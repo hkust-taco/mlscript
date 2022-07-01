@@ -44,22 +44,16 @@ test f =
 test f =
   let r x = f x
   in (r 0, r True)
-//│ test: (true -> 'a & 0 -> 'a & 'a) -> (forall 'a. ((forall 'a, 'b. ('b
+//│ test: 'a -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: 0 -> 'b), forall 'a, 'c. ('c
 //│   where
 //│     'a <: true -> 'c),)
-//│   where
-//│     'a <: 0 -> 'a & true -> 'a))
 //│     = [Function: test2]
 
 // * Even works with recursive definition because the constrained type is strictly local to the body!
 rec def test f =
   let r x = f x
   in (r 0, r True)
-//│ test: (0 -> 'a & true -> 'a & 'a) -> (forall 'a, 'b. ('b
-//│   where
-//│     'a <: 0 -> 'b), forall 'a, 'c. ('c
-//│   where
-//│     'a <: true -> 'c),)
+//│ test: (true -> 'a & 0 -> 'b) -> ('b, 'a,)
 //│     = [Function: test3]

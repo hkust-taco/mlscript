@@ -3,23 +3,14 @@
 
 
 def f n = n 0
-//│ f: (0 -> 'a & 'a) -> (forall 'a, 'b. ('b
+//│ f: 'a -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: 0 -> 'b))
 //│  = [Function: f]
 
 :e
 f {}
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.12: 	f {}
-//│ ║        	^^^^
-//│ ╟── record literal of type `anything` is not a function
-//│ ║  l.12: 	f {}
-//│ ║        	  ^^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.5: 	def f n = n 0
-//│ ╙──     	          ^^^
-//│ res: error | 'a
+//│ res: 'a
 //│   where
 //│     'b <: 0 -> 'a
 //│ Runtime error:
@@ -28,19 +19,10 @@ f {}
 :e
 f {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.29: 	f {} {}
-//│ ║        	^^^^
-//│ ╟── record literal of type `anything` is not a function
-//│ ║  l.29: 	f {} {}
-//│ ║        	  ^^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.5: 	def f n = n 0
-//│ ╙──     	          ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.29: 	f {} {}
+//│ ║  l.20: 	f {} {}
 //│ ║        	^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.29: 	f {} {}
+//│ ║  l.20: 	f {} {}
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.5: 	def f n = n 0
@@ -48,4 +30,27 @@ f {} {}
 //│ res: error
 //│ Runtime error:
 //│   TypeError: n is not a function
+
+
+def f n m = n 0
+//│ f: 'a -> 'a -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: 0 -> 'b))
+//│  = [Function: f1]
+
+:e
+f {}
+//│ res: anything -> (forall 'a. ('a
+//│   where
+//│     'b <: 0 -> 'a))
+//│    = [Function (anonymous)]
+
+:e
+f {} {}
+//│ res: 'a
+//│   where
+//│     'b <: 0 -> 'a
+//│ Runtime error:
+//│   TypeError: n is not a function
+
 

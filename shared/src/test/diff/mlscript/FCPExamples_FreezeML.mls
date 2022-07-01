@@ -39,7 +39,7 @@ def head: List['a] -> 'a
 def head l = l.Head
 //│ head: List['a] -> 'a
 //│     = <missing implementation>
-//│ (List['a] & 'a) -> (forall 'a, 'b. ('b
+//│ 'a -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: List['b]))
 //│   <:  head:
@@ -50,7 +50,7 @@ def tail: List['a] -> List['a]
 def tail l = l.Tail
 //│ tail: List['a] -> List['a]
 //│     = <missing implementation>
-//│ (List['b] & 'b) -> (forall 'b, 'a. (List['a]
+//│ 'b -> (forall 'b, 'a. (List['a]
 //│   where
 //│     'b <: List['a]))
 //│   <:  tail:
@@ -71,7 +71,7 @@ def cons: 'a -> List['a] -> List['a]
 def cons head tail = Cons { head; tail }
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'c. (List[?] & 'c) -> (forall 'b, 'c, 'a. (Cons['a | 'b] with {head: 'b, tail: 'c}
+//│ 'b -> (forall 'c. 'c -> (forall 'b, 'c, 'a. (Cons['a | 'b] with {head: 'b, tail: 'c}
 //│   where
 //│     'c <: List['a]
 //│     'c <: List['a])))
@@ -159,7 +159,7 @@ def poly: (forall 'a. 'a -> 'a) -> (int, bool)
 def poly f = (f 1, f true)
 //│ poly: (forall 'a. 'a -> 'a) -> (int, bool,)
 //│     = <missing implementation>
-//│ (true -> 'a & 1 -> 'a & 'a) -> (forall 'a, 'b, 'c. (('b, 'c,)
+//│ 'a -> (forall 'a, 'b, 'c. (('b, 'c,)
 //│   where
 //│     'a <: 1 -> 'b & true -> 'c))
 //│   <:  poly:
@@ -170,7 +170,7 @@ def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
 def auto x = x x
 //│ auto: (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
 //│     = <missing implementation>
-//│ ('a -> anything & 'a) -> (forall 'a, 'b. ('b
+//│ 'a -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: 'a -> 'b))
 //│   <:  auto:
@@ -181,7 +181,7 @@ def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 def auto_ x = x x
 //│ auto_: (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│      = <missing implementation>
-//│ ('a -> anything & 'a) -> (forall 'a, 'b. ('b
+//│ 'a -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: 'a -> 'b))
 //│   <:  auto_:
@@ -203,11 +203,9 @@ def app: ('a -> 'b) -> 'a -> 'b
 def app f x = f x
 //│ app: ('a -> 'b) -> 'a -> 'b
 //│    = <missing implementation>
-//│ (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
+//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
 //│   where
-//│     'a <: 'b -> 'c))
-//│   where
-//│     'a <: 'b -> 'a))
+//│     'a <: 'b -> 'c)))
 //│   <:  app:
 //│ ('a -> 'b) -> 'a -> 'b
 //│    = [Function: app]
@@ -216,7 +214,7 @@ def revapp: 'a -> ('a -> 'b) -> 'b
 def revapp x f = f x
 //│ revapp: 'a -> ('a -> 'b) -> 'b
 //│       = <missing implementation>
-//│ 'a -> (forall 'b. ('a -> 'b & 'b) -> (forall 'a, 'b, 'c. ('c
+//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
 //│   where
 //│     'b <: 'a -> 'c)))
 //│   <:  revapp:
@@ -227,13 +225,9 @@ def flip: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 def flip f = fun x -> fun y -> f y x
 //│ flip: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 //│     = <missing implementation>
-//│ (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd. ('d
+//│ 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd. ('d
 //│   where
-//│     'a <: 'c -> 'b -> 'd))
-//│   where
-//│     'a <: 'c -> 'b -> 'a))
-//│   where
-//│     'a <: nothing -> 'b -> 'a))
+//│     'a <: 'c -> 'b -> 'd))))
 //│   <:  flip:
 //│ ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 //│     = [Function: flip]
@@ -273,7 +267,7 @@ fun (x: forall 'a. 'a -> 'a) -> x x
 
 // A4'
 fun x -> x x
-//│ res: ('a -> anything & 'a) -> (forall 'a, 'b. ('b
+//│ res: 'a -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: 'a -> 'b))
 //│    = [Function: res]
@@ -310,17 +304,17 @@ def f: ('a -> 'a) -> List['a] -> 'a
 :ng
 f (choose id) ids
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.311: 	f (choose id) ids
+//│ ║  l.305: 	f (choose id) ids
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ('a314' -> 'a314')›  <:  'a800_807    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ('a314' -> 'a314')›  <:  'a800'
+//│ ╟── this constraint:  ‹∀ 0. ('a297' -> 'a297')›  <:  'a707_714    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ('a297' -> 'a297')›  <:  'a707'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.311: 	f (choose id) ids
+//│ ║  l.305: 	f (choose id) ids
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. ('a326'' -> 'a326'')›  <:  'a800_807    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. ('a326'' -> 'a326'')›  <:  'a800_807
+//│ ╟── this constraint:  ‹∀ 1. ('a309'' -> 'a309'')›  <:  'a707_714    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. ('a309'' -> 'a309'')›  <:  'a707_714
 //│ res: 'a -> 'a | error
 
 // * ^ Strangely, this one works with recursive types:
@@ -350,14 +344,14 @@ id poly (fun x -> x)
 
 // B1
 fun f -> (f 1, f true)
-//│ res: (true -> 'a & 1 -> 'a & 'a) -> (forall 'a, 'b, 'c. (('b, 'c,)
+//│ res: 'a -> (forall 'a, 'b, 'c. (('b, 'c,)
 //│   where
 //│     'a <: 1 -> 'b & true -> 'c))
 //│    = [Function: res]
 
 // B2
 fun xs -> poly (head xs)
-//│ res: (List[forall 'a. 'a -> 'a] & 'b) -> (forall 'b. ((int, bool,)
+//│ res: 'b -> (forall 'b. ((int, bool,)
 //│   where
 //│     'b <: List[forall 'a. 'a -> 'a]))
 //│    = [Function: res]
@@ -555,27 +549,16 @@ a id
 choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ res: 'c
 //│   where
-//│     'c :> (forall 'a. 'a -> 'a) | (forall 'a0. (('a0 -> 'a0) -> (forall 'd, 'b. ('d
+//│     'c :> (forall 'a. 'a -> 'a) | (forall 'a0. ('a0 -> 'a0) -> (forall 'd, 'b. ('d
 //│   where
-//│     'a0 := ‘a))
-//│   where
-//│     'a0 := ‘a))
+//│     'a0 := ‘a)))
 //│     'd :> 'b -> 'b
 //│    = [Function: id1]
 
 // :e // * ^ Here you go:
 // :e // FIXME? succeeds with genLamBodies
 res id
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.568: 	res id
-//│ ║         	^^^^^^
-//│ ╟── type `‘a1173` is not an instance of type `'a`
-//│ ║  l.180: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
-//│ ║         	                    ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.180: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
-//│ ╙──       	                    ^^
-//│ res: 'a -> 'a | error
+//│ res: 'a -> 'a
 //│   where
 //│     'a0 := ‘a
 //│    = [Function: id1]
@@ -584,10 +567,10 @@ res id
 :e
 a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.585: 	a (fun x -> { u = x })
+//│ ║  l.568: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a`
-//│ ║  l.585: 	a (fun x -> { u = x })
+//│ ║  l.568: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.180: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b

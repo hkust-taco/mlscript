@@ -563,6 +563,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             case (false, b) => con(tv, b, TopType)(ctx, extrCtx)
           }}
         }()
+      case ConstrainedType(cs, bod) =>
+        trace(s"GOOD MEASURE") {
+          cs.foreach { case (tv, bs) => bs.foreach {
+            case (true, b) => con(b, tv, TopType)(ctx, extrCtx)
+            case (false, b) => con(tv, b, TopType)(ctx, extrCtx)
+          }}
+        }()
       case _ => ()
     }
     
@@ -729,8 +736,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           assert(midCtx.lvl === newCtx.lvl-1)
           PolymorphicType.mk(midCtx.lvl,
             ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy))
-            .tap(instantiateForGoodMeasure(midCtx, extrCtx2))
+            // .tap(instantiateForGoodMeasure(midCtx, extrCtx2))
         }
+        // val body_ty = if (!genLamBodies || !generalizeCurriedFunctions) typeTerm(body)(newCtx, raise, extrCtx2, vars)
+        //     else {
+        //   val ec: ExtrCtx = MutMap.empty
+        //   val extrCtx: Opt[ExtrCtx] = S(ec)
+        //   val innerTy = typeTerm(body)(newCtx, raise, extrCtx, vars)
+        //   ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy)
+        //     .tap(instantiateForGoodMeasure(midCtx, extrCtx2))
+        // }
         
         val innerTy = FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
         // PolymorphicType.mk(ctx.lvl,

@@ -20,7 +20,7 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'c. (List[?] & 'c) -> (forall 'b, 'c, 'a. (Cons['a | 'b] with {head: 'b, tail: 'c}
+//│ 'b -> (forall 'c. 'c -> (forall 'b, 'c, 'a. (Cons['a | 'b] with {head: 'b, tail: 'c}
 //│   where
 //│     'c <: List['a]
 //│     'c <: List['a])))
@@ -56,7 +56,7 @@ def head: forall 'a. List['a] -> 'a
 def head l = l.Head
 //│ head: List['a] -> 'a
 //│     = <missing implementation>
-//│ (List['a] & 'a) -> (forall 'a, 'b. ('b
+//│ 'a -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: List['b]))
 //│   <:  head:
@@ -67,7 +67,7 @@ def tail: forall 'a. List['a] -> List['a]
 def tail l = l.Tail
 //│ tail: List['a] -> List['a]
 //│     = <missing implementation>
-//│ (List['b] & 'b) -> (forall 'b, 'a. (List['a]
+//│ 'b -> (forall 'b, 'a. (List['a]
 //│   where
 //│     'b <: List['a]))
 //│   <:  tail:
@@ -141,7 +141,7 @@ def id x = x
 
 // FreezeML B1
 def poly f = (f 1, f true)
-//│ poly: (true -> 'a & 1 -> 'a & 'a) -> (forall 'a, 'b, 'c. (('b, 'c,)
+//│ poly: 'a -> (forall 'a, 'b, 'c. (('b, 'c,)
 //│   where
 //│     'a <: 1 -> 'b & true -> 'c))
 //│     = [Function: poly]
@@ -154,11 +154,9 @@ poly id
 //│    = [ 1, true ]
 
 def app f x = f x
-//│ app: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
+//│ app: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
 //│   where
-//│     'a <: 'b -> 'c))
-//│   where
-//│     'a <: 'b -> 'a))
+//│     'a <: 'b -> 'c)))
 //│    = [Function: app]
 
 // FreezeML D1
@@ -181,7 +179,7 @@ def idss = single ids
 //│       }
 
 def revapp x f = f x
-//│ revapp: 'a -> (forall 'b. ('a -> 'b & 'b) -> (forall 'a, 'b, 'c. ('c
+//│ revapp: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
 //│   where
 //│     'b <: 'a -> 'c)))
 //│       = [Function: revapp]
@@ -211,10 +209,9 @@ app (map head) (single ids)
 
 // nope
 fun f -> poly f
-//│ res: (1 -> 'a & true -> 'a & 'a) -> (forall 'a, 'b, 'c, 'd. (('c, 'd,)
+//│ res: anything -> (forall 'a, 'b, 'c. (('b, 'c,)
 //│   where
-//│     'b <: 1 -> 'c & true -> 'd
-//│     'a <: true -> 'a & 1 -> 'a))
+//│     'a <: 1 -> 'b & true -> 'c))
 //│    = [Function: res]
 
 // FreezeML D2
@@ -305,7 +302,7 @@ def poly: (forall 'a. 'a -> 'a) -> (int, bool)
 def poly f = (f 1, f true)
 //│ poly: (forall 'a. 'a -> 'a) -> (int, bool,)
 //│     = <missing implementation>
-//│ (true -> 'a & 1 -> 'a & 'a) -> (forall 'a, 'b, 'c. (('b, 'c,)
+//│ 'a -> (forall 'a, 'b, 'c. (('b, 'c,)
 //│   where
 //│     'a <: 1 -> 'b & true -> 'c))
 //│   <:  poly:
