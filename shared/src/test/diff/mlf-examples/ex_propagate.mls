@@ -13,9 +13,13 @@ def delta = (fun x -> x x) : Sid -> 'b
 def delta_ = fun x -> x x
 def k = (fun x -> fun y -> y) : forall 'a. 'a -> Sid
 def k_ = fun x -> fun y -> y
-//│ delta: Sid -> Sid
+//│ delta: Sid -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: 'a -> 'b))
 //│      = [Function: delta]
-//│ delta_: ('a -> 'b & 'a) -> 'b
+//│ delta_: 'a -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: 'a -> 'b))
 //│       = [Function: delta_]
 //│ k: anything -> Sid
 //│  = [Function: k]
@@ -35,9 +39,13 @@ def id_ = id : Sid -> Sid
 // untype fun x -> ((fun y -> y y) : 'a -> sid)
 fun x -> ((fun y -> y y) : 'a -> Sid)
 fun x_ -> (fun y -> y y)
-//│ res: anything -> ('a -> Sid & 'a) -> Sid
+//│ res: anything -> (forall 'a. ('a -> Sid
+//│   where
+//│     'a <: 'a -> ‘a -> ‘a))
 //│    = [Function: res]
-//│ res: anything -> (forall 'a, 'b. ('a -> 'b & 'a) -> 'b)
+//│ res: anything -> (forall 'a. 'a -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: 'a -> 'b)))
 //│    = [Function: res]
 
 // :e // FIXME? fails with genLamBodies
@@ -48,10 +56,12 @@ def delta = (fun x -> x x) : Sid -> Sid
 
 // let (delta:sid -> 'b) = fun x -> x x
 def delta = (fun x -> x x) : Sid -> 'b
-//│ delta: Sid -> Sid
+//│ delta: Sid -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: 'a -> 'b))
 //│      = [Function: delta2]
 
 // untype let (delta:'a -> sid) = fun x -> x x in delta
 let delta = (fun x -> x x) : 'a -> Sid in delta
-//│ res: ('a -> Sid & 'a) -> Sid
+//│ res: ('a -> nothing -> anything & 'a) -> Sid
 //│    = [Function (anonymous)]

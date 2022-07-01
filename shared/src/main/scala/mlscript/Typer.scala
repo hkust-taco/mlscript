@@ -23,7 +23,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   var generalizeCurriedFunctions: Boolean = false
   
   var distributeForalls: Boolean = false
-  var genLamBodies: Boolean = false
+  
+  // var genLamBodies: Boolean = false
+  var genLamBodies: Boolean = true
   
   var noCycleCheck: Boolean = false
   var noRecursiveTypes: Boolean = false

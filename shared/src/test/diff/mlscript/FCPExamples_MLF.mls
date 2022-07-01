@@ -28,12 +28,14 @@ def id x = x
 //│ id: 'a -> 'a
 
 def auto (x: forall 'a. 'a -> 'a) = x x
-//│ auto: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ auto: (forall 'a. 'a -> 'a) -> (forall 'b, 'c. ('c
+//│   where
+//│     'b <: 'b -> 'c))
 
 def app f x = f x
-//│ app: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ app: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
 //│   where
-//│     'a <: 'b -> 'c))
+//│     'a <: 'b -> 'c)))
 
 def inc: int -> int
 //│ inc: int -> int
@@ -73,40 +75,54 @@ choose id
 //│ res: 'a -> (forall 'a, 'b. 'b -> 'b | 'a)
 
 fun (g: forall 'a. ('a -> 'a) -> ('a -> 'a)) -> fun (x: forall 'a. 'a -> 'a) -> fun a -> g a (x a)
-//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'b, 'c, 'd, 'e, 'f. ('c -> 'e
+//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'b. 'b -> (forall 'b, 'c, 'd, 'e, 'f. ('e
 //│   where
-//│     'b <: 'c -> 'd -> 'e
-//│     'f <: 'c -> 'd))
+//│     'c <: 'b -> 'd -> 'e
+//│     'f <: 'b -> 'd)))
 
 choose id succ
 //│ res: int -> int
 
 // FreezeML A7
 choose id auto
-//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ res: (forall 'a. 'a -> 'a & 'b) -> (forall 'b, 'c, 'd. ('b | 'd
+//│   where
+//│     'c <: 'c -> 'd))
 
 // nope, along with anything with it as a subterm
 // i.e. unannotated auto
 omega = fun x -> x x
-//│ omega: ('a -> 'b & 'a) -> 'b
+//│ omega: 'a -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: 'a -> 'b))
 
 fun (x: forall 'a. 'a) -> x x
-//│ res: anything -> nothing
+//│ res: anything -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: 'a -> 'b))
 
 // i.e. auto
 omegad = fun (x: forall 'a. 'a -> 'a) -> x x
-//│ omegad: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ omegad: (forall 'a. 'a -> 'a) -> (forall 'b, 'c. ('c
+//│   where
+//│     'b <: 'b -> 'c))
 
 // FreezeML A5
 id auto
-//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ res: (forall 'a. 'a -> 'a) -> (forall 'b, 'c. ('c
+//│   where
+//│     'b <: 'b -> 'c))
 
 // ~ auto id (FreezeML F5, PolyML 1.1)
 (fun x -> x id) auto
-//│ res: 'a -> 'a
+//│ res: 'a
+//│   where
+//│     'b <: (forall 'c. 'c -> 'c) -> 'a
 
 app auto id
-//│ res: 'a -> 'a
+//│ res: 'a
+//│   where
+//│     'b <: (forall 'c. 'c -> 'c) -> 'a
 
 // ------------ Sec 5.2 ------------
 
@@ -114,41 +130,44 @@ app auto id
 :e
 let f = choose id in (f auto) (f succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.115: 	let f = choose id in (f auto) (f succ)
+//│ ║  l.131: 	let f = choose id in (f auto) (f succ)
 //│ ║         	                     ^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` is not an instance of type `int`
 //│ ║  l.30: 	def auto (x: forall 'a. 'a -> 'a) = x x
 //│ ╙──      	                    ^^
-//│ res: int -> int | error
+//│ res: int -> int | error | 'a
+//│   where
+//│     'b <: 'b -> 'a
 
 // Reproduced with an unnanotated auto:
 
 def auto2 x = x x
-//│ auto2: ('a -> 'b & 'a) -> 'b
+//│ auto2: 'a -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: 'a -> 'b))
 
 choose id auto2
-//│ res: ('a -> 'b & 'b & 'a) -> 'b
+//│ res: 'a -> (forall 'a, 'b. ('a | 'b
+//│   where
+//│     'a <: 'a -> 'b))
 
 :e // FIXME? succeeds with genLamBodies
 res (choose id succ)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.133: 	res (choose id succ)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `int -> int` is not an instance of type `int`
-//│ ║  l.133: 	res (choose id succ)
-//│ ║         	               ^^^^
-//│ ╟── but it flows into application with expected type `int`
-//│ ║  l.133: 	res (choose id succ)
-//│ ╙──       	     ^^^^^^^^^^^^^^
-//│ res: int -> int | error | int
+//│ res: int -> int | 'a
+//│   where
+//│     'b <: 'b -> 'a
 
 // Didier Le Botlan suggested this fix by email:
 
 let f = choose id in (f auto, f succ)
-//│ res: (forall 'b. (forall 'a. 'a -> 'a & 'b) -> (forall 'a. 'a -> 'a | 'b), forall 'b. (int & 'b) -> (int | 'b),)
+//│ res: (forall 'b. (forall 'a. 'a -> 'a & 'b) -> (forall 'b, 'c, 'd. ('b | 'd
+//│   where
+//│     'c <: 'c -> 'd)), forall 'b. (int & 'b) -> (int | 'b),)
 
 let f = choose id in (f auto2, f succ)
-//│ res: (forall 'a, 'b, 'c. ('a -> 'b & 'c & 'a) -> ('c | 'b), forall 'c. (int & 'c) -> (int | 'c),)
+//│ res: (forall 'a, 'b. ('a & 'b) -> (forall 'a, 'b, 'c. ('a | 'c
+//│   where
+//│     'b <: 'b -> 'c)), forall 'a. (int & 'a) -> (int | 'a),)
 
 // ------------ Sec 6 ------------
 
@@ -165,11 +184,15 @@ K x y = x
 //│ K: 'a -> anything -> 'a
 
 (fun y -> let tmp = y I in y K) (fun x -> x x)
-//│ res: anything -> (forall 'a. 'a -> anything -> 'a)
+//│ res: 'a
+//│   where
+//│     'b <: (forall 'c. 'c -> anything -> 'c) -> 'a
 
 // Note: reduces to
 let tmp = (fun x -> x x) I in (fun x -> x x) K
-//│ res: anything -> (forall 'a. 'a -> anything -> 'a)
+//│ res: 'a
+//│   where
+//│     'b <: 'b -> 'a
 
 // to
 let tmp = I I in K K
@@ -182,46 +205,78 @@ let tmp = I I in K K
 
 // ~ FreezeML B1
 (fun f -> (f 42, f "foo")) (fun x -> x)
-//│ res: (42, "foo",)
+//│ res: ('a, 'b,)
+//│   where
+//│     'c <: 42 -> 'a & "foo" -> 'b
 
 (fun f -> (f succ, choose f auto)) (choose id)
-//│ res: (forall 'b. (int & 'b) -> (int | 'b), (forall 'a, 'c. 'a -> 'a & 'c) -> (forall 'b, 'a, 'c. ('b & 'a) -> ('a | 'b) | 'c),)
+//│ res: ('b, (forall 'a. 'a -> 'a) -> (forall 'c, 'd. ('d
+//│   where
+//│     'c <: 'c -> 'd)) | 'e,)
+//│   where
+//│     'e <: (int -> int) -> 'b
 
 // ------------ Sec 2.3.1 ------------
 
 // i.e. id auto (FreezeML A5)
 (fun z -> z) omegad
 (fun z -> z) omega
-//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ res: ('a -> 'b & 'a) -> 'b
+//│ res: (forall 'a. 'a -> 'a) -> (forall 'b, 'c. ('c
+//│   where
+//│     'b <: 'b -> 'c))
+//│ res: 'a -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: 'a -> 'b))
 
 // i.e. auto id (FreezeML F5)
 (fun x -> x x) id
-//│ res: 'a -> 'a
+//│ res: 'a
+//│   where
+//│     'b <: 'b -> 'a
 
 fun z -> (z omegad)
 fun z -> (z omega)
-//│ res: (((forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)) -> 'b) -> 'b
-//│ res: ((forall 'a, 'b. ('a -> 'b & 'a) -> 'b) -> 'c) -> 'c
+//│ res: 'b -> (forall 'b. ('c
+//│   where
+//│     'b <: ((forall 'a. 'a -> 'a) -> (forall 'd, 'e. ('e
+//│   where
+//│     'd <: 'd -> 'e))) -> 'c))
+//│ res: 'a -> (forall 'a. ('b
+//│   where
+//│     'a <: (forall 'c. 'c -> (forall 'c, 'd. ('d
+//│   where
+//│     'c <: 'c -> 'd))) -> 'b))
 
 (fun y -> fun z -> z y) omegad
 (fun y -> fun z -> z y) omega
-//│ res: (((forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)) -> 'b) -> 'b
-//│ res: ((forall 'a, 'b. ('a -> 'b & 'a) -> 'b) -> 'c) -> 'c
+//│ res: 'b -> (forall 'b. ('c
+//│   where
+//│     'b <: ((forall 'a. 'a -> 'a) -> (forall 'd, 'e. ('e
+//│   where
+//│     'd <: 'd -> 'e))) -> 'c))
+//│ res: 'a -> (forall 'a. ('b
+//│   where
+//│     'a <: (forall 'c. 'c -> (forall 'c, 'd. ('d
+//│   where
+//│     'c <: 'c -> 'd))) -> 'b))
 
 fun z -> omegad z
 fun z -> omega z
-//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ res: ('a -> 'b & 'a) -> 'b
+//│ res: (forall 'a. 'a -> 'a) -> (forall 'b, 'c. ('c
+//│   where
+//│     'b <: 'b -> 'c))
+//│ res: anything -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: 'a -> 'b))
 
 (fun x -> fun y -> x y) omegad
 (fun x -> fun y -> x y) omega
-//│ res: 'a -> 'b
+//│ res: 'a -> (forall 'a, 'b. ('b
 //│   where
-//│     'c <: 'a -> 'b
-//│ res: 'a -> 'b
+//│     'c <: 'a -> 'b))
+//│ res: 'a -> (forall 'a, 'b. ('b
 //│   where
-//│     'c <: 'a -> 'b
+//│     'c <: 'a -> 'b))
 
 // ------------ Sec 4.3 ------------
 // affects the order of bindings in the result type in MLF, not very interesting otherwise
@@ -239,14 +294,22 @@ fun (x: forall 'b 'a. 'a -> 'b -> 'a) -> x
 // FreezeML B1
 // nope
 poly = fun f -> (f 1, f true)
-//│ poly: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+//│ poly: 'a -> (forall 'a, 'b, 'c. (('b, 'c,)
+//│   where
+//│     'a <: 1 -> 'b & true -> 'c))
 
 // FreezeML B2
 polyL = fun xs -> poly (head xs)
-//│ polyL: List[true -> 'a & 1 -> 'b] -> ('b, 'a,)
+//│ polyL: 'a -> (forall 'a, 'b, 'c, 'd. (('c, 'd,)
+//│   where
+//│     'b <: 1 -> 'c & true -> 'd
+//│     'a <: List['b]))
 
 let ids = single id in (polyL ids, append ids (single inc))
-//│ res: ((1, true,), List[int -> int],)
+//│ res: (forall 'a, 'b, 'c. (('b, 'c,)
+//│   where
+//│     'a <: 1 -> 'b & true -> 'c
+//│     'd <: List[?]), List[int -> int],)
 
 // ------------ Sec 5 ------------
 
@@ -273,5 +336,7 @@ let f = fun x -> id in g f
 
 // FreezeML D4
 app runST argST
-//│ res: int
+//│ res: 'a
+//│   where
+//│     'b <: (forall 's. ST['s, int]) -> 'a
 

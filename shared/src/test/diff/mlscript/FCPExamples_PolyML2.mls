@@ -18,7 +18,10 @@ def Nil = Nil {}
 //│ Nil: Nil
 
 def Cons head tail = Cons { head; tail }
-//│ Cons: 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
+//│ Cons: 'b -> (forall 'c. 'c -> (forall 'b, 'c, 'a. (Cons['a | 'b] with {head: 'b, tail: 'c}
+//│   where
+//│     'c <: List['a]
+//│     'c <: List['a])))
 
 // ------------ Type signatures for functions used in the examples ------------
 // (I guess)
@@ -48,13 +51,16 @@ class Collection[a]: { l: List[a] }
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
 //│ Defined Collection.Mem: Collection[?] -> anything -> bool
-//│ Defined Collection.Fold: Collection['a] -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c -> 'c
+//│ Defined Collection.Fold: Collection['a] -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd. ('c | 'd
 //│   where
-//│     'b <: 'c -> 'a -> 'c)))
+//│     'b <: ('c | 'd) -> 'a -> 'd
+//│     'b <: ('c | 'd) -> 'a -> 'd))))
 
 def coll_mem c x = c.Mem x
-//│ coll_mem: 'a -> (forall 'a. ('a -> bool
+//│ coll_mem: 'a -> 'a -> (forall 'a. (bool
 //│   where
+//│     'a <: Collection['a]
+//│     'a <: Collection['a]
 //│     'a <: Collection['a]))
 
 // typo in the paper? it was `fun x -> fun y -> ...`
@@ -62,7 +68,10 @@ def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
   let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
   (l1, l2)
-//│ simple_and_double: Collection[?] -> (forall 'a. 'a, forall 'b. 'b,)
+//│ simple_and_double: Collection[?] -> (forall 'a, 'b. (Nil | 'b
 //│   where
-//│     'b :> (Cons[(nothing, nothing,)] with {tail: 'b}) | Nil
-//│     'a :> (Cons[nothing] with {tail: 'a}) | Nil
+//│     'a <: (Nil | 'b) -> nothing -> 'b
+//│     'a <: (Nil | 'b) -> nothing -> 'b), forall 'c, 'd. (Nil | 'd
+//│   where
+//│     'c <: (Nil | 'd) -> nothing -> 'd
+//│     'c <: (Nil | 'd) -> nothing -> 'd),)
