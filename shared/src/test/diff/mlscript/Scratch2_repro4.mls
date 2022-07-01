@@ -10,7 +10,7 @@
 // def s n = fun f -> fun x -> (n f x)
 def s n = fun f -> n f
 // def s n = n
-//│ s: (nothing -> 'a & 'a) -> (forall 'b. ('b -> (forall 'a, 'b, 'c. ('c
+//│ s: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
 //│   where
 //│     'a <: 'b -> 'c))
 //│   where
@@ -27,7 +27,7 @@ def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M
 :e // * Needs distrib (see below)
 // :d
 succ = s
-//│ (nothing -> 'a & 'a) -> (forall 'b. ('b -> (forall 'a, 'b, 'c. ('c
+//│ (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
 //│   where
 //│     'a <: 'b -> 'c))
 //│   where
@@ -37,7 +37,7 @@ succ = s
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.29: 	succ = s
 //│ ║        	^^^^^^^^
-//│ ╟── type `‘M95` is not an instance of type `'M`
+//│ ╟── type `‘M96` is not an instance of type `'M`
 //│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                                                           ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -60,7 +60,7 @@ def succ: (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
 succ = s
 // succ n = s n
 // s id : (forall 'M. ('M -> 'M))
-//│ (nothing -> 'a & 'a) -> (forall 'b. ('b -> (forall 'a, 'b, 'c. ('c
+//│ (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
 //│   where
 //│     'a <: 'b -> 'c))
 //│   where

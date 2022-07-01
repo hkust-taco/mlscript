@@ -11,7 +11,7 @@ def z f x = x
 // def s n = fun f -> fun x -> (n f x)
 def s n = fun f -> n f
 // def s n = n
-//│ s: (nothing -> 'a & 'a) -> (forall 'b. ('b -> (forall 'a, 'b, 'c. ('c
+//│ s: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
 //│   where
 //│     'a <: 'b -> 'c))
 //│   where
@@ -20,7 +20,7 @@ def s n = fun f -> n f
 
 :ns
 s
-//│ res: forall 'a, 'b, 'c. 'a -> (forall 'd, 'e. (forall 'd. 'd -> (forall 'f. ('f
+//│ res: forall 'a, 'b, 'c. 'a -> (forall 'd, 'e. ('d -> (forall 'f. ('f
 //│   where
 //│     'a <: 'd -> 'f))
 //│   where
@@ -75,11 +75,11 @@ def to_ch n =
 //   s (to_church n)
 // def to_ch =
 //   s (to_church 0)
-//│ to_ch: int -> (forall 'a. ('a -> (forall 'b, 'a, 'c, 'd. ('d -> 'd | 'c
+//│ to_ch: int -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d -> 'd | 'c
 //│   where
-//│     'b <: 'a -> 'c))
+//│     'a <: 'b -> 'c))
 //│   where
-//│     'b <: 'a -> anything))
+//│     'a <: 'b -> anything))
 //│      = <no result>
 //│        to_church is not implemented
 
@@ -99,11 +99,11 @@ def to_ch n =
 // :DistributeForalls
 // :d
 to_church = to_ch
-//│ int -> (forall 'a. ('a -> (forall 'b, 'a, 'c, 'd. ('d -> 'd | 'c
+//│ int -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d -> 'd | 'c
 //│   where
-//│     'b <: 'a -> 'c))
+//│     'a <: 'b -> 'c))
 //│   where
-//│     'b <: 'a -> anything))
+//│     'a <: 'b -> anything))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│          = <no result>
@@ -118,20 +118,20 @@ to_church = to_ch
 def to_ch n =
   if true then z
   else s (to_church n)
-//│ to_ch: int -> (forall 'a. ('a -> (forall 'b, 'a, 'c, 'd. ('d -> 'd | 'c
+//│ to_ch: int -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d -> 'd | 'c
 //│   where
-//│     'b <: 'a -> 'c))
+//│     'a <: 'b -> 'c))
 //│   where
-//│     'b <: 'a -> anything))
+//│     'a <: 'b -> anything))
 //│      = <no result>
 //│        to_church, to_ch and to_church are not implemented
 
 to_church = to_ch
-//│ int -> (forall 'a. ('a -> (forall 'b, 'a, 'c, 'd. ('d -> 'd | 'c
+//│ int -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d -> 'd | 'c
 //│   where
-//│     'b <: 'a -> 'c))
+//│     'a <: 'b -> 'c))
 //│   where
-//│     'b <: 'a -> anything))
+//│     'a <: 'b -> anything))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│          = <no result>
@@ -159,7 +159,7 @@ to_church = to_ch
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.153: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘M255` is not an instance of type `'M`
+//│ ╟── type `‘M262` is not an instance of type `'M`
 //│ ║  l.47: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                              ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -224,8 +224,8 @@ to_church = to_ch
 //│ ║  l.217: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 4. {α29_455''''' where: α27_438'' <: ((α28_454'',) -> α29_455''''')}›  <:  (‘M'' -> ‘M'')    PolymorphicType  FunctionType
-//│ ╙──  ... looks like:  ‹∀ 4. {α29_439''''' where: α27_438'' <: ((α28_434'''',) -> α29_439''''')}›  <:  (‘M'' -> ‘M'')
+//│ ╟── this constraint:  ‹∀ 4. {α29_462''''' where: α27_445'' <: ((α28_461'',) -> α29_462''''')}›  <:  (‘M'' -> ‘M'')    PolymorphicType  FunctionType
+//│ ╙──  ... looks like:  ‹∀ 4. {α29_446''''' where: α27_445'' <: ((α28_441'''',) -> α29_446''''')}›  <:  (‘M'' -> ‘M'')
 //│          = [Function: to_ch4]
 
 

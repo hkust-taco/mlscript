@@ -548,14 +548,14 @@ def intfa f = f 15
 // let polyann (a:'x) (b:int) f (g:int -> 'x -> 'y) = g (f 10) a b
 def polyann (a: 'x) (b: int) f (g: int -> 'x -> 'y) = g (f 10) a b
 def polyann_ a b f g = g (f 10) a b
-//│ polyann: 'x -> int -> (forall 'a. (10 -> int & 'a) -> ((int -> 'x -> int -> 'a) -> (forall 'x, 'a, 'b, 'c, 'd. ('d
+//│ polyann: 'x -> int -> (forall 'a. (10 -> int & 'a) -> (forall 'x, 'a. ((int -> 'x -> int -> 'a) -> (forall 'x, 'a, 'b, 'c, 'd. ('d
 //│   where
 //│     'a <: 10 -> 'b
 //│     'c <: 'b -> 'x -> int -> 'd))
 //│   where
-//│     'a <: 10 -> int))
+//│     'a <: 10 -> int)))
 //│        = [Function: polyann]
-//│ polyann_: 'a -> (forall 'b. 'b -> (forall 'c, 'd. (10 -> 'c & 'd) -> (forall 'c, 'e. (('e -> 'a -> 'b -> 'c & 'c) -> (forall 'a, 'b, 'c, 'd, 'f, 'g. ('g
+//│ polyann_: 'a -> (forall 'b. 'b -> (forall 'c, 'd. (10 -> 'c & 'd) -> (forall 'a, 'b, 'c, 'd, 'e. (('e -> 'a -> 'b -> 'c & 'c) -> (forall 'a, 'b, 'c, 'd, 'f, 'g. ('g
 //│   where
 //│     'd <: 10 -> 'f
 //│     'c <: 'f -> 'a -> 'b -> 'g))
@@ -566,15 +566,15 @@ def polyann_ a b f g = g (f 10) a b
 // let voyage (f:'p -> 'q) x y = (y, f x)
 def voyage (f: 'p -> 'q) x y = (y, f x)
 def voyage_ f x y = (y, f x)
-//│ voyage: (nothing -> anything) -> (forall 'a. ('a -> (forall 'b. ('b -> (forall 'c, 'a, 'b, 'd. (('b, 'd,)
+//│ voyage: (nothing -> anything) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd. (('c, 'd,)
 //│   where
-//│     'c <: 'a -> 'd))
+//│     'a <: 'b -> 'd))
 //│   where
-//│     'c <: 'a -> anything))
+//│     'a <: 'b -> anything))
 //│   where
-//│     'c <: 'a -> anything))
+//│     'a <: 'b -> anything))
 //│       = [Function: voyage]
-//│ voyage_: (nothing -> 'a & 'a) -> (forall 'b. ('b -> (forall 'c. ('c -> (forall 'a, 'b, 'c, 'd. (('c, 'd,)
+//│ voyage_: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd. (('c, 'd,)
 //│   where
 //│     'a <: 'b -> 'd))
 //│   where
@@ -890,7 +890,7 @@ def a = fun f -> f id
 //│            = [Function: church_zero]
 //│ church_un: 'a -> 'a
 //│          = [Function: id2]
-//│ church_succ: (nothing -> nothing -> 'a & 'a) -> (forall 'b, 'c. (('c -> 'a & 'b) -> (forall 'd, 'e. ('d -> (forall 'a, 'b, 'd, 'f, 'g. ('g
+//│ church_succ: (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. (('c -> 'a & 'b) -> (forall 'a, 'b, 'd, 'e. ('d -> (forall 'a, 'b, 'd, 'f, 'g. ('g
 //│   where
 //│     'a <: 'b -> 'd -> 'f
 //│     'b <: 'f -> 'g))
@@ -900,24 +900,24 @@ def a = fun f -> f id
 //│   where
 //│     'a <: 'b -> nothing -> 'c))
 //│            = [Function: church_succ]
-//│ f: Sa -> (forall 'a, 'c, 'b, 'd, 'e, 'f, 'g. ('h
+//│ f: Sa -> (forall 'a, 'c, 'b, 'd. ('e
 //│   where
 //│     'a <: 'c -> 'c -> anything
-//│     'b :> forall 'i, 'j. ('i -> (forall 'd, 'e, 'i, 'k, 'l. ('l
+//│     'b :> forall 'c, 'f, 'g, 'h, 'i, 'j. ('h -> (forall 'f, 'g, 'h, 'k, 'l. ('l
 //│   where
-//│     'd <: 'e -> 'i -> 'k
-//│     'e <: 'k -> 'l))
+//│     'f <: 'g -> 'h -> 'k
+//│     'g <: 'k -> 'l))
 //│   where
-//│     'd <: 'e -> 'i -> 'j
-//│     'e <: 'j -> anything
-//│     'f <: 'c -> 'c -> anything)
-//│     'g <: (Sid -> (forall 'c, 'm. ('m
+//│     'f <: 'g -> 'h -> 'i
+//│     'g <: 'i -> anything
+//│     'j <: 'c -> 'c -> anything)
+//│     'd <: (Sid -> (forall 'c, 'm. ('m
 //│   where
-//│     'c <: 'c -> 'm))) -> 'h))
+//│     'c <: 'c -> 'm))) -> 'e))
 //│  = [Function: f]
 //│ f_: ((forall 'a, 'b. ('a -> 'b & 'a) -> (forall 'a, 'c. ('c
 //│   where
-//│     'a <: 'a -> 'c))) -> 'b & (forall 'b, 'd, 'e. ('d -> 'd -> 'b & 'b) -> (forall 'f, 'g. ('f -> (forall 'd, 'e, 'f, 'h, 'i. ('i
+//│     'a <: 'a -> 'c))) -> 'b & (forall 'b, 'd. ('d -> 'd -> 'b & 'b) -> (forall 'b, 'd, 'e, 'f, 'g. ('f -> (forall 'd, 'e, 'f, 'h, 'i. ('i
 //│   where
 //│     'e <: 'd -> 'f -> 'h
 //│     'd <: 'h -> 'i))
@@ -941,7 +941,7 @@ def a = fun f -> f id
 def app x y = x y
 def test1 = f a
 def test2 = app f a
-//│ app: (nothing -> 'a & 'a) -> (forall 'b. ('b -> (forall 'a, 'b, 'c. ('c
+//│ app: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
 //│   where
 //│     'a <: 'b -> 'c))
 //│   where
@@ -950,14 +950,14 @@ def test2 = app f a
 //│ test1: 'c
 //│   where
 //│     'a <: 'd -> 'd -> anything
-//│     'b :> forall 'e, 'f. ('e -> (forall 'g, 'h, 'e, 'i, 'j. ('j
+//│     'b :> forall 'd, 'e, 'f, 'g, 'h, 'i. ('g -> (forall 'e, 'f, 'g, 'j, 'k. ('k
 //│   where
-//│     'g <: 'h -> 'e -> 'i
-//│     'h <: 'i -> 'j))
+//│     'e <: 'f -> 'g -> 'j
+//│     'f <: 'j -> 'k))
 //│   where
-//│     'g <: 'h -> 'e -> 'f
-//│     'h <: 'f -> anything
-//│     'k <: 'd -> 'd -> anything)
+//│     'e <: 'f -> 'g -> 'h
+//│     'f <: 'h -> anything
+//│     'i <: 'd -> 'd -> anything)
 //│     'l <: (Sid -> (forall 'd, 'm. ('m
 //│   where
 //│     'd <: 'd -> 'm))) -> 'c
@@ -1015,29 +1015,37 @@ fun x -> ( ((x : Sid) : 'a), (x : 'a) x)
 fun x -> ( (((x : 'a) : Sid) : 'a), x x)
 fun x -> ( (x : Sid), (x : 'a) x)
 fun x -> ( (((x : 'a) : Sid) : 'a), x : 'a)
-//│ res: ('a -> anything & nothing -> anything & 'a) -> (forall 'a, 'b. ((Sid, 'b,)
+//│ res: 'a -> (forall 'a, 'b. ((Sid, 'b,)
 //│   where
 //│     'a <: ‘a -> ‘a & 'a -> 'b))
+//│   where
+//│     'a <: ‘a -> ‘a
 //│    = [Function: res]
-//│ res: ('a -> anything & nothing -> anything & 'a) -> (forall 'a, 'b. ((Sid, 'b,)
+//│ res: 'a -> (forall 'a, 'b. ((Sid, 'b,)
 //│   where
 //│     'a <: ‘a -> ‘a & 'a -> 'b))
+//│   where
+//│     'a <: ‘a -> ‘a
 //│    = [Function: res]
 //│ res: (Sid & 'a -> anything & 'a) -> (forall 'a, 'b. ((Sid, 'b,)
 //│   where
 //│     'a <: 'a -> 'b))
 //│    = [Function: res]
-//│ res: ('a -> anything & nothing -> anything & 'a) -> (forall 'a, 'b. ((Sid, 'b,)
+//│ res: 'a -> (forall 'a, 'b. ((Sid, 'b,)
 //│   where
 //│     'a <: ‘a -> ‘a & 'a -> 'b))
+//│   where
+//│     'a <: ‘a -> ‘a
 //│    = [Function: res]
 //│ res: (Sid & 'a -> anything & 'a) -> (forall 'a, 'b. ((Sid, 'b,)
 //│   where
 //│     'a <: 'a -> 'b))
 //│    = [Function: res]
-//│ res: (nothing -> anything & 'a) -> (forall 'a. ((Sid, 'a,)
+//│ res: 'a -> (forall 'a. ((Sid, 'a,)
 //│   where
 //│     'a <: ‘a -> ‘a))
+//│   where
+//│     'a <: ‘a -> ‘a
 //│    = [Function: res]
 
 // (* R�cursion polymorphe. *)
@@ -1047,17 +1055,17 @@ fun x -> ( (((x : 'a) : Sid) : 'a), x : 'a)
 :e
 rec def id_ x = if true then x else id_ id_ x
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.1048: 	rec def id_ x = if true then x else id_ id_ x
+//│ ║  l.1056: 	rec def id_ x = if true then x else id_ id_ x
 //│ ║          	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α2650' -> α2656')  <:  α2655'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α2650' -> α2656')  <:  α2655'
+//│ ╟── this constraint:  (α2896' -> α2902')  <:  α2901'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α2896' -> α2902')  <:  α2901'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.1048: 	rec def id_ x = if true then x else id_ id_ x
+//│ ║  l.1056: 	rec def id_ x = if true then x else id_ id_ x
 //│ ║          	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α2650' -> α2656')  <:  α2654'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α2650' -> α2656')  <:  α2654'
+//│ ╟── this constraint:  (α2896' -> α2902')  <:  α2900'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α2896' -> α2902')  <:  α2900'
 //│ id_: 'id_
 //│   where
 //│     'id_ :> 'a -> 'b
@@ -1076,17 +1084,17 @@ def id: Sid
 // FIXME
 rec def id x = if true then x else id id x
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.1077: 	rec def id x = if true then x else id id x
+//│ ║  l.1085: 	rec def id x = if true then x else id id x
 //│ ║          	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α2670' -> α2676')  <:  α2675'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α2670' -> α2676')  <:  α2675'
+//│ ╟── this constraint:  (α2916' -> α2922')  <:  α2921'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α2916' -> α2922')  <:  α2921'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.1077: 	rec def id x = if true then x else id id x
+//│ ║  l.1085: 	rec def id x = if true then x else id id x
 //│ ║          	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α2670' -> α2676')  <:  α2674'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α2670' -> α2676')  <:  α2674'
+//│ ╟── this constraint:  (α2916' -> α2922')  <:  α2920'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α2916' -> α2922')  <:  α2920'
 //│ 'id
 //│   where
 //│     'id :> 'a -> 'b
@@ -1097,43 +1105,43 @@ rec def id x = if true then x else id id x
 //│   <:  id:
 //│ Sid
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.1077: 	rec def id x = if true then x else id id x
+//│ ║  l.1085: 	rec def id x = if true then x else id id x
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‘a''  <:  α20_2693''    TraitTag  TypeVariable
-//│ ╙──  ... looks like:  ‘a''  <:  α20_2672'
+//│ ╟── this constraint:  ‘a''  <:  α20_2939''    TraitTag  TypeVariable
+//│ ╙──  ... looks like:  ‘a''  <:  α20_2918'
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.1077: 	rec def id x = if true then x else id id x
+//│ ║  l.1085: 	rec def id x = if true then x else id id x
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` is not a function
 //│ ║  l.834: 	type Sid = forall 'a. 'a -> 'a
 //│ ║         	                  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.1077: 	rec def id x = if true then x else id id x
+//│ ║  l.1085: 	rec def id x = if true then x else id id x
 //│ ║          	                                   ^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.1077: 	rec def id x = if true then x else id id x
+//│ ║  l.1085: 	rec def id x = if true then x else id id x
 //│ ╙──        	                            ^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.1077: 	rec def id x = if true then x else id id x
+//│ ║  l.1085: 	rec def id x = if true then x else id id x
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` is not an instance of type `'a`
-//│ ║  l.1077: 	rec def id x = if true then x else id id x
+//│ ║  l.1085: 	rec def id x = if true then x else id id x
 //│ ║          	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `‘a`
-//│ ║  l.1077: 	rec def id x = if true then x else id id x
+//│ ║  l.1085: 	rec def id x = if true then x else id id x
 //│ ║          	                                      ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.834: 	type Sid = forall 'a. 'a -> 'a
 //│ ╙──       	                  ^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.1077: 	rec def id x = if true then x else id id x
+//│ ║  l.1085: 	rec def id x = if true then x else id id x
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` is not an instance of type `'a`
-//│ ║  l.1077: 	rec def id x = if true then x else id id x
+//│ ║  l.1085: 	rec def id x = if true then x else id id x
 //│ ║          	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `‘a`
-//│ ║  l.1077: 	rec def id x = if true then x else id id x
+//│ ║  l.1085: 	rec def id x = if true then x else id id x
 //│ ║          	                                      ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.834: 	type Sid = forall 'a. 'a -> 'a

@@ -34,7 +34,7 @@ def s k = k () nil
 //│     'a <: () -> List[nothing] -> 'b))
 
 def insert v () acu k = k () (cons v acu)
-//│ insert: 'b -> () -> (forall 'c, 'd. (List['c] & 'd) -> (forall 'c, 'a. ((() -> List['a | 'b] -> 'c & 'c) -> (forall 'b, 'c, 'd, 'a0, 'e. ('e
+//│ insert: 'b -> () -> (forall 'c, 'd. (List['c] & 'd) -> (forall 'b, 'c, 'd, 'a. ((() -> List['a | 'b] -> 'c & 'c) -> (forall 'b, 'c, 'd, 'a0, 'e. ('e
 //│   where
 //│     'd <: List['a0]
 //│     'c <: () -> List['a0 | 'b] -> 'e))
@@ -43,7 +43,7 @@ def insert v () acu k = k () (cons v acu)
 
 // (* x  inserts "x" in the acu *)
 def x () = insert "x" ()
-//│ x: () -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'a. ((() -> List["x" | 'a] -> 'b & 'b) -> (forall 'b, 'c, 'a0, 'd. ('d
+//│ x: () -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'c, 'a. ((() -> List["x" | 'a] -> 'b & 'b) -> (forall 'b, 'c, 'a0, 'd. ('d
 //│   where
 //│     'c <: List['a0]
 //│     'b <: () -> List["x" | 'a0] -> 'd))
@@ -54,7 +54,7 @@ def x () = insert "x" ()
 
 // (* e  ends the sequence. It builds a token that can be inserted in another sequence or that can be printed. *)
 def e () acu = insert (concat "," acu)
-//│ e: () -> List[string] -> () -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'a. ((() -> List['a | string] -> 'b & 'b) -> (forall 'b, 'c, 'a0, 'd. ('d
+//│ e: () -> List[string] -> () -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'c, 'a. ((() -> List['a | string] -> 'b & 'b) -> (forall 'b, 'c, 'a0, 'd. ('d
 //│   where
 //│     'c <: List['a0]
 //│     'b <: () -> List['a0 | string] -> 'd))
@@ -110,34 +110,34 @@ def test18 = (s x x x x x x x x x x x x x x x x x x e)
 
 // (* A function that receives a token *)
 def f t = (s x x t x x e)
-//│ f: (() -> List["x"] -> (() -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'a, 'd. ((() -> List["x" | 'a] -> 'b & 'd) -> (forall 'c, 'd, 'a0, 'e. ('e
+//│ f: (() -> List["x"] -> (() -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'c, 'a, 'd. ((() -> List["x" | 'a] -> 'b & 'd) -> (forall 'c, 'd, 'a0, 'e. ('e
 //│   where
 //│     'c <: List['a0]
 //│     'd <: () -> List["x" | 'a0] -> 'e))
 //│   where
-//│     'c <: List['a])))) -> (() -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'a, 'd. ((() -> List["x" | 'a] -> 'b & 'd) -> (forall 'c, 'd, 'a0, 'e. ('e
+//│     'c <: List['a])))) -> (() -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'c, 'a, 'd. ((() -> List["x" | 'a] -> 'b & 'd) -> (forall 'c, 'd, 'a0, 'e. ('e
 //│   where
 //│     'c <: List['a0]
 //│     'd <: () -> List["x" | 'a0] -> 'e))
 //│   where
-//│     'c <: List['a])))) -> (() -> List[string] -> () -> (forall 'b, 'f. (List['b] & 'f) -> (forall 'b, 'a1. ((() -> List['a1 | string] -> 'b & 'b) -> (forall 'b, 'f, 'a2, 'g. ('g
+//│     'c <: List['a])))) -> (() -> List[string] -> () -> (forall 'b, 'f. (List['b] & 'f) -> (forall 'b, 'f, 'a1. ((() -> List['a1 | string] -> 'b & 'b) -> (forall 'b, 'f, 'a2, 'g. ('g
 //│   where
 //│     'f <: List['a2]
 //│     'b <: () -> List['a2 | string] -> 'g))
 //│   where
 //│     'f <: List['a1])))) -> 'b & () -> List["x"] -> 'b & 'h) -> (forall 'b, 'h. ('i
 //│   where
-//│     'h <: () -> List["x"] -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'a, 'd. ((() -> List["x" | 'a] -> 'b & 'd) -> (forall 'c, 'd, 'a0, 'e. ('e
+//│     'h <: () -> List["x"] -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'c, 'a, 'd. ((() -> List["x" | 'a] -> 'b & 'd) -> (forall 'c, 'd, 'a0, 'e. ('e
 //│   where
 //│     'c <: List['a0]
 //│     'd <: () -> List["x" | 'a0] -> 'e))
 //│   where
-//│     'c <: List['a])))) -> (() -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'a, 'd. ((() -> List["x" | 'a] -> 'b & 'd) -> (forall 'c, 'd, 'a0, 'e. ('e
+//│     'c <: List['a])))) -> (() -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'c, 'a, 'd. ((() -> List["x" | 'a] -> 'b & 'd) -> (forall 'c, 'd, 'a0, 'e. ('e
 //│   where
 //│     'c <: List['a0]
 //│     'd <: () -> List["x" | 'a0] -> 'e))
 //│   where
-//│     'c <: List['a])))) -> (() -> List[string] -> () -> (forall 'b, 'f. (List['b] & 'f) -> (forall 'b, 'a1. ((() -> List['a1 | string] -> 'b & 'b) -> (forall 'b, 'f, 'a2, 'g. ('g
+//│     'c <: List['a])))) -> (() -> List[string] -> () -> (forall 'b, 'f. (List['b] & 'f) -> (forall 'b, 'f, 'a1. ((() -> List['a1 | string] -> 'b & 'b) -> (forall 'b, 'f, 'a2, 'g. ('g
 //│   where
 //│     'f <: List['a2]
 //│     'b <: () -> List['a2 | string] -> 'g))
@@ -146,57 +146,57 @@ def f t = (s x x t x x e)
 
 // (* If the token is used twice, we must reveive two arguments *)
 def g t1 t2 = (s x x t1 x (s x t2 x e) e)
-//│ g: (() -> List["x"] -> (() -> (forall 'b. (List['c] & 'b) -> (forall 'a, 'd. ((() -> List["x" | 'a] -> 'c & 'd) -> (forall 'b, 'd, 'a0, 'e. ('e
+//│ g: (() -> List["x"] -> (() -> (forall 'b. (List['c] & 'b) -> (forall 'c, 'b, 'a, 'd. ((() -> List["x" | 'a] -> 'c & 'd) -> (forall 'b, 'd, 'a0, 'e. ('e
 //│   where
 //│     'b <: List['a0]
 //│     'd <: () -> List["x" | 'a0] -> 'e))
 //│   where
-//│     'b <: List['a])))) -> nothing -> (() -> List[string] -> () -> (forall 'f. (List['c] & 'f) -> (forall 'a1, 'g. ((() -> List['a1 | string] -> 'c & 'g) -> (forall 'f, 'g, 'a2, 'h. ('h
+//│     'b <: List['a])))) -> nothing -> (() -> List[string] -> () -> (forall 'f. (List['c] & 'f) -> (forall 'c, 'f, 'a1, 'g. ((() -> List['a1 | string] -> 'c & 'g) -> (forall 'f, 'g, 'a2, 'h. ('h
 //│   where
 //│     'f <: List['a2]
 //│     'g <: () -> List['a2 | string] -> 'h))
 //│   where
-//│     'f <: List['a1])))) -> 'c & () -> List["x"] -> 'c & 'i) -> (forall 'c. ((() -> List["x"] -> (() -> (forall 'b. (List['c] & 'b) -> (forall 'a, 'd. ((() -> List["x" | 'a] -> 'c & 'd) -> (forall 'b, 'd, 'a0, 'e. ('e
+//│     'f <: List['a1])))) -> 'c & () -> List["x"] -> 'c & 'i) -> (forall 'c, 'i. ((() -> List["x"] -> (() -> (forall 'b. (List['c] & 'b) -> (forall 'c, 'b, 'a, 'd. ((() -> List["x" | 'a] -> 'c & 'd) -> (forall 'b, 'd, 'a0, 'e. ('e
 //│   where
 //│     'b <: List['a0]
 //│     'd <: () -> List["x" | 'a0] -> 'e))
 //│   where
-//│     'b <: List['a])))) -> (() -> List[string] -> () -> (forall 'f. (List['c] & 'f) -> (forall 'a1, 'g. ((() -> List['a1 | string] -> 'c & 'g) -> (forall 'f, 'g, 'a2, 'h. ('h
+//│     'b <: List['a])))) -> (() -> List[string] -> () -> (forall 'f. (List['c] & 'f) -> (forall 'c, 'f, 'a1, 'g. ((() -> List['a1 | string] -> 'c & 'g) -> (forall 'f, 'g, 'a2, 'h. ('h
 //│   where
 //│     'f <: List['a2]
 //│     'g <: () -> List['a2 | string] -> 'h))
 //│   where
 //│     'f <: List['a1])))) -> 'j & () -> List["x"] -> 'c & 'c) -> (forall 'c, 'i. ('k
 //│   where
-//│     'i <: () -> List["x"] -> 'c & () -> List["x"] -> (() -> (forall 'b. (List['c] & 'b) -> (forall 'a, 'd. ((() -> List["x" | 'a] -> 'c & 'd) -> (forall 'b, 'd, 'a0, 'e. ('e
+//│     'i <: () -> List["x"] -> 'c & () -> List["x"] -> (() -> (forall 'b. (List['c] & 'b) -> (forall 'c, 'b, 'a, 'd. ((() -> List["x" | 'a] -> 'c & 'd) -> (forall 'b, 'd, 'a0, 'e. ('e
 //│   where
 //│     'b <: List['a0]
 //│     'd <: () -> List["x" | 'a0] -> 'e))
 //│   where
-//│     'b <: List['a])))) -> 'l -> (() -> List[string] -> () -> (forall 'f. (List['c] & 'f) -> (forall 'a1, 'g. ((() -> List['a1 | string] -> 'c & 'g) -> (forall 'f, 'g, 'a2, 'h. ('h
+//│     'b <: List['a])))) -> 'l -> (() -> List[string] -> () -> (forall 'f. (List['c] & 'f) -> (forall 'c, 'f, 'a1, 'g. ((() -> List['a1 | string] -> 'c & 'g) -> (forall 'f, 'g, 'a2, 'h. ('h
 //│   where
 //│     'f <: List['a2]
 //│     'g <: () -> List['a2 | string] -> 'h))
 //│   where
 //│     'f <: List['a1])))) -> 'k
-//│     'c <: () -> List["x"] -> 'c & () -> List["x"] -> (() -> (forall 'b. (List['c] & 'b) -> (forall 'a, 'd. ((() -> List["x" | 'a] -> 'c & 'd) -> (forall 'b, 'd, 'a0, 'e. ('e
+//│     'c <: () -> List["x"] -> 'c & () -> List["x"] -> (() -> (forall 'b. (List['c] & 'b) -> (forall 'c, 'b, 'a, 'd. ((() -> List["x" | 'a] -> 'c & 'd) -> (forall 'b, 'd, 'a0, 'e. ('e
 //│   where
 //│     'b <: List['a0]
 //│     'd <: () -> List["x" | 'a0] -> 'e))
 //│   where
-//│     'b <: List['a])))) -> (() -> List[string] -> () -> (forall 'f. (List['c] & 'f) -> (forall 'a1, 'g. ((() -> List['a1 | string] -> 'c & 'g) -> (forall 'f, 'g, 'a2, 'h. ('h
+//│     'b <: List['a])))) -> (() -> List[string] -> () -> (forall 'f. (List['c] & 'f) -> (forall 'c, 'f, 'a1, 'g. ((() -> List['a1 | string] -> 'c & 'g) -> (forall 'f, 'g, 'a2, 'h. ('h
 //│   where
 //│     'f <: List['a2]
 //│     'g <: () -> List['a2 | string] -> 'h))
 //│   where
 //│     'f <: List['a1])))) -> 'l))
 //│   where
-//│     'i <: () -> List["x"] -> 'c & () -> List["x"] -> (() -> (forall 'b. (List['c] & 'b) -> (forall 'a, 'd. ((() -> List["x" | 'a] -> 'c & 'd) -> (forall 'b, 'd, 'a0, 'e. ('e
+//│     'i <: () -> List["x"] -> 'c & () -> List["x"] -> (() -> (forall 'b. (List['c] & 'b) -> (forall 'c, 'b, 'a, 'd. ((() -> List["x" | 'a] -> 'c & 'd) -> (forall 'b, 'd, 'a0, 'e. ('e
 //│   where
 //│     'b <: List['a0]
 //│     'd <: () -> List["x" | 'a0] -> 'e))
 //│   where
-//│     'b <: List['a])))) -> 'j -> (() -> List[string] -> () -> (forall 'f. (List['c] & 'f) -> (forall 'a1, 'g. ((() -> List['a1 | string] -> 'c & 'g) -> (forall 'f, 'g, 'a2, 'h. ('h
+//│     'b <: List['a])))) -> 'j -> (() -> List[string] -> () -> (forall 'f. (List['c] & 'f) -> (forall 'c, 'f, 'a1, 'g. ((() -> List['a1 | string] -> 'c & 'g) -> (forall 'f, 'g, 'a2, 'h. ('h
 //│   where
 //│     'f <: List['a2]
 //│     'g <: () -> List['a2 | string] -> 'h))
@@ -205,86 +205,86 @@ def g t1 t2 = (s x x t1 x (s x t2 x e) e)
 
 // (* This does not type. It requires first-class polymorphism. *)
 def h t = g t t
-//│ h: (() -> List["x"] -> (() -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'a, 'd. ((() -> List["x" | 'a] -> 'b & 'd) -> (forall 'c, 'd, 'a0, 'e. ('e
+//│ h: (() -> List["x"] -> (() -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'c, 'a, 'd. ((() -> List["x" | 'a] -> 'b & 'd) -> (forall 'c, 'd, 'a0, 'e. ('e
 //│   where
 //│     'c <: List['a0]
 //│     'd <: () -> List["x" | 'a0] -> 'e))
 //│   where
-//│     'c <: List['a])))) -> nothing -> (() -> List[string] -> () -> (forall 'b, 'f. (List['b] & 'f) -> (forall 'b, 'a1. ((() -> List['a1 | string] -> 'b & 'b) -> (forall 'b, 'f, 'a2, 'g. ('g
+//│     'c <: List['a])))) -> nothing -> (() -> List[string] -> () -> (forall 'b, 'f. (List['b] & 'f) -> (forall 'b, 'f, 'a1. ((() -> List['a1 | string] -> 'b & 'b) -> (forall 'b, 'f, 'a2, 'g. ('g
 //│   where
 //│     'f <: List['a2]
 //│     'b <: () -> List['a2 | string] -> 'g))
 //│   where
-//│     'f <: List['a1])))) -> 'b & () -> List["x"] -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'a, 'd. ((() -> List["x" | 'a] -> 'b & 'd) -> (forall 'c, 'd, 'a0, 'e. ('e
+//│     'f <: List['a1])))) -> 'b & () -> List["x"] -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'c, 'a, 'd. ((() -> List["x" | 'a] -> 'b & 'd) -> (forall 'c, 'd, 'a0, 'e. ('e
 //│   where
 //│     'c <: List['a0]
 //│     'd <: () -> List["x" | 'a0] -> 'e))
 //│   where
-//│     'c <: List['a])))) -> 'h -> (() -> List[string] -> () -> (forall 'b, 'f. (List['b] & 'f) -> (forall 'b, 'a1. ((() -> List['a1 | string] -> 'b & 'b) -> (forall 'b, 'f, 'a2, 'g. ('g
+//│     'c <: List['a])))) -> 'h -> (() -> List[string] -> () -> (forall 'b, 'f. (List['b] & 'f) -> (forall 'b, 'f, 'a1. ((() -> List['a1 | string] -> 'b & 'b) -> (forall 'b, 'f, 'a2, 'g. ('g
 //│   where
 //│     'f <: List['a2]
 //│     'b <: () -> List['a2 | string] -> 'g))
 //│   where
-//│     'f <: List['a1])))) -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'a, 'd. ((() -> List["x" | 'a] -> 'b & 'd) -> (forall 'c, 'd, 'a0, 'e. ('e
+//│     'f <: List['a1])))) -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'c, 'a, 'd. ((() -> List["x" | 'a] -> 'b & 'd) -> (forall 'c, 'd, 'a0, 'e. ('e
 //│   where
 //│     'c <: List['a0]
 //│     'd <: () -> List["x" | 'a0] -> 'e))
 //│   where
-//│     'c <: List['a])))) -> (() -> List[string] -> () -> (forall 'b, 'f. (List['b] & 'f) -> (forall 'b, 'a1. ((() -> List['a1 | string] -> 'b & 'b) -> (forall 'b, 'f, 'a2, 'g. ('g
+//│     'c <: List['a])))) -> (() -> List[string] -> () -> (forall 'b, 'f. (List['b] & 'f) -> (forall 'b, 'f, 'a1. ((() -> List['a1 | string] -> 'b & 'b) -> (forall 'b, 'f, 'a2, 'g. ('g
 //│   where
 //│     'f <: List['a2]
 //│     'b <: () -> List['a2 | string] -> 'g))
 //│   where
 //│     'f <: List['a1])))) -> 'h & 'i) -> (forall 'b, 'i, 'j, 'k. ('l
 //│   where
-//│     'j <: () -> List["x"] -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'a, 'd. ((() -> List["x" | 'a] -> 'b & 'd) -> (forall 'c, 'd, 'a0, 'e. ('e
+//│     'j <: () -> List["x"] -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'c, 'a, 'd. ((() -> List["x" | 'a] -> 'b & 'd) -> (forall 'c, 'd, 'a0, 'e. ('e
 //│   where
 //│     'c <: List['a0]
 //│     'd <: () -> List["x" | 'a0] -> 'e))
 //│   where
-//│     'c <: List['a])))) -> 'm -> (() -> List[string] -> () -> (forall 'b, 'f. (List['b] & 'f) -> (forall 'b, 'a1. ((() -> List['a1 | string] -> 'b & 'b) -> (forall 'b, 'f, 'a2, 'g. ('g
+//│     'c <: List['a])))) -> 'm -> (() -> List[string] -> () -> (forall 'b, 'f. (List['b] & 'f) -> (forall 'b, 'f, 'a1. ((() -> List['a1 | string] -> 'b & 'b) -> (forall 'b, 'f, 'a2, 'g. ('g
 //│   where
 //│     'f <: List['a2]
 //│     'b <: () -> List['a2 | string] -> 'g))
 //│   where
 //│     'f <: List['a1])))) -> 'l
-//│     'k <: () -> List["x"] -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'a, 'd. ((() -> List["x" | 'a] -> 'b & 'd) -> (forall 'c, 'd, 'a0, 'e. ('e
+//│     'k <: () -> List["x"] -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'c, 'a, 'd. ((() -> List["x" | 'a] -> 'b & 'd) -> (forall 'c, 'd, 'a0, 'e. ('e
 //│   where
 //│     'c <: List['a0]
 //│     'd <: () -> List["x" | 'a0] -> 'e))
 //│   where
-//│     'c <: List['a])))) -> (() -> List[string] -> () -> (forall 'b, 'f. (List['b] & 'f) -> (forall 'b, 'a1. ((() -> List['a1 | string] -> 'b & 'b) -> (forall 'b, 'f, 'a2, 'g. ('g
+//│     'c <: List['a])))) -> (() -> List[string] -> () -> (forall 'b, 'f. (List['b] & 'f) -> (forall 'b, 'f, 'a1. ((() -> List['a1 | string] -> 'b & 'b) -> (forall 'b, 'f, 'a2, 'g. ('g
 //│   where
 //│     'f <: List['a2]
 //│     'b <: () -> List['a2 | string] -> 'g))
 //│   where
 //│     'f <: List['a1])))) -> 'm
-//│     'i <: () -> List["x"] -> (() -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'a, 'd. ((() -> List["x" | 'a] -> 'b & 'd) -> (forall 'c, 'd, 'a0, 'e. ('e
+//│     'i <: () -> List["x"] -> (() -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'c, 'a, 'd. ((() -> List["x" | 'a] -> 'b & 'd) -> (forall 'c, 'd, 'a0, 'e. ('e
 //│   where
 //│     'c <: List['a0]
 //│     'd <: () -> List["x" | 'a0] -> 'e))
 //│   where
-//│     'c <: List['a])))) -> nothing -> (() -> List[string] -> () -> (forall 'b, 'f. (List['b] & 'f) -> (forall 'b, 'a1. ((() -> List['a1 | string] -> 'b & 'b) -> (forall 'b, 'f, 'a2, 'g. ('g
+//│     'c <: List['a])))) -> nothing -> (() -> List[string] -> () -> (forall 'b, 'f. (List['b] & 'f) -> (forall 'b, 'f, 'a1. ((() -> List['a1 | string] -> 'b & 'b) -> (forall 'b, 'f, 'a2, 'g. ('g
 //│   where
 //│     'f <: List['a2]
 //│     'b <: () -> List['a2 | string] -> 'g))
 //│   where
-//│     'f <: List['a1])))) -> 'b & () -> List["x"] -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'a, 'd. ((() -> List["x" | 'a] -> 'b & 'd) -> (forall 'c, 'd, 'a0, 'e. ('e
+//│     'f <: List['a1])))) -> 'b & () -> List["x"] -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'c, 'a, 'd. ((() -> List["x" | 'a] -> 'b & 'd) -> (forall 'c, 'd, 'a0, 'e. ('e
 //│   where
 //│     'c <: List['a0]
 //│     'd <: () -> List["x" | 'a0] -> 'e))
 //│   where
-//│     'c <: List['a])))) -> 'n -> (() -> List[string] -> () -> (forall 'b, 'f. (List['b] & 'f) -> (forall 'b, 'a1. ((() -> List['a1 | string] -> 'b & 'b) -> (forall 'b, 'f, 'a2, 'g. ('g
+//│     'c <: List['a])))) -> 'n -> (() -> List[string] -> () -> (forall 'b, 'f. (List['b] & 'f) -> (forall 'b, 'f, 'a1. ((() -> List['a1 | string] -> 'b & 'b) -> (forall 'b, 'f, 'a2, 'g. ('g
 //│   where
 //│     'f <: List['a2]
 //│     'b <: () -> List['a2 | string] -> 'g))
 //│   where
-//│     'f <: List['a1])))) -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'a, 'd. ((() -> List["x" | 'a] -> 'b & 'd) -> (forall 'c, 'd, 'a0, 'e. ('e
+//│     'f <: List['a1])))) -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b, 'c, 'a, 'd. ((() -> List["x" | 'a] -> 'b & 'd) -> (forall 'c, 'd, 'a0, 'e. ('e
 //│   where
 //│     'c <: List['a0]
 //│     'd <: () -> List["x" | 'a0] -> 'e))
 //│   where
-//│     'c <: List['a])))) -> (() -> List[string] -> () -> (forall 'b, 'f. (List['b] & 'f) -> (forall 'b, 'a1. ((() -> List['a1 | string] -> 'b & 'b) -> (forall 'b, 'f, 'a2, 'g. ('g
+//│     'c <: List['a])))) -> (() -> List[string] -> () -> (forall 'b, 'f. (List['b] & 'f) -> (forall 'b, 'f, 'a1. ((() -> List['a1 | string] -> 'b & 'b) -> (forall 'b, 'f, 'a2, 'g. ('g
 //│   where
 //│     'f <: List['a2]
 //│     'b <: () -> List['a2 | string] -> 'g))

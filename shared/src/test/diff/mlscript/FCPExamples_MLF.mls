@@ -33,7 +33,7 @@ def auto (x: forall 'a. 'a -> 'a) = x x
 //│     'b <: 'b -> 'c))
 
 def app f x = f x
-//│ app: (nothing -> 'a & 'a) -> (forall 'b. ('b -> (forall 'a, 'b, 'c. ('c
+//│ app: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
 //│   where
 //│     'a <: 'b -> 'c))
 //│   where
@@ -77,15 +77,15 @@ choose id
 //│ res: 'a -> (forall 'a, 'b. 'b -> 'b | 'a)
 
 fun (g: forall 'a. ('a -> 'a) -> ('a -> 'a)) -> fun (x: forall 'a. 'a -> 'a) -> fun a -> g a (x a)
-//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'b. ((forall 'a0. 'a0 -> 'a0) -> (forall 'c, 'd. ('c -> (forall 'e, 'c, 'b, 'f, 'g. ('g
+//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'b. ((forall 'a0. 'a0 -> 'a0) -> (forall 'b, 'c, 'd, 'e. ('c -> (forall 'b, 'c, 'e, 'f, 'g. ('g
 //│   where
-//│     'e <: 'c -> 'f -> 'g
-//│     'b <: 'c -> 'f))
+//│     'b <: 'c -> 'f -> 'g
+//│     'e <: 'c -> 'f))
 //│   where
-//│     'e <: 'c -> 'd -> anything
-//│     'b <: 'c -> 'd))
+//│     'b <: 'c -> 'd -> anything
+//│     'e <: 'c -> 'd))
 //│   where
-//│     'e <: nothing -> nothing -> anything))
+//│     'b <: nothing -> nothing -> anything))
 
 choose id succ
 //│ res: int -> int

@@ -117,16 +117,16 @@ rec def fl f x l = match_list l x (fun head -> fun tail -> fl f (f x head) tail)
 //│ fl: ('b -> 'a -> 'b) -> 'b -> List['a] -> 'b
 
 rec def fl2 f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
-//│ fl2: ('a -> nothing -> 'a & nothing -> nothing -> 'a & 'a0 -> nothing -> 'a0 & nothing -> nothing -> 'a0 & 'a1 -> nothing -> 'a1 & 'c -> nothing -> 'a1 & 'c -> nothing -> 'a2 & 'a2 -> nothing -> 'a2 & 'd) -> (forall 'e. ('c & 'e) -> (forall 'a3, 'a4, 'f, 'g. ((List['f] & 'g) -> (forall 'd, 'e, 'g, 'h, 'a5, 'a6, 'i, 'b, 'a7. ('a7 | 'e
+//│ fl2: ('a -> nothing -> 'a & nothing -> nothing -> 'a & 'a0 -> nothing -> 'a0 & nothing -> nothing -> 'a0 & 'a1 -> nothing -> 'a1 & 'c -> nothing -> 'a1 & 'c -> nothing -> 'a2 & 'a2 -> nothing -> 'a2 & 'd) -> (forall 'e. ('c & 'e) -> (forall 'd, 'e, 'a3, 'b, 'a4, 'f. ((List['b] & 'f) -> (forall 'd, 'e, 'f, 'b0, 'a5, 'a6, 'g, 'b1, 'a7. ('a7 | 'e
 //│   where
-//│     'g <: List['h]
-//│     'd <: 'a5 -> nothing -> 'a5 & 'e -> nothing -> 'a5 & 'a6 -> nothing -> 'a6 & 'e -> 'h -> 'a6
-//│     'i <: List['b]
-//│     'd <: 'a7 -> 'b -> 'a7 & 'e -> 'h -> 'a7
-//│     'g <: List['h]
-//│     'd <: 'a5 -> nothing -> 'a5 & 'e -> nothing -> 'a5 & 'a6 -> nothing -> 'a6 & 'e -> 'h -> 'a6))
+//│     'f <: List['b0]
+//│     'd <: 'a5 -> nothing -> 'a5 & 'e -> 'b0 -> 'a5 & 'a6 -> 'b0 -> 'a6 & 'e -> 'b0 -> 'a6
+//│     'g <: List['b1]
+//│     'd <: 'a7 -> 'b1 -> 'a7 & 'e -> 'b0 -> 'a7
+//│     'f <: List['b0]
+//│     'd <: 'a5 -> nothing -> 'a5 & 'e -> 'b0 -> 'a5 & 'a6 -> 'b0 -> 'a6 & 'e -> 'b0 -> 'a6))
 //│   where
-//│     'd <: 'a3 -> nothing -> 'a3 & 'e -> nothing -> 'a3 & 'a4 -> nothing -> 'a4 & 'e -> 'f -> 'a4)))
+//│     'd <: 'a3 -> nothing -> 'a3 & 'e -> 'b -> 'a3 & 'a4 -> 'b -> 'a4 & 'e -> 'b -> 'a4)))
 
 :RecursiveTypes // needed for this recursive def
 def fold_left = fl
@@ -136,16 +136,16 @@ def fold_left = fl
 :NoRecursiveTypes
 
 def fold_left = fl2
-//│ ('a -> nothing -> 'a & nothing -> nothing -> 'a & 'a0 -> nothing -> 'a0 & nothing -> nothing -> 'a0 & 'a1 -> nothing -> 'a1 & 'c -> nothing -> 'a1 & 'c -> nothing -> 'a2 & 'a2 -> nothing -> 'a2 & 'd) -> (forall 'e. ('c & 'e) -> (forall 'a3, 'a4, 'f, 'g. ((List['f] & 'g) -> (forall 'd, 'e, 'g, 'h, 'a5, 'a6, 'i, 'b, 'a7. ('a7 | 'e
+//│ ('a -> nothing -> 'a & nothing -> nothing -> 'a & 'a0 -> nothing -> 'a0 & nothing -> nothing -> 'a0 & 'a1 -> nothing -> 'a1 & 'c -> nothing -> 'a1 & 'c -> nothing -> 'a2 & 'a2 -> nothing -> 'a2 & 'd) -> (forall 'e. ('c & 'e) -> (forall 'd, 'e, 'a3, 'b, 'a4, 'f. ((List['b] & 'f) -> (forall 'd, 'e, 'f, 'b0, 'a5, 'a6, 'g, 'b1, 'a7. ('a7 | 'e
 //│   where
-//│     'g <: List['h]
-//│     'd <: 'a5 -> nothing -> 'a5 & 'e -> nothing -> 'a5 & 'a6 -> nothing -> 'a6 & 'e -> 'h -> 'a6
-//│     'i <: List['b]
-//│     'd <: 'a7 -> 'b -> 'a7 & 'e -> 'h -> 'a7
-//│     'g <: List['h]
-//│     'd <: 'a5 -> nothing -> 'a5 & 'e -> nothing -> 'a5 & 'a6 -> nothing -> 'a6 & 'e -> 'h -> 'a6))
+//│     'f <: List['b0]
+//│     'd <: 'a5 -> nothing -> 'a5 & 'e -> 'b0 -> 'a5 & 'a6 -> 'b0 -> 'a6 & 'e -> 'b0 -> 'a6
+//│     'g <: List['b1]
+//│     'd <: 'a7 -> 'b1 -> 'a7 & 'e -> 'b0 -> 'a7
+//│     'f <: List['b0]
+//│     'd <: 'a5 -> nothing -> 'a5 & 'e -> 'b0 -> 'a5 & 'a6 -> 'b0 -> 'a6 & 'e -> 'b0 -> 'a6))
 //│   where
-//│     'd <: 'a3 -> nothing -> 'a3 & 'e -> nothing -> 'a3 & 'a4 -> nothing -> 'a4 & 'e -> 'f -> 'a4)))
+//│     'd <: 'a3 -> nothing -> 'a3 & 'e -> 'b -> 'a3 & 'a4 -> 'b -> 'a4 & 'e -> 'b -> 'a4)))
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 
@@ -159,7 +159,7 @@ class Collection[a]: { l: List[a] }
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
 //│ Defined Collection.Mem: Collection[?] -> anything -> bool
-//│ Defined Collection.Fold: Collection['a] -> (forall 'a0, 'b. ('a0 -> 'a -> 'a0) -> (forall 'a1, 'c. ('c -> (forall 'a, 'b, 'c, 'a2. ('a2 | 'c
+//│ Defined Collection.Fold: Collection['a] -> (forall 'a0. ('a0 -> 'a -> 'a0) -> (forall 'a, 'b, 'a1, 'c. ('c -> (forall 'a, 'b, 'c, 'a2. ('a2 | 'c
 //│   where
 //│     'b <: ('a2 | 'c) -> 'a -> 'a2
 //│     'b <: ('a2 | 'c) -> 'a -> 'a2))
@@ -182,14 +182,14 @@ def simple_and_double c =
 //│ ║  l.178: 	  let l1 = c.Fold (fun y -> fun x -> cons x y) nil in
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 7. {α967_1002^8 where: α963_991'''' <: List[α222_1001^8]}›  <:  list<>    PolymorphicType  ClassTag
-//│ ╙──  ... looks like:  ‹∀ 7. {α967_997^8 where: α963_991'''' <: List[α222_996^8]}›  <:  list<>
+//│ ╟── this constraint:  ‹∀ 7. {α1004_1040^8 where: α1000_1030'''' <: List[α222_1039^8]}›  <:  list<>    PolymorphicType  ClassTag
+//│ ╙──  ... looks like:  ‹∀ 7. {α1004_1036^8 where: α1000_1030'''' <: List[α222_1035^8]}›  <:  list<>
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
 //│ ║  l.179: 	  let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 7. {α1040_1075^8 where: α1036_1064'''' <: List[α222_1074^8]}›  <:  list<>    PolymorphicType  ClassTag
-//│ ╙──  ... looks like:  ‹∀ 7. {α1040_1070^8 where: α1036_1064'''' <: List[α222_1069^8]}›  <:  list<>
+//│ ╟── this constraint:  ‹∀ 7. {α1078_1114^8 where: α1074_1104'''' <: List[α222_1113^8]}›  <:  list<>    PolymorphicType  ClassTag
+//│ ╙──  ... looks like:  ‹∀ 7. {α1078_1110^8 where: α1074_1104'''' <: List[α222_1109^8]}›  <:  list<>
 //│ simple_and_double: Collection[?] -> (error, error,)
 
 simple_and_double (Collection{l = cons 1 nil})

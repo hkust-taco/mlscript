@@ -92,8 +92,8 @@ def eval1_fixed_3 =
 //│ ║  l.90: 	  in fixed fixed
 //│ ║        	     ^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α372'' -> α400'')›  <:  α372_475'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α372'' -> α400'')›  <:  α372''
+//│ ╟── this constraint:  ‹∀ 1. (α372'' -> α387'')›  <:  α372_456'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α372'' -> α387'')›  <:  α372''
 //│ eval1_fixed_3: (Add[?] & {lhs: Add[?] & {lhs: Add[?] & {lhs: Add[?] | Lit, rhs: Add[?] | Lit} | Lit, rhs: Add[?] & {lhs: Add[?] | Lit, rhs: Add[?] | Lit} | Lit} | Lit, rhs: Add[?] & {lhs: Add[?] & {lhs: Add[?] | Lit, rhs: Add[?] | Lit} | Lit, rhs: Add[?] & {lhs: Add[?] | Lit, rhs: Add[?] | Lit} | Lit} | Lit} | (Lit with {val: 'val})) -> (int | 'val) | error
 //│              = [Function (anonymous)]
 
@@ -142,8 +142,8 @@ def eval2_fixed_1 = eval2 eval2
 //│ ║  l.140: 	def eval2_fixed_1 = eval2 eval2
 //│ ║         	                    ^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α739' -> (α740' -> (α746' | α761')))›  <:  α739_895'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α739' -> (α740' -> (α746' | α761')))›  <:  α739'
+//│ ╟── this constraint:  ‹∀ 0. (α671' -> (α672' -> (α678' | α693')))›  <:  α671_827'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α671' -> (α672' -> (α678' | α693')))›  <:  α671'
 //│ eval2_fixed_1: (Add[?] & {lhs: Add[?] | Lit | Nega[?], rhs: Add[?] | Lit | Nega[?]} | (Lit with {val: 'val}) | Nega[?] & {arg: Add[?] | Lit | Nega[?]}) -> (int | 'val) | error
 //│              = [Function (anonymous)]
 
@@ -157,34 +157,22 @@ eval2_fixed_1 e2
 // FIXME strange type
 // :e
 def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.159: 	def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
-//│ ║         	                                                         ^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α1122'' -> α1129'')›  <:  α1122_1139'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α1122'' -> α1129'')›  <:  α1122''
 //│ fix: ((forall 'a, 'b, 'c. ('b -> 'c
 //│   where
-//│     'a <: 'a -> 'b -> 'c)) -> ('a -> anything & 'd)) -> (error | 'd)
+//│     'a <: 'a -> 'b -> 'c)) -> 'd) -> 'd
 //│    = [Function: fix]
 
 def eval2_fixed_2 = fix eval2f
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.171: 	def eval2_fixed_2 = fix eval2f
-//│ ║         	                    ^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α1122_1165'' -> α1129_1169'')›  <:  α1122_1204'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α1122'' -> α1129'')›  <:  α1122_1165''
-//│ eval2_fixed_2: 'a -> int | error
+//│ eval2_fixed_2: 'a -> int
 //│   where
 //│     'a <: Add[?] & {lhs: 'a, rhs: 'a} | Lit | Nega[?] & {arg: 'a}
 //│              = [Function (anonymous)]
 
 eval2_fixed_2 e1
 eval2_fixed_2 e2
-//│ res: error | int
+//│ res: int
 //│    = 6
-//│ res: error | int
+//│ res: int
 //│    = -5
 
 
@@ -320,8 +308,8 @@ eval2_broken eval2_broken e2
 //│ ║  l.+1: 	eval2_broken eval2_broken e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α1662' -> (α1663' -> (arg1665' | α1680')))›  <:  α1662_1726    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α1662' -> (α1663' -> (arg1665' | α1680')))›  <:  α1662'
+//│ ╟── this constraint:  ‹∀ 0. (α1550' -> (α1551' -> (arg1553' | α1568')))›  <:  α1550_1614    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α1550' -> (α1551' -> (arg1553' | α1568')))›  <:  α1550'
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	eval2_broken eval2_broken e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -332,7 +320,7 @@ eval2_broken eval2_broken e2
 //│ ║  l.20: 	  | Add -> eval1 eval1 e.lhs + eval1 eval1 e.rhs
 //│ ║        	                               ^^^^^^^^^^^^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.312: 	  | Nega -> e.arg
+//│ ║  l.300: 	  | Nega -> e.arg
 //│ ╙──       	            ^^^^^
 //│ res: error | int
 
@@ -349,8 +337,8 @@ fix eval2f_oops e2
 //│ ║  l.+1: 	fix eval2f_oops e2
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α1122_1849'' -> α1129_1853'')›  <:  α1122_1890    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α1122'' -> α1129'')›  <:  α1122_1849''
+//│ ╟── this constraint:  (α1683_1754 -> (α1688_1761 | α1703_1762))  <:  α1060_1779    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α1683' -> (α1688' | α1703'))  <:  α1060_1741'''
 //│ res: error
 
 

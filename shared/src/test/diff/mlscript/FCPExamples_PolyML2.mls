@@ -51,7 +51,7 @@ class Collection[a]: { l: List[a] }
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
 //│ Defined Collection.Mem: Collection[?] -> anything -> bool
-//│ Defined Collection.Fold: Collection['a] -> (forall 'b, 'c. ('b -> 'a -> 'b) -> (forall 'd, 'e. ('d -> (forall 'a, 'c, 'd, 'f. ('d | 'f
+//│ Defined Collection.Fold: Collection['a] -> (forall 'b. ('b -> 'a -> 'b) -> (forall 'a, 'c, 'd, 'e. ('d -> (forall 'a, 'c, 'd, 'f. ('d | 'f
 //│   where
 //│     'c <: ('d | 'f) -> 'a -> 'f
 //│     'c <: ('d | 'f) -> 'a -> 'f))
@@ -76,14 +76,14 @@ def simple_and_double c =
 //│ ║  l.72: 	  let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α260_311''''  <:  List[a22_331'''']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  α260'''''  <:  List[a22_319^8]
+//│ ╟── this constraint:  α267_319''''  <:  List[a22_339'''']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  α267'''''  <:  List[a22_327^8]
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
 //│ ║  l.73: 	  let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α482_533''''  <:  List[a22_553'''']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  α482'''''  <:  List[a22_541^8]
+//│ ╟── this constraint:  α463_515''''  <:  List[a22_535'''']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  α463'''''  <:  List[a22_523^8]
 //│ simple_and_double: Collection[?] -> (forall 'a, 'b. (error | Nil | 'b
 //│   where
 //│     'a <: (Nil | 'b) -> nothing -> 'b
