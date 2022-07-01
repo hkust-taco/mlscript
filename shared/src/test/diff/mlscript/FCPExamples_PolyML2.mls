@@ -18,7 +18,7 @@ def Nil = Nil {}
 //│ Nil: Nil
 
 def Cons head tail = Cons { head; tail }
-//│ Cons: 'b -> (forall 'c. 'c -> (forall 'b, 'c, 'a. (Cons['a | 'b] with {head: 'b, tail: 'c}
+//│ Cons: 'b -> (forall 'c. (List[?] & 'c) -> (forall 'b, 'c, 'a. (Cons['a | 'b] with {head: 'b, tail: 'c}
 //│   where
 //│     'c <: List['a]
 //│     'c <: List['a])))
@@ -51,16 +51,20 @@ class Collection[a]: { l: List[a] }
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
 //│ Defined Collection.Mem: Collection[?] -> anything -> bool
-//│ Defined Collection.Fold: Collection['a] -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd. ('c | 'd
+//│ Defined Collection.Fold: Collection['a] -> (forall 'b, 'c. ('b -> 'a -> 'b) -> (forall 'd, 'e. ('d -> (forall 'a, 'c, 'd, 'f. ('d | 'f
 //│   where
-//│     'b <: ('c | 'd) -> 'a -> 'd
-//│     'b <: ('c | 'd) -> 'a -> 'd))))
+//│     'c <: ('d | 'f) -> 'a -> 'f
+//│     'c <: ('d | 'f) -> 'a -> 'f))
+//│   where
+//│     'c <: ('d | 'e) -> 'a -> 'e)))
 
 def coll_mem c x = c.Mem x
-//│ coll_mem: 'a -> 'a -> (forall 'a. (bool
+//│ coll_mem: (Collection['a] & 'a) -> (forall 'a. ('a -> (forall 'a. (bool
 //│   where
 //│     'a <: Collection['a]
 //│     'a <: Collection['a]
+//│     'a <: Collection['a]))
+//│   where
 //│     'a <: Collection['a]))
 
 // typo in the paper? it was `fun x -> fun y -> ...`
@@ -68,10 +72,22 @@ def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
   let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
   (l1, l2)
-//│ simple_and_double: Collection[?] -> (forall 'a, 'b. (Nil | 'b
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.72: 	  let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
+//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α260_311''''  <:  List[a22_331'''']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  α260'''''  <:  List[a22_319^8]
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.73: 	  let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
+//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α482_533''''  <:  List[a22_553'''']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  α482'''''  <:  List[a22_541^8]
+//│ simple_and_double: Collection[?] -> (forall 'a, 'b. (error | Nil | 'b
 //│   where
 //│     'a <: (Nil | 'b) -> nothing -> 'b
-//│     'a <: (Nil | 'b) -> nothing -> 'b), forall 'c, 'd. (Nil | 'd
+//│     'a <: (Nil | 'b) -> nothing -> 'b), forall 'c, 'd. (error | Nil | 'd
 //│   where
 //│     'c <: (Nil | 'd) -> nothing -> 'd
 //│     'c <: (Nil | 'd) -> nothing -> 'd),)

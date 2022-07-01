@@ -10,9 +10,11 @@
 // def s n = fun f -> fun x -> (n f x)
 def s n = fun f -> n f
 // def s n = n
-//│ s: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
+//│ s: (nothing -> 'a & 'a) -> (forall 'b. ('b -> (forall 'a, 'b, 'c. ('c
 //│   where
-//│     'a <: 'b -> 'c)))
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: 'b -> 'a))
 //│  = [Function: s]
 
 def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -25,19 +27,21 @@ def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M
 :e // * Needs distrib (see below)
 // :d
 succ = s
-//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
+//│ (nothing -> 'a & 'a) -> (forall 'b. ('b -> (forall 'a, 'b, 'c. ('c
 //│   where
-//│     'a <: 'b -> 'c)))
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: 'b -> 'a))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.27: 	succ = s
+//│ ║  l.29: 	succ = s
 //│ ║        	^^^^^^^^
-//│ ╟── type `‘M73` is not an instance of type `'M`
-//│ ║  l.18: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╟── type `‘M95` is not an instance of type `'M`
+//│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                                                           ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.18: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ╙──      	                                                           ^^
 //│     = [Function: s]
 
@@ -56,9 +60,11 @@ def succ: (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
 succ = s
 // succ n = s n
 // s id : (forall 'M. ('M -> 'M))
-//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
+//│ (nothing -> 'a & 'a) -> (forall 'b. ('b -> (forall 'a, 'b, 'c. ('c
 //│   where
-//│     'a <: 'b -> 'c)))
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: 'b -> 'a))
 //│   <:  succ:
 //│ (forall 'N. 'N -> 'N) -> (forall 'M. 'M -> 'M)
 //│     = [Function: s]

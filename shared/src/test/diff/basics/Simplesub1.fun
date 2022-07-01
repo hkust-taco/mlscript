@@ -204,28 +204,52 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (x x)) (x => f (x x)))
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. {(α244' -> α246') where: α240 <: (α245' -> α246')}›  <:  α244_253    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. {(α244' -> α246') where: α240 <: (α245' -> α246')}›  <:  α244_256    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. {(α244' -> α246') where: α240 <: (α245' -> α246')}›  <:  α244'
-//│ res: ('a -> 'b & nothing -> 'c & 'c -> 'a) -> (error | 'b)
+//│ res: ('a -> 'b & nothing -> anything & nothing -> 'c & 'c -> 'a) -> (error | 'b)
 
 // Z combinator:
 // * FIXME simplified type
 // :e
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
+//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. {(α282' -> α289') where: α273 <: (‹∀ 1. {(α283'' -> α285'') where: α282' <: (α282' -> α284'')}› -> α289')}›  <:  α282_307    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. {(α282' -> α289') where: α273 <: (‹∀ 1. {(α283'' -> α285'') where: α282' <: (α282' -> α284'')}› -> α289')}›  <:  α282'
 //│ res: ((forall 'a, 'b. ('a -> 'b
 //│   where
-//│     'c <: 'c -> 'a -> 'b)) -> 'd) -> 'd
+//│     'c <: 'c -> 'a -> 'b)) -> 'd & (forall 'e, 'f. ('e -> 'f
+//│   where
+//│     'g <: 'g -> 'e -> 'f)) -> anything & (forall 'h, 'i. ('h -> 'i
+//│   where
+//│     'j <: 'j -> 'h -> 'i)) -> 'c -> anything & (forall 'k, 'l. ('k -> 'l
+//│   where
+//│     'm <: 'm -> 'k -> 'l)) -> 'c -> anything) -> (error | 'd)
 
 // * Function that takes arbitrarily many arguments:
 // * FIXME type of result shouldn't be `nothing`
 // :e
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
+//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. {(α378' -> α385') where: α369 <: (‹∀ 1. {(α379'' -> α381'') where: α378' <: (α378' -> α380'')}› -> α385')}›  <:  α378_403    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. {(α378' -> α385') where: α369 <: (‹∀ 1. {(α379'' -> α381'') where: α378' <: (α378' -> α380'')}› -> α385')}›  <:  α378'
 //│ res: anything -> (forall 'a, 'b. ('a -> 'b
 //│   where
-//│     'c <: 'c -> 'a -> 'b))
+//│     'c <: 'c -> 'a -> 'b)) | error
 
 res 1 2
-//│ res: 'a -> 'b
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.+1: 	res 1 2
+//│ ║        	^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. {(α378' -> α385') where: α369 <: (‹∀ 1. {(α379'' -> α381'') where: α378' <: (α378' -> α380'')}› -> α385')}›  <:  α378_450    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. {(α378' -> α385') where: α369 <: (‹∀ 1. {(α379'' -> α381'') where: α378' <: (α378' -> α380'')}› -> α385')}›  <:  α378'
+//│ res: 'a -> 'b | error
 //│   where
 //│     'c <: 'c -> 'a -> 'b
 
@@ -399,8 +423,8 @@ let rec x = (let y = (x x); (z => z))
 //│ ║  l.+1: 	(w => x => x) ((y => y y) (y => y y))
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α654' -> α655')›  <:  α654_661    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α654' -> α655')›  <:  α654'
+//│ ╟── this constraint:  ‹∀ 0. (α777' -> α778')›  <:  α777_784    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α777' -> α778')›  <:  α777'
 //│ res: 'a -> 'a
 
 :NoCycleCheck

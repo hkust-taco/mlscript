@@ -20,7 +20,7 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'c. 'c -> (forall 'b, 'c, 'a. (Cons['a | 'b] with {head: 'b, tail: 'c}
+//│ 'b -> (forall 'c. (List[?] & 'c) -> (forall 'b, 'c, 'a. (Cons['a | 'b] with {head: 'b, tail: 'c}
 //│   where
 //│     'c <: List['a]
 //│     'c <: List['a])))
@@ -97,9 +97,11 @@ fun x -> fun y -> ((x : S1), (y : S2), x x)
 //│ Defined type alias S2
 //│ res: (S1 & 'a) -> (forall 'b. (S2 & 'b) -> (S1, S2, 'a | 'b,))
 //│    = [Function: res]
-//│ res: (S1 & 'a) -> S2 -> (forall 'a, 'b. ((S1, S2, 'b,)
+//│ res: (S1 & 'a -> anything & 'a) -> (forall 'a. (S2 -> (forall 'a, 'b. ((S1, S2, 'b,)
 //│   where
 //│     'a <: 'a -> 'b))
+//│   where
+//│     'a <: 'a -> anything))
 //│    = [Function: res]
 
 // (* please onlyweak ['b = sid] 'b -> 'b : sid -> sid *)
@@ -110,11 +112,11 @@ fun x -> fun y -> ((x : S1), (y : S2), x x)
 def example f = (f: forall 'a. 'a -> int -> 'b) f
 def example_ f = f f
 def mkpair x y = (x, y)
-//│ example: 'a -> (forall 'a, 'b. (int -> 'b
+//│ example: (nothing -> int -> 'a & 'a) -> (forall 'a, 'b. (int -> 'b
 //│   where
 //│     'a <: nothing -> int -> 'b))
 //│        = [Function: example]
-//│ example_: 'a -> (forall 'a, 'b. ('b
+//│ example_: ('a -> anything & 'a) -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: 'a -> 'b))
 //│         = [Function: example_]
@@ -138,29 +140,22 @@ example_ mkpair
 
 // let make_ex3 x (f:['a > sid] 'a -> 'b ) = f x 
 def make_ex3 x (f: forall 'a. ('a | Sid) -> 'b) = f x
-//│ make_ex3: 'a -> (Sid -> anything) -> (forall 'a, 'b, 'c. ('c
+//│ make_ex3: 'a -> ((Sid -> anything) -> (forall 'a, 'b, 'c. ('c
 //│   where
 //│     'b <: 'a -> 'c))
+//│   where
+//│     'a <: anything)
 //│         = [Function: make_ex3]
 
 // let ex_list3 = [ make_ex3 succ ;
 // 		 make_ex3 id ;
 // 		 make_ex3 not ]
+
+// FIXME
 def ex_list3 = cons (make_ex3 succ) (
       cons (make_ex3 id) (
       cons (make_ex3 not) nil))
-//│ ex_list3: List[(Sid -> anything) -> (forall 'a, 'b, 'c, 'd. ('b
-//│   where
-//│     'a <: Sid -> 'b
-//│     'c <: (bool -> bool) -> 'b
-//│     'd <: (int -> int) -> 'b))]
-//│         = Cons {
-//│             head: [Function (anonymous)],
-//│             tail: Cons {
-//│               head: [Function (anonymous)],
-//│               tail: Cons { head: [Function (anonymous)], tail: Nil {} }
-//│             }
-//│           }
+//│ /!!!\ Uncaught error: java.lang.ClassCastException: class mlscript.TyperDatatypes$TraitTag cannot be cast to class mlscript.TyperDatatypes$TypeVariable (mlscript.TyperDatatypes$TraitTag and mlscript.TyperDatatypes$TypeVariable are in unnamed module of loader sbt.internal.LayeredClassLoader @6a355084)
 
 // FIXME: what is `open`?
 // (*let test3 = listiter (open (fun v -> choose v id)) ex_list3  *)
