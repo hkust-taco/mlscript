@@ -2,6 +2,10 @@
 :GeneralizeCurriedFunctions
 // :DistributeForalls
 
+def z f x = x
+//│ z: anything -> (forall 'a. 'a -> 'a)
+//│  = [Function: z]
+
 // def s n = fun f -> fun x -> f (n f x)
 // def s n = fun f -> f (n f)
 // def s n = fun f -> fun x -> (n f x)
@@ -23,7 +27,10 @@ type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ Defined type alias ChurchInt
 
 def zero: ChurchInt
+def succ: ChurchInt -> ChurchInt
 //│ zero: ChurchInt
+//│     = <missing implementation>
+//│ succ: ChurchInt -> ChurchInt
 //│     = <missing implementation>
 
 // def z f x = x
@@ -48,16 +55,21 @@ def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 // rec def to_ch n =
 //   if true then zero
 //   else s (to_church n)
+def to_ch n =
+  if true then z
+  else s (to_church n)
 // def to_ch n =
 //   if true then zero
 //   else s (to_church n)
-def to_ch n =
-  s (to_church n)
+// def to_ch n =
+//   s (to_church n)
+// rec def to_ch n =
+//   s (to_church n)
 // def to_ch (n:int) =
 //   s (to_church n)
 // def to_ch =
 //   s (to_church 0)
-//│ to_ch: int -> (forall 'a. 'a -> (forall 'a, 'b, 'c. ('c
+//│ to_ch: int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd. ('d -> 'd | 'c
 //│   where
 //│     'b <: 'a -> 'c)))
 //│      = <no result>
@@ -78,9 +90,8 @@ def to_ch n =
 
 // :DistributeForalls
 // :d
-// FIXME?
 to_church = to_ch
-//│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c. ('c
+//│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd. ('d -> 'd | 'c
 //│   where
 //│     'b <: 'a -> 'c)))
 //│   <:  to_church:
@@ -88,17 +99,111 @@ to_church = to_ch
 //│          = <no result>
 //│            to_ch and to_church are not implemented
 
+
+
+
+// * Older minimized example that was fixed:
+
+// also works with `zero`
+def to_ch n =
+  if true then z
+  else s (to_church n)
+//│ to_ch: int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd. ('d -> 'd | 'c
+//│   where
+//│     'b <: 'a -> 'c)))
+//│      = <no result>
+//│        to_church, to_ch and to_church are not implemented
+
+to_church = to_ch
+//│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd. ('d -> 'd | 'c
+//│   where
+//│     'b <: 'a -> 'c)))
+//│   <:  to_church:
+//│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
+//│          = <no result>
+//│            to_ch, to_church, to_ch and to_church are not implemented
+
+// * Marking it `rec` (on a minimized version) makes it fail
+// *  This is because of `destroyConstrainedTypes` which is invoked on rec defs:
+// *  (disabling the destruction fixes this problem)
+
+rec def to_ch n =
+  s (to_church n)
+//│ to_ch: int -> ('M -> 'M) -> 'M -> 'M
+//│      = <no result>
+//│        to_church, to_ch, to_church, to_ch and to_church are not implemented
+
+:e
+to_church = to_ch
+//│ int -> ('M -> 'M) -> 'M -> 'M
+//│   <:  to_church:
+//│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.137: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.41: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.41: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.137: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` is not an instance of type `'M`
+//│ ║  l.41: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.41: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                              ^^
+//│          = <no result>
+//│            to_ch, to_church, to_ch, to_church, to_ch and to_church are not implemented
+
+
+// * But distributivity allows getting around the recursion limitation by recovering _some_ of the lost expressiveness
 :DistributeForalls
 
+
+rec def to_ch n =
+  s (to_church n)
+//│ to_ch: int -> ('M -> 'M) -> 'M -> 'M
+//│      = <no result>
+//│        to_church, to_ch, to_church, to_ch, to_church, to_ch and to_church are not implemented
+
 to_church = to_ch
-//│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c. ('c
-//│   where
-//│     'b <: 'a -> 'c)))
+//│ int -> ('M -> 'M) -> 'M -> 'M
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│          = <no result>
-//│            to_ch and to_church are not implemented
+//│            to_ch, to_church, to_ch, to_church, to_ch, to_church, to_ch and to_church are not implemented
 
+
+rec def to_ch n =
+  if n == 0 then zero
+  else succ (to_ch (n - 1))
+//│ to_ch: int -> ChurchInt
+//│      = <no result>
+//│        zero is not implemented
+
+to_church = to_ch
+//│ int -> ChurchInt
+//│   <:  to_church:
+//│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
+//│          = <no result>
+//│            to_ch and zero are not implemented
+
+
+rec def to_ch n =
+  if n == 0 then z
+  else s (to_ch (n - 1))
+//│ to_ch: int -> anything -> (forall 'a. 'a -> 'a | (forall 'a. 'a -> 'a))
+//│      = [Function: to_ch4]
+
+to_church = to_ch
+//│ int -> anything -> (forall 'a. 'a -> 'a | (forall 'a. 'a -> 'a))
+//│   <:  to_church:
+//│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
+//│          = [Function: to_ch4]
 
 
 rec def to_ch_weird n =

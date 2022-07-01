@@ -453,6 +453,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case _ => ty.map(destroyConstrainedTypes)
         }
         val ty = trace(s"Destroying constrained types...") {
+          // rhs_ty
           destroyConstrainedTypes(rhs_ty)
         }(r => s"=> $r")
         
@@ -749,6 +750,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case App(f, a) =>
         // val genArgs = ctx.inRecursiveDef.forall(rd => !f.freeVars.contains(rd))
         val genArgs = !noArgGen && ctx.inRecursiveDef.isEmpty //&& !generalizeCurriedFunctions
+        // val genArgs = true
         
         val f_ty = typeTerm(f)
         val a_ty = {
