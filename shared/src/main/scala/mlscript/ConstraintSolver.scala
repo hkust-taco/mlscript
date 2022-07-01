@@ -1,6 +1,6 @@
 package mlscript
 
-import scala.collection.mutable.{Map => MutMap, Set => MutSet, Stack => MutStack, Buffer}
+import scala.collection.mutable.{Map => MutMap, SortedMap=>MutSortMap, Set => MutSet, Stack => MutStack, Buffer}
 import scala.collection.immutable.{SortedSet, SortedMap}
 import scala.util.chaining._
 import scala.annotation.tailrec
@@ -754,7 +754,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   /** Copies a type up to its type variables of wrong level (and their extruded bounds). */
   def extrude(ty: SimpleType, lvl: Int, pol: Boolean, upperLvl: Level)
-      (implicit ctx: Ctx, flexifyRigids: Bool, cache: MutMap[PolarVariable, TV] = MutMap.empty): SimpleType =
+      // (implicit ctx: Ctx, flexifyRigids: Bool, cache: MutMap[PolarVariable, TV] = MutMap.empty, cache2: MutMap[TraitTag, TV] = MutMap.empty): SimpleType =
+      (implicit ctx: Ctx, flexifyRigids: Bool, cache: MutMap[PolarVariable, TV] = MutMap.empty, cache2: MutSortMap[TraitTag, TraitTag] = MutSortMap.empty): SimpleType =
         // (trace(s"EXTR[${printPol(S(pol))}] $ty || $lvl .. $upperLvl  ${ty.level} ${ty.level <= lvl}"){
     if (ty.level <= lvl) ty else ty match {
       case t @ TypeBounds(lb, ub) => if (pol) extrude(ub, lvl, true, upperLvl) else extrude(lb, lvl, false, upperLvl)
@@ -798,16 +799,49 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case p @ ProvType(und) => ProvType(extrude(und, lvl, pol, upperLvl))(p.prov)
       case p @ ProxyType(und) => extrude(und, lvl, pol, upperLvl)
       // case _: ClassTag | _: TraitTag => ty
-      case TraitTag(level, id) =>
+      case tt @ TraitTag(level, id) =>
         // println(lvl, upperLvl)
         // if (lvl > upperLvl)
         if (level > lvl) {
           if (flexifyRigids) { // FIXME should this have a shadow?
             freshVar(ty.prov, N, S(id.idStr))(lvl + 1)
           } else {
-            // When a rigid type variable is extruded, we need to widen it to Top or Bot
-            ExtrType(!pol)(ty.prov/*TODO wrap/explain prov*/)
-            // ExtrType(pol)(ty.prov/*TODO wrap/explain prov*/)
+            
+            // * When a rigid type variable is extruded, we need to widen it to Top or Bot
+            // ExtrType(!pol)(ty.prov/*TODO wrap/explain prov*/)
+            
+            // val c = cache2
+            // {
+            //   val cache2 = ()
+            //   c.getOrElseUpdate(tt,
+            //     )
+            // }
+            
+            cache2.getOrElseUpdate(tt,
+              TraitTag(lvl,
+                Var.apply(freshVar(noProv,N,S(id.idStr))(0).toString)
+              )(tt.prov)
+            )
+            /* 
+            val mk = Var.apply(
+                freshVar(noProv,N,S(id.idStr))(0).toString
+                )
+            val mk2 = TraitTag(level, mk)(tt.prov)
+            println(cache2)
+            // println(cache2.getOrElse(tt, mk2))
+            println(tt===tt,tt.hashCode)
+            // println(cache2.getOrElseUpdate(tt, mk2))
+            // cache2.getOrElseUpdate(tt, mk2)
+            collection.mutable.HashMap.empty
+            if (cache2.contains(tt)) cache2(tt)
+            else {
+              println(tt.hashCode)
+              cache2 += tt -> mk2
+              mk2
+            }
+            */
+            
+            // nope: // ExtrType(pol)(ty.prov/*TODO wrap/explain prov*/)
           }
         } else ty
       case _: ClassTag => ty

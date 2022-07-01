@@ -78,27 +78,27 @@ to_church = to_ch
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?to_ch, ?b, ?c, ?d, ?e, ?f, ?g. ?to_ch <: int -> ChurchInt` exceeded recursion depth limit (300)
 //│ ║  l.74: 	to_church = to_ch
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  ‹∀ 1. ('N214'' -> 'N215'')›
-//│ ╟── while constraining:  α43_89'  <!<  ‹∀ 1. ('N214'' -> 'N215'')›
+//│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  ‹∀ 1. ('N215'' -> 'N216'')›
+//│ ╟── while constraining:  α43_89'  <!<  ‹∀ 1. ('N215'' -> 'N216'')›
 //│ ╟── while constraining:  α43_89'  <!<  (‘N^42 -> ‘N^42)
-//│ ╟── while constraining:  α23_213^42  <!<  (‘N^42 -> ‘N^42)
+//│ ╟── while constraining:  α23_214^42  <!<  (‘N^42 -> ‘N^42)
 //│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  (‘N^42 -> ‘N^42)
-//│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  ‹∀ 1. ('N211'' -> 'N212'')›
-//│ ╟── while constraining:  α43_89'  <!<  ‹∀ 1. ('N211'' -> 'N212'')›
+//│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  ‹∀ 1. ('N212'' -> 'N213'')›
+//│ ╟── while constraining:  α43_89'  <!<  ‹∀ 1. ('N212'' -> 'N213'')›
 //│ ╟── while constraining:  α43_89'  <!<  (‘N^41 -> ‘N^41)
-//│ ╟── while constraining:  α23_210^41  <!<  (‘N^41 -> ‘N^41)
+//│ ╟── while constraining:  α23_211^41  <!<  (‘N^41 -> ‘N^41)
 //│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  (‘N^41 -> ‘N^41)
-//│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  ‹∀ 1. ('N208'' -> 'N209'')›
-//│ ╟── while constraining:  α43_89'  <!<  ‹∀ 1. ('N208'' -> 'N209'')›
+//│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  ‹∀ 1. ('N209'' -> 'N210'')›
+//│ ╟── while constraining:  α43_89'  <!<  ‹∀ 1. ('N209'' -> 'N210'')›
 //│ ╟── while constraining:  α43_89'  <!<  (‘N^40 -> ‘N^40)
-//│ ╟── while constraining:  α23_207^40  <!<  (‘N^40 -> ‘N^40)
+//│ ╟── while constraining:  α23_208^40  <!<  (‘N^40 -> ‘N^40)
 //│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  (‘N^40 -> ‘N^40)
 //│ ╟── ......
 //│ ╟── ......
-//│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  ‹∀ 1. ('N94'' -> 'N95'')›
-//│ ╟── while constraining:  α43_89'  <!<  ‹∀ 1. ('N94'' -> 'N95'')›
+//│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  ‹∀ 1. ('N95'' -> 'N96'')›
+//│ ╟── while constraining:  α43_89'  <!<  ‹∀ 1. ('N95'' -> 'N96'')›
 //│ ╟── while constraining:  α43_89'  <!<  (‘N'' -> ‘N'')
-//│ ╟── while constraining:  α23_93''  <!<  (‘N'' -> ‘N'')
+//│ ╟── while constraining:  α23_94''  <!<  (‘N'' -> ‘N'')
 //│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  (‘N'' -> ‘N'')
 //│ ╟── while constraining:  (α22_92'' -> ‹∀ 4. α23_88'''''›)  <!<  ((‘N'' -> ‘N'') -> (‘N'' -> ‘N''))
 //│ ╟── while constraining:  ‹∀ 3. (α22_85'''' -> ‹∀ 4. α23_88'''''›)›  <!<  ((‘N'' -> ‘N'') -> (‘N'' -> ‘N''))
