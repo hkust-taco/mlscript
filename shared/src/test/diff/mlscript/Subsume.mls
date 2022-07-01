@@ -362,7 +362,7 @@ self1 = res
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.349: 	self1 = res
 //│ ║         	^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type `anything` is not an instance of type `'b`
 //│ ║  l.334: 	def self1: ('a -> 'b & 'a) -> 'b
 //│ ║         	                  ^^
 //│ ╟── Note: constraint arises from type variable:
@@ -397,14 +397,14 @@ def self2 = self1
 //│ ║  l.390: 	def self2 = self1
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')››  <:  (('a368' -> 'b369') & 'a368')    PolymorphicType  ComposedType
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')››  <:  (('a369' -> 'b370') & 'a369')    PolymorphicType  ComposedType
 //│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')››  <:  (('a279' -> 'b280') & 'a279')
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.390: 	def self2 = self1
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a' & ('a365' -> ‘b'))  <:  (('a368' -> 'b369') & 'a368')    ComposedType  ComposedType
-//│ ╙──  ... looks like:  (‘a' & ('a345' -> ‘b'))  <:  (('a279' -> 'b280') & 'a279')
+//│ ╟── this constraint:  (‘a' & ('a366' -> ‘b'))  <:  (('a369' -> 'b370') & 'a369')    ComposedType  ComposedType
+//│ ╙──  ... looks like:  (‘a' & ('a346' -> ‘b'))  <:  (('a279' -> 'b280') & 'a279')
 //│      = [Function: r]
 
 

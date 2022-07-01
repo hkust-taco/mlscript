@@ -85,15 +85,15 @@ res: ChI
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.84: 	res: ChI
 //│ ║        	^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type `anything` is not an instance of type `'M`
 //│ ║  l.22: 	type ChI = (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                   ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.22: 	type ChI = (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                   ^^
-//│ ╟── from type variable:
-//│ ║  l.17: 	def zero: ('N -> 'N) -> ('N -> 'N)
-//│ ╙──      	                 ^^
+//│ ╟── from reference:
+//│ ║  l.5: 	def s n = fun f -> fun x -> f (n f x)
+//│ ╙──     	                                   ^
 //│ res: ChI
 //│    = [Function: s]
 

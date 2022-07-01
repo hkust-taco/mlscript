@@ -446,14 +446,22 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             buf += true -> lhs0
             ()
           case (_: TypeVariable, rhs0) =>
-            val rhs = extrude(rhs0, lhs.level, false, MaxLevel)
+            // val rhs = extrude(rhs0, lhs.level, false, MaxLevel)
+            val rhs = PolymorphicType.mk(lhs.level, {
+              implicit val flexifyRigids: Bool = true
+              extrude(rhs0, lhs.level, false, MaxLevel)
+            })
             // println(s"EXTR RHS  $rhs0  ~>  $rhs  to ${lhs.level}")
             println(s"EXTR RHS  ~>  $rhs  to ${lhs.level}")
             println(s" where ${rhs.showBounds}")
             println(s"   and ${rhs0.showBounds}")
             rec(lhs, rhs, true)
           case (lhs0, _: TypeVariable) =>
-            val lhs = extrude(lhs0, rhs.level, true, MaxLevel)
+            // val lhs = extrude(lhs0, rhs.level, true, MaxLevel)
+            val lhs = { // TODO make into existential...
+              implicit val flexifyRigids: Bool = false
+              extrude(lhs0, rhs.level, true, MaxLevel)
+            }
             // println(s"EXTR LHS  $lhs0  ~>  $lhs  to ${rhs.level}")
             println(s"EXTR LHS  ~>  $lhs  to ${rhs.level}")
             println(s" where ${lhs.showBounds}")
@@ -718,7 +726,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   /** Copies a type up to its type variables of wrong level (and their extruded bounds). */
   def extrude(ty: SimpleType, lvl: Int, pol: Boolean, upperLvl: Level)
-      (implicit ctx: Ctx, cache: MutMap[PolarVariable, TV] = MutMap.empty): SimpleType =
+      (implicit ctx: Ctx, flexifyRigids: Bool, cache: MutMap[PolarVariable, TV] = MutMap.empty): SimpleType =
         // (trace(s"EXTR[${printPol(S(pol))}] $ty || $lvl .. $upperLvl  ${ty.level} ${ty.level <= lvl}"){
     if (ty.level <= lvl) ty else ty match {
       case t @ TypeBounds(lb, ub) => if (pol) extrude(ub, lvl, true, upperLvl) else extrude(lb, lvl, false, upperLvl)
@@ -765,11 +773,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case TraitTag(level, id) =>
         // println(lvl, upperLvl)
         // if (lvl > upperLvl)
-        if (level > lvl)
-          // When a rigid type variable is extruded, we need to widen it to Top or Bot
-          ExtrType(!pol)(ty.prov/*TODO wrap/explain prov*/)
-          // ExtrType(pol)(ty.prov/*TODO wrap/explain prov*/)
-        else ty
+        if (level > lvl) {
+          if (flexifyRigids) { // FIXME should this have a shadow?
+            freshVar(ty.prov, N, S(id.idStr))(lvl + 1)
+          } else {
+            // When a rigid type variable is extruded, we need to widen it to Top or Bot
+            ExtrType(!pol)(ty.prov/*TODO wrap/explain prov*/)
+            // ExtrType(pol)(ty.prov/*TODO wrap/explain prov*/)
+          }
+        } else ty
       case _: ClassTag => ty
       case tr @ TypeRef(d, ts) =>
         TypeRef(d, tr.mapTargs(S(pol)) {

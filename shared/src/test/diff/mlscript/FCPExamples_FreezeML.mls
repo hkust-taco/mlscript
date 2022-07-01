@@ -538,7 +538,7 @@ res id
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.537: 	res id
 //│ ║         	^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type `anything` is not an instance of type `'a`
 //│ ║  l.169: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:

@@ -34,7 +34,7 @@ succ = s
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.26: 	succ = s
 //│ ║        	^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type `anything` is not an instance of type `'M`
 //│ ║  l.17: 	def succ: (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
 //│ ║        	                                             ^^
 //│ ╟── Note: constraint arises from quantified type variable:

@@ -992,13 +992,26 @@ rec def to_church n =
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.599: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
-//│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.983: 	  if n == 0 then fun f -> fun x -> x
-//│ ║         	                                   ^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.599: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
-//│ int -> (anything -> nothing) -> anything -> anything
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.982: 	rec def to_church n =
+//│ ║         	                  ^^^
+//│ ║  l.983: 	  if n == 0 then fun f -> fun x -> x
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.984: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` is not an instance of type `'a`
+//│ ║  l.599: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                    ^^
+//│ ╟── but it flows into application with expected type `‘a`
+//│ ║  l.984: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
+//│ ║         	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.599: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                    ^^
+//│ int -> (anything -> anything & anything -> nothing) -> anything -> anything
 //│   <:  to_church:
 //│ int -> Fint
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -1017,6 +1030,22 @@ rec def to_church n =
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.599: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.982: 	rec def to_church n =
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.983: 	  if n == 0 then fun f -> fun x -> x
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.984: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` is not an instance of type `'a`
+//│ ║  l.599: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.599: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                    ^^
+//│ ╟── from application:
+//│ ║  l.984: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
+//│ ╙──       	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│          = [Function: to_church]
 
 
@@ -1042,19 +1071,19 @@ rec def c_fact (n: Fint) =
   c_if (c_iszero n) (fun (u: Funit) -> c_i1)
     (fun (u: Funit) -> c_mul n (c_fact (c_pred n)))
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.1041: 	rec def c_fact (n: Fint) =
+//│ ║  l.1070: 	rec def c_fact (n: Fint) =
 //│ ║          	               ^^^^^^^^^^^
-//│ ║  l.1042: 	  c_if (c_iszero n) (fun (u: Funit) -> c_i1)
+//│ ║  l.1071: 	  c_if (c_iszero n) (fun (u: Funit) -> c_i1)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1043: 	    (fun (u: Funit) -> c_mul n (c_fact (c_pred n)))
+//│ ║  l.1072: 	    (fun (u: Funit) -> c_mul n (c_fact (c_pred n)))
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type `anything` is not an instance of type `'a`
 //│ ║  l.599: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.599: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
-//│ c_fact: Fint -> (forall 'a, 'b, 'c. ('a -> 'b & 'c -> anything & anything -> nothing) -> (forall 'c. ('a & 'c) -> ('b | 'c)) | Fint)
+//│ c_fact: Fint -> (forall 'a, 'b. ('a -> anything & 'b -> anything & anything -> anything) -> (forall 'b. ('a & 'b) -> anything) | Fint)
 //│       = [Function: c_fact]
 
 // def c_fact: Fint -> (forall 'a 'b. ('a & 'b) -> (forall 'c 'd 'e 'f 'g 'h. (('c & 'h) -> ('d | 'g | 'c))))
@@ -1066,22 +1095,22 @@ def c_fact_A: Fint -> Fint
 def c_fact_A n =
   c_if (c_iszero n) (fun u -> c_i1)
     (fun u -> c_mul n (c_fact_A (c_pred n)))
-//│ (Fint & (Fint -> (forall 'a, 'b, 'c. ('a -> 'b & anything -> nothing & 'c) -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g. (('a & 'g) -> 'f
+//│ (Fint & (Fint -> (forall 'a, 'b, 'c. ('a -> 'b & anything -> anything & 'c) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('a & 'f) -> anything
 //│   where
-//│     'd <: 'c -> ('b | 'e) -> 'f
-//│     'c <: 'g -> 'e)) | Fint)) -> ('h -> (forall 'i. 'i -> 'i)) -> 'j) -> (forall 'h, 'k, 'l. ('k -> 'l & 'h) -> (forall 'h, 'k, 'l, 'm, 'n. (('k & 'm) -> ('l | 'n)
+//│     'd <: 'c -> ('b | 'e) -> anything
+//│     'c <: 'f -> 'e)) | Fint)) -> ('g -> (forall 'h. 'h -> 'h)) -> 'i) -> (forall 'g, 'j, 'k. ('j -> 'k & 'g) -> (forall 'g, 'j, 'k, 'l, 'm. (('j & 'l) -> ('k | 'm)
 //│   where
-//│     'h <: 'm -> 'n)) | 'j)
+//│     'g <: 'l -> 'm)) | 'i)
 //│   <:  c_fact_A:
 //│ Fint -> Fint
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.1066: 	def c_fact_A n =
+//│ ║  l.1095: 	def c_fact_A n =
 //│ ║          	^^^^^^^^^^^^^^^^
-//│ ║  l.1067: 	  c_if (c_iszero n) (fun u -> c_i1)
+//│ ║  l.1096: 	  c_if (c_iszero n) (fun u -> c_i1)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1068: 	    (fun u -> c_mul n (c_fact_A (c_pred n)))
+//│ ║  l.1097: 	    (fun u -> c_mul n (c_fact_A (c_pred n)))
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type `anything` is not an instance of type `'a`
 //│ ║  l.599: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -1118,9 +1147,9 @@ def print_fact n =
   let _ = c_printint (c_fact (to_church n)) in
           print_string "\n"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1118: 	  let _ = c_printint (c_fact (to_church n)) in
+//│ ║  l.1147: 	  let _ = c_printint (c_fact (to_church n)) in
 //│ ║          	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a` does not match type `nothing`
+//│ ╟── type `‘a` is not an instance of type `'a`
 //│ ║  l.599: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -1149,8 +1178,8 @@ def print_fact2 n =
          (c_printint2 (c_fact (to_church n))) ))
 //│ print_fact2: int -> string
 //│   where
-//│     'a := ‘a
 //│     'b <: ‘a
+//│     'a := ‘a
 //│            = [Function: print_fact2]
 
 // :e // FIXME? fails with genLamBodies
@@ -1182,9 +1211,9 @@ this_should_be_98 =
   let c_98 = c_pred c_99 in
   c_printint2 c_98
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1179: 	  let c_i10 = c_mul c_i5 c_i2 in
+//│ ║  l.1208: 	  let c_i10 = c_mul c_i5 c_i2 in
 //│ ║          	              ^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type `anything` is not an instance of type `'a`
 //│ ║  l.599: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -1194,7 +1223,7 @@ this_should_be_98 =
 //│ ║  l.796: 	def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
 //│ ╙──       	                                              ^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1181: 	  let c_99 = c_add (c_mul c_i9 c_i10) c_i9 in
+//│ ║  l.1210: 	  let c_99 = c_add (c_mul c_i9 c_i10) c_i9 in
 //│ ║          	                    ^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` is not a function
 //│ ║  l.599: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1206,9 +1235,9 @@ this_should_be_98 =
 //│ ║  l.796: 	def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
 //│ ╙──       	                                              ^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1182: 	  let c_98 = c_pred c_99 in
+//│ ║  l.1211: 	  let c_98 = c_pred c_99 in
 //│ ║          	             ^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type `anything` is not an instance of type `'a`
 //│ ║  l.599: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -1235,40 +1264,40 @@ this_should_be_98_ =
 :e
 c_i5_ = c_add_ c_i3_ c_i2
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b, ?c. ?c) -> ?d` exceeded recursion depth limit (300)
-//│ ║  l.1236: 	c_i5_ = c_add_ c_i3_ c_i2
+//│ ║  l.1265: 	c_i5_ = c_add_ c_i3_ c_i2
 //│ ║          	        ^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ‹∀ 2. (α5234''' -> ‹∀ 3. {(α5240'''' -> α5239'''') where: α5229' <: ((α5234''',) -> α5237''''), α5234''' <: ((α5240'''',) -> α5238'''')}›)›  <!<  ((α5428',) -> α5435')
-//│ ╟── while constraining:  α5229'  <!<  ((α5428',) -> α5435')
-//│ ╟── while constraining:  {(α5438' -> α5437') where: α5229' <: ((α5428',) -> α5435'), α5428' <: ((α5438',) -> α5436')}  <!<  ((α5425',) -> α5426')
-//│ ╟── while constraining:  ‹∀ 3. {(α5434'''' -> α5433'''') where: α5229' <: ((α5428',) -> α5431''''), α5428' <: ((α5434'''',) -> α5432'''')}›  <!<  ((α5425',) -> α5426')
-//│ ╟── while constraining:  ‹∀ 3. {(α5434'''' -> α5433'''') where: α5229' <: ((α5428',) -> α5431''''), α5428' <: ((α5434'''',) -> α5432'''')}›  <!<  α5424'
-//│ ╟── while constraining:  (α5428' -> ‹∀ 3. {(α5434'''' -> α5433'''') where: α5229' <: ((α5428',) -> α5431''''), α5428' <: ((α5434'''',) -> α5432'''')}›)  <!<  ((α5417',) -> α5424')
-//│ ╟── while constraining:  ‹∀ 2. (α5234''' -> ‹∀ 3. {(α5240'''' -> α5239'''') where: α5229' <: ((α5234''',) -> α5237''''), α5234''' <: ((α5240'''',) -> α5238'''')}›)›  <!<  ((α5417',) -> α5424')
-//│ ╟── while constraining:  α5229'  <!<  ((α5417',) -> α5424')
-//│ ╟── while constraining:  {(α5427' -> α5426') where: α5229' <: ((α5417',) -> α5424'), α5417' <: ((α5427',) -> α5425')}  <!<  ((α5414',) -> α5415')
-//│ ╟── while constraining:  ‹∀ 3. {(α5423'''' -> α5422'''') where: α5229' <: ((α5417',) -> α5420''''), α5417' <: ((α5423'''',) -> α5421'''')}›  <!<  ((α5414',) -> α5415')
-//│ ╟── while constraining:  ‹∀ 3. {(α5423'''' -> α5422'''') where: α5229' <: ((α5417',) -> α5420''''), α5417' <: ((α5423'''',) -> α5421'''')}›  <!<  α5413'
-//│ ╟── while constraining:  (α5417' -> ‹∀ 3. {(α5423'''' -> α5422'''') where: α5229' <: ((α5417',) -> α5420''''), α5417' <: ((α5423'''',) -> α5421'''')}›)  <!<  ((α5406',) -> α5413')
-//│ ╟── while constraining:  ‹∀ 2. (α5234''' -> ‹∀ 3. {(α5240'''' -> α5239'''') where: α5229' <: ((α5234''',) -> α5237''''), α5234''' <: ((α5240'''',) -> α5238'''')}›)›  <!<  ((α5406',) -> α5413')
-//│ ╟── while constraining:  α5229'  <!<  ((α5406',) -> α5413')
-//│ ╟── while constraining:  {(α5416' -> α5415') where: α5229' <: ((α5406',) -> α5413'), α5406' <: ((α5416',) -> α5414')}  <!<  ((α5403',) -> α5404')
+//│ ╟── while constraining:  ‹∀ 2. (α5246''' -> ‹∀ 3. {(α5252'''' -> α5251'''') where: α5241' <: ((α5246''',) -> α5249''''), α5246''' <: ((α5252'''',) -> α5250'''')}›)›  <!<  ((α5440',) -> α5447')
+//│ ╟── while constraining:  α5241'  <!<  ((α5440',) -> α5447')
+//│ ╟── while constraining:  {(α5450' -> α5449') where: α5241' <: ((α5440',) -> α5447'), α5440' <: ((α5450',) -> α5448')}  <!<  ((α5437',) -> α5438')
+//│ ╟── while constraining:  ‹∀ 3. {(α5446'''' -> α5445'''') where: α5241' <: ((α5440',) -> α5443''''), α5440' <: ((α5446'''',) -> α5444'''')}›  <!<  ((α5437',) -> α5438')
+//│ ╟── while constraining:  ‹∀ 3. {(α5446'''' -> α5445'''') where: α5241' <: ((α5440',) -> α5443''''), α5440' <: ((α5446'''',) -> α5444'''')}›  <!<  α5436'
+//│ ╟── while constraining:  (α5440' -> ‹∀ 3. {(α5446'''' -> α5445'''') where: α5241' <: ((α5440',) -> α5443''''), α5440' <: ((α5446'''',) -> α5444'''')}›)  <!<  ((α5429',) -> α5436')
+//│ ╟── while constraining:  ‹∀ 2. (α5246''' -> ‹∀ 3. {(α5252'''' -> α5251'''') where: α5241' <: ((α5246''',) -> α5249''''), α5246''' <: ((α5252'''',) -> α5250'''')}›)›  <!<  ((α5429',) -> α5436')
+//│ ╟── while constraining:  α5241'  <!<  ((α5429',) -> α5436')
+//│ ╟── while constraining:  {(α5439' -> α5438') where: α5241' <: ((α5429',) -> α5436'), α5429' <: ((α5439',) -> α5437')}  <!<  ((α5426',) -> α5427')
+//│ ╟── while constraining:  ‹∀ 3. {(α5435'''' -> α5434'''') where: α5241' <: ((α5429',) -> α5432''''), α5429' <: ((α5435'''',) -> α5433'''')}›  <!<  ((α5426',) -> α5427')
+//│ ╟── while constraining:  ‹∀ 3. {(α5435'''' -> α5434'''') where: α5241' <: ((α5429',) -> α5432''''), α5429' <: ((α5435'''',) -> α5433'''')}›  <!<  α5425'
+//│ ╟── while constraining:  (α5429' -> ‹∀ 3. {(α5435'''' -> α5434'''') where: α5241' <: ((α5429',) -> α5432''''), α5429' <: ((α5435'''',) -> α5433'''')}›)  <!<  ((α5418',) -> α5425')
+//│ ╟── while constraining:  ‹∀ 2. (α5246''' -> ‹∀ 3. {(α5252'''' -> α5251'''') where: α5241' <: ((α5246''',) -> α5249''''), α5246''' <: ((α5252'''',) -> α5250'''')}›)›  <!<  ((α5418',) -> α5425')
+//│ ╟── while constraining:  α5241'  <!<  ((α5418',) -> α5425')
+//│ ╟── while constraining:  {(α5428' -> α5427') where: α5241' <: ((α5418',) -> α5425'), α5418' <: ((α5428',) -> α5426')}  <!<  ((α5415',) -> α5416')
 //│ ╟── ......
 //│ ╟── ......
-//│ ╟── while constraining:  ‹∀ 0. (('a1768' -> 'a1768') -> ('a1768' -> 'a1768'))›  <!<  ((α5219',) -> α5224')
-//│ ╟── while constraining:  Fint  <!<  ((α5219',) -> α5224')
-//│ ╟── while constraining:  α5214'  <!<  ((α5219',) -> α5224')
-//│ ╟── while constraining:  {(α5227' -> α5226') where: α5214' <: ((α5219',) -> α5224'), α5219' <: ((α5227',) -> α5225')}  <!<  ((α5204',) -> α5211')
-//│ ╟── while constraining:  ‹∀ 3. {(α5223'''' -> α5222'''') where: α5214' <: ((α5219',) -> α5220''''), α5219' <: ((α5223'''',) -> α5221'''')}›  <!<  ((α5204',) -> α5211')
-//│ ╟── while constraining:  ‹∀ 3. {(α5223'''' -> α5222'''') where: α5214' <: ((α5219',) -> α5220''''), α5219' <: ((α5223'''',) -> α5221'''')}›  <!<  α5210'
-//│ ╟── while constraining:  (α5219' -> ‹∀ 3. {(α5223'''' -> α5222'''') where: α5214' <: ((α5219',) -> α5220''''), α5219' <: ((α5223'''',) -> α5221'''')}›)  <!<  ((‹∀ 0. ‹∀ 1. (α2349'' -> ‹∀ 2. (α2350''' -> ‹∀ 3. {(α2351'''' -> α2354'''') where: α2349'' <: ((α2350''',) -> α2352''''), α2350''' <: ((α2351'''',) -> α2353'''')}›)›)››,) -> α5210')
-//│ ╟── while constraining:  ‹∀ 2. (α5213''' -> ‹∀ 3. {(α5218'''' -> α5217'''') where: α5214' <: ((α5213''',) -> α5215''''), α5213''' <: ((α5218'''',) -> α5216'''')}›)›  <!<  ((‹∀ 0. ‹∀ 1. (α2349'' -> ‹∀ 2. (α2350''' -> ‹∀ 3. {(α2351'''' -> α2354'''') where: α2349'' <: ((α2350''',) -> α2352''''), α2350''' <: ((α2351'''',) -> α2353'''')}›)›)››,) -> α5210')
-//│ ╟── while constraining:  α5212'  <!<  ((‹∀ 0. ‹∀ 1. (α2349'' -> ‹∀ 2. (α2350''' -> ‹∀ 3. {(α2351'''' -> α2354'''') where: α2349'' <: ((α2350''',) -> α2352''''), α2350''' <: ((α2351'''',) -> α2353'''')}›)›)››,) -> α5210')
-//│ ╟── while constraining:  ‹∀ 0. α2992'›  <!<  ((‹∀ 0. ‹∀ 1. (α2349'' -> ‹∀ 2. (α2350''' -> ‹∀ 3. {(α2351'''' -> α2354'''') where: α2349'' <: ((α2350''',) -> α2352''''), α2350''' <: ((α2351'''',) -> α2353'''')}›)›)››,) -> α5210')
-//│ ╟── while constraining:  ‹∀ 0. α2992'›  <!<  α5209'
-//│ ╟── while constraining:  (‹∀ 0. α2992'›,)  <!<  (α5209',)
-//│ ╟── while constraining:  (α5209' -> α5211')  <!<  ((‹∀ 0. α2992'›,) -> α5208')
-//│ ╟── while constraining:  ‹∀ 2. (α5205''' -> α5207''')›  <!<  ((‹∀ 0. α2992'›,) -> α5208')
-//│ ╙── while constraining:  α5203'  <!<  ((‹∀ 0. α2992'›,) -> α5208')
+//│ ╟── while constraining:  ‹∀ 0. (('a1768' -> 'a1768') -> ('a1768' -> 'a1768'))›  <!<  ((α5231',) -> α5236')
+//│ ╟── while constraining:  Fint  <!<  ((α5231',) -> α5236')
+//│ ╟── while constraining:  α5226'  <!<  ((α5231',) -> α5236')
+//│ ╟── while constraining:  {(α5239' -> α5238') where: α5226' <: ((α5231',) -> α5236'), α5231' <: ((α5239',) -> α5237')}  <!<  ((α5216',) -> α5223')
+//│ ╟── while constraining:  ‹∀ 3. {(α5235'''' -> α5234'''') where: α5226' <: ((α5231',) -> α5232''''), α5231' <: ((α5235'''',) -> α5233'''')}›  <!<  ((α5216',) -> α5223')
+//│ ╟── while constraining:  ‹∀ 3. {(α5235'''' -> α5234'''') where: α5226' <: ((α5231',) -> α5232''''), α5231' <: ((α5235'''',) -> α5233'''')}›  <!<  α5222'
+//│ ╟── while constraining:  (α5231' -> ‹∀ 3. {(α5235'''' -> α5234'''') where: α5226' <: ((α5231',) -> α5232''''), α5231' <: ((α5235'''',) -> α5233'''')}›)  <!<  ((‹∀ 0. ‹∀ 1. (α2349'' -> ‹∀ 2. (α2350''' -> ‹∀ 3. {(α2351'''' -> α2354'''') where: α2349'' <: ((α2350''',) -> α2352''''), α2350''' <: ((α2351'''',) -> α2353'''')}›)›)››,) -> α5222')
+//│ ╟── while constraining:  ‹∀ 2. (α5225''' -> ‹∀ 3. {(α5230'''' -> α5229'''') where: α5226' <: ((α5225''',) -> α5227''''), α5225''' <: ((α5230'''',) -> α5228'''')}›)›  <!<  ((‹∀ 0. ‹∀ 1. (α2349'' -> ‹∀ 2. (α2350''' -> ‹∀ 3. {(α2351'''' -> α2354'''') where: α2349'' <: ((α2350''',) -> α2352''''), α2350''' <: ((α2351'''',) -> α2353'''')}›)›)››,) -> α5222')
+//│ ╟── while constraining:  α5224'  <!<  ((‹∀ 0. ‹∀ 1. (α2349'' -> ‹∀ 2. (α2350''' -> ‹∀ 3. {(α2351'''' -> α2354'''') where: α2349'' <: ((α2350''',) -> α2352''''), α2350''' <: ((α2351'''',) -> α2353'''')}›)›)››,) -> α5222')
+//│ ╟── while constraining:  ‹∀ 0. α2992'›  <!<  ((‹∀ 0. ‹∀ 1. (α2349'' -> ‹∀ 2. (α2350''' -> ‹∀ 3. {(α2351'''' -> α2354'''') where: α2349'' <: ((α2350''',) -> α2352''''), α2350''' <: ((α2351'''',) -> α2353'''')}›)›)››,) -> α5222')
+//│ ╟── while constraining:  ‹∀ 0. α2992'›  <!<  α5221'
+//│ ╟── while constraining:  (‹∀ 0. α2992'›,)  <!<  (α5221',)
+//│ ╟── while constraining:  (α5221' -> α5223')  <!<  ((‹∀ 0. α2992'›,) -> α5220')
+//│ ╟── while constraining:  ‹∀ 2. (α5217''' -> α5219''')›  <!<  ((‹∀ 0. α2992'›,) -> α5220')
+//│ ╙── while constraining:  α5215'  <!<  ((‹∀ 0. α2992'›,) -> α5220')
 //│ c_i5_: error
 //│      = [Function (anonymous)]
 
@@ -1289,9 +1318,9 @@ print_fact2 4
 print_fact2 5
 print_fact2 6
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1284: 	print_fact2 0
+//│ ║  l.1313: 	print_fact2 0
 //│ ║          	^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type `anything` is not an instance of type `'a`
 //│ ║  l.599: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -1300,9 +1329,9 @@ print_fact2 6
 //│ res: error | string
 //│    = 'Factorial 0 = 1'
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1285: 	print_fact2 1
+//│ ║  l.1314: 	print_fact2 1
 //│ ║          	^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type `anything` is not an instance of type `'a`
 //│ ║  l.599: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -1311,9 +1340,9 @@ print_fact2 6
 //│ res: error | string
 //│    = 'Factorial 1 = 1'
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1286: 	print_fact2 2
+//│ ║  l.1315: 	print_fact2 2
 //│ ║          	^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type `anything` is not an instance of type `'a`
 //│ ║  l.599: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -1322,9 +1351,9 @@ print_fact2 6
 //│ res: error | string
 //│    = 'Factorial 2 = 2'
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1287: 	print_fact2 3
+//│ ║  l.1316: 	print_fact2 3
 //│ ║          	^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type `anything` is not an instance of type `'a`
 //│ ║  l.599: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -1333,9 +1362,9 @@ print_fact2 6
 //│ res: error | string
 //│    = 'Factorial 3 = 6'
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1288: 	print_fact2 4
+//│ ║  l.1317: 	print_fact2 4
 //│ ║          	^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type `anything` is not an instance of type `'a`
 //│ ║  l.599: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -1344,9 +1373,9 @@ print_fact2 6
 //│ res: error | string
 //│    = 'Factorial 4 = 24'
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1289: 	print_fact2 5
+//│ ║  l.1318: 	print_fact2 5
 //│ ║          	^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type `anything` is not an instance of type `'a`
 //│ ║  l.599: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -1355,9 +1384,9 @@ print_fact2 6
 //│ res: error | string
 //│    = 'Factorial 5 = 120'
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1290: 	print_fact2 6
+//│ ║  l.1319: 	print_fact2 6
 //│ ║          	^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type `anything` is not an instance of type `'a`
 //│ ║  l.599: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:

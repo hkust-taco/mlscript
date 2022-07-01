@@ -41,15 +41,15 @@ succ = s
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.34: 	succ = s
 //│ ║        	^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type `anything` is not an instance of type `'M`
 //│ ║  l.23: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                                                           ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.23: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                                                           ^^
-//│ ╟── from quantified type variable:
-//│ ║  l.23: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ╙──      	                  ^^
+//│ ╟── from reference:
+//│ ║  l.15: 	def s n f x = f (n f x)
+//│ ╙──      	                     ^
 //│     = [Function: s]
 
 
@@ -82,15 +82,15 @@ def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.75: 	def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type `anything` is not an instance of type `'M`
 //│ ║  l.23: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                                                           ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.23: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                                                           ^^
-//│ ╟── from quantified type variable:
+//│ ╟── from reference:
 //│ ║  l.75: 	def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
-//│ ╙──      	                     ^^
+//│ ╙──      	                                                                               ^
 //│     = [Function: succ2]
 
 
