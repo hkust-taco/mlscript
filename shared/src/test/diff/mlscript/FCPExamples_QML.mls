@@ -1,0 +1,79 @@
+:NoJS
+
+// =============== Sec 2 ===============
+let id x = x in id
+(id 3, id false)
+//│ res: 'a -> 'a
+//│ res: (3, false,)
+
+let poly f = (f 1, f true) in poly
+//│ res: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+let poly f = let y = f in (y 1, y true) in poly
+//│ res: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+
+// Altered from
+// let poly f = let y = f {forall 'a. 'a -> 'a} in (y 1, y true)
+def poly = fun (f : (forall 'a. 'a -> 'a)) -> (f 1, f true)
+//│ poly: (forall 'a. 'a -> 'a) -> (1, true,)
+
+def app : ('a -> 'b) -> 'a -> 'b
+//│ app: ('a -> 'b) -> 'a -> 'b
+
+def revapp : 'a -> ('a -> 'b) -> 'b
+//│ revapp: 'a -> ('a -> 'b) -> 'b
+
+app poly (fun x -> x)
+//│ res: (1, true,)
+
+revapp (fun x -> x) poly
+//│ res: (1, true,)
+
+class List[A]
+  method Get: A
+//│ Defined class List[+A]
+//│ Declared List.Get: List['A] -> 'A
+
+def single : 'a -> List['a]
+//│ single: 'a -> List['a]
+
+def ids = single (fun x -> x)
+//│ ids: List[forall 'a. 'a -> 'a]
+
+single ids
+//│ res: List[List[forall 'a. 'a -> 'a]]
+
+def map: ('a -> 'b) -> List['a] -> List['b]
+def head: List['a] -> 'a
+//│ map: ('a -> 'b) -> List['a] -> List['b]
+//│ head: List['a] -> 'a
+
+map head (single ids)
+//│ res: List[forall 'a. 'a -> 'a]
+app (map head) (single ids)
+//│ res: List[forall 'a. 'a -> 'a]
+
+// =============== Sec 3 ===============
+
+fun (f : (forall. 'b -> 'g)) -> f 1
+//│ res: (1 -> 'a) -> 'a
+
+def run : (forall 'g. 'g -> 'a) -> 'a
+//│ run: (nothing -> 'a) -> 'a
+
+def e : 'g -> int
+//│ e: anything -> int
+
+run e
+//│ res: int
+
+// ?
+fun (x : (forall. 'a -> 'a)) -> x
+//│ res: ('a -> 'a) -> 'a -> 'a
+
+// =============== Sec 7 ===============
+
+def choose: 'a -> 'a -> 'a
+//│ choose: 'a -> 'a -> 'a
+
+choose (head ids)
+//│ res: 'a -> (forall 'b. 'a | 'b -> 'b)
