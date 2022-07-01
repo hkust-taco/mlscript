@@ -791,8 +791,8 @@ def c_1_2_ p = p (fun x -> fun y -> x)
 //│       = [Function: c_1_2_]
 
 // let c_2_2 (p:Pair) = p (fun x y -> y) 
-def c_2_2 (t: Pair) = t (fun x -> fun y -> y)
-def c_2_2_ t = t (fun x -> fun y -> y)
+def c_2_2 (p: Pair) = p (fun x -> fun y -> y)
+def c_2_2_ p = p (fun x -> fun y -> y)
 //│ c_2_2: Pair -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: (anything -> (forall 'c. 'c -> 'c)) -> 'b))
@@ -1508,13 +1508,13 @@ c_i5_ = c_add_ c_i3_ c_i2
 //│     'h <: 'i -> 'k)))) -> 'a
 //│      = [Function (anonymous)]
 
-//   print_fact2 0 ;
-//   print_fact2 1 ;
-//   print_fact2 2 ;
-//   print_fact2 3 ;
-//   print_fact2 4 ;
-//   print_fact2 5 ;
-//   print_fact2 6 ;
+//   print_fact 0 ;
+//   print_fact 1 ;
+//   print_fact 2 ;
+//   print_fact 3 ;
+//   print_fact 4 ;
+//   print_fact 5 ;
+//   print_fact 6 ;
 //   ()
 //:e // FIXME? succeeds with genLamBodies
 print_fact2 0

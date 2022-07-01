@@ -129,60 +129,23 @@ rec def find table key =
 find(error:List[(int, string)])(unit)
 //│ res: None | Some[string]
 
-def find_A: List['a] -> anything -> (None | Some['a])
-//│ find_A: List['a] -> anything -> (None | Some['a])
+def find_A: forall 'a 'b. List[('a, 'b)] -> 'a -> (None | Some['b])
+//│ find_A: List[(anything, 'b,)] -> anything -> (None | Some['b])
 //│       = <missing implementation>
 
-:e // * Still doesn't work:
 def find_A table key =
   if is_empty table then None
   else if eq (head table)._1 key then Some (head table)._2
   else find_A (tail table) key
-//│ 'b -> 'b -> (forall 'b, 'c, 'a. (None | Some['c] | Some['a]
+//│ 'a -> 'a -> (forall 'a, 'c, 'b. (None | Some['c] | Some['b]
 //│   where
-//│     'b <: List['b] & List[{_1: 'b}] & List[{_2: 'c}] & List['a]
-//│     'b <: List['b] & List[{_1: 'b}] & List[{_2: 'c}] & List['a]
-//│     'b <: List['b] & List[{_1: 'b}] & List[{_2: 'c}] & List['a]
-//│     'b <: List['b] & List[{_1: 'b}] & List[{_2: 'c}] & List['a]
-//│     'b <: List['b] & List[{_1: 'b}] & List[{_2: 'c}] & List['a]))
+//│     'a <: List['a] & List[{_1: 'a}] & List[{_2: 'c}] & List[('a, 'b,)]
+//│     'a <: List['a] & List[{_1: 'a}] & List[{_2: 'c}] & List[('a, 'b,)]
+//│     'a <: List['a] & List[{_1: 'a}] & List[{_2: 'c}] & List[('a, 'b,)]
+//│     'a <: List['a] & List[{_1: 'a}] & List[{_2: 'c}] & List[('a, 'b,)]
+//│     'a <: List['a] & List[{_1: 'a}] & List[{_2: 'c}] & List[('a, 'b,)]))
 //│   <:  find_A:
-//│ List['a] -> anything -> (None | Some['a])
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.137: 	def find_A table key =
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.138: 	  if is_empty table then None
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.139: 	  else if eq (head table)._1 key then Some (head table)._2
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.140: 	  else find_A (tail table) key
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a` does not have field '_1'
-//│ ║  l.132: 	def find_A: List['a] -> anything -> (None | Some['a])
-//│ ║         	                 ^^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.139: 	  else if eq (head table)._1 key then Some (head table)._2
-//│ ║         	             ^^^^^^^^^^^^^^^
-//│ ╟── from quantified type variable:
-//│ ║  l.49: 	def head: forall 'a. List['a] -> 'a
-//│ ╙──      	                 ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.137: 	def find_A table key =
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.138: 	  if is_empty table then None
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.139: 	  else if eq (head table)._1 key then Some (head table)._2
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.140: 	  else find_A (tail table) key
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a` does not have field '_2'
-//│ ║  l.132: 	def find_A: List['a] -> anything -> (None | Some['a])
-//│ ║         	                 ^^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.139: 	  else if eq (head table)._1 key then Some (head table)._2
-//│ ║         	                                           ^^^^^^^^^^^^^^^
-//│ ╟── from quantified type variable:
-//│ ║  l.49: 	def head: forall 'a. List['a] -> 'a
-//│ ╙──      	                 ^^
+//│ List[(anything, 'b,)] -> anything -> (None | Some['b])
 //│       = <no result>
 //│         find_A is not implemented
 
@@ -214,8 +177,8 @@ def succ_ n = fun f -> fun x -> f (n f x)
 //│     = [Function: succ]
 //│ succ_: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e))))
+//│     'b <: 'd -> 'e
+//│     'a <: 'b -> 'c -> 'd))))
 //│      = [Function: succ_]
 
 // let add (n:Int) (m:Int) = n succ m
@@ -232,8 +195,8 @@ def add_ n m = n succ_ m
 //│   where
 //│     'a <: (forall 'd. 'd -> (forall 'e. 'e -> (forall 'f. 'f -> (forall 'd, 'e, 'f, 'g, 'h. ('h
 //│   where
-//│     'd <: 'e -> 'f -> 'g
-//│     'e <: 'g -> 'h))))) -> 'b -> 'c)))
+//│     'e <: 'g -> 'h
+//│     'd <: 'e -> 'f -> 'g))))) -> 'b -> 'c)))
 //│     = [Function: add_]
 
 // let printInt (n:Int) = print (n (fun x -> x+1) 0)
