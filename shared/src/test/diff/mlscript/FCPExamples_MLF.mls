@@ -129,7 +129,7 @@ def auto2 x = x x
 choose id auto2
 //│ res: ('a -> 'b & 'b & 'a) -> 'b
 
-:e
+:e // FIXME? succeeds with genLamBodies
 res (choose id succ)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.133: 	res (choose id succ)

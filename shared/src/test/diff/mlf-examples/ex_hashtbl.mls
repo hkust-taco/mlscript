@@ -1,5 +1,6 @@
 :NoRecursiveTypes
 :GeneralizeCurriedFunctions
+:DistributeForalls
 
 // ============ Dummy classes to represent the types in the examples ============
 
@@ -121,6 +122,59 @@ rec def find table key =
 find(error:List[(int, string)])(unit)
 //│ res: None | Some[string]
 
+def find_A: List['a] -> anything -> (None | Some['a])
+//│ find_A: List['a] -> anything -> (None | Some['a])
+//│       = <missing implementation>
+
+:e // * Still doesn't work:
+def find_A table key =
+  if is_empty table then None
+  else if eq (head table)._1 key then Some (head table)._2
+  else find_A (tail table) key
+//│ 'b -> (forall 'b, 'val, 'a. ('b -> (None | Some['val] | Some['a])
+//│   where
+//│     'b <: List['b] & List[{_1: 'b}] & List[{_2: 'val}] & List['a]))
+//│   <:  find_A:
+//│ List['a] -> anything -> (None | Some['a])
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.130: 	def find_A table key =
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.131: 	  if is_empty table then None
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.132: 	  else if eq (head table)._1 key then Some (head table)._2
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.133: 	  else find_A (tail table) key
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘a` does not have field '_1'
+//│ ║  l.125: 	def find_A: List['a] -> anything -> (None | Some['a])
+//│ ║         	                 ^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.132: 	  else if eq (head table)._1 key then Some (head table)._2
+//│ ║         	             ^^^^^^^^^^^^^^^
+//│ ╟── from quantified type variable:
+//│ ║  l.46: 	def head: forall 'a. List['a] -> 'a
+//│ ╙──      	                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.130: 	def find_A table key =
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.131: 	  if is_empty table then None
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.132: 	  else if eq (head table)._1 key then Some (head table)._2
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.133: 	  else find_A (tail table) key
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘a` does not have field '_2'
+//│ ║  l.125: 	def find_A: List['a] -> anything -> (None | Some['a])
+//│ ║         	                 ^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.132: 	  else if eq (head table)._1 key then Some (head table)._2
+//│ ║         	                                           ^^^^^^^^^^^^^^^
+//│ ╟── from quantified type variable:
+//│ ║  l.46: 	def head: forall 'a. List['a] -> 'a
+//│ ╙──      	                 ^^
+//│       = <no result>
+//│         find_A is not implemented
+
 // let nfind table key =
 //   begin match find table key with
 //   | None -> fun f x -> x
@@ -141,21 +195,21 @@ type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 
 // let succ (n:Int) = fun f x -> f (n f x)
 def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
-def succ' n = fun f -> fun x -> f (n f x)
+def succ_ n = fun f -> fun x -> f (n f x)
 //│ succ: ChurchInt -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
 //│     'b <: 'a -> 'c -> 'd
 //│     'a <: 'd -> 'e)))
 //│     = [Function: succ]
-//│ succ': 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> 'd
+//│ succ_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
-//│     'b <: 'c -> 'd
-//│     'a <: 'b -> 'e -> 'c)))
-//│      = [Function: succ]
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e)))
+//│      = [Function: succ_]
 
 // let add (n:Int) (m:Int) = n succ m
 def add (n: ChurchInt) (m: ChurchInt) = n succ m
-def add' n m = n succ' m
+def add_ n m = n succ_ m
 //│ add: ChurchInt -> (forall 'a. (ChurchInt -> 'b
 //│   where
 //│     'a <: (ChurchInt -> (forall 'c. 'c -> (forall 'c, 'd, 'e, 'f, 'g. ('e -> 'g
@@ -163,21 +217,21 @@ def add' n m = n succ' m
 //│     'd <: 'c -> 'e -> 'f
 //│     'c <: 'f -> 'g)))) -> ChurchInt -> 'b))
 //│    = [Function: add]
-//│ add': 'a -> (forall 'a. ('b -> 'c
+//│ add_: 'a -> (forall 'a. ('b -> 'c
 //│   where
-//│     'a <: (forall 'd. 'd -> (forall 'e. 'e -> (forall 'd, 'e, 'f, 'g, 'h. ('h -> 'g
+//│     'a <: (forall 'd. 'd -> (forall 'e. 'e -> (forall 'd, 'e, 'f, 'g, 'h. ('f -> 'h
 //│   where
-//│     'e <: 'f -> 'g
-//│     'd <: 'e -> 'h -> 'f)))) -> 'b -> 'c))
-//│     = [Function: add]
+//│     'd <: 'e -> 'f -> 'g
+//│     'e <: 'g -> 'h)))) -> 'b -> 'c))
+//│     = [Function: add_]
 
 // let printInt (n:Int) = print (n (fun x -> x+1) 0)
 def printInt (n: ChurchInt) = toString (n (fun x -> x + 1) 0)
-def printInt' n = toString (n (fun x -> x + 1) 0)
+def printInt_ n = toString (n (fun x -> x + 1) 0)
 //│ printInt: ChurchInt -> string
 //│         = [Function: printInt]
-//│ printInt': ((int -> int) -> 0 -> anything) -> string
-//│          = [Function: printInt]
+//│ printInt_: ((int -> int) -> 0 -> anything) -> string
+//│          = [Function: printInt_]
 
 // let table = create_hashtbl ()
 // let table = hashtbl_add table "one" (fun f x -> f x)
@@ -203,21 +257,41 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 // let zog =
 //   printInt (add (nfind table "one") (nfind table "two"))
 
-:e // FIXME?
+// :e // FIXME? fails with genLamBodies
+// * Note: this one requires `:DistributeForalls`
 zog = printInt (add (nfind table "one") (nfind table "two"))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.207: 	zog = printInt (add (nfind table "one") (nfind table "two"))
-//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.139: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.139: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──       	                        ^^
 //│ zog: string
 //│    = '0'
 
-zog' = printInt' (add' (nfind table "one") (nfind table "two"))
-//│ zog': string
+// Repro:
+
+// :e // FIXME? fails with genLamBodies
+a = add (nfind table "one")
+//│ a: ChurchInt -> 'a
+//│   where
+//│     'b <: (ChurchInt -> (forall 'c. 'c -> (forall 'c, 'd, 'e, 'f, 'g. ('e -> 'g
+//│   where
+//│     'd <: 'c -> 'e -> 'f
+//│     'c <: 'f -> 'g)))) -> ChurchInt -> 'a
+//│  = [Function (anonymous)]
+
+b = (nfind table "two")
+//│ b: ('a & 'b) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('f | 'e)
+//│   where
+//│     'a <: 'c -> 'd & 'd -> 'e
+//│     'b <: 'c -> 'e))
+//│  = [Function (anonymous)]
+
+// * Note: this one requires `:DistributeForalls`
+// :d
+a b
+//│ res: 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│   where
+//│     'b <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e)) | ChurchInt
+//│    = [Function (anonymous)]
+
+zog_ = printInt_ (add_ (nfind table "one") (nfind table "two"))
+//│ zog_: string
 //│     = '0'
 

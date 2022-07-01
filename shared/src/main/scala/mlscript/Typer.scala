@@ -23,6 +23,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   var generalizeCurriedFunctions: Boolean = false
   
   var distributeForalls: Boolean = false
+  var genLamBodies: Boolean = false
   
   var noCycleCheck: Boolean = false
   var noRecursiveTypes: Boolean = false
@@ -711,7 +712,19 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           // Option.when(ctx.inRecursiveDef.isEmpty)(ec)
         val param_ty = typePattern(pat)(newCtx, raise, extrCtx, vars)
         // newCtx ++= newBindings
-        val body_ty = typeTerm(body)(newCtx, raise, extrCtx, vars, genLambdas = generalizeCurriedFunctions)
+        
+        // val body_ty = typeTerm(body)(newCtx, raise, extrCtx, vars, genLambdas = generalizeCurriedFunctions)
+        val body_ty = if (!genLamBodies || !generalizeCurriedFunctions) typeTerm(body)(newCtx, raise, extrCtx, vars)
+            // else newCtx.nextLevel |> { implicit ctx =>
+            else newCtx.nextLevel |> { newCtx =>
+          val ec: ExtrCtx = MutMap.empty
+          val extrCtx: Opt[ExtrCtx] = S(ec)
+          val innerTy = typeTerm(body)(newCtx, raise, extrCtx, vars)
+          // PolymorphicType.mk(ctx.lvl,
+          PolymorphicType.mk(newCtx.lvl-1,
+            ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy))
+        }
+        
         val innerTy = FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
         // PolymorphicType.mk(ctx.lvl,
         //   // if (ec.isEmpty) innerTy else ConstrainedType(ec.flatMap()))

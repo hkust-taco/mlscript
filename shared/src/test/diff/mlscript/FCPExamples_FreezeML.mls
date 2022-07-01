@@ -532,10 +532,11 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│     'd :> 'b -> 'b
 //│    = [Function: id1]
 
-:e // * ^ Here you go:
+// :e // * ^ Here you go:
+:e // FIXME? succeees with genLamBodies
 res id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.536: 	res id
+//│ ║  l.537: 	res id
 //│ ║         	^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.169: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
@@ -550,10 +551,10 @@ res id
 :e
 a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.551: 	a (fun x -> { u = x })
+//│ ║  l.552: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a`
-//│ ║  l.551: 	a (fun x -> { u = x })
+//│ ║  l.552: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.169: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b

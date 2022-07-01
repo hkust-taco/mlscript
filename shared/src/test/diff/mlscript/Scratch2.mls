@@ -189,7 +189,8 @@ to_church = to_ch
 
 // :s
 // :ns
-:e // * Needs distrib (see below)
+// :e // * Needs distrib (see below)
+:e // FIXME? succeees with genLamBodies
 to_church = to_ch_s_mix
 //│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('f | 'e)
 //│   where
@@ -198,7 +199,7 @@ to_church = to_ch_s_mix
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.193: 	to_church = to_ch_s_mix
+//│ ║  l.194: 	to_church = to_ch_s_mix
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -214,7 +215,7 @@ to_church = to_ch_s
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.212: 	to_church = to_ch_s
+//│ ║  l.213: 	to_church = to_ch_s
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -239,7 +240,7 @@ to_church = to_ch_mix
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.237: 	to_church = to_ch_mix
+//│ ║  l.238: 	to_church = to_ch_mix
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -261,9 +262,9 @@ to_church = to_ch_mix
 rec def to_ch n =
   succD (to_ch n)
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.261: 	rec def to_ch n =
+//│ ║  l.262: 	rec def to_ch n =
 //│ ║         	              ^^^
-//│ ║  l.262: 	  succD (to_ch n)
+//│ ║  l.263: 	  succD (to_ch n)
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)

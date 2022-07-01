@@ -40,6 +40,7 @@ fun x_ -> (fun y -> y y)
 //│ res: anything -> (forall 'a, 'b. ('a -> 'b & 'a) -> 'b)
 //│    = [Function: res]
 
+// :e // FIXME? fails with genLamBodies
 // let (delta:sid -> sid) = fun x -> x x
 def delta = (fun x -> x x) : Sid -> Sid
 //│ delta: Sid -> Sid

@@ -9,9 +9,8 @@ import mlscript.Message._
 
 class ConstraintSolver extends NormalForms { self: Typer =>
   def verboseConstraintProvenanceHints: Bool = verbose
-  // def startingFuel: Int = 10000
-  var startingFuel: Int = 10000
-  def depthLimit: Int = 400
+  var startingFuel: Int = 5000
+  def depthLimit: Int = 300
   
   type ExtrCtx = MutMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound
   
@@ -556,10 +555,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             //    Note: similar remark applies inside constrainDNF
             rec(poly.instantiate, rhs, true)
           case (ConstrainedType(cs, bod), _) =>
-            cs.foreach { case (tv, bs) => bs.foreach {
-              case (true, b) => rec(b, tv, false)
-              case (false, b) => rec(tv, b, false)
-            }}
+            trace(s"DISCHARGE CONSTRAINTS") {
+              cs.foreach { case (tv, bs) => bs.foreach {
+                case (true, b) => rec(b, tv, false)
+                case (false, b) => rec(tv, b, false)
+              }}
+            }()
             rec(bod, rhs, true)
           case (_, ComposedType(true, l, r)) =>
             goToWork(lhs, rhs)
