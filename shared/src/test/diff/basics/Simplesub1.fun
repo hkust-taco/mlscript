@@ -206,7 +206,7 @@ x => {l: x x, r: x }
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‹∀ 0. (α244' -> α246')›  <:  α244_251    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. (α244' -> α246')›  <:  α244'
-//│ res: (nothing -> anything & nothing -> 'a) -> (error | 'a)
+//│ res: ('a -> 'b & nothing -> anything & 'c -> 'a & nothing -> 'c) -> (error | 'b)
 
 // Z combinator:
 // * FIXME simplified type
@@ -216,9 +216,9 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α268' -> α272')›  <:  α268_279    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α268' -> α272')›  <:  α268'
-//│ res: ((anything -> nothing) -> anything & (anything -> nothing) -> 'a) -> (error | 'a)
+//│ ╟── this constraint:  ‹∀ 0. (α276' -> α280')›  <:  α276_290    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α276' -> α280')›  <:  α276'
+//│ res: ((forall 'a, 'b. 'a -> 'b) -> 'c & (anything -> nothing) -> anything & (anything -> nothing) -> 'a -> 'b & (anything -> nothing) -> nothing -> anything) -> (error | 'c)
 
 // * Function that takes arbitrarily many arguments:
 // * FIXME type of result shouldn't be `nothing`
@@ -228,13 +228,13 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α300' -> α304')›  <:  α300_311    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α300' -> α304')›  <:  α300'
-//│ res: anything -> anything -> nothing | error
+//│ ╟── this constraint:  ‹∀ 0. (α327' -> α331')›  <:  α327_341    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α327' -> α331')›  <:  α327'
+//│ res: anything -> anything -> anything -> nothing | error
 
 // :e // due to tapping
 res 1 2
-//│ res: error
+//│ res: anything -> nothing | error
 
 
 let rec trutru = g => trutru (g true)
@@ -261,7 +261,7 @@ y => (let f = x => x; {a: f y, b: f true})
 //│ res: 'a -> {a: 'a, b: true}
 
 y => (let f = x => y x; {a: f 0, b: f true})
-//│ res: (nothing -> anything) -> {a: nothing, b: nothing}
+//│ res: (nothing -> anything & 0 -> 'a & true -> 'b) -> {a: 'a, b: 'b}
 
 y => (let f = x => x y; {a: f (z => z), b: f (z => true)})
 //│ res: 'a -> {a: 'a, b: true}
@@ -406,8 +406,8 @@ let rec x = (let y = (x x); (z => z))
 //│ ║  l.+1: 	(w => x => x) ((y => y y) (y => y y))
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α621' -> α622')›  <:  α621_628    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α621' -> α622')›  <:  α621'
+//│ ╟── this constraint:  ‹∀ 0. (α675' -> α676')›  <:  α675_682    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α675' -> α676')›  <:  α675'
 //│ res: 'a -> 'a
 
 :NoCycleCheck

@@ -20,7 +20,7 @@ def f v = case v of {
     A -> (v.x : int)
   | _ -> 0
  }
-//│ f: anything -> int
+//│ f: (A & {x: int} | ~A) -> int
 //│  = [Function: f1]
 
 a1 = A { x = 0 }
@@ -37,7 +37,19 @@ a2 = A { x = 0: number }
 
 :e
 f a2
-//│ res: int
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.39: 	f a2
+//│ ║        	^^^^
+//│ ╟── type `number` is not an instance of type `int`
+//│ ║  l.34: 	a2 = A { x = 0: number }
+//│ ║        	                ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.20: 	    A -> (v.x : int)
+//│ ║        	                ^^^
+//│ ╟── from field selection:
+//│ ║  l.20: 	    A -> (v.x : int)
+//│ ╙──      	          ^^^
+//│ res: error | int
 //│    = 0
 
 def f2: (A & {x: int} | anything) -> int

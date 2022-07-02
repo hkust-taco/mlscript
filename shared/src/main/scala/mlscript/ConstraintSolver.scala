@@ -18,6 +18,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   protected var currentConstrainingRun = 0
   
+  // FIXME use dependency graph instead
+  val hasWrongLevelBounds: MutSet[TV] = MutSet.empty
+  
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
   // def constrain(lhs: SimpleType, rhs: SimpleType, extrusionContext: Opt[ExtrCtx])(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx): Unit = { val outerCtx = ctx ; {
   def constrain(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx, extrusionContext: Opt[ExtrCtx]): Unit = { val outerCtx = ctx ; {
@@ -458,6 +461,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val newBound = (cctx._1 ::: cctx._2.reverse).foldRight(rhs)((c, ty) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             lhs.upperBounds ::= newBound // update the bound
+            if (rhs.level > lhs.level) hasWrongLevelBounds += lhs
             lhs.lowerBounds.foreach(recThrough(_, rhs, lhs)) // propagate from the bound
           case (lhs, rhs: TypeVariable) =>
             println(s"NEW $rhs LB (${lhs.level})")
@@ -465,6 +469,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val newBound = (cctx._1 ::: cctx._2.reverse).foldLeft(lhs)((ty, c) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             rhs.lowerBounds ::= newBound // update the bound
+            if (lhs.level > rhs.level) hasWrongLevelBounds += rhs
             rhs.upperBounds.foreach(recThrough(lhs, _, rhs)) // propagate from the bound
             //  */
             
@@ -1020,7 +1025,22 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case o @ Overload(alts) => Overload(alts.map(freshen(_).asInstanceOf[FunctionType]))(o.prov)
     }}
     // (r => s"=> $r"))
-    freshenImpl(ty, below)
+    val res = freshenImpl(ty, below)
+    
+    hasWrongLevelBounds.foreach { wtv =>
+      val lbs = wtv.lowerBounds
+      val ubs = wtv.upperBounds
+      lbs.foreach { lb =>
+        if (lb.getVars.exists(freshened.contains))
+          wtv.lowerBounds ::= freshenImpl(lb, below)
+      }
+      ubs.foreach { ub =>
+        if (ub.getVars.exists(freshened.contains))
+          wtv.upperBounds ::= freshenImpl(ub, below)
+      }
+    }
+    
+    res
   }
   
   

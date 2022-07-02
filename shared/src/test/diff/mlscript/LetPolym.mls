@@ -26,31 +26,31 @@ test "hi"
 def test f =
   let local g = g (f 1)
   in local succ
-//│ test: (1 -> anything) -> int
+//│ test: (1 -> int & 1 -> anything) -> int
 //│     = [Function: test1]
 
 def test f =
   let local g x = g (f x)
   in local succ
-//│ test: (nothing -> anything) -> anything -> int
+//│ test: ('a -> int & nothing -> anything) -> 'a -> int
 //│     = [Function: test2]
 
 def test f =
   let local g x = g (f x)
   in local add
-//│ test: (nothing -> anything) -> anything -> int -> int
+//│ test: ('a -> int & nothing -> anything) -> 'a -> int -> int
 //│     = [Function: test3]
 
 def test f =
   let local g x = g (f x)
   in local add 1
-//│ test: (nothing -> anything) -> int -> int
+//│ test: (1 -> int & nothing -> anything) -> int -> int
 //│     = [Function: test4]
 
 def test f =
   let local g x = g (f x)
   in (local add 1, local (fun y -> fun z -> y + z) 2)
-//│ test: (nothing -> anything) -> (int -> int, int -> int,)
+//│ test: (nothing -> anything & 1 -> int & 2 -> int) -> (int -> int, int -> int,)
 //│     = [Function: test5]
 
 :re // TODO
@@ -70,12 +70,18 @@ f_g._2 42
 def test f =
   let local g x = g (f x)
   in (local add 1, local concat "ok")
-//│ test: (nothing -> anything) -> (int -> int, string -> string,)
+//│ test: (nothing -> anything & 1 -> int & "ok" -> string) -> (int -> int, string -> string,)
 //│     = [Function: test6]
 
 :e
 test succ
-//│ res: (int -> int, string -> string,)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.77: 	test succ
+//│ ║        	^^^^^^^^^
+//│ ╟── string literal of type `"ok"` is not an instance of type `int`
+//│ ║  l.72: 	  in (local add 1, local concat "ok")
+//│ ╙──      	                                ^^^^
+//│ res: (int -> int, string -> string,) | error
 //│    = [ [Function (anonymous)], [Function (anonymous)] ]
 
 
@@ -100,7 +106,7 @@ def test =
     let local g = f (g x)
     in local add "1"
   )
-//│ test: (nothing -> anything) -> int -> nothing
+//│ test: ((int -> int) -> "1" -> 'a & nothing -> anything) -> int -> 'a
 //│     = [Function: test9]
 
 fun f -> fun x ->

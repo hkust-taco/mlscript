@@ -284,14 +284,14 @@ f (choose id) ids
 //│ ║  l.282: 	f (choose id) ids
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ('a278' -> 'a278')›  <:  'a659_666    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ('a278' -> 'a278')›  <:  'a659'
+//│ ╟── this constraint:  ‹∀ 0. ('a278' -> 'a278')›  <:  'a663_670    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ('a278' -> 'a278')›  <:  'a663'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
 //│ ║  l.282: 	f (choose id) ids
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. ('a290'' -> 'a290'')›  <:  'a659_666    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. ('a290'' -> 'a290'')›  <:  'a659_666
+//│ ╟── this constraint:  ‹∀ 1. ('a290'' -> 'a290'')›  <:  'a663_670    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. ('a290'' -> 'a290'')›  <:  'a663_670
 //│ res: 'a -> 'a | error
 
 // * ^ Strangely, this one works with recursive types:
@@ -534,8 +534,8 @@ res id
 //│ ║  l.532: 	res id
 //│ ║         	^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‘a''  <:  'a1009_1015    TraitTag  TypeVariable
-//│ ╙──  ... looks like:  ‘a''  <:  'a1009'
+//│ ╟── this constraint:  ‘a''  <:  'a1013_1019    TraitTag  TypeVariable
+//│ ╙──  ... looks like:  ‘a''  <:  'a1013'
 //│ res: 'a -> 'a | error
 //│    = [Function: id1]
 

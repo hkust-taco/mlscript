@@ -19,7 +19,7 @@ foo id
 
 // Notice `f` is passed an arg of locally-quantified type 'a, which is extruded to `anything`:
 bar f = foo (fun x -> let tmp = f x in x)
-//│ bar: (nothing -> anything) -> int
+//│ bar: (‘a -> anything & nothing -> anything) -> int
 //│    = [Function: bar]
 
 

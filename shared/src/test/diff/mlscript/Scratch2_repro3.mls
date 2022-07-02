@@ -182,6 +182,41 @@ to_church = to_ch
 
 rec def to_ch_weird n =
   s (to_ch_weird n)
+//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: ?to_ch_weird` took too many steps and ran out of fuel (5000)
+//│ ║  l.183: 	rec def to_ch_weird n =
+//│ ║         	                    ^^^
+//│ ║  l.184: 	  s (to_ch_weird n)
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 2. (α28''' -> α29''')›
+//│ ║  l.12: 	def s n = fun f -> n f
+//│ ║        	          ^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 2. (α28''' -> α29''')›
+//│ ║  l.12: 	def s n = fun f -> n f
+//│ ║        	          ^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 2. (α28''' -> α29''')›
+//│ ║  l.184: 	  s (to_ch_weird n)
+//│ ║         	  ^^^^^^^^^^^^^^^^^
+//│ ╟──  + α804'
+//│ ║  l.184: 	  s (to_ch_weird n)
+//│ ║         	  ^^^^^^^^^^^^^^^^^
+//│ ╟──  - ((α28_1050',) -> α29_963')
+//│ ║  l.12: 	def s n = fun f -> n f
+//│ ║        	                   ^^^
+//│ ╟──  - ((α28_1050',) -> α29_963')
+//│ ║  l.12: 	def s n = fun f -> n f
+//│ ║        	                   ^
+//│ ╟──  - ((α28_1050',) -> α29_963')
+//│ ║  l.12: 	def s n = fun f -> n f
+//│ ║        	                   ^
+//│ ╟──  - ((α28_1050',) -> α29_963')
+//│ ╟──  - α27_805'
+//│ ╟──  - α27_805'
+//│ ╟──  - α27_805'
+//│ ║  l.184: 	  s (to_ch_weird n)
+//│ ║         	     ^^^^^^^^^^^^^
+//│ ╟──  - α803'
+//│ ║  l.184: 	  s (to_ch_weird n)
+//│ ╙──       	     ^^^^^^^^^^^^^
 //│ to_ch_weird: anything -> anything -> nothing
 //│            = [Function: to_ch_weird]
 
