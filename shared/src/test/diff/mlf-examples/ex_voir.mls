@@ -20,10 +20,7 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'c. (List[?] & 'c) -> (forall 'b, 'c, 'a. (Cons['a | 'b] with {head: 'b, tail: 'c}
-//│   where
-//│     'c <: List['a]
-//│     'c <: List['a])))
+//│ 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -60,7 +57,7 @@ def id_ = fun x -> x
 def succ n = n + 1
 //│ choose: 'a -> (forall 'b. 'b -> ('a | 'b))
 //│       = [Function: choose]
-//│ choose3: 'a -> anything -> (forall 'b. 'b -> (forall 'b. 'a | 'b))
+//│ choose3: 'a -> anything -> (forall 'b. 'b -> ('a | 'b))
 //│        = [Function: choose3]
 //│ id: Sid
 //│   = [Function: id]
@@ -75,11 +72,11 @@ def test = choose3 id
 def test_ = choose3 id_
 def test2 = test succ
 def test2_ = test_ succ
-//│ test: anything -> (forall 'a. 'a -> (forall 'a. Sid | 'a))
+//│ test: anything -> (forall 'a. 'a -> (Sid | 'a))
 //│     = [Function (anonymous)]
 //│ test_: anything -> (forall 'a. 'a -> (forall 'a, 'b. 'b -> 'b | 'a))
 //│      = [Function (anonymous)]
-//│ test2: 'a -> (forall 'a. Sid | 'a)
+//│ test2: 'a -> (Sid | 'a)
 //│      = [Function (anonymous)]
 //│ test2_: 'a -> (forall 'a, 'b. 'b -> 'b | 'a)
 //│       = [Function (anonymous)]
@@ -97,11 +94,9 @@ fun x -> fun y -> ((x : S1), (y : S2), x x)
 //│ Defined type alias S2
 //│ res: (S1 & 'a) -> (forall 'b. (S2 & 'b) -> (S1, S2, 'a | 'b,))
 //│    = [Function: res]
-//│ res: (S1 & 'a -> anything & 'a) -> (forall 'a. (S2 -> (forall 'a, 'b. ((S1, S2, 'b,)
+//│ res: (S1 & 'a) -> (forall 'a, 'b. (S2 -> (S1, S2, 'b,)
 //│   where
 //│     'a <: 'a -> 'b))
-//│   where
-//│     'a <: 'a -> anything))
 //│    = [Function: res]
 
 // (* please onlyweak ['b = sid] 'b -> 'b : sid -> sid *)
@@ -112,13 +107,9 @@ fun x -> fun y -> ((x : S1), (y : S2), x x)
 def example f = (f: forall 'a. 'a -> int -> 'b) f
 def example_ f = f f
 def mkpair x y = (x, y)
-//│ example: (nothing -> int -> 'a & 'a) -> (forall 'a, 'b. (int -> 'b
-//│   where
-//│     'a <: nothing -> int -> 'b))
+//│ example: (nothing -> int -> 'b) -> int -> 'b
 //│        = [Function: example]
-//│ example_: ('a -> anything & 'a) -> (forall 'a, 'b. ('b
-//│   where
-//│     'a <: 'a -> 'b))
+//│ example_: ('a -> 'b & 'a) -> 'b
 //│         = [Function: example_]
 //│ mkpair: 'a -> (forall 'b. 'b -> ('a, 'b,))
 //│       = [Function: mkpair]
@@ -129,22 +120,16 @@ def mkpair x y = (x, y)
 // *)
 example mkpair
 example_ mkpair
-//│ res: int -> 'b
-//│   where
-//│     'a <: nothing -> int -> 'b
+//│ res: int -> (‘a329, int,)
 //│    = [Function (anonymous)]
-//│ res: 'a
-//│   where
-//│     'b <: 'b -> 'a
+//│ res: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('b, 'c,)), 'a,)
 //│    = [Function (anonymous)]
 
 // let make_ex3 x (f:['a > sid] 'a -> 'b ) = f x 
 def make_ex3 x (f: forall 'a. ('a | Sid) -> 'b) = f x
-//│ make_ex3: 'a -> (forall 'a. ((Sid -> anything) -> (forall 'a, 'b, 'c. ('c
+//│ make_ex3: 'a -> (forall 'a, 'b. ((Sid -> 'b) -> 'b
 //│   where
-//│     'b <: 'a -> 'c))
-//│   where
-//│     'a <: anything))
+//│     'a <: 'a))
 //│         = [Function: make_ex3]
 
 // let ex_list3 = [ make_ex3 succ ;

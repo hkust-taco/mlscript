@@ -7,22 +7,16 @@
 // def s n = fun f -> fun x -> (n f x)
 // def s n = fun f -> fun x -> (n f x)
 def s n = fun f -> n f
-//│ s: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
+//│ s: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
 //│     'a <: 'b -> 'c))
-//│   where
-//│     'a <: 'b -> 'a))
 //│  = [Function: s]
 
 :ns
 s
-//│ res: forall 'a, 'b, 'c. 'a -> (forall 'd, 'e. ('d -> (forall 'f. ('f
+//│ res: forall 'a. 'a -> (forall 'b, 'c. ('b -> 'c
 //│   where
-//│     'a <: 'd -> 'f))
-//│   where
-//│     'a <: 'd -> 'e))
-//│   where
-//│     'a <: 'b -> 'c
+//│     'a <: 'b -> 'c))
 //│    = [Function: s]
 
 type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -46,47 +40,30 @@ rec def to_ch n =
   s (to_ch n)
 // rec def to_ch n =
 //   to_ch n
-//│ to_ch: anything -> (forall 'a. 'a -> (forall 'a, 'b, 'c. ('c
-//│   where
-//│     'b <: 'a -> 'c)))
+//│ to_ch: anything -> anything -> nothing
 //│      = [Function: to_ch]
 
 :ns
 to_ch
-//│ res: forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h. forall 'to_ch, 'i, 'a, 'j, 'b, 'c, 'd, 'e, 'f, 'g, 'h. 'to_ch
+//│ res: forall 'a, 'b, 'c, 'd, 'e. forall 'to_ch, 'f, 'a, 'g, 'b, 'c, 'd, 'e. 'to_ch
 //│   where
-//│     'to_ch :> 'i -> 'j
-//│            <: 'i -> 'a
-//│     'j :> forall 'k. 'k -> ('l
-//│   where
-//│     'b <: 'k -> 'l)
+//│     'to_ch :> 'f -> 'g
+//│            <: 'f -> 'a
+//│     'g :> forall 'h, 'i. 'h -> 'i
 //│        <: 'a
-//│     'a :> forall 'k. 'k -> ('l
-//│   where
-//│     'b <: 'k -> 'l)
+//│     'a :> forall 'h, 'i. 'h -> 'i
 //│        <: 'b
-//│     'b :> forall 'k. 'k -> ('l
-//│   where
-//│     'b <: 'k -> 'l)
-//│        <: 'e -> 'f & 'c -> 'd
-//│     'd :> 'm
-//│   where
-//│     'b <: 'h -> 'm
-//│     'c <: 'h
-//│     'h <: 'e
-//│     'f :> 'n
-//│   where
-//│     'b <: 'g -> 'n
-//│     'k <: 'e
-//│     'e <: 'g
-//│     'g <: 'e
+//│     'b :> forall 'h, 'i. 'h -> 'i
+//│        <: 'c -> 'd
+//│     'i :> 'd
+//│     'h <: 'c
+//│     'c <: 'e
+//│     'e <: 'c
 //│    = [Function: to_ch]
 
 :re
 to_ch 1 2
-//│ res: 'a
-//│   where
-//│     'b <: 2 -> 'a
+//│ res: nothing
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 
@@ -94,46 +71,9 @@ to_ch 1 2
 // :d
 :e // fails with quantif extrus
 to_church = to_ch
-//│ anything -> (forall 'a. 'a -> (forall 'a, 'b, 'c. ('c
-//│   where
-//│     'b <: 'a -> 'c)))
+//│ anything -> anything -> nothing
 //│   <:  to_church:
 //│ int -> ChurchInt
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?to_ch, ?i, ?j, ?k, ?l, ?m, ?n, ?o, ?p, ?q. ?to_ch <: int -> ChurchInt` exceeded recursion depth limit (300)
-//│ ║  l.96: 	to_church = to_ch
-//│ ║        	^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  α391'  <!<  α52_119'
-//│ ╟── while constraining:  α399'  <!<  α52_119'
-//│ ╟── while constraining:  α399'  <!<  α22_401^35
-//│ ╟── while constraining:  (α399',)  <!<  (α22_401^35,)
-//│ ╟── while constraining:  (α22_401^35 -> ‹∀ 4. {α23_402''''' where: α21_121' <: ((α22_401^35,) -> α23_402''''')}›)  <!<  ((α399',) -> α400')
-//│ ╟── while constraining:  ‹∀ 3. (α22_118'''' -> ‹∀ 4. {α23_122''''' where: α21_121' <: ((α22_118'''',) -> α23_122''''')}›)›  <!<  ((α399',) -> α400')
-//│ ╟── while constraining:  α21_121'  <!<  ((α399',) -> α400')
-//│ ╟── while constraining:  α21_121'  <!<  ((α22_397^35,) -> α23_398^35)
-//│ ╟── while constraining:  {α23_398^35 where: α21_121' <: ((α22_397^35,) -> α23_398^35)}  <!<  (‘N^35 -> ‘N^35)
-//│ ╟── while constraining:  ‹∀ 4. {α23_394''''' where: α21_121' <: ((α22_393^34,) -> α23_394''''')}›  <!<  (‘N^35 -> ‘N^35)
-//│ ╟── while constraining:  ‹∀ 4. {α23_394''''' where: α21_121' <: ((α22_393^34,) -> α23_394''''')}›  <!<  ‹∀ 1. ('N395'' -> 'N396'')›
-//│ ╟── while constraining:  α392'  <!<  ‹∀ 1. ('N395'' -> 'N396'')›
-//│ ╟── while constraining:  α392'  <!<  (‘N^34 -> ‘N^34)
-//│ ╟── while constraining:  α23_390^34  <!<  (‘N^34 -> ‘N^34)
-//│ ╟── while constraining:  {α23_390^34 where: α21_121' <: ((α22_389^34,) -> α23_390^34)}  <!<  (‘N^34 -> ‘N^34)
-//│ ╟── ......
-//│ ╟── ......
-//│ ╟── while constraining:  α137'  <!<  ‹∀ 1. ('N143'' -> 'N144'')›
-//│ ╟── while constraining:  α137'  <!<  (‘N'' -> ‘N'')
-//│ ╟── while constraining:  α23_133''  <!<  (‘N'' -> ‘N'')
-//│ ╟── while constraining:  {α23_133'' where: α21_121' <: ((α22_130'',) -> α23_133'')}  <!<  (‘N'' -> ‘N'')
-//│ ╟── while constraining:  ‹∀ 4. {α23_131''''' where: α21_121' <: ((α22_130'',) -> α23_131''''')}›  <!<  (‘N'' -> ‘N'')
-//│ ╟── while constraining:  (α22_130'' -> ‹∀ 4. {α23_131''''' where: α21_121' <: ((α22_130'',) -> α23_131''''')}›)  <!<  ((‘N'' -> ‘N'') -> (‘N'' -> ‘N''))
-//│ ╟── while constraining:  ‹∀ 3. (α22_118'''' -> ‹∀ 4. {α23_122''''' where: α21_121' <: ((α22_118'''',) -> α23_122''''')}›)›  <!<  ((‘N'' -> ‘N'') -> (‘N'' -> ‘N''))
-//│ ╟── while constraining:  ‹∀ 3. (α22_118'''' -> ‹∀ 4. {α23_122''''' where: α21_121' <: ((α22_118'''',) -> α23_122''''')}›)›  <!<  ‹∀ 0. (('N40' -> 'N40') -> ('N40' -> 'N40'))›
-//│ ╟── while constraining:  ‹∀ 3. (α22_118'''' -> ‹∀ 4. {α23_122''''' where: α21_121' <: ((α22_118'''',) -> α23_122''''')}›)›  <!<  ChurchInt
-//│ ╟── while constraining:  α45_117'  <!<  ChurchInt
-//│ ╟── while constraining:  (α43_116' -> α45_117')  <!<  (Int -> ChurchInt)
-//│ ╟── while constraining:  to_ch42_115'  <!<  (Int -> ChurchInt)
-//│ ╟── while constraining:  ‹∀ 0. to_ch42'›  <!<  (Int -> ChurchInt)
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_ch42'››  <!<  (Int -> ChurchInt)
-//│ ╙── while constraining:  ‹∀ 0. ‹∀ 0. to_ch42'››  <!<  ‹∀ 0. (Int -> ChurchInt)›
 //│          = [Function: to_ch]
 
 

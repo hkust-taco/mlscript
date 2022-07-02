@@ -18,10 +18,7 @@ def Nil = Nil {}
 //│ Nil: Nil
 
 def Cons head tail = Cons { head; tail }
-//│ Cons: 'b -> (forall 'c. (List[?] & 'c) -> (forall 'b, 'c, 'a. (Cons['a | 'b] with {head: 'b, tail: 'c}
-//│   where
-//│     'c <: List['a]
-//│     'c <: List['a])))
+//│ Cons: 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
 
 // ------------ Type signatures for functions used in the examples ------------
 // (I guess)
@@ -51,19 +48,12 @@ class Collection[a]: { l: List[a] }
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
 //│ Defined Collection.Mem: Collection[?] -> anything -> bool
-//│ Defined Collection.Fold: Collection['a] -> (forall 'b. ('b -> 'a -> 'b) -> (forall 'a, 'c, 'd, 'e. ('d -> (forall 'a, 'c, 'd, 'f. ('d | 'f
+//│ Defined Collection.Fold: Collection['a] -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c -> 'c
 //│   where
-//│     'c <: ('d | 'f) -> 'a -> 'f
-//│     'c <: ('d | 'f) -> 'a -> 'f))
-//│   where
-//│     'c <: ('d | 'e) -> 'a -> 'e)))
+//│     'b <: 'c -> 'a -> 'c)))
 
 def coll_mem c x = c.Mem x
-//│ coll_mem: (Collection['a] & 'a) -> (forall 'a. ('a -> (forall 'a. (bool
-//│   where
-//│     'a <: Collection['a]
-//│     'a <: Collection['a]
-//│     'a <: Collection['a]))
+//│ coll_mem: 'a -> (forall 'a. ('a -> bool
 //│   where
 //│     'a <: Collection['a]))
 
@@ -72,22 +62,7 @@ def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
   let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
   (l1, l2)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.72: 	  let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
-//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α267_319''''  <:  List[a22_339'''']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  α267'''''  <:  List[a22_327^8]
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.73: 	  let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
-//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α463_515''''  <:  List[a22_535'''']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  α463'''''  <:  List[a22_523^8]
-//│ simple_and_double: Collection[?] -> (forall 'a, 'b. (error | Nil | 'b
+//│ simple_and_double: Collection[?] -> (forall 'a. 'a, forall 'b. 'b,)
 //│   where
-//│     'a <: (Nil | 'b) -> nothing -> 'b
-//│     'a <: (Nil | 'b) -> nothing -> 'b), forall 'c, 'd. (error | Nil | 'd
-//│   where
-//│     'c <: (Nil | 'd) -> nothing -> 'd
-//│     'c <: (Nil | 'd) -> nothing -> 'd),)
+//│     'b :> (Cons[(nothing, nothing,)] with {tail: 'b}) | Nil
+//│     'a :> (Cons[nothing] with {tail: 'a}) | Nil

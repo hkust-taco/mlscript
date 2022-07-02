@@ -6,58 +6,34 @@
 // i.e. auto
 g = fun (f: forall 'a. 'a -> 'a) -> f f
 g' = fun f -> f f
-//│ g: (forall 'a. 'a -> 'a) -> (forall 'b, 'c. ('c
-//│   where
-//│     'b <: 'b -> 'c))
+//│ g: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│  = [Function: g]
-//│ g': ('a -> anything & 'a) -> (forall 'a, 'b. ('b
-//│   where
-//│     'a <: 'a -> 'b))
+//│ g': ('a -> 'b & 'a) -> 'b
 //│   = [Function: g]
 
 // i.e. auto id (FreezeML F5)
 (fun (f: forall 'a. 'a -> 'a) -> f f) (fun x -> x)
 (fun f -> f f) (fun x -> x)
-//│ res: 'a
-//│   where
-//│     'b <: 'b -> 'a
+//│ res: 'a -> 'a
 //│    = [Function (anonymous)]
-//│ res: 'a
-//│   where
-//│     'b <: 'b -> 'a
+//│ res: 'a -> 'a
 //│    = [Function (anonymous)]
 
 // i.e. (fun auto -> auto id) auto
 (fun g -> g (fun x -> x)) (fun f -> f f)
 (fun g -> g (fun x -> x)) (fun (f: forall 'a. 'a -> 'a) -> f f)
-//│ res: 'a
-//│   where
-//│     'b <: (forall 'c. 'c -> 'c) -> 'a
+//│ res: 'a -> 'a
 //│    = [Function (anonymous)]
-//│ res: 'a
-//│   where
-//│     'b <: (forall 'c. 'c -> 'c) -> 'a
+//│ res: 'a -> 'a
 //│    = [Function (anonymous)]
 
 // ============ Sec 1.2 ============
 
 fun f -> f (g f)
 fun f -> f (g' f)
-//│ res: ((forall 'b, 'c. ('c
-//│   where
-//│     'b <: 'b -> 'c)) -> 'd & 'a -> 'a & 'd) -> (forall 'd. ('e
-//│   where
-//│     'd <: (forall 'f, 'g. ('g
-//│   where
-//│     'f <: 'f -> 'g)) -> 'e))
+//│ res: ((forall 'a. 'a -> 'a) -> 'b & 'a -> 'a) -> 'b
 //│    = [Function: res]
-//│ res: ((forall 'a, 'b. ('b
-//│   where
-//│     'a <: 'a -> 'b)) -> anything & 'a -> anything & 'c) -> (forall 'c, 'd. ('e
-//│   where
-//│     'c <: ('c | 'd) -> anything & (forall 'c, 'd, 'f. ('f
-//│   where
-//│     'd <: ('c | 'd) -> 'f)) -> 'e))
+//│ res: ('a -> 'b & 'c -> 'a & 'c) -> 'b
 //│    = [Function: res]
 
 // ============ Sec 4.1 ============
@@ -117,16 +93,7 @@ rec def fl f x l = match_list l x (fun head -> fun tail -> fl f (f x head) tail)
 //│ fl: ('b -> 'a -> 'b) -> 'b -> List['a] -> 'b
 
 rec def fl2 f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
-//│ fl2: ('a -> nothing -> 'a & nothing -> nothing -> 'a & 'a0 -> nothing -> 'a0 & nothing -> nothing -> 'a0 & 'a1 -> nothing -> 'a1 & 'c -> nothing -> 'a1 & 'c -> nothing -> 'a2 & 'a2 -> nothing -> 'a2 & 'd) -> (forall 'e. ('c & 'e) -> (forall 'd, 'e, 'a3, 'b, 'a4, 'f. ((List['b] & 'f) -> (forall 'd, 'e, 'f, 'b0, 'a5, 'a6, 'g, 'b1, 'a7. ('a7 | 'e
-//│   where
-//│     'f <: List['b0]
-//│     'd <: 'a5 -> nothing -> 'a5 & 'e -> 'b0 -> 'a5 & 'a6 -> 'b0 -> 'a6 & 'e -> 'b0 -> 'a6
-//│     'g <: List['b1]
-//│     'd <: 'a7 -> 'b1 -> 'a7 & 'e -> 'b0 -> 'a7
-//│     'f <: List['b0]
-//│     'd <: 'a5 -> nothing -> 'a5 & 'e -> 'b0 -> 'a5 & 'a6 -> 'b0 -> 'a6 & 'e -> 'b0 -> 'a6))
-//│   where
-//│     'd <: 'a3 -> nothing -> 'a3 & 'e -> 'b -> 'a3 & 'a4 -> 'b -> 'a4 & 'e -> 'b -> 'a4)))
+//│ fl2: ('c -> 'b -> 'a & 'a -> 'b -> 'a) -> (forall 'd. ('c & 'd) -> List['b] -> ('d | 'a))
 
 :RecursiveTypes // needed for this recursive def
 def fold_left = fl
@@ -136,16 +103,7 @@ def fold_left = fl
 :NoRecursiveTypes
 
 def fold_left = fl2
-//│ ('a -> nothing -> 'a & nothing -> nothing -> 'a & 'a0 -> nothing -> 'a0 & nothing -> nothing -> 'a0 & 'a1 -> nothing -> 'a1 & 'c -> nothing -> 'a1 & 'c -> nothing -> 'a2 & 'a2 -> nothing -> 'a2 & 'd) -> (forall 'e. ('c & 'e) -> (forall 'd, 'e, 'a3, 'b, 'a4, 'f. ((List['b] & 'f) -> (forall 'd, 'e, 'f, 'b0, 'a5, 'a6, 'g, 'b1, 'a7. ('a7 | 'e
-//│   where
-//│     'f <: List['b0]
-//│     'd <: 'a5 -> nothing -> 'a5 & 'e -> 'b0 -> 'a5 & 'a6 -> 'b0 -> 'a6 & 'e -> 'b0 -> 'a6
-//│     'g <: List['b1]
-//│     'd <: 'a7 -> 'b1 -> 'a7 & 'e -> 'b0 -> 'a7
-//│     'f <: List['b0]
-//│     'd <: 'a5 -> nothing -> 'a5 & 'e -> 'b0 -> 'a5 & 'a6 -> 'b0 -> 'a6 & 'e -> 'b0 -> 'a6))
-//│   where
-//│     'd <: 'a3 -> nothing -> 'a3 & 'e -> 'b -> 'a3 & 'a4 -> 'b -> 'a4 & 'e -> 'b -> 'a4)))
+//│ ('c -> 'b -> 'a & 'a -> 'b -> 'a) -> (forall 'd. ('c & 'd) -> List['b] -> ('d | 'a))
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 
@@ -159,17 +117,12 @@ class Collection[a]: { l: List[a] }
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
 //│ Defined Collection.Mem: Collection[?] -> anything -> bool
-//│ Defined Collection.Fold: Collection['a] -> (forall 'a0. ('a0 -> 'a -> 'a0) -> (forall 'a, 'b, 'a1, 'c. ('c -> (forall 'a, 'b, 'c, 'a2. ('a2 | 'c
+//│ Defined Collection.Fold: Collection['a] -> (forall 'b. 'b -> (forall 'a, 'b, 'a0. ('a0 -> 'a0
 //│   where
-//│     'b <: ('a2 | 'c) -> 'a -> 'a2
-//│     'b <: ('a2 | 'c) -> 'a -> 'a2))
-//│   where
-//│     'b <: ('a1 | 'c) -> 'a -> 'a1)))
+//│     'b <: 'a0 -> 'a -> 'a0)))
 
 def coll_mem c x = c.Mem x
-//│ coll_mem: (Collection['a] & 'a) -> (forall 'a. ('a -> (forall 'a. (bool
-//│   where
-//│     'a <: Collection['a]))
+//│ coll_mem: 'a -> (forall 'a. ('a -> bool
 //│   where
 //│     'a <: Collection['a]))
 
@@ -178,22 +131,10 @@ def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> cons x y) nil in
   let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
   (l1, l2)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.178: 	  let l1 = c.Fold (fun y -> fun x -> cons x y) nil in
-//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 7. {α1004_1040^8 where: α1000_1030'''' <: List[α222_1039^8]}›  <:  list<>    PolymorphicType  ClassTag
-//│ ╙──  ... looks like:  ‹∀ 7. {α1004_1036^8 where: α1000_1030'''' <: List[α222_1035^8]}›  <:  list<>
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.179: 	  let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
-//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 7. {α1078_1114^8 where: α1074_1104'''' <: List[α222_1113^8]}›  <:  list<>    PolymorphicType  ClassTag
-//│ ╙──  ... looks like:  ‹∀ 7. {α1078_1110^8 where: α1074_1104'''' <: List[α222_1109^8]}›  <:  list<>
-//│ simple_and_double: Collection[?] -> (error, error,)
+//│ simple_and_double: Collection[?] -> (List[nothing], List[(nothing, nothing,)],)
 
 simple_and_double (Collection{l = cons 1 nil})
-//│ res: (error, error,)
+//│ res: (List[nothing], List[(nothing, nothing,)],)
 
 // ------------ subtyping & methods ------------
 
