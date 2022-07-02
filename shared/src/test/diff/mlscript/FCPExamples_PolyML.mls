@@ -93,7 +93,9 @@ rec def fl f x l = match_list l x (fun head -> fun tail -> fl f (f x head) tail)
 //│ fl: ('b -> 'a -> 'b) -> 'b -> List['a] -> 'b
 
 rec def fl2 f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
-//│ fl2: ('c -> 'b -> 'a & 'a -> 'b -> 'a) -> (forall 'd. ('c & 'd) -> List['b] -> ('a | 'd))
+//│ fl2: ('a -> nothing -> 'a & nothing -> nothing -> 'a & 'a0 -> nothing -> 'a0 & nothing -> nothing -> 'a0 & 'a1 -> nothing -> 'a1 & nothing -> nothing -> 'a1 & 'a2 -> nothing -> 'a2 & 'c -> nothing -> 'a2 & 'a3 -> nothing -> 'a3 & 'c -> nothing -> 'a3 & 'c -> nothing -> 'a4 & 'a4 -> nothing -> 'a4 & 'd) -> (forall 'e. ('c & 'e) -> (forall 'd, 'e, 'a5, 'a6, 'b, 'a7. (List['b] -> ('a7 | 'e)
+//│   where
+//│     'd <: 'a5 -> nothing -> 'a5 & 'e -> nothing -> 'a5 & 'a6 -> nothing -> 'a6 & 'e -> 'b -> 'a6 & ('a7 | 'e) -> 'b -> 'a7 & 'e -> 'b -> 'a7)))
 
 :RecursiveTypes // needed for this recursive def
 def fold_left = fl
@@ -103,7 +105,9 @@ def fold_left = fl
 :NoRecursiveTypes
 
 def fold_left = fl2
-//│ ('c -> 'b -> 'a & 'a -> 'b -> 'a) -> (forall 'd. ('c & 'd) -> List['b] -> ('a | 'd))
+//│ ('a -> nothing -> 'a & nothing -> nothing -> 'a & 'a0 -> nothing -> 'a0 & nothing -> nothing -> 'a0 & 'a1 -> nothing -> 'a1 & nothing -> nothing -> 'a1 & 'a2 -> nothing -> 'a2 & 'c -> nothing -> 'a2 & 'a3 -> nothing -> 'a3 & 'c -> nothing -> 'a3 & 'c -> nothing -> 'a4 & 'a4 -> nothing -> 'a4 & 'd) -> (forall 'e. ('c & 'e) -> (forall 'd, 'e, 'a5, 'a6, 'b, 'a7. (List['b] -> ('a7 | 'e)
+//│   where
+//│     'd <: 'a5 -> nothing -> 'a5 & 'e -> nothing -> 'a5 & 'a6 -> nothing -> 'a6 & 'e -> 'b -> 'a6 & ('a7 | 'e) -> 'b -> 'a7 & 'e -> 'b -> 'a7)))
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 
@@ -117,20 +121,24 @@ class Collection[a]: { l: List[a] }
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
 //│ Defined Collection.Mem: Collection[?] -> anything -> bool
-//│ Defined Collection.Fold: Collection['a] -> (forall 'a0, 'a1. ('a0 -> 'a -> ('a0 & 'a1)) -> (forall 'b. ('a0 & 'b) -> ('a1 | 'b)))
+//│ Defined Collection.Fold: Collection['a] -> (forall 'a0. ('a0 -> 'a -> 'a0) -> (forall 'a, 'b, 'a1. ('a1 -> 'a1
+//│   where
+//│     'b <: 'a1 -> 'a -> 'a1)))
 
 def coll_mem c x = c.Mem x
-//│ coll_mem: Collection[?] -> anything -> bool
+//│ coll_mem: (Collection['a] & 'a) -> (forall 'a. ('a -> bool
+//│   where
+//│     'a <: Collection['a]))
 
 // typo in the paper? it was `fun x -> fun y -> ...`
 def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> cons x y) nil in
   let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
   (l1, l2)
-//│ simple_and_double: Collection[?] -> (List[nothing], List[(nothing, nothing,)],)
+//│ simple_and_double: Collection[?] -> (List[nothing], List[nothing],)
 
 simple_and_double (Collection{l = cons 1 nil})
-//│ res: (List[nothing], List[(nothing, nothing,)],)
+//│ res: (List[nothing], List[nothing],)
 
 // ------------ subtyping & methods ------------
 

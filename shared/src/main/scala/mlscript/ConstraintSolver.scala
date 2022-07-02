@@ -422,22 +422,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             if prim.parentsST.contains(ot.id) => ()
             
             
-          // case (tv: TypeVariable, rhs0) if extrusionContext.nonEmpty && !tv.recPlaceholder =>
-          case (tv: TypeVariable, rhs0) if !noConstrainnedTypes && extrusionContext.nonEmpty /* && !tv.recPlaceholder */ =>
-            ???
-            println(s"STASHING $tv bound in extr ctx")
-            val buf = extrusionContext.get.getOrElseUpdate(tv, Buffer.empty)
-            buf += false -> rhs0
-            ()
-          // case (lhs0, tv: TypeVariable) if extrusionContext.nonEmpty && !tv.recPlaceholder =>
-          case (lhs0, tv: TypeVariable) if !noConstrainnedTypes && extrusionContext.nonEmpty /* && !tv.recPlaceholder */ =>
-            ???
-            println(s"STASHING $tv bound in extr ctx")
-            val buf = extrusionContext.get.getOrElseUpdate(tv, Buffer.empty)
-            buf += true -> lhs0
-            ()
-            
-            
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
             println(s"NEW $lhs UB (${rhs.level})")
             val newBound = (cctx._1 ::: cctx._2.reverse).foldRight(rhs)((c, ty) =>
@@ -452,6 +436,21 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rhs.lowerBounds ::= newBound // update the bound
             rhs.upperBounds.foreach(rec(lhs, _, true)) // propagate from the bound
             
+            
+          // case (tv: TypeVariable, rhs0) if extrusionContext.nonEmpty && !tv.recPlaceholder =>
+          case (tv: TypeVariable, rhs0) if !noConstrainnedTypes && extrusionContext.nonEmpty /* && !tv.recPlaceholder */ =>
+            // ???
+            println(s"STASHING $tv bound in extr ctx")
+            val buf = extrusionContext.get.getOrElseUpdate(tv, Buffer.empty)
+            buf += false -> rhs0
+            ()
+          // case (lhs0, tv: TypeVariable) if extrusionContext.nonEmpty && !tv.recPlaceholder =>
+          case (lhs0, tv: TypeVariable) if !noConstrainnedTypes && extrusionContext.nonEmpty /* && !tv.recPlaceholder */ =>
+            // ???
+            println(s"STASHING $tv bound in extr ctx")
+            val buf = extrusionContext.get.getOrElseUpdate(tv, Buffer.empty)
+            buf += true -> lhs0
+            ()
             
             
           // case (tv: TypeVariable, rhs0) if tv.lowerBounds.foreach(_.level) =>

@@ -190,7 +190,9 @@ def app: ('a -> 'b) -> 'a -> 'b
 def app f x = f x
 //│ app: ('a -> 'b) -> 'a -> 'b
 //│    = <missing implementation>
-//│ ('a -> 'b) -> 'a -> 'b
+//│ (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. ('b -> 'c
+//│   where
+//│     'a <: 'b -> 'c))
 //│   <:  app:
 //│ ('a -> 'b) -> 'a -> 'b
 //│    = [Function: app]
@@ -208,7 +210,11 @@ def flip: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 def flip f = fun x -> fun y -> f y x
 //│ flip: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 //│     = <missing implementation>
-//│ ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
+//│ (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('c -> 'd
+//│   where
+//│     'a <: 'c -> 'b -> 'd))
+//│   where
+//│     'a <: nothing -> 'b -> 'a))
 //│   <:  flip:
 //│ ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 //│     = [Function: flip]
@@ -281,17 +287,17 @@ def f: ('a -> 'a) -> List['a] -> 'a
 :ng
 f (choose id) ids
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.282: 	f (choose id) ids
+//│ ║  l.288: 	f (choose id) ids
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ('a281' -> 'a281')›  <:  'a682_689    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ('a281' -> 'a281')›  <:  'a682'
+//│ ╟── this constraint:  ‹∀ 0. ('a281' -> 'a281')›  <:  'a707_714    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ('a281' -> 'a281')›  <:  'a707'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.282: 	f (choose id) ids
+//│ ║  l.288: 	f (choose id) ids
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. ('a293'' -> 'a293'')›  <:  'a682_689    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. ('a293'' -> 'a293'')›  <:  'a682_689
+//│ ╟── this constraint:  ‹∀ 1. ('a293'' -> 'a293'')›  <:  'a707_714    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. ('a293'' -> 'a293'')›  <:  'a707_714
 //│ res: 'a -> 'a | error
 
 // * ^ Strangely, this one works with recursive types:
@@ -520,32 +526,35 @@ a id
 :e // due to tapping
 :ns
 choose id (fun (x: ('a -> 'a)) -> auto_ x)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.522: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
-//│ ║         	                                  ^^^^^^^
-//│ ╟── type `‘a1035` is not an instance of type `'a`
+//│ ╔══[ERROR] Type mismatch in lambda expression:
+//│ ║  l.528: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘a1063` is not an instance of type `'a`
 //│ ║  l.169: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.169: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──       	                    ^^
-//│ res: forall 'c, 'b. 'd
+//│ res: 'c
 //│   where
-//│     'd :> (forall 'a. 'a -> 'a) | (forall 'a0, 'c, 'b. ('a0 -> 'a0) -> 'c)
-//│     'c :> 'b -> 'b | error
-//│     'a0 :> ‘a1035
-//│         <: forall 'a1. 'a1
+//│     'c :> (forall 'a. 'a -> 'a) | (forall 'a0, 'd, 'b. (('a0 -> 'a0) -> 'd
+//│   where
+//│     'a0 := ‘a))
+//│     'd :> 'b -> 'b
 //│    = [Function: id1]
 
 // :e // * ^ Here you go:
 :e // FIXME? succeeds with genLamBodies
 res id
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.542: 	res id
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.548: 	res id
 //│ ║         	^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‘a10351044  <:  'a1032_1040    TraitTag  TypeVariable
-//│ ╙──  ... looks like:  ‘a10351044  <:  'a1032'
+//│ ╟── type `‘a1071` is not an instance of type `'a`
+//│ ║  l.169: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.169: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ╙──       	                    ^^
 //│ res: 'a -> 'a | error
 //│    = [Function: id1]
 
@@ -553,10 +562,10 @@ res id
 :e
 a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.554: 	a (fun x -> { u = x })
+//│ ║  l.563: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a`
-//│ ║  l.554: 	a (fun x -> { u = x })
+//│ ║  l.563: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.169: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b

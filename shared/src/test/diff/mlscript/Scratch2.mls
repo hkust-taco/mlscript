@@ -15,11 +15,11 @@ test1 (fun value -> { value })
 test2 f =
   let r x = f x
   in (r 0, r true)
-//│ test2: ((0 | true) -> 'a) -> ('a, 'a,)
+//│ test2: (nothing -> anything & true -> 'a & 0 -> 'b) -> ('b, 'a,)
 //│      = [Function: test2]
 
 test2 (fun value -> { value })
-//│ res: ({value: 0 | true}, {value: 0 | true},)
+//│ res: ({value: 0}, {value: true},)
 //│    = [ undefined, undefined ]
 
 
@@ -28,12 +28,22 @@ type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 
 // :ns
 def s n = fun f -> fun x -> f (n f x)
-//│ s: ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│ s: (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. (('c -> 'a & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
+//│   where
+//│     'a <: 'b -> 'd -> 'e
+//│     'b <: 'e -> 'f))
+//│   where
+//│     'a <: 'b -> nothing -> 'c))
 //│  = [Function: s]
 
 // :ns
 def s' (n: ChurchInt) = fun f -> fun x -> f (n f x)
-//│ s': ChurchInt -> (forall 'a. ('N -> 'a & 'N -> 'N) -> 'N -> 'a)
+//│ s': ChurchInt -> (forall 'a, 'b, 'c. (('c -> anything & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
+//│   where
+//│     'a <: 'b -> 'd -> 'e
+//│     'b <: 'e -> 'f))
+//│   where
+//│     'a <: 'b -> nothing -> 'c))
 //│   = [Function: s]
 
 def succ: ChurchInt -> ChurchInt
@@ -43,34 +53,27 @@ def succ: ChurchInt -> ChurchInt
 // :ns
 :e // * Needs distrib (see below) // works with quantif extrus
 succ = s
-//│ ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│ (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. (('c -> 'a & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
+//│   where
+//│     'a <: 'b -> 'd -> 'e
+//│     'b <: 'e -> 'f))
+//│   where
+//│     'a <: 'b -> nothing -> 'c))
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.45: 	succ = s
+//│ ║  l.55: 	succ = s
 //│ ║        	^^^^^^^^
-//│ ╟── type `‘N172` is not an instance of type `'N`
+//│ ╟── type `‘N237` is not an instance of type `'N`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ╙──      	                        ^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.45: 	succ = s
+//│ ║  l.55: 	succ = s
 //│ ║        	^^^^^^^^
-//│ ╟── type `‘N175` is not an instance of type `'N172`
-//│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── from reference:
-//│ ║  l.30: 	def s n = fun f -> fun x -> f (n f x)
-//│ ╙──      	                                   ^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.45: 	succ = s
-//│ ║        	^^^^^^^^
-//│ ╟── type `‘N175` is not an instance of type `'N`
+//│ ╟── type `‘N255` is not an instance of type `'N`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -86,7 +89,12 @@ def succD: forall 'M. ChurchInt -> ('M -> 'M) -> ('M -> 'M)
 //│      = <missing implementation>
 
 succD = s
-//│ ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│ (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. (('c -> 'a & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
+//│   where
+//│     'a <: 'b -> 'd -> 'e
+//│     'b <: 'e -> 'f))
+//│   where
+//│     'a <: 'b -> nothing -> 'c))
 //│   <:  succD:
 //│ ChurchInt -> ('M -> 'M) -> 'M -> 'M
 //│      = [Function: s]
@@ -112,7 +120,12 @@ wrap x = { x }
 //│     = [Function: wrap]
 
 n1 = s z
-//│ n1: ('a -> 'b) -> 'a -> 'b
+//│ n1: ('a -> anything & 'b) -> (forall 'c, 'b, 'd, 'e, 'f. ('d -> 'f
+//│   where
+//│     'c <: 'b -> 'd -> 'e
+//│     'b <: 'e -> 'f))
+//│   where
+//│     'c <: 'b -> nothing -> 'a
 //│   = [Function (anonymous)]
 
 n1 wrap 0
@@ -120,7 +133,12 @@ n1 wrap 0
 //│    = { x: 0 }
 
 n2 = s (s z)
-//│ n2: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ n2: ('a -> anything & 'b) -> (forall 'c, 'b, 'd, 'e, 'f. ('d -> 'f
+//│   where
+//│     'c <: 'b -> 'd -> 'e
+//│     'b <: 'e -> 'f))
+//│   where
+//│     'c <: 'b -> nothing -> 'a
 //│   = [Function (anonymous)]
 
 n2 wrap 0
@@ -128,7 +146,12 @@ n2 wrap 0
 //│    = { x: { x: 0 } }
 
 n3 = s (s (s z))
-//│ n3: ('a -> 'b & 'c -> 'a & 'd -> 'c) -> 'd -> 'b
+//│ n3: ('a -> anything & 'b) -> (forall 'c, 'b, 'd, 'e, 'f. ('d -> 'f
+//│   where
+//│     'c <: 'b -> 'd -> 'e
+//│     'b <: 'e -> 'f))
+//│   where
+//│     'c <: 'b -> nothing -> 'a
 //│   = [Function (anonymous)]
 
 
@@ -155,14 +178,61 @@ rec def to_ch n =
 def to_ch_s_mix n =
   if n == 0 then z
   else s (to_ch (n - 1))
-//│ to_ch_s_mix: int -> (forall 'a. ('N -> 'a & 'N -> 'N) -> (forall 'a. ('a & 'N) -> 'a))
+//│ to_ch_s_mix: int -> (forall 'a, 'b, 'c. (('c -> anything & 'b) -> (forall 'a, 'b, 'd, 'e, 'f, 'g. (('g & 'd) -> ('g | 'f)
+//│   where
+//│     'a <: 'b -> 'd -> 'e
+//│     'b <: 'e -> 'f))
+//│   where
+//│     'a <: 'b -> nothing -> 'c))
 //│            = [Function: to_ch_s_mix]
 
 //:e // due to tapping
 rec def to_ch_s n =
   if n == 0 then z
   else s (to_ch_s (n - 1))
-//│ to_ch_s: int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'a. ('a & 'b) -> 'a))
+//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: ?to_ch_s` exceeded recursion depth limit (300)
+//│ ║  l.190: 	rec def to_ch_s n =
+//│ ║         	                ^^^
+//│ ║  l.191: 	  if n == 0 then z
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.192: 	  else s (to_ch_s (n - 1))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  α90_824'  <!<  ((α91_991',) -> α93_998')
+//│ ╟── while constraining:  {(α92_999' -> α95_1001') where: α90_824' <: ((α91_991',) -> α93_998'), α91_991' <: ((α94_1000',) -> α95_1001')}  <!<  ((α92_988',) -> α94_989')
+//│ ╟── while constraining:  ‹∀ 3. {(α92_995'''' -> α95_997'''') where: α90_824' <: ((α91_991',) -> α93_994''''), α91_991' <: ((α94_996'''',) -> α95_997'''')}›  <!<  ((α92_988',) -> α94_989')
+//│ ╟── while constraining:  ‹∀ 3. {(α92_995'''' -> α95_997'''') where: α90_824' <: ((α91_991',) -> α93_994''''), α91_991' <: ((α94_996'''',) -> α95_997'''')}›  <!<  α93_987'
+//│ ╟── while constraining:  (α91_991' -> ‹∀ 3. {(α92_995'''' -> α95_997'''') where: α90_824' <: ((α91_991',) -> α93_994''''), α91_991' <: ((α94_996'''',) -> α95_997'''')}›)  <!<  ((α91_980',) -> α93_987')
+//│ ╟── while constraining:  ‹∀ 2. (α91_830''' -> ‹∀ 3. {(α92_836'''' -> α95_838'''') where: α90_824' <: ((α91_830''',) -> α93_835''''), α91_830''' <: ((α94_837'''',) -> α95_838'''')}›)›  <!<  ((α91_980',) -> α93_987')
+//│ ╟── while constraining:  α90_824'  <!<  ((α91_980',) -> α93_987')
+//│ ╟── while constraining:  {(α92_988' -> α95_990') where: α90_824' <: ((α91_980',) -> α93_987'), α91_980' <: ((α94_989',) -> α95_990')}  <!<  ((α92_977',) -> α94_978')
+//│ ╟── while constraining:  ‹∀ 3. {(α92_984'''' -> α95_986'''') where: α90_824' <: ((α91_980',) -> α93_983''''), α91_980' <: ((α94_985'''',) -> α95_986'''')}›  <!<  ((α92_977',) -> α94_978')
+//│ ╟── while constraining:  ‹∀ 3. {(α92_984'''' -> α95_986'''') where: α90_824' <: ((α91_980',) -> α93_983''''), α91_980' <: ((α94_985'''',) -> α95_986'''')}›  <!<  α93_976'
+//│ ╟── while constraining:  (α91_980' -> ‹∀ 3. {(α92_984'''' -> α95_986'''') where: α90_824' <: ((α91_980',) -> α93_983''''), α91_980' <: ((α94_985'''',) -> α95_986'''')}›)  <!<  ((α91_969',) -> α93_976')
+//│ ╟── while constraining:  ‹∀ 2. (α91_830''' -> ‹∀ 3. {(α92_836'''' -> α95_838'''') where: α90_824' <: ((α91_830''',) -> α93_835''''), α91_830''' <: ((α94_837'''',) -> α95_838'''')}›)›  <!<  ((α91_969',) -> α93_976')
+//│ ╟── while constraining:  α90_824'  <!<  ((α91_969',) -> α93_976')
+//│ ╟── while constraining:  {(α92_977' -> α95_979') where: α90_824' <: ((α91_969',) -> α93_976'), α91_969' <: ((α94_978',) -> α95_979')}  <!<  ((α92_966',) -> α94_967')
+//│ ╟── while constraining:  ‹∀ 3. {(α92_973'''' -> α95_975'''') where: α90_824' <: ((α91_969',) -> α93_972''''), α91_969' <: ((α94_974'''',) -> α95_975'''')}›  <!<  ((α92_966',) -> α94_967')
+//│ ╟── ......
+//│ ╟── ......
+//│ ╟── while constraining:  ‹∀ 3. {(α92_863'''' -> α95_865'''') where: α90_824' <: ((α91_859',) -> α93_862''''), α91_859' <: ((α94_864'''',) -> α95_865'''')}›  <!<  ((α92_856',) -> α94_857')
+//│ ╟── while constraining:  ‹∀ 3. {(α92_863'''' -> α95_865'''') where: α90_824' <: ((α91_859',) -> α93_862''''), α91_859' <: ((α94_864'''',) -> α95_865'''')}›  <!<  α93_855'
+//│ ╟── while constraining:  (α91_859' -> ‹∀ 3. {(α92_863'''' -> α95_865'''') where: α90_824' <: ((α91_859',) -> α93_862''''), α91_859' <: ((α94_864'''',) -> α95_865'''')}›)  <!<  ((α91_848',) -> α93_855')
+//│ ╟── while constraining:  ‹∀ 2. (α91_830''' -> ‹∀ 3. {(α92_836'''' -> α95_838'''') where: α90_824' <: ((α91_830''',) -> α93_835''''), α91_830''' <: ((α94_837'''',) -> α95_838'''')}›)›  <!<  ((α91_848',) -> α93_855')
+//│ ╟── while constraining:  α90_824'  <!<  ((α91_848',) -> α93_855')
+//│ ╟── while constraining:  {(α92_856' -> α95_858') where: α90_824' <: ((α91_848',) -> α93_855'), α91_848' <: ((α94_857',) -> α95_858')}  <!<  ((α842',) -> α843')
+//│ ╟── while constraining:  ‹∀ 3. {(α92_852'''' -> α95_854'''') where: α90_824' <: ((α91_848',) -> α93_851''''), α91_848' <: ((α94_853'''',) -> α95_854'''')}›  <!<  ((α842',) -> α843')
+//│ ╟── while constraining:  ‹∀ 3. {(α92_852'''' -> α95_854'''') where: α90_824' <: ((α91_848',) -> α93_851''''), α91_848' <: ((α94_853'''',) -> α95_854'''')}›  <!<  α841'
+//│ ╟── while constraining:  (α91_848' -> ‹∀ 3. {(α92_852'''' -> α95_854'''') where: α90_824' <: ((α91_848',) -> α93_851''''), α91_848' <: ((α94_853'''',) -> α95_854'''')}›)  <!<  ((α840',) -> α841')
+//│ ╟── while constraining:  ‹∀ 2. (α91_830''' -> ‹∀ 3. {(α92_836'''' -> α95_838'''') where: α90_824' <: ((α91_830''',) -> α93_835''''), α91_830''' <: ((α94_837'''',) -> α95_838'''')}›)›  <!<  ((α840',) -> α841')
+//│ ╟── while constraining:  ‹∀ 2. (α91_830''' -> ‹∀ 3. {(α92_836'''' -> α95_838'''') where: α90_824' <: ((α91_830''',) -> α93_835''''), α91_830''' <: ((α94_837'''',) -> α95_838'''')}›)›  <!<  α90_824'
+//│ ╟── while constraining:  ‹∀ 2. (α91_830''' -> ‹∀ 3. {(α92_836'''' -> α95_838'''') where: α90_824' <: ((α91_830''',) -> α93_835''''), α91_830''' <: ((α94_837'''',) -> α95_838'''')}›)›  <!<  α822'
+//│ ╟── while constraining:  α839'  <!<  α822'
+//│ ╟── while constraining:  (α814' -> α839')  <!<  ((α821',) -> α822')
+//│ ╙── while constraining:  (α814' -> α839')  <!<  to_ch_s813'
+//│ to_ch_s: int -> (forall 'a. (nothing -> anything & 'a) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('f | 'e)
+//│   where
+//│     'b <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e)))
 //│        = [Function: to_ch_s]
 
 // rec def to_ch n =
@@ -193,34 +263,27 @@ to_church = to_ch
 // :e // * Needs distrib (see below)
 :e // FIXME? succeeds with genLamBodies
 to_church = to_ch_s_mix
-//│ int -> (forall 'a. ('N -> 'a & 'N -> 'N) -> (forall 'a. ('a & 'N) -> 'a))
+//│ int -> (forall 'a, 'b, 'c. (('c -> anything & 'b) -> (forall 'a, 'b, 'd, 'e, 'f, 'g. (('g & 'd) -> ('g | 'f)
+//│   where
+//│     'a <: 'b -> 'd -> 'e
+//│     'b <: 'e -> 'f))
+//│   where
+//│     'a <: 'b -> nothing -> 'c))
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.195: 	to_church = to_ch_s_mix
+//│ ║  l.265: 	to_church = to_ch_s_mix
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N635` is not an instance of type `'N`
+//│ ╟── type `‘N1306` is not an instance of type `'N`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ╙──      	                        ^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.195: 	to_church = to_ch_s_mix
+//│ ║  l.265: 	to_church = to_ch_s_mix
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N638` is not an instance of type `'N635`
-//│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── from reference:
-//│ ║  l.30: 	def s n = fun f -> fun x -> f (n f x)
-//│ ╙──      	                                   ^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.195: 	to_church = to_ch_s_mix
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N638` is not an instance of type `'N`
+//│ ╟── type `‘N1324` is not an instance of type `'N`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -233,83 +296,79 @@ to_church = to_ch_s_mix
 
 :e // * Needs distrib (see below)
 to_church = to_ch_s
-//│ int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'a. ('a & 'b) -> 'a))
+//│ int -> (forall 'a. (nothing -> anything & 'a) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('f | 'e)
+//│   where
+//│     'b <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e)))
 //│   <:  to_church:
 //│ int -> ChurchInt
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.235: 	to_church = to_ch_s
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j, ?k, ?l, ?m, ?n, ?o, ?p, ?q, ?r, ?s, ?t, ?u, ?v, ?w, ?x, ?y, ?z, ?a1, ?b1, ?c1, ?d1, ?e1, ?f1, ?g1, ?h1, ?i1, ?j1, ?k1, ?l1, ?m1, ?n1, ?o1, ?p1, ?q1, ?r1, ?s1, ?t1, ?u1, ?v1, ?w1, ?x1, ?y1, ?z1, ?a2, ?b2, ?c2, ?d2, ?e2, ?f2, ?g2, ?h2, ?i2, ?j2, ?k2, ?l2, ?m2, ?n2, ?o2, ?p2, ?q2, ?r2, ?s2, ?t2, ?u2, ?v2, ?w2, ?x2, ?y2, ?z2, ?a3, ?b3, ?c3, ?d3, ?e3, ?f3, ?g3, ?h3, ?i3, ?j3, ?k3, ?l3, ?m3, ?n3, ?o3, ?p3, ?q3, ?to_ch_s, ?r3, ?s3, ?t3, ?u3, ?v3, ?w3, ?x3, ?y3, ?z3, ?a4, ?b4, ?c4, ?d4, ?e4, ?f4, ?g4, ?h4, ?i4, ?j4, ?k4, ?l4, ?m4, ?n4, ?o4, ?p4, ?q4, ?r4, ?s4, ?t4, ?u4, ?v4, ?w4, ?x4, ?y4, ?z4, ?a5, ?b5, ?c5, ?d5, ?e5, ?f5, ?g5, ?h5, ?i5, ?j5, ?k5, ?l5, ?m5, ?n5, ?o5, ?p5, ?q5, ?r5, ?s5. ?to_ch_s <: int -> ChurchInt` exceeded recursion depth limit (300)
+//│ ║  l.298: 	to_church = to_ch_s
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N696` is not an instance of type `'N`
-//│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── from application:
-//│ ║  l.30: 	def s n = fun f -> fun x -> f (n f x)
-//│ ╙──      	                            ^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.235: 	to_church = to_ch_s
-//│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N699` is not an instance of type `'N696`
-//│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── from reference:
-//│ ║  l.30: 	def s n = fun f -> fun x -> f (n f x)
-//│ ╙──      	                                   ^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.235: 	to_church = to_ch_s
-//│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N699` is not an instance of type `'N`
-//│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── from reference:
-//│ ║  l.30: 	def s n = fun f -> fun x -> f (n f x)
-//│ ╙──      	                                   ^
+//│ ╟── while constraining:  α1627'  <!<  ((α1769',) -> α1770')
+//│ ╟── while constraining:  α1645'  <!<  ((α1769',) -> α1770')
+//│ ╟── while constraining:  α1663'  <!<  ((α1769',) -> α1770')
+//│ ╟── while constraining:  α1681'  <!<  ((α1769',) -> α1770')
+//│ ╟── while constraining:  α1699'  <!<  ((α1769',) -> α1770')
+//│ ╟── while constraining:  α1717'  <!<  ((α1769',) -> α1770')
+//│ ╟── while constraining:  α1735'  <!<  ((α1769',) -> α1770')
+//│ ╟── while constraining:  α1753'  <!<  ((α1769',) -> α1770')
+//│ ╟── while constraining:  α1753'  <!<  ((α94_1763'',) -> α95_1764'')
+//│ ╟── while constraining:  α1753'  <!<  α91_1762''
+//│ ╟── while constraining:  (α1753',)  <!<  (α91_1762'',)
+//│ ╟── while constraining:  (α91_1762'' -> ‹∀ 3. {(α92_1766'''' -> α95_1768'''') where: α90_1447' <: ((α91_1762'',) -> α93_1765''''), α91_1762'' <: ((α94_1767'''',) -> α95_1768'''')}›)  <!<  ((α1753',) -> α1759')
+//│ ╟── while constraining:  ‹∀ 2. (α91_1399''' -> ‹∀ 3. {(α92_1449'''' -> α95_1451'''') where: α90_1447' <: ((α91_1399''',) -> α93_1448''''), α91_1399''' <: ((α94_1450'''',) -> α95_1451'''')}›)›  <!<  ((α1753',) -> α1759')
+//│ ╟── while constraining:  α90_1447'  <!<  ((α1753',) -> α1759')
+//│ ╟── while constraining:  α90_1447'  <!<  ((α1753',) -> α1754_1755'')
+//│ ╟── ......
+//│ ╟── ......
+//│ ╟── while constraining:  ‹∀ 2. (α91_1399''' -> ‹∀ 3. {(α92_1449'''' -> α95_1451'''') where: α90_1447' <: ((α91_1399''',) -> α93_1448''''), α91_1399''' <: ((α94_1450'''',) -> α95_1451'''')}›)›  <!<  ((α1574',) -> α1577')
+//│ ╟── while constraining:  α90_1447'  <!<  ((α1574',) -> α1577')
+//│ ╟── while constraining:  α90_1447'  <!<  ((α91_1561'',) -> α93_1570'')
+//│ ╟── while constraining:  {(α92_1571'' -> α95_1573'') where: α90_1447' <: ((α91_1561'',) -> α93_1570''), α91_1561'' <: ((α94_1572'',) -> α95_1573'')}  <!<  (‘N'' -> ‘N'')
+//│ ╟── while constraining:  ‹∀ 3. {(α92_1565'''' -> α95_1567'''') where: α90_1447' <: ((α91_1561'',) -> α93_1564''''), α91_1561'' <: ((α94_1566'''',) -> α95_1567'''')}›  <!<  (‘N'' -> ‘N'')
+//│ ╟── while constraining:  (α91_1561'' -> ‹∀ 3. {(α92_1565'''' -> α95_1567'''') where: α90_1447' <: ((α91_1561'',) -> α93_1564''''), α91_1561'' <: ((α94_1566'''',) -> α95_1567'''')}›)  <!<  ((‘N'' -> ‘N'') -> (‘N'' -> ‘N''))
+//│ ╟── while constraining:  ‹∀ 2. (α91_1399''' -> ‹∀ 3. {(α92_1449'''' -> α95_1451'''') where: α90_1447' <: ((α91_1399''',) -> α93_1448''''), α91_1399''' <: ((α94_1450'''',) -> α95_1451'''')}›)›  <!<  ((‘N'' -> ‘N'') -> (‘N'' -> ‘N''))
+//│ ╟── while constraining:  ‹∀ 2. (α91_1399''' -> ‹∀ 3. {(α92_1449'''' -> α95_1451'''') where: α90_1447' <: ((α91_1399''',) -> α93_1448''''), α91_1399''' <: ((α94_1450'''',) -> α95_1451'''')}›)›  <!<  ‹∀ 0. (('N88' -> 'N88') -> ('N88' -> 'N88'))›
+//│ ╟── while constraining:  ‹∀ 2. (α91_1399''' -> ‹∀ 3. {(α92_1449'''' -> α95_1451'''') where: α90_1447' <: ((α91_1399''',) -> α93_1448''''), α91_1399''' <: ((α94_1450'''',) -> α95_1451'''')}›)›  <!<  ChurchInt
+//│ ╟── while constraining:  α839_1398'  <!<  ChurchInt
+//│ ╟── while constraining:  (α814_1397' -> α839_1398')  <!<  (Int -> ChurchInt)
+//│ ╟── while constraining:  to_ch_s813_1396'  <!<  (Int -> ChurchInt)
+//│ ╟── while constraining:  ‹∀ 0. to_ch_s813'›  <!<  (Int -> ChurchInt)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_ch_s813'››  <!<  (Int -> ChurchInt)
+//│ ╙── while constraining:  ‹∀ 0. ‹∀ 0. to_ch_s813'››  <!<  ‹∀ 0. (Int -> ChurchInt)›
 //│          = [Function: to_ch_s]
 
 rec def to_ch_mix n =
   if n == 0 then zero
   else s (to_ch (n - 1))
-//│ to_ch_mix: int -> (forall 'a. ('N -> 'a & 'N -> 'N) -> 'N -> 'a | ChurchInt)
+//│ to_ch_mix: int -> (forall 'a. ('N -> 'N & 'N -> anything & 'a) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│   where
+//│     'b <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e)) | ChurchInt)
 //│          = [Function: to_ch_mix]
 
 :e // * Needs distrib (see below)
 to_church = to_ch_mix
-//│ int -> (forall 'a. ('N -> 'a & 'N -> 'N) -> 'N -> 'a | ChurchInt)
+//│ int -> (forall 'a. ('N -> 'N & 'N -> anything & 'a) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│   where
+//│     'b <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e)) | ChurchInt)
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.284: 	to_church = to_ch_mix
+//│ ║  l.352: 	to_church = to_ch_mix
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N779` is not an instance of type `'N`
+//│ ╟── type `‘N1965` is not an instance of type `'N`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ╙──      	                        ^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.284: 	to_church = to_ch_mix
+//│ ║  l.352: 	to_church = to_ch_mix
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N782` is not an instance of type `'N779`
-//│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── from reference:
-//│ ║  l.30: 	def s n = fun f -> fun x -> f (n f x)
-//│ ╙──      	                                   ^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.284: 	to_church = to_ch_mix
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N782` is not an instance of type `'N`
+//│ ╟── type `‘N1983` is not an instance of type `'N`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -332,20 +391,20 @@ to_church = to_ch_mix
 rec def to_ch n =
   succD (to_ch n)
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.332: 	rec def to_ch n =
+//│ ║  l.391: 	rec def to_ch n =
 //│ ║         	              ^^^
-//│ ║  l.333: 	  succD (to_ch n)
+//│ ║  l.392: 	  succD (to_ch n)
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N789` is not an instance of type `'N`
+//│ ╟── type `‘N1990` is not an instance of type `'N`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║        	                        ^^
 //│ ╟── from quantified type variable:
-//│ ║  l.84: 	def succD: forall 'M. ChurchInt -> ('M -> 'M) -> ('M -> 'M)
+//│ ║  l.87: 	def succD: forall 'M. ChurchInt -> ('M -> 'M) -> ('M -> 'M)
 //│ ╙──      	                  ^^
-//│ to_ch: anything -> (('M | ‘N789) -> 'M) -> 'M -> ('M | ‘N789)
+//│ to_ch: anything -> (('M | ‘N1990) -> 'M) -> 'M -> ('M | ‘N1990)
 //│      = [Function: to_ch1]
 
 
@@ -353,32 +412,88 @@ rec def to_ch n =
 :DistributeForalls
 
 succ = s
-//│ ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│ (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. (('c -> 'a & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
+//│   where
+//│     'a <: 'b -> 'd -> 'e
+//│     'b <: 'e -> 'f))
+//│   where
+//│     'a <: 'b -> nothing -> 'c))
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│     = [Function: s]
 
 succ = s'
-//│ ChurchInt -> (forall 'a. ('N -> 'a & 'N -> 'N) -> 'N -> 'a)
+//│ ChurchInt -> (forall 'a, 'b, 'c. (('c -> anything & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
+//│   where
+//│     'a <: 'b -> 'd -> 'e
+//│     'b <: 'e -> 'f))
+//│   where
+//│     'a <: 'b -> nothing -> 'c))
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│     = [Function: s]
 
 to_church = to_ch_s_mix
-//│ int -> (forall 'a. ('N -> 'a & 'N -> 'N) -> (forall 'a. ('a & 'N) -> 'a))
+//│ int -> (forall 'a, 'b, 'c. (('c -> anything & 'b) -> (forall 'a, 'b, 'd, 'e, 'f, 'g. (('g & 'd) -> ('g | 'f)
+//│   where
+//│     'a <: 'b -> 'd -> 'e
+//│     'b <: 'e -> 'f))
+//│   where
+//│     'a <: 'b -> nothing -> 'c))
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│          = [Function: to_ch_s_mix]
 
 //:e // due to tapping
 to_church = to_ch_s
-//│ int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'a. ('a & 'b) -> 'a))
+//│ int -> (forall 'a. (nothing -> anything & 'a) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('f | 'e)
+//│   where
+//│     'b <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e)))
 //│   <:  to_church:
 //│ int -> ChurchInt
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j, ?k, ?l, ?m, ?n, ?o, ?p, ?q, ?r, ?s, ?t, ?u, ?v, ?w, ?x, ?y, ?z, ?a1, ?b1, ?c1, ?d1, ?e1, ?f1, ?g1, ?h1, ?i1, ?j1, ?k1, ?l1, ?m1, ?n1, ?o1, ?p1, ?q1, ?r1, ?s1, ?t1, ?u1, ?v1, ?w1, ?x1, ?y1, ?z1, ?a2, ?b2, ?c2, ?d2, ?e2, ?f2, ?g2, ?h2, ?i2, ?j2, ?k2, ?l2, ?m2, ?n2, ?o2, ?p2, ?q2, ?r2, ?s2, ?t2, ?u2, ?v2, ?w2, ?x2, ?y2, ?z2, ?a3, ?b3, ?c3, ?d3, ?e3, ?f3, ?g3, ?h3, ?i3, ?j3, ?k3, ?l3, ?m3, ?n3, ?o3, ?p3, ?q3, ?to_ch_s, ?r3, ?s3, ?t3, ?u3, ?v3, ?w3, ?x3, ?y3, ?z3, ?a4, ?b4, ?c4, ?d4, ?e4, ?f4, ?g4, ?h4, ?i4, ?j4, ?k4, ?l4, ?m4, ?n4, ?o4, ?p4, ?q4, ?r4, ?s4, ?t4, ?u4, ?v4, ?w4, ?x4, ?y4, ?z4, ?a5, ?b5, ?c5, ?d5, ?e5, ?f5, ?g5, ?h5, ?i5, ?j5, ?k5, ?l5, ?m5, ?n5, ?o5, ?p5, ?q5, ?r5, ?s5. ?to_ch_s <: int -> ChurchInt` exceeded recursion depth limit (300)
+//│ ║  l.448: 	to_church = to_ch_s
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  (‘N'' -> ‘N'')  <!<  α91_2539''
+//│ ╟── while constraining:  α91_2528''  <!<  α91_2539''
+//│ ╟── while constraining:  (α91_2528'',)  <!<  (α91_2539'',)
+//│ ╟── while constraining:  (α91_2539'' -> ‹∀ 3. {(α92_2543'''' -> α95_2545'''') where: α90_2293'' <: ((α91_2539'',) -> α93_2542''''), α91_2539'' <: ((α94_2544'''',) -> α95_2545'''')}›)  <!<  ((α91_2528'',) -> α93_2535'')
+//│ ╟── while constraining:  ‹∀ 2. (α91_2245''' -> ‹∀ 3. {(α92_2295'''' -> α95_2297'''') where: α90_2293'' <: ((α91_2245''',) -> α93_2294''''), α91_2245''' <: ((α94_2296'''',) -> α95_2297'''')}›)›  <!<  ((α91_2528'',) -> α93_2535'')
+//│ ╟── while constraining:  α90_2293''  <!<  ((α91_2528'',) -> α93_2535'')
+//│ ╟── while constraining:  {(α92_2536'' -> α95_2538'') where: α90_2293'' <: ((α91_2528'',) -> α93_2535''), α91_2528'' <: ((α94_2537'',) -> α95_2538'')}  <!<  ((α92_2525'',) -> α94_2526'')
+//│ ╟── while constraining:  ‹∀ 3. {(α92_2532'''' -> α95_2534'''') where: α90_2293'' <: ((α91_2528'',) -> α93_2531''''), α91_2528'' <: ((α94_2533'''',) -> α95_2534'''')}›  <!<  ((α92_2525'',) -> α94_2526'')
+//│ ╟── while constraining:  ‹∀ 3. {(α92_2532'''' -> α95_2534'''') where: α90_2293'' <: ((α91_2528'',) -> α93_2531''''), α91_2528'' <: ((α94_2533'''',) -> α95_2534'''')}›  <!<  α93_2524''
+//│ ╟── while constraining:  (α91_2528'' -> ‹∀ 3. {(α92_2532'''' -> α95_2534'''') where: α90_2293'' <: ((α91_2528'',) -> α93_2531''''), α91_2528'' <: ((α94_2533'''',) -> α95_2534'''')}›)  <!<  ((α91_2517'',) -> α93_2524'')
+//│ ╟── while constraining:  ‹∀ 2. (α91_2245''' -> ‹∀ 3. {(α92_2295'''' -> α95_2297'''') where: α90_2293'' <: ((α91_2245''',) -> α93_2294''''), α91_2245''' <: ((α94_2296'''',) -> α95_2297'''')}›)›  <!<  ((α91_2517'',) -> α93_2524'')
+//│ ╟── while constraining:  α90_2293''  <!<  ((α91_2517'',) -> α93_2524'')
+//│ ╟── while constraining:  {(α92_2525'' -> α95_2527'') where: α90_2293'' <: ((α91_2517'',) -> α93_2524''), α91_2517'' <: ((α94_2526'',) -> α95_2527'')}  <!<  ((α92_2514'',) -> α94_2515'')
+//│ ╟── while constraining:  ‹∀ 3. {(α92_2521'''' -> α95_2523'''') where: α90_2293'' <: ((α91_2517'',) -> α93_2520''''), α91_2517'' <: ((α94_2522'''',) -> α95_2523'''')}›  <!<  ((α92_2514'',) -> α94_2515'')
+//│ ╟── while constraining:  ‹∀ 3. {(α92_2521'''' -> α95_2523'''') where: α90_2293'' <: ((α91_2517'',) -> α93_2520''''), α91_2517'' <: ((α94_2522'''',) -> α95_2523'''')}›  <!<  α93_2513''
+//│ ╟── ......
+//│ ╟── ......
+//│ ╟── while constraining:  (α91_2418'' -> ‹∀ 3. {(α92_2422'''' -> α95_2424'''') where: α90_2293'' <: ((α91_2418'',) -> α93_2421''''), α91_2418'' <: ((α94_2423'''',) -> α95_2424'''')}›)  <!<  ((α91_2407'',) -> α93_2414'')
+//│ ╟── while constraining:  ‹∀ 2. (α91_2245''' -> ‹∀ 3. {(α92_2295'''' -> α95_2297'''') where: α90_2293'' <: ((α91_2245''',) -> α93_2294''''), α91_2245''' <: ((α94_2296'''',) -> α95_2297'''')}›)›  <!<  ((α91_2407'',) -> α93_2414'')
+//│ ╟── while constraining:  α90_2293''  <!<  ((α91_2407'',) -> α93_2414'')
+//│ ╟── while constraining:  {(α92_2415'' -> α95_2417'') where: α90_2293'' <: ((α91_2407'',) -> α93_2414''), α91_2407'' <: ((α94_2416'',) -> α95_2417'')}  <!<  (‘N'' -> ‘N'')
+//│ ╟── while constraining:  ‹∀ 3. {(α92_2411'''' -> α95_2413'''') where: α90_2293'' <: ((α91_2407'',) -> α93_2410''''), α91_2407'' <: ((α94_2412'''',) -> α95_2413'''')}›  <!<  (‘N'' -> ‘N'')
+//│ ╟── while constraining:  (α91_2407'' -> ‹∀ 3. {(α92_2411'''' -> α95_2413'''') where: α90_2293'' <: ((α91_2407'',) -> α93_2410''''), α91_2407'' <: ((α94_2412'''',) -> α95_2413'''')}›)  <!<  ((‘N'' -> ‘N'') -> (‘N'' -> ‘N''))
+//│ ╟── while constraining:  ‹∀ 2. (α91_2245''' -> ‹∀ 3. {(α92_2295'''' -> α95_2297'''') where: α90_2293'' <: ((α91_2245''',) -> α93_2294''''), α91_2245''' <: ((α94_2296'''',) -> α95_2297'''')}›)›  <!<  ((‘N'' -> ‘N'') -> (‘N'' -> ‘N''))
+//│ ╟── while constraining:  α839_2244''  <!<  ((‘N'' -> ‘N'') -> (‘N'' -> ‘N''))
+//│ ╟── while constraining:  (α814_2243'' -> α839_2244'')  <!<  (Int -> ((‘N'' -> ‘N'') -> (‘N'' -> ‘N'')))
+//│ ╟── while constraining:  to_ch_s813_2242''  <!<  (Int -> ((‘N'' -> ‘N'') -> (‘N'' -> ‘N'')))
+//│ ╟── while constraining:  ‹∀ 0. to_ch_s813'›  <!<  (Int -> ((‘N'' -> ‘N'') -> (‘N'' -> ‘N'')))
+//│ ╟── while constraining:  ‹∀ 0. to_ch_s813'›  <!<  ‹∀ 0. (Int -> (('N88' -> 'N88') -> ('N88' -> 'N88')))›
+//│ ╟── while constraining:  ‹∀ 0. to_ch_s813'›  <!<  (Int -> ChurchInt)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_ch_s813'››  <!<  (Int -> ChurchInt)
+//│ ╙── while constraining:  ‹∀ 0. ‹∀ 0. to_ch_s813'››  <!<  ‹∀ 0. (Int -> ChurchInt)›
 //│          = [Function: to_ch_s]
 
 to_church = to_ch_mix
-//│ int -> (forall 'a. ('N -> 'a & 'N -> 'N) -> 'N -> 'a | ChurchInt)
+//│ int -> (forall 'a. ('N -> 'N & 'N -> anything & 'a) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│   where
+//│     'b <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e)) | ChurchInt)
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│          = [Function: to_ch_mix]

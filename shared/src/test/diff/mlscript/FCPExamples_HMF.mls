@@ -143,7 +143,9 @@ poly id
 //│    = [ 1, true ]
 
 def app f x = f x
-//│ app: ('a -> 'b) -> 'a -> 'b
+//│ app: (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. ('b -> 'c
+//│   where
+//│     'a <: 'b -> 'c))
 //│    = [Function: app]
 
 // FreezeML D1
