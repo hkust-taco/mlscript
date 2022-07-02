@@ -424,14 +424,14 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             
           // case (tv: TypeVariable, rhs0) if extrusionContext.nonEmpty && !tv.recPlaceholder =>
           case (tv: TypeVariable, rhs0) if !noConstrainnedTypes && extrusionContext.nonEmpty /* && !tv.recPlaceholder */ =>
-            // ???
+            ???
             println(s"STASHING $tv bound in extr ctx")
             val buf = extrusionContext.get.getOrElseUpdate(tv, Buffer.empty)
             buf += false -> rhs0
             ()
           // case (lhs0, tv: TypeVariable) if extrusionContext.nonEmpty && !tv.recPlaceholder =>
           case (lhs0, tv: TypeVariable) if !noConstrainnedTypes && extrusionContext.nonEmpty /* && !tv.recPlaceholder */ =>
-            // ???
+            ???
             println(s"STASHING $tv bound in extr ctx")
             val buf = extrusionContext.get.getOrElseUpdate(tv, Buffer.empty)
             buf += true -> lhs0

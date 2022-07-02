@@ -3,22 +3,23 @@
 
 
 def f n = n 0
-//│ f: 'a -> 'b
-//│   where
-//│     'a <: 0 -> 'b
+//│ f: (0 -> 'a) -> 'a
 //│  = [Function: f]
 
 :e
 f {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.12: 	f {}
+//│ ║  l.10: 	f {}
 //│ ║        	^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.12: 	f {}
+//│ ║  l.10: 	f {}
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.5: 	def f n = n 0
-//│ ╙──     	          ^^^
+//│ ║       	          ^^^
+//│ ╟── from reference:
+//│ ║  l.5: 	def f n = n 0
+//│ ╙──     	          ^
 //│ res: error
 //│ Runtime error:
 //│   TypeError: n is not a function
@@ -26,25 +27,24 @@ f {}
 :e
 f {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.27: 	f {} {}
+//│ ║  l.28: 	f {} {}
 //│ ║        	^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.27: 	f {} {}
+//│ ║  l.28: 	f {} {}
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.5: 	def f n = n 0
-//│ ╙──     	          ^^^
+//│ ║       	          ^^^
+//│ ╟── from reference:
+//│ ║  l.5: 	def f n = n 0
+//│ ╙──     	          ^
 //│ res: error
 //│ Runtime error:
 //│   TypeError: n is not a function
 
 
 def f n m = n 0
-//│ f: 'a -> (forall 'a, 'b. ('a -> 'b
-//│   where
-//│     'a <: 0 -> 'b))
-//│   where
-//│     'a <: 0 -> 'a
+//│ f: (0 -> 'a) -> anything -> 'a
 //│  = [Function: f1]
 
 :e // due to tapping
@@ -56,33 +56,28 @@ f {}
 //│ ║  l.51: 	f {}
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.42: 	def f n m = n 0
-//│ ╙──      	            ^^^
-//│ res: anything -> 'a | error
-//│   where
-//│     'b <: 0 -> 'a
+//│ ║  l.46: 	def f n m = n 0
+//│ ║        	            ^^^
+//│ ╟── from reference:
+//│ ║  l.46: 	def f n m = n 0
+//│ ╙──      	            ^
+//│ res: anything -> nothing | error
 //│    = [Function (anonymous)]
 
 :e
 f {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.67: 	f {} {}
+//│ ║  l.68: 	f {} {}
 //│ ║        	^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.67: 	f {} {}
+//│ ║  l.68: 	f {} {}
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.42: 	def f n m = n 0
-//│ ╙──      	            ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.67: 	f {} {}
-//│ ║        	^^^^^^^
-//│ ╟── record literal of type `anything` is not a function
-//│ ║  l.67: 	f {} {}
-//│ ║        	  ^^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.42: 	def f n m = n 0
-//│ ╙──      	            ^^^
+//│ ║  l.46: 	def f n m = n 0
+//│ ║        	            ^^^
+//│ ╟── from reference:
+//│ ║  l.46: 	def f n m = n 0
+//│ ╙──      	            ^
 //│ res: error
 //│ Runtime error:
 //│   TypeError: n is not a function

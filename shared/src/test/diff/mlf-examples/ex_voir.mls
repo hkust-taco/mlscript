@@ -20,15 +20,7 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'b, 'head, 'a, 'c, 'tail, 'd. ('c -> 'd
-//│   where
-//│     'b <: 'head & 'a
-//│     'c <: List['a] & 'tail
-//│     'd :> Cons['a] with {head: 'head, tail: 'tail}))
-//│   where
-//│     'e :> Cons['a0] with {head: 'head0, tail: 'tail0}
-//│     'b <: 'head0 & 'a0
-//│     'f <: List['a0] & 'tail0
+//│ 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -63,90 +55,15 @@ def choose3 x y z = choose (choose x y) z
 def id = (fun x -> x) : Sid
 def id_ = fun x -> x
 def succ n = n + 1
-//│ choose: 'a -> (forall 'b, 'a, 'c, 'd, 'e, 'f. ('c -> 'd
-//│   where
-//│     'b <: 'c -> 'd
-//│     'e :> 'f -> 'f -> 'f
-//│        <: 'a -> 'b))
-//│   where
-//│     'g <: nothing -> 'b
-//│     'h :> 'i -> 'i -> 'i
-//│        <: 'a -> 'g
+//│ choose: 'a -> (forall 'b. 'b -> ('a | 'b))
 //│       = [Function: choose]
-//│ choose3: 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i. ('j -> (forall 'a, 'k, 'l, 'm, 'n, 'o, 'p, 'q, 'r. ('s -> 't
-//│   where
-//│     'a <: 'l
-//│     'm :> forall 'u, 'v, 'w, 'x, 'y, 'z. ('v -> 'w
-//│   where
-//│     'u <: 'v -> 'w
-//│     'x :> 'y -> 'y -> 'y
-//│        <: 'z -> 'u)
-//│        <: 's -> 't
-//│     'n <: nothing -> 'k
-//│     'o :> 'a1 -> 'a1 -> 'a1
-//│        <: 'z -> 'n
-//│     'p :> forall 'b1, 'c1, 'd1, 'e1, 'f1, 'l. ('c1 -> 'd1
-//│   where
-//│     'b1 <: 'c1 -> 'd1
-//│     'e1 :> 'f1 -> 'f1 -> 'f1
-//│         <: 'l -> 'b1)
-//│        <: 'j -> 'q
-//│     'k <: nothing -> 'k
-//│     'r :> 'g1 -> 'g1 -> 'g1
-//│        <: 'l -> 'k
-//│     'q <: 'z))
-//│   where
-//│     'a <: 'b
-//│     'c :> forall 'b1, 'c1, 'd1, 'e1, 'f1, 'l. ('c1 -> 'd1
-//│   where
-//│     'b1 <: 'c1 -> 'd1
-//│     'e1 :> 'f1 -> 'f1 -> 'f1
-//│         <: 'l -> 'b1)
-//│        <: 'j -> 'd
-//│     'e <: nothing -> 'k
-//│     'f :> 'h1 -> 'h1 -> 'h1
-//│        <: 'b -> 'e
-//│     'd <: 'i1
-//│     'g :> forall 'u, 'v, 'w, 'x, 'y, 'z. ('v -> 'w
-//│   where
-//│     'u <: 'v -> 'w
-//│     'x :> 'y -> 'y -> 'y
-//│        <: 'z -> 'u)
-//│        <: nothing -> 'k
-//│     'h <: nothing -> 'k
-//│     'i :> 'j1 -> 'j1 -> 'j1
-//│        <: 'i1 -> 'h))
-//│   where
-//│     'a <: 'k1
-//│     'l1 :> 'm1 -> 'm1 -> 'm1
-//│         <: 'k1 -> 'n1
-//│     'o1 <: 'p1
-//│     'q1 :> forall 'u, 'v, 'w, 'x, 'y, 'z. ('v -> 'w
-//│   where
-//│     'u <: 'v -> 'w
-//│     'x :> 'y -> 'y -> 'y
-//│        <: 'z -> 'u)
-//│         <: nothing -> 'k
-//│     'r1 <: nothing -> 'k
-//│     's1 :> 't1 -> 't1 -> 't1
-//│         <: 'p1 -> 'r1
-//│     'u1 :> forall 'b1, 'c1, 'd1, 'e1, 'f1, 'l. ('c1 -> 'd1
-//│   where
-//│     'b1 <: 'c1 -> 'd1
-//│     'e1 :> 'f1 -> 'f1 -> 'f1
-//│         <: 'l -> 'b1)
-//│         <: nothing -> 'o1
-//│     'n1 <: nothing -> 'k
+//│ choose3: 'a -> anything -> (forall 'b. 'b -> ('a | 'b))
 //│        = [Function: choose3]
 //│ id: Sid
 //│   = [Function: id]
 //│ id_: 'a -> 'a
 //│    = [Function: id_]
-//│ succ: 'a -> 'b
-//│   where
-//│     'a <: int
-//│     'c :> int -> int
-//│        <: 1 -> 'b
+//│ succ: int -> int
 //│     = [Function: succ]
 
 // let test = choose3 id
@@ -155,147 +72,13 @@ def test = choose3 id
 def test_ = choose3 id_
 def test2 = test succ
 def test2_ = test_ succ
-//│ test: 'a -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j. ('k -> 'l
-//│   where
-//│     'b <: 'd
-//│     'e :> forall 'm, 'n, 'o, 'p, 'q. ('n -> 'o
-//│   where
-//│     'm <: 'n -> 'o
-//│     'p :> 'q -> 'q -> 'q
-//│        <: nothing -> 'm)
-//│        <: 'k -> 'l
-//│     'f <: nothing -> 'c
-//│     'g :> 'r -> 'r -> 'r
-//│        <: 's -> 'f
-//│     'h :> forall 't, 'u, 'v, 'w, 'x. ('u -> 'v
-//│   where
-//│     't <: 'u -> 'v
-//│     'w :> 'x -> 'x -> 'x
-//│        <: nothing -> 't)
-//│        <: 'a -> 'i
-//│     'c <: nothing -> 'c
-//│     'j :> 'y -> 'y -> 'y
-//│        <: 'd -> 'c
-//│     'i <: 's))
-//│   where
-//│     'b <: 'z
-//│     'a1 :> forall 't, 'u, 'v, 'w, 'x. ('u -> 'v
-//│   where
-//│     't <: 'u -> 'v
-//│     'w :> 'x -> 'x -> 'x
-//│        <: nothing -> 't)
-//│         <: 'a -> 'b1
-//│     'c1 <: nothing -> 'c
-//│     'd1 :> 'e1 -> 'e1 -> 'e1
-//│         <: 'z -> 'c1
-//│     'b1 <: 'f1
-//│     'g1 :> forall 'm, 'n, 'o, 'p, 'q. ('n -> 'o
-//│   where
-//│     'm <: 'n -> 'o
-//│     'p :> 'q -> 'q -> 'q
-//│        <: nothing -> 'm)
-//│         <: nothing -> 'c
-//│     'h1 <: nothing -> 'c
-//│     'i1 :> 'j1 -> 'j1 -> 'j1
-//│         <: 'f1 -> 'h1
+//│ test: anything -> (forall 'a. 'a -> (Sid | 'a))
 //│     = [Function (anonymous)]
-//│ test_: 'a -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j. ('k -> 'l
-//│   where
-//│     'b <: 'd
-//│     'e :> forall 'm, 'n, 'o, 'p, 'q. ('n -> 'o
-//│   where
-//│     'm <: 'n -> 'o
-//│     'p :> 'q -> 'q -> 'q
-//│        <: nothing -> 'm)
-//│        <: 'k -> 'l
-//│     'f <: nothing -> 'c
-//│     'g :> 'r -> 'r -> 'r
-//│        <: 's -> 'f
-//│     'h :> forall 't, 'u, 'v, 'w, 'x. ('u -> 'v
-//│   where
-//│     't <: 'u -> 'v
-//│     'w :> 'x -> 'x -> 'x
-//│        <: nothing -> 't)
-//│        <: 'a -> 'i
-//│     'c <: nothing -> 'c
-//│     'j :> 'y -> 'y -> 'y
-//│        <: 'd -> 'c
-//│     'i <: 's))
-//│   where
-//│     'b <: 'z
-//│     'a1 :> forall 't, 'u, 'v, 'w, 'x. ('u -> 'v
-//│   where
-//│     't <: 'u -> 'v
-//│     'w :> 'x -> 'x -> 'x
-//│        <: nothing -> 't)
-//│         <: 'a -> 'b1
-//│     'c1 <: nothing -> 'c
-//│     'd1 :> 'e1 -> 'e1 -> 'e1
-//│         <: 'z -> 'c1
-//│     'b1 <: 'f1
-//│     'g1 :> forall 'm, 'n, 'o, 'p, 'q. ('n -> 'o
-//│   where
-//│     'm <: 'n -> 'o
-//│     'p :> 'q -> 'q -> 'q
-//│        <: nothing -> 'm)
-//│         <: nothing -> 'c
-//│     'h1 <: nothing -> 'c
-//│     'i1 :> 'j1 -> 'j1 -> 'j1
-//│         <: 'f1 -> 'h1
+//│ test_: anything -> (forall 'a. 'a -> (forall 'a, 'b. 'b -> 'b | 'a))
 //│      = [Function (anonymous)]
-//│ test2: 'a -> 'b
-//│   where
-//│     'c <: 'd
-//│     'e :> forall 'f, 'g, 'h, 'i, 'j. ('g -> 'h
-//│   where
-//│     'f <: 'g -> 'h
-//│     'i :> 'j -> 'j -> 'j
-//│        <: nothing -> 'f)
-//│        <: 'a -> 'b
-//│     'k <: nothing -> 'l
-//│     'm :> 'n -> 'n -> 'n
-//│        <: 'o -> 'k
-//│     'p :> forall 'q, 'r, 's, 't, 'u. ('r -> 's
-//│   where
-//│     'q <: 'r -> 's
-//│     't :> 'u -> 'u -> 'u
-//│        <: nothing -> 'q)
-//│        <: (forall 'v, 'w, 'x. ('v -> 'x
-//│   where
-//│     'v <: int
-//│     'w :> int -> int
-//│        <: 1 -> 'x)) -> 'y
-//│     'l <: nothing -> 'l
-//│     'z :> 'a1 -> 'a1 -> 'a1
-//│        <: 'd -> 'l
-//│     'y <: 'o
+//│ test2: 'a -> (Sid | 'a)
 //│      = [Function (anonymous)]
-//│ test2_: 'a -> 'b
-//│   where
-//│     'c <: 'd
-//│     'e :> forall 'f, 'g, 'h, 'i, 'j. ('g -> 'h
-//│   where
-//│     'f <: 'g -> 'h
-//│     'i :> 'j -> 'j -> 'j
-//│        <: nothing -> 'f)
-//│        <: 'a -> 'b
-//│     'k <: nothing -> 'l
-//│     'm :> 'n -> 'n -> 'n
-//│        <: 'o -> 'k
-//│     'p :> forall 'q, 'r, 's, 't, 'u. ('r -> 's
-//│   where
-//│     'q <: 'r -> 's
-//│     't :> 'u -> 'u -> 'u
-//│        <: nothing -> 'q)
-//│        <: (forall 'v, 'w, 'x. ('v -> 'x
-//│   where
-//│     'v <: int
-//│     'w :> int -> int
-//│        <: 1 -> 'x)) -> 'y
-//│     'l <: nothing -> 'l
-//│     'z :> 'a1 -> 'a1 -> 'a1
-//│        <: 'd -> 'l
-//│     'y <: 'o
+//│ test2_: 'a -> (forall 'a, 'b. 'b -> 'b | 'a)
 //│       = [Function (anonymous)]
 
 // (* Messages d'erreur foireux : *)
@@ -309,27 +92,9 @@ fun x -> fun y -> ((x : S1), (y : S2), if true then x else y)
 fun x -> fun y -> ((x : S1), (y : S2), x x)
 //│ Defined type alias S1
 //│ Defined type alias S2
-//│ res: 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('c -> (S1, S2, 'f,)
-//│   where
-//│     'a <: S1
-//│     'c <: S2
-//│     'd :> 'e -> 'e -> 'e
-//│        <: 'a -> 'b
-//│     'b <: 'c -> 'f))
-//│   where
-//│     'a <: S1
-//│     'g <: S2
-//│     'h :> 'i -> 'i -> 'i
-//│        <: 'a -> 'j
-//│     'j <: 'g -> 'b
+//│ res: (S1 & 'a) -> (forall 'b. (S2 & 'b) -> (S1, S2, 'a | 'b,))
 //│    = [Function: res]
-//│ res: 'a -> (forall 'a, 'b, 'c. ('b -> (S1, S2, 'c,)
-//│   where
-//│     'a <: S1 & 'a -> 'c
-//│     'b <: S2))
-//│   where
-//│     'a <: S1 & 'a -> 'b
-//│     'd <: S2
+//│ res: (S1 & 'a -> 'b & 'a) -> S2 -> (S1, S2, 'b,)
 //│    = [Function: res]
 
 // (* please onlyweak ['b = sid] 'b -> 'b : sid -> sid *)
@@ -340,14 +105,9 @@ fun x -> fun y -> ((x : S1), (y : S2), x x)
 def example f = (f: forall 'a. 'a -> int -> 'b) f
 def example_ f = f f
 def mkpair x y = (x, y)
-//│ example: 'a -> 'c
-//│   where
-//│     'a <: 'c -> int -> 'b & 'a
-//│     'c :> int -> 'b
+//│ example: (nothing -> int -> 'b) -> int -> 'b
 //│        = [Function: example]
-//│ example_: 'a -> 'b
-//│   where
-//│     'a <: 'a -> 'b
+//│ example_: ('a -> 'b & 'a) -> 'b
 //│         = [Function: example_]
 //│ mkpair: 'a -> (forall 'b. 'b -> ('a, 'b,))
 //│       = [Function: mkpair]
@@ -358,20 +118,14 @@ def mkpair x y = (x, y)
 // *)
 example mkpair
 example_ mkpair
-//│ res: int -> (‘a1393, int,)
+//│ res: int -> (‘a331, int,)
 //│    = [Function (anonymous)]
 //│ res: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('b, 'c,)), 'a,)
 //│    = [Function (anonymous)]
 
 // let make_ex3 x (f:['a > sid] 'a -> 'b ) = f x 
 def make_ex3 x (f: forall 'a. ('a | Sid) -> 'b) = f x
-//│ make_ex3: 'c -> (forall 'c, 'd, 'b, 'e. ((forall 'a. ('a | Sid) -> 'b) -> 'e
-//│   where
-//│     'd :> forall 'a. ('a | Sid) -> 'b
-//│        <: (forall 'a. ('a | Sid) -> 'b) & 'c -> 'e))
-//│   where
-//│     'f :> forall 'a0. ('a0 | Sid) -> 'b0
-//│        <: (forall 'a0. ('a0 | Sid) -> 'b0) & 'c -> anything
+//│ make_ex3: anything -> (forall 'a. (Sid -> 'a) -> 'a)
 //│         = [Function: make_ex3]
 
 // let ex_list3 = [ make_ex3 succ ;

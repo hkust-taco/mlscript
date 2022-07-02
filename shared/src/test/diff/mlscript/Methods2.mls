@@ -73,7 +73,7 @@ l.Size
 l.Map (fun x -> mul x 2)
 //│ res: List[int]
 //│    = Cons { head: 0, tail: Cons { head: 2, tail: Nil {} } }
-//│ constrain calls  : 92
+//│ constrain calls  : 81
 //│ annoying  calls  : 6
 //│ subtyping calls  : 12
 

@@ -1,11 +1,6 @@
 
 def test f = f (fun b -> if b then 1 else 2)
-//│ test: ((forall 'a, 'b, 'c, 'd, 'e. ('a -> 'e
-//│   where
-//│     'a <: bool
-//│     'b :> 'c -> 'c -> 'c
-//│        <: 1 -> 'd
-//│     'd <: 2 -> 'e)) -> 'f) -> 'f
+//│ test: ((bool -> (1 | 2)) -> 'a) -> 'a
 //│     = [Function: test]
 
 test (fun k -> (k true, k false))
@@ -106,15 +101,15 @@ def useTrt t = case t of { T -> t.y | Class -> t.x }
 :e
 useTrt c
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.107: 	useTrt c
+//│ ║  l.102: 	useTrt c
 //│ ║         	^^^^^^^^
 //│ ╟── expression of type `Class & {x: ?x} & ~?a | Class & {x: ?x} & t` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.102: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
-//│ ║         	                                ^^^
+//│ ║  l.97: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
+//│ ║        	                                ^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.102: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
-//│ ╙──       	                    ^
+//│ ║  l.97: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
+//│ ╙──      	                    ^
 //│ res: 1 | error
 //│    = 1
 

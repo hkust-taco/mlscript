@@ -15,9 +15,7 @@ def k = (fun x -> fun y -> y) : forall 'a. 'a -> Sid
 def k_ = fun x -> fun y -> y
 //│ delta: Sid -> Sid
 //│      = [Function: delta]
-//│ delta_: 'a -> 'b
-//│   where
-//│     'a <: 'a -> 'b
+//│ delta_: ('a -> 'b & 'a) -> 'b
 //│       = [Function: delta_]
 //│ k: anything -> Sid
 //│  = [Function: k]
@@ -37,18 +35,9 @@ def id_ = id : Sid -> Sid
 // untype fun x -> ((fun y -> y y) : 'a -> sid)
 fun x -> ((fun y -> y y) : 'a -> Sid)
 fun x_ -> (fun y -> y y)
-//│ res: 'b -> 'a -> Sid
-//│   where
-//│     'a <: 'c
-//│     'c <: 'c -> 'b
-//│     'b <: Sid
-//│     'd <: 'd -> 'b
+//│ res: anything -> ('a -> Sid & 'a) -> Sid
 //│    = [Function: res]
-//│ res: anything -> (forall 'a, 'b. ('a -> 'b
-//│   where
-//│     'a <: 'a -> 'b))
-//│   where
-//│     'c <: 'c -> anything
+//│ res: anything -> (forall 'a, 'b. ('a -> 'b & 'a) -> 'b)
 //│    = [Function: res]
 
 // :e // FIXME? failed with genLamBodies but works with quantif extrus

@@ -44,18 +44,44 @@ test f =
 test f =
   let r x = f x
   in (r 0, r True)
-//│ test: 'a -> ('b, 'c,)
-//│   where
-//│     'a <: 'd -> 'e & 'f -> 'g
-//│     'd :> 0
-//│     'e <: 'b
-//│     'f :> true
-//│     'g <: 'c
+//│ test: ((0 | true) -> 'a) -> ('a, 'a,)
 //│     = [Function: test2]
+
+:e
+(test id)._1 + 1
+not (test id)._1 + 1
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.51: 	(test id)._1 + 1
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── reference of type `true` is not an instance of type `int`
+//│ ║  l.4: 	def True = true
+//│ ║       	           ^^^^
+//│ ╟── but it flows into field selection with expected type `int`
+//│ ║  l.51: 	(test id)._1 + 1
+//│ ╙──      	^^^^^^^^^^^^
+//│ res: error | int
+//│    = NaN
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.52: 	not (test id)._1 + 1
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `bool`
+//│ ║  l.46: 	  in (r 0, r True)
+//│ ║        	        ^
+//│ ╟── but it flows into field selection with expected type `bool`
+//│ ║  l.52: 	not (test id)._1 + 1
+//│ ╙──      	    ^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.52: 	not (test id)._1 + 1
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `bool` is not an instance of type `int`
+//│ ║  l.52: 	not (test id)._1 + 1
+//│ ╙──      	^^^^^^^^^^^^^^^^
+//│ res: error | int
+//│    = 2
 
 // * Even works with recursive definition because the constrained type is strictly local to the body!
 rec def test f =
   let r x = f x
   in (r 0, r True)
-//│ test: (nothing -> anything & true -> 'a & 0 -> 'b) -> ('b, 'a,)
+//│ test: ((0 | true) -> 'a) -> ('a, 'a,)
 //│     = [Function: test3]

@@ -10,16 +10,12 @@
 
 // λf. f (λx. x)
 fun f -> f (fun x -> x)
-//│ res: 'a -> 'b
-//│   where
-//│     'a <: (forall 'c. 'c -> 'c) -> 'b
+//│ res: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
 //│    = [Function: res]
 
 // λy. y y
 fun y -> y y
-//│ res: 'a -> 'b
-//│   where
-//│     'a <: 'a -> 'b
+//│ res: ('a -> 'b & 'a) -> 'b
 //│    = [Function: res]
 
 // Typeable in P; not in ML nor I2:

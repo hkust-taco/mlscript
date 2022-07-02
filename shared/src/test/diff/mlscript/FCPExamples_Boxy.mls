@@ -45,24 +45,7 @@ def ids: List[forall 'a. 'a -> 'a]
 // ============ Sec 1 ============
 
 def f get = (get (cons 1 (cons 2 nil)), get (cons "a" (cons "b" (cons "c" nil))))
-//│ f: 'a -> ('b, 'c,)
-//│   where
-//│     'd :> List['e] -> List['e]
-//│        <: 'f -> 'g
-//│     'e :> "a"
-//│     'h :> List['i] -> List['i]
-//│        <: 'j -> 'f
-//│     'i :> "b"
-//│     'k :> List['l] -> List['l]
-//│        <: List[nothing] -> 'j
-//│     'l :> "c"
-//│     'a <: 'm -> 'b & 'g -> 'c
-//│     'n :> List['o] -> List['o]
-//│        <: 'p -> 'm
-//│     'o :> 1
-//│     'q :> List['r] -> List['r]
-//│        <: List[nothing] -> 'p
-//│     'r :> 2
+//│ f: (List["a" | "b" | "c"] -> 'a & List[1 | 2] -> 'b) -> ('b, 'a,)
 
 // definition in paper:
 //   g None = (0, "0")
@@ -71,27 +54,7 @@ def g x = case x of
   { None -> (0, "0")
   | Some -> (x.val (cons 1 (cons 2 nil)), x.val (cons "a" (cons "b" (cons "c" nil))))
   }
-//│ g: 'a -> (0 | 'b, "0" | 'c,)
-//│   where
-//│     'val <: 'd -> 'c
-//│     'e :> List['f] -> List['f]
-//│        <: 'g -> 'd
-//│     'f :> "a"
-//│     'h :> List['i] -> List['i]
-//│        <: 'j -> 'g
-//│     'i :> "b"
-//│     'k :> List['l] -> List['l]
-//│        <: List[nothing] -> 'j
-//│     'l :> "c"
-//│     'a <: None | Some['val0] & 'm
-//│     'm <: {val: 'val0 & 'val}
-//│     'val0 <: 'n -> 'b
-//│     'o :> List['p] -> List['p]
-//│        <: 'q -> 'n
-//│     'p :> 1
-//│     'r :> List['s] -> List['s]
-//│        <: List[nothing] -> 'q
-//│     's :> 2
+//│ g: (None | Some[?] & {val: List["a" | "b" | "c"] -> 'a & List[1 | 2] -> 'b}) -> (0 | 'b, "0" | 'a,)
 
 // ============ Sec 2 ============
 
@@ -102,9 +65,7 @@ length ids
 // ============ Sec 3.2 ============
 
 (fun x -> fun g -> (g true, g 3)) 4
-//│ res: 'a -> ('b, 'c,)
-//│   where
-//│     'a <: true -> 'b & 3 -> 'c
+//│ res: (3 -> 'a & true -> 'b) -> ('b, 'a,)
 
 // ============ Sec 3.3 ============
 
@@ -151,7 +112,4 @@ let f = fun x -> nil in f (fun g -> (g 3, g true))
 def f: (int -> (forall 'a. 'a -> 'a)) -> int
 fun x -> f x // Not typeable in Boxy Types!
 //│ f: (int -> (forall 'a. 'a -> 'a)) -> int
-//│ res: 'b -> 'c
-//│   where
-//│     'b <: int -> (forall 'a. 'a -> 'a)
-//│     'c :> int
+//│ res: (int -> (forall 'a. 'a -> 'a)) -> int

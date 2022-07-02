@@ -111,12 +111,12 @@ r = bar (fun x -> (x, x + 1, not x, x x))
 r
 //│ res: forall 'b, 'a, 'c, 'd, 'e, 'f. 'b
 //│   where
-//│     'b :> ('c, 'f, 'd, 'e,)
-//│     'd :> bool
-//│     'f :> int
+//│     'b :> ('c, 'e, 'f, 'd,)
+//│     'f :> bool
+//│     'e :> int
 //│     'c :> 'a & int & ~'a
-//│        <: 'c -> 'e & bool & int
-//│     'a <: (int | ~(int & ~'a)) & (bool | ~(int & ~'a)) & ('c -> 'e | ~(int & ~'a))
+//│        <: 'c -> 'd & bool & int
+//│     'a <: (int | ~(int & ~'a)) & (bool | ~(int & ~'a)) & ('c -> 'd | ~(int & ~'a))
 //│    = <no result>
 //│      r and bar are not implemented
 

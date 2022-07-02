@@ -25,24 +25,17 @@ type Sid = forall 'a. 'a -> 'a
 // let annot x = (x:sid)
 // ;;
 def annot x = x : Sid
-//│ annot: 'a -> Sid
-//│   where
-//│     'a <: Sid
+//│ annot: Sid -> Sid
 //│      = [Function: annot]
 
 // let delta x = let y = (x:sid) in y y
 // ;;
 def delta x = let y = (x : Sid) in y y
-//│ delta: Sid -> 'b
-//│   where
-//│     'a :> Sid
-//│        <: 'b
+//│ delta: Sid -> Sid
 //│      = [Function: delta]
 
 // untype fun x -> let y = (annot x) in y y
 // ;;
 fun x -> let y = annot x in y y
-//│ res: Sid -> 'a
-//│   where
-//│     'b <: Sid -> 'a
+//│ res: Sid -> Sid
 //│    = [Function: res]

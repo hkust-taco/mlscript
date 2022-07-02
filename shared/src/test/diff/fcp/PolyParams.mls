@@ -112,11 +112,7 @@ def cons: ('a, {x:'a}) -> {x:'a}
 //│     = <missing implementation>
 
 f (x, xs) = cons (x, xs)
-//│ f: ('b, 'c,) -> 'd
-//│   where
-//│     'b <: 'a
-//│     'c <: {x: 'a}
-//│     'd :> {x: 'a}
+//│ f: ('a, {x: 'a},) -> {x: 'a}
 //│  = <no result>
 //│    cons is not implemented
 
