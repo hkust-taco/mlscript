@@ -154,27 +154,27 @@ def mkIntegerPrecise value = Integer { value; addOne = fun n -> mkInteger (n.val
 //│                 = [Function: mkIntegerPrecise1]
 
 def mkIntegerPrecise value = Integer { value; addOne = fun (n: Integer) -> mkInteger2 (n.value + 1) }
-//│ mkIntegerPrecise: (int & 'value) -> (Integer with {addOne: forall 'value0, 'a, 'b, 'c, 'd. (Integer -> 'c
+//│ mkIntegerPrecise: (int & 'value) -> (Integer with {addOne: forall 'a, 'b, 'c, 'value0, 'd. (Integer -> 'b
 //│   where
-//│     'value0 <: int
-//│     'a :> int -> int
-//│        <: 1 -> 'b
-//│     'b <: int
+//│     'a <: int
+//│     'b :> Integer
 //│     'c :> Integer
-//│     'd :> Integer
-//│        <: Integer & {value: 'value0}), value: 'value})
+//│        <: Integer & {value: 'value0}
+//│     'value0 <: int
+//│     'd :> int -> int
+//│        <: 1 -> 'a), value: 'value})
 //│                 = [Function: mkIntegerPrecise2]
 
 n = mkIntegerPrecise 42
-//│ n: Integer with {addOne: forall 'value, 'a, 'b, 'c, 'd. (Integer -> 'c
+//│ n: Integer with {addOne: forall 'a, 'b, 'c, 'value, 'd. (Integer -> 'b
 //│   where
-//│     'value <: int
-//│     'a :> int -> int
-//│        <: 1 -> 'b
-//│     'b <: int
+//│     'a <: int
+//│     'b :> Integer
 //│     'c :> Integer
-//│     'd :> Integer
-//│        <: Integer & {value: 'value}), value: 42}
+//│        <: Integer & {value: 'value}
+//│     'value <: int
+//│     'd :> int -> int
+//│        <: 1 -> 'a), value: 42}
 //│  = Integer { value: 42, addOne: [Function: addOne] }
 
 addOne1 n
@@ -185,15 +185,15 @@ def mkIntegerPrecise2: (int & 'a) -> (Integer & { value: 'a })
 def mkIntegerPrecise2 = mkIntegerPrecise
 //│ mkIntegerPrecise2: (int & 'a) -> (Integer\addOne with {value: 'a})
 //│                  = <missing implementation>
-//│ (int & 'value) -> (Integer with {addOne: forall 'value0, 'a, 'b, 'c, 'd. (Integer -> 'c
+//│ (int & 'value) -> (Integer with {addOne: forall 'a, 'b, 'c, 'value0, 'd. (Integer -> 'b
 //│   where
-//│     'value0 <: int
-//│     'a :> int -> int
-//│        <: 1 -> 'b
-//│     'b <: int
+//│     'a <: int
+//│     'b :> Integer
 //│     'c :> Integer
-//│     'd :> Integer
-//│        <: Integer & {value: 'value0}), value: 'value})
+//│        <: Integer & {value: 'value0}
+//│     'value0 <: int
+//│     'd :> int -> int
+//│        <: 1 -> 'a), value: 'value})
 //│   <:  mkIntegerPrecise2:
 //│ (int & 'a) -> (Integer\addOne with {value: 'a})
 //│                  = [Function: mkIntegerPrecise2]
@@ -281,15 +281,15 @@ addOne2 (mkStr "hello")
 //│    = Str { value: 'hello1', addOne: [Function: addOne] }
 
 union = if true then mkIntegerPrecise 42 else mkStr "hello"
-//│ union: (Integer with {addOne: forall 'value, 'a, 'b, 'c, 'd. (Integer -> 'c
+//│ union: (Integer with {addOne: forall 'a, 'b, 'c, 'value, 'd. (Integer -> 'b
 //│   where
-//│     'value <: int
-//│     'a :> int -> int
-//│        <: 1 -> 'b
-//│     'b <: int
+//│     'a <: int
+//│     'b :> Integer
 //│     'c :> Integer
-//│     'd :> Integer
-//│        <: Integer & {value: 'value}), value: 42}) | Str
+//│        <: Integer & {value: 'value}
+//│     'value <: int
+//│     'd :> int -> int
+//│        <: 1 -> 'a), value: 42}) | Str
 //│      = Integer { value: 42, addOne: [Function: addOne] }
 
 union2 = addOne2 union

@@ -25,6 +25,10 @@ def cons head tail = Cons { head; tail }
 //│     'b <: 'head & 'a
 //│     'c <: List['a] & 'tail
 //│     'd :> Cons['a] with {head: 'head, tail: 'tail}))
+//│   where
+//│     'e :> Cons['a0] with {head: 'head0, tail: 'tail0}
+//│     'b <: 'head0 & 'a0
+//│     'f <: List['a0] & 'tail0
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -52,8 +56,8 @@ def head l = l.Head
 //│     = <missing implementation>
 //│ 'b -> 'c
 //│   where
-//│     'b <: List['a]
 //│     'a <: 'c
+//│     'b <: List['a]
 //│   <:  head:
 //│ List['a] -> 'a
 //│     = [Function: head]
@@ -112,8 +116,8 @@ def print_int i = log i
 //│          = <missing implementation>
 //│ 'a -> 'b
 //│   where
-//│     'b :> unit
 //│     'a <: 'a
+//│     'b :> unit
 //│   <:  print_int:
 //│ int -> unit
 //│          = [Function: print_int]
@@ -153,9 +157,13 @@ def succ n = n + 1
 def z = succ : int -> int
 //│ choose: 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('e -> 'f
 //│   where
-//│     'b :> 'c -> 'c -> 'c
-//│        <: 'a -> 'd
-//│     'd <: 'e -> 'f))
+//│     'c :> 'd -> 'd -> 'd
+//│        <: 'a -> 'b
+//│     'b <: 'e -> 'f))
+//│   where
+//│     'g :> 'h -> 'h -> 'h
+//│        <: 'a -> 'i
+//│     'i <: nothing -> 'b
 //│       = [Function: choose]
 //│ succ: 'a -> 'b
 //│   where
@@ -219,21 +227,21 @@ def z_ = delta_ (delta_ id)
 delta succ
 delta_ succ
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.219: 	delta succ
+//│ ║  l.227: 	delta succ
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `‘a` is not an instance of type `int`
-//│ ║  l.145: 	type Id = forall 'a. 'a -> 'a
+//│ ║  l.149: 	type Id = forall 'a. 'a -> 'a
 //│ ╙──       	                 ^^
 //│ res: error | Id
 //│    = 'function succ(n) {  return n + 1;}1'
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.220: 	delta_ succ
+//│ ║  l.228: 	delta_ succ
 //│ ║         	^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` is not an instance of type `int`
-//│ ║  l.152: 	def succ n = n + 1
+//│ ║  l.156: 	def succ n = n + 1
 //│ ║         	         ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.220: 	delta_ succ
+//│ ║  l.228: 	delta_ succ
 //│ ╙──       	       ^^^^
 //│ res: error | int
 //│    = 'function succ(n) {  return n + 1;}1'
@@ -260,10 +268,10 @@ def test2 = apply_to_id delta
 def test2_ = apply_to_id delta_
 //│ step: 'a -> 'b
 //│   where
-//│     'a <: 1 -> 'c & 0 -> 'd
-//│     'c <: int
-//│     'e :> int -> int
+//│     'c :> int -> int
 //│        <: 'd -> 'b
+//│     'a <: 1 -> 'e & 0 -> 'd
+//│     'e <: int
 //│     = [Function: step]
 //│ apply_to_id: 'a -> 'b
 //│   where
@@ -328,49 +336,89 @@ fun x -> fun y ->
 fun x -> fun y ->
   let isnil = x y in
     (isnil (cons 1 (cons 2 (cons 3 nil))), isnil nil, isnil (cons "ok" nil), isnil (cons true nil)) 
-//│ res: Id -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm, 'n, 'o, 'p, 'q, 'r, 's, 't, 'u, 'v, 'w. (anything -> ('k, 'm, 'r, 'w,)
+//│ res: Id -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm, 'n, 'o, 'p, 'q, 'r, 's, 't, 'u, 'v, 'w. (anything -> ('p, 'r, 'w, 'e,)
 //│   where
 //│     'a :> List['b] -> List['b]
-//│        <: 'c -> 'd
-//│     'b :> 1
-//│     'e :> List['f] -> List['f]
-//│        <: 'g -> 'c
-//│     'f :> 2
-//│     'h :> List['i] -> List['i]
-//│        <: List[nothing] -> 'g
-//│     'i :> 3
-//│     'j <: 'd -> 'k
-//│     'l <: List[nothing] -> 'm
-//│     'n :> List['o] -> List['o]
-//│        <: List[nothing] -> 'p
-//│     'o :> "ok"
-//│     'q <: 'p -> 'r
+//│        <: List[nothing] -> 'c
+//│     'b :> true
+//│     'd <: 'c -> 'e
+//│     'f :> List['g] -> List['g]
+//│        <: 'h -> 'i
+//│     'g :> 1
+//│     'j :> List['k] -> List['k]
+//│        <: 'l -> 'h
+//│     'k :> 2
+//│     'm :> List['n] -> List['n]
+//│        <: List[nothing] -> 'l
+//│     'n :> 3
+//│     'o <: 'i -> 'p
+//│     'q <: List[nothing] -> 'r
 //│     's :> List['t] -> List['t]
 //│        <: List[nothing] -> 'u
-//│     't :> true
+//│     't :> "ok"
 //│     'v <: 'u -> 'w))
-//│    = [Function: res]
-//│ res: ('a -> anything) -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm, 'n, 'o, 'p, 'q, 'r, 's, 't, 'u, 'v, 'w, 'x. ('a -> ('o, 'q, 'v, 'd,)
 //│   where
-//│     'b <: 'c -> 'd
-//│     'e :> List['f] -> List['f]
-//│        <: 'g -> 'h
-//│     'f :> 1
+//│     'x :> List['y] -> List['y]
+//│        <: List[nothing] -> 'z
+//│     'y :> true
+//│     'a1 <: 'z -> anything
+//│     'b1 :> List['c1] -> List['c1]
+//│         <: 'd1 -> 'e1
+//│     'c1 :> 1
+//│     'f1 :> List['g1] -> List['g1]
+//│         <: 'h1 -> 'd1
+//│     'g1 :> 2
+//│     'i1 :> List['j1] -> List['j1]
+//│         <: List[nothing] -> 'h1
+//│     'j1 :> 3
+//│     'k1 <: 'e1 -> anything
+//│     'l1 <: List[nothing] -> anything
+//│     'm1 :> List['n1] -> List['n1]
+//│         <: List[nothing] -> 'o1
+//│     'n1 :> "ok"
+//│     'p1 <: 'o1 -> anything
+//│    = [Function: res]
+//│ res: ('a -> anything) -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm, 'n, 'o, 'p, 'q, 'r, 's, 't, 'u, 'v, 'w, 'x. ('a -> ('l, 'n, 's, 'x,)
+//│   where
+//│     'b :> List['c] -> List['c]
+//│        <: 'd -> 'e
+//│     'c :> 1
+//│     'f :> List['g] -> List['g]
+//│        <: 'h -> 'd
+//│     'g :> 2
 //│     'i :> List['j] -> List['j]
-//│        <: 'k -> 'g
-//│     'j :> 2
-//│     'l :> List['m] -> List['m]
-//│        <: List[nothing] -> 'k
-//│     'm :> 3
-//│     'n <: 'h -> 'o
-//│     'p <: List[nothing] -> 'q
-//│     'r :> List['s] -> List['s]
-//│        <: List[nothing] -> 't
-//│     's :> "ok"
-//│     'u <: 't -> 'v
-//│     'w :> List['x] -> List['x]
-//│        <: List[nothing] -> 'c
-//│     'x :> true))
+//│        <: List[nothing] -> 'h
+//│     'j :> 3
+//│     'k <: 'e -> 'l
+//│     'm <: List[nothing] -> 'n
+//│     'o :> List['p] -> List['p]
+//│        <: List[nothing] -> 'q
+//│     'p :> "ok"
+//│     'r <: 'q -> 's
+//│     't :> List['u] -> List['u]
+//│        <: List[nothing] -> 'v
+//│     'u :> true
+//│     'w <: 'v -> 'x))
+//│   where
+//│     'y :> 2
+//│     'z :> List['a1] -> List['a1]
+//│        <: List[nothing] -> 'b1
+//│     'a1 :> 3
+//│     'c1 <: 'd1 -> anything
+//│     'e1 <: List[nothing] -> anything
+//│     'f1 :> List['g1] -> List['g1]
+//│         <: List[nothing] -> 'h1
+//│     'g1 :> "ok"
+//│     'i1 <: 'h1 -> anything
+//│     'j1 :> List['k1] -> List['k1]
+//│         <: List[nothing] -> 'l1
+//│     'k1 :> true
+//│     'm1 <: 'l1 -> anything
+//│     'n1 :> List['o1] -> List['o1]
+//│         <: 'p1 -> 'd1
+//│     'o1 :> 1
+//│     'q1 :> List['y] -> List['y]
+//│         <: 'b1 -> 'p1
 //│    = [Function: res]
 
 // (*let t1 = f delta	
@@ -388,7 +436,10 @@ def departage x = choose id (x : Id)
 //│        <: 'f -> 'g
 //│     'g <: 'h -> 'i)
 //│        <: 'a -> 'b
-//│     'f :> forall 'j. 'j -> 'j
+//│     'j :> 'k -> 'k -> 'k
+//│        <: 'f -> 'l
+//│     'l <: 'f -> 'l
+//│     'f :> forall 'm. 'm -> 'm
 //│        = [Function: partage]
 //│ departage: 'a -> 'b
 //│   where
@@ -399,7 +450,10 @@ def departage x = choose id (x : Id)
 //│        <: 'f -> 'g
 //│     'g <: 'h -> 'i)
 //│        <: Id -> 'b
-//│     'f :> forall 'j. 'j -> 'j
+//│     'j :> 'k -> 'k -> 'k
+//│        <: 'f -> 'l
+//│     'l <: 'f -> 'l
+//│     'f :> forall 'm. 'm -> 'm
 //│          = [Function: departage]
 
 // let delta' = fun x -> (departage x) x
@@ -408,30 +462,36 @@ def delta' = fun x -> (departage x) x
 def delta'_ = fun x -> (partage x) x
 //│ delta': 'a -> 'b
 //│   where
-//│     'c :> forall 'd, 'e, 'f, 'g, 'h, 'i. ('h -> 'i
+//│     'c :> forall 'd. 'd -> 'd
+//│     'e <: 'f
+//│     'a <: 'g
+//│     'f <: 'a -> 'b
+//│     'g <: Id
+//│     'h :> forall 'c, 'i, 'j, 'k, 'l, 'm. ('l -> 'm
 //│   where
-//│     'd :> 'e -> 'e -> 'e
-//│        <: 'f -> 'g
-//│     'g <: 'h -> 'i)
-//│        <: Id -> 'j
-//│     'f :> forall 'k. 'k -> 'k
-//│     'j <: 'l
-//│     'a <: 'm
-//│     'l <: 'a -> 'b
-//│     'm <: Id
+//│     'i :> 'j -> 'j -> 'j
+//│        <: 'c -> 'k
+//│     'k <: 'l -> 'm)
+//│        <: Id -> 'e
+//│     'n :> 'o -> 'o -> 'o
+//│        <: 'c -> 'p
+//│     'p <: 'c -> 'p
 //│       = [Function: departage]
 //│ delta'_: 'a -> 'b
 //│   where
-//│     'a <: 'c
+//│     'c <: 'd
+//│     'a <: 'e
 //│     'd <: 'a -> 'b
-//│     'e :> forall 'f, 'g, 'h, 'i, 'j, 'k. ('j -> 'k
+//│     'f :> forall 'g, 'h, 'i, 'j, 'k, 'l. ('k -> 'l
 //│   where
-//│     'f :> 'g -> 'g -> 'g
-//│        <: 'h -> 'i
-//│     'i <: 'j -> 'k)
-//│        <: 'c -> 'l
-//│     'h :> forall 'm. 'm -> 'm
-//│     'l <: 'd
+//│     'g :> 'h -> 'h -> 'h
+//│        <: 'i -> 'j
+//│     'j <: 'k -> 'l)
+//│        <: 'e -> 'c
+//│     'm :> 'n -> 'n -> 'n
+//│        <: 'i -> 'o
+//│     'o <: 'i -> 'o
+//│     'i :> forall 'p. 'p -> 'p
 //│        = [Function: departage]
 
 // let t = fun x -> (x:id) x, x
@@ -447,8 +507,8 @@ def t = fun x -> (x x, x : Id)
 def t_ = fun x -> (x x, x)
 //│ t: 'b -> ('c, 'b,)
 //│   where
-//│     'b <: Id & 'a
 //│     'a <: 'c
+//│     'b <: Id & 'a
 //│  = [Function: t]
 //│ t: Id -> ('a, Id,)
 //│   where
@@ -509,41 +569,63 @@ def ff_ = fun g ->
 //│   = [Function: aa]
 //│ ff: (forall 'a, 'b. (('a | Id) -> 'b) -> 'b) -> 'c
 //│   where
-//│     'd :> forall 'e, 'f, 'g, 'h, 'i, 'j. ('e -> 'j
+//│     'd <: 'e
+//│     'f <: 8 -> 'g
+//│     'g <: 'h
+//│     'h <: int
+//│     'i :> int -> int
+//│        <: 1 -> 'd
+//│     'j :> forall 'e, 'k, 'l, 'm, 'n, 'o. ('m -> 'l
 //│   where
-//│     'e <: 8 -> 'f
-//│     'f <: 'g
-//│     'g <: int
-//│     'h :> int -> int
-//│        <: 1 -> 'i
-//│     'i <: 'j)
-//│        <: (forall 'k, 'l, 'm. ('k -> 'm
+//│     'k <: 'l
+//│     'm <: 8 -> 'n
+//│     'n <: 'e
+//│     'e <: int
+//│     'o :> int -> int
+//│        <: 1 -> 'k)
+//│        <: (forall 'p, 'q, 'r. ('p -> 'r
 //│   where
-//│     'k <: int
-//│     'l :> int -> int
-//│        <: 1 -> 'm)) -> 'n
-//│     'n <: 'c
-//│     'o := forall 'a, 'b. (('a | Id) -> 'b) -> 'b
+//│     'p <: int
+//│     'q :> int -> int
+//│        <: 1 -> 'r)) -> 's
+//│     't <: (forall 'p, 'q, 'r. ('p -> 'r
+//│   where
+//│     'p <: int
+//│     'q :> int -> int
+//│        <: 1 -> 'r)) -> 'e
+//│     's <: 'c
+//│     'u := forall 'a, 'b. (('a | Id) -> 'b) -> 'b
 //│   = [Function: ff]
 //│ ff_: ('a -> 'b & (forall 'a, 'c. (Id -> 'c
 //│   where
 //│     'a :> Id
 //│        <: Id & 'a -> 'c)) -> 'b) -> 'd
 //│   where
-//│     'e :> forall 'f, 'g, 'h, 'i, 'j, 'b. ('i -> 'h
+//│     'e <: 'f
+//│     'f <: int
+//│     'g :> int -> int
+//│        <: 1 -> 'h
+//│     'h <: 'b
+//│     'i <: 8 -> 'e
+//│     'j :> forall 'b, 'k, 'l, 'm, 'n, 'o. ('b -> 'o
 //│   where
-//│     'f :> int -> int
-//│        <: 1 -> 'g
-//│     'g <: 'h
-//│     'i <: 8 -> 'j
-//│     'j <: 'b
-//│     'b <: int)
-//│        <: (forall 'k, 'l, 'm. ('k -> 'm
+//│     'k <: 'l
+//│     'l <: int
+//│     'm :> int -> int
+//│        <: 1 -> 'n
+//│     'n <: 'o
+//│     'b <: 8 -> 'k)
+//│        <: (forall 'p, 'q, 'r. ('p -> 'r
 //│   where
-//│     'k <: int
-//│     'l :> int -> int
-//│        <: 1 -> 'm)) -> 'n
-//│     'n <: 'd
+//│     'p <: int
+//│     'q :> int -> int
+//│        <: 1 -> 'r)) -> 's
+//│     't <: (forall 'p, 'q, 'r. ('p -> 'r
+//│   where
+//│     'p <: int
+//│     'q :> int -> int
+//│        <: 1 -> 'r)) -> 'b
+//│     's <: 'd
 //│    = [Function: ff_]
 
 // let bigtest = ff aa
@@ -577,7 +659,7 @@ def mkpair x y = (x, y)
 // (* Il faudrait que le message d'erreur soit plus clair. *)
 example mkpair
 example_ mkpair
-//│ res: int -> (‘a1441, int,)
+//│ res: int -> (‘a2333, int,)
 //│    = [Function (anonymous)]
 //│ res: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('b, 'c,)), 'a,)
 //│    = [Function (anonymous)]
@@ -665,39 +747,78 @@ def intfa f = f 15
 // let polyann (a:'x) (b:int) f (g:int -> 'x -> 'y) = g (f 10) a b
 def polyann (a: 'x) (b: int) f (g: int -> 'x -> 'y) = g (f 10) a b
 def polyann_ a b f g = g (f 10) a b
-//│ polyann: 'x -> (forall 'a. (int -> (forall 'b. 'b -> (forall 'c, 'a, 'b, 'd, 'e, 'x0, 'y, 'f, 'g, 'h. ((int -> 'x0 -> 'y) -> 'h
+//│ polyann: 'x -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'x0, 'y, 'g, 'h. (int -> (forall 'a, 'b, 'c, 'i, 'j, 'k, 'x1, 'y0, 'l, 'm. ('m -> (forall 'a, 'b, 'c, 'm, 'n, 'o, 'p, 'q, 'x2, 'y1. ((int -> 'x2 -> 'y1) -> 'o
 //│   where
-//│     'b <: 10 -> 'd
-//│     'e :> int -> 'x0 -> 'y
-//│        <: int -> 'x0 -> 'y & 'd -> 'f
-//│     'f <: 'c -> 'g
-//│     'g <: 'a -> 'h)))
+//│     'n <: 'a -> 'b
+//│     'b <: 'c -> 'o
+//│     'm <: 10 -> 'p
+//│     'q :> int -> 'x2 -> 'y1
+//│        <: int -> 'x2 -> 'y1 & 'p -> 'n))
 //│   where
-//│     'a := int))
+//│     'i <: 'a -> 'j
+//│     'j <: 'c -> 'b
+//│     'k :> int -> 'x1 -> 'y0
+//│        <: int -> 'x1 -> 'y0 & 'l -> 'i
+//│     'm <: 10 -> 'l))
 //│   where
-//│     'c <: 'x
-//│     'x <: 'c
+//│     'c := int
+//│     'd <: 'a -> 'e
+//│     'e <: 'c -> 'b
+//│     'f :> int -> 'x0 -> 'y
+//│        <: int -> 'x0 -> 'y & 'g -> 'd
+//│     'h <: 10 -> 'g))
+//│   where
+//│     'a <: 'x
+//│     'x <: 'a
+//│     'r := int
+//│     's <: 'a -> 't
+//│     't <: 'r -> 'b
+//│     'u :> int -> 'x3 -> 'y2
+//│        <: int -> 'x3 -> 'y2 & 'v -> 's
+//│     'w <: 10 -> 'v
 //│        = [Function: polyann]
-//│ polyann_: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h. ('g -> 'e
+//│ polyann_: 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h. ('g -> (forall 'a, 'b, 'g, 'i, 'j, 'k, 'l, 'm. ('m -> (forall 'a, 'b, 'g, 'm, 'n, 'o, 'p, 'q. ('o -> 'q
 //│   where
-//│     'd <: 'b -> 'e
-//│     'c <: 10 -> 'f
-//│     'g <: 'f -> 'h
-//│     'h <: 'a -> 'd))))
+//│     'm <: 10 -> 'n
+//│     'o <: 'n -> 'p
+//│     'p <: 'a -> 'b
+//│     'b <: 'g -> 'q))
+//│   where
+//│     'i <: 'j -> 'k
+//│     'k <: 'a -> 'l
+//│     'l <: 'g -> 'b
+//│     'm <: 10 -> 'j))
+//│   where
+//│     'c <: 'd -> 'e
+//│     'e <: 'a -> 'f
+//│     'f <: 'g -> 'b
+//│     'h <: 10 -> 'd))
+//│   where
+//│     'r <: 's -> 't
+//│     't <: 'a -> 'u
+//│     'u <: nothing -> 'b
+//│     'v <: 10 -> 's
 //│         = [Function: polyann_]
 
 // let voyage (f:'p -> 'q) x y = (y, f x)
 def voyage (f: 'p -> 'q) x y = (y, f x)
 def voyage_ f x y = (y, f x)
-//│ voyage: ('p -> 'q) -> (forall 'a. 'a -> (forall 'b, 'a, 'c, 'd. ('d -> ('d, 'c,)
+//│ voyage: ('p -> 'q) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d -> ('d, 'c,)
 //│   where
-//│     'b <: 'a -> 'c)))
+//│     'a <: 'b -> 'c))
 //│   where
-//│     'b := 'p -> 'q
+//│     'a <: 'b -> anything))
+//│   where
+//│     'a :> 'p -> 'q
+//│        <: 'p -> 'q & nothing -> anything
 //│       = [Function: voyage]
-//│ voyage_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('d -> ('d, 'c,)
+//│ voyage_: 'a -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d -> ('d, 'c,)
 //│   where
-//│     'a <: 'b -> 'c)))
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: 'b -> 'a))
+//│   where
+//│     'a <: nothing -> 'a
 //│        = [Function: voyage_]
 
 // let main =
@@ -964,11 +1085,11 @@ def test2 = fun (x : 'a) -> (x : Sid, if true then x else succ)
 //│     = [Function: succ1]
 //│ test: 'a -> (Sid, 'b,)
 //│   where
-//│     'c <: (forall 'd. 'd -> 'd) -> 'b
-//│     'e <: 'a & Sid
-//│     'a <: 'e
-//│     'f :> 'g -> 'g -> 'g
-//│        <: 'e -> 'c
+//│     'c <: 'a & Sid
+//│     'a <: 'c
+//│     'd :> 'e -> 'e -> 'e
+//│        <: 'c -> 'f
+//│     'f <: (forall 'g. 'g -> 'g) -> 'b
 //│     = [Function: test]
 //│ test2: 'a -> (Sid, 'b,)
 //│   where
@@ -1028,53 +1149,105 @@ def a = fun f -> f id
 //│            = [Function: church_zero]
 //│ church_un: 'a -> 'a
 //│          = [Function: id2]
-//│ church_succ: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('d -> 'f
+//│ church_succ: 'a -> (forall 'b, 'a, 'c, 'd, 'e, 'f. ('d -> (forall 'a, 'c, 'd, 'g, 'h, 'i. ('i -> 'h
 //│   where
-//│     'c <: 'd -> 'e
-//│     'a <: 'b -> 'c
-//│     'b <: 'e -> 'f)))
+//│     'a <: 'd -> 'c
+//│     'd <: 'g -> 'h
+//│     'c <: 'i -> 'g))
+//│   where
+//│     'a <: 'd -> 'e
+//│     'd <: 'f -> 'c
+//│     'e <: 'b -> 'f))
+//│   where
+//│     'j <: 'b -> 'k
+//│     'a <: 'b -> 'j
+//│     'b <: 'k -> 'c
 //│            = [Function: church_succ]
 //│ f: Sa -> 'a
 //│   where
-//│     'b :> Sa
-//│        <: Sa & (forall 'c, 'd. (Sid -> 'd
+//│     'b :> forall 'c, 'd, 'e, 'f, 'g. ('c -> 'h
 //│   where
-//│     'c :> Sid
-//│        <: Sid & 'c -> 'd)) -> 'e
-//│     'e <: 'f
-//│     'g :> 'h -> 'f
-//│        <: 'i -> 'a
-//│     'j :> forall 'k, 'l, 'm. ('k -> 'n
+//│     'c <: 'd
+//│     'e :> forall 'd, 'i, 'j, 'k, 'l, 'm. ('i -> (forall 'd, 'i, 'n, 'o, 'p, 'q. ('q -> 'p
 //│   where
-//│     'k <: 'l
-//│     'm :> forall 'o. 'o -> (forall 'h, 'l, 'o, 'p, 'q, 'r. ('p -> 'r
+//│     'd <: 'i -> 'n
+//│     'i <: 'o -> 'p
+//│     'n <: 'q -> 'o))
 //│   where
-//│     'h <: 'p -> 'q
-//│     'l <: 'o -> 'h
-//│     'o <: 'q -> 'r))
-//│        <: ('h -> (forall 's. 's -> 's)) -> 'n)
-//│        <: (forall 's. 's -> 's) -> 't
-//│     't <: 'i
+//│     'd <: 'i -> 'j
+//│     'i <: 'k -> 'l
+//│     'j <: 'm -> 'k)
+//│        <: ('l -> (forall 'r. 'r -> 'r)) -> 'h
+//│     'f <: 'm -> 's
+//│     'd <: 'g -> 'f
+//│     'g <: 's -> 'l)
+//│        <: (forall 'r. 'r -> 'r) -> 't
+//│     't <: 'u
+//│     'v <: (forall 'r. 'r -> 'r) -> 'l
+//│     'w <: 'x
+//│     'y :> forall 'd, 'i, 'j, 'k, 'l, 'm. ('i -> (forall 'd, 'i, 'n, 'o, 'p, 'q. ('q -> 'p
+//│   where
+//│     'd <: 'i -> 'n
+//│     'i <: 'o -> 'p
+//│     'n <: 'q -> 'o))
+//│   where
+//│     'd <: 'i -> 'j
+//│     'i <: 'k -> 'l
+//│     'j <: 'm -> 'k)
+//│        <: ('l -> (forall 'r. 'r -> 'r)) -> 'l
+//│     'z :> Sa
+//│        <: Sa & (forall 'a1, 'b1. (Sid -> 'b1
+//│   where
+//│     'a1 :> Sid
+//│         <: Sid & 'a1 -> 'b1)) -> 'c1
+//│     'l <: 'm -> 'd1
+//│     'c1 <: 'e1
+//│     'x <: 'm -> 'l
+//│     'f1 :> 'l -> 'e1
+//│         <: 'u -> 'a
+//│     'm <: 'd1 -> 'l
 //│  = [Function: f]
 //│ f_: 'a -> 'b
 //│   where
 //│     'c <: 'd
-//│     'a <: (forall 'e, 'f. ('e -> 'f
+//│     'e :> forall 'f, 'g, 'h, 'i, 'j, 'k. ('g -> (forall 'f, 'g, 'l, 'm, 'n, 'o. ('o -> 'n
 //│   where
-//│     'e <: 'e -> 'f)) -> 'g
-//│     'g <: 'h
-//│     'i :> 'j -> 'h
-//│        <: 'd -> 'b
-//│     'k :> forall 'l, 'm, 'n. ('l -> 'o
+//│     'f <: 'g -> 'l
+//│     'g <: 'm -> 'n
+//│     'l <: 'o -> 'm))
 //│   where
-//│     'l <: 'm
-//│     'n :> forall 'p. 'p -> (forall 'j, 'm, 'p, 'q, 'r, 's. ('q -> 's
+//│     'f <: 'g -> 'h
+//│     'g <: 'i -> 'j
+//│     'h <: 'k -> 'i)
+//│        <: ('j -> (forall 'p. 'p -> 'p)) -> 'j
+//│     'a <: (forall 'q, 'r. ('q -> 'r
 //│   where
-//│     'j <: 'q -> 'r
-//│     'm <: 'p -> 'j
-//│     'p <: 'r -> 's))
-//│        <: ('j -> (forall 't. 't -> 't)) -> 'o)
-//│        <: (forall 't. 't -> 't) -> 'c
+//│     'q <: 'q -> 'r)) -> 's
+//│     't <: 'k -> 'u
+//│     's <: 'v
+//│     'd <: 'w -> 't
+//│     'x :> 'j -> 'v
+//│        <: 'y -> 'b
+//│     'w <: 'u -> 'j
+//│     'z :> forall 'f, 'j, 'k, 'a1, 'b1. ('a1 -> 'c1
+//│   where
+//│     'a1 <: 'f
+//│     'b1 :> forall 'f, 'g, 'h, 'i, 'j, 'k. ('g -> (forall 'f, 'g, 'l, 'm, 'n, 'o. ('o -> 'n
+//│   where
+//│     'f <: 'g -> 'l
+//│     'g <: 'm -> 'n
+//│     'l <: 'o -> 'm))
+//│   where
+//│     'f <: 'g -> 'h
+//│     'g <: 'i -> 'j
+//│     'h <: 'k -> 'i)
+//│         <: ('j -> (forall 'p. 'p -> 'p)) -> 'c1
+//│     'j <: 'k -> 'd1
+//│     'f <: 'k -> 'j
+//│     'k <: 'd1 -> 'j)
+//│        <: (forall 'p. 'p -> 'p) -> 'e1
+//│     'e1 <: 'y
+//│     'f1 <: (forall 'p. 'p -> 'p) -> 'j
 //│   = [Function: f_]
 //│ a: 'a -> 'b
 //│   where
@@ -1090,6 +1263,8 @@ def test2 = app f a
 //│ app: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
 //│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> 'a
 //│    = [Function: app]
 //│ test1: Sid
 //│      = [Function: id2]
@@ -1144,10 +1319,10 @@ fun x -> ( (x : Sid), (x : 'a) x)
 fun x -> ( (((x : 'a) : Sid) : 'a), x : 'a)
 //│ res: 'b -> ('a, 'c,)
 //│   where
-//│     'a0 <: ‘a -> ‘a
+//│     'b <: 'a0
+//│     'a1 <: ‘a -> ‘a
 //│     'a :> Sid
-//│     'a1 <: 'b -> 'c
-//│     'b <: 'a1
+//│     'a0 <: 'b -> 'c
 //│    = [Function: res]
 //│ res: 'b -> (Sid, 'c,)
 //│   where
@@ -1157,9 +1332,9 @@ fun x -> ( (((x : 'a) : Sid) : 'a), x : 'a)
 //│    = [Function: res]
 //│ res: 'b -> ('a, 'c,)
 //│   where
+//│     'a0 <: 'b -> 'c
 //│     'b <: Sid & 'a0
 //│     'a :> Sid
-//│     'a0 <: 'b -> 'c
 //│    = [Function: res]
 //│ res: 'b -> ('a, 'c,)
 //│   where
@@ -1186,17 +1361,17 @@ fun x -> ( (((x : 'a) : Sid) : 'a), x : 'a)
 :e
 rec def id_ x = if true then x else id_ id_ x
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.1187: 	rec def id_ x = if true then x else id_ id_ x
+//│ ║  l.1362: 	rec def id_ x = if true then x else id_ id_ x
 //│ ║          	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α2536' -> α2542')  <:  α2541'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α2536' -> α2542')  <:  α2541'
+//│ ╟── this constraint:  (α4340' -> α4346')  <:  α4345'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α4340' -> α4346')  <:  α4345'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.1187: 	rec def id_ x = if true then x else id_ id_ x
+//│ ║  l.1362: 	rec def id_ x = if true then x else id_ id_ x
 //│ ║          	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α2536' -> α2542')  <:  α2540'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α2536' -> α2542')  <:  α2540'
+//│ ╟── this constraint:  (α4340' -> α4346')  <:  α4344'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α4340' -> α4346')  <:  α4344'
 //│ id_: 'id_
 //│   where
 //│     'id_ :> 'a -> 'b
@@ -1215,17 +1390,17 @@ def id: Sid
 // FIXME
 rec def id x = if true then x else id id x
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.1216: 	rec def id x = if true then x else id id x
+//│ ║  l.1391: 	rec def id x = if true then x else id id x
 //│ ║          	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α2556' -> α2562')  <:  α2561'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α2556' -> α2562')  <:  α2561'
+//│ ╟── this constraint:  (α4360' -> α4366')  <:  α4365'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α4360' -> α4366')  <:  α4365'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.1216: 	rec def id x = if true then x else id id x
+//│ ║  l.1391: 	rec def id x = if true then x else id id x
 //│ ║          	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α2556' -> α2562')  <:  α2560'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α2556' -> α2562')  <:  α2560'
+//│ ╟── this constraint:  (α4360' -> α4366')  <:  α4364'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α4360' -> α4366')  <:  α4364'
 //│ 'id
 //│   where
 //│     'id :> 'a -> 'b
@@ -1236,47 +1411,47 @@ rec def id x = if true then x else id id x
 //│   <:  id:
 //│ Sid
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.1216: 	rec def id x = if true then x else id id x
+//│ ║  l.1391: 	rec def id x = if true then x else id id x
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‘a''  <:  α20_2579''    TraitTag  TypeVariable
-//│ ╙──  ... looks like:  ‘a''  <:  α20_2558'
+//│ ╟── this constraint:  ‘a''  <:  α20_4383''    TraitTag  TypeVariable
+//│ ╙──  ... looks like:  ‘a''  <:  α20_4362'
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.1216: 	rec def id x = if true then x else id id x
+//│ ║  l.1391: 	rec def id x = if true then x else id id x
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` is not a function
-//│ ║  l.951: 	type Sid = forall 'a. 'a -> 'a
-//│ ║         	                  ^^
+//│ ║  l.1072: 	type Sid = forall 'a. 'a -> 'a
+//│ ║          	                  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.1216: 	rec def id x = if true then x else id id x
+//│ ║  l.1391: 	rec def id x = if true then x else id id x
 //│ ║          	                                   ^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.1216: 	rec def id x = if true then x else id id x
+//│ ║  l.1391: 	rec def id x = if true then x else id id x
 //│ ╙──        	                            ^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.1216: 	rec def id x = if true then x else id id x
+//│ ║  l.1391: 	rec def id x = if true then x else id id x
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` is not an instance of type `'a`
-//│ ║  l.1216: 	rec def id x = if true then x else id id x
+//│ ║  l.1391: 	rec def id x = if true then x else id id x
 //│ ║          	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `‘a`
-//│ ║  l.1216: 	rec def id x = if true then x else id id x
+//│ ║  l.1391: 	rec def id x = if true then x else id id x
 //│ ║          	                                      ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.951: 	type Sid = forall 'a. 'a -> 'a
-//│ ╙──       	                  ^^
+//│ ║  l.1072: 	type Sid = forall 'a. 'a -> 'a
+//│ ╙──        	                  ^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.1216: 	rec def id x = if true then x else id id x
+//│ ║  l.1391: 	rec def id x = if true then x else id id x
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` is not an instance of type `'a`
-//│ ║  l.1216: 	rec def id x = if true then x else id id x
+//│ ║  l.1391: 	rec def id x = if true then x else id id x
 //│ ║          	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `‘a`
-//│ ║  l.1216: 	rec def id x = if true then x else id id x
+//│ ║  l.1391: 	rec def id x = if true then x else id id x
 //│ ║          	                                      ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.951: 	type Sid = forall 'a. 'a -> 'a
-//│ ╙──       	                  ^^
+//│ ║  l.1072: 	type Sid = forall 'a. 'a -> 'a
+//│ ╙──        	                  ^^
 //│   = [Function: id3]
 
 

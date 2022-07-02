@@ -57,5 +57,5 @@ test f =
 rec def test f =
   let r x = f x
   in (r 0, r True)
-//│ test: (true -> 'a & 0 -> 'b) -> ('b, 'a,)
+//│ test: (nothing -> anything & true -> 'a & 0 -> 'b) -> ('b, 'a,)
 //│     = [Function: test3]

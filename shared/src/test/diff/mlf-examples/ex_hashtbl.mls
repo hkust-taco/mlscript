@@ -26,6 +26,10 @@ def cons head tail = Cons { head; tail }
 //│     'b <: 'head & 'a
 //│     'c <: List['a] & 'tail
 //│     'd :> Cons['a] with {head: 'head, tail: 'tail}))
+//│   where
+//│     'e :> Cons['a0] with {head: 'head0, tail: 'tail0}
+//│     'b <: 'head0 & 'a0
+//│     'f <: List['a0] & 'tail0
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -53,8 +57,8 @@ def head l = l.Head
 //│     = <missing implementation>
 //│ 'b -> 'c
 //│   where
-//│     'b <: List['a]
 //│     'a <: 'c
+//│     'b <: List['a]
 //│   <:  head:
 //│ List['a] -> 'a
 //│     = [Function: head]
@@ -112,11 +116,19 @@ def create_hashtbl _ = nil
 
 // let hashtbl_add table key element = (key, element) :: table
 def hashtbl_add table key element = cons ((key, element)) table
-//│ hashtbl_add: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f -> 'e
+//│ hashtbl_add: 'a -> (forall 'a, 'b, 'c, 'd. ('d -> (forall 'a, 'd, 'e, 'f, 'g, 'h. ('h -> 'g
 //│   where
-//│     'c :> List['d] -> List['d]
-//│        <: 'a -> 'e
-//│     'd :> ('b, 'f,))))
+//│     'e :> List['f] -> List['f]
+//│        <: 'a -> 'g
+//│     'f :> ('d, 'h,)))
+//│   where
+//│     'b :> List['c] -> List['c]
+//│        <: 'a -> anything
+//│     'c :> ('d, nothing,)))
+//│   where
+//│     'i :> List['j] -> List['j]
+//│        <: 'a -> anything
+//│     'j :> (nothing, nothing,)
 //│            = [Function: hashtbl_add]
 
 // let rec find table key = 
@@ -176,20 +188,57 @@ def find_A table key =
 //│        <: List[('d, 'b,)]
 //│     'r :> 'd -> (None | Some['b])
 //│        <: 's -> 'x))
+//│   where
+//│     'y := bool
+//│     'z :> forall 'u. 'u -> 'u -> 'u
+//│        <: None -> 'a1
+//│     'c <: List['d] & List['a2] & List['a3] & List['a4]
+//│     'a1 <: 'b1 -> 'd
+//│     'c1 <: {_1: 'd1}
+//│     'a2 <: 'c1
+//│     'd1 <: 'd
+//│     'e1 :> 'd -> bool
+//│         <: nothing -> 'f1
+//│     'f1 <: bool
+//│     'g1 :> forall 'u. 'u -> 'u -> 'u
+//│         <: 'h1 -> 'i1
+//│     'j1 <: {_2: 'k1}
+//│     'a3 <: 'j1
+//│     'k1 <: 'l1
+//│     'l1 <: 'val0
+//│     'm1 :> Some['val0]
+//│         <: 'h1
+//│     'i1 <: 'n1 -> 'b1
+//│     'o1 :> List['a4]
+//│         <: List[('d, 'b0,)]
+//│     'p1 :> 'd -> (None | Some['b0])
+//│         <: nothing -> 'n1
 //│   <:  find_A:
 //│ List[(anything, 'b,)] -> anything -> (None | Some['b])
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.149: 	def find_A table key =
+//│ ║  l.161: 	def find_A table key =
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.150: 	  if is_empty table then None
+//│ ║  l.162: 	  if is_empty table then None
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.151: 	  else if eq (head table)._1 key then Some (head table)._2
+//│ ║  l.163: 	  else if eq (head table)._1 key then Some (head table)._2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.152: 	  else find_A (tail table) key
+//│ ║  l.164: 	  else find_A (tail table) key
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (None | Some['b317_500''])  <:  α20_501''    ComposedType  TypeVariable
-//│ ╙──  ... looks like:  (None | Some['b317_471'''])  <:  α20'
+//│ ╟── this constraint:  (None | Some['b414_733''])  <:  α20_763''    ComposedType  TypeVariable
+//│ ╙──  ... looks like:  (None | Some['b414_477''])  <:  α20'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.161: 	def find_A table key =
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.162: 	  if is_empty table then None
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.163: 	  else if eq (head table)._1 key then Some (head table)._2
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.164: 	  else find_A (tail table) key
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  (None | Some['b414_793''])  <:  α20_794''    ComposedType  TypeVariable
+//│ ╙──  ... looks like:  (None | Some['b414_762'''])  <:  α20'
 //│       = <no result>
 //│         find_A is not implemented
 
@@ -208,6 +257,9 @@ def nfind table key =
 //│   where
 //│     'a <: {val: 'val}
 //│     'b <: None | Some['a] & 'a))
+//│   where
+//│     'd <: {val: 'a}
+//│     'e <: None | Some['a] & 'd
 //│      = [Function: nfind]
 
 // type Int = ['a] ('a -> 'a) -> ('a -> 'a)
@@ -217,46 +269,119 @@ type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 // let succ (n:Int) = fun f x -> f (n f x)
 def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 def succ_ n = fun f -> fun x -> f (n f x)
-//│ succ: ChurchInt -> (forall 'a. 'a -> (forall 'b, 'a, 'c, 'd, 'e, 'f. ('f -> 'e
+//│ succ: ChurchInt -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('d -> (forall 'b, 'c, 'd, 'g, 'h, 'i. ('i -> 'h
 //│   where
-//│     'b <: 'a -> 'c
-//│     'a <: 'd -> 'e
-//│     'c <: 'f -> 'd)))
+//│     'b <: 'd -> 'c
+//│     'd <: 'g -> 'h
+//│     'c <: 'i -> 'g))
 //│   where
-//│     'b := ChurchInt
-//│     = [Function: succ]
-//│ succ_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f -> 'e
-//│   where
-//│     'a <: 'b -> 'c
 //│     'b <: 'd -> 'e
-//│     'c <: 'f -> 'd)))
+//│     'd <: 'f -> 'c
+//│     'e <: 'a -> 'f))
+//│   where
+//│     'j <: 'a -> 'k
+//│     'b :> ChurchInt
+//│        <: ChurchInt & 'a -> 'j
+//│     'a <: 'k -> 'c
+//│     = [Function: succ]
+//│ succ_: 'a -> (forall 'b, 'c, 'a, 'd, 'e, 'f. ('f -> (forall 'c, 'a, 'f, 'g, 'h, 'i. ('g -> 'i
+//│   where
+//│     'c <: 'g -> 'h
+//│     'a <: 'f -> 'c
+//│     'f <: 'h -> 'i))
+//│   where
+//│     'd <: 'b -> 'e
+//│     'a <: 'f -> 'd
+//│     'f <: 'e -> 'c))
+//│   where
+//│     'j <: 'b -> 'k
+//│     'b <: 'k -> 'c
+//│     'a <: 'b -> 'j
 //│      = [Function: succ_]
 
 // let add (n:Int) (m:Int) = n succ m
+
+:e // due to tapping
 def add (n: ChurchInt) (m: ChurchInt) = n succ m
-def add_ n m = n succ_ m
+//│ ╔══[ERROR] Type mismatch in lambda expression:
+//│ ║  l.305: 	def add (n: ChurchInt) (m: ChurchInt) = n succ m
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘a1142` is not an instance of type `'a`
+//│ ║  l.266: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.266: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                        ^^
 //│ add: ChurchInt -> (forall 'a, 'b, 'c. (ChurchInt -> 'd
 //│   where
-//│     'a <: (forall 'e. (ChurchInt -> (forall 'f. 'f -> (forall 'e, 'f, 'g, 'h, 'i, 'j. ('j -> 'i
+//│     'a <: (forall 'e, 'b, 'f, 'g, 'h, 'c. (ChurchInt -> (forall 'b, 'g, 'c, 'i, 'j, 'k. ('i -> (forall 'g, 'i, 'l, 'm, 'n, 'o. ('o -> 'n
 //│   where
-//│     'e <: 'f -> 'g
-//│     'f <: 'h -> 'i
-//│     'g <: 'j -> 'h)))
+//│     'g <: 'i -> 'l
+//│     'i <: 'm -> 'n
+//│     'l <: 'o -> 'm))
 //│   where
-//│     'e := ChurchInt)) -> 'b
-//│     'c := ChurchInt
-//│     'b <: 'c -> 'd))
+//│     'g <: 'i -> 'j
+//│     'i <: 'k -> 'c
+//│     'j <: 'b -> 'k))
 //│   where
-//│     'a := ChurchInt
+//│     'e <: 'b -> 'f
+//│     'g :> ChurchInt
+//│        <: ChurchInt & 'h -> 'e
+//│     'h <: 'f -> 'c)) -> 'c
+//│     'b := ChurchInt
+//│     'c <: 'b -> 'd))
+//│   where
+//│     'a :> ChurchInt
+//│        <: ChurchInt & (forall 'e, 'b, 'f, 'g, 'h, 'c. (ChurchInt -> (forall 'b, 'g, 'c, 'i, 'j, 'k. ('i -> (forall 'g, 'i, 'l, 'm, 'n, 'o. ('o -> 'n
+//│   where
+//│     'g <: 'i -> 'l
+//│     'i <: 'm -> 'n
+//│     'l <: 'o -> 'm))
+//│   where
+//│     'g <: 'i -> 'j
+//│     'i <: 'k -> 'c
+//│     'j <: 'b -> 'k))
+//│   where
+//│     'e <: 'b -> 'f
+//│     'g :> ChurchInt
+//│        <: ChurchInt & 'h -> 'e
+//│     'h <: 'f -> 'c)) -> 'p
+//│     'q := ChurchInt
+//│     'p <: 'q -> 'c
 //│    = [Function: add]
+
+def add_ n m = n succ_ m
 //│ add_: 'a -> (forall 'a, 'b. ('c -> 'd
 //│   where
-//│     'a <: (forall 'e. 'e -> (forall 'f. 'f -> (forall 'e, 'f, 'g, 'h, 'i, 'j. ('j -> 'i
+//│     'a <: (forall 'e, 'f, 'g, 'b, 'h. ('h -> (forall 'f, 'b, 'h, 'i, 'j, 'k. ('k -> (forall 'h, 'k, 'l, 'm, 'n, 'o. ('m -> 'o
+//│   where
+//│     'l <: 'm -> 'n
+//│     'h <: 'k -> 'l
+//│     'k <: 'n -> 'o))
+//│   where
+//│     'i <: 'f -> 'j
+//│     'h <: 'k -> 'i
+//│     'k <: 'j -> 'b))
 //│   where
 //│     'e <: 'f -> 'g
-//│     'f <: 'h -> 'i
-//│     'g <: 'j -> 'h)))) -> 'b
+//│     'f <: 'g -> 'b
+//│     'h <: 'f -> 'e)) -> 'b
 //│     'b <: 'c -> 'd))
+//│   where
+//│     'a <: (forall 'e, 'f, 'g, 'b, 'h. ('h -> (forall 'f, 'b, 'h, 'i, 'j, 'k. ('k -> (forall 'h, 'k, 'l, 'm, 'n, 'o. ('m -> 'o
+//│   where
+//│     'l <: 'm -> 'n
+//│     'h <: 'k -> 'l
+//│     'k <: 'n -> 'o))
+//│   where
+//│     'i <: 'f -> 'j
+//│     'h <: 'k -> 'i
+//│     'k <: 'j -> 'b))
+//│   where
+//│     'e <: 'f -> 'g
+//│     'f <: 'g -> 'b
+//│     'h <: 'f -> 'e)) -> 'p
+//│     'p <: 'f -> 'b
 //│     = [Function: add_]
 
 // let printInt (n:Int) = print (n (fun x -> x+1) 0)
@@ -264,14 +389,17 @@ def printInt (n: ChurchInt) = toString (n (fun x -> x + 1) 0)
 def printInt_ n = toString (n (fun x -> x + 1) 0)
 //│ printInt: ChurchInt -> 'a
 //│   where
-//│     'b <: 0 -> 'c
-//│     'a :> string
-//│     'd :> ChurchInt
-//│        <: ChurchInt & (forall 'c, 'e, 'f. ('c -> 'f
+//│     'b :> ChurchInt
+//│        <: ChurchInt & (forall 'c, 'd, 'e. ('c -> 'e
 //│   where
-//│     'e :> int -> int
+//│     'c <: int
+//│     'd :> int -> int
+//│        <: 1 -> 'e)) -> 'f
+//│     'g <: int
+//│     'h :> int -> int
 //│        <: 1 -> 'f
-//│     'c <: int)) -> 'b
+//│     'f <: 0 -> 'f
+//│     'a :> string
 //│         = [Function: printInt]
 //│ printInt_: 'a -> 'b
 //│   where
@@ -280,6 +408,9 @@ def printInt_ n = toString (n (fun x -> x + 1) 0)
 //│     'c <: int
 //│     'd :> int -> int
 //│        <: 1 -> 'e)) -> 'f
+//│     'g <: int
+//│     'h :> int -> int
+//│        <: 1 -> 'f
 //│     'f <: 0 -> 'f
 //│     'b :> string
 //│          = [Function: printInt_]
@@ -292,14 +423,19 @@ table = hashtbl_add table "one" (fun f -> fun x -> f x)
 table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│ table: List[nothing]
 //│      = Nil {}
-//│ table: List[("one", forall 'a. 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ table: List[("one", forall 'a. ('a -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
-//│     'a <: 'b -> 'c)),)]
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> 'a),)]
 //│      = Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
-//│ table: List[("one" | "two", forall 'a, 'b. ('a & 'b) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ table: List[("one" | "two", forall 'a, 'b, 'c. (('a & 'c) -> (forall 'a, 'c, 'd, 'e, 'f. ('d -> 'f
 //│   where
-//│     'a <: 'c -> 'd & 'd -> 'e
-//│     'b <: 'c -> 'e)),)]
+//│     'a <: 'd -> 'e & 'e -> 'f
+//│     'c <: 'd -> 'f))
+//│   where
+//│     'a <: nothing -> 'b & 'b -> 'c
+//│     'c <: nothing -> 'c),)]
 //│      = Cons {
 //│          head: [ 'two', [Function (anonymous)] ],
 //│          tail: Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
@@ -310,47 +446,159 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 
 // :e // FIXME? failed with genLamBodies but works with quantif extrus
 // * Note: this one requires `:DistributeForalls`
+:e // due to tapping
 zog = printInt (add (nfind table "one") (nfind table "two"))
-//│ zog: string
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.450: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘a1689` is not an instance of type `'a`
+//│ ║  l.266: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.266: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                        ^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.450: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘a1881` is not an instance of type `'a`
+//│ ║  l.266: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.266: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                        ^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.450: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘a1966` is not an instance of type `'a`
+//│ ║  l.266: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.266: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                        ^^
+//│ zog: error | string
 //│    = '0'
 
 // Repro:
 
 // :e // FIXME? failed with genLamBodies but works with quantif extrus
+:e // due to tapping
 a = add (nfind table "one")
-//│ a: ChurchInt -> 'a
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.485: 	a = add (nfind table "one")
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘a2127` is not an instance of type `'a`
+//│ ║  l.266: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.266: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                        ^^
+//│ a: ChurchInt -> 'a | error
 //│   where
-//│     'b <: (forall 'c. (ChurchInt -> (forall 'd. 'd -> (forall 'c, 'd, 'e, 'f, 'g, 'h. ('h -> 'g
+//│     'b <: (forall 'c, 'd, 'e, 'f, 'g, 'h. (ChurchInt -> (forall 'd, 'f, 'h, 'i, 'j, 'k. ('i -> (forall 'f, 'i, 'l, 'm, 'n, 'o. ('o -> 'n
+//│   where
+//│     'f <: 'i -> 'l
+//│     'i <: 'm -> 'n
+//│     'l <: 'o -> 'm))
+//│   where
+//│     'f <: 'i -> 'j
+//│     'i <: 'k -> 'h
+//│     'j <: 'd -> 'k))
 //│   where
 //│     'c <: 'd -> 'e
-//│     'd <: 'f -> 'g
-//│     'e <: 'h -> 'f)))
-//│   where
-//│     'c := ChurchInt)) -> 'i
-//│     'j := ChurchInt
-//│     'i <: 'j -> 'a
+//│     'f :> ChurchInt
+//│        <: ChurchInt & 'g -> 'c
+//│     'g <: 'e -> 'h)) -> 'h
+//│     'd := ChurchInt
+//│     'h <: 'd -> 'a
 //│  = [Function (anonymous)]
 
 b = (nfind table "two")
-//│ b: ('a & 'b) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('f | 'e)
+//│ b: ('a & 'b) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('e | 'f)
 //│   where
 //│     'a <: 'c -> 'd & 'd -> 'e
 //│     'b <: 'c -> 'e
 //│     'a <: 'c -> 'd & 'd -> 'e
 //│     'b <: 'c -> 'e))
+//│   where
+//│     'a <: nothing -> 'g & 'g -> 'b
+//│     'b <: nothing -> 'b
+//│     'a <: nothing -> 'g & 'g -> 'b
+//│     'b <: nothing -> 'b
 //│  = [Function (anonymous)]
 
 // * Note: this one requires `:DistributeForalls`
 // :d
+:e // due to tapping
 a b
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.532: 	a b
+//│ ║         	^^^
+//│ ╟── type `‘a2445` is not an instance of type `'a`
+//│ ║  l.266: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.266: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                        ^^
 //│ res: 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> 'd
 //│   where
 //│     'f <: 'a -> 'b
 //│     'a <: 'c -> 'd
-//│     'b <: 'e -> 'c)) | ChurchInt
+//│     'b <: 'e -> 'c)) | error | ChurchInt
+//│   where
+//│     'f <: 'a -> 'g
+//│     'a <: 'h -> 'b
+//│     'g <: nothing -> 'h
 //│    = [Function (anonymous)]
 
+:e // due to tapping
 zog_ = printInt_ (add_ (nfind table "one") (nfind table "two"))
-//│ zog_: string
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d, ?e. (?a -> ?e
+//│   where
+//│     ?a <: (forall ?f, ?g, ?h. (?f -> ?h
+//│   where
+//│     ?f <: int
+//│     ?g :> int -> int
+//│        <: 1 -> ?h)) -> ?d
+//│     ?b <: int
+//│     ?c :> int -> int
+//│        <: 1 -> ?i
+//│     ?d <: 0 -> ?j
+//│     ?e :> string) <: ?k -> ?l` took too many steps and ran out of fuel (5000)
+//│ ║  l.554: 	zog_ = printInt_ (add_ (nfind table "one") (nfind table "two"))
+//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 1. {(α1412'' -> ‹∀ 2. {(α1413''' -> α1414''') where: α1412'' <: ((α1413''',) -> α1414''')}›) where: α1412'' <: ((α1413_1415'',) -> α1414_1416'')}›
+//│ ╟──  + ‹∀ 1. {(α1412'' -> ‹∀ 2. {(α1413''' -> α1414''') where: α1412'' <: ((α1413''',) -> α1414''')}›) where: α1412'' <: ((α1413_1415'',) -> α1414_1416'')}›
+//│ ╟──  + ‹∀ 1. {(α1412'' -> ‹∀ 2. {(α1413''' -> α1414''') where: α1412'' <: ((α1413''',) -> α1414''')}›) where: α1412'' <: ((α1413_1415'',) -> α1414_1416'')}›
+//│ ╟──  + ‹∀ 1. {(α1412'' -> ‹∀ 2. {(α1413''' -> α1414''') where: α1412'' <: ((α1413''',) -> α1414''')}›) where: α1412'' <: ((α1413_1415'',) -> α1414_1416'')}›
+//│ ║  l.254: 	  | Some -> opt.val
+//│ ║         	            ^^^^^^^
+//│ ╟──  + val850_2995'
+//│ ║  l.254: 	  | Some -> opt.val
+//│ ║         	            ^^^^^^^
+//│ ╟──  + (‹∀ 3. (α847'''' -> ‹∀ 4. (α848''''' -> α848''''')›)› | val850_2995')
+//│ ╟──  + (‹∀ 3. (α847'''' -> ‹∀ 4. (α848''''' -> α848''''')›)› | val850_2995')
+//│ ║  l.554: 	zog_ = printInt_ (add_ (nfind table "one") (nfind table "two"))
+//│ ║         	                                            ^^^^^^^^^^^^^^^^^
+//│ ╟──  + (‹∀ 3. (α847'''' -> ‹∀ 4. (α848''''' -> α848''''')›)› | val850_2995')
+//│ ║  l.554: 	zog_ = printInt_ (add_ (nfind table "one") (nfind table "two"))
+//│ ║         	                                            ^^^^^^^^^^^^^^^^^
+//│ ╟──  + (‹∀ 3. (α847'''' -> ‹∀ 4. (α848''''' -> α848''''')›)› | val850_2995')
+//│ ╟──  + (‹∀ 3. (α847'''' -> ‹∀ 4. (α848''''' -> α848''''')›)› | val850_2995')
+//│ ╟──  + (‹∀ 3. (α847'''' -> ‹∀ 4. (α848''''' -> α848''''')›)› | val850_2995')
+//│ ║  l.353: 	def add_ n m = n succ_ m
+//│ ║         	                       ^
+//│ ╟──  + (‹∀ 3. (α847'''' -> ‹∀ 4. (α848''''' -> α848''''')›)› | val850_2995')
+//│ ╟──  + (‹∀ 3. (α847'''' -> ‹∀ 4. (α848''''' -> α848''''')›)› | val850_2995')
+//│ ╟──  + (‹∀ 3. (α847'''' -> ‹∀ 4. (α848''''' -> α848''''')›)› | val850_2995')
+//│ ╟──  + (‹∀ 3. (α847'''' -> ‹∀ 4. (α848''''' -> α848''''')›)› | val850_2995')
+//│ ║  l.423: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
+//│ ║         	                                                        ^
+//│ ╟──  + (‹∀ 3. (α847'''' -> ‹∀ 4. (α848''''' -> α848''''')›)› | val850_2995')
+//│ ╟──  + (‹∀ 3. (α847'''' -> ‹∀ 4. (α848''''' -> α848''''')›)› | val850_2995')
+//│ ╟──  + α1021_3230'
+//│ ╟──  - ((α1022_4249',) -> α1024_4293')
+//│ ║  l.271: 	def succ_ n = fun f -> fun x -> f (n f x)
+//│ ╙──       	                                   ^^^
+//│ zog_: error
 //│     = '0'
 

@@ -758,7 +758,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy))
             // * Feels like we should be doing this, but it produces pretty horrible results
             // *  and does not seem required for soundness (?)
-            // .tap(instantiateForGoodMeasure(ctx, extrCtx)) // needed?!
+            .tap(instantiateForGoodMeasure(ctx, extrCtx)) // needed?!
       case Lam(pat, body) =>
         val newCtx = ctx.nest
         val param_ty = typePattern(pat)(newCtx, raise, extrCtx, vars)

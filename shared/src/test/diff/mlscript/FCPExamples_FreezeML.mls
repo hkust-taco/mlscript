@@ -78,6 +78,10 @@ def cons head tail = Cons { head; tail }
 //│     'b <: 'head & 'a
 //│     'c <: List['a] & 'tail
 //│     'd :> Cons['a] with {head: 'head, tail: 'tail}))
+//│   where
+//│     'e :> Cons['a0] with {head: 'head0, tail: 'tail0}
+//│     'b <: 'head0 & 'a0
+//│     'f <: List['a0] & 'tail0
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -161,11 +165,15 @@ def choose: 'a -> 'a -> 'a
 def choose x y = if true then x else y
 //│ choose: 'a -> 'a -> 'a
 //│       = <missing implementation>
-//│ 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('c -> 'd
+//│ 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('e -> 'f
 //│   where
-//│     'b <: 'c -> 'd
-//│     'e :> 'f -> 'f -> 'f
-//│        <: 'a -> 'b))
+//│     'c :> 'd -> 'd -> 'd
+//│        <: 'a -> 'b
+//│     'b <: 'e -> 'f))
+//│   where
+//│     'g :> 'h -> 'h -> 'h
+//│        <: 'a -> 'i
+//│     'i <: nothing -> 'b
 //│   <:  choose:
 //│ 'a -> 'a -> 'a
 //│       = [Function: choose]
@@ -221,6 +229,8 @@ def app f x = f x
 //│ 'a -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
 //│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> 'a
 //│   <:  app:
 //│ ('a -> 'b) -> 'a -> 'b
 //│    = [Function: app]
@@ -232,6 +242,8 @@ def revapp x f = f x
 //│ 'a -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
 //│     'b <: 'a -> 'c))
+//│   where
+//│     'd <: 'a -> 'b
 //│   <:  revapp:
 //│ 'a -> ('a -> 'b) -> 'b
 //│       = [Function: revapp]
@@ -240,10 +252,16 @@ def flip: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 def flip f = fun x -> fun y -> f y x
 //│ flip: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 //│     = <missing implementation>
-//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ 'a -> (forall 'b, 'a, 'c, 'd. ('d -> (forall 'b, 'a, 'd, 'e, 'f. ('f -> 'e
 //│   where
-//│     'a <: 'c -> 'd
-//│     'd <: 'b -> 'e)))
+//│     'b <: 'd -> 'e
+//│     'a <: 'f -> 'b))
+//│   where
+//│     'c <: 'd -> 'b
+//│     'a <: nothing -> 'c))
+//│   where
+//│     'g <: nothing -> 'b
+//│     'a <: nothing -> 'g
 //│   <:  flip:
 //│ ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 //│     = [Function: flip]
@@ -321,17 +339,17 @@ def f: ('a -> 'a) -> List['a] -> 'a
 :ng
 f (choose id) ids
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.322: 	f (choose id) ids
+//│ ║  l.340: 	f (choose id) ids
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ('a313' -> 'a313')›  <:  'a730_737    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ('a313' -> 'a313')›  <:  'a730'
+//│ ╟── this constraint:  ‹∀ 0. ('a367' -> 'a367')›  <:  'a895_902    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ('a367' -> 'a367')›  <:  'a895'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.322: 	f (choose id) ids
+//│ ║  l.340: 	f (choose id) ids
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. ('a325'' -> 'a325'')›  <:  'a730_737    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. ('a325'' -> 'a325'')›  <:  'a730_737
+//│ ╟── this constraint:  ‹∀ 1. ('a379'' -> 'a379'')›  <:  'a895_902    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. ('a379'' -> 'a379'')›  <:  'a895_902
 //│ res: 'a -> 'a | error
 
 // * ^ Strangely, this one works with recursive types:
@@ -370,10 +388,10 @@ fun f -> (f 1, f true)
 fun xs -> poly (head xs)
 //│ res: 'b -> 'c
 //│   where
-//│     'c :> (int, bool,)
 //│     'b <: List['a]
 //│     'd <: forall 'a0. 'a0 -> 'a0
 //│     'a <: 'd
+//│     'c :> (int, bool,)
 //│    = [Function: res]
 
 
@@ -574,9 +592,21 @@ a id
 
 // * FIXME: without constrained types, the type of argument x was not polymorphic enough
 // * I guess we're swallowing/delaying a constraint?
-// :e
+:e // due to tapping
 :ns
 choose id (fun (x: ('a -> 'a)) -> auto_ x)
+//│ ╔══[ERROR] Type mismatch in lambda expression:
+//│ ║  l.597: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘a1294` is not an instance of type `'a`
+//│ ║  l.203: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║         	                    ^^
+//│ ╟── but it flows into type variable with expected type `‘a`
+//│ ║  l.597: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.203: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ╙──       	                    ^^
 //│ res: forall 'b. 'c
 //│   where
 //│     'c :> (forall 'a. 'a -> 'a) | (forall 'd, 'a0, 'e, 'b. (('a0 -> 'a0) -> 'e
@@ -590,13 +620,13 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 :e // FIXME? succeeds with genLamBodies
 res id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.591: 	res id
+//│ ║  l.621: 	res id
 //│ ║         	^^^^^^
-//│ ╟── type `‘a1116` is not an instance of type `'a`
-//│ ║  l.195: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ╟── type `‘a1303` is not an instance of type `'a`
+//│ ║  l.203: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.195: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║  l.203: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──       	                    ^^
 //│ res: 'a -> 'a | error
 //│    = [Function: id1]
@@ -605,13 +635,13 @@ res id
 :e
 a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.606: 	a (fun x -> { u = x })
+//│ ║  l.636: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a`
-//│ ║  l.606: 	a (fun x -> { u = x })
+//│ ║  l.636: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.195: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║  l.203: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──       	                    ^^
 //│ res: ('b & 'a) -> ('b | {u: 'a}) | error
 //│    = [Function (anonymous)]

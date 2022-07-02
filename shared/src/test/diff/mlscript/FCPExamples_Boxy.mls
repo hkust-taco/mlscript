@@ -73,25 +73,25 @@ def g x = case x of
   }
 //│ g: 'a -> (0 | 'b, "0" | 'c,)
 //│   where
-//│     'a <: None | Some['val] & 'd
-//│     'd <: {val: 'val0 & 'val}
-//│     'val0 <: 'e -> 'b
-//│     'f :> List['g] -> List['g]
-//│        <: 'h -> 'e
-//│     'g :> 1
-//│     'i :> List['j] -> List['j]
-//│        <: List[nothing] -> 'h
-//│     'j :> 2
-//│     'val <: 'k -> 'c
-//│     'l :> List['m] -> List['m]
-//│        <: 'n -> 'k
-//│     'm :> "a"
+//│     'val <: 'd -> 'c
+//│     'e :> List['f] -> List['f]
+//│        <: 'g -> 'd
+//│     'f :> "a"
+//│     'h :> List['i] -> List['i]
+//│        <: 'j -> 'g
+//│     'i :> "b"
+//│     'k :> List['l] -> List['l]
+//│        <: List[nothing] -> 'j
+//│     'l :> "c"
+//│     'a <: None | Some['val0] & 'm
+//│     'm <: {val: 'val0 & 'val}
+//│     'val0 <: 'n -> 'b
 //│     'o :> List['p] -> List['p]
 //│        <: 'q -> 'n
-//│     'p :> "b"
+//│     'p :> 1
 //│     'r :> List['s] -> List['s]
 //│        <: List[nothing] -> 'q
-//│     's :> "c"
+//│     's :> 2
 
 // ============ Sec 2 ============
 

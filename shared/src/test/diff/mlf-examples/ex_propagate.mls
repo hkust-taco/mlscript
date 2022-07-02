@@ -42,10 +42,13 @@ fun x_ -> (fun y -> y y)
 //│     'a <: 'c
 //│     'c <: 'c -> 'b
 //│     'b <: Sid
+//│     'd <: 'd -> 'b
 //│    = [Function: res]
 //│ res: anything -> (forall 'a, 'b. ('a -> 'b
 //│   where
 //│     'a <: 'a -> 'b))
+//│   where
+//│     'c <: 'c -> anything
 //│    = [Function: res]
 
 // :e // FIXME? failed with genLamBodies but works with quantif extrus

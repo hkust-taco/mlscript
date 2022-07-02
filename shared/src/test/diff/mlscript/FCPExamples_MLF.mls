@@ -24,9 +24,13 @@ class ST[S, A]
 def choose x y = if true then x else y
 //│ choose: 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('e -> 'f
 //│   where
-//│     'b :> 'c -> 'c -> 'c
-//│        <: 'a -> 'd
-//│     'd <: 'e -> 'f))
+//│     'c :> 'd -> 'd -> 'd
+//│        <: 'a -> 'b
+//│     'b <: 'e -> 'f))
+//│   where
+//│     'g :> 'h -> 'h -> 'h
+//│        <: 'a -> 'i
+//│     'i <: nothing -> 'b
 
 def id x = x
 //│ id: 'a -> 'a
@@ -41,6 +45,8 @@ def app f x = f x
 //│ app: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
 //│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> 'a
 
 def inc: int -> int
 //│ inc: int -> int
@@ -84,15 +90,22 @@ choose id
 //│     'f <: 'a -> 'b
 
 fun (g: forall 'a. ('a -> 'a) -> ('a -> 'a)) -> fun (x: forall 'a. 'a -> 'a) -> fun a -> g a (x a)
-//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'b. ((forall 'a0. 'a0 -> 'a0) -> (forall 'c, 'b, 'd, 'e, 'f, 'g. ('g -> 'f
+//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'b, 'c, 'd, 'e. ((forall 'a0. 'a0 -> 'a0) -> (forall 'f, 'b, 'd, 'g, 'h, 'i. ('g -> 'i
 //│   where
-//│     'd <: 'e -> 'f
-//│     'c <: 'g -> 'd
-//│     'b <: 'g -> 'e))
+//│     'b <: 'g -> 'f
+//│     'd <: 'g -> 'h
+//│     'f <: 'h -> 'i))
 //│   where
-//│     'b := forall 'a0. 'a0 -> 'a0))
+//│     'b <: nothing -> 'c
+//│     'd :> forall 'a0. 'a0 -> 'a0
+//│        <: (forall 'a0. 'a0 -> 'a0) & nothing -> 'e
+//│     'c <: 'e -> 'f))
 //│   where
-//│     'c := forall 'a. ('a -> 'a) -> 'a -> 'a
+//│     'j :> forall 'a0. 'a0 -> 'a0
+//│        <: (forall 'a0. 'a0 -> 'a0) & nothing -> 'k
+//│     'l <: 'k -> 'f
+//│     'b :> forall 'a. ('a -> 'a) -> 'a -> 'a
+//│        <: (forall 'a. ('a -> 'a) -> 'a -> 'a) & nothing -> 'l
 
 choose id succ
 //│ res: int -> int
@@ -144,10 +157,10 @@ app auto id
 :e
 let f = choose id in (f auto) (f succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.145: 	let f = choose id in (f auto) (f succ)
+//│ ║  l.158: 	let f = choose id in (f auto) (f succ)
 //│ ║         	                     ^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` is not an instance of type `int`
-//│ ║  l.34: 	def auto (x: forall 'a. 'a -> 'a) = x x
+//│ ║  l.38: 	def auto (x: forall 'a. 'a -> 'a) = x x
 //│ ╙──      	                    ^^
 //│ res: int -> int | error
 
@@ -166,13 +179,13 @@ choose id auto2
 :e // FIXME? succeeds with genLamBodies
 res (choose id succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.167: 	res (choose id succ)
+//│ ║  l.180: 	res (choose id succ)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `int -> int` is not an instance of type `int`
-//│ ║  l.167: 	res (choose id succ)
+//│ ║  l.180: 	res (choose id succ)
 //│ ║         	               ^^^^
 //│ ╟── but it flows into application with expected type `int`
-//│ ║  l.167: 	res (choose id succ)
+//│ ║  l.180: 	res (choose id succ)
 //│ ╙──       	     ^^^^^^^^^^^^^^
 //│ res: int -> int | error | int
 
@@ -328,11 +341,11 @@ poly = fun f -> (f 1, f true)
 polyL = fun xs -> poly (head xs)
 //│ polyL: 'b -> 'c
 //│   where
+//│     'd <: 1 -> 'e & true -> 'f
 //│     'b <: List['a]
-//│     'd <: 'e
-//│     'a <: 'd
-//│     'c :> ('f, 'g,)
-//│     'e <: 1 -> 'f & true -> 'g
+//│     'g <: 'd
+//│     'a <: 'g
+//│     'c :> ('e, 'f,)
 
 let ids = single id in (polyL ids, append ids (single inc))
 //│ res: ((1, true,), List[int -> int],)

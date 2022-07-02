@@ -35,363 +35,1490 @@ def s k = k () nil
 //│     'c <: List[nothing] -> 'b
 
 def insert v () acu k = k () (cons v acu)
-//│ insert: 'b -> () -> (forall 'c. 'c -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'a. ('d -> 'g
+//│ insert: 'b -> (forall 'b, 'c, 'd, 'e, 'a, 'f, 'g. (() -> (forall 'b, 'c, 'a0, 'h, 'i, 'j, 'k, 'l. ('l -> (forall 'b, 'c, 'l, 'a1, 'm, 'n, 'o, 'p. ('m -> 'o
 //│   where
-//│     'd <: () -> 'e
-//│     'e <: 'f -> 'g
-//│     'h :> List['a] -> List['a]
-//│        <: 'c -> 'f
-//│     'b <: 'a)))
+//│     'b <: 'a1
+//│     'm <: () -> 'c
+//│     'c <: 'n -> 'o
+//│     'p :> List['a1] -> List['a1]
+//│        <: 'l -> 'n))
+//│   where
+//│     'b <: 'a0
+//│     'h <: () -> 'i
+//│     'i <: 'j -> 'c
+//│     'k :> List['a0] -> List['a0]
+//│        <: 'l -> 'j))
+//│   where
+//│     'd <: 'e -> 'c
+//│     'b <: 'a
+//│     'f :> List['a] -> List['a]
+//│        <: nothing -> 'e
+//│     'g <: () -> 'd))
+//│   where
+//│     'b <: 'a2
+//│     'q <: 'r -> 'c
+//│     's :> List['a2] -> List['a2]
+//│        <: nothing -> 'r
+//│     't <: () -> 'q
 
 // (* x  inserts "x" in the acu *)
 def x () = insert "x" ()
 //│ x: () -> 'b
 //│   where
-//│     'c :> () -> (forall 'd. 'd -> (forall 'd, 'e, 'f, 'g, 'h, 'i, 'a, 'j. ('e -> 'h
+//│     'c :> forall 'd, 'e, 'f, 'g, 'a, 'h, 'i. (() -> (forall 'f, 'g, 'a0, 'j, 'k, 'l, 'm, 'n. ('n -> (forall 'g, 'n, 'a1, 'o, 'p, 'q, 'r, 's. ('o -> 'r
 //│   where
-//│     'e <: () -> 'f
-//│     'f <: 'g -> 'h
-//│     'i :> List['a] -> List['a]
-//│        <: 'd -> 'g
-//│     'j <: 'a)))
+//│     'g <: 'a1
+//│     'o <: () -> 'p
+//│     'p <: 'q -> 'r
+//│     's :> List['a1] -> List['a1]
+//│        <: 'n -> 'q))
+//│   where
+//│     'g <: 'a0
+//│     'j <: () -> 'k
+//│     'k <: 'l -> 'f
+//│     'm :> List['a0] -> List['a0]
+//│        <: 'n -> 'l))
+//│   where
+//│     'd <: 'e -> 'f
+//│     'g <: 'a
+//│     'h :> List['a] -> List['a]
+//│        <: nothing -> 'e
+//│     'i <: () -> 'd)
 //│        <: () -> 'b
-//│     'j :> "x"
+//│     'g :> "x"
+//│        <: 'a2
+//│     'f <: 't -> 'f
+//│     'u :> List['a2] -> List['a2]
+//│        <: nothing -> 't
+//│     'v <: () -> 'f
 
 // (* We call x a 'token', in the sequence. *)
 
 // (* e  ends the sequence. It builds a token that can be inserted in another sequence or that can be printed. *)
 def e () acu = insert (concat "," acu)
-//│ e: () -> (forall 'b, 'c, 'd, 'e, 'f. ('c -> 'f
+//│ e: () -> (forall 'b, 'c, 'd, 'a, 'e, 'f, 'g, 'h, 'i, 'j. ('j -> 'b
 //│   where
-//│     'b :> List[string] -> string
-//│        <: 'c -> 'd
-//│     'd <: 'e
-//│     'f :> () -> (forall 'g. 'g -> (forall 'e, 'g, 'h, 'i, 'j, 'k, 'l, 'a. ('h -> 'k
+//│     'd <: 'a
+//│     'e <: 'f -> 'c
+//│     'g :> List['a] -> List['a]
+//│        <: 'b -> 'f
+//│     'h <: () -> 'e
+//│     'i :> List[string] -> string
+//│        <: 'j -> 'c
+//│     'c <: 'd
+//│     'b :> forall 'b, 'k, 'l, 'c, 'd, 'a0, 'm, 'n. (() -> (forall 'c, 'd, 'a1, 'o, 'p, 'q, 'r, 's. ('s -> (forall 'd, 's, 'a2, 't, 'u, 'v, 'w, 'x. ('t -> 'w
 //│   where
-//│     'h <: () -> 'i
-//│     'i <: 'j -> 'k
-//│     'l :> List['a] -> List['a]
-//│        <: 'g -> 'j
-//│     'e <: 'a)))))
+//│     'd <: 'a2
+//│     't <: () -> 'u
+//│     'u <: 'v -> 'w
+//│     'x :> List['a2] -> List['a2]
+//│        <: 's -> 'v))
+//│   where
+//│     'd <: 'a1
+//│     'o <: () -> 'p
+//│     'p <: 'q -> 'c
+//│     'r :> List['a1] -> List['a1]
+//│        <: 's -> 'q))
+//│   where
+//│     'k <: 'l -> 'c
+//│     'd <: 'a0
+//│     'm :> List['a0] -> List['a0]
+//│        <: 'b -> 'l
+//│     'n <: () -> 'k)))
+//│   where
+//│     'y :> List[string] -> string
+//│        <: 'b -> 'z
+//│     'z <: 'a1
+//│     'b1 :> forall 'b, 'k, 'l, 'c, 'd, 'a0, 'm, 'n. (() -> (forall 'c, 'd, 'a1, 'o, 'p, 'q, 'r, 's. ('s -> (forall 'd, 's, 'a2, 't, 'u, 'v, 'w, 'x. ('t -> 'w
+//│   where
+//│     'd <: 'a2
+//│     't <: () -> 'u
+//│     'u <: 'v -> 'w
+//│     'x :> List['a2] -> List['a2]
+//│        <: 's -> 'v))
+//│   where
+//│     'd <: 'a1
+//│     'o <: () -> 'p
+//│     'p <: 'q -> 'c
+//│     'r :> List['a1] -> List['a1]
+//│        <: 's -> 'q))
+//│   where
+//│     'k <: 'l -> 'c
+//│     'd <: 'a0
+//│     'm :> List['a0] -> List['a0]
+//│        <: 'b -> 'l
+//│     'n <: () -> 'k)
+//│     'a1 <: 'a3
+//│     'c1 <: 'd1 -> 'c
+//│     'e1 :> List['a3] -> List['a3]
+//│         <: 'b -> 'd1
+//│     'f1 <: () -> 'c1
 
 
 // (* Prints a token *)
 def print t = t () nil (fun () -> fun r -> log (concat "," r))
 //│ print: 'a -> 'b
 //│   where
-//│     'a <: () -> 'c
-//│     'c <: List['d] -> 'e
-//│     'e <: (() -> (forall 'd, 'f, 'g, 'h. ('g -> 'd
+//│     'c :> List[string] -> string
+//│        <: 'd -> 'e
+//│     'e <: 'f
+//│     'g :> unit
+//│     'a <: () -> 'h
+//│     'h <: List['d] -> 'i
+//│     'i <: (forall 'd, 'f, 'j, 'k, 'l. (() -> (forall 'd, 'f, 'm, 'n. ('n -> 'd
 //│   where
-//│     'f :> List[string] -> string
-//│        <: 'g -> 'h
-//│     'h <: 'h
-//│     'd :> unit))) -> 'b
+//│     'm :> List[string] -> string
+//│        <: 'n -> 'f
+//│     'f <: 'f
+//│     'd :> unit))
+//│   where
+//│     'j :> List[string] -> string
+//│        <: 'd -> 'k
+//│     'k <: 'f
+//│     'l :> unit)) -> 'b
 
 // Added by me:
 s x x (s x x e)
 //│ res: 'b -> 'c
 //│   where
-//│     'b <: () -> 'd
-//│     'd <: 'e -> 'c
-//│     'f :> List['a] -> List['a]
-//│        <: List["x"] -> 'e
-//│     'g <: 'a
+//│     'd <: 'a
+//│     'b <: () -> 'e
+//│     'e <: 'f -> 'c
+//│     'g :> List['a] -> List['a]
+//│        <: List["x"] -> 'f
 
 
 def test8  = (s x x (s x x e) x (s x x x e) e)
-//│ test8: () -> (forall 'b. 'b -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'a, 'h. ('c -> 'f
+//│ test8: () -> (forall 'b, 'c, 'a, 'd, 'e, 'f, 'g, 'h. ('h -> (forall 'b, 'c, 'h, 'a0, 'i, 'j, 'k, 'l. ('i -> 'k
 //│   where
-//│     'c <: () -> 'd
-//│     'd <: 'e -> 'f
+//│     'c <: 'a0
+//│     'i <: () -> 'b
+//│     'b <: 'j -> 'k
+//│     'l :> List['a0] -> List['a0]
+//│        <: 'h -> 'j))
+//│   where
+//│     'c <: 'a
+//│     'd <: () -> 'e
+//│     'e <: 'f -> 'b
 //│     'g :> List['a] -> List['a]
-//│        <: 'b -> 'e
-//│     'h <: 'a)))
+//│        <: 'h -> 'f))
+//│   where
+//│     'm <: 'n -> 'b
+//│     'c <: 'a1
+//│     'o :> List['a1] -> List['a1]
+//│        <: nothing -> 'n
+//│     'p <: () -> 'm
 
 print test8
 
 
 def test14 = (s x x x x x x x x x x x x x x e)
-//│ test14: () -> (forall 'b. 'b -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'a, 'h. ('c -> 'f
+//│ test14: () -> (forall 'b, 'c, 'a, 'd, 'e, 'f, 'g, 'h. ('h -> (forall 'b, 'c, 'h, 'a0, 'i, 'j, 'k, 'l. ('i -> 'k
 //│   where
-//│     'c <: () -> 'd
-//│     'd <: 'e -> 'f
+//│     'c <: 'a0
+//│     'i <: () -> 'b
+//│     'b <: 'j -> 'k
+//│     'l :> List['a0] -> List['a0]
+//│        <: 'h -> 'j))
+//│   where
+//│     'c <: 'a
+//│     'd <: () -> 'e
+//│     'e <: 'f -> 'b
 //│     'g :> List['a] -> List['a]
-//│        <: 'b -> 'e
-//│     'h <: 'a)))
+//│        <: 'h -> 'f))
+//│   where
+//│     'm <: 'n -> 'b
+//│     'c <: 'a1
+//│     'o :> List['a1] -> List['a1]
+//│        <: nothing -> 'n
+//│     'p <: () -> 'm
 
 def test16 = (s x x x x x x x x x x x x x x x x e)
-//│ test16: () -> (forall 'b. 'b -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'a, 'h. ('c -> 'f
+//│ test16: () -> (forall 'b, 'c, 'a, 'd, 'e, 'f, 'g, 'h. ('h -> (forall 'b, 'c, 'h, 'a0, 'i, 'j, 'k, 'l. ('i -> 'k
 //│   where
-//│     'c <: () -> 'd
-//│     'd <: 'e -> 'f
+//│     'c <: 'a0
+//│     'i <: () -> 'b
+//│     'b <: 'j -> 'k
+//│     'l :> List['a0] -> List['a0]
+//│        <: 'h -> 'j))
+//│   where
+//│     'c <: 'a
+//│     'd <: () -> 'e
+//│     'e <: 'f -> 'b
 //│     'g :> List['a] -> List['a]
-//│        <: 'b -> 'e
-//│     'h <: 'a)))
+//│        <: 'h -> 'f))
+//│   where
+//│     'm <: 'n -> 'b
+//│     'c <: 'a1
+//│     'o :> List['a1] -> List['a1]
+//│        <: nothing -> 'n
+//│     'p <: () -> 'm
 
 // (* This is too much for the type-checker. *)
 def test18 = (s x x x x x x x x x x x x x x x x x x e)
-//│ test18: () -> (forall 'b. 'b -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'a, 'h. ('c -> 'f
+//│ test18: () -> (forall 'b, 'c, 'a, 'd, 'e, 'f, 'g, 'h. ('h -> (forall 'b, 'c, 'h, 'a0, 'i, 'j, 'k, 'l. ('i -> 'k
 //│   where
-//│     'c <: () -> 'd
-//│     'd <: 'e -> 'f
+//│     'c <: 'a0
+//│     'i <: () -> 'b
+//│     'b <: 'j -> 'k
+//│     'l :> List['a0] -> List['a0]
+//│        <: 'h -> 'j))
+//│   where
+//│     'c <: 'a
+//│     'd <: () -> 'e
+//│     'e <: 'f -> 'b
 //│     'g :> List['a] -> List['a]
-//│        <: 'b -> 'e
-//│     'h <: 'a)))
+//│        <: 'h -> 'f))
+//│   where
+//│     'm <: 'n -> 'b
+//│     'c <: 'a1
+//│     'o :> List['a1] -> List['a1]
+//│        <: nothing -> 'n
+//│     'p <: () -> 'm
 
 
 // (* A function that receives a token *)
 def f t = (s x x t x x e)
 //│ f: 'b -> 'c
 //│   where
-//│     'd <: (forall 'e, 'f. (() -> 'g
+//│     'd :> forall 'e, 'f, 'g, 'h, 'i. (() -> 'j
 //│   where
-//│     'e :> () -> (forall 'h. 'h -> (forall 'h, 'i, 'j, 'k, 'l, 'm, 'a, 'f. ('i -> 'l
+//│     'e :> forall 'k, 'l, 'm, 'f, 'a, 'n, 'o, 'p. (() -> (forall 'm, 'f, 'a0, 'q, 'r, 's, 't, 'u. ('u -> (forall 'f, 'u, 'a1, 'v, 'w, 'x, 'y, 'z. ('v -> 'y
 //│   where
-//│     'i <: () -> 'j
-//│     'j <: 'k -> 'l
-//│     'm :> List['a] -> List['a]
-//│        <: 'h -> 'k
-//│     'f <: 'a)))
-//│        <: () -> 'g
-//│     'f :> "x")) -> 'n
-//│     'o :> forall 'e, 'f. (() -> 'g
+//│     'f <: 'a1
+//│     'v <: () -> 'w
+//│     'w <: 'x -> 'y
+//│     'z :> List['a1] -> List['a1]
+//│        <: 'u -> 'x))
 //│   where
-//│     'e :> () -> (forall 'h. 'h -> (forall 'h, 'i, 'j, 'k, 'l, 'm, 'a, 'f. ('i -> 'l
+//│     'f <: 'a0
+//│     'q <: () -> 'r
+//│     'r <: 's -> 'm
+//│     't :> List['a0] -> List['a0]
+//│        <: 'u -> 's))
 //│   where
-//│     'i <: () -> 'j
-//│     'j <: 'k -> 'l
-//│     'm :> List['a] -> List['a]
-//│        <: 'h -> 'k
-//│     'f <: 'a)))
-//│        <: () -> 'g
-//│     'f :> "x")
-//│        <: () -> 'p
-//│     'p <: List['q] -> 'r
-//│     'r <: 'd
-//│     'n <: 'b -> 's
-//│     's <: (forall 'e, 'f. (() -> 'g
+//│     'k <: 'l -> 'm
+//│     'f <: 'a
+//│     'n :> List['a] -> List['a]
+//│        <: 'o -> 'l
+//│     'p <: () -> 'k)
+//│        <: () -> 'j
+//│     'f :> "x"
+//│        <: 'a2
+//│     'g <: 'a1 -> 'm
+//│     'h :> List['a2] -> List['a2]
+//│        <: 'o -> 'a1
+//│     'i <: () -> 'g)
+//│        <: () -> 'b1
+//│     'b1 <: List['o] -> 'c1
+//│     'c1 <: 'd1
+//│     'e1 <: 'b -> 'f1
+//│     'f1 <: (forall 'e, 'f, 'g, 'h, 'i. (() -> 'j
 //│   where
-//│     'e :> () -> (forall 'h. 'h -> (forall 'h, 'i, 'j, 'k, 'l, 'm, 'a, 'f. ('i -> 'l
+//│     'e :> forall 'k, 'l, 'm, 'f, 'a, 'n, 'o, 'p. (() -> (forall 'm, 'f, 'a0, 'q, 'r, 's, 't, 'u. ('u -> (forall 'f, 'u, 'a1, 'v, 'w, 'x, 'y, 'z. ('v -> 'y
 //│   where
-//│     'i <: () -> 'j
-//│     'j <: 'k -> 'l
-//│     'm :> List['a] -> List['a]
-//│        <: 'h -> 'k
-//│     'f <: 'a)))
-//│        <: () -> 'g
-//│     'f :> "x")) -> 't
-//│     't <: (forall 'e, 'f. (() -> 'g
+//│     'f <: 'a1
+//│     'v <: () -> 'w
+//│     'w <: 'x -> 'y
+//│     'z :> List['a1] -> List['a1]
+//│        <: 'u -> 'x))
 //│   where
-//│     'e :> () -> (forall 'h. 'h -> (forall 'h, 'i, 'j, 'k, 'l, 'm, 'a, 'f. ('i -> 'l
+//│     'f <: 'a0
+//│     'q <: () -> 'r
+//│     'r <: 's -> 'm
+//│     't :> List['a0] -> List['a0]
+//│        <: 'u -> 's))
 //│   where
-//│     'i <: () -> 'j
-//│     'j <: 'k -> 'l
-//│     'm :> List['a] -> List['a]
-//│        <: 'h -> 'k
-//│     'f <: 'a)))
-//│        <: () -> 'g
-//│     'f :> "x")) -> 'u
-//│     'u <: (() -> (forall 'q, 'v, 'w, 'x, 'y. ('w -> 'q
+//│     'k <: 'l -> 'm
+//│     'f <: 'a
+//│     'n :> List['a] -> List['a]
+//│        <: 'o -> 'l
+//│     'p <: () -> 'k)
+//│        <: () -> 'j
+//│     'f :> "x"
+//│        <: 'a2
+//│     'g <: 'a1 -> 'm
+//│     'h :> List['a2] -> List['a2]
+//│        <: 'o -> 'a1
+//│     'i <: () -> 'g)) -> 'g1
+//│     'g1 <: (forall 'e, 'f, 'g, 'h, 'i. (() -> 'j
 //│   where
-//│     'v :> List[string] -> string
-//│        <: 'w -> 'x
-//│     'x <: 'y
-//│     'q :> () -> (forall 'z. 'z -> (forall 'y, 'z, 'a1, 'b1, 'c1, 'd1, 'e1, 'a0. ('a1 -> 'd1
+//│     'e :> forall 'k, 'l, 'm, 'f, 'a, 'n, 'o, 'p. (() -> (forall 'm, 'f, 'a0, 'q, 'r, 's, 't, 'u. ('u -> (forall 'f, 'u, 'a1, 'v, 'w, 'x, 'y, 'z. ('v -> 'y
 //│   where
-//│     'a1 <: () -> 'b1
-//│     'b1 <: 'c1 -> 'd1
-//│     'e1 :> List['a0] -> List['a0]
-//│         <: 'z -> 'c1
-//│     'y <: 'a0)))))) -> 'c
+//│     'f <: 'a1
+//│     'v <: () -> 'w
+//│     'w <: 'x -> 'y
+//│     'z :> List['a1] -> List['a1]
+//│        <: 'u -> 'x))
+//│   where
+//│     'f <: 'a0
+//│     'q <: () -> 'r
+//│     'r <: 's -> 'm
+//│     't :> List['a0] -> List['a0]
+//│        <: 'u -> 's))
+//│   where
+//│     'k <: 'l -> 'm
+//│     'f <: 'a
+//│     'n :> List['a] -> List['a]
+//│        <: 'o -> 'l
+//│     'p <: () -> 'k)
+//│        <: () -> 'j
+//│     'f :> "x"
+//│        <: 'a2
+//│     'g <: 'a1 -> 'm
+//│     'h :> List['a2] -> List['a2]
+//│        <: 'o -> 'a1
+//│     'i <: () -> 'g)) -> 'h1
+//│     'h1 <: (forall 'o, 'i1, 'j1, 'k1, 'l1, 'm1, 'n1, 'o1. (() -> (forall 'm, 'o, 'p1, 'a3, 'q1, 'r1, 's1, 't1, 'u1, 'v1. ('v1 -> 'o
+//│   where
+//│     'p1 <: 'a3
+//│     'q1 <: 'r1 -> 'm
+//│     's1 :> List['a3] -> List['a3]
+//│         <: 'o -> 'r1
+//│     't1 <: () -> 'q1
+//│     'u1 :> List[string] -> string
+//│         <: 'v1 -> 'm
+//│     'm <: 'p1
+//│     'o :> forall 'm, 'o, 'w1, 'x1, 'p1, 'a4, 'y1, 'z1. (() -> (forall 'm, 'p1, 'a5, 'a2, 'b2, 'c2, 'd2, 'e2. ('e2 -> (forall 'p1, 'e2, 'a6, 'f2, 'g2, 'h2, 'i2, 'j2. ('f2 -> 'i2
+//│   where
+//│     'p1 <: 'a6
+//│     'f2 <: () -> 'g2
+//│     'g2 <: 'h2 -> 'i2
+//│     'j2 :> List['a6] -> List['a6]
+//│         <: 'e2 -> 'h2))
+//│   where
+//│     'p1 <: 'a5
+//│     'a2 <: () -> 'b2
+//│     'b2 <: 'c2 -> 'm
+//│     'd2 :> List['a5] -> List['a5]
+//│         <: 'e2 -> 'c2))
+//│   where
+//│     'w1 <: 'x1 -> 'm
+//│     'p1 <: 'a4
+//│     'y1 :> List['a4] -> List['a4]
+//│         <: 'o -> 'x1
+//│     'z1 <: () -> 'w1)))
+//│   where
+//│     'i1 :> List[string] -> string
+//│         <: 'o -> 'j1
+//│     'j1 <: 'k1
+//│     'l1 :> forall 'm, 'o, 'w1, 'x1, 'p1, 'a4, 'y1, 'z1. (() -> (forall 'm, 'p1, 'a5, 'a2, 'b2, 'c2, 'd2, 'e2. ('e2 -> (forall 'p1, 'e2, 'a6, 'f2, 'g2, 'h2, 'i2, 'j2. ('f2 -> 'i2
+//│   where
+//│     'p1 <: 'a6
+//│     'f2 <: () -> 'g2
+//│     'g2 <: 'h2 -> 'i2
+//│     'j2 :> List['a6] -> List['a6]
+//│         <: 'e2 -> 'h2))
+//│   where
+//│     'p1 <: 'a5
+//│     'a2 <: () -> 'b2
+//│     'b2 <: 'c2 -> 'm
+//│     'd2 :> List['a5] -> List['a5]
+//│         <: 'e2 -> 'c2))
+//│   where
+//│     'w1 <: 'x1 -> 'm
+//│     'p1 <: 'a4
+//│     'y1 :> List['a4] -> List['a4]
+//│         <: 'o -> 'x1
+//│     'z1 <: () -> 'w1)
+//│     'k1 <: 'a7
+//│     'm1 <: 'k2 -> 'm
+//│     'n1 :> List['a7] -> List['a7]
+//│         <: 'o -> 'k2
+//│     'o1 <: () -> 'm1)) -> 'c
+//│     'd1 <: (forall 'e, 'f, 'g, 'h, 'i. (() -> 'j
+//│   where
+//│     'e :> forall 'k, 'l, 'm, 'f, 'a, 'n, 'o, 'p. (() -> (forall 'm, 'f, 'a0, 'q, 'r, 's, 't, 'u. ('u -> (forall 'f, 'u, 'a1, 'v, 'w, 'x, 'y, 'z. ('v -> 'y
+//│   where
+//│     'f <: 'a1
+//│     'v <: () -> 'w
+//│     'w <: 'x -> 'y
+//│     'z :> List['a1] -> List['a1]
+//│        <: 'u -> 'x))
+//│   where
+//│     'f <: 'a0
+//│     'q <: () -> 'r
+//│     'r <: 's -> 'm
+//│     't :> List['a0] -> List['a0]
+//│        <: 'u -> 's))
+//│   where
+//│     'k <: 'l -> 'm
+//│     'f <: 'a
+//│     'n :> List['a] -> List['a]
+//│        <: 'o -> 'l
+//│     'p <: () -> 'k)
+//│        <: () -> 'j
+//│     'f :> "x"
+//│        <: 'a2
+//│     'g <: 'a1 -> 'm
+//│     'h :> List['a2] -> List['a2]
+//│        <: 'o -> 'a1
+//│     'i <: () -> 'g)) -> 'e1
 
 // (* If the token is used twice, we must reveive two arguments *)
 def g t1 t2 = (s x x t1 x (s x t2 x e) e)
-//│ g: 'b -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm, 'n, 'o, 'p. ('q -> 'r
+//│ g: 'b -> (forall 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm, 'n, 'o, 'p. ('q -> 'r
 //│   where
-//│     'c <: 'b -> 'd
-//│     'd <: (forall 's, 't. (() -> 'u
+//│     'd <: (forall 's, 't, 'u, 'v, 'w. (() -> 'x
 //│   where
-//│     's :> () -> (forall 'v. 'v -> (forall 'v, 'w, 'x, 'y, 'z, 'a1, 'a, 't. ('w -> 'z
+//│     's :> forall 'y, 'z, 'c, 't, 'a, 'a1, 'b1, 'c1. (() -> (forall 'c, 't, 'a0, 'd1, 'e1, 'f1, 'g1, 'h1. ('h1 -> (forall 't, 'h1, 'a1, 'i1, 'j1, 'k1, 'l1, 'm1. ('i1 -> 'l1
 //│   where
-//│     'w <: () -> 'x
-//│     'x <: 'y -> 'z
-//│     'a1 :> List['a] -> List['a]
-//│         <: 'v -> 'y
-//│     't <: 'a)))
-//│        <: () -> 'u
-//│     't :> "x")) -> 'e
-//│     'e <: 'b1 -> 'f
-//│     'g <: 'q -> 'h
-//│     'i :> forall 's, 't. (() -> 'u
-//│   where
-//│     's :> () -> (forall 'v. 'v -> (forall 'v, 'w, 'x, 'y, 'z, 'a1, 'a, 't. ('w -> 'z
-//│   where
-//│     'w <: () -> 'x
-//│     'x <: 'y -> 'z
-//│     'a1 :> List['a] -> List['a]
-//│         <: 'v -> 'y
-//│     't <: 'a)))
-//│        <: () -> 'u
-//│     't :> "x")
-//│        <: () -> 'j
-//│     'j <: List['c1] -> 'k
-//│     'k <: 'g
-//│     'h <: (forall 's, 't. (() -> 'u
-//│   where
-//│     's :> () -> (forall 'v. 'v -> (forall 'v, 'w, 'x, 'y, 'z, 'a1, 'a, 't. ('w -> 'z
-//│   where
-//│     'w <: () -> 'x
-//│     'x <: 'y -> 'z
-//│     'a1 :> List['a] -> List['a]
-//│         <: 'v -> 'y
-//│     't <: 'a)))
-//│        <: () -> 'u
-//│     't :> "x")) -> 'l
-//│     'l <: (() -> (forall 'c1, 'd1, 'e1, 'f1, 'g1. ('e1 -> 'c1
-//│   where
-//│     'd1 :> List[string] -> string
-//│         <: 'e1 -> 'f1
-//│     'f1 <: 'g1
-//│     'c1 :> () -> (forall 'h1. 'h1 -> (forall 'g1, 'h1, 'i1, 'j1, 'k1, 'l1, 'm1, 'a0. ('i1 -> 'l1
-//│   where
+//│     't <: 'a1
 //│     'i1 <: () -> 'j1
 //│     'j1 <: 'k1 -> 'l1
-//│     'm1 :> List['a0] -> List['a0]
-//│         <: 'h1 -> 'k1
-//│     'g1 <: 'a0)))))) -> 'b1
-//│     'f <: (() -> (forall 'c1, 'd1, 'e1, 'f1, 'g1. ('e1 -> 'c1
+//│     'm1 :> List['a1] -> List['a1]
+//│         <: 'h1 -> 'k1))
 //│   where
-//│     'd1 :> List[string] -> string
-//│         <: 'e1 -> 'f1
-//│     'f1 <: 'g1
-//│     'c1 :> () -> (forall 'h1. 'h1 -> (forall 'g1, 'h1, 'i1, 'j1, 'k1, 'l1, 'm1, 'a0. ('i1 -> 'l1
+//│     't <: 'a0
+//│     'd1 <: () -> 'e1
+//│     'e1 <: 'f1 -> 'c
+//│     'g1 :> List['a0] -> List['a0]
+//│         <: 'h1 -> 'f1))
 //│   where
+//│     'y <: 'z -> 'c
+//│     't <: 'a
+//│     'a1 :> List['a] -> List['a]
+//│         <: 'b1 -> 'z
+//│     'c1 <: () -> 'y)
+//│        <: () -> 'x
+//│     't :> "x"
+//│        <: 'a2
+//│     'u <: 'n1 -> 'c
+//│     'v :> List['a2] -> List['a2]
+//│        <: 'b1 -> 'n1
+//│     'w <: () -> 'u)) -> 'e
+//│     'f :> forall 's, 't, 'u, 'v, 'w. (() -> 'x
+//│   where
+//│     's :> forall 'y, 'z, 'c, 't, 'a, 'a1, 'b1, 'c1. (() -> (forall 'c, 't, 'a0, 'd1, 'e1, 'f1, 'g1, 'h1. ('h1 -> (forall 't, 'h1, 'a1, 'i1, 'j1, 'k1, 'l1, 'm1. ('i1 -> 'l1
+//│   where
+//│     't <: 'a1
 //│     'i1 <: () -> 'j1
 //│     'j1 <: 'k1 -> 'l1
-//│     'm1 :> List['a0] -> List['a0]
-//│         <: 'h1 -> 'k1
-//│     'g1 <: 'a0)))))) -> 'r
-//│     'm <: (forall 's, 't. (() -> 'u
+//│     'm1 :> List['a1] -> List['a1]
+//│         <: 'h1 -> 'k1))
 //│   where
-//│     's :> () -> (forall 'v. 'v -> (forall 'v, 'w, 'x, 'y, 'z, 'a1, 'a, 't. ('w -> 'z
+//│     't <: 'a0
+//│     'd1 <: () -> 'e1
+//│     'e1 <: 'f1 -> 'c
+//│     'g1 :> List['a0] -> List['a0]
+//│         <: 'h1 -> 'f1))
 //│   where
-//│     'w <: () -> 'x
-//│     'x <: 'y -> 'z
+//│     'y <: 'z -> 'c
+//│     't <: 'a
 //│     'a1 :> List['a] -> List['a]
-//│         <: 'v -> 'y
-//│     't <: 'a)))
-//│        <: () -> 'u
-//│     't :> "x")) -> 'c
-//│     'n :> forall 's, 't. (() -> 'u
+//│         <: 'b1 -> 'z
+//│     'c1 <: () -> 'y)
+//│        <: () -> 'x
+//│     't :> "x"
+//│        <: 'a2
+//│     'u <: 'n1 -> 'c
+//│     'v :> List['a2] -> List['a2]
+//│        <: 'b1 -> 'n1
+//│     'w <: () -> 'u)
+//│        <: () -> 'g
+//│     'g <: List['b1] -> 'h
+//│     'h <: 'd
+//│     'e <: 'b -> 'i
+//│     'i <: (forall 's, 't, 'u, 'v, 'w. (() -> 'x
 //│   where
-//│     's :> () -> (forall 'v. 'v -> (forall 'v, 'w, 'x, 'y, 'z, 'a1, 'a, 't. ('w -> 'z
+//│     's :> forall 'y, 'z, 'c, 't, 'a, 'a1, 'b1, 'c1. (() -> (forall 'c, 't, 'a0, 'd1, 'e1, 'f1, 'g1, 'h1. ('h1 -> (forall 't, 'h1, 'a1, 'i1, 'j1, 'k1, 'l1, 'm1. ('i1 -> 'l1
 //│   where
-//│     'w <: () -> 'x
-//│     'x <: 'y -> 'z
+//│     't <: 'a1
+//│     'i1 <: () -> 'j1
+//│     'j1 <: 'k1 -> 'l1
+//│     'm1 :> List['a1] -> List['a1]
+//│         <: 'h1 -> 'k1))
+//│   where
+//│     't <: 'a0
+//│     'd1 <: () -> 'e1
+//│     'e1 <: 'f1 -> 'c
+//│     'g1 :> List['a0] -> List['a0]
+//│         <: 'h1 -> 'f1))
+//│   where
+//│     'y <: 'z -> 'c
+//│     't <: 'a
 //│     'a1 :> List['a] -> List['a]
-//│         <: 'v -> 'y
-//│     't <: 'a)))
-//│        <: () -> 'u
-//│     't :> "x")
+//│         <: 'b1 -> 'z
+//│     'c1 <: () -> 'y)
+//│        <: () -> 'x
+//│     't :> "x"
+//│        <: 'a2
+//│     'u <: 'n1 -> 'c
+//│     'v :> List['a2] -> List['a2]
+//│        <: 'b1 -> 'n1
+//│     'w <: () -> 'u)) -> 'j
+//│     'j <: 'o1 -> 'k
+//│     'l <: 'q -> 'm
+//│     'n :> forall 's, 't, 'u, 'v, 'w. (() -> 'x
+//│   where
+//│     's :> forall 'y, 'z, 'c, 't, 'a, 'a1, 'b1, 'c1. (() -> (forall 'c, 't, 'a0, 'd1, 'e1, 'f1, 'g1, 'h1. ('h1 -> (forall 't, 'h1, 'a1, 'i1, 'j1, 'k1, 'l1, 'm1. ('i1 -> 'l1
+//│   where
+//│     't <: 'a1
+//│     'i1 <: () -> 'j1
+//│     'j1 <: 'k1 -> 'l1
+//│     'm1 :> List['a1] -> List['a1]
+//│         <: 'h1 -> 'k1))
+//│   where
+//│     't <: 'a0
+//│     'd1 <: () -> 'e1
+//│     'e1 <: 'f1 -> 'c
+//│     'g1 :> List['a0] -> List['a0]
+//│         <: 'h1 -> 'f1))
+//│   where
+//│     'y <: 'z -> 'c
+//│     't <: 'a
+//│     'a1 :> List['a] -> List['a]
+//│         <: 'b1 -> 'z
+//│     'c1 <: () -> 'y)
+//│        <: () -> 'x
+//│     't :> "x"
+//│        <: 'a2
+//│     'u <: 'n1 -> 'c
+//│     'v :> List['a2] -> List['a2]
+//│        <: 'b1 -> 'n1
+//│     'w <: () -> 'u)
 //│        <: () -> 'o
-//│     'o <: List['c1] -> 'p
-//│     'p <: 'm))
+//│     'o <: List['b1] -> 'p
+//│     'p <: 'l
+//│     'm <: (forall 's, 't, 'u, 'v, 'w. (() -> 'x
+//│   where
+//│     's :> forall 'y, 'z, 'c, 't, 'a, 'a1, 'b1, 'c1. (() -> (forall 'c, 't, 'a0, 'd1, 'e1, 'f1, 'g1, 'h1. ('h1 -> (forall 't, 'h1, 'a1, 'i1, 'j1, 'k1, 'l1, 'm1. ('i1 -> 'l1
+//│   where
+//│     't <: 'a1
+//│     'i1 <: () -> 'j1
+//│     'j1 <: 'k1 -> 'l1
+//│     'm1 :> List['a1] -> List['a1]
+//│         <: 'h1 -> 'k1))
+//│   where
+//│     't <: 'a0
+//│     'd1 <: () -> 'e1
+//│     'e1 <: 'f1 -> 'c
+//│     'g1 :> List['a0] -> List['a0]
+//│         <: 'h1 -> 'f1))
+//│   where
+//│     'y <: 'z -> 'c
+//│     't <: 'a
+//│     'a1 :> List['a] -> List['a]
+//│         <: 'b1 -> 'z
+//│     'c1 <: () -> 'y)
+//│        <: () -> 'x
+//│     't :> "x"
+//│        <: 'a2
+//│     'u <: 'n1 -> 'c
+//│     'v :> List['a2] -> List['a2]
+//│        <: 'b1 -> 'n1
+//│     'w <: () -> 'u)) -> 'c
+//│     'c <: (forall 'b1, 'p1, 'q1, 'r1, 's1, 't1, 'u1, 'v1. (() -> (forall 'c, 'b1, 'w1, 'a3, 'x1, 'y1, 'z1, 'a2, 'b2, 'c2, 'd2. ('c2 -> 'b1
+//│   where
+//│     'w1 <: 'a3
+//│     'x1 <: 'y1 -> 'c
+//│     'z1 :> List['a3] -> List['a3]
+//│         <: 'b1 -> 'y1
+//│     'a2 <: () -> 'x1
+//│     'b2 :> List[string] -> string
+//│         <: 'c2 -> 'd2
+//│     'd2 <: 'w1
+//│     'b1 :> forall 'c, 'b1, 'e2, 'f2, 'w1, 'a4, 'g2, 'h2. (() -> (forall 'c, 'w1, 'a5, 'i2, 'j2, 'k2, 'l2, 'm2. ('m2 -> (forall 'w1, 'm2, 'a6, 'n2, 'o2, 'p2, 'q2, 'r2. ('n2 -> 'q2
+//│   where
+//│     'w1 <: 'a6
+//│     'n2 <: () -> 'o2
+//│     'o2 <: 'p2 -> 'q2
+//│     'r2 :> List['a6] -> List['a6]
+//│         <: 'm2 -> 'p2))
+//│   where
+//│     'w1 <: 'a5
+//│     'i2 <: () -> 'j2
+//│     'j2 <: 'k2 -> 'c
+//│     'l2 :> List['a5] -> List['a5]
+//│         <: 'm2 -> 'k2))
+//│   where
+//│     'e2 <: 'f2 -> 'c
+//│     'w1 <: 'a4
+//│     'g2 :> List['a4] -> List['a4]
+//│         <: 'b1 -> 'f2
+//│     'h2 <: () -> 'e2)))
+//│   where
+//│     'p1 :> List[string] -> string
+//│         <: 'b1 -> 'q1
+//│     'q1 <: 'r1
+//│     's1 :> forall 'c, 'b1, 'e2, 'f2, 'w1, 'a4, 'g2, 'h2. (() -> (forall 'c, 'w1, 'a5, 'i2, 'j2, 'k2, 'l2, 'm2. ('m2 -> (forall 'w1, 'm2, 'a6, 'n2, 'o2, 'p2, 'q2, 'r2. ('n2 -> 'q2
+//│   where
+//│     'w1 <: 'a6
+//│     'n2 <: () -> 'o2
+//│     'o2 <: 'p2 -> 'q2
+//│     'r2 :> List['a6] -> List['a6]
+//│         <: 'm2 -> 'p2))
+//│   where
+//│     'w1 <: 'a5
+//│     'i2 <: () -> 'j2
+//│     'j2 <: 'k2 -> 'c
+//│     'l2 :> List['a5] -> List['a5]
+//│         <: 'm2 -> 'k2))
+//│   where
+//│     'e2 <: 'f2 -> 'c
+//│     'w1 <: 'a4
+//│     'g2 :> List['a4] -> List['a4]
+//│         <: 'b1 -> 'f2
+//│     'h2 <: () -> 'e2)
+//│     'r1 <: 'a7
+//│     't1 <: 's2 -> 'c
+//│     'u1 :> List['a7] -> List['a7]
+//│         <: 'b1 -> 's2
+//│     'v1 <: () -> 't1)) -> 'o1
+//│     'k <: (forall 'b1, 'p1, 'q1, 'r1, 's1, 't1, 'u1, 'v1. (() -> (forall 'c, 'b1, 'w1, 'a3, 'x1, 'y1, 'z1, 'a2, 'b2, 'c2, 'd2. ('c2 -> 'b1
+//│   where
+//│     'w1 <: 'a3
+//│     'x1 <: 'y1 -> 'c
+//│     'z1 :> List['a3] -> List['a3]
+//│         <: 'b1 -> 'y1
+//│     'a2 <: () -> 'x1
+//│     'b2 :> List[string] -> string
+//│         <: 'c2 -> 'd2
+//│     'd2 <: 'w1
+//│     'b1 :> forall 'c, 'b1, 'e2, 'f2, 'w1, 'a4, 'g2, 'h2. (() -> (forall 'c, 'w1, 'a5, 'i2, 'j2, 'k2, 'l2, 'm2. ('m2 -> (forall 'w1, 'm2, 'a6, 'n2, 'o2, 'p2, 'q2, 'r2. ('n2 -> 'q2
+//│   where
+//│     'w1 <: 'a6
+//│     'n2 <: () -> 'o2
+//│     'o2 <: 'p2 -> 'q2
+//│     'r2 :> List['a6] -> List['a6]
+//│         <: 'm2 -> 'p2))
+//│   where
+//│     'w1 <: 'a5
+//│     'i2 <: () -> 'j2
+//│     'j2 <: 'k2 -> 'c
+//│     'l2 :> List['a5] -> List['a5]
+//│         <: 'm2 -> 'k2))
+//│   where
+//│     'e2 <: 'f2 -> 'c
+//│     'w1 <: 'a4
+//│     'g2 :> List['a4] -> List['a4]
+//│         <: 'b1 -> 'f2
+//│     'h2 <: () -> 'e2)))
+//│   where
+//│     'p1 :> List[string] -> string
+//│         <: 'b1 -> 'q1
+//│     'q1 <: 'r1
+//│     's1 :> forall 'c, 'b1, 'e2, 'f2, 'w1, 'a4, 'g2, 'h2. (() -> (forall 'c, 'w1, 'a5, 'i2, 'j2, 'k2, 'l2, 'm2. ('m2 -> (forall 'w1, 'm2, 'a6, 'n2, 'o2, 'p2, 'q2, 'r2. ('n2 -> 'q2
+//│   where
+//│     'w1 <: 'a6
+//│     'n2 <: () -> 'o2
+//│     'o2 <: 'p2 -> 'q2
+//│     'r2 :> List['a6] -> List['a6]
+//│         <: 'm2 -> 'p2))
+//│   where
+//│     'w1 <: 'a5
+//│     'i2 <: () -> 'j2
+//│     'j2 <: 'k2 -> 'c
+//│     'l2 :> List['a5] -> List['a5]
+//│         <: 'm2 -> 'k2))
+//│   where
+//│     'e2 <: 'f2 -> 'c
+//│     'w1 <: 'a4
+//│     'g2 :> List['a4] -> List['a4]
+//│         <: 'b1 -> 'f2
+//│     'h2 <: () -> 'e2)
+//│     'r1 <: 'a7
+//│     't1 <: 's2 -> 'c
+//│     'u1 :> List['a7] -> List['a7]
+//│         <: 'b1 -> 's2
+//│     'v1 <: () -> 't1)) -> 'r))
+//│   where
+//│     't2 <: (forall 's, 't, 'u, 'v, 'w. (() -> 'x
+//│   where
+//│     's :> forall 'y, 'z, 'c, 't, 'a, 'a1, 'b1, 'c1. (() -> (forall 'c, 't, 'a0, 'd1, 'e1, 'f1, 'g1, 'h1. ('h1 -> (forall 't, 'h1, 'a1, 'i1, 'j1, 'k1, 'l1, 'm1. ('i1 -> 'l1
+//│   where
+//│     't <: 'a1
+//│     'i1 <: () -> 'j1
+//│     'j1 <: 'k1 -> 'l1
+//│     'm1 :> List['a1] -> List['a1]
+//│         <: 'h1 -> 'k1))
+//│   where
+//│     't <: 'a0
+//│     'd1 <: () -> 'e1
+//│     'e1 <: 'f1 -> 'c
+//│     'g1 :> List['a0] -> List['a0]
+//│         <: 'h1 -> 'f1))
+//│   where
+//│     'y <: 'z -> 'c
+//│     't <: 'a
+//│     'a1 :> List['a] -> List['a]
+//│         <: 'b1 -> 'z
+//│     'c1 <: () -> 'y)
+//│        <: () -> 'x
+//│     't :> "x"
+//│        <: 'a2
+//│     'u <: 'n1 -> 'c
+//│     'v :> List['a2] -> List['a2]
+//│        <: 'b1 -> 'n1
+//│     'w <: () -> 'u)) -> 'u2
+//│     'u2 <: 'v2 -> 'w2
+//│     'x2 <: 'b1 -> 'y2
+//│     'z2 :> forall 's, 't, 'u, 'v, 'w. (() -> 'x
+//│   where
+//│     's :> forall 'y, 'z, 'c, 't, 'a, 'a1, 'b1, 'c1. (() -> (forall 'c, 't, 'a0, 'd1, 'e1, 'f1, 'g1, 'h1. ('h1 -> (forall 't, 'h1, 'a1, 'i1, 'j1, 'k1, 'l1, 'm1. ('i1 -> 'l1
+//│   where
+//│     't <: 'a1
+//│     'i1 <: () -> 'j1
+//│     'j1 <: 'k1 -> 'l1
+//│     'm1 :> List['a1] -> List['a1]
+//│         <: 'h1 -> 'k1))
+//│   where
+//│     't <: 'a0
+//│     'd1 <: () -> 'e1
+//│     'e1 <: 'f1 -> 'c
+//│     'g1 :> List['a0] -> List['a0]
+//│         <: 'h1 -> 'f1))
+//│   where
+//│     'y <: 'z -> 'c
+//│     't <: 'a
+//│     'a1 :> List['a] -> List['a]
+//│         <: 'b1 -> 'z
+//│     'c1 <: () -> 'y)
+//│        <: () -> 'x
+//│     't :> "x"
+//│        <: 'a2
+//│     'u <: 'n1 -> 'c
+//│     'v :> List['a2] -> List['a2]
+//│        <: 'b1 -> 'n1
+//│     'w <: () -> 'u)
+//│         <: () -> 'a3
+//│     'a3 <: List['b1] -> 'b3
+//│     'b3 <: 'x2
+//│     'y2 <: (forall 's, 't, 'u, 'v, 'w. (() -> 'x
+//│   where
+//│     's :> forall 'y, 'z, 'c, 't, 'a, 'a1, 'b1, 'c1. (() -> (forall 'c, 't, 'a0, 'd1, 'e1, 'f1, 'g1, 'h1. ('h1 -> (forall 't, 'h1, 'a1, 'i1, 'j1, 'k1, 'l1, 'm1. ('i1 -> 'l1
+//│   where
+//│     't <: 'a1
+//│     'i1 <: () -> 'j1
+//│     'j1 <: 'k1 -> 'l1
+//│     'm1 :> List['a1] -> List['a1]
+//│         <: 'h1 -> 'k1))
+//│   where
+//│     't <: 'a0
+//│     'd1 <: () -> 'e1
+//│     'e1 <: 'f1 -> 'c
+//│     'g1 :> List['a0] -> List['a0]
+//│         <: 'h1 -> 'f1))
+//│   where
+//│     'y <: 'z -> 'c
+//│     't <: 'a
+//│     'a1 :> List['a] -> List['a]
+//│         <: 'b1 -> 'z
+//│     'c1 <: () -> 'y)
+//│        <: () -> 'x
+//│     't :> "x"
+//│        <: 'a2
+//│     'u <: 'n1 -> 'c
+//│     'v :> List['a2] -> List['a2]
+//│        <: 'b1 -> 'n1
+//│     'w <: () -> 'u)) -> 'c3
+//│     'c3 <: (forall 'b1, 'p1, 'q1, 'r1, 's1, 't1, 'u1, 'v1. (() -> (forall 'c, 'b1, 'w1, 'a3, 'x1, 'y1, 'z1, 'a2, 'b2, 'c2, 'd2. ('c2 -> 'b1
+//│   where
+//│     'w1 <: 'a3
+//│     'x1 <: 'y1 -> 'c
+//│     'z1 :> List['a3] -> List['a3]
+//│         <: 'b1 -> 'y1
+//│     'a2 <: () -> 'x1
+//│     'b2 :> List[string] -> string
+//│         <: 'c2 -> 'd2
+//│     'd2 <: 'w1
+//│     'b1 :> forall 'c, 'b1, 'e2, 'f2, 'w1, 'a4, 'g2, 'h2. (() -> (forall 'c, 'w1, 'a5, 'i2, 'j2, 'k2, 'l2, 'm2. ('m2 -> (forall 'w1, 'm2, 'a6, 'n2, 'o2, 'p2, 'q2, 'r2. ('n2 -> 'q2
+//│   where
+//│     'w1 <: 'a6
+//│     'n2 <: () -> 'o2
+//│     'o2 <: 'p2 -> 'q2
+//│     'r2 :> List['a6] -> List['a6]
+//│         <: 'm2 -> 'p2))
+//│   where
+//│     'w1 <: 'a5
+//│     'i2 <: () -> 'j2
+//│     'j2 <: 'k2 -> 'c
+//│     'l2 :> List['a5] -> List['a5]
+//│         <: 'm2 -> 'k2))
+//│   where
+//│     'e2 <: 'f2 -> 'c
+//│     'w1 <: 'a4
+//│     'g2 :> List['a4] -> List['a4]
+//│         <: 'b1 -> 'f2
+//│     'h2 <: () -> 'e2)))
+//│   where
+//│     'p1 :> List[string] -> string
+//│         <: 'b1 -> 'q1
+//│     'q1 <: 'r1
+//│     's1 :> forall 'c, 'b1, 'e2, 'f2, 'w1, 'a4, 'g2, 'h2. (() -> (forall 'c, 'w1, 'a5, 'i2, 'j2, 'k2, 'l2, 'm2. ('m2 -> (forall 'w1, 'm2, 'a6, 'n2, 'o2, 'p2, 'q2, 'r2. ('n2 -> 'q2
+//│   where
+//│     'w1 <: 'a6
+//│     'n2 <: () -> 'o2
+//│     'o2 <: 'p2 -> 'q2
+//│     'r2 :> List['a6] -> List['a6]
+//│         <: 'm2 -> 'p2))
+//│   where
+//│     'w1 <: 'a5
+//│     'i2 <: () -> 'j2
+//│     'j2 <: 'k2 -> 'c
+//│     'l2 :> List['a5] -> List['a5]
+//│         <: 'm2 -> 'k2))
+//│   where
+//│     'e2 <: 'f2 -> 'c
+//│     'w1 <: 'a4
+//│     'g2 :> List['a4] -> List['a4]
+//│         <: 'b1 -> 'f2
+//│     'h2 <: () -> 'e2)
+//│     'r1 <: 'a7
+//│     't1 <: 's2 -> 'c
+//│     'u1 :> List['a7] -> List['a7]
+//│         <: 'b1 -> 's2
+//│     'v1 <: () -> 't1)) -> 'v2
+//│     'w2 <: (forall 'b1, 'p1, 'q1, 'r1, 's1, 't1, 'u1, 'v1. (() -> (forall 'c, 'b1, 'w1, 'a3, 'x1, 'y1, 'z1, 'a2, 'b2, 'c2, 'd2. ('c2 -> 'b1
+//│   where
+//│     'w1 <: 'a3
+//│     'x1 <: 'y1 -> 'c
+//│     'z1 :> List['a3] -> List['a3]
+//│         <: 'b1 -> 'y1
+//│     'a2 <: () -> 'x1
+//│     'b2 :> List[string] -> string
+//│         <: 'c2 -> 'd2
+//│     'd2 <: 'w1
+//│     'b1 :> forall 'c, 'b1, 'e2, 'f2, 'w1, 'a4, 'g2, 'h2. (() -> (forall 'c, 'w1, 'a5, 'i2, 'j2, 'k2, 'l2, 'm2. ('m2 -> (forall 'w1, 'm2, 'a6, 'n2, 'o2, 'p2, 'q2, 'r2. ('n2 -> 'q2
+//│   where
+//│     'w1 <: 'a6
+//│     'n2 <: () -> 'o2
+//│     'o2 <: 'p2 -> 'q2
+//│     'r2 :> List['a6] -> List['a6]
+//│         <: 'm2 -> 'p2))
+//│   where
+//│     'w1 <: 'a5
+//│     'i2 <: () -> 'j2
+//│     'j2 <: 'k2 -> 'c
+//│     'l2 :> List['a5] -> List['a5]
+//│         <: 'm2 -> 'k2))
+//│   where
+//│     'e2 <: 'f2 -> 'c
+//│     'w1 <: 'a4
+//│     'g2 :> List['a4] -> List['a4]
+//│         <: 'b1 -> 'f2
+//│     'h2 <: () -> 'e2)))
+//│   where
+//│     'p1 :> List[string] -> string
+//│         <: 'b1 -> 'q1
+//│     'q1 <: 'r1
+//│     's1 :> forall 'c, 'b1, 'e2, 'f2, 'w1, 'a4, 'g2, 'h2. (() -> (forall 'c, 'w1, 'a5, 'i2, 'j2, 'k2, 'l2, 'm2. ('m2 -> (forall 'w1, 'm2, 'a6, 'n2, 'o2, 'p2, 'q2, 'r2. ('n2 -> 'q2
+//│   where
+//│     'w1 <: 'a6
+//│     'n2 <: () -> 'o2
+//│     'o2 <: 'p2 -> 'q2
+//│     'r2 :> List['a6] -> List['a6]
+//│         <: 'm2 -> 'p2))
+//│   where
+//│     'w1 <: 'a5
+//│     'i2 <: () -> 'j2
+//│     'j2 <: 'k2 -> 'c
+//│     'l2 :> List['a5] -> List['a5]
+//│         <: 'm2 -> 'k2))
+//│   where
+//│     'e2 <: 'f2 -> 'c
+//│     'w1 <: 'a4
+//│     'g2 :> List['a4] -> List['a4]
+//│         <: 'b1 -> 'f2
+//│     'h2 <: () -> 'e2)
+//│     'r1 <: 'a7
+//│     't1 <: 's2 -> 'c
+//│     'u1 :> List['a7] -> List['a7]
+//│         <: 'b1 -> 's2
+//│     'v1 <: () -> 't1)) -> 'c
+//│     'd3 <: (forall 's, 't, 'u, 'v, 'w. (() -> 'x
+//│   where
+//│     's :> forall 'y, 'z, 'c, 't, 'a, 'a1, 'b1, 'c1. (() -> (forall 'c, 't, 'a0, 'd1, 'e1, 'f1, 'g1, 'h1. ('h1 -> (forall 't, 'h1, 'a1, 'i1, 'j1, 'k1, 'l1, 'm1. ('i1 -> 'l1
+//│   where
+//│     't <: 'a1
+//│     'i1 <: () -> 'j1
+//│     'j1 <: 'k1 -> 'l1
+//│     'm1 :> List['a1] -> List['a1]
+//│         <: 'h1 -> 'k1))
+//│   where
+//│     't <: 'a0
+//│     'd1 <: () -> 'e1
+//│     'e1 <: 'f1 -> 'c
+//│     'g1 :> List['a0] -> List['a0]
+//│         <: 'h1 -> 'f1))
+//│   where
+//│     'y <: 'z -> 'c
+//│     't <: 'a
+//│     'a1 :> List['a] -> List['a]
+//│         <: 'b1 -> 'z
+//│     'c1 <: () -> 'y)
+//│        <: () -> 'x
+//│     't :> "x"
+//│        <: 'a2
+//│     'u <: 'n1 -> 'c
+//│     'v :> List['a2] -> List['a2]
+//│        <: 'b1 -> 'n1
+//│     'w <: () -> 'u)) -> 'e3
+//│     'f3 :> forall 's, 't, 'u, 'v, 'w. (() -> 'x
+//│   where
+//│     's :> forall 'y, 'z, 'c, 't, 'a, 'a1, 'b1, 'c1. (() -> (forall 'c, 't, 'a0, 'd1, 'e1, 'f1, 'g1, 'h1. ('h1 -> (forall 't, 'h1, 'a1, 'i1, 'j1, 'k1, 'l1, 'm1. ('i1 -> 'l1
+//│   where
+//│     't <: 'a1
+//│     'i1 <: () -> 'j1
+//│     'j1 <: 'k1 -> 'l1
+//│     'm1 :> List['a1] -> List['a1]
+//│         <: 'h1 -> 'k1))
+//│   where
+//│     't <: 'a0
+//│     'd1 <: () -> 'e1
+//│     'e1 <: 'f1 -> 'c
+//│     'g1 :> List['a0] -> List['a0]
+//│         <: 'h1 -> 'f1))
+//│   where
+//│     'y <: 'z -> 'c
+//│     't <: 'a
+//│     'a1 :> List['a] -> List['a]
+//│         <: 'b1 -> 'z
+//│     'c1 <: () -> 'y)
+//│        <: () -> 'x
+//│     't :> "x"
+//│        <: 'a2
+//│     'u <: 'n1 -> 'c
+//│     'v :> List['a2] -> List['a2]
+//│        <: 'b1 -> 'n1
+//│     'w <: () -> 'u)
+//│         <: () -> 'g3
+//│     'g3 <: List['b1] -> 'h3
+//│     'h3 <: 'd3
+//│     'e3 <: 'b -> 't2
 
 // (* This does not type. It requires first-class polymorphism. *)
 def h t = g t t
 //│ h: 'b -> 'c
 //│   where
 //│     'b <: 'd
-//│     'e :> forall 'd, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm, 'n, 'o, 'p, 'q, 'r, 's. ('t -> 'u
+//│     'e :> forall 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm, 'n, 'o, 'p, 'q, 'r, 's. ('t -> 'u
 //│   where
-//│     'f <: 'd -> 'g
-//│     'g <: (forall 'v, 'w. (() -> 'x
+//│     'f <: (forall 'v, 'w, 'x, 'y, 'z. (() -> 'a1
 //│   where
-//│     'v :> () -> (forall 'y. 'y -> (forall 'y, 'z, 'a1, 'b1, 'c1, 'd1, 'a, 'w. ('z -> 'c1
+//│     'v :> forall 'b1, 'c1, 'd1, 'w, 'a, 'e1, 'f1, 'g1. (() -> (forall 'd1, 'w, 'a0, 'h1, 'i1, 'j1, 'k1, 'l1. ('l1 -> (forall 'w, 'l1, 'a1, 'm1, 'n1, 'o1, 'p1, 'q1. ('m1 -> 'p1
 //│   where
-//│     'z <: () -> 'a1
-//│     'a1 <: 'b1 -> 'c1
-//│     'd1 :> List['a] -> List['a]
-//│         <: 'y -> 'b1
-//│     'w <: 'a)))
-//│        <: () -> 'x
-//│     'w :> "x")) -> 'h
-//│     'h <: 'e1 -> 'i
-//│     'j <: 't -> 'k
-//│     'l :> forall 'v, 'w. (() -> 'x
+//│     'w <: 'a1
+//│     'm1 <: () -> 'n1
+//│     'n1 <: 'o1 -> 'p1
+//│     'q1 :> List['a1] -> List['a1]
+//│         <: 'l1 -> 'o1))
 //│   where
-//│     'v :> () -> (forall 'y. 'y -> (forall 'y, 'z, 'a1, 'b1, 'c1, 'd1, 'a, 'w. ('z -> 'c1
+//│     'w <: 'a0
+//│     'h1 <: () -> 'i1
+//│     'i1 <: 'j1 -> 'd1
+//│     'k1 :> List['a0] -> List['a0]
+//│         <: 'l1 -> 'j1))
 //│   where
-//│     'z <: () -> 'a1
-//│     'a1 <: 'b1 -> 'c1
-//│     'd1 :> List['a] -> List['a]
-//│         <: 'y -> 'b1
-//│     'w <: 'a)))
-//│        <: () -> 'x
-//│     'w :> "x")
-//│        <: () -> 'm
-//│     'm <: List['f1] -> 'n
-//│     'n <: 'j
-//│     'k <: (forall 'v, 'w. (() -> 'x
+//│     'b1 <: 'c1 -> 'd1
+//│     'w <: 'a
+//│     'e1 :> List['a] -> List['a]
+//│         <: 'f1 -> 'c1
+//│     'g1 <: () -> 'b1)
+//│        <: () -> 'a1
+//│     'w :> "x"
+//│        <: 'a2
+//│     'x <: 'r1 -> 'd1
+//│     'y :> List['a2] -> List['a2]
+//│        <: 'f1 -> 'r1
+//│     'z <: () -> 'x)) -> 'g
+//│     'h :> forall 'v, 'w, 'x, 'y, 'z. (() -> 'a1
 //│   where
-//│     'v :> () -> (forall 'y. 'y -> (forall 'y, 'z, 'a1, 'b1, 'c1, 'd1, 'a, 'w. ('z -> 'c1
+//│     'v :> forall 'b1, 'c1, 'd1, 'w, 'a, 'e1, 'f1, 'g1. (() -> (forall 'd1, 'w, 'a0, 'h1, 'i1, 'j1, 'k1, 'l1. ('l1 -> (forall 'w, 'l1, 'a1, 'm1, 'n1, 'o1, 'p1, 'q1. ('m1 -> 'p1
 //│   where
-//│     'z <: () -> 'a1
-//│     'a1 <: 'b1 -> 'c1
-//│     'd1 :> List['a] -> List['a]
-//│         <: 'y -> 'b1
-//│     'w <: 'a)))
-//│        <: () -> 'x
-//│     'w :> "x")) -> 'o
-//│     'o <: (() -> (forall 'f1, 'g1, 'h1, 'i1, 'j1. ('h1 -> 'f1
+//│     'w <: 'a1
+//│     'm1 <: () -> 'n1
+//│     'n1 <: 'o1 -> 'p1
+//│     'q1 :> List['a1] -> List['a1]
+//│         <: 'l1 -> 'o1))
 //│   where
-//│     'g1 :> List[string] -> string
-//│         <: 'h1 -> 'i1
-//│     'i1 <: 'j1
-//│     'f1 :> () -> (forall 'k1. 'k1 -> (forall 'j1, 'k1, 'l1, 'm1, 'n1, 'o1, 'p1, 'a0. ('l1 -> 'o1
+//│     'w <: 'a0
+//│     'h1 <: () -> 'i1
+//│     'i1 <: 'j1 -> 'd1
+//│     'k1 :> List['a0] -> List['a0]
+//│         <: 'l1 -> 'j1))
 //│   where
-//│     'l1 <: () -> 'm1
-//│     'm1 <: 'n1 -> 'o1
-//│     'p1 :> List['a0] -> List['a0]
-//│         <: 'k1 -> 'n1
-//│     'j1 <: 'a0)))))) -> 'e1
-//│     'i <: (() -> (forall 'f1, 'g1, 'h1, 'i1, 'j1. ('h1 -> 'f1
+//│     'b1 <: 'c1 -> 'd1
+//│     'w <: 'a
+//│     'e1 :> List['a] -> List['a]
+//│         <: 'f1 -> 'c1
+//│     'g1 <: () -> 'b1)
+//│        <: () -> 'a1
+//│     'w :> "x"
+//│        <: 'a2
+//│     'x <: 'r1 -> 'd1
+//│     'y :> List['a2] -> List['a2]
+//│        <: 'f1 -> 'r1
+//│     'z <: () -> 'x)
+//│        <: () -> 'i
+//│     'i <: List['f1] -> 'j
+//│     'j <: 'f
+//│     'g <: 'd -> 'k
+//│     'k <: (forall 'v, 'w, 'x, 'y, 'z. (() -> 'a1
 //│   where
-//│     'g1 :> List[string] -> string
-//│         <: 'h1 -> 'i1
-//│     'i1 <: 'j1
-//│     'f1 :> () -> (forall 'k1. 'k1 -> (forall 'j1, 'k1, 'l1, 'm1, 'n1, 'o1, 'p1, 'a0. ('l1 -> 'o1
+//│     'v :> forall 'b1, 'c1, 'd1, 'w, 'a, 'e1, 'f1, 'g1. (() -> (forall 'd1, 'w, 'a0, 'h1, 'i1, 'j1, 'k1, 'l1. ('l1 -> (forall 'w, 'l1, 'a1, 'm1, 'n1, 'o1, 'p1, 'q1. ('m1 -> 'p1
 //│   where
-//│     'l1 <: () -> 'm1
-//│     'm1 <: 'n1 -> 'o1
-//│     'p1 :> List['a0] -> List['a0]
-//│         <: 'k1 -> 'n1
-//│     'j1 <: 'a0)))))) -> 'u
-//│     'p <: (forall 'v, 'w. (() -> 'x
+//│     'w <: 'a1
+//│     'm1 <: () -> 'n1
+//│     'n1 <: 'o1 -> 'p1
+//│     'q1 :> List['a1] -> List['a1]
+//│         <: 'l1 -> 'o1))
 //│   where
-//│     'v :> () -> (forall 'y. 'y -> (forall 'y, 'z, 'a1, 'b1, 'c1, 'd1, 'a, 'w. ('z -> 'c1
+//│     'w <: 'a0
+//│     'h1 <: () -> 'i1
+//│     'i1 <: 'j1 -> 'd1
+//│     'k1 :> List['a0] -> List['a0]
+//│         <: 'l1 -> 'j1))
 //│   where
-//│     'z <: () -> 'a1
-//│     'a1 <: 'b1 -> 'c1
-//│     'd1 :> List['a] -> List['a]
-//│         <: 'y -> 'b1
-//│     'w <: 'a)))
-//│        <: () -> 'x
-//│     'w :> "x")) -> 'f
-//│     'q :> forall 'v, 'w. (() -> 'x
+//│     'b1 <: 'c1 -> 'd1
+//│     'w <: 'a
+//│     'e1 :> List['a] -> List['a]
+//│         <: 'f1 -> 'c1
+//│     'g1 <: () -> 'b1)
+//│        <: () -> 'a1
+//│     'w :> "x"
+//│        <: 'a2
+//│     'x <: 'r1 -> 'd1
+//│     'y :> List['a2] -> List['a2]
+//│        <: 'f1 -> 'r1
+//│     'z <: () -> 'x)) -> 'l
+//│     'l <: 's1 -> 'm
+//│     'n <: 't -> 'o
+//│     'p :> forall 'v, 'w, 'x, 'y, 'z. (() -> 'a1
 //│   where
-//│     'v :> () -> (forall 'y. 'y -> (forall 'y, 'z, 'a1, 'b1, 'c1, 'd1, 'a, 'w. ('z -> 'c1
+//│     'v :> forall 'b1, 'c1, 'd1, 'w, 'a, 'e1, 'f1, 'g1. (() -> (forall 'd1, 'w, 'a0, 'h1, 'i1, 'j1, 'k1, 'l1. ('l1 -> (forall 'w, 'l1, 'a1, 'm1, 'n1, 'o1, 'p1, 'q1. ('m1 -> 'p1
 //│   where
-//│     'z <: () -> 'a1
-//│     'a1 <: 'b1 -> 'c1
-//│     'd1 :> List['a] -> List['a]
-//│         <: 'y -> 'b1
-//│     'w <: 'a)))
-//│        <: () -> 'x
-//│     'w :> "x")
-//│        <: () -> 'r
-//│     'r <: List['f1] -> 's
-//│     's <: 'p)
+//│     'w <: 'a1
+//│     'm1 <: () -> 'n1
+//│     'n1 <: 'o1 -> 'p1
+//│     'q1 :> List['a1] -> List['a1]
+//│         <: 'l1 -> 'o1))
+//│   where
+//│     'w <: 'a0
+//│     'h1 <: () -> 'i1
+//│     'i1 <: 'j1 -> 'd1
+//│     'k1 :> List['a0] -> List['a0]
+//│         <: 'l1 -> 'j1))
+//│   where
+//│     'b1 <: 'c1 -> 'd1
+//│     'w <: 'a
+//│     'e1 :> List['a] -> List['a]
+//│         <: 'f1 -> 'c1
+//│     'g1 <: () -> 'b1)
+//│        <: () -> 'a1
+//│     'w :> "x"
+//│        <: 'a2
+//│     'x <: 'r1 -> 'd1
+//│     'y :> List['a2] -> List['a2]
+//│        <: 'f1 -> 'r1
+//│     'z <: () -> 'x)
+//│        <: () -> 'q
+//│     'q <: List['f1] -> 'r
+//│     'r <: 'n
+//│     'o <: (forall 'v, 'w, 'x, 'y, 'z. (() -> 'a1
+//│   where
+//│     'v :> forall 'b1, 'c1, 'd1, 'w, 'a, 'e1, 'f1, 'g1. (() -> (forall 'd1, 'w, 'a0, 'h1, 'i1, 'j1, 'k1, 'l1. ('l1 -> (forall 'w, 'l1, 'a1, 'm1, 'n1, 'o1, 'p1, 'q1. ('m1 -> 'p1
+//│   where
+//│     'w <: 'a1
+//│     'm1 <: () -> 'n1
+//│     'n1 <: 'o1 -> 'p1
+//│     'q1 :> List['a1] -> List['a1]
+//│         <: 'l1 -> 'o1))
+//│   where
+//│     'w <: 'a0
+//│     'h1 <: () -> 'i1
+//│     'i1 <: 'j1 -> 'd1
+//│     'k1 :> List['a0] -> List['a0]
+//│         <: 'l1 -> 'j1))
+//│   where
+//│     'b1 <: 'c1 -> 'd1
+//│     'w <: 'a
+//│     'e1 :> List['a] -> List['a]
+//│         <: 'f1 -> 'c1
+//│     'g1 <: () -> 'b1)
+//│        <: () -> 'a1
+//│     'w :> "x"
+//│        <: 'a2
+//│     'x <: 'r1 -> 'd1
+//│     'y :> List['a2] -> List['a2]
+//│        <: 'f1 -> 'r1
+//│     'z <: () -> 'x)) -> 's
+//│     's <: (forall 'f1, 't1, 'u1, 'v1, 'w1, 'x1, 'y1, 'z1. (() -> (forall 'd1, 'f1, 'a2, 'a3, 'b2, 'c2, 'd2, 'e2, 'f2, 'g2, 'h2. ('g2 -> 'f1
+//│   where
+//│     'a2 <: 'a3
+//│     'b2 <: 'c2 -> 'd1
+//│     'd2 :> List['a3] -> List['a3]
+//│         <: 'f1 -> 'c2
+//│     'e2 <: () -> 'b2
+//│     'f2 :> List[string] -> string
+//│         <: 'g2 -> 'h2
+//│     'h2 <: 'a2
+//│     'f1 :> forall 'd1, 'f1, 'i2, 'j2, 'a2, 'a4, 'k2, 'l2. (() -> (forall 'd1, 'a2, 'a5, 'm2, 'n2, 'o2, 'p2, 'q2. ('q2 -> (forall 'a2, 'q2, 'a6, 'r2, 's2, 't2, 'u2, 'v2. ('r2 -> 'u2
+//│   where
+//│     'a2 <: 'a6
+//│     'r2 <: () -> 's2
+//│     's2 <: 't2 -> 'u2
+//│     'v2 :> List['a6] -> List['a6]
+//│         <: 'q2 -> 't2))
+//│   where
+//│     'a2 <: 'a5
+//│     'm2 <: () -> 'n2
+//│     'n2 <: 'o2 -> 'd1
+//│     'p2 :> List['a5] -> List['a5]
+//│         <: 'q2 -> 'o2))
+//│   where
+//│     'i2 <: 'j2 -> 'd1
+//│     'a2 <: 'a4
+//│     'k2 :> List['a4] -> List['a4]
+//│         <: 'f1 -> 'j2
+//│     'l2 <: () -> 'i2)))
+//│   where
+//│     't1 :> List[string] -> string
+//│         <: 'f1 -> 'u1
+//│     'u1 <: 'v1
+//│     'w1 :> forall 'd1, 'f1, 'i2, 'j2, 'a2, 'a4, 'k2, 'l2. (() -> (forall 'd1, 'a2, 'a5, 'm2, 'n2, 'o2, 'p2, 'q2. ('q2 -> (forall 'a2, 'q2, 'a6, 'r2, 's2, 't2, 'u2, 'v2. ('r2 -> 'u2
+//│   where
+//│     'a2 <: 'a6
+//│     'r2 <: () -> 's2
+//│     's2 <: 't2 -> 'u2
+//│     'v2 :> List['a6] -> List['a6]
+//│         <: 'q2 -> 't2))
+//│   where
+//│     'a2 <: 'a5
+//│     'm2 <: () -> 'n2
+//│     'n2 <: 'o2 -> 'd1
+//│     'p2 :> List['a5] -> List['a5]
+//│         <: 'q2 -> 'o2))
+//│   where
+//│     'i2 <: 'j2 -> 'd1
+//│     'a2 <: 'a4
+//│     'k2 :> List['a4] -> List['a4]
+//│         <: 'f1 -> 'j2
+//│     'l2 <: () -> 'i2)
+//│     'v1 <: 'a7
+//│     'x1 <: 'w2 -> 'd1
+//│     'y1 :> List['a7] -> List['a7]
+//│         <: 'f1 -> 'w2
+//│     'z1 <: () -> 'x1)) -> 's1
+//│     'm <: (forall 'f1, 't1, 'u1, 'v1, 'w1, 'x1, 'y1, 'z1. (() -> (forall 'd1, 'f1, 'a2, 'a3, 'b2, 'c2, 'd2, 'e2, 'f2, 'g2, 'h2. ('g2 -> 'f1
+//│   where
+//│     'a2 <: 'a3
+//│     'b2 <: 'c2 -> 'd1
+//│     'd2 :> List['a3] -> List['a3]
+//│         <: 'f1 -> 'c2
+//│     'e2 <: () -> 'b2
+//│     'f2 :> List[string] -> string
+//│         <: 'g2 -> 'h2
+//│     'h2 <: 'a2
+//│     'f1 :> forall 'd1, 'f1, 'i2, 'j2, 'a2, 'a4, 'k2, 'l2. (() -> (forall 'd1, 'a2, 'a5, 'm2, 'n2, 'o2, 'p2, 'q2. ('q2 -> (forall 'a2, 'q2, 'a6, 'r2, 's2, 't2, 'u2, 'v2. ('r2 -> 'u2
+//│   where
+//│     'a2 <: 'a6
+//│     'r2 <: () -> 's2
+//│     's2 <: 't2 -> 'u2
+//│     'v2 :> List['a6] -> List['a6]
+//│         <: 'q2 -> 't2))
+//│   where
+//│     'a2 <: 'a5
+//│     'm2 <: () -> 'n2
+//│     'n2 <: 'o2 -> 'd1
+//│     'p2 :> List['a5] -> List['a5]
+//│         <: 'q2 -> 'o2))
+//│   where
+//│     'i2 <: 'j2 -> 'd1
+//│     'a2 <: 'a4
+//│     'k2 :> List['a4] -> List['a4]
+//│         <: 'f1 -> 'j2
+//│     'l2 <: () -> 'i2)))
+//│   where
+//│     't1 :> List[string] -> string
+//│         <: 'f1 -> 'u1
+//│     'u1 <: 'v1
+//│     'w1 :> forall 'd1, 'f1, 'i2, 'j2, 'a2, 'a4, 'k2, 'l2. (() -> (forall 'd1, 'a2, 'a5, 'm2, 'n2, 'o2, 'p2, 'q2. ('q2 -> (forall 'a2, 'q2, 'a6, 'r2, 's2, 't2, 'u2, 'v2. ('r2 -> 'u2
+//│   where
+//│     'a2 <: 'a6
+//│     'r2 <: () -> 's2
+//│     's2 <: 't2 -> 'u2
+//│     'v2 :> List['a6] -> List['a6]
+//│         <: 'q2 -> 't2))
+//│   where
+//│     'a2 <: 'a5
+//│     'm2 <: () -> 'n2
+//│     'n2 <: 'o2 -> 'd1
+//│     'p2 :> List['a5] -> List['a5]
+//│         <: 'q2 -> 'o2))
+//│   where
+//│     'i2 <: 'j2 -> 'd1
+//│     'a2 <: 'a4
+//│     'k2 :> List['a4] -> List['a4]
+//│         <: 'f1 -> 'j2
+//│     'l2 <: () -> 'i2)
+//│     'v1 <: 'a7
+//│     'x1 <: 'w2 -> 'd1
+//│     'y1 :> List['a7] -> List['a7]
+//│         <: 'f1 -> 'w2
+//│     'z1 <: () -> 'x1)) -> 'u)
 //│        <: 'b -> 'c
+//│     'x2 <: (forall 'v, 'w, 'x, 'y, 'z. (() -> 'a1
+//│   where
+//│     'v :> forall 'b1, 'c1, 'd1, 'w, 'a, 'e1, 'f1, 'g1. (() -> (forall 'd1, 'w, 'a0, 'h1, 'i1, 'j1, 'k1, 'l1. ('l1 -> (forall 'w, 'l1, 'a1, 'm1, 'n1, 'o1, 'p1, 'q1. ('m1 -> 'p1
+//│   where
+//│     'w <: 'a1
+//│     'm1 <: () -> 'n1
+//│     'n1 <: 'o1 -> 'p1
+//│     'q1 :> List['a1] -> List['a1]
+//│         <: 'l1 -> 'o1))
+//│   where
+//│     'w <: 'a0
+//│     'h1 <: () -> 'i1
+//│     'i1 <: 'j1 -> 'd1
+//│     'k1 :> List['a0] -> List['a0]
+//│         <: 'l1 -> 'j1))
+//│   where
+//│     'b1 <: 'c1 -> 'd1
+//│     'w <: 'a
+//│     'e1 :> List['a] -> List['a]
+//│         <: 'f1 -> 'c1
+//│     'g1 <: () -> 'b1)
+//│        <: () -> 'a1
+//│     'w :> "x"
+//│        <: 'a2
+//│     'x <: 'r1 -> 'd1
+//│     'y :> List['a2] -> List['a2]
+//│        <: 'f1 -> 'r1
+//│     'z <: () -> 'x)) -> 'y2
+//│     'y2 <: 'z2 -> 'a3
+//│     'b3 <: 'f1 -> 'c3
+//│     'd3 :> forall 'v, 'w, 'x, 'y, 'z. (() -> 'a1
+//│   where
+//│     'v :> forall 'b1, 'c1, 'd1, 'w, 'a, 'e1, 'f1, 'g1. (() -> (forall 'd1, 'w, 'a0, 'h1, 'i1, 'j1, 'k1, 'l1. ('l1 -> (forall 'w, 'l1, 'a1, 'm1, 'n1, 'o1, 'p1, 'q1. ('m1 -> 'p1
+//│   where
+//│     'w <: 'a1
+//│     'm1 <: () -> 'n1
+//│     'n1 <: 'o1 -> 'p1
+//│     'q1 :> List['a1] -> List['a1]
+//│         <: 'l1 -> 'o1))
+//│   where
+//│     'w <: 'a0
+//│     'h1 <: () -> 'i1
+//│     'i1 <: 'j1 -> 'd1
+//│     'k1 :> List['a0] -> List['a0]
+//│         <: 'l1 -> 'j1))
+//│   where
+//│     'b1 <: 'c1 -> 'd1
+//│     'w <: 'a
+//│     'e1 :> List['a] -> List['a]
+//│         <: 'f1 -> 'c1
+//│     'g1 <: () -> 'b1)
+//│        <: () -> 'a1
+//│     'w :> "x"
+//│        <: 'a2
+//│     'x <: 'r1 -> 'd1
+//│     'y :> List['a2] -> List['a2]
+//│        <: 'f1 -> 'r1
+//│     'z <: () -> 'x)
+//│         <: () -> 'e3
+//│     'e3 <: List['f1] -> 'f3
+//│     'f3 <: 'b3
+//│     'c3 <: (forall 'v, 'w, 'x, 'y, 'z. (() -> 'a1
+//│   where
+//│     'v :> forall 'b1, 'c1, 'd1, 'w, 'a, 'e1, 'f1, 'g1. (() -> (forall 'd1, 'w, 'a0, 'h1, 'i1, 'j1, 'k1, 'l1. ('l1 -> (forall 'w, 'l1, 'a1, 'm1, 'n1, 'o1, 'p1, 'q1. ('m1 -> 'p1
+//│   where
+//│     'w <: 'a1
+//│     'm1 <: () -> 'n1
+//│     'n1 <: 'o1 -> 'p1
+//│     'q1 :> List['a1] -> List['a1]
+//│         <: 'l1 -> 'o1))
+//│   where
+//│     'w <: 'a0
+//│     'h1 <: () -> 'i1
+//│     'i1 <: 'j1 -> 'd1
+//│     'k1 :> List['a0] -> List['a0]
+//│         <: 'l1 -> 'j1))
+//│   where
+//│     'b1 <: 'c1 -> 'd1
+//│     'w <: 'a
+//│     'e1 :> List['a] -> List['a]
+//│         <: 'f1 -> 'c1
+//│     'g1 <: () -> 'b1)
+//│        <: () -> 'a1
+//│     'w :> "x"
+//│        <: 'a2
+//│     'x <: 'r1 -> 'd1
+//│     'y :> List['a2] -> List['a2]
+//│        <: 'f1 -> 'r1
+//│     'z <: () -> 'x)) -> 'g3
+//│     'g3 <: (forall 'f1, 't1, 'u1, 'v1, 'w1, 'x1, 'y1, 'z1. (() -> (forall 'd1, 'f1, 'a2, 'a3, 'b2, 'c2, 'd2, 'e2, 'f2, 'g2, 'h2. ('g2 -> 'f1
+//│   where
+//│     'a2 <: 'a3
+//│     'b2 <: 'c2 -> 'd1
+//│     'd2 :> List['a3] -> List['a3]
+//│         <: 'f1 -> 'c2
+//│     'e2 <: () -> 'b2
+//│     'f2 :> List[string] -> string
+//│         <: 'g2 -> 'h2
+//│     'h2 <: 'a2
+//│     'f1 :> forall 'd1, 'f1, 'i2, 'j2, 'a2, 'a4, 'k2, 'l2. (() -> (forall 'd1, 'a2, 'a5, 'm2, 'n2, 'o2, 'p2, 'q2. ('q2 -> (forall 'a2, 'q2, 'a6, 'r2, 's2, 't2, 'u2, 'v2. ('r2 -> 'u2
+//│   where
+//│     'a2 <: 'a6
+//│     'r2 <: () -> 's2
+//│     's2 <: 't2 -> 'u2
+//│     'v2 :> List['a6] -> List['a6]
+//│         <: 'q2 -> 't2))
+//│   where
+//│     'a2 <: 'a5
+//│     'm2 <: () -> 'n2
+//│     'n2 <: 'o2 -> 'd1
+//│     'p2 :> List['a5] -> List['a5]
+//│         <: 'q2 -> 'o2))
+//│   where
+//│     'i2 <: 'j2 -> 'd1
+//│     'a2 <: 'a4
+//│     'k2 :> List['a4] -> List['a4]
+//│         <: 'f1 -> 'j2
+//│     'l2 <: () -> 'i2)))
+//│   where
+//│     't1 :> List[string] -> string
+//│         <: 'f1 -> 'u1
+//│     'u1 <: 'v1
+//│     'w1 :> forall 'd1, 'f1, 'i2, 'j2, 'a2, 'a4, 'k2, 'l2. (() -> (forall 'd1, 'a2, 'a5, 'm2, 'n2, 'o2, 'p2, 'q2. ('q2 -> (forall 'a2, 'q2, 'a6, 'r2, 's2, 't2, 'u2, 'v2. ('r2 -> 'u2
+//│   where
+//│     'a2 <: 'a6
+//│     'r2 <: () -> 's2
+//│     's2 <: 't2 -> 'u2
+//│     'v2 :> List['a6] -> List['a6]
+//│         <: 'q2 -> 't2))
+//│   where
+//│     'a2 <: 'a5
+//│     'm2 <: () -> 'n2
+//│     'n2 <: 'o2 -> 'd1
+//│     'p2 :> List['a5] -> List['a5]
+//│         <: 'q2 -> 'o2))
+//│   where
+//│     'i2 <: 'j2 -> 'd1
+//│     'a2 <: 'a4
+//│     'k2 :> List['a4] -> List['a4]
+//│         <: 'f1 -> 'j2
+//│     'l2 <: () -> 'i2)
+//│     'v1 <: 'a7
+//│     'x1 <: 'w2 -> 'd1
+//│     'y1 :> List['a7] -> List['a7]
+//│         <: 'f1 -> 'w2
+//│     'z1 <: () -> 'x1)) -> 'z2
+//│     'a3 <: (forall 'f1, 't1, 'u1, 'v1, 'w1, 'x1, 'y1, 'z1. (() -> (forall 'd1, 'f1, 'a2, 'a3, 'b2, 'c2, 'd2, 'e2, 'f2, 'g2, 'h2. ('g2 -> 'f1
+//│   where
+//│     'a2 <: 'a3
+//│     'b2 <: 'c2 -> 'd1
+//│     'd2 :> List['a3] -> List['a3]
+//│         <: 'f1 -> 'c2
+//│     'e2 <: () -> 'b2
+//│     'f2 :> List[string] -> string
+//│         <: 'g2 -> 'h2
+//│     'h2 <: 'a2
+//│     'f1 :> forall 'd1, 'f1, 'i2, 'j2, 'a2, 'a4, 'k2, 'l2. (() -> (forall 'd1, 'a2, 'a5, 'm2, 'n2, 'o2, 'p2, 'q2. ('q2 -> (forall 'a2, 'q2, 'a6, 'r2, 's2, 't2, 'u2, 'v2. ('r2 -> 'u2
+//│   where
+//│     'a2 <: 'a6
+//│     'r2 <: () -> 's2
+//│     's2 <: 't2 -> 'u2
+//│     'v2 :> List['a6] -> List['a6]
+//│         <: 'q2 -> 't2))
+//│   where
+//│     'a2 <: 'a5
+//│     'm2 <: () -> 'n2
+//│     'n2 <: 'o2 -> 'd1
+//│     'p2 :> List['a5] -> List['a5]
+//│         <: 'q2 -> 'o2))
+//│   where
+//│     'i2 <: 'j2 -> 'd1
+//│     'a2 <: 'a4
+//│     'k2 :> List['a4] -> List['a4]
+//│         <: 'f1 -> 'j2
+//│     'l2 <: () -> 'i2)))
+//│   where
+//│     't1 :> List[string] -> string
+//│         <: 'f1 -> 'u1
+//│     'u1 <: 'v1
+//│     'w1 :> forall 'd1, 'f1, 'i2, 'j2, 'a2, 'a4, 'k2, 'l2. (() -> (forall 'd1, 'a2, 'a5, 'm2, 'n2, 'o2, 'p2, 'q2. ('q2 -> (forall 'a2, 'q2, 'a6, 'r2, 's2, 't2, 'u2, 'v2. ('r2 -> 'u2
+//│   where
+//│     'a2 <: 'a6
+//│     'r2 <: () -> 's2
+//│     's2 <: 't2 -> 'u2
+//│     'v2 :> List['a6] -> List['a6]
+//│         <: 'q2 -> 't2))
+//│   where
+//│     'a2 <: 'a5
+//│     'm2 <: () -> 'n2
+//│     'n2 <: 'o2 -> 'd1
+//│     'p2 :> List['a5] -> List['a5]
+//│         <: 'q2 -> 'o2))
+//│   where
+//│     'i2 <: 'j2 -> 'd1
+//│     'a2 <: 'a4
+//│     'k2 :> List['a4] -> List['a4]
+//│         <: 'f1 -> 'j2
+//│     'l2 <: () -> 'i2)
+//│     'v1 <: 'a7
+//│     'x1 <: 'w2 -> 'd1
+//│     'y1 :> List['a7] -> List['a7]
+//│         <: 'f1 -> 'w2
+//│     'z1 <: () -> 'x1)) -> 'd1
+//│     'h3 <: (forall 'v, 'w, 'x, 'y, 'z. (() -> 'a1
+//│   where
+//│     'v :> forall 'b1, 'c1, 'd1, 'w, 'a, 'e1, 'f1, 'g1. (() -> (forall 'd1, 'w, 'a0, 'h1, 'i1, 'j1, 'k1, 'l1. ('l1 -> (forall 'w, 'l1, 'a1, 'm1, 'n1, 'o1, 'p1, 'q1. ('m1 -> 'p1
+//│   where
+//│     'w <: 'a1
+//│     'm1 <: () -> 'n1
+//│     'n1 <: 'o1 -> 'p1
+//│     'q1 :> List['a1] -> List['a1]
+//│         <: 'l1 -> 'o1))
+//│   where
+//│     'w <: 'a0
+//│     'h1 <: () -> 'i1
+//│     'i1 <: 'j1 -> 'd1
+//│     'k1 :> List['a0] -> List['a0]
+//│         <: 'l1 -> 'j1))
+//│   where
+//│     'b1 <: 'c1 -> 'd1
+//│     'w <: 'a
+//│     'e1 :> List['a] -> List['a]
+//│         <: 'f1 -> 'c1
+//│     'g1 <: () -> 'b1)
+//│        <: () -> 'a1
+//│     'w :> "x"
+//│        <: 'a2
+//│     'x <: 'r1 -> 'd1
+//│     'y :> List['a2] -> List['a2]
+//│        <: 'f1 -> 'r1
+//│     'z <: () -> 'x)) -> 'i3
+//│     'j3 :> forall 'v, 'w, 'x, 'y, 'z. (() -> 'a1
+//│   where
+//│     'v :> forall 'b1, 'c1, 'd1, 'w, 'a, 'e1, 'f1, 'g1. (() -> (forall 'd1, 'w, 'a0, 'h1, 'i1, 'j1, 'k1, 'l1. ('l1 -> (forall 'w, 'l1, 'a1, 'm1, 'n1, 'o1, 'p1, 'q1. ('m1 -> 'p1
+//│   where
+//│     'w <: 'a1
+//│     'm1 <: () -> 'n1
+//│     'n1 <: 'o1 -> 'p1
+//│     'q1 :> List['a1] -> List['a1]
+//│         <: 'l1 -> 'o1))
+//│   where
+//│     'w <: 'a0
+//│     'h1 <: () -> 'i1
+//│     'i1 <: 'j1 -> 'd1
+//│     'k1 :> List['a0] -> List['a0]
+//│         <: 'l1 -> 'j1))
+//│   where
+//│     'b1 <: 'c1 -> 'd1
+//│     'w <: 'a
+//│     'e1 :> List['a] -> List['a]
+//│         <: 'f1 -> 'c1
+//│     'g1 <: () -> 'b1)
+//│        <: () -> 'a1
+//│     'w :> "x"
+//│        <: 'a2
+//│     'x <: 'r1 -> 'd1
+//│     'y :> List['a2] -> List['a2]
+//│        <: 'f1 -> 'r1
+//│     'z <: () -> 'x)
+//│         <: () -> 'k3
+//│     'k3 <: List['f1] -> 'd1
+//│     'd1 <: 'h3
+//│     'i3 <: 'd -> 'x2
 
