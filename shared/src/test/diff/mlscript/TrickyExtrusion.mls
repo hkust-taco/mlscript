@@ -44,7 +44,13 @@ test f =
 test f =
   let r x = f x
   in (r 0, r True)
-//│ test: (true -> 'a & 0 -> 'b) -> ('b, 'a,)
+//│ test: 'a -> ('b, 'c,)
+//│   where
+//│     'a <: 'd -> 'e & 'f -> 'g
+//│     'd :> 0
+//│     'e <: 'b
+//│     'f :> true
+//│     'g <: 'c
 //│     = [Function: test2]
 
 // * Even works with recursive definition because the constrained type is strictly local to the body!

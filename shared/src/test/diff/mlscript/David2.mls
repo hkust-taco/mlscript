@@ -144,17 +144,37 @@ def mkIntegerPrecise value = Integer { value; addOne = addOne1 }
 //│                 = [Function: mkIntegerPrecise]
 
 def mkIntegerPrecise value = Integer { value; addOne = fun n -> mkInteger (n.value + 1) }
-//│ mkIntegerPrecise: (int & 'value) -> (Integer with {addOne: forall 'a. {value: int} -> 'a, value: 'value})
+//│ mkIntegerPrecise: (int & 'value) -> (Integer with {addOne: forall 'a, 'value0, 'b, 'c, 'mkInteger, 'd. ('a -> 'd
 //│   where
-//│     'a :> Integer with {addOne: {value: int} -> 'a}
+//│     'a <: {value: 'value0}
+//│     'value0 <: int
+//│     'b :> int -> int
+//│        <: 1 -> 'c
+//│     'mkInteger <: 'c -> 'd), value: 'value})
 //│                 = [Function: mkIntegerPrecise1]
 
 def mkIntegerPrecise value = Integer { value; addOne = fun (n: Integer) -> mkInteger2 (n.value + 1) }
-//│ mkIntegerPrecise: (int & 'value) -> (Integer with {value: 'value})
+//│ mkIntegerPrecise: (int & 'value) -> (Integer with {addOne: forall 'value0, 'a, 'b, 'c, 'd. (Integer -> 'c
+//│   where
+//│     'value0 <: int
+//│     'a :> int -> int
+//│        <: 1 -> 'b
+//│     'b <: int
+//│     'c :> Integer
+//│     'd :> Integer
+//│        <: Integer & {value: 'value0}), value: 'value})
 //│                 = [Function: mkIntegerPrecise2]
 
 n = mkIntegerPrecise 42
-//│ n: Integer & {value: 42}
+//│ n: Integer with {addOne: forall 'value, 'a, 'b, 'c, 'd. (Integer -> 'c
+//│   where
+//│     'value <: int
+//│     'a :> int -> int
+//│        <: 1 -> 'b
+//│     'b <: int
+//│     'c :> Integer
+//│     'd :> Integer
+//│        <: Integer & {value: 'value}), value: 42}
 //│  = Integer { value: 42, addOne: [Function: addOne] }
 
 addOne1 n
@@ -165,7 +185,15 @@ def mkIntegerPrecise2: (int & 'a) -> (Integer & { value: 'a })
 def mkIntegerPrecise2 = mkIntegerPrecise
 //│ mkIntegerPrecise2: (int & 'a) -> (Integer\addOne with {value: 'a})
 //│                  = <missing implementation>
-//│ (int & 'value) -> (Integer with {value: 'value})
+//│ (int & 'value) -> (Integer with {addOne: forall 'value0, 'a, 'b, 'c, 'd. (Integer -> 'c
+//│   where
+//│     'value0 <: int
+//│     'a :> int -> int
+//│        <: 1 -> 'b
+//│     'b <: int
+//│     'c :> Integer
+//│     'd :> Integer
+//│        <: Integer & {value: 'value0}), value: 'value})
 //│   <:  mkIntegerPrecise2:
 //│ (int & 'a) -> (Integer\addOne with {value: 'a})
 //│                  = [Function: mkIntegerPrecise2]
@@ -192,13 +220,13 @@ def mkIntegerPrecise3 = mkInteger
 //│   <:  mkIntegerPrecise3:
 //│ (int & 'a) -> (Integer\addOne with {value: 'a})
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.186: 	def mkIntegerPrecise3 = mkInteger
+//│ ║  l.214: 	def mkIntegerPrecise3 = mkInteger
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` is not an instance of type `'a`
 //│ ║  l.72: 	rec def mkInteger value = Integer { value; addOne = fun n -> mkInteger (n.value + 1) }
 //│ ║        	                                                                        ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.185: 	def mkIntegerPrecise3: (int & 'a) -> (Integer & { value: 'a })
+//│ ║  l.213: 	def mkIntegerPrecise3: (int & 'a) -> (Integer & { value: 'a })
 //│ ╙──       	                                                         ^^
 //│                  = [Function: mkInteger]
 
@@ -206,10 +234,10 @@ def mkIntegerPrecise3 = mkInteger
 :e
 addOne1 (Str { value = ""; addOne = error })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.207: 	addOne1 (Str { value = ""; addOne = error })
+//│ ║  l.235: 	addOne1 (Str { value = ""; addOne = error })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Str & {addOne: ?addOne, value: ?value}` does not match type `Integer & ?a`
-//│ ║  l.207: 	addOne1 (Str { value = ""; addOne = error })
+//│ ║  l.235: 	addOne1 (Str { value = ""; addOne = error })
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.11: 	addOne1 x = case x of {
@@ -253,7 +281,15 @@ addOne2 (mkStr "hello")
 //│    = Str { value: 'hello1', addOne: [Function: addOne] }
 
 union = if true then mkIntegerPrecise 42 else mkStr "hello"
-//│ union: Integer & {value: 42} | Str
+//│ union: (Integer with {addOne: forall 'value, 'a, 'b, 'c, 'd. (Integer -> 'c
+//│   where
+//│     'value <: int
+//│     'a :> int -> int
+//│        <: 1 -> 'b
+//│     'b <: int
+//│     'c :> Integer
+//│     'd :> Integer
+//│        <: Integer & {value: 'value}), value: 42}) | Str
 //│      = Integer { value: 42, addOne: [Function: addOne] }
 
 union2 = addOne2 union

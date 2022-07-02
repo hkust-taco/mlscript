@@ -187,8 +187,8 @@ x => y => x x y
 //│ ║  l.+1: 	(x => x x) (x => x x)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α224' -> α225')›  <:  α224_229    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α224' -> α225')›  <:  α224'
+//│ ╟── this constraint:  ‹∀ 0. {(α224' -> α225') where: α224' <: (α224' -> α225')}›  <:  α224_229    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. {(α224' -> α225') where: α224' <: (α224' -> α225')}›  <:  α224'
 //│ res: error
 
 
@@ -204,30 +204,33 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (x x)) (x => f (x x)))
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. {(α244' -> α246') where: α240 <: (α245' -> α246')}›  <:  α244_253    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. {(α244' -> α246') where: α240 <: (α245' -> α246')}›  <:  α244'
+//│ ╟── this constraint:  ‹∀ 0. {(α244' -> α246') where: α240 <: (α245' -> α246'), α244' <: (α244' -> α245')}›  <:  α244_251    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. {(α244' -> α246') where: α240 <: (α245' -> α246'), α244' <: (α244' -> α245')}›  <:  α244'
 //│ res: ('a -> 'b & nothing -> 'c & 'c -> 'a) -> (error | 'b)
 
 // Z combinator:
 // * FIXME simplified type
 // :e
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
-//│ res: ((forall 'a, 'b. ('a -> 'b
+//│ res: ((forall 'a, 'b, 'c. ('b -> 'c
 //│   where
-//│     'c <: 'c -> 'a -> 'b)) -> 'd) -> 'd
+//│     'd <: 'd -> 'a
+//│     'a <: 'b -> 'c)) -> 'e) -> 'e
 
 // * Function that takes arbitrarily many arguments:
 // * FIXME type of result shouldn't be `nothing`
 // :e
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
-//│ res: anything -> (forall 'a, 'b. ('a -> 'b
+//│ res: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
-//│     'c <: 'c -> 'a -> 'b))
+//│     'd <: 'd -> 'a
+//│     'a <: 'b -> 'c))
 
 res 1 2
 //│ res: 'a -> 'b
 //│   where
-//│     'c <: 'c -> 'a -> 'b
+//│     'c <: 'a -> 'b
+//│     'd <: 'd -> 'c
 
 
 let rec trutru = g => trutru (g true)
@@ -377,7 +380,9 @@ let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
 //│     'a :> 'x
 //│ res: 'a
 //│   where
-//│     'a :> forall 'u. ({u: 'u} & 'a) -> ('u | 'a)
+//│     'a :> forall 'b, 'u. (('a & 'b) -> ('u | 'a)
+//│   where
+//│     'b <: {u: 'u})
 
 :ns
 let rec x = (let y = (x x); (z => z))
@@ -399,8 +404,8 @@ let rec x = (let y = (x x); (z => z))
 //│ ║  l.+1: 	(w => x => x) ((y => y y) (y => y y))
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α654' -> α655')›  <:  α654_661    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α654' -> α655')›  <:  α654'
+//│ ╟── this constraint:  ‹∀ 0. {(α662' -> α663') where: α662' <: (α662' -> α663')}›  <:  α662_669    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. {(α662' -> α663') where: α662' <: (α662' -> α663')}›  <:  α662'
 //│ res: 'a -> 'a
 
 :NoCycleCheck

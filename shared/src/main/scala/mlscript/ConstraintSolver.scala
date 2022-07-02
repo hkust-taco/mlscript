@@ -420,19 +420,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rec(r0, r1, false)
           case (prim: ClassTag, ot: ObjectTag)
             if prim.parentsST.contains(ot.id) => ()
-          case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
-            println(s"NEW $lhs UB (${rhs.level})")
-            val newBound = (cctx._1 ::: cctx._2.reverse).foldRight(rhs)((c, ty) =>
-              if (c.prov is noProv) ty else mkProxy(ty, c.prov))
-            lhs.upperBounds ::= newBound // update the bound
-            lhs.lowerBounds.foreach(rec(_, rhs, true)) // propagate from the bound
-          case (lhs, rhs: TypeVariable) if lhs.level <= rhs.level =>
-            println(s"NEW $rhs LB (${lhs.level})")
-            // println(lhs, rhs, lhs.level, rhs.level)
-            val newBound = (cctx._1 ::: cctx._2.reverse).foldLeft(lhs)((ty, c) =>
-              if (c.prov is noProv) ty else mkProxy(ty, c.prov))
-            rhs.lowerBounds ::= newBound // update the bound
-            rhs.upperBounds.foreach(rec(lhs, _, true)) // propagate from the bound
+            
+            
           // case (tv: TypeVariable, rhs0) if extrusionContext.nonEmpty && !tv.recPlaceholder =>
           case (tv: TypeVariable, rhs0) if !noConstrainnedTypes && extrusionContext.nonEmpty /* && !tv.recPlaceholder */ =>
             // ???
@@ -447,6 +436,23 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val buf = extrusionContext.get.getOrElseUpdate(tv, Buffer.empty)
             buf += true -> lhs0
             ()
+            
+            
+          case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
+            println(s"NEW $lhs UB (${rhs.level})")
+            val newBound = (cctx._1 ::: cctx._2.reverse).foldRight(rhs)((c, ty) =>
+              if (c.prov is noProv) ty else mkProxy(ty, c.prov))
+            lhs.upperBounds ::= newBound // update the bound
+            lhs.lowerBounds.foreach(rec(_, rhs, true)) // propagate from the bound
+          case (lhs, rhs: TypeVariable) if lhs.level <= rhs.level =>
+            println(s"NEW $rhs LB (${lhs.level})")
+            // println(lhs, rhs, lhs.level, rhs.level)
+            val newBound = (cctx._1 ::: cctx._2.reverse).foldLeft(lhs)((ty, c) =>
+              if (c.prov is noProv) ty else mkProxy(ty, c.prov))
+            rhs.lowerBounds ::= newBound // update the bound
+            rhs.upperBounds.foreach(rec(lhs, _, true)) // propagate from the bound
+            
+            
             
           // case (tv: TypeVariable, rhs0) if tv.lowerBounds.foreach(_.level) =>
           case (tv: TypeVariable, rhs0) if unifyInsteadOfExtrude && tv.lowerBounds.nonEmpty =>
@@ -464,6 +470,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             }()
             tv.upperBounds.foreach(rec(lhs0, _, true))
             
+            // /* 
           case (_: TypeVariable, rhs0) =>
             // val rhs = extrude(rhs0, lhs.level, false, MaxLevel)
             // val rhs = PolymorphicType.mk(lhs.level, {
@@ -491,6 +498,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             println(s" where ${lhs.showBounds}")
             println(s"   and ${lhs0.showBounds}")
             rec(lhs, rhs, true)
+            // */
+            
           case (TupleType(fs0), TupleType(fs1)) if fs0.size === fs1.size => // TODO generalize (coerce compatible tuples)
             fs0.lazyZip(fs1).foreach { case ((ln, l), (rn, r)) =>
               ln.foreach { ln => rn.foreach { rn =>

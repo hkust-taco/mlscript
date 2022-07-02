@@ -21,7 +21,11 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
+//│ 'b -> (forall 'b, 'head, 'a, 'c, 'tail, 'd. ('c -> 'd
+//│   where
+//│     'b <: 'head & 'a
+//│     'c <: List['a] & 'tail
+//│     'd :> Cons['a] with {head: 'head, tail: 'tail}))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -47,7 +51,10 @@ def head: forall 'a. List['a] -> 'a
 def head l = l.Head
 //│ head: List['a] -> 'a
 //│     = <missing implementation>
-//│ List['a] -> 'a
+//│ 'b -> 'c
+//│   where
+//│     'b <: List['a]
+//│     'a <: 'c
 //│   <:  head:
 //│ List['a] -> 'a
 //│     = [Function: head]
@@ -56,7 +63,10 @@ def tail: forall 'a. List['a] -> List['a]
 def tail l = l.Tail
 //│ tail: List['a] -> List['a]
 //│     = <missing implementation>
-//│ List['a] -> List['a]
+//│ 'b -> 'c
+//│   where
+//│     'b <: List['a]
+//│     'c :> List['a]
 //│   <:  tail:
 //│ List['a] -> List['a]
 //│     = [Function: tail]
@@ -65,7 +75,11 @@ def is_empty: forall 'a. List['a] -> bool
 def is_empty l = eq l nil
 //│ is_empty: List[?] -> bool
 //│         = <missing implementation>
-//│ anything -> bool
+//│ 'a -> 'b
+//│   where
+//│     'a <: 'a
+//│     'c :> 'a -> bool
+//│        <: List[nothing] -> 'b
 //│   <:  is_empty:
 //│ List[?] -> bool
 //│         = [Function: is_empty]
@@ -85,7 +99,10 @@ def Some val = Some { val }
 //│ Defined type alias Option[+a]
 //│ None: None
 //│     = None {}
-//│ Some: 'val -> Some['val]
+//│ Some: 'a -> 'b
+//│   where
+//│     'a <: 'val
+//│     'b :> Some['val]
 //│     = [Function: Some1]
 
 // let create_hashtbl () = []
@@ -95,9 +112,11 @@ def create_hashtbl _ = nil
 
 // let hashtbl_add table key element = (key, element) :: table
 def hashtbl_add table key element = cons ((key, element)) table
-//│ hashtbl_add: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('d -> List[('b, 'd,) | 'c]
+//│ hashtbl_add: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f -> 'e
 //│   where
-//│     'a <: List['c])))
+//│     'c :> List['d] -> List['d]
+//│        <: 'a -> 'e
+//│     'd :> ('b, 'f,))))
 //│            = [Function: hashtbl_add]
 
 // let rec find table key = 
@@ -126,15 +145,51 @@ def find_A: forall 'a 'b. List[('a, 'b)] -> 'a -> (None | Some['b])
 //│ find_A: List[(anything, 'b,)] -> anything -> (None | Some['b])
 //│       = <missing implementation>
 
+:e // FIXME?
 def find_A table key =
   if is_empty table then None
   else if eq (head table)._1 key then Some (head table)._2
   else find_A (tail table) key
-//│ 'a -> (forall 'a, 'val, 'b. ('a -> (None | Some['val] | Some['b])
+//│ 'c -> (forall 'c, 'd, 'a, 'a0, 'a1, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm, 'n, 'o, 'p, 'q, 'r. ('s -> 't
 //│   where
-//│     'a <: List['a] & List[{_1: 'a}] & List[{_2: 'val}] & List[('a, 'b,)]))
+//│     'c <: List['d] & List['a] & List['a0] & List['a1]
+//│     'e := bool
+//│     'f :> forall 'u. 'u -> 'u -> 'u
+//│        <: None -> 'g
+//│     'g <: 'v -> 't
+//│     'h <: {_1: 'i}
+//│     'a <: 'h
+//│     'i <: 'd
+//│     'j :> 'd -> bool
+//│        <: 's -> 'k
+//│     'k <: bool
+//│     'l :> forall 'u. 'u -> 'u -> 'u
+//│        <: 'w -> 'm
+//│     'n <: {_2: 'o}
+//│     'a0 <: 'n
+//│     'o <: 'd
+//│     'd <: 'val
+//│     'p :> Some['val]
+//│        <: 'w
+//│     'm <: 'x -> 'v
+//│     'q :> List['a1]
+//│        <: List[('d, 'b,)]
+//│     'r :> 'd -> (None | Some['b])
+//│        <: 's -> 'x))
 //│   <:  find_A:
 //│ List[(anything, 'b,)] -> anything -> (None | Some['b])
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.149: 	def find_A table key =
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.150: 	  if is_empty table then None
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.151: 	  else if eq (head table)._1 key then Some (head table)._2
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.152: 	  else find_A (tail table) key
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  (None | Some['b317_500''])  <:  α20_501''    ComposedType  TypeVariable
+//│ ╙──  ... looks like:  (None | Some['b317_471'''])  <:  α20'
 //│       = <no result>
 //│         find_A is not implemented
 
@@ -149,7 +204,10 @@ def nfind table key =
   { None -> fun f -> fun x -> x
   | Some -> opt.val
   }
-//│ nfind: List[?] -> anything -> anything -> (forall 'a. 'a -> 'a)
+//│ nfind: List['a] -> (forall 'a, 'val, 'b. ('a -> ('a -> (forall 'c. 'c -> 'c) | 'val)
+//│   where
+//│     'a <: {val: 'val}
+//│     'b <: None | Some['a] & 'a))
 //│      = [Function: nfind]
 
 // type Int = ['a] ('a -> 'a) -> ('a -> 'a)
@@ -159,41 +217,71 @@ type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 // let succ (n:Int) = fun f x -> f (n f x)
 def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 def succ_ n = fun f -> fun x -> f (n f x)
-//│ succ: ChurchInt -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ succ: ChurchInt -> (forall 'a. 'a -> (forall 'b, 'a, 'c, 'd, 'e, 'f. ('f -> 'e
 //│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'd -> 'e)))
+//│     'b <: 'a -> 'c
+//│     'a <: 'd -> 'e
+//│     'c <: 'f -> 'd)))
+//│   where
+//│     'b := ChurchInt
 //│     = [Function: succ]
-//│ succ_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ succ_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f -> 'e
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e)))
+//│     'a <: 'b -> 'c
+//│     'b <: 'd -> 'e
+//│     'c <: 'f -> 'd)))
 //│      = [Function: succ_]
 
 // let add (n:Int) (m:Int) = n succ m
 def add (n: ChurchInt) (m: ChurchInt) = n succ m
 def add_ n m = n succ_ m
-//│ add: ChurchInt -> (forall 'a. (ChurchInt -> 'b
+//│ add: ChurchInt -> (forall 'a, 'b, 'c. (ChurchInt -> 'd
 //│   where
-//│     'a <: (ChurchInt -> (forall 'c. 'c -> (forall 'c, 'd, 'e, 'f, 'g. ('e -> 'g
+//│     'a <: (forall 'e. (ChurchInt -> (forall 'f. 'f -> (forall 'e, 'f, 'g, 'h, 'i, 'j. ('j -> 'i
 //│   where
-//│     'd <: 'c -> 'e -> 'f
-//│     'c <: 'f -> 'g)))) -> ChurchInt -> 'b))
+//│     'e <: 'f -> 'g
+//│     'f <: 'h -> 'i
+//│     'g <: 'j -> 'h)))
+//│   where
+//│     'e := ChurchInt)) -> 'b
+//│     'c := ChurchInt
+//│     'b <: 'c -> 'd))
+//│   where
+//│     'a := ChurchInt
 //│    = [Function: add]
-//│ add_: 'a -> (forall 'a. ('b -> 'c
+//│ add_: 'a -> (forall 'a, 'b. ('c -> 'd
 //│   where
-//│     'a <: (forall 'd. 'd -> (forall 'e. 'e -> (forall 'd, 'e, 'f, 'g, 'h. ('f -> 'h
+//│     'a <: (forall 'e. 'e -> (forall 'f. 'f -> (forall 'e, 'f, 'g, 'h, 'i, 'j. ('j -> 'i
 //│   where
-//│     'd <: 'e -> 'f -> 'g
-//│     'e <: 'g -> 'h)))) -> 'b -> 'c))
+//│     'e <: 'f -> 'g
+//│     'f <: 'h -> 'i
+//│     'g <: 'j -> 'h)))) -> 'b
+//│     'b <: 'c -> 'd))
 //│     = [Function: add_]
 
 // let printInt (n:Int) = print (n (fun x -> x+1) 0)
 def printInt (n: ChurchInt) = toString (n (fun x -> x + 1) 0)
 def printInt_ n = toString (n (fun x -> x + 1) 0)
-//│ printInt: ChurchInt -> string
+//│ printInt: ChurchInt -> 'a
+//│   where
+//│     'b <: 0 -> 'c
+//│     'a :> string
+//│     'd :> ChurchInt
+//│        <: ChurchInt & (forall 'c, 'e, 'f. ('c -> 'f
+//│   where
+//│     'e :> int -> int
+//│        <: 1 -> 'f
+//│     'c <: int)) -> 'b
 //│         = [Function: printInt]
-//│ printInt_: ((int -> int) -> 0 -> anything) -> string
+//│ printInt_: 'a -> 'b
+//│   where
+//│     'a <: (forall 'c, 'd, 'e. ('c -> 'e
+//│   where
+//│     'c <: int
+//│     'd :> int -> int
+//│        <: 1 -> 'e)) -> 'f
+//│     'f <: 0 -> 'f
+//│     'b :> string
 //│          = [Function: printInt_]
 
 // let table = create_hashtbl ()
@@ -208,10 +296,10 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│   where
 //│     'a <: 'b -> 'c)),)]
 //│      = Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
-//│ table: List[("one" | "two", forall 'a, 'b. ('a & 'b) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'd
+//│ table: List[("one" | "two", forall 'a, 'b. ('a & 'b) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
-//│     'a <: 'c -> 'd
-//│     'b <: 'c -> 'e & 'e -> 'd)),)]
+//│     'a <: 'c -> 'd & 'd -> 'e
+//│     'b <: 'c -> 'e)),)]
 //│      = Cons {
 //│          head: [ 'two', [Function (anonymous)] ],
 //│          tail: Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
@@ -232,15 +320,22 @@ zog = printInt (add (nfind table "one") (nfind table "two"))
 a = add (nfind table "one")
 //│ a: ChurchInt -> 'a
 //│   where
-//│     'b <: (ChurchInt -> (forall 'c. 'c -> (forall 'c, 'd, 'e, 'f, 'g. ('e -> 'g
+//│     'b <: (forall 'c. (ChurchInt -> (forall 'd. 'd -> (forall 'c, 'd, 'e, 'f, 'g, 'h. ('h -> 'g
 //│   where
-//│     'd <: 'c -> 'e -> 'f
-//│     'c <: 'f -> 'g)))) -> ChurchInt -> 'a
+//│     'c <: 'd -> 'e
+//│     'd <: 'f -> 'g
+//│     'e <: 'h -> 'f)))
+//│   where
+//│     'c := ChurchInt)) -> 'i
+//│     'j := ChurchInt
+//│     'i <: 'j -> 'a
 //│  = [Function (anonymous)]
 
 b = (nfind table "two")
 //│ b: ('a & 'b) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('f | 'e)
 //│   where
+//│     'a <: 'c -> 'd & 'd -> 'e
+//│     'b <: 'c -> 'e
 //│     'a <: 'c -> 'd & 'd -> 'e
 //│     'b <: 'c -> 'e))
 //│  = [Function (anonymous)]
@@ -248,10 +343,11 @@ b = (nfind table "two")
 // * Note: this one requires `:DistributeForalls`
 // :d
 a b
-//│ res: 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ res: 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> 'd
 //│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'd -> 'e)) | ChurchInt
+//│     'f <: 'a -> 'b
+//│     'a <: 'c -> 'd
+//│     'b <: 'e -> 'c)) | ChurchInt
 //│    = [Function (anonymous)]
 
 zog_ = printInt_ (add_ (nfind table "one") (nfind table "two"))

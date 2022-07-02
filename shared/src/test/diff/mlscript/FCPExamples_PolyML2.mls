@@ -18,7 +18,11 @@ def Nil = Nil {}
 //│ Nil: Nil
 
 def Cons head tail = Cons { head; tail }
-//│ Cons: 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
+//│ Cons: 'b -> (forall 'b, 'c, 'a, 'head, 'tail, 'd. ('d -> 'c
+//│   where
+//│     'c :> Cons['a] with {head: 'head, tail: 'tail}
+//│     'b <: 'head & 'a
+//│     'd <: List['a] & 'tail))
 
 // ------------ Type signatures for functions used in the examples ------------
 // (I guess)
@@ -47,22 +51,34 @@ class Collection[a]: { l: List[a] }
   method Mem x = mem x this.l
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
-//│ Defined Collection.Mem: Collection[?] -> anything -> bool
-//│ Defined Collection.Fold: Collection['a] -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c -> 'c
+//│ Defined Collection.Mem: Collection['a] -> (forall 'a, 'l, 'b, 'c, 'mem, 'd. ('d -> 'c
 //│   where
-//│     'b <: 'c -> 'a -> 'c)))
+//│     'l :> List['a]
+//│     'b <: 'l -> 'c
+//│     'mem <: 'd -> 'b))
+//│ Defined Collection.Fold: Collection['a] -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'l, 'd, 'e, 'f, 'fold_left. ('f -> 'd
+//│   where
+//│     'c <: 'l -> 'd
+//│     'l :> List['a]
+//│     'e <: 'f -> 'c
+//│     'fold_left <: 'b -> 'e)))
 
 def coll_mem c x = c.Mem x
-//│ coll_mem: 'a -> (forall 'a. ('a -> bool
+//│ coll_mem: 'b -> (forall 'b, 'a, 'c. ('d -> 'e
 //│   where
-//│     'a <: Collection['a]))
+//│     'b <: Collection['a]
+//│     'c :> forall 'a, 'l, 'f, 'g, 'mem, 'h. ('h -> 'g
+//│   where
+//│     'l :> List['a]
+//│     'f <: 'l -> 'g
+//│     'mem <: 'h -> 'f)
+//│        <: 'd -> 'e))
 
 // typo in the paper? it was `fun x -> fun y -> ...`
 def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
   let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
   (l1, l2)
-//│ simple_and_double: Collection[?] -> (forall 'a. 'a, forall 'b. 'b,)
+//│ simple_and_double: Collection[?] -> (forall 'tail. 'tail, forall 'tail. 'tail,)
 //│   where
-//│     'b :> (Cons[(nothing, nothing,)] with {tail: 'b}) | Nil
-//│     'a :> (Cons[nothing] with {tail: 'a}) | Nil
+//│     'tail :> (Cons[nothing] with {tail: 'tail}) | Nil
