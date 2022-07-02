@@ -22,7 +22,7 @@ class ST[S, A]
 // ============ Type signatures for functions used in the examples ============
 
 def choose x y = if true then x else y
-//│ choose: 'a -> (forall 'b. 'b -> ('a | 'b))
+//│ choose: 'a -> (forall 'a. 'a -> 'a)
 
 def id x = x
 //│ id: 'a -> 'a
@@ -31,7 +31,7 @@ def auto (x: forall 'a. 'a -> 'a) = x x
 //│ auto: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 
 def app f x = f x
-//│ app: ('a -> 'b) -> 'a -> 'b
+//│ app: ('a -> 'b) -> (forall 'a, 'b. 'a -> 'b)
 
 def inc: int -> int
 //│ inc: int -> int
@@ -68,10 +68,10 @@ def argST: ST['s, int]
 // This used to be `'a -> (forall 'b. 'b -> 'b | 'a)`, now it's wrong!
 // FreezeML A2
 choose id
-//│ res: 'a -> (forall 'a, 'b. 'b -> 'b | 'a)
+//│ res: 'a -> 'a
 
 fun (g: forall 'a. ('a -> 'a) -> ('a -> 'a)) -> fun (x: forall 'a. 'a -> 'a) -> fun a -> g a (x a)
-//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> ('a1 -> 'a1 & 'a1) -> 'a1
+//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'a1. ('a1 -> 'a1 & 'a1) -> 'a1)
 
 choose id succ
 //│ res: int -> int
@@ -101,7 +101,7 @@ id auto
 //│ res: 'a -> 'a
 
 app auto id
-//│ res: 'a -> 'a
+//│ res: nothing
 
 // ------------ Sec 5.2 ------------
 
@@ -114,7 +114,7 @@ let f = choose id in (f auto) (f succ)
 //│ ╟── type `‘a` is not an instance of type `int`
 //│ ║  l.30: 	def auto (x: forall 'a. 'a -> 'a) = x x
 //│ ╙──      	                    ^^
-//│ res: int -> int | error
+//│ res: 'a -> 'a | error
 
 // Reproduced with an unnanotated auto:
 
@@ -122,7 +122,7 @@ def auto2 x = x x
 //│ auto2: ('a -> 'b & 'a) -> 'b
 
 choose id auto2
-//│ res: ('a -> 'b & 'b & 'a) -> 'b
+//│ res: ('a -> 'b & 'a) -> 'b
 
 :e // FIXME? succeeds with genLamBodies
 res (choose id succ)
@@ -135,15 +135,15 @@ res (choose id succ)
 //│ ╟── but it flows into application with expected type `int`
 //│ ║  l.128: 	res (choose id succ)
 //│ ╙──       	     ^^^^^^^^^^^^^^
-//│ res: int -> int | error | int
+//│ res: error | int
 
 // Didier Le Botlan suggested this fix by email:
 
 let f = choose id in (f auto, f succ)
-//│ res: (forall 'b. (forall 'a. 'a -> 'a & 'b) -> (forall 'a. 'a -> 'a | 'b), forall 'b. (int & 'b) -> (int | 'b),)
+//│ res: ((forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a), int -> int,)
 
 let f = choose id in (f auto2, f succ)
-//│ res: (forall 'a, 'b, 'c. ('a -> 'b & 'c & 'a) -> ('b | 'c), forall 'c. (int & 'c) -> (int | 'c),)
+//│ res: (forall 'a, 'b. ('a -> 'b & 'a) -> 'b, int -> int,)
 
 // ------------ Sec 6 ------------
 
@@ -180,7 +180,7 @@ let tmp = I I in K K
 //│ res: (42, "foo",)
 
 (fun f -> (f succ, choose f auto)) (choose id)
-//│ res: (forall 'b. (int & 'b) -> (int | 'b), (forall 'a, 'c. 'a -> 'a & 'c) -> (forall 'b, 'a, 'c. ('b & 'a) -> ('a | 'b) | 'c),)
+//│ res: (int -> int, (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a),)
 
 // ------------ Sec 2.3.1 ------------
 
@@ -211,8 +211,8 @@ fun z -> omega z
 
 (fun x -> fun y -> x y) omegad
 (fun x -> fun y -> x y) omega
-//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ res: ('a -> 'b & 'a) -> 'b
+//│ res: anything -> nothing
+//│ res: anything -> nothing
 
 // ------------ Sec 4.3 ------------
 // affects the order of bindings in the result type in MLF, not very interesting otherwise
@@ -264,5 +264,5 @@ let f = fun x -> id in g f
 
 // FreezeML D4
 app runST argST
-//│ res: int
+//│ res: nothing
 

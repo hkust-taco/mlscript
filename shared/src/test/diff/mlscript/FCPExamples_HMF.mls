@@ -20,7 +20,7 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
+//│ ('head & 'a) -> (forall 'head, 'a, 'tail. (List['a] & 'tail) -> (Cons['a] with {head: 'head, tail: 'tail}))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -100,7 +100,7 @@ def choose: forall 'a. 'a -> 'a -> 'a
 def choose x y = if true then x else y
 //│ choose: 'a -> 'a -> 'a
 //│       = <missing implementation>
-//│ 'a -> (forall 'b. 'b -> ('a | 'b))
+//│ 'a -> (forall 'a. 'a -> 'a)
 //│   <:  choose:
 //│ 'a -> 'a -> 'a
 //│       = [Function: choose]
@@ -143,12 +143,12 @@ poly id
 //│    = [ 1, true ]
 
 def app f x = f x
-//│ app: ('a -> 'b) -> 'a -> 'b
+//│ app: ('a -> 'b) -> (forall 'a, 'b. 'a -> 'b)
 //│    = [Function: app]
 
 // FreezeML D1
 app poly id
-//│ res: (1, true,)
+//│ res: nothing
 //│    = [ 1, true ]
 
 // FreezeML F2
@@ -183,7 +183,7 @@ map head (single ids)
 //│    = Cons { head: [Function: id], tail: Nil {} }
 
 app (map head) (single ids)
-//│ res: List[forall 'a. 'a -> 'a]
+//│ res: nothing
 //│    = Cons { head: [Function: id], tail: Nil {} }
 
 // nope
@@ -240,7 +240,7 @@ let f = choose nil in f ids
 // FreezeML D4
 :ne
 app runST argST
-//│ res: int
+//│ res: nothing
 
 // ============ Sec 4 ============
 

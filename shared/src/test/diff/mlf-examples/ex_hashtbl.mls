@@ -21,7 +21,7 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
+//│ ('head & 'a) -> (forall 'head, 'a, 'tail. (List['a] & 'tail) -> (Cons['a] with {head: 'head, tail: 'tail}))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -95,7 +95,7 @@ def create_hashtbl _ = nil
 
 // let hashtbl_add table key element = (key, element) :: table
 def hashtbl_add table key element = cons ((key, element)) table
-//│ hashtbl_add: List['a] -> (forall 'b. 'b -> (forall 'c. 'c -> List[('b, 'c,) | 'a]))
+//│ hashtbl_add: List['a] -> (forall 'b. 'b -> (forall 'a, 'c. 'c -> List[('b, 'c,) | 'a]))
 //│            = [Function: hashtbl_add]
 
 // let rec find table key = 
@@ -156,20 +156,20 @@ type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 // let succ (n:Int) = fun f x -> f (n f x)
 def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 def succ_ n = fun f -> fun x -> f (n f x)
-//│ succ: ChurchInt -> (forall 'b. ('a -> 'b & 'a -> 'a) -> 'a -> 'b)
+//│ succ: ChurchInt -> (forall 'a, 'b. ('a -> 'b & 'a -> 'a) -> (forall 'a, 'b. 'a -> 'b))
 //│     = [Function: succ]
-//│ succ_: ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│ succ_: ('a -> 'b -> 'c) -> (forall 'a, 'c, 'd. ('c -> 'd & 'a) -> (forall 'b, 'd. 'b -> 'd))
 //│      = [Function: succ_]
 
 // let add (n:Int) (m:Int) = n succ m
 
 //:e // due to tapping
 def add (n: ChurchInt) (m: ChurchInt) = n succ m
-//│ add: ChurchInt -> ChurchInt -> (forall 'a, 'b. ('a -> 'b & 'a -> 'a) -> 'a -> 'b | ChurchInt)
+//│ add: ChurchInt -> ChurchInt -> (forall 'a, 'b. ('a -> 'b & 'a -> 'a) -> (forall 'a, 'b. 'a -> 'b) | ChurchInt)
 //│    = [Function: add]
 
 def add_ n m = n succ_ m
-//│ add_: ((forall 'a, 'b, 'c. ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)) -> 'e -> 'f) -> 'e -> 'f
+//│ add_: ((forall 'a, 'b, 'c. ('a -> 'b -> 'c) -> (forall 'a, 'c, 'd. ('c -> 'd & 'a) -> (forall 'b, 'd. 'b -> 'd))) -> 'e -> 'f) -> (forall 'e, 'f. 'e -> 'f)
 //│     = [Function: add_]
 
 // let printInt (n:Int) = print (n (fun x -> x+1) 0)
@@ -188,9 +188,9 @@ table = hashtbl_add table "one" (fun f -> fun x -> f x)
 table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│ table: List[nothing]
 //│      = Nil {}
-//│ table: List[("one", forall 'a, 'b. ('a -> 'b) -> 'a -> 'b,)]
+//│ table: List[("one", nothing,)]
 //│      = Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
-//│ table: List[("one" | "two", forall 'a, 'b, 'c. ('a -> 'b & 'c -> 'b & 'a -> 'c) -> 'a -> 'b,)]
+//│ table: List[("two", nothing,)]
 //│      = Cons {
 //│          head: [ 'two', [Function (anonymous)] ],
 //│          tail: Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
@@ -211,18 +211,18 @@ zog = printInt (add (nfind table "one") (nfind table "two"))
 // :e // FIXME? failed with genLamBodies but works with quantif extrus
 //:e // due to tapping
 a = add (nfind table "one")
-//│ a: ChurchInt -> (forall 'a, 'b. ('a -> 'b & 'a -> 'a) -> 'a -> 'b | ChurchInt)
+//│ a: ChurchInt -> (forall 'a, 'b. ('a -> 'b & 'a -> 'a) -> (forall 'a, 'b. 'a -> 'b) | ChurchInt)
 //│  = [Function (anonymous)]
 
 b = (nfind table "two")
-//│ b: ('a -> 'b & 'c -> 'b & 'a -> 'c) -> (forall 'd. ('d & 'a) -> ('d | 'b))
+//│ b: anything -> (forall 'a. 'a -> 'a)
 //│  = [Function (anonymous)]
 
 // * Note: this one requires `:DistributeForalls`
 // :d
 //:e // due to tapping
 a b
-//│ res: ('a -> 'b & 'a -> 'a) -> 'a -> 'b | ChurchInt
+//│ res: ('a -> 'b & 'a -> 'a) -> (forall 'a, 'b. 'a -> 'b) | ChurchInt
 //│    = [Function (anonymous)]
 
 //:e // due to tapping

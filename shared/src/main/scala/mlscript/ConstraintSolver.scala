@@ -360,6 +360,20 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       stack.pop()
       ()
     }
+    def recThrough(lhs0: SimpleType, rhs: SimpleType, tv: TV)
+          (implicit raise: Raise, cctx: ConCtx, ctx: Ctx, shadows: Shadows): Unit = {
+      // val lhs = extrude(lhs0, rhs.level, true, MaxLevel)
+      val lhs2 = if (lhs.level <= tv.level) lhs0 else {
+        implicit val flexifyRigids: Bool = false
+        val lhs = extrude(lhs0, rhs.level, true, MaxLevel)
+        // println(s"EXTR LHS  $lhs0  ~>  $lhs  to ${rhs.level}")
+        println(s"EXTR LHS  ~>  $lhs  to ${tv.level}")
+        println(s" where ${lhs.showBounds}")
+        // println(s"   and ${lhs0.showBounds}")
+        lhs
+      }
+      rec(lhs2, rhs, true)
+    }
     def recImpl(lhs: SimpleType, rhs: SimpleType)
           (implicit raise: Raise, cctx: ConCtx, ctx: Ctx, shadows: Shadows): Unit =
     // trace(s"C $lhs <! $rhs") {
@@ -436,6 +450,23 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val buf = extrusionContext.get.getOrElseUpdate(tv, Buffer.empty)
             buf += true -> lhs0
             ()
+            
+            
+            // /* 
+          case (lhs: TypeVariable, rhs) =>
+            println(s"NEW $lhs UB (${rhs.level})")
+            val newBound = (cctx._1 ::: cctx._2.reverse).foldRight(rhs)((c, ty) =>
+              if (c.prov is noProv) ty else mkProxy(ty, c.prov))
+            lhs.upperBounds ::= newBound // update the bound
+            lhs.lowerBounds.foreach(recThrough(_, rhs, lhs)) // propagate from the bound
+          case (lhs, rhs: TypeVariable) =>
+            println(s"NEW $rhs LB (${lhs.level})")
+            // println(lhs, rhs, lhs.level, rhs.level)
+            val newBound = (cctx._1 ::: cctx._2.reverse).foldLeft(lhs)((ty, c) =>
+              if (c.prov is noProv) ty else mkProxy(ty, c.prov))
+            rhs.lowerBounds ::= newBound // update the bound
+            rhs.upperBounds.foreach(recThrough(lhs, _, rhs)) // propagate from the bound
+            //  */
             
             
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
@@ -941,8 +972,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             //    where rv is the rigidified variables.
             // Now, since there may be recursive bounds, we do the same
             //    but through the indirection of a type variable tv2:
-            tv2.lowerBounds ::= tv.lowerBounds.map(freshen).foldLeft(rv: ST)(_ & _)
-            tv2.upperBounds ::= tv.upperBounds.map(freshen).foldLeft(rv: ST)(_ | _)
+            
+            // tv2.lowerBounds ::= tv.lowerBounds.map(freshen).foldLeft(rv: ST)(_ & _)
+            // tv2.upperBounds ::= tv.upperBounds.map(freshen).foldLeft(rv: ST)(_ | _)
+            tv2.lowerBounds ::= tv.lowerBounds.map(freshenImpl(_, below = tv.level)).foldLeft(rv: ST)(_ & _)
+            tv2.upperBounds ::= tv.upperBounds.map(freshenImpl(_, below = tv.level)).foldLeft(rv: ST)(_ | _)
+            
             tv2
           } else {
             freshened += tv -> rv
@@ -951,8 +986,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         case None =>
           val v = freshVar(tv.prov, S(tv), tv.nameHint)(if (tv.level > below) tv.level else lvl)
           freshened += tv -> v
-          v.lowerBounds = tv.lowerBounds.mapConserve(freshen)
-          v.upperBounds = tv.upperBounds.mapConserve(freshen)
+          // v.lowerBounds = tv.lowerBounds.mapConserve(freshen)
+          // v.upperBounds = tv.upperBounds.mapConserve(freshen)
+          v.lowerBounds = tv.lowerBounds.mapConserve(freshenImpl(_, below = tv.level)) // FIXME or v.level?
+          v.upperBounds = tv.upperBounds.mapConserve(freshenImpl(_, below = tv.level))
           v
       }
       case t @ TypeBounds(lb, ub) =>

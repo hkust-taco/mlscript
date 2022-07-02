@@ -44,7 +44,7 @@ f {} {}
 
 
 def f n m = n 0
-//│ f: (0 -> 'a) -> anything -> 'a
+//│ f: (0 -> 'a) -> (forall 'a. anything -> 'a)
 //│  = [Function: f1]
 
 :e // due to tapping

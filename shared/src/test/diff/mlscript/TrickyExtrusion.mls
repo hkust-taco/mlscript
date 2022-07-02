@@ -27,61 +27,155 @@ test f = (f 0, f True)
 test f =
   let r x = f x
   in (r 0, r True)
-//│ test: ((0 | true) -> 'a) -> ('a, 'a,)
+//│ test: (nothing -> anything) -> (nothing, nothing,)
 //│     = [Function: test1]
 
 // Same example, a little elaborated
 test f =
   let r = fun x -> fun g -> (g x, f x)
   in (r 0 inc, r True not)
-//│ test: ((0 | true) -> 'a) -> ((int, 'a,), (bool, 'a,),)
+//│ test: (nothing -> anything) -> ((int, nothing,), (bool, nothing,),)
 //│     = <no result>
 //│       inc is not implemented
 
 
 :GeneralizeCurriedFunctions
 
+:d
+test f =
+  let r x = f x
+  in r 0
+//│ 1. Typing term ((f,) => (let r = ((x,) => (f (x,))); (r (0,))))   None
+//│ | TYPING POLY LAM
+//│ | 2. Typing pattern (f,)   Some(0)
+//│ | | 2. Typing pattern f   Some(0)
+//│ | | 2. : α90''
+//│ | 2. : (α90'',)
+//│ | 2. Typing term (let r = ((x,) => (f (x,))); (r (0,)))   Some(0)
+//│ | | 3. Typing term ((x,) => (f (x,)))   None
+//│ | | | TYPING POLY LAM
+//│ | | | 4. Typing pattern (x,)   Some(0)
+//│ | | | | 4. Typing pattern x   Some(0)
+//│ | | | | 4. : α91''''
+//│ | | | 4. : (α91'''',)
+//│ | | | 4. Typing term (f (x,))   Some(0)
+//│ | | | | 4. Typing term f   Some(0)
+//│ | | | | 4. : α90''
+//│ | | | | 4. Typing term x   Some(0)
+//│ | | | | 4. : α91''''
+//│ | | | | CONSTRAIN α90'' <! (α91'''' -> α92'''')
+//│ | | | |   where 
+//│ | | | | 4. C α90'' <! (α91'''' -> α92'''')
+//│ | | | | | NEW α90'' UB (4)
+//│ | | | 4. : α92''''
+//│ | | 3. : ‹∀ 3. (α91'''' -> α92'''')›
+//│ | | 2. Typing term (r (0,))   Some(0)
+//│ | | | 2. Typing term r   Some(0)
+//│ | | | 2. : ‹∀ 2. ‹∀ 3. (α91'''' -> α92'''')››
+//│ | | | 2. Typing term 0   Some(0)
+//│ | | | 2. : 0<int,number>
+//│ | | | CONSTRAIN ‹∀ 2. ‹∀ 3. (α91'''' -> α92'''')›› <! (0<int,number> -> α93'')
+//│ | | |   where 
+//│ | | | 2. C ‹∀ 2. ‹∀ 3. (α91'''' -> α92'''')›› <! (0<int,number> -> α93'')
+//│ | | | | 2. C ‹∀ 3. (α91'''' -> α92'''')› <! (0<int,number> -> α93'')
+//│ | | | | | INST [3]   ‹∀ 3. (α91'''' -> α92'''')›
+//│ | | | | |   where  
+//│ | | | | | TO [2] ~>  (α91_94'' -> α92_95'')
+//│ | | | | |   where  
+//│ | | | | | 2. C (α91_94'' -> α92_95'') <! (0<int,number> -> α93'')
+//│ | | | | | | 2. C (0<int,number>,) <! (α91_94'',)
+//│ | | | | | | | 2. C 0<int,number> <! α91_94''
+//│ | | | | | | | | NEW α91_94'' LB (0)
+//│ | | | | | | 2. C α92_95'' <! α93''
+//│ | | | | | | | NEW α92_95'' UB (2)
+//│ | | 2. : α93''
+//│ | 2. : α93''
+//│ 1. : ‹∀ 1. (α90'' -> α93'')›
+//│ ⬤ Typed as: ‹∀ 0. ‹∀ 1. (α90'' -> α93'')››
+//│  where: 
+//│ 		α90'' <: (α91'''' -> α92'''')
+//│ test: (nothing -> anything) -> nothing
+//│     = [Function: test2]
+
+
+
 test f =
   let r x = f x
   in (r 0, r True)
-//│ test: ((0 | true) -> 'a) -> ('a, 'a,)
-//│     = [Function: test2]
+//│ test: (nothing -> anything) -> (nothing, nothing,)
+//│     = [Function: test3]
+
+:d
+test id
+//│ 0. Typing term (test (id,))   None
+//│ | 0. Typing term test   None
+//│ | 0. : ‹∀ 0. ‹∀ 1. (α100'' -> (α103'', α106'',))››
+//│ | 0. Typing term id   None
+//│ | 0. : ‹∀ 0. (α19' -> α19')›
+//│ | CONSTRAIN ‹∀ 0. ‹∀ 1. (α100'' -> (α103'', α106'',))›› <! (‹∀ 0. (α19' -> α19')› -> α114)
+//│ |   where 
+//│ 		α100'' <: ((α101'''',) -> α102'''')
+//│ | 0. C ‹∀ 0. ‹∀ 1. (α100'' -> (α103'', α106'',))›› <! (‹∀ 0. (α19' -> α19')› -> α114)
+//│ | | 0. C ‹∀ 1. (α100'' -> (α103'', α106'',))› <! (‹∀ 0. (α19' -> α19')› -> α114)
+//│ | | | INST [1]   ‹∀ 1. (α100'' -> (α103'', α106'',))›
+//│ | | |   where  
+//│ 		α100'' <: ((α101'''',) -> α102'''')
+//│ | | | TO [0] ~>  (α100_115 -> (α103_118, α106_119,))
+//│ | | |   where  
+//│ 		α100_115 <: ((α101_116'''',) -> α102_117'''')
+//│ | | | 0. C (α100_115 -> (α103_118, α106_119,)) <! (‹∀ 0. (α19' -> α19')› -> α114)
+//│ | | | | 0. C (‹∀ 0. (α19' -> α19')›,) <! (α100_115,)
+//│ | | | | | 0. C ‹∀ 0. (α19' -> α19')› <! α100_115
+//│ | | | | | | NEW α100_115 LB (0)
+//│ | | | | | | 0. C ‹∀ 0. (α19' -> α19')› <! ((α101_116'''',) -> α102_117'''')
+//│ | | | | | | | 0. C ‹∀ 0. (α19' -> α19')› <! ((α101_116'''',) -> α102_117'''')
+//│ | | | | | | | | 0. C ‹∀ 0. (α19' -> α19')› <! ((α101_116'''',) -> α102_117'''')
+//│ | | | | | | | | | 0. C ‹∀ 0. (α19' -> α19')› <! ((α101_116'''',) -> α102_117'''')
+//│ | | | | | | | | | | 0. C ‹∀ 0. (α19' -> α19')› <! ((α101_116'''',) -> α102_117'''')
+//│ | | | | | | | | | | | INST [0]   ‹∀ 0. (α19' -> α19')›
+//│ | | | | | | | | | | |   where  
+//│ | | | | | | | | | | | TO [0] ~>  (α19_120 -> α19_120)
+//│ | | | | | | | | | | |   where  
+//│ | | | | | | | | | | | 0. C (α19_120 -> α19_120) <! ((α101_116'''',) -> α102_117'''')
+//│ | | | | | | | | | | | | 0. C (α101_116'''',) <! (α19_120,)
+//│ | | | | | | | | | | | | | 0. C (α101_116'''',) <! (α19_120,)
+//│ | | | | | | | | | | | | | | 0. C α101_116'''' <! α19_120
+//│ | | | | | | | | | | | | | | | 0. C α101_116'''' <! α19_120
+//│ | | | | | | | | | | | | | | | | NEW α101_116'''' UB (0)
+//│ | | | | | | | | | | | | 0. C α19_120 <! α102_117''''
+//│ | | | | | | | | | | | | | NEW α19_120 UB (4)
+//│ | | | | 0. C (α103_118, α106_119,) <! α114
+//│ | | | | | NEW α114 LB (0)
+//│ 0. : α114
+//│ ⬤ Typed as: ‹∀ 0. α114›
+//│  where: 
+//│ 		α114 :> (α103_118, α106_119,)
+//│ res: (nothing, nothing,)
+//│    = [ 0, true ]
+
+// :e
+(test id)._1 + 1
+not (test id)._2
+//│ res: int
+//│    = NaN
+//│ res: bool
+//│    = true
 
 :e
-(test id)._1 + 1
-not (test id)._1 + 1
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.51: 	(test id)._1 + 1
-//│ ║        	^^^^^^^^^^^^^^
-//│ ╟── reference of type `true` is not an instance of type `int`
-//│ ║  l.4: 	def True = true
-//│ ║       	           ^^^^
-//│ ╟── but it flows into field selection with expected type `int`
-//│ ║  l.51: 	(test id)._1 + 1
-//│ ╙──      	^^^^^^^^^^^^
-//│ res: error | int
+not (test id)._1
+//│ res: bool
+//│    = true
+
+:e
+(test id)._2 + 1
+//│ res: int
 //│    = NaN
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.52: 	not (test id)._1 + 1
-//│ ║        	^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `bool`
-//│ ║  l.46: 	  in (r 0, r True)
-//│ ║        	        ^
-//│ ╟── but it flows into field selection with expected type `bool`
-//│ ║  l.52: 	not (test id)._1 + 1
-//│ ╙──      	    ^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.52: 	not (test id)._1 + 1
-//│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `bool` is not an instance of type `int`
-//│ ║  l.52: 	not (test id)._1 + 1
-//│ ╙──      	^^^^^^^^^^^^^^^^
-//│ res: error | int
-//│    = 2
+
 
 // * Even works with recursive definition because the constrained type is strictly local to the body!
 rec def test f =
   let r x = f x
   in (r 0, r True)
-//│ test: ((0 | true) -> 'a) -> ('a, 'a,)
-//│     = [Function: test3]
+//│ test: (nothing -> anything) -> (nothing, nothing,)
+//│     = [Function: test4]
+

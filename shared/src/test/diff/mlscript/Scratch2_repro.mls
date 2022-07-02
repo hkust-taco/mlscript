@@ -7,15 +7,13 @@
 // def s n = fun f -> fun x -> (n f x)
 // def s n = fun f -> fun x -> (n f x)
 def s n = fun f -> n f
-//│ s: ('a -> 'b) -> 'a -> 'b
+//│ s: ('a -> 'b) -> (forall 'a, 'b. 'a -> 'b)
 //│  = [Function: s]
 
 :ns
 s
-//│ res: forall 'a, 'b, 'c. 'a -> (forall 'd, 'e. 'd -> 'e)
+//│ res: forall 'a, 'b, 'c. 'a -> (forall 'b, 'c. 'b -> 'c)
 //│   where
-//│     'e :> 'c
-//│     'd <: 'b
 //│     'a <: 'b -> 'c
 //│    = [Function: s]
 
@@ -45,20 +43,17 @@ rec def to_ch n =
 
 :ns
 to_ch
-//│ res: forall 'a, 'b, 'c, 'd, 'e. forall 'to_ch, 'f, 'a, 'g, 'b, 'c, 'd, 'e. 'to_ch
+//│ res: forall 'a, 'b, 'c. forall 'to_ch, 'd, 'a, 'e, 'b, 'c. 'to_ch
 //│   where
-//│     'to_ch :> 'f -> 'g
-//│            <: 'f -> 'a
-//│     'g :> forall 'h, 'i. 'h -> 'i
+//│     'to_ch :> 'd -> 'e
+//│            <: 'd -> 'a
+//│     'e :> forall 'f, 'g. 'f -> 'g
 //│        <: 'a
-//│     'a :> forall 'h, 'i. 'h -> 'i
+//│     'a :> forall 'f, 'g. 'f -> 'g
 //│        <: 'b
-//│     'b :> forall 'h, 'i. 'h -> 'i
-//│        <: 'c -> 'd
-//│     'i :> 'd
+//│     'b :> forall 'f, 'g. 'f -> 'g
+//│        <: 'h -> 'i
 //│     'h <: 'c
-//│     'c <: 'e
-//│     'e <: 'c
 //│    = [Function: to_ch]
 
 :re

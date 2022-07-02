@@ -15,7 +15,7 @@ def t (z: Sid) = (fun a -> z) : forall 'a 'b. 'b -> 'a -> 'a
 // (* Une seule instance, mais polymorphe. *)
 // let t z = ( (fun a -> z) : ['a,'b] 'b -> 'a -> 'a );;
 def t z = (fun a -> z) : forall 'a 'b. 'b -> 'a -> 'a
-//│ t: (nothing -> anything) -> (forall 'a. anything -> 'a -> 'a)
+//│ t: (‘a -> ‘a) -> (forall 'a. anything -> 'a -> 'a)
 //│  = [Function: t1]
 
 def t z = fun a -> z
@@ -48,9 +48,9 @@ def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 def succ' n = fun f -> fun x -> f (n f x)
 //│ succ_ty: ChurchInt -> ChurchInt
 //│        = <missing implementation>
-//│ succ: ChurchInt -> (forall 'b. ('a -> 'b & 'a -> 'a) -> 'a -> 'b)
+//│ succ: ChurchInt -> (forall 'a, 'b. ('a -> 'b & 'a -> 'a) -> (forall 'a, 'b. 'a -> 'b))
 //│     = [Function: succ]
-//│ succ': ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│ succ': ('a -> 'b -> 'c) -> (forall 'a, 'c, 'd. ('c -> 'd & 'a) -> (forall 'b, 'd. 'b -> 'd))
 //│      = [Function: succ]
 
 // * Note: without constrained types we wouldn't get the principal type of succ'
@@ -58,18 +58,18 @@ def succ' n = fun f -> fun x -> f (n f x)
 // * Require distrib – see Scratch3
 succ_ty = succ
 succ_ty = succ'
-//│ ChurchInt -> (forall 'b. ('a -> 'b & 'a -> 'a) -> 'a -> 'b)
+//│ ChurchInt -> (forall 'a, 'b. ('a -> 'b & 'a -> 'a) -> (forall 'a, 'b. 'a -> 'b))
 //│   <:  succ_ty:
 //│ ChurchInt -> ChurchInt
 //│        = [Function: succ]
-//│ ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│ ('a -> 'b -> 'c) -> (forall 'a, 'c, 'd. ('c -> 'd & 'a) -> (forall 'b, 'd. 'b -> 'd))
 //│   <:  succ_ty:
 //│ ChurchInt -> ChurchInt
 //│        = [Function: succ]
 
 // :d
 succ'
-//│ res: ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│ res: ('a -> 'b -> 'c) -> (forall 'a, 'c, 'd. ('c -> 'd & 'a) -> (forall 'b, 'd. 'b -> 'd))
 //│    = [Function: succ]
 
 // :d
@@ -87,7 +87,7 @@ succ' {}
 //│ ╟── from reference:
 //│ ║  l.48: 	def succ' n = fun f -> fun x -> f (n f x)
 //│ ╙──      	                                   ^
-//│ res: (nothing -> 'a) -> anything -> 'a | error
+//│ res: (nothing -> 'a) -> (forall 'a. anything -> 'a) | error
 //│    = [Function: succ]
 
 :e // due to tapping
@@ -149,7 +149,7 @@ succ' {} {} {}
 //│    = [Function: succ]
 
 fun x -> succ' x x x x x x x x x
-//│ res: ('a -> 'b -> 'b -> 'b -> 'b -> 'b -> 'b -> 'c & 'b -> 'b -> 'a & 'b) -> 'c
+//│ res: (nothing -> anything & nothing -> nothing -> anything) -> nothing
 //│    = [Function: succ]
 
 
@@ -169,7 +169,7 @@ def to_church_ty: int -> ChurchInt
 rec def to_church_1 n =
   if n == 0 then zero
   else succ (to_church_1 (n - 1))
-//│ to_church_1: int -> (forall 'a, 'b. ('a -> 'b & 'a -> 'a) -> (forall 'b. ('b & 'a) -> 'b))
+//│ to_church_1: int -> (forall 'a, 'b. ('a -> 'b & 'a -> 'a) -> (forall 'a, 'b, 'c. ('c & 'a) -> ('c | 'b)))
 //│            = [Function: to_church_1]
 
 rec def to_church_1_t n =
@@ -195,7 +195,7 @@ rec def to_church_1_tt n =
 //   succ (to_church_1 n)
 rec def wat =
   succ wat
-//│ wat: ('a -> 'b & 'a -> 'a) -> 'a -> 'b
+//│ wat: ('a -> 'b & 'a -> 'a) -> (forall 'a, 'b. 'a -> 'b)
 //│ Runtime error:
 //│   ReferenceError: wat is not defined
 
@@ -204,12 +204,12 @@ rec def wat =
 :ng
 rec def nani =
   succ' nani
-//│ nani: ('a -> 'b & 'a -> 'a) -> anything -> 'b
+//│ nani: (nothing -> 'a) -> (forall 'a. anything -> 'a)
 
 // * The one with annotated rec occurrence works...
 def to_church_1_repro n =
   succ (to_church_ty n)
-//│ to_church_1_repro: int -> (forall 'a, 'b. ('a -> 'b & 'a -> 'a) -> 'a -> 'b)
+//│ to_church_1_repro: int -> (forall 'a, 'b. ('a -> 'b & 'a -> 'a) -> (forall 'a, 'b. 'a -> 'b))
 //│                  = <no result>
 //│                    to_church_ty is not implemented
 
@@ -225,7 +225,7 @@ rec def to_church_1_st n =
 rec def to_church_2 n =
   if n == 0 then zero
   else succ' (to_church_2 (n - 1))
-//│ to_church_2: int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'a. ('a & 'b) -> 'a))
+//│ to_church_2: int -> (forall 'a. (nothing -> 'a) -> (forall 'a, 'b. 'b -> ('b | 'a)))
 //│            = [Function: to_church_1_st]
 
 // :e // FIXME should be caught by cycle checker!
@@ -233,7 +233,7 @@ rec def to_church_2 n =
 :ng // FIXME codegen: `ReferenceError: to_church_2 is not defined`
 // :e // due to tapping
 to_church_ty = to_church_2
-//│ int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'a. ('a & 'b) -> 'a))
+//│ int -> (forall 'a. (nothing -> 'a) -> (forall 'a, 'b. 'b -> ('b | 'a)))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 
@@ -247,39 +247,7 @@ to_church_ty = to_church_2
 rec def to_church_3 n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
-//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.247: 	rec def to_church_3 n =
-//│ ║         	                    ^^^
-//│ ║  l.248: 	  if n == 0 then fun f -> fun x -> x
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.249: 	  else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a676` is not an instance of type `'a675`
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                        ^^
-//│ ╟── from reference:
-//│ ║  l.249: 	  else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
-//│ ╙──       	                                                                ^
-//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.247: 	rec def to_church_3 n =
-//│ ║         	                    ^^^
-//│ ║  l.248: 	  if n == 0 then fun f -> fun x -> x
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.249: 	  else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a675` is not an instance of type `'a`
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                        ^^
-//│ ╟── but it flows into application with expected type `‘a`
-//│ ║  l.249: 	  else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
-//│ ║         	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──      	                        ^^
-//│ to_church_3: int -> (('a | ‘a675 | ‘a676) -> 'b & ('a | ‘a675 | ‘a676) -> (‘a675 & 'a)) -> (forall 'c. (‘a675 & 'c & 'a) -> (‘a675 | 'c | 'b))
+//│ to_church_3: int -> ('a -> 'b & 'a -> 'a) -> (forall 'c. ('c & 'a) -> ('c | 'b))
 //│            = [Function: to_church_3]
 
 // (* Ne Marche Pas *)
@@ -290,7 +258,7 @@ rec def to_church_3 n =
 rec def to_church_4 n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church_4 (n - 1)) f x) : ChurchInt
-//│ to_church_4: int -> ((ChurchInt | 'a) -> (anything -> nothing) -> nothing -> anything) -> (forall 'b. ('b & 'a) -> (ChurchInt | 'b))
+//│ to_church_4: int -> ((ChurchInt | 'a) -> anything) -> (forall 'b. ('b & 'a) -> (ChurchInt | 'b))
 //│            = [Function: to_church_4]
 
 
@@ -309,7 +277,7 @@ rec def to_church_5 n =
 
 // :e // FIXME?
 to_church_ty = to_church_1
-//│ int -> (forall 'a, 'b. ('a -> 'b & 'a -> 'a) -> (forall 'b. ('b & 'a) -> 'b))
+//│ int -> (forall 'a, 'b. ('a -> 'b & 'a -> 'a) -> (forall 'a, 'b, 'c. ('c & 'a) -> ('c | 'b)))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_church_1]
@@ -337,63 +305,24 @@ to_church_ty = to_church_1_st
 :ng
 // :e // due to tapping
 to_church_ty = to_church_2
-//│ int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'a. ('a & 'b) -> 'a))
+//│ int -> (forall 'a. (nothing -> 'a) -> (forall 'a, 'b. 'b -> ('b | 'a)))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 
 :e // FIXME?
 to_church_ty = to_church_3
-//│ int -> (('a | ‘a675 | ‘a676) -> 'b & ('a | ‘a675 | ‘a676) -> (‘a675 & 'a)) -> (forall 'c. (‘a675 & 'c & 'a) -> (‘a675 | 'c | 'b))
+//│ int -> ('a -> 'b & 'a -> 'a) -> (forall 'c. ('c & 'a) -> ('c | 'b))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.345: 	to_church_ty = to_church_3
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a676` is not an instance of type `'a`
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──      	                        ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.345: 	to_church_ty = to_church_3
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a675` is not an instance of type `'a`
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──      	                        ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.345: 	to_church_ty = to_church_3
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a` is not an instance of type `'a`
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                        ^^
-//│ ╟── from application:
-//│ ║  l.249: 	  else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
-//│ ╙──       	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.345: 	to_church_ty = to_church_3
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a` is not an instance of type `'a675`
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──      	                        ^^
 //│             = [Function: to_church_3]
 
 :e
 to_church_ty = to_church_4
-//│ int -> ((ChurchInt | 'a) -> (anything -> nothing) -> nothing -> anything) -> (forall 'b. ('b & 'a) -> (ChurchInt | 'b))
+//│ int -> ((ChurchInt | 'a) -> anything) -> (forall 'b. ('b & 'a) -> (ChurchInt | 'b))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.391: 	to_church_ty = to_church_4
+//│ ║  l.320: 	to_church_ty = to_church_4
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `(?a -> ?a) -> ?a -> ?a` is not an instance of type `'a`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -401,18 +330,6 @@ to_church_ty = to_church_4
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──      	                        ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.391: 	to_church_ty = to_church_4
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a` is not a function
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from function type:
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                            ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── from application:
-//│ ║  l.292: 	  else fun f -> fun x -> f ((to_church_4 (n - 1)) f x) : ChurchInt
-//│ ╙──       	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│             = [Function: to_church_4]
 
 // :e
@@ -447,7 +364,7 @@ rec def to_church_ty n =
 def to_church_ty n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church_ty (n - 1)) f x)
-//│ int -> (forall 'a, 'b. ('a -> 'b & 'a -> 'a) -> (forall 'c. ('c & 'a) -> ('c | 'b)))
+//│ int -> (forall 'a, 'b. ('a -> 'b & 'a -> 'a) -> (forall 'a, 'b. ('b & 'a) -> 'b))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_church_ty7]
@@ -472,49 +389,19 @@ def tc n = to_church_2 n : ChurchInt // Requires :RecursiveTypes
 
 // FIXME stupid type
 def tc n = to_church_3 n
-//│ tc: int -> (('a | ‘a675 | ‘a676) -> 'b & ('a | ‘a675 | ‘a676) -> (‘a675 & 'a)) -> (forall 'c. (‘a675 & 'a & 'c) -> (‘a675 | 'c | 'b))
+//│ tc: int -> ('a -> 'b & 'a -> 'a) -> (forall 'c. ('a & 'c) -> ('c | 'b))
 //│   = [Function: tc3]
 // FIXME
 tc 1 id
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.478: 	tc 1 id
-//│ ║         	^^^^^^^
-//│ ╟── type `‘a6751267` is not an instance of type `'a`
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                        ^^
-//│ ╟── from application:
-//│ ║  l.249: 	  else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
-//│ ╙──       	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ res: 'a -> 'a | error
+//│ res: 'a -> 'a
 //│    = [Function (anonymous)]
 // FIXME
 tc: int -> ChurchInt
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.494: 	tc: int -> ChurchInt
-//│ ║         	^^
-//│ ╟── type `‘a676` is not an instance of type `'a`
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──      	                        ^^
 //│ res: int -> ChurchInt
 //│    = [Function: tc3]
 
 // FIXME
 def tc n = to_church_3 n : ChurchInt
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.508: 	def tc n = to_church_3 n : ChurchInt
-//│ ║         	           ^^^^^^^^^^^^^
-//│ ╟── type `‘a676` is not an instance of type `'a`
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──      	                        ^^
 //│ tc: int -> ChurchInt
 //│   = [Function: tc4]
 

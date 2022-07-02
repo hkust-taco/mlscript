@@ -13,7 +13,7 @@ def z f x = x
 //│  = [Function: z]
 
 def s n f x = f (n f x)
-//│ s: ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│ s: ('a -> 'b -> 'c) -> (forall 'a, 'c, 'd. ('c -> 'd & 'a) -> (forall 'b, 'd. 'b -> 'd))
 //│  = [Function: s]
 
 
@@ -30,45 +30,9 @@ def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M
 // :e // works with quantif extrus
 :e // due to tapping
 succ = s
-//│ ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│ ('a -> 'b -> 'c) -> (forall 'a, 'c, 'd. ('c -> 'd & 'a) -> (forall 'b, 'd. 'b -> 'd))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.32: 	succ = s
-//│ ║        	^^^^^^^^
-//│ ╟── type `‘M106` is not an instance of type `'M`
-//│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ║        	                                                           ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ║        	                                                           ^^
-//│ ╟── from quantified type variable:
-//│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ╙──      	                  ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.32: 	succ = s
-//│ ║        	^^^^^^^^
-//│ ╟── type `‘M109` is not an instance of type `'M106`
-//│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ║        	                                                           ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ║        	                                                           ^^
-//│ ╟── from reference:
-//│ ║  l.15: 	def s n f x = f (n f x)
-//│ ╙──      	                     ^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.32: 	succ = s
-//│ ║        	^^^^^^^^
-//│ ╟── type `‘M109` is not an instance of type `'M`
-//│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ║        	                                                           ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ║        	                                                           ^^
-//│ ╟── from reference:
-//│ ║  l.15: 	def s n f x = f (n f x)
-//│ ╙──      	                     ^
 //│     = [Function: s]
 
 
@@ -79,7 +43,7 @@ def succ0: forall 'M. (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (('M -> 'M) -> ('
 //│      = <missing implementation>
 
 succ0 = s
-//│ ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│ ('a -> 'b -> 'c) -> (forall 'a, 'c, 'd. ('c -> 'd & 'a) -> (forall 'b, 'd. 'b -> 'd))
 //│   <:  succ0:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> ('M -> 'M) -> 'M -> 'M
 //│      = [Function: s]
@@ -90,60 +54,24 @@ succ0 = s
 // :e // works with quantif extrus
 :e // due to tapping
 def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
-//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'a. ('N0 -> 'a & 'N0 -> 'N0) -> 'N0 -> 'a)
+//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'N0, 'a. ('N0 -> 'a & 'N0 -> 'N0) -> (forall 'N0, 'a. 'N0 -> 'a))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.92: 	def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘M220` is not an instance of type `'M`
-//│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ║        	                                                           ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ║        	                                                           ^^
-//│ ╟── from quantified type variable:
-//│ ║  l.92: 	def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
-//│ ╙──      	                     ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.92: 	def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘M223` is not an instance of type `'M`
-//│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ║        	                                                           ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ║        	                                                           ^^
-//│ ╟── from reference:
-//│ ║  l.92: 	def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
-//│ ╙──      	                                                                               ^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.92: 	def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘M223` is not an instance of type `'M220`
-//│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ║        	                                                           ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ║        	                                                           ^^
-//│ ╟── from reference:
-//│ ║  l.92: 	def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
-//│ ╙──      	                                                                               ^
 //│     = [Function: succ2]
 
 
 
 // :d
 n1 = s z
-//│ n1: ('a -> 'b) -> 'a -> 'b
+//│ n1: (nothing -> 'a) -> (forall 'a. anything -> 'a)
 //│   = [Function (anonymous)]
 
 n2 = s (s z)
-//│ n2: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ n2: (nothing -> 'a) -> (forall 'a. anything -> 'a)
 //│   = [Function (anonymous)]
 
 n3 = s (s (s z))
-//│ n3: ('a -> 'b & 'c -> 'a & 'd -> 'c) -> 'd -> 'b
+//│ n3: (nothing -> 'a) -> (forall 'a. anything -> 'a)
 //│   = [Function (anonymous)]
 
 // def wrap: 'WRA -> 'WRA
@@ -156,16 +84,16 @@ wrap x = { x }
 
 // :d
 n1w = n1 wrap
-//│ n1w: 'a -> {x: 'a}
+//│ n1w: anything -> nothing
 //│    = [Function (anonymous)]
 
 // :d
 n1w 0
-//│ res: {x: 0}
+//│ res: nothing
 //│    = { x: 0 }
 
 n1 wrap 0
-//│ res: {x: 0}
+//│ res: nothing
 //│    = { x: 0 }
 
 res.x + 1
@@ -173,7 +101,7 @@ res.x + 1
 //│    = 1
 
 n2 wrap 0
-//│ res: {x: {x: 0}}
+//│ res: nothing
 //│    = { x: { x: 0 } }
 
 res.x.x + 1
@@ -181,7 +109,7 @@ res.x.x + 1
 //│    = 1
 
 n3 wrap 0
-//│ res: {x: {x: {x: 0}}}
+//│ res: nothing
 //│    = { x: { x: { x: 0 } } }
 
 res.x.x.x + 1
@@ -193,7 +121,7 @@ res.x.x.x + 1
 :DistributeForalls
 
 succ = s
-//│ ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│ ('a -> 'b -> 'c) -> (forall 'a, 'c, 'd. ('c -> 'd & 'a) -> (forall 'b, 'd. 'b -> 'd))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: s]
@@ -214,7 +142,7 @@ z: ChurchInt
 s: ChurchInt -> ChurchInt
 //│ res: ChurchInt -> ChurchInt
 //│    = [Function: s]
-//│ constrain calls  : 72
+//│ constrain calls  : 47
 //│ annoying  calls  : 0
 //│ subtyping calls  : 0
 

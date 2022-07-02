@@ -34,7 +34,7 @@ def g x = x (fun x -> x)
 
 
 def g x y = x (fun x -> y x)
-//│ g: (('a -> 'b) -> 'c) -> ('a -> 'b) -> 'c
+//│ g: ((forall 'a, 'b. 'a -> 'b) -> 'c) -> ('a -> 'b) -> 'c
 //│  = [Function: g1]
 
 
@@ -48,8 +48,8 @@ self self
 //│ ║  l.46: 	self self
 //│ ║        	^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α95' -> α96')›  <:  α95_106    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α95' -> α96')›  <:  α95'
+//│ ╟── this constraint:  ‹∀ 0. (α91' -> α92')›  <:  α91_102    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α91' -> α92')›  <:  α91'
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded

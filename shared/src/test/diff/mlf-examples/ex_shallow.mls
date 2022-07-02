@@ -33,18 +33,18 @@ def church_zero = fun f -> id
 // (* church_un is like apply *)
 // let church_one = fun f x -> f x
 def church_one = fun f -> fun x -> f x
-//│ church_one: ('a -> 'b) -> 'a -> 'b
+//│ church_one: ('a -> 'b) -> (forall 'a, 'b. 'a -> 'b)
 //│           = [Function: church_one]
 
 // (* church_un is like apply_twice *)
 // let church_two = fun f x -> f (f x)
 def church_two = fun f -> fun x -> f (f x)
-//│ church_two: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ church_two: ('a -> 'b & 'c -> 'a) -> (forall 'b, 'c. 'c -> 'b)
 //│           = [Function: church_two]
 
 // let church_succ n = fun f x -> f (n f x)
 def church_succ n = fun f -> fun x -> f (n f x)
-//│ church_succ: ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│ church_succ: ('a -> 'b -> 'c) -> (forall 'a, 'c, 'd. ('c -> 'd & 'a) -> (forall 'b, 'd. 'b -> 'd))
 //│            = [Function: church_succ]
 
 // (* We build the a0 of the icfp version paper *)
@@ -73,15 +73,15 @@ def a0_ = a2_ a1
 //│ Defined type alias A1
 //│ a1: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
 //│   = [Function: a1]
-//│ a3: ((forall 'a, 'b, 'c. ('a -> 'b & 'c -> 'a) -> 'c -> 'b) -> 'd) -> anything -> 'd
+//│ a3: ((forall 'a, 'b, 'c. ('a -> 'b & 'c -> 'a) -> (forall 'b, 'c. 'c -> 'b)) -> 'd) -> (forall 'd. anything -> 'd)
 //│   = [Function: a3]
-//│ a2: A1 -> anything -> (forall 'a. ('b -> 'a & 'c -> 'b & 'd -> 'c) -> 'd -> 'a)
+//│ a2: A1 -> anything -> nothing
 //│   = [Function: a2]
-//│ a2_: A1 -> anything -> (forall 'a. ('b -> 'a & 'c -> 'b & 'd -> 'c) -> 'd -> 'a)
+//│ a2_: A1 -> anything -> nothing
 //│    = [Function: a2_]
-//│ a0: anything -> (forall 'a. ('b -> 'a & 'c -> 'b & 'd -> 'c) -> 'd -> 'a)
+//│ a0: anything -> nothing
 //│   = [Function (anonymous)]
-//│ a0_: anything -> (forall 'a. ('b -> 'a & 'c -> 'b & 'd -> 'c) -> 'd -> 'a)
+//│ a0_: anything -> nothing
 //│    = [Function (anonymous)]
 
 // let test0 = 
@@ -127,22 +127,13 @@ type A1_nat = forall 'a 'b. (('a & ChurchInt -> ChurchInt | ChurchInt -> ChurchI
 def a1_sid_to_nat (g: A1_sid) =
   let r = fun f -> g (fun (x: Sid) -> f x) in
   (r: A1_nat)
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.129: 	  (r: A1_nat)
-//│ ║         	   ^
-//│ ╟── type `‘b577` is not an instance of type `'b`
-//│ ║  l.118: 	type A1_nat = forall 'a 'b. (('a & ChurchInt -> ChurchInt | ChurchInt -> ChurchInt) -> 'b) -> 'b
-//│ ║         	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.118: 	type A1_nat = forall 'a 'b. (('a & ChurchInt -> ChurchInt | ChurchInt -> ChurchInt) -> 'b) -> 'b
-//│ ╙──       	                        ^^
 //│ a1_sid_to_nat: A1_sid -> A1_nat
 //│              = [Function: a1_sid_to_nat]
 
 def a1_sid_to_nat_ g =
   let r = fun f -> g (fun x -> f x) in
   r
-//│ a1_sid_to_nat_: (('a -> 'b) -> 'c) -> ('a -> 'b) -> 'c
+//│ a1_sid_to_nat_: ((forall 'a, 'b. 'a -> 'b) -> 'c) -> (forall 'a, 'b, 'c. ('a -> 'b) -> 'c)
 //│               = [Function: a1_sid_to_nat_]
 
 // (* the term is as above but abstract over sb and uses the coercion *)
@@ -198,11 +189,11 @@ type A1' = forall 'a. (('a | Sid) -> ('a | Sid)) -> ('a | Sid) -> ('a | Sid)
 // let a0' = a2' a1';;
 
 def either x y = if true then x else y
-//│ either: 'a -> (forall 'b. 'b -> ('a | 'b))
+//│ either: 'a -> (forall 'a. 'a -> 'a)
 //│       = [Function: either]
 
 def a1' = fun f -> fun x -> f (f (either id x))
-//│ a1': ('a -> 'b & (forall 'c, 'd. 'c -> 'c | 'd) -> 'a) -> 'd -> 'b
+//│ a1': ('a -> 'b & 'c -> 'a) -> (forall 'b, 'c. 'c -> 'b)
 //│    = [Function: either]
 
 def a2' (x: A1') =
@@ -211,8 +202,17 @@ def a2' (x: A1') =
     let _ = x y church_two in
     y church_succ
   ) a3
-//│ a2': A1' -> anything -> (forall 'a. ('b -> 'a & 'c -> 'b & 'd -> 'c) -> 'd -> 'a)
-//│    = [Function: either]
+//│ /!!!\ Uncaught error: java.lang.ClassCastException: mlscript.TyperDatatypes$TraitTag cannot be cast to mlscript.TyperDatatypes$TypeVariable
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$freshenAbove$7(NormalForms.scala:306)
+//│ 	at: scala.collection.StrictOptimizedSortedSetOps.map(StrictOptimizedSortedSetOps.scala:31)
+//│ 	at: scala.collection.StrictOptimizedSortedSetOps.map$(StrictOptimizedSortedSetOps.scala:30)
+//│ 	at: scala.collection.immutable.TreeSet.map(TreeSet.scala:39)
+//│ 	at: mlscript.NormalForms$Conjunct.freshenAbove(NormalForms.scala:306)
+//│ 	at: mlscript.NormalForms$DNF.$anonfun$rigidify$1(NormalForms.scala:465)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.NormalForms$DNF.rigidify(NormalForms.scala:465)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$11(ConstraintSolver.scala:119)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$11$adapted(ConstraintSolver.scala:95)
 
 def a2'_ x =
   let _ = x auto_ id in
@@ -220,35 +220,26 @@ def a2'_ x =
     let _ = x y church_two in
     y church_succ
   ) a3
-//│ a2'_: ((((forall 'a, 'b, 'c. ('a -> 'b & 'c -> 'a) -> 'c -> 'b) -> 'd) -> anything -> 'd) -> (forall 'a, 'b, 'c. ('a -> 'b & 'c -> 'a) -> 'c -> 'b) -> anything & (forall 'e, 'f. ('e -> 'f & 'e) -> 'f) -> (forall 'g. 'g -> 'g) -> anything) -> anything -> (forall 'h. ('i -> 'h & 'j -> 'i & 'k -> 'j) -> 'k -> 'h)
+//│ a2'_: (nothing -> (forall 'a, 'b, 'c. ('a -> 'b & 'c -> 'a) -> (forall 'b, 'c. 'c -> 'b)) -> anything & (forall 'd, 'e. ('d -> 'e & 'd) -> 'e) -> (forall 'f. 'f -> 'f) -> anything) -> anything -> nothing
 //│     = [Function: either]
 
 def a0' = a2' a1'
-//│ a0': anything -> (forall 'a. ('b -> 'a & 'c -> 'b & 'd -> 'c) -> 'd -> 'a)
+//│ ╔══[ERROR] identifier not found: a2'
+//│ ║  l.226: 	def a0' = a2' a1'
+//│ ╙──       	          ^^^
+//│ a0': error
 //│    = [Function: either]
 
 :e // works with quantif extrus
 def a0'_ = a2'_ a1'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.231: 	def a0'_ = a2'_ a1'
-//│ ║         	           ^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 2. (α67_1182''' -> α71_1183''')›  <:  α132_1160'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 2. (α67''' -> α71''')›  <:  α132''
-//│ a0'_: error
+//│ a0'_: anything -> nothing
 //│     = [Function: either]
 
 // * ^ Strangely, this one works with recursive types:
 :RecursiveTypes
 :e // FIXME?
 def a0'_ = a2'_ a1'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.244: 	def a0'_ = a2'_ a1'
-//│ ║         	           ^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 2. (α67_1289''' -> α71_1290''')›  <:  α132_1267'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 2. (α67''' -> α71''')›  <:  α132''
-//│ a0'_: anything -> (forall 'a. ('b -> 'a & 'c -> 'b & 'd -> 'c) -> 'd -> 'a) | error
+//│ a0'_: anything -> nothing
 //│     = [Function: either]
 :NoRecursiveTypes
 
