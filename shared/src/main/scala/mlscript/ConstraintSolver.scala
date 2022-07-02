@@ -19,7 +19,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   protected var currentConstrainingRun = 0
   
   // FIXME use dependency graph instead
-  val hasWrongLevelBounds: MutSet[TV] = MutSet.empty
+  // val hasWrongLevelBounds: MutSet[TV] = MutSet.empty
+  // val refersToWrongLevelVars: MutMap[TV, TV] = MutMap.empty
+  // val occursInWrongLevelVars: MutMap[TV, TV] = MutMap.empty
+  // val occursInWrongLevelVars: MutMap[TV, MutSet[TV]] = MutMap.empty.withDefault(_ => MutSet.empty)
+  val occursInWrongLevelVars: MutMap[TV, MutSet[TV]] = MutMap.empty
   
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
   // def constrain(lhs: SimpleType, rhs: SimpleType, extrusionContext: Opt[ExtrCtx])(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx): Unit = { val outerCtx = ctx ; {
@@ -461,7 +465,17 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val newBound = (cctx._1 ::: cctx._2.reverse).foldRight(rhs)((c, ty) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             lhs.upperBounds ::= newBound // update the bound
-            if (rhs.level > lhs.level) hasWrongLevelBounds += lhs
+            val tv = lhs
+            if (rhs.level > lhs.level) {
+              println(s"BAD LEVEL!")
+              // hasWrongLevelBounds += lhs
+              // refersToWrongLevelVars ++= lhs.getVars.iterator.filter(_.level > tv.level).map(tv -> _)
+              // occursInWrongLevelVars ++= lhs.getVars.iterator.filter(_.level > tv.level).map(_ -> tv)
+              lhs.getVars.iterator.filter(_.level > tv.level).foreach { wtv =>
+                println(s"  bad var: $wtv")
+                occursInWrongLevelVars.getOrElseUpdate(wtv, MutSet.empty) += tv
+              }
+            }
             lhs.lowerBounds.foreach(recThrough(_, rhs, lhs)) // propagate from the bound
           case (lhs, rhs: TypeVariable) =>
             println(s"NEW $rhs LB (${lhs.level})")
@@ -469,7 +483,17 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val newBound = (cctx._1 ::: cctx._2.reverse).foldLeft(lhs)((ty, c) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             rhs.lowerBounds ::= newBound // update the bound
-            if (lhs.level > rhs.level) hasWrongLevelBounds += rhs
+            val tv = rhs
+            if (lhs.level > rhs.level) {
+              println(s"BAD LEVEL!")
+              // hasWrongLevelBounds += rhs
+              // refersToWrongLevelVars ++= rhs.getVars.iterator.filter(_.level > tv.level).map(tv -> _)
+              // occursInWrongLevelVars ++= rhs.getVars.iterator.filter(_.level > tv.level).map(_ -> tv)
+              rhs.getVars.iterator.filter(_.level > tv.level).foreach { wtv =>
+                println(s"  bad var: $wtv")
+                occursInWrongLevelVars.getOrElseUpdate(wtv, MutSet.empty) += tv
+              }
+            }
             rhs.upperBounds.foreach(recThrough(lhs, _, rhs)) // propagate from the bound
             //  */
             
@@ -930,7 +954,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   /** Freshens all the type variables whose level is comprised in `(above, below]`
     *   or which have bounds and whose level is greater than `above`. */
   def freshenAbove(above: Int, ty: SimpleType, rigidify: Bool = false, below: Int = MaxLevel)
-        (implicit lvl: Int, freshened: MutMap[TV, ST]): SimpleType = {
+        // (implicit lvl: Int, freshened: MutMap[TV, ST]): SimpleType = {
+        (implicit lvl: Int, freshened: MutMap[TV, ST], raise: Raise=_ => ???, prov: TP=NoProv, ctx: Ctx=Ctx.empty, ectx: Opt[ExtrCtx]=N): SimpleType = {
     def freshenImpl(ty: SimpleType, below: Int): SimpleType =
     // (trace(s"FRESHEN $ty || $above .. $below  ${ty.level} ${ty.level <= above}")
     {
@@ -1027,18 +1052,41 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     // (r => s"=> $r"))
     val res = freshenImpl(ty, below)
     
-    hasWrongLevelBounds.foreach { wtv =>
-      val lbs = wtv.lowerBounds
-      val ubs = wtv.upperBounds
-      lbs.foreach { lb =>
-        if (lb.getVars.exists(freshened.contains))
-          wtv.lowerBounds ::= freshenImpl(lb, below)
-      }
-      ubs.foreach { ub =>
-        if (ub.getVars.exists(freshened.contains))
-          wtv.upperBounds ::= freshenImpl(ub, below)
-      }
-    }
+    // hasWrongLevelBounds.foreach { wtv =>
+    //   val lbs = wtv.lowerBounds
+    //   val ubs = wtv.upperBounds
+    //   lbs.foreach { lb =>
+    //     if (lb.getVars.exists(freshened.contains))
+    //       wtv.lowerBounds ::= freshenImpl(lb, below)
+    //   }
+    //   ubs.foreach { ub =>
+    //     if (ub.getVars.exists(freshened.contains))
+    //       wtv.upperBounds ::= freshenImpl(ub, below)
+    //   }
+    // }
+    println(freshened)
+    println(occursInWrongLevelVars)
+    // implicit val prov = NoProv
+    trace(s"FIXIN") {
+      val handled = MutSet.empty[TV]
+      freshened.keysIterator.foreach { ftv => occursInWrongLevelVars.getOrElse(ftv, Nil).foreach { wtv =>
+        handled.setAndIfUnset(wtv) {
+          val lbs = wtv.lowerBounds
+          val ubs = wtv.upperBounds
+          lbs.foreach { lb =>
+            if (lb.getVars.exists(freshened.contains))
+              // wtv.lowerBounds ::= freshenImpl(lb, below)
+              constrain(freshenImpl(lb, below), wtv)
+          }
+          ubs.foreach { ub =>
+            if (ub.getVars.exists(freshened.contains))
+              // wtv.upperBounds ::= freshenImpl(ub, below)
+              constrain(wtv, freshenImpl(ub, below))
+          }
+        }
+      }}
+    }()
+    
     
     res
   }

@@ -273,12 +273,14 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   case class RhsField(name: Var, ty: FieldType) extends RhsNf {
     def name_ty: Var -> FieldType = name -> ty
     def freshenAbove(lim: Int, rigidify: Bool)(implicit lvl: Level, freshened: MutMap[TV, ST]): RhsField =
+    // def freshenAbove(lim: Int, rigidify: Bool)(implicit lvl: Level, freshened: MutMap[TV, ST], ctx: Ctx, raise: Raise, p: TP, eCtx:Opt[ExtrCtx]): RhsField =
       // RhsField(name, self.freshenAbove(lim, ty, rigidify = rigidify))
       RhsField(name, ty.update(self.freshenAbove(lim, _, rigidify = rigidify), self.freshenAbove(lim, _, rigidify = rigidify)))
     override def toString: Str = s"{$name:$ty}"
   }
   case class RhsBases(tags: Ls[ObjectTag], rest: Opt[MiscBaseType \/ RhsField], trefs: SortedMap[TypeName, TypeRef]) extends RhsNf {
     def freshenAbove(lim: Int, rigidify: Bool)(implicit lvl: Level, freshened: MutMap[TV, ST]): RhsBases =
+    // def freshenAbove(lim: Int, rigidify: Bool)(implicit lvl: Level, freshened: MutMap[TV, ST], ctx: Ctx, raise: Raise, p: TP, eCtx:Opt[ExtrCtx]): RhsBases =
       RhsBases(tags, rest.map(_ match {
         case L(v) => L(v.freshenAboveImpl(lim, rigidify))
         case R(v) => R(v.freshenAbove(lim, rigidify))
