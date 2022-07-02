@@ -1,0 +1,58 @@
+
+
+
+
+def foo: (forall 'a. 'a -> 'a) -> int
+//│ foo: (forall 'a. 'a -> 'a) -> int
+//│    = <missing implementation>
+
+foo f = f 42
+//│ (42 -> 'a) -> 'a
+//│   <:  foo:
+//│ (forall 'a. 'a -> 'a) -> int
+//│    = [Function: foo]
+
+// :d
+foo id
+//│ res: int
+//│    = 42
+
+// Notice `f` is passed an arg of locally-quantified type 'a, which is extruded to `anything`:
+bar f = foo (fun x -> let tmp = f x in x)
+//│ bar: (anything -> anything) -> int
+//│    = [Function: bar]
+
+
+def f: 'a -> 'b
+//│ f: anything -> nothing
+//│  = <missing implementation>
+
+// FIXME type simplifier should not treat 'a as negative here as it's quantified in neg pos:
+def foo: (forall 'a. 'a -> 'b) -> 'b
+//│ foo: (nothing -> 'b) -> 'b
+//│    = <missing implementation>
+
+
+// Notice `id` returns its arg of locally-quantified type 'a, which is extruded to `anything`:
+foo id
+//│ res: anything
+//│    = <no result>
+//│      foo is not implemented
+
+:e
+foo (fun a -> a + 1)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.43: 	foo (fun a -> a + 1)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘a` is not an instance of type `int`
+//│ ║  l.31: 	def foo: (forall 'a. 'a -> 'b) -> 'b
+//│ ║        	                 ^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.43: 	foo (fun a -> a + 1)
+//│ ╙──      	              ^
+//│ res: error | int
+//│    = <no result>
+//│      foo is not implemented
+
+
+

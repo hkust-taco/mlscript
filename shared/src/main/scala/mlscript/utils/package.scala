@@ -134,7 +134,7 @@ package object utils {
   }
   
   implicit final class ListHelpers[A](ls: Ls[A]) {
-    def filterOutConsecutive(f: (A, A) => Bool): Ls[A] =
+    def filterOutConsecutive(f: (A, A) => Bool = _ === _): Ls[A] =
       ls.foldRight[List[A]](Nil) { case (x, xs) => if (xs.isEmpty || !f(xs.head, x)) x :: xs else xs }
     def tailOption: Opt[Ls[A]] = if (ls.isEmpty) N else S(ls.tail)
     def headOr(els: => A): A = if (ls.isEmpty) els else ls.head

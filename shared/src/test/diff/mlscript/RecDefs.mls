@@ -1,0 +1,14 @@
+
+rec def f x = x
+//│ f: 'a -> 'a
+//│  = [Function: f]
+
+f 1
+//│ res: 1
+//│    = 1
+
+f 2
+//│ res: 2
+//│    = 2
+
+

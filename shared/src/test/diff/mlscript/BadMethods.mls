@@ -135,7 +135,7 @@ class BadSelf[A]: { x: A }
 
 c = BadSelf { x = fun x -> x }
 c.F
-//│ c: BadSelf['a -> 'a]
+//│ c: BadSelf[forall 'a. 'a -> 'a]
 //│ res: error
 
 
@@ -199,7 +199,7 @@ class BadPair[A, B]: AbstractPair[A, B]
 //│ ╙──       	               ^
 //│ Defined class BadPair[+A, +B]
 //│ Defined BadPair.Test: BadPair['A, ?] -> ('A -> 'A -> 'a) -> 'a
-//│ Defined BadPair.Map: BadPair['A, ?] -> ('A -> 'y) -> anything -> BadPair['y, 'y]
+//│ Defined BadPair.Map: BadPair['A, ?] -> ('A -> 'y & 'A -> 'x) -> anything -> BadPair['x, 'y]
 
 bp = BadPair { x = 42; y = true }
 bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
@@ -222,11 +222,11 @@ BadPair = BadPair { x = 42; y = 0 }
 BadPair.Map
 BadPair.(BadPair.Map)
 //│ BadPair: BadPair[42, 0]
-//│ res: BadPair['A, ?] -> ('A -> 'y) -> anything -> BadPair['y, 'y]
+//│ res: BadPair['A, ?] -> ('A -> 'y & 'A -> 'x) -> anything -> BadPair['x, 'y]
 //│ ╔══[ERROR] Class BadPair has no method BadPair.Map
 //│ ║  l.223: 	BadPair.(BadPair.Map)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
-//│ res: (42 -> 'y) -> anything -> BadPair['y, 'y]
+//│ res: (42 -> 'y & 42 -> 'x) -> anything -> BadPair['x, 'y]
 
 
 class ClassA
@@ -568,7 +568,7 @@ t = Dup { x = 42 }
 :stats
 t : Dup[bool, int]
 //│ res: Dup[?, int]
-//│ constrain calls  : 20
+//│ constrain calls  : 27
 //│ annoying  calls  : 21
 //│ subtyping calls  : 42
 
@@ -584,21 +584,21 @@ t : Dup[int, bool]
 //│ ║  l.576: 	t : Dup[int, bool]
 //│ ╙──       	             ^^^^
 //│ res: Dup[?, bool]
-//│ constrain calls  : 31
+//│ constrain calls  : 38
 //│ annoying  calls  : 23
 //│ subtyping calls  : 41
 
 :stats
 t.MthDup (fun x -> mul 2 x)
 //│ res: int
-//│ constrain calls  : 75
+//│ constrain calls  : 83
 //│ annoying  calls  : 21
 //│ subtyping calls  : 35
 
 :stats
 t.MthDup id
 //│ res: 42
-//│ constrain calls  : 60
+//│ constrain calls  : 68
 //│ annoying  calls  : 19
 //│ subtyping calls  : 29
 

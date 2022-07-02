@@ -40,7 +40,7 @@ f.x
 //│ res: 'a & (T1 & T3 & {x: T2} | T1 & T2 & {x: T3})
 //│   where
 //│     'a :> T3 & {x: T1 & 'a}
-//│ constrain calls  : 5
+//│ constrain calls  : 6
 //│ annoying  calls  : 4
 //│ subtyping calls  : 123
 
@@ -54,7 +54,7 @@ g.x
 //│ res: T1 & {x: T1} & 'a | T1 & T2 & {x: T1}
 //│   where
 //│     'a :> T1 & {x: 'a | T2}
-//│ constrain calls  : 5
+//│ constrain calls  : 6
 //│ annoying  calls  : 4
 //│ subtyping calls  : 66
 
@@ -67,7 +67,7 @@ f = g
 //│ 'a
 //│   where
 //│     'a :> T3 & {x: T1 & 'a}
-//│ constrain calls  : 27
+//│ constrain calls  : 28
 //│ annoying  calls  : 55
 //│ subtyping calls  : 2789
 

@@ -138,7 +138,7 @@ trait TypeSimplifier { self: Typer =>
             }
             
             val traitPrefixes =
-              tts.iterator.collect{ case TraitTag(Var(tagNme)) => tagNme.capitalize }.toSet
+              tts.iterator.collect{ case TraitTag(_, Var(tagNme)) => tagNme.capitalize }.toSet
             
             bo match {
               case S(cls @ ClassTag(Var(tagNme), ps)) if !primitiveTypes.contains(tagNme) =>
@@ -241,6 +241,8 @@ trait TypeSimplifier { self: Typer =>
                   case S(ct: ClassTag) => S(ct) -> nFields
                   case S(ft @ FunctionType(l, r)) =>
                     S(FunctionType(go(l, pol.map(!_)), go(r, pol))(ft.prov)) -> nFields
+                  case S(ot @ Overload(alts)) =>
+                    S(Overload(alts.map(go(_, pol).asInstanceOf[FunctionType]))(noProv)) -> nFields
                   case S(at @ ArrayType(inner)) =>
                     S(ArrayType(inner.update(go(_, pol.map(!_)), go(_, pol)))(at.prov)) -> nFields
                   case S(wt @ Without(b: ComposedType, ns @ empty())) =>
@@ -267,15 +269,16 @@ trait TypeSimplifier { self: Typer =>
             ots.sorted.foldLeft(r)(_ | _)
         }, sort = true)
       }.foldLeft(BotType: ST)(_ | _) |> factorize(ctx)
-      otherCs2 | csNegs2
+      val res = otherCs2 | csNegs2
+      PolymorphicType.mk(dnf.polymLevel, res)
     }
         
     def go(ty: ST, pol: Opt[Bool]): ST = trace(s"norm[${printPol(pol)}] $ty") {
       pol match {
-        case S(p) => helper(DNF.mk(ty, p)(ctx, ptr = true, etf = false), pol)
+        case S(p) => helper(DNF.mk(MaxLevel, ty, p)(ctx, ptr = true, etf = false), pol)
         case N =>
-          val dnf1 = DNF.mk(ty, false)(ctx, ptr = true, etf = false)
-          val dnf2 = DNF.mk(ty, true)(ctx, ptr = true, etf = false)
+          val dnf1 = DNF.mk(MaxLevel, ty, false)(ctx, ptr = true, etf = false)
+          val dnf2 = DNF.mk(MaxLevel, ty, true)(ctx, ptr = true, etf = false)
           TypeBounds.mk(helper(dnf1, S(false)), helper(dnf2, S(true)))
       }
     }(r => s"~> $r")
@@ -358,6 +361,7 @@ trait TypeSimplifier { self: Typer =>
         inner.lb.foreach(analyze2(_, !pol))
         analyze2(inner.ub, pol)
       case FunctionType(l, r) => analyze2(l, !pol); analyze2(r, pol)
+      case Overload(as) => as.foreach(analyze2(_, pol))
       case tv: TypeVariable => process(tv, pol)
       case _: ObjectTag | ExtrType(_) => ()
       case ct: ComposedType => process(ct, pol)
@@ -371,6 +375,7 @@ trait TypeSimplifier { self: Typer =>
       case Without(base, names) => analyze2(base, pol)
       case TypeBounds(lb, ub) =>
         if (pol) analyze2(ub, true) else analyze2(lb, false)
+      case PolymorphicType(lvl, bod) => analyze2(bod, pol)
     }
     }
     }()
@@ -506,6 +511,8 @@ trait TypeSimplifier { self: Typer =>
               // *    even though the non-rec one may not be strictly polar (as an example of this, see [test:T1]).
               && (v.nameHint.nonEmpty || w.nameHint.isEmpty)
               // * ^ Don't merge in this direction if that would override a nameHint
+              && (v.level === w.level)
+              // ^ Don't merge variables of differing levels
             =>
             println(s"  [w] $w ${coOccurrences.get(pol -> w)}")
             if (coOccurrences.get(pol -> w).forall(_(v))) {
@@ -570,6 +577,7 @@ trait TypeSimplifier { self: Typer =>
       case TupleType(fs) => TupleType(fs.mapValues(_ |> transformField))(st.prov)
       case ArrayType(inner) => ArrayType(inner |> transformField)(st.prov)
       case FunctionType(l, r) => FunctionType(transform(l, pol.map(!_), N), transform(r, pol, N))(st.prov)
+      case Overload(as) => Overload(as.map(transform(_, pol, parent).asInstanceOf[FunctionType]))(st.prov)
       case _: ObjectTag | ExtrType(_) => st
       case tv: TypeVariable if parent.exists(_ === tv) =>
         if (pol.getOrElse(lastWords(s"parent in invariant position $tv $parent"))) BotType else TopType
@@ -645,6 +653,7 @@ trait TypeSimplifier { self: Typer =>
       case tb @ TypeBounds(lb, ub) =>
         pol.fold[ST](TypeBounds.mk(transform(lb, S(false), parent), transform(ub, S(true), parent), noProv))(pol =>
           if (pol) transform(ub, S(true), parent) else transform(lb, S(false), parent))
+      case PolymorphicType(lvl, bod) => PolymorphicType.mk(lvl, transform(bod, pol, parent)) // FIXME? parent or None?
     }
     }(r => s"~> $r")
     
@@ -755,7 +764,7 @@ trait TypeSimplifier { self: Typer =>
                           (fields1.size === fields2.size || nope) && fields1.map(_._2).lazyZip(fields2.map(_._2)).forall(unifyF)
                         case (FunctionType(lhs1, rhs1), FunctionType(lhs2, rhs2)) => unify(lhs1, lhs2) && unify(rhs1, rhs2)
                         case (Without(base1, names1), Without(base2, names2)) => unify(base1, base2) && (names1 === names2 || nope)
-                        case (TraitTag(id1), TraitTag(id2)) => id1 === id2 || nope
+                        case (TraitTag(l1, id1), TraitTag(l2, id2)) => l1 === l2 && id1 === id2 || nope
                         case (ExtrType(pol1), ExtrType(pol2)) => pol1 === pol2 || nope
                         case (TypeBounds(lb1, ub1), TypeBounds(lb2, ub2)) =>
                           unify(lb1, lb2) && unify(ub1, ub2)

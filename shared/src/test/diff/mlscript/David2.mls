@@ -56,31 +56,14 @@ addOne1 (Integer { value = 1; addOne = fun x -> (error : Integer) } with { value
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
-:e
+// * `addOne` is now typed polymorphically, so this line now works!
 addOne1 ((Integer { value = 1; addOne = id }) with { value = "oops!" })
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.60: 	addOne1 ((Integer { value = 1; addOne = id }) with { value = "oops!" })
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"oops!"` is not an instance of type `int`
-//│ ║  l.60: 	addOne1 ((Integer { value = 1; addOne = id }) with { value = "oops!" })
-//│ ║        	                                                             ^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.2: 	class Integer: { value: int; addOne: Integer -> Integer }
-//│ ╙──     	                        ^^^
-//│ res: error | (Integer with {addOne: 'addOne, value: "oops!"}) | Integer
-//│   where
-//│     'addOne :> 'a -> 'a
-//│     'a :> (Integer with {addOne: 'addOne, value: "oops!"}) | Integer
-//│        <: Integer
+//│ res: Integer with {addOne: forall 'a. 'a -> 'a, value: "oops!"}
 //│    = Integer { value: 'oops!', addOne: [Function: id] }
 
 
 addOne1 (Integer { value = 1; addOne = id })
-//│ res: (Integer with {addOne: 'addOne, value: 1}) | Integer
-//│   where
-//│     'addOne :> 'a -> 'a
-//│     'a :> (Integer with {addOne: 'addOne, value: 1}) | Integer
-//│        <: Integer
+//│ res: Integer with {addOne: forall 'a. 'a -> 'a, value: 1}
 //│    = Integer { value: 1, addOne: [Function: id] }
 
 
@@ -141,29 +124,29 @@ rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops
 //│   <:  mkInteger_oops:
 //│ (int & 'a) -> (Integer\addOne with {value: 'a})
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.135: 	rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops (n.value + 1) }
+//│ ║  l.118: 	rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops (n.value + 1) }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` is not an instance of type `'a`
-//│ ║  l.135: 	rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops (n.value + 1) }
+//│ ║  l.118: 	rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops (n.value + 1) }
 //│ ║         	                                                                                  ^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `'a`
-//│ ║  l.135: 	rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops (n.value + 1) }
+//│ ╟── but it flows into reference with expected type `‘a`
+//│ ║  l.118: 	rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops (n.value + 1) }
 //│ ║         	                                         ^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.134: 	def mkInteger_oops: (int & 'a) -> (Integer & { value: 'a })
+//│ ║  l.117: 	def mkInteger_oops: (int & 'a) -> (Integer & { value: 'a })
 //│ ╙──       	                                                      ^^
 //│               = [Function: mkInteger_oops]
 
 // * We may still want to retain the precise typing of the `value` part:
 
 def mkIntegerPrecise value = Integer { value; addOne = addOne1 }
-//│ mkIntegerPrecise: (int & 'value) -> (Integer with {addOne: ((Integer\value with {addOne: (Integer | 'a) -> Integer}) & 'a) -> Integer, value: 'value})
+//│ mkIntegerPrecise: (int & 'value) -> (Integer with {addOne: forall 'a, 'b. ((Integer\value with {addOne: 'a -> 'b}) & 'a) -> 'b, value: 'value})
 //│                 = [Function: mkIntegerPrecise]
 
 def mkIntegerPrecise value = Integer { value; addOne = fun n -> mkInteger (n.value + 1) }
-//│ mkIntegerPrecise: (int & 'value) -> (Integer with {addOne: {value: int} -> 'a, value: 'value})
+//│ mkIntegerPrecise: (int & 'value) -> (Integer with {addOne: forall 'a. {value: int} -> 'a, value: 'value})
 //│   where
-//│     'a :> Integer with {addOne: {value: int} -> 'a}
+//│     'a :> Integer with {addOne: forall 'a. {value: int} -> 'a}
 //│                 = [Function: mkIntegerPrecise1]
 
 def mkIntegerPrecise value = Integer { value; addOne = fun (n: Integer) -> mkInteger2 (n.value + 1) }
@@ -209,13 +192,13 @@ def mkIntegerPrecise3 = mkInteger
 //│   <:  mkIntegerPrecise3:
 //│ (int & 'a) -> (Integer\addOne with {value: 'a})
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.203: 	def mkIntegerPrecise3 = mkInteger
+//│ ║  l.186: 	def mkIntegerPrecise3 = mkInteger
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` is not an instance of type `'a`
-//│ ║  l.89: 	rec def mkInteger value = Integer { value; addOne = fun n -> mkInteger (n.value + 1) }
+//│ ║  l.72: 	rec def mkInteger value = Integer { value; addOne = fun n -> mkInteger (n.value + 1) }
 //│ ║        	                                                                        ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.202: 	def mkIntegerPrecise3: (int & 'a) -> (Integer & { value: 'a })
+//│ ║  l.185: 	def mkIntegerPrecise3: (int & 'a) -> (Integer & { value: 'a })
 //│ ╙──       	                                                         ^^
 //│                  = [Function: mkInteger]
 
@@ -223,10 +206,10 @@ def mkIntegerPrecise3 = mkInteger
 :e
 addOne1 (Str { value = ""; addOne = error })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.224: 	addOne1 (Str { value = ""; addOne = error })
+//│ ║  l.207: 	addOne1 (Str { value = ""; addOne = error })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Str & {addOne: ?addOne, value: ?value}` does not match type `Integer & ?a`
-//│ ║  l.224: 	addOne1 (Str { value = ""; addOne = error })
+//│ ║  l.207: 	addOne1 (Str { value = ""; addOne = error })
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.11: 	addOne1 x = case x of {

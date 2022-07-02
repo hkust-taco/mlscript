@@ -41,6 +41,17 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
         baseClasses.iterator.filterNot(traversed).flatMap(v =>
           ctx.tyDefs.get(v.name).fold(Set.empty[TypeName])(_.allBaseClasses(ctx)(traversed + v)))
     val (tparams: List[TypeName], targs: List[TypeVariable]) = tparamsargs.unzip
+    
+    
+    
+    
+    
+    
+    // TODO FIXME pt.level -> pt.polymLevel
+    // def wrapMethod(pt: PolymorphicType, prov: TypeProvenance): MethodType =
+    //   MethodType(pt.polymLevel, S((thisTy(prov), pt.body)), nme :: Nil, isInherited = false)(prov)
+    
+    
     val thisTv: TypeVariable = freshVar(noProv, S("this"), Nil, TypeRef(nme, targs)(noProv) :: Nil)(1)
     var tvarVariances: Opt[VarianceStore] = N
     def getVariancesOrDefault: collection.Map[TV, VarianceInfo] =
@@ -109,7 +120,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
   }
   def trtNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): TraitTag = {
     require(td.kind is Trt)
-    TraitTag(Var(td.nme.name.decapitalize))(prov)
+    TraitTag(MinLevel, Var(td.nme.name.decapitalize))(prov)
   }
   
   def baseClassesOf(tyd: mlscript.TypeDef): Set[TypeName] =
@@ -123,6 +134,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
       case _: Union => Set.empty
       case _ => Set.empty // TODO TupleType?
     }
+  
   
   
   /** Only supports getting the fields of a valid base class type.
@@ -146,9 +158,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
   }
   // ()
   
-  
   def processTypeDefs(newDefs0: List[mlscript.TypeDef])(implicit ctx: Ctx, raise: Raise): Ctx = {
-    
     var allDefs = ctx.tyDefs
     val allEnv = ctx.env.clone
     val allMthEnv = ctx.mthEnv.clone
@@ -182,14 +192,12 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
       td1
     }
     import ctx.{tyDefs => oldDefs}
-    
     /* Type the bodies of type definitions, ensuring the correctness of parent types
      * and the regularity of the definitions, then register the constructors and types in the context. */
     def typeTypeDefs(implicit ctx: Ctx): Ctx =
       ctx.copy(tyDefs = oldDefs ++ newDefs.flatMap { td =>
         implicit val prov: TypeProvenance = tp(td.toLoc, "type definition")
         val n = td.nme
-        
         def gatherMthNames(td: TypeDef): (Set[Var], Set[Var]) =
           td.baseClasses.iterator.flatMap(bn => ctx.tyDefs.get(bn.name)).map(gatherMthNames(_)).fold(
             (td.mthDecls.iterator.map(md => md.nme.copy().withLocOf(md)).toSet,
@@ -199,7 +207,6 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
               if (mns.size > 1) Var(mn.name).withLoc(td.toLoc) else mn }.toSet,
             defns1 ++ defns2
           )}
-        
         def checkCycle(ty: SimpleType)(implicit travsersed: Set[TypeName \/ TV]): Bool =
             // trace(s"Cycle? $ty {${travsersed.mkString(",")}}") {
             ty match {
@@ -219,7 +226,6 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           case _: ExtrType | _: ObjectTag | _: FunctionType | _: RecordType | _: ArrayBase => true
         }
         // }()
-        
         val rightParents = td.kind match {
           case Als => checkCycle(td.bodyTy)(Set.single(L(td.nme)))
           case k: ObjDefKind =>
@@ -307,7 +313,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                             else fv.toUpper(f._2.prov)
                           )
                         }).toList
-                      PolymorphicType(0, FunctionType(
+                      PolymorphicType(MinLevel, FunctionType(
                         singleTup(RecordType.mk(fieldsRefined.filterNot(_._1.name.isCapitalized))(noProv)),
                         nomTag & RecordType.mk(
                           fieldsRefined ::: tparamTags
@@ -319,7 +325,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                       val nomTag = trtNameToNomTag(td)(originProv(td.nme.toLoc, "trait", td.nme.name), ctx)
                       val tv = freshVar(noProv)(1)
                       tv.upperBounds ::= td.bodyTy
-                      PolymorphicType(0, FunctionType(
+                      PolymorphicType(MinLevel, FunctionType(
                         singleTup(tv), tv & nomTag & RecordType.mk(tparamTags)(noProv)
                       )(originProv(td.nme.toLoc, "trait constructor", td.nme.name)))
                   }
@@ -329,7 +335,6 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             }
             checkParents(td.bodyTy) && checkCycle(td.bodyTy)(Set.single(L(td.nme))) && checkAbstractAddCtors
         }
-        
         def checkRegular(ty: SimpleType)(implicit reached: Map[Str, Ls[SimpleType]]): Bool = ty match {
           case tr @ TypeRef(defn, targs) => reached.get(defn.name) match {
             case None => checkRegular(tr.expandWith(false))(reached + (defn.name -> targs))
@@ -349,14 +354,12 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           }
           case _ => ty.children(includeBounds = false).forall(checkRegular)
         }
-        
         // Note: this will end up going through some types several times... We could make sure to
         //    only go through each type once, but the error messages would be worse.
         if (rightParents && checkRegular(td.bodyTy)(Map(n.name -> td.targs)))
           td.nme.name -> td :: Nil
         else Nil
       })
-    
     def typeMethods(implicit ctx: Ctx): Ctx = {
       /* Perform subsumption checking on method declarations and definitions by rigidifying class type variables,
        * then register the method signatures in the context */
@@ -364,7 +367,10 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
         val tn = td.nme
         val MethodSet(_, _, decls, defns) = mds
         val MethodSet(_, _, declsInherited, defnsInherited) = mds.processInheritedMethods
-        val rigidtargs = td.targs.map(freshenAbove(ctx.lvl, _, true))
+        val rigidtargs = {
+          implicit val state: MutMap[TV, ST] = MutMap.empty
+          td.targs.map(freshenAbove(ctx.lvl, _, true))
+        }
         val targsMap = td.targs.lazyZip(rigidtargs).toMap[SimpleType, SimpleType]
         def ss(mt: MethodType, bmt: MethodType)(implicit prov: TypeProvenance) =
           constrain(subst(mt.bodyPT, targsMap).instantiate, subst(bmt.bodyPT, targsMap).rigidify)
@@ -459,7 +465,10 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
       newDefs.foreach { td => if (ctx.tyDefs.isDefinedAt(td.nme.name)) {
         /* Recursive traverse the type definition and type the bodies of method definitions 
          * by applying the targs in `TypeRef` and rigidifying class type parameters. */
-        val rigidtargs = td.targs.map(freshenAbove(ctx.lvl, _, true))
+        val rigidtargs = {
+          implicit val state: MutMap[TV, ST] = MutMap.empty
+          td.targs.map(freshenAbove(ctx.lvl, _, true))
+        }
         val reverseRigid = rigidtargs.lazyZip(td.targs).toMap
         def rec(tr: TypeRef, top: Bool = false)(ctx: Ctx): MethodSet = {
           implicit val thisCtx: Ctx = ctx.nest
@@ -475,7 +484,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             case _ => Nil
           }
           def go(md: MethodDef[_ <: Term \/ Type]): (Str, MethodType) = {
-            val thisTag = TraitTag(Var("this"))(noProv)
+            val thisTag = TraitTag(thisCtx.lvl/*TODO correct?*/, Var("this"))(noProv)
             val thisTy = thisTag & tr
             thisCtx += "this" -> thisTy
             val MethodDef(rec, prt, nme, tparams, rhs) = md
@@ -508,7 +517,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             }
             rhs.fold(_ => defined, _ => declared) += nme.name -> nme.toLoc
             val dummyTargs2 = tparams.map(p =>
-              TraitTag(Var(p.name))(originProv(p.toLoc, "method type parameter", p.name)))
+              TraitTag(MinLevel, Var(p.name))(originProv(p.toLoc, "method type parameter", p.name)))
             val targsMap2 = targsMap ++ tparams.iterator.map(_.name).zip(dummyTargs2).toMap
             val reverseRigid2 = reverseRigid ++ dummyTargs2.map(t => t ->
               freshVar(t.prov, S(t.id.idStr))(thisCtx.lvl + 1)) +
@@ -592,10 +601,10 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           updateVariance(fieldTy.ub, curVariance)
       }
       
-      trace(s"upd[$curVariance] $ty") {
+      trace(s"upd[$curVariance] $ty") { // Note: could simplify this (at some perf cost) by just using ty.childrenPol
         ty match {
           case ProxyType(underlying) => updateVariance(underlying, curVariance)
-          case TraitTag(_) | ClassTag(_, _) => ()
+          case TraitTag(_, _) | ClassTag(_, _) => ()
           case ExtrType(pol) => ()
           case t: TypeVariable =>
             // update the variance information for the type variable
@@ -650,6 +659,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             updateVariance(lhs, curVariance.flip)
             updateVariance(rhs, curVariance)
           case Without(base, names) => updateVariance(base, curVariance.flip)
+          case PolymorphicType(lvl, bod) => updateVariance(bod, curVariance)
         }
       }()
     }

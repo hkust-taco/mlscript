@@ -130,7 +130,7 @@ fun (x, y) -> f (T2 ((x,y)))
 
 :ns
 res = if true then (1,2, "hello") else (true, 3)
-//│ res: 'a
+//│ res: forall 'a. 'a
 //│   where
 //│     'a :> (1, 2, "hello",) | (true, 3,)
 //│    = [ 1, 2, 'hello' ]
@@ -177,7 +177,7 @@ q = if true then (1,1) else (1,1,1)
 
 // Note: function with non-tuple domain
 def h f = (f (1,2,false), f (1,true))
-//│ h: ((Array[1 | 2 | false | true] & {_1: 1, _2: 2 | true}) -> 'a) -> ('a, 'a,)
+//│ h: ((1, true,) -> 'a & (1, 2, false,) -> 'b) -> ('b, 'a,)
 //│  = [Function: h]
 
 :e
@@ -202,16 +202,16 @@ h (fun (x, y) -> x)
 //│ ╟── Note: constraint arises from tuple literal:
 //│ ║  l.195: 	h (fun (x, y) -> x)
 //│ ╙──       	       ^^^^^^
-//│ res: (1, 1,) | error
+//│ res: (nothing, 1,) | error
 //│    = [ 1, 1 ]
 
 def h f = (f ((1,2,false)), f ((1,true)))
-//│ h: ((Array[1 | 2 | false | true] & {_1: 1, _2: 2 | true}) -> 'a) -> ('a, 'a,)
+//│ h: ((1, true,) -> 'a & (1, 2, false,) -> 'b) -> ('b, 'a,)
 //│  = [Function: h1]
 
 h (fun x -> x[0])
 h (fun x -> x._1)
-//│ res: (1 | 2 | false | true | undefined, 1 | 2 | false | true | undefined,)
+//│ res: (1 | 2 | false | undefined, 1 | true | undefined,)
 //│    = [ 1, 1 ]
 //│ res: (1, 1,)
 //│    = [ undefined, undefined ]
@@ -630,7 +630,7 @@ ra: (Array['a], Array['a]) as 'a
 //│      ra is not implemented
 //│ res: 'a
 //│   where
-//│     'a :> ('a0 | Array['a], 'a0 | Array['a],)
+//│     'a :> 'a0 | (Array['a], Array['a],)
 //│     'a0 :> ('a0, 'a0,)
 //│    = <no result>
 //│      ra is not implemented
@@ -652,7 +652,7 @@ ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ╙──       	    ^^^^^^^^^^^^
 //│ res: 'a
 //│   where
-//│     'a :> 'a0 | ('a, 'a, 'a,) | error
+//│     'a :> forall 'a0. 'a0 | ('a, 'a, 'a,) | error
 //│     'a0 :> ('a0, 'a0,)
 //│    = <no result>
 //│      ra is not implemented
@@ -670,7 +670,7 @@ ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: 'a
 //│   where
-//│     'a :> 'a0 | (Array['a], Array['a], Array['a],) | error
+//│     'a :> forall 'a0. 'a0 | (Array['a], Array['a], Array['a],) | error
 //│     'a0 :> ('a0, 'a0,)
 //│    = <no result>
 //│      ra is not implemented

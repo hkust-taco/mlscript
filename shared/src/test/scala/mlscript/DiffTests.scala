@@ -33,6 +33,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     
     val diffBegMarker = "<<<<<<<"
     val diffMidMarker = "======="
+    val diff3MidMarker = "|||||||" // appears under `git config merge.conflictstyle diff3` (https://stackoverflow.com/a/18131595/1518588)
     val diffEndMarker = ">>>>>>>"
     
     val fileContents = os.read(file)
@@ -150,7 +151,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
         assert(hdo.exists(_.startsWith(diffEndMarker)), hdo)
         val blankLines = diff.count(_.isEmpty)
         val hasBlankLines = diff.exists(_.isEmpty)
-        if (diff.forall(l => l.startsWith(outputMarker) || l.startsWith(diffMidMarker) || l.isEmpty)) {
+        if (diff.forall(l => l.startsWith(outputMarker) || l.startsWith(diffMidMarker) || l.startsWith(diff3MidMarker) || l.isEmpty)) {
           for (_ <- 1 to blankLines) out.println()
         } else {
           unmergedChanges += allLines.size - lines.size + 1
@@ -279,7 +280,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             ctx = typer.processTypeDefs(typeDefs)(ctx, raise)
             
             def getType(ty: typer.TypeScheme): Type = {
-              val wty = ty.uninstantiatedBody
+              // val wty = ty.instantiate(0)
+              // val wty = ty.uninstantiatedBody
+              val wty = ty.asInstanceOf[typer.ST]
               if (mode.isDebugging) output(s"⬤ Typed as: $wty")
               if (mode.isDebugging) output(s" where: ${wty.showBounds}")
               typer.dbg = mode.dbgSimplif
@@ -292,7 +295,27 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 val sim = SimplifyPipeline(wty)(ctx)
                 val exp = typer.expandType(sim)(ctx)
                 if (mode.dbgSimplif) output(s"⬤ Expanded: ${exp}")
-                exp
+                // exp
+                // exp match {
+                //   case PolyType(tps, body) =>
+                //     // Strip top-level implicitly-quantified type variables
+                //     tps.filterNot(_.isRight) match {
+                //       case Nil => body
+                //       case tps => PolyType(tps, body)
+                //     }
+                //   case ty => ty
+                // }
+                def stripPoly(pt: PolyType): Type = 
+                  pt.targs.filterNot(_.isRight) match {
+                    case Nil => pt.body
+                    case tps => PolyType(tps, pt.body)
+                  }
+                exp match {
+                  // Strip top-level implicitly-quantified type variables
+                  case pt: PolyType => stripPoly(pt)
+                  case Constrained(pt: PolyType, cs) => Constrained(stripPoly(pt), cs)
+                  case ty => ty
+                }
               }
             }
             // initialize ts typegen code builder and
@@ -506,9 +529,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               // but does not give a body/definition to it
               case Def(isrec, nme, R(PolyType(tps, rhs))) =>
                 typer.dbg = mode.dbg
-                val ty_sch = typer.PolymorphicType(0,
-                  typer.typeType(rhs)(ctx.nextLevel, raise,
-                    vars = tps.map(tp => tp.name -> typer.freshVar(typer.noProv/*FIXME*/)(1)).toMap))
+                val ty_sch = typer.PolymorphicType(typer.MinLevel,
+                  typer.typeType(rhs)(ctx.nextLevel, raise, vars = tps.collect {
+                      case L(tp: TypeName) => tp.name -> typer.freshVar(typer.noProv/*FIXME*/)(1)
+                    }.toMap))
                 ctx += nme.name -> ty_sch
                 declared += nme.name -> ty_sch
                 val exp = getType(ty_sch)
@@ -619,7 +643,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             output("/!!!\\ Uncaught error: " + err +
               err.getStackTrace().take(
                 if (mode.fullExceptionStack) Int.MaxValue
-                else if (mode.fixme) 0
+                else if (mode.fixme || err.isInstanceOf[StackOverflowError]) 0
                 else 10
               ).map("\n" + "\tat: " + _).mkString)
         } finally {

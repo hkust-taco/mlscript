@@ -142,7 +142,7 @@ def id n = add n 1
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.138: 	def id n = add n 1
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── type `'a` is not an instance of type `int`
+//│ ╟── type `‘a` is not an instance of type `int`
 //│ ║  l.110: 	def id: 'a -> 'a
 //│ ║         	        ^^
 //│ ╟── Note: constraint arises from reference:
@@ -167,7 +167,7 @@ def id (x: int) = x
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.163: 	def id (x: int) = x
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `'a` is not an instance of type `int`
+//│ ╟── type `‘a` is not an instance of type `int`
 //│ ║  l.110: 	def id: 'a -> 'a
 //│ ║         	        ^^
 //│ ╟── Note: constraint arises from type reference:
@@ -179,7 +179,7 @@ def id (x: int) = x
 //│ ╟── type `int` is not an instance of type `'a`
 //│ ║  l.163: 	def id (x: int) = x
 //│ ║         	           ^^^
-//│ ╟── but it flows into reference with expected type `'a`
+//│ ╟── but it flows into reference with expected type `‘a`
 //│ ║  l.163: 	def id (x: int) = x
 //│ ║         	                  ^
 //│ ╟── Note: constraint arises from type variable:
@@ -205,7 +205,7 @@ def f = impl
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.201: 	def f = impl
 //│ ║         	^^^^^^^^^^^^
-//│ ╟── type `int & 'a` is not a function
+//│ ╟── type `int & ‘a` is not a function
 //│ ║  l.192: 	def f: (int & 'a) -> 'a
 //│ ║         	       ^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
@@ -244,7 +244,7 @@ def f a b = if gt a b then a else b b // mistake!
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.240: 	def f a b = if gt a b then a else b b // mistake!
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int & 'a` is not a function
+//│ ╟── type `int & ‘a` is not a function
 //│ ║  l.226: 	def f: (int & 'a) -> (int & 'a) -> 'a 
 //│ ║         	                     ^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
@@ -291,7 +291,7 @@ def g a = add a 1
 
 
 def twice f x = f (f x)
-//│ twice: ('a -> ('a & 'b)) -> 'a -> 'b
+//│ twice: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
 //│      = [Function: twice]
 
 def ty1: (('b | 'c) -> 'c) -> 'b -> 'c
@@ -317,11 +317,11 @@ ty2 = ty1
 
 ty1 = twice
 ty2 = twice
-//│ ('a -> ('a & 'b)) -> 'a -> 'b
+//│ ('a -> 'b & 'c -> 'a) -> 'c -> 'b
 //│   <:  ty1:
 //│ (('b | 'c) -> 'c) -> 'b -> 'c
 //│    = [Function: twice]
-//│ ('a -> ('a & 'b)) -> 'a -> 'b
+//│ ('a -> 'b & 'c -> 'a) -> 'c -> 'b
 //│   <:  ty2:
 //│ ('b -> ('b & 'd)) -> 'b -> 'd
 //│    = [Function: twice]
@@ -357,12 +357,60 @@ def self2: 'a -> 'b as 'a
 //│     'a := 'a -> 'b
 //│      = <missing implementation>
 
+:e
 def self2 = self1
 //│ ('a -> 'b & 'a) -> 'b
 //│   <:  self2:
 //│ 'a
 //│   where
 //│     'a := 'a -> 'b
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b. (?a -> ?b & ?a) -> ?b <: ?a0` exceeded recursion depth limit (100)
+//│ ║  l.361: 	def self2 = self1
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  ('a380 -> 'b381)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a380 -> 'b381) & 'a380)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a378
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a378 -> 'b379) & 'a378)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a376
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a376 -> 'b377) & 'a376)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a374
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a374 -> 'b375) & 'a374)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a372
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a372 -> 'b373) & 'a372)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a370
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a370 -> 'b371) & 'a370)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a368
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a368 -> 'b369) & 'a368)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a366
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a366 -> 'b367) & 'a366)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a364
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a364 -> 'b365) & 'a364)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a362
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a362 -> 'b363) & 'a362)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a360
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a360 -> 'b361) & 'a360)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a358
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a358 -> 'b359) & 'a358)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a356
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a356 -> 'b357) & 'a356)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a354
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a354 -> 'b355) & 'a354)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a352
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a352 -> 'b353) & 'a352)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a350
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a350 -> 'b351) & 'a350)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a348
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a348 -> 'b349) & 'a348)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a346
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a346 -> 'b347) & 'a346)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a344
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a344 -> 'b345) & 'a344)
+//│ ╟── while constraining:  'a343  <!<  (('a344 -> 'b345) & 'a344)
+//│ ╟── while constraining:  ('a343,)  <!<  ((('a344 -> 'b345) & 'a344),)
+//│ ╟── while constraining:  ((('a344 -> 'b345) & 'a344) -> 'b345)  <!<  ('a343 -> ‘b)
+//│ ╟── while constraining:  ((('a344 -> 'b345) & 'a344) -> 'b345)  <!<  (‘a | ('a343 -> ‘b))
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (‘a | ('a343 -> ‘b))
+//│ ╙── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a343
 //│      = [Function: res]
 
 

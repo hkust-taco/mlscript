@@ -12,6 +12,7 @@
 //│ res: anything
 //│    = 42
 
+:e // FIXME new rigidification semantics
 def n: ?
 n = 42
 //│ n: anything
@@ -19,6 +20,15 @@ n = 42
 //│ 42
 //│   <:  n:
 //│ anything
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.17: 	n = 42
+//│ ║        	^^^^^^
+//│ ╟── integer literal of type `42` does not match type `nothing`
+//│ ║  l.17: 	n = 42
+//│ ║        	    ^^
+//│ ╟── Note: constraint arises from type wildcard:
+//│ ║  l.16: 	def n: ?
+//│ ╙──      	       ^
 //│  = 42
 
 
@@ -31,22 +41,23 @@ class E[A]
   method In = id
 //│ Defined class E[=A]
 //│ Declared E.In: E['A] -> 'A -> 'A
-//│ Defined E.In: E['A] -> 'a -> 'a
+//│ Defined E.In: E['A] -> (forall 'a. 'a -> 'a)
 
 :e
 E{} : E[?]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.37: 	E{} : E[?]
+//│ ║  l.47: 	E{} : E[?]
 //│ ║        	^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.37: 	E{} : E[?]
+//│ ║  l.47: 	E{} : E[?]
 //│ ║        	        ^
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.37: 	E{} : E[?]
+//│ ║  l.47: 	E{} : E[?]
 //│ ╙──      	        ^
 //│ res: E[?]
 //│    = E {}
 
+:e // FIXME new rigidification semantics
 def e: E[?]
 def e = E{}
 //│ e: E[?]
@@ -54,6 +65,15 @@ def e = E{}
 //│ E['A]
 //│   <:  e:
 //│ E[?]
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.62: 	def e = E{}
+//│ ║        	^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.61: 	def e: E[?]
+//│ ║        	         ^
+//│ ╟── Note: constraint arises from type wildcard:
+//│ ║  l.61: 	def e: E[?]
+//│ ╙──      	         ^
 //│  = E {}
 
 
@@ -63,15 +83,16 @@ type Als1[A] = int -> A
 :e
 add 1 : Als1[?]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.64: 	add 1 : Als1[?]
+//│ ║  l.84: 	add 1 : Als1[?]
 //│ ║        	^^^^^
 //│ ╟── type `int` does not match type `nothing`
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.64: 	add 1 : Als1[?]
+//│ ║  l.84: 	add 1 : Als1[?]
 //│ ╙──      	             ^
 //│ res: Als1[?]
 //│    = [Function (anonymous)]
 
+:e // FIXME new rigidification semantics
 def a1: Als1[?]
 a1 = add 1
 //│ a1: Als1[?]
@@ -79,6 +100,13 @@ a1 = add 1
 //│ int -> int
 //│   <:  a1:
 //│ Als1[?]
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.97: 	a1 = add 1
+//│ ║        	^^^^^^^^^^
+//│ ╟── type `int` does not match type `nothing`
+//│ ╟── Note: constraint arises from type wildcard:
+//│ ║  l.96: 	def a1: Als1[?]
+//│ ╙──      	             ^
 //│   = [Function (anonymous)]
 
 
@@ -88,14 +116,15 @@ type Als2[A] = A -> int
 :e
 add 1 : Als2[?]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.89: 	add 1 : Als2[?]
-//│ ║        	^^^^^
+//│ ║  l.117: 	add 1 : Als2[?]
+//│ ║         	^^^^^
 //│ ╟── type `anything` is not an instance of type `int`
-//│ ║  l.89: 	add 1 : Als2[?]
-//│ ╙──      	             ^
+//│ ║  l.117: 	add 1 : Als2[?]
+//│ ╙──       	             ^
 //│ res: Als2[?]
 //│    = [Function (anonymous)]
 
+:e // FIXME new rigidification semantics
 def a2: Als2[?]
 a2 = add 1
 //│ a2: Als2[?]
@@ -103,6 +132,12 @@ a2 = add 1
 //│ int -> int
 //│   <:  a2:
 //│ Als2[?]
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.129: 	a2 = add 1
+//│ ║         	^^^^^^^^^^
+//│ ╟── type `anything` is not an instance of type `int`
+//│ ║  l.128: 	def a2: Als2[?]
+//│ ╙──       	             ^
 //│   = [Function (anonymous)]
 
 
@@ -110,22 +145,32 @@ def q: ?
 //│ q: anything
 //│  = <missing implementation>
 
+:e // FIXME new rigidification semantics
 q = 1
 //│ 1
 //│   <:  q:
 //│ anything
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.149: 	q = 1
+//│ ║         	^^^^^
+//│ ╟── integer literal of type `1` does not match type `nothing`
+//│ ║  l.149: 	q = 1
+//│ ║         	    ^
+//│ ╟── Note: constraint arises from type wildcard:
+//│ ║  l.144: 	def q: ?
+//│ ╙──       	       ^
 //│  = 1
 
 :e
 q + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.120: 	q + 1
+//│ ║  l.165: 	q + 1
 //│ ║         	^^^
 //│ ╟── type `anything` is not an instance of type `int`
-//│ ║  l.109: 	def q: ?
+//│ ║  l.144: 	def q: ?
 //│ ║         	       ^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.120: 	q + 1
+//│ ║  l.165: 	q + 1
 //│ ╙──       	^
 //│ res: error | int
 //│    = 2
@@ -133,13 +178,13 @@ q + 1
 :e
 q q
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.134: 	q q
+//│ ║  l.179: 	q q
 //│ ║         	^^^
 //│ ╟── type `anything` is not a function
-//│ ║  l.109: 	def q: ?
+//│ ║  l.144: 	def q: ?
 //│ ║         	       ^
 //│ ╟── but it flows into reference with expected type `anything -> ?a`
-//│ ║  l.134: 	q q
+//│ ║  l.179: 	q q
 //│ ╙──       	^
 //│ res: error
 //│ Runtime error:

@@ -43,6 +43,9 @@ abstract class TypeImpl extends Located { self: Type =>
   // TODO remove obsolete pretty-printing hacks
     case Top => "anything"
     case Bot => "nothing"
+    case TypeName(name) if name.startsWith("'") =>
+      // "_"+name
+      "‘" + name.tail
     case TypeName(name) => name
     // case uv: TypeVar => ctx.vs.getOrElse(uv, s"[??? $uv ???]")
     case uv: TypeVar => ctx.vs(uv)
@@ -72,8 +75,8 @@ abstract class TypeImpl extends Located { self: Type =>
       val prec = if (c.pol) 20 else 25
       val opStr = if (c.pol) " | " else " & "
       c.distinctComponents match {
-        case Nil => (if (c.pol) Bot else Top).showIn(ctx, prec)
-        case x :: Nil => x.showIn(ctx, prec)
+        case Nil => (if (c.pol) Bot else Top).showIn(ctx, outerPrec)
+        case x :: Nil => x.showIn(ctx, outerPrec)
         case _ =>
           parensIf(c.distinctComponents.iterator
             .map(_.showIn(ctx, prec))
@@ -91,6 +94,13 @@ abstract class TypeImpl extends Located { self: Type =>
     case Literal(IntLit(n)) => n.toString
     case Literal(DecLit(n)) => n.toString
     case Literal(StrLit(s)) => "\"" + s + "\""
+    case Literal(UnitLit(b)) => if (b) "undefined" else "null"
+    case PolyType(Nil, body) => body.showIn(ctx, outerPrec)
+    case PolyType(targs, body) => parensIf(
+        s"${targs.iterator.map(_.fold(_.name, _.showIn(ctx, 0)))
+          .mkString("forall ", ", ", ".")} ${body.showIn(ctx, 1)}",
+        outerPrec > 1 // or 0?
+      )
     case Constrained(b, ws) => parensIf(s"${b.showIn(ctx, 0)}\n  where${ws.map {
       case (uv, Bounds(Bot, ub)) =>
         s"\n    ${ctx.vs(uv)} <: ${ub.showIn(ctx, 0)}"
@@ -103,7 +113,6 @@ abstract class TypeImpl extends Located { self: Type =>
         s"\n    ${vstr             } :> ${lb.showIn(ctx, 0)}" +
         s"\n    ${" " * vstr.length} <: ${ub.showIn(ctx, 0)}"
     }.mkString}", outerPrec > 0)
-    case Literal(UnitLit(b)) => if (b) "undefined" else "null"
   }
   
   def children: List[Type] = this match {
@@ -119,6 +128,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case AppliedType(n, ts) => ts
     case Rem(b, _) => b :: Nil
     case WithExtension(b, r) => b :: r :: Nil
+    case PolyType(targs, body) => targs.map(_.fold(identity, identity)) :+ body
     case Constrained(b, ws) => b :: ws.flatMap(c => c._1 :: c._2 :: Nil)
   }
 
@@ -209,6 +219,8 @@ object ShowCtx {
   }
 }
 
+trait PolyTypeImpl  { self: PolyType => }
+
 trait ComposedImpl { self: Composed =>
   val lhs: Type
   val rhs: Type
@@ -223,10 +235,10 @@ trait ComposedImpl { self: Composed =>
     components.filterNot(c => if (pol) c === Bot else c === Top).distinct
 }
 
-abstract class PolyTypeImpl extends Located { self: PolyType =>
-  def children: List[Located] =  targs :+ body
-  def show: Str = s"${targs.iterator.map(_.name).mkString("[", ", ", "] ->")} ${body.show}"
-}
+// abstract class PolyTypeImpl extends Located { self: PolyType =>
+//   def children: List[Located] =  targs :+ body
+//   def show: Str = s"${targs.iterator.map(_.name).mkString("[", ", ", "] ->")} ${body.show}"
+// }
 
 trait TypeVarImpl extends Ordered[TypeVar] { self: TypeVar =>
   def compare(that: TypeVar): Int = {
@@ -562,7 +574,7 @@ trait StatementImpl extends Located { self: Statement =>
           val params = args.flatMap(getFields)
           val clsNme = TypeName(v.name).withLocOf(v)
           val tps = tparams.toList
-          val ctor = Def(false, v, R(PolyType(tps,
+          val ctor = Def(false, v, R(PolyType(tps.map(L(_)),
             params.foldRight(AppliedType(clsNme, tps):Type)(Function(_, _))))).withLocOf(stmt)
           val td = TypeDef(Cls, clsNme, tps, Record(fields.toList.mapValues(Field(None, _)))).withLocOf(stmt)
           td :: ctor :: cs

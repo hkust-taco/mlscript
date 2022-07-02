@@ -69,7 +69,7 @@ abstract class TyperHelpers { Typer: Typer =>
   }
 
   def subst(ts: PolymorphicType, map: Map[SimpleType, SimpleType]): PolymorphicType = 
-    PolymorphicType(ts.level, subst(ts.body, map))
+    PolymorphicType(ts.polymLevel, subst(ts.body, map))
 
   def subst(st: SimpleType, map: Map[SimpleType, SimpleType], substInMap: Bool = false)
         (implicit cache: MutMap[TypeVariable, SimpleType] = MutMap.empty): SimpleType =
@@ -221,6 +221,7 @@ abstract class TyperHelpers { Typer: Typer =>
   
   def mapPol(bt: BaseType, pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType): BaseType = bt match {
     case FunctionType(lhs, rhs) => FunctionType(f(pol.map(!_), lhs), f(pol, rhs))(bt.prov)
+    case Overload(alts) => Overload(alts.map(f(pol, _).asInstanceOf[FunctionType]))(bt.prov)
     case TupleType(fields) => TupleType(fields.mapValues(_.update(f(pol.map(!_), _), f(pol, _))))(bt.prov)
     case ArrayType(inner) => ArrayType(inner.update(f(pol.map(!_), _), f(pol, _)))(bt.prov)
     case wt @ Without(b: ComposedType, ns @ empty()) => Without(b.map(f(pol, _)), ns)(wt.prov) // FIXME very hacky
@@ -278,6 +279,7 @@ abstract class TyperHelpers { Typer: Typer =>
     def map(f: SimpleType => SimpleType): SimpleType = this match {
       case TypeBounds(lb, ub) => TypeBounds(f(lb), f(ub))(prov)
       case FunctionType(lhs, rhs) => FunctionType(f(lhs), f(rhs))(prov)
+      case Overload(as) => Overload(as.map(f(_).asInstanceOf[FunctionType]))(prov)
       case RecordType(fields) => RecordType(fields.mapValues(_.update(f, f)))(prov)
       case TupleType(fields) => TupleType(fields.mapValues(_.update(f, f)))(prov)
       case ArrayType(inner) => ArrayType(inner.update(f, f))(prov)
@@ -288,6 +290,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case WithType(bse, rcd) => WithType(f(bse), RecordType(rcd.fields.mapValues(_.update(f, f)))(rcd.prov))(prov)
       case ProxyType(underlying) => f(underlying) // TODO different?
       case TypeRef(defn, targs) => TypeRef(defn, targs.map(f(_)))(prov)
+      case PolymorphicType(plvl, und) => PolymorphicType(plvl, f(und))
       case _: TypeVariable | _: ObjectTag | _: ExtrType => this
     }
     def mapPol(pol: Opt[Bool], smart: Bool = false)(f: (Opt[Bool], SimpleType) => SimpleType)
@@ -308,6 +311,8 @@ abstract class TyperHelpers { Typer: Typer =>
       case WithType(bse, rcd) => WithType(f(pol, bse), RecordType(rcd.fields.mapValues(_.update(f(pol.map(!_), _), f(pol, _))))(rcd.prov))(prov)
       case ProxyType(underlying) => f(pol, underlying) // TODO different?
       case tr @ TypeRef(defn, targs) => TypeRef(defn, tr.mapTargs(pol)(f))(prov)
+      case PolymorphicType(plvl, und) =>
+        if (smart) PolymorphicType.mk(plvl, f(pol, und)) else PolymorphicType(plvl, f(pol, und))
       case _: TypeVariable | _: ObjectTag | _: ExtrType => this
     }
     
@@ -342,8 +347,8 @@ abstract class TyperHelpers { Typer: Typer =>
       // Unnecessary and can complicate constraint solving quite a lot:
       // case (ComposedType(true, l, r), _) => l & that | r & that
       case (_: ClassTag, _: FunctionType) => BotType
-      case (FunctionType(l1, r1), FunctionType(l2, r2)) =>
-        FunctionType(l1 | l2, r1 & r2)(prov)
+      // case (FunctionType(l1, r1), FunctionType(l2, r2)) =>
+      //   FunctionType(l1 | l2, r1 & r2)(prov)
       case (RecordType(fs1), RecordType(fs2)) =>
         RecordType(mergeSortedMap(fs1, fs2)(_ && _).toList)(prov)
       case (t0 @ TupleType(fs0), t1 @ TupleType(fs1)) =>
@@ -353,6 +358,7 @@ abstract class TyperHelpers { Typer: Typer =>
         TypeBounds(l0 | l1, u0 & u1)(prov)
       case _ if !swapped => that & (this, prov, swapped = true)
       case (`that`, _) => this
+      case _ if !swapped => that & (this, prov, swapped = true)
       case (NegType(`that`), _) => BotType
       case _ => ComposedType(false, that, this)(prov)
     }
@@ -425,6 +431,7 @@ abstract class TyperHelpers { Typer: Typer =>
           }
         case (_, _: TypeRef) =>
           false // TODO try to expand them (this requires populating the cache because of recursive types)
+        case (_: PolymorphicType, _) | (_, _: PolymorphicType) => false
         case (_: Without, _) | (_, _: Without)
           | (_: ArrayBase, _) | (_, _: ArrayBase)
           | (_: TraitTag, _) | (_, _: TraitTag)
@@ -486,6 +493,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case p: ObjectTag => p
       case TypeBounds(lo, hi) => hi.withoutPos(names)
       case _: TypeVariable | _: NegType | _: TypeRef => Without(this, names)(noProv)
+      case PolymorphicType(plvl, bod) => PolymorphicType.mk(plvl, bod.withoutPos(names))
     }
     def unwrapAll(implicit ctx: Ctx): SimpleType = unwrapProxies match {
       case tr: TypeRef => tr.expand.unwrapAll
@@ -521,7 +529,6 @@ abstract class TyperHelpers { Typer: Typer =>
       }
       case _ => this
     }
-    def normalize(pol: Bool)(implicit ctx: Ctx): ST = DNF.mk(this, pol = pol).toType()
     
     def abs(that: SimpleType)(prov: TypeProvenance): SimpleType =
       FunctionType(this, that)(prov)
@@ -552,6 +559,7 @@ abstract class TyperHelpers { Typer: Typer =>
           (if (pol =/= S(false)) tv.lowerBounds.map(S(true) -> _) else Nil) :::
           (if (pol =/= S(true)) tv.upperBounds.map(S(false) -> _) else Nil)
         case FunctionType(l, r) => pol.map(!_) -> l :: pol -> r :: Nil
+        case Overload(as) => as.map(pol -> _)
         case ComposedType(_, l, r) => pol -> l :: pol -> r :: Nil
         case RecordType(fs) => fs.unzip._2.flatMap(childrenPolField)
         case TupleType(fs) => fs.unzip._2.flatMap(childrenPolField)
@@ -563,6 +571,7 @@ abstract class TyperHelpers { Typer: Typer =>
         case tr: TypeRef => tr.mapTargs(pol)(_ -> _)
         case Without(b, ns) => pol -> b :: Nil
         case TypeBounds(lb, ub) => S(false) -> lb :: S(true) -> ub :: Nil
+        case PolymorphicType(_, und) => pol -> und :: Nil
     }}
     
     def getVarsPol(pol: Opt[Bool])(implicit ctx: Ctx): SortedMap[TypeVariable, Opt[Bool]] = {
@@ -596,6 +605,7 @@ abstract class TyperHelpers { Typer: Typer =>
     def children(includeBounds: Bool): List[SimpleType] = this match {
       case tv: TypeVariable => if (includeBounds) tv.lowerBounds ::: tv.upperBounds else Nil
       case FunctionType(l, r) => l :: r :: Nil
+      case Overload(as) => as
       case ComposedType(_, l, r) => l :: r :: Nil
       case RecordType(fs) => fs.flatMap(f => f._2.lb.toList ::: f._2.ub :: Nil)
       case TupleType(fs) => fs.flatMap(f => f._2.lb.toList ::: f._2.ub :: Nil)
@@ -607,6 +617,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case TypeRef(d, ts) => ts
       case Without(b, ns) => b :: Nil
       case TypeBounds(lb, ub) => lb :: ub :: Nil
+      case PolymorphicType(_, und) => und :: Nil
     }
     
     def getVars: SortedSet[TypeVariable] = {
@@ -619,6 +630,29 @@ abstract class TyperHelpers { Typer: Typer =>
         case Nil => ()
       }
       rec(this :: Nil)
+      SortedSet.from(res)(Ordering.by(_.uid))
+    }
+    
+    def varsBetween(lb: Level, ub: Level): Set[TV] = {
+      val res = MutSet.empty[TypeVariable]
+      val traversed = MutSet.empty[TypeVariable]
+      @tailrec def rec(lb: Level, ub: Level, queue: List[SimpleType]): Unit =
+      // trace(s"varsBetween($lb, $ub, $queue)") {
+      queue match {
+        case (tv: TypeVariable) :: tys =>
+          if (traversed(tv)) rec(lb, ub, tys)
+          else {
+            traversed += tv
+            if (tv.level > lb && tv.level <= ub) res += tv
+            rec(lb, ub, tv.children(includeBounds = true) ::: tys)
+          }
+        case (pt: PolymorphicType) :: tys =>
+          rec(lb, pt.polymLevel, pt.body :: tys)
+        case ty :: tys => rec(lb, ub, ty.children(includeBounds = true) ::: tys)
+        case Nil => ()
+      }
+      // }()
+      rec(lb, ub, this :: Nil)
       SortedSet.from(res)(Ordering.by(_.uid))
     }
     
@@ -660,6 +694,7 @@ abstract class TyperHelpers { Typer: Typer =>
         if (pol =/= S(false)) tv.lowerBounds.foreach(apply(S(true)))
         if (pol =/= S(true)) tv.upperBounds.foreach(apply(S(false)))
       case FunctionType(l, r) => apply(pol.map(!_))(l); apply(pol)(r)
+      case Overload(as) => as.foreach(apply(pol))
       case ComposedType(_, l, r) => apply(pol)(l); apply(pol)(r)
       case RecordType(fs) => fs.unzip._2.foreach(applyField(pol))
       case TupleType(fs) => fs.unzip._2.foreach(applyField(pol))
@@ -671,6 +706,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case tr: TypeRef => tr.mapTargs(pol)(apply(_)(_)); ()
       case Without(b, ns) => apply(pol)(b)
       case TypeBounds(lb, ub) => apply(S(false))(lb); apply(S(true))(ub)
+      case PolymorphicType(plvl, und) => apply(pol)(und)
     }
     def applyField(pol: Opt[Bool])(fld: FieldType): Unit = {
       fld.lb.foreach(apply(pol.map(!_)))
@@ -685,5 +721,8 @@ abstract class TyperHelpers { Typer: Typer =>
     }
   }
   
+  
+  protected def showLevel(level: Level): Str =
+    (if (level === MaxLevel) "^" else if (level > 5 ) "^" + level else "'" * level)
   
 }

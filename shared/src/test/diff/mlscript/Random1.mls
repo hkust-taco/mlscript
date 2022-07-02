@@ -31,10 +31,10 @@ g = g2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.25: 	g = g2
 //│ ║        	^^^^^^
-//│ ╟── function of type `?b -> ?c` does not match type `(G[?] with {a: ?a}) | 'a`
+//│ ╟── function of type `?b -> ?c` does not match type `(G[?] with {a: ?a}) | ‘a`
 //│ ║  l.21: 	rec def g2 a = G { a }
 //│ ║        	           ^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(G[?] with {a: ?a0}) | 'a`
+//│ ╟── but it flows into reference with expected type `(G[?] with {a: ?a0}) | ‘a`
 //│ ║  l.25: 	g = g2
 //│ ║        	    ^^
 //│ ╟── Note: constraint arises from local type binding:
@@ -81,11 +81,7 @@ manual id
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.68: 	def manual: 'a -> nothing as 'a
 //│ ╙──      	                  ^^^^^^^
-//│ res: ('a & 'b) -> 'b | error
-//│   where
-//│     'a <: ('b -> 'b) -> nothing & 'b
-//│     'b :> ('a & 'b) -> 'b
-//│        <: nothing
+//│ res: 'a -> 'a | error
 
 def manual: 'a -> anything as 'a
 //│ manual: 'a

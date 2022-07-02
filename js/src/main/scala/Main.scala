@@ -202,7 +202,8 @@ object Main {
     typer.computeVariances(curBlockTypeDefs, ctx)
     
     def getType(ty: typer.TypeScheme): Type = {
-      val wty = ty.uninstantiatedBody
+      // val wty = ty.uninstantiatedBody
+      val wty = ty.asInstanceOf[ST]
       object SimplifyPipeline extends typer.SimplifyPipeline {
         def debugOutput(msg: => Str): Unit = println(msg)
       }
@@ -323,7 +324,8 @@ object Main {
             case N => ()
           }
           val ty_sch = PolymorphicType(0, typeType(rhs)(ctx.nextLevel, raise,
-            vars = tps.map(tp => tp.name -> freshVar(noProv/*FIXME*/)(1)).toMap))
+            vars = tps.map(tp => tp.fold(_.name, _ => ??? // FIXME
+              ) -> freshVar(noProv/*FIXME*/)(1)).toMap))
           ctx += nme.name -> ty_sch
           declared += nme -> ty_sch
           results append S(d.nme.name) -> getType(ty_sch).show

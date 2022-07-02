@@ -2296,7 +2296,7 @@ add
 //│ res: {u: {v: int -> int -> int}}
 
 (let rec x = {v: x}; {u: x})
-//│ res: {u: 'x}
+//│ res: {u: forall 'x. 'x}
 //│   where
 //│     'x :> {v: 'x}
 
@@ -2406,22 +2406,22 @@ add
 //│ res: {u: {u: int -> int -> int}, v: {u: int -> int -> int}}
 
 (let rec x = {u: x}; {u: x, v: x})
-//│ res: {u: 'x, v: 'x}
+//│ res: {u: forall 'x. 'x, v: forall 'x. 'x}
 //│   where
 //│     'x :> {u: 'x}
 
 (let rec x = {u: x, v: 0}; {u: x, v: x})
-//│ res: {u: 'x, v: 'x}
+//│ res: {u: forall 'x. 'x, v: forall 'x. 'x}
 //│   where
 //│     'x :> {u: 'x, v: 0}
 
 (let rec x = {u: x, v: add}; {u: x, v: x})
-//│ res: {u: 'x, v: 'x}
+//│ res: {u: forall 'x. 'x, v: forall 'x. 'x}
 //│   where
 //│     'x :> {u: 'x, v: int -> int -> int}
 
 (let rec x = {u: x, v: x}; {u: x, v: x})
-//│ res: {u: 'x, v: 'x}
+//│ res: {u: forall 'x. 'x, v: forall 'x. 'x}
 //│   where
 //│     'x :> {u: 'x, v: 'x}
 
@@ -2432,7 +2432,7 @@ add
 //│ res: {u: {v: int -> int -> int}, v: {v: int -> int -> int}}
 
 (let rec x = {v: x}; {u: x, v: x})
-//│ res: {u: 'x, v: 'x}
+//│ res: {u: forall 'x. 'x, v: forall 'x. 'x}
 //│   where
 //│     'x :> {v: 'x}
 
