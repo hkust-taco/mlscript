@@ -18,12 +18,15 @@ def Nil = Nil {}
 //│ Nil: Nil
 
 def Cons head tail = Cons { head; tail }
-//│ Cons: 'b -> (forall 'c. (List['c] & 'c) -> (forall 'b, 'c, 'head, 'a, 'tail. (Cons['a] with {head: 'head, tail: 'tail}
+//│ Cons: 'b -> (forall 'b, 'c. ((List['c] & 'c) -> (forall 'b, 'c, 'head, 'a, 'tail. (Cons['a] with {head: 'head, tail: 'tail}
 //│   where
 //│     'b <: 'head & 'a
 //│     'c <: List['a] & 'tail
 //│     'b <: 'head & 'a
-//│     'c <: List['a] & 'tail)))
+//│     'c <: List['a] & 'tail))
+//│   where
+//│     'b <: 'c
+//│     'b <: 'c))
 
 // ------------ Type signatures for functions used in the examples ------------
 // (I guess)
@@ -57,37 +60,33 @@ class Collection[a]: { l: List[a] }
 //│     'a <: anything
 //│     'a <: anything
 //│     'a <: anything))
-//│ Defined Collection.Fold: Collection['a] -> (forall 'b. ('b -> 'a -> 'b) -> anything -> (forall 'a, 'c, 'd, 'e. ('d
+//│ Defined Collection.Fold: Collection['a] -> (forall 'b. ('b -> 'a -> 'b) -> (forall 'a, 'c, 'd, 'e. (anything -> (forall 'a, 'c, 'f, 'g. ('f
+//│   where
+//│     'c <: 'f -> 'a -> 'f
+//│     'g <: 'f))
 //│   where
 //│     'c <: 'd -> 'a -> 'd
-//│     'e <: 'd)))
+//│     'c <: 'e -> 'a -> 'e)))
 
 def coll_mem c x = c.Mem x
-//│ coll_mem: (Collection['a] & 'b) -> (forall 'a. 'a -> (forall 'a, 'b, 'c. (bool
+//│ coll_mem: (Collection['a] & 'b) -> (forall 'a, 'b. ('a -> (forall 'a, 'b, 'c. (bool
 //│   where
 //│     'c <: 'a
-//│     'a <: 'a
 //│     'b <: Collection['a]
-//│     'c <: 'a
 //│     'a <: 'a
+//│     'c <: 'a
 //│     'b <: Collection['a]
-//│     'c <: 'a
 //│     'a <: 'a
-//│     'b <: Collection['a])))
+//│     'c <: 'a
+//│     'b <: Collection['a]
+//│     'a <: 'a))
+//│   where
+//│     'b <: Collection['a]
+//│     'b <: Collection['a]))
 
 // typo in the paper? it was `fun x -> fun y -> ...`
 def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
   let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
   (l1, l2)
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:675)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError

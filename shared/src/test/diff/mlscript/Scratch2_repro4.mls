@@ -10,13 +10,22 @@
 def s n = fun f -> fun x -> (n f x)
 def s n = fun f -> n f
 def s n = n
-//│ s: (nothing -> nothing -> 'a & 'a) -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd. ('d
+//│ s: (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'c. ('c -> (forall 'a, 'b, 'c, 'd. ('d
 //│   where
-//│     'a <: 'b -> 'c -> 'd))))
+//│     'a <: 'b -> 'c -> 'd))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a))
 //│  = [Function: s]
-//│ s: (nothing -> 'a & 'a) -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
+//│ s: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
 //│   where
-//│     'a <: 'b -> 'c)))
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> 'a
+//│     'a <: nothing -> 'a))
 //│  = [Function: s1]
 //│ s: 'a -> 'a
 //│  = [Function: s2]
@@ -43,9 +52,12 @@ succ = s
 
 // :d
 def s n = fun f -> n f
-//│ s: (nothing -> 'a & 'a) -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
+//│ s: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
 //│   where
-//│     'a <: 'b -> 'c)))
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> 'a
+//│     'a <: nothing -> 'a))
 //│  = [Function: s3]
 
 // def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -61,9 +73,12 @@ def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
 succ_min = s
 // succ n = s n
 // s id : (forall 'M. ('M -> 'M))
-//│ (nothing -> 'a & 'a) -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
+//│ (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
 //│   where
-//│     'a <: 'b -> 'c)))
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> 'a
+//│     'a <: nothing -> 'a))
 //│   <:  succ_min:
 //│ (forall 'N. 'N -> 'N) -> (forall 'M. 'M -> 'M)
 //│         = [Function: s3]

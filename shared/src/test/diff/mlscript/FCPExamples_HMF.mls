@@ -20,25 +20,18 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'c. (List['c] & 'c) -> (forall 'b, 'c, 'head, 'a, 'tail. (Cons['a] with {head: 'head, tail: 'tail}
+//│ 'b -> (forall 'b, 'c. ((List['c] & 'c) -> (forall 'b, 'c, 'head, 'a, 'tail. (Cons['a] with {head: 'head, tail: 'tail}
 //│   where
 //│     'b <: 'head & 'a
 //│     'c <: List['a] & 'tail
 //│     'b <: 'head & 'a
-//│     'c <: List['a] & 'tail)))
+//│     'c <: List['a] & 'tail))
+//│   where
+//│     'b <: 'c
+//│     'b <: 'c))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:659)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
+//│     = [Function: cons]
 
 class Nil[a]: List[a]
   method Head = error
@@ -73,17 +66,7 @@ def head l = l.Head
 //│     'a <: List['b]))
 //│   <:  head:
 //│ List['a] -> 'a
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:659)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
+//│     = [Function: head]
 
 def tail: forall 'a. List['a] -> List['a]
 def tail l = l.Tail
@@ -94,17 +77,7 @@ def tail l = l.Tail
 //│     'b <: List['a]))
 //│   <:  tail:
 //│ List['a] -> List['a]
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:659)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
+//│     = [Function: tail]
 
 def is_empty: forall 'a. List['a] -> bool
 def is_empty l = eq l nil
@@ -143,10 +116,13 @@ def choose: forall 'a. 'a -> 'a -> 'a
 def choose x y = if true then x else y
 //│ choose: 'a -> 'a -> 'a
 //│       = <missing implementation>
-//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
+//│ 'a -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
 //│   where
 //│     'a <: 'c
-//│     'b <: 'c)))
+//│     'b <: 'c))
+//│   where
+//│     'a <: 'b
+//│     'a <: 'b))
 //│   <:  choose:
 //│ 'a -> 'a -> 'a
 //│       = [Function: choose]
@@ -193,9 +169,12 @@ poly id
 //│    = [ 1, true ]
 
 def app f x = f x
-//│ app: (nothing -> 'a & 'a) -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
+//│ app: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
 //│   where
-//│     'a <: 'b -> 'c)))
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> 'a
+//│     'a <: nothing -> 'a))
 //│    = [Function: app]
 
 // FreezeML D1

@@ -1026,9 +1026,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   /** Freshens all the type variables whose level is comprised in `(above, below]`
     *   or which have bounds and whose level is greater than `above`. */
   def freshenAbove(above: Int, ty: SimpleType, rigidify: Bool = false, below: Int = MaxLevel)
-        (implicit lvl: Int, freshened: MutMap[TV, ST],
-        ctx:Ctx=Ctx.empty,//FIXME
-        raise:Raise=throw _,
+        (implicit ctx:Ctx, freshened: MutMap[TV, ST],
+        // ctx:Ctx=Ctx.empty,//FIXME
+        // raise:Raise=throw _,
+        // ctx:Ctx,
+        raise:Raise,
         ): SimpleType = {
     def freshenImpl(ty: SimpleType, below: Int): SimpleType =
     // (trace(s"FRESHEN $ty || $above .. $below  ${ty.level} ${ty.level <= above}")

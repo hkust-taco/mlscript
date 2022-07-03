@@ -20,25 +20,18 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'c. (List['c] & 'c) -> (forall 'b, 'c, 'head, 'a, 'tail. (Cons['a] with {head: 'head, tail: 'tail}
+//│ 'b -> (forall 'b, 'c. ((List['c] & 'c) -> (forall 'b, 'c, 'head, 'a, 'tail. (Cons['a] with {head: 'head, tail: 'tail}
 //│   where
 //│     'b <: 'head & 'a
 //│     'c <: List['a] & 'tail
 //│     'b <: 'head & 'a
-//│     'c <: List['a] & 'tail)))
+//│     'c <: List['a] & 'tail))
+//│   where
+//│     'b <: 'c
+//│     'b <: 'c))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:659)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
+//│     = [Function: cons]
 
 class Nil[a]: List[a]
   method Head = error
@@ -70,25 +63,52 @@ def choose3 x y z = choose (choose x y) z
 def id = (fun x -> x) : Sid
 def id_ = fun x -> x
 def succ n = n + 1
-//│ choose: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
+//│ choose: 'a -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
 //│   where
 //│     'a <: 'c
-//│     'b <: 'c)))
-//│       = [Function: choose]
-//│ choose3: 'a -> (forall 'b. 'b -> (forall 'c, 'd. ('c & 'd) -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h. ('d
+//│     'b <: 'c))
 //│   where
-//│     'e <: 'd
-//│     'f <: 'd
-//│     'g <: 'd
-//│     'h <: 'd
-//│     'a <: 'h
-//│     'b <: 'f
-//│     'c <: 'd & 'h
-//│     'g <: 'd
-//│     'h <: 'd
-//│     'a <: 'h
-//│     'b <: 'f
-//│     'c <: 'd & 'h))))
+//│     'a <: 'b
+//│     'a <: 'b))
+//│       = [Function: choose]
+//│ choose3: 'a -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h. ('h -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l. ('j
+//│   where
+//│     'i <: 'j
+//│     'k <: 'j
+//│     'l <: 'j
+//│     'b <: 'j
+//│     'd <: 'b
+//│     'e <: 'b
+//│     'a <: 'b
+//│     'f <: 'b
+//│     'c <: 'k & 'j
+//│     'g <: 'b
+//│     'h <: 'b & 'j
+//│     'l <: 'j
+//│     'b <: 'j
+//│     'd <: 'b
+//│     'e <: 'b
+//│     'a <: 'b
+//│     'f <: 'b
+//│     'c <: 'k & 'j
+//│     'g <: 'b
+//│     'h <: 'b & 'j))
+//│   where
+//│     'd <: 'b
+//│     'e <: 'b
+//│     'a <: 'b
+//│     'f <: 'b
+//│     'c <: 'b
+//│     'g <: 'b
+//│     'd <: 'b
+//│     'e <: 'b
+//│     'a <: 'b
+//│     'f <: 'b
+//│     'c <: 'b
+//│     'g <: 'b))
+//│   where
+//│     'a <: 'b
+//│     'a <: 'b))
 //│        = [Function: choose3]
 //│ id: Sid
 //│   = [Function: id]
@@ -103,65 +123,155 @@ def test = choose3 id
 def test_ = choose3 id_
 def test2 = test succ
 def test2_ = test_ succ
-//│ test: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h. ('d
+//│ test: 'a -> (forall 'b, 'c, 'a, 'd, 'e, 'f, 'g. ('c -> (forall 'b, 'c, 'a, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l. ('i
 //│   where
-//│     'c <: 'd
-//│     'e <: 'd
-//│     'f <: 'd
-//│     'g <: 'd
-//│     'h <: 'b
-//│     'a <: 'b
-//│     'b <: 'b
-//│     'f <: 'd
-//│     'g <: 'd
-//│     'h <: 'b
-//│     'a <: 'b
-//│     'b <: 'b)))
+//│     'h <: 'i
+//│     'j <: 'i
+//│     'k <: 'i
+//│     'l <: 'i
+//│     'd <: 'c
+//│     'e <: 'c
+//│     'b <: 'c
+//│     'f <: 'c
+//│     'a <: 'c
+//│     'g <: 'c
+//│     'c <: 'c
+//│     'k <: 'i
+//│     'l <: 'i
+//│     'd <: 'c
+//│     'e <: 'c
+//│     'b <: 'c
+//│     'f <: 'c
+//│     'a <: 'c
+//│     'g <: 'c
+//│     'c <: 'c))
+//│   where
+//│     'd <: 'c
+//│     'e <: 'c
+//│     'b <: 'c
+//│     'f <: 'c
+//│     'a <: 'c
+//│     'g <: 'c
+//│     'd <: 'c
+//│     'e <: 'c
+//│     'b <: 'c
+//│     'f <: 'c
+//│     'a <: 'c
+//│     'g <: 'c))
+//│   where
+//│     'b <: 'c
+//│     'b <: 'c
 //│     = [Function (anonymous)]
-//│ test_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h. ('d
+//│ test_: 'a -> (forall 'b, 'c, 'a, 'd, 'e, 'f, 'g. ('c -> (forall 'b, 'c, 'a, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l. ('i
 //│   where
-//│     'c <: 'd
-//│     'e <: 'd
-//│     'f <: 'd
-//│     'g <: 'd
-//│     'h <: 'b
-//│     'a <: 'b
-//│     'b <: 'b
-//│     'f <: 'd
-//│     'g <: 'd
-//│     'h <: 'b
-//│     'a <: 'b
-//│     'b <: 'b)))
-//│      = [Function (anonymous)]
-//│ test2: 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h. ('c
-//│   where
-//│     'b <: 'c
+//│     'h <: 'i
+//│     'j <: 'i
+//│     'k <: 'i
+//│     'l <: 'i
 //│     'd <: 'c
 //│     'e <: 'c
-//│     'f <: 'c
-//│     'g <: 'a
-//│     'h <: 'a
-//│     'a <: 'a
-//│     'e <: 'c
-//│     'f <: 'c
-//│     'g <: 'a
-//│     'h <: 'a
-//│     'a <: 'a))
-//│      = [Function (anonymous)]
-//│ test2_: 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h. ('c
-//│   where
 //│     'b <: 'c
+//│     'f <: 'c
+//│     'a <: 'c
+//│     'g <: 'c
+//│     'c <: 'c
+//│     'k <: 'i
+//│     'l <: 'i
 //│     'd <: 'c
 //│     'e <: 'c
+//│     'b <: 'c
 //│     'f <: 'c
-//│     'g <: 'a
-//│     'h <: 'a
-//│     'a <: 'a
+//│     'a <: 'c
+//│     'g <: 'c
+//│     'c <: 'c))
+//│   where
+//│     'd <: 'c
 //│     'e <: 'c
+//│     'b <: 'c
 //│     'f <: 'c
+//│     'a <: 'c
+//│     'g <: 'c
+//│     'd <: 'c
+//│     'e <: 'c
+//│     'b <: 'c
+//│     'f <: 'c
+//│     'a <: 'c
+//│     'g <: 'c))
+//│   where
+//│     'b <: 'c
+//│     'b <: 'c
+//│      = [Function (anonymous)]
+//│ test2: 'a -> (forall 'b, 'a, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l. ('i
+//│   where
+//│     'h <: 'i
+//│     'j <: 'i
+//│     'k <: 'i
+//│     'l <: 'i
+//│     'b <: 'a
+//│     'c <: 'a
+//│     'd <: 'a
+//│     'e <: 'a
+//│     'f <: 'a
 //│     'g <: 'a
-//│     'h <: 'a
+//│     'a <: 'a
+//│     'k <: 'i
+//│     'l <: 'i
+//│     'b <: 'a
+//│     'c <: 'a
+//│     'd <: 'a
+//│     'e <: 'a
+//│     'f <: 'a
+//│     'g <: 'a
 //│     'a <: 'a))
+//│   where
+//│     'b <: 'a
+//│     'c <: 'a
+//│     'd <: 'a
+//│     'e <: 'a
+//│     'f <: 'a
+//│     'g <: 'a
+//│     'b <: 'a
+//│     'c <: 'a
+//│     'd <: 'a
+//│     'e <: 'a
+//│     'f <: 'a
+//│     'g <: 'a
+//│      = [Function (anonymous)]
+//│ test2_: 'a -> (forall 'b, 'a, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l. ('i
+//│   where
+//│     'h <: 'i
+//│     'j <: 'i
+//│     'k <: 'i
+//│     'l <: 'i
+//│     'b <: 'a
+//│     'c <: 'a
+//│     'd <: 'a
+//│     'e <: 'a
+//│     'f <: 'a
+//│     'g <: 'a
+//│     'a <: 'a
+//│     'k <: 'i
+//│     'l <: 'i
+//│     'b <: 'a
+//│     'c <: 'a
+//│     'd <: 'a
+//│     'e <: 'a
+//│     'f <: 'a
+//│     'g <: 'a
+//│     'a <: 'a))
+//│   where
+//│     'b <: 'a
+//│     'c <: 'a
+//│     'd <: 'a
+//│     'e <: 'a
+//│     'f <: 'a
+//│     'g <: 'a
+//│     'b <: 'a
+//│     'c <: 'a
+//│     'd <: 'a
+//│     'e <: 'a
+//│     'f <: 'a
+//│     'g <: 'a
 //│       = [Function (anonymous)]
 
 // (* Messages d'erreur foireux : *)
@@ -175,14 +285,20 @@ fun x -> fun y -> ((x : S1), (y : S2), if true then x else y)
 fun x -> fun y -> ((x : S1), (y : S2), x x)
 //│ Defined type alias S1
 //│ Defined type alias S2
-//│ res: (S1 & 'a) -> (forall 'b. (S2 & 'b) -> (forall 'a, 'b, 'c. ((S1, S2, 'c,)
+//│ res: (S1 & 'a) -> (forall 'a, 'b. ((S2 & 'b) -> (forall 'a, 'b, 'c. ((S1, S2, 'c,)
 //│   where
 //│     'a <: 'c
-//│     'b <: 'c)))
+//│     'b <: 'c))
+//│   where
+//│     'a <: 'b
+//│     'a <: 'b))
 //│    = [Function: res]
-//│ res: (S1 & 'a -> anything & 'a) -> S2 -> (forall 'a, 'b. ((S1, S2, 'b,)
+//│ res: (S1 & 'a -> anything & 'a) -> (forall 'a. (S2 -> (forall 'a, 'b. ((S1, S2, 'b,)
 //│   where
 //│     'a <: 'a -> 'b))
+//│   where
+//│     'a <: 'a -> anything
+//│     'a <: 'a -> anything))
 //│    = [Function: res]
 
 // (* please onlyweak ['b = sid] 'b -> 'b : sid -> sid *)
@@ -210,7 +326,7 @@ def mkpair x y = (x, y)
 // *)
 example mkpair
 example_ mkpair
-//│ res: int -> ('b | (‘a1042, int,))
+//│ res: int -> ('b | (‘a2471, int,))
 //│   where
 //│     'a <: nothing -> int -> 'b
 //│    = [Function (anonymous)]
@@ -225,6 +341,7 @@ def make_ex3 x (f: forall 'a. ('a | Sid) -> 'b) = f x
 //│   where
 //│     'b <: 'a -> 'c))
 //│   where
+//│     'a <: anything
 //│     'a <: anything))
 //│         = [Function: make_ex3]
 

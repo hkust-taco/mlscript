@@ -18,17 +18,26 @@ def imp (z: Bot) =
 def imp' z =
   (fun x -> x x)
   (fun y -> y z y)
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: Bot
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:633)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:674)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ imp: Bot -> (forall 'a, 'b, 'c. ('b
+//│   where
+//│     'a <: 'a -> 'b
+//│     'c <: ‘a & ‘a66))
+//│    = [Function: imp]
+//│ imp': ('a -> 'a -> anything & 'a -> 'a -> (forall 'b. ('a -> 'b -> anything & 'b) -> (forall 'a, 'b, 'c. ('c
+//│   where
+//│     'b <: 'a -> 'b -> 'c))) -> anything & 'a) -> (forall 'a, 'd, 'e, 'f. ('e
+//│   where
+//│     'd <: 'd -> 'e
+//│     'a <: 'a -> 'f -> anything & 'a -> 'f -> (forall 'b. ('a -> 'b -> anything & 'b) -> (forall 'a, 'b, 'c. ('c
+//│   where
+//│     'b <: 'a -> 'b -> 'c))) -> anything & 'f & 'a -> 'g -> anything & 'a -> 'g -> (forall 'b. ('a -> 'b -> anything & 'b) -> (forall 'a, 'b, 'c. ('c
+//│   where
+//│     'b <: 'a -> 'b -> 'c))) -> anything & 'g & 'a -> 'h -> anything & 'a -> 'h -> (forall 'b. ('a -> 'b -> anything & 'b) -> (forall 'a, 'b, 'c. ('c
+//│   where
+//│     'b <: 'a -> 'b -> 'c))) -> anything & 'h & 'a -> 'i -> anything & 'a -> 'i -> (forall 'b. ('a -> 'b -> anything & 'b) -> (forall 'a, 'b, 'c. ('c
+//│   where
+//│     'b <: 'a -> 'b -> 'c))) -> anything & 'i))
+//│     = [Function: imp]
 
 
 // (* Quelques constantes. *)
@@ -59,21 +68,18 @@ def delta' = fun x -> x x
 // delta id ;;
 delta id
 delta' id
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: Sid
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:674)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ res: 'a
+//│   where
+//│     'b <: 'b -> 'a
+//│    = [Function: id]
+//│ res: 'a
+//│   where
+//│     'b <: 'b -> 'a
+//│    = [Function: id]
 
 // let t a b c d e = (fun x -> a x x) ((fun y -> b (c y)) (d e)) ;;
 def t a b c d e = (fun x -> a x x) ((fun y -> b (c y)) (d e))
-//│ t: (nothing -> nothing -> 'a & 'b) -> (forall 'a, 'c. (nothing -> 'a & 'c) -> (forall 'a, 'd. (nothing -> 'a & 'd) -> (forall 'a. (nothing -> 'a & 'a) -> (forall 'e. 'e -> (forall 'a, 'b. ('f
+//│ t: (nothing -> nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ((nothing -> 'a & 'c) -> (forall 'a, 'b, 'c, 'd. ((nothing -> 'a & 'd) -> (forall 'a, 'b, 'c, 'd. ((nothing -> 'a & 'a) -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> (forall 'a, 'b, 'c, 'd. ('f
 //│   where
 //│     'b <: (forall 'c, 'd, 'g, 'h, 'i. ('h
 //│   where
@@ -82,25 +88,70 @@ def t a b c d e = (fun x -> a x x) ((fun y -> b (c y)) (d e))
 //│   where
 //│     'c <: 'g -> 'h
 //│     'd <: 'i -> 'g)) -> 'f
-//│     'a <: 'e -> 'i))))))
+//│     'b <: nothing -> nothing -> 'a
+//│     'c <: nothing -> 'a
+//│     'd <: nothing -> 'a
+//│     'a <: 'e -> 'i))
+//│   where
+//│     'b <: nothing -> nothing -> 'a
+//│     'c <: nothing -> 'a
+//│     'd <: nothing -> 'a
+//│     'a <: nothing -> 'a
+//│     'b <: nothing -> nothing -> 'a
+//│     'c <: nothing -> 'a
+//│     'd <: nothing -> 'a
+//│     'a <: nothing -> 'a))
+//│   where
+//│     'b <: nothing -> nothing -> 'a
+//│     'c <: nothing -> 'a
+//│     'd <: nothing -> 'a
+//│     'b <: nothing -> nothing -> 'a
+//│     'c <: nothing -> 'a
+//│     'd <: nothing -> 'a))
+//│   where
+//│     'b <: nothing -> nothing -> 'a
+//│     'c <: nothing -> 'a
+//│     'b <: nothing -> nothing -> 'a
+//│     'c <: nothing -> 'a))
+//│   where
+//│     'b <: nothing -> nothing -> 'a
+//│     'b <: nothing -> nothing -> 'a))
 //│  = [Function: t]
 
 // let t w z a b = (fun y -> (fun x -> w (x y) z) a) b ;;
 def t w z a b = (fun y -> (fun x -> w (x y) z) a) b
-//│ t: (nothing -> nothing -> 'a & 'b) -> (forall 'c. 'c -> (forall 'a, 'd. (nothing -> 'a & 'd) -> (forall 'e. 'e -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h. ('g
+//│ t: (nothing -> nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'd. ((nothing -> 'a & 'd) -> (forall 'a, 'b, 'd, 'e. ('e -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h. ('g
 //│   where
 //│     'b <: 'f -> 'c -> 'g
 //│     'a <: 'h -> 'f
+//│     'b <: nothing -> nothing -> 'a
 //│     'd <: 'h -> 'a & 'a
-//│     'e <: 'h)))))
+//│     'b <: nothing -> nothing -> 'a
+//│     'd <: nothing -> 'a
+//│     'e <: 'h))
+//│   where
+//│     'b <: nothing -> nothing -> 'a
+//│     'd <: nothing -> 'a
+//│     'b <: nothing -> nothing -> 'a
+//│     'd <: nothing -> 'a))
+//│   where
+//│     'b <: nothing -> nothing -> 'a
+//│     'b <: nothing -> nothing -> 'a))
+//│   where
+//│     'b <: nothing -> nothing -> 'a
+//│     'b <: nothing -> nothing -> 'a))
 //│  = [Function: t1]
 
 // let t y a = (fun x -> x (x y)) ((fun z -> z) (fun x -> a x)) ;;
 def t y a = (fun x -> x (x y)) ((fun z -> z) (fun x -> a x))
-//│ t: 'a -> (nothing -> anything) -> (forall 'a, 'b, 'c, 'd. ('d
+//│ t: 'a -> (forall 'a, 'b. ((nothing -> 'b & 'b) -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
-//│     'b <: 'a -> 'c & 'c -> 'd
-//│     'a <: anything))
+//│     'c <: 'a -> 'd & 'd -> 'e
+//│     'a <: 'b
+//│     'b <: nothing -> 'b))
+//│   where
+//│     'a <: 'b
+//│     'a <: 'b))
 //│  = [Function: t2]
 
 // (* Rank 1 *)
@@ -109,6 +160,9 @@ def t y a = (fun x -> x (x y)) ((fun z -> z) (fun x -> a x))
 //│ res: 'a -> (forall 'a, 'b. ('b
 //│   where
 //│     'c <: 'a -> 'b))
+//│   where
+//│     'c <: nothing -> anything
+//│     'c <: nothing -> anything
 //│    = [Function (anonymous)]
 
 // (* Rank 3 *)
@@ -145,17 +199,14 @@ def t y a = (fun x -> x (x y)) ((fun z -> z) (fun x -> a x))
 // (fun (x:sid) -> x x x x x) id delta ;;
 (fun (x: Sid) -> x x x x x) id delta
 (fun x -> x x x x x) id delta'
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: Sid
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:674)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ res: Sid -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: 'a -> 'b))
+//│    = [Function: delta]
+//│ res: ('a -> anything & 'a) -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: 'a -> 'b))
+//│    = [Function: delta]
 
 // (* Rank 2 *)
 // type sk = ['a,'b] 'a -> 'b -> 'a;;
@@ -164,33 +215,33 @@ type Sk = forall 'a 'b. 'a -> 'b -> 'a
 (fun (f: Sk) -> fun x -> f f x) (fun v -> fun w -> v)
 (fun f -> fun x -> f f x) (fun v -> fun w -> v)
 //│ Defined type alias Sk
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: Sk
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:674)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ res: 'a -> (forall 'a, 'b. ('b
+//│   where
+//│     'c <: 'c -> 'a -> 'b))
+//│   where
+//│     'c <: 'c -> 'c -> anything
+//│     'c <: 'c -> 'c -> anything
+//│    = [Function (anonymous)]
+//│ res: 'a -> (forall 'a, 'b. ('b
+//│   where
+//│     'c <: 'c -> 'a -> 'b))
+//│   where
+//│     'c <: 'c -> 'c -> anything
+//│     'c <: 'c -> 'c -> anything
+//│    = [Function (anonymous)]
 
 // (* Rank 3 *)
 // (fun t -> fun k -> t k) (fun (f:sk) -> fun x -> f f x) (fun v -> fun w -> v);;
 (fun t -> fun k -> t k) (fun (f: Sk) -> fun x -> f f x) (fun v -> fun w -> v)
 (fun t -> fun k -> t k) (fun f -> fun x -> f f x) (fun v -> fun w -> v)
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: Sk
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:674)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ res: 'a
+//│   where
+//│     'b <: (forall 'c. 'c -> anything -> 'c) -> 'a
+//│    = [Function (anonymous)]
+//│ res: 'a
+//│   where
+//│     'b <: (forall 'c. 'c -> anything -> 'c) -> 'a
+//│    = [Function (anonymous)]
 
 
 // let k = fun x y -> x
@@ -207,17 +258,26 @@ def three = fun f -> fun x -> f (f (f x))
 //│  = [Function: k]
 //│ k2: anything -> (forall 'a. 'a -> 'a)
 //│   = [Function: k2]
-//│ app: (nothing -> 'a & 'a) -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
+//│ app: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
 //│   where
-//│     'a <: 'b -> 'c)))
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> 'a
+//│     'a <: nothing -> 'a))
 //│    = [Function: app]
-//│ two: (nothing -> 'a & 'a) -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('d
+//│ two: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d
 //│   where
-//│     'a <: 'b -> 'c & 'c -> 'd)))
+//│     'a <: 'b -> 'c & 'c -> 'd))
+//│   where
+//│     'a <: nothing -> 'a
+//│     'a <: nothing -> 'a))
 //│    = [Function: two]
-//│ three: (nothing -> 'a & 'a) -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ three: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
-//│     'a <: 'b -> 'c & 'c -> 'd & 'd -> 'e)))
+//│     'a <: 'b -> 'c & 'c -> 'd & 'd -> 'e))
+//│   where
+//│     'a <: nothing -> 'a
+//│     'a <: nothing -> 'a))
 //│      = [Function: three]
 
 
@@ -248,13 +308,13 @@ def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) 
 // FIXME
 t id succ 0
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.249: 	t id succ 0
+//│ ║  l.309: 	t id succ 0
 //│ ║         	^^^^^^^^^
 //│ ╟── function of type `?a -> ?a` is not an instance of type `int`
-//│ ║  l.42: 	def id = fun x -> x
+//│ ║  l.51: 	def id = fun x -> x
 //│ ║        	         ^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.249: 	t id succ 0
+//│ ║  l.309: 	t id succ 0
 //│ ╙──       	  ^^
 //│ res: error
 //│    = 2
@@ -262,7 +322,7 @@ t id succ 0
 //:e // due to tapping
 t2 id succ 0
 //│ ╔══[ERROR] identifier not found: t2
-//│ ║  l.263: 	t2 id succ 0
+//│ ║  l.323: 	t2 id succ 0
 //│ ╙──       	^^
 //│ res: error
 //│    = 2
@@ -284,13 +344,13 @@ def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) 
 // FIXME
 t id succ 0
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.285: 	t id succ 0
+//│ ║  l.345: 	t id succ 0
 //│ ║         	^^^^^^^^^
 //│ ╟── function of type `?a -> ?a` is not an instance of type `int`
-//│ ║  l.42: 	def id = fun x -> x
+//│ ║  l.51: 	def id = fun x -> x
 //│ ║        	         ^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.285: 	t id succ 0
+//│ ║  l.345: 	t id succ 0
 //│ ╙──       	  ^^
 //│ res: error
 //│    = 6
@@ -298,7 +358,7 @@ t id succ 0
 // :e // TODO try without cycle check // works with quantif extrus
 t2 id succ 0
 //│ ╔══[ERROR] identifier not found: t2
-//│ ║  l.299: 	t2 id succ 0
+//│ ║  l.359: 	t2 id succ 0
 //│ ╙──       	^^
 //│ res: error
 //│    = 6
@@ -338,40 +398,40 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 //│     ?c <: ?b -> ?d)) <: (forall ?e, ?f. ?f -> (forall ?g, ?h, ?e, ?f. (?h
 //│   where
 //│     ?g <: ?f -> ?h))) -> ?i` exceeded recursion depth limit (300)
-//│ ║  l.335: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.395: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ‹∀ 0. (α3505' -> ‹∀ 1. {α3506'' where: α3505' <: ((α3505',) -> α3506'')}›)›  <!<  α3505_3549
-//│ ╟── while constraining:  α3505_3545  <!<  α3505_3549
-//│ ╟── while constraining:  (α3505_3545,)  <!<  (α3505_3549,)
-//│ ╟── while constraining:  (α3505_3549 -> ‹∀ 1. {α3506_3551'' where: α3505_3549 <: ((α3505_3549,) -> α3506_3551'')}›)  <!<  ((α3505_3545,) -> α3506_3548)
-//│ ╟── while constraining:  ‹∀ 0. (α3505' -> ‹∀ 1. {α3506'' where: α3505' <: ((α3505',) -> α3506'')}›)›  <!<  ((α3505_3545,) -> α3506_3548)
-//│ ╟── while constraining:  ‹∀ 0. (α3505' -> ‹∀ 1. {α3506'' where: α3505' <: ((α3505',) -> α3506'')}›)›  <!<  α3505_3545
-//│ ╟── while constraining:  α3505_3541  <!<  α3505_3545
-//│ ╟── while constraining:  (α3505_3541,)  <!<  (α3505_3545,)
-//│ ╟── while constraining:  (α3505_3545 -> ‹∀ 1. {α3506_3547'' where: α3505_3545 <: ((α3505_3545,) -> α3506_3547'')}›)  <!<  ((α3505_3541,) -> α3506_3544)
-//│ ╟── while constraining:  ‹∀ 0. (α3505' -> ‹∀ 1. {α3506'' where: α3505' <: ((α3505',) -> α3506'')}›)›  <!<  ((α3505_3541,) -> α3506_3544)
-//│ ╟── while constraining:  ‹∀ 0. (α3505' -> ‹∀ 1. {α3506'' where: α3505' <: ((α3505',) -> α3506'')}›)›  <!<  α3505_3541
-//│ ╟── while constraining:  α3505_3537  <!<  α3505_3541
-//│ ╟── while constraining:  (α3505_3537,)  <!<  (α3505_3541,)
-//│ ╟── while constraining:  (α3505_3541 -> ‹∀ 1. {α3506_3543'' where: α3505_3541 <: ((α3505_3541,) -> α3506_3543'')}›)  <!<  ((α3505_3537,) -> α3506_3540)
-//│ ╟── while constraining:  ‹∀ 0. (α3505' -> ‹∀ 1. {α3506'' where: α3505' <: ((α3505',) -> α3506'')}›)›  <!<  ((α3505_3537,) -> α3506_3540)
+//│ ╟── while constraining:  ‹∀ 0. (α6881' -> ‹∀ 1. {α6882'' where: α6881' <: ((α6881',) -> α6882'')}›)›  <!<  α6881_6925
+//│ ╟── while constraining:  α6881_6921  <!<  α6881_6925
+//│ ╟── while constraining:  (α6881_6921,)  <!<  (α6881_6925,)
+//│ ╟── while constraining:  (α6881_6925 -> ‹∀ 1. {α6882_6927'' where: α6881_6925 <: ((α6881_6925,) -> α6882_6927'')}›)  <!<  ((α6881_6921,) -> α6882_6924)
+//│ ╟── while constraining:  ‹∀ 0. (α6881' -> ‹∀ 1. {α6882'' where: α6881' <: ((α6881',) -> α6882'')}›)›  <!<  ((α6881_6921,) -> α6882_6924)
+//│ ╟── while constraining:  ‹∀ 0. (α6881' -> ‹∀ 1. {α6882'' where: α6881' <: ((α6881',) -> α6882'')}›)›  <!<  α6881_6921
+//│ ╟── while constraining:  α6881_6917  <!<  α6881_6921
+//│ ╟── while constraining:  (α6881_6917,)  <!<  (α6881_6921,)
+//│ ╟── while constraining:  (α6881_6921 -> ‹∀ 1. {α6882_6923'' where: α6881_6921 <: ((α6881_6921,) -> α6882_6923'')}›)  <!<  ((α6881_6917,) -> α6882_6920)
+//│ ╟── while constraining:  ‹∀ 0. (α6881' -> ‹∀ 1. {α6882'' where: α6881' <: ((α6881',) -> α6882'')}›)›  <!<  ((α6881_6917,) -> α6882_6920)
+//│ ╟── while constraining:  ‹∀ 0. (α6881' -> ‹∀ 1. {α6882'' where: α6881' <: ((α6881',) -> α6882'')}›)›  <!<  α6881_6917
+//│ ╟── while constraining:  α6881_6913  <!<  α6881_6917
+//│ ╟── while constraining:  (α6881_6913,)  <!<  (α6881_6917,)
+//│ ╟── while constraining:  (α6881_6917 -> ‹∀ 1. {α6882_6919'' where: α6881_6917 <: ((α6881_6917,) -> α6882_6919'')}›)  <!<  ((α6881_6913,) -> α6882_6916)
+//│ ╟── while constraining:  ‹∀ 0. (α6881' -> ‹∀ 1. {α6882'' where: α6881' <: ((α6881',) -> α6882'')}›)›  <!<  ((α6881_6913,) -> α6882_6916)
 //│ ╟── ......
 //│ ╟── ......
-//│ ╟── while constraining:  ‹∀ 0. (α3505' -> ‹∀ 1. {α3506'' where: α3505' <: ((α3505',) -> α3506'')}›)›  <!<  ((α3505_3517,) -> α3506_3520)
-//│ ╟── while constraining:  ‹∀ 0. (α3505' -> ‹∀ 1. {α3506'' where: α3505' <: ((α3505',) -> α3506'')}›)›  <!<  α3505_3517
-//│ ╟── while constraining:  α3505_3513  <!<  α3505_3517
-//│ ╟── while constraining:  (α3505_3513,)  <!<  (α3505_3517,)
-//│ ╟── while constraining:  (α3505_3517 -> ‹∀ 1. {α3506_3519'' where: α3505_3517 <: ((α3505_3517,) -> α3506_3519'')}›)  <!<  ((α3505_3513,) -> α3506_3516)
-//│ ╟── while constraining:  ‹∀ 0. (α3505' -> ‹∀ 1. {α3506'' where: α3505' <: ((α3505',) -> α3506'')}›)›  <!<  ((α3505_3513,) -> α3506_3516)
-//│ ╟── while constraining:  ‹∀ 0. (α3505' -> ‹∀ 1. {α3506'' where: α3505' <: ((α3505',) -> α3506'')}›)›  <!<  α3505_3513
-//│ ╟── while constraining:  α3502_3509  <!<  α3505_3513
-//│ ╟── while constraining:  (α3502_3509,)  <!<  (α3505_3513,)
-//│ ╟── while constraining:  (α3505_3513 -> ‹∀ 1. {α3506_3515'' where: α3505_3513 <: ((α3505_3513,) -> α3506_3515'')}›)  <!<  ((α3502_3509,) -> α3503_3512)
-//│ ╟── while constraining:  ‹∀ 0. (α3505' -> ‹∀ 1. {α3506'' where: α3505' <: ((α3505',) -> α3506'')}›)›  <!<  ((α3502_3509,) -> α3503_3512)
-//│ ╟── while constraining:  ‹∀ 0. (α3505' -> ‹∀ 1. {α3506'' where: α3505' <: ((α3505',) -> α3506'')}›)›  <!<  α3502_3509
-//│ ╟── while constraining:  (‹∀ 0. (α3505' -> ‹∀ 1. {α3506'' where: α3505' <: ((α3505',) -> α3506'')}›)›,)  <!<  (α3502_3509,)
-//│ ╟── while constraining:  (α3502_3509 -> ‹∀ 1. {α3503_3511'' where: α3502_3509 <: ((α3502_3509,) -> α3503_3511'')}›)  <!<  ((‹∀ 0. (α3505' -> ‹∀ 1. {α3506'' where: α3505' <: ((α3505',) -> α3506'')}›)›,) -> α3508)
-//│ ╙── while constraining:  ‹∀ 0. (α3502' -> ‹∀ 1. {α3503'' where: α3502' <: ((α3502',) -> α3503'')}›)›  <!<  ((‹∀ 0. (α3505' -> ‹∀ 1. {α3506'' where: α3505' <: ((α3505',) -> α3506'')}›)›,) -> α3508)
+//│ ╟── while constraining:  ‹∀ 0. (α6881' -> ‹∀ 1. {α6882'' where: α6881' <: ((α6881',) -> α6882'')}›)›  <!<  ((α6881_6893,) -> α6882_6896)
+//│ ╟── while constraining:  ‹∀ 0. (α6881' -> ‹∀ 1. {α6882'' where: α6881' <: ((α6881',) -> α6882'')}›)›  <!<  α6881_6893
+//│ ╟── while constraining:  α6881_6889  <!<  α6881_6893
+//│ ╟── while constraining:  (α6881_6889,)  <!<  (α6881_6893,)
+//│ ╟── while constraining:  (α6881_6893 -> ‹∀ 1. {α6882_6895'' where: α6881_6893 <: ((α6881_6893,) -> α6882_6895'')}›)  <!<  ((α6881_6889,) -> α6882_6892)
+//│ ╟── while constraining:  ‹∀ 0. (α6881' -> ‹∀ 1. {α6882'' where: α6881' <: ((α6881',) -> α6882'')}›)›  <!<  ((α6881_6889,) -> α6882_6892)
+//│ ╟── while constraining:  ‹∀ 0. (α6881' -> ‹∀ 1. {α6882'' where: α6881' <: ((α6881',) -> α6882'')}›)›  <!<  α6881_6889
+//│ ╟── while constraining:  α6878_6885  <!<  α6881_6889
+//│ ╟── while constraining:  (α6878_6885,)  <!<  (α6881_6889,)
+//│ ╟── while constraining:  (α6881_6889 -> ‹∀ 1. {α6882_6891'' where: α6881_6889 <: ((α6881_6889,) -> α6882_6891'')}›)  <!<  ((α6878_6885,) -> α6879_6888)
+//│ ╟── while constraining:  ‹∀ 0. (α6881' -> ‹∀ 1. {α6882'' where: α6881' <: ((α6881',) -> α6882'')}›)›  <!<  ((α6878_6885,) -> α6879_6888)
+//│ ╟── while constraining:  ‹∀ 0. (α6881' -> ‹∀ 1. {α6882'' where: α6881' <: ((α6881',) -> α6882'')}›)›  <!<  α6878_6885
+//│ ╟── while constraining:  (‹∀ 0. (α6881' -> ‹∀ 1. {α6882'' where: α6881' <: ((α6881',) -> α6882'')}›)›,)  <!<  (α6878_6885,)
+//│ ╟── while constraining:  (α6878_6885 -> ‹∀ 1. {α6879_6887'' where: α6878_6885 <: ((α6878_6885,) -> α6879_6887'')}›)  <!<  ((‹∀ 0. (α6881' -> ‹∀ 1. {α6882'' where: α6881' <: ((α6881',) -> α6882'')}›)›,) -> α6884)
+//│ ╙── while constraining:  ‹∀ 0. (α6878' -> ‹∀ 1. {α6879'' where: α6878' <: ((α6878',) -> α6879'')}›)›  <!<  ((‹∀ 0. (α6881' -> ‹∀ 1. {α6882'' where: α6881' <: ((α6881',) -> α6882'')}›)›,) -> α6884)
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
@@ -397,9 +457,33 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 // * Note: the only example in this file that requires `:GeneralizeCurriedFunctions`
 // :e // due to not stashing...?
 (fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
-//│ res: 'a
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d, ?e. ?c -> (forall ?f, ?g, ?h, ?i, ?j, ?k, ?l, ?m, ?a, ?b, ?c, ?d, ?e, ?n, ?o, ?p, ?q. (?g -> (forall ?f, ?g, ?r, ?l, ?m, ?a, ?b, ?c, ?d, ?e, ?s, ?t. (?r
 //│   where
-//│     'b <: 'b -> 'b -> (forall 'c. 'c -> anything -> 'c) -> 'a
+//│     ?f <: ?c -> ?s))
+//│   where
+//│     ?f <: ?c -> ?p
+//│     ?f <: ?c -> ?n)) <: (forall ?u, ?v, ?w, ?x, ?y. ?y -> (forall ?z, ?a1, ?b1, ?c1, ?d1, ?e1, ?f1, ?g1, ?h1, ?i1, ?u, ?v, ?w, ?x. (?a1 -> (forall ?z, ?a1, ?j1, ?k1, ?u, ?v, ?w, ?x. (?k1
+//│   where
+//│     ?z <: ?a1 -> ?j1 & ?j1 -> ?k1))
+//│   where
+//│     ?z <: ?b1 -> ?c1 & ?d1 -> ?e1
+//│     ?z <: ?f1 -> ?g1 & ?h1 -> ?i1))) -> ?l1` took too many steps and ran out of fuel (5000)
+//│ ║  l.459: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 1. {‹∀ 2. {(α12572_38570''' -> ‹∀ 3. {α12574_38572'''' where: α12571_38549 <: ((α12572_38570''',) -> α12573_38571''''), α12571_38549 <: ((α12573_38571'''',) -> α12574_38572'''')}›) where: α12571_38549 <: ((α12572_38562''',) -> α12573_38563'''), α12571_38549 <: ((α12573_38564''',) -> α12574_38565''')}› where: α12571_38549 <: ((α12572_38554'',) -> α12573_38555''), α12571_38549 <: ((α12573_38556'',) -> α12574_38557'')}›
+//│ ║  l.459: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ ║         	                                              ^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 1. {‹∀ 2. {(α12572_38570''' -> ‹∀ 3. {α12574_38572'''' where: α12571_38549 <: ((α12572_38570''',) -> α12573_38571''''), α12571_38549 <: ((α12573_38571'''',) -> α12574_38572'''')}›) where: α12571_38549 <: ((α12572_38562''',) -> α12573_38563'''), α12571_38549 <: ((α12573_38564''',) -> α12574_38565''')}› where: α12571_38549 <: ((α12572_38554'',) -> α12573_38555''), α12571_38549 <: ((α12573_38556'',) -> α12574_38557'')}›
+//│ ║  l.459: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ ║         	                                              ^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 1. {‹∀ 2. {(α12572_38570''' -> ‹∀ 3. {α12574_38572'''' where: α12571_38549 <: ((α12572_38570''',) -> α12573_38571''''), α12571_38549 <: ((α12573_38571'''',) -> α12574_38572'''')}›) where: α12571_38549 <: ((α12572_38562''',) -> α12573_38563'''), α12571_38549 <: ((α12573_38564''',) -> α12574_38565''')}› where: α12571_38549 <: ((α12572_38554'',) -> α12573_38555''), α12571_38549 <: ((α12573_38556'',) -> α12574_38557'')}›
+//│ ║  l.459: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ ║         	                                                          ^^^
+//│ ╟──  + α12573_35915
+//│ ║  l.459: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ ║         	                                                          ^^^
+//│ ╙──  - α12571_41153
+//│ res: error
 //│    = [Function (anonymous)]
 
 
@@ -412,47 +496,51 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 // :e // works with quantif extrus
 :re
 (fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b. ?b -> (forall ?c, ?d, ?e, ?a, ?b. (?e
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d. (?d -> (forall ?e, ?f, ?g, ?c, ?d. (?g
 //│   where
-//│     ?f <: ?d -> ?e
-//│     ?c <: ?b -> ?d)) <: (forall ?g, ?h. ?h -> (forall ?i, ?j, ?k, ?g, ?h. (?k
+//│     ?h <: ?f -> ?g
+//│     ?e <: ?d -> ?f))
 //│   where
-//│     ?i <: ?h -> ?j
-//│     ?f <: ?j -> ?k))) -> ?l` exceeded recursion depth limit (300)
-//│ ║  l.414: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
+//│     ?h <: ?a -> ?b) <: (forall ?i, ?j, ?k, ?l. (?l -> (forall ?m, ?n, ?o, ?i, ?l. (?o
+//│   where
+//│     ?m <: ?l -> ?n
+//│     ?h <: ?n -> ?o))
+//│   where
+//│     ?h <: ?j -> ?k)) -> ?p` exceeded recursion depth limit (300)
+//│ ║  l.498: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ‹∀ 2. (α7156''' -> ‹∀ 3. {α7158'''' where: α7156''' <: ((α7156''',) -> α7157''''), α7149' <: ((α7157'''',) -> α7158'''')}›)›  <!<  α7156_7233''
-//│ ╟── while constraining:  α7156_7226''  <!<  α7156_7233''
-//│ ╟── while constraining:  (α7156_7226'',)  <!<  (α7156_7233'',)
-//│ ╟── while constraining:  (α7156_7233'' -> ‹∀ 3. {α7158_7236'''' where: α7156_7233'' <: ((α7156_7233'',) -> α7157_7235''''), α7149' <: ((α7157_7235'''',) -> α7158_7236'''')}›)  <!<  ((α7156_7226'',) -> α7157_7230'')
-//│ ╟── while constraining:  ‹∀ 2. (α7156''' -> ‹∀ 3. {α7158'''' where: α7156''' <: ((α7156''',) -> α7157''''), α7149' <: ((α7157'''',) -> α7158'''')}›)›  <!<  ((α7156_7226'',) -> α7157_7230'')
-//│ ╟── while constraining:  ‹∀ 2. (α7156''' -> ‹∀ 3. {α7158'''' where: α7156''' <: ((α7156''',) -> α7157''''), α7149' <: ((α7157'''',) -> α7158'''')}›)›  <!<  α7156_7226''
-//│ ╟── while constraining:  α7156_7219''  <!<  α7156_7226''
-//│ ╟── while constraining:  (α7156_7219'',)  <!<  (α7156_7226'',)
-//│ ╟── while constraining:  (α7156_7226'' -> ‹∀ 3. {α7158_7229'''' where: α7156_7226'' <: ((α7156_7226'',) -> α7157_7228''''), α7149' <: ((α7157_7228'''',) -> α7158_7229'''')}›)  <!<  ((α7156_7219'',) -> α7157_7223'')
-//│ ╟── while constraining:  ‹∀ 2. (α7156''' -> ‹∀ 3. {α7158'''' where: α7156''' <: ((α7156''',) -> α7157''''), α7149' <: ((α7157'''',) -> α7158'''')}›)›  <!<  ((α7156_7219'',) -> α7157_7223'')
-//│ ╟── while constraining:  ‹∀ 2. (α7156''' -> ‹∀ 3. {α7158'''' where: α7156''' <: ((α7156''',) -> α7157''''), α7149' <: ((α7157'''',) -> α7158'''')}›)›  <!<  α7156_7219''
-//│ ╟── while constraining:  α7156_7212''  <!<  α7156_7219''
-//│ ╟── while constraining:  (α7156_7212'',)  <!<  (α7156_7219'',)
-//│ ╟── while constraining:  (α7156_7219'' -> ‹∀ 3. {α7158_7222'''' where: α7156_7219'' <: ((α7156_7219'',) -> α7157_7221''''), α7149' <: ((α7157_7221'''',) -> α7158_7222'''')}›)  <!<  ((α7156_7212'',) -> α7157_7216'')
-//│ ╟── while constraining:  ‹∀ 2. (α7156''' -> ‹∀ 3. {α7158'''' where: α7156''' <: ((α7156''',) -> α7157''''), α7149' <: ((α7157'''',) -> α7158'''')}›)›  <!<  ((α7156_7212'',) -> α7157_7216'')
+//│ ╟── while constraining:  ‹∀ 2. {(α42086''' -> ‹∀ 3. {α42088'''' where: α42086''' <: ((α42086''',) -> α42087''''), α42077' <: ((α42087'''',) -> α42088'''')}›) where: α42077' <: ((α42087_42090''',) -> α42088_42091''')}›  <!<  α42086_42187''
+//│ ╟── while constraining:  α42086_42178''  <!<  α42086_42187''
+//│ ╟── while constraining:  (α42086_42178'',)  <!<  (α42086_42187'',)
+//│ ╟── while constraining:  (α42086_42187'' -> ‹∀ 3. {α42088_42190'''' where: α42086_42187'' <: ((α42086_42187'',) -> α42087_42189''''), α42077' <: ((α42087_42189'''',) -> α42088_42190'''')}›)  <!<  ((α42086_42178'',) -> α42087_42182'')
+//│ ╟── while constraining:  {(α42086_42187'' -> ‹∀ 3. {α42088_42190'''' where: α42086_42187'' <: ((α42086_42187'',) -> α42087_42189''''), α42077' <: ((α42087_42189'''',) -> α42088_42190'''')}›) where: α42077' <: ((α42087_42185'',) -> α42088_42186'')}  <!<  ((α42086_42178'',) -> α42087_42182'')
+//│ ╟── while constraining:  ‹∀ 2. {(α42086''' -> ‹∀ 3. {α42088'''' where: α42086''' <: ((α42086''',) -> α42087''''), α42077' <: ((α42087'''',) -> α42088'''')}›) where: α42077' <: ((α42087_42090''',) -> α42088_42091''')}›  <!<  ((α42086_42178'',) -> α42087_42182'')
+//│ ╟── while constraining:  ‹∀ 2. {(α42086''' -> ‹∀ 3. {α42088'''' where: α42086''' <: ((α42086''',) -> α42087''''), α42077' <: ((α42087'''',) -> α42088'''')}›) where: α42077' <: ((α42087_42090''',) -> α42088_42091''')}›  <!<  α42086_42178''
+//│ ╟── while constraining:  α42086_42169''  <!<  α42086_42178''
+//│ ╟── while constraining:  (α42086_42169'',)  <!<  (α42086_42178'',)
+//│ ╟── while constraining:  (α42086_42178'' -> ‹∀ 3. {α42088_42181'''' where: α42086_42178'' <: ((α42086_42178'',) -> α42087_42180''''), α42077' <: ((α42087_42180'''',) -> α42088_42181'''')}›)  <!<  ((α42086_42169'',) -> α42087_42173'')
+//│ ╟── while constraining:  {(α42086_42178'' -> ‹∀ 3. {α42088_42181'''' where: α42086_42178'' <: ((α42086_42178'',) -> α42087_42180''''), α42077' <: ((α42087_42180'''',) -> α42088_42181'''')}›) where: α42077' <: ((α42087_42176'',) -> α42088_42177'')}  <!<  ((α42086_42169'',) -> α42087_42173'')
+//│ ╟── while constraining:  ‹∀ 2. {(α42086''' -> ‹∀ 3. {α42088'''' where: α42086''' <: ((α42086''',) -> α42087''''), α42077' <: ((α42087'''',) -> α42088'''')}›) where: α42077' <: ((α42087_42090''',) -> α42088_42091''')}›  <!<  ((α42086_42169'',) -> α42087_42173'')
+//│ ╟── while constraining:  ‹∀ 2. {(α42086''' -> ‹∀ 3. {α42088'''' where: α42086''' <: ((α42086''',) -> α42087''''), α42077' <: ((α42087'''',) -> α42088'''')}›) where: α42077' <: ((α42087_42090''',) -> α42088_42091''')}›  <!<  α42086_42169''
+//│ ╟── while constraining:  α42086_42160''  <!<  α42086_42169''
+//│ ╟── while constraining:  (α42086_42160'',)  <!<  (α42086_42169'',)
 //│ ╟── ......
 //│ ╟── ......
-//│ ╟── while constraining:  ‹∀ 2. (α7156''' -> ‹∀ 3. {α7158'''' where: α7156''' <: ((α7156''',) -> α7157''''), α7149' <: ((α7157'''',) -> α7158'''')}›)›  <!<  ((α7156_7177'',) -> α7157_7181'')
-//│ ╟── while constraining:  ‹∀ 2. (α7156''' -> ‹∀ 3. {α7158'''' where: α7156''' <: ((α7156''',) -> α7157''''), α7149' <: ((α7157'''',) -> α7158'''')}›)›  <!<  α7156_7177''
-//│ ╟── while constraining:  α7156_7170''  <!<  α7156_7177''
-//│ ╟── while constraining:  (α7156_7170'',)  <!<  (α7156_7177'',)
-//│ ╟── while constraining:  (α7156_7177'' -> ‹∀ 3. {α7158_7180'''' where: α7156_7177'' <: ((α7156_7177'',) -> α7157_7179''''), α7149' <: ((α7157_7179'''',) -> α7158_7180'''')}›)  <!<  ((α7156_7170'',) -> α7157_7174'')
-//│ ╟── while constraining:  ‹∀ 2. (α7156''' -> ‹∀ 3. {α7158'''' where: α7156''' <: ((α7156''',) -> α7157''''), α7149' <: ((α7157'''',) -> α7158'''')}›)›  <!<  ((α7156_7170'',) -> α7157_7174'')
-//│ ╟── while constraining:  ‹∀ 2. (α7156''' -> ‹∀ 3. {α7158'''' where: α7156''' <: ((α7156''',) -> α7157''''), α7149' <: ((α7157'''',) -> α7158'''')}›)›  <!<  α7156_7170''
-//│ ╟── while constraining:  α7150_7163''  <!<  α7156_7170''
-//│ ╟── while constraining:  (α7150_7163'',)  <!<  (α7156_7170'',)
-//│ ╟── while constraining:  (α7156_7170'' -> ‹∀ 3. {α7158_7173'''' where: α7156_7170'' <: ((α7156_7170'',) -> α7157_7172''''), α7149' <: ((α7157_7172'''',) -> α7158_7173'''')}›)  <!<  ((α7150_7163'',) -> α7151_7169'')
-//│ ╟── while constraining:  ‹∀ 2. (α7156''' -> ‹∀ 3. {α7158'''' where: α7156''' <: ((α7156''',) -> α7157''''), α7149' <: ((α7157'''',) -> α7158'''')}›)›  <!<  ((α7150_7163'',) -> α7151_7169'')
-//│ ╟── while constraining:  ‹∀ 2. (α7156''' -> ‹∀ 3. {α7158'''' where: α7156''' <: ((α7156''',) -> α7157''''), α7149' <: ((α7157'''',) -> α7158'''')}›)›  <!<  α7150_7163''
-//│ ╟── while constraining:  (‹∀ 2. (α7156''' -> ‹∀ 3. {α7158'''' where: α7156''' <: ((α7156''',) -> α7157''''), α7149' <: ((α7157'''',) -> α7158'''')}›)›,)  <!<  (α7150_7163'',)
-//│ ╟── while constraining:  (α7150_7163'' -> ‹∀ 3. {α7152_7166'''' where: α7149' <: ((α7151_7165'''',) -> α7152_7166''''), α7150_7163'' <: ((α7150_7163'',) -> α7151_7165'''')}›)  <!<  ((‹∀ 2. (α7156''' -> ‹∀ 3. {α7158'''' where: α7156''' <: ((α7156''',) -> α7157''''), α7149' <: ((α7157'''',) -> α7158'''')}›)›,) -> α7162'')
-//│ ╙── while constraining:  ‹∀ 2. (α7150''' -> ‹∀ 3. {α7152'''' where: α7149' <: ((α7151'''',) -> α7152''''), α7150''' <: ((α7150''',) -> α7151'''')}›)›  <!<  ((‹∀ 2. (α7156''' -> ‹∀ 3. {α7158'''' where: α7156''' <: ((α7156''',) -> α7157''''), α7149' <: ((α7157'''',) -> α7158'''')}›)›,) -> α7162'')
+//│ ╟── while constraining:  (α42086_42106'',)  <!<  (α42086_42115'',)
+//│ ╟── while constraining:  (α42086_42115'' -> ‹∀ 3. {α42088_42118'''' where: α42086_42115'' <: ((α42086_42115'',) -> α42087_42117''''), α42077' <: ((α42087_42117'''',) -> α42088_42118'''')}›)  <!<  ((α42086_42106'',) -> α42087_42110'')
+//│ ╟── while constraining:  {(α42086_42115'' -> ‹∀ 3. {α42088_42118'''' where: α42086_42115'' <: ((α42086_42115'',) -> α42087_42117''''), α42077' <: ((α42087_42117'''',) -> α42088_42118'''')}›) where: α42077' <: ((α42087_42113'',) -> α42088_42114'')}  <!<  ((α42086_42106'',) -> α42087_42110'')
+//│ ╟── while constraining:  ‹∀ 2. {(α42086''' -> ‹∀ 3. {α42088'''' where: α42086''' <: ((α42086''',) -> α42087''''), α42077' <: ((α42087'''',) -> α42088'''')}›) where: α42077' <: ((α42087_42090''',) -> α42088_42091''')}›  <!<  ((α42086_42106'',) -> α42087_42110'')
+//│ ╟── while constraining:  ‹∀ 2. {(α42086''' -> ‹∀ 3. {α42088'''' where: α42086''' <: ((α42086''',) -> α42087''''), α42077' <: ((α42087'''',) -> α42088'''')}›) where: α42077' <: ((α42087_42090''',) -> α42088_42091''')}›  <!<  α42086_42106''
+//│ ╟── while constraining:  α42078_42097''  <!<  α42086_42106''
+//│ ╟── while constraining:  (α42078_42097'',)  <!<  (α42086_42106'',)
+//│ ╟── while constraining:  (α42086_42106'' -> ‹∀ 3. {α42088_42109'''' where: α42086_42106'' <: ((α42086_42106'',) -> α42087_42108''''), α42077' <: ((α42087_42108'''',) -> α42088_42109'''')}›)  <!<  ((α42078_42097'',) -> α42079_42103'')
+//│ ╟── while constraining:  {(α42086_42106'' -> ‹∀ 3. {α42088_42109'''' where: α42086_42106'' <: ((α42086_42106'',) -> α42087_42108''''), α42077' <: ((α42087_42108'''',) -> α42088_42109'''')}›) where: α42077' <: ((α42087_42104'',) -> α42088_42105'')}  <!<  ((α42078_42097'',) -> α42079_42103'')
+//│ ╟── while constraining:  ‹∀ 2. {(α42086''' -> ‹∀ 3. {α42088'''' where: α42086''' <: ((α42086''',) -> α42087''''), α42077' <: ((α42087'''',) -> α42088'''')}›) where: α42077' <: ((α42087_42090''',) -> α42088_42091''')}›  <!<  ((α42078_42097'',) -> α42079_42103'')
+//│ ╟── while constraining:  ‹∀ 2. {(α42086''' -> ‹∀ 3. {α42088'''' where: α42086''' <: ((α42086''',) -> α42087''''), α42077' <: ((α42087'''',) -> α42088'''')}›) where: α42077' <: ((α42087_42090''',) -> α42088_42091''')}›  <!<  α42078_42097''
+//│ ╟── while constraining:  (‹∀ 2. {(α42086''' -> ‹∀ 3. {α42088'''' where: α42086''' <: ((α42086''',) -> α42087''''), α42077' <: ((α42087'''',) -> α42088'''')}›) where: α42077' <: ((α42087_42090''',) -> α42088_42091''')}›,)  <!<  (α42078_42097'',)
+//│ ╟── while constraining:  (α42078_42097'' -> ‹∀ 3. {α42080_42100'''' where: α42077' <: ((α42079_42099'''',) -> α42080_42100''''), α42078_42097'' <: ((α42078_42097'',) -> α42079_42099'''')}›)  <!<  ((‹∀ 2. {(α42086''' -> ‹∀ 3. {α42088'''' where: α42086''' <: ((α42086''',) -> α42087''''), α42077' <: ((α42087'''',) -> α42088'''')}›) where: α42077' <: ((α42087_42090''',) -> α42088_42091''')}›,) -> α42094'')
+//│ ╟── while constraining:  {(α42078_42097'' -> ‹∀ 3. {α42080_42100'''' where: α42077' <: ((α42079_42099'''',) -> α42080_42100''''), α42078_42097'' <: ((α42078_42097'',) -> α42079_42099'''')}›) where: α42077' <: ((α42079_42095'',) -> α42080_42096'')}  <!<  ((‹∀ 2. {(α42086''' -> ‹∀ 3. {α42088'''' where: α42086''' <: ((α42086''',) -> α42087''''), α42077' <: ((α42087'''',) -> α42088'''')}›) where: α42077' <: ((α42087_42090''',) -> α42088_42091''')}›,) -> α42094'')
+//│ ╙── while constraining:  ‹∀ 2. {(α42078''' -> ‹∀ 3. {α42080'''' where: α42077' <: ((α42079'''',) -> α42080''''), α42078''' <: ((α42078''',) -> α42079'''')}›) where: α42077' <: ((α42079_42081''',) -> α42080_42082''')}›  <!<  ((‹∀ 2. {(α42086''' -> ‹∀ 3. {α42088'''' where: α42086''' <: ((α42086''',) -> α42087''''), α42077' <: ((α42087'''',) -> α42088'''')}›) where: α42077' <: ((α42087_42090''',) -> α42088_42091''')}›,) -> α42094'')
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded

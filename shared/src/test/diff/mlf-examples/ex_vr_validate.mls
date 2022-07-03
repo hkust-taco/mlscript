@@ -37,5 +37,7 @@ def delta x = let y = (x : Sid) in y y
 // untype fun x -> let y = (annot x) in y y
 // ;;
 fun x -> let y = annot x in y y
-//│ res: Sid -> Sid
+//│ res: (Sid & 'a) -> (forall 'a. (Sid
+//│   where
+//│     'a <: Sid))
 //│    = [Function: res]

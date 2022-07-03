@@ -22,10 +22,13 @@ class ST[S, A]
 // ============ Type signatures for functions used in the examples ============
 
 def choose x y = if true then x else y
-//│ choose: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
+//│ choose: 'a -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
 //│   where
 //│     'a <: 'c
-//│     'b <: 'c)))
+//│     'b <: 'c))
+//│   where
+//│     'a <: 'b
+//│     'a <: 'b))
 
 def id x = x
 //│ id: 'a -> 'a
@@ -36,9 +39,12 @@ def auto (x: forall 'a. 'a -> 'a) = x x
 //│     'b <: 'b -> 'c))
 
 def app f x = f x
-//│ app: (nothing -> 'a & 'a) -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
+//│ app: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
 //│   where
-//│     'a <: 'b -> 'c)))
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> 'a
+//│     'a <: nothing -> 'a))
 
 def inc: int -> int
 //│ inc: int -> int
@@ -79,16 +85,23 @@ choose id
 //│   where
 //│     'c <: 'b
 //│     'a <: 'b))
+//│   where
+//│     'c <: 'a
+//│     'c <: 'a
 
 fun (g: forall 'a. ('a -> 'a) -> ('a -> 'a)) -> fun (x: forall 'a. 'a -> 'a) -> fun a -> g a (x a)
-//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'b, 'a1, 'c, 'd, 'e. ('e -> (forall 'e, 'f, 'g, 'h, 'i. ('h
+//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'b. ((forall 'a0. 'a0 -> 'a0) -> (forall 'b, 'c, 'd. ('d -> (forall 'b, 'c, 'd, 'e, 'f. ('f
 //│   where
-//│     'f <: 'e -> 'g -> 'h
-//│     'i <: 'e -> 'g))
+//│     'c <: 'd -> 'e
+//│     'b <: 'd -> 'e -> 'f))
 //│   where
-//│     'b <: 'a1 -> 'a1
-//│     'c :> 'a1 -> 'a1
-//│     'd <: anything))
+//│     'c <: nothing -> anything
+//│     'b <: nothing -> nothing -> anything
+//│     'c <: nothing -> anything
+//│     'b <: nothing -> nothing -> anything))
+//│   where
+//│     'b <: nothing -> nothing -> anything
+//│     'b <: nothing -> nothing -> anything))
 
 choose id succ
 //│ res: 'a
@@ -144,16 +157,12 @@ app auto id
 :e
 let f = choose id in (f auto) (f succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.145: 	let f = choose id in (f auto) (f succ)
+//│ ║  l.158: 	let f = choose id in (f auto) (f succ)
 //│ ║         	                     ^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` is not an instance of type `int`
-//│ ║  l.33: 	def auto (x: forall 'a. 'a -> 'a) = x x
+//│ ║  l.36: 	def auto (x: forall 'a. 'a -> 'a) = x x
 //│ ╙──      	                    ^^
-//│ res: error | 'a | 'b
-//│   where
-//│     'c <: 'a
-//│     'd <: 'a
-//│     'e <: 'e -> 'b
+//│ res: error
 
 // Reproduced with an unnanotated auto:
 
@@ -171,13 +180,13 @@ choose id auto2
 // :e // This is a legit error
 res (choose id succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.172: 	res (choose id succ)
+//│ ║  l.181: 	res (choose id succ)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `int -> int` is not an instance of type `int`
-//│ ║  l.172: 	res (choose id succ)
+//│ ║  l.181: 	res (choose id succ)
 //│ ║         	               ^^^^
 //│ ╟── but it flows into application with expected type `int`
-//│ ║  l.172: 	res (choose id succ)
+//│ ║  l.181: 	res (choose id succ)
 //│ ╙──       	     ^^^^^^^^^^^^^^
 //│ res: error
 
@@ -218,7 +227,7 @@ K x y = x
 (fun y -> let tmp = y I in y K) (fun x -> x x)
 //│ res: 'a
 //│   where
-//│     'b <: (forall 'c. 'c -> anything -> 'c) -> 'a
+//│     'b <: (forall 'c. 'c -> 'c) -> anything & (forall 'd. 'd -> anything -> 'd) -> 'a
 
 // Note: reduces to
 let tmp = (fun x -> x x) I in (fun x -> x x) K
@@ -316,9 +325,15 @@ fun z -> omega z
 //│ res: 'a -> (forall 'a, 'b. ('b
 //│   where
 //│     'c <: 'a -> 'b))
+//│   where
+//│     'c <: nothing -> anything
+//│     'c <: nothing -> anything
 //│ res: 'a -> (forall 'a, 'b. ('b
 //│   where
 //│     'c <: 'a -> 'b))
+//│   where
+//│     'c <: nothing -> anything
+//│     'c <: nothing -> anything
 
 // ------------ Sec 4.3 ------------
 // affects the order of bindings in the result type in MLF, not very interesting otherwise

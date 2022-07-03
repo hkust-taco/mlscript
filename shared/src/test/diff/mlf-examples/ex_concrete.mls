@@ -49,17 +49,13 @@ def cinq = Cons ("zozo", quatre)
 //│     'b <: 'head & 'a
 //│     'c <: List['a] & 'tail
 //│       = Cons { head: 'ok', tail: Nil {} }
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:675)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ cinq: Cons['a] with {head: 'head, tail: 'tail}
+//│   where
+//│     'b <: 'head & 'a
+//│     'c <: List['a] & 'tail
+//│     'b <: 'head & 'a
+//│     'c <: List['a] & 'tail
+//│     = Cons { head: 'zozo', tail: Cons { head: 'ok', tail: Nil {} } }
 
 // let id x = x 
 def id x = x

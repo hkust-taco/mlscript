@@ -11,16 +11,23 @@ def z f x = x
 // def s n = fun f -> fun x -> (n f x)
 def s n = fun f -> n f
 // def s n = n
-//│ s: (nothing -> 'a & 'a) -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
+//│ s: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
 //│   where
-//│     'a <: 'b -> 'c)))
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> 'a
+//│     'a <: nothing -> 'a))
 //│  = [Function: s]
 
 :ns
 s
-//│ res: forall 'a, 'b, 'c. 'a -> (forall 'd. 'd -> (forall 'e. ('e
+//│ res: forall 'a, 'b, 'c. 'a -> (forall 'd, 'e. (forall 'f, 'g, 'h. ('f -> (forall 'i. ('i
 //│   where
-//│     'a <: 'd -> 'e)))
+//│     'a <: 'f -> 'i))
+//│   where
+//│     'a <: 'g -> 'h)
+//│   where
+//│     'a <: 'd -> 'e))
 //│   where
 //│     'a <: 'b -> 'c
 //│    = [Function: s]
@@ -71,9 +78,12 @@ def to_ch n =
 //   s (to_church n)
 // def to_ch =
 //   s (to_church 0)
-//│ to_ch: int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd. ('d -> 'd | 'c
+//│ to_ch: int -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d -> 'd | 'c
 //│   where
-//│     'b <: 'a -> 'c)))
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> anything
+//│     'a <: nothing -> anything))
 //│      = <no result>
 //│        to_church is not implemented
 
@@ -94,22 +104,16 @@ def to_ch n =
 // :d
 // :e // FIXME?
 to_church = to_ch
-//│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd. ('d -> 'd | 'c
+//│ int -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d -> 'd | 'c
 //│   where
-//│     'b <: 'a -> 'c)))
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> anything
+//│     'a <: nothing -> anything))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ /!!!\ Uncaught error: mlscript.TypeError: Type mismatch in expression:
-//│ 	at: mlscript.TypeError$.apply(Diagnostic.scala:14)
-//│ 	at: mlscript.ConstraintSolver.reportError$1(ConstraintSolver.scala:881)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:748)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
+//│          = <no result>
+//│            to_ch and to_church are not implemented
 
 
 
@@ -120,30 +124,27 @@ to_church = to_ch
 def to_ch n =
   if true then z
   else s (to_church n)
-//│ to_ch: int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd. ('d -> 'd | 'c
+//│ to_ch: int -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d -> 'd | 'c
 //│   where
-//│     'b <: 'a -> 'c)))
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> anything
+//│     'a <: nothing -> anything))
 //│      = <no result>
 //│        to_church, to_ch and to_church are not implemented
 
 // :e // FIXME?
 to_church = to_ch
-//│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd. ('d -> 'd | 'c
+//│ int -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d -> 'd | 'c
 //│   where
-//│     'b <: 'a -> 'c)))
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> anything
+//│     'a <: nothing -> anything))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ /!!!\ Uncaught error: mlscript.TypeError: Type mismatch in expression:
-//│ 	at: mlscript.TypeError$.apply(Diagnostic.scala:14)
-//│ 	at: mlscript.ConstraintSolver.reportError$1(ConstraintSolver.scala:881)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:748)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
+//│          = <no result>
+//│            to_ch, to_church, to_ch and to_church are not implemented
 
 // * Marking it `rec` (on a minimized version) makes it fail
 // *  This is because of `destroyConstrainedTypes` which is invoked on rec defs:
@@ -151,13 +152,21 @@ to_church = to_ch
 
 rec def to_ch n =
   s (to_church n)
-//│ to_ch: int -> anything -> nothing
+//│ to_ch: int -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
+//│   where
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> anything))
 //│      = <no result>
 //│        to_church, to_ch, to_church, to_ch and to_church are not implemented
 
-:e
+// :e
 to_church = to_ch
-//│ int -> anything -> nothing
+//│ int -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
+//│   where
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> anything))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│          = <no result>
@@ -170,12 +179,20 @@ to_church = to_ch
 
 rec def to_ch n =
   s (to_church n)
-//│ to_ch: int -> anything -> nothing
+//│ to_ch: int -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
+//│   where
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> anything))
 //│      = <no result>
 //│        to_church, to_ch, to_church, to_ch, to_church, to_ch and to_church are not implemented
 
 to_church = to_ch
-//│ int -> anything -> nothing
+//│ int -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
+//│   where
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> anything))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│          = <no result>
@@ -200,20 +217,22 @@ to_church = to_ch
 rec def to_ch n =
   if n == 0 then z
   else s (to_ch (n - 1))
-//│ to_ch: int -> anything -> (forall 'a. 'a -> 'a)
-//│      = [Function: to_ch4]
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 to_church = to_ch
-//│ int -> anything -> (forall 'a. 'a -> 'a)
+//│ int -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d -> 'd | 'c
+//│   where
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> anything))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│          = [Function: to_ch4]
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 
 rec def to_ch_weird n =
   s (to_ch_weird n)
-//│ to_ch_weird: anything -> anything -> nothing
-//│            = [Function: to_ch_weird]
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 
 

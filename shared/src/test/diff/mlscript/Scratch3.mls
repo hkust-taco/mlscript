@@ -13,10 +13,18 @@ def z f x = x
 //│  = [Function: z]
 
 def s n f x = f (n f x)
-//│ s: (nothing -> nothing -> 'a & 'a) -> (forall 'b. (nothing -> 'a & 'b) -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ s: (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e))))
+//│     'b <: 'd -> 'e))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a))
 //│  = [Function: s]
 
 
@@ -33,10 +41,18 @@ def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M
 // :e // works with quantif extrus
 // :e // due to tapping
 succ = s
-//│ (nothing -> nothing -> 'a & 'a) -> (forall 'b. (nothing -> 'a & 'b) -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e))))
+//│     'b <: 'd -> 'e))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: s]
@@ -49,23 +65,21 @@ def succ0: forall 'M. (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (('M -> 'M) -> ('
 //│      = <missing implementation>
 
 succ0 = s
-//│ (nothing -> nothing -> 'a & 'a) -> (forall 'b. (nothing -> 'a & 'b) -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e))))
+//│     'b <: 'd -> 'e))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a))
 //│   <:  succ0:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> ('M -> 'M) -> 'M -> 'M
-//│ /!!!\ Uncaught error: mlscript.TypeError: Type mismatch in expression:
-//│ 	at: mlscript.TypeError$.apply(Diagnostic.scala:14)
-//│ 	at: mlscript.ConstraintSolver.reportError$1(ConstraintSolver.scala:881)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:748)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
+//│      = [Function: s]
 
 
 
@@ -73,13 +87,18 @@ succ0 = s
 // :e // works with quantif extrus
 // :e // due to tapping
 def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
-//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'a. (nothing -> anything & 'a) -> (forall 'b, 'N0, 'c, 'd. ('d -> (forall 'a, 'd, 'e, 'f, 'g. ('g
+//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
-//│     'e <: 'a -> 'd -> 'f
-//│     'a <: 'f -> 'g))
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e))
 //│   where
-//│     'b <: 'N0 -> 'N0
-//│     'c :> 'N0 -> 'N0)))
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything))
+//│   where
+//│     'a <: nothing -> nothing -> anything
+//│     'a <: nothing -> nothing -> anything))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: succ2]
@@ -88,24 +107,48 @@ def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x
 
 // :d
 n1 = s z
-//│ n1: (nothing -> anything & 'a) -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ n1: (nothing -> anything & 'a) -> (forall 'b, 'a, 'c. ('c -> (forall 'b, 'a, 'c, 'd, 'e. ('e
 //│   where
-//│     'c <: 'a -> 'b -> 'd
-//│     'a <: 'd -> 'e)))
+//│     'b <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e))
+//│   where
+//│     'b <: nothing -> nothing -> anything
+//│     'a <: nothing -> anything
+//│     'b <: nothing -> nothing -> anything
+//│     'a <: nothing -> anything))
+//│   where
+//│     'b <: nothing -> nothing -> anything
+//│     'b <: nothing -> nothing -> anything
 //│   = [Function (anonymous)]
 
 n2 = s (s z)
-//│ n2: (nothing -> anything & 'a) -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ n2: (nothing -> anything & 'a) -> (forall 'b, 'a, 'c. ('c -> (forall 'b, 'a, 'c, 'd, 'e. ('e
 //│   where
-//│     'c <: 'a -> 'b -> 'd
-//│     'a <: 'd -> 'e)))
+//│     'b <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e))
+//│   where
+//│     'b <: nothing -> nothing -> anything
+//│     'a <: nothing -> anything
+//│     'b <: nothing -> nothing -> anything
+//│     'a <: nothing -> anything))
+//│   where
+//│     'b <: nothing -> nothing -> anything
+//│     'b <: nothing -> nothing -> anything
 //│   = [Function (anonymous)]
 
 n3 = s (s (s z))
-//│ n3: (nothing -> anything & 'a) -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ n3: (nothing -> anything & 'a) -> (forall 'b, 'a, 'c. ('c -> (forall 'b, 'a, 'c, 'd, 'e. ('e
 //│   where
-//│     'c <: 'a -> 'b -> 'd
-//│     'a <: 'd -> 'e)))
+//│     'b <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e))
+//│   where
+//│     'b <: nothing -> nothing -> anything
+//│     'a <: nothing -> anything
+//│     'b <: nothing -> nothing -> anything
+//│     'a <: nothing -> anything))
+//│   where
+//│     'b <: nothing -> nothing -> anything
+//│     'b <: nothing -> nothing -> anything
 //│   = [Function (anonymous)]
 
 // def wrap: 'WRA -> 'WRA
@@ -118,10 +161,15 @@ wrap x = { x }
 
 // :d
 n1w = n1 wrap
-//│ n1w: 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ n1w: 'a -> (forall 'b, 'c, 'a, 'd, 'e. ('e
 //│   where
 //│     'b <: 'c -> 'a -> 'd
 //│     'c <: 'd -> 'e))
+//│   where
+//│     'b <: 'c -> 'c -> anything
+//│     'c <: 'c -> anything
+//│     'b <: 'c -> 'c -> anything
+//│     'c <: 'c -> anything
 //│    = [Function (anonymous)]
 
 // :d
@@ -170,23 +218,21 @@ res.x.x.x + 1
 :DistributeForalls
 
 succ = s
-//│ (nothing -> nothing -> 'a & 'a) -> (forall 'b. (nothing -> 'a & 'b) -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e))))
+//│     'b <: 'd -> 'e))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ /!!!\ Uncaught error: mlscript.TypeError: Type mismatch in expression:
-//│ 	at: mlscript.TypeError$.apply(Diagnostic.scala:14)
-//│ 	at: mlscript.ConstraintSolver.reportError$1(ConstraintSolver.scala:881)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:748)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
+//│     = [Function: s]
 
 
 type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -202,17 +248,11 @@ z: ChurchInt
 
 :stats
 s: ChurchInt -> ChurchInt
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: ChurchInt
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:633)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:674)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ res: ChurchInt -> ChurchInt
+//│    = [Function: s]
+//│ constrain calls  : 625
+//│ annoying  calls  : 0
+//│ subtyping calls  : 0
 
 
 

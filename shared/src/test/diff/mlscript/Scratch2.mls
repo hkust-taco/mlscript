@@ -19,11 +19,13 @@ test1 (fun value -> { value })
 test2 f =
   let r x = f x
   in (r 0, r true)
-//│ test2: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b
+//│ test2: (nothing -> 'a & 'a) -> (forall 'a. ((forall 'a, 'b. ('b
 //│   where
 //│     'a <: 0 -> 'b), forall 'a, 'c. ('c
 //│   where
 //│     'a <: true -> 'c),)
+//│   where
+//│     'a <: nothing -> 'a))
 //│      = [Function: test2]
 
 test2 (fun value -> { value })
@@ -32,6 +34,8 @@ test2 (fun value -> { value })
 //│     'b <: 0 -> 'a), forall 'c. ('c
 //│   where
 //│     'b <: true -> 'c),)
+//│   where
+//│     'b <: nothing -> anything
 //│    = [ undefined, undefined ]
 
 
@@ -40,21 +44,34 @@ type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 
 // :ns
 def s n = fun f -> fun x -> f (n f x)
-//│ s: (nothing -> nothing -> 'a & 'a) -> (forall 'b. (nothing -> 'a & 'b) -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ s: (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e))))
+//│     'b <: 'd -> 'e))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a))
 //│  = [Function: s]
 
 // :ns
 def s' (n: ChurchInt) = fun f -> fun x -> f (n f x)
-//│ s': ChurchInt -> (forall 'a. (nothing -> anything & 'a) -> (forall 'b, 'N, 'c, 'd. ('d -> (forall 'a, 'd, 'e, 'f, 'g. ('g
+//│ s': ChurchInt -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
-//│     'e <: 'a -> 'd -> 'f
-//│     'a <: 'f -> 'g))
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e))
 //│   where
-//│     'b <: 'N -> 'N
-//│     'c :> 'N -> 'N)))
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything))
+//│   where
+//│     'a <: nothing -> nothing -> anything
+//│     'a <: nothing -> nothing -> anything))
 //│   = [Function: s]
 
 def succ: ChurchInt -> ChurchInt
@@ -64,46 +81,42 @@ def succ: ChurchInt -> ChurchInt
 // :ns
 // :e // * Needs distrib (see below) // works with quantif extrus
 succ = s
-//│ (nothing -> nothing -> 'a & 'a) -> (forall 'b. (nothing -> 'a & 'b) -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e))))
+//│     'b <: 'd -> 'e))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a))
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: ChurchInt
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:633)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:674)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│     = [Function: s]
 
 def succD: forall 'M. ChurchInt -> ('M -> 'M) -> ('M -> 'M)
 //│ succD: ChurchInt -> ('M -> 'M) -> 'M -> 'M
 //│      = <missing implementation>
 
 succD = s
-//│ (nothing -> nothing -> 'a & 'a) -> (forall 'b. (nothing -> 'a & 'b) -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e))))
+//│     'b <: 'd -> 'e))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a))
 //│   <:  succD:
 //│ ChurchInt -> ('M -> 'M) -> 'M -> 'M
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: ChurchInt
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:633)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:674)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│      = [Function: s]
 
 
 def z f x = x
@@ -126,10 +139,18 @@ wrap x = { x }
 //│     = [Function: wrap]
 
 n1 = s z
-//│ n1: (nothing -> anything & 'a) -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ n1: (nothing -> anything & 'a) -> (forall 'b, 'a, 'c. ('c -> (forall 'b, 'a, 'c, 'd, 'e. ('e
 //│   where
-//│     'c <: 'a -> 'b -> 'd
-//│     'a <: 'd -> 'e)))
+//│     'b <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e))
+//│   where
+//│     'b <: nothing -> nothing -> anything
+//│     'a <: nothing -> anything
+//│     'b <: nothing -> nothing -> anything
+//│     'a <: nothing -> anything))
+//│   where
+//│     'b <: nothing -> nothing -> anything
+//│     'b <: nothing -> nothing -> anything
 //│   = [Function (anonymous)]
 
 n1 wrap 0
@@ -140,10 +161,18 @@ n1 wrap 0
 //│    = { x: 0 }
 
 n2 = s (s z)
-//│ n2: (nothing -> anything & 'a) -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ n2: (nothing -> anything & 'a) -> (forall 'b, 'a, 'c. ('c -> (forall 'b, 'a, 'c, 'd, 'e. ('e
 //│   where
-//│     'c <: 'a -> 'b -> 'd
-//│     'a <: 'd -> 'e)))
+//│     'b <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e))
+//│   where
+//│     'b <: nothing -> nothing -> anything
+//│     'a <: nothing -> anything
+//│     'b <: nothing -> nothing -> anything
+//│     'a <: nothing -> anything))
+//│   where
+//│     'b <: nothing -> nothing -> anything
+//│     'b <: nothing -> nothing -> anything
 //│   = [Function (anonymous)]
 
 n2 wrap 0
@@ -154,10 +183,18 @@ n2 wrap 0
 //│    = { x: { x: 0 } }
 
 n3 = s (s (s z))
-//│ n3: (nothing -> anything & 'a) -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ n3: (nothing -> anything & 'a) -> (forall 'b, 'a, 'c. ('c -> (forall 'b, 'a, 'c, 'd, 'e. ('e
 //│   where
-//│     'c <: 'a -> 'b -> 'd
-//│     'a <: 'd -> 'e)))
+//│     'b <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e))
+//│   where
+//│     'b <: nothing -> nothing -> anything
+//│     'a <: nothing -> anything
+//│     'b <: nothing -> nothing -> anything
+//│     'a <: nothing -> anything))
+//│   where
+//│     'b <: nothing -> nothing -> anything
+//│     'b <: nothing -> nothing -> anything
 //│   = [Function (anonymous)]
 
 
@@ -184,18 +221,25 @@ rec def to_ch n =
 def to_ch_s_mix n =
   if n == 0 then z
   else s (to_ch (n - 1))
-//│ to_ch_s_mix: int -> (forall 'a. (nothing -> anything & 'a) -> (forall 'b, 'c. ('b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f | 'b
+//│ to_ch_s_mix: int -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c, 'd. (('c & 'd) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f | 'c
 //│   where
-//│     'd <: 'a -> 'c -> 'e
-//│     'a <: 'e -> 'f))))
+//│     'a <: 'b -> 'd -> 'e
+//│     'b <: 'e -> 'f))
+//│   where
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything))
+//│   where
+//│     'a <: nothing -> nothing -> anything
+//│     'a <: nothing -> nothing -> anything))
 //│            = [Function: to_ch_s_mix]
 
-//:e // due to tapping
+// :e // due to tapping
 rec def to_ch_s n =
   if n == 0 then z
   else s (to_ch_s (n - 1))
-//│ to_ch_s: int -> (nothing -> anything) -> (forall 'a. 'a -> 'a)
-//│        = [Function: to_ch_s]
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 // rec def to_ch n =
 //   (if n == 0 then zero
@@ -225,40 +269,68 @@ to_church = to_ch
 // :e // * Needs distrib (see below)
 // :e // FIXME? succeeds with genLamBodies
 to_church = to_ch_s_mix
-//│ int -> (forall 'a. (nothing -> anything & 'a) -> (forall 'b, 'c. ('b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f | 'b
+//│ int -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c, 'd. (('c & 'd) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f | 'c
 //│   where
-//│     'd <: 'a -> 'c -> 'e
-//│     'a <: 'e -> 'f))))
+//│     'a <: 'b -> 'd -> 'e
+//│     'b <: 'e -> 'f))
+//│   where
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything))
+//│   where
+//│     'a <: nothing -> nothing -> anything
+//│     'a <: nothing -> nothing -> anything))
 //│   <:  to_church:
 //│ int -> ChurchInt
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: ChurchInt
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:633)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:674)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│          = [Function: to_ch_s_mix]
 
 :e // * Needs distrib (see below)
 to_church = to_ch_s
-//│ int -> (nothing -> anything) -> (forall 'a. 'a -> 'a)
+//│ int -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c, 'd. (('c & 'd) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f | 'c
+//│   where
+//│     'a <: 'b -> 'd -> 'e
+//│     'b <: 'e -> 'f))
+//│   where
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything))
+//│   where
+//│     'a <: nothing -> nothing -> anything))
 //│   <:  to_church:
 //│ int -> ChurchInt
-//│          = [Function: to_ch_s]
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 rec def to_ch_mix n =
   if n == 0 then zero
   else s (to_ch (n - 1))
-//│ to_ch_mix: int -> ((nothing -> anything) -> anything -> nothing | ChurchInt)
+//│ to_ch_mix: int -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│   where
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e))
+//│   where
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything)) | ChurchInt
+//│   where
+//│     'a <: nothing -> nothing -> anything))
 //│          = [Function: to_ch_mix]
 
-:e // * Needs distrib (see below)
+// :e // * Needs distrib (see below)
 to_church = to_ch_mix
-//│ int -> ((nothing -> anything) -> anything -> nothing | ChurchInt)
+//│ int -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│   where
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e))
+//│   where
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything)) | ChurchInt
+//│   where
+//│     'a <: nothing -> nothing -> anything))
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│          = [Function: to_ch_mix]
@@ -275,20 +347,20 @@ to_church = to_ch_mix
 rec def to_ch n =
   succD (to_ch n)
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.275: 	rec def to_ch n =
+//│ ║  l.347: 	rec def to_ch n =
 //│ ║         	              ^^^
-//│ ║  l.276: 	  succD (to_ch n)
+//│ ║  l.348: 	  succD (to_ch n)
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N1608` is not an instance of type `'N`
-//│ ║  l.38: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ╟── type `‘N14023` is not an instance of type `'N`
+//│ ║  l.42: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.38: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║  l.42: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║        	                        ^^
 //│ ╟── from quantified type variable:
-//│ ║  l.85: 	def succD: forall 'M. ChurchInt -> ('M -> 'M) -> ('M -> 'M)
-//│ ╙──      	                  ^^
-//│ to_ch: anything -> (('M | ‘N1608) -> (‘N & 'M)) -> (‘N & 'M) -> ('M | ‘N1608)
+//│ ║  l.100: 	def succD: forall 'M. ChurchInt -> ('M -> 'M) -> ('M -> 'M)
+//│ ╙──       	                  ^^
+//│ to_ch: anything -> (('M | ‘N14023) -> (‘N & 'M)) -> (‘N & 'M) -> ('M | ‘N14023)
 //│      = [Function: to_ch1]
 
 
@@ -296,74 +368,85 @@ rec def to_ch n =
 :DistributeForalls
 
 succ = s
-//│ (nothing -> nothing -> 'a & 'a) -> (forall 'b. (nothing -> 'a & 'b) -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e))))
+//│     'b <: 'd -> 'e))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a))
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: ChurchInt
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:633)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:674)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│     = [Function: s]
 
 succ = s'
-//│ ChurchInt -> (forall 'a. (nothing -> anything & 'a) -> (forall 'b, 'N, 'c, 'd. ('d -> (forall 'a, 'd, 'e, 'f, 'g. ('g
+//│ ChurchInt -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
-//│     'e <: 'a -> 'd -> 'f
-//│     'a <: 'f -> 'g))
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e))
 //│   where
-//│     'b <: 'N -> 'N
-//│     'c :> 'N -> 'N)))
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything))
+//│   where
+//│     'a <: nothing -> nothing -> anything
+//│     'a <: nothing -> nothing -> anything))
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: ChurchInt
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:633)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:674)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│     = [Function: s]
 
 to_church = to_ch_s_mix
-//│ int -> (forall 'a. (nothing -> anything & 'a) -> (forall 'b, 'c. ('b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f | 'b
+//│ int -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c, 'd. (('c & 'd) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f | 'c
 //│   where
-//│     'd <: 'a -> 'c -> 'e
-//│     'a <: 'e -> 'f))))
+//│     'a <: 'b -> 'd -> 'e
+//│     'b <: 'e -> 'f))
+//│   where
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything))
+//│   where
+//│     'a <: nothing -> nothing -> anything
+//│     'a <: nothing -> nothing -> anything))
 //│   <:  to_church:
 //│ int -> ChurchInt
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: ChurchInt
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:633)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:674)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│          = [Function: to_ch_s_mix]
 
 //:e // due to tapping
 to_church = to_ch_s
-//│ int -> (nothing -> anything) -> (forall 'a. 'a -> 'a)
+//│ int -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c, 'd. (('c & 'd) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f | 'c
+//│   where
+//│     'a <: 'b -> 'd -> 'e
+//│     'b <: 'e -> 'f))
+//│   where
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything))
+//│   where
+//│     'a <: nothing -> nothing -> anything))
 //│   <:  to_church:
 //│ int -> ChurchInt
-//│          = [Function: to_ch_s]
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 to_church = to_ch_mix
-//│ int -> ((nothing -> anything) -> anything -> nothing | ChurchInt)
+//│ int -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│   where
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e))
+//│   where
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything)) | ChurchInt
+//│   where
+//│     'a <: nothing -> nothing -> anything))
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│          = [Function: to_ch_mix]

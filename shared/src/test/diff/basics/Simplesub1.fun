@@ -210,7 +210,7 @@ x => {l: x x, r: x }
 
 // Z combinator:
 // * FIXME simplified type
-// :e // due to tapping
+:e // due to tapping
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j. (?k -> ?j
 //│   where
@@ -277,7 +277,7 @@ x => {l: x x, r: x }
 
 // * Function that takes arbitrarily many arguments:
 // * FIXME type of result shouldn't be `nothing`
-// :e // due to tapping
+:e // due to tapping
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j. (?k -> ?j
 //│   where

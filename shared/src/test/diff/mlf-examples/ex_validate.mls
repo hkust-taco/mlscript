@@ -20,25 +20,18 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'c. (List['c] & 'c) -> (forall 'b, 'c, 'head, 'a, 'tail. (Cons['a] with {head: 'head, tail: 'tail}
+//│ 'b -> (forall 'b, 'c. ((List['c] & 'c) -> (forall 'b, 'c, 'head, 'a, 'tail. (Cons['a] with {head: 'head, tail: 'tail}
 //│   where
 //│     'b <: 'head & 'a
 //│     'c <: List['a] & 'tail
 //│     'b <: 'head & 'a
-//│     'c <: List['a] & 'tail)))
+//│     'c <: List['a] & 'tail))
+//│   where
+//│     'b <: 'c
+//│     'b <: 'c))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:659)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
+//│     = [Function: cons]
 
 class Nil[a]: List[a]
   method Head = error
@@ -66,17 +59,7 @@ def head l = l.Head
 //│     'a <: List['b]))
 //│   <:  head:
 //│ List['a] -> 'a
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:659)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
+//│     = [Function: head]
 
 def tail: forall 'a. List['a] -> List['a]
 def tail l = l.Tail
@@ -87,17 +70,7 @@ def tail l = l.Tail
 //│     'b <: List['a]))
 //│   <:  tail:
 //│ List['a] -> List['a]
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:659)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
+//│     = [Function: tail]
 
 def is_empty: forall 'a. List['a] -> bool
 def is_empty l = eq l nil
@@ -174,10 +147,13 @@ type Id = forall 'a. 'a -> 'a
 def choose x y = if true then x else y
 def succ n = n + 1
 def z = succ : int -> int
-//│ choose: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
+//│ choose: 'a -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
 //│   where
 //│     'a <: 'c
-//│     'b <: 'c)))
+//│     'b <: 'c))
+//│   where
+//│     'a <: 'b
+//│     'a <: 'b))
 //│       = [Function: choose]
 //│ succ: int -> int
 //│     = [Function: succ]
@@ -227,17 +203,10 @@ def delta_ x = x x
 
 // :e // FIXME? failed with genLamBodies but works with quantif extrus
 def z = delta (delta id)
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: Id
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:633)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:674)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ z: 'a
+//│   where
+//│     'b <: 'b -> 'a
+//│  = [Function: id]
 
 def z_ = delta_ (delta_ id)
 //│ z_: 'a
@@ -249,33 +218,44 @@ def z_ = delta_ (delta_ id)
 :e
 delta succ
 delta_ succ
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: Id
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:633)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:674)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.219: 	delta succ
+//│ ║         	^^^^^^^^^^
+//│ ╟── type `‘a` is not an instance of type `int`
+//│ ║  l.141: 	type Id = forall 'a. 'a -> 'a
+//│ ║         	                 ^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.148: 	def succ n = n + 1
+//│ ╙──       	             ^
+//│ res: error | 'a
+//│   where
+//│     'b <: 'b -> 'a
+//│    = 'function succ(n) {  return n + 1;}1'
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.220: 	delta_ succ
+//│ ║         	^^^^^^^^^^^
+//│ ╟── function of type `?a -> (forall ?b. ?b)` is not an instance of type `int`
+//│ ║  l.148: 	def succ n = n + 1
+//│ ║         	         ^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `int`
+//│ ║  l.220: 	delta_ succ
+//│ ║         	       ^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.148: 	def succ n = n + 1
+//│ ╙──       	             ^
+//│ res: error | 'a
+//│   where
+//│     'b <: 'b -> 'a
+//│    = 'function succ(n) {  return n + 1;}1'
 
 // let z = delta (choose id id)
 
 // :e // FIXME? failed with genLamBodies but works with quantif extrus
 def z = delta (choose id id)
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: Id
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:633)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:674)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ z: 'a
+//│   where
+//│     'b <: 'b -> 'a
+//│  = [Function: id]
 
 def z_ = delta_ (choose id id)
 //│ z_: 'a
@@ -304,17 +284,14 @@ def test2_ = apply_to_id delta_
 //│   where
 //│     'b <: (forall 'c. 'c -> 'c) -> 'a
 //│      = 1
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: Id
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:633)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:674)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ test2: 'a
+//│   where
+//│     'b <: (forall 'c. 'c -> 'c) -> 'a
+//│      = [Function: id]
+//│ test2_: 'a
+//│   where
+//│     'b <: (forall 'c. 'c -> 'c) -> 'a
+//│       = [Function: id]
 
 // type s  = ['a] list ('a) -> bool
 // let annote_s (x:id) = (x : s -> s)
@@ -350,6 +327,8 @@ let t = fun x -> fun y ->
 //│ res: (bool, bool, bool, bool,)
 //│    = [ false, true, false, false ]
 //│ res: (bool, bool, bool, bool,)
+//│   where
+//│     'a <: S -> S
 //│    = [ false, true, false, false ]
 
 // untype fun x y ->
@@ -361,9 +340,16 @@ fun x -> fun y ->
 fun x -> fun y ->
   let isnil = x y in
     (isnil (cons 1 (cons 2 (cons 3 nil))), isnil nil, isnil (cons "ok" nil), isnil (cons true nil)) 
-//│ res: Id -> anything -> (nothing, nothing, nothing, nothing,)
+//│ res: Id -> (forall 'a. 'a -> (forall 'a. ((nothing, nothing, nothing, nothing,)
+//│   where
+//│     'a <: 'a)))
 //│    = [Function: res]
-//│ res: (nothing -> anything) -> anything -> (nothing, nothing, nothing, nothing,)
+//│ res: (nothing -> 'a & 'a) -> (forall 'a. ('a -> (forall 'a. ((nothing, nothing, nothing, nothing,)
+//│   where
+//│     'a <: nothing -> 'a))
+//│   where
+//│     'a <: nothing -> 'a
+//│     'a <: nothing -> 'a))
 //│    = [Function: res]
 
 // (*let t1 = f delta	
@@ -468,30 +454,43 @@ def ff_ = fun g ->
 //│   where
 //│     'b <: (forall 'a. 'a -> 'a) -> 'c))
 //│   = [Function: aa]
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: Id
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:633)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:674)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ ff: (forall 'b. (anything -> 'b) -> 'b) -> (forall 'a, 'c, 'd, 'e. ('c
+//│   where
+//│     'a <: (int -> int) -> 'c
+//│     'd <: 'e -> anything
+//│     'd <: (Id -> (forall 'e, 'f. ('f
+//│   where
+//│     'e <: 'e -> 'f))) -> anything & 'e -> anything))
+//│   = [Function: ff]
+//│ ff_: ('a -> 'b & (Id -> (forall 'a, 'c. ('c
+//│   where
+//│     'a <: 'a -> 'c))) -> 'b & 'b) -> (forall 'a, 'b, 'd, 'e. ('e
+//│   where
+//│     'd <: (int -> int) -> 'e
+//│     'b <: 'a -> 'b
+//│     'b <: (Id -> (forall 'a, 'c. ('c
+//│   where
+//│     'a <: 'a -> 'c))) -> 'b & 'a -> 'b))
+//│    = [Function: ff_]
 
 // let bigtest = ff aa
 def bigtest = ff aa
 def bigtest_ = ff_ aa
-//│ ╔══[ERROR] identifier not found: ff
-//│ ║  l.484: 	def bigtest = ff aa
-//│ ╙──       	              ^^
-//│ bigtest: error
+//│ bigtest: 'a
+//│   where
+//│     'b <: (int -> int) -> 'a
+//│     'c <: 'd -> anything
+//│     'c <: (Id -> (forall 'd, 'e. ('e
+//│   where
+//│     'd <: 'd -> 'e))) -> anything & 'd -> anything
 //│        = 10
-//│ ╔══[ERROR] identifier not found: ff_
-//│ ║  l.485: 	def bigtest_ = ff_ aa
-//│ ╙──       	               ^^^
-//│ bigtest_: error
+//│ bigtest_: 'a
+//│   where
+//│     'b <: (int -> int) -> 'a
+//│     'c <: 'd -> anything
+//│     'c <: (Id -> (forall 'd, 'e. ('e
+//│   where
+//│     'd <: 'd -> 'e))) -> anything & 'd -> anything
 //│         = 10
 
 // (* Variable libre / variable li�e dans les annotations. *)
@@ -516,7 +515,7 @@ def mkpair x y = (x, y)
 // (* Il faudrait que le message d'erreur soit plus clair. *)
 example mkpair
 example_ mkpair
-//│ res: int -> ('b | (‘a1388, int,))
+//│ res: int -> ('b | (‘a2360, int,))
 //│   where
 //│     'a <: nothing -> int -> 'b
 //│    = [Function (anonymous)]
@@ -598,29 +597,53 @@ def intfa f = f 15
 // let polyann (a:'x) (b:int) f (g:int -> 'x -> 'y) = g (f 10) a b
 def polyann (a: 'x) (b: int) f (g: int -> 'x -> 'y) = g (f 10) a b
 def polyann_ a b f g = g (f 10) a b
-//│ polyann: 'x -> int -> (forall 'a. (10 -> 'a & 'a) -> (forall 'x, 'a, 'x0. ((int -> 'x0 -> int -> 'a) -> (forall 'x, 'a, 'b, 'c, 'd. ('d
+//│ polyann: 'x -> (forall 'x, 'a. (int -> (forall 'x, 'a. ((10 -> 'a & 'a) -> (forall 'x, 'a, 'x0. ((int -> 'x0 -> int -> 'a) -> (forall 'x, 'a, 'b, 'c, 'd. ('d
 //│   where
 //│     'a <: 10 -> 'b
 //│     'c <: 'b -> 'x -> int -> 'd))
 //│   where
-//│     'x <: 'x0)))
+//│     'x <: 'x0
+//│     'a <: 10 -> 'a
+//│     'x <: 'a
+//│     'a <: 10 -> 'a))
+//│   where
+//│     'x <: 'a
+//│     'x <: 'a))
+//│   where
+//│     'x <: 'a
+//│     'x <: 'a))
 //│        = [Function: polyann]
-//│ polyann_: 'a -> (forall 'b. 'b -> (forall 'c, 'd. (10 -> 'c & 'd) -> (forall 'c. (nothing -> 'a -> 'b -> 'c & 'c) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f
+//│ polyann_: 'a -> (forall 'b. 'b -> (forall 'c, 'd. (10 -> 'c & 'd) -> (forall 'a, 'b, 'c, 'd. ((nothing -> 'a -> 'b -> 'c & 'c) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f
 //│   where
 //│     'd <: 10 -> 'e
-//│     'c <: 'e -> 'a -> 'b -> 'f)))))
+//│     'c <: 'e -> 'a -> 'b -> 'f))
+//│   where
+//│     'd <: 10 -> 'c
+//│     'd <: 10 -> 'c))))
 //│         = [Function: polyann_]
 
 // let voyage (f:'p -> 'q) x y = (y, f x)
 def voyage (f: 'p -> 'q) x y = (y, f x)
 def voyage_ f x y = (y, f x)
-//│ voyage: (nothing -> anything) -> (forall 'a. 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. (('b, 'd,)
+//│ voyage: (nothing -> anything) -> (forall 'a, 'b. ('b -> (forall 'a, 'c. ('c -> (forall 'a, 'b, 'c, 'd. (('c, 'd,)
 //│   where
-//│     'c <: 'a -> 'd))))
+//│     'a <: 'b -> 'd))
+//│   where
+//│     'a <: nothing -> anything
+//│     'a <: nothing -> anything))
+//│   where
+//│     'a <: nothing -> anything
+//│     'a <: nothing -> anything))
 //│       = [Function: voyage]
-//│ voyage_: (nothing -> 'a & 'a) -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd. (('c, 'd,)
+//│ voyage_: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'c. ('c -> (forall 'a, 'b, 'c, 'd. (('c, 'd,)
 //│   where
-//│     'a <: 'b -> 'd))))
+//│     'a <: 'b -> 'd))
+//│   where
+//│     'a <: nothing -> 'a
+//│     'a <: nothing -> 'a))
+//│   where
+//│     'a <: nothing -> 'a
+//│     'a <: nothing -> 'a))
 //│        = [Function: voyage_]
 
 // let main =
@@ -934,22 +957,37 @@ def a = fun f -> f id
 //│            = [Function: church_zero]
 //│ church_un: 'a -> 'a
 //│          = [Function: id2]
-//│ church_succ: (nothing -> nothing -> 'a & 'a) -> (forall 'b. (nothing -> 'a & 'b) -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ church_succ: (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e))))
+//│     'b <: 'd -> 'e
+//│     'a <: 'b -> 'c -> 'd))
+//│   where
+//│     'b <: nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a))
 //│            = [Function: church_succ]
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: Sid
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:674)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ f: Sa -> (forall 'a. ('b
+//│   where
+//│     'a <: (Sid -> (forall 'c, 'd. ('d
+//│   where
+//│     'c <: 'c -> 'd))) -> 'b & 'c -> anything))
+//│  = [Function: f]
+//│ f_: (nothing -> 'a & (forall 'a, 'b. ('b -> 'a & 'b) -> (forall 'b, 'c. ('c
+//│   where
+//│     'b <: 'b -> 'c))) -> 'a & 'a) -> (forall 'a. ('d
+//│   where
+//│     'a <: (forall 'a, 'b. ('b -> 'a & 'b) -> (forall 'b, 'c. ('c
+//│   where
+//│     'b <: 'b -> 'c))) -> 'd & nothing -> 'a))
+//│   = [Function: f_]
+//│ a: ((forall 'a. 'a -> 'a) -> 'b & 'b) -> (forall 'b. ('c
+//│   where
+//│     'b <: (forall 'a. 'a -> 'a) -> 'c))
+//│  = [Function: a]
 
 // let app x y = x y
 // let test1 = f a
@@ -957,27 +995,24 @@ def a = fun f -> f id
 def app x y = x y
 def test1 = f a
 def test2 = app f a
-//│ app: (nothing -> 'a & 'a) -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
+//│ app: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
 //│   where
-//│     'a <: 'b -> 'c)))
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> 'a
+//│     'a <: nothing -> 'a))
 //│    = [Function: app]
-//│ ╔══[ERROR] identifier not found: f
-//│ ║  l.958: 	def test1 = f a
-//│ ╙──       	            ^
-//│ ╔══[ERROR] identifier not found: a
-//│ ║  l.958: 	def test1 = f a
-//│ ╙──       	              ^
-//│ test1: error
+//│ test1: 'a
+//│   where
+//│     'b <: (Sid -> (forall 'c, 'd. ('d
+//│   where
+//│     'c <: 'c -> 'd))) -> 'a & 'c -> anything
 //│      = [Function: id2]
-//│ ╔══[ERROR] identifier not found: f
-//│ ║  l.959: 	def test2 = app f a
-//│ ╙──       	                ^
-//│ ╔══[ERROR] identifier not found: a
-//│ ║  l.959: 	def test2 = app f a
-//│ ╙──       	                  ^
 //│ test2: 'a
 //│   where
-//│     'b <: error -> 'a
+//│     'b <: (((forall 'c. 'c -> 'c) -> 'd & 'd) -> (forall 'd. ('e
+//│   where
+//│     'd <: (forall 'c. 'c -> 'c) -> 'e))) -> 'a
 //│      = [Function: id2]
 
 
@@ -1048,7 +1083,7 @@ fun x -> ( (((x : 'a) : Sid) : 'a), x : 'a)
 //│    = [Function: res]
 //│ res: 'b -> (forall 'b, 'a. ((Sid, 'a,)
 //│   where
-//│     'b <: 'a))
+//│     'b <: 'b & 'a))
 //│    = [Function: res]
 
 // (* R�cursion polymorphe. *)
@@ -1058,17 +1093,17 @@ fun x -> ( (((x : 'a) : Sid) : 'a), x : 'a)
 :e
 rec def id_ x = if true then x else id_ id_ x
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.1059: 	rec def id_ x = if true then x else id_ id_ x
+//│ ║  l.1094: 	rec def id_ x = if true then x else id_ id_ x
 //│ ║          	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α2501' -> α2507')  <:  α2506'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α2501' -> α2507')  <:  α2506'
+//│ ╟── this constraint:  (α4932' -> α4938')  <:  α4937'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α4932' -> α4938')  <:  α4937'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.1059: 	rec def id_ x = if true then x else id_ id_ x
+//│ ║  l.1094: 	rec def id_ x = if true then x else id_ id_ x
 //│ ║          	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α2501' -> α2507')  <:  α2505'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α2501' -> α2507')  <:  α2505'
+//│ ╟── this constraint:  (α4932' -> α4938')  <:  α4936'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α4932' -> α4938')  <:  α4936'
 //│ id_: 'id_
 //│   where
 //│     'id_ :> 'a -> 'b
@@ -1087,17 +1122,17 @@ def id: Sid
 // FIXME
 rec def id x = if true then x else id id x
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.1088: 	rec def id x = if true then x else id id x
+//│ ║  l.1123: 	rec def id x = if true then x else id id x
 //│ ║          	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α2521' -> α2527')  <:  α2526'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α2521' -> α2527')  <:  α2526'
+//│ ╟── this constraint:  (α4952' -> α4958')  <:  α4957'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α4952' -> α4958')  <:  α4957'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.1088: 	rec def id x = if true then x else id id x
+//│ ║  l.1123: 	rec def id x = if true then x else id id x
 //│ ║          	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α2521' -> α2527')  <:  α2525'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α2521' -> α2527')  <:  α2525'
+//│ ╟── this constraint:  (α4952' -> α4958')  <:  α4956'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α4952' -> α4958')  <:  α4956'
 //│ 'id
 //│   where
 //│     'id :> 'a -> 'b
@@ -1108,46 +1143,46 @@ rec def id x = if true then x else id id x
 //│   <:  id:
 //│ Sid
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.1088: 	rec def id x = if true then x else id id x
+//│ ║  l.1123: 	rec def id x = if true then x else id id x
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‘a'  <:  α20_2544'    TraitTag  TypeVariable
-//│ ╙──  ... looks like:  ‘a'  <:  α20_2523'
+//│ ╟── this constraint:  ‘a'  <:  α20_4975'    TraitTag  TypeVariable
+//│ ╙──  ... looks like:  ‘a'  <:  α20_4954'
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.1088: 	rec def id x = if true then x else id id x
+//│ ║  l.1123: 	rec def id x = if true then x else id id x
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` is not a function
-//│ ║  l.874: 	type Sid = forall 'a. 'a -> 'a
+//│ ║  l.897: 	type Sid = forall 'a. 'a -> 'a
 //│ ║         	                  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.1088: 	rec def id x = if true then x else id id x
+//│ ║  l.1123: 	rec def id x = if true then x else id id x
 //│ ║          	                                   ^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.1088: 	rec def id x = if true then x else id id x
+//│ ║  l.1123: 	rec def id x = if true then x else id id x
 //│ ╙──        	                            ^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.1088: 	rec def id x = if true then x else id id x
+//│ ║  l.1123: 	rec def id x = if true then x else id id x
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` is not an instance of type `'a`
-//│ ║  l.1088: 	rec def id x = if true then x else id id x
+//│ ║  l.1123: 	rec def id x = if true then x else id id x
 //│ ║          	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `‘a`
-//│ ║  l.1088: 	rec def id x = if true then x else id id x
+//│ ║  l.1123: 	rec def id x = if true then x else id id x
 //│ ║          	                                      ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.874: 	type Sid = forall 'a. 'a -> 'a
+//│ ║  l.897: 	type Sid = forall 'a. 'a -> 'a
 //│ ╙──       	                  ^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.1088: 	rec def id x = if true then x else id id x
+//│ ║  l.1123: 	rec def id x = if true then x else id id x
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` is not an instance of type `'a`
-//│ ║  l.1088: 	rec def id x = if true then x else id id x
+//│ ║  l.1123: 	rec def id x = if true then x else id id x
 //│ ║          	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `‘a`
-//│ ║  l.1088: 	rec def id x = if true then x else id id x
+//│ ║  l.1123: 	rec def id x = if true then x else id id x
 //│ ║          	                                      ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.874: 	type Sid = forall 'a. 'a -> 'a
+//│ ║  l.897: 	type Sid = forall 'a. 'a -> 'a
 //│ ╙──       	                  ^^
 //│   = [Function: id3]
 

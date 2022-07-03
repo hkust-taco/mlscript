@@ -21,25 +21,18 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'c. (List['c] & 'c) -> (forall 'b, 'c, 'head, 'a, 'tail. (Cons['a] with {head: 'head, tail: 'tail}
+//│ 'b -> (forall 'b, 'c. ((List['c] & 'c) -> (forall 'b, 'c, 'head, 'a, 'tail. (Cons['a] with {head: 'head, tail: 'tail}
 //│   where
 //│     'b <: 'head & 'a
 //│     'c <: List['a] & 'tail
 //│     'b <: 'head & 'a
-//│     'c <: List['a] & 'tail)))
+//│     'c <: List['a] & 'tail))
+//│   where
+//│     'b <: 'c
+//│     'b <: 'c))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:659)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
+//│     = [Function: cons]
 
 class Nil[a]: List[a]
   method Head = error
@@ -67,17 +60,7 @@ def head l = l.Head
 //│     'a <: List['b]))
 //│   <:  head:
 //│ List['a] -> 'a
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:659)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
+//│     = [Function: head]
 
 def tail: forall 'a. List['a] -> List['a]
 def tail l = l.Tail
@@ -88,17 +71,7 @@ def tail l = l.Tail
 //│     'b <: List['a]))
 //│   <:  tail:
 //│ List['a] -> List['a]
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:659)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
+//│     = [Function: tail]
 
 def is_empty: forall 'a. List['a] -> bool
 def is_empty l = eq l nil
@@ -139,9 +112,15 @@ def create_hashtbl _ = nil
 
 // let hashtbl_add table key element = (key, element) :: table
 def hashtbl_add table key element = cons ((key, element)) table
-//│ hashtbl_add: (List['a] & 'a) -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd. (List[('b, 'c,) | 'd]
+//│ hashtbl_add: (List['a] & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'c. ('c -> (forall 'a, 'b, 'c, 'd. (List[('b, 'c,) | 'd]
 //│   where
-//│     'a <: List['d]))))
+//│     'a <: List['d]))
+//│   where
+//│     'a <: List['a]
+//│     'a <: List['a]))
+//│   where
+//│     'a <: List['a]
+//│     'a <: List['a]))
 //│            = [Function: hashtbl_add]
 
 // let rec find table key = 
@@ -175,7 +154,7 @@ def find_A table key =
   if is_empty table then None
   else if eq (head table)._1 key then Some (head table)._2
   else find_A (tail table) key
-//│ (List['a] & 'c) -> (forall 'd. 'd -> (forall 'a, 'c, 'd, 'val, 'b. (None | Some['val] | Some['b]
+//│ (List['a] & 'c) -> (forall 'a, 'c, 'd. ('d -> (forall 'a, 'c, 'd, 'val, 'b. (None | Some['val] | Some['b]
 //│   where
 //│     'c <: List['a] & List[{_1: 'a}] & List[{_2: 'a & 'val}] & List[('a, 'b,)]
 //│     'd <: 'a
@@ -188,20 +167,14 @@ def find_A table key =
 //│     'c <: List['a] & List[{_1: 'a}] & List[{_2: 'a & 'val}] & List[('a, 'b,)]
 //│     'd <: 'a
 //│     'c <: List['a] & List[{_1: 'a}] & List[{_2: 'a & 'val}] & List[('a, 'b,)]
-//│     'd <: 'a)))
+//│     'd <: 'a))
+//│   where
+//│     'c <: List['a] & List[{_1: 'a}] & List[{_2: 'a}] & List[('a, 'a,)]
+//│     'c <: List['a] & List[{_1: 'a}] & List[{_2: 'a}] & List[('a, 'a,)]))
 //│   <:  find_A:
 //│ List[(anything, 'b,)] -> anything -> (None | Some['b])
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:659)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
+//│       = <no result>
+//│         find_A is not implemented
 
 // let nfind table key =
 //   begin match find table key with
@@ -214,7 +187,13 @@ def nfind table key =
   { None -> fun f -> fun x -> x
   | Some -> opt.val
   }
-//│ nfind: List[?] -> anything -> anything -> (forall 'a. 'a -> 'a)
+//│ nfind: (List['a] & 'b) -> (forall 'a, 'b. ('a -> (forall 'a, 'b. ('a -> (forall 'c. 'c -> 'c)
+//│   where
+//│     'b <: List['a]
+//│     'a <: 'a))
+//│   where
+//│     'b <: List['a]
+//│     'b <: List['a]))
 //│      = [Function: nfind]
 
 // type Int = ['a] ('a -> 'a) -> ('a -> 'a)
@@ -224,46 +203,129 @@ type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 // let succ (n:Int) = fun f x -> f (n f x)
 def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 def succ_ n = fun f -> fun x -> f (n f x)
-//│ succ: ChurchInt -> (forall 'b. (nothing -> anything & 'b) -> (forall 'c, 'a, 'd, 'e. ('e -> (forall 'b, 'e, 'f, 'g, 'h. ('h
-//│   where
-//│     'f <: 'b -> 'e -> 'g
-//│     'b <: 'g -> 'h))
-//│   where
-//│     'c <: 'a -> 'a
-//│     'd :> 'a -> 'a)))
-//│     = [Function: succ]
-//│ succ_: (nothing -> nothing -> 'a & 'a) -> (forall 'b. (nothing -> 'a & 'b) -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ succ: ChurchInt -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e))))
+//│     'b <: 'd -> 'e))
+//│   where
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything))
+//│   where
+//│     'a <: nothing -> nothing -> anything
+//│     'a <: nothing -> nothing -> anything))
+//│     = [Function: succ]
+//│ succ_: (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│   where
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a))
 //│      = [Function: succ_]
 
 // let add (n:Int) (m:Int) = n succ m
 
 //:e // due to tapping
 def add (n: ChurchInt) (m: ChurchInt) = n succ m
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: ChurchInt
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:633)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:674)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ add: ChurchInt -> (forall 'a. (ChurchInt -> (forall 'a. ('b
+//│   where
+//│     'a <: (ChurchInt -> (forall 'c, 'd. ((nothing -> anything & 'd) -> (forall 'c, 'd, 'e. ('e -> (forall 'c, 'd, 'e, 'f, 'g. ('g
+//│   where
+//│     'c <: 'd -> 'e -> 'f
+//│     'd <: 'f -> 'g))
+//│   where
+//│     'c <: nothing -> nothing -> anything
+//│     'd <: nothing -> anything
+//│     'c <: nothing -> nothing -> anything
+//│     'd <: nothing -> anything))
+//│   where
+//│     'c <: nothing -> nothing -> anything
+//│     'c <: nothing -> nothing -> anything))) -> ChurchInt -> 'b))
+//│   where
+//│     'a <: (ChurchInt -> (forall 'c, 'd. ((nothing -> anything & 'd) -> (forall 'c, 'd, 'e. ('e -> (forall 'c, 'd, 'e, 'f, 'g. ('g
+//│   where
+//│     'c <: 'd -> 'e -> 'f
+//│     'd <: 'f -> 'g))
+//│   where
+//│     'c <: nothing -> nothing -> anything
+//│     'd <: nothing -> anything
+//│     'c <: nothing -> nothing -> anything
+//│     'd <: nothing -> anything))
+//│   where
+//│     'c <: nothing -> nothing -> anything
+//│     'c <: nothing -> nothing -> anything))) -> ChurchInt -> anything
+//│     'a <: (ChurchInt -> (forall 'c, 'd. ((nothing -> anything & 'd) -> (forall 'c, 'd, 'e. ('e -> (forall 'c, 'd, 'e, 'f, 'g. ('g
+//│   where
+//│     'c <: 'd -> 'e -> 'f
+//│     'd <: 'f -> 'g))
+//│   where
+//│     'c <: nothing -> nothing -> anything
+//│     'd <: nothing -> anything
+//│     'c <: nothing -> nothing -> anything
+//│     'd <: nothing -> anything))
+//│   where
+//│     'c <: nothing -> nothing -> anything
+//│     'c <: nothing -> nothing -> anything))) -> ChurchInt -> anything))
+//│    = [Function: add]
 
 def add_ n m = n succ_ m
-//│ add_: ((forall 'a. (nothing -> nothing -> 'a & 'a) -> (forall 'b. (nothing -> 'a & 'b) -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ add_: ((forall 'a. (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e))))) -> nothing -> 'a & 'f) -> (forall 'g. 'g -> (forall 'f. ('h
+//│     'b <: 'd -> 'e))
 //│   where
-//│     'f <: (forall 'a. (nothing -> nothing -> 'a & 'a) -> (forall 'b. (nothing -> 'a & 'b) -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a))) -> nothing -> 'a & 'f) -> (forall 'f. ('g -> (forall 'f. ('h
+//│   where
+//│     'f <: (forall 'a. (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e))))) -> 'g -> 'h)))
+//│     'b <: 'd -> 'e))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a))) -> 'g -> 'h))
+//│   where
+//│     'f <: (forall 'a. (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│   where
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a))) -> nothing -> 'a
+//│     'f <: (forall 'a. (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│   where
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a
+//│     'b <: nothing -> 'a))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a))) -> nothing -> 'a))
 //│     = [Function: add_]
 
 // let printInt (n:Int) = print (n (fun x -> x+1) 0)
@@ -286,56 +348,128 @@ table = hashtbl_add table "one" (fun f -> fun x -> f x)
 table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│ table: List[nothing]
 //│      = Nil {}
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:675)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ table: List[("one", forall 'a. (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
+//│   where
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> 'a
+//│     'a <: nothing -> 'a)),) | 'd]
+//│   where
+//│     'e <: List['d]
+//│      = Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
+//│ table: List[("two", forall 'a. (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d
+//│   where
+//│     'a <: 'b -> 'c & 'c -> 'd))
+//│   where
+//│     'a <: nothing -> 'a
+//│     'a <: nothing -> 'a)),) | 'e]
+//│   where
+//│     'f <: List['e]
+//│      = Cons {
+//│          head: [ 'two', [Function (anonymous)] ],
+//│          tail: Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
+//│        }
 
 // let zog =
 //   printInt (add (nfind table "one") (nfind table "two"))
 
 // :e // FIXME? failed with genLamBodies but works with quantif extrus
 // * Note: this one requires `:DistributeForalls`
-//:e // due to tapping
+:e // due to tapping
 zog = printInt (add (nfind table "one") (nfind table "two"))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.307: 	zog = printInt (add (nfind table "one") (nfind table "two"))
-//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> (forall ?b. ?b -> ?b)` is not an instance of type `int`
-//│ ║  l.214: 	  { None -> fun f -> fun x -> x
-//│ ║         	            ^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into application with expected type `int`
-//│ ║  l.307: 	zog = printInt (add (nfind table "one") (nfind table "two"))
-//│ ╙──       	                     ^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.307: 	zog = printInt (add (nfind table "one") (nfind table "two"))
-//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> (forall ?b. ?b -> ?b)` is not an instance of type `int`
-//│ ║  l.214: 	  { None -> fun f -> fun x -> x
-//│ ║         	            ^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into application with expected type `int`
-//│ ║  l.307: 	zog = printInt (add (nfind table "one") (nfind table "two"))
-//│ ╙──       	                                         ^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.307: 	zog = printInt (add (nfind table "one") (nfind table "two"))
-//│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `int` is not a function
-//│ ║  l.307: 	zog = printInt (add (nfind table "one") (nfind table "two"))
-//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from function type:
-//│ ║  l.221: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── from type reference:
-//│ ║  l.270: 	def printInt (n: ChurchInt) = toString (n (fun x -> x + 1) 0)
-//│ ╙──       	                 ^^^^^^^^^
-//│ zog: error | string
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?val, ?a, ?b, ?a0, ?a1, ?a2, ?a3, ?c, ?d, ?a4, ?a5, ?e, ?f, ?a6, ?g, ?h, ?i, ?val0, ?val1, ?val2, ?val3. ?c -> (forall ?j, ?val, ?a7, ?k, ?a8, ?a9, ?a10, ?a11, ?l, ?a12, ?m, ?a13, ?a14, ?a15, ?a16, ?n, ?a17, ?a, ?a18, ?o, ?p, ?b, ?a19, ?q, ?r, ?s, ?val4, ?a0, ?val5, ?a1, ?val6, ?a2, ?val7, ?a3, ?t, ?a20, ?a21, ?u, ?v, ?a22, ?w, ?x, ?y, ?val8, ?val9, ?val10, ?val11, ?z, ?a23, ?a24, ?a1, ?b1, ?a25, ?c1, ?d1, ?e1, ?val12, ?val13, ?val14, ?val15, ?f1, ?g1. (?f1 -> (forall ?j, ?h1, ?a26, ?i1, ?a27, ?a28, ?a29, ?a30, ?j1, ?k1, ?val, ?l1, ?l, ?n, ?a17, ?a, ?a18, ?o, ?p, ?b, ?a19, ?q, ?r, ?s, ?val4, ?a0, ?val5, ?a1, ?val6, ?a2, ?val7, ?a3, ?m1, ?a31, ?a32, ?n1, ?o1, ?a33, ?p1, ?q1, ?r1, ?val16, ?val17, ?val18, ?val19, ?s1. (?k1 -> (forall ?t1. ?t1 -> ?t1) | ?val
+//│   where
+//│     ?j <: ?m1
+//│     ?h1 <: ?s1
+//│     ?j <: ?m1
+//│     ?h1 <: ?s1))
+//│   where
+//│     ?j <: ?z
+//│     ?j <: ?t)) <: (forall ?u1, ?v1, ?w1, ?x1, ?y1, ?z1, ?a2, ?b2, ?c2, ?d2, ?e2, ?f2, ?g2, ?h2, ?i2, ?j2, ?k2, ?l2, ?m2, ?n2, ?o2, ?p2, ?q2, ?r2, ?s2, ?t2, ?u2, ?v2, ?w2, ?x2, ?y2, ?z2, ?a3, ?b3, ?c3, ?d3, ?e3, ?f3, ?g3, ?h3, ?i3, ?j3, ?k3, ?l3, ?m3, ?n3, ?o3, ?p3, ?q3, ?r3, ?s3, ?t3, ?u3, ?v3, ?w3, ?x3, ?y3, ?z3, ?a4, ?b4, ?c4, ?d4, ?e4, ?f4, ?g4, ?h4, ?i4, ?j4, ?k4, ?l4, ?m4, ?n4, ?o4, ?p4, ?q4, ?r4, ?s4, ?t4, ?u4, ?v4, ?w4, ?x4, ?y4, ?z4, ?a5, ?b5, ?c5, ?d5, ?e5, ?f5, ?g5, ?h5, ?i5, ?j5, ?k5, ?l5, ?m5, ?n5, ?o5, ?p5, ?q5, ?r5, ?s5, ?t5, ?u5, ?v5, ?w5, ?x5, ?y5, ?z5, ?a6, ?b6, ?c6, ?d6, ?e6, ?f6, ?g6. ?e6) -> ?h6` took too many steps and ran out of fuel (5000)
+//│ ║  l.379: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║         	                     ^^^^^^^^^^^
+//│ ╟──  + (list<> & {List#a: mut ..'a156_17894'})
+//│ ╟──  + List['a156_17894']
+//│ ║  l.40: 	def nil: List['a]
+//│ ║        	         ^^^^^^^^
+//│ ╟──  + ‹∀ 0. List['a156']›
+//│ ║  l.40: 	def nil: List['a]
+//│ ║        	         ^^^^^^^^
+//│ ╟──  + ‹∀ 0. List['a156']›
+//│ ║  l.40: 	def nil: List['a]
+//│ ║        	         ^^^^^^^^
+//│ ╟──  + ‹∀ 0. List['a156']›
+//│ ║  l.109: 	def create_hashtbl _ = nil
+//│ ║         	                       ^^^
+//│ ╟──  + ‹∀ 0. List['a156']›
+//│ ║  l.346: 	table = create_hashtbl null
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + α1584_17893'
+//│ ║  l.346: 	table = create_hashtbl null
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. α1584'›
+//│ ║  l.346: 	table = create_hashtbl null
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. α1584'›
+//│ ║  l.346: 	table = create_hashtbl null
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. α1584'›
+//│ ║  l.347: 	table = hashtbl_add table "one" (fun f -> fun x -> f x)
+//│ ║         	                    ^^^^^
+//│ ╟──  + ‹∀ 0. α1584'›
+//│ ╟──  + α289_17836'
+//│ ╟──  - {List#a: mut ..α53_17885'}
+//│ ╟──  - (list<> & {List#a: mut ..α53_17885'})
+//│ ╟──  - List[α53_17885']
+//│ ║  l.17: 	def cons[a]: a -> List[a] -> List[a]
+//│ ╙──      	                  ^^^^^^^
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?val, ?a, ?b, ?a0, ?a1, ?a2, ?a3, ?c, ?d, ?a4, ?a5, ?e, ?f, ?a6, ?g, ?h, ?i, ?val0, ?val1, ?val2, ?val3. ?c -> (forall ?j, ?val, ?a7, ?k, ?a8, ?a9, ?a10, ?a11, ?l, ?a12, ?m, ?a13, ?a14, ?a15, ?a16, ?n, ?a17, ?a, ?a18, ?o, ?p, ?b, ?a19, ?q, ?r, ?s, ?val4, ?a0, ?val5, ?a1, ?val6, ?a2, ?val7, ?a3, ?t, ?a20, ?a21, ?u, ?v, ?a22, ?w, ?x, ?y, ?val8, ?val9, ?val10, ?val11, ?z, ?a23, ?a24, ?a1, ?b1, ?a25, ?c1, ?d1, ?e1, ?val12, ?val13, ?val14, ?val15, ?f1, ?g1. (?f1 -> (forall ?j, ?h1, ?a26, ?i1, ?a27, ?a28, ?a29, ?a30, ?j1, ?k1, ?val, ?l1, ?l, ?n, ?a17, ?a, ?a18, ?o, ?p, ?b, ?a19, ?q, ?r, ?s, ?val4, ?a0, ?val5, ?a1, ?val6, ?a2, ?val7, ?a3, ?m1, ?a31, ?a32, ?n1, ?o1, ?a33, ?p1, ?q1, ?r1, ?val16, ?val17, ?val18, ?val19, ?s1. (?k1 -> (forall ?t1. ?t1 -> ?t1) | ?val
+//│   where
+//│     ?j <: ?m1
+//│     ?h1 <: ?s1
+//│     ?j <: ?m1
+//│     ?h1 <: ?s1))
+//│   where
+//│     ?j <: ?z
+//│     ?j <: ?t)) <: (forall ?u1, ?v1, ?w1, ?x1, ?y1, ?z1, ?a2, ?b2, ?c2, ?d2, ?e2, ?f2, ?g2, ?h2, ?i2, ?j2, ?k2, ?l2, ?m2, ?n2, ?o2, ?p2, ?q2, ?r2, ?s2, ?t2, ?u2, ?v2, ?w2, ?x2, ?y2, ?z2, ?a3, ?b3, ?c3, ?d3, ?e3, ?f3, ?g3, ?h3, ?i3, ?j3, ?k3, ?l3, ?m3, ?n3, ?o3, ?p3, ?q3, ?r3, ?s3, ?t3, ?u3, ?v3, ?w3, ?x3, ?y3, ?z3, ?a4, ?b4, ?c4, ?d4, ?e4, ?f4, ?g4, ?h4, ?i4, ?j4, ?k4, ?l4, ?m4, ?n4, ?o4, ?p4, ?q4, ?r4, ?s4, ?t4, ?u4, ?v4, ?w4, ?x4, ?y4, ?z4, ?a5, ?b5, ?c5, ?d5, ?e5, ?f5, ?g5, ?h5, ?i5, ?j5, ?k5, ?l5, ?m5, ?n5, ?o5, ?p5, ?q5, ?r5, ?s5, ?t5, ?u5, ?v5, ?w5, ?x5, ?y5, ?z5, ?a6, ?b6, ?c6, ?d6, ?e6, ?f6, ?g6. ?e6) -> ?h6` took too many steps and ran out of fuel (5000)
+//│ ║  l.379: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║         	                                         ^^^^^^^^^^^
+//│ ╟──  + (list<> & {List#a: mut ..'a156_31805'})
+//│ ╟──  + List['a156_31805']
+//│ ║  l.40: 	def nil: List['a]
+//│ ║        	         ^^^^^^^^
+//│ ╟──  + ‹∀ 0. List['a156']›
+//│ ║  l.40: 	def nil: List['a]
+//│ ║        	         ^^^^^^^^
+//│ ╟──  + ‹∀ 0. List['a156']›
+//│ ║  l.40: 	def nil: List['a]
+//│ ║        	         ^^^^^^^^
+//│ ╟──  + ‹∀ 0. List['a156']›
+//│ ║  l.109: 	def create_hashtbl _ = nil
+//│ ║         	                       ^^^
+//│ ╟──  + ‹∀ 0. List['a156']›
+//│ ║  l.346: 	table = create_hashtbl null
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + α1584_31804'
+//│ ║  l.346: 	table = create_hashtbl null
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. α1584'›
+//│ ║  l.346: 	table = create_hashtbl null
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. α1584'›
+//│ ║  l.346: 	table = create_hashtbl null
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. α1584'›
+//│ ║  l.347: 	table = hashtbl_add table "one" (fun f -> fun x -> f x)
+//│ ║         	                    ^^^^^
+//│ ╟──  + ‹∀ 0. α1584'›
+//│ ╟──  + α289_31747'
+//│ ╟──  - {List#a: mut ..α53_31796'}
+//│ ╟──  - (list<> & {List#a: mut ..α53_31796'})
+//│ ╟──  - List[α53_31796']
+//│ ║  l.17: 	def cons[a]: a -> List[a] -> List[a]
+//│ ╙──      	                  ^^^^^^^
+//│ zog: string
 //│   where
 //│     'a <: (int -> int) -> 0 -> anything
 //│    = '0'
@@ -345,40 +479,257 @@ zog = printInt (add (nfind table "one") (nfind table "two"))
 // :e // FIXME? failed with genLamBodies but works with quantif extrus
 //:e // due to tapping
 a = add (nfind table "one")
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.347: 	a = add (nfind table "one")
-//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> (forall ?b. ?b -> ?b)` is not an instance of type `int`
-//│ ║  l.214: 	  { None -> fun f -> fun x -> x
-//│ ║         	            ^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into application with expected type `int`
-//│ ║  l.347: 	a = add (nfind table "one")
-//│ ╙──       	         ^^^^^^^^^^^^^^^^^
-//│ a: int -> int | error
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?val, ?a, ?b, ?a0, ?a1, ?a2, ?a3, ?c, ?d, ?a4, ?a5, ?e, ?f, ?a6, ?g, ?h, ?i, ?val0, ?val1, ?val2, ?val3. ?c -> (forall ?j, ?val, ?a7, ?k, ?a8, ?a9, ?a10, ?a11, ?l, ?a12, ?m, ?a13, ?a14, ?a15, ?a16, ?n, ?a17, ?a, ?a18, ?o, ?p, ?b, ?a19, ?q, ?r, ?s, ?val4, ?a0, ?val5, ?a1, ?val6, ?a2, ?val7, ?a3, ?t, ?a20, ?a21, ?u, ?v, ?a22, ?w, ?x, ?y, ?val8, ?val9, ?val10, ?val11, ?z, ?a23, ?a24, ?a1, ?b1, ?a25, ?c1, ?d1, ?e1, ?val12, ?val13, ?val14, ?val15, ?f1, ?g1. (?f1 -> (forall ?j, ?h1, ?a26, ?i1, ?a27, ?a28, ?a29, ?a30, ?j1, ?k1, ?val, ?l1, ?l, ?n, ?a17, ?a, ?a18, ?o, ?p, ?b, ?a19, ?q, ?r, ?s, ?val4, ?a0, ?val5, ?a1, ?val6, ?a2, ?val7, ?a3, ?m1, ?a31, ?a32, ?n1, ?o1, ?a33, ?p1, ?q1, ?r1, ?val16, ?val17, ?val18, ?val19, ?s1. (?k1 -> (forall ?t1. ?t1 -> ?t1) | ?val
+//│   where
+//│     ?j <: ?m1
+//│     ?h1 <: ?s1
+//│     ?j <: ?m1
+//│     ?h1 <: ?s1))
+//│   where
+//│     ?j <: ?z
+//│     ?j <: ?t)) <: (forall ?u1, ?v1, ?w1, ?x1, ?y1, ?z1, ?a2, ?b2, ?c2, ?d2, ?e2, ?f2, ?g2, ?h2, ?i2, ?j2, ?k2, ?l2, ?m2, ?n2, ?o2, ?p2, ?q2, ?r2, ?s2, ?t2, ?u2, ?v2, ?w2, ?x2, ?y2, ?z2, ?a3, ?b3, ?c3, ?d3, ?e3, ?f3, ?g3, ?h3, ?i3, ?j3, ?k3, ?l3, ?m3, ?n3, ?o3, ?p3, ?q3, ?r3, ?s3, ?t3, ?u3, ?v3, ?w3, ?x3, ?y3, ?z3, ?a4, ?b4, ?c4, ?d4, ?e4, ?f4, ?g4, ?h4, ?i4, ?j4, ?k4, ?l4, ?m4, ?n4, ?o4, ?p4, ?q4, ?r4, ?s4, ?t4, ?u4, ?v4, ?w4, ?x4, ?y4, ?z4, ?a5, ?b5, ?c5, ?d5, ?e5, ?f5, ?g5, ?h5, ?i5, ?j5, ?k5, ?l5, ?m5, ?n5, ?o5, ?p5, ?q5, ?r5, ?s5, ?t5, ?u5, ?v5, ?w5, ?x5, ?y5, ?z5, ?a6, ?b6, ?c6, ?d6, ?e6, ?f6, ?g6. ?e6) -> ?h6` took too many steps and ran out of fuel (5000)
+//│ ║  l.481: 	a = add (nfind table "one")
+//│ ║         	         ^^^^^^^^^^^
+//│ ╟──  + (list<> & {List#a: mut ..'a156_47388'})
+//│ ╟──  + List['a156_47388']
+//│ ║  l.40: 	def nil: List['a]
+//│ ║        	         ^^^^^^^^
+//│ ╟──  + ‹∀ 0. List['a156']›
+//│ ║  l.40: 	def nil: List['a]
+//│ ║        	         ^^^^^^^^
+//│ ╟──  + ‹∀ 0. List['a156']›
+//│ ║  l.40: 	def nil: List['a]
+//│ ║        	         ^^^^^^^^
+//│ ╟──  + ‹∀ 0. List['a156']›
+//│ ║  l.109: 	def create_hashtbl _ = nil
+//│ ║         	                       ^^^
+//│ ╟──  + ‹∀ 0. List['a156']›
+//│ ║  l.346: 	table = create_hashtbl null
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + α1584_47387'
+//│ ║  l.346: 	table = create_hashtbl null
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. α1584'›
+//│ ║  l.346: 	table = create_hashtbl null
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. α1584'›
+//│ ║  l.346: 	table = create_hashtbl null
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. α1584'›
+//│ ║  l.347: 	table = hashtbl_add table "one" (fun f -> fun x -> f x)
+//│ ║         	                    ^^^^^
+//│ ╟──  + ‹∀ 0. α1584'›
+//│ ╟──  + α289_47330'
+//│ ╟──  - {List#a: mut ..α53_47379'}
+//│ ╟──  - (list<> & {List#a: mut ..α53_47379'})
+//│ ╟──  - List[α53_47379']
+//│ ║  l.17: 	def cons[a]: a -> List[a] -> List[a]
+//│ ╙──      	                  ^^^^^^^
+//│ a: ChurchInt -> (forall 'a. ('b
+//│   where
+//│     'a <: (ChurchInt -> (forall 'c, 'd. ((nothing -> anything & 'd) -> (forall 'c, 'd, 'e. ('e -> (forall 'c, 'd, 'e, 'f, 'g. ('g
+//│   where
+//│     'c <: 'd -> 'e -> 'f
+//│     'd <: 'f -> 'g))
+//│   where
+//│     'c <: nothing -> nothing -> anything
+//│     'd <: nothing -> anything
+//│     'c <: nothing -> nothing -> anything
+//│     'd <: nothing -> anything))
+//│   where
+//│     'c <: nothing -> nothing -> anything
+//│     'c <: nothing -> nothing -> anything))) -> ChurchInt -> 'b))
+//│   where
+//│     'a <: (ChurchInt -> (forall 'c, 'd. ((nothing -> anything & 'd) -> (forall 'c, 'd, 'e. ('e -> (forall 'c, 'd, 'e, 'f, 'g. ('g
+//│   where
+//│     'c <: 'd -> 'e -> 'f
+//│     'd <: 'f -> 'g))
+//│   where
+//│     'c <: nothing -> nothing -> anything
+//│     'd <: nothing -> anything
+//│     'c <: nothing -> nothing -> anything
+//│     'd <: nothing -> anything))
+//│   where
+//│     'c <: nothing -> nothing -> anything
+//│     'c <: nothing -> nothing -> anything))) -> ChurchInt -> anything
+//│     'a <: (ChurchInt -> (forall 'c, 'd. ((nothing -> anything & 'd) -> (forall 'c, 'd, 'e. ('e -> (forall 'c, 'd, 'e, 'f, 'g. ('g
+//│   where
+//│     'c <: 'd -> 'e -> 'f
+//│     'd <: 'f -> 'g))
+//│   where
+//│     'c <: nothing -> nothing -> anything
+//│     'd <: nothing -> anything
+//│     'c <: nothing -> nothing -> anything
+//│     'd <: nothing -> anything))
+//│   where
+//│     'c <: nothing -> nothing -> anything
+//│     'c <: nothing -> nothing -> anything))) -> ChurchInt -> anything
 //│  = [Function (anonymous)]
 
 b = (nfind table "two")
-//│ b: anything -> (forall 'a. 'a -> 'a)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?val, ?a, ?b, ?a0, ?a1, ?a2, ?a3, ?c, ?d, ?a4, ?a5, ?e, ?f, ?a6, ?g, ?h, ?i, ?val0, ?val1, ?val2, ?val3. ?c -> (forall ?j, ?val, ?a7, ?k, ?a8, ?a9, ?a10, ?a11, ?l, ?a12, ?m, ?a13, ?a14, ?a15, ?a16, ?n, ?a17, ?a, ?a18, ?o, ?p, ?b, ?a19, ?q, ?r, ?s, ?val4, ?a0, ?val5, ?a1, ?val6, ?a2, ?val7, ?a3, ?t, ?a20, ?a21, ?u, ?v, ?a22, ?w, ?x, ?y, ?val8, ?val9, ?val10, ?val11, ?z, ?a23, ?a24, ?a1, ?b1, ?a25, ?c1, ?d1, ?e1, ?val12, ?val13, ?val14, ?val15, ?f1, ?g1. (?f1 -> (forall ?j, ?h1, ?a26, ?i1, ?a27, ?a28, ?a29, ?a30, ?j1, ?k1, ?val, ?l1, ?l, ?n, ?a17, ?a, ?a18, ?o, ?p, ?b, ?a19, ?q, ?r, ?s, ?val4, ?a0, ?val5, ?a1, ?val6, ?a2, ?val7, ?a3, ?m1, ?a31, ?a32, ?n1, ?o1, ?a33, ?p1, ?q1, ?r1, ?val16, ?val17, ?val18, ?val19, ?s1. (?k1 -> (forall ?t1. ?t1 -> ?t1) | ?val
+//│   where
+//│     ?j <: ?m1
+//│     ?h1 <: ?s1
+//│     ?j <: ?m1
+//│     ?h1 <: ?s1))
+//│   where
+//│     ?j <: ?z
+//│     ?j <: ?t)) <: (forall ?u1, ?v1, ?w1, ?x1, ?y1, ?z1, ?a2, ?b2, ?c2, ?d2, ?e2, ?f2, ?g2, ?h2, ?i2, ?j2, ?k2, ?l2, ?m2, ?n2, ?o2, ?p2, ?q2, ?r2, ?s2, ?t2, ?u2, ?v2, ?w2, ?x2, ?y2, ?z2, ?a3, ?b3, ?c3, ?d3, ?e3, ?f3, ?g3, ?h3, ?i3, ?j3, ?k3, ?l3, ?m3, ?n3, ?o3, ?p3, ?q3, ?r3, ?s3, ?t3, ?u3, ?v3, ?w3, ?x3, ?y3, ?z3, ?a4, ?b4, ?c4, ?d4, ?e4, ?f4, ?g4, ?h4, ?i4, ?j4, ?k4, ?l4, ?m4, ?n4, ?o4, ?p4, ?q4, ?r4, ?s4, ?t4, ?u4, ?v4, ?w4, ?x4, ?y4, ?z4, ?a5, ?b5, ?c5, ?d5, ?e5, ?f5, ?g5, ?h5, ?i5, ?j5, ?k5, ?l5, ?m5, ?n5, ?o5, ?p5, ?q5, ?r5, ?s5, ?t5, ?u5, ?v5, ?w5, ?x5, ?y5, ?z5, ?a6, ?b6, ?c6, ?d6, ?e6, ?f6, ?g6. ?e6) -> ?h6` took too many steps and ran out of fuel (5000)
+//│ ║  l.569: 	b = (nfind table "two")
+//│ ║         	     ^^^^^^^^^^^
+//│ ╟──  + (list<> & {List#a: mut ..'a156_61352'})
+//│ ╟──  + List['a156_61352']
+//│ ║  l.40: 	def nil: List['a]
+//│ ║        	         ^^^^^^^^
+//│ ╟──  + ‹∀ 0. List['a156']›
+//│ ║  l.40: 	def nil: List['a]
+//│ ║        	         ^^^^^^^^
+//│ ╟──  + ‹∀ 0. List['a156']›
+//│ ║  l.40: 	def nil: List['a]
+//│ ║        	         ^^^^^^^^
+//│ ╟──  + ‹∀ 0. List['a156']›
+//│ ║  l.109: 	def create_hashtbl _ = nil
+//│ ║         	                       ^^^
+//│ ╟──  + ‹∀ 0. List['a156']›
+//│ ║  l.346: 	table = create_hashtbl null
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + α1584_61351'
+//│ ║  l.346: 	table = create_hashtbl null
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. α1584'›
+//│ ║  l.346: 	table = create_hashtbl null
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. α1584'›
+//│ ║  l.346: 	table = create_hashtbl null
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. α1584'›
+//│ ║  l.347: 	table = hashtbl_add table "one" (fun f -> fun x -> f x)
+//│ ║         	                    ^^^^^
+//│ ╟──  + ‹∀ 0. α1584'›
+//│ ╟──  + α289_61294'
+//│ ╟──  - {List#a: mut ..α53_61343'}
+//│ ╟──  - (list<> & {List#a: mut ..α53_61343'})
+//│ ╟──  - List[α53_61343']
+//│ ║  l.17: 	def cons[a]: a -> List[a] -> List[a]
+//│ ╙──      	                  ^^^^^^^
+//│ b: error
 //│  = [Function (anonymous)]
 
 // * Note: this one requires `:DistributeForalls`
 // :d
 //:e // due to tapping
 a b
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.367: 	a b
-//│ ║         	^^^
-//│ ╟── function of type `?a -> (forall ?b. ?b -> ?b)` is not an instance of type `int`
-//│ ║  l.214: 	  { None -> fun f -> fun x -> x
-//│ ║         	            ^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.367: 	a b
-//│ ╙──       	  ^
-//│ res: error | int
+//│ res: 'a
+//│   where
+//│     'b <: (ChurchInt -> (forall 'c, 'd. ((nothing -> anything & 'd) -> (forall 'c, 'd, 'e. ('e -> (forall 'c, 'd, 'e, 'f, 'g. ('g
+//│   where
+//│     'c <: 'd -> 'e -> 'f
+//│     'd <: 'f -> 'g))
+//│   where
+//│     'c <: nothing -> nothing -> anything
+//│     'd <: nothing -> anything
+//│     'c <: nothing -> nothing -> anything
+//│     'd <: nothing -> anything))
+//│   where
+//│     'c <: nothing -> nothing -> anything
+//│     'c <: nothing -> nothing -> anything))) -> ChurchInt -> 'a
 //│    = [Function (anonymous)]
 
 //:e // due to tapping
 zog_ = printInt_ (add_ (nfind table "one") (nfind table "two"))
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?val, ?a, ?b, ?a0, ?a1, ?a2, ?a3, ?c, ?d, ?a4, ?a5, ?e, ?f, ?a6, ?g, ?h, ?i, ?val0, ?val1, ?val2, ?val3. ?c -> (forall ?j, ?val, ?a7, ?k, ?a8, ?a9, ?a10, ?a11, ?l, ?a12, ?m, ?a13, ?a14, ?a15, ?a16, ?n, ?a17, ?a, ?a18, ?o, ?p, ?b, ?a19, ?q, ?r, ?s, ?val4, ?a0, ?val5, ?a1, ?val6, ?a2, ?val7, ?a3, ?t, ?a20, ?a21, ?u, ?v, ?a22, ?w, ?x, ?y, ?val8, ?val9, ?val10, ?val11, ?z, ?a23, ?a24, ?a1, ?b1, ?a25, ?c1, ?d1, ?e1, ?val12, ?val13, ?val14, ?val15, ?f1, ?g1. (?f1 -> (forall ?j, ?h1, ?a26, ?i1, ?a27, ?a28, ?a29, ?a30, ?j1, ?k1, ?val, ?l1, ?l, ?n, ?a17, ?a, ?a18, ?o, ?p, ?b, ?a19, ?q, ?r, ?s, ?val4, ?a0, ?val5, ?a1, ?val6, ?a2, ?val7, ?a3, ?m1, ?a31, ?a32, ?n1, ?o1, ?a33, ?p1, ?q1, ?r1, ?val16, ?val17, ?val18, ?val19, ?s1. (?k1 -> (forall ?t1. ?t1 -> ?t1) | ?val
+//│   where
+//│     ?j <: ?m1
+//│     ?h1 <: ?s1
+//│     ?j <: ?m1
+//│     ?h1 <: ?s1))
+//│   where
+//│     ?j <: ?z
+//│     ?j <: ?t)) <: (forall ?u1, ?v1, ?w1, ?x1, ?y1, ?z1, ?a2, ?b2, ?c2, ?d2, ?e2, ?f2, ?g2, ?h2, ?i2, ?j2, ?k2, ?l2, ?m2, ?n2, ?o2, ?p2, ?q2, ?r2, ?s2, ?t2, ?u2, ?v2, ?w2, ?x2, ?y2, ?z2, ?a3, ?b3, ?c3, ?d3, ?e3, ?f3, ?g3, ?h3, ?i3, ?j3, ?k3, ?l3, ?m3, ?n3, ?o3, ?p3, ?q3, ?r3, ?s3, ?t3, ?u3, ?v3, ?w3, ?x3, ?y3, ?z3, ?a4, ?b4, ?c4, ?d4, ?e4, ?f4, ?g4, ?h4, ?i4, ?j4, ?k4, ?l4, ?m4, ?n4, ?o4, ?p4, ?q4, ?r4, ?s4, ?t4, ?u4, ?v4, ?w4, ?x4, ?y4, ?z4, ?a5, ?b5, ?c5, ?d5, ?e5, ?f5, ?g5, ?h5, ?i5, ?j5, ?k5, ?l5, ?m5, ?n5, ?o5, ?p5, ?q5, ?r5, ?s5, ?t5, ?u5, ?v5, ?w5, ?x5, ?y5, ?z5, ?a6, ?b6, ?c6, ?d6, ?e6, ?f6, ?g6. ?e6) -> ?h6` took too many steps and ran out of fuel (5000)
+//│ ║  l.640: 	zog_ = printInt_ (add_ (nfind table "one") (nfind table "two"))
+//│ ║         	                        ^^^^^^^^^^^
+//│ ╟──  + (list<> & {List#a: mut ..'a156_76377'})
+//│ ╟──  + List['a156_76377']
+//│ ║  l.40: 	def nil: List['a]
+//│ ║        	         ^^^^^^^^
+//│ ╟──  + ‹∀ 0. List['a156']›
+//│ ║  l.40: 	def nil: List['a]
+//│ ║        	         ^^^^^^^^
+//│ ╟──  + ‹∀ 0. List['a156']›
+//│ ║  l.40: 	def nil: List['a]
+//│ ║        	         ^^^^^^^^
+//│ ╟──  + ‹∀ 0. List['a156']›
+//│ ║  l.109: 	def create_hashtbl _ = nil
+//│ ║         	                       ^^^
+//│ ╟──  + ‹∀ 0. List['a156']›
+//│ ║  l.346: 	table = create_hashtbl null
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + α1584_76376'
+//│ ║  l.346: 	table = create_hashtbl null
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. α1584'›
+//│ ║  l.346: 	table = create_hashtbl null
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. α1584'›
+//│ ║  l.346: 	table = create_hashtbl null
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. α1584'›
+//│ ║  l.347: 	table = hashtbl_add table "one" (fun f -> fun x -> f x)
+//│ ║         	                    ^^^^^
+//│ ╟──  + ‹∀ 0. α1584'›
+//│ ╟──  + α289_76319'
+//│ ╟──  - {List#a: mut ..α53_76368'}
+//│ ╟──  - (list<> & {List#a: mut ..α53_76368'})
+//│ ╟──  - List[α53_76368']
+//│ ║  l.17: 	def cons[a]: a -> List[a] -> List[a]
+//│ ╙──      	                  ^^^^^^^
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?val, ?a, ?b, ?a0, ?a1, ?a2, ?a3, ?c, ?d, ?a4, ?a5, ?e, ?f, ?a6, ?g, ?h, ?i, ?val0, ?val1, ?val2, ?val3. ?c -> (forall ?j, ?val, ?a7, ?k, ?a8, ?a9, ?a10, ?a11, ?l, ?a12, ?m, ?a13, ?a14, ?a15, ?a16, ?n, ?a17, ?a, ?a18, ?o, ?p, ?b, ?a19, ?q, ?r, ?s, ?val4, ?a0, ?val5, ?a1, ?val6, ?a2, ?val7, ?a3, ?t, ?a20, ?a21, ?u, ?v, ?a22, ?w, ?x, ?y, ?val8, ?val9, ?val10, ?val11, ?z, ?a23, ?a24, ?a1, ?b1, ?a25, ?c1, ?d1, ?e1, ?val12, ?val13, ?val14, ?val15, ?f1, ?g1. (?f1 -> (forall ?j, ?h1, ?a26, ?i1, ?a27, ?a28, ?a29, ?a30, ?j1, ?k1, ?val, ?l1, ?l, ?n, ?a17, ?a, ?a18, ?o, ?p, ?b, ?a19, ?q, ?r, ?s, ?val4, ?a0, ?val5, ?a1, ?val6, ?a2, ?val7, ?a3, ?m1, ?a31, ?a32, ?n1, ?o1, ?a33, ?p1, ?q1, ?r1, ?val16, ?val17, ?val18, ?val19, ?s1. (?k1 -> (forall ?t1. ?t1 -> ?t1) | ?val
+//│   where
+//│     ?j <: ?m1
+//│     ?h1 <: ?s1
+//│     ?j <: ?m1
+//│     ?h1 <: ?s1))
+//│   where
+//│     ?j <: ?z
+//│     ?j <: ?t)) <: (forall ?u1, ?v1, ?w1, ?x1, ?y1, ?z1, ?a2, ?b2, ?c2, ?d2, ?e2, ?f2, ?g2, ?h2, ?i2, ?j2, ?k2, ?l2, ?m2, ?n2, ?o2, ?p2, ?q2, ?r2, ?s2, ?t2, ?u2, ?v2, ?w2, ?x2, ?y2, ?z2, ?a3, ?b3, ?c3, ?d3, ?e3, ?f3, ?g3, ?h3, ?i3, ?j3, ?k3, ?l3, ?m3, ?n3, ?o3, ?p3, ?q3, ?r3, ?s3, ?t3, ?u3, ?v3, ?w3, ?x3, ?y3, ?z3, ?a4, ?b4, ?c4, ?d4, ?e4, ?f4, ?g4, ?h4, ?i4, ?j4, ?k4, ?l4, ?m4, ?n4, ?o4, ?p4, ?q4, ?r4, ?s4, ?t4, ?u4, ?v4, ?w4, ?x4, ?y4, ?z4, ?a5, ?b5, ?c5, ?d5, ?e5, ?f5, ?g5, ?h5, ?i5, ?j5, ?k5, ?l5, ?m5, ?n5, ?o5, ?p5, ?q5, ?r5, ?s5, ?t5, ?u5, ?v5, ?w5, ?x5, ?y5, ?z5, ?a6, ?b6, ?c6, ?d6, ?e6, ?f6, ?g6. ?e6) -> ?h6` took too many steps and ran out of fuel (5000)
+//│ ║  l.640: 	zog_ = printInt_ (add_ (nfind table "one") (nfind table "two"))
+//│ ║         	                                            ^^^^^^^^^^^
+//│ ╟──  + (list<> & {List#a: mut ..'a156_90310'})
+//│ ╟──  + List['a156_90310']
+//│ ║  l.40: 	def nil: List['a]
+//│ ║        	         ^^^^^^^^
+//│ ╟──  + ‹∀ 0. List['a156']›
+//│ ║  l.40: 	def nil: List['a]
+//│ ║        	         ^^^^^^^^
+//│ ╟──  + ‹∀ 0. List['a156']›
+//│ ║  l.40: 	def nil: List['a]
+//│ ║        	         ^^^^^^^^
+//│ ╟──  + ‹∀ 0. List['a156']›
+//│ ║  l.109: 	def create_hashtbl _ = nil
+//│ ║         	                       ^^^
+//│ ╟──  + ‹∀ 0. List['a156']›
+//│ ║  l.346: 	table = create_hashtbl null
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + α1584_90309'
+//│ ║  l.346: 	table = create_hashtbl null
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. α1584'›
+//│ ║  l.346: 	table = create_hashtbl null
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. α1584'›
+//│ ║  l.346: 	table = create_hashtbl null
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. α1584'›
+//│ ║  l.347: 	table = hashtbl_add table "one" (fun f -> fun x -> f x)
+//│ ║         	                    ^^^^^
+//│ ╟──  + ‹∀ 0. α1584'›
+//│ ╟──  + α289_90252'
+//│ ╟──  - {List#a: mut ..α53_90301'}
+//│ ╟──  - (list<> & {List#a: mut ..α53_90301'})
+//│ ╟──  - List[α53_90301']
+//│ ║  l.17: 	def cons[a]: a -> List[a] -> List[a]
+//│ ╙──      	                  ^^^^^^^
 //│ zog_: string
 //│   where
 //│     'a <: (int -> int) -> 0 -> anything

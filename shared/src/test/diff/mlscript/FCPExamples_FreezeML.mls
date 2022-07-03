@@ -44,17 +44,7 @@ def head l = l.Head
 //│     'a <: List['b]))
 //│   <:  head:
 //│ List['a] -> 'a
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:659)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
+//│     = [Function: head]
 
 def tail: List['a] -> List['a]
 def tail l = l.Tail
@@ -65,17 +55,7 @@ def tail l = l.Tail
 //│     'b <: List['a]))
 //│   <:  tail:
 //│ List['a] -> List['a]
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:659)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
+//│     = [Function: tail]
 
 // Used to represent `[]` in the papers
 def nil: List['a]
@@ -91,25 +71,18 @@ def cons: 'a -> List['a] -> List['a]
 def cons head tail = Cons { head; tail }
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'c. (List['c] & 'c) -> (forall 'b, 'c, 'head, 'a, 'tail. (Cons['a] with {head: 'head, tail: 'tail}
+//│ 'b -> (forall 'b, 'c. ((List['c] & 'c) -> (forall 'b, 'c, 'head, 'a, 'tail. (Cons['a] with {head: 'head, tail: 'tail}
 //│   where
 //│     'b <: 'head & 'a
 //│     'c <: List['a] & 'tail
 //│     'b <: 'head & 'a
-//│     'c <: List['a] & 'tail)))
+//│     'c <: List['a] & 'tail))
+//│   where
+//│     'b <: 'c
+//│     'b <: 'c))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:659)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
+//│     = [Function: cons]
 
 def is_empty: forall 'a. List['a] -> bool
 def is_empty l = eq l nil
@@ -186,10 +159,13 @@ def choose: 'a -> 'a -> 'a
 def choose x y = if true then x else y
 //│ choose: 'a -> 'a -> 'a
 //│       = <missing implementation>
-//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
+//│ 'a -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
 //│   where
 //│     'a <: 'c
-//│     'b <: 'c)))
+//│     'b <: 'c))
+//│   where
+//│     'a <: 'b
+//│     'a <: 'b))
 //│   <:  choose:
 //│ 'a -> 'a -> 'a
 //│       = [Function: choose]
@@ -242,9 +218,12 @@ def app: ('a -> 'b) -> 'a -> 'b
 def app f x = f x
 //│ app: ('a -> 'b) -> 'a -> 'b
 //│    = <missing implementation>
-//│ (nothing -> 'a & 'a) -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
+//│ (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
 //│   where
-//│     'a <: 'b -> 'c)))
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> 'a
+//│     'a <: nothing -> 'a))
 //│   <:  app:
 //│ ('a -> 'b) -> 'a -> 'b
 //│    = [Function: app]
@@ -264,9 +243,15 @@ def flip: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 def flip f = fun x -> fun y -> f y x
 //│ flip: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 //│     = <missing implementation>
-//│ (nothing -> nothing -> 'a & 'a) -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd. ('d
+//│ (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'c. ('c -> (forall 'a, 'b, 'c, 'd. ('d
 //│   where
-//│     'a <: 'c -> 'b -> 'd))))
+//│     'a <: 'c -> 'b -> 'd))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a))
+//│   where
+//│     'a <: nothing -> nothing -> 'a
+//│     'a <: nothing -> nothing -> 'a))
 //│   <:  flip:
 //│ ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 //│     = [Function: flip]
@@ -343,17 +328,17 @@ def f: ('a -> 'a) -> List['a] -> 'a
 :ng
 f (choose id) ids
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.344: 	f (choose id) ids
+//│ ║  l.329: 	f (choose id) ids
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ('a359' -> 'a359')›  <:  'a868_875    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ('a359' -> 'a359')›  <:  'a868'
+//│ ╟── this constraint:  ‹∀ 0. ('a386' -> 'a386')›  <:  'a1029_1036    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ('a386' -> 'a386')›  <:  'a1029'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.344: 	f (choose id) ids
+//│ ║  l.329: 	f (choose id) ids
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. ('a371'' -> 'a371'')›  <:  'a868_875    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. ('a371'' -> 'a371'')›  <:  'a868_875
+//│ ╟── this constraint:  ‹∀ 1. ('a398'' -> 'a398'')›  <:  'a1029_1036    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. ('a398'' -> 'a398'')›  <:  'a1029_1036
 //│ res: 'a -> 'a | error
 
 // * ^ Strangely, this one works with recursive types:
@@ -586,32 +571,35 @@ a id
 // :e // due to tapping
 :ns
 choose id (fun (x: ('a -> 'a)) -> auto_ x)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.588: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
-//│ ║         	                                  ^^^^^^^
-//│ ╟── type `‘a1232` is not an instance of type `'a`
-//│ ║  l.219: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ╔══[ERROR] Type mismatch in lambda expression:
+//│ ║  l.573: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘a1393` is not an instance of type `'a`
+//│ ║  l.195: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.219: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║  l.195: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──       	                    ^^
 //│ res: 'c
 //│   where
-//│     'c :> (forall 'a. 'a -> 'a) | (forall 'a0. ('a0 -> 'a0) -> (forall 'd, 'b. 'd))
-//│     'd :> 'b -> 'b | error
-//│     'a0 :> ‘a1232
+//│     'c :> (forall 'a. 'a -> 'a) | (forall 'a0. ('a0 -> 'a0) -> (forall 'd, 'b. ('d
+//│   where
+//│     'a0 <: ‘a)))
+//│     'd :> 'b -> 'b
+//│     'a0 :> ‘a1393
 //│         <: ‘a
 //│    = [Function: id1]
 
 // :e // * ^ Here you go:
 // :e // FIXME? succeeds with genLamBodies
 res id
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.608: 	res id
-//│ ║         	^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‘a1232  <:  'a1229_1236    TraitTag  TypeVariable
-//│ ╙──  ... looks like:  ‘a1232  <:  'a1229'
+//│ ╔══[ERROR] Type mismatch in expression:
+//│ ╟── type `‘a1393` is not an instance of type `'a`
+//│ ║  l.195: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.195: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ╙──       	                    ^^
 //│ res: 'a -> 'a | error
 //│    = [Function: id1]
 
@@ -619,13 +607,13 @@ res id
 :e
 a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.620: 	a (fun x -> { u = x })
+//│ ║  l.608: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a`
-//│ ║  l.620: 	a (fun x -> { u = x })
+//│ ║  l.608: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.219: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║  l.195: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──       	                    ^^
 //│ res: ('b & 'a) -> ('b | {u: 'a}) | error
 //│    = [Function (anonymous)]

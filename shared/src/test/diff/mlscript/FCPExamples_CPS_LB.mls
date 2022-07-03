@@ -34,29 +34,59 @@ def s k = k () nil
 //│     'a <: () -> List[nothing] -> 'b))
 
 def insert v () acu k = k () (cons v acu)
-//│ insert: 'b -> () -> (forall 'c, 'd. (List['c] & 'd) -> (forall 'c. (() -> List[nothing] -> 'c & 'c) -> (forall 'b, 'c, 'd, 'a, 'e. ('e
+//│ insert: 'b -> (forall 'b, 'c. (() -> (forall 'b, 'c, 'd. ((List['c] & 'd) -> (forall 'b, 'c, 'd. ((() -> List[nothing] -> 'c & 'c) -> (forall 'b, 'c, 'd, 'a, 'e. ('e
 //│   where
 //│     'b <: 'a
 //│     'd <: List['a]
-//│     'c <: () -> List['a] -> 'e))))
+//│     'c <: () -> List['a] -> 'e))
+//│   where
+//│     'b <: 'c
+//│     'd <: List['c]
+//│     'b <: 'c
+//│     'd <: List['c]))
+//│   where
+//│     'b <: 'c
+//│     'b <: 'c))
+//│   where
+//│     'b <: 'c
+//│     'b <: 'c))
 
 // (* x  inserts "x" in the acu *)
 def x () = insert "x" ()
-//│ x: () -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b. (() -> List[nothing] -> 'b & 'b) -> (forall 'b, 'c, 'd, 'a, 'e. ('e
+//│ x: () -> (forall 'b, 'c, 'd. ((List['c] & 'd) -> (forall 'b, 'c, 'd. ((() -> List[nothing] -> 'c & 'c) -> (forall 'b, 'c, 'd, 'a, 'e. ('e
 //│   where
-//│     'd <: 'a
-//│     'c <: List['a]
-//│     'b <: () -> List['a] -> 'e))))
+//│     'b <: 'a
+//│     'd <: List['a]
+//│     'c <: () -> List['a] -> 'e))
+//│   where
+//│     'b <: 'c
+//│     'd <: List['c]
+//│     'b <: 'c
+//│     'd <: List['c]))
+//│   where
+//│     'b <: 'c
+//│     'b <: 'c))
 
 // (* We call x a 'token', in the sequence. *)
 
 // (* e  ends the sequence. It builds a token that can be inserted in another sequence or that can be printed. *)
 def e () acu = insert (concat "," acu)
-//│ e: () -> List[string] -> () -> (forall 'b, 'c. (List['b] & 'c) -> (forall 'b. (() -> List[nothing] -> 'b & 'b) -> (forall 'b, 'c, 'd, 'a, 'e. ('e
+//│ e: () -> List[string] -> (forall 'b, 'c. (() -> (forall 'b, 'c, 'd. ((List['c] & 'd) -> (forall 'b, 'c, 'd. ((() -> List[nothing] -> 'c & 'c) -> (forall 'b, 'c, 'd, 'a, 'e. ('e
 //│   where
-//│     'd <: 'a
-//│     'c <: List['a]
-//│     'b <: () -> List['a] -> 'e))))
+//│     'b <: 'a
+//│     'd <: List['a]
+//│     'c <: () -> List['a] -> 'e))
+//│   where
+//│     'b <: 'c
+//│     'd <: List['c]
+//│     'b <: 'c
+//│     'd <: List['c]))
+//│   where
+//│     'b <: 'c
+//│     'b <: 'c))
+//│   where
+//│     'b <: 'c
+//│     'b <: 'c))
 
 
 // (* Prints a token *)
@@ -67,114 +97,707 @@ def print t = t () nil (fun () -> fun r -> log (concat "," r))
 
 // Added by me:
 s x x (s x x e)
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:675)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: ?b -> ?c` took too many steps and ran out of fuel (5000)
+//│ ║  l.99: 	s x x (s x x e)
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟──  + List['a27_4124]
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                            ^^^^^^^^
+//│ ╟──  + List['a27_4124]
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                            ^^^^^^^^
+//│ ╟──  + List['a27_4124]
+//│ ║  l.36: 	def insert v () acu k = k () (cons v acu)
+//│ ║        	                              ^^^^^^^^^^
+//│ ╟──  + α54_4123
+//│ ║  l.36: 	def insert v () acu k = k () (cons v acu)
+//│ ║        	                              ^^^^^^^^^^
+//│ ╟──  - List['a27_5934]
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                ^^^^^^^^
+//│ ╟──  - List['a27_5934]
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                ^^^^^^^^
+//│ ╟──  - List['a27_5934]
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                ^^^^^^^^
+//│ ╟──  - List['a27_5934]
+//│ ╙──  - α49_5929
+//│ res: error
 
 
 def test8  = (s x x (s x x e) x (s x x x e) e)
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:675)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: ?b -> ?c` took too many steps and ran out of fuel (5000)
+//│ ║  l.129: 	def test8  = (s x x (s x x e) x (s x x x e) e)
+//│ ║         	              ^^^^^^^^^^^^^^^
+//│ ╟──  + List['a27_10759']
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                            ^^^^^^^^
+//│ ╟──  + List['a27_10759']
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                            ^^^^^^^^
+//│ ╟──  + List['a27_10759']
+//│ ║  l.36: 	def insert v () acu k = k () (cons v acu)
+//│ ║        	                              ^^^^^^^^^^
+//│ ╟──  + α54_10758'
+//│ ║  l.36: 	def insert v () acu k = k () (cons v acu)
+//│ ║        	                              ^^^^^^^^^^
+//│ ╟──  - List['a27_12569']
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                ^^^^^^^^
+//│ ╟──  - List['a27_12569']
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                ^^^^^^^^
+//│ ╟──  - List['a27_12569']
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                ^^^^^^^^
+//│ ╟──  - List['a27_12569']
+//│ ╙──  - α49_12564'
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (() -> (forall ?b. ?b -> (forall ?c. ?c))) -> ?d` took too many steps and ran out of fuel (5000)
+//│ ║  l.129: 	def test8  = (s x x (s x x e) x (s x x x e) e)
+//│ ║         	                                 ^^^^^^^^^
+//│ ╟──  + "x"<string>
+//│ ║  l.55: 	def x () = insert "x" ()
+//│ ║        	                  ^^^
+//│ ╟──  + "x"<string>
+//│ ║  l.55: 	def x () = insert "x" ()
+//│ ║        	                  ^^^
+//│ ╟──  + "x"<string>
+//│ ╟──  + "x"<string>
+//│ ╟──  + "x"<string>
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                                 ^^
+//│ ╟──  + "x"<string>
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                     ^^
+//│ ╟──  + 'a27_18378'
+//│ ╟──  + 'a27_18378'
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                                 ^^
+//│ ╟──  - 'a27_18559'
+//│ ╟──  - 'a27_18559'
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ╙──      	                     ^^
+//│ test8: error
 
 print test8
-//│ ╔══[ERROR] identifier not found: test8
-//│ ║  l.96: 	print test8
-//│ ╙──      	      ^^^^^
 //│ res: 'a
 //│   where
 //│     'b <: () -> List[nothing] -> (() -> List[string] -> unit) -> 'a
 
 
 def test14 = (s x x x x x x x x x x x x x x e)
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:675)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (() -> (forall ?b. ?b)) -> ?c` took too many steps and ran out of fuel (5000)
+//│ ║  l.189: 	def test14 = (s x x x x x x x x x x x x x x e)
+//│ ║         	              ^^^^^^^^^
+//│ ╟──  + List['a27_24067']
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                            ^^^^^^^^
+//│ ╟──  + List['a27_24067']
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                            ^^^^^^^^
+//│ ╟──  + List['a27_24067']
+//│ ║  l.36: 	def insert v () acu k = k () (cons v acu)
+//│ ║        	                              ^^^^^^^^^^
+//│ ╟──  + α54_24066'
+//│ ║  l.36: 	def insert v () acu k = k () (cons v acu)
+//│ ║        	                              ^^^^^^^^^^
+//│ ╙──  - α49_25167'
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (() -> (forall ?b. ?b)) -> ?c` took too many steps and ran out of fuel (5000)
+//│ ║  l.189: 	def test14 = (s x x x x x x x x x x x x x x e)
+//│ ║         	              ^^^^^^^^^^^
+//│ ╟──  + 'a27_26498'
+//│ ╟──  + 'a27_26498'
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                                 ^^
+//│ ╟──  - 'a27_26656'
+//│ ╟──  - 'a27_26656'
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ╙──      	                     ^^
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (() -> (forall ?b. ?b)) -> ?c` took too many steps and ran out of fuel (5000)
+//│ ║  l.189: 	def test14 = (s x x x x x x x x x x x x x x e)
+//│ ║         	              ^^^^^^^^^^^^^
+//│ ╟──  + "x"<string>
+//│ ║  l.55: 	def x () = insert "x" ()
+//│ ║        	                  ^^^
+//│ ╟──  + "x"<string>
+//│ ║  l.55: 	def x () = insert "x" ()
+//│ ║        	                  ^^^
+//│ ╟──  + "x"<string>
+//│ ╟──  + "x"<string>
+//│ ╟──  + "x"<string>
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                                 ^^
+//│ ╟──  + "x"<string>
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                     ^^
+//│ ╟──  + "x"<string>
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                                 ^^
+//│ ╟──  + "x"<string>
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                     ^^
+//│ ╟──  + "x"<string>
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                                 ^^
+//│ ╟──  + "x"<string>
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                     ^^
+//│ ╟──  + 'a27_26716'
+//│ ╟──  + 'a27_26716'
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                                 ^^
+//│ ╟──  - 'a27_26834'
+//│ ╟──  - 'a27_26834'
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ╙──      	                     ^^
+//│ test14: error
 
 def test16 = (s x x x x x x x x x x x x x x x x e)
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:675)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (() -> (forall ?b. ?b)) -> ?c` took too many steps and ran out of fuel (5000)
+//│ ║  l.256: 	def test16 = (s x x x x x x x x x x x x x x x x e)
+//│ ║         	              ^^^^^^^^^
+//│ ╟──  + List['a27_32336']
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                            ^^^^^^^^
+//│ ╟──  + List['a27_32336']
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                            ^^^^^^^^
+//│ ╟──  + List['a27_32336']
+//│ ║  l.36: 	def insert v () acu k = k () (cons v acu)
+//│ ║        	                              ^^^^^^^^^^
+//│ ╟──  + α54_32335'
+//│ ║  l.36: 	def insert v () acu k = k () (cons v acu)
+//│ ║        	                              ^^^^^^^^^^
+//│ ╙──  - α49_33436'
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (() -> (forall ?b. ?b)) -> ?c` took too many steps and ran out of fuel (5000)
+//│ ║  l.256: 	def test16 = (s x x x x x x x x x x x x x x x x e)
+//│ ║         	              ^^^^^^^^^^^
+//│ ╟──  + 'a27_34767'
+//│ ╟──  + 'a27_34767'
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                                 ^^
+//│ ╟──  - 'a27_34925'
+//│ ╟──  - 'a27_34925'
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ╙──      	                     ^^
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (() -> (forall ?b. ?b)) -> ?c` took too many steps and ran out of fuel (5000)
+//│ ║  l.256: 	def test16 = (s x x x x x x x x x x x x x x x x e)
+//│ ║         	              ^^^^^^^^^^^^^
+//│ ╟──  + "x"<string>
+//│ ║  l.55: 	def x () = insert "x" ()
+//│ ║        	                  ^^^
+//│ ╟──  + "x"<string>
+//│ ║  l.55: 	def x () = insert "x" ()
+//│ ║        	                  ^^^
+//│ ╟──  + "x"<string>
+//│ ╟──  + "x"<string>
+//│ ╟──  + "x"<string>
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                                 ^^
+//│ ╟──  + "x"<string>
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                     ^^
+//│ ╟──  + "x"<string>
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                                 ^^
+//│ ╟──  + "x"<string>
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                     ^^
+//│ ╟──  + "x"<string>
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                                 ^^
+//│ ╟──  + "x"<string>
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                     ^^
+//│ ╟──  + 'a27_34985'
+//│ ╟──  + 'a27_34985'
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                                 ^^
+//│ ╟──  - 'a27_35103'
+//│ ╟──  - 'a27_35103'
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ╙──      	                     ^^
+//│ test16: error
 
 // (* This is too much for the type-checker. *)
 def test18 = (s x x x x x x x x x x x x x x x x x x e)
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:675)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (() -> (forall ?b. ?b)) -> ?c` took too many steps and ran out of fuel (5000)
+//│ ║  l.324: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ ║         	              ^^^^^^^^^
+//│ ╟──  + List['a27_40607']
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                            ^^^^^^^^
+//│ ╟──  + List['a27_40607']
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                            ^^^^^^^^
+//│ ╟──  + List['a27_40607']
+//│ ║  l.36: 	def insert v () acu k = k () (cons v acu)
+//│ ║        	                              ^^^^^^^^^^
+//│ ╟──  + α54_40606'
+//│ ║  l.36: 	def insert v () acu k = k () (cons v acu)
+//│ ║        	                              ^^^^^^^^^^
+//│ ╙──  - α49_41707'
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (() -> (forall ?b. ?b)) -> ?c` took too many steps and ran out of fuel (5000)
+//│ ║  l.324: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ ║         	              ^^^^^^^^^^^
+//│ ╟──  + 'a27_43038'
+//│ ╟──  + 'a27_43038'
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                                 ^^
+//│ ╟──  - 'a27_43196'
+//│ ╟──  - 'a27_43196'
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ╙──      	                     ^^
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (() -> (forall ?b. ?b)) -> ?c` took too many steps and ran out of fuel (5000)
+//│ ║  l.324: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ ║         	              ^^^^^^^^^^^^^
+//│ ╟──  + "x"<string>
+//│ ║  l.55: 	def x () = insert "x" ()
+//│ ║        	                  ^^^
+//│ ╟──  + "x"<string>
+//│ ║  l.55: 	def x () = insert "x" ()
+//│ ║        	                  ^^^
+//│ ╟──  + "x"<string>
+//│ ╟──  + "x"<string>
+//│ ╟──  + "x"<string>
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                                 ^^
+//│ ╟──  + "x"<string>
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                     ^^
+//│ ╟──  + "x"<string>
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                                 ^^
+//│ ╟──  + "x"<string>
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                     ^^
+//│ ╟──  + "x"<string>
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                                 ^^
+//│ ╟──  + "x"<string>
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                     ^^
+//│ ╟──  + 'a27_43256'
+//│ ╟──  + 'a27_43256'
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ║        	                                 ^^
+//│ ╟──  - 'a27_43374'
+//│ ╟──  - 'a27_43374'
+//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
+//│ ╙──      	                     ^^
+//│ test18: error
 
 
 // (* A function that receives a token *)
 def f t = (s x x t x x e)
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:675)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ f: (() -> List[nothing] -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c, 'd. ((List['b] & 'd) -> (forall 'b, 'c, 'd, 'e. ((() -> List[nothing] -> 'b & 'e) -> (forall 'c, 'd, 'e, 'a, 'f. ('f
+//│   where
+//│     'c <: 'a
+//│     'd <: List['a]
+//│     'e <: () -> List['a] -> 'f))
+//│   where
+//│     'c <: 'b
+//│     'd <: List['b]
+//│     'c <: 'b
+//│     'd <: List['b]))
+//│   where
+//│     'c <: 'b
+//│     'c <: 'b))) -> (() -> (forall 'b, 'c, 'd. ((List['b] & 'd) -> (forall 'b, 'c, 'd, 'e. ((() -> List[nothing] -> 'b & 'e) -> (forall 'c, 'd, 'e, 'a, 'f. ('f
+//│   where
+//│     'c <: 'a
+//│     'd <: List['a]
+//│     'e <: () -> List['a] -> 'f))
+//│   where
+//│     'c <: 'b
+//│     'd <: List['b]
+//│     'c <: 'b
+//│     'd <: List['b]))
+//│   where
+//│     'c <: 'b
+//│     'c <: 'b))) -> (() -> List[string] -> (forall 'b, 'g. (() -> (forall 'b, 'g, 'h. ((List['b] & 'h) -> (forall 'b, 'g, 'h. ((() -> List[nothing] -> 'b & 'b) -> (forall 'b, 'g, 'h, 'a0, 'i. ('i
+//│   where
+//│     'g <: 'a0
+//│     'h <: List['a0]
+//│     'b <: () -> List['a0] -> 'i))
+//│   where
+//│     'g <: 'b
+//│     'h <: List['b]
+//│     'g <: 'b
+//│     'h <: List['b]))
+//│   where
+//│     'g <: 'b
+//│     'g <: 'b))
+//│   where
+//│     'g <: 'b
+//│     'g <: 'b))) -> 'b & 'j) -> (forall 'b, 'j. ('k
+//│   where
+//│     'j <: () -> List[nothing] -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c, 'd. ((List['b] & 'd) -> (forall 'b, 'c, 'd, 'e. ((() -> List[nothing] -> 'b & 'e) -> (forall 'c, 'd, 'e, 'a, 'f. ('f
+//│   where
+//│     'c <: 'a
+//│     'd <: List['a]
+//│     'e <: () -> List['a] -> 'f))
+//│   where
+//│     'c <: 'b
+//│     'd <: List['b]
+//│     'c <: 'b
+//│     'd <: List['b]))
+//│   where
+//│     'c <: 'b
+//│     'c <: 'b))) -> (() -> (forall 'b, 'c, 'd. ((List['b] & 'd) -> (forall 'b, 'c, 'd, 'e. ((() -> List[nothing] -> 'b & 'e) -> (forall 'c, 'd, 'e, 'a, 'f. ('f
+//│   where
+//│     'c <: 'a
+//│     'd <: List['a]
+//│     'e <: () -> List['a] -> 'f))
+//│   where
+//│     'c <: 'b
+//│     'd <: List['b]
+//│     'c <: 'b
+//│     'd <: List['b]))
+//│   where
+//│     'c <: 'b
+//│     'c <: 'b))) -> (() -> List[string] -> (forall 'b, 'g. (() -> (forall 'b, 'g, 'h. ((List['b] & 'h) -> (forall 'b, 'g, 'h. ((() -> List[nothing] -> 'b & 'b) -> (forall 'b, 'g, 'h, 'a0, 'i. ('i
+//│   where
+//│     'g <: 'a0
+//│     'h <: List['a0]
+//│     'b <: () -> List['a0] -> 'i))
+//│   where
+//│     'g <: 'b
+//│     'h <: List['b]
+//│     'g <: 'b
+//│     'h <: List['b]))
+//│   where
+//│     'g <: 'b
+//│     'g <: 'b))
+//│   where
+//│     'g <: 'b
+//│     'g <: 'b))) -> 'k))
 
 // (* If the token is used twice, we must reveive two arguments *)
 def g t1 t2 = (s x x t1 x (s x t2 x e) e)
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:675)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ g: (() -> List[nothing] -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c, 'd. ((List['b] & 'd) -> (forall 'b, 'c, 'd, 'e. ((() -> List[nothing] -> 'b & 'e) -> (forall 'c, 'd, 'e, 'a, 'f. ('f
+//│   where
+//│     'c <: 'a
+//│     'd <: List['a]
+//│     'e <: () -> List['a] -> 'f))
+//│   where
+//│     'c <: 'b
+//│     'd <: List['b]
+//│     'c <: 'b
+//│     'd <: List['b]))
+//│   where
+//│     'c <: 'b
+//│     'c <: 'b))) -> nothing -> (() -> List[string] -> (forall 'b, 'g. (() -> (forall 'b, 'g, 'h. ((List['b] & 'h) -> (forall 'b, 'g, 'h, 'i. ((() -> List[nothing] -> 'b & 'i) -> (forall 'g, 'h, 'i, 'a0, 'j. ('j
+//│   where
+//│     'g <: 'a0
+//│     'h <: List['a0]
+//│     'i <: () -> List['a0] -> 'j))
+//│   where
+//│     'g <: 'b
+//│     'h <: List['b]
+//│     'g <: 'b
+//│     'h <: List['b]))
+//│   where
+//│     'g <: 'b
+//│     'g <: 'b))
+//│   where
+//│     'g <: 'b
+//│     'g <: 'b))) -> 'b & 'k) -> (forall 'b, 'k. ((() -> List[nothing] -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c, 'd. ((List['b] & 'd) -> (forall 'b, 'c, 'd, 'e. ((() -> List[nothing] -> 'b & 'e) -> (forall 'c, 'd, 'e, 'a, 'f. ('f
+//│   where
+//│     'c <: 'a
+//│     'd <: List['a]
+//│     'e <: () -> List['a] -> 'f))
+//│   where
+//│     'c <: 'b
+//│     'd <: List['b]
+//│     'c <: 'b
+//│     'd <: List['b]))
+//│   where
+//│     'c <: 'b
+//│     'c <: 'b))) -> (() -> List[string] -> (forall 'b, 'g. (() -> (forall 'b, 'g, 'h. ((List['b] & 'h) -> (forall 'b, 'g, 'h, 'i. ((() -> List[nothing] -> 'b & 'i) -> (forall 'g, 'h, 'i, 'a0, 'j. ('j
+//│   where
+//│     'g <: 'a0
+//│     'h <: List['a0]
+//│     'i <: () -> List['a0] -> 'j))
+//│   where
+//│     'g <: 'b
+//│     'h <: List['b]
+//│     'g <: 'b
+//│     'h <: List['b]))
+//│   where
+//│     'g <: 'b
+//│     'g <: 'b))
+//│   where
+//│     'g <: 'b
+//│     'g <: 'b))) -> 'b & 'l) -> (forall 'b, 'k, 'l, 'm, 'n. ('o
+//│   where
+//│     'k <: () -> List[nothing] -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c, 'd. ((List['b] & 'd) -> (forall 'b, 'c, 'd, 'e. ((() -> List[nothing] -> 'b & 'e) -> (forall 'c, 'd, 'e, 'a, 'f. ('f
+//│   where
+//│     'c <: 'a
+//│     'd <: List['a]
+//│     'e <: () -> List['a] -> 'f))
+//│   where
+//│     'c <: 'b
+//│     'd <: List['b]
+//│     'c <: 'b
+//│     'd <: List['b]))
+//│   where
+//│     'c <: 'b
+//│     'c <: 'b))) -> 'p -> (() -> List[string] -> (forall 'b, 'g. (() -> (forall 'b, 'g, 'h. ((List['b] & 'h) -> (forall 'b, 'g, 'h, 'i. ((() -> List[nothing] -> 'b & 'i) -> (forall 'g, 'h, 'i, 'a0, 'j. ('j
+//│   where
+//│     'g <: 'a0
+//│     'h <: List['a0]
+//│     'i <: () -> List['a0] -> 'j))
+//│   where
+//│     'g <: 'b
+//│     'h <: List['b]
+//│     'g <: 'b
+//│     'h <: List['b]))
+//│   where
+//│     'g <: 'b
+//│     'g <: 'b))
+//│   where
+//│     'g <: 'b
+//│     'g <: 'b))) -> 'o
+//│     'l <: () -> List[nothing] -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c, 'd. ((List['b] & 'd) -> (forall 'b, 'c, 'd, 'e. ((() -> List[nothing] -> 'b & 'e) -> (forall 'c, 'd, 'e, 'a, 'f. ('f
+//│   where
+//│     'c <: 'a
+//│     'd <: List['a]
+//│     'e <: () -> List['a] -> 'f))
+//│   where
+//│     'c <: 'b
+//│     'd <: List['b]
+//│     'c <: 'b
+//│     'd <: List['b]))
+//│   where
+//│     'c <: 'b
+//│     'c <: 'b))) -> (() -> List[string] -> (forall 'b, 'g. (() -> (forall 'b, 'g, 'h. ((List['b] & 'h) -> (forall 'b, 'g, 'h, 'i. ((() -> List[nothing] -> 'b & 'i) -> (forall 'g, 'h, 'i, 'a0, 'j. ('j
+//│   where
+//│     'g <: 'a0
+//│     'h <: List['a0]
+//│     'i <: () -> List['a0] -> 'j))
+//│   where
+//│     'g <: 'b
+//│     'h <: List['b]
+//│     'g <: 'b
+//│     'h <: List['b]))
+//│   where
+//│     'g <: 'b
+//│     'g <: 'b))
+//│   where
+//│     'g <: 'b
+//│     'g <: 'b))) -> 'p
+//│     'm :> forall 'b, 'q, 'r, 's. ((() -> List[nothing] -> 'b & 's) -> (forall 'q, 'r, 's, 'a1, 't. ('t
+//│   where
+//│     'q <: 'a1
+//│     'r <: List['a1]
+//│     's <: () -> List['a1] -> 't))
+//│   where
+//│     'q <: 'b
+//│     'r <: List['b]
+//│     'q <: 'b
+//│     'r <: List['b])
+//│     'n :> forall 'b, 'u, 'v. ((() -> List[nothing] -> 'b & 'b) -> (forall 'b, 'u, 'v, 'a2, 'w. ('w
+//│   where
+//│     'u <: 'a2
+//│     'v <: List['a2]
+//│     'b <: () -> List['a2] -> 'w))
+//│   where
+//│     'u <: 'b
+//│     'v <: List['b]
+//│     'u <: 'b
+//│     'v <: List['b])))
+//│   where
+//│     'k <: () -> List[nothing] -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c, 'd. ((List['b] & 'd) -> (forall 'b, 'c, 'd, 'e. ((() -> List[nothing] -> 'b & 'e) -> (forall 'c, 'd, 'e, 'a, 'f. ('f
+//│   where
+//│     'c <: 'a
+//│     'd <: List['a]
+//│     'e <: () -> List['a] -> 'f))
+//│   where
+//│     'c <: 'b
+//│     'd <: List['b]
+//│     'c <: 'b
+//│     'd <: List['b]))
+//│   where
+//│     'c <: 'b
+//│     'c <: 'b))) -> nothing -> (() -> List[string] -> (forall 'b, 'g. (() -> (forall 'b, 'g, 'h. ((List['b] & 'h) -> (forall 'b, 'g, 'h, 'i. ((() -> List[nothing] -> 'b & 'i) -> (forall 'g, 'h, 'i, 'a0, 'j. ('j
+//│   where
+//│     'g <: 'a0
+//│     'h <: List['a0]
+//│     'i <: () -> List['a0] -> 'j))
+//│   where
+//│     'g <: 'b
+//│     'h <: List['b]
+//│     'g <: 'b
+//│     'h <: List['b]))
+//│   where
+//│     'g <: 'b
+//│     'g <: 'b))
+//│   where
+//│     'g <: 'b
+//│     'g <: 'b))) -> 'b
+//│     'k <: () -> List[nothing] -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c, 'd. ((List['b] & 'd) -> (forall 'b, 'c, 'd, 'e. ((() -> List[nothing] -> 'b & 'e) -> (forall 'c, 'd, 'e, 'a, 'f. ('f
+//│   where
+//│     'c <: 'a
+//│     'd <: List['a]
+//│     'e <: () -> List['a] -> 'f))
+//│   where
+//│     'c <: 'b
+//│     'd <: List['b]
+//│     'c <: 'b
+//│     'd <: List['b]))
+//│   where
+//│     'c <: 'b
+//│     'c <: 'b))) -> nothing -> (() -> List[string] -> (forall 'b, 'g. (() -> (forall 'b, 'g, 'h. ((List['b] & 'h) -> (forall 'b, 'g, 'h, 'i. ((() -> List[nothing] -> 'b & 'i) -> (forall 'g, 'h, 'i, 'a0, 'j. ('j
+//│   where
+//│     'g <: 'a0
+//│     'h <: List['a0]
+//│     'i <: () -> List['a0] -> 'j))
+//│   where
+//│     'g <: 'b
+//│     'h <: List['b]
+//│     'g <: 'b
+//│     'h <: List['b]))
+//│   where
+//│     'g <: 'b
+//│     'g <: 'b))
+//│   where
+//│     'g <: 'b
+//│     'g <: 'b))) -> 'b))
 
 // (* This does not type. It requires first-class polymorphism. *)
 def h t = g t t
-//│ ╔══[ERROR] identifier not found: g
-//│ ║  l.175: 	def h t = g t t
-//│ ╙──       	          ^
-//│ h: anything -> error
+//│ h: nothing -> (forall 'b, 'c, 'd, 'e, 'f, 'g. ('h
+//│   where
+//│     'b <: () -> List[nothing] -> 'c & () -> List["x"] -> (() -> (forall 'c, 'i, 'j. ((List['c] & 'j) -> (forall 'c, 'i, 'j, 'k. ((() -> List[nothing] -> 'c & 'k) -> (forall 'i, 'j, 'k, 'a, 'l. ('l
+//│   where
+//│     'i <: 'a
+//│     'j <: List['a]
+//│     'k <: () -> List['a] -> 'l))
+//│   where
+//│     'i <: 'c
+//│     'j <: List['c]
+//│     'i <: 'c
+//│     'j <: List['c]))
+//│   where
+//│     'i <: 'c
+//│     'i <: 'c))) -> 'm -> (() -> List[string] -> (forall 'c, 'n. (() -> (forall 'c, 'n, 'o. ((List['c] & 'o) -> (forall 'c, 'n, 'o, 'p. ((() -> List[nothing] -> 'c & 'p) -> (forall 'n, 'o, 'p, 'a0, 'q. ('q
+//│   where
+//│     'n <: 'a0
+//│     'o <: List['a0]
+//│     'p <: () -> List['a0] -> 'q))
+//│   where
+//│     'n <: 'c
+//│     'o <: List['c]
+//│     'n <: 'c
+//│     'o <: List['c]))
+//│   where
+//│     'n <: 'c
+//│     'n <: 'c))
+//│   where
+//│     'n <: 'c
+//│     'n <: 'c))) -> 'h
+//│     'd <: () -> List[nothing] -> 'c & () -> List["x"] -> (() -> (forall 'c, 'i, 'j. ((List['c] & 'j) -> (forall 'c, 'i, 'j, 'k. ((() -> List[nothing] -> 'c & 'k) -> (forall 'i, 'j, 'k, 'a, 'l. ('l
+//│   where
+//│     'i <: 'a
+//│     'j <: List['a]
+//│     'k <: () -> List['a] -> 'l))
+//│   where
+//│     'i <: 'c
+//│     'j <: List['c]
+//│     'i <: 'c
+//│     'j <: List['c]))
+//│   where
+//│     'i <: 'c
+//│     'i <: 'c))) -> (() -> List[string] -> (forall 'c, 'n. (() -> (forall 'c, 'n, 'o. ((List['c] & 'o) -> (forall 'c, 'n, 'o, 'p. ((() -> List[nothing] -> 'c & 'p) -> (forall 'n, 'o, 'p, 'a0, 'q. ('q
+//│   where
+//│     'n <: 'a0
+//│     'o <: List['a0]
+//│     'p <: () -> List['a0] -> 'q))
+//│   where
+//│     'n <: 'c
+//│     'o <: List['c]
+//│     'n <: 'c
+//│     'o <: List['c]))
+//│   where
+//│     'n <: 'c
+//│     'n <: 'c))
+//│   where
+//│     'n <: 'c
+//│     'n <: 'c))) -> 'm
+//│     'e :> forall 'c, 'r, 's, 't. ((() -> List[nothing] -> 'c & 't) -> (forall 'r, 's, 't, 'a1, 'u. ('u
+//│   where
+//│     'r <: 'a1
+//│     's <: List['a1]
+//│     't <: () -> List['a1] -> 'u))
+//│   where
+//│     'r <: 'c
+//│     's <: List['c]
+//│     'r <: 'c
+//│     's <: List['c])
+//│     'f :> forall 'c, 'v, 'w. ((() -> List[nothing] -> 'c & 'c) -> (forall 'c, 'v, 'w, 'a2, 'x. ('x
+//│   where
+//│     'v <: 'a2
+//│     'w <: List['a2]
+//│     'c <: () -> List['a2] -> 'x))
+//│   where
+//│     'v <: 'c
+//│     'w <: List['c]
+//│     'v <: 'c
+//│     'w <: List['c])
+//│     'g <: () -> List[nothing] -> 'c & () -> List["x"] -> (() -> (forall 'c, 'i, 'j. ((List['c] & 'j) -> (forall 'c, 'i, 'j, 'k. ((() -> List[nothing] -> 'c & 'k) -> (forall 'i, 'j, 'k, 'a, 'l. ('l
+//│   where
+//│     'i <: 'a
+//│     'j <: List['a]
+//│     'k <: () -> List['a] -> 'l))
+//│   where
+//│     'i <: 'c
+//│     'j <: List['c]
+//│     'i <: 'c
+//│     'j <: List['c]))
+//│   where
+//│     'i <: 'c
+//│     'i <: 'c))) -> nothing -> (() -> List[string] -> (forall 'c, 'n. (() -> (forall 'c, 'n, 'o. ((List['c] & 'o) -> (forall 'c, 'n, 'o, 'p. ((() -> List[nothing] -> 'c & 'p) -> (forall 'n, 'o, 'p, 'a0, 'q. ('q
+//│   where
+//│     'n <: 'a0
+//│     'o <: List['a0]
+//│     'p <: () -> List['a0] -> 'q))
+//│   where
+//│     'n <: 'c
+//│     'o <: List['c]
+//│     'n <: 'c
+//│     'o <: List['c]))
+//│   where
+//│     'n <: 'c
+//│     'n <: 'c))
+//│   where
+//│     'n <: 'c
+//│     'n <: 'c))) -> 'c & () -> List["x"] -> (() -> (forall 'c, 'i, 'j. ((List['c] & 'j) -> (forall 'c, 'i, 'j, 'k. ((() -> List[nothing] -> 'c & 'k) -> (forall 'i, 'j, 'k, 'a, 'l. ('l
+//│   where
+//│     'i <: 'a
+//│     'j <: List['a]
+//│     'k <: () -> List['a] -> 'l))
+//│   where
+//│     'i <: 'c
+//│     'j <: List['c]
+//│     'i <: 'c
+//│     'j <: List['c]))
+//│   where
+//│     'i <: 'c
+//│     'i <: 'c))) -> (() -> List[string] -> (forall 'c, 'n. (() -> (forall 'c, 'n, 'o. ((List['c] & 'o) -> (forall 'c, 'n, 'o, 'p. ((() -> List[nothing] -> 'c & 'p) -> (forall 'n, 'o, 'p, 'a0, 'q. ('q
+//│   where
+//│     'n <: 'a0
+//│     'o <: List['a0]
+//│     'p <: () -> List['a0] -> 'q))
+//│   where
+//│     'n <: 'c
+//│     'o <: List['c]
+//│     'n <: 'c
+//│     'o <: List['c]))
+//│   where
+//│     'n <: 'c
+//│     'n <: 'c))
+//│   where
+//│     'n <: 'c
+//│     'n <: 'c))) -> 'c & 'd))
 
