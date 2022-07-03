@@ -345,20 +345,11 @@ fun a -> a a
 //│ res: ('a -> 'b & 'a) -> 'b
 //│    = [Function: res]
 
-:e // Interestingly, unbound results are currently *not* generalized (despite the pretty-printing)
+// :e // Interestingly, unbound results are currently *not* generalized (despite the pretty-printing)
 self1 = res
 //│ ('a -> 'b & 'a) -> 'b
 //│   <:  self1:
 //│ ('a -> 'b & 'a) -> 'b
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.349: 	self1 = res
-//│ ║         	^^^^^^^^^^^
-//│ ╟── type `‘b324` is not an instance of type `'b`
-//│ ║  l.334: 	def self1: ('a -> 'b & 'a) -> 'b
-//│ ║         	                  ^^
-//│ ╟── Note: constraint arises from type variable:
-//│ ║  l.334: 	def self1: ('a -> 'b & 'a) -> 'b
-//│ ╙──       	                              ^^
 //│      = [Function: res]
 
 r = fun a -> a a
@@ -385,17 +376,17 @@ def self2 = self1
 //│   where
 //│     'a := 'a -> 'b
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.381: 	def self2 = self1
+//│ ║  l.372: 	def self2 = self1
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')››  <:  (('a279_371' -> 'b280_372') & 'a279_371')    PolymorphicType  ComposedType
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')››  <:  (('a279_368' -> 'b280_369') & 'a279_368')    PolymorphicType  ComposedType
 //│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')››  <:  (('a279' -> 'b280') & 'a279')
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.381: 	def self2 = self1
+//│ ║  l.372: 	def self2 = self1
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a' & ('a348_368' -> ‘b'))  <:  (('a279_371' -> 'b280_372') & 'a279_371')    ComposedType  ComposedType
-//│ ╙──  ... looks like:  (‘a' & ('a348' -> ‘b'))  <:  (('a279' -> 'b280') & 'a279')
+//│ ╟── this constraint:  (‘a' & ('a345_365' -> ‘b'))  <:  (('a279_368' -> 'b280_369') & 'a279_368')    ComposedType  ComposedType
+//│ ╙──  ... looks like:  (‘a' & ('a345' -> ‘b'))  <:  (('a279' -> 'b280') & 'a279')
 //│      = [Function: r]
 
 

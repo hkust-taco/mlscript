@@ -63,10 +63,10 @@ succ0 = s
 // :e // works with quantif extrus
 // :e // due to tapping
 def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
-//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'a. 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('d
+//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'a. 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
-//│     'a <: 'c -> 'd
-//│     'e <: 'a -> 'b -> 'c))))
+//│     'c <: 'a -> 'b -> 'd
+//│     'a <: 'd -> 'e))))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: succ2]

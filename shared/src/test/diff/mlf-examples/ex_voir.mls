@@ -20,10 +20,12 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'c. 'c -> (forall 'b, 'c, 'a. (Cons['a | 'b] with {head: 'b, tail: 'c}
+//│ 'b -> (forall 'c. 'c -> (forall 'b, 'c, 'head, 'a, 'tail. (Cons['a] with {head: 'head, tail: 'tail}
 //│   where
-//│     'c <: List['a]
-//│     'c <: List['a])))
+//│     'b <: 'head & 'a
+//│     'c <: List['a] & 'tail
+//│     'b <: 'head & 'a
+//│     'c <: List['a] & 'tail)))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -58,9 +60,18 @@ def choose3 x y z = choose (choose x y) z
 def id = (fun x -> x) : Sid
 def id_ = fun x -> x
 def succ n = n + 1
-//│ choose: 'a -> (forall 'b. 'b -> ('a | 'b))
+//│ choose: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
+//│   where
+//│     'b <: 'c
+//│     'a <: 'c)))
 //│       = [Function: choose]
-//│ choose3: 'a -> anything -> (forall 'b. 'b -> (forall 'b. 'a | 'b))
+//│ choose3: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('e
+//│   where
+//│     'd <: 'e
+//│     'f <: 'e
+//│     'b <: 'd
+//│     'c <: 'd
+//│     'a <: 'd))))
 //│        = [Function: choose3]
 //│ id: Sid
 //│   = [Function: id]
@@ -75,13 +86,37 @@ def test = choose3 id
 def test_ = choose3 id_
 def test2 = test succ
 def test2_ = test_ succ
-//│ test: anything -> (forall 'a. 'a -> (forall 'a. Sid | 'a))
+//│ test: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('d
+//│   where
+//│     'c <: 'd
+//│     'e <: 'd
+//│     'a <: 'b
+//│     'b <: 'b
+//│     'f <: 'b)))
 //│     = [Function (anonymous)]
-//│ test_: anything -> (forall 'a. 'a -> (forall 'a, 'b. 'b -> 'b | 'a))
+//│ test_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('d
+//│   where
+//│     'c <: 'd
+//│     'e <: 'd
+//│     'a <: 'b
+//│     'b <: 'b
+//│     'f <: 'b)))
 //│      = [Function (anonymous)]
-//│ test2: 'a -> (forall 'a. Sid | 'a)
+//│ test2: 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('c
+//│   where
+//│     'b <: 'c
+//│     'd <: 'c
+//│     'e <: 'a
+//│     'a <: 'a
+//│     'f <: 'a))
 //│      = [Function (anonymous)]
-//│ test2_: 'a -> (forall 'a, 'b. 'b -> 'b | 'a)
+//│ test2_: 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('c
+//│   where
+//│     'b <: 'c
+//│     'd <: 'c
+//│     'e <: 'a
+//│     'a <: 'a
+//│     'f <: 'a))
 //│       = [Function (anonymous)]
 
 // (* Messages d'erreur foireux : *)
@@ -95,7 +130,10 @@ fun x -> fun y -> ((x : S1), (y : S2), if true then x else y)
 fun x -> fun y -> ((x : S1), (y : S2), x x)
 //│ Defined type alias S1
 //│ Defined type alias S2
-//│ res: (S1 & 'a) -> (forall 'b. (S2 & 'b) -> (S1, S2, 'a | 'b,))
+//│ res: (S1 & 'a) -> (forall 'b. (S2 & 'b) -> (forall 'a, 'b, 'c. ((S1, S2, 'c,)
+//│   where
+//│     'a <: 'c
+//│     'b <: 'c)))
 //│    = [Function: res]
 //│ res: (S1 & 'a) -> S2 -> (forall 'a, 'b. ((S1, S2, 'b,)
 //│   where
@@ -112,7 +150,7 @@ def example_ f = f f
 def mkpair x y = (x, y)
 //│ example: 'a -> (forall 'a, 'b. (int -> 'b
 //│   where
-//│     'a <: nothing -> int -> 'b))
+//│     'a <: nothing -> int -> 'b & 'a))
 //│        = [Function: example]
 //│ example_: 'a -> (forall 'a, 'b. ('b
 //│   where

@@ -45,21 +45,18 @@ rec def to_ch n =
 
 :ns
 to_ch
-//│ res: forall 'a, 'b, 'c, 'd, 'e. forall 'to_ch, 'f, 'a, 'g, 'b, 'c, 'd, 'e. 'to_ch
+//│ res: forall 'a, 'b, 'c. forall 'to_ch, 'd, 'a, 'e, 'b, 'c. 'to_ch
 //│   where
-//│     'to_ch :> 'f -> 'g
-//│            <: 'f -> 'a
-//│     'g :> forall 'h. 'h -> (forall 'i. 'i)
+//│     'to_ch :> 'd -> 'e
+//│            <: 'd -> 'a
+//│     'e :> forall 'f. 'f -> (forall 'g. 'g)
 //│        <: 'a
-//│     'a :> forall 'h. 'h -> (forall 'i. 'i)
+//│     'a :> forall 'f. 'f -> (forall 'g. 'g)
 //│        <: 'b
-//│     'b :> forall 'h. 'h -> (forall 'i. 'i)
-//│        <: 'c -> 'd
-//│     'i :> 'd
-//│     'd :> forall 'i. 'i
-//│     'h <: 'c
-//│     'c <: 'e
-//│     'e <: 'c
+//│     'b :> forall 'f. 'f -> (forall 'g. 'g)
+//│        <: 'f -> 'g
+//│     'g :> forall 'g. 'g
+//│     'f <: 'c
 //│    = [Function: to_ch]
 
 :re
@@ -76,41 +73,6 @@ to_church = to_ch
 //│ anything -> anything -> nothing
 //│   <:  to_church:
 //│ int -> ChurchInt
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?to_ch, ?b, ?c, ?d, ?e, ?f, ?g. ?to_ch <: int -> ChurchInt` exceeded recursion depth limit (300)
-//│ ║  l.75: 	to_church = to_ch
-//│ ║        	^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  ‹∀ 1. ('N215'' -> 'N216'')›
-//│ ╟── while constraining:  α43_89'  <!<  ‹∀ 1. ('N215'' -> 'N216'')›
-//│ ╟── while constraining:  α43_89'  <!<  (‘N^42 -> ‘N^42)
-//│ ╟── while constraining:  α23_214^42  <!<  (‘N^42 -> ‘N^42)
-//│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  (‘N^42 -> ‘N^42)
-//│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  ‹∀ 1. ('N212'' -> 'N213'')›
-//│ ╟── while constraining:  α43_89'  <!<  ‹∀ 1. ('N212'' -> 'N213'')›
-//│ ╟── while constraining:  α43_89'  <!<  (‘N^41 -> ‘N^41)
-//│ ╟── while constraining:  α23_211^41  <!<  (‘N^41 -> ‘N^41)
-//│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  (‘N^41 -> ‘N^41)
-//│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  ‹∀ 1. ('N209'' -> 'N210'')›
-//│ ╟── while constraining:  α43_89'  <!<  ‹∀ 1. ('N209'' -> 'N210'')›
-//│ ╟── while constraining:  α43_89'  <!<  (‘N^40 -> ‘N^40)
-//│ ╟── while constraining:  α23_208^40  <!<  (‘N^40 -> ‘N^40)
-//│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  (‘N^40 -> ‘N^40)
-//│ ╟── ......
-//│ ╟── ......
-//│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  ‹∀ 1. ('N95'' -> 'N96'')›
-//│ ╟── while constraining:  α43_89'  <!<  ‹∀ 1. ('N95'' -> 'N96'')›
-//│ ╟── while constraining:  α43_89'  <!<  (‘N'' -> ‘N'')
-//│ ╟── while constraining:  α23_94''  <!<  (‘N'' -> ‘N'')
-//│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  (‘N'' -> ‘N'')
-//│ ╟── while constraining:  (α22_92'' -> ‹∀ 4. α23_88'''''›)  <!<  ((‘N'' -> ‘N'') -> (‘N'' -> ‘N''))
-//│ ╟── while constraining:  ‹∀ 3. (α22_85'''' -> ‹∀ 4. α23_88'''''›)›  <!<  ((‘N'' -> ‘N'') -> (‘N'' -> ‘N''))
-//│ ╟── while constraining:  ‹∀ 3. (α22_85'''' -> ‹∀ 4. α23_88'''''›)›  <!<  ‹∀ 0. (('N33' -> 'N33') -> ('N33' -> 'N33'))›
-//│ ╟── while constraining:  ‹∀ 3. (α22_85'''' -> ‹∀ 4. α23_88'''''›)›  <!<  ChurchInt
-//│ ╟── while constraining:  α38_84'  <!<  ChurchInt
-//│ ╟── while constraining:  (α36_83' -> α38_84')  <!<  (Int -> ChurchInt)
-//│ ╟── while constraining:  to_ch35_82'  <!<  (Int -> ChurchInt)
-//│ ╟── while constraining:  ‹∀ 0. to_ch35'›  <!<  (Int -> ChurchInt)
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_ch35'››  <!<  (Int -> ChurchInt)
-//│ ╙── while constraining:  ‹∀ 0. ‹∀ 0. to_ch35'››  <!<  ‹∀ 0. (Int -> ChurchInt)›
 //│          = [Function: to_ch]
 
 

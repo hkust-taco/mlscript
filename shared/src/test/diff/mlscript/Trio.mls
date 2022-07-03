@@ -37,7 +37,7 @@ foo arg
 //│ res: bool | int | string
 //│    = <no result>
 //│      arg is not implemented
-//│ constrain calls  : 41
+//│ constrain calls  : 40
 //│ annoying  calls  : 30
 //│ subtyping calls  : 87
 
@@ -79,7 +79,7 @@ foo arg
 //│ res: error | int | string | {l: bool, r: nothing}
 //│    = <no result>
 //│      arg is not implemented
-//│ constrain calls  : 53
+//│ constrain calls  : 52
 //│ annoying  calls  : 40
 //│ subtyping calls  : 123
 

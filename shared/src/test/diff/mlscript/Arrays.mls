@@ -2030,7 +2030,7 @@ ty1A = ty1B
 //│ ╟── type `int` does not match type `0 | 1`
 //│ ║  l.17: 	def ty1A: MyArray[int]
 //│ ╙──      	                  ^^^
-//│ constrain calls  : 32
+//│ constrain calls  : 28
 //│ annoying  calls  : 29
 //│ subtyping calls  : 101
 
@@ -2046,7 +2046,7 @@ ty1B = ty1A
 //│ ╟── type `int` does not match type `0 | 1`
 //│ ║  l.17: 	def ty1A: MyArray[int]
 //│ ╙──      	                  ^^^
-//│ constrain calls  : 32
+//│ constrain calls  : 28
 //│ annoying  calls  : 29
 //│ subtyping calls  : 72
 

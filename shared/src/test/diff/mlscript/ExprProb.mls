@@ -259,7 +259,7 @@ rec def pretty1 k e = case e of {
 //│   where
 //│     'b <: Add[?] & {lhs: 'b, rhs: 'b} | Lit | 'a & ~add & ~lit
 //│        = [Function: pretty1]
-//│ constrain calls  : 91
+//│ constrain calls  : 90
 //│ annoying  calls  : 0
 //│ subtyping calls  : 91
 
@@ -277,7 +277,7 @@ rec def prettier1 k ev e = case e of {
 //│   where
 //│     'b <: Add[?] & {lhs: 'lhs & 'b, rhs: 'rhs & 'b} | Lit | 'a & ~add & ~lit
 //│          = [Function: prettier1]
-//│ constrain calls  : 299
+//│ constrain calls  : 298
 //│ annoying  calls  : 0
 //│ subtyping calls  : 115
 
@@ -294,9 +294,9 @@ rec def prettier11 k ev e = case e of {
 //│     'c <: Add[?] & {lhs: 'd, rhs: 'rhs & 'c} | Lit | 'a & ~add & ~lit
 //│     'd <: Add[?] & {lhs: 'd, rhs: 'd} | Lit | 'b & ~add & ~lit
 //│           = [Function: prettier11]
-//│ constrain calls  : 198
+//│ constrain calls  : 185
 //│ annoying  calls  : 0
-//│ subtyping calls  : 205
+//│ subtyping calls  : 195
 
 // Doesn't make much sense, but generates very ugly type unless aggressively simplified:
 :stats
@@ -312,9 +312,9 @@ rec def prettier12 k ev e = case e of {
 //│     'g <: Add[?] & {lhs: 'g, rhs: 'g} | Lit | 'd & ~add & ~lit
 //│     'f <: Add[?] & {lhs: 'f, rhs: 'f} | Lit | 'a & ~add & ~lit
 //│           = [Function: prettier12]
-//│ constrain calls  : 170
+//│ constrain calls  : 158
 //│ annoying  calls  : 0
-//│ subtyping calls  : 281
+//│ subtyping calls  : 271
 
 
 :stats
@@ -339,9 +339,9 @@ prettier12 done (eval1 done) e1
 //│    = '123'
 //│ res: string
 //│    = '123'
-//│ constrain calls  : 1410
+//│ constrain calls  : 1397
 //│ annoying  calls  : 490
-//│ subtyping calls  : 2007
+//│ subtyping calls  : 2005
 
 
 e1 = add (lit 1) (add (lit 2) (lit 3))
@@ -411,9 +411,9 @@ rec def prettier22 k ev = prettier12 (fun x -> case x of {
 //│     'e <: Nega[?] & {arg: 'c} | 'a & ~nega
 //│     'c <: Add[?] & 'b | Lit | 'e & ~add & ~lit
 //│           = [Function: prettier22]
-//│ constrain calls  : 177
+//│ constrain calls  : 164
 //│ annoying  calls  : 0
-//│ subtyping calls  : 317
+//│ subtyping calls  : 305
 
 
 
@@ -525,9 +525,9 @@ prettier22 done (eval2 done) d2
 //│    = '1-123'
 //│ res: string
 //│    = '-1'
-//│ constrain calls  : 1174
+//│ constrain calls  : 1165
 //│ annoying  calls  : 390
-//│ subtyping calls  : 1794
+//│ subtyping calls  : 1776
 
 
 

@@ -171,7 +171,7 @@ def to_ch_s_mix n =
 rec def to_ch_s n =
   if n == 0 then z
   else s (to_ch_s (n - 1))
-//│ to_ch_s: int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'a. ('a & 'b) -> 'a))
+//│ to_ch_s: int -> (nothing -> anything & (forall 'a, 'b. 'a | 'b) -> 'a) -> (forall 'b, 'c. ('c & 'b) -> (forall 'a. 'a | 'c))
 //│        = [Function: to_ch_s]
 
 // rec def to_ch n =
@@ -212,88 +212,22 @@ to_church = to_ch_s_mix
 
 :e // * Needs distrib (see below)
 to_church = to_ch_s
-//│ int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'a. ('a & 'b) -> 'a))
+//│ int -> (nothing -> anything & (forall 'a, 'b. 'a | 'b) -> 'a) -> (forall 'b, 'c. ('c & 'b) -> (forall 'a. 'a | 'c))
 //│   <:  to_church:
 //│ int -> ChurchInt
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.214: 	to_church = to_ch_s
-//│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N659` is not an instance of type `'N`
-//│ ║  l.38: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.38: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ╙──      	                        ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.214: 	to_church = to_ch_s
-//│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N665` is not an instance of type `'N`
-//│ ║  l.38: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.38: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── from reference:
-//│ ║  l.42: 	def s n = fun f -> fun x -> f (n f x)
-//│ ╙──      	                                   ^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.214: 	to_church = to_ch_s
-//│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N665` is not an instance of type `'N659`
-//│ ║  l.38: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.38: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── from reference:
-//│ ║  l.42: 	def s n = fun f -> fun x -> f (n f x)
-//│ ╙──      	                                   ^
 //│          = [Function: to_ch_s]
 
 rec def to_ch_mix n =
   if n == 0 then zero
   else s (to_ch (n - 1))
-//│ to_ch_mix: int -> (forall 'a. ('N -> 'N & 'N -> 'a) -> 'N -> 'a | ChurchInt)
+//│ to_ch_mix: int -> (forall 'a, 'b. ('N -> ('N & 'a) & 'a -> 'b) -> (forall 'a. ('N & 'a) -> (forall 'b. 'b)) | ChurchInt)
 //│          = [Function: to_ch_mix]
 
 :e // * Needs distrib (see below)
 to_church = to_ch_mix
-//│ int -> (forall 'a. ('N -> 'N & 'N -> 'a) -> 'N -> 'a | ChurchInt)
+//│ int -> (forall 'a, 'b. ('N -> ('N & 'a) & 'a -> 'b) -> (forall 'a. ('N & 'a) -> (forall 'b. 'b)) | ChurchInt)
 //│   <:  to_church:
 //│ int -> ChurchInt
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.260: 	to_church = to_ch_mix
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N750` is not an instance of type `'N`
-//│ ║  l.38: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.38: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ╙──      	                        ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.260: 	to_church = to_ch_mix
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N753` is not an instance of type `'N`
-//│ ║  l.38: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.38: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── from reference:
-//│ ║  l.42: 	def s n = fun f -> fun x -> f (n f x)
-//│ ╙──      	                                   ^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.260: 	to_church = to_ch_mix
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N753` is not an instance of type `'N750`
-//│ ║  l.38: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.38: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── from reference:
-//│ ║  l.42: 	def s n = fun f -> fun x -> f (n f x)
-//│ ╙──      	                                   ^
 //│          = [Function: to_ch_mix]
 
 
@@ -307,21 +241,7 @@ to_church = to_ch_mix
 :e // * Needs to distribute back (in the other direction) here:
 rec def to_ch n =
   succD (to_ch n)
-//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.308: 	rec def to_ch n =
-//│ ║         	              ^^^
-//│ ║  l.309: 	  succD (to_ch n)
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N761` is not an instance of type `'N`
-//│ ║  l.38: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.38: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── from quantified type variable:
-//│ ║  l.72: 	def succD: forall 'M. ChurchInt -> ('M -> 'M) -> ('M -> 'M)
-//│ ╙──      	                  ^^
-//│ to_ch: anything -> (('M | ‘N761) -> 'M) -> 'M -> ('M | ‘N761)
+//│ to_ch: anything -> (('M | ‘N) -> (‘N & 'M)) -> (‘N & 'M) -> ('M | ‘N)
 //│      = [Function: to_ch1]
 
 
@@ -357,13 +277,13 @@ to_church = to_ch_s_mix
 
 //:e // due to tapping
 to_church = to_ch_s
-//│ int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'a. ('a & 'b) -> 'a))
+//│ int -> (nothing -> anything & (forall 'a, 'b. 'a | 'b) -> 'a) -> (forall 'b, 'c. ('c & 'b) -> (forall 'a. 'a | 'c))
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│          = [Function: to_ch_s]
 
 to_church = to_ch_mix
-//│ int -> (forall 'a. ('N -> 'N & 'N -> 'a) -> 'N -> 'a | ChurchInt)
+//│ int -> (forall 'a, 'b. ('N -> ('N & 'a) & 'a -> 'b) -> (forall 'a. ('N & 'a) -> (forall 'b. 'b)) | ChurchInt)
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│          = [Function: to_ch_mix]

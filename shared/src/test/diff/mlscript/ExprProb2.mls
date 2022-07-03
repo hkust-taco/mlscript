@@ -159,21 +159,19 @@ eval2_fixed_1 e2
 def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
 //│ fix: ((forall 'a, 'b, 'c. ('b -> 'c
 //│   where
-//│     'a <: 'a -> 'b -> 'c)) -> 'd) -> 'd
+//│     'a <: 'a -> 'b -> 'c)) -> anything) -> 'a
 //│    = [Function: fix]
 
 //:e // due to tapping
 def eval2_fixed_2 = fix eval2f
-//│ eval2_fixed_2: 'a -> int
-//│   where
-//│     'a <: Add[?] & {lhs: 'a, rhs: 'a} | Lit | Nega[?] & {arg: 'a}
+//│ eval2_fixed_2: nothing
 //│              = [Function (anonymous)]
 
 eval2_fixed_2 e1
 eval2_fixed_2 e2
-//│ res: int
+//│ res: nothing
 //│    = 6
-//│ res: int
+//│ res: nothing
 //│    = -5
 
 
@@ -309,8 +307,8 @@ eval2_broken eval2_broken e2
 //│ ║  l.+1: 	eval2_broken eval2_broken e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α1550' -> (α1551' -> (arg1553' | α1568')))›  <:  α1550_1614    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α1550' -> (α1551' -> (arg1553' | α1568')))›  <:  α1550'
+//│ ╟── this constraint:  ‹∀ 0. (α1452' -> (α1453' -> (arg1455' | α1470')))›  <:  α1452_1516    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α1452' -> (α1453' -> (arg1455' | α1470')))›  <:  α1452'
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	eval2_broken eval2_broken e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -321,7 +319,7 @@ eval2_broken eval2_broken e2
 //│ ║  l.20: 	  | Add -> eval1 eval1 e.lhs + eval1 eval1 e.rhs
 //│ ║        	                               ^^^^^^^^^^^^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.301: 	  | Nega -> e.arg
+//│ ║  l.299: 	  | Nega -> e.arg
 //│ ╙──       	            ^^^^^
 //│ res: error | int
 
@@ -334,12 +332,6 @@ def eval2f_oops eval2 e = case e of {
 
 // :e
 fix eval2f_oops e2
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.+1: 	fix eval2f_oops e2
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α1683_1754 -> (α1688_1761 | α1703_1762))  <:  α1060_1779    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α1683' -> (α1688' | α1703'))  <:  α1060_1741'''
-//│ res: error
+//│ res: nothing
 
 

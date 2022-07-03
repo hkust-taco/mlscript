@@ -18,12 +18,9 @@ def imp (z: Bot) =
 def imp' z =
   (fun x -> x x)
   (fun y -> y z y)
-//│ imp: Bot -> (forall 'a, 'b, 'v. ('b
+//│ imp: Bot -> (forall 'a, 'b. ('b
 //│   where
-//│     'a <: 'a -> 'b
-//│     'v :> forall 'c, 'd. ('d
-//│   where
-//│     'c <: Bot -> 'c -> 'd)))
+//│     'a <: 'a -> 'b))
 //│    = [Function: imp]
 //│ imp': anything -> (forall 'a, 'b. ('b
 //│   where
@@ -72,22 +69,24 @@ delta' id
 def t a b c d e = (fun x -> a x x) ((fun y -> b (c y)) (d e))
 //│ t: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'd. 'd -> (forall 'e. 'e -> (forall 'a, 'd. ('f
 //│   where
-//│     'a <: (forall 'b, 'c, 'g, 'h, 'i. ('h
+//│     'a <: (forall 'b, 'c, 'g, 'h, 'i. ('i
 //│   where
-//│     'b <: 'g -> 'h
-//│     'c <: 'i -> 'g)) -> (forall 'b, 'c, 'g, 'h, 'i. ('h
+//│     'c <: 'g -> 'h
+//│     'b <: 'h -> 'i)) -> (forall 'b, 'c, 'g, 'h, 'i. ('i
 //│   where
-//│     'b <: 'g -> 'h
-//│     'c <: 'i -> 'g)) -> 'f
-//│     'd <: 'e -> 'i))))))
+//│     'c <: 'g -> 'h
+//│     'b <: 'h -> 'i)) -> 'f
+//│     'd <: 'e -> 'g))))))
 //│  = [Function: t]
 
 // let t w z a b = (fun y -> (fun x -> w (x y) z) a) b ;;
 def t w z a b = (fun y -> (fun x -> w (x y) z) a) b
-//│ t: 'a -> (forall 'b. 'b -> 'a -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f
+//│ t: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'd. 'd -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h. ('f
 //│   where
-//│     'd <: 'c -> 'e
-//│     'a <: 'e -> 'b -> 'f))))
+//│     'a <: 'e -> 'b -> 'f
+//│     'g <: 'h -> 'e
+//│     'c <: 'g
+//│     'd <: 'h)))))
 //│  = [Function: t1]
 
 // let t y a = (fun x -> x (x y)) ((fun z -> z) (fun x -> a x)) ;;
@@ -328,10 +327,10 @@ def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) 
 //│     'b <: (forall 'o. 'o -> (forall 'p. 'p -> (forall 'a, 'o, 'p. ('q
 //│   where
 //│     'o <: ('a -> (forall 'd. 'd -> 'd)) -> 'r
-//│     'p <: 'r -> (forall 's. 's -> (forall 't. 't -> (forall 'a, 'o, 's. ('u
+//│     'p <: 'r -> (forall 's. 's -> (forall 't. 't -> (forall 'a, 'o, 's, 'u, 'v. ('v
 //│   where
-//│     'o <: ('a -> (forall 'd. 'd -> 'd)) -> 's -> 't -> 'v
-//│     's <: 'v -> 'u)))) -> 'q)))) -> (forall 'a. 'a -> (forall 'a. ('w
+//│     's <: 'u -> 'v
+//│     'o <: ('a -> (forall 'd. 'd -> 'd)) -> 's -> 't -> 'u)))) -> 'q)))) -> (forall 'a. 'a -> (forall 'a. ('w
 //│   where
 //│     'a <: ('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'w))) -> (forall 'a, 'e. 'e -> 'a -> 'e) -> 'l & 'm -> 'j -> 'n)))) -> 'c))
 //│   = [Function: t22]
@@ -368,20 +367,19 @@ t2 id succ 0
 //│     'e <: (forall 'f. 'f -> (forall 'g. 'g -> (forall 'f, 'g, 'h. ('i
 //│   where
 //│     'f <: ('h -> (forall 'j. 'j -> 'j)) -> 'k
-//│     'g <: 'k -> (forall 'l. 'l -> (forall 'm. 'm -> (forall 'f, 'h, 'l. ('n
+//│     'g <: 'k -> (forall 'l. 'l -> (forall 'm. 'm -> (forall 'f, 'h, 'l, 'n, 'o. ('o
 //│   where
-//│     'f <: ('h -> (forall 'j. 'j -> 'j)) -> 'l -> 'm -> 'o
-//│     'l <: 'o -> 'n)))) -> 'i)))) -> (forall 'h. 'h -> (forall 'h. ('p
+//│     'l <: 'n -> 'o
+//│     'f <: ('h -> (forall 'j. 'j -> 'j)) -> 'l -> 'm -> 'n)))) -> 'i)))) -> (forall 'h. 'h -> (forall 'h. ('p
 //│   where
 //│     'h <: ('h -> (forall 'j. 'j -> 'j)) -> ('h -> (forall 'j. 'j -> 'j)) -> 'p))) -> (forall 'h, 'q. 'q -> 'h -> 'q) -> 'c & 'd -> 0 -> 'a
 //│    = 6
 
 // let t (z : 0) = let x = (fun (y: ['t > 0] 'a -> 't) -> y z y) in x x;;
 def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z y in x x
-//│ t: nothing -> (forall 'b, 'c, 'a. ('c
+//│ t: nothing -> (forall 'a, 'b. ('b
 //│   where
-//│     'b <: 'b -> 'b -> 'c
-//│     'a <: 'b -> anything))
+//│     'a <: 'a -> 'a -> 'b))
 //│  = [Function: t5]
 
 // (* Plus petit. *)
@@ -390,10 +388,9 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z y in x x
 type Tt = forall 'b 'c. ('b & nothing) -> ('c | (forall 'a 'd 'e. ('d & (forall 't. 'a -> 't))) -> 'e)
 def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 //│ Defined type alias Tt
-//│ t: nothing -> (forall 'b, 'c, 'a. ('c
+//│ t: nothing -> (forall 'a, 'b. ('b
 //│   where
-//│     'b <: nothing -> 'c
-//│     'a <: nothing -> anything))
+//│     'a <: nothing -> 'b))
 //│  = [Function: t6]
 
 // (*
@@ -452,18 +449,18 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 //│   where
 //│     'b <: ('c -> 'c -> (forall 'd. 'd -> 'd)) -> (forall 'c, 'e. 'e -> 'c -> 'e) -> (forall 'f. 'f -> (forall 'g. 'g -> (forall 'f, 'g, 'h. ('h
 //│   where
-//│     'f <: 'g -> 'h)))) -> (forall 'i, 'j, 'k, 'l. 'i -> (forall 'm, 'j, 'k, 'l. 'm -> (forall 'i, 'n, 'o, 'j, 'k, 'l. ('p
+//│     'f <: 'g -> 'h)))) -> (forall 'i, 'j, 'k, 'l. 'i -> (forall 'm, 'j, 'k, 'l. 'm -> (forall 'j, 'k, 'l. ('n
 //│   where
-//│     'q <: 'n -> 'i -> 'o
-//│     'b <: (forall 'r, 'j, 'k. 'r -> (forall 's, 'j, 'k. 's -> (forall 'c, 'r, 's, 'j, 'k. ('k
+//│     'b <: (forall 'o, 'j, 'k. 'o -> (forall 'p, 'j, 'k. 'p -> (forall 'c, 'o, 'p, 'j, 'k. ('k
 //│   where
-//│     'r <: ('c -> (forall 't. 't -> 't)) -> 'j
-//│     's <: 'j -> (forall 'u. 'u -> (forall 'v. 'v -> (forall 'c, 'r, 'u, 'v, 'w, 'x. ('x
+//│     'o <: ('c -> (forall 'q. 'q -> 'q)) -> 'j
+//│     'p <: 'j -> (forall 'r. 'r -> (forall 's. 's -> (forall 'c, 'o, 'r, 's, 't, 'u. ('u
 //│   where
-//│     'u <: 'w -> 'x
-//│     'r <: ('c -> (forall 'y. 'y -> 'y)) -> 'u -> 'v -> 'w)))) -> 'k)))) -> (forall 'c, 'l. 'c -> (forall 'c, 'l. ('l
+//│     'r <: 't -> 'u
+//│     'o <: ('c -> (forall 'v. 'v -> 'v)) -> 'r -> 's -> 't)))) -> 'k)))) -> (forall 'c, 'l. 'c -> (forall 'c, 'l. ('l
 //│   where
-//│     'c <: ('c -> (forall 'z. 'z -> 'z)) -> ('c -> (forall 'a1. 'a1 -> 'a1)) -> 'l))) -> (forall 'c, 'e. 'e -> 'c -> 'e) -> 'n & 'o -> 'm -> 'p)))) -> 'a
+//│     'c <: ('c -> (forall 'w. 'w -> 'w)) -> ('c -> (forall 'x. 'x -> 'x)) -> 'l))) -> (forall 'c, 'e. 'e -> 'c -> 'e) -> 'y & 'z -> 'm -> 'n
+//│     'a1 <: 'y -> 'i -> 'z)))) -> 'a
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 

@@ -20,10 +20,12 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'c. 'c -> (forall 'b, 'c, 'a. (Cons['a | 'b] with {head: 'b, tail: 'c}
+//│ 'b -> (forall 'c. 'c -> (forall 'b, 'c, 'head, 'a, 'tail. (Cons['a] with {head: 'head, tail: 'tail}
 //│   where
-//│     'c <: List['a]
-//│     'c <: List['a])))
+//│     'b <: 'head & 'a
+//│     'c <: List['a] & 'tail
+//│     'b <: 'head & 'a
+//│     'c <: List['a] & 'tail)))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -78,7 +80,9 @@ def is_empty: forall 'a. List['a] -> bool
 def is_empty l = eq l nil
 //│ is_empty: List[?] -> bool
 //│         = <missing implementation>
-//│ anything -> bool
+//│ 'a -> (forall 'a. (bool
+//│   where
+//│     'a <: 'a))
 //│   <:  is_empty:
 //│ List[?] -> bool
 //│         = [Function: is_empty]
@@ -87,7 +91,9 @@ def single: forall 'a. 'a -> List['a]
 def single x = cons x nil
 //│ single: 'a -> List['a]
 //│       = <missing implementation>
-//│ 'a -> List['a]
+//│ 'a -> (forall 'a, 'b. (List['b]
+//│   where
+//│     'a <: 'b))
 //│   <:  single:
 //│ 'a -> List['a]
 //│       = [Function: single]
@@ -107,7 +113,10 @@ def choose: forall 'a. 'a -> 'a -> 'a
 def choose x y = if true then x else y
 //│ choose: 'a -> 'a -> 'a
 //│       = <missing implementation>
-//│ 'a -> (forall 'b. 'b -> ('a | 'b))
+//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
+//│   where
+//│     'a <: 'c
+//│     'b <: 'c)))
 //│   <:  choose:
 //│ 'a -> 'a -> 'a
 //│       = [Function: choose]
@@ -209,9 +218,10 @@ app (map head) (single ids)
 
 // nope
 fun f -> poly f
-//│ res: anything -> (forall 'a, 'b, 'c. (('b, 'c,)
+//│ res: 'a -> (forall 'a, 'b, 'c, 'd. (('c, 'd,)
 //│   where
-//│     'a <: 1 -> 'b & true -> 'c))
+//│     'b <: 1 -> 'c & true -> 'd
+//│     'a <: 'b))
 //│    = [Function: res]
 
 // FreezeML D2
@@ -288,7 +298,9 @@ single id
 //│    = Cons { head: [Function: id], tail: Nil {} }
 
 let foo x y = single y in foo ids id
-//│ res: List[forall 'a. 'a -> 'a]
+//│ res: List['a]
+//│   where
+//│     'b <: 'a
 //│    = Cons { head: [Function: id], tail: Nil {} }
 
 head ids 1

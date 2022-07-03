@@ -255,7 +255,7 @@ y => (let f = x => x; {a: f y, b: f true})
 //│ res: 'a -> {a: 'a, b: true}
 
 y => (let f = x => y x; {a: f 0, b: f true})
-//│ res: ((0 | true) -> 'a) -> {a: 'a, b: 'a}
+//│ res: (nothing -> anything) -> {a: nothing, b: nothing}
 
 y => (let f = x => x y; {a: f (z => z), b: f (z => true)})
 //│ res: 'a -> {a: 'a, b: true}
@@ -305,10 +305,7 @@ let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ ║        	                                           ^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
-//│ ║        	                                    ^^^
-//│ ╟── from reference:
-//│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
-//│ ╙──      	                                    ^
+//│ ╙──      	                                    ^^^
 //│ x: 0
 //│ res: 0
 
@@ -400,8 +397,8 @@ let rec x = (let y = (x x); (z => z))
 //│ ║  l.+1: 	(w => x => x) ((y => y y) (y => y y))
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α654' -> α655')›  <:  α654_661    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α654' -> α655')›  <:  α654'
+//│ ╟── this constraint:  ‹∀ 0. (α636' -> α637')›  <:  α636_643    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α636' -> α637')›  <:  α636'
 //│ res: 'a -> 'a
 
 :NoCycleCheck

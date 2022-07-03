@@ -73,13 +73,22 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
     def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty)
     // def nextLevel: Ctx = copy(lvl = lvl + 1)
-    def nextLevel[R](k: Ctx => R): R = {
+    def nextLevel[R](k: Ctx => R)(implicit raise: Raise, prov: TP): R = {
       val newCtx = copy(lvl = lvl + 1, extrCtx = MutMap.empty)
       val res = k(newCtx)
-      assert(newCtx.extrCtx.isEmpty) // TODO
+      // assert(newCtx.extrCtx.isEmpty) // TODO
+      val ec = newCtx.extrCtx
+      trace(s"UNSTASHING... (out)") {
+        implicit val ctx: Ctx = this
+        ec.foreach { case (tv, bs) => bs.foreach {
+          case (true, b) => constrain(b, tv)
+          case (false, b) => constrain(tv, b)
+        }}
+        ec.clear()
+      }()
       res
     }
-    def poly(k: Ctx => ST): ST = {
+    def poly(k: Ctx => ST)(implicit raise: Raise, prov: TP): ST = {
       nextLevel { newCtx =>
         val innerTy = k(newCtx)
         // assert(newCtx.extrCtx.isEmpty) // TODO
@@ -89,7 +98,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           ConstrainedType.mk(newCtx.extrCtx.iterator.mapValues(_.toList).toList, innerTy)
           // innerTy
         )
-        newCtx.extrCtx.clear
+        newCtx.extrCtx.clear()
         poly
       }
     }
@@ -376,6 +385,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case PolyType(vars, ty) =>
         val oldLvl = ctx.lvl
         // ctx.nextLevel { implicit ctx =>
+        implicit val prov: TP = NoProv // TODO
         ctx.poly { implicit ctx =>
           var newVars = recVars
           val tvs = vars.map {
@@ -437,6 +447,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   /** Infer the type of a let binding right-hand side. */
   def typeLetRhs(isrec: Boolean, nme: Str, rhs: Term)(implicit ctx: Ctx, raise: Raise,
       vars: Map[Str, SimpleType] = Map.empty): PolymorphicType = {
+    
+    implicit val prov: TP = NoProv // TODO
+    
     // TODO these should introduce PolymorphicType-s
     val res = if (isrec) {
       val e_ty = freshVar(
@@ -459,6 +472,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       // constrain(ty_sch, e_ty)(raise, TypeProvenance(rhs.toLoc, "binding of " + rhs.describe), ctx)
       
       val oldLvl = lvl
+      
       ctx.copy(inRecursiveDef = S(Var(nme))).nextLevel { implicit ctx: Ctx =>
         implicit val extrCtx: Opt[ExtrCtx] = N
         val rhs_ty = typeTerm(rhs)

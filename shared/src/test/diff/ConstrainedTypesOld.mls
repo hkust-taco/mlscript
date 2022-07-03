@@ -27,10 +27,7 @@ foo false
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.12: 	  let _ = log (succ x.prop)
-//│ ║        	                    ^^^^^^
-//│ ╟── from reference:
-//│ ║  l.12: 	  let _ = log (succ x.prop)
-//│ ╙──      	                    ^
+//│ ╙──      	                    ^^^^^^
 //│ res: error | false
 //│    = false
 //│ output:

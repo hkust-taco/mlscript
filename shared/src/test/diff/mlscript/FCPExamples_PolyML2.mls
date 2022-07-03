@@ -18,10 +18,12 @@ def Nil = Nil {}
 //│ Nil: Nil
 
 def Cons head tail = Cons { head; tail }
-//│ Cons: 'b -> (forall 'c. 'c -> (forall 'b, 'c, 'a. (Cons['a | 'b] with {head: 'b, tail: 'c}
+//│ Cons: 'b -> (forall 'c. 'c -> (forall 'b, 'c, 'head, 'a, 'tail. (Cons['a] with {head: 'head, tail: 'tail}
 //│   where
-//│     'c <: List['a]
-//│     'c <: List['a])))
+//│     'b <: 'head & 'a
+//│     'c <: List['a] & 'tail
+//│     'b <: 'head & 'a
+//│     'c <: List['a] & 'tail)))
 
 // ------------ Type signatures for functions used in the examples ------------
 // (I guess)
@@ -50,28 +52,38 @@ class Collection[a]: { l: List[a] }
   method Mem x = mem x this.l
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
-//│ Defined Collection.Mem: Collection[?] -> anything -> bool
-//│ Defined Collection.Fold: Collection['a] -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd. ('c | 'd
+//│ Defined Collection.Mem: Collection['a] -> (forall 'a. 'a -> (forall 'a. (bool
 //│   where
-//│     'b <: ('c | 'd) -> 'a -> 'd
-//│     'b <: ('c | 'd) -> 'a -> 'd))))
+//│     'a <: 'a
+//│     'a <: 'a
+//│     'a <: 'a)))
+//│ Defined Collection.Fold: Collection['a] -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd. ('d
+//│   where
+//│     'b <: 'd -> 'a -> 'd
+//│     'c <: 'd))))
 
 def coll_mem c x = c.Mem x
-//│ coll_mem: 'a -> 'a -> (forall 'a. (bool
+//│ coll_mem: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. (bool
 //│   where
-//│     'a <: Collection['a]
-//│     'a <: Collection['a]
-//│     'a <: Collection['a]))
+//│     'c <: 'c
+//│     'a <: Collection['c]
+//│     'b <: 'c
+//│     'c <: 'c
+//│     'a <: Collection['c]
+//│     'b <: 'c
+//│     'c <: 'c
+//│     'a <: Collection['c]
+//│     'b <: 'c)))
 
 // typo in the paper? it was `fun x -> fun y -> ...`
 def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
   let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
   (l1, l2)
-//│ simple_and_double: Collection[?] -> (forall 'a, 'b. (Nil | 'b
+//│ simple_and_double: Collection[?] -> (forall 'a, 'b, 'c. ('b
 //│   where
-//│     'a <: (Nil | 'b) -> nothing -> 'b
-//│     'a <: (Nil | 'b) -> nothing -> 'b), forall 'c, 'd. (Nil | 'd
+//│     'a <: 'b -> nothing -> 'b
+//│     'c <: 'b), forall 'd, 'e, 'f. ('e
 //│   where
-//│     'c <: (Nil | 'd) -> nothing -> 'd
-//│     'c <: (Nil | 'd) -> nothing -> 'd),)
+//│     'd <: 'e -> nothing -> 'e
+//│     'f <: 'e),)

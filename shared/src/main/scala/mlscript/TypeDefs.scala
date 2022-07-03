@@ -546,9 +546,12 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                     case pt => pt
                   })
                 },
-              ty =>
+              ty => {
                 // PolymorphicType(thisCtx.lvl,
                 // typeType(ty)(thisCtx.nextLevel, raise, N, targsMap2))
+                
+                implicit val prov: TP = NoProv // TODO
+                
                 thisCtx.nextLevel { newCtx =>
                   PolymorphicType(ctx.lvl, typeType(ty)(newCtx, raise, targsMap2))
                 }
@@ -557,7 +560,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                 // }
                 // ^ Note: we need to go to the next level here,
                 //    which is also done automatically by `typeLetRhs` in the case above
-              ), reverseRigid2)
+              }), reverseRigid2)
             val mthTy = MethodType(bodyTy.level, S((td.thisTv, bodyTy.body)), td2.nme :: Nil, false)(prov)
             if (rhs.isRight || !declared.isDefinedAt(nme.name)) {
               if (top) thisCtx.addMth(S(td.nme.name), nme.name, mthTy)

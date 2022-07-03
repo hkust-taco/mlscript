@@ -19,7 +19,7 @@ foo id
 
 // Notice `f` is passed an arg of locally-quantified type 'a, which is extruded to `anything`:
 bar f = foo (fun x -> let tmp = f x in x)
-//│ bar: (‘a47 -> anything) -> int
+//│ bar: (nothing -> anything) -> int
 //│    = [Function: bar]
 
 
@@ -35,7 +35,7 @@ def foo: (forall 'a. 'a -> 'b) -> 'b
 
 // Notice `id` returns its arg of locally-quantified type 'a, which is extruded to `anything`:
 foo id
-//│ res: ‘a66
+//│ res: ‘a
 //│    = <no result>
 //│      foo is not implemented
 

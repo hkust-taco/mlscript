@@ -39,9 +39,7 @@ def id_ = id : Sid -> Sid
 // untype fun x -> ((fun y -> y y) : 'a -> sid)
 fun x -> ((fun y -> y y) : 'a -> Sid)
 fun x_ -> (fun y -> y y)
-//│ res: anything -> (forall 'a. ('a -> Sid
-//│   where
-//│     'a <: 'a -> ‘a -> ‘a))
+//│ res: anything -> (forall 'a. ('a -> ‘a -> ‘a & 'a) -> Sid)
 //│    = [Function: res]
 //│ res: anything -> (forall 'a. 'a -> (forall 'a, 'b. ('b
 //│   where
@@ -63,5 +61,5 @@ def delta = (fun x -> x x) : Sid -> 'b
 
 // untype let (delta:'a -> sid) = fun x -> x x in delta
 let delta = (fun x -> x x) : 'a -> Sid in delta
-//│ res: ('a -> nothing -> anything & 'a) -> Sid
+//│ res: ('a -> ‘a -> ‘a & 'a) -> Sid
 //│    = [Function (anonymous)]

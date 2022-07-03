@@ -581,6 +581,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 //   typer.typeType(rhs)(ctx.nextLevel, raise, extrCtx, vars = tps.collect {
                 //       case L(tp: TypeName) => tp.name -> typer.freshVar(typer.noProv/*FIXME*/, N)(1)
                 //     }.toMap))
+                
+                implicit val prov: typer.TP = typer.NoProv // TODO
+                implicit val r: typer.Raise = raise
+                
                 val ty_sch = ctx.poly { ctx =>
                   typer.typeType(rhs)(ctx, raise, vars = tps.collect {
                       case L(tp: TypeName) => tp.name -> typer.freshVar(typer.noProv/*FIXME*/, N)(1)

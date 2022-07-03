@@ -140,33 +140,6 @@ to_church = to_ch
 //│ int -> ('M -> 'M) -> 'M -> 'M
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.139: 	to_church = to_ch
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘M201` is not an instance of type `'M197`
-//│ ║  l.41: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ║        	                              ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.41: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ╙──      	                              ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.139: 	to_church = to_ch
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘M201` is not an instance of type `'M`
-//│ ║  l.41: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ║        	                              ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.41: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ╙──      	                              ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.139: 	to_church = to_ch
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘M197` is not an instance of type `'M`
-//│ ║  l.41: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ║        	                              ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.41: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ╙──      	                              ^^
 //│          = <no result>
 //│            to_ch, to_church, to_ch, to_church, to_ch and to_church are not implemented
 
@@ -207,11 +180,11 @@ to_church = to_ch
 rec def to_ch n =
   if n == 0 then z
   else s (to_ch (n - 1))
-//│ to_ch: int -> anything -> (forall 'a. 'a -> 'a | (forall 'a. 'a -> 'a))
+//│ to_ch: int -> anything -> (forall 'a. 'a -> 'a)
 //│      = [Function: to_ch4]
 
 to_church = to_ch
-//│ int -> anything -> (forall 'a. 'a -> 'a | (forall 'a. 'a -> 'a))
+//│ int -> anything -> (forall 'a. 'a -> 'a)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│          = [Function: to_ch4]

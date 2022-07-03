@@ -21,10 +21,12 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'c. 'c -> (forall 'b, 'c, 'a. (Cons['a | 'b] with {head: 'b, tail: 'c}
+//│ 'b -> (forall 'c. 'c -> (forall 'b, 'c, 'head, 'a, 'tail. (Cons['a] with {head: 'head, tail: 'tail}
 //│   where
-//│     'c <: List['a]
-//│     'c <: List['a])))
+//│     'b <: 'head & 'a
+//│     'c <: List['a] & 'tail
+//│     'b <: 'head & 'a
+//│     'c <: List['a] & 'tail)))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -72,7 +74,9 @@ def is_empty: forall 'a. List['a] -> bool
 def is_empty l = eq l nil
 //│ is_empty: List[?] -> bool
 //│         = <missing implementation>
-//│ anything -> bool
+//│ 'a -> (forall 'a. (bool
+//│   where
+//│     'a <: 'a))
 //│   <:  is_empty:
 //│ List[?] -> bool
 //│         = [Function: is_empty]
@@ -92,7 +96,10 @@ def Some val = Some { val }
 //│ Defined type alias Option[+a]
 //│ None: None
 //│     = None {}
-//│ Some: 'a -> Some['a]
+//│ Some: 'a -> (forall 'a, 'val. (Some['val]
+//│   where
+//│     'a <: 'val
+//│     'a <: 'val))
 //│     = [Function: Some1]
 
 // let create_hashtbl () = []
@@ -127,7 +134,7 @@ rec def find table key =
 
 :ng
 find(error:List[(int, string)])(unit)
-//│ res: None | Some[string]
+//│ res: None | Some[nothing]
 
 def find_A: forall 'a 'b. List[('a, 'b)] -> 'a -> (None | Some['b])
 //│ find_A: List[(anything, 'b,)] -> anything -> (None | Some['b])
@@ -138,13 +145,20 @@ def find_A table key =
   if is_empty table then None
   else if eq (head table)._1 key then Some (head table)._2
   else find_A (tail table) key
-//│ 'a -> 'a -> (forall 'a, 'c, 'b. (None | Some['c] | Some['b]
+//│ 'a -> (forall 'c. 'c -> (forall 'a, 'c, 'd, 'b, 'val. (None | Some['val] | Some['b]
 //│   where
-//│     'a <: List['a] & List[{_1: 'a}] & List[{_2: 'c}] & List[('a, 'b,)]
-//│     'a <: List['a] & List[{_1: 'a}] & List[{_2: 'c}] & List[('a, 'b,)]
-//│     'a <: List['a] & List[{_1: 'a}] & List[{_2: 'c}] & List[('a, 'b,)]
-//│     'a <: List['a] & List[{_1: 'a}] & List[{_2: 'c}] & List[('a, 'b,)]
-//│     'a <: List['a] & List[{_1: 'a}] & List[{_2: 'c}] & List[('a, 'b,)]))
+//│     'a <: List['d] & List[{_1: 'd}] & List[{_2: 'd}] & List[('d, 'b,)]
+//│     'c <: 'd
+//│     'd <: 'val
+//│     'a <: List['d] & List[{_1: 'd}] & List[{_2: 'd}] & List[('d, 'b,)]
+//│     'c <: 'd
+//│     'd <: 'val
+//│     'a <: List['d] & List[{_1: 'd}] & List[{_2: 'd}] & List[('d, 'b,)]
+//│     'c <: 'd
+//│     'a <: List['d] & List[{_1: 'd}] & List[{_2: 'd}] & List[('d, 'b,)]
+//│     'c <: 'd
+//│     'a <: List['d] & List[{_1: 'd}] & List[{_2: 'd}] & List[('d, 'b,)]
+//│     'c <: 'd)))
 //│   <:  find_A:
 //│ List[(anything, 'b,)] -> anything -> (None | Some['b])
 //│       = <no result>
@@ -178,8 +192,8 @@ def succ_ n = fun f -> fun x -> f (n f x)
 //│     = [Function: succ]
 //│ succ_: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
-//│     'b <: 'd -> 'e
-//│     'a <: 'b -> 'c -> 'd))))
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e))))
 //│      = [Function: succ_]
 
 // let add (n:Int) (m:Int) = n succ m
@@ -199,8 +213,8 @@ def add_ n m = n succ_ m
 //│   where
 //│     'a <: (forall 'd. 'd -> (forall 'e. 'e -> (forall 'f. 'f -> (forall 'd, 'e, 'f, 'g, 'h. ('h
 //│   where
-//│     'e <: 'g -> 'h
-//│     'd <: 'e -> 'f -> 'g))))) -> 'b -> 'c)))
+//│     'd <: 'e -> 'f -> 'g
+//│     'e <: 'g -> 'h))))) -> 'b -> 'c)))
 //│     = [Function: add_]
 
 // let printInt (n:Int) = print (n (fun x -> x+1) 0)
@@ -265,10 +279,7 @@ a = add (nfind table "one")
 //│  = [Function (anonymous)]
 
 b = (nfind table "two")
-//│ b: ('a & 'b) -> (forall 'c, 'd. ('c & 'd) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('c | 'f
-//│   where
-//│     'a <: 'd -> 'e & 'e -> 'f
-//│     'b <: 'd -> 'f)))
+//│ b: anything -> (forall 'a. 'a -> 'a)
 //│  = [Function (anonymous)]
 
 // * Note: this one requires `:DistributeForalls`

@@ -141,16 +141,12 @@ example id
 
 // FIXME: Rigid variable extrusion here! We should clean extr contexts of local rigids before returning them....
 def example f = ((0, f) : forall 'a. (0, 'a))
-//│ example: 'a -> (forall 'a. ((0, nothing,)
-//│   where
-//│     'a <: ‘a))
+//│ example: ‘a -> (0, nothing,)
 //│        = [Function: example1]
 
 // FIXME same
 def example f = ((0, f) : forall 'a. (0, 'a -> 'a))
-//│ example: 'b -> (forall 'a. ((0, 'a -> 'a,)
-//│   where
-//│     'b <: ‘a -> ‘a))
+//│ example: (‘a -> ‘a) -> (forall 'a. (0, 'a -> 'a,))
 //│        = [Function: example2]
 
 
@@ -178,25 +174,25 @@ id_ty = id
 //│   <:  id_ty:
 //│ 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.172: 	id_ty = id
+//│ ║  l.168: 	id_ty = id
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `‘a` is not a function
-//│ ║  l.158: 	def id_ty: forall 'a. 'a -> 'a
+//│ ║  l.154: 	def id_ty: forall 'a. 'a -> 'a
 //│ ║         	                  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.163: 	rec def id x = let tmp = id id x in x
+//│ ║  l.159: 	rec def id x = let tmp = id id x in x
 //│ ║         	                         ^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.163: 	rec def id x = let tmp = id id x in x
+//│ ║  l.159: 	rec def id x = let tmp = id id x in x
 //│ ╙──       	                                    ^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.172: 	id_ty = id
+//│ ║  l.168: 	id_ty = id
 //│ ║         	^^^^^^^^^^
 //│ ╟── function of type `?a -> ?a` is not an instance of type `'a`
-//│ ║  l.163: 	rec def id x = let tmp = id id x in x
+//│ ║  l.159: 	rec def id x = let tmp = id id x in x
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.158: 	def id_ty: forall 'a. 'a -> 'a
+//│ ║  l.154: 	def id_ty: forall 'a. 'a -> 'a
 //│ ╙──       	                  ^^
 //│      = [Function: id1]
 

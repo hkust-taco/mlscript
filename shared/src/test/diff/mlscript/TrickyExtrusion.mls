@@ -27,14 +27,14 @@ test f = (f 0, f True)
 test f =
   let r x = f x
   in (r 0, r True)
-//│ test: ((0 | true) -> 'a) -> ('a, 'a,)
+//│ test: (nothing -> anything) -> (nothing, nothing,)
 //│     = [Function: test1]
 
 // Same example, a little elaborated
 test f =
   let r = fun x -> fun g -> (g x, f x)
   in (r 0 inc, r True not)
-//│ test: ((0 | true) -> 'a) -> ((int, 'a,), (bool, 'a,),)
+//│ test: (nothing -> anything) -> ((int, nothing,), (bool, nothing,),)
 //│     = <no result>
 //│       inc is not implemented
 
@@ -78,5 +78,5 @@ not (test id)._1 + 1
 rec def test f =
   let r x = f x
   in (r 0, r True)
-//│ test: (true -> 'a & 0 -> 'b) -> ('b, 'a,)
+//│ test: (true -> 'a & 0 -> 'b) -> (forall 'b. 'b, forall 'a. 'a,)
 //│     = [Function: test3]
