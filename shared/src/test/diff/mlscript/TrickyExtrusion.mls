@@ -44,7 +44,7 @@ test f =
 test f =
   let r x = f x
   in (r 0, r True)
-//│ test: 'a -> (forall 'a, 'b. ('b
+//│ test: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: 0 -> 'b), forall 'a, 'c. ('c
 //│   where
@@ -78,5 +78,5 @@ not (test id)._1 + 1
 rec def test f =
   let r x = f x
   in (r 0, r True)
-//│ test: (true -> 'a & 0 -> 'b) -> (forall 'b. 'b, forall 'a. 'a,)
+//│ test: (nothing -> anything & true -> anything & 0 -> anything) -> (nothing, nothing,)
 //│     = [Function: test3]

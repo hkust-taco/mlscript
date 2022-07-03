@@ -6,7 +6,7 @@ def s n = fun f -> fun x -> f (n f x)
 // def s n = fun f -> fun x -> (n f x)
 // def s n = fun f -> n f
 // def s n = n
-//│ s: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ s: (nothing -> nothing -> 'a & 'a) -> (forall 'b. (nothing -> 'a & 'b) -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
 //│     'b <: 'd -> 'e))))
@@ -27,49 +27,67 @@ type ChI = (forall 'M. ('M -> 'M) -> ('M -> 'M))
 sz = s zero
 //│ sz: forall 'a, 'b. 'a
 //│   where
-//│     'a :> forall 'c. 'c -> (forall 'd. 'd -> ('e
+//│     'a :> forall 'c, 'd, 'e, 'f, 'g. 'c -> (forall 'h. 'h -> ('i
 //│   where
-//│     'b <: 'c -> 'f
-//│     'c <: 'g -> 'e))
-//│     'f <: 'd -> 'g
+//│     'b <: 'c -> 'j
+//│     'c <: 'k -> 'i))
+//│     'j <: 'h -> 'k
+//│     'c <: 'f -> 'g & 'd -> 'e
 //│   = <no result>
 //│     zero is not implemented
 
 // Note: the error is delayed...
 // :e // due to tapping
 sz1 = sz 1
-//│ sz1: 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('e
-//│   where
-//│     'b <: 'c -> 'a -> 'd
-//│     'c <: 'd -> 'e))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.41: 	sz1 = sz 1
+//│ ║        	      ^^^^
+//│ ╟── integer literal of type `1` is not a function
+//│ ║  l.41: 	sz1 = sz 1
+//│ ║        	         ^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.5: 	def s n = fun f -> fun x -> f (n f x)
+//│ ╙──     	                            ^^^^^^^^^
+//│ sz1: error
 //│    = <no result>
 //│      sz and zero are not implemented
 
 // :e // FIXME? succeeds with genLamBodies
 sz1 2
-//│ res: 'a
-//│   where
-//│     'b <: 'c -> 2 -> 'd
-//│     'c <: 'd -> 'a
+//│ res: error
 //│    = <no result>
 //│      sz1, sz and zero are not implemented
 
 // :e // due to tapping
 sz true
-//│ res: 'a -> (forall 'a, 'b, 'c. ('c
-//│   where
-//│     'd <: 'e -> 'a -> 'b
-//│     'e <: 'b -> 'c))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.62: 	sz true
+//│ ║        	^^^^^^^
+//│ ╟── reference of type `true` is not a function
+//│ ║  l.62: 	sz true
+//│ ║        	   ^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.5: 	def s n = fun f -> fun x -> f (n f x)
+//│ ╙──     	                            ^^^^^^^^^
+//│ res: error
 //│    = <no result>
 //│      sz and zero are not implemented
 
 sz: ChI
-//│ res: ChI
-//│    = <no result>
-//│      sz and zero are not implemented
+//│ /!!!\ Uncaught error: mlscript.TypeError: Type mismatch in expression:
+//│ 	at: mlscript.TypeError$.apply(Diagnostic.scala:14)
+//│ 	at: mlscript.ConstraintSolver.reportError$1(ConstraintSolver.scala:881)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:748)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
 
 s zero
-//│ res: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('d
+//│ res: (nothing -> anything & 'a) -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('d
 //│   where
 //│     'e <: 'a -> 'b -> 'c
 //│     'a <: 'c -> 'd)))
@@ -83,16 +101,32 @@ res: ChI
 //│    = [Function: s]
 
 let tmp = s zero in tmp: ChI
-//│ res: ChI
-//│    = <no result>
-//│      zero is not implemented
+//│ /!!!\ Uncaught error: mlscript.TypeError: Type mismatch in expression:
+//│ 	at: mlscript.TypeError$.apply(Diagnostic.scala:14)
+//│ 	at: mlscript.ConstraintSolver.reportError$1(ConstraintSolver.scala:881)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:748)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
 
 // FIXedME:
 // :d
 s zero : ChI
-//│ res: ChI
-//│    = <no result>
-//│      zero is not implemented
+//│ /!!!\ Uncaught error: mlscript.TypeError: Type mismatch in expression:
+//│ 	at: mlscript.TypeError$.apply(Diagnostic.scala:14)
+//│ 	at: mlscript.ConstraintSolver.reportError$1(ConstraintSolver.scala:881)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:748)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
 
 
 
@@ -107,16 +141,16 @@ def example f = (f: forall 'a. 'a -> 'a)
 :e
 example 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.108: 	example 1
+//│ ║  l.142: 	example 1
 //│ ║         	^^^^^^^^^
 //│ ╟── integer literal of type `1` is not a function
-//│ ║  l.108: 	example 1
+//│ ║  l.142: 	example 1
 //│ ║         	        ^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.103: 	def example f = (f: forall 'a. 'a -> 'a)
+//│ ║  l.137: 	def example f = (f: forall 'a. 'a -> 'a)
 //│ ║         	                               ^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.103: 	def example f = (f: forall 'a. 'a -> 'a)
+//│ ║  l.137: 	def example f = (f: forall 'a. 'a -> 'a)
 //│ ╙──       	                 ^
 //│ res: 'a -> 'a | error
 //│    = 1
@@ -124,10 +158,10 @@ example 1
 :e
 example succ
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.125: 	example succ
+//│ ║  l.159: 	example succ
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type `‘a` is not an instance of type `int`
-//│ ║  l.103: 	def example f = (f: forall 'a. 'a -> 'a)
+//│ ║  l.137: 	def example f = (f: forall 'a. 'a -> 'a)
 //│ ╙──       	                           ^^
 //│ res: 'a -> 'a | error
 //│    = [Function: succ]
@@ -174,25 +208,25 @@ id_ty = id
 //│   <:  id_ty:
 //│ 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.168: 	id_ty = id
+//│ ║  l.202: 	id_ty = id
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `‘a` is not a function
-//│ ║  l.154: 	def id_ty: forall 'a. 'a -> 'a
+//│ ║  l.188: 	def id_ty: forall 'a. 'a -> 'a
 //│ ║         	                  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.159: 	rec def id x = let tmp = id id x in x
+//│ ║  l.193: 	rec def id x = let tmp = id id x in x
 //│ ║         	                         ^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.159: 	rec def id x = let tmp = id id x in x
+//│ ║  l.193: 	rec def id x = let tmp = id id x in x
 //│ ╙──       	                                    ^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.168: 	id_ty = id
+//│ ║  l.202: 	id_ty = id
 //│ ║         	^^^^^^^^^^
 //│ ╟── function of type `?a -> ?a` is not an instance of type `'a`
-//│ ║  l.159: 	rec def id x = let tmp = id id x in x
+//│ ║  l.193: 	rec def id x = let tmp = id id x in x
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.154: 	def id_ty: forall 'a. 'a -> 'a
+//│ ║  l.188: 	def id_ty: forall 'a. 'a -> 'a
 //│ ╙──       	                  ^^
 //│      = [Function: id1]
 

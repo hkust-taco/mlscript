@@ -112,7 +112,7 @@ def cons: ('a, {x:'a}) -> {x:'a}
 //│     = <missing implementation>
 
 f (x, xs) = cons (x, xs)
-//│ f: ('b, 'c,) -> (forall 'b, 'c, 'a. ({x: 'a}
+//│ f: ('b, {x: 'c} & 'c,) -> (forall 'b, 'c, 'a. ({x: 'a}
 //│   where
 //│     'b <: 'a
 //│     'c <: {x: 'a}))
@@ -121,9 +121,7 @@ f (x, xs) = cons (x, xs)
 
 // :d
 g f
-//│ res: anything
-//│    = <no result>
-//│      g is not implemented
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 
 

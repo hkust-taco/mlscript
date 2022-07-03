@@ -18,7 +18,7 @@ def Nil = Nil {}
 //│ Nil: Nil
 
 def Cons head tail = Cons { head; tail }
-//│ Cons: 'b -> (forall 'c. 'c -> (forall 'b, 'c, 'head, 'a, 'tail. (Cons['a] with {head: 'head, tail: 'tail}
+//│ Cons: 'b -> (forall 'c. (List['c] & 'c) -> (forall 'b, 'c, 'head, 'a, 'tail. (Cons['a] with {head: 'head, tail: 'tail}
 //│   where
 //│     'b <: 'head & 'a
 //│     'c <: List['a] & 'tail
@@ -52,38 +52,42 @@ class Collection[a]: { l: List[a] }
   method Mem x = mem x this.l
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
-//│ Defined Collection.Mem: Collection['a] -> (forall 'a. 'a -> (forall 'a. (bool
+//│ Defined Collection.Mem: Collection[?] -> anything -> (forall 'a. (bool
 //│   where
-//│     'a <: 'a
-//│     'a <: 'a
-//│     'a <: 'a)))
-//│ Defined Collection.Fold: Collection['a] -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd. ('d
+//│     'a <: anything
+//│     'a <: anything
+//│     'a <: anything))
+//│ Defined Collection.Fold: Collection['a] -> (forall 'b. ('b -> 'a -> 'b) -> anything -> (forall 'a, 'c, 'd, 'e. ('d
 //│   where
-//│     'b <: 'd -> 'a -> 'd
-//│     'c <: 'd))))
+//│     'c <: 'd -> 'a -> 'd
+//│     'e <: 'd)))
 
 def coll_mem c x = c.Mem x
-//│ coll_mem: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. (bool
+//│ coll_mem: (Collection['a] & 'b) -> (forall 'a. 'a -> (forall 'a, 'b, 'c. (bool
 //│   where
-//│     'c <: 'c
-//│     'a <: Collection['c]
-//│     'b <: 'c
-//│     'c <: 'c
-//│     'a <: Collection['c]
-//│     'b <: 'c
-//│     'c <: 'c
-//│     'a <: Collection['c]
-//│     'b <: 'c)))
+//│     'c <: 'a
+//│     'a <: 'a
+//│     'b <: Collection['a]
+//│     'c <: 'a
+//│     'a <: 'a
+//│     'b <: Collection['a]
+//│     'c <: 'a
+//│     'a <: 'a
+//│     'b <: Collection['a])))
 
 // typo in the paper? it was `fun x -> fun y -> ...`
 def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
   let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
   (l1, l2)
-//│ simple_and_double: Collection[?] -> (forall 'a, 'b, 'c. ('b
-//│   where
-//│     'a <: 'b -> nothing -> 'b
-//│     'c <: 'b), forall 'd, 'e, 'f. ('e
-//│   where
-//│     'd <: 'e -> nothing -> 'e
-//│     'f <: 'e),)
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
+//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
+//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:675)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)

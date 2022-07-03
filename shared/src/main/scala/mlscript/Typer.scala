@@ -98,7 +98,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           ConstrainedType.mk(newCtx.extrCtx.iterator.mapValues(_.toList).toList, innerTy)
           // innerTy
         )
-        newCtx.extrCtx.clear()
+        // newCtx.extrCtx.clear()
         poly
       }
     }
@@ -645,7 +645,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val prov = tp(if (verboseConstraintProvenanceHints) v.toLoc else N, "variable")
         // Note: only look at ctx.env, and not the outer ones!
         ctx.env.get(nme).collect { case ts: TypeScheme => ts }
-          .getOrElse(new TypeVariable(lvl, Nil, Nil, N)(prov).tap(ctx += nme -> _))
+          .getOrElse(new TypeVariable(lvl, Nil, Nil, N, Option.when(dbg)(nme))(prov).tap(ctx += nme -> _))
       case v @ ValidVar(name) =>
         val ty = ctx.get(name).fold(err("identifier not found: " + name, term.toLoc): TypeScheme) {
           case AbstractConstructor(absMths, traitWithMths) =>

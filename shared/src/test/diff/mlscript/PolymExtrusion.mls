@@ -35,7 +35,7 @@ def foo: (forall 'a. 'a -> 'b) -> 'b
 
 // Notice `id` returns its arg of locally-quantified type 'a, which is extruded to `anything`:
 foo id
-//│ res: ‘a
+//│ res: ‘a65
 //│    = <no result>
 //│      foo is not implemented
 

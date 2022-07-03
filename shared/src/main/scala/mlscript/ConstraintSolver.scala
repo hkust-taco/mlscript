@@ -332,20 +332,27 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         }
       }
     
-    def recThrough(lhs0: SimpleType, rhs: SimpleType, tv: TV)
+    /* 
+    def recThrough(lhs0: SimpleType, rhs0: SimpleType, tv: TV)
           (implicit raise: Raise, cctx: ConCtx, ctx: Ctx, shadows: Shadows): Unit = {
       // val lhs = extrude(lhs0, rhs.level, true, MaxLevel)
       val lhs2 = if (lhs.level <= tv.level) lhs0 else {
         implicit val flexifyRigids: Bool = false
-        val lhs = extrude(lhs0, rhs.level, true, MaxLevel)
+        val lhs = extrude(lhs0, tv.level, true, MaxLevel)
         // println(s"EXTR LHS  $lhs0  ~>  $lhs  to ${rhs.level}")
         println(s"EXTR LHS  ~>  $lhs  to ${tv.level}")
         println(s" where ${lhs.showBounds}")
         // println(s"   and ${lhs0.showBounds}")
         lhs
       }
+      val rhs = PolymorphicType.mk(lhs.level, {
+        implicit val flexifyRigids: Bool = true
+        extrude(rhs0, tv.level, false, MaxLevel)
+        // rhs0
+      })
       rec(lhs2, rhs, true)
     }
+    */
     
     def rec(lhs: SimpleType, rhs: SimpleType, sameLevel: Bool)
           // (implicit raise: Raise, cctx: ConCtx): Unit = {
@@ -442,39 +449,78 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (lhs: TypeVariable, rhs) =>
             val tv = lhs
             // if (rhs.level > lhs.level && rhs.level > lvl) {
-            if (rhs.level > lhs.level && rhs.level <= lvl) {
-            // if (rhs.level > lhs.level) {
-              println(s"STASHING $tv bound in extr ctx")
-              // println(rhs.level, lvl)
-              val buf = ctx.extrCtx.getOrElseUpdate(tv, Buffer.empty)
-              buf += false -> rhs
-              cache -= lhs -> rhs
-              ()
+            if (rhs.level > lhs.level) {
+            // if (rhs.level > lhs.level && rhs.level <= lvl) {
+              println(s"wrong level: ${rhs.level}")
+              if (rhs.level <= lvl) {
+                println(s"STASHING $tv bound in extr ctx")
+                val buf = ctx.extrCtx.getOrElseUpdate(tv, Buffer.empty)
+                buf += false -> rhs
+                cache -= lhs -> rhs
+                ()
+              } else {
+                // ???
+                // val rhs2 = PolymorphicType.mk(lhs.level, {
+                //   implicit val flexifyRigids: Bool = true
+                //   // extrude(rhs, lhs.level, false, MaxLevel)
+                //   rhs
+                // })
+                // val rhs2 = PolymorphicType.mk(lhs.level, {
+                //   // implicit val flexifyRigids: Bool = false
+                //   // extrude(rhs, lhs.level, false, MaxLevel)
+                //   rhs
+                // })
+                // assert()
+                implicit val state: MutMap[TV, ST] = MutMap.empty
+                implicit val lvl: Level = tv.level
+                val rhs2 = freshenAbove(tv.level, rhs)
+                // val rhs2 = rhs
+                val sh = shadows
+                
+                {
+                implicit val shadows: Shadows = sh - (lhs.shadow -> rhs.shadow)
+                rec(lhs, rhs2, true)
+                }
+                // ???
+              }
             } else {
             println(s"NEW $lhs UB (${rhs.level})")
             val newBound = (cctx._1 ::: cctx._2.reverse).foldRight(rhs)((c, ty) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             lhs.upperBounds ::= newBound // update the bound
-            lhs.lowerBounds.foreach(recThrough(_, rhs, lhs)) // propagate from the bound
+            // lhs.lowerBounds.foreach(recThrough(_, rhs, lhs)) // propagate from the bound
+            lhs.lowerBounds.foreach(rec(_, rhs, true)) // propagate from the bound
             }
             
           case (lhs, rhs: TypeVariable) =>
             val tv = rhs
             // if (lhs.level > rhs.level && lhs.level > lvl) {
-            if (lhs.level > rhs.level && lhs.level <= lvl) {
+            if (lhs.level > rhs.level) {
+              println(s"wrong level: ${lhs.level}")
             // if (lhs.level > rhs.level) {
-              println(s"STASHING $tv bound in extr ctx")
-              val buf = ctx.extrCtx.getOrElseUpdate(tv, Buffer.empty)
-              buf += true -> lhs
-              cache -= lhs -> rhs
-              ()
+              if (lhs.level <= lvl) {
+                println(s"STASHING $tv bound in extr ctx")
+                val buf = ctx.extrCtx.getOrElseUpdate(tv, Buffer.empty)
+                buf += true -> lhs
+                cache -= lhs -> rhs
+                ()
+              } else {
+                // ???
+                // val lhs = extrude(lhs0, rhs.level, true, MaxLevel)
+                val lhs2 = { // TODO make into existential...
+                  implicit val flexifyRigids: Bool = false
+                  extrude(lhs, rhs.level, true, MaxLevel)
+                }
+                rec(lhs2, rhs, true)
+              }
             } else {
             println(s"NEW $rhs LB (${lhs.level})")
             // println(lhs, rhs, lhs.level, rhs.level)
             val newBound = (cctx._1 ::: cctx._2.reverse).foldLeft(lhs)((ty, c) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             rhs.lowerBounds ::= newBound // update the bound
-            rhs.upperBounds.foreach(recThrough(lhs, _, rhs)) // propagate from the bound
+            // rhs.upperBounds.foreach(recThrough(lhs, _, rhs)) // propagate from the bound
+            rhs.upperBounds.foreach(rec(lhs, _, true)) // propagate from the bound
             }
             //  */
             
@@ -529,6 +575,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             
             // /* 
           case (_: TypeVariable, rhs0) =>
+            ???
             // val rhs = extrude(rhs0, lhs.level, false, MaxLevel)
             // val rhs = PolymorphicType.mk(lhs.level, {
             //   implicit val flexifyRigids: Bool = true
@@ -545,6 +592,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             println(s"   and ${rhs0.showBounds}")
             rec(lhs, rhs, true)
           case (lhs0, _: TypeVariable) =>
+            ???
             // val lhs = extrude(lhs0, rhs.level, true, MaxLevel)
             val lhs = { // TODO make into existential...
               implicit val flexifyRigids: Bool = false
@@ -643,11 +691,14 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               val res = rec(lhs, rigid, true)
               // assert(ctx.extrCtx.isEmpty) // TODO
               val ec = ctx.extrCtx
+              // trace(s"UNSTASHING...") {
               trace(s"UNSTASHING...") {
                 implicit val ctx: Ctx = oldCtx
-                ec.foreach { case (tv, bs) => bs.foreach {
-                  case (true, b) => rec(b, tv, false)
-                  case (false, b) => rec(tv, b, false)
+                ec.foreach { case (tv, bs) => 
+                  println(s"where($tv) ${tv.showBounds}")
+                  bs.foreach {
+                  case (true, b) => println(s"UNSTASH ${b} <: $tv where ${b.showBounds}"); rec(b, tv, false)
+                  case (false, b) => println(s"UNSTASH ${tv} <: $b where ${b.showBounds}"); rec(tv, b, false)
                 }}
                 ec.clear()
               }()
@@ -975,7 +1026,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   /** Freshens all the type variables whose level is comprised in `(above, below]`
     *   or which have bounds and whose level is greater than `above`. */
   def freshenAbove(above: Int, ty: SimpleType, rigidify: Bool = false, below: Int = MaxLevel)
-        (implicit lvl: Int, freshened: MutMap[TV, ST]): SimpleType = {
+        (implicit lvl: Int, freshened: MutMap[TV, ST],
+        ctx:Ctx=Ctx.empty,//FIXME
+        raise:Raise=throw _,
+        ): SimpleType = {
     def freshenImpl(ty: SimpleType, below: Int): SimpleType =
     // (trace(s"FRESHEN $ty || $above .. $below  ${ty.level} ${ty.level <= above}")
     {
@@ -1052,6 +1106,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case e @ ExtrType(_) => e
       case p @ ProvType(und) => ProvType(freshen(und))(p.prov)
       case p @ ProxyType(und) => freshen(und)
+      case TraitTag(level, id) if level > above && level <= below => TraitTag(lvl, id)(ty.prov)
       case _: ClassTag | _: TraitTag => ty
       case w @ Without(b, ns) => Without(freshen(b), ns)(w.prov)
       case tr @ TypeRef(d, ts) => TypeRef(d, ts.map(freshen(_)))(tr.prov)
@@ -1060,7 +1115,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         //  to avoid having to copy some type variables needlessly
         freshenImpl(bod, below = lvl))
       case ct @ ConstrainedType(cs, bod) =>
-        ConstrainedType(cs.mapKeys(freshen(_).asInstanceOf[TV]).mapValues(_.mapValues(freshen)), freshen(bod))
+        val cs2 = cs.mapKeys(freshen(_).asInstanceOf[TV]).mapValues(_.mapValues(freshen))
+        trace(s"COPYING CONSTRAINTS") {
+          implicit val p: TP = NoProv
+          cs2.foreach { case (tv, bs) => bs.foreach {
+            case (true, b) => constrain(b, tv)
+            case (false, b) => constrain(tv, b)
+          }}
+        }()
+        ConstrainedType(cs2, freshen(bod))
       case o @ Overload(alts) => Overload(alts.map(freshen(_).asInstanceOf[FunctionType]))(o.prov)
     }}
     // (r => s"=> $r"))

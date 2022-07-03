@@ -17,7 +17,7 @@ def k_ = fun x -> fun y -> y
 //│   where
 //│     'a <: 'a -> 'b))
 //│      = [Function: delta]
-//│ delta_: 'a -> (forall 'a, 'b. ('b
+//│ delta_: ('a -> anything & 'a) -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: 'a -> 'b))
 //│       = [Function: delta_]
@@ -39,9 +39,9 @@ def id_ = id : Sid -> Sid
 // untype fun x -> ((fun y -> y y) : 'a -> sid)
 fun x -> ((fun y -> y y) : 'a -> Sid)
 fun x_ -> (fun y -> y y)
-//│ res: anything -> (forall 'a. ('a -> ‘a -> ‘a & 'a) -> Sid)
+//│ res: anything -> (forall 'a. ('a -> anything & 'a -> ‘a -> ‘a & 'a) -> Sid)
 //│    = [Function: res]
-//│ res: anything -> (forall 'a. 'a -> (forall 'a, 'b. ('b
+//│ res: anything -> (forall 'a. ('a -> anything & 'a) -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: 'a -> 'b)))
 //│    = [Function: res]
@@ -49,8 +49,17 @@ fun x_ -> (fun y -> y y)
 // :e // FIXME? failed with genLamBodies but works with quantif extrus
 // let (delta:sid -> sid) = fun x -> x x
 def delta = (fun x -> x x) : Sid -> Sid
-//│ delta: Sid -> Sid
-//│      = [Function: delta1]
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: Sid
+//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
+//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:674)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 
 // let (delta:sid -> 'b) = fun x -> x x
 def delta = (fun x -> x x) : Sid -> 'b
@@ -61,5 +70,5 @@ def delta = (fun x -> x x) : Sid -> 'b
 
 // untype let (delta:'a -> sid) = fun x -> x x in delta
 let delta = (fun x -> x x) : 'a -> Sid in delta
-//│ res: ('a -> ‘a -> ‘a & 'a) -> Sid
+//│ res: ('a -> anything & 'a -> ‘a -> ‘a & 'a) -> Sid
 //│    = [Function (anonymous)]

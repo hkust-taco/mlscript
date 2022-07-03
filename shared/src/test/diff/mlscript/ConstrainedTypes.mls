@@ -3,14 +3,23 @@
 
 
 def f n = n 0
-//│ f: 'a -> (forall 'a, 'b. ('b
+//│ f: (0 -> 'a & 'a) -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: 0 -> 'b))
 //│  = [Function: f]
 
 :e
 f {}
-//│ res: 'a
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.12: 	f {}
+//│ ║        	^^^^
+//│ ╟── record literal of type `anything` is not a function
+//│ ║  l.12: 	f {}
+//│ ║        	  ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.5: 	def f n = n 0
+//│ ╙──     	          ^^^
+//│ res: error | 'a
 //│   where
 //│     'b <: 0 -> 'a
 //│ Runtime error:
@@ -19,38 +28,67 @@ f {}
 :e
 f {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.20: 	f {} {}
-//│ ║        	^^^^^^^
+//│ ║  l.29: 	f {} {}
+//│ ║        	^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.20: 	f {} {}
+//│ ║  l.29: 	f {} {}
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.5: 	def f n = n 0
 //│ ╙──     	          ^^^
-//│ res: error
-//│ Runtime error:
-//│   TypeError: n is not a function
+//│ /!!!\ Uncaught error: mlscript.TypeError: Type mismatch in expression:
+//│ 	at: mlscript.TypeError$.apply(Diagnostic.scala:14)
+//│ 	at: mlscript.ConstraintSolver.reportError$1(ConstraintSolver.scala:881)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:748)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
 
 
 def f n m = n 0
-//│ f: 'a -> 'a -> (forall 'a, 'b. ('b
+//│ f: (0 -> 'a & 'a) -> 'a -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: 0 -> 'b))
 //│  = [Function: f1]
 
 :e // due to tapping
 f {}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.59: 	f {}
+//│ ║        	^^^^
+//│ ╟── record literal of type `anything` is not a function
+//│ ║  l.59: 	f {}
+//│ ║        	  ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.52: 	def f n m = n 0
+//│ ╙──      	            ^^^
 //│ res: anything -> (forall 'a. ('a
 //│   where
-//│     'b <: 0 -> 'a))
+//│     'b <: 0 -> 'a)) | error
 //│    = [Function (anonymous)]
 
 :e
 f {} {}
-//│ res: 'a
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.75: 	f {} {}
+//│ ║        	^^^^
+//│ ╟── record literal of type `anything` is not a function
+//│ ║  l.75: 	f {} {}
+//│ ║        	  ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.52: 	def f n m = n 0
+//│ ╙──      	            ^^^
+//│ res: error | 'a
 //│   where
 //│     'b <: 0 -> 'a
 //│ Runtime error:
 //│   TypeError: n is not a function
+
+
+
 
 

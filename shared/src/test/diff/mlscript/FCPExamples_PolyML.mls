@@ -10,7 +10,7 @@ g' = fun f -> f f
 //│   where
 //│     'b <: 'b -> 'c))
 //│  = [Function: g]
-//│ g': 'a -> (forall 'a, 'b. ('b
+//│ g': ('a -> anything & 'a) -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: 'a -> 'b))
 //│   = [Function: g]
@@ -43,17 +43,21 @@ g' = fun f -> f f
 
 fun f -> f (g f)
 fun f -> f (g' f)
-//│ res: (forall 'a. 'a -> 'a & 'b) -> (forall 'b. ('c
+//│ res: ((forall 'b, 'c. ('c
 //│   where
-//│     'b <: (forall 'd, 'e. ('e
+//│     'b <: 'b -> 'c)) -> 'd & 'a -> 'a & 'd) -> (forall 'd. ('e
 //│   where
-//│     'd <: 'd -> 'e)) -> 'c))
+//│     'd <: (forall 'f, 'g. ('g
+//│   where
+//│     'f <: 'f -> 'g)) -> 'e))
 //│    = [Function: res]
-//│ res: 'a -> (forall 'a, 'b. ('c
+//│ res: ((forall 'a, 'b. ('b
 //│   where
-//│     'a <: 'b & (forall 'b, 'd. ('d
+//│     'a <: 'a -> 'b)) -> anything & 'c -> anything & 'c) -> (forall 'c, 'd. ('e
 //│   where
-//│     'b <: 'b -> 'd)) -> 'c))
+//│     'c <: 'd -> anything & 'd & (forall 'd, 'f. ('f
+//│   where
+//│     'd <: 'd -> 'f)) -> 'e))
 //│    = [Function: res]
 
 // ============ Sec 4.1 ============
@@ -113,10 +117,10 @@ rec def fl f x l = match_list l x (fun head -> fun tail -> fl f (f x head) tail)
 //│ fl: ('b -> 'a -> 'b) -> 'b -> List['a] -> 'b
 
 rec def fl2 f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
-//│ fl2: 'c -> (forall 'd, 'e. ('d & 'e) -> (forall 'f. List['f] -> (forall 'c, 'd, 'e, 'f, 'a, 'b, 'g. ('a | 'e
+//│ fl2: ('a -> nothing -> 'a & nothing -> nothing -> 'c & 'a0 -> nothing -> 'a0 & 'a1 -> nothing -> 'a1 & 'a2 -> nothing -> 'a2 & 'a3 -> nothing -> 'a3 & 'a4 -> nothing -> 'a4 & 'a5 -> nothing -> 'a5 & 'a6 -> nothing -> 'a6 & 'a7 -> nothing -> 'a7 & 'a8 -> nothing -> 'a8 & 'a9 -> nothing -> 'a9 & 'a10 -> nothing -> 'a10 & 'c) -> (forall 'd. 'd -> List['c] -> (forall 'c, 'd, 'a11, 'b, 'e. ('a11
 //│   where
-//│     'c <: 'a -> 'b -> 'a & 'd -> 'f -> 'a
-//│     'g <: List['b]))))
+//│     'c <: 'a11 -> 'b -> 'a11 & 'd -> nothing -> 'a11
+//│     'e <: List['b])))
 
 :RecursiveTypes // needed for this recursive def
 def fold_left = fl
@@ -126,12 +130,23 @@ def fold_left = fl
 :NoRecursiveTypes
 
 def fold_left = fl2
-//│ 'c -> (forall 'd, 'e. ('d & 'e) -> (forall 'f. List['f] -> (forall 'c, 'd, 'e, 'f, 'a, 'b, 'g. ('a | 'e
+//│ ('a -> nothing -> 'a & nothing -> nothing -> 'c & 'a0 -> nothing -> 'a0 & 'a1 -> nothing -> 'a1 & 'a2 -> nothing -> 'a2 & 'a3 -> nothing -> 'a3 & 'a4 -> nothing -> 'a4 & 'a5 -> nothing -> 'a5 & 'a6 -> nothing -> 'a6 & 'a7 -> nothing -> 'a7 & 'a8 -> nothing -> 'a8 & 'a9 -> nothing -> 'a9 & 'a10 -> nothing -> 'a10 & 'c) -> (forall 'd. 'd -> List['c] -> (forall 'c, 'd, 'a11, 'b, 'e. ('a11
 //│   where
-//│     'c <: 'a -> 'b -> 'a & 'd -> 'f -> 'a
-//│     'g <: List['b]))))
+//│     'c <: 'a11 -> 'b -> 'a11 & 'd -> nothing -> 'a11
+//│     'e <: List['b])))
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
+//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
+//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:659)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
 
 // :d
 // rec def fold_left f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
@@ -142,42 +157,43 @@ class Collection[a]: { l: List[a] }
   method Mem x = mem x this.l
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
-//│ Defined Collection.Mem: Collection['a] -> (forall 'a. 'a -> (forall 'a. (bool
+//│ Defined Collection.Mem: Collection[?] -> anything -> (forall 'a. (bool
 //│   where
-//│     'a <: 'a)))
-//│ Defined Collection.Fold: Collection['a] -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'a0. ('a0
+//│     'a <: anything))
+//│ Defined Collection.Fold: Collection['a] -> (forall 'a0. ('a0 -> 'a -> 'a0) -> anything -> (forall 'a, 'b, 'a1, 'c. ('a1
 //│   where
-//│     'b <: 'a0 -> 'a -> 'a0
-//│     'c <: 'a0))))
+//│     'b <: 'a1 -> 'a -> 'a1
+//│     'c <: 'a1)))
 
 def coll_mem c x = c.Mem x
-//│ coll_mem: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. (bool
+//│ coll_mem: (Collection['a] & 'b) -> (forall 'a. 'a -> (forall 'a, 'b, 'c. (bool
 //│   where
-//│     'c <: 'c
-//│     'a <: Collection['c]
-//│     'b <: 'c)))
+//│     'c <: 'a
+//│     'b <: Collection['a]
+//│     'a <: 'a)))
 
 // typo in the paper? it was `fun x -> fun y -> ...`
 def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> cons x y) nil in
   let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
   (l1, l2)
-//│ simple_and_double: Collection[?] -> (forall 'b, 'a, 'c. ('a
-//│   where
-//│     'b <: 'a -> nothing -> 'a
-//│     'c <: 'a), forall 'd, 'a0, 'e. ('a0
-//│   where
-//│     'd <: 'a0 -> nothing -> 'a0
-//│     'e <: 'a0),)
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
+//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
+//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:675)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 
 simple_and_double (Collection{l = cons 1 nil})
-//│ res: (forall 'b, 'a, 'c. ('a
-//│   where
-//│     'b <: 'a -> nothing -> 'a
-//│     'c <: 'a), forall 'd, 'a0, 'e. ('a0
-//│   where
-//│     'd <: 'a0 -> nothing -> 'a0
-//│     'e <: 'a0),)
+//│ ╔══[ERROR] identifier not found: simple_and_double
+//│ ║  l.192: 	simple_and_double (Collection{l = cons 1 nil})
+//│ ╙──       	^^^^^^^^^^^^^^^^^
+//│ res: error
 
 // ------------ subtyping & methods ------------
 

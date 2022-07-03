@@ -45,7 +45,7 @@ def ids: List[forall 'a. 'a -> 'a]
 // ============ Sec 1 ============
 
 def f get = (get (cons 1 (cons 2 nil)), get (cons "a" (cons "b" (cons "c" nil))))
-//│ f: 'a -> (forall 'a, 'b, 'c. (('b, 'c,)
+//│ f: (List["a" | "b" | "c"] -> 'a & List[1 | 2] -> 'a & 'a) -> (forall 'a, 'b, 'c. (('b, 'c,)
 //│   where
 //│     'a <: List[1 | 2] -> 'b & List["a" | "b" | "c"] -> 'c))
 
@@ -56,7 +56,7 @@ def g x = case x of
   { None -> (0, "0")
   | Some -> (x.val (cons 1 (cons 2 nil)), x.val (cons "a" (cons "b" (cons "c" nil))))
   }
-//│ g: 'a -> (forall 'a, 'b, 'c. ((0 | 'c, "0" | 'b,)
+//│ g: ('a & (None | Some['a] & {val: List["a" | "b" | "c"] -> 'a & List[1 | 2] -> 'a})) -> (forall 'a, 'b, 'c. ((0 | 'c, "0" | 'b,)
 //│   where
 //│     'a <: None | Some['a] & {val: List["a" | "b" | "c"] -> 'b & List[1 | 2] -> 'c}))
 
@@ -69,7 +69,7 @@ length ids
 // ============ Sec 3.2 ============
 
 (fun x -> fun g -> (g true, g 3)) 4
-//│ res: 'a -> (forall 'a, 'b, 'c. (('b, 'c,)
+//│ res: (3 -> 'a & true -> 'a & 'a) -> (forall 'a, 'b, 'c. (('b, 'c,)
 //│   where
 //│     'a <: true -> 'b & 3 -> 'c))
 

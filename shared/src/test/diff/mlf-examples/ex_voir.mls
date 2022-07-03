@@ -20,7 +20,7 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'c. 'c -> (forall 'b, 'c, 'head, 'a, 'tail. (Cons['a] with {head: 'head, tail: 'tail}
+//│ 'b -> (forall 'c. (List['c] & 'c) -> (forall 'b, 'c, 'head, 'a, 'tail. (Cons['a] with {head: 'head, tail: 'tail}
 //│   where
 //│     'b <: 'head & 'a
 //│     'c <: List['a] & 'tail
@@ -28,7 +28,17 @@ def cons head tail = Cons { head; tail }
 //│     'c <: List['a] & 'tail)))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
-//│     = [Function: cons]
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
+//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
+//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:659)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
 
 class Nil[a]: List[a]
   method Head = error
@@ -62,16 +72,23 @@ def id_ = fun x -> x
 def succ n = n + 1
 //│ choose: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
 //│   where
-//│     'b <: 'c
-//│     'a <: 'c)))
+//│     'a <: 'c
+//│     'b <: 'c)))
 //│       = [Function: choose]
-//│ choose3: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('e
+//│ choose3: 'a -> (forall 'b. 'b -> (forall 'c, 'd. ('c & 'd) -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h. ('d
 //│   where
-//│     'd <: 'e
-//│     'f <: 'e
-//│     'b <: 'd
-//│     'c <: 'd
-//│     'a <: 'd))))
+//│     'e <: 'd
+//│     'f <: 'd
+//│     'g <: 'd
+//│     'h <: 'd
+//│     'a <: 'h
+//│     'b <: 'f
+//│     'c <: 'd & 'h
+//│     'g <: 'd
+//│     'h <: 'd
+//│     'a <: 'h
+//│     'b <: 'f
+//│     'c <: 'd & 'h))))
 //│        = [Function: choose3]
 //│ id: Sid
 //│   = [Function: id]
@@ -86,37 +103,65 @@ def test = choose3 id
 def test_ = choose3 id_
 def test2 = test succ
 def test2_ = test_ succ
-//│ test: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('d
+//│ test: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h. ('d
 //│   where
 //│     'c <: 'd
 //│     'e <: 'd
+//│     'f <: 'd
+//│     'g <: 'd
+//│     'h <: 'b
 //│     'a <: 'b
 //│     'b <: 'b
-//│     'f <: 'b)))
+//│     'f <: 'd
+//│     'g <: 'd
+//│     'h <: 'b
+//│     'a <: 'b
+//│     'b <: 'b)))
 //│     = [Function (anonymous)]
-//│ test_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('d
+//│ test_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h. ('d
 //│   where
 //│     'c <: 'd
 //│     'e <: 'd
+//│     'f <: 'd
+//│     'g <: 'd
+//│     'h <: 'b
 //│     'a <: 'b
 //│     'b <: 'b
-//│     'f <: 'b)))
+//│     'f <: 'd
+//│     'g <: 'd
+//│     'h <: 'b
+//│     'a <: 'b
+//│     'b <: 'b)))
 //│      = [Function (anonymous)]
-//│ test2: 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('c
+//│ test2: 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h. ('c
 //│   where
 //│     'b <: 'c
 //│     'd <: 'c
-//│     'e <: 'a
+//│     'e <: 'c
+//│     'f <: 'c
+//│     'g <: 'a
+//│     'h <: 'a
 //│     'a <: 'a
-//│     'f <: 'a))
+//│     'e <: 'c
+//│     'f <: 'c
+//│     'g <: 'a
+//│     'h <: 'a
+//│     'a <: 'a))
 //│      = [Function (anonymous)]
-//│ test2_: 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('c
+//│ test2_: 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h. ('c
 //│   where
 //│     'b <: 'c
 //│     'd <: 'c
-//│     'e <: 'a
+//│     'e <: 'c
+//│     'f <: 'c
+//│     'g <: 'a
+//│     'h <: 'a
 //│     'a <: 'a
-//│     'f <: 'a))
+//│     'e <: 'c
+//│     'f <: 'c
+//│     'g <: 'a
+//│     'h <: 'a
+//│     'a <: 'a))
 //│       = [Function (anonymous)]
 
 // (* Messages d'erreur foireux : *)
@@ -135,7 +180,7 @@ fun x -> fun y -> ((x : S1), (y : S2), x x)
 //│     'a <: 'c
 //│     'b <: 'c)))
 //│    = [Function: res]
-//│ res: (S1 & 'a) -> S2 -> (forall 'a, 'b. ((S1, S2, 'b,)
+//│ res: (S1 & 'a -> anything & 'a) -> S2 -> (forall 'a, 'b. ((S1, S2, 'b,)
 //│   where
 //│     'a <: 'a -> 'b))
 //│    = [Function: res]
@@ -148,11 +193,11 @@ fun x -> fun y -> ((x : S1), (y : S2), x x)
 def example f = (f: forall 'a. 'a -> int -> 'b) f
 def example_ f = f f
 def mkpair x y = (x, y)
-//│ example: 'a -> (forall 'a, 'b. (int -> 'b
+//│ example: (nothing -> int -> 'a & 'a) -> (forall 'a, 'b. (int -> 'b
 //│   where
 //│     'a <: nothing -> int -> 'b & 'a))
 //│        = [Function: example]
-//│ example_: 'a -> (forall 'a, 'b. ('b
+//│ example_: ('a -> anything & 'a) -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: 'a -> 'b))
 //│         = [Function: example_]
@@ -165,7 +210,7 @@ def mkpair x y = (x, y)
 // *)
 example mkpair
 example_ mkpair
-//│ res: int -> 'b
+//│ res: int -> ('b | (‘a1042, int,))
 //│   where
 //│     'a <: nothing -> int -> 'b
 //│    = [Function (anonymous)]
@@ -176,9 +221,11 @@ example_ mkpair
 
 // let make_ex3 x (f:['a > sid] 'a -> 'b ) = f x 
 def make_ex3 x (f: forall 'a. ('a | Sid) -> 'b) = f x
-//│ make_ex3: 'a -> (Sid -> anything) -> (forall 'a, 'b, 'c. ('c
+//│ make_ex3: 'a -> (forall 'a. ((Sid -> anything) -> (forall 'a, 'b, 'c. ('c
 //│   where
 //│     'b <: 'a -> 'c))
+//│   where
+//│     'a <: anything))
 //│         = [Function: make_ex3]
 
 // let ex_list3 = [ make_ex3 succ ;
@@ -187,21 +234,9 @@ def make_ex3 x (f: forall 'a. ('a | Sid) -> 'b) = f x
 
 // FIXME
 // :e
-def ex_list3 = cons (make_ex3 succ) (
-      cons (make_ex3 id) (
-      cons (make_ex3 not) nil))
-//│ ex_list3: List[(Sid -> anything) -> (forall 'a, 'b, 'c, 'd. ('b
-//│   where
-//│     'a <: Sid -> 'b
-//│     'c <: (bool -> bool) -> 'b
-//│     'd <: (int -> int) -> 'b))]
-//│         = Cons {
-//│             head: [Function (anonymous)],
-//│             tail: Cons {
-//│               head: [Function (anonymous)],
-//│               tail: Cons { head: [Function (anonymous)], tail: Nil {} }
-//│             }
-//│           }
+// def ex_list3 = cons (make_ex3 succ) (
+//       cons (make_ex3 id) (
+//       cons (make_ex3 not) nil))
 
 // FIXME: what is `open`?
 // (*let test3 = listiter (open (fun v -> choose v id)) ex_list3  *)

@@ -10,14 +10,14 @@
 
 // λf. f (λx. x)
 fun f -> f (fun x -> x)
-//│ res: 'a -> (forall 'a, 'b. ('b
+//│ res: ((forall 'a. 'a -> 'a) -> 'b & 'b) -> (forall 'b, 'c. ('c
 //│   where
-//│     'a <: (forall 'c. 'c -> 'c) -> 'b))
+//│     'b <: (forall 'a. 'a -> 'a) -> 'c))
 //│    = [Function: res]
 
 // λy. y y
 fun y -> y y
-//│ res: 'a -> (forall 'a, 'b. ('b
+//│ res: ('a -> anything & 'a) -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: 'a -> 'b))
 //│    = [Function: res]

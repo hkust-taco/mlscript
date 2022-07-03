@@ -21,7 +21,7 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'c. 'c -> (forall 'b, 'c, 'head, 'a, 'tail. (Cons['a] with {head: 'head, tail: 'tail}
+//│ 'b -> (forall 'c. (List['c] & 'c) -> (forall 'b, 'c, 'head, 'a, 'tail. (Cons['a] with {head: 'head, tail: 'tail}
 //│   where
 //│     'b <: 'head & 'a
 //│     'c <: List['a] & 'tail
@@ -29,7 +29,17 @@ def cons head tail = Cons { head; tail }
 //│     'c <: List['a] & 'tail)))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
-//│     = [Function: cons]
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
+//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
+//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:659)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
 
 class Nil[a]: List[a]
   method Head = error
@@ -52,23 +62,43 @@ def head: forall 'a. List['a] -> 'a
 def head l = l.Head
 //│ head: List['a] -> 'a
 //│     = <missing implementation>
-//│ 'a -> (forall 'a, 'b. ('b
+//│ (List['a] & 'a) -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: List['b]))
 //│   <:  head:
 //│ List['a] -> 'a
-//│     = [Function: head]
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
+//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
+//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:659)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
 
 def tail: forall 'a. List['a] -> List['a]
 def tail l = l.Tail
 //│ tail: List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'b, 'a. (List['a]
+//│ (List['b] & 'b) -> (forall 'b, 'a. (List['a]
 //│   where
 //│     'b <: List['a]))
 //│   <:  tail:
 //│ List['a] -> List['a]
-//│     = [Function: tail]
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
+//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
+//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:659)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
 
 def is_empty: forall 'a. List['a] -> bool
 def is_empty l = eq l nil
@@ -109,7 +139,7 @@ def create_hashtbl _ = nil
 
 // let hashtbl_add table key element = (key, element) :: table
 def hashtbl_add table key element = cons ((key, element)) table
-//│ hashtbl_add: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd. (List[('b, 'c,) | 'd]
+//│ hashtbl_add: (List['a] & 'a) -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd. (List[('b, 'c,) | 'd]
 //│   where
 //│     'a <: List['d]))))
 //│            = [Function: hashtbl_add]
@@ -145,24 +175,33 @@ def find_A table key =
   if is_empty table then None
   else if eq (head table)._1 key then Some (head table)._2
   else find_A (tail table) key
-//│ 'a -> (forall 'c. 'c -> (forall 'a, 'c, 'd, 'b, 'val. (None | Some['val] | Some['b]
+//│ (List['a] & 'c) -> (forall 'd. 'd -> (forall 'a, 'c, 'd, 'val, 'b. (None | Some['val] | Some['b]
 //│   where
-//│     'a <: List['d] & List[{_1: 'd}] & List[{_2: 'd}] & List[('d, 'b,)]
-//│     'c <: 'd
-//│     'd <: 'val
-//│     'a <: List['d] & List[{_1: 'd}] & List[{_2: 'd}] & List[('d, 'b,)]
-//│     'c <: 'd
-//│     'd <: 'val
-//│     'a <: List['d] & List[{_1: 'd}] & List[{_2: 'd}] & List[('d, 'b,)]
-//│     'c <: 'd
-//│     'a <: List['d] & List[{_1: 'd}] & List[{_2: 'd}] & List[('d, 'b,)]
-//│     'c <: 'd
-//│     'a <: List['d] & List[{_1: 'd}] & List[{_2: 'd}] & List[('d, 'b,)]
-//│     'c <: 'd)))
+//│     'c <: List['a] & List[{_1: 'a}] & List[{_2: 'a & 'val}] & List[('a, 'b,)]
+//│     'd <: 'a
+//│     'a <: 'val
+//│     'c <: List['a] & List[{_1: 'a}] & List[{_2: 'a & 'val}] & List[('a, 'b,)]
+//│     'd <: 'a
+//│     'a <: 'val
+//│     'c <: List['a] & List[{_1: 'a}] & List[{_2: 'a & 'val}] & List[('a, 'b,)]
+//│     'd <: 'a
+//│     'c <: List['a] & List[{_1: 'a}] & List[{_2: 'a & 'val}] & List[('a, 'b,)]
+//│     'd <: 'a
+//│     'c <: List['a] & List[{_1: 'a}] & List[{_2: 'a & 'val}] & List[('a, 'b,)]
+//│     'd <: 'a)))
 //│   <:  find_A:
 //│ List[(anything, 'b,)] -> anything -> (None | Some['b])
-//│       = <no result>
-//│         find_A is not implemented
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
+//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
+//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:659)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:390)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:375)
 
 // let nfind table key =
 //   begin match find table key with
@@ -185,12 +224,15 @@ type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 // let succ (n:Int) = fun f x -> f (n f x)
 def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 def succ_ n = fun f -> fun x -> f (n f x)
-//│ succ: ChurchInt -> (forall 'a. 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ succ: ChurchInt -> (forall 'b. (nothing -> anything & 'b) -> (forall 'c, 'a, 'd, 'e. ('e -> (forall 'b, 'e, 'f, 'g, 'h. ('h
 //│   where
-//│     'c <: 'a -> 'b -> 'd
-//│     'a <: 'd -> 'e))))
+//│     'f <: 'b -> 'e -> 'g
+//│     'b <: 'g -> 'h))
+//│   where
+//│     'c <: 'a -> 'a
+//│     'd :> 'a -> 'a)))
 //│     = [Function: succ]
-//│ succ_: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ succ_: (nothing -> nothing -> 'a & 'a) -> (forall 'b. (nothing -> 'a & 'b) -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
 //│     'b <: 'd -> 'e))))
@@ -200,21 +242,28 @@ def succ_ n = fun f -> fun x -> f (n f x)
 
 //:e // due to tapping
 def add (n: ChurchInt) (m: ChurchInt) = n succ m
-//│ add: ChurchInt -> ChurchInt -> (forall 'a. ('b
-//│   where
-//│     'a <: (ChurchInt -> (forall 'c. 'c -> (forall 'd. 'd -> (forall 'c, 'd, 'e, 'f, 'g. ('g
-//│   where
-//│     'e <: 'c -> 'd -> 'f
-//│     'c <: 'f -> 'g))))) -> ChurchInt -> 'b))
-//│    = [Function: add]
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: ChurchInt
+//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
+//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:633)
+//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:674)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
 
 def add_ n m = n succ_ m
-//│ add_: 'a -> (forall 'b. 'b -> (forall 'a. ('c
+//│ add_: ((forall 'a. (nothing -> nothing -> 'a & 'a) -> (forall 'b. (nothing -> 'a & 'b) -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
-//│     'a <: (forall 'd. 'd -> (forall 'e. 'e -> (forall 'f. 'f -> (forall 'd, 'e, 'f, 'g, 'h. ('h
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e))))) -> nothing -> 'a & 'f) -> (forall 'g. 'g -> (forall 'f. ('h
 //│   where
-//│     'd <: 'e -> 'f -> 'g
-//│     'e <: 'g -> 'h))))) -> 'b -> 'c)))
+//│     'f <: (forall 'a. (nothing -> nothing -> 'a & 'a) -> (forall 'b. (nothing -> 'a & 'b) -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│   where
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e))))) -> 'g -> 'h)))
 //│     = [Function: add_]
 
 // let printInt (n:Int) = print (n (fun x -> x+1) 0)
@@ -224,7 +273,7 @@ def printInt_ n = toString (n (fun x -> x + 1) 0)
 //│   where
 //│     'a <: (int -> int) -> 0 -> anything))
 //│         = [Function: printInt]
-//│ printInt_: 'a -> (forall 'a. (string
+//│ printInt_: ((int -> int) -> 0 -> 'a & 'a) -> (forall 'a. (string
 //│   where
 //│     'a <: (int -> int) -> 0 -> 'a))
 //│          = [Function: printInt_]
@@ -237,21 +286,17 @@ table = hashtbl_add table "one" (fun f -> fun x -> f x)
 table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│ table: List[nothing]
 //│      = Nil {}
-//│ table: List[("one", forall 'a. 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
-//│   where
-//│     'a <: 'b -> 'c))),) | 'd]
-//│   where
-//│     'e <: List['d]
-//│      = Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
-//│ table: List[("two", forall 'a. 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('d
-//│   where
-//│     'a <: 'b -> 'c & 'c -> 'd))),) | 'e]
-//│   where
-//│     'f <: List['e]
-//│      = Cons {
-//│          head: [ 'two', [Function (anonymous)] ],
-//│          tail: Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
-//│        }
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: List
+//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
+//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:334)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:332)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65(ConstraintSolver.scala:675)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$65$adapted(ConstraintSolver.scala:432)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$62(ConstraintSolver.scala:432)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 
 // let zog =
 //   printInt (add (nfind table "one") (nfind table "two"))
@@ -260,7 +305,37 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 // * Note: this one requires `:DistributeForalls`
 //:e // due to tapping
 zog = printInt (add (nfind table "one") (nfind table "two"))
-//│ zog: string
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.307: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> (forall ?b. ?b -> ?b)` is not an instance of type `int`
+//│ ║  l.214: 	  { None -> fun f -> fun x -> x
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into application with expected type `int`
+//│ ║  l.307: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ╙──       	                     ^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.307: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> (forall ?b. ?b -> ?b)` is not an instance of type `int`
+//│ ║  l.214: 	  { None -> fun f -> fun x -> x
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into application with expected type `int`
+//│ ║  l.307: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ╙──       	                                         ^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.307: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `int` is not a function
+//│ ║  l.307: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.221: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── from type reference:
+//│ ║  l.270: 	def printInt (n: ChurchInt) = toString (n (fun x -> x + 1) 0)
+//│ ╙──       	                 ^^^^^^^^^
+//│ zog: error | string
 //│   where
 //│     'a <: (int -> int) -> 0 -> anything
 //│    = '0'
@@ -270,12 +345,16 @@ zog = printInt (add (nfind table "one") (nfind table "two"))
 // :e // FIXME? failed with genLamBodies but works with quantif extrus
 //:e // due to tapping
 a = add (nfind table "one")
-//│ a: ChurchInt -> (forall 'a. ('b
-//│   where
-//│     'a <: (ChurchInt -> (forall 'c. 'c -> (forall 'd. 'd -> (forall 'c, 'd, 'e, 'f, 'g. ('g
-//│   where
-//│     'e <: 'c -> 'd -> 'f
-//│     'c <: 'f -> 'g))))) -> ChurchInt -> 'b))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.347: 	a = add (nfind table "one")
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> (forall ?b. ?b -> ?b)` is not an instance of type `int`
+//│ ║  l.214: 	  { None -> fun f -> fun x -> x
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into application with expected type `int`
+//│ ║  l.347: 	a = add (nfind table "one")
+//│ ╙──       	         ^^^^^^^^^^^^^^^^^
+//│ a: int -> int | error
 //│  = [Function (anonymous)]
 
 b = (nfind table "two")
@@ -286,12 +365,16 @@ b = (nfind table "two")
 // :d
 //:e // due to tapping
 a b
-//│ res: 'a
-//│   where
-//│     'b <: (ChurchInt -> (forall 'c. 'c -> (forall 'd. 'd -> (forall 'c, 'd, 'e, 'f, 'g. ('g
-//│   where
-//│     'e <: 'c -> 'd -> 'f
-//│     'c <: 'f -> 'g))))) -> ChurchInt -> 'a
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.367: 	a b
+//│ ║         	^^^
+//│ ╟── function of type `?a -> (forall ?b. ?b -> ?b)` is not an instance of type `int`
+//│ ║  l.214: 	  { None -> fun f -> fun x -> x
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `int`
+//│ ║  l.367: 	a b
+//│ ╙──       	  ^
+//│ res: error | int
 //│    = [Function (anonymous)]
 
 //:e // due to tapping
