@@ -20,7 +20,10 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
+//│ 'b -> (forall 'c. 'c -> (forall 'b, 'c, 'a. (Cons['a | 'b] with {head: 'b, tail: 'c}
+//│   where
+//│     'c <: List['a]
+//│     'c <: List['a])))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -53,7 +56,9 @@ def head: forall 'a. List['a] -> 'a
 def head l = l.Head
 //│ head: List['a] -> 'a
 //│     = <missing implementation>
-//│ List['a] -> 'a
+//│ 'a -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: List['b]))
 //│   <:  head:
 //│ List['a] -> 'a
 //│     = [Function: head]
@@ -62,7 +67,9 @@ def tail: forall 'a. List['a] -> List['a]
 def tail l = l.Tail
 //│ tail: List['a] -> List['a]
 //│     = <missing implementation>
-//│ List['a] -> List['a]
+//│ 'b -> (forall 'b, 'a. (List['a]
+//│   where
+//│     'b <: List['a]))
 //│   <:  tail:
 //│ List['a] -> List['a]
 //│     = [Function: tail]
@@ -134,23 +141,29 @@ def id x = x
 
 // FreezeML B1
 def poly f = (f 1, f true)
-//│ poly: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+//│ poly: 'a -> (forall 'a, 'b, 'c. (('b, 'c,)
+//│   where
+//│     'a <: 1 -> 'b & true -> 'c))
 //│     = [Function: poly]
 
 // FreezeML A10
 poly id
-//│ res: (1, true,)
+//│ res: ('a, 'b,)
+//│   where
+//│     'c <: 1 -> 'a & true -> 'b
 //│    = [ 1, true ]
 
 def app f x = f x
-//│ app: (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ app: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
 //│   where
-//│     'a <: 'b -> 'c))
+//│     'a <: 'b -> 'c)))
 //│    = [Function: app]
 
 // FreezeML D1
 app poly id
-//│ res: (1, true,)
+//│ res: 'a
+//│   where
+//│     'b <: (forall 'c. 'c -> 'c) -> 'a
 //│    = [ 1, true ]
 
 // FreezeML F2
@@ -166,12 +179,16 @@ def idss = single ids
 //│       }
 
 def revapp x f = f x
-//│ revapp: 'a -> (forall 'b. ('a -> 'b) -> 'b)
+//│ revapp: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
+//│   where
+//│     'b <: 'a -> 'c)))
 //│       = [Function: revapp]
 
 // FreezeML D2
 revapp id poly
-//│ res: (1, true,)
+//│ res: 'a
+//│   where
+//│     'b <: (forall 'c. 'c -> 'c) -> 'a
 //│    = [ 1, true ]
 
 // FreezeML C1
@@ -185,30 +202,42 @@ map head (single ids)
 //│    = Cons { head: [Function: id], tail: Nil {} }
 
 app (map head) (single ids)
-//│ res: List[forall 'a. 'a -> 'a]
+//│ res: 'a
+//│   where
+//│     'b <: List[List[forall 'c. 'c -> 'c]] -> 'a
 //│    = Cons { head: [Function: id], tail: Nil {} }
 
 // nope
 fun f -> poly f
-//│ res: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+//│ res: anything -> (forall 'a, 'b, 'c. (('b, 'c,)
+//│   where
+//│     'a <: 1 -> 'b & true -> 'c))
 //│    = [Function: res]
 
 // FreezeML D2
 // nope in plain HMF
 revapp id poly
-//│ res: (1, true,)
+//│ res: 'a
+//│   where
+//│     'b <: (forall 'c. 'c -> 'c) -> 'a
 //│    = [ 1, true ]
 
 // nope
 let f = revapp id in f poly
-//│ res: (1, true,)
+//│ res: 'a
+//│   where
+//│     'b <: (forall 'c. 'c -> 'c) -> 'a
 //│    = [ 1, true ]
 
 :ne
 def iapp: (int -> int) -> int -> int
 let f = revapp id in (f poly, f iapp)
 //│ iapp: (int -> int) -> int -> int
-//│ res: ((1, true,), int -> int,)
+//│ res: ('a
+//│   where
+//│     'b <: (forall 'c. 'c -> 'c) -> 'a, 'd
+//│   where
+//│     'e <: (forall 'c. 'c -> 'c) -> 'd,)
 
 // ============ Sec 3 ============
 
@@ -242,7 +271,9 @@ let f = choose nil in f ids
 // FreezeML D4
 :ne
 app runST argST
-//│ res: int
+//│ res: 'a
+//│   where
+//│     'b <: (forall 's. ST['s, int]) -> 'a
 
 // ============ Sec 4 ============
 
@@ -271,7 +302,9 @@ def poly: (forall 'a. 'a -> 'a) -> (int, bool)
 def poly f = (f 1, f true)
 //│ poly: (forall 'a. 'a -> 'a) -> (int, bool,)
 //│     = <missing implementation>
-//│ (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+//│ 'a -> (forall 'a, 'b, 'c. (('b, 'c,)
+//│   where
+//│     'a <: 1 -> 'b & true -> 'c))
 //│   <:  poly:
 //│ (forall 'a. 'a -> 'a) -> (int, bool,)
 //│     = [Function: poly1]

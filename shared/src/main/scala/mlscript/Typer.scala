@@ -554,6 +554,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     }
     
     // TODO use or rm?
+    /* 
     def instantiateForGoodMeasure(ctx: Ctx, extrCtx: Opt[ExtrCtx])(ty: ST): Unit = ty match {
       case ty @ PolymorphicType(plvl, _: ConstrainedType) =>
         trace(s"GOOD MEASURE") {
@@ -572,6 +573,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         }()
       case _ => ()
     }
+    */
     
     term match {
       case v @ Var("_") =>
@@ -727,20 +729,20 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         
         // val body_ty = typeTerm(body)(newCtx, raise, extrCtx2, vars, genLambdas = generalizeCurriedFunctions)
         
-        val body_ty = typeTerm(body)(newCtx, raise, extrCtx2, vars)
+        // val body_ty = typeTerm(body)(newCtx, raise, extrCtx2, vars)
         
-        // val body_ty = if (!genLamBodies || !generalizeCurriedFunctions) typeTerm(body)(newCtx, raise, extrCtx2, vars)
-        //     // else newCtx.nextLevel |> { implicit ctx =>
-        //     else newCtx.nextLevel |> { newCtx =>
-        //   val ec: ExtrCtx = MutMap.empty
-        //   val extrCtx: Opt[ExtrCtx] = S(ec)
-        //   val innerTy = typeTerm(body)(newCtx, raise, extrCtx, vars)
-        //   // PolymorphicType.mk(ctx.lvl,
-        //   assert(midCtx.lvl === newCtx.lvl-1)
-        //   PolymorphicType.mk(midCtx.lvl,
-        //     ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy))
-        //     .tap(instantiateForGoodMeasure(midCtx, extrCtx2))
-        // }
+        val body_ty = if (!genLamBodies || !generalizeCurriedFunctions) typeTerm(body)(newCtx, raise, extrCtx2, vars)
+            // else newCtx.nextLevel |> { implicit ctx =>
+            else newCtx.nextLevel |> { newCtx =>
+          val ec: ExtrCtx = MutMap.empty
+          val extrCtx: Opt[ExtrCtx] = S(ec)
+          val innerTy = typeTerm(body)(newCtx, raise, extrCtx, vars)
+          // PolymorphicType.mk(ctx.lvl,
+          assert(midCtx.lvl === newCtx.lvl-1)
+          PolymorphicType.mk(midCtx.lvl,
+            ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy))
+            // .tap(instantiateForGoodMeasure(midCtx, extrCtx2))
+        }
         // val body_ty = if (!genLamBodies || !generalizeCurriedFunctions) typeTerm(body)(newCtx, raise, extrCtx2, vars)
         //     else {
         //   val ec: ExtrCtx = MutMap.empty
@@ -758,7 +760,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy))
             // * Feels like we should be doing this, but it produces pretty horrible results
             // *  and does not seem required for soundness (?)
-            .tap(instantiateForGoodMeasure(ctx, extrCtx)) // needed?!
+            // .tap(instantiateForGoodMeasure(ctx, extrCtx)) // needed?!
       case Lam(pat, body) =>
         val newCtx = ctx.nest
         val param_ty = typePattern(pat)(newCtx, raise, extrCtx, vars)
@@ -789,8 +791,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               genLambdas = false // currently can't do it because we don't yet push foralls into argument tuples
               )
             PolymorphicType.mk(ctx.lvl,
-              ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy)) tap
-                instantiateForGoodMeasure(ctx, extrCtx)
+              ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy))
+                // .tap(instantiateForGoodMeasure(ctx, extrCtx))
           }
           a match {
             case tup @ Tup(as) =>
