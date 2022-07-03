@@ -15,12 +15,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   def unifyInsteadOfExtrude: Bool = false
   
   type ExtrCtx = MutMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound
+  // type ExtrCtx = Level -> MutMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound
   
   protected var currentConstrainingRun = 0
   
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
   // def constrain(lhs: SimpleType, rhs: SimpleType, extrusionContext: Opt[ExtrCtx])(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx): Unit = { val outerCtx = ctx ; {
-  def constrain(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx, extrusionContext: Opt[ExtrCtx]): Unit = { val outerCtx = ctx ; {
+  def constrain(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx): Unit = { val outerCtx = ctx ; {
     currentConstrainingRun += 1
     val ctx = ()
     
@@ -331,6 +332,21 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         }
       }
     
+    def recThrough(lhs0: SimpleType, rhs: SimpleType, tv: TV)
+          (implicit raise: Raise, cctx: ConCtx, ctx: Ctx, shadows: Shadows): Unit = {
+      // val lhs = extrude(lhs0, rhs.level, true, MaxLevel)
+      val lhs2 = if (lhs.level <= tv.level) lhs0 else {
+        implicit val flexifyRigids: Bool = false
+        val lhs = extrude(lhs0, rhs.level, true, MaxLevel)
+        // println(s"EXTR LHS  $lhs0  ~>  $lhs  to ${rhs.level}")
+        println(s"EXTR LHS  ~>  $lhs  to ${tv.level}")
+        println(s" where ${lhs.showBounds}")
+        // println(s"   and ${lhs0.showBounds}")
+        lhs
+      }
+      rec(lhs2, rhs, true)
+    }
+    
     def rec(lhs: SimpleType, rhs: SimpleType, sameLevel: Bool)
           // (implicit raise: Raise, cctx: ConCtx): Unit = {
           (implicit raise: Raise, cctx: ConCtx, ctx: Ctx, shadows: Shadows): Unit = {
@@ -422,6 +438,48 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             if prim.parentsST.contains(ot.id) => ()
             
             
+            // /* 
+          case (lhs: TypeVariable, rhs) =>
+            val tv = lhs
+            // if (rhs.level > lhs.level && rhs.level > lvl) {
+            if (rhs.level > lhs.level && rhs.level <= lvl) {
+            // if (rhs.level > lhs.level) {
+              println(s"STASHING $tv bound in extr ctx")
+              // println(rhs.level, lvl)
+              val buf = ctx.extrCtx.getOrElseUpdate(tv, Buffer.empty)
+              buf += false -> rhs
+              cache -= lhs -> rhs
+              ()
+            } else {
+            println(s"NEW $lhs UB (${rhs.level})")
+            val newBound = (cctx._1 ::: cctx._2.reverse).foldRight(rhs)((c, ty) =>
+              if (c.prov is noProv) ty else mkProxy(ty, c.prov))
+            lhs.upperBounds ::= newBound // update the bound
+            lhs.lowerBounds.foreach(recThrough(_, rhs, lhs)) // propagate from the bound
+            }
+            
+          case (lhs, rhs: TypeVariable) =>
+            val tv = rhs
+            // if (lhs.level > rhs.level && lhs.level > lvl) {
+            if (lhs.level > rhs.level && lhs.level <= lvl) {
+            // if (lhs.level > rhs.level) {
+              println(s"STASHING $tv bound in extr ctx")
+              val buf = ctx.extrCtx.getOrElseUpdate(tv, Buffer.empty)
+              buf += true -> lhs
+              cache -= lhs -> rhs
+              ()
+            } else {
+            println(s"NEW $rhs LB (${lhs.level})")
+            // println(lhs, rhs, lhs.level, rhs.level)
+            val newBound = (cctx._1 ::: cctx._2.reverse).foldLeft(lhs)((ty, c) =>
+              if (c.prov is noProv) ty else mkProxy(ty, c.prov))
+            rhs.lowerBounds ::= newBound // update the bound
+            rhs.upperBounds.foreach(recThrough(lhs, _, rhs)) // propagate from the bound
+            }
+            //  */
+            
+            
+            
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
             println(s"NEW $lhs UB (${rhs.level})")
             val newBound = (cctx._1 ::: cctx._2.reverse).foldRight(rhs)((c, ty) =>
@@ -436,7 +494,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rhs.lowerBounds ::= newBound // update the bound
             rhs.upperBounds.foreach(rec(lhs, _, true)) // propagate from the bound
             
-            
+            /* 
           // case (tv: TypeVariable, rhs0) if extrusionContext.nonEmpty && !tv.recPlaceholder =>
           case (tv: TypeVariable, rhs0) if !noConstrainnedTypes && extrusionContext.nonEmpty /* && !tv.recPlaceholder */ =>
             // ???
@@ -451,7 +509,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val buf = extrusionContext.get.getOrElseUpdate(tv, Buffer.empty)
             buf += true -> lhs0
             ()
-            
+            */
             
           // case (tv: TypeVariable, rhs0) if tv.lowerBounds.foreach(_.level) =>
           case (tv: TypeVariable, rhs0) if unifyInsteadOfExtrude && tv.lowerBounds.nonEmpty =>
@@ -498,6 +556,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             println(s"   and ${lhs0.showBounds}")
             rec(lhs, rhs, true)
             // */
+            
+            
+            
             
           case (TupleType(fs0), TupleType(fs1)) if fs0.size === fs1.size => // TODO generalize (coerce compatible tuples)
             fs0.lazyZip(fs1).foreach { case ((ln, l), (rn, r)) =>
@@ -572,12 +633,32 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rec(Without(lhs, ns)(w.prov), NegType(b)(n.prov), true) // this is weird... TODO check sound
           case (_, poly: PolymorphicType) =>
             // rec(lhs, poly.rigidify, true)
-            ctx.nextLevel |> { implicit ctx =>
+            val oldCtx = ctx
+            ctx.nextLevel { implicit ctx =>
               val rigid = poly.rigidify
               println(s"BUMP TO LEVEL ${lvl}  -->  $rigid")
               println(s"where ${rigid.showBounds}")
-              // rec(lhs, poly.rigidify, true)
-              rec(lhs, rigid, true)
+              // // rec(lhs, poly.rigidify, true)
+              // rec(lhs, rigid, true)
+              val res = rec(lhs, rigid, true)
+              // assert(ctx.extrCtx.isEmpty) // TODO
+              val ec = ctx.extrCtx
+              trace(s"UNSTASHING...") {
+                implicit val ctx: Ctx = oldCtx
+                ec.foreach { case (tv, bs) => bs.foreach {
+                  case (true, b) => rec(b, tv, false)
+                  case (false, b) => rec(tv, b, false)
+                }}
+                ec.clear()
+              }()
+              res
+              
+              // val extrCtx_old = extrCtx
+              // {
+              //   val ec: ExtrCtx = MutMap.empty
+              //   implicit val extrCtx: Opt[ExtrCtx] = S(ec)
+              //   rec(lhs, rigid, true)
+              // }
             }
           case (AliasOf(PolymorphicType(plvl, bod)), _) if bod.level <= plvl => rec(bod, rhs, true)
           case (_, FunctionType(param, AliasOf(PolymorphicType(plvl, bod)))) if distributeForalls =>
@@ -753,8 +834,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   }}
   
   
-  def subsume(ty_sch: PolymorphicType, sign: PolymorphicType)
-      (implicit ctx: Ctx, raise: Raise, extrCtx: Opt[ExtrCtx], prov: TypeProvenance): Unit = {
+  // def subsume(ty_sch: PolymorphicType, sign: PolymorphicType)
+  def subsume(ty_sch: ST, sign: ST)
+      (implicit ctx: Ctx, raise: Raise, prov: TypeProvenance): Unit = {
     println(s"CHECKING SUBSUMPTION...")
     constrain(ty_sch, sign)
   }

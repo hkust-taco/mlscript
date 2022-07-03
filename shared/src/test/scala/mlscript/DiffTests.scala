@@ -55,10 +55,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
       override def emitDbg(str: String): Unit = output(str)
     }
     var ctx: typer.Ctx = typer.Ctx.init
-    var declared: Map[Str, typer.PolymorphicType] = Map.empty
+    // var declared: Map[Str, typer.PolymorphicType] = Map.empty
+    var declared: Map[Str, typer.ST] = Map.empty
     val failures = mutable.Buffer.empty[Int]
     val unmergedChanges = mutable.Buffer.empty[Int]
-    implicit val extrCtx: Opt[typer.ExtrCtx] = N
     
     case class Mode(
       expectTypeErrors: Bool = false,
@@ -313,7 +313,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             }
             
             val oldCtx = ctx
-            ctx = typer.processTypeDefs(typeDefs)(ctx, raise, extrCtx)
+            ctx = typer.processTypeDefs(typeDefs)(ctx, raise)
             
             def getType(ty: typer.TypeScheme): Type = {
               // val wty = ty.instantiate(0)
@@ -577,10 +577,15 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               // but does not give a body/definition to it
               case Def(isrec, nme, R(PolyType(tps, rhs))) =>
                 typer.dbg = mode.dbg
-                val ty_sch = typer.PolymorphicType(typer.MinLevel,
-                  typer.typeType(rhs)(ctx.nextLevel, raise, extrCtx, vars = tps.collect {
+                // val ty_sch = typer.PolymorphicType(typer.MinLevel,
+                //   typer.typeType(rhs)(ctx.nextLevel, raise, extrCtx, vars = tps.collect {
+                //       case L(tp: TypeName) => tp.name -> typer.freshVar(typer.noProv/*FIXME*/, N)(1)
+                //     }.toMap))
+                val ty_sch = ctx.poly { ctx =>
+                  typer.typeType(rhs)(ctx, raise, vars = tps.collect {
                       case L(tp: TypeName) => tp.name -> typer.freshVar(typer.noProv/*FIXME*/, N)(1)
-                    }.toMap))
+                    }.toMap)
+                }
                 ctx += nme.name -> ty_sch
                 declared += nme.name -> ty_sch
                 val exp = getType(ty_sch)
@@ -613,14 +618,14 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                     output(s"  <:  $nme:")
                     output(sign_exp.show)
                     typer.dbg = mode.dbg
-                    typer.subsume(ty_sch, sign)(ctx, raise, extrCtx, typer.TypeProvenance(d.toLoc, "def definition"))
+                    typer.subsume(ty_sch, sign)(ctx, raise, typer.TypeProvenance(d.toLoc, "def definition"))
                     if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
                 }
                 showFirstResult(nme.name.length())
               case desug: DesugaredStatement =>
                 var prefixLength = 0
                 typer.dbg = mode.dbg
-                typer.typeStatement(desug, allowPure = true)(ctx, raise, extrCtx = N) match {
+                typer.typeStatement(desug, allowPure = true)(ctx, raise) match {
                   // when does this happen??
                   case R(binds) =>
                     binds.foreach {

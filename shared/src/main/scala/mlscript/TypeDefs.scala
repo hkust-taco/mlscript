@@ -158,7 +158,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
   }
   // ()
   
-  def processTypeDefs(newDefs0: List[mlscript.TypeDef])(implicit ctx: Ctx, raise: Raise, extrCtx: Opt[ExtrCtx]): Ctx = {
+  def processTypeDefs(newDefs0: List[mlscript.TypeDef])(implicit ctx: Ctx, raise: Raise): Ctx = {
     var allDefs = ctx.tyDefs
     val allEnv = ctx.env.clone
     val allMthEnv = ctx.mthEnv.clone
@@ -185,7 +185,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
         freshVar(originProv(p.toLoc, s"${td.kind.str} type parameter", p.name), N, S(p.name))(ctx.lvl + 1))
       val tparamsargs = td.tparams.lazyZip(dummyTargs)
       val (bodyTy, tvars) = 
-        typeType2(td.body, simplify = false)(ctx.copy(lvl = 0), raise, extrCtx, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
+        typeType2(td.body, simplify = false)(ctx.copy(lvl = 0), raise, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
       val td1 = TypeDef(td.kind, td.nme, tparamsargs.toList, tvars, bodyTy,
         td.mthDecls, td.mthDefs, baseClassesOf(td), td.toLoc)
       allDefs += n -> td1
@@ -546,8 +546,15 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                     case pt => pt
                   })
                 },
-              ty => PolymorphicType(thisCtx.lvl,
-                typeType(ty)(thisCtx.nextLevel, raise, N, targsMap2))
+              ty =>
+                // PolymorphicType(thisCtx.lvl,
+                // typeType(ty)(thisCtx.nextLevel, raise, N, targsMap2))
+                thisCtx.nextLevel { newCtx =>
+                  PolymorphicType(ctx.lvl, typeType(ty)(newCtx, raise, targsMap2))
+                }
+                // thisCtx.poly { implicit ctx =>
+                //   typeType(ty)(ctx, raise, targsMap2)
+                // }
                 // ^ Note: we need to go to the next level here,
                 //    which is also done automatically by `typeLetRhs` in the case above
               ), reverseRigid2)
