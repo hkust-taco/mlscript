@@ -2,6 +2,12 @@
 :ArgGen
 :NoRecursiveTypes
 
+// From HML implementation
+
+// Daan Leijen. 2009. Flexible Types: Robust Type Inference for First-Class Polymorphism. In
+//   Proceedings of the 36th Annual ACM SIGPLAN-SIGACT Symposium on Principles of Programming
+//   Languages (Savannah, GA, USA) (POPL ’09). Association for Computing Machinery, New York,
+//   NY, USA, 66–77. https://doi.org/10.1145/1480881.1480891 
 
 // ============ Dummy classes to represent the types in the examples ============
 
@@ -279,13 +285,13 @@ fun f -> fun x -> f x
 :e
 inc true
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.280: 	inc true
+//│ ║  l.286: 	inc true
 //│ ║         	^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `int`
-//│ ║  l.280: 	inc true
+//│ ║  l.286: 	inc true
 //│ ║         	    ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.143: 	def inc: int -> int
+//│ ║  l.149: 	def inc: int -> int
 //│ ╙──       	         ^^^
 //│ res: error
 //│    = 2
@@ -432,13 +438,13 @@ app (map head) (single ids)
 :ng
 (error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.433: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
+//│ ║  l.439: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘d` is not an instance of type `int`
-//│ ║  l.433: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
+//│ ║  l.439: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
 //│ ║         	                                                      ^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.433: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
+//│ ║  l.439: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
 //│ ╙──       	                                                                        ^^^
 //│ res: error
 
@@ -512,13 +518,13 @@ fun x -> let polys (xs: List[forall 'a. 'a -> 'a]) = 1 in let f y = x in polys (
 :e
 ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.513: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
+//│ ║  l.519: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ║         	^^^
 //│ ╟── type `‘a` is not an instance of type `'b`
-//│ ║  l.513: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
+//│ ║  l.519: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ║         	                             ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.513: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
+//│ ║  l.519: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ╙──       	             ^^
 //│ res: List[anything -> nothing]
 //│    = Cons { head: [Function: id1], tail: Nil {} }
@@ -585,7 +591,7 @@ single (id : forall 'a. 'a -> 'a)
 // FIXME
 (id : 'a -> 'a) 1
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.586: 	(id : 'a -> 'a) 1
+//│ ║  l.592: 	(id : 'a -> 'a) 1
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  1<int,number>  <:  'a1411    ClassTag  TypeVariable
@@ -935,3 +941,13 @@ runST4 (newRef4 1)
 //│ runST4: (forall 's. ST['s, ('a, 'b,)]) -> ('a, 'b,)
 //│ newRef4: 'a -> ST['s, (Ref['s, 'a], Ref['s, 'a],)]
 //│ res: (Ref[in ‘s2145 & 's out 's | ‘s2145, 1], Ref[in ‘s2145 & 's out 's | ‘s2145, 1],)
+
+// ("(\\(x :: forall a. a -> a) -> xauto x) :: (forall a. a -> a) -> (forall a. a -> a)", ok "(forall a. a -> a) -> (forall a. a -> a)")
+(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0)
+//│    = [Function: res]
+
+// ("xauto :: (forall a. a -> a) -> (forall a. a -> a)"", Wrong)
+xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0)
+//│    = [Function: xauto]
