@@ -1094,7 +1094,7 @@ def to_church: int -> Fint
 rec def to_church n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
-//│ int -> (('a | ‘a4652) -> (‘a4652 & 'b) & ('a | ‘a4652) -> (‘a4652 & 'a)) -> (forall 'c. (‘a4652 & 'c & 'a) -> (‘a4652 | 'c | 'b))
+//│ int -> (('a | ‘a4656) -> (‘a4656 & 'b) & ('a | ‘a4656) -> (‘a4656 & 'a)) -> (forall 'c. (‘a4656 & 'c & 'a) -> (‘a4656 | 'c | 'b))
 //│   <:  to_church:
 //│ int -> Fint
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -1104,10 +1104,10 @@ rec def to_church n =
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.1096: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a4652` is not an instance of type `'a4688`
+//│ ╟── type `‘a4656` is not an instance of type `'a4685`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
-//│ ╟── but it flows into application with expected type `‘a4688`
+//│ ╟── but it flows into application with expected type `‘a4685`
 //│ ║  l.1096: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
 //│ ║          	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -1137,9 +1137,9 @@ def to_church_ = to_church
 rec def c_fact (n: Fint) =
   c_if (c_iszero n) (fun (u: Funit) -> c_i1)
     (fun (u: Funit) -> c_mul n (c_fact (c_pred n)))
-//│ c_fact: Fint -> (forall 'b, 'c, 'd, 'a, 'e, 'f. ('b -> 'c & 'd -> (‘a4847 & 'a0 & 'a & 'e) & ('a0 | ‘a4847) -> (‘a4847 & 'a0) & 'a -> 'a & 'f) -> (forall 'b, 'c, 'd, 'a0, 'a, 'e, 'f, 'g, 'h, 'i, 'j. (('b & 'd & 'g) -> ('a0 | 'a | ‘a4847 | 'd | 'j | 'c)
+//│ c_fact: Fint -> (forall 'b, 'c, 'd, 'a, 'e, 'f. ('b -> 'c & 'd -> (‘a4844 & 'a0 & 'a & 'e) & ('a0 | ‘a4844) -> (‘a4844 & 'a0) & 'a -> 'a & 'f) -> (forall 'b, 'c, 'd, 'a0, 'a, 'e, 'f, 'g, 'h, 'i, 'j. (('b & 'd & 'g) -> ('a0 | 'a | ‘a4844 | 'd | 'j | 'c)
 //│   where
-//│     'f <: 'g -> (‘a4847 & 'a0 & 'a & 'h)
+//│     'f <: 'g -> (‘a4844 & 'a0 & 'a & 'h)
 //│     'i <: 'f -> ('h | 'e) -> 'j)) | Fint)
 //│       = [Function: c_fact]
 
@@ -1155,9 +1155,9 @@ def c_fact_A: Fint -> Fint
 def c_fact_A n =
   c_if (c_iszero n) (fun u -> c_i1)
     (fun u -> c_mul n (c_fact_A (c_pred n)))
-//│ (Fint & (forall 'b. (Fint -> (forall 'c, 'd, 'e, 'f, 'g, 'h, 'a, 'a0. (('h -> (‘a4847 & 'e & 'a & 'a0) & ('a | ‘a4847) -> (‘a4847 & 'a) & 'a0 -> 'a0 & 'd) -> (forall 'c, 'd, 'e, 'f, 'g, 'h, 'a, 'a0, 'i, 'j, 'k. (('h & 'i) -> ('a | 'a0 | ‘a4847 | 'k | 'g)
+//│ (Fint & (forall 'b. (Fint -> (forall 'c, 'd, 'e, 'f, 'g, 'h, 'a, 'a0. (('h -> (‘a4844 & 'e & 'a & 'a0) & ('a | ‘a4844) -> (‘a4844 & 'a) & 'a0 -> 'a0 & 'd) -> (forall 'c, 'd, 'e, 'f, 'g, 'h, 'a, 'a0, 'i, 'j, 'k. (('h & 'i) -> ('a | 'a0 | ‘a4844 | 'k | 'g)
 //│   where
-//│     'd <: 'i -> (‘a4847 & 'f & 'a & 'a0 & 'j)
+//│     'd <: 'i -> (‘a4844 & 'f & 'a & 'a0 & 'j)
 //│     'c <: 'd -> ('j | 'e) -> 'k)) | Fint
 //│   where
 //│     'c <: 'd -> ('e | 'f) -> 'g))
@@ -1174,7 +1174,7 @@ def c_fact_A n =
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.1157: 	    (fun u -> c_mul n (c_fact_A (c_pred n)))
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a4847` is not an instance of type `'a`
+//│ ╟── type `‘a4844` is not an instance of type `'a`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -1219,7 +1219,7 @@ def print_fact n =
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.1217: 	  let _ = c_printint (c_fact (to_church n)) in
 //│ ║          	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a4847` is not an instance of type `'a`
+//│ ╟── type `‘a4844` is not an instance of type `'a`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -1248,7 +1248,7 @@ def print_fact2 n =
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.1247: 	         (c_printint2 (c_fact (to_church n))) ))
 //│ ║          	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a4847` is not an instance of type `'a5784`
+//│ ╟── type `‘a4844` is not an instance of type `'a5781`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -1289,7 +1289,7 @@ this_should_be_98 =
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.1284: 	  let c_i10 = c_mul c_i5 c_i2 in
 //│ ║          	              ^^^^^^^^^^
-//│ ╟── type `‘a4847` is not a function
+//│ ╟── type `‘a4844` is not a function
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from function type:
@@ -1299,14 +1299,14 @@ this_should_be_98 =
 //│ ║  l.848: 	def c_add n (m: Fint) = m c_succ n
 //│ ╙──       	                ^^^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a4847` is not an instance of type `'a62596266`
+//│ ╟── type `‘a4844` is not an instance of type `'a62566263`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a62596266` is not a function
+//│ ╟── type `‘a62566263` is not a function
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from function type:
@@ -1316,7 +1316,7 @@ this_should_be_98 =
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a62596266` is not a function
+//│ ╟── type `‘a62566263` is not a function
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from function type:
@@ -1326,7 +1326,7 @@ this_should_be_98 =
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a62596266` is not a function
+//│ ╟── type `‘a62566263` is not a function
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from function type:
@@ -1336,200 +1336,200 @@ this_should_be_98 =
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a4847` is not an instance of type `'a62596266`
+//│ ╟── type `‘a4844` is not an instance of type `'a62566263`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
-//│ ╟── but it flows into application with expected type `‘a62596266`
+//│ ╟── but it flows into application with expected type `‘a62566263`
 //│ ║  l.816: 	def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
 //│ ║         	                                         ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a62596266` is not an instance of type `'a63086412`
+//│ ╟── type `‘a62566263` is not an instance of type `'a63056409`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a63086412` is not an instance of type `'a62596266`
+//│ ╟── type `‘a63056409` is not an instance of type `'a62566263`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a63086412` is not an instance of type `'a62596266`
+//│ ╟── type `‘a63056409` is not an instance of type `'a62566263`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a63086412` is not an instance of type `'a62596266`
+//│ ╟── type `‘a63056409` is not an instance of type `'a62566263`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a63086412` is not an instance of type `'a63456413`
+//│ ╟── type `‘a63056409` is not an instance of type `'a63426410`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a63456413` is not an instance of type `'a63086412`
+//│ ╟── type `‘a63426410` is not an instance of type `'a63056409`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a63456413` is not an instance of type `'a63086412`
+//│ ╟── type `‘a63426410` is not an instance of type `'a63056409`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a63456413` is not an instance of type `'a63086412`
+//│ ╟── type `‘a63426410` is not an instance of type `'a63056409`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a63456413` is not an instance of type `'a63806414`
+//│ ╟── type `‘a63426410` is not an instance of type `'a63776411`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a63806414` is not an instance of type `'a63456413`
+//│ ╟── type `‘a63776411` is not an instance of type `'a63426410`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a63806414` is not an instance of type `'a63456413`
+//│ ╟── type `‘a63776411` is not an instance of type `'a63426410`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a63806414` is not an instance of type `'a63456413`
+//│ ╟── type `‘a63776411` is not an instance of type `'a63426410`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a63806414` is not an instance of type `'a64076415`
+//│ ╟── type `‘a63776411` is not an instance of type `'a64046412`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a64076415` is not an instance of type `'a63806414`
+//│ ╟── type `‘a64046412` is not an instance of type `'a63776411`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a64076415` is not an instance of type `'a63806414`
+//│ ╟── type `‘a64046412` is not an instance of type `'a63776411`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a64076415` is not an instance of type `'a63806414`
+//│ ╟── type `‘a64046412` is not an instance of type `'a63776411`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a4847` is not an instance of type `'a63086412`
+//│ ╟── type `‘a4844` is not an instance of type `'a63056409`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
-//│ ╟── but it flows into application with expected type `‘a63086412`
+//│ ╟── but it flows into application with expected type `‘a63056409`
 //│ ║  l.816: 	def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
 //│ ║         	                                         ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a4847` is not an instance of type `'a63456413`
+//│ ╟── type `‘a4844` is not an instance of type `'a63426410`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
-//│ ╟── but it flows into application with expected type `‘a63456413`
+//│ ╟── but it flows into application with expected type `‘a63426410`
 //│ ║  l.816: 	def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
 //│ ║         	                                         ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a4847` is not an instance of type `'a63806414`
+//│ ╟── type `‘a4844` is not an instance of type `'a63776411`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
-//│ ╟── but it flows into application with expected type `‘a63806414`
+//│ ╟── but it flows into application with expected type `‘a63776411`
 //│ ║  l.816: 	def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
 //│ ║         	                                         ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a4847` is not an instance of type `'a64076415`
+//│ ╟── type `‘a4844` is not an instance of type `'a64046412`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
-//│ ╟── but it flows into application with expected type `‘a64076415`
+//│ ╟── but it flows into application with expected type `‘a64046412`
 //│ ║  l.816: 	def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
 //│ ║         	                                         ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a64076415` is not an instance of type `'a64456446`
+//│ ╟── type `‘a64046412` is not an instance of type `'a64426443`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a64456446` is not an instance of type `'a64076415`
+//│ ╟── type `‘a64426443` is not an instance of type `'a64046412`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a64456446` is not an instance of type `'a64076415`
+//│ ╟── type `‘a64426443` is not an instance of type `'a64046412`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a64456446` is not an instance of type `'a64076415`
+//│ ╟── type `‘a64426443` is not an instance of type `'a64046412`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a4847` is not an instance of type `'a64456446`
+//│ ╟── type `‘a4844` is not an instance of type `'a64426443`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
-//│ ╟── but it flows into application with expected type `‘a64456446`
+//│ ╟── but it flows into application with expected type `‘a64426443`
 //│ ║  l.816: 	def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
 //│ ║         	                                         ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -1550,10 +1550,10 @@ this_should_be_98_ =
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j, ?k, ?l. ?d) -> ?m` took too many steps and ran out of fuel (5000)
 //│ ║  l.1544: 	  let c_i5_ = c_add_ c_i3_ c_i2_ in
 //│ ║          	              ^^^^^^^^^^^^^^^^^^
-//│ ╟──  + α3045_9800''
+//│ ╟──  + α3045_9797''
 //│ ║  l.817: 	def c_succ_ n = fun f -> fun x -> n f (f x)
 //│ ║         	                                    ^
-//│ ╙──  - α2992_9866''
+//│ ╙──  - α2992_9863''
 //│ this_should_be_98_: string
 //│                   = '98'
 
@@ -1566,8 +1566,8 @@ c_i5_ = c_add_ c_i3_ c_i2
 //│ ║  l.1564: 	c_i5_ = c_add_ c_i3_ c_i2
 //│ ║          	        ^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α3044_12198'  <:  ((α3045_12227',) -> α3050_12231')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α3044''  <:  ((α3045_12207''',) -> α3050_12211''')
+//│ ╟── this constraint:  α3044_12195'  <:  ((α3045_12224',) -> α3050_12228')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α3044''  <:  ((α3045_12204''',) -> α3050_12208''')
 //│ c_i5_: error
 //│      = [Function (anonymous)]
 

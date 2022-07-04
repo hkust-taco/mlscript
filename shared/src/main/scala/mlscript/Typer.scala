@@ -636,9 +636,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case Asc(trm, ty) =>
         // val trm_ty = typeTerm(trm)
         val trm_ty = if (ctx.inPattern /* || !generalizeCurriedFunctions */) typeTerm(trm)
-        else PolymorphicType.mk(ctx.lvl, ctx.nextLevel { implicit ctx =>
-          typeTerm(trm)
-        })
+        // else PolymorphicType.mk(ctx.lvl, ctx.nextLevel { implicit ctx =>
+        //   typeTerm(trm)
+        // })
+        // else ctx.poly { implicit ctx =>
+        //   typeTerm(trm)
+        // }
+        else typeTerm(trm)
         val ty_ty = typeType(ty)(ctx.copy(inPattern = false), raise, vars)
         con(trm_ty, ty_ty, ty_ty)
         if (ctx.inPattern)
