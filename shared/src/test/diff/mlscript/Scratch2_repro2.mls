@@ -6,12 +6,12 @@ def s n = fun f -> fun x -> f (n f x)
 // def s n = fun f -> fun x -> (n f x)
 // def s n = fun f -> n f
 // def s n = n
-//│ s: (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. (('c -> 'a & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
+//│ s: ('a -> 'b -> 'c & 'd) -> (forall 'a, 'c, 'd, 'e, 'f, 'g, 'h, 'i. ((('g | 'h | 'c) -> 'i & 'a & 'e) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l. (('b & 'f & 'j) -> ('l | 'i)
 //│   where
-//│     'a <: 'b -> 'd -> 'e
-//│     'b <: 'e -> 'f))
+//│     'd <: 'e -> 'j -> ('h & 'k)
+//│     'e <: ('k | 'g | 'c) -> 'l))
 //│   where
-//│     'a <: 'b -> nothing -> 'c))
+//│     'd <: 'e -> 'f -> 'g))
 //│  = [Function: s]
 
 // type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -27,24 +27,49 @@ type ChI = (forall 'M. ('M -> 'M) -> ('M -> 'M))
 
 :ns
 sz = s zero
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ sz: forall 'a, 'b. 'a
+//│   where
+//│     'a :> 'c -> ('d -> 'e
+//│   where
+//│     'b <: 'c -> 'f
+//│     'c <: 'g -> 'e)
+//│   where
+//│     'b <: 'c -> 'h
+//│     'f :> 'h
+//│        <: 'd -> 'g
+//│     'g :> 'i
+//│        <: 'j
+//│     'h :> 'k
+//│        <: 'l -> 'i
+//│     'k :> 'N -> 'N
+//│        <: 'm -> 'n
+//│     'e :> 'o
+//│     'd <: 'l
+//│     'l <: 'm
+//│     'm <: 'N
+//│     'c <: 'p & 'j -> 'o
+//│     'j :> 'i
+//│     'i :> 'n
+//│     'p <: 'N -> 'N
+//│     'N <: 'n
+//│   = <no result>
+//│     zero is not implemented
 
 // Note: the error is delayed...
 :e // due to tapping
 sz1 = sz 1
-//│ ╔══[ERROR] identifier not found: sz
-//│ ║  l.46: 	sz1 = sz 1
-//│ ╙──      	      ^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.60: 	sz1 = sz 1
+//│ ║        	      ^^^^
+//│ ╟── integer literal of type `1` is not a function
+//│ ║  l.60: 	sz1 = sz 1
+//│ ║        	         ^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.19: 	def zero: ('N -> 'N) -> ('N -> 'N)
+//│ ║        	          ^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.5: 	def s n = fun f -> fun x -> f (n f x)
+//│ ╙──     	                                 ^
 //│ sz1: error
 //│    = <no result>
 //│      sz and zero are not implemented
@@ -57,33 +82,36 @@ sz1 2
 
 :e // due to tapping
 sz true
-//│ ╔══[ERROR] identifier not found: sz
-//│ ║  l.67: 	sz true
-//│ ╙──      	^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.84: 	sz true
+//│ ║        	^^^^^^^
+//│ ╟── reference of type `true` is not a function
+//│ ║  l.84: 	sz true
+//│ ║        	   ^^^^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.19: 	def zero: ('N -> 'N) -> ('N -> 'N)
+//│ ║        	          ^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.5: 	def s n = fun f -> fun x -> f (n f x)
+//│ ╙──     	                                 ^
 //│ res: error
 //│    = <no result>
 //│      sz and zero are not implemented
 
 sz: ChI
-//│ ╔══[ERROR] identifier not found: sz
-//│ ║  l.81: 	sz: ChI
-//│ ╙──      	^^
 //│ res: ChI
 //│    = <no result>
 //│      sz and zero are not implemented
 
 s zero
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ res: ('N -> 'N & ('N | 'a | 'b) -> 'c & 'd) -> (forall 'd, 'e, 'a, 'b, 'c, 'f, 'g, 'h. (('e & 'N & 'f) -> ('h | 'c)
+//│   where
+//│     'i <: 'd -> 'f -> ('b & 'g)
+//│     'd <: ('N | 'g | 'a) -> 'h))
+//│   where
+//│     'i <: 'd -> 'e -> 'a
+//│    = <no result>
+//│      zero is not implemented
 
 // :e // works with quantif extrus
 // :e // due to tapping
@@ -92,32 +120,16 @@ res: ChI
 //│    = [Function: s]
 
 let tmp = s zero in tmp: ChI
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ res: ChI
+//│    = <no result>
+//│      zero is not implemented
 
 // FIXedME:
 // :d
 s zero : ChI
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ res: ChI
+//│    = <no result>
+//│      zero is not implemented
 
 
 
@@ -132,16 +144,16 @@ def example f = (f: forall 'a. 'a -> 'a)
 :e
 example 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.125: 	example 1
+//│ ║  l.145: 	example 1
 //│ ║         	^^^^^^^^^
 //│ ╟── integer literal of type `1` is not a function
-//│ ║  l.125: 	example 1
+//│ ║  l.145: 	example 1
 //│ ║         	        ^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.120: 	def example f = (f: forall 'a. 'a -> 'a)
+//│ ║  l.140: 	def example f = (f: forall 'a. 'a -> 'a)
 //│ ║         	                               ^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.120: 	def example f = (f: forall 'a. 'a -> 'a)
+//│ ║  l.140: 	def example f = (f: forall 'a. 'a -> 'a)
 //│ ╙──       	                 ^
 //│ res: error
 //│    = 1
@@ -149,10 +161,10 @@ example 1
 :e
 example succ
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.142: 	example succ
+//│ ║  l.162: 	example succ
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type `‘a` is not an instance of type `int`
-//│ ║  l.120: 	def example f = (f: forall 'a. 'a -> 'a)
+//│ ║  l.140: 	def example f = (f: forall 'a. 'a -> 'a)
 //│ ╙──       	                           ^^
 //│ res: error
 //│    = [Function: succ]
@@ -166,12 +178,12 @@ example id
 
 // FIXME: Rigid variable extrusion here! We should clean extr contexts of local rigids before returning them....
 def example f = ((0, f) : forall 'a. (0, 'a))
-//│ example: ‘a -> (0, nothing,)
+//│ example: ‘a385 -> (0, nothing,)
 //│        = [Function: example1]
 
 // FIXME same
 def example f = ((0, f) : forall 'a. (0, 'a -> 'a))
-//│ example: (‘a -> ‘a) -> (forall 'a. (0, 'a -> 'a,))
+//│ example: (‘a390 -> ‘a390) -> (forall 'a. (0, 'a -> 'a,))
 //│        = [Function: example2]
 
 
@@ -199,16 +211,16 @@ id_ty = id
 //│   <:  id_ty:
 //│ 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.185: 	id_ty = id
+//│ ║  l.205: 	id_ty = id
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `‘a` is not a function
-//│ ║  l.171: 	def id_ty: forall 'a. 'a -> 'a
+//│ ║  l.191: 	def id_ty: forall 'a. 'a -> 'a
 //│ ║         	                  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.176: 	rec def id x = let tmp = id id x in x
+//│ ║  l.196: 	rec def id x = let tmp = id id x in x
 //│ ║         	                         ^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.176: 	rec def id x = let tmp = id id x in x
+//│ ║  l.196: 	rec def id x = let tmp = id id x in x
 //│ ╙──       	                                    ^
 //│      = [Function: id1]
 

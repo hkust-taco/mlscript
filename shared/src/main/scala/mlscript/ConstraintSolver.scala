@@ -476,6 +476,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 cache -= lhs -> rhs
                 ()
               } else {
+                /* 
                 ???
                 // val rhs2 = PolymorphicType.mk(lhs.level, {
                 //   implicit val flexifyRigids: Bool = true
@@ -499,6 +500,17 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 rec(lhs, rhs2, true)
                 }
                 // ???
+                */
+                val rhs2 = PolymorphicType.mk(lhs.level, { // FIXME???!??!?!?
+                  implicit val flexifyRigids: Bool = true
+                  extrude(rhs, lhs.level, false, MaxLevel)
+                  // rhs0
+                })
+                // println(s"EXTR RHS  $rhs0  ~>  $rhs2  to ${lhs.level}")
+                println(s"EXTR RHS  ~>  $rhs2  to ${lhs.level}")
+                println(s" where ${rhs2.showBounds}")
+                // println(s"   and ${rhs.showBounds}")
+                rec(lhs, rhs2, true)
               }
             } else {
             println(s"NEW $lhs UB (${rhs.level})")
@@ -522,12 +534,23 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 cache -= lhs -> rhs
                 ()
               } else {
+                /* 
                 ???
                 // val lhs = extrude(lhs0, rhs.level, true, MaxLevel)
                 val lhs2 = { // TODO make into existential...
                   implicit val flexifyRigids: Bool = false
                   extrude(lhs, rhs.level, true, MaxLevel)
                 }
+                rec(lhs2, rhs, true)
+                */
+                val lhs2 = { // TODO make into existential...
+                  implicit val flexifyRigids: Bool = false
+                  extrude(lhs, rhs.level, true, MaxLevel)
+                }
+                // println(s"EXTR LHS  $lhs0  ~>  $lhs2  to ${rhs.level}")
+                println(s"EXTR LHS  ~>  $lhs2  to ${rhs.level}")
+                println(s" where ${lhs2.showBounds}")
+                // println(s"   and ${lhs.showBounds}")
                 rec(lhs2, rhs, true)
               }
             } else {
@@ -1139,6 +1162,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case ct @ ConstrainedType(cs, bod) =>
         val cs2 = cs.mapKeys(freshen(_).asInstanceOf[TV]).mapValues(_.mapValues(freshen))
         // trace(s"COPYING CONSTRAINTS   (${shadows.size})") {
+        /* 
         trace(s"COPYING CONSTRAINTS   (${cs.mkString(", ")})") {
           implicit val p: TP = NoProv
           cs2.foreach { case (tv, bs) => bs.foreach {
@@ -1149,12 +1173,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           //   case (pol, b) => ctx.extrCtx.getOrElseUpdate(tv, Buffer.empty) += pol -> b
           // }}
         }()
+        */
         ConstrainedType(cs2, freshen(bod))
       case o @ Overload(alts) => Overload(alts.map(freshen(_).asInstanceOf[FunctionType]))(o.prov)
     }}
     // (r => s"=> $r"))
     freshenImpl(ty, below)
   }
+  
+  /* 
   def freshenExtrCtx(above: Int, ec: ExtrCtx, rigidify: Bool = false, below: Int = MaxLevel)
       (implicit ctx:Ctx, //freshened: MutMap[TV, ST],
         raise:Raise,
@@ -1166,6 +1193,27 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         freshenAbove(above, tv, rigidify, below)
             .asInstanceOf[TV] -> // FIXME
           buff.map(_.mapSecond(freshenAbove(above, _, rigidify, below)))
+    }
+  }
+  */
+  def freshenExtrCtx(above: Int, ec: ExtrCtx, rigidify: Bool = false, below: Int = MaxLevel)
+      (implicit ctx:Ctx, //freshened: MutMap[TV, ST],
+        raise:Raise,
+        shadows: Shadows,
+        ): ExtrCtx = {
+    // implicit val state = MutMap.empty[TV, ST]
+    implicit val cache: MutMap[PolarVariable, TV] = MutMap.empty
+    val init = MutSortMap.empty[TraitTag, TraitTag]
+    
+    {
+    implicit val cache2: MutSortMap[TraitTag, TraitTag] = init
+    implicit val flexifyRigids: Bool = false // Q: can this lead to worse results than when extruding bounds individually?!
+    ec.map {
+      case (tv, buff) =>
+        extrude(tv, above, true, below) // FIXME true?
+            .asInstanceOf[TV] -> // FIXME
+          buff.map { case (pol, bound) => (pol, extrude(bound, above, pol, below)) }
+    }
     }
   }
   

@@ -67,22 +67,12 @@ def cons: 'a -> List['a] -> List['a]
 def cons head tail = Cons { head; tail }
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'b, 'head, 'a, 'tail. ((List['a] & 'tail) -> (Cons['a] with {head: 'head, tail: 'tail})
+//│ 'head -> (forall 'head, 'head0, 'a, 'tail. ((List['a] & 'tail) -> (Cons['a | 'head] with {head: 'head | 'head0, tail: 'tail})
 //│   where
-//│     'b <: 'head & 'a))
+//│     'head <: 'head0 & 'a))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│     = [Function: cons]
 
 def is_empty: forall 'a. List['a] -> bool
 def is_empty l = eq l nil
@@ -155,22 +145,12 @@ def choose: 'a -> 'a -> 'a
 def choose x y = if true then x else y
 //│ choose: 'a -> 'a -> 'a
 //│       = <missing implementation>
-//│ 'a -> (forall 'a, 'b. ('b -> 'b
+//│ 'a -> (forall 'a, 'b. ('b -> ('b | 'a)
 //│   where
 //│     'a <: 'b))
 //│   <:  choose:
 //│ 'a -> 'a -> 'a
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│       = [Function: choose]
 
 def poly: (forall 'a. 'a -> 'a) -> (int, bool)
 def poly f = (f 1, f true)
@@ -214,22 +194,12 @@ def app: ('a -> 'b) -> 'a -> 'b
 def app f x = f x
 //│ app: ('a -> 'b) -> 'a -> 'b
 //│    = <missing implementation>
-//│ (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ ('a -> 'b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e. (('a & 'd) -> ('e | 'b)
 //│   where
-//│     'a <: 'b -> 'c))
+//│     'c <: 'd -> 'e))
 //│   <:  app:
 //│ ('a -> 'b) -> 'a -> 'b
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│    = [Function: app]
 
 def revapp: 'a -> ('a -> 'b) -> 'b
 def revapp x f = f x
@@ -244,24 +214,14 @@ def flip: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 def flip f = fun x -> fun y -> f y x
 //│ flip: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 //│     = <missing implementation>
-//│ (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('c -> 'd
+//│ ('a -> 'b -> 'c & 'd) -> (forall 'b, 'd, 'e, 'f, 'g. (('b & 'f) -> (forall 'a, 'c, 'd, 'e, 'f, 'g, 'h, 'i. (('a & 'e & 'h) -> ('i | 'g | 'c)
 //│   where
-//│     'a <: 'c -> 'b -> 'd))
+//│     'd <: 'h -> 'f -> 'i))
 //│   where
-//│     'a <: nothing -> 'b -> 'a))
+//│     'd <: 'e -> 'f -> 'g))
 //│   <:  flip:
 //│ ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│     = [Function: flip]
 
 :ng
 def runST: (forall 's. ST['s, 'v]) -> 'v
@@ -334,8 +294,8 @@ f (choose id) ids
 //│ ║  l.292: 	f (choose id) ids
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ('a281' -> 'a281')›  <:  'a691_698    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ('a281' -> 'a281')›  <:  'a691'
+//│ ╟── this constraint:  ‹∀ 0. ('a289' -> 'a289')›  <:  'a732_739    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ('a289' -> 'a289')›  <:  'a732'
 //│ res: error
 
 // * ^ Strangely, this one works with recursive types:
@@ -562,14 +522,14 @@ a id
 // * FIXME: without constrained types, the type of argument x was not polymorphic enough
 // * I guess we're swallowing/delaying a constraint?
 // :e // due to tapping
-:e // refreshing-extr
+// :e // refreshing-extr
 :ns
 choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ res: 'c
 //│   where
 //│     'c :> (forall 'a. 'a -> 'a) | (forall 'a0, 'd, 'b. ('a0 -> 'a0) -> 'd)
 //│     'd :> 'b -> 'b
-//│     'a0 := ‘a
+//│     'a0 := ‘a1080
 //│    = [Function: id1]
 
 // :e // * ^ Here you go:
@@ -577,11 +537,11 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 :e // FIXME? refreshing-extr
 res id
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.548: 	res id
+//│ ║  l.538: 	res id
 //│ ║         	^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‘a  <:  'a1036_1042    TraitTag  TypeVariable
-//│ ╙──  ... looks like:  ‘a  <:  'a1036'
+//│ ╟── this constraint:  ‘a1080  <:  'a1077_1084    TraitTag  TypeVariable
+//│ ╙──  ... looks like:  ‘a1080  <:  'a1077'
 //│ res: 'a -> 'a | error
 //│    = [Function: id1]
 
@@ -589,10 +549,10 @@ res id
 :e
 a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.560: 	a (fun x -> { u = x })
+//│ ║  l.550: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a`
-//│ ║  l.560: 	a (fun x -> { u = x })
+//│ ║  l.550: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b

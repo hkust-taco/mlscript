@@ -10,15 +10,15 @@
 def s n = fun f -> fun x -> (n f x)
 def s n = fun f -> n f
 def s n = n
-//│ s: (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('c -> 'd
+//│ s: ('a -> 'b -> 'c & 'd) -> (forall 'a, 'd, 'e, 'f, 'g. (('a & 'e) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i. (('b & 'f & 'h) -> ('i | 'g | 'c)
 //│   where
-//│     'a <: 'b -> 'c -> 'd))
+//│     'd <: 'e -> 'h -> 'i))
 //│   where
-//│     'a <: 'b -> nothing -> 'a))
+//│     'd <: 'e -> 'f -> 'g))
 //│  = [Function: s]
-//│ s: (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ s: ('a -> 'b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e. (('a & 'd) -> ('e | 'b)
 //│   where
-//│     'a <: 'b -> 'c))
+//│     'c <: 'd -> 'e))
 //│  = [Function: s1]
 //│ s: 'a -> 'a
 //│  = [Function: s2]
@@ -30,7 +30,7 @@ def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M
 // :DistributeForalls
 
 // :ns
-// :e // * Needs distrib (see below)
+// :e // * Needed distrib (see below)
 // :d
 succ = s
 //│ 'a -> 'a
@@ -45,9 +45,9 @@ succ = s
 
 // :d
 def s n = fun f -> n f
-//│ s: (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ s: ('a -> 'b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e. (('a & 'd) -> ('e | 'b)
 //│   where
-//│     'a <: 'b -> 'c))
+//│     'c <: 'd -> 'e))
 //│  = [Function: s3]
 
 // def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -63,22 +63,12 @@ def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
 succ_min = s
 // succ n = s n
 // s id : (forall 'M. ('M -> 'M))
-//│ (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ ('a -> 'b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e. (('a & 'd) -> ('e | 'b)
 //│   where
-//│     'a <: 'b -> 'c))
+//│     'c <: 'd -> 'e))
 //│   <:  succ_min:
 //│ (forall 'N. 'N -> 'N) -> (forall 'M. 'M -> 'M)
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│         = [Function: s3]
 
 
 

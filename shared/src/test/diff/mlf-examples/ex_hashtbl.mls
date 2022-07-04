@@ -21,22 +21,12 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'b, 'head, 'a, 'tail. ((List['a] & 'tail) -> (Cons['a] with {head: 'head, tail: 'tail})
+//│ 'head -> (forall 'head, 'head0, 'a, 'tail. ((List['a] & 'tail) -> (Cons['a | 'head] with {head: 'head0 | 'head, tail: 'tail})
 //│   where
-//│     'b <: 'head & 'a))
+//│     'head <: 'head0 & 'a))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│     = [Function: cons]
 
 class Nil[a]: List[a]
   method Head = error
@@ -107,11 +97,11 @@ def create_hashtbl _ = nil
 
 // let hashtbl_add table key element = (key, element) :: table
 def hashtbl_add table key element = cons ((key, element)) table
-//│ hashtbl_add: (List['a] & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d -> List[('b, 'd,) | 'c]
+//│ hashtbl_add: (List['a] & 'b) -> (forall 'b, 'c, 'd. ('d -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f -> List[('d, 'f,) | 'c | 'a | 'e]
 //│   where
-//│     'a <: List['c]))
+//│     'b <: List['e]))
 //│   where
-//│     'a <: List['a]))
+//│     'b <: List['c]))
 //│            = [Function: hashtbl_add]
 
 // let rec find table key = 
@@ -150,17 +140,8 @@ def find_A table key =
 //│     'a <: List['a] & List[{_1: 'a}] & List[{_2: 'val}] & List[('a, 'b,)]))
 //│   <:  find_A:
 //│ List[(anything, 'b,)] -> anything -> (None | Some['b])
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│       = <no result>
+//│         find_A is not implemented
 
 // let nfind table key =
 //   begin match find table key with
@@ -185,51 +166,54 @@ type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 // let succ (n:Int) = fun f x -> f (n f x)
 def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 def succ_ n = fun f -> fun x -> f (n f x)
-//│ succ: ChurchInt -> (forall 'a, 'b, 'c. (('c -> anything & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
+//│ succ: ChurchInt -> (forall 'b, 'c, 'd, 'e, 'a, 'f, 'g. (('a -> 'a & ('a | 'e | 'f) -> 'g & 'c) -> (forall 'b, 'c, 'd, 'e, 'a, 'f, 'g, 'h, 'i, 'j. (('d & 'a & 'h) -> ('j | 'g)
 //│   where
-//│     'a <: 'b -> 'd -> 'e
-//│     'b <: 'e -> 'f))
+//│     'b <: 'c -> 'h -> ('f & 'i)
+//│     'c <: ('a | 'i | 'e) -> 'j))
 //│   where
-//│     'a <: 'b -> nothing -> 'c))
+//│     'b <: 'c -> 'd -> 'e))
 //│     = [Function: succ]
-//│ succ_: (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. (('c -> 'a & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
+//│ succ_: ('a -> 'b -> 'c & 'd) -> (forall 'a, 'c, 'd, 'e, 'f, 'g, 'h, 'i. ((('g | 'h | 'c) -> 'i & 'a & 'e) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l. (('b & 'f & 'j) -> ('l | 'i)
 //│   where
-//│     'a <: 'b -> 'd -> 'e
-//│     'b <: 'e -> 'f))
+//│     'd <: 'e -> 'j -> ('h & 'k)
+//│     'e <: ('k | 'g | 'c) -> 'l))
 //│   where
-//│     'a <: 'b -> nothing -> 'c))
+//│     'd <: 'e -> 'f -> 'g))
 //│      = [Function: succ_]
 
 // let add (n:Int) (m:Int) = n succ m
 
 //:e // due to tapping
 def add (n: ChurchInt) (m: ChurchInt) = n succ m
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ add: ChurchInt -> (forall 'b. (ChurchInt -> (forall 'c, 'd, 'e, 'f, 'a, 'g, 'h. (('a -> 'a & ('a | 'f | 'g) -> 'h & 'd) -> (forall 'c, 'd, 'e, 'f, 'a, 'g, 'h, 'i, 'j, 'k. (('e & 'a & 'i) -> ('k | 'h)
+//│   where
+//│     'c <: 'd -> 'i -> ('g & 'j)
+//│     'd <: ('a | 'j | 'f) -> 'k)) | ChurchInt | 'l
+//│   where
+//│     'c <: 'd -> 'e -> 'f))
+//│   where
+//│     'b <: (ChurchInt -> (forall 'c, 'd, 'e, 'f, 'a, 'g, 'h. (('a -> 'a & ('a | 'f | 'g) -> 'h & 'd) -> (forall 'c, 'd, 'e, 'f, 'a, 'g, 'h, 'i, 'j, 'k. (('e & 'a & 'i) -> ('k | 'h)
+//│   where
+//│     'c <: 'd -> 'i -> ('g & 'j)
+//│     'd <: ('a | 'j | 'f) -> 'k))
+//│   where
+//│     'c <: 'd -> 'e -> 'f))) -> ChurchInt -> 'l))
+//│    = [Function: add]
 
 def add_ n m = n succ_ m
-//│ add_: ((forall 'a. (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. (('c -> 'a & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
+//│ add_: ((forall 'a, 'b, 'c, 'd. ('a -> 'b -> 'c & 'd) -> (forall 'a, 'c, 'd, 'e, 'f, 'g, 'h, 'i. ((('g | 'h | 'c) -> 'i & 'a & 'e) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l. (('b & 'f & 'j) -> ('l | 'i)
 //│   where
-//│     'a <: 'b -> 'd -> 'e
-//│     'b <: 'e -> 'f))
+//│     'd <: 'e -> 'j -> ('h & 'k)
+//│     'e <: ('k | 'g | 'c) -> 'l))
 //│   where
-//│     'a <: 'b -> nothing -> 'c))) -> nothing -> 'a & 'g) -> (forall 'g. ('h -> 'i
+//│     'd <: 'e -> 'f -> 'g))) -> 'm -> 'n & 'o) -> (forall 'o. (('m & 'p) -> ('q | 'n)
 //│   where
-//│     'g <: (forall 'a. (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. (('c -> 'a & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
+//│     'o <: (forall 'a, 'b, 'c, 'd. ('a -> 'b -> 'c & 'd) -> (forall 'a, 'c, 'd, 'e, 'f, 'g, 'h, 'i. ((('g | 'h | 'c) -> 'i & 'a & 'e) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l. (('b & 'f & 'j) -> ('l | 'i)
 //│   where
-//│     'a <: 'b -> 'd -> 'e
-//│     'b <: 'e -> 'f))
+//│     'd <: 'e -> 'j -> ('h & 'k)
+//│     'e <: ('k | 'g | 'c) -> 'l))
 //│   where
-//│     'a <: 'b -> nothing -> 'c))) -> 'h -> 'i))
+//│     'd <: 'e -> 'f -> 'g))) -> 'p -> 'q))
 //│     = [Function: add_]
 
 // let printInt (n:Int) = print (n (fun x -> x+1) 0)
@@ -248,17 +232,18 @@ table = hashtbl_add table "one" (fun f -> fun x -> f x)
 table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│ table: List[nothing]
 //│      = Nil {}
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ table: List[("one", forall 'a, 'b, 'c. ('a -> 'b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e. (('a & 'd) -> ('e | 'b)
+//│   where
+//│     'c <: 'd -> 'e)),)]
+//│      = Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
+//│ table: List[("one" | "two", forall 'a, 'b, 'c, 'd, 'e, 'f. ('a -> 'b & ('c | 'd) -> 'b & 'a -> 'c & 'e & 'f) -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i. (('a & 'g) -> ('h | 'b)
+//│   where
+//│     'e <: 'g -> 'h
+//│     'f <: 'g -> ('d & 'i) & ('i | 'c) -> 'h)),)]
+//│      = Cons {
+//│          head: [ 'two', [Function (anonymous)] ],
+//│          tail: Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
+//│        }
 
 // let zog =
 //   printInt (add (nfind table "one") (nfind table "two"))
@@ -267,17 +252,8 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 // * Note: this one requires `:DistributeForalls`
 // :e // due to tapping
 zog = printInt (add (nfind table "one") (nfind table "two"))
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ zog: string
+//│    = '0'
 
 // Repro:
 
@@ -285,57 +261,76 @@ zog = printInt (add (nfind table "one") (nfind table "two"))
 //:e // due to tapping
 // :e // FIXME? refreshing-extr
 a = add (nfind table "one")
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ a: ChurchInt -> (forall 'b, 'c, 'd, 'e, 'a, 'f, 'g. (('a -> 'a & ('a | 'e | 'f) -> 'g & 'c) -> (forall 'b, 'c, 'd, 'e, 'a, 'f, 'g, 'h, 'i, 'j. (('d & 'a & 'h) -> ('j | 'g)
+//│   where
+//│     'b <: 'c -> 'h -> ('f & 'i)
+//│     'c <: ('a | 'i | 'e) -> 'j)) | ChurchInt | 'k
+//│   where
+//│     'b <: 'c -> 'd -> 'e))
+//│   where
+//│     'l <: (ChurchInt -> (forall 'b, 'c, 'd, 'e, 'a, 'f, 'g. (('a -> 'a & ('a | 'e | 'f) -> 'g & 'c) -> (forall 'b, 'c, 'd, 'e, 'a, 'f, 'g, 'h, 'i, 'j. (('d & 'a & 'h) -> ('j | 'g)
+//│   where
+//│     'b <: 'c -> 'h -> ('f & 'i)
+//│     'c <: ('a | 'i | 'e) -> 'j))
+//│   where
+//│     'b <: 'c -> 'd -> 'e))) -> ChurchInt -> 'k
+//│  = [Function (anonymous)]
 
 // :e // FIXME? refreshing-extr
 b = (nfind table "two")
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ b: nothing -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'b) -> ('f | 'd)
+//│   where
+//│     'a <: 'b -> 'c & 'c -> 'd
+//│     'e <: 'b -> 'd
+//│     'e <: 'b -> 'd
+//│     'e <: 'b -> 'd
+//│     'a <: 'b -> 'c & 'c -> 'd
+//│     'e <: 'b -> 'd
+//│     'e <: 'b -> 'd
+//│     'e <: 'b -> 'd))
+//│  = [Function (anonymous)]
 
 // * Note: this one requires `:DistributeForalls`
 // :d
 //:e // due to tapping
 a b
-//│ ╔══[ERROR] identifier not found: a
-//│ ║  l.277: 	a b
-//│ ╙──       	^
-//│ ╔══[ERROR] identifier not found: b
-//│ ║  l.277: 	a b
-//│ ╙──       	  ^
-//│ res: error
+//│ res: ('a -> 'a & ('a | 'b | 'c) -> 'd & 'e) -> (forall 'f, 'e, 'g, 'b, 'a, 'c, 'd, 'h, 'i, 'j. (('g & 'a & 'h) -> ('j | 'd)
+//│   where
+//│     'f <: 'e -> 'h -> ('c & 'i)
+//│     'e <: ('a | 'i | 'b) -> 'j)) | ChurchInt
+//│   where
+//│     'f <: 'e -> 'g -> 'b
+//│     'f <: 'e -> 'g -> 'b
 //│    = [Function (anonymous)]
 
 // :e // FIXME? refreshing-extr
 //:e // due to tapping
+:e // FIXME?
 zog_ = printInt_ (add_ (nfind table "one") (nfind table "two"))
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: ?b -> ?c` took too many steps and ran out of fuel (5000)
+//│ ║  l.309: 	zog_ = printInt_ (add_ (nfind table "one") (nfind table "two"))
+//│ ║         	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + {(α858_5966' -> α859_5967') where: α857_5961' <: ((α858_5966',) -> α859_5967')}
+//│ ║  l.231: 	table = hashtbl_add table "one" (fun f -> fun x -> f x)
+//│ ║         	                                          ^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 2. {(α858_5964''' -> α859_5965''') where: α857_5961' <: ((α858_5964''',) -> α859_5965''')}›
+//│ ║  l.231: 	table = hashtbl_add table "one" (fun f -> fun x -> f x)
+//│ ║         	                                          ^^^^^^^^^^^^
+//│ ╟──  - ((α602_5040',) -> α604_5041')
+//│ ║  l.168: 	def succ_ n = fun f -> fun x -> f (n f x)
+//│ ║         	                                   ^^^^^
+//│ ╟──  - ((α602_5040',) -> α604_5041')
+//│ ║  l.168: 	def succ_ n = fun f -> fun x -> f (n f x)
+//│ ║         	                                   ^^^^^
+//│ ╟──  - ((α602_5040',) -> α604_5041')
+//│ ║  l.168: 	def succ_ n = fun f -> fun x -> f (n f x)
+//│ ║         	                                   ^^^
+//│ ╟──  - ((α602_5040',) -> α604_5041')
+//│ ║  l.168: 	def succ_ n = fun f -> fun x -> f (n f x)
+//│ ║         	                                   ^^^
+//│ ╟──  - α603_5039'
+//│ ║  l.168: 	def succ_ n = fun f -> fun x -> f (n f x)
+//│ ╙──       	                                   ^^^
+//│ zog_: string
+//│     = '0'
 

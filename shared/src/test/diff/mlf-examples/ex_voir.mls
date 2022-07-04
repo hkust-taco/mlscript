@@ -20,22 +20,12 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'b, 'head, 'a, 'tail. ((List['a] & 'tail) -> (Cons['a] with {head: 'head, tail: 'tail})
+//│ 'head -> (forall 'head, 'head0, 'a, 'tail. ((List['a] & 'tail) -> (Cons['a | 'head] with {head: 'head0 | 'head, tail: 'tail})
 //│   where
-//│     'b <: 'head & 'a))
+//│     'head <: 'head0 & 'a))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│     = [Function: cons]
 
 class Nil[a]: List[a]
   method Head = error
@@ -67,7 +57,7 @@ def choose3 x y z = choose (choose x y) z
 def id = (fun x -> x) : Sid
 def id_ = fun x -> x
 def succ n = n + 1
-//│ choose: 'a -> (forall 'a, 'b. ('b -> 'b
+//│ choose: 'a -> (forall 'a, 'b. ('b -> ('b | 'a)
 //│   where
 //│     'a <: 'b))
 //│       = [Function: choose]
@@ -91,17 +81,30 @@ def test = choose3 id
 def test_ = choose3 id_
 def test2 = test succ
 def test2_ = test_ succ
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ test: 'a -> (forall 'b, 'a, 'c. ('c -> 'c
+//│   where
+//│     'b <: 'a
+//│     'a <: 'a))
+//│   where
+//│     'b <: 'a
+//│     = [Function (anonymous)]
+//│ test_: 'a -> (forall 'b, 'a, 'c. ('c -> 'c
+//│   where
+//│     'b <: 'a
+//│     'a <: 'a))
+//│   where
+//│     'b <: 'a
+//│      = [Function (anonymous)]
+//│ test2: 'a -> 'a
+//│   where
+//│     'b <: anything
+//│     'c <: anything
+//│      = [Function (anonymous)]
+//│ test2_: 'a -> 'a
+//│   where
+//│     'b <: anything
+//│     'c <: anything
+//│       = [Function (anonymous)]
 
 // (* Messages d'erreur foireux : *)
 // type s1 = ['a] 'a -> int * int ;;
@@ -114,13 +117,13 @@ fun x -> fun y -> ((x : S1), (y : S2), if true then x else y)
 fun x -> fun y -> ((x : S1), (y : S2), x x)
 //│ Defined type alias S1
 //│ Defined type alias S2
-//│ res: (S1 & 'a) -> (forall 'a, 'b. ((S2 & 'b) -> (S1, S2, 'b,)
+//│ res: (S1 & 'a) -> (forall 'a, 'b. ((S2 & 'b) -> (S1, S2, 'b | 'a,)
 //│   where
 //│     'a <: 'b))
 //│    = [Function: res]
-//│ res: (S1 & 'a -> anything & 'a) -> (forall 'a, 'b. (S2 -> (S1, S2, 'b,)
+//│ res: (S1 & 'a -> 'b & 'a) -> (forall 'a, 'b, 'c. (S2 -> (S1, S2, 'c | 'b,)
 //│   where
-//│     'a <: 'a -> 'b))
+//│     'a <: 'a -> 'c))
 //│    = [Function: res]
 
 // (* please onlyweak ['b = sid] 'b -> 'b : sid -> sid *)
@@ -144,7 +147,7 @@ def mkpair x y = (x, y)
 // *)
 example mkpair
 example_ mkpair
-//│ res: int -> (‘a, int,)
+//│ res: int -> (‘a624, int,)
 //│    = [Function (anonymous)]
 //│ res: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('b, 'c,)), 'a,)
 //│    = [Function (anonymous)]

@@ -7,9 +7,9 @@
 // def s n = fun f -> fun x -> (n f x)
 // def s n = fun f -> fun x -> (n f x)
 def s n = fun f -> n f
-//│ s: (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ s: ('a -> 'b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e. (('a & 'd) -> ('e | 'b)
 //│   where
-//│     'a <: 'b -> 'c))
+//│     'c <: 'd -> 'e))
 //│  = [Function: s]
 
 :ns
@@ -18,6 +18,8 @@ s
 //│   where
 //│     'a <: 'd -> 'e))
 //│   where
+//│     'e :> 'c
+//│     'd <: 'b
 //│     'a <: 'b -> 'c
 //│    = [Function: s]
 
@@ -43,23 +45,29 @@ rec def to_ch n =
   s (to_ch n)
 // rec def to_ch n =
 //   to_ch n
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ to_ch: anything -> anything -> nothing
+//│      = [Function: to_ch]
 
 :ns
 to_ch
-//│ res: forall 'to_ch, 'a, 'b. 'to_ch
+//│ res: forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h. forall 'to_ch, 'i, 'a, 'j, 'b, 'c, 'd, 'e, 'f, 'g, 'h. 'to_ch
 //│   where
-//│     'to_ch <: 'a -> 'b
+//│     'to_ch :> 'i -> 'j
+//│            <: 'i -> 'a
+//│     'j :> forall 'k, 'l. 'k -> 'l
+//│        <: 'a
+//│     'a :> forall 'k, 'l. 'k -> 'l
+//│        <: 'b
+//│     'b :> forall 'k, 'l. 'k -> 'l
+//│        <: 'e -> 'f & 'c -> 'd
+//│     'l :> 'f | 'd
+//│     'f <: 'd
+//│     'd <: 'f
+//│     'k <: 'e & 'c
+//│     'e <: 'g
+//│     'g <: 'e & 'c
+//│     'c <: 'h
+//│     'h <: 'e & 'c
 //│    = [Function: to_ch]
 
 // :d
@@ -76,7 +84,7 @@ to_ch 1 2
 // :e // fails with quantif extrus
 // :e // fails with gen lam bodies
 to_church = to_ch
-//│ nothing
+//│ anything -> anything -> nothing
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│          = [Function: to_ch]

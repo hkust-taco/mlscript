@@ -13,12 +13,12 @@ def z f x = x
 //│  = [Function: z]
 
 def s n f x = f (n f x)
-//│ s: (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. (('c -> 'a & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
+//│ s: ('a -> 'b -> 'c & 'd) -> (forall 'a, 'c, 'd, 'e, 'f, 'g, 'h, 'i. ((('g | 'h | 'c) -> 'i & 'a & 'e) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l. (('b & 'f & 'j) -> ('l | 'i)
 //│   where
-//│     'a <: 'b -> 'd -> 'e
-//│     'b <: 'e -> 'f))
+//│     'd <: 'e -> 'j -> ('h & 'k)
+//│     'e <: ('k | 'g | 'c) -> 'l))
 //│   where
-//│     'a <: 'b -> nothing -> 'c))
+//│     'd <: 'e -> 'f -> 'g))
 //│  = [Function: s]
 
 
@@ -35,25 +35,15 @@ def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M
 // :e // works with quantif extrus
 // :e // due to tapping
 succ = s
-//│ (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. (('c -> 'a & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
+//│ ('a -> 'b -> 'c & 'd) -> (forall 'a, 'c, 'd, 'e, 'f, 'g, 'h, 'i. ((('g | 'h | 'c) -> 'i & 'a & 'e) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l. (('b & 'f & 'j) -> ('l | 'i)
 //│   where
-//│     'a <: 'b -> 'd -> 'e
-//│     'b <: 'e -> 'f))
+//│     'd <: 'e -> 'j -> ('h & 'k)
+//│     'e <: ('k | 'g | 'c) -> 'l))
 //│   where
-//│     'a <: 'b -> nothing -> 'c))
+//│     'd <: 'e -> 'f -> 'g))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│     = [Function: s]
 
 
 // * Manually distributing fixes the error:
@@ -63,25 +53,15 @@ def succ0: forall 'M. (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (('M -> 'M) -> ('
 //│      = <missing implementation>
 
 succ0 = s
-//│ (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. (('c -> 'a & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
+//│ ('a -> 'b -> 'c & 'd) -> (forall 'a, 'c, 'd, 'e, 'f, 'g, 'h, 'i. ((('g | 'h | 'c) -> 'i & 'a & 'e) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l. (('b & 'f & 'j) -> ('l | 'i)
 //│   where
-//│     'a <: 'b -> 'd -> 'e
-//│     'b <: 'e -> 'f))
+//│     'd <: 'e -> 'j -> ('h & 'k)
+//│     'e <: ('k | 'g | 'c) -> 'l))
 //│   where
-//│     'a <: 'b -> nothing -> 'c))
+//│     'd <: 'e -> 'f -> 'g))
 //│   <:  succ0:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> ('M -> 'M) -> 'M -> 'M
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│      = [Function: s]
 
 
 
@@ -89,67 +69,45 @@ succ0 = s
 // :e // works with quantif extrus
 // :e // due to tapping
 def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
-//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'a, 'b, 'c. (('c -> anything & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
+//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'a, 'b, 'c, 'd, 'N0, 'e, 'f. (('N0 -> 'N0 & ('N0 | 'd | 'e) -> 'f & 'b) -> (forall 'a, 'b, 'c, 'd, 'N0, 'e, 'f, 'g, 'h, 'i. (('c & 'N0 & 'g) -> ('i | 'f)
 //│   where
-//│     'a <: 'b -> 'd -> 'e
-//│     'b <: 'e -> 'f))
+//│     'a <: 'b -> 'g -> ('e & 'h)
+//│     'b <: ('N0 | 'h | 'd) -> 'i))
 //│   where
-//│     'a <: 'b -> nothing -> 'c))
+//│     'a <: 'b -> 'c -> 'd))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│     = [Function: succ2]
 
 
 
 // :d
 n1 = s z
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ n1: (('a | 'b | 'c) -> 'd & 'e) -> (forall 'f, 'e, 'g, 'a, 'b, 'c, 'd, 'h, 'i, 'j. (('g & 'c & 'h) -> ('j | 'd)
+//│   where
+//│     'f <: 'e -> 'h -> ('b & 'i)
+//│     'e <: ('i | 'a | 'c) -> 'j))
+//│   where
+//│     'f <: 'e -> 'g -> 'a
+//│   = [Function (anonymous)]
 
 n2 = s (s z)
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ n2: ('a -> 'b & ('c | 'd | 'b) -> 'e & 'f) -> (forall 'g, 'f, 'h, 'c, 'a, 'b, 'd, 'e, 'i, 'j, 'k. (('h & 'a & 'i) -> ('k | 'e)
+//│   where
+//│     'g <: 'f -> 'i -> ('d & 'j)
+//│     'f <: ('j | 'c | 'b) -> 'k))
+//│   where
+//│     'g <: 'f -> 'h -> 'c
+//│   = [Function (anonymous)]
 
 n3 = s (s (s z))
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ n3: (('a | 'b | 'c) -> 'd & 'e -> 'c & 'f -> 'e & 'g) -> (forall 'h, 'g, 'i, 'a, 'b, 'c, 'd, 'f, 'j, 'k, 'l. (('i & 'f & 'j) -> ('l | 'd)
+//│   where
+//│     'h <: 'g -> 'j -> ('b & 'k)
+//│     'g <: ('k | 'a | 'c) -> 'l))
+//│   where
+//│     'h <: 'g -> 'i -> 'a
+//│   = [Function (anonymous)]
 
 // def wrap: 'WRA -> 'WRA
 // def wrap: int -> {x:int}
@@ -161,22 +119,19 @@ wrap x = { x }
 
 // :d
 n1w = n1 wrap
-//│ ╔══[ERROR] identifier not found: n1
-//│ ║  l.121: 	n1w = n1 wrap
-//│ ╙──       	      ^^
-//│ n1w: error
+//│ n1w: ('a & 'b & 'c) -> ({x: 'b} | 'd)
+//│   where
+//│     'e <: 'f -> 'a -> ('g & 'b)
+//│     'f <: ('g | 'c) -> 'd
 //│    = [Function (anonymous)]
 
 // :d
 n1w 0
-//│ res: error
+//│ res: {x: 0}
 //│    = { x: 0 }
 
 n1 wrap 0
-//│ ╔══[ERROR] identifier not found: n1
-//│ ║  l.133: 	n1 wrap 0
-//│ ╙──       	^^
-//│ res: error
+//│ res: {x: 0}
 //│    = { x: 0 }
 
 res.x + 1
@@ -184,10 +139,7 @@ res.x + 1
 //│    = 1
 
 n2 wrap 0
-//│ ╔══[ERROR] identifier not found: n2
-//│ ║  l.141: 	n2 wrap 0
-//│ ╙──       	^^
-//│ res: error
+//│ res: {x: {x: 0}}
 //│    = { x: { x: 0 } }
 
 res.x.x + 1
@@ -195,10 +147,7 @@ res.x.x + 1
 //│    = 1
 
 n3 wrap 0
-//│ ╔══[ERROR] identifier not found: n3
-//│ ║  l.149: 	n3 wrap 0
-//│ ╙──       	^^
-//│ res: error
+//│ res: {x: {x: {x: 0}}}
 //│    = { x: { x: { x: 0 } } }
 
 res.x.x.x + 1
@@ -210,25 +159,15 @@ res.x.x.x + 1
 :DistributeForalls
 
 succ = s
-//│ (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. (('c -> 'a & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
+//│ ('a -> 'b -> 'c & 'd) -> (forall 'a, 'c, 'd, 'e, 'f, 'g, 'h, 'i. ((('g | 'h | 'c) -> 'i & 'a & 'e) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l. (('b & 'f & 'j) -> ('l | 'i)
 //│   where
-//│     'a <: 'b -> 'd -> 'e
-//│     'b <: 'e -> 'f))
+//│     'd <: 'e -> 'j -> ('h & 'k)
+//│     'e <: ('k | 'g | 'c) -> 'l))
 //│   where
-//│     'a <: 'b -> nothing -> 'c))
+//│     'd <: 'e -> 'f -> 'g))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│     = [Function: s]
 
 
 type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -244,17 +183,11 @@ z: ChurchInt
 
 :stats
 s: ChurchInt -> ChurchInt
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ res: ChurchInt -> ChurchInt
+//│    = [Function: s]
+//│ constrain calls  : 151
+//│ annoying  calls  : 0
+//│ subtyping calls  : 0
 
 
 

@@ -11,9 +11,9 @@ def z f x = x
 // def s n = fun f -> fun x -> (n f x)
 def s n = fun f -> n f
 // def s n = n
-//│ s: (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ s: ('a -> 'b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e. (('a & 'd) -> ('e | 'b)
 //│   where
-//│     'a <: 'b -> 'c))
+//│     'c <: 'd -> 'e))
 //│  = [Function: s]
 
 :ns
@@ -22,6 +22,8 @@ s
 //│   where
 //│     'a <: 'd -> 'e))
 //│   where
+//│     'e :> 'c
+//│     'd <: 'b
 //│     'a <: 'b -> 'c
 //│    = [Function: s]
 
@@ -71,17 +73,11 @@ def to_ch n =
 //   s (to_church n)
 // def to_ch =
 //   s (to_church 0)
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ to_ch: int -> (forall 'a, 'b, 'c, 'M. (('M -> 'M & 'b) -> (forall 'c. 'M -> 'M | 'c)
+//│   where
+//│     'a <: 'b -> 'c))
+//│      = <no result>
+//│        to_church is not implemented
 
 // rec def to_ch n =
 //   s (to_ch (n - 1))
@@ -100,10 +96,9 @@ def to_ch n =
 // :d
 // :e // FIXME?
 to_church = to_ch
-//│ ╔══[ERROR] identifier not found: to_ch
-//│ ║  l.96: 	to_church = to_ch
-//│ ╙──      	            ^^^^^
-//│ error
+//│ int -> (forall 'a, 'b, 'c, 'M. (('M -> 'M & 'b) -> (forall 'c. 'M -> 'M | 'c)
+//│   where
+//│     'a <: 'b -> 'c))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│          = <no result>
@@ -118,24 +113,17 @@ to_church = to_ch
 def to_ch n =
   if true then z
   else s (to_church n)
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ to_ch: int -> (forall 'a, 'b, 'c, 'M. (('M -> 'M & 'b) -> (forall 'c. 'M -> 'M | 'c)
+//│   where
+//│     'a <: 'b -> 'c))
+//│      = <no result>
+//│        to_church, to_ch and to_church are not implemented
 
 // :e // FIXME?
 to_church = to_ch
-//│ ╔══[ERROR] identifier not found: to_ch
-//│ ║  l.121: 	to_church = to_ch
-//│ ╙──       	            ^^^^^
-//│ error
+//│ int -> (forall 'a, 'b, 'c, 'M. (('M -> 'M & 'b) -> (forall 'c. 'M -> 'M | 'c)
+//│   where
+//│     'a <: 'b -> 'c))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│          = <no result>
@@ -147,21 +135,13 @@ to_church = to_ch
 
 rec def to_ch n =
   s (to_church n)
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ to_ch: int -> ('M -> 'M & 'M0 -> 'M0) -> ('M & 'M0) -> ('M | 'M0)
+//│      = <no result>
+//│        to_church, to_ch, to_church, to_ch and to_church are not implemented
 
 // :e
 to_church = to_ch
-//│ nothing
+//│ int -> ('M -> 'M & 'M0 -> 'M0) -> ('M & 'M0) -> ('M | 'M0)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│          = <no result>
@@ -174,20 +154,12 @@ to_church = to_ch
 
 rec def to_ch n =
   s (to_church n)
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ to_ch: int -> ('M -> 'M & 'M0 -> 'M0) -> ('M & 'M0) -> ('M | 'M0)
+//│      = <no result>
+//│        to_church, to_ch, to_church, to_ch, to_church, to_ch and to_church are not implemented
 
 to_church = to_ch
-//│ nothing
+//│ int -> ('M -> 'M & 'M0 -> 'M0) -> ('M & 'M0) -> ('M | 'M0)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│          = <no result>
@@ -213,21 +185,12 @@ to_church = to_ch
 rec def to_ch n =
   if n == 0 then z
   else s (to_ch (n - 1))
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ to_ch: int -> anything -> (forall 'a. 'a -> 'a)
+//│      = [Function: to_ch4]
 
 // :e // FIXME? refreshing-extr
 to_church = to_ch
-//│ nothing
+//│ int -> anything -> (forall 'a. 'a -> 'a)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│          = [Function: to_ch4]
@@ -237,17 +200,8 @@ to_church = to_ch
 // :e // FIXME? refreshing-extr
 rec def to_ch_weird n =
   s (to_ch_weird n)
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ to_ch_weird: anything -> anything -> nothing
+//│            = [Function: to_ch_weird]
 
 
 

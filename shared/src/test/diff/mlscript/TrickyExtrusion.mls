@@ -27,14 +27,14 @@ test f = (f 0, f True)
 test f =
   let r x = f x
   in (r 0, r True)
-//│ test: (nothing -> anything) -> (nothing, nothing,)
+//│ test: ((0 | true) -> 'a) -> ('a, 'a,)
 //│     = [Function: test1]
 
 // Same example, a little elaborated
 test f =
   let r = fun x -> fun g -> (g x, f x)
   in (r 0 inc, r True not)
-//│ test: (nothing -> anything) -> ((int, nothing,), (bool, nothing,),)
+//│ test: ((0 | true) -> 'a) -> ((int, 'a,), (bool, 'a,),)
 //│     = <no result>
 //│       inc is not implemented
 
@@ -44,13 +44,22 @@ test f =
 test f =
   let r x = f x
   in (r 0, r True)
-//│ test: (nothing -> anything & 0 -> 'a & true -> 'b) -> ('a, 'b,)
+//│ test: ((0 | true) -> ('a & 'b) & true -> 'a & 0 -> 'b) -> ('b, 'a,)
 //│     = [Function: test2]
 
 :e
 (test id)._1 + 1
 not (test id)._1 + 1
-//│ res: int
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.51: 	(test id)._1 + 1
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── reference of type `true` is not an instance of type `int`
+//│ ║  l.4: 	def True = true
+//│ ║       	           ^^^^
+//│ ╟── but it flows into field selection with expected type `int`
+//│ ║  l.51: 	(test id)._1 + 1
+//│ ╙──      	^^^^^^^^^^^^
+//│ res: error
 //│    = NaN
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.52: 	not (test id)._1 + 1
@@ -68,5 +77,5 @@ not (test id)._1 + 1
 rec def test f =
   let r x = f x
   in (r 0, r True)
-//│ test: (nothing -> anything & 0 -> 'a & true -> 'b) -> ('a, 'b,)
+//│ test: ((0 | true) -> ('a & 'b) & true -> 'a & 0 -> 'b) -> ('b, 'a,)
 //│     = [Function: test3]

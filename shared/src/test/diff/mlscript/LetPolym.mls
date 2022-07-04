@@ -73,9 +73,9 @@ def test f =
 //│ | | | 2. : α57''
 //│ | | 2. : (g55'' -> α57'')
 //│ | | UNSTASHING... (out)
-//│ | | | CONSTRAIN f54' <! (1<int,number> -> α56_58')
+//│ | | | CONSTRAIN f54' <! (1<int,number> -> α58')
 //│ | | |   where 
-//│ | | | 1. C f54' <! (1<int,number> -> α56_58')    (0)
+//│ | | | 1. C f54' <! (1<int,number> -> α58')    (0)
 //│ | | | | NEW f54' UB (1)
 //│ | | 1. Typing term (local (succ,))
 //│ | | | 1. Typing term local
@@ -85,13 +85,16 @@ def test f =
 //│ | | | CONSTRAIN ‹∀ 1. (g55'' -> α57'')› <! ((int<number> -> int<number>) -> α59')
 //│ | | |   where 
 //│ 		g55'' <: (α56'' -> α57'')
+//│ 		α56'' :> α58'
 //│ | | | 1. C ‹∀ 1. (g55'' -> α57'')› <! ((int<number> -> int<number>) -> α59')    (0)
 //│ | | | | INST [1]   ‹∀ 1. (g55'' -> α57'')›
 //│ | | | |   where  
 //│ 		g55'' <: (α56'' -> α57'')
+//│ 		α56'' :> α58'
 //│ | | | | TO [1] ~>  (g55_60' -> α57_62')
 //│ | | | |   where  
 //│ 		g55_60' <: (α56_61' -> α57_62')
+//│ 		α56_61' :> α58'
 //│ | | | | 1. C (g55_60' -> α57_62') <! ((int<number> -> int<number>) -> α59')    (1)
 //│ | | | | | 1. C ((int<number> -> int<number>),) <! (g55_60',)    (2)
 //│ | | | | | | 1. C (int<number> -> int<number>) <! g55_60'    (3)
@@ -100,6 +103,8 @@ def test f =
 //│ | | | | | | | | 1. C (α56_61',) <! (int<number>,)    (5)
 //│ | | | | | | | | | 1. C α56_61' <! int<number>    (6)
 //│ | | | | | | | | | | NEW α56_61' UB (0)
+//│ | | | | | | | | | | 1. C α58' <! int<number>    (7)
+//│ | | | | | | | | | | | NEW α58' UB (0)
 //│ | | | | | | | | 1. C int<number> <! α57_62'    (5)
 //│ | | | | | | | | | NEW α57_62' LB (0)
 //│ | | | | | 1. C α57_62' <! α59'    (2)
@@ -112,39 +117,49 @@ def test f =
 //│ UNSTASHING... (out)
 //│ ⬤ Typed as: ‹∀ 0. (f54' -> α59')›
 //│  where: 
-//│ 		f54' <: (1<int,number> -> α56_58')
+//│ 		f54' <: (1<int,number> -> α58')
+//│ 		α58' <: int<number>
 //│ 		α59' :> int<number>
-//│ test: (1 -> anything) -> int
+//│ test: (1 -> int) -> int
 //│     = [Function: test3]
 
 :e // FIXME should error
 test (fun x -> "oops")
-//│ res: int
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.127: 	test (fun x -> "oops")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── string literal of type `"oops"` is not an instance of type `int`
+//│ ║  l.127: 	test (fun x -> "oops")
+//│ ║         	               ^^^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.40: 	  let local g = g (f 1)
+//│ ╙──      	                   ^^^
+//│ res: error
 //│    = 'oops1'
 
 
 def test f =
   let local g x = g (f x)
   in local succ
-//│ test: (nothing -> anything) -> anything -> int
+//│ test: ('a -> int) -> 'a -> int
 //│     = [Function: test4]
 
 def test f =
   let local g x = g (f x)
   in local add
-//│ test: (nothing -> anything) -> anything -> int -> int
+//│ test: ('a -> int) -> 'a -> int -> int
 //│     = [Function: test5]
 
 def test f =
   let local g x = g (f x)
   in local add 1
-//│ test: (nothing -> anything) -> int -> int
+//│ test: (1 -> int) -> int -> int
 //│     = [Function: test6]
 
 def test f =
   let local g x = g (f x)
   in (local add 1, local (fun y -> fun z -> y + z) 2)
-//│ test: (nothing -> anything) -> (int -> int, int -> int,)
+//│ test: ((1 | 2) -> int) -> (int -> int, int -> int,)
 //│     = [Function: test7]
 
 :re // TODO
@@ -164,12 +179,18 @@ f_g._2 42
 def test f =
   let local g x = g (f x)
   in (local add 1, local concat "ok")
-//│ test: (nothing -> anything) -> (int -> int, string -> string,)
+//│ test: (("ok" | 1) -> nothing) -> (int -> int, string -> string,)
 //│     = [Function: test8]
 
-// :e
+:e
 test succ
-//│ res: (int -> int, string -> string,)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.186: 	test succ
+//│ ║         	^^^^^^^^^
+//│ ╟── string literal of type `"ok"` is not an instance of type `int`
+//│ ║  l.181: 	  in (local add 1, local concat "ok")
+//│ ╙──       	                                ^^^^
+//│ res: error
 //│    = [ [Function (anonymous)], [Function (anonymous)] ]
 
 
@@ -178,7 +199,7 @@ def test =
     let local g x = f (g x)
     in local
   ) add
-//│ test: ('a -> anything) -> 'a -> nothing
+//│ test: ('a -> int) -> 'a -> int -> int
 //│     = [Function (anonymous)]
 
 def test =
@@ -186,7 +207,7 @@ def test =
     let local g = f (g x)
     in local
   ) add "1"
-//│ test: ("1" -> anything) -> nothing
+//│ test: ("1" -> int) -> int -> int
 //│     = [Function (anonymous)]
 
 def test =
@@ -194,7 +215,7 @@ def test =
     let local g = f (g x)
     in local add "1"
   )
-//│ test: (nothing -> anything) -> int -> nothing
+//│ test: ((int -> int) -> "1" -> 'a) -> int -> 'a
 //│     = [Function: test11]
 
 // :GeneralizeCurriedFunctions
@@ -206,17 +227,16 @@ fun f -> fun x ->
 //│ res: ('a -> anything) -> 'a -> ()
 //│    = [Function: res]
 
-// FIXME refreshing-extr
 :e
 res add "1"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.211: 	res add "1"
+//│ ║  l.231: 	res add "1"
 //│ ║         	^^^^^^^^^^^
 //│ ╟── string literal of type `"1"` is not an instance of type `int`
-//│ ║  l.211: 	res add "1"
+//│ ║  l.231: 	res add "1"
 //│ ║         	        ^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.204: 	  let local = (fun y -> f y) x
+//│ ║  l.225: 	  let local = (fun y -> f y) x
 //│ ╙──       	                          ^
 //│ res: error
 //│    = []
@@ -228,17 +248,17 @@ fun f -> fun x ->
 //│ 0. Typing term ((f,) => ((x,) => (let local = (f ((((((y,) => y)) (x,))),)); ())))
 //│ | 0. Typing pattern (f,)
 //│ | | 0. Typing pattern f
-//│ | | 0. : f285
-//│ | 0. : (f285,)
+//│ | | 0. : f298
+//│ | 0. : (f298,)
 //│ | 0. Typing term ((x,) => (let local = (f ((((((y,) => y)) (x,))),)); ()))
 //│ | | 0. Typing pattern (x,)
 //│ | | | 0. Typing pattern x
-//│ | | | 0. : x286
-//│ | | 0. : (x286,)
+//│ | | | 0. : x299
+//│ | | 0. : (x299,)
 //│ | | 0. Typing term (let local = (f ((((((y,) => y)) (x,))),)); ())
 //│ | | | 1. Typing term (f ((((((y,) => y)) (x,))),))
 //│ | | | | 1. Typing term f
-//│ | | | | 1. : f285
+//│ | | | | 1. : f298
 //│ | | | | 1. Typing term (((((y,) => y)) (x,)))
 //│ | | | | | 1. Typing term ((((y,) => y)) (x,))
 //│ | | | | | | 1. Typing term (((y,) => y))
@@ -246,57 +266,59 @@ fun f -> fun x ->
 //│ | | | | | | | | TYPING POLY LAM
 //│ | | | | | | | | 2. Typing pattern (y,)
 //│ | | | | | | | | | 2. Typing pattern y
-//│ | | | | | | | | | 2. : y287''
-//│ | | | | | | | | 2. : (y287'',)
+//│ | | | | | | | | | 2. : y300''
+//│ | | | | | | | | 2. : (y300'',)
 //│ | | | | | | | | 2. Typing term y
-//│ | | | | | | | | 2. : y287''
+//│ | | | | | | | | 2. : y300''
 //│ | | | | | | | | UNSTASHING... (out)
-//│ | | | | | | | 1. : ‹∀ 1. (y287'' -> y287'')›
-//│ | | | | | | 1. : ‹∀ 1. (y287'' -> y287'')›
+//│ | | | | | | | 1. : ‹∀ 1. (y300'' -> y300'')›
+//│ | | | | | | 1. : ‹∀ 1. (y300'' -> y300'')›
 //│ | | | | | | 1. Typing term x
-//│ | | | | | | 1. : x286
-//│ | | | | | | CONSTRAIN ‹∀ 1. (y287'' -> y287'')› <! (x286 -> α288')
+//│ | | | | | | 1. : x299
+//│ | | | | | | CONSTRAIN ‹∀ 1. (y300'' -> y300'')› <! (x299 -> α301')
 //│ | | | | | |   where 
-//│ | | | | | | 1. C ‹∀ 1. (y287'' -> y287'')› <! (x286 -> α288')    (0)
-//│ | | | | | | | INST [1]   ‹∀ 1. (y287'' -> y287'')›
+//│ | | | | | | 1. C ‹∀ 1. (y300'' -> y300'')› <! (x299 -> α301')    (0)
+//│ | | | | | | | INST [1]   ‹∀ 1. (y300'' -> y300'')›
 //│ | | | | | | |   where  
-//│ | | | | | | | TO [1] ~>  (y287_289' -> y287_289')
+//│ | | | | | | | TO [1] ~>  (y300_302' -> y300_302')
 //│ | | | | | | |   where  
-//│ | | | | | | | 1. C (y287_289' -> y287_289') <! (x286 -> α288')    (1)
-//│ | | | | | | | | 1. C (x286,) <! (y287_289',)    (2)
-//│ | | | | | | | | | 1. C x286 <! y287_289'    (3)
+//│ | | | | | | | 1. C (y300_302' -> y300_302') <! (x299 -> α301')    (1)
+//│ | | | | | | | | 1. C (x299,) <! (y300_302',)    (2)
+//│ | | | | | | | | | 1. C x299 <! y300_302'    (3)
 //│ | | | | | | | | | | wrong level: 1
-//│ | | | | | | | | | | STASHING x286 bound in extr ctx
-//│ | | | | | | | | 1. C y287_289' <! α288'    (2)
-//│ | | | | | | | | | NEW y287_289' UB (1)
-//│ | | | | | 1. : α288'
-//│ | | | | 1. : α288'
-//│ | | | | CONSTRAIN f285 <! (α288' -> α290')
+//│ | | | | | | | | | | STASHING x299 bound in extr ctx
+//│ | | | | | | | | 1. C y300_302' <! α301'    (2)
+//│ | | | | | | | | | NEW y300_302' UB (1)
+//│ | | | | | 1. : α301'
+//│ | | | | 1. : α301'
+//│ | | | | CONSTRAIN f298 <! (α301' -> α303')
 //│ | | | |   where 
-//│ | | | | 1. C f285 <! (α288' -> α290')    (0)
+//│ | | | | 1. C f298 <! (α301' -> α303')    (0)
 //│ | | | | | wrong level: 1
-//│ | | | | | STASHING f285 bound in extr ctx
-//│ | | | 1. : α290'
+//│ | | | | | STASHING f298 bound in extr ctx
+//│ | | | 1. : α303'
 //│ | | | UNSTASHING... (out)
-//│ | | | | CONSTRAIN f285 <! (α288_291 -> α290_292)
+//│ | | | | CONSTRAIN f298 <! (α304 -> α305)
 //│ | | | |   where 
-//│ | | | | 0. C f285 <! (α288_291 -> α290_292)    (0)
-//│ | | | | | NEW f285 UB (0)
-//│ | | | | CONSTRAIN x286 <! y287_293
+//│ | | | | 0. C f298 <! (α304 -> α305)    (0)
+//│ | | | | | NEW f298 UB (0)
+//│ | | | | CONSTRAIN x299 <! y306
 //│ | | | |   where 
-//│ 		y287_293 <: α288_291
-//│ | | | | 0. C x286 <! y287_293    (0)
-//│ | | | | | NEW x286 UB (0)
+//│ 		y306 <: α307
+//│ 		α307 <: α304
+//│ | | | | 0. C x299 <! y306    (0)
+//│ | | | | | NEW x299 UB (0)
 //│ | | | 0. Typing term ()
 //│ | | | 0. : ()
 //│ | | 0. : ()
-//│ | 0. : (x286 -> ())
-//│ 0. : (f285 -> (x286 -> ()))
-//│ ⬤ Typed as: ‹∀ 0. (f285 -> (x286 -> ()))›
+//│ | 0. : (x299 -> ())
+//│ 0. : (f298 -> (x299 -> ()))
+//│ ⬤ Typed as: ‹∀ 0. (f298 -> (x299 -> ()))›
 //│  where: 
-//│ 		f285 <: (α288_291 -> α290_292)
-//│ 		x286 <: y287_293
-//│ 		y287_293 <: α288_291
+//│ 		f298 <: (α304 -> α305)
+//│ 		x299 <: y306
+//│ 		y306 <: α307
+//│ 		α307 <: α304
 //│ res: ('a -> anything) -> 'a -> ()
 //│    = [Function: res]
 
@@ -304,13 +326,13 @@ fun f -> fun x ->
 :e
 res add "1"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.305: 	res add "1"
+//│ ║  l.327: 	res add "1"
 //│ ║         	^^^^^^^^^^^
 //│ ╟── string literal of type `"1"` is not an instance of type `int`
-//│ ║  l.305: 	res add "1"
+//│ ║  l.327: 	res add "1"
 //│ ║         	        ^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.226: 	  let local = f ((fun y -> y) x)
+//│ ║  l.246: 	  let local = f ((fun y -> y) x)
 //│ ╙──       	                 ^^^^^^^^^^^^^^
 //│ res: error
 //│    = []
@@ -325,6 +347,7 @@ fun f -> fun x ->
 //│ res: ('a -> anything) -> 'a -> ()
 //│    = <no result>
 //│      id is not implemented
+
 
 
 

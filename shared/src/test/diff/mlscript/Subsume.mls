@@ -325,7 +325,7 @@ fun a -> a a
 //│    = [Function: res]
 
 // :e // Interestingly, unbound results are currently *not* generalized (despite the pretty-printing)
-:e // FIXME? refreshing-extr
+// :e // FIXME? refreshing-extr
 self1 = res
 //│ ('a -> 'b & 'a) -> 'b
 //│   <:  self1:
@@ -356,10 +356,10 @@ def self2 = self1
 //│   where
 //│     'a := 'a -> 'b
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.361: 	def self2 = self1
+//│ ║  l.352: 	def self2 = self1
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')››  <:  (('a279_368' -> 'b280_369') & 'a279_368')    PolymorphicType  ComposedType
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')››  <:  (('a279_370' -> 'b280_371') & 'a279_370')    PolymorphicType  ComposedType
 //│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')››  <:  (('a279' -> 'b280') & 'a279')
 //│      = [Function: r]
 

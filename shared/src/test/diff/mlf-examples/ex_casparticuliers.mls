@@ -15,7 +15,7 @@ def t (z: Sid) = (fun a -> z) : forall 'a 'b. 'b -> 'a -> 'a
 // (* Une seule instance, mais polymorphe. *)
 // let t z = ( (fun a -> z) : ['a,'b] 'b -> 'a -> 'a );;
 def t z = (fun a -> z) : forall 'a 'b. 'b -> 'a -> 'a
-//│ t: (‘a -> ‘a) -> (forall 'a. anything -> 'a -> 'a)
+//│ t: (‘a39 -> ‘a39) -> (forall 'a. anything -> 'a -> 'a)
 //│  = [Function: t1]
 
 def t z = fun a -> z
@@ -48,19 +48,19 @@ def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 def succ' n = fun f -> fun x -> f (n f x)
 //│ succ_ty: ChurchInt -> ChurchInt
 //│        = <missing implementation>
-//│ succ: ChurchInt -> (forall 'a, 'b, 'c. (('c -> anything & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
+//│ succ: ChurchInt -> (forall 'b, 'c, 'd, 'e, 'a, 'f, 'g. (('a -> 'a & ('a | 'e | 'f) -> 'g & 'c) -> (forall 'b, 'c, 'd, 'e, 'a, 'f, 'g, 'h, 'i, 'j. (('d & 'a & 'h) -> ('j | 'g)
 //│   where
-//│     'a <: 'b -> 'd -> 'e
-//│     'b <: 'e -> 'f))
+//│     'b <: 'c -> 'h -> ('f & 'i)
+//│     'c <: ('a | 'i | 'e) -> 'j))
 //│   where
-//│     'a <: 'b -> nothing -> 'c))
+//│     'b <: 'c -> 'd -> 'e))
 //│     = [Function: succ]
-//│ succ': (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. (('c -> 'a & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('f -> 'e
+//│ succ': ('a -> 'b -> 'c & 'd) -> (forall 'a, 'c, 'd, 'e, 'f, 'g, 'h, 'i. ((('g | 'h | 'c) -> 'i & 'a & 'e) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l. (('b & 'f & 'j) -> ('l | 'i)
 //│   where
-//│     'b <: 'd -> 'e
-//│     'a <: 'b -> 'f -> 'd))
+//│     'd <: 'e -> 'j -> ('h & 'k)
+//│     'e <: ('k | 'g | 'c) -> 'l))
 //│   where
-//│     'a <: 'b -> nothing -> 'c))
+//│     'd <: 'e -> 'f -> 'g))
 //│      = [Function: succ]
 
 // * Note: without constrained types we wouldn't get the principal type of succ'
@@ -68,92 +68,82 @@ def succ' n = fun f -> fun x -> f (n f x)
 // * Require distrib – see Scratch3
 succ_ty = succ
 succ_ty = succ'
-//│ ChurchInt -> (forall 'a, 'b, 'c. (('c -> anything & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
+//│ ChurchInt -> (forall 'b, 'c, 'd, 'e, 'a, 'f, 'g. (('a -> 'a & ('a | 'e | 'f) -> 'g & 'c) -> (forall 'b, 'c, 'd, 'e, 'a, 'f, 'g, 'h, 'i, 'j. (('d & 'a & 'h) -> ('j | 'g)
 //│   where
-//│     'a <: 'b -> 'd -> 'e
-//│     'b <: 'e -> 'f))
+//│     'b <: 'c -> 'h -> ('f & 'i)
+//│     'c <: ('a | 'i | 'e) -> 'j))
 //│   where
-//│     'a <: 'b -> nothing -> 'c))
+//│     'b <: 'c -> 'd -> 'e))
 //│   <:  succ_ty:
 //│ ChurchInt -> ChurchInt
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│        = [Function: succ]
+//│ ('a -> 'b -> 'c & 'd) -> (forall 'a, 'c, 'd, 'e, 'f, 'g, 'h, 'i. ((('g | 'h | 'c) -> 'i & 'a & 'e) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l. (('b & 'f & 'j) -> ('l | 'i)
+//│   where
+//│     'd <: 'e -> 'j -> ('h & 'k)
+//│     'e <: ('k | 'g | 'c) -> 'l))
+//│   where
+//│     'd <: 'e -> 'f -> 'g))
+//│   <:  succ_ty:
+//│ ChurchInt -> ChurchInt
+//│        = [Function: succ]
 
 // :d
 succ'
-//│ res: (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. (('c -> 'a & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('f -> 'e
+//│ res: ('a -> 'b -> 'c & 'd) -> (forall 'a, 'c, 'd, 'e, 'f, 'g, 'h, 'i. ((('g | 'h | 'c) -> 'i & 'a & 'e) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l. (('b & 'f & 'j) -> ('l | 'i)
 //│   where
-//│     'b <: 'd -> 'e
-//│     'a <: 'b -> 'f -> 'd))
+//│     'd <: 'e -> 'j -> ('h & 'k)
+//│     'e <: ('k | 'g | 'c) -> 'l))
 //│   where
-//│     'a <: 'b -> nothing -> 'c))
+//│     'd <: 'e -> 'f -> 'g))
 //│    = [Function: succ]
 
 // Legit error: (bad bounds)
 // :d
 :e // due to tapping
 succ' {}
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.103: 	succ' {}
+//│ ║         	^^^^^^^^
+//│ ╟── record literal of type `anything` is not a function
+//│ ║  l.103: 	succ' {}
+//│ ║         	      ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.48: 	def succ' n = fun f -> fun x -> f (n f x)
+//│ ╙──      	                                   ^^^
+//│ res: error
+//│    = [Function: succ]
 
 :e // due to tapping
 succ' {} {}
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.117: 	succ' {} {}
+//│ ║         	^^^^^^^^
+//│ ╟── record literal of type `anything` is not a function
+//│ ║  l.117: 	succ' {} {}
+//│ ║         	      ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.48: 	def succ' n = fun f -> fun x -> f (n f x)
+//│ ╙──      	                                   ^^^
+//│ res: error
+//│    = [Function: succ]
 
 :e
 succ' {} {} {}
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.131: 	succ' {} {} {}
+//│ ║         	^^^^^^^^
+//│ ╟── record literal of type `anything` is not a function
+//│ ║  l.131: 	succ' {} {} {}
+//│ ║         	      ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.48: 	def succ' n = fun f -> fun x -> f (n f x)
+//│ ╙──      	                                   ^^^
+//│ res: error
+//│    = [Function: succ]
 
 fun x -> succ' x x x x x x x x x
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ res: ('a -> 'b -> 'b -> 'b -> 'b -> 'b -> 'b -> 'c & 'b -> 'b -> 'a & 'b) -> 'c
+//│    = [Function: succ]
 
 
 // let rec to_church n =
@@ -172,17 +162,11 @@ def to_church_ty: int -> ChurchInt
 rec def to_church_1 n =
   if n == 0 then zero
   else succ (to_church_1 (n - 1))
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ to_church_1: int -> (forall 'a, 'b, 'c, 'd. (('a0 | 'a | ‘a517 | 'b) -> 'c & ('a0 | ‘a517) -> (‘a517 & 'a0) & 'a -> 'a & 'd) -> (forall 'a0, 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h. ((‘a517 & 'c & 'a0 & 'a & 'f) -> ('c | 'h)
+//│   where
+//│     'e <: 'd -> 'f -> ('b & 'g)
+//│     'd <: ('a0 | 'a | ‘a517 | 'g) -> 'h)))
+//│            = [Function: to_church_1]
 
 rec def to_church_1_t n =
   if n == 0 then zero
@@ -205,46 +189,79 @@ rec def to_church_1_tt n =
 :re
 // rec def to_church_1 n =
 //   succ (to_church_1 n)
+:e // FIXME?
 rec def wat =
   succ wat
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ ╔══[ERROR] Type mismatch in binding of application:
+//│ ║  l.194: 	  succ wat
+//│ ║         	  ^^^^^^^^
+//│ ╟── type `‘a517` is not an instance of type `'a642`
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──      	                        ^^
+//│ wat: (('a | 'a0 | 'a1 | ‘a517 | 'b) -> 'c & 'a1 -> 'a1 & 'a -> 'a & ('a0 | ‘a517) -> (‘a517 & ‘a642 & 'a0) & 'd) -> (forall 'a, 'a0, 'a1, 'b, 'c, 'd, 'e, 'f, 'g, 'h. ((‘a517 & ‘a642 & 'a & 'a0 & 'a1 & 'f) -> ('h | 'c)
+//│   where
+//│     'e <: 'd -> 'f -> ('b & 'g)
+//│     'd <: ('a | 'a0 | 'a1 | ‘a517 | 'g) -> 'h))
+//│ Runtime error:
+//│   ReferenceError: wat is not defined
 
 // works when `succ` is not annotated with the parameter type
 :e // FIXME should be caught by cycle checker! // due to tapping
 :ng
 rec def nani =
   succ' nani
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: ?nani` exceeded recursion depth limit (300)
+//│ ║  l.215: 	  succ' nani
+//│ ║         	  ^^^^^^^^^^
+//│ ╟── while constraining:  (α111_947',)  <!<  (α111_961',)
+//│ ╟── while constraining:  (α111_961' -> ‹∀ 3. {(α112_968'''' -> α115_970'''') where: α110_690' <: ((α111_961',) -> α113_965''''), α111_961' <: ((α114_969'''',) -> α115_970'''')}›)  <!<  ((α111_947',) -> α113_957')
+//│ ╟── while constraining:  ‹∀ 2. (α111_695''' -> ‹∀ 3. {(α112_702'''' -> α115_704'''') where: α110_690' <: ((α111_695''',) -> α113_701''''), α111_695''' <: ((α114_703'''',) -> α115_704'''')}›)›  <!<  ((α111_947',) -> α113_957')
+//│ ╟── while constraining:  α110_690'  <!<  ((α111_947',) -> α113_957')
+//│ ╟── while constraining:  {(α112_958' -> α115_960') where: α110_690' <: ((α111_947',) -> α113_957'), α111_947' <: ((α114_959',) -> α115_960')}  <!<  ((α112_944',) -> α114_945')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_954'''' -> α115_956'''') where: α110_690' <: ((α111_947',) -> α113_951''''), α111_947' <: ((α114_955'''',) -> α115_956'''')}›  <!<  ((α112_944',) -> α114_945')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_954'''' -> α115_956'''') where: α110_690' <: ((α111_947',) -> α113_951''''), α111_947' <: ((α114_955'''',) -> α115_956'''')}›  <!<  α113_943'
+//│ ╟── while constraining:  (α111_947' -> ‹∀ 3. {(α112_954'''' -> α115_956'''') where: α110_690' <: ((α111_947',) -> α113_951''''), α111_947' <: ((α114_955'''',) -> α115_956'''')}›)  <!<  ((α111_933',) -> α113_943')
+//│ ╟── while constraining:  ‹∀ 2. (α111_695''' -> ‹∀ 3. {(α112_702'''' -> α115_704'''') where: α110_690' <: ((α111_695''',) -> α113_701''''), α111_695''' <: ((α114_703'''',) -> α115_704'''')}›)›  <!<  ((α111_933',) -> α113_943')
+//│ ╟── while constraining:  α110_690'  <!<  ((α111_933',) -> α113_943')
+//│ ╟── while constraining:  {(α112_944' -> α115_946') where: α110_690' <: ((α111_933',) -> α113_943'), α111_933' <: ((α114_945',) -> α115_946')}  <!<  ((α112_930',) -> α114_931')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_940'''' -> α115_942'''') where: α110_690' <: ((α111_933',) -> α113_937''''), α111_933' <: ((α114_941'''',) -> α115_942'''')}›  <!<  ((α112_930',) -> α114_931')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_940'''' -> α115_942'''') where: α110_690' <: ((α111_933',) -> α113_937''''), α111_933' <: ((α114_941'''',) -> α115_942'''')}›  <!<  α113_929'
+//│ ╟── while constraining:  (α111_933' -> ‹∀ 3. {(α112_940'''' -> α115_942'''') where: α110_690' <: ((α111_933',) -> α113_937''''), α111_933' <: ((α114_941'''',) -> α115_942'''')}›)  <!<  ((α111_919',) -> α113_929')
+//│ ╟── while constraining:  ‹∀ 2. (α111_695''' -> ‹∀ 3. {(α112_702'''' -> α115_704'''') where: α110_690' <: ((α111_695''',) -> α113_701''''), α111_695''' <: ((α114_703'''',) -> α115_704'''')}›)›  <!<  ((α111_919',) -> α113_929')
+//│ ╟── ......
+//│ ╟── ......
+//│ ╟── while constraining:  α110_690'  <!<  ((α111_723',) -> α113_733')
+//│ ╟── while constraining:  {(α112_734' -> α115_736') where: α110_690' <: ((α111_723',) -> α113_733'), α111_723' <: ((α114_735',) -> α115_736')}  <!<  ((α112_720',) -> α114_721')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_730'''' -> α115_732'''') where: α110_690' <: ((α111_723',) -> α113_727''''), α111_723' <: ((α114_731'''',) -> α115_732'''')}›  <!<  ((α112_720',) -> α114_721')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_730'''' -> α115_732'''') where: α110_690' <: ((α111_723',) -> α113_727''''), α111_723' <: ((α114_731'''',) -> α115_732'''')}›  <!<  α113_719'
+//│ ╟── while constraining:  (α111_723' -> ‹∀ 3. {(α112_730'''' -> α115_732'''') where: α110_690' <: ((α111_723',) -> α113_727''''), α111_723' <: ((α114_731'''',) -> α115_732'''')}›)  <!<  ((α111_709',) -> α113_719')
+//│ ╟── while constraining:  ‹∀ 2. (α111_695''' -> ‹∀ 3. {(α112_702'''' -> α115_704'''') where: α110_690' <: ((α111_695''',) -> α113_701''''), α111_695''' <: ((α114_703'''',) -> α115_704'''')}›)›  <!<  ((α111_709',) -> α113_719')
+//│ ╟── while constraining:  α110_690'  <!<  ((α111_709',) -> α113_719')
+//│ ╟── while constraining:  {(α112_720' -> α115_722') where: α110_690' <: ((α111_709',) -> α113_719'), α111_709' <: ((α114_721',) -> α115_722')}  <!<  ((α707',) -> α708')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_716'''' -> α115_718'''') where: α110_690' <: ((α111_709',) -> α113_713''''), α111_709' <: ((α114_717'''',) -> α115_718'''')}›  <!<  ((α707',) -> α708')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_716'''' -> α115_718'''') where: α110_690' <: ((α111_709',) -> α113_713''''), α111_709' <: ((α114_717'''',) -> α115_718'''')}›  <!<  α706'
+//│ ╟── while constraining:  (α111_709' -> ‹∀ 3. {(α112_716'''' -> α115_718'''') where: α110_690' <: ((α111_709',) -> α113_713''''), α111_709' <: ((α114_717'''',) -> α115_718'''')}›)  <!<  ((α705',) -> α706')
+//│ ╟── while constraining:  ‹∀ 2. (α111_695''' -> ‹∀ 3. {(α112_702'''' -> α115_704'''') where: α110_690' <: ((α111_695''',) -> α113_701''''), α111_695''' <: ((α114_703'''',) -> α115_704'''')}›)›  <!<  ((α705',) -> α706')
+//│ ╟── while constraining:  ‹∀ 2. (α111_695''' -> ‹∀ 3. {(α112_702'''' -> α115_704'''') where: α110_690' <: ((α111_695''',) -> α113_701''''), α111_695''' <: ((α114_703'''',) -> α115_704'''')}›)›  <!<  α110_690'
+//│ ╟── while constraining:  ‹∀ 2. (α111_695''' -> ‹∀ 3. {(α112_702'''' -> α115_704'''') where: α110_690' <: ((α111_695''',) -> α113_701''''), α111_695''' <: ((α114_703'''',) -> α115_704'''')}›)›  <!<  nani688'
+//│ ╙── while constraining:  α689'  <!<  nani688'
+//│ nani: ('a -> 'b & 'c & nothing -> anything) -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g. ('e -> ('g | 'b)
+//│   where
+//│     'd <: 'c -> 'e -> ('a & 'f)
+//│     'c <: 'f -> 'g))
 
 // * The one with annotated rec occurrence works...
 def to_church_1_repro n =
   succ (to_church_ty n)
-//│ to_church_1_repro: int -> (forall 'a, 'b, 'c. (('c -> anything & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
+//│ to_church_1_repro: int -> (forall 'b, 'c, 'd, 'e, 'a, 'a0, 'a1, 'f, 'g. ((('a | 'a0 | 'a1 | ‘a517 | 'e | 'f) -> 'g & 'a1 -> 'a1 & 'a -> 'a & ('a0 | ‘a517) -> (‘a517 & ‘a642 & 'a0) & 'c) -> (forall 'b, 'c, 'd, 'e, 'a, 'a0, 'a1, 'f, 'g, 'h, 'i, 'j. ((‘a517 & ‘a642 & 'd & 'a & 'a0 & 'a1 & 'h) -> ('j | 'g)
 //│   where
-//│     'a <: 'b -> 'd -> 'e
-//│     'b <: 'e -> 'f))
+//│     'b <: 'c -> 'h -> ('f & 'i)
+//│     'c <: ('a | 'a0 | 'a1 | ‘a517 | 'i | 'e) -> 'j))
 //│   where
-//│     'a <: 'b -> nothing -> 'c))
+//│     'b <: 'c -> 'd -> 'e))
 //│                  = <no result>
 //│                    to_church_ty is not implemented
 
@@ -256,31 +273,103 @@ rec def to_church_1_st n =
 //│ to_church_1_st: int -> (anything -> (forall 'a. 'a -> 'a) | ChurchInt)
 //│               = [Function: to_church_1_st]
 
-:e // FIXME should be caught by cycle checker! // due to tapping
+// FIXME should be caught by cycle checker!
 rec def to_church_2 n =
   if n == 0 then zero
   else succ' (to_church_2 (n - 1))
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: ?to_church_2` exceeded recursion depth limit (300)
+//│ ║  l.277: 	rec def to_church_2 n =
+//│ ║         	                    ^^^
+//│ ║  l.278: 	  if n == 0 then zero
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	  else succ' (to_church_2 (n - 1))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  α110_1622'  <!<  ((α111_1828',) -> α113_1838')
+//│ ╟── while constraining:  {(α112_1839' -> α115_1841') where: α110_1622' <: ((α111_1828',) -> α113_1838'), α111_1828' <: ((α114_1840',) -> α115_1841')}  <!<  ((α112_1825',) -> α114_1826')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_1835'''' -> α115_1837'''') where: α110_1622' <: ((α111_1828',) -> α113_1832''''), α111_1828' <: ((α114_1836'''',) -> α115_1837'''')}›  <!<  ((α112_1825',) -> α114_1826')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_1835'''' -> α115_1837'''') where: α110_1622' <: ((α111_1828',) -> α113_1832''''), α111_1828' <: ((α114_1836'''',) -> α115_1837'''')}›  <!<  α113_1824'
+//│ ╟── while constraining:  (α111_1828' -> ‹∀ 3. {(α112_1835'''' -> α115_1837'''') where: α110_1622' <: ((α111_1828',) -> α113_1832''''), α111_1828' <: ((α114_1836'''',) -> α115_1837'''')}›)  <!<  ((α111_1814',) -> α113_1824')
+//│ ╟── while constraining:  ‹∀ 2. (α111_1627''' -> ‹∀ 3. {(α112_1634'''' -> α115_1636'''') where: α110_1622' <: ((α111_1627''',) -> α113_1633''''), α111_1627''' <: ((α114_1635'''',) -> α115_1636'''')}›)›  <!<  ((α111_1814',) -> α113_1824')
+//│ ╟── while constraining:  α110_1622'  <!<  ((α111_1814',) -> α113_1824')
+//│ ╟── while constraining:  {(α112_1825' -> α115_1827') where: α110_1622' <: ((α111_1814',) -> α113_1824'), α111_1814' <: ((α114_1826',) -> α115_1827')}  <!<  ((α112_1811',) -> α114_1812')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_1821'''' -> α115_1823'''') where: α110_1622' <: ((α111_1814',) -> α113_1818''''), α111_1814' <: ((α114_1822'''',) -> α115_1823'''')}›  <!<  ((α112_1811',) -> α114_1812')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_1821'''' -> α115_1823'''') where: α110_1622' <: ((α111_1814',) -> α113_1818''''), α111_1814' <: ((α114_1822'''',) -> α115_1823'''')}›  <!<  α113_1810'
+//│ ╟── while constraining:  (α111_1814' -> ‹∀ 3. {(α112_1821'''' -> α115_1823'''') where: α110_1622' <: ((α111_1814',) -> α113_1818''''), α111_1814' <: ((α114_1822'''',) -> α115_1823'''')}›)  <!<  ((α111_1800',) -> α113_1810')
+//│ ╟── while constraining:  ‹∀ 2. (α111_1627''' -> ‹∀ 3. {(α112_1634'''' -> α115_1636'''') where: α110_1622' <: ((α111_1627''',) -> α113_1633''''), α111_1627''' <: ((α114_1635'''',) -> α115_1636'''')}›)›  <!<  ((α111_1800',) -> α113_1810')
+//│ ╟── while constraining:  α110_1622'  <!<  ((α111_1800',) -> α113_1810')
+//│ ╟── while constraining:  {(α112_1811' -> α115_1813') where: α110_1622' <: ((α111_1800',) -> α113_1810'), α111_1800' <: ((α114_1812',) -> α115_1813')}  <!<  ((α112_1797',) -> α114_1798')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_1807'''' -> α115_1809'''') where: α110_1622' <: ((α111_1800',) -> α113_1804''''), α111_1800' <: ((α114_1808'''',) -> α115_1809'''')}›  <!<  ((α112_1797',) -> α114_1798')
+//│ ╟── ......
+//│ ╟── ......
+//│ ╟── while constraining:  ‹∀ 3. {(α112_1667'''' -> α115_1669'''') where: α110_1622' <: ((α111_1660',) -> α113_1664''''), α111_1660' <: ((α114_1668'''',) -> α115_1669'''')}›  <!<  ((α112_1657',) -> α114_1658')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_1667'''' -> α115_1669'''') where: α110_1622' <: ((α111_1660',) -> α113_1664''''), α111_1660' <: ((α114_1668'''',) -> α115_1669'''')}›  <!<  α113_1656'
+//│ ╟── while constraining:  (α111_1660' -> ‹∀ 3. {(α112_1667'''' -> α115_1669'''') where: α110_1622' <: ((α111_1660',) -> α113_1664''''), α111_1660' <: ((α114_1668'''',) -> α115_1669'''')}›)  <!<  ((α111_1646',) -> α113_1656')
+//│ ╟── while constraining:  ‹∀ 2. (α111_1627''' -> ‹∀ 3. {(α112_1634'''' -> α115_1636'''') where: α110_1622' <: ((α111_1627''',) -> α113_1633''''), α111_1627''' <: ((α114_1635'''',) -> α115_1636'''')}›)›  <!<  ((α111_1646',) -> α113_1656')
+//│ ╟── while constraining:  α110_1622'  <!<  ((α111_1646',) -> α113_1656')
+//│ ╟── while constraining:  {(α112_1657' -> α115_1659') where: α110_1622' <: ((α111_1646',) -> α113_1656'), α111_1646' <: ((α114_1658',) -> α115_1659')}  <!<  ((α1640',) -> α1641')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_1653'''' -> α115_1655'''') where: α110_1622' <: ((α111_1646',) -> α113_1650''''), α111_1646' <: ((α114_1654'''',) -> α115_1655'''')}›  <!<  ((α1640',) -> α1641')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_1653'''' -> α115_1655'''') where: α110_1622' <: ((α111_1646',) -> α113_1650''''), α111_1646' <: ((α114_1654'''',) -> α115_1655'''')}›  <!<  α1639'
+//│ ╟── while constraining:  (α111_1646' -> ‹∀ 3. {(α112_1653'''' -> α115_1655'''') where: α110_1622' <: ((α111_1646',) -> α113_1650''''), α111_1646' <: ((α114_1654'''',) -> α115_1655'''')}›)  <!<  ((α1638',) -> α1639')
+//│ ╟── while constraining:  ‹∀ 2. (α111_1627''' -> ‹∀ 3. {(α112_1634'''' -> α115_1636'''') where: α110_1622' <: ((α111_1627''',) -> α113_1633''''), α111_1627''' <: ((α114_1635'''',) -> α115_1636'''')}›)›  <!<  ((α1638',) -> α1639')
+//│ ╟── while constraining:  ‹∀ 2. (α111_1627''' -> ‹∀ 3. {(α112_1634'''' -> α115_1636'''') where: α110_1622' <: ((α111_1627''',) -> α113_1633''''), α111_1627''' <: ((α114_1635'''',) -> α115_1636'''')}›)›  <!<  α110_1622'
+//│ ╟── while constraining:  ‹∀ 2. (α111_1627''' -> ‹∀ 3. {(α112_1634'''' -> α115_1636'''') where: α110_1622' <: ((α111_1627''',) -> α113_1633''''), α111_1627''' <: ((α114_1635'''',) -> α115_1636'''')}›)›  <!<  α1620'
+//│ ╟── while constraining:  α1637'  <!<  α1620'
+//│ ╟── while constraining:  (α1612' -> α1637')  <!<  ((α1619',) -> α1620')
+//│ ╙── while constraining:  (α1612' -> α1637')  <!<  to_church_21611'
+//│ to_church_2: int -> (forall 'a, 'b, 'c. (('a | 'd) -> 'b & 'c & 'd -> anything) -> (forall 'a, 'd, 'b, 'c, 'e, 'f, 'g, 'h. (('b & 'd & 'f) -> ('h | 'b)
+//│   where
+//│     'e <: 'c -> 'f -> ('a & 'g)
+//│     'c <: ('g | 'd) -> 'h)))
+//│            = [Function: to_church_1_st]
 
 // :e // FIXME should be caught by cycle checker!
 // Requires :RecursiveTypes
 :ng // FIXME codegen: `ReferenceError: to_church_2 is not defined`
 // :e // due to tapping
 :e // FIXME? refreshing-extr
+// FIXME should be caught by cycle checker!
 to_church_ty = to_church_2
-//│ nothing
+//│ int -> (forall 'a, 'b, 'c. (('a | 'd) -> 'b & 'c & 'd -> anything) -> (forall 'a, 'd, 'b, 'c, 'e, 'f, 'g, 'h. (('b & 'd & 'f) -> ('h | 'b)
+//│   where
+//│     'e <: 'c -> 'f -> ('a & 'g)
+//│     'c <: ('g | 'd) -> 'h)))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j, ?k, ?l, ?m, ?n, ?o, ?p, ?q, ?r, ?to_church_2, ?s, ?t, ?u, ?v, ?w, ?x, ?y, ?z, ?a1, ?b1, ?c1, ?d1, ?e1, ?f1, ?g1, ?h1, ?i1, ?j1, ?k1, ?l1, ?m1, ?n1, ?o1, ?p1, ?q1, ?r1, ?s1, ?t1, ?u1, ?v1, ?w1, ?x1, ?y1, ?z1, ?a2, ?b2, ?c2, ?d2, ?e2, ?f2, ?g2, ?h2, ?i2, ?j2, ?k2, ?l2, ?m2, ?n2, ?o2, ?p2, ?q2, ?r2, ?s2, ?t2, ?u2, ?v2, ?w2, ?x2, ?y2, ?z2, ?a3, ?b3, ?c3, ?d3, ?e3, ?f3, ?g3, ?h3, ?i3, ?j3, ?k3, ?l3, ?m3, ?n3, ?o3, ?p3, ?q3, ?r3, ?s3, ?t3, ?u3, ?v3, ?w3, ?x3, ?y3, ?z3, ?a4, ?b4, ?c4, ?d4, ?e4, ?f4, ?g4, ?h4, ?i4, ?j4, ?k4, ?l4, ?m4, ?n4, ?o4, ?p4, ?q4, ?r4, ?s4, ?t4, ?u4, ?v4, ?w4, ?x4, ?y4, ?z4, ?a5, ?b5, ?c5, ?d5, ?e5, ?f5, ?g5, ?h5, ?i5, ?j5. ?to_church_2 <: int -> ChurchInt` exceeded recursion depth limit (300)
+//│ ║  l.331: 	to_church_ty = to_church_2
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  (‘a' -> ‘a')  <!<  α111_2767'
+//│ ╟── while constraining:  α111_2755'  <!<  α111_2767'
+//│ ╟── while constraining:  (α111_2755',)  <!<  (α111_2767',)
+//│ ╟── while constraining:  (α111_2767' -> ‹∀ 3. {(α112_2772'''' -> α115_2774'''') where: α110_2483' <: ((α111_2767',) -> α113_2771''''), α111_2767' <: ((α114_2773'''',) -> α115_2774'''')}›)  <!<  ((α111_2755',) -> α113_2763')
+//│ ╟── while constraining:  ‹∀ 2. (α111_2417''' -> ‹∀ 3. {(α112_2499'''' -> α115_2501'''') where: α110_2483' <: ((α111_2417''',) -> α113_2484''''), α111_2417''' <: ((α114_2500'''',) -> α115_2501'''')}›)›  <!<  ((α111_2755',) -> α113_2763')
+//│ ╟── while constraining:  α110_2483'  <!<  ((α111_2755',) -> α113_2763')
+//│ ╟── while constraining:  {(α112_2764' -> α115_2766') where: α110_2483' <: ((α111_2755',) -> α113_2763'), α111_2755' <: ((α114_2765',) -> α115_2766')}  <!<  ((α112_2752',) -> α114_2753')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_2760'''' -> α115_2762'''') where: α110_2483' <: ((α111_2755',) -> α113_2759''''), α111_2755' <: ((α114_2761'''',) -> α115_2762'''')}›  <!<  ((α112_2752',) -> α114_2753')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_2760'''' -> α115_2762'''') where: α110_2483' <: ((α111_2755',) -> α113_2759''''), α111_2755' <: ((α114_2761'''',) -> α115_2762'''')}›  <!<  α113_2751'
+//│ ╟── while constraining:  (α111_2755' -> ‹∀ 3. {(α112_2760'''' -> α115_2762'''') where: α110_2483' <: ((α111_2755',) -> α113_2759''''), α111_2755' <: ((α114_2761'''',) -> α115_2762'''')}›)  <!<  ((α111_2743',) -> α113_2751')
+//│ ╟── while constraining:  ‹∀ 2. (α111_2417''' -> ‹∀ 3. {(α112_2499'''' -> α115_2501'''') where: α110_2483' <: ((α111_2417''',) -> α113_2484''''), α111_2417''' <: ((α114_2500'''',) -> α115_2501'''')}›)›  <!<  ((α111_2743',) -> α113_2751')
+//│ ╟── while constraining:  α110_2483'  <!<  ((α111_2743',) -> α113_2751')
+//│ ╟── while constraining:  {(α112_2752' -> α115_2754') where: α110_2483' <: ((α111_2743',) -> α113_2751'), α111_2743' <: ((α114_2753',) -> α115_2754')}  <!<  ((α112_2740',) -> α114_2741')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_2748'''' -> α115_2750'''') where: α110_2483' <: ((α111_2743',) -> α113_2747''''), α111_2743' <: ((α114_2749'''',) -> α115_2750'''')}›  <!<  ((α112_2740',) -> α114_2741')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_2748'''' -> α115_2750'''') where: α110_2483' <: ((α111_2743',) -> α113_2747''''), α111_2743' <: ((α114_2749'''',) -> α115_2750'''')}›  <!<  α113_2739'
+//│ ╟── ......
+//│ ╟── ......
+//│ ╟── while constraining:  ‹∀ 3. {(α112_2640'''' -> α115_2642'''') where: α110_2483' <: ((α111_2635',) -> α113_2639''''), α111_2635' <: ((α114_2641'''',) -> α115_2642'''')}›  <!<  α113_2631'
+//│ ╟── while constraining:  (α111_2635' -> ‹∀ 3. {(α112_2640'''' -> α115_2642'''') where: α110_2483' <: ((α111_2635',) -> α113_2639''''), α111_2635' <: ((α114_2641'''',) -> α115_2642'''')}›)  <!<  ((α111_2623',) -> α113_2631')
+//│ ╟── while constraining:  ‹∀ 2. (α111_2417''' -> ‹∀ 3. {(α112_2499'''' -> α115_2501'''') where: α110_2483' <: ((α111_2417''',) -> α113_2484''''), α111_2417''' <: ((α114_2500'''',) -> α115_2501'''')}›)›  <!<  ((α111_2623',) -> α113_2631')
+//│ ╟── while constraining:  α110_2483'  <!<  ((α111_2623',) -> α113_2631')
+//│ ╟── while constraining:  {(α112_2632' -> α115_2634') where: α110_2483' <: ((α111_2623',) -> α113_2631'), α111_2623' <: ((α114_2633',) -> α115_2634')}  <!<  (‘a' -> ‘a')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_2628'''' -> α115_2630'''') where: α110_2483' <: ((α111_2623',) -> α113_2627''''), α111_2623' <: ((α114_2629'''',) -> α115_2630'''')}›  <!<  (‘a' -> ‘a')
+//│ ╟── while constraining:  (α111_2623' -> ‹∀ 3. {(α112_2628'''' -> α115_2630'''') where: α110_2483' <: ((α111_2623',) -> α113_2627''''), α111_2623' <: ((α114_2629'''',) -> α115_2630'''')}›)  <!<  ((‘a' -> ‘a') -> (‘a' -> ‘a'))
+//│ ╟── while constraining:  ‹∀ 2. (α111_2417''' -> ‹∀ 3. {(α112_2499'''' -> α115_2501'''') where: α110_2483' <: ((α111_2417''',) -> α113_2484''''), α111_2417''' <: ((α114_2500'''',) -> α115_2501'''')}›)›  <!<  ((‘a' -> ‘a') -> (‘a' -> ‘a'))
+//│ ╟── while constraining:  α1637_2416'  <!<  ((‘a' -> ‘a') -> (‘a' -> ‘a'))
+//│ ╟── while constraining:  (α1612_2415' -> α1637_2416')  <!<  (Int -> ((‘a' -> ‘a') -> (‘a' -> ‘a')))
+//│ ╟── while constraining:  to_church_21611_2414'  <!<  (Int -> ((‘a' -> ‘a') -> (‘a' -> ‘a')))
+//│ ╟── while constraining:  ‹∀ 0. to_church_21611'›  <!<  (Int -> ((‘a' -> ‘a') -> (‘a' -> ‘a')))
+//│ ╟── while constraining:  ‹∀ 0. to_church_21611'›  <!<  ‹∀ 0. (Int -> (('a51' -> 'a51') -> ('a51' -> 'a51')))›
+//│ ╟── while constraining:  ‹∀ 0. to_church_21611'›  <!<  (Int -> ChurchInt)
+//│ ╙── while constraining:  ‹∀ 0. ‹∀ 0. to_church_21611'››  <!<  (Int -> ChurchInt)
 
 // (* Marche *)
 // let rec to_church n =
@@ -292,7 +381,7 @@ to_church_ty = to_church_2
 rec def to_church_3 n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
-//│ to_church_3: int -> ('a -> 'b & 'a -> 'a) -> (forall 'c. ('c & 'a) -> ('c | 'b))
+//│ to_church_3: int -> (('a | ‘a2980) -> (‘a2980 & 'b) & ('a | ‘a2980) -> (‘a2980 & 'a)) -> (forall 'c. (‘a2980 & 'c & 'a) -> (‘a2980 | 'c | 'b))
 //│            = [Function: to_church_3]
 
 // (* Ne Marche Pas *)
@@ -303,7 +392,7 @@ rec def to_church_3 n =
 rec def to_church_4 n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church_4 (n - 1)) f x) : ChurchInt
-//│ to_church_4: int -> ((ChurchInt | 'a) -> anything) -> (forall 'b. ('b & 'a) -> (ChurchInt | 'b))
+//│ to_church_4: int -> ((ChurchInt | 'a) -> (‘a3028 -> ‘a3028) -> ‘a3028 -> ‘a3028) -> (forall 'b. ('b & 'a) -> (ChurchInt | 'b))
 //│            = [Function: to_church_4]
 
 
@@ -320,11 +409,23 @@ rec def to_church_5 n =
 //│            = [Function: to_church_5]
 
 
-// :e // FIXME? // due to gen lam bod?
+:e // FIXME? // due to gen lam bod?
 to_church_ty = to_church_1
-//│ nothing
+//│ int -> (forall 'a, 'b, 'c, 'd. (('a0 | 'a1 | 'a | ‘a517 | 'b) -> 'c & 'a -> 'a & 'a0 -> 'a0 & ('a1 | ‘a517) -> (‘a517 & ‘a642 & 'a1) & 'd) -> (forall 'a0, 'a1, 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h. ((‘a517 & ‘a642 & 'c & 'a0 & 'a1 & 'a & 'f) -> ('c | 'h)
+//│   where
+//│     'e <: 'd -> 'f -> ('b & 'g)
+//│     'd <: ('a0 | 'a1 | 'a | ‘a517 | 'g) -> 'h)))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.413: 	to_church_ty = to_church_1
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘a517` is not an instance of type `'a`
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──      	                        ^^
 //│             = [Function: to_church_1]
 
 to_church_ty = to_church_1_t
@@ -349,25 +450,73 @@ to_church_ty = to_church_1_st
 // :e // FIXME should be caught by cycle checker!
 :ng
 :e // due to tapping
+// FIXME should be caught by cycle checker!
 to_church_ty = to_church_2
-//│ nothing
+//│ int -> (forall 'a, 'b, 'c. (('a | 'd) -> 'b & 'c & 'd -> anything) -> (forall 'a, 'd, 'b, 'c, 'e, 'f, 'g, 'h. (('b & 'd & 'f) -> ('h | 'b)
+//│   where
+//│     'e <: 'c -> 'f -> ('a & 'g)
+//│     'c <: ('g | 'd) -> 'h)))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j, ?k, ?l, ?m, ?n, ?o, ?p, ?q, ?r, ?to_church_2, ?s, ?t, ?u, ?v, ?w, ?x, ?y, ?z, ?a1, ?b1, ?c1, ?d1, ?e1, ?f1, ?g1, ?h1, ?i1, ?j1, ?k1, ?l1, ?m1, ?n1, ?o1, ?p1, ?q1, ?r1, ?s1, ?t1, ?u1, ?v1, ?w1, ?x1, ?y1, ?z1, ?a2, ?b2, ?c2, ?d2, ?e2, ?f2, ?g2, ?h2, ?i2, ?j2, ?k2, ?l2, ?m2, ?n2, ?o2, ?p2, ?q2, ?r2, ?s2, ?t2, ?u2, ?v2, ?w2, ?x2, ?y2, ?z2, ?a3, ?b3, ?c3, ?d3, ?e3, ?f3, ?g3, ?h3, ?i3, ?j3, ?k3, ?l3, ?m3, ?n3, ?o3, ?p3, ?q3, ?r3, ?s3, ?t3, ?u3, ?v3, ?w3, ?x3, ?y3, ?z3, ?a4, ?b4, ?c4, ?d4, ?e4, ?f4, ?g4, ?h4, ?i4, ?j4, ?k4, ?l4, ?m4, ?n4, ?o4, ?p4, ?q4, ?r4, ?s4, ?t4, ?u4, ?v4, ?w4, ?x4, ?y4, ?z4, ?a5, ?b5, ?c5, ?d5, ?e5, ?f5, ?g5, ?h5, ?i5, ?j5. ?to_church_2 <: int -> ChurchInt` exceeded recursion depth limit (300)
+//│ ║  l.454: 	to_church_ty = to_church_2
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  (‘a' -> ‘a')  <!<  α111_3669'
+//│ ╟── while constraining:  α111_3657'  <!<  α111_3669'
+//│ ╟── while constraining:  (α111_3657',)  <!<  (α111_3669',)
+//│ ╟── while constraining:  (α111_3669' -> ‹∀ 3. {(α112_3674'''' -> α115_3676'''') where: α110_3385' <: ((α111_3669',) -> α113_3673''''), α111_3669' <: ((α114_3675'''',) -> α115_3676'''')}›)  <!<  ((α111_3657',) -> α113_3665')
+//│ ╟── while constraining:  ‹∀ 2. (α111_3319''' -> ‹∀ 3. {(α112_3401'''' -> α115_3403'''') where: α110_3385' <: ((α111_3319''',) -> α113_3386''''), α111_3319''' <: ((α114_3402'''',) -> α115_3403'''')}›)›  <!<  ((α111_3657',) -> α113_3665')
+//│ ╟── while constraining:  α110_3385'  <!<  ((α111_3657',) -> α113_3665')
+//│ ╟── while constraining:  {(α112_3666' -> α115_3668') where: α110_3385' <: ((α111_3657',) -> α113_3665'), α111_3657' <: ((α114_3667',) -> α115_3668')}  <!<  ((α112_3654',) -> α114_3655')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_3662'''' -> α115_3664'''') where: α110_3385' <: ((α111_3657',) -> α113_3661''''), α111_3657' <: ((α114_3663'''',) -> α115_3664'''')}›  <!<  ((α112_3654',) -> α114_3655')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_3662'''' -> α115_3664'''') where: α110_3385' <: ((α111_3657',) -> α113_3661''''), α111_3657' <: ((α114_3663'''',) -> α115_3664'''')}›  <!<  α113_3653'
+//│ ╟── while constraining:  (α111_3657' -> ‹∀ 3. {(α112_3662'''' -> α115_3664'''') where: α110_3385' <: ((α111_3657',) -> α113_3661''''), α111_3657' <: ((α114_3663'''',) -> α115_3664'''')}›)  <!<  ((α111_3645',) -> α113_3653')
+//│ ╟── while constraining:  ‹∀ 2. (α111_3319''' -> ‹∀ 3. {(α112_3401'''' -> α115_3403'''') where: α110_3385' <: ((α111_3319''',) -> α113_3386''''), α111_3319''' <: ((α114_3402'''',) -> α115_3403'''')}›)›  <!<  ((α111_3645',) -> α113_3653')
+//│ ╟── while constraining:  α110_3385'  <!<  ((α111_3645',) -> α113_3653')
+//│ ╟── while constraining:  {(α112_3654' -> α115_3656') where: α110_3385' <: ((α111_3645',) -> α113_3653'), α111_3645' <: ((α114_3655',) -> α115_3656')}  <!<  ((α112_3642',) -> α114_3643')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_3650'''' -> α115_3652'''') where: α110_3385' <: ((α111_3645',) -> α113_3649''''), α111_3645' <: ((α114_3651'''',) -> α115_3652'''')}›  <!<  ((α112_3642',) -> α114_3643')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_3650'''' -> α115_3652'''') where: α110_3385' <: ((α111_3645',) -> α113_3649''''), α111_3645' <: ((α114_3651'''',) -> α115_3652'''')}›  <!<  α113_3641'
+//│ ╟── ......
+//│ ╟── ......
+//│ ╟── while constraining:  ‹∀ 3. {(α112_3542'''' -> α115_3544'''') where: α110_3385' <: ((α111_3537',) -> α113_3541''''), α111_3537' <: ((α114_3543'''',) -> α115_3544'''')}›  <!<  α113_3533'
+//│ ╟── while constraining:  (α111_3537' -> ‹∀ 3. {(α112_3542'''' -> α115_3544'''') where: α110_3385' <: ((α111_3537',) -> α113_3541''''), α111_3537' <: ((α114_3543'''',) -> α115_3544'''')}›)  <!<  ((α111_3525',) -> α113_3533')
+//│ ╟── while constraining:  ‹∀ 2. (α111_3319''' -> ‹∀ 3. {(α112_3401'''' -> α115_3403'''') where: α110_3385' <: ((α111_3319''',) -> α113_3386''''), α111_3319''' <: ((α114_3402'''',) -> α115_3403'''')}›)›  <!<  ((α111_3525',) -> α113_3533')
+//│ ╟── while constraining:  α110_3385'  <!<  ((α111_3525',) -> α113_3533')
+//│ ╟── while constraining:  {(α112_3534' -> α115_3536') where: α110_3385' <: ((α111_3525',) -> α113_3533'), α111_3525' <: ((α114_3535',) -> α115_3536')}  <!<  (‘a' -> ‘a')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_3530'''' -> α115_3532'''') where: α110_3385' <: ((α111_3525',) -> α113_3529''''), α111_3525' <: ((α114_3531'''',) -> α115_3532'''')}›  <!<  (‘a' -> ‘a')
+//│ ╟── while constraining:  (α111_3525' -> ‹∀ 3. {(α112_3530'''' -> α115_3532'''') where: α110_3385' <: ((α111_3525',) -> α113_3529''''), α111_3525' <: ((α114_3531'''',) -> α115_3532'''')}›)  <!<  ((‘a' -> ‘a') -> (‘a' -> ‘a'))
+//│ ╟── while constraining:  ‹∀ 2. (α111_3319''' -> ‹∀ 3. {(α112_3401'''' -> α115_3403'''') where: α110_3385' <: ((α111_3319''',) -> α113_3386''''), α111_3319''' <: ((α114_3402'''',) -> α115_3403'''')}›)›  <!<  ((‘a' -> ‘a') -> (‘a' -> ‘a'))
+//│ ╟── while constraining:  α1637_3318'  <!<  ((‘a' -> ‘a') -> (‘a' -> ‘a'))
+//│ ╟── while constraining:  (α1612_3317' -> α1637_3318')  <!<  (Int -> ((‘a' -> ‘a') -> (‘a' -> ‘a')))
+//│ ╟── while constraining:  to_church_21611_3316'  <!<  (Int -> ((‘a' -> ‘a') -> (‘a' -> ‘a')))
+//│ ╟── while constraining:  ‹∀ 0. to_church_21611'›  <!<  (Int -> ((‘a' -> ‘a') -> (‘a' -> ‘a')))
+//│ ╟── while constraining:  ‹∀ 0. to_church_21611'›  <!<  ‹∀ 0. (Int -> (('a51' -> 'a51') -> ('a51' -> 'a51')))›
+//│ ╟── while constraining:  ‹∀ 0. to_church_21611'›  <!<  (Int -> ChurchInt)
+//│ ╙── while constraining:  ‹∀ 0. ‹∀ 0. to_church_21611'››  <!<  (Int -> ChurchInt)
 
-// :e // FIXME?
+:e // FIXME?
 to_church_ty = to_church_3
-//│ int -> ('a -> 'b & 'a -> 'a) -> (forall 'c. ('c & 'a) -> ('c | 'b))
+//│ int -> (('a | ‘a2980) -> (‘a2980 & 'b) & ('a | ‘a2980) -> (‘a2980 & 'a)) -> (forall 'c. (‘a2980 & 'c & 'a) -> (‘a2980 | 'c | 'b))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.498: 	to_church_ty = to_church_3
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘a2980` is not an instance of type `'a`
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──      	                        ^^
 //│             = [Function: to_church_3]
 
 :e
 to_church_ty = to_church_4
-//│ int -> ((ChurchInt | 'a) -> anything) -> (forall 'b. ('b & 'a) -> (ChurchInt | 'b))
+//│ int -> ((ChurchInt | 'a) -> (‘a3028 -> ‘a3028) -> ‘a3028 -> ‘a3028) -> (forall 'b. ('b & 'a) -> (ChurchInt | 'b))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.341: 	to_church_ty = to_church_4
+//│ ║  l.514: 	to_church_ty = to_church_4
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `(?a -> ?a) -> ?a -> ?a` is not an instance of type `'a`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -409,60 +558,110 @@ rec def to_church_ty n =
 def to_church_ty n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church_ty (n - 1)) f x)
-//│ int -> (forall 'a, 'b. ('a -> 'b & 'a -> 'a & 'b) -> (forall 'b, 'a0, 'c. (('c & 'a0) -> 'c
+//│ int -> (forall 'a, 'b, 'c, 'a0, 'd. (('a | 'b) -> 'c & 'a0 -> ('a & 'a0) & 'd) -> (forall 'a, 'b, 'c, 'a0, 'd, 'a1, 'e. (('e & 'b & 'a0 & 'a1) -> ('e | 'c)
 //│   where
-//│     'b <: 'a0 -> 'a0 & 'a0 -> 'c)))
+//│     'd <: ('a | 'a1) -> ('b & 'a0 & 'a1) & ('a | 'a1) -> 'e)))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│             = [Function: to_church_ty7]
 
 
 // (* �a coince. *)
 // let tc n = (to_church n : Int);;
 
 // :e // FIXME? // due to gen lam bod?
+:e // FIXME?
 def tc n = to_church_1 n : ChurchInt
-//│ tc: 'a -> ChurchInt
-//│   where
-//│     'to_church_1 <: 'a -> anything
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.574: 	def tc n = to_church_1 n : ChurchInt
+//│ ║         	           ^^^^^^^^^^^^^
+//│ ╟── type `‘a517` is not an instance of type `'a`
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──      	                        ^^
+//│ tc: int -> ChurchInt
 //│   = [Function: tc]
 
 def tc n = to_church_ty n : ChurchInt
 //│ tc: int -> ChurchInt
 //│   = [Function: tc1]
 
-// :e // FIXME should be caught by cycle checker!
+// FIXME should be caught by cycle checker!
 def tc n = to_church_2 n : ChurchInt // Requires :RecursiveTypes
-//│ tc: 'a -> ChurchInt
-//│   where
-//│     'to_church_2 <: 'a -> anything
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j, ?k, ?l, ?m, ?n, ?o, ?p, ?q, ?r, ?s, ?t, ?u, ?v, ?w, ?x, ?y, ?z, ?a1, ?b1, ?c1, ?d1, ?e1, ?f1, ?g1, ?h1, ?i1, ?j1, ?k1, ?l1, ?m1, ?n1, ?o1, ?p1, ?q1, ?r1, ?s1, ?t1, ?u1, ?v1, ?w1, ?x1, ?y1, ?z1, ?a2, ?b2, ?c2, ?d2, ?e2, ?f2, ?g2, ?h2, ?i2, ?j2, ?k2, ?l2, ?m2, ?n2, ?o2, ?p2, ?q2, ?r2. ?a <: ChurchInt` exceeded recursion depth limit (300)
+//│ ║  l.592: 	def tc n = to_church_2 n : ChurchInt // Requires :RecursiveTypes
+//│ ║         	           ^^^^^^^^^^^^^
+//│ ╟── while constraining:  (‘a''' -> ‘a''')  <!<  α53_6231'''
+//│ ╟── while constraining:  (‘a''' -> ‘a''')  <!<  α121_6230'''
+//│ ╟── while constraining:  (‘a''' -> ‘a''')  <!<  α111_6229'''
+//│ ╟── while constraining:  (‘a''' -> ‘a''')  <!<  α111_6228'''
+//│ ╟── while constraining:  (‘a''' -> ‘a''')  <!<  α111_6227'''
+//│ ╟── while constraining:  (‘a''' -> ‘a''')  <!<  α111_6226'''
+//│ ╟── while constraining:  (‘a''' -> ‘a''')  <!<  α111_6225'''
+//│ ╟── while constraining:  (‘a''' -> ‘a''')  <!<  α111_6224'''
+//│ ╟── while constraining:  (‘a''' -> ‘a''')  <!<  α111_6223'''
+//│ ╟── while constraining:  (‘a''' -> ‘a''')  <!<  α111_6222'''
+//│ ╟── while constraining:  (‘a''' -> ‘a''')  <!<  α111_6221'''
+//│ ╟── while constraining:  (‘a''' -> ‘a''')  <!<  α111_6220'''
+//│ ╟── while constraining:  (‘a''' -> ‘a''')  <!<  α111_6219'''
+//│ ╟── while constraining:  (‘a''' -> ‘a''')  <!<  α111_6218'''
+//│ ╟── while constraining:  (‘a''' -> ‘a''')  <!<  α111_6217'''
+//│ ╟── ......
+//│ ╟── ......
+//│ ╟── while constraining:  α110_4632'''  <!<  ((α111_4566''',) -> α113_4768''')
+//│ ╟── while constraining:  {(α112_4769''' -> α115_4771''') where: α110_4632''' <: ((α111_4566''',) -> α113_4768'''), α111_4566''' <: ((α114_4770''',) -> α115_4771''')}  <!<  ((α112_4563''',) -> α114_4564''')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_4765'''' -> α115_4767'''') where: α110_4632''' <: ((α111_4566''',) -> α113_4762''''), α111_4566''' <: ((α114_4766'''',) -> α115_4767'''')}›  <!<  ((α112_4563''',) -> α114_4564''')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_4765'''' -> α115_4767'''') where: α110_4632''' <: ((α111_4566''',) -> α113_4762''''), α111_4566''' <: ((α114_4766'''',) -> α115_4767'''')}›  <!<  α113_4562'''
+//│ ╟── while constraining:  (α111_4566''' -> ‹∀ 3. {(α112_4765'''' -> α115_4767'''') where: α110_4632''' <: ((α111_4566''',) -> α113_4762''''), α111_4566''' <: ((α114_4766'''',) -> α115_4767'''')}›)  <!<  ((α111_4360''',) -> α113_4562''')
+//│ ╟── while constraining:  ‹∀ 2. (α111_4154''' -> ‹∀ 3. {(α112_4236'''' -> α115_4238'''') where: α110_4220''' <: ((α111_4154''',) -> α113_4221''''), α111_4154''' <: ((α114_4237'''',) -> α115_4238'''')}›)›  <!<  ((α111_4360''',) -> α113_4562''')
+//│ ╟── while constraining:  α110_4426'''  <!<  ((α111_4360''',) -> α113_4562''')
+//│ ╟── while constraining:  {(α112_4563''' -> α115_4565''') where: α110_4426''' <: ((α111_4360''',) -> α113_4562'''), α111_4360''' <: ((α114_4564''',) -> α115_4565''')}  <!<  (‘a''' -> ‘a''')
+//│ ╟── while constraining:  ‹∀ 3. {(α112_4559'''' -> α115_4561'''') where: α110_4426''' <: ((α111_4360''',) -> α113_4556''''), α111_4360''' <: ((α114_4560'''',) -> α115_4561'''')}›  <!<  (‘a''' -> ‘a''')
+//│ ╟── while constraining:  (α111_4360''' -> ‹∀ 3. {(α112_4559'''' -> α115_4561'''') where: α110_4426''' <: ((α111_4360''',) -> α113_4556''''), α111_4360''' <: ((α114_4560'''',) -> α115_4561'''')}›)  <!<  ((‘a''' -> ‘a''') -> (‘a''' -> ‘a'''))
+//│ ╟── while constraining:  ‹∀ 2. (α111_4154''' -> ‹∀ 3. {(α112_4236'''' -> α115_4238'''') where: α110_4220''' <: ((α111_4154''',) -> α113_4221''''), α111_4154''' <: ((α114_4237'''',) -> α115_4238'''')}›)›  <!<  ((‘a''' -> ‘a''') -> (‘a''' -> ‘a'''))
+//│ ╟── while constraining:  α4150_4359'''  <!<  ((‘a''' -> ‘a''') -> (‘a''' -> ‘a'''))
+//│ ╟── while constraining:  ‹∀ 2. α4150'''›  <!<  ((‘a''' -> ‘a''') -> (‘a''' -> ‘a'''))
+//│ ╟── while constraining:  ‹∀ 2. α4150'''›  <!<  ‹∀ 0. (('a51' -> 'a51') -> ('a51' -> 'a51'))›
+//│ ╙── while constraining:  ‹∀ 2. α4150'''›  <!<  ChurchInt
+//│ tc: int -> ChurchInt
 //│   = [Function: tc2]
 
 // FIXME stupid type
 def tc n = to_church_3 n
-//│ tc: int -> ('a -> 'b & 'a -> 'a) -> (forall 'c. ('a & 'c) -> ('c | 'b))
+//│ tc: int -> (('a | ‘a2980) -> (‘a2980 & 'b) & ('a | ‘a2980) -> (‘a2980 & 'a)) -> (forall 'c. (‘a2980 & 'a & 'c) -> (‘a2980 | 'c | 'b))
 //│   = [Function: tc3]
-// FIXME
+
 tc 1 id
-//│ res: 'a -> 'a
+//│ res: (‘a2980 & 'a) -> (‘a2980 | 'a)
 //│    = [Function (anonymous)]
+
 // FIXME
 tc: int -> ChurchInt
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.641: 	tc: int -> ChurchInt
+//│ ║         	^^
+//│ ╟── type `‘a2980` is not an instance of type `'a`
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──      	                        ^^
 //│ res: int -> ChurchInt
 //│    = [Function: tc3]
 
 // FIXME
 def tc n = to_church_3 n : ChurchInt
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.655: 	def tc n = to_church_3 n : ChurchInt
+//│ ║         	           ^^^^^^^^^^^^^
+//│ ╟── type `‘a2980` is not an instance of type `'a`
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──      	                        ^^
 //│ tc: int -> ChurchInt
 //│   = [Function: tc4]
 

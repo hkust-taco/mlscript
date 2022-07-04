@@ -45,38 +45,40 @@ f {} {}
 
 
 def f n m = n 0
-//│ f: (0 -> 'a & 'a) -> (forall 'a, 'b. ('a -> 'b
+//│ f: (0 -> 'a & 'b) -> (forall 'a, 'b, 'c. ('b -> ('c | 'a)
 //│   where
-//│     'a <: 0 -> 'b))
+//│     'b <: 0 -> 'c))
 //│  = [Function: f1]
 
 :e // due to tapping
 f {}
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.54: 	f {}
+//│ ║        	^^^^
+//│ ╟── record literal of type `anything` is not a function
+//│ ║  l.54: 	f {}
+//│ ║        	  ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.47: 	def f n m = n 0
+//│ ╙──      	            ^^^
+//│ res: error
+//│    = [Function (anonymous)]
 
 :e
 f {} {}
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.68: 	f {} {}
+//│ ║        	^^^^
+//│ ╟── record literal of type `anything` is not a function
+//│ ║  l.68: 	f {} {}
+//│ ║        	  ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.47: 	def f n m = n 0
+//│ ╙──      	            ^^^
+//│ res: error
+//│ Runtime error:
+//│   TypeError: n is not a function
+
 
 
 

@@ -62,7 +62,7 @@ def ty_2: nothing -> (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
 
 // * This fails to constrain though the subtyping do be holdin
 // * For instance taking 'a := (forall 'b. 'b -> 'b)
-:e
+// :e
 ty_2 = ty_1
 //│ 'a -> (nothing -> 'a) -> 'a
 //│   <:  ty_2:

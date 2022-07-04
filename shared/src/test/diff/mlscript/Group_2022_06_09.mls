@@ -155,7 +155,7 @@ def evalComposed evalComposed = evalN evalN (eval evalComposed)
 //│ ║  l.153: 	def evalComposed evalComposed = evalN evalN (eval evalComposed)
 //│ ║         	                                ^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α430' -> (α431' -> (α432' -> (α439' | α441'))))›  <:  α430_534'    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. (α430' -> (α431' -> (α432' -> (α439' | α441'))))›  <:  α430_536'    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. (α430' -> (α431' -> (α432' -> (α439' | α441'))))›  <:  α430'
 //│ evalComposed: ('a -> nothing -> int & 'a) -> error
 //│             = [Function: evalComposed1]
@@ -170,8 +170,8 @@ ev2 = evalComposed evalComposed
 //│ ║  l.168: 	ev2 = evalComposed evalComposed
 //│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α521' -> α558')›  <:  α521_580'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α521' -> α558')›  <:  α521'
+//│ ╟── this constraint:  ‹∀ 0. (α523' -> α560')›  <:  α523_582'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α523' -> α560')›  <:  α523'
 //│ ev2: error
 //│    = [Function (anonymous)]
 

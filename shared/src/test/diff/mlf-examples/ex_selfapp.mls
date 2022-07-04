@@ -79,55 +79,48 @@ b = error: Baa
 // :e // due to tapping
 :e // works with quantif extrus
 def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> Cons (x, xs)) Nil
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.81: 	def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> Cons (x, xs)) Nil
+//│ ║        	                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  (cons<> & {head: head26_126'', tail: tail27_130'', Cons#a: mut a22_127''..a22_127''})  <:  List[a22_127'']    ComposedType  TypeRef
+//│ ╙──  ... looks like:  (cons<> & {head: head26_119'''', tail: tail27_123'''', Cons#a: mut a22_120''''..a22_120''''})  <:  List[a22_120'''']
+//│ build: (forall 'b. (anything -> 'b -> 'b) -> 'b -> 'b) -> error
+//│      = [Function: build]
 
 // * ^ Not sure why this one only works with recursive types:
 :RecursiveTypes
 // :e // FIXME? refreshing-extr
 def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> Cons (x, xs)) Nil
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ build: (forall 'b. ('head -> 'b -> 'b) -> 'b -> 'b) -> 'tail
+//│   where
+//│     'tail :> (Cons['head] with {tail: 'tail}) | Nil
+//│      = [Function: build1]
 :NoRecursiveTypes
 
 
 def build_ = fun g -> g (fun x -> fun xs -> Cons (x, xs)) Nil
-//│ build_: ((forall 'b. 'b -> (forall 'b, 'head, 'a, 'tail. ((List['a] & 'tail) -> (Cons['a] with {head: 'head, tail: 'tail})
+//│ build_: ((forall 'head. 'head -> (forall 'head, 'head0, 'a, 'tail. ((List['a] & 'tail) -> (Cons['a | 'head] with {head: 'head | 'head0, tail: 'tail})
 //│   where
-//│     'b <: 'head & 'a))) -> Nil -> 'c) -> 'c
+//│     'head <: 'head0 & 'a))) -> Nil -> 'b) -> 'b
 //│       = [Function: build_]
 
 :e
 build_ : forall 'a. (forall 'b. (('a -> 'b -> 'b) -> 'b -> 'b)) -> List['a]
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.109: 	build_ : forall 'a. (forall 'b. (('a -> 'b -> 'b) -> 'b -> 'b)) -> List['a]
+//│ ║         	^^^^^^
+//│ ╟── type `‘b` does not match type `Cons[?a] | Nil`
+//│ ║  l.109: 	build_ : forall 'a. (forall 'b. (('a -> 'b -> 'b) -> 'b -> 'b)) -> List['a]
+//│ ║         	                            ^^
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.15: 	type List[a] = Nil | Cons[a]
+//│ ║        	               ^^^^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.102: 	def build_ = fun g -> g (fun x -> fun xs -> Cons (x, xs)) Nil
+//│ ╙──       	                                                     ^^
+//│ res: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> List['a]
+//│    = [Function: build_]
 
 
 class Ls[A] method Head: A
@@ -142,38 +135,34 @@ def nil: Ls['a]
 
 // :e // FIXME? refreshing-extr
 def build2 = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> cons (x, xs)) nil
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ build2: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
+//│       = <no result>
+//│         cons is not implemented
 
 def build2_ = fun g -> g (fun x -> fun xs -> cons (x, xs)) nil
-//│ build2_: ((forall 'b. 'b -> (forall 'b, 'a. (Ls['a] -> Ls['a]
+//│ build2_: ((forall 'a. 'a -> (forall 'a, 'a0. (Ls['a0] -> Ls['a0 | 'a]
 //│   where
-//│     'b <: 'a))) -> Ls[nothing] -> 'c) -> 'c
+//│     'a <: 'a0))) -> Ls[nothing] -> 'b) -> 'b
 //│        = <no result>
 //│          cons is not implemented
 
 :e
 build2_ : forall 'a. (forall 'b. (('a -> 'b -> 'b) -> 'b -> 'b)) -> Ls['a]
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.150: 	build2_ : forall 'a. (forall 'b. (('a -> 'b -> 'b) -> 'b -> 'b)) -> Ls['a]
+//│ ║         	^^^^^^^
+//│ ╟── type `‘b` is not an instance of type `Ls`
+//│ ║  l.150: 	build2_ : forall 'a. (forall 'b. (('a -> 'b -> 'b) -> 'b -> 'b)) -> Ls['a]
+//│ ║         	                             ^^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.127: 	def cons: ('a, Ls['a]) -> Ls['a]
+//│ ║         	               ^^^^^^
+//│ ╟── from reference:
+//│ ║  l.142: 	def build2_ = fun g -> g (fun x -> fun xs -> cons (x, xs)) nil
+//│ ╙──       	                                                      ^^
+//│ res: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
+//│    = <no result>
+//│      build2_ and cons are not implemented
 
 
 // let rec foldr =
@@ -216,9 +205,18 @@ def k: int -> Ba -> Ba
 
 // FIXME
 rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
-//│ int -> Ba -> (nothing -> ('b | ‘b) -> (‘b & 'b & 'a) & int -> (‘b | 'a) -> (‘b & 'a & 'c)) -> (‘b & 'b & 'a) -> (‘b | 'c)
+//│ int -> Ba -> (nothing -> ('b | ‘b415) -> (‘b415 & 'b & 'a) & int -> (‘b415 | 'a) -> (‘b415 & 'a & 'c)) -> (‘b415 & 'b & 'a) -> (‘b415 | 'c)
 //│   <:  k:
 //│ int -> Ba -> Ba
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.207: 	rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘b415` is not an instance of type `'b445`
+//│ ║  l.50: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
+//│ ║        	                 ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.50: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
+//│ ╙──      	                 ^^
 //│  = [Function: k]
 
 :e
@@ -229,17 +227,17 @@ rec def k = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
 //│   <:  k:
 //│ int -> Ba -> Ba
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.238: 	rec def k = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
+//│ ║  l.223: 	rec def k = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> (forall ?b. ?b -> ?b)` is not an instance of type `'b`
-//│ ║  l.189: 	def z_ = fun c -> fun n -> n
-//│ ║         	         ^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `‘b`
-//│ ║  l.238: 	rec def k = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
-//│ ║         	                                                                 ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ╟── type `‘b502` is not a function
 //│ ║  l.50: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
-//│ ╙──      	                 ^^
+//│ ║        	                 ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.223: 	rec def k = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
+//│ ║         	                                                            ^^^^
+//│ ╟── from reference:
+//│ ║  l.223: 	rec def k = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
+//│ ╙──       	                                                                      ^
 //│  = [Function: k1]
 
 rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k_ z_ c n)
@@ -267,28 +265,31 @@ rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k_ z_ c n)
 
 // :e // FIXME? fails with genLamBodies
 def bfoo xs = build (foldr k z xs)
-//│ ╔══[ERROR] identifier not found: build
-//│ ║  l.282: 	def bfoo xs = build (foldr k z xs)
-//│ ╙──       	              ^^^^^
-//│ bfoo: 'a -> error
+//│ bfoo: 'a -> 'tail
 //│   where
+//│     'tail :> (Cons[int] with {tail: 'tail}) | Nil
 //│     'a <: (Cons[?] with {head: int, tail: 'a}) | Nil
 //│     = [Function: bfoo]
 
 // FIXedME // works with quantif extrus
 :e // due to tapping
 def bfoo_ xs = build_ (foldr k_ z_ xs)
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.276: 	def bfoo_ xs = build_ (foldr k_ z_ xs)
+//│ ║         	               ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?b -> (forall ?c. ?c -> ?c)` does not match type `Cons[?a] | Nil`
+//│ ║  l.189: 	def z_ = fun c -> fun n -> n
+//│ ║         	         ^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.15: 	type List[a] = Nil | Cons[a]
+//│ ║        	               ^^^^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.102: 	def build_ = fun g -> g (fun x -> fun xs -> Cons (x, xs)) Nil
+//│ ╙──       	                                                     ^^
+//│ bfoo_: 'a -> error
+//│   where
+//│     'a <: (Cons[?] with {head: int, tail: 'a}) | Nil
+//│      = [Function: bfoo_]
 
 
 def lst = Cons (0, Cons (0, Cons (0, Nil)))
@@ -319,7 +320,9 @@ foo lst0
 
 // bfoo lst0;;
 bfoo lst0
-//│ res: error
+//│ res: 'tail
+//│   where
+//│     'tail :> (Cons[int] with {tail: 'tail}) | Nil
 //│    = Cons {
 //│        head: 1,
 //│        tail: Cons { head: 2, tail: Cons { head: 4, tail: [Cons] } }
@@ -327,9 +330,6 @@ bfoo lst0
 
 // :e // FIXME?
 bfoo_ lst0
-//│ ╔══[ERROR] identifier not found: bfoo_
-//│ ║  l.347: 	bfoo_ lst0
-//│ ╙──       	^^^^^
 //│ res: error
 //│    = Cons {
 //│        head: 1,
@@ -348,58 +348,60 @@ def k: int -> Baa -> Baa
 :e
 rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.364: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║  l.349: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `int` is not an instance of type `'a`
-//│ ║  l.364: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ╟── operator application of type `int` is not an instance of type `'a860`
+//│ ║  l.349: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	                                                           ^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.51: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
 //│ ╙──      	                  ^^
-//│ int -> Baa -> (nothing -> ('b | ‘b) -> (‘b & 'b) & int -> ('b | ‘b) -> 'a) -> (‘b & 'b) -> 'a
+//│ int -> Baa -> (nothing -> ('b | ‘b859) -> (‘b859 & 'b) & int -> ('b | ‘b859) -> (‘b859 & 'a)) -> (‘b859 & 'b) -> 'a
 //│   <:  k:
 //│ int -> Baa -> Baa
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.364: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║  l.349: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `int` is not an instance of type `'a`
-//│ ║  l.364: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
-//│ ║         	                                                           ^^^^^
+//│ ╟── type `‘b889` is not an instance of type `'b859`
+//│ ║  l.51: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
+//│ ║        	                     ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.51: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
-//│ ╙──      	                  ^^
+//│ ║        	                     ^^
+//│ ╟── from reference:
+//│ ║  l.349: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ╙──       	                                                                            ^
 //│  = [Function: k2]
 
 :e // FIXME?
 def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
-//│ int -> Baa -> (forall 'a, 'b, 'c. ((int -> 'c -> anything & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
+//│ int -> Baa -> (forall 'a, 'c, 'd, 'e, 'b, 'f, 'g. ((nothing -> 'b -> 'b & int -> ('b | 'e | 'f) -> 'g & 'c) -> (forall 'a, 'c, 'd, 'e, 'b, 'f, 'g, 'h, 'i, 'j. (('d & 'b & 'h) -> ('j | 'g)
 //│   where
-//│     'a <: (int -> Baa -> Baa) -> Baa -> 'b -> 'd -> 'e
-//│     'b <: int -> 'e -> 'f))
+//│     'a <: (int -> Baa -> Baa) -> Baa -> 'c -> 'h -> ('f & 'i)
+//│     'c <: int -> ('b | 'i | 'e) -> 'j))
 //│   where
-//│     'a <: (int -> Baa -> Baa) -> Baa -> 'b -> nothing -> 'c))
+//│     'a <: (int -> Baa -> Baa) -> Baa -> 'c -> 'd -> 'e))
 //│   <:  k:
 //│ int -> Baa -> Baa
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.377: 	def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── operator application of type `int` is not an instance of type `'a`
+//│ ║  l.377: 	def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║         	                                                       ^^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.51: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
+//│ ╙──      	                  ^^
+//│  = [Function: k3]
 
 // * Using `k` here on purpose to simulate an annotated rec def
 def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z c n)
-//│ k_: int -> (forall 'a. ((int -> Baa -> Baa) -> Baa -> nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. ((int -> 'c -> 'a & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
+//│ k_: int -> (forall 'a, 'b, 'c, 'd. ((int -> Baa -> Baa) -> Baa -> 'a -> 'b -> 'c & 'd) -> (forall 'a, 'c, 'd, 'e, 'f, 'g, 'h, 'i. ((int -> ('g | 'h | 'c) -> 'i & 'a & 'e) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l. (('b & 'f & 'j) -> ('l | 'i)
 //│   where
-//│     'a <: (int -> Baa -> Baa) -> Baa -> 'b -> 'd -> 'e
-//│     'b <: int -> 'e -> 'f))
+//│     'd <: (int -> Baa -> Baa) -> Baa -> 'e -> 'j -> ('h & 'k)
+//│     'e <: int -> ('k | 'g | 'c) -> 'l))
 //│   where
-//│     'a <: (int -> Baa -> Baa) -> Baa -> 'b -> nothing -> 'c)))
+//│     'd <: (int -> Baa -> Baa) -> Baa -> 'e -> 'f -> 'g)))
 //│   = [Function: k_1]
 
 rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k_ z c n)

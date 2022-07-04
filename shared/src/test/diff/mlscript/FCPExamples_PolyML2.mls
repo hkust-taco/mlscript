@@ -18,9 +18,9 @@ def Nil = Nil {}
 //│ Nil: Nil
 
 def Cons head tail = Cons { head; tail }
-//│ Cons: 'b -> (forall 'b, 'head, 'a, 'tail. ((List['a] & 'tail) -> (Cons['a] with {head: 'head, tail: 'tail})
+//│ Cons: 'head -> (forall 'head, 'head0, 'a, 'tail. ((List['a] & 'tail) -> (Cons['a | 'head] with {head: 'head0 | 'head, tail: 'tail})
 //│   where
-//│     'b <: 'head & 'a))
+//│     'head <: 'head0 & 'a))
 
 // ------------ Type signatures for functions used in the examples ------------
 // (I guess)
@@ -50,9 +50,9 @@ class Collection[a]: { l: List[a] }
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
 //│ Defined Collection.Mem: Collection[?] -> anything -> bool
-//│ Defined Collection.Fold: Collection['a] -> (forall 'b, 'c. ('b -> 'a -> 'b & 'c) -> (forall 'a, 'c, 'd. ('d -> 'd
+//│ Defined Collection.Fold: Collection['a] -> (forall 'b, 'c, 'd. ('b -> 'a -> ('b & 'c) & 'd) -> (forall 'a, 'b, 'c, 'd, 'e. (('b & 'e) -> ('c | 'e)
 //│   where
-//│     'c <: 'd -> 'a -> 'd)))
+//│     'd <: ('c | 'e) -> 'a -> ('b & 'e))))
 
 def coll_mem c x = c.Mem x
 //│ coll_mem: (Collection['a] & 'a) -> (forall 'a. ('a -> bool
@@ -60,19 +60,12 @@ def coll_mem c x = c.Mem x
 //│     'a <: Collection['a]))
 
 // typo in the paper? it was `fun x -> fun y -> ...`
-:e // FIXME? refreshing-extr
+// :e // FIXME? refreshing-extr
 def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
   let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
   (l1, l2)
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
-//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
+//│ simple_and_double: Collection[?] -> (forall 'a. 'a, forall 'b. 'b,)
+//│   where
+//│     'b :> (Cons[(nothing, nothing,)] with {tail: 'b}) | Nil
+//│     'a :> (Cons[nothing] with {tail: 'a}) | Nil
