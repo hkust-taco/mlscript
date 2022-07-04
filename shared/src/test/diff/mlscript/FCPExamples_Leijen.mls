@@ -380,7 +380,7 @@ map xauto ids
 //│    = Cons { head: [Function: id1], tail: Nil {} }
 
 // ,("map xauto (map xauto ids)", Wrong)
-:e
+// :e // * This term seems fine, though they mark it as wrong in their system
 map xauto (map xauto ids)
 //│ res: List['a -> 'a]
 //│    = Cons { head: [Function: id1], tail: Nil {} }

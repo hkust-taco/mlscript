@@ -65,7 +65,7 @@ def succ' n = fun f -> fun x -> f (n f x)
 
 // * Note: without constrained types we wouldn't get the principal type of succ'
 
-// * Require distrib – see Scratch3
+// * Used to require distrib – see Scratch3
 succ_ty = succ
 succ_ty = succ'
 //│ ChurchInt -> (forall 'b, 'c, 'd, 'e, 'a, 'f, 'g. (('a -> 'a & ('a | 'e | 'f) -> 'g & 'c) -> (forall 'b, 'c, 'd, 'e, 'a, 'f, 'g, 'h, 'i, 'j. (('d & 'a & 'h) -> ('j | 'g)

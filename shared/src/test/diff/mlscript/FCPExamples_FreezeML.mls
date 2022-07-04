@@ -287,7 +287,7 @@ def f: ('a -> 'a) -> List['a] -> 'a
 //│ f: ('a -> 'a) -> List['a] -> 'a
 //│  = <missing implementation>
 
-:e
+:e // FIXME — works with :RecursiveTypes
 :ng
 f (choose id) ids
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
@@ -532,12 +532,14 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│     'a0 := ‘a1080
 //│    = [Function: id1]
 
+
+// ?!
 // :e // * ^ Here you go:
 // :e // FIXME? succeeds with genLamBodies
 :e // FIXME? refreshing-extr
 res id
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.538: 	res id
+//│ ║  l.540: 	res id
 //│ ║         	^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‘a1080  <:  'a1077_1084    TraitTag  TypeVariable
@@ -549,10 +551,10 @@ res id
 :e
 a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.550: 	a (fun x -> { u = x })
+//│ ║  l.552: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a`
-//│ ║  l.550: 	a (fun x -> { u = x })
+//│ ║  l.552: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b

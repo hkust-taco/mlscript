@@ -91,7 +91,7 @@ def test8  = (s x x (s x x e) x (s x x x e) e)
 print test8
 
 
-:e // FIXME? refreshing-extr
+:e // FIXME — works with :RecursiveTypes
 def test14 = (s x x x x x x x x x x x x x x e)
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b. () -> ?b) -> ?c` took too many steps and ran out of fuel (5000)
 //│ ║  l.95: 	def test14 = (s x x x x x x x x x x x x x x e)
@@ -151,7 +151,7 @@ def test14 = (s x x x x x x x x x x x x x x e)
 //│ ╙──      	                     ^^
 //│ test14: error
 
-:e // FIXME? refreshing-extr
+:e // FIXME — works with :RecursiveTypes
 def test16 = (s x x x x x x x x x x x x x x x x e)
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b. () -> ?b) -> ?c` took too many steps and ran out of fuel (5000)
 //│ ║  l.155: 	def test16 = (s x x x x x x x x x x x x x x x x e)
@@ -212,7 +212,7 @@ def test16 = (s x x x x x x x x x x x x x x x x e)
 //│ test16: error
 
 // (* This is too much for the type-checker. *)
-:e // FIXME? refreshing-extr
+:e // FIXME — works with :RecursiveTypes
 def test18 = (s x x x x x x x x x x x x x x x x x x e)
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b. () -> ?b) -> ?c` took too many steps and ran out of fuel (5000)
 //│ ║  l.216: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
@@ -271,6 +271,18 @@ def test18 = (s x x x x x x x x x x x x x x x x x x e)
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ╙──      	                     ^^
 //│ test18: error
+
+:RecursiveTypes
+def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ test18: () -> (forall 'b, 'a, 'c. ((List['a] & 'c) -> (forall 'b, 'a0, 'a, 'c, 'a1, 'd. ((() -> List['a1 | 'a | 'a0 | string] -> 'd) -> 'd
+//│   where
+//│     'b <: 'a1
+//│     'c <: List['a1]))
+//│   where
+//│     'b <: 'a))
+//│   where
+//│     'b <: 'a0
+:NoRecursiveTypes
 
 
 // (* A function that receives a token *)

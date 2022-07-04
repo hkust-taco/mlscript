@@ -1,4 +1,5 @@
 :GeneralizeCurriedFunctions
+:NoRecursiveTypes
 
 // type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 
@@ -6,22 +7,17 @@
 
 // :d
 // :ns
-// def s n = fun f -> fun x -> f (n f x)
-def s n = fun f -> fun x -> (n f x)
-def s n = fun f -> n f
-def s n = n
-//│ s: ('a -> 'b -> 'c & 'd) -> (forall 'a, 'd, 'e, 'f, 'g. (('a & 'e) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i. (('b & 'f & 'h) -> ('i | 'g | 'c)
+def s n = fun f -> fun x -> f (n f x)
+// def s n = fun f -> fun x -> (n f x)
+// def s n = fun f -> n f
+// def s n = n
+//│ s: ('a -> 'b -> 'c & 'd) -> (forall 'a, 'c, 'd, 'e, 'f, 'g, 'h, 'i. ((('g | 'h | 'c) -> 'i & 'a & 'e) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l. (('b & 'f & 'j) -> ('l | 'i)
 //│   where
-//│     'd <: 'e -> 'h -> 'i))
+//│     'd <: 'e -> 'j -> ('h & 'k)
+//│     'e <: ('k | 'g | 'c) -> 'l))
 //│   where
 //│     'd <: 'e -> 'f -> 'g))
 //│  = [Function: s]
-//│ s: ('a -> 'b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e. (('a & 'd) -> ('e | 'b)
-//│   where
-//│     'c <: 'd -> 'e))
-//│  = [Function: s1]
-//│ s: 'a -> 'a
-//│  = [Function: s2]
 
 def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ succ: (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
@@ -30,14 +26,59 @@ def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M
 // :DistributeForalls
 
 // :ns
-// :e // * Needed distrib (see below)
+// :e // * Used to need distrib (see below)
 // :d
 succ = s
-//│ 'a -> 'a
+//│ ('a -> 'b -> 'c & 'd) -> (forall 'a, 'c, 'd, 'e, 'f, 'g, 'h, 'i. ((('g | 'h | 'c) -> 'i & 'a & 'e) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l. (('b & 'f & 'j) -> ('l | 'i)
+//│   where
+//│     'd <: 'e -> 'j -> ('h & 'k)
+//│     'e <: ('k | 'g | 'c) -> 'l))
+//│   where
+//│     'd <: 'e -> 'f -> 'g))
+//│   <:  succ:
+//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
+//│     = [Function: s]
+
+def s n = fun f -> fun x -> (n f x)
+//│ s: ('a -> 'b -> 'c & 'd) -> (forall 'a, 'd, 'e, 'f, 'g. (('a & 'e) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i. (('b & 'f & 'h) -> ('i | 'g | 'c)
+//│   where
+//│     'd <: 'e -> 'h -> 'i))
+//│   where
+//│     'd <: 'e -> 'f -> 'g))
+//│  = [Function: s1]
+
+succ = s
+//│ ('a -> 'b -> 'c & 'd) -> (forall 'a, 'd, 'e, 'f, 'g. (('a & 'e) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i. (('b & 'f & 'h) -> ('i | 'g | 'c)
+//│   where
+//│     'd <: 'e -> 'h -> 'i))
+//│   where
+//│     'd <: 'e -> 'f -> 'g))
+//│   <:  succ:
+//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
+//│     = [Function: s1]
+
+def s n = fun f -> n f
+succ = s
+//│ s: ('a -> 'b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e. (('a & 'd) -> ('e | 'b)
+//│   where
+//│     'c <: 'd -> 'e))
+//│  = [Function: s2]
+//│ ('a -> 'b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e. (('a & 'd) -> ('e | 'b)
+//│   where
+//│     'c <: 'd -> 'e))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: s2]
 
+def s n = n
+//│ s: 'a -> 'a
+//│  = [Function: s3]
+
+succ = s
+//│ 'a -> 'a
+//│   <:  succ:
+//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
+//│     = [Function: s3]
 
 
 // ==========================================================================
@@ -48,7 +89,7 @@ def s n = fun f -> n f
 //│ s: ('a -> 'b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e. (('a & 'd) -> ('e | 'b)
 //│   where
 //│     'c <: 'd -> 'e))
-//│  = [Function: s3]
+//│  = [Function: s4]
 
 // def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
@@ -68,7 +109,7 @@ succ_min = s
 //│     'c <: 'd -> 'e))
 //│   <:  succ_min:
 //│ (forall 'N. 'N -> 'N) -> (forall 'M. 'M -> 'M)
-//│         = [Function: s3]
+//│         = [Function: s4]
 
 
 

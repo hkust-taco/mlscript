@@ -139,7 +139,7 @@ def coll_mem c x = c.Mem x
 //│   where
 //│     'a <: Collection['a]))
 
-:e // FIXME? refreshing-extr
+:e // FIXME — works with :RecursiveTypes
 // typo in the paper? it was `fun x -> fun y -> ...`
 def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> cons x y) nil in
