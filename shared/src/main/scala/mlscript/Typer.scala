@@ -836,7 +836,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               //   typePolymorphicTerm(a)
               if (!genArgs) typePolymorphicTerm(a)
               else {
-            ???
+            // ???
             /* 
             val newCtx = ctx.nextLevel
             val ec: ExtrCtx = MutMap.empty
@@ -849,6 +849,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy))
                 // .tap(instantiateForGoodMeasure(ctx))
             */
+            ctx.poly { implicit ctx =>
+              typeTerm(a)
+              // (newCtx, raise, extrCtx2, vars,
+              //   genLambdas = false // currently can't do it because we don't yet push foralls into argument tuples
+              //   )
+            }
           }
           a match {
             case tup @ Tup(as) =>
