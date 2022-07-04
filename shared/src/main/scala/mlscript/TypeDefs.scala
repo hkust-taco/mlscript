@@ -530,7 +530,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
               freshVar(t.prov, N, S(t.id.idStr))(thisCtx.lvl + 1)) +
                 (thisTag -> td.thisTv) +
                 (td.thisTv -> td.thisTv) // needed to prevent the type variable from being refreshed during substitution!
-            val bodyTy = subst(rhs.fold(term =>
+            val bodyTy: PolymorphicType = subst(rhs.fold(term =>
               ctx.getMthDefn(prt.name, nme.name)
                 .fold(typeLetRhs(rec, nme.name, term)(thisCtx, raise, targsMap2)) { mt =>
                   // Now buckle-up because this is some seriously twisted stuff:

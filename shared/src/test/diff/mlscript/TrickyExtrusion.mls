@@ -44,13 +44,7 @@ test f =
 test f =
   let r x = f x
   in (r 0, r True)
-//│ test: (nothing -> 'a & 'a) -> (forall 'a. ((forall 'a, 'b. ('b
-//│   where
-//│     'a <: 0 -> 'b), forall 'a, 'c. ('c
-//│   where
-//│     'a <: true -> 'c),)
-//│   where
-//│     'a <: nothing -> 'a))
+//│ test: (nothing -> anything & 0 -> 'a & true -> 'b) -> ('a, 'b,)
 //│     = [Function: test2]
 
 :e
@@ -59,13 +53,13 @@ not (test id)._1 + 1
 //│ res: int
 //│    = NaN
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.58: 	not (test id)._1 + 1
+//│ ║  l.52: 	not (test id)._1 + 1
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `0` is not an instance of type `bool`
 //│ ║  l.46: 	  in (r 0, r True)
 //│ ║        	        ^
 //│ ╟── but it flows into field selection with expected type `bool`
-//│ ║  l.58: 	not (test id)._1 + 1
+//│ ║  l.52: 	not (test id)._1 + 1
 //│ ╙──      	    ^^^^^^^^^^^^
 //│ res: int
 //│    = 2
@@ -74,9 +68,5 @@ not (test id)._1 + 1
 rec def test f =
   let r x = f x
   in (r 0, r True)
-//│ test: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b
-//│   where
-//│     'a <: 0 -> 'b), forall 'a, 'c. ('c
-//│   where
-//│     'a <: true -> 'c),)
+//│ test: (nothing -> anything & 0 -> 'a & true -> 'b) -> ('a, 'b,)
 //│     = [Function: test3]

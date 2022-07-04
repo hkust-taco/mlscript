@@ -10,24 +10,18 @@
 
 // λf. f (λx. x)
 fun f -> f (fun x -> x)
-//│ res: ((forall 'a. 'a -> 'a) -> 'b & 'b) -> (forall 'b, 'c. ('c
-//│   where
-//│     'b <: (forall 'a. 'a -> 'a) -> 'c))
+//│ res: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
 //│    = [Function: res]
 
 // λy. y y
 fun y -> y y
-//│ res: ('a -> anything & 'a) -> (forall 'a, 'b. ('b
-//│   where
-//│     'a <: 'a -> 'b))
+//│ res: ('a -> 'b & 'a) -> 'b
 //│    = [Function: res]
 
 // Typeable in P; not in ML nor I2:
 // (λf. f (λx. x)) (λy. y y)
 (fun f -> f (fun x -> x)) (fun y -> y y)
-//│ res: 'a
-//│   where
-//│     'b <: (forall 'c. 'c -> 'c) -> 'a
+//│ res: 'a -> 'a
 //│    = [Function (anonymous)]
 
 

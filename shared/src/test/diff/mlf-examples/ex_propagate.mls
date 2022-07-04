@@ -13,13 +13,9 @@ def delta = (fun x -> x x) : Sid -> 'b
 def delta_ = fun x -> x x
 def k = (fun x -> fun y -> y) : forall 'a. 'a -> Sid
 def k_ = fun x -> fun y -> y
-//│ delta: Sid -> (forall 'a, 'b. ('b
-//│   where
-//│     'a <: 'a -> 'b))
+//│ delta: Sid -> Sid
 //│      = [Function: delta]
-//│ delta_: ('a -> anything & 'a) -> (forall 'a, 'b. ('b
-//│   where
-//│     'a <: 'a -> 'b))
+//│ delta_: ('a -> 'b & 'a) -> 'b
 //│       = [Function: delta_]
 //│ k: anything -> Sid
 //│  = [Function: k]
@@ -39,11 +35,9 @@ def id_ = id : Sid -> Sid
 // untype fun x -> ((fun y -> y y) : 'a -> sid)
 fun x -> ((fun y -> y y) : 'a -> Sid)
 fun x_ -> (fun y -> y y)
-//│ res: anything -> (forall 'a. ('a -> anything & 'a -> ‘a -> ‘a & 'a) -> Sid)
+//│ res: anything -> ('a -> Sid & 'a) -> Sid
 //│    = [Function: res]
-//│ res: anything -> (forall 'a. ('a -> anything & 'a) -> (forall 'a, 'b. ('b
-//│   where
-//│     'a <: 'a -> 'b)))
+//│ res: anything -> (forall 'a, 'b. ('a -> 'b & 'a) -> 'b)
 //│    = [Function: res]
 
 // :e // FIXME? failed with genLamBodies but works with quantif extrus
@@ -54,12 +48,10 @@ def delta = (fun x -> x x) : Sid -> Sid
 
 // let (delta:sid -> 'b) = fun x -> x x
 def delta = (fun x -> x x) : Sid -> 'b
-//│ delta: Sid -> (forall 'a, 'b. ('b
-//│   where
-//│     'a <: 'a -> 'b))
+//│ delta: Sid -> Sid
 //│      = [Function: delta2]
 
 // untype let (delta:'a -> sid) = fun x -> x x in delta
 let delta = (fun x -> x x) : 'a -> Sid in delta
-//│ res: ('a -> anything & 'a -> ‘a -> ‘a & 'a) -> Sid
+//│ res: ('a -> Sid & 'a) -> Sid
 //│    = [Function (anonymous)]

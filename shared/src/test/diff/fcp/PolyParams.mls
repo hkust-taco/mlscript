@@ -112,21 +112,14 @@ def cons: ('a, {x:'a}) -> {x:'a}
 //│     = <missing implementation>
 
 f (x, xs) = cons (x, xs)
-//│ f: ('b, {x: 'c} & 'c,) -> (forall 'b, 'c, 'a. ({x: 'a}
-//│   where
-//│     'b <: 'a
-//│     'c <: {x: 'a}))
+//│ f: ('a, {x: 'a},) -> {x: 'a}
 //│  = <no result>
 //│    cons is not implemented
 
 // :d
-:e // FIXME? refreshing-extr
+// :e // FIXME? refreshing-extr
 g f
-//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 2. {α51_76''' where: α49_69 <: 'a45_73''', α50_71 <: {x: 'a45_73'''}}›  <:  {x: 'a45_77}    PolymorphicType  RecordType
-//│ ╙──  ... looks like:  ‹∀ 2. {α51''' where: α49'' <: 'a45_52''', α50'' <: {x: 'a45_52'''}}›  <:  {x: 'a45_73'''}
-//│ res: error
+//│ res: anything
 //│    = <no result>
 //│      g is not implemented
 

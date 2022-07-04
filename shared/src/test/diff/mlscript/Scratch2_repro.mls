@@ -7,21 +7,14 @@
 // def s n = fun f -> fun x -> (n f x)
 // def s n = fun f -> fun x -> (n f x)
 def s n = fun f -> n f
-//│ s: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
+//│ s: (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
 //│     'a <: 'b -> 'c))
-//│   where
-//│     'a <: nothing -> 'a
-//│     'a <: nothing -> 'a))
 //│  = [Function: s]
 
 :ns
 s
-//│ res: forall 'a, 'b, 'c. 'a -> (forall 'd, 'e. (forall 'f, 'g, 'h. ('f -> (forall 'i. ('i
-//│   where
-//│     'a <: 'f -> 'i))
-//│   where
-//│     'a <: 'g -> 'h)
+//│ res: forall 'a, 'b, 'c. 'a -> (forall 'd, 'e. ('d -> 'e
 //│   where
 //│     'a <: 'd -> 'e))
 //│   where
@@ -45,77 +38,48 @@ def to_church: int -> ChurchInt
 //   else s (to_ch (n - 1))
 // rec def to_ch n =
 //   s (to_ch (n - 1))
-:e // FIXME? refreshing-extr
+// :e // FIXME? refreshing-extr
 rec def to_ch n =
   s (to_ch n)
 // rec def to_ch n =
 //   to_ch n
-//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α21_51'  <:  ((α22_70',) -> α23_71')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α21_51'  <:  ((α22_58'''',) -> α23_59'''')
-//│ to_ch: anything -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
-//│   where
-//│     'a <: 'b -> 'c))
-//│   where
-//│     'a <: nothing -> anything))
+//│ to_ch: anything -> anything -> nothing
 //│      = [Function: to_ch]
 
 :ns
 to_ch
-//│ res: forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm, 'n. forall 'to_ch, 'o, 'a, 'p, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm, 'n. 'to_ch
+//│ res: forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k. forall 'to_ch, 'l, 'a, 'm, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k. 'to_ch
 //│   where
-//│     'to_ch :> 'o -> 'p
-//│            <: 'o -> 'a
-//│     'p :> 'q -> ('r
-//│   where
-//│     'b <: 'q -> 'r)
-//│   where
-//│     'b <: 's -> 't
+//│     'to_ch :> 'l -> 'm
+//│            <: 'l -> 'a
+//│     'm :> forall 'n, 'o. 'n -> 'o
 //│        <: 'a
-//│     'a :> 'q -> ('r
-//│   where
-//│     'b <: 'q -> 'r)
-//│   where
-//│     'b <: 's -> 't
+//│     'a :> forall 'n, 'o. 'n -> 'o
 //│        <: 'b
-//│     'b :> 'q -> ('r
-//│   where
-//│     'b <: 'q -> 'r)
-//│   where
-//│     'b <: 's -> 't
-//│        <: 'm -> 'n & 'k -> 'l & 'i -> 'j & 'g -> 'h & 'e -> 'f & 'c -> 'd
+//│     'b :> forall 'n, 'o. 'n -> 'o
+//│        <: 'g -> 'h & 'e -> 'f & 'c -> 'd
+//│     'c <: 'k
+//│     'e <: 'j
+//│     'g <: 'i
 //│    = [Function: to_ch]
 
 // :d
 // :s
-:e // FIXME? refreshing-extr
+// :e // FIXME? refreshing-extr
 :re
 to_ch 1 2
-//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α21_90  <:  ((α22_113,) -> α23_114)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α21_51'  <:  ((α22_91'''',) -> α23_92'''')
-//│ res: error
+//│ res: nothing
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 
 // * NOTE the crash was due to the use of `s` rather than an annotated `succ`:
 // :d
 // :e // fails with quantif extrus
-:e // fails with gen lam bodies
+// :e // fails with gen lam bodies
 to_church = to_ch
-//│ anything -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
-//│   where
-//│     'a <: 'b -> 'c))
-//│   where
-//│     'a <: nothing -> anything))
+//│ anything -> anything -> nothing
 //│   <:  to_church:
 //│ int -> ChurchInt
-//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α21_134  <:  ((α22_157,) -> α23_158)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α21_51'  <:  ((α22_135'''',) -> α23_136'''')
 //│          = [Function: to_ch]
 
 

@@ -11,21 +11,14 @@ def z f x = x
 // def s n = fun f -> fun x -> (n f x)
 def s n = fun f -> n f
 // def s n = n
-//│ s: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
+//│ s: (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
 //│     'a <: 'b -> 'c))
-//│   where
-//│     'a <: nothing -> 'a
-//│     'a <: nothing -> 'a))
 //│  = [Function: s]
 
 :ns
 s
-//│ res: forall 'a, 'b, 'c. 'a -> (forall 'd, 'e. (forall 'f, 'g, 'h. ('f -> (forall 'i. ('i
-//│   where
-//│     'a <: 'f -> 'i))
-//│   where
-//│     'a <: 'g -> 'h)
+//│ res: forall 'a, 'b, 'c. 'a -> (forall 'd, 'e. ('d -> 'e
 //│   where
 //│     'a <: 'd -> 'e))
 //│   where
@@ -78,12 +71,9 @@ def to_ch n =
 //   s (to_church n)
 // def to_ch =
 //   s (to_church 0)
-//│ to_ch: int -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d -> 'd | 'c
+//│ to_ch: int -> (forall 'a, 'b, 'c. ('b -> (forall 'c, 'd. 'd -> 'd | 'c)
 //│   where
 //│     'a <: 'b -> 'c))
-//│   where
-//│     'a <: nothing -> anything
-//│     'a <: nothing -> anything))
 //│      = <no result>
 //│        to_church is not implemented
 
@@ -104,12 +94,9 @@ def to_ch n =
 // :d
 // :e // FIXME?
 to_church = to_ch
-//│ int -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d -> 'd | 'c
+//│ int -> (forall 'a, 'b, 'c. ('b -> (forall 'c, 'd. 'd -> 'd | 'c)
 //│   where
 //│     'a <: 'b -> 'c))
-//│   where
-//│     'a <: nothing -> anything
-//│     'a <: nothing -> anything))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│          = <no result>
@@ -124,23 +111,17 @@ to_church = to_ch
 def to_ch n =
   if true then z
   else s (to_church n)
-//│ to_ch: int -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d -> 'd | 'c
+//│ to_ch: int -> (forall 'a, 'b, 'c. ('b -> (forall 'c, 'd. 'd -> 'd | 'c)
 //│   where
 //│     'a <: 'b -> 'c))
-//│   where
-//│     'a <: nothing -> anything
-//│     'a <: nothing -> anything))
 //│      = <no result>
 //│        to_church, to_ch and to_church are not implemented
 
 // :e // FIXME?
 to_church = to_ch
-//│ int -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d -> 'd | 'c
+//│ int -> (forall 'a, 'b, 'c. ('b -> (forall 'c, 'd. 'd -> 'd | 'c)
 //│   where
 //│     'a <: 'b -> 'c))
-//│   where
-//│     'a <: nothing -> anything
-//│     'a <: nothing -> anything))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│          = <no result>
@@ -152,21 +133,13 @@ to_church = to_ch
 
 rec def to_ch n =
   s (to_church n)
-//│ to_ch: int -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
-//│   where
-//│     'a <: 'b -> 'c))
-//│   where
-//│     'a <: nothing -> anything))
+//│ to_ch: int -> anything -> nothing
 //│      = <no result>
 //│        to_church, to_ch, to_church, to_ch and to_church are not implemented
 
 // :e
 to_church = to_ch
-//│ int -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
-//│   where
-//│     'a <: 'b -> 'c))
-//│   where
-//│     'a <: nothing -> anything))
+//│ int -> anything -> nothing
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│          = <no result>
@@ -179,20 +152,12 @@ to_church = to_ch
 
 rec def to_ch n =
   s (to_church n)
-//│ to_ch: int -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
-//│   where
-//│     'a <: 'b -> 'c))
-//│   where
-//│     'a <: nothing -> anything))
+//│ to_ch: int -> anything -> nothing
 //│      = <no result>
 //│        to_church, to_ch, to_church, to_ch, to_church, to_ch and to_church are not implemented
 
 to_church = to_ch
-//│ int -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
-//│   where
-//│     'a <: 'b -> 'c))
-//│   where
-//│     'a <: nothing -> anything))
+//│ int -> anything -> nothing
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│          = <no result>
@@ -214,50 +179,26 @@ to_church = to_ch
 //│            to_ch and zero are not implemented
 
 
-:e // FIXME? refreshing-extr
+// :e // FIXME? refreshing-extr
 rec def to_ch n =
   if n == 0 then z
   else s (to_ch (n - 1))
-//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α27_496'  <:  ((α28_521',) -> α29_522')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α27_496'  <:  ((α28_503'''',) -> α29_504'''')
-//│ to_ch: int -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d -> 'd | 'c
-//│   where
-//│     'a <: 'b -> 'c))
-//│   where
-//│     'a <: nothing -> anything))
+//│ to_ch: int -> anything -> (forall 'a. 'a -> 'a)
 //│      = [Function: to_ch4]
 
-:e // FIXME? refreshing-extr
+// :e // FIXME? refreshing-extr
 to_church = to_ch
-//│ int -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d -> 'd | 'c
-//│   where
-//│     'a <: 'b -> 'c))
-//│   where
-//│     'a <: nothing -> anything))
+//│ int -> anything -> (forall 'a. 'a -> 'a)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α27_565'  <:  ((α28_593',) -> α29_594')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α27_496'  <:  ((α28_566'''',) -> α29_567'''')
 //│          = [Function: to_ch4]
 
 
 // :d
-:e // FIXME? refreshing-extr
+// :e // FIXME? refreshing-extr
 rec def to_ch_weird n =
   s (to_ch_weird n)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α27_599'  <:  ((α28_618',) -> α29_619')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α27_599'  <:  ((α28_606'''',) -> α29_607'''')
-//│ to_ch_weird: anything -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
-//│   where
-//│     'a <: 'b -> 'c))
-//│   where
-//│     'a <: nothing -> anything))
+//│ to_ch_weird: anything -> anything -> nothing
 //│            = [Function: to_ch_weird]
 
 

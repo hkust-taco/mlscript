@@ -29,6 +29,12 @@ def test f =
 //│ test: (1 -> anything) -> int
 //│     = [Function: test1]
 
+:e // FIXME should error
+test (fun x -> "oops")
+//│ res: int
+//│    = 'oops1'
+
+
 def test f =
   let local g x = g (f x)
   in local succ
@@ -103,6 +109,9 @@ def test =
 //│ test: (nothing -> anything) -> int -> nothing
 //│     = [Function: test9]
 
+// :GeneralizeCurriedFunctions
+
+// :d
 fun f -> fun x ->
   let local = (fun y -> f y) x
   in ()
@@ -138,5 +147,6 @@ fun f -> fun x ->
 //│ res: (nothing -> anything) -> anything -> ()
 //│    = <no result>
 //│      id is not implemented
+
 
 

@@ -13,17 +13,11 @@ def z f x = x
 //│  = [Function: z]
 
 def s n f x = f (n f x)
-//│ s: (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ s: (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
 //│     'b <: 'd -> 'e))
 //│   where
-//│     'a <: nothing -> nothing -> 'a
-//│     'b <: nothing -> 'a
-//│     'a <: nothing -> nothing -> 'a
-//│     'b <: nothing -> 'a))
-//│   where
-//│     'a <: nothing -> nothing -> 'a
 //│     'a <: nothing -> nothing -> 'a))
 //│  = [Function: s]
 
@@ -41,17 +35,11 @@ def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M
 // :e // works with quantif extrus
 // :e // due to tapping
 succ = s
-//│ (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
 //│     'b <: 'd -> 'e))
 //│   where
-//│     'a <: nothing -> nothing -> 'a
-//│     'b <: nothing -> 'a
-//│     'a <: nothing -> nothing -> 'a
-//│     'b <: nothing -> 'a))
-//│   where
-//│     'a <: nothing -> nothing -> 'a
 //│     'a <: nothing -> nothing -> 'a))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
@@ -65,17 +53,11 @@ def succ0: forall 'M. (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (('M -> 'M) -> ('
 //│      = <missing implementation>
 
 succ0 = s
-//│ (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
 //│     'b <: 'd -> 'e))
 //│   where
-//│     'a <: nothing -> nothing -> 'a
-//│     'b <: nothing -> 'a
-//│     'a <: nothing -> nothing -> 'a
-//│     'b <: nothing -> 'a))
-//│   where
-//│     'a <: nothing -> nothing -> 'a
 //│     'a <: nothing -> nothing -> 'a))
 //│   <:  succ0:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> ('M -> 'M) -> 'M -> 'M
@@ -87,17 +69,11 @@ succ0 = s
 // :e // works with quantif extrus
 // :e // due to tapping
 def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
-//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
 //│     'b <: 'd -> 'e))
 //│   where
-//│     'a <: nothing -> nothing -> anything
-//│     'b <: nothing -> anything
-//│     'a <: nothing -> nothing -> anything
-//│     'b <: nothing -> anything))
-//│   where
-//│     'a <: nothing -> nothing -> anything
 //│     'a <: nothing -> nothing -> anything))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
@@ -107,47 +83,29 @@ def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x
 
 // :d
 n1 = s z
-//│ n1: (nothing -> anything & 'a) -> (forall 'b, 'a, 'c. ('c -> (forall 'b, 'a, 'c, 'd, 'e. ('e
+//│ n1: (nothing -> anything & 'a) -> (forall 'b, 'a, 'c, 'd, 'e. ('c -> 'e
 //│   where
 //│     'b <: 'a -> 'c -> 'd
 //│     'a <: 'd -> 'e))
 //│   where
-//│     'b <: nothing -> nothing -> anything
-//│     'a <: nothing -> anything
-//│     'b <: nothing -> nothing -> anything
-//│     'a <: nothing -> anything))
-//│   where
-//│     'b <: nothing -> nothing -> anything
 //│     'b <: nothing -> nothing -> anything
 //│   = [Function (anonymous)]
 
 n2 = s (s z)
-//│ n2: (nothing -> anything & 'a) -> (forall 'b, 'a, 'c. ('c -> (forall 'b, 'a, 'c, 'd, 'e. ('e
+//│ n2: (nothing -> anything & 'a) -> (forall 'b, 'a, 'c, 'd, 'e. ('c -> 'e
 //│   where
 //│     'b <: 'a -> 'c -> 'd
 //│     'a <: 'd -> 'e))
 //│   where
-//│     'b <: nothing -> nothing -> anything
-//│     'a <: nothing -> anything
-//│     'b <: nothing -> nothing -> anything
-//│     'a <: nothing -> anything))
-//│   where
-//│     'b <: nothing -> nothing -> anything
 //│     'b <: nothing -> nothing -> anything
 //│   = [Function (anonymous)]
 
 n3 = s (s (s z))
-//│ n3: (nothing -> anything & 'a) -> (forall 'b, 'a, 'c. ('c -> (forall 'b, 'a, 'c, 'd, 'e. ('e
+//│ n3: (nothing -> anything & 'a) -> (forall 'b, 'a, 'c, 'd, 'e. ('c -> 'e
 //│   where
 //│     'b <: 'a -> 'c -> 'd
 //│     'a <: 'd -> 'e))
 //│   where
-//│     'b <: nothing -> nothing -> anything
-//│     'a <: nothing -> anything
-//│     'b <: nothing -> nothing -> anything
-//│     'a <: nothing -> anything))
-//│   where
-//│     'b <: nothing -> nothing -> anything
 //│     'b <: nothing -> nothing -> anything
 //│   = [Function (anonymous)]
 
@@ -161,30 +119,19 @@ wrap x = { x }
 
 // :d
 n1w = n1 wrap
-//│ n1w: 'a -> (forall 'b, 'c, 'a, 'd, 'e. ('e
+//│ n1w: 'a -> 'b
 //│   where
-//│     'b <: 'c -> 'a -> 'd
-//│     'c <: 'd -> 'e))
-//│   where
-//│     'b <: 'c -> 'c -> anything
-//│     'c <: 'c -> anything
-//│     'b <: 'c -> 'c -> anything
-//│     'c <: 'c -> anything
+//│     'c <: 'd -> 'a -> 'e
+//│     'd <: 'e -> 'b
 //│    = [Function (anonymous)]
 
 // :d
 n1w 0
-//│ res: 'a
-//│   where
-//│     'b <: 'c -> 0 -> 'd
-//│     'c <: 'd -> 'a
+//│ res: {x: 0}
 //│    = { x: 0 }
 
 n1 wrap 0
-//│ res: 'a
-//│   where
-//│     'b <: 'c -> 0 -> 'd
-//│     'c <: 'd -> 'a
+//│ res: {x: 0}
 //│    = { x: 0 }
 
 res.x + 1
@@ -192,10 +139,7 @@ res.x + 1
 //│    = 1
 
 n2 wrap 0
-//│ res: 'a
-//│   where
-//│     'b <: 'c -> 0 -> 'd
-//│     'c <: 'd -> 'a
+//│ res: {x: {x: 0}}
 //│    = { x: { x: 0 } }
 
 res.x.x + 1
@@ -203,10 +147,7 @@ res.x.x + 1
 //│    = 1
 
 n3 wrap 0
-//│ res: 'a
-//│   where
-//│     'b <: 'c -> 0 -> 'd
-//│     'c <: 'd -> 'a
+//│ res: {x: {x: {x: 0}}}
 //│    = { x: { x: { x: 0 } } }
 
 res.x.x.x + 1
@@ -218,17 +159,11 @@ res.x.x.x + 1
 :DistributeForalls
 
 succ = s
-//│ (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
 //│     'b <: 'd -> 'e))
 //│   where
-//│     'a <: nothing -> nothing -> 'a
-//│     'b <: nothing -> 'a
-//│     'a <: nothing -> nothing -> 'a
-//│     'b <: nothing -> 'a))
-//│   where
-//│     'a <: nothing -> nothing -> 'a
 //│     'a <: nothing -> nothing -> 'a))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
@@ -250,7 +185,7 @@ z: ChurchInt
 s: ChurchInt -> ChurchInt
 //│ res: ChurchInt -> ChurchInt
 //│    = [Function: s]
-//│ constrain calls  : 625
+//│ constrain calls  : 277
 //│ annoying  calls  : 0
 //│ subtyping calls  : 0
 

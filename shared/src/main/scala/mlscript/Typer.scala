@@ -450,8 +450,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     
     implicit val prov: TP = NoProv // TODO
     
-    // TODO these should introduce PolymorphicType-s
-    val res = if (isrec) {
+    // TODO eventually these should NOW introduce PolymorphicType-s on their own
+    val res = 
+    if (isrec) {
       val e_ty = freshVar(
         // It turns out it is better to NOT store a provenance here,
         //    or it will obscure the true provenance of constraints causing errors
@@ -504,7 +505,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         constrain(ty_sch, e_ty)(raise, TypeProvenance(rhs.toLoc, "binding of " + rhs.describe), ctx)
       }
       e_ty
+      // PolymorphicType(lvl, e_ty)
     // } else typeTerm(rhs)(ctx.nextLevel, raise, vars) // Note: let polymorphism (`ctx.nextLevel`)
+    // } else typeTerm(rhs)(ctx, raise, vars)
     } else ctx.nextLevel { ctx => // Note: let polymorphism (`ctx.nextLevel`)
       typeTerm(rhs)(ctx, raise, vars)
     }
@@ -775,22 +778,22 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         
         // val body_ty = typeTerm(body)(newCtx, raise2, vars, genLambdas = generalizeCurriedFunctions)
         
-        // val body_ty = typeTerm(body)(newCtx, raise2, vars)
+        val body_ty = typeTerm(body)(newCtx, raise, vars)
         
-        val body_ty = if (!genLamBodies || !generalizeCurriedFunctions) typeTerm(body)(newCtx, raise, vars)
-            // else newCtx.nextLevel |> { implicit ctx =>
-            // else newCtx.nextLevel { newCtx =>
-            else newCtx.poly { newCtx =>
-          // val ec: ExtrCtx = MutMap.empty
-          // val extrCtx: Opt[ExtrCtx] = S(ec)
-          val innerTy = typeTerm(body)(newCtx, raise, vars)
-          // PolymorphicType.mk(ctx.lvl,
-          assert(midCtx.lvl === newCtx.lvl-1)
-          // PolymorphicType.mk(midCtx.lvl,
-          //   ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy))
-          innerTy
-            // .tap(instantiateForGoodMeasure(midCtx, extrCtx2))
-        }
+        // val body_ty = if (!genLamBodies || !generalizeCurriedFunctions) typeTerm(body)(newCtx, raise, vars)
+        //     // else newCtx.nextLevel |> { implicit ctx =>
+        //     // else newCtx.nextLevel { newCtx =>
+        //     else newCtx.poly { newCtx =>
+        //   // val ec: ExtrCtx = MutMap.empty
+        //   // val extrCtx: Opt[ExtrCtx] = S(ec)
+        //   val innerTy = typeTerm(body)(newCtx, raise, vars)
+        //   // PolymorphicType.mk(ctx.lvl,
+        //   assert(midCtx.lvl === newCtx.lvl-1)
+        //   // PolymorphicType.mk(midCtx.lvl,
+        //   //   ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy))
+        //   innerTy
+        //     // .tap(instantiateForGoodMeasure(midCtx, extrCtx2))
+        // }
         // val body_ty = if (!genLamBodies || !generalizeCurriedFunctions) typeTerm(body)(newCtx, raise, extrCtx2, vars)
         //     else {
         //   val ec: ExtrCtx = MutMap.empty

@@ -9,17 +9,13 @@ type Sid = forall 'a. 'a -> 'a
 
 // let t (z:sid) = ( (fun a -> z) : ['a,'b] 'b -> 'a -> 'a )
 def t (z: Sid) = (fun a -> z) : forall 'a 'b. 'b -> 'a -> 'a
-//│ t: Sid -> (forall 'a. (anything -> 'a -> 'a
-//│   where
-//│     'b <: ‘a -> ‘a))
+//│ t: Sid -> (forall 'a. anything -> 'a -> 'a)
 //│  = [Function: t]
 
 // (* Une seule instance, mais polymorphe. *)
 // let t z = ( (fun a -> z) : ['a,'b] 'b -> 'a -> 'a );;
 def t z = (fun a -> z) : forall 'a 'b. 'b -> 'a -> 'a
-//│ t: (‘a -> ‘a & 'b) -> (forall 'a. ('b -> 'a -> 'a
-//│   where
-//│     'b <: ‘a -> ‘a))
+//│ t: (‘a -> ‘a) -> (forall 'a. anything -> 'a -> 'a)
 //│  = [Function: t1]
 
 def t z = fun a -> z
@@ -52,30 +48,18 @@ def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 def succ' n = fun f -> fun x -> f (n f x)
 //│ succ_ty: ChurchInt -> ChurchInt
 //│        = <missing implementation>
-//│ succ: ChurchInt -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ succ: ChurchInt -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
 //│     'b <: 'd -> 'e))
 //│   where
-//│     'a <: nothing -> nothing -> anything
-//│     'b <: nothing -> anything
-//│     'a <: nothing -> nothing -> anything
-//│     'b <: nothing -> anything))
-//│   where
-//│     'a <: nothing -> nothing -> anything
 //│     'a <: nothing -> nothing -> anything))
 //│     = [Function: succ]
-//│ succ': (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ succ': (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
 //│     'b <: 'd -> 'e))
 //│   where
-//│     'a <: nothing -> nothing -> 'a
-//│     'b <: nothing -> 'a
-//│     'a <: nothing -> nothing -> 'a
-//│     'b <: nothing -> 'a))
-//│   where
-//│     'a <: nothing -> nothing -> 'a
 //│     'a <: nothing -> nothing -> 'a))
 //│      = [Function: succ]
 
@@ -84,32 +68,20 @@ def succ' n = fun f -> fun x -> f (n f x)
 // * Require distrib – see Scratch3
 succ_ty = succ
 succ_ty = succ'
-//│ ChurchInt -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ ChurchInt -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
 //│     'b <: 'd -> 'e))
 //│   where
-//│     'a <: nothing -> nothing -> anything
-//│     'b <: nothing -> anything
-//│     'a <: nothing -> nothing -> anything
-//│     'b <: nothing -> anything))
-//│   where
-//│     'a <: nothing -> nothing -> anything
 //│     'a <: nothing -> nothing -> anything))
 //│   <:  succ_ty:
 //│ ChurchInt -> ChurchInt
 //│        = [Function: succ]
-//│ (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
 //│     'b <: 'd -> 'e))
 //│   where
-//│     'a <: nothing -> nothing -> 'a
-//│     'b <: nothing -> 'a
-//│     'a <: nothing -> nothing -> 'a
-//│     'b <: nothing -> 'a))
-//│   where
-//│     'a <: nothing -> nothing -> 'a
 //│     'a <: nothing -> nothing -> 'a))
 //│   <:  succ_ty:
 //│ ChurchInt -> ChurchInt
@@ -117,17 +89,11 @@ succ_ty = succ'
 
 // :d
 succ'
-//│ res: (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ res: (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
 //│     'b <: 'd -> 'e))
 //│   where
-//│     'a <: nothing -> nothing -> 'a
-//│     'b <: nothing -> 'a
-//│     'a <: nothing -> nothing -> 'a
-//│     'b <: nothing -> 'a))
-//│   where
-//│     'a <: nothing -> nothing -> 'a
 //│     'a <: nothing -> nothing -> 'a))
 //│    = [Function: succ]
 
@@ -136,13 +102,13 @@ succ'
 :e // due to tapping
 succ' {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.137: 	succ' {}
+//│ ║  l.103: 	succ' {}
 //│ ║         	^^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.137: 	succ' {}
+//│ ║  l.103: 	succ' {}
 //│ ║         	      ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.52: 	def succ' n = fun f -> fun x -> f (n f x)
+//│ ║  l.48: 	def succ' n = fun f -> fun x -> f (n f x)
 //│ ╙──      	                                   ^^^
 //│ res: error
 //│    = [Function: succ]
@@ -150,13 +116,13 @@ succ' {}
 :e // due to tapping
 succ' {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.151: 	succ' {} {}
+//│ ║  l.117: 	succ' {} {}
 //│ ║         	^^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.151: 	succ' {} {}
+//│ ║  l.117: 	succ' {} {}
 //│ ║         	      ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.52: 	def succ' n = fun f -> fun x -> f (n f x)
+//│ ║  l.48: 	def succ' n = fun f -> fun x -> f (n f x)
 //│ ╙──      	                                   ^^^
 //│ res: error
 //│    = [Function: succ]
@@ -164,21 +130,19 @@ succ' {} {}
 :e
 succ' {} {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.165: 	succ' {} {} {}
+//│ ║  l.131: 	succ' {} {} {}
 //│ ║         	^^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.165: 	succ' {} {} {}
+//│ ║  l.131: 	succ' {} {} {}
 //│ ║         	      ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.52: 	def succ' n = fun f -> fun x -> f (n f x)
+//│ ║  l.48: 	def succ' n = fun f -> fun x -> f (n f x)
 //│ ╙──      	                                   ^^^
 //│ res: error
 //│    = [Function: succ]
 
 fun x -> succ' x x x x x x x x x
-//│ res: (nothing -> nothing -> anything & nothing -> anything & nothing -> 'a -> 'a -> 'a -> 'a -> 'a -> 'a -> anything & 'a) -> (forall 'a, 'b, 'c, 'd, 'e. ('e
-//│   where
-//│     'a <: nothing -> nothing -> anything & 'b -> nothing -> anything & 'b -> 'c -> anything & 'b -> 'c -> 'd & nothing -> anything & 'd -> 'a -> 'a -> 'a -> 'a -> 'a -> 'a -> 'e & 'b & 'c))
+//│ res: nothing -> nothing
 //│    = [Function: succ]
 
 
@@ -198,17 +162,10 @@ def to_church_ty: int -> ChurchInt
 rec def to_church_1 n =
   if n == 0 then zero
   else succ (to_church_1 (n - 1))
-//│ to_church_1: int -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c, 'd. (('c & 'd) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('c | 'f
+//│ to_church_1: int -> (forall 'a. (nothing -> anything & 'a) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('f | 'e)
 //│   where
-//│     'a <: 'b -> 'd -> 'e
-//│     'b <: 'e -> 'f))
-//│   where
-//│     'a <: nothing -> nothing -> anything
-//│     'b <: nothing -> anything
-//│     'a <: nothing -> nothing -> anything
-//│     'b <: nothing -> anything))
-//│   where
-//│     'a <: nothing -> nothing -> anything))
+//│     'b <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e)))
 //│            = [Function: to_church_1]
 
 rec def to_church_1_t n =
@@ -234,17 +191,10 @@ rec def to_church_1_tt n =
 //   succ (to_church_1 n)
 rec def wat =
   succ wat
-//│ wat: (nothing -> anything & 'a) -> (forall 'b, 'a, 'c. ('c -> (forall 'b, 'a, 'c, 'd, 'e. ('e
+//│ wat: (nothing -> anything & 'a) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
 //│     'b <: 'a -> 'c -> 'd
 //│     'a <: 'd -> 'e))
-//│   where
-//│     'b <: nothing -> nothing -> anything
-//│     'a <: nothing -> anything
-//│     'b <: nothing -> nothing -> anything
-//│     'a <: nothing -> anything))
-//│   where
-//│     'b <: nothing -> nothing -> anything
 //│ Runtime error:
 //│   ReferenceError: wat is not defined
 
@@ -253,36 +203,16 @@ rec def wat =
 :ng
 rec def nani =
   succ' nani
-//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α133_1654'  <:  ((α134_1722',) -> α136_1723')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α133_1654'  <:  ((α134_1667'''',) -> α136_1668'''')
-//│ nani: (nothing -> anything & 'a) -> (forall 'b, 'a, 'c. ('c -> (forall 'b, 'a, 'c, 'd, 'e. ('e
-//│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'd -> 'e))
-//│   where
-//│     'b <: nothing -> nothing -> anything
-//│     'a <: nothing -> anything
-//│     'b <: nothing -> nothing -> anything
-//│     'a <: nothing -> anything))
-//│   where
-//│     'b <: nothing -> nothing -> anything
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 // * The one with annotated rec occurrence works...
 def to_church_1_repro n =
   succ (to_church_ty n)
-//│ to_church_1_repro: int -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ to_church_1_repro: int -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
 //│     'b <: 'd -> 'e))
 //│   where
-//│     'a <: nothing -> nothing -> anything
-//│     'b <: nothing -> anything
-//│     'a <: nothing -> nothing -> anything
-//│     'b <: nothing -> anything))
-//│   where
-//│     'a <: nothing -> nothing -> anything
 //│     'a <: nothing -> nothing -> anything))
 //│                  = <no result>
 //│                    to_church_ty is not implemented
@@ -299,22 +229,7 @@ rec def to_church_1_st n =
 rec def to_church_2 n =
   if n == 0 then zero
   else succ' (to_church_2 (n - 1))
-//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α133_1842'  <:  ((α134_1925',) -> α136_1926')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α133_1842'  <:  ((α134_1855'''',) -> α136_1856'''')
-//│ to_church_2: int -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c, 'd. (('c & 'd) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f | 'c
-//│   where
-//│     'a <: 'b -> 'd -> 'e
-//│     'b <: 'e -> 'f))
-//│   where
-//│     'a <: nothing -> nothing -> anything
-//│     'b <: nothing -> anything
-//│     'a <: nothing -> nothing -> anything
-//│     'b <: nothing -> anything))
-//│   where
-//│     'a <: nothing -> nothing -> anything))
-//│            = [Function: to_church_1_st]
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 // :e // FIXME should be caught by cycle checker!
 // Requires :RecursiveTypes
@@ -322,23 +237,16 @@ rec def to_church_2 n =
 // :e // due to tapping
 :e // FIXME? refreshing-extr
 to_church_ty = to_church_2
-//│ int -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c, 'd. (('c & 'd) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f | 'c
+//│ int -> (forall 'a. (nothing -> anything & 'a) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('e | 'f)
 //│   where
-//│     'a <: 'b -> 'd -> 'e
-//│     'b <: 'e -> 'f))
-//│   where
-//│     'a <: nothing -> nothing -> anything
-//│     'b <: nothing -> anything
-//│     'a <: nothing -> nothing -> anything
-//│     'b <: nothing -> anything))
-//│   where
-//│     'a <: nothing -> nothing -> anything))
+//│     'b <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e)))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α133_2026'  <:  ((α134_2132',) -> α136_2133')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α133_1842'  <:  ((α134_2027'''',) -> α136_2028'''')
+//│ ╟── this constraint:  α96_1595'  <:  ((α97_1844',) -> α99_1847'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α96_1178'  <:  ((α97_1590''',) -> α99_1596'''')
 
 // (* Marche *)
 // let rec to_church n =
@@ -380,17 +288,10 @@ rec def to_church_5 n =
 
 // :e // FIXME? // due to gen lam bod?
 to_church_ty = to_church_1
-//│ int -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c, 'd. (('c & 'd) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('c | 'f
+//│ int -> (forall 'a. (nothing -> anything & 'a) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('f | 'e)
 //│   where
-//│     'a <: 'b -> 'd -> 'e
-//│     'b <: 'e -> 'f))
-//│   where
-//│     'a <: nothing -> nothing -> anything
-//│     'b <: nothing -> anything
-//│     'a <: nothing -> nothing -> anything
-//│     'b <: nothing -> anything))
-//│   where
-//│     'a <: nothing -> nothing -> anything))
+//│     'b <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e)))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_church_1]
@@ -418,23 +319,16 @@ to_church_ty = to_church_1_st
 :ng
 :e // due to tapping
 to_church_ty = to_church_2
-//│ int -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c, 'd. (('c & 'd) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f | 'c
+//│ int -> (forall 'a. (nothing -> anything & 'a) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('e | 'f)
 //│   where
-//│     'a <: 'b -> 'd -> 'e
-//│     'b <: 'e -> 'f))
-//│   where
-//│     'a <: nothing -> nothing -> anything
-//│     'b <: nothing -> anything
-//│     'a <: nothing -> nothing -> anything
-//│     'b <: nothing -> anything))
-//│   where
-//│     'a <: nothing -> nothing -> anything))
+//│     'b <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e)))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α133_2559'  <:  ((α134_2665',) -> α136_2666')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α133_1842'  <:  ((α134_2560'''',) -> α136_2561'''')
+//│ ╟── this constraint:  α96_2133'  <:  ((α97_2382',) -> α99_2385'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α96_1178'  <:  ((α97_2128''',) -> α99_2134'''')
 
 // :e // FIXME?
 to_church_ty = to_church_3
@@ -449,13 +343,13 @@ to_church_ty = to_church_4
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.447: 	to_church_ty = to_church_4
+//│ ║  l.341: 	to_church_ty = to_church_4
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `(?a -> ?a) -> ?a -> ?a` is not an instance of type `'a`
-//│ ║  l.34: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                            ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.34: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──      	                        ^^
 //│             = [Function: to_church_4]
 
@@ -491,13 +385,9 @@ rec def to_church_ty n =
 def to_church_ty n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church_ty (n - 1)) f x)
-//│ int -> (forall 'b, 'a, 'c. (nothing -> 'b & 'a -> 'a & 'c) -> (forall 'b, 'c, 'a0, 'a1, 'd. (('d & 'b) -> (forall 'b, 'c, 'd, 'a2, 'e. ('d | 'e
+//│ int -> (forall 'b, 'a. (nothing -> 'b & 'a -> 'a & 'b) -> (forall 'b, 'a0, 'c. (('c & 'a0) -> 'c
 //│   where
-//│     'c <: 'a2 -> 'a2 & 'a2 -> 'e
-//│     'b <: 'a2))
-//│   where
-//│     'c <: 'a0 -> 'a0 & nothing -> 'b
-//│     'c <: 'a1 -> 'a1 & nothing -> 'b)))
+//│     'b <: 'a0 -> 'a0 & 'a0 -> 'c)))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_church_ty7]
@@ -508,30 +398,23 @@ def to_church_ty n =
 
 // :e // FIXME? // due to gen lam bod?
 def tc n = to_church_1 n : ChurchInt
-//│ tc: (int & 'a) -> (forall 'a. (ChurchInt
-//│   where
-//│     'a <: int))
+//│ tc: int -> ChurchInt
 //│   = [Function: tc]
 
 def tc n = to_church_ty n : ChurchInt
 //│ tc: int -> ChurchInt
 //│   = [Function: tc1]
 
-:e // FIXME should be caught by cycle checker!
+// :e // FIXME should be caught by cycle checker!
 def tc n = to_church_2 n : ChurchInt // Requires :RecursiveTypes
-//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α133_3333''''  <:  ((α134_3334'''',) -> α136_3335'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α133_3181''''  <:  ((α134_3182'''',) -> α136_3183'''')
 //│ tc: anything -> ChurchInt
+//│   where
+//│     'to_church_2 <: nothing -> anything
 //│   = [Function: tc2]
 
 // FIXME stupid type
 def tc n = to_church_3 n
-//│ tc: (int & 'b) -> (forall 'b, 'a, 'c. (('a -> 'c & 'a -> 'a) -> (forall 'd. ('a & 'd) -> ('d | 'c))
-//│   where
-//│     'b <: int
-//│     'b <: int))
+//│ tc: int -> ('a -> 'b & 'a -> 'a) -> (forall 'c. ('a & 'c) -> ('c | 'b))
 //│   = [Function: tc3]
 // FIXME
 tc 1 id
@@ -544,9 +427,7 @@ tc: int -> ChurchInt
 
 // FIXME
 def tc n = to_church_3 n : ChurchInt
-//│ tc: (int & 'a) -> (forall 'a. (ChurchInt
-//│   where
-//│     'a <: int))
+//│ tc: int -> ChurchInt
 //│   = [Function: tc4]
 
 // (* Duplicate with to_church1 ("Marche") above *)

@@ -15,13 +15,9 @@ def auto (x: Sid) = x x
 def auto_ x = x x
 def id x = x
 def k x y = x
-//│ auto: Sid -> (forall 'a, 'b. ('b
-//│   where
-//│     'a <: 'a -> 'b))
+//│ auto: Sid -> Sid
 //│     = [Function: auto]
-//│ auto_: ('a -> anything & 'a) -> (forall 'a, 'b. ('b
-//│   where
-//│     'a <: 'a -> 'b))
+//│ auto_: ('a -> 'b & 'a) -> 'b
 //│      = [Function: auto_]
 //│ id: 'a -> 'a
 //│   = [Function: id]
@@ -37,38 +33,26 @@ def church_zero = fun f -> id
 // (* church_un is like apply *)
 // let church_one = fun f x -> f x
 def church_one = fun f -> fun x -> f x
-//│ church_one: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
+//│ church_one: (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
 //│     'a <: 'b -> 'c))
-//│   where
-//│     'a <: nothing -> 'a
-//│     'a <: nothing -> 'a))
 //│           = [Function: church_one]
 
 // (* church_un is like apply_twice *)
 // let church_two = fun f x -> f (f x)
 def church_two = fun f -> fun x -> f (f x)
-//│ church_two: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d
+//│ church_two: (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c, 'd. ('b -> 'd
 //│   where
 //│     'a <: 'b -> 'c & 'c -> 'd))
-//│   where
-//│     'a <: nothing -> 'a
-//│     'a <: nothing -> 'a))
 //│           = [Function: church_two]
 
 // let church_succ n = fun f x -> f (n f x)
 def church_succ n = fun f -> fun x -> f (n f x)
-//│ church_succ: (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ church_succ: (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
 //│     'b <: 'd -> 'e))
 //│   where
-//│     'a <: nothing -> nothing -> 'a
-//│     'b <: nothing -> 'a
-//│     'a <: nothing -> nothing -> 'a
-//│     'b <: nothing -> 'a))
-//│   where
-//│     'a <: nothing -> nothing -> 'a
 //│     'a <: nothing -> nothing -> 'a))
 //│            = [Function: church_succ]
 
@@ -96,112 +80,39 @@ def a2_ (x: A1) =
 def a0 = a2 a1
 def a0_ = a2_ a1
 //│ Defined type alias A1
-//│ a1: ((forall 'a. 'a -> 'a) -> 'b & 'b) -> (forall 'b. ('c
-//│   where
-//│     'b <: (forall 'a. 'a -> 'a) -> 'c))
+//│ a1: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
 //│   = [Function: a1]
-//│ a3: ((forall 'a. (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d
+//│ a3: ((forall 'a. (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c, 'd. ('b -> 'd
 //│   where
-//│     'a <: 'b -> 'c & 'c -> 'd))
+//│     'a <: 'b -> 'c & 'c -> 'd))) -> 'a & 'e) -> (forall 'e. ('a -> 'f
 //│   where
-//│     'a <: nothing -> 'a
-//│     'a <: nothing -> 'a))) -> 'a & 'e) -> (forall 'e. ('a -> (forall 'e. ('f
+//│     'e <: (forall 'a. (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c, 'd. ('b -> 'd
 //│   where
-//│     'e <: (forall 'a. (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d
-//│   where
-//│     'a <: 'b -> 'c & 'c -> 'd))
-//│   where
-//│     'a <: nothing -> 'a
-//│     'a <: nothing -> 'a))) -> 'f))
-//│   where
-//│     'e <: (forall 'a. (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d
-//│   where
-//│     'a <: 'b -> 'c & 'c -> 'd))
-//│   where
-//│     'a <: nothing -> 'a
-//│     'a <: nothing -> 'a))) -> 'a
-//│     'e <: (forall 'a. (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d
-//│   where
-//│     'a <: 'b -> 'c & 'c -> 'd))
-//│   where
-//│     'a <: nothing -> 'a
-//│     'a <: nothing -> 'a))) -> 'a))
+//│     'a <: 'b -> 'c & 'c -> 'd))) -> 'f))
 //│   = [Function: a3]
-//│ a2: A1 -> (forall 'a, 'b. ('c
+//│ a2: A1 -> (forall 'a. ('b -> 'c
 //│   where
-//│     'a <: (forall 'd, 'e. ('d -> 'd -> 'e & 'e) -> (forall 'd, 'e, 'f. (('d -> 'e & 'f) -> (forall 'd, 'e, 'f, 'g. ('g -> (forall 'e, 'f, 'g, 'h, 'i. ('i
+//│     'a <: (forall 'b. (nothing -> 'b & 'b) -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
 //│   where
-//│     'e <: 'f -> 'g -> 'h
-//│     'f <: 'h -> 'i))
-//│   where
-//│     'e <: 'd -> 'd -> 'e
-//│     'f <: 'd -> 'e
-//│     'e <: 'd -> 'd -> 'e
-//│     'f <: 'd -> 'e))
-//│   where
-//│     'e <: 'd -> 'd -> 'e
-//│     'e <: 'd -> 'd -> 'e))) -> 'c
-//│     'b <: 'd -> 'e
-//│     'b <: (Sid -> (forall 'd, 'j. ('j
-//│   where
-//│     'd <: 'd -> 'j))) -> 'e & 'd -> 'e))
+//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'c))
 //│   = [Function: a2]
-//│ a2_: A1 -> (forall 'a, 'b, 'c. ('d
+//│ a2_: A1 -> (forall 'a. ('b -> 'c
 //│   where
-//│     'a <: nothing -> 'b
-//│     'c <: (forall 'b. (nothing -> nothing -> 'b & 'b) -> (forall 'b, 'e. ((nothing -> 'b & 'e) -> (forall 'b, 'e, 'f. ('f -> (forall 'b, 'e, 'f, 'g, 'h. ('h
+//│     'a <: (forall 'b. (nothing -> 'b & 'b) -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
 //│   where
-//│     'b <: 'e -> 'f -> 'g
-//│     'e <: 'g -> 'h))
-//│   where
-//│     'b <: nothing -> nothing -> 'b
-//│     'e <: nothing -> 'b
-//│     'b <: nothing -> nothing -> 'b
-//│     'e <: nothing -> 'b))
-//│   where
-//│     'b <: nothing -> nothing -> 'b
-//│     'b <: nothing -> nothing -> 'b))) -> 'd
-//│     'a <: (forall 'b, 'i. ('i -> 'b & 'i) -> (forall 'i, 'j. ('j
-//│   where
-//│     'i <: 'i -> 'j))) -> 'b & nothing -> 'b))
+//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'c))
 //│    = [Function: a2_]
-//│ a0: 'a
+//│ a0: 'a -> 'b
 //│   where
-//│     'b <: (forall 'c, 'd. ('c -> 'c -> 'd & 'd) -> (forall 'c, 'd, 'e. (('c -> 'd & 'e) -> (forall 'c, 'd, 'e, 'f. ('f -> (forall 'd, 'e, 'f, 'g, 'h. ('h
+//│     'c <: (forall 'a. (nothing -> 'a & 'a) -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
 //│   where
-//│     'd <: 'e -> 'f -> 'g
-//│     'e <: 'g -> 'h))
-//│   where
-//│     'd <: 'c -> 'c -> 'd
-//│     'e <: 'c -> 'd
-//│     'd <: 'c -> 'c -> 'd
-//│     'e <: 'c -> 'd))
-//│   where
-//│     'd <: 'c -> 'c -> 'd
-//│     'd <: 'c -> 'c -> 'd))) -> 'a
-//│     'i <: 'c -> 'd
-//│     'i <: (Sid -> (forall 'c, 'j. ('j
-//│   where
-//│     'c <: 'c -> 'j))) -> 'd & 'c -> 'd
+//│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
 //│   = [Function (anonymous)]
-//│ a0_: 'a
+//│ a0_: 'a -> 'b
 //│   where
-//│     'b <: nothing -> 'c
-//│     'd <: (forall 'c. (nothing -> nothing -> 'c & 'c) -> (forall 'c, 'e. ((nothing -> 'c & 'e) -> (forall 'c, 'e, 'f. ('f -> (forall 'c, 'e, 'f, 'g, 'h. ('h
+//│     'c <: (forall 'a. (nothing -> 'a & 'a) -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
 //│   where
-//│     'c <: 'e -> 'f -> 'g
-//│     'e <: 'g -> 'h))
-//│   where
-//│     'c <: nothing -> nothing -> 'c
-//│     'e <: nothing -> 'c
-//│     'c <: nothing -> nothing -> 'c
-//│     'e <: nothing -> 'c))
-//│   where
-//│     'c <: nothing -> nothing -> 'c
-//│     'c <: nothing -> nothing -> 'c))) -> 'a
-//│     'b <: (forall 'c, 'i. ('i -> 'c & 'i) -> (forall 'i, 'j. ('j
-//│   where
-//│     'i <: 'i -> 'j))) -> 'c & nothing -> 'c
+//│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
 //│    = [Function (anonymous)]
 
 // let test0 = 
@@ -223,17 +134,9 @@ def test0_ =
       k (g (fun x -> x x))
         ((fun t -> (fun u -> fun v -> v) (g t) (t (fun f -> fun x -> x)))
           (fun x -> ((fun f -> fun x -> f x) x) (fun f -> fun x -> x))))
-//│ test0: 'a
-//│   where
-//│     'b <: (((forall 'c. 'c -> 'c) -> 'd & 'd) -> (forall 'd. ('e
-//│   where
-//│     'd <: (forall 'c. 'c -> 'c) -> 'e))) -> 'a
+//│ test0: Sid
 //│      = [Function: id]
-//│ test0_: 'a
-//│   where
-//│     'b <: (((forall 'c. 'c -> 'c) -> 'd & 'd) -> (forall 'd. ('e
-//│   where
-//│     'd <: (forall 'c. 'c -> 'c) -> 'e))) -> 'a
+//│ test0_: 'a -> 'a
 //│       = [Function: id]
 
 
@@ -255,61 +158,19 @@ type A1_nat = forall 'a 'b. (('a & ChurchInt -> ChurchInt | ChurchInt -> ChurchI
 def a1_sid_to_nat (g: A1_sid) =
   let r = fun f -> g (fun (x: Sid) -> f x) in
   (r: A1_nat)
-//│ a1_sid_to_nat: A1_sid -> (forall 'a. (A1_nat
-//│   where
-//│     'a <: (forall 'b. (Sid -> (forall 'b, 'c. ('c
-//│   where
-//│     'b <: Sid -> 'c))
-//│   where
-//│     'b <: Sid -> anything)) -> anything & (forall 'd. (Sid -> (forall 'd, 'e. ('e
-//│   where
-//│     'd <: Sid -> 'e))
-//│   where
-//│     'd <: Sid -> anything)) -> anything & (forall 'f. (Sid -> (forall 'f, 'g. ('g
-//│   where
-//│     'f <: Sid -> 'g))
-//│   where
-//│     'f <: Sid -> anything)) -> anything & (forall 'h. (Sid -> (forall 'h, 'i. ('i
-//│   where
-//│     'h <: Sid -> 'i))
-//│   where
-//│     'h <: Sid -> anything)) -> anything & (forall 'j. (Sid -> (forall 'j, 'k. ('k
-//│   where
-//│     'j <: Sid -> 'k))
-//│   where
-//│     'j <: Sid -> anything)) -> ‘b & (forall 'l. (Sid -> (forall 'l, 'm. ('m
-//│   where
-//│     'l <: Sid -> 'm))
-//│   where
-//│     'l <: Sid -> anything)) -> ‘b))
+//│ a1_sid_to_nat: A1_sid -> A1_nat
 //│              = [Function: a1_sid_to_nat]
 
 def a1_sid_to_nat_ g =
   let r = fun f -> g (fun x -> f x) in
   r
-//│ a1_sid_to_nat_: ((forall 'a, 'b, 'c. ('c -> (forall 'a, 'c, 'd. ('d
+//│ a1_sid_to_nat_: ((forall 'a, 'b, 'c. ('b -> 'c
 //│   where
-//│     'a <: 'c -> 'd))
+//│     'a <: 'b -> 'c)) -> 'd & 'e) -> (forall 'e. ('d -> 'f
 //│   where
-//│     'a <: nothing -> 'b)) -> 'b & 'e) -> (forall 'e. ((nothing -> 'b & 'b) -> (forall 'b, 'e. ('f
+//│     'e <: (forall 'd, 'g, 'h. ('g -> 'h
 //│   where
-//│     'e <: (forall 'b, 'g. ('g -> (forall 'b, 'g, 'h. ('h
-//│   where
-//│     'b <: 'g -> 'h))
-//│   where
-//│     'b <: nothing -> 'b)) -> 'f
-//│     'b <: nothing -> 'b))
-//│   where
-//│     'e <: (forall 'b, 'i, 'j. ('j -> (forall 'i, 'j, 'k. ('k
-//│   where
-//│     'i <: 'j -> 'k))
-//│   where
-//│     'i <: nothing -> 'b)) -> 'b
-//│     'e <: (forall 'b, 'l, 'm. ('m -> (forall 'l, 'm, 'n. ('n
-//│   where
-//│     'l <: 'm -> 'n))
-//│   where
-//│     'l <: nothing -> 'b)) -> 'b))
+//│     'd <: 'g -> 'h)) -> 'f))
 //│               = [Function: a1_sid_to_nat_]
 
 // (* the term is as above but abstract over sb and uses the coercion *)
@@ -323,76 +184,14 @@ def a1_sid_to_nat_ g =
 // ;;
 
 // :e // FIXME?
-:e // FIXME? refreshing-extr
+// :e // FIXME? refreshing-extr
 def test_in_F_eta = 
   (fun f -> f (fun h -> h id))
     (fun (g: A1_sid) ->
       k (g (fun (x : Sid) -> x x))
         ((fun t -> (fun u -> fun v -> v) ((a1_sid_to_nat g) t) (t (fun f -> fun x -> x)))
           (fun x -> ((fun f -> fun x -> f x) x) (fun f -> fun x -> x))))
-//│ ╔══[ERROR] Type mismatch in lambda expression:
-//│ ║  l.331: 	        ((fun t -> (fun u -> fun v -> v) ((a1_sid_to_nat g) t) (t (fun f -> fun x -> x)))
-//│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘b13030` is not an instance of type `'b`
-//│ ║  l.246: 	type A1_nat = forall 'a 'b. (('a & ChurchInt -> ChurchInt | ChurchInt -> ChurchInt) -> 'b) -> 'b
-//│ ║         	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.246: 	type A1_nat = forall 'a 'b. (('a & ChurchInt -> ChurchInt | ChurchInt -> ChurchInt) -> 'b) -> 'b
-//│ ║         	                        ^^
-//│ ╟── from application:
-//│ ║  l.256: 	  let r = fun f -> g (fun (x: Sid) -> f x) in
-//│ ╙──       	                                      ^^^
-//│ ╔══[ERROR] Type mismatch in lambda expression:
-//│ ║  l.331: 	        ((fun t -> (fun u -> fun v -> v) ((a1_sid_to_nat g) t) (t (fun f -> fun x -> x)))
-//│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘b13030` is not an instance of type `'b`
-//│ ║  l.246: 	type A1_nat = forall 'a 'b. (('a & ChurchInt -> ChurchInt | ChurchInt -> ChurchInt) -> 'b) -> 'b
-//│ ║         	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.246: 	type A1_nat = forall 'a 'b. (('a & ChurchInt -> ChurchInt | ChurchInt -> ChurchInt) -> 'b) -> 'b
-//│ ║         	                        ^^
-//│ ╟── from application:
-//│ ║  l.256: 	  let r = fun f -> g (fun (x: Sid) -> f x) in
-//│ ╙──       	                                      ^^^
-//│ ╔══[ERROR] Type mismatch in lambda expression:
-//│ ║  l.331: 	        ((fun t -> (fun u -> fun v -> v) ((a1_sid_to_nat g) t) (t (fun f -> fun x -> x)))
-//│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘b13016` is not an instance of type `'b`
-//│ ║  l.246: 	type A1_nat = forall 'a 'b. (('a & ChurchInt -> ChurchInt | ChurchInt -> ChurchInt) -> 'b) -> 'b
-//│ ║         	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.246: 	type A1_nat = forall 'a 'b. (('a & ChurchInt -> ChurchInt | ChurchInt -> ChurchInt) -> 'b) -> 'b
-//│ ║         	                        ^^
-//│ ╟── from application:
-//│ ║  l.256: 	  let r = fun f -> g (fun (x: Sid) -> f x) in
-//│ ╙──       	                                      ^^^
-//│ ╔══[ERROR] Type mismatch in lambda expression:
-//│ ║  l.331: 	        ((fun t -> (fun u -> fun v -> v) ((a1_sid_to_nat g) t) (t (fun f -> fun x -> x)))
-//│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘b13016` is not an instance of type `'b`
-//│ ║  l.246: 	type A1_nat = forall 'a 'b. (('a & ChurchInt -> ChurchInt | ChurchInt -> ChurchInt) -> 'b) -> 'b
-//│ ║         	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.246: 	type A1_nat = forall 'a 'b. (('a & ChurchInt -> ChurchInt | ChurchInt -> ChurchInt) -> 'b) -> 'b
-//│ ║         	                        ^^
-//│ ╟── from application:
-//│ ║  l.256: 	  let r = fun f -> g (fun (x: Sid) -> f x) in
-//│ ╙──       	                                      ^^^
-//│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘b13030` is not an instance of type `'b`
-//│ ║  l.246: 	type A1_nat = forall 'a 'b. (('a & ChurchInt -> ChurchInt | ChurchInt -> ChurchInt) -> 'b) -> 'b
-//│ ║         	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.246: 	type A1_nat = forall 'a 'b. (('a & ChurchInt -> ChurchInt | ChurchInt -> ChurchInt) -> 'b) -> 'b
-//│ ║         	                        ^^
-//│ ╟── from application:
-//│ ║  l.256: 	  let r = fun f -> g (fun (x: Sid) -> f x) in
-//│ ╙──       	                                      ^^^
-//│ test_in_F_eta: 'a
-//│   where
-//│     'b <: (((forall 'c. 'c -> 'c) -> 'd & 'd) -> (forall 'd. ('e
-//│   where
-//│     'd <: (forall 'c. 'c -> 'c) -> 'e))) -> 'a
+//│ test_in_F_eta: Sid
 //│              = [Function: id]
 
 def test_in_F_eta_ = 
@@ -401,11 +200,7 @@ def test_in_F_eta_ =
       k (g (fun x -> x x))
         ((fun t -> (fun u -> fun v -> v) ((a1_sid_to_nat_ g) t) (t (fun f -> fun x -> x)))
           (fun x -> ((fun f -> fun x -> f x) x) (fun f -> fun x -> x))))
-//│ test_in_F_eta_: 'a
-//│   where
-//│     'b <: (((forall 'c. 'c -> 'c) -> 'd & 'd) -> (forall 'd. ('e
-//│   where
-//│     'd <: (forall 'c. 'c -> 'c) -> 'e))) -> 'a
+//│ test_in_F_eta_: 'a -> 'a
 //│               = [Function: id]
 
 // (*
@@ -432,45 +227,15 @@ type A1' = forall 'a. (('a | Sid) -> ('a | Sid)) -> ('a | Sid) -> ('a | Sid)
 // let a0' = a2' a1';;
 
 def either x y = if true then x else y
-//│ either: 'a -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
+//│ either: 'a -> (forall 'a, 'b. ('b -> 'b
 //│   where
-//│     'a <: 'c
-//│     'b <: 'c))
-//│   where
-//│     'a <: 'b
 //│     'a <: 'b))
 //│       = [Function: either]
 
 def a1' = fun f -> fun x -> f (f (either id x))
-//│ a1': (nothing -> 'a & (forall 'b, 'c, 'd, 'e. ('e -> 'e | 'c
+//│ a1': (nothing -> 'a & (forall 'b. 'b -> 'b) -> 'a & 'a) -> (forall 'a. ('c -> 'd
 //│   where
-//│     'b <: 'c
-//│     'd <: 'c
-//│     'b <: 'c
-//│     'd <: 'c)) -> 'a & 'f) -> (forall 'f. ('a -> (forall 'a, 'f, 'g, 'h. ('i
-//│   where
-//│     'f <: (forall 'b, 'c, 'd, 'e. ('e -> 'e | 'c
-//│   where
-//│     'b <: 'c
-//│     'd <: 'c
-//│     'b <: 'c
-//│     'd <: 'c)) -> 'j & 'j -> 'i
-//│     'a <: 'd
-//│     'g <: 'a
-//│     'h <: 'a))
-//│   where
-//│     'f <: (forall 'b, 'c, 'd, 'e. ('e -> 'e | 'c
-//│   where
-//│     'b <: 'c
-//│     'd <: 'c
-//│     'b <: 'c
-//│     'd <: 'c)) -> 'a & nothing -> 'a
-//│     'f <: (forall 'b, 'c, 'd, 'e. ('e -> 'e | 'c
-//│   where
-//│     'b <: 'c
-//│     'd <: 'c
-//│     'b <: 'c
-//│     'd <: 'c)) -> 'a & nothing -> 'a))
+//│     'a <: (forall 'b, 'c. 'b -> 'b | 'c) -> 'e & 'e -> 'd))
 //│    = [Function: either]
 
 // FIXME
@@ -487,47 +252,19 @@ def a2'_ x =
     let _ = x y church_two in
     y church_succ
   ) a3
-//│ a2'_: (nothing -> (forall 'a, 'b. (nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'b, 'c, 'd, 'e. ('e
+//│ a2'_: (nothing -> (forall 'a. (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c, 'd. ('b -> 'd
 //│   where
-//│     'b <: 'c -> 'd & 'd -> 'e))
+//│     'a <: 'b -> 'c & 'c -> 'd))) -> 'a & (forall 'e, 'f. ('e -> 'f & 'e) -> 'f) -> (forall 'g. 'g -> 'g) -> 'a) -> (forall 'h. ('a -> 'i
 //│   where
-//│     'b <: nothing -> 'a
-//│     'b <: nothing -> 'a))) -> 'a & (forall 'a, 'f. ('f -> 'a & 'f) -> (forall 'f, 'g. ('g
+//│     'h <: (forall 'a. (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c, 'd. ('b -> 'd
 //│   where
-//│     'f <: 'f -> 'g))) -> (forall 'h. 'h -> 'h) -> 'a & 'i) -> (forall 'i, 'j. ('k
-//│   where
-//│     'i <: nothing -> (forall 'a, 'b. (nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'b, 'c, 'd, 'e. ('e
-//│   where
-//│     'b <: 'c -> 'd & 'd -> 'e))
-//│   where
-//│     'b <: nothing -> 'a
-//│     'b <: nothing -> 'a))) -> 'a
-//│     'j <: (forall 'a. (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'l. ((nothing -> 'a & 'l) -> (forall 'a, 'l, 'm. ('m -> (forall 'a, 'l, 'm, 'n, 'o. ('o
-//│   where
-//│     'a <: 'l -> 'm -> 'n
-//│     'l <: 'n -> 'o))
-//│   where
-//│     'a <: nothing -> nothing -> 'a
-//│     'l <: nothing -> 'a
-//│     'a <: nothing -> nothing -> 'a
-//│     'l <: nothing -> 'a))
-//│   where
-//│     'a <: nothing -> nothing -> 'a
-//│     'a <: nothing -> nothing -> 'a))) -> 'k
-//│     'i <: (forall 'a, 'f. ('f -> 'a & 'f) -> (forall 'f, 'g. ('g
-//│   where
-//│     'f <: 'f -> 'g))) -> (forall 'h. 'h -> 'h) -> 'a & nothing -> (forall 'a, 'b. (nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'b, 'c, 'd, 'e. ('e
-//│   where
-//│     'b <: 'c -> 'd & 'd -> 'e))
-//│   where
-//│     'b <: nothing -> 'a
-//│     'b <: nothing -> 'a))) -> 'a))
+//│     'a <: 'b -> 'c & 'c -> 'd))) -> 'i))
 //│     = [Function: either]
 
 // FIXME
 def a0' = a2' a1'
 //│ ╔══[ERROR] identifier not found: a2'
-//│ ║  l.528: 	def a0' = a2' a1'
+//│ ║  l.265: 	def a0' = a2' a1'
 //│ ╙──       	          ^^^
 //│ a0': error
 //│ Code generation encountered an error:
@@ -536,70 +273,64 @@ def a0' = a2' a1'
 // FIXME
 // :e // works with quantif extrus
 def a0'_ = a2'_ a1'
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j, ?k, ?l, ?m, ?n, ?o, ?p, ?q, ?r, ?s, ?t, ?u, ?v, ?w, ?x, ?y, ?z, ?a1, ?b1, ?c1, ?d1, ?e1, ?f1, ?g1, ?h1, ?i1, ?j1, ?k1, ?l1, ?m1, ?n1, ?o1, ?p1, ?q1, ?r1, ?s1, ?t1, ?u1, ?v1, ?w1, ?x1, ?y1, ?z1, ?a2, ?b2, ?c2, ?d2, ?e2, ?f2, ?g2, ?h2, ?i2, ?j2, ?k2, ?l2, ?m2, ?n2, ?o2, ?p2, ?q2, ?r2, ?s2, ?t2, ?u2, ?v2, ?w2, ?x2, ?y2, ?z2, ?a3, ?b3, ?c3, ?d3, ?e3, ?f3, ?g3, ?h3, ?i3, ?j3, ?k3, ?l3, ?m3, ?n3, ?o3, ?p3, ?q3, ?r3, ?s3, ?t3, ?u3, ?v3, ?w3, ?x3, ?y3, ?z3, ?a4, ?b4, ?c4, ?d4, ?e4, ?f4, ?g4, ?h4, ?i4, ?j4, ?k4, ?l4, ?m4, ?n4, ?o4, ?p4, ?q4, ?r4, ?s4, ?t4, ?u4, ?v4, ?w4, ?x4, ?y4, ?z4, ?a5, ?b5, ?c5, ?d5, ?e5, ?f5, ?g5, ?h5, ?i5, ?j5, ?k5, ?l5, ?m5, ?n5, ?o5, ?p5, ?q5, ?r5, ?s5, ?t5, ?u5, ?v5, ?w5, ?x5, ?y5, ?z5, ?a6, ?b6, ?c6, ?d6, ?e6, ?f6, ?g6, ?h6, ?i6, ?j6, ?k6, ?l6, ?m6, ?n6, ?o6, ?p6, ?q6, ?r6, ?s6, ?t6, ?u6, ?v6, ?w6, ?x6, ?y6, ?z6, ?a7, ?b7, ?c7, ?d7, ?e7, ?f7, ?g7, ?h7, ?i7, ?j7, ?k7, ?l7, ?m7, ?n7, ?o7, ?p7, ?q7, ?r7, ?s7, ?t7, ?u7, ?v7, ?w7, ?x7, ?y7, ?z7, ?a8, ?b8, ?c8, ?d8, ?e8, ?f8, ?g8, ?h8, ?i8, ?j8, ?k8, ?l8, ?m8, ?n8, ?o8, ?p8, ?q8, ?r8, ?s8, ?t8, ?u8, ?v8, ?w8, ?x8, ?y8, ?z8, ?a9, ?b9, ?c9, ?d9, ?e9, ?f9, ?g9, ?h9, ?i9, ?j9, ?k9, ?l9, ?m9, ?n9, ?o9, ?p9, ?q9, ?r9, ?s9, ?t9, ?u9, ?v9, ?w9, ?x9, ?y9, ?z9, ?a10, ?b10, ?c10, ?d10, ?e10, ?f10, ?g10, ?h10, ?i10, ?j10, ?k10, ?l10, ?m10, ?n10, ?o10, ?p10, ?q10, ?r10, ?s10, ?t10, ?u10, ?v10, ?w10, ?x10, ?y10, ?z10, ?a11, ?b11, ?c11, ?d11, ?e11, ?f11, ?g11, ?h11, ?i11, ?j11, ?k11, ?l11, ?m11, ?n11, ?o11, ?p11, ?q11, ?r11, ?s11, ?t11, ?u11, ?v11, ?w11, ?x11, ?y11, ?z11, ?a12, ?b12, ?c12, ?d12, ?e12, ?f12, ?g12, ?h12, ?i12, ?j12, ?k12, ?l12, ?m12, ?n12, ?o12, ?p12, ?q12, ?r12, ?s12, ?t12, ?u12, ?v12, ?w12, ?x12, ?y12, ?z12, ?a13, ?b13, ?c13, ?d13, ?e13, ?f13, ?g13, ?h13, ?i13, ?j13, ?k13, ?l13, ?m13, ?n13, ?o13, ?p13, ?q13, ?r13, ?s13, ?t13, ?u13, ?v13, ?w13, ?x13, ?y13, ?z13, ?a14, ?b14, ?c14, ?d14, ?e14, ?f14, ?g14, ?h14, ?i14, ?j14, ?k14, ?l14, ?m14, ?n14, ?o14, ?p14, ?q14, ?r14, ?s14, ?t14, ?u14, ?v14, ?w14, ?x14, ?y14, ?z14, ?a15, ?b15, ?c15, ?d15, ?e15, ?f15, ?g15, ?h15, ?i15, ?j15, ?k15, ?l15, ?m15, ?n15, ?o15, ?p15, ?q15, ?r15, ?s15, ?t15, ?u15, ?v15, ?w15, ?x15, ?y15, ?z15, ?a16, ?b16, ?c16, ?d16, ?e16, ?f16, ?g16, ?h16, ?i16, ?j16, ?k16, ?l16, ?m16, ?n16, ?o16, ?p16, ?q16, ?r16, ?s16, ?t16, ?u16, ?v16, ?w16, ?x16, ?y16, ?z16, ?a17, ?b17, ?c17, ?d17, ?e17, ?f17, ?g17, ?h17, ?i17, ?j17, ?k17, ?l17, ?m17, ?n17, ?o17, ?p17, ?q17, ?r17, ?s17, ?t17, ?u17, ?v17, ?w17, ?x17, ?y17, ?z17, ?a18, ?b18, ?c18, ?d18, ?e18, ?f18, ?g18, ?h18, ?i18, ?j18, ?k18, ?l18, ?m18, ?n18, ?o18, ?p18, ?q18, ?r18, ?s18, ?t18, ?u18, ?v18, ?w18, ?x18, ?y18, ?z18, ?a19, ?b19, ?c19, ?d19, ?e19, ?f19, ?g19, ?h19, ?i19, ?j19, ?k19, ?l19, ?m19, ?n19, ?o19, ?p19, ?q19, ?r19, ?s19, ?t19, ?u19, ?v19, ?w19, ?x19, ?y19, ?z19, ?a20, ?b20, ?c20, ?d20, ?e20, ?f20, ?g20, ?h20, ?i20, ?j20, ?k20, ?l20, ?m20, ?n20, ?o20, ?p20, ?q20, ?r20, ?s20, ?t20, ?u20, ?v20, ?w20, ?x20, ?y20, ?z20, ?a21, ?b21, ?c21, ?d21, ?e21, ?f21, ?g21, ?h21, ?i21, ?j21, ?k21, ?l21, ?m21, ?n21, ?o21, ?p21, ?q21, ?r21, ?s21, ?t21, ?u21, ?v21, ?w21, ?x21, ?y21, ?z21, ?a22, ?b22, ?c22, ?d22, ?e22, ?f22, ?g22, ?h22, ?i22, ?j22, ?k22, ?l22, ?m22, ?n22, ?o22, ?p22, ?q22, ?r22, ?s22, ?t22, ?u22, ?v22, ?w22, ?x22, ?y22, ?z22, ?a23, ?b23, ?c23, ?d23, ?e23, ?f23, ?g23, ?h23, ?i23, ?j23, ?k23, ?l23, ?m23, ?n23, ?o23, ?p23, ?q23, ?r23, ?s23, ?t23, ?u23, ?v23, ?w23, ?x23, ?y23, ?z23, ?a24, ?b24, ?c24, ?d24, ?e24, ?f24, ?g24, ?h24, ?i24, ?j24, ?k24, ?l24, ?m24, ?n24, ?o24, ?p24, ?q24, ?r24, ?s24, ?t24, ?u24, ?v24, ?w24, ?x24, ?y24, ?z24, ?a25, ?b25, ?c25, ?d25, ?e25, ?f25, ?g25, ?h25, ?i25, ?j25, ?k25, ?l25, ?m25, ?n25, ?o25, ?p25, ?q25, ?r25, ?s25, ?t25, ?u25, ?v25, ?w25, ?x25, ?y25, ?z25, ?a26, ?b26, ?c26, ?d26, ?e26, ?f26, ?g26, ?h26, ?i26, ?j26, ?k26, ?l26, ?m26, ?n26, ?o26, ?p26, ?q26, ?r26, ?s26, ?t26, ?u26, ?v26, ?w26, ?x26, ?y26, ?z26, ?a27, ?b27, ?c27, ?d27, ?e27, ?f27, ?g27, ?h27, ?i27, ?j27, ?k27, ?l27, ?m27, ?n27, ?o27, ?p27, ?q27, ?r27, ?s27, ?t27, ?u27, ?v27, ?w27, ?x27, ?y27, ?z27, ?a28, ?b28, ?c28, ?d28, ?e28, ?f28, ?g28, ?h28, ?i28, ?j28, ?k28, ?l28, ?m28, ?n28, ?o28, ?p28, ?q28, ?r28, ?s28, ?t28, ?u28, ?v28, ?w28, ?x28, ?y28, ?z28, ?a29, ?b29, ?c29, ?d29, ?e29, ?f29, ?g29, ?h29, ?i29, ?j29, ?k29, ?l29, ?m29, ?n29, ?o29, ?p29, ?q29, ?r29, ?s29, ?t29, ?u29, ?v29, ?w29, ?x29, ?y29, ?z29, ?a30, ?b30, ?c30, ?d30, ?e30, ?f30, ?g30, ?h30, ?i30, ?j30, ?k30, ?l30, ?m30, ?n30, ?o30, ?p30, ?q30, ?r30, ?s30, ?t30, ?u30, ?v30, ?w30, ?x30, ?y30, ?z30, ?a31, ?b31, ?c31, ?d31, ?e31, ?f31, ?g31, ?h31, ?i31, ?j31, ?k31, ?l31, ?m31, ?n31, ?o31, ?p31, ?q31, ?r31, ?s31, ?t31, ?u31, ?v31, ?w31, ?x31, ?y31, ?z31, ?a32, ?b32, ?c32, ?d32, ?e32, ?f32, ?g32, ?h32, ?i32, ?j32, ?k32, ?l32, ?m32, ?n32, ?o32, ?p32, ?q32, ?r32, ?s32, ?t32, ?u32, ?v32, ?w32, ?x32, ?y32, ?z32, ?a33, ?b33, ?c33, ?d33, ?e33, ?f33, ?g33, ?h33, ?i33, ?j33, ?k33, ?l33, ?m33, ?n33, ?o33, ?p33, ?q33, ?r33, ?s33, ?t33, ?u33, ?v33, ?w33, ?x33, ?y33, ?z33, ?a34, ?b34, ?c34, ?d34, ?e34, ?f34, ?g34, ?h34, ?i34, ?j34, ?k34, ?l34, ?m34, ?n34, ?o34, ?p34, ?q34, ?r34, ?s34, ?t34, ?u34, ?v34, ?w34, ?x34, ?y34, ?z34, ?a35, ?b35, ?c35, ?d35, ?e35, ?f35, ?g35, ?h35, ?i35, ?j35, ?k35, ?l35, ?m35, ?n35, ?o35, ?p35, ?q35, ?r35, ?s35, ?t35, ?u35, ?v35, ?w35, ?x35, ?y35, ?z35, ?a36, ?b36, ?c36, ?d36, ?e36, ?f36, ?g36, ?h36, ?i36, ?j36, ?k36, ?l36, ?m36, ?n36, ?o36, ?p36, ?q36, ?r36, ?s36, ?t36, ?u36, ?v36, ?w36, ?x36, ?y36, ?z36, ?a37, ?b37, ?c37, ?d37, ?e37, ?f37, ?g37, ?h37, ?i37, ?j37, ?k37, ?l37, ?m37, ?n37, ?o37, ?p37, ?q37, ?r37, ?s37, ?t37, ?u37, ?v37, ?w37, ?x37, ?y37, ?z37, ?a38, ?b38, ?c38, ?d38, ?e38, ?f38, ?g38, ?h38, ?i38, ?j38, ?k38, ?l38, ?m38, ?n38, ?o38, ?p38, ?q38, ?r38, ?s38, ?t38, ?u38, ?v38, ?w38, ?x38, ?y38, ?z38, ?a39, ?b39, ?c39, ?d39, ?e39, ?f39, ?g39, ?h39, ?i39, ?j39, ?k39, ?l39, ?m39, ?n39, ?o39, ?p39, ?q39, ?r39, ?s39, ?t39, ?u39, ?v39, ?w39, ?x39, ?y39, ?z39, ?a40, ?b40, ?c40, ?d40, ?e40, ?f40, ?g40, ?h40, ?i40, ?j40, ?k40, ?l40, ?m40, ?n40, ?o40, ?p40, ?q40, ?r40, ?s40, ?t40, ?u40, ?v40, ?w40, ?x40, ?y40, ?z40, ?a41, ?b41, ?c41, ?d41, ?e41, ?f41, ?g41, ?h41, ?i41, ?j41, ?k41, ?l41, ?m41, ?n41, ?o41, ?p41, ?q41, ?r41, ?s41, ?t41, ?u41, ?v41, ?w41, ?x41, ?y41, ?z41, ?a42, ?b42, ?c42, ?d42, ?e42, ?f42, ?g42, ?h42, ?i42, ?j42, ?k42, ?l42, ?m42, ?n42, ?o42, ?p42, ?q42, ?r42, ?s42, ?t42, ?u42, ?v42, ?w42, ?x42, ?y42, ?z42, ?a43, ?b43, ?c43, ?d43, ?e43, ?f43, ?g43, ?h43, ?i43, ?j43, ?k43, ?l43, ?m43, ?n43, ?o43, ?p43, ?q43, ?r43, ?s43, ?t43, ?u43, ?v43, ?w43, ?x43, ?y43, ?z43, ?a44, ?b44, ?c44, ?d44, ?e44, ?f44, ?g44, ?h44, ?i44, ?j44, ?k44, ?l44, ?m44, ?n44, ?o44, ?p44, ?q44, ?r44, ?s44, ?t44, ?u44, ?v44, ?w44, ?x44, ?y44, ?z44, ?a45, ?b45, ?c45, ?d45, ?e45, ?f45, ?g45, ?h45, ?i45, ?j45, ?k45, ?l45, ?m45, ?n45, ?o45, ?p45, ?q45, ?r45, ?s45, ?t45, ?u45, ?v45, ?w45, ?x45, ?y45, ?z45, ?a46, ?b46, ?c46, ?d46, ?e46, ?f46, ?g46, ?h46, ?i46, ?j46, ?k46, ?l46, ?m46, ?n46, ?o46, ?p46, ?q46, ?r46, ?s46, ?t46, ?u46, ?v46, ?w46, ?x46, ?y46, ?z46, ?a47, ?b47, ?c47, ?d47, ?e47, ?f47, ?g47, ?h47, ?i47, ?j47, ?k47, ?l47, ?m47, ?n47, ?o47, ?p47, ?q47, ?r47, ?s47, ?t47, ?u47, ?v47, ?w47, ?x47, ?y47, ?z47, ?a48, ?b48, ?c48, ?d48, ?e48, ?f48, ?g48, ?h48, ?i48, ?j48, ?k48, ?l48, ?m48, ?n48, ?o48, ?p48, ?q48, ?r48, ?s48, ?t48, ?u48, ?v48, ?w48, ?x48, ?y48, ?z48, ?a49, ?b49, ?c49, ?d49, ?e49, ?f49, ?g49, ?h49, ?i49, ?j49, ?k49, ?l49, ?m49, ?n49, ?o49, ?p49, ?q49, ?r49, ?s49, ?t49, ?u49, ?v49, ?w49, ?x49, ?y49, ?z49, ?a50, ?b50, ?c50, ?d50, ?e50, ?f50, ?g50, ?h50, ?i50, ?j50, ?k50, ?l50, ?m50, ?n50, ?o50, ?p50, ?q50, ?r50, ?s50, ?t50, ?u50, ?v50, ?w50, ?x50, ?y50, ?z50, ?a51, ?b51, ?c51, ?d51, ?e51, ?f51, ?g51, ?h51, ?i51, ?j51, ?k51, ?l51, ?m51, ?n51, ?o51, ?p51, ?q51, ?r51, ?s51, ?t51, ?u51, ?v51, ?w51, ?x51, ?y51, ?z51, ?a52, ?b52, ?c52, ?d52, ?e52, ?f52, ?g52, ?h52, ?i52, ?j52, ?k52, ?l52, ?m52, ?n52, ?o52, ?p52, ?q52, ?r52, ?s52, ?t52, ?u52, ?v52, ?w52, ?x52, ?y52, ?z52, ?a53, ?b53, ?c53, ?d53, ?e53, ?f53, ?g53, ?h53, ?i53, ?j53, ?k53, ?l53, ?m53, ?n53, ?o53, ?p53, ?q53, ?r53, ?s53, ?t53, ?u53, ?v53, ?w53, ?x53, ?y53, ?z53, ?a54, ?b54, ?c54, ?d54, ?e54, ?f54, ?g54, ?h54, ?i54, ?j54, ?k54, ?l54, ?m54, ?n54, ?o54, ?p54, ?q54, ?r54, ?s54, ?t54, ?u54, ?v54, ?w54, ?x54, ?y54, ?z54, ?a55, ?b55, ?c55, ?d55, ?e55, ?f55, ?g55, ?h55, ?i55, ?j55, ?k55, ?l55, ?m55, ?n55, ?o55, ?p55, ?q55, ?r55, ?s55, ?t55, ?u55, ?v55, ?w55, ?x55, ?y55, ?z55, ?a56, ?b56, ?c56, ?d56, ?e56, ?f56, ?g56, ?h56, ?i56, ?j56, ?k56, ?l56, ?m56, ?n56, ?o56, ?p56, ?q56, ?r56, ?s56, ?t56, ?u56, ?v56, ?w56, ?x56, ?y56, ?z56, ?a57, ?b57, ?c57, ?d57, ?e57, ?f57, ?g57, ?h57, ?i57, ?j57, ?k57, ?l57, ?m57, ?n57, ?o57, ?p57, ?q57, ?r57, ?s57, ?t57, ?u57, ?v57, ?w57, ?x57, ?y57, ?z57, ?a58, ?b58, ?c58, ?d58, ?e58, ?f58, ?g58, ?h58, ?i58, ?j58, ?k58, ?l58, ?m58, ?n58, ?o58, ?p58, ?q58, ?r58, ?s58, ?t58, ?u58, ?v58, ?w58, ?x58, ?y58, ?z58, ?a59, ?b59, ?c59, ?d59, ?e59, ?f59, ?g59, ?h59, ?i59, ?j59, ?k59, ?l59, ?m59, ?n59, ?o59, ?p59, ?q59, ?r59, ?s59, ?t59, ?u59, ?v59, ?w59, ?x59, ?y59, ?z59, ?a60, ?b60, ?c60, ?d60, ?e60, ?f60, ?g60, ?h60, ?i60, ?j60, ?k60, ?l60, ?m60, ?n60, ?o60, ?p60, ?q60, ?r60, ?s60, ?t60, ?u60, ?v60, ?w60, ?x60, ?y60, ?z60, ?a61, ?b61, ?c61, ?d61, ?e61, ?f61, ?g61, ?h61, ?i61, ?j61, ?k61, ?l61, ?m61, ?n61, ?o61, ?p61, ?q61, ?r61, ?s61, ?t61, ?u61, ?v61, ?w61, ?x61, ?y61, ?z61, ?a62, ?b62, ?c62, ?d62, ?e62, ?f62, ?g62, ?h62, ?i62, ?j62, ?k62, ?l62, ?m62, ?n62, ?o62, ?p62, ?q62, ?r62, ?s62, ?t62, ?u62, ?v62, ?w62, ?x62, ?y62, ?z62, ?a63, ?b63, ?c63, ?d63, ?e63, ?f63, ?g63, ?h63, ?i63, ?j63, ?k63, ?l63, ?m63, ?n63, ?o63, ?p63, ?q63, ?r63, ?s63, ?t63, ?u63, ?v63, ?w63, ?x63, ?y63, ?z63, ?a64, ?b64, ?c64, ?d64, ?e64, ?f64, ?g64, ?h64, ?i64, ?j64, ?k64, ?l64, ?m64, ?n64, ?o64, ?p64, ?q64, ?r64, ?s64, ?t64, ?u64, ?v64, ?w64, ?x64, ?y64, ?z64, ?a65, ?b65, ?c65, ?d65, ?e65, ?f65, ?g65, ?h65, ?i65, ?j65, ?k65, ?l65, ?m65, ?n65, ?o65, ?p65, ?q65, ?r65, ?s65, ?t65, ?u65, ?v65, ?w65, ?x65, ?y65, ?z65, ?a66, ?b66, ?c66, ?d66, ?e66, ?f66, ?g66, ?h66, ?i66, ?j66, ?k66, ?l66, ?m66, ?n66, ?o66, ?p66, ?q66, ?r66, ?s66, ?t66, ?u66, ?v66, ?w66, ?x66, ?y66, ?z66, ?a67, ?b67, ?c67, ?d67, ?e67, ?f67, ?g67, ?h67, ?i67, ?j67, ?k67, ?l67, ?m67, ?n67, ?o67, ?p67, ?q67, ?r67, ?s67, ?t67, ?u67, ?v67, ?w67, ?x67, ?y67, ?z67, ?a68, ?b68, ?c68, ?d68, ?e68, ?f68, ?g68, ?h68, ?i68, ?j68, ?k68, ?l68, ?m68, ?n68, ?o68, ?p68, ?q68, ?r68, ?s68, ?t68, ?u68, ?v68, ?w68, ?x68, ?y68, ?z68, ?a69, ?b69, ?c69, ?d69, ?e69, ?f69, ?g69, ?h69, ?i69, ?j69, ?k69, ?l69, ?m69, ?n69, ?o69, ?p69, ?q69, ?r69, ?s69, ?t69, ?u69, ?v69, ?w69, ?x69, ?y69, ?z69, ?a70, ?b70, ?c70, ?d70, ?e70, ?f70, ?g70, ?h70, ?i70, ?j70, ?k70, ?l70, ?m70, ?n70, ?o70, ?p70, ?q70, ?r70, ?s70, ?t70, ?u70, ?v70, ?w70, ?x70, ?y70, ?z70, ?a71, ?b71, ?c71, ?d71, ?e71, ?f71, ?g71, ?h71, ?i71, ?j71, ?k71, ?l71, ?m71, ?n71, ?o71, ?p71, ?q71, ?r71, ?s71, ?t71, ?u71, ?v71, ?w71, ?x71, ?y71, ?z71, ?a72, ?b72, ?c72, ?d72, ?e72, ?f72, ?g72, ?h72, ?i72, ?j72, ?k72, ?l72, ?m72, ?n72, ?o72, ?p72, ?q72, ?r72, ?s72, ?t72, ?u72, ?v72, ?w72, ?x72, ?y72, ?z72, ?a73, ?b73, ?c73, ?d73, ?e73, ?f73, ?g73, ?h73, ?i73, ?j73, ?k73, ?l73, ?m73, ?n73, ?o73, ?p73, ?q73, ?r73, ?s73, ?t73, ?u73, ?v73, ?w73, ?x73, ?y73, ?z73, ?a74, ?b74, ?c74, ?d74, ?e74, ?f74, ?g74, ?h74, ?i74, ?j74, ?k74, ?l74, ?m74, ?n74, ?o74, ?p74, ?q74, ?r74, ?s74, ?t74, ?u74, ?v74, ?w74, ?x74, ?y74, ?z74, ?a75, ?b75, ?c75, ?d75, ?e75, ?f75, ?g75, ?h75, ?i75, ?j75, ?k75, ?l75, ?m75, ?n75, ?o75, ?p75, ?q75, ?r75, ?s75, ?t75, ?u75, ?v75, ?w75, ?x75, ?y75, ?z75, ?a76, ?b76, ?c76, ?d76, ?e76, ?f76, ?g76, ?h76, ?i76, ?j76, ?k76, ?l76, ?m76, ?n76, ?o76, ?p76, ?q76, ?r76, ?s76, ?t76, ?u76, ?v76, ?w76, ?x76, ?y76, ?z76, ?a77, ?b77, ?c77, ?d77, ?e77, ?f77, ?g77, ?h77, ?i77, ?j77, ?k77, ?l77, ?m77, ?n77, ?o77, ?p77, ?q77, ?r77, ?s77, ?t77, ?u77, ?v77, ?w77, ?x77, ?y77, ?z77, ?a78, ?b78, ?c78, ?d78, ?e78, ?f78, ?g78, ?h78, ?i78, ?j78, ?k78, ?l78, ?m78, ?n78, ?o78, ?p78, ?q78, ?r78, ?s78, ?t78, ?u78, ?v78, ?w78, ?x78, ?y78, ?z78, ?a79, ?b79, ?c79, ?d79, ?e79, ?f79, ?g79, ?h79, ?i79, ?j79, ?k79, ?l79, ?m79, ?n79, ?o79, ?p79, ?q79, ?r79, ?s79, ?t79, ?u79, ?v79, ?w79, ?x79, ?y79, ?z79, ?a80, ?b80, ?c80, ?d80, ?e80, ?f80, ?g80, ?h80, ?i80, ?j80, ?k80, ?l80, ?m80, ?n80, ?o80, ?p80, ?q80, ?r80, ?s80, ?t80, ?u80, ?v80, ?w80, ?x80, ?y80, ?z80, ?a81, ?b81, ?c81, ?d81, ?e81, ?f81, ?g81, ?h81, ?i81, ?j81, ?k81, ?l81, ?m81, ?n81, ?o81, ?p81, ?q81, ?r81, ?s81, ?t81, ?u81, ?v81, ?w81, ?x81, ?y81, ?z81, ?a82, ?b82, ?c82, ?d82, ?e82, ?f82, ?g82, ?h82, ?i82, ?j82, ?k82, ?l82, ?m82, ?n82, ?o82, ?p82, ?q82, ?r82, ?s82, ?t82, ?u82, ?v82, ?w82, ?x82, ?y82, ?z82, ?a83, ?b83, ?c83, ?d83, ?e83, ?f83, ?g83, ?h83, ?i83, ?j83, ?k83, ?l83, ?m83, ?n83, ?o83, ?p83, ?q83, ?r83, ?s83, ?t83, ?u83, ?v83, ?w83, ?x83, ?y83, ?z83, ?a84, ?b84, ?c84, ?d84, ?e84, ?f84, ?g84, ?h84, ?i84, ?j84, ?k84, ?l84, ?m84, ?n84, ?o84, ?p84, ?q84, ?r84, ?s84, ?t84, ?u84, ?v84, ?w84, ?x84, ?y84, ?z84, ?a85, ?b85, ?c85, ?d85, ?e85, ?f85, ?g85, ?h85, ?i85, ?j85, ?k85, ?l85, ?m85, ?n85, ?o85, ?p85, ?q85, ?r85, ?s85, ?t85, ?u85, ?v85, ?w85, ?x85, ?y85, ?z85, ?a86, ?b86, ?c86, ?d86, ?e86, ?f86, ?g86, ?h86, ?i86, ?j86, ?k86, ?l86, ?m86, ?n86, ?o86, ?p86, ?q86, ?r86, ?s86, ?t86, ?u86, ?v86, ?w86, ?x86, ?y86, ?z86, ?a87, ?b87, ?c87, ?d87, ?e87, ?f87, ?g87, ?h87, ?i87, ?j87, ?k87, ?l87, ?m87, ?n87, ?o87, ?p87, ?q87, ?r87, ?s87, ?t87, ?u87, ?v87, ?w87, ?x87, ?y87, ?z87, ?a88, ?b88, ?c88, ?d88, ?e88, ?f88, ?g88, ?h88, ?i88, ?j88, ?k88, ?l88, ?m88, ?n88, ?o88, ?p88, ?q88, ?r88, ?s88, ?t88, ?u88, ?v88, ?w88, ?x88, ?y88, ?z88, ?a89, ?b89, ?c89, ?d89, ?e89, ?f89, ?g89, ?h89, ?i89, ?j89, ?k89, ?l89, ?m89, ?n89, ?o89, ?p89, ?q89, ?r89, ?s89, ?t89, ?u89, ?v89, ?w89, ?x89, ?y89, ?z89, ?a90, ?b90, ?c90, ?d90, ?e90, ?f90, ?g90, ?h90, ?i90, ?j90, ?k90, ?l90, ?m90, ?n90, ?o90, ?p90, ?q90, ?r90, ?s90, ?t90, ?u90, ?v90, ?w90, ?x90, ?y90, ?z90, ?a91, ?b91, ?c91, ?d91, ?e91, ?f91, ?g91, ?h91, ?i91, ?j91, ?k91, ?l91, ?m91, ?n91, ?o91, ?p91, ?q91, ?r91, ?s91, ?t91, ?u91, ?v91, ?w91, ?x91, ?y91, ?z91, ?a92, ?b92, ?c92, ?d92, ?e92, ?f92, ?g92, ?h92, ?i92, ?j92, ?k92, ?l92, ?m92, ?n92, ?o92, ?p92, ?q92, ?r92, ?s92, ?t92, ?u92, ?v92, ?w92, ?x92, ?y92, ?z92, ?a93, ?b93, ?c93, ?d93, ?e93, ?f93, ?g93, ?h93, ?i93, ?j93, ?k93, ?l93, ?m93, ?n93, ?o93, ?p93, ?q93, ?r93, ?s93, ?t93, ?u93, ?v93, ?w93, ?x93, ?y93, ?z93, ?a94, ?b94, ?c94, ?d94, ?e94, ?f94, ?g94, ?h94, ?i94, ?j94, ?k94, ?l94, ?m94, ?n94, ?o94, ?p94, ?q94, ?r94, ?s94, ?t94, ?u94, ?v94, ?w94, ?x94, ?y94, ?z94, ?a95, ?b95, ?c95, ?d95, ?e95, ?f95, ?g95, ?h95, ?i95, ?j95, ?k95, ?l95, ?m95, ?n95, ?o95, ?p95, ?q95, ?r95, ?s95, ?t95, ?u95, ?v95, ?w95, ?x95, ?y95, ?z95, ?a96, ?b96, ?c96, ?d96, ?e96, ?f96, ?g96, ?h96, ?i96, ?j96, ?k96, ?l96, ?m96, ?n96, ?o96, ?p96, ?q96, ?r96, ?s96, ?t96, ?u96, ?v96, ?w96, ?x96, ?y96, ?z96, ?a97, ?b97, ?c97, ?d97, ?e97, ?f97, ?g97, ?h97, ?i97, ?j97, ?k97, ?l97, ?m97, ?n97, ?o97, ?p97, ?q97, ?r97, ?s97, ?t97, ?u97, ?v97, ?w97, ?x97, ?y97, ?z97, ?a98, ?b98, ?c98, ?d98, ?e98, ?f98, ?g98, ?h98, ?i98, ?j98, ?k98, ?l98, ?m98, ?n98, ?o98, ?p98, ?q98, ?r98, ?s98, ?t98, ?u98, ?v98, ?w98, ?x98, ?y98, ?z98, ?a99, ?b99, ?c99, ?d99, ?e99, ?f99, ?g99, ?h99, ?i99, ?j99, ?k99, ?l99, ?m99, ?n99, ?o99, ?p99, ?q99, ?r99, ?s99, ?t99, ?u99, ?v99, ?w99, ?x99, ?y99, ?z99, ?a100, ?b100, ?c100, ?d100, ?e100, ?f100, ?g100, ?h100, ?i100, ?j100, ?k100, ?l100, ?m100, ?n100, ?o100, ?p100, ?q100, ?r100, ?s100, ?t100, ?u100, ?v100, ?w100, ?x100, ?y100, ?z100, ?a101, ?b101, ?c101, ?d101, ?e101, ?f101, ?g101, ?h101, ?i101, ?j101, ?k101, ?l101, ?m101, ?n101, ?o101, ?p101, ?q101, ?r101, ?s101, ?t101, ?u101, ?v101, ?w101, ?x101, ?y101, ?z101, ?a102, ?b102, ?c102, ?d102, ?e102, ?f102, ?g102, ?h102, ?i102, ?j102, ?k102, ?l102, ?m102, ?n102, ?o102, ?p102, ?q102, ?r102, ?s102, ?t102, ?u102, ?v102, ?w102, ?x102, ?y102. ?l91 -> (forall ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j, ?k, ?l, ?m, ?n, ?o, ?p, ?q, ?r, ?s, ?t, ?u, ?v, ?w, ?x, ?y, ?z, ?a1, ?b1, ?c1, ?d1, ?e1, ?f1, ?g1, ?h1, ?i1, ?j1, ?k1, ?l1, ?m1, ?n1, ?o1, ?p1, ?q1, ?r1, ?s1, ?t1, ?u1, ?v1, ?w1, ?x1, ?y1, ?z1, ?a2, ?b2, ?c2, ?d2, ?e2, ?f2, ?g2, ?h2, ?i2, ?j2, ?k2, ?l2, ?m2, ?n2, ?o2, ?p2, ?q2, ?r2, ?s2, ?t2, ?u2, ?v2, ?w2, ?x2, ?y2, ?z2, ?a3, ?b3, ?c3, ?d3, ?e3, ?f3, ?g3, ?h3, ?i3, ?j3, ?k3, ?l3, ?m3, ?n3, ?o3, ?p3, ?q3, ?r3, ?s3, ?t3, ?u3, ?v3, ?w3, ?x3, ?y3, ?z3, ?a4, ?b4, ?c4, ?d4, ?e4, ?f4, ?g4, ?h4, ?i4, ?j4, ?k4, ?l4, ?m4, ?n4, ?o4, ?p4, ?q4, ?r4, ?s4, ?t4, ?u4, ?v4, ?w4, ?x4, ?y4, ?z4, ?a5, ?b5, ?c5, ?d5, ?e5, ?f5, ?g5, ?h5, ?i5, ?j5, ?k5, ?l5, ?m5, ?n5, ?o5, ?p5, ?q5, ?r5, ?s5, ?t5, ?u5, ?v5, ?w5, ?x5, ?y5, ?z5, ?a6, ?b6, ?c6, ?d6, ?e6, ?f6, ?g6, ?h6, ?i6, ?j6, ?k6, ?l6, ?m6, ?n6, ?o6, ?p6, ?q6, ?r6, ?s6, ?t6, ?u6, ?v6, ?w6, ?x6, ?y6, ?z6, ?a7, ?b7, ?c7, ?d7, ?e7, ?f7, ?g7, ?h7, ?i7, ?j7, ?k7, ?l7, ?m7, ?n7, ?o7, ?p7, ?q7, ?r7, ?s7, ?t7, ?u7, ?v7, ?w7, ?x7, ?y7, ?z7, ?a8, ?b8, ?c8, ?d8, ?e8, ?f8, ?g8, ?h8, ?i8, ?j8, ?k8, ?l8, ?m8, ?n8, ?o8, ?p8, ?q8, ?r8, ?s8, ?t8, ?u8, ?v8, ?w8, ?x8, ?y8, ?z8, ?a9, ?b9, ?c9, ?d9, ?e9, ?f9, ?g9, ?h9, ?i9, ?j9, ?k9, ?l9, ?m9, ?n9, ?o9, ?p9, ?q9, ?r9, ?s9, ?t9, ?u9, ?v9, ?w9, ?x9, ?y9, ?z9, ?a10, ?b10, ?c10, ?d10, ?e10, ?f10, ?g10, ?h10, ?i10, ?j10, ?k10, ?l10, ?m10, ?n10, ?o10, ?p10, ?q10, ?r10, ?s10, ?t10, ?u10, ?v10, ?w10, ?x10, ?y10, ?z10, ?a11, ?b11, ?c11, ?d11, ?e11, ?f11, ?g11, ?h11, ?i11, ?j11, ?k11, ?l11, ?m11, ?n11, ?o11, ?p11, ?q11, ?r11, ?s11, ?t11, ?u11, ?v11, ?w11, ?x11, ?y11, ?z11, ?a12, ?b12, ?c12, ?d12, ?e12, ?f12, ?g12, ?h12, ?i12, ?j12, ?k12, ?l12, ?m12, ?n12, ?o12, ?p12, ?q12, ?r12, ?s12, ?t12, ?u12, ?v12, ?w12, ?x12, ?y12, ?z12, ?a13, ?b13, ?c13, ?d13, ?e13, ?f13, ?g13, ?h13, ?i13, ?j13, ?k13, ?l13, ?m13, ?n13, ?o13, ?p13, ?q13, ?r13, ?s13, ?t13, ?u13, ?v13, ?w13, ?x13, ?y13, ?z13, ?a14, ?b14, ?c14, ?d14, ?e14, ?f14, ?g14, ?h14, ?i14, ?j14, ?k14, ?l14, ?m14, ?n14, ?o14, ?p14, ?q14, ?r14, ?s14, ?t14, ?u14, ?v14, ?w14, ?x14, ?y14, ?z14, ?a15, ?b15, ?c15, ?d15, ?e15, ?f15, ?g15, ?h15, ?i15, ?j15, ?k15, ?l15, ?m15, ?n15, ?o15, ?p15, ?q15, ?r15, ?s15, ?t15, ?u15, ?v15, ?w15, ?x15, ?y15, ?z15, ?a16, ?b16, ?c16, ?d16, ?e16, ?f16, ?g16, ?h16, ?i16, ?j16, ?k16, ?l16, ?m16, ?n16, ?o16, ?p16, ?q16, ?r16, ?s16, ?t16, ?u16, ?v16, ?w16, ?x16, ?y16, ?z16, ?a17, ?b17, ?c17, ?d17, ?e17, ?f17, ?g17, ?h17, ?i17, ?j17, ?k17, ?l17, ?m17, ?n17, ?o17, ?p17, ?q17, ?r17, ?s17, ?t17, ?u17, ?v17, ?w17, ?x17, ?y17, ?z17, ?a18, ?b18, ?c18, ?d18, ?e18, ?f18, ?g18, ?h18, ?i18, ?j18, ?k18, ?l18, ?m18, ?n18, ?o18, ?p18, ?q18, ?r18, ?s18, ?t18, ?u18, ?v18, ?w18, ?x18, ?y18, ?z18, ?a19, ?b19, ?c19, ?d19, ?e19, ?f19, ?g19, ?h19, ?i19, ?j19, ?k19, ?l19, ?m19, ?n19, ?o19, ?p19, ?q19, ?r19, ?s19, ?t19, ?u19, ?v19, ?w19, ?x19, ?y19, ?z19, ?a20, ?b20, ?c20, ?d20, ?e20, ?f20, ?g20, ?h20, ?i20, ?j20, ?k20, ?l20, ?m20, ?n20, ?o20, ?p20, ?q20, ?r20, ?s20, ?t20, ?u20, ?v20, ?w20, ?x20, ?y20, ?z20, ?a21, ?b21, ?c21, ?d21, ?e21, ?f21, ?g21, ?h21, ?i21, ?j21, ?k21, ?l21, ?m21, ?n21, ?o21, ?p21, ?q21, ?r21, ?s21, ?t21, ?u21, ?v21, ?w21, ?x21, ?y21, ?z21, ?a22, ?b22, ?c22, ?d22, ?e22, ?f22, ?g22, ?h22, ?i22, ?j22, ?k22, ?l22, ?m22, ?n22, ?o22, ?p22, ?q22, ?r22, ?s22, ?t22, ?u22, ?v22, ?w22, ?x22, ?y22, ?z22, ?a23, ?b23, ?c23, ?d23, ?e23, ?f23, ?g23, ?h23, ?i23, ?j23, ?k23, ?l23, ?m23, ?n23, ?o23, ?p23, ?q23, ?r23, ?s23, ?t23, ?u23, ?v23, ?w23, ?x23, ?y23, ?z23, ?a24, ?b24, ?c24, ?d24, ?e24, ?f24, ?g24, ?h24, ?i24, ?j24, ?k24, ?l24, ?m24, ?n24, ?o24, ?p24, ?q24, ?r24, ?s24, ?t24, ?u24, ?v24, ?w24, ?x24, ?y24, ?z24, ?a25, ?b25, ?c25, ?d25, ?e25, ?f25, ?g25, ?h25, ?i25, ?j25, ?k25, ?l25, ?m25, ?n25, ?o25, ?p25, ?q25, ?r25, ?s25, ?t25, ?u25, ?v25, ?w25, ?x25, ?y25, ?z25, ?a26, ?b26, ?c26, ?d26, ?e26, ?f26, ?g26, ?h26, ?i26, ?j26, ?k26, ?l26, ?m26, ?n26, ?o26, ?p26, ?q26, ?r26, ?s26, ?t26, ?u26, ?v26, ?w26, ?x26, ?y26, ?z26, ?a27, ?b27, ?c27, ?d27, ?e27, ?f27, ?g27, ?h27, ?i27, ?j27, ?k27, ?l27, ?m27, ?n27, ?o27, ?p27, ?q27, ?r27, ?s27, ?t27, ?u27, ?v27, ?w27, ?x27, ?y27, ?z27, ?a28, ?b28, ?c28, ?d28, ?e28, ?f28, ?g28, ?h28, ?i28, ?j28, ?k28, ?l28, ?m28, ?n28, ?o28, ?p28, ?q28, ?r28, ?s28, ?t28, ?u28, ?v28, ?w28, ?x28, ?y28, ?z28, ?a29, ?b29, ?c29, ?d29, ?e29, ?f29, ?g29, ?h29, ?i29, ?j29, ?k29, ?l29, ?m29, ?n29, ?o29, ?p29, ?q29, ?r29, ?s29, ?t29, ?u29, ?v29, ?w29, ?x29, ?y29, ?z29, ?a30, ?b30, ?c30, ?d30, ?e30, ?f30, ?g30, ?h30, ?i30, ?j30, ?k30, ?l30, ?m30, ?n30, ?o30, ?p30, ?q30, ?r30, ?s30, ?t30, ?u30, ?v30, ?w30, ?x30, ?y30, ?z30, ?a31, ?b31, ?c31, ?d31, ?e31, ?f31, ?g31, ?h31, ?i31, ?j31, ?k31, ?l31, ?m31, ?n31, ?o31, ?p31, ?q31, ?r31, ?s31, ?t31, ?u31, ?v31, ?w31, ?x31, ?y31, ?z31, ?a32, ?b32, ?c32, ?d32, ?e32, ?f32, ?g32, ?h32, ?i32, ?j32, ?k32, ?l32, ?m32, ?n32, ?o32, ?p32, ?q32, ?r32, ?s32, ?t32, ?u32, ?v32, ?w32, ?x32, ?y32, ?z32, ?a33, ?b33, ?c33, ?d33, ?e33, ?f33, ?g33, ?h33, ?i33, ?j33, ?k33, ?l33, ?m33, ?n33, ?o33, ?p33, ?q33, ?r33, ?s33, ?t33, ?u33, ?v33, ?w33, ?x33, ?y33, ?z33, ?a34, ?b34, ?c34, ?d34, ?e34, ?f34, ?g34, ?h34, ?i34, ?j34, ?k34, ?l34, ?m34, ?n34, ?o34, ?p34, ?q34, ?r34, ?s34, ?t34, ?u34, ?v34, ?w34, ?x34, ?y34, ?z34, ?a35, ?b35, ?c35, ?d35, ?e35, ?f35, ?g35, ?h35, ?i35, ?j35, ?k35, ?l35, ?m35, ?n35, ?o35, ?p35, ?q35, ?r35, ?s35, ?t35, ?u35, ?v35, ?w35, ?x35, ?y35, ?z35, ?a36, ?b36, ?c36, ?d36, ?e36, ?f36, ?g36, ?h36, ?i36, ?j36, ?k36, ?l36, ?m36, ?n36, ?o36, ?p36, ?q36, ?r36, ?s36, ?t36, ?u36, ?v36, ?w36, ?x36, ?y36, ?z36, ?a37, ?b37, ?c37, ?d37, ?e37, ?f37, ?g37, ?h37, ?i37, ?j37, ?k37, ?l37, ?m37, ?n37, ?o37, ?p37, ?q37, ?r37, ?s37, ?t37, ?u37, ?v37, ?w37, ?x37, ?y37, ?z37, ?a38, ?b38, ?c38, ?d38, ?e38, ?f38, ?g38, ?h38, ?i38, ?j38, ?k38, ?l38, ?m38, ?n38, ?o38, ?p38, ?q38, ?r38, ?s38, ?t38, ?u38, ?v38, ?w38, ?x38, ?y38, ?z38, ?a39, ?b39, ?c39, ?d39, ?e39, ?f39, ?g39, ?h39, ?i39, ?j39, ?k39, ?l39, ?m39, ?n39, ?o39, ?p39, ?q39, ?r39, ?s39, ?t39, ?u39, ?v39, ?w39, ?x39, ?y39, ?z39, ?a40, ?b40, ?c40, ?d40, ?e40, ?f40, ?g40, ?h40, ?i40, ?j40, ?k40, ?l40, ?m40, ?n40, ?o40, ?p40, ?q40, ?r40, ?s40, ?t40, ?u40, ?v40, ?w40, ?x40, ?y40, ?z40, ?a41, ?b41, ?c41, ?d41, ?e41, ?f41, ?g41, ?h41, ?i41, ?j41, ?k41, ?l41, ?m41, ?n41, ?o41, ?p41, ?q41, ?r41, ?s41, ?t41, ?u41, ?v41, ?w41, ?x41, ?y41, ?z41, ?a42, ?b42, ?c42, ?d42, ?e42, ?f42, ?g42, ?h42, ?i42, ?j42, ?k42, ?l42, ?m42, ?n42, ?o42, ?p42, ?q42, ?r42, ?s42, ?t42, ?u42, ?v42, ?w42, ?x42, ?y42, ?z42, ?a43, ?b43, ?c43, ?d43, ?e43, ?f43, ?g43, ?h43, ?i43, ?j43, ?k43, ?l43, ?m43, ?n43, ?o43, ?p43, ?q43, ?r43, ?s43, ?t43, ?u43, ?v43, ?w43, ?x43, ?y43, ?z43, ?a44, ?b44, ?c44, ?d44, ?e44, ?f44, ?g44, ?h44, ?i44, ?j44, ?k44, ?l44, ?m44, ?n44, ?o44, ?p44, ?q44, ?r44, ?s44, ?t44, ?u44, ?v44, ?w44, ?x44, ?y44, ?z44, ?a45, ?b45, ?c45, ?d45, ?e45, ?f45, ?g45, ?h45, ?i45, ?j45, ?k45, ?l45, ?m45, ?n45, ?o45, ?p45, ?q45, ?r45, ?s45, ?t45, ?u45, ?v45, ?w45, ?x45, ?y45, ?z45, ?a46, ?b46, ?c46, ?d46, ?e46, ?f46, ?g46, ?h46, ?i46, ?j46, ?k46, ?l46, ?m46, ?n46, ?o46, ?p46, ?q46, ?r46, ?s46, ?t46, ?u46, ?v46, ?w46, ?x46, ?y46, ?z46, ?a47, ?b47, ?c47, ?d47, ?e47, ?f47, ?g47, ?h47, ?i47, ?j47, ?k47, ?l47, ?m47, ?n47, ?o47, ?p47, ?q47, ?r47, ?s47, ?t47, ?u47, ?v47, ?w47, ?x47, ?y47, ?z47, ?a48, ?b48, ?c48, ?d48, ?e48, ?f48, ?g48, ?h48, ?i48, ?j48, ?k48, ?l48, ?m48, ?n48, ?o48, ?p48, ?q48, ?r48, ?s48, ?t48, ?u48, ?v48, ?w48, ?x48, ?y48, ?z48, ?a49, ?b49, ?c49, ?d49, ?e49, ?f49, ?g49, ?h49, ?i49, ?j49, ?k49, ?l49, ?m49, ?n49, ?o49, ?p49, ?q49, ?r49, ?s49, ?t49, ?u49, ?v49, ?w49, ?x49, ?y49, ?z49, ?a50, ?b50, ?c50, ?d50, ?e50, ?f50, ?g50, ?h50, ?i50, ?j50, ?k50, ?l50, ?m50, ?n50, ?o50, ?p50, ?q50, ?r50, ?s50, ?t50, ?u50, ?v50, ?w50, ?x50, ?y50, ?z50, ?a51, ?b51, ?c51, ?d51, ?e51, ?f51, ?g51, ?h51, ?i51, ?j51, ?k51, ?l51, ?m51, ?n51, ?o51, ?p51, ?q51, ?r51, ?s51, ?t51, ?u51, ?v51, ?w51, ?x51, ?y51, ?z51, ?a52, ?b52, ?c52, ?d52, ?e52, ?f52, ?g52, ?h52, ?i52, ?j52, ?k52, ?l52, ?m52, ?n52, ?o52, ?p52, ?q52, ?r52, ?s52, ?t52, ?u52, ?v52, ?w52, ?x52, ?y52, ?z52, ?a53, ?b53, ?c53, ?d53, ?e53, ?f53, ?g53, ?h53, ?i53, ?j53, ?k53, ?l53, ?m53, ?n53, ?o53, ?p53, ?q53, ?r53, ?s53, ?t53, ?u53, ?v53, ?w53, ?x53, ?y53, ?z53, ?a54, ?b54, ?c54, ?d54, ?e54, ?f54, ?g54, ?h54, ?i54, ?j54, ?k54, ?l54, ?m54, ?n54, ?o54, ?p54, ?q54, ?r54, ?s54, ?t54, ?u54, ?v54, ?w54, ?x54, ?y54, ?z54, ?a55, ?b55, ?c55, ?d55, ?e55, ?f55, ?g55, ?h55, ?i55, ?j55, ?k55, ?l55, ?m55, ?n55, ?o55, ?p55, ?q55, ?r55, ?s55, ?t55, ?u55, ?v55, ?w55, ?x55, ?y55, ?z55, ?a56, ?b56, ?c56, ?d56, ?e56, ?f56, ?g56, ?h56, ?i56, ?j56, ?k56, ?l56, ?m56, ?n56, ?o56, ?p56, ?q56, ?r56, ?s56, ?t56, ?u56, ?v56, ?w56, ?x56, ?y56, ?z56, ?a57, ?b57, ?c57, ?d57, ?e57, ?f57, ?g57, ?h57, ?i57, ?j57, ?k57, ?l57, ?m57, ?n57, ?o57, ?p57, ?q57, ?r57, ?s57, ?t57, ?u57, ?v57, ?w57, ?x57, ?y57, ?z57, ?a58, ?b58, ?c58, ?d58, ?e58, ?f58, ?g58, ?h58, ?i58, ?j58, ?k58, ?l58, ?m58, ?n58, ?o58, ?p58, ?q58, ?r58, ?s58, ?t58, ?u58, ?v58, ?w58, ?x58, ?y58, ?z58, ?a59, ?b59, ?c59, ?d59, ?e59, ?f59, ?g59, ?h59, ?i59, ?j59, ?k59, ?l59, ?m59, ?n59, ?o59, ?p59, ?q59, ?r59, ?s59, ?t59, ?u59, ?v59, ?w59, ?x59, ?y59, ?z59, ?a60, ?b60, ?c60, ?d60, ?e60, ?f60, ?g60, ?h60, ?i60, ?j60, ?k60, ?l60, ?m60, ?n60, ?o60, ?p60, ?q60, ?r60, ?s60, ?t60, ?u60, ?v60, ?w60, ?x60, ?y60, ?z60, ?a61, ?b61, ?c61, ?d61, ?e61, ?f61, ?g61, ?h61, ?i61, ?j61, ?k61, ?l61, ?m61, ?n61, ?o61, ?p61, ?q61, ?r61, ?s61, ?t61, ?u61, ?v61, ?w61, ?x61, ?y61, ?z61, ?a62, ?b62, ?c62, ?d62, ?e62, ?f62, ?g62, ?h62, ?i62, ?j62, ?k62, ?l62, ?m62, ?n62, ?o62, ?p62, ?q62, ?r62, ?s62, ?t62, ?u62, ?v62, ?w62, ?x62, ?y62, ?z62, ?a63, ?b63, ?c63, ?d63, ?e63, ?f63, ?g63, ?h63, ?i63, ?j63, ?k63, ?l63, ?m63, ?n63, ?o63, ?p63, ?q63, ?r63, ?s63, ?t63, ?u63, ?v63, ?w63, ?x63, ?y63, ?z63, ?a64, ?b64, ?c64, ?d64, ?e64, ?f64, ?g64, ?h64, ?i64, ?j64, ?k64, ?l64, ?m64, ?n64, ?o64, ?p64, ?q64, ?r64, ?s64, ?t64, ?u64, ?v64, ?w64, ?x64, ?y64, ?z64, ?a65, ?b65, ?c65, ?d65, ?e65, ?f65, ?g65, ?h65, ?i65, ?j65, ?k65, ?l65, ?m65, ?n65, ?o65, ?p65, ?q65, ?r65, ?s65, ?t65, ?u65, ?v65, ?w65, ?x65, ?y65, ?z65, ?a66, ?b66, ?c66, ?d66, ?e66, ?f66, ?g66, ?h66, ?i66, ?j66, ?k66, ?l66, ?m66, ?n66, ?o66, ?p66, ?q66, ?r66, ?s66, ?t66, ?u66, ?v66, ?w66, ?x66, ?y66, ?z66, ?a67, ?b67, ?c67, ?d67, ?e67, ?f67, ?g67, ?h67, ?i67, ?j67, ?k67, ?l67, ?m67, ?n67, ?o67, ?p67, ?q67, ?r67, ?s67, ?t67, ?u67, ?v67, ?w67, ?x67, ?y67, ?z67, ?a68, ?b68, ?c68, ?d68, ?e68, ?f68, ?g68, ?h68, ?i68, ?j68, ?k68, ?l68, ?m68, ?n68, ?o68, ?p68, ?q68, ?r68, ?s68, ?t68, ?u68, ?v68, ?w68, ?x68, ?y68, ?z68, ?a69, ?b69, ?c69, ?d69, ?e69, ?f69, ?g69, ?h69, ?i69, ?j69, ?k69, ?l69, ?m69, ?n69, ?o69, ?p69, ?q69, ?r69, ?s69, ?t69, ?u69, ?v69, ?w69, ?x69, ?y69, ?z69, ?a70, ?b70, ?c70, ?d70, ?e70, ?f70, ?g70, ?h70, ?i70, ?j70, ?k70, ?l70, ?m70, ?n70, ?o70, ?p70, ?q70, ?r70, ?s70, ?t70, ?u70, ?v70, ?w70, ?x70, ?y70, ?z70, ?a71, ?b71, ?c71, ?d71, ?e71, ?f71, ?g71, ?h71, ?i71, ?j71, ?k71, ?l71, ?m71, ?n71, ?o71, ?p71, ?q71, ?r71, ?s71, ?t71, ?u71, ?v71, ?w71, ?x71, ?y71, ?z71, ?a72, ?b72, ?c72, ?d72, ?e72, ?f72, ?g72, ?h72, ?i72, ?j72, ?k72, ?l72, ?m72, ?n72, ?o72, ?p72, ?q72, ?r72, ?s72, ?t72, ?u72, ?v72, ?w72, ?x72, ?y72, ?z72, ?a73, ?b73, ?c73, ?d73, ?e73, ?f73, ?g73, ?h73, ?i73, ?j73, ?k73, ?l73, ?m73, ?n73, ?o73, ?p73, ?q73, ?r73, ?s73, ?t73, ?u73, ?v73, ?w73, ?x73, ?y73, ?z73, ?a74, ?b74, ?c74, ?d74, ?e74, ?f74, ?g74, ?h74, ?i74, ?j74, ?k74, ?l74, ?m74, ?n74, ?o74, ?p74, ?q74, ?r74, ?s74, ?t74, ?u74, ?v74, ?w74, ?x74, ?y74, ?z74, ?a75, ?b75, ?c75, ?d75, ?e75, ?f75, ?g75, ?h75, ?i75, ?j75, ?k75, ?l75, ?m75, ?n75, ?o75, ?p75, ?q75, ?r75, ?s75, ?t75, ?u75, ?v75, ?w75, ?x75, ?y75, ?z75, ?a76, ?b76, ?c76, ?d76, ?e76, ?f76, ?g76, ?h76, ?i76, ?j76, ?k76, ?l76, ?m76, ?n76, ?o76, ?p76, ?q76, ?r76, ?s76, ?t76, ?u76, ?v76, ?w76, ?x76, ?y76, ?z76, ?a77, ?b77, ?c77, ?d77, ?e77, ?f77, ?g77, ?h77, ?i77, ?j77, ?k77, ?l77, ?m77, ?n77, ?o77, ?p77, ?q77, ?r77, ?s77, ?t77, ?u77, ?v77, ?w77, ?x77, ?y77, ?z77, ?a78, ?b78, ?c78, ?d78, ?e78, ?f78, ?g78, ?h78, ?i78, ?j78, ?k78, ?l78, ?m78, ?n78, ?o78, ?p78, ?q78, ?r78, ?s78, ?t78, ?u78, ?v78, ?w78, ?x78, ?y78, ?z78, ?a79, ?b79, ?c79, ?d79, ?e79, ?f79, ?g79, ?h79, ?i79, ?j79, ?k79, ?l79, ?m79, ?n79, ?o79, ?p79, ?q79, ?r79, ?s79, ?t79, ?u79, ?v79, ?w79, ?x79, ?y79, ?z79, ?a80, ?b80, ?c80, ?d80, ?e80, ?f80, ?g80, ?h80, ?i80, ?j80, ?k80, ?l80, ?m80, ?n80, ?o80, ?p80, ?q80, ?r80, ?s80, ?t80, ?u80, ?v80, ?w80, ?x80, ?y80, ?z80, ?a81, ?b81, ?c81, ?d81, ?e81, ?f81, ?g81, ?h81, ?i81, ?j81, ?k81, ?l81, ?m81, ?n81, ?o81, ?p81, ?q81, ?r81, ?s81, ?t81, ?u81, ?v81, ?w81, ?x81, ?y81, ?z81, ?a82, ?b82, ?c82, ?d82, ?e82, ?f82, ?g82, ?h82, ?i82, ?j82, ?k82, ?l82, ?m82, ?n82, ?o82, ?p82, ?q82, ?r82, ?s82, ?t82, ?u82, ?v82, ?w82, ?x82, ?y82, ?z82, ?a83, ?b83, ?c83, ?d83, ?e83, ?f83, ?g83, ?h83, ?i83, ?j83, ?k83, ?l83, ?m83, ?n83, ?o83, ?p83, ?q83, ?r83, ?s83, ?t83, ?u83, ?v83, ?w83, ?x83, ?y83, ?z83, ?a84, ?b84, ?c84, ?d84, ?e84, ?f84, ?g84, ?h84, ?i84, ?j84, ?k84, ?l84, ?m84, ?n84, ?o84, ?p84, ?q84, ?r84, ?s84, ?t84, ?u84, ?v84, ?w84, ?x84, ?y84, ?z84, ?a85, ?b85, ?c85, ?d85, ?e85, ?f85, ?g85, ?h85, ?i85, ?j85, ?k85, ?l85, ?m85, ?n85, ?o85, ?p85, ?q85, ?r85, ?s85, ?t85, ?u85, ?v85, ?w85, ?x85, ?y85, ?z85, ?a86, ?b86, ?c86, ?d86, ?e86, ?f86, ?g86, ?h86, ?i86, ?j86, ?k86, ?l86, ?m86, ?n86, ?o86, ?p86, ?q86, ?r86, ?s86, ?t86, ?u86, ?v86, ?w86, ?x86, ?y86, ?z86, ?a87, ?b87, ?c87, ?d87, ?e87, ?f87, ?g87, ?h87, ?i87, ?j87, ?k87, ?l87, ?m87, ?n87, ?o87, ?p87, ?q87, ?r87, ?s87, ?t87, ?u87, ?v87, ?w87, ?x87, ?y87, ?z87, ?a88, ?b88, ?c88, ?d88, ?e88, ?f88, ?g88, ?h88, ?i88, ?j88, ?k88, ?l88, ?m88, ?n88, ?o88, ?p88, ?q88, ?r88, ?s88, ?t88, ?u88, ?v88, ?w88, ?x88, ?y88, ?z88, ?a89, ?b89, ?c89, ?d89, ?e89, ?f89, ?g89, ?h89, ?i89, ?j89, ?k89, ?l89, ?m89, ?n89, ?o89, ?p89, ?q89, ?r89, ?s89, ?t89, ?u89, ?v89, ?w89, ?x89, ?y89, ?z89, ?a90, ?b90, ?c90, ?d90, ?e90, ?f90, ?g90, ?h90, ?i90, ?j90, ?k90, ?l90, ?m90, ?n90, ?o90, ?p90, ?q90, ?r90, ?s90, ?t90, ?u90, ?v90, ?w90, ?x90, ?y90, ?z90, ?a91, ?b91, ?c91, ?d91, ?e91, ?f91, ?g91, ?h91, ?i91, ?j91, ?k91, ?l91, ?m91, ?n91, ?o91, ?p91, ?q91, ?r91, ?s91, ?t91, ?u91, ?v91, ?w91, ?x91, ?y91, ?z91, ?a92, ?b92, ?c92, ?d92, ?e92, ?f92, ?g92, ?h92, ?i92, ?j92, ?k92, ?l92, ?m92, ?n92, ?o92, ?p92, ?q92, ?r92, ?s92, ?t92, ?u92, ?v92, ?w92, ?x92, ?y92, ?z92, ?a93, ?b93, ?c93, ?d93, ?e93, ?f93, ?g93, ?h93, ?i93, ?j93, ?k93, ?l93, ?m93, ?n93, ?o93, ?p93, ?q93, ?r93, ?s93, ?t93, ?u93, ?v93, ?w93, ?x93, ?y93, ?z93, ?a94, ?b94, ?c94, ?d94, ?e94, ?f94, ?g94, ?h94, ?i94, ?j94, ?k94, ?l94, ?m94, ?n94, ?o94, ?p94, ?q94, ?r94, ?s94, ?t94, ?u94, ?v94, ?w94, ?x94, ?y94, ?z94, ?a95, ?b95, ?c95, ?d95, ?e95, ?f95, ?g95, ?h95, ?i95, ?j95, ?k95, ?l95, ?m95, ?n95, ?o95, ?p95, ?q95, ?r95, ?s95, ?t95, ?u95, ?v95, ?w95, ?x95, ?y95, ?z95, ?a96, ?b96, ?c96, ?d96, ?e96, ?f96, ?g96, ?h96, ?i96, ?j96, ?k96, ?l96, ?m96, ?n96, ?o96, ?p96, ?q96, ?r96, ?s96, ?t96, ?u96, ?v96, ?w96, ?x96, ?y96, ?z96, ?a97, ?b97, ?c97, ?d97, ?e97, ?f97, ?g97, ?h97, ?i97, ?j97, ?k97, ?l97, ?m97, ?n97, ?o97, ?p97, ?q97, ?r97, ?s97, ?t97, ?u97, ?v97, ?w97, ?x97, ?y97, ?z97, ?a98, ?b98, ?c98, ?d98, ?e98, ?f98, ?g98, ?h98, ?i98, ?j98, ?k98, ?l98, ?m98, ?n98, ?o98, ?p98, ?q98, ?r98, ?s98, ?t98, ?u98, ?v98, ?w98, ?x98, ?y98, ?z98, ?a99, ?b99, ?c99, ?d99, ?e99, ?f99, ?g99, ?h99, ?i99, ?j99, ?k99, ?l99, ?m99, ?n99, ?o99, ?p99, ?q99, ?r99, ?s99, ?t99, ?u99, ?v99, ?w99, ?x99, ?y99, ?z99, ?a100, ?b100, ?c100, ?d100, ?e100, ?f100, ?g100, ?h100, ?i100, ?j100, ?k100, ?l100, ?m100, ?n100, ?o100, ?p100, ?q100, ?r100, ?s100, ?t100, ?u100, ?v100, ?w100, ?x100, ?y100, ?z100, ?a101, ?b101, ?c101, ?d101, ?e101, ?f101, ?g101, ?h101, ?i101, ?j101, ?k101, ?l101, ?m101, ?n101, ?o101, ?p101, ?q101, ?r101, ?s101, ?t101, ?u101, ?v101, ?w101, ?x101, ?y101, ?z101, ?a102, ?b102, ?c102, ?d102, ?e102, ?f102, ?g102, ?h102, ?i102, ?j102, ?k102, ?l102, ?m102, ?n102, ?o102, ?p102, ?q102, ?r102, ?s102, ?t102, ?u102, ?v102, ?w102, ?x102, ?y102. (?z102
-//│   where
-//│     ?l91 <: (forall ?a103, ?b103. ?b103 -> (forall ?c103, ?a103, ?b103. (?c103
-//│   where
-//│     ?b103 <: ?b103 -> ?c103))) -> ?d103 & ?e103 -> ?f103 & ?g103 -> ?h103 & ?i103 -> ?j103)) <: (forall ?k103, ?l103, ?m103, ?n103. ?m103 -> (forall ?k103, ?l103, ?m103, ?n103. (?o103 -> (forall ?k103, ?l103, ?m103, ?n103. (?p103
-//│   where
-//│     ?m103 <: ?q103 -> ?r103 & ?r103 -> ?p103
-//│     ?o103 <: ?s103
-//│     ?t103 <: ?u103
-//│     ?v103 <: ?w103))
-//│   where
-//│     ?m103 <: ?x103 -> ?y103 & ?z103 -> ?a104
-//│     ?m103 <: ?b104 -> ?c104 & ?d104 -> ?e104))) -> ?f104` took too many steps and ran out of fuel (5000)
-//│ ║  l.538: 	def a0'_ = a2'_ a1'
-//│ ║         	           ^^^^^^^^
-//│ ╟──  + ‹∀ 0. ‹∀ 1. (α45'' -> α45'')››
-//│ ║  l.16: 	def id x = x
-//│ ║        	       ^^^^^
-//│ ╟──  + ‹∀ 0. ‹∀ 1. (α45'' -> α45'')››
-//│ ║  l.16: 	def id x = x
-//│ ║        	       ^^^^^
-//│ ╟──  + ‹∀ 0. ‹∀ 1. (α45'' -> α45'')››
-//│ ║  l.16: 	def id x = x
-//│ ║        	       ^^^^^
-//│ ╟──  + ‹∀ 0. ‹∀ 1. (α45'' -> α45'')››
-//│ ║  l.444: 	def a1' = fun f -> fun x -> f (f (either id x))
-//│ ║         	                                         ^^
-//│ ╟──  + ‹∀ 0. ‹∀ 1. (α45'' -> α45'')››
-//│ ╟──  + ‹∀ 0. ‹∀ 1. (α45'' -> α45'')››
-//│ ╟──  + ‹∀ 0. ‹∀ 1. (α45'' -> α45'')››
-//│ ║  l.434: 	def either x y = if true then x else y
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: ?b -> ?c` took too many steps and ran out of fuel (5000)
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››
+//│ ║  l.229: 	def either x y = if true then x else y
 //│ ║         	                    ^^^^^^^^^^^^^^^^^^
-//│ ╟──  + ‹∀ 0. ‹∀ 1. (α45'' -> α45'')››
-//│ ║  l.434: 	def either x y = if true then x else y
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››
+//│ ║  l.229: 	def either x y = if true then x else y
 //│ ║         	                    ^^^^^^^^^^^^^^^^^^
-//│ ╟──  + α19433_26531'
-//│ ║  l.434: 	def either x y = if true then x else y
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››
+//│ ║  l.229: 	def either x y = if true then x else y
 //│ ║         	                    ^^^^^^^^^^^^^^^^^^
-//│ ╟──  + {α19433_26531' where: α19428_26527' <: α20_26530', α19429_26536' <: α20_26530'}
-//│ ║  l.434: 	def either x y = if true then x else y
-//│ ║         	                    ^^^^^^^^^^^^^^^^^^
-//│ ╟──  + ‹∀ 4. {α19433_19492''''' where: α19428_19488''''' <: α20_19491''''', α19429_19497''''' <: α20_19491'''''}›
-//│ ║  l.434: 	def either x y = if true then x else y
-//│ ║         	                    ^^^^^^^^^^^^^^^^^^
-//│ ╟──  + ‹∀ 4. {α19433_19492''''' where: α19428_19488''''' <: α20_19491''''', α19429_19497''''' <: α20_19491'''''}›
-//│ ║  l.434: 	def either x y = if true then x else y
-//│ ║         	                    ^^^^^^^^^^^^^^^^^^
-//│ ╟──  + ‹∀ 4. {α19433_19492''''' where: α19428_19488''''' <: α20_19491''''', α19429_19497''''' <: α20_19491'''''}›
-//│ ║  l.444: 	def a1' = fun f -> fun x -> f (f (either id x))
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››
+//│ ║  l.235: 	def a1' = fun f -> fun x -> f (f (either id x))
 //│ ║         	                                  ^^^^^^^^^^^
-//│ ╟──  + α19475_26387'
-//│ ║  l.444: 	def a1' = fun f -> fun x -> f (f (either id x))
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››
+//│ ║  l.235: 	def a1' = fun f -> fun x -> f (f (either id x))
 //│ ║         	                                  ^^^^^^^^^^^
-//│ ╟──  - ((α35_26506',) -> α36_26507')
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››
+//│ ║  l.15: 	def auto_ x = x x
+//│ ║        	                ^
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››
+//│ ║  l.16: 	def id x = x
+//│ ║        	           ^
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››
 //│ ║  l.15: 	def auto_ x = x x
 //│ ║        	              ^^^
-//│ ╟──  - ((α35_26506',) -> α36_26507')
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››
 //│ ║  l.15: 	def auto_ x = x x
 //│ ║        	              ^^^
-//│ ╟──  - ((α35_26506',) -> α36_26507')
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››
+//│ ║  l.235: 	def a1' = fun f -> fun x -> f (f (either id x))
+//│ ║         	                               ^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››
+//│ ║  l.235: 	def a1' = fun f -> fun x -> f (f (either id x))
+//│ ║         	                               ^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››
+//│ ║  l.15: 	def auto_ x = x x
+//│ ║        	                ^
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››
+//│ ║  l.16: 	def id x = x
+//│ ║        	           ^
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››
 //│ ║  l.15: 	def auto_ x = x x
 //│ ║        	              ^^^
-//│ ╟──  - ((α35_26506',) -> α36_26507')
-//│ ╙──  - α35_26506'
+//│ ╟──  + α30_2812'
+//│ ║  l.15: 	def auto_ x = x x
+//│ ║        	              ^^^
+//│ ╟──  - α2116_2805'
+//│ ║  l.235: 	def a1' = fun f -> fun x -> f (f (either id x))
+//│ ╙──       	                            ^^^^^^^^^^^^^^^^^^^
 //│ a0'_: error
 //│     = [Function: either]
 
@@ -607,34 +338,11 @@ def a0'_ = a2'_ a1'
 :RecursiveTypes
 // :e // FIXME?
 def a0'_ = a2'_ a1'
-//│ a0'_: 'a
+//│ a0'_: 'a -> 'b
 //│   where
-//│     'b <: nothing -> (forall 'c, 'd. (nothing -> 'c & 'd) -> (forall 'c, 'd, 'e. ('e -> (forall 'd, 'e, 'f, 'g. ('g
+//│     'c <: (forall 'a. (nothing -> 'a & 'a) -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
 //│   where
-//│     'd <: 'e -> 'f & 'f -> 'g))
-//│   where
-//│     'd <: nothing -> 'c
-//│     'd <: nothing -> 'c))) -> 'c
-//│     'h <: (forall 'c. (nothing -> nothing -> 'c & 'c) -> (forall 'c, 'i. ((nothing -> 'c & 'i) -> (forall 'c, 'i, 'j. ('j -> (forall 'c, 'i, 'j, 'k, 'l. ('l
-//│   where
-//│     'c <: 'i -> 'j -> 'k
-//│     'i <: 'k -> 'l))
-//│   where
-//│     'c <: nothing -> nothing -> 'c
-//│     'i <: nothing -> 'c
-//│     'c <: nothing -> nothing -> 'c
-//│     'i <: nothing -> 'c))
-//│   where
-//│     'c <: nothing -> nothing -> 'c
-//│     'c <: nothing -> nothing -> 'c))) -> 'a
-//│     'b <: (forall 'c, 'm. ('m -> 'c & 'm) -> (forall 'm, 'n. ('n
-//│   where
-//│     'm <: 'm -> 'n))) -> (forall 'o. 'o -> 'o) -> 'c & nothing -> (forall 'c, 'd. (nothing -> 'c & 'd) -> (forall 'c, 'd, 'e. ('e -> (forall 'd, 'e, 'f, 'g. ('g
-//│   where
-//│     'd <: 'e -> 'f & 'f -> 'g))
-//│   where
-//│     'd <: nothing -> 'c
-//│     'd <: nothing -> 'c))) -> 'c
+//│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
 //│     = [Function: either]
 :NoRecursiveTypes
 
