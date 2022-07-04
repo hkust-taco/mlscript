@@ -48,19 +48,19 @@ def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 def succ' n = fun f -> fun x -> f (n f x)
 //│ succ_ty: ChurchInt -> ChurchInt
 //│        = <missing implementation>
-//│ succ: ChurchInt -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ succ: ChurchInt -> (forall 'a, 'b, 'c. (('c -> anything & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e))
+//│     'a <: 'b -> 'd -> 'e
+//│     'b <: 'e -> 'f))
 //│   where
-//│     'a <: nothing -> nothing -> anything))
+//│     'a <: 'b -> nothing -> 'c))
 //│     = [Function: succ]
-//│ succ': (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ succ': (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. (('c -> 'a & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('f -> 'e
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e))
+//│     'b <: 'd -> 'e
+//│     'a <: 'b -> 'f -> 'd))
 //│   where
-//│     'a <: nothing -> nothing -> 'a))
+//│     'a <: 'b -> nothing -> 'c))
 //│      = [Function: succ]
 
 // * Note: without constrained types we wouldn't get the principal type of succ'
@@ -68,82 +68,92 @@ def succ' n = fun f -> fun x -> f (n f x)
 // * Require distrib – see Scratch3
 succ_ty = succ
 succ_ty = succ'
-//│ ChurchInt -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ ChurchInt -> (forall 'a, 'b, 'c. (('c -> anything & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e))
+//│     'a <: 'b -> 'd -> 'e
+//│     'b <: 'e -> 'f))
 //│   where
-//│     'a <: nothing -> nothing -> anything))
+//│     'a <: 'b -> nothing -> 'c))
 //│   <:  succ_ty:
 //│ ChurchInt -> ChurchInt
-//│        = [Function: succ]
-//│ (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
-//│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e))
-//│   where
-//│     'a <: nothing -> nothing -> 'a))
-//│   <:  succ_ty:
-//│ ChurchInt -> ChurchInt
-//│        = [Function: succ]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 // :d
 succ'
-//│ res: (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ res: (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. (('c -> 'a & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('f -> 'e
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e))
+//│     'b <: 'd -> 'e
+//│     'a <: 'b -> 'f -> 'd))
 //│   where
-//│     'a <: nothing -> nothing -> 'a))
+//│     'a <: 'b -> nothing -> 'c))
 //│    = [Function: succ]
 
 // Legit error: (bad bounds)
 // :d
 :e // due to tapping
 succ' {}
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.103: 	succ' {}
-//│ ║         	^^^^^^^^
-//│ ╟── record literal of type `anything` is not a function
-//│ ║  l.103: 	succ' {}
-//│ ║         	      ^^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.48: 	def succ' n = fun f -> fun x -> f (n f x)
-//│ ╙──      	                                   ^^^
-//│ res: error
-//│    = [Function: succ]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 :e // due to tapping
 succ' {} {}
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.117: 	succ' {} {}
-//│ ║         	^^^^^^^^
-//│ ╟── record literal of type `anything` is not a function
-//│ ║  l.117: 	succ' {} {}
-//│ ║         	      ^^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.48: 	def succ' n = fun f -> fun x -> f (n f x)
-//│ ╙──      	                                   ^^^
-//│ res: error
-//│    = [Function: succ]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 :e
 succ' {} {} {}
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.131: 	succ' {} {} {}
-//│ ║         	^^^^^^^^
-//│ ╟── record literal of type `anything` is not a function
-//│ ║  l.131: 	succ' {} {} {}
-//│ ║         	      ^^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.48: 	def succ' n = fun f -> fun x -> f (n f x)
-//│ ╙──      	                                   ^^^
-//│ res: error
-//│    = [Function: succ]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 fun x -> succ' x x x x x x x x x
-//│ res: nothing -> nothing
-//│    = [Function: succ]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 
 // let rec to_church n =
@@ -162,11 +172,17 @@ def to_church_ty: int -> ChurchInt
 rec def to_church_1 n =
   if n == 0 then zero
   else succ (to_church_1 (n - 1))
-//│ to_church_1: int -> (forall 'a. (nothing -> anything & 'a) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('f | 'e)
-//│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'd -> 'e)))
-//│            = [Function: to_church_1]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 rec def to_church_1_t n =
   if n == 0 then zero
@@ -191,29 +207,44 @@ rec def to_church_1_tt n =
 //   succ (to_church_1 n)
 rec def wat =
   succ wat
-//│ wat: (nothing -> anything & 'a) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
-//│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'd -> 'e))
-//│ Runtime error:
-//│   ReferenceError: wat is not defined
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 // works when `succ` is not annotated with the parameter type
 :e // FIXME should be caught by cycle checker! // due to tapping
 :ng
 rec def nani =
   succ' nani
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 // * The one with annotated rec occurrence works...
 def to_church_1_repro n =
   succ (to_church_ty n)
-//│ to_church_1_repro: int -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ to_church_1_repro: int -> (forall 'a, 'b, 'c. (('c -> anything & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e))
+//│     'a <: 'b -> 'd -> 'e
+//│     'b <: 'e -> 'f))
 //│   where
-//│     'a <: nothing -> nothing -> anything))
+//│     'a <: 'b -> nothing -> 'c))
 //│                  = <no result>
 //│                    to_church_ty is not implemented
 
@@ -229,7 +260,17 @@ rec def to_church_1_st n =
 rec def to_church_2 n =
   if n == 0 then zero
   else succ' (to_church_2 (n - 1))
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 // :e // FIXME should be caught by cycle checker!
 // Requires :RecursiveTypes
@@ -237,16 +278,9 @@ rec def to_church_2 n =
 // :e // due to tapping
 :e // FIXME? refreshing-extr
 to_church_ty = to_church_2
-//│ int -> (forall 'a. (nothing -> anything & 'a) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('e | 'f)
-//│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'd -> 'e)))
+//│ nothing
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
-//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α96_1595'  <:  ((α97_1844',) -> α99_1847'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α96_1178'  <:  ((α97_1590''',) -> α99_1596'''')
 
 // (* Marche *)
 // let rec to_church n =
@@ -269,7 +303,7 @@ rec def to_church_3 n =
 rec def to_church_4 n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church_4 (n - 1)) f x) : ChurchInt
-//│ to_church_4: int -> (nothing -> anything) -> (forall 'a. 'a -> (ChurchInt | 'a))
+//│ to_church_4: int -> ((ChurchInt | 'a) -> anything) -> (forall 'b. ('b & 'a) -> (ChurchInt | 'b))
 //│            = [Function: to_church_4]
 
 
@@ -288,10 +322,7 @@ rec def to_church_5 n =
 
 // :e // FIXME? // due to gen lam bod?
 to_church_ty = to_church_1
-//│ int -> (forall 'a. (nothing -> anything & 'a) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('f | 'e)
-//│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'd -> 'e)))
+//│ nothing
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_church_1]
@@ -319,16 +350,9 @@ to_church_ty = to_church_1_st
 :ng
 :e // due to tapping
 to_church_ty = to_church_2
-//│ int -> (forall 'a. (nothing -> anything & 'a) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('e | 'f)
-//│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'd -> 'e)))
+//│ nothing
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
-//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α96_2133'  <:  ((α97_2382',) -> α99_2385'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α96_1178'  <:  ((α97_2128''',) -> α99_2134'''')
 
 // :e // FIXME?
 to_church_ty = to_church_3
@@ -339,7 +363,7 @@ to_church_ty = to_church_3
 
 :e
 to_church_ty = to_church_4
-//│ int -> (nothing -> anything) -> (forall 'a. 'a -> (ChurchInt | 'a))
+//│ int -> ((ChurchInt | 'a) -> anything) -> (forall 'b. ('b & 'a) -> (ChurchInt | 'b))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -385,12 +409,22 @@ rec def to_church_ty n =
 def to_church_ty n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church_ty (n - 1)) f x)
-//│ int -> (forall 'b, 'a. (nothing -> 'b & 'a -> 'a & 'b) -> (forall 'b, 'a0, 'c. (('c & 'a0) -> 'c
+//│ int -> (forall 'a, 'b. ('a -> 'b & 'a -> 'a & 'b) -> (forall 'b, 'a0, 'c. (('c & 'a0) -> 'c
 //│   where
 //│     'b <: 'a0 -> 'a0 & 'a0 -> 'c)))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
-//│             = [Function: to_church_ty7]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 
 // (* �a coince. *)
@@ -398,7 +432,9 @@ def to_church_ty n =
 
 // :e // FIXME? // due to gen lam bod?
 def tc n = to_church_1 n : ChurchInt
-//│ tc: int -> ChurchInt
+//│ tc: 'a -> ChurchInt
+//│   where
+//│     'to_church_1 <: 'a -> anything
 //│   = [Function: tc]
 
 def tc n = to_church_ty n : ChurchInt
@@ -407,9 +443,9 @@ def tc n = to_church_ty n : ChurchInt
 
 // :e // FIXME should be caught by cycle checker!
 def tc n = to_church_2 n : ChurchInt // Requires :RecursiveTypes
-//│ tc: anything -> ChurchInt
+//│ tc: 'a -> ChurchInt
 //│   where
-//│     'to_church_2 <: nothing -> anything
+//│     'to_church_2 <: 'a -> anything
 //│   = [Function: tc2]
 
 // FIXME stupid type

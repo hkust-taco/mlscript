@@ -55,33 +55,33 @@ delta' id
 
 // let t a b c d e = (fun x -> a x x) ((fun y -> b (c y)) (d e)) ;;
 def t a b c d e = (fun x -> a x x) ((fun y -> b (c y)) (d e))
-//│ t: (nothing -> nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ((nothing -> 'a & 'c) -> (forall 'a, 'b, 'c, 'd. ((nothing -> 'a & 'd) -> (forall 'a, 'b, 'c, 'd. ((nothing -> 'a & 'a) -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i. ('i -> 'f
+//│ t: (nothing -> nothing -> 'a & 'b) -> (forall 'a, 'b, 'c, 'd. ((nothing -> 'c & nothing -> 'a & 'd) -> (forall 'a, 'b, 'd, 'e, 'f, 'g, 'h. ((nothing -> 'g & nothing -> 'f & 'h) -> (forall 'a, 'b, 'd, 'h, 'i, 'j, 'k, 'l. ((nothing -> 'l & 'a) -> (forall 'a, 'b, 'd, 'h, 'm, 'n, 'o, 'p, 'q, 'r. ('r -> 'n
 //│   where
-//│     'b <: nothing -> nothing -> 'a & 'e -> 'e -> 'f
-//│     'c <: nothing -> 'a & 'g -> 'e
-//│     'd <: nothing -> 'a & 'h -> 'g
-//│     'a <: 'i -> 'h))
+//│     'b <: nothing -> nothing -> 'a & 'm -> 'm -> 'n
+//│     'd <: 'o -> 'a & 'p -> 'm
+//│     'h <: nothing -> 'o & 'q -> 'p
+//│     'a <: 'r -> 'q))
 //│   where
-//│     'b <: nothing -> nothing -> 'a
-//│     'c <: nothing -> 'a
-//│     'd <: nothing -> 'a))
+//│     'b <: nothing -> nothing -> 'a & 'i -> 'i -> 'a
+//│     'd <: 'j -> 'a & 'k -> 'i
+//│     'h <: nothing -> 'j & 'l -> 'k))
 //│   where
-//│     'b <: nothing -> nothing -> 'a
-//│     'c <: nothing -> 'a))
+//│     'b <: nothing -> nothing -> 'a & 'e -> 'e -> 'a
+//│     'd <: 'f -> 'a & 'g -> 'e))
 //│   where
-//│     'b <: nothing -> nothing -> 'a))
+//│     'b <: nothing -> nothing -> 'a & 'c -> 'c -> 'a))
 //│  = [Function: t]
 
 // let t w z a b = (fun y -> (fun x -> w (x y) z) a) b ;;
 def t w z a b = (fun y -> (fun x -> w (x y) z) a) b
-//│ t: (nothing -> nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b. ((nothing -> 'a & 'a) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f -> 'e
+//│ t: (nothing -> nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ((nothing -> 'e & nothing -> 'd & 'a) -> (forall 'a, 'b, 'c, 'f, 'g, 'h, 'i. ('i -> 'h
 //│   where
-//│     'b <: nothing -> nothing -> 'a & 'd -> 'c -> 'e
-//│     'a <: nothing -> 'a & 'f -> 'd))
+//│     'b <: nothing -> 'c -> 'a & 'f -> 'c -> 'a & 'g -> 'c -> 'h
+//│     'a <: nothing -> 'f & 'i -> 'g))
 //│   where
-//│     'b <: nothing -> nothing -> 'a))
+//│     'b <: nothing -> 'c -> 'a & 'd -> 'c -> 'a & 'e -> 'c -> 'a))
 //│   where
-//│     'b <: nothing -> nothing -> 'a))
+//│     'b <: nothing -> 'c -> 'a))
 //│  = [Function: t1]
 
 // let t y a = (fun x -> x (x y)) ((fun z -> z) (fun x -> a x)) ;;
@@ -94,10 +94,17 @@ def t y a = (fun x -> x (x y)) ((fun z -> z) (fun x -> a x))
 // (* Rank 1 *)
 // (fun x -> fun y -> x y) (fun y -> fun x -> x y) ;;
 (fun x -> fun y -> x y) (fun y -> fun x -> x y)
-//│ res: 'a -> 'b
-//│   where
-//│     'c <: 'a -> 'b
-//│    = [Function (anonymous)]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 // (* Rank 3 *)
 // (fun x -> fun y -> x) delta ;;
@@ -112,10 +119,17 @@ def t y a = (fun x -> x (x y)) ((fun z -> z) (fun x -> a x))
 // (fun x -> fun y -> x y) (fun y -> fun x -> x y) delta ;;
 (fun x -> fun y -> x y) (fun y -> fun x -> x y) delta
 (fun x -> fun y -> x y) (fun y -> fun x -> x y) delta'
-//│ res: ((Sid -> Sid) -> 'a) -> 'a
-//│    = [Function (anonymous)]
-//│ res: ((forall 'a, 'b. ('a -> 'b & 'a) -> 'b) -> 'c) -> 'c
-//│    = [Function (anonymous)]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 // (* Rank 8 *)
 // (fun (x:sid) -> x x x x x) id delta ;;
@@ -133,29 +147,33 @@ type Sk = forall 'a 'b. 'a -> 'b -> 'a
 (fun (f: Sk) -> fun x -> f f x) (fun v -> fun w -> v)
 (fun f -> fun x -> f f x) (fun v -> fun w -> v)
 //│ Defined type alias Sk
-//│ res: 'a -> 'b
-//│   where
-//│     'c <: 'c -> 'a -> 'b
-//│    = [Function (anonymous)]
-//│ res: 'a -> 'b
-//│   where
-//│     'c <: 'c -> 'a -> 'b
-//│    = [Function (anonymous)]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 // (* Rank 3 *)
 // (fun t -> fun k -> t k) (fun (f:sk) -> fun x -> f f x) (fun v -> fun w -> v);;
 (fun t -> fun k -> t k) (fun (f: Sk) -> fun x -> f f x) (fun v -> fun w -> v)
 (fun t -> fun k -> t k) (fun f -> fun x -> f f x) (fun v -> fun w -> v)
-//│ res: 'a -> 'b
-//│   where
-//│     'c <: 'c -> 'a -> 'b
-//│     'd <: 'd -> 'a -> 'b
-//│    = [Function (anonymous)]
-//│ res: 'a -> 'b
-//│   where
-//│     'c <: 'c -> 'a -> 'b
-//│     'd <: 'd -> 'a -> 'b
-//│    = [Function (anonymous)]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 
 // let k = fun x y -> x
@@ -176,24 +194,42 @@ def three = fun f -> fun x -> f (f (f x))
 //│   where
 //│     'a <: 'b -> 'c))
 //│    = [Function: app]
-//│ two: (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c, 'd. ('b -> 'd
+//│ two: ('a -> 'b & nothing -> 'a & 'b) -> (forall 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
-//│     'a <: 'b -> 'c & 'c -> 'd))
+//│     'b <: 'c -> 'd & 'd -> 'e))
 //│    = [Function: two]
-//│ three: (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c, 'd, 'e. ('b -> 'e
+//│ three: (nothing -> 'a & 'b -> 'c & 'a -> 'b & 'c) -> (forall 'c, 'd, 'e, 'f, 'g. ('d -> 'g
 //│   where
-//│     'a <: 'b -> 'c & 'c -> 'd & 'd -> 'e))
+//│     'c <: 'd -> 'e & 'e -> 'f & 'f -> 'g))
 //│      = [Function: three]
 
 
 // * Tony noticed this did not work before this commit generalizing the LHS of ascriptions...
 (app id): Sid
-//│ res: Sid
-//│    = [Function (anonymous)]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 // * this one worked:
 let t = app id in t: Sid
-//│ res: Sid
-//│    = [Function (anonymous)]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 
 // type Int = ['a] ('a -> 'a) -> ('a -> 'a)
@@ -209,44 +245,18 @@ type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 // :e // due to tapping
 def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
 def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
-//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α1410_1468''''  <:  ((‹∀ 0. ‹∀ 1. (α1257'' -> ‹∀ 2. (α1258''' -> α1258''')›)››,) -> α1412_1523'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α1410^7  <:  ((‹∀ 0. ‹∀ 1. (α1257'' -> ‹∀ 2. (α1258''' -> α1258''')›)››,) -> α1412_1475^8)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α1410_1593''  <:  ((‹∀ 0. ‹∀ 1. (α1257'' -> ‹∀ 2. (α1258''' -> α1258''')›)››,) -> α1412_1648'')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α1410^7  <:  ((‹∀ 0. ‹∀ 1. (α1257'' -> ‹∀ 2. (α1258''' -> α1258''')›)››,) -> α1412_1600^8)
-//│ t: anything -> error
-//│  = [Function: t3]
-//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b, ?c, ?d, ?e, ?f. ?f -> (forall ?g, ?h, ?i. (?g -> ?i
-//│   where
-//│     ?f <: ?g -> ?h & ?h -> ?i))) -> ?j` took too many steps and ran out of fuel (5000)
-//│ ║  l.211: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
-//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟──  + ‹∀ 2. (α1258''' -> α1258''')›
-//│ ║  l.167: 	def k2 = fun x -> fun y -> y
-//│ ║         	                  ^^^^^^^^^^
-//│ ╟──  - ((α1676_5339'',) -> α1679_5340'')
-//│ ║  l.211: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
-//│ ║         	                                                                                                                                                                   ^^^^^^
-//│ ╟──  - ((α1676_5339'',) -> α1679_5340'')
-//│ ║  l.211: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
-//│ ║         	                                                                                                                                                                   ^^^^^^
-//│ ╟──  - α1678_5338''
-//│ ║  l.211: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
-//│ ╙──       	                                                                                                                                                                   ^^^^^^
-//│ t2: (nothing -> anything) -> error
-//│   = [Function: t21]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 // FIXME
 t id succ 0
-//│ res: error
-//│    = 2
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 // FIXME
 //:e // due to tapping
 t2 id succ 0
+//│ ╔══[ERROR] identifier not found: t2
+//│ ║  l.249: 	t2 id succ 0
+//│ ╙──       	^^
 //│ res: error
 //│    = 2
 
@@ -256,55 +266,7 @@ t2 id succ 0
 // :e // due to tapping
 def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
 def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
-//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α8090_8148''''  <:  ((‹∀ 0. ‹∀ 1. (α1257'' -> ‹∀ 2. (α1258''' -> α1258''')›)››,) -> α8092_8203'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α8090^7  <:  ((‹∀ 0. ‹∀ 1. (α1257'' -> ‹∀ 2. (α1258''' -> α1258''')›)››,) -> α8092_8155^8)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α8090_8273''  <:  ((‹∀ 0. ‹∀ 1. (α1257'' -> ‹∀ 2. (α1258''' -> α1258''')›)››,) -> α8092_8328'')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α8090^7  <:  ((‹∀ 0. ‹∀ 1. (α1257'' -> ‹∀ 2. (α1258''' -> α1258''')›)››,) -> α8092_8280^8)
-//│ t: anything -> error
-//│  = [Function: t4]
-//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b, ?c, ?d, ?e, ?f, ?g, ?h. ?h -> (forall ?i, ?j, ?k, ?l. (?i -> ?l
-//│   where
-//│     ?h <: ?i -> ?j & ?j -> ?k & ?k -> ?l))) -> ?m` took too many steps and ran out of fuel (5000)
-//│ ║  l.258: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
-//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟──  + ‹∀ 8. {(α8355_11825^9 -> ‹∀ 9. {(α8356_11832^10 -> α8360_11829^10) where: α8355_11825^9 <: ((α8359_11828^10,) -> α8360_11829^10), α8351_11784'' <: ((‹∀ 0. ‹∀ 1. (α1257'' -> ‹∀ 2. (α1258''' -> α1258''')›)››,) -> α8357_11830^10)}›) where: α8351_11784'' <: ((‹∀ 0. ‹∀ 1. (α1257'' -> ‹∀ 2. (α1258''' -> α1258''')›)››,) -> α8357_11811^9)}›
-//│ ║  l.258: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
-//│ ║         	                                                                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟──  + ‹∀ 8. {(α8355_11825^9 -> ‹∀ 9. {(α8356_11832^10 -> α8360_11829^10) where: α8355_11825^9 <: ((α8359_11828^10,) -> α8360_11829^10), α8351_11784'' <: ((‹∀ 0. ‹∀ 1. (α1257'' -> ‹∀ 2. (α1258''' -> α1258''')›)››,) -> α8357_11830^10)}›) where: α8351_11784'' <: ((‹∀ 0. ‹∀ 1. (α1257'' -> ‹∀ 2. (α1258''' -> α1258''')›)››,) -> α8357_11811^9)}›
-//│ ║  l.258: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
-//│ ║         	                                                                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟──  + ‹∀ 8. {(α8355_11825^9 -> ‹∀ 9. {(α8356_11832^10 -> α8360_11829^10) where: α8355_11825^9 <: ((α8359_11828^10,) -> α8360_11829^10), α8351_11784'' <: ((‹∀ 0. ‹∀ 1. (α1257'' -> ‹∀ 2. (α1258''' -> α1258''')›)››,) -> α8357_11830^10)}›) where: α8351_11784'' <: ((‹∀ 0. ‹∀ 1. (α1257'' -> ‹∀ 2. (α1258''' -> α1258''')›)››,) -> α8357_11811^9)}›
-//│ ║  l.258: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
-//│ ║         	                                                                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟──  + ‹∀ 8. {(α8355_11825^9 -> ‹∀ 9. {(α8356_11832^10 -> α8360_11829^10) where: α8355_11825^9 <: ((α8359_11828^10,) -> α8360_11829^10), α8351_11784'' <: ((‹∀ 0. ‹∀ 1. (α1257'' -> ‹∀ 2. (α1258''' -> α1258''')›)››,) -> α8357_11830^10)}›) where: α8351_11784'' <: ((‹∀ 0. ‹∀ 1. (α1257'' -> ‹∀ 2. (α1258''' -> α1258''')›)››,) -> α8357_11811^9)}›
-//│ ╟──  + ‹∀ 8. {(α8355_11825^9 -> ‹∀ 9. {(α8356_11832^10 -> α8360_11829^10) where: α8355_11825^9 <: ((α8359_11828^10,) -> α8360_11829^10), α8351_11784'' <: ((‹∀ 0. ‹∀ 1. (α1257'' -> ‹∀ 2. (α1258''' -> α1258''')›)››,) -> α8357_11830^10)}›) where: α8351_11784'' <: ((‹∀ 0. ‹∀ 1. (α1257'' -> ‹∀ 2. (α1258''' -> α1258''')›)››,) -> α8357_11811^9)}›
-//│ ╟──  + ‹∀ 8. {(α8355_11825^9 -> ‹∀ 9. {(α8356_11832^10 -> α8360_11829^10) where: α8355_11825^9 <: ((α8359_11828^10,) -> α8360_11829^10), α8351_11784'' <: ((‹∀ 0. ‹∀ 1. (α1257'' -> ‹∀ 2. (α1258''' -> α1258''')›)››,) -> α8357_11830^10)}›) where: α8351_11784'' <: ((‹∀ 0. ‹∀ 1. (α1257'' -> ‹∀ 2. (α1258''' -> α1258''')›)››,) -> α8357_11811^9)}›
-//│ ║  l.167: 	def k2 = fun x -> fun y -> y
-//│ ║         	                           ^
-//│ ╟──  + ‹∀ 8. {(α8355_11825^9 -> ‹∀ 9. {(α8356_11832^10 -> α8360_11829^10) where: α8355_11825^9 <: ((α8359_11828^10,) -> α8360_11829^10), α8351_11784'' <: ((‹∀ 0. ‹∀ 1. (α1257'' -> ‹∀ 2. (α1258''' -> α1258''')›)››,) -> α8357_11830^10)}›) where: α8351_11784'' <: ((‹∀ 0. ‹∀ 1. (α1257'' -> ‹∀ 2. (α1258''' -> α1258''')›)››,) -> α8357_11811^9)}›
-//│ ║  l.258: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
-//│ ║         	                                                                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟──  + α8377_16842''
-//│ ║  l.258: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
-//│ ║         	                                                                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟──  - ((α8355_16656'',) -> α8358_16659'')
-//│ ║  l.258: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
-//│ ║         	                                                                                                                                                                   ^^^^^^
-//│ ╟──  - ((α8355_16656'',) -> α8358_16659'')
-//│ ║  l.258: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
-//│ ║         	                                                                                                                                                                   ^^^^
-//│ ╟──  - ((α8355_16656'',) -> α8358_16659'')
-//│ ║  l.258: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
-//│ ║         	                                                                                                                                                                   ^^^^
-//│ ╟──  - α8357_16655''
-//│ ║  l.258: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
-//│ ╙──       	                                                                                                                                                                   ^^^^
-//│ t2: (nothing -> anything) -> error
-//│   = [Function: t22]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 // (* This comment is from the ORIGINAL PAGE: *)
 // (* Factorial of three. Exposed bugs in old implementation. This one works correctly, but the generated files take up to 3.8GB, and it takes about 1 hour on a 2GHz PIII box to get the result. You can see the final judgement here. Yes, the result is the Church numeral for 6. *)
@@ -315,12 +277,14 @@ def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) 
 
 // FIXME
 t id succ 0
-//│ res: error
-//│    = 6
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 // :e // TODO try without cycle check // works with quantif extrus
 // :e // FIXME? refreshing-extr
 t2 id succ 0
+//│ ╔══[ERROR] identifier not found: t2
+//│ ║  l.323: 	t2 id succ 0
+//│ ╙──       	^^
 //│ res: error
 //│    = 6
 
@@ -353,8 +317,8 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 //│ ║  l.351: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α18801' -> α18802')›  <:  α18801_18808    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α18801' -> α18802')›  <:  α18801'
+//│ ╟── this constraint:  ‹∀ 0. (α989' -> α990')›  <:  α989_996    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α989' -> α990')›  <:  α989'
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
@@ -362,22 +326,32 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 //     * Rank 3, untypable in F2 but F3
 //       (fun f x -> f (f x)) (fun f x -> f (f x)) (fun v w -> v)
 (fun f -> fun x -> f (f x)) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
-//│ res: 'a -> 'b
-//│   where
-//│     'c <: 'a -> 'd & 'd -> 'b
-//│     'e <: 'a -> 'f & 'f -> 'b
-//│    = [Function (anonymous)]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 //     * Rank 4, alternate formulation, untypeable in F2, but F3
 //       (fun two k -> two two k)(fun f x -> f (f x)) (fun v w -> v)
 (fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
-//│ res: 'a -> 'b
-//│   where
-//│     'c <: 'a -> 'd & 'd -> 'b
-//│     'e <: 'a -> 'f & 'f -> 'b
-//│     'g <: 'a -> 'h & 'h -> 'b
-//│     'i <: 'a -> 'j & 'j -> 'b
-//│    = [Function (anonymous)]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 //     * Rank 5, causes huge blowup. Do not attempt to output skeletons !
 //       (fun two k -> two two two k)(fun f -x -> f (f x)) (fun v w -> v)
@@ -385,33 +359,17 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 // :e // due to not stashing...?
 :e // FIXME? refreshing-extr
 (fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
-//│ ╔══[ERROR] Subtyping constraint of the form `?a <: ?b -> ?c` took too many steps and ran out of fuel (5000)
-//│ ╟──  + (α20166_24135 -> α20168_24137)
-//│ ║  l.387: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
-//│ ║         	                                              ^^^^^^^^^^^^^^^^
-//│ ╟──  + {(α20166_24135 -> α20168_24137) where: α20165_22119 <: ((α20166_24135,) -> α20167_24136), α20165_22119 <: ((α20167_24136,) -> α20168_24137)}
-//│ ║  l.387: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
-//│ ║         	                                              ^^^^^^^^^^^^^^^^
-//│ ╟──  + ‹∀ 1. {(α20166_22124'' -> α20168_22126'') where: α20165_22119 <: ((α20166_22124'',) -> α20167_22125''), α20165_22119 <: ((α20167_22125'',) -> α20168_22126'')}›
-//│ ║  l.387: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
-//│ ║         	                                              ^^^^^^^^^^^^^^^^
-//│ ╟──  + ‹∀ 1. {(α20166_22124'' -> α20168_22126'') where: α20165_22119 <: ((α20166_22124'',) -> α20167_22125''), α20165_22119 <: ((α20167_22125'',) -> α20168_22126'')}›
-//│ ║  l.387: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
-//│ ║         	                                              ^^^^^^^^^^^^^^^^
-//│ ╟──  + ‹∀ 1. {(α20166_22124'' -> α20168_22126'') where: α20165_22119 <: ((α20166_22124'',) -> α20167_22125''), α20165_22119 <: ((α20167_22125'',) -> α20168_22126'')}›
-//│ ║  l.387: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
-//│ ║         	                                                          ^^^
-//│ ╟──  + ‹∀ 1. {(α20166_22124'' -> α20168_22126'') where: α20165_22119 <: ((α20166_22124'',) -> α20167_22125''), α20165_22119 <: ((α20167_22125'',) -> α20168_22126'')}›
-//│ ║  l.387: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
-//│ ║         	                                                          ^^^
-//│ ╟──  + ‹∀ 1. {(α20166_22124'' -> α20168_22126'') where: α20165_22119 <: ((α20166_22124'',) -> α20167_22125''), α20165_22119 <: ((α20167_22125'',) -> α20168_22126'')}›
-//│ ╟──  + ‹∀ 1. {(α20166_22124'' -> α20168_22126'') where: α20165_22119 <: ((α20166_22124'',) -> α20167_22125''), α20165_22119 <: ((α20167_22125'',) -> α20168_22126'')}›
-//│ ╟──  + α20165_22095
-//│ ╟──  - ((α20167_24115,) -> α20168_24116)
-//│ ║  l.387: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
-//│ ╙──       	                                                       ^^^^^^^
-//│ res: error
-//│    = [Function (anonymous)]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 
 
@@ -428,10 +386,18 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 //│ ║  l.426: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. {(α26439'' -> α26441'') where: α26433' <: ((α26440'',) -> α26441'')}›  <:  α26439_26453'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. {(α26439'' -> α26441'') where: α26433' <: ((α26440'',) -> α26441'')}›  <:  α26439''
-//│ res: error
-//│ Runtime error:
-//│   RangeError: Maximum call stack size exceeded
+//│ ╟── this constraint:  ‹∀ 1. {(α1075'' -> α1077'') where: α1069' <: ((α1076'',) -> α1077'')}›  <:  α1075_1089'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. {(α1075'' -> α1077'') where: α1069' <: ((α1076'',) -> α1077'')}›  <:  α1075''
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 

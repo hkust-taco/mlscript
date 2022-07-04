@@ -212,36 +212,45 @@ x => {l: x x, r: x }
 // * FIXME simplified type
 :e // due to tapping
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
-//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. {(α272' -> α279') where: α263 <: (‹∀ 1. {(α273'' -> α275'') where: α272' <: (α272' -> α274'')}› -> α279')}›  <:  α272_303    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. {(α272' -> α279') where: α263 <: (‹∀ 1. {(α273'' -> α275'') where: α272' <: (α272' -> α274'')}› -> α279')}›  <:  α272'
-//│ res: ((forall 'a, 'b. ('a -> 'b
-//│   where
-//│     'c <: 'c -> 'a -> 'b)) -> anything & (forall 'd, 'e. ('d -> 'e
-//│   where
-//│     'f <: 'f -> 'd -> 'e)) -> anything & (forall 'g, 'h. ('g -> 'h
-//│   where
-//│     'i <: 'i -> 'g -> 'h)) -> anything & (forall 'j, 'k. ('j -> 'k
-//│   where
-//│     'l <: 'l -> 'j -> 'k)) -> anything) -> error
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 // * Function that takes arbitrarily many arguments:
 // * FIXME type of result shouldn't be `nothing`
 :e // due to tapping
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
-//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. {(α369' -> α376') where: α360 <: (‹∀ 1. {(α370'' -> α372'') where: α369' <: (α369' -> α371'')}› -> α376')}›  <:  α369_400    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. {(α369' -> α376') where: α360 <: (‹∀ 1. {(α370'' -> α372'') where: α369' <: (α369' -> α371'')}› -> α376')}›  <:  α369'
-//│ res: error
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 // :e // due to tapping
 res 1 2
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	res 1 2
+//│ ║        	^^^^^
+//│ ╟── integer literal of type `1` is not a function
+//│ ║  l.+1: 	res 1 2
+//│ ║        	    ^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.202: 	(f => (x => f (x x)) (x => f (x x)))
+//│ ╙──       	                           ^^^^^^^
 //│ res: error
 
 
@@ -380,7 +389,7 @@ x => (y => (x (y y)))
 //│     'a <: 'x -> anything
 
 (x => (let y = (x x.v); 0))
-//│ res: (nothing -> anything & {v: anything}) -> 0
+//│ res: ('v -> anything & {v: 'v}) -> 0
 
 let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
 //│ x: 'x
@@ -411,8 +420,8 @@ let rec x = (let y = (x x); (z => z))
 //│ ║  l.+1: 	(w => x => x) ((y => y y) (y => y y))
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α726' -> α727')›  <:  α726_733    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α726' -> α727')›  <:  α726'
+//│ ╟── this constraint:  ‹∀ 0. (α614' -> α615')›  <:  α614_621    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α614' -> α615')›  <:  α614'
 //│ res: 'a -> 'a
 
 :NoCycleCheck

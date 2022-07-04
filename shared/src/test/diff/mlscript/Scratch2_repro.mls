@@ -43,24 +43,23 @@ rec def to_ch n =
   s (to_ch n)
 // rec def to_ch n =
 //   to_ch n
-//│ to_ch: anything -> anything -> nothing
-//│      = [Function: to_ch]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 :ns
 to_ch
-//│ res: forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k. forall 'to_ch, 'l, 'a, 'm, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k. 'to_ch
+//│ res: forall 'to_ch, 'a, 'b. 'to_ch
 //│   where
-//│     'to_ch :> 'l -> 'm
-//│            <: 'l -> 'a
-//│     'm :> forall 'n, 'o. 'n -> 'o
-//│        <: 'a
-//│     'a :> forall 'n, 'o. 'n -> 'o
-//│        <: 'b
-//│     'b :> forall 'n, 'o. 'n -> 'o
-//│        <: 'g -> 'h & 'e -> 'f & 'c -> 'd
-//│     'c <: 'k
-//│     'e <: 'j
-//│     'g <: 'i
+//│     'to_ch <: 'a -> 'b
 //│    = [Function: to_ch]
 
 // :d
@@ -77,7 +76,7 @@ to_ch 1 2
 // :e // fails with quantif extrus
 // :e // fails with gen lam bodies
 to_church = to_ch
-//│ anything -> anything -> nothing
+//│ nothing
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│          = [Function: to_ch]

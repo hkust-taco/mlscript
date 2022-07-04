@@ -10,28 +10,17 @@ def z: (('a -> 'b) -> (('a -> 'b) & 'c)) -> 'c
 :e // due to tapping
 def z =
   (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.12: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
-//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. {(α42'' -> α49'') where: α33' <: ((‹∀ 2. {(α43''' -> α45''') where: α42'' <: ((α42'',) -> α44''')}›,) -> α49'')}›  <:  α42_73'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. {(α42'' -> α49'') where: α33' <: ((‹∀ 2. {(α43''' -> α45''') where: α42'' <: ((α42'',) -> α44''')}›,) -> α49'')}›  <:  α42''
-//│ ((forall 'a, 'b, 'c. ('b -> 'c
-//│   where
-//│     'a <: 'a -> 'b -> 'c)) -> anything & (forall 'd, 'e, 'f. ('e -> 'f
-//│   where
-//│     'd <: 'd -> 'e -> 'f)) -> anything & (forall 'g, 'h, 'i. ('h -> 'i
-//│   where
-//│     'g <: 'g -> 'h -> 'i)) -> anything & (forall 'j, 'k, 'l. ('k -> 'l
-//│   where
-//│     'j <: 'j -> 'k -> 'l)) -> anything) -> error
-//│   <:  z:
-//│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
-//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α33_139'  <:  ((‹∀ 2. {(α43_163''' -> α45_164''') where: α42_158' <: ((α42_158',) -> α44_162''')}›,) -> α49_237')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α33'  <:  ((‹∀ 2. {(α43''' -> α45''') where: α42'' <: ((α42'',) -> α44''')}›,) -> α49_168'')
-//│  = [Function: z]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 
 def pow1 = z (fun pow0 -> fun n -> fun x ->
@@ -77,28 +66,17 @@ oops 1
 :e
 def z =
   (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.79: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
-//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. {(α346'' -> α353'') where: α337' <: ((‹∀ 2. {(α347''' -> α349''') where: α346'' <: ((α346'',) -> α348''')}›,) -> α353'')}›  <:  α346_377'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. {(α346'' -> α353'') where: α337' <: ((‹∀ 2. {(α347''' -> α349''') where: α346'' <: ((α346'',) -> α348''')}›,) -> α353'')}›  <:  α346''
-//│ ((forall 'a, 'b, 'c. ('b -> 'c
-//│   where
-//│     'a <: 'a -> 'b -> 'c)) -> anything & (forall 'd, 'e, 'f. ('e -> 'f
-//│   where
-//│     'd <: 'd -> 'e -> 'f)) -> anything & (forall 'g, 'h, 'i. ('h -> 'i
-//│   where
-//│     'g <: 'g -> 'h -> 'i)) -> anything & (forall 'j, 'k, 'l. ('k -> 'l
-//│   where
-//│     'j <: 'j -> 'k -> 'l)) -> anything) -> error
-//│   <:  z:
-//│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
-//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α337_443'  <:  ((‹∀ 2. {(α347_467''' -> α349_468''') where: α346_462' <: ((α346_462',) -> α348_466''')}›,) -> α353_545')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α337'  <:  ((‹∀ 2. {(α347''' -> α349''') where: α346'' <: ((α346'',) -> α348''')}›,) -> α353_472'')
-//│  = [Function: z1]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 :NoCycleCheck
 
@@ -107,71 +85,5 @@ def z =
 // FIXME
 def z =
   (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
-//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j. (?h -> ?g
-//│   where
-//│     ?k <: (forall ?l, ?m, ?e, ?f, ?h, ?i, ?n. (?l -> ?m
-//│   where
-//│     ?h <: ?h -> ?n)) -> ?g)) -> ?o` exceeded recursion depth limit (300)
-//│ ║  l.109: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
-//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ‹∀ 1. {(α555'' -> α562'') where: α546' <: ((‹∀ 2. {(α556''' -> α558''') where: α555'' <: ((α555'',) -> α557''')}›,) -> α562'')}›  <!<  α555_674'
-//│ ╟── while constraining:  α555_663'  <!<  α555_674'
-//│ ╟── while constraining:  (α555_663',)  <!<  (α555_674',)
-//│ ╟── while constraining:  (α555_674' -> α562_684')  <!<  ((α555_663',) -> α557_670')
-//│ ╟── while constraining:  {(α555_674' -> α562_684') where: α546' <: ((‹∀ 2. {(α556_679''' -> α558_680''') where: α555_674' <: ((α555_674',) -> α557_678''')}›,) -> α562_684')}  <!<  ((α555_663',) -> α557_670')
-//│ ╟── while constraining:  ‹∀ 1. {(α555'' -> α562'') where: α546' <: ((‹∀ 2. {(α556''' -> α558''') where: α555'' <: ((α555'',) -> α557''')}›,) -> α562'')}›  <!<  ((α555_663',) -> α557_670')
-//│ ╟── while constraining:  ‹∀ 1. {(α555'' -> α562'') where: α546' <: ((‹∀ 2. {(α556''' -> α558''') where: α555'' <: ((α555'',) -> α557''')}›,) -> α562'')}›  <!<  α555_663'
-//│ ╟── while constraining:  α555_652'  <!<  α555_663'
-//│ ╟── while constraining:  (α555_652',)  <!<  (α555_663',)
-//│ ╟── while constraining:  (α555_663' -> α562_673')  <!<  ((α555_652',) -> α557_659')
-//│ ╟── while constraining:  {(α555_663' -> α562_673') where: α546' <: ((‹∀ 2. {(α556_668''' -> α558_669''') where: α555_663' <: ((α555_663',) -> α557_667''')}›,) -> α562_673')}  <!<  ((α555_652',) -> α557_659')
-//│ ╟── while constraining:  ‹∀ 1. {(α555'' -> α562'') where: α546' <: ((‹∀ 2. {(α556''' -> α558''') where: α555'' <: ((α555'',) -> α557''')}›,) -> α562'')}›  <!<  ((α555_652',) -> α557_659')
-//│ ╟── while constraining:  ‹∀ 1. {(α555'' -> α562'') where: α546' <: ((‹∀ 2. {(α556''' -> α558''') where: α555'' <: ((α555'',) -> α557''')}›,) -> α562'')}›  <!<  α555_652'
-//│ ╟── while constraining:  α555_641'  <!<  α555_652'
-//│ ╟── while constraining:  (α555_641',)  <!<  (α555_652',)
-//│ ╟── ......
-//│ ╟── ......
-//│ ╟── while constraining:  ‹∀ 1. {(α555'' -> α562'') where: α546' <: ((‹∀ 2. {(α556''' -> α558''') where: α555'' <: ((α555'',) -> α557''')}›,) -> α562'')}›  <!<  α555_586'
-//│ ╟── while constraining:  α555_575'  <!<  α555_586'
-//│ ╟── while constraining:  (α555_575',)  <!<  (α555_586',)
-//│ ╟── while constraining:  (α555_586' -> α562_596')  <!<  ((α555_575',) -> α557_582')
-//│ ╟── while constraining:  {(α555_586' -> α562_596') where: α546' <: ((‹∀ 2. {(α556_591''' -> α558_592''') where: α555_586' <: ((α555_586',) -> α557_590''')}›,) -> α562_596')}  <!<  ((α555_575',) -> α557_582')
-//│ ╟── while constraining:  ‹∀ 1. {(α555'' -> α562'') where: α546' <: ((‹∀ 2. {(α556''' -> α558''') where: α555'' <: ((α555'',) -> α557''')}›,) -> α562'')}›  <!<  ((α555_575',) -> α557_582')
-//│ ╟── while constraining:  ‹∀ 1. {(α555'' -> α562'') where: α546' <: ((‹∀ 2. {(α556''' -> α558''') where: α555'' <: ((α555'',) -> α557''')}›,) -> α562'')}›  <!<  α555_575'
-//│ ╟── while constraining:  α547'  <!<  α555_575'
-//│ ╟── while constraining:  (α547',)  <!<  (α555_575',)
-//│ ╟── while constraining:  (α555_575' -> α562_585')  <!<  ((α547',) -> α549_551')
-//│ ╟── while constraining:  {(α555_575' -> α562_585') where: α546' <: ((‹∀ 2. {(α556_580''' -> α558_581''') where: α555_575' <: ((α555_575',) -> α557_579''')}›,) -> α562_585')}  <!<  ((α547',) -> α549_551')
-//│ ╟── while constraining:  ‹∀ 1. {(α555'' -> α562'') where: α546' <: ((‹∀ 2. {(α556''' -> α558''') where: α555'' <: ((α555'',) -> α557''')}›,) -> α562'')}›  <!<  ((α547',) -> α549_551')
-//│ ╟── while constraining:  ‹∀ 1. {(α555'' -> α562'') where: α546' <: ((‹∀ 2. {(α556''' -> α558''') where: α555'' <: ((α555'',) -> α557''')}›,) -> α562'')}›  <!<  α547'
-//│ ╟── while constraining:  (‹∀ 1. {(α555'' -> α562'') where: α546' <: ((‹∀ 2. {(α556''' -> α558''') where: α555'' <: ((α555'',) -> α557''')}›,) -> α562'')}›,)  <!<  (α547',)
-//│ ╙── while constraining:  (α547' -> α554')  <!<  ((‹∀ 1. {(α555'' -> α562'') where: α546' <: ((‹∀ 2. {(α556''' -> α558''') where: α555'' <: ((α555'',) -> α557''')}›,) -> α562'')}›,) -> α574')
-//│ ((forall 'a, 'b, 'c. ('b -> 'c
-//│   where
-//│     'a <: 'a -> 'b -> 'c)) -> anything & (forall 'd, 'e, 'f. ('e -> 'f
-//│   where
-//│     'd <: 'd -> 'e -> 'f)) -> anything & (forall 'g, 'h, 'i. ('h -> 'i
-//│   where
-//│     'g <: 'g -> 'h -> 'i)) -> anything & (forall 'j, 'k, 'l. ('k -> 'l
-//│   where
-//│     'j <: 'j -> 'k -> 'l)) -> anything & (forall 'm, 'n, 'o. ('n -> 'o
-//│   where
-//│     'm <: 'm -> 'n -> 'o)) -> anything & (forall 'p, 'q, 'r. ('q -> 'r
-//│   where
-//│     'p <: 'p -> 'q -> 'r)) -> anything & (forall 's, 't, 'u. ('t -> 'u
-//│   where
-//│     's <: 's -> 't -> 'u)) -> anything & (forall 'v, 'w, 'x. ('w -> 'x
-//│   where
-//│     'v <: 'v -> 'w -> 'x)) -> anything & (forall 'y, 'z, 'a1. ('z -> 'a1
-//│   where
-//│     'y <: 'y -> 'z -> 'a1)) -> anything & (forall 'b1, 'c1, 'd1. ('c1 -> 'd1
-//│   where
-//│     'b1 <: 'b1 -> 'c1 -> 'd1)) -> anything & (forall 'e1, 'f1, 'g1. ('f1 -> 'g1
-//│   where
-//│     'e1 <: 'e1 -> 'f1 -> 'g1)) -> anything & (forall 'h1, 'i1, 'j1. ('i1 -> 'j1
-//│   where
-//│     'h1 <: 'h1 -> 'i1 -> 'j1)) -> anything) -> error
-//│   <:  z:
-//│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 

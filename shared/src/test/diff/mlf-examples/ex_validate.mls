@@ -25,7 +25,17 @@ def cons head tail = Cons { head; tail }
 //│     'b <: 'head & 'a))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
-//│     = [Function: cons]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 class Nil[a]: List[a]
   method Head = error
@@ -146,12 +156,17 @@ def z = (choose id succ) 10
 def z = (choose succ id) 10
 //│ id: 'a -> 'a
 //│   = [Function: id]
-//│ z: 'a -> 'a | Id
-//│  = [Function: id]
-//│ z: int
-//│  = 10
-//│ z: int
-//│  = 11
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 // untype fun x -> x x
 fun x -> x x
@@ -211,12 +226,30 @@ delta_ succ
 
 // :e // FIXME? failed with genLamBodies but works with quantif extrus
 def z = delta (choose id id)
-//│ z: Id
-//│  = [Function: id]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 def z_ = delta_ (choose id id)
-//│ z_: 'a -> 'a
-//│   = [Function: id]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 // let step g = (g 1) - (g 0)
 // let apply_to_id f = f id
@@ -269,8 +302,17 @@ let t = fun x -> fun y ->
   in t id isnil
 //│ res: (bool, bool, bool, bool,)
 //│    = [ false, true, false, false ]
-//│ res: (bool, bool, bool, bool,)
-//│    = [ false, true, false, false ]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 // untype fun x y ->
 //   let isnil = (x:id) y in
@@ -283,9 +325,9 @@ fun x -> fun y ->
     (isnil (cons 1 (cons 2 (cons 3 nil))), isnil nil, isnil (cons "ok" nil), isnil (cons true nil)) 
 //│ res: Id -> anything -> (nothing, nothing, nothing, nothing,)
 //│    = [Function: res]
-//│ res: (nothing -> 'a & 'a) -> (forall 'a. ('a -> (nothing, nothing, nothing, nothing,)
+//│ res: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (nothing, nothing, nothing, nothing,)
 //│   where
-//│     'a <: nothing -> 'a))
+//│     'a <: 'b -> 'a))
 //│    = [Function: res]
 
 // (*let t1 = f delta	
@@ -295,18 +337,31 @@ fun x -> fun y ->
 // let departage x = choose id (x:id)
 def partage x = choose id x
 def departage x = choose id (x : Id)
-//│ partage: 'a -> (forall 'a, 'b. 'b -> 'b | 'a)
-//│        = [Function: partage]
-//│ departage: Id -> (forall 'a. 'a -> 'a | Id)
-//│          = [Function: departage]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 // let delta' = fun x -> (departage x) x
 // untype fun x -> partage x x
 def delta' = fun x -> (departage x) x
 def delta'_ = fun x -> (partage x) x
-//│ delta': (Id & 'a) -> 'a
+//│ ╔══[ERROR] identifier not found: departage
+//│ ║  l.305: 	def delta' = fun x -> (departage x) x
+//│ ╙──       	                       ^^^^^^^^^
+//│ delta': anything -> error
 //│       = [Function: departage]
-//│ delta'_: ('a -> 'b & 'a & 'b) -> 'b
+//│ ╔══[ERROR] identifier not found: partage
+//│ ║  l.306: 	def delta'_ = fun x -> (partage x) x
+//│ ╙──       	                        ^^^^^^^
+//│ delta'_: anything -> error
 //│        = [Function: departage]
 
 // let t = fun x -> (x:id) x, x
@@ -365,7 +420,7 @@ def ff_ = fun g ->
 //│   = [Function: aa]
 //│ ff: (forall 'b. (anything -> 'b) -> 'b) -> int
 //│   = [Function: ff]
-//│ ff_: (nothing -> anything & (Id -> Id) -> anything) -> int
+//│ ff_: ((Id -> Id) -> anything & ((8 -> int) -> int) -> anything & nothing -> anything) -> int
 //│    = [Function: ff_]
 
 // let bigtest = ff aa
@@ -394,7 +449,7 @@ def mkpair x y = (x, y)
 // (* Il faudrait que le message d'erreur soit plus clair. *)
 example mkpair
 example_ mkpair
-//│ res: int -> (‘a1024, int,)
+//│ res: int -> (‘a, int,)
 //│    = [Function (anonymous)]
 //│ res: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('b, 'c,)), 'a,)
 //│    = [Function (anonymous)]
@@ -487,13 +542,13 @@ def voyage_ f x y = (y, f x)
 //│   where
 //│     'a <: 'b -> 'c))
 //│   where
-//│     'a <: nothing -> anything))
+//│     'a <: 'b -> anything))
 //│       = [Function: voyage]
 //│ voyage_: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d -> ('d, 'c,)
 //│   where
 //│     'a <: 'b -> 'c))
 //│   where
-//│     'a <: nothing -> 'a))
+//│     'a <: 'b -> 'a))
 //│        = [Function: voyage_]
 
 // let main =
@@ -799,19 +854,24 @@ def a = fun f -> f id
 //│            = [Function: church_zero]
 //│ church_un: 'a -> 'a
 //│          = [Function: id2]
-//│ church_succ: (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ church_succ: (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. (('c -> 'a & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e))
+//│     'a <: 'b -> 'd -> 'e
+//│     'b <: 'e -> 'f))
 //│   where
-//│     'a <: nothing -> nothing -> 'a))
+//│     'a <: 'b -> nothing -> 'c))
 //│            = [Function: church_succ]
-//│ f: Sa -> Sid
-//│  = [Function: f]
-//│ f_: (nothing -> anything & (forall 'a, 'b. ('a -> 'b & 'a) -> 'b) -> 'c) -> 'c
-//│   = [Function: f_]
-//│ a: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
-//│  = [Function: a]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 // let app x y = x y
 // let test1 = f a
@@ -823,10 +883,28 @@ def test2 = app f a
 //│   where
 //│     'a <: 'b -> 'c))
 //│    = [Function: app]
-//│ test1: Sid
+//│ ╔══[ERROR] identifier not found: f
+//│ ║  l.820: 	def test1 = f a
+//│ ╙──       	            ^
+//│ ╔══[ERROR] identifier not found: a
+//│ ║  l.820: 	def test1 = f a
+//│ ╙──       	              ^
+//│ test1: error
 //│      = [Function: id2]
-//│ test2: Sid
-//│      = [Function: id2]
+//│ ╔══[ERROR] identifier not found: f
+//│ ║  l.821: 	def test2 = app f a
+//│ ╙──       	                ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 
 // (* Create occur-checks. *)
@@ -897,8 +975,8 @@ rec def id_ x = if true then x else id_ id_ x
 //│ ║  l.895: 	rec def id_ x = if true then x else id_ id_ x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α2087' -> α2093')  <:  α2092'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α2087' -> α2093')  <:  α2092'
+//│ ╟── this constraint:  (α1645' -> α1651')  <:  α1650'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α1645' -> α1651')  <:  α1650'
 //│ id_: 'id_
 //│   where
 //│     'id_ :> 'a -> 'b
@@ -920,8 +998,8 @@ rec def id x = if true then x else id id x
 //│ ║  l.918: 	rec def id x = if true then x else id id x
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α2107' -> α2113')  <:  α2112'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α2107' -> α2113')  <:  α2112'
+//│ ╟── this constraint:  (α1665' -> α1671')  <:  α1670'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α1665' -> α1671')  <:  α1670'
 //│ 'id
 //│   where
 //│     'id :> 'a -> 'b
@@ -935,8 +1013,8 @@ rec def id x = if true then x else id id x
 //│ ║  l.918: 	rec def id x = if true then x else id id x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‘a'  <:  α20_2130'    TraitTag  TypeVariable
-//│ ╙──  ... looks like:  ‘a'  <:  α20_2109'
+//│ ╟── this constraint:  ‘a'  <:  α20_1688'    TraitTag  TypeVariable
+//│ ╙──  ... looks like:  ‘a'  <:  α20_1667'
 //│   = [Function: id3]
 
 

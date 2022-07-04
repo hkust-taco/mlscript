@@ -43,25 +43,33 @@ def insert v () acu k = k () (cons v acu)
 
 // (* x  inserts "x" in the acu *)
 def x () = insert "x" ()
-//│ x: () -> (forall 'b, 'c. ((List['c] & 'c) -> (forall 'b, 'c, 'a, 'd. ((() -> List['a] -> 'd) -> 'd
-//│   where
-//│     'b <: 'a
-//│     'c <: List['a]))
-//│   where
-//│     'b <: 'c))
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 // (* We call x a 'token', in the sequence. *)
 
 // (* e  ends the sequence. It builds a token that can be inserted in another sequence or that can be printed. *)
 def e () acu = insert (concat "," acu)
-//│ e: () -> List[string] -> (forall 'b, 'c. (() -> (forall 'b, 'c. ((List['c] & 'c) -> (forall 'b, 'c, 'a, 'd. ((() -> List['a] -> 'd) -> 'd
-//│   where
-//│     'b <: 'a
-//│     'c <: List['a]))
-//│   where
-//│     'b <: 'c))
-//│   where
-//│     'b <: 'c))
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 
 // (* Prints a token *)
@@ -71,305 +79,277 @@ def print t = t () nil (fun () -> fun r -> log (concat "," r))
 // Added by me:
 // :e // FIXME? refreshing-extr
 s x x (s x x e)
-//│ res: (() -> List['a] -> 'b) -> 'b
-//│   where
-//│     'c <: 'a
-//│     'd <: List['a]
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.73: 	s x x (s x x e)
+//│ ╙──      	  ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.73: 	s x x (s x x e)
+//│ ╙──      	    ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.73: 	s x x (s x x e)
+//│ ╙──      	         ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.73: 	s x x (s x x e)
+//│ ╙──      	           ^
+//│ ╔══[ERROR] identifier not found: e
+//│ ║  l.73: 	s x x (s x x e)
+//│ ╙──      	             ^
+//│ res: error
 
 
 // :e // FIXME? refreshing-extr
 def test8  = (s x x (s x x e) x (s x x x e) e)
-//│ test8: () -> (forall 'b, 'c. ((List['c] & 'c) -> (forall 'b, 'c, 'a, 'd. ((() -> List['a] -> 'd) -> 'd
-//│   where
-//│     'b <: 'a
-//│     'c <: List['a]))
-//│   where
-//│     'b <: 'c))
-//│   where
-//│     'b <: 'c
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.81: 	def test8  = (s x x (s x x e) x (s x x x e) e)
+//│ ╙──      	                ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.81: 	def test8  = (s x x (s x x e) x (s x x x e) e)
+//│ ╙──      	                  ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.81: 	def test8  = (s x x (s x x e) x (s x x x e) e)
+//│ ╙──      	                       ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.81: 	def test8  = (s x x (s x x e) x (s x x x e) e)
+//│ ╙──      	                         ^
+//│ ╔══[ERROR] identifier not found: e
+//│ ║  l.81: 	def test8  = (s x x (s x x e) x (s x x x e) e)
+//│ ╙──      	                           ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.81: 	def test8  = (s x x (s x x e) x (s x x x e) e)
+//│ ╙──      	                              ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.81: 	def test8  = (s x x (s x x e) x (s x x x e) e)
+//│ ╙──      	                                   ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.81: 	def test8  = (s x x (s x x e) x (s x x x e) e)
+//│ ╙──      	                                     ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.81: 	def test8  = (s x x (s x x e) x (s x x x e) e)
+//│ ╙──      	                                       ^
+//│ ╔══[ERROR] identifier not found: e
+//│ ║  l.81: 	def test8  = (s x x (s x x e) x (s x x x e) e)
+//│ ╙──      	                                         ^
+//│ ╔══[ERROR] identifier not found: e
+//│ ║  l.81: 	def test8  = (s x x (s x x e) x (s x x x e) e)
+//│ ╙──      	                                            ^
+//│ test8: error
 
 print test8
+//│ res: error
 
 
 :e // FIXME? refreshing-extr
 def test14 = (s x x x x x x x x x x x x x x e)
-//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b. () -> ?b) -> ?c` took too many steps and ran out of fuel (5000)
+//│ ╔══[ERROR] identifier not found: x
 //│ ║  l.95: 	def test14 = (s x x x x x x x x x x x x x x e)
-//│ ║        	              ^^^^^^^^^^^^^^^
-//│ ╟──  + "x"<string>
-//│ ║  l.45: 	def x () = insert "x" ()
-//│ ║        	                  ^^^
-//│ ╟──  + "x"<string>
-//│ ║  l.45: 	def x () = insert "x" ()
-//│ ║        	                  ^^^
-//│ ╟──  + "x"<string>
-//│ ║  l.45: 	def x () = insert "x" ()
-//│ ║        	                  ^^^
-//│ ╟──  + "x"<string>
-//│ ║  l.45: 	def x () = insert "x" ()
-//│ ║        	                  ^^^
-//│ ╟──  + "x"<string>
-//│ ╟──  + "x"<string>
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                                 ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                     ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                                 ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                     ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                                 ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                     ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                                 ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                     ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                                 ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                     ^^
-//│ ╟──  + 'a27_1078'
-//│ ╟──  + 'a27_1078'
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                                 ^^
-//│ ╟──  - 'a27_1097'
-//│ ╟──  - 'a27_1097'
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ╙──      	                     ^^
+//│ ╙──      	                ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.95: 	def test14 = (s x x x x x x x x x x x x x x e)
+//│ ╙──      	                  ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.95: 	def test14 = (s x x x x x x x x x x x x x x e)
+//│ ╙──      	                    ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.95: 	def test14 = (s x x x x x x x x x x x x x x e)
+//│ ╙──      	                      ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.95: 	def test14 = (s x x x x x x x x x x x x x x e)
+//│ ╙──      	                        ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.95: 	def test14 = (s x x x x x x x x x x x x x x e)
+//│ ╙──      	                          ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.95: 	def test14 = (s x x x x x x x x x x x x x x e)
+//│ ╙──      	                            ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.95: 	def test14 = (s x x x x x x x x x x x x x x e)
+//│ ╙──      	                              ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.95: 	def test14 = (s x x x x x x x x x x x x x x e)
+//│ ╙──      	                                ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.95: 	def test14 = (s x x x x x x x x x x x x x x e)
+//│ ╙──      	                                  ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.95: 	def test14 = (s x x x x x x x x x x x x x x e)
+//│ ╙──      	                                    ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.95: 	def test14 = (s x x x x x x x x x x x x x x e)
+//│ ╙──      	                                      ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.95: 	def test14 = (s x x x x x x x x x x x x x x e)
+//│ ╙──      	                                        ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.95: 	def test14 = (s x x x x x x x x x x x x x x e)
+//│ ╙──      	                                          ^
+//│ ╔══[ERROR] identifier not found: e
+//│ ║  l.95: 	def test14 = (s x x x x x x x x x x x x x x e)
+//│ ╙──      	                                            ^
 //│ test14: error
 
 :e // FIXME? refreshing-extr
 def test16 = (s x x x x x x x x x x x x x x x x e)
-//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b. () -> ?b) -> ?c` took too many steps and ran out of fuel (5000)
+//│ ╔══[ERROR] identifier not found: x
 //│ ║  l.154: 	def test16 = (s x x x x x x x x x x x x x x x x e)
-//│ ║         	              ^^^^^^^^^^^^^^^
-//│ ╟──  + "x"<string>
-//│ ║  l.45: 	def x () = insert "x" ()
-//│ ║        	                  ^^^
-//│ ╟──  + "x"<string>
-//│ ║  l.45: 	def x () = insert "x" ()
-//│ ║        	                  ^^^
-//│ ╟──  + "x"<string>
-//│ ║  l.45: 	def x () = insert "x" ()
-//│ ║        	                  ^^^
-//│ ╟──  + "x"<string>
-//│ ║  l.45: 	def x () = insert "x" ()
-//│ ║        	                  ^^^
-//│ ╟──  + "x"<string>
-//│ ╟──  + "x"<string>
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                                 ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                     ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                                 ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                     ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                                 ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                     ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                                 ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                     ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                                 ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                     ^^
-//│ ╟──  + 'a27_1387'
-//│ ╟──  + 'a27_1387'
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                                 ^^
-//│ ╟──  - 'a27_1406'
-//│ ╟──  - 'a27_1406'
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ╙──      	                     ^^
+//│ ╙──       	                ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.154: 	def test16 = (s x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                  ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.154: 	def test16 = (s x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                    ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.154: 	def test16 = (s x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                      ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.154: 	def test16 = (s x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                        ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.154: 	def test16 = (s x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                          ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.154: 	def test16 = (s x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                            ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.154: 	def test16 = (s x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                              ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.154: 	def test16 = (s x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                                ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.154: 	def test16 = (s x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                                  ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.154: 	def test16 = (s x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                                    ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.154: 	def test16 = (s x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                                      ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.154: 	def test16 = (s x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                                        ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.154: 	def test16 = (s x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                                          ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.154: 	def test16 = (s x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                                            ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.154: 	def test16 = (s x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                                              ^
+//│ ╔══[ERROR] identifier not found: e
+//│ ║  l.154: 	def test16 = (s x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                                                ^
 //│ test16: error
 
 // (* This is too much for the type-checker. *)
 :e // FIXME? refreshing-extr
 def test18 = (s x x x x x x x x x x x x x x x x x x e)
-//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b. () -> ?b) -> ?c` took too many steps and ran out of fuel (5000)
+//│ ╔══[ERROR] identifier not found: x
 //│ ║  l.214: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
-//│ ║         	              ^^^^^^^^^^^^^^^
-//│ ╟──  + "x"<string>
-//│ ║  l.45: 	def x () = insert "x" ()
-//│ ║        	                  ^^^
-//│ ╟──  + "x"<string>
-//│ ║  l.45: 	def x () = insert "x" ()
-//│ ║        	                  ^^^
-//│ ╟──  + "x"<string>
-//│ ║  l.45: 	def x () = insert "x" ()
-//│ ║        	                  ^^^
-//│ ╟──  + "x"<string>
-//│ ║  l.45: 	def x () = insert "x" ()
-//│ ║        	                  ^^^
-//│ ╟──  + "x"<string>
-//│ ╟──  + "x"<string>
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                                 ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                     ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                                 ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                     ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                                 ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                     ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                                 ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                     ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                                 ^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                     ^^
-//│ ╟──  + 'a27_1698'
-//│ ╟──  + 'a27_1698'
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                                 ^^
-//│ ╟──  - 'a27_1717'
-//│ ╟──  - 'a27_1717'
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ╙──      	                     ^^
+//│ ╙──       	                ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.214: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                  ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.214: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                    ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.214: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                      ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.214: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                        ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.214: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                          ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.214: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                            ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.214: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                              ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.214: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                                ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.214: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                                  ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.214: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                                    ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.214: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                                      ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.214: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                                        ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.214: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                                          ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.214: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                                            ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.214: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                                              ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.214: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                                                ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.214: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                                                  ^
+//│ ╔══[ERROR] identifier not found: e
+//│ ║  l.214: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ ╙──       	                                                    ^
 //│ test18: error
 
 
 // (* A function that receives a token *)
 def f t = (s x x t x x e)
-//│ f: (() -> List["x"] -> (() -> (forall 'b, 'c, 'd. ((List['c] & 'd) -> (forall 'b, 'd, 'a, 'e. ((() -> List['a] -> 'e) -> 'e
-//│   where
-//│     'b <: 'a
-//│     'd <: List['a]))
-//│   where
-//│     'b <: 'c))) -> (() -> (forall 'b, 'c, 'd. ((List['c] & 'd) -> (forall 'b, 'd, 'a, 'e. ((() -> List['a] -> 'e) -> 'e
-//│   where
-//│     'b <: 'a
-//│     'd <: List['a]))
-//│   where
-//│     'b <: 'c))) -> (() -> List[string] -> (forall 'c, 'f. (() -> (forall 'c, 'f. ((List['c] & 'c) -> (forall 'c, 'f, 'a0, 'g. ((() -> List['a0] -> 'g) -> 'g
-//│   where
-//│     'f <: 'a0
-//│     'c <: List['a0]))
-//│   where
-//│     'f <: 'c))
-//│   where
-//│     'f <: 'c))) -> 'h) -> 'h
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.274: 	def f t = (s x x t x x e)
+//│ ╙──       	             ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.274: 	def f t = (s x x t x x e)
+//│ ╙──       	               ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.274: 	def f t = (s x x t x x e)
+//│ ╙──       	                   ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.274: 	def f t = (s x x t x x e)
+//│ ╙──       	                     ^
+//│ ╔══[ERROR] identifier not found: e
+//│ ║  l.274: 	def f t = (s x x t x x e)
+//│ ╙──       	                       ^
+//│ f: anything -> error
 
 // (* If the token is used twice, we must reveive two arguments *)
 def g t1 t2 = (s x x t1 x (s x t2 x e) e)
-//│ g: (() -> List["x"] -> (() -> (forall 'b, 'c, 'd. ((List['c] & 'd) -> (forall 'b, 'd, 'a, 'e. ((() -> List['a] -> 'e) -> 'e
-//│   where
-//│     'b <: 'a
-//│     'd <: List['a]))
-//│   where
-//│     'b <: 'c))) -> nothing -> (() -> List[string] -> (forall 'c, 'f. (() -> (forall 'c, 'f. ((List['c] & 'c) -> (forall 'c, 'f, 'a0, 'g. ((() -> List['a0] -> 'g) -> 'g
-//│   where
-//│     'f <: 'a0
-//│     'c <: List['a0]))
-//│   where
-//│     'f <: 'c))
-//│   where
-//│     'f <: 'c))) -> 'c & 'h) -> (forall 'h. ((() -> List["x"] -> (() -> (forall 'b, 'c, 'd. ((List['c] & 'd) -> (forall 'b, 'd, 'a, 'e. ((() -> List['a] -> 'e) -> 'e
-//│   where
-//│     'b <: 'a
-//│     'd <: List['a]))
-//│   where
-//│     'b <: 'c))) -> (() -> List[string] -> (forall 'c, 'f. (() -> (forall 'c, 'f. ((List['c] & 'c) -> (forall 'c, 'f, 'a0, 'g. ((() -> List['a0] -> 'g) -> 'g
-//│   where
-//│     'f <: 'a0
-//│     'c <: List['a0]))
-//│   where
-//│     'f <: 'c))
-//│   where
-//│     'f <: 'c))) -> 'i) -> 'j
-//│   where
-//│     'h <: () -> List["x"] -> (() -> (forall 'b, 'c, 'd. ((List['c] & 'd) -> (forall 'b, 'd, 'a, 'e. ((() -> List['a] -> 'e) -> 'e
-//│   where
-//│     'b <: 'a
-//│     'd <: List['a]))
-//│   where
-//│     'b <: 'c))) -> 'i -> (() -> List[string] -> (forall 'c, 'f. (() -> (forall 'c, 'f. ((List['c] & 'c) -> (forall 'c, 'f, 'a0, 'g. ((() -> List['a0] -> 'g) -> 'g
-//│   where
-//│     'f <: 'a0
-//│     'c <: List['a0]))
-//│   where
-//│     'f <: 'c))
-//│   where
-//│     'f <: 'c))) -> 'j))
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.295: 	def g t1 t2 = (s x x t1 x (s x t2 x e) e)
+//│ ╙──       	                 ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.295: 	def g t1 t2 = (s x x t1 x (s x t2 x e) e)
+//│ ╙──       	                   ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.295: 	def g t1 t2 = (s x x t1 x (s x t2 x e) e)
+//│ ╙──       	                        ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.295: 	def g t1 t2 = (s x x t1 x (s x t2 x e) e)
+//│ ╙──       	                             ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.295: 	def g t1 t2 = (s x x t1 x (s x t2 x e) e)
+//│ ╙──       	                                  ^
+//│ ╔══[ERROR] identifier not found: e
+//│ ║  l.295: 	def g t1 t2 = (s x x t1 x (s x t2 x e) e)
+//│ ╙──       	                                    ^
+//│ ╔══[ERROR] identifier not found: e
+//│ ║  l.295: 	def g t1 t2 = (s x x t1 x (s x t2 x e) e)
+//│ ╙──       	                                       ^
+//│ g: anything -> anything -> error
 
 // (* This does not type. It requires first-class polymorphism. *)
 def h t = g t t
-//│ h: (() -> List["x"] -> (() -> (forall 'b, 'c, 'd. ((List['c] & 'd) -> (forall 'b, 'd, 'a, 'e. ((() -> List['a] -> 'e) -> 'e
-//│   where
-//│     'b <: 'a
-//│     'd <: List['a]))
-//│   where
-//│     'b <: 'c))) -> (() -> List[string] -> (forall 'c, 'f. (() -> (forall 'c, 'f. ((List['c] & 'c) -> (forall 'c, 'f, 'a0, 'g. ((() -> List['a0] -> 'g) -> 'g
-//│   where
-//│     'f <: 'a0
-//│     'c <: List['a0]))
-//│   where
-//│     'f <: 'c))
-//│   where
-//│     'f <: 'c))) -> 'h & () -> List["x"] -> (() -> (forall 'b, 'c, 'd. ((List['c] & 'd) -> (forall 'b, 'd, 'a, 'e. ((() -> List['a] -> 'e) -> 'e
-//│   where
-//│     'b <: 'a
-//│     'd <: List['a]))
-//│   where
-//│     'b <: 'c))) -> nothing -> (() -> List[string] -> (forall 'c, 'f. (() -> (forall 'c, 'f. ((List['c] & 'c) -> (forall 'c, 'f, 'a0, 'g. ((() -> List['a0] -> 'g) -> 'g
-//│   where
-//│     'f <: 'a0
-//│     'c <: List['a0]))
-//│   where
-//│     'f <: 'c))
-//│   where
-//│     'f <: 'c))) -> 'c & () -> List["x"] -> (() -> (forall 'b, 'c, 'd. ((List['c] & 'd) -> (forall 'b, 'd, 'a, 'e. ((() -> List['a] -> 'e) -> 'e
-//│   where
-//│     'b <: 'a
-//│     'd <: List['a]))
-//│   where
-//│     'b <: 'c))) -> 'h -> (() -> List[string] -> (forall 'c, 'f. (() -> (forall 'c, 'f. ((List['c] & 'c) -> (forall 'c, 'f, 'a0, 'g. ((() -> List['a0] -> 'g) -> 'g
-//│   where
-//│     'f <: 'a0
-//│     'c <: List['a0]))
-//│   where
-//│     'f <: 'c))
-//│   where
-//│     'f <: 'c))) -> 'i) -> 'i
+//│ h: anything -> error
 

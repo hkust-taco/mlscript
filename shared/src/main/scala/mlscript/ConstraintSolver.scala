@@ -476,7 +476,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 cache -= lhs -> rhs
                 ()
               } else {
-                // ???
+                ???
                 // val rhs2 = PolymorphicType.mk(lhs.level, {
                 //   implicit val flexifyRigids: Bool = true
                 //   // extrude(rhs, lhs.level, false, MaxLevel)
@@ -522,7 +522,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 cache -= lhs -> rhs
                 ()
               } else {
-                // ???
+                ???
                 // val lhs = extrude(lhs0, rhs.level, true, MaxLevel)
                 val lhs2 = { // TODO make into existential...
                   implicit val flexifyRigids: Bool = false
@@ -711,7 +711,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               // trace(s"UNSTASHING...") {
               trace(s"UNSTASHING...") {
                 implicit val ctx: Ctx = oldCtx
-                ec.foreach { case (tv, bs) => 
+                freshenExtrCtx(ctx.lvl, ec).foreach { case (tv, bs) => 
                   println(s"where($tv) ${tv.showBounds}")
                   bs.foreach {
                   case (true, b) => println(s"UNSTASH ${b} <: $tv where ${b.showBounds}"); rec(b, tv, false)
@@ -1154,6 +1154,19 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }}
     // (r => s"=> $r"))
     freshenImpl(ty, below)
+  }
+  def freshenExtrCtx(above: Int, ec: ExtrCtx, rigidify: Bool = false, below: Int = MaxLevel)
+      (implicit ctx:Ctx, //freshened: MutMap[TV, ST],
+        raise:Raise,
+        shadows: Shadows,
+        ): ExtrCtx = {
+    implicit val state = MutMap.empty[TV, ST]
+    ec.map {
+      case (tv, buff) =>
+        freshenAbove(above, tv, rigidify, below)
+            .asInstanceOf[TV] -> // FIXME
+          buff.map(_.mapSecond(freshenAbove(above, _, rigidify, below)))
+    }
   }
   
   

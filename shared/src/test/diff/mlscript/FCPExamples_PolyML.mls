@@ -93,10 +93,17 @@ rec def fl f x l = match_list l x (fun head -> fun tail -> fl f (f x head) tail)
 //│ fl: ('b -> 'a -> 'b) -> 'b -> List['a] -> 'b
 
 rec def fl2 f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
-//│ fl2: ('a -> nothing -> 'a & nothing -> nothing -> 'c & 'a0 -> nothing -> 'a0 & 'a1 -> nothing -> 'a1 & 'a2 -> nothing -> 'a2 & 'a3 -> nothing -> 'a3 & 'a4 -> nothing -> 'a4 & 'a5 -> nothing -> 'a5 & 'a6 -> nothing -> 'a6 & 'a7 -> nothing -> 'a7 & 'a8 -> nothing -> 'a8 & 'a9 -> nothing -> 'a9 & 'a10 -> nothing -> 'a10 & 'c) -> (forall 'd. 'd -> (forall 'c, 'd, 'a11, 'a12, 'a13, 'a14, 'b, 'e. (List['b] -> 'e
-//│   where
-//│     'c <: 'a11 -> nothing -> 'a11 & nothing -> nothing -> 'c & 'a12 -> nothing -> 'a12 & 'a13 -> nothing -> 'a13 & 'a14 -> 'b -> ('a14 & 'e) & 'd -> 'b -> ('a14 & 'e)
-//│     'd <: 'e)))
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 :RecursiveTypes // needed for this recursive def
 def fold_left = fl
@@ -107,10 +114,7 @@ def fold_left = fl
 
 // :e // FIXME? refreshing-extr
 def fold_left = fl2
-//│ ('a -> nothing -> 'a & nothing -> nothing -> 'c & 'a0 -> nothing -> 'a0 & 'a1 -> nothing -> 'a1 & 'a2 -> nothing -> 'a2 & 'a3 -> nothing -> 'a3 & 'a4 -> nothing -> 'a4 & 'a5 -> nothing -> 'a5 & 'a6 -> nothing -> 'a6 & 'a7 -> nothing -> 'a7 & 'a8 -> nothing -> 'a8 & 'a9 -> nothing -> 'a9 & 'a10 -> nothing -> 'a10 & 'c) -> (forall 'd. 'd -> (forall 'c, 'd, 'a11, 'a12, 'a13, 'a14, 'b, 'e. (List['b] -> 'e
-//│   where
-//│     'c <: 'a11 -> nothing -> 'a11 & nothing -> nothing -> 'c & 'a12 -> nothing -> 'a12 & 'a13 -> nothing -> 'a13 & 'a14 -> 'b -> ('a14 & 'e) & 'd -> 'b -> ('a14 & 'e)
-//│     'd <: 'e)))
+//│ nothing
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 
@@ -139,14 +143,23 @@ def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> cons x y) nil in
   let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
   (l1, l2)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α1688_1730''', α1688_1730''',)  <:  α137_1729'''    TupleType  TypeVariable
-//│ ╙──  ... looks like:  (α1688_1713''', α1688_1713''',)  <:  α137_1712'''
-//│ simple_and_double: Collection[?] -> (List[nothing], error,)
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 simple_and_double (Collection{l = cons 1 nil})
-//│ res: (List[nothing], error,)
+//│ ╔══[ERROR] identifier not found: simple_and_double
+//│ ║  l.148: 	simple_and_double (Collection{l = cons 1 nil})
+//│ ╙──       	^^^^^^^^^^^^^^^^^
+//│ res: error
 
 // ------------ subtyping & methods ------------
 

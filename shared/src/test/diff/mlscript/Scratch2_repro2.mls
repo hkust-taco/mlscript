@@ -6,12 +6,12 @@ def s n = fun f -> fun x -> f (n f x)
 // def s n = fun f -> fun x -> (n f x)
 // def s n = fun f -> n f
 // def s n = n
-//│ s: (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b. ((nothing -> 'a & 'b) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ s: (nothing -> nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. (('c -> 'a & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('d -> 'f
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e))
+//│     'a <: 'b -> 'd -> 'e
+//│     'b <: 'e -> 'f))
 //│   where
-//│     'a <: nothing -> nothing -> 'a))
+//│     'a <: 'b -> nothing -> 'c))
 //│  = [Function: s]
 
 // type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -27,32 +27,24 @@ type ChI = (forall 'M. ('M -> 'M) -> ('M -> 'M))
 
 :ns
 sz = s zero
-//│ sz: forall 'a, 'b. 'a
-//│   where
-//│     'a :> 'c -> ('d -> 'e
-//│   where
-//│     'b <: 'c -> 'f
-//│     'c <: 'g -> 'e)
-//│   where
-//│     'b <: 'h -> 'i
-//│     'i <: 'j -> 'k
-//│     'f <: 'd -> 'g
-//│     'c <: 'l -> 'm & 'n -> 'o
-//│   = <no result>
-//│     zero is not implemented
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 // Note: the error is delayed...
 :e // due to tapping
 sz1 = sz 1
-//│ ╔══[ERROR] Type mismatch in application:
+//│ ╔══[ERROR] identifier not found: sz
 //│ ║  l.46: 	sz1 = sz 1
-//│ ║        	      ^^^^
-//│ ╟── integer literal of type `1` is not a function
-//│ ║  l.46: 	sz1 = sz 1
-//│ ║        	         ^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.5: 	def s n = fun f -> fun x -> f (n f x)
-//│ ╙──     	                            ^^^^^^^^^
+//│ ╙──      	      ^^
 //│ sz1: error
 //│    = <no result>
 //│      sz and zero are not implemented
@@ -65,33 +57,33 @@ sz1 2
 
 :e // due to tapping
 sz true
-//│ ╔══[ERROR] Type mismatch in application:
+//│ ╔══[ERROR] identifier not found: sz
 //│ ║  l.67: 	sz true
-//│ ║        	^^^^^^^
-//│ ╟── reference of type `true` is not a function
-//│ ║  l.67: 	sz true
-//│ ║        	   ^^^^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.5: 	def s n = fun f -> fun x -> f (n f x)
-//│ ╙──     	                            ^^^^^^^^^
+//│ ╙──      	^^
 //│ res: error
 //│    = <no result>
 //│      sz and zero are not implemented
 
 sz: ChI
+//│ ╔══[ERROR] identifier not found: sz
+//│ ║  l.81: 	sz: ChI
+//│ ╙──      	^^
 //│ res: ChI
 //│    = <no result>
 //│      sz and zero are not implemented
 
 s zero
-//│ res: (nothing -> anything & 'a) -> (forall 'a, 'b, 'c, 'd. ('b -> 'd
-//│   where
-//│     'e <: 'a -> 'b -> 'c
-//│     'a <: 'c -> 'd))
-//│   where
-//│     'e <: nothing -> nothing -> anything
-//│    = <no result>
-//│      zero is not implemented
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 // :e // works with quantif extrus
 // :e // due to tapping
@@ -100,16 +92,32 @@ res: ChI
 //│    = [Function: s]
 
 let tmp = s zero in tmp: ChI
-//│ res: ChI
-//│    = <no result>
-//│      zero is not implemented
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 // FIXedME:
 // :d
 s zero : ChI
-//│ res: ChI
-//│    = <no result>
-//│      zero is not implemented
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65(ConstraintSolver.scala:479)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$65$adapted(ConstraintSolver.scala:449)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:101)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$62(ConstraintSolver.scala:449)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:408)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:391)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:901)
 
 
 
