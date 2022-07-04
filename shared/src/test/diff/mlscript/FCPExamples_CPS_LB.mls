@@ -96,10 +96,11 @@ def print t = t () nil (fun () -> fun r -> log (concat "," r))
 //│     'a <: () -> List[nothing] -> (() -> List[string] -> unit) -> 'b))
 
 // Added by me:
+:e // FIXME? refreshing-extr
 s x x (s x x e)
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: ?b -> ?c` took too many steps and ran out of fuel (5000)
-//│ ║  l.99: 	s x x (s x x e)
-//│ ║        	^^^^^^^^^^^^^^^
+//│ ║  l.100: 	s x x (s x x e)
+//│ ║         	^^^^^^^^^^^^^^^
 //│ ╟──  + List['a27_4124]
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ║        	                            ^^^^^^^^
@@ -126,35 +127,36 @@ s x x (s x x e)
 //│ res: error
 
 
+:e // FIXME? refreshing-extr
 def test8  = (s x x (s x x e) x (s x x x e) e)
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: ?b -> ?c` took too many steps and ran out of fuel (5000)
-//│ ║  l.129: 	def test8  = (s x x (s x x e) x (s x x x e) e)
+//│ ║  l.131: 	def test8  = (s x x (s x x e) x (s x x x e) e)
 //│ ║         	              ^^^^^^^^^^^^^^^
-//│ ╟──  + List['a27_10759']
+//│ ╟──  + List['a27_13098']
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ║        	                            ^^^^^^^^
-//│ ╟──  + List['a27_10759']
+//│ ╟──  + List['a27_13098']
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ║        	                            ^^^^^^^^
-//│ ╟──  + List['a27_10759']
+//│ ╟──  + List['a27_13098']
 //│ ║  l.36: 	def insert v () acu k = k () (cons v acu)
 //│ ║        	                              ^^^^^^^^^^
-//│ ╟──  + α54_10758'
+//│ ╟──  + α54_13097'
 //│ ║  l.36: 	def insert v () acu k = k () (cons v acu)
 //│ ║        	                              ^^^^^^^^^^
-//│ ╟──  - List['a27_12569']
+//│ ╟──  - List['a27_14908']
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ║        	                ^^^^^^^^
-//│ ╟──  - List['a27_12569']
+//│ ╟──  - List['a27_14908']
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ║        	                ^^^^^^^^
-//│ ╟──  - List['a27_12569']
+//│ ╟──  - List['a27_14908']
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ║        	                ^^^^^^^^
-//│ ╟──  - List['a27_12569']
-//│ ╙──  - α49_12564'
+//│ ╟──  - List['a27_14908']
+//│ ╙──  - α49_14903'
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (() -> (forall ?b. ?b -> (forall ?c. ?c))) -> ?d` took too many steps and ran out of fuel (5000)
-//│ ║  l.129: 	def test8  = (s x x (s x x e) x (s x x x e) e)
+//│ ║  l.131: 	def test8  = (s x x (s x x e) x (s x x x e) e)
 //│ ║         	                                 ^^^^^^^^^
 //│ ╟──  + "x"<string>
 //│ ║  l.55: 	def x () = insert "x" ()
@@ -170,12 +172,12 @@ def test8  = (s x x (s x x e) x (s x x x e) e)
 //│ ╟──  + "x"<string>
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ║        	                     ^^
-//│ ╟──  + 'a27_18378'
-//│ ╟──  + 'a27_18378'
+//│ ╟──  + 'a27_23056'
+//│ ╟──  + 'a27_23056'
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ║        	                                 ^^
-//│ ╟──  - 'a27_18559'
-//│ ╟──  - 'a27_18559'
+//│ ╟──  - 'a27_23237'
+//│ ╟──  - 'a27_23237'
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ╙──      	                     ^^
 //│ test8: error
@@ -186,36 +188,37 @@ print test8
 //│     'b <: () -> List[nothing] -> (() -> List[string] -> unit) -> 'a
 
 
+:e // FIXME? refreshing-extr
 def test14 = (s x x x x x x x x x x x x x x e)
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (() -> (forall ?b. ?b)) -> ?c` took too many steps and ran out of fuel (5000)
-//│ ║  l.189: 	def test14 = (s x x x x x x x x x x x x x x e)
+//│ ║  l.192: 	def test14 = (s x x x x x x x x x x x x x x e)
 //│ ║         	              ^^^^^^^^^
-//│ ╟──  + List['a27_24067']
+//│ ╟──  + List['a27_31115']
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ║        	                            ^^^^^^^^
-//│ ╟──  + List['a27_24067']
+//│ ╟──  + List['a27_31115']
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ║        	                            ^^^^^^^^
-//│ ╟──  + List['a27_24067']
+//│ ╟──  + List['a27_31115']
 //│ ║  l.36: 	def insert v () acu k = k () (cons v acu)
 //│ ║        	                              ^^^^^^^^^^
-//│ ╟──  + α54_24066'
+//│ ╟──  + α54_31114'
 //│ ║  l.36: 	def insert v () acu k = k () (cons v acu)
 //│ ║        	                              ^^^^^^^^^^
-//│ ╙──  - α49_25167'
+//│ ╙──  - α49_32215'
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (() -> (forall ?b. ?b)) -> ?c` took too many steps and ran out of fuel (5000)
-//│ ║  l.189: 	def test14 = (s x x x x x x x x x x x x x x e)
+//│ ║  l.192: 	def test14 = (s x x x x x x x x x x x x x x e)
 //│ ║         	              ^^^^^^^^^^^
-//│ ╟──  + 'a27_26498'
-//│ ╟──  + 'a27_26498'
+//│ ╟──  + 'a27_36918'
+//│ ╟──  + 'a27_36918'
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ║        	                                 ^^
-//│ ╟──  - 'a27_26656'
-//│ ╟──  - 'a27_26656'
+//│ ╟──  - 'a27_37076'
+//│ ╟──  - 'a27_37076'
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ╙──      	                     ^^
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (() -> (forall ?b. ?b)) -> ?c` took too many steps and ran out of fuel (5000)
-//│ ║  l.189: 	def test14 = (s x x x x x x x x x x x x x x e)
+//│ ║  l.192: 	def test14 = (s x x x x x x x x x x x x x x e)
 //│ ║         	              ^^^^^^^^^^^^^
 //│ ╟──  + "x"<string>
 //│ ║  l.55: 	def x () = insert "x" ()
@@ -243,46 +246,47 @@ def test14 = (s x x x x x x x x x x x x x x e)
 //│ ╟──  + "x"<string>
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ║        	                     ^^
-//│ ╟──  + 'a27_26716'
-//│ ╟──  + 'a27_26716'
+//│ ╟──  + 'a27_39439'
+//│ ╟──  + 'a27_39439'
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ║        	                                 ^^
-//│ ╟──  - 'a27_26834'
-//│ ╟──  - 'a27_26834'
+//│ ╟──  - 'a27_39557'
+//│ ╟──  - 'a27_39557'
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ╙──      	                     ^^
 //│ test14: error
 
+:e // FIXME? refreshing-extr
 def test16 = (s x x x x x x x x x x x x x x x x e)
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (() -> (forall ?b. ?b)) -> ?c` took too many steps and ran out of fuel (5000)
-//│ ║  l.256: 	def test16 = (s x x x x x x x x x x x x x x x x e)
+//│ ║  l.260: 	def test16 = (s x x x x x x x x x x x x x x x x e)
 //│ ║         	              ^^^^^^^^^
-//│ ╟──  + List['a27_32336']
+//│ ╟──  + List['a27_45784']
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ║        	                            ^^^^^^^^
-//│ ╟──  + List['a27_32336']
+//│ ╟──  + List['a27_45784']
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ║        	                            ^^^^^^^^
-//│ ╟──  + List['a27_32336']
+//│ ╟──  + List['a27_45784']
 //│ ║  l.36: 	def insert v () acu k = k () (cons v acu)
 //│ ║        	                              ^^^^^^^^^^
-//│ ╟──  + α54_32335'
+//│ ╟──  + α54_45783'
 //│ ║  l.36: 	def insert v () acu k = k () (cons v acu)
 //│ ║        	                              ^^^^^^^^^^
-//│ ╙──  - α49_33436'
+//│ ╙──  - α49_46884'
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (() -> (forall ?b. ?b)) -> ?c` took too many steps and ran out of fuel (5000)
-//│ ║  l.256: 	def test16 = (s x x x x x x x x x x x x x x x x e)
+//│ ║  l.260: 	def test16 = (s x x x x x x x x x x x x x x x x e)
 //│ ║         	              ^^^^^^^^^^^
-//│ ╟──  + 'a27_34767'
-//│ ╟──  + 'a27_34767'
+//│ ╟──  + 'a27_51587'
+//│ ╟──  + 'a27_51587'
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ║        	                                 ^^
-//│ ╟──  - 'a27_34925'
-//│ ╟──  - 'a27_34925'
+//│ ╟──  - 'a27_51745'
+//│ ╟──  - 'a27_51745'
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ╙──      	                     ^^
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (() -> (forall ?b. ?b)) -> ?c` took too many steps and ran out of fuel (5000)
-//│ ║  l.256: 	def test16 = (s x x x x x x x x x x x x x x x x e)
+//│ ║  l.260: 	def test16 = (s x x x x x x x x x x x x x x x x e)
 //│ ║         	              ^^^^^^^^^^^^^
 //│ ╟──  + "x"<string>
 //│ ║  l.55: 	def x () = insert "x" ()
@@ -310,47 +314,48 @@ def test16 = (s x x x x x x x x x x x x x x x x e)
 //│ ╟──  + "x"<string>
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ║        	                     ^^
-//│ ╟──  + 'a27_34985'
-//│ ╟──  + 'a27_34985'
+//│ ╟──  + 'a27_54108'
+//│ ╟──  + 'a27_54108'
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ║        	                                 ^^
-//│ ╟──  - 'a27_35103'
-//│ ╟──  - 'a27_35103'
+//│ ╟──  - 'a27_54226'
+//│ ╟──  - 'a27_54226'
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ╙──      	                     ^^
 //│ test16: error
 
 // (* This is too much for the type-checker. *)
+:e // FIXME? refreshing-extr
 def test18 = (s x x x x x x x x x x x x x x x x x x e)
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (() -> (forall ?b. ?b)) -> ?c` took too many steps and ran out of fuel (5000)
-//│ ║  l.324: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ ║  l.329: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
 //│ ║         	              ^^^^^^^^^
-//│ ╟──  + List['a27_40607']
+//│ ╟──  + List['a27_60455']
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ║        	                            ^^^^^^^^
-//│ ╟──  + List['a27_40607']
+//│ ╟──  + List['a27_60455']
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ║        	                            ^^^^^^^^
-//│ ╟──  + List['a27_40607']
+//│ ╟──  + List['a27_60455']
 //│ ║  l.36: 	def insert v () acu k = k () (cons v acu)
 //│ ║        	                              ^^^^^^^^^^
-//│ ╟──  + α54_40606'
+//│ ╟──  + α54_60454'
 //│ ║  l.36: 	def insert v () acu k = k () (cons v acu)
 //│ ║        	                              ^^^^^^^^^^
-//│ ╙──  - α49_41707'
+//│ ╙──  - α49_61555'
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (() -> (forall ?b. ?b)) -> ?c` took too many steps and ran out of fuel (5000)
-//│ ║  l.324: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ ║  l.329: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
 //│ ║         	              ^^^^^^^^^^^
-//│ ╟──  + 'a27_43038'
-//│ ╟──  + 'a27_43038'
+//│ ╟──  + 'a27_66258'
+//│ ╟──  + 'a27_66258'
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ║        	                                 ^^
-//│ ╟──  - 'a27_43196'
-//│ ╟──  - 'a27_43196'
+//│ ╟──  - 'a27_66416'
+//│ ╟──  - 'a27_66416'
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ╙──      	                     ^^
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (() -> (forall ?b. ?b)) -> ?c` took too many steps and ran out of fuel (5000)
-//│ ║  l.324: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ ║  l.329: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
 //│ ║         	              ^^^^^^^^^^^^^
 //│ ╟──  + "x"<string>
 //│ ║  l.55: 	def x () = insert "x" ()
@@ -378,12 +383,12 @@ def test18 = (s x x x x x x x x x x x x x x x x x x e)
 //│ ╟──  + "x"<string>
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ║        	                     ^^
-//│ ╟──  + 'a27_43256'
-//│ ╟──  + 'a27_43256'
+//│ ╟──  + 'a27_68779'
+//│ ╟──  + 'a27_68779'
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ║        	                                 ^^
-//│ ╟──  - 'a27_43374'
-//│ ╟──  - 'a27_43374'
+//│ ╟──  - 'a27_68897'
+//│ ╟──  - 'a27_68897'
 //│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
 //│ ╙──      	                     ^^
 //│ test18: error
@@ -529,36 +534,28 @@ def g t1 t2 = (s x x t1 x (s x t2 x e) e)
 //│     'g <: 'b))
 //│   where
 //│     'g <: 'b
-//│     'g <: 'b))) -> 'b & 'l) -> (forall 'b, 'k, 'l, 'm, 'n. ('o
+//│     'g <: 'b))) -> 'b & 'l) -> (forall 'k, 'l, 'm, 'n. ('o
 //│   where
-//│     'k <: () -> List[nothing] -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c, 'd. ((List['b] & 'd) -> (forall 'b, 'c, 'd, 'e. ((() -> List[nothing] -> 'b & 'e) -> (forall 'c, 'd, 'e, 'a, 'f. ('f
+//│     'm :> forall 'b, 'p, 'q, 'r. ((() -> List[nothing] -> 'b & 'r) -> (forall 'p, 'q, 'r, 'a1, 's. ('s
 //│   where
-//│     'c <: 'a
-//│     'd <: List['a]
-//│     'e <: () -> List['a] -> 'f))
+//│     'p <: 'a1
+//│     'q <: List['a1]
+//│     'r <: () -> List['a1] -> 's))
 //│   where
-//│     'c <: 'b
-//│     'd <: List['b]
-//│     'c <: 'b
-//│     'd <: List['b]))
+//│     'p <: 'b
+//│     'q <: List['b]
+//│     'p <: 'b
+//│     'q <: List['b])
+//│     'n :> forall 'b, 't, 'u. ((() -> List[nothing] -> 'b & 'b) -> (forall 'b, 't, 'u, 'a2, 'v. ('v
 //│   where
-//│     'c <: 'b
-//│     'c <: 'b))) -> 'p -> (() -> List[string] -> (forall 'b, 'g. (() -> (forall 'b, 'g, 'h. ((List['b] & 'h) -> (forall 'b, 'g, 'h, 'i. ((() -> List[nothing] -> 'b & 'i) -> (forall 'g, 'h, 'i, 'a0, 'j. ('j
+//│     't <: 'a2
+//│     'u <: List['a2]
+//│     'b <: () -> List['a2] -> 'v))
 //│   where
-//│     'g <: 'a0
-//│     'h <: List['a0]
-//│     'i <: () -> List['a0] -> 'j))
-//│   where
-//│     'g <: 'b
-//│     'h <: List['b]
-//│     'g <: 'b
-//│     'h <: List['b]))
-//│   where
-//│     'g <: 'b
-//│     'g <: 'b))
-//│   where
-//│     'g <: 'b
-//│     'g <: 'b))) -> 'o
+//│     't <: 'b
+//│     'u <: List['b]
+//│     't <: 'b
+//│     'u <: List['b])
 //│     'l <: () -> List[nothing] -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c, 'd. ((List['b] & 'd) -> (forall 'b, 'c, 'd, 'e. ((() -> List[nothing] -> 'b & 'e) -> (forall 'c, 'd, 'e, 'a, 'f. ('f
 //│   where
 //│     'c <: 'a
@@ -586,27 +583,35 @@ def g t1 t2 = (s x x t1 x (s x t2 x e) e)
 //│     'g <: 'b))
 //│   where
 //│     'g <: 'b
-//│     'g <: 'b))) -> 'p
-//│     'm :> forall 'b, 'q, 'r, 's. ((() -> List[nothing] -> 'b & 's) -> (forall 'q, 'r, 's, 'a1, 't. ('t
+//│     'g <: 'b))) -> 'w
+//│     'k <: () -> List[nothing] -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c, 'd. ((List['b] & 'd) -> (forall 'b, 'c, 'd, 'e. ((() -> List[nothing] -> 'b & 'e) -> (forall 'c, 'd, 'e, 'a, 'f. ('f
 //│   where
-//│     'q <: 'a1
-//│     'r <: List['a1]
-//│     's <: () -> List['a1] -> 't))
+//│     'c <: 'a
+//│     'd <: List['a]
+//│     'e <: () -> List['a] -> 'f))
 //│   where
-//│     'q <: 'b
-//│     'r <: List['b]
-//│     'q <: 'b
-//│     'r <: List['b])
-//│     'n :> forall 'b, 'u, 'v. ((() -> List[nothing] -> 'b & 'b) -> (forall 'b, 'u, 'v, 'a2, 'w. ('w
+//│     'c <: 'b
+//│     'd <: List['b]
+//│     'c <: 'b
+//│     'd <: List['b]))
 //│   where
-//│     'u <: 'a2
-//│     'v <: List['a2]
-//│     'b <: () -> List['a2] -> 'w))
+//│     'c <: 'b
+//│     'c <: 'b))) -> 'w -> (() -> List[string] -> (forall 'b, 'g. (() -> (forall 'b, 'g, 'h. ((List['b] & 'h) -> (forall 'b, 'g, 'h, 'i. ((() -> List[nothing] -> 'b & 'i) -> (forall 'g, 'h, 'i, 'a0, 'j. ('j
 //│   where
-//│     'u <: 'b
-//│     'v <: List['b]
-//│     'u <: 'b
-//│     'v <: List['b])))
+//│     'g <: 'a0
+//│     'h <: List['a0]
+//│     'i <: () -> List['a0] -> 'j))
+//│   where
+//│     'g <: 'b
+//│     'h <: List['b]
+//│     'g <: 'b
+//│     'h <: List['b]))
+//│   where
+//│     'g <: 'b
+//│     'g <: 'b))
+//│   where
+//│     'g <: 'b
+//│     'g <: 'b))) -> 'o))
 //│   where
 //│     'k <: () -> List[nothing] -> 'b & () -> List["x"] -> (() -> (forall 'b, 'c, 'd. ((List['b] & 'd) -> (forall 'b, 'c, 'd, 'e. ((() -> List[nothing] -> 'b & 'e) -> (forall 'c, 'd, 'e, 'a, 'f. ('f
 //│   where
@@ -667,137 +672,137 @@ def g t1 t2 = (s x x t1 x (s x t2 x e) e)
 
 // (* This does not type. It requires first-class polymorphism. *)
 def h t = g t t
-//│ h: nothing -> (forall 'b, 'c, 'd, 'e, 'f, 'g. ('h
+//│ h: nothing -> (forall 'b, 'c, 'd, 'e, 'f. ('g
 //│   where
-//│     'b <: () -> List[nothing] -> 'c & () -> List["x"] -> (() -> (forall 'c, 'i, 'j. ((List['c] & 'j) -> (forall 'c, 'i, 'j, 'k. ((() -> List[nothing] -> 'c & 'k) -> (forall 'i, 'j, 'k, 'a, 'l. ('l
+//│     'b :> forall 'h, 'i, 'j, 'k. ((() -> List[nothing] -> 'i & 'k) -> (forall 'h, 'j, 'k, 'a, 'l. ('l
 //│   where
-//│     'i <: 'a
+//│     'h <: 'a
 //│     'j <: List['a]
 //│     'k <: () -> List['a] -> 'l))
 //│   where
-//│     'i <: 'c
-//│     'j <: List['c]
-//│     'i <: 'c
-//│     'j <: List['c]))
+//│     'h <: 'i
+//│     'j <: List['i]
+//│     'h <: 'i
+//│     'j <: List['i])
+//│     'c :> forall 'i, 'm, 'n. ((() -> List[nothing] -> 'i & 'i) -> (forall 'i, 'm, 'n, 'a0, 'o. ('o
 //│   where
-//│     'i <: 'c
-//│     'i <: 'c))) -> 'm -> (() -> List[string] -> (forall 'c, 'n. (() -> (forall 'c, 'n, 'o. ((List['c] & 'o) -> (forall 'c, 'n, 'o, 'p. ((() -> List[nothing] -> 'c & 'p) -> (forall 'n, 'o, 'p, 'a0, 'q. ('q
+//│     'm <: 'a0
+//│     'n <: List['a0]
+//│     'i <: () -> List['a0] -> 'o))
 //│   where
-//│     'n <: 'a0
-//│     'o <: List['a0]
-//│     'p <: () -> List['a0] -> 'q))
+//│     'm <: 'i
+//│     'n <: List['i]
+//│     'm <: 'i
+//│     'n <: List['i])
+//│     'd <: () -> List[nothing] -> 'i & () -> List["x"] -> (() -> (forall 'i, 'p, 'q. ((List['i] & 'q) -> (forall 'i, 'p, 'q, 'r. ((() -> List[nothing] -> 'i & 'r) -> (forall 'p, 'q, 'r, 'a1, 's. ('s
 //│   where
-//│     'n <: 'c
-//│     'o <: List['c]
-//│     'n <: 'c
-//│     'o <: List['c]))
+//│     'p <: 'a1
+//│     'q <: List['a1]
+//│     'r <: () -> List['a1] -> 's))
 //│   where
-//│     'n <: 'c
-//│     'n <: 'c))
+//│     'p <: 'i
+//│     'q <: List['i]
+//│     'p <: 'i
+//│     'q <: List['i]))
 //│   where
-//│     'n <: 'c
-//│     'n <: 'c))) -> 'h
-//│     'd <: () -> List[nothing] -> 'c & () -> List["x"] -> (() -> (forall 'c, 'i, 'j. ((List['c] & 'j) -> (forall 'c, 'i, 'j, 'k. ((() -> List[nothing] -> 'c & 'k) -> (forall 'i, 'j, 'k, 'a, 'l. ('l
+//│     'p <: 'i
+//│     'p <: 'i))) -> (() -> List[string] -> (forall 'i, 't. (() -> (forall 'i, 't, 'u. ((List['i] & 'u) -> (forall 'i, 't, 'u, 'v. ((() -> List[nothing] -> 'i & 'v) -> (forall 't, 'u, 'v, 'a2, 'w. ('w
 //│   where
-//│     'i <: 'a
-//│     'j <: List['a]
-//│     'k <: () -> List['a] -> 'l))
+//│     't <: 'a2
+//│     'u <: List['a2]
+//│     'v <: () -> List['a2] -> 'w))
 //│   where
-//│     'i <: 'c
-//│     'j <: List['c]
-//│     'i <: 'c
-//│     'j <: List['c]))
+//│     't <: 'i
+//│     'u <: List['i]
+//│     't <: 'i
+//│     'u <: List['i]))
 //│   where
-//│     'i <: 'c
-//│     'i <: 'c))) -> (() -> List[string] -> (forall 'c, 'n. (() -> (forall 'c, 'n, 'o. ((List['c] & 'o) -> (forall 'c, 'n, 'o, 'p. ((() -> List[nothing] -> 'c & 'p) -> (forall 'n, 'o, 'p, 'a0, 'q. ('q
+//│     't <: 'i
+//│     't <: 'i))
 //│   where
-//│     'n <: 'a0
-//│     'o <: List['a0]
-//│     'p <: () -> List['a0] -> 'q))
+//│     't <: 'i
+//│     't <: 'i))) -> 'x
+//│     'e <: () -> List[nothing] -> 'i & () -> List["x"] -> (() -> (forall 'i, 'p, 'q. ((List['i] & 'q) -> (forall 'i, 'p, 'q, 'r. ((() -> List[nothing] -> 'i & 'r) -> (forall 'p, 'q, 'r, 'a1, 's. ('s
 //│   where
-//│     'n <: 'c
-//│     'o <: List['c]
-//│     'n <: 'c
-//│     'o <: List['c]))
+//│     'p <: 'a1
+//│     'q <: List['a1]
+//│     'r <: () -> List['a1] -> 's))
 //│   where
-//│     'n <: 'c
-//│     'n <: 'c))
+//│     'p <: 'i
+//│     'q <: List['i]
+//│     'p <: 'i
+//│     'q <: List['i]))
 //│   where
-//│     'n <: 'c
-//│     'n <: 'c))) -> 'm
-//│     'e :> forall 'c, 'r, 's, 't. ((() -> List[nothing] -> 'c & 't) -> (forall 'r, 's, 't, 'a1, 'u. ('u
+//│     'p <: 'i
+//│     'p <: 'i))) -> 'x -> (() -> List[string] -> (forall 'i, 't. (() -> (forall 'i, 't, 'u. ((List['i] & 'u) -> (forall 'i, 't, 'u, 'v. ((() -> List[nothing] -> 'i & 'v) -> (forall 't, 'u, 'v, 'a2, 'w. ('w
 //│   where
-//│     'r <: 'a1
-//│     's <: List['a1]
-//│     't <: () -> List['a1] -> 'u))
+//│     't <: 'a2
+//│     'u <: List['a2]
+//│     'v <: () -> List['a2] -> 'w))
 //│   where
-//│     'r <: 'c
-//│     's <: List['c]
-//│     'r <: 'c
-//│     's <: List['c])
-//│     'f :> forall 'c, 'v, 'w. ((() -> List[nothing] -> 'c & 'c) -> (forall 'c, 'v, 'w, 'a2, 'x. ('x
+//│     't <: 'i
+//│     'u <: List['i]
+//│     't <: 'i
+//│     'u <: List['i]))
 //│   where
-//│     'v <: 'a2
-//│     'w <: List['a2]
-//│     'c <: () -> List['a2] -> 'x))
+//│     't <: 'i
+//│     't <: 'i))
 //│   where
-//│     'v <: 'c
-//│     'w <: List['c]
-//│     'v <: 'c
-//│     'w <: List['c])
-//│     'g <: () -> List[nothing] -> 'c & () -> List["x"] -> (() -> (forall 'c, 'i, 'j. ((List['c] & 'j) -> (forall 'c, 'i, 'j, 'k. ((() -> List[nothing] -> 'c & 'k) -> (forall 'i, 'j, 'k, 'a, 'l. ('l
+//│     't <: 'i
+//│     't <: 'i))) -> 'g
+//│     'f <: () -> List[nothing] -> 'i & () -> List["x"] -> (() -> (forall 'i, 'p, 'q. ((List['i] & 'q) -> (forall 'i, 'p, 'q, 'r. ((() -> List[nothing] -> 'i & 'r) -> (forall 'p, 'q, 'r, 'a1, 's. ('s
 //│   where
-//│     'i <: 'a
-//│     'j <: List['a]
-//│     'k <: () -> List['a] -> 'l))
+//│     'p <: 'a1
+//│     'q <: List['a1]
+//│     'r <: () -> List['a1] -> 's))
 //│   where
-//│     'i <: 'c
-//│     'j <: List['c]
-//│     'i <: 'c
-//│     'j <: List['c]))
+//│     'p <: 'i
+//│     'q <: List['i]
+//│     'p <: 'i
+//│     'q <: List['i]))
 //│   where
-//│     'i <: 'c
-//│     'i <: 'c))) -> nothing -> (() -> List[string] -> (forall 'c, 'n. (() -> (forall 'c, 'n, 'o. ((List['c] & 'o) -> (forall 'c, 'n, 'o, 'p. ((() -> List[nothing] -> 'c & 'p) -> (forall 'n, 'o, 'p, 'a0, 'q. ('q
+//│     'p <: 'i
+//│     'p <: 'i))) -> nothing -> (() -> List[string] -> (forall 'i, 't. (() -> (forall 'i, 't, 'u. ((List['i] & 'u) -> (forall 'i, 't, 'u, 'v. ((() -> List[nothing] -> 'i & 'v) -> (forall 't, 'u, 'v, 'a2, 'w. ('w
 //│   where
-//│     'n <: 'a0
-//│     'o <: List['a0]
-//│     'p <: () -> List['a0] -> 'q))
+//│     't <: 'a2
+//│     'u <: List['a2]
+//│     'v <: () -> List['a2] -> 'w))
 //│   where
-//│     'n <: 'c
-//│     'o <: List['c]
-//│     'n <: 'c
-//│     'o <: List['c]))
+//│     't <: 'i
+//│     'u <: List['i]
+//│     't <: 'i
+//│     'u <: List['i]))
 //│   where
-//│     'n <: 'c
-//│     'n <: 'c))
+//│     't <: 'i
+//│     't <: 'i))
 //│   where
-//│     'n <: 'c
-//│     'n <: 'c))) -> 'c & () -> List["x"] -> (() -> (forall 'c, 'i, 'j. ((List['c] & 'j) -> (forall 'c, 'i, 'j, 'k. ((() -> List[nothing] -> 'c & 'k) -> (forall 'i, 'j, 'k, 'a, 'l. ('l
+//│     't <: 'i
+//│     't <: 'i))) -> 'i & () -> List["x"] -> (() -> (forall 'i, 'p, 'q. ((List['i] & 'q) -> (forall 'i, 'p, 'q, 'r. ((() -> List[nothing] -> 'i & 'r) -> (forall 'p, 'q, 'r, 'a1, 's. ('s
 //│   where
-//│     'i <: 'a
-//│     'j <: List['a]
-//│     'k <: () -> List['a] -> 'l))
+//│     'p <: 'a1
+//│     'q <: List['a1]
+//│     'r <: () -> List['a1] -> 's))
 //│   where
-//│     'i <: 'c
-//│     'j <: List['c]
-//│     'i <: 'c
-//│     'j <: List['c]))
+//│     'p <: 'i
+//│     'q <: List['i]
+//│     'p <: 'i
+//│     'q <: List['i]))
 //│   where
-//│     'i <: 'c
-//│     'i <: 'c))) -> (() -> List[string] -> (forall 'c, 'n. (() -> (forall 'c, 'n, 'o. ((List['c] & 'o) -> (forall 'c, 'n, 'o, 'p. ((() -> List[nothing] -> 'c & 'p) -> (forall 'n, 'o, 'p, 'a0, 'q. ('q
+//│     'p <: 'i
+//│     'p <: 'i))) -> (() -> List[string] -> (forall 'i, 't. (() -> (forall 'i, 't, 'u. ((List['i] & 'u) -> (forall 'i, 't, 'u, 'v. ((() -> List[nothing] -> 'i & 'v) -> (forall 't, 'u, 'v, 'a2, 'w. ('w
 //│   where
-//│     'n <: 'a0
-//│     'o <: List['a0]
-//│     'p <: () -> List['a0] -> 'q))
+//│     't <: 'a2
+//│     'u <: List['a2]
+//│     'v <: () -> List['a2] -> 'w))
 //│   where
-//│     'n <: 'c
-//│     'o <: List['c]
-//│     'n <: 'c
-//│     'o <: List['c]))
+//│     't <: 'i
+//│     'u <: List['i]
+//│     't <: 'i
+//│     'u <: List['i]))
 //│   where
-//│     'n <: 'c
-//│     'n <: 'c))
+//│     't <: 'i
+//│     't <: 'i))
 //│   where
-//│     'n <: 'c
-//│     'n <: 'c))) -> 'c & 'd))
+//│     't <: 'i
+//│     't <: 'i))) -> 'i & 'd))
 

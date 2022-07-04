@@ -103,7 +103,7 @@ cmi = ComplexMonoid { base = IntMonoid }
 //│ ╟── from reference:
 //│ ║  l.52: 	def ComplexMonoid base = ComplexMonoid { base }
 //│ ╙──      	                                         ^^^^
-//│ cmi: (ComplexMonoid['A] with {base: {base: IntMonoid}}) | error
+//│ cmi: error
 
 
 
@@ -117,36 +117,6 @@ class ComplexMonoid_bad_0[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║  l.31: 	def Complex real imaginary = Complex { real; imaginary }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into application with expected type `Complex[?]`
-//│ ║  l.+2: 	  method Empty = Complex { real = this.base }
-//│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.+1: 	class ComplexMonoid_bad_0[A]: Monoid[Complex[A]] & { base: Monoid[A] }
-//│ ║        	                                     ^^^^^^^^^^
-//│ ╟── from inherited method declaration:
-//│ ║  l.3: 	  method Empty: A
-//│ ╙──     	         ^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.+2: 	  method Empty = Complex { real = this.base }
-//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> ?b` is not a record (expected a record with fields: real, imaginary)
-//│ ║  l.31: 	def Complex real imaginary = Complex { real; imaginary }
-//│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into application with expected type `{imaginary: A, real: A}`
-//│ ║  l.+2: 	  method Empty = Complex { real = this.base }
-//│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from record type:
-//│ ║  l.29: 	class Complex[A]: { real: A; imaginary: A }
-//│ ║        	                  ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── from inherited method declaration:
-//│ ║  l.3: 	  method Empty: A
-//│ ╙──     	         ^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.+2: 	  method Empty = Complex { real = this.base }
-//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> ?b` does not have field 'Complex#A'
-//│ ║  l.31: 	def Complex real imaginary = Complex { real; imaginary }
-//│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into application with expected type `{Complex#A <: A}`
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from applied type reference:
@@ -176,36 +146,6 @@ class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║  l.31: 	def Complex real imaginary = Complex { real; imaginary }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into application with expected type `Complex[?]`
-//│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
-//│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.+1: 	class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
-//│ ║        	                                     ^^^^^^^^^^
-//│ ╟── from inherited method declaration:
-//│ ║  l.3: 	  method Empty: A
-//│ ╙──     	         ^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
-//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> ?b` is not a record (expected a record with fields: real, imaginary)
-//│ ║  l.31: 	def Complex real imaginary = Complex { real; imaginary }
-//│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into application with expected type `{imaginary: A, real: A}`
-//│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
-//│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from record type:
-//│ ║  l.29: 	class Complex[A]: { real: A; imaginary: A }
-//│ ║        	                  ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── from inherited method declaration:
-//│ ║  l.3: 	  method Empty: A
-//│ ╙──     	         ^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
-//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> ?b` does not have field 'Complex#A'
-//│ ║  l.31: 	def Complex real imaginary = Complex { real; imaginary }
-//│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into application with expected type `{Complex#A <: A}`
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from applied type reference:
@@ -244,6 +184,6 @@ class ComplexMonoid_bad_2[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╙──      	                                                 ^^^^^^^^^
 //│ Defined class ComplexMonoid_bad_2[=A]
 //│ Defined ComplexMonoid_bad_2.Add: ComplexMonoid_bad_2['A] -> {imaginary: 'A, real: 'A} -> {imaginary: 'A, real: 'A} -> Complex['A]
-//│ Defined ComplexMonoid_bad_2.Add2: ComplexMonoid_bad_2['A] -> Complex[{imaginary: 'A0, real: 'A0}] -> Complex[{imaginary: 'A0, real: 'A0}] -> (Complex[Complex['A0] | error] with {imaginary: Complex['A0] | error, real: Complex['A0] | error})
+//│ Defined ComplexMonoid_bad_2.Add2: ComplexMonoid_bad_2['A] -> Complex[?] -> Complex[?] -> Complex[error]
 
 

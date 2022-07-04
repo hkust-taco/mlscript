@@ -46,7 +46,7 @@ def c = Child(Parent1{name="A"})
 //│ ╟── from intersection type:
 //│ ║  l.18: 	def Child: (Parent1 & Parent2) -> Child
 //│ ╙──      	           ^^^^^^^^^^^^^^^^^^^
-//│ c: error | Child
+//│ c: error
 //│  = <no result>
 //│    Child is not implemented
 
@@ -243,7 +243,7 @@ E{} + 1
 //│ ╟── Note: class E is defined at:
 //│ ║  l.206: 	class E: 1
 //│ ╙──       	      ^
-//│ res: error | int
+//│ res: error
 //│    = '[object Object]1'
 
 :e

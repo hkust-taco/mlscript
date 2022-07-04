@@ -21,7 +21,7 @@ Test1 { x = "oops" }
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.2: 	class Test1: { x: int }
 //│ ╙──     	                  ^^^
-//│ res: error | (Test1 with {x: "oops"})
+//│ res: error
 //│    = Test1 { x: 'oops' }
 
 def Test1 = fun x -> Test1 { x = x }

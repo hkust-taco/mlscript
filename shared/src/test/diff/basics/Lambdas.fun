@@ -85,7 +85,7 @@ f (y: 42)
 //│ ╔══[ERROR] Wrong tuple field name: found 'y' instead of 'x'
 //│ ║  l.84: 	f (y: 42)
 //│ ╙──      	   ^^^^^
-//│ res: error | int
+//│ res: error
 
 :e
 f (x: 42, y: 43)
@@ -104,7 +104,7 @@ f (x: 42, y: 43)
 //│ ╟── from binding:
 //│ ║  l.74: 	let f(x: int) = x + 1
 //│ ╙──      	      ^^^^^^
-//│ res: error | int
+//│ res: error
 
 (a, b) => a + b
 //│ res: (int, int,) -> int

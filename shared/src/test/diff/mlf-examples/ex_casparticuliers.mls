@@ -249,11 +249,25 @@ rec def wat =
 //│   ReferenceError: wat is not defined
 
 // works when `succ` is not annotated with the parameter type
-// :e // FIXME should be caught by cycle checker! // due to tapping
+:e // FIXME should be caught by cycle checker! // due to tapping
 :ng
 rec def nani =
   succ' nani
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α133_1654'  <:  ((α134_1722',) -> α136_1723')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α133_1654'  <:  ((α134_1667'''',) -> α136_1668'''')
+//│ nani: (nothing -> anything & 'a) -> (forall 'b, 'a, 'c. ('c -> (forall 'b, 'a, 'c, 'd, 'e. ('e
+//│   where
+//│     'b <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e))
+//│   where
+//│     'b <: nothing -> nothing -> anything
+//│     'a <: nothing -> anything
+//│     'b <: nothing -> nothing -> anything
+//│     'a <: nothing -> anything))
+//│   where
+//│     'b <: nothing -> nothing -> anything
 
 // * The one with annotated rec occurrence works...
 def to_church_1_repro n =
@@ -281,16 +295,32 @@ rec def to_church_1_st n =
 //│ to_church_1_st: int -> (anything -> (forall 'a. 'a -> 'a) | ChurchInt)
 //│               = [Function: to_church_1_st]
 
-// :e // FIXME should be caught by cycle checker! // due to tapping
+:e // FIXME should be caught by cycle checker! // due to tapping
 rec def to_church_2 n =
   if n == 0 then zero
   else succ' (to_church_2 (n - 1))
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α133_1842'  <:  ((α134_1925',) -> α136_1926')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α133_1842'  <:  ((α134_1855'''',) -> α136_1856'''')
+//│ to_church_2: int -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c, 'd. (('c & 'd) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f | 'c
+//│   where
+//│     'a <: 'b -> 'd -> 'e
+//│     'b <: 'e -> 'f))
+//│   where
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything))
+//│   where
+//│     'a <: nothing -> nothing -> anything))
+//│            = [Function: to_church_1_st]
 
 // :e // FIXME should be caught by cycle checker!
 // Requires :RecursiveTypes
 :ng // FIXME codegen: `ReferenceError: to_church_2 is not defined`
 // :e // due to tapping
+:e // FIXME? refreshing-extr
 to_church_ty = to_church_2
 //│ int -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c, 'd. (('c & 'd) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f | 'c
 //│   where
@@ -305,7 +335,10 @@ to_church_ty = to_church_2
 //│     'a <: nothing -> nothing -> anything))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α133_2026'  <:  ((α134_2132',) -> α136_2133')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α133_1842'  <:  ((α134_2027'''',) -> α136_2028'''')
 
 // (* Marche *)
 // let rec to_church n =
@@ -383,7 +416,7 @@ to_church_ty = to_church_1_st
 
 // :e // FIXME should be caught by cycle checker!
 :ng
-// :e // due to tapping
+:e // due to tapping
 to_church_ty = to_church_2
 //│ int -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c, 'd. (('c & 'd) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f | 'c
 //│   where
@@ -398,7 +431,10 @@ to_church_ty = to_church_2
 //│     'a <: nothing -> nothing -> anything))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α133_2559'  <:  ((α134_2665',) -> α136_2666')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α133_1842'  <:  ((α134_2560'''',) -> α136_2561'''')
 
 // :e // FIXME?
 to_church_ty = to_church_3
@@ -413,7 +449,7 @@ to_church_ty = to_church_4
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.411: 	to_church_ty = to_church_4
+//│ ║  l.447: 	to_church_ty = to_church_4
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `(?a -> ?a) -> ?a -> ?a` is not an instance of type `'a`
 //│ ║  l.34: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -481,13 +517,13 @@ def tc n = to_church_ty n : ChurchInt
 //│ tc: int -> ChurchInt
 //│   = [Function: tc1]
 
-// :e // FIXME should be caught by cycle checker!
+:e // FIXME should be caught by cycle checker!
 def tc n = to_church_2 n : ChurchInt // Requires :RecursiveTypes
-//│ tc: anything -> (forall 'to_church_2. (ChurchInt
-//│   where
-//│     'to_church_2 <: nothing -> anything))
-//│   where
-//│     'to_church_2 <: nothing -> anything
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α133_3333''''  <:  ((α134_3334'''',) -> α136_3335'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α133_3181''''  <:  ((α134_3182'''',) -> α136_3183'''')
+//│ tc: anything -> ChurchInt
 //│   = [Function: tc2]
 
 // FIXME stupid type

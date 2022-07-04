@@ -20,7 +20,7 @@ test "hi"
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.3: 	  let local g = g x
 //│ ╙──     	                  ^
-//│ res: error | int
+//│ res: error
 //│    = 'hi1'
 
 def test f =
@@ -73,7 +73,7 @@ def test f =
 //│ test: (nothing -> anything) -> (int -> int, string -> string,)
 //│     = [Function: test6]
 
-:e
+// :e
 test succ
 //│ res: (int -> int, string -> string,)
 //│    = [ [Function (anonymous)], [Function (anonymous)] ]
@@ -109,6 +109,7 @@ fun f -> fun x ->
 //│ res: (nothing -> anything) -> anything -> ()
 //│    = [Function: res]
 
+// FIXME refreshing-extr
 :e
 res add "1"
 //│ res: ()
@@ -121,6 +122,7 @@ fun f -> fun x ->
 //│ res: (nothing -> anything) -> anything -> ()
 //│    = [Function: res]
 
+// FIXME refreshing-extr
 :e
 res add "1"
 //│ res: ()

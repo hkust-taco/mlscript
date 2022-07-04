@@ -213,7 +213,7 @@ bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.205: 	bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
 //│ ╙──       	                                         ^
-//│ res: 42 | error
+//│ res: error
 
 BadPair = BadPair { x = 42; y = 0 }
 BadPair.Map
@@ -581,9 +581,9 @@ t : Dup[int, bool]
 //│ ║  l.573: 	t : Dup[int, bool]
 //│ ╙──       	             ^^^^
 //│ res: Dup[?, bool]
-//│ constrain calls  : 38
-//│ annoying  calls  : 23
-//│ subtyping calls  : 41
+//│ constrain calls  : 25
+//│ annoying  calls  : 6
+//│ subtyping calls  : 21
 
 :stats
 t.MthDup (fun x -> mul 2 x)

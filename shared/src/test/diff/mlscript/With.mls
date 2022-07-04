@@ -133,7 +133,7 @@ foo 42
 //│ ╟── from reference:
 //│ ║  l.118: 	  in { l = getf xf; r = getf x; s = x }
 //│ ╙──       	                             ^
-//│ res: error | {l: 42, r: nothing, s: 42}
+//│ res: error
 //│    = { l: 42, r: undefined, s: 42 }
 
 def r = foo (42 with { f = 1 })

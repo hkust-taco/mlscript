@@ -214,11 +214,22 @@ to_church = to_ch
 //│            to_ch and zero are not implemented
 
 
+:e // FIXME? refreshing-extr
 rec def to_ch n =
   if n == 0 then z
   else s (to_ch (n - 1))
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α27_496'  <:  ((α28_521',) -> α29_522')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α27_496'  <:  ((α28_503'''',) -> α29_504'''')
+//│ to_ch: int -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d -> 'd | 'c
+//│   where
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> anything))
+//│      = [Function: to_ch4]
 
+:e // FIXME? refreshing-extr
 to_church = to_ch
 //│ int -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c, 'd. ('d -> 'd | 'c
 //│   where
@@ -227,12 +238,27 @@ to_church = to_ch
 //│     'a <: nothing -> anything))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α27_565'  <:  ((α28_593',) -> α29_594')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α27_496'  <:  ((α28_566'''',) -> α29_567'''')
+//│          = [Function: to_ch4]
 
 
+// :d
+:e // FIXME? refreshing-extr
 rec def to_ch_weird n =
   s (to_ch_weird n)
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α27_599'  <:  ((α28_618',) -> α29_619')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α27_599'  <:  ((α28_606'''',) -> α29_607'''')
+//│ to_ch_weird: anything -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
+//│   where
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> anything))
+//│            = [Function: to_ch_weird]
 
 
 

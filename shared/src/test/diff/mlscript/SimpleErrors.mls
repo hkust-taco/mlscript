@@ -7,7 +7,7 @@ succ false
 //│ ╟── reference of type `false` is not an instance of type `int`
 //│ ║  l.3: 	succ false
 //│ ╙──     	     ^^^^^
-//│ res: error | int
+//│ res: error
 
 x = "oops"
 //│ x: "oops"
@@ -29,7 +29,7 @@ f x
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.15: 	f y = succ y
 //│ ╙──      	           ^
-//│ res: error | int
+//│ res: error
 
 
 
@@ -51,7 +51,7 @@ test1 1
 //│ ╟── from refined scrutinee:
 //│ ║  l.39: 	def test1 x = case x of { MyTrait -> x.value | _ -> 0 }
 //│ ╙──      	                   ^
-//│ res: 0 | error
+//│ res: error
 
 
 def map: 'a -> 'a
@@ -109,6 +109,6 @@ add boom 1
 //│ ╟── but it flows into reference with expected type `int`
 //│ ║  l.102: 	add boom 1
 //│ ╙──       	    ^^^^
-//│ res: error | int
+//│ res: error
 
 

@@ -35,7 +35,7 @@
 //│ ╟── integer literal of type `3` is not an instance of type `bool`
 //│ ║  l.26: 	1 |> 2 || 3
 //│ ╙──      	          ^
-//│ res: bool | error
+//│ res: error
 //│ Code generation encountered an error:
 //│   unresolved symbol |>
 

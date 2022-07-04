@@ -28,7 +28,7 @@ add res 1
 //│ ╟── but it flows into reference with expected type `int`
 //│ ║  l.21: 	add res 1
 //│ ╙──      	    ^^^
-//│ res: error | int
+//│ res: error
 //│    = 'oops1'
 
 :e

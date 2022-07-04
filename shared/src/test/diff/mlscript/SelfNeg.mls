@@ -86,7 +86,7 @@ r[0] + 1
 //│ ╟── possibly-undefined array access of type `undefined` is not an instance of type `int`
 //│ ║  l.82: 	r[0] + 1
 //│ ╙──      	^^^^
-//│ res: error | int
+//│ res: error
 //│    = <no result>
 //│      r and foo are not implemented
 

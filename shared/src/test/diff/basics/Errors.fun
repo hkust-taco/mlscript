@@ -91,34 +91,28 @@ log / false + 1
 //│ ╟── reference of type `false` is not an instance of type `int`
 //│ ║  l.+3: 	let oops = succ false
 //│ ╙──      	                ^^^^^
-//│ oops: error | int
+//│ oops: error
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.+4: 	false + 1
 //│ ║        	^^^^^^^
 //│ ╟── reference of type `false` is not an instance of type `int`
 //│ ║  l.+4: 	false + 1
 //│ ╙──      	^^^^^
-//│ res: error | int
+//│ res: error
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.+5: 	1 + false
 //│ ║        	^^^^^^^^^
 //│ ╟── reference of type `false` is not an instance of type `int`
 //│ ║  l.+5: 	1 + false
 //│ ╙──      	    ^^^^^
-//│ res: error | int
+//│ res: error
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.+6: 	true + false
 //│ ║        	^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `int`
 //│ ║  l.+6: 	true + false
 //│ ╙──      	^^^^
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.+6: 	true + false
-//│ ║        	^^^^^^^^^^^^
-//│ ╟── reference of type `false` is not an instance of type `int`
-//│ ║  l.+6: 	true + false
-//│ ╙──      	       ^^^^^
-//│ res: error | int
+//│ res: error
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.+7: 	log / false + 1
 //│ ║        	      ^^^^^^^
@@ -138,14 +132,6 @@ succ succ
 //│ ╟── reference of type `int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	succ succ
 //│ ╙──      	     ^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.+1: 	succ succ
-//│ ║        	^^^^^^^^^
-//│ ║  l.+2: 	  1
-//│ ║        	^^^
-//│ ╟── application of type `int` is not a function
-//│ ║  l.+1: 	succ succ
-//│ ╙──      	^^^^^^^^^
 //│ res: error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	(
@@ -157,7 +143,7 @@ succ succ
 //│ ╟── reference of type `false` is not an instance of type `int`
 //│ ║  l.+5: 	) false
 //│ ╙──      	  ^^^^^
-//│ res: error | int
+//│ res: error
 
 :e
 :w
@@ -224,7 +210,7 @@ succ ((((false))))
 //│ ╟── but it flows into argument with expected type `int`
 //│ ║  l.+1: 	succ ((((false))))
 //│ ╙──      	     ^^^^^^^^^^^^^
-//│ res: error | int
+//│ res: error
 
 :e
 let rec f = n => if n then 0 else f (miss + 1)
@@ -297,7 +283,7 @@ succ {a: 1}
 //│ ╟── but it flows into field selection with expected type `int`
 //│ ║  l.+5: 	1 + {a: true}.a
 //│ ╙──      	             ^^
-//│ res: error | int
+//│ res: error
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.+6: 	{a: true}.a + 1
 //│ ║        	         ^^^^
@@ -307,14 +293,14 @@ succ {a: 1}
 //│ ╟── but it flows into field selection with expected type `int`
 //│ ║  l.+6: 	{a: true}.a + 1
 //│ ╙──      	         ^^
-//│ res: error | int
+//│ res: error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+7: 	succ {a: 1}
 //│ ║        	^^^^^^^^^^^
 //│ ╟── record of type `{a: 1}` is not an instance of type `int`
 //│ ║  l.+7: 	succ {a: 1}
 //│ ╙──      	     ^^^^^^
-//│ res: error | int
+//│ res: error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+8: 	{a: 1} succ
 //│ ║        	^^^^^^^^^^^
@@ -341,10 +327,10 @@ f { prap: 1 }
 //│ ║  l.+1: 	f 42
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.328: 	  x.prop
+//│ ║  l.314: 	  x.prop
 //│ ║         	   ^^^^^
 //│ ╟── from reference:
-//│ ║  l.328: 	  x.prop
+//│ ║  l.314: 	  x.prop
 //│ ╙──       	  ^
 //│ res: error
 //│ ╔══[ERROR] Type mismatch in application:
@@ -354,10 +340,10 @@ f { prap: 1 }
 //│ ║  l.+2: 	f { prap: 1 }
 //│ ║        	  ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.328: 	  x.prop
+//│ ║  l.314: 	  x.prop
 //│ ║         	   ^^^^^
 //│ ╟── from reference:
-//│ ║  l.328: 	  x.prop
+//│ ║  l.314: 	  x.prop
 //│ ╙──       	  ^
 //│ res: error
 
@@ -370,12 +356,12 @@ f { prop: false }
 //│ ║  l.+1: 	f { prop: false }
 //│ ║        	          ^^^^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.327: 	  log / succ x.prop
+//│ ║  l.313: 	  log / succ x.prop
 //│ ║         	             ^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.327: 	  log / succ x.prop
+//│ ║  l.313: 	  log / succ x.prop
 //│ ╙──       	              ^^^^^
-//│ res: error | false
+//│ res: error
 
 :e
 let arg = 0
@@ -391,10 +377,10 @@ f arg
 //│ ║  l.+2: 	f arg
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.328: 	  x.prop
+//│ ║  l.314: 	  x.prop
 //│ ║         	   ^^^^^
 //│ ╟── from reference:
-//│ ║  l.328: 	  x.prop
+//│ ║  l.314: 	  x.prop
 //│ ╙──       	  ^
 //│ res: error
 
@@ -409,12 +395,12 @@ f arg
 //│ ║  l.+1: 	let arg = {prop: not true}
 //│ ║        	                 ^^^^^^^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.327: 	  log / succ x.prop
+//│ ║  l.313: 	  log / succ x.prop
 //│ ║         	             ^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.327: 	  log / succ x.prop
+//│ ║  l.313: 	  log / succ x.prop
 //│ ╙──       	              ^^^^^
-//│ res: bool | error
+//│ res: error
 
 
 let g = y =>
@@ -434,10 +420,10 @@ g { fld: { oops: 1 } }
 //│ ║  l.+1: 	g 1
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.421: 	  f { prop: y.fld }
+//│ ║  l.407: 	  f { prop: y.fld }
 //│ ║         	             ^^^^
 //│ ╟── from reference:
-//│ ║  l.421: 	  f { prop: y.fld }
+//│ ║  l.407: 	  f { prop: y.fld }
 //│ ╙──       	            ^
 //│ res: error
 //│ ╔══[ERROR] Type mismatch in application:
@@ -447,12 +433,12 @@ g { fld: { oops: 1 } }
 //│ ║  l.+2: 	g { fld: false }
 //│ ║        	         ^^^^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.327: 	  log / succ x.prop
+//│ ║  l.313: 	  log / succ x.prop
 //│ ║         	             ^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.421: 	  f { prop: y.fld }
+//│ ║  l.407: 	  f { prop: y.fld }
 //│ ╙──       	             ^^^^
-//│ res: error | false
+//│ res: error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	g { fld: { oops: 1 } }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
@@ -460,12 +446,12 @@ g { fld: { oops: 1 } }
 //│ ║  l.+3: 	g { fld: { oops: 1 } }
 //│ ║        	         ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.327: 	  log / succ x.prop
+//│ ║  l.313: 	  log / succ x.prop
 //│ ║         	             ^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.421: 	  f { prop: y.fld }
+//│ ║  l.407: 	  f { prop: y.fld }
 //│ ╙──       	             ^^^^
-//│ res: error | {oops: 1}
+//│ res: error
 
 :e
 let arg1 = {fld: not true}
@@ -484,10 +470,10 @@ f arg2
 //│ ║  l.+3: 	f arg1
 //│ ║        	  ^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.328: 	  x.prop
+//│ ║  l.314: 	  x.prop
 //│ ║         	   ^^^^^
 //│ ╟── from reference:
-//│ ║  l.328: 	  x.prop
+//│ ║  l.314: 	  x.prop
 //│ ╙──       	  ^
 //│ res: error
 //│ ╔══[ERROR] Type mismatch in application:
@@ -500,10 +486,10 @@ f arg2
 //│ ║  l.+4: 	f arg2
 //│ ║        	  ^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.328: 	  x.prop
+//│ ║  l.314: 	  x.prop
 //│ ║         	   ^^^^^
 //│ ╟── from reference:
-//│ ║  l.328: 	  x.prop
+//│ ║  l.314: 	  x.prop
 //│ ╙──       	  ^
 //│ res: error
 
@@ -522,31 +508,31 @@ x => h / succ x
 //│ ║  l.+1: 	h arg2
 //│ ║        	^^^^^^
 //│ ╟── record of type `{fld: forall ?a. {prop: ?a}}` does not have field 'prop'
-//│ ║  l.472: 	let arg2 = {fld: arg}
+//│ ║  l.458: 	let arg2 = {fld: arg}
 //│ ║         	           ^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{prop: ?prop}`
 //│ ║  l.+1: 	h arg2
 //│ ║        	  ^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.328: 	  x.prop
+//│ ║  l.314: 	  x.prop
 //│ ║         	   ^^^^^
 //│ ╟── from reference:
-//│ ║  l.511: 	  succ / f y
+//│ ║  l.497: 	  succ / f y
 //│ ╙──       	           ^
-//│ res: error | int
+//│ res: error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+2: 	h arg
 //│ ║        	^^^^^
 //│ ╟── application of type `bool` is not an instance of type `int`
-//│ ║  l.402: 	let arg = {prop: not true}
+//│ ║  l.388: 	let arg = {prop: not true}
 //│ ║         	                 ^^^^^^^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.511: 	  succ / f y
+//│ ║  l.497: 	  succ / f y
 //│ ║         	         ^^^
 //│ ╟── from field selection:
-//│ ║  l.328: 	  x.prop
+//│ ║  l.314: 	  x.prop
 //│ ╙──       	   ^^^^^
-//│ res: error | int
+//│ res: error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	h / 42
 //│ ║        	^^^^^^
@@ -554,12 +540,12 @@ x => h / succ x
 //│ ║  l.+3: 	h / 42
 //│ ║        	    ^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.328: 	  x.prop
+//│ ║  l.314: 	  x.prop
 //│ ║         	   ^^^^^
 //│ ╟── from reference:
-//│ ║  l.511: 	  succ / f y
+//│ ║  l.497: 	  succ / f y
 //│ ╙──       	           ^
-//│ res: error | int
+//│ res: error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+4: 	x => h / succ x
 //│ ║        	     ^^^^^^^^^^
@@ -567,12 +553,12 @@ x => h / succ x
 //│ ║  l.+4: 	x => h / succ x
 //│ ║        	         ^^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.328: 	  x.prop
+//│ ║  l.314: 	  x.prop
 //│ ║         	   ^^^^^
 //│ ╟── from reference:
-//│ ║  l.511: 	  succ / f y
+//│ ║  l.497: 	  succ / f y
 //│ ╙──       	           ^
-//│ res: int -> (error | int)
+//│ res: int -> error
 
 :e
 let mkArg2 = a => {prop: succ a}
@@ -600,31 +586,31 @@ i arg
 //│ ║  l.+1: 	i arg2
 //│ ║        	^^^^^^
 //│ ╟── application of type `bool` is not an instance of type `int`
-//│ ║  l.402: 	let arg = {prop: not true}
+//│ ║  l.388: 	let arg = {prop: not true}
 //│ ║         	                 ^^^^^^^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.593: 	  succ / f y.fld
+//│ ║  l.579: 	  succ / f y.fld
 //│ ║         	         ^^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.328: 	  x.prop
+//│ ║  l.314: 	  x.prop
 //│ ╙──       	   ^^^^^
-//│ res: error | int
+//│ res: error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+2: 	i arg
 //│ ║        	^^^^^
 //│ ╟── record of type `{prop: ?a}` does not have field 'fld'
-//│ ║  l.402: 	let arg = {prop: not true}
+//│ ║  l.388: 	let arg = {prop: not true}
 //│ ║         	          ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{fld: ?fld}`
 //│ ║  l.+2: 	i arg
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.593: 	  succ / f y.fld
+//│ ║  l.579: 	  succ / f y.fld
 //│ ║         	            ^^^^
 //│ ╟── from reference:
-//│ ║  l.593: 	  succ / f y.fld
+//│ ║  l.579: 	  succ / f y.fld
 //│ ╙──       	           ^
-//│ res: error | int
+//│ res: error
 
 let test x y = if x.prop then i x else y
 //│ test: {fld: {prop: int}, prop: bool} -> 'a -> (int | 'a)
@@ -635,15 +621,15 @@ test arg2
 //│ ║  l.+1: 	test arg2
 //│ ║        	^^^^^^^^^
 //│ ╟── application of type `bool` is not an instance of type `int`
-//│ ║  l.402: 	let arg = {prop: not true}
+//│ ║  l.388: 	let arg = {prop: not true}
 //│ ║         	                 ^^^^^^^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.593: 	  succ / f y.fld
+//│ ║  l.579: 	  succ / f y.fld
 //│ ║         	         ^^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.328: 	  x.prop
+//│ ║  l.314: 	  x.prop
 //│ ╙──       	   ^^^^^
-//│ res: 'a -> (int | 'a) | error
+//│ res: error
 
 let mkArg = a => {prop: a}
 h / mkArg 1
@@ -661,18 +647,18 @@ i / mkArg 1
 //│ ║  l.+1: 	g { fld: mkArg 1 } // TODO multi-step flow message?
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── record of type `{prop: ?a}` is not an instance of type `int`
-//│ ║  l.648: 	let mkArg = a => {prop: a}
+//│ ║  l.634: 	let mkArg = a => {prop: a}
 //│ ║         	                 ^^^^^^^^^
 //│ ╟── but it flows into application with expected type `int`
 //│ ║  l.+1: 	g { fld: mkArg 1 } // TODO multi-step flow message?
 //│ ║        	         ^^^^^^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.327: 	  log / succ x.prop
+//│ ║  l.313: 	  log / succ x.prop
 //│ ║         	             ^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.421: 	  f { prop: y.fld }
+//│ ║  l.407: 	  f { prop: y.fld }
 //│ ╙──       	             ^^^^
-//│ res: error | {prop: 1}
+//│ res: error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+2: 	h / mkArg false
 //│ ║        	^^^^^^^^^^^^^^^
@@ -680,12 +666,12 @@ i / mkArg 1
 //│ ║  l.+2: 	h / mkArg false
 //│ ║        	          ^^^^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.511: 	  succ / f y
+//│ ║  l.497: 	  succ / f y
 //│ ║         	         ^^^
 //│ ╟── from field selection:
-//│ ║  l.328: 	  x.prop
+//│ ║  l.314: 	  x.prop
 //│ ╙──       	   ^^^^^
-//│ res: error | int
+//│ res: error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	i { fld: mkArg false }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
@@ -693,28 +679,28 @@ i / mkArg 1
 //│ ║  l.+3: 	i { fld: mkArg false }
 //│ ║        	               ^^^^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.593: 	  succ / f y.fld
+//│ ║  l.579: 	  succ / f y.fld
 //│ ║         	         ^^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.328: 	  x.prop
+//│ ║  l.314: 	  x.prop
 //│ ╙──       	   ^^^^^
-//│ res: error | int
+//│ res: error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+4: 	i / mkArg 1
 //│ ║        	^^^^^^^^^^^
 //│ ╟── record of type `{prop: ?a}` does not have field 'fld'
-//│ ║  l.648: 	let mkArg = a => {prop: a}
+//│ ║  l.634: 	let mkArg = a => {prop: a}
 //│ ║         	                 ^^^^^^^^^
 //│ ╟── but it flows into application with expected type `{fld: ?fld}`
 //│ ║  l.+4: 	i / mkArg 1
 //│ ║        	    ^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.593: 	  succ / f y.fld
+//│ ║  l.579: 	  succ / f y.fld
 //│ ║         	            ^^^^
 //│ ╟── from reference:
-//│ ║  l.593: 	  succ / f y.fld
+//│ ║  l.579: 	  succ / f y.fld
 //│ ╙──       	           ^
-//│ res: error | int
+//│ res: error
 
 
 
@@ -724,4 +710,4 @@ i / mkArg 1
 foo
 ba)r
 baz
-//│ /!\ Parse error: Expected end-of-input:2:3, found ")r\nbaz\n" at l.725:3: ba)r
+//│ /!\ Parse error: Expected end-of-input:2:3, found ")r\nbaz\n" at l.711:3: ba)r

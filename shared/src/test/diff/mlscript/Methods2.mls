@@ -190,7 +190,7 @@ case o of {
 //│ ╟── but it flows into reference with expected type `None[?] & ?a | Some[?] & ?c`
 //│ ║  l.180: 	case o of {
 //│ ╙──       	     ^
-//│ res: 0 | 1
+//│ res: 0
 //│    = 0
 
 case o of {

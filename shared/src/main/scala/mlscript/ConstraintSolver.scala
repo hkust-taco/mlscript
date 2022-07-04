@@ -19,10 +19,24 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   protected var currentConstrainingRun = 0
   
+  type Shadows = Set[ST -> ST]
+  
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
   // def constrain(lhs: SimpleType, rhs: SimpleType, extrusionContext: Opt[ExtrCtx])(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx): Unit = { val outerCtx = ctx ; {
-  def constrain(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx): Unit = { val outerCtx = ctx ; {
+  def constrain(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx, 
+          shadows: Shadows = Set.empty
+        ): Unit = {
     currentConstrainingRun += 1
+    constrainImpl(lhs, rhs)(err => {
+      raise(err)
+      return()
+    }, prov, ctx, shadows)
+  }
+  def constrainImpl(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx, 
+          shadows: Shadows
+        ): Unit = { val outerCtx = ctx ; {
+    // if (shadows.isEmpty) // FIXME hack!!
+    // currentConstrainingRun += 1
     val ctx = ()
     
     // We need a cache to remember the subtyping tests in process; we also make the cache remember
@@ -35,9 +49,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     println(s"CONSTRAIN $lhs <! $rhs")
     println(s"  where ${FunctionType(lhs, rhs)(noProv).showBounds}")
     
-    type ConCtx = Ls[SimpleType] -> Ls[SimpleType]
+    // shadows.foreach { sh =>
+    //   println(s">> $sh   ${sh.hashCode}")
+    // }
     
-    type Shadows = Set[ST -> ST]
+    type ConCtx = Ls[SimpleType] -> Ls[SimpleType]
     
     
     val ret = () => return
@@ -387,8 +403,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           (implicit raise: Raise, cctx: ConCtx, ctx: Ctx, shadows: Shadows): Unit =
     // trace(s"C $lhs <! $rhs") {
     // trace(s"C $lhs <! $rhs    (${cache.size})") {
-    trace(s"$lvl. C $lhs <! $rhs") {
+    // trace(s"$lvl. C $lhs <! $rhs") {
     // trace(s"$lvl. C $lhs <! $rhs    (${cache.size})") {
+    trace(s"$lvl. C $lhs <! $rhs    (${shadows.size})") {
     // trace(s"C $lhs <! $rhs  ${lhs.getClass.getSimpleName}  ${rhs.getClass.getSimpleName}") {
       // println(s"[[ ${cctx._1.map(_.prov).mkString(", ")}  <<  ${cctx._2.map(_.prov).mkString(", ")} ]]")
       // println(s"{{ ${cache.mkString(", ")} }}")
@@ -881,7 +898,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       raise(TypeError(msgs))
     }
     
-    rec(lhs, rhs, true)(raise, Nil -> Nil, outerCtx, Set.empty)
+    rec(lhs, rhs, true)(raise, Nil -> Nil, outerCtx, shadows)
   }}
   
   
@@ -889,6 +906,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   def subsume(ty_sch: ST, sign: ST)
       (implicit ctx: Ctx, raise: Raise, prov: TypeProvenance): Unit = {
     println(s"CHECKING SUBSUMPTION...")
+    implicit val shadows: Shadows = Set.empty
     constrain(ty_sch, sign)
   }
   
@@ -1031,6 +1049,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         // raise:Raise=throw _,
         // ctx:Ctx,
         raise:Raise,
+        // shadows: Shadows=Set.empty,
+        shadows: Shadows,
         ): SimpleType = {
     def freshenImpl(ty: SimpleType, below: Int): SimpleType =
     // (trace(s"FRESHEN $ty || $above .. $below  ${ty.level} ${ty.level <= above}")
@@ -1118,12 +1138,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         freshenImpl(bod, below = lvl))
       case ct @ ConstrainedType(cs, bod) =>
         val cs2 = cs.mapKeys(freshen(_).asInstanceOf[TV]).mapValues(_.mapValues(freshen))
-        trace(s"COPYING CONSTRAINTS") {
+        // trace(s"COPYING CONSTRAINTS   (${shadows.size})") {
+        trace(s"COPYING CONSTRAINTS   (${cs.mkString(", ")})") {
           implicit val p: TP = NoProv
           cs2.foreach { case (tv, bs) => bs.foreach {
-            case (true, b) => constrain(b, tv)
-            case (false, b) => constrain(tv, b)
+            case (true, b) => constrainImpl(b, tv)
+            case (false, b) => constrainImpl(tv, b)
           }}
+          // cs2.foreach { case (tv, bs) => bs.foreach {
+          //   case (pol, b) => ctx.extrCtx.getOrElseUpdate(tv, Buffer.empty) += pol -> b
+          // }}
         }()
         ConstrainedType(cs2, freshen(bod))
       case o @ Overload(alts) => Overload(alts.map(freshen(_).asInstanceOf[FunctionType]))(o.prov)

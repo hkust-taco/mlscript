@@ -45,41 +45,60 @@ def to_church: int -> ChurchInt
 //   else s (to_ch (n - 1))
 // rec def to_ch n =
 //   s (to_ch (n - 1))
+:e // FIXME? refreshing-extr
 rec def to_ch n =
   s (to_ch n)
 // rec def to_ch n =
 //   to_ch n
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α21_51'  <:  ((α22_70',) -> α23_71')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α21_51'  <:  ((α22_58'''',) -> α23_59'''')
+//│ to_ch: anything -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
+//│   where
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: nothing -> anything))
+//│      = [Function: to_ch]
 
 :ns
 to_ch
-//│ res: forall 'to_ch, 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm, 'n, 'o, 'p, 'q, 'r, 's, 't, 'u, 'v, 'w, 'x, 'y, 'z, 'a1, 'b1, 'c1, 'd1, 'e1, 'f1, 'g1, 'h1, 'i1, 'j1, 'k1, 'l1, 'm1, 'n1, 'o1, 'p1, 'q1, 'r1, 's1, 't1, 'u1, 'v1, 'w1, 'x1, 'y1, 'z1, 'a2, 'b2, 'c2, 'd2, 'e2, 'f2, 'g2, 'h2, 'i2, 'j2, 'k2, 'l2, 'm2, 'n2, 'o2, 'p2, 'q2, 'r2, 's2, 't2, 'u2, 'v2, 'w2, 'x2, 'y2, 'z2, 'a3, 'b3, 'c3, 'd3, 'e3, 'f3, 'g3, 'h3, 'i3, 'j3, 'k3, 'l3, 'm3, 'n3, 'o3, 'p3, 'q3, 'r3, 's3, 't3, 'u3, 'v3, 'w3, 'x3, 'y3, 'z3, 'a4, 'b4, 'c4, 'd4, 'e4, 'f4, 'g4, 'h4, 'i4, 'j4, 'k4, 'l4, 'm4, 'n4, 'o4, 'p4, 'q4, 'r4, 's4, 't4, 'u4, 'v4, 'w4, 'x4, 'y4, 'z4, 'a5, 'b5, 'c5, 'd5, 'e5, 'f5, 'g5, 'h5, 'i5, 'j5, 'k5, 'l5, 'm5, 'n5, 'o5, 'p5, 'q5, 'r5, 's5, 't5, 'u5, 'v5, 'w5, 'x5, 'y5, 'z5, 'a6, 'b6, 'c6, 'd6, 'e6, 'f6, 'g6, 'h6, 'i6, 'j6, 'k6, 'l6, 'm6, 'n6, 'o6, 'p6, 'q6, 'r6, 's6, 't6, 'u6, 'v6, 'w6, 'x6, 'y6, 'z6, 'a7, 'b7, 'c7, 'd7, 'e7, 'f7, 'g7, 'h7, 'i7, 'j7, 'k7, 'l7, 'm7, 'n7, 'o7, 'p7, 'q7, 'r7, 's7, 't7, 'u7, 'v7, 'w7, 'x7, 'y7, 'z7, 'a8, 'b8, 'c8, 'd8, 'e8, 'f8, 'g8, 'h8, 'i8, 'j8, 'k8, 'l8. 'to_ch
+//│ res: forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm, 'n. forall 'to_ch, 'o, 'a, 'p, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm, 'n. 'to_ch
 //│   where
-//│     'to_ch :> 'a -> 'c
-//│            <: 'a -> 'b
-//│     'c :> 'm8 -> ('n8
+//│     'to_ch :> 'o -> 'p
+//│            <: 'o -> 'a
+//│     'p :> 'q -> ('r
 //│   where
-//│     'd <: 'm8 -> 'n8)
+//│     'b <: 'q -> 'r)
 //│   where
-//│     'd <: 'o8 -> 'p8
+//│     'b <: 's -> 't
+//│        <: 'a
+//│     'a :> 'q -> ('r
+//│   where
+//│     'b <: 'q -> 'r)
+//│   where
+//│     'b <: 's -> 't
 //│        <: 'b
-//│     'b :> 'm8 -> ('n8
+//│     'b :> 'q -> ('r
 //│   where
-//│     'd <: 'm8 -> 'n8)
+//│     'b <: 'q -> 'r)
 //│   where
-//│     'd <: 'o8 -> 'p8
-//│        <: 'd
-//│     'd :> 'm8 -> ('n8
-//│   where
-//│     'd <: 'm8 -> 'n8)
-//│   where
-//│     'd <: 'o8 -> 'p8
-//│        <: 'k8 -> 'l8 & 'i8 -> 'j8 & 'g8 -> 'h8 & 'e8 -> 'f8 & 'c8 -> 'd8 & 'a8 -> 'b8 & 'y7 -> 'z7 & 'w7 -> 'x7 & 'u7 -> 'v7 & 's7 -> 't7 & 'q7 -> 'r7 & 'o7 -> 'p7 & 'm7 -> 'n7 & 'k7 -> 'l7 & 'i7 -> 'j7 & 'g7 -> 'h7 & 'e7 -> 'f7 & 'c7 -> 'd7 & 'a7 -> 'b7 & 'y6 -> 'z6 & 'w6 -> 'x6 & 'u6 -> 'v6 & 's6 -> 't6 & 'q6 -> 'r6 & 'o6 -> 'p6 & 'm6 -> 'n6 & 'k6 -> 'l6 & 'i6 -> 'j6 & 'g6 -> 'h6 & 'e6 -> 'f6 & 'c6 -> 'd6 & 'a6 -> 'b6 & 'y5 -> 'z5 & 'w5 -> 'x5 & 'u5 -> 'v5 & 's5 -> 't5 & 'q5 -> 'r5 & 'o5 -> 'p5 & 'm5 -> 'n5 & 'k5 -> 'l5 & 'i5 -> 'j5 & 'g5 -> 'h5 & 'e5 -> 'f5 & 'c5 -> 'd5 & 'a5 -> 'b5 & 'y4 -> 'z4 & 'w4 -> 'x4 & 'u4 -> 'v4 & 's4 -> 't4 & 'q4 -> 'r4 & 'o4 -> 'p4 & 'm4 -> 'n4 & 'k4 -> 'l4 & 'i4 -> 'j4 & 'g4 -> 'h4 & 'e4 -> 'f4 & 'c4 -> 'd4 & 'a4 -> 'b4 & 'y3 -> 'z3 & 'w3 -> 'x3 & 'u3 -> 'v3 & 's3 -> 't3 & 'q3 -> 'r3 & 'o3 -> 'p3 & 'm3 -> 'n3 & 'k3 -> 'l3 & 'i3 -> 'j3 & 'g3 -> 'h3 & 'e3 -> 'f3 & 'c3 -> 'd3 & 'a3 -> 'b3 & 'y2 -> 'z2 & 'w2 -> 'x2 & 'u2 -> 'v2 & 's2 -> 't2 & 'q2 -> 'r2 & 'o2 -> 'p2 & 'm2 -> 'n2 & 'k2 -> 'l2 & 'i2 -> 'j2 & 'g2 -> 'h2 & 'e2 -> 'f2 & 'c2 -> 'd2 & 'a2 -> 'b2 & 'y1 -> 'z1 & 'w1 -> 'x1 & 'u1 -> 'v1 & 's1 -> 't1 & 'q1 -> 'r1 & 'o1 -> 'p1 & 'm1 -> 'n1 & 'k1 -> 'l1 & 'i1 -> 'j1 & 'g1 -> 'h1 & 'e1 -> 'f1 & 'c1 -> 'd1 & 'a1 -> 'b1 & 'y -> 'z & 'w -> 'x & 'u -> 'v & 's -> 't & 'q -> 'r & 'o -> 'p & 'm -> 'n & 'k -> 'l & 'i -> 'j & 'g -> 'h & 'e -> 'f
+//│     'b <: 's -> 't
+//│        <: 'm -> 'n & 'k -> 'l & 'i -> 'j & 'g -> 'h & 'e -> 'f & 'c -> 'd
 //│    = [Function: to_ch]
 
+// :d
+// :s
+:e // FIXME? refreshing-extr
 :re
 to_ch 1 2
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α21_90  <:  ((α22_113,) -> α23_114)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α21_51'  <:  ((α22_91'''',) -> α23_92'''')
+//│ res: error
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 // * NOTE the crash was due to the use of `s` rather than an annotated `succ`:
 // :d
@@ -93,6 +112,10 @@ to_church = to_ch
 //│     'a <: nothing -> anything))
 //│   <:  to_church:
 //│ int -> ChurchInt
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α21_134  <:  ((α22_157,) -> α23_158)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α21_51'  <:  ((α22_135'''',) -> α23_136'''')
+//│          = [Function: to_ch]
 
 

@@ -55,38 +55,56 @@ class Collection[a]: { l: List[a] }
   method Mem x = mem x this.l
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
-//│ Defined Collection.Mem: Collection[?] -> anything -> (forall 'a. (bool
+//│ Defined Collection.Mem: Collection['a] -> (forall 'a. 'a -> (forall 'a. (bool
 //│   where
-//│     'a <: anything
-//│     'a <: anything
-//│     'a <: anything))
-//│ Defined Collection.Fold: Collection['a] -> (forall 'b. ('b -> 'a -> 'b) -> (forall 'a, 'c, 'd, 'e. (anything -> (forall 'a, 'c, 'f, 'g. ('f
+//│     'a <: 'a
+//│     'a <: 'a
+//│     'a <: 'a)))
+//│ Defined Collection.Fold: Collection['a] -> (forall 'b, 'c. ('b -> 'a -> 'b & 'c) -> (forall 'a, 'c, 'd, 'e, 'f. ('f -> (forall 'a, 'c, 'f, 'g. ('g
 //│   where
-//│     'c <: 'f -> 'a -> 'f
-//│     'g <: 'f))
+//│     'c <: 'g -> 'a -> 'g
+//│     'f <: 'g))
 //│   where
 //│     'c <: 'd -> 'a -> 'd
 //│     'c <: 'e -> 'a -> 'e)))
 
 def coll_mem c x = c.Mem x
-//│ coll_mem: (Collection['a] & 'b) -> (forall 'a, 'b. ('a -> (forall 'a, 'b, 'c. (bool
+//│ coll_mem: (Collection['a] & 'b) -> (forall 'a, 'b, 'c, 'd. ('d -> (forall 'a, 'b, 'c, 'd. (bool
 //│   where
-//│     'c <: 'a
-//│     'b <: Collection['a]
 //│     'a <: 'a
-//│     'c <: 'a
 //│     'b <: Collection['a]
+//│     'd <: 'a
+//│     'c <: 'a
 //│     'a <: 'a
-//│     'c <: 'a
 //│     'b <: Collection['a]
-//│     'a <: 'a))
+//│     'd <: 'a
+//│     'c <: 'a
+//│     'a <: 'a
+//│     'b <: Collection['a]
+//│     'd <: 'a
+//│     'c <: 'a))
 //│   where
 //│     'b <: Collection['a]
-//│     'b <: Collection['a]))
+//│     'c <: 'a
+//│     'b <: Collection['a]
+//│     'c <: 'a))
 
 // typo in the paper? it was `fun x -> fun y -> ...`
+:e // FIXME? refreshing-extr
 def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
   let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
   (l1, l2)
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 7. {α379_520^8 where: α31_372'''' <: tail27_458'''', α31_389'''' <: tail27_460'''', α362_462'''' <: α31_508^8, α363_504'''' <: α30_511^8}›  <:  tail27_464''''    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 7. {α379_497^8 where: α31_372'''' <: tail27_377''''', α31_389'''' <: tail27_392''''', α362''''' <: α31_485^8, α363_480^7 <: α30_488^8}›  <:  tail27_406'''''
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 7. {α594_730^8 where: α577_683'''' <: α31_724^8, head26_583''' :> (α578_723'''', α578_723'''',), head26_585'''' :> (α578_723'''', α578_723'''',), α31_587'''' <: tail27_677'''', α31_605'''' <: tail27_680'''', head26_696'''' :> (α578_723'''', α578_723'''',)}›  <:  tail27_685''''    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 7. {α594_716^8 where: α577''''' <: α31_707^8, head26_583''' :> (α578_700^7, α578_700^7,), head26_585'''' :> (α578_700^7, α578_700^7,), α31_587'''' <: tail27_592''''', α31_605'''' <: tail27_608''''', head26_590''''' :> (α578_700^7, α578_700^7,)}›  <:  tail27_623'''''
+//│ simple_and_double: (Collection['a] & 'a) -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i. ((error, error,)
+//│   where
+//│     'b <: 'c -> nothing -> 'c & 'd -> nothing -> 'd & 'e -> nothing -> 'e
+//│     'a <: Collection['a]
+//│     'f <: 'g -> nothing -> 'g & 'h -> nothing -> 'h & 'i -> nothing -> 'i))

@@ -333,13 +333,7 @@ f (choose id) ids
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‹∀ 0. ('a386' -> 'a386')›  <:  'a1029_1036    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. ('a386' -> 'a386')›  <:  'a1029'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.329: 	f (choose id) ids
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. ('a398'' -> 'a398'')›  <:  'a1029_1036    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. ('a398'' -> 'a398'')›  <:  'a1029_1036
-//│ res: 'a -> 'a | error
+//│ res: error
 
 // * ^ Strangely, this one works with recursive types:
 :ng
@@ -569,12 +563,13 @@ a id
 // * FIXME: without constrained types, the type of argument x was not polymorphic enough
 // * I guess we're swallowing/delaying a constraint?
 // :e // due to tapping
+:e // refreshing-extr
 :ns
 choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ╔══[ERROR] Type mismatch in lambda expression:
-//│ ║  l.573: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
+//│ ║  l.568: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a1393` is not an instance of type `'a`
+//│ ╟── type `‘a1388` is not an instance of type `'a`
 //│ ║  l.195: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -586,15 +581,16 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│   where
 //│     'a0 <: ‘a)))
 //│     'd :> 'b -> 'b
-//│     'a0 :> ‘a1393
+//│     'a0 :> ‘a1388
 //│         <: ‘a
 //│    = [Function: id1]
 
 // :e // * ^ Here you go:
 // :e // FIXME? succeeds with genLamBodies
+:e // FIXME? refreshing-extr
 res id
 //│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `‘a1393` is not an instance of type `'a`
+//│ ╟── type `‘a1388` is not an instance of type `'a`
 //│ ║  l.195: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -607,15 +603,15 @@ res id
 :e
 a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.608: 	a (fun x -> { u = x })
+//│ ║  l.604: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a`
-//│ ║  l.608: 	a (fun x -> { u = x })
+//│ ║  l.604: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.195: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──       	                    ^^
-//│ res: ('b & 'a) -> ('b | {u: 'a}) | error
+//│ res: 'a -> {u: 'a} | error
 //│    = [Function (anonymous)]
 
 

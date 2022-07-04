@@ -158,7 +158,7 @@ example 1
 //│ ╟── from reference:
 //│ ║  l.143: 	def example f = (f: forall 'a. 'a -> 'a)
 //│ ╙──       	                 ^
-//│ res: 'a -> 'a | error
+//│ res: error
 //│    = 1
 
 :e
@@ -169,7 +169,7 @@ example succ
 //│ ╟── type `‘a` is not an instance of type `int`
 //│ ║  l.143: 	def example f = (f: forall 'a. 'a -> 'a)
 //│ ╙──       	                           ^^
-//│ res: 'a -> 'a | error
+//│ res: error
 //│    = [Function: succ]
 
 example id
@@ -229,15 +229,6 @@ id_ty = id
 //│ ╟── from reference:
 //│ ║  l.203: 	rec def id x = let tmp = id id x in x
 //│ ╙──       	                                    ^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.212: 	id_ty = id
-//│ ║         	^^^^^^^^^^
-//│ ╟── function of type `?a -> ?a` is not an instance of type `'a`
-//│ ║  l.203: 	rec def id x = let tmp = id id x in x
-//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.198: 	def id_ty: forall 'a. 'a -> 'a
-//│ ╙──       	                  ^^
 //│      = [Function: id1]
 
 

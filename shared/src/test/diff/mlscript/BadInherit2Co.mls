@@ -17,15 +17,6 @@ class A00: S00[int] & T00[string]
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.10: 	class A00: S00[int] & T00[string]
 //│ ╙──      	                          ^^^^^^
-//│ ╔══[ERROR] Type mismatch in type definition:
-//│ ║  l.10: 	class A00: S00[int] & T00[string]
-//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `string` is not an instance of `int`
-//│ ║  l.10: 	class A00: S00[int] & T00[string]
-//│ ║        	                          ^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.10: 	class A00: S00[int] & T00[string]
-//│ ╙──      	               ^^^
 //│ Defined trait S00[+A]
 //│ Declared S00.Foo00: S00['A] -> 'A
 //│ Defined trait T00[+B]
@@ -47,13 +38,13 @@ class A0: S0[int] & T0[string]
 :e
 (A0{}).Foo0
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.48: 	(A0{}).Foo0
+//│ ║  l.39: 	(A0{}).Foo0
 //│ ║        	 ^^
 //│ ╟── Note that class A0 is abstract:
-//│ ║  l.44: 	class A0: S0[int] & T0[string]
+//│ ║  l.35: 	class A0: S0[int] & T0[string]
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Hint: method Foo0 is abstract
-//│ ║  l.44: 	class A0: S0[int] & T0[string]
+//│ ║  l.35: 	class A0: S0[int] & T0[string]
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error
 //│    = undefined
@@ -62,19 +53,19 @@ class A0: S0[int] & T0[string]
 class A0_2: S0[int] & T0[string]
   method Foo0 = 1
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.63: 	  method Foo0 = 1
+//│ ║  l.54: 	  method Foo0 = 1
 //│ ║        	         ^^^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `string`
-//│ ║  l.63: 	  method Foo0 = 1
+//│ ║  l.54: 	  method Foo0 = 1
 //│ ║        	                ^
 //│ ╟── but it flows into method definition with expected type `string`
-//│ ║  l.63: 	  method Foo0 = 1
+//│ ║  l.54: 	  method Foo0 = 1
 //│ ║        	         ^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.62: 	class A0_2: S0[int] & T0[string]
+//│ ║  l.53: 	class A0_2: S0[int] & T0[string]
 //│ ║        	                         ^^^^^^
 //│ ╟── from inherited method declaration:
-//│ ║  l.38: 	  method Foo0: A
+//│ ║  l.29: 	  method Foo0: A
 //│ ╙──      	         ^^^^^^^
 //│ Defined class A0_2
 //│ Defined A0_2.Foo0: A0_2 -> 1
@@ -104,14 +95,14 @@ trait T1: R1[string]
 :e
 class A1: S1 & T1
 //│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
-//│ ║  l.105: 	class A1: S1 & T1
-//│ ║         	      ^^
+//│ ║  l.96: 	class A1: S1 & T1
+//│ ║        	      ^^
 //│ ╟── Definitions of method Foo1 inherited from:
 //│ ╟── • S1
-//│ ║  l.96: 	  method Foo1 = 1
+//│ ║  l.87: 	  method Foo1 = 1
 //│ ║        	         ^^^^^^^^
 //│ ╟── • T1
-//│ ║  l.98: 	  method Foo1 = "a"
+//│ ║  l.89: 	  method Foo1 = "a"
 //│ ╙──      	         ^^^^^^^^^^
 //│ Defined class A1
 

@@ -21,8 +21,10 @@ e2 : Add['e] as 'e
 //│   where
 //│     'e :> forall 'e0. 'e0 | error | Add['e]
 //│        <: Add['e] & 'e1
-//│     'e1 :> (forall 'e0. 'e0 | error | Add['e1]) | error | Add['e1]
-//│         <: Add['e1] & {x: 'e -> 'e} & {x: 'e1 -> 'e1}
+//│     'e1 :> forall 'e0. 'e0 | error | Add['e1]
+//│         <: Add['e1] & {x: 'e -> 'e} & 'e2
+//│     'e2 :> error | Add['e2]
+//│         <: Add['e2] & {x: 'e1 -> 'e1}
 //│     'e0 := Add['e0]
 //│    = <no result>
 //│      e2 is not implemented
@@ -45,17 +47,11 @@ f0 = f0
 //│   where
 //│     'a := 'a -> int
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.39: 	f0 = f0
+//│ ║  l.41: 	f0 = f0
 //│ ║        	^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a42'››  <:  'a42_53'    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a42'››  <:  'a42'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.39: 	f0 = f0
-//│ ║        	^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ('a42_52' -> int<number>)  <:  ('a42_53' -> int<number>)    FunctionType  FunctionType
-//│ ╙──  ... looks like:  ('a42' -> int<number>)  <:  ('a42' -> int<number>)
 //│   = <no result>
 //│     f0 is not implemented
 

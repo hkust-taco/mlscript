@@ -172,7 +172,7 @@ q + 1
 //│ ╟── but it flows into reference with expected type `int`
 //│ ║  l.165: 	q + 1
 //│ ╙──       	^
-//│ res: error | int
+//│ res: error
 //│    = 2
 
 :e

@@ -177,7 +177,7 @@ choose id auto2
 //│     'b <: 'a
 //│     'c <: 'a
 
-// :e // This is a legit error
+:e // This is a legit error
 res (choose id succ)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.181: 	res (choose id succ)

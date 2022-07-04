@@ -19,9 +19,7 @@ f {}
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.5: 	def f n = n 0
 //│ ╙──     	          ^^^
-//│ res: error | 'a
-//│   where
-//│     'b <: 0 -> 'a
+//│ res: error
 //│ Runtime error:
 //│   TypeError: n is not a function
 
@@ -29,17 +27,10 @@ f {}
 :e
 f {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.30: 	f {} {}
+//│ ║  l.28: 	f {} {}
 //│ ║        	^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.30: 	f {} {}
-//│ ║        	  ^^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.5: 	def f n = n 0
-//│ ╙──     	          ^^^
-//│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── record literal of type `anything` is not a function
-//│ ║  l.30: 	f {} {}
+//│ ║  l.28: 	f {} {}
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.5: 	def f n = n 0
@@ -61,13 +52,13 @@ def f n m = n 0
 :e // due to tapping
 f {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.62: 	f {}
+//│ ║  l.53: 	f {}
 //│ ║        	^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.62: 	f {}
+//│ ║  l.53: 	f {}
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.52: 	def f n m = n 0
+//│ ║  l.43: 	def f n m = n 0
 //│ ╙──      	            ^^^
 //│ res: error
 //│    = [Function (anonymous)]
@@ -75,13 +66,13 @@ f {}
 :e
 f {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.76: 	f {} {}
+//│ ║  l.67: 	f {} {}
 //│ ║        	^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.76: 	f {} {}
+//│ ║  l.67: 	f {} {}
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.52: 	def f n m = n 0
+//│ ║  l.43: 	def f n m = n 0
 //│ ╙──      	            ^^^
 //│ res: error
 //│ Runtime error:

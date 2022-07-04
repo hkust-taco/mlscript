@@ -37,7 +37,7 @@ Hey t
 //│ ╟── Note: constraint arises from record type:
 //│ ║  l.23: 	trait Hey: { x: int }
 //│ ╙──      	           ^^^^^^^^^^
-//│ res: (1, 2, 3,) & hey | error
+//│ res: error
 //│    = [ 1, 2, 3 ]
 
 htx = Hey tx
@@ -84,7 +84,7 @@ f htx
 //│ ╟── Note: constraint arises from tuple literal:
 //│ ║  l.67: 	f ((a, b)) = add a b
 //│ ╙──      	   ^^^^^^
-//│ res: error | int
+//│ res: error
 //│    = 3
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.73: 	f tx
@@ -98,7 +98,7 @@ f htx
 //│ ╟── Note: constraint arises from tuple literal:
 //│ ║  l.67: 	f ((a, b)) = add a b
 //│ ╙──      	   ^^^^^^
-//│ res: error | int
+//│ res: error
 //│    = 3
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.74: 	f htx
@@ -112,7 +112,7 @@ f htx
 //│ ╟── Note: constraint arises from tuple literal:
 //│ ║  l.67: 	f ((a, b)) = add a b
 //│ ╙──      	   ^^^^^^
-//│ res: error | int
+//│ res: error
 //│    = 3
 
 
@@ -148,7 +148,7 @@ g tx
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.131: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ╙──       	                                          ^^^^^
-//│ res: 1 | error
+//│ res: error
 //│    = 1
 
 :ge

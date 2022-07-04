@@ -236,10 +236,26 @@ def to_ch_s_mix n =
 //│            = [Function: to_ch_s_mix]
 
 // :e // due to tapping
+:e // FIXME? refreshing-extr
 rec def to_ch_s n =
   if n == 0 then z
   else s (to_ch_s (n - 1))
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α225_12078'  <:  ((α226_12161',) -> α228_12162')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α225_12078'  <:  ((α226_12091'''',) -> α228_12092'''')
+//│ to_ch_s: int -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c, 'd. (('c & 'd) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f | 'c
+//│   where
+//│     'a <: 'b -> 'd -> 'e
+//│     'b <: 'e -> 'f))
+//│   where
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything
+//│     'a <: nothing -> nothing -> anything
+//│     'b <: nothing -> anything))
+//│   where
+//│     'a <: nothing -> nothing -> anything))
+//│        = [Function: to_ch_s]
 
 // rec def to_ch n =
 //   (if n == 0 then zero
@@ -300,7 +316,11 @@ to_church = to_ch_s
 //│     'a <: nothing -> nothing -> anything))
 //│   <:  to_church:
 //│ int -> ChurchInt
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α225_12507  <:  ((α226_12613,) -> α228_12614)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α225_12078'  <:  ((α226_12508'''',) -> α228_12509'''')
+//│          = [Function: to_ch_s]
 
 rec def to_ch_mix n =
   if n == 0 then zero
@@ -347,11 +367,11 @@ to_church = to_ch_mix
 rec def to_ch n =
   succD (to_ch n)
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.347: 	rec def to_ch n =
+//│ ║  l.367: 	rec def to_ch n =
 //│ ║         	              ^^^
-//│ ║  l.348: 	  succD (to_ch n)
+//│ ║  l.368: 	  succD (to_ch n)
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N14023` is not an instance of type `'N`
+//│ ╟── type `‘N13050` is not an instance of type `'N`
 //│ ║  l.42: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -360,7 +380,7 @@ rec def to_ch n =
 //│ ╟── from quantified type variable:
 //│ ║  l.100: 	def succD: forall 'M. ChurchInt -> ('M -> 'M) -> ('M -> 'M)
 //│ ╙──       	                  ^^
-//│ to_ch: anything -> (('M | ‘N14023) -> (‘N & 'M)) -> (‘N & 'M) -> ('M | ‘N14023)
+//│ to_ch: anything -> (('M | ‘N13050) -> (‘N & 'M)) -> (‘N & 'M) -> ('M | ‘N13050)
 //│      = [Function: to_ch1]
 
 
@@ -419,6 +439,7 @@ to_church = to_ch_s_mix
 //│          = [Function: to_ch_s_mix]
 
 //:e // due to tapping
+:e // FIXME? refreshing-extr
 to_church = to_ch_s
 //│ int -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c, 'd. (('c & 'd) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f | 'c
 //│   where
@@ -433,7 +454,11 @@ to_church = to_ch_s
 //│     'a <: nothing -> nothing -> anything))
 //│   <:  to_church:
 //│ int -> ChurchInt
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α225_13702'  <:  ((α226_13808',) -> α228_13809')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α225_12078'  <:  ((α226_13703'''',) -> α228_13704'''')
+//│          = [Function: to_ch_s]
 
 to_church = to_ch_mix
 //│ int -> (forall 'a, 'b. ((nothing -> anything & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd, 'e. ('e

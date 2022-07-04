@@ -67,13 +67,7 @@ not (test id)._1 + 1
 //│ ╟── but it flows into field selection with expected type `bool`
 //│ ║  l.58: 	not (test id)._1 + 1
 //│ ╙──      	    ^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.58: 	not (test id)._1 + 1
-//│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `bool` is not an instance of type `int`
-//│ ║  l.58: 	not (test id)._1 + 1
-//│ ╙──      	^^^^^^^^^^^^^^^^
-//│ res: error | int
+//│ res: int
 //│    = 2
 
 // * Even works with recursive definition because the constrained type is strictly local to the body!

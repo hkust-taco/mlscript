@@ -142,6 +142,7 @@ def fold_left = fl
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 :NoRecursiveTypes
 
+:e // FIXME? refreshing-extr
 def fold_left = fl2
 //│ ('a -> nothing -> 'a & nothing -> nothing -> 'c & 'a0 -> nothing -> 'a0 & 'a1 -> nothing -> 'a1 & 'a2 -> nothing -> 'a2 & 'a3 -> nothing -> 'a3 & 'a4 -> nothing -> 'a4 & 'a5 -> nothing -> 'a5 & 'a6 -> nothing -> 'a6 & 'a7 -> nothing -> 'a7 & 'a8 -> nothing -> 'a8 & 'a9 -> nothing -> 'a9 & 'a10 -> nothing -> 'a10 & 'a11 -> nothing -> 'a11 & 'a12 -> nothing -> 'a12 & 'a13 -> nothing -> 'a13 & 'a14 -> nothing -> 'a14 & 'a15 -> nothing -> 'a15 & 'a16 -> nothing -> 'a16 & 'a17 -> nothing -> 'a17 & 'a18 -> nothing -> 'a18 & 'a19 -> nothing -> 'a19 & 'a20 -> nothing -> 'a20 & 'a21 -> nothing -> 'a21 & 'a22 -> nothing -> 'a22 & 'a23 -> nothing -> 'a23 & 'a24 -> nothing -> 'a24 & 'a25 -> nothing -> 'a25 & 'a26 -> nothing -> 'a26 & 'a27 -> nothing -> 'a27 & 'a28 -> nothing -> 'a28 & 'a29 -> nothing -> 'a29 & 'a30 -> nothing -> 'a30 & 'a31 -> nothing -> 'a31 & 'a32 -> nothing -> 'a32 & 'd) -> (forall 'c, 'd, 'a33, 'a34, 'a35, 'a36, 'a37, 'a38, 'a39, 'a40, 'a41, 'a42, 'a43, 'a44, 'a45, 'a46, 'a47, 'a48, 'a49, 'e. ('e -> (forall 'c, 'd, 'e, 'a50, 'a51, 'a52, 'a53, 'a54, 'a55, 'a56, 'a57, 'a58, 'a59, 'a60, 'a61, 'a62, 'a63, 'a64, 'a65, 'a66, 'a67, 'a68, 'a69, 'a70, 'a71, 'a72, 'a73, 'a74, 'a75, 'a76, 'a77. ((List['c] & 'c) -> (forall 'c, 'd, 'e, 'a78, 'b, 'f, 'g, 'a79, 'a80, 'a81, 'a82, 'a83, 'a84, 'a85, 'a86, 'h. ('a78 | 'h
 //│   where
@@ -162,8 +163,8 @@ def fold_left = fl2
 //│     'd <: 'a33 -> nothing -> 'a33 & nothing -> nothing -> 'c & 'a34 -> nothing -> 'a34 & 'a35 -> nothing -> 'a35 & 'a36 -> nothing -> 'a36 & 'a37 -> nothing -> 'a37 & 'a38 -> nothing -> 'a38 & 'a39 -> nothing -> 'a39 & 'a40 -> nothing -> 'a40 & 'a41 -> nothing -> 'a41 & 'a42 -> nothing -> 'a42 & 'a43 -> nothing -> 'a43 & 'a44 -> nothing -> 'a44 & 'a45 -> nothing -> 'a45 & 'a46 -> nothing -> 'a46 & 'a47 -> nothing -> 'a47 & 'a48 -> nothing -> 'a48 & 'a49 -> nothing -> 'a49))
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?c, ?b, ?d, ?e, ?f, ?g, ?b0, ?h, ?i, ?j, ?k, ?b1, ?l, ?m, ?n, ?o, ?b2, ?p, ?q, ?r, ?s, ?b3, ?t, ?u, ?v, ?w, ?b4, ?x, ?y, ?z, ?a1, ?b5, ?b1, ?c1, ?d1, ?e1, ?b6, ?f1, ?g1, ?h1, ?i1, ?b7, ?j1, ?k1, ?l1, ?m1, ?b8, ?n1, ?o1, ?p1, ?q1, ?b9, ?r1, ?s1, ?t1, ?u1, ?b10, ?v1, ?w1, ?x1, ?y1, ?b11, ?z1, ?a2, ?b2, ?c2, ?a, ?d2, ?b12, ?e2, ?f2, ?g2, ?h2, ?a0, ?i2, ?a1, ?j2, ?b13, ?k2, ?l2, ?m2, ?n2, ?a2, ?o2, ?a3, ?p2, ?b14, ?q2, ?r2, ?s2, ?t2, ?a4, ?u2, ?a5, ?v2, ?b15, ?w2, ?x2, ?y2, ?z2, ?a6, ?a3, ?a7, ?b3, ?b16, ?c3, ?d3, ?e3, ?f3, ?a8, ?g3, ?a9, ?h3, ?b17, ?i3, ?j3, ?k3, ?l3, ?a10, ?m3, ?a11, ?n3, ?b18, ?o3, ?p3, ?q3, ?r3, ?a12, ?s3, ?a13, ?t3, ?b19, ?u3, ?v3, ?w3, ?x3, ?a14, ?y3, ?a15, ?z3, ?b20, ?a4, ?b4, ?c4, ?d4, ?a16, ?e4, ?a17, ?f4, ?b21, ?g4, ?h4, ?i4, ?j4, ?a18, ?k4, ?a19, ?l4, ?b22, ?m4, ?n4, ?o4, ?p4, ?a20, ?q4, ?a21, ?r4, ?b23, ?s4, ?t4, ?u4, ?v4, ?a22, ?w4, ?a23, ?x4, ?b24, ?y4, ?z4, ?a5, ?b5, ?a24, ?c5, ?a25, ?d5, ?b25, ?e5, ?f5, ?g5, ?h5, ?a26, ?i5, ?a27, ?j5, ?b26, ?k5, ?l5, ?m5, ?n5, ?a28, ?o5, ?a29, ?p5, ?b27, ?q5, ?r5, ?s5, ?t5, ?a30, ?u5, ?a31, ?v5, ?b28, ?w5, ?x5, ?y5, ?z5, ?a32, ?a6, ?fl2, ?b6, ?c6, ?a33, ?a34, ?d6, ?e6, ?a35, ?a36, ?f6, ?g6, ?a37, ?a38, ?h6, ?i6, ?a39, ?a40, ?j6, ?k6, ?a41, ?a42, ?l6, ?m6, ?a43, ?a44, ?n6, ?o6, ?a45, ?a46, ?p6, ?q6, ?a47, ?a48, ?r6, ?s6, ?a49, ?a50, ?t6, ?u6, ?a51, ?a52, ?v6, ?w6, ?a53, ?a54, ?x6, ?y6, ?a55, ?a56, ?z6, ?a7, ?a57, ?a58, ?b7, ?c7, ?a59, ?a60, ?d7, ?e7, ?a61, ?a62, ?f7, ?g7, ?a63, ?a64, ?h7, ?i7, ?a65, ?a66, ?a67, ?j7, ?k7, ?a68, ?a69, ?l7, ?m7, ?a70, ?a71, ?n7, ?o7, ?a72, ?a73, ?p7, ?q7, ?a74, ?a75, ?r7, ?s7, ?a76, ?a77, ?t7, ?u7, ?a78, ?a79, ?v7, ?w7, ?a80, ?a81, ?x7, ?y7, ?a82, ?a83, ?z7, ?a8, ?a84, ?a85, ?b8, ?c8, ?a86, ?a87, ?d8, ?e8, ?a88, ?a89, ?f8, ?g8, ?a90, ?a91, ?h8, ?i8, ?a92, ?b29. ?fl2 <: forall ?a93, ?b30. (?a93 -> ?b30 -> ?a93) -> ?a93 -> List[?b30] -> ?a93` took too many steps and ran out of fuel (5000)
-//│ ║  l.145: 	def fold_left = fl2
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?c, ?b, ?d, ?e, ?f, ?g, ?b0, ?h, ?i, ?j, ?k, ?b1, ?l, ?m, ?n, ?o, ?b2, ?p, ?q, ?r, ?s, ?b3, ?t, ?u, ?v, ?w, ?b4, ?x, ?y, ?z, ?a1, ?b5, ?b1, ?c1, ?d1, ?e1, ?b6, ?f1, ?g1, ?h1, ?i1, ?b7, ?j1, ?k1, ?l1, ?m1, ?b8, ?n1, ?o1, ?p1, ?q1, ?b9, ?r1, ?s1, ?t1, ?u1, ?b10, ?v1, ?w1, ?x1, ?y1, ?b11, ?z1, ?a2, ?b2, ?c2, ?b12, ?d2, ?e2, ?f2, ?g2, ?b13, ?h2, ?i2, ?j2, ?k2, ?b14, ?l2, ?m2, ?n2, ?o2, ?b15, ?p2, ?q2, ?r2, ?fl2, ?s2, ?t2, ?a, ?a0, ?u2, ?v2, ?a1, ?a2, ?w2, ?x2, ?a3, ?a4, ?y2, ?z2, ?a5, ?a6, ?a3, ?b3, ?a7, ?a8, ?c3, ?d3, ?a9, ?a10, ?e3, ?f3, ?a11, ?a12, ?g3, ?h3, ?a13, ?a14, ?i3, ?j3, ?a15, ?a16, ?k3, ?l3, ?a17, ?a18, ?m3, ?n3, ?a19, ?a20, ?o3, ?p3, ?a21, ?a22, ?q3, ?r3, ?a23, ?a24, ?s3, ?t3, ?a25, ?a26, ?u3, ?v3, ?a27, ?a28, ?w3, ?x3, ?a29, ?a30, ?y3, ?z3, ?a31, ?a32. ?fl2 <: forall ?a33, ?b16. (?a33 -> ?b16 -> ?a33) -> ?a33 -> List[?b16] -> ?a33` took too many steps and ran out of fuel (5000)
+//│ ║  l.146: 	def fold_left = fl2
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟──  + (‘a' -> (‘b' -> ‘a'))
 //│ ║  l.113: 	def fold_left: forall 'a 'b. ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
@@ -183,10 +184,10 @@ class Collection[a]: { l: List[a] }
   method Mem x = mem x this.l
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
-//│ Defined Collection.Mem: Collection[?] -> anything -> (forall 'a. (bool
+//│ Defined Collection.Mem: Collection['a] -> (forall 'a. 'a -> (forall 'a. (bool
 //│   where
-//│     'a <: anything))
-//│ Defined Collection.Fold: Collection['a] -> (forall 'a0. ('a0 -> 'a -> 'a0) -> (forall 'a, 'b, 'a1, 'a2. (anything -> (forall 'a, 'b, 'a3, 'c. ('a3
+//│     'a <: 'a)))
+//│ Defined Collection.Fold: Collection['a] -> (forall 'a0, 'b. ('a0 -> 'a -> 'a0 & 'b) -> (forall 'a, 'b, 'a1, 'a2, 'c. ('c -> (forall 'a, 'b, 'c, 'a3. ('a3
 //│   where
 //│     'b <: 'a3 -> 'a -> 'a3
 //│     'c <: 'a3))
@@ -195,27 +196,44 @@ class Collection[a]: { l: List[a] }
 //│     'b <: 'a2 -> 'a -> 'a2)))
 
 def coll_mem c x = c.Mem x
-//│ coll_mem: (Collection['a] & 'b) -> (forall 'a, 'b. ('a -> (forall 'a, 'b, 'c. (bool
+//│ coll_mem: (Collection['a] & 'b) -> (forall 'a, 'b, 'c, 'd. ('d -> (forall 'a, 'b, 'c, 'd. (bool
 //│   where
+//│     'a <: 'a
+//│     'b <: Collection['a]
+//│     'd <: 'a
+//│     'c <: 'a))
+//│   where
+//│     'b <: Collection['a]
 //│     'c <: 'a
 //│     'b <: Collection['a]
-//│     'a <: 'a))
-//│   where
-//│     'b <: Collection['a]
-//│     'b <: Collection['a]))
+//│     'c <: 'a))
 
+:e // FIXME? refreshing-extr
 // typo in the paper? it was `fun x -> fun y -> ...`
 def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> cons x y) nil in
   let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
   (l1, l2)
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 7. {α6981_7030^8 where: α6977_7011'''' <: List[α260_7027^8], α6978_7025'''' <: α260_7027^8}›  <:  list<>    PolymorphicType  ClassTag
+//│ ╙──  ... looks like:  ‹∀ 7. {α6981_7022^8 where: α6977''''' <: List[α260_7019^8], α6978_7017^7 <: α260_7019^8}›  <:  list<>
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 7. {α7072_7127^8 where: α7068_7104'''' <: List[α260_7125^8]}›  <:  list<>    PolymorphicType  ClassTag
+//│ ╙──  ... looks like:  ‹∀ 7. {α7072_7119^8 where: α7068''''' <: List[α260_7116^8]}›  <:  list<>
+//│ simple_and_double: (Collection['b] & 'b) -> (forall 'b, 'c, 'a, 'a0, 'a1, 'd, 'a2, 'a3, 'a4. ((error, error,)
+//│   where
+//│     'c <: 'a -> nothing -> 'a & 'a0 -> nothing -> 'a0 & 'a1 -> nothing -> 'a1
+//│     'b <: Collection['b]
+//│     'd <: 'a2 -> nothing -> 'a2 & 'a3 -> nothing -> 'a3 & 'a4 -> nothing -> 'a4))
 
 simple_and_double (Collection{l = cons 1 nil})
-//│ ╔══[ERROR] identifier not found: simple_and_double
-//│ ║  l.214: 	simple_and_double (Collection{l = cons 1 nil})
-//│ ╙──       	^^^^^^^^^^^^^^^^^
-//│ res: error
+//│ res: (error, error,)
+//│   where
+//│     'b <: 'a -> nothing -> 'a & 'a0 -> nothing -> 'a0 & 'a1 -> nothing -> 'a1
+//│     'c <: Collection[?]
+//│     'd <: 'a2 -> nothing -> 'a2 & 'a3 -> nothing -> 'a3 & 'a4 -> nothing -> 'a4
 
 // ------------ subtyping & methods ------------
 

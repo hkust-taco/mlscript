@@ -21,7 +21,7 @@ test1 1
 //│ ╟── from refined scrutinee:
 //│ ║  l.8: 	def test1 x = case x of { MyTrait -> x.value | _ -> 0 }
 //│ ╙──     	                   ^
-//│ res: 0 | error
+//│ res: error
 //│    = 0
 
 test1 { value = 1 }
@@ -69,7 +69,7 @@ test2 { value = 1 }
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.47: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
 //│ ╙──      	                                                    ^^^^^^^^^
-//│ res: 1 | error
+//│ res: error
 //│    = undefined
 
 test2 { value = 1; default = "hi" }
@@ -101,7 +101,7 @@ test2 (C2 { default = "oops" })
 //│ ╟── from refined scrutinee:
 //│ ║  l.47: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
 //│ ╙──      	                   ^
-//│ res: "oops" | error
+//│ res: error
 //│    = 'oops'
 
 // Note: `value` is unused here; would deserve a warning
@@ -121,7 +121,7 @@ test2 c2
 //│ ╟── from refined scrutinee:
 //│ ║  l.47: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
 //│ ╙──      	                   ^
-//│ res: "oops" | error
+//│ res: error
 //│    = 'oops'
 
 test2 (c2 with { value = 1 })

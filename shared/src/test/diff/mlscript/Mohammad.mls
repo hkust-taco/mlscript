@@ -110,7 +110,7 @@ useTrt c
 //│ ╟── from refined scrutinee:
 //│ ║  l.97: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ╙──      	                    ^
-//│ res: 1 | error
+//│ res: error
 //│    = 1
 
 useTrt (c with { y = 1 })

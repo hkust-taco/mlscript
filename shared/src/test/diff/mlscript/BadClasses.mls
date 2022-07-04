@@ -27,4 +27,4 @@ class Box2[T]: { inner: T }
 //│ ║  l.18: 	class Box2[T]: { inner: T }
 //│ ╙──      	           ^
 //│ Defined class Box2[+T]
-//│ Defined Box2.Test: Box2[?] -> (error | int)
+//│ Defined Box2.Test: Box2[?] -> error

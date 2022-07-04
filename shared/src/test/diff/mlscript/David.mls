@@ -55,7 +55,7 @@ def r4 = addOne (selectBoolOrInt 1)
 //│ ╟── from reference:
 //│ ║  l.33: 	    then addOneI x 
 //│ ╙──      	                 ^
-//│ r4: error | int | true
+//│ r4: error
 //│   = 2
 
 :e
@@ -152,7 +152,7 @@ addOne "hello"
 //│ ╟── from reference:
 //│ ║  l.137: 	def addOne = fun x -> if isInt x then addOneI x else addOneS x
 //│ ╙──       	                                              ^
-//│ res: error | int | string
+//│ res: error
 //│    = 'helloOne'
 
 
@@ -183,7 +183,7 @@ concat "Three" (addOne "Two")
 //│ ╟── but it flows into application with expected type `int`
 //│ ║  l.175: 	(addOne 1) + 1
 //│ ╙──       	 ^^^^^^^^
-//│ res: error | int
+//│ res: error
 //│    = 3
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.176: 	concat "Three" (addOne "Two")
@@ -194,6 +194,6 @@ concat "Three" (addOne "Two")
 //│ ╟── but it flows into application with expected type `string`
 //│ ║  l.176: 	concat "Three" (addOne "Two")
 //│ ╙──       	                ^^^^^^^^^^^^
-//│ res: error | string
+//│ res: error
 //│    = 'ThreeTwoOne'
 

@@ -60,7 +60,7 @@ add boom 1
 //│ ╟── but it flows into reference with expected type `int`
 //│ ║  l.53: 	add boom 1
 //│ ╙──      	    ^^^^
-//│ res: error | int
+//│ res: error
 //│    = 2
 
 
@@ -148,15 +148,6 @@ def id n = add n 1
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.138: 	def id n = add n 1
 //│ ╙──       	               ^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.138: 	def id n = add n 1
-//│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `int` is not an instance of type `'a`
-//│ ║  l.138: 	def id n = add n 1
-//│ ║         	           ^^^^^^^
-//│ ╟── Note: constraint arises from type variable:
-//│ ║  l.110: 	def id: 'a -> 'a
-//│ ╙──       	              ^^
 //│   = [Function: id2]
 
 :e
@@ -165,26 +156,14 @@ def id (x: int) = x
 //│   <:  id:
 //│ 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.163: 	def id (x: int) = x
+//│ ║  l.154: 	def id (x: int) = x
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` is not an instance of type `int`
 //│ ║  l.110: 	def id: 'a -> 'a
 //│ ║         	        ^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.163: 	def id (x: int) = x
+//│ ║  l.154: 	def id (x: int) = x
 //│ ╙──       	           ^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.163: 	def id (x: int) = x
-//│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of type `'a`
-//│ ║  l.163: 	def id (x: int) = x
-//│ ║         	           ^^^
-//│ ╟── but it flows into reference with expected type `‘a`
-//│ ║  l.163: 	def id (x: int) = x
-//│ ║         	                  ^
-//│ ╟── Note: constraint arises from type variable:
-//│ ║  l.110: 	def id: 'a -> 'a
-//│ ╙──       	              ^^
 //│   = [Function: id3]
 
 
@@ -203,16 +182,16 @@ def f = impl
 //│   <:  f:
 //│ (int & 'a) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.201: 	def f = impl
+//│ ║  l.180: 	def f = impl
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type `int & ‘a` is not a function
-//│ ║  l.192: 	def f: (int & 'a) -> 'a
+//│ ║  l.171: 	def f: (int & 'a) -> 'a
 //│ ║         	       ^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.196: 	def impl a = a a
+//│ ║  l.175: 	def impl a = a a
 //│ ║         	             ^^^
 //│ ╟── from reference:
-//│ ║  l.196: 	def impl a = a a
+//│ ║  l.175: 	def impl a = a a
 //│ ╙──       	             ^
 //│  = [Function: impl]
 
@@ -242,16 +221,16 @@ def f a b = if gt a b then a else b b // mistake!
 //│   <:  f:
 //│ (int & 'a) -> (int & 'a) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.240: 	def f a b = if gt a b then a else b b // mistake!
+//│ ║  l.219: 	def f a b = if gt a b then a else b b // mistake!
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `int & ‘a` is not a function
-//│ ║  l.226: 	def f: (int & 'a) -> (int & 'a) -> 'a 
+//│ ║  l.205: 	def f: (int & 'a) -> (int & 'a) -> 'a 
 //│ ║         	                     ^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.240: 	def f a b = if gt a b then a else b b // mistake!
+//│ ║  l.219: 	def f a b = if gt a b then a else b b // mistake!
 //│ ║         	                                  ^^^
 //│ ╟── from reference:
-//│ ║  l.240: 	def f a b = if gt a b then a else b b // mistake!
+//│ ║  l.219: 	def f a b = if gt a b then a else b b // mistake!
 //│ ╙──       	                                  ^
 //│  = [Function: f4]
 
@@ -275,13 +254,13 @@ def g a = add a 1
 //│   <:  g:
 //│ (int & 'a) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.271: 	def g a = add a 1
+//│ ║  l.250: 	def g a = add a 1
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `int` is not an instance of type `'a`
-//│ ║  l.271: 	def g a = add a 1
+//│ ║  l.250: 	def g a = add a 1
 //│ ║         	          ^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.270: 	def g: (int & 'a) -> 'a
+//│ ║  l.249: 	def g: (int & 'a) -> 'a
 //│ ╙──       	                     ^^
 //│  = [Function: g]
 
@@ -346,18 +325,19 @@ fun a -> a a
 //│    = [Function: res]
 
 // :e // Interestingly, unbound results are currently *not* generalized (despite the pretty-printing)
+:e // FIXME? refreshing-extr
 self1 = res
 //│ ('a -> 'b & 'a) -> 'b
 //│   <:  self1:
 //│ ('a -> 'b & 'a) -> 'b
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.349: 	self1 = res
+//│ ║  l.329: 	self1 = res
 //│ ║         	^^^^^^^^^^^
 //│ ╟── type `‘b324` is not an instance of type `'b`
-//│ ║  l.334: 	def self1: ('a -> 'b & 'a) -> 'b
+//│ ║  l.313: 	def self1: ('a -> 'b & 'a) -> 'b
 //│ ║         	                  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.344: 	fun a -> a a
+//│ ║  l.323: 	fun a -> a a
 //│ ╙──       	         ^^^
 //│      = [Function: res]
 
@@ -385,17 +365,11 @@ def self2 = self1
 //│   where
 //│     'a := 'a -> 'b
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.381: 	def self2 = self1
+//│ ║  l.361: 	def self2 = self1
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')››  <:  (('a279_370' -> 'b280_371') & 'a279_370')    PolymorphicType  ComposedType
 //│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')››  <:  (('a279' -> 'b280') & 'a279')
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.381: 	def self2 = self1
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a' & ('a347_367' -> ‘b'))  <:  (('a279_370' -> 'b280_371') & 'a279_370')    ComposedType  ComposedType
-//│ ╙──  ... looks like:  (‘a' & ('a347' -> ‘b'))  <:  (('a279' -> 'b280') & 'a279')
 //│      = [Function: r]
 
 

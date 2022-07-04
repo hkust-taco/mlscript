@@ -309,7 +309,9 @@ abstract class TyperHelpers { Typer: Typer =>
       case ProxyType(underlying) => f(underlying) // TODO different?
       case TypeRef(defn, targs) => TypeRef(defn, targs.map(f(_)))(prov)
       case PolymorphicType(plvl, und) => PolymorphicType(plvl, f(und))
-      case ConstrainedType(cs, bod) => ConstrainedType(cs.mapValues(_.mapValues(f)), f(bod))
+      case ConstrainedType(cs, bod) =>
+        // ConstrainedType(cs.mapValues(_.mapValues(f)), f(bod))
+        ConstrainedType(cs.mapKeys(f(_).asInstanceOf[TV]).mapValues(_.mapValues(f)), f(bod))
       case _: TypeVariable | _: ObjectTag | _: ExtrType => this
     }
     def mapPol(pol: Opt[Bool], smart: Bool = false)(f: (Opt[Bool], SimpleType) => SimpleType)
