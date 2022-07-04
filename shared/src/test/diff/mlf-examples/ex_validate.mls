@@ -877,17 +877,17 @@ fun x -> ( ((x : Sid) : 'a), (x : 'a) x)
 fun x -> ( (((x : 'a) : Sid) : 'a), x x)
 fun x -> ( (x : Sid), (x : 'a) x)
 fun x -> ( (((x : 'a) : Sid) : 'a), x : 'a)
-//│ res: ('a -> 'b & ‘a20672069 -> ‘a20672069 & 'a) -> (Sid, 'b,)
-//│    = [Function: res]
-//│ res: ('a -> 'b & ‘a2086 -> ‘a2086 & 'a) -> (Sid, 'b,)
+//│ res: (Sid & 'a -> 'b & 'a) -> (Sid, 'b,)
 //│    = [Function: res]
 //│ res: (Sid & 'a -> 'b & 'a) -> (Sid, 'b,)
 //│    = [Function: res]
-//│ res: ('a -> 'b & ‘a21132115 -> ‘a21132115 & 'a) -> (Sid, 'b,)
+//│ res: (Sid & 'a -> 'b & 'a) -> (Sid, 'b,)
 //│    = [Function: res]
 //│ res: (Sid & 'a -> 'b & 'a) -> (Sid, 'b,)
 //│    = [Function: res]
-//│ res: (‘a21402142 -> ‘a21402142 & 'a) -> (Sid, 'a,)
+//│ res: (Sid & 'a -> 'b & 'a) -> (Sid, 'b,)
+//│    = [Function: res]
+//│ res: (Sid & 'a) -> (Sid, 'a,)
 //│    = [Function: res]
 
 // (* R�cursion polymorphe. *)
@@ -900,8 +900,8 @@ rec def id_ x = if true then x else id_ id_ x
 //│ ║  l.898: 	rec def id_ x = if true then x else id_ id_ x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α2152' -> α2158')  <:  α2157'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α2152' -> α2158')  <:  α2157'
+//│ ╟── this constraint:  (α2134' -> α2140')  <:  α2139'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α2134' -> α2140')  <:  α2139'
 //│ id_: 'id_
 //│   where
 //│     'id_ :> 'a -> 'b
@@ -923,8 +923,8 @@ rec def id x = if true then x else id id x
 //│ ║  l.921: 	rec def id x = if true then x else id id x
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α2172' -> α2178')  <:  α2177'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α2172' -> α2178')  <:  α2177'
+//│ ╟── this constraint:  (α2154' -> α2160')  <:  α2159'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α2154' -> α2160')  <:  α2159'
 //│ 'id
 //│   where
 //│     'id :> 'a -> 'b
@@ -938,8 +938,8 @@ rec def id x = if true then x else id id x
 //│ ║  l.921: 	rec def id x = if true then x else id id x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‘a'  <:  α20_2195'    TraitTag  TypeVariable
-//│ ╙──  ... looks like:  ‘a'  <:  α20_2174'
+//│ ╟── this constraint:  ‘a'  <:  α20_2177'    TraitTag  TypeVariable
+//│ ╙──  ... looks like:  ‘a'  <:  α20_2156'
 //│   = [Function: id3]
 
 
