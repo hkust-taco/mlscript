@@ -1091,7 +1091,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         shadows: Shadows,
         ): SimpleType = {
     def freshenImpl(ty: SimpleType, below: Int): SimpleType =
-    // (trace(s"FRESHEN $ty || $above .. $below  ${ty.level} ${ty.level <= above}")
+    (trace(s"FRESHEN $ty || $above .. $below  ${ty.level} ${ty.level <= above}")
     {
       def freshen(ty: SimpleType): SimpleType = freshenImpl(ty, below)
       
@@ -1118,7 +1118,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       //   => tv
       case tv: TypeVariable => freshened.get(tv) match {
         case Some(tv) => tv
-        case None if rigidify =>
+        case None if rigidify && tv.level <= below =>
           val rv = TraitTag( // Rigid type variables (ie, skolems) are encoded as TraitTag-s
             lvl,
             // tv.level,
@@ -1166,7 +1166,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case e @ ExtrType(_) => e
       case p @ ProvType(und) => ProvType(freshen(und))(p.prov)
       case p @ ProxyType(und) => freshen(und)
-      case TraitTag(level, id) if level > above && level <= below => TraitTag(lvl, id)(ty.prov)
+      case TraitTag(level, id) if level > above && level <= below =>
+        TraitTag(lvl, id)(ty.prov)
       case _: ClassTag | _: TraitTag => ty
       case w @ Without(b, ns) => Without(freshen(b), ns)(w.prov)
       case tr @ TypeRef(d, ts) => TypeRef(d, ts.map(freshen(_)))(tr.prov)
@@ -1192,7 +1193,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         ConstrainedType(cs2, freshen(bod))
       case o @ Overload(alts) => Overload(alts.map(freshen(_).asInstanceOf[FunctionType]))(o.prov)
     }}
-    // (r => s"=> $r"))
+    (r => s"=> $r"))
     freshenImpl(ty, below)
   }
   

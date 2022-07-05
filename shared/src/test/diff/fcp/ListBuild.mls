@@ -166,17 +166,18 @@ build: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 //│ res: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 //│    = [Function: build]
 
-:e // FIXME why does the above work but not this one?
+def build_ty: forall 'a. (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
+//│ build_ty: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
+//│         = <missing implementation>
+
+build_ty = build_ty
+//│ (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
+//│   <:  build_ty:
+//│ (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
+//│         = <no result>
+//│           build_ty is not implemented
+
 build: forall 'a. (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.170: 	build: forall 'a. (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
-//│ ║         	^^^^^
-//│ ╟── type `‘b` is not an instance of type `'b`
-//│ ║  l.170: 	build: forall 'a. (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
-//│ ║         	                          ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.144: 	def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> cons (x, xs)) nil
-//│ ╙──       	                           ^^
 //│ res: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 //│    = [Function: build]
 
@@ -185,10 +186,10 @@ build: forall 'a. (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 :e
 build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.186: 	build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
+//│ ║  l.187: 	build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 //│ ║         	^^^^^
 //│ ╟── type `Ls[?a]` is not an instance of type `'b`
-//│ ║  l.186: 	build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
+//│ ║  l.187: 	build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 //│ ║         	               ^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.144: 	def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> cons (x, xs)) nil
@@ -243,26 +244,54 @@ def b: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 //│ b: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 //│  = <missing implementation>
 
-:e // FIXME why does the above work but not this one?
 b = build_
 //│ ((forall 'a. 'a -> (forall 'a, 'a0. (Ls['a0] -> Ls['a | 'a0]
 //│   where
 //│     'a <: 'a0))) -> Ls[nothing] -> 'b) -> 'b
 //│   <:  b:
 //│ (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.247: 	b = build_
-//│ ║         	^^^^^^^^^^
-//│ ╟── type `‘b` is not an instance of type `Ls`
-//│ ║  l.242: 	def b: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
-//│ ║         	               ^^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.30: 	def cons: ('a, Ls['a]) -> Ls['a]
-//│ ║        	               ^^^^^^
-//│ ╟── from reference:
-//│ ║  l.204: 	def build_ = fun g -> g (fun x -> fun xs -> cons (x, xs)) nil
-//│ ╙──       	                                                     ^^
 //│  = [Function: build_]
+
+b g = build_ g
+//│ ((forall 'a. 'a -> (forall 'a, 'a0. (Ls['a0] -> Ls['a | 'a0]
+//│   where
+//│     'a <: 'a0))) -> Ls[nothing] -> 'b) -> 'b
+//│   <:  b:
+//│ (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
+//│  = [Function: b1]
+
+b g = build_ (fun x -> g x)
+//│ ((forall 'a. 'a -> (forall 'a, 'a0. (Ls['a0] -> Ls['a | 'a0]
+//│   where
+//│     'a <: 'a0))) -> Ls[nothing] -> 'b) -> 'b
+//│   <:  b:
+//│ (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
+//│  = [Function: b2]
+
+:e
+b g x = build_ g x
+//│ ((forall 'a. 'a -> (forall 'a, 'a0. (Ls['a0] -> Ls['a | 'a0]
+//│   where
+//│     'a <: 'a0))) -> Ls[nothing] -> 'b -> 'c & 'd) -> (forall 'd. (('b & 'e) -> ('f | 'c)
+//│   where
+//│     'd <: (forall 'a. 'a -> (forall 'a, 'a0. (Ls['a0] -> Ls['a | 'a0]
+//│   where
+//│     'a <: 'a0))) -> Ls[nothing] -> 'e -> 'f))
+//│   <:  b:
+//│ (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.272: 	b g x = build_ g x
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Ls[?a]` is not a function
+//│ ║  l.29: 	def nil: Ls['a]
+//│ ║        	         ^^^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.272: 	b g x = build_ g x
+//│ ║         	        ^^^^^^^^^^
+//│ ╟── from application:
+//│ ║  l.205: 	def build_ = fun g -> g (fun x -> fun xs -> cons (x, xs)) nil
+//│ ╙──       	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│  = [Function: b3]
 
 
 

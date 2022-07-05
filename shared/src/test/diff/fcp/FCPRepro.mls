@@ -1,5 +1,6 @@
 :GeneralizeCurriedFunctions
 :NoRecursiveTypes
+:NoProvs
 // :ArgGen
 
 
