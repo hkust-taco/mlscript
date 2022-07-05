@@ -519,7 +519,7 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│     'a0 := ‘a1074
 //│    = [Function: id1]
 
-// * Why is there a skolem in this type?
+// * Note the skolem (unsafely) leaking in this type – see also `Skolems.mls`:
 res
 //│ res: (('a | ‘a1074) -> (‘a1074 & 'a) & 'a0) -> ('a0 | 'b -> 'b)
 //│    = [Function: id1]

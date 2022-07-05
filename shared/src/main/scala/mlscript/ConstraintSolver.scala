@@ -1091,7 +1091,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         shadows: Shadows,
         ): SimpleType = {
     def freshenImpl(ty: SimpleType, below: Int): SimpleType =
-    (trace(s"FRESHEN $ty || $above .. $below  ${ty.level} ${ty.level <= above}")
+    // (trace(s"FRESHEN $ty || $above .. $below  ${ty.level} ${ty.level <= above}")
     {
       def freshen(ty: SimpleType): SimpleType = freshenImpl(ty, below)
       
@@ -1193,7 +1193,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         ConstrainedType(cs2, freshen(bod))
       case o @ Overload(alts) => Overload(alts.map(freshen(_).asInstanceOf[FunctionType]))(o.prov)
     }}
-    (r => s"=> $r"))
+    // (r => s"=> $r"))
     freshenImpl(ty, below)
   }
   
