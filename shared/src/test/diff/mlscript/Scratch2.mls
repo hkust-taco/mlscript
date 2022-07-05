@@ -51,6 +51,7 @@ def succ: ChurchInt -> ChurchInt
 
 // :ns
 // :e // * Needs distrib (see below) // works with quantif extrus
+:e // skolem extrusion?
 succ = s
 //│ ('a -> 'b -> 'c & 'd) -> (forall 'e, 'f, 'g. (('c | 'e) -> 'f & 'a & 'g) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j. (('b & 'h) -> ('f | 'j)
 //│   where
@@ -59,7 +60,7 @@ succ = s
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.54: 	succ = s
+//│ ║  l.55: 	succ = s
 //│ ║        	^^^^^^^^
 //│ ╟── type `‘N_248` is not an instance of type `'N_247`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -165,8 +166,8 @@ def to_ch_s_mix n =
 //│            = [Function: to_ch_s_mix]
 
 // :e // due to tapping
-:e // FIXME? refreshing-extr
-// FIXME should be caught by cycle checker!
+// :e // FIXME? refreshing-extr
+// FIXedME should be caught by cycle checker!
 rec def to_ch_s n =
   if n == 0 then z
   else s (to_ch_s (n - 1))
@@ -200,6 +201,7 @@ to_church = to_ch
 // :ns
 // :e // * Needs distrib (see below)
 // :e // FIXME? succeeds with genLamBodies
+:e // skolem extrusion?
 to_church = to_ch_s_mix
 //│ int -> (forall 'a, 'b, 'c. (('N | 'a) -> 'b & 'N -> 'N & 'c) -> (forall 'N, 'a, 'b, 'c, 'd, 'e, 'f, 'g. (('b & 'N & 'e) -> ('b | 'g)
 //│   where
@@ -208,7 +210,7 @@ to_church = to_ch_s_mix
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.203: 	to_church = to_ch_s_mix
+//│ ║  l.205: 	to_church = to_ch_s_mix
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘N_971` is not an instance of type `'N`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -224,7 +226,7 @@ to_church = to_ch_s
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.222: 	to_church = to_ch_s
+//│ ║  l.224: 	to_church = to_ch_s
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘N_1069` is not an instance of type `'N_1068`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -244,12 +246,13 @@ rec def to_ch_mix n =
 //│          = [Function: to_ch_mix]
 
 // :e // * Needs distrib (see below)
+:e // skolem extrusion?
 to_church = to_ch_mix
 //│ int -> (forall 'a. ('N -> 'N & ('N0 | 'N) -> 'a & 'N0 -> 'N0) -> ('N0 & 'N) -> 'a | ChurchInt)
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.247: 	to_church = to_ch_mix
+//│ ║  l.250: 	to_church = to_ch_mix
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘N_1199` is not an instance of type `'N`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -268,12 +271,13 @@ to_church = to_ch_mix
 //   succD (to_ch (n - 1))
 
 // :e // * Needs to distribute back (in the other direction) here:
+:e // skolem extrusion?
 rec def to_ch n =
   succD (to_ch n)
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.271: 	rec def to_ch n =
+//│ ║  l.275: 	rec def to_ch n =
 //│ ║         	              ^^^
-//│ ║  l.272: 	  succD (to_ch n)
+//│ ║  l.276: 	  succD (to_ch n)
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘N_1206` is not an instance of type `'N`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -282,7 +286,7 @@ rec def to_ch n =
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║        	                        ^^
 //│ ╟── from quantified type variable:
-//│ ║  l.75: 	def succD: forall 'M. ChurchInt -> ('M -> 'M) -> ('M -> 'M)
+//│ ║  l.76: 	def succD: forall 'M. ChurchInt -> ('M -> 'M) -> ('M -> 'M)
 //│ ╙──      	                  ^^
 //│ to_ch: anything -> (('M | ‘N_1206) -> 'M) -> 'M -> ('M | ‘N_1206)
 //│      = [Function: to_ch1]
@@ -322,7 +326,7 @@ to_church = to_ch_s_mix
 //│          = [Function: to_ch_s_mix]
 
 //:e // due to tapping
-:e // FIXME? refreshing-extr
+// :e // FIXME? refreshing-extr
 // FIXME should be caught by cycle checker!
 to_church = to_ch_s
 //│ int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'a. ('a & 'b) -> 'a))

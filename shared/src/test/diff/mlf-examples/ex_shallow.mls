@@ -165,11 +165,12 @@ type A1_nat = forall 'a 'b. (('a & ChurchInt -> ChurchInt | ChurchInt -> ChurchI
 //   (r : a1_nat);;
 
 // :e // due to tapping
+:e // skolem extrusion
 def a1_sid_to_nat (g: A1_sid) =
   let r = fun f -> g (fun (x: Sid) -> f x) in
   (r: A1_nat)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.170: 	  (r: A1_nat)
+//│ ║  l.171: 	  (r: A1_nat)
 //│ ║         	   ^
 //│ ╟── type `‘b_913` is not an instance of type `'b`
 //│ ║  l.159: 	type A1_nat = forall 'a 'b. (('a & ChurchInt -> ChurchInt | ChurchInt -> ChurchInt) -> 'b) -> 'b
@@ -292,7 +293,7 @@ def a2'_ x =
 // FIXME
 def a0' = a2' a1'
 //│ ╔══[ERROR] identifier not found: a2'
-//│ ║  l.293: 	def a0' = a2' a1'
+//│ ║  l.294: 	def a0' = a2' a1'
 //│ ╙──       	          ^^^
 //│ a0': error
 //│ Code generation encountered an error:
@@ -303,7 +304,7 @@ def a0' = a2' a1'
 :Fuel 15000
 def a0'_ = a2'_ a1'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.304: 	def a0'_ = a2'_ a1'
+//│ ║  l.305: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››  <:  α29_1724'    PolymorphicType  TypeVariable

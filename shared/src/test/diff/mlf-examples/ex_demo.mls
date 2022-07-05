@@ -1153,7 +1153,7 @@ def c_fact_A: Fint -> Fint
 // :e // FIXME? // works with quantif extrus
 //:e // due to tapping
 // :e // FIXME? refreshing-extr
-:e // FIXME?
+// :e // FIXME?
 def c_fact_A n =
   c_if (c_iszero n) (fun u -> c_i1)
     (fun u -> c_mul n (c_fact_A (c_pred n)))
@@ -1191,7 +1191,7 @@ rec def c_fact_ n =
 //   print_string "\n" ;
 //   ()
 // :e // works with quantif extrus
-:e // FIXME?
+// :e // FIXME?
 def print_fact n =
   let _ = print_string "Factorial " in
   let _ = print_int n in
@@ -1212,7 +1212,7 @@ def print_fact_ n =
 //│            = [Function: print_fact_]
 
 //:e // due to tapping
-:e // FIXME?
+// :e // FIXME?
 def print_fact2 n =
   concat "Factorial " (
   concat (toString n) (
@@ -1241,7 +1241,7 @@ def print_fact2_ n =
 //   c_printint c_98;
 //   print_string "\n\n" ;
 
-:e // FIXME?
+// :e // FIXME?
 //:e // due to tapping
 this_should_be_98 =
   let c_i5 = c_add c_i3 c_i2 in

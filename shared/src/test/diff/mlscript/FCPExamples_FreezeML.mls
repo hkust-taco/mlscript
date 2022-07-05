@@ -504,14 +504,11 @@ a id
 // ============ Expected error cases (useful for regression-testing error messages) ============
 
 
-// * FIXME: without constrained types, the type of argument x was not polymorphic enough
-// * Maybe we could be swallowing/delaying a constraint?
-// :e // due to tapping
-// :e // refreshing-extr
 :ns
+:e // * Skolem extrusion; rightly rejected
 choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.512: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
+//│ ║  l.509: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ║         	                                  ^^^^^^^
 //│ ╟── type `‘a_1058` is not an instance of type `'a`
 //│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
@@ -527,14 +524,15 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│         <: forall 'a1. 'a1
 //│    = [Function: id1]
 
-// * Note the skolem (unsafely) leaking in this type – see also `Skolems.mls`:
+// * The skolem used to (unsafely) leak into this type – see also `Skolems.mls`:
 res
 //│ res: (('a | ‘a_1058) -> 'a & 'a0) -> ('a0 | error)
 //│    = [Function: id1]
 
+:e // skolem extrusion
 res id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.535: 	res id
+//│ ║  l.533: 	res id
 //│ ║         	^^^^^^
 //│ ╟── type `‘a_1058` is not an instance of type `'a`
 //│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
@@ -543,7 +541,7 @@ res id
 //│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║         	                    ^^
 //│ ╟── from type variable:
-//│ ║  l.512: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
+//│ ║  l.509: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ╙──       	                          ^^
 //│ res: 'a -> 'a | error
 //│    = [Function: id1]
@@ -552,10 +550,10 @@ res id
 :e
 a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.553: 	a (fun x -> { u = x })
+//│ ║  l.551: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a`
-//│ ║  l.553: 	a (fun x -> { u = x })
+//│ ║  l.551: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b

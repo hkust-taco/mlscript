@@ -185,7 +185,7 @@ rec def to_church_1_tt n =
 :re
 // rec def to_church_1 n =
 //   succ (to_church_1 n)
-:e // FIXME?
+// :e // FIXME?
 rec def wat =
   succ wat
 //│ wat: (('a | 'b) -> 'c & 'a -> ('a0 & 'a) & ('a1 | 'a0) -> ('a1 & 'a) & 'd) -> (forall 'a, 'b, 'c, 'a0, 'a1, 'd, 'e, 'f, 'g, 'h. (('a1 & 'a0 & 'a & 'h) -> ('f | 'c)
@@ -196,7 +196,7 @@ rec def wat =
 //│   ReferenceError: wat is not defined
 
 // works when `succ` is not annotated with the parameter type
-:e // FIXME should be caught by cycle checker! // due to tapping
+// :e // FIXME should be caught by cycle checker! // due to tapping
 :ng
 rec def nani =
   succ' nani
@@ -234,7 +234,7 @@ rec def to_church_2 n =
 // Requires :RecursiveTypes
 :ng // FIXME codegen: `ReferenceError: to_church_2 is not defined`
 // :e // due to tapping
-:e // FIXME? refreshing-extr
+// :e // FIXME? refreshing-extr
 // FIXME should be caught by cycle checker!
 to_church_ty = to_church_2
 //│ int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'a. ('a & 'b) -> 'a))
@@ -247,7 +247,7 @@ to_church_ty = to_church_2
 //   else fun f x -> f ((to_church (n-1) : Int) f x)
 // ;;
 
-// :e // FIXME?
+:e // FIXME?
 rec def to_church_3 n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
@@ -295,7 +295,7 @@ rec def to_church_5 n =
 //│            = [Function: to_church_5]
 
 
-:e // FIXME? // due to gen lam bod?
+// :e // FIXME? // due to gen lam bod?
 to_church_ty = to_church_1
 //│ int -> (forall 'a, 'b, 'c, 'a0, 'a1, 'd. (('a | 'b) -> 'c & 'a -> ('a0 & 'a) & ('a1 | 'a0) -> ('a1 & 'a) & 'd) -> (forall 'a, 'b, 'c, 'a0, 'a1, 'd, 'e, 'f, 'g, 'h. (('c & 'a1 & 'a0 & 'a & 'h) -> ('c | 'f)
 //│   where
@@ -326,7 +326,7 @@ to_church_ty = to_church_1_st
 
 // :e // FIXME should be caught by cycle checker!
 :ng
-:e // due to tapping
+// :e // due to tapping
 // FIXME should be caught by cycle checker!
 to_church_ty = to_church_2
 //│ int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'a. ('a & 'b) -> 'a))
@@ -412,7 +412,7 @@ def to_church_ty n =
 // let tc n = (to_church n : Int);;
 
 // :e // FIXME? // due to gen lam bod?
-:e // FIXME?
+// :e // FIXME?
 def tc n = to_church_1 n : ChurchInt
 //│ tc: int -> ChurchInt
 //│   = [Function: tc]

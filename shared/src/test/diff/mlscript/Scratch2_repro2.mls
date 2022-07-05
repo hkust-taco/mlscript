@@ -99,9 +99,10 @@ s zero
 
 // :e // works with quantif extrus
 // :e // due to tapping
+:e // skolem extrusion?
 res: ChI
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.102: 	res: ChI
+//│ ║  l.103: 	res: ChI
 //│ ║         	^^^
 //│ ╟── type `‘M_231` is not an instance of type `'M_230`
 //│ ║  l.22: 	type ChI = (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -122,9 +123,10 @@ let tmp = s zero in tmp: ChI
 
 // FIXedME:
 // :d
+:e // TODO this works when generalizing the LHS of ascriptions
 s zero : ChI
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.125: 	s zero : ChI
+//│ ║  l.127: 	s zero : ChI
 //│ ║         	^^^^^^
 //│ ╟── type `‘M_310` is not an instance of type `'M_309`
 //│ ║  l.22: 	type ChI = (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -152,16 +154,16 @@ def example f = (f: forall 'a. 'a -> 'a)
 :e
 example 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.153: 	example 1
+//│ ║  l.155: 	example 1
 //│ ║         	^^^^^^^^^
 //│ ╟── integer literal of type `1` is not a function
-//│ ║  l.153: 	example 1
+//│ ║  l.155: 	example 1
 //│ ║         	        ^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.148: 	def example f = (f: forall 'a. 'a -> 'a)
+//│ ║  l.150: 	def example f = (f: forall 'a. 'a -> 'a)
 //│ ║         	                               ^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.148: 	def example f = (f: forall 'a. 'a -> 'a)
+//│ ║  l.150: 	def example f = (f: forall 'a. 'a -> 'a)
 //│ ╙──       	                 ^
 //│ res: error
 //│    = 1
@@ -169,10 +171,10 @@ example 1
 :e
 example succ
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.170: 	example succ
+//│ ║  l.172: 	example succ
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type `‘a` is not an instance of type `int`
-//│ ║  l.148: 	def example f = (f: forall 'a. 'a -> 'a)
+//│ ║  l.150: 	def example f = (f: forall 'a. 'a -> 'a)
 //│ ╙──       	                           ^^
 //│ res: error
 //│    = [Function: succ]
@@ -219,16 +221,16 @@ id_ty = id
 //│   <:  id_ty:
 //│ 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.213: 	id_ty = id
+//│ ║  l.215: 	id_ty = id
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `‘a` is not a function
-//│ ║  l.199: 	def id_ty: forall 'a. 'a -> 'a
+//│ ║  l.201: 	def id_ty: forall 'a. 'a -> 'a
 //│ ║         	                  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.204: 	rec def id x = let tmp = id id x in x
+//│ ║  l.206: 	rec def id x = let tmp = id id x in x
 //│ ║         	                         ^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.204: 	rec def id x = let tmp = id id x in x
+//│ ║  l.206: 	rec def id x = let tmp = id id x in x
 //│ ╙──       	                                    ^
 //│      = [Function: id1]
 

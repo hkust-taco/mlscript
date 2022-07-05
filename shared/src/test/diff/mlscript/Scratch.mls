@@ -46,12 +46,13 @@ def foo_ty: 'a -> (forall 'b. 'b -> ('a, 'b,))
 // def foo_ty: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
 
 // :d
+:e // skolem extrusion?
 foo_ty = foo
 //│ 'a -> 'b -> ('a, 'b,)
 //│   <:  foo_ty:
 //│ 'a -> (forall 'b. 'b -> ('a, 'b,))
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.49: 	foo_ty = foo
+//│ ║  l.50: 	foo_ty = foo
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── type `‘b_98` is not an instance of type `'b`
 //│ ║  l.42: 	def foo_ty: 'a -> (forall 'b. 'b -> ('a, 'b,))

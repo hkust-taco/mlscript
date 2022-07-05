@@ -26,6 +26,7 @@ def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M
 // :ns
 // :e // * Used to need distrib (see below)
 // :d
+:e // skolem extrusion?
 succ = s
 //│ ('a -> 'b -> 'c & 'd) -> (forall 'e, 'f, 'g. (('c | 'e) -> 'f & 'a & 'g) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j. (('b & 'h) -> ('j | 'f)
 //│   where
@@ -34,7 +35,7 @@ succ = s
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.29: 	succ = s
+//│ ║  l.30: 	succ = s
 //│ ║        	^^^^^^^^
 //│ ╟── type `‘M_136` is not an instance of type `'M_135`
 //│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -53,6 +54,7 @@ def s n = fun f -> fun x -> (n f x)
 //│     'd <: 'e -> 'f -> 'g)))
 //│  = [Function: s1]
 
+:e // skolem extrusion?
 succ = s
 //│ ('a -> 'b -> 'c & 'd) -> (forall 'e. ('a & 'e) -> (forall 'b, 'c, 'd, 'e, 'f, 'g. (('b & 'f) -> ('g | 'c)
 //│   where
@@ -60,7 +62,7 @@ succ = s
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.56: 	succ = s
+//│ ║  l.58: 	succ = s
 //│ ║        	^^^^^^^^
 //│ ╟── type `‘M_226` is not an instance of type `'M_225`
 //│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -69,10 +71,11 @@ succ = s
 //│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                                                           ^^
 //│ ╟── from reference:
-//│ ║  l.50: 	def s n = fun f -> fun x -> (n f x)
+//│ ║  l.51: 	def s n = fun f -> fun x -> (n f x)
 //│ ╙──      	                                 ^
 //│     = [Function: s1]
 
+:e // skolem extrusion?
 def s n = fun f -> n f
 succ = s
 //│ s: ('a -> 'b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e. (('a & 'd) -> ('e | 'b)
@@ -85,7 +88,7 @@ succ = s
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.77: 	succ = s
+//│ ║  l.80: 	succ = s
 //│ ║        	^^^^^^^^
 //│ ╟── type `‘M_288` is not an instance of type `'M_285`
 //│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -129,6 +132,7 @@ def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
 // :ns
 // :e // * Needs distrib (see below)
 // :d
+:e // skolem extrusion?
 succ_min = s
 // succ n = s n
 // s id : (forall 'M. ('M -> 'M))
@@ -138,13 +142,13 @@ succ_min = s
 //│   <:  succ_min:
 //│ (forall 'N. 'N -> 'N) -> (forall 'M. 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.132: 	succ_min = s
+//│ ║  l.136: 	succ_min = s
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type `‘M_366` is not an instance of type `'M`
-//│ ║  l.123: 	def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
+//│ ║  l.126: 	def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
 //│ ║         	                                                  ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.123: 	def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
+//│ ║  l.126: 	def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
 //│ ╙──       	                                                  ^^
 //│         = [Function: s4]
 
