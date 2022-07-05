@@ -44,7 +44,7 @@ test f =
 test f =
   let r x = f x
   in (r 0, r True)
-//│ test: ((0 | true) -> ('a & 'b) & true -> 'a & 0 -> 'b) -> ('b, 'a,)
+//│ test: ((0 | true) -> 'a) -> ('a, 'a,)
 //│     = [Function: test2]
 
 :e
@@ -77,5 +77,5 @@ not (test id)._1 + 1
 rec def test f =
   let r x = f x
   in (r 0, r True)
-//│ test: ((0 | true) -> ('a & 'b) & true -> 'a & 0 -> 'b) -> ('b, 'a,)
+//│ test: ((0 | true) -> 'a) -> ('a, 'a,)
 //│     = [Function: test3]

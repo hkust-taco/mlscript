@@ -96,10 +96,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val poly = PolymorphicType.mk(lvl,
           // TODO:
           // ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy)
-          ConstrainedType.mk(newCtx.extrCtx.iterator.mapValues(_.toList).toList, innerTy)
+          if (noConstrainnedTypes) innerTy
+          else ConstrainedType.mk(newCtx.extrCtx.iterator.mapValues(_.toList).toList, innerTy)
           // innerTy
         )
-        // newCtx.extrCtx.clear()
+        // if (!noConstrainnedTypes) newCtx.extrCtx.clear() // could lead to inferring inconsistent bounds without errors
         poly
       }
     }

@@ -20,9 +20,7 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'head -> (forall 'head, 'head0, 'a, 'tail. ((List['a] & 'tail) -> (Cons['a | 'head] with {head: 'head0 | 'head, tail: 'tail})
-//│   where
-//│     'head <: 'head0 & 'a))
+//│ 'head -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'head] with {head: 'head, tail: 'tail}))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -57,14 +55,9 @@ def choose3 x y z = choose (choose x y) z
 def id = (fun x -> x) : Sid
 def id_ = fun x -> x
 def succ n = n + 1
-//│ choose: 'a -> (forall 'a, 'b. ('b -> ('b | 'a)
-//│   where
-//│     'a <: 'b))
+//│ choose: 'a -> (forall 'b. 'b -> ('b | 'a))
 //│       = [Function: choose]
-//│ choose3: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c -> 'c
-//│   where
-//│     'a <: 'b
-//│     'b <: 'b)))
+//│ choose3: anything -> anything -> (forall 'a. 'a -> 'a)
 //│        = [Function: choose3]
 //│ id: Sid
 //│   = [Function: id]
@@ -79,25 +72,13 @@ def test = choose3 id
 def test_ = choose3 id_
 def test2 = test succ
 def test2_ = test_ succ
-//│ test: 'a -> (forall 'a, 'b, 'c. ('c -> 'c
-//│   where
-//│     'b <: 'a
-//│     'a <: 'a))
+//│ test: anything -> (forall 'a. 'a -> 'a)
 //│     = [Function (anonymous)]
-//│ test_: 'a -> (forall 'a, 'b, 'c. ('c -> 'c
-//│   where
-//│     'b <: 'a
-//│     'a <: 'a))
+//│ test_: anything -> (forall 'a. 'a -> 'a)
 //│      = [Function (anonymous)]
 //│ test2: 'a -> 'a
-//│   where
-//│     'b <: anything
-//│     'c <: anything
 //│      = [Function (anonymous)]
 //│ test2_: 'a -> 'a
-//│   where
-//│     'b <: anything
-//│     'c <: anything
 //│       = [Function (anonymous)]
 
 // (* Messages d'erreur foireux : *)
@@ -111,13 +92,9 @@ fun x -> fun y -> ((x : S1), (y : S2), if true then x else y)
 fun x -> fun y -> ((x : S1), (y : S2), x x)
 //│ Defined type alias S1
 //│ Defined type alias S2
-//│ res: (S1 & 'a) -> (forall 'a, 'b. ((S2 & 'b) -> (S1, S2, 'b | 'a,)
-//│   where
-//│     'a <: 'b))
+//│ res: (S1 & 'a) -> (forall 'b. (S2 & 'b) -> (S1, S2, 'b | 'a,))
 //│    = [Function: res]
-//│ res: (S1 & 'a -> 'b & 'a) -> (forall 'a, 'b, 'c. (S2 -> (S1, S2, 'c | 'b,)
-//│   where
-//│     'a <: 'a -> 'c))
+//│ res: (S1 & 'a -> 'b & 'a) -> S2 -> (S1, S2, 'b,)
 //│    = [Function: res]
 
 // (* please onlyweak ['b = sid] 'b -> 'b : sid -> sid *)
@@ -141,16 +118,14 @@ def mkpair x y = (x, y)
 // *)
 example mkpair
 example_ mkpair
-//│ res: int -> (‘a_594, int,)
+//│ res: int -> (‘a_358, int,)
 //│    = [Function (anonymous)]
 //│ res: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('b, 'c,)), 'a,)
 //│    = [Function (anonymous)]
 
 // let make_ex3 x (f:['a > sid] 'a -> 'b ) = f x 
 def make_ex3 x (f: forall 'a. ('a | Sid) -> 'b) = f x
-//│ make_ex3: 'a -> (forall 'a, 'b. ((Sid -> 'b) -> 'b
-//│   where
-//│     'a <: 'a))
+//│ make_ex3: anything -> (forall 'a. (Sid -> 'a) -> 'a)
 //│         = [Function: make_ex3]
 
 // let ex_list3 = [ make_ex3 succ ;

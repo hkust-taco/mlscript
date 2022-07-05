@@ -45,18 +45,16 @@ f {} {}
 
 
 def f n m = n 0
-//│ f: (0 -> 'a & 'b) -> (forall 'a, 'b, 'c. ('b -> ('c | 'a)
-//│   where
-//│     'b <: 0 -> 'c))
+//│ f: (0 -> 'a) -> anything -> 'a
 //│  = [Function: f1]
 
 :e // due to tapping
 f {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.54: 	f {}
+//│ ║  l.52: 	f {}
 //│ ║        	^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.54: 	f {}
+//│ ║  l.52: 	f {}
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.47: 	def f n m = n 0
@@ -67,10 +65,10 @@ f {}
 :e
 f {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.68: 	f {} {}
+//│ ║  l.66: 	f {} {}
 //│ ║        	^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.68: 	f {} {}
+//│ ║  l.66: 	f {} {}
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.47: 	def f n m = n 0

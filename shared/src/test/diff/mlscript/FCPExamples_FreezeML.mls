@@ -67,9 +67,7 @@ def cons: 'a -> List['a] -> List['a]
 def cons head tail = Cons { head; tail }
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'head -> (forall 'head, 'head0, 'a, 'tail. ((List['a] & 'tail) -> (Cons['a | 'head] with {head: 'head | 'head0, tail: 'tail})
-//│   where
-//│     'head <: 'head0 & 'a))
+//│ 'head -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'head] with {head: 'head, tail: 'tail}))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -145,9 +143,7 @@ def choose: 'a -> 'a -> 'a
 def choose x y = if true then x else y
 //│ choose: 'a -> 'a -> 'a
 //│       = <missing implementation>
-//│ 'a -> (forall 'a, 'b. ('b -> ('b | 'a)
-//│   where
-//│     'a <: 'b))
+//│ 'a -> (forall 'b. 'b -> ('b | 'a))
 //│   <:  choose:
 //│ 'a -> 'a -> 'a
 //│       = [Function: choose]
@@ -194,9 +190,7 @@ def app: ('a -> 'b) -> 'a -> 'b
 def app f x = f x
 //│ app: ('a -> 'b) -> 'a -> 'b
 //│    = <missing implementation>
-//│ ('a -> 'b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e. (('a & 'd) -> ('e | 'b)
-//│   where
-//│     'c <: 'd -> 'e))
+//│ ('a -> 'b) -> 'a -> 'b
 //│   <:  app:
 //│ ('a -> 'b) -> 'a -> 'b
 //│    = [Function: app]
@@ -214,9 +208,7 @@ def flip: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 def flip f = fun x -> fun y -> f y x
 //│ flip: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 //│     = <missing implementation>
-//│ ('a -> 'b -> 'c & 'd) -> (forall 'e. ('b & 'e) -> (forall 'a, 'c, 'd, 'e, 'f, 'g. (('a & 'f) -> ('g | 'c)
-//│   where
-//│     'd <: 'f -> 'e -> 'g)))
+//│ ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 //│   <:  flip:
 //│ ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 //│     = [Function: flip]
@@ -508,40 +500,40 @@ a id
 :e // * Skolem extrusion; rightly rejected
 choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.509: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
+//│ ║  l.501: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ║         	                                  ^^^^^^^
-//│ ╟── type `‘a_1058` is not an instance of type `'a`
-//│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ╟── type `‘a_1036` is not an instance of type `'a`
+//│ ║  l.169: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║  l.169: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──       	                    ^^
 //│ res: forall 'b. 'c
 //│   where
 //│     'c :> (forall 'a. 'a -> 'a) | (forall 'a0, 'b. ('a0 -> 'a0) -> 'b)
 //│     'b :> error
-//│     'a0 :> ‘a_1058
+//│     'a0 :> ‘a_1036
 //│         <: forall 'a1. 'a1
 //│    = [Function: id1]
 
 // * The skolem used to (unsafely) leak into this type – see also `Skolems.mls`:
 res
-//│ res: (('a | ‘a_1058) -> 'a & 'a0) -> ('a0 | error)
+//│ res: (('a | ‘a_1036) -> 'a & 'a0) -> ('a0 | error)
 //│    = [Function: id1]
 
 :e // skolem extrusion
 res id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.533: 	res id
+//│ ║  l.525: 	res id
 //│ ║         	^^^^^^
-//│ ╟── type `‘a_1058` is not an instance of type `'a`
-//│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ╟── type `‘a_1036` is not an instance of type `'a`
+//│ ║  l.169: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║  l.169: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║         	                    ^^
 //│ ╟── from type variable:
-//│ ║  l.509: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
+//│ ║  l.501: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ╙──       	                          ^^
 //│ res: 'a -> 'a | error
 //│    = [Function: id1]
@@ -550,13 +542,13 @@ res id
 :e
 a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.551: 	a (fun x -> { u = x })
+//│ ║  l.543: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a`
-//│ ║  l.551: 	a (fun x -> { u = x })
+//│ ║  l.543: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║  l.169: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──       	                    ^^
 //│ res: 'a -> {u: 'a} | error
 //│    = [Function (anonymous)]

@@ -32,26 +32,17 @@ def s k = k () nil
 //│ s: (() -> List[nothing] -> 'a) -> 'a
 
 def insert v () acu k = k () (cons v acu)
-//│ insert: 'a -> () -> (forall 'a0, 'b. (List['a0] & 'b) -> (forall 'a, 'a0, 'b, 'a1, 'c. ((() -> List['a1 | 'a | 'a0] -> 'c) -> 'c
-//│   where
-//│     'a <: 'a1
-//│     'b <: List['a1])))
+//│ insert: 'a -> () -> (forall 'a0. List['a0] -> (forall 'b. (() -> List['a | 'a0] -> 'b) -> 'b))
 
 // (* x  inserts "x" in the acu *)
 def x () = insert "x" ()
-//│ x: () -> (forall 'a, 'b. (List['a] & 'b) -> (forall 'a, 'b, 'c, 'a0, 'd. ((() -> List["x" | 'a0 | 'a] -> 'd) -> 'd
-//│   where
-//│     'c <: 'a0
-//│     'b <: List['a0])))
+//│ x: () -> (forall 'a. List['a] -> (forall 'b. (() -> List["x" | 'a] -> 'b) -> 'b))
 
 // (* We call x a 'token', in the sequence. *)
 
 // (* e  ends the sequence. It builds a token that can be inserted in another sequence or that can be printed. *)
 def e () acu = insert (concat "," acu)
-//│ e: () -> List[string] -> () -> (forall 'a, 'b. (List['a] & 'b) -> (forall 'a, 'b, 'c, 'a0, 'd. ((() -> List['a0 | 'a | string] -> 'd) -> 'd
-//│   where
-//│     'c <: 'a0
-//│     'b <: List['a0])))
+//│ e: () -> List[string] -> () -> (forall 'a. List['a] -> (forall 'b. (() -> List['a | string] -> 'b) -> 'b))
 
 
 // (* Prints a token *)
@@ -61,139 +52,44 @@ def print t = t () nil (fun () -> fun r -> log (concat "," r))
 // Added by me:
 // :e // FIXME? refreshing-extr
 s x x (s x x e)
-//│ res: (() -> List['a | string] -> 'b) -> 'b
-//│   where
-//│     'c <: 'a
-//│     'd <: List['a]
+//│ res: (() -> List[string] -> 'a) -> 'a
 
 
 // :e // FIXME? refreshing-extr
 def test8  = (s x x (s x x e) x (s x x x e) e)
-//│ test8: () -> (forall 'a, 'b. (List['a] & 'b) -> (forall 'a, 'b, 'c, 'a0, 'd. ((() -> List['a0 | 'a | string] -> 'd) -> 'd
-//│   where
-//│     'c <: 'a0
-//│     'b <: List['a0])))
+//│ test8: () -> (forall 'a. List['a] -> (forall 'b. (() -> List['a | string] -> 'b) -> 'b))
 
 print test8
 
 
 :e // FIXME — works with :RecursiveTypes
 def test14 = (s x x x x x x x x x x x x x x e)
-//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b. () -> ?b) -> ?c` took too many steps and ran out of fuel (5000)
-//│ ║  l.81: 	def test14 = (s x x x x x x x x x x x x x x e)
-//│ ║        	              ^^^^^^^^^^^^^^^^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                     ^^
-//│ ╟──  + 'a51_776'
-//│ ╟──  + 'a27_783'
-//│ ╟──  + 'a27_783'
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                                 ^^
-//│ ╟──  - 'a51_799'
-//│ ╟──  - 'a51_799'
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ╙──      	                     ^^
-//│ test14: error
+//│ test14: () -> (forall 'a. List['a] -> (forall 'b. (() -> List['a | string] -> 'b) -> 'b))
 
 :e // FIXME — works with :RecursiveTypes
 def test16 = (s x x x x x x x x x x x x x x x x e)
-//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b. () -> ?b) -> ?c` took too many steps and ran out of fuel (5000)
-//│ ║  l.100: 	def test16 = (s x x x x x x x x x x x x x x x x e)
-//│ ║         	              ^^^^^^^^^^^^^^^^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                     ^^
-//│ ╟──  + 'a51_1000'
-//│ ╟──  + 'a27_1007'
-//│ ╟──  + 'a27_1007'
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                                 ^^
-//│ ╟──  - 'a51_1023'
-//│ ╟──  - 'a51_1023'
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ╙──      	                     ^^
-//│ test16: error
+//│ test16: () -> (forall 'a. List['a] -> (forall 'b. (() -> List['a | string] -> 'b) -> 'b))
 
 // (* This is too much for the type-checker. *)
 :e // FIXME — works with :RecursiveTypes
 def test18 = (s x x x x x x x x x x x x x x x x x x e)
-//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b. () -> ?b) -> ?c` took too many steps and ran out of fuel (5000)
-//│ ║  l.120: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
-//│ ║         	              ^^^^^^^^^^^^^^^^^
-//│ ╟──  + "x"<string>
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                     ^^
-//│ ╟──  + 'a51_1226'
-//│ ╟──  + 'a27_1233'
-//│ ╟──  + 'a27_1233'
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ║        	                                 ^^
-//│ ╟──  - 'a51_1249'
-//│ ╟──  - 'a51_1249'
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ╙──      	                     ^^
-//│ test18: error
+//│ test18: () -> (forall 'a. List['a] -> (forall 'b. (() -> List['a | string] -> 'b) -> 'b))
 
 :RecursiveTypes
 def test18 = (s x x x x x x x x x x x x x x x x x x e)
-//│ test18: () -> (forall 'a, 'b. (List['a] & 'b) -> (forall 'a, 'b, 'c, 'a0, 'd. ((() -> List['a0 | 'a | string] -> 'd) -> 'd
-//│   where
-//│     'c <: 'a0
-//│     'b <: List['a0])))
+//│ test18: () -> (forall 'a. List['a] -> (forall 'b. (() -> List['a | string] -> 'b) -> 'b))
 :NoRecursiveTypes
 
 
 // (* A function that receives a token *)
 def f t = (s x x t x x e)
-//│ f: (() -> List["x"] -> (() -> (forall 'a, 'b. (List['a] & 'b) -> (forall 'a, 'b, 'c, 'a0, 'd. ((() -> List["x" | 'a0 | 'a] -> 'd) -> 'd
-//│   where
-//│     'c <: 'a0
-//│     'b <: List['a0])))) -> (() -> (forall 'a, 'b. (List['a] & 'b) -> (forall 'a, 'b, 'c, 'a0, 'd. ((() -> List["x" | 'a0 | 'a] -> 'd) -> 'd
-//│   where
-//│     'c <: 'a0
-//│     'b <: List['a0])))) -> (() -> List[string] -> () -> (forall 'a1, 'e. (List['a1] & 'e) -> (forall 'a1, 'e, 'f, 'a2, 'g. ((() -> List['a2 | 'a1 | string] -> 'g) -> 'g
-//│   where
-//│     'f <: 'a2
-//│     'e <: List['a2])))) -> 'h) -> 'h
+//│ f: (() -> List["x"] -> (() -> (forall 'a. List['a] -> (forall 'b. (() -> List["x" | 'a] -> 'b) -> 'b))) -> (() -> (forall 'a. List['a] -> (forall 'b. (() -> List["x" | 'a] -> 'b) -> 'b))) -> (() -> List[string] -> () -> (forall 'a0. List['a0] -> (forall 'c. (() -> List['a0 | string] -> 'c) -> 'c))) -> 'd) -> 'd
 
 // (* If the token is used twice, we must reveive two arguments *)
 def g t1 t2 = (s x x t1 x (s x t2 x e) e)
-//│ g: (() -> List["x"] -> (() -> (forall 'a, 'b. (List['a] & 'b) -> (forall 'a, 'b, 'c, 'a0, 'd. ((() -> List["x" | 'a0 | 'a] -> 'd) -> 'd
-//│   where
-//│     'c <: 'a0
-//│     'b <: List['a0])))) -> 'e -> (() -> List[string] -> () -> (forall 'a1, 'f. (List['a1] & 'f) -> (forall 'a1, 'f, 'g, 'a2, 'h. ((() -> List['a2 | 'a1 | string] -> 'h) -> 'h
-//│   where
-//│     'g <: 'a2
-//│     'f <: List['a2])))) -> 'i & 'j) -> (forall 'j. ((() -> List["x"] -> (() -> (forall 'a, 'b. (List['a] & 'b) -> (forall 'a, 'b, 'c, 'a0, 'd. ((() -> List["x" | 'a0 | 'a] -> 'd) -> 'd
-//│   where
-//│     'c <: 'a0
-//│     'b <: List['a0])))) -> (() -> List[string] -> () -> (forall 'a1, 'f. (List['a1] & 'f) -> (forall 'a1, 'f, 'g, 'a2, 'h. ((() -> List['a2 | 'a1 | string] -> 'h) -> 'h
-//│   where
-//│     'g <: 'a2
-//│     'f <: List['a2])))) -> ('e & 'k)) -> ('l | 'i)
-//│   where
-//│     'j <: () -> List["x"] -> (() -> (forall 'a, 'b. (List['a] & 'b) -> (forall 'a, 'b, 'c, 'a0, 'd. ((() -> List["x" | 'a0 | 'a] -> 'd) -> 'd
-//│   where
-//│     'c <: 'a0
-//│     'b <: List['a0])))) -> 'k -> (() -> List[string] -> () -> (forall 'a1, 'f. (List['a1] & 'f) -> (forall 'a1, 'f, 'g, 'a2, 'h. ((() -> List['a2 | 'a1 | string] -> 'h) -> 'h
-//│   where
-//│     'g <: 'a2
-//│     'f <: List['a2])))) -> 'l))
+//│ g: (() -> List["x"] -> (() -> (forall 'a. List['a] -> (forall 'b. (() -> List["x" | 'a] -> 'b) -> 'b))) -> 'c -> (() -> List[string] -> () -> (forall 'a0. List['a0] -> (forall 'd. (() -> List['a0 | string] -> 'd) -> 'd))) -> 'e) -> (() -> List["x"] -> (() -> (forall 'a. List['a] -> (forall 'b. (() -> List["x" | 'a] -> 'b) -> 'b))) -> (() -> List[string] -> () -> (forall 'a0. List['a0] -> (forall 'd. (() -> List['a0 | string] -> 'd) -> 'd))) -> 'c) -> 'e
 
 // (* This does not type. It requires first-class polymorphism. *)
 def h t = g t t
-//│ h: (() -> List["x"] -> (() -> (forall 'a, 'b. (List['a] & 'b) -> (forall 'a, 'b, 'c, 'a0, 'd. ((() -> List["x" | 'a0 | 'a] -> 'd) -> 'd
-//│   where
-//│     'c <: 'a0
-//│     'b <: List['a0])))) -> (() -> List[string] -> () -> (forall 'a1, 'e. (List['a1] & 'e) -> (forall 'a1, 'e, 'f, 'a2, 'g. ((() -> List['a2 | 'a1 | string] -> 'g) -> 'g
-//│   where
-//│     'f <: 'a2
-//│     'e <: List['a2])))) -> 'h & () -> List["x"] -> (() -> (forall 'a, 'b. (List['a] & 'b) -> (forall 'a, 'b, 'c, 'a0, 'd. ((() -> List["x" | 'a0 | 'a] -> 'd) -> 'd
-//│   where
-//│     'c <: 'a0
-//│     'b <: List['a0])))) -> 'h -> (() -> List[string] -> () -> (forall 'a1, 'e. (List['a1] & 'e) -> (forall 'a1, 'e, 'f, 'a2, 'g. ((() -> List['a2 | 'a1 | string] -> 'g) -> 'g
-//│   where
-//│     'f <: 'a2
-//│     'e <: List['a2])))) -> 'i) -> 'i
+//│ h: (() -> List["x"] -> (() -> (forall 'a. List['a] -> (forall 'b. (() -> List["x" | 'a] -> 'b) -> 'b))) -> (() -> List[string] -> () -> (forall 'a0. List['a0] -> (forall 'c. (() -> List['a0 | string] -> 'c) -> 'c))) -> 'd & () -> List["x"] -> (() -> (forall 'a. List['a] -> (forall 'b. (() -> List["x" | 'a] -> 'b) -> 'b))) -> 'd -> (() -> List[string] -> () -> (forall 'a0. List['a0] -> (forall 'c. (() -> List['a0 | string] -> 'c) -> 'c))) -> 'e) -> 'e
 

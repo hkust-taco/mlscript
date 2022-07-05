@@ -953,7 +953,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   def extrude(ty: SimpleType, lvl: Int, pol: Boolean, upperLvl: Level)
       // (implicit ctx: Ctx, flexifyRigids: Bool, cache: MutMap[PolarVariable, TV] = MutMap.empty, cache2: MutMap[TraitTag, TV] = MutMap.empty): SimpleType =
       (implicit ctx: Ctx, flexifyRigids: Bool, cache: MutMap[PolarVariable, TV] = MutMap.empty, cache2: MutSortMap[TraitTag, TraitTag] = MutSortMap.empty): SimpleType =
-        (trace(s"EXTR[${printPol(S(pol))}] $ty || $lvl .. $upperLvl  ${ty.level} ${ty.level <= lvl}"){
+        // (trace(s"EXTR[${printPol(S(pol))}] $ty || $lvl .. $upperLvl  ${ty.level} ${ty.level <= lvl}"){
     if (ty.level <= lvl) ty else ty match {
       case t @ TypeBounds(lb, ub) => if (pol) extrude(ub, lvl, true, upperLvl) else extrude(lb, lvl, false, upperLvl)
       case t @ FunctionType(l, r) => FunctionType(extrude(l, lvl, !pol, upperLvl), extrude(r, lvl, pol, upperLvl))(t.prov)
@@ -1060,7 +1060,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           } }, extrude(bod, lvl, pol, upperLvl))
       case o @ Overload(alts) => Overload(alts.map(extrude(_, lvl, pol, upperLvl).asInstanceOf[FunctionType]))(o.prov)
     }
-    }(r => s"=> $r"))
+    // }(r => s"=> $r"))
   
   
   def err(msg: Message, loco: Opt[Loc])(implicit raise: Raise): SimpleType = {
@@ -1093,7 +1093,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         shadows: Shadows,
         ): SimpleType = {
     def freshenImpl(ty: SimpleType, below: Int): SimpleType =
-    (trace(s"FRESHEN $ty || $above .. $below  ${ty.level} ${ty.level <= above}")
+    // (trace(s"FRESHEN $ty || $above .. $below  ${ty.level} ${ty.level <= above}")
     {
       def freshen(ty: SimpleType): SimpleType = freshenImpl(ty, below)
       
@@ -1195,7 +1195,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         ConstrainedType(cs2, freshen(bod))
       case o @ Overload(alts) => Overload(alts.map(freshen(_).asInstanceOf[FunctionType]))(o.prov)
     }}
-    (r => s"=> $r"))
+    // (r => s"=> $r"))
     freshenImpl(ty, below)
   }
   

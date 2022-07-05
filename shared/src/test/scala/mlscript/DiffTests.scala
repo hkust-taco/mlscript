@@ -236,7 +236,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             typer.distributeForalls = distributeForalls
             typer.noCycleCheck = noCycleCheck
             typer.noRecursiveTypes = noRecursiveTypes
-            typer.noConstrainnedTypes = noConstrainnedTypes || mode.generateTsDeclarations
+            typer.noConstrainnedTypes = true // noConstrainnedTypes || mode.generateTsDeclarations
             typer.noArgGen = noArgGen
             typer.irregularTypes = irregularTypes
             typer.verbose = mode.verbose

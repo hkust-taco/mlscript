@@ -1,5 +1,6 @@
 :GeneralizeCurriedFunctions
 :NoRecursiveTypes
+:NoProvs
 
 // type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 
@@ -11,10 +12,7 @@ def s n = fun f -> fun x -> f (n f x)
 // def s n = fun f -> fun x -> (n f x)
 // def s n = fun f -> n f
 // def s n = n
-//│ s: ('a -> 'b -> 'c & 'd) -> (forall 'e, 'f, 'g. (('c | 'e) -> 'f & 'a & 'g) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j. (('b & 'h) -> ('j | 'f)
-//│   where
-//│     'd <: 'g -> 'h -> ('e & 'i)
-//│     'g <: ('i | 'c) -> 'j)))
+//│ s: ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
 //│  = [Function: s]
 
 def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -28,76 +26,65 @@ def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M
 // :d
 :e // skolem extrusion?
 succ = s
-//│ ('a -> 'b -> 'c & 'd) -> (forall 'e, 'f, 'g. (('c | 'e) -> 'f & 'a & 'g) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j. (('b & 'h) -> ('j | 'f)
-//│   where
-//│     'd <: 'g -> 'h -> ('e & 'i)
-//│     'g <: ('i | 'c) -> 'j)))
+//│ ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.30: 	succ = s
+//│ ║  l.28: 	succ = s
 //│ ║        	^^^^^^^^
-//│ ╟── type `‘M_136` is not an instance of type `'M_135`
-//│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╟── type `‘M_102` is not an instance of type `'M_101`
+//│ ║  l.18: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                                                           ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║  l.18: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                                                           ^^
-//│ ╟── from reference:
-//│ ║  l.10: 	def s n = fun f -> fun x -> f (n f x)
-//│ ╙──      	                                   ^
+//│ ╟── from quantified type variable:
+//│ ║  l.18: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                  ^^
 //│     = [Function: s]
 
 def s n = fun f -> fun x -> (n f x)
-//│ s: ('a -> 'b -> 'c & 'd) -> (forall 'e. ('a & 'e) -> (forall 'b, 'c, 'd, 'e, 'f, 'g. (('b & 'f) -> ('g | 'c)
-//│   where
-//│     'd <: 'e -> 'f -> 'g)))
+//│ s: ('a -> 'b -> 'c) -> 'a -> 'b -> 'c
 //│  = [Function: s1]
 
 :e // skolem extrusion?
 succ = s
-//│ ('a -> 'b -> 'c & 'd) -> (forall 'e. ('a & 'e) -> (forall 'b, 'c, 'd, 'e, 'f, 'g. (('b & 'f) -> ('g | 'c)
-//│   where
-//│     'd <: 'e -> 'f -> 'g)))
+//│ ('a -> 'b -> 'c) -> 'a -> 'b -> 'c
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.58: 	succ = s
+//│ ║  l.51: 	succ = s
 //│ ║        	^^^^^^^^
-//│ ╟── type `‘M_226` is not an instance of type `'M_225`
-//│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╟── type `‘M_159` is not an instance of type `'M_158`
+//│ ║  l.18: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                                                           ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║  l.18: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                                                           ^^
-//│ ╟── from reference:
-//│ ║  l.51: 	def s n = fun f -> fun x -> (n f x)
-//│ ╙──      	                                 ^
+//│ ╟── from quantified type variable:
+//│ ║  l.18: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                  ^^
 //│     = [Function: s1]
 
 :e // skolem extrusion?
 def s n = fun f -> n f
 succ = s
-//│ s: ('a -> 'b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e. (('a & 'd) -> ('e | 'b)
-//│   where
-//│     'c <: 'd -> 'e))
+//│ s: ('a -> 'b) -> 'a -> 'b
 //│  = [Function: s2]
-//│ ('a -> 'b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e. (('a & 'd) -> ('e | 'b)
-//│   where
-//│     'c <: 'd -> 'e))
+//│ ('a -> 'b) -> 'a -> 'b
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.80: 	succ = s
+//│ ║  l.71: 	succ = s
 //│ ║        	^^^^^^^^
-//│ ╟── type `‘M_288` is not an instance of type `'M_285`
-//│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╟── type `‘M_200` is not an instance of type `'M_197`
+//│ ║  l.18: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                                                           ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║  l.18: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                                                           ^^
 //│ ╟── from quantified type variable:
-//│ ║  l.20: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║  l.18: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ╙──      	                  ^^
 //│     = [Function: s2]
 
@@ -115,11 +102,50 @@ succ = s
 // ==========================================================================
 
 
-// :d
+:d
 def s n = fun f -> n f
-//│ s: ('a -> 'b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e. (('a & 'd) -> ('e | 'b)
-//│   where
-//│     'c <: 'd -> 'e))
+//│ 1. Typing term ((n,) => ((f,) => (n (f,))))
+//│ | TYPING POLY LAM
+//│ | 2. Typing pattern (n,)
+//│ | | 2. Typing pattern n
+//│ | | 2. : n216''
+//│ | 2. : (n216'',)
+//│ | 2. Typing term ((f,) => (n (f,)))
+//│ | | TYPING POLY LAM
+//│ | | 3. Typing pattern (f,)
+//│ | | | 3. Typing pattern f
+//│ | | | 3. : f217'''
+//│ | | 3. : (f217''',)
+//│ | | 3. Typing term (n (f,))
+//│ | | | 3. Typing term n
+//│ | | | 3. : n216''
+//│ | | | 3. Typing term f
+//│ | | | 3. : f217'''
+//│ | | | CONSTRAIN n216'' <! (f217''' -> α218''')
+//│ | | |   where 
+//│ | | | 3. C n216'' <! (f217''' -> α218''')    (0)
+//│ | | | | wrong level: 3
+//│ | | | | STASHING n216'' bound in extr ctx
+//│ | | 3. : α218'''
+//│ | | UNSTASHING... (out)
+//│ | | | CONSTRAIN n216'' <! (f217''' -> α218''')
+//│ | | |   where 
+//│ | | | 2. C n216'' <! (f217''' -> α218''')    (0)
+//│ | | | | wrong level: 3
+//│ | | | | EXTR RHS  ~>  (f219'' -> α220'')  to 2
+//│ | | | |  where 
+//│ | | | | 2. C n216'' <! (f219'' -> α220'')    (1)
+//│ | | | | | NEW n216'' UB (2)
+//│ | 2. : ‹∀ 2. (f217''' -> α218''')›
+//│ | UNSTASHING... (out)
+//│ 1. : ‹∀ 1. (n216'' -> ‹∀ 2. (f217''' -> α218''')›)›
+//│ UNSTASHING... (out)
+//│ ⬤ Typed as: ‹∀ 0. ‹∀ 1. (n216'' -> ‹∀ 2. (f217''' -> α218''')›)››
+//│  where: 
+//│ 		n216'' <: (f219'' -> α220'')
+//│ 		f217''' <: f219''
+//│ 		α218''' :> α220''
+//│ s: ('f -> 'a) -> 'f -> 'a
 //│  = [Function: s4]
 
 // def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -131,24 +157,127 @@ def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
 
 // :ns
 // :e // * Needs distrib (see below)
-// :d
+:d
 :e // skolem extrusion?
 succ_min = s
 // succ n = s n
 // s id : (forall 'M. ('M -> 'M))
-//│ ('a -> 'b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e. (('a & 'd) -> ('e | 'b)
-//│   where
-//│     'c <: 'd -> 'e))
+//│ 1. Typing term s
+//│ 1. : ‹∀ 0. ‹∀ 1. (n216'' -> ‹∀ 2. (f217''' -> α218''')›)››
+//│ UNSTASHING... (out)
+//│ ⬤ Typed as: ‹∀ 0. ‹∀ 0. ‹∀ 1. (n216'' -> ‹∀ 2. (f217''' -> α218''')›)›››
+//│  where: 
+//│ 		n216'' <: (f219'' -> α220'')
+//│ 		f217''' <: f219''
+//│ 		α218''' :> α220''
+//│ ⬤ Typed as: (‹∀ 1. ('N230'' -> 'N230'')› -> ‹∀ 1. ('M231'' -> 'M231'')›)
+//│  where: 
+//│ ('f -> 'a) -> 'f -> 'a
 //│   <:  succ_min:
 //│ (forall 'N. 'N -> 'N) -> (forall 'M. 'M -> 'M)
+//│ CHECKING SUBSUMPTION...
+//│ CONSTRAIN ‹∀ 0. ‹∀ 0. ‹∀ 1. (n216'' -> ‹∀ 2. (f217''' -> α218''')›)››› <! (‹∀ 1. ('N230'' -> 'N230'')› -> ‹∀ 1. ('M231'' -> 'M231'')›)
+//│   where 
+//│ 		n216'' <: (f219'' -> α220'')
+//│ 		f217''' <: f219''
+//│ 		α218''' :> α220''
+//│ 0. C ‹∀ 0. ‹∀ 0. ‹∀ 1. (n216'' -> ‹∀ 2. (f217''' -> α218''')›)››› <! (‹∀ 1. ('N230'' -> 'N230'')› -> ‹∀ 1. ('M231'' -> 'M231'')›)    (0)
+//│ | 0. C ‹∀ 0. ‹∀ 1. (n216'' -> ‹∀ 2. (f217''' -> α218''')›)›› <! (‹∀ 1. ('N230'' -> 'N230'')› -> ‹∀ 1. ('M231'' -> 'M231'')›)    (1)
+//│ | | 0. C ‹∀ 1. (n216'' -> ‹∀ 2. (f217''' -> α218''')›)› <! (‹∀ 1. ('N230'' -> 'N230'')› -> ‹∀ 1. ('M231'' -> 'M231'')›)    (2)
+//│ | | | INST [1]   ‹∀ 1. (n216'' -> ‹∀ 2. (f217''' -> α218''')›)›
+//│ | | |   where  
+//│ 		n216'' <: (f219'' -> α220'')
+//│ 		f217''' <: f219''
+//│ 		α218''' :> α220''
+//│ | | | TO [0] ~>  (n216_253 -> ‹∀ 2. (f217_256''' -> α218_257''')›)
+//│ | | |   where  
+//│ 		n216_253 <: (f219_254 -> α220_255)
+//│ 		f217_256''' <: f219_254
+//│ 		α218_257''' :> α220_255
+//│ | | | 0. C (n216_253 -> ‹∀ 2. (f217_256''' -> α218_257''')›) <! (‹∀ 1. ('N230'' -> 'N230'')› -> ‹∀ 1. ('M231'' -> 'M231'')›)    (3)
+//│ | | | | 0. C (‹∀ 1. ('N230'' -> 'N230'')›,) <! (n216_253,)    (4)
+//│ | | | | | 0. C ‹∀ 1. ('N230'' -> 'N230'')› <! n216_253    (5)
+//│ | | | | | | NEW n216_253 LB (0)
+//│ | | | | | | 0. C ‹∀ 1. ('N230'' -> 'N230'')› <! (f219_254 -> α220_255)    (6)
+//│ | | | | | | | INST [1]   ‹∀ 1. ('N230'' -> 'N230'')›
+//│ | | | | | | |   where  
+//│ | | | | | | | TO [0] ~>  ('N230_258 -> 'N230_258)
+//│ | | | | | | |   where  
+//│ | | | | | | | 0. C ('N230_258 -> 'N230_258) <! (f219_254 -> α220_255)    (7)
+//│ | | | | | | | | 0. C (f219_254,) <! ('N230_258,)    (8)
+//│ | | | | | | | | | 0. C f219_254 <! 'N230_258    (9)
+//│ | | | | | | | | | | NEW f219_254 UB (0)
+//│ | | | | | | | | 0. C 'N230_258 <! α220_255    (8)
+//│ | | | | | | | | | NEW 'N230_258 UB (0)
+//│ | | | | 0. C ‹∀ 2. (f217_256''' -> α218_257''')› <! ‹∀ 1. ('M231'' -> 'M231'')›    (4)
+//│ | | | | | BUMP TO LEVEL 1  -->  (‘M' -> ‘M')
+//│ | | | | | where 
+//│ | | | | | 1. C ‹∀ 2. (f217_256''' -> α218_257''')› <! (‘M' -> ‘M')    (5)
+//│ | | | | | | INST [2]   ‹∀ 2. (f217_256''' -> α218_257''')›
+//│ | | | | | |   where  
+//│ 		f219_254 <: 'N230_258
+//│ 		f217_256''' <: f219_254
+//│ 		α218_257''' :> α220_255
+//│ 		'N230_258 <: α220_255
+//│ | | | | | | TO [1] ~>  (f217_259' -> α218_260')
+//│ | | | | | |   where  
+//│ 		f219_254 <: 'N230_258
+//│ 		'N230_258 <: α220_255
+//│ 		f217_259' <: f219_254
+//│ 		α218_260' :> α220_255
+//│ | | | | | | 1. C (f217_259' -> α218_260') <! (‘M' -> ‘M')    (6)
+//│ | | | | | | | 1. C (‘M',) <! (f217_259',)    (7)
+//│ | | | | | | | | 1. C ‘M' <! f217_259'    (8)
+//│ | | | | | | | | | NEW f217_259' LB (1)
+//│ | | | | | | | | | 1. C ‘M' <! f219_254    (9)
+//│ | | | | | | | | | | wrong level: 1
+//│ | | | | | | | | | | STASHING f219_254 bound in extr ctx
+//│ | | | | | | | 1. C α218_260' <! ‘M'    (7)
+//│ | | | | | | | | NEW α218_260' UB (1)
+//│ | | | | | | | | 1. C α220_255 <! ‘M'    (8)
+//│ | | | | | | | | | wrong level: 1
+//│ | | | | | | | | | STASHING α220_255 bound in extr ctx
+//│ | | | | | UNSTASHING...
+//│ | | | | | | where(f219_254) 
+//│ 		f219_254 <: 'N230_258
+//│ 		'N230_258 <: α220_255
+//│ | | | | | | UNSTASH ‘M' <: f219_254 where 
+//│ | | | | | | 0. C ‘M' <! f219_254    (5)
+//│ | | | | | | | wrong level: 1
+//│ | | | | | | | EXTR LHS  ~>  ‘M_261  to 0
+//│ | | | | | | |  where 
+//│ | | | | | | | 0. C ‘M_261 <! f219_254    (6)
+//│ | | | | | | | | NEW f219_254 LB (0)
+//│ | | | | | | | | 0. C ‘M_261 <! 'N230_258    (7)
+//│ | | | | | | | | | NEW 'N230_258 LB (0)
+//│ | | | | | | | | | 0. C ‘M_261 <! α220_255    (8)
+//│ | | | | | | | | | | NEW α220_255 LB (0)
+//│ | | | | | | where(α220_255) 
+//│ 		α220_255 :> ‘M_261
+//│ | | | | | | UNSTASH α220_255 <: ‘M' where 
+//│ | | | | | | 0. C α220_255 <! ‘M'    (5)
+//│ | | | | | | | wrong level: 1
+//│ | | | | | | | EXTR RHS  ~>  ‹∀ 0. 'M262'›  to 0
+//│ | | | | | | |  where 
+//│ | | | | | | | 0. C α220_255 <! ‹∀ 0. 'M262'›    (6)
+//│ | | | | | | | | NEW α220_255 UB (0)
+//│ | | | | | | | | 0. C ‘M_261 <! ‹∀ 0. 'M262'›    (7)
+//│ | | | | | | | | | BUMP TO LEVEL 1  -->  ‘M'
+//│ | | | | | | | | | where 
+//│ | | | | | | | | | 1. C ‘M_261 <! ‘M'    (8)
+//│ | | | | | | | | | | CONSTRAINT FAILURE: ‘M_261 <: ‘M'
+//│ | | | | | | | | | | allVarPols: 
+//│ | | | | | | | | | | norm[+] ‘M_261
+//│ | | | | | | | | | | | DNF: DNF(1024, {}∧‘M_261)
+//│ | | | | | | | | | | ~> ‘M_261
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.136: 	succ_min = s
+//│ ║  l.162: 	succ_min = s
 //│ ║         	^^^^^^^^^^^^
-//│ ╟── type `‘M_366` is not an instance of type `'M`
-//│ ║  l.126: 	def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
+//│ ╟── type `‘M_261` is not an instance of type `'M`
+//│ ║  l.152: 	def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
 //│ ║         	                                                  ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.126: 	def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
+//│ ║  l.152: 	def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
 //│ ╙──       	                                                  ^^
 //│         = [Function: s4]
 
