@@ -214,11 +214,9 @@ def flip: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 def flip f = fun x -> fun y -> f y x
 //│ flip: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 //│     = <missing implementation>
-//│ ('a -> 'b -> 'c & 'd) -> (forall 'b, 'd, 'e, 'f, 'g. (('b & 'f) -> (forall 'a, 'c, 'd, 'e, 'f, 'g, 'h, 'i. (('a & 'e & 'h) -> ('i | 'g | 'c)
+//│ ('a -> 'b -> 'c & 'd) -> (forall 'e. ('b & 'e) -> (forall 'a, 'c, 'd, 'e, 'f, 'g. (('a & 'f) -> ('g | 'c)
 //│   where
-//│     'd <: 'h -> 'f -> 'i))
-//│   where
-//│     'd <: 'e -> 'f -> 'g))
+//│     'd <: 'f -> 'e -> 'g)))
 //│   <:  flip:
 //│ ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 //│     = [Function: flip]
@@ -512,30 +510,52 @@ a id
 // :e // refreshing-extr
 :ns
 choose id (fun (x: ('a -> 'a)) -> auto_ x)
-//│ res: 'c
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.512: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
+//│ ║         	                                  ^^^^^^^
+//│ ╟── type `‘a_1058` is not an instance of type `'a`
+//│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ╙──       	                    ^^
+//│ res: forall 'b. 'c
 //│   where
-//│     'c :> (forall 'a. 'a -> 'a) | (forall 'a0, 'd, 'b. ('a0 -> 'a0) -> 'd)
-//│     'd :> 'b -> 'b
-//│     'a0 := ‘a1074
+//│     'c :> (forall 'a. 'a -> 'a) | (forall 'a0, 'b. ('a0 -> 'a0) -> 'b)
+//│     'b :> error
+//│     'a0 :> ‘a_1058
+//│         <: forall 'a1. 'a1
 //│    = [Function: id1]
 
 // * Note the skolem (unsafely) leaking in this type – see also `Skolems.mls`:
 res
-//│ res: (('a | ‘a1074) -> (‘a1074 & 'a) & 'a0) -> ('a0 | 'b -> 'b)
+//│ res: (('a | ‘a_1058) -> 'a & 'a0) -> ('a0 | error)
 //│    = [Function: id1]
 
 res id
-//│ res: 'a -> 'a
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.535: 	res id
+//│ ║         	^^^^^^
+//│ ╟── type `‘a_1058` is not an instance of type `'a`
+//│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║         	                    ^^
+//│ ╟── from type variable:
+//│ ║  l.512: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
+//│ ╙──       	                          ^^
+//│ res: 'a -> 'a | error
 //│    = [Function: id1]
 
 
 :e
 a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.533: 	a (fun x -> { u = x })
+//│ ║  l.553: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a`
-//│ ║  l.533: 	a (fun x -> { u = x })
+//│ ║  l.553: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b

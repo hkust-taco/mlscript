@@ -101,6 +101,15 @@ to_church = to_ch
 //│     'a <: 'b -> 'c))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.98: 	to_church = to_ch
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘M_121` is not an instance of type `'M`
+//│ ║  l.45: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.45: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                              ^^
 //│          = <no result>
 //│            to_ch and to_church are not implemented
 
@@ -126,6 +135,15 @@ to_church = to_ch
 //│     'a <: 'b -> 'c))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.132: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘M_201` is not an instance of type `'M_198`
+//│ ║  l.45: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.45: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                              ^^
 //│          = <no result>
 //│            to_ch, to_church, to_ch and to_church are not implemented
 
@@ -144,6 +162,15 @@ to_church = to_ch
 //│ int -> ('M -> 'M & 'M0 -> 'M0) -> ('M & 'M0) -> ('M | 'M0)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.161: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘M_265` is not an instance of type `'M`
+//│ ║  l.45: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.45: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                              ^^
 //│          = <no result>
 //│            to_ch, to_church, to_ch, to_church, to_ch and to_church are not implemented
 

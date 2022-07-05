@@ -373,7 +373,7 @@ runST (returnST 1)
 // ,("runST (newRef 1)", Wrong)
 :ng
 runST (newRef 1)
-//│ res: Ref[in ‘s830 & 's out 's | ‘s830, 1]
+//│ res: Ref[in ‘s_830 & 's out 's | ‘s_830, 1]
 
 // ,("apply runST (returnST 1)", ok "Int")
 :ng
@@ -388,7 +388,16 @@ map xauto ids
 // ,("map xauto (map xauto ids)", Wrong)
 // :e // * This term seems fine, though they mark it as wrong in their system
 map xauto (map xauto ids)
-//│ res: List['a -> 'a]
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.390: 	map xauto (map xauto ids)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘b_883` is not an instance of type `'b`
+//│ ║  l.178: 	def xauto : forall 'a. (forall 'b. 'b -> 'b) -> 'a -> 'a
+//│ ║         	                               ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.178: 	def xauto : forall 'a. (forall 'b. 'b -> 'b) -> 'a -> 'a
+//│ ╙──       	                               ^^
+//│ res: error
 //│    = Cons { head: [Function: id1], tail: Nil {} }
 
 // ,("map auto ids", ok "[forall a. a -> a]")
@@ -438,13 +447,13 @@ app (map head) (single ids)
 :ng
 (error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.439: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
+//│ ║  l.448: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘d` is not an instance of type `int`
-//│ ║  l.439: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
+//│ ║  l.448: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
 //│ ║         	                                                      ^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.439: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
+//│ ║  l.448: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
 //│ ╙──       	                                                                        ^^^
 //│ res: error
 
@@ -511,20 +520,20 @@ fun x -> (x : List[forall 'a. 'a -> 'a])
 
 // ,("\\x -> let polys (xs :: [forall a . a -> a]) = 1; f y = x in polys [f::some a. forall b. b -> a]",Wrong)  -- escape in unify (with rigid annotations, otherwise we get a skolem mismatch)
 fun x -> let polys (xs: List[forall 'a. 'a -> 'a]) = 1 in let f y = x in polys (single (f : forall 'b. 'b -> 'a))
-//│ res: ‘a1130 -> 1
+//│ res: anything -> 1
 //│    = [Function: res]
 
 // ,("ids :: forall b. [forall a. a -> b]", Wrong)                                                       -- unify different skolems
 :e
 ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.519: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
+//│ ║  l.528: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ║         	^^^
 //│ ╟── type `‘a` is not an instance of type `'b`
-//│ ║  l.519: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
+//│ ║  l.528: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ║         	                             ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.519: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
+//│ ║  l.528: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ╙──       	             ^^
 //│ res: List[anything -> nothing]
 //│    = Cons { head: [Function: id1], tail: Nil {} }
@@ -817,6 +826,15 @@ single id : List[forall 'a. 'a -> 'a]
 // ,("returnST 1 :: forall s. ST s Int", ok "forall s. ST s Int")
 :ng
 returnST 1 : forall 's. ST['s, int]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.828: 	returnST 1 : forall 's. ST['s, int]
+//│ ║         	^^^^^^^^^^
+//│ ╟── type `‘s_1792` is not an instance of type `'s`
+//│ ║  l.828: 	returnST 1 : forall 's. ST['s, int]
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.828: 	returnST 1 : forall 's. ST['s, int]
+//│ ╙──       	                    ^^
 //│ res: ST['s, int]
 
 // ,("auto id :: Int -> Int", ok "Int -> Int")
@@ -918,7 +936,7 @@ fun x -> (auto x, (x : int -> int) 1)
 def runST2: forall 'a. (forall 's. (ST['s, 'a], ST['s, 'a])) -> 'a
 runST2 ((newRef 1, newRef 2))
 //│ runST2: (forall 's. (ST['s, 'a], ST['s, 'a],)) -> 'a
-//│ res: Ref[in ‘s2039 & 's out 's | ‘s2039, 1 | 2]
+//│ res: Ref[in ‘s_2022 & 's | ‘s_2026 & 's out 's | ‘s_2022 | ‘s_2026, 1 | 2]
 
 :ng
 def runST3: forall 'a. (forall 's. ST[('s, 's), 'a]) -> 'a
@@ -926,7 +944,7 @@ def newRef3: forall 'a 's. 'a -> ST[('s, 's), Ref['s, 'a]]
 runST3 (newRef3 1)
 //│ runST3: (forall 's. ST[('s, 's,), 'a]) -> 'a
 //│ newRef3: 'a -> ST[('s, 's,), Ref['s, 'a]]
-//│ res: Ref[in ‘s2084 & 's out 's | ‘s2084, 1]
+//│ res: Ref[in ‘s_2068 & 's out 's | ‘s_2068, 1]
 
 :ng
 def runST4: forall 'a 'b. (forall 's. ST['s, ('a, 'b)]) -> ('a, 'b)
@@ -934,14 +952,32 @@ def newRef4: forall 'a 's. 'a -> ST['s, (Ref['s, 'a], Ref['s, 'a])]
 runST4 (newRef4 1)
 //│ runST4: (forall 's. ST['s, ('a, 'b,)]) -> ('a, 'b,)
 //│ newRef4: 'a -> ST['s, (Ref['s, 'a], Ref['s, 'a],)]
-//│ res: (Ref[in ‘s2127 & 's out 's | ‘s2127, 1], Ref[in ‘s2127 & 's out 's | ‘s2127, 1],)
+//│ res: (Ref[in ‘s_2111 & 's out 's | ‘s_2111 | 's0, 1], Ref[in ‘s_2115 & 's0 out 's | ‘s_2115, 1],)
 
 // ("(\\(x :: forall a. a -> a) -> xauto x) :: (forall a. a -> a) -> (forall a. a -> a)", ok "(forall a. a -> a) -> (forall a. a -> a)")
 (fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.958: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘a_2140` is not an instance of type `'a`
+//│ ║  l.958: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║         	                                                      ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.958: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ╙──       	                                                      ^^
 //│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0)
 //│    = [Function: res]
 
 // ("xauto :: (forall a. a -> a) -> (forall a. a -> a)"", Wrong)
 xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.972: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║         	^^^^^
+//│ ╟── type `‘a_2152` is not an instance of type `'a`
+//│ ║  l.972: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║         	                                         ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.972: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ╙──       	                                         ^^
 //│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0)
 //│    = [Function: xauto]

@@ -77,12 +77,13 @@ choose id
 //│     'c <: 'a
 
 fun (g: forall 'a. ('a -> 'a) -> ('a -> 'a)) -> fun (x: forall 'a. 'a -> 'a) -> fun a -> g a (x a)
-//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'b, 'c, 'd, 'e. ((forall 'a0. 'a0 -> 'a0) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'a1. (('a1 -> 'a1 & 'c & 'd & 'f & 'a1) -> ('a1 | 'h | 'e)
+//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'b, 'a0, 'a1, 'c, 'd. ((forall 'a2. 'a2 -> 'a2) -> (forall 'b, 'a1, 'c, 'e, 'f, 'g, 'h, 'i, 'j. (('b & 'a1 & 'c & 'f & 'h) -> ('i | 'c)
 //│   where
-//│     'b <: 'f -> ('g | 'c) -> 'h
-//│     'i <: 'f -> ('d & 'g & 'a1)))
+//│     'e <: 'f -> ('g | 'h) -> 'i
+//│     'j <: 'f -> ('a1 & 'c & 'g)))
 //│   where
-//│     'b <: 'c -> 'd -> 'e))
+//│     'b <: ('a0 | 'a1) -> ('a0 & 'c)
+//│     'd :> ('a0 & 'c) -> ('a0 | 'a1)))
 
 choose id succ
 //│ res: int -> int
@@ -120,7 +121,7 @@ app auto id
 :e
 let f = choose id in (f auto) (f succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.121: 	let f = choose id in (f auto) (f succ)
+//│ ║  l.122: 	let f = choose id in (f auto) (f succ)
 //│ ║         	                     ^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` is not an instance of type `int`
 //│ ║  l.32: 	def auto (x: forall 'a. 'a -> 'a) = x x
@@ -138,13 +139,13 @@ choose id auto2
 :e // This is a legit error
 res (choose id succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.139: 	res (choose id succ)
+//│ ║  l.140: 	res (choose id succ)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `int -> int` is not an instance of type `int`
-//│ ║  l.139: 	res (choose id succ)
+//│ ║  l.140: 	res (choose id succ)
 //│ ║         	               ^^^^
 //│ ╟── but it flows into application with expected type `int`
-//│ ║  l.139: 	res (choose id succ)
+//│ ║  l.140: 	res (choose id succ)
 //│ ╙──       	     ^^^^^^^^^^^^^^
 //│ res: int -> int | error
 

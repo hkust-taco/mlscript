@@ -953,7 +953,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   def extrude(ty: SimpleType, lvl: Int, pol: Boolean, upperLvl: Level)
       // (implicit ctx: Ctx, flexifyRigids: Bool, cache: MutMap[PolarVariable, TV] = MutMap.empty, cache2: MutMap[TraitTag, TV] = MutMap.empty): SimpleType =
       (implicit ctx: Ctx, flexifyRigids: Bool, cache: MutMap[PolarVariable, TV] = MutMap.empty, cache2: MutSortMap[TraitTag, TraitTag] = MutSortMap.empty): SimpleType =
-        // (trace(s"EXTR[${printPol(S(pol))}] $ty || $lvl .. $upperLvl  ${ty.level} ${ty.level <= lvl}"){
+        (trace(s"EXTR[${printPol(S(pol))}] $ty || $lvl .. $upperLvl  ${ty.level} ${ty.level <= lvl}"){
     if (ty.level <= lvl) ty else ty match {
       case t @ TypeBounds(lb, ub) => if (pol) extrude(ub, lvl, true, upperLvl) else extrude(lb, lvl, false, upperLvl)
       case t @ FunctionType(l, r) => FunctionType(extrude(l, lvl, !pol, upperLvl), extrude(r, lvl, pol, upperLvl))(t.prov)
@@ -1015,8 +1015,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             // }
             
             cache2.getOrElseUpdate(tt,
-              TraitTag(lvl,
-                Var.apply(freshVar(noProv,N,S(id.idStr))(0).toString)
+              TraitTag(
+                lvl,
+                // level,
+                Var.apply(freshVar(noProv,N,S(id.idStr+"_"))(0).toString)
               )(tt.prov)
             )
             /* 
@@ -1058,7 +1060,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           } }, extrude(bod, lvl, pol, upperLvl))
       case o @ Overload(alts) => Overload(alts.map(extrude(_, lvl, pol, upperLvl).asInstanceOf[FunctionType]))(o.prov)
     }
-    // }(r => s"=> $r"))
+    }(r => s"=> $r"))
   
   
   def err(msg: Message, loco: Opt[Loc])(implicit raise: Raise): SimpleType = {
@@ -1091,7 +1093,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         shadows: Shadows,
         ): SimpleType = {
     def freshenImpl(ty: SimpleType, below: Int): SimpleType =
-    // (trace(s"FRESHEN $ty || $above .. $below  ${ty.level} ${ty.level <= above}")
+    (trace(s"FRESHEN $ty || $above .. $below  ${ty.level} ${ty.level <= above}")
     {
       def freshen(ty: SimpleType): SimpleType = freshenImpl(ty, below)
       
@@ -1193,7 +1195,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         ConstrainedType(cs2, freshen(bod))
       case o @ Overload(alts) => Overload(alts.map(freshen(_).asInstanceOf[FunctionType]))(o.prov)
     }}
-    // (r => s"=> $r"))
+    (r => s"=> $r"))
     freshenImpl(ty, below)
   }
   
@@ -1220,7 +1222,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     // implicit val state = MutMap.empty[TV, ST]
     implicit val cache: MutMap[PolarVariable, TV] = MutMap.empty
     val init = MutSortMap.empty[TraitTag, TraitTag]
-    
+    /* 
     {
     implicit val cache2: MutSortMap[TraitTag, TraitTag] = init
     implicit val flexifyRigids: Bool = false // Q: can this lead to worse results than when extruding bounds individually?!
@@ -1231,6 +1233,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           buff.map { case (pol, bound) => (pol, extrude(bound, above, pol, below)) }
     }
     }
+    */
+    ec
   }
   
   

@@ -50,6 +50,15 @@ foo_ty = foo
 //│ 'a -> 'b -> ('a, 'b,)
 //│   <:  foo_ty:
 //│ 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.49: 	foo_ty = foo
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── type `‘b_98` is not an instance of type `'b`
+//│ ║  l.42: 	def foo_ty: 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│ ║        	                          ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.42: 	def foo_ty: 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│ ╙──      	                          ^^
 //│       = [Function: foo]
 
 

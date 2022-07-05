@@ -97,11 +97,9 @@ def create_hashtbl _ = nil
 
 // let hashtbl_add table key element = (key, element) :: table
 def hashtbl_add table key element = cons ((key, element)) table
-//│ hashtbl_add: (List['a] & 'b) -> (forall 'b, 'c, 'd. ('d -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f -> List[('d, 'f,) | 'c | 'a | 'e]
+//│ hashtbl_add: (List['a] & 'b) -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> List[('c, 'e,) | 'a | 'd]
 //│   where
-//│     'b <: List['e]))
-//│   where
-//│     'b <: List['c]))
+//│     'b <: List['d])))
 //│            = [Function: hashtbl_add]
 
 // let rec find table key = 
@@ -154,9 +152,9 @@ def nfind table key =
   { None -> fun f -> fun x -> x
   | Some -> opt.val
   }
-//│ nfind: (List['a] & 'a) -> (forall 'a. ('a -> 'a -> (forall 'b. 'b -> 'b)
+//│ nfind: List[?] -> (forall 'val, 'val0. (anything -> (anything -> (forall 'a. 'a -> 'a) | 'val0 | 'val)
 //│   where
-//│     'a <: List['a]))
+//│     'val <: 'val0))
 //│      = [Function: nfind]
 
 // type Int = ['a] ('a -> 'a) -> ('a -> 'a)
@@ -166,54 +164,51 @@ type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 // let succ (n:Int) = fun f x -> f (n f x)
 def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 def succ_ n = fun f -> fun x -> f (n f x)
-//│ succ: ChurchInt -> (forall 'b, 'c, 'd, 'e, 'a, 'f, 'g. (('a -> 'a & ('a | 'e | 'f) -> 'g & 'c) -> (forall 'b, 'c, 'd, 'e, 'a, 'f, 'g, 'h, 'i, 'j. (('d & 'a & 'h) -> ('j | 'g)
+//│ succ: ChurchInt -> (forall 'b, 'a, 'c, 'a0, 'd, 'e, 'f, 'g. ((('c | 'e) -> 'f & 'd & 'g) -> (forall 'c, 'a0, 'e, 'f, 'g, 'h, 'i, 'j, 'k. (('c & 'a0 & 'i) -> ('k | 'f)
 //│   where
-//│     'b <: 'c -> 'h -> ('f & 'i)
-//│     'c <: ('a | 'i | 'e) -> 'j))
+//│     'h <: 'g -> 'i -> ('e & 'j)
+//│     'g <: ('j | 'c) -> 'k))
 //│   where
-//│     'b <: 'c -> 'd -> 'e))
+//│     'b :> ('a & 'c) -> ('a | 'a0)
+//│     'd <: ('a | 'a0) -> ('a & 'c)))
 //│     = [Function: succ]
-//│ succ_: ('a -> 'b -> 'c & 'd) -> (forall 'a, 'c, 'd, 'e, 'f, 'g, 'h, 'i. ((('g | 'h | 'c) -> 'i & 'a & 'e) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l. (('b & 'f & 'j) -> ('l | 'i)
+//│ succ_: ('a -> 'b -> 'c & 'd) -> (forall 'e, 'f, 'g. (('c | 'e) -> 'f & 'a & 'g) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j. (('b & 'h) -> ('j | 'f)
 //│   where
-//│     'd <: 'e -> 'j -> ('h & 'k)
-//│     'e <: ('k | 'g | 'c) -> 'l))
-//│   where
-//│     'd <: 'e -> 'f -> 'g))
+//│     'd <: 'g -> 'h -> ('e & 'i)
+//│     'g <: ('i | 'c) -> 'j)))
 //│      = [Function: succ_]
 
 // let add (n:Int) (m:Int) = n succ m
 
 //:e // due to tapping
 def add (n: ChurchInt) (m: ChurchInt) = n succ m
-//│ add: ChurchInt -> (forall 'b. (ChurchInt -> (forall 'c, 'd, 'e, 'f, 'a, 'g, 'h. (('a -> 'a & ('a | 'f | 'g) -> 'h & 'd) -> (forall 'c, 'd, 'e, 'f, 'a, 'g, 'h, 'i, 'j, 'k. (('e & 'a & 'i) -> ('k | 'h)
+//│ add: ChurchInt -> (forall 'b. (ChurchInt -> (forall 'c, 'a, 'd, 'a0, 'e, 'f, 'g, 'h. ((('d | 'f) -> 'g & 'e & 'h) -> (forall 'd, 'a0, 'f, 'g, 'h, 'i, 'j, 'k, 'l. (('d & 'a0 & 'j) -> ('l | 'g)
 //│   where
-//│     'c <: 'd -> 'i -> ('g & 'j)
-//│     'd <: ('a | 'j | 'f) -> 'k)) | ChurchInt | 'l
+//│     'i <: 'h -> 'j -> ('f & 'k)
+//│     'h <: ('k | 'd) -> 'l)) | ChurchInt | 'm
 //│   where
-//│     'c <: 'd -> 'e -> 'f))
+//│     'c :> ('a & 'd) -> ('a | 'a0)
+//│     'e <: ('a | 'a0) -> ('a & 'd)))
 //│   where
-//│     'b <: (ChurchInt -> (forall 'c, 'd, 'e, 'f, 'a, 'g, 'h. (('a -> 'a & ('a | 'f | 'g) -> 'h & 'd) -> (forall 'c, 'd, 'e, 'f, 'a, 'g, 'h, 'i, 'j, 'k. (('e & 'a & 'i) -> ('k | 'h)
+//│     'b <: (ChurchInt -> (forall 'c, 'a, 'd, 'a0, 'e, 'f, 'g, 'h. ((('d | 'f) -> 'g & 'e & 'h) -> (forall 'd, 'a0, 'f, 'g, 'h, 'i, 'j, 'k, 'l. (('d & 'a0 & 'j) -> ('l | 'g)
 //│   where
-//│     'c <: 'd -> 'i -> ('g & 'j)
-//│     'd <: ('a | 'j | 'f) -> 'k))
+//│     'i <: 'h -> 'j -> ('f & 'k)
+//│     'h <: ('k | 'd) -> 'l))
 //│   where
-//│     'c <: 'd -> 'e -> 'f))) -> ChurchInt -> 'l))
+//│     'c :> ('a & 'd) -> ('a | 'a0)
+//│     'e <: ('a | 'a0) -> ('a & 'd)))) -> ChurchInt -> 'm))
 //│    = [Function: add]
 
 def add_ n m = n succ_ m
-//│ add_: ((forall 'a, 'b, 'c, 'd. ('a -> 'b -> 'c & 'd) -> (forall 'a, 'c, 'd, 'e, 'f, 'g, 'h, 'i. ((('g | 'h | 'c) -> 'i & 'a & 'e) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l. (('b & 'f & 'j) -> ('l | 'i)
+//│ add_: ((forall 'a, 'b, 'c, 'd. ('a -> 'b -> 'c & 'd) -> (forall 'e, 'f, 'g. (('c | 'e) -> 'f & 'a & 'g) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j. (('b & 'h) -> ('j | 'f)
 //│   where
-//│     'd <: 'e -> 'j -> ('h & 'k)
-//│     'e <: ('k | 'g | 'c) -> 'l))
+//│     'd <: 'g -> 'h -> ('e & 'i)
+//│     'g <: ('i | 'c) -> 'j)))) -> 'k -> 'l & 'm) -> (forall 'm. (('k & 'n) -> ('o | 'l)
 //│   where
-//│     'd <: 'e -> 'f -> 'g))) -> 'm -> 'n & 'o) -> (forall 'o. (('m & 'p) -> ('q | 'n)
+//│     'm <: (forall 'a, 'b, 'c, 'd. ('a -> 'b -> 'c & 'd) -> (forall 'e, 'f, 'g. (('c | 'e) -> 'f & 'a & 'g) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j. (('b & 'h) -> ('j | 'f)
 //│   where
-//│     'o <: (forall 'a, 'b, 'c, 'd. ('a -> 'b -> 'c & 'd) -> (forall 'a, 'c, 'd, 'e, 'f, 'g, 'h, 'i. ((('g | 'h | 'c) -> 'i & 'a & 'e) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l. (('b & 'f & 'j) -> ('l | 'i)
-//│   where
-//│     'd <: 'e -> 'j -> ('h & 'k)
-//│     'e <: ('k | 'g | 'c) -> 'l))
-//│   where
-//│     'd <: 'e -> 'f -> 'g))) -> 'p -> 'q))
+//│     'd <: 'g -> 'h -> ('e & 'i)
+//│     'g <: ('i | 'c) -> 'j)))) -> 'n -> 'o))
 //│     = [Function: add_]
 
 // let printInt (n:Int) = print (n (fun x -> x+1) 0)
@@ -261,46 +256,53 @@ zog = printInt (add (nfind table "one") (nfind table "two"))
 //:e // due to tapping
 // :e // FIXME? refreshing-extr
 a = add (nfind table "one")
-//│ a: ChurchInt -> (forall 'b, 'c, 'd, 'e, 'a, 'f, 'g. (('a -> 'a & ('a | 'e | 'f) -> 'g & 'c) -> (forall 'b, 'c, 'd, 'e, 'a, 'f, 'g, 'h, 'i, 'j. (('d & 'a & 'h) -> ('j | 'g)
+//│ a: ChurchInt -> (forall 'b, 'a, 'c, 'a0, 'd, 'e, 'f, 'g. ((('c | 'e) -> 'f & 'd & 'g) -> (forall 'c, 'a0, 'e, 'f, 'g, 'h, 'i, 'j, 'k. (('c & 'a0 & 'i) -> ('k | 'f)
 //│   where
-//│     'b <: 'c -> 'h -> ('f & 'i)
-//│     'c <: ('a | 'i | 'e) -> 'j)) | ChurchInt | 'k
+//│     'h <: 'g -> 'i -> ('e & 'j)
+//│     'g <: ('j | 'c) -> 'k)) | ChurchInt | 'l
 //│   where
-//│     'b <: 'c -> 'd -> 'e))
+//│     'b :> ('a & 'c) -> ('a | 'a0)
+//│     'd <: ('a | 'a0) -> ('a & 'c)))
 //│   where
-//│     'l <: (ChurchInt -> (forall 'b, 'c, 'd, 'e, 'a, 'f, 'g. (('a -> 'a & ('a | 'e | 'f) -> 'g & 'c) -> (forall 'b, 'c, 'd, 'e, 'a, 'f, 'g, 'h, 'i, 'j. (('d & 'a & 'h) -> ('j | 'g)
+//│     'm <: (ChurchInt -> (forall 'b, 'a, 'c, 'a0, 'd, 'e, 'f, 'g. ((('c | 'e) -> 'f & 'd & 'g) -> (forall 'c, 'a0, 'e, 'f, 'g, 'h, 'i, 'j, 'k. (('c & 'a0 & 'i) -> ('k | 'f)
 //│   where
-//│     'b <: 'c -> 'h -> ('f & 'i)
-//│     'c <: ('a | 'i | 'e) -> 'j))
+//│     'h <: 'g -> 'i -> ('e & 'j)
+//│     'g <: ('j | 'c) -> 'k))
 //│   where
-//│     'b <: 'c -> 'd -> 'e))) -> ChurchInt -> 'k
+//│     'b :> ('a & 'c) -> ('a | 'a0)
+//│     'd <: ('a | 'a0) -> ('a & 'c)))) -> ChurchInt -> 'l
 //│  = [Function (anonymous)]
 
 // :e // FIXME? refreshing-extr
 b = (nfind table "two")
-//│ b: nothing -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'b) -> ('f | 'd)
+//│ b: nothing -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'b) -> ('f | 'c)
 //│   where
-//│     'a <: 'b -> 'c & 'c -> 'd
-//│     'e <: 'b -> 'd
-//│     'e <: 'b -> 'd
-//│     'e <: 'b -> 'd
-//│     'a <: 'b -> 'c & 'c -> 'd
-//│     'e <: 'b -> 'd
-//│     'e <: 'b -> 'd
-//│     'e <: 'b -> 'd))
+//│     'a <: 'b -> 'c
+//│     'd <: 'b -> 'e & 'e -> 'c
+//│     'a <: 'b -> 'c
+//│     'a <: 'b -> 'c
+//│     'd <: 'b -> 'e & 'e -> 'c
+//│     'd <: 'b -> 'e & 'e -> 'c
+//│     'a <: 'b -> 'c
+//│     'a <: 'b -> 'c
+//│     'd <: 'b -> 'e & 'e -> 'c
+//│     'a <: 'b -> 'c
+//│     'a <: 'b -> 'c))
 //│  = [Function (anonymous)]
 
 // * Note: this one requires `:DistributeForalls`
 // :d
 //:e // due to tapping
 a b
-//│ res: ('a -> 'a & ('a | 'b | 'c) -> 'd & 'e) -> (forall 'f, 'e, 'g, 'b, 'a, 'c, 'd, 'h, 'i, 'j. (('g & 'a & 'h) -> ('j | 'd)
+//│ res: (('b | 'c) -> 'd & 'e & 'f) -> (forall 'b, 'a, 'c, 'd, 'f, 'g, 'h, 'i, 'j. (('b & 'a & 'h) -> ('j | 'd)
 //│   where
-//│     'f <: 'e -> 'h -> ('c & 'i)
-//│     'e <: ('a | 'i | 'b) -> 'j)) | ChurchInt
+//│     'g <: 'f -> 'h -> ('c & 'i)
+//│     'f <: ('i | 'b) -> 'j)) | ChurchInt
 //│   where
-//│     'f <: 'e -> 'g -> 'b
-//│     'f <: 'e -> 'g -> 'b
+//│     'k :> ('a0 & 'b) -> ('a0 | 'a)
+//│     'e <: ('a0 | 'a) -> ('a0 & 'b)
+//│     'k :> ('a0 & 'b) -> ('a0 | 'a)
+//│     'e <: ('a0 | 'a) -> ('a0 & 'b)
 //│    = [Function (anonymous)]
 
 // :e // FIXME? refreshing-extr
@@ -308,29 +310,12 @@ a b
 :e // FIXME?
 zog_ = printInt_ (add_ (nfind table "one") (nfind table "two"))
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: ?b -> ?c` took too many steps and ran out of fuel (5000)
-//│ ║  l.309: 	zog_ = printInt_ (add_ (nfind table "one") (nfind table "two"))
+//│ ║  l.311: 	zog_ = printInt_ (add_ (nfind table "one") (nfind table "two"))
 //│ ║         	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟──  + {(α858_5966' -> α859_5967') where: α857_5961' <: ((α858_5966',) -> α859_5967')}
-//│ ║  l.231: 	table = hashtbl_add table "one" (fun f -> fun x -> f x)
-//│ ║         	                                          ^^^^^^^^^^^^
-//│ ╟──  + ‹∀ 2. {(α858_5964''' -> α859_5965''') where: α857_5961' <: ((α858_5964''',) -> α859_5965''')}›
-//│ ║  l.231: 	table = hashtbl_add table "one" (fun f -> fun x -> f x)
-//│ ║         	                                          ^^^^^^^^^^^^
-//│ ╟──  - ((α602_5040',) -> α604_5041')
-//│ ║  l.168: 	def succ_ n = fun f -> fun x -> f (n f x)
-//│ ║         	                                   ^^^^^
-//│ ╟──  - ((α602_5040',) -> α604_5041')
-//│ ║  l.168: 	def succ_ n = fun f -> fun x -> f (n f x)
-//│ ║         	                                   ^^^^^
-//│ ╟──  - ((α602_5040',) -> α604_5041')
-//│ ║  l.168: 	def succ_ n = fun f -> fun x -> f (n f x)
-//│ ║         	                                   ^^^
-//│ ╟──  - ((α602_5040',) -> α604_5041')
-//│ ║  l.168: 	def succ_ n = fun f -> fun x -> f (n f x)
-//│ ║         	                                   ^^^
-//│ ╟──  - α603_5039'
-//│ ║  l.168: 	def succ_ n = fun f -> fun x -> f (n f x)
-//│ ╙──       	                                   ^^^
+//│ ╟──  + (α581_3428',)
+//│ ║  l.166: 	def succ_ n = fun f -> fun x -> f (n f x)
+//│ ║         	                                       ^
+//│ ╙──  - (α876_4418',)
 //│ zog_: string
 //│     = '0'
 
