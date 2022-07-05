@@ -779,6 +779,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             // println(s"DISTRIB-L ${lhs} ~> $newLhs")
             println(s"DISTRIB-L  ~>  $newLhs")
             rec(newLhs, rhs, true)
+          // case (poly: PolymorphicType, _) if poly.body.level <= poly.polymLevel => rec(poly.body, rhs, true)
           case (poly: PolymorphicType, _) =>
             // TODO Here it might actually be better to try and put poly into a TV if the RHS contains one
             //    Note: similar remark applies inside constrainDNF

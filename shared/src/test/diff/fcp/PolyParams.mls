@@ -2,136 +2,33 @@
 :GeneralizeCurriedFunctions
 
 
-// def foo(f: forall 'a. 'a -> 'a) =
-//   (f 1, f true)
-// //│ foo: (forall 'a. 'a -> 'a) -> (forall 'b, 'c, 'd. (('c, 'd,)
-// //│   where
-// //│     'b <: 1 -> 'c & true -> 'd))
-// //│    = [Function: foo]
+def foo(f: forall 'a. 'a -> 'a) =
+  (f 1, f true)
+//│ foo: (forall 'a. 'a -> 'a) -> (1, true,)
+//│    = [Function: foo]
 
-// fooid = foo id
-// //│ fooid: ('a, 'b,)
-// //│   where
-// //│     'c <: 1 -> 'a & true -> 'b
-// //│      = [ 1, true ]
+fooid = foo id
+//│ fooid: (1, true,)
+//│      = [ 1, true ]
 
-// fooid._1
-// fooid._2
-// //│ res: 1
-// //│    = undefined
-// //│ res: true
-// //│    = undefined
+fooid._1
+fooid._2
+//│ res: 1
+//│    = undefined
+//│ res: true
+//│    = undefined
 
-// def foo(f: (forall 'A. 'A -> 'A) -> (forall 'B. 'B -> 'B)) =
-//   id f id (f id)
-// //│ foo: ((forall 'A. 'A -> 'A) -> (forall 'B. 'B -> 'B)) -> (forall 'a. ('b
-// //│   where
-// //│     'a <: (forall 'c. 'c -> 'c) -> 'd -> 'b & (forall 'c. 'c -> 'c) -> 'd))
-// //│    = [Function: foo1]
+def foo(f: (forall 'A. 'A -> 'A) -> (forall 'B. 'B -> 'B)) =
+  id f id (f id)
+//│ foo: ((forall 'A. 'A -> 'A) -> (forall 'B. 'B -> 'B)) -> (forall 'B. 'B -> 'B)
+//│    = [Function: foo1]
 
-// foo id
-// //│ res: 'a
-// //│   where
-// //│     'b <: (forall 'c. 'c -> 'c) -> 'd -> 'a & (forall 'c. 'c -> 'c) -> 'd
-// //│    = [Function: id]
+foo id
+//│ res: 'B -> 'B
+//│    = [Function: id]
 
-// foo id id
-
-
-
-class Ls[A] method Head: A
-def cons: ('a, Ls['a]) -> Ls['a]
-def nil: Ls['a]
-def single: 'a -> Ls['a]
-//│ Defined class Ls[+A]
-//│ Declared Ls.Head: Ls['A] -> 'A
-//│ cons: ('a, Ls['a],) -> Ls['a]
-//│     = <missing implementation>
-//│ nil: Ls[nothing]
-//│    = <missing implementation>
-//│ single: 'a -> Ls['a]
-//│       = <missing implementation>
-
-
-// def build0 (g: forall 'b. ('a -> 'b) -> 'b) = g single
-// //│ build0: (forall 'b. (anything -> 'b) -> 'b) -> (forall 'c. ('d
-// //│   where
-// //│     'c <: (forall 'a. 'a -> Ls['a]) -> 'd))
-// //│       = <no result>
-// //│         single is not implemented
-
-// build0 (fun s -> s 1)
-// //│ res: 'b
-// //│   where
-// //│     'c <: (forall 'a. 'a -> Ls['a]) -> 'b
-// //│    = <no result>
-// //│      build0 and single are not implemented
-
-// res: Ls[int]
-// //│ res: Ls[int]
-// //│    = [Function: id]
-
-
-// def build0 (g: forall 'b. ('a -> 'b) -> 'b) = g (fun x -> single ((x,x)))
-// //│ build0: (forall 'b. (anything -> 'b) -> 'b) -> (forall 'a, 'c. ('c
-// //│   where
-// //│     'a <: (forall 'd. 'd -> Ls[('d, 'd,)]) -> 'c))
-// //│       = <no result>
-// //│         single is not implemented
-
-// // def build0 (g: forall 'b. ('a -> 'a -> 'b) -> 'b) = g (fun x -> fun y -> single ((x,y)))
-
-// def build0 (g: forall 'b. ('a -> 'b -> 'b) -> 'b) = g (fun x -> fun y -> single ((x,y)))
-// //│ build0: (forall 'b. (anything -> 'b -> 'b) -> 'b) -> (forall 'a, 'c. ('c
-// //│   where
-// //│     'a <: (forall 'd. 'd -> (forall 'e. 'e -> Ls[('d, 'e,)])) -> 'c))
-// //│       = <no result>
-// //│         single is not implemented
-
-
-// def build0 (g: forall 'b. (('a, 'b) -> 'b) -> 'b) = g cons
-
-// :d
-// def build0 (g: forall 'b. (('a, 'b) -> 'b) -> 'b) = g (fun (x, xs) -> cons (x, xs))
-
-// def g: forall 'b. (('a, 'b) -> 'b) -> 'b
-// def g: (('a, 'b) -> 'b) -> 'b
-def g: ((int, 'b) -> 'b) -> 'b
-def g: ((int, 'b) -> 'b) -> anything
-// def g: (('a, {x:'a}) -> {x:'a}) -> {x:'a}
-//│ g: ((int, 'b,) -> 'b) -> 'b
-//│  = <missing implementation>
-//│ g: ((int, 'b,) -> 'b) -> anything
-//│  = <missing implementation>
-
-// g (fun (x, xs) -> cons (x, xs))
-
-def cons: ('a, {x:'a}) -> {x:'a}
-// def cons: ('a, 'a) -> 'a
-//│ cons: ('a, {x: 'a},) -> {x: 'a}
-//│     = <missing implementation>
-
-f (x, xs) = cons (x, xs)
-//│ f: ('a, {x: 'a},) -> {x: 'a}
-//│  = <no result>
-//│    cons is not implemented
-
-// :d
-// :e // FIXME? refreshing-extr
-g f
-//│ res: anything
-//│    = <no result>
-//│      g is not implemented
-
-
-
-
-// def build0 (g: forall 'b. ('a -> 'b -> 'b) -> 'b) = g (fun x -> fun xs -> cons (x, xs))
-
-
-// def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> cons (x, xs)) nil
-
-
-
+foo id id
+//│ res: 'a -> 'a
+//│    = [Function: id]
 
 
