@@ -1,6 +1,6 @@
 package mlscript
 
-import scala.collection.mutable.{Map => MutMap, SortedMap=>MutSortMap, Set => MutSet, Stack => MutStack, Buffer}
+import scala.collection.mutable.{Map => MutMap, SortedMap => MutSortMap, Set => MutSet, Stack => MutStack, Buffer}
 import scala.collection.immutable.{SortedSet, SortedMap}
 import scala.util.chaining._
 import scala.annotation.tailrec
@@ -9,7 +9,8 @@ import mlscript.Message._
 
 class ConstraintSolver extends NormalForms { self: Typer =>
   def verboseConstraintProvenanceHints: Bool = verbose
-  var startingFuel: Int = 5000
+  def defaultStartingFuel: Int = 5000
+  var startingFuel: Int = defaultStartingFuel
   def depthLimit: Int = 300
   
   def unifyInsteadOfExtrude: Bool = false
@@ -19,12 +20,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   protected var currentConstrainingRun = 0
   
-  type Shadows = Set[ST -> ST]
+  type ShadowSet = Set[ST -> ST]
+  case class Shadows(current: ShadowSet, previous: ShadowSet) {
+    def size: Int = current.size + previous.size
+  }
+  object Shadows { val empty: Shadows = Shadows(Set.empty, Set.empty) }
   
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
   // def constrain(lhs: SimpleType, rhs: SimpleType, extrusionContext: Opt[ExtrCtx])(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx): Unit = { val outerCtx = ctx ; {
   def constrain(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx, 
-          shadows: Shadows = Set.empty
+          shadows: Shadows = Shadows.empty
         ): Unit = {
     currentConstrainingRun += 1
     constrainImpl(lhs, rhs)(err => {
@@ -394,7 +399,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           ->
           (if (cctx._2.headOption.exists(_ is rhs)) cctx._2 else rhs :: cctx._2)
         else (lhs :: Nil) -> (rhs :: Nil),
-        ctx, shadows
+        ctx,
+        if (sameLevel) shadows else Shadows(Set.empty, shadows.previous ++ shadows.current)
       )
       stack.pop()
       ()
@@ -426,12 +432,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           // *  Indeed, due to the normalization of unions and intersections in the wriong polarity,
           // *    cycles in regular trees may only ever go through unions or intersections,
           // *    and not plain type variables.
+          // case (l: TV, r: TV) if noRecursiveTypes =>
+          //   if (cache(lhs_rhs)) return println(s"Cached! (not recursive")
+          //   cache += lhs_rhs
+          case (_: TV, _: TV) if cache(lhs_rhs) => return println(s"Cached! (not recursive")
           case _ =>
             if (!noRecursiveTypes && cache(lhs_rhs)) return println(s"Cached!")
             val shadow = lhs.shadow -> rhs.shadow
             // println(s"SH: $shadow")
             // println(s"ALLSH: ${shadows.iterator.map(s => s._1 + "<:" + s._2).mkString(", ")}")
-            if (!noCycleCheck && shadows.contains(shadow)) {
+            if (!noCycleCheck && shadows.previous.contains(shadow)) {
             // if (!lhs.isInstanceOf[TV] && !rhs.isInstanceOf[TV] && shadows.contains(shadow)) { // FIXME there are cyclic constraints like this; find a better way of allowing recursion after extrusion!
               println(s"SHADOWING DETECTED!")
               // err(msg"Cyclic-looking constraint ${lhs_rhs.toString}" -> prov.loco :: Nil)
@@ -443,9 +453,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 msg" ... looks like:  ${shadow._1.toString}  <:  ${shadow._2.toString}" -> N ::
                 Nil)
               return ()
-            }
-            if (!noRecursiveTypes) cache += lhs_rhs
-            shadows + shadow
+            } else if (shadows.current.contains(shadow)) return () // * Spurious cycle, like alpha <: beta <: alpha
+            // if (!noRecursiveTypes) cache += lhs_rhs
+            if (lhs_rhs match {
+              case (_: TV, _: TV) => true
+              case _ => !noRecursiveTypes
+            }) cache += lhs_rhs
+            shadows.copy(current = shadows.current + shadow)
         }) |> { implicit shadows: Shadows =>
         lhs_rhs match {
           case (ExtrType(true), _) => ()
@@ -929,7 +943,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   def subsume(ty_sch: ST, sign: ST)
       (implicit ctx: Ctx, raise: Raise, prov: TypeProvenance): Unit = {
     println(s"CHECKING SUBSUMPTION...")
-    implicit val shadows: Shadows = Set.empty
+    implicit val shadows: Shadows = Shadows.empty
     constrain(ty_sch, sign)
   }
   

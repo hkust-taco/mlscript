@@ -301,29 +301,33 @@ def a0' = a2' a1'
 //│ Code generation encountered an error:
 //│   unresolved symbol a2'
 
-// FIXME
+// FIXME?
 // :e // works with quantif extrus
+:Fuel 15000
 def a0'_ = a2'_ a1'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.306: 	def a0'_ = a2'_ a1'
+//│ ║  l.307: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 2. {(α73_1679''' -> α75_1681''') where: α72_1674' <: ((α73_1679''',) -> α74_1680'''), α72_1674' <: ((α74_1680''',) -> α75_1681''')}›  <:  α173_1603'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 2. {(α73''' -> α75''') where: α72'' <: ((α73''',) -> α74'''), α72'' <: ((α74''',) -> α75''')}›  <:  α173''
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››  <:  α29_2074'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››  <:  α29''
 //│ a0'_: error
 //│     = [Function: either]
+:ResetFuel
 
 // * ^ Strangely, this one works with recursive types:
 :RecursiveTypes
-:e // FIXME?
 def a0'_ = a2'_ a1'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.319: 	def a0'_ = a2'_ a1'
-//│ ║         	           ^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 2. {(α73_1865''' -> α75_1867''') where: α72_1860' <: ((α73_1865''',) -> α74_1866'''), α72_1860' <: ((α74_1866''',) -> α75_1867''')}›  <:  α173_1791'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 2. {(α73''' -> α75''') where: α72'' <: ((α73''',) -> α74'''), α72'' <: ((α74''',) -> α75''')}›  <:  α173''
-//│ a0'_: error
+//│ a0'_: 'a -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j. ((('e | 'f | 'g) -> 'h & 'i -> 'j & 'j -> 'g & 'c) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'k, 'l, 'm. (('d & 'i & 'k) -> ('m | 'h)
+//│   where
+//│     'b <: 'c -> 'k -> ('f & 'l)
+//│     'c <: ('l | 'e | 'g) -> 'm)) | 'n
+//│   where
+//│     'b <: 'c -> 'd -> 'e))
+//│   where
+//│     'o <: (forall 'p, 'q, 'r, 's, 'a. (('p | 'q) -> 'r & 's -> 'p & 'a) -> (forall 'p, 'q, 'r, 's, 'a, 't, 'u, 'v. (('s & 't) -> ('v | 'r)
+//│   where
+//│     'a <: 't -> ('q & 'u) & ('u | 'p) -> 'v))) -> 'n
 //│     = [Function: either]
 :NoRecursiveTypes
 

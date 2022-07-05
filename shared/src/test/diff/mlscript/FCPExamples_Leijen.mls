@@ -590,13 +590,7 @@ single (id : forall 'a. 'a -> 'a)
 // ,("(id :: some a. a -> a) 1", ok "Int")
 // FIXME
 (id : 'a -> 'a) 1
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.592: 	(id : 'a -> 'a) 1
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  1<int,number>  <:  'a1411    ClassTag  TypeVariable
-//│ ╙──  ... looks like:  1<int,number>  <:  'a1411
-//│ res: error
+//│ res: 1
 //│    = 1
 
 // ,("\\x -> ((\\y -> x) :: some a. forall b. b -> a)", ok "forall a. forall (b >= forall c. c -> a). a -> b")

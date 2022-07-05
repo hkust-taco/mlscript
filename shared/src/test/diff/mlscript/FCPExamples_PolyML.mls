@@ -145,12 +145,29 @@ def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> cons x y) nil in
   let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
   (l1, l2)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
+//│ ╔══[ERROR] Subtyping constraint of the form `?b <: (forall ?a. List[?a]) -> ?c` took too many steps and ran out of fuel (5000)
 //│ ║  l.146: 	  let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α1219_1248''', α1219_1248''',)  <:  α137_1246'''    TupleType  TypeVariable
-//│ ╙──  ... looks like:  (α1219_1241''', α1219_1241''',)  <:  α137_1240'''
+//│ ╟──  + (α1219_1248''', α1219_1248''',)
+//│ ║  l.146: 	  let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
+//│ ║         	                                           ^^^^^^
+//│ ╟──  + (α1219_1248''', α1219_1248''',)
+//│ ║  l.146: 	  let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
+//│ ║         	                                           ^^^^^^
+//│ ╟──  + (α1219_1248''', α1219_1248''',)
+//│ ║  l.146: 	  let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
+//│ ║         	                                           ^^^^^^
+//│ ╟──  + (α1219_1248''', α1219_1248''',)
+//│ ║  l.146: 	  let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
+//│ ║         	                                           ^^^^^^
+//│ ╟──  + (α1219_1248''', α1219_1248''',)
+//│ ║  l.146: 	  let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
+//│ ║         	                                           ^^^^^^
+//│ ╟──  + α1223_1259'''
+//│ ╟──  + α137_1263'''
+//│ ╟──  - α137_1246'''
+//│ ╟──  - α1223_1259'''
+//│ ╙──  - α1223_1247'''
 //│ simple_and_double: Collection[?] -> (List[nothing], error,)
 
 simple_and_double (Collection{l = cons 1 nil})

@@ -291,7 +291,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                 // *  but will help report inheritance errors earlier (see test BadInherit2).
                 case (nme, FieldType(S(lb), ub)) =>
                   // implicit val ec: Opt[ExtrCtx] = N
-                  implicit val shadows: Shadows = Set.empty
+                  implicit val shadows: Shadows = Shadows.empty
                   constrain(lb, ub)
                 case _ => ()
               }
@@ -367,7 +367,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
     def typeMethods(implicit ctx: Ctx): Ctx = {
       /* Perform subsumption checking on method declarations and definitions by rigidifying class type variables,
        * then register the method signatures in the context */
-      implicit val shadows: Shadows = Set.empty
+      implicit val shadows: Shadows = Shadows.empty
       def checkSubsume(td: TypeDef, mds: MethodSet): Unit = {
         val tn = td.nme
         val MethodSet(_, _, decls, defns) = mds

@@ -375,28 +375,42 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 
 //     * Rank 3, untypable in F2 but F3
 //       (fun f x -> f (f x)) (fun f x -> f (f x)) (fun v w -> v)
-:e // FIXME?
 (fun f -> fun x -> f (f x)) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.379: 	(fun f -> fun x -> f (f x)) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α7425_7481'' -> α7424_7480)›  <:  α7392_7447    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α7425'' -> α7424')›  <:  α7392'
-//│ res: error
+//│ res: ('a & 'b & 'c) -> (anything -> 'd | 'e)
+//│   where
+//│     'f <: 'a -> ('g & 'h & 'b) & ('g | 'i) -> 'e
+//│     'j <: 'a -> ('b & 'h & 'k) & ('k | 'l) -> 'e
+//│   where
+//│     'b :> anything -> ('d | 'm)
+//│     'd :> anything -> ('h | 'c) | anything -> 'b
+//│     'h :> 'l | 'i
+//│     'i :> anything -> ('d | 'm)
+//│     'm :> anything -> ('b | 'c)
+//│     'l :> anything -> 'd
 //│    = [Function (anonymous)]
 
 //     * Rank 4, alternate formulation, untypeable in F2, but F3
 //       (fun two k -> two two k)(fun f x -> f (f x)) (fun v w -> v)
-:e // FIXME?
 (fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.392: 	(fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α7574_7663'' -> α7573_7662)›  <:  α7497_7629    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α7574'' -> α7573')›  <:  α7497'
-//│ res: error
+//│ res: ('a & 'b & 'c & 'd) -> (anything -> (anything -> ('e | 'd) | 'f) | 'g)
+//│   where
+//│     'h <: 'a -> ('i & 'j & 'b) & ('i | 'k) -> 'g
+//│     'l <: 'a -> ('b & 'j & 'm) & ('m | 'n) -> 'g
+//│     'o <: 'a -> ('p & 'e & 'd) & ('p | 'q) -> 'g
+//│     'r <: 'a -> ('d & 'e & 's) & ('s | 't) -> 'g
+//│   where
+//│     'd :> anything -> ('u | 'v)
+//│     'u :> anything -> ('e | 'c) | anything -> 'd
+//│     'e :> 't | 'q
+//│     'q :> anything -> 'u
+//│     't :> anything -> ('u | 'v)
+//│     'v :> anything -> ('d | 'c)
+//│     'b :> anything -> ('f | 'w)
+//│     'f :> anything -> ('j | 'c) | anything -> 'b
+//│     'j :> 'n | 'k
+//│     'k :> anything -> 'f
+//│     'n :> anything -> ('f | 'w)
+//│     'w :> anything -> ('b | 'c)
 //│    = [Function (anonymous)]
 
 //     * Rank 5, causes huge blowup. Do not attempt to output skeletons !
@@ -406,11 +420,11 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 :e // FIXME? refreshing-extr
 (fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.407: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ ║  l.421: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α7674_7955  <:  ((α7675_8068,) -> α7676_8069)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α7674'  <:  ((α7675_7960'',) -> α7676_7961'')
+//│ ╟── this constraint:  α8055_8336  <:  ((α8056_8449,) -> α8057_8450)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α8055'  <:  ((α8056_8341'',) -> α8057_8342'')
 //│ res: error
 //│    = [Function (anonymous)]
 
@@ -426,11 +440,11 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 :re
 (fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.427: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
+//│ ║  l.441: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. {(α8081'' -> α8083'') where: α8075' <: ((α8082'',) -> α8083'')}›  <:  α8081_8095'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. {(α8081'' -> α8083'') where: α8075' <: ((α8082'',) -> α8083'')}›  <:  α8081''
+//│ ╟── this constraint:  ‹∀ 1. {(α8462'' -> α8464'') where: α8456' <: ((α8463'',) -> α8464'')}›  <:  α8462_8476'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. {(α8462'' -> α8464'') where: α8456' <: ((α8463'',) -> α8464'')}›  <:  α8462''
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
