@@ -896,7 +896,7 @@ fun x -> ( (((x : 'a) : Sid) : 'a), x : 'a)
 // Same as `id1` in `ex_demo.mls`; works with `:RecursiveTypes`
 :e
 rec def id_ x = if true then x else id_ id_ x
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
 //│ ║  l.898: 	rec def id_ x = if true then x else id_ id_ x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
@@ -919,7 +919,7 @@ def id: Sid
 
 // FIXME
 rec def id x = if true then x else id id x
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
 //│ ║  l.921: 	rec def id x = if true then x else id id x
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
@@ -934,7 +934,7 @@ rec def id x = if true then x else id id x
 //│        <: 'a -> 'b
 //│   <:  id:
 //│ Sid
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
 //│ ║  l.921: 	rec def id x = if true then x else id id x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————

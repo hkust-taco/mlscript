@@ -290,7 +290,7 @@ def f: ('a -> 'a) -> List['a] -> 'a
 :e // FIXME — works with :RecursiveTypes
 :ng
 f (choose id) ids
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
 //│ ║  l.292: 	f (choose id) ids
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
@@ -538,7 +538,7 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 // :e // FIXME? succeeds with genLamBodies
 :e // FIXME? refreshing-extr
 res id
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
 //│ ║  l.540: 	res id
 //│ ║         	^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————

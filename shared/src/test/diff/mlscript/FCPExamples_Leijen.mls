@@ -590,7 +590,7 @@ single (id : forall 'a. 'a -> 'a)
 // ,("(id :: some a. a -> a) 1", ok "Int")
 // FIXME
 (id : 'a -> 'a) 1
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
 //│ ║  l.592: 	(id : 'a -> 'a) 1
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————

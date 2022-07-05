@@ -11,7 +11,7 @@ def e2: Add['e] as 'e
 // :d
 // FIXME
 e2 : Add['e] as 'e
-//│ ╔══[ERROR] Cyclic-looking constraint while typing type ascription
+//│ ╔══[ERROR] Cyclic-looking constraint while typing type ascription; a type annotation may be required
 //│ ║  l.13: 	e2 : Add['e] as 'e
 //│ ║        	^^
 //│ ╟── ————————— Additional debugging info: —————————
@@ -46,7 +46,7 @@ f0 = f0
 //│ 'a
 //│   where
 //│     'a := 'a -> int
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
 //│ ║  l.41: 	f0 = f0
 //│ ║        	^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————

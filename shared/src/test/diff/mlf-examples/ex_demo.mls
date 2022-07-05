@@ -300,7 +300,7 @@ id1: nothing
 
 :e // * Works with `:RecursiveTypes`
 id1 id
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
 //│ ║  l.302: 	id1 id
 //│ ║         	^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
@@ -319,7 +319,7 @@ res id
 
 :e // FIXME?
 id1 id1
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
 //│ ║  l.321: 	id1 id1
 //│ ║         	^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
@@ -1562,7 +1562,7 @@ this_should_be_98_ =
 //:e // due to tapping
 :e // FIXME? refreshing-extr
 c_i5_ = c_add_ c_i3_ c_i2
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
 //│ ║  l.1564: 	c_i5_ = c_add_ c_i3_ c_i2
 //│ ║          	        ^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————

@@ -100,6 +100,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     var noCycleCheck = false
     var noRecursiveTypes = false
     var noConstrainnedTypes = false
+    var irregularTypes = false
     var noArgGen = true
 
     val backend = new JSTestBackend()
@@ -136,6 +137,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           case "NoConstrainnedTypes" => noConstrainnedTypes = true; mode
           case "ArgGen" => noArgGen = false; mode
           case "NoArgGen" => noArgGen = true; mode
+          case "IrregularTypes" => irregularTypes = true; mode
           case str @ "Fuel" =>
             // println("'"+line.drop(str.length + 2)+"'")
             typer.startingFuel = line.drop(str.length + 2).toInt; mode
@@ -235,6 +237,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             typer.noRecursiveTypes = noRecursiveTypes
             typer.noConstrainnedTypes = noConstrainnedTypes || mode.generateTsDeclarations
             typer.noArgGen = noArgGen
+            typer.irregularTypes = irregularTypes
             typer.verbose = mode.verbose
             typer.explainErrors = mode.explainErrors
             stdout = mode.stdout

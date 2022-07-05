@@ -360,7 +360,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
         }
         // Note: this will end up going through some types several times... We could make sure to
         //    only go through each type once, but the error messages would be worse.
-        if (rightParents && checkRegular(td.bodyTy)(Map(n.name -> td.targs)))
+        if (rightParents && (irregularTypes || checkRegular(td.bodyTy)(Map(n.name -> td.targs))))
           td.nme.name -> td :: Nil
         else Nil
       })

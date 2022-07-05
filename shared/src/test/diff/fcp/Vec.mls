@@ -1,0 +1,482 @@
+
+:GeneralizeCurriedFunctions
+:ArgGen // Type of cons is much simpler without this...
+
+:AllowTypeErrors // FIXME
+
+
+class Z
+class S[P]
+  method Inv: P -> P
+  method Inv = id
+//│ Defined class Z
+//│ Defined class S[=P]
+//│ Declared S.Inv: S['P] -> 'P -> 'P
+//│ Defined S.Inv: S['P] -> (forall 'a. 'a -> 'a)
+
+:IrregularTypes
+
+class Cons[A, N]: { size: S[N]; head: A; tail: Vec[A, N] }
+class Nil: { size: Z }
+type Vec[A, N] = forall 'r. (forall 'p. (Nil & { size: N } | Cons[A, S['p]] & Cons[A, N]) -> 'r) -> 'r
+//│ Defined class Cons[+A, =N]
+//│ Defined class Nil
+//│ Defined type alias Vec[+A, =N]
+
+type AnyVec[A] = forall 'r. (forall 'p. Nil | Cons[A, S['p]] -> 'r) -> 'r
+//│ Defined type alias AnyVec[+A]
+
+def Nil = Nil { size = Z{} }
+def Cons head tail = Cons { head; tail; size = S{} }
+//│ Nil: Nil
+//│ Cons: 'head -> (forall 'head, 'head0, 'A, 'N, 'tail. ((Vec['A, 'N] & 'tail) -> (Cons['A | 'head, 'N] with {head: 'head0 | 'head, tail: 'tail})
+//│   where
+//│     'head <: 'head0 & 'A))
+
+
+def nil k = k Nil
+def cons h t k = k (Cons h t)
+//│ nil: (Nil -> 'a) -> 'a
+//│ cons: 'a -> (forall 'a, 'tail, 'A, 'N, 'N0. ((Vec['A, in 'N out 'N | 'N0] & 'tail) -> (forall 'a, 'tail, 'N, 'N0, 'A0, 'N1, 'N2, 'tail0. (((forall 'a, 'tail, 'A, 'N, 'N0, 'A0, 'N1, 'N2, 'tail0, 'A1, 'N3, 'tail1. (Cons['A0 | 'A | 'A1, 'N3] with {head: nothing, tail: 'tail0 | 'tail | 'tail1}
+//│   where
+//│     'a <: 'a
+//│     'tail <: Vec['A1, 'N3] & 'tail1
+//│     'a <: 'a
+//│     'tail <: Vec['A1, 'N3] & 'tail1)) -> 'b) -> 'b
+//│   where
+//│     'a <: 'a
+//│     'tail <: Vec['A0, in 'N0 & 'N1 out 'N | 'N1 | 'N2] & 'tail0))
+//│   where
+//│     'a <: 'a))
+//│   where
+//│     'N3 :> 'N | 'N1
+//│         <: 'N0 & 'N2
+
+nil_ty = nil : Vec[int, Z]
+//│ nil_ty: Vec[int, Z]
+
+def cons_ty : forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
+//│ cons_ty: 'a -> Vec['a, 'n] -> Vec['a, S['n]]
+
+cons_ty = cons : forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.61: 	cons_ty = cons : forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
+//│ ║        	          ^^^^
+//│ ╟── expression of type `‘n` is not an instance of type `'p`
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	type Vec[A, N] = forall 'r. (forall 'p. (Nil & { size: N } | Cons[A, S['p]] & Cons[A, N]) -> 'r) -> 'r
+//│ ╙──      	                                    ^^
+//│ 'a -> Vec['a, 'n] -> Vec['a, S['n]]
+//│   <:  cons_ty:
+//│ 'a -> Vec['a, 'n] -> Vec['a, S['n]]
+
+cons_ty2 = cons : forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.73: 	cons_ty2 = cons : forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
+//│ ║        	           ^^^^
+//│ ╟── expression of type `‘n` is not an instance of type `'p`
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	type Vec[A, N] = forall 'r. (forall 'p. (Nil & { size: N } | Cons[A, S['p]] & Cons[A, N]) -> 'r) -> 'r
+//│ ╙──      	                                    ^^
+//│ cons_ty2: 'a -> Vec['a, 'n] -> Vec['a, S['n]]
+
+type Cons_ty = forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
+//│ Defined type alias Cons_ty
+
+cons_ty = cons : Cons_ty
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.86: 	cons_ty = cons : Cons_ty
+//│ ║        	          ^^^^
+//│ ╟── type `‘a` is not an instance of type `'a592`
+//│ ║  l.83: 	type Cons_ty = forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
+//│ ║        	                      ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.83: 	type Cons_ty = forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
+//│ ╙──      	                      ^^
+//│ Cons_ty
+//│   <:  cons_ty:
+//│ 'a -> Vec['a, 'n] -> Vec['a, S['n]]
+
+cons_ty3 = cons : Cons_ty
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.100: 	cons_ty3 = cons : Cons_ty
+//│ ║         	           ^^^^
+//│ ╟── type `‘a` is not an instance of type `'a734`
+//│ ║  l.83: 	type Cons_ty = forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
+//│ ║        	                      ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.83: 	type Cons_ty = forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
+//│ ╙──      	                      ^^
+//│ cons_ty3: Cons_ty
+
+def cons h (t: Vec['a, 'n]) k = k (Cons h t)
+//│ cons: 'b -> (forall 'b, 'a, 'n. (Vec['a, 'n] -> (forall 'b, 'n, 'c, 'A, 'tail. (((forall 'b, 'a, 'n, 'c, 'A, 'tail, 'A0, 'tail0. (Cons['a | 'A0 | 'A, 'n] with {head: nothing, tail: 'tail0 | 'tail | Vec['a, 'n]}
+//│   where
+//│     'b <: 'b
+//│     'c <: Vec['A0, 'n] & 'tail0
+//│     'b <: 'b
+//│     'c <: Vec['A0, 'n] & 'tail0)) -> 'd) -> 'd
+//│   where
+//│     'b <: 'b
+//│     'c <: Vec['A, 'n] & 'tail))
+//│   where
+//│     'b <: 'b))
+
+cons : Cons_ty
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.125: 	cons : Cons_ty
+//│ ║         	^^^^
+//│ ╟── type `‘a` is not an instance of type `'a980`
+//│ ║  l.83: 	type Cons_ty = forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
+//│ ║        	                      ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.83: 	type Cons_ty = forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
+//│ ╙──      	                      ^^
+//│ res: Cons_ty
+
+def cons h (t: Vec['a, 'n]) k = k (Cons h t)
+//│ cons: 'b -> (forall 'b, 'a, 'n. (Vec['a, 'n] -> (forall 'b, 'n, 'c, 'A, 'tail. (((forall 'b, 'a, 'n, 'c, 'A, 'tail, 'A0, 'tail0. (Cons['a | 'A | 'A0, 'n] with {head: nothing, tail: 'tail | 'tail0 | Vec['a, 'n]}
+//│   where
+//│     'b <: 'b
+//│     'c <: Vec['A0, 'n] & 'tail0
+//│     'b <: 'b
+//│     'c <: Vec['A0, 'n] & 'tail0)) -> 'd) -> 'd
+//│   where
+//│     'b <: 'b
+//│     'c <: Vec['A, 'n] & 'tail))
+//│   where
+//│     'b <: 'b))
+
+cons : Cons_ty
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.150: 	cons : Cons_ty
+//│ ║         	^^^^
+//│ ╟── type `‘a` is not an instance of type `'a1236`
+//│ ║  l.83: 	type Cons_ty = forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
+//│ ║        	                      ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.83: 	type Cons_ty = forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
+//│ ╙──      	                      ^^
+//│ res: Cons_ty
+
+
+// v0 = nil
+
+// v0_ty = v0 : Vec[int, Z]
+
+v1_ = Cons 1 nil
+//│ v1_: Cons[1, 'P] with {tail: forall 'a. (Nil -> 'a) -> 'a}
+
+v1_ty = v1_ : Cons[int, Z]
+//│ v1_ty: Cons[int, Z]
+
+v1_0 = cons 1 nil
+//│ v1_0: ((forall 'a, 'b, 'A, 'N, 'n, 'N0, 'tail, 'A0, 'N1, 'tail0. (Cons['A | 'A0, 'N1] with {head: nothing, tail: 'tail | 'tail0 | Vec[nothing, 'n]}
+//│   where
+//│     'a <: anything
+//│     'b <: Vec['A0, 'N1] & 'tail0
+//│     'a <: anything
+//│     'b <: Vec['A0, 'N1] & 'tail0)) -> 'c) -> 'c
+//│   where
+//│     'a <: anything
+//│     'b <: Vec['A, in 'n & 'N out 'N | 'N0] & 'tail
+//│   where
+//│     'N1 :> 'N
+//│         <: 'n & 'N0
+
+:e
+v1_0 : Vec[int, S[Z]]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.188: 	v1_0 : Vec[int, S[Z]]
+//│ ║         	^^^^
+//│ ╟── type `Z` is not an instance of type `'p`
+//│ ║  l.188: 	v1_0 : Vec[int, S[Z]]
+//│ ║         	                  ^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	type Vec[A, N] = forall 'r. (forall 'p. (Nil & { size: N } | Cons[A, S['p]] & Cons[A, N]) -> 'r) -> 'r
+//│ ╙──      	                                    ^^
+//│ res: Vec[int, S[Z]]
+
+v1_1 k = k v1_
+//│ v1_1: ((forall 'P. Cons[1, 'P] with {tail: forall 'a. (Nil -> 'a) -> 'a}) -> 'b) -> 'b
+
+:e
+v1_1 : Vec[int, S[Z]]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.204: 	v1_1 : Vec[int, S[Z]]
+//│ ║         	^^^^
+//│ ╟── type `Z` is not an instance of type `'p`
+//│ ║  l.204: 	v1_1 : Vec[int, S[Z]]
+//│ ║         	                  ^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	type Vec[A, N] = forall 'r. (forall 'p. (Nil & { size: N } | Cons[A, S['p]] & Cons[A, N]) -> 'r) -> 'r
+//│ ╙──      	                                    ^^
+//│ res: Vec[int, S[Z]]
+
+
+v1_tty = cons_ty 1 nil_ty
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.217: 	v1_tty = cons_ty 1 nil_ty
+//│ ║         	         ^^^^^^^^^^^^^^^^
+//│ ╟── type `Z` is not an instance of type `'n`
+//│ ║  l.55: 	nil_ty = nil : Vec[int, Z]
+//│ ╙──      	                        ^
+//│ v1_tty: error
+
+v1_tty = cons_ty2 1 nil_ty
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.226: 	v1_tty = cons_ty2 1 nil_ty
+//│ ║         	         ^^^^^^^^^^^^^^^^^
+//│ ╟── type `Z` is not an instance of type `'n`
+//│ ║  l.55: 	nil_ty = nil : Vec[int, Z]
+//│ ╙──      	                        ^
+//│ v1_tty: error
+
+v1_tty = cons_ty3 1 nil_ty
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.235: 	v1_tty = cons_ty3 1 nil_ty
+//│ ║         	         ^^^^^^^^^^^^^^^^^
+//│ ╟── type `Z` is not an instance of type `'n619`
+//│ ║  l.55: 	nil_ty = nil : Vec[int, Z]
+//│ ╙──      	                        ^
+//│ v1_tty: error
+
+
+v2 = cons 1 (cons 2 nil)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.245: 	v2 = cons 1 (cons 2 nil)
+//│ ║         	     ^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `‘n` is not an instance of type `S`
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.21: 	type Vec[A, N] = forall 'r. (forall 'p. (Nil & { size: N } | Cons[A, S['p]] & Cons[A, N]) -> 'r) -> 'r
+//│ ╙──      	                                                                     ^^^^^
+//│ v2: error
+
+
+def impossible x = case x of {}
+//│ impossible: nothing -> nothing
+
+def head1 vec = vec (fun v -> case v of {
+  | Nil -> impossible v.size
+  | Cons -> v.head
+  })
+//│ head1: ((forall 'head. ((Cons[?, ?]\size\tail with {head: 'head}) | Nil & {size: nothing}) -> 'head) -> 'a) -> 'a
+
+def head1_ty : Vec['a, S['p]] -> 'a
+head1_ty = head1
+//│ head1_ty: Vec['a, S['p]] -> 'a
+//│ ((forall 'head. ((Cons[?, ?]\size\tail with {head: 'head}) | Nil & {size: nothing}) -> 'head) -> 'a) -> 'a
+//│   <:  head1_ty:
+//│ Vec['a, S['p]] -> 'a
+
+// FIXME works without `:GeneralizeCurriedFunctions`!
+def head2 (vec: Vec['a, S['p]]) = vec (fun v -> case v of {
+  | Nil -> impossible v.size
+  | Cons -> v.head
+  })
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.273: 	def head2 (vec: Vec['a, S['p]]) = vec (fun v -> case v of {
+//│ ║         	                                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.274: 	  | Nil -> impossible v.size
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.275: 	  | Cons -> v.head
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	  })
+//│ ║         	^^^^
+//│ ╟── type `‘a` is not an instance of type `'r`
+//│ ║  l.273: 	def head2 (vec: Vec['a, S['p]]) = vec (fun v -> case v of {
+//│ ║         	                    ^^
+//│ ╟── but it flows into field selection with expected type `‘r`
+//│ ║  l.275: 	  | Cons -> v.head
+//│ ║         	            ^^^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	type Vec[A, N] = forall 'r. (forall 'p. (Nil & { size: N } | Cons[A, S['p]] & Cons[A, N]) -> 'r) -> 'r
+//│ ╙──      	                        ^^
+//│ head2: Vec[?, S['p]] -> error
+
+head1 v1
+head1 v2
+//│ ╔══[ERROR] identifier not found: v1
+//│ ║  l.297: 	head1 v1
+//│ ╙──       	      ^^
+//│ res: error
+//│ res: error
+
+:e
+head1 nil
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.306: 	head1 nil
+//│ ║         	^^^^^^^^^
+//│ ╟── application of type `Z` does not match type `nothing`
+//│ ║  l.29: 	def Nil = Nil { size = Z{} }
+//│ ║        	                       ^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.256: 	def impossible x = case x of {}
+//│ ║         	                        ^
+//│ ╟── from field selection:
+//│ ║  l.260: 	  | Nil -> impossible v.size
+//│ ║         	                      ^^^^^^
+//│ ╟── Note: class Z is defined at:
+//│ ║  l.8: 	class Z
+//│ ╙──     	      ^
+//│ res: error
+
+
+rec def sum vec = vec (fun v -> case v of {
+  | Nil -> 0
+  | Cons -> v.head + sum v.tail
+  })
+//│ sum: 'a -> 'b
+//│   where
+//│     'a <: (((Cons[?, ?]\size with {head: int, tail: 'a}) | Nil) -> int) -> (int & 'b)
+
+def sum_ty : Vec[int, 'n] -> int
+//│ sum_ty: Vec[int, 'n] -> int
+
+// FIXME should be a cycle error
+sum_ty = sum
+//│ 'a -> 'b
+//│   where
+//│     'a <: (((Cons[?, ?]\size with {head: int, tail: 'a}) | Nil) -> int) -> (int & 'b)
+//│   <:  sum_ty:
+//│ Vec[int, 'n] -> int
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?sum, ?b, ?c, ?d, ?tail, ?head, ?e, ?f, ?g. ?sum <: forall ?n. Vec[int, ?n] -> int` exceeded recursion depth limit (300)
+//│ ║  l.337: 	sum_ty = sum
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── while constraining:  (cons<> & {Cons#N: mut (S[(((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100') & ‘p2103')] | ‘n')..((S[‘p2103'] & ‘n') | S[(((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100') | ‘p2103')]), size: S[(‘n' | S[(((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100') & ‘p2103')])], Cons#A: mut ..int<number>, tail: Vec[int<number>,(‘n' | S[(((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100') & ‘p2103')])], head: int<number>})  <!<  {tail: tail2019_2063'}
+//│ ╟── while constraining:  (cons<> & {Cons#N: mut (S[(((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100') & ‘p2103')] | ‘n')..((S[‘p2103'] & ‘n') | S[(((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100') | ‘p2103')]), size: S[(‘n' | S[(((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100') & ‘p2103')])], Cons#A: mut ..int<number>, tail: Vec[int<number>,(‘n' | S[(((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100') & ‘p2103')])], head: int<number>})  <!<  α2016_2062'
+//│ ╟── while constraining:  (Cons[int<number>,S[‘p2103'..‘p2103']..S[‘p2103'..‘p2103']] & Cons[int<number>,(‘n' | S[((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100')])])  <!<  ((nil<> & α2015_2061') | ((cons<> & α2016_2062') & ~(nil<>)))
+//│ ╟── while constraining:  ((Nil & {size: (‘n' | S[((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100')])}) | (Cons[int<number>,S[‘p2103'..‘p2103']..S[‘p2103'..‘p2103']] & Cons[int<number>,(‘n' | S[((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100')])]))  <!<  ((nil<> & α2015_2061') | ((cons<> & α2016_2062') & ~(nil<>)))
+//│ ╟── while constraining:  ((Nil & {size: (‘n' | S[((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100')])}) | (Cons[int<number>,S[‘p2103'..‘p2103']..S[‘p2103'..‘p2103']] & Cons[int<number>,(‘n' | S[((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100')])]))  <!<  α2014_2060'
+//│ ╟── while constraining:  (α2014_2060' -> (0<int,number> | α2021_2065'))  <!<  ‹∀ 1. (((Nil & {size: (‘n' | S[((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100')])}) | (Cons[int<number>,S['p43_2101'']] & Cons[int<number>,(‘n' | S[((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100')])])) -> 'r42_2102')›
+//│ ╟── while constraining:  ((α2014_2060' -> (0<int,number> | α2021_2065')),)  <!<  (‹∀ 1. (((Nil & {size: (‘n' | S[((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100')])}) | (Cons[int<number>,S['p43_2101'']] & Cons[int<number>,(‘n' | S[((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100')])])) -> 'r42_2102')›,)
+//│ ╟── while constraining:  (‹∀ 1. (((Nil & {size: (‘n' | S[((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100')])}) | (Cons[int<number>,S['p43_2101'']] & Cons[int<number>,(‘n' | S[((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100')])])) -> 'r42_2102')› -> 'r42_2102')  <!<  (((α2014_2060' -> (0<int,number> | α2021_2065')),) -> α2022_2066')
+//│ ╟── while constraining:  ‹∀ 0. (‹∀ 1. (((Nil & {size: (‘n' | S[((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100')])}) | (Cons[int<number>,S['p43'']] & Cons[int<number>,(‘n' | S[((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100')])])) -> 'r42')› -> 'r42')›  <!<  (((α2014_2060' -> (0<int,number> | α2021_2065')),) -> α2022_2066')
+//│ ╟── while constraining:  Vec[int<number>,(‘n' | S[((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100')])]  <!<  (((α2014_2060' -> (0<int,number> | α2021_2065')),) -> α2022_2066')
+//│ ╟── while constraining:  Vec[int<number>,(‘n' | S[((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100')])]  <!<  α2013_2059'
+//│ ╟── while constraining:  Vec[int<number>,(‘n' | S[((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100')])]  <!<  tail2019_2063'
+//│ ╟── while constraining:  (cons<> & {Cons#N: mut (S[((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100')] | ‘n')..((S[‘p2100'] & ‘n') | S[((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') | ‘p2100')]), size: S[(‘n' | S[((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100')])], Cons#A: mut ..int<number>, tail: Vec[int<number>,(‘n' | S[((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100')])], head: int<number>})  <!<  {tail: tail2019_2063'}
+//│ ╟── while constraining:  (cons<> & {Cons#N: mut (S[((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100')] | ‘n')..((S[‘p2100'] & ‘n') | S[((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') | ‘p2100')]), size: S[(‘n' | S[((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100')])], Cons#A: mut ..int<number>, tail: Vec[int<number>,(‘n' | S[((((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097') & ‘p2100')])], head: int<number>})  <!<  α2016_2062'
+//│ ╟── while constraining:  (Cons[int<number>,S[‘p2100'..‘p2100']..S[‘p2100'..‘p2100']] & Cons[int<number>,(‘n' | S[(((((((((‘p2070' & ‘p2073') & ‘p2076') & ‘p2079') & ‘p2082') & ‘p2085') & ‘p2088') & ‘p2091') & ‘p2094') & ‘p2097')])])  <!<  ((nil<> & α2015_2061') | ((cons<> & α2016_2062') & ~(nil<>)))
+//│ ╟── ......
+//│ ╟── ......
+//│ ╟── while constraining:  (Cons[Int,S[‘p2070'..‘p2070']..S[‘p2070'..‘p2070']] & Cons[Int,‘n'])  <!<  ((nil<> & α2015_2061') | ((cons<> & α2016_2062') & ~(nil<>)))
+//│ ╟── while constraining:  ((Nil & {size: ‘n'}) | (Cons[Int,S[‘p2070'..‘p2070']..S[‘p2070'..‘p2070']] & Cons[Int,‘n']))  <!<  ((nil<> & α2015_2061') | ((cons<> & α2016_2062') & ~(nil<>)))
+//│ ╟── while constraining:  ((Nil & {size: ‘n'}) | (Cons[Int,S[‘p2070'..‘p2070']..S[‘p2070'..‘p2070']] & Cons[Int,‘n']))  <!<  α2014_2060'
+//│ ╟── while constraining:  (α2014_2060' -> (0<int,number> | α2021_2065'))  <!<  ‹∀ 1. (((Nil & {size: ‘n'}) | (Cons[Int,S['p43_2068'']] & Cons[Int,‘n'])) -> 'r42_2069')›
+//│ ╟── while constraining:  ((α2014_2060' -> (0<int,number> | α2021_2065')),)  <!<  (‹∀ 1. (((Nil & {size: ‘n'}) | (Cons[Int,S['p43_2068'']] & Cons[Int,‘n'])) -> 'r42_2069')›,)
+//│ ╟── while constraining:  (‹∀ 1. (((Nil & {size: ‘n'}) | (Cons[Int,S['p43_2068'']] & Cons[Int,‘n'])) -> 'r42_2069')› -> 'r42_2069')  <!<  (((α2014_2060' -> (0<int,number> | α2021_2065')),) -> α2022_2066')
+//│ ╟── while constraining:  ‹∀ 0. (‹∀ 1. (((Nil & {size: ‘n'}) | (Cons[Int,S['p43'']] & Cons[Int,‘n'])) -> 'r42')› -> 'r42')›  <!<  (((α2014_2060' -> (0<int,number> | α2021_2065')),) -> α2022_2066')
+//│ ╟── while constraining:  Vec[Int,‘n']  <!<  (((α2014_2060' -> (0<int,number> | α2021_2065')),) -> α2022_2066')
+//│ ╟── while constraining:  Vec[Int,‘n']  <!<  α2013_2059'
+//│ ╟── while constraining:  (Vec[Int,‘n'],)  <!<  (α2013_2059',)
+//│ ╟── while constraining:  (α2013_2059' -> α2022_2066')  <!<  (Vec[Int,‘n'] -> Int)
+//│ ╟── while constraining:  sum2012_2058'  <!<  (Vec[Int,‘n'] -> Int)
+//│ ╟── while constraining:  ‹∀ 0. sum2012'›  <!<  (Vec[Int,‘n'] -> Int)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. sum2012'››  <!<  (Vec[Int,‘n'] -> Int)
+//│ ╙── while constraining:  ‹∀ 0. ‹∀ 0. sum2012'››  <!<  ‹∀ 0. (Vec[Int,'n2037'] -> Int)›
+
+
+sum nil
+//│ res: int
+
+sum v1_0
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?sum, ?b, ?c, ?d, ?tail, ?head, ?e, ?f, ?g. ?sum <: (forall ?h. ?h) -> ?i` exceeded recursion depth limit (300)
+//│ ║  l.383: 	sum v1_0
+//│ ║         	^^^^^^^^
+//│ ╟── while constraining:  (cons<> & {Cons#N: mut (S[(((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250) & ‘p2253)] | 'n1014_2152)..((S[‘p2253] & 'n1014_2152) | S[(((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250) | ‘p2253)]), size: S[('n1014_2152 | S[(((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250) & ‘p2253)])], Cons#A: mut ..'a1013_2150, tail: Vec['a1013_2150,('n1014_2152 | S[(((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250) & ‘p2253)])], head: 'a1013_2150})  <!<  {tail: tail2019_2136}
+//│ ╟── while constraining:  (cons<> & {Cons#N: mut (S[(((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250) & ‘p2253)] | 'n1014_2152)..((S[‘p2253] & 'n1014_2152) | S[(((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250) | ‘p2253)]), size: S[('n1014_2152 | S[(((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250) & ‘p2253)])], Cons#A: mut ..'a1013_2150, tail: Vec['a1013_2150,('n1014_2152 | S[(((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250) & ‘p2253)])], head: 'a1013_2150})  <!<  α2016_2135
+//│ ╟── while constraining:  (Cons['a1013_2150,S[‘p2253..‘p2253]..S[‘p2253..‘p2253]] & Cons['a1013_2150,('n1014_2152 | S[((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250)])])  <!<  ((nil<> & α2015_2134) | ((cons<> & α2016_2135) & ~(nil<>)))
+//│ ╟── while constraining:  ((Nil & {size: ('n1014_2152 | S[((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250)])}) | (Cons['a1013_2150,S[‘p2253..‘p2253]..S[‘p2253..‘p2253]] & Cons['a1013_2150,('n1014_2152 | S[((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250)])]))  <!<  ((nil<> & α2015_2134) | ((cons<> & α2016_2135) & ~(nil<>)))
+//│ ╟── while constraining:  ((Nil & {size: ('n1014_2152 | S[((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250)])}) | (Cons['a1013_2150,S[‘p2253..‘p2253]..S[‘p2253..‘p2253]] & Cons['a1013_2150,('n1014_2152 | S[((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250)])]))  <!<  α2014_2133
+//│ ╟── while constraining:  (α2014_2133 -> (0<int,number> | α2021_2138))  <!<  ‹∀ 1. (((Nil & {size: ('n1014_2152 | S[((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250)])}) | (Cons['a1013_2150,S['p43_2251'']] & Cons['a1013_2150,('n1014_2152 | S[((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250)])])) -> 'r42_2252)›
+//│ ╟── while constraining:  ((α2014_2133 -> (0<int,number> | α2021_2138)),)  <!<  (‹∀ 1. (((Nil & {size: ('n1014_2152 | S[((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250)])}) | (Cons['a1013_2150,S['p43_2251'']] & Cons['a1013_2150,('n1014_2152 | S[((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250)])])) -> 'r42_2252)›,)
+//│ ╟── while constraining:  (‹∀ 1. (((Nil & {size: ('n1014_2152 | S[((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250)])}) | (Cons['a1013_2150,S['p43_2251'']] & Cons['a1013_2150,('n1014_2152 | S[((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250)])])) -> 'r42_2252)› -> 'r42_2252)  <!<  (((α2014_2133 -> (0<int,number> | α2021_2138)),) -> α2022_2139)
+//│ ╟── while constraining:  ‹∀ 0. (‹∀ 1. (((Nil & {size: ('n1014_2152 | S[((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250)])}) | (Cons['a1013_2150,S['p43'']] & Cons['a1013_2150,('n1014_2152 | S[((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250)])])) -> 'r42')› -> 'r42')›  <!<  (((α2014_2133 -> (0<int,number> | α2021_2138)),) -> α2022_2139)
+//│ ╟── while constraining:  Vec['a1013_2150,('n1014_2152 | S[((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250)])]  <!<  (((α2014_2133 -> (0<int,number> | α2021_2138)),) -> α2022_2139)
+//│ ╟── while constraining:  Vec['a1013_2150,('n1014_2152 | S[((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250)])]  <!<  α2013_2132
+//│ ╟── while constraining:  Vec['a1013_2150,('n1014_2152 | S[((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250)])]  <!<  tail2019_2136
+//│ ╟── while constraining:  (cons<> & {Cons#N: mut (S[((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250)] | 'n1014_2152)..((S[‘p2250] & 'n1014_2152) | S[((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) | ‘p2250)]), size: S[('n1014_2152 | S[((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250)])], Cons#A: mut ..'a1013_2150, tail: Vec['a1013_2150,('n1014_2152 | S[((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250)])], head: 'a1013_2150})  <!<  {tail: tail2019_2136}
+//│ ╟── while constraining:  (cons<> & {Cons#N: mut (S[((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250)] | 'n1014_2152)..((S[‘p2250] & 'n1014_2152) | S[((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) | ‘p2250)]), size: S[('n1014_2152 | S[((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250)])], Cons#A: mut ..'a1013_2150, tail: Vec['a1013_2150,('n1014_2152 | S[((((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247) & ‘p2250)])], head: 'a1013_2150})  <!<  α2016_2135
+//│ ╟── while constraining:  (Cons['a1013_2150,S[‘p2250..‘p2250]..S[‘p2250..‘p2250]] & Cons['a1013_2150,('n1014_2152 | S[(((((((‘p2226 & ‘p2229) & ‘p2232) & ‘p2235) & ‘p2238) & ‘p2241) & ‘p2244) & ‘p2247)])])  <!<  ((nil<> & α2015_2134) | ((cons<> & α2016_2135) & ~(nil<>)))
+//│ ╟── ......
+//│ ╟── ......
+//│ ╟── while constraining:  ‹∀ 4. {α1028_2206''''' where: α1011_2142 <: α59_2197''''', α1012_2149 <: α60_2200'''''}›  <!<  α2014_2133
+//│ ╟── while constraining:  (‹∀ 4. {α1028_2206''''' where: α1011_2142 <: α59_2197''''', α1012_2149 <: α60_2200'''''}›,)  <!<  (α2014_2133,)
+//│ ╟── while constraining:  (α2014_2133 -> (0<int,number> | α2021_2138))  <!<  ((‹∀ 4. {α1028_2206''''' where: α1011_2142 <: α59_2197''''', α1012_2149 <: α60_2200'''''}›,) -> α1049_2210)
+//│ ╟── while constraining:  (α2014_2133 -> (0<int,number> | α2021_2138))  <!<  α1015_2196
+//│ ╟── while constraining:  ((α2014_2133 -> (0<int,number> | α2021_2138)),)  <!<  (α1015_2196,)
+//│ ╟── while constraining:  (α1015_2196 -> α1049_2210)  <!<  (((α2014_2133 -> (0<int,number> | α2021_2138)),) -> α2022_2139)
+//│ ╟── while constraining:  {(α1015_2196 -> α1049_2210) where: α1011_2142 <: α1040_2187, α1012_2149 <: α1043_2190}  <!<  (((α2014_2133 -> (0<int,number> | α2021_2138)),) -> α2022_2139)
+//│ ╟── while constraining:  ‹∀ 3. {(α1015_2172'''' -> α1049_2186'''') where: α1011_2142 <: α1040_2159'''', α1012_2149 <: α1043_2162''''}›  <!<  (((α2014_2133 -> (0<int,number> | α2021_2138)),) -> α2022_2139)
+//│ ╟── while constraining:  α1390_2141  <!<  (((α2014_2133 -> (0<int,number> | α2021_2138)),) -> α2022_2139)
+//│ ╟── while constraining:  ‹∀ 0. α1390'›  <!<  (((α2014_2133 -> (0<int,number> | α2021_2138)),) -> α2022_2139)
+//│ ╟── while constraining:  ‹∀ 0. α1390'›  <!<  α2013_2132
+//│ ╟── while constraining:  (‹∀ 0. α1390'›,)  <!<  (α2013_2132,)
+//│ ╟── while constraining:  (α2013_2132 -> α2022_2139)  <!<  ((‹∀ 0. α1390'›,) -> α2130)
+//│ ╟── while constraining:  sum2012_2131  <!<  ((‹∀ 0. α1390'›,) -> α2130)
+//│ ╙── while constraining:  ‹∀ 0. sum2012'›  <!<  ((‹∀ 0. α1390'›,) -> α2130)
+//│ res: error
+
+sum v2
+//│ res: error
+
+
+
+
+// === === === ERROR CASES === === === //
+
+
+:ShowRelativeLineNums
+:AllowTypeErrors
+
+
+def head1_ty v = case v of {
+  | Nil -> impossible v.size
+  | Cons -> v.head
+  }
+//│ ((Cons[?, ?]\size\tail with {head: 'head}) | Nil & {size: nothing}) -> 'head
+//│   <:  head1_ty:
+//│ Vec['a, S['p]] -> 'a
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.+1: 	def head1_ty v = case v of {
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	  | Nil -> impossible v.size
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	  | Cons -> v.head
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	  }
+//│ ║        	^^^
+//│ ╟── type `(forall ?p. (Cons[‘a, in S[in ‘p & ?p out ?p | ‘p] out S[in ?p | ‘p out ‘p & ?p]] | (Nil with {size: S[‘p]})) -> ?r) -> ?r` does not match type `Cons[?, ?] & ?a | Nil & ?b`
+//│ ║  l.21: 	type Vec[A, N] = forall 'r. (forall 'p. (Nil & { size: N } | Cons[A, S['p]] & Cons[A, N]) -> 'r) -> 'r
+//│ ║        	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.+1: 	def head1_ty v = case v of {
+//│ ╙──      	                      ^
+
+
+sum v1_ty
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	sum v1_ty
+//│ ║        	^^^^^^^^^
+//│ ╟── type `Cons[int, Z]` is not a function
+//│ ║  l.170: 	v1_ty = v1_ : Cons[int, Z]
+//│ ║         	              ^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `(?a -> ?b) -> ?c`
+//│ ║  l.+1: 	sum v1_ty
+//│ ║        	    ^^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.325: 	rec def sum vec = vec (fun v -> case v of {
+//│ ║         	                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.326: 	  | Nil -> 0
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.327: 	  | Cons -> v.head + sum v.tail
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.328: 	  })
+//│ ║         	^^^^
+//│ ╟── from reference:
+//│ ║  l.325: 	rec def sum vec = vec (fun v -> case v of {
+//│ ╙──       	                  ^^^
+//│ res: error
+
+

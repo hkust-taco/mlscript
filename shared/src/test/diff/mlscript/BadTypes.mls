@@ -168,7 +168,7 @@ def someRec: { x: 'a; y: 'a } as 'a
 
 :e // TODO try without cycle check
 someRec: BadRec
-//│ ╔══[ERROR] Cyclic-looking constraint while typing type ascription
+//│ ╔══[ERROR] Cyclic-looking constraint while typing type ascription; a type annotation may be required
 //│ ║  l.+1: 	someRec: BadRec
 //│ ║        	^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————

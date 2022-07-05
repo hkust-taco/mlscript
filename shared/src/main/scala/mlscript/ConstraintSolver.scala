@@ -435,7 +435,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             // if (!lhs.isInstanceOf[TV] && !rhs.isInstanceOf[TV] && shadows.contains(shadow)) { // FIXME there are cyclic constraints like this; find a better way of allowing recursion after extrusion!
               println(s"SHADOWING DETECTED!")
               // err(msg"Cyclic-looking constraint ${lhs_rhs.toString}" -> prov.loco :: Nil)
-              err(msg"Cyclic-looking constraint while typing ${prov.desc}" -> prov.loco ::
+              err(msg"Cyclic-looking constraint while typing ${prov.desc}; a type annotation may be required" -> prov.loco ::
                 // msg"this constraint:  ${lhs.expPos}  <:  ${rhs.expNeg}" -> N ::
                 // msg" ... looks like:  ${shadow._1.expPos}  <:  ${shadow._2.expNeg}" -> N ::
                 msg"————————— Additional debugging info: —————————" -> N ::
