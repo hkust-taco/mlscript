@@ -52,12 +52,12 @@ def Cons head tail = Cons { head; tail; size = S{} }
 def nil k = k Nil
 def cons h t k = k (Cons h t)
 //│ nil: (Nil -> 'a) -> 'a
-//│ cons: 'a -> (forall 'b. (Vec[?, ?] & 'b) -> ((forall 'a, 'b, 'tail, 'P. (Cons[nothing, 'P] with {tail: 'tail}
+//│ cons: 'a -> (forall 'b. 'b -> ((forall 'a, 'b, 'tail, 'P. (Cons[nothing, 'P] with {tail: 'tail}
 //│   where
-//│     'a <: 'b
 //│     'b <: Vec[?, ?] & 'tail
 //│     'a <: 'b
-//│     'b <: Vec[?, ?] & 'tail)) -> 'c) -> 'c)
+//│     'b <: Vec[?, ?] & 'tail
+//│     'a <: 'b)) -> 'c) -> 'c)
 
 nil_ty = nil : Vec[int, Z]
 //│ ╔══[ERROR] Type mismatch in type ascription:
@@ -186,10 +186,10 @@ cons : Cons_ty
 def cons h (t: Vec['a, 'n]) k = k (Cons h t)
 //│ cons: 'a -> Vec[?, ?] -> ((forall 'a, 'b, 'tail, 'P. (Cons[nothing, 'P] with {tail: 'tail}
 //│   where
-//│     'a <: 'a
 //│     'b <: Vec[?, ?] & 'tail
 //│     'a <: 'a
-//│     'b <: Vec[?, ?] & 'tail)) -> 'c) -> 'c
+//│     'b <: Vec[?, ?] & 'tail
+//│     'a <: 'a)) -> 'c) -> 'c
 
 cons : Cons_ty
 //│ ╔══[ERROR] Type mismatch in type ascription:
@@ -275,12 +275,12 @@ v2 = cons 1 (cons 2 nil)
 //│ ╟── Note: class Z is defined at:
 //│ ║  l.8: 	class Z
 //│ ╙──     	      ^
-//│ v2: ((forall 'a, 'b, 'tail, 'P. (Cons[nothing, 'P] with {tail: 'tail}
+//│ v2: ((forall 'a, 'tail, 'b, 'P. (Cons[nothing, 'P] with {tail: 'tail}
 //│   where
-//│     'a <: anything
-//│     'b <: Vec[?, ?] & 'tail
-//│     'a <: anything
-//│     'b <: Vec[?, ?] & 'tail)) -> 'c) -> 'c
+//│     'a <: Vec[?, ?] & 'tail
+//│     'b <: anything
+//│     'a <: Vec[?, ?] & 'tail
+//│     'b <: anything)) -> 'c) -> 'c
 
 
 def impossible x = case x of {}

@@ -44,7 +44,7 @@ test f =
 test f =
   let r x = f x
   in (r 0, r True)
-//│ test: (nothing -> anything & 0 -> 'a & true -> 'b) -> ('a, 'b,)
+//│ test: (true -> 'a & 0 -> 'b) -> ('b, 'a,)
 //│     = [Function: test2]
 
 // :e // FIXME!!!! ^ approx type!
@@ -75,5 +75,5 @@ not (test id)._1
 rec def test f =
   let r x = f x
   in (r 0, r True)
-//│ test: (nothing -> anything & 0 -> 'a & true -> 'b) -> ('a, 'b,)
+//│ test: (true -> 'a & 0 -> 'b) -> ('b, 'a,)
 //│     = [Function: test3]

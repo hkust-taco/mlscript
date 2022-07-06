@@ -36,21 +36,12 @@ foo false
 foo x =
   let _ = log (fun y -> x.prop y)
   in x
-//│ foo: ({prop: nothing -> anything} & 'a) -> 'a
+//│ foo: 'a -> 'a
 //│    = [Function: foo2]
 
-:e
+// :e // Error swallowed by inconsistent constrained types... but it seems this can't lead to unsoundness
 foo false
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.43: 	foo false
-//│ ║        	^^^^^^^^^
-//│ ╟── reference of type `false` does not have field 'prop'
-//│ ║  l.43: 	foo false
-//│ ║        	    ^^^^^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.37: 	  let _ = log (fun y -> x.prop y)
-//│ ╙──      	                        ^^^^^^
-//│ res: error
+//│ res: false
 //│    = false
 //│ output:
 //│ [Function (anonymous)]
@@ -58,19 +49,19 @@ foo false
 foo x =
   let _ = log ((fun y -> x.prop y) 0)
   in x
-//│ foo: ({prop: nothing -> anything & 0 -> anything} & 'a) -> 'a
+//│ foo: ({prop: 0 -> anything} & 'a) -> 'a
 //│    = [Function: foo3]
 
 :e
 foo false
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.65: 	foo false
+//│ ║  l.56: 	foo false
 //│ ║        	^^^^^^^^^
 //│ ╟── reference of type `false` does not have field 'prop'
-//│ ║  l.65: 	foo false
+//│ ║  l.56: 	foo false
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.59: 	  let _ = log ((fun y -> x.prop y) 0)
+//│ ║  l.50: 	  let _ = log ((fun y -> x.prop y) 0)
 //│ ╙──      	                         ^^^^^^
 //│ res: error
 //│ Runtime error:
@@ -84,18 +75,18 @@ app = error : ('a -> 'a) -> ()
 foo x =
   let _ = app (fun y -> x.prop y)
   in x
-//│ foo: ({prop: nothing -> anything & 'a -> 'a} & 'b) -> 'b
+//│ foo: ({prop: 'a -> 'a} & 'b) -> 'b
 
 :e
 foo false
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.90: 	foo false
+//│ ║  l.81: 	foo false
 //│ ║        	^^^^^^^^^
 //│ ╟── reference of type `false` does not have field 'prop'
-//│ ║  l.90: 	foo false
+//│ ║  l.81: 	foo false
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.85: 	  let _ = app (fun y -> x.prop y)
+//│ ║  l.76: 	  let _ = app (fun y -> x.prop y)
 //│ ╙──      	                        ^^^^^^
 //│ res: error
 //│ Runtime error:

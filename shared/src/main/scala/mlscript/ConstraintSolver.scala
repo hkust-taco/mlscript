@@ -1004,21 +1004,21 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   
   /** Copies a type up to its type variables of wrong level (and their extruded bounds). */
-  def extrude(ty: SimpleType, lvl: Int, pol: Boolean, upperLvl: Level)
+  def extrude(ty: SimpleType, lowerLvl: Int, pol: Boolean, upperLvl: Level)
       // (implicit ctx: Ctx, flexifyRigids: Bool, cache: MutMap[PolarVariable, TV] = MutMap.empty, cache2: MutMap[TraitTag, TV] = MutMap.empty): SimpleType =
       (implicit ctx: Ctx, flexifyRigids: Bool, cache: MutMap[PolarVariable, TV] = MutMap.empty, cache2: MutSortMap[TraitTag, TraitTag] = MutSortMap.empty): SimpleType =
-        // (trace(s"EXTR[${printPol(S(pol))}] $ty || $lvl .. $upperLvl  ${ty.level} ${ty.level <= lvl}"){
-    if (ty.level <= lvl) ty else ty match {
-      case t @ TypeBounds(lb, ub) => if (pol) extrude(ub, lvl, true, upperLvl) else extrude(lb, lvl, false, upperLvl)
-      case t @ FunctionType(l, r) => FunctionType(extrude(l, lvl, !pol, upperLvl), extrude(r, lvl, pol, upperLvl))(t.prov)
-      case t @ ComposedType(p, l, r) => ComposedType(p, extrude(l, lvl, pol, upperLvl), extrude(r, lvl, pol, upperLvl))(t.prov)
+        // (trace(s"EXTR[${printPol(S(pol))}] $ty || $lowerLvl .. $upperLvl  ${ty.level} ${ty.level <= lowerLvl}"){
+    if (ty.level <= lowerLvl) ty else ty match {
+      case t @ TypeBounds(lb, ub) => if (pol) extrude(ub, lowerLvl, true, upperLvl) else extrude(lb, lowerLvl, false, upperLvl)
+      case t @ FunctionType(l, r) => FunctionType(extrude(l, lowerLvl, !pol, upperLvl), extrude(r, lowerLvl, pol, upperLvl))(t.prov)
+      case t @ ComposedType(p, l, r) => ComposedType(p, extrude(l, lowerLvl, pol, upperLvl), extrude(r, lowerLvl, pol, upperLvl))(t.prov)
       case t @ RecordType(fs) =>
-        RecordType(fs.mapValues(_.update(extrude(_, lvl, !pol, upperLvl), extrude(_, lvl, pol, upperLvl))))(t.prov)
+        RecordType(fs.mapValues(_.update(extrude(_, lowerLvl, !pol, upperLvl), extrude(_, lowerLvl, pol, upperLvl))))(t.prov)
       case t @ TupleType(fs) =>
-        TupleType(fs.mapValues(_.update(extrude(_, lvl, !pol, upperLvl), extrude(_, lvl, pol, upperLvl))))(t.prov)
+        TupleType(fs.mapValues(_.update(extrude(_, lowerLvl, !pol, upperLvl), extrude(_, lowerLvl, pol, upperLvl))))(t.prov)
       case t @ ArrayType(ar) =>
-        ArrayType(ar.update(extrude(_, lvl, !pol, upperLvl), extrude(_, lvl, pol, upperLvl)))(t.prov)
-      case w @ Without(b, ns) => Without(extrude(b, lvl, pol, upperLvl), ns)(w.prov)
+        ArrayType(ar.update(extrude(_, lowerLvl, !pol, upperLvl), extrude(_, lowerLvl, pol, upperLvl)))(t.prov)
+      case w @ Without(b, ns) => Without(extrude(b, lowerLvl, pol, upperLvl), ns)(w.prov)
       case tv: TypeVariable if tv.level > upperLvl =>
         // If the TV's level is strictly greater than `upperLvl`,
         //  it means the TV is quantified by a type being copied,
@@ -1028,34 +1028,34 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           // val nv = freshVar(tv.prov, S(tv), tv.nameHint)(tv.level)
           val nv = freshVar(tv.prov, N, tv.nameHint)(tv.level)
           cache += tv -> true -> nv
-          nv.lowerBounds = tv.lowerBounds.map(extrude(_, lvl, true, upperLvl))
-          nv.upperBounds = tv.upperBounds.map(extrude(_, lvl, false, upperLvl))
+          nv.lowerBounds = tv.lowerBounds.map(extrude(_, lowerLvl, true, upperLvl))
+          nv.upperBounds = tv.upperBounds.map(extrude(_, lowerLvl, false, upperLvl))
           nv
         })
       case tv: TypeVariable => cache.getOrElse(tv -> pol, {
-        // val nv = freshVar(tv.prov, S(tv), tv.nameHint)(lvl)
-        val nv = freshVar(tv.prov, N, tv.nameHint)(lvl)
+        // val nv = freshVar(tv.prov, S(tv), tv.nameHint)(lowerLvl)
+        val nv = freshVar(tv.prov, N, tv.nameHint)(lowerLvl)
         cache += tv -> pol -> nv
         if (pol) {
           tv.upperBounds ::= nv
-          nv.lowerBounds = tv.lowerBounds.map(extrude(_, lvl, pol, upperLvl))
+          nv.lowerBounds = tv.lowerBounds.map(extrude(_, lowerLvl, pol, upperLvl))
         } else {
           tv.lowerBounds ::= nv
-          nv.upperBounds = tv.upperBounds.map(extrude(_, lvl, pol, upperLvl))
+          nv.upperBounds = tv.upperBounds.map(extrude(_, lowerLvl, pol, upperLvl))
         }
         nv
       })
-      case n @ NegType(neg) => NegType(extrude(neg, lvl, pol, upperLvl))(n.prov)
+      case n @ NegType(neg) => NegType(extrude(neg, lowerLvl, pol, upperLvl))(n.prov)
       case e @ ExtrType(_) => e
-      case p @ ProvType(und) => ProvType(extrude(und, lvl, pol, upperLvl))(p.prov)
-      case p @ ProxyType(und) => extrude(und, lvl, pol, upperLvl)
+      case p @ ProvType(und) => ProvType(extrude(und, lowerLvl, pol, upperLvl))(p.prov)
+      case p @ ProxyType(und) => extrude(und, lowerLvl, pol, upperLvl)
       // case _: ClassTag | _: TraitTag => ty
       case tt @ TraitTag(level, id) =>
-        // println(lvl, upperLvl)
-        // if (lvl > upperLvl)
-        if (level > lvl) {
+        // println(lowerLvl, upperLvl)
+        // if (lowerLvl > upperLvl)
+        if (level > lowerLvl) {
           if (flexifyRigids) { // FIXME should this have a shadow?
-            freshVar(ty.prov, N, S(id.idStr))(lvl + 1)
+            freshVar(ty.prov, N, S(id.idStr))(lowerLvl + 1)
           } else {
             
             // * When a rigid type variable is extruded, we need to widen it to Top or Bot
@@ -1070,7 +1070,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             
             cache2.getOrElseUpdate(tt,
               TraitTag(
-                lvl,
+                lowerLvl,
                 // level,
                 Var.apply(freshVar(noProv,N,S(id.idStr+"_"))(0).toString)
               )(tt.prov)
@@ -1101,18 +1101,29 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case tr @ TypeRef(d, ts) =>
         TypeRef(d, tr.mapTargs(S(pol)) {
           case (N, targ) =>
-            TypeBounds(extrude(targ, lvl, false, upperLvl), extrude(targ, lvl, true, upperLvl))(noProv)
-          case (S(pol), targ) => extrude(targ, lvl, pol, upperLvl)
+            TypeBounds(extrude(targ, lowerLvl, false, upperLvl), extrude(targ, lowerLvl, true, upperLvl))(noProv)
+          case (S(pol), targ) => extrude(targ, lowerLvl, pol, upperLvl)
         })(tr.prov)
       case PolymorphicType(polymLevel, body) =>
-        PolymorphicType(polymLevel, extrude(body, lvl, pol, upperLvl = polymLevel))
+        PolymorphicType(polymLevel, extrude(body, lowerLvl, pol, upperLvl = polymLevel))
       case ConstrainedType(cs, bod) =>
         ConstrainedType(cs.map { case (tv, bs) =>
-          val nv = extrude(tv, lvl, pol, upperLvl).asInstanceOf[TV] // FIXME
-          nv -> bs.map {
-            case (pol, b) => (pol, extrude(b, lvl, pol, upperLvl))
-          } }, extrude(bod, lvl, pol, upperLvl))
-      case o @ Overload(alts) => Overload(alts.map(extrude(_, lvl, pol, upperLvl).asInstanceOf[FunctionType]))(o.prov)
+          val nv = extrude(tv, lowerLvl, pol, upperLvl).asInstanceOf[TV] // FIXME
+          
+          // * Intuitively feels like we should be discharging the constraints if the variable is extruded here...
+          // *  but not doing so does not seem to cause problems... (?)
+          
+          // if (tv.level > lowerLvl && tv.level <= upperLvl) {
+          //   assert(nv =/= tv)
+          //   ???
+          // } else {
+          //   assert(nv === tv)
+            nv -> bs.map {
+              case (pol, b) => (pol, extrude(b, lowerLvl, pol, upperLvl))
+            }
+          // }
+        }, extrude(bod, lowerLvl, pol, upperLvl))
+      case o @ Overload(alts) => Overload(alts.map(extrude(_, lowerLvl, pol, upperLvl).asInstanceOf[FunctionType]))(o.prov)
     }
     // }(r => s"=> $r"))
   
@@ -1246,6 +1257,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           // }}
         }()
         */
+        /* 
         val c = ctx
         trace(s"COPYING CONSTRAINTS   (${cs.mkString(", ")})") {
           implicit val p: TP = NoProv
@@ -1257,6 +1269,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             }
           }
         }()
+        */
         ConstrainedType(cs2, freshen(bod))
       case o @ Overload(alts) => Overload(alts.map(freshen(_).asInstanceOf[FunctionType]))(o.prov)
     }}

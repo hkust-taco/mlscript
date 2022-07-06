@@ -13,7 +13,7 @@ type Two[A] = (A, A)
 //│ Defined type alias Two[+A]
 
 def mapTwo f ((a, b)) = (f a, f b)
-//│ mapTwo: (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c, 'd, 'e. (('b, 'd,) -> ('c, 'e,)
+//│ mapTwo: 'a -> (forall 'a, 'b, 'c, 'd, 'e. (('b, 'd,) -> ('c, 'e,)
 //│   where
 //│     'a <: 'b -> 'c & 'd -> 'e))
 //│       = [Function: mapTwo]
@@ -66,20 +66,24 @@ rec def map f tree = case tree of {
   | Leaf -> Leaf { value = f tree.value }
   | Node -> Node { subTree = map (mapTwo f) tree.subTree }
   }
-//│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
+//│ ║  l.65: 	rec def map f tree = case tree of {
+//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.66: 	  | Leaf -> Leaf { value = f tree.value }
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.67: 	  | Node -> Node { subTree = map (mapTwo f) tree.subTree }
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.68: 	  }
+//│ ║        	^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α23_144'  <:  ((α24_175',) -> α26_176')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α23_144'  <:  ((α24_153''',) -> α26_154''')
+//│ ╟── this constraint:  α23_124'  <:  ((α24_139',) -> α26_140')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α23_124'  <:  ((α24_125''',) -> α26_126''')
 //│ map: (nothing -> anything & 'value -> 'value0) -> ((Leaf[?] with {value: 'value}) | Node[?]) -> (Leaf['value0] | Node[nothing] & {subTree: nothing})
 //│    = [Function: map]
 
-:e // fails after new-refreshing-extrusion
+// :e // fails after new-refreshing-extrusion // Works since inconsistent constrained types...
 map succ n4
-//│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α23_217  <:  ((α24_246,) -> α26_247)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α23_144'  <:  ((α24_218''',) -> α26_219''')
-//│ res: error
+//│ res: Leaf[int] | Node[nothing] & {subTree: nothing}
 //│    = Node1 { subTree: Node1 { subTree: Leaf { value: [Array] } } }
 
 
@@ -91,9 +95,9 @@ def map f tree = case tree of {
   | Leaf -> Leaf { value = f tree.value }
   | Node -> Node { subTree = map (mapTwo f) tree.subTree }
   }
-//│ (nothing -> 'a & 'a) -> (forall 'a, 'value, 'value0. (((Leaf['a] with {value: 'value}) | (Node['a] with {subTree: PerfectTree[('a, 'a,)]})) -> (Leaf['value0] | (Node[nothing] with {subTree: PerfectTree[(nothing, nothing,)]}))
+//│ 'a -> (forall 'a, 'value, 'value0. (((Leaf['a] with {value: 'value}) | (Node['a] with {subTree: PerfectTree[('a, 'a,)]})) -> (Leaf['value0] | (Node[nothing] with {subTree: PerfectTree[(nothing, nothing,)]}))
 //│   where
-//│     'a <: 'value -> 'value0 & nothing -> 'a))
+//│     'a <: 'value -> 'value0 & 'a))
 //│   <:  map:
 //│ ('a -> 'b) -> PerfectTree['a] -> PerfectTree['b]
 //│    = <no result>

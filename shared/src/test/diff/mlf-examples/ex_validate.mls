@@ -283,7 +283,7 @@ fun x -> fun y ->
     (isnil (cons 1 (cons 2 (cons 3 nil))), isnil nil, isnil (cons "ok" nil), isnil (cons true nil)) 
 //│ res: Id -> (forall 'a, 'b, 'c, 'd. (List[1 | 2 | 3] -> 'a & List[nothing] -> 'b & List[true] -> 'c & List["ok"] -> 'd) -> ('a, 'b, 'd, 'c,))
 //│    = [Function: res]
-//│ res: ('a -> (List[1 | 2 | 3] -> 'b & List[nothing] -> 'b & List["ok"] -> 'b & List[true] -> 'b & 'b)) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('a -> ('c, 'd, 'e, 'f,)
+//│ res: ('a -> 'b) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('a -> ('c, 'd, 'e, 'f,)
 //│   where
 //│     'b <: List[1 | 2 | 3] -> 'c & List[nothing] -> 'd & List["ok"] -> 'e & List[true] -> 'f))
 //│    = [Function: res]
@@ -394,7 +394,7 @@ def mkpair x y = (x, y)
 // (* Il faudrait que le message d'erreur soit plus clair. *)
 example mkpair
 example_ mkpair
-//│ res: int -> (‘a_1315, int,)
+//│ res: int -> (‘a_1174, int,)
 //│    = [Function (anonymous)]
 //│ res: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('b, 'c,)), 'a,)
 //│    = [Function (anonymous)]
@@ -464,26 +464,26 @@ def intfa f = f 15
 //│      = [Function: intfa]
 
 // let polyann (a:'x) (b:int) f (g:int -> 'x -> 'y) = g (f 10) a b
+
+// FIXME SOF
 def polyann (a: 'x) (b: int) f (g: int -> 'x -> 'y) = g (f 10) a b
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+
 def polyann_ a b f g = g (f 10) a b
-//│ polyann: 'x -> int -> (forall 'a. (10 -> int & 'a) -> (forall 'x, 'a, 'x0, 'b. ((int -> 'x0 -> int -> 'b) -> 'b
-//│   where
-//│     'a <: 10 -> int
-//│     'x <: 'x0)))
-//│        = [Function: polyann]
-//│ polyann_: 'a -> (forall 'b. 'b -> (forall 'c. (10 -> 'c & 'c) -> (forall 'a, 'b, 'c, 'd, 'e. (('d -> 'a -> 'b -> 'e) -> 'e
+//│ polyann_: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. (('d -> 'a -> 'b -> 'e) -> 'e
 //│   where
 //│     'c <: 10 -> 'd))))
 //│         = [Function: polyann_]
 
 // let voyage (f:'p -> 'q) x y = (y, f x)
 def voyage (f: 'p -> 'q) x y = (y, f x)
-def voyage_ f x y = (y, f x)
 //│ voyage: (nothing -> anything) -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd. ('d -> ('d, 'c,)
 //│   where
 //│     'b <: 'a -> 'c)))
 //│       = [Function: voyage]
-//│ voyage_: (nothing -> 'a & 'a) -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('d -> ('d, 'c,)
+
+def voyage_ f x y = (y, f x)
+//│ voyage_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('d -> ('d, 'c,)
 //│   where
 //│     'a <: 'b -> 'c)))
 //│        = [Function: voyage_]
@@ -791,17 +791,17 @@ def a = fun f -> f id
 //│            = [Function: church_zero]
 //│ church_un: 'a -> 'a
 //│          = [Function: id2]
-//│ church_succ: (nothing -> nothing -> 'a & nothing -> nothing -> 'b & nothing -> nothing -> 'c & 'd) -> (forall 'e. ('a -> 'd & 'b -> 'd & 'c -> 'd & 'e) -> (forall 'd, 'e, 'f, 'g, 'h. ('f -> 'h
+//│ church_succ: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
-//│     'd <: 'e -> 'f -> 'g
-//│     'e <: 'g -> 'h)))
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e)))
 //│            = [Function: church_succ]
 //│ f: Sa -> Sid
 //│  = [Function: f]
-//│ f_: ((('a -> 'a -> anything) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ f_: ((anything -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'd -> 'e))) -> anything & (forall 'f, 'g. ('f -> 'g & 'f) -> 'g) -> 'h) -> 'h
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e))) -> anything & (forall 'f, 'g. ('f -> 'g & 'f) -> 'g) -> 'h) -> 'h
 //│   = [Function: f_]
 //│ a: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
 //│  = [Function: a]
@@ -812,7 +812,7 @@ def a = fun f -> f id
 def app x y = x y
 def test1 = f a
 def test2 = app f a
-//│ app: (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ app: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
 //│     'a <: 'b -> 'c))
 //│    = [Function: app]
@@ -890,8 +890,8 @@ rec def id_ x = if true then x else id_ id_ x
 //│ ║  l.888: 	rec def id_ x = if true then x else id_ id_ x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α3089' -> α3095')  <:  α3093'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α3089' -> α3095')  <:  α3093'
+//│ ╟── this constraint:  (α2199' -> α2205')  <:  α2203'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α2199' -> α2205')  <:  α2203'
 //│ id_: 'id_
 //│   where
 //│     'id_ :> 'a -> 'b
@@ -913,8 +913,8 @@ rec def id x = if true then x else id id x
 //│ ║  l.911: 	rec def id x = if true then x else id id x
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α3109' -> α3115')  <:  α3113'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α3109' -> α3115')  <:  α3113'
+//│ ╟── this constraint:  (α2219' -> α2225')  <:  α2223'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α2219' -> α2225')  <:  α2223'
 //│ 'id
 //│   where
 //│     'id :> 'a -> 'b

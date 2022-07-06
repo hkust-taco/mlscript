@@ -257,20 +257,18 @@ b g = build_ g
 b g = build_ (fun x -> g x)
 //│ ((forall 'b. 'b -> (forall 'b, 'a. (Ls['a] -> Ls['a]
 //│   where
-//│     'b <: 'a))) -> Ls[nothing] -> 'c & nothing -> 'b) -> 'c
+//│     'b <: 'a))) -> Ls[nothing] -> 'c) -> 'c
 //│   <:  b:
 //│ (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 //│  = [Function: b2]
 
 :e
 b g x = build_ g x
-//│ ((forall 'b. 'b -> (forall 'b, 'a. (Ls['a] -> Ls['a]
+//│ 'b -> (forall 'b. ('c -> 'd
 //│   where
-//│     'b <: 'a))) -> Ls[nothing] -> nothing -> 'b & 'c) -> (forall 'c. ('d -> 'e
+//│     'b <: (forall 'e. 'e -> (forall 'e, 'a. (Ls['a] -> Ls['a]
 //│   where
-//│     'c <: (forall 'b. 'b -> (forall 'b, 'a. (Ls['a] -> Ls['a]
-//│   where
-//│     'b <: 'a))) -> Ls[nothing] -> 'd -> 'e))
+//│     'e <: 'a))) -> Ls[nothing] -> 'c -> 'd))
 //│   <:  b:
 //│ (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 //│ ╔══[ERROR] Type mismatch in def definition:

@@ -45,32 +45,25 @@ f {} {}
 
 
 def f n m = n 0
-//│ f: (0 -> 'a & 'a) -> (forall 'a, 'b. ('a -> 'b
+//│ f: 'a -> (forall 'a, 'b. ('a -> 'b
 //│   where
 //│     'a <: 0 -> 'b))
 //│  = [Function: f1]
 
-:e // due to tapping
+// :e // Error delayed by inconsistent constrained types
 f {}
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.54: 	f {}
-//│ ║        	^^^^
-//│ ╟── record literal of type `anything` is not a function
-//│ ║  l.54: 	f {}
-//│ ║        	  ^^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.47: 	def f n m = n 0
-//│ ╙──      	            ^^^
-//│ res: error
+//│ res: anything -> 'a
+//│   where
+//│     'b <: 0 -> 'a
 //│    = [Function (anonymous)]
 
 :e
 f {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.68: 	f {} {}
-//│ ║        	^^^^
+//│ ║  l.61: 	f {} {}
+//│ ║        	^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.68: 	f {} {}
+//│ ║  l.61: 	f {} {}
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.47: 	def f n m = n 0
@@ -81,6 +74,120 @@ f {} {}
 
 
 
+def test extr =
+  let f n m = n 0
+  in let _ = extr f
+  in f 0
+//│ test: ((forall 'a. 'a -> (forall 'a, 'b. ('a -> 'b
+//│   where
+//│     'a <: 0 -> 'b))) -> 'a) -> (forall 'a, 'c, 'd. ('a -> 'd
+//│   where
+//│     'c <: 0 -> 'd))
+//│     = [Function: test]
 
+:e
+test 1
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.89: 	test 1
+//│ ║        	^^^^^^
+//│ ╟── integer literal of type `1` is not a function
+//│ ║  l.89: 	test 1
+//│ ║        	     ^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.79: 	  in let _ = extr f
+//│ ╙──      	             ^^^^^^
+//│ res: error
+//│ Runtime error:
+//│   TypeError: extr is not a function
+
+// * Note: this extrudes a Constrainedtype referring to a higher-level variable (x)
+def test extr x =
+  let f n m = x (n 0)
+  in let _ = extr f
+  in f 0
+//│ test: (('a -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> 'd
+//│   where
+//│     'b <: 'c -> 'd
+//│     'a <: 0 -> 'c))) -> 'e) -> (forall 'e. ('b & 'e) -> (forall 'e, 'f, 'g, 'h. ('e -> 'g
+//│   where
+//│     'e <: 'f -> 'g
+//│     'h <: 0 -> 'f)))
+//│     = [Function: test1]
+
+:e
+test 0
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.118: 	test 0
+//│ ║         	^^^^^^
+//│ ╟── integer literal of type `0` is not a function
+//│ ║  l.118: 	test 0
+//│ ║         	     ^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.106: 	  in let _ = extr f
+//│ ╙──       	             ^^^^^^
+//│ res: error
+//│    = [Function (anonymous)]
+
+def test extr x =
+  let f n m = x (n 0)
+  in f 0
+//│ test: 'a -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd. ('a -> 'c
+//│   where
+//│     'a <: 'b -> 'c
+//│     'd <: 0 -> 'b)))
+//│     = [Function: test2]
+
+// Error delayed by inconsistent constrained types
+test 0 1
+//│ res: anything -> 'a
+//│   where
+//│     'b <: 'c -> 'a
+//│     'd <: 0 -> 'c
+//│    = [Function (anonymous)]
+
+:e
+test 0 1 2
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.149: 	test 0 1 2
+//│ ║         	^^^^^^^^^^
+//│ ╟── integer literal of type `1` is not a function
+//│ ║  l.149: 	test 0 1 2
+//│ ║         	       ^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.132: 	  let f n m = x (n 0)
+//│ ╙──       	              ^^^^^^^
+//│ res: error
+//│ Runtime error:
+//│   TypeError: n is not a function
+
+def test extr x =
+  let f n m = (n x 0)
+  in f 0
+//│ test: anything -> (forall 'a. 'a -> (forall 'a, 'b, 'c. (anything -> 'c
+//│   where
+//│     'b <: 'a -> 0 -> 'c)))
+//│     = [Function: test3]
+
+// Error delayed by inconsistent constrained types
+test 0 1
+//│ res: anything -> 'a
+//│   where
+//│     'b <: 1 -> 0 -> 'a
+//│    = [Function (anonymous)]
+
+:e
+test 0 1 2
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.179: 	test 0 1 2
+//│ ║         	^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not a function
+//│ ║  l.165: 	  in f 0
+//│ ║         	       ^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.164: 	  let f n m = (n x 0)
+//│ ╙──       	               ^^^
+//│ res: error
+//│ Runtime error:
+//│   TypeError: n is not a function
 
 

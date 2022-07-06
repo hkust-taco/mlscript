@@ -204,45 +204,30 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (x x)) (x => f (x x)))
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. {(α243_250' -> α245_247') where: α239 <: (α244_246' -> α245_247')}›  <:  α243_257    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. {(α243_250' -> α245_247') where: α239 <: (α244_246' -> α245_247')}›  <:  α243_250'
+//│ ╟── this constraint:  ‹∀ 0. {(α243_248' -> α245_247') where: α239 <: (α244_246' -> α245_247')}›  <:  α243_255    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. {(α243_248' -> α245_247') where: α239 <: (α244_246' -> α245_247')}›  <:  α243_248'
 //│ res: (nothing -> anything) -> error
 
 // Z combinator:
 // * FIXME simplified type
-:e // due to tapping
+// :e // Works thanks to inconsistent constrained types...
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
-//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. {(α280_291' -> α290_301') where: α268 <: (‹∀ 1. {(α281_296'' -> α283_297'') where: α280_291' <: (α280_291' -> α282_295'')}› -> α290_301')}›  <:  α280_330    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. {(α280_291' -> α290_301') where: α268 <: (‹∀ 1. {(α281_296'' -> α283_297'') where: α280_291' <: (α280_291' -> α282_295'')}› -> α290_301')}›  <:  α280_291'
 //│ res: ((forall 'a, 'b. ('a -> 'b
 //│   where
-//│     'c <: 'c -> 'a -> 'b)) -> anything & ('d -> 'e
-//│   where
-//│     'f <: 'f -> 'd -> 'e) -> anything & (forall 'g, 'h. ('g -> 'h
-//│   where
-//│     'i <: 'i -> 'g -> 'h)) -> anything & (forall 'j, 'k. ('j -> 'k
-//│   where
-//│     'l <: 'l -> 'j -> 'k)) -> anything) -> error
+//│     'c <: 'c -> 'a -> 'b)) -> 'd) -> 'd
 
 // * Function that takes arbitrarily many arguments:
 // * FIXME type of result shouldn't be `nothing`
-:e // due to tapping
+// :e // Works thanks to inconsistent constrained types...
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
-//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. {(α404_415' -> α414_425') where: α392 <: (‹∀ 1. {(α405_420'' -> α407_421'') where: α404_415' <: (α404_415' -> α406_419'')}› -> α414_425')}›  <:  α404_454    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. {(α404_415' -> α414_425') where: α392 <: (‹∀ 1. {(α405_420'' -> α407_421'') where: α404_415' <: (α404_415' -> α406_419'')}› -> α414_425')}›  <:  α404_415'
-//│ res: error
+//│ res: anything -> (forall 'a, 'b. ('a -> 'b
+//│   where
+//│     'c <: 'c -> 'a -> 'b))
 
-// :e // due to tapping
 res 1 2
-//│ res: error
+//│ res: 'a -> 'b
+//│   where
+//│     'c <: 'c -> 'a -> 'b
 
 
 let rec trutru = g => trutru (g true)
@@ -411,8 +396,8 @@ let rec x = (let y = (x x); (z => z))
 //│ ║  l.+1: 	(w => x => x) ((y => y y) (y => y y))
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α800_802' -> α801_803')›  <:  α800_809    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α800_802' -> α801_803')›  <:  α800_802'
+//│ ╟── this constraint:  ‹∀ 0. (α683_685' -> α684_686')›  <:  α683_692    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α683_685' -> α684_686')›  <:  α683_685'
 //│ res: 'a -> 'a
 
 :NoCycleCheck

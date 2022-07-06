@@ -11,18 +11,16 @@ def z f x = x
 // def s n = fun f -> fun x -> (n f x)
 def s n = fun f -> n f
 // def s n = n
-//│ s: (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ s: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
 //│     'a <: 'b -> 'c))
 //│  = [Function: s]
 
 :ns
 s
-//│ res: forall 'a, 'b, 'c, 'd, 'e. 'a -> (forall 'f, 'g. ('f -> 'g
+//│ res: forall 'a. 'a -> (forall 'b, 'c. ('b -> 'c
 //│   where
-//│     'a <: 'f -> 'g))
-//│   where
-//│     'a <: 'd -> 'e & 'b -> 'c
+//│     'a <: 'b -> 'c))
 //│    = [Function: s]
 
 type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -146,13 +144,13 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.144: 	to_church = to_ch
+//│ ║  l.142: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘M_336` is not an instance of type `'M_335`
-//│ ║  l.43: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╟── type `‘M_227` is not an instance of type `'M_226`
+//│ ║  l.41: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                              ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.43: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║  l.41: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ╙──      	                              ^^
 //│          = <no result>
 //│            to_ch, to_church, to_ch, to_church, to_ch and to_church are not implemented
