@@ -334,12 +334,9 @@ self1 = res
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.330: 	self1 = res
 //│ ║         	^^^^^^^^^^^
-//│ ╟── type `‘b_325` is not an instance of type `'b`
+//│ ╟── type `‘b_335` is not an instance of type `'b`
 //│ ║  l.313: 	def self1: ('a -> 'b & 'a) -> 'b
-//│ ║         	                  ^^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.323: 	fun a -> a a
-//│ ╙──       	         ^^^
+//│ ╙──       	                  ^^
 //│      = [Function: res]
 
 r = fun a -> a a

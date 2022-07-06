@@ -22,7 +22,7 @@ class ST[S, A]
 // ============ Type signatures for functions used in the examples ============
 
 def choose x y = if true then x else y
-//│ choose: 'a -> (forall 'a, 'b. ('b -> ('b | 'a)
+//│ choose: 'a -> (forall 'a, 'b. ('b -> 'b
 //│   where
 //│     'a <: 'b))
 
@@ -33,9 +33,9 @@ def auto (x: forall 'a. 'a -> 'a) = x x
 //│ auto: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 
 def app f x = f x
-//│ app: ('a -> 'b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e. (('a & 'd) -> ('e | 'b)
+//│ app: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
-//│     'c <: 'd -> 'e))
+//│     'a <: 'b -> 'c))
 
 def inc: int -> int
 //│ inc: int -> int
@@ -72,18 +72,15 @@ def argST: ST['s, int]
 // This used to be `'a -> (forall 'b. 'b -> 'b | 'a)`, now it's wrong!
 // FreezeML A2
 choose id
-//│ res: 'a -> (forall 'a, 'b. 'b -> 'b | 'a)
+//│ res: 'a -> 'a
 //│   where
-//│     'c <: 'a
+//│     'b <: 'a
 
 fun (g: forall 'a. ('a -> 'a) -> ('a -> 'a)) -> fun (x: forall 'a. 'a -> 'a) -> fun a -> g a (x a)
-//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'b, 'a0, 'a1, 'c, 'd. ((forall 'a2. 'a2 -> 'a2) -> (forall 'b, 'a1, 'c, 'e, 'f, 'g, 'h, 'i, 'j. (('b & 'a1 & 'c & 'f & 'h) -> ('i | 'c)
+//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'b, 'c, 'd, 'e, 'f. ('c -> 'e
 //│   where
-//│     'e <: 'f -> ('g | 'h) -> 'i
-//│     'j <: 'f -> ('a1 & 'c & 'g)))
-//│   where
-//│     'b <: ('a0 | 'a1) -> ('a0 & 'c)
-//│     'd :> ('a0 & 'c) -> ('a0 | 'a1)))
+//│     'b <: 'c -> 'd -> 'e
+//│     'f <: 'c -> 'd))
 
 choose id succ
 //│ res: int -> int
@@ -121,7 +118,7 @@ app auto id
 :e
 let f = choose id in (f auto) (f succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.122: 	let f = choose id in (f auto) (f succ)
+//│ ║  l.119: 	let f = choose id in (f auto) (f succ)
 //│ ║         	                     ^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` is not an instance of type `int`
 //│ ║  l.32: 	def auto (x: forall 'a. 'a -> 'a) = x x
@@ -139,13 +136,13 @@ choose id auto2
 :e // This is a legit error
 res (choose id succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.140: 	res (choose id succ)
+//│ ║  l.137: 	res (choose id succ)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `int -> int` is not an instance of type `int`
-//│ ║  l.140: 	res (choose id succ)
+//│ ║  l.137: 	res (choose id succ)
 //│ ║         	               ^^^^
 //│ ╟── but it flows into application with expected type `int`
-//│ ║  l.140: 	res (choose id succ)
+//│ ║  l.137: 	res (choose id succ)
 //│ ╙──       	     ^^^^^^^^^^^^^^
 //│ res: int -> int | error
 
@@ -192,9 +189,9 @@ let tmp = I I in K K
 //│ res: (42, "foo",)
 
 (fun f -> (f succ, choose f auto)) (choose id)
-//│ res: (forall 'b. (int & 'b) -> (int | 'b), forall 'c. ((forall 'c, 'a. 'a -> 'a & 'c) -> (forall 'b, 'c, 'a. ('b & 'a) -> ('a | 'b) | 'c)
+//│ res: (int -> int, forall 'b. ((forall 'b, 'a. 'a -> 'a & 'b) -> (forall 'b, 'a. 'a -> 'a | 'b)
 //│   where
-//│     'd <: 'c),)
+//│     'c <: 'b),)
 
 // ------------ Sec 2.3.1 ------------
 
@@ -225,12 +222,12 @@ fun z -> omega z
 
 (fun x -> fun y -> x y) omegad
 (fun x -> fun y -> x y) omega
-//│ res: (forall 'a. 'a -> 'a & 'b) -> (forall 'a. 'a -> 'a | 'c)
+//│ res: 'a -> 'b
 //│   where
-//│     'd <: 'b -> 'c
-//│ res: ('a -> 'b & 'c & 'a) -> ('d | 'b)
+//│     'c <: 'a -> 'b
+//│ res: 'a -> 'b
 //│   where
-//│     'e <: 'c -> 'd
+//│     'c <: 'a -> 'b
 
 // ------------ Sec 4.3 ------------
 // affects the order of bindings in the result type in MLF, not very interesting otherwise

@@ -11,20 +11,16 @@ def z f x = x
 // def s n = fun f -> fun x -> (n f x)
 def s n = fun f -> n f
 // def s n = n
-//│ s: ('a -> 'b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e. (('a & 'd) -> ('e | 'b)
+//│ s: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
-//│     'c <: 'd -> 'e))
+//│     'a <: 'b -> 'c))
 //│  = [Function: s]
 
 :ns
 s
-//│ res: forall 'a, 'b, 'c. 'a -> (forall 'd, 'e. ('d -> 'e
+//│ res: forall 'a. 'a -> (forall 'b, 'c. ('b -> 'c
 //│   where
-//│     'a <: 'd -> 'e))
-//│   where
-//│     'e :> 'c
-//│     'd <: 'b
-//│     'a <: 'b -> 'c
+//│     'a <: 'b -> 'c))
 //│    = [Function: s]
 
 type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -73,7 +69,7 @@ def to_ch n =
 //   s (to_church n)
 // def to_ch =
 //   s (to_church 0)
-//│ to_ch: int -> (forall 'a, 'b, 'c, 'M. (('M -> 'M & 'b) -> (forall 'c. 'M -> 'M | 'c)
+//│ to_ch: int -> (forall 'a, 'b, 'c. ('b -> (forall 'c, 'd. 'd -> 'd | 'c)
 //│   where
 //│     'a <: 'b -> 'c))
 //│      = <no result>
@@ -97,20 +93,11 @@ def to_ch n =
 // :e // FIXME?
 :e // skolem extrusion?
 to_church = to_ch
-//│ int -> (forall 'a, 'b, 'c, 'M. (('M -> 'M & 'b) -> (forall 'c. 'M -> 'M | 'c)
+//│ int -> (forall 'a, 'b, 'c. ('b -> (forall 'c, 'd. 'd -> 'd | 'c)
 //│   where
 //│     'a <: 'b -> 'c))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.99: 	to_church = to_ch
-//│ ║        	^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘M_121` is not an instance of type `'M`
-//│ ║  l.45: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ║        	                              ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.45: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ╙──      	                              ^^
 //│          = <no result>
 //│            to_ch and to_church are not implemented
 
@@ -123,7 +110,7 @@ to_church = to_ch
 def to_ch n =
   if true then z
   else s (to_church n)
-//│ to_ch: int -> (forall 'a, 'b, 'c, 'M. (('M -> 'M & 'b) -> (forall 'c. 'M -> 'M | 'c)
+//│ to_ch: int -> (forall 'a, 'b, 'c. ('b -> (forall 'c, 'd. 'd -> 'd | 'c)
 //│   where
 //│     'a <: 'b -> 'c))
 //│      = <no result>
@@ -132,20 +119,11 @@ def to_ch n =
 // :e // FIXME?
 :e // skolem extrusion?
 to_church = to_ch
-//│ int -> (forall 'a, 'b, 'c, 'M. (('M -> 'M & 'b) -> (forall 'c. 'M -> 'M | 'c)
+//│ int -> (forall 'a, 'b, 'c. ('b -> (forall 'c, 'd. 'd -> 'd | 'c)
 //│   where
 //│     'a <: 'b -> 'c))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.134: 	to_church = to_ch
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘M_201` is not an instance of type `'M_198`
-//│ ║  l.45: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ║        	                              ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.45: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ╙──      	                              ^^
 //│          = <no result>
 //│            to_ch, to_church, to_ch and to_church are not implemented
 
@@ -155,24 +133,24 @@ to_church = to_ch
 
 rec def to_ch n =
   s (to_church n)
-//│ to_ch: int -> ('M -> 'M & 'M0 -> 'M0) -> ('M & 'M0) -> ('M | 'M0)
+//│ to_ch: int -> ('M -> 'M) -> 'M -> 'M
 //│      = <no result>
 //│        to_church, to_ch, to_church, to_ch and to_church are not implemented
 
 // :e
 :e // skolem extrusion?
 to_church = to_ch
-//│ int -> ('M -> 'M & 'M0 -> 'M0) -> ('M & 'M0) -> ('M | 'M0)
+//│ int -> ('M -> 'M) -> 'M -> 'M
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.164: 	to_church = to_ch
+//│ ║  l.142: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘M_265` is not an instance of type `'M`
-//│ ║  l.45: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╟── type `‘M_239` is not an instance of type `'M_236`
+//│ ║  l.41: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                              ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.45: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║  l.41: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ╙──      	                              ^^
 //│          = <no result>
 //│            to_ch, to_church, to_ch, to_church, to_ch and to_church are not implemented
@@ -184,12 +162,12 @@ to_church = to_ch
 
 rec def to_ch n =
   s (to_church n)
-//│ to_ch: int -> ('M -> 'M & 'M0 -> 'M0) -> ('M & 'M0) -> ('M | 'M0)
+//│ to_ch: int -> ('M -> 'M) -> 'M -> 'M
 //│      = <no result>
 //│        to_church, to_ch, to_church, to_ch, to_church, to_ch and to_church are not implemented
 
 to_church = to_ch
-//│ int -> ('M -> 'M & 'M0 -> 'M0) -> ('M & 'M0) -> ('M | 'M0)
+//│ int -> ('M -> 'M) -> 'M -> 'M
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│          = <no result>

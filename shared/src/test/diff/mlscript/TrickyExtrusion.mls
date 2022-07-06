@@ -44,47 +44,29 @@ test f =
 test f =
   let r x = f x
   in (r 0, r True)
-//│ test: ((0 | true) -> ('a & 'b) & true -> 'a & 0 -> 'b) -> ('b, 'a,)
+//│ test: (true -> 'a & 0 -> 'b) -> ('b, 'a,)
 //│     = [Function: test2]
 
 :e // FIXME!!!! ^ approx type!
 (test id)._1 + 1
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.51: 	(test id)._1 + 1
-//│ ║        	^^^^^^^^^^^^^^
-//│ ╟── reference of type `true` is not an instance of type `int`
-//│ ║  l.4: 	def True = true
-//│ ║       	           ^^^^
-//│ ╟── but it flows into field selection with expected type `int`
-//│ ║  l.51: 	(test id)._1 + 1
-//│ ╙──      	^^^^^^^^^^^^
-//│ res: error
+//│ res: int
 //│    = NaN
 
 :e // FIXME!!!! ^ approx type!
 not (test id)._2
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.65: 	not (test id)._2
-//│ ║        	^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `bool`
-//│ ║  l.46: 	  in (r 0, r True)
-//│ ║        	        ^
-//│ ╟── but it flows into field selection with expected type `bool`
-//│ ║  l.65: 	not (test id)._2
-//│ ╙──      	    ^^^^^^^^^^^^
-//│ res: error
+//│ res: bool
 //│    = true
 
 :e
 not (test id)._1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.79: 	not (test id)._1
+//│ ║  l.61: 	not (test id)._1
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `0` is not an instance of type `bool`
 //│ ║  l.46: 	  in (r 0, r True)
 //│ ║        	        ^
 //│ ╟── but it flows into field selection with expected type `bool`
-//│ ║  l.79: 	not (test id)._1
+//│ ║  l.61: 	not (test id)._1
 //│ ╙──      	    ^^^^^^^^^^^^
 //│ res: error
 //│    = true
@@ -93,5 +75,5 @@ not (test id)._1
 rec def test f =
   let r x = f x
   in (r 0, r True)
-//│ test: ((0 | true) -> ('a & 'b) & true -> 'a & 0 -> 'b) -> ('b, 'a,)
+//│ test: (true -> 'a & 0 -> 'b) -> ('b, 'a,)
 //│     = [Function: test3]

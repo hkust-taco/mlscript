@@ -187,8 +187,8 @@ x => y => x x y
 //│ ║  l.+1: 	(x => x x) (x => x x)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α221' -> α222')›  <:  α221_226    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α221' -> α222')›  <:  α221'
+//│ ╟── this constraint:  ‹∀ 0. (α221_223' -> α222_224')›  <:  α221_228    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α221_223' -> α222_224')›  <:  α221_223'
 //│ res: error
 
 
@@ -204,45 +204,31 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (x x)) (x => f (x x)))
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. {(α241' -> α243') where: α237 <: (α242' -> α243')}›  <:  α241_252    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. {(α241' -> α243') where: α237 <: (α242' -> α243')}›  <:  α241'
+//│ ╟── this constraint:  ‹∀ 0. {(α243_248' -> α245_247') where: α239 <: (α244_246' -> α245_247')}›  <:  α243_255    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. {(α243_248' -> α245_247') where: α239 <: (α244_246' -> α245_247')}›  <:  α243_248'
 //│ res: (nothing -> anything) -> error
 
 // Z combinator:
 // * FIXME simplified type
 :e // due to tapping
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
-//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. {(α272' -> α279') where: α263 <: (‹∀ 1. {(α273'' -> α275'') where: α272' <: (α272' -> α274'')}› -> α279')}›  <:  α272_297    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. {(α272' -> α279') where: α263 <: (‹∀ 1. {(α273'' -> α275'') where: α272' <: (α272' -> α274'')}› -> α279')}›  <:  α272'
 //│ res: ((forall 'a, 'b. ('a -> 'b
 //│   where
-//│     'c <: 'c -> 'a -> 'b)) -> anything & (forall 'd, 'e. ('d -> 'e
-//│   where
-//│     'f <: 'f -> 'd -> 'e)) -> anything & (forall 'g, 'h. ('g -> 'h
-//│   where
-//│     'i <: 'i -> 'g -> 'h)) -> anything & (forall 'j, 'k. ('j -> 'k
-//│   where
-//│     'l <: 'l -> 'j -> 'k)) -> anything) -> error
+//│     'c <: 'c -> 'a -> 'b)) -> 'd) -> 'd
 
 // * Function that takes arbitrarily many arguments:
 // * FIXME type of result shouldn't be `nothing`
 :e // due to tapping
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
-//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. {(α368' -> α375') where: α359 <: (‹∀ 1. {(α369'' -> α371'') where: α368' <: (α368' -> α370'')}› -> α375')}›  <:  α368_393    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. {(α368' -> α375') where: α359 <: (‹∀ 1. {(α369'' -> α371'') where: α368' <: (α368' -> α370'')}› -> α375')}›  <:  α368'
-//│ res: error
+//│ res: anything -> (forall 'a, 'b. ('a -> 'b
+//│   where
+//│     'c <: 'c -> 'a -> 'b))
 
 // :e // due to tapping
 res 1 2
-//│ res: error
+//│ res: 'a -> 'b
+//│   where
+//│     'c <: 'c -> 'a -> 'b
 
 
 let rec trutru = g => trutru (g true)
@@ -411,8 +397,8 @@ let rec x = (let y = (x x); (z => z))
 //│ ║  l.+1: 	(w => x => x) ((y => y y) (y => y y))
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α721' -> α722')›  <:  α721_728    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α721' -> α722')›  <:  α721'
+//│ ╟── this constraint:  ‹∀ 0. (α683_685' -> α684_686')›  <:  α683_692    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α683_685' -> α684_686')›  <:  α683_685'
 //│ res: 'a -> 'a
 
 :NoCycleCheck

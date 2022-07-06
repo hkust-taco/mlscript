@@ -197,9 +197,9 @@ build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 
 
 def build_ = fun g -> g (fun x -> fun xs -> cons (x, xs)) nil
-//│ build_: ((forall 'a. 'a -> (forall 'a, 'a0. (Ls['a0] -> Ls['a0 | 'a]
+//│ build_: ((forall 'b. 'b -> (forall 'b, 'a. (Ls['a] -> Ls['a]
 //│   where
-//│     'a <: 'a0))) -> Ls[nothing] -> 'b) -> 'b
+//│     'b <: 'a))) -> Ls[nothing] -> 'c) -> 'c
 //│       = [Function: build_]
 
 build_ (fun c -> fun n -> n)
@@ -239,38 +239,36 @@ def b: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 //│  = <missing implementation>
 
 b = build_
-//│ ((forall 'a. 'a -> (forall 'a, 'a0. (Ls['a0] -> Ls['a0 | 'a]
+//│ ((forall 'b. 'b -> (forall 'b, 'a. (Ls['a] -> Ls['a]
 //│   where
-//│     'a <: 'a0))) -> Ls[nothing] -> 'b) -> 'b
+//│     'b <: 'a))) -> Ls[nothing] -> 'c) -> 'c
 //│   <:  b:
 //│ (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 //│  = [Function: build_]
 
 b g = build_ g
-//│ ((forall 'a. 'a -> (forall 'a, 'a0. (Ls['a0] -> Ls['a0 | 'a]
+//│ ((forall 'b. 'b -> (forall 'b, 'a. (Ls['a] -> Ls['a]
 //│   where
-//│     'a <: 'a0))) -> Ls[nothing] -> 'b) -> 'b
+//│     'b <: 'a))) -> Ls[nothing] -> 'c) -> 'c
 //│   <:  b:
 //│ (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 //│  = [Function: b1]
 
 b g = build_ (fun x -> g x)
-//│ ((forall 'a. 'a -> (forall 'a, 'a0. (Ls['a0] -> Ls['a0 | 'a]
+//│ ((forall 'b. 'b -> (forall 'b, 'a. (Ls['a] -> Ls['a]
 //│   where
-//│     'a <: 'a0))) -> Ls[nothing] -> 'b) -> 'b
+//│     'b <: 'a))) -> Ls[nothing] -> 'c) -> 'c
 //│   <:  b:
 //│ (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 //│  = [Function: b2]
 
 :e
 b g x = build_ g x
-//│ ((forall 'a. 'a -> (forall 'a, 'a0. (Ls['a0] -> Ls['a0 | 'a]
+//│ 'b -> (forall 'b. ('c -> 'd
 //│   where
-//│     'a <: 'a0))) -> Ls[nothing] -> 'b -> 'c & 'd) -> (forall 'd. (('b & 'e) -> ('f | 'c)
+//│     'b <: (forall 'e. 'e -> (forall 'e, 'a. (Ls['a] -> Ls['a]
 //│   where
-//│     'd <: (forall 'a. 'a -> (forall 'a, 'a0. (Ls['a0] -> Ls['a0 | 'a]
-//│   where
-//│     'a <: 'a0))) -> Ls[nothing] -> 'e -> 'f))
+//│     'e <: 'a))) -> Ls[nothing] -> 'c -> 'd))
 //│   <:  b:
 //│ (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 //│ ╔══[ERROR] Type mismatch in def definition:

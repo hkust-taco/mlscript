@@ -93,7 +93,7 @@ rec def fl f x l = match_list l x (fun head -> fun tail -> fl f (f x head) tail)
 //│ fl: ('b -> 'a -> 'b) -> 'b -> List['a] -> 'b
 
 rec def fl2 f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
-//│ fl2: ('a -> 'b -> ('a & 'a0) & 'c -> 'b -> ('a & 'a0) & ('a0 | 'a1) -> 'b -> ('a1 & 'a) & 'c -> 'b -> ('a1 & 'a)) -> (forall 'd. ('c & 'd) -> List['b] -> ('a | 'd))
+//│ fl2: ('c -> 'b -> 'a & 'a -> 'b -> 'a) -> (forall 'd. ('c & 'd) -> List['b] -> ('d | 'a))
 
 :RecursiveTypes // needed for this recursive def
 def fold_left = fl
@@ -104,7 +104,7 @@ def fold_left = fl
 
 // :e // FIXME? refreshing-extr
 def fold_left = fl2
-//│ ('a -> 'b -> ('a & 'a0) & 'c -> 'b -> ('a & 'a0) & ('a0 | 'a1) -> 'b -> ('a1 & 'a) & 'c -> 'b -> ('a1 & 'a)) -> (forall 'd. ('c & 'd) -> List['b] -> ('a | 'd))
+//│ ('c -> 'b -> 'a & 'a -> 'b -> 'a) -> (forall 'd. ('c & 'd) -> List['b] -> ('d | 'a))
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 
@@ -118,12 +118,12 @@ class Collection[a]: { l: List[a] }
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
 //│ Defined Collection.Mem: Collection[?] -> anything -> bool
-//│ Defined Collection.Fold: Collection['a] -> (forall 'a0, 'a1, 'b. ('a0 -> 'a -> ('a0 & 'a1) & 'b) -> (forall 'a, 'a0, 'a1, 'b, 'a2. (('a0 & 'a2) -> ('a2 | 'a1)
+//│ Defined Collection.Fold: Collection['a] -> (forall 'b. 'b -> (forall 'a, 'b, 'a0. ('a0 -> 'a0
 //│   where
-//│     'b <: ('a2 | 'a1) -> 'a -> ('a0 & 'a2))))
+//│     'b <: 'a0 -> 'a -> 'a0)))
 
 def coll_mem c x = c.Mem x
-//│ coll_mem: (Collection['a] & 'a) -> (forall 'a. ('a -> bool
+//│ coll_mem: 'a -> (forall 'a. ('a -> bool
 //│   where
 //│     'a <: Collection['a]))
 
@@ -133,31 +133,10 @@ def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> cons x y) nil in
   let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
   (l1, l2)
-//│ ╔══[ERROR] Subtyping constraint of the form `?b <: (forall ?a. List[?a]) -> ?c` took too many steps and ran out of fuel (5000)
-//│ ║  l.134: 	  let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
-//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟──  + (α738_767''', α738_767''',)
-//│ ║  l.134: 	  let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
-//│ ║         	                                           ^^^^^^
-//│ ╟──  + (α738_767''', α738_767''',)
-//│ ║  l.134: 	  let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
-//│ ║         	                                           ^^^^^^
-//│ ╟──  + (α738_767''', α738_767''',)
-//│ ║  l.134: 	  let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
-//│ ║         	                                           ^^^^^^
-//│ ╟──  + (α738_767''', α738_767''',)
-//│ ║  l.134: 	  let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
-//│ ║         	                                           ^^^^^^
-//│ ╟──  + (α738_767''', α738_767''',)
-//│ ║  l.134: 	  let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
-//│ ║         	                                           ^^^^^^
-//│ ╟──  + α742_778'''
-//│ ╟──  + α137_782'''
-//│ ╙──  - α742_766'''
-//│ simple_and_double: Collection[?] -> (List[nothing], error,)
+//│ simple_and_double: Collection[?] -> (List[nothing], List[(nothing, nothing,)],)
 
 simple_and_double (Collection{l = cons 1 nil})
-//│ res: (List[nothing], error,)
+//│ res: (List[nothing], List[(nothing, nothing,)],)
 
 // ------------ subtyping & methods ------------
 

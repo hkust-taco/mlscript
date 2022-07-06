@@ -344,7 +344,7 @@ prettier12 done (eval1 done) e1
 //│    = '123'
 //│ res: string
 //│    = '123'
-//│ constrain calls  : 1402
+//│ constrain calls  : 1403
 //│ annoying  calls  : 490
 //│ subtyping calls  : 1861
 
@@ -419,9 +419,9 @@ rec def prettier22 k ev = prettier12 (fun x -> case x of {
 //│     'e <: Nega[?] & {arg: 'c} | 'a & ~nega
 //│     'c <: Add[?] & 'b | Lit | 'e & ~add & ~lit
 //│           = [Function: prettier22]
-//│ constrain calls  : 176
+//│ constrain calls  : 177
 //│ annoying  calls  : 0
-//│ subtyping calls  : 283
+//│ subtyping calls  : 282
 
 
 
@@ -539,7 +539,7 @@ prettier22 done (eval2 done) d2
 //│    = '-1'
 //│ constrain calls  : 1168
 //│ annoying  calls  : 390
-//│ subtyping calls  : 1774
+//│ subtyping calls  : 1773
 
 
 

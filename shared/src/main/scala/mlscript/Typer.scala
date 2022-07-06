@@ -98,14 +98,22 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     def poly(k: Ctx => ST)(implicit raise: Raise, prov: TP, shadows: Shadows=Shadows.empty): ST = {
       nextLevel { newCtx =>
         val innerTy = k(newCtx)
+        implicit val ctx: Ctx = newCtx
+        implicit val freshened: MutMap[TV, ST] = MutMap.empty
         // assert(newCtx.extrCtx.isEmpty) // TODO
         val poly = PolymorphicType.mk(lvl,
           // ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy)
           ConstrainedType.mk(newCtx.extrCtx.iterator.mapValues(_.iterator
             .filter(_._2.level > lvl) // does not seem to change anything!
             .toList).toList, innerTy)
+            .freshenAbove(lvl, false)
           // innerTy
         )
+        newCtx.extrCtx.valuesIterator.foreach { buff =>
+          val filtered = buff.filter(_._2.level <= lvl)
+          buff.clear()
+          filtered ++= filtered
+        }
         // newCtx.extrCtx.clear()
         poly
       }

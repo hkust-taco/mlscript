@@ -50,8 +50,8 @@ self self
 //│ ║  l.48: 	self self
 //│ ║        	^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α97' -> α98')›  <:  α97_108    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α97' -> α98')›  <:  α97'
+//│ ╟── this constraint:  ‹∀ 0. (α98' -> α99')›  <:  α98_109    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α98' -> α99')›  <:  α98'
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded

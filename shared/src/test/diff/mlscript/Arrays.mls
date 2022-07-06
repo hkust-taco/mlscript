@@ -65,8 +65,8 @@ ty3A = ty3A
 //│ ║  l.+1: 	ty3A = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a95'››  <:  'a95_106'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a95'››  <:  'a95'
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a100_101'››  <:  'a100_112'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a100_101'››  <:  'a100_101'
 //│ constrain calls  : 17
 //│ annoying  calls  : 17
 //│ subtyping calls  : 26
@@ -90,8 +90,8 @@ ty3B = ty3A
 //│ ║  l.+1: 	ty3B = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a107_117']  <:  'a95_120'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a95'
+//│ ╟── this constraint:  MyArray['a113_124']  <:  'a100_127'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a113_114']  <:  'a100_101'
 //│ constrain calls  : 57
 //│ annoying  calls  : 52
 //│ subtyping calls  : 63
@@ -110,8 +110,8 @@ ty3A = ty3B
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a107_130']  <:  'a107_128'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
+//│ ╟── this constraint:  MyArray['a113_137']  <:  'a113_135'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a113_114']  <:  'a113_114'
 //│ constrain calls  : 53
 //│ annoying  calls  : 33
 //│ subtyping calls  : 57
@@ -135,8 +135,8 @@ ty4B = ty4B
 //│ ║  l.+1: 	ty4B = ty4B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a131'››  <:  'a131_142'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a131'››  <:  'a131'
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a138_139'››  <:  'a138_150'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a138_139'››  <:  'a138_139'
 //│ constrain calls  : 19
 //│ annoying  calls  : 17
 //│ subtyping calls  : 26

@@ -13,9 +13,9 @@ type Two[A] = (A, A)
 //│ Defined type alias Two[+A]
 
 def mapTwo f ((a, b)) = (f a, f b)
-//│ mapTwo: ('a -> 'b & 'c -> 'd & 'e) -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i. (('c & 'f, 'a & 'h,) -> ('g | 'd, 'i | 'b,)
+//│ mapTwo: 'a -> (forall 'a, 'b, 'c, 'd, 'e. (('b, 'd,) -> ('c, 'e,)
 //│   where
-//│     'e <: 'f -> 'g & 'h -> 'i))
+//│     'a <: 'b -> 'c & 'd -> 'e))
 //│       = [Function: mapTwo]
 
 class Leaf[A]: { value: A }
@@ -76,8 +76,8 @@ rec def map f tree = case tree of {
 //│ ║  l.68: 	  }
 //│ ║        	^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α23_131'  <:  ((α24_150',) -> α26_151')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α23_131'  <:  ((α24_136''',) -> α26_137''')
+//│ ╟── this constraint:  α23_124'  <:  ((α24_139',) -> α26_140')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α23_124'  <:  ((α24_125''',) -> α26_126''')
 //│ map: (nothing -> anything & 'value -> 'value0) -> ((Leaf[?] with {value: 'value}) | Node[?]) -> (Leaf['value0] | Node[nothing] & {subTree: nothing})
 //│    = [Function: map]
 
@@ -94,9 +94,9 @@ def map f tree = case tree of {
   | Leaf -> Leaf { value = f tree.value }
   | Node -> Node { subTree = map (mapTwo f) tree.subTree }
   }
-//│ (nothing -> 'a & 'value -> 'value0 & 'a) -> (forall 'a, 'value, 'value0, 'value1, 'value2. (((Leaf['a] with {value: 'value & 'value1}) | (Node['a] with {subTree: PerfectTree[('a, 'a,)]})) -> (Leaf['value0 | 'value2] | (Node[nothing] with {subTree: PerfectTree[(nothing, nothing,)]}))
+//│ 'a -> (forall 'a, 'value, 'value0. (((Leaf['a] with {value: 'value}) | (Node['a] with {subTree: PerfectTree[('a, 'a,)]})) -> (Leaf['value0] | (Node[nothing] with {subTree: PerfectTree[(nothing, nothing,)]}))
 //│   where
-//│     'a <: 'value1 -> 'value2 & nothing -> 'a))
+//│     'a <: 'value -> 'value0 & 'a))
 //│   <:  map:
 //│ ('a -> 'b) -> PerfectTree['a] -> PerfectTree['b]
 //│    = <no result>

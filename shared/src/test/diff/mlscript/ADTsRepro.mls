@@ -15,8 +15,8 @@ e2 : Add['e] as 'e
 //│ ║  l.13: 	e2 : Add['e] as 'e
 //│ ║        	^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. 'e23'›  <:  'e23_29    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. 'e23'›  <:  'e23'
+//│ ╟── this constraint:  ‹∀ 0. 'e23_24'›  <:  'e23_30    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. 'e23_24'›  <:  'e23_24'
 //│ res: 'e
 //│   where
 //│     'e :> forall 'e0. 'e0 | error | Add['e]
@@ -50,8 +50,8 @@ f0 = f0
 //│ ║  l.41: 	f0 = f0
 //│ ║        	^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a42'››  <:  'a42_53'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a42'››  <:  'a42'
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a43_44'››  <:  'a43_55'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a43_44'››  <:  'a43_44'
 //│   = <no result>
 //│     f0 is not implemented
 

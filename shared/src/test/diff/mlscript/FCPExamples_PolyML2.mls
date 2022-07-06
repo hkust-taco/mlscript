@@ -18,9 +18,9 @@ def Nil = Nil {}
 //│ Nil: Nil
 
 def Cons head tail = Cons { head; tail }
-//│ Cons: 'head -> (forall 'head, 'head0, 'a, 'tail. ((List['a] & 'tail) -> (Cons['a | 'head] with {head: 'head0 | 'head, tail: 'tail})
+//│ Cons: 'b -> (forall 'b, 'head, 'a, 'tail. ((List['a] & 'tail) -> (Cons['a] with {head: 'head, tail: 'tail})
 //│   where
-//│     'head <: 'head0 & 'a))
+//│     'b <: 'head & 'a))
 
 // ------------ Type signatures for functions used in the examples ------------
 // (I guess)
@@ -50,12 +50,12 @@ class Collection[a]: { l: List[a] }
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
 //│ Defined Collection.Mem: Collection[?] -> anything -> bool
-//│ Defined Collection.Fold: Collection['a] -> (forall 'b, 'c, 'd. ('b -> 'a -> ('b & 'c) & 'd) -> (forall 'a, 'b, 'c, 'd, 'e. (('b & 'e) -> ('c | 'e)
+//│ Defined Collection.Fold: Collection['a] -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c -> 'c
 //│   where
-//│     'd <: ('c | 'e) -> 'a -> ('b & 'e))))
+//│     'b <: 'c -> 'a -> 'c)))
 
 def coll_mem c x = c.Mem x
-//│ coll_mem: (Collection['a] & 'a) -> (forall 'a. ('a -> bool
+//│ coll_mem: 'a -> (forall 'a. ('a -> bool
 //│   where
 //│     'a <: Collection['a]))
 
@@ -65,7 +65,7 @@ def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
   let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
   (l1, l2)
-//│ simple_and_double: Collection[?] -> (forall 'a. 'a, forall 'b. 'b,)
+//│ simple_and_double: Collection[?] -> (forall 'tail. 'tail, forall 'tail0. 'tail0,)
 //│   where
-//│     'b :> (Cons[(nothing, nothing,)] with {tail: 'b}) | Nil
-//│     'a :> (Cons[nothing] with {tail: 'a}) | Nil
+//│     'tail0 :> (Cons[(nothing, nothing,)] with {tail: 'tail0}) | Nil
+//│     'tail :> (Cons[nothing] with {tail: 'tail}) | Nil
