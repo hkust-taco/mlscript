@@ -11,16 +11,18 @@ def z f x = x
 // def s n = fun f -> fun x -> (n f x)
 def s n = fun f -> n f
 // def s n = n
-//│ s: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ s: (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
 //│     'a <: 'b -> 'c))
 //│  = [Function: s]
 
 :ns
 s
-//│ res: forall 'a. 'a -> (forall 'b, 'c. ('b -> 'c
+//│ res: forall 'a, 'b, 'c, 'd, 'e. 'a -> (forall 'f, 'g. ('f -> 'g
 //│   where
-//│     'a <: 'b -> 'c))
+//│     'a <: 'f -> 'g))
+//│   where
+//│     'a <: 'd -> 'e & 'b -> 'c
 //│    = [Function: s]
 
 type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -91,7 +93,7 @@ def to_ch n =
 // :DistributeForalls
 // :d
 // :e // FIXME?
-:e // skolem extrusion?
+// :e // skolem extrusion?
 to_church = to_ch
 //│ int -> (forall 'a, 'b, 'c. ('b -> (forall 'c, 'd. 'd -> 'd | 'c)
 //│   where
@@ -117,7 +119,7 @@ def to_ch n =
 //│        to_church, to_ch and to_church are not implemented
 
 // :e // FIXME?
-:e // skolem extrusion?
+// :e // skolem extrusion?
 to_church = to_ch
 //│ int -> (forall 'a, 'b, 'c. ('b -> (forall 'c, 'd. 'd -> 'd | 'c)
 //│   where
@@ -144,13 +146,13 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.142: 	to_church = to_ch
+//│ ║  l.144: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘M_239` is not an instance of type `'M_236`
-//│ ║  l.41: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╟── type `‘M_348` is not an instance of type `'M_345`
+//│ ║  l.43: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                              ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.41: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║  l.43: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ╙──      	                              ^^
 //│          = <no result>
 //│            to_ch, to_church, to_ch, to_church, to_ch and to_church are not implemented

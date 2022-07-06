@@ -1200,6 +1200,17 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           // }}
         }()
         */
+        val c = ctx
+        trace(s"COPYING CONSTRAINTS   (${cs.mkString(", ")})") {
+          implicit val p: TP = NoProv
+          cs2.foreach { case (tv, bs) =>
+            implicit val ctx: Ctx = c.copy(lvl = tv.level)
+            bs.foreach {
+              case (true, b) => constrainImpl(b.freshenAbove(lvl, false), tv)
+              case (false, b) => constrainImpl(tv, b.freshenAbove(lvl, false))
+            }
+          }
+        }()
         ConstrainedType(cs2, freshen(bod))
       case o @ Overload(alts) => Overload(alts.map(freshen(_).asInstanceOf[FunctionType]))(o.prov)
     }}

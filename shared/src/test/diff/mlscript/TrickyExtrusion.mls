@@ -44,15 +44,15 @@ test f =
 test f =
   let r x = f x
   in (r 0, r True)
-//│ test: (true -> 'a & 0 -> 'b) -> ('b, 'a,)
+//│ test: (nothing -> anything & 0 -> 'a & true -> 'b) -> ('a, 'b,)
 //│     = [Function: test2]
 
-:e // FIXME!!!! ^ approx type!
+// :e // FIXME!!!! ^ approx type!
 (test id)._1 + 1
 //│ res: int
 //│    = NaN
 
-:e // FIXME!!!! ^ approx type!
+// :e // FIXME!!!! ^ approx type!
 not (test id)._2
 //│ res: bool
 //│    = true
@@ -75,5 +75,5 @@ not (test id)._1
 rec def test f =
   let r x = f x
   in (r 0, r True)
-//│ test: (true -> 'a & 0 -> 'b) -> ('b, 'a,)
+//│ test: (nothing -> anything & 0 -> 'a & true -> 'b) -> ('a, 'b,)
 //│     = [Function: test3]

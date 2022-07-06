@@ -115,7 +115,7 @@ fun x -> fun y -> ((x : S1), (y : S2), x x)
 //│   where
 //│     'a <: 'b))
 //│    = [Function: res]
-//│ res: (S1 & 'a) -> (forall 'a, 'b. (S2 -> (S1, S2, 'b,)
+//│ res: (S1 & 'a -> anything & 'a) -> (forall 'a, 'b. (S2 -> (S1, S2, 'b,)
 //│   where
 //│     'a <: 'a -> 'b))
 //│    = [Function: res]
@@ -141,7 +141,7 @@ def mkpair x y = (x, y)
 // *)
 example mkpair
 example_ mkpair
-//│ res: int -> (‘a_498, int,)
+//│ res: int -> (‘a_1306, int,)
 //│    = [Function (anonymous)]
 //│ res: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('b, 'c,)), 'a,)
 //│    = [Function (anonymous)]

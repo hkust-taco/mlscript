@@ -16,7 +16,7 @@ type Two[A] = (A, A)
 //│ Defined type alias Two[+A]
 
 def mapTwo f ((a, b)) = (f a, f b)
-//│ mapTwo: 'a -> (forall 'a, 'b, 'c, 'd, 'e. (('b, 'd,) -> ('c, 'e,)
+//│ mapTwo: (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c, 'd, 'e. (('b, 'd,) -> ('c, 'e,)
 //│   where
 //│     'a <: 'b -> 'c & 'd -> 'e))
 //│       = [Function: mapTwo]
@@ -73,11 +73,13 @@ d1: HTreeBase[Z, int]
 //│    = DLeaf { n: Z {}, value: 1 }
 
 d1_ k = k d1
-d1_ : HTree[Z, int]
 //│ d1_: (DLeaf[1] -> 'a) -> 'a
 //│    = [Function: d1_]
+
+:e // fails after new-refreshing-extrusion
+d1_ : HTree[Z, int]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.76: 	d1_ : HTree[Z, int]
+//│ ║  l.80: 	d1_ : HTree[Z, int]
 //│ ║        	^^^
 //│ ╟── integer literal of type `1` is not an instance of type `A`
 //│ ║  l.68: 	d1 = DLeaf { value = 1; n = Z{} }
@@ -91,7 +93,7 @@ d1_ : HTree[Z, int]
 // FIXME
 d2 = DNode { subTree = (d1_, d1_); n = S{} }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.92: 	d2 = DNode { subTree = (d1_, d1_); n = S{} }
+//│ ║  l.94: 	d2 = DNode { subTree = (d1_, d1_); n = S{} }
 //│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `A`
 //│ ║  l.68: 	d1 = DLeaf { value = 1; n = Z{} }
@@ -127,7 +129,7 @@ d2_ k = k d2
 // FIXME
 d2_ : HTree[S[Z], int]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.128: 	d2_ : HTree[S[Z], int]
+//│ ║  l.130: 	d2_ : HTree[S[Z], int]
 //│ ║         	^^^
 //│ ╟── type `S[?p]` is not an instance of type `N`
 //│ ║  l.40: 	type HTree[N, A] = forall 'r. (forall 'p. (DLeaf[A] | DNode[S['p], A] & DNode[N, A]) -> 'r) -> 'r
@@ -146,10 +148,10 @@ d2_ : HTree[S[Z], int]
 //│    = <no result>
 //│      d2 and d1_ty are not implemented
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.144: 	d2_ : HTree[S[Z], int]
+//│ ║  l.146: 	d2_ : HTree[S[Z], int]
 //│ ║         	^^^
 //│ ╟── type `HTreeBase[S[Z], ?]` does not match type `DLeaf[A] | DNode[in S[?p] | N out S[?p] & N, ?]`
-//│ ║  l.143: 	d2_ k = k (d2:HTreeBase[S[Z], int])
+//│ ║  l.145: 	d2_ k = k (d2:HTreeBase[S[Z], int])
 //│ ║         	              ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.40: 	type HTree[N, A] = forall 'r. (forall 'p. (DLeaf[A] | DNode[S['p], A] & DNode[N, A]) -> 'r) -> 'r

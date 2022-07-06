@@ -11,10 +11,10 @@ def s n = fun f -> fun x -> f (n f x)
 // def s n = fun f -> fun x -> (n f x)
 // def s n = fun f -> n f
 // def s n = n
-//│ s: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ s: (nothing -> nothing -> 'a & nothing -> nothing -> 'b & nothing -> nothing -> 'c & 'd) -> (forall 'e. ('a -> 'd & 'b -> 'd & 'c -> 'd & 'e) -> (forall 'd, 'e, 'f, 'g, 'h. ('f -> 'h
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e)))
+//│     'd <: 'e -> 'f -> 'g
+//│     'e <: 'g -> 'h)))
 //│  = [Function: s]
 
 def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -26,39 +26,39 @@ def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M
 // :ns
 // :e // * Used to need distrib (see below)
 // :d
-:e // skolem extrusion?
+// :e // skolem extrusion?
 succ = s
-//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ (nothing -> nothing -> 'a & nothing -> nothing -> 'b & nothing -> nothing -> 'c & 'd) -> (forall 'e. ('a -> 'd & 'b -> 'd & 'c -> 'd & 'e) -> (forall 'd, 'e, 'f, 'g, 'h. ('f -> 'h
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e)))
+//│     'd <: 'e -> 'f -> 'g
+//│     'e <: 'g -> 'h)))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: s]
 
 def s n = fun f -> fun x -> (n f x)
-//│ s: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('c -> 'd
+//│ s: (nothing -> nothing -> 'a & 'a) -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('c -> 'd
 //│   where
 //│     'a <: 'b -> 'c -> 'd)))
 //│  = [Function: s1]
 
-:e // skolem extrusion?
+// :e // skolem extrusion?
 succ = s
-//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('c -> 'd
+//│ (nothing -> nothing -> 'a & 'a) -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('c -> 'd
 //│   where
 //│     'a <: 'b -> 'c -> 'd)))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: s1]
 
-:e // skolem extrusion?
+// :e // skolem extrusion?
 def s n = fun f -> n f
 succ = s
-//│ s: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ s: (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
 //│     'a <: 'b -> 'c))
 //│  = [Function: s2]
-//│ 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
 //│     'a <: 'b -> 'c))
 //│   <:  succ:
@@ -81,7 +81,7 @@ succ = s
 
 // :d
 def s n = fun f -> n f
-//│ s: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ s: (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
 //│     'a <: 'b -> 'c))
 //│  = [Function: s4]
@@ -96,11 +96,11 @@ def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
 // :ns
 // :e // * Needs distrib (see below)
 // :d
-:e // skolem extrusion?
+// :e // skolem extrusion?
 succ_min = s
 // succ n = s n
 // s id : (forall 'M. ('M -> 'M))
-//│ 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
 //│     'a <: 'b -> 'c))
 //│   <:  succ_min:

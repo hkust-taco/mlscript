@@ -93,7 +93,7 @@ rec def fl f x l = match_list l x (fun head -> fun tail -> fl f (f x head) tail)
 //│ fl: ('b -> 'a -> 'b) -> 'b -> List['a] -> 'b
 
 rec def fl2 f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
-//│ fl2: ('c -> 'b -> 'a & 'a -> 'b -> 'a) -> (forall 'd. ('c & 'd) -> List['b] -> ('d | 'a))
+//│ fl2: ('a -> nothing -> 'a & nothing -> nothing -> 'a & 'a0 -> nothing -> 'a0 & nothing -> nothing -> 'a0 & 'a1 -> nothing -> 'a1 & nothing -> nothing -> 'a1 & 'a2 -> nothing -> 'a2 & nothing -> nothing -> 'a2 & 'a3 -> nothing -> 'a3 & nothing -> nothing -> 'a3 & 'a4 -> nothing -> 'a4 & nothing -> nothing -> 'a4 & 'a5 -> nothing -> 'a5 & nothing -> nothing -> 'a5 & 'c -> 'b -> 'a6 & 'a6 -> 'b -> 'a6) -> (forall 'd. ('c & 'd) -> List['b] -> ('d | 'a6))
 
 :RecursiveTypes // needed for this recursive def
 def fold_left = fl
@@ -104,7 +104,7 @@ def fold_left = fl
 
 // :e // FIXME? refreshing-extr
 def fold_left = fl2
-//│ ('c -> 'b -> 'a & 'a -> 'b -> 'a) -> (forall 'd. ('c & 'd) -> List['b] -> ('d | 'a))
+//│ ('a -> nothing -> 'a & nothing -> nothing -> 'a & 'a0 -> nothing -> 'a0 & nothing -> nothing -> 'a0 & 'a1 -> nothing -> 'a1 & nothing -> nothing -> 'a1 & 'a2 -> nothing -> 'a2 & nothing -> nothing -> 'a2 & 'a3 -> nothing -> 'a3 & nothing -> nothing -> 'a3 & 'a4 -> nothing -> 'a4 & nothing -> nothing -> 'a4 & 'a5 -> nothing -> 'a5 & nothing -> nothing -> 'a5 & 'c -> 'b -> 'a6 & 'a6 -> 'b -> 'a6) -> (forall 'd. ('c & 'd) -> List['b] -> ('d | 'a6))
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 
@@ -118,12 +118,12 @@ class Collection[a]: { l: List[a] }
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
 //│ Defined Collection.Mem: Collection[?] -> anything -> bool
-//│ Defined Collection.Fold: Collection['a] -> (forall 'b. 'b -> (forall 'a, 'b, 'a0. ('a0 -> 'a0
+//│ Defined Collection.Fold: Collection['a] -> (forall 'a0, 'a1, 'b. ('a0 -> 'a -> 'a0 & 'a1 -> 'a -> 'a1 & 'b) -> (forall 'a, 'b, 'a2. ('a2 -> 'a2
 //│   where
-//│     'b <: 'a0 -> 'a -> 'a0)))
+//│     'b <: 'a2 -> 'a -> 'a2)))
 
 def coll_mem c x = c.Mem x
-//│ coll_mem: 'a -> (forall 'a. ('a -> bool
+//│ coll_mem: (Collection['a] & 'a) -> (forall 'a. ('a -> bool
 //│   where
 //│     'a <: Collection['a]))
 
@@ -133,10 +133,35 @@ def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> cons x y) nil in
   let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
   (l1, l2)
-//│ simple_and_double: Collection[?] -> (List[nothing], List[(nothing, nothing,)],)
+//│ ╔══[ERROR] Subtyping constraint of the form `?b <: (forall ?a. List[?a]) -> ?c` took too many steps and ran out of fuel (5000)
+//│ ║  l.134: 	  let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + (α1165_1255''', α1165_1255''',)
+//│ ║  l.134: 	  let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
+//│ ║         	                                           ^^^^^^
+//│ ╟──  + (α1165_1255''', α1165_1255''',)
+//│ ║  l.134: 	  let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
+//│ ║         	                                           ^^^^^^
+//│ ╟──  + (α1165_1255''', α1165_1255''',)
+//│ ║  l.134: 	  let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
+//│ ║         	                                           ^^^^^^
+//│ ╟──  + (α1165_1255''', α1165_1255''',)
+//│ ║  l.134: 	  let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
+//│ ║         	                                           ^^^^^^
+//│ ╟──  + (α1165_1255''', α1165_1255''',)
+//│ ║  l.134: 	  let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
+//│ ║         	                                           ^^^^^^
+//│ ╟──  + (α1165_1255''', α1165_1255''',)
+//│ ║  l.134: 	  let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
+//│ ║         	                                           ^^^^^^
+//│ ╟──  + α167_1327'''
+//│ ╟──  - α167_1327'''
+//│ ╟──  - α167_1313'''
+//│ ╙──  - α167_1254'''
+//│ simple_and_double: Collection[?] -> (List[nothing], error,)
 
 simple_and_double (Collection{l = cons 1 nil})
-//│ res: (List[nothing], List[(nothing, nothing,)],)
+//│ res: (List[nothing], error,)
 
 // ------------ subtyping & methods ------------
 

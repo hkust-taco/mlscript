@@ -33,7 +33,7 @@ def church_zero = fun f -> id
 // (* church_un is like apply *)
 // let church_one = fun f x -> f x
 def church_one = fun f -> fun x -> f x
-//│ church_one: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ church_one: (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
 //│     'a <: 'b -> 'c))
 //│           = [Function: church_one]
@@ -41,17 +41,17 @@ def church_one = fun f -> fun x -> f x
 // (* church_un is like apply_twice *)
 // let church_two = fun f x -> f (f x)
 def church_two = fun f -> fun x -> f (f x)
-//│ church_two: 'a -> (forall 'a, 'b, 'c, 'd. ('b -> 'd
+//│ church_two: (nothing -> 'a & 'a -> 'b & 'c -> 'b & nothing -> 'c & 'b) -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
 //│   where
-//│     'a <: 'b -> 'c & 'c -> 'd))
+//│     'b <: 'd -> 'e & 'e -> 'f))
 //│           = [Function: church_two]
 
 // let church_succ n = fun f x -> f (n f x)
 def church_succ n = fun f -> fun x -> f (n f x)
-//│ church_succ: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ church_succ: (nothing -> nothing -> 'a & nothing -> nothing -> 'b & nothing -> nothing -> 'c & 'd) -> (forall 'e. ('a -> 'd & 'b -> 'd & 'c -> 'd & 'e) -> (forall 'd, 'e, 'f, 'g, 'h. ('f -> 'h
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e)))
+//│     'd <: 'e -> 'f -> 'g
+//│     'e <: 'g -> 'h)))
 //│            = [Function: church_succ]
 
 // (* We build the a0 of the icfp version paper *)
@@ -80,35 +80,37 @@ def a0_ = a2_ a1
 //│ Defined type alias A1
 //│ a1: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
 //│   = [Function: a1]
-//│ a3: 'a -> (forall 'a. ('b -> 'c
+//│ a3: ((forall 'a, 'b, 'c. (nothing -> 'a & 'a -> 'b & 'c -> 'b & nothing -> 'c & 'b) -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
 //│   where
-//│     'a <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'b & 'g) -> (forall 'g. ('b -> 'h
 //│   where
-//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'c))
+//│     'g <: (forall 'a, 'b, 'c. (nothing -> 'a & 'a -> 'b & 'c -> 'b & nothing -> 'c & 'b) -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│   where
+//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'h))
 //│   = [Function: a3]
 //│ a2: A1 -> (forall 'a. ('b -> 'c
 //│   where
-//│     'a <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│     'a <: (forall 'd, 'b, 'e. (nothing -> 'd & 'd -> 'b & 'e -> 'b & nothing -> 'e & 'b) -> (forall 'b, 'f, 'g, 'h. ('f -> 'h
 //│   where
-//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'c))
+//│     'b <: 'f -> 'g & 'g -> 'h))) -> 'c))
 //│   = [Function: a2]
 //│ a2_: A1 -> (forall 'a. ('b -> 'c
 //│   where
-//│     'a <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│     'a <: (forall 'd, 'b, 'e. (nothing -> 'd & 'd -> 'b & 'e -> 'b & nothing -> 'e & 'b) -> (forall 'b, 'f, 'g, 'h. ('f -> 'h
 //│   where
-//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'c))
+//│     'b <: 'f -> 'g & 'g -> 'h))) -> 'c))
 //│    = [Function: a2_]
 //│ a0: 'a -> 'b
 //│   where
-//│     'c <: (forall 'a. 'a -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
+//│     'c <: (forall 'd, 'a, 'e. (nothing -> 'd & 'd -> 'a & 'e -> 'a & nothing -> 'e & 'a) -> (forall 'a, 'f, 'g, 'h. ('f -> 'h
 //│   where
-//│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
+//│     'a <: 'f -> 'g & 'g -> 'h))) -> 'b
 //│   = [Function (anonymous)]
 //│ a0_: 'a -> 'b
 //│   where
-//│     'c <: (forall 'a. 'a -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
+//│     'c <: (forall 'd, 'a, 'e. (nothing -> 'd & 'd -> 'a & 'e -> 'a & nothing -> 'e & 'a) -> (forall 'a, 'f, 'g, 'h. ('f -> 'h
 //│   where
-//│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
+//│     'a <: 'f -> 'g & 'g -> 'h))) -> 'b
 //│    = [Function (anonymous)]
 
 // let test0 = 
@@ -151,7 +153,7 @@ type A1_nat = forall 'a 'b. (('a & ChurchInt -> ChurchInt | ChurchInt -> ChurchI
 //   (r : a1_nat);;
 
 // :e // due to tapping
-:e // skolem extrusion
+// :e // skolem extrusion
 def a1_sid_to_nat (g: A1_sid) =
   let r = fun f -> g (fun (x: Sid) -> f x) in
   (r: A1_nat)
@@ -161,11 +163,15 @@ def a1_sid_to_nat (g: A1_sid) =
 def a1_sid_to_nat_ g =
   let r = fun f -> g (fun x -> f x) in
   r
-//│ a1_sid_to_nat_: 'a -> (forall 'a. ('b -> 'c
+//│ a1_sid_to_nat_: ((forall 'a, 'b, 'c. ('b -> 'c
 //│   where
-//│     'a <: (forall 'b, 'd, 'e. ('d -> 'e
+//│     'a <: 'b -> 'c)) -> 'a & (forall 'd, 'e, 'f. ('e -> 'f
 //│   where
-//│     'b <: 'd -> 'e)) -> 'c))
+//│     'd <: 'e -> 'f)) -> 'a & 'g) -> (forall 'g. ('a -> 'h
+//│   where
+//│     'g <: (forall 'a, 'b, 'c. ('b -> 'c
+//│   where
+//│     'a <: 'b -> 'c)) -> 'h))
 //│               = [Function: a1_sid_to_nat_]
 
 // (* the term is as above but abstract over sb and uses the coercion *)
@@ -228,9 +234,9 @@ def either x y = if true then x else y
 //│       = [Function: either]
 
 def a1' = fun f -> fun x -> f (f (either id x))
-//│ a1': 'a -> (forall 'a. ('b -> 'c
+//│ a1': ((forall 'a. 'a -> 'a) -> 'b & 'b -> 'c & 'd -> 'c & (forall 'a. 'a -> 'a) -> 'd & 'c) -> (forall 'c. ('e -> 'f
 //│   where
-//│     'a <: (forall 'd, 'b. 'd -> 'd | 'b) -> 'e & 'e -> 'c))
+//│     'c <: (forall 'a, 'e. 'a -> 'a | 'e) -> 'g & 'g -> 'f))
 //│    = [Function: either]
 
 // FIXME: ClassCastException: mlscript.TyperDatatypes$TraitTag cannot be cast to mlscript.TyperDatatypes$TypeVariable
@@ -247,23 +253,25 @@ def a2'_ x =
     let _ = x y church_two in
     y church_succ
   ) a3
-//│ a2'_: ((forall 'a. 'a -> (forall 'a. ('b -> 'c
+//│ a2'_: ((((forall 'a, 'b, 'c. (nothing -> 'a & 'a -> 'b & 'c -> 'b & nothing -> 'c & 'b) -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
 //│   where
-//│     'a <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'b & 'g) -> (forall 'g. ('b -> 'h
 //│   where
-//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'c))) -> (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│     'g <: (forall 'a, 'b, 'c. (nothing -> 'a & 'a -> 'b & 'c -> 'b & nothing -> 'c & 'b) -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
 //│   where
-//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'b & (forall 'g, 'h. ('g -> 'h & 'g) -> 'h) -> (forall 'i. 'i -> 'i) -> 'b) -> (forall 'j. ('b -> 'k
+//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'h))) -> (forall 'a, 'b, 'c. (nothing -> 'a & 'a -> 'b & 'c -> 'b & nothing -> 'c & 'b) -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
 //│   where
-//│     'j <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'b & (forall 'i, 'j. ('i -> 'j & 'i) -> 'j) -> (forall 'k. 'k -> 'k) -> 'b) -> (forall 'l. ('b -> 'm
 //│   where
-//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'k))
+//│     'l <: (forall 'a, 'b, 'c. (nothing -> 'a & 'a -> 'b & 'c -> 'b & nothing -> 'c & 'b) -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│   where
+//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'm))
 //│     = [Function: either]
 
 // FIXME
 def a0' = a2' a1'
 //│ ╔══[ERROR] identifier not found: a2'
-//│ ║  l.264: 	def a0' = a2' a1'
+//│ ║  l.272: 	def a0' = a2' a1'
 //│ ╙──       	          ^^^
 //│ a0': error
 //│ Code generation encountered an error:
@@ -273,24 +281,101 @@ def a0' = a2' a1'
 // :e // works with quantif extrus
 :Fuel 15000
 def a0'_ = a2'_ a1'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.275: 	def a0'_ = a2'_ a1'
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j, ?k, ?l, ?m, ?n, ?o, ?p, ?q, ?r, ?s, ?t, ?u, ?v, ?w, ?x, ?y, ?z, ?a1, ?b1, ?c1, ?d1, ?e1, ?f1, ?g1, ?h1, ?i1, ?j1, ?k1, ?l1, ?m1, ?n1, ?o1, ?p1, ?q1, ?r1, ?s1, ?t1, ?u1, ?v1, ?w1, ?x1, ?y1, ?z1, ?a2, ?b2, ?c2, ?d2, ?e2, ?f2, ?g2, ?h2, ?i2, ?j2, ?k2, ?l2, ?m2, ?n2, ?o2, ?p2, ?q2, ?r2, ?s2, ?t2, ?u2, ?v2, ?w2, ?x2, ?y2, ?z2, ?a3, ?b3, ?c3, ?d3, ?e3, ?f3, ?g3, ?h3, ?i3, ?j3, ?k3, ?l3, ?m3, ?n3, ?o3, ?p3, ?q3, ?r3, ?s3, ?t3, ?u3, ?v3, ?w3, ?x3, ?y3, ?z3, ?a4, ?b4, ?c4, ?d4, ?e4, ?f4, ?g4, ?h4, ?i4, ?j4, ?k4, ?l4, ?m4, ?n4, ?o4, ?p4, ?q4, ?r4, ?s4, ?t4, ?u4, ?v4, ?w4, ?x4, ?y4, ?z4, ?a5, ?b5, ?c5, ?d5, ?e5, ?f5, ?g5, ?h5, ?i5, ?j5, ?k5, ?l5, ?m5, ?n5, ?o5, ?p5, ?q5, ?r5, ?s5, ?t5, ?u5, ?v5, ?w5, ?x5, ?y5, ?z5, ?a6, ?b6, ?c6, ?d6, ?e6, ?f6, ?g6, ?h6, ?i6, ?j6, ?k6, ?l6, ?m6, ?n6, ?o6, ?p6, ?q6, ?r6, ?s6, ?t6, ?u6, ?v6, ?w6, ?x6, ?y6, ?z6, ?a7, ?b7, ?c7, ?d7, ?e7, ?f7, ?g7, ?h7, ?i7, ?j7, ?k7, ?l7, ?m7, ?n7, ?o7, ?p7, ?q7, ?r7, ?s7, ?t7, ?u7, ?v7, ?w7, ?x7, ?y7, ?z7, ?a8, ?b8, ?c8, ?d8, ?e8, ?f8, ?g8, ?h8, ?i8, ?j8, ?k8, ?l8, ?m8, ?n8, ?o8, ?p8, ?q8, ?r8, ?s8, ?t8, ?u8, ?v8, ?w8, ?x8, ?y8, ?z8, ?a9, ?b9, ?c9, ?d9, ?e9, ?f9, ?g9, ?h9, ?i9, ?j9, ?k9, ?l9, ?m9, ?n9, ?o9, ?p9, ?q9, ?r9, ?s9, ?t9, ?u9, ?v9, ?w9, ?x9, ?y9, ?z9, ?a10, ?b10, ?c10, ?d10, ?e10, ?f10, ?g10, ?h10, ?i10, ?j10, ?k10, ?l10, ?m10, ?n10, ?o10, ?p10, ?q10, ?r10, ?s10, ?t10, ?u10, ?v10, ?w10, ?x10, ?y10, ?z10, ?a11, ?b11, ?c11, ?d11, ?e11, ?f11, ?g11, ?h11, ?i11, ?j11, ?k11, ?l11, ?m11, ?n11, ?o11, ?p11, ?q11, ?r11, ?s11, ?t11, ?u11, ?v11, ?w11, ?x11, ?y11, ?z11, ?a12, ?b12, ?c12, ?d12, ?e12, ?f12, ?g12, ?h12, ?i12, ?j12, ?k12, ?l12, ?m12, ?n12, ?o12, ?p12, ?q12, ?r12, ?s12, ?t12, ?u12, ?v12, ?w12, ?x12, ?y12, ?z12, ?a13, ?b13, ?c13, ?d13, ?e13, ?f13, ?g13, ?h13, ?i13, ?j13, ?k13, ?l13, ?m13, ?n13, ?o13, ?p13, ?q13, ?r13, ?s13, ?t13, ?u13, ?v13, ?w13, ?x13, ?y13, ?z13, ?a14, ?b14, ?c14, ?d14, ?e14, ?f14, ?g14, ?h14, ?i14, ?j14, ?k14, ?l14, ?m14, ?n14, ?o14, ?p14, ?q14, ?r14, ?s14, ?t14, ?u14, ?v14, ?w14, ?x14, ?y14, ?z14, ?a15, ?b15, ?c15, ?d15, ?e15, ?f15, ?g15, ?h15, ?i15, ?j15, ?k15, ?l15, ?m15, ?n15, ?o15. ?o11 -> ?p15 <: (forall ?q15, ?r15, ?s15, ?t15. ?s15 -> (forall ?q15, ?r15, ?s15, ?t15. (?u15 -> ?v15
+//│   where
+//│     ?s15 <: ?w15 -> ?x15 & ?x15 -> ?v15))) -> ?y15` took too many steps and ran out of fuel (15000)
+//│ ║  l.283: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››  <:  α32_1048'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››  <:  α32_34''
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››
+//│ ║  l.230: 	def either x y = if true then x else y
+//│ ║         	                    ^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››
+//│ ║  l.230: 	def either x y = if true then x else y
+//│ ║         	                    ^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››
+//│ ║  l.230: 	def either x y = if true then x else y
+//│ ║         	                    ^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››
+//│ ║  l.236: 	def a1' = fun f -> fun x -> f (f (either id x))
+//│ ║         	                                  ^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››
+//│ ║  l.236: 	def a1' = fun f -> fun x -> f (f (either id x))
+//│ ║         	                                  ^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››
+//│ ║  l.15: 	def auto_ x = x x
+//│ ║        	                ^
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››
+//│ ║  l.16: 	def id x = x
+//│ ║        	           ^
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››
+//│ ║  l.15: 	def auto_ x = x x
+//│ ║        	              ^^^
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››
+//│ ║  l.15: 	def auto_ x = x x
+//│ ║        	              ^^^
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››
+//│ ║  l.15: 	def auto_ x = x x
+//│ ║        	              ^^^
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››
+//│ ║  l.236: 	def a1' = fun f -> fun x -> f (f (either id x))
+//│ ║         	                               ^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››
+//│ ║  l.236: 	def a1' = fun f -> fun x -> f (f (either id x))
+//│ ║         	                               ^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››
+//│ ║  l.15: 	def auto_ x = x x
+//│ ║        	                ^
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››
+//│ ╟──  + α42_11231'
+//│ ╟──  + α42_11231'
+//│ ║  l.16: 	def id x = x
+//│ ║        	           ^
+//│ ╟──  - α33_11218'
+//│ ║  l.15: 	def auto_ x = x x
+//│ ╙──      	              ^^^
 //│ a0'_: error
 //│     = [Function: either]
 :ResetFuel
 
-// * ^ Strangely, this one works with recursive types:
+// * ^ Strangely, this one works[ed] with recursive types:
 :RecursiveTypes
+:e // fails after new-refreshing-extrusion
 def a0'_ = a2'_ a1'
-//│ a0'_: 'a -> 'b
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j, ?k, ?l, ?m, ?n, ?o, ?p, ?q, ?r, ?s, ?t, ?u, ?v, ?w, ?x, ?y, ?z, ?a1, ?b1, ?c1, ?d1, ?e1, ?f1, ?g1, ?h1, ?i1, ?j1, ?k1, ?l1, ?m1, ?n1, ?o1, ?p1, ?q1, ?r1, ?s1, ?t1, ?u1, ?v1, ?w1, ?x1, ?y1, ?z1, ?a2, ?b2, ?c2, ?d2, ?e2, ?f2, ?g2, ?h2, ?i2, ?j2, ?k2, ?l2, ?m2, ?n2, ?o2, ?p2, ?q2, ?r2, ?s2, ?t2, ?u2, ?v2, ?w2, ?x2, ?y2, ?z2, ?a3, ?b3, ?c3, ?d3, ?e3, ?f3, ?g3, ?h3, ?i3, ?j3, ?k3, ?l3, ?m3, ?n3, ?o3, ?p3, ?q3, ?r3, ?s3, ?t3, ?u3, ?v3, ?w3, ?x3, ?y3, ?z3, ?a4, ?b4, ?c4, ?d4, ?e4, ?f4, ?g4, ?h4, ?i4, ?j4, ?k4, ?l4, ?m4, ?n4, ?o4, ?p4, ?q4, ?r4, ?s4, ?t4, ?u4, ?v4, ?w4, ?x4, ?y4, ?z4, ?a5, ?b5, ?c5, ?d5, ?e5, ?f5, ?g5, ?h5, ?i5, ?j5, ?k5, ?l5, ?m5, ?n5, ?o5, ?p5, ?q5, ?r5, ?s5, ?t5, ?u5, ?v5, ?w5, ?x5, ?y5, ?z5, ?a6, ?b6, ?c6, ?d6, ?e6, ?f6, ?g6, ?h6, ?i6, ?j6, ?k6, ?l6, ?m6, ?n6, ?o6, ?p6, ?q6, ?r6, ?s6, ?t6, ?u6, ?v6, ?w6, ?x6, ?y6, ?z6, ?a7, ?b7, ?c7, ?d7, ?e7, ?f7, ?g7, ?h7, ?i7, ?j7, ?k7, ?l7, ?m7, ?n7, ?o7, ?p7, ?q7, ?r7, ?s7, ?t7, ?u7, ?v7, ?w7, ?x7, ?y7, ?z7, ?a8, ?b8, ?c8, ?d8, ?e8, ?f8, ?g8, ?h8, ?i8, ?j8, ?k8, ?l8, ?m8, ?n8, ?o8, ?p8, ?q8, ?r8, ?s8, ?t8, ?u8, ?v8, ?w8, ?x8, ?y8, ?z8, ?a9, ?b9, ?c9, ?d9, ?e9, ?f9, ?g9, ?h9, ?i9, ?j9, ?k9, ?l9, ?m9, ?n9, ?o9, ?p9, ?q9, ?r9, ?s9, ?t9, ?u9, ?v9, ?w9, ?x9, ?y9, ?z9, ?a10, ?b10, ?c10, ?d10, ?e10, ?f10, ?g10, ?h10, ?i10, ?j10, ?k10, ?l10, ?m10, ?n10, ?o10, ?p10, ?q10, ?r10, ?s10, ?t10, ?u10, ?v10, ?w10, ?x10, ?y10, ?z10, ?a11, ?b11, ?c11, ?d11, ?e11, ?f11, ?g11, ?h11, ?i11, ?j11, ?k11, ?l11, ?m11, ?n11, ?o11, ?p11, ?q11, ?r11, ?s11, ?t11, ?u11, ?v11, ?w11, ?x11, ?y11, ?z11, ?a12, ?b12, ?c12, ?d12, ?e12, ?f12, ?g12, ?h12, ?i12, ?j12, ?k12, ?l12, ?m12, ?n12, ?o12, ?p12, ?q12, ?r12, ?s12, ?t12, ?u12, ?v12, ?w12, ?x12, ?y12, ?z12, ?a13, ?b13, ?c13, ?d13, ?e13, ?f13, ?g13, ?h13, ?i13, ?j13, ?k13, ?l13, ?m13, ?n13, ?o13, ?p13, ?q13, ?r13, ?s13, ?t13, ?u13, ?v13, ?w13, ?x13, ?y13, ?z13, ?a14, ?b14, ?c14, ?d14, ?e14, ?f14, ?g14, ?h14, ?i14, ?j14, ?k14, ?l14, ?m14, ?n14, ?o14, ?p14, ?q14, ?r14, ?s14, ?t14, ?u14, ?v14, ?w14, ?x14, ?y14, ?z14, ?a15, ?b15, ?c15, ?d15, ?e15, ?f15, ?g15, ?h15, ?i15, ?j15, ?k15, ?l15, ?m15, ?n15, ?o15. ?o11 -> ?p15 <: (forall ?q15, ?r15, ?s15, ?t15. ?s15 -> (forall ?q15, ?r15, ?s15, ?t15. (?u15 -> ?v15
 //│   where
-//│     'c <: (forall 'a. 'a -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
-//│   where
-//│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
+//│     ?s15 <: ?w15 -> ?x15 & ?x15 -> ?v15))) -> ?y15` took too many steps and ran out of fuel (5000)
+//│ ║  l.351: 	def a0'_ = a2'_ a1'
+//│ ║         	           ^^^^^^^^
+//│ ╟──  + {(α90_14148' -> α92_14150') where: α89_14129' <: ((α90_14148',) -> α91_14149'), α89_14129' <: ((α91_14149',) -> α92_14150')}
+//│ ║  l.43: 	def church_two = fun f -> fun x -> f (f x)
+//│ ║        	                          ^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 2. {(α90_14136''' -> α92_14138''') where: α89_14129' <: ((α90_14136''',) -> α91_14137'''), α89_14129' <: ((α91_14137''',) -> α92_14138''')}›
+//│ ║  l.43: 	def church_two = fun f -> fun x -> f (f x)
+//│ ║        	                          ^^^^^^^^^^^^^^^^
+//│ ╟──  - ((α91_14117',) -> α92_14118')
+//│ ║  l.43: 	def church_two = fun f -> fun x -> f (f x)
+//│ ║        	                                   ^^^^^^^
+//│ ╟──  - ((α91_14117',) -> α92_14118')
+//│ ║  l.43: 	def church_two = fun f -> fun x -> f (f x)
+//│ ║        	                                   ^^^^^^^
+//│ ╟──  - ((α91_14117',) -> α92_14118')
+//│ ╟──  - α89_14116'
+//│ ╟──  - α89_14116'
+//│ ╟──  - α89_14116'
+//│ ║  l.43: 	def church_two = fun f -> fun x -> f (f x)
+//│ ║        	                                      ^^^
+//│ ╟──  - α91_14060'
+//│ ║  l.43: 	def church_two = fun f -> fun x -> f (f x)
+//│ ╙──      	                                      ^^^
+//│ a0'_: error
 //│     = [Function: either]
 :NoRecursiveTypes
 

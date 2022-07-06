@@ -7,16 +7,18 @@
 // def s n = fun f -> fun x -> (n f x)
 // def s n = fun f -> fun x -> (n f x)
 def s n = fun f -> n f
-//│ s: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ s: (nothing -> 'a & 'a) -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
 //│     'a <: 'b -> 'c))
 //│  = [Function: s]
 
 :ns
 s
-//│ res: forall 'a. 'a -> (forall 'b, 'c. ('b -> 'c
+//│ res: forall 'a, 'b, 'c, 'd, 'e. 'a -> (forall 'f, 'g. ('f -> 'g
 //│   where
-//│     'a <: 'b -> 'c))
+//│     'a <: 'f -> 'g))
+//│   where
+//│     'a <: 'd -> 'e & 'b -> 'c
 //│    = [Function: s]
 
 type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -46,20 +48,27 @@ rec def to_ch n =
 
 :ns
 to_ch
-//│ res: forall 'a, 'b, 'c, 'd, 'e. forall 'to_ch, 'f, 'a, 'g, 'b, 'c, 'd, 'e. 'to_ch
+//│ res: forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm, 'n. forall 'to_ch, 'o, 'a, 'p, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm, 'n. 'to_ch
 //│   where
-//│     'to_ch :> 'f -> 'g
-//│            <: 'f -> 'a
-//│     'g :> forall 'h, 'i. 'h -> 'i
+//│     'to_ch :> 'o -> 'p
+//│            <: 'o -> 'a
+//│     'p :> forall 'q, 'r. 'q -> 'r
 //│        <: 'a
-//│     'a :> forall 'h, 'i. 'h -> 'i
+//│     'a :> forall 'q, 'r. 'q -> 'r
 //│        <: 'b
-//│     'b :> forall 'h, 'i. 'h -> 'i
-//│        <: 'c -> 'd
-//│     'i :> 'd
-//│     'h <: 'c
-//│     'c <: 'e
-//│     'e <: 'c
+//│     'b :> forall 'q, 'r. 'q -> 'r
+//│        <: 'i -> 'j & 'g -> 'h & 'c -> 'd & 'e -> 'f
+//│     'e <: 'n
+//│     'n <: 'i
+//│     'c <: 'm
+//│     'm <: 'i
+//│     'g <: 'l
+//│     'l <: 'i
+//│     'r :> 'j
+//│     'j <: 'f & 'd & 'h
+//│     'q <: 'i
+//│     'i <: 'k
+//│     'k <: 'i
 //│    = [Function: to_ch]
 
 // :d

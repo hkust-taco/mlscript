@@ -52,12 +52,12 @@ def Cons head tail = Cons { head; tail; size = S{} }
 def nil k = k Nil
 def cons h t k = k (Cons h t)
 //│ nil: (Nil -> 'a) -> 'a
-//│ cons: 'a -> (forall 'b. 'b -> ((forall 'a, 'b, 'tail, 'P. (Cons[nothing, 'P] with {tail: 'tail}
+//│ cons: 'a -> (forall 'b. (Vec[?, ?] & 'b) -> ((forall 'a, 'b, 'tail, 'P. (Cons[nothing, 'P] with {tail: 'tail}
 //│   where
-//│     'b <: Vec[?, ?] & 'tail
 //│     'a <: 'b
 //│     'b <: Vec[?, ?] & 'tail
-//│     'a <: 'b)) -> 'c) -> 'c)
+//│     'a <: 'b
+//│     'b <: Vec[?, ?] & 'tail)) -> 'c) -> 'c)
 
 nil_ty = nil : Vec[int, Z]
 //│ ╔══[ERROR] Type mismatch in type ascription:
