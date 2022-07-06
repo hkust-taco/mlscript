@@ -1,5 +1,7 @@
 :GeneralizeCurriedFunctions
 :NoRecursiveTypes
+// :NoConstrainedTypes
+// :DistributeForalls
 
 // type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 

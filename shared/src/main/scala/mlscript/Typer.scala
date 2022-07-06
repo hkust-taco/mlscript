@@ -31,7 +31,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   var noRecursiveTypes: Boolean = false
   var irregularTypes: Boolean = false
   
-  var noConstrainnedTypes: Boolean = false
+  var noConstrainedTypes: Boolean = false
   var noArgGen: Boolean = true
   
   var recordProvenances: Boolean = true
@@ -106,7 +106,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           ConstrainedType.mk(newCtx.extrCtx.iterator.mapValues(_.iterator
             .filter(_._2.level > lvl) // does not seem to change anything!
             .toList).toList, innerTy)
-            .freshenAbove(lvl, false)
+            .freshenAbove(lvl, false) // * In principle this should change nothing.... TODO why does it somehow makes the Vec test much slower?!
           // innerTy
         )
         newCtx.extrCtx.valuesIterator.foreach { buff =>

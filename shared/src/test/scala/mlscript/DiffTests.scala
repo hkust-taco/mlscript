@@ -99,7 +99,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     // distributeForalls = true
     var noCycleCheck = false
     var noRecursiveTypes = false
-    var noConstrainnedTypes = false
+    var noConstrainedTypes = false
     var irregularTypes = false
     var noArgGen = true
 
@@ -134,7 +134,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           case "CycleCheck" => noCycleCheck = false; mode
           case "RecursiveTypes" => noRecursiveTypes = false; mode
           case "NoRecursiveTypes" => noRecursiveTypes = true; mode
-          case "NoConstrainnedTypes" => noConstrainnedTypes = true; mode
+          case "NoConstrainedTypes" => noConstrainedTypes = true; mode
           case "ArgGen" => noArgGen = false; mode
           case "NoArgGen" => noArgGen = true; mode
           case "IrregularTypes" => irregularTypes = true; mode
@@ -236,7 +236,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             typer.distributeForalls = distributeForalls
             typer.noCycleCheck = noCycleCheck
             typer.noRecursiveTypes = noRecursiveTypes
-            typer.noConstrainnedTypes = noConstrainnedTypes || mode.generateTsDeclarations
+            typer.noConstrainedTypes = noConstrainedTypes || mode.generateTsDeclarations
             typer.noArgGen = noArgGen
             typer.irregularTypes = irregularTypes
             typer.verbose = mode.verbose

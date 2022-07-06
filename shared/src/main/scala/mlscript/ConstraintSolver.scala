@@ -483,7 +483,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             if (rhs.level > lhs.level) {
             // if (rhs.level > lhs.level && rhs.level <= lvl) {
               println(s"wrong level: ${rhs.level}")
-              if (rhs.level <= lvl) {
+              if (!noConstrainedTypes && rhs.level <= lvl) {
               // if (rhs.level <= lvl || true) {
               // if (ctx.lvl > 0) {
               // if (ctx.lvl > tv.level) {
@@ -573,7 +573,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             if (lhs.level > rhs.level) {
               println(s"wrong level: ${lhs.level}")
             // if (lhs.level > rhs.level) {
-              if (lhs.level <= lvl) {
+              if (!noConstrainedTypes && lhs.level <= lvl) {
               // if (lhs.level <= lvl || true) {
               // if (ctx.lvl > 0) {
               // if (ctx.lvl > tv.level) {
@@ -650,14 +650,14 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             
             /* 
           // case (tv: TypeVariable, rhs0) if extrusionContext.nonEmpty && !tv.recPlaceholder =>
-          case (tv: TypeVariable, rhs0) if !noConstrainnedTypes && extrusionContext.nonEmpty /* && !tv.recPlaceholder */ =>
+          case (tv: TypeVariable, rhs0) if !noConstrainedTypes && extrusionContext.nonEmpty /* && !tv.recPlaceholder */ =>
             // ???
             println(s"STASHING $tv bound in extr ctx")
             val buf = extrusionContext.get.getOrElseUpdate(tv, Buffer.empty)
             buf += false -> rhs0
             ()
           // case (lhs0, tv: TypeVariable) if extrusionContext.nonEmpty && !tv.recPlaceholder =>
-          case (lhs0, tv: TypeVariable) if !noConstrainnedTypes && extrusionContext.nonEmpty /* && !tv.recPlaceholder */ =>
+          case (lhs0, tv: TypeVariable) if !noConstrainedTypes && extrusionContext.nonEmpty /* && !tv.recPlaceholder */ =>
             // ???
             println(s"STASHING $tv bound in extr ctx")
             val buf = extrusionContext.get.getOrElseUpdate(tv, Buffer.empty)
