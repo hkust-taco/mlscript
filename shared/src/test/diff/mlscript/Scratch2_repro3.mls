@@ -148,7 +148,7 @@ to_church = to_ch
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.144: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘M_348` is not an instance of type `'M_345`
+//│ ╟── type `‘M_336` is not an instance of type `'M_335`
 //│ ║  l.43: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                              ^^
 //│ ╟── Note: constraint arises from quantified type variable:

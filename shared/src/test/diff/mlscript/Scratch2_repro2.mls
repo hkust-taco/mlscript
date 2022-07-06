@@ -153,12 +153,12 @@ example id
 
 // FIXME: Rigid variable extrusion here! We should clean extr contexts of local rigids before returning them....
 def example f = ((0, f) : forall 'a. (0, 'a))
-//│ example: anything -> (0, nothing,)
+//│ example: ‘a_646 -> (0, nothing,)
 //│        = [Function: example1]
 
 // FIXME same
 def example f = ((0, f) : forall 'a. (0, 'a -> 'a))
-//│ example: (nothing -> anything) -> (forall 'a. (0, 'a -> 'a,))
+//│ example: (‘a_653 -> ‘a_653) -> (forall 'a. (0, 'a -> 'a,))
 //│        = [Function: example2]
 
 

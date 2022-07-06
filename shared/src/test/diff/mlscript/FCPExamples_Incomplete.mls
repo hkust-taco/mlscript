@@ -71,7 +71,7 @@ ty_2 = ty_1
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.67: 	ty_2 = ty_1
 //│ ║        	^^^^^^^^^^^
-//│ ╟── type `‘b_89` is not an instance of type `'b`
+//│ ╟── type `‘b_89` is not an instance of type `'b_90`
 //│ ║  l.59: 	def ty_2: nothing -> (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
 //│ ║        	                                                            ^^
 //│ ╟── Note: constraint arises from quantified type variable:

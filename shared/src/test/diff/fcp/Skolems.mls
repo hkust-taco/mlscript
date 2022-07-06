@@ -22,17 +22,17 @@ fun (x: ('a -> 'a)) -> auto_ x
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.21: 	fun (x: ('a -> 'a)) -> auto_ x
 //│ ║        	                       ^^^^^^^
-//│ ╟── type `‘a_70` is not an instance of type `'a`
+//│ ╟── type `‘a_70` is not an instance of type `'a_71`
 //│ ║  l.6: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║       	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.6: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──     	                    ^^
-//│ res: (('a | ‘a_70) -> 'a) -> error
+//│ res: (('a | ‘a_70) -> (‘a_71 & 'a)) -> error
 //│    = [Function: res]
 
 foo(x: ('a -> 'b)) = auto_ x
-//│ foo: (‘a_84 -> anything) -> 'b -> 'b
+//│ foo: (‘a_84 -> ‘a_83) -> 'b -> 'b
 //│    = [Function: foo]
 
 :e
@@ -40,10 +40,10 @@ foo (fun x -> x)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.39: 	foo (fun x -> x)
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_84` is not an instance of type `'a`
+//│ ╟── type `‘a_84` is not an instance of type `'a_83`
 //│ ║  l.6: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║       	                    ^^
-//│ ╟── but it flows into reference with expected type `‘a`
+//│ ╟── but it flows into reference with expected type `‘a_83`
 //│ ║  l.39: 	foo (fun x -> x)
 //│ ║        	              ^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -60,7 +60,7 @@ foo (fun x -> 0)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.59: 	foo (fun x -> 0)
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `'a`
+//│ ╟── integer literal of type `0` is not an instance of type `'a_83`
 //│ ║  l.59: 	foo (fun x -> 0)
 //│ ║        	              ^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -77,10 +77,10 @@ foo (fun x -> foo (fun y -> y) x)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.76: 	foo (fun x -> foo (fun y -> y) x)
 //│ ║        	              ^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_84` is not an instance of type `'a`
+//│ ╟── type `‘a_84` is not an instance of type `'a_83`
 //│ ║  l.6: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║       	                    ^^
-//│ ╟── but it flows into reference with expected type `‘a`
+//│ ╟── but it flows into reference with expected type `‘a_83`
 //│ ║  l.76: 	foo (fun x -> foo (fun y -> y) x)
 //│ ║        	                            ^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -98,7 +98,7 @@ foo (fun x -> foo (fun y -> x) x)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.97: 	foo (fun x -> foo (fun y -> x) x)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_84` is not an instance of type `'a`
+//│ ╟── type `‘a_84` is not an instance of type `'a_83`
 //│ ║  l.6: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║       	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -122,7 +122,7 @@ def oops (i: forall 'a. 'a -> 'a) =
 
 // If we were not careful this would lead to unsound skolem extrusion:
 def extrude (f: 'a -> 'b) = oops f
-//│ extrude: (‘a_185 -> anything) -> (forall 'a. 'a -> 'a)
+//│ extrude: (‘a_183 -> ‘a_184) -> (forall 'a. 'a -> 'a)
 //│        = [Function: extrude]
 
 :e
@@ -130,7 +130,7 @@ f = extrude (fun x -> extrude (fun y -> x) x)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.129: 	f = extrude (fun x -> extrude (fun y -> x) x)
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_185` is not an instance of type `'a`
+//│ ╟── type `‘a_183` is not an instance of type `'a_184`
 //│ ║  l.117: 	def oops (i: forall 'a. 'a -> 'a) =
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -169,21 +169,21 @@ fun (x: ('a -> 'a)) -> swapWith x
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.168: 	fun (x: ('a -> 'a)) -> swapWith x
 //│ ║         	                       ^^^^^^^^^^
-//│ ╟── type `‘x_324` is not an instance of type `'y`
+//│ ╟── type `‘x_321` is not an instance of type `'y_323`
 //│ ║  l.153: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
 //│ ║         	                      ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.153: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
 //│ ╙──       	                         ^^
-//│ res: (('a | (‘x_324, ‘y_325,)) -> ((anything, anything,) & 'a)) -> error
+//│ res: (('a | (‘x_321, ‘y_322,)) -> ((‘y_323, ‘x_324,) & 'a)) -> error
 //│    = [Function: res]
 
 foo = fun (x: ('a -> 'b)) -> swapWith x
-//│ foo: ((‘x_342, ‘y_343,) -> (anything, anything,)) -> ('a, 'b,) -> ('b, 'a,)
+//│ foo: ((‘x_337, ‘y_338,) -> (‘y_339, ‘x_340,)) -> ('a, 'b,) -> ('b, 'a,)
 //│    = [Function: foo1]
 
 bar = fun f -> foo f (1, 2)
-//│ bar: ((‘x_342, ‘y_343,) -> (anything, anything,)) -> (2, 1,)
+//│ bar: ((‘x_337, ‘y_338,) -> (‘y_339, ‘x_340,)) -> (2, 1,)
 //│    = [Function: bar]
 
 :e
@@ -191,44 +191,53 @@ bar (fun ((u, v),) -> (v, u))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.190: 	bar (fun ((u, v),) -> (v, u))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘x_342` is not an instance of type `'x`
+//│ ╟── type `‘y_338` is not an instance of type `'y_339`
 //│ ║  l.153: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
-//│ ║         	                      ^^
+//│ ║         	                         ^^
+//│ ╟── but it flows into reference with expected type `‘y_339`
+//│ ║  l.190: 	bar (fun ((u, v),) -> (v, u))
+//│ ║         	                       ^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.153: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
-//│ ╙──       	                      ^^
+//│ ╙──       	                         ^^
 //│ res: error
 //│    = [ 2, 1 ]
 
 :e
 bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v2, u2)) in (v1, u1))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.204: 	bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v2, u2)) in (v1, u1))
+//│ ║  l.207: 	bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v2, u2)) in (v1, u1))
 //│ ║         	                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘x_342` is not an instance of type `'x`
+//│ ╟── type `‘y_338` is not an instance of type `'y_339`
 //│ ║  l.153: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
-//│ ║         	                      ^^
+//│ ║         	                         ^^
+//│ ╟── but it flows into reference with expected type `‘y_339`
+//│ ║  l.207: 	bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v2, u2)) in (v1, u1))
+//│ ║         	                                                           ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.153: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
-//│ ╙──       	                      ^^
+//│ ╙──       	                         ^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.204: 	bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v2, u2)) in (v1, u1))
+//│ ║  l.207: 	bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v2, u2)) in (v1, u1))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘x_342` is not an instance of type `'x`
+//│ ╟── type `‘y_338` is not an instance of type `'y_339`
 //│ ║  l.153: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
-//│ ║         	                      ^^
+//│ ║         	                         ^^
+//│ ╟── but it flows into reference with expected type `‘y_339`
+//│ ║  l.207: 	bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v2, u2)) in (v1, u1))
+//│ ║         	                                                                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.153: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
-//│ ╙──       	                      ^^
+//│ ╙──       	                         ^^
 //│ res: error
 //│    = [ 2, 1 ]
 
 :e // * Not sure why this one is rejected (but the `extrude` version above is accepted.)
 bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v1, u1)) in (v1, u1))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.227: 	bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v1, u1)) in (v1, u1))
+//│ ║  l.236: 	bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v1, u1)) in (v1, u1))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘x_342` is not an instance of type `'x`
+//│ ╟── type `‘x_337` is not an instance of type `'x_340_431`
 //│ ║  l.153: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
 //│ ║         	                      ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -241,19 +250,19 @@ bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v1, u1)) in (v1, u1))
 :e
 fun (x: ((('a, 'b),) -> ('b, 'a))) -> swapWith x
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.242: 	fun (x: ((('a, 'b),) -> ('b, 'a))) -> swapWith x
+//│ ║  l.251: 	fun (x: ((('a, 'b),) -> ('b, 'a))) -> swapWith x
 //│ ║         	                                      ^^^^^^^^^^
-//│ ╟── type `‘x_463` is not an instance of type `'x`
+//│ ╟── type `‘x_451` is not an instance of type `'x_452`
 //│ ║  l.153: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
 //│ ║         	                      ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.153: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
 //│ ╙──       	                      ^^
-//│ res: (('a | ‘x_463, 'b,) -> ('b, 'a,)) -> error
+//│ res: (('a | ‘x_451, 'b,) -> ('b, ‘x_452 & 'a,)) -> error
 //│    = [Function: res]
 
 fun (x: ((('a, 'b),) -> ('c, 'd))) -> swapWith x
-//│ res: ((‘x_485, ‘y_486,) -> (anything, anything,)) -> ('a, 'b,) -> ('b, 'a,)
+//│ res: ((‘x_471, ‘y_472,) -> (‘y_473, ‘x_474,)) -> ('a, 'b,) -> ('b, 'a,)
 //│    = [Function: res]
 
 

@@ -204,7 +204,7 @@ to_church = to_ch_s
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.200: 	to_church = to_ch_s
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N_2419` is not an instance of type `'N`
+//│ ╟── type `‘N_2412` is not an instance of type `'N_2411`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -230,7 +230,7 @@ to_church = to_ch_mix
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.226: 	to_church = to_ch_mix
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N_2626` is not an instance of type `'N`
+//│ ╟── type `‘N_2616` is not an instance of type `'N_2615`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -258,7 +258,7 @@ rec def to_ch n =
 //│ ║         	              ^^^
 //│ ║  l.255: 	  succD (to_ch n)
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N_2633` is not an instance of type `'N`
+//│ ╟── type `‘N_2623` is not an instance of type `'N_2622`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -267,7 +267,7 @@ rec def to_ch n =
 //│ ╟── from quantified type variable:
 //│ ║  l.61: 	def succD: forall 'M. ChurchInt -> ('M -> 'M) -> ('M -> 'M)
 //│ ╙──      	                  ^^
-//│ to_ch: anything -> (('M | ‘N_2633) -> 'M) -> 'M -> ('M | ‘N_2633)
+//│ to_ch: anything -> (('M | ‘N_2623) -> (‘N_2622 & 'M)) -> (‘N_2622 & 'M) -> ('M | ‘N_2623)
 //│      = [Function: to_ch1]
 
 

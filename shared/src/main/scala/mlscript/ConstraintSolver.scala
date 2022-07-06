@@ -497,6 +497,25 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 // implicit val freshened: MutMap[TV, ST] = MutMap.empty
                 // rec(lhs, rhs.freshenAbove(tv.level, false), true)
                 ()
+              // } else if (true) {
+              } else if (false) {
+                
+                // val rhs2 = PolymorphicType.mk(lvl, { // FIXME???!??!?!?
+                //   implicit val flexifyRigids: Bool = true
+                //   extrude(rhs, lvl, false, MaxLevel)
+                //   // rhs0
+                // })
+                val rhs2 = {
+                  // implicit val flexifyRigids: Bool = true
+                  implicit val flexifyRigids: Bool = false
+                  extrude(rhs, lvl, false, MaxLevel)
+                }
+                // println(s"EXTR RHS  $rhs0  ~>  $rhs2  to ${lhs.level}")
+                println(s"EXTR RHS  ~>  $rhs2  to ${lvl}")
+                println(s" where ${rhs2.showBounds}")
+                // println(s"   and ${rhs.showBounds}")
+                rec(lhs, rhs2, true)
+                
               } else {
               // case N =>
                 /* 
@@ -524,11 +543,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 }
                 // ???
                 */
-                val rhs2 = PolymorphicType.mk(lhs.level, { // FIXME???!??!?!?
-                  implicit val flexifyRigids: Bool = true
+                // val rhs2 = PolymorphicType.mk(lhs.level, { // FIXME???!??!?!?
+                //   implicit val flexifyRigids: Bool = true
+                //   extrude(rhs, lhs.level, false, MaxLevel)
+                //   // rhs0
+                // })
+                val rhs2 = {
+                  implicit val flexifyRigids: Bool = false
                   extrude(rhs, lhs.level, false, MaxLevel)
-                  // rhs0
-                })
+                }
                 // println(s"EXTR RHS  $rhs0  ~>  $rhs2  to ${lhs.level}")
                 println(s"EXTR RHS  ~>  $rhs2  to ${lhs.level}")
                 println(s" where ${rhs2.showBounds}")
@@ -564,6 +587,19 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 // implicit val freshened: MutMap[TV, ST] = MutMap.empty
                 // rec(lhs.freshenAbove(tv.level, false), rhs, true)
                 ()
+              // } else if (true) {
+              } else if (false) {
+                
+                val lhs2 = {
+                  implicit val flexifyRigids: Bool = false
+                  extrude(lhs, lvl, true, MaxLevel)
+                }
+                // println(s"EXTR LHS  $lhs0  ~>  $lhs2  to ${rhs.level}")
+                println(s"EXTR LHS  ~>  $lhs2  to ${lvl}")
+                println(s" where ${lhs2.showBounds}")
+                // println(s"   and ${lhs.showBounds}")
+                rec(lhs2, rhs, true)
+                
               } else {
               // case N =>
                 /* 
