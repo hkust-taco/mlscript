@@ -47,9 +47,8 @@ test f =
 //│ test: ((0 | true) -> ('a & 'b) & true -> 'a & 0 -> 'b) -> ('b, 'a,)
 //│     = [Function: test2]
 
-:e
+:e // FIXME!!!! ^ approx type!
 (test id)._1 + 1
-not (test id)._1 + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.51: 	(test id)._1 + 1
 //│ ║        	^^^^^^^^^^^^^^
@@ -61,17 +60,34 @@ not (test id)._1 + 1
 //│ ╙──      	^^^^^^^^^^^^
 //│ res: error
 //│    = NaN
+
+:e // FIXME!!!! ^ approx type!
+not (test id)._2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.52: 	not (test id)._1 + 1
+//│ ║  l.65: 	not (test id)._2
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `0` is not an instance of type `bool`
 //│ ║  l.46: 	  in (r 0, r True)
 //│ ║        	        ^
 //│ ╟── but it flows into field selection with expected type `bool`
-//│ ║  l.52: 	not (test id)._1 + 1
+//│ ║  l.65: 	not (test id)._2
 //│ ╙──      	    ^^^^^^^^^^^^
-//│ res: int
-//│    = 2
+//│ res: error
+//│    = true
+
+:e
+not (test id)._1
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.79: 	not (test id)._1
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `bool`
+//│ ║  l.46: 	  in (r 0, r True)
+//│ ║        	        ^
+//│ ╟── but it flows into field selection with expected type `bool`
+//│ ║  l.79: 	not (test id)._1
+//│ ╙──      	    ^^^^^^^^^^^^
+//│ res: error
+//│    = true
 
 // * Even works with recursive definition because the constrained type is strictly local to the body!
 rec def test f =

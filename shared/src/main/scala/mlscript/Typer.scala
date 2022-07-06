@@ -73,9 +73,15 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     private def containsMth(key: (Str, Str) \/ (Opt[Str], Str)): Bool = mthEnv.contains(key) || parent.exists(_.containsMth(key))
     def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
     def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty)
+    // def findUnder(level: Level): Opt[Ctx] = { //println(s"Ctx at $lvl?");
+    //   if (lvl < level) { println(s"Found ctx at $lvl"); Option.when(lvl > 0)(this) }
+    //   else parent.flatMap(_.findUnder(level))
+    //   // S(this)
+    // }
     // def nextLevel: Ctx = copy(lvl = lvl + 1)
     def nextLevel[R](k: Ctx => R)(implicit raise: Raise, prov: TP, shadows: Shadows=Shadows.empty): R = { // TODO rm implicits here and in freshen functions
       val newCtx = copy(lvl = lvl + 1, extrCtx = MutMap.empty)
+      // val newCtx = copy(parent = S(this), lvl = lvl + 1, extrCtx = MutMap.empty)
       val res = k(newCtx)
       // assert(newCtx.extrCtx.isEmpty) // TODO
       val ec = newCtx.extrCtx
@@ -94,9 +100,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val innerTy = k(newCtx)
         // assert(newCtx.extrCtx.isEmpty) // TODO
         val poly = PolymorphicType.mk(lvl,
-          // TODO:
           // ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy)
-          ConstrainedType.mk(newCtx.extrCtx.iterator.mapValues(_.toList).toList, innerTy)
+          ConstrainedType.mk(newCtx.extrCtx.iterator.mapValues(_.iterator
+            .filter(_._2.level > lvl) // does not seem to change anything!
+            .toList).toList, innerTy)
           // innerTy
         )
         // newCtx.extrCtx.clear()
