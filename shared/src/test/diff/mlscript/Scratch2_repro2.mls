@@ -88,7 +88,7 @@ s zero
 
 // :e // works with quantif extrus
 // :e // due to tapping
-:e // skolem extrusion?
+// :e // skolem extrusion?
 res: ChI
 //│ res: ChI
 //│    = [Function: s]
@@ -100,7 +100,7 @@ let tmp = s zero in tmp: ChI
 
 // FIXedME:
 // :d
-:e // TODO this works when generalizing the LHS of ascriptions
+// :e // TODO this works when generalizing the LHS of ascriptions
 s zero : ChI
 //│ res: ChI
 //│    = <no result>

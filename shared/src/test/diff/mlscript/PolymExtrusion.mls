@@ -22,6 +22,21 @@ bar f = foo (fun x -> let tmp = f x in x)
 //│ bar: (‘a_49 -> anything) -> int
 //│    = [Function: bar]
 
+:e
+bar (fun x -> case x of {})
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.26: 	bar (fun x -> case x of {})
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘a_49` does not match type `nothing`
+//│ ║  l.5: 	def foo: (forall 'a. 'a -> 'a) -> int
+//│ ║       	                 ^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.26: 	bar (fun x -> case x of {})
+//│ ╙──      	                   ^
+//│ res: error
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
+
 
 def f: 'a -> 'b
 //│ f: anything -> nothing
@@ -35,20 +50,20 @@ def foo: (forall 'a. 'a -> 'b) -> 'b
 
 // Notice `id` returns its arg of locally-quantified type 'a, which is extruded to `anything`:
 foo id
-//│ res: ‘a_73
+//│ res: ‘a_82
 //│    = <no result>
 //│      foo is not implemented
 
 :e
 foo (fun a -> a + 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.43: 	foo (fun a -> a + 1)
+//│ ║  l.58: 	foo (fun a -> a + 1)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` is not an instance of type `int`
-//│ ║  l.31: 	def foo: (forall 'a. 'a -> 'b) -> 'b
+//│ ║  l.46: 	def foo: (forall 'a. 'a -> 'b) -> 'b
 //│ ║        	                 ^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.43: 	foo (fun a -> a + 1)
+//│ ║  l.58: 	foo (fun a -> a + 1)
 //│ ╙──      	              ^
 //│ res: error
 //│    = <no result>

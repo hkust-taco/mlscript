@@ -1330,6 +1330,7 @@ this_should_be_98_ =
 // :e // works with quantif extrus
 //:e // due to tapping
 :e // FIXME? refreshing-extr
+// FIXME SOF
 c_i5_ = c_add_ c_i3_ c_i2
 //│ /!!!\ Uncaught error: java.lang.StackOverflowError
 

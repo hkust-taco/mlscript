@@ -336,6 +336,46 @@ def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (f
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  α1790_1908''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α1792_2560'''')    TypeVariable  FunctionType
 //│ ╙──  ... looks like:  α1790_1837^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α1792_1937^8)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α1790_1908''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α1792_2569'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α1790_1837^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α1792_1937^8)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α1790_1908''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α1792_2595'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α1790_1837^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α1792_1937^8)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α1790_1908''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α1792_2604'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α1790_1837^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α1792_1937^8)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α1790_1908''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α1792_2630'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α1790_1837^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α1792_1937^8)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α1790_1908''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α1792_2639'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α1790_1837^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α1792_1937^8)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α1790_1908''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α1792_2665'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α1790_1837^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α1792_1937^8)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α1790_1908''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α1792_2674'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α1790_1837^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α1792_1937^8)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α1790_1908''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α1792_2700'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α1790_1837^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α1792_1937^8)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α1790_1908''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α1792_2709'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α1790_1837^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α1792_1937^8)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α1790_1908''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α1792_2735'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α1790_1837^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α1792_1937^8)
 //│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 :e // fails after new-refreshing-extrusion
@@ -343,28 +383,28 @@ def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) 
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b, ?c, ?d, ?e, ?f, ?g, ?h. ?h -> (forall ?i, ?j, ?k. (?i -> ?k
 //│   where
 //│     ?h <: ?i -> ?j & ?j -> ?k))) -> ?l` took too many steps and ran out of fuel (5000)
-//│ ║  l.398: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
+//│ ║  l.390: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟──  + (α1573_5152'' -> α1573_5152'')
+//│ ╟──  + (α1573_5325'' -> α1573_5325'')
 //│ ║  l.154: 	def k2 = fun x -> fun y -> y
 //│ ║         	                  ^^^^^^^^^^
 //│ ╟──  + ‹∀ 2. (α1573_1574''' -> α1573_1574''')›
 //│ ║  l.154: 	def k2 = fun x -> fun y -> y
 //│ ║         	                  ^^^^^^^^^^
-//│ ╟──  - ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α2664_5150'')
-//│ ║  l.398: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
+//│ ╟──  - ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α2837_5323'')
+//│ ║  l.390: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
 //│ ║         	                                                                                                                                                                                         ^^^^^^^
-//│ ╟──  - ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α2664_5150'')
-//│ ║  l.398: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
+//│ ╟──  - ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α2837_5323'')
+//│ ║  l.390: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
 //│ ║         	                                                                                                                                                                                         ^^^^^^^
-//│ ╟──  - ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α2664_5150'')
-//│ ║  l.398: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
+//│ ╟──  - ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α2837_5323'')
+//│ ║  l.390: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
 //│ ║         	                                                                                                                                                                                         ^^^^
-//│ ╟──  - ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α2664_5150'')
-//│ ║  l.398: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
+//│ ╟──  - ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α2837_5323'')
+//│ ║  l.390: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
 //│ ║         	                                                                                                                                                                                         ^^^^
-//│ ╟──  - α2663_5149''
-//│ ║  l.398: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
+//│ ╟──  - α2836_5322''
+//│ ║  l.390: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
 //│ ╙──       	                                                                                                                                                                                         ^^^^
 //│ t2: (nothing -> anything) -> error
 //│   = [Function: t21]
@@ -372,13 +412,13 @@ def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) 
 // FIXME
 t id succ 0
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.434: 	t id succ 0
+//│ ║  l.426: 	t id succ 0
 //│ ║         	^^^^^^^^^
 //│ ╟── function of type `?a -> ?a` is not an instance of type `int`
 //│ ║  l.35: 	def id = fun x -> x
 //│ ║        	         ^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.434: 	t id succ 0
+//│ ║  l.426: 	t id succ 0
 //│ ╙──       	  ^^
 //│ res: error
 //│    = 2
@@ -397,144 +437,152 @@ def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (f
 def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5915'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6088'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5924'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6097'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5947'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6120'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5956'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6129'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5979'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6152'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5988'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6161'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6011'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6184'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6020'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6193'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6043'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6216'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6052'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6225'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6075'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6248'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6084'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6257'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6107'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6280'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6116'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6289'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6139'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6312'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6148'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6321'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6171'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6344'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6180'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6353'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6203'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6376'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6212'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6385'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6235'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6408'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6244'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6417'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6267'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6440'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6276'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6449'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6299'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6472'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6308'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6481'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6331'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6504'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6340'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6513'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6363'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6536'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6372'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6545'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6395'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6568'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6404'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6577'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6427'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6600'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6436'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6609'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α5767_5870''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_6459'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α5767_5808^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5769_5891^8)
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6632'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6641'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing expression; a type annotation may be required
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α5940_6043''''  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6664'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α5940_5981^7  <:  ((‹∀ 0. ‹∀ 1. (α1572_1575'' -> ‹∀ 2. (α1573_1574''' -> α1573_1574''')›)››,) -> α5942_6064^8)
 //│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 // (* This comment is from the ORIGINAL PAGE: *)
@@ -547,13 +595,13 @@ def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) 
 // FIXME
 t id succ 0
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.665: 	t id succ 0
+//│ ║  l.657: 	t id succ 0
 //│ ║         	^^^^^^^^^
 //│ ╟── function of type `?a -> ?a` is not an instance of type `int`
 //│ ║  l.35: 	def id = fun x -> x
 //│ ║        	         ^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.665: 	t id succ 0
+//│ ║  l.657: 	t id succ 0
 //│ ╙──       	  ^^
 //│ res: error
 //│    = 6
@@ -590,11 +638,11 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 :e // FIXME? refreshing-extr
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.708: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.700: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α6629_6631' -> α6630_6632')›  <:  α6629_6638    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α6629_6631' -> α6630_6632')›  <:  α6629_6631'
+//│ ╟── this constraint:  ‹∀ 0. (α6833_6835' -> α6834_6836')›  <:  α6833_6842    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α6833_6835' -> α6834_6836')›  <:  α6833_6835'
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
@@ -613,33 +661,33 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 :e // fails after new-refreshing-extrusion
 (fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b. ?b -> (forall ?c. ?c -> ?b)) -> ?d` took too many steps and ran out of fuel (5000)
-//│ ║  l.731: 	(fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ ║  l.723: 	(fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟──  + ‹∀ 1. (α8070_9027'' -> α8069_9026)›
-//│ ║  l.731: 	(fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ ╟──  + ‹∀ 1. (α8274_9231'' -> α8273_9230)›
+//│ ║  l.723: 	(fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ ║         	                                                                      ^^^^^^^^^^
-//│ ╟──  + ‹∀ 1. (α8070_9027'' -> α8069_9026)›
-//│ ║  l.731: 	(fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ ╟──  + ‹∀ 1. (α8274_9231'' -> α8273_9230)›
+//│ ║  l.723: 	(fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ ║         	                                                   ^^^^^^^
-//│ ╟──  + ‹∀ 1. (α8070_9027'' -> α8069_9026)›
-//│ ║  l.731: 	(fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ ╟──  + ‹∀ 1. (α8274_9231'' -> α8273_9230)›
+//│ ║  l.723: 	(fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ ║         	                                                   ^^^^^^^
-//│ ╟──  + ‹∀ 1. (α8070_9027'' -> α8069_9026)›
-//│ ║  l.731: 	(fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ ╟──  + ‹∀ 1. (α8274_9231'' -> α8273_9230)›
+//│ ║  l.723: 	(fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ ║         	                                                      ^^^
-//│ ╟──  + ‹∀ 1. (α8070_9027'' -> α8069_9026)›
-//│ ║  l.731: 	(fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ ╟──  + ‹∀ 1. (α8274_9231'' -> α8273_9230)›
+//│ ║  l.723: 	(fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ ║         	                                                      ^^^
-//│ ╟──  + ‹∀ 1. (α8070_9027'' -> α8069_9026)›
-//│ ║  l.731: 	(fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ ╟──  + ‹∀ 1. (α8274_9231'' -> α8273_9230)›
+//│ ║  l.723: 	(fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ ║         	                                                      ^^^
-//│ ╟──  + ‹∀ 1. (α8070_9027'' -> α8069_9026)›
-//│ ╟──  + ‹∀ 1. (α8070_9027'' -> α8069_9026)›
-//│ ╟──  + α7220_8252
-//│ ╟──  + α7220_8252
-//│ ║  l.731: 	(fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ ╟──  + ‹∀ 1. (α8274_9231'' -> α8273_9230)›
+//│ ╟──  + ‹∀ 1. (α8274_9231'' -> α8273_9230)›
+//│ ╟──  + α7424_8456
+//│ ╟──  + α7424_8456
+//│ ║  l.723: 	(fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ ║         	                                                        ^
-//│ ╙──  - α8069_9040
+//│ ╙──  - α8273_9244
 //│ res: error
 //│    = [Function (anonymous)]
 
@@ -654,22 +702,22 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 //│     ?e <: ?e -> ?l)) <: (forall ?n, ?o, ?p, ?q, ?r, ?s, ?t. ?t -> (forall ?n, ?o, ?p, ?u, ?v, ?w, ?q, ?r, ?s, ?t. (?u -> ?w
 //│   where
 //│     ?t <: ?u -> ?v & ?v -> ?w))) -> ?x` took too many steps and ran out of fuel (5000)
-//│ ║  l.768: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ ║  l.760: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟──  + ‹∀ 1. {(α9849_10240'' -> α9851_10242'') where: α9848_10233 <: ((α9849_10240'',) -> α9850_10241''), α9848_10233 <: ((α9850_10241'',) -> α9851_10242'')}›
-//│ ║  l.768: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ ╟──  + ‹∀ 1. {(α10053_10444'' -> α10055_10446'') where: α10052_10437 <: ((α10053_10444'',) -> α10054_10445''), α10052_10437 <: ((α10054_10445'',) -> α10055_10446'')}›
+//│ ║  l.760: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ ║         	                                              ^^^^^^^^^^^^^^^^
-//│ ╟──  + ‹∀ 1. {(α9849_10240'' -> α9851_10242'') where: α9848_10233 <: ((α9849_10240'',) -> α9850_10241''), α9848_10233 <: ((α9850_10241'',) -> α9851_10242'')}›
-//│ ║  l.768: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ ╟──  + ‹∀ 1. {(α10053_10444'' -> α10055_10446'') where: α10052_10437 <: ((α10053_10444'',) -> α10054_10445''), α10052_10437 <: ((α10054_10445'',) -> α10055_10446'')}›
+//│ ║  l.760: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ ║         	                                                          ^^^
-//│ ╟──  + ‹∀ 1. {(α9849_10240'' -> α9851_10242'') where: α9848_10233 <: ((α9849_10240'',) -> α9850_10241''), α9848_10233 <: ((α9850_10241'',) -> α9851_10242'')}›
-//│ ║  l.768: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ ╟──  + ‹∀ 1. {(α10053_10444'' -> α10055_10446'') where: α10052_10437 <: ((α10053_10444'',) -> α10054_10445''), α10052_10437 <: ((α10054_10445'',) -> α10055_10446'')}›
+//│ ║  l.760: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ ║         	                                                          ^^^
-//│ ╟──  + ‹∀ 1. {(α9849_10240'' -> α9851_10242'') where: α9848_10233 <: ((α9849_10240'',) -> α9850_10241''), α9848_10233 <: ((α9850_10241'',) -> α9851_10242'')}›
-//│ ╟──  + ‹∀ 1. {(α9849_10240'' -> α9851_10242'') where: α9848_10233 <: ((α9849_10240'',) -> α9850_10241''), α9848_10233 <: ((α9850_10241'',) -> α9851_10242'')}›
-//│ ╟──  + α9848_10202
-//│ ╟──  - ((α9849_12808,) -> α9850_12809)
-//│ ║  l.768: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ ╟──  + ‹∀ 1. {(α10053_10444'' -> α10055_10446'') where: α10052_10437 <: ((α10053_10444'',) -> α10054_10445''), α10052_10437 <: ((α10054_10445'',) -> α10055_10446'')}›
+//│ ╟──  + ‹∀ 1. {(α10053_10444'' -> α10055_10446'') where: α10052_10437 <: ((α10053_10444'',) -> α10054_10445''), α10052_10437 <: ((α10054_10445'',) -> α10055_10446'')}›
+//│ ╟──  + α10052_10406
+//│ ╟──  - ((α10053_13012,) -> α10054_13013)
+//│ ║  l.760: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ ╙──       	                                                          ^^^
 //│ res: error
 //│    = [Function (anonymous)]
@@ -686,11 +734,11 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 :re
 (fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.804: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
+//│ ║  l.796: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. {(α12847_12854'' -> α12849_12851'') where: α12838' <: ((α12848_12850'',) -> α12849_12851'')}›  <:  α12847_12864'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. {(α12847_12854'' -> α12849_12851'') where: α12838' <: ((α12848_12850'',) -> α12849_12851'')}›  <:  α12847_12854''
+//│ ╟── this constraint:  ‹∀ 1. {(α13051_13058'' -> α13053_13055'') where: α13042' <: ((α13052_13054'',) -> α13053_13055'')}›  <:  α13051_13068'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. {(α13051_13058'' -> α13053_13055'') where: α13042' <: ((α13052_13054'',) -> α13053_13055'')}›  <:  α13051_13058''
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded

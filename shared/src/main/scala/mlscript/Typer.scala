@@ -111,6 +111,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         )
         newCtx.extrCtx.valuesIterator.foreach { buff =>
           val filtered = buff.filter(_._2.level <= lvl)
+          if (filtered.nonEmpty) println(s"FILTER $filtered")
+          // if (filtered.nonEmpty) ???
+          // * ^ This weirdly only ever seems to happen in ONE test case (bug?)
+          // *    `fun (g: forall 'a. ('a -> 'a) -> ('a -> 'a)) -> fun (x: forall 'a. 'a -> 'a) -> fun a -> g a (x a)`
           buff.clear()
           filtered ++= filtered
         }

@@ -484,6 +484,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             // if (rhs.level > lhs.level && rhs.level <= lvl) {
               println(s"wrong level: ${rhs.level}")
               if (rhs.level <= lvl) {
+              // if (rhs.level <= lvl || true) {
+              // if (ctx.lvl > 0) {
+              // if (ctx.lvl > tv.level) {
               // ctx.findUnder(rhs.level) match {
               // Option.when(rhs.level <= lvl)(ctx) match {
               // case S(ctx) =>
@@ -491,6 +494,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 val buf = ctx.extrCtx.getOrElseUpdate(tv, Buffer.empty)
                 buf += false -> rhs
                 cache -= lhs -> rhs
+                // implicit val freshened: MutMap[TV, ST] = MutMap.empty
+                // rec(lhs, rhs.freshenAbove(tv.level, false), true)
                 ()
               } else {
               // case N =>
@@ -546,6 +551,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               println(s"wrong level: ${lhs.level}")
             // if (lhs.level > rhs.level) {
               if (lhs.level <= lvl) {
+              // if (lhs.level <= lvl || true) {
+              // if (ctx.lvl > 0) {
+              // if (ctx.lvl > tv.level) {
               // ctx.findUnder(lhs.level) match {
               // Option.when(lhs.level <= lvl)(ctx) match {
               // case S(ctx) =>
@@ -553,6 +561,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 val buf = ctx.extrCtx.getOrElseUpdate(tv, Buffer.empty)
                 buf += true -> lhs
                 cache -= lhs -> rhs
+                // implicit val freshened: MutMap[TV, ST] = MutMap.empty
+                // rec(lhs.freshenAbove(tv.level, false), rhs, true)
                 ()
               } else {
               // case N =>
