@@ -55,12 +55,12 @@ delta' id
 
 // let t a b c d e = (fun x -> a x x) ((fun y -> b (c y)) (d e)) ;;
 def t a b c d e = (fun x -> a x x) ((fun y -> b (c y)) (d e))
-//│ t: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'd. 'd -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i. ('h -> 'i
+//│ t: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'd. 'd -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i. ('i -> 'f
 //│   where
-//│     'b <: 'e -> 'f
-//│     'c <: 'g -> 'e
-//│     'd <: 'h -> 'g
-//│     'a <: 'f -> 'f -> 'i)))))
+//│     'a <: 'e -> 'e -> 'f
+//│     'b <: 'g -> 'e
+//│     'c <: 'h -> 'g
+//│     'd <: 'i -> 'h)))))
 //│  = [Function: t]
 
 // let t w z a b = (fun y -> (fun x -> w (x y) z) a) b ;;
@@ -226,8 +226,8 @@ t id succ 0
 //│ ║  l.224: 	t id succ 0
 //│ ║         	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α889_1595  <:  ((‹∀ 0. ‹∀ 1. (α763_766'' -> ‹∀ 2. (α764_765''' -> α764_765''')›)››,) -> α891_1623)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α889_915^7  <:  ((‹∀ 0. ‹∀ 1. (α763_766'' -> ‹∀ 2. (α764_765''' -> α764_765''')›)››,) -> α891_1596^8)
+//│ ╟── this constraint:  α898_1605  <:  ((‹∀ 0. ‹∀ 1. (α770_773'' -> ‹∀ 2. (α771_772''' -> α771_772''')›)››,) -> α900_1634)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α898_924^7  <:  ((‹∀ 0. ‹∀ 1. (α770_773'' -> ‹∀ 2. (α771_772''' -> α771_772''')›)››,) -> α900_1606^8)
 //│ res: error | int
 //│    = 2
 
@@ -278,8 +278,8 @@ t id succ 0
 //│ ║  l.276: 	t id succ 0
 //│ ║         	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α2011_2725  <:  ((‹∀ 0. ‹∀ 1. (α763_766'' -> ‹∀ 2. (α764_765''' -> α764_765''')›)››,) -> α2013_2753)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α2011_2037^7  <:  ((‹∀ 0. ‹∀ 1. (α763_766'' -> ‹∀ 2. (α764_765''' -> α764_765''')›)››,) -> α2013_2726^8)
+//│ ╟── this constraint:  α2022_2737  <:  ((‹∀ 0. ‹∀ 1. (α770_773'' -> ‹∀ 2. (α771_772''' -> α771_772''')›)››,) -> α2024_2766)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α2022_2048^7  <:  ((‹∀ 0. ‹∀ 1. (α770_773'' -> ‹∀ 2. (α771_772''' -> α771_772''')›)››,) -> α2024_2738^8)
 //│ res: error | int
 //│    = 6
 
@@ -290,14 +290,14 @@ t2 id succ 0
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: 0 -> ?b` took too many steps and ran out of fuel (5000)
 //│ ║  l.289: 	t2 id succ 0
 //│ ║         	^^^^^^^^^^^^
-//│ ╟──  + ‹∀ 0. ‹∀ 1. (α763_766'' -> ‹∀ 2. (α764_765''' -> α764_765''')›)››
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α770_773'' -> ‹∀ 2. (α771_772''' -> α771_772''')›)››
 //│ ║  l.152: 	def k2 = fun x -> fun y -> y
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^
-//│ ╟──  + ‹∀ 0. ‹∀ 1. (α763_766'' -> ‹∀ 2. (α764_765''' -> α764_765''')›)››
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α770_773'' -> ‹∀ 2. (α771_772''' -> α771_772''')›)››
 //│ ║  l.245: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
 //│ ║         	                                                                                                                                                                     ^^
-//│ ╟──  - ((‹∀ 0. ‹∀ 1. (α763_766'' -> ‹∀ 2. (α764_765''' -> α764_765''')›)››,) -> α2370_3656)
-//│ ╙──  - α2369_3655
+//│ ╟──  - ((‹∀ 0. ‹∀ 1. (α770_773'' -> ‹∀ 2. (α771_772''' -> α771_772''')›)››,) -> α2382_3669)
+//│ ╙──  - α2381_3668
 //│ res: error
 //│    = 6
 
@@ -330,8 +330,8 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 //│ ║  l.328: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α4197_4199' -> α4198_4200')›  <:  α4197_4206    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α4197_4199' -> α4198_4200')›  <:  α4197_4199'
+//│ ╟── this constraint:  ‹∀ 0. (α4212_4214' -> α4213_4215')›  <:  α4212_4221    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α4212_4214' -> α4213_4215')›  <:  α4212_4214'
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
@@ -379,8 +379,8 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 //│ ║  l.377: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. {(α4431_4436'' -> α4433_4435'') where: α4424' <: ((α4432_4434'',) -> α4433_4435'')}›  <:  α4431_4446'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. {(α4431_4436'' -> α4433_4435'') where: α4424' <: ((α4432_4434'',) -> α4433_4435'')}›  <:  α4431_4436''
+//│ ╟── this constraint:  ‹∀ 1. {(α4446_4451'' -> α4448_4450'') where: α4439' <: ((α4447_4449'',) -> α4448_4450'')}›  <:  α4446_4461'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. {(α4446_4451'' -> α4448_4450'') where: α4439' <: ((α4447_4449'',) -> α4448_4450'')}›  <:  α4446_4451''
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded

@@ -38,13 +38,13 @@ ty0 = ty1
 :stats
 :e
 ty1 = ty0
-//│ (C & 'c & 'd | 'b & (A & 'a | B & 'c) | 'e & (D & 'd | E & 'f)) -> ('a, 'b, 'c, 'd, 'e, 'f,)
+//│ (E & 'e & 'f | 'd & (C & 'c | D & 'e) | 'b & (A & 'a | B & 'c)) -> ('a, 'b, 'c, 'd, 'e, 'f,)
 //│   <:  ty1:
 //│ (A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, nothing,)
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.40: 	ty1 = ty0
 //│ ║        	^^^^^^^^^
-//│ ╟── type `A & ‘a` is not an instance of type `'b`
+//│ ╟── type `A & ‘a_212'` is not an instance of type `'b_213'`
 //│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ║        	          ^^^^^^
 //│ ╟── Note: constraint arises from type variable:

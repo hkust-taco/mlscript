@@ -65,8 +65,8 @@ ty3A = ty3A
 //│ ║  l.+1: 	ty3A = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a100_101'››  <:  'a100_112'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a100_101'››  <:  'a100_101'
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a104_105'››  <:  'a104_117'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a104_105'››  <:  'a104_105'
 //│ constrain calls  : 17
 //│ annoying  calls  : 17
 //│ subtyping calls  : 26
@@ -90,8 +90,8 @@ ty3B = ty3A
 //│ ║  l.+1: 	ty3B = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a113_124']  <:  'a100_127'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a113_114']  <:  'a100_101'
+//│ ╟── this constraint:  MyArray['a118_130']  <:  'a104_133'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a118_119']  <:  'a104_105'
 //│ constrain calls  : 57
 //│ annoying  calls  : 52
 //│ subtyping calls  : 63
@@ -110,8 +110,8 @@ ty3A = ty3B
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a113_137']  <:  'a113_135'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a113_114']  <:  'a113_114'
+//│ ╟── this constraint:  MyArray['a118_144']  <:  'a118_142'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a118_119']  <:  'a118_119'
 //│ constrain calls  : 53
 //│ annoying  calls  : 33
 //│ subtyping calls  : 57
@@ -135,8 +135,8 @@ ty4B = ty4B
 //│ ║  l.+1: 	ty4B = ty4B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a138_139'››  <:  'a138_150'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a138_139'››  <:  'a138_139'
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a145_146'››  <:  'a145_158'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a145_146'››  <:  'a145_146'
 //│ constrain calls  : 19
 //│ annoying  calls  : 17
 //│ subtyping calls  : 26
@@ -188,7 +188,7 @@ ty2A = ty2B
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.+1: 	ty2A = ty2B
 //│ ║        	^^^^^^^^^^^
-//│ ╟── type `‘a` is not an instance of type `MyArray`
+//│ ╟── type `‘a_165'` is not an instance of type `MyArray`
 //│ ║  l.23: 	def ty2A: MyArray['a]
 //│ ║        	                  ^^
 //│ ╟── Note: constraint arises from applied type reference:

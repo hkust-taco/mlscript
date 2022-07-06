@@ -51,8 +51,8 @@ eval1 eval1 e1
 //│ ║  l.49: 	eval1 eval1 e1
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α53' -> (α54' -> (val56' | α65')))›  <:  α53_164    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α53' -> (α54' -> (val56' | α65')))›  <:  α53'
+//│ ╟── this constraint:  ‹∀ 0. (α55' -> (α56' -> (val58' | α67')))›  <:  α55_166    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α55' -> (α56' -> (val58' | α67')))›  <:  α55'
 //│ res: error
 //│    = 6
 
@@ -62,8 +62,8 @@ def eval1_fixed_1 = eval1 eval1
 //│ ║  l.60: 	def eval1_fixed_1 = eval1 eval1
 //│ ║        	                    ^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α53' -> (α54' -> (val56' | α65')))›  <:  α53_191'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α53' -> (α54' -> (val56' | α65')))›  <:  α53'
+//│ ╟── this constraint:  ‹∀ 0. (α55' -> (α56' -> (val58' | α67')))›  <:  α55_193'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α55' -> (α56' -> (val58' | α67')))›  <:  α55'
 //│ eval1_fixed_1: error
 //│              = [Function (anonymous)]
 
@@ -92,8 +92,8 @@ def eval1_fixed_3 =
 //│ ║  l.90: 	  in fixed fixed
 //│ ║        	     ^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α284'' -> α312'')›  <:  α284_381'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α284'' -> α312'')›  <:  α284''
+//│ ╟── this constraint:  ‹∀ 1. (α286'' -> α314'')›  <:  α286_383'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α286'' -> α314'')›  <:  α286''
 //│ eval1_fixed_3: error
 //│              = [Function (anonymous)]
 
@@ -142,8 +142,8 @@ def eval2_fixed_1 = eval2 eval2
 //│ ║  l.140: 	def eval2_fixed_1 = eval2 eval2
 //│ ║         	                    ^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α429' -> (α430' -> (α436' | α451')))›  <:  α429_585'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α429' -> (α430' -> (α436' | α451')))›  <:  α429'
+//│ ╟── this constraint:  ‹∀ 0. (α433' -> (α434' -> (α440' | α455')))›  <:  α433_589'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α433' -> (α434' -> (α440' | α455')))›  <:  α433'
 //│ eval2_fixed_1: error
 //│              = [Function (anonymous)]
 
@@ -283,8 +283,8 @@ eval2_broken eval2_broken e2
 //│ ║  l.+1: 	eval2_broken eval2_broken e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α1027' -> (α1028' -> (arg1030' | α1045')))›  <:  α1027_1091    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α1027' -> (α1028' -> (arg1030' | α1045')))›  <:  α1027'
+//│ ╟── this constraint:  ‹∀ 0. (α1031' -> (α1032' -> (arg1034' | α1049')))›  <:  α1031_1095    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α1031' -> (α1032' -> (arg1034' | α1049')))›  <:  α1031'
 //│ res: error
 
 
@@ -300,8 +300,8 @@ fix eval2f_oops e2
 //│ ║  l.+1: 	fix eval2f_oops e2
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α1112_1183 -> (α1117_1190 | α1132_1191))  <:  α623_1208    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α1112' -> (α1117' | α1132'))  <:  α623_1170'''
+//│ ╟── this constraint:  (α1116_1187 -> (α1121_1194 | α1136_1195))  <:  α627_1212    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α1116' -> (α1121' | α1136'))  <:  α627_1174'''
 //│ res: error
 
 

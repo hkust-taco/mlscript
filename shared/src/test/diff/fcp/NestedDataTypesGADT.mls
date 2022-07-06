@@ -81,7 +81,7 @@ d1_ : HTree[Z, int]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.80: 	d1_ : HTree[Z, int]
 //│ ║        	^^^
-//│ ╟── integer literal of type `1` is not an instance of type `A`
+//│ ╟── integer literal of type `1` is not an instance of type `A_141'`
 //│ ║  l.68: 	d1 = DLeaf { value = 1; n = Z{} }
 //│ ║        	                     ^
 //│ ╟── Note: constraint arises from type alias type parameter:
@@ -95,7 +95,7 @@ d2 = DNode { subTree = (d1_, d1_); n = S{} }
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.94: 	d2 = DNode { subTree = (d1_, d1_); n = S{} }
 //│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `A`
+//│ ╟── integer literal of type `1` is not an instance of type `A_159''`
 //│ ║  l.68: 	d1 = DLeaf { value = 1; n = Z{} }
 //│ ║        	                     ^
 //│ ╟── Note: constraint arises from type alias type parameter:
@@ -131,7 +131,7 @@ d2_ : HTree[S[Z], int]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.130: 	d2_ : HTree[S[Z], int]
 //│ ║         	^^^
-//│ ╟── type `S[?p]` is not an instance of type `N`
+//│ ╟── type `S[?p]` is not an instance of type `N_256'`
 //│ ║  l.40: 	type HTree[N, A] = forall 'r. (forall 'p. (DLeaf[A] | DNode[S['p], A] & DNode[N, A]) -> 'r) -> 'r
 //│ ║        	                                                            ^^^^^
 //│ ╟── Note: constraint arises from type alias type parameter:
@@ -150,7 +150,7 @@ d2_ : HTree[S[Z], int]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.146: 	d2_ : HTree[S[Z], int]
 //│ ║         	^^^
-//│ ╟── type `HTreeBase[S[Z], ?]` does not match type `DLeaf[A] | DNode[in S[?p] | N out S[?p] & N, ?]`
+//│ ╟── type `HTreeBase[S[Z], ?]` does not match type `DLeaf[A_293'] | DNode[in S[?p] | N_295' out S[?p] & N_295', ?]`
 //│ ║  l.145: 	d2_ k = k (d2:HTreeBase[S[Z], int])
 //│ ║         	              ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:

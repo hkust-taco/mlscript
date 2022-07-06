@@ -77,10 +77,10 @@ choose id
 //│     'b <: 'a
 
 fun (g: forall 'a. ('a -> 'a) -> ('a -> 'a)) -> fun (x: forall 'a. 'a -> 'a) -> fun a -> g a (x a)
-//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'b, 'c, 'd, 'e, 'f. ('c -> 'e
+//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'b, 'c, 'd, 'e, 'f. ('c -> 'f
 //│   where
-//│     'b <: 'c -> 'd -> 'e
-//│     'f <: 'c -> 'd))
+//│     'b <: 'c -> 'd
+//│     'e <: 'c -> 'd -> 'f))
 
 choose id succ
 //│ res: int -> int
@@ -120,7 +120,7 @@ let f = choose id in (f auto) (f succ)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.119: 	let f = choose id in (f auto) (f succ)
 //│ ║         	                     ^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a` is not an instance of type `int`
+//│ ╟── type `‘a_325'` is not an instance of type `int`
 //│ ║  l.32: 	def auto (x: forall 'a. 'a -> 'a) = x x
 //│ ╙──      	                    ^^
 //│ res: int -> int | error

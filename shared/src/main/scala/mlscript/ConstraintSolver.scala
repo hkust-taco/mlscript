@@ -32,6 +32,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           shadows: Shadows = Shadows.empty
         ): Unit = {
     currentConstrainingRun += 1
+    // constrainImpl(lhs, rhs)
     constrainImpl(lhs, rhs)(err => {
       raise(err)
       return()
@@ -1189,7 +1190,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           val rv = TraitTag( // Rigid type variables (ie, skolems) are encoded as TraitTag-s
             lvl,
             // tv.level,
-            Var(tv.nameHint.getOrElse("_"+freshVar(noProv,N).toString).toString))(tv.prov)
+            // {if (tv.nameHint.isDefined) freshVar(noProv,N,S("")).toString
+            // Var(tv.nameHint.getOrElse("_"+freshVar(noProv,N).toString).toString)}
+            // Var(tv.nameHint.getOrElse("_"+freshVar(noProv,N).toString).toString)
+            Var(tv.nameHint.getOrElse("")+"_"+freshVar(noProv,N,S("")).toString)
+          )(tv.prov)
           if (tv.lowerBounds.nonEmpty || tv.upperBounds.nonEmpty) {
             // The bounds of `tv` may be recursive (refer to `tv` itself),
             //    so here we create a fresh variabe that will be able to tie the presumed recursive knot

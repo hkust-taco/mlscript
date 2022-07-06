@@ -277,7 +277,7 @@ def a0'_ = a2'_ a1'
 //│ ║  l.275: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››  <:  α32_1046'    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››  <:  α32_1063'    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››  <:  α32_34''
 //│ a0'_: error
 //│     = [Function: either]

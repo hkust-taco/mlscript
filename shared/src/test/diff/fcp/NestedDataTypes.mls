@@ -76,8 +76,8 @@ rec def map f tree = case tree of {
 //│ ║  l.68: 	  }
 //│ ║        	^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α23_124'  <:  ((α24_139',) -> α26_140')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α23_124'  <:  ((α24_125''',) -> α26_126''')
+//│ ╟── this constraint:  α25_132'  <:  ((α26_147',) -> α28_148')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α25_132'  <:  ((α26_133''',) -> α28_134''')
 //│ map: (nothing -> anything & 'value -> 'value0) -> ((Leaf[?] with {value: 'value}) | Node[?]) -> (Leaf['value0] | Node[nothing] & {subTree: nothing})
 //│    = [Function: map]
 

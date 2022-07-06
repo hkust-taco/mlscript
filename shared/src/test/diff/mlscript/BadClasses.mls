@@ -7,7 +7,7 @@ class Box[T]: { inner: T }
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.6: 	  method Get2 = this.x
 //│ ║       	                ^^^^^^
-//│ ╟── reference of type `Box[T] & this` does not have field 'x'
+//│ ╟── reference of type `Box[T_24] & this` does not have field 'x'
 //│ ║  l.6: 	  method Get2 = this.x
 //│ ╙──     	                ^^^^
 //│ Defined class Box[+T]
@@ -20,7 +20,7 @@ class Box2[T]: { inner: T }
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.19: 	  method Test = this.inner + 1
 //│ ║        	                ^^^^^^^^^^^^
-//│ ╟── field selection of type `T` is not an instance of type `int`
+//│ ╟── field selection of type `T_41` is not an instance of type `int`
 //│ ║  l.19: 	  method Test = this.inner + 1
 //│ ║        	                ^^^^^^^^^^
 //│ ╟── Note: class type parameter T is defined at:

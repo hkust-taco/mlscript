@@ -61,7 +61,7 @@ class C5[A]
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.60: 	  method F(x: A) = x + 1
 //│ ║        	                   ^^^
-//│ ╟── reference of type `A` is not an instance of type `int`
+//│ ╟── reference of type `A_92` is not an instance of type `int`
 //│ ║  l.60: 	  method F(x: A) = x + 1
 //│ ║        	                   ^
 //│ ╟── Note: class type parameter A is defined at:

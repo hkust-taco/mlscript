@@ -63,8 +63,8 @@ def succ n = n + 1
 //│       = [Function: choose]
 //│ choose3: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c -> 'c
 //│   where
-//│     'a <: 'b
-//│     'b <: 'b)))
+//│     'b <: 'b
+//│     'a <: 'b)))
 //│        = [Function: choose3]
 //│ id: Sid
 //│   = [Function: id]
@@ -81,13 +81,13 @@ def test2 = test succ
 def test2_ = test_ succ
 //│ test: 'a -> (forall 'a, 'b, 'c. ('c -> 'c
 //│   where
-//│     'b <: 'a
-//│     'a <: 'a))
+//│     'a <: 'a
+//│     'b <: 'a))
 //│     = [Function (anonymous)]
 //│ test_: 'a -> (forall 'a, 'b, 'c. ('c -> 'c
 //│   where
-//│     'b <: 'a
-//│     'a <: 'a))
+//│     'a <: 'a
+//│     'b <: 'a))
 //│      = [Function (anonymous)]
 //│ test2: 'a -> 'a
 //│   where
@@ -141,7 +141,7 @@ def mkpair x y = (x, y)
 // *)
 example mkpair
 example_ mkpair
-//│ res: int -> (‘a_498, int,)
+//│ res: int -> (‘a_502'_507, int,)
 //│    = [Function (anonymous)]
 //│ res: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('b, 'c,)), 'a,)
 //│    = [Function (anonymous)]

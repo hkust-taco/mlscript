@@ -54,7 +54,7 @@ foo_ty = foo
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.50: 	foo_ty = foo
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── type `‘b_107` is not an instance of type `'b_108`
+//│ ╟── type `‘b_110''_111` is not an instance of type `'b_110''_112`
 //│ ║  l.42: 	def foo_ty: 'a -> (forall 'b. 'b -> ('a, 'b,))
 //│ ║        	                          ^^
 //│ ╟── Note: constraint arises from quantified type variable:
