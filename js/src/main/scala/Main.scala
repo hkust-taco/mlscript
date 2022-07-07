@@ -302,7 +302,7 @@ object Main {
       try d match {
         case d @ Def(isrec, nme, L(rhs)) =>
           val ty_sch = typeLetRhs(isrec, nme.name, rhs)(ctx, raise)
-          val inst = ty_sch.instantiate(0)
+          val inst = ty_sch.instantiate(ctx, raise, Shadows.empty)
           println(s"Typed `$nme` as: $inst")
           println(s" where: ${inst.showBounds}")
           val exp = getType(ty_sch)
@@ -329,6 +329,7 @@ object Main {
           //   extrCtx = N,
           //   vars = tps.map(tp => tp.fold(_.name, _ => ??? // FIXME
           //     ) -> freshVar(noProv/*FIXME*/, N)(1)).toMap))
+          implicit val tp: TP = NoProv // TODO
           val ty_sch = ctx.poly { implicit ctx =>
             typeType(rhs)(ctx, raise,
               vars = tps.map(tp => tp.fold(_.name, _ => ??? // FIXME
