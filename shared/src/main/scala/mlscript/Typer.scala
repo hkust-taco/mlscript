@@ -101,12 +101,24 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         implicit val ctx: Ctx = newCtx
         implicit val freshened: MutMap[TV, ST] = MutMap.empty
         // assert(newCtx.extrCtx.isEmpty) // TODO
-        val poly = PolymorphicType.mk(lvl,
-          // ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy)
-          ConstrainedType.mk(newCtx.extrCtx.iterator.mapValues(_.iterator
+        
+        val cty = ConstrainedType.mk(newCtx.extrCtx.iterator.mapValues(_.iterator
             .filter(_._2.level > lvl) // does not seem to change anything!
             .toList).toList, innerTy)
-            .freshenAbove(lvl, false) // * In principle this should change nothing.... TODO why does it somehow makes the Vec test much slower?!
+        
+        // println(s"Inferred poly constr: $cty")
+        // println(s"where ${cty.showBounds}")
+        println(s"Inferred poly constr: $cty  —— where ${cty.showBounds}")
+        
+        val cty_fresh =
+          // * In principle this should change nothing.... TODO why does it somehow makes the Vec test much slower?!
+          cty.freshenAbove(lvl, false)
+        
+        if (dbg) if (cty_fresh =/= cty) println(s"Refreshed:            $cty_fresh  —— where ${cty_fresh.showBounds}")
+        
+        val poly = PolymorphicType.mk(lvl,
+          // ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy)
+          cty_fresh
           // innerTy
         )
         newCtx.extrCtx.valuesIterator.foreach { buff =>

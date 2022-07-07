@@ -36,6 +36,73 @@ g {} {}
 // ————————————————————————
 
 
+def app p q = p q
+//│ app: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│   where
+//│     'a <: 'b -> 'c))
+//│    = [Function: app1]
+
+def mul r s = r (app s) id
+//│ mul: 'a -> (forall 'a. ('b -> 'c
+//│   where
+//│     'a <: (forall 'b, 'd, 'e. ('d -> 'e
+//│   where
+//│     'b <: 'd -> 'e)) -> (forall 'f. 'f -> 'f) -> 'c))
+//│    = [Function: mul]
+
+:e
+mul id {}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.54: 	mul id {}
+//│ ║        	^^^^^^^^^
+//│ ╟── record literal of type `anything` is not a function
+//│ ║  l.54: 	mul id {}
+//│ ║        	       ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.39: 	def app p q = p q
+//│ ╙──      	              ^^^
+//│ res: error
+//│ Runtime error:
+//│   TypeError: p is not a function
+
+def fact t = mul t {}
+//│ fact: ((forall 'a, 'b, 'c. ('b -> 'c
+//│   where
+//│     'a <: 'b -> 'c)) -> (forall 'd. 'd -> 'd) -> 'e) -> 'e
+//│     = [Function: fact]
+
+:e
+fact id
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.75: 	fact id
+//│ ║        	^^^^^^^
+//│ ╟── record literal of type `anything` is not a function
+//│ ║  l.68: 	def fact t = mul t {}
+//│ ║        	                   ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.39: 	def app p q = p q
+//│ ╙──      	              ^^^
+//│ res: error
+//│ Runtime error:
+//│   TypeError: p is not a function
+
+def mul r s = r (app s)
+//│ mul: 'a -> (forall 'a. ('b -> 'c
+//│   where
+//│     'a <: (forall 'b, 'd, 'e. ('d -> 'e
+//│   where
+//│     'b <: 'd -> 'e)) -> 'c))
+//│    = [Function: mul1]
+
+mul id id {}
+//│ res: anything
+//│    = {}
+
+
+
+// ————————————————————————
+
+
 :ArgGen
 :DistributeForalls
 
@@ -70,14 +137,14 @@ def f x y = add x y
 :e
 f {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.71: 	f {} {}
-//│ ║        	^^^^^^^
+//│ ║  l.138: 	f {} {}
+//│ ║         	^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.71: 	f {} {}
-//│ ║        	  ^^
+//│ ║  l.138: 	f {} {}
+//│ ║         	  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.59: 	def add n m = n succ m
-//│ ╙──      	              ^^^^^^
+//│ ║  l.126: 	def add n m = n succ m
+//│ ╙──       	              ^^^^^^
 //│ res: error
 //│ Runtime error:
 //│   TypeError: n is not a function

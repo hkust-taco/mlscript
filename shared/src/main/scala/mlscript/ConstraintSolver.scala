@@ -1132,8 +1132,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case _: ClassTag | _: TraitTag => ty
       case w @ Without(b, ns) => Without(freshen(b), ns)(w.prov)
       case tr @ TypeRef(d, ts) => TypeRef(d, ts.map(freshen(_)))(tr.prov)
+      case pt @ PolymorphicType(lvl, bod) if pt.level <= above => pt // is this really useful?
+      case pt @ PolymorphicType(lvl, bod) if lvl < ctx.lvl =>
+        implicit val tp: TP = NoProv // TODO?
+        freshen(PolymorphicType(ctx.lvl, ctx.nextLevel { implicit ctx => bod.freshenAbove(lvl, false) }))
       case pt @ PolymorphicType(lvl, bod) => PolymorphicType(lvl,
-        // Setting `upperLim` here is essentially just an optimization,
+        // Setting `below` here is essentially just an optimization,
         //  to avoid having to copy some type variables needlessly
         freshenImpl(bod, below = lvl))
       case ct @ ConstrainedType(cs, bod) =>

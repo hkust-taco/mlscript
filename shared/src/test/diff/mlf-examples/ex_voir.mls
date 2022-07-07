@@ -57,7 +57,7 @@ def id_ = fun x -> x
 def succ n = n + 1
 //│ choose: 'a -> (forall 'b. 'b -> ('a | 'b))
 //│       = [Function: choose]
-//│ choose3: 'a -> anything -> (forall 'b. 'b -> ('a | 'b))
+//│ choose3: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a | 'b | 'c)))
 //│        = [Function: choose3]
 //│ id: Sid
 //│   = [Function: id]
@@ -72,13 +72,13 @@ def test = choose3 id
 def test_ = choose3 id_
 def test2 = test succ
 def test2_ = test_ succ
-//│ test: anything -> (forall 'a. 'a -> (Sid | 'a))
+//│ test: 'a -> (forall 'b. 'b -> (Sid | 'a | 'b))
 //│     = [Function (anonymous)]
-//│ test_: anything -> (forall 'a. 'a -> (forall 'a, 'b. 'b -> 'b | 'a))
+//│ test_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. 'c -> 'c | 'a | 'b))
 //│      = [Function (anonymous)]
-//│ test2: 'a -> (Sid | 'a)
+//│ test2: 'a -> (int -> int | Sid | 'a)
 //│      = [Function (anonymous)]
-//│ test2_: 'a -> (forall 'a, 'b. 'b -> 'b | 'a)
+//│ test2_: 'a -> (forall 'a. int -> int | 'a)
 //│       = [Function (anonymous)]
 
 // (* Messages d'erreur foireux : *)
@@ -120,7 +120,7 @@ def mkpair x y = (x, y)
 // *)
 example mkpair
 example_ mkpair
-//│ res: int -> (‘a_400'_405, int,)
+//│ res: int -> (‘a_426'_431, int,)
 //│    = [Function (anonymous)]
 //│ res: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('b, 'c,)), 'a,)
 //│    = [Function (anonymous)]

@@ -58,12 +58,11 @@ def coll_mem c x = c.Mem x
 //│     'a <: Collection['a]))
 
 // typo in the paper? it was `fun x -> fun y -> ...`
-// :e // FIXME? refreshing-extr
 def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
   let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
   (l1, l2)
-//│ simple_and_double: Collection[?] -> (forall 'a. 'a, forall 'b. 'b,)
+//│ simple_and_double: Collection['a | 'b] -> (forall 'c. 'c, forall 'd. 'd,)
 //│   where
-//│     'b :> (Cons[(nothing, nothing,)] with {tail: 'b}) | Nil
-//│     'a :> (Cons[nothing] with {tail: 'a}) | Nil
+//│     'd :> (Cons[('b, 'b,)] with {tail: 'd}) | Nil
+//│     'c :> (Cons['a] with {tail: 'c}) | Nil

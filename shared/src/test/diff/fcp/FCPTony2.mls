@@ -1,0 +1,188 @@
+:GeneralizeCurriedFunctions
+:ArgGen
+:NoRecursiveTypes
+:DistributeForalls
+
+type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ Defined type alias ChurchInt
+
+def zero f x = x
+//│ zero: anything -> (forall 'a. 'a -> 'a)
+//│     = [Function: zero]
+
+zero: ChurchInt
+//│ res: ChurchInt
+//│    = [Function: zero]
+
+def succ: ChurchInt -> ChurchInt
+def succ n f x = f (n f x)
+//│ succ: ChurchInt -> ChurchInt
+//│     = <missing implementation>
+//│ 'a -> (forall 'b. 'b -> (forall 'b. ('c -> 'd
+//│   where
+//│     'b <: (forall 'a, 'b, 'c, 'e. ('e
+//│   where
+//│     'a <: 'b -> 'c -> 'e)) -> 'd)))
+//│   <:  succ:
+//│ ChurchInt -> ChurchInt
+//│     = [Function: succ1]
+
+// def to_church: int -> ChurchInt
+rec def to_church n =
+  if n == 0 then zero
+  else succ (to_church (n - 1))
+//│ to_church: int -> (anything -> (forall 'a. 'a -> 'a) | ChurchInt)
+//│          = [Function: to_church]
+
+to_church: int -> ChurchInt
+//│ res: int -> ChurchInt
+//│    = [Function: to_church]
+
+// def add: ChurchInt -> ChurchInt -> ChurchInt
+def add n m = n succ m
+//│ add: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│   where
+//│     'a <: (ChurchInt -> ChurchInt) -> 'b -> 'c))
+//│    = [Function: add]
+
+add: ChurchInt -> ChurchInt -> ChurchInt
+//│ res: ChurchInt -> ChurchInt -> ChurchInt
+//│    = [Function: add]
+
+// def mul: ChurchInt -> ChurchInt -> ChurchInt
+def mul n m = n (add m) zero
+//│ mul: 'a -> (forall 'a. ('a -> 'b
+//│   where
+//│     'a <: (forall 'c, 'd, 'e. ('d -> 'e
+//│   where
+//│     'c <: (ChurchInt -> ChurchInt) -> 'd -> 'e)) -> ('a -> (forall 'f. 'f -> 'f)) -> 'b))
+//│    = [Function: mul]
+
+mul: ChurchInt -> ChurchInt -> ChurchInt
+//│ res: ChurchInt -> ChurchInt -> ChurchInt
+//│    = [Function: mul]
+
+// def pow: ChurchInt -> ChurchInt -> ChurchInt
+def pow n m = n (mul m) (succ zero)
+//│ pow: 'a -> (forall 'a. ('a -> 'b
+//│   where
+//│     'a <: (forall 'c. ('a -> 'd
+//│   where
+//│     'c <: (forall 'e, 'f, 'g. ('f -> 'g
+//│   where
+//│     'e <: (ChurchInt -> ChurchInt) -> 'f -> 'g)) -> ('a -> (forall 'h. 'h -> 'h)) -> 'd)) -> ChurchInt -> 'b))
+//│    = [Function: pow]
+
+:e
+pow: ChurchInt -> ChurchInt -> ChurchInt
+//│ ╔══[ERROR] Cyclic-looking constraint while typing type ascription; a type annotation may be required
+//│ ║  l.77: 	pow: ChurchInt -> ChurchInt -> ChurchInt
+//│ ║        	^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α24_27'' -> ‹∀ 2. (α25_26''' -> α25_26''')›)››  <:  'a21_353    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α24_27'' -> ‹∀ 2. (α25_26''' -> α25_26''')›)››  <:  'a21_22'
+//│ res: ChurchInt -> ChurchInt -> ChurchInt
+//│    = [Function: pow]
+
+def unit = id
+//│ unit: 'a -> 'a
+//│     = [Function: id]
+
+type Unit_t = 'a -> 'a
+unit : Unit_t
+//│ Defined type alias Unit_t
+//│ res: Unit_t
+//│    = [Function: id]
+
+def tru x _ = x unit
+//│ tru: 'a -> (forall 'a. ('a -> 'b
+//│   where
+//│     'a <: (forall 'c. 'c -> 'c) -> 'b))
+//│    = [Function: tru]
+
+def fls _ x = x unit
+//│ fls: anything -> ((forall 'a. 'a -> 'a) -> 'b) -> 'b
+//│    = [Function: fls]
+
+type If_t = (Unit_t -> 'a) -> (Unit_t -> 'a) -> 'a
+tru : If_t
+fls : If_t
+//│ Defined type alias If_t
+//│ res: If_t
+//│    = [Function: tru]
+//│ res: If_t
+//│    = [Function: fls]
+
+def iszero n = n (fun _ -> fls) tru
+//│ iszero: (('a -> 'a -> ((forall 'b. 'b -> 'b) -> 'c) -> 'c) -> (forall 'a. 'a -> (forall 'a. ('a -> 'd
+//│   where
+//│     'a <: (forall 'b. 'b -> 'b) -> 'd))) -> 'e) -> 'e
+//│       = [Function: iszero]
+
+iszero : ChurchInt -> If_t
+//│ res: ChurchInt -> If_t
+//│    = [Function: iszero]
+
+def pair x y f = f x y
+//│ pair: 'a -> (forall 'b. 'b -> (forall 'c. ('a -> 'b -> 'c) -> 'c))
+//│     = [Function: pair]
+
+def fst p = p (fun x -> fun _ -> x)
+//│ fst: ((forall 'a. 'a -> anything -> 'a) -> 'b) -> 'b
+//│    = [Function: fst]
+
+def snd p = p (fun _ -> fun x -> x)
+//│ snd: ((anything -> (forall 'a. 'a -> 'a)) -> 'b) -> 'b
+//│    = [Function: snd]
+
+def pred n =
+  let s p = pair (snd p) (succ (snd p)) in
+  let z = pair zero zero in
+  fst (n s z)
+//│ pred: ((forall 'a. (('a -> (forall 'b. 'b -> 'b)) -> (‘a_561^6_566 -> ‘a_561^6_566) -> ‘a_561^6_566 -> ‘a_561^6_566 & 'a) -> ((forall 'a. ('c
+//│   where
+//│     'a <: ('a -> (forall 'b. 'b -> 'b)) -> 'c)) -> ChurchInt -> 'd) -> 'd) -> ((('a -> (forall 'e. 'e -> 'e)) -> ('a -> (forall 'e. 'e -> 'e)) -> 'f) -> 'f) -> (forall 'a, 'g. 'g -> 'a -> 'g) -> 'h) -> 'h
+//│     = [Function: pred]
+
+pred : ChurchInt -> ChurchInt
+//│ res: ChurchInt -> ChurchInt
+//│    = [Function: pred]
+
+:e
+rec def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n (fact (pred n)))
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
+//│ ║  l.152: 	rec def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n (fact (pred n)))
+//│ ║         	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α24_27'' -> ‹∀ 2. (α25_26''' -> α25_26''')›)››  <:  α123_835'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α24_27'' -> ‹∀ 2. (α25_26''' -> α25_26''')›)››  <:  α123_835'
+//│ fact: ChurchInt -> (anything -> (forall 'a. 'a -> 'a) | ChurchInt)
+//│     = [Function: fact]
+
+:e
+def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n {})
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.163: 	def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n {})
+//│ ║         	                                                                    ^^^^^^^^
+//│ ╟── record literal of type `anything` is not a function
+//│ ║  l.163: 	def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n {})
+//│ ║         	                                                                          ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.42: 	def add n m = n succ m
+//│ ║        	              ^^^^^^
+//│ ╟── from reference:
+//│ ║  l.53: 	def mul n m = n (add m) zero
+//│ ╙──      	                     ^
+//│ fact: ChurchInt -> (error | ChurchInt)
+//│     = [Function: fact1]
+
+fact : ChurchInt -> ChurchInt
+//│ res: ChurchInt -> ChurchInt
+//│    = [Function: fact1]
+
+:re
+(fact (to_church 1)) (fun x -> x + 1) 0
+//│ res: error | int
+//│ Runtime error:
+//│   TypeError: n is not a function
+
