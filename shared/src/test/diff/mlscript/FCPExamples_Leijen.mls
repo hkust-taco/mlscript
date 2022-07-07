@@ -386,7 +386,7 @@ map xauto ids
 //│    = Cons { head: [Function: id1], tail: Nil {} }
 
 // ,("map xauto (map xauto ids)", Wrong)
-:e // * This term seems fine, though they mark it as wrong in their system (now fails due to apprent skolem extrusion)
+:e // * This term needs distributivity to wrork because of how autox is defined (see at the end of this file):
 map xauto (map xauto ids)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.390: 	map xauto (map xauto ids)
@@ -931,7 +931,9 @@ fun x -> (auto x, (x : int -> int) 1)
 
 // ]
 
-// ============ Our stuff ============
+
+
+// ============ ============ ============ Our stuff ============ ============ ============
 
 :ng
 def runST2: forall 'a. (forall 's. (ST['s, 'a], ST['s, 'a])) -> 'a
@@ -959,13 +961,13 @@ runST4 (newRef4 1)
 // FIXME
 (fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.960: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.962: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a_2463'_2464` is not an instance of type `'a_2463'_2465`
-//│ ║  l.960: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.962: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║         	                                                      ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.960: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.962: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ╙──       	                                                      ^^
 //│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0)
 //│    = [Function: res]
@@ -974,13 +976,66 @@ runST4 (newRef4 1)
 // FIXME
 xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.975: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.977: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║         	^^^^^
 //│ ╟── type `‘a_2479'_2480` is not an instance of type `'a_2479'_2481`
-//│ ║  l.975: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.977: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║         	                                         ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.975: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.977: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ╙──       	                                         ^^
 //│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0)
 //│    = [Function: xauto]
+
+
+// ———————————— Distribtivity ————————————
+
+
+:DistributeForalls
+
+// * Note the more precise type we now infer:
+// ,("map xauto ids", ok "forall a. [a -> a]")
+map xauto ids
+//│ res: List[forall 'a. 'a -> 'a]
+//│    = Cons { head: [Function: id1], tail: Nil {} }
+
+// * This term is fine but though they mark it as wrong in their system (they don't have distrib. nor subtyping)
+// ,("map xauto (map xauto ids)", Wrong)
+map xauto (map xauto ids)
+//│ res: List[forall 'a. 'a -> 'a]
+//│    = Cons { head: [Function: id1], tail: Nil {} }
+
+
+// * Distributivity demonstration:
+
+def test1: List['a -> 'a]
+def test2: List[forall 'a. 'a -> 'a]
+//│ test1: List['a -> 'a]
+//│      = <missing implementation>
+//│ test2: List[forall 'a. 'a -> 'a]
+//│      = <missing implementation>
+
+test1 = test2
+//│ List[forall 'a. 'a -> 'a]
+//│   <:  test1:
+//│ List['a -> 'a]
+//│      = <no result>
+//│        test2 is not implemented
+
+:e
+test2 = test1
+//│ List['a -> 'a]
+//│   <:  test2:
+//│ List[forall 'a. 'a -> 'a]
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.1026: 	test2 = test1
+//│ ║          	^^^^^^^^^^^^^
+//│ ╟── type `‘a_2548'_2549` is not an instance of type `'a_2548'_2550`
+//│ ║  l.1012: 	def test2: List[forall 'a. 'a -> 'a]
+//│ ║          	                       ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.1012: 	def test2: List[forall 'a. 'a -> 'a]
+//│ ╙──        	                       ^^
+//│      = <no result>
+//│        test1 and test2 are not implemented
+
