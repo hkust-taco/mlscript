@@ -66,9 +66,8 @@ def e : 'g -> int
 run e
 //│ res: int
 
-// ?
-fun (x : (forall. 'a -> 'a)) -> x
-//│ res: ('a -> 'a) -> 'a -> 'a
+fun (x : (forall 'a. 'a -> 'a)) -> x
+//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 
 // =============== Sec 7 ===============
 

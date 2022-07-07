@@ -289,7 +289,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   def typeType2(ty: Type, simplify: Bool = true)
         (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType],
         newDefsInfo: Map[Str, (TypeDefKind, Int)] = Map.empty): (SimpleType, Iterable[TypeVariable]) =
-      trace(s"$lvl. Typing type $ty") {
+      // trace(s"$lvl. Typing type $ty") {
+      trace(s"Typing type $ty") {
     println(s"vars=$vars newDefsInfo=$newDefsInfo")
     val typeType2 = ()
     // val outerCtxLvl = MinLevel + 1
@@ -301,7 +302,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     val localVars = mutable.Map.empty[TypeVar, TypeVariable]
     def tyTp(loco: Opt[Loc], desc: Str, originName: Opt[Str] = N) =
       TypeProvenance(loco, desc, originName, isType = true)
-    def rec(ty: Type)(implicit ctx: Ctx, recVars: Map[TypeVar, TypeVariable]): SimpleType = ty match {
+    def rec(ty: Type)(implicit ctx: Ctx, recVars: Map[TypeVar, TypeVariable]): SimpleType = trace(s"$lvl. type $ty") { ty match {
       case Top => ExtrType(false)(tyTp(ty.toLoc, "top type"))
       case Bot => ExtrType(true)(tyTp(ty.toLoc, "bottom type"))
       case Bounds(Bot, Top) =>
@@ -374,7 +375,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         //   localVars.getOrElseUpdate(tv, freshVar(noProv, S(tv), tv.identifier.toOption)(outerCtxLvl))
         //     .withProv(tyTp(ty.toLoc, "type variable")))
         recVars.getOrElse(tv,
-          localVars.getOrElseUpdate(tv, freshVar(noProv, N, tv.identifier.toOption)(outerCtxLvl)) // ????
+          localVars.getOrElseUpdate(tv, freshVar(noProv, N, tv.identifier.toOption)
+              (outerCtxLvl)) // * Type variables not explicily bound are assigned the widest (the outer context's) level
             .withProv(tyTp(ty.toLoc, "type variable")))
       case AppliedType(base, targs) =>
         val prov = tyTp(ty.toLoc, "applied type reference")
@@ -412,17 +414,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             case L(tn) => freshVar(tyTp(tn.toLoc, "quantified type name"), N, S(tn.name)) // this probably never happens...
             case R(tv) =>
               // val nv = freshVar(tyTp(tv.toLoc, "quantified type variable"), S(tv), tv.identifier.toOption)
-              val nv = freshVar(tyTp(tv.toLoc, "quantified type variable"), N, tv.identifier.toOption) // ????
+              val nv = freshVar(tyTp(tv.toLoc, "quantified type variable"), N, tv.identifier.toOption)
               newVars += tv -> nv
               nv
           }
+          println(vars, recVars)
           // val newVars = tvs.map()
           // PolymorphicType(oldLvl, rec(ty)(ctx, newVars))
           rec(ty)(ctx, newVars)
         }
-    }
+    }}(r => s"=> $r")
     (rec(ty)(ctx, Map.empty), localVars.values)
-  }(r => s"=> ${r._1} | ${r._2.mkString(", ")}")
+  }(r => s"=> ${r._1} ——— ${r._2.mkString(", ")}")
   
   def typePattern(pat: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty): SimpleType =
     typeTerm(pat)(ctx.copy(inPattern = true), raise, vars)
