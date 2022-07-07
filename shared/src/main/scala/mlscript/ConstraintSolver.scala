@@ -271,23 +271,29 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         }
       }
     
-    def rec(lhs: SimpleType, rhs: SimpleType, sameLevel: Bool, nestedProv: Opt[TypeProvenance] = N)
+    def rec(lhs: SimpleType, rhs: SimpleType, sameLevel: Bool, nestedProv: Opt[NestedTypeProvenance] = N)
           (implicit raise: Raise, cctx: ConCtx): Unit = {
       constrainCalls += 1
       // Thread.sleep(10)  // useful for debugging constraint-solving explosions debugged on stdout
       recImpl(lhs, rhs)(raise,
         if (sameLevel)
+          // only add non-provenance information to context to bloated context
           (if (cctx._1.headOption.exists(_ is lhs.prov)) cctx._1 else lhs :: cctx._1)
           ->
           (if (cctx._2.headOption.exists(_ is rhs.prov)) cctx._2 else rhs :: cctx._2)
-        else (lhs :: Nil) ->
-          (nestedProv.map(prov => rhs.withProv(prov) :: Nil).getOrElse(rhs :: Nil))
+        else (lhs :: Nil) -> {
+          println(s"Adding ${nestedProv.map(pv => pv.desc ++ pv.chain.toString())} nested prov for $lhs and $rhs")
+          val a = nestedProv.map(prov => rhs.withProv(prov) :: Nil).getOrElse(rhs :: Nil)
+          println(s"Added $a nested prov for $lhs and $rhs")
+          a
+        }
       )
     }
+
     def recImpl(lhs: SimpleType, rhs: SimpleType)
           (implicit raise: Raise, cctx: ConCtx): Unit =
     // trace(s"C $lhs <! $rhs") {
-    trace(s"C $lhs <! $rhs    (${cache.size})") {
+    trace(s"C $lhs <! $rhs    (${cache.size}) where lhs is ${lhs.getClass.getSimpleName} and rhs is ${rhs.getClass.getSimpleName} and cctx is $cctx}") {
     // trace(s"C $lhs <! $rhs  ${lhs.getClass.getSimpleName}  ${rhs.getClass.getSimpleName}") {
       // println(s"[[ ${cctx._1.map(_.prov).mkString(", ")}  <<  ${cctx._2.map(_.prov).mkString(", ")} ]]")
       // println(s"{{ ${cache.mkString(", ")} }}")
@@ -320,6 +326,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_, p @ ProvType(und)) => rec(lhs, und, true)
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs, true)
           case (FunctionType(l0, r0), FunctionType(l1, r1)) =>
+            println(s"FunctionType($l0, $r0) and FunctionType($l1, $r1)\n context part 1 -\n  $cctx._1\n and part 2 -\n $cctx._2\n")
             rec(l1, l0, false, Some(NestedTypeProvenance((cctx._1 reverse_::: cctx._2).reverse)))
             rec(r0, r1, false, Some(NestedTypeProvenance(cctx._1 reverse_::: cctx._2)))
           case (prim: ClassTag, ot: ObjectTag)
@@ -432,7 +439,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       val rhs = cctx._2.head
       
       println(s"CONSTRAINT FAILURE: $lhs <: $rhs")
-      // println(s"CTX: ${cctx.map(_.map(lr => s"${lr._1} <: ${lr._2} [${lr._1.prov}] [${lr._2.prov}]"))}")
+      println(s"CTX: ${cctx._1.zip(cctx._2).map(lr => s"${lr._1} <: ${lr._2} [${lr._1.prov}] [${lr._2.prov}]")}")
       
       def doesntMatch(ty: SimpleType) = msg"does not match type `${ty.expNeg}`"
       def doesntHaveField(n: Str) = msg"does not have field '$n'"
