@@ -1,0 +1,87 @@
+:GeneralizeCurriedFunctions
+:NoRecursiveTypes
+:NoProvs
+// :ArgGen
+
+
+def app n f = n f
+//│ app: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│   where
+//│     'a <: 'b -> 'c))
+//│    = [Function: app]
+
+def g x y = app x y
+//│ g: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│   where
+//│     'a <: 'b -> 'c))
+//│  = [Function: g]
+
+:e
+g {} {}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.20: 	g {} {}
+//│ ║        	^^^^^^^
+//│ ╟── record literal of type `anything` is not a function
+//│ ║  l.20: 	g {} {}
+//│ ║        	  ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.7: 	def app n f = n f
+//│ ╙──     	              ^^^
+//│ res: error
+//│ Runtime error:
+//│   TypeError: n is not a function
+
+
+
+// ————————————————————————
+
+
+:ArgGen
+:DistributeForalls
+
+
+type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ Defined type alias ChurchInt
+
+def succ: ChurchInt -> ChurchInt
+def succ n f x = f (n f x)
+//│ succ: ChurchInt -> ChurchInt
+//│     = <missing implementation>
+//│ 'a -> (forall 'b. 'b -> (forall 'b. ('c -> 'd
+//│   where
+//│     'b <: (forall 'a, 'b, 'c, 'e. ('e
+//│   where
+//│     'a <: 'b -> 'c -> 'e)) -> 'd)))
+//│   <:  succ:
+//│ ChurchInt -> ChurchInt
+//│     = [Function: succ1]
+
+def add n m = n succ m
+def f x y = add x y
+//│ add: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│   where
+//│     'a <: (ChurchInt -> ChurchInt) -> 'b -> 'c))
+//│    = [Function: add]
+//│ f: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│   where
+//│     'a <: (ChurchInt -> ChurchInt) -> 'b -> 'c))
+//│  = [Function: f]
+
+:e
+f {} {}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.71: 	f {} {}
+//│ ║        	^^^^^^^
+//│ ╟── record literal of type `anything` is not a function
+//│ ║  l.71: 	f {} {}
+//│ ║        	  ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.59: 	def add n m = n succ m
+//│ ╙──      	              ^^^^^^
+//│ res: error
+//│ Runtime error:
+//│   TypeError: n is not a function
+
+
+
+

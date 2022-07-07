@@ -21,9 +21,7 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'b, 'head, 'a, 'tail. ((List['a] & 'tail) -> (Cons['a] with {head: 'head, tail: 'tail})
-//│   where
-//│     'b <: 'head & 'a))
+//│ 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -152,9 +150,7 @@ def nfind table key =
   { None -> fun f -> fun x -> x
   | Some -> opt.val
   }
-//│ nfind: List[?] -> (forall 'val, 'val0. (anything -> (anything -> (forall 'a. 'a -> 'a) | 'val0)
-//│   where
-//│     'val <: 'val0))
+//│ nfind: List[?] -> anything -> anything -> (forall 'a. 'a -> 'a)
 //│      = [Function: nfind]
 
 // type Int = ['a] ('a -> 'a) -> ('a -> 'a)
@@ -244,12 +240,10 @@ a = add (nfind table "one")
 
 // :e // FIXME? refreshing-extr
 b = (nfind table "two")
-//│ b: ('a & 'b) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('f | 'd)
+//│ b: ('a & 'b) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('f | 'e)
 //│   where
-//│     'a <: 'c -> 'd
-//│     'b <: 'c -> 'e & 'e -> 'd
-//│     'a <: 'c -> 'd
-//│     'b <: 'c -> 'e & 'e -> 'd))
+//│     'a <: 'c -> 'd & 'd -> 'e
+//│     'b <: 'c -> 'e))
 //│  = [Function (anonymous)]
 
 // * Note: this one requires `:DistributeForalls`

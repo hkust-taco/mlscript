@@ -18,9 +18,7 @@ def Nil = Nil {}
 //│ Nil: Nil
 
 def Cons head tail = Cons { head; tail }
-//│ Cons: 'b -> (forall 'b, 'head, 'a, 'tail. ((List['a] & 'tail) -> (Cons['a] with {head: 'head, tail: 'tail})
-//│   where
-//│     'b <: 'head & 'a))
+//│ Cons: 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
 
 // ------------ Type signatures for functions used in the examples ------------
 // (I guess)
@@ -65,7 +63,7 @@ def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
   let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
   (l1, l2)
-//│ simple_and_double: Collection[?] -> (forall 'tail. 'tail, forall 'tail0. 'tail0,)
+//│ simple_and_double: Collection[?] -> (forall 'a. 'a, forall 'b. 'b,)
 //│   where
-//│     'tail0 :> (Cons[(nothing, nothing,)] with {tail: 'tail0}) | Nil
-//│     'tail :> (Cons[nothing] with {tail: 'tail}) | Nil
+//│     'b :> (Cons[(nothing, nothing,)] with {tail: 'b}) | Nil
+//│     'a :> (Cons[nothing] with {tail: 'a}) | Nil

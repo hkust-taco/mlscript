@@ -477,163 +477,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             if prim.parentsST.contains(ot.id) => ()
             
             
-            // /* 
-          case (lhs: TypeVariable, rhs) =>
-            val tv = lhs
-            // if (rhs.level > lhs.level && rhs.level > lvl) {
-            if (rhs.level > lhs.level) {
-            // if (rhs.level > lhs.level && rhs.level <= lvl) {
-              println(s"wrong level: ${rhs.level}")
-              if (!noConstrainedTypes && rhs.level <= lvl) {
-              // if (rhs.level <= lvl || true) {
-              // if (ctx.lvl > 0) {
-              // if (ctx.lvl > tv.level) {
-              // ctx.findUnder(rhs.level) match {
-              // Option.when(rhs.level <= lvl)(ctx) match {
-              // case S(ctx) =>
-                println(s"STASHING $tv bound in extr ctx")
-                val buf = ctx.extrCtx.getOrElseUpdate(tv, Buffer.empty)
-                buf += false -> rhs
-                cache -= lhs -> rhs
-                // implicit val freshened: MutMap[TV, ST] = MutMap.empty
-                // rec(lhs, rhs.freshenAbove(tv.level, false), true)
-                ()
-              // } else if (true) {
-              } else if (false) {
-                
-                // val rhs2 = PolymorphicType.mk(lvl, { // FIXME???!??!?!?
-                //   implicit val flexifyRigids: Bool = true
-                //   extrude(rhs, lvl, false, MaxLevel)
-                //   // rhs0
-                // })
-                val rhs2 = {
-                  // implicit val flexifyRigids: Bool = true
-                  implicit val flexifyRigids: Bool = false
-                  extrude(rhs, lvl, false, MaxLevel)
-                }
-                // println(s"EXTR RHS  $rhs0  ~>  $rhs2  to ${lhs.level}")
-                println(s"EXTR RHS  ~>  $rhs2  to ${lvl}")
-                println(s" where ${rhs2.showBounds}")
-                // println(s"   and ${rhs.showBounds}")
-                rec(lhs, rhs2, true)
-                
-              } else {
-              // case N =>
-                /* 
-                ???
-                // val rhs2 = PolymorphicType.mk(lhs.level, {
-                //   implicit val flexifyRigids: Bool = true
-                //   // extrude(rhs, lhs.level, false, MaxLevel)
-                //   rhs
-                // })
-                // val rhs2 = PolymorphicType.mk(lhs.level, {
-                //   // implicit val flexifyRigids: Bool = false
-                //   // extrude(rhs, lhs.level, false, MaxLevel)
-                //   rhs
-                // })
-                // assert()
-                implicit val state: MutMap[TV, ST] = MutMap.empty
-                implicit val lvl: Level = tv.level
-                val rhs2 = freshenAbove(tv.level, rhs)
-                // val rhs2 = rhs
-                val sh = shadows
-                
-                {
-                implicit val shadows: Shadows = sh - (lhs.shadow -> rhs.shadow)
-                rec(lhs, rhs2, true)
-                }
-                // ???
-                */
-                // val rhs2 = PolymorphicType.mk(lhs.level, { // FIXME???!??!?!?
-                //   implicit val flexifyRigids: Bool = true
-                //   extrude(rhs, lhs.level, false, MaxLevel)
-                //   // rhs0
-                // })
-                val rhs2 = {
-                  implicit val flexifyRigids: Bool = false
-                  extrude(rhs, lhs.level, false, MaxLevel)
-                }
-                // println(s"EXTR RHS  $rhs0  ~>  $rhs2  to ${lhs.level}")
-                println(s"EXTR RHS  ~>  $rhs2  to ${lhs.level}")
-                println(s" where ${rhs2.showBounds}")
-                // println(s"   and ${rhs.showBounds}")
-                rec(lhs, rhs2, true)
-              }
-            } else {
-            println(s"NEW $lhs UB (${rhs.level})")
-            val newBound = (cctx._1 ::: cctx._2.reverse).foldRight(rhs)((c, ty) =>
-              if (c.prov is noProv) ty else mkProxy(ty, c.prov))
-            lhs.upperBounds ::= newBound // update the bound
-            // lhs.lowerBounds.foreach(recThrough(_, rhs, lhs)) // propagate from the bound
-            lhs.lowerBounds.foreach(rec(_, rhs, true)) // propagate from the bound
-            }
-            
-          case (lhs, rhs: TypeVariable) =>
-            val tv = rhs
-            // if (lhs.level > rhs.level && lhs.level > lvl) {
-            if (lhs.level > rhs.level) {
-              println(s"wrong level: ${lhs.level}")
-            // if (lhs.level > rhs.level) {
-              if (!noConstrainedTypes && lhs.level <= lvl) {
-              // if (lhs.level <= lvl || true) {
-              // if (ctx.lvl > 0) {
-              // if (ctx.lvl > tv.level) {
-              // ctx.findUnder(lhs.level) match {
-              // Option.when(lhs.level <= lvl)(ctx) match {
-              // case S(ctx) =>
-                println(s"STASHING $tv bound in extr ctx")
-                val buf = ctx.extrCtx.getOrElseUpdate(tv, Buffer.empty)
-                buf += true -> lhs
-                cache -= lhs -> rhs
-                // implicit val freshened: MutMap[TV, ST] = MutMap.empty
-                // rec(lhs.freshenAbove(tv.level, false), rhs, true)
-                ()
-              // } else if (true) {
-              } else if (false) {
-                
-                val lhs2 = {
-                  implicit val flexifyRigids: Bool = false
-                  extrude(lhs, lvl, true, MaxLevel)
-                }
-                // println(s"EXTR LHS  $lhs0  ~>  $lhs2  to ${rhs.level}")
-                println(s"EXTR LHS  ~>  $lhs2  to ${lvl}")
-                println(s" where ${lhs2.showBounds}")
-                // println(s"   and ${lhs.showBounds}")
-                rec(lhs2, rhs, true)
-                
-              } else {
-              // case N =>
-                /* 
-                ???
-                // val lhs = extrude(lhs0, rhs.level, true, MaxLevel)
-                val lhs2 = { // TODO make into existential...
-                  implicit val flexifyRigids: Bool = false
-                  extrude(lhs, rhs.level, true, MaxLevel)
-                }
-                rec(lhs2, rhs, true)
-                */
-                val lhs2 = { // TODO make into existential...
-                  implicit val flexifyRigids: Bool = false
-                  extrude(lhs, rhs.level, true, MaxLevel)
-                }
-                // println(s"EXTR LHS  $lhs0  ~>  $lhs2  to ${rhs.level}")
-                println(s"EXTR LHS  ~>  $lhs2  to ${rhs.level}")
-                println(s" where ${lhs2.showBounds}")
-                // println(s"   and ${lhs.showBounds}")
-                rec(lhs2, rhs, true)
-              }
-            } else {
-            println(s"NEW $rhs LB (${lhs.level})")
-            // println(lhs, rhs, lhs.level, rhs.level)
-            val newBound = (cctx._1 ::: cctx._2.reverse).foldLeft(lhs)((ty, c) =>
-              if (c.prov is noProv) ty else mkProxy(ty, c.prov))
-            rhs.lowerBounds ::= newBound // update the bound
-            // rhs.upperBounds.foreach(recThrough(lhs, _, rhs)) // propagate from the bound
-            rhs.upperBounds.foreach(rec(lhs, _, true)) // propagate from the bound
-            }
-            //  */
-            
-            
             
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
             println(s"NEW $lhs UB (${rhs.level})")
@@ -641,6 +484,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             lhs.upperBounds ::= newBound // update the bound
             lhs.lowerBounds.foreach(rec(_, rhs, true)) // propagate from the bound
+            
           case (lhs, rhs: TypeVariable) if lhs.level <= rhs.level =>
             println(s"NEW $rhs LB (${lhs.level})")
             // println(lhs, rhs, lhs.level, rhs.level)
@@ -648,6 +492,50 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             rhs.lowerBounds ::= newBound // update the bound
             rhs.upperBounds.foreach(rec(lhs, _, true)) // propagate from the bound
+            
+            
+          case (lhs: TypeVariable, rhs) =>
+            val tv = lhs
+            println(s"wrong level: ${rhs.level}")
+            if (!noConstrainedTypes && rhs.level <= lvl) {
+              println(s"STASHING $tv bound in extr ctx")
+              val buf = ctx.extrCtx.getOrElseUpdate(tv, Buffer.empty)
+              buf += false -> rhs
+              cache -= lhs -> rhs
+              ()
+            } else {
+              val rhs2 = {
+                implicit val flexifyRigids: Bool = false
+                extrude(rhs, lhs.level, false, MaxLevel)
+              }
+              // println(s"EXTR RHS  $rhs0  ~>  $rhs2  to ${lhs.level}")
+              println(s"EXTR RHS  ~>  $rhs2  to ${lhs.level}")
+              println(s" where ${rhs2.showBounds}")
+              // println(s"   and ${rhs.showBounds}")
+              rec(lhs, rhs2, true)
+            }
+            
+          case (lhs, rhs: TypeVariable) =>
+            val tv = rhs
+            println(s"wrong level: ${lhs.level}")
+            if (!noConstrainedTypes && lhs.level <= lvl) {
+              println(s"STASHING $tv bound in extr ctx")
+              val buf = ctx.extrCtx.getOrElseUpdate(tv, Buffer.empty)
+              buf += true -> lhs
+              cache -= lhs -> rhs
+              ()
+            } else {
+              val lhs2 = {
+                implicit val flexifyRigids: Bool = false
+                extrude(lhs, rhs.level, true, MaxLevel)
+              }
+              // println(s"EXTR LHS  $lhs0  ~>  $lhs2  to ${rhs.level}")
+              println(s"EXTR LHS  ~>  $lhs2  to ${rhs.level}")
+              println(s" where ${lhs2.showBounds}")
+              // println(s"   and ${lhs.showBounds}")
+              rec(lhs2, rhs, true)
+            }
+            
             
             /* 
           // case (tv: TypeVariable, rhs0) if extrusionContext.nonEmpty && !tv.recPlaceholder =>
@@ -666,6 +554,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             ()
             */
             
+            /* 
           // case (tv: TypeVariable, rhs0) if tv.lowerBounds.foreach(_.level) =>
           case (tv: TypeVariable, rhs0) if unifyInsteadOfExtrude && tv.lowerBounds.nonEmpty =>
             trace(s"NVM, unify") {
@@ -713,7 +602,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             println(s"   and ${lhs0.showBounds}")
             rec(lhs, rhs, true)
             // */
-            
+            */
             
             
             

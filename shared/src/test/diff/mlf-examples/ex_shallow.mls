@@ -222,9 +222,7 @@ type A1' = forall 'a. (('a | Sid) -> ('a | Sid)) -> ('a | Sid) -> ('a | Sid)
 // let a0' = a2' a1';;
 
 def either x y = if true then x else y
-//│ either: 'a -> (forall 'a, 'b. ('b -> 'b
-//│   where
-//│     'a <: 'b))
+//│ either: 'a -> (forall 'b. 'b -> ('a | 'b))
 //│       = [Function: either]
 
 def a1' = fun f -> fun x -> f (f (either id x))
@@ -263,7 +261,7 @@ def a2'_ x =
 // FIXME
 def a0' = a2' a1'
 //│ ╔══[ERROR] identifier not found: a2'
-//│ ║  l.264: 	def a0' = a2' a1'
+//│ ║  l.262: 	def a0' = a2' a1'
 //│ ╙──       	          ^^^
 //│ a0': error
 //│ Code generation encountered an error:
@@ -274,10 +272,10 @@ def a0' = a2' a1'
 :Fuel 15000
 def a0'_ = a2'_ a1'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.275: 	def a0'_ = a2'_ a1'
+//│ ║  l.273: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α41_42'' -> α41_42'')››  <:  α31_1055'    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α41_42'' -> α41_42'')››  <:  α31_1089'    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α41_42'' -> α41_42'')››  <:  α31_33''
 //│ a0'_: error
 //│     = [Function: either]

@@ -67,9 +67,7 @@ def cons: 'a -> List['a] -> List['a]
 def cons head tail = Cons { head; tail }
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'b, 'head, 'a, 'tail. ((List['a] & 'tail) -> (Cons['a] with {head: 'head, tail: 'tail})
-//│   where
-//│     'b <: 'head & 'a))
+//│ 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -145,9 +143,7 @@ def choose: 'a -> 'a -> 'a
 def choose x y = if true then x else y
 //│ choose: 'a -> 'a -> 'a
 //│       = <missing implementation>
-//│ 'a -> (forall 'a, 'b. ('b -> 'b
-//│   where
-//│     'a <: 'b))
+//│ 'a -> (forall 'b. 'b -> ('a | 'b))
 //│   <:  choose:
 //│ 'a -> 'a -> 'a
 //│       = [Function: choose]
@@ -508,40 +504,40 @@ a id
 :e // * Skolem extrusion; rightly rejected
 choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.509: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
+//│ ║  l.505: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ║         	                                  ^^^^^^^
-//│ ╟── type `‘a_1187''_1188` is not an instance of type `'a_1187''_1189`
-//│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ╟── type `‘a_1185''_1186` is not an instance of type `'a_1185''_1187`
+//│ ║  l.169: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║  l.169: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──       	                    ^^
 //│ res: 'b
 //│   where
 //│     'b :> (forall 'a. 'a -> 'a) | (forall 'a0, 'c. ('a0 -> 'a0) -> 'c)
 //│     'c :> error
-//│     'a0 :> ‘a_1187''_1188
-//│         <: ‘a_1187''_1189
+//│     'a0 :> ‘a_1185''_1186
+//│         <: ‘a_1185''_1187
 //│    = [Function: id1]
 
 // * The skolem used to (unsafely) leak into this type – see also `Skolems.mls`:
 res
-//│ res: (('a | ‘a_1187''_1188) -> (‘a_1187''_1189 & 'a) & 'a0) -> ('a0 | error)
+//│ res: (('a | ‘a_1185''_1186) -> (‘a_1185''_1187 & 'a) & 'a0) -> ('a0 | error)
 //│    = [Function: id1]
 
 :e // skolem extrusion
 res id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.533: 	res id
+//│ ║  l.529: 	res id
 //│ ║         	^^^^^^
-//│ ╟── type `‘a_1187''_1188` is not an instance of type `'a_1187''_1189`
-//│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ╟── type `‘a_1185''_1186` is not an instance of type `'a_1185''_1187`
+//│ ║  l.169: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║  l.169: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║         	                    ^^
 //│ ╟── from type variable:
-//│ ║  l.509: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
+//│ ║  l.505: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ╙──       	                          ^^
 //│ res: 'a -> 'a | error
 //│    = [Function: id1]
@@ -550,13 +546,13 @@ res id
 :e
 a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.551: 	a (fun x -> { u = x })
+//│ ║  l.547: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a_1216'`
-//│ ║  l.551: 	a (fun x -> { u = x })
+//│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a_1214'`
+//│ ║  l.547: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║  l.169: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──       	                    ^^
 //│ res: 'a -> {u: 'a} | error
 //│    = [Function (anonymous)]

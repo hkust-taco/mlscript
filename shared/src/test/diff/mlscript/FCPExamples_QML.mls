@@ -77,3 +77,4 @@ def choose: 'a -> 'a -> 'a
 
 choose (head ids)
 //│ res: 'a -> (forall 'b. 'a | 'b -> 'b)
+

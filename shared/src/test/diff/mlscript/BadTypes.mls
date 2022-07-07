@@ -172,8 +172,8 @@ someRec: BadRec
 //│ ║  l.+1: 	someRec: BadRec
 //│ ║        	^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  {x: 'a46_52, y: 'a46_52}  <:  {x: 'a34_53, y: BadRec}    RecordType  RecordType
-//│ ╙──  ... looks like:  {x: 'a46_47', y: 'a46_47'}  <:  {x: 'a34, y: BadRec}
+//│ ╟── this constraint:  {x: 'a45_51, y: 'a45_51}  <:  {x: 'a34_52, y: BadRec}    RecordType  RecordType
+//│ ╙──  ... looks like:  {x: 'a45_46', y: 'a45_46'}  <:  {x: 'a34, y: BadRec}
 //│ res: BadRec
 //│    = <no result>
 //│      someRec is not implemented

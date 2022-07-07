@@ -229,12 +229,15 @@ to_church = to_ch_mix
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.225: 	to_church = to_ch_mix
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N_764'_773` is not an instance of type `'N_764'_772`
+//│ ╟── type `‘N_760'_769` is not an instance of type `'N_760'_768`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ╙──      	                        ^^
+//│ ║        	                        ^^
+//│ ╟── from reference:
+//│ ║  l.30: 	def s n = fun f -> fun x -> f (n f x)
+//│ ╙──      	                                   ^
 //│          = [Function: to_ch_mix]
 
 
@@ -250,11 +253,11 @@ to_church = to_ch_mix
 rec def to_ch n =
   succD (to_ch n)
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.250: 	rec def to_ch n =
+//│ ║  l.253: 	rec def to_ch n =
 //│ ║         	              ^^^
-//│ ║  l.251: 	  succD (to_ch n)
+//│ ║  l.254: 	  succD (to_ch n)
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N_779''_781` is not an instance of type `'N_779''_780`
+//│ ╟── type `‘N_775''_777` is not an instance of type `'N_775''_776`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -263,7 +266,7 @@ rec def to_ch n =
 //│ ╟── from quantified type variable:
 //│ ║  l.60: 	def succD: forall 'M. ChurchInt -> ('M -> 'M) -> ('M -> 'M)
 //│ ╙──      	                  ^^
-//│ to_ch: anything -> (('M | ‘N_779''_781) -> (‘N_779''_780 & 'M)) -> (‘N_779''_780 & 'M) -> ('M | ‘N_779''_781)
+//│ to_ch: anything -> (('M | ‘N_775''_777) -> (‘N_775''_776 & 'M)) -> (‘N_775''_776 & 'M) -> ('M | ‘N_775''_777)
 //│      = [Function: to_ch1]
 
 
