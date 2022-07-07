@@ -210,7 +210,7 @@ c = e
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.206: 	c = e
 //│ ║         	^^^^^
-//│ ╟── type `‘a_461'_466` is not an instance of type `'a_461'_469`
+//│ ╟── type `‘a_457'_465` is not an instance of type `'a_457'_468`
 //│ ║  l.162: 	def c: 'a -> C6['a]
 //│ ║         	                ^^
 //│ ╟── Note: constraint arises from type variable:
@@ -338,7 +338,7 @@ append_ty_2 = append
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.334: 	append_ty_2 = append
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘T0_777'` is not an instance of type `L`
+//│ ╟── type `‘T0_776'` is not an instance of type `L`
 //│ ║  l.327: 	def append_ty_2: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] & {h: 'h; t: S['T0] & {v: 'v}})
 //│ ║         	                                                                          ^^^
 //│ ╟── Note: constraint arises from applied type reference:
@@ -361,7 +361,7 @@ append_ty_2 = append_ty
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.357: 	append_ty_2 = append_ty
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘T0_838'` is not an instance of type `L`
+//│ ╟── type `‘T0_837'` is not an instance of type `L`
 //│ ║  l.327: 	def append_ty_2: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] & {h: 'h; t: S['T0] & {v: 'v}})
 //│ ║         	                                                                          ^^^
 //│ ╟── Note: constraint arises from applied type reference:

@@ -65,10 +65,9 @@ succ0 = s
 // :e // due to tapping
 // :e // skolem extrusion?
 def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
-//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'a. 'a -> (forall 'a, 'N0, 'b. ('N0 -> 'b
 //│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'd -> 'e)))
+//│     'a <: 'N0 -> 'N0 & 'N0 -> 'b)))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: succ2]

@@ -194,7 +194,7 @@ def mkIntegerPrecise3 = mkInteger
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.186: 	def mkIntegerPrecise3 = mkInteger
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `int` is not an instance of type `'a_525'`
+//│ ╟── operator application of type `int` is not an instance of type `'a_524'`
 //│ ║  l.72: 	rec def mkInteger value = Integer { value; addOne = fun n -> mkInteger (n.value + 1) }
 //│ ║        	                                                                        ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type variable:

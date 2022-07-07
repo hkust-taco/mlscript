@@ -277,8 +277,8 @@ def a0'_ = a2'_ a1'
 //│ ║  l.275: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››  <:  α32_1063'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››  <:  α32_34''
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α41_42'' -> α41_42'')››  <:  α31_1055'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α41_42'' -> α41_42'')››  <:  α31_33''
 //│ a0'_: error
 //│     = [Function: either]
 :ResetFuel

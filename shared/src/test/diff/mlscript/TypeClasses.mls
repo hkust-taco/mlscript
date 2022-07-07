@@ -136,7 +136,7 @@ class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
 //│ ║        	                                                               ^^^^^^^^^^^^^^
-//│ ╟── reference of type `ComplexMonoid_bad_1[A_543] & this` does not have field 'imaginary'
+//│ ╟── reference of type `ComplexMonoid_bad_1[A_541] & this` does not have field 'imaginary'
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
 //│ ╙──      	                                                               ^^^^
 //│ ╔══[ERROR] Type mismatch in method definition:
@@ -167,7 +167,7 @@ class ComplexMonoid_bad_2[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+5: 	    Complex (this.base.Add self.real that.real) (this.base.Add self.imaginary that.imaginary)
 //│ ║        	             ^^^^^^^^^^^^^
-//│ ╟── type `Monoid[A_617]` is not an instance of `ComplexMonoid_bad_2[?A]`
+//│ ╟── type `Monoid[A_615]` is not an instance of `ComplexMonoid_bad_2[?A]`
 //│ ║  l.+1: 	class ComplexMonoid_bad_2[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║        	                                                           ^^^^^^^^^
 //│ ╟── but it flows into field selection with expected type `ComplexMonoid_bad_2[?A]`
@@ -176,7 +176,7 @@ class ComplexMonoid_bad_2[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+5: 	    Complex (this.base.Add self.real that.real) (this.base.Add self.imaginary that.imaginary)
 //│ ║        	                                                 ^^^^^^^^^^^^^
-//│ ╟── type `Monoid[A_617]` is not an instance of `ComplexMonoid_bad_2[?A]`
+//│ ╟── type `Monoid[A_615]` is not an instance of `ComplexMonoid_bad_2[?A]`
 //│ ║  l.+1: 	class ComplexMonoid_bad_2[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║        	                                                           ^^^^^^^^^
 //│ ╟── but it flows into field selection with expected type `ComplexMonoid_bad_2[?A]`

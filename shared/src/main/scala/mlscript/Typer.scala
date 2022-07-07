@@ -653,6 +653,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       //     typeTerm(trm)
       //   })
         
+      case Asc(v @ ValidPatVar(nme), ty) => // TODO generalize treatment with unification instead of special-casing for variables
+        val ty_ty = typeType(ty)(ctx.copy(inPattern = false), raise, vars)
+        val prov = tp(if (verboseConstraintProvenanceHints) v.toLoc else N, "variable")
+        ctx.env.get(nme) match {
+          case S(_) => err(s"Duplicate use of annotated pattern variable $nme", v.toLoc)
+          case N =>
+            ctx += nme -> ty_ty
+            ty_ty
+        }
+        
       case Asc(trm, ty) =>
         // val trm_ty = typeTerm(trm)
         val trm_ty = if (ctx.inPattern /* || !generalizeCurriedFunctions */) typeTerm(trm)

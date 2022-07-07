@@ -144,7 +144,7 @@ delta succ
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.143: 	delta succ
 //│ ║         	^^^^^^^^^^
-//│ ╟── type `‘a_293'` is not an instance of type `int`
+//│ ╟── type `‘a_292'` is not an instance of type `int`
 //│ ║  l.107: 	type Sid = forall 'a. 'a -> 'a
 //│ ║         	                  ^^
 //│ ╟── Note: constraint arises from reference:
@@ -169,7 +169,7 @@ delta (choose id succ)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.168: 	delta (choose id succ)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_344'` is not an instance of type `int`
+//│ ╟── type `‘a_343'` is not an instance of type `int`
 //│ ║  l.107: 	type Sid = forall 'a. 'a -> 'a
 //│ ║         	                  ^^
 //│ ╟── Note: constraint arises from reference:
@@ -304,8 +304,8 @@ id1 id
 //│ ║  l.302: 	id1 id
 //│ ║         	^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α496_549 -> α502_550)  <:  α501_551    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α496' -> α502')  <:  α501'
+//│ ╟── this constraint:  (α495_548 -> α501_549)  <:  α500_550    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α495' -> α501')  <:  α500'
 //│ res: error
 //│    = [Function: id]
 
@@ -323,8 +323,8 @@ id1 id1
 //│ ║  l.321: 	id1 id1
 //│ ║         	^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. id1495'›  <:  α496_568    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. id1495'›  <:  α496'
+//│ ╟── this constraint:  ‹∀ 0. id1494'›  <:  α495_567    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. id1494'›  <:  α495'
 //│ res: error
 //│    = [Function: id1]
 
@@ -648,9 +648,9 @@ def c_false = fun a -> fun b -> b c_unit
 // let c_if (cond:Bool) c_then c_else = cond c_then c_else 
 def c_if (cond: Fbool) c_then c_else = cond c_then c_else
 def c_if_ cond c_then c_else = cond c_then c_else
-//│ c_if: Fbool -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd. ('c -> 'd
+//│ c_if: Fbool -> (forall 'a. 'a -> (forall 'a, 'b. ((Funit -> 'b) -> 'b
 //│   where
-//│     'b <: 'a -> 'c -> 'd)))
+//│     'a <: Funit -> 'b)))
 //│     = [Function: c_if]
 //│ c_if_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('c -> 'd
 //│   where
@@ -774,9 +774,9 @@ def c_sumd = fun x -> fun fg -> fun fd -> fd x
 // let c_case (s:Sum) g d = s g d
 def c_case (s: Sum) g d = s g d
 def c_case_ s g d = s g d
-//│ c_case: Sum -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd. ('c -> 'd
+//│ c_case: Sum -> (forall 'a. 'a -> (forall 'a, 'b. ((Fint -> 'b) -> 'b
 //│   where
-//│     'b <: 'a -> 'c -> 'd)))
+//│     'a <: Fint -> 'b)))
 //│       = [Function: c_case]
 //│ c_case_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('c -> 'd
 //│   where
@@ -807,10 +807,9 @@ def c_i2 = fun f -> fun x -> f (f x)
 // let c_succ (n:Int) = fun f x -> n f (f x)
 def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
 def c_succ_ n = fun f -> fun x -> n f (f x)
-//│ c_succ: Fint -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> 'd
+//│ c_succ: Fint -> (forall 'b. 'b -> (forall 'b, 'a, 'c. ('c -> 'a
 //│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'e -> 'c)))
+//│     'b <: 'a -> 'a & 'c -> 'a)))
 //│       = [Function: c_succ]
 //│ c_succ_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> 'd
 //│   where
@@ -834,12 +833,11 @@ def c_iszero_ n = n (fun x -> c_false) c_true
 
 //:e // due to tapping
 def c_add n (m: Fint) = m c_succ n
-//│ c_add: 'a -> (forall 'a, 'b. (Fint -> (forall 'c. 'c -> (forall 'c, 'd, 'e, 'f, 'g. ('g -> 'f
+//│ c_add: 'b -> (forall 'b, 'c. (Fint -> (forall 'd. 'd -> (forall 'd, 'a, 'e. ('e -> 'a
 //│   where
-//│     'd <: 'c -> 'e -> 'f
-//│     'c <: 'g -> 'e)) | 'b)
+//│     'd <: 'a -> 'a & 'e -> 'a)) | 'c)
 //│   where
-//│     'a <: Fint & 'b))
+//│     'b <: Fint & 'c))
 //│      = [Function: c_add]
 
 def c_add_ n m = m c_succ_ n
@@ -853,14 +851,13 @@ def c_add_ n m = m c_succ_ n
 
 //:e // due to tapping
 def c_mul m (n: Fint) = m (c_add n) c_i0
-//│ c_mul: 'a -> (forall 'a. (Fint -> 'b
+//│ c_mul: 'b -> (forall 'b. (Fint -> 'c
 //│   where
-//│     'a <: (forall 'c, 'd. (Fint -> (forall 'e. 'e -> (forall 'e, 'f, 'g, 'h, 'i. ('i -> 'h
+//│     'b <: (forall 'd, 'e. (Fint -> (forall 'f. 'f -> (forall 'f, 'a, 'g. ('g -> 'a
 //│   where
-//│     'f <: 'e -> 'g -> 'h
-//│     'e <: 'i -> 'g)) | 'd)
+//│     'f <: 'a -> 'a & 'g -> 'a)) | 'e)
 //│   where
-//│     'c <: Fint & 'd)) -> ('a -> (forall 'j. 'j -> 'j)) -> 'b))
+//│     'd <: Fint & 'e)) -> ('f -> (forall 'h. 'h -> 'h)) -> 'c))
 //│      = [Function: c_mul]
 
 def c_mul_ m n = m (c_add_ n) c_i0
@@ -876,18 +873,17 @@ def c_mul_ m n = m (c_add_ n) c_i0
 
 // :e // due to tapping
 def c_pow m (n: Fint) = m (c_mul n) c_i1
-//│ c_pow: 'a -> (forall 'a. (Fint -> 'b
+//│ c_pow: 'b -> (forall 'b. (Fint -> 'c
 //│   where
-//│     'a <: (forall 'c. (Fint -> 'd
+//│     'b <: (forall 'd. (Fint -> 'e
 //│   where
-//│     'c <: (forall 'e, 'f. (Fint -> (forall 'g. 'g -> (forall 'g, 'h, 'i, 'j, 'k. ('k -> 'j
+//│     'd <: (forall 'f, 'g. (Fint -> (forall 'h. 'h -> (forall 'h, 'a, 'i. ('i -> 'a
 //│   where
-//│     'h <: 'g -> 'i -> 'j
-//│     'g <: 'k -> 'i)) | 'f)
+//│     'h <: 'a -> 'a & 'i -> 'a)) | 'g)
 //│   where
-//│     'e <: Fint & 'f)) -> ('l -> (forall 'm. 'm -> 'm)) -> 'd)) -> (forall 'l. 'l -> (forall 'l, 'n, 'o. ('n -> 'o
+//│     'f <: Fint & 'g)) -> ('j -> (forall 'k. 'k -> 'k)) -> 'e)) -> (forall 'j. 'j -> (forall 'j, 'l, 'm. ('l -> 'm
 //│   where
-//│     'l <: 'n -> 'o))) -> 'b))
+//│     'j <: 'l -> 'm))) -> 'c))
 //│      = [Function: c_pow]
 
 def c_pow_ m n = m (c_mul_ n) c_i1
@@ -949,10 +945,9 @@ def c_printint2_ n = toString (n (fun x -> x + 1) 0)
 // let c_i2 = c_succ c_i1
 def c_i2 = c_succ c_i1
 def c_i2_ = c_succ_ c_i1
-//│ c_i2: 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> 'd
+//│ c_i2: 'b -> (forall 'b, 'a, 'c. ('c -> 'a
 //│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'e -> 'c))
+//│     'b <: 'a -> 'a & 'c -> 'a))
 //│     = [Function (anonymous)]
 //│ c_i2_: 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> 'd
 //│   where
@@ -963,10 +958,9 @@ def c_i2_ = c_succ_ c_i1
 // let c_i3 = c_succ c_i2
 def c_i3 = c_succ c_i2
 def c_i3_ = c_succ_ c_i2
-//│ c_i3: 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> 'd
+//│ c_i3: 'b -> (forall 'b, 'a, 'c. ('c -> 'a
 //│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'e -> 'c))
+//│     'b <: 'a -> 'a & 'c -> 'a))
 //│     = [Function (anonymous)]
 //│ c_i3_: 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> 'd
 //│   where
@@ -977,10 +971,9 @@ def c_i3_ = c_succ_ c_i2
 // let c_i4 = c_succ c_i3
 def c_i4 = c_succ c_i3
 def c_i4_ = c_succ_ c_i3
-//│ c_i4: 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> 'd
+//│ c_i4: 'b -> (forall 'b, 'a, 'c. ('c -> 'a
 //│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'e -> 'c))
+//│     'b <: 'a -> 'a & 'c -> 'a))
 //│     = [Function (anonymous)]
 //│ c_i4_: 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> 'd
 //│   where
@@ -1012,40 +1005,40 @@ rec def to_church n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.1011: 	rec def to_church n =
+//│ ║  l.1004: 	rec def to_church n =
 //│ ║          	                  ^^^
-//│ ║  l.1012: 	  if n == 0 then fun f -> fun x -> x
+//│ ║  l.1005: 	  if n == 0 then fun f -> fun x -> x
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1013: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
+//│ ║  l.1006: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_3849''_3851` is not an instance of type `'a_3849''_3850`
+//│ ╟── type `‘a_3670''_3672` is not an instance of type `'a_3670''_3671`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── from application:
-//│ ║  l.1013: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
+//│ ║  l.1006: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
 //│ ╙──        	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ int -> ('a -> (‘a_3849''_3850 & 'b) & 'a -> (‘a_3849''_3851 & 'a)) -> (forall 'c. (‘a_3849''_3851 & 'c & 'a) -> (‘a_3849''_3851 | 'c | 'b))
+//│ int -> ('a -> (‘a_3670''_3671 & 'b) & 'a -> (‘a_3670''_3672 & 'a)) -> (forall 'c. (‘a_3670''_3672 & 'c & 'a) -> (‘a_3670''_3672 | 'c | 'b))
 //│   <:  to_church:
 //│ int -> Fint
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.1011: 	rec def to_church n =
+//│ ║  l.1004: 	rec def to_church n =
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1012: 	  if n == 0 then fun f -> fun x -> x
+//│ ║  l.1005: 	  if n == 0 then fun f -> fun x -> x
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1013: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
+//│ ║  l.1006: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_3849''_3851` is not an instance of type `'a_3881'_3882`
+//│ ╟── type `‘a_3702'_3703` is not an instance of type `'a_3670''_3672`
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
-//│ ╟── but it flows into application with expected type `‘a_3881'_3882`
-//│ ║  l.1013: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
-//│ ║          	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──       	                    ^^
+//│ ║         	                    ^^
+//│ ╟── from reference:
+//│ ║  l.1006: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
+//│ ╙──        	                                                         ^
 //│          = [Function: to_church]
 
 
@@ -1066,25 +1059,10 @@ def to_church_ = to_church
 //   c_if (c_iszero n) (fun (u:Unit) -> c_i1)
 //     (fun (u:Unit) -> c_mul n (c_fact (c_pred n)))
 
-// :e // polym recur? // works with quantif extrus
-:e // fails after new-refreshing-extrusion
 rec def c_fact (n: Fint) =
   c_if (c_iszero n) (fun (u: Funit) -> c_i1)
     (fun (u: Funit) -> c_mul n (c_fact (c_pred n)))
-//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.1071: 	rec def c_fact (n: Fint) =
-//│ ║          	               ^^^^^^^^^^^
-//│ ║  l.1072: 	  c_if (c_iszero n) (fun (u: Funit) -> c_i1)
-//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1073: 	    (fun (u: Funit) -> c_mul n (c_fact (c_pred n)))
-//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_3968''_3978` is not an instance of type `'a_3968''_3979`
-//│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                    ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──       	                    ^^
-//│ c_fact: Fint -> (forall 'b, 'c, 'd. ('b -> 'c & 'd -> (‘a_3968''_3979 & 'a) & ('a | ‘a_3968''_3978) -> (‘a_3968''_3979 & 'a)) -> (forall 'd. ('b & 'd) -> ('a | ‘a_3968''_3978 | 'd | 'c)) | Fint)
+//│ c_fact: Fint -> (forall 'b, 'c, 'd, 'a, 'e. ('b -> 'c & 'd -> ('a & 'e) & 'a -> ('a & 'e)) -> (forall 'd, 'e. ('b & 'e & 'd) -> ('e | 'c)) | Fint)
 //│       = [Function: c_fact]
 
 // def c_fact: Fint -> (forall 'a 'b. ('a & 'b) -> (forall 'c 'd 'e 'f 'g 'h. (('c & 'h) -> ('d | 'g | 'c))))
@@ -1126,31 +1104,15 @@ rec def c_fact_ n =
 //   c_printint (c_fact (to_church n)) ;
 //   print_string "\n" ;
 //   ()
-// :e // works with quantif extrus
-// :e // FIXME?
-:e // fails after new-refreshing-extrusion
 def print_fact n =
   let _ = print_string "Factorial " in
   let _ = print_int n in
   let _ = print_string " = " in
   let _ = c_printint (c_fact (to_church n)) in
           print_string "\n"
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1136: 	  let _ = c_printint (c_fact (to_church n)) in
-//│ ║          	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_4300''''` is not an instance of type `'a_3968''_3979`
-//│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                    ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                    ^^
-//│ ╟── from application:
-//│ ║  l.808: 	def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
-//│ ╙──       	                                              ^^^
 //│ print_fact: int -> unit
 //│           = [Function: print_fact]
 
-// :e // FIXME? fails with genLamBodies
 def print_fact_ n =
   let _ = print_string "Factorial " in
   let _ = print_int n in
@@ -1160,27 +1122,14 @@ def print_fact_ n =
 //│ print_fact_: int -> unit
 //│            = [Function: print_fact_]
 
-//:e // due to tapping
-// :e // FIXME?
-:e // fails after new-refreshing-extrusion
 def print_fact2 n =
   concat "Factorial " (
   concat (toString n) (
   concat " = "
          (c_printint2 (c_fact (to_church n))) ))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1170: 	         (c_printint2 (c_fact (to_church n))) ))
-//│ ║          	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_4495'''_4504` is not an instance of type `'a_3968''_3979`
-//│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                    ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──       	                    ^^
 //│ print_fact2: int -> string
 //│            = [Function: print_fact2]
 
-// :e // FIXME? fails with genLamBodies
 def print_fact2_ n =
   concat "Factorial_ " (
   concat (toString n) (
@@ -1200,9 +1149,6 @@ def print_fact2_ n =
 //   c_printint c_98;
 //   print_string "\n\n" ;
 
-// :e // FIXME?
-//:e // due to tapping
-:e // fails after new-refreshing-extrusion
 this_should_be_98 =
   let c_i5 = c_add c_i3 c_i2 in
   let c_i10 = c_mul c_i5 c_i2 in
@@ -1210,36 +1156,6 @@ this_should_be_98 =
   let c_99 = c_add (c_mul c_i9 c_i10) c_i9 in
   let c_98 = c_pred c_99 in
   c_printint2 c_98
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1208: 	  let c_i10 = c_mul c_i5 c_i2 in
-//│ ║          	              ^^^^^^^^^^^^^^^
-//│ ╟── type `(?a -> ?a) -> ?a -> ?a` is not an instance of type `'a_3968''_3979`
-//│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                        ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                    ^^
-//│ ╟── from application:
-//│ ║  l.808: 	def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
-//│ ╙──       	                                              ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1210: 	  let c_99 = c_add (c_mul c_i9 c_i10) c_i9 in
-//│ ║          	                    ^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_4754'''_4771` is not an instance of type `'a_3968''_3979`
-//│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                    ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──       	                    ^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1211: 	  let c_98 = c_pred c_99 in
-//│ ║          	             ^^^^^^^^^^^
-//│ ╟── type `‘a_4784'''_4802` is not an instance of type `'a_3968''_3979`
-//│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                    ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.611: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──       	                    ^^
 //│ this_should_be_98: string
 //│                  = '98'
 
@@ -1262,41 +1178,41 @@ this_should_be_98_ =
 :e // FIXME? refreshing-extr
 // FIXME SOF
 c_i5_ = c_add_ c_i3_ c_i2
-//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b, ?c. ?b) -> ?d` exceeded recursion depth limit (300)
-//│ ║  l.1264: 	c_i5_ = c_add_ c_i3_ c_i2
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b. ?b) -> ?c` exceeded recursion depth limit (300)
+//│ ║  l.1180: 	c_i5_ = c_add_ c_i3_ c_i2
 //│ ║          	        ^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ‹∀ 2. (α2863_5645''' -> ‹∀ 3. {(α2864_5651'''' -> α2867_5650'''') where: α2862_5640' <: ((α2863_5645''',) -> α2865_5648''''), α2863_5645''' <: ((α2864_5651'''',) -> α2866_5649'''')}›)›  <!<  ((α2863_5839',) -> α2865_5846')
-//│ ╟── while constraining:  α2862_5640'  <!<  ((α2863_5839',) -> α2865_5846')
-//│ ╟── while constraining:  {(α2864_5849' -> α2867_5848') where: α2862_5640' <: ((α2863_5839',) -> α2865_5846'), α2863_5839' <: ((α2864_5849',) -> α2866_5847')}  <!<  ((α2866_5836',) -> α2867_5837')
-//│ ╟── while constraining:  ‹∀ 3. {(α2864_5845'''' -> α2867_5844'''') where: α2862_5640' <: ((α2863_5839',) -> α2865_5842''''), α2863_5839' <: ((α2864_5845'''',) -> α2866_5843'''')}›  <!<  ((α2866_5836',) -> α2867_5837')
-//│ ╟── while constraining:  ‹∀ 3. {(α2864_5845'''' -> α2867_5844'''') where: α2862_5640' <: ((α2863_5839',) -> α2865_5842''''), α2863_5839' <: ((α2864_5845'''',) -> α2866_5843'''')}›  <!<  α2865_5835'
-//│ ╟── while constraining:  (α2863_5839' -> ‹∀ 3. {(α2864_5845'''' -> α2867_5844'''') where: α2862_5640' <: ((α2863_5839',) -> α2865_5842''''), α2863_5839' <: ((α2864_5845'''',) -> α2866_5843'''')}›)  <!<  ((α2863_5828',) -> α2865_5835')
-//│ ╟── while constraining:  ‹∀ 2. (α2863_5645''' -> ‹∀ 3. {(α2864_5651'''' -> α2867_5650'''') where: α2862_5640' <: ((α2863_5645''',) -> α2865_5648''''), α2863_5645''' <: ((α2864_5651'''',) -> α2866_5649'''')}›)›  <!<  ((α2863_5828',) -> α2865_5835')
-//│ ╟── while constraining:  α2862_5640'  <!<  ((α2863_5828',) -> α2865_5835')
-//│ ╟── while constraining:  {(α2864_5838' -> α2867_5837') where: α2862_5640' <: ((α2863_5828',) -> α2865_5835'), α2863_5828' <: ((α2864_5838',) -> α2866_5836')}  <!<  ((α2866_5825',) -> α2867_5826')
-//│ ╟── while constraining:  ‹∀ 3. {(α2864_5834'''' -> α2867_5833'''') where: α2862_5640' <: ((α2863_5828',) -> α2865_5831''''), α2863_5828' <: ((α2864_5834'''',) -> α2866_5832'''')}›  <!<  ((α2866_5825',) -> α2867_5826')
-//│ ╟── while constraining:  ‹∀ 3. {(α2864_5834'''' -> α2867_5833'''') where: α2862_5640' <: ((α2863_5828',) -> α2865_5831''''), α2863_5828' <: ((α2864_5834'''',) -> α2866_5832'''')}›  <!<  α2865_5824'
-//│ ╟── while constraining:  (α2863_5828' -> ‹∀ 3. {(α2864_5834'''' -> α2867_5833'''') where: α2862_5640' <: ((α2863_5828',) -> α2865_5831''''), α2863_5828' <: ((α2864_5834'''',) -> α2866_5832'''')}›)  <!<  ((α2863_5817',) -> α2865_5824')
-//│ ╟── while constraining:  ‹∀ 2. (α2863_5645''' -> ‹∀ 3. {(α2864_5651'''' -> α2867_5650'''') where: α2862_5640' <: ((α2863_5645''',) -> α2865_5648''''), α2863_5645''' <: ((α2864_5651'''',) -> α2866_5649'''')}›)›  <!<  ((α2863_5817',) -> α2865_5824')
-//│ ╟── while constraining:  α2862_5640'  <!<  ((α2863_5817',) -> α2865_5824')
-//│ ╟── while constraining:  {(α2864_5827' -> α2867_5826') where: α2862_5640' <: ((α2863_5817',) -> α2865_5824'), α2863_5817' <: ((α2864_5827',) -> α2866_5825')}  <!<  ((α2866_5814',) -> α2867_5815')
+//│ ╟── while constraining:  {(α2780_5888' -> α2783_5887') where: α2778_5668' <: ((α2779_5878',) -> α2781_5885'), α2779_5878' <: ((α2780_5888',) -> α2782_5886')}  <!<  ((α2782_5875',) -> α2783_5876')
+//│ ╟── while constraining:  ‹∀ 3. {(α2780_5884'''' -> α2783_5883'''') where: α2778_5668' <: ((α2779_5878',) -> α2781_5881''''), α2779_5878' <: ((α2780_5884'''',) -> α2782_5882'''')}›  <!<  ((α2782_5875',) -> α2783_5876')
+//│ ╟── while constraining:  ‹∀ 3. {(α2780_5884'''' -> α2783_5883'''') where: α2778_5668' <: ((α2779_5878',) -> α2781_5881''''), α2779_5878' <: ((α2780_5884'''',) -> α2782_5882'''')}›  <!<  α2781_5874'
+//│ ╟── while constraining:  (α2779_5878' -> ‹∀ 3. {(α2780_5884'''' -> α2783_5883'''') where: α2778_5668' <: ((α2779_5878',) -> α2781_5881''''), α2779_5878' <: ((α2780_5884'''',) -> α2782_5882'''')}›)  <!<  ((α2779_5867',) -> α2781_5874')
+//│ ╟── while constraining:  ‹∀ 2. (α2779_5673''' -> ‹∀ 3. {(α2780_5679'''' -> α2783_5678'''') where: α2778_5668' <: ((α2779_5673''',) -> α2781_5676''''), α2779_5673''' <: ((α2780_5679'''',) -> α2782_5677'''')}›)›  <!<  ((α2779_5867',) -> α2781_5874')
+//│ ╟── while constraining:  α2778_5668'  <!<  ((α2779_5867',) -> α2781_5874')
+//│ ╟── while constraining:  {(α2780_5877' -> α2783_5876') where: α2778_5668' <: ((α2779_5867',) -> α2781_5874'), α2779_5867' <: ((α2780_5877',) -> α2782_5875')}  <!<  ((α2782_5864',) -> α2783_5865')
+//│ ╟── while constraining:  ‹∀ 3. {(α2780_5873'''' -> α2783_5872'''') where: α2778_5668' <: ((α2779_5867',) -> α2781_5870''''), α2779_5867' <: ((α2780_5873'''',) -> α2782_5871'''')}›  <!<  ((α2782_5864',) -> α2783_5865')
+//│ ╟── while constraining:  ‹∀ 3. {(α2780_5873'''' -> α2783_5872'''') where: α2778_5668' <: ((α2779_5867',) -> α2781_5870''''), α2779_5867' <: ((α2780_5873'''',) -> α2782_5871'''')}›  <!<  α2781_5863'
+//│ ╟── while constraining:  (α2779_5867' -> ‹∀ 3. {(α2780_5873'''' -> α2783_5872'''') where: α2778_5668' <: ((α2779_5867',) -> α2781_5870''''), α2779_5867' <: ((α2780_5873'''',) -> α2782_5871'''')}›)  <!<  ((α2779_5856',) -> α2781_5863')
+//│ ╟── while constraining:  ‹∀ 2. (α2779_5673''' -> ‹∀ 3. {(α2780_5679'''' -> α2783_5678'''') where: α2778_5668' <: ((α2779_5673''',) -> α2781_5676''''), α2779_5673''' <: ((α2780_5679'''',) -> α2782_5677'''')}›)›  <!<  ((α2779_5856',) -> α2781_5863')
+//│ ╟── while constraining:  α2778_5668'  <!<  ((α2779_5856',) -> α2781_5863')
+//│ ╟── while constraining:  {(α2780_5866' -> α2783_5865') where: α2778_5668' <: ((α2779_5856',) -> α2781_5863'), α2779_5856' <: ((α2780_5866',) -> α2782_5864')}  <!<  ((α2782_5853',) -> α2783_5854')
+//│ ╟── while constraining:  ‹∀ 3. {(α2780_5862'''' -> α2783_5861'''') where: α2778_5668' <: ((α2779_5856',) -> α2781_5859''''), α2779_5856' <: ((α2780_5862'''',) -> α2782_5860'''')}›  <!<  ((α2782_5853',) -> α2783_5854')
+//│ ╟── while constraining:  ‹∀ 3. {(α2780_5862'''' -> α2783_5861'''') where: α2778_5668' <: ((α2779_5856',) -> α2781_5859''''), α2779_5856' <: ((α2780_5862'''',) -> α2782_5860'''')}›  <!<  α2781_5852'
 //│ ╟── ......
 //│ ╟── ......
-//│ ╟── while constraining:  ‹∀ 0. (('a2060_2061' -> 'a2060_2061') -> ('a2060_2061' -> 'a2060_2061'))›  <!<  ((α2826_5630',) -> α2828_5635')
-//│ ╟── while constraining:  Fint  <!<  ((α2826_5630',) -> α2828_5635')
-//│ ╟── while constraining:  α2825_5625'  <!<  ((α2826_5630',) -> α2828_5635')
-//│ ╟── while constraining:  {(α2827_5638' -> α2830_5637') where: α2825_5625' <: ((α2826_5630',) -> α2828_5635'), α2826_5630' <: ((α2827_5638',) -> α2829_5636')}  <!<  ((α3004_5615',) -> α3007_5622')
-//│ ╟── while constraining:  ‹∀ 3. {(α2827_5634'''' -> α2830_5633'''') where: α2825_5625' <: ((α2826_5630',) -> α2828_5631''''), α2826_5630' <: ((α2827_5634'''',) -> α2829_5632'''')}›  <!<  ((α3004_5615',) -> α3007_5622')
-//│ ╟── while constraining:  ‹∀ 3. {(α2827_5634'''' -> α2830_5633'''') where: α2825_5625' <: ((α2826_5630',) -> α2828_5631''''), α2826_5630' <: ((α2827_5634'''',) -> α2829_5632'''')}›  <!<  α3006_5621'
-//│ ╟── while constraining:  (α2826_5630' -> ‹∀ 3. {(α2827_5634'''' -> α2830_5633'''') where: α2825_5625' <: ((α2826_5630',) -> α2828_5631''''), α2826_5630' <: ((α2827_5634'''',) -> α2829_5632'''')}›)  <!<  ((‹∀ 0. ‹∀ 1. (α2862_2877'' -> ‹∀ 2. (α2863_2878''' -> ‹∀ 3. {(α2864_2882'''' -> α2867_2881'''') where: α2862_2877'' <: ((α2863_2878''',) -> α2865_2879''''), α2863_2878''' <: ((α2864_2882'''',) -> α2866_2880'''')}›)›)››,) -> α3006_5621')
-//│ ╟── while constraining:  ‹∀ 2. (α2826_5624''' -> ‹∀ 3. {(α2827_5629'''' -> α2830_5628'''') where: α2825_5625' <: ((α2826_5624''',) -> α2828_5626''''), α2826_5624''' <: ((α2827_5629'''',) -> α2829_5627'''')}›)›  <!<  ((‹∀ 0. ‹∀ 1. (α2862_2877'' -> ‹∀ 2. (α2863_2878''' -> ‹∀ 3. {(α2864_2882'''' -> α2867_2881'''') where: α2862_2877'' <: ((α2863_2878''',) -> α2865_2879''''), α2863_2878''' <: ((α2864_2882'''',) -> α2866_2880'''')}›)›)››,) -> α3006_5621')
-//│ ╟── while constraining:  α3639_5623'  <!<  ((‹∀ 0. ‹∀ 1. (α2862_2877'' -> ‹∀ 2. (α2863_2878''' -> ‹∀ 3. {(α2864_2882'''' -> α2867_2881'''') where: α2862_2877'' <: ((α2863_2878''',) -> α2865_2879''''), α2863_2878''' <: ((α2864_2882'''',) -> α2866_2880'''')}›)›)››,) -> α3006_5621')
-//│ ╟── while constraining:  ‹∀ 0. α3639'›  <!<  ((‹∀ 0. ‹∀ 1. (α2862_2877'' -> ‹∀ 2. (α2863_2878''' -> ‹∀ 3. {(α2864_2882'''' -> α2867_2881'''') where: α2862_2877'' <: ((α2863_2878''',) -> α2865_2879''''), α2863_2878''' <: ((α2864_2882'''',) -> α2866_2880'''')}›)›)››,) -> α3006_5621')
-//│ ╟── while constraining:  ‹∀ 0. α3639'›  <!<  α3005_5620'
-//│ ╟── while constraining:  (‹∀ 0. α3639'›,)  <!<  (α3005_5620',)
-//│ ╟── while constraining:  (α3005_5620' -> α3007_5622')  <!<  ((‹∀ 0. α3639'›,) -> α5619')
-//│ ╟── while constraining:  ‹∀ 2. (α3005_5616''' -> α3007_5618''')›  <!<  ((‹∀ 0. α3639'›,) -> α5619')
-//│ ╙── while constraining:  α5614'  <!<  ((‹∀ 0. α3639'›,) -> α5619')
+//│ ╟── while constraining:  ‹∀ 2. (α2779_5673''' -> ‹∀ 3. {(α2780_5679'''' -> α2783_5678'''') where: α2778_5668' <: ((α2779_5673''',) -> α2781_5676''''), α2779_5673''' <: ((α2780_5679'''',) -> α2782_5677'''')}›)›  <!<  'a3761_5650'
+//│ ╟── while constraining:  (α2778_5668' -> ‹∀ 2. (α2779_5673''' -> ‹∀ 3. {(α2780_5679'''' -> α2783_5678'''') where: α2778_5668' <: ((α2779_5673''',) -> α2781_5676''''), α2779_5673''' <: ((α2780_5679'''',) -> α2782_5677'''')}›)›)  <!<  ('a3760_5648' -> 'a3761_5650')
+//│ ╟── while constraining:  ‹∀ 1. (α2778_2793'' -> ‹∀ 2. (α2779_2794''' -> ‹∀ 3. {(α2780_2798'''' -> α2783_2797'''') where: α2778_2793'' <: ((α2779_2794''',) -> α2781_2795''''), α2779_2794''' <: ((α2780_2798'''',) -> α2782_2796'''')}›)›)›  <!<  ('a3760_5648' -> 'a3761_5650')
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 1. (α2778_2793'' -> ‹∀ 2. (α2779_2794''' -> ‹∀ 3. {(α2780_2798'''' -> α2783_2797'''') where: α2778_2793'' <: ((α2779_2794''',) -> α2781_2795''''), α2779_2794''' <: ((α2780_2798'''',) -> α2782_2796'''')}›)›)››  <!<  ('a3760_5648' -> 'a3761_5650')
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 1. (α2778_2793'' -> ‹∀ 2. (α2779_2794''' -> ‹∀ 3. {(α2780_2798'''' -> α2783_2797'''') where: α2778_2793'' <: ((α2779_2794''',) -> α2781_2795''''), α2779_2794''' <: ((α2780_2798'''',) -> α2782_2796'''')}›)›)››  <!<  α2752_5644'
+//│ ╟── while constraining:  (‹∀ 0. ‹∀ 1. (α2778_2793'' -> ‹∀ 2. (α2779_2794''' -> ‹∀ 3. {(α2780_2798'''' -> α2783_2797'''') where: α2778_2793'' <: ((α2779_2794''',) -> α2781_2795''''), α2779_2794''' <: ((α2780_2798'''',) -> α2782_2796'''')}›)›)››,)  <!<  (α2752_5644',)
+//│ ╟── while constraining:  (α2752_5644' -> ‹∀ 3. {(α2753_5654'''' -> α2757_5653'''') where: α2752_5644' <: ('a2057_5652'''' -> 'a2057_5652''''), α2752_5644' <: ((α2753_5654'''',) -> α2756_5655'''')}›)  <!<  ((‹∀ 0. ‹∀ 1. (α2778_2793'' -> ‹∀ 2. (α2779_2794''' -> ‹∀ 3. {(α2780_2798'''' -> α2783_2797'''') where: α2778_2793'' <: ((α2779_2794''',) -> α2781_2795''''), α2779_2794''' <: ((α2780_2798'''',) -> α2782_2796'''')}›)›)››,) -> α2906_5641')
+//│ ╟── while constraining:  ‹∀ 2. (α2752_2762''' -> ‹∀ 3. {(α2753_2765'''' -> α2757_2764'''') where: α2752_2762''' <: ('a2057_2763'''' -> 'a2057_2763''''), α2752_2762''' <: ((α2753_2765'''',) -> α2756_2766'''')}›)›  <!<  ((‹∀ 0. ‹∀ 1. (α2778_2793'' -> ‹∀ 2. (α2779_2794''' -> ‹∀ 3. {(α2780_2798'''' -> α2783_2797'''') where: α2778_2793'' <: ((α2779_2794''',) -> α2781_2795''''), α2779_2794''' <: ((α2780_2798'''',) -> α2782_2796'''')}›)›)››,) -> α2906_5641')
+//│ ╟── while constraining:  α3507_5643'  <!<  ((‹∀ 0. ‹∀ 1. (α2778_2793'' -> ‹∀ 2. (α2779_2794''' -> ‹∀ 3. {(α2780_2798'''' -> α2783_2797'''') where: α2778_2793'' <: ((α2779_2794''',) -> α2781_2795''''), α2779_2794''' <: ((α2780_2798'''',) -> α2782_2796'''')}›)›)››,) -> α2906_5641')
+//│ ╟── while constraining:  ‹∀ 0. α3507'›  <!<  ((‹∀ 0. ‹∀ 1. (α2778_2793'' -> ‹∀ 2. (α2779_2794''' -> ‹∀ 3. {(α2780_2798'''' -> α2783_2797'''') where: α2778_2793'' <: ((α2779_2794''',) -> α2781_2795''''), α2779_2794''' <: ((α2780_2798'''',) -> α2782_2796'''')}›)›)››,) -> α2906_5641')
+//│ ╟── while constraining:  ‹∀ 0. α3507'›  <!<  α2905_5640'
+//│ ╟── while constraining:  (‹∀ 0. α3507'›,)  <!<  (α2905_5640',)
+//│ ╟── while constraining:  (α2905_5640' -> α2907_5642')  <!<  ((‹∀ 0. α3507'›,) -> α5639')
+//│ ╟── while constraining:  ‹∀ 2. (α2905_5636''' -> α2907_5638''')›  <!<  ((‹∀ 0. α3507'›,) -> α5639')
+//│ ╙── while constraining:  α5634'  <!<  ((‹∀ 0. α3507'›,) -> α5639')
 //│ c_i5_: error
 //│      = [Function (anonymous)]
 

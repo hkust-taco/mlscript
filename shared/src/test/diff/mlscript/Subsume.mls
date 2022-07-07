@@ -158,7 +158,7 @@ def id (x: int) = x
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.154: 	def id (x: int) = x
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_82'` is not an instance of type `int`
+//│ ╟── type `‘a_80'` is not an instance of type `int`
 //│ ║  l.110: 	def id: 'a -> 'a
 //│ ║         	        ^^
 //│ ╟── Note: constraint arises from type reference:
@@ -184,7 +184,7 @@ def f = impl
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.180: 	def f = impl
 //│ ║         	^^^^^^^^^^^^
-//│ ╟── type `int & ‘a_106'` is not a function
+//│ ╟── type `int & ‘a_103'` is not a function
 //│ ║  l.171: 	def f: (int & 'a) -> 'a
 //│ ║         	       ^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
@@ -223,7 +223,7 @@ def f a b = if gt a b then a else b b // mistake!
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.219: 	def f a b = if gt a b then a else b b // mistake!
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int & ‘a_164'` is not a function
+//│ ╟── type `int & ‘a_161'` is not a function
 //│ ║  l.205: 	def f: (int & 'a) -> (int & 'a) -> 'a 
 //│ ║         	                     ^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
@@ -256,7 +256,7 @@ def g a = add a 1
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.250: 	def g a = add a 1
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `int` is not an instance of type `'a_191'`
+//│ ╟── application of type `int` is not an instance of type `'a_188'`
 //│ ║  l.250: 	def g a = add a 1
 //│ ║         	          ^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
@@ -334,7 +334,7 @@ self1 = res
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.330: 	self1 = res
 //│ ║         	^^^^^^^^^^^
-//│ ╟── type `‘b_353'_355` is not an instance of type `'b_353'_356`
+//│ ╟── type `‘b_350'_352` is not an instance of type `'b_350'_353`
 //│ ║  l.313: 	def self1: ('a -> 'b & 'a) -> 'b
 //│ ╙──       	                  ^^
 //│      = [Function: res]

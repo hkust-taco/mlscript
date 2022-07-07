@@ -164,10 +164,9 @@ type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 // let succ (n:Int) = fun f x -> f (n f x)
 def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 def succ_ n = fun f -> fun x -> f (n f x)
-//│ succ: ChurchInt -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ succ: ChurchInt -> (forall 'b. 'b -> (forall 'b, 'a, 'c. ('a -> 'c
 //│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'd -> 'e)))
+//│     'b <: 'a -> 'a & 'a -> 'c)))
 //│     = [Function: succ]
 //│ succ_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
@@ -179,12 +178,9 @@ def succ_ n = fun f -> fun x -> f (n f x)
 
 //:e // due to tapping
 def add (n: ChurchInt) (m: ChurchInt) = n succ m
-//│ add: ChurchInt -> (forall 'a. (ChurchInt -> 'b
+//│ add: ChurchInt -> ChurchInt -> (forall 'b. 'b -> (forall 'b, 'a, 'c. ('a -> 'c
 //│   where
-//│     'a <: (ChurchInt -> (forall 'c. 'c -> (forall 'c, 'd, 'e, 'f, 'g. ('e -> 'g
-//│   where
-//│     'd <: 'c -> 'e -> 'f
-//│     'c <: 'f -> 'g)))) -> ChurchInt -> 'b))
+//│     'b <: 'a -> 'a & 'a -> 'c)) | ChurchInt)
 //│    = [Function: add]
 
 def add_ n m = n succ_ m
@@ -241,12 +237,9 @@ zog = printInt (add (nfind table "one") (nfind table "two"))
 //:e // due to tapping
 // :e // FIXME? refreshing-extr
 a = add (nfind table "one")
-//│ a: ChurchInt -> 'a
+//│ a: ChurchInt -> (forall 'b. 'b -> (forall 'b, 'a, 'c. ('a -> 'c
 //│   where
-//│     'b <: (ChurchInt -> (forall 'c. 'c -> (forall 'c, 'd, 'e, 'f, 'g. ('e -> 'g
-//│   where
-//│     'd <: 'c -> 'e -> 'f
-//│     'c <: 'f -> 'g)))) -> ChurchInt -> 'a
+//│     'b <: 'a -> 'a & 'a -> 'c)) | ChurchInt)
 //│  = [Function (anonymous)]
 
 // :e // FIXME? refreshing-extr
@@ -263,10 +256,9 @@ b = (nfind table "two")
 // :d
 //:e // due to tapping
 a b
-//│ res: 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ res: 'b -> (forall 'b, 'a, 'c. ('a -> 'c
 //│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'd -> 'e)) | ChurchInt
+//│     'b <: 'a -> 'a & 'a -> 'c)) | ChurchInt
 //│    = [Function (anonymous)]
 
 // :e // FIXME? refreshing-extr
