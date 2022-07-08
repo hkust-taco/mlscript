@@ -57,3 +57,12 @@ lazy val mlscript = crossProject(JSPlatform, JVMPlatform).in(file("."))
 
 lazy val mlscriptJVM = mlscript.jvm
 lazy val mlscriptJS = mlscript.js
+
+lazy val mlscript_mono = crossProject(JSPlatform, JVMPlatform).in(file("mono"))
+  .settings(
+    name := "mlscript-mono",
+    scalaVersion := "3.1.3",
+  )
+  .dependsOn(mlscript)
+
+
