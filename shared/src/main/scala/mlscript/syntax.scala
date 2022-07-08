@@ -66,6 +66,7 @@ final case class With(trm: Term, fields: Rcd)                        extends Ter
 final case class CaseOf(trm: Term, cases: CaseBranches)              extends Term
 final case class Subs(arr: Term, idx: Term)                          extends Term
 final case class Assign(lhs: Term, rhs: Term)                        extends Term
+final case class New(head: Opt[(TypeName, Term)], body: TypingUnit)  extends Term // `new C(...)` or `new C(){...}` or `new{...}`
 
 sealed abstract class CaseBranches extends CaseBranchesImpl
 final case class Case(pat: SimpleTerm, body: Term, rest: CaseBranches) extends CaseBranches
@@ -128,4 +129,28 @@ final case class TypeVar(val identifier: Int \/ Str, nameHint: Opt[Str]) extends
 }
 
 final case class PolyType(targs: Ls[TypeName], body: Type) extends PolyTypeImpl
+
+
+// New Definitions AST
+
+final case class TypingUnit(entities: Ls[Term \/ NuDecl])
+
+sealed abstract class NuDecl
+
+final case class NuTypeDef(
+  kind: TypeDefKind,
+  nme: TypeName,
+  tparams: Ls[TypeName],
+  specParams: Ls[Var -> Opt[Type]], // the specialized parameters for that type
+  parents: Ls[AppliedType],
+  body: TypingUnit
+) extends NuDecl
+
+final case class NuFunDef(
+  nme: Var,
+  targs: Ls[TypeName],
+  specParams: Ls[Var -> Opt[Type]],
+  body: Term \/ PolyType,
+) extends NuDecl
+
 
