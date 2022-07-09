@@ -1,7 +1,3 @@
 package mlscript.mono
 
-object Monomorph {
-  
-  
-  
-}
+object Monomorph
