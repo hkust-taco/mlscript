@@ -52,10 +52,34 @@ map head (single ids)
 app (map head) (single ids)
 //│ res: List[forall 'a. 'a -> 'a]
 
-// =============== Sec 3 ===============
+def fst: forall 'a 'b. (('a, 'b),) -> 'a
+def fst ((x, _),) = x
+def snd: forall 'a 'b. (('a, 'b),) -> 'b
+def snd ((_, x),) = x
+//│ fst: ('a, anything,) -> 'a
+//│ ('a, anything,) -> 'a
+//│   <:  fst:
+//│ ('a, anything,) -> 'a
+//│ snd: (anything, 'b,) -> 'b
+//│ (anything, 'a,) -> 'a
+//│   <:  snd:
+//│ (anything, 'b,) -> 'b
 
-fun (f : (forall. 'b -> 'g)) -> f 1
-//│ res: (1 -> 'a) -> 'a
+def pack t = fun f -> f t
+//│ pack: 'a -> ('a -> 'b) -> 'b
+
+def open p t = p t
+//│ open: ('a -> 'b) -> 'a -> 'b
+
+// Altered from
+// let f = {exists 'a. 'a * ('a -> 'a) * ('a -> int)} (0, (fun x -> x + 1) , (fun x -> x));
+// open {exists 'a. a * ('a -> 'a) * ('a -> int)} g = f in (snd (snd g)) (fst g);;
+let f = pack ((0, (fun x -> x + 1, fun x -> x),),) in
+  open f (fun x -> (snd (snd x)) (fst x))
+//│ res: 0
+
+
+// =============== Sec 3 ===============
 
 def run : (forall 'g. 'g -> 'a) -> 'a
 //│ run: (nothing -> 'a) -> 'a
@@ -63,11 +87,70 @@ def run : (forall 'g. 'g -> 'a) -> 'a
 def e : 'g -> int
 //│ e: anything -> int
 
+// 
+(fun (f : (forall 'g. int -> 'g)) -> f 1)
+//│ res: (int -> anything) -> nothing
+
 run e
 //│ res: int
 
 fun (x : (forall 'a. 'a -> 'a)) -> x
 //│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+
+
+let abstype = pack ((id, id),) in
+  let module = pack ((id, app),) in
+  open abstype (fun x -> (snd x) (fst x 1))
+//│ res: 1
+
+let abstype = pack ((id, id),) in
+  let module = pack ((id, app),) in
+  open module (fun x -> (snd x) (fun a -> ((a, a),)) (fst x 1))
+//│ res: ((1, 1,),)
+
+def mod a b = a - (a / b) * b
+//│ mod: int -> int -> int
+
+
+let base = pack ((((fun a -> a, fun r -> fun i -> r), (fun r -> fun i -> fun a -> a)), fun f -> fun b -> fun r -> f r b),) in
+  let step = fun x ->
+    let xinit = fst (fst (fst x)) in
+    let xsub = fst (fst (snd x)) in
+    let xupdate = fst (snd x) in
+    let xfold = snd x in
+      let init = fun a -> ((xinit a), (xinit a)) in
+      let sub = fun r -> fun i ->
+        if (mod i 2) == 2
+        then (xsub (fst r) (i / 2))
+        else (xsub (snd r) (i / 2)) in
+      let update = fun r -> fun i -> fun a ->
+        if (mod i 2) == 0
+        then ((xupdate (fst r) (i / 2) a), (snd r))
+        else ((fst r), (xupdate (snd r) (i / 2) a)) in
+        let fold = fun f -> fun b -> fun r ->
+          xfold f (xfold f b (fst r) (snd r))
+        in ((((init, sub), update), sub),) in
+          let rec mkMonoArray n =
+            if (n == 0) then base else step (mkMonoArray (n - 1)) in
+          let mkPolyArray = fun n -> (mkMonoArray n) in mkPolyArray 1
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.173: 	          let rec mkMonoArray n =
+//│ ║         	                              ^^^
+//│ ║  l.174: 	            if (n == 0) then base else step (mkMonoArray (n - 1)) in
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?c -> ?d` is not a 2-element tuple
+//│ ║  l.94: 	def pack t = fun f -> f t
+//│ ║        	             ^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `(?a, ?b,)`
+//│ ║  l.174: 	            if (n == 0) then base else step (mkMonoArray (n - 1)) in
+//│ ║         	                             ^^^^
+//│ ╟── Note: constraint arises from tuple type:
+//│ ║  l.79: 	def snd: forall 'a 'b. (('a, 'b),) -> 'b
+//│ ║        	                        ^^^^^^^^
+//│ ╟── from application:
+//│ ║  l.174: 	            if (n == 0) then base else step (mkMonoArray (n - 1)) in
+//│ ╙──       	                                             ^^^^^^^^^^^^^^^^^^^
+//│ res: anything
 
 // =============== Sec 7 ===============
 
