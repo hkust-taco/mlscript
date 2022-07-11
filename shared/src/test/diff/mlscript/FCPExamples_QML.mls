@@ -159,14 +159,14 @@ def mod = let rec mod a b = if a < b then a else mod (a - b) b in mod
 // exists r. forall b. Sig[a, r, b]
 // (forall r. (forall b. Sig[a, r, b]) -> y) -> y
 
-type Sig[a, r, b] = ((((a -> r), (r -> int -> a)), (r -> int -> a -> r)), (a -> b -> b) -> b -> r -> b)
-type ExSig = (forall 'r 'b. (((('a -> 'r), ('r -> int -> 'a)), ('r -> int -> 'a -> 'r)), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b) -> 'y) -> 'y
+type Sig[a, r, b] = (((a -> r, r -> int -> a), r -> int -> a -> r), (a -> b -> b) -> b -> r -> b)
+type ExSig = (forall 'r 'b. ((('a -> 'r, 'r -> int -> 'a), 'r -> int -> 'a -> 'r), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b) -> 'y) -> 'y
 //│ Defined type alias Sig[=a, =r, =b]
 //│ Defined type alias ExSig
 
 def base : ExSig
-def base = fun (f : forall 'r 'b. (((('a -> 'r), ('r -> int -> 'a),), ('r -> int -> 'a -> 'r),), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b) -> 'y,) ->
-                f (((fun a -> a, fun r -> fun (i : int) -> r), fun r -> fun (i : int) -> fun a -> a), fun f -> fun b -> fun r -> f r b)
+def base (f : forall 'r 'b. ((('a -> 'r, 'r -> int -> 'a), 'r -> int -> 'a -> 'r), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b) -> 'y) =
+  f (((fun a -> a, fun r -> fun (i : int) -> r), fun r -> fun (i : int) -> fun a -> a), fun f -> fun b -> fun r -> f r b)
 //│ base: ExSig
 //│     = <missing implementation>
 //│ (forall 'r, 'b. ((('a -> 'r, 'r -> int -> 'a,), 'r -> int -> 'a -> 'r,), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b,) -> 'c) -> 'c
@@ -174,44 +174,40 @@ def base = fun (f : forall 'r 'b. (((('a -> 'r), ('r -> int -> 'a),), ('r -> int
 //│ ExSig
 //│     = [Function: base]
 
-def step = fun xx -> xx (fun x ->
-  let xinit = (fst (fst (fst x))) in
-  let xsub = snd (fst (fst x)) in
-  let xupdate = snd (fst x) in
-  let xfold = snd x in
-    let init = fun a -> ((xinit a), (xinit a)) in
-    let sub = fun r -> fun i ->
-      if (mod i 2) == 0
-      then (xsub (fst r) (i / 2))
-      else (xsub (snd r) (i / 2)) in
-    let update = fun r -> fun i -> fun a ->
-      if (mod i 2) == 0
-      then ((xupdate (fst r) (i / 2) a), (snd r))
-      else ((fst r), (xupdate (snd r) (i / 2) a)) in
-    let fold = fun f -> fun b -> fun r -> xfold f (xfold f b (fst r) (snd r)) in
-      fun (f : forall 'r 'b. (((('a -> 'r), ('r -> int -> 'a)), ('r -> int -> 'a -> 'r)), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b) -> 'y) ->
+def step = fun xx -> xx (fun ( (((xinit, xsub), xupdate), xfold) ) ->
+    let init a = (xinit a, xinit a) in
+    let sub r i =
+      if mod i 2 == 0
+      then xsub (fst r) (i / 2)
+      else xsub (snd r) (i / 2) in
+    let update r i a =
+      if mod i 2 == 0
+      then (xupdate (fst r) (i / 2) a, snd r)
+      else (fst r, xupdate (snd r) (i / 2) a) in
+    let fold f b r = xfold f (xfold f b (fst r) (snd r)) in
+      fun (f : forall 'r 'b. ((('a -> 'r, 'r -> int -> 'a), 'r -> int -> 'a -> 'r), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b) -> 'y) ->
       f (((init, sub), update), fold)
     )
 //│ step: ((forall 'c, 'd, 'e, 'f, 'g. ((('c, 'd,), 'e,), 'f,) -> (forall 'c, 'd, 'e, 'f, 'a, 'a0, 'b, 'b0, 'h, 'g. ((forall 'r, 'b1. ((('a -> 'r, 'r -> int -> 'a,), 'r -> int -> 'a -> 'r,), ('a -> 'b1 -> 'b1) -> 'b1 -> 'r -> 'b1,) -> 'g) -> 'g
 //│   where
 //│     'c <: 'a -> 'a0 & 'a -> 'b
-//│     'e <: 'a0 -> int -> 'a -> 'a0 & 'b -> int -> 'a -> 'b
 //│     'd <: 'a0 -> int -> 'a & 'b -> int -> 'a
+//│     'e <: 'a0 -> int -> 'a -> 'a0 & 'b -> int -> 'a -> 'b
 //│     'f <: ('a -> 'b0 -> 'b0) -> 'h -> 'b0 & ('a -> 'b0 -> 'b0) -> 'b0 -> 'a0 -> 'b -> 'h))) -> 'i) -> 'i
 //│     = [Function: step]
 
 // FIXME
-let rec mkArray n = if (n == 0) then base else step (mkArray (n - 1)) in
-  (mkArray 1)
+let rec mkArray n = if n == 0 then base else step (mkArray (n - 1)) in
+  mkArray 1
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.204: 	let rec mkArray n = if (n == 0) then base else step (mkArray (n - 1)) in
-//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `(((?a -> ‘r_1311'', ‘r_1311'' -> int -> ?a,), ‘r_1311'' -> int -> ?a -> ‘r_1311'',), (?a -> ‘b_1312'' -> ‘b_1312'') -> ‘b_1312'' -> ‘r_1311'' -> ‘b_1312'',)` does not match type `(?b,)`
-//│ ║  l.163: 	type ExSig = (forall 'r 'b. (((('a -> 'r), ('r -> int -> 'a)), ('r -> int -> 'a -> 'r)), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b) -> 'y) -> 'y
-//│ ╙──       	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.200: 	let rec mkArray n = if n == 0 then base else step (mkArray (n - 1)) in
+//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `(((?a -> ‘r_1204'', ‘r_1204'' -> int -> ?a,), ‘r_1204'' -> int -> ?a -> ‘r_1204'',), (?a -> ‘b_1205'' -> ‘b_1205'') -> ‘b_1205'' -> ‘r_1204'' -> ‘b_1205'',)` does not match type `((((?b, ?c,), ?d,), ?e,),)`
+//│ ║  l.163: 	type ExSig = (forall 'r 'b. ((('a -> 'r, 'r -> int -> 'a), 'r -> int -> 'a -> 'r), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b) -> 'y) -> 'y
+//│ ╙──       	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: ExSig
 //│ Runtime error:
-//│   TypeError: undefined is not a function
+//│   TypeError: function is not iterable (cannot read property Symbol(Symbol.iterator))
 
 // =============== Sec 7 ===============
 
