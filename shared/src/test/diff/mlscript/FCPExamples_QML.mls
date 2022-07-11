@@ -1,32 +1,43 @@
-:NoJS
+// :NoJS
 
 // =============== Sec 2 ===============
 let id x = x in id
 (id 3, id false)
 //│ res: 'a -> 'a
+//│    = [Function (anonymous)]
 //│ res: (3, false,)
+//│    = [ 3, false ]
 
 let poly f = (f 1, f true) in poly
 //│ res: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+//│    = [Function (anonymous)]
 let poly f = let y = f in (y 1, y true) in poly
 //│ res: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+//│    = [Function (anonymous)]
 
 // Altered from
 // let poly f = let y = f {forall 'a. 'a -> 'a} in (y 1, y true)
 def poly = fun (f : (forall 'a. 'a -> 'a)) -> (f 1, f true)
 //│ poly: (forall 'a. 'a -> 'a) -> (1, true,)
+//│     = [Function: poly]
 
 def app : ('a -> 'b) -> 'a -> 'b
 //│ app: ('a -> 'b) -> 'a -> 'b
+//│    = <missing implementation>
 
 def revapp : 'a -> ('a -> 'b) -> 'b
 //│ revapp: 'a -> ('a -> 'b) -> 'b
+//│       = <missing implementation>
 
 app poly (fun x -> x)
 //│ res: (1, true,)
+//│    = <no result>
+//│      app is not implemented
 
 revapp (fun x -> x) poly
 //│ res: (1, true,)
+//│    = <no result>
+//│      revapp is not implemented
 
 class List[A]
   method Get: A
@@ -35,41 +46,58 @@ class List[A]
 
 def single : 'a -> List['a]
 //│ single: 'a -> List['a]
+//│       = <missing implementation>
 
 def ids = single (fun x -> x)
 //│ ids: List[forall 'a. 'a -> 'a]
+//│    = <no result>
+//│      single is not implemented
 
 single ids
 //│ res: List[List[forall 'a. 'a -> 'a]]
+//│    = <no result>
+//│      single is not implemented
 
 def map: ('a -> 'b) -> List['a] -> List['b]
 def head: List['a] -> 'a
 //│ map: ('a -> 'b) -> List['a] -> List['b]
+//│    = <missing implementation>
 //│ head: List['a] -> 'a
+//│     = <missing implementation>
 
 map head (single ids)
 //│ res: List[forall 'a. 'a -> 'a]
+//│    = <no result>
+//│      map is not implemented
 app (map head) (single ids)
 //│ res: List[forall 'a. 'a -> 'a]
+//│    = <no result>
+//│      app is not implemented
 
 def fst: forall 'a 'b. (('a, 'b),) -> 'a
 def fst ((x, _),) = x
 def snd: forall 'a 'b. (('a, 'b),) -> 'b
 def snd ((_, x),) = x
 //│ fst: ('a, anything,) -> 'a
+//│    = <missing implementation>
 //│ ('a, anything,) -> 'a
 //│   <:  fst:
 //│ ('a, anything,) -> 'a
+//│    = [Function: fst]
 //│ snd: (anything, 'b,) -> 'b
+//│    = <missing implementation>
 //│ (anything, 'a,) -> 'a
 //│   <:  snd:
 //│ (anything, 'b,) -> 'b
+//│    = [Function: snd]
 
 def pack t = fun f -> f t
 //│ pack: 'a -> ('a -> 'b) -> 'b
+//│     = [Function: pack]
 
 def open p t = p t
 //│ open: ('a -> 'b) -> 'a -> 'b
+//│     = [Function: open]
 
 // Altered from
 // let f = {exists 'a. 'a * ('a -> 'a) * ('a -> int)} (0, (fun x -> x + 1) , (fun x -> x));
@@ -77,86 +105,106 @@ def open p t = p t
 let f = pack ((0, (fun x -> x + 1, fun x -> x),),) in
   open f (fun x -> (snd (snd x)) (fst x))
 //│ res: 0
+//│    = 0
 
 
 // =============== Sec 3 ===============
 
 def run : (forall 'g. 'g -> 'a) -> 'a
 //│ run: (nothing -> 'a) -> 'a
+//│    = <missing implementation>
 
 def e : 'g -> int
 //│ e: anything -> int
+//│  = <missing implementation>
 
 // 
 (fun (f : (forall 'g. int -> 'g)) -> f 1)
 //│ res: (int -> anything) -> nothing
+//│    = [Function: res]
 
 run e
 //│ res: int
+//│    = <no result>
+//│      run is not implemented
 
 fun (x : (forall 'a. 'a -> 'a)) -> x
 //│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│    = [Function: res]
 
 
 let abstype = pack ((id, id),) in
   let module = pack ((id, app),) in
   open abstype (fun x -> (snd x) (fst x 1))
 //│ res: 1
+//│    = <no result>
+//│      app is not implemented
 
 let abstype = pack ((id, id),) in
   let module = pack ((id, app),) in
   open module (fun x -> (snd x) (fun a -> ((a, a),)) (fst x 1))
 //│ res: ((1, 1,),)
+//│    = <no result>
+//│      app is not implemented
 
-def mod a b = a - (a / b) * b
+def mod = let rec mod a b = if a < b then a else mod (a - b) b in mod
 //│ mod: int -> int -> int
+//│    = [Function: mod]
 
+// let base = (((fun a -> a, fun r -> fun i -> r), fun r -> fun i -> fun a -> a), fun f -> fun b -> fun r -> f r b) in
+//   let xinit = fst (fst (fst base)) in
+//   let xsub = snd (fst (fst base)) in
+//   let xupdate = snd (fst base) in
+//   let xfold = snd base in
+//   xinit
 
-let base = pack ((((fun a -> a, fun r -> fun i -> r), (fun r -> fun i -> fun a -> a)), fun f -> fun b -> fun r -> f r b),) in
+let base = (((fun a -> a,
+              fun r -> fun (i : int) -> r),
+              fun r -> fun (i : int) -> fun a -> a),
+              fun f -> fun b -> fun r -> f r b) in
   let step = fun x ->
     let xinit = fst (fst (fst x)) in
-    let xsub = fst (fst (snd x)) in
-    let xupdate = fst (snd x) in
+    let xsub = snd (fst (fst x)) in
+    let xupdate = snd (fst x) in
     let xfold = snd x in
       let init = fun a -> ((xinit a), (xinit a)) in
       let sub = fun r -> fun i ->
-        if (mod i 2) == 2
+        if (mod i 2) == 0
         then (xsub (fst r) (i / 2))
-        else (xsub (snd r) (i / 2)) in
+        else (xsub (snd r) (i / 2))
+      in
       let update = fun r -> fun i -> fun a ->
         if (mod i 2) == 0
         then ((xupdate (fst r) (i / 2) a), (snd r))
-        else ((fst r), (xupdate (snd r) (i / 2) a)) in
-        let fold = fun f -> fun b -> fun r ->
-          xfold f (xfold f b (fst r) (snd r))
-        in ((((init, sub), update), sub),) in
-          let rec mkMonoArray n =
-            if (n == 0) then base else step (mkMonoArray (n - 1)) in
-          let mkPolyArray = fun n -> (mkMonoArray n) in mkPolyArray 1
-//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.173: 	          let rec mkMonoArray n =
-//│ ║         	                              ^^^
-//│ ║  l.174: 	            if (n == 0) then base else step (mkMonoArray (n - 1)) in
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?c -> ?d` is not a 2-element tuple
-//│ ║  l.94: 	def pack t = fun f -> f t
-//│ ║        	             ^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(?a, ?b,)`
-//│ ║  l.174: 	            if (n == 0) then base else step (mkMonoArray (n - 1)) in
-//│ ║         	                             ^^^^
-//│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.79: 	def snd: forall 'a 'b. (('a, 'b),) -> 'b
-//│ ║        	                        ^^^^^^^^
-//│ ╟── from application:
-//│ ║  l.174: 	            if (n == 0) then base else step (mkMonoArray (n - 1)) in
-//│ ╙──       	                                             ^^^^^^^^^^^^^^^^^^^
-//│ res: anything
+        else ((fst r), (xupdate (snd r) (i / 2) a)) 
+      in
+      let fold = fun f -> fun b -> fun r ->
+        xfold f (xfold f b (fst r) (snd r))
+      in
+        ((((init, sub), update), fold))
+  in 
+    let rec mkArray n =
+      if (n == 0) then base else step (mkArray (n - 1))
+    in
+    let array = mkArray 1 in
+      let init = fst (fst (fst array)) in
+      let sub = snd (fst (fst array)) in
+      let update = snd (fst array) in
+      let fold = snd array in
+        init 2
+//│ res: 'a
+//│   where
+//│     'a :> ('a, 'a,) | 2
+//│    = [ 2, 2 ]
 
 // =============== Sec 7 ===============
 
 def choose: 'a -> 'a -> 'a
 //│ choose: 'a -> 'a -> 'a
+//│       = <missing implementation>
 
 choose (head ids)
 //│ res: 'a -> (forall 'b. 'a | 'b -> 'b)
+//│    = <no result>
+//│      choose is not implemented
 
