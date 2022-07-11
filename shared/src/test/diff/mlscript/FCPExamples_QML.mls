@@ -91,12 +91,17 @@ def snd ((_, x),) = x
 //│ (anything, 'b,) -> 'b
 //│    = [Function: snd]
 
+:GeneralizeCurriedFunctions
+
+// def pack : 
 def pack t = fun f -> f t
-//│ pack: 'a -> ('a -> 'b) -> 'b
+//│ pack: 'a -> (forall 'b. ('a -> 'b) -> 'b)
 //│     = [Function: pack]
 
 def open p t = p t
-//│ open: ('a -> 'b) -> 'a -> 'b
+//│ open: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│   where
+//│     'a <: 'b -> 'c))
 //│     = [Function: open]
 
 // Altered from
@@ -151,51 +156,62 @@ def mod = let rec mod a b = if a < b then a else mod (a - b) b in mod
 //│ mod: int -> int -> int
 //│    = [Function: mod]
 
-// let base = (((fun a -> a, fun r -> fun i -> r), fun r -> fun i -> fun a -> a), fun f -> fun b -> fun r -> f r b) in
-//   let xinit = fst (fst (fst base)) in
-//   let xsub = snd (fst (fst base)) in
-//   let xupdate = snd (fst base) in
-//   let xfold = snd base in
-//   xinit
+// exists r. forall b. Sig[a, r, b]
+// (forall r. (forall b. Sig[a, r, b]) -> y) -> y
 
-let base = (((fun a -> a,
-              fun r -> fun (i : int) -> r),
-              fun r -> fun (i : int) -> fun a -> a),
-              fun f -> fun b -> fun r -> f r b) in
-  let step = fun x ->
-    let xinit = fst (fst (fst x)) in
-    let xsub = snd (fst (fst x)) in
-    let xupdate = snd (fst x) in
-    let xfold = snd x in
-      let init = fun a -> ((xinit a), (xinit a)) in
-      let sub = fun r -> fun i ->
-        if (mod i 2) == 0
-        then (xsub (fst r) (i / 2))
-        else (xsub (snd r) (i / 2))
-      in
-      let update = fun r -> fun i -> fun a ->
-        if (mod i 2) == 0
-        then ((xupdate (fst r) (i / 2) a), (snd r))
-        else ((fst r), (xupdate (snd r) (i / 2) a)) 
-      in
-      let fold = fun f -> fun b -> fun r ->
-        xfold f (xfold f b (fst r) (snd r))
-      in
-        ((((init, sub), update), fold))
-  in 
-    let rec mkArray n =
-      if (n == 0) then base else step (mkArray (n - 1))
-    in
-    let array = mkArray 1 in
-      let init = fst (fst (fst array)) in
-      let sub = snd (fst (fst array)) in
-      let update = snd (fst array) in
-      let fold = snd array in
-        init 2
-//│ res: 'a
+type Sig[a, r, b] = ((((a -> r), (r -> int -> a)), (r -> int -> a -> r)), (a -> b -> b) -> b -> r -> b)
+type ExSig = (forall 'r 'b. (((('a -> 'r), ('r -> int -> 'a)), ('r -> int -> 'a -> 'r)), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b) -> 'y) -> 'y
+//│ Defined type alias Sig[=a, =r, =b]
+//│ Defined type alias ExSig
+
+def base : ExSig
+def base = fun (f : forall 'r 'b. (((('a -> 'r), ('r -> int -> 'a),), ('r -> int -> 'a -> 'r),), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b) -> 'y,) ->
+                f (((fun a -> a, fun r -> fun (i : int) -> r), fun r -> fun (i : int) -> fun a -> a), fun f -> fun b -> fun r -> f r b)
+//│ base: ExSig
+//│     = <missing implementation>
+//│ (forall 'r, 'b. ((('a -> 'r, 'r -> int -> 'a,), 'r -> int -> 'a -> 'r,), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b,) -> 'c) -> 'c
+//│   <:  base:
+//│ ExSig
+//│     = [Function: base]
+
+def step = fun xx -> xx (fun x ->
+  let xinit = (fst (fst (fst x))) in
+  let xsub = snd (fst (fst x)) in
+  let xupdate = snd (fst x) in
+  let xfold = snd x in
+    let init = fun a -> ((xinit a), (xinit a)) in
+    let sub = fun r -> fun i ->
+      if (mod i 2) == 0
+      then (xsub (fst r) (i / 2))
+      else (xsub (snd r) (i / 2)) in
+    let update = fun r -> fun i -> fun a ->
+      if (mod i 2) == 0
+      then ((xupdate (fst r) (i / 2) a), (snd r))
+      else ((fst r), (xupdate (snd r) (i / 2) a)) in
+    let fold = fun f -> fun b -> fun r -> xfold f (xfold f b (fst r) (snd r)) in
+      fun (f : forall 'r 'b. (((('a -> 'r), ('r -> int -> 'a)), ('r -> int -> 'a -> 'r)), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b) -> 'y) ->
+      f (((init, sub), update), fold)
+    )
+//│ step: ((forall 'c, 'd, 'e, 'f, 'g. ((('c, 'd,), 'e,), 'f,) -> (forall 'c, 'd, 'e, 'f, 'a, 'a0, 'b, 'b0, 'h, 'g. ((forall 'r, 'b1. ((('a -> 'r, 'r -> int -> 'a,), 'r -> int -> 'a -> 'r,), ('a -> 'b1 -> 'b1) -> 'b1 -> 'r -> 'b1,) -> 'g) -> 'g
 //│   where
-//│     'a :> ('a, 'a,) | 2
-//│    = [ 2, 2 ]
+//│     'c <: 'a -> 'a0 & 'a -> 'b
+//│     'e <: 'a0 -> int -> 'a -> 'a0 & 'b -> int -> 'a -> 'b
+//│     'd <: 'a0 -> int -> 'a & 'b -> int -> 'a
+//│     'f <: ('a -> 'b0 -> 'b0) -> 'h -> 'b0 & ('a -> 'b0 -> 'b0) -> 'b0 -> 'a0 -> 'b -> 'h))) -> 'i) -> 'i
+//│     = [Function: step]
+
+// FIXME
+let rec mkArray n = if (n == 0) then base else step (mkArray (n - 1)) in
+  (mkArray 1)
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.204: 	let rec mkArray n = if (n == 0) then base else step (mkArray (n - 1)) in
+//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `(((?a -> ‘r_1311'', ‘r_1311'' -> int -> ?a,), ‘r_1311'' -> int -> ?a -> ‘r_1311'',), (?a -> ‘b_1312'' -> ‘b_1312'') -> ‘b_1312'' -> ‘r_1311'' -> ‘b_1312'',)` does not match type `(?b,)`
+//│ ║  l.163: 	type ExSig = (forall 'r 'b. (((('a -> 'r), ('r -> int -> 'a)), ('r -> int -> 'a -> 'r)), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b) -> 'y) -> 'y
+//│ ╙──       	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ res: ExSig
+//│ Runtime error:
+//│   TypeError: undefined is not a function
 
 // =============== Sec 7 ===============
 
