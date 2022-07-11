@@ -15,16 +15,20 @@ import mlscript.PolyType
 @main
 def main(): Unit =
   val source = """
-    def f(x) = x + 1
-    def g(x) = f(x) * 2
-    g(0)
-    g(1)
+def inc x = x + 1
+def dbl x = x * 2
+def app f x = f x
+
+class Nothing: {}
+
+app (fun x -> x) 0
   """
   val fastParseHelpers = mlscript.FastParseHelpers(source)
   val parserOrigin = mlscript.Origin("test.mls", 1, fastParseHelpers)
   parse(source, p => MLParser(parserOrigin).pgrm(p)) match {
-    case failure: Failure => println("Failed.")
+    case failure: Failure => println("Failed." + failure.msg)
     case Success(pgrm, index) =>
+      println(pgrm)
       val typingUnit = fromPgrmToTypingUnit(pgrm)
       println("Typing unit = " + PrettyPrinter.show(typingUnit))
       val monomorphized = Monomorph.monomprphize(typingUnit)
