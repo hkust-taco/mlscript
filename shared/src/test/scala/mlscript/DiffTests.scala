@@ -7,6 +7,10 @@ import sourcecode.Line
 import scala.collection.mutable
 import scala.collection.mutable.{Map => MutMap}
 import scala.collection.immutable
+import scala.concurrent.{Future, Await, ExecutionContext}
+import ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+import scala.language.postfixOps
 import mlscript.utils._, shorthands._
 import mlscript.JSTestBackend.IllFormedCode
 import mlscript.JSTestBackend.Unimplemented
@@ -630,10 +634,12 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
       case Nil =>
     }
 
-    try rec(allLines, defaultMode) finally {
+    val rec_future = Future {rec(allLines, defaultMode)}
+    try Await.result(rec_future, 10 seconds) finally {
       out.close()
       host.terminate()
     }
+
     val testFailed = failures.nonEmpty || unmergedChanges.nonEmpty
     val result = strw.toString
     val endTime = System.nanoTime()
