@@ -11,7 +11,6 @@ A = 2
 //│ res = ((x) => new A(x));
 //│ // Query 2
 //│ globalThis.A1 = 2;
-//│ res = A1;
 //│ // End of generated code
 //│ res: anything -> A
 //│    = [Function: res]
@@ -26,7 +25,7 @@ A
 :js
 class add
 //│ ╔══[ERROR] Type names must start with a capital letter
-//│ ║  l.27: 	class add
+//│ ║  l.26: 	class add
 //│ ╙──      	      ^^^
 //│ // Prelude
 //│ class add1 {}
@@ -58,7 +57,6 @@ x = Test
 //│ globalThis.x = function x(x) {
 //│   return new Test1(x);
 //│ };
-//│ res = x;
 //│ // End of generated code
 //│ x: anything -> Test
 //│  = [Function: x]
@@ -78,7 +76,6 @@ x = Test2
 //│ globalThis.x1 = function x1(x) {
 //│   return new Test2(x);
 //│ };
-//│ res = x1;
 //│ // End of generated code
 //│ x: anything -> Test2
 //│  = [Function: x1]
@@ -93,7 +90,7 @@ type B = Test2
 :js
 class C: B
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.94: 	class C: B
+//│ ║  l.91: 	class C: B
 //│ ╙──      	      ^^^^
 //│ Code generation encountered an error:
 //│   cannot inherit from type alias B
@@ -102,7 +99,6 @@ class C: B
 B = 1
 //│ // Query 1
 //│ globalThis.B = 1;
-//│ res = B;
 //│ // End of generated code
 //│ B: 1
 //│  = 1
@@ -122,10 +118,8 @@ def f = 2
 def f = 3
 //│ // Query 1
 //│ globalThis.f = 2;
-//│ res = f;
 //│ // Query 2
 //│ globalThis.f1 = 3;
-//│ res = f1;
 //│ // End of generated code
 //│ 2
 //│   <:  f:
@@ -156,7 +150,6 @@ def g: string
 g = "a"
 //│ // Query 1
 //│ globalThis.g1 = "a";
-//│ res = g1;
 //│ // End of generated code
 //│ "a"
 //│   <:  g:
@@ -178,11 +171,9 @@ def i: string
 i = "a"
 //│ // Query 1
 //│ globalThis.i = 1;
-//│ res = i;
 //│ // Query 2 is empty
 //│ // Query 3
 //│ globalThis.i1 = "a";
-//│ res = i1;
 //│ // End of generated code
 //│ i: 1
 //│  = 1
@@ -205,7 +196,6 @@ class C1
 C1 = "a"
 //│ // Query 1
 //│ globalThis.C11 = "a";
-//│ res = C11;
 //│ // End of generated code
 //│ C1: "a"
 //│   = 'a'
@@ -231,7 +221,7 @@ type Lol = 1
 :js
 Lol
 //│ ╔══[ERROR] identifier not found: Lol
-//│ ║  l.232: 	Lol
+//│ ║  l.222: 	Lol
 //│ ╙──       	^^^
 //│ res: error
 //│ Code generation encountered an error:
