@@ -7,6 +7,7 @@ import scala.reflect.ClassTag
 import mlscript.{TypeName, Top, Bot, TypeDef, Als, Trt, Cls}
 import mlscript.MethodDef
 import mlscript.Term
+import mlscript.utils.AnyOps
 
 class Scope(name: Str, enclosing: Opt[Scope]) {
   private val lexicalTypeSymbols = scala.collection.mutable.HashMap[Str, TypeSymbol]()
@@ -301,6 +302,10 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     * Shorthands for deriving function scopes.
     */
   def derive(name: Str, params: Ls[Str]): Scope = Scope(name, params, this)
+  
+  def refreshRes(): Unit = {
+    lexicalValueSymbols("res") = ValueSymbol("res", "res")
+  }
 }
 
 object Scope {

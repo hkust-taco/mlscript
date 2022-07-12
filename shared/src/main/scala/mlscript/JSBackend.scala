@@ -594,9 +594,8 @@ class JSTestBackend extends JSBackend {
               ((JSIdent("globalThis").member(sym.runtimeName) := (expr match {
                 case t: JSArrowFn => t.toFuncExpr(S(sym.runtimeName))
                 case t            => t
-              })) ::
-                (resultIdent := JSIdent(sym.runtimeName)) ::
-                Nil)
+              })) :: Nil),
+              sym.runtimeName
             )
           case L(reason) => JSTestBackend.AbortedQuery(reason)
         }
@@ -606,7 +605,9 @@ class JSTestBackend extends JSBackend {
       case term: Term =>
         try {
           val body = translateTerm(term)(scope)
-          JSTestBackend.CodeQuery(scope.tempVars.emit(), (resultIdent := body) :: Nil)
+          val res = JSTestBackend.CodeQuery(scope.tempVars.emit(), (resultIdent := body) :: Nil)
+          scope.refreshRes()
+          res
         } catch {
           case e: UnimplementedError => JSTestBackend.AbortedQuery(e.getMessage())
           case e: Throwable          => throw e
@@ -641,18 +642,19 @@ object JSTestBackend {
   /**
     * The entry generates meaningful code.
     */
-  final case class CodeQuery(prelude: Ls[Str], code: Ls[Str]) extends Query {
+  final case class CodeQuery(prelude: Ls[Str], code: Ls[Str], res: Str) extends Query {
     
   }
 
   object CodeQuery {
-    def apply(decls: Opt[JSLetDecl], stmts: Ls[JSStmt]): CodeQuery =
+    def apply(decls: Opt[JSLetDecl], stmts: Ls[JSStmt], res: Str = "res"): CodeQuery =
       CodeQuery(
         decls match {
           case S(stmt) => stmt.toSourceCode.toLines
           case N       => Nil
         },
-        SourceCode.fromStmts(stmts).toLines
+        SourceCode.fromStmts(stmts).toLines,
+        res
       )
   }
 

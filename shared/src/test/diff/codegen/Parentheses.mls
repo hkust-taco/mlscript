@@ -33,7 +33,6 @@ x = 0
 x > 0 && x < 0
 //│ // Query 1
 //│ globalThis.x = 0;
-//│ res = x;
 //│ // Query 2
 //│ res = x > 0 && x < 0;
 //│ // End of generated code
