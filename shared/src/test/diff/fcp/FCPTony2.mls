@@ -58,7 +58,14 @@ def mul n m = n (add m) zero
 //│     'c <: (ChurchInt -> ChurchInt) -> 'd -> 'e)) -> ('a -> (forall 'f. 'f -> 'f)) -> 'b))
 //│    = [Function: mul]
 
+:e // fails since the fix to spurious-TV-cycles
 mul: ChurchInt -> ChurchInt -> ChurchInt
+//│ ╔══[ERROR] Cyclic-looking constraint while typing type ascription; a type annotation may be required
+//│ ║  l.62: 	mul: ChurchInt -> ChurchInt -> ChurchInt
+//│ ║        	^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ChurchInt  <:  'a21_233    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  ChurchInt  <:  'a21_22'
 //│ res: ChurchInt -> ChurchInt -> ChurchInt
 //│    = [Function: mul]
 
@@ -76,10 +83,10 @@ def pow n m = n (mul m) (succ zero)
 :e
 pow: ChurchInt -> ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing type ascription; a type annotation may be required
-//│ ║  l.77: 	pow: ChurchInt -> ChurchInt -> ChurchInt
+//│ ║  l.84: 	pow: ChurchInt -> ChurchInt -> ChurchInt
 //│ ║        	^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α24_27'' -> ‹∀ 2. (α25_26''' -> α25_26''')›)››  <:  'a21_353    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α24_27'' -> ‹∀ 2. (α25_26''' -> α25_26''')›)››  <:  'a21_350    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α24_27'' -> ‹∀ 2. (α25_26''' -> α25_26''')›)››  <:  'a21_22'
 //│ res: ChurchInt -> ChurchInt -> ChurchInt
 //│    = [Function: pow]
@@ -139,7 +146,7 @@ def pred n =
   let s p = pair (snd p) (succ (snd p)) in
   let z = pair zero zero in
   fst (n s z)
-//│ pred: ((forall 'a. (('a -> (forall 'b. 'b -> 'b)) -> (‘a_561^6_566 -> ‘a_561^6_566) -> ‘a_561^6_566 -> ‘a_561^6_566 & 'a) -> ((forall 'a. ('c
+//│ pred: ((forall 'a. (('a -> (forall 'b. 'b -> 'b)) -> (‘a_558^6_563 -> ‘a_558^6_563) -> ‘a_558^6_563 -> ‘a_558^6_563 & 'a) -> ((forall 'a. ('c
 //│   where
 //│     'a <: ('a -> (forall 'b. 'b -> 'b)) -> 'c)) -> ChurchInt -> 'd) -> 'd) -> ((('a -> (forall 'e. 'e -> 'e)) -> ('a -> (forall 'e. 'e -> 'e)) -> 'f) -> 'f) -> (forall 'a, 'g. 'g -> 'a -> 'g) -> 'h) -> 'h
 //│     = [Function: pred]
@@ -151,21 +158,21 @@ pred : ChurchInt -> ChurchInt
 :e
 rec def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n (fact (pred n)))
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.152: 	rec def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n (fact (pred n)))
+//│ ║  l.159: 	rec def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n (fact (pred n)))
 //│ ║         	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α24_27'' -> ‹∀ 2. (α25_26''' -> α25_26''')›)››  <:  α123_835'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α24_27'' -> ‹∀ 2. (α25_26''' -> α25_26''')›)››  <:  α123_835'
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α24_27'' -> ‹∀ 2. (α25_26''' -> α25_26''')›)››  <:  α123_832'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α24_27'' -> ‹∀ 2. (α25_26''' -> α25_26''')›)››  <:  α123_832'
 //│ fact: ChurchInt -> (anything -> (forall 'a. 'a -> 'a) | ChurchInt)
 //│     = [Function: fact]
 
 :e
 def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n {})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.163: 	def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n {})
+//│ ║  l.170: 	def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n {})
 //│ ║         	                                                                    ^^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.163: 	def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n {})
+//│ ║  l.170: 	def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n {})
 //│ ║         	                                                                          ^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.42: 	def add n m = n succ m

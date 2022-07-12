@@ -401,7 +401,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           (if (cctx._2.headOption.exists(_ is rhs)) cctx._2 else rhs :: cctx._2)
         else (lhs :: Nil) -> (rhs :: Nil),
         ctx,
-        if (sameLevel) shadows else Shadows(Set.empty, shadows.previous ++ shadows.current)
+        if (sameLevel) shadows else Shadows(Set.empty, shadows.previous)
       )
       stack.pop()
       ()
@@ -442,7 +442,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val shadow = lhs.shadow -> rhs.shadow
             // println(s"SH: $shadow")
             // println(s"ALLSH: ${shadows.iterator.map(s => s._1 + "<:" + s._2).mkString(", ")}")
-            if (!noCycleCheck && shadows.previous.contains(shadow)) {
+            
+            if (shadows.current.contains(shadow))
+              return println(s"Spurious cycle involving $lhs_rhs") // * Spurious cycle, like alpha <: beta <: alpha
+            
+            else if (!noCycleCheck && shadows.previous.contains(shadow)) {
             // if (!lhs.isInstanceOf[TV] && !rhs.isInstanceOf[TV] && shadows.contains(shadow)) { // FIXME there are cyclic constraints like this; find a better way of allowing recursion after extrusion!
               println(s"SHADOWING DETECTED!")
               // err(msg"Cyclic-looking constraint ${lhs_rhs.toString}" -> prov.loco :: Nil)
@@ -454,13 +458,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 msg" ... looks like:  ${shadow._1.toString}  <:  ${shadow._2.toString}" -> N ::
                 Nil)
               return ()
-            } else if (shadows.current.contains(shadow)) return () // * Spurious cycle, like alpha <: beta <: alpha
+            }
+            
             // if (!noRecursiveTypes) cache += lhs_rhs
             if (lhs_rhs match {
               case (_: TV, _: TV) => true
               case _ => !noRecursiveTypes
             }) cache += lhs_rhs
-            shadows.copy(current = shadows.current + shadow)
+            
+            Shadows(shadows.current + lhs_rhs, shadows.previous + shadow)
+            
         }) |> { implicit shadows: Shadows =>
         lhs_rhs match {
           case (ExtrType(true), _) => ()

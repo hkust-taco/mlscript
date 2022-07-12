@@ -35,15 +35,12 @@ ty1 = ty2
 //│ MutArray['A -> 'A]
 //│   <:  ty1:
 //│ MutArray[forall 'A. 'A -> 'A]
-//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
 //│ ║  l.34: 	ty1 = ty2
 //│ ║        	^^^^^^^^^
-//│ ╟── type `‘A_81'_82` is not an instance of type `'A_81'_83`
-//│ ║  l.15: 	def ty1: MutArray[forall 'A. 'A -> 'A]
-//│ ║        	                         ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.15: 	def ty1: MutArray[forall 'A. 'A -> 'A]
-//│ ╙──      	                         ^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‘A_81'_82  <:  'A54_79    TraitTag  TypeVariable
+//│ ╙──  ... looks like:  ‘A_81'_82  <:  'A54_55''
 
 :e
 ty2 = ty1
@@ -51,9 +48,9 @@ ty2 = ty1
 //│   <:  ty2:
 //│ MutArray['A -> 'A]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.49: 	ty2 = ty1
+//│ ║  l.46: 	ty2 = ty1
 //│ ║        	^^^^^^^^^
-//│ ╟── type `‘A_91''` is not an instance of type `'A_90'`
+//│ ╟── type `‘A_90''` is not an instance of type `'A_89'`
 //│ ║  l.15: 	def ty1: MutArray[forall 'A. 'A -> 'A]
 //│ ║        	                         ^^
 //│ ╟── Note: constraint arises from quantified type variable:

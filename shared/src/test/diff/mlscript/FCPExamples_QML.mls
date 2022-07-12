@@ -184,7 +184,7 @@ let mkSArray n = if n == 0 then sbase else sstep (sstep sbase) in
 let rec mkSArray n = if n == 0 then sbase else sstep (mkSArray (n - 1)) in
   mkSArray 2 (fun (xinit, xsub) -> xinit 2)
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: ?mkSArray` exceeded recursion depth limit (300)
-//│ ║  l.187: 	let rec mkSArray n = if n == 0 then sbase else sstep (mkSArray (n - 1)) in
+//│ ║  l.184: 	let rec mkSArray n = if n == 0 then sbase else sstep (mkSArray (n - 1)) in
 //│ ║         	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── while constraining:  'a918'  <!<  'a1104'
 //│ ╟── while constraining:  'a956'  <!<  'a1104'
@@ -219,13 +219,13 @@ let rec mkSArray n = if n == 0 then sbase else sstep (mkSArray (n - 1)) in
 //│ ╟── while constraining:  (α788' -> α800')  <!<  ((α795',) -> α796')
 //│ ╙── while constraining:  (α788' -> α800')  <!<  mkSArray787'
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.188: 	  mkSArray 2 (fun (xinit, xsub) -> xinit 2)
+//│ ║  l.185: 	  mkSArray 2 (fun (xinit, xsub) -> xinit 2)
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘r_1449'_1453` is not a function
 //│ ║  l.171: 	      fun (f : forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) ->
 //│ ║         	                      ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.188: 	  mkSArray 2 (fun (xinit, xsub) -> xinit 2)
+//│ ║  l.185: 	  mkSArray 2 (fun (xinit, xsub) -> xinit 2)
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from type variable:
 //│ ║  l.171: 	      fun (f : forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) ->
@@ -264,16 +264,17 @@ def step = fun xx -> xx (fun (((xinit, xsub), xupdate), xfold) ->
 //│ step: ((forall 'a, 'b, 'a0, 'b0, 'c, 'd. ((('a -> 'b & 'a -> 'a0, 'b -> int -> 'a & 'a0 -> int -> 'a,), 'b -> int -> 'a -> 'b & 'a0 -> int -> 'a -> 'a0,), ('a -> 'b0 -> 'b0) -> 'b0 -> 'a0 -> 'b -> 'c & ('a -> 'b0 -> 'b0) -> 'c -> 'b0,) -> (forall 'r. ((('a -> 'r, 'r -> int -> 'a,), 'r -> int -> 'a -> 'r,), ('a -> 'b0 -> 'b0) -> 'b0 -> 'r -> 'b0,) -> 'd) -> 'd) -> 'e) -> 'e
 //│     = [Function: step]
 
+// FIXME
 let mkArray n = if n == 0 then base else step base in
   mkArray 1 (fun (((xinit, xsub), xupdate), xfold) -> xinit 2)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.275: 	let mkArray n = if n == 0 then base else step base in
+//│ ║  l.268: 	let mkArray n = if n == 0 then base else step base in
 //│ ║         	                                         ^^^^^^^^^
 //│ ╟── type `‘r_1931''_2009` is not an instance of type `'r_1931''_2012`
-//│ ║  l.240: 	type ExSig = (forall 'r. (forall 'b. (('a -> 'r, 'r -> int -> 'a), 'r -> int -> 'a -> 'r), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b) -> 'y) -> 'y
+//│ ║  l.237: 	type ExSig = (forall 'r. (forall 'b. (('a -> 'r, 'r -> int -> 'a), 'r -> int -> 'a -> 'r), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b) -> 'y) -> 'y
 //│ ║         	                     ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.240: 	type ExSig = (forall 'r. (forall 'b. (('a -> 'r, 'r -> int -> 'a), 'r -> int -> 'a -> 'r), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b) -> 'y) -> 'y
+//│ ║  l.237: 	type ExSig = (forall 'r. (forall 'b. (('a -> 'r, 'r -> int -> 'a), 'r -> int -> 'a -> 'r), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b) -> 'y) -> 'y
 //│ ╙──       	                     ^^
 //│ res: error | ‘r_2042'_2048
 //│    = [ 2, 2 ]
@@ -282,13 +283,13 @@ let mkArray n = if n == 0 then base else step base in
 let rec mkArray n = if n == 0 then base else step (mkArray (n - 1)) in
   mkArray 2 (fun (((xinit, xsub), xupdate), xfold) -> xinit 2)
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.281: 	let rec mkArray n = if n == 0 then base else step (mkArray (n - 1)) in
+//│ ║  l.283: 	let rec mkArray n = if n == 0 then base else step (mkArray (n - 1)) in
 //│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘r_2079''_2157` is not an instance of type `'r_2079''_2160`
-//│ ║  l.240: 	type ExSig = (forall 'r. (forall 'b. (('a -> 'r, 'r -> int -> 'a), 'r -> int -> 'a -> 'r), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b) -> 'y) -> 'y
+//│ ║  l.237: 	type ExSig = (forall 'r. (forall 'b. (('a -> 'r, 'r -> int -> 'a), 'r -> int -> 'a -> 'r), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b) -> 'y) -> 'y
 //│ ║         	                     ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.240: 	type ExSig = (forall 'r. (forall 'b. (('a -> 'r, 'r -> int -> 'a), 'r -> int -> 'a -> 'r), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b) -> 'y) -> 'y
+//│ ║  l.237: 	type ExSig = (forall 'r. (forall 'b. (('a -> 'r, 'r -> int -> 'a), 'r -> int -> 'a -> 'r), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b) -> 'y) -> 'y
 //│ ╙──       	                     ^^
 //│ res: ‘r_2197'_2203
 //│    = [ [ 2, 2 ], [ 2, 2 ] ]
