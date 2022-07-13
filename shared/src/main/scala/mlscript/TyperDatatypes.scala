@@ -20,7 +20,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
 
   case class NestingInfo()
-  class NestedTypeProvenance(val chain: Ls[SimpleType], val nestingInfo: NestingInfo = NestingInfo()) extends TypeProvenance(N, "<nested>")
+  class NestedTypeProvenance(val chain: Ls[SimpleType], val nestingInfo: NestingInfo = NestingInfo()) extends TypeProvenance(N, "<nested>") {
+    override def toString: Str = "<nested> " + chain.mkString(" -> ") + " <nested>"
+  }
 
   object NestedTypeProvenance {
     def apply(chain: Ls[SimpleType], nestingInfo: NestingInfo = NestingInfo()): NestedTypeProvenance = {
@@ -195,7 +197,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   /** The sole purpose of ProvType is to store additional type provenance info. */
   case class ProvType(underlying: SimpleType)(val prov: TypeProvenance) extends ProxyType {
-    override def toString = s"[$underlying]"
+    override def toString = if (prov is NestedTypeProvenance) s"[$underlying] prov: $prov" else s"[$underlying]"
     // override def toString = s"$underlying[${prov.desc.take(5)}]"
     // override def toString = s"$underlying[${prov.toString.take(5)}]"
     // override def toString = s"$underlying@${prov}"

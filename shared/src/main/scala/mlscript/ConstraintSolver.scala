@@ -258,10 +258,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }()
     
     /** Helper function to constrain Field lower bounds. */
-    def recLb(lhs: FieldType, rhs: FieldType)
+    def recLb(lhs: FieldType, rhs: FieldType, nestedProv: Option[NestedTypeProvenance] = None)
       (implicit raise: Raise, cctx: ConCtx): Unit = {
         (lhs.lb, rhs.lb) match {
-          case (Some(l), Some(r)) => rec(l, r, false)
+          case (Some(l), Some(r)) => rec(l, r, false, nestedProv)
           case (Some(l), None) =>
             if (lhs.prov.loco.isEmpty || rhs.prov.loco.isEmpty) reportError()
             else reportError(S(msg"is not mutable"))(
@@ -277,7 +277,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       // Thread.sleep(10)  // useful for debugging constraint-solving explosions debugged on stdout
       recImpl(lhs, rhs)(raise,
         if (sameLevel)
-          // only add non-provenance information to context to bloated context
           (if (cctx._1.headOption.exists(_ is lhs.prov)) cctx._1 else lhs :: cctx._1)
           ->
           (if (cctx._2.headOption.exists(_ is rhs.prov)) cctx._2 else rhs :: cctx._2)
@@ -289,7 +288,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         }
       )
     }
-
     def recImpl(lhs: SimpleType, rhs: SimpleType)
           (implicit raise: Raise, cctx: ConCtx): Unit =
     // trace(s"C $lhs <! $rhs") {
@@ -298,6 +296,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       // println(s"[[ ${cctx._1.map(_.prov).mkString(", ")}  <<  ${cctx._2.map(_.prov).mkString(", ")} ]]")
       // println(s"{{ ${cache.mkString(", ")} }}")
       
+      lazy val provChain = Some(NestedTypeProvenance(cctx._1 reverse_::: cctx._2))
+      lazy val revProvChain = Some(NestedTypeProvenance((cctx._1 reverse_::: cctx._2).reverse))
+
       if (lhs === rhs) return ()
       
       // if (lhs <:< rhs) return () // * It's not clear that doing this here is worth it
@@ -327,8 +328,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs, true)
           case (FunctionType(l0, r0), FunctionType(l1, r1)) =>
             println(s"FunctionType($l0, $r0) and FunctionType($l1, $r1)\n context part 1 -\n  $cctx._1\n and part 2 -\n $cctx._2\n")
-            rec(l1, l0, false, Some(NestedTypeProvenance((cctx._1 reverse_::: cctx._2).reverse)))
-            rec(r0, r1, false, Some(NestedTypeProvenance(cctx._1 reverse_::: cctx._2)))
+            rec(l1, l0, false, revProvChain)
+            rec(r0, r1, false, provChain)
           case (prim: ClassTag, ot: ObjectTag)
             if prim.parentsST.contains(ot.id) => ()
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
@@ -360,12 +361,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                   msg"Wrong tuple field name: found '${ln.name}' instead of '${rn.name}'",
                   lhs.prov.loco // TODO better loco
               )}}
-              recLb(r, l)
-              rec(l.ub, r.ub, false)
+              recLb(r, l, provChain)
+              rec(l.ub, r.ub, false, provChain)
             }
           case (t: ArrayBase, a: ArrayType) =>
-            recLb(a.inner, t.inner)
-            rec(t.inner.ub, a.inner.ub, false)
+            recLb(a.inner, t.inner, provChain)
+            rec(t.inner.ub, a.inner.ub, false, provChain)
           case (ComposedType(true, l, r), _) =>
             rec(l, rhs, true) // Q: really propagate the outerProv here?
             rec(r, rhs, true)
@@ -377,26 +378,26 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_, TupleType(f :: Nil)) if funkyTuples =>
             rec(lhs, f._2.ub, true) // FIXME actually needs reified coercion! not a true subtyping relationship
           case (err @ ClassTag(ErrTypeId, _), FunctionType(l1, r1)) =>
-            rec(l1, err, false)
-            rec(err, r1, false)
+            rec(l1, err, false, provChain)
+            rec(err, r1, false, provChain)
           case (FunctionType(l0, r0), err @ ClassTag(ErrTypeId, _)) =>
-            rec(err, l0, false)
-            rec(r0, err, false)
+            rec(err, l0, false, provChain)
+            rec(r0, err, false, provChain)
           case (RecordType(fs0), RecordType(fs1)) =>
             fs1.foreach { case (n1, t1) =>
               fs0.find(_._1 === n1).fold {
                 reportError()
               } { case (n0, t0) =>
                 recLb(t1, t0)
-                rec(t0.ub, t1.ub, false)
+                rec(t0.ub, t1.ub, false, provChain)
               }
             }
           case (tup: TupleType, _: RecordType) =>
             rec(tup.toRecord, rhs, true) // Q: really support this? means we'd put names into tuple reprs at runtime
           case (err @ ClassTag(ErrTypeId, _), RecordType(fs1)) =>
-            fs1.foreach(f => rec(err, f._2.ub, false))
+            fs1.foreach(f => rec(err, f._2.ub, false, provChain))
           case (RecordType(fs1), err @ ClassTag(ErrTypeId, _)) =>
-            fs1.foreach(f => rec(f._2.ub, err, false))
+            fs1.foreach(f => rec(f._2.ub, err, false, provChain))
             
           case (tr1: TypeRef, tr2: TypeRef) if tr1.defn.name =/= "Array" =>
             if (tr1.defn === tr2.defn) {
@@ -405,8 +406,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               val tvv = td.getVariancesOrDefault
               td.tparamsargs.unzip._2.lazyZip(tr1.targs).lazyZip(tr2.targs).foreach { (tv, targ1, targ2) =>
                 val v = tvv(tv)
-                if (!v.isContravariant) rec(targ1, targ2, false)
-                if (!v.isCovariant) rec(targ2, targ1, false)
+                if (!v.isContravariant) rec(targ1, targ2, false, provChain)
+                if (!v.isCovariant) rec(targ2, targ1, false, provChain)
               }
             } else {
               (tr1.mkTag, tr2.mkTag) match {
@@ -545,7 +546,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       
       val detailedContext =
         if (explainErrors)
-          // TODO show nested provs
           msg"========= Additional explanations below =========" -> N ::
           lhsChain.flatMap { lhs =>
             if (dbg) msg"[info] LHS >> ${lhs.prov.toString} : ${lhs.expPos}" -> lhs.prov.loco :: Nil
