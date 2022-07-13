@@ -293,14 +293,21 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
    *   is used to check the kind of the definition and the number of type arguments expected. Use case:
    *   for typing bodies of type definitions with mutually recursive references. */
   def typeType(ty: Type, simplify: Bool = true)
-        (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): SimpleType =
+        (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType], newDefsInfo: Map[Str, (TypeDefKind, Int)] = Map.empty): SimpleType = {
     typeType2(ty, simplify)._1
+  }
+  def typePolyType(ty: Type, simplify: Bool = true)
+        (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType], newDefsInfo: Map[Str, (TypeDefKind, Int)] = Map.empty): SimpleType = {
+    implicit val prov: TP = tp(ty.toLoc, "type")
+    val baseLevel = vars.valuesIterator.map(_.level).maxOption.getOrElse(MinLevel)
+    ctx.copy(lvl = baseLevel).poly { implicit ctx => typeType2(ty, simplify)._1 }
+  }
   
   /* Also returns an iterable of `TypeVariable`s instantiated when typing `TypeVar`s.
    * Useful for instantiating them by substitution when expanding a `TypeRef`. */
   def typeType2(ty: Type, simplify: Bool = true)
         (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType],
-        newDefsInfo: Map[Str, (TypeDefKind, Int)] = Map.empty): (SimpleType, Iterable[TypeVariable]) =
+        newDefsInfo: Map[Str, (TypeDefKind, Int)]): (SimpleType, Iterable[TypeVariable]) = // TODO rm _2 result?
       // trace(s"$lvl. Typing type $ty") {
       trace(s"Typing type $ty") {
     println(s"vars=$vars newDefsInfo=$newDefsInfo")
@@ -423,7 +430,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         ctx.poly { implicit ctx =>
           var newVars = recVars
           val tvs = vars.map {
-            case L(tn) => freshVar(tyTp(tn.toLoc, "quantified type name"), N, S(tn.name)) // this probably never happens...
+            case L(tn) =>
+              die // this probably never happens...
+              freshVar(tyTp(tn.toLoc, "quantified type name"), N, S(tn.name))
             case R(tv) =>
               // val nv = freshVar(tyTp(tv.toLoc, "quantified type variable"), S(tv), tv.identifier.toOption)
               val nv = freshVar(tyTp(tv.toLoc, "quantified type variable"), N, tv.identifier.toOption)

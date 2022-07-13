@@ -305,7 +305,7 @@ class B: Id[A]
 :e // TODO improve prov of the TV
 class Class3A
 class Class3B: Class3A & 'a
-//│ ╔══[ERROR] cannot inherit from a type variable
+//│ ╔══[ERROR] cannot inherit from a polymorphic type
 //│ ║  l.307: 	class Class3B: Class3A & 'a
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^
 //│ Defined class Class3A

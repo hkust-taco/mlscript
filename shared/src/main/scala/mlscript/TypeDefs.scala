@@ -29,7 +29,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
     kind: TypeDefKind,
     nme: TypeName,
     tparamsargs: List[(TypeName, TypeVariable)],
-    tvars: Iterable[TypeVariable], // "implicit" type variables. instantiate every time a `TypeRef` is expanded
+    tvars: Iterable[TypeVariable], // * TODO rm // "implicit" type variables. instantiate every time a `TypeRef` is expanded
     bodyTy: SimpleType,
     mthDecls: List[MethodDef[Right[Term, Type]]],
     mthDefs: List[MethodDef[Left[Term, Type]]],
@@ -184,9 +184,14 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
       val dummyTargs = td.tparams.map(p =>
         freshVar(originProv(p.toLoc, s"${td.kind.str} type parameter", p.name), N, S(p.name))(ctx.lvl + 1))
       val tparamsargs = td.tparams.lazyZip(dummyTargs)
-      val (bodyTy, tvars) = 
-        typeType2(td.body, simplify = false)(ctx.copy(lvl = 0), raise, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
-      val td1 = TypeDef(td.kind, td.nme, tparamsargs.toList, tvars, bodyTy,
+      // val (bodyTy, tvars) = 
+      //   typeType2(td.body, simplify = false)(ctx.copy(lvl = 0), raise, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
+      // assert(tvars.isEmpty)
+      // val td1 = TypeDef(td.kind, td.nme, tparamsargs.toList, tvars, bodyTy,
+      //   td.mthDecls, td.mthDefs, baseClassesOf(td), td.toLoc)
+      val bodyTy =
+        typePolyType(td.body, simplify = false)(ctx, raise, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
+      val td1 = TypeDef(td.kind, td.nme, tparamsargs.toList, Nil, bodyTy,
         td.mthDecls, td.mthDefs, baseClassesOf(td), td.toLoc)
       allDefs += n -> td1
       td1
@@ -276,6 +281,9 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                 false
               case _: TypeBounds =>
                 err(msg"cannot inherit from type bounds", prov.loco)
+                false
+              case _: PolymorphicType =>
+                err(msg"cannot inherit from a polymorphic type", prov.loco)
                 false
               case _: RecordType | _: ExtrType => true
               case p: ProxyType => checkParents(p.underlying)
@@ -477,9 +485,12 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           td.targs.map(freshenAbove(ctx.lvl, _, true))
         }
         val reverseRigid = rigidtargs.lazyZip(td.targs).toMap
-        def rec(tr: TypeRef, top: Bool = false)(ctx: Ctx): MethodSet = {
+        def rec(tr: TypeRef, top: Bool = false)(ctx: Ctx): MethodSet = ctx.tyDefs.get(tr.defn.name) match {
+              case N =>
+                err(msg"type identifier not found: ${tr.defn.name}" -> tr.prov.loco :: Nil)
+                MethodSet(tr.defn, Nil, Map.empty, Map.empty)
+              case S(td2) =>
           implicit val thisCtx: Ctx = ctx.nest
-          val td2 = ctx.tyDefs(tr.defn.name)
           val targsMap = td2.tparams.iterator.map(_.name).zip(tr.targs).toMap
           val declared = MutMap.empty[Str, Opt[Loc]]
           val defined = MutMap.empty[Str, Opt[Loc]]

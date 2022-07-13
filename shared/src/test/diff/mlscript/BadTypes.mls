@@ -101,15 +101,36 @@ aa: { a: 'a }
 type Bad = { x: 'a }
 //│ Defined type alias Bad
 
-// :d
+:e
 {x = 123}: Bad
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.+1: 	{x = 123}: Bad
+//│ ║        	^^^^^^^^^
+//│ ╟── integer literal of type `123` is not an instance of type `'a_34'`
+//│ ║  l.+1: 	{x = 123}: Bad
+//│ ║        	     ^^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.101: 	type Bad = { x: 'a }
+//│ ╙──       	                ^^
 //│ res: Bad
 //│    = { x: 123 }
 
-// Note: we should get {x: 123 | "ah"} here; but there seems to be a TV problem
-// :d
+:e
 {x = "ah"}: Bad
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.+1: 	{x = "ah"}: Bad
+//│ ║        	^^^^^^^^^^
+//│ ╟── string literal of type `"ah"` is not an instance of type `'a_35'`
+//│ ║  l.+1: 	{x = "ah"}: Bad
+//│ ║        	     ^^^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.101: 	type Bad = { x: 'a }
+//│ ╙──       	                ^^
 //│ res: Bad
+//│    = { x: 'ah' }
+
+{x = "ah"}: { x: 'a }
+//│ res: {x: "ah"}
 //│    = { x: 'ah' }
 
 :re
@@ -145,13 +166,13 @@ someRec: BadRec
 //│ ║  l.+1: 	someRec: BadRec
 //│ ║        	^^^^^^^
 //│ ╟── type `{y: ?a}` does not have field 'x'
-//│ ║  l.136: 	def someRec: { y: 'a } as 'a
+//│ ║  l.157: 	def someRec: { y: 'a } as 'a
 //│ ║         	             ^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{x: ?a0, y: BadRec}`
+//│ ╟── but it flows into reference with expected type `{x: ‘a_48', y: BadRec}`
 //│ ║  l.+1: 	someRec: BadRec
 //│ ║        	^^^^^^^
 //│ ╟── Note: constraint arises from record type:
-//│ ║  l.121: 	type BadRec = { x: 'a; y: BadRec }
+//│ ║  l.142: 	type BadRec = { x: 'a; y: BadRec }
 //│ ║         	              ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from type reference:
 //│ ║  l.+1: 	someRec: BadRec
@@ -168,12 +189,15 @@ def someRec: { x: 'a; y: 'a } as 'a
 
 :e // TODO try without cycle check
 someRec: BadRec
-//│ ╔══[ERROR] Cyclic-looking constraint while typing type ascription; a type annotation may be required
+//│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.+1: 	someRec: BadRec
 //│ ║        	^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  {x: 'a45_51, y: 'a45_51}  <:  {x: 'a34_52, y: BadRec}    RecordType  RecordType
-//│ ╙──  ... looks like:  {x: 'a45_46', y: 'a45_46'}  <:  {x: 'a34, y: BadRec}
+//│ ╟── type `{x: ?a, y: ?a}` is not an instance of type `'a_56'`
+//│ ║  l.184: 	def someRec: { x: 'a; y: 'a } as 'a
+//│ ║         	             ^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.142: 	type BadRec = { x: 'a; y: BadRec }
+//│ ╙──       	                   ^^
 //│ res: BadRec
 //│    = <no result>
 //│      someRec is not implemented

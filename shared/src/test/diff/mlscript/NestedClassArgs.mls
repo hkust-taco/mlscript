@@ -202,20 +202,11 @@ def e: anything -> (C6['A] & {a: Inner})
 // *  but it's really weird and fishy so it should probably be rejected.
 // :e // no longer an error...(?)
 // :e // Fails with polymorphic RHS extrusion
-// FIXME should be a cycle error
+// Used to fail with a depth excess... (before implicitly quantifying TVs in type defs)
 c = e
 //│ anything -> (C6['A] with {a: Inner})
 //│   <:  c:
 //│ 'a -> C6['a]
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.206: 	c = e
-//│ ║         	^^^^^
-//│ ╟── type `‘a_457'_465` is not an instance of type `'a_457'_468`
-//│ ║  l.162: 	def c: 'a -> C6['a]
-//│ ║         	                ^^
-//│ ╟── Note: constraint arises from type variable:
-//│ ║  l.162: 	def c: 'a -> C6['a]
-//│ ╙──       	                ^^
 
 type Inner2[A] = C5[C6[A]] & {a: C2[C5[C6[A]] | C5[C6[A]] & ~c5 | C5[C6[A]] | C5[C6[A]] & ~{a: C2[C5[C6[A]]]}] & {a: Inner2[A]}}
 //│ Defined type alias Inner2[=A]
@@ -260,23 +251,23 @@ s2 = S{v=S{v=1}}:O[O['_]]
 L{h=error;t=s1}
 L{h=error;t=s2}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.260: 	L{h=error;t=s1}
+//│ ║  l.251: 	L{h=error;t=s1}
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `L`
-//│ ║  l.250: 	s1 = S{v=1}:O['_]
+//│ ║  l.241: 	s1 = S{v=1}:O['_]
 //│ ║         	         ^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.238: 	class L[T]: { h: T; t: O[L[T]] }
+//│ ║  l.229: 	class L[T]: { h: T; t: O[L[T]] }
 //│ ╙──       	                         ^^^^
 //│ res: error
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.261: 	L{h=error;t=s2}
+//│ ║  l.252: 	L{h=error;t=s2}
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── type `S[?_]` is not an instance of type `L`
-//│ ║  l.237: 	type O[T] = S[T] | N
+//│ ║  l.228: 	type O[T] = S[T] | N
 //│ ║         	            ^^^^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.238: 	class L[T]: { h: T; t: O[L[T]] }
+//│ ║  l.229: 	class L[T]: { h: T; t: O[L[T]] }
 //│ ╙──       	                         ^^^^
 //│ res: error
 
@@ -336,16 +327,16 @@ append_ty_2 = append
 //│   <:  append_ty_2:
 //│ (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] with {h: 'h, t: S['T0] with {v: 'v}})
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.334: 	append_ty_2 = append
+//│ ║  l.325: 	append_ty_2 = append
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘T0_776'` is not an instance of type `L`
-//│ ║  l.327: 	def append_ty_2: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] & {h: 'h; t: S['T0] & {v: 'v}})
+//│ ╟── type `‘T0_778'` is not an instance of type `L`
+//│ ║  l.318: 	def append_ty_2: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] & {h: 'h; t: S['T0] & {v: 'v}})
 //│ ║         	                                                                          ^^^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.238: 	class L[T]: { h: T; t: O[L[T]] }
+//│ ║  l.229: 	class L[T]: { h: T; t: O[L[T]] }
 //│ ║         	                         ^^^^
 //│ ╟── Note: class type parameter T is defined at:
-//│ ║  l.234: 	class S[T]: { v: T }
+//│ ║  l.225: 	class S[T]: { v: T }
 //│ ╙──       	        ^
 
 append_ty = append_ty_2
@@ -359,13 +350,13 @@ append_ty_2 = append_ty
 //│   <:  append_ty_2:
 //│ (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] with {h: 'h, t: S['T0] with {v: 'v}})
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.357: 	append_ty_2 = append_ty
+//│ ║  l.348: 	append_ty_2 = append_ty
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘T0_837'` is not an instance of type `L`
-//│ ║  l.327: 	def append_ty_2: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] & {h: 'h; t: S['T0] & {v: 'v}})
+//│ ╟── type `‘T0_839'` is not an instance of type `L`
+//│ ║  l.318: 	def append_ty_2: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] & {h: 'h; t: S['T0] & {v: 'v}})
 //│ ║         	                                                                          ^^^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.313: 	def append_ty: (L['T] & 'v) -> ('T & 'h) -> (L['T] & {h: 'h; t: S[L['T]] & {v: 'v}})
+//│ ║  l.304: 	def append_ty: (L['T] & 'v) -> ('T & 'h) -> (L['T] & {h: 'h; t: S[L['T]] & {v: 'v}})
 //│ ╙──       	                                                                  ^^^^^
 
 

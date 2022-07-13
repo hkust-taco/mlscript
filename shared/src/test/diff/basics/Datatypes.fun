@@ -143,14 +143,21 @@ data type Ls of LsA a
 //│ LsA: 'a -> LsA['a]
 
 :p
+:e
 data type Ls2 of LsA2 `a
 //│ Parsed: data type Ls2 of (LsA2 `a);;
 //│ Desugared: type alias Ls2 = LsA2[]
 //│ Desugared: class LsA2: {`a: 'a}
 //│ Desugared: def LsA2: 'a -> LsA2[]
+//│ ╔══[ERROR] cannot inherit from a polymorphic type
+//│ ║  l.147: 	data type Ls2 of LsA2 `a
+//│ ╙──       	                 ^^^^^^^
+//│ ╔══[ERROR] type identifier not found: LsA2
+//│ ╙──
 //│ Defined type alias Ls2
-//│ Defined class LsA2
-//│ LsA2: anything -> LsA2
+//│ ╔══[ERROR] type identifier not found: LsA2
+//│ ╙──
+//│ LsA2: anything -> error
 
 Nil
 Cons
@@ -173,20 +180,20 @@ not (Cons false Nil).head
 :e
 not (Cons 42 Nil).head
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.174: 	not (Cons 42 Nil).head
+//│ ║  l.181: 	not (Cons 42 Nil).head
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `42` is not an instance of type `bool`
-//│ ║  l.174: 	not (Cons 42 Nil).head
+//│ ║  l.181: 	not (Cons 42 Nil).head
 //│ ║         	          ^^
 //│ ╟── but it flows into field selection with expected type `bool`
-//│ ║  l.174: 	not (Cons 42 Nil).head
+//│ ║  l.181: 	not (Cons 42 Nil).head
 //│ ╙──       	                 ^^^^^
 //│ res: error
 
 :e
 (Cons 4).head
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.187: 	(Cons 4).head
+//│ ║  l.194: 	(Cons 4).head
 //│ ║         	        ^^^^^
 //│ ╟── type `(tail: List[?a],) -> Cons[?a]` does not have field 'head'
 //│ ║  l.110: 	data type List a of
@@ -196,17 +203,17 @@ not (Cons 42 Nil).head
 //│ ║  l.112: 	  Cons (head: a) (tail: List a)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into receiver with expected type `{head: ?head}`
-//│ ║  l.187: 	(Cons 4).head
+//│ ║  l.194: 	(Cons 4).head
 //│ ╙──       	^^^^^^^^
 //│ res: error
 
 :e
 Cons 1 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.204: 	Cons 1 2
+//│ ║  l.211: 	Cons 1 2
 //│ ║         	^^^^^^^^
 //│ ╟── integer literal of type `2` does not match type `Cons[?a] | Nil[?]`
-//│ ║  l.204: 	Cons 1 2
+//│ ║  l.211: 	Cons 1 2
 //│ ║         	       ^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.110: 	data type List a of
@@ -220,7 +227,7 @@ Cons 1 2
 :e
 let List.head = () // ...
 //│ ╔══[ERROR] Unsupported pattern shape
-//│ ║  l.221: 	let List.head = () // ...
+//│ ║  l.228: 	let List.head = () // ...
 //│ ╙──       	        ^^^^^
 //│ <error>: ()
 

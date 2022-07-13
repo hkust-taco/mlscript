@@ -152,12 +152,15 @@ def mod = let rec mod a b = if a < b then a else mod (a - b) b in mod
 //│ mod: int -> int -> int
 //│    = [Function: mod]
 
+
 // ********** SMALL ARRAY EXAMPLE **********
 
 // exists r. forall b. Sig[a, r, b]
 // (forall r. (forall b. Sig[a, r, b]) -> y) -> y
 
 :GeneralizeCurriedFunctions
+:DistributeForalls
+// :ArgGen
 
 type ExSmall = (forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) -> 'y
 //│ Defined type alias ExSmall
@@ -174,21 +177,37 @@ def sbase f = f (fun a -> a, fun r -> fun (i : int) -> r)
 def sstep : ExSmall -> ExSmall
 def sstep = fun xx -> xx (fun (xinit, xsub) -> 
   let init a = (xinit a, xinit a) in
-  let sub r i =
+  let sub ((r1, r2)) i =
     if mod i 2 == 0
-    then xsub (fst r) (i / 2)
-    else xsub (snd r) (i / 2) in
-      fun (f : forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) ->
-      f (init, sub)) 
+    then xsub r1 (i / 2)
+    else xsub r2 (i / 2) in
+  fun f -> f (init, sub))
 //│ sstep: ExSmall -> ExSmall
 //│      = <missing implementation>
+//│ ((forall 'a, 'b. ('a, 'b,) -> ((forall 'a, 'c, 'd, 'e. ('c -> ('d, 'e,)
+//│   where
+//│     'a <: 'c -> 'd & 'c -> 'e), forall 'f, 'g. ('f, 'g,) -> (forall 'b, 'f, 'g, 'h. (int -> 'h
+//│   where
+//│     'b <: 'f -> int -> 'h & 'g -> int -> 'h)),) -> 'i) -> 'i) -> 'j) -> 'j
+//│   <:  sstep:
+//│ ExSmall -> ExSmall
+//│      = [Function: sstep]
+
+// * Alternative, with an annotation on `f`:
+def sstep = fun xx -> xx (fun (xinit, xsub) -> 
+  let init a = (xinit a, xinit a) in
+  let sub ((r1, r2)) i =
+    if mod i 2 == 0
+    then xsub r1 (i / 2)
+    else xsub r2 (i / 2) in
+  fun (f : forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) -> f (init, sub))
 //│ ((forall 'b, 'c, 'd. ('b, 'c,) -> (forall 'b, 'c, 'a, 'e, 'f, 'd. ((forall 'r. ('a -> 'r, 'r -> int -> 'a,) -> 'd) -> 'd
 //│   where
 //│     'b <: 'a -> 'e & 'a -> 'f
 //│     'c <: 'e -> int -> 'a & 'f -> int -> 'a))) -> 'g) -> 'g
 //│   <:  sstep:
 //│ ExSmall -> ExSmall
-//│      = [Function: sstep]
+//│      = [Function: sstep1]
 
 let mkSArray n = if n == 0 then sbase else sstep (sstep sbase) in
   mkSArray 1 (fun (xinit, xsub) -> xsub (xinit 2) 2)
@@ -205,8 +224,31 @@ rec def mkSArray n = if n == 0 then sbase else sstep (mkSArray (n - 1))
 //│         = [Function: mkSArray]
 
 mkSArray 2 (fun (xinit, xsub) -> xinit 2)
-//│ res: ‘r_871'_875
+//│ res: ‘r_1027'_1031
 //│    = [ [ 2, 2 ], [ 2, 2 ] ]
+
+ma2 = mkSArray 2
+//│ ma2: ExSmall
+//│    = [Function (anonymous)]
+
+a2 = ma2 (fun (xinit, xsub) -> xinit 2)
+//│ a2: ‘r_1046''_1050
+//│   = [ [ 2, 2 ], [ 2, 2 ] ]
+
+:e // FIXME
+a2._1
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.239: 	a2._1
+//│ ║         	^^^^^
+//│ ╟── type `‘r_1046''_1050` does not have field '_1'
+//│ ║  l.165: 	type ExSmall = (forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) -> 'y
+//│ ║         	                       ^^
+//│ ╟── but it flows into reference with expected type `{_1: ?a}`
+//│ ║  l.239: 	a2._1
+//│ ╙──       	^^
+//│ res: error
+//│    = undefined
+
 
 // ******** ORIGINAL ARRAY EXAMPLE ********
 
@@ -215,6 +257,7 @@ type ExSig = (forall 'r. (forall 'b. ((('a -> 'r, 'r -> int -> 'a), 'r -> int ->
 //│ Defined type alias Sig[=a, =r, =b]
 //│ Defined type alias ExSig
 
+:e // FIXME
 def base : ExSig
 def base f = f ((((fun a -> a, fun r -> fun (i : int) -> r), fun r -> fun (i : int) -> fun a -> a), fun f -> fun b -> fun r -> f r b),)
 //│ base: ExSig
@@ -224,6 +267,18 @@ def base f = f ((((fun a -> a, fun r -> fun (i : int) -> r), fun r -> fun (i : i
 //│     'c <: 'f -> 'e -> 'g))),) -> 'h) -> 'h
 //│   <:  base:
 //│ ExSig
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.262: 	def base f = f ((((fun a -> a, fun r -> fun (i : int) -> r), fun r -> fun (i : int) -> fun a -> a), fun f -> fun b -> fun r -> f r b),)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘a_1133'` is not an instance of type `'r_1134'`
+//│ ║  l.256: 	type ExSig = (forall 'r. (forall 'b. ((('a -> 'r, 'r -> int -> 'a), 'r -> int -> 'a -> 'r), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b)) -> 'y) -> 'y
+//│ ║         	                                        ^^
+//│ ╟── but it flows into reference with expected type `‘r_1134'`
+//│ ║  l.262: 	def base f = f ((((fun a -> a, fun r -> fun (i : int) -> r), fun r -> fun (i : int) -> fun a -> a), fun f -> fun b -> fun r -> f r b),)
+//│ ║         	                            ^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.256: 	type ExSig = (forall 'r. (forall 'b. ((('a -> 'r, 'r -> int -> 'a), 'r -> int -> 'a -> 'r), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b)) -> 'y) -> 'y
+//│ ╙──       	                     ^^
 //│     = [Function: base]
 
 // FIXME - Seems the original example cannot work as-is
@@ -247,53 +302,50 @@ def step = fun xx -> xx (fun ((((xinit, xsub), xupdate), xfold),) ->
 //│     'a <: 'e -> 'f & 'e -> 'g), forall 'h. 'h -> (forall 'b, 'h, 'i, 'j, 'k, 'l. (int -> 'l
 //│   where
 //│     'h <: ('i & 'j, 'j & 'k,)
-//│     'b <: 'i -> int -> 'l & 'k -> int -> 'l)),), forall 'j. 'j -> int -> (forall 'c, 'j, 'm, 'n, 'o, 'p, 'q. ('q -> ('o, 'n,)
+//│     'b <: 'i -> int -> 'l & 'k -> int -> 'l)),), forall 'j. 'j -> int -> (forall 'c, 'j, 'm, 'n, 'o, 'p, 'q. ('n -> ('o, 'q,)
 //│   where
-//│     'j <: ('m & 'j & 'o, 'j & 'n & 'p,)
-//│     'c <: 'm -> int -> 'q -> 'o & 'p -> int -> 'q -> 'n)),), forall 'r. 'r -> (forall 's. 's -> (forall 'd, 'r, 's, 't, 'u, 'v, 'w. (('w, 'u,) -> 'v
+//│     'c <: 'm -> int -> 'n -> 'o & 'p -> int -> 'n -> 'q
+//│     'j <: ('m & 'j & 'o, 'j & 'q & 'p,))),), forall 'r. 'r -> (forall 's. 's -> (forall 'd, 'r, 's, 't, 'u, 'v, 'w. (('w, 'u,) -> 'v
 //│   where
 //│     'd <: 'r -> 't -> 'u -> 'v & 'r -> 's -> 'w -> 't))),) -> 'x) -> 'x) -> 'y) -> 'y
 //│   <:  step:
 //│ ExSig -> ExSig
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.231: 	def step = fun xx -> xx (fun ((((xinit, xsub), xupdate), xfold),) ->
+//│ ║  l.286: 	def step = fun xx -> xx (fun ((((xinit, xsub), xupdate), xfold),) ->
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.232: 	  let init a = (xinit a, xinit a) in
+//│ ║  l.287: 	  let init a = (xinit a, xinit a) in
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.233: 	  let sub r i =
+//│ ║  l.288: 	  let sub r i =
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.234: 	    if mod i 2 == 0
+//│ ║  l.289: 	    if mod i 2 == 0
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.235: 	    then xsub (fst r) (i / 2)
+//│ ║  l.290: 	    then xsub (fst r) (i / 2)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.236: 	    else xsub (snd r) (i / 2) in
+//│ ║  l.291: 	    else xsub (snd r) (i / 2) in
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.237: 	  let update r i a =
+//│ ║  l.292: 	  let update r i a =
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.238: 	    if mod i 2 == 0
+//│ ║  l.293: 	    if mod i 2 == 0
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.239: 	    then (xupdate (fst r) (i / 2) a, snd r)
+//│ ║  l.294: 	    then (xupdate (fst r) (i / 2) a, snd r)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.240: 	    else (fst r, xupdate (snd r) (i / 2) a) in
+//│ ║  l.295: 	    else (fst r, xupdate (snd r) (i / 2) a) in
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.241: 	  let fold f b r = xfold f (xfold f b (fst r)) (snd r) in
+//│ ║  l.296: 	  let fold f b r = xfold f (xfold f b (fst r)) (snd r) in
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.242: 	    fun f -> f ((((init, sub), update), fold),) )
+//│ ║  l.297: 	    fun f -> f ((((init, sub), update), fold),) )
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘b_1535'_1599` is not an instance of type `'b_1535'_1621`
-//│ ║  l.214: 	type ExSig = (forall 'r. (forall 'b. ((('a -> 'r, 'r -> int -> 'a), 'r -> int -> 'a -> 'r), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b)) -> 'y) -> 'y
-//│ ║         	                                 ^^
-//│ ╟── but it flows into reference with expected type `‘b_1535'_1621`
-//│ ║  l.241: 	  let fold f b r = xfold f (xfold f b (fst r)) (snd r) in
-//│ ║         	                                    ^
+//│ ╟── tuple literal of type `(?a, ?b,)` is not an instance of type `'r_1569'`
+//│ ║  l.287: 	  let init a = (xinit a, xinit a) in
+//│ ║         	               ^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.214: 	type ExSig = (forall 'r. (forall 'b. ((('a -> 'r, 'r -> int -> 'a), 'r -> int -> 'a -> 'r), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b)) -> 'y) -> 'y
-//│ ╙──       	                                 ^^
+//│ ║  l.256: 	type ExSig = (forall 'r. (forall 'b. ((('a -> 'r, 'r -> int -> 'a), 'r -> int -> 'a -> 'r), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b)) -> 'y) -> 'y
+//│ ╙──       	                     ^^
 //│     = [Function: step]
 
 let mkArray n = if n == 0 then base else step base in
   mkArray 1 (fun ((((xinit, xsub), xupdate), xfold),) -> xinit 2)
-//│ res: ‘r_1654'_1662
+//│ res: nothing
 //│    = [ 2, 2 ]
 
 def mkArray : int -> ExSig
@@ -306,7 +358,7 @@ mkArray 3 (fun ((((xinit, xsub), xupdate), xfold),) -> xinit 2)
 //│   <:  mkArray:
 //│ int -> ExSig
 //│        = [Function: mkArray]
-//│ res: ‘r_1704'_1712
+//│ res: nothing
 //│    = [ [ [ 2, 2 ], [ 2, 2 ] ], [ [ 2, 2 ], [ 2, 2 ] ] ]
 
 // =============== Sec 7 ===============
