@@ -39,7 +39,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     val allLines = fileContents.splitSane('\n').toList
     val strw = new java.io.StringWriter
     val out = new java.io.PrintWriter(strw) {
-      override def println(): Unit = print('\n')
+      override def println(): Unit = print('\n') // to avoid inserting CRLF on Windows
     }
     var stdout = false
     def output(str: String) =
