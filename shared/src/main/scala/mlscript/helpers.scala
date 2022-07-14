@@ -378,8 +378,8 @@ trait TermImpl extends StatementImpl { self: Term =>
     case CaseOf(s, c) => s"case $s of $c"
     case Subs(a, i) => s"$a[$i]"
     case Assign(lhs, rhs) => s" $lhs <- $rhs"
-    case New(N, body) => s"{}"
-    case New(Some((TypeName(name), args)), body) => s"$name$args {}"
+    case New(N, body) => s"new {}"
+    case New(Some((TypeName(name), args)), body) => s"new $name$args {}"
   }
   
   def toType: Diagnostic \/ Type =
