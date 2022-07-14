@@ -38,7 +38,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     val fileContents = os.read(file)
     val allLines = fileContents.splitSane('\n').toList
     val strw = new java.io.StringWriter
-    val out = new java.io.PrintWriter(strw)
+    val out = new java.io.PrintWriter(strw) {
+      override def println(): Unit = print('\n') // to avoid inserting CRLF on Windows
+    }
     var stdout = false
     def output(str: String) =
       // out.println(outputMarker + str)
@@ -640,12 +642,12 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     val timeStr = (((endTime - beginTime) / 1000 / 100).toDouble / 10.0).toString
     val testColor = if (testFailed) Console.RED else Console.GREEN
     buf ++= s"${" " * (30 - fileName.size)}${testColor}${
-      " " * (6 - timeStr.size)}$timeStr  ms${Console.RESET}\n"
+      " " * (6 - timeStr.size)}$timeStr  ms${Console.RESET}"
     if (result =/= fileContents) {
-      buf ++= s"! Updated $file\n"
+      buf ++= s"\n! Updated $file"
       os.write.over(file, result)
     }
-    print(buf.mkString)
+    println(buf.mkString)
     if (testFailed)
       if (unmergedChanges.nonEmpty)
         fail(s"Unmerged non-output changes around: " + unmergedChanges.map("l."+_).mkString(", "))
