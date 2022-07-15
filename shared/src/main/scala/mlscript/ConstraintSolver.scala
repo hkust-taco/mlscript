@@ -10,6 +10,8 @@ import mlscript.Message._
 
 class ConstraintSolver extends NormalForms { self: Typer =>
   def verboseConstraintProvenanceHints: Bool = verbose
+  // TODO: maintain state across multiple constrain calls
+  val provenanceCounter: MutMap[TypeProvenance, Int] = MutMap();
   
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
   def constrain(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx): Unit = {
@@ -327,7 +329,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_, p @ ProvType(und)) => rec(lhs, und, true)
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs, true)
           case (FunctionType(l0, r0), FunctionType(l1, r1)) =>
-            println(s"FunctionType($l0, $r0) and FunctionType($l1, $r1)\n context part 1 -\n  $cctx._1\n and part 2 -\n $cctx._2\n")
             rec(l1, l0, false, revProvChain)
             rec(r0, r1, false, provChain)
           case (prim: ClassTag, ot: ObjectTag)
@@ -439,6 +440,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       val lhs = cctx._1.head
       val rhs = cctx._2.head
       
+      println(s"context part 1 -\n  $cctx._1\n and part 2 -\n $cctx._2\n")
       println(s"CONSTRAINT FAILURE: $lhs <: $rhs")
       println(s"CTX: ${cctx._1.zip(cctx._2).map(lr => s"${lr._1} <: ${lr._2} [${lr._1.prov}] [${lr._2.prov}]")}")
       
@@ -491,6 +493,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         .find(_.prov.loco.isDefined)
         .map(_.prov).getOrElse(rhs.prov)
       
+      // checks if location of type error is touched by or contains
+      // a provenance location from the left chain of the context
       val relevantFailures = lhsChain.collect {
         case st
           if st.prov.loco =/= lhsProv.loco
@@ -518,12 +522,20 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           msg"${printProv(lhsProv)} `${lhs.expPos}` $failure"
         ) -> (if (lhsProv.loco === prov.loco) N else show(lhsProv.loco)) :: Nil
       
+      // connects the current type error produced by rhs
+      // to the most tight type error location. This is calculated
+      // based on it's location intersecting or contained within
+      // current error location
       val flowHint = 
         tighestRelevantFailure.map { l =>
           val expTyMsg = msg" with expected type `${rhs.expNeg}`"
           msg"but it flows into ${l.prov.desc}$expTyMsg" -> show(l.prov.loco) :: Nil
         }.toList.flatten
       
+      // if first located provenance coming from right chain is
+      // not the same as current error location. and the right chain
+      // has a defined end. Then relate the start and end of the rhs
+      // chain to show how the constraint arose.
       val constraintProvenanceHints = 
         if (rhsProv.loco.isDefined && rhsProv2.loco =/= prov.loco)
           msg"Note: constraint arises from ${rhsProv.desc}:" -> show(rhsProv.loco) :: (
