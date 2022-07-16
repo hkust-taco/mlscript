@@ -8,7 +8,6 @@ n = 42 with { x = 1 }
 n + n.x
 //│ // Query 1
 //│ globalThis.n = withConstruct(42, { x: 1 });
-//│ res = n;
 //│ // Query 2
 //│ res = n + n.x;
 //│ // End of generated code
@@ -28,7 +27,6 @@ a = (1,2,3) with {}
 //│   2,
 //│   3
 //│ ], {});
-//│ res = a;
 //│ // End of generated code
 //│ a: (1, 2, 3,)
 //│  = [ 1, 2, 3 ]
