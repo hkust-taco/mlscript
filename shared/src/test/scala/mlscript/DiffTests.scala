@@ -17,6 +17,7 @@ import mlscript.JSTestBackend.Unimplemented
 import mlscript.JSTestBackend.UnexpectedCrash
 import mlscript.JSTestBackend.TestCode
 import mlscript.codegen.typescript.TsTypegenCodeBuilder
+import scala.annotation.nowarn
 
 class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.ParallelTestExecution {
 // class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
@@ -636,6 +637,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
       case Nil =>
     }
 
+    @nowarn("cat=other")
     val rec_future = Future {rec(allLines, defaultMode)}
     try Await.result(rec_future, 10 seconds) finally {
       out.close()
@@ -776,6 +778,7 @@ object DiffTests {
     }
 
     def execute(code: Str): Unit = {
+      @nowarn("cat=other")
       val execute_future = Future {
         send(code)
         skipUntilPrompt()
