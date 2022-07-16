@@ -780,7 +780,7 @@ object DiffTests {
         send(code)
         skipUntilPrompt()
       }
-      Await.result(execute_future, 1 seconds)
+      Await.result(execute_future, 2 seconds)
     }
 
     def terminate(): Unit = proc.destroy()
