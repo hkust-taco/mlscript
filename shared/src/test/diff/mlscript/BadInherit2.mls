@@ -218,7 +218,7 @@ def f' = 1
 
 f'
 //│ res: 1
-//│    = A1 { Foo1: [Function (anonymous)] }
+//│    = 1
 
 
 

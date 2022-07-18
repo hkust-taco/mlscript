@@ -7,7 +7,7 @@ import scala.reflect.ClassTag
 import mlscript.{TypeName, Top, Bot, TypeDef, Als, Trt, Cls}
 import mlscript.MethodDef
 import mlscript.Term
-import mlscript.utils.AnyOps
+import mlscript.utils.{AnyOps, lastWords}
 
 class Scope(name: Str, enclosing: Opt[Scope]) {
   private val lexicalTypeSymbols = scala.collection.mutable.HashMap[Str, TypeSymbol]()
@@ -57,8 +57,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     this(name, Opt(enclosing))
     params foreach { param =>
       // TODO: avoid reserved keywords.
-      val symbol = ValueSymbol(param, param)
-      register(symbol)
+      declareParameter(param)
     }
   }
 
@@ -84,23 +83,25 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     if (prefix.isEmpty()) {
       return allocateRuntimeName()
     }
+    // Replace ticks
+    val realPrefix = Scope.replaceTicks(prefix)
     // Try just prefix.
-    if (!runtimeSymbols.contains(prefix) && !Symbol.isKeyword(prefix)) {
-      return prefix
+    if (!runtimeSymbols.contains(realPrefix) && !Symbol.isKeyword(realPrefix)) {
+      return realPrefix
     }
     // Try prefix with an integer.
     for (i <- 1 to Int.MaxValue) {
-      val name = s"$prefix$i"
+      val name = s"$realPrefix$i"
       if (!runtimeSymbols.contains(name)) {
         return name
       }
     }
     // Give up.
     throw CodeGenError(
-      if (prefix.isEmpty())
+      if (realPrefix.isEmpty())
         "Cannot allocate a runtime name"
       else
-        s"Cannot allocate a runtime name starting with '$prefix'"
+        s"Cannot allocate a runtime name starting with '$realPrefix'"
     )
   }
 
@@ -291,7 +292,16 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     name
   }
 
+  def declareParameter(name: Str): Str = {
+    val symbol = ValueSymbol(name, Scope.replaceTicks(name))
+    register(symbol)
+    symbol.runtimeName
+  }
+
   def existsRuntimeSymbol(name: Str): Bool = runtimeSymbols.contains(name)
+
+  def getRuntimeName(lexicalName: Str): Str = lexicalValueSymbols.getOrElse(lexicalName,
+    lastWords(s"unexpected absence of name ${lexicalName} from scope")).runtimeName
 
   /**
     * Shorthands for deriving normal scopes.
@@ -322,6 +332,8 @@ object Scope {
     new Scope(name, params, enclosing)
 
   private val nameAlphabet: Ls[Char] = Ls.from("abcdefghijklmnopqrstuvwxyz")
+
+  def replaceTicks(str: Str): Str = str.replace('\'', '$')
 }
 
 /**
