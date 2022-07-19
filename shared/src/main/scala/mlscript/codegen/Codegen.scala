@@ -607,6 +607,8 @@ object JSField {
   private val identifierPattern: Regex = "^[A-Za-z$][A-Za-z0-9$]*$".r
 
   def isValidIdentifier(s: Str): Bool = identifierPattern.matches(s) && !Symbol.isKeyword(s)
+
+  def makeIdentifierValid(s: Str): Str = if (isValidIdentifier(s)) s else JSLit.makeStringLiteral(s)
 }
 
 final case class JSArray(items: Ls[JSExpr]) extends JSExpr {
@@ -622,9 +624,7 @@ final case class JSRecord(entries: Ls[Str -> JSExpr]) extends JSExpr {
   // Make
   override def toSourceCode: SourceCode = SourceCode
     .record(entries map { case (key, value) =>
-      val body = if (JSField.isValidIdentifier(key)) { key }
-      else { JSLit.makeStringLiteral(key) }
-      SourceCode(body + ": ") ++ value.embed(JSCommaExpr.outerPrecedence)
+      SourceCode(JSField.makeIdentifierValid(key) + ": ") ++ value.embed(JSCommaExpr.outerPrecedence)
     })
 }
 
