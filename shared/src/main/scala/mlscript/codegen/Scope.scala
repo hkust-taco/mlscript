@@ -283,8 +283,9 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
   }
 
   def declareParameter(name: Str): Str = {
-    val prefix = if (Symbol.isKeyword(name)) name + "$" else name
-    val symbol = ValueSymbol(name, if (JSField.isValidIdentifier(prefix)) prefix else Scope.replaceTicks(prefix))
+    val prefix = if (JSField.isValidIdentifier(name)) name
+     else if (Symbol.isKeyword(name)) name + "$" else Scope.replaceTicks(name)
+    val symbol = ValueSymbol(name, prefix)
     register(symbol)
     symbol.runtimeName
   }
