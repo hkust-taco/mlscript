@@ -740,7 +740,7 @@ abstract class JSClassMemberDecl extends JSStmt;
 
 final case class JSClassGetter(name: Str, body: JSExpr \/ Ls[JSStmt]) extends JSClassMemberDecl {
   def toSourceCode: SourceCode = {
-    SourceCode(s"get $name() ") ++ (body match {
+    SourceCode(s"get ${JSField.emitValidFieldName(name)}() ") ++ (body match {
       case Left(expr) => new JSReturnStmt(S(expr)).toSourceCode
       case Right(stmts) =>
         stmts.foldLeft(SourceCode.empty) { case (x, y) => x + y.toSourceCode }
@@ -755,7 +755,7 @@ final case class JSClassMethod(
     body: JSExpr \/ Ls[JSStmt]
 ) extends JSClassMemberDecl {
   def toSourceCode: SourceCode =
-    SourceCode(name) ++
+    SourceCode(JSField.emitValidFieldName(name)) ++
      JSExpr.params(params) ++ SourceCode.space ++ (body match {
       case Left(expr) => new JSReturnStmt(S(expr)).toSourceCode
       case Right(stmts) =>
