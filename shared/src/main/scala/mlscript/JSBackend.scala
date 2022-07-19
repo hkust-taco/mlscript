@@ -395,7 +395,7 @@ class JSBackend {
   private def translateClassMember(
       method: MethodDef[Left[Term, Type]]
   )(implicit scope: Scope): JSClassMemberDecl = {
-    val name = JSField.makeIdentifierValid(method.nme.name)
+    val name = JSField.emitValidFieldName(method.nme.name)
     method.rhs.value match {
       case Lam(params, body) =>
         val methodScope = scope.derive(s"Method $name")
