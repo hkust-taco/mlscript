@@ -53,8 +53,8 @@ sealed abstract class Lit                                            extends Sim
 final case class Var(name: Str)                                      extends SimpleTerm with VarImpl
 final case class Lam(lhs: Term, rhs: Term)                           extends Term
 final case class App(lhs: Term, rhs: Term)                           extends Term
-final case class Tup(fields: Ls[Opt[Var] -> (Term -> Bool)])         extends Term
-final case class Rcd(fields: Ls[Var -> (Term -> Bool)])              extends Term
+final case class Tup(fields: Ls[Opt[Var] -> Fld])                    extends Term
+final case class Rcd(fields: Ls[Var -> Fld])                         extends Term
 final case class Sel(receiver: Term, fieldName: Var)                 extends Term
 final case class Let(isRec: Bool, name: Var, rhs: Term, body: Term)  extends Term
 final case class Blk(stmts: Ls[Statement])                           extends Term with BlkImpl
@@ -67,6 +67,8 @@ final case class CaseOf(trm: Term, cases: CaseBranches)              extends Ter
 final case class Subs(arr: Term, idx: Term)                          extends Term
 final case class Assign(lhs: Term, rhs: Term)                        extends Term
 final case class New(head: Opt[(TypeName, Term)], body: TypingUnit)  extends Term // `new C(...)` or `new C(){...}` or `new{...}`
+
+final case class Fld(mut: Bool, spec: Bool, value: Term)
 
 sealed abstract class CaseBranches extends CaseBranchesImpl
 final case class Case(pat: SimpleTerm, body: Term, rest: CaseBranches) extends CaseBranches
@@ -149,7 +151,6 @@ final case class NuTypeDef(
 final case class NuFunDef(
   nme: Var,
   targs: Ls[TypeName],
-  specParams: Ls[Var -> Opt[Type]],
   body: Term \/ PolyType,
 ) extends NuDecl
 
