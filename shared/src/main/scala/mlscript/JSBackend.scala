@@ -44,7 +44,7 @@ class JSBackend {
     // should returns ("{ x, y }", ["x", "y"])
     case Rcd(fields) =>
       JSObjectPattern(fields map {
-        case (Var(nme), (Var(als), _)) if nme === als => scope.declareParameter(nme);(); nme -> N
+        case (Var(nme), (Var(als), _)) if nme === als => scope.declareParameter(nme); nme -> N
         case (Var(nme), (subTrm, _))                  => scope.declareParameter(nme);(); nme -> S(translatePattern(subTrm))
       })
     // This branch supports `def f (x: int) = x`.
