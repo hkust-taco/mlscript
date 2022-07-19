@@ -1,0 +1,52 @@
+// This file tracks runtime name allocation.
+
+:js
+// The single quote is replace by an underscore.
+y' = 0
+//│ // Prelude
+//│ let res;
+//│ // Query 1
+//│ globalThis["y_"] = 0;
+//│ // End of generated code
+//│ y': 0
+//│   = 0
+
+:js
+// It evaluates!
+y' + 1
+//│ // Query 1
+//│ res = y_ + 1;
+//│ // End of generated code
+//│ res: int
+//│    = 1
+
+:js
+// Declare "y_" won't conflict.
+y_ = 1
+//│ // Query 1
+//│ globalThis["y_1"] = 1;
+//│ // End of generated code
+//│ y_: 1
+//│   = 1
+
+:js
+// Let's declare "x_" first.
+x_ = 42
+//│ // Query 1
+//│ globalThis["x_"] = 42;
+//│ // End of generated code
+//│ x_: 42
+//│   = 42
+
+:js
+// Then let's declare "x'".
+x' = 66
+//│ // Query 1
+//│ globalThis["x_1"] = 66;
+//│ // End of generated code
+//│ x': 66
+//│   = 66
+
+x_ + x'
+//│ res: int
+//│    = 108

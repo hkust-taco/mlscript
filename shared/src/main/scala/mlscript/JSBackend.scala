@@ -60,6 +60,14 @@ class JSBackend {
     case _           => throw CodeGenError(s"term $t is not a valid parameter list")
   }
 
+  /**
+    * Translate `Var` into a suitable JavaScript expression.
+    *
+    * @param name the `name` field of the `Var`
+    * @param isCallee whether the `Var` is in the callee position
+    * @param scope current scope
+    * @return
+    */
   protected def translateVar(name: Str, isCallee: Bool)(implicit scope: Scope): JSExpr =
     scope.resolveValue(name) match {
       case S(sym: BuiltinSymbol) =>

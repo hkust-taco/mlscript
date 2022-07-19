@@ -79,15 +79,19 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
   /**
     * Allocate a runtime name starting with the given prefix.
     */
-  private def allocateRuntimeName(prefix: Str): Str = {
+  private def allocateRuntimeName(rawPrefix: Str): Str = {
     // Fallback case.
-    if (prefix.isEmpty()) {
+    if (rawPrefix.isEmpty()) {
       return allocateRuntimeName()
     }
+
+    val prefix = Scope.sanitizeName(rawPrefix)
+
     // Try just prefix.
     if (!runtimeSymbols.contains(prefix) && !Symbol.isKeyword(prefix)) {
       return prefix
     }
+
     // Try prefix with an integer.
     for (i <- 1 to Int.MaxValue) {
       val name = s"$prefix$i"
@@ -322,6 +326,13 @@ object Scope {
     new Scope(name, params, enclosing)
 
   private val nameAlphabet: Ls[Char] = Ls.from("abcdefghijklmnopqrstuvwxyz")
+
+  private def sanitizeName(name: Str) =
+    if (name.contains('\'')) {
+      name.replace('\'', '_')
+    } else {
+      name
+    }
 }
 
 /**
