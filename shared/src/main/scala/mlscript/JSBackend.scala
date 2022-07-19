@@ -134,8 +134,8 @@ class JSBackend {
     case Let(true, Var(name), Lam(args, body), expr) =>
       val letScope = scope.derive("Let", name :: Nil)
       val fn = {
-        val params = translateParams(args)(letScope)
         val fnScope = letScope.derive("Function")
+        val params = translateParams(args)(fnScope)
         val fnBody = fnScope.tempVars.`with`(translateTerm(body)(fnScope))
         JSFuncExpr(S(letScope.getRuntimeName(name)), params, fnBody.fold(_.`return` :: Nil, identity))
       }

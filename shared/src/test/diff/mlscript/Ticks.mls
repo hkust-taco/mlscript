@@ -310,3 +310,13 @@ trait T : {x': int}
 //│   });
 //│ }();
 //│ // End of generated code
+
+:js
+let f' = fun x -> x + 1 in f' 2
+//│ // Query 1
+//│ res = (function (f$) {
+//│   return f$(2);
+//│ })((x) => x + 1);
+//│ // End of generated code
+//│ res: int
+//│    = 3
