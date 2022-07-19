@@ -37,24 +37,21 @@ class JSBackend {
   private def translatePattern(t: Term)(implicit scope: Scope): JSPattern = t match {
     // fun x -> ... ==> function (x) { ... }
     // should returns ("x", ["x"])
-    case Var(name) => {
+    case Var(name) =>
       val runtimeName = scope.declareParameter(name)
       JSNamePattern(runtimeName)
-    }
     // fun { x, y } -> ... ==> function ({ x, y }) { ... }
     // should returns ("{ x, y }", ["x", "y"])
     case Rcd(fields) =>
       JSObjectPattern(fields map {
-        case (Var(nme), (Var(als), _)) if nme === als => {
-          val runtimeName = scope.declareParameter(nme);
+        case (Var(nme), (Var(als), _)) if nme === als => 
+          val runtimeName = scope.declareParameter(nme)
           if (JSField.isValidIdentifier(nme)) nme -> N
           else JSLit.makeStringLiteral(nme) -> S(JSNamePattern(runtimeName))
-        }
-        case (Var(nme), (subTrm, _)) => {
+        case (Var(nme), (subTrm, _)) => 
           scope.declareParameter(nme);
           if (JSField.isValidIdentifier(nme)) nme -> S(translatePattern(subTrm))
           else JSLit.makeStringLiteral(nme) -> S(translatePattern(subTrm))
-        }
       })
     // This branch supports `def f (x: int) = x`.
     case Asc(trm, _) => translatePattern(trm)

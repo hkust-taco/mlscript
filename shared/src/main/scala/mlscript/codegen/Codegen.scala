@@ -739,13 +739,12 @@ final case class JSFuncDecl(name: Str, params: Ls[JSPattern], body: Ls[JSStmt]) 
 abstract class JSClassMemberDecl extends JSStmt;
 
 final case class JSClassGetter(name: Str, body: JSExpr \/ Ls[JSStmt]) extends JSClassMemberDecl {
-  def toSourceCode: SourceCode = {
+  def toSourceCode: SourceCode = 
     SourceCode(s"get ${JSField.emitValidFieldName(name)}() ") ++ (body match {
       case Left(expr) => new JSReturnStmt(S(expr)).toSourceCode
       case Right(stmts) =>
         stmts.foldLeft(SourceCode.empty) { case (x, y) => x + y.toSourceCode }
     }).block
-  }
     
 }
 
@@ -784,10 +783,9 @@ final case class JSClassDecl(
       implements.foreach { name =>
         buffer += s"    $name.implement(this);"
       }
-      fields.foreach { name => {
+      fields.foreach { name =>
         val innerName: Str = if (JSField.isValidIdentifier(name)) s".${name}" else s"[\"${name}\"]"
         buffer += s"    this$innerName = fields$innerName;"
-      }
       }
       buffer += "  }"
       SourceCode(buffer.toList)
