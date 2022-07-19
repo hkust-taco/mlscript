@@ -12,7 +12,6 @@ import mlscript.utils._, shorthands._
 import scala.collection.immutable
 import scala.util.matching.Regex
 import scala.collection.mutable.ListBuffer
-import mlscript.codegen.Scope
 
 class SourceLine(val content: Str, indent: Int = 0) {
   def indented: SourceLine = new SourceLine(content, indent + 1)
@@ -288,7 +287,7 @@ final case class JSObjectPattern(properties: Ls[Str -> Opt[JSPattern]]) extends 
         case name -> Some(subPattern) =>
           SourceCode(s"${if (JSField.isValidIdentifier(name)) name else JSLit.makeStringLiteral(name)}: ") ++ subPattern.toSourceCode
         case name -> N => if (JSField.isValidIdentifier(name)) SourceCode(name)
-          else SourceCode(s"${JSLit.makeStringLiteral(name)}: ${Scope.replaceTicks(name)}")
+          else SourceCode(s"${JSLit.makeStringLiteral(name)}")
       }
   )
 }

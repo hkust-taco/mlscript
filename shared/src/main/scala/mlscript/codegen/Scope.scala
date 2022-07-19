@@ -309,7 +309,7 @@ object Scope {
 
   private val nameAlphabet: Ls[Char] = Ls.from("abcdefghijklmnopqrstuvwxyz")
 
-  def replaceTicks(str: Str): Str = str.replace('\'', '$')
+  private def replaceTicks(str: Str): Str = str.replace('\'', '$')
 }
 
 /**
