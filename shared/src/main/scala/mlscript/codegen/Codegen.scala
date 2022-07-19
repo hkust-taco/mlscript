@@ -283,11 +283,9 @@ final case class JSObjectPattern(properties: Ls[Str -> Opt[JSPattern]]) extends 
   def toSourceCode: SourceCode = SourceCode.record(
     properties
       .map {
-        case name -> Some(JSWildcardPattern()) => SourceCode(if (JSField.isValidIdentifier(name)) name else JSLit.makeStringLiteral(name))
-        case name -> Some(subPattern) =>
-          SourceCode(s"${if (JSField.isValidIdentifier(name)) name else JSLit.makeStringLiteral(name)}: ") ++ subPattern.toSourceCode
-        case name -> N => if (JSField.isValidIdentifier(name)) SourceCode(name)
-          else SourceCode(s"${JSLit.makeStringLiteral(name)}")
+        case name -> Some(JSWildcardPattern()) => SourceCode(name)
+        case name -> Some(subPattern) => SourceCode(s"$name: ") ++ subPattern.toSourceCode
+        case name -> N => SourceCode(name)
       }
   )
 }

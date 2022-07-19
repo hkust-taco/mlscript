@@ -8,6 +8,7 @@ import mlscript.{TypeName, Top, Bot, TypeDef, Als, Trt, Cls}
 import mlscript.MethodDef
 import mlscript.Term
 import mlscript.utils.{AnyOps, lastWords}
+import mlscript.JSField
 
 class Scope(name: Str, enclosing: Opt[Scope]) {
   private val lexicalTypeSymbols = scala.collection.mutable.HashMap[Str, TypeSymbol]()
@@ -282,7 +283,8 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
   }
 
   def declareParameter(name: Str): Str = {
-    val symbol = ValueSymbol(name, Scope.replaceTicks(name))
+    val runtimeName = if (JSField.isValidIdentifier(name)) name else Scope.replaceTicks(name)
+    val symbol = ValueSymbol(name, runtimeName)
     register(symbol)
     symbol.runtimeName
   }
