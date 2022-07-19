@@ -47,12 +47,12 @@ class JSBackend {
       JSObjectPattern(fields map {
         case (Var(nme), (Var(als), _)) if nme === als => {
           val runtimeName = scope.declareParameter(nme);
-          if (JSField.isValidIdentifier(nme)) nme -> N
+          if (JSField.isValidIdentifier(nme) && !Symbol.isKeyword(nme)) nme -> N
           else JSLit.makeStringLiteral(nme) -> S(JSNamePattern(runtimeName))
         }
         case (Var(nme), (subTrm, _)) => {
           scope.declareParameter(nme);
-          if (JSField.isValidIdentifier(nme)) nme -> S(translatePattern(subTrm))
+          if (JSField.isValidIdentifier(nme) && !Symbol.isKeyword(nme)) nme -> S(translatePattern(subTrm))
           else JSLit.makeStringLiteral(nme) -> S(translatePattern(subTrm))
         }
       })

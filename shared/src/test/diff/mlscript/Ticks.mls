@@ -320,3 +320,17 @@ let f' = fun x -> x + 1 in f' 2
 //│ // End of generated code
 //│ res: int
 //│    = 3
+
+:js
+foo { return } = return
+//│ // Query 1
+//│ globalThis.foo2 = function foo2({ "return": return$ }) {
+//│   return return$;
+//│ };
+//│ // End of generated code
+//│ foo: {return: 'a} -> 'a
+//│    = [Function: foo2]
+
+foo { return = 1 }
+//│ res: 1
+//│    = 1
