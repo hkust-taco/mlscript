@@ -12,6 +12,7 @@ import mlscript.utils._, shorthands._
 import scala.collection.immutable
 import scala.util.matching.Regex
 import scala.collection.mutable.ListBuffer
+import mlscript.codegen.Symbol
 
 class SourceLine(val content: Str, indent: Int = 0) {
   def indented: SourceLine = new SourceLine(content, indent + 1)
@@ -605,7 +606,7 @@ object JSField {
 
   private val identifierPattern: Regex = "^[A-Za-z$][A-Za-z0-9$]*$".r
 
-  def isValidIdentifier(s: Str): Bool = identifierPattern.matches(s)
+  def isValidIdentifier(s: Str): Bool = identifierPattern.matches(s) && !Symbol.isKeyword(s)
 }
 
 final case class JSArray(items: Ls[JSExpr]) extends JSExpr {
