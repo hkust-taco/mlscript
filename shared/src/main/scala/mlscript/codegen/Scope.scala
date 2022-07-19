@@ -50,17 +50,6 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     }
   }
 
-  /**
-    * Shorthands for creating function scopes.
-    */
-  def this(name: Str, params: Ls[Str], enclosing: Scope) = {
-    this(name, Opt(enclosing))
-    params foreach { param =>
-      // TODO: avoid reserved keywords.
-      declareParameter(param)
-    }
-  }
-
   private val allocateRuntimeNameIter = for {
     i <- (1 to Int.MaxValue).iterator
     c <- Scope.nameAlphabet.combinations(i)
@@ -300,18 +289,11 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
 
   def existsRuntimeSymbol(name: Str): Bool = runtimeSymbols.contains(name)
 
-  def getRuntimeName(lexicalName: Str): Str = lexicalValueSymbols.getOrElse(lexicalName,
-    lastWords(s"unexpected absence of name ${lexicalName} from scope")).runtimeName
-
   /**
     * Shorthands for deriving normal scopes.
     */
   def derive(name: Str): Scope = new Scope(name, S(this))
 
-  /**
-    * Shorthands for deriving function scopes.
-    */
-  def derive(name: Str, params: Ls[Str]): Scope = Scope(name, params, this)
   
   def refreshRes(): Unit = {
     lexicalValueSymbols("res") = ValueSymbol("res", "res")
@@ -324,12 +306,6 @@ object Scope {
   * Shorthands for creating top-level scopes.
   */
   def apply(name: Str): Scope = new Scope(name)
-
-  /**
-    * Shorthands for creating function scopes.
-    */
-  def apply(name: Str, params: Ls[Str], enclosing: Scope): Scope =
-    new Scope(name, params, enclosing)
 
   private val nameAlphabet: Ls[Char] = Ls.from("abcdefghijklmnopqrstuvwxyz")
 
