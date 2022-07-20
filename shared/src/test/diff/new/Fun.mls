@@ -4,22 +4,22 @@
 
 fun f = 1
 //│ |#fun| |f| |#=| |1|
-//│ Parsed: {def f: 1}
+//│ Parsed: {fun f: 1}
 
 fun f(x) = x
 //│ |#fun| |f|(|x|)| |#=| |x|
-//│ Parsed: {def f: x, => x}
+//│ Parsed: {fun f: x, => x}
 
 fun f x = x
 //│ |#fun| |f| |x| |#=| |x|
 //│ ╔══[ERROR] Expected function parameter list; found identifier instead
 //│ ║  l.13: 	fun f x = x
 //│ ╙──      	      ^
-//│ Parsed: {def f: x}
+//│ Parsed: {fun f: x}
 
 fun f = x => x
 //│ |#fun| |f| |#=| |x| |=>| |x|
-//│ Parsed: {def f: => x x}
+//│ Parsed: {fun f: => x x}
 
 // TODO
 fun x => x
@@ -30,7 +30,7 @@ fun x => x
 //│ ╔══[ERROR] Expected ':' or '=' followed by a function body or signature; found identifier instead
 //│ ║  l.25: 	fun x => x
 //│ ╙──      	         ^
-//│ Parsed: {def x: undefined}
+//│ Parsed: {fun x: undefined}
 
 let f = x => x
 //│ |#let| |f| |#=| |x| |=>| |x|
@@ -52,15 +52,15 @@ f(x) + x
 
 fun f(x, y) = x
 //│ |#fun| |f|(|x|,| |y|)| |#=| |x|
-//│ Parsed: {def f: x, y, => x}
+//│ Parsed: {fun f: x, y, => x}
 
 fun f of x = x
 //│ |#fun| |f| |#of| |x| |#=| |x|
-//│ Parsed: {def f: x, => x}
+//│ Parsed: {fun f: x, => x}
 
 fun f of x, y = x
 //│ |#fun| |f| |#of| |x|,| |y| |#=| |x|
-//│ Parsed: {def f: x, y, => x}
+//│ Parsed: {fun f: x, y, => x}
 
 fun f x, y = x
 //│ |#fun| |f| |x|,| |y| |#=| |x|
@@ -73,7 +73,7 @@ fun f x, y = x
 //│ ╔══[ERROR] Expected end of input; found identifier instead
 //│ ║  l.65: 	fun f x, y = x
 //│ ╙──      	         ^
-//│ Parsed: {def f: undefined}
+//│ Parsed: {fun f: undefined}
 
 fun f x y = x
 //│ |#fun| |f| |x| |y| |#=| |x|
@@ -86,54 +86,54 @@ fun f x y = x
 //│ ╔══[ERROR] Expected end of input; found '=' keyword instead
 //│ ║  l.78: 	fun f x y = x
 //│ ╙──      	          ^
-//│ Parsed: {def f: undefined}
+//│ Parsed: {fun f: undefined}
 
 
 fun f(x, y)(a, b) = x + y * a / b
 //│ |#fun| |f|(|x|,| |y|)|(|a|,| |b|)| |#=| |x| |+| |y| |*| |a| |/| |b|
-//│ Parsed: {def f: x, y, => a, b, => / (+ x (* y a)) b}
+//│ Parsed: {fun f: x, y, => a, b, => / (+ x (* y a)) b}
 
 fun f(x, y) of a, b = x + y * a / b
 //│ |#fun| |f|(|x|,| |y|)| |#of| |a|,| |b| |#=| |x| |+| |y| |*| |a| |/| |b|
-//│ Parsed: {def f: x, y, => a, b, => / (+ x (* y a)) b}
+//│ Parsed: {fun f: x, y, => a, b, => / (+ x (* y a)) b}
 
 fun f of x, y of a, b = x + y * a / b
 //│ |#fun| |f| |#of| |x|,| |y| |#of| |a|,| |b| |#=| |x| |+| |y| |*| |a| |/| |b|
-//│ Parsed: {def f: x, y (a, b,), => / (+ x (* y a)) b}
+//│ Parsed: {fun f: x, y (a, b,), => / (+ x (* y a)) b}
 
 
 fun f(Some(x)) = x
 //│ |#fun| |f|(|Some|(|x|)|)| |#=| |x|
-//│ Parsed: {def f: Some (x,), => x}
+//│ Parsed: {fun f: Some (x,), => x}
 
 fun f(Some of x) = x
 //│ |#fun| |f|(|Some| |#of| |x|)| |#=| |x|
-//│ Parsed: {def f: Some (x,), => x}
+//│ Parsed: {fun f: Some (x,), => x}
 
 fun f of Some of x = x
 //│ |#fun| |f| |#of| |Some| |#of| |x| |#=| |x|
-//│ Parsed: {def f: Some (x,), => x}
+//│ Parsed: {fun f: Some (x,), => x}
 
 fun f(Some(x), Some(y)) = x
 //│ |#fun| |f|(|Some|(|x|)|,| |Some|(|y|)|)| |#=| |x|
-//│ Parsed: {def f: Some (x,), Some (y,), => x}
+//│ Parsed: {fun f: Some (x,), Some (y,), => x}
 
 fun f(Some of x, Some of y) = x + y
 //│ |#fun| |f|(|Some| |#of| |x|,| |Some| |#of| |y|)| |#=| |x| |+| |y|
-//│ Parsed: {def f: Some (x, Some (y,),), => + x y}
+//│ Parsed: {fun f: Some (x, Some (y,),), => + x y}
 
 fun f of Some of x, Some of y = x + y
 //│ |#fun| |f| |#of| |Some| |#of| |x|,| |Some| |#of| |y| |#=| |x| |+| |y|
-//│ Parsed: {def f: Some (x, Some (y,),), => + x y}
+//│ Parsed: {fun f: Some (x, Some (y,),), => + x y}
 
 
 fun f(x: Int, y: Int) = x
 //│ |#fun| |f|(|x|#:| |Int|,| |y|#:| |Int|)| |#=| |x|
-//│ Parsed: {def f: x: Int, y: Int, => x}
+//│ Parsed: {fun f: x: Int, y: Int, => x}
 
 fun f(x: Int, y: Int): Int = x
 //│ |#fun| |f|(|x|#:| |Int|,| |y|#:| |Int|)|#:| |Int| |#=| |x|
-//│ Parsed: {def f: x: Int, y: Int, => x : TypeName(Int)}
+//│ Parsed: {fun f: x: Int, y: Int, => x : TypeName(Int)}
 
 
 
@@ -142,28 +142,28 @@ fun 1
 //│ ╔══[ERROR] Expected a function name; found literal instead
 //│ ║  l.140: 	fun 1
 //│ ╙──       	    ^
-//│ Parsed: {def <error>: undefined}
+//│ Parsed: {fun <error>: undefined}
 
 fun 1 = 1
 //│ |#fun| |1| |#=| |1|
 //│ ╔══[ERROR] Expected a function name; found literal instead
 //│ ║  l.147: 	fun 1 = 1
 //│ ╙──       	    ^
-//│ Parsed: {def <error>: 1}
+//│ Parsed: {fun <error>: 1}
 
 fun
 //│ |#fun|
 //│ ╔══[ERROR] Expected a function name; found end of input instead
 //│ ║  l.154: 	fun
 //│ ╙──       	   ^
-//│ Parsed: {def <error>: undefined}
+//│ Parsed: {fun <error>: undefined}
 
 fun = 1
 //│ |#fun| |#=| |1|
 //│ ╔══[ERROR] Expected a function name; found '=' keyword instead
 //│ ║  l.161: 	fun = 1
 //│ ╙──       	    ^
-//│ Parsed: {def <error>: undefined}
+//│ Parsed: {fun <error>: undefined}
 
 
 

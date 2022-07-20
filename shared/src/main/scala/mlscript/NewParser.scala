@@ -226,6 +226,17 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
     }
     Blk(es)
   }
+  def typingUnit: TypingUnit = {
+    val ts = block(false, false)
+    val es = ts.map {
+      case L(t) =>
+        raise(CompilationError(msg"Unexpected 'then'/'else' clause" -> t.toLoc :: Nil))
+        L(errExpr)
+      case R(d: NuDecl) => R(d)
+      case R(e: Term) => L(e)
+    }
+    TypingUnit(es)
+  }
   
   def toParams(t: Term): Tup = t match {
     case t: Tup => t
@@ -242,7 +253,46 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
       case (NEWLINE, _) :: _ => consume; block
       case c =>
         val t = c match {
-          case (KEYWORD("fun"), l0) :: c => // TODO support rec
+          case (KEYWORD(k @ ("class" | "trait" | "type")), l0) :: c =>
+            consume
+            val kind = k match {
+              case "class" => Cls
+              case "trait" => Trt
+              case "type" => Als
+              case _ => die
+            }
+            val (tn, success) = c.dropWhile(_._1 === SPACE && { consume; true }) match {
+              case (IDENT(idStr, false), l1) :: _ =>
+                consume
+                (TypeName(idStr).withLoc(S(l1)), true)
+              case c =>
+                val (tkstr, loc) = c.headOption.fold(("end of input", lastLoc))(_.mapFirst(_.describe).mapSecond(some))
+                raise(CompilationError(
+                  msg"Expected a type name; found ${tkstr} instead" -> loc :: Nil))
+                consume
+                // R(errExpr)
+                (TypeName("<error>").withLoc(curLoc.map(_.left)), false)
+            }
+            // val body = typingUnit()
+            val body = cur.dropWhile(_._1 === SPACE && { consume; true }) match {
+              case (OPEN_BRACKET(Curly), l1) :: _ =>
+                consume
+                val res = cur match {
+                  case (INDENT, _) :: _ =>
+                    consume
+                    val res = typingUnit
+                    skip(DEINDENT)
+                    res
+                  case _ => typingUnit
+                }
+                skip(CLOSE_BRACKET(Curly), ignored = Set(SPACE, NEWLINE, INDENT))
+                res
+              case _ =>
+                // println(c)
+                TypingUnit(Nil)
+            }
+            R(NuTypeDef(kind, tn, Nil, Nil, Nil, body))
+          case (KEYWORD("fun"), l0) :: c => // TODO support rec?
             consume
             val (v, success) = c.dropWhile(_._1 === SPACE && { consume; true }) match {
               case (IDENT(idStr, false), l1) :: _ =>
@@ -277,17 +327,27 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
                     case L(d) => ???
                   }))
                   // R(Def(false, v, L(ps.foldRight(body)((i, acc) => Lam(toParams(i), acc)))))
-                  R(Def(false, v, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))))
+                  // R(Def(false, v, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))))
+                  R(NuFunDef(v, Nil, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))))
                 case c =>
                   asc match {
-                    case S(ty) => ???
+                    case S(tytrm) =>
+                      // val (ty, ds) = tytrm.toType
+                      // ds.foreach(raise)
+                      val ty = tytrm.toType match {
+                        case L(d) => raise(d); Top // TODO better
+                        case R(ty) => ty
+                      }
+                      // R(Def(false, v, R(PolyType(Nil, ty)))) // TODO rm PolyType after FCP is merged
+                      R(NuFunDef(v, Nil, R(PolyType(Nil, ty)))) // TODO rm PolyType after FCP is merged
                     case N =>
                       // TODO dedup:
                       val (tkstr, loc) = c.headOption.fold(("end of input", lastLoc))(_.mapFirst(_.describe).mapSecond(some))
                       raise(CompilationError(
                         msg"Expected ':' or '=' followed by a function body or signature; found ${tkstr} instead" -> loc :: Nil))
                       consume
-                      R(Def(false, v, L(ps.foldRight(errExpr: Term)((i, acc) => Lam(i, acc)))))
+                      // R(Def(false, v, L(ps.foldRight(errExpr: Term)((i, acc) => Lam(i, acc)))))
+                      R(NuFunDef(v, Nil, L(ps.foldRight(errExpr: Term)((i, acc) => Lam(i, acc)))))
                   }
               }
             }

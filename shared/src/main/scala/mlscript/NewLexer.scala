@@ -177,6 +177,9 @@ object NewLexer {
     // "any",
     // "all",
     "mut",
+    "class",
+    "trait",
+    "interface",
   )
   
   def printToken(tl: TokLoc): Str = tl match {

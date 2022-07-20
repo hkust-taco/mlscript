@@ -1,0 +1,29 @@
+:AllowParseErrors
+:AllowTypeErrors // TODO rm
+
+
+class Foo
+//│ |#class| |Foo|
+//│ Parsed: {class Foo: {}}
+
+class Foo {}
+//│ |#class| |Foo| |{|}|
+//│ Parsed: {class Foo: {undefined}}
+
+class Foo {
+  fun foo: int
+}
+//│ |#class| |Foo| |{|→|#fun| |foo|#:| |int|←|↵|}|
+//│ Parsed: {class Foo: {fun foo: [] -> int}}
+
+class Foo {
+  class Bar {
+    class Baz
+  }
+}
+//│ |#class| |Foo| |{|→|#class| |Bar| |{|→|#class| |Baz|←|↵|}|←|↵|}|
+//│ Parsed: {class Foo: {class Bar: {class Baz: {}}}}
+
+
+
+

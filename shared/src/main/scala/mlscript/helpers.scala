@@ -281,6 +281,32 @@ trait DeclImpl extends Located { self: Decl =>
   }
 }
 
+trait NuDeclImpl extends Located { self: NuDecl =>
+  val body: Located
+  def showBody: Str = this match {
+    case NuFunDef(_, _, rhs) => rhs.fold(_.toString, _.show)
+    case td: NuTypeDef => td.body.show
+  }
+  def describe: Str = this match {
+    case _: NuFunDef => "definition"
+    case _: NuTypeDef => "type declaration"
+  }
+  def show: Str = showHead + (this match {
+    case NuTypeDef(Als, _, _, _, _, _) => " = "; case _ => ": " }) + showBody
+  def showHead: Str = this match {
+    case NuFunDef(n, _, b) => s"fun $n"
+    case NuTypeDef(k, n, tps, b, _, _) =>
+      s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_.name).mkString("[", ", ", "]")}"
+  }
+}
+trait TypingUnitImpl extends Located { self: TypingUnit =>
+  def show: Str = entities.map {
+    case L(t) => t.toString
+    case R(d) => d.show
+  }.mkString("{", "; ", "}")
+  lazy val children: List[Located] = entities.map(_.fold(identity, identity))
+}
+
 trait TypeNameImpl extends Ordered[TypeName] { self: TypeName =>
   def compare(that: TypeName): Int = this.name compare that.name
 }
@@ -612,6 +638,7 @@ trait StatementImpl extends Located { self: Statement =>
     case DataDefn(head) => s"data $head"
     case _: Term => super.toString
     case d: Decl => d.show
+    case d: NuDecl => d.show
   }
 }
 

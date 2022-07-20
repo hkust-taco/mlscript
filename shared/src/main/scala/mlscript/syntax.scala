@@ -146,9 +146,9 @@ final case class PolyType(targs: Ls[TypeName], body: Type) extends PolyTypeImpl
 
 // New Definitions AST
 
-final case class TypingUnit(entities: Ls[Term \/ NuDecl])
+final case class TypingUnit(entities: Ls[Term \/ NuDecl]) extends TypingUnitImpl
 
-sealed abstract class NuDecl
+sealed abstract class NuDecl extends Statement with NuDeclImpl
 
 final case class NuTypeDef(
   kind: TypeDefKind,
@@ -162,7 +162,9 @@ final case class NuTypeDef(
 final case class NuFunDef(
   nme: Var,
   targs: Ls[TypeName],
-  body: Term \/ PolyType,
-) extends NuDecl
+  rhs: Term \/ PolyType,
+) extends NuDecl {
+  val body: Located = rhs.fold(identity, identity)
+}
 
 
