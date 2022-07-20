@@ -292,11 +292,14 @@ trait NuDeclImpl extends Located { self: NuDecl =>
     case _: NuTypeDef => "type declaration"
   }
   def show: Str = showHead + (this match {
-    case NuTypeDef(Als, _, _, _, _, _) => " = "; case _ => ": " }) + showBody
+    case NuTypeDef(Als, _, _, _, _, _) => " = "
+    case NuTypeDef(Cls, _, _, _, _, _) => " "
+    case _ => ": " }) + showBody
   def showHead: Str = this match {
     case NuFunDef(n, _, b) => s"fun $n"
-    case NuTypeDef(k, n, tps, b, _, _) =>
-      s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_.name).mkString("[", ", ", "]")}"
+    case NuTypeDef(k, n, tps, sps, parents, bod) =>
+      s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_.name).mkString("[", ", ", "]")}${
+        sps.mkString("(",",",")")}${if (parents.isEmpty) "" else ": "}${parents.map(_.show).mkString(", ")}"
   }
 }
 trait TypingUnitImpl extends Located { self: TypingUnit =>
@@ -629,6 +632,7 @@ trait StatementImpl extends Located { self: Statement =>
     case Subs(a, i) => a :: i :: Nil
     case Assign(lhs, rhs) => lhs :: rhs :: Nil
     case If(body, els) => body :: els.toList
+    case d @ NuFunDef(v, ts, rhs) => v :: ts ::: d.body :: Nil
   }
   
   

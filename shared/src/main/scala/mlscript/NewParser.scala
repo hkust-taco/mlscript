@@ -246,6 +246,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
     case t: Tuple => t
     case _ => Tuple((N, Field(None, t)) :: Nil)
   }
+  def typ(implicit fe: FoundErr, l: Line): Type =
+    expr(0).toType match {
+      case L(d) => raise(d); Top // TODO better
+      case R(ty) => ty
+    }
   
   def block(implicit et: ExpectThen, fe: FoundErr): Ls[IfBody \/ Statement] =
     cur match {
@@ -261,7 +266,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
               case "type" => Als
               case _ => die
             }
-            val (tn, success) = c.dropWhile(_._1 === SPACE && { consume; true }) match {
+            // val (tn, success) = c.dropWhile(_._1 === SPACE && { consume; true }) match {
+            val (tn, success) = yeetSpaces match {
               case (IDENT(idStr, false), l1) :: _ =>
                 consume
                 (TypeName(idStr).withLoc(S(l1)), true)
@@ -273,6 +279,21 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
                 // R(errExpr)
                 (TypeName("<error>").withLoc(curLoc.map(_.left)), false)
             }
+            def parents(Sep: Token): Ls[NamedType] = yeetSpaces match {
+              case (Sep, _) :: _ =>
+                consume
+                // val ty = typ
+                (typ match {
+                  case nt: NamedType => nt
+                  // case at: AppliedType => at
+                  // case tn: TypeName => AppliedType(tn, Nil)
+                  case _ =>
+                    ??? // TODO raise
+                    AppliedType(TypeName("<error>"), Nil)
+                }) :: parents(COMMA)
+              case _ => Nil
+            }
+            val ps = parents(KEYWORD(":"))
             // val body = typingUnit()
             val body = cur.dropWhile(_._1 === SPACE && { consume; true }) match {
               case (OPEN_BRACKET(Curly), l1) :: _ =>
@@ -291,7 +312,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
                 // println(c)
                 TypingUnit(Nil)
             }
-            R(NuTypeDef(kind, tn, Nil, Nil, Nil, body))
+            R(NuTypeDef(kind, tn, Nil, Nil, ps, body))
           case (KEYWORD("fun"), l0) :: c => // TODO support rec?
             consume
             val (v, success) = c.dropWhile(_._1 === SPACE && { consume; true }) match {
@@ -313,8 +334,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
               val asc = yeetSpaces match {
                 case (KEYWORD(":"), _) :: _ =>
                   consume
-                  val e = expr(0)
-                  S(e)
+                  // val e = expr(0)
+                  // S(e)
+                  S(typ)
                 // case (KEYWORD("="), _) =>
                 case _ => N
               }
@@ -322,22 +344,24 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
                 case (KEYWORD("="), _) :: _ =>
                   consume
                   val body = expr(0)
-                  val annotatedBody = asc.fold(body)(ty => Asc(body, ty.toType match {
-                    case R(ty) => ty
-                    case L(d) => ???
-                  }))
+                  // val annotatedBody = asc.fold(body)(ty => Asc(body, ty.toType match {
+                  //   case R(ty) => ty
+                  //   case L(d) => ???
+                  // }))
+                  val annotatedBody = asc.fold(body)(ty => Asc(body, ty))
                   // R(Def(false, v, L(ps.foldRight(body)((i, acc) => Lam(toParams(i), acc)))))
                   // R(Def(false, v, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))))
                   R(NuFunDef(v, Nil, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))))
                 case c =>
                   asc match {
-                    case S(tytrm) =>
-                      // val (ty, ds) = tytrm.toType
-                      // ds.foreach(raise)
-                      val ty = tytrm.toType match {
-                        case L(d) => raise(d); Top // TODO better
-                        case R(ty) => ty
-                      }
+                    case S(ty) =>
+                    // case S(tytrm) =>
+                    //   // val (ty, ds) = tytrm.toType
+                    //   // ds.foreach(raise)
+                    //   val ty = tytrm.toType match {
+                    //     case L(d) => raise(d); Top // TODO better
+                    //     case R(ty) => ty
+                    //   }
                       // R(Def(false, v, R(PolyType(Nil, ty)))) // TODO rm PolyType after FCP is merged
                       R(NuFunDef(v, Nil, R(PolyType(Nil, ty)))) // TODO rm PolyType after FCP is merged
                     case N =>

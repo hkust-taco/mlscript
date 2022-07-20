@@ -4,17 +4,17 @@
 
 class Foo
 //│ |#class| |Foo|
-//│ Parsed: {class Foo: {}}
+//│ Parsed: {class Foo() {}}
 
 class Foo {}
 //│ |#class| |Foo| |{|}|
-//│ Parsed: {class Foo: {undefined}}
+//│ Parsed: {class Foo() {undefined}}
 
 class Foo {
   fun foo: int
 }
 //│ |#class| |Foo| |{|→|#fun| |foo|#:| |int|←|↵|}|
-//│ Parsed: {class Foo: {fun foo: [] -> int}}
+//│ Parsed: {class Foo() {fun foo: [] -> int}}
 
 class Foo {
   class Bar {
@@ -22,8 +22,79 @@ class Foo {
   }
 }
 //│ |#class| |Foo| |{|→|#class| |Bar| |{|→|#class| |Baz|←|↵|}|←|↵|}|
-//│ Parsed: {class Foo: {class Bar: {class Baz: {}}}}
+//│ Parsed: {class Foo() {class Bar() {class Baz() {}}}}
 
+class Foo: Bar
+//│ |#class| |Foo|#:| |Bar|
+//│ Parsed: {class Foo(): Bar {}}
+
+class Foo: Bar, Baz
+//│ |#class| |Foo|#:| |Bar|,| |Baz|
+//│ Parsed: {class Foo(): Bar, Baz {}}
+
+class Foo: Bar { fun f = 0 }
+//│ |#class| |Foo|#:| |Bar| |{| |#fun| |f| |#=| |0| |}|
+//│ ╔══[ERROR] Unexpected 'fun' keyword in expression position
+//│ ║  l.35: 	class Foo: Bar { fun f = 0 }
+//│ ╙──      	                 ^^^
+//│ ╔══[ERROR] Expected closing curly brace; found '=' keyword instead
+//│ ║  l.35: 	class Foo: Bar { fun f = 0 }
+//│ ║        	                       ^
+//│ ╟── Note: unmatched curly brace was opened here:
+//│ ║  l.35: 	class Foo: Bar { fun f = 0 }
+//│ ╙──      	               ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.35: 	class Foo: Bar { fun f = 0 }
+//│ ╙──      	               ^^^^^^^^^^^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.35: 	class Foo: Bar { fun f = 0 }
+//│ ╙──      	           ^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: '{' f, '}' (0,),
+//│ ║  l.35: 	class Foo: Bar { fun f = 0 }
+//│ ╙──      	               ^^^^^^^^^^^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NewParser.parents$1(NewParser.scala:291)
+//│ 	at: mlscript.NewParser.block(NewParser.scala:296)
+//│ 	at: mlscript.NewParser.blockTerm(NewParser.scala:217)
+//│ 	at: mlscript.DiffTests.$anonfun$new$23(DiffTests.scala:280)
+//│ 	at: mlscript.NewParser.parseAll(NewParser.scala:68)
+//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:280)
+//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:679)
+//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
+//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
+
+class Foo: Bar, Baz { fun f = 0 }
+//│ |#class| |Foo|#:| |Bar|,| |Baz| |{| |#fun| |f| |#=| |0| |}|
+//│ ╔══[ERROR] Unexpected 'fun' keyword in expression position
+//│ ║  l.67: 	class Foo: Bar, Baz { fun f = 0 }
+//│ ╙──      	                      ^^^
+//│ ╔══[ERROR] Expected closing curly brace; found '=' keyword instead
+//│ ║  l.67: 	class Foo: Bar, Baz { fun f = 0 }
+//│ ║        	                            ^
+//│ ╟── Note: unmatched curly brace was opened here:
+//│ ║  l.67: 	class Foo: Bar, Baz { fun f = 0 }
+//│ ╙──      	                    ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.67: 	class Foo: Bar, Baz { fun f = 0 }
+//│ ╙──      	                    ^^^^^^^^^^^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.67: 	class Foo: Bar, Baz { fun f = 0 }
+//│ ╙──      	                ^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: '{' f, '}' (0,),
+//│ ║  l.67: 	class Foo: Bar, Baz { fun f = 0 }
+//│ ╙──      	                    ^^^^^^^^^^^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NewParser.parents$1(NewParser.scala:291)
+//│ 	at: mlscript.NewParser.parents$1(NewParser.scala:293)
+//│ 	at: mlscript.NewParser.block(NewParser.scala:296)
+//│ 	at: mlscript.NewParser.blockTerm(NewParser.scala:217)
+//│ 	at: mlscript.DiffTests.$anonfun$new$23(DiffTests.scala:280)
+//│ 	at: mlscript.NewParser.parseAll(NewParser.scala:68)
+//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:280)
+//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:679)
+//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
 
 
 

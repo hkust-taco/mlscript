@@ -107,6 +107,8 @@ sealed trait Terms extends DesugaredStatement
 
 sealed abstract class Type extends TypeImpl
 
+sealed trait NamedType extends Type
+
 sealed abstract class Composed(val pol: Bool) extends Type with ComposedImpl
 
 final case class Union(lhs: Type, rhs: Type)             extends Composed(true)
@@ -115,7 +117,7 @@ final case class Function(lhs: Type, rhs: Type)          extends Type
 final case class Record(fields: Ls[Var -> Field])        extends Type
 final case class Tuple(fields: Ls[Opt[Var] -> Field])    extends Type
 final case class Recursive(uv: TypeVar, body: Type)      extends Type
-final case class AppliedType(base: TypeName, targs: List[Type]) extends Type
+final case class AppliedType(base: TypeName, targs: List[Type]) extends Type with NamedType
 final case class Neg(base: Type)                         extends Type
 final case class Rem(base: Type, names: Ls[Var])         extends Type
 final case class Bounds(lb: Type, ub: Type)              extends Type
@@ -133,7 +135,7 @@ case object Bot                                          extends NullaryType
 final case class Literal(lit: Lit)                       extends NullaryType
 
 /** Reference to an existing type with the given name. */
-final case class TypeName(name: Str)                     extends NullaryType with TypeNameImpl
+final case class TypeName(name: Str)                     extends NullaryType with NamedType with TypeNameImpl
 
 final case class TypeVar(val identifier: Int \/ Str, nameHint: Opt[Str]) extends NullaryType with TypeVarImpl {
   require(nameHint.isEmpty || identifier.isLeft)
@@ -155,7 +157,7 @@ final case class NuTypeDef(
   nme: TypeName,
   tparams: Ls[TypeName],
   specParams: Ls[Var -> Opt[Type]], // the specialized parameters for that type
-  parents: Ls[AppliedType],
+  parents: Ls[NamedType],
   body: TypingUnit
 ) extends NuDecl
 
