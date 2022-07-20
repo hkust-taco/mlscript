@@ -743,6 +743,17 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
         raise(CompilationError(msg"Unexpected 'then'/'else' clause" -> x.toLoc :: Nil))
         n->(errExpr->false)::Nil
       case (n, R(x))=>n->x::Nil} // TODO
+  /* 
+  def argsOrIf2()(implicit fe: FoundErr, et: ExpectThen): IfBlock \/ Ls[Opt[Var] -> (Term -> Bool)] = {
+    // argsOrIf(Nil).partitionMap(identity).mapFirst(ifbods => ???)
+    argsOrIf(Nil) match {
+      case n -> L(ib) =>
+        
+      case n -> R(tm) =>
+      case Nil => R(Nil)
+    }
+  }
+  */
   def argsOrIf(acc: Ls[Opt[Var] -> (IfBody \/ (Term -> Bool))])(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> (IfBody \/ (Term -> Bool))] =
     cur match {
       case (SPACE, _) :: _ =>
