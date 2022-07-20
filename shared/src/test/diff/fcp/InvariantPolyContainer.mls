@@ -39,8 +39,8 @@ ty1 = ty2
 //│ ║  l.34: 	ty1 = ty2
 //│ ║        	^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‘A_81'_82  <:  'A54_79    TraitTag  TypeVariable
-//│ ╙──  ... looks like:  ‘A_81'_82  <:  'A54_55''
+//│ ╟── this constraint:  ‘A_81_82  <:  'A54_79    TraitTag  TypeVariable
+//│ ╙──  ... looks like:  ‘A_81_82  <:  'A54_55''
 
 :e
 ty2 = ty1
@@ -50,7 +50,7 @@ ty2 = ty1
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.46: 	ty2 = ty1
 //│ ║        	^^^^^^^^^
-//│ ╟── type `‘A_90''` is not an instance of type `'A_89'`
+//│ ╟── type `‘A_90` is not an instance of type `'A_89`
 //│ ║  l.15: 	def ty1: MutArray[forall 'A. 'A -> 'A]
 //│ ║        	                         ^^
 //│ ╟── Note: constraint arises from quantified type variable:

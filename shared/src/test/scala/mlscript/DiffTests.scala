@@ -407,6 +407,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                   else
                     SourceCode("")
                 output(s"Defined " + td.kind.str + " " + tn + params)
+                // output(s"Defined " + td.kind.str + " " + tn + params + (td.kind match {
+                //   case Als => " = " + getType(ttd.bodyTy).show
+                //   case _ => ""
+                // }))
 
                 // calculate types for all method definitions and declarations
                 // only once and reuse for pretty printing and type generation

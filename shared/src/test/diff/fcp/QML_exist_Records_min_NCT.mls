@@ -1,0 +1,48 @@
+// * This is a further minimization of the error that happens in `QML_exist_Records_min_CT`,
+// *  this time without constrained types, which makes a related error appear earlier.
+
+
+// :NoRecursiveTypes
+:GeneralizeCurriedFunctions
+// :DistributeForalls
+// :ArgGen
+:NoConstrainedTypes
+
+
+type ArraysRep = { fold: forall 'b. 'b -> 'b }
+//│ Defined type alias ArraysRep
+
+type Arrays = (ArraysRep -> 'r) -> 'r
+//│ Defined type alias Arrays
+
+// :d
+def stepImpl arrImpl = { fold = fun f ->  arrImpl.fold f }
+//│ stepImpl: {fold: 'a -> 'b} -> {fold: 'a -> 'b}
+//│         = [Function: stepImpl]
+
+// :d
+def stepImpl2 arr = arr stepImpl
+//│ stepImpl2: ((forall 'a, 'b. {fold: 'a -> 'b} -> {fold: 'a -> 'b}) -> 'c) -> 'c
+//│          = [Function: stepImpl2]
+
+def step: Arrays -> Arrays
+//│ step: Arrays -> Arrays
+//│     = <missing implementation>
+
+// :d
+:e
+def step arr f = f (stepImpl2 arr)
+//│ ((forall 'a, 'b. {fold: 'a -> 'b} -> {fold: 'a -> 'b}) -> 'c) -> (forall 'd. ('c -> 'd) -> 'd)
+//│   <:  step:
+//│ Arrays -> Arrays
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.34: 	def step arr f = f (stepImpl2 arr)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘b_121_124` is not an instance of type `'b_121_125`
+//│ ║  l.12: 	type ArraysRep = { fold: forall 'b. 'b -> 'b }
+//│ ║        	                                ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.12: 	type ArraysRep = { fold: forall 'b. 'b -> 'b }
+//│ ╙──      	                                ^^
+//│     = [Function: step]
+

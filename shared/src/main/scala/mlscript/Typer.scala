@@ -309,7 +309,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType],
         newDefsInfo: Map[Str, (TypeDefKind, Int)]): (SimpleType, Iterable[TypeVariable]) = // TODO rm _2 result?
       // trace(s"$lvl. Typing type $ty") {
-      trace(s"Typing type $ty") {
+      trace(s"Typing type ${ty.show}") {
     println(s"vars=$vars newDefsInfo=$newDefsInfo")
     val typeType2 = ()
     // val outerCtxLvl = MinLevel + 1
@@ -321,7 +321,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     val localVars = mutable.Map.empty[TypeVar, TypeVariable]
     def tyTp(loco: Opt[Loc], desc: Str, originName: Opt[Str] = N) =
       TypeProvenance(loco, desc, originName, isType = true)
-    def rec(ty: Type)(implicit ctx: Ctx, recVars: Map[TypeVar, TypeVariable]): SimpleType = trace(s"$lvl. type $ty") { ty match {
+    def rec(ty: Type)(implicit ctx: Ctx, recVars: Map[TypeVar, TypeVariable]): SimpleType = trace(s"$lvl. type ${ty.show}") { ty match {
       case Top => ExtrType(false)(tyTp(ty.toLoc, "top type"))
       case Bot => ExtrType(true)(tyTp(ty.toLoc, "bottom type"))
       case Bounds(Bot, Top) =>

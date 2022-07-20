@@ -1,9 +1,15 @@
 
+def test f a b =
+  let local x = f x
+  in (local a, local b)
+//│ test: ('a -> 'b) -> 'a -> 'a -> ('b, 'b,)
+//│     = [Function: test]
+
 def test x =
   let local g = g x
   in local succ
 //│ test: int -> int
-//│     = [Function: test]
+//│     = [Function: test1]
 
 test 1
 //│ res: int
@@ -12,13 +18,13 @@ test 1
 :e
 test "hi"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.13: 	test "hi"
+//│ ║  l.19: 	test "hi"
 //│ ║        	^^^^^^^^^
 //│ ╟── string literal of type `"hi"` is not an instance of type `int`
-//│ ║  l.13: 	test "hi"
+//│ ║  l.19: 	test "hi"
 //│ ║        	     ^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.3: 	  let local g = g x
+//│ ║  l.9: 	  let local g = g x
 //│ ╙──     	                  ^
 //│ res: error
 //│    = 'hi1'
@@ -27,7 +33,7 @@ def test f =
   let local() = succ (f 1)
   in local()
 //│ test: (1 -> int) -> int
-//│     = [Function: test1]
+//│     = [Function: test2]
 
 test succ
 test id
@@ -39,13 +45,13 @@ test id
 :e
 test (fun x -> false)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.40: 	test (fun x -> false)
+//│ ║  l.46: 	test (fun x -> false)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `false` is not an instance of type `int`
-//│ ║  l.40: 	test (fun x -> false)
+//│ ║  l.46: 	test (fun x -> false)
 //│ ║        	               ^^^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.27: 	  let local() = succ (f 1)
+//│ ║  l.33: 	  let local() = succ (f 1)
 //│ ╙──      	                      ^^^
 //│ res: error
 //│    = 1
@@ -53,10 +59,10 @@ test (fun x -> false)
 :e
 test concat
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.54: 	test concat
+//│ ║  l.60: 	test concat
 //│ ║        	^^^^^^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `string`
-//│ ║  l.27: 	  let local() = succ (f 1)
+//│ ║  l.33: 	  let local() = succ (f 1)
 //│ ╙──      	                        ^
 //│ res: error
 //│    = '(y) => x + y1'
@@ -65,24 +71,24 @@ def test f =
   let local g = g f
   in local succ
 //│ test: int -> int
-//│     = [Function: test2]
+//│     = [Function: test3]
 
 def test f =
   let local g = g (f 1)
   in local succ
 //│ test: (1 -> int) -> int
-//│     = [Function: test3]
+//│     = [Function: test4]
 
 :e
 test (fun x -> "oops")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.77: 	test (fun x -> "oops")
+//│ ║  l.83: 	test (fun x -> "oops")
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"oops"` is not an instance of type `int`
-//│ ║  l.77: 	test (fun x -> "oops")
+//│ ║  l.83: 	test (fun x -> "oops")
 //│ ║        	               ^^^^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.71: 	  let local g = g (f 1)
+//│ ║  l.77: 	  let local g = g (f 1)
 //│ ╙──      	                   ^^^
 //│ res: error
 //│    = 'oops1'
@@ -92,25 +98,25 @@ def test f =
   let local g x = g (f x)
   in local succ
 //│ test: ('a -> int) -> 'a -> int
-//│     = [Function: test4]
+//│     = [Function: test5]
 
 def test f =
   let local g x = g (f x)
   in local add
 //│ test: ('a -> int) -> 'a -> int -> int
-//│     = [Function: test5]
+//│     = [Function: test6]
 
 def test f =
   let local g x = g (f x)
   in local add 1
 //│ test: (1 -> int) -> int -> int
-//│     = [Function: test6]
+//│     = [Function: test7]
 
 def test f =
   let local g x = g (f x)
   in (local add 1, local (fun y -> fun z -> y + z) 2)
 //│ test: ((1 | 2) -> int) -> (int -> int, int -> int,)
-//│     = [Function: test7]
+//│     = [Function: test8]
 
 :re // TODO
 f_g = test succ
@@ -130,15 +136,15 @@ def test f =
   let local g x = g (f x)
   in (local add 1, local concat "ok")
 //│ test: (("ok" | 1) -> nothing) -> (int -> int, string -> string,)
-//│     = [Function: test8]
+//│     = [Function: test9]
 
 :e
 test succ
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.136: 	test succ
+//│ ║  l.142: 	test succ
 //│ ║         	^^^^^^^^^
 //│ ╟── string literal of type `"ok"` is not an instance of type `int`
-//│ ║  l.131: 	  in (local add 1, local concat "ok")
+//│ ║  l.137: 	  in (local add 1, local concat "ok")
 //│ ╙──       	                                ^^^^
 //│ res: error
 //│    = [ [Function (anonymous)], [Function (anonymous)] ]
@@ -166,7 +172,7 @@ def test =
     in local add "1"
   )
 //│ test: ((int -> int) -> "1" -> 'a) -> int -> 'a
-//│     = [Function: test11]
+//│     = [Function: test12]
 
 // :GeneralizeCurriedFunctions
 
@@ -180,16 +186,16 @@ fun f -> fun x ->
 :e
 res add "1"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.181: 	res add "1"
+//│ ║  l.187: 	res add "1"
 //│ ║         	^^^^^^^^^^^
 //│ ╟── string literal of type `"1"` is not an instance of type `int`
-//│ ║  l.181: 	res add "1"
+//│ ║  l.187: 	res add "1"
 //│ ║         	        ^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.175: 	  let local = (fun y -> f y) x
+//│ ║  l.181: 	  let local = (fun y -> f y) x
 //│ ║         	                          ^
 //│ ╟── from reference:
-//│ ║  l.175: 	  let local = (fun y -> f y) x
+//│ ║  l.181: 	  let local = (fun y -> f y) x
 //│ ╙──       	                             ^
 //│ res: error
 //│    = []
@@ -203,16 +209,16 @@ fun f -> fun x ->
 :e
 res add "1"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.204: 	res add "1"
+//│ ║  l.210: 	res add "1"
 //│ ║         	^^^^^^^^^^^
 //│ ╟── string literal of type `"1"` is not an instance of type `int`
-//│ ║  l.204: 	res add "1"
+//│ ║  l.210: 	res add "1"
 //│ ║         	        ^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.198: 	  let local = f ((fun y -> y) x)
+//│ ║  l.204: 	  let local = f ((fun y -> y) x)
 //│ ║         	                 ^^^^^^^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.198: 	  let local = f ((fun y -> y) x)
+//│ ║  l.204: 	  let local = f ((fun y -> y) x)
 //│ ╙──       	                              ^
 //│ res: error
 //│    = []

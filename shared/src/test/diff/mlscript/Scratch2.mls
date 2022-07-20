@@ -203,7 +203,7 @@ to_church = to_ch_s
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.199: 	to_church = to_ch_s
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N_666'_675` is not an instance of type `'N_666'_674`
+//│ ╟── type `‘N_666_675` is not an instance of type `'N_666_674`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -229,15 +229,12 @@ to_church = to_ch_mix
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.225: 	to_church = to_ch_mix
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N_760'_769` is not an instance of type `'N_760'_768`
+//│ ╟── type `‘N_768_777` is not an instance of type `'N_768_776`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── from reference:
-//│ ║  l.30: 	def s n = fun f -> fun x -> f (n f x)
-//│ ╙──      	                                   ^
+//│ ╙──      	                        ^^
 //│          = [Function: to_ch_mix]
 
 
@@ -253,11 +250,11 @@ to_church = to_ch_mix
 rec def to_ch n =
   succD (to_ch n)
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.253: 	rec def to_ch n =
+//│ ║  l.250: 	rec def to_ch n =
 //│ ║         	              ^^^
-//│ ║  l.254: 	  succD (to_ch n)
+//│ ║  l.251: 	  succD (to_ch n)
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N_775''_777` is not an instance of type `'N_775''_776`
+//│ ╟── type `‘N_783_785` is not an instance of type `'N_783_784`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -266,7 +263,7 @@ rec def to_ch n =
 //│ ╟── from quantified type variable:
 //│ ║  l.60: 	def succD: forall 'M. ChurchInt -> ('M -> 'M) -> ('M -> 'M)
 //│ ╙──      	                  ^^
-//│ to_ch: anything -> (('M | ‘N_775''_777) -> (‘N_775''_776 & 'M)) -> (‘N_775''_776 & 'M) -> ('M | ‘N_775''_777)
+//│ to_ch: anything -> (('M | ‘N_783_785) -> (‘N_783_784 & 'M)) -> (‘N_783_784 & 'M) -> ('M | ‘N_783_785)
 //│      = [Function: to_ch1]
 
 

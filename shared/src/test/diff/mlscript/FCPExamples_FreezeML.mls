@@ -513,7 +513,7 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.512: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ║         	                                  ^^^^^^^
-//│ ╟── type `‘a_1180''_1181` is not an instance of type `'a_1180''_1182`
+//│ ╟── type `‘a_1180_1181` is not an instance of type `'a_1180_1182`
 //│ ║  l.169: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -523,13 +523,13 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│   where
 //│     'b :> (forall 'a. 'a -> 'a) | (forall 'a0, 'c. ('a0 -> 'a0) -> 'c)
 //│     'c :> error
-//│     'a0 :> ‘a_1180''_1181
-//│         <: ‘a_1180''_1182
+//│     'a0 :> ‘a_1180_1181
+//│         <: ‘a_1180_1182
 //│    = [Function: id1]
 
 // * The skolem used to (unsafely) leak into this type – see also `Skolems.mls`:
 res
-//│ res: (('a | ‘a_1180''_1181) -> (‘a_1180''_1182 & 'a) & 'a0) -> ('a0 | error)
+//│ res: (('a | ‘a_1180_1181) -> (‘a_1180_1182 & 'a) & 'a0) -> ('a0 | error)
 //│    = [Function: id1]
 
 :e // skolem extrusion
@@ -538,8 +538,8 @@ res id
 //│ ║  l.536: 	res id
 //│ ║         	^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‘a_1180''_1181  <:  'a1177_1196    TraitTag  TypeVariable
-//│ ╙──  ... looks like:  ‘a_1180''_1181  <:  'a1177_1183'
+//│ ╟── this constraint:  ‘a_1180_1181  <:  'a1177_1196    TraitTag  TypeVariable
+//│ ╙──  ... looks like:  ‘a_1180_1181  <:  'a1177_1183'
 //│ res: 'a -> 'a | error
 //│    = [Function: id1]
 
@@ -549,7 +549,7 @@ a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.548: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a_1209'`
+//│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a_1209`
 //│ ║  l.548: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:

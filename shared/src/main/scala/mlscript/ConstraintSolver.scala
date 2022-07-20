@@ -716,7 +716,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               //   rec(lhs, rigid, true)
               // }
             }
-          case (AliasOf(PolymorphicType(plvl, bod)), _) if bod.level <= plvl => rec(bod, rhs, true)
+          case (AliasOf(PolymorphicType(plvl, bod)), _) if bod.level <= plvl =>
+            // println(s"Useless poly? ${plvl} ${bod.level}")
+            rec(bod, rhs, true)
           case (_, FunctionType(param, AliasOf(PolymorphicType(plvl, bod)))) if distributeForalls =>
             val newRhs = if (param.level > plvl) ??? // TODO
             else PolymorphicType(plvl, FunctionType(param, bod)(rhs.prov))
@@ -969,7 +971,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               TraitTag(
                 lowerLvl,
                 // level,
-                Var.apply(freshVar(noProv,N,S(id.idStr+"_"))(0).toString)
+                Var.apply(freshVar(noProv,N,S(id.idStr+"_"))(0).mkStr)
               )(tt.prov)
             )
             /* 
@@ -1045,7 +1047,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   /** Freshens all the type variables whose level is comprised in `(above, below]`
     *   or which have bounds and whose level is greater than `above`. */
-  def freshenAbove(above: Int, ty: SimpleType, rigidify: Bool = false, below: Int = MaxLevel)
+  def freshenAbove(above: Level, ty: SimpleType, rigidify: Bool = false, below: Level = MaxLevel)
         (implicit ctx:Ctx, freshened: MutMap[TV, ST],
         // ctx:Ctx=Ctx.empty,//FIXME
         // raise:Raise=throw _,
@@ -1054,8 +1056,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         // shadows: Shadows=Set.empty,
         shadows: Shadows,
         ): SimpleType = {
-    def freshenImpl(ty: SimpleType, below: Int): SimpleType =
-    // (trace(s"FRESHEN $ty || $above .. $below  ${ty.level} ${ty.level <= above}")
+    def freshenImpl(ty: SimpleType, below: Level): SimpleType =
+    // (trace(s"${lvl}. FRESHEN $ty || $above .. $below  ${ty.level} ${ty.level <= above}")
     {
       def freshen(ty: SimpleType): SimpleType = freshenImpl(ty, below)
       
@@ -1089,7 +1091,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             // {if (tv.nameHint.isDefined) freshVar(noProv,N,S("")).toString
             // Var(tv.nameHint.getOrElse("_"+freshVar(noProv,N).toString).toString)}
             // Var(tv.nameHint.getOrElse("_"+freshVar(noProv,N).toString).toString)
-            Var(tv.nameHint.getOrElse("")+"_"+freshVar(noProv,N,S("")).toString)
+            Var(tv.nameHint.getOrElse("")+"_"+freshVar(noProv,N,S("")).mkStr)
           )(tv.prov)
           if (tv.lowerBounds.nonEmpty || tv.upperBounds.nonEmpty) {
             // The bounds of `tv` may be recursive (refer to `tv` itself),
@@ -1113,6 +1115,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           }
         case None =>
           val v = freshVar(tv.prov, S(tv), tv.nameHint)(if (tv.level > below) tv.level else lvl)
+          // val v = freshVar(tv.prov, S(tv), tv.nameHint)(tv.level)
+          // val v = freshVar(tv.prov, S(tv), tv.nameHint)(tv.level max lvl)
           freshened += tv -> v
           v.lowerBounds = tv.lowerBounds.mapConserve(freshen)
           v.upperBounds = tv.upperBounds.mapConserve(freshen)
@@ -1146,7 +1150,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case pt @ PolymorphicType(lvl, bod) => PolymorphicType(lvl,
         // Setting `below` here is essentially just an optimization,
         //  to avoid having to copy some type variables needlessly
-        freshenImpl(bod, below = lvl))
+        // freshenImpl(bod, below = lvl))
+        freshenImpl(bod, below = below min lvl))
       case ct @ ConstrainedType(cs, bod) =>
         val cs2 = cs.mapKeys(freshen(_).asInstanceOf[TV]).mapValues(_.mapValues(freshen))
         // trace(s"COPYING CONSTRAINTS   (${shadows.size})") {

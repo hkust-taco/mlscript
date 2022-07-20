@@ -63,7 +63,7 @@ def map f = f map (fun x -> map)
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.58: 	def map f = f map (fun x -> map)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_72'` is not a function
+//│ ╟── type `‘a_72` is not a function
 //│ ║  l.57: 	def map: 'a -> 'a
 //│ ║        	         ^^
 //│ ╟── Note: constraint arises from application:

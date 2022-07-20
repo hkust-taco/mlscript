@@ -411,7 +411,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       if (level <= ub) level else MinLevel
     override def toString =
       // (if (id.idStr.startsWith("'")) "‘"+id.idStr.tail else id.idStr) + showLevel(level)
-      "‘"+(if (id.idStr.startsWith("'")) id.idStr.tail else id.idStr) + showLevel(level)
+      "‘"+(if (id.idStr.startsWith("'")) id.idStr.tail else id.idStr) + (if (id.idStr.last==='\'') "_" else "") + showLevel(level)
   }
   
   /** `TypeBounds(lb, ub)` represents an unknown type between bounds `lb` and `ub`.
@@ -504,7 +504,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
           // showProvOver(false)(nameHint.getOrElse("α") + uid + showLevel(level))
           showProvOver(false)(mkStr + showLevel(level))
       }
-    private def mkStr = nameHint.getOrElse("α") + uid
+    private[mlscript] def mkStr = nameHint.getOrElse("α") + uid
     
     def isRecursive_$(implicit ctx: Ctx) : Bool = (lbRecOccs_$, ubRecOccs_$) match {
       case (S(N | S(true)), _) | (_, S(N | S(false))) => true

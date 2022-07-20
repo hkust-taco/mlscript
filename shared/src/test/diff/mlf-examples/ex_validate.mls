@@ -180,7 +180,7 @@ delta_ succ
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.178: 	delta succ
 //│ ║         	^^^^^^^^^^
-//│ ╟── type `‘a_429'` is not an instance of type `int`
+//│ ╟── type `‘a_429` is not an instance of type `int`
 //│ ║  l.119: 	type Id = forall 'a. 'a -> 'a
 //│ ║         	                 ^^
 //│ ╟── Note: constraint arises from reference:
@@ -390,7 +390,7 @@ def mkpair x y = (x, y)
 // (* Il faudrait que le message d'erreur soit plus clair. *)
 example mkpair
 example_ mkpair
-//│ res: int -> (‘a_1181'_1186, int,)
+//│ res: int -> (‘a_1181_1186, int,)
 //│    = [Function (anonymous)]
 //│ res: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('b, 'c,)), 'a,)
 //│    = [Function (anonymous)]
@@ -925,8 +925,8 @@ rec def id x = if true then x else id id x
 //│ ║  l.908: 	rec def id x = if true then x else id id x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‘a_2246''  <:  α20_2251'    TraitTag  TypeVariable
-//│ ╙──  ... looks like:  ‘a_2246''  <:  α20_2229'
+//│ ╟── this constraint:  ‘a_2246'  <:  α20_2251'    TraitTag  TypeVariable
+//│ ╙──  ... looks like:  ‘a_2246'  <:  α20_2229'
 //│   = [Function: id3]
 
 
