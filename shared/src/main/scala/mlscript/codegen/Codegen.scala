@@ -420,7 +420,7 @@ final case class JSArrowFn(params: Ls[JSPattern], body: JSExpr \/ Ls[JSStmt]) ex
         }) ++ (if (i === params.length - 1) SourceCode.empty else SourceCode(", "))
       }
       .parenthesized ++ SourceCode(" => ") ++ (body match {
-      // TODO: Figure out how `=>` compete with other operators.
+      // TODO: Figure out how `=>` competes with other operators.
       case L(expr: JSRecord) => expr.toSourceCode.parenthesized
       case L(expr)  => expr.embed
       case R(stmts) => SourceCode.concat(stmts map { _.toSourceCode }).block
