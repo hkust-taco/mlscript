@@ -81,7 +81,9 @@ class JSBackend {
           JSIdent(sym.runtimeName)
         else
           throw new UnimplementedError(sym)
-      case S(sym: ValueSymbol) => JSIdent(sym.runtimeName)
+      case S(sym: ValueSymbol) =>
+        sym.accessed = true
+        JSIdent(sym.runtimeName)
       case S(sym: ClassSymbol) =>
         if (isCallee)
           JSNew(JSIdent(sym.runtimeName))
@@ -388,20 +390,37 @@ class JSBackend {
     JSClassDecl(classSymbol.runtimeName, fields, base, members, traits)
   }
 
+  /**
+   * Translate class methods and getters.
+   */
   private def translateClassMember(
       method: MethodDef[Left[Term, Type]]
   )(implicit scope: Scope): JSClassMemberDecl = {
     val name = method.nme.name
-    method.rhs.value match {
+    // Collect parameters and create the member scope.
+    val (memberParams, memberScope, body) = method.rhs.value match {
       case Lam(params, body) =>
-        val methodScope = scope.derive(s"Method $name")
+        val methodScope = scope.derive("method $name")
         val methodParams = translateParams(params)(methodScope)
-        methodScope.declareValue("this")
-        JSClassMethod(name, methodParams, L(translateTerm(body)(methodScope)))
+        (S(methodParams), methodScope, body)
       case term =>
-        val getterScope = scope.derive(s"Getter $name")
-        getterScope.declareValue("this")
-        JSClassGetter(name, L(translateTerm(term)(getterScope)))
+        (N, scope.derive(s"Getter $name"), term)
+    }
+    // Declare a value symbol for `this`.
+    val thisSymbol = memberScope.declareThis()
+    // Translate class member body.
+    val bodyResult = translateTerm(body)(memberScope).`return`
+    // If `this` is accessed, add `const self = this`.
+    val bodyStmts = if (thisSymbol.accessed) {
+      val thisDecl = JSConstDecl(thisSymbol.runtimeName, JSIdent("this"))
+      R(thisDecl :: bodyResult :: Nil)
+    } else {
+      R(bodyResult :: Nil)
+    }
+    // Returns members depending on what it is.
+    memberParams match {
+      case S(memberParams) => JSClassMethod(name, memberParams, bodyStmts)
+      case N => JSClassGetter(name, bodyStmts)
     }
   }
 

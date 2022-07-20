@@ -19,10 +19,12 @@ class Box[T]: { inner: T }
 //│     this.inner = fields.inner;
 //│   }
 //│   Map(f) {
-//│     return new Box({ inner: f(this.inner) });
+//│     const self = this;
+//│     return new Box({ inner: f(self.inner) });
 //│   }
 //│   get Get() {
-//│     return this.inner;
+//│     const self = this;
+//│     return self.inner;
 //│   }
 //│ }
 //│ // End of generated code
@@ -73,12 +75,14 @@ def MyBox inner info = MyBox { inner; info }
 //│     this.info = fields.info;
 //│   }
 //│   Map(f) {
-//│     return withConstruct(Box1(f(this.inner)), { info: this.info });
+//│     const self = this;
+//│     return withConstruct(Box1(f(self.inner)), { info: self.info });
 //│   }
 //│   get Inc() {
+//│     const self = this;
 //│     return (new MyBox({
-//│       inner: this.inner + 1,
-//│       info: this.info
+//│       inner: self.inner + 1,
+//│       info: self.info
 //│     }));
 //│   }
 //│ }
@@ -161,13 +165,13 @@ def f: Box[?] -> int
 :e
 f(Box{})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.162: 	f(Box{})
+//│ ║  l.166: 	f(Box{})
 //│ ║         	^^^^^^^^
 //│ ╟── record literal of type `anything` does not match type `nothing`
-//│ ║  l.162: 	f(Box{})
+//│ ║  l.166: 	f(Box{})
 //│ ║         	     ^^
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.157: 	def f: Box[?] -> int
+//│ ║  l.161: 	def f: Box[?] -> int
 //│ ╙──       	           ^
 //│ res: error | int
 //│    = <no result>

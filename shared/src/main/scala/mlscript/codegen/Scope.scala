@@ -227,6 +227,13 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     register(symbol)
     symbol
   }
+  
+  def declareThis(): ValueSymbol = {
+    val runtimeName = allocateRuntimeName("self")
+    val symbol = ValueSymbol("this", runtimeName)
+    register(symbol)
+    symbol
+  }
 
   def declareValue(lexicalName: Str): ValueSymbol = {
     val runtimeName = lexicalValueSymbols.get(lexicalName) match {
