@@ -751,7 +751,7 @@ object DiffTests {
   private def filter(file: os.Path): Bool = {
     val name = file.baseName
     if (focused.nonEmpty) focused(name) else modified(name) || modified.isEmpty &&
-      // false
+      // true
       // name.startsWith("new/")
       file.segments.toList.init.lastOption.contains("new")
   }

@@ -110,7 +110,7 @@ Tru : Boolean
 data type List a of
   Nil
   Cons (head: a) (tail: List a)
-//│ Parsed: data type List a of {Nil; Cons '(' {(head: a,)} ')' '(' {(tail: List a,)} ')'};
+//│ Parsed: data type List a of {Nil; Cons '(' {head: a,} ')' '(' {tail: List a,} ')'};
 //│ Desugared: type alias List[a] = Nil[a] | Cons[a]
 //│ Desugared: class Nil[a]: {}
 //│ Desugared: class Cons[a]: {head: a, tail: List[a]}
