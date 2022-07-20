@@ -230,7 +230,6 @@ checkS p && checkR p && checkQ p && checkP p
 //│   r: 0,
 //│   p: 0
 //│ });
-//│ res = p;
 //│ // Query 2
 //│ res = checkS(p) && checkR(p) && checkQ(p) && checkP(p);
 //│ // End of generated code
