@@ -44,14 +44,14 @@ class JSBackend {
     // should returns ("{ x, y }", ["x", "y"])
     case Rcd(fields) =>
       JSObjectPattern(fields map {
-        case (Var(nme), (Var(als), _)) if nme === als =>
-          val runtimeName = scope.declareParameter(nme)
-          if (JSField.isValidIdentifier(nme)) nme -> N
-          else JSLit.makeStringLiteral(nme) -> S(JSNamePattern(runtimeName))
+        case (Var(nme), (Var(als), _)) =>
+          val runtimeName = scope.declareParameter(als)
+          val fieldName = JSField.emitValidFieldName(nme)
+          if (runtimeName === fieldName) fieldName -> N
+          else fieldName -> S(JSNamePattern(runtimeName))
         case (Var(nme), (subTrm, _)) => 
           scope.declareParameter(nme)
-          if (JSField.isValidIdentifier(nme)) nme -> S(translatePattern(subTrm))
-          else JSLit.makeStringLiteral(nme) -> S(translatePattern(subTrm))
+          JSField.emitValidFieldName(nme) -> S(translatePattern(subTrm))
       })
     // This branch supports `def f (x: int) = x`.
     case Asc(trm, _) => translatePattern(trm)
