@@ -98,3 +98,22 @@ id (fun x -> x)
 //│ // End of generated code
 //│ res: 'a -> 'a
 //│    = [Function (anonymous)]
+
+:js
+fun x -> {t1 = gt 1 2; t2 = 1}
+//│ // Prelude
+//│ function gt(x, y) {
+//│   if (arguments.length === 2) {
+//│     return x > y;
+//│   } else {
+//│     return (y) => x > y;
+//│   }
+//│ }
+//│ // Query 1
+//│ res = ((x) => ({
+//│   t1: gt(1)(2),
+//│   t2: 1
+//│ }));
+//│ // End of generated code
+//│ res: anything -> {t1: bool, t2: 1}
+//│    = [Function: res]
