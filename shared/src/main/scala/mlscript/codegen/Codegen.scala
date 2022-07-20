@@ -420,6 +420,8 @@ final case class JSArrowFn(params: Ls[JSPattern], body: JSExpr \/ Ls[JSStmt]) ex
         }) ++ (if (i === params.length - 1) SourceCode.empty else SourceCode(", "))
       }
       .parenthesized ++ SourceCode(" => ") ++ (body match {
+      // TODO: Figure out how `=>` compete with other operators.
+      case L(expr: JSRecord) => expr.toSourceCode.parenthesized
       case L(expr)  => expr.embed
       case R(stmts) => SourceCode.concat(stmts map { _.toSourceCode }).block
     })
@@ -651,7 +653,7 @@ final case class JSIfStmt(test: JSExpr, body: Ls[JSStmt], `else`: Ls[JSStmt] = N
     SourceCode.space ++
     body.foldLeft(SourceCode.empty) { _ + _.toSourceCode }.block ++ (`else` match {
       case Nil => SourceCode.empty
-      case _   => SourceCode("else ") ++ `else`.foldLeft(SourceCode.empty) { _ + _.toSourceCode }.block
+      case _   => SourceCode(" else ") ++ `else`.foldLeft(SourceCode.empty) { _ + _.toSourceCode }.block
     })
 }
 
