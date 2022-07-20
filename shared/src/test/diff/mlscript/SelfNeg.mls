@@ -1,0 +1,137 @@
+
+
+def foo: ('a -> (~'a -> 'b) -> 'b) -> 'b
+//│ foo: (nothing -> (anything -> 'b) -> 'b) -> 'b
+//│    = <missing implementation>
+
+def foo: ('a -> (~'a -> 'a) -> 'a) -> 'a -> 'a
+//│ foo: ('a -> (~'a -> 'a) -> 'a) -> 'a -> 'a
+//│    = <missing implementation>
+
+:ns
+foo
+//│ res: ('a -> (~'a -> 'a) -> 'a) -> 'a -> 'a
+//│    = <no result>
+//│      foo is not implemented
+
+:ns
+r = foo (fun a -> fun f -> f a)
+//│ r: 'b
+//│   where
+//│     'b :> 'a -> 'a
+//│     'a <: 'c & 'd
+//│     'd <: ~'a
+//│     'c <: 'a
+//│  = <no result>
+//│    foo is not implemented
+
+r
+//│ res: 'a -> 'a
+//│    = <no result>
+//│      r and foo are not implemented
+
+:e
+r: anything -> nothing
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.34: 	r: anything -> nothing
+//│ ║        	^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.34: 	r: anything -> nothing
+//│ ║        	   ^^^^^^^^
+//│ ╟── Note: constraint arises from type negation:
+//│ ║  l.7: 	def foo: ('a -> (~'a -> 'a) -> 'a) -> 'a -> 'a
+//│ ║       	                 ^^^
+//│ ╟── from type variable:
+//│ ║  l.7: 	def foo: ('a -> (~'a -> 'a) -> 'a) -> 'a -> 'a
+//│ ╙──     	                                      ^^
+//│ res: anything -> nothing
+//│    = <no result>
+//│      r and foo are not implemented
+
+
+
+def foo: ('a -> (~'a -> anything) -> anything) -> MutArray['a]
+//│ foo: ('a -> (~'a -> anything) -> anything) -> MutArray['a]
+//│    = <missing implementation>
+
+:ns
+r = foo (fun a -> fun f -> f a)
+//│ r: 'b
+//│   where
+//│     'b :> MutArray['a]
+//│     'a <: 'c
+//│     'c <: ~'a
+//│  = <no result>
+//│    foo is not implemented
+
+:e
+r[0] <- "test"
+//│ ╔══[ERROR] Type mismatch in assignment:
+//│ ║  l.68: 	r[0] <- "test"
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── string literal of type `"test"` does not match type `~"test"`
+//│ ║  l.68: 	r[0] <- "test"
+//│ ║        	        ^^^^^^
+//│ ╟── but it flows into assigned array element with expected type `~"test"`
+//│ ║  l.68: 	r[0] <- "test"
+//│ ╙──      	^^^^
+//│ = <no result>
+//│   r and foo are not implemented
+
+:e
+r[0] + 1
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.82: 	r[0] + 1
+//│ ║        	^^^^^^
+//│ ╟── possibly-undefined array access of type `undefined` is not an instance of type `int`
+//│ ║  l.82: 	r[0] + 1
+//│ ╙──      	^^^^
+//│ res: error | int
+//│    = <no result>
+//│      r and foo are not implemented
+
+
+
+
+:ns
+def bar: (('a & ~'a) -> 'b) -> 'b
+//│ bar: (nothing -> 'b) -> 'b
+//│    = <missing implementation>
+
+def bar: (('a & int & ~'a) -> 'b) -> 'b
+//│ bar: ((int & 'a & ~'a) -> 'b) -> 'b
+//│    = <missing implementation>
+
+r = bar (fun x -> (x, x + 1, not x, x x))
+//│ r: (int & 'a & ~'a, int, bool, nothing,)
+//│  = <no result>
+//│    bar is not implemented
+
+:ns
+r
+//│ res: 'b
+//│   where
+//│     'b :> ('c, 'd, 'e, 'f,)
+//│     'e :> bool
+//│     'd :> int
+//│     'c :> 'a & int & ~'a
+//│        <: 'c -> 'f & bool & int
+//│     'a <: (int | ~(int & ~'a)) & (bool | ~(int & ~'a)) & ('c -> 'f | ~(int & ~'a))
+//│    = <no result>
+//│      r and bar are not implemented
+
+r._1 : nothing
+//│ res: nothing
+//│    = <no result>
+//│      r and bar are not implemented
+
+def impossible x = case x of {}
+//│ impossible: nothing -> nothing
+//│           = [Function: impossible]
+
+bar impossible
+//│ res: nothing
+//│    = <no result>
+//│      bar is not implemented
+
+

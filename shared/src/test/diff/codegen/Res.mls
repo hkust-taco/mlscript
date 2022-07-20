@@ -56,7 +56,6 @@ res == 4
 def res = 0
 //│ // Query 1
 //│ globalThis.res1 = 0;
-//│ res = res1;
 //│ // End of generated code
 //│ res: 0
 //│    = 0
@@ -74,7 +73,7 @@ res + 1
 :js
 res + 1
 //│ // Query 1
-//│ res = res1 + 1;
+//│ res = res + 1;
 //│ // End of generated code
 //│ res: int
-//│    = 1
+//│    = 2

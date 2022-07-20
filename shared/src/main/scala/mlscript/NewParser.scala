@@ -229,7 +229,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
   
   def toParams(t: Term): Tup = t match {
     case t: Tup => t
-    case _ => Tup((N, (t, false)) :: Nil)
+    case _ => Tup((N, Fld(false, false, t)) :: Nil)
   }
   def toParamsTy(t: Type): Tuple = t match {
     case t: Tuple => t
@@ -737,14 +737,14 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
   }
   
   // TODO support comma-less arg blocks...
-  def args()(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> (Term -> Bool)] =
+  def args()(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =
     // argsOrIf(Nil).map{case (_, L(x))=> ???; case (n, R(x))=>n->x} // TODO
     argsOrIf(Nil).flatMap{case (n, L(x))=> 
         raise(CompilationError(msg"Unexpected 'then'/'else' clause" -> x.toLoc :: Nil))
-        n->(errExpr->false)::Nil
+        n->Fld(false, false, errExpr)::Nil
       case (n, R(x))=>n->x::Nil} // TODO
   /* 
-  def argsOrIf2()(implicit fe: FoundErr, et: ExpectThen): IfBlock \/ Ls[Opt[Var] -> (Term -> Bool)] = {
+  def argsOrIf2()(implicit fe: FoundErr, et: ExpectThen): IfBlock \/ Ls[Opt[Var] -> Fld] = {
     // argsOrIf(Nil).partitionMap(identity).mapFirst(ifbods => ???)
     argsOrIf(Nil) match {
       case n -> L(ib) =>
@@ -754,7 +754,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
     }
   }
   */
-  def argsOrIf(acc: Ls[Opt[Var] -> (IfBody \/ (Term -> Bool))])(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> (IfBody \/ (Term -> Bool))] =
+  def argsOrIf(acc: Ls[Opt[Var] -> (IfBody \/ Fld)])(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> (IfBody \/ Fld)] =
     cur match {
       case (SPACE, _) :: _ =>
         consume
@@ -780,7 +780,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
       case _ => N
     }
     // val e = expr(NoElsePrec) -> argMut.isDefined
-    val e = exprOrIf(NoElsePrec).map(_ -> argMut.isDefined)
+    val e = exprOrIf(NoElsePrec).map(Fld(argMut.isDefined, false, _))
     cur match {
       case (COMMA, l0) :: _ =>
         consume

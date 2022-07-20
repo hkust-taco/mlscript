@@ -49,7 +49,9 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
     val fileContents = os.read(file)
     val allLines = fileContents.splitSane('\n').toList
     val strw = new java.io.StringWriter
-    val out = new java.io.PrintWriter(strw)
+    val out = new java.io.PrintWriter(strw) {
+      override def println(): Unit = print('\n') // to avoid inserting CRLF on Windows
+    }
     var stdout = false
     def output(str: String) =
       // out.println(outputMarker + str)
@@ -475,7 +477,7 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
                       }
                     }
                     queries.zipWithIndex foreach {
-                      case (JSTestBackend.CodeQuery(prelude, code), i) =>
+                      case (JSTestBackend.CodeQuery(prelude, code, _), i) =>
                         output(s"// Query ${i + 1}")
                         prelude foreach { output(_) }
                         code foreach { output(_) }
@@ -499,7 +501,7 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
                     }
                     // Send queries to the host.
                     ExecutedResult(queries.zipWithIndex.map {
-                      case (JSTestBackend.CodeQuery(preludeLines, codeLines), i) =>
+                      case (JSTestBackend.CodeQuery(preludeLines, codeLines, res), i) =>
                         val prelude = preludeLines.mkString
                         val code = codeLines.mkString
                         if (mode.showRepl) {
@@ -507,7 +509,7 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
                           println(s"│ ├── Prelude: ${if (preludeLines.isEmpty) "<empty>" else prelude}")
                           println(s"│ └── Code: ${code}")
                         }
-                        val reply = host.query(prelude, code)
+                        val reply = host.query(prelude, code, res)
                         if (mode.showRepl) {
                           val prefix = if (i + 1 == queries.length) "└──" else "├──"
                           println(s"$prefix Reply ${i + 1}/${queries.length}: $reply")
@@ -809,14 +811,17 @@ object DiffTests {
       stdin.flush()
     }
 
-    def query(prelude: Str, code: Str): ReplHost.Reply = {
-      val wrapped = s"$prelude try { $code } catch (e) { console.log('\\u200B' + e + '\\u200B'); }"
-      send(wrapped)
-      consumeUntilPrompt() match {
-        case _: ReplHost.Result =>
-          send("res")
-          consumeUntilPrompt()
-        case t => t
+    def query(prelude: Str, code: Str, res: Str): ReplHost.Reply = {
+      if (prelude.isEmpty && code.isEmpty) ReplHost.Empty
+      else {
+        val wrapped = s"$prelude try { $code } catch (e) { console.log('\\u200B' + e + '\\u200B'); }"
+        send(wrapped)
+        consumeUntilPrompt() match {
+          case _: ReplHost.Result =>
+            send(if (res =:= "res") res else s"globalThis[\"${res}\"]")
+            consumeUntilPrompt()
+          case t => t
+        }
       }
     }
 
