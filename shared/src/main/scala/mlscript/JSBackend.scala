@@ -5,6 +5,7 @@ import mlscript.codegen.Helpers._
 import mlscript.codegen._
 import scala.collection.mutable.ListBuffer
 import mlscript.{JSField, JSLit}
+import scala.collection.mutable.{Set => MutSet}
 
 class JSBackend {
   /**
@@ -16,6 +17,8 @@ class JSBackend {
     * The prelude code manager.
     */
   protected val polyfill = Polyfill()
+
+  protected val visitedSymbols = MutSet[ValueSymbol]()
 
   /**
     * This function translates parameter destructions in `def` declarations.
@@ -82,7 +85,7 @@ class JSBackend {
         else
           throw new UnimplementedError(sym)
       case S(sym: ValueSymbol) =>
-        sym.accessed = true
+        visitedSymbols += sym
         JSIdent(sym.runtimeName)
       case S(sym: ClassSymbol) =>
         if (isCallee)
@@ -375,7 +378,12 @@ class JSBackend {
       classSymbol: ClassSymbol,
       baseClassSymbol: Opt[ClassSymbol]
   )(implicit scope: Scope): JSClassDecl = {
-    val members = classSymbol.methods.map { translateClassMember(_) }
+    // Translate class methods and getters.
+    val classScope = scope.derive(s"class ${classSymbol.lexicalName}")
+    val members = classSymbol.methods.map {
+      translateClassMember(_)(classScope)
+    }
+    // Collect class fields.
     val fields = classSymbol.body.collectFields ++
       classSymbol.body.collectTypeNames.flatMap(resolveTraitFields)
     val base = baseClassSymbol.map { sym => JSIdent(sym.runtimeName) }
@@ -394,25 +402,31 @@ class JSBackend {
    * Translate class methods and getters.
    */
   private def translateClassMember(
-      method: MethodDef[Left[Term, Type]]
+      method: MethodDef[Left[Term, Type]],
   )(implicit scope: Scope): JSClassMemberDecl = {
     val name = method.nme.name
-    // Collect parameters and create the member scope.
-    val (memberParams, memberScope, body) = method.rhs.value match {
-      case Lam(params, body) =>
-        val methodScope = scope.derive("method $name")
-        val methodParams = translateParams(params)(methodScope)
-        (S(methodParams), methodScope, body)
-      case term =>
-        (N, scope.derive(s"Getter $name"), term)
+    // Create the method/getter scope.
+    val memberScope = method.rhs.value match {
+      case _: Lam => scope.derive(s"method $name")
+      case _ => scope.derive(s"getter $name")
     }
-    // Declare a value symbol for `this`.
-    val thisSymbol = memberScope.declareThis()
+    // Declare the alias for `this` before declaring parameters.
+    // TODO: Remove this after we don't use IIFEs.
+    val selfSymbol = memberScope.declareThisAlias()
+    // Declare parameters.
+    val (memberParams, body) = method.rhs.value match {
+      case Lam(params, body) =>
+        val methodParams = translateParams(params)(memberScope)
+        (S(methodParams), body)
+      case term =>
+        (N, term)
+    }
     // Translate class member body.
     val bodyResult = translateTerm(body)(memberScope).`return`
     // If `this` is accessed, add `const self = this`.
-    val bodyStmts = if (thisSymbol.accessed) {
-      val thisDecl = JSConstDecl(thisSymbol.runtimeName, JSIdent("this"))
+    val bodyStmts = if (visitedSymbols(selfSymbol)) {
+      val thisDecl = JSConstDecl(selfSymbol.runtimeName, JSIdent("this"))
+      visitedSymbols -= selfSymbol
       R(thisDecl :: bodyResult :: Nil)
     } else {
       R(bodyResult :: Nil)

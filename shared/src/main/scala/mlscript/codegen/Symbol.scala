@@ -28,11 +28,6 @@ sealed trait TypeSymbol extends LexicalSymbol {
 
 sealed class ValueSymbol(val lexicalName: Str, val runtimeName: Str) extends RuntimeSymbol {
   override def toString: Str = s"value $lexicalName"
-
-  /**
-   * Whether this `ValueSymbol` has touched by `translateVar` or not.
-   */
-  var accessed: Bool = false
 }
 
 object ValueSymbol {
@@ -130,7 +125,7 @@ object Symbol {
     "return",
     "super",
     "switch",
-    // "this",
+    "this",
     "throw",
     "try",
     "typeof",

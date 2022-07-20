@@ -51,6 +51,16 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     }
   }
 
+  /**
+    * Shorthands for creating function scopes.
+    */
+  def this(name: Str, params: Ls[Str], enclosing: Scope) = {
+    this(name, Opt(enclosing))
+    params foreach { param =>
+      declareValue(param)
+    }
+  }
+
   private val allocateRuntimeNameIter = for {
     i <- (1 to Int.MaxValue).iterator
     c <- Scope.nameAlphabet.combinations(i)
@@ -228,7 +238,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     symbol
   }
   
-  def declareThis(): ValueSymbol = {
+  def declareThisAlias(): ValueSymbol = {
     val runtimeName = allocateRuntimeName("self")
     val symbol = ValueSymbol("this", runtimeName)
     register(symbol)
