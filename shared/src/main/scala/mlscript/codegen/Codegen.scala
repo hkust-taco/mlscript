@@ -285,7 +285,7 @@ final case class JSObjectPattern(properties: Ls[Str -> Opt[JSPattern]]) extends 
     properties
       .map {
         case name -> Some(JSWildcardPattern()) => SourceCode(name)
-        case name -> Some(subPattern) => 
+        case name -> Some(subPattern) =>
           SourceCode(s"$name: ") ++ subPattern.toSourceCode
         case name -> N => SourceCode(name)
       }
@@ -740,7 +740,7 @@ final case class JSFuncDecl(name: Str, params: Ls[JSPattern], body: Ls[JSStmt]) 
 abstract class JSClassMemberDecl extends JSStmt;
 
 final case class JSClassGetter(name: Str, body: JSExpr \/ Ls[JSStmt]) extends JSClassMemberDecl {
-  def toSourceCode: SourceCode = 
+  def toSourceCode: SourceCode =
     SourceCode(s"get ${JSField.emitValidFieldName(name)}() ") ++ (body match {
       case Left(expr) => new JSReturnStmt(S(expr)).toSourceCode
       case Right(stmts) =>
@@ -754,8 +754,7 @@ final case class JSClassMethod(
     body: JSExpr \/ Ls[JSStmt]
 ) extends JSClassMemberDecl {
   def toSourceCode: SourceCode =
-    SourceCode(JSField.emitValidFieldName(name)) ++
-     JSExpr.params(params) ++ SourceCode.space ++ (body match {
+    SourceCode(JSField.emitValidFieldName(name)) ++ JSExpr.params(params) ++ SourceCode.space ++ (body match {
       case Left(expr) => new JSReturnStmt(S(expr)).toSourceCode
       case Right(stmts) =>
         stmts.foldLeft(SourceCode.empty) { case (x, y) => x + y.toSourceCode }
