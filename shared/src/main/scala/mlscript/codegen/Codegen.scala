@@ -285,7 +285,8 @@ final case class JSObjectPattern(properties: Ls[Str -> Opt[JSPattern]]) extends 
     properties
       .map {
         case name -> Some(JSWildcardPattern()) => SourceCode(name)
-        case name -> Some(subPattern) => SourceCode(s"$name: ") ++ subPattern.toSourceCode
+        case name -> Some(subPattern) => 
+          SourceCode(s"$name: ") ++ subPattern.toSourceCode
         case name -> N => SourceCode(name)
       }
   )
@@ -745,7 +746,6 @@ final case class JSClassGetter(name: Str, body: JSExpr \/ Ls[JSStmt]) extends JS
       case Right(stmts) =>
         stmts.foldLeft(SourceCode.empty) { case (x, y) => x + y.toSourceCode }
     }).block
-    
 }
 
 final case class JSClassMethod(
