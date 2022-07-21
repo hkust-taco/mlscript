@@ -259,7 +259,7 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
         
         // try to parse block of text into mlscript ast
         val ans = try {
-          if (basePath.headOption.contains("new")) {
+          if (basePath.headOption.contains("parser")) {
             // ??? : Parsed.Extra
             // Failure("",0,Parsed.Extra())
             val origin = Origin(testName, globalStartLineNum, fph)
@@ -751,9 +751,9 @@ object DiffTests {
   private def filter(file: os.Path): Bool = {
     val name = file.baseName
     if (focused.nonEmpty) focused(name) else modified(name) || modified.isEmpty &&
-      // true
+      true
       // name.startsWith("new/")
-      file.segments.toList.init.lastOption.contains("new")
+      // file.segments.toList.init.lastOption.contains("parser")
   }
   
   private val files = allFiles.filter { file =>
