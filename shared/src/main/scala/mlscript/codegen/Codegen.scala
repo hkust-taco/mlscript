@@ -12,6 +12,7 @@ import mlscript.utils._, shorthands._
 import scala.collection.immutable
 import scala.util.matching.Regex
 import scala.collection.mutable.ListBuffer
+import mlscript.codegen.Symbol
 
 class SourceLine(val content: Str, indent: Int = 0) {
   def indented: SourceLine = new SourceLine(content, indent + 1)
@@ -269,24 +270,17 @@ abstract class JSCode {
 }
 
 abstract class JSPattern extends JSCode {
-  def bindings: Ls[Str]
 }
 
 object JSPattern {
-  def bindings(patterns: Ls[JSPattern]): Ls[Str] = patterns.flatMap(_.bindings)
 }
 
 final case class JSArrayPattern(elements: Ls[JSPattern]) extends JSPattern {
-  def bindings: Ls[Str] = elements flatMap { _.bindings }
   def toSourceCode: SourceCode = SourceCode.array(elements map { _.toSourceCode })
 }
 
 final case class JSObjectPattern(properties: Ls[Str -> Opt[JSPattern]]) extends JSPattern {
   // If no sub-patterns, use the property name as the binding name.
-  def bindings: Ls[Str] = properties flatMap {
-    case name -> Some(subPattern) => subPattern.bindings
-    case name -> None             => name :: Nil
-  }
   def toSourceCode: SourceCode = SourceCode.record(
     properties
       .map {
@@ -299,12 +293,10 @@ final case class JSObjectPattern(properties: Ls[Str -> Opt[JSPattern]]) extends 
 }
 
 final case class JSWildcardPattern() extends JSPattern {
-  def bindings: Ls[Str] = Nil
   def toSourceCode: SourceCode = SourceCode.empty
 }
 
 final case class JSNamePattern(name: Str) extends JSPattern {
-  def bindings: Ls[Str] = name :: Nil
   def toSourceCode: SourceCode = SourceCode(name)
 }
 
@@ -617,7 +609,9 @@ object JSField {
 
   private val identifierPattern: Regex = "^[A-Za-z$][A-Za-z0-9$]*$".r
 
-  def isValidIdentifier(s: Str): Bool = identifierPattern.matches(s)
+  def isValidIdentifier(s: Str): Bool = identifierPattern.matches(s) && !Symbol.isKeyword(s)
+
+  def emitValidFieldName(s: Str): Str = if (isValidIdentifier(s)) s else JSLit.makeStringLiteral(s)
 }
 
 final case class JSArray(items: Ls[JSExpr]) extends JSExpr {
@@ -633,9 +627,7 @@ final case class JSRecord(entries: Ls[Str -> JSExpr]) extends JSExpr {
   // Make
   override def toSourceCode: SourceCode = SourceCode
     .record(entries map { case (key, value) =>
-      val body = if (JSField.isValidIdentifier(key)) { key }
-      else { JSLit.makeStringLiteral(key) }
-      SourceCode(body + ": ") ++ value.embed(JSCommaExpr.outerPrecedence)
+      SourceCode(JSField.emitValidFieldName(key) + ": ") ++ value.embed(JSCommaExpr.outerPrecedence)
     })
 }
 
@@ -751,7 +743,7 @@ abstract class JSClassMemberDecl extends JSStmt;
 
 final case class JSClassGetter(name: Str, body: JSExpr \/ Ls[JSStmt]) extends JSClassMemberDecl {
   def toSourceCode: SourceCode =
-    SourceCode(s"get $name() ") ++ (body match {
+    SourceCode(s"get ${JSField.emitValidFieldName(name)}() ") ++ (body match {
       case Left(expr) => new JSReturnStmt(S(expr)).toSourceCode
       case Right(stmts) =>
         stmts.foldLeft(SourceCode.empty) { case (x, y) => x + y.toSourceCode }
@@ -764,7 +756,7 @@ final case class JSClassMethod(
     body: JSExpr \/ Ls[JSStmt]
 ) extends JSClassMemberDecl {
   def toSourceCode: SourceCode =
-    SourceCode(name) ++ JSExpr.params(params) ++ SourceCode.space ++ (body match {
+    SourceCode(JSField.emitValidFieldName(name)) ++ JSExpr.params(params) ++ SourceCode.space ++ (body match {
       case Left(expr) => new JSReturnStmt(S(expr)).toSourceCode
       case Right(stmts) =>
         stmts.foldLeft(SourceCode.empty) { case (x, y) => x + y.toSourceCode }
@@ -793,7 +785,8 @@ final case class JSClassDecl(
         buffer += s"    $name.implement(this);"
       }
       fields.foreach { name =>
-        buffer += s"    this.$name = fields.$name;"
+        val innerName = if (JSField.isValidIdentifier(name)) s".${name}" else s"[${JSLit.makeStringLiteral(name)}]"
+        buffer += s"    this$innerName = fields$innerName;"
       }
       buffer += "  }"
       SourceCode(buffer.toList)
