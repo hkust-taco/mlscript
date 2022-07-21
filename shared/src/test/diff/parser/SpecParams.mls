@@ -14,3 +14,8 @@ fun Foo(#x, #y, #z) = if z then x + y else z
 //│ Parsed: {fun Foo = #x, #y, #z, => if (z) then + x y else z}
 
 
+class Foo(x, #y, z)
+//│ |#class| |Foo|(|x|,| |##|y|,| |z|)|
+//│ Parsed: {class Foo(x, #y, z,) {}}
+
+

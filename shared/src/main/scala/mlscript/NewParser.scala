@@ -296,6 +296,14 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
                 // R(errExpr)
                 (TypeName("<error>").withLoc(curLoc.map(_.left)), false)
             }
+            val params = yeetSpaces match {
+              case (OPEN_BRACKET(Round), _) :: _ =>
+                consume
+                val as = args() // TODO
+                skip(CLOSE_BRACKET(Round), ignored = Set(SPACE, NEWLINE, INDENT))
+                Tup(as)
+              case _ => Tup(Nil)
+            }
             def parents(Sep: Token): Ls[NamedType] = yeetSpaces match {
               case (Sep, _) :: _ =>
                 consume
@@ -330,7 +338,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
             //     // println(c)
             //     TypingUnit(Nil)
             // }
-            R(NuTypeDef(kind, tn, Nil, Nil, ps, body))
+            R(NuTypeDef(kind, tn, Nil, params, ps, body))
           case (KEYWORD("fun"), l0) :: c => // TODO support rec?
             consume
             val (v, success) = yeetSpaces match {

@@ -298,8 +298,9 @@ trait NuDeclImpl extends Located { self: NuDecl =>
   def showHead: Str = this match {
     case NuFunDef(n, _, b) => s"fun $n"
     case NuTypeDef(k, n, tps, sps, parents, bod) =>
-      s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_.name).mkString("[", ", ", "]")}${
-        sps.mkString("(",",",")")}${if (parents.isEmpty) "" else ": "}${parents.map(_.show).mkString(", ")}"
+      s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_.name).mkString("[", ", ", "]")}(${
+        // sps.mkString("(",",",")")
+        sps})${if (parents.isEmpty) "" else ": "}${parents.map(_.show).mkString(", ")}"
   }
 }
 trait TypingUnitImpl extends Located { self: TypingUnit =>

@@ -65,3 +65,14 @@ class Foo: Bar {
 //│ |#class| |Foo|#:| |Bar| |{|→|#fun| |f| |#=| |0|↵|#fun| |bar| |#=| |1|←|↵|}|
 //│ Parsed: {class Foo(): Bar {fun f = 0; fun bar = 1}}
 
+
+// FIXME `(undefined,)`
+class Foo()
+//│ |#class| |Foo|(|)|
+//│ Parsed: {class Foo(undefined,) {}}
+
+class Foo(x, y, z)
+//│ |#class| |Foo|(|x|,| |y|,| |z|)|
+//│ Parsed: {class Foo(x, y, z,) {}}
+
+

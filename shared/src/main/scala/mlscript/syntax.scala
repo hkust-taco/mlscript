@@ -156,7 +156,7 @@ final case class NuTypeDef(
   kind: TypeDefKind,
   nme: TypeName,
   tparams: Ls[TypeName],
-  specParams: Ls[Var -> Opt[Type]], // the specialized parameters for that type
+  params: Tup, // the specialized parameters for that type
   parents: Ls[NamedType],
   body: TypingUnit
 ) extends NuDecl
