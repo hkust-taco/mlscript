@@ -346,6 +346,8 @@ trait TermImpl extends StatementImpl { self: Term =>
     case CaseOf(scrut, cases) =>  "`case` expression" 
     case Subs(arr, idx) => "array access"
     case Assign(lhs, rhs) => "assignment"
+    case New(h, b) => "object instantiation"
+    case If(_, _) => "if-else block"
   }
   
   override def toString: Str = print(false)
@@ -381,6 +383,8 @@ trait TermImpl extends StatementImpl { self: Term =>
     case CaseOf(s, c) => s"case $s of $c" |> bra
     case Subs(a, i) => s"$a[$i]"
     case Assign(lhs, rhs) => s" $lhs <- $rhs" |> bra
+    case New(S((at, ar)), bod) => s"new ${at.show}($ar) ${bod.show}" |> bra
+    case New(N, bod) => s"new ${bod.show}" |> bra
     case If(body, els) => s"if $body" + els.fold("")(" else " + _) |> bra
   }}
   

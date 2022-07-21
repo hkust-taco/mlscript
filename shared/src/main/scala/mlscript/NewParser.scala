@@ -237,6 +237,23 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
     }
     TypingUnit(es)
   }
+  def curlyTypingUnit(implicit fe: FoundErr): TypingUnit = yeetSpaces match {
+    case (OPEN_BRACKET(Curly), l1) :: _ =>
+      consume
+      val res = yeetSpaces match {
+        case (INDENT, _) :: _ =>
+          consume
+          val res = typingUnit
+          skipDeindent()
+          res
+        case _ => typingUnit
+      }
+      skip(CLOSE_BRACKET(Curly), ignored = Set(SPACE, NEWLINE, INDENT))
+      res
+    case _ =>
+      // println(c)
+      TypingUnit(Nil)
+  }
   
   def toParams(t: Term): Tup = t match {
     case t: Tup => t
@@ -295,27 +312,28 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
             }
             val ps = parents(KEYWORD(":"))
             // val body = typingUnit()
-            val body = cur.dropWhile(_._1 === SPACE && { consume; true }) match {
-              case (OPEN_BRACKET(Curly), l1) :: _ =>
-                consume
-                val res = yeetSpaces match {
-                  case (INDENT, _) :: _ =>
-                    consume
-                    val res = typingUnit
-                    skipDeindent()
-                    res
-                  case _ => typingUnit
-                }
-                skip(CLOSE_BRACKET(Curly), ignored = Set(SPACE, NEWLINE, INDENT))
-                res
-              case _ =>
-                // println(c)
-                TypingUnit(Nil)
-            }
+            val body = curlyTypingUnit
+            // val body = yeetSpaces match {
+            //   case (OPEN_BRACKET(Curly), l1) :: _ =>
+            //     consume
+            //     val res = yeetSpaces match {
+            //       case (INDENT, _) :: _ =>
+            //         consume
+            //         val res = typingUnit
+            //         skipDeindent()
+            //         res
+            //       case _ => typingUnit
+            //     }
+            //     skip(CLOSE_BRACKET(Curly), ignored = Set(SPACE, NEWLINE, INDENT))
+            //     res
+            //   case _ =>
+            //     // println(c)
+            //     TypingUnit(Nil)
+            // }
             R(NuTypeDef(kind, tn, Nil, Nil, ps, body))
           case (KEYWORD("fun"), l0) :: c => // TODO support rec?
             consume
-            val (v, success) = c.dropWhile(_._1 === SPACE && { consume; true }) match {
+            val (v, success) = yeetSpaces match {
               case (IDENT(idStr, false), l1) :: _ =>
                 consume
                 (Var(idStr).withLoc(S(l1)), true)
@@ -469,7 +487,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
         val bs = bindings(Nil)
         // Let(false, )
         // ???
-        val body = cur.dropWhile(_._1 === SPACE && { consume; true }) match {
+        val body = yeetSpaces match {
           // case (KEYWORD("in") | IDENT(";", true), _) :: _ =>
           case (KEYWORD("in") | KEYWORD(";"), _) :: _ =>
             consume
@@ -486,6 +504,44 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
           case ((v, r), R(acc)) => R(Let(false, v, r, acc))
           case ((v, r), L(acc)) => L(IfLet(false, v, r, acc))
         }
+      case (KEYWORD("new"), l0) :: c =>
+        consume
+        /* 
+        val (v, success) = yeetSpaces match {
+          case (IDENT(idStr, false), l1) :: _ =>
+            consume
+            (Var(idStr).withLoc(S(l1)), true)
+          case c =>
+            val (tkstr, loc) = c.headOption.fold(("end of input", lastLoc))(_.mapFirst(_.describe).mapSecond(some))
+            raise(CompilationError(
+              // msg"Expected a function name; found ${"[TODO]"} instead" -> N :: Nil))
+              msg"Expected a class name; found ${tkstr} instead" -> loc :: Nil))
+            consume
+            // R(errExpr)
+            (Var("<error>").withLoc(curLoc.map(_.left)), false)
+        }
+        foundErr || !success pipe { implicit fe =>
+        }
+        */
+        val body = expr(0)
+        // val (cls, arg) = 
+        val head = body match {
+          case Var(clsNme) =>
+            S(TypeName(clsNme).withLocOf(body) -> Tup(Nil))
+          case App(Var(clsNme), Tup(N -> Fld(false, false, UnitLit(true)) :: Nil)) =>
+            S(TypeName(clsNme).withLocOf(body) -> Tup(Nil))
+          case App(Var(clsNme), arg) =>
+            S(TypeName(clsNme).withLocOf(body) -> arg)
+          case UnitLit(true) =>
+            N
+          case _ =>
+            raise(CompilationError(
+              msg"Unexpected ${body.describe} after `new` keyword" -> body.toLoc :: Nil))
+            N
+        }
+        // New(S(cls, arg), ???)
+        // R(New(head, ???).withLoc(S(head.fold(l0)(l0 ++ _.toLoc))))
+        R(New(head, curlyTypingUnit).withLoc(S(head.foldLeft(l0)((l, h) => l ++ h._1.toLoc ++ h._2.toLoc))))
       case (KEYWORD("else"), l0) :: _ =>
         consume
         val e = expr(0)
@@ -571,7 +627,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
         R(errExpr)
       case //Nil | 
       // ((CLOSE_BRACKET(_) | COMMA | KEYWORD(";") /* | NEWLINE | DEINDENT */, _) :: _) =>
-      ((CLOSE_BRACKET(_) | KEYWORD(";") /* | NEWLINE | DEINDENT */, _) :: _) =>
+      ((CLOSE_BRACKET(_) | KEYWORD(";") /* | NEWLINE | DEINDENT */ | OPEN_BRACKET(Curly), _) :: _) =>
         R(UnitLit(true))
         // R(errExpr) // TODO
       case (tk, l0) :: _ =>

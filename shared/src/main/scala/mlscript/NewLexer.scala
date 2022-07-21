@@ -180,6 +180,7 @@ object NewLexer {
     "class",
     "trait",
     "interface",
+    "new",
   )
   
   def printToken(tl: TokLoc): Str = tl match {

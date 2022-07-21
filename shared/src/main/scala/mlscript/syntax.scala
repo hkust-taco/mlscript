@@ -66,7 +66,7 @@ final case class With(trm: Term, fields: Rcd)                        extends Ter
 final case class CaseOf(trm: Term, cases: CaseBranches)              extends Term
 final case class Subs(arr: Term, idx: Term)                          extends Term
 final case class Assign(lhs: Term, rhs: Term)                        extends Term
-final case class New(head: Opt[(TypeName, Term)], body: TypingUnit)  extends Term // `new C(...)` or `new C(){...}` or `new{...}`
+final case class New(head: Opt[(NamedType, Term)], body: TypingUnit) extends Term // `new C(...)` or `new C(){...}` or `new{...}`
 final case class If(body: IfBody, els: Opt[Term])                    extends Term
 
 sealed abstract class IfBody extends IfBodyImpl
