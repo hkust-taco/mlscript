@@ -292,7 +292,7 @@ trait NuDeclImpl extends Located { self: NuDecl =>
     case _: NuTypeDef => "type declaration"
   }
   def show: Str = showHead + (this match {
-    case NuTypeDef(Als, _, _, _, _, _) => " = "
+    case NuTypeDef(Als, _, _, _, _, _) | NuFunDef(_, _, L(_)) => " = "
     case NuTypeDef(Cls, _, _, _, _, _) => " "
     case _ => ": " }) + showBody
   def showHead: Str = this match {
@@ -374,7 +374,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       s"let${if (isRec) " rec" else ""} $name = $rhs in $body" |> bra
     case Tup(xs) =>
       xs.iterator.map { case (n, t) =>
-        (if (t.mut) "mut " else "") + n.fold("")(_.name + ": ") + t.value + ","
+        (if (t.mut) "mut " else "") + (if (t.spec) "#" else "") + n.fold("")(_.name + ": ") + t.value + ","
       // }.mkString("(", " ", ")")
       }.mkString(" ") |> bra
     case Bind(l, r) => s"$l as $r" |> bra

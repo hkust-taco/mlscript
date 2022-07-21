@@ -18,7 +18,12 @@ import javax.tools.Diagnostic
 
 class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
 // class DiffTests extends funsuite.AnyFunSuite {
-   
+  
+  
+  /**  Hook for dependent projects, like the monomorphizer. */
+  def postProcess(unit: TypingUnit): Ls[Str] = Nil
+  
+  
   private val inParallel = isInstanceOf[ParallelTestExecution]
   
   import DiffTests._
@@ -99,6 +104,7 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
     }
     val defaultMode = Mode()
     
+    var parseOnly = false
     var allowTypeErrors = false
     var allowParseErrors = false // TODO use
     var showRelativeLineNums = false
@@ -127,6 +133,7 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
           case "ns" | "no-simpl" => mode.copy(noSimplification = true)
           case "stats" => mode.copy(stats = true)
           case "stdout" => mode.copy(stdout = true)
+          case "ParseOnly" => parseOnly = true; mode
           case "AllowTypeErrors" => allowTypeErrors = true; mode
           case "AllowParseErrors" => allowParseErrors = true; mode
           case "AllowRuntimeErrors" => allowRuntimeErrors = true; mode
@@ -259,7 +266,7 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
         
         // try to parse block of text into mlscript ast
         val ans = try {
-          if (basePath.headOption.contains("parser")) {
+          if (basePath.headOption.contains("parser") || basePath.headOption.contains("mono")) {
             // ??? : Parsed.Extra
             // Failure("",0,Parsed.Extra())
             val origin = Origin(testName, globalStartLineNum, fph)
@@ -277,11 +284,14 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
             }
             // val res = p.parse
             // val res = p.parseAll(p.block)
-            val res = p.parseAll(p.blockTerm)
+            val res = p.parseAll(p.typingUnit)
             // if (mode.showParse || mode.dbgParsing) 
-            output("Parsed: " + res.toString)
+            output("Parsed: " + res.show)
             // output(p.parse.toString)
             // ???
+            
+            postProcess(res).foreach(output)
+            
             Success(Pgrm(Nil), 0)
           }
           else parse(processedBlockStr, p =>

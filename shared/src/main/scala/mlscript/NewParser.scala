@@ -912,6 +912,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
         S(l0)
       case _ => N
     }
+    val argSpec = cur match {
+      case (KEYWORD("#"), l0) :: _ =>
+        consume
+        S(l0)
+      case _ => N
+    }
     val argName = cur match {
       // case (IDENT(idStr, false), l0) :: (IDENT(":", true), _) :: _ =>
       case (IDENT(idStr, false), l0) :: (KEYWORD(":"), _) :: _ => // TODO: | ...
@@ -921,7 +927,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
       case _ => N
     }
     // val e = expr(NoElsePrec) -> argMut.isDefined
-    val e = exprOrIf(NoElsePrec).map(Fld(argMut.isDefined, false, _))
+    val e = exprOrIf(NoElsePrec).map(Fld(argMut.isDefined, argSpec.isDefined, _))
     cur match {
       case (COMMA, l0) :: _ =>
         consume
