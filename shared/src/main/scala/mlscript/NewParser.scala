@@ -298,11 +298,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
             val body = cur.dropWhile(_._1 === SPACE && { consume; true }) match {
               case (OPEN_BRACKET(Curly), l1) :: _ =>
                 consume
-                val res = cur match {
+                val res = yeetSpaces match {
                   case (INDENT, _) :: _ =>
                     consume
                     val res = typingUnit
-                    skip(DEINDENT)
+                    skipDeindent()
                     res
                   case _ => typingUnit
                 }
@@ -452,7 +452,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
       case (IDENT(nme, false), l0) :: _ =>
         consume
         exprCont(Var(nme).withLoc(S(l0)), prec)
-      case (OPEN_BRACKET(bk), l0) :: _ =>
+      case (OPEN_BRACKET(bk @ (Round | Square)), l0) :: _ =>
         consume
         // val res = expr(0)
         val res = args()
@@ -678,7 +678,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
         // val (success, _) = skipDeindent()
         // if (success) 
         // else L(IfThen(acc, e))
-      case (DEINDENT | COMMA | NEWLINE | KEYWORD("then" | "else" | "in" | ";" | "=") | CLOSE_BRACKET(Round) | IDENT(_, true), _) :: _ => R(acc)
+      case (DEINDENT | COMMA | NEWLINE | KEYWORD("then" | "else" | "in" | ";" | "=")
+        | CLOSE_BRACKET(Round) | IDENT(_, true) | OPEN_BRACKET(Curly), _) :: _ => R(acc)
       
       // case (INDENT, _) :: (KEYWORD("of"), _) :: _ if prec === 0 =>
       case (INDENT, _) :: (KEYWORD("of"), _) :: _ if prec <= 1 =>

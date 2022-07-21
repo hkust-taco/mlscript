@@ -287,24 +287,24 @@ f[1, 2, 3]
 
 f{}
 //│ |f|{|}|
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ╔══[ERROR] Expected end of input; found opening curly brace instead
 //│ ║  l.288: 	f{}
-//│ ╙──       	^^^
-//│ Parsed: {f ('{' undefined, '}',)}
+//│ ╙──       	 ^
+//│ Parsed: {f}
 
 f{1}
 //│ |f|{|1|}|
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ╔══[ERROR] Expected end of input; found opening curly brace instead
 //│ ║  l.295: 	f{1}
-//│ ╙──       	^^^^
-//│ Parsed: {f ('{' 1, '}',)}
+//│ ╙──       	 ^
+//│ Parsed: {f}
 
 f{1, 2, 3}
 //│ |f|{|1|,| |2|,| |3|}|
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ╔══[ERROR] Expected end of input; found opening curly brace instead
 //│ ║  l.302: 	f{1, 2, 3}
-//│ ╙──       	^^^^^^^^^^
-//│ Parsed: {f ('{' 1, 2, 3, '}',)}
+//│ ╙──       	 ^
+//│ Parsed: {f}
 
 
 f 1,, 2
