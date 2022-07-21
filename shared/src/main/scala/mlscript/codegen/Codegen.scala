@@ -783,7 +783,7 @@ final case class JSClassDecl(
         buffer += s"    $name.implement(this);"
       }
       fields.foreach { name =>
-        val innerName: Str = if (JSField.isValidIdentifier(name)) s".${name}" else s"[\"${name}\"]"
+        val innerName = if (JSField.isValidIdentifier(name)) s".${name}" else s"[${JSLit.makeStringLiteral(name)}]"
         buffer += s"    this$innerName = fields$innerName;"
       }
       buffer += "  }"
