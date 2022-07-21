@@ -50,7 +50,6 @@ class JSBackend {
           if (runtimeName === fieldName) fieldName -> N
           else fieldName -> S(JSNamePattern(runtimeName))
         case (Var(nme), (subTrm, _)) => 
-          scope.declareParameter(nme)
           JSField.emitValidFieldName(nme) -> S(translatePattern(subTrm))
       })
     // This branch supports `def f (x: int) = x`.
