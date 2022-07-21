@@ -34,24 +34,18 @@ class Foo: Bar, Baz
 
 class Foo: Bar { fun f = 0 }
 //│ |#class| |Foo|#:| |Bar| |{| |#fun| |f| |#=| |0| |}|
-//│ Parsed: {class Foo(): Bar {fun f: 0}}
+//│ Parsed: {class Foo(): Bar {fun f = 0}}
 
 class Foo: Bar, Baz { fun f = 0 }
 //│ |#class| |Foo|#:| |Bar|,| |Baz| |{| |#fun| |f| |#=| |0| |}|
-//│ Parsed: {class Foo(): Bar, Baz {fun f: 0}}
+//│ Parsed: {class Foo(): Bar, Baz {fun f = 0}}
 
-:e
+// * Pretty confusing... maybe we should find a way to reject this:
 class Foo: Bar { fun f = 0
   fun bar = 1
 }
 //│ |#class| |Foo|#:| |Bar| |{| |#fun| |f| |#=| |0|→|#fun| |bar| |#=| |1|←|↵|}|
-//│ ╔══[ERROR] Expected closing curly brace; found 'fun' keyword instead
-//│ ║  l.45: 	  fun bar = 1
-//│ ╙──      	  ^^^
-//│ ╔══[ERROR] Expected end of input; found identifier instead
-//│ ║  l.45: 	  fun bar = 1
-//│ ╙──      	      ^^^
-//│ Parsed: {class Foo(): Bar {fun f: 0}}
+//│ Parsed: {class Foo(): Bar {fun f = 0 {fun bar = 1}; undefined}}
 
 :e
 class Foo: Bar {
@@ -60,14 +54,14 @@ class Foo: Bar {
   }
 //│ |#class| |Foo|#:| |Bar| |{|→|#fun| |f| |#=| |0|↵|#fun| |bar| |#=| |1|↵|}|
 //│ ╔══[ERROR] Expected end of indented block; found closing curly brace instead
-//│ ║  l.60: 	  }
+//│ ║  l.54: 	  }
 //│ ╙──      	  ^
-//│ Parsed: {class Foo(): Bar {fun f: 0; fun bar: 1; undefined}}
+//│ Parsed: {class Foo(): Bar {fun f = 0; fun bar = 1; undefined}}
 
 class Foo: Bar {
   fun f = 0
   fun bar = 1
 }
 //│ |#class| |Foo|#:| |Bar| |{|→|#fun| |f| |#=| |0|↵|#fun| |bar| |#=| |1|←|↵|}|
-//│ Parsed: {class Foo(): Bar {fun f: 0; fun bar: 1}}
+//│ Parsed: {class Foo(): Bar {fun f = 0; fun bar = 1}}
 

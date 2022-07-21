@@ -21,7 +21,7 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
   
   
   /**  Hook for dependent projects, like the monomorphizer. */
-  def postProcess(unit: TypingUnit): Ls[Str] = Nil
+  def postProcess(basePath: Ls[Str], testName: Str, unit: TypingUnit): Ls[Str] = Nil
   
   
   private val inParallel = isInstanceOf[ParallelTestExecution]
@@ -290,7 +290,7 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
             // output(p.parse.toString)
             // ???
             
-            postProcess(res).foreach(output)
+            postProcess(basePath, testName, res).foreach(output)
             
             Success(Pgrm(Nil), 0)
           }

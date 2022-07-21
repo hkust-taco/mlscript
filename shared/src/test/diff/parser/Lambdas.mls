@@ -19,7 +19,7 @@ fun x => x
 //│ ╔══[ERROR] Expected ':' or '=' followed by a function body or signature; found identifier instead
 //│ ║  l.14: 	fun x => x
 //│ ╙──      	         ^
-//│ Parsed: {fun x: undefined}
+//│ Parsed: {fun x = undefined}
 
 // TODO
 let f = fun x => x
@@ -35,7 +35,7 @@ fun f x = x
 //│ ╔══[ERROR] Expected function parameter list; found identifier instead
 //│ ║  l.33: 	fun f x = x
 //│ ╙──      	      ^
-//│ Parsed: {fun f: x}
+//│ Parsed: {fun f = x}
 
 
 (x, y) => x

@@ -742,6 +742,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
         consume
         consume
         // TODO allow indent before the args... indented allow arg block
+        // val as = args(5)
         val as = args()
         val res = App(acc, Tup(as))
         val (success, _) = skipDeindent(allowNewlineOn = {
@@ -759,6 +760,14 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
         }
         else
         R(res)
+        
+      // case (INDENT, _) :: _ =>
+      case (INDENT, _) :: rest
+      if prec === 0 && !rest.dropWhile(_._1 === SPACE).headOption.map(_._1).contains(KEYWORD("else")) =>
+        consume
+        val res = blockTerm
+        skipDeindent()
+        R(App(acc, res))
         
       // case c =>
       // case c @ ((KEYWORD("of"), _) :: _ | (OPEN_BRACKET(Round), _) :: _) =>
@@ -878,9 +887,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
   }
   
   // TODO support comma-less arg blocks...
-  def args()(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =
+  def args(prec: Int = NoElsePrec)(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =
     // argsOrIf(Nil).map{case (_, L(x))=> ???; case (n, R(x))=>n->x} // TODO
-    argsOrIf(Nil).flatMap{case (n, L(x))=> 
+    argsOrIf(Nil, prec).flatMap{case (n, L(x))=> 
         raise(CompilationError(msg"Unexpected 'then'/'else' clause" -> x.toLoc :: Nil))
         n->Fld(false, false, errExpr)::Nil
       case (n, R(x))=>n->x::Nil} // TODO
@@ -895,11 +904,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
     }
   }
   */
-  def argsOrIf(acc: Ls[Opt[Var] -> (IfBody \/ Fld)])(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> (IfBody \/ Fld)] =
+  def argsOrIf(acc: Ls[Opt[Var] -> (IfBody \/ Fld)], prec: Int = NoElsePrec)(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> (IfBody \/ Fld)] =
     cur match {
       case (SPACE, _) :: _ =>
         consume
-        argsOrIf(acc)
+        argsOrIf(acc, prec)
       case (NEWLINE | IDENT(_, true), _) :: _ => // TODO: | ...
         acc.reverse
       case _ =>
@@ -927,7 +936,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
       case _ => N
     }
     // val e = expr(NoElsePrec) -> argMut.isDefined
-    val e = exprOrIf(NoElsePrec).map(Fld(argMut.isDefined, argSpec.isDefined, _))
+    val e = exprOrIf(prec).map(Fld(argMut.isDefined, argSpec.isDefined, _))
     cur match {
       case (COMMA, l0) :: _ =>
         consume

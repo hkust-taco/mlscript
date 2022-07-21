@@ -461,22 +461,19 @@ if true
   then 0
     
 //│ |#if| |true|→|#then| |0|→|
-//│ ╔══[ERROR] Expected end of indented block; found indentation instead
+//│ ╔══[ERROR] Unexpected end of input; an expression was expected here
 //│ ║  l.462: 	    
-//│ ╙──       	^^^^
-//│ ╔══[ERROR] Expected end of input; found indentation instead
-//│ ║  l.462: 	    
-//│ ╙──       	^^^^
-//│ Parsed: {if (true) then 0}
+//│ ╙──       	    ^
+//│ Parsed: {if (true) then 0 {undefined}}
 
 
 (if true)
 //│ |(|#if| |true|)|
 //│ ╔══[ERROR] Expected 'then'/'else' clause; found reference followed by closing parenthesis instead
-//│ ║  l.473: 	(if true)
+//│ ║  l.470: 	(if true)
 //│ ║         	    ^^^^^
 //│ ╟── Note: 'if' expression started here:
-//│ ║  l.473: 	(if true)
+//│ ║  l.470: 	(if true)
 //│ ╙──       	 ^^
 //│ Parsed: {'(' if (true) then undefined, ')'}
 
@@ -487,7 +484,7 @@ if true
 if true then;
 //│ |#if| |true| |#then|#;|
 //│ ╔══[ERROR] Expected end of input; found ';' keyword instead
-//│ ║  l.487: 	if true then;
+//│ ║  l.484: 	if true then;
 //│ ╙──       	            ^
 //│ Parsed: {if (true) then undefined}
 

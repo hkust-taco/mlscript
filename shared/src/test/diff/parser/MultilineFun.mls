@@ -6,17 +6,17 @@ fun f(
   x
 ) = x
 //│ |#fun| |f|(|→|x|←|↵|)| |#=| |x|
-//│ Parsed: {fun f: {x}, => x}
+//│ Parsed: {fun f = {x}, => x}
 
 fun f(x
 ) = x
 //│ |#fun| |f|(|x|↵|)| |#=| |x|
-//│ Parsed: {fun f: x, => x}
+//│ Parsed: {fun f = x, => x}
 
 fun f(
   x) = x
 //│ |#fun| |f|(|→|x|)| |#=| |x|
-//│ Parsed: {fun f: {x}, => x}
+//│ Parsed: {fun f = {x}, => x}
 
 fun f(
 x) = x
@@ -27,12 +27,12 @@ x) = x
 //│ ╔══[ERROR] Expected function parameter list; found closing parenthesis instead
 //│ ║  l.22: 	x) = x
 //│ ╙──      	 ^
-//│ Parsed: {fun f:  => x}
+//│ Parsed: {fun f =  => x}
 
 fun f(x,
   y) = x + y
 //│ |#fun| |f|(|x|,|→|y|)| |#=| |x| |+| |y|
-//│ Parsed: {fun f: x, {y}, => + x y}
+//│ Parsed: {fun f = x, {y}, => + x y}
 
 fun f(
   x,
@@ -50,7 +50,7 @@ fun f(
 //│ ╔══[ERROR] Expected function parameter list; found closing parenthesis instead
 //│ ║  l.39: 	  y) = x + y
 //│ ╙──      	   ^
-//│ Parsed: {fun f: {x}, => + x y}
+//│ Parsed: {fun f = {x}, => + x y}
 
 fun f(
   x,
@@ -79,5 +79,5 @@ fun f(
 //│ ╔══[ERROR] Expected end of input; found closing parenthesis instead
 //│ ║  l.58: 	) = x + y
 //│ ╙──      	^
-//│ Parsed: {fun f: {x}, => undefined}
+//│ Parsed: {fun f = {x}, => undefined}
 
