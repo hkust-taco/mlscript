@@ -914,7 +914,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   }
   
   
-  /** Copies a type up to its type variables of wrong level (and their extruded bounds). */
+  /** Copies a type up to its type variables of wrong level (and their extruded bounds).
+    * Parameter `upperLvl` is used to track above which level we DON'T want to extrude variables,
+    * as we may be traversing types that are quantified by polymorphic types in the process of being copied.
+    * `upperLvl` tracks the lowest such current quantification level. */
   def extrude(ty: SimpleType, lowerLvl: Int, pol: Boolean, upperLvl: Level)
       // (implicit ctx: Ctx, flexifyRigids: Bool, cache: MutMap[PolarVariable, TV] = MutMap.empty, cache2: MutMap[TraitTag, TV] = MutMap.empty): SimpleType =
       (implicit ctx: Ctx, flexifyRigids: Bool, cache: MutMap[PolarVariable, TV] = MutMap.empty, cache2: MutSortMap[TraitTag, TraitTag] = MutSortMap.empty): SimpleType =
@@ -948,10 +951,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           nv
         })
       case tv: TypeVariable if tv.level > upperLvl =>
-        // If the TV's level is strictly greater than `upperLvl`,
-        //  it means the TV is quantified by a type being copied,
-        //  so all we need to do is copy this TV along (it is not extruded).
-        assert(!cache.contains(tv -> false))
+        assert(!cache.contains(tv -> false), (tv, cache))
+        // * If the TV's level is strictly greater than `upperLvl`,
+        // *  it means the TV is quantified by a type being copied,
+        // *  so all we need to do is copy this TV along (it is not extruded).
+        // * We pick `tv -> true` (and not `tv -> false`) arbitrarily.
         if (tv.lowerBounds.isEmpty && tv.upperBounds.isEmpty) tv
         else cache.getOrElse(tv -> true, {
           // val nv = freshVar(tv.prov, S(tv), tv.nameHint)(tv.level)
@@ -1034,7 +1038,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (S(pol), targ) => extrude(targ, lowerLvl, pol, upperLvl)
         })(tr.prov)
       case PolymorphicType(polymLevel, body) =>
-        PolymorphicType(polymLevel, extrude(body, lowerLvl, pol, upperLvl = polymLevel))
+        // PolymorphicType(polymLevel, extrude(body, lowerLvl, pol, upperLvl = polymLevel))
+        PolymorphicType(polymLevel, extrude(body, lowerLvl, pol, upperLvl = upperLvl min polymLevel))
       case ConstrainedType(cs, bod) =>
         ConstrainedType(cs.map { case (tv, bs) =>
           val nv = extrude(tv, lowerLvl, pol, upperLvl).asInstanceOf[TV] // FIXME

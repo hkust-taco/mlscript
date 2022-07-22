@@ -252,9 +252,9 @@ def stepImpl2_Ann_4 arr = arr stepImpl_Ann_4
 def stepImpl2_Ann_2_Ann (arr: Arrays['a]) = arr stepImpl_Ann_2
 // def stepImpl2_Ann_2_Ann (arr: Arrays['a]) = arr stepImpl_Ann_2 : Arrays['a]
 // def stepImpl2_Ann_2_Ann (arr: ArraysRep['a, 'r]) = arr stepImpl_Ann_2
-//│ stepImpl2_Ann_2_Ann: Arrays['a] -> {fold: 'c -> 'd -> (forall 'c, 'd, 'a0, 'b, 'r. ((‘Rep_1666_1711 & 'r, 'c,) -> ('b | 'd)
+//│ stepImpl2_Ann_2_Ann: Arrays['a] -> {fold: forall 'c. 'c -> (forall 'd. 'd -> (forall 'c, 'd, 'a0, 'b, 'r. ((‘Rep_1666_1711 & 'r, 'c,) -> ('b | 'd)
 //│   where
-//│     'c <: 'a0 -> ('b | 'd) -> 'b)), init: 'a0 -> ('r | ‘Rep_1666_1711, "hi",), sub: (‘Rep_1666_1711 & 'r, 'c,) -> int -> 'a0, update: (‘Rep_1666_1711 & 'r, 'c,) -> int -> 'a0 -> ('r | ‘Rep_1666_1711, "hey",)}
+//│     'c <: 'a0 -> ('b | 'd) -> 'b))), init: 'a0 -> ('r | ‘Rep_1666_1711, "hi",), sub: (‘Rep_1666_1711 & 'r, 'c,) -> int -> 'a0, update: (‘Rep_1666_1711 & 'r, 'c,) -> int -> 'a0 -> ('r | ‘Rep_1666_1711, "hey",)}
 //│                    = [Function: stepImpl2_Ann_2_Ann]
 
 
@@ -263,10 +263,9 @@ def step: Arrays['a] -> Arrays['a]
 //│ step: Arrays['a] -> Arrays['a]
 //│     = <missing implementation>
 
-// * This extrusion seems difficult to prevent.
-// *  It's due to the polymorphism of `arrImpl.fold` not being known at the `stepImpl` definition site.
-// *  So we need a type annotation. But as we shall see, it's not immediately obvious where the annotaton is needed.
-:e
+// * There used to be a very subtly extrusion here related to the polymorphism of `arrImpl.fold`
+// *  and it not being known at the `stepImpl` definition site.
+// * But this problem actually disappeared after fixing a subtle bug in type freshening...!
 def step arr f = f (stepImpl2 arr)
 //│ 'a -> (forall 'a. (('b -> 'c) -> 'c
 //│   where
@@ -281,21 +280,11 @@ def step arr f = f (stepImpl2 arr)
 //│     'd <: {update: 'n -> 'o -> 'p -> 'q})))}) -> 'b))
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.270: 	def step arr f = f (stepImpl2 arr)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘b_1957_1967` is not an instance of type `'b_1957_1966`
-//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
-//│ ║        	                 ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
-//│ ╙──      	                 ^^
 //│     = [Function: step]
 
 // * Expectedly doesn't work (see comment on `stepImpl_Ann_1`)
 // def step arr f = f (stepImpl2_Ann_1 arr)
 
-:e
 def step arr f = f (stepImpl2_Ann_2 arr)
 //│ 'c -> (forall 'c. (('d -> 'e) -> 'e
 //│   where
@@ -304,15 +293,6 @@ def step arr f = f (stepImpl2_Ann_2 arr)
 //│     'f <: 'a -> ('b | 'g) -> 'b))), init: 'a -> ('r, "hi",), sub: ('r, 'f,) -> int -> 'a, update: ('r, 'f,) -> int -> 'a -> ('r, "hey",)}) -> 'd))
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.299: 	def step arr f = f (stepImpl2_Ann_2 arr)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘b_2102_2111` is not an instance of type `'b_2102_2115`
-//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
-//│ ║        	                 ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
-//│ ╙──      	                 ^^
 //│     = [Function: step1]
 
 :e
@@ -329,9 +309,9 @@ def step arr f = f (stepImpl2_Ann_3 arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.319: 	def step arr f = f (stepImpl2_Ann_3 arr)
+//│ ║  l.299: 	def step arr f = f (stepImpl2_Ann_3 arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_2192` is not an instance of type `'a_913_939`
+//│ ╟── type `‘a_2213` is not an instance of type `'a_913_939`
 //│ ║  l.262: 	def step: Arrays['a] -> Arrays['a]
 //│ ║         	                 ^^
 //│ ╟── Note: constraint arises from type variable:
@@ -339,7 +319,7 @@ def step arr f = f (stepImpl2_Ann_3 arr)
 //│ ╙──       	                                                                              ^^
 //│     = [Function: step2]
 
-// * Works!
+// * This used to be the only working one based on an internal annotation
 def step arr f = f (stepImpl2_Ann_4 arr)
 //│ 'b -> (forall 'b. (('c -> 'd) -> 'd
 //│   where
@@ -351,42 +331,22 @@ def step arr f = f (stepImpl2_Ann_4 arr)
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step3]
 
-:e
 def step arr f = f (stepImpl2_Ann_2_Ann arr)
-//│ 'c -> (forall 'c, 'a, 'd, 'e. (({fold: 'd -> 'e -> (forall 'd, 'e, 'a0, 'b, 'r. ((‘Rep_1666_1711 & 'r, 'd,) -> ('b | 'e)
+//│ 'c -> (forall 'c, 'a. (({fold: forall 'd. 'd -> (forall 'e. 'e -> (forall 'd, 'e, 'a0, 'b, 'r. ((‘Rep_1666_1711 & 'r, 'd,) -> ('b | 'e)
 //│   where
-//│     'd <: 'a0 -> ('b | 'e) -> 'b)), init: 'a0 -> ('r | ‘Rep_1666_1711, "hi",), sub: (‘Rep_1666_1711 & 'r, 'd,) -> int -> 'a0, update: (‘Rep_1666_1711 & 'r, 'd,) -> int -> 'a0 -> ('r | ‘Rep_1666_1711, "hey",)} -> 'f) -> 'f
+//│     'd <: 'a0 -> ('b | 'e) -> 'b))), init: 'a0 -> ('r | ‘Rep_1666_1711, "hi",), sub: (‘Rep_1666_1711 & 'r, 'd,) -> int -> 'a0, update: (‘Rep_1666_1711 & 'r, 'd,) -> int -> 'a0 -> ('r | ‘Rep_1666_1711, "hey",)} -> 'f) -> 'f
 //│   where
 //│     'c <: Arrays['a]))
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.355: 	def step arr f = f (stepImpl2_Ann_2_Ann arr)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘b_2579_2586` is not an instance of type `'b_2579_2587`
-//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
-//│ ║        	                 ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
-//│ ╙──      	                 ^^
 //│     = [Function: step4]
 
-:e
 def step (arr: Arrays['a]) f = f (stepImpl2_Ann_2_Ann arr)
-//│ Arrays['a] -> (forall 'c, 'd. ({fold: 'c -> 'd -> (forall 'c, 'd, 'a0, 'b, 'r. ((‘Rep_1666_1711 & 'r, 'c,) -> ('b | 'd)
+//│ Arrays['a] -> ({fold: forall 'c. 'c -> (forall 'd. 'd -> (forall 'c, 'd, 'a0, 'b, 'r. ((‘Rep_1666_1711 & 'r, 'c,) -> ('b | 'd)
 //│   where
-//│     'c <: 'a0 -> ('b | 'd) -> 'b)), init: 'a0 -> ('r | ‘Rep_1666_1711, "hi",), sub: (‘Rep_1666_1711 & 'r, 'c,) -> int -> 'a0, update: (‘Rep_1666_1711 & 'r, 'c,) -> int -> 'a0 -> ('r | ‘Rep_1666_1711, "hey",)} -> 'e) -> 'e)
+//│     'c <: 'a0 -> ('b | 'd) -> 'b))), init: 'a0 -> ('r | ‘Rep_1666_1711, "hi",), sub: (‘Rep_1666_1711 & 'r, 'c,) -> int -> 'a0, update: (‘Rep_1666_1711 & 'r, 'c,) -> int -> 'a0 -> ('r | ‘Rep_1666_1711, "hey",)} -> 'e) -> 'e
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.375: 	def step (arr: Arrays['a]) f = f (stepImpl2_Ann_2_Ann arr)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘b_2734_2743` is not an instance of type `'b_2734_2747`
-//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
-//│ ║        	                 ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
-//│ ╙──      	                 ^^
 //│     = [Function: step5]
 
 // * Also works, but this one is easier as it internally uses the fully-annotated `stepImpl_ty`
@@ -423,7 +383,7 @@ snb = mkMonoArray 5
 //│    = [Function (anonymous)]
 
 snb (fun arr -> arr.init true)
-//│ res: ‘Rep_2944_2948 | ‘Rep_2952_2956
+//│ res: ‘Rep_2960_2964 | ‘Rep_2968_2972
 //│    = [ [ [ [Array], 'hi' ], 'hi' ], 'hi' ]
 
 

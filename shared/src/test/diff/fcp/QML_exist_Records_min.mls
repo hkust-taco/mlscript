@@ -34,7 +34,6 @@ def step: Arrays -> Arrays
 //│     = <missing implementation>
 
 // :d
-:e
 def step arr g = g (stepImpl2 arr)
 //│ 'a -> (forall 'a. (('b -> 'c) -> 'c
 //│   where
@@ -43,17 +42,5 @@ def step arr g = g (stepImpl2 arr)
 //│     'd <: {fold: 'e -> 'f -> 'g}))}) -> 'b))
 //│   <:  step:
 //│ Arrays -> Arrays
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.38: 	def step arr g = g (stepImpl2 arr)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘b_159_171` is not an instance of type `'b_159_169`
-//│ ║  l.12: 	type ArraysRep[Rep] = { fold: forall 'b. 'b -> Rep -> 'b }
-//│ ║        	                                     ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.12: 	type ArraysRep[Rep] = { fold: forall 'b. 'b -> Rep -> 'b }
-//│ ║        	                                     ^^
-//│ ╟── from reference:
-//│ ║  l.19: 	def stepImpl arrImpl = { fold = fun f -> fun r0 -> arrImpl.fold f r0 }
-//│ ╙──      	                                                                ^
 //│     = [Function: step]
 
