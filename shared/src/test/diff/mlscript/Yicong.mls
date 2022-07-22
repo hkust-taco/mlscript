@@ -829,7 +829,7 @@ mkarr (1,true,"hi")[0]
 //│      = [Function: mkarr]
 //│ mk1: 6
 //│    = 6
-//│ res: int | undefined
+//│ res: number | undefined
 //│    = 2
 //│ res: Array["hi" | 1 | true | undefined]
 //│    = [ 1, 1, 1, 1, 1 ]

@@ -12,20 +12,34 @@ id
 //│    = [Function: id]
 
 // Simple expressions.
+:e
 :js
 1 + 1 * 2 / 4 - 5
 //│ // Query 1
 //│ res = 1 + 1 * 2 / 4 - 5;
 //│ // End of generated code
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.17: 	1 + 1 * 2 / 4 - 5
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── operator application of type `number` is not an instance of type `int`
+//│ ║  l.17: 	1 + 1 * 2 / 4 - 5
+//│ ╙──      	    ^^^^^^^^^
 //│ res: int
 //│    = -3.5
 
+:e
 :js
 1 * (2 + 3) / 4 - 5
 //│ // Query 1
 //│ res = 1 * (2 + 3) / 4 - 5;
 //│ // End of generated code
-//│ res: int
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.32: 	1 * (2 + 3) / 4 - 5
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ╟── operator application of type `number` is not an instance of type `int`
+//│ ║  l.32: 	1 * (2 + 3) / 4 - 5
+//│ ╙──      	^^^^^^^^^^^^^^^
+//│ res: error | int
 //│    = -3.75
 
 :js

@@ -427,7 +427,7 @@ rec def f x = if x > 0 then f (x with { a = x - 1 }) else x
 //│ f: 'a -> 'a
 //│   where
 //│     'a :> 'a\a & {a: int}
-//│        <: (int | ~{a: int})\a & int
+//│        <: (int | ~{a: int})\a & int & number
 
 f 1
 //│ res: 'a
@@ -441,7 +441,7 @@ rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│     'f :> 'b -> 'c
 //│        <: ('b\a & {a: 'd}) -> 'e
 //│     'b :> 'b\a & {a: 'd}
-//│        <: ({a: 'a} | ~{a: 'd} | ~{})\a & ({a: 'a} | ~{a: 'd})\a & (int | ~{a: 'd} | ~{})\a & (int | ~{a: 'd})\a & 'g & int
+//│        <: ({a: 'a} | ~{a: 'd} | ~{})\a & ({a: 'a} | ~{a: 'd})\a & (number | ~{a: 'd} | ~{})\a & (number | ~{a: 'd})\a & (int | ~{a: 'd} | ~{})\a & (int | ~{a: 'd})\a & 'g & int & number
 //│     'a <: 'g
 //│     'g :> 'b\a & {a: 'd}
 //│        <: 'c
@@ -455,7 +455,7 @@ f
 //│ res: 'a -> 'b
 //│   where
 //│     'a :> 'a\a & {a: int}
-//│        <: (int & 'c | ~{a: int})\a & int & 'b
+//│        <: (int & 'c | ~{a: int})\a & int & number & 'b
 //│     'c <: {a: 'b}
 //│     'b :> 'a\a & {a: int}
 //│        <: 'c

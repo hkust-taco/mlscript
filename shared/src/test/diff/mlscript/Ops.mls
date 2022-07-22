@@ -13,10 +13,17 @@
 //│ res: int
 //│    = 8
 
+:e
 :p
 1 + 2 / 2 + 3
 //│ Parsed: ((+ (((+ (1,)) (((/ (2,)) (2,)),)),)) (3,));
 //│ Desugared: ((+ (((+ (1,)) (((/ (2,)) (2,)),)),)) (3,))
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.18: 	1 + 2 / 2 + 3
+//│ ║        	^^^^^^^^^
+//│ ╟── operator application of type `number` is not an instance of type `int`
+//│ ║  l.18: 	1 + 2 / 2 + 3
+//│ ╙──      	    ^^^^^
 //│ res: int
 //│    = 5
 
@@ -27,13 +34,13 @@
 //│ Parsed: ((|| (((|> (1,)) (2,)),)) (3,));
 //│ Desugared: ((|| (((|> (1,)) (2,)),)) (3,))
 //│ ╔══[ERROR] identifier not found: |>
-//│ ║  l.26: 	1 |> 2 || 3
+//│ ║  l.33: 	1 |> 2 || 3
 //│ ╙──      	  ^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.26: 	1 |> 2 || 3
+//│ ║  l.33: 	1 |> 2 || 3
 //│ ║        	^^^^^^^^^^^
 //│ ╟── integer literal of type `3` is not an instance of type `bool`
-//│ ║  l.26: 	1 |> 2 || 3
+//│ ║  l.33: 	1 |> 2 || 3
 //│ ╙──      	          ^
 //│ res: bool | error
 //│ Code generation encountered an error:
@@ -51,8 +58,8 @@ true || false && true || false
 
 :pe
 -1
-//│ /!\ Parse error: Expected end-of-input:1:1, found "-1;" at l.53:1: -1
+//│ /!\ Parse error: Expected end-of-input:1:1, found "-1;" at l.60:1: -1
 
 :pe
 - 1
-//│ /!\ Parse error: Expected end-of-input:1:1, found "- 1;" at l.57:1: - 1
+//│ /!\ Parse error: Expected end-of-input:1:1, found "- 1;" at l.64:1: - 1

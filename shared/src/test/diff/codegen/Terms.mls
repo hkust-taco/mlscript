@@ -69,7 +69,7 @@ z ** 4 * z / (x + 5)
 //│ ╔══[ERROR] identifier not found: **
 //│ ║  l.65: 	z ** 4 * z / (x + 5)
 //│ ╙──      	  ^^
-//│ res: int
+//│ res: number
 //│    = 6.4
 
 // App(App(App(Var("if"), test), consequent), alternative)
