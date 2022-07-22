@@ -58,7 +58,7 @@ build0 (fun s -> s 1)
 
 res: Ls[int]
 //│ res: Ls[int]
-//│    = [Function: cons]
+//│    = undefined
 
 
 def build0 (g: forall 'b. ('a -> 'b) -> 'b) = g (fun x -> single ((x, x)))

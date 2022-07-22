@@ -232,7 +232,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     val tv = freshVar(noProv, N)(1)
     import FunctionType.{ apply => fun }
     val intBinOpTy = fun(singleTup(IntType), fun(singleTup(IntType), IntType)(noProv))(noProv)
-    val intBinPred = fun(singleTup(IntType), fun(singleTup(IntType), BoolType)(noProv))(noProv)
+    val numberBinOpTy = fun(singleTup(DecType), fun(singleTup(DecType), DecType)(noProv))(noProv)
+    val numberBinPred = fun(singleTup(DecType), fun(singleTup(DecType), BoolType)(noProv))(noProv)
     Map(
       "true" -> TrueType,
       "false" -> FalseType,
@@ -249,10 +250,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       "mul" -> intBinOpTy,
       "div" -> intBinOpTy,
       "sqrt" -> fun(singleTup(IntType), IntType)(noProv),
-      "lt" -> intBinPred,
-      "le" -> intBinPred,
-      "gt" -> intBinPred,
-      "ge" -> intBinPred,
+      "lt" -> numberBinPred,
+      "le" -> numberBinPred,
+      "gt" -> numberBinPred,
+      "ge" -> numberBinPred,
       "concat" -> fun(singleTup(StrType), fun(singleTup(StrType), StrType)(noProv))(noProv),
       "eq" -> {
         val v = freshVar(noProv, N)(1)
@@ -266,12 +267,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       "+" -> intBinOpTy,
       "-" -> intBinOpTy,
       "*" -> intBinOpTy,
-      "/" -> intBinOpTy,
-      "<" -> intBinPred,
-      ">" -> intBinPred,
-      "<=" -> intBinPred,
-      ">=" -> intBinPred,
-      "==" -> intBinPred,
+      "/" -> numberBinOpTy,
+      "<" -> numberBinPred,
+      ">" -> numberBinPred,
+      "<=" -> numberBinPred,
+      ">=" -> numberBinPred,
+      "==" -> numberBinPred,
       "&&" -> fun(singleTup(BoolType), fun(singleTup(BoolType), BoolType)(noProv))(noProv),
       "||" -> fun(singleTup(BoolType), fun(singleTup(BoolType), BoolType)(noProv))(noProv),
       "id" -> {

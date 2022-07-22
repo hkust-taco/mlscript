@@ -41,7 +41,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     val fileContents = os.read(file)
     val allLines = fileContents.splitSane('\n').toList
     val strw = new java.io.StringWriter
-    val out = new java.io.PrintWriter(strw)
+    val out = new java.io.PrintWriter(strw) {
+      override def println(): Unit = print('\n') // to avoid inserting CRLF on Windows
+    }
     var stdout = false
     def output(str: String) =
       // out.println(outputMarker + str)
@@ -510,7 +512,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                       }
                     }
                     queries.zipWithIndex foreach {
-                      case (JSTestBackend.CodeQuery(prelude, code), i) =>
+                      case (JSTestBackend.CodeQuery(prelude, code, _), i) =>
                         output(s"// Query ${i + 1}")
                         prelude foreach { output(_) }
                         code foreach { output(_) }
@@ -534,7 +536,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                     }
                     // Send queries to the host.
                     ExecutedResult(queries.zipWithIndex.map {
-                      case (JSTestBackend.CodeQuery(preludeLines, codeLines), i) =>
+                      case (JSTestBackend.CodeQuery(preludeLines, codeLines, res), i) =>
                         val prelude = preludeLines.mkString
                         val code = codeLines.mkString
                         if (mode.showRepl) {
@@ -542,7 +544,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                           println(s"│ ├── Prelude: ${if (preludeLines.isEmpty) "<empty>" else prelude}")
                           println(s"│ └── Code: ${code}")
                         }
-                        val reply = host.query(prelude, code)
+                        val reply = host.query(prelude, code, res)
                         if (mode.showRepl) {
                           val prefix = if (i + 1 == queries.length) "└──" else "├──"
                           println(s"$prefix Reply ${i + 1}/${queries.length}: $reply")
@@ -729,12 +731,12 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     val timeStr = (((endTime - beginTime) / 1000 / 100).toDouble / 10.0).toString
     val testColor = if (testFailed) Console.RED else Console.GREEN
     buf ++= s"${" " * (30 - fileName.size)}${testColor}${
-      " " * (6 - timeStr.size)}$timeStr  ms${Console.RESET}\n"
+      " " * (6 - timeStr.size)}$timeStr  ms${Console.RESET}"
     if (result =/= fileContents) {
-      buf ++= s"! Updated $file\n"
+      buf ++= s"\n! Updated $file"
       os.write.over(file, result)
     }
-    print(buf.mkString)
+    println(buf.mkString)
     if (testFailed)
       if (unmergedChanges.nonEmpty)
         fail(s"Unmerged non-output changes around: " + unmergedChanges.map("\n\t"+file.segments.toList.last+":"+_).mkString(", "))
@@ -850,15 +852,18 @@ object DiffTests {
       stdin.flush()
     }
 
-    def query(prelude: Str, code: Str): (ReplHost.Reply, String) = {
-      val wrapped = s"$prelude try { $code } catch (e) { console.log('\\u200B' + e + '\\u200B'); }"
-      send(wrapped)
-      (consumeUntilPrompt() match {
-        case _: ReplHost.Result =>
-          send("res")
-          consumeUntilPrompt()
-        case t => t
-      }, consumeStderr())
+    def query(prelude: Str, code: Str, res: Str): (ReplHost.Reply, String) = {
+      if (prelude.isEmpty && code.isEmpty) (ReplHost.Empty, "")
+      else {
+        val wrapped = s"$prelude try { $code } catch (e) { console.log('\\u200B' + e + '\\u200B'); }"
+        send(wrapped)
+        (consumeUntilPrompt() match {
+          case _: ReplHost.Result =>
+            send(if (res =:= "res") res else s"globalThis[\"${res}\"]")
+            consumeUntilPrompt()
+          case t => t
+        }, consumeStderr())
+      }
     }
 
     def execute(code: Str): Unit = {

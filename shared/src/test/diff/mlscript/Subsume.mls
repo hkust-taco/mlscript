@@ -206,7 +206,7 @@ def f: (int & 'a) -> (int & 'a) -> 'a
 def f a b = if gt a b then a else b
 //│ f: (int & 'a) -> (int & 'a) -> 'a
 //│  = <missing implementation>
-//│ (int & 'a) -> (int & 'a) -> 'a
+//│ (number & 'a) -> (number & 'a) -> 'a
 //│   <:  f:
 //│ (int & 'a) -> (int & 'a) -> 'a
 //│  = [Function: f3]
@@ -217,7 +217,7 @@ f 1
 
 :e
 def f a b = if gt a b then a else b b // mistake!
-//│ (int & 'a) -> nothing -> 'a
+//│ (number & 'a) -> nothing -> 'a
 //│   <:  f:
 //│ (int & 'a) -> (int & 'a) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:

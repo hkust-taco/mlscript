@@ -33,7 +33,6 @@ def Box value = Box { inner = value }
 //│ globalThis.Box1 = function Box1(value) {
 //│   return new Box({ inner: value });
 //│ };
-//│ res = Box1;
 //│ // End of generated code
 //│ Box: 'inner -> Box['inner]
 //│    = [Function: Box1]
@@ -43,10 +42,8 @@ def box1 = Box 1
 def box2 = box1.Map (fun x -> add x 1)
 //│ // Query 1
 //│ globalThis.box1 = Box1(1);
-//│ res = box1;
 //│ // Query 2
 //│ globalThis.box2 = box1.Map((x) => add(x)(1));
-//│ res = box2;
 //│ // End of generated code
 //│ box1: Box[1]
 //│     = Box { inner: 1 }
@@ -92,7 +89,6 @@ def MyBox inner info = MyBox { inner; info }
 //│     info: info
 //│   }));
 //│ };
-//│ res = MyBox1;
 //│ // End of generated code
 //│ MyBox: (int & 'inner) -> (string & 'info) -> (MyBox with {info: 'info, inner: 'inner})
 //│      = [Function: MyBox1]
@@ -105,15 +101,12 @@ mb2 = mb.Map (fun x -> x * 3)
 mb2.Get
 //│ // Query 1
 //│ globalThis.mb = MyBox1(1)("hello");
-//│ res = mb;
 //│ // Query 2
 //│ globalThis.mb1 = mb.Inc;
-//│ res = mb1;
 //│ // Query 3
 //│ res = mb1.Get;
 //│ // Query 4
 //│ globalThis.mb2 = mb1.Map((x) => x * 3);
-//│ res = mb2;
 //│ // Query 5
 //│ res = mb2.Get;
 //│ // End of generated code
@@ -168,13 +161,13 @@ def f: Box[?] -> int
 :e
 f(Box{})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.169: 	f(Box{})
+//│ ║  l.162: 	f(Box{})
 //│ ║         	^^^^^^^^
 //│ ╟── record literal of type `anything` does not match type `nothing`
-//│ ║  l.169: 	f(Box{})
+//│ ║  l.162: 	f(Box{})
 //│ ║         	     ^^
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.164: 	def f: Box[?] -> int
+//│ ║  l.157: 	def f: Box[?] -> int
 //│ ╙──       	           ^
 //│ res: error
 //│    = <no result>

@@ -12,20 +12,34 @@ id
 //│    = [Function: id]
 
 // Simple expressions.
+:e
 :js
 1 + 1 * 2 / 4 - 5
 //│ // Query 1
 //│ res = 1 + 1 * 2 / 4 - 5;
 //│ // End of generated code
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.17: 	1 + 1 * 2 / 4 - 5
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── operator application of type `number` is not an instance of type `int`
+//│ ║  l.17: 	1 + 1 * 2 / 4 - 5
+//│ ╙──      	    ^^^^^^^^^
 //│ res: int
 //│    = -3.5
 
+:e
 :js
 1 * (2 + 3) / 4 - 5
 //│ // Query 1
 //│ res = 1 * (2 + 3) / 4 - 5;
 //│ // End of generated code
-//│ res: int
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.32: 	1 * (2 + 3) / 4 - 5
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ╟── operator application of type `number` is not an instance of type `int`
+//│ ║  l.32: 	1 * (2 + 3) / 4 - 5
+//│ ╙──      	^^^^^^^^^^^^^^^
+//│ res: error
 //│    = -3.75
 
 :js
@@ -33,7 +47,6 @@ x = 0
 x > 0 && x < 0
 //│ // Query 1
 //│ globalThis.x = 0;
-//│ res = x;
 //│ // Query 2
 //│ res = x > 0 && x < 0;
 //│ // End of generated code
@@ -99,3 +112,22 @@ id (fun x -> x)
 //│ // End of generated code
 //│ res: 'a -> 'a
 //│    = [Function (anonymous)]
+
+:js
+fun x -> {t1 = gt 1 2; t2 = 1}
+//│ // Prelude
+//│ function gt(x, y) {
+//│   if (arguments.length === 2) {
+//│     return x > y;
+//│   } else {
+//│     return (y) => x > y;
+//│   }
+//│ }
+//│ // Query 1
+//│ res = ((x) => ({
+//│   t1: gt(1)(2),
+//│   t2: 1
+//│ }));
+//│ // End of generated code
+//│ res: anything -> {t1: bool, t2: 1}
+//│    = [Function: res]

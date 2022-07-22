@@ -72,10 +72,10 @@ let f = b => if b then 0 else 1
 //│ f: bool -> (0 | 1)
 
 let pred = n => 0 < n
-//│ pred: int -> bool
+//│ pred: number -> bool
 
 let g = x => if pred x then x else f false
-//│ g: (int & 'a) -> (0 | 1 | 'a)
+//│ g: (number & 'a) -> (0 | 1 | 'a)
 
 g 3
 //│ res: 0 | 1 | 3

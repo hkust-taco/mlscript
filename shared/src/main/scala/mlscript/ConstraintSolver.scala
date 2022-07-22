@@ -116,70 +116,78 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       val lhsCs = lhs.instantiate
       
       lhsCs.foreach { case Conjunct(lnf, vars, rnf, nvars) =>
-        vars.headOption match {
-          case S(v) =>
-            rec(v, rhs.toType() | Conjunct(lnf, vars - v, rnf, nvars).toType().neg(), true)
-          case N =>
-            implicit val etf: ExpandTupleFields = true
-            val fullRhs = nvars.iterator.map(DNF.mkDeep(MaxLevel, Nil, _, true))
-              .foldLeft(rhs | DNF.mkDeep(MaxLevel, Nil, rnf.toType(), false))(_ | _)
-            println(s"Consider ${lnf} <: ${fullRhs}")
-            
-            // The following crutch is necessary because the pesky Without types may get stuck
-            //  on type variables and type variable negations:
-            lnf match {
-              case LhsRefined(S(Without(NegType(tv: TV), ns)), tts, rcd, trs) =>
-                return rec((
-                  fullRhs.toType() | LhsRefined(N, tts, rcd, trs).toType().neg()).without(ns).neg(), tv, true)
-              case LhsRefined(S(Without(b, ns)), tts, rcd, trs) =>
-                assert(b.isInstanceOf[TV])
-                return rec(b, (
-                  fullRhs.toType() | LhsRefined(N, tts, rcd, trs).toType().neg()).without(ns), true)
-              case _ => ()
-            }
-            
-            // First, we filter out those RHS alternatives that obviously don't match our LHS:
-            val possible = fullRhs.rigidify.filter { r =>
+        
+        def local(): Unit = { // * Used to return early in simple cases
+          
+          vars.headOption match {
+            case S(v) =>
+              rec(v, rhs.toType() | Conjunct(lnf, vars - v, rnf, nvars).toType().neg(), true)
+            case N =>
+              implicit val etf: ExpandTupleFields = true
+              val fullRhs = nvars.iterator.map(DNF.mkDeep(MaxLevel, Nil, _, true))
+                .foldLeft(rhs | DNF.mkDeep(MaxLevel, Nil, rnf.toType(), false))(_ | _)
+              println(s"Consider ${lnf} <: ${fullRhs}")
               
-              // Note that without this subtyping check,
-              //  the number of constraints in the `eval1_ty_ugly = eval1_ty`
-              //  ExprProb subsumption test case explodes.
-              if ((r.rnf is RhsBot) && r.vars.isEmpty && r.nvars.isEmpty && lnf <:< r.lnf) {
-                println(s"OK  $lnf <: $r")
-                return ()
+              // The following crutch is necessary because the pesky Without types may get stuck
+              //  on type variables and type variable negations:
+              lnf match {
+                case LhsRefined(S(Without(NegType(tv: TV), ns)), tts, rcd, trs) =>
+                  return rec((
+                    fullRhs.toType() | LhsRefined(N, tts, rcd, trs).toType().neg()).without(ns).neg(), tv, true)
+                case LhsRefined(S(Without(b, ns)), tts, rcd, trs) =>
+                  assert(b.isInstanceOf[TV])
+                  return rec(b, (
+                    fullRhs.toType() | LhsRefined(N, tts, rcd, trs).toType().neg()).without(ns), true)
+                case _ => ()
               }
               
-              // println(s"Possible? $r ${lnf & r.lnf}")
-              !vars.exists(r.nvars) && ((lnf & r.lnf)(ctx, etf = false)).isDefined && ((lnf, r.rnf) match {
-                case (LhsRefined(_, ttags, _, _), RhsBases(objTags, rest, trs))
-                  if objTags.exists { case t: TraitTag => ttags(t); case _ => false }
-                  => false
-                case (LhsRefined(S(ot: ClassTag), _, _, _), RhsBases(objTags, rest, trs))
-                  => !objTags.contains(ot)
-                case _ => true
-              })
-            }
-            
-            println(s"Possible: " + possible)
-            
-            if (doFactorize) {
-              // We try to factorize the RHS to help make subsequent solving take shortcuts:
+              // First, we filter out those RHS alternatives that obviously don't match our LHS:
+              val possible = fullRhs.rigidify.filter { r =>
+                
+                // Note that without this subtyping check,
+                //  the number of constraints in the `eval1_ty_ugly = eval1_ty`
+                //  ExprProb subsumption test case explodes.
+                if ((r.rnf is RhsBot) && r.vars.isEmpty && r.nvars.isEmpty && lnf <:< r.lnf) {
+                  println(s"OK  $lnf <: $r")
+                  return ()
+                }
+                
+                // println(s"Possible? $r ${lnf & r.lnf}")
+                !vars.exists(r.nvars) && ((lnf & r.lnf)(ctx, etf = false)).isDefined && ((lnf, r.rnf) match {
+                  case (LhsRefined(_, ttags, _, _), RhsBases(objTags, rest, trs))
+                    if objTags.exists { case t: TraitTag => ttags(t); case _ => false }
+                    => false
+                  case (LhsRefined(S(ot: ClassTag), _, _, _), RhsBases(objTags, rest, trs))
+                    => !objTags.contains(ot)
+                  case _ => true
+                })
+              }
               
-              val fact = factorize(possible, sort = false)
+              println(s"Possible: " + possible)
               
-              println(s"Factorized: " + fact)
+              if (doFactorize) {
+                // We try to factorize the RHS to help make subsequent solving take shortcuts:
+                
+                val fact = factorize(possible, sort = false)
+                
+                println(s"Factorized: " + fact)
+                
+                // Finally, we enter the "annoying constraint" resolution routine:
+                annoying(Nil, lnf, fact, RhsBot)
+                
+              } else {
+                // Alternatively, without factorization (does not actually make a difference most of the time):
+                
+                annoying(Nil, lnf, possible.map(_.toType()), RhsBot)
+                
+              }
               
-              // Finally, we enter the "annoying constraint" resolution routine:
-              annoying(Nil, lnf, fact, RhsBot)
-              
-            } else {
-              // Alternatively, without factorization (does not actually make a difference most of the time):
-              
-              annoying(Nil, lnf, possible.map(_.toType()), RhsBot)
-              
-            }
-            
+          }
+          
         }
+        
+        local()
+        
       }
     }()
     

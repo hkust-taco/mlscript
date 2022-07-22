@@ -25,7 +25,7 @@ concat "a" "b"
 //│ function concat(x, y) {
 //│   if (arguments.length === 2) {
 //│     return x + y;
-//│   }else {
+//│   } else {
 //│     return (y) => x + y;
 //│   }
 //│ }
@@ -42,7 +42,6 @@ def add x y = x + y + x + y
 //│ globalThis.add = function add(x) {
 //│   return (y) => x + y + x + y;
 //│ };
-//│ res = add;
 //│ // End of generated code
 //│ add: int -> int -> int
 //│    = [Function: add]
@@ -86,7 +85,6 @@ n = 123 with { x = 1 }
 //│ }
 //│ // Query 1
 //│ globalThis.n = withConstruct(123, { x: 1 });
-//│ res = n;
 //│ // End of generated code
 //│ n: 123 & {x: 1}
 //│  = [Number: 123] { x: 1 }

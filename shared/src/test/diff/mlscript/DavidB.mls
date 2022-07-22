@@ -1,0 +1,130 @@
+
+
+
+tuple1 = (1, 2, 3)
+//│ tuple1: (1, 2, 3,)
+//│       = [ 1, 2, 3 ]
+
+tuple2 = (4, 5)
+//│ tuple2: (4, 5,)
+//│       = [ 4, 5 ]
+
+if true then tuple1 else tuple2
+//│ res: Array[1 | 2 | 3 | 4 | 5] & {_1: 1 | 4, _2: 2 | 5}
+//│    = [ 1, 2, 3 ]
+
+arr = tuple1 : Array[int]
+//│ arr: Array[int]
+//│    = [ 1, 2, 3 ]
+
+if true then tuple1 else arr
+//│ res: Array[int]
+//│    = [ 1, 2, 3 ]
+
+
+
+type Cons[H, T] = { h: H; t: T }
+type List[A] = Cons[A, List[A]] | ()
+//│ Defined type alias Cons[+H, +T]
+//│ Defined type alias List[+A]
+
+list1 = { h = 1; t = { h = 2; t = () }}
+//│ list1: {h: 1, t: {h: 2, t: ()}}
+//│      = { h: 1, t: { h: 2, t: [] } }
+
+list2 = { h = 3; t = () }
+//│ list2: {h: 3, t: ()}
+//│      = { h: 3, t: [] }
+
+ls = if true then list1 else list2
+//│ ls: {h: 1 | 3, t: () | {h: 2, t: ()}}
+//│   = { h: 1, t: { h: 2, t: [] } }
+
+ls : List[int]
+//│ res: List[int]
+//│    = { h: 1, t: { h: 2, t: [] } }
+
+type NonEmptyList[A] = Cons[A, List[A]]
+//│ Defined type alias NonEmptyList[+A]
+
+ls : NonEmptyList[int]
+//│ res: NonEmptyList[int]
+//│    = { h: 1, t: { h: 2, t: [] } }
+
+:e // TODO improve error message
+ls : Cons[int, Cons[int, List[int]]]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.55: 	ls : Cons[int, Cons[int, List[int]]]
+//│ ║        	^^
+//│ ╟── expression of type `anything` does not have field 'h'
+//│ ╟── Note: constraint arises from record type:
+//│ ║  l.26: 	type Cons[H, T] = { h: H; t: T }
+//│ ║        	                  ^^^^^^^^^^^^^^
+//│ ╟── from applied type reference:
+//│ ║  l.55: 	ls : Cons[int, Cons[int, List[int]]]
+//│ ╙──      	               ^^^^^^^^^^^^^^^^^^^^
+//│ res: Cons[int, Cons[int, List[int]]]
+//│    = { h: 1, t: { h: 2, t: [] } }
+
+ls : { h: int; t: List[int] }
+//│ res: {h: int, t: List[int]}
+//│    = { h: 1, t: { h: 2, t: [] } }
+
+:e
+ls : { h: int; t: { h: int; t: List[int] } }
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.74: 	ls : { h: int; t: { h: int; t: List[int] } }
+//│ ║        	^^
+//│ ╟── expression of type `anything` does not have field 'h'
+//│ ╟── Note: constraint arises from record type:
+//│ ║  l.74: 	ls : { h: int; t: { h: int; t: List[int] } }
+//│ ╙──      	                  ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ res: {h: int, t: {h: int, t: List[int]}}
+//│    = { h: 1, t: { h: 2, t: [] } }
+
+
+
+class C[A]: { h: A; t: List[A] }
+type List0[A] = C[A] | ()
+//│ Defined class C[+A]
+//│ Defined type alias List0[+A]
+
+list1 = C { h = 1; t = C { h = 2; t = () }}
+//│ list1: C[1 | 2] with {h: 1, t: C[2] with {t: ()}}
+//│      = C { h: 1, t: C { h: 2, t: [] } }
+
+list2 = C { h = 3; t = () }
+//│ list2: C[3] with {t: ()}
+//│      = C { h: 3, t: [] }
+
+ls = if true then list1 else list2
+//│ ls: C[1 | 2 | 3] with {h: 1 | 3, t: () | (C[2] with {t: ()})}
+//│   = C { h: 1, t: C { h: 2, t: [] } }
+
+ls : List0[int]
+//│ res: List0[int]
+//│    = C { h: 1, t: C { h: 2, t: [] } }
+
+
+
+type List1[A] = (A, List1[A]) | ()
+//│ Defined type alias List1[+A]
+
+list1 = (1, (2, (3, ())))
+//│ list1: (1, (2, (3, (),),),)
+//│      = [ 1, [ 2, [ 3, [] ] ] ]
+
+list1: List1[int]
+//│ res: List1[int]
+//│    = [ 1, [ 2, [ 3, [] ] ] ]
+
+list2 = (4, (5, ()))
+//│ list2: (4, (5, (),),)
+//│      = [ 4, [ 5, [] ] ]
+
+if true then list1 else list2
+//│ res: (1 | 4, (2 | 5, Array[() | 3],),)
+//│    = [ 1, [ 2, [ 3, [] ] ] ]
+
+
+

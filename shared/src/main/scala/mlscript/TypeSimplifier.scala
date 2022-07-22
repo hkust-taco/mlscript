@@ -713,7 +713,7 @@ trait TypeSimplifier { self: Typer =>
     
     val processed = MutSet.empty[TV]
     
-    // TODO imrove: map values should actually be lists as several TVs may have an identical bound
+    // TODO improve: map values should actually be lists as several TVs may have an identical bound
     val consed = allVarPols.iterator.collect { case (tv, S(pol)) =>
       if (pol) (true, tv.lowerBounds.foldLeft(BotType: ST)(_ | _)) -> tv
       else (false, tv.upperBounds.foldLeft(TopType: ST)(_ & _)) -> tv

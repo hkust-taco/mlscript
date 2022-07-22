@@ -9,7 +9,7 @@ g' = fun f -> f f
 //│ g: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│  = [Function: g]
 //│ g': ('a -> 'b & 'a) -> 'b
-//│   = [Function: g]
+//│   = [Function: g$]
 
 // i.e. auto id (FreezeML F5)
 (fun (f: forall 'a. 'a -> 'a) -> f f) (fun x -> x)

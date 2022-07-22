@@ -101,7 +101,6 @@ class B: A & T1
 a = A{}
 //│ // Query 1
 //│ globalThis.a = new A({});
-//│ res = a;
 //│ // End of generated code
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
 //│ ║  l.101: 	a = A{}
@@ -129,7 +128,6 @@ b = B{}
 foo b
 //│ // Query 1
 //│ globalThis.b = new B({});
-//│ res = b;
 //│ // Query 2
 //│ res = foo(b);
 //│ // End of generated code
@@ -153,16 +151,16 @@ class BBB: AAA
   method F: int
   method G: 'a -> 'a
 //│ ╔══[ERROR] Overriding method AAA.F without an overriding definition is not allowed.
-//│ ║  l.153: 	  method F: int
+//│ ║  l.151: 	  method F: int
 //│ ║         	         ^^^^^^
 //│ ╟── Note: method definition inherited from
-//│ ║  l.149: 	  method F = 1
+//│ ║  l.147: 	  method F = 1
 //│ ╙──       	         ^^^^^
 //│ ╔══[ERROR] Overriding method AAA.G without an overriding definition is not allowed.
-//│ ║  l.154: 	  method G: 'a -> 'a
+//│ ║  l.152: 	  method G: 'a -> 'a
 //│ ║         	         ^^^^^^^^^^^
 //│ ╟── Note: method definition inherited from
-//│ ║  l.151: 	  method G x = x
+//│ ║  l.149: 	  method G x = x
 //│ ╙──       	         ^^^^^^^
 //│ Defined type alias Id[+X]
 //│ Defined class AAA
@@ -193,7 +191,7 @@ C.Foo
 :e
 fun x -> x.Foo
 //│ ╔══[ERROR] Implicit call to method Foo is forbidden because it is ambiguous.
-//│ ║  l.194: 	fun x -> x.Foo
+//│ ║  l.192: 	fun x -> x.Foo
 //│ ║         	         ^^^^^
 //│ ╟── Unrelated methods named Foo are defined by:
 //│ ╟── • trait T0
@@ -203,10 +201,10 @@ fun x -> x.Foo
 //│ ║  l.41: 	trait T1
 //│ ║        	      ^^
 //│ ╟── • trait T3
-//│ ║  l.178: 	trait T3
+//│ ║  l.176: 	trait T3
 //│ ║         	      ^^
 //│ ╟── • trait T4
-//│ ║  l.180: 	trait T4
+//│ ║  l.178: 	trait T4
 //│ ╙──       	      ^^
 //│ res: anything -> error
 //│    = [Function: res]

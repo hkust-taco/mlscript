@@ -21,7 +21,7 @@ def imp' z =
 //│ imp: Bot -> nothing
 //│    = [Function: imp]
 //│ imp': ('a -> 'a -> (forall 'b, 'c. ('a -> 'b -> 'c & 'b) -> 'c) -> 'd & 'a) -> 'd
-//│     = [Function: imp]
+//│     = [Function: imp$]
 
 
 // (* Quelques constantes. *)
@@ -43,7 +43,7 @@ def delta' = fun x -> x x
 //│ delta: Sid -> Sid
 //│      = [Function: delta]
 //│ delta': ('a -> 'b & 'a) -> 'b
-//│       = [Function: delta]
+//│       = [Function: delta$]
 
 // delta id ;;
 delta id
@@ -109,7 +109,7 @@ def t y a = (fun x -> x (x y)) ((fun z -> z) (fun x -> a x))
 //│ res: Sid -> Sid
 //│    = [Function: delta]
 //│ res: ('a -> 'b & 'a) -> 'b
-//│    = [Function: delta]
+//│    = [Function: delta$]
 
 // (* Rank 2 *)
 // type sk = ['a,'b] 'a -> 'b -> 'a;;

@@ -8,7 +8,7 @@ test1 f =
 
 test1 (fun value -> { value })
 //│ res: ({value: 0}, {value: true},)
-//│    = [ undefined, undefined ]
+//│    = [ { value: 0 }, { value: true } ]
 
 // :ns
 // :d
@@ -20,7 +20,7 @@ test2 f =
 
 test2 (fun value -> { value })
 //│ res: ({value: 0}, {value: true},)
-//│    = [ undefined, undefined ]
+//│    = [ { value: 0 }, { value: true } ]
 
 
 type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -39,7 +39,7 @@ def s' (n: ChurchInt) = fun f -> fun x -> f (n f x)
 //│ s': ChurchInt -> (forall 'a. 'a -> (forall 'a, 'N, 'b. ('N -> 'b
 //│   where
 //│     'a <: 'N -> 'N & 'N -> 'b)))
-//│   = [Function: s]
+//│   = [Function: s$]
 
 def succ: ChurchInt -> ChurchInt
 //│ succ: ChurchInt -> ChurchInt
@@ -285,7 +285,7 @@ succ = s'
 //│     'a <: 'N -> 'N & 'N -> 'b)))
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
-//│     = [Function: s]
+//│     = [Function: s$]
 
 to_church = to_ch_s_mix
 //│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('e | 'f)

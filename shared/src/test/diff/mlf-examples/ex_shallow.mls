@@ -229,7 +229,7 @@ def a1' = fun f -> fun x -> f (f (either id x))
 //│ a1': 'a -> (forall 'a. ('b -> 'c
 //│   where
 //│     'a <: (forall 'd, 'b. 'd -> 'd | 'b) -> 'e & 'e -> 'c))
-//│    = [Function: either]
+//│    = [Function: a1$]
 
 // FIXME: ClassCastException: mlscript.TyperDatatypes$TraitTag cannot be cast to mlscript.TyperDatatypes$TypeVariable
 // def a2' (x: A1') =
@@ -256,7 +256,7 @@ def a2'_ x =
 //│     'j <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
 //│   where
 //│     'b <: 'd -> 'e & 'e -> 'f))) -> 'k))
-//│     = [Function: either]
+//│     = [Function: a2$_]
 
 // FIXME
 def a0' = a2' a1'
@@ -278,7 +278,7 @@ def a0'_ = a2'_ a1'
 //│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α41_42'' -> α41_42'')››  <:  α31_1089'    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α41_42'' -> α41_42'')››  <:  α31_33''
 //│ a0'_: error
-//│     = [Function: either]
+//│     = [Function (anonymous)]
 :ResetFuel
 
 // * ^ Strangely, this one works[ed] with recursive types:
@@ -290,7 +290,7 @@ def a0'_ = a2'_ a1'
 //│     'c <: (forall 'a. 'a -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
 //│   where
 //│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
-//│     = [Function: either]
+//│     = [Function (anonymous)]
 :NoRecursiveTypes
 
 // type a1'_sid = ['a = sid] ('a -> 'a) -> 'a -> 'a;;

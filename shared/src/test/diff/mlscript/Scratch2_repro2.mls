@@ -87,7 +87,7 @@ s zero
 // :e // skolem extrusion?
 res: ChI
 //│ res: ChI
-//│    = [Function: s]
+//│    = undefined
 
 let tmp = s zero in tmp: ChI
 //│ res: ChI

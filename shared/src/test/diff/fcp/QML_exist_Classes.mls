@@ -286,6 +286,20 @@ sb (fun arr ->
 
 
 
+:escape
+def Math: nothing
+//│ Math: nothing
+//│     = <missing implementation>
+
+def div: int -> int -> int
+def div a b = Math.trunc(a/b)
+//│ div: int -> int -> int
+//│    = <missing implementation>
+//│ number -> number -> nothing
+//│   <:  div:
+//│ int -> int -> int
+//│    = [Function: div1]
+
 def mod: int -> int -> int
 rec def mod a b = if a < b then a else mod (a - b) b
 //│ mod: int -> int -> int
@@ -299,12 +313,12 @@ def stepImpl arrImpl = ArraysImpl {
     init = fun a -> (arrImpl.Init a, arrImpl.Init a);
     sub = fun ((r0, r1)) -> fun i ->
       if mod i 2 == 0
-      then arrImpl.Sub r0 (i / 2)
-      else arrImpl.Sub r1 (i / 2);
+      then arrImpl.Sub r0 (div i 2)
+      else arrImpl.Sub r1 (div i 2);
     update = fun ((r0, r1)) -> fun i -> fun a ->
       if mod i 2 == 0
-      then (arrImpl.Update r0 (i / 2) a, r1)
-      else (r0, arrImpl.Update r1 (i / 2) a);
+      then (arrImpl.Update r0 (div i 2) a, r1)
+      else (r0, arrImpl.Update r1 (div i 2) a);
     fold = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.Fold f (arrImpl.Fold f b r0) r1
   }
 //│ stepImpl: (ArraysRep[in 'A | 'A0 | 'A1 | 'A2 | 'A3 & 'A4 | 'A3 & ('A5 | 'A6) out nothing, in 'Rep | 'Rep0 | 'Rep1 | 'Rep2 | 'a | 'c out nothing] & 'd) -> (ArraysImpl['A3, 'Rep3] with {fold: forall 'e. 'e -> (forall 'f. 'f -> (forall 'd, 'e, 'f, 'A7, 'Rep4, 'A8, 'Rep5, 'b, 'b0. (('Rep5, 'Rep4,) -> ('b | 'f)
@@ -415,7 +429,7 @@ def step arr f = f (stepImpl2 arr)
 
 // * Now the annotation is okay because the result no longer extrudes it...
 def step (arr: Arrays['a]) f = f (stepImpl2 arr)
-//│ Arrays['a] -> (forall 'a0, 'c, 'd, 'Rep, 'e, 'f. ((ArraysImpl['a0, in (‘Rep_3625_3797 & 'c, ‘Rep_3625_3797 & 'd,) & 'Rep out (‘Rep_3625_3797 | 'c, ‘Rep_3625_3797 | 'd,) | 'Rep] with {fold: 'e -> 'f -> (forall 'e, 'f, 'g, 'A, 'Rep0, 'A0, 'Rep1, 'b, 'b0. (('Rep1, 'Rep0,) -> ('b | 'f)
+//│ Arrays['a] -> (forall 'a0, 'c, 'd, 'Rep, 'e, 'f. ((ArraysImpl['a0, in (‘Rep_3640_3812 & 'c, ‘Rep_3640_3812 & 'd,) & 'Rep out (‘Rep_3640_3812 | 'c, ‘Rep_3640_3812 | 'd,) | 'Rep] with {fold: 'e -> 'f -> (forall 'e, 'f, 'g, 'A, 'Rep0, 'A0, 'Rep1, 'b, 'b0. (('Rep1, 'Rep0,) -> ('b | 'f)
 //│   where
 //│     'g <: ArraysRep['A, 'Rep0] & ArraysRep['A0, 'Rep1]
 //│     'e <: 'A -> ('b | 'f) -> 'b & 'A0 -> ('b0 | 'f) -> ('b & 'b0))), init: forall 'g, 'A1, 'Rep2, 'A2, 'Rep3. (('A1 & 'A2) -> ('Rep2, 'Rep3,)
@@ -438,9 +452,9 @@ def step arr f = f (stepImpl2_ty arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.434: 	def step arr f = f (stepImpl2_ty arr)
+//│ ║  l.448: 	def step arr f = f (stepImpl2_ty arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘Rep_4243_4244` is not an instance of type `'Rep_4243_4245`
+//│ ╟── type `‘Rep_4258_4259` is not an instance of type `'Rep_4258_4260`
 //│ ║  l.42: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                         ^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -450,9 +464,9 @@ def step arr f = f (stepImpl2_ty arr)
 :e
 def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.451: 	def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
+//│ ║  l.465: 	def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
 //│ ║         	                                  ^^^^^^^^^^^^^^^^
-//│ ╟── type `‘Rep_4258_4259` is not an instance of type `'Rep_4258_4260`
+//│ ╟── type `‘Rep_4273_4274` is not an instance of type `'Rep_4273_4275`
 //│ ║  l.42: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                         ^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -487,7 +501,7 @@ snb = mkMonoArray 5
 //│    = [Function (anonymous)]
 
 snb (fun arr -> arr.Init true)
-//│ res: ‘Rep_4455_4461 | ‘Rep_4465_4471
+//│ res: ‘Rep_4470_4476 | ‘Rep_4480_4486
 //│    = [
 //│        [ [ [Array], [Array] ], [ [Array], [Array] ] ],
 //│        [ [ [Array], [Array] ], [ [Array], [Array] ] ]

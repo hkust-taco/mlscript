@@ -56,7 +56,7 @@ def succ' n = fun f -> fun x -> f (n f x)
 //│   where
 //│     'a <: 'b -> 'c -> 'd
 //│     'b <: 'd -> 'e)))
-//│      = [Function: succ]
+//│      = [Function: succ$]
 
 // * Note: without constrained types we wouldn't get the principal type of succ'
 
@@ -75,7 +75,7 @@ succ_ty = succ'
 //│     'b <: 'd -> 'e)))
 //│   <:  succ_ty:
 //│ ChurchInt -> ChurchInt
-//│        = [Function: succ]
+//│        = [Function: succ$]
 
 // :d
 succ'
@@ -83,7 +83,7 @@ succ'
 //│   where
 //│     'a <: 'b -> 'c -> 'd
 //│     'b <: 'd -> 'e)))
-//│    = [Function: succ]
+//│    = [Function: succ$]
 
 // Legit error: (bad bounds)
 // :d
@@ -93,7 +93,7 @@ succ' {}
 //│   where
 //│     'e <: 'a -> 'b -> 'c
 //│     'a <: 'c -> 'd))
-//│    = [Function: succ]
+//│    = [Function (anonymous)]
 
 // :e // Error delayed by inconsistent constrained types
 succ' {} {}
@@ -101,7 +101,7 @@ succ' {} {}
 //│   where
 //│     'c <: 'd -> 'a -> 'e
 //│     'd <: 'e -> 'b
-//│    = [Function: succ]
+//│    = [Function (anonymous)]
 
 :e
 succ' {} {} {}
@@ -115,11 +115,12 @@ succ' {} {} {}
 //│ ║  l.48: 	def succ' n = fun f -> fun x -> f (n f x)
 //│ ╙──      	                                   ^^^
 //│ res: error
-//│    = [Function: succ]
+//│ Runtime error:
+//│   TypeError: n is not a function
 
 fun x -> succ' x x x x x x x x x
 //│ res: ('a -> 'b -> 'b -> 'b -> 'b -> 'b -> 'b -> 'c & 'b -> 'b -> 'a & 'b) -> 'c
-//│    = [Function: succ]
+//│    = [Function: res]
 
 
 // let rec to_church n =
@@ -187,7 +188,7 @@ rec def to_church_2 n =
   if n == 0 then zero
   else succ' (to_church_2 (n - 1))
 //│ to_church_2: int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'a. ('a & 'b) -> 'a))
-//│            = [Function: to_church_1_st]
+//│            = [Function: to_church_2]
 
 // Requires :RecursiveTypes
 :ng // FIXME codegen: `ReferenceError: to_church_2 is not defined`
@@ -209,11 +210,11 @@ rec def to_church_3 n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.208: 	rec def to_church_3 n =
+//│ ║  l.209: 	rec def to_church_3 n =
 //│ ║         	                    ^^^
-//│ ║  l.209: 	  if n == 0 then fun f -> fun x -> x
+//│ ║  l.210: 	  if n == 0 then fun f -> fun x -> x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.210: 	  else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
+//│ ║  l.211: 	  else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a_806_808` is not an instance of type `'a_806_807`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -222,7 +223,7 @@ rec def to_church_3 n =
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                        ^^
 //│ ╟── from application:
-//│ ║  l.210: 	  else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
+//│ ║  l.211: 	  else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
 //│ ╙──       	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ to_church_3: int -> ('a -> (‘a_806_807 & 'b) & 'a -> (‘a_806_808 & 'a)) -> (forall 'c. (‘a_806_808 & 'c & 'a) -> (‘a_806_808 | 'c | 'b))
 //│            = [Function: to_church_3]
@@ -290,7 +291,7 @@ to_church_ty = to_church_3
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.288: 	to_church_ty = to_church_3
+//│ ║  l.289: 	to_church_ty = to_church_3
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a_1088` is not an instance of type `'a_806_807`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -299,7 +300,7 @@ to_church_ty = to_church_3
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                        ^^
 //│ ╟── from application:
-//│ ║  l.210: 	  else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
+//│ ║  l.211: 	  else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
 //│ ╙──       	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│             = [Function: to_church_3]
 
@@ -309,7 +310,7 @@ to_church_ty = to_church_4
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.307: 	to_church_ty = to_church_4
+//│ ║  l.308: 	to_church_ty = to_church_4
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `(?a -> ?a) -> ?a -> ?a` is not an instance of type `'a_1116`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -373,7 +374,7 @@ def tc n = to_church_ty n : ChurchInt
 :e // FIXME?
 def tc n = to_church_2 n : ChurchInt // Requires :RecursiveTypes
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.374: 	def tc n = to_church_2 n : ChurchInt // Requires :RecursiveTypes
+//│ ║  l.375: 	def tc n = to_church_2 n : ChurchInt // Requires :RecursiveTypes
 //│ ║         	           ^^^^^^^^^^^^^
 //│ ╟── type `‘a_1347_1356` is not an instance of type `'a_1347_1355`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -406,7 +407,7 @@ tc 1 id
 :e // FIXME?
 tc: int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.407: 	tc: int -> ChurchInt
+//│ ║  l.408: 	tc: int -> ChurchInt
 //│ ║         	^^
 //│ ╟── type `‘a_1421` is not an instance of type `'a_806_807`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -415,7 +416,7 @@ tc: int -> ChurchInt
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                        ^^
 //│ ╟── from application:
-//│ ║  l.210: 	  else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
+//│ ║  l.211: 	  else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
 //│ ╙──       	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: int -> ChurchInt
 //│    = [Function: tc3]
@@ -423,7 +424,7 @@ tc: int -> ChurchInt
 // FIXME
 def tc n = to_church_3 n : ChurchInt
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.424: 	def tc n = to_church_3 n : ChurchInt
+//│ ║  l.425: 	def tc n = to_church_3 n : ChurchInt
 //│ ║         	           ^^^^^^^^^^^^^
 //│ ╟── type `‘a_1442_1443` is not an instance of type `'a_806_807`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -432,7 +433,7 @@ def tc n = to_church_3 n : ChurchInt
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                        ^^
 //│ ╟── from application:
-//│ ║  l.210: 	  else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
+//│ ║  l.211: 	  else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
 //│ ╙──       	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ tc: int -> ChurchInt
 //│   = [Function: tc4]

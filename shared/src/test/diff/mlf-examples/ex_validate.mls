@@ -301,9 +301,9 @@ def departage x = choose id (x : Id)
 def delta' = fun x -> (departage x) x
 def delta'_ = fun x -> (partage x) x
 //│ delta': (Id & 'a) -> 'a
-//│       = [Function: departage]
+//│       = [Function: delta$]
 //│ delta'_: ('a -> 'b & 'a & 'b) -> 'b
-//│        = [Function: departage]
+//│        = [Function: delta$_]
 
 // let t = fun x -> (x:id) x, x
 // let t = fun (x:id) -> x x, (x:id)
