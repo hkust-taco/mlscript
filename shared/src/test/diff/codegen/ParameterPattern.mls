@@ -7,10 +7,10 @@
 def volatile ((this, break)) = this + break
 //│ // Query 1
 //│ globalThis.volatile1 = function volatile1([
-//│   this1,
-//│   break1
+//│   this$,
+//│   break$
 //│ ]) {
-//│   return this1 + break1;
+//│   return this$ + break$;
 //│ };
 //│ // End of generated code
 //│ volatile: (int, int,) -> int
@@ -20,10 +20,10 @@ def volatile ((this, break)) = this + break
 def volatile1 { debugger; continue } = debugger + continue
 //│ // Query 1
 //│ globalThis.volatile11 = function volatile11({
-//│   debugger: debugger1,
-//│   continue: continue1
+//│   "debugger": debugger$,
+//│   "continue": continue$
 //│ }) {
-//│   return debugger1 + continue1;
+//│   return debugger$ + continue$;
 //│ };
 //│ // End of generated code
 //│ volatile1: {continue: int, debugger: int} -> int
@@ -32,8 +32,8 @@ def volatile1 { debugger; continue } = debugger + continue
 :js
 def volatile2 export = export + 2
 //│ // Query 1
-//│ globalThis.volatile2 = function volatile2(export1) {
-//│   return export1 + 2;
+//│ globalThis.volatile2 = function volatile2(export$) {
+//│   return export$ + 2;
 //│ };
 //│ // End of generated code
 //│ volatile2: int -> int
