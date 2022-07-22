@@ -1197,7 +1197,7 @@ this_should_be_98 =
 //│ this_should_be_98: string
 //│                  = '98'
 
-// * Note: we get a recursive depth excess when using `c_i2_` instead of `c_i2`:
+// * Note: we get a recursive depth excess when using `c_i2` instead of `c_i2` (see test case below)
 // :e // FIXME? refreshing-extr
 // :e // Works since inconsistent constrained types...
 :e // FIXME?
@@ -1221,10 +1221,9 @@ this_should_be_98_ =
 // :e // works with quantif extrus
 //:e // due to tapping
 :e // FIXME? refreshing-extr
-// FIXME SOF
 c_i5_ = c_add_ c_i3_ c_i2
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b. ?b) -> ?c` exceeded recursion depth limit (300)
-//│ ║  l.1225: 	c_i5_ = c_add_ c_i3_ c_i2
+//│ ║  l.1224: 	c_i5_ = c_add_ c_i3_ c_i2
 //│ ║          	        ^^^^^^^^^^^^^^^^^
 //│ ╟── while constraining:  {(α2973_6813' -> α2976_6812') where: α2971_6593' <: ((α2972_6803',) -> α2974_6810'), α2972_6803' <: ((α2973_6813',) -> α2975_6811')}  <!<  ((α2975_6800',) -> α2976_6801')
 //│ ╟── while constraining:  ‹∀ 3. {(α2973_6809'''' -> α2976_6808'''') where: α2971_6593' <: ((α2972_6803',) -> α2974_6806''''), α2972_6803' <: ((α2973_6809'''',) -> α2975_6807'''')}›  <!<  ((α2975_6800',) -> α2976_6801')

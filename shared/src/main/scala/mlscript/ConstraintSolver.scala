@@ -491,6 +491,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (prim: ClassTag, ot: ObjectTag)
             if prim.parentsST.contains(ot.id) => ()
             
+          case (tv @ AssignedVariable(lhs), rhs) =>
+            rec(lhs, rhs, true)
+          case (lhs, tv @ AssignedVariable(rhs)) =>
+            rec(lhs, rhs, true)
             
             
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
@@ -926,10 +930,28 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case t @ ArrayType(ar) =>
         ArrayType(ar.update(extrude(_, lowerLvl, !pol, upperLvl), extrude(_, lowerLvl, pol, upperLvl)))(t.prov)
       case w @ Without(b, ns) => Without(extrude(b, lowerLvl, pol, upperLvl), ns)(w.prov)
+      case tv @ AssignedVariable(ty) =>
+        cache.getOrElse(tv -> true, {
+          // val nv = freshVar(tv.prov, S(tv), N, tv.nameHint)(tv.level)
+          val nv = freshVar(tv.prov, N, tv.nameHint)(tv.level)
+          cache += tv -> true -> nv
+          val tyPos = extrude(ty, lowerLvl, true, upperLvl)
+          val tyNeg = extrude(ty, lowerLvl, false, upperLvl)
+          if (tyPos === tyNeg)
+            nv.assignedTo = S(tyPos)
+          else {
+            assert(nv.lowerBounds.isEmpty)
+            assert(nv.upperBounds.isEmpty)
+            nv.lowerBounds = tyPos :: Nil
+            nv.upperBounds = tyNeg :: Nil
+          }
+          nv
+        })
       case tv: TypeVariable if tv.level > upperLvl =>
         // If the TV's level is strictly greater than `upperLvl`,
         //  it means the TV is quantified by a type being copied,
         //  so all we need to do is copy this TV along (it is not extruded).
+        assert(!cache.contains(tv -> false))
         if (tv.lowerBounds.isEmpty && tv.upperBounds.isEmpty) tv
         else cache.getOrElse(tv -> true, {
           // val nv = freshVar(tv.prov, S(tv), tv.nameHint)(tv.level)
@@ -979,7 +1001,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               TraitTag(
                 lowerLvl,
                 // level,
-                Var.apply(freshVar(noProv,N,S(id.idStr+"_"))(0).mkStr)
+                Var.apply(freshVar(noProv, N, S(id.idStr+"_"))(0).mkStr)
               )(tt.prov)
             )
             /* 
@@ -1051,7 +1073,39 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     raise(Warning(msgs))
   
   
-  // TODO! should we refresh quantified trait tags?!
+  
+  def unify(lhs: ST, rhs: ST)(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx, 
+          shadows: Shadows = Shadows.empty
+        ): Unit = {
+    trace(s"$lvl. U $lhs =! $rhs") {
+      
+      def rec(lhs: ST, rhs: ST, swapped: Bool): Unit =
+        (lhs, rhs) match {
+          
+          // TODO handle more cases
+          
+          case (tv: TV, bound) =>
+            tv.assignedTo match {
+              case S(et) =>
+                unify(et, bound)
+              case N =>
+                tv.assignedTo = S(bound)
+            }
+            
+          case _ =>
+            if (swapped) {
+              constrain(lhs, rhs)
+              constrain(rhs, lhs)
+            } else rec(rhs, lhs, true)
+            
+        }
+      rec(lhs, rhs, false)
+    }()
+  }
+  
+  
+  
+  
   
   /** Freshens all the type variables whose level is comprised in `(above, below]`
     *   or which have bounds and whose level is greater than `above`. */
@@ -1090,6 +1144,14 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       //   && tv.lowerBounds.isEmpty
       //   && tv.upperBounds.isEmpty
       //   => tv
+      case tv @ AssignedVariable(ty) =>
+        freshened.getOrElse(tv, {
+          val nv = freshVar(tv.prov, S(tv), tv.nameHint)(if (tv.level > below) tv.level else lvl)
+          freshened += tv -> nv
+          val ty2 = freshen(ty)
+          nv.assignedTo = S(ty2)
+          nv
+        })
       case tv: TypeVariable => freshened.get(tv) match {
         case Some(tv) => tv
         case None if rigidify && tv.level <= below =>

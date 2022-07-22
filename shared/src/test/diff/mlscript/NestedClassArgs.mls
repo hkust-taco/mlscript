@@ -26,7 +26,7 @@ def c: C['a] as 'a
 def c: C['a] | 'a as 'a
 //│ c: 'a
 //│   where
-//│     'a :> C['a]
+//│     'a := 'a | C['a]
 
 def c: C[C['a]] as 'a
 //│ c: 'a

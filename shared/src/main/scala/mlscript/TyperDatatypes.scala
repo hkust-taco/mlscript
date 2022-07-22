@@ -453,12 +453,20 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     * Invariant: Types appearing in the bounds never have a level higher than this variable's `level`. */
   final class TypeVariable(
       val level: Level,
-      var lowerBounds: List[SimpleType],
-      var upperBounds: List[SimpleType],
+      var _lowerBounds: List[SimpleType],
+      var _upperBounds: List[SimpleType],
       originalTV: Opt[TV],
       val nameHint: Opt[Str] = N,
       val recPlaceholder: Bool = false
   )(val prov: TypeProvenance) extends SimpleType with CompactTypeOrVariable with Ordered[TypeVariable] with Factorizable {
+    
+    var assignedTo: Opt[ST] = N
+    
+    // * Bounds shoudl always be disregarded when `equatedTo` is defined, as they are then irrelevant:
+    def lowerBounds: List[SimpleType] = { require(assignedTo.isEmpty); _lowerBounds }
+    def upperBounds: List[SimpleType] = { require(assignedTo.isEmpty); _upperBounds }
+    def lowerBounds_=(bs: Ls[ST]): Unit = { require(assignedTo.isEmpty); _lowerBounds = bs }
+    def upperBounds_=(bs: Ls[ST]): Unit = { require(assignedTo.isEmpty); _upperBounds = bs }
     
     private val creationRun = currentConstrainingRun
     def original: TV =
@@ -483,8 +491,13 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         // println(this, level, ub)
         if (cache(this)) MinLevel else {
           cache += this
-          (lowerBounds.iterator ++ upperBounds.iterator)
-            .map(_.levelBelow(ub)).maxOption.getOrElse(MinLevel)
+          assignedTo match {
+            case S(ty) =>
+              ty.levelBelow(ub)
+            case N =>
+              (lowerBounds.iterator ++ upperBounds.iterator)
+                .map(_.levelBelow(ub)).maxOption.getOrElse(MinLevel)
+          }
         }
       } //tap { r => println(this, level, ub, r, cache) }
     // override def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx:Ctx, raise:Raise, shadows: Shadows, freshened: MutMap[TV, ST]): TV =
@@ -495,7 +508,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     // override def toString: String = showProvOver(false)(nameHint.getOrElse("α") + uid + (if (level === MaxLevel) "^" else if (level > 5 ) "^" + level else "'" * level))
     override def toString: String =
       // showProvOver(false)(nameHint.getOrElse("α") + uid + showLevel(level)) // + ":"+originalTV.getOrElse("")
-      trueOriginal match {
+      (trueOriginal match {
         case S(to) =>
           assert(to.nameHint === nameHint)
           // to.mkStr + ":" + uid + showLevel(level)
@@ -503,7 +516,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         case N =>
           // showProvOver(false)(nameHint.getOrElse("α") + uid + showLevel(level))
           showProvOver(false)(mkStr + showLevel(level))
-      }
+      }) + (if (assignedTo.isDefined) "#" else "")
     private[mlscript] def mkStr = nameHint.getOrElse("α") + uid
     
     def isRecursive_$(implicit ctx: Ctx) : Bool = (lbRecOccs_$, ubRecOccs_$) match {
@@ -514,9 +527,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       * Note that if we have something like 'a :> Bot <: 'a -> Top, 'a is not truly recursive
       *   and its bounds can actually be inlined. */
     private final def lbRecOccs_$(implicit ctx: Ctx): Opt[Opt[Bool]] =
-      TupleType(lowerBounds.map(N -> _.toUpper(noProv)))(noProv).getVarsPol(S(true)).get(this)
+      assignedTo.getOrElse(TupleType(lowerBounds.map(N -> _.toUpper(noProv)))(noProv)).getVarsPol(S(true)).get(this)
     private final def ubRecOccs_$(implicit ctx: Ctx): Opt[Opt[Bool]] =
-      TupleType(upperBounds.map(N -> _.toUpper(noProv)))(noProv).getVarsPol(S(false)).get(this)
+      assignedTo.getOrElse(TupleType(upperBounds.map(N -> _.toUpper(noProv)))(noProv)).getVarsPol(S(false)).get(this)
   }
   type TV = TypeVariable
   private var freshCount = 0
@@ -528,6 +541,10 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   trait CompactTypeOrVariable
   type PolarVariable = (TypeVariable, Boolean)
+  
+  object AssignedVariable {
+    def unapply(tv: TV): Opt[ST] = tv.assignedTo
+  }
   
   case class NegVar(tv: TV) extends ProxyType with Factorizable {
     lazy val underlying: SimpleType = tv.neg()

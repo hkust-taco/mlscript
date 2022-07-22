@@ -78,6 +78,12 @@ abstract class TyperHelpers { Typer: Typer =>
       case S(res) => if (substInMap) subst(res, map, substInMap) else res
       case N =>
         st match {
+          case tv @ AssignedVariable(ty) => cache.getOrElse(tv, {
+            val v = freshVar(tv.prov, S(tv), tv.nameHint)(tv.level)
+            cache += tv -> v
+            v.assignedTo = S(subst(ty, map, substInMap))
+            v
+          })
           case tv: TypeVariable if tv.lowerBounds.isEmpty && tv.upperBounds.isEmpty =>
             cache += tv -> tv
             tv
@@ -429,12 +435,22 @@ abstract class TyperHelpers { Typer: Typer =>
           => cache(this -> that)
         case (tv: TypeVariable, _) =>
           cache(this -> that) = false
-          val tmp = tv.upperBounds.exists(_ <:< that)
+          val tmp = tv.assignedTo match {
+            case S(ty) =>
+              ty <:< that
+            case N =>
+              tv.upperBounds.exists(_ <:< that)
+          }
           if (tmp) cache(this -> that) = true
           tmp
         case (_, tv: TypeVariable) =>
           cache(this -> that) = false
-          val tmp = tv.lowerBounds.exists(this <:< _)
+          val tmp = tv.assignedTo match {
+            case S(ty) =>
+              this <:< ty
+            case N =>
+              tv.lowerBounds.exists(this <:< _)
+          }
           if (tmp) cache(this -> that) = true
           tmp
         case (ConstrainedType(Nil, bod), rhs) => bod <:< that
@@ -583,6 +599,8 @@ abstract class TyperHelpers { Typer: Typer =>
       def childrenPolField(fld: FieldType): List[Opt[Bool] -> SimpleType] =
         fld.lb.map(pol.map(!_) -> _).toList ::: pol -> fld.ub :: Nil
       this match {
+        case tv @ AssignedVariable(ty) =>
+          pol -> ty :: Nil
         case tv: TypeVariable =>
           (if (pol =/= S(false)) tv.lowerBounds.map(S(true) -> _) else Nil) :::
           (if (pol =/= S(true)) tv.upperBounds.map(S(false) -> _) else Nil)
@@ -641,6 +659,7 @@ abstract class TyperHelpers { Typer: Typer =>
     }
     
     def children(includeBounds: Bool): List[SimpleType] = this match {
+      case tv @ AssignedVariable(ty) => if (includeBounds) ty :: Nil else Nil
       case tv: TypeVariable => if (includeBounds) tv.lowerBounds ::: tv.upperBounds else Nil
       case FunctionType(l, r) => l :: r :: Nil
       case Overload(as) => as
@@ -698,11 +717,12 @@ abstract class TyperHelpers { Typer: Typer =>
     }
     
     def showBounds: String =
-      getVars.iterator.filter(tv => (tv.upperBounds ++ tv.lowerBounds).nonEmpty).map(tv =>
-        "\n\t\t" + tv.toString
+      getVars.iterator.filter(tv => tv.assignedTo.nonEmpty || (tv.upperBounds ++ tv.lowerBounds).nonEmpty).map {
+      case tv @ AssignedVariable(ty) => "\n\t\t" + tv.toString + " := " + ty
+      case tv => ("\n\t\t" + tv.toString
           + (if (tv.lowerBounds.isEmpty) "" else " :> " + tv.lowerBounds.mkString(" | "))
-          + (if (tv.upperBounds.isEmpty) "" else " <: " + tv.upperBounds.mkString(" & "))
-      ).mkString
+          + (if (tv.upperBounds.isEmpty) "" else " <: " + tv.upperBounds.mkString(" & ")))
+      }.mkString
     
     def expPos(implicit ctx: Ctx): Type = exp(S(true), this)
     def expNeg(implicit ctx: Ctx): Type = exp(S(false), this)
@@ -732,6 +752,7 @@ abstract class TyperHelpers { Typer: Typer =>
   
   class Traverser(implicit ctx: Ctx) {
     def apply(pol: Opt[Bool])(st: ST): Unit = st match {
+      case tv @ AssignedVariable(ty) => apply(pol)(ty)
       case tv: TypeVariable =>
         if (pol =/= S(false)) tv.lowerBounds.foreach(apply(S(true)))
         if (pol =/= S(true)) tv.upperBounds.foreach(apply(S(false)))
@@ -747,7 +768,10 @@ abstract class TyperHelpers { Typer: Typer =>
       case _: ObjectTag => ()
       case tr: TypeRef => tr.mapTargs(pol)(apply(_)(_)); ()
       case Without(b, ns) => apply(pol)(b)
-      case TypeBounds(lb, ub) => apply(S(false))(lb); apply(S(true))(ub)
+      // case TypeBounds(lb, ub) => apply(S(false))(lb); apply(S(true))(ub)
+      case TypeBounds(lb, ub) =>
+        if (pol =/= S(true)) apply(S(false))(lb)
+        if (pol =/= S(false)) apply(S(true))(ub)
       case PolymorphicType(plvl, und) => apply(pol)(und)
       case ConstrainedType(cs, bod) =>
         cs.foreach(_._2.foreach{

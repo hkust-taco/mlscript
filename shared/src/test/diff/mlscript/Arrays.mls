@@ -65,18 +65,18 @@ ty3A = ty3A
 //│ ║  l.+1: 	ty3A = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a104_105'››  <:  'a104_117'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a104_105'››  <:  'a104_105'
-//│ constrain calls  : 17
-//│ annoying  calls  : 17
-//│ subtyping calls  : 26
+//│ ╟── this constraint:  'a104_117'#  <:  'a104_115'#    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a104_105'#  <:  'a104_105'#
+//│ constrain calls  : 26
+//│ annoying  calls  : 15
+//│ subtyping calls  : 19
 
 def ty3B: MyArray[MyArray['a]] as 'a
 //│ ty3B: 'a
 //│   where
 //│     'a := MyArray[MyArray['a]]
 
-:e // FIXME (probably the issue reproduced in `ADRsRepro.mls`)
+// :e // FIXME (probably the issue reproduced in `ADRsRepro.mls`)
 :stats
 ty3B = ty3A
 //│ 'a
@@ -86,17 +86,11 @@ ty3B = ty3A
 //│ 'a
 //│   where
 //│     'a := MyArray[MyArray['a]]
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a118_130']  <:  'a104_133'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a118_119']  <:  'a104_105'
-//│ constrain calls  : 57
-//│ annoying  calls  : 52
-//│ subtyping calls  : 63
+//│ constrain calls  : 62
+//│ annoying  calls  : 24
+//│ subtyping calls  : 27
 
-:e // FIXME (probably the issue reproduced in `ADRsRepro.mls`)
+// :e // FIXME (probably the issue reproduced in `ADRsRepro.mls`)
 :stats
 ty3A = ty3B
 //│ 'a
@@ -106,15 +100,9 @@ ty3A = ty3B
 //│ 'a
 //│   where
 //│     'a := MyArray['a]
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a118_144']  <:  'a118_142'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a118_119']  <:  'a118_119'
-//│ constrain calls  : 53
-//│ annoying  calls  : 33
-//│ subtyping calls  : 57
+//│ constrain calls  : 62
+//│ annoying  calls  : 24
+//│ subtyping calls  : 27
 
 def ty4B: MyArray[MyArray[MyArray['a]]] as 'a
 //│ ty4B: 'a
@@ -135,11 +123,11 @@ ty4B = ty4B
 //│ ║  l.+1: 	ty4B = ty4B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a145_146'››  <:  'a145_158'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a145_146'››  <:  'a145_146'
-//│ constrain calls  : 19
-//│ annoying  calls  : 17
-//│ subtyping calls  : 26
+//│ ╟── this constraint:  MyArray[MyArray['a143_156'#]]  <:  MyArray[MyArray['a143_154'#]]    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray[MyArray['a143_144'#]]  <:  MyArray[MyArray['a143_144'#]]
+//│ constrain calls  : 28
+//│ annoying  calls  : 15
+//│ subtyping calls  : 19
 
 
 
@@ -188,7 +176,7 @@ ty2A = ty2B
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.+1: 	ty2A = ty2B
 //│ ║        	^^^^^^^^^^^
-//│ ╟── type `‘a_165` is not an instance of type `MyArray`
+//│ ╟── type `‘a_163` is not an instance of type `MyArray`
 //│ ║  l.23: 	def ty2A: MyArray['a]
 //│ ║        	                  ^^
 //│ ╟── Note: constraint arises from applied type reference:

@@ -226,7 +226,12 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           case TypeBounds(lb, ub) => checkCycle(lb) && checkCycle(ub)
           case tv: TypeVariable => travsersed(R(tv)) || {
             val t2 = travsersed + R(tv)
-            tv.lowerBounds.forall(checkCycle(_)(t2)) && tv.upperBounds.forall(checkCycle(_)(t2))
+            tv.assignedTo match {
+              case S(ty) =>
+                checkCycle(ty)(t2)
+              case N =>
+                tv.lowerBounds.forall(checkCycle(_)(t2)) && tv.upperBounds.forall(checkCycle(_)(t2))
+            }
           }
           case PolymorphicType(_, body) => checkCycle(body)
           case _: ExtrType | _: ObjectTag | _: FunctionType | _: RecordType | _: ArrayBase => true
@@ -648,10 +653,18 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
               !curVariance.isContravariant && !visited(true -> t),
               !curVariance.isCovariant && !visited(false -> t),
             )
-            if (visitLB) visited += true -> t
-            if (visitUB) visited += false -> t
-            if (visitLB) t.lowerBounds.foreach(lb => updateVariance(lb, VarianceInfo.co))
-            if (visitUB) t.upperBounds.foreach(ub => updateVariance(ub, VarianceInfo.contra))
+            t.assignedTo match {
+              case S(ty) =>
+                if (visitLB || visitUB) {
+                  visited += true -> t; visited += false -> t
+                  updateVariance(ty, curVariance)
+                }
+              case N =>
+                if (visitLB) visited += true -> t
+                if (visitUB) visited += false -> t
+                if (visitLB) t.lowerBounds.foreach(lb => updateVariance(lb, VarianceInfo.co))
+                if (visitUB) t.upperBounds.foreach(ub => updateVariance(ub, VarianceInfo.contra))
+            }
           case RecordType(fields) => fields.foreach {
             case (_ , fieldTy) => fieldVarianceHelper(fieldTy)
           }

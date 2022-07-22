@@ -413,8 +413,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case Recursive(uv, body) =>
         val tv = freshVar(tyTp(ty.toLoc, "local type binding"), N, uv.identifier.toOption)
         val bod = rec(body)(ctx, recVars + (uv -> tv))
-        tv.upperBounds ::= bod
-        tv.lowerBounds ::= bod
+        tv.assignedTo = S(bod)
         tv
       case Rem(base, fs) => Without(rec(base), fs.toSortedSet)(tyTp(ty.toLoc, "field removal type"))
       case Constrained(base, where) =>
@@ -689,20 +688,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         }
         
       case Asc(trm, ty) =>
-        // val trm_ty = typeTerm(trm)
-        val trm_ty = if (ctx.inPattern /* || !generalizeCurriedFunctions */) typeTerm(trm)
-        // else PolymorphicType.mk(ctx.lvl, ctx.nextLevel { implicit ctx =>
-        //   typeTerm(trm)
-        // })
-        // else ctx.poly { implicit ctx =>
-        //   typeTerm(trm)
-        // }
-        else typeTerm(trm)
+        val trm_ty = typeTerm(trm)
         val ty_ty = typeType(ty)(ctx.copy(inPattern = false), raise, vars)
-        con(trm_ty, ty_ty, ty_ty)
-        if (ctx.inPattern)
-          con(ty_ty, trm_ty, ty_ty) // In patterns, we actually _unify_ the pattern and ascribed type 
-        else ty_ty
+        if (ctx.inPattern) { unify(trm_ty, ty_ty); ty_ty } // In patterns, we actually _unify_ the pattern and ascribed type 
+        else con(trm_ty, ty_ty, ty_ty)
       case (v @ ValidPatVar(nme)) =>
         val prov = tp(if (verboseConstraintProvenanceHints) v.toLoc else N, "variable")
         // Note: only look at ctx.env, and not the outer ones!
@@ -1178,10 +1167,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           val nv = tv.asTypeVar
           if (!seenVars(tv)) {
             seenVars += tv
-            val l = go(tv.lowerBounds.foldLeft(BotType: ST)(_ | _))
-            val u = go(tv.upperBounds.foldLeft(TopType: ST)(_ & _))
-            if (l =/= Bot || u =/= Top)
-              bounds ::= nv -> Bounds(l, u)
+            tv.assignedTo match {
+              case S(ty) =>
+                val b = go(ty)
+                bounds ::= nv -> Bounds(b, b)
+              case N =>
+                val l = go(tv.lowerBounds.foldLeft(BotType: ST)(_ | _))
+                val u = go(tv.upperBounds.foldLeft(TopType: ST)(_ & _))
+                if (l =/= Bot || u =/= Top)
+                  bounds ::= nv -> Bounds(l, u)
+            }
           }
           nv
         case FunctionType(l, r) => Function(go(l), go(r))

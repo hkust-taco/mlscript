@@ -31,13 +31,16 @@ g = g2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.25: 	g = g2
 //│ ║        	^^^^^^
-//│ ╟── function of type `?b -> ?c` does not match type `(G[?] with {a: ?a}) | ‘a_51`
+//│ ╟── function of type `?a -> ?b` is not an instance of type `G`
 //│ ║  l.21: 	rec def g2 a = G { a }
 //│ ║        	           ^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(G[?] with {a: ?a0}) | ‘a_51`
+//│ ╟── but it flows into reference with expected type `G[?]`
 //│ ║  l.25: 	g = g2
 //│ ║        	    ^^
-//│ ╟── Note: constraint arises from local type binding:
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.13: 	def g: G['a] & {a: 'a} as 'a
+//│ ║        	       ^^^^^
+//│ ╟── from local type binding:
 //│ ║  l.13: 	def g: G['a] & {a: 'a} as 'a
 //│ ╙──      	       ^^^^^^^^^^^^^^^
 
@@ -73,15 +76,15 @@ def manual: 'a -> nothing as 'a
 :e
 manual id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.74: 	manual id
+//│ ║  l.77: 	manual id
 //│ ║        	^^^^^^^^^
 //│ ╟── type `?a -> nothing` does not match type `nothing`
-//│ ║  l.68: 	def manual: 'a -> nothing as 'a
+//│ ║  l.71: 	def manual: 'a -> nothing as 'a
 //│ ║        	            ^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.68: 	def manual: 'a -> nothing as 'a
+//│ ║  l.71: 	def manual: 'a -> nothing as 'a
 //│ ╙──      	                  ^^^^^^^
-//│ res: 'a -> 'a | error
+//│ res: error
 
 def manual: 'a -> anything as 'a
 //│ manual: 'a

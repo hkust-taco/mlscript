@@ -355,19 +355,13 @@ def self2: 'a -> 'b as 'a
 //│     'a := 'a -> 'b
 //│      = <missing implementation>
 
-:e // fails since the fix to spurious-TV-cycles
+// :e // fails since the fix to spurious-TV-cycles // works since assigned TVs
 def self2 = self1
 //│ ('a -> 'b & 'a) -> 'b
 //│   <:  self2:
 //│ 'a
 //│   where
 //│     'a := 'a -> 'b
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.359: 	def self2 = self1
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. ((('a301_303' -> 'b302_304') & 'a301_303') -> 'b302_304')››  <:  (('a301_405' -> 'b302_406') & 'a301_405')    PolymorphicType  ComposedType
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. ((('a301_303' -> 'b302_304') & 'a301_303') -> 'b302_304')››  <:  (('a301_303' -> 'b302_304') & 'a301_303')
 //│      = [Function: r]
 
 

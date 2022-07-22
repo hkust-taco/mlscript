@@ -42,7 +42,7 @@ f.x
 //│     'a :> T3 & {x: T1 & 'a}
 //│ constrain calls  : 6
 //│ annoying  calls  : 4
-//│ subtyping calls  : 123
+//│ subtyping calls  : 122
 
 g = error : T1 & { x: T2 | 'a } as 'a
 //│ g: 'a
@@ -67,8 +67,8 @@ f = g
 //│ 'a
 //│   where
 //│     'a :> T3 & {x: T1 & 'a}
-//│ constrain calls  : 30
-//│ annoying  calls  : 55
-//│ subtyping calls  : 2789
+//│ constrain calls  : 77
+//│ annoying  calls  : 98
+//│ subtyping calls  : 2831
 
 

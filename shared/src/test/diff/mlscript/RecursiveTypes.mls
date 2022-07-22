@@ -365,13 +365,13 @@ bar2_ty2 = bar_ty2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.357: 	bar2_ty2 = bar_ty2
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── type `C[?r]` does not match type `{x: ?r0} | ‘r_464`
+//│ ╟── type `C[?r]` does not have field 'x'
 //│ ║  l.290: 	def bar_ty2: C['r] as 'r
 //│ ║         	             ^^^^^
-//│ ╟── but it flows into reference with expected type `{x: ?r1} | ‘r_464`
+//│ ╟── but it flows into reference with expected type `{x: ?r0}`
 //│ ║  l.357: 	bar2_ty2 = bar_ty2
 //│ ║         	           ^^^^^^^
-//│ ╟── Note: constraint arises from local type binding:
+//│ ╟── Note: constraint arises from record type:
 //│ ║  l.337: 	def bar2_ty2: { x: 'r } as 'r
 //│ ╙──       	              ^^^^^^^^^
 
@@ -387,13 +387,13 @@ bar_ty2 = bar2_ty2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.379: 	bar_ty2 = bar2_ty2
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── type `{x: ?r}` does not match type `C[?r0] | ‘r_480`
+//│ ╟── type `{x: ?r}` is not an instance of type `C`
 //│ ║  l.337: 	def bar2_ty2: { x: 'r } as 'r
 //│ ║         	              ^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `C[?r1] | ‘r_480`
+//│ ╟── but it flows into reference with expected type `C[?]`
 //│ ║  l.379: 	bar_ty2 = bar2_ty2
 //│ ║         	          ^^^^^^^^
-//│ ╟── Note: constraint arises from local type binding:
+//│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.290: 	def bar_ty2: C['r] as 'r
 //│ ╙──       	             ^^^^^
 
@@ -671,7 +671,9 @@ r: int
 
 def fancyBottom1: 'a & ('a -> 'a) as 'a
 def fancyBottom2: 'a\x as 'a
-//│ fancyBottom1: nothing
+//│ fancyBottom1: 'a
+//│   where
+//│     'a := 'a -> 'a & 'a
 //│ fancyBottom2: 'a
 //│   where
 //│     'a :> 'a\x

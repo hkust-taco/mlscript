@@ -8,24 +8,10 @@ def e2: Add['e] as 'e
 //│     'e := Add['e]
 //│   = <missing implementation>
 
-// :d
-// FIXME
 e2 : Add['e] as 'e
-//│ ╔══[ERROR] Cyclic-looking constraint while typing type ascription; a type annotation may be required
-//│ ║  l.13: 	e2 : Add['e] as 'e
-//│ ║        	^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. 'e25_26'›  <:  'e25_32    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. 'e25_26'›  <:  'e25_26'
 //│ res: 'e
 //│   where
-//│     'e :> forall 'e0. 'e0 | error | Add['e]
-//│        <: Add['e] & 'e1
-//│     'e1 :> forall 'e0. 'e0 | error | Add['e1]
-//│         <: Add['e1] & {x: 'e -> 'e} & 'e2
-//│     'e2 :> error | Add['e2]
-//│         <: Add['e2] & {x: 'e1 -> 'e1}
-//│     'e0 := Add['e0]
+//│     'e := Add['e]
 //│    = <no result>
 //│      e2 is not implemented
 
@@ -37,7 +23,7 @@ def f0: ('a -> int) as 'a
 //│   = <missing implementation>
 
 // :d
-// FIXME
+:e // FIXME
 f0 = f0
 //│ 'a
 //│   where
@@ -47,11 +33,11 @@ f0 = f0
 //│   where
 //│     'a := 'a -> int
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.41: 	f0 = f0
+//│ ║  l.27: 	f0 = f0
 //│ ║        	^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a45_46'››  <:  'a45_58'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a45_46'››  <:  'a45_46'
+//│ ╟── this constraint:  ('a35_46'# -> Int)  <:  ('a35_47'# -> Int)    FunctionType  FunctionType
+//│ ╙──  ... looks like:  ('a35_36'# -> Int)  <:  ('a35_36'# -> Int)
 //│   = <no result>
 //│     f0 is not implemented
 

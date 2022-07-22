@@ -37,7 +37,22 @@ trait TypeSimplifier { self: Typer =>
         var isNew = false
         val nv = renewed.getOrElseUpdate(tv, { isNew = true; renew(tv) })
         
-        if (isNew) {
+        if (isNew) tv.assignedTo match {
+        case S(ty) =>
+          // * If the variable is polar, we turn the `assignedTo` into a simple bound.
+          // *  I'm not actually sure if that's useful/a good idea.
+          // *  Maybe we should process with the appropriate parent, but still generate an `assignedTo`?
+          pols(tv) match {
+            case S(true) =>
+              nv.lowerBounds =
+                (process(ty, S(true -> tv)) :: Nil).filterNot(_.isBot)
+            case S(false) =>
+              nv.upperBounds =
+                (process(ty, S(false -> tv)) :: Nil).filterNot(_.isTop)
+            case N => 
+              nv.assignedTo = S(process(ty, N))
+          }
+        case N =>
           nv.lowerBounds = if (pols(tv).forall(_ === true))
               tv.lowerBounds.iterator.map(process(_, S(true -> tv))).reduceOption(_ | _).filterNot(_.isBot).toList
             else Nil
@@ -303,8 +318,13 @@ trait TypeSimplifier { self: Typer =>
     
     def processVar(tv: TV): Unit = {
       processed.setAndIfUnset(tv) {
-        tv.lowerBounds = tv.lowerBounds.map(go(_, S(true)))
-        tv.upperBounds = tv.upperBounds.map(go(_, S(false)))
+        tv.assignedTo match {
+          case S(ty) =>
+            tv.assignedTo = S(go(ty, N))
+          case N =>
+            tv.lowerBounds = tv.lowerBounds.map(go(_, S(true)))
+            tv.upperBounds = tv.upperBounds.map(go(_, S(false)))
+        }
       }
     }
     
@@ -341,10 +361,18 @@ trait TypeSimplifier { self: Typer =>
               occNums(true -> tv) += 1
               occNums(false -> tv) += 1
             }{ pol => occNums(pol -> tv) += 1 }
-            if (pol =/= S(false))
-              analyzed1.setAndIfUnset(tv -> true) { tv.lowerBounds.foreach(apply(S(true))) }
-            if (pol =/= S(true))
-              analyzed1.setAndIfUnset(tv -> false) { tv.upperBounds.foreach(apply(S(false))) }
+            tv.assignedTo match {
+              case S(ty) =>
+                if (pol =/= S(false))
+                  analyzed1.setAndIfUnset(tv -> true) { apply(S(true))(ty) }
+                if (pol =/= S(true))
+                  analyzed1.setAndIfUnset(tv -> false) { apply(S(false))(ty) }
+              case N =>
+                if (pol =/= S(false))
+                  analyzed1.setAndIfUnset(tv -> true) { tv.lowerBounds.foreach(apply(S(true))) }
+                if (pol =/= S(true))
+                  analyzed1.setAndIfUnset(tv -> false) { tv.upperBounds.foreach(apply(S(false))) }
+            }
           case ConstrainedType(cs, bod) =>
             // occursInvariantly ++= cs.iterator.map(_._1)
             constrainedVars ++= cs.iterator.map(_._1)
@@ -410,7 +438,7 @@ trait TypeSimplifier { self: Typer =>
       val newOccs = MutSet.empty[SimpleType]
       def go(st: SimpleType): Unit = goImpl(st.unwrapProvs)
       def goImpl(st: SimpleType): Unit =
-          trace(s"go $st   (${newOccs.mkString(", ")})") {
+          trace(s"go[${printPol(S(pol))}] $st   (${newOccs.mkString(", ")})") {
             st match {
         case ComposedType(p, l, r) =>
           // println(s">> $pol $l $r")
@@ -421,7 +449,12 @@ trait TypeSimplifier { self: Typer =>
           // println(s"$tv ${newOccs.contains(tv)}")
           if (!newOccs.contains(tv)) {
             newOccs += st
-            (if (pol) tv.lowerBounds else tv.upperBounds).foreach(go)
+            tv.assignedTo match {
+              case S(ty) =>
+                go(ty)
+              case N =>
+                (if (pol) tv.lowerBounds else tv.upperBounds).foreach(go)
+            }
           }
         case _ => analyze2(st, pol)
       }
@@ -530,12 +563,12 @@ trait TypeSimplifier { self: Typer =>
     }}
     
     // * Unify equivalent variables based on polar co-occurrence analysis:
-    { val pols = true :: false :: Nil; rewritableVars.foreach { case v => if (!varSubst.contains(v)) {
+    { val pols = true :: false :: Nil; rewritableVars.foreach { case v => if (!v.assignedTo.isDefined && !varSubst.contains(v)) { // TODO also handle v.assignedTo.isDefined?
       println(s"3[v] $v ${coOccurrences.get(true -> v)} ${coOccurrences.get(false -> v)}")
       
       pols.foreach { pol =>
         coOccurrences.get(pol -> v).iterator.flatMap(_.iterator).foreach {
-          case w: TypeVariable if !(w is v) && !varSubst.contains(w)
+          case w: TypeVariable if !(w is v) && !w.assignedTo.isDefined && !varSubst.contains(w)
               // && (recVars.contains(v) === recVars.contains(w))
               // * ^ Note: We no longer avoid merging rec and non-rec vars,
               // *    even though the non-rec one may not be strictly polar (as an example of this, see [test:T1]).
@@ -592,7 +625,11 @@ trait TypeSimplifier { self: Typer =>
     val renewals = MutMap.empty[TypeVariable, TypeVariable]
     
     def mergeTransform(pol: Bool, tv: TV, parent: Opt[TV]): ST =
-      transform(merge(pol, if (pol) tv.lowerBounds else tv.upperBounds), S(pol), parent)
+      // transform(merge(pol, if (pol) tv.lowerBounds else tv.upperBounds), S(pol), parent)
+      transform(tv.assignedTo match {
+        case S(ty) => ty
+        case N => merge(pol,if (pol) tv.lowerBounds else tv.upperBounds)
+      }, S(pol), parent)
     
     def transform(st: SimpleType, pol: Opt[Bool], parent: Opt[TV]): SimpleType =
           trace(s"transform[${printPol(pol)}] $st") {
@@ -638,14 +675,20 @@ trait TypeSimplifier { self: Typer =>
               case _ if (!wasDefined) =>
                 def setBounds = {
                   trace(s"Setting bounds of $res...") {
-                    res.lowerBounds = tv.lowerBounds.map(transform(_, S(true), S(tv)))
-                    res.upperBounds = tv.upperBounds.map(transform(_, S(false), S(tv)))
+                    tv.assignedTo match {
+                      case S(ty) =>
+                        res.assignedTo = S(transform(ty, N, N))
+                      case N =>
+                        res.lowerBounds = tv.lowerBounds.map(transform(_, S(true), S(tv)))
+                        res.upperBounds = tv.upperBounds.map(transform(_, S(false), S(tv)))
+                    }
                     res
                   }()
                 }
                 pol match {
                   case polo @ S(pol)
                     if coOccurrences.get(!pol -> tv).isEmpty // * If tv is polar...
+                    && tv.assignedTo.isEmpty // TODO handle?
                   =>
                     val bounds = if (pol) tv.lowerBounds else tv.upperBounds
                     
@@ -714,9 +757,13 @@ trait TypeSimplifier { self: Typer =>
     val processed = MutSet.empty[TV]
     
     // TODO improve: map values should actually be lists as several TVs may have an identical bound
-    val consed = allVarPols.iterator.collect { case (tv, S(pol)) =>
-      if (pol) (true, tv.lowerBounds.foldLeft(BotType: ST)(_ | _)) -> tv
-      else (false, tv.upperBounds.foldLeft(TopType: ST)(_ & _)) -> tv
+    val consed = allVarPols.iterator.collect {
+      case (tv @ AssignedVariable(ty), S(pol)) =>
+        if (pol) (true, ty) -> tv
+        else (false, ty) -> tv
+      case (tv, S(pol)) =>
+        if (pol) (true, tv.lowerBounds.foldLeft(BotType: ST)(_ | _)) -> tv
+        else (false, tv.upperBounds.foldLeft(TopType: ST)(_ & _)) -> tv
     }.toMap
     
     println(s"consed: $consed")
@@ -724,6 +771,11 @@ trait TypeSimplifier { self: Typer =>
     def process(pol: Opt[Bool], st: ST, parent: Opt[TV]): ST =
         // trace(s"cons[${printPol(pol)}] $st") {
           st.unwrapProvs match {
+      case tv @ AssignedVariable(ty) =>
+        processed.setAndIfUnset(tv) {
+          tv.assignedTo = S(process(N, ty, S(tv))) // TODO polarity?
+        }
+        tv
       case tv: TV =>
         processed.setAndIfUnset(tv) {
           tv.lowerBounds = tv.lowerBounds.map(process(S(true), _, S(tv)))
@@ -772,11 +824,11 @@ trait TypeSimplifier { self: Typer =>
     allVarPols.foreach {
       case (tv1, S(p1)) =>
         println(s"Consider $tv1")
-        (if (p1) tv1.lowerBounds else tv1.upperBounds) match {
+        (tv1.assignedTo.map(_::Nil).getOrElse(if (p1) tv1.lowerBounds else tv1.upperBounds)) match {
           case b1 :: Nil => 
             allVarPols.foreach {
               case (tv2, S(p2)) if p2 === p1 && (tv2 isnt tv1) && !varSubst.contains(tv1) && !varSubst.contains(tv2) =>
-                (if (p2) tv2.lowerBounds else tv2.upperBounds) match {
+                (tv2.assignedTo.map(_::Nil).getOrElse(if (p2) tv2.lowerBounds else tv2.upperBounds)) match {
                   case b2 :: Nil =>
                     
                     // TODO could be smarter, using sets of assumed equalities instead of just one:
