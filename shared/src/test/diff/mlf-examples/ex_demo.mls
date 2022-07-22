@@ -367,7 +367,7 @@ ex1_1 = make_ex1 (("A String", print_string))
 
 ex1_1 (fun ((x, f)) -> f x)
 //│ = undefined
-//│ output:
+//│ // Output
 //│ A String
 
 ex1_2 = if true then make_ex1 ((42, print_int)) else ex1_1
@@ -379,7 +379,7 @@ ex1_2 = if true then make_ex1 ((42, print_int)) else ex1_1
 
 ex1_2 (fun ((x, f)) -> f x)
 //│ = undefined
-//│ output:
+//│ // Output
 //│ 42
 
 
@@ -442,7 +442,7 @@ h = head ex_list1
 
 h (fun ((x, f)) -> f x)
 //│ = undefined
-//│ output:
+//│ // Output
 //│ A String
 
 // * _n accessors not yet implemented in JS backend:
@@ -452,7 +452,7 @@ h (fun ((x, f)) -> f x)
 test1 = listiterA (fun ex -> ex (fun ((p1, p2)) -> p2 p1)) ex_list1
 //│ test1: unit
 //│      = [Function: unit]
-//│ output:
+//│ // Output
 //│ A String
 //│ 8250
 //│ true
@@ -462,7 +462,7 @@ test1 = listiterA (fun ex -> ex (fun ((p1, p2)) -> p2 p1)) ex_list1
 test1 = listiter (fun ex -> ex (fun ((p1, p2)) -> p2 p1)) ex_list1
 //│ test1: unit
 //│      = [Function: unit]
-//│ output:
+//│ // Output
 //│ A String
 //│ 8250
 //│ true
@@ -473,7 +473,7 @@ test1_ = listiter (fun ex -> ex (fun ((p1, p2)) -> p2 p1))
 
 test1_ ex_list1
 //│ = [Function: unit]
-//│ output:
+//│ // Output
 //│ A String
 //│ 8250
 //│ true
@@ -484,7 +484,7 @@ process ex = ex (fun ((p1, p2)) -> p2 p1)
 
 process h
 //│ = undefined
-//│ output:
+//│ // Output
 //│ A String
 
 // * Also fails:
@@ -507,7 +507,7 @@ test2 = listiterA (fun ex -> ex (fun ((t1, t2, t3)) ->
   print_bool areequal )) ex_list2
 //│ test2: unit
 //│      = [Function: unit]
-//│ output:
+//│ // Output
 //│ true
 //│ false
 //│ false
@@ -543,7 +543,7 @@ ex1_1 = make_ex1 ("A String", print_string)
 
 ex1_1 (fun (x, f) -> f x)
 //│ = undefined
-//│ output:
+//│ // Output
 //│ A String
 
 ex1_2 = if true then make_ex1 (42, print_int) else ex1_1
@@ -552,7 +552,7 @@ ex1_2 = if true then make_ex1 (42, print_int) else ex1_1
 
 ex1_2 (fun (x, f) -> f x)
 //│ = undefined
-//│ output:
+//│ // Output
 //│ 42
 
 
@@ -608,7 +608,7 @@ ex_list2 = cons (make_ex2 ("String", "String", eqstring))
 test1 = listiterA (fun ex -> ex (fun (a, b) -> b a)) ex_list1
 //│ test1: unit
 //│      = [Function: unit]
-//│ output:
+//│ // Output
 //│ A String
 //│ 8250
 //│ true
@@ -619,7 +619,7 @@ test1_ = listiterA (fun ex -> ex (fun (a, b) -> b a))
 
 test1_ ex_list1
 //│ = [Function: unit]
-//│ output:
+//│ // Output
 //│ A String
 //│ 8250
 //│ true

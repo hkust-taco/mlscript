@@ -460,7 +460,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               def outputLog(log: String): Unit = {
                 val loglines = log.split('\n').iterator.filter(_.nonEmpty)
                 if (loglines.nonEmpty) {
-                  output("output:")
+                  output("// Output")
                   loglines.foreach(output)
                 }
               }
