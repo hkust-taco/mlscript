@@ -67,10 +67,10 @@ mkC = mkC'
 //│ 'a -> C2['a]
 
 rec def rc = mkC(rc)
-//│ rc: 'rc
+//│ rc: 'b
 //│   where
-//│     'rc :> C2['a]
-//│     'a :> 'rc
+//│     'b :> C2['a]
+//│     'a :> 'b
 
 rec def rc = mkC'(rc)
 //│ rc: 'a
@@ -178,7 +178,7 @@ c = c6
 //│         <: C5[C6['A]]
 //│   <:  c:
 //│ 'a -> C6['a]
-//│ constrain calls  : 89
+//│ constrain calls  : 88
 //│ annoying  calls  : 25
 //│ subtyping calls  : 177
 
@@ -329,7 +329,7 @@ append_ty_2 = append
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.325: 	append_ty_2 = append
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘T0_778` is not an instance of type `L`
+//│ ╟── type `‘T0_777` is not an instance of type `L`
 //│ ║  l.318: 	def append_ty_2: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] & {h: 'h; t: S['T0] & {v: 'v}})
 //│ ║         	                                                                          ^^^
 //│ ╟── Note: constraint arises from applied type reference:
@@ -352,7 +352,7 @@ append_ty_2 = append_ty
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.348: 	append_ty_2 = append_ty
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘T0_839` is not an instance of type `L`
+//│ ╟── type `‘T0_838` is not an instance of type `L`
 //│ ║  l.318: 	def append_ty_2: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] & {h: 'h; t: S['T0] & {v: 'v}})
 //│ ║         	                                                                          ^^^
 //│ ╟── Note: constraint arises from applied type reference:

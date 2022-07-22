@@ -92,8 +92,8 @@ def eval1_fixed_3 =
 //│ ║  l.90: 	  in fixed fixed
 //│ ║        	     ^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α286'' -> α314'')›  <:  α286_383'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α286'' -> α314'')›  <:  α286''
+//│ ╟── this constraint:  ‹∀ 1. (α285'' -> α313'')›  <:  α285_382'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α285'' -> α313'')›  <:  α285''
 //│ eval1_fixed_3: error
 //│              = [Function (anonymous)]
 
@@ -142,8 +142,8 @@ def eval2_fixed_1 = eval2 eval2
 //│ ║  l.140: 	def eval2_fixed_1 = eval2 eval2
 //│ ║         	                    ^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α433' -> (α434' -> (α440' | α455')))›  <:  α433_589'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α433' -> (α434' -> (α440' | α455')))›  <:  α433'
+//│ ╟── this constraint:  ‹∀ 0. (α432' -> (α433' -> (α439' | α454')))›  <:  α432_588'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α432' -> (α433' -> (α439' | α454')))›  <:  α432'
 //│ eval2_fixed_1: error
 //│              = [Function (anonymous)]
 
@@ -283,8 +283,8 @@ eval2_broken eval2_broken e2
 //│ ║  l.+1: 	eval2_broken eval2_broken e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α1031' -> (α1032' -> (arg1034' | α1049')))›  <:  α1031_1095    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α1031' -> (α1032' -> (arg1034' | α1049')))›  <:  α1031'
+//│ ╟── this constraint:  ‹∀ 0. (α1033' -> (α1034' -> (arg1036' | α1051')))›  <:  α1033_1097    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α1033' -> (α1034' -> (arg1036' | α1051')))›  <:  α1033'
 //│ res: error
 
 
@@ -300,8 +300,8 @@ fix eval2f_oops e2
 //│ ║  l.+1: 	fix eval2f_oops e2
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α1116_1187 -> (α1121_1194 | α1136_1195))  <:  α627_1212    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α1116' -> (α1121' | α1136'))  <:  α627_1174'''
+//│ ╟── this constraint:  (α1118_1189 -> (α1123_1196 | α1138_1197))  <:  α626_1214    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α1118' -> (α1123' | α1138'))  <:  α626_1176'''
 //│ res: error
 
 

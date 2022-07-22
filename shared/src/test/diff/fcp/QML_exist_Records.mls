@@ -383,7 +383,7 @@ snb = mkMonoArray 5
 //│    = [Function (anonymous)]
 
 snb (fun arr -> arr.init true)
-//│ res: ‘Rep_2961_2965 | ‘Rep_2969_2973
+//│ res: ‘Rep_2960_2964 | ‘Rep_2968_2972
 //│    = [ [ [ [Array], 'hi' ], 'hi' ], 'hi' ]
 
 

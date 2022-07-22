@@ -64,7 +64,7 @@ mul: ChurchInt -> ChurchInt -> ChurchInt
 //│ ║  l.62: 	mul: ChurchInt -> ChurchInt -> ChurchInt
 //│ ║        	^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ChurchInt  <:  'a21_251    TypeRef  TypeVariable
+//│ ╟── this constraint:  ChurchInt  <:  'a21_250    TypeRef  TypeVariable
 //│ ╙──  ... looks like:  ChurchInt  <:  'a21_22''
 //│ res: ChurchInt -> ChurchInt -> ChurchInt
 //│    = [Function: mul]
@@ -86,7 +86,7 @@ pow: ChurchInt -> ChurchInt -> ChurchInt
 //│ ║  l.84: 	pow: ChurchInt -> ChurchInt -> ChurchInt
 //│ ║        	^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α24_27'' -> ‹∀ 2. (α25_26''' -> α25_26''')›)››  <:  'a21_414    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α24_27'' -> ‹∀ 2. (α25_26''' -> α25_26''')›)››  <:  'a21_413    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α24_27'' -> ‹∀ 2. (α25_26''' -> α25_26''')›)››  <:  'a21_22''
 //│ res: ChurchInt -> ChurchInt -> ChurchInt
 //│    = [Function: pow]
@@ -146,7 +146,7 @@ def pred n =
   let s p = pair (snd p) (succ (snd p)) in
   let z = pair zero zero in
   fst (n s z)
-//│ pred: ((forall 'a. (('a -> (forall 'b. 'b -> 'b)) -> (‘a_616_621 -> ‘a_616_621) -> ‘a_616_621 -> ‘a_616_621 & 'a) -> ((forall 'a. ('c
+//│ pred: ((forall 'a. (('a -> (forall 'b. 'b -> 'b)) -> (‘a_615_620 -> ‘a_615_620) -> ‘a_615_620 -> ‘a_615_620 & 'a) -> ((forall 'a. ('c
 //│   where
 //│     'a <: ('a -> (forall 'b. 'b -> 'b)) -> 'c)) -> ChurchInt -> 'd) -> 'd) -> ((('a -> (forall 'e. 'e -> 'e)) -> ('a -> (forall 'e. 'e -> 'e)) -> 'f) -> 'f) -> (forall 'a, 'g. 'g -> 'a -> 'g) -> 'h) -> 'h
 //│     = [Function: pred]
@@ -161,8 +161,8 @@ rec def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n (f
 //│ ║  l.159: 	rec def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n (fact (pred n)))
 //│ ║         	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α24_27'' -> ‹∀ 2. (α25_26''' -> α25_26''')›)››  <:  α127_900'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α24_27'' -> ‹∀ 2. (α25_26''' -> α25_26''')›)››  <:  α127_900'
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α24_27'' -> ‹∀ 2. (α25_26''' -> α25_26''')›)››  <:  α126_899'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α24_27'' -> ‹∀ 2. (α25_26''' -> α25_26''')›)››  <:  α126_899'
 //│ fact: ChurchInt -> (anything -> (forall 'a. 'a -> 'a) | ChurchInt)
 //│     = [Function: fact]
 

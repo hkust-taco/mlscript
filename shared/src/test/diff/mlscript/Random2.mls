@@ -30,8 +30,7 @@ m y = l y
 //│ m: forall 'a, 'b, 'l, 'c. 'a -> 'b
 //│   where
 //│     'b :> 'c -> 'l
-//│     'l :> 'c -> 'l
-//│        <: 'b & 'a -> 'b
+//│     'l := 'c -> 'l
 //│     'a <: 'c
 
 m
@@ -56,10 +55,10 @@ rec def f a = a a
 //│   where
 //│     'a :> {x: 'a}
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.52: 	rec def f a = a a
+//│ ║  l.51: 	rec def f a = a a
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` does not have field 'x'
-//│ ║  l.52: 	rec def f a = a a
+//│ ║  l.51: 	rec def f a = a a
 //│ ║        	          ^^^^^^^
 //│ ╟── Note: constraint arises from record type:
 //│ ║  l.8: 	def f: { x: 'a } as 'a

@@ -380,8 +380,7 @@ let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
 let rec x = (let y = (x x); (z => z))
 //│ x: forall 'x, 'a, 'b. 'x
 //│   where
-//│     'x :> 'b -> 'b
-//│        <: 'b & 'x -> 'a
+//│     'x := 'b -> 'b
 //│     'b :> 'b -> 'b
 //│        <: 'a
 //│     'a :> 'b -> 'b
@@ -396,8 +395,8 @@ let rec x = (let y = (x x); (z => z))
 //│ ║  l.+1: 	(w => x => x) ((y => y y) (y => y y))
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α683_685' -> α684_686')›  <:  α683_692    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α683_685' -> α684_686')›  <:  α683_685'
+//│ ╟── this constraint:  ‹∀ 0. (α684_686' -> α685_687')›  <:  α684_693    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α684_686' -> α685_687')›  <:  α684_686'
 //│ res: 'a -> 'a
 
 :NoCycleCheck

@@ -48,8 +48,7 @@ rec def to_ch n =
 to_ch
 //│ res: forall 'a, 'b, 'c, 'd, 'e. forall 'to_ch, 'f, 'a, 'g, 'b, 'c, 'd, 'e. 'to_ch
 //│   where
-//│     'to_ch :> 'f -> 'g
-//│            <: 'f -> 'a
+//│     'to_ch := 'f -> 'g
 //│     'g :> forall 'h, 'i. 'h -> 'i
 //│        <: 'a
 //│     'a :> forall 'h, 'i. 'h -> 'i

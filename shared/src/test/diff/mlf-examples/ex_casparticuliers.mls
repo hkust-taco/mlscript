@@ -171,7 +171,7 @@ rec def wat n =
 //│ ║         	            ^^^
 //│ ║  l.168: 	  succ wat n
 //│ ║         	^^^^^^^^^^^^
-//│ ╟── type `‘a_582_584` is not an instance of type `'a_582_583`
+//│ ╟── type `‘a_583_585` is not an instance of type `'a_583_584`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -180,7 +180,7 @@ rec def wat n =
 //│ ╟── from reference:
 //│ ║  l.47: 	def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 //│ ╙──      	                                                   ^
-//│ wat: (('a | ‘a_582_583) -> (‘a_582_583 & 'a0 & 'a) & ('a0 | 'a1 | ‘a_582_583) -> 'b & ('a0 | 'a1 | ‘a_582_583) -> (‘a_582_583 & 'a2 & 'a1 & 'a) & ('a0 | 'a2 | 'a3 | ‘a_582_583) -> 'b & ('a0 | 'a2 | 'a3 | ‘a_582_583) -> (‘a_582_583 & 'a3 & 'a1 & 'a) & ('a0 | 'a2 | ‘a_582_583 | 'a3) -> 'b & ('a0 | 'a2 | 'a3 | ‘a_582_583 | ‘a_582_584) -> (‘a_582_583 & 'a3 & 'a1 & 'a)) -> (‘a_582_583 & 'a3 & 'a1 & 'a) -> (‘a_582_583 | 'b)
+//│ wat: (('a | ‘a_583_584) -> (‘a_583_584 & 'a0 & 'a) & ('a0 | 'a1 | ‘a_583_584) -> 'b & ('a0 | 'a1 | ‘a_583_584) -> (‘a_583_584 & 'a2 & 'a1 & 'a) & ('a0 | 'a2 | 'a3 | ‘a_583_584) -> 'b & ('a0 | 'a2 | 'a3 | ‘a_583_584) -> (‘a_583_584 & 'a3 & 'a1 & 'a) & ('a0 | 'a2 | ‘a_583_584 | 'a3) -> 'b & ('a0 | 'a2 | 'a3 | ‘a_583_584 | ‘a_583_585) -> (‘a_583_584 & 'a3 & 'a1 & 'a)) -> (‘a_583_584 & 'a3 & 'a1 & 'a) -> (‘a_583_584 | 'b)
 //│    = [Function: wat1]
 
 :ng
@@ -241,7 +241,7 @@ rec def to_church_3 n =
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.236: 	  else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_978_980` is not an instance of type `'a_978_979`
+//│ ╟── type `‘a_979_981` is not an instance of type `'a_979_980`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -250,7 +250,7 @@ rec def to_church_3 n =
 //│ ╟── from reference:
 //│ ║  l.236: 	  else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
 //│ ╙──       	                                                                ^
-//│ to_church_3: int -> (('a | ‘a_978_979 | ‘a_978_980) -> 'b & ('a | ‘a_978_979 | ‘a_978_980) -> (‘a_978_979 & 'a)) -> (forall 'c. (‘a_978_979 & 'c & 'a) -> (‘a_978_979 | 'c | 'b))
+//│ to_church_3: int -> (('a | ‘a_979_980 | ‘a_979_981) -> 'b & ('a | ‘a_979_980 | ‘a_979_981) -> (‘a_979_980 & 'a)) -> (forall 'c. (‘a_979_980 & 'c & 'a) -> (‘a_979_980 | 'c | 'b))
 //│            = [Function: to_church_3]
 
 // (* Ne Marche Pas *)
@@ -311,13 +311,13 @@ to_church_ty = to_church_2
 
 :e // FIXME?
 to_church_ty = to_church_3
-//│ int -> (('a | ‘a_978_979 | ‘a_978_980) -> 'b & ('a | ‘a_978_979 | ‘a_978_980) -> (‘a_978_979 & 'a)) -> (forall 'c. (‘a_978_979 & 'c & 'a) -> (‘a_978_979 | 'c | 'b))
+//│ int -> (('a | ‘a_979_980 | ‘a_979_981) -> 'b & ('a | ‘a_979_980 | ‘a_979_981) -> (‘a_979_980 & 'a)) -> (forall 'c. (‘a_979_980 & 'c & 'a) -> (‘a_979_980 | 'c | 'b))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.313: 	to_church_ty = to_church_3
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_978_979` is not an instance of type `'a_1275`
+//│ ╟── type `‘a_979_980` is not an instance of type `'a_1271`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -333,7 +333,7 @@ to_church_ty = to_church_4
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.329: 	to_church_ty = to_church_4
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `(?a -> ?a) -> ?a -> ?a` is not an instance of type `'a_1303`
+//│ ╟── type `(?a -> ?a) -> ?a -> ?a` is not an instance of type `'a_1298`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                            ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -396,21 +396,18 @@ def tc n = to_church_2 n : ChurchInt // Requires :RecursiveTypes
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.395: 	def tc n = to_church_2 n : ChurchInt // Requires :RecursiveTypes
 //│ ║         	           ^^^^^^^^^^^^^
-//│ ╟── type `‘a_1539_1548` is not an instance of type `'a_1539_1547`
+//│ ╟── type `‘a_1529_1537` is not an instance of type `'a_1529_1538`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                        ^^
-//│ ╟── from application:
-//│ ║  l.48: 	def succ' n = fun f -> fun x -> f (n f x)
-//│ ╙──      	                                ^^^^^^^^^
+//│ ╙──      	                        ^^
 //│ tc: int -> ChurchInt
 //│   = [Function: tc2]
 
 // Not the strange refreshed skolems in the results
 def tc n = to_church_3 n
-//│ tc: int -> (('a | ‘a_978_979 | ‘a_978_980) -> 'b & ('a | ‘a_978_979 | ‘a_978_980) -> (‘a_978_979 & 'a)) -> (forall 'c. (‘a_978_979 & 'a & 'c) -> (‘a_978_979 | 'c | 'b))
+//│ tc: int -> (('a | ‘a_979_980 | ‘a_979_981) -> 'b & ('a | ‘a_979_980 | ‘a_979_981) -> (‘a_979_980 & 'a)) -> (forall 'c. (‘a_979_980 & 'a & 'c) -> (‘a_979_980 | 'c | 'b))
 //│   = [Function: tc3]
 
 // * This test is "flaky" (unreliable) because its success depends on
@@ -421,9 +418,9 @@ def tc n = to_church_3 n
 :e
 tc 1 id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.422: 	tc 1 id
+//│ ║  l.419: 	tc 1 id
 //│ ║         	^^^^^^^
-//│ ╟── type `‘a_978_980` is not an instance of type `'a_978_979`
+//│ ╟── type `‘a_979_981` is not an instance of type `'a_979_980`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -435,9 +432,9 @@ tc 1 id
 :e // FIXME?
 tc: int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.436: 	tc: int -> ChurchInt
+//│ ║  l.433: 	tc: int -> ChurchInt
 //│ ║         	^^
-//│ ╟── type `‘a_978_979` is not an instance of type `'a_1606`
+//│ ╟── type `‘a_979_980` is not an instance of type `'a_1595`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -449,9 +446,9 @@ tc: int -> ChurchInt
 // FIXME
 def tc n = to_church_3 n : ChurchInt
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.450: 	def tc n = to_church_3 n : ChurchInt
+//│ ║  l.447: 	def tc n = to_church_3 n : ChurchInt
 //│ ║         	           ^^^^^^^^^^^^^
-//│ ╟── type `‘a_978_979` is not an instance of type `'a_1627_1628`
+//│ ╟── type `‘a_979_980` is not an instance of type `'a_1615_1616`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:

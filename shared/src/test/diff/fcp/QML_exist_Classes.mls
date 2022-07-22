@@ -429,7 +429,7 @@ def step arr f = f (stepImpl2 arr)
 
 // * Now the annotation is okay because the result no longer extrudes it...
 def step (arr: Arrays['a]) f = f (stepImpl2 arr)
-//│ Arrays['a] -> (forall 'a0, 'c, 'd, 'Rep. ((ArraysImpl['a0, in (‘Rep_3614_3786 & 'c, ‘Rep_3614_3786 & 'd,) & 'Rep out (‘Rep_3614_3786 | 'c, ‘Rep_3614_3786 | 'd,) | 'Rep] with {fold: forall 'e. 'e -> (forall 'f. 'f -> (forall 'e, 'f, 'A, 'b, 'A0, 'b0, 'g, 'Rep0, 'Rep1. (('Rep1, 'Rep0,) -> ('b | 'f)
+//│ Arrays['a] -> (forall 'a0, 'c, 'd, 'Rep. ((ArraysImpl['a0, in (‘Rep_3612_3784 & 'c, ‘Rep_3612_3784 & 'd,) & 'Rep out (‘Rep_3612_3784 | 'c, ‘Rep_3612_3784 | 'd,) | 'Rep] with {fold: forall 'e. 'e -> (forall 'f. 'f -> (forall 'e, 'f, 'A, 'b, 'A0, 'b0, 'g, 'Rep0, 'Rep1. (('Rep1, 'Rep0,) -> ('b | 'f)
 //│   where
 //│     'e <: 'A -> ('b | 'f) -> 'b & 'A0 -> ('b0 | 'f) -> ('b & 'b0)
 //│     'g <: ArraysRep['A, 'Rep0] & ArraysRep['A0, 'Rep1]))), init: forall 'g, 'A1, 'Rep2, 'A2, 'Rep3. (('A1 & 'A2) -> ('Rep2, 'Rep3,)
@@ -454,7 +454,7 @@ def step arr f = f (stepImpl2_ty arr)
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.448: 	def step arr f = f (stepImpl2_ty arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘Rep_4200_4201` is not an instance of type `'Rep_4200_4202`
+//│ ╟── type `‘Rep_4198_4199` is not an instance of type `'Rep_4198_4200`
 //│ ║  l.42: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                         ^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -466,7 +466,7 @@ def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.465: 	def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
 //│ ║         	                                  ^^^^^^^^^^^^^^^^
-//│ ╟── type `‘Rep_4215_4216` is not an instance of type `'Rep_4215_4217`
+//│ ╟── type `‘Rep_4213_4214` is not an instance of type `'Rep_4213_4215`
 //│ ║  l.42: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                         ^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -501,7 +501,7 @@ snb = mkMonoArray 5
 //│    = [Function (anonymous)]
 
 snb (fun arr -> arr.Init true)
-//│ res: ‘Rep_4413_4419 | ‘Rep_4423_4429
+//│ res: ‘Rep_4410_4416 | ‘Rep_4420_4426
 //│    = [
 //│        [ [ [Array], [Array] ], [ [Array], [Array] ] ],
 //│        [ [ [Array], [Array] ], [ [Array], [Array] ] ]

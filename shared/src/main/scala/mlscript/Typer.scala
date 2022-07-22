@@ -533,8 +533,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             body
           case tv: TV =>
             processed.setAndIfUnset(tv) {
-              tv.lowerBounds = tv.lowerBounds.map(destroyConstrainedTypes)
-              tv.upperBounds = tv.upperBounds.map(destroyConstrainedTypes)
+              tv.assignedTo match {
+                case S(ty) =>
+                  tv.assignedTo = S(destroyConstrainedTypes(ty))
+                case N =>
+                  tv.lowerBounds = tv.lowerBounds.map(destroyConstrainedTypes)
+                  tv.upperBounds = tv.upperBounds.map(destroyConstrainedTypes)
+              }
             }
             tv
           case _ => ty.map(destroyConstrainedTypes)
@@ -547,6 +552,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         // val ty_sch = PolymorphicType(lvl, ty)
         val ty_sch = ty
         constrain(ty_sch, e_ty)(raise, TypeProvenance(rhs.toLoc, "binding of " + rhs.describe), ctx)
+        e_ty.assignedTo = S(ty_sch)
       }
       e_ty
       // PolymorphicType(lvl, e_ty)
