@@ -451,7 +451,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             // println(s"SH: $shadow")
             // println(s"ALLSH: ${shadows.iterator.map(s => s._1 + "<:" + s._2).mkString(", ")}")
             
-            if (shadows.current.contains(shadow))
+            if (shadows.current.contains(lhs_rhs))
               return println(s"Spurious cycle involving $lhs_rhs") // * Spurious cycle, like alpha <: beta <: alpha
             
             else if (!noCycleCheck && shadows.previous.contains(shadow)) {

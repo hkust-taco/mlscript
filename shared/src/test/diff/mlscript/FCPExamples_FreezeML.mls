@@ -281,17 +281,10 @@ def f: ('a -> 'a) -> List['a] -> 'a
 //│ f: ('a -> 'a) -> List['a] -> 'a
 //│  = <missing implementation>
 
-:e // fails since the fix to spurious-TV-cycles
+// :e // fails since the fix to spurious-TV-cycles // succeeds since the fix to the fix to spurious-TV-cycles...
 :ng
 f (choose id) ids
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.286: 	f (choose id) ids
-//│ ║         	^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ('a332_333' -> 'a332_333')›  <:  'a802_810    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ('a332_333' -> 'a332_333')›  <:  'a802_803'
-//│ res: error
-// * ^ Used to only work with recursive types (with old Shadows impl)
+//│ res: 'a -> 'a
 
 // A10
 poly id
@@ -511,9 +504,9 @@ a id
 :e // * Skolem extrusion; rightly rejected
 choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.512: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
+//│ ║  l.505: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ║         	                                  ^^^^^^^
-//│ ╟── type `‘a_1180_1181` is not an instance of type `'a_1180_1182`
+//│ ╟── type `‘a_1185_1186` is not an instance of type `'a_1185_1187`
 //│ ║  l.169: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -523,23 +516,29 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│   where
 //│     'b :> (forall 'a. 'a -> 'a) | (forall 'a0, 'c. ('a0 -> 'a0) -> 'c)
 //│     'c :> error
-//│     'a0 :> ‘a_1180_1181
-//│         <: ‘a_1180_1182
+//│     'a0 :> ‘a_1185_1186
+//│         <: ‘a_1185_1187
 //│    = [Function: id1]
 
 // * The skolem used to (unsafely) leak into this type – see also `Skolems.mls`:
 res
-//│ res: (('a | ‘a_1180_1181) -> (‘a_1180_1182 & 'a) & 'a0) -> ('a0 | error)
+//│ res: (('a | ‘a_1185_1186) -> (‘a_1185_1187 & 'a) & 'a0) -> ('a0 | error)
 //│    = [Function: id1]
 
 :e // skolem extrusion
 res id
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.536: 	res id
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.529: 	res id
 //│ ║         	^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‘a_1180_1181  <:  'a1177_1196    TraitTag  TypeVariable
-//│ ╙──  ... looks like:  ‘a_1180_1181  <:  'a1177_1183'
+//│ ╟── type `‘a_1185_1186` is not an instance of type `'a_1185_1187`
+//│ ║  l.169: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.169: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║         	                    ^^
+//│ ╟── from type variable:
+//│ ║  l.505: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
+//│ ╙──       	                          ^^
 //│ res: 'a -> 'a | error
 //│    = [Function: id1]
 
@@ -547,10 +546,10 @@ res id
 :e
 a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.548: 	a (fun x -> { u = x })
+//│ ║  l.547: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a_1209`
-//│ ║  l.548: 	a (fun x -> { u = x })
+//│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a_1214`
+//│ ║  l.547: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.169: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b

@@ -213,15 +213,9 @@ def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) 
 //│     'a <: ('a -> (forall 'm. 'm -> 'm)) -> 'i))) -> (forall 'a. (('a -> (forall 'm. 'm -> 'm)) -> ('a -> (forall 'm. 'm -> 'm)) -> 'p) -> 'p) -> (forall 'a, 'q. 'q -> 'a -> 'q) -> 'd & 'e -> 'g -> 'h)))
 //│   = [Function: t21]
 
-:e // fails since the fix to spurious-TV-cycles
+// :e // fails since the fix to spurious-TV-cycles // succeeds since the fix to the fix to spurious-TV-cycles...
 t id succ 0
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.217: 	t id succ 0
-//│ ║         	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  int<number>  <:  'a826_1431    ClassTag  TypeVariable
-//│ ╙──  ... looks like:  int<number>  <:  'a826_1425^6
-//│ res: error | int
+//│ res: int
 //│    = 2
 
 //:e // due to tapping
@@ -236,11 +230,11 @@ t2 id succ 0
 def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
 def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.236: 	def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
+//│ ║  l.230: 	def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
 //│ ║         	                                                                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α1834_1873^6  <:  ((‹∀ 0. ‹∀ 1. (α726_729'' -> ‹∀ 2. (α727_728''' -> α727_728''')›)››,) -> α1836_1901^6)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α1834_1873^6  <:  ((‹∀ 0. ‹∀ 1. (α726_729'' -> ‹∀ 2. (α727_728''' -> α727_728''')›)››,) -> α1836_1874^8)
+//│ ╟── this constraint:  α1844_1883^6  <:  ((‹∀ 0. ‹∀ 1. (α726_729'' -> ‹∀ 2. (α727_728''' -> α727_728''')›)››,) -> α1846_1911^6)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α1844_1883^6  <:  ((‹∀ 0. ‹∀ 1. (α726_729'' -> ‹∀ 2. (α727_728''' -> α727_728''')›)››,) -> α1846_1884^8)
 //│ t: 'b -> (forall 'b, 'c. ('b & 'c) -> (forall 'b, 'c, 'd, 'e, 'f, 'a. (('d & 'a) -> ('a | 'e)
 //│   where
 //│     'b <: 'd -> 'e
@@ -264,15 +258,9 @@ def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) 
 // let succ n = n + 1 ;;
 // t id succ 0 ;;
 
-:e // fails since the fix to spurious-TV-cycles
+// :e // fails since the fix to spurious-TV-cycles // succeeds since the fix to the fix to spurious-TV-cycles...
 t id succ 0
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.268: 	t id succ 0
-//│ ║         	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  int<number>  <:  'a826_2420    ClassTag  TypeVariable
-//│ ╙──  ... looks like:  int<number>  <:  'a826_2414^6
-//│ res: error | int
+//│ res: int
 //│    = 6
 
 // :e // TODO try without cycle check // works with quantif extrus
@@ -280,10 +268,10 @@ t id succ 0
 :e // Fails since inconsistent constrained types
 t2 id succ 0
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.281: 	t2 id succ 0
+//│ ║  l.269: 	t2 id succ 0
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  int<number>  <:  α727_3212    ClassTag  TypeVariable
+//│ ╟── this constraint:  int<number>  <:  α727_3232    ClassTag  TypeVariable
 //│ ╙──  ... looks like:  int<number>  <:  α727_728'''
 //│ res: error
 //│    = 6
@@ -314,11 +302,11 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 :e // FIXME? refreshing-extr
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.315: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.303: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α3343_3345' -> α3344_3346')›  <:  α3343_3352    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α3343_3345' -> α3344_3346')›  <:  α3343_3345'
+//│ ╟── this constraint:  ‹∀ 0. (α3363_3365' -> α3364_3366')›  <:  α3363_3372    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α3363_3365' -> α3364_3366')›  <:  α3363_3365'
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
@@ -363,11 +351,11 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 :re
 (fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.364: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
+//│ ║  l.352: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. {(α3577_3582'' -> α3579_3581'') where: α3570' <: ((α3578_3580'',) -> α3579_3581'')}›  <:  α3577_3592'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. {(α3577_3582'' -> α3579_3581'') where: α3570' <: ((α3578_3580'',) -> α3579_3581'')}›  <:  α3577_3582''
+//│ ╟── this constraint:  ‹∀ 1. {(α3597_3602'' -> α3599_3601'') where: α3590' <: ((α3598_3600'',) -> α3599_3601'')}›  <:  α3597_3612'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. {(α3597_3602'' -> α3599_3601'') where: α3590' <: ((α3598_3600'',) -> α3599_3601'')}›  <:  α3597_3602''
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded

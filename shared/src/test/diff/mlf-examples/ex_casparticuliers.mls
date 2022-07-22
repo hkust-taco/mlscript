@@ -1,4 +1,4 @@
-// :NoRecursiveTypes // Makes several signature checks fail
+:NoRecursiveTypes
 :GeneralizeCurriedFunctions
 :DistributeForalls
 
@@ -317,7 +317,7 @@ to_church_ty = to_church_3
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.313: 	to_church_ty = to_church_3
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_978_979` is not an instance of type `'a_1274`
+//│ ╟── type `‘a_978_979` is not an instance of type `'a_1275`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -333,7 +333,7 @@ to_church_ty = to_church_4
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.329: 	to_church_ty = to_church_4
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `(?a -> ?a) -> ?a -> ?a` is not an instance of type `'a_1302`
+//│ ╟── type `(?a -> ?a) -> ?a -> ?a` is not an instance of type `'a_1303`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                            ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -396,7 +396,7 @@ def tc n = to_church_2 n : ChurchInt // Requires :RecursiveTypes
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.395: 	def tc n = to_church_2 n : ChurchInt // Requires :RecursiveTypes
 //│ ║         	           ^^^^^^^^^^^^^
-//│ ╟── type `‘a_1538_1547` is not an instance of type `'a_1538_1546`
+//│ ╟── type `‘a_1539_1548` is not an instance of type `'a_1539_1547`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -437,7 +437,7 @@ tc: int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.436: 	tc: int -> ChurchInt
 //│ ║         	^^
-//│ ╟── type `‘a_978_979` is not an instance of type `'a_1605`
+//│ ╟── type `‘a_978_979` is not an instance of type `'a_1606`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -451,7 +451,7 @@ def tc n = to_church_3 n : ChurchInt
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.450: 	def tc n = to_church_3 n : ChurchInt
 //│ ║         	           ^^^^^^^^^^^^^
-//│ ╟── type `‘a_978_979` is not an instance of type `'a_1626_1627`
+//│ ╟── type `‘a_978_979` is not an instance of type `'a_1627_1628`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:

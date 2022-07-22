@@ -2,7 +2,7 @@
 // *  this time without constrained types, which makes a related error appear earlier.
 
 
-// :NoRecursiveTypes
+:NoRecursiveTypes
 :GeneralizeCurriedFunctions
 // :DistributeForalls
 // :ArgGen

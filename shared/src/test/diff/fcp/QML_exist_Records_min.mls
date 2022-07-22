@@ -2,7 +2,7 @@
 
 
 
-// :NoRecursiveTypes
+:NoRecursiveTypes
 :GeneralizeCurriedFunctions
 // :DistributeForalls
 // :ArgGen

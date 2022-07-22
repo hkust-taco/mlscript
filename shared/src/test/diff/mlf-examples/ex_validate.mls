@@ -921,12 +921,18 @@ rec def id x = if true then x else id id x
 //│        <: 'a -> 'b
 //│   <:  id:
 //│ Sid
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
+//│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.908: 	rec def id x = if true then x else id id x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‘a_2246'  <:  α20_2251'    TraitTag  TypeVariable
-//│ ╙──  ... looks like:  ‘a_2246'  <:  α20_2229'
+//│ ╟── type `‘a_2246` is not a function
+//│ ║  l.736: 	type Sid = forall 'a. 'a -> 'a
+//│ ║         	                  ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.908: 	rec def id x = if true then x else id id x
+//│ ║         	                                   ^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.908: 	rec def id x = if true then x else id id x
+//│ ╙──       	                            ^
 //│   = [Function: id3]
 
 
