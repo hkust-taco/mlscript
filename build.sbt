@@ -57,3 +57,11 @@ lazy val mlscript = crossProject(JSPlatform, JVMPlatform).in(file("."))
 
 lazy val mlscriptJVM = mlscript.jvm
 lazy val mlscriptJS = mlscript.js
+
+lazy val mlscript_codegen = crossProject(JSPlatform, JVMPlatform).in(file("codegen"))
+  .settings(
+    name := "mlscript-codegen",
+    scalaVersion := "3.1.3",
+    sourceDirectory := baseDirectory.value.getParentFile()/"shared",
+  )
+  .dependsOn(mlscript)
