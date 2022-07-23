@@ -1,0 +1,64 @@
+:AllowParseErrors
+:AllowTypeErrors // TODO rm
+
+
+x => x
+//│ |x| |=>| |x|
+//│ Parsed: {=> x x}
+
+(x) => x
+//│ |(|x|)| |=>| |x|
+//│ Parsed: {=> '(' x, ')' x}
+
+// TODO
+fun x => x
+//│ |#fun| |x| |=>| |x|
+//│ ╔══[ERROR] Expected function parameter list; found operator instead
+//│ ║  l.14: 	fun x => x
+//│ ╙──      	      ^^
+//│ ╔══[ERROR] Expected ':' or '=' followed by a function body or signature; found identifier instead
+//│ ║  l.14: 	fun x => x
+//│ ╙──      	         ^
+//│ Parsed: {fun x = undefined}
+
+// TODO
+let f = fun x => x
+//│ |#let| |f| |#=| |#fun| |x| |=>| |x|
+//│ ╔══[ERROR] Unexpected 'fun' keyword in expression position
+//│ ║  l.25: 	let f = fun x => x
+//│ ╙──      	        ^^^
+//│ Parsed: {let f = => x x in undefined}
+
+
+fun f x = x
+//│ |#fun| |f| |x| |#=| |x|
+//│ ╔══[ERROR] Expected function parameter list; found identifier instead
+//│ ║  l.33: 	fun f x = x
+//│ ╙──      	      ^
+//│ Parsed: {fun f = x}
+
+
+(x, y) => x
+//│ |(|x|,| |y|)| |=>| |x|
+//│ Parsed: {=> '(' x, y, ')' x}
+
+
+=> 1
+//│ |=>| |1|
+//│ ╔══[ERROR] Unexpected operator in expression position
+//│ ║  l.46: 	=> 1
+//│ ╙──      	^^
+//│ Parsed: {1}
+
+x =>
+//│ |x| |=>|
+//│ ╔══[ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.53: 	x =>
+//│ ╙──      	    ^
+//│ Parsed: {=> x undefined}
+
+(x =>)
+//│ |(|x| |=>|)|
+//│ Parsed: {'(' => x undefined, ')'}
+
+

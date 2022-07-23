@@ -555,7 +555,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         detailedContext,
       ).flatten
       
-      raise(TypeError(msgs))
+      raise(CompilationError(msgs))
     }
     
     rec(lhs, rhs, true)(raise, Nil -> Nil)
@@ -612,7 +612,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     err(msg -> loco :: Nil)
   }
   def err(msgs: List[Message -> Opt[Loc]])(implicit raise: Raise): SimpleType = {
-    raise(TypeError(msgs))
+    raise(CompilationError(msgs))
     errType
   }
   def errType: SimpleType = ClassTag(ErrTypeId, Set.empty)(noProv)

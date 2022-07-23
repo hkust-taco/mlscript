@@ -1,0 +1,128 @@
+:AllowParseErrors
+:AllowTypeErrors // TODO rm
+
+
+foo
+  a
+  b
+//│ |foo|→|a|↵|b|
+//│ Parsed: {foo {a; b}}
+
+foo(
+  a,
+  b
+)
+//│ |foo|(|→|a|,|↵|b|←|↵|)|
+//│ ╔══[ERROR] Expected deindentation; found comma instead
+//│ ║  l.12: 	  a,
+//│ ║        	   ^
+//│ ╟── Note: indented block starts here:
+//│ ║  l.12: 	  a,
+//│ ╙──      	^^
+//│ ╔══[ERROR] Expected closing parenthesis; found identifier instead
+//│ ║  l.13: 	  b
+//│ ║        	  ^
+//│ ╟── Note: unmatched application parenthesis was opened here:
+//│ ║  l.11: 	foo(
+//│ ╙──      	   ^
+//│ ╔══[ERROR] Expected end of input; found deindentation instead
+//│ ║  l.13: 	  b
+//│ ║        	   ^
+//│ ║  l.14: 	)
+//│ ╙──      	
+//│ Parsed: {foo ({a},)}
+
+foo(
+  a,
+  b,
+)
+//│ |foo|(|→|a|,|↵|b|,|←|↵|)|
+//│ ╔══[ERROR] Expected deindentation; found comma instead
+//│ ║  l.36: 	  a,
+//│ ║        	   ^
+//│ ╟── Note: indented block starts here:
+//│ ║  l.36: 	  a,
+//│ ╙──      	^^
+//│ ╔══[ERROR] Expected closing parenthesis; found identifier instead
+//│ ║  l.37: 	  b,
+//│ ║        	  ^
+//│ ╟── Note: unmatched application parenthesis was opened here:
+//│ ║  l.35: 	foo(
+//│ ╙──      	   ^
+//│ ╔══[ERROR] Expected end of input; found comma instead
+//│ ║  l.37: 	  b,
+//│ ╙──      	   ^
+//│ Parsed: {foo ({a},)}
+
+foo(
+  a
+  b
+)
+//│ |foo|(|→|a|↵|b|←|↵|)|
+//│ Parsed: {foo ({a; b},)}
+
+foo(
+    a
+  b
+)
+//│ |foo|(|→|a|←|→|b|←|↵|)|
+//│ ╔══[ERROR] Expected closing parenthesis; found identifier instead
+//│ ║  l.66: 	  b
+//│ ║        	  ^
+//│ ╟── Note: unmatched application parenthesis was opened here:
+//│ ║  l.64: 	foo(
+//│ ╙──      	   ^
+//│ ╔══[ERROR] Expected end of input; found deindentation instead
+//│ ║  l.66: 	  b
+//│ ║        	   ^
+//│ ║  l.67: 	)
+//│ ╙──      	
+//│ Parsed: {foo ({a},)}
+
+foo of
+  a
+  fun f = 1
+  b
+//│ |foo| |#of|→|a|↵|#fun| |f| |#=| |1|↵|b|
+//│ Parsed: {foo ({a; fun f = 1; b},)}
+
+foo +
+  a
+  b
+//│ |foo| |+|→|a|↵|b|
+//│ Parsed: {+ foo {a; b}}
+
+
+foo(a, b, c)
+foo of a, b, c
+//│ |foo|(|a|,| |b|,| |c|)|↵|foo| |#of| |a|,| |b|,| |c|
+//│ Parsed: {foo (a, b, c,); foo (a, b, c,)}
+
+foo of
+  aaaaa,
+  bbbbb,
+  ccccc
+//│ |foo| |#of|→|aaaaa|,|↵|bbbbb|,|↵|ccccc|
+//│ ╔══[ERROR] Expected deindentation; found comma instead
+//│ ║  l.102: 	  aaaaa,
+//│ ║         	       ^
+//│ ╟── Note: indented block starts here:
+//│ ║  l.102: 	  aaaaa,
+//│ ╙──       	^^
+//│ ╔══[ERROR] Expected end of input; found comma instead
+//│ ║  l.103: 	  bbbbb,
+//│ ╙──       	       ^
+//│ Parsed: {foo ({aaaaa},); bbbbb}
+
+foo of
+  a
+  boo
+    x
+    y
+  c
+//│ |foo| |#of|→|a|↵|boo|→|x|↵|y|←|↵|c|
+//│ Parsed: {foo ({a; boo {x; y}; c},)}
+
+
+
+

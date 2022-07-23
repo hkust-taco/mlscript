@@ -3,7 +3,7 @@ package mlscript.mono
 import mlscript.{TypingUnit, NuTypeDef, NuFunDef}
 import mlscript.TypeName
 import mlscript.{App, Asc, Assign, Bind, Blk, Block, Bra, CaseOf, Lam, Let, Lit,
-                 New, Rcd, Sel, Subs, Term, Test, Tup, With, Var}
+                 New, Rcd, Sel, Subs, Term, Test, Tup, With, Var, Fld}
 import mlscript.{IntLit, DecLit, StrLit, UnitLit}
 import scala.collection.mutable.Map as MutMap
 import scala.collection.mutable.Set as MutSet
@@ -88,7 +88,7 @@ object Monomorph:
     // The recursive function doing the real work.
     def rec(tyDef: NuTypeDef): Item.TypeDecl =
       debug.trace[Item.TypeDecl]("MONO TDEF", PrettyPrinter.show(tyDef)) {
-        val NuTypeDef(kind, nme, tparams, specParams, parents, body) = tyDef
+        val NuTypeDef(kind, nme, tparams, params, parents, body) = tyDef
         val isolation = Isolation(body.entities.flatMap {
           // Will there be pure terms in class body?
           case Left(term) => Some(monomorphizeTerm(term)(using nestedTypeDecls))
@@ -113,8 +113,8 @@ object Monomorph:
   ): Item.FuncDecl | Item.FuncDefn =
     debug.trace[Item.FuncDecl | Item.FuncDefn]("MONO FUNC", PrettyPrinter.show(funDef)) {
       funImpls.addOne((funDef.nme.name, ArrayBuffer()))
-      val NuFunDef(nme, targs, specParams, body) = funDef
-      body match
+      val NuFunDef(nme, targs, rhs) = funDef
+      rhs match
         case Left(term) => Item.FuncDecl(nme, monomorphizeTerm(term))
         case Right(polyType) => Item.FuncDefn(nme, targs, polyType)
     }(_.toString)
@@ -145,11 +145,11 @@ object Monomorph:
           Expr.Apply(callee, arguments)
         case Tup(fields) =>
           Expr.Tuple(fields.map {
-            case (_, (term, _)) => monomorphizeTerm(term)
+            case (_, Fld(mut, spec, value)) => monomorphizeTerm(value)
           })
         case Rcd(fields) =>
           Expr.Record(fields.map {
-            case (name, (term, _)) => (name, monomorphizeTerm(term))
+            case (name, Fld(mut, spec, value)) => (name, monomorphizeTerm(value))
           })
         case Sel(receiver, fieldName) =>
           Expr.Select(monomorphizeTerm(receiver), fieldName)
@@ -162,7 +162,7 @@ object Monomorph:
         case _: Test => throw MonomorphError("cannot monomorphize `Test`")
         case With(term, Rcd(fields)) =>
           Expr.With(monomorphizeTerm(term), Expr.Record(fields.map {
-            case (name, (term, _)) => (name, monomorphizeTerm(term))
+            case (name, Fld(mut, spec, value)) => (name, monomorphizeTerm(term))
           }))
         case CaseOf(term, cases) => ???
         case Subs(array, index) =>

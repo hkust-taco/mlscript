@@ -1,0 +1,75 @@
+
+
+:e
+new
+//│ |#new|
+//│ ╔══[ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.4: 	new
+//│ ╙──     	   ^
+//│ Parsed: {new {}}
+
+
+(new)
+//│ |(|#new|)|
+//│ Parsed: {'(' new {}, ')'}
+
+new {}
+//│ |#new| |{|}|
+//│ Parsed: {new {undefined}}
+
+new A
+//│ |#new| |A|
+//│ Parsed: {new A() {}}
+
+new A()
+//│ |#new| |A|(|)|
+//│ Parsed: {new A() {}}
+
+new A(1, 2, 3)
+//│ |#new| |A|(|1|,| |2|,| |3|)|
+//│ Parsed: {new A(1, 2, 3,) {}}
+
+new A of 1, 2, 3
+//│ |#new| |A| |#of| |1|,| |2|,| |3|
+//│ Parsed: {new A(1, 2, 3,) {}}
+
+new A { fun x = 1 }
+//│ |#new| |A| |{| |#fun| |x| |#=| |1| |}|
+//│ Parsed: {new A() {fun x = 1}}
+
+new A() { fun x = 1 }
+//│ |#new| |A|(|)| |{| |#fun| |x| |#=| |1| |}|
+//│ Parsed: {new A() {fun x = 1}}
+
+new A(1, 2, 3) { fun x = 1 }
+//│ |#new| |A|(|1|,| |2|,| |3|)| |{| |#fun| |x| |#=| |1| |}|
+//│ Parsed: {new A(1, 2, 3,) {fun x = 1}}
+
+new A of 1, 2, 3 { fun x = 1 }
+//│ |#new| |A| |#of| |1|,| |2|,| |3| |{| |#fun| |x| |#=| |1| |}|
+//│ Parsed: {new A(1, 2, 3,) {fun x = 1}}
+
+
+:e
+new new
+//│ |#new| |#new|
+//│ ╔══[ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.54: 	new new
+//│ ╙──      	       ^
+//│ ╔══[ERROR] Unexpected object instantiation after `new` keyword
+//│ ║  l.54: 	new new
+//│ ╙──      	    ^^^
+//│ Parsed: {new {}}
+
+:e
+new new {}
+//│ |#new| |#new| |{|}|
+//│ ╔══[ERROR] Unexpected object instantiation after `new` keyword
+//│ ║  l.65: 	new new {}
+//│ ╙──      	    ^^^
+//│ Parsed: {new {}}
+
+new {new}
+//│ |#new| |{|#new|}|
+//│ Parsed: {new {new {}}}
+

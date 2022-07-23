@@ -41,22 +41,22 @@ class JSBackend {
     // should returns ("{ x, y }", ["x", "y"])
     case Rcd(fields) =>
       JSObjectPattern(fields map {
-        case (Var(nme), (Var(als), _)) if nme === als => nme -> N
-        case (Var(nme), (subTrm, _))                  => nme -> S(translatePattern(subTrm))
+        case (Var(nme), Fld(_, _, Var(als))) if nme === als => nme -> N
+        case (Var(nme), Fld(_, _, subTrm))                  => nme -> S(translatePattern(subTrm))
       })
     // This branch supports `def f (x: int) = x`.
     case Asc(trm, _) => translatePattern(trm)
     // Replace literals with wildcards.
     case _: Lit      => JSWildcardPattern()
     case Bra(_, trm) => translatePattern(trm)
-    case Tup(fields) => JSArrayPattern(fields map { case (_, (t, _)) => translatePattern(t) })
+    case Tup(fields) => JSArrayPattern(fields map { case (_, Fld(_, _, t)) => translatePattern(t) })
     // Others are not supported yet.
     case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf | _: Subs | _: Assign =>
       throw CodeGenError(s"term ${inspect(t)} is not a valid pattern")
   }
 
   private def translateParams(t: Term): Ls[JSPattern] = t match {
-    case Tup(params) => params map { case _ -> (p -> _) => translatePattern(p) }
+    case Tup(params) => params map { case _ -> Fld(_, _, p) => translatePattern(p) }
     case _           => throw CodeGenError(s"term $t is not a valid parameter list")
   }
 
@@ -95,7 +95,7 @@ class JSBackend {
     */
   protected def translateApp(term: App)(implicit scope: Scope): JSExpr = term match {
     // Binary expressions
-    case App(App(Var(op), Tup((N -> (lhs -> _)) :: Nil)), Tup((N -> (rhs -> _)) :: Nil))
+    case App(App(Var(op), Tup((N -> Fld(_, _, lhs)) :: Nil)), Tup((N -> Fld(_, _, rhs)) :: Nil))
         if JSBinary.operators contains op =>
       JSBinary(op, translateTerm(lhs), translateTerm(rhs))
     // If-expressions
@@ -107,7 +107,7 @@ class JSBackend {
         case Var(nme) => translateVar(nme, true)
         case _ => translateTerm(trm)
       }
-      callee(args map { case (_, (arg, _)) => translateTerm(arg) }: _*)
+      callee(args map { case (_, Fld(_, _, arg)) => translateTerm(arg) }: _*)
     case _ => throw CodeGenError(s"ill-formed application ${inspect(term)}")
   }
 
@@ -122,7 +122,7 @@ class JSBackend {
       JSArrowFn(patterns, lamScope.tempVars `with` translateTerm(body)(lamScope))
     case t: App => translateApp(t)
     case Rcd(fields) =>
-      JSRecord(fields map { case (key, (value, _)) =>
+      JSRecord(fields map { case (key, Fld(_, _, value)) =>
         key.name -> translateTerm(value)
       })
     case Sel(receiver, fieldName) =>
@@ -195,13 +195,13 @@ class JSBackend {
           case S(fnName) => fnName
           case N         => polyfill.use("withConstruct", topLevelScope.declareRuntimeSymbol("withConstruct"))
         }),
-        translateTerm(trm) :: JSRecord(fields map { case (Var(name), (value, _)) =>
+        translateTerm(trm) :: JSRecord(fields map { case (Var(name), Fld(_, _, value)) =>
           name -> translateTerm(value)
         }) :: Nil
       )
     case Bra(_, trm) => translateTerm(trm)
     case Tup(terms) =>
-      JSArray(terms map { case (_, (term, _)) => translateTerm(term) })
+      JSArray(terms map { case (_, Fld(_, _, term)) => translateTerm(term) })
     case Subs(arr, idx) =>
       JSMember(translateTerm(arr), translateTerm(idx))
     case Assign(lhs, value) =>
@@ -594,9 +594,8 @@ class JSTestBackend extends JSBackend {
               ((JSIdent("globalThis").member(sym.runtimeName) := (expr match {
                 case t: JSArrowFn => t.toFuncExpr(S(sym.runtimeName))
                 case t            => t
-              })) ::
-                (resultIdent := JSIdent(sym.runtimeName)) ::
-                Nil)
+              })) :: Nil),
+              sym.runtimeName
             )
           case L(reason) => JSTestBackend.AbortedQuery(reason)
         }
@@ -606,7 +605,9 @@ class JSTestBackend extends JSBackend {
       case term: Term =>
         try {
           val body = translateTerm(term)(scope)
-          JSTestBackend.CodeQuery(scope.tempVars.emit(), (resultIdent := body) :: Nil)
+          val res = JSTestBackend.CodeQuery(scope.tempVars.emit(), (resultIdent := body) :: Nil)
+          scope.refreshRes()
+          res
         } catch {
           case e: UnimplementedError => JSTestBackend.AbortedQuery(e.getMessage())
           case e: Throwable          => throw e
@@ -641,18 +642,19 @@ object JSTestBackend {
   /**
     * The entry generates meaningful code.
     */
-  final case class CodeQuery(prelude: Ls[Str], code: Ls[Str]) extends Query {
+  final case class CodeQuery(prelude: Ls[Str], code: Ls[Str], res: Str) extends Query {
     
   }
 
   object CodeQuery {
-    def apply(decls: Opt[JSLetDecl], stmts: Ls[JSStmt]): CodeQuery =
+    def apply(decls: Opt[JSLetDecl], stmts: Ls[JSStmt], res: Str = "res"): CodeQuery =
       CodeQuery(
         decls match {
           case S(stmt) => stmt.toSourceCode.toLines
           case N       => Nil
         },
-        SourceCode.fromStmts(stmts).toLines
+        SourceCode.fromStmts(stmts).toLines,
+        res
       )
   }
 

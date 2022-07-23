@@ -1,0 +1,78 @@
+:AllowParseErrors
+:AllowTypeErrors // TODO rm
+
+
+class Foo
+//│ |#class| |Foo|
+//│ Parsed: {class Foo() {}}
+
+class Foo {}
+//│ |#class| |Foo| |{|}|
+//│ Parsed: {class Foo() {undefined}}
+
+class Foo {
+  fun foo: int
+}
+//│ |#class| |Foo| |{|→|#fun| |foo|#:| |int|←|↵|}|
+//│ Parsed: {class Foo() {fun foo: [] -> int}}
+
+class Foo {
+  class Bar {
+    class Baz
+  }
+}
+//│ |#class| |Foo| |{|→|#class| |Bar| |{|→|#class| |Baz|←|↵|}|←|↵|}|
+//│ Parsed: {class Foo() {class Bar() {class Baz() {}}}}
+
+class Foo: Bar
+//│ |#class| |Foo|#:| |Bar|
+//│ Parsed: {class Foo(): Bar {}}
+
+class Foo: Bar, Baz
+//│ |#class| |Foo|#:| |Bar|,| |Baz|
+//│ Parsed: {class Foo(): Bar, Baz {}}
+
+class Foo: Bar { fun f = 0 }
+//│ |#class| |Foo|#:| |Bar| |{| |#fun| |f| |#=| |0| |}|
+//│ Parsed: {class Foo(): Bar {fun f = 0}}
+
+class Foo: Bar, Baz { fun f = 0 }
+//│ |#class| |Foo|#:| |Bar|,| |Baz| |{| |#fun| |f| |#=| |0| |}|
+//│ Parsed: {class Foo(): Bar, Baz {fun f = 0}}
+
+// * Pretty confusing... maybe we should find a way to reject this:
+class Foo: Bar { fun f = 0
+  fun bar = 1
+}
+//│ |#class| |Foo|#:| |Bar| |{| |#fun| |f| |#=| |0|→|#fun| |bar| |#=| |1|←|↵|}|
+//│ Parsed: {class Foo(): Bar {fun f = 0 {fun bar = 1}; undefined}}
+
+:e
+class Foo: Bar {
+  fun f = 0
+  fun bar = 1
+  }
+//│ |#class| |Foo|#:| |Bar| |{|→|#fun| |f| |#=| |0|↵|#fun| |bar| |#=| |1|↵|}|
+//│ ╔══[ERROR] Expected end of indented block; found closing curly brace instead
+//│ ║  l.54: 	  }
+//│ ╙──      	  ^
+//│ Parsed: {class Foo(): Bar {fun f = 0; fun bar = 1; undefined}}
+
+class Foo: Bar {
+  fun f = 0
+  fun bar = 1
+}
+//│ |#class| |Foo|#:| |Bar| |{|→|#fun| |f| |#=| |0|↵|#fun| |bar| |#=| |1|←|↵|}|
+//│ Parsed: {class Foo(): Bar {fun f = 0; fun bar = 1}}
+
+
+// FIXME `(undefined,)`
+class Foo()
+//│ |#class| |Foo|(|)|
+//│ Parsed: {class Foo(undefined,) {}}
+
+class Foo(x, y, z)
+//│ |#class| |Foo|(|x|,| |y|,| |z|)|
+//│ Parsed: {class Foo(x, y, z,) {}}
+
+

@@ -4,14 +4,15 @@ import scala.util.chaining._
 import mlscript.utils._, shorthands._
 
 
-sealed abstract class Diagnostic(theMsg: String) extends Exception(theMsg) {
+sealed abstract class Diagnostic(val theMsg: String) extends Exception(theMsg) {
   val allMsgs: Ls[Message -> Opt[Loc]]
 }
 
-final case class TypeError(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]]) extends Diagnostic(mainMsg)
-object TypeError {
-  def apply(msgs: Ls[Message -> Opt[Loc]]): TypeError =
-    TypeError(msgs.head._1.show.toString, msgs)
+// TODO add error kind or diagnostic kind field
+final case class CompilationError(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]]) extends Diagnostic(mainMsg)
+object CompilationError {
+  def apply(msgs: Ls[Message -> Opt[Loc]]): CompilationError =
+    CompilationError(msgs.head._1.show.toString, msgs)
 }
 
 final case class Warning(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]]) extends Diagnostic(mainMsg)
@@ -31,6 +32,13 @@ final case class Loc(spanStart: Int, spanEnd: Int, origin: Origin) {
     that.spanStart >= this.spanStart && that.spanStart <= this.spanEnd
     || that.spanEnd <= this.spanEnd && that.spanEnd >= this.spanStart
   )
+  def ++(that: Loc): Loc = {
+    require(this.origin is that.origin)
+    Loc(this.spanStart min that.spanStart, this.spanEnd max that.spanEnd, origin)
+  }
+  def ++(that: Opt[Loc]): Loc = that.fold(this)(this ++ _)
+  def right: Loc = copy(spanStart = spanEnd)
+  def left: Loc = copy(spanEnd = spanStart)
 }
 
 final case class Origin(fileName: Str, startLineNum: Int, fph: FastParseHelpers) {

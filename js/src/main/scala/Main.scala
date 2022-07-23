@@ -30,7 +30,7 @@ object Main {
     val tryRes = Try[Str] {
       import fastparse._
       import fastparse.Parsed.{Success, Failure}
-      import mlscript.{MLParser, TypeError, Origin}
+      import mlscript.{MLParser, CompilationError, Origin}
       val lines = str.splitSane('\n').toIndexedSeq
       val processedBlock = MLParser.addTopLevelSeparators(lines).mkString
       val fph = new mlscript.FastParseHelpers(str, lines)
@@ -177,7 +177,7 @@ object Main {
     val stopAtFirstError = true
     var errorOccurred = false
 
-    def formatError(culprit: Str, err: TypeError): Str = {
+    def formatError(culprit: Str, err: CompilationError): Str = {
       s"""<b><font color="Red">
                 Error in <font color="LightGreen">${culprit}</font>: ${err.mainMsg}
                 <!--${
@@ -193,7 +193,7 @@ object Main {
     implicit var ctx: Ctx =
       try processTypeDefs(typeDefs)(Ctx.init, raise)
       catch {
-        case err: TypeError =>
+        case err: CompilationError =>
           res ++= formatError("class definitions", err)
           Ctx.init
       }
@@ -238,7 +238,7 @@ object Main {
       }
       val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
       val headStr = diag match {
-        case TypeError(msg, loco) =>
+        case CompilationError(msg, loco) =>
           totalTypeErrors += 1
           s"╔══ <strong style=\"color: #E74C3C\">[ERROR]</strong> "
         case Warning(msg, loco) =>
@@ -345,7 +345,7 @@ object Main {
               }
           }
       } catch {
-        case err: TypeError =>
+        case err: CompilationError =>
           if (stopAtFirstError) decls = Nil
           val culprit = d match {
             case Def(isrec, nme, rhs)  => "def " + nme

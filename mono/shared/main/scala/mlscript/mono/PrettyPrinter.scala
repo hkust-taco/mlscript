@@ -31,11 +31,8 @@ object PrettyPrinter:
       + (if funDef.targs.isEmpty
          then ""
          else funDef.targs.map(_.name).mkString("[", ", ", "]"))
-      + (if funDef.specParams.isEmpty
-         then ""
-         else funDef.specParams.map(_._1.name).mkString(" ", " ", ""))
       + " = "
-      + funDef.body.fold(_.toString, _.body.show)
+      + funDef.rhs.fold(_.toString, _.body.show)
 
   def showTypeDef(tyDef: NuTypeDef, indent: Int = 0): String =
     s"${tyDef.kind.str} ${tyDef.nme.name}"
@@ -44,5 +41,5 @@ object PrettyPrinter:
          else tyDef.tparams.map(_.name).mkString("[", ",", "]"))
       + (if tyDef.parents.isEmpty
          then ""
-         else ": " + tyDef.parents.map(_.base.name).mkString(", "))
+         else ": " + tyDef.parents.mkString(", "))
       + showTypingUnit(tyDef.body, indent + 1)

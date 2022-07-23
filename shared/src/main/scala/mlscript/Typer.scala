@@ -425,7 +425,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     def con(lhs: SimpleType, rhs: SimpleType, res: SimpleType): SimpleType = {
       var errorsCount = 0
       constrain(lhs, rhs)({
-        case err: TypeError =>
+        case err: CompilationError =>
           // Note that we do not immediately abort constraining because we still
           //  care about getting the non-erroneous parts of the code return meaningful types.
           // In other words, this is so that errors do not interfere too much
@@ -496,7 +496,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               :: fieldNames.map(tp => msg"Declared at" -> tp.toLoc))(raise)
           case _ =>
         }
-        RecordType.mk(fs.map { case (n, (t, mut)) => 
+        RecordType.mk(fs.map { case (n, Fld(mut, _, t)) => 
           if (n.name.isCapitalized)
             err(msg"Field identifiers must start with a small letter", term.toLoc)(raise)
           val tym = typeTerm(t)
@@ -510,7 +510,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case tup: Tup if funkyTuples =>
         typeTerms(tup :: Nil, false, Nil)
       case Tup(fs) =>
-        TupleType(fs.map { case (n, (t, mut)) =>
+        TupleType(fs.map { case (n, Fld(mut, _, t)) =>
           val tym = typeTerm(t)
           val fprov = tp(t.toLoc, (if (mut) "mutable " else "") + "tuple field")
           if (mut) {
@@ -736,10 +736,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         (implicit ctx: Ctx, raise: Raise, prov: TypeProvenance): SimpleType
       = term match {
     case (trm @ Var(nme)) :: sts if rcd => // field punning
-      typeTerms(Tup(S(trm) -> (trm -> false) :: Nil) :: sts, rcd, fields)
+      typeTerms(Tup(S(trm) -> Fld(false, false, trm) :: Nil) :: sts, rcd, fields)
     case Blk(sts0) :: sts1 => typeTerms(sts0 ::: sts1, rcd, fields)
     case Tup(Nil) :: sts => typeTerms(sts, rcd, fields)
-    case Tup((no, (trm, tmut)) :: ofs) :: sts =>
+    case Tup((no, Fld(tmut, _, trm)) :: ofs) :: sts =>
       val ty = {
         trm match  {
           case Bra(false, t) if ctx.inPattern => // we use syntax `(x: (p))` to type `p` as a pattern and not a type...

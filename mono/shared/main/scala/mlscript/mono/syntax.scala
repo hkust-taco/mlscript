@@ -3,7 +3,7 @@ package mlscript.mono
 import scala.collection.mutable.ArrayBuffer
 import mlscript.{Type, Union, Inter, Function, Record, Tuple, Recursive, AppliedType,
                  Neg, Rem, Bounds, WithExtension, Constrained, Top, Bot, Literal,
-                 TypeName, TypeVar, PolyType}
+                 TypeName, TypeVar, PolyType, NamedType}
 
 enum Expr:
   case Ref(name: String)
@@ -77,7 +77,7 @@ enum TypeDeclKind:
 enum Item:
   // Type declarations: aliases, classes and traits.
   case TypeDecl(name: TypeName, kind: TypeDeclKind, typeParams: List[TypeName],
-                parents: List[AppliedType], body: Isolation)
+                parents: List[NamedType], body: Isolation)
 
   // Function declaration (with implementation).
   case FuncDecl(name: Expr.Ref, body: Expr)

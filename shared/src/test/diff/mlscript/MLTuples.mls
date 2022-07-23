@@ -11,7 +11,6 @@ t = (1, 2, 3)
 tx = t with { x = 1 }
 //│ // Query 1
 //│ globalThis.tx = withConstruct(t, { x: 1 });
-//│ res = tx;
 //│ // End of generated code
 //│ tx: (1, 2, 3,) & {x: 1}
 //│   = [ 1, 2, 3, x: 1 ]
@@ -26,16 +25,16 @@ trait Hey: { x: int }
 :e
 Hey t
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.27: 	Hey t
+//│ ║  l.26: 	Hey t
 //│ ║        	^^^^^
 //│ ╟── tuple literal of type `{_1: 1, _2: 2, _3: 3}` does not have field 'x'
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	    ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{x: int}`
-//│ ║  l.27: 	Hey t
+//│ ║  l.26: 	Hey t
 //│ ║        	    ^
 //│ ╟── Note: constraint arises from record type:
-//│ ║  l.23: 	trait Hey: { x: int }
+//│ ║  l.22: 	trait Hey: { x: int }
 //│ ╙──      	           ^^^^^^^^^^
 //│ res: (1, 2, 3,) & hey | error
 //│    = [ 1, 2, 3 ]
@@ -73,44 +72,44 @@ f t
 f tx
 f htx
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.72: 	f t
+//│ ║  l.71: 	f t
 //│ ║        	^^^
 //│ ╟── tuple literal of type `(1, 2, 3,)` does not match type `(?a, ?b,)`
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	    ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
-//│ ║  l.72: 	f t
+//│ ║  l.71: 	f t
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.67: 	f ((a, b)) = add a b
+//│ ║  l.66: 	f ((a, b)) = add a b
 //│ ╙──      	   ^^^^^^
 //│ res: error | int
 //│    = 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.73: 	f tx
+//│ ║  l.72: 	f tx
 //│ ║        	^^^^
 //│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` is not a 2-element tuple
 //│ ║  l.11: 	tx = t with { x = 1 }
 //│ ║        	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?a, ?b,)`
-//│ ║  l.73: 	f tx
+//│ ║  l.72: 	f tx
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.67: 	f ((a, b)) = add a b
+//│ ║  l.66: 	f ((a, b)) = add a b
 //│ ╙──      	   ^^^^^^
 //│ res: error | int
 //│    = 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.74: 	f htx
+//│ ║  l.73: 	f htx
 //│ ║        	^^^^^
 //│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` does not match type `(?a, ?b,) | ~hey`
 //│ ║  l.11: 	tx = t with { x = 1 }
 //│ ║        	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,) | ~hey`
-//│ ║  l.74: 	f htx
+//│ ║  l.73: 	f htx
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.67: 	f ((a, b)) = add a b
+//│ ║  l.66: 	f ((a, b)) = add a b
 //│ ╙──      	   ^^^^^^
 //│ res: error | int
 //│    = 3
@@ -142,11 +141,11 @@ g (tx with { y = 2 })
 :e
 g tx
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.143: 	g tx
+//│ ║  l.142: 	g tx
 //│ ║         	^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1} & ~hey` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.131: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
+//│ ║  l.130: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ╙──       	                                          ^^^^^
 //│ res: 1 | error
 //│    = 1
@@ -210,16 +209,16 @@ t = (1, 2, 3) with {_1 = "oops"}
 :e
 (t: ("oops",int,int,))._1
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.211: 	(t: ("oops",int,int,))._1
+//│ ║  l.210: 	(t: ("oops",int,int,))._1
 //│ ║         	 ^
 //│ ╟── `with` extension of type `{_1: "oops", _2: 2, _3: 3}` is not a 3-element tuple
-//│ ║  l.205: 	t = (1, 2, 3) with {_1 = "oops"}
+//│ ║  l.204: 	t = (1, 2, 3) with {_1 = "oops"}
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `("oops", int, int,)`
-//│ ║  l.211: 	(t: ("oops",int,int,))._1
+//│ ║  l.210: 	(t: ("oops",int,int,))._1
 //│ ║         	 ^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.211: 	(t: ("oops",int,int,))._1
+//│ ║  l.210: 	(t: ("oops",int,int,))._1
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^
 //│ res: "oops"
 //│    = 'oops'

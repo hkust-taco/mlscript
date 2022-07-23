@@ -1,0 +1,100 @@
+:AllowParseErrors
+:AllowTypeErrors // TODO rm
+
+
+
+if f of
+  0 then "ok"
+  1 then "ko"
+//│ |#if| |f| |#of|→|0| |#then| |"ok"|↵|1| |#then| |"ko"|
+//│ ╔══[ERROR] Unexpected 'then'/'else' clause
+//│ ║  l.7: 	  0 then "ok"
+//│ ║       	  ^^^^^^^^^^^
+//│ ║  l.8: 	  1 then "ko"
+//│ ╙──     	^^^^^^^^^^^^^
+//│ ╔══[ERROR] Expected 'then'/'else' clause; found application instead
+//│ ║  l.6: 	if f of
+//│ ║       	   ^^^^
+//│ ║  l.7: 	  0 then "ok"
+//│ ║       	^^^^^^^^^^^^^
+//│ ║  l.8: 	  1 then "ko"
+//│ ║       	^^^^^^^^^^^^^
+//│ ╟── Note: 'if' expression started here:
+//│ ║  l.6: 	if f of
+//│ ╙──     	^^
+//│ Parsed: {if (f (undefined,)) then undefined}
+
+if f (
+  0 then "ok"
+  1 then "ko"
+)
+//│ |#if| |f| |(|→|0| |#then| |"ok"|↵|1| |#then| |"ko"|←|↵|)|
+//│ ╔══[ERROR] Unexpected 'then'/'else' clause
+//│ ║  l.28: 	  0 then "ok"
+//│ ║        	  ^^^^^^^^^^^
+//│ ║  l.29: 	  1 then "ko"
+//│ ╙──      	^^^^^^^^^^^^^
+//│ ╔══[ERROR] Expected 'then'/'else' clause; found application instead
+//│ ║  l.27: 	if f (
+//│ ║        	   ^^^
+//│ ║  l.28: 	  0 then "ok"
+//│ ║        	^^^^^^^^^^^^^
+//│ ║  l.29: 	  1 then "ko"
+//│ ║        	^^^^^^^^^^^^^
+//│ ║  l.30: 	)
+//│ ║        	^
+//│ ╟── Note: 'if' expression started here:
+//│ ║  l.27: 	if f (
+//│ ╙──      	^^
+//│ Parsed: {if (f (undefined,)) then undefined}
+
+if f of
+  0 then "ok"
+  1 then "ko"
+  else "?"
+//│ |#if| |f| |#of|→|0| |#then| |"ok"|↵|1| |#then| |"ko"|↵|#else| |"?"|
+//│ ╔══[ERROR] Unexpected 'then'/'else' clause
+//│ ║  l.52: 	  0 then "ok"
+//│ ║        	  ^^^^^^^^^^^
+//│ ║  l.53: 	  1 then "ko"
+//│ ║        	^^^^^^^^^^^^^
+//│ ║  l.54: 	  else "?"
+//│ ╙──      	^^^^^^^^^^
+//│ ╔══[ERROR] Expected 'then'/'else' clause; found application instead
+//│ ║  l.51: 	if f of
+//│ ║        	   ^^^^
+//│ ║  l.52: 	  0 then "ok"
+//│ ║        	^^^^^^^^^^^^^
+//│ ║  l.53: 	  1 then "ko"
+//│ ║        	^^^^^^^^^^^^^
+//│ ║  l.54: 	  else "?"
+//│ ║        	^^^^^^^^^^
+//│ ╟── Note: 'if' expression started here:
+//│ ║  l.51: 	if f of
+//│ ╙──      	^^
+//│ Parsed: {if (f (undefined,)) then undefined}
+
+if f of
+  0 is 0 then "ok"
+  1 is 1 then "ko"
+//│ |#if| |f| |#of|→|0| |is| |0| |#then| |"ok"|↵|1| |is| |1| |#then| |"ko"|
+//│ ╔══[ERROR] Unexpected 'then'/'else' clause
+//│ ║  l.78: 	  0 is 0 then "ok"
+//│ ║        	  ^^^^^^^^^^^^^^^^
+//│ ║  l.79: 	  1 is 1 then "ko"
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Expected 'then'/'else' clause; found application instead
+//│ ║  l.77: 	if f of
+//│ ║        	   ^^^^
+//│ ║  l.78: 	  0 is 0 then "ok"
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.79: 	  1 is 1 then "ko"
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: 'if' expression started here:
+//│ ║  l.77: 	if f of
+//│ ╙──      	^^
+//│ Parsed: {if (f (undefined,)) then undefined}
+
+
+
+
