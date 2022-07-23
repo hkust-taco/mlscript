@@ -17,34 +17,34 @@ import collection.mutable.Map as MutMap
 import mlscript.Cls
 import mlscript.New.apply
 import mlscript.Trt
+import mlscript.{Diagnostic, Warning, CompilationError}
 
 @main
 def main(): Unit =
   val source = """
-def inc x = x + 1
-def dbl x = x * 2
-def app f x = f x
+fun inc x = x + 1
+fun dbl x = x * 2
+fun app(f, x) = f x
 
-class Box[T]: { inner: T }
-  method Map: (T -> 'a) -> Box['a]
-  method Map f = Box { inner = f this.inner }
-  method Get = this.inner
+class Box(value) {
+  fun map f = Box(f(value))
+  fun get = this.value
+}
 
-class Stop: {}
-
-Box { inner = 4 * 5 }
-
-def box0 = Box { inner = 0 }
-def box1 = box0.Map inc
-def box2 = box1.Map dbl
+Box(4 * 5)
   """
   val fastParseHelpers = mlscript.FastParseHelpers(source)
   val origin = mlscript.Origin("test.mls", 1, fastParseHelpers)
-  val raise = (t: Any) => ()
+  val raise = (t: Diagnostic) => t match
+    case Warning(mainMsg, _) =>
+      println(Console.YELLOW + "[parser]" + Console.RESET + " " + mainMsg)
+    case CompilationError(mainMsg, _) =>
+      println(Console.RED + "[parser]" + Console.RESET + " " + mainMsg)
   val lexer = new NewLexer(origin, raise, false)
   val tokens = lexer.tokens
   val parser = new NewParser(origin, tokens, raise, false) {
-    def printDbg(msg: => Any): Unit = ()
+    def printDbg(msg: => Any): Unit =
+      println(Console.GREEN + "[parser]" + Console.RESET + " " + msg)
   }
   val typingUnit = parser.parseAll(parser.typingUnit)
   val monomorphized = Monomorph.monomprphize(typingUnit)
