@@ -150,7 +150,7 @@ final case class NuTypeDef(
 final case class NuFunDef(
   nme: Var,
   targs: Ls[TypeName],
-  specParams: Ls[Var -> Opt[Type]],
+  specParams: Ls[Var -> Opt[Type]], // list of parameters
   body: Term \/ PolyType,
 ) extends NuDecl
 
