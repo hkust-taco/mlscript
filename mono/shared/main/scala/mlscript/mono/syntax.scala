@@ -13,6 +13,7 @@ enum Expr:
   case Record(fields: List[(Ref, Expr)])
   case Select(receiver: Expr, field: Ref)
   case LetIn(isRec: Boolean, name: Ref, rhs: Expr, body: Expr)
+  case Block(items: List[Expr | Item.FuncDecl | Item.FuncDefn])
   case As(value: Expr, toType: Type)
   case Assign(assignee: Expr, value: Expr)
   case With(value: Expr, fields: Expr.Record)
@@ -37,6 +38,7 @@ enum Expr:
       "{" + fields.iterator.map { (name, value) => s"$name = $value" } + "}"
     case Select(receiver, field) => s"$receiver.$field"
     case LetIn(isRec, name, rhs, body) => s"let $name = $rhs in $body"
+    case Block(items) => items.mkString(";")
     case As(value, toType) => s"$value as $toType"
     case Assign(assignee, value) => s"$assignee = $value"
     case With(value, fields) => s"$value with $fields"

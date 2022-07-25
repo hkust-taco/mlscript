@@ -155,7 +155,18 @@ object Monomorph:
           Expr.Select(monomorphizeTerm(receiver), fieldName)
         case Let(isRec, name, rhs, body) =>
           Expr.LetIn(isRec, name, monomorphizeTerm(rhs), monomorphizeTerm(body))
-        case _: Blk => throw MonomorphError("cannot monomorphize `Blk`")
+        case Blk(stmts) => Expr.Block(stmts.flatMap[Expr | Item.FuncDecl | Item.FuncDefn] {
+          case term: Term => Some(monomorphizeTerm(term))
+          case tyDef: NuTypeDef =>
+            tyDecls ++= monomorphizeTypeDef(tyDef)
+            None
+          case funDef: NuFunDef => Some(monomorphizeFunDef(funDef))
+          case mlscript.DataDefn(_) => throw MonomorphError("unsupported DataDefn")
+          case mlscript.DatatypeDefn(_, _) => throw MonomorphError("unsupported DatatypeDefn")
+          case mlscript.TypeDef(_, _, _, _, _, _) => throw MonomorphError("unsupported TypeDef")
+          case mlscript.Def(_, _, _) => throw MonomorphError("unsupported Def")
+          case mlscript.LetS(_, _, _) => throw MonomorphError("unsupported LetS")
+        })
         case _: Bra => throw MonomorphError("cannot monomorphize `Bra`")
         case Asc(term, ty) => Expr.As(monomorphizeTerm(term), ty)
         case _: Bind => throw MonomorphError("cannot monomorphize `Bind`")
