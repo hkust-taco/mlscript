@@ -657,7 +657,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
         // val rhs = expr(opPrec(opStr)._2)
         // // exprCont(Infix(acc, opStr, rhs), prec)
         // exprCont(App(App(Var(opStr).withLoc(N/*TODO*/), acc), rhs), prec)
-        val v = Var(opStr).withLoc(N/*TODO*/)
+        val v = Var(opStr).withLoc(S(l0))
         // printDbg(s">>> $opStr ${opPrec(opStr)}")
         exprOrIf(opPrec(opStr)._2) match {
           case L(rhs) =>

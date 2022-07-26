@@ -1,0 +1,71 @@
+
+x.a
+//│ |x|.|a|
+//│ Parsed: {. x a}
+
+x
+  .a
+//│ |x|→|.|a|
+//│ Parsed: {. x a}
+
+:e
+x
+.a
+//│ |x|↵|.|a|
+//│ ╔══[ERROR] Unexpected operator in expression position
+//│ ║  l.13: 	.a
+//│ ╙──      	^
+//│ Parsed: {x; a}
+
+x.a.b
+//│ |x|.|a|.|b|
+//│ Parsed: {. (. x a) b}
+
+x
+  .a
+  .b
+//│ |x|→|.|a|↵|.|b|
+//│ Parsed: {. (. x a) b}
+
+x
+  .a.b
+//│ |x|→|.|a|.|b|
+//│ Parsed: {. x (. a b)}
+
+// Perhaps surprising:
+x
+  .a
+    .b
+//│ |x|→|.|a|→|.|b|
+//│ Parsed: {. x (. a b)}
+
+x
+  .a
+    .b
+    .c
+  .d
+//│ |x|→|.|a|→|.|b|↵|.|c|←|↵|.|d|
+//│ Parsed: {. (. x (. (. a b) c)) d}
+
+:e
+(.)
+//│ |(|.|)|
+//│ ╔══[ERROR] Expected closing parenthesis; found operator instead
+//│ ║  l.49: 	(.)
+//│ ║        	 ^
+//│ ╟── Note: unmatched parenthesis was opened here:
+//│ ║  l.49: 	(.)
+//│ ╙──      	^
+//│ ╔══[ERROR] Expected end of input; found closing parenthesis instead
+//│ ║  l.49: 	(.)
+//│ ╙──      	  ^
+//│ Parsed: {'('  ')'}
+
+:e
+a, b
+//│ |a|,| |b|
+//│ ╔══[ERROR] Expected end of input; found comma instead
+//│ ║  l.63: 	a, b
+//│ ╙──      	 ^
+//│ Parsed: {a}
+
