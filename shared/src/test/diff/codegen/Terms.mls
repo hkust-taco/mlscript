@@ -228,9 +228,7 @@ f 0
 :js
 let x = 0 in x + 1
 //│ // Query 1
-//│ res = (function (x) {
-//│   return x + 1;
-//│ })(0);
+//│ res = ((x) => x + 1)(0);
 //│ // End of generated code
 //│ res: int
 //│    = 1
@@ -243,7 +241,7 @@ def f x = case x of { }
 //│ // Query 1
 //│ globalThis.f1 = function f1(x) {
 //│   let a;
-//│   return (a = x, (function () {
+//│   return (a = x, (() => {
 //│     throw new Error("non-exhaustive case expression");
 //│   })());
 //│ };
@@ -294,7 +292,7 @@ case A { a = 0 } of
   }
 //│ // Query 1
 //│ let b;
-//│ res = (b = new A({ a: 0 }), b instanceof A ? "A" : b instanceof B ? "B" : (function () {
+//│ res = (b = new A({ a: 0 }), b instanceof A ? "A" : b instanceof B ? "B" : (() => {
 //│   throw new Error("non-exhaustive case expression");
 //│ })());
 //│ // End of generated code

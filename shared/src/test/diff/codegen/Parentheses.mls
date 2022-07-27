@@ -60,7 +60,7 @@ x > 0 && x < 0
 1 + (if (case x + 1 of { int -> 8 | string -> 9 }) == 3 then 2 else 3)
 //│ // Query 1
 //│ let a;
-//│ res = 1 + ((a = x + 1, Number.isInteger(a) ? 8 : a.constructor === String ? 9 : (function () {
+//│ res = 1 + ((a = x + 1, Number.isInteger(a) ? 8 : a.constructor === String ? 9 : (() => {
 //│   throw new Error("non-exhaustive case expression");
 //│ })()) == 3 ? 2 : 3);
 //│ // End of generated code
@@ -71,7 +71,7 @@ x > 0 && x < 0
 case x of { int -> 1 | string -> 0 }
 //│ // Query 1
 //│ let b;
-//│ res = (b = x, Number.isInteger(b) ? 1 : b.constructor === String ? 0 : (function () {
+//│ res = (b = x, Number.isInteger(b) ? 1 : b.constructor === String ? 0 : (() => {
 //│   throw new Error("non-exhaustive case expression");
 //│ })());
 //│ // End of generated code
@@ -85,10 +85,10 @@ case x of { int -> 1 | string -> 0 }
 //│ // Query 1
 //│ let c, d;
 //│ res = [
-//│   (c = x, Number.isInteger(c) ? 1 : c.constructor === String ? 0 : (function () {
+//│   (c = x, Number.isInteger(c) ? 1 : c.constructor === String ? 0 : (() => {
 //│     throw new Error("non-exhaustive case expression");
 //│   })()),
-//│   (d = x, Number.isInteger(d) ? 1 : d.constructor === String ? 0 : (function () {
+//│   (d = x, Number.isInteger(d) ? 1 : d.constructor === String ? 0 : (() => {
 //│     throw new Error("non-exhaustive case expression");
 //│   })())
 //│ ];

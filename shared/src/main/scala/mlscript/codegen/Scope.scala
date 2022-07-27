@@ -227,6 +227,13 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     register(symbol)
     symbol
   }
+  
+  def declareThisAlias(): ValueSymbol = {
+    val runtimeName = allocateRuntimeName("self")
+    val symbol = ValueSymbol("this", runtimeName)
+    register(symbol)
+    symbol
+  }
 
   def declareValue(lexicalName: Str): ValueSymbol = {
     val runtimeName = lexicalValueSymbols.get(lexicalName) match {
@@ -282,12 +289,21 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     name
   }
 
+  /**
+    * This function declares a parameter in current scope and returns the 
+    * symbol's runtime name.
+    *
+    * @param name
+    * @return
+    */
   def declareParameter(name: Str): Str = {
-    val prefix = if (JSField.isValidIdentifier(name)) name
-      else if (Symbol.isKeyword(name)) name + "$" else Scope.replaceTicks(name)
-    val symbol = ValueSymbol(name, prefix)
-    register(symbol)
-    symbol.runtimeName
+    val prefix =
+      if (JSField.isValidIdentifier(name)) name
+      else if (Symbol.isKeyword(name)) name + "$"
+      else Scope.replaceTicks(name)
+    val runtimeName = allocateRuntimeName(prefix)
+    register(ValueSymbol(name, runtimeName))
+    runtimeName
   }
 
   def existsRuntimeSymbol(name: Str): Bool = runtimeSymbols.contains(name)
