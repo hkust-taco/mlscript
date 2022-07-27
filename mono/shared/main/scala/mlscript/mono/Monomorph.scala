@@ -18,9 +18,22 @@ object Monomorph:
   private val funProtos = MutMap[String, NuFunDef]()
   private val funImpls = MutMap[String, ArrayBuffer[NuFunDef]]()
 
-  private val tyProtos = MutMap[String, NuTypeDef]()
-  private val tyImpls = MutMap[String, ArrayBuffer[NuTypeDef]]()
-  private val allTyImpls = ArrayBuffer[NuTypeDef]()
+  /**
+   * Specialized implementations of each type declarations.
+   */
+  private val tyImpls = MutMap[String, (Item.TypeDecl, ArrayBuffer[Item.TypeDecl])]()
+  /**
+   * Add a prototype type declaration.
+   */
+  private def addPrototypeTypeDecl(typeDecl: Item.TypeDecl) =
+    tyImpls.addOne(typeDecl.name.name, (typeDecl, ArrayBuffer()))
+  /**
+   * An iterator going through all type declarations.
+   */
+  private def allTypeDecls: IterableOnce[(Item.TypeDecl, Item.TypeDecl)] =
+    tyImpls.iterator.flatMap { case (name, (protoClass, implClasses)) =>
+      implClasses.iterator.map((protoClass, _))
+    }
 
   /**
    * A global store of monomorphized lambda classes.
@@ -31,7 +44,7 @@ object Monomorph:
    */
   private val anonymTyDefs = MutMap[String, Item.TypeDecl]()
 
-  def specializedTypeDefs: List[NuTypeDef] = allTyImpls.toList
+  def specializedTypeDefs: List[Item.TypeDecl] = allTypeDecls.map(_._2).toList
 
   /**
    * This function monomorphizes the top-level `TypingUnit` into a `Module`.
@@ -40,34 +53,9 @@ object Monomorph:
     debug.trace("MONO MODL", PrettyPrinter.show(tu)) {
       mlscript.mono.Module(tu.entities.flatMap[Expr | Item] {
         case Left(term) =>
-          val tyDecls = ArrayBuffer[Item.TypeDecl]()
-          Some(monomorphizeTerm(term)(using tyDecls)).concat(tyDecls)
-        case Right(tyDef: NuTypeDef) => 
-          tyProtos.addOne((tyDef.nme.name, tyDef))
-          tyImpls.addOne((tyDef.nme.name, ArrayBuffer()))
-          monomorphizeTypeDef(tyDef)
-        case Right(funDef: NuFunDef) =>
-          funProtos.addOne((funDef.nme.name, funDef))
-          funImpls.addOne((funDef.nme.name, ArrayBuffer()))
-          val tyDecls = ArrayBuffer[Item.TypeDecl]()
-          Some(monomorphizeFunDef(funDef)(using tyDecls))
-      })
-    }(_.toString)
-
-  /**
-   * This function monomorphizes the top-level `TypingUnit` into a `Module`.
-   */
-  def monomorphizeBody(body: TypingUnit)(
-      using tyDecls: ArrayBuffer[Item.TypeDecl]
-  ): Isolation =
-    debug.trace("MONO BODY", PrettyPrinter.show(body)) {
-      Isolation(body.entities.flatMap[Expr | Item.FuncDecl | Item.FuncDefn] {
-        case Left(term) =>
           Some(monomorphizeTerm(term))
         case Right(tyDef: NuTypeDef) => 
-          tyProtos.addOne((tyDef.nme.name, tyDef))
-          tyImpls.addOne((tyDef.nme.name, ArrayBuffer()))
-          tyDecls ++= monomorphizeTypeDef(tyDef)
+          monomorphizeTypeDef(tyDef)
           None
         case Right(funDef: NuFunDef) =>
           funProtos.addOne((funDef.nme.name, funDef))
@@ -78,39 +66,62 @@ object Monomorph:
     }(_.toString)
 
   /**
-   * This function monomorphizes a top-level type definition and produces a
-   * series of `Item.TypeDecl`.
+   * This function monomorphizes the nested `TypingUnit` into a `Isolation`.
    */
-  private def monomorphizeTypeDef(tyDef: NuTypeDef): Iterable[Item.TypeDecl] =
-    // Lifted classes will be put in this array buffer.
-    val nestedTypeDecls = ArrayBuffer[Item.TypeDecl]()
+  def monomorphizeBody(body: TypingUnit): Isolation =
+    debug.trace("MONO BODY", PrettyPrinter.show(body)) {
+      Isolation(body.entities.flatMap[Expr | Item.FuncDecl | Item.FuncDefn] {
+        case Left(term) =>
+          Some(monomorphizeTerm(term))
+        case Right(tyDef: NuTypeDef) => 
+          monomorphizeTypeDef(tyDef)
+          None
+        case Right(funDef: NuFunDef) =>
+          funProtos.addOne((funDef.nme.name, funDef))
+          funImpls.addOne((funDef.nme.name, ArrayBuffer()))
+          val tyDecls = ArrayBuffer[Item.TypeDecl]()
+          Some(monomorphizeFunDef(funDef))
+      })
+    }(_.toString)
 
-    // The recursive function doing the real work.
-    def rec(tyDef: NuTypeDef): Item.TypeDecl =
-      debug.trace[Item.TypeDecl]("MONO TDEF", PrettyPrinter.show(tyDef)) {
-        val NuTypeDef(kind, nme, tparams, params, parents, body) = tyDef
-        val isolation = Isolation(body.entities.flatMap {
-          // Will there be pure terms in class body?
-          case Left(term) => Some(monomorphizeTerm(term)(using nestedTypeDecls))
-          case Right(tyDef: NuTypeDef) =>
-            nestedTypeDecls += rec(tyDef)
-            None
-          case Right(funDef: NuFunDef) =>
-            Some(monomorphizeFunDef(funDef)(using nestedTypeDecls))
-        })
-        Item.TypeDecl(nme, kind, tparams, parents, isolation)
-      }()
+  /**
+   * This function flattens a top-level type definition and returns the root
+   * type definition. There is a simple class lifting here.
+   */
+  private def monomorphizeTypeDef(tyDef: NuTypeDef): Item.TypeDecl =
+    debug.trace("MONO TDEF", PrettyPrinter.show(tyDef)) {
+      /**
+       * The recursive function doing the real work.
+       * @param tyDef the type definition
+       * @param namePath enclosing class names and this class name
+       */
+      def rec(tyDef: NuTypeDef, namePath: List[String]): Item.TypeDecl =
+        debug.trace[Item.TypeDecl]("LIFT", PrettyPrinter.show(tyDef)) {
+          val NuTypeDef(kind, _, tparams, params, parents, body) = tyDef
+          val isolation = Isolation(body.entities.flatMap {
+            // Question: Will there be pure terms in class body?
+            case Left(term) =>
+              Some(monomorphizeTerm(term))
+            case Right(subTypeDef: NuTypeDef) =>
+              rec(subTypeDef, subTypeDef.nme.name :: namePath)
+              None
+            case Right(subFunDef: NuFunDef) =>
+              Some(monomorphizeFunDef(subFunDef))
+          })
+          val className = namePath.reverseIterator.mkString("_")
+          val typeDecl: Item.TypeDecl = Item.TypeDecl(className, kind, tparams, parents, isolation)
+          addPrototypeTypeDecl(typeDecl)
+          typeDecl
+        }()
 
-    // Returns the array buffer as an `Iterable`.
-    nestedTypeDecls += rec(tyDef)
-
+      rec(tyDef, tyDef.nme.name :: Nil)
+    }()
+    
   /**
    * This function monomorphizes a function definition in smoe typing units.
    * @param tyDecls the destination of nested type declarations
    */
-  private def monomorphizeFunDef(funDef: NuFunDef)(
-      using tyDecls: ArrayBuffer[Item.TypeDecl]
-  ): Item.FuncDecl | Item.FuncDefn =
+  private def monomorphizeFunDef(funDef: NuFunDef): Item.FuncDecl | Item.FuncDefn =
     debug.trace[Item.FuncDecl | Item.FuncDefn]("MONO FUNC", PrettyPrinter.show(funDef)) {
       funImpls.addOne((funDef.nme.name, ArrayBuffer()))
       val NuFunDef(nme, targs, rhs) = funDef
@@ -121,9 +132,8 @@ object Monomorph:
 
   /**
    * This function monomophizes a `Term` into an `Expr`.
-   * @param tyDecls the destination of nested type declarations
    */
-  def monomorphizeTerm(term: Term)(using tyDecls: ArrayBuffer[Item.TypeDecl]): Expr =
+  def monomorphizeTerm(term: Term): Expr =
     import Helpers._
     debug.trace[Expr]("MONO TERM", PrettyPrinter.show(term)) {
       term match
@@ -158,7 +168,7 @@ object Monomorph:
         case Blk(stmts) => Expr.Block(stmts.flatMap[Expr | Item.FuncDecl | Item.FuncDefn] {
           case term: Term => Some(monomorphizeTerm(term))
           case tyDef: NuTypeDef =>
-            tyDecls ++= monomorphizeTypeDef(tyDef)
+            monomorphizeTypeDef(tyDef)
             None
           case funDef: NuFunDef => Some(monomorphizeFunDef(funDef))
           case mlscript.DataDefn(_) => throw MonomorphError("unsupported DataDefn")
@@ -201,18 +211,15 @@ object Monomorph:
    * `{ class CImpl extends C(...) { ... }; CImpl() }`.
    * ~~This requires you to add a `LetClass` construct to `mlscript.Term`.~~
    */
-  def specializeNew(name: String, termArgs: List[Term], termBody: TypingUnit)(
-      using tyDecls: ArrayBuffer[Item.TypeDecl]
-  ): Expr.Apply =
+  def specializeNew(name: String, termArgs: List[Term], termBody: TypingUnit): Expr.Apply =
     debug.trace[Expr.Apply]("SPEC NEW", {
       name + termArgs.iterator.map(_.toString).mkString("(", ", ", ")") +
         " with " + PrettyPrinter.show(termBody)
     }) {
       val args = termArgs.map(monomorphizeTerm)
       val body = monomorphizeBody(termBody)
-      val (specClassRef, addedClasses) = specializeTypeDef(name, args, body)
-      tyDecls ++= addedClasses
-      Expr.Apply(specClassRef, Nil)
+      val specTypeDecl = specializeTypeDef(name, args, body)
+      Expr.Apply(specTypeDecl.name, Nil)
     }(_.toString)
 
   /**
@@ -223,20 +230,16 @@ object Monomorph:
       name: String,
       args: List[Expr],
       body: Isolation
-  ): (Expr.Ref, IterableOnce[Item.TypeDecl]) =
-    debug.trace("SPEC TDEF", name + args.mkString("(", ", ", ")")) {
-      tyProtos.get(name) match {
-        case Some(NuTypeDef(kind, nme, tparams, specParams, parents, body)) =>
-          val tyDefImpls = tyImpls(name)
-          val implClassName = s"${name}_${tyDefImpls.size}"
-          // How to put args into `specParams`?
-          val specTyDef = NuTypeDef(kind, TypeName(implClassName), tparams, specParams, parents, body)
-          tyDefImpls += specTyDef
-          allTyImpls += specTyDef
-          specTyDef
-        case None => throw new MonomorphError(s"undeclared type $name")
+  ): Item.TypeDecl =
+    debug.trace("SPEC TDEF", name + args.mkString("(", ", ", ")") + " {\n" + body + "\n}") {
+      tyImpls.get(name) match {
+        case Some((Item.TypeDecl(name, kind, typeParams, parents, body), impls)) =>
+          val implClassName: Expr.Ref = Expr.Ref(s"${name}_${impls.size}")
+          val specTypeDecl: Item.TypeDecl = Item.TypeDecl(implClassName, kind, typeParams, parents, body)
+          impls += specTypeDecl
+          specTypeDecl
+        case None => throw new MonomorphError(s"cannot specialize undeclared type $name")
       }
-      ???
     }()
 
   // Shorthand implicit conversions.

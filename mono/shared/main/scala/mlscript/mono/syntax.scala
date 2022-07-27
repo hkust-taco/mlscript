@@ -78,7 +78,7 @@ enum TypeDeclKind:
 
 enum Item:
   // Type declarations: aliases, classes and traits.
-  case TypeDecl(name: TypeName, kind: TypeDeclKind, typeParams: List[TypeName],
+  case TypeDecl(name: Expr.Ref, kind: TypeDeclKind, typeParams: List[TypeName],
                 parents: List[NamedType], body: Isolation)
 
   // Function declaration (with implementation).
@@ -88,7 +88,7 @@ enum Item:
   case FuncDefn(name: Expr.Ref, typeParams: List[TypeName], body: PolyType)
 
   override def toString(): String = this match
-    case TypeDecl(TypeName(name), kind, typeParams, parents, body) =>
+    case TypeDecl(Expr.Ref(name), kind, typeParams, parents, body) =>
       val typeParamsStr = if typeParams.isEmpty then ""
         else typeParams.iterator.map(_.name).mkString("[", ", ", "]")
       val parentsStr = if parents.isEmpty then ""
@@ -106,7 +106,7 @@ object Item:
    * A shorthand constructor for classes without type parameters and parents.
    */
   def classDecl(name: String, body: Isolation): Item.TypeDecl =
-    Item.TypeDecl(TypeName(name), TypeDeclKind.Class, Nil, Nil, body)
+    Item.TypeDecl(Expr.Ref(name), TypeDeclKind.Class, Nil, Nil, body)
 
 /**
  * An `Isolation` is like a `TypingUnit` but without nested classes.

@@ -15,24 +15,26 @@ import mlscript.PolyType
 import mlscript.{Lam, Tup, Var}
 import collection.mutable.Map as MutMap
 import mlscript.Cls
-import mlscript.New.apply
+import mlscript.New
 import mlscript.Trt
 import mlscript.{Diagnostic, Warning, CompilationError}
 
 @main
 def main(): Unit =
   val source = """
-fun inc x = x + 1
-fun dbl x = x * 2
-fun app(f, x) = f x
-
-class Box(value) {
-  fun map f = Box(f(value))
-  fun get = this.value
-}
-
-Box(4 * 5)
-  """
+    |fun inc x = x + 1
+    |fun dbl x = x * 2
+    |fun app(f, x) = f x
+    |
+    |class Box(value) {
+    |  fun map f = Box(f(value))
+    |  fun get = this.value
+    |}
+    |
+    |new Box(0) {
+    |  fun get = this.value + 1
+    |}
+    |""".stripMargin
   val fastParseHelpers = mlscript.FastParseHelpers(source)
   val origin = mlscript.Origin("test.mls", 1, fastParseHelpers)
   val raise = (t: Diagnostic) => t match
@@ -50,6 +52,6 @@ Box(4 * 5)
   val monomorphized = Monomorph.monomprphize(typingUnit)
   println("Successfully monomorphized the program.")
   println("Specialized type definitions:")
-  Monomorph.specializedTypeDefs.foreach { case tyDef =>
-    println(PrettyPrinter.show(tyDef))
+  Monomorph.specializedTypeDefs.foreach { case typeDecl =>
+    println(typeDecl)
   }
