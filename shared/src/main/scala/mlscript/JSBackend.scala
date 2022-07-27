@@ -411,7 +411,6 @@ class JSBackend {
       case _ => scope.derive(s"getter $name")
     }
     // Declare the alias for `this` before declaring parameters.
-    // TODO: Remove this after we don't use IIFEs.
     val selfSymbol = memberScope.declareThisAlias()
     // Declare parameters.
     val (memberParams, body) = method.rhs.value match {
