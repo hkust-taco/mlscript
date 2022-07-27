@@ -1,3 +1,4 @@
+
 class Monoid[A]
   method Empty: A
   method Add: A -> A -> A
