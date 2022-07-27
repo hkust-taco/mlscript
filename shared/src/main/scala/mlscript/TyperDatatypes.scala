@@ -12,14 +12,24 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   type TN = TypeName
   
-  
   // The data types used for type inference:
-  
   case class TypeProvenance(loco: Opt[Loc], desc: Str, originName: Opt[Str] = N, isType: Bool = false) {
     val isOrigin: Bool = originName.isDefined
     def & (that: TypeProvenance): TypeProvenance = this // arbitrary; maybe should do better
     override def toString: Str = (if (isOrigin) "o: " else "") + "‹"+loco.fold(desc)(desc+":"+_)+"›"
   }
+
+  case class NestingInfo()
+  class NestedTypeProvenance(val chain: Ls[SimpleType], val nestingInfo: NestingInfo = NestingInfo()) extends TypeProvenance(N, "<nested>") {
+    override def toString: Str = "<nested> " + chain.mkString(" -> ") + " <nested>"
+  }
+
+  object NestedTypeProvenance {
+    def apply(chain: Ls[SimpleType], nestingInfo: NestingInfo = NestingInfo()): NestedTypeProvenance = {
+      new NestedTypeProvenance(chain, nestingInfo)
+    }
+  }
+
   type TP = TypeProvenance
 
   sealed abstract class TypeInfo
@@ -187,7 +197,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   /** The sole purpose of ProvType is to store additional type provenance info. */
   case class ProvType(underlying: SimpleType)(val prov: TypeProvenance) extends ProxyType {
-    override def toString = s"[$underlying]"
+    override def toString = if (prov is NestedTypeProvenance) s"[$underlying] prov: $prov" else s"[$underlying]"
     // override def toString = s"$underlying[${prov.desc.take(5)}]"
     // override def toString = s"$underlying[${prov.toString.take(5)}]"
     // override def toString = s"$underlying@${prov}"
