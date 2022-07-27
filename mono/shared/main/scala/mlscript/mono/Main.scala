@@ -22,12 +22,12 @@ import mlscript.{Diagnostic, Warning, CompilationError}
 @main
 def main(): Unit =
   val source = """
-    |fun inc x = x + 1
-    |fun dbl x = x * 2
+    |fun inc(#x) = x + 1
+    |fun dbl(#x) = x * 2
     |fun app(f, x) = f x
     |
     |class Box(value) {
-    |  fun map f = Box(f(value))
+    |  fun map(f) = Box(f(value))
     |  fun get = this.value
     |}
     |
@@ -51,7 +51,3 @@ def main(): Unit =
   val typingUnit = parser.parseAll(parser.typingUnit)
   val monomorphized = Monomorph.monomprphize(typingUnit)
   println("Successfully monomorphized the program.")
-  println("Specialized type definitions:")
-  Monomorph.specializedTypeDefs.foreach { case typeDecl =>
-    println(typeDecl)
-  }

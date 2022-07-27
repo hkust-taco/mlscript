@@ -44,14 +44,12 @@ object Monomorph:
    */
   private val anonymTyDefs = MutMap[String, Item.TypeDecl]()
 
-  def specializedTypeDefs: List[Item.TypeDecl] = allTypeDecls.map(_._2).toList
-
   /**
    * This function monomorphizes the top-level `TypingUnit` into a `Module`.
    */
   def monomprphize(tu: TypingUnit): Module =
     debug.trace("MONO MODL", PrettyPrinter.show(tu)) {
-      mlscript.mono.Module(tu.entities.flatMap[Expr | Item] {
+      mlscript.mono.Module(tu.entities.iterator.flatMap[Expr | Item] {
         case Left(term) =>
           Some(monomorphizeTerm(term))
         case Right(tyDef: NuTypeDef) => 
@@ -62,7 +60,10 @@ object Monomorph:
           funImpls.addOne((funDef.nme.name, ArrayBuffer()))
           val tyDecls = ArrayBuffer[Item.TypeDecl]()
           Some(monomorphizeFunDef(funDef))
-      })
+      }.concat(allTypeDecls.map(_._2))
+       .concat(lamTyDefs.values)
+       .concat(anonymTyDefs.values)
+       .toList)
     }(_.toString)
 
   /**

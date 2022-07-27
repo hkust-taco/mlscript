@@ -41,10 +41,21 @@ class RainbowDebug:
     val res =
       try thunk
       finally indent -= 1
-    val epilogue = if post eq noPostTrace
-      then " "
-      else s" ${Console.UNDERLINED}${post(res)}${Console.RESET}"
-    log(s"$endMark $name$epilogue")
+    if (post eq noPostTrace) {
+      log(s"$endMark $name")
+    } else {
+      val result = post(res)
+      val leadingLength = name.length + 3 // one space
+      val leadingSpaces = " " * leadingLength
+      result.split("\n").toList match {
+        case head :: tail =>
+          log(s"$endMark $name ${Console.UNDERLINED}$head${Console.RESET}")
+          tail.foreach { line =>
+            log(s"$leadingSpaces${Console.UNDERLINED}$line${Console.RESET}")
+          }
+        case Nil =>
+      }
+    }
     res
   }
 

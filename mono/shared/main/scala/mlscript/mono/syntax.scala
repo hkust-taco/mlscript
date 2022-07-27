@@ -92,14 +92,14 @@ enum Item:
       val typeParamsStr = if typeParams.isEmpty then ""
         else typeParams.iterator.map(_.name).mkString("[", ", ", "]")
       val parentsStr = if parents.isEmpty then ""
-        else parents.mkString(": ", " with ", "")
-      s"$kind $name$typeParamsStr extends $parentsStr $body"
+        else parents.mkString(" extends ", " with ", " ")
+      s"$kind $name$typeParamsStr$parentsStr { $body }"
     case FuncDecl(Expr.Ref(name), body) =>
-      s"func $name = $body"
+      s"fun $name = $body"
     case FuncDefn(Expr.Ref(name), Nil, polyType) =>
-      s"func $name: $polyType"
+      s"fun $name: $polyType"
     case FuncDefn(Expr.Ref(name), typeParams, polyType) =>
-      s"fund $name: ${typeParams.mkString("[", ", ", "]")} => $polyType"
+      s"fun $name: ${typeParams.mkString("[", ", ", "]")} => $polyType"
 
 object Item:
   /**
