@@ -21,6 +21,7 @@ enum Expr:
   case Match(scrutinee: Expr, branches: ArrayBuffer[CaseBranch])
   case Literal(value: BigInt | BigDecimal | String | UnitValue)
   case New(apply: Option[(TypeName, List[Expr])], body: Isolation)
+  case IfThenElse(condition: Expr, consequent: Expr, alternate: Option[Expr])
   case Isolated(isolation: Isolation)
 
   override def toString(): String = this match
@@ -47,8 +48,12 @@ enum Expr:
       s"$scrutinee match " + branches.iterator.mkString("{", "; ", "}")
     case Literal(value) => value.toString
     case New(Some((callee, args)), body) =>
-       s"new ${callee.name}" + args.mkString(" (", ", ", ") ") + body.toString
+      s"new ${callee.name}" + args.mkString(" (", ", ", ") ") + body.toString
     case New(None, body) => "new " + body.toString
+    case IfThenElse(condition, consequent, None) =>
+      s"if $condition then $consequent"
+    case IfThenElse(condition, consequent, Some(alternate)) =>
+      s"if $condition then $consequent else $alternate"
     case Isolated(isolation) => s"{\n$isolation\n}"
 end Expr
 

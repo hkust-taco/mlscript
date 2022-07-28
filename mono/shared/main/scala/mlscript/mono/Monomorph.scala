@@ -3,7 +3,8 @@ package mlscript.mono
 import mlscript.{TypingUnit, NuTypeDef, NuFunDef}
 import mlscript.TypeName
 import mlscript.{App, Asc, Assign, Bind, Blk, Block, Bra, CaseOf, Lam, Let, Lit,
-                 New, Rcd, Sel, Subs, Term, Test, Tup, With, Var, Fld}
+                 New, Rcd, Sel, Subs, Term, Test, Tup, With, Var, Fld, If}
+import mlscript.{IfTerm, IfThen, IfElse, IfLet, IfOpApp, IfOpsApp, IfBlock}
 import mlscript.{IntLit, DecLit, StrLit, UnitLit}
 import scala.collection.mutable.Map as MutMap
 import scala.collection.mutable.Set as MutSet
@@ -198,6 +199,19 @@ class Monomorph(debugMode: Boolean):
         case New(Some((TypeName(name), args)), body) =>
           specializeNew(name, toFuncArgs(args).toList, body)
         case Block(unit) => Expr.Isolated(monomorphizeBody(unit))
+        case If(body, alternate) => body match
+          case term: IfTerm => throw MonomorphError("unsupported IfTerm")
+          case IfThen(condition, consequent) =>
+            Expr.IfThenElse(
+              monomorphizeTerm(condition),
+              monomorphizeTerm(consequent),
+              alternate.map(monomorphizeTerm)
+            )
+          case term: IfElse => throw MonomorphError("unsupported IfElse")
+          case term: IfLet => throw MonomorphError("unsupported IfLet")
+          case term: IfOpApp => throw MonomorphError("unsupported IfOpApp")
+          case term: IfOpsApp => throw MonomorphError("unsupported IfOpsApp")
+          case term: IfBlock => throw MonomorphError("unsupported IfBlock")
         case IntLit(value) => Expr.Literal(value)
         case DecLit(value) => Expr.Literal(value)
         case StrLit(value) => Expr.Literal(value)
