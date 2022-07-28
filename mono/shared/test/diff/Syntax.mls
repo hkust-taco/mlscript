@@ -39,3 +39,19 @@ new Box(0) {
 //│ class Lambda_0 { fun apply = ((+ x) 1) }
 //│ class Lambda_3 { fun apply = (Box (f value)) }
 //│ class Lambda_2 { fun apply = (f x) }
+
+
+fun pow(#n, x) =
+  if n > 1 then pow(n - 1, x) * x
+  else 1
+//│ |#fun| |pow|(|##|n|,| |x|)| |#=|→|#if| |n| |>| |1| |#then| |pow|(|n| |-| |1|,| |x|)| |*| |x|↵|#else| |1|
+//│ Parsed: {fun pow = #n, x, => {if (> n 1) then * (pow (- n 1, x,)) x else 1}}
+//│ fun pow = new Lambda_0 () 
+//│ class Lambda_0 { fun apply = if ((> n) 1) then ((* (pow ((- n) 1) x)) x) else 1 }
+
+pow(0, 123)
+//│ |pow|(|0|,| |123|)|
+//│ Parsed: {pow (0, 123,)}
+//│ (pow 0 123)
+
+
