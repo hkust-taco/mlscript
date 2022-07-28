@@ -114,7 +114,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }()
     
     /* Solve annoying constraints,
-        which are those that involve either unions and intersections at the wrong polarities, or negations.
+        which are those that involve either unions and intersections at the wrong polarities or negations.
         This works by constructing all pairs of "conjunct <: disjunct" implied by the conceptual
         "DNF <: CNF" form of the constraint. */
     def annoying(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
