@@ -77,14 +77,18 @@ enum TypeDeclKind:
     case Trait => "trait"
 
 enum Item:
-  // Type declarations: aliases, classes and traits.
+  /**
+   * Type declarations: aliases, classes and traits.
+   */
   case TypeDecl(name: Expr.Ref, kind: TypeDeclKind, typeParams: List[TypeName],
                 parents: List[NamedType], body: Isolation)
-
-  // Function declaration (with implementation).
+  /**
+   * Function declaration (with implementation).
+   */
   case FuncDecl(name: Expr.Ref, body: Expr)
-
-  // Function definition (with definition)
+  /**
+   * Function definition (with definition)
+   */
   case FuncDefn(name: Expr.Ref, typeParams: List[TypeName], body: PolyType)
 
   override def toString(): String = this match

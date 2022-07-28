@@ -1,8 +1,22 @@
 package mlscript.mono
 
-class Test extends org.scalatest.funsuite.AnyFunSuite {
-  test("it must pass") {
-    assert(0 === 0)
-    assert(1 === 1)
-  }
+import mlscript.DiffTests
+import mlscript.utils.shorthands.Str
+import mlscript.TypingUnit
+
+class Test extends DiffTests(Test.dir) {
+  override def postProcess(basePath: List[Str], testName: Str, unit: TypingUnit): List[Str] = 
+    val monomorph = new Monomorph(false)
+    val output = try {
+      val result = monomorph.monomprphize(unit)
+      result.toString()
+    } catch {
+      case error: MonomorphError => error.getMessage()
+      case other: Throwable => other.toString()
+    }
+    output.linesIterator.toList
+}
+
+object Test {
+  private val dir = os.pwd/"mono"/"shared"/"test"/"diff"
 }

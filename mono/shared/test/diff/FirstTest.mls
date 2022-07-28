@@ -1,0 +1,23 @@
+
+fun inc(#x) = x + 1
+fun dbl(#x) = x * 2
+fun app(f, x) = f(x)
+class Box(value) {
+  fun map(f) = Box(f(value))
+  fun get = this.value
+}
+new Box(0) {
+  fun get = this.value + 1
+}
+//│ |#fun| |inc|(|##|x|)| |#=| |x| |+| |1|↵|#fun| |dbl|(|##|x|)| |#=| |x| |*| |2|↵|#fun| |app|(|f|,| |x|)| |#=| |f|(|x|)|↵|#class| |Box|(|value|)| |{|→|#fun| |map|(|f|)| |#=| |Box|(|f|(|value|)|)|↵|#fun| |get| |#=| |this|.|value|←|↵|}|↵|#new| |Box|(|0|)| |{|→|#fun| |get| |#=| |this|.|value| |+| |1|←|↵|}|
+//│ Parsed: {fun inc = #x, => + x 1; fun dbl = #x, => * x 2; fun app = f, x, => f (x,); class Box(value,) {fun map = f, => Box (f (value,),); fun get = . this value}; new Box(0,) {fun get = + (. this value) 1}}
+//│ fun inc = new Lambda_0 () 
+//│ fun dbl = new Lambda_1 () 
+//│ fun app = new Lambda_2 () 
+//│ (Box_0 )
+//│ class Box_0 { fun map = new Lambda_3 () 
+//│ fun get = ((. this) value) }
+//│ class Lambda_1 { fun apply = ((* x) 2) }
+//│ class Lambda_0 { fun apply = ((+ x) 1) }
+//│ class Lambda_3 { fun apply = (Box (f value)) }
+//│ class Lambda_2 { fun apply = (f x) }

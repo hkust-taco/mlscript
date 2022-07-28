@@ -63,8 +63,9 @@ lazy val mlscript_mono = crossProject(JSPlatform, JVMPlatform).in(file("mono"))
     name := "mlscript-mono",
     scalaVersion := "3.1.3",
     sourceDirectory := baseDirectory.value.getParentFile()/"shared",
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.12" % Test,
+    watchSources += WatchSource(
+      baseDirectory.value.getParentFile()/"shared/test/diff", "*.mls", NothingFilter),
   )
-  .dependsOn(mlscript)
+  .dependsOn(mlscript % "compile->compile;test->test")
 
 

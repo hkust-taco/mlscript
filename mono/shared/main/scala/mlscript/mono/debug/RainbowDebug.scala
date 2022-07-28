@@ -2,7 +2,7 @@ package mlscript.mono
 
 import scala.collection.mutable.ArrayBuffer
 
-class RainbowDebug:
+class RainbowDebug extends Debug:
   private val colors = {
     val buffer = ArrayBuffer[String]()
     buffer += Console.RED
@@ -16,12 +16,11 @@ class RainbowDebug:
   private def currentColor = colors(indent % colors.size)
   private def beginMark = currentColor + "┌" + Console.RESET
   private def endMark = currentColor + "└" + Console.RESET
-  private val noPostTrace: Any => String = _ => ""
   private var indent = 0
 
   def trace[T](name: String, pre: String)
               (thunk: => T)
-              (post: T => String = noPostTrace): T = {
+              (post: T => String): T = {
     if (pre.contains("\n"))
       val leadingLength = name.length + 1 // one space
       val leadingSpaces = " " * leadingLength
@@ -41,7 +40,7 @@ class RainbowDebug:
     val res =
       try thunk
       finally indent -= 1
-    if (post eq noPostTrace) {
+    if (post eq Debug.noPostTrace) {
       log(s"$endMark $name")
     } else {
       val result = post(res)

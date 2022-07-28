@@ -49,5 +49,6 @@ def main(): Unit =
       println(Console.GREEN + "[parser]" + Console.RESET + " " + msg)
   }
   val typingUnit = parser.parseAll(parser.typingUnit)
-  val monomorphized = Monomorph.monomprphize(typingUnit)
+  val monomorph = new Monomorph(true)
+  val monomorphized = monomorph.monomprphize(typingUnit)
   println("Successfully monomorphized the program.")

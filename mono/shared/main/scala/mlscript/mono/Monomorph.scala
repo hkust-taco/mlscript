@@ -12,11 +12,13 @@ import mlscript.Cls
 import mlscript.CaseBranches
 import mlscript.TypeDefKind
 
-object Monomorph:
-  private val debug = RainbowDebug()
+class Monomorph(debugMode: Boolean):
+  private val debug = if debugMode then RainbowDebug() else DummyDebug()
 
-  private val funProtos = MutMap[String, NuFunDef]()
-  private val funImpls = MutMap[String, ArrayBuffer[NuFunDef]]()
+  /**
+   * Specialized implementations of function declarations.
+   */
+  private val funImpls = MutMap[String, (Item.FuncDecl, ArrayBuffer[Item.FuncDecl])]()
 
   /**
    * Specialized implementations of each type declarations.
@@ -56,10 +58,12 @@ object Monomorph:
           monomorphizeTypeDef(tyDef)
           None
         case Right(funDef: NuFunDef) =>
-          funProtos.addOne((funDef.nme.name, funDef))
-          funImpls.addOne((funDef.nme.name, ArrayBuffer()))
-          val tyDecls = ArrayBuffer[Item.TypeDecl]()
-          Some(monomorphizeFunDef(funDef))
+          val funcItem = monomorphizeFunDef(funDef)
+          funcItem match
+            case funcDecl: Item.FuncDecl =>
+              funImpls.addOne(funcDecl.name.name, (funcDecl, ArrayBuffer()))
+            case _ => ()
+          Some(funcItem)
       }.concat(allTypeDecls.map(_._2))
        .concat(lamTyDefs.values)
        .concat(anonymTyDefs.values)
@@ -78,9 +82,6 @@ object Monomorph:
           monomorphizeTypeDef(tyDef)
           None
         case Right(funDef: NuFunDef) =>
-          funProtos.addOne((funDef.nme.name, funDef))
-          funImpls.addOne((funDef.nme.name, ArrayBuffer()))
-          val tyDecls = ArrayBuffer[Item.TypeDecl]()
           Some(monomorphizeFunDef(funDef))
       })
     }(_.toString)
@@ -124,7 +125,6 @@ object Monomorph:
    */
   private def monomorphizeFunDef(funDef: NuFunDef): Item.FuncDecl | Item.FuncDefn =
     debug.trace[Item.FuncDecl | Item.FuncDefn]("MONO FUNC", PrettyPrinter.show(funDef)) {
-      funImpls.addOne((funDef.nme.name, ArrayBuffer()))
       val NuFunDef(nme, targs, rhs) = funDef
       rhs match
         case Left(term) => Item.FuncDecl(nme, monomorphizeTerm(term))

@@ -14,9 +14,8 @@ import mlscript.JSTestBackend.UnexpectedCrash
 import mlscript.JSTestBackend.TestCode
 import mlscript.codegen.typescript.TsTypegenCodeBuilder
 import org.scalatest.{funsuite, ParallelTestExecution}
-import javax.tools.Diagnostic
 
-class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
+class DiffTests(dir: os.Path = DiffTests.defaultDir) extends funsuite.AnyFunSuite with ParallelTestExecution {
 // class DiffTests extends funsuite.AnyFunSuite {
   
   
@@ -25,8 +24,38 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
   
   
   private val inParallel = isInstanceOf[ParallelTestExecution]
-  
+
+  private val allFiles = os.walk(dir).filter(_.toIO.isFile)
+
   import DiffTests._
+
+  // Aggregate unstaged modified files to only run the tests on them, if there are any
+  private val modified: Set[Str] =
+    try os.proc("git", "status", "--porcelain", dir).call().out.lines().iterator.flatMap { gitStr =>
+      println(" [git] " + gitStr)
+      val prefix = gitStr.take(2)
+      val filePath = gitStr.drop(3)
+      val fileName = os.RelPath(filePath).baseName
+      if (prefix =:= "A " || prefix =:= "M ") N else S(fileName) // disregard modified files that are staged
+    }.toSet catch {
+      case err: Throwable => System.err.println("/!\\ git command failed with: " + err)
+      Set.empty
+    }
+
+  // private def filter(name: Str): Bool =
+  private def filter(file: os.Path): Bool = {
+    val name = file.baseName
+    if (focused.nonEmpty) focused(name) else modified(name) || modified.isEmpty &&
+      true
+      // name.startsWith("new/")
+      // file.segments.toList.init.lastOption.contains("parser")
+  }
+  
+  private val files = allFiles.filter { file =>
+      val fileName = file.baseName
+      // validExt(file.ext) && filter(fileName)
+      validExt(file.ext) && filter(file)
+  }
   
   files.foreach { file =>
         val basePath = file.segments.drop(dir.segmentCount).toList.init
@@ -266,7 +295,7 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
         
         // try to parse block of text into mlscript ast
         val ans = try {
-          if (basePath.headOption.contains("parser") || basePath.headOption.contains("mono")) {
+          if (basePath.headOption.contains("parser") || file.segments.contains("mono")) {
             // ??? : Parsed.Extra
             // Failure("",0,Parsed.Extra())
             val origin = Origin(testName, globalStartLineNum, fph)
@@ -717,25 +746,10 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
 
 object DiffTests {
   
-  private val dir = os.pwd/"shared"/"src"/"test"/"diff"
-  
-  private val allFiles = os.walk(dir).filter(_.toIO.isFile)
+  private val defaultDir = os.pwd/"shared"/"src"/"test"/"diff"
   
   private val validExt = Set("fun", "mls")
-  
-  // Aggregate unstaged modified files to only run the tests on them, if there are any
-  private val modified: Set[Str] =
-    try os.proc("git", "status", "--porcelain", dir).call().out.lines().iterator.flatMap { gitStr =>
-      println(" [git] " + gitStr)
-      val prefix = gitStr.take(2)
-      val filePath = gitStr.drop(3)
-      val fileName = os.RelPath(filePath).baseName
-      if (prefix =:= "A " || prefix =:= "M ") N else S(fileName) // disregard modified files that are staged
-    }.toSet catch {
-      case err: Throwable => System.err.println("/!\\ git command failed with: " + err)
-      Set.empty
-    }
-  
+
   // Allow overriding which specific tests to run, sometimes easier for development:
   private val focused = Set[Str](
     // "Ascribe",
@@ -757,20 +771,6 @@ object DiffTests {
     // "Subsume",
     // "Methods",
   )
-  // private def filter(name: Str): Bool =
-  private def filter(file: os.Path): Bool = {
-    val name = file.baseName
-    if (focused.nonEmpty) focused(name) else modified(name) || modified.isEmpty &&
-      true
-      // name.startsWith("new/")
-      // file.segments.toList.init.lastOption.contains("parser")
-  }
-  
-  private val files = allFiles.filter { file =>
-      val fileName = file.baseName
-      // validExt(file.ext) && filter(fileName)
-      validExt(file.ext) && filter(file)
-  }
   
   
   /** Helper to run NodeJS on test input. */
