@@ -22,8 +22,9 @@ class DiffTests
   with org.scalatest.ParallelTestExecution
   with TimeLimitedTests
 {
+  import DiffTests._
   
-  val timeLimit = Span(10, Seconds)
+  val timeLimit = TimeLimit
   
   override val defaultTestSignaler: Signaler = new Signaler {
     @annotation.nowarn("msg=method stop in class Thread is deprecated") def apply(testThread: Thread): Unit = {
@@ -38,7 +39,6 @@ class DiffTests
     }
   }
   
-  import DiffTests._
   files.foreach { file => val fileName = file.baseName; test(fileName) {
     
     val buf = mutable.ArrayBuffer.empty[Char]
@@ -679,6 +679,10 @@ class DiffTests
 }
 
 object DiffTests {
+  
+  private val TimeLimit =
+    if (sys.env.get("CI").isDefined) Span(25, Seconds)
+    else Span(5, Seconds)
   
   private val dir = os.pwd/"shared"/"src"/"test"/"diff"
   
