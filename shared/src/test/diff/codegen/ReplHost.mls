@@ -80,3 +80,7 @@ box1.Map (fun x -> Box { inner = x })
 //│    = Box { inner: 3 }
 //│ res: Box[Box[1]]
 //│    = Box { inner: Box { inner: 1 } }
+
+box1.Map (fun x -> Box { inner = x })
+//│ res: Box[Box[1]]
+//│    = Box { inner: Box { inner: 1 } }
