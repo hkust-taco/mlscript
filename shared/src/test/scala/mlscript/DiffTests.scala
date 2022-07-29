@@ -13,11 +13,32 @@ import mlscript.JSTestBackend.Unimplemented
 import mlscript.JSTestBackend.UnexpectedCrash
 import mlscript.JSTestBackend.TestCode
 import mlscript.codegen.typescript.TsTypegenCodeBuilder
+import org.scalatest.time._
+import org.scalatest.concurrent.{TimeLimitedTests, Signaler}
 
-class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.ParallelTestExecution {
-// class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
-  
+
+class DiffTests
+  extends org.scalatest.funsuite.AnyFunSuite
+  with org.scalatest.ParallelTestExecution
+  with TimeLimitedTests
+{
   import DiffTests._
+  
+  val timeLimit = TimeLimit
+  
+  override val defaultTestSignaler: Signaler = new Signaler {
+    @annotation.nowarn("msg=method stop in class Thread is deprecated") def apply(testThread: Thread): Unit = {
+      println(s"!! Test at $testThread has run out out time !! stopping...")
+      // * Thread.stop() is considered bad practice because normally it's better to implement proper logic
+      // * to terminate threads gracefully, avoiding leaving applications in a bad state.
+      // * But here we DGAF since all the test is doing is runnign a type checker and some Node REPL,
+      // * which would be a much bigger pain to make receptive to "gentle" interruption.
+      // * It would feel extremely wrong to intersperse the pure type checker algorithms
+      // * with ugly `Thread.isInterrupted` checks everywhere...
+      testThread.stop()
+    }
+  }
+  
   files.foreach { file => val fileName = file.baseName; test(fileName) {
     
     val buf = mutable.ArrayBuffer.empty[Char]
@@ -614,6 +635,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             if (mode.expectRuntimeErrors && totalRuntimeErrors =:= 0)
               failures += blockLineNum
         } catch {
+          case oh_noes: ThreadDeath => throw oh_noes
           case err: Throwable =>
             if (!mode.fixme)
               failures += allLines.size - lines.size
@@ -657,6 +679,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
 }
 
 object DiffTests {
+  
+  private val TimeLimit =
+    if (sys.env.get("CI").isDefined) Span(25, Seconds)
+    else Span(5, Seconds)
   
   private val dir = os.pwd/"shared"/"src"/"test"/"diff"
   
