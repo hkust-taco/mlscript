@@ -468,34 +468,34 @@ class DiffTests
                   // Execute code.
                   if (!mode.noExecution) {
                     if (mode.showRepl) {
-                      println(s"Block [line: ${blockLineNum}] [file: ${file.baseName}]")
+                      output(s"Block [line: ${blockLineNum}] [file: ${file.baseName}]")
                     }
                     // Execute the prelude code.
                     prelude match {
                       case Nil => {
                         if (mode.showRepl) {
-                          println(s"├── No prelude")
+                          output(s"├── No prelude")
                           if (queries.isEmpty)
-                            println(s"└── No queries")
+                            output(s"└── No queries")
                         }
                       }
                       case lines => {
                         val preludeReply = host.execute(lines mkString " ")
                         if (mode.showRepl) {
-                          println(s"├─┬ Prelude")
-                          println(s"│ ├── Code")
+                          output(s"├─┬ Prelude")
+                          output(s"│ ├── Code")
                           lines.iterator.zipWithIndex.foreach { case (line, index) =>
-                            println(s"│ │   $line")
+                            output(s"│ │   $line")
                           }
-                          println(s"│ └── Reply")
+                          output(s"│ └── Reply")
                           preludeReply.linesIterator.zipWithIndex.foreach { case (line, index) =>
-                            println(s"│     $line")
+                            output(s"│     $line")
                           }
                         }
                       }
                     }
                     if (mode.showRepl && queries.isEmpty) {
-                      println(s"└── No queries")
+                      output(s"└── No queries")
                     }
                     // Send queries to the host.
                     ExecutedResult(queries.zipWithIndex.map {
@@ -503,26 +503,26 @@ class DiffTests
                         val prelude = preludeLines.mkString
                         val code = codeLines.mkString
                         if (mode.showRepl) {
-                          println(s"├─┬ Query ${i + 1}/${queries.length}")
-                          println(s"│ ├── Prelude: ${if (preludeLines.isEmpty) "<empty>" else prelude}")
-                          println(s"│ └── Code: ${code}")
+                          output(s"├─┬ Query ${i + 1}/${queries.length}")
+                          output(s"│ ├── Prelude: ${if (preludeLines.isEmpty) "<empty>" else prelude}")
+                          output(s"│ └── Code: ${code}")
                         }
                         val reply = host.query(prelude, code, res)
                         if (mode.showRepl) {
                           val prefix = if (i + 1 == queries.length) "└──" else "├──"
-                          println(s"$prefix Reply ${i + 1}/${queries.length}: $reply")
+                          output(s"$prefix Reply ${i + 1}/${queries.length}: $reply")
                         }
                         reply
                       case (JSTestBackend.AbortedQuery(reason), i) =>
                         if (mode.showRepl) {
                           val prefix = if (i + 1 == queries.length) "└──" else "├──"
-                          println(s"$prefix Query ${i + 1}/${queries.length}: <aborted: $reason>")
+                          output(s"$prefix Query ${i + 1}/${queries.length}: <aborted: $reason>")
                         }
                         ReplHost.Unexecuted(reason)
                       case (JSTestBackend.EmptyQuery, i) =>
                         if (mode.showRepl) {
                           val prefix = if (i + 1 == queries.length) "└──" else "├──"
-                          println(s"$prefix Query ${i + 1}/${queries.length}: <empty>")
+                          output(s"$prefix Query ${i + 1}/${queries.length}: <empty>")
                         }
                         ReplHost.Empty
                     })
