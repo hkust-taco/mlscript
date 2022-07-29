@@ -467,14 +467,35 @@ class DiffTests
                   }
                   // Execute code.
                   if (!mode.noExecution) {
-                    prelude match {
-                      case Nil => ()
-                      case lines => host.execute(lines mkString " ")
-                    }
                     if (mode.showRepl) {
                       println(s"Block [line: ${blockLineNum}] [file: ${file.baseName}]")
-                      if (queries.isEmpty)
-                        println(s"The block is empty")
+                    }
+                    // Execute the prelude code.
+                    prelude match {
+                      case Nil => {
+                        if (mode.showRepl) {
+                          println(s"├── No prelude")
+                          if (queries.isEmpty)
+                            println(s"└── No queries")
+                        }
+                      }
+                      case lines => {
+                        val preludeReply = host.execute(lines mkString " ")
+                        if (mode.showRepl) {
+                          println(s"├─┬ Prelude")
+                          println(s"│ ├── Code")
+                          lines.iterator.zipWithIndex.foreach { case (line, index) =>
+                            println(s"│ │   $line")
+                          }
+                          println(s"│ └── Reply")
+                          preludeReply.linesIterator.zipWithIndex.foreach { case (line, index) =>
+                            println(s"│     $line")
+                          }
+                        }
+                      }
+                    }
+                    if (mode.showRepl && queries.isEmpty) {
+                      println(s"└── No queries")
                     }
                     // Send queries to the host.
                     ExecutedResult(queries.zipWithIndex.map {
@@ -482,7 +503,7 @@ class DiffTests
                         val prelude = preludeLines.mkString
                         val code = codeLines.mkString
                         if (mode.showRepl) {
-                          println(s"├── Query ${i + 1}/${queries.length}")
+                          println(s"├─┬ Query ${i + 1}/${queries.length}")
                           println(s"│ ├── Prelude: ${if (preludeLines.isEmpty) "<empty>" else prelude}")
                           println(s"│ └── Code: ${code}")
                         }
@@ -746,13 +767,16 @@ object DiffTests {
 
     skipUntilPrompt()
 
-    private def skipUntilPrompt(): Unit = {
+    /**
+     * This function simply collect output from Node.js until meet `"\n> "`.
+     */
+    private def skipUntilPrompt(): Str = {
       val buffer = new StringBuilder()
       while (!buffer.endsWith("\n> ")) {
         buffer.append(stdout.read().toChar)
       }
       buffer.delete(buffer.length - 3, buffer.length)
-      ()
+      buffer.toString
     }
 
     private def consumeUntilPrompt(): ReplHost.Reply = {
@@ -795,7 +819,7 @@ object DiffTests {
       }
     }
 
-    def execute(code: Str): Unit = {
+    def execute(code: Str): Str = {
       send(code)
       skipUntilPrompt()
     }
