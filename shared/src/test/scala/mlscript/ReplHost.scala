@@ -32,7 +32,7 @@ final case class ReplHost() {
     buffer.delete(buffer.length - 3, buffer.length)
     val reply = buffer.toString()
     reply.linesIterator.find(_.startsWith(ReplHost.syntaxErrorHead)) match {
-      case None => ReplHost.Result(reply)
+      case None => ReplHost.Result(reply, None)
       case Some(syntaxErrorLine) =>
         val message = syntaxErrorLine.substring(ReplHost.syntaxErrorHead.length)
         ReplHost.Error(true, message)
@@ -59,7 +59,7 @@ final case class ReplHost() {
         // so + 1 and - 1 is necessary to get correct length.
         ReplHost.Error(false, reply.substring(begin + 1, end))
       else
-        ReplHost.Result(reply)
+        ReplHost.Result(reply, None)
     }
   }
 
@@ -88,9 +88,11 @@ final case class ReplHost() {
       // Send the code
       send(wrapped)
       // If succeed, retrieve the result.
-      parseQueryResult().map { _ =>
+      parseQueryResult().map { intermediate =>
         send(if (res == "res") res else s"globalThis[\"${res}\"]")
-        parseQueryResult()
+        parseQueryResult().map { result =>
+          ReplHost.Result(result, Some(intermediate))
+        }
       }
     }
   }
@@ -124,7 +126,7 @@ object ReplHost {
     def map(f: Str => Reply): Reply
   }
 
-  final case class Result(content: Str) extends Reply {
+  final case class Result(content: Str, intermediate: Opt[Str]) extends Reply {
     override def map(f: Str => Reply): Reply = f(content)
     override def toString(): Str = s"[success] $content"
   }

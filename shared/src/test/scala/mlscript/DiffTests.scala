@@ -15,6 +15,9 @@ import mlscript.JSTestBackend.TestCode
 import mlscript.codegen.typescript.TsTypegenCodeBuilder
 import org.scalatest.time._
 import org.scalatest.concurrent.{TimeLimitedTests, Signaler}
+import mlscript.ReplHost.Result
+import mlscript.ReplHost.Empty
+import mlscript.ReplHost.Unexecuted
 
 
 class DiffTests
@@ -428,7 +431,7 @@ class DiffTests
                   output(" " * prefixLength + "= <no result>")
                   output(" " * (prefixLength + 2) + reason)
                   replies = rest
-                case ReplHost.Result(result) :: rest =>
+                case ReplHost.Result(result, _) :: rest =>
                   result.split('\n').zipWithIndex foreach { case (s, i) =>
                     if (i =:= 0) output(" " * prefixLength + "= " + s)
                     else output(" " * (prefixLength + 2) + s)
@@ -491,7 +494,7 @@ class DiffTests
                           // Display successful results in multiple lines.
                           // Display other results in single line.
                           preludeReply match {
-                            case ReplHost.Result(content) =>
+                            case ReplHost.Result(content, _) =>
                               content.linesIterator.zipWithIndex.foreach {
                                 case (line, index) => output(s"│     $line")
                               }
@@ -508,15 +511,23 @@ class DiffTests
                       case (JSTestBackend.CodeQuery(preludeLines, codeLines, res), i) =>
                         val prelude = preludeLines.mkString
                         val code = codeLines.mkString
+                        val p0 = if (i + 1 == queries.length) "  " else "│ "
                         if (mode.showRepl) {
-                          output(s"├─┬ Query ${i + 1}/${queries.length}")
-                          output(s"│ ├── Prelude: ${if (preludeLines.isEmpty) "<empty>" else prelude}")
-                          output(s"│ └── Code: ${code}")
+                          val p1 = if (i + 1 == queries.length) "└─" else "├─"
+                          output(s"$p1┬ Query ${i + 1}/${queries.length}")
+                          output(s"$p0├── Prelude: ${if (preludeLines.isEmpty) "<empty>" else prelude}")
+                          output(s"$p0├── Code: ${code}")
                         }
                         val reply = host.query(prelude, code, res)
                         if (mode.showRepl) {
-                          val prefix = if (i + 1 == queries.length) "└──" else "├──"
-                          output(s"$prefix Reply ${i + 1}/${queries.length}: $reply")
+                          // Show the intermediate reply if possible.
+                          reply match {
+                            case Result(_, Some(intermediate)) =>
+                              output(s"$p0├── Intermediate: $intermediate")
+                            case _ => ()
+                          }
+                          val p1 = if (i + 1 == queries.length) "  └──" else s"$p0└──"
+                          output(s"$p1 Reply: $reply")
                         }
                         reply
                       case (JSTestBackend.AbortedQuery(reason), i) =>
