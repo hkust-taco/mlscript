@@ -28,21 +28,23 @@ box0 = Box { inner = 0 }
 //│ │ │   }
 //│ │ └── Reply
 //│ │     undefined
-//│ ├─┬ Query 1/1
-//│ │ ├── Prelude: <empty>
-//│ │ └── Code: globalThis.box0 = new Box({ inner: 0 });
-//│ └── Reply 1/1: [success] Box { inner: 0 }
+//│ └─┬ Query 1/1
+//│   ├── Prelude: <empty>
+//│   ├── Code: globalThis.box0 = new Box({ inner: 0 });
+//│   ├── Intermediate: Box { inner: 0 }
+//│   └── Reply: [success] Box { inner: 0 }
 //│ box0: Box[0]
 //│     = Box { inner: 0 }
 
 :ShowRepl
 box1 = Box { inner = 1 }
-//│ Block [line: 39] [file: ReplHost]
+//│ Block [line: 40] [file: ReplHost]
 //│ ├── No prelude
-//│ ├─┬ Query 1/1
-//│ │ ├── Prelude: <empty>
-//│ │ └── Code: globalThis.box1 = new Box({ inner: 1 });
-//│ └── Reply 1/1: [success] Box { inner: 1 }
+//│ └─┬ Query 1/1
+//│   ├── Prelude: <empty>
+//│   ├── Code: globalThis.box1 = new Box({ inner: 1 });
+//│   ├── Intermediate: Box { inner: 1 }
+//│   └── Reply: [success] Box { inner: 1 }
 //│ box1: Box[1]
 //│     = Box { inner: 1 }
 
@@ -50,7 +52,7 @@ box1 = Box { inner = 1 }
 box1.Map (fun x -> add x 1)
 box1.Map (fun x -> add x 2)
 box1.Map (fun x -> Box { inner = x })
-//│ Block [line: 50] [file: ReplHost]
+//│ Block [line: 52] [file: ReplHost]
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   function add(x, y) {
@@ -64,16 +66,19 @@ box1.Map (fun x -> Box { inner = x })
 //│ │     undefined
 //│ ├─┬ Query 1/3
 //│ │ ├── Prelude: <empty>
-//│ │ └── Code: res = box1.Map((x) => add(x)(1));
-//│ ├── Reply 1/3: [success] Box { inner: 2 }
+//│ │ ├── Code: res = box1.Map((x) => add(x)(1));
+//│ │ ├── Intermediate: Box { inner: 2 }
+//│ │ └── Reply: [success] Box { inner: 2 }
 //│ ├─┬ Query 2/3
 //│ │ ├── Prelude: <empty>
-//│ │ └── Code: res = box1.Map((x) => add(x)(2));
-//│ ├── Reply 2/3: [success] Box { inner: 3 }
-//│ ├─┬ Query 3/3
-//│ │ ├── Prelude: <empty>
-//│ │ └── Code: res = box1.Map((x) => new Box({ inner: x }));
-//│ └── Reply 3/3: [success] Box { inner: Box { inner: 1 } }
+//│ │ ├── Code: res = box1.Map((x) => add(x)(2));
+//│ │ ├── Intermediate: Box { inner: 3 }
+//│ │ └── Reply: [success] Box { inner: 3 }
+//│ └─┬ Query 3/3
+//│   ├── Prelude: <empty>
+//│   ├── Code: res = box1.Map((x) => new Box({ inner: x }));
+//│   ├── Intermediate: Box { inner: Box { inner: 1 } }
+//│   └── Reply: [success] Box { inner: Box { inner: 1 } }
 //│ res: Box[int]
 //│    = Box { inner: 2 }
 //│ res: Box[int]
