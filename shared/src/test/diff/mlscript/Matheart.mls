@@ -1,0 +1,57 @@
+1+2
+//│ res: int
+//│    = 3
+
+record = {a = 1}
+record.a
+//│ record: {a: 1}
+//│       = { a: 1 }
+//│ res: 1
+//│    = 1
+
+def z: Array[int]
+z = (3, 5, 6)
+z[1]
+//│ z: Array[int]
+//│  = <missing implementation>
+//│ (3, 5, 6,)
+//│   <:  z:
+//│ Array[int]
+//│  = [ 3, 5, 6 ]
+//│ res: int | undefined
+//│    = 5
+
+
+//y = (3, "hello", 5.4)
+
+def st: Array[string] 
+st = ("hello", "world", "!")
+st[0]
+//│ st: Array[string]
+//│   = <missing implementation>
+//│ ("hello", "world", "!",)
+//│   <:  st:
+//│ Array[string]
+//│   = [ 'hello', 'world', '!' ]
+//│ res: string | undefined
+//│    = 'hello'
+
+def ud: Array[int]
+ud[0]
+//│ ud: Array[int]
+//│   = <missing implementation>
+//│ res: int | undefined
+//│    = <no result>
+//│      ud is not implemented
+
+def precise: Array[int] 
+precise = (3: int, 5:int, 9:int)
+precise[2]
+//│ precise: Array[int]
+//│        = <missing implementation>
+//│ (int, int, int,)
+//│   <:  precise:
+//│ Array[int]
+//│        = [ 3, 5, 9 ]
+//│ res: int | undefined
+//│    = 9
