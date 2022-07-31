@@ -3,7 +3,7 @@ package mlscript
 import mlscript.utils.shorthands._
 
 /**
- * A helper class holding a Node.js process and runs 
+ * A helper class manipulate an interactive Node.js process.
  */
 final case class ReplHost() {
   import java.io.{BufferedWriter, BufferedReader, InputStreamReader, OutputStreamWriter}
