@@ -3,11 +3,12 @@ package mlscript
 import mlscript.utils.shorthands._
 
 /**
- * Helper to run NodeJS on test input.
+ * A helper class holding a Node.js process and runs 
  */
 final case class ReplHost() {
   import java.io.{BufferedWriter, BufferedReader, InputStreamReader, OutputStreamWriter}
   private val builder = new java.lang.ProcessBuilder()
+  // `--interactive` always enters the REPL even if stdin is not a terminal
   builder.command("node", "--interactive")
   private val proc = builder.start()
 
@@ -22,6 +23,9 @@ final case class ReplHost() {
    * This function simply collect output from Node.js until meet `"\n> "`.
    * It is useful to skip the welcome message and collect REPL reply from
    * interactive Node.js. It also filters out syntax errors.
+   * 
+   * @return when there are syntax errors, returns `Error` where `syntax` is 
+   *         `true`; otherwise, returns `Result`
    */
   private def collectUntilPrompt(): ReplHost.Reply = {
     val buffer = new StringBuilder()
@@ -66,18 +70,21 @@ final case class ReplHost() {
   /**
     * Send code to Node.js process.
     *
-    * @param code
-    * @param useEval whether warp
+    * @param code the code to execute
     */
-  private def send(code: Str, useEval: Bool = false): Unit = {
-    stdin.write(
-      if (useEval) "eval(" + JSLit.makeStringLiteral(code) + ")\n"
-      else if (code endsWith "\n") code
-      else code + "\n"
-    )
+  private def send(code: Str): Unit = {
+    stdin.write(if (code endsWith "\n") code else code + "\n")
     stdin.flush()
   }
 
+  /**
+    * Send code to the Node.js process.
+    *
+    * @param prelude the prelude code
+    * @param code the main code
+    * @param res the result identifier name
+    * @return
+    */
   def query(prelude: Str, code: Str, res: Str): ReplHost.Reply = {
     // For empty queries, returns empty.
     if (prelude.isEmpty && code.isEmpty)
@@ -89,26 +96,41 @@ final case class ReplHost() {
       send(wrapped)
       // If succeed, retrieve the result.
       parseQueryResult().map { intermediate =>
-        send(if (res == "res") res else s"globalThis[\"${res}\"]")
+        // Since the result might not be the result of the expression, we need
+        // to retrieve the value again.
+        send(res match {
+          case "res" => res
+          case _     => s"globalThis[\"${res}\"]"
+        })
         parseQueryResult().map { result =>
+          // Add the intermediate result to the reply.
           ReplHost.Result(result, Some(intermediate))
         }
       }
     }
   }
 
+  /**
+    * Execute class and function declarations.
+    *
+    * @param code the code to execute
+    * @return
+    */
   def execute(code: Str): ReplHost.Reply = {
     send(code)
     collectUntilPrompt()
   }
 
+  /**
+    * Kills the Node.js process.
+    */
   def terminate(): Unit = proc.destroy()
 }
 
 object ReplHost {
 
   /**
-    * The syntax error beginning text.
+    * The syntax error beginning text from Node.js.
     */
   private val syntaxErrorHead = "Uncaught SyntaxError: "
 
@@ -118,7 +140,7 @@ object ReplHost {
   sealed abstract class Reply {
 
     /**
-      * Maps the successfuly part.
+      * Maps the successful part. Like `Option[T].map`.
       *
       * @param f the function over
       * @return
@@ -126,6 +148,12 @@ object ReplHost {
     def map(f: Str => Reply): Reply
   }
 
+  /**
+    * Represents a successful reply from Node.js.
+    *
+    * @param content the reply content, i.e. the final result
+    * @param intermediate the intermediate evaluation results
+    */
   final case class Result(content: Str, intermediate: Opt[Str]) extends Reply {
     override def map(f: Str => Reply): Reply = f(content)
     override def toString(): Str = s"[success] $content"
@@ -141,6 +169,7 @@ object ReplHost {
 
   /**
     * If the query is `Unexecuted`, we will receive this.
+    * @param message the error message
     */
   final case class Unexecuted(message: Str) extends Reply {
     override def map(f: Str => Reply): Reply = this
@@ -149,6 +178,9 @@ object ReplHost {
 
   /**
     * If the `ReplHost` captured errors, it will response with `Error`.
+    * @param syntax if `true`, this is a syntax error; otherwise, this is a
+    *               runtime error
+    * @param message the error message
     */
   final case class Error(syntax: Bool, message: Str) extends Reply {
     override def map(f: Str => Reply): Reply = this
