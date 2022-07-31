@@ -429,9 +429,9 @@ class DiffTests
                   output(" " * (prefixLength + 2) + reason)
                   replies = rest
                 case ReplHost.Result(result, _) :: rest =>
-                  result.split('\n').zipWithIndex foreach { case (s, i) =>
-                    if (i =:= 0) output(" " * prefixLength + "= " + s)
-                    else output(" " * (prefixLength + 2) + s)
+                  result.linesIterator.zipWithIndex.foreach { case (line, i) =>
+                    if (i =:= 0) output(" " * prefixLength + "= " + line)
+                    else output(" " * (prefixLength + 2) + line)
                   }
                   replies = rest
                 case ReplHost.Empty :: rest =>
@@ -484,18 +484,18 @@ class DiffTests
                         if (mode.showRepl) {
                           output(s"├─┬ Prelude")
                           output(s"│ ├── Code")
-                          lines.iterator.zipWithIndex.foreach { case (line, index) =>
-                            output(s"│ │   $line")
-                          }
-                          output(s"│ └── Reply")
+                          lines.iterator.foreach { line => output(s"│ │   $line") }
                           // Display successful results in multiple lines.
                           // Display other results in single line.
                           preludeReply match {
-                            case ReplHost.Result(content, _) =>
-                              content.linesIterator.zipWithIndex.foreach {
-                                case (line, index) => output(s"│     $line")
+                            case ReplHost.Result(content, intermediate) =>
+                              intermediate.foreach { value =>
+                                output(s"│ ├── Intermediate")
+                                content.linesIterator.foreach { line => output(s"│ │   $line") }  
                               }
-                            case other => output(s"│     $other")
+                              output(s"│ └── Reply")
+                              content.linesIterator.foreach { line => output(s"│     $line") }  
+                            case other => output(s"│ └── Reply $other")
                           }
                         }
                       }
