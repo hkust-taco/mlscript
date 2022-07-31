@@ -9,7 +9,7 @@ box0 = Box { inner = 0 }
 //│ Declared Box.Map: Box['T] -> ('T -> 'a) -> Box['a]
 //│ Defined Box.Map: Box['T] -> ('T -> 'inner) -> Box['inner]
 //│ Defined Box.Get: Box['T] -> 'T
-//│ Block [line: 3] [file: ReplHost]
+//│ ┌ Block at ReplHost.mls:3
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   let res;
@@ -38,7 +38,7 @@ box0 = Box { inner = 0 }
 
 :ShowRepl
 box1 = Box { inner = 1 }
-//│ Block [line: 40] [file: ReplHost]
+//│ ┌ Block at ReplHost.mls:40
 //│ ├── No prelude
 //│ └─┬ Query 1/1
 //│   ├── Prelude: <empty>
@@ -52,7 +52,7 @@ box1 = Box { inner = 1 }
 box1.Map (fun x -> add x 1)
 box1.Map (fun x -> add x 2)
 box1.Map (fun x -> Box { inner = x })
-//│ Block [line: 52] [file: ReplHost]
+//│ ┌ Block at ReplHost.mls:52
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   function add(x, y) {

@@ -468,7 +468,7 @@ class DiffTests
                   // Execute code.
                   if (!mode.noExecution) {
                     if (mode.showRepl) {
-                      output(s"Block [line: ${blockLineNum}] [file: ${file.baseName}]")
+                      output(s"┌ Block at ${file.last}:${blockLineNum}")
                     }
                     // Execute the prelude code.
                     prelude match {
