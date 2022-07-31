@@ -15,9 +15,6 @@ import mlscript.JSTestBackend.TestCode
 import mlscript.codegen.typescript.TsTypegenCodeBuilder
 import org.scalatest.time._
 import org.scalatest.concurrent.{TimeLimitedTests, Signaler}
-import mlscript.ReplHost.Result
-import mlscript.ReplHost.Empty
-import mlscript.ReplHost.Unexecuted
 
 
 class DiffTests
@@ -522,7 +519,7 @@ class DiffTests
                         if (mode.showRepl) {
                           // Show the intermediate reply if possible.
                           reply match {
-                            case Result(_, Some(intermediate)) =>
+                            case ReplHost.Result(_, Some(intermediate)) =>
                               output(s"$p0├── Intermediate: $intermediate")
                             case _ => ()
                           }
