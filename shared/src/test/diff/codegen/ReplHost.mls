@@ -49,10 +49,22 @@ box1 = Box { inner = 1 }
 //│     = Box { inner: 1 }
 
 :ShowRepl
+case box1 of { Box -> 0 }
+//│ ┌ Block at ReplHost.mls:52
+//│ ├── No prelude
+//│ └─┬ Query 1/1
+//│   ├── Prelude: let a;
+//│   ├── Code: res = (a = box1, a instanceof Box ? 0 : (() => {  throw new Error("non-exhaustive case expression");})());
+//│   ├── Intermediate: 0
+//│   └── Reply: [success] 0
+//│ res: 0
+//│    = 0
+
+:ShowRepl
 box1.Map (fun x -> add x 1)
 box1.Map (fun x -> add x 2)
 box1.Map (fun x -> Box { inner = x })
-//│ ┌ Block at ReplHost.mls:52
+//│ ┌ Block at ReplHost.mls:64
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   function add(x, y) {
