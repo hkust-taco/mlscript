@@ -491,7 +491,7 @@ class DiffTests
                             case ReplHost.Result(content, intermediate) =>
                               intermediate.foreach { value =>
                                 output(s"│ ├── Intermediate")
-                                content.linesIterator.foreach { line => output(s"│ │   $line") }  
+                                value.linesIterator.foreach { line => output(s"│ │   $line") }  
                               }
                               output(s"│ └── Reply")
                               content.linesIterator.foreach { line => output(s"│     $line") }  
