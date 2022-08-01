@@ -414,24 +414,24 @@ class DiffTests
 
             final case class ExecutedResult(var replies: Ls[ReplHost.Reply]) extends JSTestBackend.Result {
               def showFirst(prefixLength: Int): Unit = replies match {
-                case ReplHost.Error(err) :: rest =>
+                case ReplHost.Error(isSyntaxError, content) :: rest =>
                   if (!(mode.expectTypeErrors
                       || mode.expectRuntimeErrors
                       || allowRuntimeErrors
                       || mode.fixme
                   )) failures += blockLineNum
                   totalRuntimeErrors += 1
-                  output("Runtime error:")
-                  err.split('\n') foreach { s => output("  " + s) }
+                  output((if (isSyntaxError) "Syntax" else "Runtime") + " error:")
+                  content.linesIterator.foreach { s => output("  " + s) }
                   replies = rest
                 case ReplHost.Unexecuted(reason) :: rest =>
                   output(" " * prefixLength + "= <no result>")
                   output(" " * (prefixLength + 2) + reason)
                   replies = rest
-                case ReplHost.Result(result) :: rest =>
-                  result.split('\n').zipWithIndex foreach { case (s, i) =>
-                    if (i =:= 0) output(" " * prefixLength + "= " + s)
-                    else output(" " * (prefixLength + 2) + s)
+                case ReplHost.Result(result, _) :: rest =>
+                  result.linesIterator.zipWithIndex.foreach { case (line, i) =>
+                    if (i =:= 0) output(" " * prefixLength + "= " + line)
+                    else output(" " * (prefixLength + 2) + line)
                   }
                   replies = rest
                 case ReplHost.Empty :: rest =>
@@ -467,41 +467,76 @@ class DiffTests
                   }
                   // Execute code.
                   if (!mode.noExecution) {
-                    prelude match {
-                      case Nil => ()
-                      case lines => host.execute(lines mkString " ")
-                    }
                     if (mode.showRepl) {
-                      println(s"Block [line: ${blockLineNum}] [file: ${file.baseName}]")
-                      if (queries.isEmpty)
-                        println(s"The block is empty")
+                      output(s"┌ Block at ${file.last}:${blockLineNum}")
+                    }
+                    // Execute the prelude code.
+                    prelude match {
+                      case Nil => {
+                        if (mode.showRepl) {
+                          output(s"├── No prelude")
+                          if (queries.isEmpty)
+                            output(s"└── No queries")
+                        }
+                      }
+                      case lines => {
+                        val preludeReply = host.execute(lines mkString " ")
+                        if (mode.showRepl) {
+                          output(s"├─┬ Prelude")
+                          output(s"│ ├── Code")
+                          lines.iterator.foreach { line => output(s"│ │   $line") }
+                          // Display successful results in multiple lines.
+                          // Display other results in single line.
+                          preludeReply match {
+                            case ReplHost.Result(content, intermediate) =>
+                              intermediate.foreach { value =>
+                                output(s"│ ├── Intermediate")
+                                value.linesIterator.foreach { line => output(s"│ │   $line") }  
+                              }
+                              output(s"│ └── Reply")
+                              content.linesIterator.foreach { line => output(s"│     $line") }  
+                            case other => output(s"│ └── Reply $other")
+                          }
+                        }
+                      }
+                    }
+                    if (mode.showRepl && queries.isEmpty) {
+                      output(s"└── No queries")
                     }
                     // Send queries to the host.
                     ExecutedResult(queries.zipWithIndex.map {
                       case (JSTestBackend.CodeQuery(preludeLines, codeLines, res), i) =>
                         val prelude = preludeLines.mkString
                         val code = codeLines.mkString
+                        val p0 = if (i + 1 == queries.length) "  " else "│ "
                         if (mode.showRepl) {
-                          println(s"├── Query ${i + 1}/${queries.length}")
-                          println(s"│ ├── Prelude: ${if (preludeLines.isEmpty) "<empty>" else prelude}")
-                          println(s"│ └── Code: ${code}")
+                          val p1 = if (i + 1 == queries.length) "└─" else "├─"
+                          output(s"$p1┬ Query ${i + 1}/${queries.length}")
+                          output(s"$p0├── Prelude: ${if (preludeLines.isEmpty) "<empty>" else prelude}")
+                          output(s"$p0├── Code: ${code}")
                         }
                         val reply = host.query(prelude, code, res)
                         if (mode.showRepl) {
-                          val prefix = if (i + 1 == queries.length) "└──" else "├──"
-                          println(s"$prefix Reply ${i + 1}/${queries.length}: $reply")
+                          // Show the intermediate reply if possible.
+                          reply match {
+                            case ReplHost.Result(_, Some(intermediate)) =>
+                              output(s"$p0├── Intermediate: $intermediate")
+                            case _ => ()
+                          }
+                          val p1 = if (i + 1 == queries.length) "  └──" else s"$p0└──"
+                          output(s"$p1 Reply: $reply")
                         }
                         reply
                       case (JSTestBackend.AbortedQuery(reason), i) =>
                         if (mode.showRepl) {
                           val prefix = if (i + 1 == queries.length) "└──" else "├──"
-                          println(s"$prefix Query ${i + 1}/${queries.length}: <aborted: $reason>")
+                          output(s"$prefix Query ${i + 1}/${queries.length}: <aborted: $reason>")
                         }
                         ReplHost.Unexecuted(reason)
                       case (JSTestBackend.EmptyQuery, i) =>
                         if (mode.showRepl) {
                           val prefix = if (i + 1 == queries.length) "└──" else "├──"
-                          println(s"$prefix Query ${i + 1}/${queries.length}: <empty>")
+                          output(s"$prefix Query ${i + 1}/${queries.length}: <empty>")
                         }
                         ReplHost.Empty
                     })
@@ -730,108 +765,5 @@ object DiffTests {
   private val files = allFiles.filter { file =>
       val fileName = file.baseName
       validExt(file.ext) && filter(fileName)
-  }
-  
-  
-  /** Helper to run NodeJS on test input. */
-  final case class ReplHost() {
-    import java.io.{BufferedWriter, BufferedReader, InputStreamReader, OutputStreamWriter}
-    private val builder = new java.lang.ProcessBuilder()
-    builder.command("node", "--interactive")
-    private val proc = builder.start()
-
-    private val stdin = new BufferedWriter(new OutputStreamWriter(proc.getOutputStream))
-    private val stdout = new BufferedReader(new InputStreamReader(proc.getInputStream))
-    private val stderr = new BufferedReader(new InputStreamReader(proc.getErrorStream))
-
-    skipUntilPrompt()
-
-    private def skipUntilPrompt(): Unit = {
-      val buffer = new StringBuilder()
-      while (!buffer.endsWith("\n> ")) {
-        buffer.append(stdout.read().toChar)
-      }
-      buffer.delete(buffer.length - 3, buffer.length)
-      ()
-    }
-
-    private def consumeUntilPrompt(): ReplHost.Reply = {
-      val buffer = new StringBuilder()
-      while (!buffer.endsWith("\n> ")) {
-        buffer.append(stdout.read().toChar)
-      }
-      buffer.delete(buffer.length - 3, buffer.length)
-      val reply = buffer.toString()
-      val begin = reply.indexOf(0x200B)
-      val end = reply.lastIndexOf(0x200B)
-      if (begin >= 0 && end >= 0)
-        // `console.log` inserts a space between every two arguments,
-        // so + 1 and - 1 is necessary to get correct length.
-        ReplHost.Error(reply.substring(begin + 1, end))
-      else
-        ReplHost.Result(reply)
-    }
-
-    private def send(code: Str, useEval: Bool = false): Unit = {
-      stdin.write(
-        if (useEval) "eval(" + JSLit.makeStringLiteral(code) + ")\n"
-        else if (code endsWith "\n") code
-        else code + "\n"
-      )
-      stdin.flush()
-    }
-
-    def query(prelude: Str, code: Str, res: Str): ReplHost.Reply = {
-      if (prelude.isEmpty && code.isEmpty) ReplHost.Empty
-      else {
-        val wrapped = s"$prelude try { $code } catch (e) { console.log('\\u200B' + e + '\\u200B'); }"
-        send(wrapped)
-        consumeUntilPrompt() match {
-          case _: ReplHost.Result =>
-            send(if (res =:= "res") res else s"globalThis[\"${res}\"]")
-            consumeUntilPrompt()
-          case t => t
-        }
-      }
-    }
-
-    def execute(code: Str): Unit = {
-      send(code)
-      skipUntilPrompt()
-    }
-
-    def terminate(): Unit = proc.destroy()
-  }
-
-  object ReplHost {
-    /**
-      * The base class of all kinds of REPL replies.
-      */
-    sealed abstract class Reply
-
-    final case class Result(content: Str) extends Reply {
-      override def toString(): Str = s"[success] $content"
-    }
-
-    /**
-      * If the query is `Empty`, we will receive this.
-      */
-    final object Empty extends Reply {
-      override def toString(): Str = "[empty]"
-    }
-
-    /**
-      * If the query is `Unexecuted`, we will receive this.
-      */
-    final case class Unexecuted(message: Str) extends Reply {
-      override def toString(): Str = s"[unexecuted] $message"
-    }
-
-    /**
-      * If the `ReplHost` captured errors, it will response with `Error`.
-      */
-    final case class Error(message: Str) extends Reply {
-      override def toString(): Str = s"[error] $message"
-    }
   }
 }
