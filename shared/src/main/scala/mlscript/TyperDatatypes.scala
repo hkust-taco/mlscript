@@ -313,12 +313,19 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   
   /** A type variable living at a certain polymorphism level `level`, with mutable bounds.
-    * Invariant: Types appearing in the bounds never have a level higher than this variable's `level`. */
+    * Invariant: Types appearing in the bounds never have a level higher than this variable's `level`. 
+    * IndexedIn, IndexedBy are extra metavariables used for accurate type inference for element indexing
+    * a[i]:R, a: A, i: I
+    * IndexedIn: i is indexed in a, add (A, R) to i
+    * IndexedBy: a is indexed by i, add (I, R) to a
+    */
   final class TypeVariable(
       val level: Int,
       var lowerBounds: List[SimpleType],
       var upperBounds: List[SimpleType],
-      val nameHint: Opt[Str] = N
+      val nameHint: Opt[Str] = N,
+      var IndexedIn: Opt[(TypeVariable, TypeVariable)] = None,
+      var IndexedBy: Opt[(TypeVariable, TypeVariable)] = None
   )(val prov: TypeProvenance) extends SimpleType with CompactTypeOrVariable with Ordered[TypeVariable] with Factorizable {
     private[mlscript] val uid: Int = { freshCount += 1; freshCount - 1 }
     lazy val asTypeVar = new TypeVar(L(uid), nameHint)
