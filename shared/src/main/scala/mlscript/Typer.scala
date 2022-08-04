@@ -527,6 +527,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val t_i = typeTerm(i)
         con(t_i, IntType, TopType)
         val elemType = freshVar(prov)
+
         elemType.upperBounds ::=
           // * We forbid using [⋅] indexing to access elements that possibly have `undefined` value,
           // *  which could result in surprising behavior and bugs in the presence of parametricity!
