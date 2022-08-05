@@ -19,10 +19,18 @@ enum Expr:
   case With(value: Expr, fields: Expr.Record)
   case Subscript(receiver: Expr, index: Expr)
   case Match(scrutinee: Expr, branches: ArrayBuffer[CaseBranch])
-  case Literal(value: BigInt | BigDecimal | String | UnitValue)
+  case Literal(value: BigInt | BigDecimal | Boolean | String | UnitValue)
   case New(apply: Option[(TypeName, List[Expr])], body: Isolation)
   case IfThenElse(condition: Expr, consequent: Expr, alternate: Option[Expr])
   case Isolated(isolation: Isolation)
+
+  def asBoolean(): Boolean = this match
+    case Literal(value: BigInt) => value != 0
+    case Literal(value: BigDecimal) => value != 0
+    case Literal(value: Boolean) => value
+    case Literal(value: String) => !value.isEmpty()
+    case Literal(_) => false
+    case _ => false
 
   override def toString(): String = this match
     case Ref(name) => name
@@ -30,8 +38,8 @@ enum Expr:
       val head = params.mkString("(", ", ", ")")
       s"fun $head -> $body"
     case Apply(callee, arguments) =>
-      val tail = arguments.mkString(" ")
-      s"($callee $tail)"
+      val tail = arguments.mkString(", ")
+      s"($callee of $tail)"
     case Tuple(fields) => 
       val inner = fields.mkString(", ")
       "(" + (if fields.length == 1 then inner + ", " else inner) + ")"
@@ -81,6 +89,11 @@ enum TypeDeclKind:
     case Class => "class"
     case Trait => "trait"
 
+/**
+ * Function parameters: `(specializable, name)`.
+ */
+type Parameter = (Boolean, Expr.Ref)
+
 enum Item:
   /**
    * Type declarations: aliases, classes and traits.
@@ -90,7 +103,7 @@ enum Item:
   /**
    * Function declaration (with implementation).
    */
-  case FuncDecl(name: Expr.Ref, body: Expr)
+  case FuncDecl(name: Expr.Ref, params: List[Parameter], body: Expr)
   /**
    * Function definition (with definition)
    */
@@ -103,8 +116,12 @@ enum Item:
       val parentsStr = if parents.isEmpty then ""
         else parents.mkString(" extends ", " with ", " ")
       s"$kind $name$typeParamsStr$parentsStr { $body }"
-    case FuncDecl(Expr.Ref(name), body) =>
-      s"fun $name = $body"
+    case FuncDecl(Expr.Ref(name), params, body) =>
+      val parameters = params.iterator.map {
+        case (spec, Expr.Ref(name)) =>
+          (if spec then "#" else "") + name
+      }.mkString("(", ", ", ")")
+      s"fun $name$parameters = $body"
     case FuncDefn(Expr.Ref(name), Nil, polyType) =>
       s"fun $name: $polyType"
     case FuncDefn(Expr.Ref(name), typeParams, polyType) =>

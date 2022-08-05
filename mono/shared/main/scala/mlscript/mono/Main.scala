@@ -22,19 +22,11 @@ import mlscript.{Diagnostic, Warning, CompilationError}
 @main
 def main(): Unit =
   val source = """
-    |fun inc(#x) = x + 1
-    |fun dbl(#x) = x * 2
-    |fun app(f, x) = f x
-    |
-    |class Box(value) {
-    |  fun map(f) = Box(f(value))
-    |  fun get = this.value
-    |}
-    |
-    |new Box(0) {
-    |  fun get = this.value + 1
-    |}
-    |""".stripMargin
+    |fun pow(#n, x) =
+    |  if n > 1 then pow(n - 1, x) * x else 1
+    |pow(3, 2)
+    |pow(3, 1)
+    |pow(2, 9)""".stripMargin
   val fastParseHelpers = mlscript.FastParseHelpers(source)
   val origin = mlscript.Origin("test.mls", 1, fastParseHelpers)
   val raise = (t: Diagnostic) => t match
@@ -50,5 +42,5 @@ def main(): Unit =
   }
   val typingUnit = parser.parseAll(parser.typingUnit)
   val monomorph = new Monomorph(true)
-  val monomorphized = monomorph.monomprphize(typingUnit)
+  val monomorphized = monomorph.monomorphize(typingUnit)
   println("Successfully monomorphized the program.")

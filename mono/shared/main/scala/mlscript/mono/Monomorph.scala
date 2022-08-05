@@ -1,25 +1,33 @@
 package mlscript.mono
 
 import mlscript.{TypingUnit, NuTypeDef, NuFunDef}
-import mlscript.TypeName
+import mlscript.{AppliedType, TypeName}
 import mlscript.{App, Asc, Assign, Bind, Blk, Block, Bra, CaseOf, Lam, Let, Lit,
                  New, Rcd, Sel, Subs, Term, Test, Tup, With, Var, Fld, If}
 import mlscript.{IfTerm, IfThen, IfElse, IfLet, IfOpApp, IfOpsApp, IfBlock}
 import mlscript.{IntLit, DecLit, StrLit, UnitLit}
-import scala.collection.mutable.Map as MutMap
-import scala.collection.mutable.Set as MutSet
+import scala.collection.immutable.{HashMap}
+import scala.collection.mutable.{Map as MutMap, Set as MutSet}
 import scala.collection.mutable.ArrayBuffer
 import mlscript.Cls
 import mlscript.CaseBranches
 import mlscript.TypeDefKind
+import mlscript.AppliedType.apply
+import mlscript.mono.specializer.Builtin
 
 class Monomorph(debugMode: Boolean):
   private val debug = if debugMode then RainbowDebug() else DummyDebug()
 
+  import Helpers._
+
   /**
    * Specialized implementations of function declarations.
    */
-  private val funImpls = MutMap[String, (Item.FuncDecl, ArrayBuffer[Item.FuncDecl])]()
+  private val funImpls = MutMap[String, (Item.FuncDecl, MutMap[String, Item.FuncDecl])]()
+  private def allFunImpls: IterableOnce[(Item.FuncDecl, Item.FuncDecl)] =
+    funImpls.iterator.flatMap { case (name, (protoFunc, implFunc)) =>
+      implFunc.values.map((protoFunc, _))
+    }
 
   /**
    * Specialized implementations of each type declarations.
@@ -50,7 +58,7 @@ class Monomorph(debugMode: Boolean):
   /**
    * This function monomorphizes the top-level `TypingUnit` into a `Module`.
    */
-  def monomprphize(tu: TypingUnit): Module =
+  def monomorphize(tu: TypingUnit): Module =
     debug.trace("MONO MODL", PrettyPrinter.show(tu)) {
       mlscript.mono.Module(tu.entities.iterator.flatMap[Expr | Item] {
         case Left(term) =>
@@ -62,10 +70,11 @@ class Monomorph(debugMode: Boolean):
           val funcItem = monomorphizeFunDef(funDef)
           funcItem match
             case funcDecl: Item.FuncDecl =>
-              funImpls.addOne(funcDecl.name.name, (funcDecl, ArrayBuffer()))
+              funImpls.addOne(funcDecl.name.name, (funcDecl, MutMap()))
             case _ => ()
           Some(funcItem)
-      }.concat(allTypeDecls.map(_._2))
+      }.concat(allFunImpls.map(_._2))
+       .concat(allTypeDecls.map(_._2))
        .concat(lamTyDefs.values)
        .concat(anonymTyDefs.values)
        .toList)
@@ -128,7 +137,9 @@ class Monomorph(debugMode: Boolean):
     debug.trace[Item.FuncDecl | Item.FuncDefn]("MONO FUNC", PrettyPrinter.show(funDef)) {
       val NuFunDef(nme, targs, rhs) = funDef
       rhs match
-        case Left(term) => Item.FuncDecl(nme, monomorphizeTerm(term))
+        case Left(Lam(params, body)) =>
+          Item.FuncDecl(nme, toFuncParams(params).toList, monomorphizeTerm(body))
+        case Left(body) => Item.FuncDecl(nme, Nil, monomorphizeTerm(body))
         case Right(polyType) => Item.FuncDefn(nme, targs, polyType)
     }(_.toString)
 
@@ -136,7 +147,6 @@ class Monomorph(debugMode: Boolean):
    * This function monomophizes a `Term` into an `Expr`.
    */
   def monomorphizeTerm(term: Term): Expr =
-    import Helpers._
     debug.trace[Expr]("MONO TERM", PrettyPrinter.show(term)) {
       term match
         case Var(name) => Expr.Ref(name)
@@ -145,7 +155,9 @@ class Monomorph(debugMode: Boolean):
           // TODO: Capture variables referenced in the lambda body.
           // We should capture: closure variables and referenced type variables.
           val className = s"Lambda_${lamTyDefs.size}"
-          val classBody = Isolation(Item.FuncDecl("apply", monomorphizeTerm(rhs)) :: Nil)
+          val applyMethod: Item.FuncDecl =
+            Item.FuncDecl("apply", toFuncParams(lhs).toList, monomorphizeTerm(rhs))
+          val classBody = Isolation(applyMethod :: Nil)
           val classDecl = Item.classDecl(className, classBody)
           // Add to the global store.
           lamTyDefs.addOne((className, classDecl))
@@ -154,7 +166,10 @@ class Monomorph(debugMode: Boolean):
         case App(lhs, rhs) =>
           val callee = monomorphizeTerm(lhs)
           val arguments = toFuncArgs(rhs).map(monomorphizeTerm).toList
-          Expr.Apply(callee, arguments)
+          callee match
+            case Expr.Ref(name) =>
+              specializeCall(name, arguments).fold(Expr.Apply(callee, arguments))(identity)
+            case _ => Expr.Apply(callee, arguments)
         case Tup(fields) =>
           Expr.Tuple(fields.map {
             case (_, Fld(mut, spec, value)) => monomorphizeTerm(value)
@@ -196,8 +211,11 @@ class Monomorph(debugMode: Boolean):
           val className = s"Anonym_${anonymTyDefs.size}"
           val classDecl = Item.classDecl(className, monomorphizeBody(body))
           Expr.Apply(className, Nil)
-        case New(Some((TypeName(name), args)), body) =>
-          specializeNew(name, toFuncArgs(args).toList, body)
+        case New(Some((constructor, args)), body) =>
+          val typeName = constructor match
+            case AppliedType(TypeName(name), _) => name
+            case TypeName(name)                 => name
+          specializeNew(typeName, toFuncArgs(args).toList, body)
         case Block(unit) => Expr.Isolated(monomorphizeBody(unit))
         case If(body, alternate) => body match
           case term: IfTerm => throw MonomorphError("unsupported IfTerm")
@@ -236,6 +254,101 @@ class Monomorph(debugMode: Boolean):
       val specTypeDecl = specializeTypeDef(name, args, body)
       Expr.Apply(specTypeDecl.name, Nil)
     }(_.toString)
+
+  // TODO: Remove `Option[Expr]` by passing the callee.
+  def specializeCall(name: String, args: List[Expr]): Option[Expr] =
+    debug.trace("SPEC CALL", name + args.mkString("(", ", ", ")")) {
+      funImpls.get(name) match
+        case Some((Item.FuncDecl(ref, params, body), impls)) =>
+          if (args.length != params.length) {
+            throw MonomorphError(s"$name expect ${params.length} arguments but ${args.length} were given")
+          }
+          val staticArguments = params.iterator.zip(args).flatMap({
+            case ((false, _), value) => Some(value)
+            case _ => None
+          })
+          val dynamicArguments = params.iterator.zip(args).flatMap({
+            case ((true, _), value) => Some(value)
+            case _ => None
+          })
+          if (dynamicArguments.isEmpty) {
+            None
+          } else {
+            val signature = dynamicArguments.iterator.map(DataType.infer(_, None)).mkString("__", "_", "")
+            val specFuncDecl = impls.get(signature).getOrElse[Item.FuncDecl] {
+              val values = params.iterator.zip(args).flatMap({
+                case ((true, Expr.Ref(name)), value) => Some((name, value))
+                case ((false, _), _) => None
+              })
+              val specFuncBody = specializeExpr(body)(using HashMap.from(values))
+              val staticParams = params.filter(!_._1)
+              val specFuncName = s"${name}" + signature
+              val funcDecl: Item.FuncDecl = Item.FuncDecl(specFuncName, staticParams, specFuncBody)
+              impls.addOne((specFuncName, funcDecl))
+              funcDecl
+            }
+            Some(Expr.Apply(specFuncDecl.name, staticArguments.toList))
+          }
+        case None => None
+    }(_.toString())
+
+  def specializeExpr(expr: Expr)(using ctx: HashMap[String, Expr]): Expr =
+    debug.trace[Expr]("SPEC EXPR", expr.toString() + " in context " +
+      (if ctx.isEmpty then "{}" else ctx.mkString("{\n  ", "\n  ", "\n}"))
+    ) {
+      expr match
+        case Expr.Ref(name) => ctx.get(name) match
+          case Some(value) => value
+          case None => expr
+        case _: Expr.Lambda => expr
+        case Expr.Apply(Expr.Apply(ident @ Expr.Ref(name), lhsExpr :: Nil), rhsExpr :: Nil)
+            if Builtin.isBinaryOperator(name) =>
+          val lhs = specializeExpr(lhsExpr)
+          val rhs = specializeExpr(rhsExpr)
+          Builtin.evalulateBinaryOperation(name, lhs, rhs)
+            .getOrElse(Expr.Apply(Expr.Apply(ident, lhs :: Nil), rhs :: Nil))
+        case Expr.Apply(callee, arguments) =>
+          val specCallee = specializeExpr(callee)
+          val specArgs = arguments.map(specializeExpr)
+          specCallee match
+            case Expr.Ref(name) => specializeCall(name, specArgs).getOrElse(expr)
+            case Expr.Lambda(params, body) =>
+              // Same as `specializeFuncDecl` but I should extract some common stuffs.
+              ???
+            case other => throw MonomorphError(s"not a callable: $other")
+        case Expr.Tuple(elements) => Expr.Tuple(elements.map(specializeExpr))
+        case Expr.Record(fields) => Expr.Record(fields.map {
+          case (key, value) => (key, specializeExpr(value))
+        })
+        case Expr.Select(receiver, field) =>
+          // We can do more.
+          Expr.Select(specializeExpr(receiver), field)
+        case Expr.LetIn(true, name, Expr.Lambda(params, body), cont) =>
+          // Create a callable entry in the context and recursively specialize
+          // the continuation.
+          ???
+        case Expr.LetIn(true, _, _, _) =>
+          throw MonomorphError(s"recursive non-function definition are not allowed")
+        case Expr.LetIn(false, Expr.Ref(name), rhs, body) =>
+          val specRhs = specializeExpr(rhs)
+          specializeExpr(body)(using ctx + (name -> specRhs))
+        case Expr.Block(items) =>
+          val onlyExpressions = items.iterator.flatMap {
+            case expr: Expr => Some(expr)
+            case _ => None
+          }
+          onlyExpressions.map(specializeExpr).toList match
+            case Nil => Expr.Literal(UnitValue.Undefined)
+            case items => items.last
+        case expr: Expr.Literal => expr
+        case Expr.IfThenElse(condition, consequent, alternate) =>
+          specializeExpr(
+            if specializeExpr(condition).asBoolean()
+            then consequent
+            else alternate.getOrElse(Expr.Literal(UnitValue.Undefined))
+          )
+        case _ => throw MonomorphError(s"unimplemented ${expr.getClass()}")
+    }(_.toString())
 
   /**
    * This function monomorphizes the given class with given arguments.

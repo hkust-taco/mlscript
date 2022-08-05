@@ -6,9 +6,12 @@ import mlscript.{IfBody, IfTerm, IfThen, IfElse, IfLet, IfOpApp, IfOpsApp, IfBlo
 import mlscript.CaseBranches
 
 object Helpers:
-  def toFuncParams(term: Term): IterableOnce[Expr.Ref] = term match
+  /**
+   * Extract parameters for monomorphization from a `Tup`.
+   */
+  def toFuncParams(term: Term): Iterator[Parameter] = term match
     case Tup(fields) => fields.iterator.map {
-      case (_, Fld(mut, spec, Var(name))) => Expr.Ref(name)
+      case (_, Fld(_, spec, Var(name))) => (spec, Expr.Ref(name))
       case _ => throw new MonomorphError("only `Var` can be parameters")
     }
     case _ => throw MonomorphError("expect the list of parameters to be a `Tup`")
