@@ -528,6 +528,15 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         con(t_i, IntType, TopType)
         val elemType = freshVar(prov)
 
+        var t_a_var = new TypeVariable(t_a.level, Nil, Nil)(t_a.prov)
+        var t_i_var = new TypeVariable(t_i.level, Nil, Nil)(t_i.prov)
+
+        t_a_var.indexedBy = Some((t_i_var, elemType))
+        t_i_var.indexedIn = Some((t_a_var, elemType))
+
+        //con(t_a_var, )
+        //con(t_i_var, )  
+
         elemType.upperBounds ::=
           // * We forbid using [⋅] indexing to access elements that possibly have `undefined` value,
           // *  which could result in surprising behavior and bugs in the presence of parametricity!
