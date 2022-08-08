@@ -333,6 +333,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             rhs.lowerBounds ::= newBound // update the bound
             rhs.upperBounds.foreach(rec(lhs, _, true)) // propagate from the bound
+            rhs.indexedBy.foreach { case (index, result) => 
+              rec(indexedBy(lhs, index), result, false) } 
           case (_: TypeVariable, rhs0) =>
             val rhs = extrude(rhs0, lhs.level, false)
             println(s"EXTR RHS  $rhs0  ~>  $rhs  to ${lhs.level}")
@@ -687,5 +689,25 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     freshen(ty)
   }
   
+  // receiver: a, index: i, return type of a[i]
+  // tuple: fixed length of array
+  def indexedBy(receiver: SimpleType, index: SimpleType)(implicit ctx: Ctx): SimpleType = {
+    (receiver.unwrapProxies, index) match {
+      case (t @ TupleType(fs), ClassTag(id @ IntLit(value), parents)) =>  
+        // check index validity and retrieve corresponding type 
+        BoolType
+      
+      case (t : TypeVariable, _) =>
+        val lb = t.lowerBounds
+        val typeVar: SimpleType = freshVar(noProv)
+        t.indexedBy ::= (index, typeVar)
+        lb.map(indexedBy(_, index)).foldLeft(typeVar)(_ | _)
+      
+      case _ => ???
+    }
+  }
   
+  // def indexedIn(): {
+
+  // }
 }

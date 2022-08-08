@@ -525,27 +525,30 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case Subs(a, i) =>
         val t_a = typeTerm(a)
         val t_i = typeTerm(i)
-        con(t_i, IntType, TopType)
-        val elemType = freshVar(prov)
 
-        var t_a_var = new TypeVariable(t_a.level, Nil, Nil)(t_a.prov)
-        var t_i_var = new TypeVariable(t_i.level, Nil, Nil)(t_i.prov)
+        indexedBy(t_a, t_i)
+        //con(t_i, IntType, TopType)
+        // val elemType = freshVar(prov)
 
-        t_a_var.indexedBy = Some((t_i_var, elemType))
-        t_i_var.indexedIn = Some((t_a_var, elemType))
+        // var t_a_var = new TypeVariable(t_a.level, Nil, Nil)(t_a.prov)
+        // var t_i_var = new TypeVariable(t_i.level, Nil, Nil)(t_i.prov)
 
-        //con(t_a_var, )
-        //con(t_i_var, )  
+        // t_a_var.indexedBy = Some((t_i_var, elemType))
+        // t_i_var.indexedIn = Some((t_a_var, elemType))
+        
+        // con(t_i_var, IntType, TopType)
+        // //con(t_a_var, )
+        // //con(t_i_var, )  
 
-        elemType.upperBounds ::=
-          // * We forbid using [⋅] indexing to access elements that possibly have `undefined` value,
-          // *  which could result in surprising behavior and bugs in the presence of parametricity!
-          // * Note that in modern JS, `undefined` is arguably not a value you're supposed to use explicitly;
-          // *  `null` should be used instead for those willing to indulge in the Billion Dollar Mistake.
-          TypeRef(TypeName("undefined"), Nil)(noProv).neg(
-            prov.copy(desc = "prohibited undefined element")) // TODO better reporting for this; the prov isn't actually used
-        con(t_a, ArrayType(elemType.toUpper(tp(i.toLoc, "array element")))(prov), elemType) |
-          TypeRef(TypeName("undefined"), Nil)(prov.copy(desc = "possibly-undefined array access"))
+        // elemType.upperBounds ::=
+        //   // * We forbid using [⋅] indexing to access elements that possibly have `undefined` value,
+        //   // *  which could result in surprising behavior and bugs in the presence of parametricity!
+        //   // * Note that in modern JS, `undefined` is arguably not a value you're supposed to use explicitly;
+        //   // *  `null` should be used instead for those willing to indulge in the Billion Dollar Mistake.
+        //   TypeRef(TypeName("undefined"), Nil)(noProv).neg(
+        //     prov.copy(desc = "prohibited undefined element")) // TODO better reporting for this; the prov isn't actually used
+        // con(t_a, ArrayType(elemType.toUpper(tp(i.toLoc, "array element")))(prov), elemType) |
+        //   TypeRef(TypeName("undefined"), Nil)(prov.copy(desc = "possibly-undefined array access"))
       case Assign(s @ Sel(r, f), rhs) =>
         val o_ty = typeTerm(r)
         val sprov = tp(s.toLoc, "assigned selection")

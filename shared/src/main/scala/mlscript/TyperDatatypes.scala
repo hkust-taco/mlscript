@@ -324,8 +324,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       var lowerBounds: List[SimpleType],
       var upperBounds: List[SimpleType],
       val nameHint: Opt[Str] = N,
-      var indexedIn: Opt[(TypeVariable, TypeVariable)] = None,
-      var indexedBy: Opt[(TypeVariable, TypeVariable)] = None
+      var indexedIn: List[(SimpleType, SimpleType)] = Nil,
+      var indexedBy: List[(SimpleType, SimpleType)] = Nil
   )(val prov: TypeProvenance) extends SimpleType with CompactTypeOrVariable with Ordered[TypeVariable] with Factorizable {
     private[mlscript] val uid: Int = { freshCount += 1; freshCount - 1 }
     lazy val asTypeVar = new TypeVar(L(uid), nameHint)
