@@ -8,7 +8,7 @@ class Test extends DiffTests(Test.dir) {
   override def postProcess(basePath: List[Str], testName: Str, unit: TypingUnit): List[Str] = 
     val monomorph = new Monomorph(false)
     val output = try {
-      val result = monomorph.monomprphize(unit)
+      val result = monomorph.monomorphize(unit)
       result.toString()
     } catch {
       case error: MonomorphError => error.getMessage()
