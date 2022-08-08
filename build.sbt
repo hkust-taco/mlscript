@@ -57,3 +57,13 @@ lazy val mlscript = crossProject(JSPlatform, JVMPlatform).in(file("."))
 
 lazy val mlscriptJVM = mlscript.jvm
 lazy val mlscriptJS = mlscript.js
+
+lazy val ts2mls = crossProject(JSPlatform, JVMPlatform).in(file("ts2mls"))
+  .settings(
+    name := "ts2mls",
+    scalaVersion := "2.13.8",
+    sourceDirectory := baseDirectory.value.getParentFile()/"shared",
+  )
+  .dependsOn(mlscript % "compile->compile;test->test")
+
+lazy val ts2mlsJS = ts2mls.js
