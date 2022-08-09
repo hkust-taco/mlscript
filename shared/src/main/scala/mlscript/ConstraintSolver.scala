@@ -333,8 +333,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             rhs.lowerBounds ::= newBound // update the bound
             rhs.upperBounds.foreach(rec(lhs, _, true)) // propagate from the bound
+            
             rhs.indexedBy.foreach { case (index, result) => 
-              rec(indexedBy(lhs, index), result, false) } 
+              rec(constrainIndex(lhs, index), result, false) } 
+            
+            // add indexedIn
           case (_: TypeVariable, rhs0) =>
             val rhs = extrude(rhs0, lhs.level, false)
             println(s"EXTR RHS  $rhs0  ~>  $rhs  to ${lhs.level}")
@@ -689,25 +692,37 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     freshen(ty)
   }
   
+  // a is indexed by i
   // receiver: a, index: i, return type of a[i]
   // tuple: fixed length of array
-  def indexedBy(receiver: SimpleType, index: SimpleType)(implicit ctx: Ctx): SimpleType = {
+  def constrainIndex(receiver: SimpleType, index: SimpleType)(implicit ctx: Ctx): SimpleType 
+        = {//trace(s"$lvl. Receiver: $receiver, Index: $index") {
     (receiver.unwrapProxies, index) match {
       case (t @ TupleType(fs), ClassTag(id @ IntLit(value), parents)) =>  
-        // check index validity and retrieve corresponding type 
-        BoolType
+        // check index validity and retrieve corresponding type
+
+        // get the len of t: fs.length
+        if (value >= fs.length || value < 0){
+          throw new Exception("Out of range!")
+        } else{
+          fs(value.toInt)._2.ub
+        }
       
       case (t : TypeVariable, _) =>
         val lb = t.lowerBounds
         val typeVar: SimpleType = freshVar(noProv)
         t.indexedBy ::= (index, typeVar)
-        lb.map(indexedBy(_, index)).foldLeft(typeVar)(_ | _)
+        lb.map(constrainIndex(_, index)).foldLeft(typeVar)(_ | _)
       
+      case (_, t: TypeVariable) =>
+        ???
+
+      // (1, 2, 3)[true]
+      /* | : (or) 
+      case (..... , _) =>  
+        typeTerm(tv)
+      */
       case _ => ???
     }
   }
-  
-  // def indexedIn(): {
-
-  // }
 }

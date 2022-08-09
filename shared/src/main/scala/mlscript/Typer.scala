@@ -526,7 +526,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val t_a = typeTerm(a)
         val t_i = typeTerm(i)
 
-        indexedBy(t_a, t_i)
+        constrainIndex(t_a, t_i)
         //con(t_i, IntType, TopType)
         // val elemType = freshVar(prov)
 
