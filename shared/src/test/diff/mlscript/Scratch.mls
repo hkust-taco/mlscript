@@ -11,17 +11,18 @@
 //│ | 0. : (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
 //│ | 0. Typing term true
 //│ | 0. : true<TypeName(bool)>
+//│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: true<TypeName(bool)>
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:725)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:752)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:696)
 //│ 	at: mlscript.Typer.typeStatement(Typer.scala:351)
 //│ 	at: mlscript.DiffTests.$anonfun$new$53(DiffTests.scala:553)
 //│ 	at: mlscript.DiffTests.$anonfun$new$53$adapted(DiffTests.scala:506)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:506)
 
 :d
 def foo x = x[1]
@@ -35,6 +36,7 @@ def foo x = x[1]
 //│ | | 1. : α21' [indexedIn: List(), indexedBy: List()]
 //│ | | 1. Typing term 1
 //│ | | 1. : 1<TypeName(int),TypeName(number)>
+//│ | | 1. Receiver: α21' [indexedIn: List(), indexedBy: List()], Index: 1<TypeName(int),TypeName(number)>
 //│ | 1. : α22' [indexedIn: List(), indexedBy: List()]
 //│ 1. : (α21' [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α22' [indexedIn: List(), indexedBy: List()]))] -> α22' [indexedIn: List(), indexedBy: List()])
 //│ ⬤ Typed as: (α21' [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α22' [indexedIn: List(), indexedBy: List()]))] -> α22' [indexedIn: List(), indexedBy: List()])
@@ -72,7 +74,7 @@ foo ((1, 2, 3))
 //│    = 2
 
 (1, 2, 3)[-1]
-//│ /!\ Parse error: Expected end-of-input:1:10, found "[-1];" at l.74:10: (1, 2, 3)[-1]
+//│ /!\ Parse error: Expected end-of-input:1:10, found "[-1];" at l.76:10: (1, 2, 3)[-1]
 
 (1, 2, 3)[0]
 //│ res: 1
@@ -91,6 +93,7 @@ foo ((1, 2, 3))
 //│ | 0. : (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
 //│ | 0. Typing term 1
 //│ | 0. : 1<TypeName(int),TypeName(number)>
+//│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: 1<TypeName(int),TypeName(number)>
 //│ 0. : 2<TypeName(int),TypeName(number)>
 //│ ⬤ Typed as: 2<TypeName(int),TypeName(number)>
 //│  where: 
@@ -101,37 +104,28 @@ foo ((1, 2, 3))
 //│ res: 10
 //│    = 10
 
-a = 10
+a = 0
 a
 (1, 2, 3)[a]
-//│ a: 10
-//│  = 10
-//│ res: 10
-//│    = 10
+//│ a: 0
+//│  = 0
+//│ res: 0
+//│    = 0
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:725)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:752)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:696)
 //│ 	at: mlscript.Typer.typeStatement(Typer.scala:351)
 //│ 	at: mlscript.DiffTests.$anonfun$new$53(DiffTests.scala:553)
 //│ 	at: mlscript.DiffTests.$anonfun$new$53$adapted(DiffTests.scala:506)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:506)
 
 (1, 2, 3)[10]
-//│ /!!!\ Uncaught error: java.lang.Exception: Out of range!
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:706)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:696)
-//│ 	at: mlscript.Typer.typeStatement(Typer.scala:351)
-//│ 	at: mlscript.DiffTests.$anonfun$new$53(DiffTests.scala:553)
-//│ 	at: mlscript.DiffTests.$anonfun$new$53$adapted(DiffTests.scala:506)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:506)
-//│ 	at: mlscript.DiffTests.$anonfun$new$2(DiffTests.scala:635)
+//│ res: bool
+//│    = undefined
 
 (1, 2, 3)[-1]
-//│ /!\ Parse error: Expected end-of-input:1:10, found "[-1];" at l.136:10: (1, 2, 3)[-1]
+//│ /!\ Parse error: Expected end-of-input:1:10, found "[-1];" at l.130:10: (1, 2, 3)[-1]

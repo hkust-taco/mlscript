@@ -146,24 +146,17 @@ f(1,2,3) : 1 | 2 | 3
 
 :e
 (arr[0])[1][2]
-//│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.148: 	(arr[0])[1][2]
-//│ ║         	^^^^^^^^^^^
-//│ ╟── type `int` does not match type `Array[?a]`
-//│ ║  l.57: 	def arr: Array[int]
-//│ ║        	               ^^^
-//│ ╟── but it flows into array access with expected type `Array[?b]`
-//│ ║  l.148: 	(arr[0])[1][2]
-//│ ╙──       	 ^^^^^^
-//│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.148: 	(arr[0])[1][2]
-//│ ║         	^^^^^^^^^^^^^^
-//│ ╟── possibly-undefined array access of type `undefined` does not match type `Array[?a]`
-//│ ║  l.148: 	(arr[0])[1][2]
-//│ ╙──       	^^^^^^^^^^^
-//│ res: error | undefined
-//│ Runtime error:
-//│   TypeError: Cannot read properties of undefined (reading '2')
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:752)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:696)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:581)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:696)
 
 
 class A: { x: int }
@@ -311,13 +304,13 @@ a2.x
 :e
 a2._1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.312: 	a2._1
+//│ ║  l.305: 	a2._1
 //│ ║         	^^^^^
 //│ ╟── type `Array[?a]` does not match type `{_1: ?b} | ~{_2: true, x: "haha"}`
-//│ ║  l.289: 	def rep5: 'a -> Array['a]
+//│ ║  l.282: 	def rep5: 'a -> Array['a]
 //│ ║         	                ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?b} | ~{_2: true, x: "haha"}`
-//│ ║  l.312: 	a2._1
+//│ ║  l.305: 	a2._1
 //│ ╙──       	^^
 //│ res: error
 //│    = undefined
@@ -399,5 +392,5 @@ def pf t = (t[1], t._1)
 pf((1,2,3))
 //│ p1: Array[bool | int | string] | T
 //│ p2: Array[bool | int | string] | T
-//│ pf: (Array['a & ~undefined] & {_1: 'b}) -> (undefined | 'a, 'b,)
-//│ res: (1 | 2 | 3 | undefined, 1,)
+//│ pf: {_1: 'a} -> (nothing, 'a,)
+//│ res: (nothing, 1,)

@@ -132,18 +132,39 @@ case (null) of { undefined -> "undefined it is" | null -> "null it is" }
 
 
 absent = ()[0]
-//│ absent: undefined
+//│ absent: bool
 //│       = undefined
 
 case absent of { undefined -> 1 }
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.138: 	case absent of { undefined -> 1 }
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `bool` does not match type `undefined`
+//│ ║  l.138: 	case absent of { undefined -> 1 }
+//│ ║         	     ^^^^^^
+//│ ╟── Note: constraint arises from literal pattern:
+//│ ║  l.138: 	case absent of { undefined -> 1 }
+//│ ╙──       	                 ^^^^^^^^^
 //│ res: 1
 //│    = 1
 
 case absent of { null -> 0 | undefined -> 1 }
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.151: 	case absent of { null -> 0 | undefined -> 1 }
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `bool` does not match type `null & ?a | undefined & ?b`
+//│ ║  l.151: 	case absent of { null -> 0 | undefined -> 1 }
+//│ ╙──       	     ^^^^^^
 //│ res: 0 | 1
 //│    = 1
 
 case absent of { "" -> 0 | undefined -> 1 }
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.161: 	case absent of { "" -> 0 | undefined -> 1 }
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `bool` does not match type `"" & ?a | undefined & ?b`
+//│ ║  l.161: 	case absent of { "" -> 0 | undefined -> 1 }
+//│ ╙──       	     ^^^^^^
 //│ res: 0 | 1
 //│    = 1
 
@@ -165,19 +186,19 @@ nw.x
 undefined.x
 null.x
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.165: 	undefined.x
+//│ ║  l.186: 	undefined.x
 //│ ║         	^^^^^^^^^^^
 //│ ╟── undefined literal of type `undefined` does not have field 'x'
-//│ ║  l.165: 	undefined.x
+//│ ║  l.186: 	undefined.x
 //│ ╙──       	^^^^^^^^^
 //│ res: error
 //│ Runtime error:
 //│   TypeError: Cannot read properties of undefined (reading 'x')
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.166: 	null.x
+//│ ║  l.187: 	null.x
 //│ ║         	^^^^^^
 //│ ╟── null literal of type `null` does not have field 'x'
-//│ ║  l.166: 	null.x
+//│ ║  l.187: 	null.x
 //│ ╙──       	^^^^
 //│ res: error
 //│ Runtime error:
@@ -194,13 +215,13 @@ bypass = undefined
 //│   <:  bypass:
 //│ nothing
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.192: 	bypass = undefined
+//│ ║  l.213: 	bypass = undefined
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── undefined literal of type `undefined` does not match type `nothing`
-//│ ║  l.192: 	bypass = undefined
+//│ ║  l.213: 	bypass = undefined
 //│ ║         	         ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.186: 	def bypass: nothing
+//│ ║  l.207: 	def bypass: nothing
 //│ ╙──       	            ^^^^^^^
 //│       = undefined
 

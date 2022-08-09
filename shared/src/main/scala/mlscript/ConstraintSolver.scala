@@ -337,7 +337,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rhs.indexedBy.foreach { case (index, result) => 
               rec(constrainIndex(lhs, index), result, false) } 
             
-            // add indexedIn
+            rhs.indexedIn.foreach { case(receiver, result) =>
+              rec(constrainIndex(receiver, lhs), result, false)}
+            
           case (_: TypeVariable, rhs0) =>
             val rhs = extrude(rhs0, lhs.level, false)
             println(s"EXTR RHS  $rhs0  ~>  $rhs  to ${lhs.level}")
@@ -596,9 +598,24 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         } else {
           tv.lowerBounds ::= nv
           nv.upperBounds = tv.upperBounds.map(extrude(_, lvl, pol))
+          
+          /*
+          tv.indexedBy.foreach { case (index, result) =>
+            extrude()}
+          */
         }
         nv
       })
+      /*
+      case (lhs, rhs: TypeVariable) if lhs.level <= rhs.level =>
+        val newBound = (cctx._1 ::: cctx._2.reverse).foldLeft(lhs)((ty, c) =>
+          if (c.prov is noProv) ty else mkProxy(ty, c.prov))
+        rhs.lowerBounds ::= newBound // update the bound
+        rhs.upperBounds.foreach(rec(lhs, _, true)) // propagate from the bound
+        
+        rhs.indexedBy.foreach { case (index, result) => 
+          rec(constrainIndex(lhs, index), result, false) } 
+      */
       case n @ NegType(neg) => NegType(extrude(neg, lvl, pol))(n.prov)
       case e @ ExtrType(_) => e
       case p @ ProvType(und) => ProvType(extrude(und, lvl, pol))(p.prov)
@@ -696,14 +713,19 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   // receiver: a, index: i, return type of a[i]
   // tuple: fixed length of array
   def constrainIndex(receiver: SimpleType, index: SimpleType)(implicit ctx: Ctx): SimpleType 
-        = {//trace(s"$lvl. Receiver: $receiver, Index: $index") {
+        = trace(s"$lvl. Receiver: $receiver, Index: $index") {
     (receiver.unwrapProxies, index) match {
       case (t @ TupleType(fs), ClassTag(id @ IntLit(value), parents)) =>  
         // check index validity and retrieve corresponding type
 
         // get the len of t: fs.length
         if (value >= fs.length || value < 0){
-          throw new Exception("Out of range!")
+          BoolType
+          /*
+          fs(0)._1 match{
+            case Some(v) => err(msg"Out of range!" -> v.toLoc)
+          }
+          */
         } else{
           fs(value.toInt)._2.ub
         }
@@ -714,8 +736,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         t.indexedBy ::= (index, typeVar)
         lb.map(constrainIndex(_, index)).foldLeft(typeVar)(_ | _)
       
+      /*
       case (_, t: TypeVariable) =>
-        ???
+        val lb = t.lowerBounds
+        val typeVar: SimpleType = freshVar(noProv)
+        t.indexedIn ::= (receiver, typeVar)
+        lb.map(constrainIndex(receiver, _)).foldLeft(typeVar)(_ | _)
+      */
 
       // (1, 2, 3)[true]
       /* | : (or) 
@@ -724,5 +751,5 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       */
       case _ => ???
     }
-  }
+  } ()
 }

@@ -210,18 +210,17 @@ ep + 1
 //│ res: error | int
 
 ep[0]
-//│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.+1: 	ep[0]
-//│ ║        	^^^^^
-//│ ╟── integer literal of type `1` does not match type `Array[?a]`
-//│ ║  l.142: 	  lhs = IntLit { value = 1 };
-//│ ║         	                         ^
-//│ ╟── but it flows into reference with expected type `Array[?b]`
-//│ ║  l.+1: 	ep[0]
-//│ ╙──      	^^
-//│ res: error | undefined | 'a
-//│   where
-//│     'a :> ('a, 'a,) | 1 | 2 | 3
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:752)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$3(ConstraintSolver.scala:737)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:737)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 
 
 eval (Pair {
@@ -283,7 +282,7 @@ rec def eval(e) = case e of
 //│ ║  l.+4: 	  }
 //│ ║        	^^^
 //│ ╟── type `Expr[?]` does not match type `IntLit & ?a | Pair[?, ?] & ?b`
-//│ ║  l.263: 	def eval: Expr['a] -> 'a
+//│ ║  l.262: 	def eval: Expr['a] -> 'a
 //│ ║         	          ^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.+1: 	rec def eval(e) = case e of
@@ -349,7 +348,7 @@ rec def eval(e) = case e of
 //│ ║  l.+3: 	  | Pair -> (eval e.lhs, eval e.rhs)
 //│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.263: 	def eval: Expr['a] -> 'a
+//│ ║  l.262: 	def eval: Expr['a] -> 'a
 //│ ╙──       	                      ^^
 
 rec def eval(e) = case e of
@@ -432,5 +431,5 @@ rec def eval(e) = case e of
 //│ ║  l.+3: 	  | Pair -> (eval e.lhs, eval e.rhs)
 //│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.263: 	def eval: Expr['a] -> 'a
+//│ ║  l.262: 	def eval: Expr['a] -> 'a
 //│ ╙──       	                      ^^

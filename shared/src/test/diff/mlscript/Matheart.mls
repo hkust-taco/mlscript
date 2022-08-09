@@ -18,8 +18,17 @@ z[1]
 //│   <:  z:
 //│ Array[int]
 //│  = [ 3, 5, 6 ]
-//│ res: int | undefined
-//│    = 5
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:752)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:696)
+//│ 	at: mlscript.Typer.typeStatement(Typer.scala:351)
+//│ 	at: mlscript.DiffTests.$anonfun$new$53(DiffTests.scala:553)
+//│ 	at: mlscript.DiffTests.$anonfun$new$53$adapted(DiffTests.scala:506)
 
 
 //y = (3, "hello", 5.4)
@@ -33,16 +42,33 @@ st[0]
 //│   <:  st:
 //│ Array[string]
 //│   = [ 'hello', 'world', '!' ]
-//│ res: string | undefined
-//│    = 'hello'
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:752)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:696)
+//│ 	at: mlscript.Typer.typeStatement(Typer.scala:351)
+//│ 	at: mlscript.DiffTests.$anonfun$new$53(DiffTests.scala:553)
+//│ 	at: mlscript.DiffTests.$anonfun$new$53$adapted(DiffTests.scala:506)
 
 def ud: Array[int]
 ud[0]
 //│ ud: Array[int]
 //│   = <missing implementation>
-//│ res: int | undefined
-//│    = <no result>
-//│      ud is not implemented
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:752)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:696)
+//│ 	at: mlscript.Typer.typeStatement(Typer.scala:351)
+//│ 	at: mlscript.DiffTests.$anonfun$new$53(DiffTests.scala:553)
+//│ 	at: mlscript.DiffTests.$anonfun$new$53$adapted(DiffTests.scala:506)
 
 def precise: Array[int] 
 precise = (3: int, 5:int, 9:int)
@@ -54,10 +80,17 @@ precise[3]
 //│   <:  precise:
 //│ Array[int]
 //│        = [ 3, 5, 9 ]
-//│ res: int | undefined
-//│    = 9
-//│ res: int | undefined
-//│    = undefined
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:752)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:696)
+//│ 	at: mlscript.Typer.typeStatement(Typer.scala:351)
+//│ 	at: mlscript.DiffTests.$anonfun$new$53(DiffTests.scala:553)
+//│ 	at: mlscript.DiffTests.$anonfun$new$53$adapted(DiffTests.scala:506)
 
 class Lit: {val: int}
 class Add[E]: { lhs: E; rhs: E }
@@ -137,17 +170,17 @@ eval exp
 //│ exp: Array[Automata] -> Array[Binding]
 //│    = <missing implementation>
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.136: 	eval exp
+//│ ║  l.169: 	eval exp
 //│ ║         	^^^^^^^^
 //│ ╟── type `Array[Automata] -> Array[Binding]` does not match type `Add[?] & ?a | Lit & ?b | Nega[?] & ?c`
-//│ ║  l.135: 	def exp: Array[Automata] -> Array[Binding]
+//│ ║  l.168: 	def exp: Array[Automata] -> Array[Binding]
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Add[?] & ?d | Lit & ?e | Nega[?] & ?f`
-//│ ║  l.136: 	eval exp
+//│ ║  l.169: 	eval exp
 //│ ║         	     ^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.92: 	rec def eval e = case e of {
-//│ ╙──      	                      ^
+//│ ║  l.125: 	rec def eval e = case e of {
+//│ ╙──       	                      ^
 //│ res: error | int
 //│    = <no result>
 //│      exp is not implemented
@@ -155,26 +188,26 @@ eval exp
 :e
 eval (e: Lit | Add['e'] | Nega[int] as 'e)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.156: 	eval (e: Lit | Add['e'] | Nega[int] as 'e)
+//│ ║  l.189: 	eval (e: Lit | Add['e'] | Nega[int] as 'e)
 //│ ║         	      ^
 //│ ╟── type `Lit` is not an instance of type `int`
-//│ ║  l.116: 	def e: Lit | Add['e] | Nega['e] as 'e
+//│ ║  l.149: 	def e: Lit | Add['e] | Nega['e] as 'e
 //│ ║         	       ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.156: 	eval (e: Lit | Add['e'] | Nega[int] as 'e)
+//│ ║  l.189: 	eval (e: Lit | Add['e'] | Nega[int] as 'e)
 //│ ╙──       	                               ^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.156: 	eval (e: Lit | Add['e'] | Nega[int] as 'e)
+//│ ║  l.189: 	eval (e: Lit | Add['e'] | Nega[int] as 'e)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `int` does not match type `Add[?] & ?a | Lit & ?b | Nega[?] & ?c`
-//│ ║  l.156: 	eval (e: Lit | Add['e'] | Nega[int] as 'e)
+//│ ║  l.189: 	eval (e: Lit | Add['e'] | Nega[int] as 'e)
 //│ ║         	                               ^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.92: 	rec def eval e = case e of {
-//│ ║        	                      ^
+//│ ║  l.125: 	rec def eval e = case e of {
+//│ ║         	                      ^
 //│ ╟── from field selection:
-//│ ║  l.95: 	    | Nega -> 0 - (eval e.arg)
-//│ ╙──      	                        ^^^^^
+//│ ║  l.128: 	    | Nega -> 0 - (eval e.arg)
+//│ ╙──       	                        ^^^^^
 //│ res: error | int
 //│    = 4
 

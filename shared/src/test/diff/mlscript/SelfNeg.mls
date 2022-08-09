@@ -80,15 +80,17 @@ r[0] <- "test"
 
 :e
 r[0] + 1
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.82: 	r[0] + 1
-//│ ║        	^^^^^^
-//│ ╟── possibly-undefined array access of type `undefined` is not an instance of type `int`
-//│ ║  l.82: 	r[0] + 1
-//│ ╙──      	^^^^
-//│ res: error | int
-//│    = <no result>
-//│      r and foo are not implemented
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:752)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$3(ConstraintSolver.scala:737)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:737)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 
 
 
