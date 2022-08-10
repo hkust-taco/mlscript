@@ -102,16 +102,16 @@ enum Item:
   /**
    * Type declarations: aliases, classes and traits.
    */
-  case TypeDecl(name: Expr.Ref, kind: TypeDeclKind, typeParams: List[TypeName],
+  case TypeDecl(val name: Expr.Ref, kind: TypeDeclKind, typeParams: List[TypeName],
                 params: List[Parameter], parents: List[NamedType], body: Isolation)
   /**
    * Function declaration (with implementation).
    */
-  case FuncDecl(name: Expr.Ref, params: List[Parameter], body: Expr)
+  case FuncDecl(val name: Expr.Ref, params: List[Parameter], body: Expr)
   /**
    * Function definition (with definition)
    */
-  case FuncDefn(name: Expr.Ref, typeParams: List[TypeName], body: PolyType)
+  case FuncDefn(val name: Expr.Ref, typeParams: List[TypeName], body: PolyType)
 
   override def toString(): String = this match
     case TypeDecl(Expr.Ref(name), kind, typeParams, params, parents, body) =>

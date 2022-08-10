@@ -22,7 +22,7 @@ class ExprPrinter:
       val typeParamsStr = if typeParams.isEmpty then ""
         else typeParams.iterator.map(_.name).mkString("[", ", ", "]")
       val parentsStr = if parents.isEmpty then ""
-        else parents.iterator.map(_.show).mkString(" extends ", " with ", "")
+        else parents.iterator.map(_.show).mkString(": ", " with ", "")
       print(s"$kind $name$typeParamsStr${show(params)}$parentsStr ")
       show(body)
     case Item.FuncDecl(Expr.Ref(name), params, body) =>
