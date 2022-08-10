@@ -4,6 +4,7 @@ import mlscript._, mlscript.utils.shorthands._
 import scala.collection.immutable.{Map, Set}
 
 object Helpers {
+
   /**
     * Show how a term is actually structured.
     */
@@ -24,7 +25,16 @@ object Helpers {
       s"Rcd($entries})"
     case Sel(receiver, fieldName)    => s"Sel(${inspect(receiver)}, $fieldName)"
     case Let(isRec, name, rhs, body) => s"Let($isRec, $name, ${inspect(rhs)}, ${inspect(body)})"
-    case Blk(stmts)                  => s"Blk(...)"
+    case Blk(stmts)                  => stmts.iterator.map {
+      case term: Term => inspect(term)
+      case NuFunDef(nme, targs, L(term)) =>
+        s"NuFunDef(${nme.name}, ${targs.mkString("[", ", ", "]")}, ${inspect(term)})"
+      case NuFunDef(nme, targs, R(ty)) =>
+        s"NuFunDef(${nme.name}, ${targs.mkString("[", ", ", "]")}, $ty)"
+      case NuTypeDef(kind, nme, tparams, params, parents, body) =>
+        s"NuTypeDef(${kind.str}, ${nme.name}, ${tparams.mkString("(", ", ", ")")}, ${
+          inspect(params)}, ${parents.mkString("(", ", ", ")")}, ${inspect(body)})"
+    }.mkString("Blk(", ", ", ")")
     case Bra(rcd, trm)               => s"Bra(rcd = $rcd, ${inspect(trm)})"
     case Asc(trm, ty)                => s"Asc(${inspect(trm)}, $ty)"
     case Bind(lhs, rhs)              => s"Bind(${inspect(lhs)}, ${inspect(rhs)})"
@@ -39,11 +49,27 @@ object Helpers {
         case NoCases        => "NoCases"
       }
       s"CaseOf(${inspect(trm)}, ${inspectCaseBranches(cases)}"
-    case IntLit(value)  => s"IntLit($value)"
-    case DecLit(value)  => s"DecLit($value)"
-    case StrLit(value)  => s"StrLit($value)"
+    case IntLit(value)   => s"IntLit($value)"
+    case DecLit(value)   => s"DecLit($value)"
+    case StrLit(value)   => s"StrLit($value)"
     case UnitLit(value)  => s"UnitLit($value)"
-    case Subs(arr, idx) => s"Subs(${inspect(arr)}, ${inspect(idx)})"
-    case Assign(f, v)   => s"Assign(${inspect(f)}, ${inspect(v)})"
+    case Subs(arr, idx)  => s"Subs(${inspect(arr)}, ${inspect(idx)})"
+    case Assign(f, v)    => s"Assign(${inspect(f)}, ${inspect(v)})"
+    case New(head, body) => s"New($head, ${inspect(body)})"
+    case Block(unit) => s"Block(${inspect(unit)})"
+    case If(body, els) => s"If(...)"
   }
+
+  def inspect(t: TypingUnit): Str = t.entities.iterator
+    .map {
+      case L(term) => inspect(term)
+      case R(NuFunDef(nme, targs, L(term))) =>
+        s"NuFunDef(${nme.name}, ${targs.mkString("[", ", ", "]")}, ${inspect(term)})"
+      case R(NuFunDef(nme, targs, R(ty))) =>
+        s"NuFunDef(${nme.name}, ${targs.mkString("[", ", ", "]")}, $ty)"
+      case R(NuTypeDef(kind, nme, tparams, params, parents, body)) =>
+        s"NuTypeDef(${kind.str}, ${nme.name}, ${tparams.mkString("(", ", ", ")")}, ${
+          inspect(params)}, ${parents.mkString("(", ", ", ")")}, ${inspect(body)})"
+    }
+    .mkString("TypingUnit(", ", ", ")")
 }

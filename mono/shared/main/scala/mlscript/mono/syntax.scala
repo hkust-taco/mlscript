@@ -36,10 +36,15 @@ enum Expr:
     case Ref(name) => name
     case Lambda(params, body) => 
       val head = params.mkString("(", ", ", ")")
-      s"fun $head -> $body"
+      s"(fun $head -> $body)"
+    case Apply(Apply(Ref("."), lhs :: Nil), rhs :: Nil) =>
+      s"$lhs.$rhs"
+    case Apply(Apply(Ref(op), lhs :: Nil), rhs :: Nil)
+        if !op.headOption.forall(_.isLetter) =>
+      s"($lhs $op $rhs)"
     case Apply(callee, arguments) =>
       val tail = arguments.mkString(", ")
-      s"($callee of $tail)"
+      s"($callee $tail)"
     case Tuple(fields) => 
       val inner = fields.mkString(", ")
       "(" + (if fields.length == 1 then inner + ", " else inner) + ")"

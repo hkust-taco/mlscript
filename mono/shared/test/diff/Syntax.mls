@@ -26,12 +26,15 @@ new Box(0) {
 }
 //│ |#fun| |inc|(|##|x|)| |#=| |x| |+| |1|↵|#fun| |dbl|(|##|x|)| |#=| |x| |*| |2|↵|#fun| |app|(|f|,| |x|)| |#=| |f|(|x|)|↵|#class| |Box|(|value|)| |{|→|#fun| |map|(|f|)| |#=| |Box|(|f|(|value|)|)|↵|#fun| |get| |#=| |this|.|value|←|↵|}|↵|#new| |Box|(|0|)| |{|→|#fun| |get| |#=| |this|.|value| |+| |1|←|↵|}|
 //│ Parsed: {fun inc = #x, => + x 1; fun dbl = #x, => * x 2; fun app = f, x, => f (x,); class Box(value,) {fun map = f, => Box (f (value,),); fun get = . this value}; new Box(0,) {fun get = + (. this value) 1}}
-//│ fun inc(#x) = ((+ of x) of 1)
-//│ fun dbl(#x) = ((* of x) of 2)
-//│ fun app(f, x) = (f of x)
-//│ (Box_0 of )
-//│ class Box_0 { fun map(f) = (Box of (f of value))
-//│ fun get() = ((. of this) of value) }
+//│ Parsed:
+//│ TypingUnit(NuFunDef(inc, [], Lam(Tup(_: Var(x)), App(App(Var(+), Var(x)), IntLit(1)))), NuFunDef(dbl, [], Lam(Tup(_: Var(x)), App(App(Var(*), Var(x)), IntLit(2)))), NuFunDef(app, [], Lam(Tup(_: Var(f), _: Var(x)), App(Var(f), Tup(_: Var(x))))), NuTypeDef(class, Box, (), Tup(_: Var(value)), (), TypingUnit(NuFunDef(map, [], Lam(Tup(_: Var(f)), App(Var(Box), Tup(_: App(Var(f), Tup(_: Var(value))))))), NuFunDef(get, [], App(App(Var(.), Var(this)), Var(value))))), New(Some((TypeName(Box),0,)), TypingUnit(NuFunDef(get, [], App(App(Var(+), App(App(Var(.), Var(this)), Var(value))), IntLit(1))))))
+//│ Monomorphization result:
+//│ fun inc(#x) = (x + 1)
+//│ fun dbl(#x) = (x * 2)
+//│ fun app(f, x) = (f x)
+//│ (Box_0 )
+//│ class Box_0 { fun map(f) = (Box (f value))
+//│ fun get() = this.value }
 
 
 fun pow(#n, x) =
@@ -40,8 +43,27 @@ fun pow(#n, x) =
 pow(0, 123)
 //│ |#fun| |pow|(|##|n|,| |x|)| |#=|→|#if| |n| |>| |1| |#then| |pow|(|n| |-| |1|,| |x|)| |*| |x|↵|#else| |1|←|↵|pow|(|0|,| |123|)|
 //│ Parsed: {fun pow = #n, x, => {if (> n 1) then * (pow (- n 1, x,)) x else 1}; pow (0, 123,)}
-//│ fun pow(#n, x) = if ((> of n) of 1) then ((* of (pow of ((- of n) of 1), x)) of x) else 1
-//│ (pow__0 of 123)
+//│ Parsed:
+//│ TypingUnit(NuFunDef(pow, [], Lam(Tup(_: Var(n), _: Var(x)), Blk(If(...)))), App(Var(pow), Tup(_: IntLit(0), _: IntLit(123))))
+//│ Monomorphization result:
+//│ fun pow(#n, x) = if (n > 1) then ((pow (n - 1), x) * x) else 1
+//│ (pow__0 123)
 //│ fun pow__0(x) = 1
 
+let f = (x) => x + 1
+//│ |#let| |f| |#=| |(|x|)| |=>| |x| |+| |1|
+//│ Parsed: {let f = => '(' x, ')' (+ x 1) in undefined}
+//│ Parsed:
+//│ TypingUnit(Let(false, f, App(App(Var(=>), Bra(rcd = false, Tup(_: Var(x)))), App(App(Var(+), Var(x)), IntLit(1))), UnitLit(true)))
+//│ Monomorphization result:
+//│ let f = new Lambda_0 ()  in undefined
+//│ class Lambda_0 { fun apply(x) = (x + 1) }
 
+let f = (x, y) => x + y
+//│ |#let| |f| |#=| |(|x|,| |y|)| |=>| |x| |+| |y|
+//│ Parsed: {let f = => '(' x, y, ')' (+ x y) in undefined}
+//│ Parsed:
+//│ TypingUnit(Let(false, f, App(App(Var(=>), Bra(rcd = false, Tup(_: Var(x), _: Var(y)))), App(App(Var(+), Var(x)), Var(y))), UnitLit(true)))
+//│ Monomorphization result:
+//│ let f = new Lambda_0 ()  in undefined
+//│ class Lambda_0 { fun apply(x, y) = (x + y) }

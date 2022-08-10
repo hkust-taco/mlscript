@@ -41,5 +41,5 @@ object PrettyPrinter:
          else tyDef.tparams.map(_.name).mkString("[", ",", "]"))
       + (if tyDef.parents.isEmpty
          then ""
-         else ": " + tyDef.parents.mkString(", "))
+         else ": " + tyDef.parents.map(_.show).mkString(", "))
       + showTypingUnit(tyDef.body, indent + 1)

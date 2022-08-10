@@ -14,6 +14,12 @@ object DataType:
     override def toString(): String = this.name
   end Primitive
 
+  sealed class Tuple(elementTypes: List[DataType]) extends DataType:
+    override def toString(): String = elementTypes.mkString("(", ", ", ")")
+
+  sealed class Class(declaration: Item.TypeDecl) extends DataType:
+    override def toString(): String = s"class ${declaration.name.name}"
+
   sealed class Function(parameterTypes: List[DataType], returnType: DataType) extends DataType:
     def this(returnType: DataType, parameterTypes: DataType*) =
       this(parameterTypes.toList, returnType)
@@ -28,6 +34,7 @@ object DataType:
 
   def infer(expr: Expr, compatiableType: Option[DataType]): DataType =
     expr match
+      case Expr.Tuple(elements) => DataType.Tuple(elements.map(infer(_, None)))
       case lit @ Expr.Literal(value: BigInt) => Singleton(lit, Primitive.Integer)
       case lit @ Expr.Literal(value: BigDecimal) => Singleton(lit, Primitive.Decimal)
       case lit @ Expr.Literal(value: String) => Singleton(lit, Primitive.String)

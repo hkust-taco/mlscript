@@ -1,0 +1,71 @@
+
+fun f(x) = if x then 42 else 1337
+//│ |#fun| |f|(|x|)| |#=| |#if| |x| |#then| |42| |#else| |1337|
+//│ Parsed: {fun f = x, => if (x) then 42 else 1337}
+//│ TypingUnit(NuFunDef(f, [], Lam(Tup(_: Var(x)), If(...))))
+//│ fun f(x) = if x then 42 else 1337
+
+fun foo() = 42
+//│ |#fun| |foo|(|)| |#=| |42|
+//│ Parsed: {fun foo = undefined, => 42}
+//│ only `Var` can be parameters
+
+fun foo(x, #b) = if b then x else 1337
+let a = foo(42, true)
+let b = foo(23, false)
+//│ |#fun| |foo|(|x|,| |##|b|)| |#=| |#if| |b| |#then| |x| |#else| |1337|↵|#let| |a| |#=| |foo|(|42|,| |true|)|↵|#let| |b| |#=| |foo|(|23|,| |false|)|
+//│ Parsed: {fun foo = x, #b, => if (b) then x else 1337; let a = foo (42, true,) in let b = foo (23, false,) in undefined}
+//│ I can't infer the type of true now
+
+let x = 42 + 1337
+//│ |#let| |x| |#=| |42| |+| |1337|
+//│ Parsed: {let x = + 42 1337 in undefined}
+//│ TypingUnit(Let(false, x, App(App(Var(+), IntLit(42)), IntLit(1337)), UnitLit(true)))
+//│ let x = (42 + 1337) in undefined
+
+class Bar(#x)
+fun foo(#b) = b
+let a = foo(Bar(1))
+let b = foo(Bar(2))
+//│ |#class| |Bar|(|##|x|)|↵|#fun| |foo|(|##|b|)| |#=| |b|↵|#let| |a| |#=| |foo|(|Bar|(|1|)|)|↵|#let| |b| |#=| |foo|(|Bar|(|2|)|)|
+//│ Parsed: {class Bar(#x,) {}; fun foo = #b, => b; let a = foo (Bar (1,),) in let b = foo (Bar (2,),) in undefined}
+//│ I can't infer the type of (Bar 1) now
+
+trait AnyFoo {
+  fun bar(b: int): int
+}
+class FooPlus(#a: int): AnyFoo {
+  fun bar(b: int) = a + b
+}
+class FooMinus(#a: int): AnyFoo {
+  fun Bar(b: int) = a - b
+}
+fun f(x: AnyFoo) = x.bar(42)
+f(FooPlus(1))
+f(FooMinus(2))
+//│ |#trait| |AnyFoo| |{|→|#fun| |bar|(|b|#:| |int|)|#:| |int|←|↵|}|↵|#class| |FooPlus|(|##|a|#:| |int|)|#:| |AnyFoo| |{|→|#fun| |bar|(|b|#:| |int|)| |#=| |a| |+| |b|←|↵|}|↵|#class| |FooMinus|(|##|a|#:| |int|)|#:| |AnyFoo| |{|→|#fun| |Bar|(|b|#:| |int|)| |#=| |a| |-| |b|←|↵|}|↵|#fun| |f|(|x|#:| |AnyFoo|)| |#=| |x|.|bar|(|42|)|↵|f|(|FooPlus|(|1|)|)|↵|f|(|FooMinus|(|2|)|)|
+//│ Parsed: {trait AnyFoo(): {fun bar: [] -> int}; class FooPlus(#a: int,): AnyFoo {fun bar = b: int, => + a b}; class FooMinus(#a: int,): AnyFoo {fun Bar = b: int, => - a b}; fun f = x: AnyFoo, => . x (bar (42,)); f (FooPlus (1,),); f (FooMinus (2,),)}
+//│ TypingUnit(NuTypeDef(trait, AnyFoo, (), Tup(), (), TypingUnit(NuFunDef(bar, [], PolyType(List(),TypeName(int))))), NuTypeDef(class, FooPlus, (), Tup(a: Var(int)), (TypeName(AnyFoo)), TypingUnit(NuFunDef(bar, [], Lam(Tup(b: Var(int)), App(App(Var(+), Var(a)), Var(b)))))), NuTypeDef(class, FooMinus, (), Tup(a: Var(int)), (TypeName(AnyFoo)), TypingUnit(NuFunDef(Bar, [], Lam(Tup(b: Var(int)), App(App(Var(-), Var(a)), Var(b)))))), NuFunDef(f, [], Lam(Tup(x: Var(AnyFoo)), App(App(Var(.), Var(x)), App(Var(bar), Tup(_: IntLit(42)))))), App(Var(f), Tup(_: App(Var(FooPlus), Tup(_: IntLit(1))))), App(Var(f), Tup(_: App(Var(FooMinus), Tup(_: IntLit(2))))))
+//│ fun f(AnyFoo) = x.(bar 42)
+//│ (f (FooPlus 1))
+//│ (f (FooMinus 2))
+
+class Bar(x: int) {
+  fun FooMinus(y: int) = x + y
+  fun car = foo(2)
+}
+class Car {
+  fun da(b: Bar) = b.foo(2)
+}
+fun baz(b: Bar) = b.foo(2)
+let bar = Bar(42)
+baz(bar)
+Car().da(Bar(1337))
+bar.car
+//│ |#class| |Bar|(|x|#:| |int|)| |{|→|#fun| |FooMinus|(|y|#:| |int|)| |#=| |x| |+| |y|↵|#fun| |car| |#=| |foo|(|2|)|←|↵|}|↵|#class| |Car| |{|→|#fun| |da|(|b|#:| |Bar|)| |#=| |b|.|foo|(|2|)|←|↵|}|↵|#fun| |baz|(|b|#:| |Bar|)| |#=| |b|.|foo|(|2|)|↵|#let| |bar| |#=| |Bar|(|42|)|↵|baz|(|bar|)|↵|Car|(|)|.|da|(|Bar|(|1337|)|)|↵|bar|.|car|
+//│ Parsed: {class Bar(x: int,) {fun FooMinus = y: int, => + x y; fun car = foo (2,)}; class Car() {fun da = b: Bar, => . b (foo (2,))}; fun baz = b: Bar, => . b (foo (2,)); let bar = Bar (42,) in baz (bar,); . (Car (undefined,)) (da (Bar (1337,),)); . bar car}
+//│ TypingUnit(NuTypeDef(class, Bar, (), Tup(x: Var(int)), (), TypingUnit(NuFunDef(FooMinus, [], Lam(Tup(y: Var(int)), App(App(Var(+), Var(x)), Var(y)))), NuFunDef(car, [], App(Var(foo), Tup(_: IntLit(2)))))), NuTypeDef(class, Car, (), Tup(), (), TypingUnit(NuFunDef(da, [], Lam(Tup(b: Var(Bar)), App(App(Var(.), Var(b)), App(Var(foo), Tup(_: IntLit(2)))))))), NuFunDef(baz, [], Lam(Tup(b: Var(Bar)), App(App(Var(.), Var(b)), App(Var(foo), Tup(_: IntLit(2)))))), Let(false, bar, App(Var(Bar), Tup(_: IntLit(42))), App(Var(baz), Tup(_: Var(bar)))), App(App(Var(.), App(Var(Car), Tup(_: UnitLit(true)))), App(Var(da), Tup(_: App(Var(Bar), Tup(_: IntLit(1337)))))), App(App(Var(.), Var(bar)), Var(car)))
+//│ fun baz(Bar) = b.(foo 2)
+//│ let bar = (Bar 42) in (baz bar)
+//│ (Car undefined).(da (Bar 1337))
+//│ bar.car

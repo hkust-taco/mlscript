@@ -18,15 +18,24 @@ import mlscript.Cls
 import mlscript.New
 import mlscript.Trt
 import mlscript.{Diagnostic, Warning, CompilationError}
+import mlscript.codegen.Helpers.inspect as showStructure
 
 @main
 def main(): Unit =
   val source = """
-    |fun pow(#n, x) =
-    |  if n > 1 then pow(n - 1, x) * x else 1
-    |pow(3, 2)
-    |pow(3, 1)
-    |pow(2, 9)""".stripMargin
+    |class Option {
+    |  fun map(f: int): int
+    |}
+    |class Some(#value): Option {
+    |  fun map(f) = f(value)
+    |}
+    |class None: Option {
+    |  fun map(f) = ()
+    |}
+    |fun process(maybeInt) =
+    |  maybeInt.map(fun (x) => x + 2)
+    |process(None)
+    |process(Some(0))""".stripMargin
   val fastParseHelpers = mlscript.FastParseHelpers(source)
   val origin = mlscript.Origin("test.mls", 1, fastParseHelpers)
   val raise = (t: Diagnostic) => t match
@@ -41,6 +50,7 @@ def main(): Unit =
       println(Console.GREEN + "[parser]" + Console.RESET + " " + msg)
   }
   val typingUnit = parser.parseAll(parser.typingUnit)
+  println(showStructure(typingUnit))
   val monomorph = new Monomorph(true)
   val monomorphized = monomorph.monomorphize(typingUnit)
   println("Successfully monomorphized the program.")

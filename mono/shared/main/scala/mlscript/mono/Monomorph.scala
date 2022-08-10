@@ -150,19 +150,9 @@ class Monomorph(debugMode: Boolean):
     debug.trace[Expr]("MONO TERM", PrettyPrinter.show(term)) {
       term match
         case Var(name) => Expr.Ref(name)
-        case Lam(lhs, rhs) =>
-          val params = toFuncParams(lhs).toList
-          // TODO: Capture variables referenced in the lambda body.
-          // We should capture: closure variables and referenced type variables.
-          val className = s"Lambda_${lamTyDefs.size}"
-          val applyMethod: Item.FuncDecl =
-            Item.FuncDecl("apply", toFuncParams(lhs).toList, monomorphizeTerm(rhs))
-          val classBody = Isolation(applyMethod :: Nil)
-          val classDecl = Item.classDecl(className, classBody)
-          // Add to the global store.
-          lamTyDefs.addOne((className, classDecl))
-          // Returns a class construction.
-          Expr.New(Some((TypeName(className), Nil)), Isolation.empty)
+        case Lam(lhs, rhs) => monomorphizeLambda(lhs, rhs)
+        case App(App(Var("=>"), Bra(false, args: Tup)), body) =>
+          monomorphizeLambda(args, body)
         case App(lhs, rhs) =>
           val callee = monomorphizeTerm(lhs)
           val arguments = toFuncArgs(rhs).map(monomorphizeTerm).toList
@@ -194,7 +184,7 @@ class Monomorph(debugMode: Boolean):
           case mlscript.Def(_, _, _) => throw MonomorphError("unsupported Def")
           case mlscript.LetS(_, _, _) => throw MonomorphError("unsupported LetS")
         })
-        case _: Bra => throw MonomorphError("cannot monomorphize `Bra`")
+        case Bra(rcd, term) => monomorphizeTerm(term)
         case Asc(term, ty) => Expr.As(monomorphizeTerm(term), ty)
         case _: Bind => throw MonomorphError("cannot monomorphize `Bind`")
         case _: Test => throw MonomorphError("cannot monomorphize `Test`")
@@ -238,6 +228,20 @@ class Monomorph(debugMode: Boolean):
                        then UnitValue.Undefined
                        else UnitValue.Null)
     }(_.toString)
+
+  def monomorphizeLambda(args: Term, body: Term): Expr =
+    val params = toFuncParams(args).toList
+    // TODO: Capture variables referenced in the lambda body.
+    // We should capture: closure variables and referenced type variables.
+    val className = s"Lambda_${lamTyDefs.size}"
+    val applyMethod: Item.FuncDecl =
+      Item.FuncDecl("apply", toFuncParams(args).toList, monomorphizeTerm(body))
+    val classBody = Isolation(applyMethod :: Nil)
+    val classDecl = Item.classDecl(className, classBody)
+    // Add to the global store.
+    lamTyDefs.addOne((className, classDecl))
+    // Returns a class construction.
+    Expr.New(Some((TypeName(className), Nil)), Isolation.empty)
 
   /**
    * `new C(...) { ... }` expressions are converted into
