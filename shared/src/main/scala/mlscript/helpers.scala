@@ -430,6 +430,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Var(name) => TypeName(name)
     case App(App(Var("|"), lhs), rhs) => Union(lhs.toType_!, rhs.toType_!)
     case App(App(Var("&"), lhs), rhs) => Inter(lhs.toType_!, rhs.toType_!)
+    case App(App(Var("=>"), lhs), rhs) => Function(lhs.toType_!, rhs.toType_!)
     case Lam(lhs, rhs) => Function(lhs.toType_!, rhs.toType_!)
     case App(lhs, rhs) => lhs.toType_! match {
       case AppliedType(base, targs) => AppliedType(base, targs :+ rhs.toType_!)

@@ -15,6 +15,8 @@ import mlscript.TypeDefKind
 import mlscript.AppliedType.apply
 import mlscript.mono.specializer.Builtin
 
+import mlscript.mono.printer.ExprPrinter
+
 class Monomorph(debugMode: Boolean):
   private val debug = if debugMode then RainbowDebug() else DummyDebug()
 
@@ -78,7 +80,7 @@ class Monomorph(debugMode: Boolean):
        .concat(lamTyDefs.values)
        .concat(anonymTyDefs.values)
        .toList)
-    }(_.toString)
+    }(ExprPrinter.print)
 
   /**
    * This function monomorphizes the nested `TypingUnit` into a `Isolation`.
@@ -94,7 +96,7 @@ class Monomorph(debugMode: Boolean):
         case Right(funDef: NuFunDef) =>
           Some(monomorphizeFunDef(funDef))
       })
-    }(_.toString)
+    }(ExprPrinter.print)
 
   /**
    * This function flattens a top-level type definition and returns the root
@@ -127,7 +129,7 @@ class Monomorph(debugMode: Boolean):
         }()
 
       rec(tyDef, tyDef.nme.name :: Nil)
-    }()
+    }(ExprPrinter.print)
     
   /**
    * This function monomorphizes a function definition in smoe typing units.
@@ -141,7 +143,7 @@ class Monomorph(debugMode: Boolean):
           Item.FuncDecl(nme, toFuncParams(params).toList, monomorphizeTerm(body))
         case Left(body) => Item.FuncDecl(nme, Nil, monomorphizeTerm(body))
         case Right(polyType) => Item.FuncDefn(nme, targs, polyType)
-    }(_.toString)
+    }(ExprPrinter.print)
 
   /**
    * This function monomophizes a `Term` into an `Expr`.
@@ -227,21 +229,23 @@ class Monomorph(debugMode: Boolean):
           Expr.Literal(if undefinedOrNull
                        then UnitValue.Undefined
                        else UnitValue.Null)
-    }(_.toString)
+    }(ExprPrinter.print)
 
   def monomorphizeLambda(args: Term, body: Term): Expr =
-    val params = toFuncParams(args).toList
-    // TODO: Capture variables referenced in the lambda body.
-    // We should capture: closure variables and referenced type variables.
-    val className = s"Lambda_${lamTyDefs.size}"
-    val applyMethod: Item.FuncDecl =
-      Item.FuncDecl("apply", toFuncParams(args).toList, monomorphizeTerm(body))
-    val classBody = Isolation(applyMethod :: Nil)
-    val classDecl = Item.classDecl(className, classBody)
-    // Add to the global store.
-    lamTyDefs.addOne((className, classDecl))
-    // Returns a class construction.
-    Expr.New(Some((TypeName(className), Nil)), Isolation.empty)
+    debug.trace("MONO LAMBDA", args.toString + " => " + body) {
+      val params = toFuncParams(args).toList
+      // TODO: Capture variables referenced in the lambda body.
+      // We should capture: closure variables and referenced type variables.
+      val className = s"Lambda_${lamTyDefs.size}"
+      val applyMethod: Item.FuncDecl =
+        Item.FuncDecl("apply", toFuncParams(args).toList, monomorphizeTerm(body))
+      val classBody = Isolation(applyMethod :: Nil)
+      val classDecl = Item.classDecl(className, classBody)
+      // Add to the global store.
+      lamTyDefs.addOne((className, classDecl))
+      // Returns a class construction.
+      Expr.New(Some((TypeName(className), Nil)), Isolation.empty)
+    }(ExprPrinter.print)
 
   /**
    * `new C(...) { ... }` expressions are converted into
@@ -257,7 +261,7 @@ class Monomorph(debugMode: Boolean):
       val body = monomorphizeBody(termBody)
       val specTypeDecl = specializeTypeDef(name, args, body)
       Expr.Apply(specTypeDecl.name, Nil)
-    }(_.toString)
+    }(ExprPrinter.print)
 
   // TODO: Remove `Option[Expr]` by passing the callee.
   def specializeCall(name: String, args: List[Expr]): Option[Expr] =
@@ -294,7 +298,7 @@ class Monomorph(debugMode: Boolean):
             Some(Expr.Apply(specFuncDecl.name, staticArguments.toList))
           }
         case None => None
-    }(_.toString())
+    }(_.fold("<none>")(ExprPrinter.print))
 
   def specializeExpr(expr: Expr)(using ctx: HashMap[String, Expr]): Expr =
     debug.trace[Expr]("SPEC EXPR", expr.toString() + " in context " +
@@ -352,7 +356,7 @@ class Monomorph(debugMode: Boolean):
             else alternate.getOrElse(Expr.Literal(UnitValue.Undefined))
           )
         case _ => throw MonomorphError(s"unimplemented ${expr.getClass()}")
-    }(_.toString())
+    }(ExprPrinter.print)
 
   /**
    * This function monomorphizes the given class with given arguments.
@@ -372,7 +376,7 @@ class Monomorph(debugMode: Boolean):
           specTypeDecl
         case None => throw new MonomorphError(s"cannot specialize undeclared type $name")
       }
-    }()
+    }(ExprPrinter.print)
 
   // Shorthand implicit conversions.
 

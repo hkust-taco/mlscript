@@ -142,7 +142,7 @@ object Item:
 /**
  * An `Isolation` is like a `TypingUnit` but without nested classes.
  */
-class Isolation(items: List[Expr | Item.FuncDecl | Item.FuncDefn]):
+class Isolation(val items: List[Expr | Item.FuncDecl | Item.FuncDefn]):
   override def toString(): String = items.mkString("\n")
 
 object Isolation:
@@ -153,5 +153,5 @@ object Isolation:
  * This name conflicts with `java.lang.Module`.
  * TODO: Find a better name.
  */
-class Module(items: List[Expr | Item]):
+class Module(val items: List[Expr | Item]):
   override def toString(): String = items.mkString("\n")

@@ -24,13 +24,13 @@ import mlscript.codegen.Helpers.inspect as showStructure
 def main(): Unit =
   val source = """
     |class Option {
-    |  fun map(f: int): int
+    |  fun map(f): callable => int
     |}
     |class Some(#value): Option {
     |  fun map(f) = f(value)
     |}
     |class None: Option {
-    |  fun map(f) = ()
+    |  fun map(f) = None
     |}
     |fun process(maybeInt) =
     |  maybeInt.map(fun (x) => x + 2)
