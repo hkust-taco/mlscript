@@ -23,19 +23,10 @@ import mlscript.codegen.Helpers.inspect as showStructure
 @main
 def main(): Unit =
   val source = """
-    |class Option {
-    |  fun map(f): callable => int
+    |class Box(#x) {
+    |  fun get() = x
     |}
-    |class Some(#value): Option {
-    |  fun map(f) = f(value)
-    |}
-    |class None: Option {
-    |  fun map(f) = None
-    |}
-    |fun process(maybeInt) =
-    |  maybeInt.map(fun (x) => x + 2)
-    |process(None)
-    |process(Some(0))""".stripMargin
+    |let box0 = Box(0)""".stripMargin
   val fastParseHelpers = mlscript.FastParseHelpers(source)
   val origin = mlscript.Origin("test.mls", 1, fastParseHelpers)
   val raise = (t: Diagnostic) => t match

@@ -1,6 +1,6 @@
 package mlscript.mono.printer
 
-import mlscript.mono.{Expr, Isolation, Item, Module}
+import mlscript.mono.{Expr, Isolation, Item, Module, Parameter}
 
 class ExprPrinter:
   private val printer = BlockPrinter()
@@ -12,20 +12,21 @@ class ExprPrinter:
     case item: Item => show(item)
   }
 
+  private def show(params: List[Parameter]): String =
+    params.iterator.map {
+      case (spec, Expr.Ref(name)) => (if spec then "#" else "") + name
+    }.mkString("(", ", ", ")")
+
   private def show(item: Item): Unit = item match
-    case Item.TypeDecl(Expr.Ref(name), kind, typeParams, parents, body) =>
+    case Item.TypeDecl(Expr.Ref(name), kind, typeParams, params, parents, body) =>
       val typeParamsStr = if typeParams.isEmpty then ""
         else typeParams.iterator.map(_.name).mkString("[", ", ", "]")
       val parentsStr = if parents.isEmpty then ""
-        else parents.iterator.map(_.show).mkString(" extends ", " with ", " ")
-      print(s"$kind $name$typeParamsStr$parentsStr ")
+        else parents.iterator.map(_.show).mkString(" extends ", " with ", "")
+      print(s"$kind $name$typeParamsStr${show(params)}$parentsStr ")
       show(body)
     case Item.FuncDecl(Expr.Ref(name), params, body) =>
-      val parameters = params.iterator.map {
-        case (spec, Expr.Ref(name)) =>
-          (if spec then "#" else "") + name
-      }.mkString("(", ", ", ")")
-      print(s"fun $name$parameters =")
+      print(s"fun $name${show(params)} =")
       enter()
       show(body)
       leave()

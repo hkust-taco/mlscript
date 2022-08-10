@@ -34,18 +34,18 @@ class Monomorph(debugMode: Boolean):
   /**
    * Specialized implementations of each type declarations.
    */
-  private val tyImpls = MutMap[String, (Item.TypeDecl, ArrayBuffer[Item.TypeDecl])]()
+  private val tyImpls = MutMap[String, (Item.TypeDecl, MutMap[String, Item.TypeDecl])]()
   /**
    * Add a prototype type declaration.
    */
   private def addPrototypeTypeDecl(typeDecl: Item.TypeDecl) =
-    tyImpls.addOne(typeDecl.name.name, (typeDecl, ArrayBuffer()))
+    tyImpls.addOne(typeDecl.name.name, (typeDecl, MutMap()))
   /**
    * An iterator going through all type declarations.
    */
   private def allTypeDecls: IterableOnce[(Item.TypeDecl, Item.TypeDecl)] =
     tyImpls.iterator.flatMap { case (name, (protoClass, implClasses)) =>
-      implClasses.iterator.map((protoClass, _))
+      implClasses.values.map((protoClass, _))
     }
 
   /**
@@ -123,7 +123,14 @@ class Monomorph(debugMode: Boolean):
               Some(monomorphizeFunDef(subFunDef))
           })
           val className = namePath.reverseIterator.mkString("_")
-          val typeDecl: Item.TypeDecl = Item.TypeDecl(className, kind, tparams, parents, isolation)
+          val typeDecl: Item.TypeDecl = Item.TypeDecl(
+            className,
+            kind,
+            tparams,
+            toFuncParams(params).toList,
+            parents,
+            isolation
+          )
           addPrototypeTypeDecl(typeDecl)
           typeDecl
         }()
@@ -201,7 +208,7 @@ class Monomorph(debugMode: Boolean):
           Expr.Assign(monomorphizeTerm(lhs), monomorphizeTerm(rhs))
         case New(None, body) =>
           val className = s"Anonym_${anonymTyDefs.size}"
-          val classDecl = Item.classDecl(className, monomorphizeBody(body))
+          val classDecl = Item.classDecl(className, Nil, monomorphizeBody(body))
           Expr.Apply(className, Nil)
         case New(Some((constructor, args)), body) =>
           val typeName = constructor match
@@ -240,11 +247,11 @@ class Monomorph(debugMode: Boolean):
       val applyMethod: Item.FuncDecl =
         Item.FuncDecl("apply", toFuncParams(args).toList, monomorphizeTerm(body))
       val classBody = Isolation(applyMethod :: Nil)
-      val classDecl = Item.classDecl(className, classBody)
+      val classDecl = Item.classDecl(className, Nil, classBody)
       // Add to the global store.
       lamTyDefs.addOne((className, classDecl))
       // Returns a class construction.
-      Expr.New(Some((TypeName(className), Nil)), Isolation.empty)
+      Expr.Apply(Expr.Ref(className), Nil)
     }(ExprPrinter.print)
 
   /**
@@ -263,47 +270,96 @@ class Monomorph(debugMode: Boolean):
       Expr.Apply(specTypeDecl.name, Nil)
     }(ExprPrinter.print)
 
-  // TODO: Remove `Option[Expr]` by passing the callee.
   def specializeCall(name: String, args: List[Expr]): Option[Expr] =
     debug.trace("SPEC CALL", name + args.mkString("(", ", ", ")")) {
-      funImpls.get(name) match
-        case Some((Item.FuncDecl(ref, params, body), impls)) =>
-          if (args.length != params.length) {
-            throw MonomorphError(s"$name expect ${params.length} arguments but ${args.length} were given")
-          }
-          val staticArguments = params.iterator.zip(args).flatMap({
-            case ((false, _), value) => Some(value)
-            case _ => None
-          })
-          val dynamicArguments = params.iterator.zip(args).flatMap({
-            case ((true, _), value) => Some(value)
-            case _ => None
-          })
-          if (dynamicArguments.isEmpty) {
+      if tyImpls.contains(name) then specializeClassCall(name, args)
+      else if funImpls.contains(name) then specializeFunctionCall(name, args)
+      else None
+    }()
+
+  private def partitationArguments(params: List[Parameter], args: List[Expr]): (List[Expr], List[Expr]) =
+    if (args.length != params.length) {
+      throw MonomorphError(s"expect ${params.length} arguments but ${args.length} were given")
+    }
+    val staticArguments = params.iterator.zip(args).flatMap({
+      case ((true, _), value) => Some(value)
+      case _ => None
+    }).toList
+    val dynamicArguments = params.iterator.zip(args).flatMap({
+      case ((false, _), value) => Some(value)
+      case _ => None
+    }).toList
+    (staticArguments, dynamicArguments)
+
+  def specializeClassCall(name: String, args: List[Expr]): Option[Expr] =
+    debug.trace("SPEC CLASS CALL", name + args.mkString("(", ", ", ")")) {
+      import TypeDeclKind._
+      tyImpls.get(name).flatMap {
+        case (classDecl @ Item.TypeDecl(Expr.Ref(name), Class, typeParams, params, parents, body), impls) =>
+          val (staticArguments, dynamicArguments) = partitationArguments(params, args)
+          if (staticArguments.isEmpty) {
             None
           } else {
-            val signature = dynamicArguments.iterator.map(DataType.infer(_, None)).mkString("__", "_", "")
-            val specFuncDecl = impls.get(signature).getOrElse[Item.FuncDecl] {
+            val signature = staticArguments.iterator.map(DataType.infer(_, None)).mkString("__", "_", "")
+            val specClassDecl = impls.get(signature).getOrElse[Item.TypeDecl] {
               val values = params.iterator.zip(args).flatMap({
                 case ((true, Expr.Ref(name)), value) => Some((name, value))
                 case ((false, _), _) => None
               })
-              val specFuncBody = specializeExpr(body)(using HashMap.from(values))
+              val specializedBody = specializeClass(classDecl)(using HashMap.from(values))
               val staticParams = params.filter(!_._1)
-              val specFuncName = s"${name}" + signature
-              val funcDecl: Item.FuncDecl = Item.FuncDecl(specFuncName, staticParams, specFuncBody)
-              impls.addOne((specFuncName, funcDecl))
-              funcDecl
+              val specClassName = s"${name}" + signature
+              val specClassDecl: Item.TypeDecl = Item.TypeDecl(
+                Expr.Ref(specClassName),
+                Class,
+                typeParams,
+                Nil,
+                TypeName(name) :: Nil,
+                specializedBody
+              )
+              impls.addOne((specClassName, specClassDecl))
+              specClassDecl
             }
-            Some(Expr.Apply(specFuncDecl.name, staticArguments.toList))
+            Some(Expr.Apply(specClassDecl.name, dynamicArguments))
           }
-        case None => None
+        case (Item.TypeDecl(_, Trait, _, _, _, _), _) =>
+          throw new MonomorphError(s"cannot specialize trait $name")
+        case (Item.TypeDecl(_, Alias, _, _, _, _), _) =>
+          throw new MonomorphError(s"cannot specialize type alias $name")
+      }
     }(_.fold("<none>")(ExprPrinter.print))
 
+  // TODO: Remove `Option[Expr]` by passing the callee.
+  def specializeFunctionCall(name: String, args: List[Expr]): Option[Expr] =
+    debug.trace("SPEC FUNC CALL", name + args.mkString("(", ", ", ")")) {
+      funImpls.get(name).flatMap { case (Item.FuncDecl(ref, params, body), impls) =>
+        val (staticArguments, dynamicArguments) = partitationArguments(params, args)
+        if (staticArguments.isEmpty) {
+          None
+        } else {
+          val signature = dynamicArguments.iterator.map(DataType.infer(_, None)).mkString("__", "_", "")
+          val specFuncDecl = impls.get(signature).getOrElse[Item.FuncDecl] {
+            val values = params.iterator.zip(args).flatMap({
+              case ((true, Expr.Ref(name)), value) => Some((name, value))
+              case ((false, _), _) => None
+            })
+            val specFuncBody = specializeExpr(body)(using HashMap.from(values))
+            val staticParams = params.filter(!_._1)
+            val specFuncName = s"${name}" + signature
+            val funcDecl: Item.FuncDecl = Item.FuncDecl(specFuncName, staticParams, specFuncBody)
+            impls.addOne((specFuncName, funcDecl))
+            funcDecl
+          }
+          Some(Expr.Apply(specFuncDecl.name, dynamicArguments))
+        }
+      }
+    }(_.fold("<none>")(ExprPrinter.print))
+
+  private def showInContext(content: String)(using ctx: HashMap[String, Expr]): String = 
+    content + " in context " + (if ctx.isEmpty then "{}" else ctx.mkString("{\n  ", "\n  ", "\n}"))
+
   def specializeExpr(expr: Expr)(using ctx: HashMap[String, Expr]): Expr =
-    debug.trace[Expr]("SPEC EXPR", expr.toString() + " in context " +
-      (if ctx.isEmpty then "{}" else ctx.mkString("{\n  ", "\n  ", "\n}"))
-    ) {
+    debug.trace[Expr]("SPEC EXPR", showInContext(expr.toString)) {
       expr match
         case Expr.Ref(name) => ctx.get(name) match
           case Some(value) => value
@@ -369,13 +425,25 @@ class Monomorph(debugMode: Boolean):
   ): Item.TypeDecl =
     debug.trace("SPEC TDEF", name + args.mkString("(", ", ", ")") + " {\n" + body + "\n}") {
       tyImpls.get(name) match {
-        case Some((Item.TypeDecl(name, kind, typeParams, parents, body), impls)) =>
+        case Some((Item.TypeDecl(name, kind, typeParams, params, parents, body), impls)) =>
           val implClassName: Expr.Ref = Expr.Ref(s"${name}_${impls.size}")
-          val specTypeDecl: Item.TypeDecl = Item.TypeDecl(implClassName, kind, typeParams, parents, body)
-          impls += specTypeDecl
+          val specTypeDecl: Item.TypeDecl = Item.TypeDecl(implClassName, kind, typeParams, params, parents, body)
+          impls.addOne(implClassName.name, specTypeDecl)
           specTypeDecl
         case None => throw new MonomorphError(s"cannot specialize undeclared type $name")
       }
+    }(ExprPrinter.print)
+
+  def specializeFunction(funcProto: Item.FuncDecl)(using ctx: HashMap[String, Expr]): Item.FuncDecl =
+    Item.FuncDecl(funcProto.name, funcProto.params, specializeExpr(funcProto.body))
+
+  def specializeClass(classProto: Item.TypeDecl)(using ctx: HashMap[String, Expr]): Isolation =
+    debug.trace("SPEC CLASS", showInContext(s"class ${classProto.name.name}")) {
+      Isolation(classProto.body.items.map {
+        case expr: Expr => specializeExpr(expr)
+        case funcDecl: Item.FuncDecl => specializeFunction(funcDecl)
+        case other => throw MonomorphError(s"$other is not supported")
+      })
     }(ExprPrinter.print)
 
   // Shorthand implicit conversions.

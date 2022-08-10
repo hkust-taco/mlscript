@@ -5,17 +5,18 @@ import mlscript.utils.shorthands.Str
 import mlscript.TypingUnit
 import mlscript.codegen.Helpers.inspect as showStructure
 import scala.collection.mutable.StringBuilder
+import mlscript.mono.printer.ExprPrinter
 
 class Test extends DiffTests(Test.dir) {
   override def postProcess(basePath: List[Str], testName: Str, unit: TypingUnit): List[Str] = 
     val monomorph = new Monomorph(false)
     val output = try {
-      val result = monomorph.monomorphize(unit)
+      val monomorphized = monomorph.monomorphize(unit)
       val outputBuilder = StringBuilder()
       outputBuilder ++= "Parsed:\n"
       outputBuilder ++= showStructure(unit)
-      outputBuilder ++= "\nMonomorphization result:\n"
-      outputBuilder ++= result.toString()
+      outputBuilder ++= "\nMonomorphized:\n"
+      outputBuilder ++= ExprPrinter.print(monomorphized)
       outputBuilder.toString()
     } catch {
       case error: MonomorphError => error.getMessage()

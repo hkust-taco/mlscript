@@ -43,8 +43,7 @@ enum Expr:
         if !op.headOption.forall(_.isLetter) =>
       s"($lhs $op $rhs)"
     case Apply(callee, arguments) =>
-      val tail = arguments.mkString(", ")
-      s"($callee $tail)"
+      callee.toString + arguments.mkString("(", ", ", ")")
     case Tuple(fields) => 
       val inner = fields.mkString(", ")
       "(" + (if fields.length == 1 then inner + ", " else inner) + ")"
@@ -77,7 +76,7 @@ enum UnitValue:
   override def toString(): String =
     this match
       case Null => "null"
-      case Undefined => "undefined"
+      case Undefined => "()" // `()` is shorter than `undefined`
 
 class CaseBranch(pattern: Option[Expr.Ref | Expr.Literal], body: Expr):
   // Constructor for the last wildcard branch.
@@ -104,7 +103,7 @@ enum Item:
    * Type declarations: aliases, classes and traits.
    */
   case TypeDecl(name: Expr.Ref, kind: TypeDeclKind, typeParams: List[TypeName],
-                parents: List[NamedType], body: Isolation)
+                params: List[Parameter], parents: List[NamedType], body: Isolation)
   /**
    * Function declaration (with implementation).
    */
@@ -115,7 +114,7 @@ enum Item:
   case FuncDefn(name: Expr.Ref, typeParams: List[TypeName], body: PolyType)
 
   override def toString(): String = this match
-    case TypeDecl(Expr.Ref(name), kind, typeParams, parents, body) =>
+    case TypeDecl(Expr.Ref(name), kind, typeParams, params, parents, body) =>
       val typeParamsStr = if typeParams.isEmpty then ""
         else typeParams.iterator.map(_.name).mkString("[", ", ", "]")
       val parentsStr = if parents.isEmpty then ""
@@ -136,8 +135,8 @@ object Item:
   /**
    * A shorthand constructor for classes without type parameters and parents.
    */
-  def classDecl(name: String, body: Isolation): Item.TypeDecl =
-    Item.TypeDecl(Expr.Ref(name), TypeDeclKind.Class, Nil, Nil, body)
+  def classDecl(name: String, params: List[Parameter], body: Isolation): Item.TypeDecl =
+    Item.TypeDecl(Expr.Ref(name), TypeDeclKind.Class, Nil, params, Nil, body)
 
 /**
  * An `Isolation` is like a `TypingUnit` but without nested classes.

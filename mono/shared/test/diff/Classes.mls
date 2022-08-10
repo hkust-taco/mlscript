@@ -1,0 +1,26 @@
+class Option {
+  fun map(f): callable => int
+}
+class Some(#value): Option {
+  fun map(f) = f(value)
+}
+class None: Option {
+  fun map(f) = None
+}
+fun process(maybeInt) =
+  maybeInt.map((x) => x + 2)
+process(None)
+process(Some(0))
+//│ |#class| |Option| |{|→|#fun| |map|(|f|)|#:| |callable| |=>| |int|←|↵|}|↵|#class| |Some|(|##|value|)|#:| |Option| |{|→|#fun| |map|(|f|)| |#=| |f|(|value|)|←|↵|}|↵|#class| |None|#:| |Option| |{|→|#fun| |map|(|f|)| |#=| |None|←|↵|}|↵|#fun| |process|(|maybeInt|)| |#=|→|maybeInt|.|map|(|(|x|)| |=>| |x| |+| |2|)|←|↵|process|(|None|)|↵|process|(|Some|(|0|)|)|
+//│ Parsed: {class Option() {fun map: [] -> callable -> int}; class Some(#value,): Option {fun map = f, => f (value,)}; class None(): Option {fun map = f, => None}; fun process = maybeInt, => {. maybeInt (map (=> '(' x, ')' (+ x 2),))}; process (None,); process (Some (0,),)}
+//│ Parsed:
+//│ TypingUnit(NuTypeDef(class, Option, (), Tup(), (), TypingUnit(NuFunDef(map, [], PolyType(List(),Function(TypeName(callable),TypeName(int)))))), NuTypeDef(class, Some, (), Tup(_: Var(value)), (TypeName(Option)), TypingUnit(NuFunDef(map, [], Lam(Tup(_: Var(f)), App(Var(f), Tup(_: Var(value))))))), NuTypeDef(class, None, (), Tup(), (TypeName(Option)), TypingUnit(NuFunDef(map, [], Lam(Tup(_: Var(f)), Var(None))))), NuFunDef(process, [], Lam(Tup(_: Var(maybeInt)), Blk(App(App(Var(.), Var(maybeInt)), App(Var(map), Tup(_: App(App(Var(=>), Bra(rcd = false, Tup(_: Var(x)))), App(App(Var(+), Var(x)), IntLit(2))))))))), App(Var(process), Tup(_: Var(None))), App(Var(process), Tup(_: App(Var(Some), Tup(_: IntLit(0))))))
+//│ Monomorphized:
+//│ fun process(maybeInt) =
+//│   maybeInt.(map new Lambda_0 () )
+//│ (process None)
+//│ (process (Some 0))
+//│ class Lambda_0 {
+//│   fun apply(x) =
+//│     (x + 2)
+//│ }
