@@ -718,7 +718,9 @@ def ornull x = definedOr x (fun () -> null)
 
 :re
 defined ()[0]
-//│ res: bool
+//│ ╔══[ERROR] Out of range!
+//│ ╙──
+//│ res: nothing
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
@@ -738,29 +740,29 @@ ta3[1-2]
 //│    = [ [ 1, 2, 4 ], [ true, false ] ]
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:752)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:754)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$3(ConstraintSolver.scala:737)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$5(ConstraintSolver.scala:740)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:737)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:740)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$3(ConstraintSolver.scala:733)
 
 :e
 ((defined ta2[0])[1+4], ta[1])[0]
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:752)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:754)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$3(ConstraintSolver.scala:737)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$5(ConstraintSolver.scala:740)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:737)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:740)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$3(ConstraintSolver.scala:733)
 
 :e
 def ge x = x + 1
@@ -771,19 +773,21 @@ ge[2]
 //│ ge: int -> int
 //│   = [Function: ge]
 //│ ╔══[ERROR] identifier not found: ta3
-//│ ║  l.767: 	ta3[ge 3][ge (1+2)]
+//│ ║  l.769: 	ta3[ge 3][ge (1+2)]
 //│ ╙──       	^^^
+//│ ╔══[ERROR] Encounter error at receiver during array indexing
+//│ ╙──
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:752)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:754)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$5(ConstraintSolver.scala:740)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:740)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:696)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:526)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:696)
 
 def mkarr: 'a -> Array['a]
 def mkarr x = (x,x,x,x,x)
@@ -798,14 +802,14 @@ mkarr (1,true,"hi")[0]
 //│      = [Function: mkarr]
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:752)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:754)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$3(ConstraintSolver.scala:737)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$3(ConstraintSolver.scala:733)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:737)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:733)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 
 :e 
@@ -813,12 +817,12 @@ mkarr 3 [  1]
 mk1[2  ]
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:752)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:754)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:696)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$15(Typer.scala:514)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:513)
@@ -831,14 +835,14 @@ def s3 a = defined a._1.t[0] + defined (defined a.x[1])[2]
 //│   = [Function: s1]
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:752)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:754)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$3(ConstraintSolver.scala:737)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$3(ConstraintSolver.scala:733)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:737)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:733)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 
 def ara: Array[(int, bool)]
@@ -852,12 +856,12 @@ def s4 arr = (defined (defined (defined arr.x[0])._3[6])[7])._h.hello
 //│    = <missing implementation>
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:752)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:754)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:696)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$15(Typer.scala:514)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:513)
@@ -871,12 +875,12 @@ dup (defined ara[1])._1 (defined (defined arb[10])[8])._2 + 1
 //│    = [Function: dup]
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:752)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:754)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:696)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$15(Typer.scala:514)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:513)
@@ -885,12 +889,12 @@ dup (defined ara[1])._1 (defined (defined arb[10])[8])._2 + 1
 (1,2,3)._1[1]
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:752)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:754)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$3(ConstraintSolver.scala:737)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$3(ConstraintSolver.scala:733)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:737)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:733)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)

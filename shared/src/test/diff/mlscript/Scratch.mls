@@ -14,15 +14,19 @@
 //│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: true<TypeName(bool)>
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:752)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:754)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:696)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
 //│ 	at: mlscript.Typer.typeStatement(Typer.scala:351)
 //│ 	at: mlscript.DiffTests.$anonfun$new$53(DiffTests.scala:553)
 //│ 	at: mlscript.DiffTests.$anonfun$new$53$adapted(DiffTests.scala:506)
+
+true : bool
+//│ res: bool
+//│    = true
 
 :d
 def foo x = x[1]
@@ -74,7 +78,7 @@ foo ((1, 2, 3))
 //│    = 2
 
 (1, 2, 3)[-1]
-//│ /!\ Parse error: Expected end-of-input:1:10, found "[-1];" at l.76:10: (1, 2, 3)[-1]
+//│ /!\ Parse error: Expected end-of-input:1:10, found "[-1];" at l.80:10: (1, 2, 3)[-1]
 
 (1, 2, 3)[0]
 //│ res: 1
@@ -104,28 +108,233 @@ foo ((1, 2, 3))
 //│ res: 10
 //│    = 10
 
-a = 0
-a
+(1, 2, 3)[0]
+//│ res: 1
+//│    = 1
+
+:d
+a = 1
 (1, 2, 3)[a]
-//│ a: 0
-//│  = 0
-//│ res: 0
-//│    = 0
+//│ 1. Typing term 1
+//│ 1. : 1<TypeName(int),TypeName(number)>
+//│ ⬤ Typed as: 1<TypeName(int),TypeName(number)>
+//│  where: 
+//│ a: 1
+//│  = 1
+//│ 0. Typing term (1, 2, 3,)[a]
+//│ | 0. Typing term (1, 2, 3,)
+//│ | | 0. Typing term 1
+//│ | | 0. : 1<TypeName(int),TypeName(number)>
+//│ | | 0. Typing term 2
+//│ | | 0. : 2<TypeName(int),TypeName(number)>
+//│ | | 0. Typing term 3
+//│ | | 0. : 3<TypeName(int),TypeName(number)>
+//│ | 0. : (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
+//│ | 0. Typing term a
+//│ | 0. : 1<TypeName(int),TypeName(number)>
+//│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: 1<TypeName(int),TypeName(number)>
+//│ 0. : 2<TypeName(int),TypeName(number)>
+//│ ⬤ Typed as: 2<TypeName(int),TypeName(number)>
+//│  where: 
+//│ res: 2
+//│    = 2
+
+:d
+a = 1 + 1
+(1, 2, 3)[a]
+//│ 1. Typing term ((+ (1,)) (1,))
+//│ | 1. Typing term (+ (1,))
+//│ | | 1. Typing term +
+//│ | | 1. : (int<TypeName(number)> -> (int<TypeName(number)> -> int<TypeName(number)>))
+//│ | | 1. Typing term (1,)
+//│ | | | 1. Typing term 1
+//│ | | | 1. : 1<TypeName(int),TypeName(number)>
+//│ | | 1. : (1<TypeName(int),TypeName(number)>,)
+//│ | | CONSTRAIN (int<TypeName(number)> -> (int<TypeName(number)> -> int<TypeName(number)>)) <! (1<TypeName(int),TypeName(number)> -> α29' [indexedIn: List(), indexedBy: List()])
+//│ | |   where 
+//│ | | C (int<TypeName(number)> -> (int<TypeName(number)> -> int<TypeName(number)>)) <! (1<TypeName(int),TypeName(number)> -> α29' [indexedIn: List(), indexedBy: List()])    (0)
+//│ | | | C (1<TypeName(int),TypeName(number)>,) <! (int<TypeName(number)>,)    (1)
+//│ | | | | C 1<TypeName(int),TypeName(number)> <! int<TypeName(number)>    (2)
+//│ | | | C (int<TypeName(number)> -> int<TypeName(number)>) <! α29' [indexedIn: List(), indexedBy: List()]    (3)
+//│ | 1. : α29' [indexedIn: List(), indexedBy: List()]
+//│ | 1. Typing term (1,)
+//│ | | 1. Typing term 1
+//│ | | 1. : 1<TypeName(int),TypeName(number)>
+//│ | 1. : (1<TypeName(int),TypeName(number)>,)
+//│ | CONSTRAIN α29' [indexedIn: List(), indexedBy: List()] <! (1<TypeName(int),TypeName(number)> -> α30' [indexedIn: List(), indexedBy: List()])
+//│ |   where 
+//│ 		α29' [indexedIn: List(), indexedBy: List()] :> (int<TypeName(number)> -> int<TypeName(number)>)
+//│ | C α29' [indexedIn: List(), indexedBy: List()] <! (1<TypeName(int),TypeName(number)> -> α30' [indexedIn: List(), indexedBy: List()])    (0)
+//│ | | C (int<TypeName(number)> -> int<TypeName(number)>) <! (1<TypeName(int),TypeName(number)> -> α30' [indexedIn: List(), indexedBy: List()])    (1)
+//│ | | | C (1<TypeName(int),TypeName(number)>,) <! (int<TypeName(number)>,)    (2)
+//│ | | | | C 1<TypeName(int),TypeName(number)> <! int<TypeName(number)>    (3)
+//│ | | | C int<TypeName(number)> <! α30' [indexedIn: List(), indexedBy: List()]    (4)
+//│ 1. : α30' [indexedIn: List(), indexedBy: List()]
+//│ ⬤ Typed as: α30' [indexedIn: List(), indexedBy: List()]
+//│  where: 
+//│ 		α30' [indexedIn: List(), indexedBy: List()] :> int<TypeName(number)>
+//│ a: int
+//│  = 2
+//│ 0. Typing term (1, 2, 3,)[a]
+//│ | 0. Typing term (1, 2, 3,)
+//│ | | 0. Typing term 1
+//│ | | 0. : 1<TypeName(int),TypeName(number)>
+//│ | | 0. Typing term 2
+//│ | | 0. : 2<TypeName(int),TypeName(number)>
+//│ | | 0. Typing term 3
+//│ | | 0. : 3<TypeName(int),TypeName(number)>
+//│ | 0. : (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
+//│ | 0. Typing term a
+//│ | 0. : α32 [indexedIn: List(), indexedBy: List()]
+//│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: α32 [indexedIn: List(), indexedBy: List()]
+//│ | | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: int<TypeName(number)>
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:752)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:754)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:716)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$5(ConstraintSolver.scala:740)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:740)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
+
+(1, 2, 3)[10]
+//│ ╔══[ERROR] Out of range!
+//│ ║  l.203: 	(1, 2, 3)[10]
+//│ ╙──       	^^^^^^^^^
+//│ res: error
+//│    = undefined
+
+(1, 2, 3)[-1]
+//│ /!\ Parse error: Expected end-of-input:1:10, found "[-1];" at l.210:10: (1, 2, 3)[-1]
+
+(1, 2, 3)[(1, 2, 3)[0]]
+//│ res: 2
+//│    = 2
+
+(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[0]]]
+//│ res: 3
+//│    = 3
+
+(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[0]]]]
+//│ ╔══[ERROR] Out of range!
+//│ ║  l.221: 	(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[0]]]]
+//│ ╙──       	^^^^^^^^^
+//│ res: error
+//│    = undefined
+
+:d
+(1, 2, 3)[k]
+//│ 0. Typing term (1, 2, 3,)[k]
+//│ | 0. Typing term (1, 2, 3,)
+//│ | | 0. Typing term 1
+//│ | | 0. : 1<TypeName(int),TypeName(number)>
+//│ | | 0. Typing term 2
+//│ | | 0. : 2<TypeName(int),TypeName(number)>
+//│ | | 0. Typing term 3
+//│ | | 0. : 3<TypeName(int),TypeName(number)>
+//│ | 0. : (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
+//│ | 0. Typing term k
+//│ ╔══[ERROR] identifier not found: k
+//│ ║  l.229: 	(1, 2, 3)[k]
+//│ ╙──       	          ^
+//│ | 0. : error<>
+//│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: error<>
+//│ ╔══[ERROR] Encounter error at index during array indexing
+//│ ╙──
+//│ 0. : error<>
+//│ ⬤ Typed as: error<>
+//│  where: 
+//│ res: error
+//│ Code generation encountered an error:
+//│   unresolved symbol k
+
+:d
+def k: int
+(1, 2, 3)[k]
+//│ 1. Typing type TypeName(int)
+//│ | vars=Map() newDefsInfo=Map()
+//│ => Int | 
+//│ ⬤ Typed as: Int
+//│  where: 
+//│ k: int
+//│  = <missing implementation>
+//│ 0. Typing term (1, 2, 3,)[k]
+//│ | 0. Typing term (1, 2, 3,)
+//│ | | 0. Typing term 1
+//│ | | 0. : 1<TypeName(int),TypeName(number)>
+//│ | | 0. Typing term 2
+//│ | | 0. : 2<TypeName(int),TypeName(number)>
+//│ | | 0. Typing term 3
+//│ | | 0. : 3<TypeName(int),TypeName(number)>
+//│ | 0. : (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
+//│ | 0. Typing term k
+//│ | 0. : Int
+//│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: Int
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:754)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:696)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
 //│ 	at: mlscript.Typer.typeStatement(Typer.scala:351)
 //│ 	at: mlscript.DiffTests.$anonfun$new$53(DiffTests.scala:553)
 //│ 	at: mlscript.DiffTests.$anonfun$new$53$adapted(DiffTests.scala:506)
 
-(1, 2, 3)[10]
-//│ res: bool
-//│    = undefined
+:d
+k
+//│ 0. Typing term k
+//│ 0. : Int
+//│ ⬤ Typed as: Int
+//│  where: 
+//│ res: int
+//│    = <no result>
+//│      k is not implemented
 
-(1, 2, 3)[-1]
-//│ /!\ Parse error: Expected end-of-input:1:10, found "[-1];" at l.130:10: (1, 2, 3)[-1]
+:d
+3[1]
+//│ 0. Typing term 3[1]
+//│ | 0. Typing term 3
+//│ | 0. : 3<TypeName(int),TypeName(number)>
+//│ | 0. Typing term 1
+//│ | 0. : 1<TypeName(int),TypeName(number)>
+//│ | 0. Receiver: 3<TypeName(int),TypeName(number)>, Index: 1<TypeName(int),TypeName(number)>
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:754)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
+//│ 	at: mlscript.Typer.typeStatement(Typer.scala:351)
+//│ 	at: mlscript.DiffTests.$anonfun$new$53(DiffTests.scala:553)
+//│ 	at: mlscript.DiffTests.$anonfun$new$53$adapted(DiffTests.scala:506)
+
+k[1]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:754)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
+//│ 	at: mlscript.Typer.typeStatement(Typer.scala:351)
+//│ 	at: mlscript.DiffTests.$anonfun$new$53(DiffTests.scala:553)
+//│ 	at: mlscript.DiffTests.$anonfun$new$53$adapted(DiffTests.scala:506)
+
+nw = (1, 2, 3, 4, 5)
+def chose i = nw[i]
+//│ nw: (1, 2, 3, 4, 5,)
+//│   = [ 1, 2, 3, 4, 5 ]
+//│ chose: anything -> nothing
+//│      = [Function: chose]
+
+chose 2
+//│ res: nothing
+//│    = 3

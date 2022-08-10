@@ -334,9 +334,17 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rhs.lowerBounds ::= newBound // update the bound
             rhs.upperBounds.foreach(rec(lhs, _, true)) // propagate from the bound
             
+            // lhs <: rhs (type variable)
+
+            // a: rhs, i: index, a[i]: result
+            // (index, result) is one of the meta-info in indexedBy
+            // constrainIndex(lhs, index) <: result
             rhs.indexedBy.foreach { case (index, result) => 
               rec(constrainIndex(lhs, index), result, false) } 
             
+            // a: receiver, i: rhs, a[i]: result
+            // (receiver, result) is one of the meta-info in indexedIn
+            // constrainIndex(receiver, lhs) <: result            
             rhs.indexedIn.foreach { case(receiver, result) =>
               rec(constrainIndex(receiver, lhs), result, false)}
             
@@ -577,7 +585,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   /** Copies a type up to its type variables of wrong level (and their extruded bounds). */
   def extrude(ty: SimpleType, lvl: Int, pol: Boolean)
-      (implicit ctx: Ctx, cache: MutMap[PolarVariable, TV] = MutMap.empty): SimpleType =
+      (implicit ctx: Ctx, cache: MutMap[PolarVariable, TV] = MutMap.empty, raise: Raise): SimpleType =
     if (ty.level <= lvl) ty else ty match {
       case t @ TypeBounds(lb, ub) => if (pol) extrude(ub, lvl, true) else extrude(lb, lvl, false)
       case t @ FunctionType(l, r) => FunctionType(extrude(l, lvl, !pol), extrude(r, lvl, pol))(t.prov)
@@ -599,23 +607,18 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           tv.lowerBounds ::= nv
           nv.upperBounds = tv.upperBounds.map(extrude(_, lvl, pol))
           
-          /*
+          // nv <: tv 
+          // a: tv, i: index, a[i]: result
+          // also need to extrude constrainIndex(nv, index)
           tv.indexedBy.foreach { case (index, result) =>
-            extrude()}
-          */
+            extrude(constrainIndex(nv, index), lvl, pol)}
+          
+          // a: receiver, i: tv, a[i]: result
+          tv.indexedIn.foreach { case (receiver, result) =>
+            extrude(constrainIndex(receiver, nv), lvl, pol)}
         }
         nv
       })
-      /*
-      case (lhs, rhs: TypeVariable) if lhs.level <= rhs.level =>
-        val newBound = (cctx._1 ::: cctx._2.reverse).foldLeft(lhs)((ty, c) =>
-          if (c.prov is noProv) ty else mkProxy(ty, c.prov))
-        rhs.lowerBounds ::= newBound // update the bound
-        rhs.upperBounds.foreach(rec(lhs, _, true)) // propagate from the bound
-        
-        rhs.indexedBy.foreach { case (index, result) => 
-          rec(constrainIndex(lhs, index), result, false) } 
-      */
       case n @ NegType(neg) => NegType(extrude(neg, lvl, pol))(n.prov)
       case e @ ExtrType(_) => e
       case p @ ProvType(und) => ProvType(extrude(und, lvl, pol))(p.prov)
@@ -712,38 +715,37 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   // a is indexed by i
   // receiver: a, index: i, return type of a[i]
   // tuple: fixed length of array
-  def constrainIndex(receiver: SimpleType, index: SimpleType)(implicit ctx: Ctx): SimpleType 
+  def constrainIndex(receiver: SimpleType, index: SimpleType)(implicit ctx: Ctx, raise: Raise): SimpleType 
         = trace(s"$lvl. Receiver: $receiver, Index: $index") {
-    (receiver.unwrapProxies, index) match {
+    (receiver.unwrapProxies, index.unwrapProxies) match {
       case (t @ TupleType(fs), ClassTag(id @ IntLit(value), parents)) =>  
         // check index validity and retrieve corresponding type
-
-        // get the len of t: fs.length
         if (value >= fs.length || value < 0){
-          BoolType
-          /*
-          fs(0)._1 match{
-            case Some(v) => err(msg"Out of range!" -> v.toLoc)
-          }
-          */
+          err(msg"Out of range!", t.prov.loco)
         } else{
           fs(value.toInt)._2.ub
         }
-      
       case (t : TypeVariable, _) =>
+        //err(msg"Get into this case 1!", t.prov.loco)
         val lb = t.lowerBounds
         val typeVar: SimpleType = freshVar(noProv)
         t.indexedBy ::= (index, typeVar)
         lb.map(constrainIndex(_, index)).foldLeft(typeVar)(_ | _)
       
-      /*
       case (_, t: TypeVariable) =>
+        //err(msg"Get into this case 2!", t.prov.loco)
         val lb = t.lowerBounds
         val typeVar: SimpleType = freshVar(noProv)
         t.indexedIn ::= (receiver, typeVar)
         lb.map(constrainIndex(receiver, _)).foldLeft(typeVar)(_ | _)
-      */
-
+      
+      case (_, e @ ClassTag(ErrTypeId, _)) =>
+        err(msg"Encounter error at index during array indexing", e.prov.loco)
+      case (e @ ClassTag(ErrTypeId, _), _) =>
+        err(msg"Encounter error at receiver during array indexing", e.prov.loco)
+      case (_, BoolType) =>
+        //err(msg"Wrong Type", b.prov.loco)
+        BoolType
       // (1, 2, 3)[true]
       /* | : (or) 
       case (..... , _) =>  
