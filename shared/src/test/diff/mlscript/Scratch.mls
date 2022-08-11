@@ -1,7 +1,28 @@
 // testing cases for various `case` in constrainIndex 
-:d
+true
+//│ res: true
+//│    = true
+
+1: bool
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.6: 	1: bool
+//│ ║       	^
+//│ ╟── integer literal of type `1` is not an instance of type `bool`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.6: 	1: bool
+//│ ╙──     	   ^^^^
+//│ res: bool
+//│    = 1
+
 (1, 2, 3)[true]
-//│ 0. Typing term (1, 2, 3,)[true]
+//│ ╔══[ERROR] The index must be an integer
+//│ ╙──
+//│ res: error
+//│    = undefined
+
+:d
+(1, 2, 3)[false]
+//│ 0. Typing term (1, 2, 3,)[false]
 //│ | 0. Typing term (1, 2, 3,)
 //│ | | 0. Typing term 1
 //│ | | 0. : 1<TypeName(int),TypeName(number)>
@@ -10,20 +31,114 @@
 //│ | | 0. Typing term 3
 //│ | | 0. : 3<TypeName(int),TypeName(number)>
 //│ | 0. : (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
-//│ | 0. Typing term true
-//│ | 0. : true<TypeName(bool)>
-//│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: true<TypeName(bool)>
+//│ | 0. Typing term false
+//│ | 0. : false<TypeName(bool)>
+//│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: false<TypeName(bool)>
+//│ ╔══[ERROR] The index must be an integer
+//│ ╙──
+//│ | ==> error<>
+//│ 0. : error<>
+//│ ⬤ Typed as: error<>
+//│  where: 
+//│ res: error
+//│    = undefined
+
+
+def a = false
+(1, 2, 3)[a]
+//│ a: false
+//│  = false
+//│ ╔══[ERROR] The index must be an integer
+//│ ╙──
+//│ res: error
+//│    = undefined
+
+:d
+def a = false : bool
+(1, 2, 3)[a]
+//│ 1. Typing term false : TypeName(bool)
+//│ | 1. Typing term false
+//│ | 1. : false<TypeName(bool)>
+//│ | 1. Typing type TypeName(bool)
+//│ | | vars=Map() newDefsInfo=Map()
+//│ | => Bool | 
+//│ | CONSTRAIN false<TypeName(bool)> <! Bool
+//│ |   where 
+//│ | C false<TypeName(bool)> <! Bool    (0)
+//│ | | C false<TypeName(bool)> <! bool<>    (1)
+//│ 1. : Bool
+//│ ⬤ Typed as: Bool
+//│  where: 
+//│ a: bool
+//│  = false
+//│ 0. Typing term (1, 2, 3,)[a]
+//│ | 0. Typing term (1, 2, 3,)
+//│ | | 0. Typing term 1
+//│ | | 0. : 1<TypeName(int),TypeName(number)>
+//│ | | 0. Typing term 2
+//│ | | 0. : 2<TypeName(int),TypeName(number)>
+//│ | | 0. Typing term 3
+//│ | | 0. : 3<TypeName(int),TypeName(number)>
+//│ | 0. : (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
+//│ | 0. Typing term a
+//│ | 0. : Bool
+//│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: Bool
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:777)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
 //│ 	at: mlscript.Typer.typeStatement(Typer.scala:351)
 //│ 	at: mlscript.DiffTests.$anonfun$new$53(DiffTests.scala:553)
 //│ 	at: mlscript.DiffTests.$anonfun$new$53$adapted(DiffTests.scala:506)
+
+:d
+(1, 2, 3)[false: bool]
+//│ 0. Typing term (1, 2, 3,)[false : TypeName(bool)]
+//│ | 0. Typing term (1, 2, 3,)
+//│ | | 0. Typing term 1
+//│ | | 0. : 1<TypeName(int),TypeName(number)>
+//│ | | 0. Typing term 2
+//│ | | 0. : 2<TypeName(int),TypeName(number)>
+//│ | | 0. Typing term 3
+//│ | | 0. : 3<TypeName(int),TypeName(number)>
+//│ | 0. : (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
+//│ | 0. Typing term false : TypeName(bool)
+//│ | | 0. Typing term false
+//│ | | 0. : false<TypeName(bool)>
+//│ | | 0. Typing type TypeName(bool)
+//│ | | | vars=Map() newDefsInfo=Map()
+//│ | | => Bool | 
+//│ | | CONSTRAIN false<TypeName(bool)> <! Bool
+//│ | |   where 
+//│ | | C false<TypeName(bool)> <! Bool    (0)
+//│ | | | C false<TypeName(bool)> <! bool<>    (1)
+//│ | 0. : Bool
+//│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: Bool
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
+//│ 	at: mlscript.Typer.typeStatement(Typer.scala:351)
+//│ 	at: mlscript.DiffTests.$anonfun$new$53(DiffTests.scala:553)
+//│ 	at: mlscript.DiffTests.$anonfun$new$53$adapted(DiffTests.scala:506)
+
+a
+//│ res: bool
+//│    = false
+
+(1, 2, 3)["true"]
+//│ ╔══[ERROR] The index must be an integer
+//│ ╙──
+//│ res: error
+//│    = undefined
 
 (1, 2, 3)["haha"]
 //│ ╔══[ERROR] The index must be an integer
@@ -32,7 +147,7 @@
 //│    = undefined
 
 (1, 2, 3)[-10]
-//│ /!\ Parse error: Expected end-of-input:1:10, found "[-10];" at l.34:10: (1, 2, 3)[-10]
+//│ /!\ Parse error: Expected end-of-input:1:10, found "[-10];" at l.149:10: (1, 2, 3)[-10]
 
 (1, 2, 3)[0]
 //│ res: 1
@@ -44,8 +159,8 @@
 
 (1, 2, 3)[3]
 //│ ╔══[ERROR] Out of range!
-//│ ║  l.45: 	(1, 2, 3)[3]
-//│ ╙──      	^^^^^^^^^
+//│ ║  l.160: 	(1, 2, 3)[3]
+//│ ╙──       	^^^^^^^^^
 //│ res: error
 //│    = undefined
 
@@ -105,19 +220,19 @@ a = 1 + 1
 //│ | 0. : α24 [indexedIn: List(), indexedBy: List()]
 //│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: α24 [indexedIn: List(), indexedBy: List()]
 //│ ╔══[WARNING] Get into this case 2!
-//│ ║  l.60: 	a = 1 + 1
-//│ ╙──      	    ^^^^^
+//│ ║  l.175: 	a = 1 + 1
+//│ ╙──       	    ^^^^^
 //│ | | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: int<TypeName(number)>
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:777)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$5(ConstraintSolver.scala:766)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$5(ConstraintSolver.scala:767)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:766)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:767)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 
 (1, "haha")[0]
@@ -194,14 +309,14 @@ foo ((1, 2, 3))
 
 "foo"[2]
 //│ ╔══[ERROR] mlscript doesn't allow string indexing
-//│ ║  l.195: 	"foo"[2]
+//│ ║  l.310: 	"foo"[2]
 //│ ╙──       	^^^^^
 //│ res: error
 //│    = 'o'
 
 "foo"[3]
 //│ ╔══[ERROR] mlscript doesn't allow string indexing
-//│ ║  l.202: 	"foo"[3]
+//│ ║  l.317: 	"foo"[3]
 //│ ╙──       	^^^^^
 //│ res: error
 //│    = undefined
@@ -220,7 +335,7 @@ foo ((1, 2, 3))
 
 (1, 2, 3)[(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[0]]]]
 //│ ╔══[ERROR] Out of range!
-//│ ║  l.221: 	(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[0]]]]
+//│ ║  l.336: 	(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[0]]]]
 //│ ╙──       	^^^^^^^^^
 //│ res: error
 //│    = undefined
@@ -228,7 +343,7 @@ foo ((1, 2, 3))
 
 (1, 2, 3)[k]
 //│ ╔══[ERROR] identifier not found: k
-//│ ║  l.229: 	(1, 2, 3)[k]
+//│ ║  l.344: 	(1, 2, 3)[k]
 //│ ╙──       	          ^
 //│ ╔══[ERROR] Encounter error at index during array indexing
 //│ ╙──
@@ -260,9 +375,9 @@ def k: int
 //│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: Int
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:777)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
@@ -280,9 +395,9 @@ def k: int
 //│ | 0. Receiver: 3<TypeName(int),TypeName(number)>, Index: 1<TypeName(int),TypeName(number)>
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:777)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
@@ -293,9 +408,9 @@ def k: int
 k[1]
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:777)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)

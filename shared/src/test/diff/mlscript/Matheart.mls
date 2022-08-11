@@ -20,9 +20,9 @@ z[1]
 //│  = [ 3, 5, 6 ]
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:777)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
@@ -44,9 +44,9 @@ st[0]
 //│   = [ 'hello', 'world', '!' ]
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:777)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
@@ -60,9 +60,9 @@ ud[0]
 //│   = <missing implementation>
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:777)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
@@ -82,9 +82,9 @@ precise[3]
 //│        = [ 3, 5, 9 ]
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:777)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)

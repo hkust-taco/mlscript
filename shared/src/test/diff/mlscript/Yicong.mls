@@ -182,6 +182,8 @@ def h f = (f (1,2,false), f (1,true))
 
 :e
 h (fun x -> x[0])
+//│ ╔══[WARNING] Get into this case 1!
+//│ ╙──
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.184: 	h (fun x -> x[0])
 //│ ║         	^^^^^^^^^^^^^^^^^
@@ -194,13 +196,13 @@ h (fun x -> x[0])
 :e
 h (fun (x, y) -> x)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.195: 	h (fun (x, y) -> x)
+//│ ║  l.197: 	h (fun (x, y) -> x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── tuple literal of type `(1, 2, false,)` does not match type `(?a, ?b,)`
 //│ ║  l.179: 	def h f = (f (1,2,false), f (1,true))
 //│ ║         	             ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.195: 	h (fun (x, y) -> x)
+//│ ║  l.197: 	h (fun (x, y) -> x)
 //│ ╙──       	       ^^^^^^
 //│ res: (1, 1,) | error
 //│    = [ 1, 1 ]
@@ -211,6 +213,8 @@ def h f = (f ((1,2,false)), f ((1,true)))
 
 h (fun x -> x[0])
 h (fun x -> x._1)
+//│ ╔══[WARNING] Get into this case 1!
+//│ ╙──
 //│ res: (1, 1,)
 //│    = [ 1, 1 ]
 //│ res: (1, 1,)
@@ -231,30 +235,30 @@ fx ((a,b,c)) = a + b + c
 fx q1
 fx q2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.231: 	fx q1
+//│ ║  l.235: 	fx q1
 //│ ║         	^^^^^
 //│ ╟── tuple literal of type `(1, 1, 1, 1,)` does not match type `(?a, ?b, ?c,)`
-//│ ║  l.220: 	q1 = (1,1,1,1)
+//│ ║  l.224: 	q1 = (1,1,1,1)
 //│ ║         	     ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?d, ?e, ?f,)`
-//│ ║  l.231: 	fx q1
+//│ ║  l.235: 	fx q1
 //│ ║         	   ^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.222: 	fx ((a,b,c)) = a + b + c
+//│ ║  l.226: 	fx ((a,b,c)) = a + b + c
 //│ ╙──       	    ^^^^^^^
 //│ res: error | int
 //│    = 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.232: 	fx q2
+//│ ║  l.236: 	fx q2
 //│ ║         	^^^^^
 //│ ╟── tuple literal of type `(1, 1,)` does not match type `(?a, ?b, ?c,)`
-//│ ║  l.221: 	q2 = (1,1)
+//│ ║  l.225: 	q2 = (1,1)
 //│ ║         	     ^^^^^
 //│ ╟── but it flows into reference with expected type `(?d, ?e, ?f,)`
-//│ ║  l.232: 	fx q2
+//│ ║  l.236: 	fx q2
 //│ ║         	   ^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.222: 	fx ((a,b,c)) = a + b + c
+//│ ║  l.226: 	fx ((a,b,c)) = a + b + c
 //│ ╙──       	    ^^^^^^^
 //│ res: error | int
 //│    = NaN
@@ -284,13 +288,13 @@ sum t2
 //│ t2: (1, 1, 2, true,)
 //│   = [ 1, 1, 2, true ]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.283: 	sum t2
+//│ ║  l.287: 	sum t2
 //│ ║         	^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `int`
-//│ ║  l.282: 	t2 = (1,1,2,true)
+//│ ║  l.286: 	t2 = (1,1,2,true)
 //│ ║         	            ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.270: 	def sum: Array[int] -> int
+//│ ║  l.274: 	def sum: Array[int] -> int
 //│ ╙──       	               ^^^
 //│ res: error | int
 //│    = <no result>
@@ -337,32 +341,32 @@ a1._2
 //│   <:  a1:
 //│ Array[int]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.332: 	a1 = (1,2,true,'hello')
+//│ ║  l.336: 	a1 = (1,2,true,'hello')
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `int`
-//│ ║  l.332: 	a1 = (1,2,true,'hello')
+//│ ║  l.336: 	a1 = (1,2,true,'hello')
 //│ ║         	          ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.331: 	def a1: Array[int]
+//│ ║  l.335: 	def a1: Array[int]
 //│ ╙──       	              ^^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.332: 	a1 = (1,2,true,'hello')
+//│ ║  l.336: 	a1 = (1,2,true,'hello')
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"hello"` is not an instance of type `int`
-//│ ║  l.332: 	a1 = (1,2,true,'hello')
+//│ ║  l.336: 	a1 = (1,2,true,'hello')
 //│ ║         	               ^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.331: 	def a1: Array[int]
+//│ ║  l.335: 	def a1: Array[int]
 //│ ╙──       	              ^^^
 //│   = [ 1, 2, true, 'hello' ]
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.333: 	a1._2
+//│ ║  l.337: 	a1._2
 //│ ║         	^^^^^
 //│ ╟── type `Array[int]` does not have field '_2'
-//│ ║  l.331: 	def a1: Array[int]
+//│ ║  l.335: 	def a1: Array[int]
 //│ ║         	        ^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_2: ?a}`
-//│ ║  l.333: 	a1._2
+//│ ║  l.337: 	a1._2
 //│ ╙──       	^^
 //│ res: error
 //│    = undefined
@@ -403,13 +407,13 @@ append2 ((mut 1, mut 2, mut false)) ((mut (), mut 'hi'))
 :e
 append2 ((mut 1, mut 2, mut false)) ((mut (), 'hi'))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.404: 	append2 ((mut 1, mut 2, mut false)) ((mut (), 'hi'))
+//│ ║  l.408: 	append2 ((mut 1, mut 2, mut false)) ((mut (), 'hi'))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── tuple literal of type `(mut ?a, "hi",)` does not match type `MutArray[?bb]`
-//│ ║  l.404: 	append2 ((mut 1, mut 2, mut false)) ((mut (), 'hi'))
+//│ ║  l.408: 	append2 ((mut 1, mut 2, mut false)) ((mut (), 'hi'))
 //│ ║         	                                     ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.393: 	def append2: MutArray['aa] -> MutArray['bb] -> MutArray['aa | 'bb]
+//│ ║  l.397: 	def append2: MutArray['aa] -> MutArray['bb] -> MutArray['aa | 'bb]
 //│ ╙──       	                              ^^^^^^^^^^^^^
 //│ res: MutArray['bb] | error
 //│   where
@@ -507,31 +511,31 @@ iarr = intersect ((1,2,3,false)) ((1,5,true,'hi',false))
 fst iarr
 snd (T1 ((1,2,3)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.507: 	fst iarr
+//│ ║  l.511: 	fst iarr
 //│ ║         	^^^^^^^^
 //│ ╟── type `Array[?a & ?b]` is not a 2-element tuple
-//│ ║  l.498: 	def intersect: Array['a] -> Array['b] -> Array['a & 'b]
+//│ ║  l.502: 	def intersect: Array['a] -> Array['b] -> Array['a & 'b]
 //│ ║         	                                         ^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
-//│ ║  l.507: 	fst iarr
+//│ ║  l.511: 	fst iarr
 //│ ║         	    ^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.477: 	def fst ((a, b)) = a
+//│ ║  l.481: 	def fst ((a, b)) = a
 //│ ╙──       	         ^^^^^^
 //│ res: error
 //│    = <no result>
 //│      iarr and intersect are not implemented
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.508: 	snd (T1 ((1,2,3)))
+//│ ║  l.512: 	snd (T1 ((1,2,3)))
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── tuple literal of type `(1, 2, 3,)` does not match type `(?a, ?b,) | ~t1`
-//│ ║  l.508: 	snd (T1 ((1,2,3)))
+//│ ║  l.512: 	snd (T1 ((1,2,3)))
 //│ ║         	         ^^^^^^^
 //│ ╟── but it flows into application with expected type `(?a, ?b,) | ~t1`
-//│ ║  l.508: 	snd (T1 ((1,2,3)))
+//│ ║  l.512: 	snd (T1 ((1,2,3)))
 //│ ║         	     ^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.478: 	def snd ((a, b)) = b
+//│ ║  l.482: 	def snd ((a, b)) = b
 //│ ╙──       	         ^^^^^^
 //│ res: error
 //│    = 2
@@ -581,28 +585,28 @@ inn2 (T2 r1)
 inn (T1 v3)
 inn2 v1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.581: 	inn (T1 v3)
+//│ ║  l.585: 	inn (T1 v3)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── type `Array[Array[(int, true,)]]` does not match type `t2 | ~t1`
-//│ ║  l.545: 	def v3: Array[Array[(int, true)]]
+//│ ║  l.549: 	def v3: Array[Array[(int, true)]]
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `t2 | ~t1`
-//│ ║  l.581: 	inn (T1 v3)
+//│ ║  l.585: 	inn (T1 v3)
 //│ ║         	        ^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.541: 	def inn: (T1 & T2 & Array['a]) -> 'a
+//│ ║  l.545: 	def inn: (T1 & T2 & Array['a]) -> 'a
 //│ ║         	               ^^
 //│ ╟── from intersection type:
-//│ ║  l.541: 	def inn: (T1 & T2 & Array['a]) -> 'a
+//│ ║  l.545: 	def inn: (T1 & T2 & Array['a]) -> 'a
 //│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^
 //│ res: Array[(int, true,)] | error
 //│    = <no result>
 //│      inn is not implemented
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.582: 	inn2 v1
+//│ ║  l.586: 	inn2 v1
 //│ ║         	^^^^^^^
 //│ ╟── integer literal of type `1` does not match type `Array[?a]`
-//│ ║  l.539: 	v1 = T1 (T2 ((1,2,true)))
+//│ ║  l.543: 	v1 = T1 (T2 ((1,2,true)))
 //│ ╙──       	              ^
 //│ res: Array[nothing] | error
 //│    = <no result>
@@ -639,16 +643,16 @@ ra: (Array['a], Array['a]) as 'a
 ra: ('a, 'a, 'a) as 'a
 ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.639: 	ra: ('a, 'a, 'a) as 'a
+//│ ║  l.643: 	ra: ('a, 'a, 'a) as 'a
 //│ ║         	^^
 //│ ╟── type `(?a, ?a,)` does not match type `(?a0, ?a0, ?a0,)`
-//│ ║  l.611: 	def ra: ('a, 'a) as 'a
+//│ ║  l.615: 	def ra: ('a, 'a) as 'a
 //│ ║         	        ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?a1, ?a1, ?a1,)`
-//│ ║  l.639: 	ra: ('a, 'a, 'a) as 'a
+//│ ║  l.643: 	ra: ('a, 'a, 'a) as 'a
 //│ ║         	^^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.639: 	ra: ('a, 'a, 'a) as 'a
+//│ ║  l.643: 	ra: ('a, 'a, 'a) as 'a
 //│ ╙──       	    ^^^^^^^^^^^^
 //│ res: 'a
 //│   where
@@ -657,16 +661,16 @@ ra: (Array['a], Array['a], Array['a]) as 'a
 //│    = <no result>
 //│      ra is not implemented
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.640: 	ra: (Array['a], Array['a], Array['a]) as 'a
+//│ ║  l.644: 	ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ║         	^^
 //│ ╟── type `(?a, ?a,)` does not match type `(Array[?a0], Array[?a0], Array[?a0],)`
-//│ ║  l.611: 	def ra: ('a, 'a) as 'a
+//│ ║  l.615: 	def ra: ('a, 'a) as 'a
 //│ ║         	        ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(Array[?a1], Array[?a1], Array[?a1],)`
-//│ ║  l.640: 	ra: (Array['a], Array['a], Array['a]) as 'a
+//│ ║  l.644: 	ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ║         	^^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.640: 	ra: (Array['a], Array['a], Array['a]) as 'a
+//│ ║  l.644: 	ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: 'a
 //│   where
@@ -685,19 +689,19 @@ tktup ((1,2,3,true))
 :e
 tktup a123
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.686: 	tktup a123
+//│ ║  l.690: 	tktup a123
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `Array[int]` does not have field '_3'
-//│ ║  l.371: 	def a123: Array[int]
+//│ ║  l.375: 	def a123: Array[int]
 //│ ║         	          ^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_3: ?a}`
-//│ ║  l.686: 	tktup a123
+//│ ║  l.690: 	tktup a123
 //│ ║         	      ^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.678: 	def tktup t = (t._2, t._3)
+//│ ║  l.682: 	def tktup t = (t._2, t._3)
 //│ ║         	                     ^^^^
 //│ ╟── from reference:
-//│ ║  l.678: 	def tktup t = (t._2, t._3)
+//│ ║  l.682: 	def tktup t = (t._2, t._3)
 //│ ╙──       	                     ^
 //│ res: (nothing, nothing,) | error
 //│    = [ undefined, undefined ]
@@ -738,31 +742,43 @@ ta3[1-2]
 //│    = 3
 //│ ta2: ((1, 2, 4,), (true, false,),)
 //│    = [ [ 1, 2, 4 ], [ true, false ] ]
+//│ ╔══[WARNING] Get into this case 1!
+//│ ║  l.735: 	(ornull (defined ta2[0])[1+4], defined ta[1])[0]
+//│ ╙──       	         ^^^^^^^^^^^^^^
+//│ ╔══[WARNING] Get into this case 2!
+//│ ║  l.735: 	(ornull (defined ta2[0])[1+4], defined ta[1])[0]
+//│ ╙──       	                         ^^^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:777)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$5(ConstraintSolver.scala:766)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$6(ConstraintSolver.scala:767)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:766)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:767)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$3(ConstraintSolver.scala:760)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$4(ConstraintSolver.scala:761)
 
 :e
 ((defined ta2[0])[1+4], ta[1])[0]
+//│ ╔══[WARNING] Get into this case 1!
+//│ ║  l.764: 	((defined ta2[0])[1+4], ta[1])[0]
+//│ ╙──       	  ^^^^^^^^^^^^^^
+//│ ╔══[WARNING] Get into this case 2!
+//│ ║  l.764: 	((defined ta2[0])[1+4], ta[1])[0]
+//│ ╙──       	                  ^^^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:777)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$5(ConstraintSolver.scala:766)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$6(ConstraintSolver.scala:767)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:766)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:767)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$3(ConstraintSolver.scala:760)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$4(ConstraintSolver.scala:761)
 
 :e
 def ge x = x + 1
@@ -773,20 +789,26 @@ ge[2]
 //│ ge: int -> int
 //│   = [Function: ge]
 //│ ╔══[ERROR] identifier not found: ta3
-//│ ║  l.769: 	ta3[ge 3][ge (1+2)]
+//│ ║  l.785: 	ta3[ge 3][ge (1+2)]
 //│ ╙──       	^^^
+//│ ╔══[WARNING] Get into this case 2!
+//│ ║  l.785: 	ta3[ge 3][ge (1+2)]
+//│ ╙──       	    ^^^^
 //│ ╔══[ERROR] Encounter error at receiver during array indexing
 //│ ╙──
+//│ ╔══[WARNING] Get into this case 2!
+//│ ║  l.785: 	ta3[ge 3][ge (1+2)]
+//│ ╙──       	          ^^^^^^^^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:777)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$5(ConstraintSolver.scala:766)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$6(ConstraintSolver.scala:767)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:766)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:767)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 
 def mkarr: 'a -> Array['a]
@@ -800,16 +822,19 @@ mkarr (1,true,"hi")[0]
 //│   <:  mkarr:
 //│ 'a -> Array['a]
 //│      = [Function: mkarr]
+//│ ╔══[WARNING] Get into this case 1!
+//│ ║  l.816: 	mk1 = defined (mkarr 6)[ 0]
+//│ ╙──       	               ^^^^^^^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:777)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$3(ConstraintSolver.scala:760)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$4(ConstraintSolver.scala:761)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:760)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:761)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 
 :e 
@@ -817,9 +842,9 @@ mkarr 3 [  1]
 mk1[2  ]
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:777)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
@@ -831,18 +856,29 @@ def s1 a = (defined a[1] + defined a[2], a[(1,2)._2])
 def s2 a = (defined (defined a[1])[0])._2 + (defined a[2])._1
 def s3 a = defined a._1.t[0] + defined (defined a.x[1])[2]
 (defined ((1, "hello"),(2, true, false),(3,3,4))[0])._1
+//│ ╔══[WARNING] Get into this case 1!
+//│ ╙──
+//│ ╔══[WARNING] Get into this case 1!
+//│ ╙──
+//│ ╔══[WARNING] Get into this case 1!
+//│ ╙──
 //│ s1: anything -> (int, nothing,)
 //│   = [Function: s1]
+//│ ╔══[WARNING] Get into this case 1!
+//│ ╙──
+//│ ╔══[WARNING] Get into this case 1!
+//│ ║  l.856: 	def s2 a = (defined (defined a[1])[0])._2 + (defined a[2])._1
+//│ ╙──       	                     ^^^^^^^^^^^^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:777)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$3(ConstraintSolver.scala:760)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$4(ConstraintSolver.scala:761)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:760)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:761)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 
 def ara: Array[(int, bool)]
@@ -856,9 +892,9 @@ def s4 arr = (defined (defined (defined arr.x[0])._3[6])[7])._h.hello
 //│    = <missing implementation>
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:777)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
@@ -869,15 +905,17 @@ def s4 arr = (defined (defined (defined arr.x[0])._3[6])[7])._h.hello
 def at1 xs = (defined xs[0])._1
 def dup a b = a * 2 + b
 dup (defined ara[1])._1 (defined (defined arb[10])[8])._2 + 1
+//│ ╔══[WARNING] Get into this case 1!
+//│ ╙──
 //│ at1: anything -> nothing
 //│    = [Function: at1]
 //│ dup: int -> int -> int
 //│    = [Function: dup]
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:777)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
@@ -887,14 +925,17 @@ dup (defined ara[1])._1 (defined (defined arb[10])[8])._2 + 1
 
 :e
 (1,2,3)._1[1]
+//│ ╔══[WARNING] Get into this case 1!
+//│ ║  l.927: 	(1,2,3)._1[1]
+//│ ╙──       	^^^^^^^^^^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:777)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$3(ConstraintSolver.scala:760)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$4(ConstraintSolver.scala:761)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:760)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:761)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)

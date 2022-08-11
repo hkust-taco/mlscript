@@ -148,9 +148,9 @@ f(1,2,3) : 1 | 2 | 3
 (arr[0])[1][2]
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:777)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
@@ -392,5 +392,7 @@ def pf t = (t[1], t._1)
 pf((1,2,3))
 //│ p1: Array[bool | int | string] | T
 //│ p2: Array[bool | int | string] | T
+//│ ╔══[WARNING] Get into this case 1!
+//│ ╙──
 //│ pf: {_1: 'a} -> (nothing, 'a,)
 //│ res: (nothing, 1,)

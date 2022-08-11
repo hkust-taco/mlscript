@@ -734,6 +734,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   // tuple: fixed length of array
   def constrainIndex(receiver: SimpleType, index: SimpleType)(implicit ctx: Ctx, raise: Raise): SimpleType 
         = trace(s"$lvl. Receiver: $receiver, Index: $index") {
+    //println(index.unwrapProxies.show)
     (receiver.unwrapProxies, index.unwrapProxies) match {
       case (t @ TupleType(fs), ClassTag(IntLit(value), _)) =>  
         // check index validity and retrieve corresponding type
@@ -768,12 +769,14 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         err(msg"Encounter error at index during array indexing", e.prov.loco)
       case (e @ ClassTag(ErrTypeId, _), _) =>
         err(msg"Encounter error at receiver during array indexing", e.prov.loco)
-      case (_, BoolType) => // UnitLit?
-        //err(msg"Wrong Type", b.prov.loco)
-        BoolType
       case (_, ClassTag(DecLit(_), _)) |  (_, ClassTag(StrLit(_), _)) |
-           (_, ClassTag(UnitLit(_), _) ) =>
+           (_, ClassTag(UnitLit(_), _) ) |
+           (_, ClassTag(Var("true"), _)) | (_, ClassTag(Var("false"), _)) |
+           (_, ClassTag(Var("bool"), _)) | (_, BoolType) =>
         err(msg"The index must be an integer", None)
+      //case (_, t) =>
+      //  println(t.toString)
+      //  BoolType
       case _ => ???
     }
   } (r => s"==> $r")
