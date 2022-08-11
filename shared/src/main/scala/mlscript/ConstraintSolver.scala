@@ -606,15 +606,14 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         } else {
           tv.lowerBounds ::= nv
           nv.upperBounds = tv.upperBounds.map(extrude(_, lvl, pol))
-          
-          nv.indexedBy = tv.indexedBy
-          nv.indexedIn = nv.indexedIn
-
-          nv.indexedBy.foreach { case (index, result) =>
-            extrude(index, lvl, pol); extrude(result, lvl, pol) }
-          nv.indexedIn.foreach { case (receiver, result) =>
-            extrude(receiver, lvl, pol); extrude(result, lvl, pol) }
         }
+        nv.indexedBy = tv.indexedBy
+        nv.indexedIn = tv.indexedIn
+
+        nv.indexedBy.foreach { case (index, result) =>
+          { extrude(index, lvl, pol); extrude(result, lvl, pol) } }
+        nv.indexedIn.foreach { case (receiver, result) =>
+          {extrude(receiver, lvl, pol); extrude(result, lvl, pol)} }
         nv
       })
       case n @ NegType(neg) => NegType(extrude(neg, lvl, pol))(n.prov)
@@ -680,10 +679,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             tv2.indexedIn = tv.indexedIn
 
             tv2.indexedBy.foreach { case (index, result) => 
-              freshen(index); freshen(result) }
+              { freshen(index); freshen(result) } }
             
             tv2.indexedIn.foreach { case(receiver, result) =>
-              freshen(receiver); freshen(result) }
+              { freshen(receiver); freshen(result) } }
 
             tv2
           } else {
@@ -700,10 +699,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           v.indexedIn = tv.indexedIn
 
           v.indexedBy.foreach { case (index, result) => 
-            freshen(index); freshen(result) }
+            { freshen(index); freshen(result) } }
           
           v.indexedIn.foreach { case(receiver, result) =>
-            freshen(receiver); freshen(result) }
+            { freshen(receiver); freshen(result) } }
 
           v
       }
@@ -743,23 +742,24 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         } else{
           fs(value.toInt)._2.ub
         }
-      
+      //this case is to disallow string indexing like "hello"[0]
       case (s @ ClassTag(StrLit(st), _), ClassTag(IntLit(value), _)) =>
+        err(msg"mlscript doesn't allow string indexing", s.prov.loco)
+        /*
         if (value >= st.length() || value < 0){
           err(msg"Out of range!", s.prov.loco)
         } else{
           StrType
-          //StrLit
         }
-
+        */
       case (t : TypeVariable, _) =>
-        //err(msg"Get into this case 1!", t.prov.loco)
+        warn(msg"Get into this case 1!", t.prov.loco)
         val lb = t.lowerBounds
         val typeVar: SimpleType = freshVar(noProv)
         t.indexedBy ::= (index, typeVar)
         lb.map(constrainIndex(_, index)).foldLeft(typeVar)(_ | _)
       case (_, t: TypeVariable) =>
-        //err(msg"Get into this case 2!", t.prov.loco)
+        warn(msg"Get into this case 2!", t.prov.loco)
         val lb = t.lowerBounds
         val typeVar: SimpleType = freshVar(noProv)
         t.indexedIn ::= (receiver, typeVar)

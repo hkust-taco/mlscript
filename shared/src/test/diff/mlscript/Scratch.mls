@@ -104,6 +104,9 @@ a = 1 + 1
 //│ | 0. Typing term a
 //│ | 0. : α24 [indexedIn: List(), indexedBy: List()]
 //│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: α24 [indexedIn: List(), indexedBy: List()]
+//│ ╔══[WARNING] Get into this case 2!
+//│ ║  l.60: 	a = 1 + 1
+//│ ╙──      	    ^^^^^
 //│ | | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: int<TypeName(number)>
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
@@ -116,6 +119,23 @@ a = 1 + 1
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
+
+(1, "haha")[0]
+//│ res: 1
+//│    = 1
+
+(1, "haha")[1]
+//│ res: "haha"
+//│    = 'haha'
+
+zh = "你好"
+//│ zh: "你好"
+//│   = '′0⊐9'
+
+ch = "मनीष منش" 
+//│ ch: "मनीष منش"
+//│   = '⍐⍄⍨⍙ ᘅᘆᖈ'
+
 
 :d
 def foo x = x[1]
@@ -130,6 +150,8 @@ def foo x = x[1]
 //│ | | 1. Typing term 1
 //│ | | 1. : 1<TypeName(int),TypeName(number)>
 //│ | | 1. Receiver: α26' [indexedIn: List(), indexedBy: List()], Index: 1<TypeName(int),TypeName(number)>
+//│ ╔══[WARNING] Get into this case 1!
+//│ ╙──
 //│ | | ==> α27' [indexedIn: List(), indexedBy: List()]
 //│ | 1. : α27' [indexedIn: List(), indexedBy: List()]
 //│ 1. : (α26' [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α27' [indexedIn: List(), indexedBy: List()]))] -> α27' [indexedIn: List(), indexedBy: List()])
@@ -171,12 +193,15 @@ foo ((1, 2, 3))
 //│    = 2
 
 "foo"[2]
-//│ res: string
+//│ ╔══[ERROR] mlscript doesn't allow string indexing
+//│ ║  l.195: 	"foo"[2]
+//│ ╙──       	^^^^^
+//│ res: error
 //│    = 'o'
 
 "foo"[3]
-//│ ╔══[ERROR] Out of range!
-//│ ║  l.177: 	"foo"[3]
+//│ ╔══[ERROR] mlscript doesn't allow string indexing
+//│ ║  l.202: 	"foo"[3]
 //│ ╙──       	^^^^^
 //│ res: error
 //│    = undefined
@@ -195,7 +220,7 @@ foo ((1, 2, 3))
 
 (1, 2, 3)[(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[0]]]]
 //│ ╔══[ERROR] Out of range!
-//│ ║  l.196: 	(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[0]]]]
+//│ ║  l.221: 	(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[0]]]]
 //│ ╙──       	^^^^^^^^^
 //│ res: error
 //│    = undefined
@@ -203,7 +228,7 @@ foo ((1, 2, 3))
 
 (1, 2, 3)[k]
 //│ ╔══[ERROR] identifier not found: k
-//│ ║  l.204: 	(1, 2, 3)[k]
+//│ ║  l.229: 	(1, 2, 3)[k]
 //│ ╙──       	          ^
 //│ ╔══[ERROR] Encounter error at index during array indexing
 //│ ╙──
@@ -282,6 +307,8 @@ nw = (1, 2, 3, 4, 5)
 def chose i = nw[i]
 //│ nw: (1, 2, 3, 4, 5,)
 //│   = [ 1, 2, 3, 4, 5 ]
+//│ ╔══[WARNING] Get into this case 2!
+//│ ╙──
 //│ chose: anything -> nothing
 //│      = [Function: chose]
 
