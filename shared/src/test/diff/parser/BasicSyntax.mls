@@ -16,7 +16,7 @@ f 1
 //│ |(|)|
 //│ Parsed: {'(' undefined, ')'}
 
-// FIXME
+// FIXME `(undefined,)`
 f()
 //│ |f|(|)|
 //│ Parsed: {f (undefined,)}
