@@ -741,17 +741,17 @@ foreach am1 (fun y -> y._1 <- 2)
 :e
 (0,)["oops"]
 (mut 0,)["oops"] <- 1
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:754)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
-//│ 	at: mlscript.Typer.typeStatement(Typer.scala:351)
-//│ 	at: mlscript.DiffTests.$anonfun$new$53(DiffTests.scala:553)
-//│ 	at: mlscript.DiffTests.$anonfun$new$53$adapted(DiffTests.scala:506)
+//│ ╔══[ERROR] The index must be an integer
+//│ ╙──
+//│ res: error
+//│    = undefined
+//│ ╔══[ERROR] Type mismatch in assignment:
+//│ ║  l.743: 	(mut 0,)["oops"] <- 1
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── string literal of type `"oops"` is not an instance of type `int`
+//│ ║  l.743: 	(mut 0,)["oops"] <- 1
+//│ ╙──       	         ^^^^^^
+//│ = []
 
 oops = "oops"
 arr = (mut 0,)
@@ -765,17 +765,20 @@ arr = (mut 0,)
 :e
 arr[oops]
 arr[oops] <- 1
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:754)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
-//│ 	at: mlscript.Typer.typeStatement(Typer.scala:351)
-//│ 	at: mlscript.DiffTests.$anonfun$new$53(DiffTests.scala:553)
-//│ 	at: mlscript.DiffTests.$anonfun$new$53$adapted(DiffTests.scala:506)
+//│ ╔══[ERROR] The index must be an integer
+//│ ╙──
+//│ res: error
+//│    = undefined
+//│ ╔══[ERROR] Type mismatch in assignment:
+//│ ║  l.767: 	arr[oops] <- 1
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╟── string literal of type `"oops"` is not an instance of type `int`
+//│ ║  l.756: 	oops = "oops"
+//│ ║         	       ^^^^^^
+//│ ╟── but it flows into reference with expected type `int`
+//│ ║  l.767: 	arr[oops] <- 1
+//│ ╙──       	    ^^^^
+//│ = []
 
 
 // TODO support typing of mutable local variable
@@ -787,10 +790,10 @@ x = 1
 :e
 x <- 2
 //│ ╔══[ERROR] Illegal assignment
-//│ ║  l.788: 	x <- 2
+//│ ║  l.791: 	x <- 2
 //│ ║         	^^^^^^
 //│ ╟── cannot assign to reference
-//│ ║  l.788: 	x <- 2
+//│ ║  l.791: 	x <- 2
 //│ ╙──       	^
 //│ res: error
 //│    = []
@@ -820,16 +823,16 @@ foo { mut a = 1 } 2 add
 :e
 foo { mut a = 1 } 2 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.821: 	foo { mut a = 1 } 2 3
+//│ ║  l.824: 	foo { mut a = 1 } 2 3
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `3` is not a function
-//│ ║  l.821: 	foo { mut a = 1 } 2 3
+//│ ║  l.824: 	foo { mut a = 1 } 2 3
 //│ ║         	                    ^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.812: 	def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
+//│ ║  l.815: 	def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
 //│ ║         	                                                   ^^^^^
 //│ ╟── from reference:
-//│ ║  l.812: 	def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
+//│ ║  l.815: 	def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
 //│ ╙──       	                                                   ^
 //│ res: (unit, int, 0 | 1 | 2, unit, nothing,) | error
 //│ Runtime error:
@@ -839,24 +842,24 @@ foo { mut a = 1 } 2 3
 foo { mut a = "oops" } 2
 foo { a = 1 } 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.839: 	foo { mut a = "oops" } 2
+//│ ║  l.842: 	foo { mut a = "oops" } 2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"oops"` is not an instance of type `int`
-//│ ║  l.839: 	foo { mut a = "oops" } 2
+//│ ║  l.842: 	foo { mut a = "oops" } 2
 //│ ║         	              ^^^^^^
 //│ ╟── but it flows into mutable record field with expected type `int`
-//│ ║  l.839: 	foo { mut a = "oops" } 2
+//│ ║  l.842: 	foo { mut a = "oops" } 2
 //│ ║         	          ^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.812: 	def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
+//│ ║  l.815: 	def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
 //│ ╙──       	                           ^^^
 //│ res: (("oops" | 0 | 2) -> 'a) -> (unit, int, "oops" | 0 | 2, unit, 'a,) | error
 //│    = [Function (anonymous)]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.840: 	foo { a = 1 } 2
+//│ ║  l.843: 	foo { a = 1 } 2
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── record field of type `1` is not mutable
-//│ ║  l.840: 	foo { a = 1 } 2
+//│ ║  l.843: 	foo { a = 1 } 2
 //│ ╙──       	      ^^^^^
 //│ res: (1 -> 'a) -> (unit, int, 1, unit, 'a,) | error
 //│    = [Function (anonymous)]

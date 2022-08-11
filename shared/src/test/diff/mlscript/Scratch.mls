@@ -1,5 +1,6 @@
+// testing cases for various `case` in constrainIndex 
 :d
-(1,2,3)[true]
+(1, 2, 3)[true]
 //│ 0. Typing term (1, 2, 3,)[true]
 //│ | 0. Typing term (1, 2, 3,)
 //│ | | 0. Typing term 1
@@ -14,9 +15,9 @@
 //│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: true<TypeName(bool)>
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:754)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:777)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
@@ -24,120 +25,36 @@
 //│ 	at: mlscript.DiffTests.$anonfun$new$53(DiffTests.scala:553)
 //│ 	at: mlscript.DiffTests.$anonfun$new$53$adapted(DiffTests.scala:506)
 
-true : bool
-//│ res: bool
-//│    = true
+(1, 2, 3)["haha"]
+//│ ╔══[ERROR] The index must be an integer
+//│ ╙──
+//│ res: error
+//│    = undefined
 
-:d
-def foo x = x[1]
-//│ 1. Typing term ((x,) => x[1])
-//│ | 1. Typing pattern (x,)
-//│ | | 1. Typing pattern x
-//│ | | 1. : α21' [indexedIn: List(), indexedBy: List()]
-//│ | 1. : (α21' [indexedIn: List(), indexedBy: List()],)
-//│ | 1. Typing term x[1]
-//│ | | 1. Typing term x
-//│ | | 1. : α21' [indexedIn: List(), indexedBy: List()]
-//│ | | 1. Typing term 1
-//│ | | 1. : 1<TypeName(int),TypeName(number)>
-//│ | | 1. Receiver: α21' [indexedIn: List(), indexedBy: List()], Index: 1<TypeName(int),TypeName(number)>
-//│ | 1. : α22' [indexedIn: List(), indexedBy: List()]
-//│ 1. : (α21' [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α22' [indexedIn: List(), indexedBy: List()]))] -> α22' [indexedIn: List(), indexedBy: List()])
-//│ ⬤ Typed as: (α21' [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α22' [indexedIn: List(), indexedBy: List()]))] -> α22' [indexedIn: List(), indexedBy: List()])
-//│  where: 
-//│ foo: anything -> nothing
-//│    = [Function: foo]
-
-:d
-foo ((1, 2, 3))
-//│ 0. Typing term (foo (((1, 2, 3,)),))
-//│ | 0. Typing term foo
-//│ | 0. : (α25 [indexedIn: List(), indexedBy: List()] -> α26 [indexedIn: List(), indexedBy: List()])
-//│ | 0. Typing term (((1, 2, 3,)),)
-//│ | | 0. Typing term ((1, 2, 3,))
-//│ | | | 0. Typing term (1, 2, 3,)
-//│ | | | | 0. Typing term 1
-//│ | | | | 0. : 1<TypeName(int),TypeName(number)>
-//│ | | | | 0. Typing term 2
-//│ | | | | 0. : 2<TypeName(int),TypeName(number)>
-//│ | | | | 0. Typing term 3
-//│ | | | | 0. : 3<TypeName(int),TypeName(number)>
-//│ | | | 0. : (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
-//│ | | 0. : (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
-//│ | 0. : ((1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,),)
-//│ | CONSTRAIN (α25 [indexedIn: List(), indexedBy: List()] -> α26 [indexedIn: List(), indexedBy: List()]) <! ((1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) -> α27 [indexedIn: List(), indexedBy: List()])
-//│ |   where 
-//│ | C (α25 [indexedIn: List(), indexedBy: List()] -> α26 [indexedIn: List(), indexedBy: List()]) <! ((1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) -> α27 [indexedIn: List(), indexedBy: List()])    (0)
-//│ | | C ((1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,),) <! (α25 [indexedIn: List(), indexedBy: List()],)    (1)
-//│ | | | C (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) <! α25 [indexedIn: List(), indexedBy: List()]    (2)
-//│ | | C α26 [indexedIn: List(), indexedBy: List()] <! α27 [indexedIn: List(), indexedBy: List()]    (3)
-//│ 0. : α27 [indexedIn: List(), indexedBy: List()]
-//│ ⬤ Typed as: α27 [indexedIn: List(), indexedBy: List()]
-//│  where: 
-//│ res: nothing
-//│    = 2
-
-(1, 2, 3)[-1]
-//│ /!\ Parse error: Expected end-of-input:1:10, found "[-1];" at l.80:10: (1, 2, 3)[-1]
+(1, 2, 3)[-10]
+//│ /!\ Parse error: Expected end-of-input:1:10, found "[-10];" at l.34:10: (1, 2, 3)[-10]
 
 (1, 2, 3)[0]
 //│ res: 1
 //│    = 1
 
-:d
 (1, 2, 3)[1]
-//│ 0. Typing term (1, 2, 3,)[1]
-//│ | 0. Typing term (1, 2, 3,)
-//│ | | 0. Typing term 1
-//│ | | 0. : 1<TypeName(int),TypeName(number)>
-//│ | | 0. Typing term 2
-//│ | | 0. : 2<TypeName(int),TypeName(number)>
-//│ | | 0. Typing term 3
-//│ | | 0. : 3<TypeName(int),TypeName(number)>
-//│ | 0. : (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
-//│ | 0. Typing term 1
-//│ | 0. : 1<TypeName(int),TypeName(number)>
-//│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: 1<TypeName(int),TypeName(number)>
-//│ 0. : 2<TypeName(int),TypeName(number)>
-//│ ⬤ Typed as: 2<TypeName(int),TypeName(number)>
-//│  where: 
 //│ res: 2
 //│    = 2
 
-10
-//│ res: 10
-//│    = 10
+(1, 2, 3)[3]
+//│ ╔══[ERROR] Out of range!
+//│ ║  l.45: 	(1, 2, 3)[3]
+//│ ╙──      	^^^^^^^^^
+//│ res: error
+//│    = undefined
 
-(1, 2, 3)[0]
-//│ res: 1
-//│    = 1
-
-:d
-a = 1
+a = 2
 (1, 2, 3)[a]
-//│ 1. Typing term 1
-//│ 1. : 1<TypeName(int),TypeName(number)>
-//│ ⬤ Typed as: 1<TypeName(int),TypeName(number)>
-//│  where: 
-//│ a: 1
-//│  = 1
-//│ 0. Typing term (1, 2, 3,)[a]
-//│ | 0. Typing term (1, 2, 3,)
-//│ | | 0. Typing term 1
-//│ | | 0. : 1<TypeName(int),TypeName(number)>
-//│ | | 0. Typing term 2
-//│ | | 0. : 2<TypeName(int),TypeName(number)>
-//│ | | 0. Typing term 3
-//│ | | 0. : 3<TypeName(int),TypeName(number)>
-//│ | 0. : (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
-//│ | 0. Typing term a
-//│ | 0. : 1<TypeName(int),TypeName(number)>
-//│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: 1<TypeName(int),TypeName(number)>
-//│ 0. : 2<TypeName(int),TypeName(number)>
-//│ ⬤ Typed as: 2<TypeName(int),TypeName(number)>
-//│  where: 
-//│ res: 2
-//│    = 2
+//│ a: 2
+//│  = 2
+//│ res: 3
+//│    = 3
 
 :d
 a = 1 + 1
@@ -150,29 +67,29 @@ a = 1 + 1
 //│ | | | 1. Typing term 1
 //│ | | | 1. : 1<TypeName(int),TypeName(number)>
 //│ | | 1. : (1<TypeName(int),TypeName(number)>,)
-//│ | | CONSTRAIN (int<TypeName(number)> -> (int<TypeName(number)> -> int<TypeName(number)>)) <! (1<TypeName(int),TypeName(number)> -> α29' [indexedIn: List(), indexedBy: List()])
+//│ | | CONSTRAIN (int<TypeName(number)> -> (int<TypeName(number)> -> int<TypeName(number)>)) <! (1<TypeName(int),TypeName(number)> -> α21' [indexedIn: List(), indexedBy: List()])
 //│ | |   where 
-//│ | | C (int<TypeName(number)> -> (int<TypeName(number)> -> int<TypeName(number)>)) <! (1<TypeName(int),TypeName(number)> -> α29' [indexedIn: List(), indexedBy: List()])    (0)
+//│ | | C (int<TypeName(number)> -> (int<TypeName(number)> -> int<TypeName(number)>)) <! (1<TypeName(int),TypeName(number)> -> α21' [indexedIn: List(), indexedBy: List()])    (0)
 //│ | | | C (1<TypeName(int),TypeName(number)>,) <! (int<TypeName(number)>,)    (1)
 //│ | | | | C 1<TypeName(int),TypeName(number)> <! int<TypeName(number)>    (2)
-//│ | | | C (int<TypeName(number)> -> int<TypeName(number)>) <! α29' [indexedIn: List(), indexedBy: List()]    (3)
-//│ | 1. : α29' [indexedIn: List(), indexedBy: List()]
+//│ | | | C (int<TypeName(number)> -> int<TypeName(number)>) <! α21' [indexedIn: List(), indexedBy: List()]    (3)
+//│ | 1. : α21' [indexedIn: List(), indexedBy: List()]
 //│ | 1. Typing term (1,)
 //│ | | 1. Typing term 1
 //│ | | 1. : 1<TypeName(int),TypeName(number)>
 //│ | 1. : (1<TypeName(int),TypeName(number)>,)
-//│ | CONSTRAIN α29' [indexedIn: List(), indexedBy: List()] <! (1<TypeName(int),TypeName(number)> -> α30' [indexedIn: List(), indexedBy: List()])
+//│ | CONSTRAIN α21' [indexedIn: List(), indexedBy: List()] <! (1<TypeName(int),TypeName(number)> -> α22' [indexedIn: List(), indexedBy: List()])
 //│ |   where 
-//│ 		α29' [indexedIn: List(), indexedBy: List()] :> (int<TypeName(number)> -> int<TypeName(number)>)
-//│ | C α29' [indexedIn: List(), indexedBy: List()] <! (1<TypeName(int),TypeName(number)> -> α30' [indexedIn: List(), indexedBy: List()])    (0)
-//│ | | C (int<TypeName(number)> -> int<TypeName(number)>) <! (1<TypeName(int),TypeName(number)> -> α30' [indexedIn: List(), indexedBy: List()])    (1)
+//│ 		α21' [indexedIn: List(), indexedBy: List()] :> (int<TypeName(number)> -> int<TypeName(number)>)
+//│ | C α21' [indexedIn: List(), indexedBy: List()] <! (1<TypeName(int),TypeName(number)> -> α22' [indexedIn: List(), indexedBy: List()])    (0)
+//│ | | C (int<TypeName(number)> -> int<TypeName(number)>) <! (1<TypeName(int),TypeName(number)> -> α22' [indexedIn: List(), indexedBy: List()])    (1)
 //│ | | | C (1<TypeName(int),TypeName(number)>,) <! (int<TypeName(number)>,)    (2)
 //│ | | | | C 1<TypeName(int),TypeName(number)> <! int<TypeName(number)>    (3)
-//│ | | | C int<TypeName(number)> <! α30' [indexedIn: List(), indexedBy: List()]    (4)
-//│ 1. : α30' [indexedIn: List(), indexedBy: List()]
-//│ ⬤ Typed as: α30' [indexedIn: List(), indexedBy: List()]
+//│ | | | C int<TypeName(number)> <! α22' [indexedIn: List(), indexedBy: List()]    (4)
+//│ 1. : α22' [indexedIn: List(), indexedBy: List()]
+//│ ⬤ Typed as: α22' [indexedIn: List(), indexedBy: List()]
 //│  where: 
-//│ 		α30' [indexedIn: List(), indexedBy: List()] :> int<TypeName(number)>
+//│ 		α22' [indexedIn: List(), indexedBy: List()] :> int<TypeName(number)>
 //│ a: int
 //│  = 2
 //│ 0. Typing term (1, 2, 3,)[a]
@@ -185,30 +102,88 @@ a = 1 + 1
 //│ | | 0. : 3<TypeName(int),TypeName(number)>
 //│ | 0. : (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
 //│ | 0. Typing term a
-//│ | 0. : α32 [indexedIn: List(), indexedBy: List()]
-//│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: α32 [indexedIn: List(), indexedBy: List()]
+//│ | 0. : α24 [indexedIn: List(), indexedBy: List()]
+//│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: α24 [indexedIn: List(), indexedBy: List()]
 //│ | | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: int<TypeName(number)>
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:754)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:777)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$5(ConstraintSolver.scala:740)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$5(ConstraintSolver.scala:766)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:740)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:766)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 
-(1, 2, 3)[10]
+:d
+def foo x = x[1]
+//│ 1. Typing term ((x,) => x[1])
+//│ | 1. Typing pattern (x,)
+//│ | | 1. Typing pattern x
+//│ | | 1. : α26' [indexedIn: List(), indexedBy: List()]
+//│ | 1. : (α26' [indexedIn: List(), indexedBy: List()],)
+//│ | 1. Typing term x[1]
+//│ | | 1. Typing term x
+//│ | | 1. : α26' [indexedIn: List(), indexedBy: List()]
+//│ | | 1. Typing term 1
+//│ | | 1. : 1<TypeName(int),TypeName(number)>
+//│ | | 1. Receiver: α26' [indexedIn: List(), indexedBy: List()], Index: 1<TypeName(int),TypeName(number)>
+//│ | | ==> α27' [indexedIn: List(), indexedBy: List()]
+//│ | 1. : α27' [indexedIn: List(), indexedBy: List()]
+//│ 1. : (α26' [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α27' [indexedIn: List(), indexedBy: List()]))] -> α27' [indexedIn: List(), indexedBy: List()])
+//│ ⬤ Typed as: (α26' [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α27' [indexedIn: List(), indexedBy: List()]))] -> α27' [indexedIn: List(), indexedBy: List()])
+//│  where: 
+//│ foo: anything -> nothing
+//│    = [Function: foo]
+
+:d
+foo ((1, 2, 3))
+//│ 0. Typing term (foo (((1, 2, 3,)),))
+//│ | 0. Typing term foo
+//│ | 0. : (α30 [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α27' [indexedIn: List(), indexedBy: List()]))] -> α31 [indexedIn: List(), indexedBy: List()])
+//│ | 0. Typing term (((1, 2, 3,)),)
+//│ | | 0. Typing term ((1, 2, 3,))
+//│ | | | 0. Typing term (1, 2, 3,)
+//│ | | | | 0. Typing term 1
+//│ | | | | 0. : 1<TypeName(int),TypeName(number)>
+//│ | | | | 0. Typing term 2
+//│ | | | | 0. : 2<TypeName(int),TypeName(number)>
+//│ | | | | 0. Typing term 3
+//│ | | | | 0. : 3<TypeName(int),TypeName(number)>
+//│ | | | 0. : (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
+//│ | | 0. : (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
+//│ | 0. : ((1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,),)
+//│ | CONSTRAIN (α30 [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α27' [indexedIn: List(), indexedBy: List()]))] -> α31 [indexedIn: List(), indexedBy: List()]) <! ((1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) -> α32 [indexedIn: List(), indexedBy: List()])
+//│ |   where 
+//│ | C (α30 [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α27' [indexedIn: List(), indexedBy: List()]))] -> α31 [indexedIn: List(), indexedBy: List()]) <! ((1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) -> α32 [indexedIn: List(), indexedBy: List()])    (0)
+//│ | | C ((1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,),) <! (α30 [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α27' [indexedIn: List(), indexedBy: List()]))],)    (1)
+//│ | | | C (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) <! α30 [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α27' [indexedIn: List(), indexedBy: List()]))]    (2)
+//│ | | | | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: 1<TypeName(int),TypeName(number)>
+//│ | | | | ==> 2<TypeName(int),TypeName(number)>
+//│ | | | | C 2<TypeName(int),TypeName(number)> <! α27' [indexedIn: List(), indexedBy: List()]    (3)
+//│ | | C α31 [indexedIn: List(), indexedBy: List()] <! α32 [indexedIn: List(), indexedBy: List()]    (4)
+//│ 0. : α32 [indexedIn: List(), indexedBy: List()]
+//│ ⬤ Typed as: α32 [indexedIn: List(), indexedBy: List()]
+//│  where: 
+//│ res: nothing
+//│    = 2
+
+"foo"[2]
+//│ res: string
+//│    = 'o'
+
+"foo"[3]
 //│ ╔══[ERROR] Out of range!
-//│ ║  l.203: 	(1, 2, 3)[10]
-//│ ╙──       	^^^^^^^^^
+//│ ║  l.177: 	"foo"[3]
+//│ ╙──       	^^^^^
 //│ res: error
 //│    = undefined
 
-(1, 2, 3)[-1]
-//│ /!\ Parse error: Expected end-of-input:1:10, found "[-1];" at l.210:10: (1, 2, 3)[-1]
+('f', 'o', 'o')[2]
+//│ res: "o"
+//│    = 'o'
 
 (1, 2, 3)[(1, 2, 3)[0]]
 //│ res: 2
@@ -220,33 +195,18 @@ a = 1 + 1
 
 (1, 2, 3)[(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[0]]]]
 //│ ╔══[ERROR] Out of range!
-//│ ║  l.221: 	(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[0]]]]
+//│ ║  l.196: 	(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[0]]]]
 //│ ╙──       	^^^^^^^^^
 //│ res: error
 //│    = undefined
 
-:d
+
 (1, 2, 3)[k]
-//│ 0. Typing term (1, 2, 3,)[k]
-//│ | 0. Typing term (1, 2, 3,)
-//│ | | 0. Typing term 1
-//│ | | 0. : 1<TypeName(int),TypeName(number)>
-//│ | | 0. Typing term 2
-//│ | | 0. : 2<TypeName(int),TypeName(number)>
-//│ | | 0. Typing term 3
-//│ | | 0. : 3<TypeName(int),TypeName(number)>
-//│ | 0. : (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
-//│ | 0. Typing term k
 //│ ╔══[ERROR] identifier not found: k
-//│ ║  l.229: 	(1, 2, 3)[k]
+//│ ║  l.204: 	(1, 2, 3)[k]
 //│ ╙──       	          ^
-//│ | 0. : error<>
-//│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: error<>
 //│ ╔══[ERROR] Encounter error at index during array indexing
 //│ ╙──
-//│ 0. : error<>
-//│ ⬤ Typed as: error<>
-//│  where: 
 //│ res: error
 //│ Code generation encountered an error:
 //│   unresolved symbol k
@@ -275,25 +235,15 @@ def k: int
 //│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: Int
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:754)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:777)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
 //│ 	at: mlscript.Typer.typeStatement(Typer.scala:351)
 //│ 	at: mlscript.DiffTests.$anonfun$new$53(DiffTests.scala:553)
 //│ 	at: mlscript.DiffTests.$anonfun$new$53$adapted(DiffTests.scala:506)
-
-:d
-k
-//│ 0. Typing term k
-//│ 0. : Int
-//│ ⬤ Typed as: Int
-//│  where: 
-//│ res: int
-//│    = <no result>
-//│      k is not implemented
 
 :d
 3[1]
@@ -305,9 +255,9 @@ k
 //│ | 0. Receiver: 3<TypeName(int),TypeName(number)>, Index: 1<TypeName(int),TypeName(number)>
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:754)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:777)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
@@ -318,9 +268,9 @@ k
 k[1]
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:754)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:777)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:719)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:779)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)

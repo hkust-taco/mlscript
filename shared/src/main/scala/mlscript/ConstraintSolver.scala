@@ -607,15 +607,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           tv.lowerBounds ::= nv
           nv.upperBounds = tv.upperBounds.map(extrude(_, lvl, pol))
           
-          // nv <: tv 
-          // a: tv, i: index, a[i]: result
-          // also need to extrude constrainIndex(nv, index)
-          tv.indexedBy.foreach { case (index, result) =>
-            extrude(constrainIndex(nv, index), lvl, pol)}
-          
-          // a: receiver, i: tv, a[i]: result
-          tv.indexedIn.foreach { case (receiver, result) =>
-            extrude(constrainIndex(receiver, nv), lvl, pol)}
+          nv.indexedBy = tv.indexedBy
+          nv.indexedIn = nv.indexedIn
+
+          nv.indexedBy.foreach { case (index, result) =>
+            extrude(index, lvl, pol); extrude(result, lvl, pol) }
+          nv.indexedIn.foreach { case (receiver, result) =>
+            extrude(receiver, lvl, pol); extrude(result, lvl, pol) }
         }
         nv
       })
@@ -677,6 +675,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             //    but through the indirection of a type variable tv2:
             tv2.lowerBounds ::= tv.lowerBounds.map(freshen).foldLeft(rv: ST)(_ & _)
             tv2.upperBounds ::= tv.upperBounds.map(freshen).foldLeft(rv: ST)(_ | _)
+            
+            tv2.indexedBy = tv.indexedBy
+            tv2.indexedIn = tv.indexedIn
+
+            tv2.indexedBy.foreach { case (index, result) => 
+              freshen(index); freshen(result) }
+            
+            tv2.indexedIn.foreach { case(receiver, result) =>
+              freshen(receiver); freshen(result) }
+
             tv2
           } else {
             freshened += tv -> rv
@@ -687,6 +695,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           freshened += tv -> v
           v.lowerBounds = tv.lowerBounds.mapConserve(freshen)
           v.upperBounds = tv.upperBounds.mapConserve(freshen)
+
+          v.indexedBy = tv.indexedBy
+          v.indexedIn = tv.indexedIn
+
+          v.indexedBy.foreach { case (index, result) => 
+            freshen(index); freshen(result) }
+          
+          v.indexedIn.foreach { case(receiver, result) =>
+            freshen(receiver); freshen(result) }
+
           v
       }
       case t @ TypeBounds(lb, ub) =>
@@ -718,40 +736,45 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   def constrainIndex(receiver: SimpleType, index: SimpleType)(implicit ctx: Ctx, raise: Raise): SimpleType 
         = trace(s"$lvl. Receiver: $receiver, Index: $index") {
     (receiver.unwrapProxies, index.unwrapProxies) match {
-      case (t @ TupleType(fs), ClassTag(id @ IntLit(value), parents)) =>  
+      case (t @ TupleType(fs), ClassTag(IntLit(value), _)) =>  
         // check index validity and retrieve corresponding type
         if (value >= fs.length || value < 0){
           err(msg"Out of range!", t.prov.loco)
         } else{
           fs(value.toInt)._2.ub
         }
+      
+      case (s @ ClassTag(StrLit(st), _), ClassTag(IntLit(value), _)) =>
+        if (value >= st.length() || value < 0){
+          err(msg"Out of range!", s.prov.loco)
+        } else{
+          StrType
+          //StrLit
+        }
+
       case (t : TypeVariable, _) =>
         //err(msg"Get into this case 1!", t.prov.loco)
         val lb = t.lowerBounds
         val typeVar: SimpleType = freshVar(noProv)
         t.indexedBy ::= (index, typeVar)
         lb.map(constrainIndex(_, index)).foldLeft(typeVar)(_ | _)
-      
       case (_, t: TypeVariable) =>
         //err(msg"Get into this case 2!", t.prov.loco)
         val lb = t.lowerBounds
         val typeVar: SimpleType = freshVar(noProv)
         t.indexedIn ::= (receiver, typeVar)
         lb.map(constrainIndex(receiver, _)).foldLeft(typeVar)(_ | _)
-      
       case (_, e @ ClassTag(ErrTypeId, _)) =>
         err(msg"Encounter error at index during array indexing", e.prov.loco)
       case (e @ ClassTag(ErrTypeId, _), _) =>
         err(msg"Encounter error at receiver during array indexing", e.prov.loco)
-      case (_, BoolType) =>
+      case (_, BoolType) => // UnitLit?
         //err(msg"Wrong Type", b.prov.loco)
         BoolType
-      // (1, 2, 3)[true]
-      /* | : (or) 
-      case (..... , _) =>  
-        typeTerm(tv)
-      */
+      case (_, ClassTag(DecLit(_), _)) |  (_, ClassTag(StrLit(_), _)) |
+           (_, ClassTag(UnitLit(_), _) ) =>
+        err(msg"The index must be an integer", None)
       case _ => ???
     }
-  } ()
+  } (r => s"==> $r")
 }
