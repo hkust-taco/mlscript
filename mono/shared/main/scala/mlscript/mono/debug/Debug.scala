@@ -1,10 +1,10 @@
-package mlscript.mono
+package mlscript.mono.debug
 
 abstract class Debug:
-  def trace[T](name: String, pre: String)
+  def trace[T](name: String, pre: Any*)
               (thunk: => T)
-              (post: T => String = Debug.noPostTrace): T
+              (post: T => Any = Debug.noPostTrace): T
   inline def log(msg: => String): Unit
 
 object Debug:
-  val noPostTrace: Any => String = _ => ""
+  val noPostTrace: Any => Any = _ => ""

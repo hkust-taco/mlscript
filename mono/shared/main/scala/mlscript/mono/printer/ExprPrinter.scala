@@ -47,7 +47,7 @@ class ExprPrinter:
     print(expr.toString)
     endLine()
 
-  def toLines(): List[String] = printer.toLines
+  def toLines: List[String] = printer.toLines
 
   override def toString(): String = printer.toString
 
@@ -89,22 +89,20 @@ class ExprPrinter:
   //   case Expr.Isolated(isolation) => s"{\n$isolation\n}"
 
 object ExprPrinter:
-  def print(module: Module): String =
+  def print(node: Module | Item | Isolation | Expr): String =
     val printer = ExprPrinter()
-    printer.show(module)
+    node match
+      case module: Module => printer.show(module)
+      case item: Item => printer.show(item)
+      case isolation: Isolation => printer.show(isolation)
+      case expr: Expr => printer.show(expr)
     printer.toString
 
-  def print(item: Item): String =
+  def printLines(node: Module | Item | Isolation | Expr): List[String] =
     val printer = ExprPrinter()
-    printer.show(item)
-    printer.toString
-
-  def print(isolation: Isolation): String =
-    val printer = ExprPrinter()
-    printer.show(isolation)
-    printer.toString
-
-  def print(expr: Expr): String =
-    val printer = ExprPrinter()
-    printer.show(expr)
-    printer.toString
+    node match
+      case module: Module => printer.show(module)
+      case item: Item => printer.show(item)
+      case isolation: Isolation => printer.show(isolation)
+      case expr: Expr => printer.show(expr)
+    printer.toLines

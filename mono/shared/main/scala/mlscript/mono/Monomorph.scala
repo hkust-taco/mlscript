@@ -1,5 +1,6 @@
 package mlscript.mono
 
+import mlscript.mono.debug.{DummyDebug, RainbowDebug}
 import mlscript.{TypingUnit, NuTypeDef, NuFunDef}
 import mlscript.{AppliedType, TypeName}
 import mlscript.{App, Asc, Assign, Bind, Blk, Block, Bra, CaseOf, Lam, Let, Lit,
@@ -14,8 +15,9 @@ import mlscript.CaseBranches
 import mlscript.TypeDefKind
 import mlscript.AppliedType.apply
 import mlscript.mono.specializer.Builtin
-
+import mlscript.mono.specializer.Context
 import mlscript.mono.printer.ExprPrinter
+import mlscript.mono.debug.Debug
 
 class Monomorph(debugMode: Boolean):
   private val debug = if debugMode then RainbowDebug() else DummyDebug()
@@ -79,7 +81,7 @@ class Monomorph(debugMode: Boolean):
        .concat(lamTyDefs.values)
        .concat(anonymTyDefs.values)
        .toList)
-    }(ExprPrinter.print)
+    }(identity)
 
   /**
    * This function monomorphizes the nested `TypingUnit` into a `Isolation`.
@@ -95,7 +97,7 @@ class Monomorph(debugMode: Boolean):
         case Right(funDef: NuFunDef) =>
           Some(monomorphizeFunDef(funDef))
       })
-    }(ExprPrinter.print)
+    }(identity)
 
   /**
    * This function flattens a top-level type definition and returns the root
@@ -135,7 +137,7 @@ class Monomorph(debugMode: Boolean):
         }()
 
       rec(tyDef, tyDef.nme.name :: Nil)
-    }(ExprPrinter.print)
+    }(identity)
     
   /**
    * This function monomorphizes a function definition in smoe typing units.
@@ -149,7 +151,7 @@ class Monomorph(debugMode: Boolean):
           Item.FuncDecl(nme, toFuncParams(params).toList, monomorphizeTerm(body))
         case Left(body) => Item.FuncDecl(nme, Nil, monomorphizeTerm(body))
         case Right(polyType) => Item.FuncDefn(nme, targs, polyType)
-    }(ExprPrinter.print)
+    }(identity)
 
   /**
    * This function monomophizes a `Term` into an `Expr`.
@@ -235,7 +237,7 @@ class Monomorph(debugMode: Boolean):
           Expr.Literal(if undefinedOrNull
                        then UnitValue.Undefined
                        else UnitValue.Null)
-    }(ExprPrinter.print)
+    }(identity)
 
   def monomorphizeLambda(args: Term, body: Term): Expr =
     debug.trace("MONO LAMBDA", args.toString + " => " + body) {
@@ -251,7 +253,7 @@ class Monomorph(debugMode: Boolean):
       lamTyDefs.addOne((className, classDecl))
       // Returns a class construction.
       Expr.Apply(Expr.Ref(className), Nil)
-    }(ExprPrinter.print)
+    }(identity)
 
   /**
    * `new C(...) { ... }` expressions are converted into
@@ -267,7 +269,7 @@ class Monomorph(debugMode: Boolean):
       val body = monomorphizeBody(termBody)
       val specTypeDecl = specializeTypeDef(name, args, body)
       Expr.Apply(specTypeDecl.name, Nil)
-    }(ExprPrinter.print)
+    }(identity)
 
   def specializeCall(name: String, args: List[Expr]): Option[Expr] =
     debug.trace("SPEC CALL", name + args.mkString("(", ", ", ")")) {
@@ -322,7 +324,7 @@ class Monomorph(debugMode: Boolean):
                 typeParams, // typeParams
                 params.filter(!_._1), // params
                 TypeName(name) :: Nil, // parents
-                specializeClass(specClassMap.prototype)(using HashMap.from(values)) // body
+                specializeClass(specClassMap.prototype)(using Context(values)) // body
               )
             })
             Some(Expr.Apply(specClassDecl.name, dynamicArguments))
@@ -332,7 +334,7 @@ class Monomorph(debugMode: Boolean):
         case Item.TypeDecl(_, Alias, _, _, _, _) =>
           throw new MonomorphError(s"cannot specialize type alias $name")
       }
-    }(_.fold("<none>")(ExprPrinter.print))
+    }(_.fold(Debug.noPostTrace)(identity))
 
   // TODO: Remove `Option[Expr]` by passing the callee.
   def specializeFunctionCall(name: String, args: List[Expr]): Option[Expr] =
@@ -348,7 +350,7 @@ class Monomorph(debugMode: Boolean):
               case ((true, Expr.Ref(name)), value) => Some((name, value))
               case ((false, _), _) => None
             })
-            val specFuncBody = specializeExpr(body)(using HashMap.from(values))
+            val specFuncBody = specializeExpr(body)(using Context(values))
             val staticParams = params.filter(!_._1)
             val specFuncName = s"${name}" + signature
             val funcDecl: Item.FuncDecl = Item.FuncDecl(specFuncName, staticParams, specFuncBody)
@@ -358,13 +360,10 @@ class Monomorph(debugMode: Boolean):
           Some(Expr.Apply(specFuncDecl.name, dynamicArguments))
         }
       }
-    }(_.fold("<none>")(ExprPrinter.print))
+    }(_.fold(Debug.noPostTrace)(identity))
 
-  private def showInContext(content: String)(using ctx: HashMap[String, Expr]): String = 
-    content + " in context " + (if ctx.isEmpty then "{}" else ctx.mkString("{\n  ", "\n  ", "\n}"))
-
-  def specializeExpr(expr: Expr)(using ctx: HashMap[String, Expr]): Expr =
-    debug.trace[Expr]("SPEC EXPR", showInContext(expr.toString)) {
+  def specializeExpr(expr: Expr)(using ctx: Context): Expr =
+    debug.trace[Expr]("SPEC EXPR", expr, "in context", ctx) {
       expr match
         case Expr.Ref(name) => ctx.get(name) match
           case Some(value) => value
@@ -417,7 +416,7 @@ class Monomorph(debugMode: Boolean):
             else alternate.getOrElse(Expr.Literal(UnitValue.Undefined))
           )
         case _ => throw MonomorphError(s"unimplemented ${expr.getClass()}")
-    }(ExprPrinter.print)
+    }(identity)
 
   /**
    * This function monomorphizes the given class with given arguments.
@@ -437,19 +436,19 @@ class Monomorph(debugMode: Boolean):
           // FIXME: Logic here does not work.
         case None => throw new MonomorphError(s"cannot specialize undeclared type $name")
       }
-    }(ExprPrinter.print)
+    }(identity)
 
-  def specializeFunction(funcProto: Item.FuncDecl)(using ctx: HashMap[String, Expr]): Item.FuncDecl =
+  def specializeFunction(funcProto: Item.FuncDecl)(using ctx: Context): Item.FuncDecl =
     Item.FuncDecl(funcProto.name, funcProto.params, specializeExpr(funcProto.body))
 
-  def specializeClass(classProto: Item.TypeDecl)(using ctx: HashMap[String, Expr]): Isolation =
-    debug.trace("SPEC CLASS", showInContext(s"class ${classProto.name.name}")) {
+  def specializeClass(classProto: Item.TypeDecl)(using ctx: Context): Isolation =
+    debug.trace("SPEC CLASS", s"class ${classProto.name.name}", "in context", ctx) {
       Isolation(classProto.body.items.map {
         case expr: Expr => specializeExpr(expr)
         case funcDecl: Item.FuncDecl => specializeFunction(funcDecl)
         case other => throw MonomorphError(s"$other is not supported")
       })
-    }(ExprPrinter.print)
+    }(identity)
 
   // Shorthand implicit conversions.
 

@@ -1,11 +1,13 @@
 package mlscript.mono
 
+import mlscript.mono.debug.{DebugOutput, Printable}
+import mlscript.mono.printer.ExprPrinter
 import scala.collection.mutable.ArrayBuffer
 import mlscript.{Type, Union, Inter, Function, Record, Tuple, Recursive, AppliedType,
                  Neg, Rem, Bounds, WithExtension, Constrained, Top, Bot, Literal,
                  TypeName, TypeVar, PolyType, NamedType}
 
-enum Expr:
+enum Expr extends Printable:
   case Ref(name: String)
   case Lambda(params: List[Ref], body: Expr)
   case Apply(callee: Expr, arguments: List[Expr])
@@ -31,6 +33,9 @@ enum Expr:
     case Literal(value: String) => !value.isEmpty()
     case Literal(_) => false
     case _ => false
+
+  def getDebugOutput: DebugOutput =
+    DebugOutput.Code(ExprPrinter.printLines(this))
 
   override def toString(): String = this match
     case Ref(name) => name
@@ -98,7 +103,7 @@ enum TypeDeclKind:
  */
 type Parameter = (Boolean, Expr.Ref)
 
-enum Item:
+enum Item extends Printable:
   /**
    * Type declarations: aliases, classes and traits.
    */
@@ -131,6 +136,9 @@ enum Item:
     case FuncDefn(Expr.Ref(name), typeParams, polyType) =>
       s"fun $name: ${typeParams.mkString("[", ", ", "]")} => $polyType"
 
+  def getDebugOutput: DebugOutput = 
+    DebugOutput.Code(ExprPrinter.printLines(this))
+
 object Item:
   /**
    * A shorthand constructor for classes without type parameters and parents.
@@ -141,7 +149,10 @@ object Item:
 /**
  * An `Isolation` is like a `TypingUnit` but without nested classes.
  */
-class Isolation(val items: List[Expr | Item.FuncDecl | Item.FuncDefn]):
+class Isolation(val items: List[Expr | Item.FuncDecl | Item.FuncDefn]) extends Printable:
+  def getDebugOutput: DebugOutput =
+    DebugOutput.Code(ExprPrinter.printLines(this))
+
   override def toString(): String = items.mkString("\n")
 
 object Isolation:
@@ -152,5 +163,8 @@ object Isolation:
  * This name conflicts with `java.lang.Module`.
  * TODO: Find a better name.
  */
-class Module(val items: List[Expr | Item]):
+class Module(val items: List[Expr | Item]) extends Printable:
+  def getDebugOutput: DebugOutput =
+    DebugOutput.Code(ExprPrinter.printLines(this))
+
   override def toString(): String = items.mkString("\n")

@@ -1,13 +1,14 @@
 package mlscript.mono
 
 import mlscript.{TypingUnit, NuFunDef, NuTypeDef, Term}
+import mlscript.mono.debug.DebugOutput
 
 // For pretty printing terms in debug output.
 object PrettyPrinter:
-  def show(term: Term): String = term.toString
-  def show(unit: TypingUnit): String = showTypingUnit(unit, 0)
-  def show(funDef: NuFunDef): String = showFunDef(funDef)
-  def show(tyDef: NuTypeDef): String = showTypeDef(tyDef, 0)
+  def show(term: Term): DebugOutput = DebugOutput.Code(term.toString.linesIterator.toList)
+  def show(unit: TypingUnit): DebugOutput = DebugOutput.Code(showTypingUnit(unit, 0).linesIterator.toList)
+  def show(funDef: NuFunDef): DebugOutput = DebugOutput.Code(showFunDef(funDef).linesIterator.toList)
+  def show(tyDef: NuTypeDef): DebugOutput = DebugOutput.Code(showTypeDef(tyDef, 0).linesIterator.toList)
 
   def showTypingUnit(unit: TypingUnit, indent: Int = 0): String =
     val head = if indent == 0 then "TypingUnit " else " "
