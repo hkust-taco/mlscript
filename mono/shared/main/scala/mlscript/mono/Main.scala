@@ -23,10 +23,10 @@ import mlscript.codegen.Helpers.inspect as showStructure
 @main
 def main(): Unit =
   val source = """
-    |class Box(#x) {
-    |  fun get() = x
+    |class Add(#x, y) {
+    |  fun get() = x + y
     |}
-    |let box0 = Box(0)""".stripMargin
+    |let add = Add(1, 2)""".stripMargin
   val fastParseHelpers = mlscript.FastParseHelpers(source)
   val origin = mlscript.Origin("test.mls", 1, fastParseHelpers)
   val raise = (t: Diagnostic) => t match

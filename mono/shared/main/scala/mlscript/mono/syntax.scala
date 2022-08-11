@@ -108,7 +108,7 @@ enum Item extends Printable:
    * Type declarations: aliases, classes and traits.
    */
   case TypeDecl(val name: Expr.Ref, kind: TypeDeclKind, typeParams: List[TypeName],
-                params: List[Parameter], parents: List[NamedType], body: Isolation)
+                params: List[Parameter], parents: List[(NamedType, List[Expr])], body: Isolation)
   /**
    * Function declaration (with implementation).
    */

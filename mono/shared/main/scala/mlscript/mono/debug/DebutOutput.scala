@@ -14,7 +14,13 @@ enum DebugOutput extends Printable:
 
   def toLines: List[String] = this match
     case Code(lines) => if lines.length == 1 then lines else box(lines)
-    case Map(entries) => boxMap(entries)
+    case Map(entries) =>
+      if entries.length <= 3 then
+        entries.iterator.map { (key, value) =>
+          s"$key: $value"
+        }.mkString("{ ", ", ", " }") :: Nil
+      else
+        boxMap(entries)
     case Plain(content) => content.linesIterator.toList
 
 object DebugOutput:

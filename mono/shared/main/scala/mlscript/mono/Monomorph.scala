@@ -125,12 +125,12 @@ class Monomorph(debugMode: Boolean):
           })
           val className = namePath.reverseIterator.mkString("_")
           val typeDecl: Item.TypeDecl = Item.TypeDecl(
-            className,
-            kind,
-            tparams,
-            toFuncParams(params).toList,
-            parents,
-            isolation
+            className, // name
+            kind, // kind
+            tparams, // typeParams
+            toFuncParams(params).toList, // params
+            parents.map((_, Nil)), // parents
+            isolation // body
           )
           addPrototypeTypeDecl(typeDecl)
           typeDecl
@@ -275,7 +275,10 @@ class Monomorph(debugMode: Boolean):
     debug.trace("SPEC CALL", name + args.mkString("(", ", ", ")")) {
       if tyImpls.contains(name) then specializeClassCall(name, args)
       else if funImpls.contains(name) then specializeFunctionCall(name, args)
-      else None
+      else {
+        debug.log(s"Not found: $name")
+        None
+      }
     }()
 
   private def partitationArguments(params: List[Parameter], args: List[Expr]): (List[Expr], List[Expr]) =
@@ -301,16 +304,17 @@ class Monomorph(debugMode: Boolean):
       tyImpls.get(name).flatMap { specClassMap => specClassMap.prototype match
         case Item.TypeDecl(Expr.Ref(name), Class, typeParams, params, parents, body) =>
           val (staticArguments, dynamicArguments) = partitationArguments(params, args)
+          val (staticParameters, dynamicParameters) = params.partition(_._1)
           if (staticArguments.isEmpty) {
             None
           } else {
             val signature = generateSignature(staticArguments)
             val specClassDecl = specClassMap.getOrInsert(signature, {
               specClassMap.base = Item.TypeDecl(
-                Expr.Ref(s"${name}" + signature), // name
+                Expr.Ref(name), // name
                 Class, // kind
                 typeParams, // typeParams
-                Nil, // params
+                dynamicParameters, // params
                 Nil, // parents
                 Isolation.empty // body
               )
@@ -322,8 +326,8 @@ class Monomorph(debugMode: Boolean):
                 Expr.Ref(s"${name}" + signature), // name
                 Class, // kind
                 typeParams, // typeParams
-                params.filter(!_._1), // params
-                TypeName(name) :: Nil, // parents
+                dynamicParameters, // params
+                (TypeName(name), dynamicParameters.map(_._2)) :: Nil, // parents
                 specializeClass(specClassMap.prototype)(using Context(values)) // body
               )
             })

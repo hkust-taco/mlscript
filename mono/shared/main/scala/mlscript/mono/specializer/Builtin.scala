@@ -19,6 +19,13 @@ object Builtin:
         Some(Expr.Literal(lhs - rhs))
       case (_, _) => None
     }),
+    ("+", {
+      case (Expr.Literal(lhs: BigInt), Expr.Literal(rhs: BigInt)) =>
+        Some(Expr.Literal(lhs + rhs))
+      case (Expr.Literal(lhs: BigDecimal), Expr.Literal(rhs: BigDecimal)) =>
+        Some(Expr.Literal(lhs + rhs))
+      case (_, _) => None
+    }),
     ("*", {
       case (Expr.Literal(lhs: BigInt), Expr.Literal(rhs: BigInt)) =>
         Some(Expr.Literal(lhs * rhs))
