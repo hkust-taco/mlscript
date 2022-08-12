@@ -1,0 +1,121 @@
+:NoJS
+:AllowTypeErrors
+
+def succ: int -> int
+def succ x = x + 1
+//│ succ: int -> int
+//│ int -> int
+//│   <:  succ:
+//│ int -> int
+
+
+x1 = false
+x2 = x1
+x3 = x2
+//│ x1: false
+//│ x2: false
+//│ x3: false
+
+:ex
+succ x3
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.20: 	succ x3
+//│ ║        	^^^^^^^
+//│ ╟── reference of type `false` is not an instance of type `int`
+//│ ║  l.12: 	x1 = false
+//│ ║        	     ^^^^^
+//│ ╟── but it flows into reference with expected type `int`
+//│ ║  l.20: 	succ x3
+//│ ║        	     ^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.4: 	def succ: int -> int
+//│ ║       	          ^^^
+//│ ╟── ========= Additional explanations below =========
+//│ ╟── [info] flowing from type `false`
+//│ ╟── [info] flowing from type `false`
+//│ ╟── [info] flowing from reference of type `false`
+//│ ║  l.12: 	x1 = false
+//│ ║        	     ^^^^^
+//│ ╟── [info] flowing from reference of type `false`
+//│ ║  l.13: 	x2 = x1
+//│ ║        	     ^^
+//│ ╟── [info] flowing from reference of type `false`
+//│ ║  l.14: 	x3 = x2
+//│ ║        	     ^^
+//│ ╟── [info] flowing from reference of type `false`
+//│ ║  l.20: 	succ x3
+//│ ║        	     ^^
+//│ ╟── [info] flowing into <nested> of type `int`
+//│ ╟── [info] flowing into type `int`
+//│ ║  l.4: 	def succ: int -> int
+//│ ║       	          ^^^
+//│ ╟── [info] flowing into type `int`
+//│ ║  l.4: 	def succ: int -> int
+//│ ║       	          ^^^
+//│ ╟── [info] flowing into type `int`
+//│ ║  l.4: 	def succ: int -> int
+//│ ║       	          ^^^
+//│ ╟── [info] flowing into type `int`
+//│ ║  l.4: 	def succ: int -> int
+//│ ║       	          ^^^
+//│ ╟── [info] flowing into type `int`
+//│ ║  l.4: 	def succ: int -> int
+//│ ║       	          ^^^
+//│ ╟── ========= Nested type provenance flow below =========
+//│ ╟── -> flowing from type `false`
+//│ ╟── -> flowing from type `false`
+//│ ╟── -> flowing from reference of type `false`
+//│ ║  l.12: 	x1 = false
+//│ ║        	     ^^^^^
+//│ ╟── -> flowing from reference of type `false`
+//│ ║  l.13: 	x2 = x1
+//│ ║        	     ^^
+//│ ╟── -> flowing from reference of type `false`
+//│ ║  l.14: 	x3 = x2
+//│ ║        	     ^^
+//│ ╟── -> flowing from reference of type `false`
+//│ ║  l.20: 	succ x3
+//│ ║        	     ^^
+//│ ╟── -> flowing from type `int`
+//│ ║  l.4: 	def succ: int -> int
+//│ ║       	          ^^^
+//│ ╟── -> flowing from type `int`
+//│ ║  l.4: 	def succ: int -> int
+//│ ║       	          ^^^
+//│ ╟── -> flowing from type `int`
+//│ ║  l.4: 	def succ: int -> int
+//│ ║       	          ^^^
+//│ ╟── -> flowing from type `int`
+//│ ║  l.4: 	def succ: int -> int
+//│ ║       	          ^^^
+//│ ╟── -> flowing from type `int`
+//│ ║  l.4: 	def succ: int -> int
+//│ ║       	          ^^^
+//│ ╟── -> Nested type provenance with info: <nesting info here>
+//│ ╟── ->> flowing from argument of type `(false,)`
+//│ ║  l.20: 	succ x3
+//│ ║        	     ^^
+//│ ╟── ->> flowing from expression of type `(false,)`
+//│ ╟── ->> flowing from type `(int,)`
+//│ ║  l.4: 	def succ: int -> int
+//│ ║       	          ^^^
+//│ ╟── ->> Nested type provenance with info: <nesting info here>
+//│ ╟── ->>> flowing from application of type `false -> ?a`
+//│ ║  l.20: 	succ x3
+//│ ║        	^^^^^^^
+//│ ╟── ->>> flowing from application of type `false -> ?a`
+//│ ║  l.20: 	succ x3
+//│ ║        	^^^^^^^
+//│ ╟── ->>> flowing from application of type `false -> ?a`
+//│ ║  l.20: 	succ x3
+//│ ║        	^^^^^^^
+//│ ╟── ->>> flowing from type `int -> int`
+//│ ║  l.4: 	def succ: int -> int
+//│ ║       	          ^^^^^^^^^^
+//│ ╟── ->>> flowing from reference of type `int -> int`
+//│ ║  l.20: 	succ x3
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from applied expression of type `int -> int`
+//│ ║  l.20: 	succ x3
+//│ ╙──      	^^^^
+//│ res: error | int

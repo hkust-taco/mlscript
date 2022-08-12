@@ -556,6 +556,26 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           msg"${msgHead} is defined at:" -> l.loco 
       }
       
+      def showNestingLevel(chain: Ls[ST], level: Int): Ls[Message -> Opt[Loc]] = {
+        val levelIndicator = s"-${">"*level}"
+        chain.flatMap { node =>
+          node.prov match {
+            case nestedProv: NestedTypeProvenance => 
+              msg"$levelIndicator Nested type provenance with info: ${nestedProv.nestingInfo.toString()}" -> N ::
+                showNestingLevel(nestedProv.chain, level + 1)
+            case tprov => 
+              msg"$levelIndicator flowing from ${printProv(tprov)} `${node.expPos}`" -> tprov.loco :: Nil
+          }
+        }
+      }
+      
+      val nestedTypeProvFlow =
+        if (explainErrors)
+          msg"========= Nested type provenance flow below =========" -> N ::
+          showNestingLevel(lhsChain, 1) :::
+          showNestingLevel(rhsChain, 1)
+        else Nil
+      
       val detailedContext =
         if (explainErrors)
           msg"========= Additional explanations below =========" -> N ::
@@ -574,6 +594,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         constraintProvenanceHints,
         originProvHints,
         detailedContext,
+        nestedTypeProvFlow
       ).flatten
       
       raise(TypeError(msgs))
