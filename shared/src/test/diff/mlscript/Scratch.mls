@@ -33,6 +33,32 @@ true
 //│ | 0. : (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
 //│ | 0. Typing term false
 //│ | 0. : false<TypeName(bool)>
+//│ | CONSTRAIN (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) <! Array‹~(Undefined)›
+//│ |   where 
+//│ | C (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) <! Array‹~(Undefined)›    (0)
+//│ | | C ((1<TypeName(int),TypeName(number)> | 2<TypeName(int),TypeName(number)>) | 3<TypeName(int),TypeName(number)>) <! ~(Undefined)    (1)
+//│ | | | C (1<TypeName(int),TypeName(number)> | 2<TypeName(int),TypeName(number)>) <! ~(Undefined)    (2)
+//│ | | | | C 1<TypeName(int),TypeName(number)> <! ~(Undefined)    (3)
+//│ | | | | | ARGH  DNF(1<TypeName(int),TypeName(number)>{})  <!  DNF(~(undefined<>))
+//│ | | | | | | Consider 1<TypeName(int),TypeName(number)>{} <: DNF(~(undefined<>))
+//│ | | | | | | Possible: List(~(undefined<>))
+//│ | | | | | | A  1<TypeName(int),TypeName(number)>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | | A  1<TypeName(int),TypeName(number)>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | | OK  1<TypeName(int),TypeName(number)>{} & undefined<>  =:=  ⊥
+//│ | | | | C 2<TypeName(int),TypeName(number)> <! ~(Undefined)    (4)
+//│ | | | | | ARGH  DNF(2<TypeName(int),TypeName(number)>{})  <!  DNF(~(undefined<>))
+//│ | | | | | | Consider 2<TypeName(int),TypeName(number)>{} <: DNF(~(undefined<>))
+//│ | | | | | | Possible: List(~(undefined<>))
+//│ | | | | | | A  2<TypeName(int),TypeName(number)>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | | A  2<TypeName(int),TypeName(number)>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | | OK  2<TypeName(int),TypeName(number)>{} & undefined<>  =:=  ⊥
+//│ | | | C 3<TypeName(int),TypeName(number)> <! ~(Undefined)    (5)
+//│ | | | | ARGH  DNF(3<TypeName(int),TypeName(number)>{})  <!  DNF(~(undefined<>))
+//│ | | | | | Consider 3<TypeName(int),TypeName(number)>{} <: DNF(~(undefined<>))
+//│ | | | | | Possible: List(~(undefined<>))
+//│ | | | | | A  3<TypeName(int),TypeName(number)>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | A  3<TypeName(int),TypeName(number)>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | OK  3<TypeName(int),TypeName(number)>{} & undefined<>  =:=  ⊥
 //│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: false<TypeName(bool)>
 //│ ╔══[ERROR] The index must be an integer
 //│ ╙──
@@ -82,18 +108,41 @@ def a = false : bool
 //│ | 0. : (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
 //│ | 0. Typing term a
 //│ | 0. : Bool
+//│ | CONSTRAIN (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) <! Array‹~(Undefined)›
+//│ |   where 
+//│ | C (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) <! Array‹~(Undefined)›    (0)
+//│ | | C ((1<TypeName(int),TypeName(number)> | 2<TypeName(int),TypeName(number)>) | 3<TypeName(int),TypeName(number)>) <! ~(Undefined)    (1)
+//│ | | | C (1<TypeName(int),TypeName(number)> | 2<TypeName(int),TypeName(number)>) <! ~(Undefined)    (2)
+//│ | | | | C 1<TypeName(int),TypeName(number)> <! ~(Undefined)    (3)
+//│ | | | | | ARGH  DNF(1<TypeName(int),TypeName(number)>{})  <!  DNF(~(undefined<>))
+//│ | | | | | | Consider 1<TypeName(int),TypeName(number)>{} <: DNF(~(undefined<>))
+//│ | | | | | | Possible: List(~(undefined<>))
+//│ | | | | | | A  1<TypeName(int),TypeName(number)>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | | A  1<TypeName(int),TypeName(number)>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | | OK  1<TypeName(int),TypeName(number)>{} & undefined<>  =:=  ⊥
+//│ | | | | C 2<TypeName(int),TypeName(number)> <! ~(Undefined)    (4)
+//│ | | | | | ARGH  DNF(2<TypeName(int),TypeName(number)>{})  <!  DNF(~(undefined<>))
+//│ | | | | | | Consider 2<TypeName(int),TypeName(number)>{} <: DNF(~(undefined<>))
+//│ | | | | | | Possible: List(~(undefined<>))
+//│ | | | | | | A  2<TypeName(int),TypeName(number)>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | | A  2<TypeName(int),TypeName(number)>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | | OK  2<TypeName(int),TypeName(number)>{} & undefined<>  =:=  ⊥
+//│ | | | C 3<TypeName(int),TypeName(number)> <! ~(Undefined)    (5)
+//│ | | | | ARGH  DNF(3<TypeName(int),TypeName(number)>{})  <!  DNF(~(undefined<>))
+//│ | | | | | Consider 3<TypeName(int),TypeName(number)>{} <: DNF(~(undefined<>))
+//│ | | | | | Possible: List(~(undefined<>))
+//│ | | | | | A  3<TypeName(int),TypeName(number)>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | A  3<TypeName(int),TypeName(number)>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | OK  3<TypeName(int),TypeName(number)>{} & undefined<>  =:=  ⊥
 //│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: Bool
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
-//│ 	at: mlscript.Typer.typeStatement(Typer.scala:351)
-//│ 	at: mlscript.DiffTests.$anonfun$new$53(DiffTests.scala:553)
-//│ 	at: mlscript.DiffTests.$anonfun$new$53$adapted(DiffTests.scala:506)
+//│ ╔══[ERROR] The index must be an integer
+//│ ╙──
+//│ | ==> error<>
+//│ 0. : error<>
+//│ ⬤ Typed as: error<>
+//│  where: 
+//│ res: error
+//│    = undefined
 
 :d
 (1, 2, 3)[false: bool]
@@ -117,18 +166,41 @@ def a = false : bool
 //│ | | C false<TypeName(bool)> <! Bool    (0)
 //│ | | | C false<TypeName(bool)> <! bool<>    (1)
 //│ | 0. : Bool
+//│ | CONSTRAIN (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) <! Array‹~(Undefined)›
+//│ |   where 
+//│ | C (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) <! Array‹~(Undefined)›    (0)
+//│ | | C ((1<TypeName(int),TypeName(number)> | 2<TypeName(int),TypeName(number)>) | 3<TypeName(int),TypeName(number)>) <! ~(Undefined)    (1)
+//│ | | | C (1<TypeName(int),TypeName(number)> | 2<TypeName(int),TypeName(number)>) <! ~(Undefined)    (2)
+//│ | | | | C 1<TypeName(int),TypeName(number)> <! ~(Undefined)    (3)
+//│ | | | | | ARGH  DNF(1<TypeName(int),TypeName(number)>{})  <!  DNF(~(undefined<>))
+//│ | | | | | | Consider 1<TypeName(int),TypeName(number)>{} <: DNF(~(undefined<>))
+//│ | | | | | | Possible: List(~(undefined<>))
+//│ | | | | | | A  1<TypeName(int),TypeName(number)>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | | A  1<TypeName(int),TypeName(number)>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | | OK  1<TypeName(int),TypeName(number)>{} & undefined<>  =:=  ⊥
+//│ | | | | C 2<TypeName(int),TypeName(number)> <! ~(Undefined)    (4)
+//│ | | | | | ARGH  DNF(2<TypeName(int),TypeName(number)>{})  <!  DNF(~(undefined<>))
+//│ | | | | | | Consider 2<TypeName(int),TypeName(number)>{} <: DNF(~(undefined<>))
+//│ | | | | | | Possible: List(~(undefined<>))
+//│ | | | | | | A  2<TypeName(int),TypeName(number)>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | | A  2<TypeName(int),TypeName(number)>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | | OK  2<TypeName(int),TypeName(number)>{} & undefined<>  =:=  ⊥
+//│ | | | C 3<TypeName(int),TypeName(number)> <! ~(Undefined)    (5)
+//│ | | | | ARGH  DNF(3<TypeName(int),TypeName(number)>{})  <!  DNF(~(undefined<>))
+//│ | | | | | Consider 3<TypeName(int),TypeName(number)>{} <: DNF(~(undefined<>))
+//│ | | | | | Possible: List(~(undefined<>))
+//│ | | | | | A  3<TypeName(int),TypeName(number)>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | A  3<TypeName(int),TypeName(number)>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | OK  3<TypeName(int),TypeName(number)>{} & undefined<>  =:=  ⊥
 //│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: Bool
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
-//│ 	at: mlscript.Typer.typeStatement(Typer.scala:351)
-//│ 	at: mlscript.DiffTests.$anonfun$new$53(DiffTests.scala:553)
-//│ 	at: mlscript.DiffTests.$anonfun$new$53$adapted(DiffTests.scala:506)
+//│ ╔══[ERROR] The index must be an integer
+//│ ╙──
+//│ | ==> error<>
+//│ 0. : error<>
+//│ ⬤ Typed as: error<>
+//│  where: 
+//│ res: error
+//│    = undefined
 
 a
 //│ res: bool
@@ -147,9 +219,52 @@ a
 //│    = undefined
 
 (1, 2, 3)[-10]
-//│ /!\ Parse error: Expected end-of-input:1:10, found "[-10];" at l.149:10: (1, 2, 3)[-10]
+//│ /!\ Parse error: Expected end-of-input:1:10, found "[-10];" at l.221:10: (1, 2, 3)[-10]
 
+:d
 (1, 2, 3)[0]
+//│ 0. Typing term (1, 2, 3,)[0]
+//│ | 0. Typing term (1, 2, 3,)
+//│ | | 0. Typing term 1
+//│ | | 0. : 1<TypeName(int),TypeName(number)>
+//│ | | 0. Typing term 2
+//│ | | 0. : 2<TypeName(int),TypeName(number)>
+//│ | | 0. Typing term 3
+//│ | | 0. : 3<TypeName(int),TypeName(number)>
+//│ | 0. : (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
+//│ | 0. Typing term 0
+//│ | 0. : 0<TypeName(int),TypeName(number)>
+//│ | CONSTRAIN (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) <! Array‹~(Undefined)›
+//│ |   where 
+//│ | C (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) <! Array‹~(Undefined)›    (0)
+//│ | | C ((1<TypeName(int),TypeName(number)> | 2<TypeName(int),TypeName(number)>) | 3<TypeName(int),TypeName(number)>) <! ~(Undefined)    (1)
+//│ | | | C (1<TypeName(int),TypeName(number)> | 2<TypeName(int),TypeName(number)>) <! ~(Undefined)    (2)
+//│ | | | | C 1<TypeName(int),TypeName(number)> <! ~(Undefined)    (3)
+//│ | | | | | ARGH  DNF(1<TypeName(int),TypeName(number)>{})  <!  DNF(~(undefined<>))
+//│ | | | | | | Consider 1<TypeName(int),TypeName(number)>{} <: DNF(~(undefined<>))
+//│ | | | | | | Possible: List(~(undefined<>))
+//│ | | | | | | A  1<TypeName(int),TypeName(number)>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | | A  1<TypeName(int),TypeName(number)>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | | OK  1<TypeName(int),TypeName(number)>{} & undefined<>  =:=  ⊥
+//│ | | | | C 2<TypeName(int),TypeName(number)> <! ~(Undefined)    (4)
+//│ | | | | | ARGH  DNF(2<TypeName(int),TypeName(number)>{})  <!  DNF(~(undefined<>))
+//│ | | | | | | Consider 2<TypeName(int),TypeName(number)>{} <: DNF(~(undefined<>))
+//│ | | | | | | Possible: List(~(undefined<>))
+//│ | | | | | | A  2<TypeName(int),TypeName(number)>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | | A  2<TypeName(int),TypeName(number)>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | | OK  2<TypeName(int),TypeName(number)>{} & undefined<>  =:=  ⊥
+//│ | | | C 3<TypeName(int),TypeName(number)> <! ~(Undefined)    (5)
+//│ | | | | ARGH  DNF(3<TypeName(int),TypeName(number)>{})  <!  DNF(~(undefined<>))
+//│ | | | | | Consider 3<TypeName(int),TypeName(number)>{} <: DNF(~(undefined<>))
+//│ | | | | | Possible: List(~(undefined<>))
+//│ | | | | | A  3<TypeName(int),TypeName(number)>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | A  3<TypeName(int),TypeName(number)>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | OK  3<TypeName(int),TypeName(number)>{} & undefined<>  =:=  ⊥
+//│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: 0<TypeName(int),TypeName(number)>
+//│ | ==> 1<TypeName(int),TypeName(number)>
+//│ 0. : 1<TypeName(int),TypeName(number)>
+//│ ⬤ Typed as: 1<TypeName(int),TypeName(number)>
+//│  where: 
 //│ res: 1
 //│    = 1
 
@@ -159,7 +274,7 @@ a
 
 (1, 2, 3)[3]
 //│ ╔══[ERROR] Out of range!
-//│ ║  l.160: 	(1, 2, 3)[3]
+//│ ║  l.275: 	(1, 2, 3)[3]
 //│ ╙──       	^^^^^^^^^
 //│ res: error
 //│    = undefined
@@ -218,22 +333,242 @@ a = 1 + 1
 //│ | 0. : (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
 //│ | 0. Typing term a
 //│ | 0. : α24 [indexedIn: List(), indexedBy: List()]
+//│ | CONSTRAIN (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) <! Array‹~(Undefined)›
+//│ |   where 
+//│ | C (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) <! Array‹~(Undefined)›    (0)
+//│ | | C ((1<TypeName(int),TypeName(number)> | 2<TypeName(int),TypeName(number)>) | 3<TypeName(int),TypeName(number)>) <! ~(Undefined)    (1)
+//│ | | | C (1<TypeName(int),TypeName(number)> | 2<TypeName(int),TypeName(number)>) <! ~(Undefined)    (2)
+//│ | | | | C 1<TypeName(int),TypeName(number)> <! ~(Undefined)    (3)
+//│ | | | | | ARGH  DNF(1<TypeName(int),TypeName(number)>{})  <!  DNF(~(undefined<>))
+//│ | | | | | | Consider 1<TypeName(int),TypeName(number)>{} <: DNF(~(undefined<>))
+//│ | | | | | | Possible: List(~(undefined<>))
+//│ | | | | | | A  1<TypeName(int),TypeName(number)>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | | A  1<TypeName(int),TypeName(number)>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | | OK  1<TypeName(int),TypeName(number)>{} & undefined<>  =:=  ⊥
+//│ | | | | C 2<TypeName(int),TypeName(number)> <! ~(Undefined)    (4)
+//│ | | | | | ARGH  DNF(2<TypeName(int),TypeName(number)>{})  <!  DNF(~(undefined<>))
+//│ | | | | | | Consider 2<TypeName(int),TypeName(number)>{} <: DNF(~(undefined<>))
+//│ | | | | | | Possible: List(~(undefined<>))
+//│ | | | | | | A  2<TypeName(int),TypeName(number)>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | | A  2<TypeName(int),TypeName(number)>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | | OK  2<TypeName(int),TypeName(number)>{} & undefined<>  =:=  ⊥
+//│ | | | C 3<TypeName(int),TypeName(number)> <! ~(Undefined)    (5)
+//│ | | | | ARGH  DNF(3<TypeName(int),TypeName(number)>{})  <!  DNF(~(undefined<>))
+//│ | | | | | Consider 3<TypeName(int),TypeName(number)>{} <: DNF(~(undefined<>))
+//│ | | | | | Possible: List(~(undefined<>))
+//│ | | | | | A  3<TypeName(int),TypeName(number)>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | A  3<TypeName(int),TypeName(number)>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | OK  3<TypeName(int),TypeName(number)>{} & undefined<>  =:=  ⊥
 //│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: α24 [indexedIn: List(), indexedBy: List()]
 //│ ╔══[WARNING] Get into this case 2!
-//│ ║  l.175: 	a = 1 + 1
+//│ ║  l.290: 	a = 1 + 1
 //│ ╙──       	    ^^^^^
 //│ | | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: int<TypeName(number)>
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:784)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$5(ConstraintSolver.scala:767)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:786)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$5(ConstraintSolver.scala:763)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:767)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:763)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:786)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:536)
+
+:d
+1 + 1
+//│ 0. Typing term ((+ (1,)) (1,))
+//│ | 0. Typing term (+ (1,))
+//│ | | 0. Typing term +
+//│ | | 0. : (int<TypeName(number)> -> (int<TypeName(number)> -> int<TypeName(number)>))
+//│ | | 0. Typing term (1,)
+//│ | | | 0. Typing term 1
+//│ | | | 0. : 1<TypeName(int),TypeName(number)>
+//│ | | 0. : (1<TypeName(int),TypeName(number)>,)
+//│ | | CONSTRAIN (int<TypeName(number)> -> (int<TypeName(number)> -> int<TypeName(number)>)) <! (1<TypeName(int),TypeName(number)> -> α26 [indexedIn: List(), indexedBy: List()])
+//│ | |   where 
+//│ | | C (int<TypeName(number)> -> (int<TypeName(number)> -> int<TypeName(number)>)) <! (1<TypeName(int),TypeName(number)> -> α26 [indexedIn: List(), indexedBy: List()])    (0)
+//│ | | | C (1<TypeName(int),TypeName(number)>,) <! (int<TypeName(number)>,)    (1)
+//│ | | | | C 1<TypeName(int),TypeName(number)> <! int<TypeName(number)>    (2)
+//│ | | | C (int<TypeName(number)> -> int<TypeName(number)>) <! α26 [indexedIn: List(), indexedBy: List()]    (3)
+//│ | 0. : α26 [indexedIn: List(), indexedBy: List()]
+//│ | 0. Typing term (1,)
+//│ | | 0. Typing term 1
+//│ | | 0. : 1<TypeName(int),TypeName(number)>
+//│ | 0. : (1<TypeName(int),TypeName(number)>,)
+//│ | CONSTRAIN α26 [indexedIn: List(), indexedBy: List()] <! (1<TypeName(int),TypeName(number)> -> α27 [indexedIn: List(), indexedBy: List()])
+//│ |   where 
+//│ 		α26 [indexedIn: List(), indexedBy: List()] :> (int<TypeName(number)> -> int<TypeName(number)>)
+//│ | C α26 [indexedIn: List(), indexedBy: List()] <! (1<TypeName(int),TypeName(number)> -> α27 [indexedIn: List(), indexedBy: List()])    (0)
+//│ | | C (int<TypeName(number)> -> int<TypeName(number)>) <! (1<TypeName(int),TypeName(number)> -> α27 [indexedIn: List(), indexedBy: List()])    (1)
+//│ | | | C (1<TypeName(int),TypeName(number)>,) <! (int<TypeName(number)>,)    (2)
+//│ | | | | C 1<TypeName(int),TypeName(number)> <! int<TypeName(number)>    (3)
+//│ | | | C int<TypeName(number)> <! α27 [indexedIn: List(), indexedBy: List()]    (4)
+//│ 0. : α27 [indexedIn: List(), indexedBy: List()]
+//│ ⬤ Typed as: α27 [indexedIn: List(), indexedBy: List()]
+//│  where: 
+//│ 		α27 [indexedIn: List(), indexedBy: List()] :> int<TypeName(number)>
+//│ res: int
+//│    = 2
+
+:d
+(1, 2, 3)[1 + 1]
+//│ 0. Typing term (1, 2, 3,)[((+ (1,)) (1,))]
+//│ | 0. Typing term (1, 2, 3,)
+//│ | | 0. Typing term 1
+//│ | | 0. : 1<TypeName(int),TypeName(number)>
+//│ | | 0. Typing term 2
+//│ | | 0. : 2<TypeName(int),TypeName(number)>
+//│ | | 0. Typing term 3
+//│ | | 0. : 3<TypeName(int),TypeName(number)>
+//│ | 0. : (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
+//│ | 0. Typing term ((+ (1,)) (1,))
+//│ | | 0. Typing term (+ (1,))
+//│ | | | 0. Typing term +
+//│ | | | 0. : (int<TypeName(number)> -> (int<TypeName(number)> -> int<TypeName(number)>))
+//│ | | | 0. Typing term (1,)
+//│ | | | | 0. Typing term 1
+//│ | | | | 0. : 1<TypeName(int),TypeName(number)>
+//│ | | | 0. : (1<TypeName(int),TypeName(number)>,)
+//│ | | | CONSTRAIN (int<TypeName(number)> -> (int<TypeName(number)> -> int<TypeName(number)>)) <! (1<TypeName(int),TypeName(number)> -> α29 [indexedIn: List(), indexedBy: List()])
+//│ | | |   where 
+//│ | | | C (int<TypeName(number)> -> (int<TypeName(number)> -> int<TypeName(number)>)) <! (1<TypeName(int),TypeName(number)> -> α29 [indexedIn: List(), indexedBy: List()])    (0)
+//│ | | | | C (1<TypeName(int),TypeName(number)>,) <! (int<TypeName(number)>,)    (1)
+//│ | | | | | C 1<TypeName(int),TypeName(number)> <! int<TypeName(number)>    (2)
+//│ | | | | C (int<TypeName(number)> -> int<TypeName(number)>) <! α29 [indexedIn: List(), indexedBy: List()]    (3)
+//│ | | 0. : α29 [indexedIn: List(), indexedBy: List()]
+//│ | | 0. Typing term (1,)
+//│ | | | 0. Typing term 1
+//│ | | | 0. : 1<TypeName(int),TypeName(number)>
+//│ | | 0. : (1<TypeName(int),TypeName(number)>,)
+//│ | | CONSTRAIN α29 [indexedIn: List(), indexedBy: List()] <! (1<TypeName(int),TypeName(number)> -> α30 [indexedIn: List(), indexedBy: List()])
+//│ | |   where 
+//│ 		α29 [indexedIn: List(), indexedBy: List()] :> (int<TypeName(number)> -> int<TypeName(number)>)
+//│ | | C α29 [indexedIn: List(), indexedBy: List()] <! (1<TypeName(int),TypeName(number)> -> α30 [indexedIn: List(), indexedBy: List()])    (0)
+//│ | | | C (int<TypeName(number)> -> int<TypeName(number)>) <! (1<TypeName(int),TypeName(number)> -> α30 [indexedIn: List(), indexedBy: List()])    (1)
+//│ | | | | C (1<TypeName(int),TypeName(number)>,) <! (int<TypeName(number)>,)    (2)
+//│ | | | | | C 1<TypeName(int),TypeName(number)> <! int<TypeName(number)>    (3)
+//│ | | | | C int<TypeName(number)> <! α30 [indexedIn: List(), indexedBy: List()]    (4)
+//│ | 0. : α30 [indexedIn: List(), indexedBy: List()]
+//│ | CONSTRAIN (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) <! Array‹~(Undefined)›
+//│ |   where 
+//│ | C (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) <! Array‹~(Undefined)›    (0)
+//│ | | C ((1<TypeName(int),TypeName(number)> | 2<TypeName(int),TypeName(number)>) | 3<TypeName(int),TypeName(number)>) <! ~(Undefined)    (1)
+//│ | | | C (1<TypeName(int),TypeName(number)> | 2<TypeName(int),TypeName(number)>) <! ~(Undefined)    (2)
+//│ | | | | C 1<TypeName(int),TypeName(number)> <! ~(Undefined)    (3)
+//│ | | | | | ARGH  DNF(1<TypeName(int),TypeName(number)>{})  <!  DNF(~(undefined<>))
+//│ | | | | | | Consider 1<TypeName(int),TypeName(number)>{} <: DNF(~(undefined<>))
+//│ | | | | | | Possible: List(~(undefined<>))
+//│ | | | | | | A  1<TypeName(int),TypeName(number)>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | | A  1<TypeName(int),TypeName(number)>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | | OK  1<TypeName(int),TypeName(number)>{} & undefined<>  =:=  ⊥
+//│ | | | | C 2<TypeName(int),TypeName(number)> <! ~(Undefined)    (4)
+//│ | | | | | ARGH  DNF(2<TypeName(int),TypeName(number)>{})  <!  DNF(~(undefined<>))
+//│ | | | | | | Consider 2<TypeName(int),TypeName(number)>{} <: DNF(~(undefined<>))
+//│ | | | | | | Possible: List(~(undefined<>))
+//│ | | | | | | A  2<TypeName(int),TypeName(number)>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | | A  2<TypeName(int),TypeName(number)>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | | OK  2<TypeName(int),TypeName(number)>{} & undefined<>  =:=  ⊥
+//│ | | | C 3<TypeName(int),TypeName(number)> <! ~(Undefined)    (5)
+//│ | | | | ARGH  DNF(3<TypeName(int),TypeName(number)>{})  <!  DNF(~(undefined<>))
+//│ | | | | | Consider 3<TypeName(int),TypeName(number)>{} <: DNF(~(undefined<>))
+//│ | | | | | Possible: List(~(undefined<>))
+//│ | | | | | A  3<TypeName(int),TypeName(number)>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | A  3<TypeName(int),TypeName(number)>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | OK  3<TypeName(int),TypeName(number)>{} & undefined<>  =:=  ⊥
+//│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: α30 [indexedIn: List(), indexedBy: List()]
+//│ ╔══[WARNING] Get into this case 2!
+//│ ║  l.416: 	(1, 2, 3)[1 + 1]
+//│ ╙──       	          ^^^^^
+//│ | | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: int<TypeName(number)>
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:784)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:786)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$5(ConstraintSolver.scala:763)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:763)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:786)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:536)
+
+:d
+(1 + 1, 2, 3)[0]
+//│ 0. Typing term (((+ (1,)) (1,)), 2, 3,)[0]
+//│ | 0. Typing term (((+ (1,)) (1,)), 2, 3,)
+//│ | | 0. Typing term ((+ (1,)) (1,))
+//│ | | | 0. Typing term (+ (1,))
+//│ | | | | 0. Typing term +
+//│ | | | | 0. : (int<TypeName(number)> -> (int<TypeName(number)> -> int<TypeName(number)>))
+//│ | | | | 0. Typing term (1,)
+//│ | | | | | 0. Typing term 1
+//│ | | | | | 0. : 1<TypeName(int),TypeName(number)>
+//│ | | | | 0. : (1<TypeName(int),TypeName(number)>,)
+//│ | | | | CONSTRAIN (int<TypeName(number)> -> (int<TypeName(number)> -> int<TypeName(number)>)) <! (1<TypeName(int),TypeName(number)> -> α32 [indexedIn: List(), indexedBy: List()])
+//│ | | | |   where 
+//│ | | | | C (int<TypeName(number)> -> (int<TypeName(number)> -> int<TypeName(number)>)) <! (1<TypeName(int),TypeName(number)> -> α32 [indexedIn: List(), indexedBy: List()])    (0)
+//│ | | | | | C (1<TypeName(int),TypeName(number)>,) <! (int<TypeName(number)>,)    (1)
+//│ | | | | | | C 1<TypeName(int),TypeName(number)> <! int<TypeName(number)>    (2)
+//│ | | | | | C (int<TypeName(number)> -> int<TypeName(number)>) <! α32 [indexedIn: List(), indexedBy: List()]    (3)
+//│ | | | 0. : α32 [indexedIn: List(), indexedBy: List()]
+//│ | | | 0. Typing term (1,)
+//│ | | | | 0. Typing term 1
+//│ | | | | 0. : 1<TypeName(int),TypeName(number)>
+//│ | | | 0. : (1<TypeName(int),TypeName(number)>,)
+//│ | | | CONSTRAIN α32 [indexedIn: List(), indexedBy: List()] <! (1<TypeName(int),TypeName(number)> -> α33 [indexedIn: List(), indexedBy: List()])
+//│ | | |   where 
+//│ 		α32 [indexedIn: List(), indexedBy: List()] :> (int<TypeName(number)> -> int<TypeName(number)>)
+//│ | | | C α32 [indexedIn: List(), indexedBy: List()] <! (1<TypeName(int),TypeName(number)> -> α33 [indexedIn: List(), indexedBy: List()])    (0)
+//│ | | | | C (int<TypeName(number)> -> int<TypeName(number)>) <! (1<TypeName(int),TypeName(number)> -> α33 [indexedIn: List(), indexedBy: List()])    (1)
+//│ | | | | | C (1<TypeName(int),TypeName(number)>,) <! (int<TypeName(number)>,)    (2)
+//│ | | | | | | C 1<TypeName(int),TypeName(number)> <! int<TypeName(number)>    (3)
+//│ | | | | | C int<TypeName(number)> <! α33 [indexedIn: List(), indexedBy: List()]    (4)
+//│ | | 0. : α33 [indexedIn: List(), indexedBy: List()]
+//│ | | 0. Typing term 2
+//│ | | 0. : 2<TypeName(int),TypeName(number)>
+//│ | | 0. Typing term 3
+//│ | | 0. : 3<TypeName(int),TypeName(number)>
+//│ | 0. : (α33 [indexedIn: List(), indexedBy: List()], 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
+//│ | 0. Typing term 0
+//│ | 0. : 0<TypeName(int),TypeName(number)>
+//│ | CONSTRAIN (α33 [indexedIn: List(), indexedBy: List()], 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) <! Array‹~(Undefined)›
+//│ |   where 
+//│ 		α33 [indexedIn: List(), indexedBy: List()] :> int<TypeName(number)>
+//│ | C (α33 [indexedIn: List(), indexedBy: List()], 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) <! Array‹~(Undefined)›    (0)
+//│ | | C ((α33 [indexedIn: List(), indexedBy: List()] | 2<TypeName(int),TypeName(number)>) | 3<TypeName(int),TypeName(number)>) <! ~(Undefined)    (1)
+//│ | | | C (α33 [indexedIn: List(), indexedBy: List()] | 2<TypeName(int),TypeName(number)>) <! ~(Undefined)    (2)
+//│ | | | | C α33 [indexedIn: List(), indexedBy: List()] <! ~(Undefined)    (3)
+//│ | | | | | C int<TypeName(number)> <! ~(Undefined)    (4)
+//│ | | | | | | ARGH  DNF(int<TypeName(number)>{})  <!  DNF(~(undefined<>))
+//│ | | | | | | | Consider int<TypeName(number)>{} <: DNF(~(undefined<>))
+//│ | | | | | | | Possible: List(~(undefined<>))
+//│ | | | | | | | A  int<TypeName(number)>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | | | A  int<TypeName(number)>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | | | OK  int<TypeName(number)>{} & undefined<>  =:=  ⊥
+//│ | | | | C 2<TypeName(int),TypeName(number)> <! ~(Undefined)    (5)
+//│ | | | | | ARGH  DNF(2<TypeName(int),TypeName(number)>{})  <!  DNF(~(undefined<>))
+//│ | | | | | | Consider 2<TypeName(int),TypeName(number)>{} <: DNF(~(undefined<>))
+//│ | | | | | | Possible: List(~(undefined<>))
+//│ | | | | | | A  2<TypeName(int),TypeName(number)>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | | A  2<TypeName(int),TypeName(number)>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | | OK  2<TypeName(int),TypeName(number)>{} & undefined<>  =:=  ⊥
+//│ | | | C 3<TypeName(int),TypeName(number)> <! ~(Undefined)    (6)
+//│ | | | | ARGH  DNF(3<TypeName(int),TypeName(number)>{})  <!  DNF(~(undefined<>))
+//│ | | | | | Consider 3<TypeName(int),TypeName(number)>{} <: DNF(~(undefined<>))
+//│ | | | | | Possible: List(~(undefined<>))
+//│ | | | | | A  3<TypeName(int),TypeName(number)>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | A  3<TypeName(int),TypeName(number)>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | OK  3<TypeName(int),TypeName(number)>{} & undefined<>  =:=  ⊥
+//│ | 0. Receiver: (α33 [indexedIn: List(), indexedBy: List()], 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: 0<TypeName(int),TypeName(number)>
+//│ | ==> α33 [indexedIn: List(), indexedBy: List()]
+//│ 0. : α33 [indexedIn: List(), indexedBy: List()]
+//│ ⬤ Typed as: α33 [indexedIn: List(), indexedBy: List()]
+//│  where: 
+//│ 		α33 [indexedIn: List(), indexedBy: List()] :> int<TypeName(number)> <: ~(Undefined)
+//│ res: int
+//│    = 2
 
 (1, "haha")[0]
 //│ res: 1
@@ -257,29 +592,33 @@ def foo x = x[1]
 //│ 1. Typing term ((x,) => x[1])
 //│ | 1. Typing pattern (x,)
 //│ | | 1. Typing pattern x
-//│ | | 1. : α26' [indexedIn: List(), indexedBy: List()]
-//│ | 1. : (α26' [indexedIn: List(), indexedBy: List()],)
+//│ | | 1. : α35' [indexedIn: List(), indexedBy: List()]
+//│ | 1. : (α35' [indexedIn: List(), indexedBy: List()],)
 //│ | 1. Typing term x[1]
 //│ | | 1. Typing term x
-//│ | | 1. : α26' [indexedIn: List(), indexedBy: List()]
+//│ | | 1. : α35' [indexedIn: List(), indexedBy: List()]
 //│ | | 1. Typing term 1
 //│ | | 1. : 1<TypeName(int),TypeName(number)>
-//│ | | 1. Receiver: α26' [indexedIn: List(), indexedBy: List()], Index: 1<TypeName(int),TypeName(number)>
+//│ | | CONSTRAIN α35' [indexedIn: List(), indexedBy: List()] <! Array‹~(Undefined)›
+//│ | |   where 
+//│ | | C α35' [indexedIn: List(), indexedBy: List()] <! Array‹~(Undefined)›    (0)
+//│ | | 1. Receiver: α35' [indexedIn: List(), indexedBy: List()], Index: 1<TypeName(int),TypeName(number)>
 //│ ╔══[WARNING] Get into this case 1!
 //│ ╙──
-//│ | | ==> α27' [indexedIn: List(), indexedBy: List()]
-//│ | 1. : α27' [indexedIn: List(), indexedBy: List()]
-//│ 1. : (α26' [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α27' [indexedIn: List(), indexedBy: List()]))] -> α27' [indexedIn: List(), indexedBy: List()])
-//│ ⬤ Typed as: (α26' [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α27' [indexedIn: List(), indexedBy: List()]))] -> α27' [indexedIn: List(), indexedBy: List()])
+//│ | | ==> α36' [indexedIn: List(), indexedBy: List()]
+//│ | 1. : α36' [indexedIn: List(), indexedBy: List()]
+//│ 1. : (α35' [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α36' [indexedIn: List(), indexedBy: List()]))] -> α36' [indexedIn: List(), indexedBy: List()])
+//│ ⬤ Typed as: (α35' [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α36' [indexedIn: List(), indexedBy: List()]))] -> α36' [indexedIn: List(), indexedBy: List()])
 //│  where: 
-//│ foo: anything -> nothing
+//│ 		α35' [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α36' [indexedIn: List(), indexedBy: List()]))] <: Array‹~(Undefined)›
+//│ foo: Array[~undefined] -> nothing
 //│    = [Function: foo]
 
 :d
 foo ((1, 2, 3))
 //│ 0. Typing term (foo (((1, 2, 3,)),))
 //│ | 0. Typing term foo
-//│ | 0. : (α30 [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α27' [indexedIn: List(), indexedBy: List()]))] -> α31 [indexedIn: List(), indexedBy: List()])
+//│ | 0. : (α39 [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α36' [indexedIn: List(), indexedBy: List()]))] -> α40 [indexedIn: List(), indexedBy: List()])
 //│ | 0. Typing term (((1, 2, 3,)),)
 //│ | | 0. Typing term ((1, 2, 3,))
 //│ | | | 0. Typing term (1, 2, 3,)
@@ -292,31 +631,68 @@ foo ((1, 2, 3))
 //│ | | | 0. : (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
 //│ | | 0. : (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
 //│ | 0. : ((1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,),)
-//│ | CONSTRAIN (α30 [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α27' [indexedIn: List(), indexedBy: List()]))] -> α31 [indexedIn: List(), indexedBy: List()]) <! ((1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) -> α32 [indexedIn: List(), indexedBy: List()])
+//│ | CONSTRAIN (α39 [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α36' [indexedIn: List(), indexedBy: List()]))] -> α40 [indexedIn: List(), indexedBy: List()]) <! ((1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) -> α41 [indexedIn: List(), indexedBy: List()])
 //│ |   where 
-//│ | C (α30 [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α27' [indexedIn: List(), indexedBy: List()]))] -> α31 [indexedIn: List(), indexedBy: List()]) <! ((1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) -> α32 [indexedIn: List(), indexedBy: List()])    (0)
-//│ | | C ((1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,),) <! (α30 [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α27' [indexedIn: List(), indexedBy: List()]))],)    (1)
-//│ | | | C (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) <! α30 [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α27' [indexedIn: List(), indexedBy: List()]))]    (2)
+//│ 		α39 [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α36' [indexedIn: List(), indexedBy: List()]))] <: Array‹~(Undefined)›
+//│ | C (α39 [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α36' [indexedIn: List(), indexedBy: List()]))] -> α40 [indexedIn: List(), indexedBy: List()]) <! ((1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) -> α41 [indexedIn: List(), indexedBy: List()])    (0)
+//│ | | C ((1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,),) <! (α39 [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α36' [indexedIn: List(), indexedBy: List()]))],)    (1)
+//│ | | | C (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) <! α39 [indexedIn: List(), indexedBy: List((1<TypeName(int),TypeName(number)>,α36' [indexedIn: List(), indexedBy: List()]))]    (2)
+//│ | | | | C (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,) <! Array‹~(Undefined)›    (3)
+//│ | | | | | C ((1<TypeName(int),TypeName(number)> | 2<TypeName(int),TypeName(number)>) | 3<TypeName(int),TypeName(number)>) <! ~(Undefined)    (4)
+//│ | | | | | | C (1<TypeName(int),TypeName(number)> | 2<TypeName(int),TypeName(number)>) <! ~(Undefined)    (5)
+//│ | | | | | | | C 1<TypeName(int),TypeName(number)> <! ~(Undefined)    (6)
+//│ | | | | | | | | ARGH  DNF(1<TypeName(int),TypeName(number)>{})  <!  DNF(~(undefined<>))
+//│ | | | | | | | | | Consider 1<TypeName(int),TypeName(number)>{} <: DNF(~(undefined<>))
+//│ | | | | | | | | | Possible: List(~(undefined<>))
+//│ | | | | | | | | | A  1<TypeName(int),TypeName(number)>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | | | | | A  1<TypeName(int),TypeName(number)>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | | | | | OK  1<TypeName(int),TypeName(number)>{} & undefined<>  =:=  ⊥
+//│ | | | | | | | C 2<TypeName(int),TypeName(number)> <! ~(Undefined)    (7)
+//│ | | | | | | | | ARGH  DNF(2<TypeName(int),TypeName(number)>{})  <!  DNF(~(undefined<>))
+//│ | | | | | | | | | Consider 2<TypeName(int),TypeName(number)>{} <: DNF(~(undefined<>))
+//│ | | | | | | | | | Possible: List(~(undefined<>))
+//│ | | | | | | | | | A  2<TypeName(int),TypeName(number)>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | | | | | A  2<TypeName(int),TypeName(number)>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | | | | | OK  2<TypeName(int),TypeName(number)>{} & undefined<>  =:=  ⊥
+//│ | | | | | | C 3<TypeName(int),TypeName(number)> <! ~(Undefined)    (8)
+//│ | | | | | | | ARGH  DNF(3<TypeName(int),TypeName(number)>{})  <!  DNF(~(undefined<>))
+//│ | | | | | | | | Consider 3<TypeName(int),TypeName(number)>{} <: DNF(~(undefined<>))
+//│ | | | | | | | | Possible: List(~(undefined<>))
+//│ | | | | | | | | A  3<TypeName(int),TypeName(number)>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | | | | A  3<TypeName(int),TypeName(number)>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | | | | OK  3<TypeName(int),TypeName(number)>{} & undefined<>  =:=  ⊥
 //│ | | | | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: 1<TypeName(int),TypeName(number)>
 //│ | | | | ==> 2<TypeName(int),TypeName(number)>
-//│ | | | | C 2<TypeName(int),TypeName(number)> <! α27' [indexedIn: List(), indexedBy: List()]    (3)
-//│ | | C α31 [indexedIn: List(), indexedBy: List()] <! α32 [indexedIn: List(), indexedBy: List()]    (4)
-//│ 0. : α32 [indexedIn: List(), indexedBy: List()]
-//│ ⬤ Typed as: α32 [indexedIn: List(), indexedBy: List()]
+//│ | | | | C 2<TypeName(int),TypeName(number)> <! α36' [indexedIn: List(), indexedBy: List()]    (9)
+//│ | | C α40 [indexedIn: List(), indexedBy: List()] <! α41 [indexedIn: List(), indexedBy: List()]    (10)
+//│ 0. : α41 [indexedIn: List(), indexedBy: List()]
+//│ ⬤ Typed as: α41 [indexedIn: List(), indexedBy: List()]
 //│  where: 
 //│ res: nothing
 //│    = 2
 
 "foo"[2]
+//│ ╔══[ERROR] Type mismatch in array access:
+//│ ║  l.674: 	"foo"[2]
+//│ ║         	^^^^^^^^
+//│ ╟── string literal of type `"foo"` does not match type `Array[~undefined]`
+//│ ║  l.674: 	"foo"[2]
+//│ ╙──       	^^^^^
 //│ ╔══[ERROR] mlscript doesn't allow string indexing
-//│ ║  l.310: 	"foo"[2]
+//│ ║  l.674: 	"foo"[2]
 //│ ╙──       	^^^^^
 //│ res: error
 //│    = 'o'
 
 "foo"[3]
+//│ ╔══[ERROR] Type mismatch in array access:
+//│ ║  l.687: 	"foo"[3]
+//│ ║         	^^^^^^^^
+//│ ╟── string literal of type `"foo"` does not match type `Array[~undefined]`
+//│ ║  l.687: 	"foo"[3]
+//│ ╙──       	^^^^^
 //│ ╔══[ERROR] mlscript doesn't allow string indexing
-//│ ║  l.317: 	"foo"[3]
+//│ ║  l.687: 	"foo"[3]
 //│ ╙──       	^^^^^
 //│ res: error
 //│    = undefined
@@ -335,7 +711,7 @@ foo ((1, 2, 3))
 
 (1, 2, 3)[(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[0]]]]
 //│ ╔══[ERROR] Out of range!
-//│ ║  l.336: 	(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[0]]]]
+//│ ║  l.712: 	(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[0]]]]
 //│ ╙──       	^^^^^^^^^
 //│ res: error
 //│    = undefined
@@ -343,7 +719,7 @@ foo ((1, 2, 3))
 
 (1, 2, 3)[k]
 //│ ╔══[ERROR] identifier not found: k
-//│ ║  l.344: 	(1, 2, 3)[k]
+//│ ║  l.720: 	(1, 2, 3)[k]
 //│ ╙──       	          ^
 //│ ╔══[ERROR] Encounter error at index during array indexing
 //│ ╙──
@@ -352,71 +728,58 @@ foo ((1, 2, 3))
 //│   unresolved symbol k
 
 :d
-def k: int
-(1, 2, 3)[k]
-//│ 1. Typing type TypeName(int)
-//│ | vars=Map() newDefsInfo=Map()
-//│ => Int | 
-//│ ⬤ Typed as: Int
-//│  where: 
-//│ k: int
-//│  = <missing implementation>
-//│ 0. Typing term (1, 2, 3,)[k]
-//│ | 0. Typing term (1, 2, 3,)
-//│ | | 0. Typing term 1
-//│ | | 0. : 1<TypeName(int),TypeName(number)>
-//│ | | 0. Typing term 2
-//│ | | 0. : 2<TypeName(int),TypeName(number)>
-//│ | | 0. Typing term 3
-//│ | | 0. : 3<TypeName(int),TypeName(number)>
-//│ | 0. : (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,)
-//│ | 0. Typing term k
-//│ | 0. : Int
-//│ | 0. Receiver: (1<TypeName(int),TypeName(number)>, 2<TypeName(int),TypeName(number)>, 3<TypeName(int),TypeName(number)>,), Index: Int
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
-//│ 	at: mlscript.Typer.typeStatement(Typer.scala:351)
-//│ 	at: mlscript.DiffTests.$anonfun$new$53(DiffTests.scala:553)
-//│ 	at: mlscript.DiffTests.$anonfun$new$53$adapted(DiffTests.scala:506)
-
-:d
 3[1]
 //│ 0. Typing term 3[1]
 //│ | 0. Typing term 3
 //│ | 0. : 3<TypeName(int),TypeName(number)>
 //│ | 0. Typing term 1
 //│ | 0. : 1<TypeName(int),TypeName(number)>
+//│ | CONSTRAIN 3<TypeName(int),TypeName(number)> <! Array‹~(Undefined)›
+//│ |   where 
+//│ | C 3<TypeName(int),TypeName(number)> <! Array‹~(Undefined)›    (0)
+//│ | | CONSTRAINT FAILURE: 3<TypeName(int),TypeName(number)> <: Array‹~(Undefined)›
+//│ | | allVarPols: 
+//│ | | norm[-] Array‹~(Undefined)›
+//│ | | | DNF: DNF(Array‹~(Undefined)›{})
+//│ | | | norm[-] ~(Undefined)
+//│ | | | | DNF: DNF(~(undefined<>))
+//│ | | | | norm[+] undefined<>
+//│ | | | | | DNF: DNF(undefined<>{})
+//│ | | | | ~> undefined<>
+//│ | | | ~> ~(undefined<>)
+//│ | | ~> Array‹~(undefined<>)›
+//│ | | allVarPols: 
+//│ | | norm[+] 3<TypeName(int),TypeName(number)>
+//│ | | | DNF: DNF(3<TypeName(int),TypeName(number)>{})
+//│ | | ~> 3<TypeName(int),TypeName(number)>
+//│ | | CONSTRAIN error<> <! ⊤
+//│ | |   where 
+//│ | | C error<> <! ⊤    (0)
+//│ ╔══[ERROR] Type mismatch in array access:
+//│ ║  l.731: 	3[1]
+//│ ║         	^^^^
+//│ ╟── integer literal of type `3` does not match type `Array[~undefined]`
+//│ ║  l.731: 	3[1]
+//│ ╙──       	^
 //│ | 0. Receiver: 3<TypeName(int),TypeName(number)>, Index: 1<TypeName(int),TypeName(number)>
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
-//│ 	at: mlscript.Typer.typeStatement(Typer.scala:351)
-//│ 	at: mlscript.DiffTests.$anonfun$new$53(DiffTests.scala:553)
-//│ 	at: mlscript.DiffTests.$anonfun$new$53$adapted(DiffTests.scala:506)
+//│ ╔══[ERROR] The indexing operation should be acted on an array
+//│ ╙──
+//│ | ==> error<>
+//│ 0. : error<>
+//│ ⬤ Typed as: error<>
+//│  where: 
+//│ res: error
+//│    = undefined
 
 k[1]
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:674)
-//│ 	at: mlscript.Typer.typeStatement(Typer.scala:351)
-//│ 	at: mlscript.DiffTests.$anonfun$new$53(DiffTests.scala:553)
-//│ 	at: mlscript.DiffTests.$anonfun$new$53$adapted(DiffTests.scala:506)
+//│ ╔══[ERROR] identifier not found: k
+//│ ║  l.774: 	k[1]
+//│ ╙──       	^
+//│ ╔══[ERROR] Encounter error at receiver during array indexing
+//│ ╙──
+//│ res: error
+//│ Code generation encountered an error:
+//│   unresolved symbol k
 
 nw = (1, 2, 3, 4, 5)
 def chose i = nw[i]
@@ -430,3 +793,30 @@ def chose i = nw[i]
 chose 2
 //│ res: nothing
 //│    = 3
+
+
+def k: int
+(1, 2, 3)[k]
+//│ k: int
+//│  = <missing implementation>
+//│ ╔══[ERROR] The index does not have a value
+//│ ╙──
+//│ res: error
+//│    = <no result>
+//│      k is not implemented
+
+def haha : Array[string]
+haha[0]
+//│ haha: Array[string]
+//│     = <missing implementation>
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:784)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:786)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:536)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:697)
+//│ 	at: mlscript.Typer.typeStatement(Typer.scala:351)
+//│ 	at: mlscript.DiffTests.$anonfun$new$53(DiffTests.scala:553)
+//│ 	at: mlscript.DiffTests.$anonfun$new$53$adapted(DiffTests.scala:506)

@@ -743,16 +743,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         } else{
           fs(value.toInt)._2.ub
         }
+      // this case is for the situation when index is defined as int but not assigned a value
+      case (TupleType(_), TypeRef(TypeName("int"), _)) => 
+        err(msg"The index does not have a value", None)
       //this case is to disallow string indexing like "hello"[0]
-      case (s @ ClassTag(StrLit(st), _), ClassTag(IntLit(value), _)) =>
+      case (s @ ClassTag(StrLit(st), _), _) =>
         err(msg"mlscript doesn't allow string indexing", s.prov.loco)
-        /*
-        if (value >= st.length() || value < 0){
-          err(msg"Out of range!", s.prov.loco)
-        } else{
-          StrType
-        }
-        */
       case (t : TypeVariable, _) =>
         warn(msg"Get into this case 1!", t.prov.loco)
         val lb = t.lowerBounds
@@ -772,11 +768,19 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case (_, ClassTag(DecLit(_), _)) |  (_, ClassTag(StrLit(_), _)) |
            (_, ClassTag(UnitLit(_), _) ) |
            (_, ClassTag(Var("true"), _)) | (_, ClassTag(Var("false"), _)) |
-           (_, ClassTag(Var("bool"), _)) | (_, BoolType) =>
+           (_, ClassTag(Var("bool"), _)) | (_, TypeRef(TypeName("bool"), _)) =>
         err(msg"The index must be an integer", None)
+      case (ClassTag(IntLit(_), _), _) |
+           (ClassTag(DecLit(_), _), _) | (ClassTag(UnitLit(_), _), _) |
+           (ClassTag(Var("true"), _), _) | (ClassTag(Var("false"), _), _) |
+           (ClassTag(Var("bool"), _), _) | (TypeRef(TypeName("bool"), _), _) =>
+        // when should we use ClassTag and when should we use TypeRef
+        err(msg"The indexing operation should be acted on an array", None)
+      //case (t @ TupleType(fs), ClassTag(IntLit(value)), _)
       //case (_, t) =>
       //  println(t.toString)
       //  BoolType
+      //case Foo(_) | Bar(_, _) => ???
       case _ => ???
     }
   } (r => s"==> $r")

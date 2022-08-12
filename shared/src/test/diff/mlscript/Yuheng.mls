@@ -210,20 +210,29 @@ ep + 1
 //│ res: error | int
 
 ep[0]
+//│ ╔══[ERROR] Type mismatch in array access:
+//│ ║  l.+1: 	ep[0]
+//│ ║        	^^^^^
+//│ ╟── integer literal of type `1` does not match type `Array[~undefined]`
+//│ ║  l.142: 	  lhs = IntLit { value = 1 };
+//│ ║         	                         ^
+//│ ╟── but it flows into reference with expected type `Array[~undefined]`
+//│ ║  l.+1: 	ep[0]
+//│ ╙──      	^^
 //│ ╔══[WARNING] Get into this case 1!
 //│ ║  l.152: 	ep = eval p
 //│ ╙──       	     ^^^^^^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:780)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:784)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$4(ConstraintSolver.scala:761)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:786)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$3(ConstraintSolver.scala:757)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:761)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:757)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:782)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:529)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:786)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:536)
 
 
 eval (Pair {
@@ -285,7 +294,7 @@ rec def eval(e) = case e of
 //│ ║  l.+4: 	  }
 //│ ║        	^^^
 //│ ╟── type `Expr[?]` does not match type `IntLit & ?a | Pair[?, ?] & ?b`
-//│ ║  l.265: 	def eval: Expr['a] -> 'a
+//│ ║  l.274: 	def eval: Expr['a] -> 'a
 //│ ║         	          ^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.+1: 	rec def eval(e) = case e of
@@ -351,7 +360,7 @@ rec def eval(e) = case e of
 //│ ║  l.+3: 	  | Pair -> (eval e.lhs, eval e.rhs)
 //│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.265: 	def eval: Expr['a] -> 'a
+//│ ║  l.274: 	def eval: Expr['a] -> 'a
 //│ ╙──       	                      ^^
 
 rec def eval(e) = case e of
@@ -434,5 +443,5 @@ rec def eval(e) = case e of
 //│ ║  l.+3: 	  | Pair -> (eval e.lhs, eval e.rhs)
 //│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.265: 	def eval: Expr['a] -> 'a
+//│ ║  l.274: 	def eval: Expr['a] -> 'a
 //│ ╙──       	                      ^^
