@@ -36,17 +36,19 @@ list_assoc 2 (Cons (Tuple 2 1) Nil )
 //│ res: 1 | NotFound
 //│    = 1
 
-class Var: { s: string }
+trait Lambda
+trait Expr
+class Var: Lambda & Expr & { s: string }
+//│ Defined trait Lambda
+//│ Defined trait Expr
 //│ Defined class Var
 
 def eval_var: List[Tuple[string, 'a]] -> Var -> 'a
 //│ eval_var: List[Tuple[string, 'a]] -> Var -> 'a
 //│         = <missing implementation>
 
-class Lambda
 class Abs[a]: Lambda & { abs: Tuple[string, a] }
 class App[a]: Lambda & { app: Tuple[a, a] }
-//│ Defined class Lambda
 //│ Defined class Abs[+a]
 //│ Defined class App[+a]
 
@@ -74,11 +76,9 @@ rec def eval1 subst = eval_lambda eval1 subst
 //│      = <no result>
 //│        eval_lambda and eval_var are not implemented
 
-class Expr
 class Num: Expr & { num: int }
 class Add[a]: Expr & { add: Tuple[a, a] }
 class Mul[a]: Expr & { mul: Tuple[a, a] }
-//│ Defined class Expr
 //│ Defined class Num
 //│ Defined class Add[+a]
 //│ Defined class Mul[+a]
@@ -130,57 +130,28 @@ rec def eval2 subst = eval_expr eval2 subst
 //│        eval_expr and eval_var are not implemented
 
 def eval_lexpr eval_rec subst v = case v of {
-  | Var -> eval_var eval_rec subst v
   | Lambda -> eval_lambda eval_rec subst v
   | Expr -> eval_expr eval_rec subst v
   }
-//│ eval_lexpr: (List[Tuple[string, 'a -> ({add: {_1: anything, _2: anything}, mul: {_1: anything, _2: anything}} & 'b)]] & ((Cons[Tuple['_1, '_10]] with {tail: Nil}) | 'c) -> 'd -> ('_10 & 'b & ((Abs[?] with {abs: {_1: '_1, _2: 'd}, add: {_1: anything, _2: anything}, mul: {_1: anything, _2: anything}}) | '_11 & (Num & {add: {_1: anything, _2: anything}, mul: {_1: anything, _2: anything}} | {add: {_1: anything, _2: anything}, mul: {_1: anything, _2: anything}} & ~abs & ~num)))) -> (Var & 'c) -> ((Add[?] with {add: {_1: 'd, _2: 'd}}) | (App[?] with {app: {_1: 'd, _2: 'd}}) | (Mul[?] with {mul: {_1: 'd, _2: 'd}}) | Var & 'a | 'b & (Abs[?] & {add: {_1: anything, _2: anything}, mul: {_1: anything, _2: anything}} | Num & {add: {_1: anything, _2: anything}, mul: {_1: anything, _2: anything}})) -> (Add['_10] | (App['_10] with {app: Tuple['_11, '_10]}) | Mul['_10] | Num | 'b)
+//│ eval_lexpr: (((Cons[Tuple['_1, '_10]] with {tail: Nil}) | 'a) -> 'b -> ('c & '_10 & ((Abs[?] with {abs: {_1: '_1, _2: 'b}, add: {_1: anything, _2: anything}, mul: {_1: anything, _2: anything}}) | '_11 & (Num & {add: {_1: anything, _2: anything}, mul: {_1: anything, _2: anything}} | {add: {_1: anything, _2: anything}, mul: {_1: anything, _2: anything}} & ~abs & ~num)))) -> (List[Tuple[string, {add: {_1: anything, _2: anything}, mul: {_1: anything, _2: anything}} & 'c]] & 'a) -> (lambda & (Abs[?] & {add: {_1: anything, _2: anything}, mul: {_1: anything, _2: anything}} & 'c | (App[?] with {app: {_1: 'b, _2: 'b}}) | Var) | ~lambda & expr & ((Add[?] with {add: {_1: 'b, _2: 'b}}) | (Mul[?] with {mul: {_1: 'b, _2: 'b}}) | Num & {add: {_1: anything, _2: anything}, mul: {_1: anything, _2: anything}} & 'c | Var)) -> (Add['_10] | (App['_10] with {app: Tuple['_11, '_10]}) | Mul['_10] | Num | 'c)
 //│           = <no result>
-//│             eval_var is not implemented
+//│             eval_lambda and eval_var are not implemented
 
-// FIXME
 rec def eval3 subst = eval_lexpr eval3 subst
-//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.142: 	rec def eval3 subst = eval_lexpr eval3 subst
-//│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Cons[?A] & {Cons#A = ?A, head: ?head, tail: ?tail}` is not an instance of type `Var`
-//│ ║  l.21: 	def Cons head tail = Cons { head; tail }
-//│ ║        	                     ^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.42: 	def eval_var: List[Tuple[string, 'a]] -> Var -> 'a
-//│ ║        	                                         ^^^
-//│ ╟── from reference:
-//│ ║  l.142: 	rec def eval3 subst = eval_lexpr eval3 subst
-//│ ╙──       	                                       ^^^^^
-//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.142: 	rec def eval3 subst = eval_lexpr eval3 subst
-//│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Cons[?A] & {Cons#A = ?A, head: ?head, tail: ?tail}` does not have field 's'
-//│ ║  l.21: 	def Cons head tail = Cons { head; tail }
-//│ ║        	                     ^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from record type:
-//│ ║  l.39: 	class Var: { s: string }
-//│ ║        	           ^^^^^^^^^^^^^
-//│ ╟── from reference:
-//│ ║  l.142: 	rec def eval3 subst = eval_lexpr eval3 subst
-//│ ╙──       	                                       ^^^^^
-//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.142: 	rec def eval3 subst = eval_lexpr eval3 subst
-//│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?b -> ?c` does not match type `Cons[Tuple[string, ?a]] | Nil`
-//│ ╟── Note: constraint arises from union type:
-//│ ║  l.12: 	type List[A] = Nil | Cons[A]
-//│ ║        	               ^^^^^^^^^^^^^
-//│ ╟── from reference:
-//│ ║  l.142: 	rec def eval3 subst = eval_lexpr eval3 subst
-//│ ╙──       	                                 ^^^^^
-//│ eval3: Var -> 'a -> 'b
+//│ eval3: List[Tuple[string, 'a]] -> 'b -> 'a
 //│   where
-//│     'a <: Abs[?] & 'b | (Add[?] with {add: {_1: 'a, _2: 'a}}) | (App[?] with {app: {_1: 'a, _2: 'a}}) | (Mul[?] with {mul: {_1: 'a, _2: 'a}}) | Num & (Var | 'b & (Add[?] | Mul[?] | ~add & ~mul & ~var)) | Var
-//│     'b :> (App['_1] with {app: Tuple['_1, 'b]}) | (Mul['b] with {mul: 'add}) | (Add['b] with {add: 'add}) | Num
-//│        <: (Abs[?] & 'c | '_1 & (~abs & ~num | Num)) & (Abs[?] & {mul: {_1: anything, _2: anything}} & 'c | '_1 & (Num & {mul: {_1: anything, _2: anything}} | {mul: {_1: anything, _2: anything}} & ~abs & ~num)) & (Abs[?] & {add: {_1: anything, _2: anything}} & 'c | '_1 & (Num & {add: {_1: anything, _2: anything}} | {add: {_1: anything, _2: anything}} & ~abs & ~num))
-//│     'c <: {abs: {_1: string, _2: 'a}}
-//│     '_1 :> (Add['b] with {add: 'add}) | (Mul['b] with {mul: 'add}) | Num | 'b
-//│     'add :> Tuple['b, 'b]
+//│     'a :> (App['_1] with {app: Tuple['_1, 'a]}) | Num | (Add['a] with {add: 'add}) | (Mul['a] with {mul: 'add})
+//│        <: (Abs[?] & 'c | '_1 & (~abs & ~num | Num)) & (Abs[?] & {add: {_1: anything, _2: anything}} & 'c | '_1 & (Num & {add: {_1: anything, _2: anything}} | {add: {_1: anything, _2: anything}} & ~abs & ~num)) & (Abs[?] & {mul: {_1: anything, _2: anything}} & 'c | '_1 & (Num & {mul: {_1: anything, _2: anything}} | {mul: {_1: anything, _2: anything}} & ~abs & ~num))
+//│     'c <: {abs: {_1: string, _2: 'b}}
+//│     'b <: lambda & (Abs[?] & 'a | (App[?] with {app: {_1: 'b, _2: 'b}}) | Var) | ~lambda & expr & ((Add[?] with {add: {_1: 'b, _2: 'b}}) | (Mul[?] with {mul: {_1: 'b, _2: 'b}}) | (Var | 'a & (Add[?] | Mul[?] | ~add & ~mul & ~var)) & (Num | Var))
+//│     '_1 :> (Add['a] with {add: 'add}) | (Mul['a] with {mul: 'add}) | Num | 'a
+//│     'add :> Tuple['a, 'a]
 //│      = <no result>
-//│        eval_lexpr and eval_var are not implemented
+//│        eval_lexpr, eval_lambda and eval_var are not implemented
+
+eval3 Nil (Var { s = "s" })
+//│ res: 'A
+//│   where
+//│     'A :> Mul['A] | (App['A | Num] with {app: Tuple['A, 'A]}) | Add['A] | Num
+//│    = <no result>
+//│      eval3, eval_lexpr, eval_lambda and eval_var are not implemented

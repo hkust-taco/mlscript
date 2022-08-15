@@ -45,6 +45,10 @@ f (id A{})
 //│ res: true
 //│    = true
 
+// # [`A; `C]
+// - : [> `A | `C] list
+// # [id `A; `C]
+// - : [> `A | `C] list
 
 Cons (A{}) (Cons (C{}) Nil)
 //│ res: Cons[A | C] with {head: A, tail: Cons[C] with {tail: Nil}}
@@ -54,11 +58,14 @@ Cons (id A{}) (Cons (C{}) Nil)
 //│ res: Cons[A | C] with {head: A, tail: Cons[C] with {tail: Nil}}
 //│    = Cons { head: A {}, tail: Cons { head: C {}, tail: Nil {} } }
 
-// val id2 : ([< `A | `B ] as 'a) → 'a = <fun>
+// val id2 : ([< `A | `B ] as 'a) -> 'a = <fun>
 
 def id2 x = case x of { A -> x | B -> x }
 //│ id2: ('a & (A | B)) -> 'a
 //│    = [Function: id2]
+
+// id2 `A
+// - : [< `A | `B > `A ] = `A
 
 id2 (A{})
 //│ res: A
@@ -72,15 +79,15 @@ Cons (id2 (A{})) (Cons (C{}) Nil)
 //│ res: Cons[A | C] with {head: A, tail: Cons[C] with {tail: Nil}}
 //│    = Cons { head: A {}, tail: Cons { head: C {}, tail: Nil {} } }
 
-//************** EXAMPLE 2: LOSS OF POLYMORPHISM *************
+//************** EXAMPLE 2: ROUGHLY-TYPED PATTERN MATCHING *************
 
-// val f : [ `A | `B ] → [ `A | `B ] = <fun>
+// val f : [ `A | `B ] -> [ `A | `B ] = <fun>
 
 def f x = let xx = id2 x in case xx of { A -> B{} | _ -> xx }
 //│ f: (A | B) -> B
 //│  = [Function: f1]
 
-// val g : ([< `A | `B > `A ] as α) → α = <fun>
+// val g : ([< `A | `B > `A ] as 'a) -> 'a = <fun>
 
 def g x = case x of { A -> id2 x | _ -> x }
 //│ g: ('a & (A | ~a)) -> 'a
@@ -90,7 +97,7 @@ g (C{})
 //│ res: C
 //│    = C {}
 
-// val map : ('a → 'a) → 'a list → 'a list = <fun>
+// val map : ('a -> 'a) -> 'a list -> 'a list = <fun>
 
 rec def map f l = case l of {
   | Nil -> l
@@ -134,13 +141,13 @@ def f = fun x -> case x._1 of {
 :e
 f ({ _1 = A{}; _2 = C{} })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.135: 	f ({ _1 = A{}; _2 = C{} })
+//│ ║  l.142: 	f ({ _1 = A{}; _2 = C{} })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `C` does not match type `A | B`
-//│ ║  l.135: 	f ({ _1 = A{}; _2 = C{} })
+//│ ║  l.142: 	f ({ _1 = A{}; _2 = C{} })
 //│ ║         	                    ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.126: 	  | _ -> case x._2 of {
+//│ ║  l.133: 	  | _ -> case x._2 of {
 //│ ║         	              ^^^^
 //│ ╟── Note: class C is defined at:
 //│ ║  l.22: 	class C
@@ -164,27 +171,22 @@ def f = fun (x: {_1: A | B; _2: anything} | {_1: anything; _2: A | B}) -> case x
     }
   }
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.161: 	  | _ -> case x._2 of {
+//│ ║  l.168: 	  | _ -> case x._2 of {
 //│ ║         	         ^^^^^^^^^^^^^^
-//│ ║  l.162: 	    | A -> 3
+//│ ║  l.169: 	    | A -> 3
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.163: 	    | B -> 4
+//│ ║  l.170: 	    | B -> 4
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.164: 	    }
+//│ ║  l.171: 	    }
 //│ ║         	^^^^^
 //│ ╟── type `anything` does not match type `A | B`
-//│ ║  l.158: 	def f = fun (x: {_1: A | B; _2: anything} | {_1: anything; _2: A | B}) -> case x._1 of {
+//│ ║  l.165: 	def f = fun (x: {_1: A | B; _2: anything} | {_1: anything; _2: A | B}) -> case x._1 of {
 //│ ║         	                                ^^^^^^^^
 //│ ╟── but it flows into field selection with expected type `A | B`
-//│ ║  l.161: 	  | _ -> case x._2 of {
+//│ ║  l.168: 	  | _ -> case x._2 of {
 //│ ╙──       	              ^^^^
 //│ f: {_1: anything, _2: anything} -> (1 | 2 | 3 | 4)
 //│  = [Function: f3]
-
-class L: { _1: A | B; _2: anything }
-class R: { _1: anything; _2: A | B }
-//│ Defined class L
-//│ Defined class R
 
 // not useful
 class Tuple[a, b]: { _1: a; _2: b }
@@ -210,6 +212,11 @@ t2 = t3
 //│   = <no result>
 //│     t3 and t2 are not implemented
 
+class L: { _1: A | B; _2: anything }
+class R: { _1: anything; _2: A | B }
+//│ Defined class L
+//│ Defined class R
+
 :e // ?
 def f = fun (x: L | R) -> case x._1 of {
   | A -> 1
@@ -220,16 +227,16 @@ def f = fun (x: L | R) -> case x._1 of {
     }
   }
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.217: 	  | _ -> case x._2 of {
+//│ ║  l.224: 	  | _ -> case x._2 of {
 //│ ║         	         ^^^^^^^^^^^^^^
-//│ ║  l.218: 	    | A -> 3
+//│ ║  l.225: 	    | A -> 3
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.219: 	    | B -> 4
+//│ ║  l.226: 	    | B -> 4
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.220: 	    }
+//│ ║  l.227: 	    }
 //│ ║         	^^^^^
 //│ ╟── field selection of type `anything` does not match type `A | B`
-//│ ║  l.217: 	  | _ -> case x._2 of {
+//│ ║  l.224: 	  | _ -> case x._2 of {
 //│ ╙──       	              ^^^^
 //│ f: (L | R) -> (1 | 2 | 3 | 4)
 //│  = [Function: f4]
