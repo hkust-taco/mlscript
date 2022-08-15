@@ -9,7 +9,8 @@ class NodeTests extends org.scalatest.funsuite.AnyFunSuite {
     println(s"Detected node version: " + v)
     
     assert(
-          v.startsWith("v16.14")
+          v.startsWith("v15")
+      ||  v.startsWith("v16.14")
       ||  v.startsWith("v16.15")
       ||  v.startsWith("v16.16")
       ||  v.startsWith("v17")
