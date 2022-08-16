@@ -757,6 +757,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         lb.map(constrainIndex(_, index)).foldLeft(typeVar)(_ | _)
       case (_, t: TypeVariable) =>
         warn(msg"Get into this case 2!", t.prov.loco)
+        // if the (?A, ?R) info we want to register into some ?I
+        // has a higher level than ?A
+        // we need to extrude its components to the correct level, 
+        // using the extrude method.
         val lb = t.lowerBounds
         val typeVar: SimpleType = freshVar(noProv)
         t.indexedIn ::= (receiver, typeVar)
@@ -765,22 +769,24 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         err(msg"Encounter error at index during array indexing", e.prov.loco)
       case (e @ ClassTag(ErrTypeId, _), _) =>
         err(msg"Encounter error at receiver during array indexing", e.prov.loco)
+      case (_, TypeRef(TypeName("string"), _)) =>
+        BoolType
+      /*
       case (_, ClassTag(DecLit(_), _)) |  (_, ClassTag(StrLit(_), _)) |
            (_, ClassTag(UnitLit(_), _) ) |
            (_, ClassTag(Var("true"), _)) | (_, ClassTag(Var("false"), _)) |
-           (_, ClassTag(Var("bool"), _)) | (_, TypeRef(TypeName("bool"), _)) =>
+           (_, ClassTag(Var("bool"), _)) | (_, TypeRef(TypeName("bool"), _)) |
+           (_, FunctionType(_, _)) | (_, RecordType(_)) |
+           (_, TupleType(_))  =>
         err(msg"The index must be an integer", None)
       case (ClassTag(IntLit(_), _), _) |
            (ClassTag(DecLit(_), _), _) | (ClassTag(UnitLit(_), _), _) |
            (ClassTag(Var("true"), _), _) | (ClassTag(Var("false"), _), _) |
-           (ClassTag(Var("bool"), _), _) | (TypeRef(TypeName("bool"), _), _) =>
+           (ClassTag(Var("bool"), _), _) | (TypeRef(TypeName("bool"), _), _) |
+           (FunctionType(_, _), _) | (RecordType(_), _) =>
         // when should we use ClassTag and when should we use TypeRef
         err(msg"The indexing operation should be acted on an array", None)
-      //case (t @ TupleType(fs), ClassTag(IntLit(value)), _)
-      //case (_, t) =>
-      //  println(t.toString)
-      //  BoolType
-      //case Foo(_) | Bar(_, _) => ???
+      */
       case _ => ???
     }
   } (r => s"==> $r")
