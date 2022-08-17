@@ -1,6 +1,7 @@
 def buildName: (string) -> (((string) | (undefined)) -> (string))
 def buildName2: (string) -> (((string) | (undefined)) -> (string))
-def buildName3: (string) -> ((any[]) -> (string))
+def buildName3: (string) -> ((MutArray[string]) -> (string))
+def buildName4: (string) -> ((MutArray[anything]) -> (string))
 trait SquareConfig: { color: (string) | (undefined); width: (number) | (undefined) }
 def did: (number) -> ((((number) -> (number)) | (undefined)) -> (number))
 def getOrElse: ((MutArray[{}]) | (undefined)) -> ({})
@@ -19,10 +20,9 @@ def boom: ((B[nothing]) | (undefined)) -> (anything)
 //│          = <missing implementation>
 //│ buildName2: string -> (string | undefined) -> string
 //│           = <missing implementation>
-//│ ╔══[ERROR] type identifier not found: any
-//│ ║  l.3: 	def buildName3: (string) -> ((any[]) -> (string))
-//│ ╙──     	                             ^^^^^^^
-//│ buildName3: string -> error -> string
+//│ buildName3: string -> MutArray[string] -> string
+//│           = <missing implementation>
+//│ buildName4: string -> MutArray[anything] -> string
 //│           = <missing implementation>
 //│ did: number -> (number -> number | undefined) -> number
 //│    = <missing implementation>

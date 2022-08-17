@@ -86,6 +86,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
           tv.getOrElse(node.typeName.escapedText, TSNamedType(node.typeName.escapedText))
         else if (!typeNode.isUndefined && !typeNode.members.isUndefined)
           TSInterfaceType("", getInterfacePropertiesType(typeNode.members, 0), List(), List())
+        else if (!node.dotDotDot.isUndefined) TSArrayType(TSNamedType("any"))
         else {
           val name = node.symbol.getType()
           if (tv.contains(name)) tv(name)

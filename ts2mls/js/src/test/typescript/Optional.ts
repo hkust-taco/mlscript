@@ -6,7 +6,12 @@ function buildName2(firstName: string, lastName = "DIO") {
   return firstName + lastName;
 }
 
-function buildName3(firstName: string, ...lastName) {
+function buildName3(firstName: string, ...lastName: string[]) {
+  console.log(lastName)
+  return firstName;
+}
+
+function buildName4(firstName: string, ...lastName) {
   console.log(lastName)
   return firstName;
 }
