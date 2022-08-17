@@ -30,3 +30,16 @@ function foo<T>(p: Printer<T>): T {
 function foo2<T extends number[]>(p: Printer<T>): T {
   return null;
 }
+
+class F<T> {
+  x: T
+
+  GG<U>(y: U): T {
+    return this.x;
+  }
+}
+
+interface I<T> {
+  x: T
+  GG<U>(y: U): T
+}

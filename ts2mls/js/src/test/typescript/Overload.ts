@@ -110,3 +110,12 @@ namespace XX {
     return "";
   }
 }
+
+class WWW {
+  F<T>(x: string): T;
+  F<T>(x: number): T;
+
+  F<T>(x) {
+    return null;
+  }
+}

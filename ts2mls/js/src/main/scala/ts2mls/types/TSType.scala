@@ -128,6 +128,25 @@ abstract class TSStructuralType(lhs: TSType, rhs: TSType, notion: String) extend
 case class TSUnionType(lhs: TSType, rhs: TSType) extends TSStructuralType(lhs, rhs, "|")
 case class TSIntersectionType(lhs: TSType, rhs: TSType) extends TSStructuralType(lhs, rhs, "&")
 
+object TSIntersectionType {
+  def getOverloadTypeVariables(inter: TSIntersectionType): List[TSTypeVariable] = inter match {
+    case TSIntersectionType(lhs, rhs) => {
+      val left = lhs match {
+        case i: TSIntersectionType => getOverloadTypeVariables(i)
+        case TSFunctionType(_, _, v) => v
+      }
+
+      val right = rhs match {
+        case i: TSIntersectionType => getOverloadTypeVariables(i)
+        case TSFunctionType(_, _, v) => v
+      }
+
+      (left ::: right).distinct
+    }
+    case _ => List()
+  }
+}
+
 case class TSApplicationType(base: String, applied: List[TSType]) extends TSType {
   override val priority = 0
 

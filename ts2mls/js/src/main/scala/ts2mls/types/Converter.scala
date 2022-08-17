@@ -48,21 +48,56 @@ object Converter {
 
   private def convertRecord(typeName: String, members: Map[String, TSMemberType], typeVars: List[TSTypeVariable], parents: List[TSType]) = {
     val rec = members.toList.foldLeft(" ")((p, m) => m._2.modifier match {
-      case Public => s"$p${m._1}: ${convert(m._2)}; "
+      case Public => {
+        m._2.base match {
+          case TSFunctionType(_, _, typeVars) if (typeVars.length > 0) => p
+          case inter: TSIntersectionType => {
+            val lst = TSIntersectionType.getOverloadTypeVariables(inter)
+            if (lst.isEmpty) s"$p${m._1}: ${convert(m._2)}; "
+            else p
+          }
+          case _ => s"$p${m._1}: ${convert(m._2)}; "
+        }
+      }
       case _ => p
     })
     
     val body = if (members.isEmpty) "{}"
       else s"{${rec.substring(0, rec.length() - 2)} }"
     
-    if (typeName.equals("trait ")) body
-    else {
-      val extBody = parents.foldLeft(body)((b, p) => s"$b & ${convert(p)}")
-      val params = typeVars.foldLeft("")((p, t) => s"$p${t.name}, ") // TODO: add constraints
-      if (params.length == 0)
-        s"$typeName: $extBody"
-      else
-        s"$typeName[${params.substring(0, params.length() - 2)}]: $extBody"
-    }
+    val res =
+      if (typeName.equals("trait ")) body
+      else {
+        val extBody = parents.foldLeft(body)((b, p) => s"$b & ${convert(p)}")
+        val params = typeVars.foldLeft("")((p, t) => s"$p${t.name}, ") // TODO: add constraints
+        if (params.length == 0)
+          s"$typeName: $extBody"
+        else
+          s"$typeName[${params.substring(0, params.length() - 2)}]: $extBody"
+      }
+
+    val methods = members.toList.foldLeft("")((p, m) => m._2.modifier match {
+      case Public => {
+        m._2.base match {
+          case TSFunctionType(_, _, typeVars) if (typeVars.length > 0) => {
+            val params = typeVars.foldLeft("")((p, t) => s"$p${t.name}, ") // TODO: add constraints
+            s"$p\n  method ${m._1}[${params.substring(0, params.length - 2)}]: ${convert(m._2)}"
+          }
+          case inter: TSIntersectionType => {
+            val lst = TSIntersectionType.getOverloadTypeVariables(inter)
+            if (lst.isEmpty) p
+            else {
+              val params = lst.foldLeft("")((p, t) => s"$p${t.name}, ") // TODO: add constraints
+              s"$p\n  method ${m._1}[${params.substring(0, params.length - 2)}]: ${convert(m._2)}"
+            }
+          }
+          case _ => p
+        }
+      }
+      case _ => p
+    })
+
+    if (methods.isEmpty()) res
+    else res + methods
   }
 }

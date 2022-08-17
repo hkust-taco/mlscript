@@ -51,7 +51,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) extends Module {
           case inter: TSIntersectionType => {
             val nsName = getFullName()
             val fullName = if (nsName.equals("")) name else s"$nsName'${name}"
-            val params = TSNamespace.getOverloadTypeVariables(inter).foldLeft("")((p, t) => s"$p${t.name}, ") // TODO: add constraints
+            val params = TSIntersectionType.getOverloadTypeVariables(inter).foldLeft("")((p, t) => s"$p${t.name}, ") // TODO: add constraints
 
             if (params.length() == 0)
               writer.generate(s"def ${fullName}: ${TSProgram.getMLSType(inter)}")
@@ -87,21 +87,4 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) extends Module {
 
 object TSNamespace {
   def apply() = new TSNamespace("globalThis", None)
-
-  private def getOverloadTypeVariables(inter: TSIntersectionType): List[TSTypeVariable] = inter match {
-    case TSIntersectionType(lhs, rhs) => {
-      val left = lhs match {
-        case i: TSIntersectionType => getOverloadTypeVariables(i)
-        case TSFunctionType(_, _, v) => v
-      }
-
-      val right = rhs match {
-        case i: TSIntersectionType => getOverloadTypeVariables(i)
-        case TSFunctionType(_, _, v) => v
-      }
-
-      (left ::: right).distinct
-    }
-    case _ => List()
-  }
 }
