@@ -33,8 +33,8 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) extends Module {
 
   override def toString(): String = s"namespace $name"
 
-  def containsMember(name: String): Boolean = 
-    if (parent.isEmpty) members.contains(name) else (members.contains(name) || parent.get.containsMember(name))
+  def containsMember(name: String, searchParent: Boolean = true): Boolean = 
+    if (parent.isEmpty) members.contains(name) else (members.contains(name) || (searchParent && parent.get.containsMember(name)))
 
   def containsMember(path: List[String]): Boolean = path match {
     case name :: Nil => containsMember(name)
@@ -48,7 +48,16 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) extends Module {
       case Right(name) => {
         val mem = members(name)
         mem match {
-          case inter: TSIntersectionType => writer.generate(s"def ${name}: ${TSProgram.getMLSType(inter)}")
+          case inter: TSIntersectionType => {
+            val nsName = getFullName()
+            val fullName = if (nsName.equals("")) name else s"$nsName'${name}"
+            val params = TSNamespace.getOverloadTypeVariables(inter).foldLeft("")((p, t) => s"$p${t.name}, ") // TODO: add constraints
+
+            if (params.length() == 0)
+              writer.generate(s"def ${fullName}: ${TSProgram.getMLSType(inter)}")
+            else
+              writer.generate(s"def ${fullName}[${params.substring(0, params.length() - 2)}]: ${TSProgram.getMLSType(inter)}")
+          }
           case f: TSFunctionType => {
             if (f.dbg) writer.debug(s"${prefix}$showPrefix${name}", f.toString)
           
@@ -78,4 +87,21 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) extends Module {
 
 object TSNamespace {
   def apply() = new TSNamespace("globalThis", None)
+
+  private def getOverloadTypeVariables(inter: TSIntersectionType): List[TSTypeVariable] = inter match {
+    case TSIntersectionType(lhs, rhs) => {
+      val left = lhs match {
+        case i: TSIntersectionType => getOverloadTypeVariables(i)
+        case TSFunctionType(_, _, v) => v
+      }
+
+      val right = rhs match {
+        case i: TSIntersectionType => getOverloadTypeVariables(i)
+        case TSFunctionType(_, _, v) => v
+      }
+
+      (left ::: right).distinct
+    }
+    case _ => List()
+  }
 }

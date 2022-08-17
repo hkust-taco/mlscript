@@ -111,7 +111,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       else if (!args.isUndefined) TSApplicationType(obj.symbol.escapedName, getApplicationArguments(args, 0))
       else if (!obj.symbol.isUndefined) {
           val symDec = obj.symbol.valueDeclaration
-          val name = obj.symbol.escapedName
+          val name = obj.symbol.getFullName
           if (ns.containsMember(name.split("'").toList)) TSNamedType(name)
           else if (!symDec.isUndefined && !symDec.properties.isUndefined)
             TSInterfaceType("", getInterfacePropertiesType(symDec.properties, 0), List(), List())
@@ -322,18 +322,25 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     if (!it.done) {
       val data = it.value()
       val name = data._1
-      val node = data._2.getFirstDeclaration()
+      val node = data._2.declaration
 
       if (!node.isToken && node.isFunctionDeclaration) {
-        val func = getFunctionType(node)(ns, Map())
-        if (!ns.containsMember(name)) ns.put(name, func)
-        else ns.>(name) match {
-          case old: TSFunctionType if (node.body.isUndefined) =>
-            ns.put(name, TSIntersectionType(old, func))
-          case old: TSIntersectionType if (node.body.isUndefined) =>
-            ns.put(name, TSIntersectionType(old, func))
-        }
+        def parseFunc(decs: TSNodeArray, index: Int): Unit = {
+          val subNode = decs.get(index)
+          val func = getFunctionType(subNode)(ns, Map())
+          if (!ns.containsMember(name, false)) ns.put(name, func)
+          else ns.>(name) match {
+            case old: TSFunctionType if (subNode.body.isUndefined) =>
+              ns.put(name, TSIntersectionType(old, func))
+            case old: TSIntersectionType if (subNode.body.isUndefined) =>
+              ns.put(name, TSIntersectionType(old, func))
+            case _ => {}
+          }
 
+          if (index + 1 < decs.length) parseFunc(decs, index + 1)
+        }
+        
+        parseFunc(data._2.declarations, 0)
         parseNamespaceExports(it)
       }
       else if (!node.isToken && node.isClassDeclaration) {

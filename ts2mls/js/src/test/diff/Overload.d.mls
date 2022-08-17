@@ -10,9 +10,10 @@ def tst: (({ z: number }) -> ({ y: string })) & (({ z: bool }) -> ({ y: string }
 def op: ((number) -> (((number) | (undefined)) -> (unit))) & ((number) -> (((bool) | (undefined)) -> (unit)))
 def swap: (((number, string, )) -> ((string, number, ))) & (((string, number, )) -> ((number, string, )))
 def u: (((number) | (bool)) -> (string)) & (({}) -> ((string) | ({})))
-def doSome: (((T) & (U)) -> ((T) & (U))) & ((string) -> (nothing))
+def doSome[T, U]: (((T) & (U)) -> ((T) & (U))) & ((string) -> (nothing))
 class G[T]: { g: T }
 def bar: (((G[string]) -> (G[string])) & ((G[number]) -> (G[number]))) & ((G[bool]) -> (G[bool]))
+def XX'f[T]: ((T) -> ((number) -> (string))) & ((T) -> ((bool) -> (string)))
 //│ Defined class M
 //│ Defined class N
 //│ Defined class G[+T]
@@ -36,19 +37,9 @@ def bar: (((G[string]) -> (G[string])) & ((G[number]) -> (G[number]))) & ((G[boo
 //│     = <missing implementation>
 //│ u: anything -> string
 //│  = <missing implementation>
-//│ ╔══[ERROR] type identifier not found: T
-//│ ║  l.13: 	def doSome: (((T) & (U)) -> ((T) & (U))) & ((string) -> (nothing))
-//│ ╙──      	              ^^^
-//│ ╔══[ERROR] type identifier not found: U
-//│ ║  l.13: 	def doSome: (((T) & (U)) -> ((T) & (U))) & ((string) -> (nothing))
-//│ ╙──      	                    ^^^
-//│ ╔══[ERROR] type identifier not found: T
-//│ ║  l.13: 	def doSome: (((T) & (U)) -> ((T) & (U))) & ((string) -> (nothing))
-//│ ╙──      	                             ^^^
-//│ ╔══[ERROR] type identifier not found: U
-//│ ║  l.13: 	def doSome: (((T) & (U)) -> ((T) & (U))) & ((string) -> (nothing))
-//│ ╙──      	                                   ^^^
-//│ doSome: (error | string) -> nothing
+//│ doSome: anything -> nothing
 //│       = <missing implementation>
 //│ bar: G[nothing] -> G[nothing]
 //│    = <missing implementation>
+//│ XX'f: anything -> (bool | number) -> string
+//│     = <missing implementation>
