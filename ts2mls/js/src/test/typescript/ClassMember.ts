@@ -3,7 +3,12 @@ class Student {
 
   constructor() {}
 
+  
   getID() { return 114514; }
+
+  /**
+   * @debug
+   */
   addScore(sub: string, score: number) {}
   isFriend(other: Student) { return true; }
 
@@ -24,4 +29,18 @@ class EZ {
 
   private foo() {}
   protected bar: undefined
+}
+
+class Outer {
+  static Inner = class Inner {
+   a: number
+  } 
+}
+
+class TTT<T> {
+  ttt(x: T): T {
+    return x;
+  }
+
+  ttt2: (x: T) => T
 }

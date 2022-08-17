@@ -1,0 +1,15 @@
+def first: (MutArray[string]) -> (string)
+def getZero3: unit -> (MutArray[number])
+def first2: (MutArray[(number) -> (number)]) -> ((number) -> (number))
+def doEs: (MutArray[int]) -> (MutArray[int])
+class C: {}
+trait I: { i: number }
+def doCs: (MutArray[C]) -> (MutArray[C])
+def doIs: (MutArray[I]) -> (MutArray[I])
+def inter[U, T]: (MutArray[(U) & (T)]) -> (MutArray[(U) & (T)])
+def clean: (MutArray[(string, number, )]) -> (MutArray[(string, number, )])
+def translate[T, U]: (MutArray[T]) -> (MutArray[U])
+def uu: (MutArray[((number) | (false)) | (true)]) -> (MutArray[((number) | (false)) | (true)])
+class Temp[T]: { x: T }
+def ta: (MutArray[Temp[bool]]) -> (MutArray[Temp[bool]])
+def tat[T]: (MutArray[Temp[T]]) -> (MutArray[Temp[T]])

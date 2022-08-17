@@ -2,6 +2,9 @@ interface IFoo {
   a: string
   b: (x: number) => number
   c: () => boolean
+  /**
+   * @debug
+   */
   d: (x: string) => void
 }
 
@@ -45,3 +48,7 @@ interface Simple2<T extends number> {
 }
 
 interface Next extends Simple {}
+
+interface TTT<T> {
+  ttt: (x: T) => T
+}

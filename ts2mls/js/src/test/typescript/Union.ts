@@ -22,3 +22,7 @@ function get2(t: [string, string] | [number, string]): string {
 function typeVar<T, U>(x: T | U): T | U {
   return x
 }
+
+function uuuu(x: string | (number | boolean)): string | (number | boolean) {
+  return x;
+}

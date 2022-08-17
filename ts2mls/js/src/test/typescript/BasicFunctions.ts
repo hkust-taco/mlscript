@@ -51,3 +51,27 @@ function pa(x: ((number))): number {
 }
 
 function wtf(x: unknown) {}
+
+class Foooooo {
+  ooooooo: number
+}
+
+function inn(f: Foooooo) {
+  console.log(f.ooooooo)
+}
+
+function out(): Foooooo {
+  return new Foooooo();
+}
+
+interface Barrrrrrrrr {
+  rrrrrrr: number
+}
+
+function inn2(b: Barrrrrrrrr) {
+  console.log(b.rrrrrrr)
+}
+
+function out2(): Barrrrrrrrr {
+  return {rrrrrrr: 42};
+}

@@ -1,8 +1,11 @@
 package ts2mls.types;
 
 import scala.collection.mutable.HashMap
+import ts2mls.DecWriter
+import ts2mls.TSProgram
 
 abstract class TSType {
+  var dbg = false
   val priority: Int = 0
   override def toString(): String = ???
   def >(fieldName: String): TSType = throw new java.lang.Exception("Field is not allowed.")
@@ -13,8 +16,8 @@ case class TSTypeVariable(val name: String, val constraint: Option[TSType]) exte
 
   override def toString(): String = s"$name'"
 
-  def getConstraint(): String = constraint match {
-    case Some(t) => s"$name' <: $t"
+  def getConstraint(ignoreTick: Boolean = false): String = constraint match {
+    case Some(t) => s"$name${if (ignoreTick) "" else "'"} <: $t"
     case _ => ""
   }
 }
@@ -39,7 +42,7 @@ case class TSTupleType(types: List[TSType]) extends TSType {
   }
 }
 
-case class TSFunctionType(params: List[TSType], res: TSType, typeVars: List[TSTypeVariable]) extends TSType {
+case class TSFunctionType(params: List[TSType], res: TSType, val typeVars: List[TSTypeVariable]) extends TSType {
   override val priority = 1
   override def toString(): String = {
     val rhs = if (res.priority < priority && res.priority > 0) s"($res)" else res.toString()
@@ -60,7 +63,7 @@ case class TSFunctionType(params: List[TSType], res: TSType, typeVars: List[TSTy
   }
 }
 
-case class TSClassType(name: String, members: Map[String, TSMemberType], typeVars: List[TSTypeVariable], parents: List[TSType])
+case class TSClassType(name: String, members: Map[String, TSMemberType], statics: Map[String, TSMemberType], typeVars: List[TSTypeVariable], parents: List[TSType])
   extends TSFieldType(members, parents) {
   override val priority = 0
 
@@ -74,6 +77,9 @@ case class TSClassType(name: String, members: Map[String, TSMemberType], typeVar
     if (cons.isEmpty()) body
     else s"$body where ${cons.substring(0, cons.length() - 2)}"
   }
+
+  def >>(name: String): TSMemberType =
+    statics.getOrElse(name, throw new java.lang.Exception(s"static $name not found."))
 }
 
 case class TSInterfaceType(name: String, members: Map[String, TSMemberType], typeVars: List[TSTypeVariable], parents: List[TSType])
@@ -122,40 +128,11 @@ abstract class TSStructuralType(lhs: TSType, rhs: TSType, notion: String) extend
 case class TSUnionType(lhs: TSType, rhs: TSType) extends TSStructuralType(lhs, rhs, "|")
 case class TSIntersectionType(lhs: TSType, rhs: TSType) extends TSStructuralType(lhs, rhs, "&")
 
-case class TSApplicationType(base: TSType, applied: List[TSType]) extends TSType {
+case class TSApplicationType(base: String, applied: List[TSType]) extends TSType {
   override val priority = 0
 
   override def toString(): String = {
     val appBody = applied.foldLeft("")((body, app) => s"$body, $app")
     s"$base<${appBody.substring(2)}>"
-  }
-
-  private lazy val applicationMap = base match {
-    case TSClassType(_, _, typeVars, _) =>
-      typeVars.zip(applied).foldLeft(Map[String, TSType]())((mp, v) => mp ++ Map(v._1.name -> v._2))
-    case TSInterfaceType(_, _, typeVars, _) =>
-      typeVars.zip(applied).foldLeft(Map[String, TSType]())((mp, v) => mp ++ Map(v._1.name -> v._2))
-    case _ => Map[String, TSType]()
-  }
-
-  private def replace(t: TSType): TSType = t match {
-    case TSTypeVariable(name, _) => applicationMap(name)
-    case TSTupleType(types) => TSTupleType(types.map((s) => replace(s)))
-    case TSFunctionType(params, res, cons) =>
-      TSFunctionType(params.map((p) => replace(p)), replace(res), cons)
-    case TSClassType(n, members, tv, c) =>
-      TSClassType(n, members.map[String, TSMemberType]((m) => (m._1, TSMemberType(replace(m._2.base), m._2.modifier))), tv, c)
-    case TSInterfaceType(n, members, tv, c) =>
-      TSInterfaceType(n, members.map[String, TSMemberType]((m) => (m._1, TSMemberType(replace(m._2.base)))), tv, c)
-    case TSArrayType(elementType) => TSArrayType(replace(elementType))
-    case TSUnionType(lhs, rhs) => TSUnionType(replace(lhs), replace(rhs))
-    case TSIntersectionType(lhs, rhs) => TSIntersectionType(replace(lhs), replace(rhs))
-    case TSMemberType(base, mod) => TSMemberType(replace(base), mod)
-    case _ => t
-  }
-
-  override def >(fieldName: String): TSType = base match {
-    case f: TSFieldType => replace(f.>(fieldName))
-    case _ => throw new java.lang.Exception("Field is not allowed.")
   }
 }

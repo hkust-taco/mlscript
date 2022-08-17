@@ -1,0 +1,14 @@
+def extend[T, U]: (T) -> ((U) -> ((T) & (U)))
+// [debug] foo: (T' & U') => void
+def foo[T, U]: ((T) & (U)) -> (unit)
+def over: (((number) -> (string)) & (({}) -> (string))) -> (string)
+trait IA: { x: number }
+trait IB: { y: number }
+def iii: ((IA) & (IB)) -> ((IA) & (IB))
+def uu[U, V, T, P]: (((U) | (V)) & ((T) | (P))) -> (((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P)))
+def iiii[U, T, V]: ((U) & ((T) & (V))) -> (((U) & (T)) & (V))
+def arr[U, T]: ((MutArray[U]) & (MutArray[T])) -> ((MutArray[U]) & (MutArray[T]))
+def tt[U, T, V]: (((U, T, )) & ((V, V, ))) -> (((U, T, )) & ((V, V, )))
+class A: {}
+class B: {}
+def inter: ((A) & (B)) -> ((A) & (B))

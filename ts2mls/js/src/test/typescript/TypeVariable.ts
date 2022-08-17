@@ -21,3 +21,12 @@ class Printer<T> {
 function setStringPrinter(p: Printer<string>) {}
 
 function getStringPrinter(): Printer<string> { return new Printer<string>(); }
+
+function foo<T>(p: Printer<T>): T {
+  return null;
+}
+
+// TODO: `extends` is still not supported yet.
+function foo2<T extends number[]>(p: Printer<T>): T {
+  return null;
+}

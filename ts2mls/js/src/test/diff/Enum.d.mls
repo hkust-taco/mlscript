@@ -1,0 +1,2 @@
+def pass: (int) -> (bool)
+def stop: unit -> (int)

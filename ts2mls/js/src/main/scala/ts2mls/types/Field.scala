@@ -1,5 +1,7 @@
 package ts2mls.types
 
+import ts2mls.DecWriter
+
 abstract class TSAccessModifier
 case object Public extends TSAccessModifier
 case object Private extends TSAccessModifier {

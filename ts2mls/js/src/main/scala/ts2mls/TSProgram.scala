@@ -8,6 +8,9 @@ import ts2mls.types._
 
 class TSProgram(filenames: Seq[String]) extends Module {
   private val program = TypeScript.createProgram(filenames)
+
+  filenames.foreach((fn) => if (!program.fileExists(fn)) throw new java.lang.Exception(s"file ${fn} doesn't exist."))
+
   implicit private val checker: TSTypeChecker = TSTypeChecker(program.getTypeChecker())
   val globalNamespace: TSNamespace = TSNamespace()
   private val sourceFiles: Map[String, TSSourceFile] = filenames.map(filename => {
@@ -40,9 +43,13 @@ class TSProgram(filenames: Seq[String]) extends Module {
     case _ => throw new java.lang.Exception(s"Symbol $symbol not found")
   }
   
-  def getMLSType(name: String) = Converter.convert(this.>(name))
+  def getMLSType(name: String) = TSProgram.getMLSType(this.>(name))
+
+  override def visit(writer: DecWriter, prefix: String): Unit = globalNamespace.visit(writer, prefix)
 }
 
 object TSProgram {
     def apply(filenames: Seq[String]) = new TSProgram(filenames)
+
+    def getMLSType(tp: TSType): String = Converter.convert(tp)
 }

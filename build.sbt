@@ -68,6 +68,12 @@ lazy val ts2mls = crossProject(JSPlatform, JVMPlatform).in(file("ts2mls"))
     scalaJSUseMainModuleInitializer := true,
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.12" % "test"
   )
-  .dependsOn(mlscript % "compile->compile;test->test")
 
 lazy val ts2mlsJS = ts2mls.js
+lazy val ts2mlsJVM = ts2mls.jvm
+
+val diffTests = taskKey[Unit]("")
+
+diffTests := (Def.task{
+  (ts2mlsJVM / Test / test).value
+} triggeredBy (ts2mlsJS / Test / test)).value

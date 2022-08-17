@@ -43,6 +43,8 @@ function toStr(x?: number | boolean): string {
 
 function boo<T, U>(x?: T & U) {}
 
-class B<T> {}
+class B<T> {
+  b: T
+}
 
 function boom(b?: B<never>): any {}

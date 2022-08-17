@@ -90,7 +90,9 @@ function doSome<T, U>(x) {
   }
 }
 
-class G<T> {}
+class G<T> {
+  g: T
+}
 
 function bar(x: G<string>): G<string>;
 function bar(x: G<number>): G<number>;

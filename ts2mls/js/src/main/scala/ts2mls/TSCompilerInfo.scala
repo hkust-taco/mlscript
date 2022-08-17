@@ -8,12 +8,13 @@ import js.JSConverters._
 trait TSTypeSource {}
 
 object TypeScript {
-  private lazy val ts = g.require(js.Any.fromString("typescript"))
+  private lazy val ts = g.require("typescript")
 
   lazy val typeFlagsUnion = ts.TypeFlags.Union.asInstanceOf[Int]
   lazy val typeFlagsInter = ts.TypeFlags.Intersection.asInstanceOf[Int]
   lazy val syntaxKindPrivate = ts.SyntaxKind.PrivateKeyword.asInstanceOf[Int]
   lazy val syntaxKindProtected = ts.SyntaxKind.ProtectedKeyword.asInstanceOf[Int]
+  lazy val syntaxKindStatic = ts.SyntaxKind.StaticKeyword.asInstanceOf[Int]
 
   def isToken(node: js.Dynamic): Boolean = ts.isToken(node)
   def isFunctionDeclaration(node: js.Dynamic): Boolean = ts.isFunctionDeclaration(node)
@@ -31,6 +32,8 @@ object TypeScript {
   def forEachChild(root: js.Dynamic, func: js.Dynamic => Unit): Unit = ts.forEachChild(root, func)
   def createProgram(filenames: Seq[String]): js.Dynamic = 
     ts.createProgram(filenames.toJSArray, js.Dictionary("maxNodeModuleJsDepth" -> 0, "target" -> ts.ScriptTarget.ES5, "module" -> ts.ModuleKind.CommonJS))
+
+  def getJSDocTags(node: js.Dynamic): js.Dynamic = ts.getJSDocTags(node)
 }
 
 class TSTypeChecker(checker: js.Dynamic) {
@@ -51,9 +54,14 @@ class TSSymbolObject(sym: js.Dynamic) extends TSAny(sym) {
   lazy val escapedName: String = sym.escapedName.toString
   lazy val valueDeclaration: TSNodeObject = TSNodeObject(sym.valueDeclaration)
   lazy val exports = TSSymbolIter(sym.exports.entries())
+  lazy val parent = TSSymbolObject(sym.parent)
 
   def getType()(implicit checker: TSTypeChecker): String = checker.getTypeOfSymbolAtLocation(sym)
   def getFirstDeclaration(): TSNodeObject = TSNodeObject(sym.declarations.shift())
+
+  def getFullName(): String =
+    if (parent.isUndefined || parent.escapedName.equals("undefined") || parent.escapedName.equals("")) escapedName
+    else s"${parent.getFullName}'$escapedName"
 }
 
 object TSSymbolObject {
@@ -91,10 +99,14 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) with TSTypeSource 
   lazy val typeToken = TSTokenObject(node.selectDynamic("type")) // for interfaces
   lazy val questionToken = TSTokenObject(node.questionToken)
   lazy val initializer = TSTokenObject(node.initializer)
+  lazy val initializerNode = TSNodeObject(node.initializer) // for inner class
   lazy val body = TSNodeObject(node.body)
   lazy val typeArguments = TSTokenArray(node.typeArguments)
   lazy val expression: TSIdentifierObject = TSIdentifierObject(node.expression)
   lazy val modifiers = TSTokenArray(node.modifiers)
+
+  private lazy val tagName =
+    if (isUndefined) TSIdentifierObject(node) else TSIdentifierObject(node.tagName)
 
   def getReturnTypeOfSignature()(implicit checker: TSTypeChecker): TSTypeObject = {
     val signature = checker.getSignatureFromDeclaration(node)
@@ -102,9 +114,18 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) with TSTypeSource 
   }
 
   private def getTypeField(t: TSNodeObject): TSNodeObject =
-    if (t.isUndefined || t.`type`.isUndefined || t.`type`.isToken) t else t.`type`
+    if (t.isUndefined || !t.parameters.isUndefined || t.`type`.isUndefined || t.`type`.isToken) t else t.`type`
 
   def `type`(): TSNodeObject = getTypeField(TSNodeObject(node.selectDynamic("type")))
+
+  def isDebugging(): Boolean = {
+    val tags = TSNodeArray(TypeScript.getJSDocTags(node))
+    if (!tags.isUndefined) {
+      val tag = tags.get(0).tagName
+      if (tag.isUndefined) false else tag.escapedText.equals("debug")
+    }
+    else false
+  }
 }
 
 object TSNodeObject {
@@ -116,6 +137,7 @@ class TSTokenObject(token: js.Dynamic) extends TSAny(token) {
   lazy val expression = TSIdentifierObject(token.expression)
   lazy val isPrivate = kind == TypeScript.syntaxKindPrivate
   lazy val isProtected = kind == TypeScript.syntaxKindProtected
+  lazy val isStatic = kind == TypeScript.syntaxKindStatic
 
   def getTypeFromTypeNode()(implicit checker: TSTypeChecker): TSTypeObject = checker.getTypeFromTypeNode(token)
 }
@@ -135,7 +157,7 @@ class TSTypeObject(obj: js.Dynamic) extends TSAny(obj) with TSTypeSource {
 
   lazy val isTupleType: Boolean = obj.checker.isTupleType(obj)
   lazy val isArrayType: Boolean = obj.checker.isArrayType(obj)
-  lazy val isEnumType: Boolean = !aliasSymbol.isUndefined
+  lazy val isEnumType: Boolean = !aliasSymbol.isUndefined && obj.aliasSymbol.hasOwnProperty("exports")
   lazy val isUnionType: Boolean = flags == TypeScript.typeFlagsUnion
   lazy val isIntersectionType: Boolean = flags == TypeScript.typeFlagsInter
   lazy val declaration: TSNodeObject = if (symbol.isUndefined) TSNodeObject(obj.symbol) else symbol.getFirstDeclaration()
@@ -146,7 +168,12 @@ object TSTypeObject {
 }
 
 class TSIdentifierObject(id: js.Dynamic) extends TSAny(id) {
-  lazy val escapedText: String = id.escapedText.toString
+  private lazy val left = TSIdentifierObject(id.left)
+  private lazy val right = TSIdentifierObject(id.right)
+
+  def escapedText(): String =
+    if (left.isUndefined) id.escapedText.toString
+    else s"${left.escapedText}'${right.escapedText}"
 }
 
 object TSIdentifierObject {

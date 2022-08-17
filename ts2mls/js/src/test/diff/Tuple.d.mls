@@ -1,0 +1,17 @@
+def key: ((string, bool, )) -> (string)
+def value: ((string, bool, )) -> (bool)
+def third: ((number, number, number, )) -> (number)
+def vec2: (number) -> ((number) -> ((number, number, )))
+def twoFunctions: (((number) -> (number), (number) -> (number), )) -> ((number) -> (number))
+def tupleIt: (string) -> ((unit -> (string), ))
+def s: (bool) -> (((string) | (number), ((number) | (false)) | (true), ))
+def s2: ((bool, (string) | (number), )) -> ((string) | (number))
+def ex[T, U]: (T) -> ((U) -> ((T, U, (T) & (U), )))
+def foo[T, U]: (((T) & (U), )) -> (unit)
+def conv: ({ y: number }) -> (({ y: number }, { z: string }, ))
+class A: { x: number }
+class B: {}
+def swap: ((A, B, )) -> ((B, A, ))
+class FFF[T]: { fff: (T) -> (unit) }
+def fff: (FFF[string]) -> ((string) -> (unit))
+def getFFF: unit -> (FFF[number])
