@@ -222,17 +222,21 @@ ep[0]
 //│ ╔══[WARNING] Get into this case 1!
 //│ ║  l.152: 	ep = eval p
 //│ ╙──       	     ^^^^^^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:790)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:792)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$3(ConstraintSolver.scala:757)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:757)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:792)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:536)
+//│ ╔══[WARNING] Get into this case 1!
+//│ ║  l.117: 	  { IntLit -> e.value
+//│ ╙──       	              ^^^^^^^
+//│ ╔══[ERROR] The indexing operation should be acted on an array
+//│ ║  l.142: 	  lhs = IntLit { value = 1 };
+//│ ╙──       	                         ^
+//│ ╔══[ERROR] The indexing operation should be acted on an array
+//│ ║  l.144: 	    lhs = IntLit { value = 2 };
+//│ ╙──       	                           ^
+//│ ╔══[ERROR] The indexing operation should be acted on an array
+//│ ║  l.145: 	    rhs = IntLit { value = 3 } } }
+//│ ╙──       	                           ^
+//│ res: error | 'a
+//│   where
+//│     'a :> ('a, 'a,) | 1 | 2 | 3
 
 
 eval (Pair {
@@ -294,7 +298,7 @@ rec def eval(e) = case e of
 //│ ║  l.+4: 	  }
 //│ ║        	^^^
 //│ ╟── type `Expr[?]` does not match type `IntLit & ?a | Pair[?, ?] & ?b`
-//│ ║  l.274: 	def eval: Expr['a] -> 'a
+//│ ║  l.278: 	def eval: Expr['a] -> 'a
 //│ ║         	          ^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.+1: 	rec def eval(e) = case e of
@@ -360,7 +364,7 @@ rec def eval(e) = case e of
 //│ ║  l.+3: 	  | Pair -> (eval e.lhs, eval e.rhs)
 //│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.274: 	def eval: Expr['a] -> 'a
+//│ ║  l.278: 	def eval: Expr['a] -> 'a
 //│ ╙──       	                      ^^
 
 rec def eval(e) = case e of
@@ -421,7 +425,7 @@ rec def eval(e) = case e of
 //│ ║        	^^^^^^^^^^^^^^
 //│ ║  l.+5: 	  }
 //│ ║        	^^^
-//│ ╟── expression of type `IntLit | Pair[?, ?] & ~pair | Pair[?, ?] & ~?a | ~?b & (Expr[?] & ~pair | Expr[?] & ~?a)` does not have field 'value'
+//│ ╟── expression of type `Expr[?] & ~pair & ~?a | IntLit | Pair[?, ?] & ~pair | ~?b & (Expr[?] & ~?a | Pair[?, ?])` does not have field 'value'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.+2: 	  { IntLit -> e.value
 //│ ║        	              ^^^^^^^
@@ -443,5 +447,5 @@ rec def eval(e) = case e of
 //│ ║  l.+3: 	  | Pair -> (eval e.lhs, eval e.rhs)
 //│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.274: 	def eval: Expr['a] -> 'a
+//│ ║  l.278: 	def eval: Expr['a] -> 'a
 //│ ╙──       	                      ^^

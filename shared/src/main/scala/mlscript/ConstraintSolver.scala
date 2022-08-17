@@ -730,12 +730,17 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   }
   
   // a is indexed by i
+  // i is indexed in a
   // receiver: a, index: i, return type of a[i]
-  // tuple: fixed length of array
   def constrainIndex(receiver: SimpleType, index: SimpleType)(implicit ctx: Ctx, raise: Raise): SimpleType 
         = trace(s"$lvl. Receiver: $receiver, Index: $index") {
-    //println(index.unwrapProxies.show)
     (receiver.unwrapProxies, index.unwrapProxies) match {
+      // if one of receiver, index is Error, then return error
+      case (_, e @ ClassTag(ErrTypeId, _)) =>
+        err(msg"Encounter error at index during array indexing", e.prov.loco)
+      case (e @ ClassTag(ErrTypeId, _), _) =>
+        err(msg"Encounter error at receiver during array indexing", e.prov.loco)
+      // TupleType: fixed length of array, inherited from ArrayBase
       case (t @ TupleType(fs), ClassTag(IntLit(value), _)) =>  
         // check index validity and retrieve corresponding type
         if (value >= fs.length || value < 0){
@@ -743,12 +748,33 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         } else{
           fs(value.toInt)._2.ub
         }
-      // this case is for the situation when index is defined as int but not assigned a value
-      case (TupleType(_), TypeRef(TypeName("int"), _)) => 
-        err(msg"The index does not have a value", None)
-      //this case is to disallow string indexing like "hello"[0]
+      // first param: match the generalised notion of array (the length might be unknown)
+      // second param:  match non-literal integer (Var("int")) 
+      // such as 1 + 1
+      case (t : ArrayBase, ClassTag(Var("int"), _)) =>  // Index: int<number>
+        t.inner.ub | TypeRef(TypeName("undefined"), Nil)(noProv)
+      // when index is defined as int but not assigned a value
+      case (t: ArrayBase, TypeRef(TypeName("int"), _)) =>  // Index: Int
+        err(msg"The index does not have a value", t.prov.loco)
+      // disallow string indexing like "hello"[0]
       case (s @ ClassTag(StrLit(st), _), _) =>
         err(msg"mlscript doesn't allow string indexing", s.prov.loco)
+      // StrLit: literal string; TypeRef: defined but not assigned value, so refer to the type; ClassTag(Var(..)): concat "bruh" "bruh", a variable but not a literal
+      case t @(
+        (_, ClassTag(StrLit(_), _)) | (_, TypeRef(TypeName("string"), _)) | (_, ClassTag(Var("string"), _)) |
+        (_, ClassTag(DecLit(_), _)) | (_, TypeRef(TypeName("decimal"), _)) | (_, ClassTag(Var("decimal"), _)) |
+        (_, ClassTag(Var("bool"), _)) | (_, TypeRef(TypeName("bool"), _)) | (_, ClassTag(Var("true"), _)) | (_, ClassTag(Var("false"), _)) |
+        (_, FunctionType(_, _)) | (_, RecordType(_))
+       ) =>
+        err(msg"The index must be an integer", t._2.prov.loco)
+      case t @(
+        (ClassTag(IntLit(_), _), _) | (TypeRef(TypeName("int"), _), _) | (ClassTag(Var("int"), _), _) |
+        (ClassTag(StrLit(_), _), _) | (TypeRef(TypeName("string"), _), _) | (ClassTag(Var("string"), _), _) |
+        (ClassTag(DecLit(_), _), _) | (TypeRef(TypeName("decimal"), _), _) | (ClassTag(Var("decimal"), _), _) |
+        (ClassTag(Var("bool"), _), _) | (TypeRef(TypeName("bool"), _), _) | (ClassTag(Var("true"), _), _) | (ClassTag(Var("false"), _), _) |
+        (FunctionType(_, _), _) | (RecordType(_), _)
+       ) =>
+        err(msg"The indexing operation should be acted on an array", t._1.prov.loco)
       case (t : TypeVariable, _) =>
         warn(msg"Get into this case 1!", t.prov.loco)
         val lb = t.lowerBounds
@@ -765,28 +791,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         val typeVar: SimpleType = freshVar(noProv)
         t.indexedIn ::= (receiver, typeVar)
         lb.map(constrainIndex(receiver, _)).foldLeft(typeVar)(_ | _)
-      case (_, e @ ClassTag(ErrTypeId, _)) =>
-        err(msg"Encounter error at index during array indexing", e.prov.loco)
-      case (e @ ClassTag(ErrTypeId, _), _) =>
-        err(msg"Encounter error at receiver during array indexing", e.prov.loco)
-      case (_, TypeRef(TypeName("string"), _)) =>
-        BoolType
-      /*
-      case (_, ClassTag(DecLit(_), _)) |  (_, ClassTag(StrLit(_), _)) |
-           (_, ClassTag(UnitLit(_), _) ) |
-           (_, ClassTag(Var("true"), _)) | (_, ClassTag(Var("false"), _)) |
-           (_, ClassTag(Var("bool"), _)) | (_, TypeRef(TypeName("bool"), _)) |
-           (_, FunctionType(_, _)) | (_, RecordType(_)) |
-           (_, TupleType(_))  =>
-        err(msg"The index must be an integer", None)
-      case (ClassTag(IntLit(_), _), _) |
-           (ClassTag(DecLit(_), _), _) | (ClassTag(UnitLit(_), _), _) |
-           (ClassTag(Var("true"), _), _) | (ClassTag(Var("false"), _), _) |
-           (ClassTag(Var("bool"), _), _) | (TypeRef(TypeName("bool"), _), _) |
-           (FunctionType(_, _), _) | (RecordType(_), _) =>
-        // when should we use ClassTag and when should we use TypeRef
-        err(msg"The indexing operation should be acted on an array", None)
-      */
+      case (ComposedType(true, lhs, rhs), i) =>
+        constrainIndex(lhs, i) | constrainIndex(rhs, i)
+      case (t, ComposedType(true, lhs, rhs)) =>
+        constrainIndex(t, lhs) | constrainIndex(t, rhs)
+      // intersection, Conjunct, DNF.mk, LhsNf, LhsRefined (base)
+      // levels of let polymorphism, implement extrusion to the current level
       case _ => ???
     }
   } (r => s"==> $r")
