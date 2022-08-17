@@ -12,3 +12,31 @@ def toStr: (((number) | (bool)) | (undefined)) -> (string)
 def boo[T, U]: (((T) & (U)) | (undefined)) -> (unit)
 class B[T]: { b: T }
 def boom: ((B[nothing]) | (undefined)) -> (anything)
+//│ Defined trait SquareConfig
+//│ Defined class ABC
+//│ Defined class B[+T]
+//│ buildName: string -> (string | undefined) -> string
+//│          = <missing implementation>
+//│ buildName2: string -> (string | undefined) -> string
+//│           = <missing implementation>
+//│ ╔══[ERROR] type identifier not found: any
+//│ ║  l.3: 	def buildName3: (string) -> ((any[]) -> (string))
+//│ ╙──     	                             ^^^^^^^
+//│ buildName3: string -> error -> string
+//│           = <missing implementation>
+//│ did: number -> (number -> number | undefined) -> number
+//│    = <missing implementation>
+//│ getOrElse: (MutArray[anything] | undefined) -> anything
+//│          = <missing implementation>
+//│ testABC: (ABC | undefined) -> unit
+//│        = <missing implementation>
+//│ testSquareConfig: (undefined | SquareConfig) -> unit
+//│                 = <missing implementation>
+//│ err: ((number, string,) | undefined) -> unit
+//│    = <missing implementation>
+//│ toStr: (bool | number | undefined) -> string
+//│      = <missing implementation>
+//│ boo: anything -> unit
+//│    = <missing implementation>
+//│ boom: (B[nothing] | undefined) -> anything
+//│     = <missing implementation>

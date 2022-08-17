@@ -10,3 +10,15 @@ class VG[T]: { x: T }
 class Home[T]: { y: T } & VG[string]
 trait O[I]: { xx: (I) -> (I) }
 class OR[R]: { xx: (R) -> (R) } & O[R]
+//│ Defined class A
+//│ Defined class B
+//│ Defined class C[=T]
+//│ Defined class D
+//│ Defined trait Wu
+//│ Defined class WuWu
+//│ Defined trait WuWuWu
+//│ Defined trait Never
+//│ Defined class VG[+T]
+//│ Defined class Home[+T]
+//│ Defined trait O[=I]
+//│ Defined class OR[=R]

@@ -9,3 +9,6 @@ trait AA'I: { f: unit -> (number) }
 def f1: (N1'C) -> (N1'C)
 // [debug] f2: (AA'C) => AA'C
 def f2: (AA'C) -> (AA'C)
+//│ Defined class N1'C
+//│ N1'f: anything -> number
+//│     = <missing implementation>

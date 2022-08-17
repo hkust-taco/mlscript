@@ -10,3 +10,17 @@ trait Simple: { a: number; b: (bool) -> (string) }
 trait Simple2[T]: { abc: T }
 trait Next: {} & Simple
 trait TTT[T]: { ttt: (T) -> (T) }
+//│ Defined trait IFoo
+//│ Defined trait II[-T]
+//│ Defined trait IEvent
+//│ Defined trait SearchFunc
+//│ Defined trait StringArray
+//│ Defined trait Counter
+//│ Defined trait Simple
+//│ Defined trait Simple2[+T]
+//│ Defined trait Next
+//│ Defined trait TTT[=T]
+//│ create: unit -> {v: number | undefined}
+//│       = <missing implementation>
+//│ get: {t: string} -> string
+//│    = <missing implementation>

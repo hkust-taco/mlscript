@@ -13,3 +13,30 @@ def uu: (MutArray[((number) | (false)) | (true)]) -> (MutArray[((number) | (fals
 class Temp[T]: { x: T }
 def ta: (MutArray[Temp[bool]]) -> (MutArray[Temp[bool]])
 def tat[T]: (MutArray[Temp[T]]) -> (MutArray[Temp[T]])
+//│ Defined class C
+//│ Defined trait I
+//│ Defined class Temp[+T]
+//│ first: MutArray[string] -> string
+//│      = <missing implementation>
+//│ getZero3: unit -> MutArray[number]
+//│         = <missing implementation>
+//│ first2: MutArray[number -> number] -> number -> number
+//│       = <missing implementation>
+//│ doEs: MutArray[int] -> MutArray[int]
+//│     = <missing implementation>
+//│ doCs: MutArray[C] -> MutArray[C]
+//│     = <missing implementation>
+//│ doIs: MutArray[I] -> MutArray[I]
+//│     = <missing implementation>
+//│ inter: MutArray['a] -> MutArray['a]
+//│      = <missing implementation>
+//│ clean: MutArray[(string, number,)] -> MutArray[(string, number,)]
+//│      = <missing implementation>
+//│ translate: MutArray['a] -> MutArray['b]
+//│          = <missing implementation>
+//│ uu: MutArray[false | number | true] -> MutArray[false | number | true]
+//│   = <missing implementation>
+//│ ta: MutArray[Temp[bool]] -> MutArray[Temp[bool]]
+//│   = <missing implementation>
+//│ tat: MutArray[Temp['a]] -> MutArray[Temp['a]]
+//│    = <missing implementation>

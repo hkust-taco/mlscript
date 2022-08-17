@@ -13,3 +13,42 @@ def u: (((number) | (bool)) -> (string)) & (({}) -> ((string) | ({})))
 def doSome: (((T) & (U)) -> ((T) & (U))) & ((string) -> (nothing))
 class G[T]: { g: T }
 def bar: (((G[string]) -> (G[string])) & ((G[number]) -> (G[number]))) & ((G[bool]) -> (G[bool]))
+//│ Defined class M
+//│ Defined class N
+//│ Defined class G[+T]
+//│ f: (number | string) -> nothing
+//│  = <missing implementation>
+//│ app: (nothing -> unit) -> (number | string) -> unit
+//│    = <missing implementation>
+//│ create: (bool | number) -> unit -> nothing
+//│       = <missing implementation>
+//│ g0: MutArray[in string] -> string
+//│   = <missing implementation>
+//│ db: anything -> MutArray[in anything out number]
+//│   = <missing implementation>
+//│ id: (M | N) -> nothing
+//│   = <missing implementation>
+//│ tst: {z: bool | number} -> {y: string}
+//│    = <missing implementation>
+//│ op: number -> (bool | number | undefined) -> unit
+//│   = <missing implementation>
+//│ swap: (number | string, number | string,) -> (nothing, nothing,)
+//│     = <missing implementation>
+//│ u: anything -> string
+//│  = <missing implementation>
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.13: 	def doSome: (((T) & (U)) -> ((T) & (U))) & ((string) -> (nothing))
+//│ ╙──      	              ^^^
+//│ ╔══[ERROR] type identifier not found: U
+//│ ║  l.13: 	def doSome: (((T) & (U)) -> ((T) & (U))) & ((string) -> (nothing))
+//│ ╙──      	                    ^^^
+//│ ╔══[ERROR] type identifier not found: T
+//│ ║  l.13: 	def doSome: (((T) & (U)) -> ((T) & (U))) & ((string) -> (nothing))
+//│ ╙──      	                             ^^^
+//│ ╔══[ERROR] type identifier not found: U
+//│ ║  l.13: 	def doSome: (((T) & (U)) -> ((T) & (U))) & ((string) -> (nothing))
+//│ ╙──      	                                   ^^^
+//│ doSome: (error | string) -> nothing
+//│       = <missing implementation>
+//│ bar: G[nothing] -> G[nothing]
+//│    = <missing implementation>

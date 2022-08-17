@@ -6,3 +6,17 @@ def setStringPrinter: (Printer[string]) -> (unit)
 def getStringPrinter: unit -> (Printer[string])
 def foo[T]: (Printer[T]) -> (T)
 def foo2[T]: (Printer[T]) -> (T)
+//│ Defined class CC[-T]
+//│ Defined class Printer[-T]
+//│ inc: anything -> number
+//│    = <missing implementation>
+//│ con: anything -> nothing
+//│    = <missing implementation>
+//│ setStringPrinter: Printer[string] -> unit
+//│                 = <missing implementation>
+//│ getStringPrinter: unit -> Printer[string]
+//│                 = <missing implementation>
+//│ foo: Printer[?] -> nothing
+//│    = <missing implementation>
+//│ foo2: Printer[?] -> nothing
+//│     = <missing implementation>

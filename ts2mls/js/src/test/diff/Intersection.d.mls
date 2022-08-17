@@ -12,3 +12,5 @@ def tt[U, T, V]: (((U, T, )) & ((V, V, ))) -> (((U, T, )) & ((V, V, )))
 class A: {}
 class B: {}
 def inter: ((A) & (B)) -> ((A) & (B))
+//│ extend: 'a -> 'b -> ('a & 'b)
+//│       = <missing implementation>
