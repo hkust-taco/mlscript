@@ -1,7 +1,5 @@
 package ts2mls
 
-import ts2mls.types._
-
 object TSTypeTest {
   // modify the path when needed
   private val path = "ts2mls/js/src/test/typescript"
