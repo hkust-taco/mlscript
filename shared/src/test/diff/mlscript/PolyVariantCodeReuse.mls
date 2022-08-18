@@ -1,6 +1,6 @@
 // Example from Code reuse through polymorphic variants
 
-//************** PRELIMINARIES *************
+//************************** PRELIMINARIES *************************
 
 class NotFound
 class Tuple[A, B]: { _1: A; _2: B }
@@ -46,7 +46,7 @@ list_assoc "2" (Cons (Tuple "2" 1) Nil )
 //│    = <no result>
 //│      list_assoc and eq are not implemented
 
-// ***************** Var *******************
+// ***************************** Var *******************************
 
 trait Lambda
 trait Expr
@@ -67,7 +67,7 @@ def eval_var sub v = case v of {
 //│         = <no result>
 //│           list_assoc and eq are not implemented
 
-// ************** Lambda *******************
+// *************************** Lambda ********************************
 
 class Abs[a]: Lambda & { s: string; t: a }
 class App[a]: Lambda & { lhs: a; rhs: a }
@@ -137,7 +137,19 @@ rec def eval1 subst = eval_lambda eval1 subst
 //│      = <no result>
 //│        eval_lambda, eval_var, list_assoc and eq are not implemented
 
-// ************* Expr ******************
+// ------------- OCaml's type -------------
+// val eval_lambda :
+//   ((string *
+//     ([> `Abs of string * 'a | `App of 'a * 'a | `Var of string ] as 'a))
+//   list -> 'a -> 'a) ->
+//   (string * 'a) list ->
+//   [< `Abs of string * 'a | `App of 'a * 'a | `Var of string ] -> 'a = <fun>
+//
+//   val eval1 :
+//   (string * ([ `Abs of string * 'a | `App of 'a * 'a | `Var of string ] as 'a))
+//   list -> 'a -> 'a = <fun>
+
+// ************************* Expr ******************************
 
 class Num: Expr & { num: int }
 class Add[a]: Expr & { lhs: a; rhs: a }
@@ -195,7 +207,34 @@ rec def eval2 subst = eval_expr eval2 subst
 //│      = <no result>
 //│        eval_expr, eval_var, list_assoc and eq are not implemented
 
-// ************ Mix things *****************
+
+// ------------- OCaml's type -------------
+// val map_expr :
+//   ('a -> 'b) ->
+//   [< `Add of 'a * 'a | `Mult of 'a * 'a | `Num of 'c | `Var of string ] ->
+//   [> `Add of 'b * 'b | `Mult of 'b * 'b | `Num of 'c | `Var of string ] = <fun>
+
+// val eval_expr :
+//   ((string *
+//     ([> `Add of ([> `Num of int ] as 'b) * 'b
+//       | `Mult of 'b * 'b
+//       | `Num of int
+//       | `Var of string ]
+//      as 'a))
+//    list -> 'c -> 'b) ->
+//   (string * 'a) list ->
+//   [< `Add of 'c * 'c | `Mult of 'c * 'c | `Num of int | `Var of string ] -> 'a =
+//   <fun>
+// val eval2 :
+//   (string *
+//    ([> `Add of 'a * 'a | `Mult of 'a * 'a | `Num of int | `Var of string ]
+//     as 'a))
+//   list ->
+//   ([< `Add of 'b * 'b | `Mult of 'b * 'b | `Num of int | `Var of string ] as 'b) ->
+//   'a = <fun>
+
+
+// ************************** Mix things *******************************
 
 def eval_lexpr eval_rec subst v = case v of {
   | Lambda -> eval_lambda eval_rec subst v
@@ -220,6 +259,38 @@ rec def eval3 subst = eval_lexpr eval3 subst
 //│      = <no result>
 //│        eval_lexpr, eval_lambda, eval_var, list_assoc and eq are not implemented
 
+// ------------- OCaml's type -------------
+// val eval_lexpr :
+//   ((string *
+//     ([> `Abs of string * 'a
+//       | `Add of 'a * 'a
+//       | `App of 'a * 'a
+//       | `Mult of 'a * 'a
+//       | `Num of int
+//       | `Var of string ]
+//      as 'a))
+//    list -> 'a -> 'a) ->
+//   (string * 'a) list ->
+//   [< `Abs of string * 'a
+//    | `Add of 'a * 'a
+//    | `App of 'a * 'a
+//    | `Mult of 'a * 'a
+//    | `Num of int
+//    | `Var of string ] ->
+//   'a = <fun>
+//
+// val eval3 :
+//   (string *
+//    ([ `Abs of string * 'a
+//     | `Add of 'a * 'a
+//     | `App of 'a * 'a
+//     | `Mult of 'a * 'a
+//     | `Num of int
+//     | `Var of string ] as 'a))
+//   list -> 'a -> 'a = <fun>
+
+// ************************** Tests *******************************
+
 eval3 Nil (Var { s = "s" })
 //│ res: 'b
 //│   where
@@ -231,6 +302,14 @@ eval3 Nil (Var { s = "s" })
 //│     'e <: expr & 'c & ~lambda | lambda & (App[?] & {lhs: 'e, rhs: 'e} | 'b & (Abs[?] | Var))
 //│    = <no result>
 //│      eval3, eval_lexpr, eval_lambda, eval_var, list_assoc and eq are not implemented
+// ------------- OCaml's type -------------
+// - : [ `Abs of string * 'a
+//     | `Add of 'a * 'a
+//     | `App of 'a * 'a
+//     | `Mult of 'a * 'a
+//     | `Num of int
+//     | `Var of string ] as 'a
+// = `Var "s"
 
 
 eval3 Nil (Abs { s = "s"; t = Var { s = "s" } })
@@ -255,14 +334,14 @@ eval2 Nil (Num { num = 1 })
 // FIXME
 eval3 Nil (Num { num = 1 })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.256: 	eval3 Nil (Num { num = 1 })
+//│ ║  l.335: 	eval3 Nil (Num { num = 1 })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Num & {num: ?num} & lambda | Num & {num: ?num} & ~expr | Num & {num: ?num} & ~?a` does not match type `Abs[?] & ?b | App[?] & ?c | Var & ?d`
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.111: 	def eval_lambda eval_rec subst v = case v of {
 //│ ║         	                                        ^
 //│ ╟── from refined scrutinee:
-//│ ║  l.200: 	def eval_lexpr eval_rec subst v = case v of {
+//│ ║  l.239: 	def eval_lexpr eval_rec subst v = case v of {
 //│ ╙──       	                                       ^
 //│ res: error | 'a
 //│   where
@@ -274,14 +353,14 @@ eval3 Nil (Num { num = 1 })
 // FIXME
 eval3 Nil (App { lhs = Num {num = 0}; rhs = Num {num = 0}})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.275: 	eval3 Nil (App { lhs = Num {num = 0}; rhs = Num {num = 0}})
+//│ ║  l.354: 	eval3 Nil (App { lhs = Num {num = 0}; rhs = Num {num = 0}})
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Num & {num: ?num} & lambda | Num & {num: ?num} & ~expr | Num & {num: ?num} & ~?a` does not match type `Abs[?] & ?b | App[?] & ?c | Var & ?d`
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.111: 	def eval_lambda eval_rec subst v = case v of {
 //│ ║         	                                        ^
 //│ ╟── from refined scrutinee:
-//│ ║  l.200: 	def eval_lexpr eval_rec subst v = case v of {
+//│ ║  l.239: 	def eval_lexpr eval_rec subst v = case v of {
 //│ ╙──       	                                       ^
 //│ res: error | 'a
 //│   where
@@ -293,16 +372,16 @@ eval3 Nil (App { lhs = Num {num = 0}; rhs = Num {num = 0}})
 // FIXME
 eval3 Nil (Abs { abs = Tuple "s" (Add { add = Tuple (Var { s = "s" }) (Num { num = 1 })})})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.294: 	eval3 Nil (Abs { abs = Tuple "s" (Add { add = Tuple (Var { s = "s" }) (Num { num = 1 })})})
+//│ ║  l.373: 	eval3 Nil (Abs { abs = Tuple "s" (Add { add = Tuple (Var { s = "s" }) (Num { num = 1 })})})
 //│ ║         	                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{add: ?a}` does not have field 'lhs'
-//│ ║  l.294: 	eval3 Nil (Abs { abs = Tuple "s" (Add { add = Tuple (Var { s = "s" }) (Num { num = 1 })})})
+//│ ║  l.373: 	eval3 Nil (Abs { abs = Tuple "s" (Add { add = Tuple (Var { s = "s" }) (Num { num = 1 })})})
 //│ ╙──       	                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.294: 	eval3 Nil (Abs { abs = Tuple "s" (Add { add = Tuple (Var { s = "s" }) (Num { num = 1 })})})
+//│ ║  l.373: 	eval3 Nil (Abs { abs = Tuple "s" (Add { add = Tuple (Var { s = "s" }) (Num { num = 1 })})})
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{abs: ?a}` does not have field 't'
-//│ ║  l.294: 	eval3 Nil (Abs { abs = Tuple "s" (Add { add = Tuple (Var { s = "s" }) (Num { num = 1 })})})
+//│ ║  l.373: 	eval3 Nil (Abs { abs = Tuple "s" (Add { add = Tuple (Var { s = "s" }) (Num { num = 1 })})})
 //│ ╙──       	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: 'a
 //│   where
