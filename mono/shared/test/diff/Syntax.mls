@@ -5,6 +5,56 @@ fun abs(#x) = if x > 0 then x else neg of x
 //│ |#fun| |neg|(|##|x|)| |#=| |0| |-| |x|↵|#fun| |abs|(|##|x|)| |#=| |#if| |x| |>| |0| |#then| |x| |#else| |neg| |#of| |x|
 //│ Parsed: {fun neg = #x, => - 0 x; fun abs = #x, => if (> x 0) then x else neg (x,)}
 //│ I can't infer the type of x now
+//│ [mono] ┌ MONO MODL
+//│ [mono] │ ┌───┬────────────────────────────────────────────────┐
+//│ [mono] │ │ 1 │ TypingUnit {                                   │
+//│ [mono] │ │ 2 │   neg = #x, => - 0 x                           │
+//│ [mono] │ │ 3 │   abs = #x, => if (> x 0) then x else neg (x,) │
+//│ [mono] │ │ 4 │ }                                              │
+//│ [mono] │ └───┴────────────────────────────────────────────────┘
+//│ [mono] │ ┌ MONO FUNC neg = #x, => - 0 x
+//│ [mono] │ │ ┌ MONO TERM - 0 x
+//│ [mono] │ │ │ ┌ MONO TERM - 0
+//│ [mono] │ │ │ │ ┌ MONO TERM -
+//│ [mono] │ │ │ │ └ MONO TERM -
+//│ [mono] │ │ │ │ ┌ MONO TERM 0
+//│ [mono] │ │ │ │ └ MONO TERM 0
+//│ [mono] │ │ │ │ ┌ SPEC CALL - with (0)
+//│ [mono] │ │ │ │ │ Not found: -
+//│ [mono] │ │ │ │ └ SPEC CALL
+//│ [mono] │ │ │ └ MONO TERM -(0)
+//│ [mono] │ │ │ ┌ MONO TERM x
+//│ [mono] │ │ │ └ MONO TERM x
+//│ [mono] │ │ └ MONO TERM (0 - x)
+//│ [mono] │ └ MONO FUNC
+//│ [mono] │   ┌───┬───────────────┐
+//│ [mono] │   │ 1 │ fun neg(#x) = │
+//│ [mono] │   │ 2 │   (0 - x)     │
+//│ [mono] │   └───┴───────────────┘
+//│ [mono] │ ┌ MONO FUNC abs = #x, => if (> x 0) then x else neg (x,)
+//│ [mono] │ │ ┌ MONO TERM if (> x 0) then x else neg (x,)
+//│ [mono] │ │ │ ┌ MONO TERM > x 0
+//│ [mono] │ │ │ │ ┌ MONO TERM > x
+//│ [mono] │ │ │ │ │ ┌ MONO TERM >
+//│ [mono] │ │ │ │ │ └ MONO TERM >
+//│ [mono] │ │ │ │ │ ┌ MONO TERM x
+//│ [mono] │ │ │ │ │ └ MONO TERM x
+//│ [mono] │ │ │ │ │ ┌ SPEC CALL > with (x)
+//│ [mono] │ │ │ │ │ │ Not found: >
+//│ [mono] │ │ │ │ │ └ SPEC CALL
+//│ [mono] │ │ │ │ └ MONO TERM >(x)
+//│ [mono] │ │ │ │ ┌ MONO TERM 0
+//│ [mono] │ │ │ │ └ MONO TERM 0
+//│ [mono] │ │ │ └ MONO TERM (x > 0)
+//│ [mono] │ │ │ ┌ MONO TERM x
+//│ [mono] │ │ │ └ MONO TERM x
+//│ [mono] │ │ │ ┌ MONO TERM neg (x,)
+//│ [mono] │ │ │ │ ┌ MONO TERM neg
+//│ [mono] │ │ │ │ └ MONO TERM neg
+//│ [mono] │ │ │ │ ┌ MONO TERM x
+//│ [mono] │ │ │ │ └ MONO TERM x
+//│ [mono] │ │ │ │ ┌ SPEC CALL neg with (x)
+//│ [mono] │ │ │ │ │ ┌ SPEC CALL function neg with (x)
 
 // UCS is not supported by the monomorphizer.
 if
@@ -13,6 +63,13 @@ if
 //│ |#if|→|true| |#then| |"true"|↵|false| |#then| |"false"|
 //│ Parsed: {if ‹(true) then "true"; (false) then "false"›}
 //│ unsupported IfBlock
+//│ [mono] ┌ MONO MODL
+//│ [mono] │ ┌───┬─────────────────────────────────────────────────────────────┐
+//│ [mono] │ │ 1 │ TypingUnit {                                                │
+//│ [mono] │ │ 2 │   Code(List(if ‹(true) then "true"; (false) then "false"›)) │
+//│ [mono] │ │ 3 │ }                                                           │
+//│ [mono] │ └───┴─────────────────────────────────────────────────────────────┘
+//│ [mono] │ ┌ MONO TERM if ‹(true) then "true"; (false) then "false"›
 
 fun inc(#x) = x + 1
 fun dbl(#x) = x * 2
@@ -34,14 +91,8 @@ new Box(0) {
 //│ fun dbl(#x) =
 //│   (x * 2)
 //│ fun app(f, x) =
-//│   (f x)
-//│ (Box_0 )
-//│ class Box_0 {
-//│   fun map(f) =
-//│     (Box (f value))
-//│   fun get() =
-//│     this.value
-//│ }
+//│   f(x)
+//│ Box_0()
 
 
 fun pow(#n, x) =
@@ -54,8 +105,8 @@ pow(0, 123)
 //│ TypingUnit(NuFunDef(pow, [], Lam(Tup(_: Var(n), _: Var(x)), Blk(If(...)))), App(Var(pow), Tup(_: IntLit(0), _: IntLit(123))))
 //│ Monomorphized:
 //│ fun pow(#n, x) =
-//│   if (n > 1) then ((pow (n - 1), x) * x) else 1
-//│ (pow__0 123)
+//│   if (n > 1) then (pow((n - 1), x) * x) else 1
+//│ pow__0(123)
 //│ fun pow__0(x) =
 //│   1
 
@@ -65,8 +116,8 @@ let f = (x) => x + 1
 //│ Parsed:
 //│ TypingUnit(Let(false, f, App(App(Var(=>), Bra(rcd = false, Tup(_: Var(x)))), App(App(Var(+), Var(x)), IntLit(1))), UnitLit(true)))
 //│ Monomorphized:
-//│ let f = new Lambda_0 ()  in undefined
-//│ class Lambda_0 {
+//│ let f = Lambda_0() in ()
+//│ class Lambda_0() {
 //│   fun apply(x) =
 //│     (x + 1)
 //│ }
@@ -77,8 +128,8 @@ let f = (x, y) => x + y
 //│ Parsed:
 //│ TypingUnit(Let(false, f, App(App(Var(=>), Bra(rcd = false, Tup(_: Var(x), _: Var(y)))), App(App(Var(+), Var(x)), Var(y))), UnitLit(true)))
 //│ Monomorphized:
-//│ let f = new Lambda_0 ()  in undefined
-//│ class Lambda_0 {
+//│ let f = Lambda_0() in ()
+//│ class Lambda_0() {
 //│   fun apply(x, y) =
 //│     (x + y)
 //│ }

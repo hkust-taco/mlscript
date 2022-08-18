@@ -6,23 +6,24 @@ import mlscript.TypingUnit
 import mlscript.codegen.Helpers.inspect as showStructure
 import scala.collection.mutable.StringBuilder
 import mlscript.mono.printer.ExprPrinter
+import mlscript.mono.debug.TreeDebug
 
 class Test extends DiffTests(Test.dir) {
   override def postProcess(basePath: List[Str], testName: Str, unit: TypingUnit): List[Str] = 
-    val monomorph = new Monomorph(false)
-    val output = try {
+    val debug = TreeDebug()
+    val monomorph = new Monomorph(debug)
+    try {
       val monomorphized = monomorph.monomorphize(unit)
       val outputBuilder = StringBuilder()
       outputBuilder ++= "Parsed:\n"
       outputBuilder ++= showStructure(unit)
       outputBuilder ++= "\nMonomorphized:\n"
       outputBuilder ++= ExprPrinter.print(monomorphized)
-      outputBuilder.toString()
+      outputBuilder.toString().linesIterator.toList
     } catch {
-      case error: MonomorphError => error.getMessage()
-      case other: Throwable => other.toString()
+      case error: MonomorphError => error.getMessage() :: debug.getLines
+      case other: Throwable => other.toString().linesIterator.toList
     }
-    output.linesIterator.toList
 }
 
 object Test {

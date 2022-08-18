@@ -22,5 +22,8 @@ object Helpers:
     case _ => throw MonomorphError("expect the list of parameters to be a `Tup`")
   
   def toFuncArgs(term: Term): IterableOnce[Term] = term match
+    // The new parser generates `(undefined, )` when no arguments.
+    // Let's do this temporary fix.
+    case Tup((_, Fld(_, _, UnitLit(true))) :: Nil) => Iterable.empty
     case Tup(fields) => fields.iterator.map(_._2.value)
     case _ => Some(term)

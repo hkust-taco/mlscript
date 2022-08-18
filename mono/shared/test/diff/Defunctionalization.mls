@@ -1,0 +1,260 @@
+class Foobar {
+  fun foo: Int
+}
+class Foo(#x): Foobar {
+  fun foo = x
+}
+class Bar(#c): Foobar {
+  fun foo = c
+}
+fun takeFoo(f) = f.foo
+let f1 = Foo(10)
+let f2 = Foo(11)
+takeFoo(f2)
+takeFoo(Foo(12))
+//│ |#class| |Foobar| |{|→|#fun| |foo|#:| |Int|←|↵|}|↵|#class| |Foo|(|##|x|)|#:| |Foobar| |{|→|#fun| |foo| |#=| |x|←|↵|}|↵|#class| |Bar|(|##|c|)|#:| |Foobar| |{|→|#fun| |foo| |#=| |c|←|↵|}|↵|#fun| |takeFoo|(|f|)| |#=| |f|.|foo|↵|#let| |f1| |#=| |Foo|(|10|)|↵|#let| |f2| |#=| |Foo|(|11|)|↵|takeFoo|(|f2|)|↵|takeFoo|(|Foo|(|12|)|)|
+//│ Parsed: {class Foobar() {fun foo: [] -> Int}; class Foo(#x,): Foobar {fun foo = x}; class Bar(#c,): Foobar {fun foo = c}; fun takeFoo = f, => . f foo; let f1 = Foo (10,) in let f2 = Foo (11,) in takeFoo (f2,); takeFoo (Foo (12,),)}
+//│ Parsed:
+//│ TypingUnit(NuTypeDef(class, Foobar, (), Tup(), (), TypingUnit(NuFunDef(foo, [], PolyType(List(),TypeName(Int))))), NuTypeDef(class, Foo, (), Tup(_: Var(x)), (TypeName(Foobar)), TypingUnit(NuFunDef(foo, [], Var(x)))), NuTypeDef(class, Bar, (), Tup(_: Var(c)), (TypeName(Foobar)), TypingUnit(NuFunDef(foo, [], Var(c)))), NuFunDef(takeFoo, [], Lam(Tup(_: Var(f)), App(App(Var(.), Var(f)), Var(foo)))), Let(false, f1, App(Var(Foo), Tup(_: IntLit(10))), Let(false, f2, App(Var(Foo), Tup(_: IntLit(11))), App(Var(takeFoo), Tup(_: Var(f2))))), App(Var(takeFoo), Tup(_: App(Var(Foo), Tup(_: IntLit(12))))))
+//│ Monomorphized:
+//│ fun takeFoo(f) =
+//│   f.foo
+//│ let f1 = Foo__10() in let f2 = Foo__11() in takeFoo(f2)
+//│ takeFoo(Foo__12())
+//│ class Foo() {
+//│ }
+//│ class Foo__10(): Foo() {
+//│   fun foo() =
+//│     10
+//│ }
+//│ class Foo__11(): Foo() {
+//│   fun foo() =
+//│     11
+//│ }
+//│ class Foo__12(): Foo() {
+//│   fun foo() =
+//│     12
+//│ }
+
+trait Fooable {
+  fun foo(x: Int): Int
+}
+class FooA(y): Fooable {
+  fun foo(x) = x + y
+}
+class FooB(): Fooable {
+  fun foo(x) = FooA(20).foo(x)
+}
+fun takeFoo(#x, f) = f.foo(x)
+let f1 = FooA(10)
+let f2 = FooB()
+f1.foo(0)
+takeFoo(42, f2)
+//│ |#trait| |Fooable| |{|→|#fun| |foo|(|x|#:| |Int|)|#:| |Int|←|↵|}|↵|#class| |FooA|(|y|)|#:| |Fooable| |{|→|#fun| |foo|(|x|)| |#=| |x| |+| |y|←|↵|}|↵|#class| |FooB|(|)|#:| |Fooable| |{|→|#fun| |foo|(|x|)| |#=| |FooA|(|20|)|.|foo|(|x|)|←|↵|}|↵|#fun| |takeFoo|(|##|x|,| |f|)| |#=| |f|.|foo|(|x|)|↵|#let| |f1| |#=| |FooA|(|10|)|↵|#let| |f2| |#=| |FooB|(|)|↵|f1|.|foo|(|0|)|↵|takeFoo|(|42|,| |f2|)|
+//│ Parsed: {trait Fooable(): {fun foo: [] -> Int}; class FooA(y,): Fooable {fun foo = x, => + x y}; class FooB(undefined,): Fooable {fun foo = x, => . (FooA (20,)) (foo (x,))}; fun takeFoo = #x, f, => . f (foo (x,)); let f1 = FooA (10,) in let f2 = FooB (undefined,) in . f1 (foo (0,)); takeFoo (42, f2,)}
+//│ not a callable: .(f)
+//│ [mono] ┌ MONO MODL
+//│ [mono] │ ┌───┬────────────────────────────────────────────────────────────────────────────────────┐
+//│ [mono] │ │ 1 │ TypingUnit {                                                                       │
+//│ [mono] │ │ 2 │   trait Fooable {foo = Int}                                                        │
+//│ [mono] │ │ 3 │   class FooA: Fooable {foo = x, => + x y}                                          │
+//│ [mono] │ │ 4 │   class FooB: Fooable {foo = x, => . (FooA (20,)) (foo (x,))}                      │
+//│ [mono] │ │ 5 │   takeFoo = #x, f, => . f (foo (x,))                                               │
+//│ [mono] │ │ 6 │   Code(List(let f1 = FooA (10,) in let f2 = FooB (undefined,) in . f1 (foo (0,)))) │
+//│ [mono] │ │ 7 │   Code(List(takeFoo (42, f2,)))                                                    │
+//│ [mono] │ │ 8 │ }                                                                                  │
+//│ [mono] │ └───┴────────────────────────────────────────────────────────────────────────────────────┘
+//│ [mono] │ ┌ MONO TDEF trait Fooable {foo = Int}
+//│ [mono] │ │ ┌ LIFT trait Fooable {foo = Int}
+//│ [mono] │ │ │ ┌ MONO FUNC foo = Int
+//│ [mono] │ │ │ └ MONO FUNC fun foo: [] -> Int
+//│ [mono] │ │ └ LIFT
+//│ [mono] │ └ MONO TDEF
+//│ [mono] │   ┌───┬──────────────────────┐
+//│ [mono] │   │ 1 │ trait Fooable() {    │
+//│ [mono] │   │ 2 │   fun foo: [] -> Int │
+//│ [mono] │   │ 3 │ }                    │
+//│ [mono] │   └───┴──────────────────────┘
+//│ [mono] │ ┌ MONO TDEF class FooA: Fooable {foo = x, => + x y}
+//│ [mono] │ │ ┌ LIFT class FooA: Fooable {foo = x, => + x y}
+//│ [mono] │ │ │ ┌ MONO FUNC foo = x, => + x y
+//│ [mono] │ │ │ │ ┌ MONO TERM + x y
+//│ [mono] │ │ │ │ │ ┌ MONO TERM + x
+//│ [mono] │ │ │ │ │ │ ┌ MONO TERM +
+//│ [mono] │ │ │ │ │ │ └ MONO TERM +
+//│ [mono] │ │ │ │ │ │ ┌ MONO TERM x
+//│ [mono] │ │ │ │ │ │ └ MONO TERM x
+//│ [mono] │ │ │ │ │ │ ┌ SPEC CALL + with (x)
+//│ [mono] │ │ │ │ │ │ │ Not found: +
+//│ [mono] │ │ │ │ │ │ └ SPEC CALL
+//│ [mono] │ │ │ │ │ └ MONO TERM +(x)
+//│ [mono] │ │ │ │ │ ┌ MONO TERM y
+//│ [mono] │ │ │ │ │ └ MONO TERM y
+//│ [mono] │ │ │ │ └ MONO TERM (x + y)
+//│ [mono] │ │ │ └ MONO FUNC
+//│ [mono] │ │ │   ┌───┬──────────────┐
+//│ [mono] │ │ │   │ 1 │ fun foo(x) = │
+//│ [mono] │ │ │   │ 2 │   (x + y)    │
+//│ [mono] │ │ │   └───┴──────────────┘
+//│ [mono] │ │ └ LIFT
+//│ [mono] │ └ MONO TDEF
+//│ [mono] │   ┌───┬────────────────────────────┐
+//│ [mono] │   │ 1 │ class FooA(y): Fooable() { │
+//│ [mono] │   │ 2 │   fun foo(x) =             │
+//│ [mono] │   │ 3 │     (x + y)                │
+//│ [mono] │   │ 4 │ }                          │
+//│ [mono] │   └───┴────────────────────────────┘
+//│ [mono] │ ┌ MONO TDEF class FooB: Fooable {foo = x, => . (FooA (20,)) (foo (x,))}
+//│ [mono] │ │ ┌ LIFT class FooB: Fooable {foo = x, => . (FooA (20,)) (foo (x,))}
+//│ [mono] │ │ │ ┌ MONO FUNC foo = x, => . (FooA (20,)) (foo (x,))
+//│ [mono] │ │ │ │ ┌ MONO TERM . (FooA (20,)) (foo (x,))
+//│ [mono] │ │ │ │ │ ┌ MONO TERM . (FooA (20,))
+//│ [mono] │ │ │ │ │ │ ┌ MONO TERM .
+//│ [mono] │ │ │ │ │ │ └ MONO TERM .
+//│ [mono] │ │ │ │ │ │ ┌ MONO TERM FooA (20,)
+//│ [mono] │ │ │ │ │ │ │ ┌ MONO TERM FooA
+//│ [mono] │ │ │ │ │ │ │ └ MONO TERM FooA
+//│ [mono] │ │ │ │ │ │ │ ┌ MONO TERM 20
+//│ [mono] │ │ │ │ │ │ │ └ MONO TERM 20
+//│ [mono] │ │ │ │ │ │ │ ┌ SPEC CALL FooA with (20)
+//│ [mono] │ │ │ │ │ │ │ │ ┌ SPEC CALL class FooA with (20)
+//│ [mono] │ │ │ │ │ │ │ │ └ SPEC CALL mlscript.mono.debug.Debug$$$Lambda$93588/0x00000008020c02c0@5f0fed12
+//│ [mono] │ │ │ │ │ │ │ └ SPEC CALL
+//│ [mono] │ │ │ │ │ │ └ MONO TERM FooA(20)
+//│ [mono] │ │ │ │ │ │ ┌ SPEC CALL . with (FooA(20))
+//│ [mono] │ │ │ │ │ │ │ Not found: .
+//│ [mono] │ │ │ │ │ │ └ SPEC CALL
+//│ [mono] │ │ │ │ │ └ MONO TERM .(FooA(20))
+//│ [mono] │ │ │ │ │ ┌ MONO TERM foo (x,)
+//│ [mono] │ │ │ │ │ │ ┌ MONO TERM foo
+//│ [mono] │ │ │ │ │ │ └ MONO TERM foo
+//│ [mono] │ │ │ │ │ │ ┌ MONO TERM x
+//│ [mono] │ │ │ │ │ │ └ MONO TERM x
+//│ [mono] │ │ │ │ │ │ ┌ SPEC CALL foo with (x)
+//│ [mono] │ │ │ │ │ │ │ Not found: foo
+//│ [mono] │ │ │ │ │ │ └ SPEC CALL
+//│ [mono] │ │ │ │ │ └ MONO TERM foo(x)
+//│ [mono] │ │ │ │ └ MONO TERM FooA(20).foo(x)
+//│ [mono] │ │ │ └ MONO FUNC
+//│ [mono] │ │ │   ┌───┬───────────────────┐
+//│ [mono] │ │ │   │ 1 │ fun foo(x) =      │
+//│ [mono] │ │ │   │ 2 │   FooA(20).foo(x) │
+//│ [mono] │ │ │   └───┴───────────────────┘
+//│ [mono] │ │ └ LIFT
+//│ [mono] │ └ MONO TDEF
+//│ [mono] │   ┌───┬───────────────────────────┐
+//│ [mono] │   │ 1 │ class FooB(): Fooable() { │
+//│ [mono] │   │ 2 │   fun foo(x) =            │
+//│ [mono] │   │ 3 │     FooA(20).foo(x)       │
+//│ [mono] │   │ 4 │ }                         │
+//│ [mono] │   └───┴───────────────────────────┘
+//│ [mono] │ ┌ MONO FUNC takeFoo = #x, f, => . f (foo (x,))
+//│ [mono] │ │ ┌ MONO TERM . f (foo (x,))
+//│ [mono] │ │ │ ┌ MONO TERM . f
+//│ [mono] │ │ │ │ ┌ MONO TERM .
+//│ [mono] │ │ │ │ └ MONO TERM .
+//│ [mono] │ │ │ │ ┌ MONO TERM f
+//│ [mono] │ │ │ │ └ MONO TERM f
+//│ [mono] │ │ │ │ ┌ SPEC CALL . with (f)
+//│ [mono] │ │ │ │ │ Not found: .
+//│ [mono] │ │ │ │ └ SPEC CALL
+//│ [mono] │ │ │ └ MONO TERM .(f)
+//│ [mono] │ │ │ ┌ MONO TERM foo (x,)
+//│ [mono] │ │ │ │ ┌ MONO TERM foo
+//│ [mono] │ │ │ │ └ MONO TERM foo
+//│ [mono] │ │ │ │ ┌ MONO TERM x
+//│ [mono] │ │ │ │ └ MONO TERM x
+//│ [mono] │ │ │ │ ┌ SPEC CALL foo with (x)
+//│ [mono] │ │ │ │ │ Not found: foo
+//│ [mono] │ │ │ │ └ SPEC CALL
+//│ [mono] │ │ │ └ MONO TERM foo(x)
+//│ [mono] │ │ └ MONO TERM f.foo(x)
+//│ [mono] │ └ MONO FUNC
+//│ [mono] │   ┌───┬──────────────────────┐
+//│ [mono] │   │ 1 │ fun takeFoo(#x, f) = │
+//│ [mono] │   │ 2 │   f.foo(x)           │
+//│ [mono] │   └───┴──────────────────────┘
+//│ [mono] │ ┌ MONO TERM let f1 = FooA (10,) in let f2 = FooB (undefined,) in . f1 (foo (0,))
+//│ [mono] │ │ ┌ MONO TERM FooA (10,)
+//│ [mono] │ │ │ ┌ MONO TERM FooA
+//│ [mono] │ │ │ └ MONO TERM FooA
+//│ [mono] │ │ │ ┌ MONO TERM 10
+//│ [mono] │ │ │ └ MONO TERM 10
+//│ [mono] │ │ │ ┌ SPEC CALL FooA with (10)
+//│ [mono] │ │ │ │ ┌ SPEC CALL class FooA with (10)
+//│ [mono] │ │ │ │ └ SPEC CALL mlscript.mono.debug.Debug$$$Lambda$93588/0x00000008020c02c0@5f0fed12
+//│ [mono] │ │ │ └ SPEC CALL
+//│ [mono] │ │ └ MONO TERM FooA(10)
+//│ [mono] │ │ ┌ MONO TERM let f2 = FooB (undefined,) in . f1 (foo (0,))
+//│ [mono] │ │ │ ┌ MONO TERM FooB (undefined,)
+//│ [mono] │ │ │ │ ┌ MONO TERM FooB
+//│ [mono] │ │ │ │ └ MONO TERM FooB
+//│ [mono] │ │ │ │ ┌ SPEC CALL FooB with ()
+//│ [mono] │ │ │ │ │ ┌ SPEC CALL class FooB with ()
+//│ [mono] │ │ │ │ │ └ SPEC CALL mlscript.mono.debug.Debug$$$Lambda$93588/0x00000008020c02c0@5f0fed12
+//│ [mono] │ │ │ │ └ SPEC CALL
+//│ [mono] │ │ │ └ MONO TERM FooB()
+//│ [mono] │ │ │ ┌ MONO TERM . f1 (foo (0,))
+//│ [mono] │ │ │ │ ┌ MONO TERM . f1
+//│ [mono] │ │ │ │ │ ┌ MONO TERM .
+//│ [mono] │ │ │ │ │ └ MONO TERM .
+//│ [mono] │ │ │ │ │ ┌ MONO TERM f1
+//│ [mono] │ │ │ │ │ └ MONO TERM f1
+//│ [mono] │ │ │ │ │ ┌ SPEC CALL . with (f1)
+//│ [mono] │ │ │ │ │ │ Not found: .
+//│ [mono] │ │ │ │ │ └ SPEC CALL
+//│ [mono] │ │ │ │ └ MONO TERM .(f1)
+//│ [mono] │ │ │ │ ┌ MONO TERM foo (0,)
+//│ [mono] │ │ │ │ │ ┌ MONO TERM foo
+//│ [mono] │ │ │ │ │ └ MONO TERM foo
+//│ [mono] │ │ │ │ │ ┌ MONO TERM 0
+//│ [mono] │ │ │ │ │ └ MONO TERM 0
+//│ [mono] │ │ │ │ │ ┌ SPEC CALL foo with (0)
+//│ [mono] │ │ │ │ │ │ Not found: foo
+//│ [mono] │ │ │ │ │ └ SPEC CALL
+//│ [mono] │ │ │ │ └ MONO TERM foo(0)
+//│ [mono] │ │ │ └ MONO TERM f1.foo(0)
+//│ [mono] │ │ └ MONO TERM let f2 = FooB() in f1.foo(0)
+//│ [mono] │ └ MONO TERM let f1 = FooA(10) in let f2 = FooB() in f1.foo(0)
+//│ [mono] │ ┌ MONO TERM takeFoo (42, f2,)
+//│ [mono] │ │ ┌ MONO TERM takeFoo
+//│ [mono] │ │ └ MONO TERM takeFoo
+//│ [mono] │ │ ┌ MONO TERM 42
+//│ [mono] │ │ └ MONO TERM 42
+//│ [mono] │ │ ┌ MONO TERM f2
+//│ [mono] │ │ └ MONO TERM f2
+//│ [mono] │ │ ┌ SPEC CALL takeFoo with (42, f2)
+//│ [mono] │ │ │ ┌ SPEC CALL function takeFoo with (42, f2)
+//│ [mono] │ │ │ │ ┌ SPEC EXPR f.foo(x)
+//│ [mono] │ │ │ │ │ in context
+//│ [mono] │ │ │ │ │ { x: 42 }
+//│ [mono] │ │ │ │ │ ┌ SPEC EXPR .(f)
+//│ [mono] │ │ │ │ │ │ in context
+//│ [mono] │ │ │ │ │ │ { x: 42 }
+//│ [mono] │ │ │ │ │ │ ┌ SPEC EXPR .
+//│ [mono] │ │ │ │ │ │ │ in context
+//│ [mono] │ │ │ │ │ │ │ { x: 42 }
+//│ [mono] │ │ │ │ │ │ └ SPEC EXPR .
+//│ [mono] │ │ │ │ │ │ ┌ SPEC EXPR f
+//│ [mono] │ │ │ │ │ │ │ in context
+//│ [mono] │ │ │ │ │ │ │ { x: 42 }
+//│ [mono] │ │ │ │ │ │ └ SPEC EXPR f
+//│ [mono] │ │ │ │ │ │ ┌ SPEC CALL . with (f)
+//│ [mono] │ │ │ │ │ │ │ Not found: .
+//│ [mono] │ │ │ │ │ │ └ SPEC CALL
+//│ [mono] │ │ │ │ │ └ SPEC EXPR .(f)
+//│ [mono] │ │ │ │ │ ┌ SPEC EXPR foo(x)
+//│ [mono] │ │ │ │ │ │ in context
+//│ [mono] │ │ │ │ │ │ { x: 42 }
+//│ [mono] │ │ │ │ │ │ ┌ SPEC EXPR foo
+//│ [mono] │ │ │ │ │ │ │ in context
+//│ [mono] │ │ │ │ │ │ │ { x: 42 }
+//│ [mono] │ │ │ │ │ │ └ SPEC EXPR foo
+//│ [mono] │ │ │ │ │ │ ┌ SPEC EXPR x
+//│ [mono] │ │ │ │ │ │ │ in context
+//│ [mono] │ │ │ │ │ │ │ { x: 42 }
+//│ [mono] │ │ │ │ │ │ └ SPEC EXPR 42
+//│ [mono] │ │ │ │ │ │ ┌ SPEC CALL foo with (42)
+//│ [mono] │ │ │ │ │ │ │ Not found: foo
+//│ [mono] │ │ │ │ │ │ └ SPEC CALL
+//│ [mono] │ │ │ │ │ └ SPEC EXPR foo(x)

@@ -3,10 +3,11 @@ package mlscript.mono.debug
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.immutable.StringOps
 
-class RainbowDebug extends Debug:
+class RainbowDebug(color: Boolean = true) extends Debug:
   import RainbowDebug._
 
-  private inline def currentColor = colors(indent % colors.size)
+  private inline def currentColor =
+    if color then colors(indent % colors.size) else identity[String]
   private inline def beginMark = currentColor("┌")
   private inline def endMark = currentColor("└")
   private var indent = 0
@@ -14,7 +15,7 @@ class RainbowDebug extends Debug:
   def trace[T](name: String, pre: Any*)
               (thunk: => T)
               (post: T => Any): T = {
-    printPrologue(name, pre.map(toLines))
+    printPrologue(name, pre.map(toLines(_)(using color)))
     indent += 1
     val res =
       try thunk
@@ -23,7 +24,7 @@ class RainbowDebug extends Debug:
       log(s"$endMark $name")
     } else {
       val result = post(res)
-      printEpilogue(name, toLines(result))
+      printEpilogue(name, toLines(result)(using color))
     }
     res
   }
@@ -34,7 +35,7 @@ class RainbowDebug extends Debug:
     things.headOption.foreach {
       case Nil => ()
       case head :: Nil =>
-        log(s"$beginMark ${name} ${black(head)}")
+        log(s"$beginMark ${name} ${if color then black(head) else head}")
       case list =>
         log(s"$beginMark ${name}")
         indent += 1
@@ -51,7 +52,7 @@ class RainbowDebug extends Debug:
     lines match {
       case Nil => ()
       case head :: Nil =>
-        log(s"$endMark $name ${black(head)}")
+        log(s"$endMark $name ${if color then black(head) else head}")
       case items =>
         log(s"$endMark $name")
         items.foreach { line => log(s"  $line") }
@@ -61,11 +62,13 @@ class RainbowDebug extends Debug:
     import scala.collection.mutable.StringBuilder
     val indentBuilder = StringBuilder()
     for i <- 0 until indent do
-      indentBuilder ++= colors(i % colors.size)("│ ")
-    println("[mono] " + indentBuilder.toString + msg)
+      indentBuilder ++= (if color then colors(i % colors.size) else identity[String])("│ ")
+    writeLine("[mono] " + indentBuilder.toString + msg)
+
+  def writeLine(line: String): Unit = println(line)
 
 object RainbowDebug:
-  def toLines(thingy: Any): List[String] =
+  def toLines(thingy: Any)(using color: Boolean): List[String] =
     thingy match
       case printable: Printable => printable.getDebugOutput.toLines
       case _ => thingy.toString.linesIterator.toList

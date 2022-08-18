@@ -19,14 +19,23 @@ import mlscript.New
 import mlscript.Trt
 import mlscript.{Diagnostic, Warning, CompilationError}
 import mlscript.codegen.Helpers.inspect as showStructure
+import mlscript.mono.debug.RainbowDebug
 
 @main
 def main(): Unit =
   val source = """
-    |class Add(#x, y) {
-    |  fun get() = x + y
+    |class Node() {}
+    |class Literal(#value): Node {
+    |  fun compute() = value
     |}
-    |let add = Add(1, 2)""".stripMargin
+    |class Add(#x, y): Node {
+    |  fun compute() = x.compute() + y.compute()
+    |}
+    |class Sub(#x, y): Node {
+    |  fun compute() = x.compute() - y.compute()
+    |}
+    |let add = Add(1, 2)
+    |add.compute()""".stripMargin
   val fastParseHelpers = mlscript.FastParseHelpers(source)
   val origin = mlscript.Origin("test.mls", 1, fastParseHelpers)
   val raise = (t: Diagnostic) => t match
@@ -42,6 +51,6 @@ def main(): Unit =
   }
   val typingUnit = parser.parseAll(parser.typingUnit)
   println(showStructure(typingUnit))
-  val monomorph = new Monomorph(true)
+  val monomorph = new Monomorph(RainbowDebug())
   val monomorphized = monomorph.monomorphize(typingUnit)
   println("Successfully monomorphized the program.")

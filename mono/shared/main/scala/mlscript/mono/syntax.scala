@@ -6,6 +6,7 @@ import scala.collection.mutable.ArrayBuffer
 import mlscript.{Type, Union, Inter, Function, Record, Tuple, Recursive, AppliedType,
                  Neg, Rem, Bounds, WithExtension, Constrained, Top, Bot, Literal,
                  TypeName, TypeVar, PolyType, NamedType}
+import scala.collection.immutable.HashMap
 
 enum Expr extends Printable:
   case Ref(name: String)
@@ -42,8 +43,6 @@ enum Expr extends Printable:
     case Lambda(params, body) => 
       val head = params.mkString("(", ", ", ")")
       s"(fun $head -> $body)"
-    case Apply(Apply(Ref("."), lhs :: Nil), rhs :: Nil) =>
-      s"$lhs.$rhs"
     case Apply(Apply(Ref(op), lhs :: Nil), rhs :: Nil)
         if !op.headOption.forall(_.isLetter) =>
       s"($lhs $op $rhs)"
@@ -83,12 +82,19 @@ enum UnitValue:
       case Null => "null"
       case Undefined => "()" // `()` is shorter than `undefined`
 
-class CaseBranch(pattern: Option[Expr.Ref | Expr.Literal], body: Expr):
-  // Constructor for the last wildcard branch.
-  def this(body: Expr) = this(None, body)
+enum CaseBranch:
+  val body: Expr
+
+  case Instance(className: Expr.Ref, alias: Expr.Ref, body: Expr)
+  case Constant(literal: Expr.Literal, body: Expr)
+  case Wildcard(body: Expr)
 
   override def toString(): String =
-    "case " + pattern.fold("_")(_.toString) + " => " + body.toString
+    this match
+      case Instance(Expr.Ref(className), Expr.Ref(alias), body) =>
+        s"case $alias: $className => $body"
+      case Constant(literal, body) => s"case $literal => $body"
+      case Wildcard(body) => s"_ => $body"
 
 enum TypeDeclKind:
   case Alias, Class, Trait
@@ -104,19 +110,21 @@ enum TypeDeclKind:
 type Parameter = (Boolean, Expr.Ref)
 
 enum Item extends Printable:
+  val name: Expr.Ref
+
   /**
    * Type declarations: aliases, classes and traits.
    */
-  case TypeDecl(val name: Expr.Ref, kind: TypeDeclKind, typeParams: List[TypeName],
+  case TypeDecl(name: Expr.Ref, kind: TypeDeclKind, typeParams: List[TypeName],
                 params: List[Parameter], parents: List[(NamedType, List[Expr])], body: Isolation)
   /**
    * Function declaration (with implementation).
    */
-  case FuncDecl(val name: Expr.Ref, params: List[Parameter], body: Expr)
+  case FuncDecl(name: Expr.Ref, params: List[Parameter], body: Expr)
   /**
    * Function definition (with definition)
    */
-  case FuncDefn(val name: Expr.Ref, typeParams: List[TypeName], body: PolyType)
+  case FuncDefn(name: Expr.Ref, typeParams: List[TypeName], body: PolyType)
 
   override def toString(): String = this match
     case TypeDecl(Expr.Ref(name), kind, typeParams, params, parents, body) =>
@@ -150,6 +158,15 @@ object Item:
  * An `Isolation` is like a `TypingUnit` but without nested classes.
  */
 class Isolation(val items: List[Expr | Item.FuncDecl | Item.FuncDefn]) extends Printable:
+  private val namedItemMap = HashMap.from(items.iterator.flatMap {
+    case _: Expr => None: Option[(String, Item.FuncDecl | Item.FuncDefn)]
+    case item: Item.FuncDecl => Some((item.name.name, item))
+    case item: Item.FuncDefn => Some((item.name.name, item))
+  })
+
+  def get(name: String): Option[Item.FuncDecl | Item.FuncDefn] =
+    namedItemMap.get(name)
+
   def getDebugOutput: DebugOutput =
     DebugOutput.Code(ExprPrinter.printLines(this))
 
