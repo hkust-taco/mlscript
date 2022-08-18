@@ -401,7 +401,7 @@ trait VarImpl { self: Var =>
 }
 
 trait AppImpl { self: App =>
-  var desugaring: Opt[(Term, Ls[Term])] = N
+  var typed: Opt[(Ls[Var -> Term], Term, Ls[Term])] = N
 }
 
 trait SimpleTermImpl extends Ordered[SimpleTerm] { self: SimpleTerm =>

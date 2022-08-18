@@ -116,11 +116,12 @@ class JSBackend {
       JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
     // Function invocation
     case app: App =>
-      app.desugaring match {
-        case S((fun, args)) =>
+      app.typed match {
+        case S((bindings, fun, args)) =>
           ??? // TODO
         case N => app.rhs match {
           case Tup(args) =>
+            // TODO check args have no name; otherwise raise error "cannot compile named arguments without type information"
             val callee = app.lhs match {
               case Var(nme) => translateVar(nme, true)
               case _ => translateTerm(app.lhs)
