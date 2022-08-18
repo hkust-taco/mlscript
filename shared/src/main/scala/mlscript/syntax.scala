@@ -52,7 +52,7 @@ sealed abstract class Term                                           extends Ter
 sealed abstract class Lit                                            extends SimpleTerm with LitImpl
 final case class Var(name: Str)                                      extends SimpleTerm with VarImpl
 final case class Lam(lhs: Term, rhs: Term)                           extends Term
-final case class App(lhs: Term, rhs: Term)                           extends Term
+final case class App(lhs: Term, rhs: Term)                           extends Term with AppImpl
 final case class Tup(fields: Ls[Opt[Var] -> (Term -> Bool)])         extends Term
 final case class Rcd(fields: Ls[Var -> (Term -> Bool)])              extends Term
 final case class Sel(receiver: Term, fieldName: Var)                 extends Term

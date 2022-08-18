@@ -584,8 +584,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val newCtx = ctx.nest // TODO use
         val rhs_ty = typeTerm(lhs)
         ??? // TODO
-      case App(f, a) =>
-        val f_ty = typeTerm(f)
+      case App(f, a) => // TODO support named arguments by setting `desugared`
+        val f_ty = typeTerm(f) // TODO look at type; if not a plain function type, don't accept named arguments
         val a_ty = typeTerm(a)
         val res = freshVar(prov)
         val arg_ty = mkProxy(a_ty, tp(a.toCoveringLoc, "argument"))

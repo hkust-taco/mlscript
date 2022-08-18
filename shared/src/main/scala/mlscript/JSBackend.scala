@@ -115,12 +115,20 @@ class JSBackend {
     case App(App(App(Var("if"), tst), con), alt) =>
       JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
     // Function invocation
-    case App(trm, Tup(args)) =>
-      val callee = trm match {
-        case Var(nme) => translateVar(nme, true)
-        case _ => translateTerm(trm)
+    case app: App =>
+      app.desugaring match {
+        case S((fun, args)) =>
+          ??? // TODO
+        case N => app.rhs match {
+          case Tup(args) =>
+            val callee = app.lhs match {
+              case Var(nme) => translateVar(nme, true)
+              case _ => translateTerm(app.lhs)
+            }
+            callee(args map { case (_, (arg, _)) => translateTerm(arg) }: _*)
+          case _ => ??? // TODO error
+        }
       }
-      callee(args map { case (_, (arg, _)) => translateTerm(arg) }: _*)
     case _ => throw CodeGenError(s"ill-formed application ${inspect(term)}")
   }
 

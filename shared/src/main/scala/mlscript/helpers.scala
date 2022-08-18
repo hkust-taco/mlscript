@@ -400,6 +400,10 @@ trait VarImpl { self: Var =>
     name.head.isLetter && name.head.isLower && name =/= "true" && name =/= "false"
 }
 
+trait AppImpl { self: App =>
+  var desugaring: Opt[(Term, Ls[Term])] = N
+}
+
 trait SimpleTermImpl extends Ordered[SimpleTerm] { self: SimpleTerm =>
   def compare(that: SimpleTerm): Int = this.idStr compare that.idStr
   val idStr: Str = this match {

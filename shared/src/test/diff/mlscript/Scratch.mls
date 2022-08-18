@@ -1,0 +1,31 @@
+
+def foo(x, y) = (x, y)
+//│ foo: ('a, 'b,) -> ('a, 'b,)
+//│    = [Function: foo]
+
+foo(1, 2)
+//│ res: (1, 2,)
+//│    = [ 1, 2 ]
+
+// TODO parse
+foo(1, y = 2)
+//│ /!\ Parse error: Expected ")":1:10, found "= 2);" at l.11:10: foo(1, y = 2)
+
+// TODO parse
+foo(x = 1, y = 2)
+//│ /!\ Parse error: Expected ")":1:7, found "= 1, y = 2" at l.15:7: foo(x = 1, y = 2)
+
+// TODO parse
+foo(y = 2, x = 1)
+//│ /!\ Parse error: Expected ")":1:7, found "= 2, x = 1" at l.19:7: foo(y = 2, x = 1)
+
+
+// TODO parse
+:e
+def bar(f) = f(x = 1, y = 2)
+//│ /!\ Parse error: Expected ")":1:18, found "= 1, y = 2" at l.25:18: def bar(f) = f(x = 1, y = 2)
+
+:pe
+def bar(f: (x: int, y: int) -> int) = f(x = 1, y = 2)
+//│ /!\ Parse error: Expected ")":1:14, found ": int, y: " at l.29:14: def bar(f: (x: int, y: int) -> int) = f(x = 1, y = 2)
+
