@@ -104,11 +104,10 @@ rec def map f l = case l of {
   | Nil -> l
   | Cons -> Cons (f l.head) (map f l.tail)
   }
-//│ map: ('head -> ('head0 & 'A)) -> 'a -> 'tail
+//│ map: ('head -> 'head0) -> 'a -> 'tail
 //│   where
 //│     'a <: (Cons[?] with {head: 'head, tail: 'a}) | Nil & 'tail
-//│     'tail :> Cons['A] with {head: 'head0, tail: 'tail}
-//│           <: List['A]
+//│     'tail :> Cons['head0] with {head: 'head0, tail: 'tail}
 //│    = [Function: map]
 
 map (fun x -> "lol") (Cons 2 (Cons 3 Nil))
@@ -142,13 +141,13 @@ def f = fun x -> case x._1 of {
 :e
 f ({ _1 = A{}; _2 = C{} })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.143: 	f ({ _1 = A{}; _2 = C{} })
+//│ ║  l.142: 	f ({ _1 = A{}; _2 = C{} })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `C` does not match type `A | B`
-//│ ║  l.143: 	f ({ _1 = A{}; _2 = C{} })
+//│ ║  l.142: 	f ({ _1 = A{}; _2 = C{} })
 //│ ║         	                    ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.134: 	  | _ -> case x._2 of {
+//│ ║  l.133: 	  | _ -> case x._2 of {
 //│ ║         	              ^^^^
 //│ ╟── Note: class C is defined at:
 //│ ║  l.22: 	class C
@@ -174,19 +173,19 @@ def f = fun (x: {_1: A | B; _2: anything} | {_1: anything; _2: A | B}) -> case x
     }
   }
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.171: 	  | _ -> case x._2 of {
+//│ ║  l.170: 	  | _ -> case x._2 of {
 //│ ║         	         ^^^^^^^^^^^^^^
-//│ ║  l.172: 	    | A -> 3
+//│ ║  l.171: 	    | A -> 3
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.173: 	    | B -> 4
+//│ ║  l.172: 	    | B -> 4
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.174: 	    }
+//│ ║  l.173: 	    }
 //│ ║         	^^^^^
 //│ ╟── type `anything` does not match type `A | B`
-//│ ║  l.168: 	def f = fun (x: {_1: A | B; _2: anything} | {_1: anything; _2: A | B}) -> case x._1 of {
+//│ ║  l.167: 	def f = fun (x: {_1: A | B; _2: anything} | {_1: anything; _2: A | B}) -> case x._1 of {
 //│ ║         	                                ^^^^^^^^
 //│ ╟── but it flows into field selection with expected type `A | B`
-//│ ║  l.171: 	  | _ -> case x._2 of {
+//│ ║  l.170: 	  | _ -> case x._2 of {
 //│ ╙──       	              ^^^^
 //│ f: {_1: anything, _2: anything} -> (1 | 2 | 3 | 4)
 //│  = [Function: f3]
@@ -230,16 +229,16 @@ def f = fun (x: L | R) -> case x._1 of {
     }
   }
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.227: 	  | _ -> case x._2 of {
+//│ ║  l.226: 	  | _ -> case x._2 of {
 //│ ║         	         ^^^^^^^^^^^^^^
-//│ ║  l.228: 	    | A -> 3
+//│ ║  l.227: 	    | A -> 3
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.229: 	    | B -> 4
+//│ ║  l.228: 	    | B -> 4
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.230: 	    }
+//│ ║  l.229: 	    }
 //│ ║         	^^^^^
 //│ ╟── field selection of type `anything` does not match type `A | B`
-//│ ║  l.227: 	  | _ -> case x._2 of {
+//│ ║  l.226: 	  | _ -> case x._2 of {
 //│ ╙──       	              ^^^^
 //│ f: (L | R) -> (1 | 2 | 3 | 4)
 //│  = [Function: f4]

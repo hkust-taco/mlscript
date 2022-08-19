@@ -274,7 +274,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       // else this.parentsST.union(that.parentsST)
       else Set(this, that)
     def level: Int = 0
-    override def toString = showProvOver(false)(id.idStr+s"<${parents.mkString(",")}>")
+    override def toString = showProvOver(false)(id.idStr+s"<${parents.map(_.show).mkString(",")}>")
   }
   
   case class TraitTag(id: SimpleTerm)(val prov: TypeProvenance) extends BaseTypeOrTag with ObjectTag with Factorizable {
