@@ -754,25 +754,28 @@ ta3[1-2]
 //│ ╔══[WARNING] Get into this case 1!
 //│ ║  l.712: 	  | _ -> x
 //│ ╙──       	         ^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:800)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:802)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$3(ConstraintSolver.scala:783)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:783)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:802)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:795)
+//│ res: bool | null
+//│    = null
+//│ ta3: ((1, 2, 3,), "hello", false,)
+//│    = [ [ 1, 2, 3 ], 'hello', false ]
+//│ ╔══[WARNING] Get into this case 2!
+//│ ║  l.737: 	ta3[1-2]
+//│ ╙──       	    ^^^
+//│ res: "hello" | (1, 2, 3,) | false | undefined
+//│    = undefined
+//│ ╔══[ERROR] Out of range!
+//│ ║  l.738: 	(1,2,3)[4]
+//│ ╙──       	^^^^^^^
+//│ res: error
+//│    = undefined
 
 :e
 ((defined ta2[0])[1+4], ta[1])[0]
 //│ ╔══[WARNING] Get into this case 1!
-//│ ║  l.770: 	((defined ta2[0])[1+4], ta[1])[0]
+//│ ║  l.773: 	((defined ta2[0])[1+4], ta[1])[0]
 //│ ╙──       	  ^^^^^^^^^^^^^^
 //│ ╔══[WARNING] Get into this case 2!
-//│ ║  l.770: 	((defined ta2[0])[1+4], ta[1])[0]
+//│ ║  l.773: 	((defined ta2[0])[1+4], ta[1])[0]
 //│ ╙──       	                  ^^^
 //│ ╔══[WARNING] Get into this case 1!
 //│ ║  l.711: 	  | undefined -> els()
@@ -780,17 +783,8 @@ ta3[1-2]
 //│ ╔══[WARNING] Get into this case 1!
 //│ ║  l.712: 	  | _ -> x
 //│ ╙──       	         ^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:800)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:802)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$3(ConstraintSolver.scala:783)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:783)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:802)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:795)
+//│ res: bool
+//│    = undefined
 
 :e
 def ge x = x + 1
@@ -800,51 +794,36 @@ true[false]
 ge[2]
 //│ ge: int -> int
 //│   = [Function: ge]
-//│ ╔══[ERROR] identifier not found: ta3
-//│ ║  l.797: 	ta3[ge 3][ge (1+2)]
-//│ ╙──       	^^^
-//│ ╔══[ERROR] Encounter error at receiver during array indexing
-//│ ╙──
-//│ ╔══[ERROR] Encounter error at receiver during array indexing
-//│ ╙──
-//│ res: error
-//│ Runtime error:
-//│   TypeError: Cannot read properties of undefined (reading '4')
+//│ ╔══[WARNING] Get into this case 2!
+//│ ║  l.791: 	ta3[ge 3][ge (1+2)]
+//│ ╙──       	    ^^^^
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.798: 	true[false]
-//│ ║         	^^^^^^^^^^^
-//│ ╟── reference of type `true` does not match type `Array[~undefined]`
-//│ ║  l.798: 	true[false]
-//│ ╙──       	^^^^
-//│ ╔══[ERROR] The index must be an integer
+//│ ║  l.791: 	ta3[ge 3][ge (1+2)]
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ╟── string literal of type `"hello"` does not match type `Array[~undefined]`
+//│ ║  l.736: 	ta3 = ((1,2,3), "hello", false)
+//│ ╙──       	                ^^^^^^^
+//│ ╔══[WARNING] Get into this case 2!
+//│ ║  l.791: 	ta3[ge 3][ge (1+2)]
+//│ ╙──       	          ^^^^^^^^
+//│ ╔══[WARNING] Get into this case 1!
 //│ ╙──
-//│ res: error
-//│    = undefined
-//│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.799: 	4["hello"]
-//│ ║         	^^^^^^^^^^
-//│ ╟── integer literal of type `4` does not match type `Array[~undefined]`
-//│ ║  l.799: 	4["hello"]
-//│ ╙──       	^
-//│ ╔══[ERROR] The index must be an integer
-//│ ║  l.799: 	4["hello"]
-//│ ╙──       	  ^^^^^^^
-//│ res: error
-//│    = undefined
-//│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.800: 	ge[2]
-//│ ║         	^^^^^
-//│ ╟── function of type `?a -> ?b` does not match type `Array[~undefined]`
-//│ ║  l.796: 	def ge x = x + 1
-//│ ║         	       ^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `Array[~undefined]`
-//│ ║  l.800: 	ge[2]
-//│ ╙──       	^^
+//│ ╔══[ERROR] mlscript doesn't allow string indexing
+//│ ║  l.736: 	ta3 = ((1,2,3), "hello", false)
+//│ ╙──       	                ^^^^^^^
 //│ ╔══[ERROR] The indexing operation should be acted on an array
-//│ ║  l.796: 	def ge x = x + 1
-//│ ╙──       	       ^^^^^^^^^
-//│ res: error
-//│    = undefined
+//│ ╙──
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:816)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:818)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:762)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:818)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:801)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:818)
 
 def mkarr: 'a -> Array['a]
 def mkarr x = (x,x,x,x,x)
@@ -858,39 +837,53 @@ mkarr (1,true,"hi")[0]
 //│ 'a -> Array['a]
 //│      = [Function: mkarr]
 //│ ╔══[WARNING] Get into this case 1!
-//│ ║  l.851: 	mk1 = defined (mkarr 6)[ 0]
+//│ ║  l.830: 	mk1 = defined (mkarr 6)[ 0]
 //│ ╙──       	               ^^^^^^^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:800)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:802)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$3(ConstraintSolver.scala:783)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:783)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:802)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:536)
+//│ mk1: 6
+//│    = 6
+//│ ╔══[WARNING] Get into this case 1!
+//│ ║  l.831: 	(mkarr (mk1/3))[(3)]
+//│ ╙──       	 ^^^^^^^^^^^^^
+//│ res: int | undefined
+//│    = 2
+//│ res: Array[1]
+//│    = [ 1, 1, 1, 1, 1 ]
 
 :e 
 mkarr 3 [  1]
 mk1[2  ]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.876: 	mkarr 3 [  1]
+//│ ║  l.853: 	mkarr 3 [  1]
 //│ ║         	      ^^^^^^^
 //│ ╟── integer literal of type `3` does not match type `Array[~undefined]`
-//│ ║  l.876: 	mkarr 3 [  1]
+//│ ║  l.853: 	mkarr 3 [  1]
 //│ ╙──       	      ^
 //│ ╔══[ERROR] The indexing operation should be acted on an array
-//│ ║  l.876: 	mkarr 3 [  1]
+//│ ║  l.853: 	mkarr 3 [  1]
 //│ ╙──       	      ^
 //│ res: Array[error]
 //│    = [ undefined, undefined, undefined, undefined, undefined ]
-//│ ╔══[ERROR] identifier not found: mk1
-//│ ║  l.877: 	mk1[2  ]
+//│ ╔══[ERROR] Type mismatch in array access:
+//│ ║  l.854: 	mk1[2  ]
+//│ ║         	^^^^^^^^
+//│ ╟── integer literal of type `6` does not match type `Array[~undefined]`
+//│ ║  l.830: 	mk1 = defined (mkarr 6)[ 0]
+//│ ║         	                     ^
+//│ ╟── but it flows into reference with expected type `Array[~undefined]`
+//│ ║  l.854: 	mk1[2  ]
 //│ ╙──       	^^^
-//│ ╔══[ERROR] Encounter error at receiver during array indexing
-//│ ╙──
+//│ ╔══[WARNING] Get into this case 1!
+//│ ║  l.830: 	mk1 = defined (mkarr 6)[ 0]
+//│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] Get into this case 1!
+//│ ║  l.711: 	  | undefined -> els()
+//│ ╙──       	                 ^^^^^
+//│ ╔══[WARNING] Get into this case 1!
+//│ ║  l.712: 	  | _ -> x
+//│ ╙──       	         ^
+//│ ╔══[ERROR] The indexing operation should be acted on an array
+//│ ║  l.830: 	mk1 = defined (mkarr 6)[ 0]
+//│ ╙──       	                     ^
 //│ res: error
 //│    = undefined
 
@@ -909,7 +902,7 @@ def s3 a = defined a._1.t[0] + defined (defined a.x[1])[2]
 //│ ╔══[WARNING] Get into this case 1!
 //│ ╙──
 //│ ╔══[WARNING] Get into this case 1!
-//│ ║  l.898: 	def s2 a = (defined (defined a[1])[0])._2 + (defined a[2])._1
+//│ ║  l.891: 	def s2 a = (defined (defined a[1])[0])._2 + (defined a[2])._1
 //│ ╙──       	                     ^^^^^^^^^^^^
 //│ ╔══[WARNING] Get into this case 1!
 //│ ║  l.711: 	  | undefined -> els()
@@ -922,13 +915,13 @@ def s3 a = defined a._1.t[0] + defined (defined a.x[1])[2]
 //│ s2: Array[~undefined] -> int
 //│   = [Function: s2]
 //│ ╔══[WARNING] Get into this case 1!
-//│ ║  l.899: 	def s3 a = defined a._1.t[0] + defined (defined a.x[1])[2]
+//│ ║  l.892: 	def s3 a = defined a._1.t[0] + defined (defined a.x[1])[2]
 //│ ╙──       	                   ^^^^^^
 //│ ╔══[WARNING] Get into this case 1!
-//│ ║  l.899: 	def s3 a = defined a._1.t[0] + defined (defined a.x[1])[2]
+//│ ║  l.892: 	def s3 a = defined a._1.t[0] + defined (defined a.x[1])[2]
 //│ ╙──       	                                                ^^^
 //│ ╔══[WARNING] Get into this case 1!
-//│ ║  l.899: 	def s3 a = defined a._1.t[0] + defined (defined a.x[1])[2]
+//│ ║  l.892: 	def s3 a = defined a._1.t[0] + defined (defined a.x[1])[2]
 //│ ╙──       	                                        ^^^^^^^^^^^^^^
 //│ ╔══[WARNING] Get into this case 1!
 //│ ║  l.711: 	  | undefined -> els()
@@ -950,17 +943,38 @@ def s4 arr = (defined (defined (defined arr.x[0])._3[6])[7])._h.hello
 //│    = <missing implementation>
 //│ arb: Array[Array[(int, int,)]]
 //│    = <missing implementation>
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:800)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:802)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:536)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:697)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$15(Typer.scala:514)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:513)
+//│ res: int
+//│    = <no result>
+//│      ara is not implemented
+//│ ╔══[WARNING] Get into this case 1!
+//│ ║  l.940: 	(defined (defined arb[0])[1])._2
+//│ ╙──       	          ^^^^^^^^^^^^^^
+//│ ╔══[WARNING] Get into this case 1!
+//│ ║  l.711: 	  | undefined -> els()
+//│ ╙──       	                 ^^^^^
+//│ ╔══[WARNING] Get into this case 1!
+//│ ║  l.712: 	  | _ -> x
+//│ ╙──       	         ^
+//│ res: int
+//│    = <no result>
+//│      arb is not implemented
+//│ ╔══[WARNING] Get into this case 1!
+//│ ║  l.941: 	def s4 arr = (defined (defined (defined arr.x[0])._3[6])[7])._h.hello
+//│ ╙──       	                                        ^^^^^
+//│ ╔══[WARNING] Get into this case 1!
+//│ ║  l.941: 	def s4 arr = (defined (defined (defined arr.x[0])._3[6])[7])._h.hello
+//│ ╙──       	                               ^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] Get into this case 1!
+//│ ║  l.941: 	def s4 arr = (defined (defined (defined arr.x[0])._3[6])[7])._h.hello
+//│ ╙──       	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] Get into this case 1!
+//│ ║  l.711: 	  | undefined -> els()
+//│ ╙──       	                 ^^^^^
+//│ ╔══[WARNING] Get into this case 1!
+//│ ║  l.712: 	  | _ -> x
+//│ ╙──       	         ^
+//│ s4: {x: Array[~undefined]} -> nothing
+//│   = [Function: s4]
 
 def at1 xs = (defined xs[0])._1
 def dup a b = a * 2 + b
@@ -971,35 +985,36 @@ dup (defined ara[1])._1 (defined (defined arb[10])[8])._2 + 1
 //│    = [Function: at1]
 //│ dup: int -> int -> int
 //│    = [Function: dup]
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:800)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:802)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:536)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:697)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$15(Typer.scala:514)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:513)
+//│ ╔══[WARNING] Get into this case 1!
+//│ ║  l.981: 	dup (defined ara[1])._1 (defined (defined arb[10])[8])._2 + 1
+//│ ╙──       	                                  ^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] Get into this case 1!
+//│ ║  l.711: 	  | undefined -> els()
+//│ ╙──       	                 ^^^^^
+//│ ╔══[WARNING] Get into this case 1!
+//│ ║  l.712: 	  | _ -> x
+//│ ╙──       	         ^
+//│ res: int
+//│    = <no result>
+//│      ara is not implemented
 
 :e
 (1,2,3)._1[1]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.987: 	(1,2,3)._1[1]
-//│ ║         	^^^^^^^^^^^^^
+//│ ║  l.1002: 	(1,2,3)._1[1]
+//│ ║          	^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` does not match type `Array[~undefined]`
-//│ ║  l.987: 	(1,2,3)._1[1]
-//│ ║         	 ^
+//│ ║  l.1002: 	(1,2,3)._1[1]
+//│ ║          	 ^
 //│ ╟── but it flows into field selection with expected type `Array[~undefined]`
-//│ ║  l.987: 	(1,2,3)._1[1]
-//│ ╙──       	^^^^^^^^^^
+//│ ║  l.1002: 	(1,2,3)._1[1]
+//│ ╙──        	^^^^^^^^^^
 //│ ╔══[WARNING] Get into this case 1!
-//│ ║  l.987: 	(1,2,3)._1[1]
-//│ ╙──       	^^^^^^^^^^
+//│ ║  l.1002: 	(1,2,3)._1[1]
+//│ ╙──        	^^^^^^^^^^
 //│ ╔══[ERROR] The indexing operation should be acted on an array
-//│ ║  l.987: 	(1,2,3)._1[1]
-//│ ╙──       	 ^
+//│ ║  l.1002: 	(1,2,3)._1[1]
+//│ ╙──        	 ^
 //│ res: error
 //│ Runtime error:
 //│   TypeError: Cannot read properties of undefined (reading '1')

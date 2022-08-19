@@ -146,17 +146,26 @@ f(1,2,3) : 1 | 2 | 3
 
 :e
 (arr[0])[1][2]
+//│ ╔══[ERROR] Type mismatch in array access:
+//│ ║  l.148: 	(arr[0])[1][2]
+//│ ║         	^^^^^^^^^^^
+//│ ╟── type `int` does not match type `Array[~undefined]`
+//│ ║  l.57: 	def arr: Array[int]
+//│ ╙──      	               ^^^
+//│ ╔══[ERROR] The indexing operation should be acted on an array
+//│ ║  l.57: 	def arr: Array[int]
+//│ ╙──      	               ^^^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:800)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:816)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:802)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:536)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:818)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:762)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:697)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:582)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:818)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainIndex$2(ConstraintSolver.scala:801)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:697)
+//│ 	at: mlscript.ConstraintSolver.constrainIndex(ConstraintSolver.scala:818)
 
 
 class A: { x: int }
@@ -304,13 +313,13 @@ a2.x
 :e
 a2._1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.305: 	a2._1
+//│ ║  l.314: 	a2._1
 //│ ║         	^^^^^
 //│ ╟── type `Array[?a]` does not match type `{_1: ?b} | ~{_2: true, x: "haha"}`
-//│ ║  l.282: 	def rep5: 'a -> Array['a]
+//│ ║  l.291: 	def rep5: 'a -> Array['a]
 //│ ║         	                ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?b} | ~{_2: true, x: "haha"}`
-//│ ║  l.305: 	a2._1
+//│ ║  l.314: 	a2._1
 //│ ╙──       	^^
 //│ res: error
 //│    = undefined

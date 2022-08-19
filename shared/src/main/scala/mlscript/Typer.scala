@@ -526,18 +526,19 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val t_a = typeTerm(a)
         val t_i = typeTerm(i)
         
+        // t_a <: Array[~undefined]
+        
         con(t_a, 
           ArrayType(TypeRef(TypeName("undefined"), Nil)(noProv)
           .neg(prov.copy(desc = "prohibited undefined element"))
           .toUpper(tp(i.toLoc, "array element")))(noProv),
           TopType)
         
-        
         constrainIndex(t_a, t_i)
         
-        //con(t_i, IntType, TopType)
-        
         /*
+        con(t_i, IntType, TopType)
+        
         val elemType = freshVar(prov)
         elemType.upperBounds ::=
           // * We forbid using [⋅] indexing to access elements that possibly have `undefined` value,

@@ -749,32 +749,38 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           fs(value.toInt)._2.ub
         }
       // first param: match the generalised notion of array (the length might be unknown)
-      // second param:  match non-literal integer (Var("int")) 
-      // such as 1 + 1
-      case (t : ArrayBase, ClassTag(Var("int"), _)) =>  // Index: int<number>
+      // second param:  match integer
+      case (t: ArrayBase, ClassTag(Var("int"), _) | ClassTag(IntLit(_), _) | TypeRef(TypeName("int"), _)) =>  // Index: int<number>
         t.inner.ub | TypeRef(TypeName("undefined"), Nil)(noProv)
-      // when index is defined as int but not assigned a value
-      case (t: ArrayBase, TypeRef(TypeName("int"), _)) =>  // Index: Int
-        err(msg"The index does not have a value", t.prov.loco)
+      // for the case with type ascription, like def k: int, it can be assigned a value or not
+      case (t: ArrayBase, rf: TypeRef) => 
+        val r = rf.expand // SimpleType
+        constrainIndex(t, r)
+      case (rf: TypeRef, t @ ( ClassTag(IntLit(_), _) |  TypeRef(TypeName("int"), _) | ClassTag(Var("int"), _))) =>
+        val r = rf.expand
+        //println(s"info: $r")
+        constrainIndex(r, t)
       // disallow string indexing like "hello"[0]
-      case (s @ ClassTag(StrLit(st), _), _) =>
-        err(msg"mlscript doesn't allow string indexing", s.prov.loco)
+      case s @ ((ClassTag(StrLit(_), _), _) | (TypeRef(TypeName("string"), _), _) | (ClassTag(Var("string"), _), _)) =>
+        err(msg"mlscript doesn't allow string indexing", s._1.prov.loco)
       // StrLit: literal string; TypeRef: defined but not assigned value, so refer to the type; ClassTag(Var(..)): concat "bruh" "bruh", a variable but not a literal
-      case t @(
-        (_, ClassTag(StrLit(_), _)) | (_, TypeRef(TypeName("string"), _)) | (_, ClassTag(Var("string"), _)) |
-        (_, ClassTag(DecLit(_), _)) | (_, TypeRef(TypeName("decimal"), _)) | (_, ClassTag(Var("decimal"), _)) |
-        (_, ClassTag(Var("bool"), _)) | (_, TypeRef(TypeName("bool"), _)) | (_, ClassTag(Var("true"), _)) | (_, ClassTag(Var("false"), _)) |
-        (_, FunctionType(_, _)) | (_, RecordType(_))
-       ) =>
-        err(msg"The index must be an integer", t._2.prov.loco)
-      case t @(
-        (ClassTag(IntLit(_), _), _) | (TypeRef(TypeName("int"), _), _) | (ClassTag(Var("int"), _), _) |
-        (ClassTag(StrLit(_), _), _) | (TypeRef(TypeName("string"), _), _) | (ClassTag(Var("string"), _), _) |
-        (ClassTag(DecLit(_), _), _) | (TypeRef(TypeName("decimal"), _), _) | (ClassTag(Var("decimal"), _), _) |
-        (ClassTag(Var("bool"), _), _) | (TypeRef(TypeName("bool"), _), _) | (ClassTag(Var("true"), _), _) | (ClassTag(Var("false"), _), _) |
-        (FunctionType(_, _), _) | (RecordType(_), _)
-       ) =>
-        err(msg"The indexing operation should be acted on an array", t._1.prov.loco)
+      case (_, t @ (
+        ClassTag(StrLit(_), _) | TypeRef(TypeName("string"), _) | ClassTag(Var("string"), _) |
+        ClassTag(DecLit(_), _) | TypeRef(TypeName("decimal"), _) | ClassTag(Var("decimal"), _) |
+        ClassTag(Var("bool"), _) | TypeRef(TypeName("bool"), _) | 
+        ClassTag(Var("true"), _) | ClassTag(Var("false"), _) |
+        FunctionType(_, _) | RecordType(_)
+      )) =>
+        err(msg"The index must be an integer", t.prov.loco)
+      case (t @ (
+        ClassTag(IntLit(_), _) | TypeRef(TypeName("int"), _) | ClassTag(Var("int"), _) |
+        ClassTag(StrLit(_), _) | TypeRef(TypeName("string"), _) | ClassTag(Var("string"), _) |
+        ClassTag(DecLit(_), _) | TypeRef(TypeName("decimal"), _) | ClassTag(Var("decimal"), _) |
+        ClassTag(Var("bool"), _) | TypeRef(TypeName("bool"), _) | 
+        ClassTag(Var("true"), _) | ClassTag(Var("false"), _) |
+        FunctionType(_, _) | RecordType(_)
+      ), _) =>
+        err(msg"The indexing operation should be acted on an array", t.prov.loco)
       case (t : TypeVariable, _) =>
         warn(msg"Get into this case 1!", t.prov.loco)
         val lb = t.lowerBounds
@@ -795,7 +801,17 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         constrainIndex(lhs, i) | constrainIndex(rhs, i)
       case (t, ComposedType(true, lhs, rhs)) =>
         constrainIndex(t, lhs) | constrainIndex(t, rhs)
-      // intersection, Conjunct, DNF.mk, LhsNf, LhsRefined (base)
+      case (ComposedType(false, lhs, rhs), i) =>
+        BoolType
+      case (t, ComposedType(false, lhs, rhs)) =>
+        BoolType
+      // handle intersection (need to be normalized), Conjunct, DNF.mk, LhsNf, LhsRefined (base)
+      // DNF.mk to normalize
+      // DNF: normalized representaton of union of conjuncts
+      // of function
+      // LhsRefined (base: Opt[BaseType])
+      // LhsNF
+
       // levels of let polymorphism, implement extrusion to the current level
       case _ => ???
     }
