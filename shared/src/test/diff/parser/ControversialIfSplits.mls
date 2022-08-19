@@ -28,7 +28,7 @@ if f (
   0 then "ok"
   1 then "ko"
 )
-//│ |#if| |f| |(|→|0| |#then| |"ok"|↵|1| |#then| |"ko"|←|↵|)|
+//│ |#if| |f| |(BEG:|→|0| |#then| |"ok"|↵|1| |#then| |"ko"|←|↵|:END)|
 //│ ╔══[ERROR] Unexpected 'then'/'else' clause
 //│ ║  l.28: 	  0 then "ok"
 //│ ║        	  ^^^^^^^^^^^
@@ -42,7 +42,7 @@ if f (
 //│ ║  l.29: 	  1 then "ko"
 //│ ║        	^^^^^^^^^^^^^
 //│ ║  l.30: 	)
-//│ ║        	^
+//│ ║        	
 //│ ╟── Note: 'if' expression started here:
 //│ ║  l.27: 	if f (
 //│ ╙──      	^^

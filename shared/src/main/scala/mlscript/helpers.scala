@@ -387,16 +387,18 @@ trait TermImpl extends StatementImpl { self: Term =>
     case New(S((at, ar)), bod) => s"new ${at.show}($ar) ${bod.show}" |> bra
     case New(N, bod) => s"new ${bod.show}" |> bra
     case If(body, els) => s"if $body" + els.fold("")(" else " + _) |> bra
+    case TyApp(lhs, targs) => s"$lhs‹${targs.map(_.show).mkString(", ")}›"
   }}
   
   def toType: Diagnostic \/ Type =
-    try R(toType_!) catch {
+    try R(toType_!.withLocOf(this)) catch {
       case e: NotAType =>
         import Message._
         L(CompilationError(msg"not a recognized type: ${e.trm.toString}"->e.trm.toLoc::Nil)) }
   protected def toType_! : Type = (this match {
     case Var(name) if name.startsWith("`") => TypeVar(R(name.tail), N)
     case Var(name) => TypeName(name)
+    case lit: Lit => Literal(lit)
     case App(App(Var("|"), lhs), rhs) => Union(lhs.toType_!, rhs.toType_!)
     case App(App(Var("&"), lhs), rhs) => Inter(lhs.toType_!, rhs.toType_!)
     case Lam(lhs, rhs) => Function(lhs.toType_!, rhs.toType_!)
@@ -638,6 +640,7 @@ trait StatementImpl extends Located { self: Statement =>
     case Assign(lhs, rhs) => lhs :: rhs :: Nil
     case If(body, els) => body :: els.toList
     case d @ NuFunDef(v, ts, rhs) => v :: ts ::: d.body :: Nil
+    case TyApp(lhs, targs) => lhs :: targs
   }
   
   

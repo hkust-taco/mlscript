@@ -16,6 +16,7 @@ sealed abstract class Token {
     case IDENT(name, symbolic) => if (symbolic) "operator" else "identifier"
     case OPEN_BRACKET(k) => s"opening ${k.name}"
     case CLOSE_BRACKET(k) => s"closing ${k.name}"
+    case BRACKETS(k, contents) => s"${k.name} section"
     case COMMENT(text) => "comment"
   }
 }
@@ -32,7 +33,7 @@ final case class KEYWORD(name: String) extends Token
 final case class IDENT(name: String, symbolic: Bool) extends Token
 final case class OPEN_BRACKET(k: BracketKind) extends Token // TODO rm
 final case class CLOSE_BRACKET(k: BracketKind) extends Token // TODO rm
-// final case class BRACKETS(k: BracketKind) extends Token
+final case class BRACKETS(k: BracketKind, contents: Ls[Token -> Loc]) extends Token
 final case class COMMENT(text: String) extends Token
 
 
@@ -42,11 +43,13 @@ sealed abstract class BracketKind {
     case Round => '(' -> ')'
     case Curly => '{' -> '}'
     case Square => '[' -> ']'
+    case Angle => '‹' -> '›'
   }
   def name: Str = this match {
     case Round => "parenthesis"
     case Curly => "curly brace"
     case Square => "square bracket"
+    case Angle => "angle bracket"
   }
 }
 
@@ -54,6 +57,7 @@ object BracketKind {
   case object Round extends BracketKind
   case object Curly extends BracketKind
   case object Square extends BracketKind
+  case object Angle extends BracketKind
   def unapply(c: Char): Opt[Either[BracketKind, BracketKind]] = c |>? {
     case '(' => Left(Round)
     case ')' => Right(Round)
@@ -61,6 +65,8 @@ object BracketKind {
     case '}' => Right(Curly)
     case '[' => Left(Square)
     case ']' => Right(Square)
+    case '‹' => Left(Angle)
+    case '›' => Right(Angle)
   }
 }
 

@@ -1,0 +1,39 @@
+
+
+class Foo<A>
+//│ |#class| |Foo|‹BEG:|A|:END›|
+//│ Parsed: {class Foo[A]() {}}
+
+
+
+class Foo‹A›
+//│ |#class| |Foo|‹BEG:|A|:END›|
+//│ Parsed: {class Foo[A]() {}}
+
+
+(1)
+//│ |(BEG:|1|:END)|
+//│ Parsed: {'(' 1, ')'}
+
+
+foo<1,2,3>
+//│ |foo|‹BEG:|1|,|2|,|3|:END›|
+//│ Parsed: {foo‹1, 2, 3›}
+
+foo<1, 2, 3>
+//│ |foo|‹BEG:|1|,| |2|,| |3|:END›|
+//│ Parsed: {foo‹1, 2, 3›}
+
+foo<1, 2, 3>()
+//│ |foo|‹BEG:|1|,| |2|,| |3|:END›|(BEG:||:END)|
+//│ Parsed: {foo‹1, 2, 3› ()}
+
+foo<1, 2, 3>(1, 2, 3)
+//│ |foo|‹BEG:|1|,| |2|,| |3|:END›|(BEG:|1|,| |2|,| |3|:END)|
+//│ Parsed: {foo‹1, 2, 3› (1, 2, 3,)}
+
+1 < 2 > 4
+//│ |1| |<| |2| |>| |4|
+//│ Parsed: {> (< 1 2) 4}
+
+

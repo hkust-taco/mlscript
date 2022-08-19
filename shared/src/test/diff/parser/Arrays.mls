@@ -3,35 +3,35 @@
 
 
 []
-//│ |[|]|
-//│ Parsed: {'(' undefined, ')'}
+//│ |[BEG:||:END]|
+//│ Parsed: {'('  ')'}
 
 [1]
-//│ |[|1|]|
+//│ |[BEG:|1|:END]|
 //│ Parsed: {'(' 1, ')'}
 
 [1,]
-//│ |[|1|,|]|
-//│ Parsed: {'(' 1, undefined, ')'}
+//│ |[BEG:|1|,|:END]|
+//│ Parsed: {'('  ')'}
 
 [1, 2, 3]
-//│ |[|1|,| |2|,| |3|]|
+//│ |[BEG:|1|,| |2|,| |3|:END]|
 //│ Parsed: {'(' 1, 2, 3, ')'}
 
 ()
-//│ |(|)|
-//│ Parsed: {'(' undefined, ')'}
+//│ |(BEG:||:END)|
+//│ Parsed: {'('  ')'}
 
 (1)
-//│ |(|1|)|
+//│ |(BEG:|1|:END)|
 //│ Parsed: {'(' 1, ')'}
 
 (1,)
-//│ |(|1|,|)|
-//│ Parsed: {'(' 1, undefined, ')'}
+//│ |(BEG:|1|,|:END)|
+//│ Parsed: {'('  ')'}
 
 (1, 2, 3)
-//│ |(|1|,| |2|,| |3|)|
+//│ |(BEG:|1|,| |2|,| |3|:END)|
 //│ Parsed: {'(' 1, 2, 3, ')'}
 
 
@@ -91,18 +91,18 @@ f of
 
 
 let arr = []
-//│ |#let| |arr| |#=| |[|]|
-//│ Parsed: {let arr = '(' undefined, ')' in undefined}
+//│ |#let| |arr| |#=| |[BEG:||:END]|
+//│ Parsed: {let arr = '('  ')' in undefined}
 
 let arr = [
 ]
-//│ |#let| |arr| |#=| |[|↵|]|
+//│ |#let| |arr| |#=| |[BEG:|↵|:END]|
 //│ Parsed: {let arr = '('  ')' in undefined}
 
 let arr =
 [
 ]
-//│ |#let| |arr| |#=|↵|[|↵|]|
+//│ |#let| |arr| |#=|↵|[BEG:|↵|:END]|
 //│ ╔══[ERROR] Unexpected newline in expression position
 //│ ║  l.102: 	let arr =
 //│ ║         	         ^
@@ -113,54 +113,38 @@ let arr =
 let arr = [
   1
 ]
-//│ |#let| |arr| |#=| |[|→|1|←|↵|]|
+//│ |#let| |arr| |#=| |[BEG:|→|1|←|↵|:END]|
 //│ Parsed: {let arr = '(' {1}, ')' in undefined}
 
 let arr = [
   1, 2
 ]
-//│ |#let| |arr| |#=| |[|→|1|,| |2|←|↵|]|
+//│ |#let| |arr| |#=| |[BEG:|→|1|,| |2|←|↵|:END]|
 //│ ╔══[ERROR] Expected deindentation; found comma instead
 //│ ║  l.120: 	  1, 2
 //│ ║         	   ^
 //│ ╟── Note: indented block starts here:
 //│ ║  l.120: 	  1, 2
 //│ ╙──       	^^
-//│ ╔══[ERROR] Expected closing square bracket; found literal instead
+//│ ╔══[ERROR] Unexpected literal here
 //│ ║  l.120: 	  1, 2
-//│ ║         	     ^
-//│ ╟── Note: unmatched square bracket was opened here:
-//│ ║  l.119: 	let arr = [
-//│ ╙──       	          ^
-//│ ╔══[ERROR] Expected end of input; found deindentation instead
-//│ ║  l.120: 	  1, 2
-//│ ║         	      ^
-//│ ║  l.121: 	]
-//│ ╙──       	
+//│ ╙──       	     ^
 //│ Parsed: {let arr = '(' {1}, ')' in undefined}
 
 let arr = [
   1,
   2
 ]
-//│ |#let| |arr| |#=| |[|→|1|,|↵|2|←|↵|]|
+//│ |#let| |arr| |#=| |[BEG:|→|1|,|↵|2|←|↵|:END]|
 //│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.143: 	  1,
+//│ ║  l.135: 	  1,
 //│ ║         	   ^
 //│ ╟── Note: indented block starts here:
-//│ ║  l.143: 	  1,
+//│ ║  l.135: 	  1,
 //│ ╙──       	^^
-//│ ╔══[ERROR] Expected closing square bracket; found literal instead
-//│ ║  l.144: 	  2
-//│ ║         	  ^
-//│ ╟── Note: unmatched square bracket was opened here:
-//│ ║  l.142: 	let arr = [
-//│ ╙──       	          ^
-//│ ╔══[ERROR] Expected end of input; found deindentation instead
-//│ ║  l.144: 	  2
-//│ ║         	   ^
-//│ ║  l.145: 	]
-//│ ╙──       	
+//│ ╔══[ERROR] Unexpected literal here
+//│ ║  l.136: 	  2
+//│ ╙──       	  ^
 //│ Parsed: {let arr = '(' {1}, ')' in undefined}
 
 

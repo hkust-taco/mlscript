@@ -7,7 +7,7 @@ fun f = 1
 //│ Parsed: {fun f = 1}
 
 fun f(x) = x
-//│ |#fun| |f|(|x|)| |#=| |x|
+//│ |#fun| |f|(BEG:|x|:END)| |#=| |x|
 //│ Parsed: {fun f = x, => x}
 
 fun f x = x
@@ -46,12 +46,12 @@ let f = fun x => x
 
 
 f(x) + x
-//│ |f|(|x|)| |+| |x|
+//│ |f|(BEG:|x|:END)| |+| |x|
 //│ Parsed: {+ (f (x,)) x}
 
 
 fun f(x, y) = x
-//│ |#fun| |f|(|x|,| |y|)| |#=| |x|
+//│ |#fun| |f|(BEG:|x|,| |y|:END)| |#=| |x|
 //│ Parsed: {fun f = x, y, => x}
 
 fun f of x = x
@@ -90,11 +90,11 @@ fun f x y = x
 
 
 fun f(x, y)(a, b) = x + y * a / b
-//│ |#fun| |f|(|x|,| |y|)|(|a|,| |b|)| |#=| |x| |+| |y| |*| |a| |/| |b|
+//│ |#fun| |f|(BEG:|x|,| |y|:END)|(BEG:|a|,| |b|:END)| |#=| |x| |+| |y| |*| |a| |/| |b|
 //│ Parsed: {fun f = x, y, => a, b, => / (+ x (* y a)) b}
 
 fun f(x, y) of a, b = x + y * a / b
-//│ |#fun| |f|(|x|,| |y|)| |#of| |a|,| |b| |#=| |x| |+| |y| |*| |a| |/| |b|
+//│ |#fun| |f|(BEG:|x|,| |y|:END)| |#of| |a|,| |b| |#=| |x| |+| |y| |*| |a| |/| |b|
 //│ Parsed: {fun f = x, y, => a, b, => / (+ x (* y a)) b}
 
 fun f of x, y of a, b = x + y * a / b
@@ -103,11 +103,11 @@ fun f of x, y of a, b = x + y * a / b
 
 
 fun f(Some(x)) = x
-//│ |#fun| |f|(|Some|(|x|)|)| |#=| |x|
+//│ |#fun| |f|(BEG:|Some|(BEG:|x|:END)|:END)| |#=| |x|
 //│ Parsed: {fun f = Some (x,), => x}
 
 fun f(Some of x) = x
-//│ |#fun| |f|(|Some| |#of| |x|)| |#=| |x|
+//│ |#fun| |f|(BEG:|Some| |#of| |x|:END)| |#=| |x|
 //│ Parsed: {fun f = Some (x,), => x}
 
 fun f of Some of x = x
@@ -115,11 +115,11 @@ fun f of Some of x = x
 //│ Parsed: {fun f = Some (x,), => x}
 
 fun f(Some(x), Some(y)) = x
-//│ |#fun| |f|(|Some|(|x|)|,| |Some|(|y|)|)| |#=| |x|
+//│ |#fun| |f|(BEG:|Some|(BEG:|x|:END)|,| |Some|(BEG:|y|:END)|:END)| |#=| |x|
 //│ Parsed: {fun f = Some (x,), Some (y,), => x}
 
 fun f(Some of x, Some of y) = x + y
-//│ |#fun| |f|(|Some| |#of| |x|,| |Some| |#of| |y|)| |#=| |x| |+| |y|
+//│ |#fun| |f|(BEG:|Some| |#of| |x|,| |Some| |#of| |y|:END)| |#=| |x| |+| |y|
 //│ Parsed: {fun f = Some (x, Some (y,),), => + x y}
 
 fun f of Some of x, Some of y = x + y
@@ -128,11 +128,11 @@ fun f of Some of x, Some of y = x + y
 
 
 fun f(x: Int, y: Int) = x
-//│ |#fun| |f|(|x|#:| |Int|,| |y|#:| |Int|)| |#=| |x|
+//│ |#fun| |f|(BEG:|x|#:| |Int|,| |y|#:| |Int|:END)| |#=| |x|
 //│ Parsed: {fun f = x: Int, y: Int, => x}
 
 fun f(x: Int, y: Int): Int = x
-//│ |#fun| |f|(|x|#:| |Int|,| |y|#:| |Int|)|#:| |Int| |#=| |x|
+//│ |#fun| |f|(BEG:|x|#:| |Int|,| |y|#:| |Int|:END)|#:| |Int| |#=| |x|
 //│ Parsed: {fun f = x: Int, y: Int, => x : TypeName(Int)}
 
 

@@ -42,6 +42,12 @@ object NewParser {
 import NewParser._
 
 abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Diagnostic => Unit, val dbg: Bool) {
+  outer =>
+  
+  def rec(tokens: Ls[Token -> Loc]): NewParser =
+    new NewParser(origin, tokens, raiseFun, dbg) {
+      def printDbg(msg: => Any): Unit = outer.printDbg(msg)
+    }
   
   def raise(mkDiag: => Diagnostic)(implicit fe: FoundErr = false): Unit =
     if (!foundErr) raiseFun(mkDiag)
@@ -72,6 +78,18 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
       case c @ (tk, tkl) :: _ =>
         val (relevantToken, rl) = c.dropWhile(_._1 === SPACE).headOption.getOrElse(tk, tkl)
         raise(CompilationError(msg"Expected end of input; found ${relevantToken.describe} instead" -> S(rl) :: Nil))
+      case Nil => ()
+    }
+    res
+  }
+  
+  def concludeWith[R](f: this.type => R): R = {
+    val res = f(this)
+    // yeetSpaces match {
+    cur.dropWhile(tk => (tk._1 === SPACE || tk._1 === INDENT || tk._1 === DEINDENT || tk._1 === NEWLINE) && { consume; true }) match {
+      case c @ (tk, tkl) :: _ =>
+        val (relevantToken, rl) = c.dropWhile(_._1 === SPACE).headOption.getOrElse(tk, tkl)
+        raise(CompilationError(msg"Unexpected ${relevantToken.describe} here" -> S(rl) :: Nil))
       case Nil => ()
     }
     res
@@ -237,7 +255,18 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
     }
     TypingUnit(es)
   }
+  def typingUnitMaybeIndented(implicit fe: FoundErr): TypingUnit = yeetSpaces match {
+    case (INDENT, _) :: _ =>
+      consume
+      val res = typingUnit
+      skipDeindent()
+      res
+    case _ => typingUnit
+  }
   def curlyTypingUnit(implicit fe: FoundErr): TypingUnit = yeetSpaces match {
+    case (BRACKETS(Curly, toks), l1) :: _ =>
+      consume
+      rec(toks).concludeWith(_.typingUnitMaybeIndented)
     case (OPEN_BRACKET(Curly), l1) :: _ =>
       consume
       val res = yeetSpaces match {
@@ -271,6 +300,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
   
   def block(implicit et: ExpectThen, fe: FoundErr): Ls[IfBody \/ Statement] =
     cur match {
+      case Nil => Nil
       case (DEINDENT, _) :: _ => Nil
       case (NEWLINE, _) :: _ => consume; block
       case c =>
@@ -296,7 +326,22 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
                 // R(errExpr)
                 (TypeName("<error>").withLoc(curLoc.map(_.left)), false)
             }
+            val tparams = yeetSpaces match {
+              case (BRACKETS(Angle, toks), loc) :: _ =>
+                consume
+                val ts = rec(toks).concludeWith(_.args()).map {
+                  case (N, Fld(false, false, v @ Var(nme))) =>
+                    TypeName(nme).withLocOf(v)
+                  case _ => ???
+                }
+                ts
+              case _ => Nil
+            }
             val params = yeetSpaces match {
+              case (BRACKETS(Round, toks), _) :: _ =>
+                consume
+                val as = rec(toks).concludeWith(_.args()) // TODO
+                Tup(as)
               case (OPEN_BRACKET(Round), _) :: _ =>
                 consume
                 val as = args() // TODO
@@ -338,7 +383,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
             //     // println(c)
             //     TypingUnit(Nil)
             // }
-            R(NuTypeDef(kind, tn, Nil, params, ps, body))
+            R(NuTypeDef(kind, tn, tparams, params, ps, body))
           case (KEYWORD("fun"), l0) :: c => // TODO support rec?
             consume
             val (v, success) = yeetSpaces match {
@@ -423,6 +468,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
         //   ) :: funParams
         Tup(args() // TODO
           ) :: funParams
+      case (BRACKETS(Round, toks), _) :: _ =>
+        consume
+        val as = rec(toks).concludeWith(_.args()) // TODO
+        Tup(as) :: funParams
       case (OPEN_BRACKET(Round), _) :: _ =>
         consume
         val as = args() // TODO
@@ -478,6 +527,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
       case (IDENT(nme, false), l0) :: _ =>
         consume
         exprCont(Var(nme).withLoc(S(l0)), prec)
+      case (BRACKETS(bk @ (Round | Square), toks), loc) :: _ =>
+        consume
+        val res = rec(toks).concludeWith(_.args()) // TODO
+        exprCont(Bra(bk === Curly, Tup(res)).withLoc(S(loc)), prec)
       case (OPEN_BRACKET(bk @ (Round | Square)), l0) :: _ =>
         consume
         // val res = expr(0)
@@ -635,7 +688,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
         R(errExpr)
       case //Nil | 
       // ((CLOSE_BRACKET(_) | COMMA | KEYWORD(";") /* | NEWLINE | DEINDENT */, _) :: _) =>
-      ((CLOSE_BRACKET(_) | KEYWORD(";") /* | NEWLINE | DEINDENT */ | OPEN_BRACKET(Curly), _) :: _) =>
+      ((CLOSE_BRACKET(_) | KEYWORD(";") /* | NEWLINE | DEINDENT */ | OPEN_BRACKET(Curly) /* | BRACKETS(Curly, _) */, _) :: _) =>
         R(UnitLit(true))
         // R(errExpr) // TODO
       case (tk, l0) :: _ =>
@@ -743,7 +796,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
         // if (success) 
         // else L(IfThen(acc, e))
       case (DEINDENT | COMMA | NEWLINE | KEYWORD("then" | "else" | "in" | ";" | "=")
-        | CLOSE_BRACKET(Round) | IDENT(_, true) | OPEN_BRACKET(Curly), _) :: _ => R(acc)
+        | CLOSE_BRACKET(Round) | IDENT(_, true) | OPEN_BRACKET(Curly) | BRACKETS(Curly, _), _) :: _ => R(acc)
       
       // case (INDENT, _) :: (KEYWORD("of"), _) :: _ if prec === 0 =>
       case (INDENT, _) :: (KEYWORD("of"), _) :: _ if prec <= 1 =>
@@ -777,6 +830,19 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
         skipDeindent()
         R(App(acc, res))
         
+      case (BRACKETS(Angle, toks), loc) :: _ =>
+        consume
+        val as = rec(toks).concludeWith(_.args())
+        // val res = TyApp(acc, as.map(_.mapSecond.to))
+        val res = TyApp(acc, as.map {
+          case (N, Fld(false, false, trm)) => trm.toType match {
+            case L(d) => raise(d); Top // TODO better
+            case R(ty) => ty
+          }
+          case _ => ???
+        })
+        exprCont(res, 0)
+        
       // case c =>
       // case c @ ((KEYWORD("of"), _) :: _ | (OPEN_BRACKET(Round), _) :: _) =>
       // case c @ (h :: _) if h._1 =/= INDENT =>
@@ -786,35 +852,50 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
         case KEYWORD(";") => false
         case _ => true
       }) =>
-        val ofLess = c match {
-          case (KEYWORD("of"), _) :: _ =>
+        c match {
+          case (BRACKETS(Round, toks), loc) :: _ =>
             consume
-            false
-          case _ =>
-            true
-        }
-        // val ofKw = curLoc
-        val openedPar = cur match {
-          case (OPEN_BRACKET(Round), l0) :: _ => consume; S(l0)
-          case (SPACE, _) :: (OPEN_BRACKET(Round), l0) :: _ => consume; consume; S(l0)
-          case _ => N
-        }
-        val as = args()
-        // val as = argsOrIf(Nil) // TODO
-        // val res = App(acc, Tup(as.map(_.mapSecond(_ -> false))))
-        val res = App(acc, Tup(as))
-        openedPar match {
-          case S(l0) =>
-            val (success, _) = skip(CLOSE_BRACKET(Round), ignored = Set(SPACE, NEWLINE, INDENT), note =
-              msg"Note: unmatched application parenthesis was opened here:" -> S(l0) :: Nil)
-            exprCont(res, 0)(et = et, fe = foundErr || !success, l = implicitly)
-          case N =>
-            if (ofLess)
-              raise(Warning(msg"Paren-less applications should use the 'of' keyword"
-                // -> ofKw :: Nil))
-                -> res.toLoc :: Nil))
-            // R(res)
+            val as = rec(toks).concludeWith(_.args())
+            val res = App(acc, Tup(as))
             exprCont(res, 0)
+          case _ =>
+            val ofLess = c match {
+              case (KEYWORD("of"), _) :: _ =>
+                consume
+                false
+              case _ =>
+                true
+            }
+            // val targs = cur match {
+            //   case (BRACKETS(Angle, toks), loc) :: _ =>
+            //     consume
+            //     val as = rec(toks).args()
+            //     S(as)
+            //   case _ => N
+            // }
+            // val ofKw = curLoc
+            val openedPar = cur match {
+              case (OPEN_BRACKET(Round), l0) :: _ => consume; S(l0)
+              case (SPACE, _) :: (OPEN_BRACKET(Round), l0) :: _ => consume; consume; S(l0)
+              case _ => N
+            }
+            val as = args()
+            // val as = argsOrIf(Nil) // TODO
+            // val res = App(acc, Tup(as.map(_.mapSecond(_ -> false))))
+            val res = App(acc, Tup(as))
+            openedPar match {
+              case S(l0) =>
+                val (success, _) = skip(CLOSE_BRACKET(Round), ignored = Set(SPACE, NEWLINE, INDENT), note =
+                  msg"Note: unmatched application parenthesis was opened here:" -> S(l0) :: Nil)
+                exprCont(res, 0)(et = et, fe = foundErr || !success, l = implicitly)
+              case N =>
+                if (ofLess)
+                  raise(Warning(msg"Paren-less applications should use the 'of' keyword"
+                    // -> ofKw :: Nil))
+                    -> res.toLoc :: Nil))
+                // R(res)
+                exprCont(res, 0)
+            }
         }
       case _ => R(acc)
     }
@@ -894,7 +975,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
       */
   }
   
-  // TODO support comma-less arg blocks...
+  def tyArgs(implicit fe: FoundErr, et: ExpectThen): Opt[Ls[Type]] =
+    cur match {
+      case (IDENT("<", true), l0) :: _ => ???
+      case _ => ???
+    }
+  
+  // TODO support comma-less arg blocks...?
   def args(prec: Int = NoElsePrec)(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =
     // argsOrIf(Nil).map{case (_, L(x))=> ???; case (n, R(x))=>n->x} // TODO
     argsOrIf(Nil, prec).flatMap{case (n, L(x))=> 
@@ -914,6 +1001,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
   */
   def argsOrIf(acc: Ls[Opt[Var] -> (IfBody \/ Fld)], prec: Int = NoElsePrec)(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> (IfBody \/ Fld)] =
     cur match {
+      case Nil => Nil
       case (SPACE, _) :: _ =>
         consume
         argsOrIf(acc, prec)

@@ -38,6 +38,8 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     ":",
     ";",
     "#",
+    // "<",
+    // ">",
   )
   
   private val isAlphaOp = Set(
@@ -155,7 +157,77 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   }
   
   
-  def tokens: Ls[Token -> Loc] = lex(0, Nil, Nil)
+  lazy val tokens: Ls[Token -> Loc] = lex(0, Nil, Nil)
+  
+  lazy val bracketedTokens: Ls[Token -> Loc] = {
+    def go(toks: Ls[Token -> Loc], canStartAngles: Bool, stack: Ls[BracketKind -> Loc -> Ls[Token -> Loc]], acc: Ls[Token -> Loc]): Ls[Token -> Loc] =
+      toks match {
+        case (OPEN_BRACKET(k), l0) :: rest =>
+          go(rest, false, k -> l0 -> acc :: stack, Nil)
+        case (CLOSE_BRACKET(k), l1) :: rest =>
+          stack match {
+            case ((k, l0), oldAcc) :: stack =>
+              go(rest, false, stack, BRACKETS(k, acc.reverse) -> (l0 ++ l1) :: oldAcc)
+              // ???
+            case Nil =>
+              raise(CompilationError(msg"Unexpected closing ${k.name}" -> S(l1) :: Nil))
+              go(rest, false, stack, acc)
+          }
+        // case (tk, loc) :: rest =>
+        case (IDENT("<", true), loc) :: rest if canStartAngles =>
+          go(OPEN_BRACKET(BracketKind.Angle) -> loc :: rest, false, stack, acc)
+        case (IDENT(">", true), loc) :: rest if canStartAngles =>
+          go(CLOSE_BRACKET(BracketKind.Angle) -> loc :: rest, false, stack, acc)
+        // case (IDENT(">", true), loc) :: rest if rest match {
+        //   case SPACE || => false
+        //   case _ => true
+        // } =>
+        case tkloc :: rest =>
+          go(rest, tkloc._1 match {
+            // case IDENT(_, false) => true
+            // case _ => false
+            case SPACE | NEWLINE | INDENT => false
+            case _ => true
+          }, stack, tkloc :: acc)
+        case Nil =>
+          stack match {
+            case ((k, l0), oldAcc) :: stack =>
+              // ???
+              raise(CompilationError(msg"Unmatched opening ${k.name}" -> S(l0) :: Nil))
+              (oldAcc ::: acc).reverse
+            case Nil => acc.reverse
+          }
+      }
+    
+    go(tokens, false, Nil, Nil)
+    
+    /* 
+    var cur = tokens
+    // def consume = { }
+    def go(stack: Ls[BracketKind -> Loc], acc: Ls[Token -> Loc]): Ls[Token -> Loc] =
+      cur match {
+        case (OPEN_BRACKET(k), l0) :: rest =>
+          cur = rest
+          go(stack, go(k -> l0 :: stack, Nil) ::: acc)
+        case (CLOSE_BRACKET(k), l1) :: rest =>
+          cur = rest
+          stack match {
+            case (k, l0) :: stack =>
+              go(rest, stack, BRACKETS(k, acc) -> (l0 ++ l1))
+              // ???
+            case Nil => ???
+          }
+        case tk :: tks => ???
+        case Nil =>
+          stack match {
+            case (k, l0) :: stack =>
+              ???
+            case Nil => acc.reverse
+          }
+      }
+    go(Nil, Nil)
+    */
+  }
   
 }
 
@@ -194,8 +266,12 @@ object NewLexer {
     case (LITVAL(lv), _) => lv.idStr
     case (KEYWORD(name: String), _) => "#" + name
     case (IDENT(name: String, symbolic: Bool), _) => name
-    case (OPEN_BRACKET(k: BracketKind), _) => k.beg.toString
-    case (CLOSE_BRACKET(k: BracketKind), _) => k.end.toString
+    case (OPEN_BRACKET(k), _) => k.beg.toString
+    case (CLOSE_BRACKET(k), _) => k.end.toString
+    case (BRACKETS(k, contents), _) =>
+      // k.beg.toString + "(" + printTokens(contents) + ")" + k.end.toString
+      // k.beg.toString + "|BEGIN:" + printTokens(contents) + ":END|" + k.end.toString
+      k.beg.toString + "BEG:" + printTokens(contents) + ":END" + k.end.toString
     case (COMMENT(text: String), _) => "/*" + text + "*/"
   }
   def printTokens(ts: Ls[TokLoc]): Str =

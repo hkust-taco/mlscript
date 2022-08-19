@@ -3,8 +3,8 @@
 
 
 fun discard(x) = ()
-//│ |#fun| |discard|(|x|)| |#=| |(|)|
-//│ Parsed: {fun discard = x, => '(' undefined, ')'}
+//│ |#fun| |discard|(BEG:|x|:END)| |#=| |(BEG:||:END)|
+//│ Parsed: {fun discard = x, => '('  ')'}
 
 // FIXME parses wrong:
 foo of
@@ -14,7 +14,7 @@ foo of
   if g of y is
     Some(v) then v + 1
     None    then 0,  
-//│ |foo| |#of|→|discard| |#of| |#if| |f| |#of| |x| |is|→|Some|(|v|)| |#then| |v| |+| |1|↵|None| |#then| |0|←|↵|#if| |g| |#of| |y| |is|→|Some|(|v|)| |#then| |v| |+| |1|↵|None| |#then| |0|,| |
+//│ |foo| |#of|→|discard| |#of| |#if| |f| |#of| |x| |is|→|Some|(BEG:|v|:END)| |#then| |v| |+| |1|↵|None| |#then| |0|←|↵|#if| |g| |#of| |y| |is|→|Some|(BEG:|v|:END)| |#then| |v| |+| |1|↵|None| |#then| |0|,| |
 //│ ╔══[ERROR] Unexpected 'then'/'else' clause
 //│ ║  l.11: 	  discard of if f of x is
 //│ ║        	                     ^^^^
@@ -142,7 +142,7 @@ foo of
 //│ Parsed: {foo ({if (f (undefined,)) then undefined},); if (g (undefined,)) then undefined}
 
 print of Foo(x) is Some
-//│ |print| |#of| |Foo|(|x|)| |is| |Some|
+//│ |print| |#of| |Foo|(BEG:|x|:END)| |is| |Some|
 //│ Parsed: {print (is (Foo (x,)) Some,)}
 
 // FIXME parses wrong:

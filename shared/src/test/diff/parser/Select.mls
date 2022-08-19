@@ -48,24 +48,27 @@ x
 //│ Parsed: {. (. x (. (. a b) c)) d}
 
 :e
-(.)
-//│ |(|.|)|
-//│ ╔══[ERROR] Expected closing parenthesis; found operator instead
-//│ ║  l.49: 	(.)
-//│ ║        	 ^
-//│ ╟── Note: unmatched parenthesis was opened here:
-//│ ║  l.49: 	(.)
+.
+//│ |.|
+//│ ╔══[ERROR] Unexpected operator in expression position
+//│ ║  l.51: 	.
 //│ ╙──      	^
-//│ ╔══[ERROR] Expected end of input; found closing parenthesis instead
-//│ ║  l.49: 	(.)
-//│ ╙──      	  ^
+//│ Parsed: {undefined}
+
+// FIXME disallow
+// :e
+(.)
+//│ |(BEG:|.|:END)|
+//│ ╔══[ERROR] Unexpected operator here
+//│ ║  l.60: 	(.)
+//│ ╙──      	 ^
 //│ Parsed: {'('  ')'}
 
 :e
 a, b
 //│ |a|,| |b|
 //│ ╔══[ERROR] Expected end of input; found comma instead
-//│ ║  l.63: 	a, b
+//│ ║  l.68: 	a, b
 //│ ╙──      	 ^
 //│ Parsed: {a}
 
