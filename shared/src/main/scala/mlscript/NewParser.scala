@@ -359,8 +359,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
                   case nt: NamedType => nt
                   // case at: AppliedType => at
                   // case tn: TypeName => AppliedType(tn, Nil)
+                  // case App(nt: NamedType, Tup(args)) =>
+                  //   ???
                   case _ =>
-                    ??? // TODO raise
+                    // ??? // TODO raise
                     AppliedType(TypeName("<error>"), Nil)
                 }) :: parents(COMMA)
               case _ => Nil
