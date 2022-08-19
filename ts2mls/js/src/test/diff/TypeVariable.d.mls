@@ -4,8 +4,8 @@ def con[U, T]: (T) -> (U)
 class Printer[T]: { print: (T) -> (unit) }
 def setStringPrinter: (Printer[string]) -> (unit)
 def getStringPrinter: unit -> (Printer[string])
-def foo[T]: (Printer[T]) -> (T)
-def foo2[T]: (Printer[T]) -> (T)
+def foo[T]: (Printer[T]) -> ((T) -> (T))
+def foo2[T]: (Printer[T]) -> ((T) -> (T))
 class F[T]: { x: T }
   method GG[U]: (U) -> (T)
 trait I[T]: { x: T }
@@ -24,7 +24,7 @@ trait I[T]: { x: T }
 //│                 = <missing implementation>
 //│ getStringPrinter: unit -> Printer[string]
 //│                 = <missing implementation>
-//│ foo: Printer[?] -> nothing
+//│ foo: Printer['a] -> 'a -> 'a
 //│    = <missing implementation>
-//│ foo2: Printer[?] -> nothing
+//│ foo2: Printer['a] -> 'a -> 'a
 //│     = <missing implementation>
