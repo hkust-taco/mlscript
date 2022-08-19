@@ -42,7 +42,7 @@ if f (
 //│ ║  l.29: 	  1 then "ko"
 //│ ║        	^^^^^^^^^^^^^
 //│ ║  l.30: 	)
-//│ ║        	
+//│ ║        	^
 //│ ╟── Note: 'if' expression started here:
 //│ ║  l.27: 	if f (
 //│ ╙──      	^^

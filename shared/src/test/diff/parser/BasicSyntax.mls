@@ -361,8 +361,8 @@ f x: 1,
 //│ |f| |x|#:| |1|,|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.360: 	f x: 1,
-//│ ╙──       	^
-//│ Parsed: {f ()}
+//│ ╙──       	^^^^^^
+//│ Parsed: {f (x: 1,)}
 
 f x : 1
 //│ |f| |x| |#:| |1|

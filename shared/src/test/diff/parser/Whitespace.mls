@@ -1,0 +1,25 @@
+:AllowParseErrors
+:AllowTypeErrors // TODO rm
+
+ 
+//│ | |
+//│ ╔══[ERROR] Unexpected space in expression position
+//│ ║  l.4: 	 
+//│ ╙──     	^
+//│ Parsed: {undefined}
+
+  
+//│ | |
+//│ ╔══[ERROR] Unexpected space in expression position
+//│ ║  l.11: 	  
+//│ ╙──      	^^
+//│ Parsed: {undefined}
+
+  
+ 
+//│ | |→|
+//│ ╔══[ERROR] Unexpected space in expression position
+//│ ║  l.18: 	  
+//│ ╙──      	^^
+//│ Parsed: {{}}
+

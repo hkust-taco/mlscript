@@ -269,7 +269,7 @@ object NewLexer {
     case (OPEN_BRACKET(k), _) => k.beg.toString
     case (CLOSE_BRACKET(k), _) => k.end.toString
     case (BRACKETS(k, contents), _) =>
-      // k.beg.toString + "(" + printTokens(contents) + ")" + k.end.toString
+      // k.beg.toString + printTokens(contents) + k.end.toString
       // k.beg.toString + "|BEGIN:" + printTokens(contents) + ":END|" + k.end.toString
       k.beg.toString + "BEG:" + printTokens(contents) + ":END" + k.end.toString
     case (COMMENT(text: String), _) => "/*" + text + "*/"
