@@ -870,7 +870,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
         c match {
           case (BRACKETS(Round, toks), loc) :: _ =>
             consume
-            val as = rec(toks).concludeWith(_.args())
+            val as = rec(toks).concludeWith(_.argsMaybeIndented())
             val res = App(acc, Tup(as).withLoc(S(loc)))
             exprCont(res, 0)
           case _ =>
@@ -894,7 +894,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
               case (SPACE, _) :: (OPEN_BRACKET(Round), l0) :: _ => consume; consume; S(l0)
               case _ => N
             }
-            val as = args()
+            val as = argsMaybeIndented()
             // val as = argsOrIf(Nil) // TODO
             // val res = App(acc, Tup(as.map(_.mapSecond(_ -> false))))
             val res = App(acc, Tup(as))
@@ -996,6 +996,14 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
       case _ => ???
     }
   
+  def argsMaybeIndented(prec: Int = NoElsePrec)(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =
+    cur match {
+      case (INDENT, _) :: _ =>
+        consume
+        args() tap (_ => skipDeindent())
+      case _ => args()
+    }
+  
   // TODO support comma-less arg blocks...?
   def args(prec: Int = NoElsePrec)(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =
     // argsOrIf(Nil).map{case (_, L(x))=> ???; case (n, R(x))=>n->x} // TODO
@@ -1049,6 +1057,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
     // val e = expr(NoElsePrec) -> argMut.isDefined
     val e = exprOrIf(prec).map(Fld(argMut.isDefined, argSpec.isDefined, _))
     cur match {
+      case (COMMA, l0) :: (NEWLINE, l1) :: _ =>
+        consume
+        consume
+        argsOrIf((argName -> e) :: acc)
       case (COMMA, l0) :: _ =>
         consume
         argsOrIf((argName -> e) :: acc)

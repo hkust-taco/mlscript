@@ -43,39 +43,29 @@ foo(
   b
 )
 //│ |foo|(BEG:|→|a|,|↵|b|←|↵|:END)|
-//│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.42: 	  a,
-//│ ║        	   ^
-//│ ╟── Note: indented block starts here:
-//│ ║  l.42: 	  a,
-//│ ╙──      	^^
-//│ ╔══[ERROR] Unexpected identifier here
-//│ ║  l.43: 	  b
-//│ ╙──      	  ^
-//│ Parsed: {foo ({a},)}
+//│ Parsed: {foo (a, b,)}
 
 foo(
   a,
   b,
 )
 //│ |foo|(BEG:|→|a|,|↵|b|,|←|↵|:END)|
-//│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.58: 	  a,
-//│ ║        	   ^
-//│ ╟── Note: indented block starts here:
-//│ ║  l.58: 	  a,
-//│ ╙──      	^^
-//│ ╔══[ERROR] Unexpected identifier here
-//│ ║  l.59: 	  b,
-//│ ╙──      	  ^
-//│ Parsed: {foo ({a},)}
+//│ ╔══[ERROR] Unexpected deindentation in expression position
+//│ ║  l.50: 	  b,
+//│ ║        	    ^
+//│ ║  l.51: 	)
+//│ ╙──      	
+//│ Parsed: {foo (a, b, undefined,)}
 
 foo(
   a
   b
 )
 //│ |foo|(BEG:|→|a|↵|b|←|↵|:END)|
-//│ Parsed: {foo ({a; b},)}
+//│ ╔══[ERROR] Unexpected identifier here
+//│ ║  l.62: 	  b
+//│ ╙──      	  ^
+//│ Parsed: {foo (a,)}
 
 foo(
     a
@@ -83,16 +73,16 @@ foo(
 )
 //│ |foo|(BEG:|→|a|←|→|b|←|↵|:END)|
 //│ ╔══[ERROR] Unexpected identifier here
-//│ ║  l.82: 	  b
+//│ ║  l.72: 	  b
 //│ ╙──      	  ^
-//│ Parsed: {foo ({a},)}
+//│ Parsed: {foo (a,)}
 
 foo of
   a
   fun f = 1
   b
 //│ |foo| |#of|→|a|↵|#fun| |f| |#=| |1|↵|b|
-//│ Parsed: {foo ({a; fun f = 1; b},)}
+//│ Parsed: {foo (a,) {fun f = 1; b}}
 
 foo +
   a
@@ -111,16 +101,7 @@ foo of
   bbbbb,
   ccccc
 //│ |foo| |#of|→|aaaaa|,|↵|bbbbb|,|↵|ccccc|
-//│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.110: 	  aaaaa,
-//│ ║         	       ^
-//│ ╟── Note: indented block starts here:
-//│ ║  l.110: 	  aaaaa,
-//│ ╙──       	^^
-//│ ╔══[ERROR] Expected end of input; found comma instead
-//│ ║  l.111: 	  bbbbb,
-//│ ╙──       	       ^
-//│ Parsed: {foo ({aaaaa},); bbbbb}
+//│ Parsed: {foo (aaaaa, bbbbb, ccccc,)}
 
 foo of
   a
@@ -129,7 +110,7 @@ foo of
     y
   c
 //│ |foo| |#of|→|a|↵|boo|→|x|↵|y|←|↵|c|
-//│ Parsed: {foo ({a; boo {x; y}; c},)}
+//│ Parsed: {foo (a,) {boo {x; y}; c}}
 
 
 

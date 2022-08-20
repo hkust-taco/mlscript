@@ -25,7 +25,7 @@ any of
   b
   c
 //│ |any| |#of|→|a|↵|b|↵|c|
-//│ Parsed: {any ({a; b; c},)}
+//│ Parsed: {any (a,) {b; c}}
 
 all of
   x
@@ -35,7 +35,7 @@ all of
     c
   y
 //│ |all| |#of|→|x|↵|any| |#of|→|a|↵|b|↵|c|←|↵|y|
-//│ Parsed: {all ({x; any ({a; b; c},); y},)}
+//│ Parsed: {all (x,) {any (a,) {b; c}; y}}
 
 
 

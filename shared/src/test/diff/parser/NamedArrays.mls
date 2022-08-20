@@ -142,38 +142,14 @@ f of x: 1, 2, z: 3
 f of
   x: 1, 2, 3
 //│ |f| |#of|→|x|#:| |1|,| |2|,| |3|
-//│ ╔══[ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.143: 	  x: 1, 2, 3
-//│ ╙──       	   ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.143: 	  x: 1, 2, 3
-//│ ╙──       	  ^^^^^^^^^^
-//│ Parsed: {f ({x (1, 2, 3,)},)}
+//│ Parsed: {f (x: 1, 2, 3,)}
 
 f of
   x: 1,
   y: 2,
   z: 3
 //│ |f| |#of|→|x|#:| |1|,|↵|y|#:| |2|,|↵|z|#:| |3|
-//│ ╔══[ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.154: 	  x: 1,
-//│ ╙──       	   ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.154: 	  x: 1,
-//│ ╙──       	  ^^^^
-//│ ╔══[ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.155: 	  y: 2,
-//│ ╙──       	   ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.155: 	  y: 2,
-//│ ╙──       	  ^^^^
-//│ ╔══[ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.156: 	  z: 3
-//│ ╙──       	   ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.156: 	  z: 3
-//│ ╙──       	  ^^^^
-//│ Parsed: {f ({x (1,); y (2,); z (3,)},)}
+//│ Parsed: {f (x: 1, y: 2, z: 3,)}
 
 f of
   x: 1
@@ -181,24 +157,18 @@ f of
   z: 3
 //│ |f| |#of|→|x|#:| |1|↵|y|#:| |2|↵|z|#:| |3|
 //│ ╔══[ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.179: 	  x: 1
+//│ ║  l.156: 	  y: 2
 //│ ╙──       	   ^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.179: 	  x: 1
+//│ ║  l.156: 	  y: 2
 //│ ╙──       	  ^^^^
 //│ ╔══[ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.180: 	  y: 2
+//│ ║  l.157: 	  z: 3
 //│ ╙──       	   ^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.180: 	  y: 2
+//│ ║  l.157: 	  z: 3
 //│ ╙──       	  ^^^^
-//│ ╔══[ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.181: 	  z: 3
-//│ ╙──       	   ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.181: 	  z: 3
-//│ ╙──       	  ^^^^
-//│ Parsed: {f ({x (1,); y (2,); z (3,)},)}
+//│ Parsed: {f (x: 1,) {y (2,); z (3,)}}
 
 f of
   x: 1
@@ -206,18 +176,12 @@ f of
   z: 3
 //│ |f| |#of|→|x|#:| |1|↵|2|↵|z|#:| |3|
 //│ ╔══[ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.204: 	  x: 1
+//│ ║  l.176: 	  z: 3
 //│ ╙──       	   ^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.204: 	  x: 1
+//│ ║  l.176: 	  z: 3
 //│ ╙──       	  ^^^^
-//│ ╔══[ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.206: 	  z: 3
-//│ ╙──       	   ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.206: 	  z: 3
-//│ ╙──       	  ^^^^
-//│ Parsed: {f ({x (1,); 2; z (3,)},)}
+//│ Parsed: {f (x: 1,) {2; z (3,)}}
 
 f of
   x: 1
@@ -225,18 +189,12 @@ f of
   3
 //│ |f| |#of|→|x|#:| |1|↵|y|#:| |2|↵|3|
 //│ ╔══[ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.223: 	  x: 1
+//│ ║  l.188: 	  y: 2
 //│ ╙──       	   ^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.223: 	  x: 1
+//│ ║  l.188: 	  y: 2
 //│ ╙──       	  ^^^^
-//│ ╔══[ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.224: 	  y: 2
-//│ ╙──       	   ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.224: 	  y: 2
-//│ ╙──       	  ^^^^
-//│ Parsed: {f ({x (1,); y (2,); 3},)}
+//│ Parsed: {f (x: 1,) {y (2,); 3}}
 
 
 

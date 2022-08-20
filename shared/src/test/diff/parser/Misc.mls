@@ -61,7 +61,7 @@ foo of
 //│ ╟── Note: 'if' expression started here:
 //│ ║  l.14: 	  if g of y is
 //│ ╙──      	  ^^
-//│ Parsed: {foo ({discard (if (f (undefined,)) then undefined,); if (g (undefined,)) then undefined},)}
+//│ Parsed: {foo (discard (if (f (undefined,)) then undefined,),) {if (g (undefined,)) then undefined}}
 
 foo of
   if f of x is
@@ -139,7 +139,7 @@ foo of
 //│ ║        	                  ^
 //│ ║  l.73: 	  
 //│ ╙──      	^^
-//│ Parsed: {foo ({if (f (undefined,)) then undefined},); if (g (undefined,)) then undefined}
+//│ Parsed: {foo (if (f (undefined,)) then undefined,); if (g (undefined,)) then undefined}
 
 print of Foo(x) is Some
 //│ |print| |#of| |Foo|(BEG:|x|:END)| |is| |Some|

@@ -60,34 +60,14 @@ f of 1, 2, 3
 f of
   1, 2, 3
 //│ |f| |#of|→|1|,| |2|,| |3|
-//│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.61: 	  1, 2, 3
-//│ ║        	   ^
-//│ ╟── Note: indented block starts here:
-//│ ║  l.61: 	  1, 2, 3
-//│ ╙──      	^^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.60: 	f of
-//│ ║        	^^^^
-//│ ║  l.61: 	  1, 2, 3
-//│ ╙──      	^^^^^^^^^
-//│ Parsed: {f ({1},) (2, 3,)}
+//│ Parsed: {f (1, 2, 3,)}
 
 f of
   1,
   2,
   3
 //│ |f| |#of|→|1|,|↵|2|,|↵|3|
-//│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.77: 	  1,
-//│ ║        	   ^
-//│ ╟── Note: indented block starts here:
-//│ ║  l.77: 	  1,
-//│ ╙──      	^^
-//│ ╔══[ERROR] Expected end of input; found comma instead
-//│ ║  l.78: 	  2,
-//│ ╙──      	   ^
-//│ Parsed: {f ({1},); 2}
+//│ Parsed: {f (1, 2, 3,)}
 
 
 let arr = []
@@ -104,10 +84,10 @@ let arr =
 ]
 //│ |#let| |arr| |#=|↵|[BEG:|↵|:END]|
 //│ ╔══[ERROR] Unexpected newline in expression position
-//│ ║  l.102: 	let arr =
-//│ ║         	         ^
-//│ ║  l.103: 	[
-//│ ╙──       	
+//│ ║  l.82: 	let arr =
+//│ ║        	         ^
+//│ ║  l.83: 	[
+//│ ╙──      	
 //│ Parsed: {let arr = '('  ')' in undefined}
 
 let arr = [
@@ -121,13 +101,13 @@ let arr = [
 ]
 //│ |#let| |arr| |#=| |[BEG:|→|1|,| |2|←|↵|:END]|
 //│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.120: 	  1, 2
+//│ ║  l.100: 	  1, 2
 //│ ║         	   ^
 //│ ╟── Note: indented block starts here:
-//│ ║  l.120: 	  1, 2
+//│ ║  l.100: 	  1, 2
 //│ ╙──       	^^
 //│ ╔══[ERROR] Unexpected literal here
-//│ ║  l.120: 	  1, 2
+//│ ║  l.100: 	  1, 2
 //│ ╙──       	     ^
 //│ Parsed: {let arr = '(' {1}, ')' in undefined}
 
@@ -137,13 +117,13 @@ let arr = [
 ]
 //│ |#let| |arr| |#=| |[BEG:|→|1|,|↵|2|←|↵|:END]|
 //│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.135: 	  1,
+//│ ║  l.115: 	  1,
 //│ ║         	   ^
 //│ ╟── Note: indented block starts here:
-//│ ║  l.135: 	  1,
+//│ ║  l.115: 	  1,
 //│ ╙──       	^^
 //│ ╔══[ERROR] Unexpected literal here
-//│ ║  l.136: 	  2
+//│ ║  l.116: 	  2
 //│ ╙──       	  ^
 //│ Parsed: {let arr = '(' {1}, ')' in undefined}
 
