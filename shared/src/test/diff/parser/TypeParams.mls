@@ -36,4 +36,64 @@ foo<1, 2, 3>(1, 2, 3)
 //│ |1| |<| |2| |>| |4|
 //│ Parsed: {> (< 1 2) 4}
 
+:w
+1 < 2> 4
+//│ ╔══[WARNING] This looks like an angle bracket, but it does not close any angle bracket section
+//│ ║  l.40: 	1 < 2> 4
+//│ ║        	     ^
+//│ ╙── Add spaces around it if you intended to use `<` as an operator
+//│ |1| |<| |2|>| |4|
+//│ Parsed: {> (< 1 2) 4}
+
+:e
+1< 2 > 4
+//│ ╔══[ERROR] Unmatched opening angle bracket
+//│ ║  l.49: 	1< 2 > 4
+//│ ║        	 ^
+//│ ╙── Note that `<` without spaces around it is considered as an angle bracket and not as an operator
+//│ | |2| |>| |4|1|
+//│ ╔══[ERROR] Unexpected space in expression position
+//│ ║  l.49: 	1< 2 > 4
+//│ ╙──      	  ^
+//│ Parsed: {> 2 (4 (1,))}
+
+:w
+1< 2> 4
+//│ |1|‹BEG:| |2|:END›| |4|
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.61: 	1< 2> 4
+//│ ╙──      	^^^^^^^
+//│ Parsed: {1‹2› (4,)}
+
+1< 2> (4)
+//│ |1|‹BEG:| |2|:END›| |(BEG:|4|:END)|
+//│ Parsed: {1‹2› (4,)}
+
+1<2>(4)
+//│ |1|‹BEG:|2|:END›|(BEG:|4|:END)|
+//│ Parsed: {1‹2› (4,)}
+
+1<>2
+//│ |1|<>|2|
+//│ Parsed: {<> 1 2}
+
+:e
+1< >2
+//│ ╔══[ERROR] Unmatched opening angle bracket
+//│ ║  l.81: 	1< >2
+//│ ║        	 ^
+//│ ╙── Note that `<` without spaces around it is considered as an angle bracket and not as an operator
+//│ | |>|2|1|
+//│ ╔══[ERROR] Unexpected space in expression position
+//│ ║  l.81: 	1< >2
+//│ ╙──      	  ^
+//│ Parsed: {2 (1,)}
+
+:e
+1 < >2
+//│ |1| |<| |>|2|
+//│ ╔══[ERROR] Unexpected operator in expression position
+//│ ║  l.93: 	1 < >2
+//│ ╙──      	    ^
+//│ Parsed: {< 1 2}
 

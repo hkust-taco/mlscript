@@ -160,6 +160,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   lazy val tokens: Ls[Token -> Loc] = lex(0, Nil, Nil)
   
   lazy val bracketedTokens: Ls[Token -> Loc] = {
+    import BracketKind._
     def go(toks: Ls[Token -> Loc], canStartAngles: Bool, stack: Ls[BracketKind -> Loc -> Ls[Token -> Loc]], acc: Ls[Token -> Loc]): Ls[Token -> Loc] =
       toks match {
         case (OPEN_BRACKET(k), l0) :: rest =>
@@ -175,9 +176,16 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
           }
         // case (tk, loc) :: rest =>
         case (IDENT("<", true), loc) :: rest if canStartAngles =>
-          go(OPEN_BRACKET(BracketKind.Angle) -> loc :: rest, false, stack, acc)
-        case (IDENT(">", true), loc) :: rest if canStartAngles =>
-          go(CLOSE_BRACKET(BracketKind.Angle) -> loc :: rest, false, stack, acc)
+          go(OPEN_BRACKET(Angle) -> loc :: rest, false, stack, acc)
+        case (IDENT(">", true), loc) :: rest if canStartAngles && (stack match {
+          case ((Angle, _), _) :: _ => true
+          case _ => false
+        }) =>
+          go(CLOSE_BRACKET(Angle) -> loc :: rest, false, stack, acc)
+        case (tkl @ (IDENT(">", true), loc)) :: rest if canStartAngles =>
+          raise(Warning(msg"This looks like an angle bracket, but it does not close any angle bracket section" -> S(loc) ::
+            msg"Add spaces around it if you intended to use `<` as an operator" -> N :: Nil))
+          go(rest, false, stack, tkl :: acc)
         // case (IDENT(">", true), loc) :: rest if rest match {
         //   case SPACE || => false
         //   case _ => true
@@ -193,7 +201,11 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
           stack match {
             case ((k, l0), oldAcc) :: stack =>
               // ???
-              raise(CompilationError(msg"Unmatched opening ${k.name}" -> S(l0) :: Nil))
+              raise(CompilationError(msg"Unmatched opening ${k.name}" -> S(l0) :: (
+                if (k === Angle)
+                  msg"Note that `<` without spaces around it is considered as an angle bracket and not as an operator" -> N :: Nil
+                else Nil
+              )))
               (oldAcc ::: acc).reverse
             case Nil => acc.reverse
           }
