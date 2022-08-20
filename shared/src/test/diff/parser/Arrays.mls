@@ -94,37 +94,19 @@ let arr = [
   1
 ]
 //│ |#let| |arr| |#=| |[BEG:|→|1|←|↵|:END]|
-//│ Parsed: {let arr = '(' {1}, ')' in undefined}
+//│ Parsed: {let arr = '(' 1, ')' in undefined}
 
 let arr = [
   1, 2
 ]
 //│ |#let| |arr| |#=| |[BEG:|→|1|,| |2|←|↵|:END]|
-//│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.100: 	  1, 2
-//│ ║         	   ^
-//│ ╟── Note: indented block starts here:
-//│ ║  l.100: 	  1, 2
-//│ ╙──       	^^
-//│ ╔══[ERROR] Unexpected literal here
-//│ ║  l.100: 	  1, 2
-//│ ╙──       	     ^
-//│ Parsed: {let arr = '(' {1}, ')' in undefined}
+//│ Parsed: {let arr = '(' 1, 2, ')' in undefined}
 
 let arr = [
   1,
   2
 ]
 //│ |#let| |arr| |#=| |[BEG:|→|1|,|↵|2|←|↵|:END]|
-//│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.115: 	  1,
-//│ ║         	   ^
-//│ ╟── Note: indented block starts here:
-//│ ║  l.115: 	  1,
-//│ ╙──       	^^
-//│ ╔══[ERROR] Unexpected literal here
-//│ ║  l.116: 	  2
-//│ ╙──       	  ^
-//│ Parsed: {let arr = '(' {1}, ')' in undefined}
+//│ Parsed: {let arr = '(' 1, 2, ')' in undefined}
 
 

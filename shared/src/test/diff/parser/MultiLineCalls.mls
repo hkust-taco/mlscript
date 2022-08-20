@@ -38,7 +38,7 @@ f (0, 1,
 f(,)
 //│ |f|(BEG:|,|:END)|
 //│ ╔══[ERROR] Unexpected comma in expression position
-//│ ║  l.28: 	f(,)
+//│ ║  l.38: 	f(,)
 //│ ╙──      	  ^
 //│ Parsed: {f (undefined,)}
 
@@ -48,7 +48,7 @@ f (
 )
 //│ |f| |(BEG:|→|0|↵|1|←|↵|:END)|
 //│ ╔══[ERROR] Unexpected literal here
-//│ ║  l.34: 	  1
+//│ ║  l.47: 	  1
 //│ ╙──      	  ^
 //│ Parsed: {f (0,)}
 
@@ -69,7 +69,7 @@ f
 of  0
 //│ |f|↵|#of| |0|
 //│ ╔══[ERROR] Unexpected 'of' keyword in expression position
-//│ ║  l.56: 	of  0
+//│ ║  l.69: 	of  0
 //│ ╙──      	^^
 //│ Parsed: {f; 0}
 
@@ -89,6 +89,13 @@ f
   (1)
 //│ |f|→|(BEG:|0|:END)|↵|(BEG:|1|:END)|
 //│ Parsed: {f {'(' 0, ')'; '(' 1, ')'}}
+
+f
+  of
+    0,
+    1
+//│ |f|→|#of|→|0|,|↵|1|
+//│ Parsed: {f (0, 1,)}
 
 
 

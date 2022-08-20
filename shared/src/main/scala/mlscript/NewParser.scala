@@ -541,15 +541,25 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
       case (IDENT(nme, false), l0) :: _ =>
         consume
         exprCont(Var(nme).withLoc(S(l0)), prec)
-      case (BRACKETS(bk @ (Round | Square), toks), loc) :: _ =>
+      case (BRACKETS(bk @ (Round | Square | Curly), toks), loc) :: _ =>
         consume
         // printDbg(toks)
-        val res = rec(toks).concludeWith(_.args()) // TODO
-        exprCont(Bra(bk === Curly, Tup(res)).withLoc(S(loc)), prec)
+        val res = rec(toks).concludeWith(_.argsMaybeIndented()) // TODO
+        // exprCont(Bra(bk === Curly, Tup(res)).withLoc(S(loc)), prec)
+        val bra = if (bk === Curly) Bra(true, Rcd(res.map {
+          case S(n) -> fld => n -> fld
+          case N -> (fld @ Fld(_, _, v: Var)) => v -> fld
+          case N -> fld =>
+            raise(CompilationError(
+              msg"Record field should have a name" -> fld.value.toLoc :: Nil))
+            Var("<error>") -> fld
+        }))
+        else Bra(false, Tup(res))
+        exprCont(bra.withLoc(S(loc)), prec)
       case (OPEN_BRACKET(bk @ (Round | Square)), l0) :: _ =>
         consume
         // val res = expr(0)
-        val res = args()
+        val res = argsMaybeIndented()
         val (success, l1) = skip(CLOSE_BRACKET(bk), ignored = Set(SPACE, NEWLINE, INDENT), note =
           msg"Note: unmatched ${bk.name} was opened here:" -> S(l0) :: Nil)
         exprCont(Bra(bk === Curly, Tup(res)).withLoc(S(l0 ++ l1)), prec)
@@ -819,7 +829,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
         consume
         // TODO allow indent before the args... indented allow arg block
         // val as = args(5)
-        val as = args()
+        val as = argsMaybeIndented()
         val res = App(acc, Tup(as))
         val (success, _) = skipDeindent(allowNewlineOn = {
           case (KEYWORD("of"), _) :: _ => true
@@ -847,7 +857,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
         
       case (BRACKETS(Angle, toks), loc) :: _ =>
         consume
-        val as = rec(toks).concludeWith(_.args())
+        val as = rec(toks).concludeWith(_.argsMaybeIndented())
         // val res = TyApp(acc, as.map(_.mapSecond.to))
         val res = TyApp(acc, as.map {
           case (N, Fld(false, false, trm)) => trm.toType match {

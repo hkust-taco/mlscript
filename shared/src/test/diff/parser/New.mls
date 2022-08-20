@@ -19,7 +19,7 @@ new
 :e
 new {}
 //│ |#new| |{BEG:||:END}|
-//│ ╔══[ERROR] Unexpected curly brace section in expression position
+//│ ╔══[ERROR] Unexpected record after `new` keyword
 //│ ║  l.20: 	new {}
 //│ ╙──      	    ^^
 //│ Parsed: {new {}}
@@ -71,7 +71,7 @@ new new
 :e
 new new {}
 //│ |#new| |#new| |{BEG:||:END}|
-//│ ╔══[ERROR] Unexpected curly brace section in expression position
+//│ ╔══[ERROR] Unexpected record after `new` keyword
 //│ ║  l.72: 	new new {}
 //│ ╙──      	        ^^
 //│ ╔══[ERROR] Unexpected object instantiation after `new` keyword
@@ -82,7 +82,13 @@ new new {}
 :e
 new {new}
 //│ |#new| |{BEG:|#new|:END}|
-//│ ╔══[ERROR] Unexpected curly brace section in expression position
+//│ ╔══[ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.83: 	new {new}
+//│ ╙──      	        ^
+//│ ╔══[ERROR] Record field should have a name
+//│ ║  l.83: 	new {new}
+//│ ╙──      	     ^^^
+//│ ╔══[ERROR] Unexpected record after `new` keyword
 //│ ║  l.83: 	new {new}
 //│ ╙──      	    ^^^^^
 //│ Parsed: {new {}}

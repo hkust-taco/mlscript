@@ -150,7 +150,7 @@ foo
   of
     1
 //│ |foo|→|#of|→|1|
-//│ Parsed: {foo ({1},)}
+//│ Parsed: {foo (1,)}
 
 foo
   of 1
