@@ -47,54 +47,55 @@ f (
   1
 )
 //│ |f| |(BEG:|→|0|↵|1|←|↵|:END)|
-//│ ╔══[ERROR] Unexpected literal here
-//│ ║  l.47: 	  1
-//│ ╙──      	  ^
-//│ Parsed: {f (0,)}
+//│ Parsed: {f ({0; 1},)}
 
 f of
   0,
   1
-//│ |f| |#of|→|0|,|↵|1|
+//│ |f| |#of|→|0|,|↵|1|←|
 //│ Parsed: {f (0, 1,)}
 
 f of
   0
   1
-//│ |f| |#of|→|0|↵|1|
-//│ Parsed: {f (0,) {1}}
+//│ |f| |#of|→|0|↵|1|←|
+//│ Parsed: {f ({0; 1},)}
 
 // :pe
 f
 of  0
 //│ |f|↵|#of| |0|
 //│ ╔══[ERROR] Unexpected 'of' keyword in expression position
-//│ ║  l.69: 	of  0
+//│ ║  l.66: 	of  0
 //│ ╙──      	^^
 //│ Parsed: {f; 0}
 
 f
   (0)
-//│ |f|→|(BEG:|0|:END)|
+//│ |f|→|(BEG:|0|:END)|←|
 //│ Parsed: {f {'(' 0, ')'}}
 
+// TODO
 f
   of 0
   of 1
-//│ |f|→|#of| |0|↵|#of| |1|
-//│ Parsed: {f (0,) (1,)}
+//│ |f|→|#of| |0|↵|#of| |1|←|
+//│ ╔══[ERROR] Unexpected 'of' keyword here
+//│ ║  l.81: 	  of 1
+//│ ╙──      	  ^^
+//│ Parsed: {f (0,)}
 
 f
   (0)
   (1)
-//│ |f|→|(BEG:|0|:END)|↵|(BEG:|1|:END)|
+//│ |f|→|(BEG:|0|:END)|↵|(BEG:|1|:END)|←|
 //│ Parsed: {f {'(' 0, ')'; '(' 1, ')'}}
 
 f
   of
     0,
     1
-//│ |f|→|#of|→|0|,|↵|1|
+//│ |f|→|#of|→|0|,|↵|1|←|←|
 //│ Parsed: {f (0, 1,)}
 
 

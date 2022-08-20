@@ -141,60 +141,51 @@ f of x: 1, 2, z: 3
 
 f of
   x: 1, 2, 3
-//│ |f| |#of|→|x|#:| |1|,| |2|,| |3|
+//│ |f| |#of|→|x|#:| |1|,| |2|,| |3|←|
 //│ Parsed: {f (x: 1, 2, 3,)}
 
 f of
   x: 1,
   y: 2,
   z: 3
-//│ |f| |#of|→|x|#:| |1|,|↵|y|#:| |2|,|↵|z|#:| |3|
+//│ |f| |#of|→|x|#:| |1|,|↵|y|#:| |2|,|↵|z|#:| |3|←|
 //│ Parsed: {f (x: 1, y: 2, z: 3,)}
 
 f of
   x: 1
   y: 2
   z: 3
-//│ |f| |#of|→|x|#:| |1|↵|y|#:| |2|↵|z|#:| |3|
-//│ ╔══[ERROR] Unexpected ':' keyword in expression position
+//│ |f| |#of|→|x|#:| |1|↵|y|#:| |2|↵|z|#:| |3|←|
+//│ ╔══[ERROR] Unexpected named argument name here
+//│ ║  l.155: 	  x: 1
+//│ ╙──       	  ^
+//│ ╔══[ERROR] Unexpected named argument name here
 //│ ║  l.156: 	  y: 2
-//│ ╙──       	   ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.156: 	  y: 2
-//│ ╙──       	  ^^^^
-//│ ╔══[ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.157: 	  z: 3
-//│ ╙──       	   ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.157: 	  z: 3
-//│ ╙──       	  ^^^^
-//│ Parsed: {f (x: 1,) {y (2,); z (3,)}}
+//│ ╙──       	  ^
+//│ Parsed: {f (z: {1; 2; 3},)}
 
 f of
   x: 1
   2
   z: 3
-//│ |f| |#of|→|x|#:| |1|↵|2|↵|z|#:| |3|
-//│ ╔══[ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.176: 	  z: 3
-//│ ╙──       	   ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.176: 	  z: 3
-//│ ╙──       	  ^^^^
-//│ Parsed: {f (x: 1,) {2; z (3,)}}
+//│ |f| |#of|→|x|#:| |1|↵|2|↵|z|#:| |3|←|
+//│ ╔══[ERROR] Unexpected named argument name here
+//│ ║  l.168: 	  x: 1
+//│ ╙──       	  ^
+//│ Parsed: {f (z: {1; 2; 3},)}
 
 f of
   x: 1
   y: 2
   3
-//│ |f| |#of|→|x|#:| |1|↵|y|#:| |2|↵|3|
-//│ ╔══[ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.188: 	  y: 2
-//│ ╙──       	   ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.188: 	  y: 2
-//│ ╙──       	  ^^^^
-//│ Parsed: {f (x: 1,) {y (2,); 3}}
+//│ |f| |#of|→|x|#:| |1|↵|y|#:| |2|↵|3|←|
+//│ ╔══[ERROR] Unexpected named argument name here
+//│ ║  l.178: 	  x: 1
+//│ ╙──       	  ^
+//│ ╔══[ERROR] Unexpected named argument name here
+//│ ║  l.179: 	  y: 2
+//│ ╙──       	  ^
+//│ Parsed: {f ({1; 2; 3},)}
 
 
 

@@ -83,112 +83,149 @@ f(1) + 1
 foo bar
   baz 1
   2 3
-//│ |foo| |bar|→|baz| |1|↵|2| |3|
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.83: 	foo bar
-//│ ╙──      	^^^^^^^
+//│ |foo| |bar|→|baz| |1|↵|2| |3|←|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.84: 	  baz 1
 //│ ╙──      	  ^^^^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.85: 	  2 3
 //│ ╙──      	  ^^^
-//│ Parsed: {foo (bar,) {baz (1,); 2 (3,)}}
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.83: 	foo bar
+//│ ║        	    ^^^
+//│ ║  l.84: 	  baz 1
+//│ ║        	^^^^^^^
+//│ ║  l.85: 	  2 3
+//│ ╙──      	^^^^^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.83: 	foo bar
+//│ ║        	^^^^^^^
+//│ ║  l.84: 	  baz 1
+//│ ║        	^^^^^^^
+//│ ║  l.85: 	  2 3
+//│ ╙──      	^^^^^
+//│ Parsed: {foo (bar ({baz (1,); 2 (3,)},),)}
 
 foo bar
   baz 1
     2 3
   4 v5
-//│ |foo| |bar|→|baz| |1|→|2| |3|←|↵|4| |v5|
+//│ |foo| |bar|→|baz| |1|→|2| |3|←|↵|4| |v5|←|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.98: 	foo bar
-//│ ╙──      	^^^^^^^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.99: 	  baz 1
-//│ ╙──      	  ^^^^^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.100: 	    2 3
+//│ ║  l.111: 	    2 3
 //│ ╙──       	    ^^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.101: 	  4 v5
+//│ ║  l.110: 	  baz 1
+//│ ║         	      ^
+//│ ║  l.111: 	    2 3
+//│ ╙──       	^^^^^^^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.110: 	  baz 1
+//│ ║         	  ^^^^^
+//│ ║  l.111: 	    2 3
+//│ ╙──       	^^^^^^^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.112: 	  4 v5
 //│ ╙──       	  ^^^^
-//│ Parsed: {foo (bar,) {baz (1,) {2 (3,)}; 4 (v5,)}}
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.109: 	foo bar
+//│ ║         	    ^^^
+//│ ║  l.110: 	  baz 1
+//│ ║         	^^^^^^^
+//│ ║  l.111: 	    2 3
+//│ ║         	^^^^^^^
+//│ ║  l.112: 	  4 v5
+//│ ╙──       	^^^^^^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.109: 	foo bar
+//│ ║         	^^^^^^^
+//│ ║  l.110: 	  baz 1
+//│ ║         	^^^^^^^
+//│ ║  l.111: 	    2 3
+//│ ║         	^^^^^^^
+//│ ║  l.112: 	  4 v5
+//│ ╙──       	^^^^^^
+//│ Parsed: {foo (bar ({baz (1 (2 (3,),),); 4 (v5,)},),)}
 
 foo of bar of
   baz of 1 of
     2 of 3
   4 of v5
-//│ |foo| |#of| |bar| |#of|→|baz| |#of| |1| |#of|→|2| |#of| |3|←|↵|4| |#of| |v5|
-//│ Parsed: {foo (bar (baz (1 (2 (3,),),),) {4 (v5,)},)}
+//│ |foo| |#of| |bar| |#of|→|baz| |#of| |1| |#of|→|2| |#of| |3|←|↵|4| |#of| |v5|←|
+//│ Parsed: {foo (bar ({baz (1 (2 (3,),),); 4 (v5,)},),)}
 
 foo
   1
-//│ |foo|→|1|
+//│ |foo|→|1|←|
 //│ Parsed: {foo {1}}
 
 foo of
   1
-//│ |foo| |#of|→|1|
+//│ |foo| |#of|→|1|←|
 //│ Parsed: {foo (1,)}
 
 foo
   of 1
-//│ |foo|→|#of| |1|
+//│ |foo|→|#of| |1|←|
 //│ Parsed: {foo (1,)}
 
 foo
   of 1, 2, 3
-//│ |foo|→|#of| |1|,| |2|,| |3|
+//│ |foo|→|#of| |1|,| |2|,| |3|←|
 //│ Parsed: {foo (1, 2, 3,)}
 
 foo
   of (1, 2, 3)
-//│ |foo|→|#of| |(BEG:|1|,| |2|,| |3|:END)|
+//│ |foo|→|#of| |(BEG:|1|,| |2|,| |3|:END)|←|
 //│ Parsed: {foo ('(' 1, 2, 3, ')',)}
 
 foo
   of
     1
-//│ |foo|→|#of|→|1|
+//│ |foo|→|#of|→|1|←|←|
 //│ Parsed: {foo (1,)}
 
+// TODO
 foo
   of 1
   of 2
-//│ |foo|→|#of| |1|↵|#of| |2|
-//│ Parsed: {foo (1,) (2,)}
+//│ |foo|→|#of| |1|↵|#of| |2|←|
+//│ ╔══[ERROR] Unexpected 'of' keyword here
+//│ ║  l.191: 	  of 2
+//│ ╙──       	  ^^
+//│ Parsed: {foo (1,)}
 
 foo
   of f
     of 2
-//│ |foo|→|#of| |f|→|#of| |2|
+//│ |foo|→|#of| |f|→|#of| |2|←|←|
 //│ Parsed: {foo (f (2,),)}
 
 foo
     of 1
   of 2
-//│ |foo|→|#of| |1|←|→|#of| |2|
+//│ |foo|→|#of| |1|←|→|#of| |2|←|
 //│ Parsed: {foo (1,) (2,)}
 
   
 //│ | |
 //│ ╔══[ERROR] Unexpected space in expression position
-//│ ║  l.173: 	  
+//│ ║  l.210: 	  
 //│ ╙──       	^^
 //│ Parsed: {undefined}
 
   1
 //│ | |1|
 //│ ╔══[ERROR] Unexpected space in expression position
-//│ ║  l.180: 	  1
+//│ ║  l.217: 	  1
 //│ ╙──       	^^
 //│ Parsed: {1}
 
   
   1
-//│ | |→|1|
+//│ | |→|1|←|
 //│ ╔══[ERROR] Unexpected space in expression position
-//│ ║  l.187: 	  
+//│ ║  l.224: 	  
 //│ ╙──       	^^
 //│ Parsed: {{1}}
 
@@ -198,28 +235,28 @@ foo
 
 (1
 //│ ╔══[ERROR] Unmatched opening parenthesis
-//│ ║  l.199: 	(1
+//│ ║  l.236: 	(1
 //│ ╙──       	^
 //│ |1|
 //│ Parsed: {1}
 
 (1))
 //│ ╔══[ERROR] Unexpected closing parenthesis
-//│ ║  l.206: 	(1))
+//│ ║  l.243: 	(1))
 //│ ╙──       	   ^
 //│ |(BEG:|1|:END)|
 //│ Parsed: {'(' 1, ')'}
 
 (
 //│ ╔══[ERROR] Unmatched opening parenthesis
-//│ ║  l.213: 	(
+//│ ║  l.250: 	(
 //│ ╙──       	^
 //│ ||
 //│ Parsed: {}
 
 )
 //│ ╔══[ERROR] Unexpected closing parenthesis
-//│ ║  l.220: 	)
+//│ ║  l.257: 	)
 //│ ╙──       	^
 //│ ||
 //│ Parsed: {}
@@ -227,14 +264,14 @@ foo
 1+
 //│ |1|+|
 //│ ╔══[ERROR] Unexpected end of input; an expression was expected here
-//│ ║  l.227: 	1+
+//│ ║  l.264: 	1+
 //│ ╙──       	  ^
 //│ Parsed: {+ 1 undefined}
 
 *
 //│ |*|
 //│ ╔══[ERROR] Unexpected operator in expression position
-//│ ║  l.234: 	*
+//│ ║  l.271: 	*
 //│ ╙──       	^
 //│ Parsed: {undefined}
 
@@ -242,7 +279,7 @@ foo
 f 1
 //│ |f| |1|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.242: 	f 1
+//│ ║  l.279: 	f 1
 //│ ╙──       	^^^
 //│ Parsed: {f (1,)}
 
@@ -258,7 +295,7 @@ f (1)
 f 1, 2, 3
 //│ |f| |1|,| |2|,| |3|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.258: 	f 1, 2, 3
+//│ ║  l.295: 	f 1, 2, 3
 //│ ╙──       	^^^^^^^^^
 //│ Parsed: {f (1, 2, 3,)}
 
@@ -273,42 +310,42 @@ f(1, 2, 3)
 f[]
 //│ |f|[BEG:||:END]|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.273: 	f[]
+//│ ║  l.310: 	f[]
 //│ ╙──       	^^^
 //│ Parsed: {f ('('  ')',)}
 
 f[1]
 //│ |f|[BEG:|1|:END]|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.280: 	f[1]
+//│ ║  l.317: 	f[1]
 //│ ╙──       	^^^^
 //│ Parsed: {f ('(' 1, ')',)}
 
 f[1, 2, 3]
 //│ |f|[BEG:|1|,| |2|,| |3|:END]|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.287: 	f[1, 2, 3]
+//│ ║  l.324: 	f[1, 2, 3]
 //│ ╙──       	^^^^^^^^^^
 //│ Parsed: {f ('(' 1, 2, 3, ')',)}
 
 f{}
 //│ |f|{BEG:||:END}|
 //│ ╔══[ERROR] Expected end of input; found curly brace section instead
-//│ ║  l.294: 	f{}
+//│ ║  l.331: 	f{}
 //│ ╙──       	 ^^
 //│ Parsed: {f}
 
 f{1}
 //│ |f|{BEG:|1|:END}|
 //│ ╔══[ERROR] Expected end of input; found curly brace section instead
-//│ ║  l.301: 	f{1}
+//│ ║  l.338: 	f{1}
 //│ ╙──       	 ^^^
 //│ Parsed: {f}
 
 f{1, 2, 3}
 //│ |f|{BEG:|1|,| |2|,| |3|:END}|
 //│ ╔══[ERROR] Expected end of input; found curly brace section instead
-//│ ║  l.308: 	f{1, 2, 3}
+//│ ║  l.345: 	f{1, 2, 3}
 //│ ╙──       	 ^^^^^^^^^
 //│ Parsed: {f}
 
@@ -316,10 +353,10 @@ f{1, 2, 3}
 f 1,, 2
 //│ |f| |1|,|,| |2|
 //│ ╔══[ERROR] Unexpected comma in expression position
-//│ ║  l.316: 	f 1,, 2
+//│ ║  l.353: 	f 1,, 2
 //│ ╙──       	    ^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.316: 	f 1,, 2
+//│ ║  l.353: 	f 1,, 2
 //│ ╙──       	^^^^^^^
 //│ Parsed: {f (1, 2,)}
 
@@ -331,10 +368,10 @@ f of x
 f g x
 //│ |f| |g| |x|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.331: 	f g x
+//│ ║  l.368: 	f g x
 //│ ╙──       	  ^^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.331: 	f g x
+//│ ║  l.368: 	f g x
 //│ ╙──       	^^^^^
 //│ Parsed: {f (g (x,),)}
 
@@ -345,7 +382,7 @@ f of g of x
 f of of g
 //│ |f| |#of| |#of| |g|
 //│ ╔══[ERROR] Unexpected 'of' keyword in expression position
-//│ ║  l.345: 	f of of g
+//│ ║  l.382: 	f of of g
 //│ ╙──       	     ^^
 //│ Parsed: {f (g,)}
 
@@ -353,64 +390,64 @@ f of of g
 f x: 1
 //│ |f| |x|#:| |1|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.353: 	f x: 1
+//│ ║  l.390: 	f x: 1
 //│ ╙──       	^^^^^^
 //│ Parsed: {f (x: 1,)}
 
 f x: 1,
 //│ |f| |x|#:| |1|,|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.360: 	f x: 1,
+//│ ║  l.397: 	f x: 1,
 //│ ╙──       	^^^^^^
 //│ Parsed: {f (x: 1,)}
 
 f x : 1
 //│ |f| |x| |#:| |1|
 //│ ╔══[ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.367: 	f x : 1
+//│ ║  l.404: 	f x : 1
 //│ ╙──       	    ^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.367: 	f x : 1
+//│ ║  l.404: 	f x : 1
 //│ ╙──       	  ^^^^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.367: 	f x : 1
+//│ ║  l.404: 	f x : 1
 //│ ╙──       	^^^^^^^
 //│ Parsed: {f (x (1,),)}
 
 f x: 1, y: 2
 //│ |f| |x|#:| |1|,| |y|#:| |2|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.380: 	f x: 1, y: 2
+//│ ║  l.417: 	f x: 1, y: 2
 //│ ╙──       	^^^^^^^^^^^^
 //│ Parsed: {f (x: 1, y: 2,)}
 
 f x : 1, y: 2
 //│ |f| |x| |#:| |1|,| |y|#:| |2|
 //│ ╔══[ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.387: 	f x : 1, y: 2
+//│ ║  l.424: 	f x : 1, y: 2
 //│ ╙──       	    ^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.387: 	f x : 1, y: 2
+//│ ║  l.424: 	f x : 1, y: 2
 //│ ╙──       	  ^^^^^^^^^^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.387: 	f x : 1, y: 2
+//│ ║  l.424: 	f x : 1, y: 2
 //│ ╙──       	^^^^^^^^^^^^^
 //│ Parsed: {f (x (1, y: 2,),)}
 
 f x: 1, y: 2, z: 3
 //│ |f| |x|#:| |1|,| |y|#:| |2|,| |z|#:| |3|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.400: 	f x: 1, y: 2, z: 3
+//│ ║  l.437: 	f x: 1, y: 2, z: 3
 //│ ╙──       	^^^^^^^^^^^^^^^^^^
 //│ Parsed: {f (x: 1, y: 2, z: 3,)}
 
 f x: 1, y: g 2, z: 3
 //│ |f| |x|#:| |1|,| |y|#:| |g| |2|,| |z|#:| |3|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.407: 	f x: 1, y: g 2, z: 3
+//│ ║  l.444: 	f x: 1, y: g 2, z: 3
 //│ ╙──       	           ^^^^^^^^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.407: 	f x: 1, y: g 2, z: 3
+//│ ║  l.444: 	f x: 1, y: g 2, z: 3
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^
 //│ Parsed: {f (x: 1, y: g (2, z: 3,),)}
 
@@ -425,10 +462,10 @@ f(x: 1, y: g(2), z: 3)
 f  x: 1,  y:  g  2, z: 3
 //│ |f| |x|#:| |1|,| |y|#:| |g| |2|,| |z|#:| |3|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.425: 	f  x: 1,  y:  g  2, z: 3
+//│ ║  l.462: 	f  x: 1,  y:  g  2, z: 3
 //│ ╙──       	              ^^^^^^^^^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.425: 	f  x: 1,  y:  g  2, z: 3
+//│ ║  l.462: 	f  x: 1,  y:  g  2, z: 3
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Parsed: {f (x: 1, y: g (2, z: 3,),)}
 
@@ -439,13 +476,13 @@ f of x: 1, y: g of 2, z: 3
 f x: 1 + 1, y: 2 2, z: 3 + 2 4 - 1
 //│ |f| |x|#:| |1| |+| |1|,| |y|#:| |2| |2|,| |z|#:| |3| |+| |2| |4| |-| |1|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.439: 	f x: 1 + 1, y: 2 2, z: 3 + 2 4 - 1
+//│ ║  l.476: 	f x: 1 + 1, y: 2 2, z: 3 + 2 4 - 1
 //│ ╙──       	                           ^^^^^^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.439: 	f x: 1 + 1, y: 2 2, z: 3 + 2 4 - 1
+//│ ║  l.476: 	f x: 1 + 1, y: 2 2, z: 3 + 2 4 - 1
 //│ ╙──       	               ^^^^^^^^^^^^^^^^^^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.439: 	f x: 1 + 1, y: 2 2, z: 3 + 2 4 - 1
+//│ ║  l.476: 	f x: 1 + 1, y: 2 2, z: 3 + 2 4 - 1
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Parsed: {f (x: + 1 1, y: 2 (2, z: + 3 (2 (- 4 1,)),),)}
 
@@ -457,7 +494,7 @@ x.y
 .y
 //│ |.|y|
 //│ ╔══[ERROR] Unexpected operator in expression position
-//│ ║  l.457: 	.y
+//│ ║  l.494: 	.y
 //│ ╙──       	^
 //│ Parsed: {y}
 
@@ -466,10 +503,19 @@ x.y
 //│ |2| |+| |f| |#of| |3| |+| |3|
 //│ Parsed: {+ 2 (f (+ 3 3,))}
 
+// TODO
 2 + 2
   of 3 + 3
-//│ |2| |+| |2|→|#of| |3| |+| |3|
-//│ Parsed: {+ 2 2 (+ 3 3,)}
+//│ |2| |+| |2|→|#of| |3| |+| |3|←|
+//│ ╔══[ERROR] Unexpected 'of' keyword in expression position
+//│ ║  l.508: 	  of 3 + 3
+//│ ╙──       	  ^^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.507: 	2 + 2
+//│ ║         	    ^
+//│ ║  l.508: 	  of 3 + 3
+//│ ╙──       	^^^^^^^^^^
+//│ Parsed: {+ 2 (2 (+ 3 3,))}
 
 
 

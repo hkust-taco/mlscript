@@ -6,7 +6,7 @@ fun f(
   x
 ) = x
 //│ |#fun| |f|(BEG:|→|x|←|↵|:END)| |#=| |x|
-//│ Parsed: {fun f = {x}, => x}
+//│ Parsed: {fun f = x, => x}
 
 fun f(x
 ) = x
@@ -15,8 +15,8 @@ fun f(x
 
 fun f(
   x) = x
-//│ |#fun| |f|(BEG:|→|x|:END)| |#=| |x|
-//│ Parsed: {fun f = {x}, => x}
+//│ |#fun| |f|(BEG:|→|x|←|:END)| |#=| |x|
+//│ Parsed: {fun f = x, => x}
 
 fun f(
 x) = x
@@ -28,37 +28,19 @@ x) = x
 
 fun f(x,
   y) = x + y
-//│ |#fun| |f|(BEG:|x|,|→|y|:END)| |#=| |x| |+| |y|
+//│ |#fun| |f|(BEG:|x|,|→|y|←|:END)| |#=| |x| |+| |y|
 //│ Parsed: {fun f = x, {y}, => + x y}
 
 fun f(
   x,
   y) = x + y
-//│ |#fun| |f|(BEG:|→|x|,|↵|y|:END)| |#=| |x| |+| |y|
-//│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.35: 	  x,
-//│ ║        	   ^
-//│ ╟── Note: indented block starts here:
-//│ ║  l.35: 	  x,
-//│ ╙──      	^^
-//│ ╔══[ERROR] Unexpected identifier here
-//│ ║  l.36: 	  y) = x + y
-//│ ╙──      	  ^
-//│ Parsed: {fun f = {x}, => + x y}
+//│ |#fun| |f|(BEG:|→|x|,|↵|y|←|:END)| |#=| |x| |+| |y|
+//│ Parsed: {fun f = x, y, => + x y}
 
 fun f(
   x,
   y
 ) = x + y
 //│ |#fun| |f|(BEG:|→|x|,|↵|y|←|↵|:END)| |#=| |x| |+| |y|
-//│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.50: 	  x,
-//│ ║        	   ^
-//│ ╟── Note: indented block starts here:
-//│ ║  l.50: 	  x,
-//│ ╙──      	^^
-//│ ╔══[ERROR] Unexpected identifier here
-//│ ║  l.51: 	  y
-//│ ╙──      	  ^
-//│ Parsed: {fun f = {x}, => + x y}
+//│ Parsed: {fun f = x, y, => + x y}
 

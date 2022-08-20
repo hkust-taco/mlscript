@@ -53,7 +53,7 @@ class Foo: Bar {
   fun f = 0
   fun bar = 1
   }
-//│ |#class| |Foo|#:| |Bar| |{BEG:|→|#fun| |f| |#=| |0|↵|#fun| |bar| |#=| |1|↵|:END}|
+//│ |#class| |Foo|#:| |Bar| |{BEG:|→|#fun| |f| |#=| |0|↵|#fun| |bar| |#=| |1|↵|←|:END}|
 //│ Parsed: {class Foo(): Bar {fun f = 0; fun bar = 1}}
 
 class Foo: Bar {

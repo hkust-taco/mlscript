@@ -35,7 +35,7 @@ c
 foo
   a
   b
-//│ |foo|→|a|↵|b|
+//│ |foo|→|a|↵|b|←|
 //│ Parsed: {foo {a; b}}
 
 foo(
@@ -57,32 +57,38 @@ foo(
   b
 )
 //│ |foo|(BEG:|→|a|↵|b|←|↵|:END)|
-//│ ╔══[ERROR] Unexpected identifier here
-//│ ║  l.57: 	  b
-//│ ╙──      	  ^
-//│ Parsed: {foo (a,)}
+//│ Parsed: {foo ({a; b},)}
 
 foo(
     a
   b
 )
 //│ |foo|(BEG:|→|a|←|→|b|←|↵|:END)|
-//│ ╔══[ERROR] Unexpected identifier here
-//│ ║  l.67: 	  b
-//│ ╙──      	  ^
+//│ ╔══[ERROR] Unexpected indented block here
+//│ ║  l.64: 	  b
+//│ ║        	^^^
+//│ ║  l.65: 	)
+//│ ╙──      	^
 //│ Parsed: {foo (a,)}
 
+// TODO
 foo of
   a
   fun f = 1
   b
-//│ |foo| |#of|→|a|↵|#fun| |f| |#=| |1|↵|b|
-//│ Parsed: {foo (a,) {fun f = 1; b}}
+//│ |foo| |#of|→|a|↵|#fun| |f| |#=| |1|↵|b|←|
+//│ ╔══[ERROR] Unexpected 'fun' keyword in expression position
+//│ ║  l.77: 	  fun f = 1
+//│ ╙──      	  ^^^
+//│ ╔══[ERROR] Unexpected '=' keyword here
+//│ ║  l.77: 	  fun f = 1
+//│ ╙──      	        ^
+//│ Parsed: {foo ({a; f},)}
 
 foo +
   a
   b
-//│ |foo| |+|→|a|↵|b|
+//│ |foo| |+|→|a|↵|b|←|
 //│ Parsed: {+ foo {a; b}}
 
 
@@ -95,7 +101,7 @@ foo of
   aaaaa,
   bbbbb,
   ccccc
-//│ |foo| |#of|→|aaaaa|,|↵|bbbbb|,|↵|ccccc|
+//│ |foo| |#of|→|aaaaa|,|↵|bbbbb|,|↵|ccccc|←|
 //│ Parsed: {foo (aaaaa, bbbbb, ccccc,)}
 
 foo of
@@ -104,8 +110,15 @@ foo of
     x
     y
   c
-//│ |foo| |#of|→|a|↵|boo|→|x|↵|y|←|↵|c|
-//│ Parsed: {foo (a,) {boo {x; y}; c}}
+//│ |foo| |#of|→|a|↵|boo|→|x|↵|y|←|↵|c|←|
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.109: 	  boo
+//│ ║         	  ^^^
+//│ ║  l.110: 	    x
+//│ ║         	^^^^^
+//│ ║  l.111: 	    y
+//│ ╙──       	^^^^^
+//│ Parsed: {foo ({a; boo ({x; y},); c},)}
 
 
 

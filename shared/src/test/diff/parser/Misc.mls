@@ -14,7 +14,7 @@ foo of
   if g of y is
     Some(v) then v + 1
     None    then 0,  
-//│ |foo| |#of|→|discard| |#of| |#if| |f| |#of| |x| |is|→|Some|(BEG:|v|:END)| |#then| |v| |+| |1|↵|None| |#then| |0|←|↵|#if| |g| |#of| |y| |is|→|Some|(BEG:|v|:END)| |#then| |v| |+| |1|↵|None| |#then| |0|,| |
+//│ |foo| |#of|→|discard| |#of| |#if| |f| |#of| |x| |is|→|Some|(BEG:|v|:END)| |#then| |v| |+| |1|↵|None| |#then| |0|←|↵|#if| |g| |#of| |y| |is|→|Some|(BEG:|v|:END)| |#then| |v| |+| |1|↵|None| |#then| |0|,| |←|←|
 //│ ╔══[ERROR] Unexpected 'then'/'else' clause
 //│ ║  l.11: 	  discard of if f of x is
 //│ ║        	                     ^^^^
@@ -32,18 +32,13 @@ foo of
 //│ ║  l.14: 	  if g of y is
 //│ ║        	^^^^^^^^^^^^^^
 //│ ║  l.15: 	    Some(v) then v + 1
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.16: 	    None    then 0,  
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	^^^^
 //│ ╟── Note: 'if' expression started here:
 //│ ║  l.11: 	  discard of if f of x is
 //│ ╙──      	             ^^
-//│ ╔══[ERROR] Expected deindentation; found comma instead
+//│ ╔══[ERROR] Unexpected comma here
 //│ ║  l.16: 	    None    then 0,  
-//│ ║        	                  ^
-//│ ╟── Note: indented block starts here:
-//│ ║  l.15: 	    Some(v) then v + 1
-//│ ╙──      	^^^^
+//│ ╙──      	                  ^
 //│ ╔══[ERROR] Unexpected 'then'/'else' clause
 //│ ║  l.14: 	  if g of y is
 //│ ║        	          ^^^^
@@ -55,13 +50,11 @@ foo of
 //│ ║  l.14: 	  if g of y is
 //│ ║        	     ^^^^^^^^^
 //│ ║  l.15: 	    Some(v) then v + 1
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.16: 	    None    then 0,  
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	^^^^
 //│ ╟── Note: 'if' expression started here:
 //│ ║  l.14: 	  if g of y is
 //│ ╙──      	  ^^
-//│ Parsed: {foo (discard (if (f (undefined,)) then undefined,),) {if (g (undefined,)) then undefined}}
+//│ Parsed: {foo ({discard (if (f (undefined,)) then undefined,); if (g (undefined,)) then undefined},)}
 
 foo of
   if f of x is
@@ -71,75 +64,64 @@ foo of
     Some v then v + 1
     None   then 0,
   
-//│ |foo| |#of|→|#if| |f| |#of| |x| |is|→|Some| |v| |#then| |v| |+| |1|↵|None| |#then| |0|,|←|↵|#if| |g| |#of| |y| |is|→|Some| |v| |#then| |v| |+| |1|↵|None| |#then| |0|,|←|↵|
+//│ |foo| |#of|→|#if| |f| |#of| |x| |is|→|Some| |v| |#then| |v| |+| |1|↵|None| |#then| |0|,|←|↵|#if| |g| |#of| |y| |is|→|Some| |v| |#then| |v| |+| |1|↵|None| |#then| |0|,|←|↵|←|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.68: 	    Some v then v + 1
+//│ ║  l.61: 	    Some v then v + 1
 //│ ╙──      	    ^^^^^^
-//│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.69: 	    None   then 0,
-//│ ║        	                 ^
-//│ ╟── Note: indented block starts here:
-//│ ║  l.68: 	    Some v then v + 1
-//│ ╙──      	^^^^
+//│ ╔══[ERROR] Unexpected comma here
+//│ ║  l.62: 	    None   then 0,
+//│ ╙──      	                 ^
 //│ ╔══[ERROR] Unexpected 'then'/'else' clause
-//│ ║  l.67: 	  if f of x is
+//│ ║  l.60: 	  if f of x is
 //│ ║        	          ^^^^
-//│ ║  l.68: 	    Some v then v + 1
+//│ ║  l.61: 	    Some v then v + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.69: 	    None   then 0,
+//│ ║  l.62: 	    None   then 0,
 //│ ╙──      	^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Expected 'then'/'else' clause; found application followed by deindentation instead
-//│ ║  l.67: 	  if f of x is
+//│ ╔══[ERROR] Expected 'then'/'else' clause; found application followed by newline instead
+//│ ║  l.60: 	  if f of x is
 //│ ║        	     ^^^^^^^^^
-//│ ║  l.68: 	    Some v then v + 1
+//│ ║  l.61: 	    Some v then v + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.69: 	    None   then 0,
+//│ ║  l.62: 	    None   then 0,
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.70: 	  if g of y is
+//│ ║  l.63: 	  if g of y is
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.71: 	    Some v then v + 1
+//│ ║  l.64: 	    Some v then v + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.72: 	    None   then 0,
+//│ ║  l.65: 	    None   then 0,
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.73: 	  
+//│ ║  l.66: 	  
 //│ ║        	^^
 //│ ╟── Note: 'if' expression started here:
-//│ ║  l.67: 	  if f of x is
+//│ ║  l.60: 	  if f of x is
 //│ ╙──      	  ^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.71: 	    Some v then v + 1
+//│ ║  l.64: 	    Some v then v + 1
 //│ ╙──      	    ^^^^^^
-//│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.72: 	    None   then 0,
-//│ ║        	                 ^
-//│ ╟── Note: indented block starts here:
-//│ ║  l.71: 	    Some v then v + 1
-//│ ╙──      	^^^^
+//│ ╔══[ERROR] Unexpected comma here
+//│ ║  l.65: 	    None   then 0,
+//│ ╙──      	                 ^
 //│ ╔══[ERROR] Unexpected 'then'/'else' clause
-//│ ║  l.70: 	  if g of y is
+//│ ║  l.63: 	  if g of y is
 //│ ║        	          ^^^^
-//│ ║  l.71: 	    Some v then v + 1
+//│ ║  l.64: 	    Some v then v + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.72: 	    None   then 0,
+//│ ║  l.65: 	    None   then 0,
 //│ ╙──      	^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Expected 'then'/'else' clause; found application followed by deindentation instead
-//│ ║  l.70: 	  if g of y is
+//│ ╔══[ERROR] Expected 'then'/'else' clause; found application followed by newline instead
+//│ ║  l.63: 	  if g of y is
 //│ ║        	     ^^^^^^^^^
-//│ ║  l.71: 	    Some v then v + 1
+//│ ║  l.64: 	    Some v then v + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.72: 	    None   then 0,
+//│ ║  l.65: 	    None   then 0,
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.73: 	  
+//│ ║  l.66: 	  
 //│ ║        	^^
 //│ ╟── Note: 'if' expression started here:
-//│ ║  l.70: 	  if g of y is
+//│ ║  l.63: 	  if g of y is
 //│ ╙──      	  ^^
-//│ ╔══[ERROR] Expected end of input; found deindentation instead
-//│ ║  l.72: 	    None   then 0,
-//│ ║        	                  ^
-//│ ║  l.73: 	  
-//│ ╙──      	^^
-//│ Parsed: {foo (if (f (undefined,)) then undefined,); if (g (undefined,)) then undefined}
+//│ Parsed: {foo ({if (f (undefined,)) then undefined; if (g (undefined,)) then undefined},)}
 
 print of Foo(x) is Some
 //│ |print| |#of| |Foo|(BEG:|x|:END)| |is| |Some|
@@ -154,13 +136,13 @@ if f of x is Some then 1 else 0
 if f of 0 and g of 1 then "ok"
 //│ |#if| |f| |#of| |0| |and| |g| |#of| |1| |#then| |"ok"|
 //│ ╔══[ERROR] Unexpected 'then'/'else' clause
-//│ ║  l.154: 	if f of 0 and g of 1 then "ok"
+//│ ║  l.136: 	if f of 0 and g of 1 then "ok"
 //│ ╙──       	        ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Expected 'then'/'else' clause; found application instead
-//│ ║  l.154: 	if f of 0 and g of 1 then "ok"
+//│ ║  l.136: 	if f of 0 and g of 1 then "ok"
 //│ ║         	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: 'if' expression started here:
-//│ ║  l.154: 	if f of 0 and g of 1 then "ok"
+//│ ║  l.136: 	if f of 0 and g of 1 then "ok"
 //│ ╙──       	^^
 //│ Parsed: {if (f (undefined,)) then undefined}
 

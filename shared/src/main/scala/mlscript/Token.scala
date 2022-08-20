@@ -16,10 +16,13 @@ sealed abstract class Token {
     case IDENT(name, symbolic) => if (symbolic) "operator" else "identifier"
     case OPEN_BRACKET(k) => s"opening ${k.name}"
     case CLOSE_BRACKET(k) => s"closing ${k.name}"
+    case BRACKETS(BracketKind.Indent, contents) => s"indented block"
     case BRACKETS(k, contents) => s"${k.name} section"
     case COMMENT(text) => "comment"
   }
 }
+
+sealed trait SToken
 
 case object SPACE extends Token
 case object COMMA extends Token
@@ -44,12 +47,15 @@ sealed abstract class BracketKind {
     case Curly => '{' -> '}'
     case Square => '[' -> ']'
     case Angle => '‹' -> '›'
+    // case Indent => '\t' -> '\r'
+    case Indent => '→' -> '←'
   }
   def name: Str = this match {
     case Round => "parenthesis"
     case Curly => "curly brace"
     case Square => "square bracket"
     case Angle => "angle bracket"
+    case Indent => "indentation"
   }
 }
 
@@ -58,6 +64,8 @@ object BracketKind {
   case object Curly extends BracketKind
   case object Square extends BracketKind
   case object Angle extends BracketKind
+  case object Indent extends BracketKind
+  
   def unapply(c: Char): Opt[Either[BracketKind, BracketKind]] = c |>? {
     case '(' => Left(Round)
     case ')' => Right(Round)

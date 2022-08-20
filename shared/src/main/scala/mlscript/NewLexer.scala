@@ -165,16 +165,25 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
       toks match {
         case (OPEN_BRACKET(k), l0) :: rest =>
           go(rest, false, k -> l0 -> acc :: stack, Nil)
-        case (CLOSE_BRACKET(k), l1) :: rest =>
+        case (CLOSE_BRACKET(k1), l1) :: rest =>
           stack match {
-            case ((k, l0), oldAcc) :: stack =>
-              go(rest, false, stack, BRACKETS(k, acc.reverse) -> (l0 ++ l1) :: oldAcc)
+            case ((Indent, loc), oldAcc) :: _ if k1 =/= Indent =>
+              go(CLOSE_BRACKET(Indent) -> l1.left :: toks, false, stack, acc)
+            case ((k0, l0), oldAcc) :: stack =>
+              if (k0 =/= k1)
+                raise(CompilationError(msg"Mistmatched closing ${k1.name}" -> S(l1) ::
+                  msg"does not correspond to opening ${k0.name}" -> S(l0) :: Nil))
+              go(rest, false, stack, BRACKETS(k0, acc.reverse) -> (l0 ++ l1) :: oldAcc)
               // ???
             case Nil =>
-              raise(CompilationError(msg"Unexpected closing ${k.name}" -> S(l1) :: Nil))
+              raise(CompilationError(msg"Unexpected closing ${k1.name}" -> S(l1) :: Nil))
               go(rest, false, stack, acc)
           }
         // case (tk, loc) :: rest =>
+        case (INDENT, loc) :: rest =>
+          go(OPEN_BRACKET(Indent) -> loc :: rest, false, stack, acc)
+        case (DEINDENT, loc) :: rest =>
+          go(CLOSE_BRACKET(Indent) -> loc :: rest, false, stack, acc)
         case (IDENT("<", true), loc) :: rest if canStartAngles =>
           go(OPEN_BRACKET(Angle) -> loc :: rest, false, stack, acc)
         case (IDENT(">", true), loc) :: rest if canStartAngles && (stack match {
@@ -198,7 +207,10 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
             case _ => true
           }, stack, tkloc :: acc)
         case Nil =>
+          // stack.dropWhile(_._1._1 === Indent) match {
           stack match {
+            case ((Indent, loc), oldAcc) :: _ =>
+              go(CLOSE_BRACKET(Indent) -> loc/*not proper loc...*/ :: Nil, false, stack, acc)
             case ((k, l0), oldAcc) :: stack =>
               // ???
               raise(CompilationError(msg"Unmatched opening ${k.name}" -> S(l0) :: (
@@ -280,6 +292,8 @@ object NewLexer {
     case (IDENT(name: String, symbolic: Bool), _) => name
     case (OPEN_BRACKET(k), _) => k.beg.toString
     case (CLOSE_BRACKET(k), _) => k.end.toString
+    case (BRACKETS(k @ BracketKind.Indent, contents), _) =>
+      k.beg.toString + printTokens(contents) + k.end.toString
     case (BRACKETS(k, contents), _) =>
       // k.beg.toString + printTokens(contents) + k.end.toString
       // k.beg.toString + "|BEGIN:" + printTokens(contents) + ":END|" + k.end.toString
