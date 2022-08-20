@@ -53,20 +53,17 @@ type B = NonReg[A]
 //│ ╔══[ERROR] Type 'B' is already defined.
 //│ ║  l.52: 	type B = NonReg[A]
 //│ ╙──      	     ^
-//│ ╔══[ERROR] type identifier not found: NonReg
-//│ ║  l.52: 	type B = NonReg[A]
-//│ ╙──      	         ^^^^^^^^^
 
 :e
 type NonReg[A] = { x: NonReg[int] }
 //│ ╔══[ERROR] Type definition is not regular: it occurs within itself as NonReg[int], but is defined as NonReg['A]
-//│ ║  l.61: 	type NonReg[A] = { x: NonReg[int] }
+//│ ║  l.58: 	type NonReg[A] = { x: NonReg[int] }
 //│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 42: NonReg[int]
 //│ ╔══[ERROR] type identifier not found: NonReg
-//│ ║  l.67: 	42: NonReg[int]
+//│ ║  l.64: 	42: NonReg[int]
 //│ ╙──      	    ^^^^^^^^^^^
 //│ res: error
 //│    = 42
@@ -76,14 +73,14 @@ type NonReg[A] = { x: NonReg[int] }
 type NonReg[A] = { x: NonReg[int] }
 type RefToNongReg[A] = { x: NonReg[A] }
 //│ ╔══[ERROR] Type definition is not regular: it occurs within itself as NonReg[int], but is defined as NonReg['A]
-//│ ║  l.76: 	type NonReg[A] = { x: NonReg[int] }
+//│ ║  l.73: 	type NonReg[A] = { x: NonReg[int] }
 //│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined type alias RefToNongReg[±A]
 //│ ╔══[WARNING] Type definition RefToNongReg has bivariant type parameters:
-//│ ║  l.77: 	type RefToNongReg[A] = { x: NonReg[A] }
+//│ ║  l.74: 	type RefToNongReg[A] = { x: NonReg[A] }
 //│ ║        	     ^^^^^^^^^^^^
 //│ ╟── A is irrelevant and may be removed
-//│ ║  l.77: 	type RefToNongReg[A] = { x: NonReg[A] }
+//│ ║  l.74: 	type RefToNongReg[A] = { x: NonReg[A] }
 //│ ╙──      	                  ^
 
 
@@ -91,10 +88,10 @@ type RefToNongReg[A] = { x: NonReg[A] }
 type Reg[A] = Reg[A] -> Reg[A]
 //│ Defined type alias Reg[±A]
 //│ ╔══[WARNING] Type definition Reg has bivariant type parameters:
-//│ ║  l.91: 	type Reg[A] = Reg[A] -> Reg[A]
+//│ ║  l.88: 	type Reg[A] = Reg[A] -> Reg[A]
 //│ ║        	     ^^^
 //│ ╟── A is irrelevant and may be removed
-//│ ║  l.91: 	type Reg[A] = Reg[A] -> Reg[A]
+//│ ║  l.88: 	type Reg[A] = Reg[A] -> Reg[A]
 //│ ╙──      	         ^
 
 
@@ -105,14 +102,14 @@ type Id[A] = A
 :e
 type FalseNeg[A] = { x: FalseNeg[Id[A]] }
 //│ ╔══[ERROR] Type definition is not regular: it occurs within itself as FalseNeg[Id['A]], but is defined as FalseNeg['A]
-//│ ║  l.106: 	type FalseNeg[A] = { x: FalseNeg[Id[A]] }
+//│ ║  l.103: 	type FalseNeg[A] = { x: FalseNeg[Id[A]] }
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 :e
 42: Id
 //│ ╔══[ERROR] Type Id takes parameters
-//│ ║  l.113: 	42: Id
+//│ ║  l.110: 	42: Id
 //│ ╙──       	    ^^
 //│ res: error
 //│    = 42

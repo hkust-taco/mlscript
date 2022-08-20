@@ -26,7 +26,6 @@ def q = 0
 //│ // Query 1 aborted: b and a are not implemented
 //│ // Query 2
 //│ globalThis.q = 0;
-//│ res = q;
 //│ // End of generated code
 //│ c: int
 //│  = <no result>
@@ -87,10 +86,8 @@ def break = 1
 def str = "str"
 //│ // Query 1
 //│ globalThis.break1 = 1;
-//│ res = break1;
 //│ // Query 2
 //│ globalThis.str = "str";
-//│ res = str;
 //│ // End of generated code
 //│ break: 1
 //│      = 1

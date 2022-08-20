@@ -53,11 +53,11 @@ def g x y = if x.b == 1 then x else x.a
 // miscellaneous functions
 //│ f: int -> string -> bool -> (int | string)
 //│ fact: int -> int
-//│ g: ({a: 'a, b: int} & 'a) -> anything -> 'a
+//│ g: ({a: 'a, b: number} & 'a) -> anything -> 'a
 //│ // start ts
 //│ export declare const f: (arg: int) => (arg1: string) => (arg2: bool) => int | string
 //│ export declare const fact: (arg: int) => int
-//│ export declare const g<a>: (arg: {readonly a: a, readonly b: int} & a) => (arg1: unknown) => a
+//│ export declare const g<a>: (arg: {readonly a: a, readonly b: number} & a) => (arg1: unknown) => a
 //│ // end ts
 
 // FIXME
@@ -100,10 +100,10 @@ def f: ('c -> 'a as 'a) -> 'c -> int
 def nonsense x y = if x.a == y.b then x y else fun y -> x
 def g = fun x -> fun y -> if x == y then x y else y x
 // complex types
-//│ nonsense: ('a -> 'b & {a: int} & 'c) -> ({b: int} & 'a) -> (anything -> 'c | 'b)
+//│ nonsense: ('a -> 'b & {a: number} & 'c) -> ({b: number} & 'a) -> (anything -> 'c | 'b)
 //│ g: nothing -> nothing -> nothing
 //│ // start ts
-//│ export declare const nonsense<a, b, c>: (arg: ((arg1: a) => b) & {readonly a: int} & c) => (arg2: {readonly b: int} & a) => ((arg3: unknown) => c) | b
+//│ export declare const nonsense<a, b, c>: (arg: ((arg1: a) => b) & {readonly a: number} & c) => (arg2: {readonly b: number} & a) => ((arg3: unknown) => c) | b
 //│ export declare const g: (arg: never) => (arg1: never) => never
 //│ // end ts
 

@@ -4,6 +4,8 @@ import mlscript.utils._, shorthands._, algorithms._
 import mlscript.codegen.Helpers._
 import mlscript.codegen._
 import scala.collection.mutable.ListBuffer
+import mlscript.{JSField, JSLit}
+import scala.collection.mutable.{Set => MutSet}
 
 class JSBackend {
   /**
@@ -15,6 +17,8 @@ class JSBackend {
     * The prelude code manager.
     */
   protected val polyfill = Polyfill()
+
+  protected val visitedSymbols = MutSet[ValueSymbol]()
 
   /**
     * This function translates parameter destructions in `def` declarations.
@@ -33,16 +37,23 @@ class JSBackend {
     * This function only translate name patterns and object patterns. I was thinking if we can
     * support literal parameter matching by merging multiple function `def`s into one.
     */
-  private def translatePattern(t: Term): JSPattern = t match {
+  private def translatePattern(t: Term)(implicit scope: Scope): JSPattern = t match {
     // fun x -> ... ==> function (x) { ... }
     // should returns ("x", ["x"])
-    case Var(name) => JSNamePattern(name)
+    case Var(name) =>
+      val runtimeName = scope.declareParameter(name)
+      JSNamePattern(runtimeName)
     // fun { x, y } -> ... ==> function ({ x, y }) { ... }
     // should returns ("{ x, y }", ["x", "y"])
     case Rcd(fields) =>
       JSObjectPattern(fields map {
-        case (Var(nme), (Var(als), _)) if nme === als => nme -> N
-        case (Var(nme), (subTrm, _))                  => nme -> S(translatePattern(subTrm))
+        case (Var(nme), (Var(als), _)) =>
+          val runtimeName = scope.declareParameter(als)
+          val fieldName = JSField.emitValidFieldName(nme)
+          if (runtimeName === fieldName) fieldName -> N
+          else fieldName -> S(JSNamePattern(runtimeName))
+        case (Var(nme), (subTrm, _)) => 
+          JSField.emitValidFieldName(nme) -> S(translatePattern(subTrm))
       })
     // This branch supports `def f (x: int) = x`.
     case Asc(trm, _) => translatePattern(trm)
@@ -55,7 +66,7 @@ class JSBackend {
       throw CodeGenError(s"term ${inspect(t)} is not a valid pattern")
   }
 
-  private def translateParams(t: Term): Ls[JSPattern] = t match {
+  private def translateParams(t: Term)(implicit scope: Scope): Ls[JSPattern] = t match {
     case Tup(params) => params map { case _ -> (p -> _) => translatePattern(p) }
     case _           => throw CodeGenError(s"term $t is not a valid parameter list")
   }
@@ -73,7 +84,9 @@ class JSBackend {
           JSIdent(sym.runtimeName)
         else
           throw new UnimplementedError(sym)
-      case S(sym: ValueSymbol) => JSIdent(sym.runtimeName)
+      case S(sym: ValueSymbol) =>
+        visitedSymbols += sym
+        JSIdent(sym.runtimeName)
       case S(sym: ClassSymbol) =>
         if (isCallee)
           JSNew(JSIdent(sym.runtimeName))
@@ -117,8 +130,8 @@ class JSBackend {
   protected def translateTerm(term: Term)(implicit scope: Scope): JSExpr = term match {
     case Var(name) => translateVar(name, false)
     case Lam(params, body) =>
-      val patterns = translateParams(params)
-      val lamScope = Scope("Lam", patterns flatMap { _.bindings }, scope)
+      val lamScope = scope.derive("Lam")
+      val patterns = translateParams(params)(lamScope)
       JSArrowFn(patterns, lamScope.tempVars `with` translateTerm(body)(lamScope))
     case t: App => translateApp(t)
     case Rcd(fields) =>
@@ -129,27 +142,28 @@ class JSBackend {
       JSField(translateTerm(receiver), fieldName.name)
     // Turn let into an IIFE.
     case Let(true, Var(name), Lam(args, body), expr) =>
-      val letScope = scope.derive("Let", name :: Nil)
+      val letScope = scope.derive("Let")
+      val runtimeName = letScope.declareParameter(name)
       val fn = {
-        val params = translateParams(args)
-        val bindings = name :: params.flatMap { _.bindings }
-        val fnScope = scope.derive("Function", bindings)
+        val fnScope = letScope.derive("Function")
+        val params = translateParams(args)(fnScope)
         val fnBody = fnScope.tempVars.`with`(translateTerm(body)(fnScope))
-        JSFuncExpr(S(name), params, fnBody.fold(_.`return` :: Nil, identity))
+        JSFuncExpr(S(runtimeName), params, fnBody.fold(_.`return` :: Nil, identity))
       }
       JSImmEvalFn(
         N,
-        JSNamePattern(name) :: Nil,
+        JSNamePattern(runtimeName) :: Nil,
         letScope.tempVars.`with`(translateTerm(expr)(letScope)),
         fn :: Nil
       )
     case Let(true, Var(name), _, _) =>
       throw new CodeGenError(s"recursive non-function definition $name is not supported")
     case Let(_, Var(name), value, body) =>
-      val letScope = scope.derive("Let", name :: Nil)
+      val letScope = scope.derive("Let")
+      val runtimeName = letScope.declareParameter(name)
       JSImmEvalFn(
         N,
-        JSNamePattern(name) :: Nil,
+        JSNamePattern(runtimeName) :: Nil,
         letScope.tempVars `with` translateTerm(body)(letScope),
         translateTerm(value) :: Nil
       )
@@ -269,12 +283,12 @@ class JSBackend {
       val define = method.rhs.value match {
         // Define methods for functions.
         case Lam(params, body) =>
-          val methodParams = translateParams(params)
-          val methodScope = scope.derive(s"Method $name", JSPattern.bindings(methodParams))
+          val methodScope = scope.derive(s"Method $name")
+          val methodParams = translateParams(params)(methodScope)
           methodScope.declareValue("this")
           instance(name) := JSFuncExpr(
             N,
-            Nil,
+            methodParams,
             `return`(translateTerm(body)(methodScope)) :: Nil
           )
         // Define getters for pure expressions.
@@ -342,7 +356,7 @@ class JSBackend {
       ) :: Nil
     )
     const(
-      traitSymbol.lexicalName,
+      traitSymbol.runtimeName,
       JSFuncExpr(
         N,
         Nil,
@@ -364,7 +378,12 @@ class JSBackend {
       classSymbol: ClassSymbol,
       baseClassSymbol: Opt[ClassSymbol]
   )(implicit scope: Scope): JSClassDecl = {
-    val members = classSymbol.methods.map { translateClassMember(_) }
+    // Translate class methods and getters.
+    val classScope = scope.derive(s"class ${classSymbol.lexicalName}")
+    val members = classSymbol.methods.map {
+      translateClassMember(_)(classScope)
+    }
+    // Collect class fields.
     val fields = classSymbol.body.collectFields ++
       classSymbol.body.collectTypeNames.flatMap(resolveTraitFields)
     val base = baseClassSymbol.map { sym => JSIdent(sym.runtimeName) }
@@ -379,20 +398,42 @@ class JSBackend {
     JSClassDecl(classSymbol.runtimeName, fields, base, members, traits)
   }
 
+  /**
+   * Translate class methods and getters.
+   */
   private def translateClassMember(
-      method: MethodDef[Left[Term, Type]]
+      method: MethodDef[Left[Term, Type]],
   )(implicit scope: Scope): JSClassMemberDecl = {
     val name = method.nme.name
-    method.rhs.value match {
+    // Create the method/getter scope.
+    val memberScope = method.rhs.value match {
+      case _: Lam => scope.derive(s"method $name")
+      case _ => scope.derive(s"getter $name")
+    }
+    // Declare the alias for `this` before declaring parameters.
+    val selfSymbol = memberScope.declareThisAlias()
+    // Declare parameters.
+    val (memberParams, body) = method.rhs.value match {
       case Lam(params, body) =>
-        val methodParams = translateParams(params)
-        val methodScope = scope.derive(s"Method $name", JSPattern.bindings(methodParams))
-        methodScope.declareValue("this")
-        JSClassMethod(name, methodParams, L(translateTerm(body)(methodScope)))
+        val methodParams = translateParams(params)(memberScope)
+        (S(methodParams), body)
       case term =>
-        val getterScope = scope.derive(s"Getter $name")
-        getterScope.declareValue("this")
-        JSClassGetter(name, L(translateTerm(term)(getterScope)))
+        (N, term)
+    }
+    // Translate class member body.
+    val bodyResult = translateTerm(body)(memberScope).`return`
+    // If `this` is accessed, add `const self = this`.
+    val bodyStmts = if (visitedSymbols(selfSymbol)) {
+      val thisDecl = JSConstDecl(selfSymbol.runtimeName, JSIdent("this"))
+      visitedSymbols -= selfSymbol
+      R(thisDecl :: bodyResult :: Nil)
+    } else {
+      R(bodyResult :: Nil)
+    }
+    // Returns members depending on what it is.
+    memberParams match {
+      case S(memberParams) => JSClassMethod(name, memberParams, bodyStmts)
+      case N => JSClassGetter(name, bodyStmts)
     }
   }
 
@@ -594,9 +635,8 @@ class JSTestBackend extends JSBackend {
               ((JSIdent("globalThis").member(sym.runtimeName) := (expr match {
                 case t: JSArrowFn => t.toFuncExpr(S(sym.runtimeName))
                 case t            => t
-              })) ::
-                (resultIdent := JSIdent(sym.runtimeName)) ::
-                Nil)
+              })) :: Nil),
+              sym.runtimeName
             )
           case L(reason) => JSTestBackend.AbortedQuery(reason)
         }
@@ -606,7 +646,9 @@ class JSTestBackend extends JSBackend {
       case term: Term =>
         try {
           val body = translateTerm(term)(scope)
-          JSTestBackend.CodeQuery(scope.tempVars.emit(), (resultIdent := body) :: Nil)
+          val res = JSTestBackend.CodeQuery(scope.tempVars.emit(), (resultIdent := body) :: Nil)
+          scope.refreshRes()
+          res
         } catch {
           case e: UnimplementedError => JSTestBackend.AbortedQuery(e.getMessage())
           case e: Throwable          => throw e
@@ -641,18 +683,19 @@ object JSTestBackend {
   /**
     * The entry generates meaningful code.
     */
-  final case class CodeQuery(prelude: Ls[Str], code: Ls[Str]) extends Query {
+  final case class CodeQuery(prelude: Ls[Str], code: Ls[Str], res: Str) extends Query {
     
   }
 
   object CodeQuery {
-    def apply(decls: Opt[JSLetDecl], stmts: Ls[JSStmt]): CodeQuery =
+    def apply(decls: Opt[JSLetDecl], stmts: Ls[JSStmt], res: Str = "res"): CodeQuery =
       CodeQuery(
         decls match {
           case S(stmt) => stmt.toSourceCode.toLines
           case N       => Nil
         },
-        SourceCode.fromStmts(stmts).toLines
+        SourceCode.fromStmts(stmts).toLines,
+        res
       )
   }
 

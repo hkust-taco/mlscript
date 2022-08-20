@@ -45,8 +45,8 @@ final class TsTypegenCodeBuilder {
 
     def apply(mlType: Type): TypegenContext = {
       val existingTypeVars = ShowCtx.mk(mlType :: Nil, "").vs
-      val typegenTypeScope = Scope("localTypeScope", List.empty, typeScope)
-      val typegenTermScope = Scope("localTermScope", List.empty, termScope)
+      val typegenTypeScope = typeScope.derive("localTypeScope")
+      val typegenTermScope = termScope.derive("localTermScope")
       val typeVarMapping = existingTypeVars.to(MutSortedMap)
 
       // initialize local term scope with global term scope as parent
@@ -59,8 +59,8 @@ final class TsTypegenCodeBuilder {
 
     // create a context with pre-created type var to name mapping
     def apply(mlType: Type, typeVarMapping: MutSortedMap[TypeVar, String]): TypegenContext = {
-      val typegenTypeScope = Scope("localTypeScope", List.empty, typeScope)
-      val typegenTermScope = Scope("localTermScope", List.empty, termScope)
+      val typegenTypeScope = typeScope.derive("localTypeScope")
+      val typegenTermScope = termScope.derive("localTermScope")
       TypegenContext(typeVarMapping, typegenTermScope, typegenTypeScope)
     }
   }

@@ -12,20 +12,34 @@ id
 //│    = [Function: id]
 
 // Simple expressions.
+:e
 :js
 1 + 1 * 2 / 4 - 5
 //│ // Query 1
 //│ res = 1 + 1 * 2 / 4 - 5;
 //│ // End of generated code
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.17: 	1 + 1 * 2 / 4 - 5
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── operator application of type `number` is not an instance of type `int`
+//│ ║  l.17: 	1 + 1 * 2 / 4 - 5
+//│ ╙──      	    ^^^^^^^^^
 //│ res: int
 //│    = -3.5
 
+:e
 :js
 1 * (2 + 3) / 4 - 5
 //│ // Query 1
 //│ res = 1 * (2 + 3) / 4 - 5;
 //│ // End of generated code
-//│ res: int
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.32: 	1 * (2 + 3) / 4 - 5
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ╟── operator application of type `number` is not an instance of type `int`
+//│ ║  l.32: 	1 * (2 + 3) / 4 - 5
+//│ ╙──      	^^^^^^^^^^^^^^^
+//│ res: error | int
 //│    = -3.75
 
 :js
@@ -33,7 +47,6 @@ x = 0
 x > 0 && x < 0
 //│ // Query 1
 //│ globalThis.x = 0;
-//│ res = x;
 //│ // Query 2
 //│ res = x > 0 && x < 0;
 //│ // End of generated code
@@ -47,7 +60,7 @@ x > 0 && x < 0
 1 + (if (case x + 1 of { int -> 8 | string -> 9 }) == 3 then 2 else 3)
 //│ // Query 1
 //│ let a;
-//│ res = 1 + ((a = x + 1, Number.isInteger(a) ? 8 : a.constructor === String ? 9 : (function () {
+//│ res = 1 + ((a = x + 1, Number.isInteger(a) ? 8 : a.constructor === String ? 9 : (() => {
 //│   throw new Error("non-exhaustive case expression");
 //│ })()) == 3 ? 2 : 3);
 //│ // End of generated code
@@ -58,7 +71,7 @@ x > 0 && x < 0
 case x of { int -> 1 | string -> 0 }
 //│ // Query 1
 //│ let b;
-//│ res = (b = x, Number.isInteger(b) ? 1 : b.constructor === String ? 0 : (function () {
+//│ res = (b = x, Number.isInteger(b) ? 1 : b.constructor === String ? 0 : (() => {
 //│   throw new Error("non-exhaustive case expression");
 //│ })());
 //│ // End of generated code
@@ -72,10 +85,10 @@ case x of { int -> 1 | string -> 0 }
 //│ // Query 1
 //│ let c, d;
 //│ res = [
-//│   (c = x, Number.isInteger(c) ? 1 : c.constructor === String ? 0 : (function () {
+//│   (c = x, Number.isInteger(c) ? 1 : c.constructor === String ? 0 : (() => {
 //│     throw new Error("non-exhaustive case expression");
 //│   })()),
-//│   (d = x, Number.isInteger(d) ? 1 : d.constructor === String ? 0 : (function () {
+//│   (d = x, Number.isInteger(d) ? 1 : d.constructor === String ? 0 : (() => {
 //│     throw new Error("non-exhaustive case expression");
 //│   })())
 //│ ];
@@ -99,3 +112,22 @@ id (fun x -> x)
 //│ // End of generated code
 //│ res: 'a -> 'a
 //│    = [Function (anonymous)]
+
+:js
+fun x -> {t1 = gt 1 2; t2 = 1}
+//│ // Prelude
+//│ function gt(x, y) {
+//│   if (arguments.length === 2) {
+//│     return x > y;
+//│   } else {
+//│     return (y) => x > y;
+//│   }
+//│ }
+//│ // Query 1
+//│ res = ((x) => ({
+//│   t1: gt(1)(2),
+//│   t2: 1
+//│ }));
+//│ // End of generated code
+//│ res: anything -> {t1: bool, t2: 1}
+//│    = [Function: res]

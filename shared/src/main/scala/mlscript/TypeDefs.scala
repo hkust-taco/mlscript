@@ -153,7 +153,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
     val allEnv = ctx.env.clone
     val allMthEnv = ctx.mthEnv.clone
     val newDefsInfo = newDefs0.iterator.map { case td => td.nme.name -> (td.kind, td.tparams.size) }.toMap
-    val newDefs = newDefs0.map { td0 =>
+    val newDefs = newDefs0.flatMap { td0 =>
       val n = td0.nme.name.capitalize
       val td = if (td0.nme.name.isCapitalized) td0
       else {
@@ -163,23 +163,26 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
       if (primitiveTypes.contains(n)) {
         err(msg"Type name '$n' is reserved.", td.nme.toLoc)
       }
-      allDefs.get(n).foreach { other =>
-        err(msg"Type '$n' is already defined.", td.nme.toLoc)
-      }
       td.tparams.groupBy(_.name).foreach { case s -> tps if tps.size > 1 => err(
           msg"Multiple declarations of type parameter ${s} in ${td.kind.str} definition" -> td.toLoc
             :: tps.map(tp => msg"Declared at" -> tp.toLoc))
         case _ =>
       }
-      val dummyTargs = td.tparams.map(p =>
-        freshVar(originProv(p.toLoc, s"${td.kind.str} type parameter", p.name), S(p.name))(ctx.lvl + 1))
-      val tparamsargs = td.tparams.lazyZip(dummyTargs)
-      val (bodyTy, tvars) = 
-        typeType2(td.body, simplify = false)(ctx.copy(lvl = 0), raise, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
-      val td1 = TypeDef(td.kind, td.nme, tparamsargs.toList, tvars, bodyTy,
-        td.mthDecls, td.mthDefs, baseClassesOf(td), td.toLoc)
-      allDefs += n -> td1
-      td1
+      allDefs.get(n) match {
+        case S(other) =>
+          err(msg"Type '$n' is already defined.", td.nme.toLoc)
+          N
+        case N =>
+          val dummyTargs = td.tparams.map(p =>
+            freshVar(originProv(p.toLoc, s"${td.kind.str} type parameter", p.name), S(p.name))(ctx.lvl + 1))
+          val tparamsargs = td.tparams.lazyZip(dummyTargs)
+          val (bodyTy, tvars) = 
+            typeType2(td.body, simplify = false)(ctx.copy(lvl = 0), raise, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
+          val td1 = TypeDef(td.kind, td.nme, tparamsargs.toList, tvars, bodyTy,
+            td.mthDecls, td.mthDefs, baseClassesOf(td), td.toLoc)
+          allDefs += n -> td1
+          S(td1)
+      }
     }
     import ctx.{tyDefs => oldDefs}
     
@@ -659,9 +662,11 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
     // DiffTests for type variables that are not used at all
     // and hence are not set in the variance info map
     tyDefs.foreach { t =>
-      assert(t.tvarVariances.isEmpty)
-      t.tvarVariances = S(MutMap.empty)
-      t.tparamsargs.foreach { case (_, tvar) => t.tvarVariances.getOrElse(die).put(tvar, VarianceInfo.bi) }
+      if (t.tvarVariances.isEmpty) {
+        // * ^ This may not be empty if the type def was (erroneously) defined several types in the same block
+        t.tvarVariances = S(MutMap.empty)
+        t.tparamsargs.foreach { case (_, tvar) => t.tvarVariances.getOrElse(die).put(tvar, VarianceInfo.bi) }
+      }
     }
     
     var i = 1

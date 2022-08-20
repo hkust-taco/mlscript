@@ -8,7 +8,6 @@ rec def pow0 n x =
 //│ globalThis.pow0 = function pow0(n) {
 //│   return (x) => n > 0 ? pow0(n - 1)(x) * x : 1;
 //│ };
-//│ res = pow0;
 //│ // End of generated code
 //│ pow0: int -> int -> int
 //│     = [Function: pow0]
@@ -25,13 +24,10 @@ def pow1 x =
   in go
 //│ // Query 1
 //│ globalThis.pow1 = function pow1(x) {
-//│   return ((function (go) {
-//│     return go;
-//│   })(function go(n) {
+//│   return (((go) => go)(function go(n) {
 //│     return n > 0 ? go(n - 1) * x : 1;
 //│   }));
 //│ };
-//│ res = pow1;
 //│ // End of generated code
 //│ pow1: int -> int -> int
 //│     = [Function: pow1]
@@ -46,7 +42,6 @@ rec def pow2 n = { call = fun x -> if n > 0 then (pow2 (n - 1)).call x * x else 
 //│ globalThis.pow2 = function pow2(n) {
 //│   return { call: (x) => n > 0 ? pow2(n - 1).call(x) * x : 1 };
 //│ };
-//│ res = pow2;
 //│ // End of generated code
 //│ pow2: int -> {call: int -> int}
 //│     = [Function: pow2]

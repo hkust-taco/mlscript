@@ -54,7 +54,7 @@ let f x y z = { log x; if y < z then y else z }
 //│ f: int -> int
 //│ f: int -> int -> int
 //│ f: bool -> 'a -> 'a -> 'a
-//│ f: anything -> (int & 'a) -> (int & 'a) -> 'a
+//│ f: anything -> (number & 'a) -> (number & 'a) -> 'a
 
 // TODO
 // let f (x: int) = x + 1

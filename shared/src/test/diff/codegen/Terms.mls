@@ -69,7 +69,7 @@ z ** 4 * z / (x + 5)
 //│ ╔══[ERROR] identifier not found: **
 //│ ║  l.65: 	z ** 4 * z / (x + 5)
 //│ ╙──      	  ^^
-//│ res: int
+//│ res: number
 //│    = 6.4
 
 // App(App(App(Var("if"), test), consequent), alternative)
@@ -131,7 +131,6 @@ f 0
 //│ globalThis.f = function f(x) {
 //│   return x;
 //│ };
-//│ res = f;
 //│ // Query 2
 //│ res = f(0);
 //│ // End of generated code
@@ -229,9 +228,7 @@ f 0
 :js
 let x = 0 in x + 1
 //│ // Query 1
-//│ res = (function (x) {
-//│   return x + 1;
-//│ })(0);
+//│ res = ((x) => x + 1)(0);
 //│ // End of generated code
 //│ res: int
 //│    = 1
@@ -244,11 +241,10 @@ def f x = case x of { }
 //│ // Query 1
 //│ globalThis.f1 = function f1(x) {
 //│   let a;
-//│   return (a = x, (function () {
+//│   return (a = x, (() => {
 //│     throw new Error("non-exhaustive case expression");
 //│   })());
 //│ };
-//│ res = f1;
 //│ // End of generated code
 //│ f: nothing -> nothing
 //│  = [Function: f1]
@@ -296,7 +292,7 @@ case A { a = 0 } of
   }
 //│ // Query 1
 //│ let b;
-//│ res = (b = new A({ a: 0 }), b instanceof A ? "A" : b instanceof B ? "B" : (function () {
+//│ res = (b = new A({ a: 0 }), b instanceof A ? "A" : b instanceof B ? "B" : (() => {
 //│   throw new Error("non-exhaustive case expression");
 //│ })());
 //│ // End of generated code
@@ -358,13 +354,11 @@ rcd2 = rcd1 with { x = 1; z = 2 }
 //│   x: "a",
 //│   y: "b"
 //│ };
-//│ res = rcd1;
 //│ // Query 2
 //│ globalThis.rcd2 = withConstruct(rcd1, {
 //│   x: 1,
 //│   z: 2
 //│ });
-//│ res = rcd2;
 //│ // Query 3
 //│ res = [
 //│   rcd1.x,
@@ -390,7 +384,6 @@ a1.x <- 666
 a1.x
 //│ // Query 1
 //│ globalThis.a1 = new M({ x: 233 });
-//│ res = a1;
 //│ // Query 2
 //│ res = (a1.x = 666, []);
 //│ // Query 3
@@ -412,7 +405,6 @@ t1 = (mut "hello", mut true)
 //│   "hello",
 //│   true
 //│ ];
-//│ res = t1;
 //│ // End of generated code
 //│ t1: (mut 'a, mut 'b,)
 //│   where
@@ -443,7 +435,6 @@ muta1 = (mut 1, mut 2, mut 3, mut 4)
 //│   3,
 //│   4
 //│ ];
-//│ res = muta1;
 //│ // End of generated code
 //│ muta1: MutArray[int]
 //│      = <missing implementation>
@@ -476,7 +467,6 @@ xpp a1
 //│ globalThis.xpp = function xpp(rc) {
 //│   return ((_) => rc)((rc.x = rc.x + 1, []));
 //│ };
-//│ res = xpp;
 //│ // Query 2
 //│ res = xpp(a1);
 //│ // End of generated code
@@ -495,7 +485,6 @@ tu._2
 //│   [],
 //│   2
 //│ ];
-//│ res = tu;
 //│ // Query 2
 //│ res = (tu["_1"] = (tu["_2"] = 3, []), []);
 //│ // Query 3
