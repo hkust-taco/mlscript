@@ -23,3 +23,16 @@
 //│ ╙──      	^^
 //│ Parsed: {{}}
 
+
+false(1 , 2 , 3)
+//│ |false|(BEG:|1| |,| |2| |,| |3|:END)|
+//│ Parsed: {false (1, 2, 3,)}
+
+false (1 ,2 ,3)
+//│ |false| |(BEG:|1| |,|2| |,|3|:END)|
+//│ Parsed: {false (1, 2, 3,)}
+
+false( 1 , 2 , 3 )
+//│ |false|(BEG:| |1| |,| |2| |,| |3| |:END)|
+//│ Parsed: {false (1, 2, 3,)}
+

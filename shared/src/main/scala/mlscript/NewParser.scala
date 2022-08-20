@@ -44,11 +44,15 @@ import NewParser._
 abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Diagnostic => Unit, val dbg: Bool) {
   outer =>
   
-  def rec(tokens: Ls[Token -> Loc]): NewParser = wrap(tokens) { l =>
+  // override def toString: Str = s"NewParser"
+  
+  def rec(tokens: Ls[Token -> Loc]): NewParser = //wrap(tokens.length) { l =>
     new NewParser(origin, tokens, raiseFun, dbg) {
-      def printDbg(msg: => Any): Unit = outer.printDbg("> " + msg)
+      def doPrintDbg(msg: => Str): Unit = outer.printDbg("> " + msg)
+      // def doPrintDbg(msg: => Str): Unit = outer.doPrintDbg(msg)
+      // override def printDbg(msg: => Any): Unit = outer.printDbg("> " + msg)
     }
-  }
+  // }
   
   def raise(mkDiag: => Diagnostic)(implicit fe: FoundErr = false): Unit =
     if (!foundErr) raiseFun(mkDiag)
@@ -56,19 +60,25 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
   def mkLoc(l: Int, r: Int): Loc =
     Loc(l, r, origin)
 
-  protected def printDbg(msg: => Any): Unit
+  protected def doPrintDbg(msg: => Str): Unit
+  protected def printDbg(msg: => Any): Unit =
+    doPrintDbg("│ " * this.indent + msg)
   protected var indent = 0
-  private def wrap[R](args: Any)(mkRes: Unit => R)(implicit l: Line, n: Name): R = try {
+  private def wrap[R](args: Any)(mkRes: Unit => R)(implicit l: Line, n: Name): R = {
     // printDbg(s"@ ${n.value}${if (args.isInstanceOf[Product]) args else s"($args)"}    [at l.${l.value}]")
     printDbg(s"@ ${n.value}${args match {
-      case _: Product => args
       case it: Iterable[_] => it.mkString("(", ",", ")")
+      case _: Product => args
       case _ => s"($args)"
     }}    [at l.${l.value}]")
-    indent += 1
-    // mkRes
-    mkRes(())
-  } finally indent -= 1
+    val res = try {
+      indent += 1
+      // mkRes
+      mkRes(())
+    } finally indent -= 1
+    printDbg(s"= $res")
+    res
+  }
   
   def parseAll[R](parser: => R): R = {
     // val t = expr(0, allowSpace = false)
@@ -192,7 +202,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
     //   // fail(cur)
     //   raise(CompilationError(msg"Expected: ${tk.describe}; found: ${ts.mkString("|")}" -> N :: Nil))
     // }
-    val res = cur match {
+    val skip_res = cur match {
       case (b @ CLOSE_BRACKET(_), l2) :: _ if tk =/= b && allowEnd => return (true, S(l2.left))
       case (tk2, l2) :: _ =>
         if (ignored(tk2)) {
@@ -210,7 +220,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
         (allowEnd, N)
     }
     consume
-    res
+    skip_res
   }
   // private def skipDeindent: Loc \/ Opt[Loc] = 
   // private def skipDeindent(allowNewline: Bool = true)(implicit l: Line): (Bool, Opt[Loc]) = wrap(()) { l =>

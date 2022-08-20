@@ -2,6 +2,36 @@
 :AllowTypeErrors // TODO rm
 
 
+a
+b
+//│ |a|↵|b|
+//│ Parsed: {a; b}
+
+a,
+b
+//│ |a|,|↵|b|
+//│ ╔══[ERROR] Expected end of input; found comma instead
+//│ ║  l.10: 	a,
+//│ ╙──      	 ^
+//│ Parsed: {a}
+
+a,
+b,
+//│ |a|,|↵|b|,|
+//│ ╔══[ERROR] Expected end of input; found comma instead
+//│ ║  l.18: 	a,
+//│ ╙──      	 ^
+//│ Parsed: {a}
+
+a,
+b,
+c
+//│ |a|,|↵|b|,|↵|c|
+//│ ╔══[ERROR] Expected end of input; found comma instead
+//│ ║  l.26: 	a,
+//│ ╙──      	 ^
+//│ Parsed: {a}
+
 foo
   a
   b
@@ -14,13 +44,13 @@ foo(
 )
 //│ |foo|(BEG:|→|a|,|↵|b|←|↵|:END)|
 //│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.12: 	  a,
+//│ ║  l.42: 	  a,
 //│ ║        	   ^
 //│ ╟── Note: indented block starts here:
-//│ ║  l.12: 	  a,
+//│ ║  l.42: 	  a,
 //│ ╙──      	^^
 //│ ╔══[ERROR] Unexpected identifier here
-//│ ║  l.13: 	  b
+//│ ║  l.43: 	  b
 //│ ╙──      	  ^
 //│ Parsed: {foo ({a},)}
 
@@ -30,13 +60,13 @@ foo(
 )
 //│ |foo|(BEG:|→|a|,|↵|b|,|←|↵|:END)|
 //│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.28: 	  a,
+//│ ║  l.58: 	  a,
 //│ ║        	   ^
 //│ ╟── Note: indented block starts here:
-//│ ║  l.28: 	  a,
+//│ ║  l.58: 	  a,
 //│ ╙──      	^^
 //│ ╔══[ERROR] Unexpected identifier here
-//│ ║  l.29: 	  b,
+//│ ║  l.59: 	  b,
 //│ ╙──      	  ^
 //│ Parsed: {foo ({a},)}
 
@@ -53,7 +83,7 @@ foo(
 )
 //│ |foo|(BEG:|→|a|←|→|b|←|↵|:END)|
 //│ ╔══[ERROR] Unexpected identifier here
-//│ ║  l.52: 	  b
+//│ ║  l.82: 	  b
 //│ ╙──      	  ^
 //│ Parsed: {foo ({a},)}
 
@@ -82,14 +112,14 @@ foo of
   ccccc
 //│ |foo| |#of|→|aaaaa|,|↵|bbbbb|,|↵|ccccc|
 //│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.80: 	  aaaaa,
-//│ ║        	       ^
+//│ ║  l.110: 	  aaaaa,
+//│ ║         	       ^
 //│ ╟── Note: indented block starts here:
-//│ ║  l.80: 	  aaaaa,
-//│ ╙──      	^^
+//│ ║  l.110: 	  aaaaa,
+//│ ╙──       	^^
 //│ ╔══[ERROR] Expected end of input; found comma instead
-//│ ║  l.81: 	  bbbbb,
-//│ ╙──      	       ^
+//│ ║  l.111: 	  bbbbb,
+//│ ╙──       	       ^
 //│ Parsed: {foo ({aaaaa},); bbbbb}
 
 foo of
