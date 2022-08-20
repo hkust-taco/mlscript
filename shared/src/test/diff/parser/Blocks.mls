@@ -50,12 +50,7 @@ foo(
   b,
 )
 //│ |foo|(BEG:|→|a|,|↵|b|,|←|↵|:END)|
-//│ ╔══[ERROR] Unexpected deindentation in expression position
-//│ ║  l.50: 	  b,
-//│ ║        	    ^
-//│ ║  l.51: 	)
-//│ ╙──      	
-//│ Parsed: {foo (a, b, undefined,)}
+//│ Parsed: {foo (a, b,)}
 
 foo(
   a
@@ -63,7 +58,7 @@ foo(
 )
 //│ |foo|(BEG:|→|a|↵|b|←|↵|:END)|
 //│ ╔══[ERROR] Unexpected identifier here
-//│ ║  l.62: 	  b
+//│ ║  l.57: 	  b
 //│ ╙──      	  ^
 //│ Parsed: {foo (a,)}
 
@@ -73,7 +68,7 @@ foo(
 )
 //│ |foo|(BEG:|→|a|←|→|b|←|↵|:END)|
 //│ ╔══[ERROR] Unexpected identifier here
-//│ ║  l.72: 	  b
+//│ ║  l.67: 	  b
 //│ ╙──      	  ^
 //│ Parsed: {foo (a,)}
 

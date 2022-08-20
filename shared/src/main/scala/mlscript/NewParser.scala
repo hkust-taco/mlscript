@@ -1057,6 +1057,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
     // val e = expr(NoElsePrec) -> argMut.isDefined
     val e = exprOrIf(prec).map(Fld(argMut.isDefined, argSpec.isDefined, _))
     cur match {
+      case (COMMA, l0) :: (DEINDENT | CLOSE_BRACKET(_), l1) :: _ =>
+        consume
+        ((argName -> e) :: acc).reverse
       case (COMMA, l0) :: (NEWLINE, l1) :: _ =>
         consume
         consume
