@@ -57,19 +57,17 @@ object TSTypeArray {
   def apply(arr: js.Dynamic) = new TSTypeArray(arr)
 }
 
-class TSSymbolIter(it: js.Dynamic) {
-  private var cur: js.Dynamic = it
-  def next(): Unit = cur = it.next()
-  def done(): Boolean = cur.done
-
-  def value(): (String, TSSymbolObject) = {
-    val data = cur.value
-    (data.selectDynamic("0").toString, TSSymbolObject(data.selectDynamic("1")))
-  }
+class TSSymbolMap(map: js.Dynamic) extends TSAny(map) {
+  def foreach(f: TSSymbolObject => Unit): Unit =
+    if (!js.isUndefined(map)){
+      val jsf: js.Function1[js.Dynamic, js.Any] =
+        { (s: js.Dynamic) => f(TSSymbolObject(s)) }
+      map.forEach(jsf)
+    }
 }
 
-object TSSymbolIter {
-  def apply(it: js.Dynamic) = new TSSymbolIter(it)
+object TSSymbolMap {
+  def apply(map: js.Dynamic) = new TSSymbolMap(map)
 }
 
 object TypeScript {
@@ -172,7 +170,7 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) with TSTypeSource 
   lazy val modifiers = TSTokenArray(node.modifiers)
   lazy val dotDotDot = TSTokenObject(node.dotDotDotToken)
   lazy val name = TSIdentifierObject(node.name)
-  lazy val locals = TSSymbolIter(node.locals.entries())
+  lazy val locals = TSSymbolMap(node.locals)
 
   def getReturnTypeOfSignature()(implicit checker: TSTypeChecker): TSTypeObject = {
     val signature = checker.getSignatureFromDeclaration(node)

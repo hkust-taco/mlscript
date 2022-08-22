@@ -196,18 +196,13 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     else TSInterfaceType(fullName, getInterfacePropertiesType(members, 0)(ns, tvMap), constraints, getInheritList(node))
   }
 
-  private def parseNamespaceExports(it: TSSymbolIter)(implicit ns: TSNamespace): Unit = {
-    it.next
-    if (!it.done) {
-      val data = it.value
-      val name = data._1
-      val node = data._2.declaration
-
+  private def parseNamespaceLocals(map: TSSymbolMap)(implicit ns: TSNamespace) =
+    map.foreach((sym) => {
+      val name = sym.escapedName
+      val node = sym.declaration
       if (!node.isToken)
-        addNodeIntoNamespace(node, name, if (node.isFunctionDeclaration) Some(data._2.declarations) else None)
-      parseNamespaceExports(it)
-    }
-  }
+        addNodeIntoNamespace(node, name, if (node.isFunctionDeclaration) Some(sym.declarations) else None)
+    })
 
   private def addFunctionIntoNamespace(fun: TSFunctionType, node: TSNodeObject, name: String)(implicit ns: TSNamespace) =
     if (!ns.containsMember(name, false)) ns.put(name, fun)
@@ -248,9 +243,9 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
 
   private def parseNamespace(node: TSNodeObject)(implicit ns: TSNamespace): Unit = {
     val name = node.symbol.escapedName
-    val iterator = node.locals
+    val locals = node.locals
     val sub = ns.derive(name)
-    parseNamespaceExports(iterator)(sub)
+    parseNamespaceLocals(locals)(sub)
   }
 }
 
