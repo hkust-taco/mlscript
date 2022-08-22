@@ -7,13 +7,13 @@ import js.JSConverters._
 
 sealed trait TSTypeSource
 
-class TSAny(v: js.Dynamic) {
+abstract class TSAny(v: js.Dynamic) {
   lazy val isUndefined: Boolean = js.isUndefined(v)
 }
 
 abstract class TSArray[T <: TSAny](arr: js.Dynamic) extends TSAny(arr) {
   def get(index: Int): T = ???
-  def length(): Int = arr.length.asInstanceOf[Int]
+  lazy val length: Int = arr.length.asInstanceOf[Int]
 
   def foldLeft[U](init: U, index: Int = 0)(implicit f: (U, T) => U): U = {
     if (index < length) foldLeft(f(init, get(index)), index + 1)
@@ -22,7 +22,6 @@ abstract class TSArray[T <: TSAny](arr: js.Dynamic) extends TSAny(arr) {
 }
 
 class TSNodeArray(arr: js.Dynamic) extends TSArray[TSNodeObject](arr) {
-
   override def get(index: Int) = TSNodeObject(arr.selectDynamic(index.toString))
 }
 
@@ -31,7 +30,6 @@ object TSNodeArray {
 }
 
 class TSTokenArray(arr: js.Dynamic) extends TSArray[TSTokenObject](arr) {
-
   override def get(index: Int) = TSTokenObject(arr.selectDynamic(index.toString))
 }
 
@@ -40,7 +38,6 @@ object TSTokenArray {
 }
 
 class TSTypeArray(arr: js.Dynamic) extends TSArray[TSTypeObject](arr) {
-
   override def get(index: Int) = TSTypeObject(arr.selectDynamic(index.toString))
 }
 
@@ -58,7 +55,7 @@ abstract class TSIterator[T <: TSAny](it: js.Dynamic) extends TSAny(it) {
 class TSSymbolIter(it: js.Dynamic) extends TSIterator[TSSymbolObject](it) {
   override def value(): (String, TSSymbolObject) = {
     val data = cur.value
-    (data.shift().toString, TSSymbolObject(data.shift()))
+    (data.selectDynamic("0").toString, TSSymbolObject(data.selectDynamic("1")))
   }
 }
 
