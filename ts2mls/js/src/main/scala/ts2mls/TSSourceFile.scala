@@ -179,34 +179,23 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       case tp: TSTypeObject => lst :+ getObjectType(tp)
     })
 
-  private def getInheritList(list: TSNodeArray, index: Int)(implicit ns: TSNamespace): List[TSType] = {
-    val tail = list.get(list.length - index - 1)
-    if (tail.isUndefined) List()
-    else {
-      val parent = tail.types.get(index)
-      def getFullName(name: String, exp: Either[TSNodeObject, TSIdentifierObject]): String =
-        exp match {
-          case Left(node) =>
-            if (name.equals("")) getFullName(node.name.escapedText, node.expression)
-            else getFullName(s"${node.name.escapedText}'$name", node.expression)
-          case Right(id) =>
-            if (name.equals("")) id.escapedText
-            else s"${id.escapedText}'$name"
-        }
-
-      val name = getFullName("", parent.expression)
-      if (parent.typeArguments.isUndefined)
-        getInheritList(list, index + 1) :+ TSNamedType(name)
-      else {
-        val app = getApplicationArguments(parent.typeArguments)(ns, Map())
-        getInheritList(list, index + 1) :+ TSApplicationType(name, app)
-      }
-    }
-  }
-
   private def getInheritList(node: TSNodeObject)(implicit ns: TSNamespace): List[TSType] = {
-    if (node.heritageClauses.isUndefined) List()
-    else getInheritList(node.heritageClauses, 0)
+    def getFullName(name: String, exp: Either[TSNodeObject, TSIdentifierObject]): String =
+      exp match {
+        case Left(node) =>
+          if (name.equals("")) getFullName(node.name.escapedText, node.expression)
+          else getFullName(s"${node.name.escapedText}'$name", node.expression)
+        case Right(id) =>
+          if (name.equals("")) id.escapedText
+          else s"${id.escapedText}'$name"
+      }
+
+    node.heritageClauses.foldLeftIndexed(List[TSType]())((lst, h, index) => {
+      val parent = h.types.get(index)
+      val name = getFullName("", parent.expression)
+      if (parent.typeArguments.isUndefined) lst :+ TSNamedType(name)
+      else lst :+ TSApplicationType(name, getApplicationArguments(parent.typeArguments)(ns, Map()))
+    })
   }
 
   private def getClassMembersType(list: TSNodeArray, index: Int, requireStatic: Boolean)(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): Map[String, TSMemberType] =
