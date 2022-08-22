@@ -9,7 +9,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
 
   private val order = ListBuffer.empty[Either[String, String]]
 
-  private lazy val showPrefix = if (name.equals("globalThis")) "" else s"$name."
+  private lazy val showPrefix = if (name.equals("")) "" else s"$name."
 
   def derive(name: String): TSNamespace = {
     if (subSpace.contains(name)) subSpace(name)
@@ -86,5 +86,5 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
 }
 
 object TSNamespace {
-  def apply() = new TSNamespace("globalThis", None)
+  def apply() = new TSNamespace("", None)
 }
