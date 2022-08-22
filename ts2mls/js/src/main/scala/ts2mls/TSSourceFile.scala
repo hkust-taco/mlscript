@@ -258,15 +258,8 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     }
   }
 
-  private def getInterfacePropertiesType(list: TSNodeArray, index: Int)(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): Map[String, TSMemberType] = {
-    val tail = list.get(list.length - index - 1)
-    if (tail.isUndefined) Map()
-    else {
-      val name = tail.symbol.escapedName
-      val nt = TSMemberType(getObjectType(tail))
-      getInterfacePropertiesType(list, index + 1) ++ Map(name -> nt)
-    }
-  }
+  private def getInterfacePropertiesType(list: TSNodeArray, index: Int)(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): Map[String, TSMemberType] =
+    list.foldLeft(Map[String, TSMemberType]())((mp, p) => mp ++ Map(p.symbol.escapedName -> TSMemberType(getObjectType(p))))
 
   private def parseMembers(node: TSNodeObject, isClass: Boolean)(implicit ns: TSNamespace): TSType = {
     val name = node.symbol.escapedName
