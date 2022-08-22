@@ -11,30 +11,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     if (nodeObject.isToken || nodeObject.symbol.isUndefined) return
 
     val name = nodeObject.symbol.escapedName
-    if (nodeObject.isFunctionDeclaration) {
-      val typeInfo = getFunctionType(nodeObject)(global, Map())
-      if (!global.containsMember(name)) global.put(name, typeInfo)
-      else global.get(name) match {
-        case old: TSFunctionType if (nodeObject.body.isUndefined) =>
-          global.put(name, TSIntersectionType(old, typeInfo))
-        case old: TSIntersectionType if (nodeObject.body.isUndefined) =>
-          global.put(name, TSIntersectionType(old, typeInfo))
-        case _ => {}
-      }
-    }
-    else if (nodeObject.isClassDeclaration) {
-      global.put(name, TSNamedType(name)) // placeholder for self reference
-      val typeInfo = parseMembers(nodeObject, true)(global)
-      global.put(name, typeInfo)
-    }
-    else if (nodeObject.isInterfaceDeclaration) {
-      global.put(name, TSNamedType(name)) // placeholder for self reference
-      val typeInfo = parseMembers(nodeObject, false)(global)
-      global.put(name, typeInfo)
-    }
-    else if (nodeObject.isNamespace) {
-      parseNamespace(nodeObject)(global)
-    }
+    addNodeIntoNamespace(nodeObject, name)(global)
   }
 
   TypeScript.forEachChild(sf, visit)
@@ -226,42 +203,48 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       val name = data._1
       val node = data._2.declaration
 
-      if (!node.isToken && node.isFunctionDeclaration) {
-        def parseFunc(decs: TSNodeArray, index: Int): Unit = {
-          val subNode = decs.get(index)
-          val func = getFunctionType(subNode)(ns, Map())
-          if (!ns.containsMember(name, false)) ns.put(name, func)
-          else ns.get(name) match {
-            case old: TSFunctionType if (subNode.body.isUndefined) =>
-              ns.put(name, TSIntersectionType(old, func))
-            case old: TSIntersectionType if (subNode.body.isUndefined) =>
-              ns.put(name, TSIntersectionType(old, func))
-            case _ => {}
-          }
-
-          if (index + 1 < decs.length) parseFunc(decs, index + 1)
-        }
-        
-        parseFunc(data._2.declarations, 0)
-        parseNamespaceExports(it)
-      }
-      else if (!node.isToken && node.isClassDeclaration) {
-        ns.put(name, TSNamedType(name)) // placeholder for self reference
-        ns.put(name, parseMembers(node, true))
-        parseNamespaceExports(it)
-      }
-      else if (!node.isToken && node.isInterfaceDeclaration) {
-        ns.put(name, TSNamedType(name)) // placeholder for self reference
-        ns.put(name, parseMembers(node, false))
-        parseNamespaceExports(it)
-      }
-      else if (!node.isToken && node.isNamespace) {
-        parseNamespace(node)
-        parseNamespaceExports(it)
-      }
-      else parseNamespaceExports(it)
+      if (!node.isToken)
+        addNodeIntoNamespace(node, name, if (node.isFunctionDeclaration) Some(data._2.declarations) else None)
+      parseNamespaceExports(it)
     }
   }
+
+  private def addFunctionIntoNamespace(fun: TSFunctionType, node: TSNodeObject, name: String)(implicit ns: TSNamespace) =
+    if (!ns.containsMember(name, false)) ns.put(name, fun)
+    else ns.get(name) match {
+      case old: TSFunctionType if (node.body.isUndefined) =>
+        ns.put(name, TSIntersectionType(old, fun))
+      case old: TSIntersectionType if (node.body.isUndefined) =>
+        ns.put(name, TSIntersectionType(old, fun))
+      case _ => {}
+    }
+
+  private def addNodeIntoNamespace(node: TSNodeObject, name: String, overload: Option[TSNodeArray] = None)(implicit ns: TSNamespace) =
+    if (node.isFunctionDeclaration) overload match {
+      case None => {
+        val typeInfo = getFunctionType(node)(ns, Map())
+        addFunctionIntoNamespace(typeInfo, node, name)
+      }
+      case Some(decs) => {
+        decs.foreach((d) => {
+          val func = getFunctionType(d)(ns, Map())
+          addFunctionIntoNamespace(func, d, name)
+        })
+      }
+    }
+    else if (node.isClassDeclaration) {
+      ns.put(name, TSNamedType(name)) // placeholder for self reference
+      val typeInfo = parseMembers(node, true)(ns)
+      ns.put(name, typeInfo)
+    }
+    else if (node.isInterfaceDeclaration) {
+      ns.put(name, TSNamedType(name)) // placeholder for self reference
+      val typeInfo = parseMembers(node, false)(ns)
+      ns.put(name, typeInfo)
+    }
+    else if (node.isNamespace) {
+      parseNamespace(node)(ns)
+    }
 
   private def parseNamespace(node: TSNodeObject)(implicit ns: TSNamespace): Unit = {
     val name = node.symbol.escapedName
