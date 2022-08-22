@@ -39,17 +39,11 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
 
   TypeScript.forEachChild(sf, visit)
 
-  private def getApplicationArguments(args: TSTokenArray, index: Int)(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): List[TSType] = {
-    val tail = args.get(args.length - index - 1)
-    if (tail.isUndefined) List()
-    else getApplicationArguments(args, index + 1) :+ getObjectType(tail.getTypeFromTypeNode())
-  }
-
-  private def getApplicationArguments(args: TSTypeArray, index: Int)(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): List[TSType] = {
-    val tail = args.get(args.length - index - 1)
-    if (tail.isUndefined) List()
-    else getApplicationArguments(args, index + 1) :+ getObjectType(tail)
-  }
+  private def getApplicationArguments[T <: TSAny](args: TSArray[T])(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): List[TSType] =
+    args.foldLeft(List[TSType]())((lst, arg) => arg match {
+      case token: TSTokenObject => lst :+ getObjectType(token.getTypeFromTypeNode)
+      case tp: TSTypeObject => lst :+ getObjectType(tp)
+    })
 
   private def getObjectType(node: TSTypeSource)(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): TSType = node match {
     case node: TSNodeObject => {
@@ -60,7 +54,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
         else if (typeNode.hasTypeName) {
           val name = typeNode.typeName.escapedText
           if (!typeNode.typeArguments.isUndefined)
-            TSApplicationType(name, getApplicationArguments(typeNode.typeArguments, 0))
+            TSApplicationType(name, getApplicationArguments(typeNode.typeArguments))
           else if (tv.contains(name)) tv(name)
           else if (ns.containsMember(name.split("'").toList)) TSNamedType(name)
           else TSEnumType(name)
@@ -97,7 +91,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       else if (obj.isUnionType) getStructuralType(obj.types, None, true, 0)
       else if (obj.isIntersectionType) getStructuralType(obj.types, None, false, 0)
       else if (obj.isArrayType) TSArrayType(getObjectType(args.get(0)))
-      else if (!args.isUndefined) TSApplicationType(obj.symbol.escapedName, getApplicationArguments(args, 0))
+      else if (!args.isUndefined) TSApplicationType(obj.symbol.escapedName, getApplicationArguments(args))
       else if (!obj.symbol.isUndefined) {
           val symDec = obj.symbol.valueDeclaration
           val name = obj.symbol.getFullName
@@ -113,10 +107,8 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
   }
 
   private def getTypeConstraints(node: TSNodeObject)(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): List[TSTypeVariable] = {
-    if (node.typeParameters.isUndefined) List()
-    else node.typeParameters.foldLeft(List[TSTypeVariable]())((lst, tp) =>
-      if (tp.isUndefined) lst
-      else if (tp.constraint.isUndefined) lst :+ TSTypeVariable(tp.symbol.escapedName, None)
+    node.typeParameters.foldLeft(List[TSTypeVariable]())((lst, tp) =>
+      if (tp.constraint.isUndefined) lst :+ TSTypeVariable(tp.symbol.escapedName, None)
       else lst :+ TSTypeVariable(tp.symbol.escapedName, Some(getObjectType(tp.constraint.getTypeFromTypeNode)))
     )
   }
@@ -130,7 +122,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     val params = node.parameters
     val constraints = getTypeConstraints(node)
     val ntv = constaintsListToMap(constraints) ++ tv
-    val pList = if (params.isUndefined) List() else params.foldLeft(List[TSType]())((lst, p) => lst :+ getObjectType(p)(ns, ntv))
+    val pList = params.foldLeft(List[TSType]())((lst, p) => lst :+ getObjectType(p)(ns, ntv))
     val res = node.getReturnTypeOfSignature()
     TSFunctionType(pList, getObjectType(res)(ns, ntv), constraints)
   }
@@ -206,7 +198,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       if (parent.typeArguments.isUndefined)
         getInheritList(list, index + 1) :+ TSNamedType(name)
       else {
-        val app = getApplicationArguments(parent.typeArguments, 0)(ns, Map())
+        val app = getApplicationArguments(parent.typeArguments)(ns, Map())
         getInheritList(list, index + 1) :+ TSApplicationType(name, app)
       }
     }

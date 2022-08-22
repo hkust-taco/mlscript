@@ -15,10 +15,10 @@ abstract class TSArray[T <: TSAny](arr: js.Dynamic) extends TSAny(arr) {
   def get(index: Int): T = ???
   lazy val length: Int = arr.length.asInstanceOf[Int]
 
-  def foldLeft[U](init: U, index: Int = 0)(implicit f: (U, T) => U): U = {
-    if (index < length) foldLeft(f(init, get(index)), index + 1)
+  def foldLeft[U](init: U, index: Int = 0)(implicit f: (U, T) => U): U =
+    if (js.isUndefined(arr)) init
+    else if (index < length) foldLeft(f(init, get(index)), index + 1)
     else init
-  }
 }
 
 class TSNodeArray(arr: js.Dynamic) extends TSArray[TSNodeObject](arr) {
