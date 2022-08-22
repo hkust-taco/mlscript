@@ -12,10 +12,13 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) extends Module {
   private lazy val showPrefix = if (name.equals("globalThis")) "" else s"$name."
 
   def derive(name: String): TSNamespace = {
-    val sub = new TSNamespace(name, Some(this))
-    subSpace.put(name, sub)
-    order += Left(name)
-    sub
+    if (subSpace.contains(name)) subSpace(name)
+    else {
+      val sub = new TSNamespace(name, Some(this))
+      subSpace.put(name, sub)
+      order += Left(name)
+      sub
+    }
   }
 
   def put(name: String, tp: TSType): Unit = {

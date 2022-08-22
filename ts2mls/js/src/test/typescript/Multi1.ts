@@ -9,3 +9,7 @@ class Foo extends Base {}
 interface AnotherBase {
   y: string
 }
+
+namespace N {
+  export function f() {}
+}

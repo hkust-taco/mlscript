@@ -10,6 +10,9 @@ class VG[T]: { x: T }
 class Home[T]: { y: T } & VG[string]
 trait O[I]: { xx: (I) -> (I) }
 class OR[R]: { xx: (R) -> (R) } & O[R]
+class Five'ROTK: { wu: string }
+class Five'Y: {} & Five'ROTK
+class Y: {} & Five'ROTK
 //│ Defined class A
 //│ Defined class B
 //│ Defined class C[=T]
@@ -22,3 +25,6 @@ class OR[R]: { xx: (R) -> (R) } & O[R]
 //│ Defined class Home[+T]
 //│ Defined trait O[=I]
 //│ Defined class OR[=R]
+//│ Defined class Five'ROTK
+//│ Defined class Five'Y
+//│ Defined class Y

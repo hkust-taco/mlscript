@@ -53,3 +53,13 @@ class OR<R> implements O<R> {
     return x;
   }
 }
+
+namespace Five {
+  export class ROTK {
+    wu: string
+  }
+
+  export class Y extends Five.ROTK {}
+}
+
+class Y extends Five.ROTK {}

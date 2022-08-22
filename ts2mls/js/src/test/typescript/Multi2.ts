@@ -11,3 +11,7 @@ interface Base {
 }
 
 class AnotherFoo extends AnotherBase {}
+
+namespace N {
+  export function g() {}
+}

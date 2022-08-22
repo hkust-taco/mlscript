@@ -229,7 +229,17 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     if (tail.isUndefined) List()
     else {
       val parent = tail.types.get(index)
-      val name = parent.expression.escapedText
+      def getFullName(name: String, exp: Either[TSNodeObject, TSIdentifierObject]): String =
+        exp match {
+          case Left(node) =>
+            if (name.equals("")) getFullName(node.name.escapedText, node.expression)
+            else getFullName(s"${node.name.escapedText}'$name", node.expression)
+          case Right(id) =>
+            if (name.equals("")) id.escapedText
+            else s"${id.escapedText}'$name"
+        }
+
+      val name = getFullName("", parent.expression)
       if (parent.typeArguments.isUndefined)
         getInheritList(list, index + 1) :+ TSNamedType(name)
       else {
@@ -370,7 +380,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
 
   private def parseNamespace(node: TSNodeObject)(implicit ns: TSNamespace): Unit = {
     val name = node.symbol.escapedName
-    val iterator = node.symbol.exports
+    val iterator = node.locals
     val sub = ns.derive(name)
     parseNamespaceExports(iterator)(sub)
   }

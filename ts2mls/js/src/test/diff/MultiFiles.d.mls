@@ -2,6 +2,9 @@ def multi1: (number) -> (number)
 def multi3: unit -> (unit)
 class Foo: {} & Base
 trait AnotherBase: { y: string }
+def N'f: unit -> (unit)
+def N'g: unit -> (unit)
+def N'h: unit -> (unit)
 def multi2: (string) -> (string)
 def multi4: unit -> (unit)
 trait Base: { a: number }
@@ -15,6 +18,12 @@ def multi5: unit -> (unit)
 //│       = <missing implementation>
 //│ multi3: unit -> unit
 //│       = <missing implementation>
+//│ N'f: unit -> unit
+//│    = <missing implementation>
+//│ N'g: unit -> unit
+//│    = <missing implementation>
+//│ N'h: unit -> unit
+//│    = <missing implementation>
 //│ multi2: string -> string
 //│       = <missing implementation>
 //│ multi4: unit -> unit

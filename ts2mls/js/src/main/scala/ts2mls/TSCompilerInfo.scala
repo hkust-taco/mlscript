@@ -108,9 +108,13 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) with TSTypeSource 
   lazy val initializerNode = TSNodeObject(node.initializer) // for inner class
   lazy val body = TSNodeObject(node.body)
   lazy val typeArguments = TSTokenArray(node.typeArguments)
-  lazy val expression: TSIdentifierObject = TSIdentifierObject(node.expression)
+  lazy val expression: Either[TSNodeObject, TSIdentifierObject] =
+    if (js.isUndefined(node.expression.name)) Right(TSIdentifierObject(node.expression))
+    else Left(TSNodeObject(node.expression))
   lazy val modifiers = TSTokenArray(node.modifiers)
   lazy val dotDotDot = TSTokenObject(node.dotDotDotToken)
+  lazy val name = TSIdentifierObject(node.name)
+  lazy val locals = TSSymbolIter(node.locals.entries())
 
   private lazy val tagName =
     if (isUndefined) TSIdentifierObject(node) else TSIdentifierObject(node.tagName)
