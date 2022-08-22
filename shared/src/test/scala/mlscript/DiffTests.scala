@@ -17,7 +17,7 @@ import org.scalatest.time._
 import org.scalatest.concurrent.{TimeLimitedTests, Signaler}
 
 
-class DiffTests(dir: os.Path = DiffTests.defaultDir)
+class DiffTests(dir: os.Path)
   extends org.scalatest.funsuite.AnyFunSuite
   with org.scalatest.ParallelTestExecution
   with TimeLimitedTests
@@ -742,8 +742,6 @@ object DiffTests {
     if (sys.env.get("CI").isDefined) Span(25, Seconds)
     else Span(5, Seconds)
   
-  private val defaultDir = os.pwd/"shared"/"src"/"test"/"diff"
-  
   private val validExt = Set("fun", "mls")
   
   // Allow overriding which specific tests to run, sometimes easier for development:
@@ -767,4 +765,10 @@ object DiffTests {
     // "Subsume",
     // "Methods",
   )
+}
+
+class MLScriptDiffTests extends DiffTests(MLScriptDiffTests.defaultDir) {}
+
+object MLScriptDiffTests {
+  private val defaultDir = os.pwd/"shared"/"src"/"test"/"diff"
 }
