@@ -8,9 +8,9 @@ import types._
 class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker) {
   private def visit(node: js.Dynamic): Unit = {
     val nodeObject = TSNodeObject(node)
-    if (nodeObject.isToken) return
+    if (nodeObject.isToken || nodeObject.symbol.isUndefined) return
 
-    val name = if (nodeObject.symbol.isUndefined) "" else nodeObject.symbol.escapedName
+    val name = nodeObject.symbol.escapedName
     if (nodeObject.isFunctionDeclaration) {
       val typeInfo = getFunctionType(nodeObject)(global, Map())
       if (!global.containsMember(name)) global.put(name, typeInfo)
@@ -111,16 +111,9 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
             TSInterfaceType("", getInterfacePropertiesType(dec.members, 0), List(), List())
           else tv.getOrElse(obj.symbol.escapedName, TSNamedType(obj.symbol.getFullName)) 
       }
-      else if (!obj.aliasSymbol.isUndefined) {
-        val name = obj.aliasSymbol.escapedName
-        if (tv.contains(name)) tv(name)
-        else TSNamedType(name)
-      }
-      else if (obj.intrinsicName != null && !obj.intrinsicName.equals("error") && !obj.intrinsicName.equals("unresolved")) {
+      else
         if (tv.contains(obj.intrinsicName)) tv(obj.intrinsicName)
         else TSNamedType(obj.intrinsicName)
-      }
-      else throw new java.lang.Exception("unknown type.")
     }
   }
 
@@ -312,9 +305,9 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
   }
 
   private def parseNamespaceExports(it: TSSymbolIter)(implicit ns: TSNamespace): Unit = {
-    it.next()
+    it.next
     if (!it.done) {
-      val data = it.value()
+      val data = it.value
       val name = data._1
       val node = data._2.declaration
 

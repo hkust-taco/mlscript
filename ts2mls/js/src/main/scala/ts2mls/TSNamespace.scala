@@ -30,7 +30,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
   def get(name: String): TSType = members.get(name) match {
     case Some(tst) => tst
     case None if (!parent.isEmpty) => parent.get.get(name)
-    case _ => throw new java.lang.Exception(s"member $name not found.")
+    case _ => throw new Exception(s"member $name not found.")
   }
 
   override def toString(): String = s"namespace $name"

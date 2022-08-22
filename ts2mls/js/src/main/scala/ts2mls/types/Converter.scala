@@ -32,7 +32,7 @@ object Converter {
     case TSInterfaceType(name, members, typeVars, parents) => convertRecord(s"trait $name", members, typeVars, parents)
     case TSClassType(name, members, _, typeVars, parents) => convertRecord(s"class $name", members, typeVars, parents)
     case TSApplicationType(base, applied) => s"${base}[${convertApply(applied)}]"
-    case _ => throw new java.lang.Exception("Unknown TypeScript Type")
+    case _ => throw new Exception("Unknown TypeScript Type")
   }
 
   private def convertTuple(types: List[TSType]): String =
@@ -40,7 +40,7 @@ object Converter {
     
 
   private def convertApply(applied: List[TSType]): String = {
-    if (applied.length == 0) throw new java.lang.Exception("empty applied list.")
+    if (applied.length == 0) throw new Exception("empty applied list.")
 
     val res = applied.foldLeft("")((p, t) => s"$p${convert(t)}, ")
     res.substring(0, res.length() - 2)
