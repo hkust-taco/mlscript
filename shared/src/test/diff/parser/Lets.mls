@@ -49,7 +49,7 @@ let in person be the default in following meetings
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.41: 	let in person be the default in following meetings
 //│ ╙──      	       ^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Expected end of input; found 'in' keyword instead
+//│ ╔══[PARSE ERROR] Expected end of input; found 'in' keyword instead
 //│ ║  l.41: 	let in person be the default in following meetings
 //│ ╙──      	                             ^^
 //│ Parsed: {person (be (the (default,),),)}

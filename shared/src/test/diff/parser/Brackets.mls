@@ -11,9 +11,9 @@
 //│ |{BEG:||:END}|
 //│ Parsed: {'{' {} '}'}
 
-:e
+:pe
 (}
-//│ ╔══[ERROR] Mistmatched closing curly brace
+//│ ╔══[PARSE ERROR] Mistmatched closing curly brace
 //│ ║  l.15: 	(}
 //│ ║        	 ^
 //│ ╟── does not correspond to opening parenthesis
@@ -26,15 +26,15 @@
 //│ |(BEG:|(BEG:|[BEG:|{BEG:||:END}|:END]|:END)|:END)|
 //│ Parsed: {'(' '(' '(' '{' {} '}', ')', ')', ')'}
 
-:e
+:pe
 (([{})])
-//│ ╔══[ERROR] Mistmatched closing parenthesis
+//│ ╔══[PARSE ERROR] Mistmatched closing parenthesis
 //│ ║  l.30: 	(([{})])
 //│ ║        	     ^
 //│ ╟── does not correspond to opening square bracket
 //│ ║  l.30: 	(([{})])
 //│ ╙──      	  ^
-//│ ╔══[ERROR] Mistmatched closing square bracket
+//│ ╔══[PARSE ERROR] Mistmatched closing square bracket
 //│ ║  l.30: 	(([{})])
 //│ ║        	      ^
 //│ ╟── does not correspond to opening parenthesis

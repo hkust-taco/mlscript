@@ -41,14 +41,14 @@
 
 1,
 //│ |1|,|
-//│ ╔══[ERROR] Expected end of input; found comma instead
+//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
 //│ ║  l.42: 	1,
 //│ ╙──      	 ^
 //│ Parsed: {1}
 
 1, 2, 3
 //│ |1|,| |2|,| |3|
-//│ ╔══[ERROR] Expected end of input; found comma instead
+//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
 //│ ║  l.49: 	1, 2, 3
 //│ ╙──      	 ^
 //│ Parsed: {1}
@@ -83,7 +83,7 @@ let arr =
 [
 ]
 //│ |#let| |arr| |#=|↵|[BEG:|↵|:END]|
-//│ ╔══[ERROR] Unexpected newline in expression position
+//│ ╔══[PARSE ERROR] Unexpected newline in expression position
 //│ ║  l.82: 	let arr =
 //│ ║        	         ^
 //│ ║  l.83: 	[

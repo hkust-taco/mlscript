@@ -12,7 +12,7 @@ fun f(x) = x
 
 fun f x = x
 //│ |#fun| |f| |x| |#=| |x|
-//│ ╔══[ERROR] Expected function parameter list; found identifier instead
+//│ ╔══[PARSE ERROR] Expected function parameter list; found identifier instead
 //│ ║  l.13: 	fun f x = x
 //│ ╙──      	      ^
 //│ Parsed: {fun f = x}
@@ -24,10 +24,10 @@ fun f = x => x
 // TODO
 fun x => x
 //│ |#fun| |x| |=>| |x|
-//│ ╔══[ERROR] Expected function parameter list; found operator instead
+//│ ╔══[PARSE ERROR] Expected function parameter list; found operator instead
 //│ ║  l.25: 	fun x => x
 //│ ╙──      	      ^^
-//│ ╔══[ERROR] Expected ':' or '=' followed by a function body or signature; found identifier instead
+//│ ╔══[PARSE ERROR] Expected ':' or '=' followed by a function body or signature; found identifier instead
 //│ ║  l.25: 	fun x => x
 //│ ╙──      	         ^
 //│ Parsed: {fun x = undefined}
@@ -39,7 +39,7 @@ let f = x => x
 // TODO
 let f = fun x => x
 //│ |#let| |f| |#=| |#fun| |x| |=>| |x|
-//│ ╔══[ERROR] Unexpected 'fun' keyword in expression position
+//│ ╔══[PARSE ERROR] Unexpected 'fun' keyword in expression position
 //│ ║  l.40: 	let f = fun x => x
 //│ ╙──      	        ^^^
 //│ Parsed: {let f = => x x in undefined}
@@ -64,26 +64,26 @@ fun f of x, y = x
 
 fun f x, y = x
 //│ |#fun| |f| |x|,| |y| |#=| |x|
-//│ ╔══[ERROR] Expected function parameter list; found identifier instead
+//│ ╔══[PARSE ERROR] Expected function parameter list; found identifier instead
 //│ ║  l.65: 	fun f x, y = x
 //│ ╙──      	      ^
-//│ ╔══[ERROR] Expected ':' or '=' followed by a function body or signature; found comma instead
+//│ ╔══[PARSE ERROR] Expected ':' or '=' followed by a function body or signature; found comma instead
 //│ ║  l.65: 	fun f x, y = x
 //│ ╙──      	       ^
-//│ ╔══[ERROR] Expected end of input; found identifier instead
+//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
 //│ ║  l.65: 	fun f x, y = x
 //│ ╙──      	         ^
 //│ Parsed: {fun f = undefined}
 
 fun f x y = x
 //│ |#fun| |f| |x| |y| |#=| |x|
-//│ ╔══[ERROR] Expected function parameter list; found identifier instead
+//│ ╔══[PARSE ERROR] Expected function parameter list; found identifier instead
 //│ ║  l.78: 	fun f x y = x
 //│ ╙──      	      ^
-//│ ╔══[ERROR] Expected ':' or '=' followed by a function body or signature; found identifier instead
+//│ ╔══[PARSE ERROR] Expected ':' or '=' followed by a function body or signature; found identifier instead
 //│ ║  l.78: 	fun f x y = x
 //│ ╙──      	        ^
-//│ ╔══[ERROR] Expected end of input; found '=' keyword instead
+//│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
 //│ ║  l.78: 	fun f x y = x
 //│ ╙──      	          ^
 //│ Parsed: {fun f = undefined}
@@ -139,30 +139,42 @@ fun f(x: Int, y: Int): Int = x
 
 fun 1
 //│ |#fun| |1|
-//│ ╔══[ERROR] Expected a function name; found literal instead
+//│ ╔══[PARSE ERROR] Expected a function name; found literal instead
 //│ ║  l.140: 	fun 1
 //│ ╙──       	    ^
+//│ ╔══[PARSE ERROR] Expected ':' or '=' followed by a function body or signature; found end of input instead
+//│ ║  l.140: 	fun 1
+//│ ╙──       	     ^
 //│ Parsed: {fun <error> = undefined}
 
 fun 1 = 1
 //│ |#fun| |1| |#=| |1|
-//│ ╔══[ERROR] Expected a function name; found literal instead
-//│ ║  l.147: 	fun 1 = 1
+//│ ╔══[PARSE ERROR] Expected a function name; found literal instead
+//│ ║  l.150: 	fun 1 = 1
 //│ ╙──       	    ^
 //│ Parsed: {fun <error> = 1}
 
 fun
 //│ |#fun|
-//│ ╔══[ERROR] Expected a function name; found end of input instead
-//│ ║  l.154: 	fun
+//│ ╔══[PARSE ERROR] Expected a function name; found end of input instead
+//│ ║  l.157: 	fun
+//│ ╙──       	   ^
+//│ ╔══[PARSE ERROR] Expected ':' or '=' followed by a function body or signature; found end of input instead
+//│ ║  l.157: 	fun
 //│ ╙──       	   ^
 //│ Parsed: {fun <error> = undefined}
 
 fun = 1
 //│ |#fun| |#=| |1|
-//│ ╔══[ERROR] Expected a function name; found '=' keyword instead
-//│ ║  l.161: 	fun = 1
+//│ ╔══[PARSE ERROR] Expected a function name; found '=' keyword instead
+//│ ║  l.167: 	fun = 1
 //│ ╙──       	    ^
+//│ ╔══[PARSE ERROR] Expected function parameter list; found literal instead
+//│ ║  l.167: 	fun = 1
+//│ ╙──       	      ^
+//│ ╔══[PARSE ERROR] Expected ':' or '=' followed by a function body or signature; found end of input instead
+//│ ║  l.167: 	fun = 1
+//│ ╙──       	       ^
 //│ Parsed: {fun <error> = undefined}
 
 

@@ -36,58 +36,58 @@
 //│ |{BEG:|x|#:| |1|,| |y|,| |z|:END}|
 //│ Parsed: {'{' {x: 1, y: y, z: z} '}'}
 
-:e
+:pe
 {1}
 //│ |{BEG:|1|:END}|
-//│ ╔══[ERROR] Record field should have a name
+//│ ╔══[PARSE ERROR] Record field should have a name
 //│ ║  l.40: 	{1}
 //│ ╙──      	 ^
 //│ Parsed: {'{' {<error>: 1} '}'}
 
-:e
+:pe
 {1,}
 //│ |{BEG:|1|,|:END}|
-//│ ╔══[ERROR] Record field should have a name
+//│ ╔══[PARSE ERROR] Record field should have a name
 //│ ║  l.48: 	{1,}
 //│ ╙──      	 ^
 //│ Parsed: {'{' {<error>: 1} '}'}
 
-:e
+:pe
 {1,2}
 //│ |{BEG:|1|,|2|:END}|
-//│ ╔══[ERROR] Record field should have a name
+//│ ╔══[PARSE ERROR] Record field should have a name
 //│ ║  l.56: 	{1,2}
 //│ ╙──      	 ^
-//│ ╔══[ERROR] Record field should have a name
+//│ ╔══[PARSE ERROR] Record field should have a name
 //│ ║  l.56: 	{1,2}
 //│ ╙──      	   ^
 //│ Parsed: {'{' {<error>: 1, <error>: 2} '}'}
 
-:e
+:pe
 {1,2,}
 //│ |{BEG:|1|,|2|,|:END}|
-//│ ╔══[ERROR] Record field should have a name
+//│ ╔══[PARSE ERROR] Record field should have a name
 //│ ║  l.67: 	{1,2,}
 //│ ╙──      	 ^
-//│ ╔══[ERROR] Record field should have a name
+//│ ╔══[PARSE ERROR] Record field should have a name
 //│ ║  l.67: 	{1,2,}
 //│ ╙──      	   ^
 //│ Parsed: {'{' {<error>: 1, <error>: 2} '}'}
 
-:e
+:pe
 {
   1,
   2,
   3,
 }
 //│ |{BEG:|→|1|,|↵|2|,|↵|3|,|←|↵|:END}|
-//│ ╔══[ERROR] Record field should have a name
+//│ ╔══[PARSE ERROR] Record field should have a name
 //│ ║  l.79: 	  1,
 //│ ╙──      	  ^
-//│ ╔══[ERROR] Record field should have a name
+//│ ╔══[PARSE ERROR] Record field should have a name
 //│ ║  l.80: 	  2,
 //│ ╙──      	  ^
-//│ ╔══[ERROR] Record field should have a name
+//│ ╔══[PARSE ERROR] Record field should have a name
 //│ ║  l.81: 	  3,
 //│ ╙──      	  ^
 //│ Parsed: {'{' {<error>: 1, <error>: 2, <error>: 3} '}'}

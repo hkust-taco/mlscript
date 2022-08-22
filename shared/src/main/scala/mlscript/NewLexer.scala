@@ -4,6 +4,7 @@ import scala.annotation.tailrec
 import utils._, shorthands._
 
 import Message.MessageContext
+import Diagnostic.{Lexing, Parsing}
 
 import NewLexer._
 
@@ -60,7 +61,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     val c = bytes(i)
     def pe(msg: Message): Unit =
       // raise(ParseError(false, msg -> S(loc(i, i + 1)) :: Nil))
-      raise(CompilationError(msg -> S(loc(i, i + 1)) :: Nil)) // TODO parse error
+      raise(ErrorReport(msg -> S(loc(i, i + 1)) :: Nil, source = Lexing)) // TODO parse error
     // @inline 
     def go(j: Int, tok: Token) = lex(j, ind, (tok, loc(i, j)) :: acc)
     c match{
@@ -155,12 +156,12 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
               go(CLOSE_BRACKET(Indent) -> l1.left :: toks, false, stack, acc)
             case ((k0, l0), oldAcc) :: stack =>
               if (k0 =/= k1)
-                raise(CompilationError(msg"Mistmatched closing ${k1.name}" -> S(l1) ::
-                  msg"does not correspond to opening ${k0.name}" -> S(l0) :: Nil))
+                raise(ErrorReport(msg"Mistmatched closing ${k1.name}" -> S(l1) ::
+                  msg"does not correspond to opening ${k0.name}" -> S(l0) :: Nil, source = Parsing))
               go(rest, false, stack, BRACKETS(k0, acc.reverse) -> (l0 ++ l1) :: oldAcc)
               // ???
             case Nil =>
-              raise(CompilationError(msg"Unexpected closing ${k1.name}" -> S(l1) :: Nil))
+              raise(ErrorReport(msg"Unexpected closing ${k1.name}" -> S(l1) :: Nil, source = Parsing))
               go(rest, false, stack, acc)
           }
         case (INDENT, loc) :: rest =>
@@ -175,8 +176,8 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         }) =>
           go(CLOSE_BRACKET(Angle) -> loc :: rest, false, stack, acc)
         case ((tk @ IDENT(">", true), loc)) :: rest if canStartAngles =>
-          raise(Warning(msg"This looks like an angle bracket, but it does not close any angle bracket section" -> S(loc) ::
-            msg"Add spaces around it if you intended to use `<` as an operator" -> N :: Nil))
+          raise(WarningReport(msg"This looks like an angle bracket, but it does not close any angle bracket section" -> S(loc) ::
+            msg"Add spaces around it if you intended to use `<` as an operator" -> N :: Nil, source = Parsing))
           go(rest, false, stack, tk -> loc :: acc)
         case (tk: Stroken, loc) :: rest =>
           go(rest, tk match {
@@ -189,11 +190,11 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
               go(CLOSE_BRACKET(Indent) -> loc/*not proper loc...*/ :: Nil, false, stack, acc)
             case ((k, l0), oldAcc) :: stack =>
               // ???
-              raise(CompilationError(msg"Unmatched opening ${k.name}" -> S(l0) :: (
+              raise(ErrorReport(msg"Unmatched opening ${k.name}" -> S(l0) :: (
                 if (k === Angle)
                   msg"Note that `<` without spaces around it is considered as an angle bracket and not as an operator" -> N :: Nil
                 else Nil
-              )))
+              ), source = Parsing))
               (oldAcc ::: acc).reverse
             case Nil => acc.reverse
           }

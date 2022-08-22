@@ -30,6 +30,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   def raise(mkDiag: => Diagnostic)(implicit fe: FoundErr = false): Unit =
     if (!foundErr) raiseFun(mkDiag)
   
+  def err(msgs: Ls[Message -> Opt[Loc]]): Unit =
+    raise(ErrorReport(msgs, source = Diagnostic.Parsing))
+  
   def mkLoc(l: Int, r: Int): Loc =
     Loc(l, r, origin)
 
@@ -61,7 +64,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     cur match {
       case c @ (tk, tkl) :: _ =>
         val (relevantToken, rl) = c.dropWhile(_._1 === SPACE).headOption.getOrElse(tk, tkl)
-        raise(CompilationError(msg"Expected end of input; found ${relevantToken.describe} instead" -> S(rl) :: Nil))
+        err(msg"Expected end of input; found ${relevantToken.describe} instead" -> S(rl) :: Nil)
       case Nil => ()
     }
     res
@@ -73,7 +76,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     cur.dropWhile(tk => (tk._1 === SPACE || tk._1 === NEWLINE) && { consume; true }) match {
       case c @ (tk, tkl) :: _ =>
         val (relevantToken, rl) = c.dropWhile(_._1 === SPACE).headOption.getOrElse(tk, tkl)
-        raise(CompilationError(msg"Unexpected ${relevantToken.describe} here" -> S(rl) :: Nil))
+        err(msg"Unexpected ${relevantToken.describe} here" -> S(rl) :: Nil)
       case Nil => ()
     }
     printDbg(s"Concluded with $res")
@@ -128,7 +131,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   }
   
   def pe(msg: Message, l: Loc, rest: (Message, Opt[Loc])*): Unit =
-    raise(CompilationError(msg -> S(l) :: rest.toList)) // TODO parse err
+    err((msg -> S(l) :: rest.toList)) // TODO parse err
   
   
   
@@ -153,7 +156,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     require(!ignored(tk))
     // if (!cur.headOption.forall(_._1 === tk)) {
     //   // fail(cur)
-    //   raise(CompilationError(msg"Expected: ${tk.describe}; found: ${ts.mkString("|")}" -> N :: Nil))
+    //   err((msg"Expected: ${tk.describe}; found: ${ts.mkString("|")}" -> N :: Nil))
     // }
     val skip_res = cur match {
       case (tk2, l2) :: _ =>
@@ -161,13 +164,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           consume
           return skip(tk, ignored, allowEnd, note)
         } else if (tk2 =/= tk) {
-          if (!foundErr) raise(CompilationError(
+          if (!foundErr) err((
             msg"Expected ${tk.describe}; found ${tk2.describe} instead" -> S(l2) :: note))
           (false, S(l2))
         } else (true, S(l2))
       case Nil =>
         if (!allowEnd)
-          if (!foundErr) raise(CompilationError(
+          if (!foundErr) err((
             msg"Expected ${tk.describe}; found end of input instead" -> lastLoc :: note))
         (allowEnd, N)
     }
@@ -184,7 +187,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     val ts = block(false, false)
     val es = ts.map {
       case L(t) =>
-        raise(CompilationError(msg"Unexpected 'then'/'else' clause" -> t.toLoc :: Nil))
+        err(msg"Unexpected 'then'/'else' clause" -> t.toLoc :: Nil)
         errExpr
       case R(e) => e
     }
@@ -194,7 +197,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     val ts = block(false, false)
     val es = ts.map {
       case L(t) =>
-        raise(CompilationError(msg"Unexpected 'then'/'else' clause" -> t.toLoc :: Nil))
+        err(msg"Unexpected 'then'/'else' clause" -> t.toLoc :: Nil)
         L(errExpr)
       case R(d: NuDecl) => R(d)
       case R(e: Term) => L(e)
@@ -250,7 +253,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 (TypeName(idStr).withLoc(S(l1)), true)
               case c =>
                 val (tkstr, loc) = c.headOption.fold(("end of input", lastLoc))(_.mapFirst(_.describe).mapSecond(some))
-                raise(CompilationError(
+                err((
                   msg"Expected a type name; found ${tkstr} instead" -> loc :: Nil))
                 consume
                 // R(errExpr)
@@ -299,7 +302,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 (Var(idStr).withLoc(S(l1)), true)
               case c =>
                 val (tkstr, loc) = c.headOption.fold(("end of input", lastLoc))(_.mapFirst(_.describe).mapSecond(some))
-                raise(CompilationError(
+                err((
                   // msg"Expected a function name; found ${"[TODO]"} instead" -> N :: Nil))
                   msg"Expected a function name; found ${tkstr} instead" -> loc :: Nil))
                 consume
@@ -331,7 +334,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                     case N =>
                       // TODO dedup:
                       val (tkstr, loc) = c.headOption.fold(("end of input", lastLoc))(_.mapFirst(_.describe).mapSecond(some))
-                      raise(CompilationError(
+                      err((
                         msg"Expected ':' or '=' followed by a function body or signature; found ${tkstr} instead" -> loc :: Nil))
                       consume
                       // R(Def(false, v, L(ps.foldRight(errExpr: Term)((i, acc) => Lam(i, acc)))))
@@ -364,7 +367,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         val as = rec(toks).concludeWith(_.argsMaybeIndented()) // TODO
         Tup(as).withLoc(S(loc)) :: funParams
       case (tk, l0) :: _ =>
-        raise(CompilationError(
+        err((
           // msg"Expected a function name; found ${"[TODO]"} instead" -> N :: Nil))
           msg"Expected function parameter list; found ${tk.describe} instead" -> S(l0) :: Nil))
         consume
@@ -377,13 +380,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case R(e) => e
       case L(e) =>
         // ??? // TODO
-        raise(CompilationError(msg"Expected an expression; found a 'then'/'else' clause instead" -> e.toLoc :: Nil))
+        err(msg"Expected an expression; found a 'then'/'else' clause instead" -> e.toLoc :: Nil)
         errExpr
     }
   }
   
   private def warnDbg(msg: Any, loco: Opt[Loc] = curLoc): Unit =
-    raise(Warning(msg"[${cur.headOption.map(_._1).mkString}] ${""+msg}" -> loco :: Nil))
+    raise(WarningReport(msg"[${cur.headOption.map(_._1).mkString}] ${""+msg}" -> loco :: Nil))
   
   def exprOrIf(prec: Int, allowSpace: Bool = true)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, allowSpace) { l =>
     cur match {
@@ -411,7 +414,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           case S(n) -> fld => n -> fld
           case N -> (fld @ Fld(_, _, v: Var)) => v -> fld
           case N -> fld =>
-            raise(CompilationError(
+            err((
               msg"Record field should have a name" -> fld.value.toLoc :: Nil))
             Var("<error>") -> fld
         }))
@@ -447,7 +450,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           case UnitLit(true) =>
             N
           case _ =>
-            raise(CompilationError(
+            err((
               msg"Unexpected ${body.describe} after `new` keyword" -> body.toLoc :: Nil))
             N
         }
@@ -504,7 +507,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                       S(e.toLoc.foldRight(l1)(_ ++ _)))
                     case Nil => (msg"${e.describe}", e.toLoc)
                   }
-                  raise(CompilationError(msg"Expected 'then'/'else' clause; found $found instead" -> loc ::
+                  err((msg"Expected 'then'/'else' clause; found $found instead" -> loc ::
                     msg"Note: 'if' expression started here:" -> S(l0) :: Nil))
                   R(If(IfThen(e, errExpr), N))
               }
@@ -512,13 +515,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         }
         
       case Nil =>
-        raise(CompilationError(msg"Unexpected end of input; an expression was expected here" -> lastLoc :: Nil))
+        err(msg"Unexpected end of input; an expression was expected here" -> lastLoc :: Nil)
         R(errExpr)
       case ((KEYWORD(";") /* | NEWLINE */ /* | BRACKETS(Curly, _) */, _) :: _) =>
         R(UnitLit(true))
         // R(errExpr) // TODO
       case (tk, l0) :: _ =>
-        raise(CompilationError(msg"Unexpected ${tk.describe} in expression position" -> S(l0) :: Nil))
+        err(msg"Unexpected ${tk.describe} in expression position" -> S(l0) :: Nil)
         consume
         exprOrIf(prec)(et = et, fe = true, l = implicitly)
   }}
@@ -609,7 +612,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
             // val as = argsOrIf(Nil) // TODO
             val res = App(acc, Tup(as))
             if (ofLess)
-              raise(Warning(msg"Paren-less applications should use the 'of' keyword"
+              raise(WarningReport(msg"Paren-less applications should use the 'of' keyword"
                 // -> ofKw :: Nil))
                 -> res.toLoc :: Nil))
             // R(res)
@@ -686,7 +689,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   def args(allowNewlines: Bool, prec: Int = NoElsePrec)(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =
     // argsOrIf(Nil).map{case (_, L(x))=> ???; case (n, R(x))=>n->x} // TODO
     argsOrIf(Nil, Nil, allowNewlines, prec).flatMap{case (n, L(x))=> 
-        raise(CompilationError(msg"Unexpected 'then'/'else' clause" -> x.toLoc :: Nil))
+        err(msg"Unexpected 'then'/'else' clause" -> x.toLoc :: Nil)
         n->Fld(false, false, errExpr)::Nil
       case (n, R(x))=>n->x::Nil} // TODO
   /* 
@@ -762,7 +765,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         consume
         argName match {
           case S(nme) =>
-            raise(CompilationError(msg"Unexpected named argument name here" -> nme.toLoc :: Nil))
+            err(msg"Unexpected named argument name here" -> nme.toLoc :: Nil)
           case N =>
         }
         e match {

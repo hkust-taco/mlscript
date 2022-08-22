@@ -8,11 +8,11 @@ x
 //│ |x|→|.|a|←|
 //│ Parsed: {. x a}
 
-:e
+:pe
 x
 .a
 //│ |x|↵|.|a|
-//│ ╔══[ERROR] Unexpected operator in expression position
+//│ ╔══[PARSE ERROR] Unexpected operator in expression position
 //│ ║  l.13: 	.a
 //│ ╙──      	^
 //│ Parsed: {x; a}
@@ -47,28 +47,30 @@ x
 //│ |x|→|.|a|→|.|b|↵|.|c|←|↵|.|d|←|
 //│ Parsed: {. (. x (. (. a b) c)) d}
 
-:e
+:pe
 .
 //│ |.|
-//│ ╔══[ERROR] Unexpected operator in expression position
+//│ ╔══[PARSE ERROR] Unexpected operator in expression position
 //│ ║  l.51: 	.
 //│ ╙──      	^
+//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.51: 	.
+//│ ╙──      	 ^
 //│ Parsed: {undefined}
 
-// FIXME disallow
-// :e
+:pe
 (.)
 //│ |(BEG:|.|:END)|
-//│ ╔══[ERROR] Unexpected operator here
-//│ ║  l.60: 	(.)
+//│ ╔══[PARSE ERROR] Unexpected operator here
+//│ ║  l.62: 	(.)
 //│ ╙──      	 ^
 //│ Parsed: {'('  ')'}
 
-:e
+:pe
 a, b
 //│ |a|,| |b|
-//│ ╔══[ERROR] Expected end of input; found comma instead
-//│ ║  l.68: 	a, b
+//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
+//│ ║  l.70: 	a, b
 //│ ╙──      	 ^
 //│ Parsed: {a}
 

@@ -45,14 +45,14 @@ foo<1, 2, 3>(1, 2, 3)
 //│ |1| |<| |2|>| |4|
 //│ Parsed: {> (< 1 2) 4}
 
-:e
+:pe
 1< 2 > 4
-//│ ╔══[ERROR] Unmatched opening angle bracket
+//│ ╔══[PARSE ERROR] Unmatched opening angle bracket
 //│ ║  l.49: 	1< 2 > 4
 //│ ║        	 ^
 //│ ╙── Note that `<` without spaces around it is considered as an angle bracket and not as an operator
 //│ | |2| |>| |4|1|
-//│ ╔══[ERROR] Unexpected space in expression position
+//│ ╔══[PARSE ERROR] Unexpected space in expression position
 //│ ║  l.49: 	1< 2 > 4
 //│ ╙──      	  ^
 //│ Parsed: {> 2 (4 (1,))}
@@ -77,23 +77,26 @@ foo<1, 2, 3>(1, 2, 3)
 //│ |1|<>|2|
 //│ Parsed: {<> 1 2}
 
-:e
+:pe
 1< >2
-//│ ╔══[ERROR] Unmatched opening angle bracket
+//│ ╔══[PARSE ERROR] Unmatched opening angle bracket
 //│ ║  l.81: 	1< >2
 //│ ║        	 ^
 //│ ╙── Note that `<` without spaces around it is considered as an angle bracket and not as an operator
 //│ | |>|2|1|
-//│ ╔══[ERROR] Unexpected space in expression position
+//│ ╔══[PARSE ERROR] Unexpected space in expression position
 //│ ║  l.81: 	1< >2
 //│ ╙──      	  ^
+//│ ╔══[PARSE ERROR] Unexpected operator in expression position
+//│ ║  l.81: 	1< >2
+//│ ╙──      	   ^
 //│ Parsed: {2 (1,)}
 
-:e
+:pe
 1 < >2
 //│ |1| |<| |>|2|
-//│ ╔══[ERROR] Unexpected operator in expression position
-//│ ║  l.93: 	1 < >2
+//│ ╔══[PARSE ERROR] Unexpected operator in expression position
+//│ ║  l.96: 	1 < >2
 //│ ╙──      	    ^
 //│ Parsed: {< 1 2}
 

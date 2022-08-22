@@ -15,14 +15,14 @@ foo of
     Some(v) then v + 1
     None    then 0,  
 //│ |foo| |#of|→|discard| |#of| |#if| |f| |#of| |x| |is|→|Some|(BEG:|v|:END)| |#then| |v| |+| |1|↵|None| |#then| |0|←|↵|#if| |g| |#of| |y| |is|→|Some|(BEG:|v|:END)| |#then| |v| |+| |1|↵|None| |#then| |0|,| |←|←|
-//│ ╔══[ERROR] Unexpected 'then'/'else' clause
+//│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
 //│ ║  l.11: 	  discard of if f of x is
 //│ ║        	                     ^^^^
 //│ ║  l.12: 	    Some(v) then v + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.13: 	    None    then 0
 //│ ╙──      	^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Expected 'then'/'else' clause; found application followed by newline instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found application followed by newline instead
 //│ ║  l.11: 	  discard of if f of x is
 //│ ║        	                ^^^^^^^^^
 //│ ║  l.12: 	    Some(v) then v + 1
@@ -36,17 +36,17 @@ foo of
 //│ ╟── Note: 'if' expression started here:
 //│ ║  l.11: 	  discard of if f of x is
 //│ ╙──      	             ^^
-//│ ╔══[ERROR] Unexpected comma here
+//│ ╔══[PARSE ERROR] Unexpected comma here
 //│ ║  l.16: 	    None    then 0,  
 //│ ╙──      	                  ^
-//│ ╔══[ERROR] Unexpected 'then'/'else' clause
+//│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
 //│ ║  l.14: 	  if g of y is
 //│ ║        	          ^^^^
 //│ ║  l.15: 	    Some(v) then v + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.16: 	    None    then 0,  
 //│ ╙──      	^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Expected 'then'/'else' clause; found application instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found application instead
 //│ ║  l.14: 	  if g of y is
 //│ ║        	     ^^^^^^^^^
 //│ ║  l.15: 	    Some(v) then v + 1
@@ -68,17 +68,17 @@ foo of
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.61: 	    Some v then v + 1
 //│ ╙──      	    ^^^^^^
-//│ ╔══[ERROR] Unexpected comma here
+//│ ╔══[PARSE ERROR] Unexpected comma here
 //│ ║  l.62: 	    None   then 0,
 //│ ╙──      	                 ^
-//│ ╔══[ERROR] Unexpected 'then'/'else' clause
+//│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
 //│ ║  l.60: 	  if f of x is
 //│ ║        	          ^^^^
 //│ ║  l.61: 	    Some v then v + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.62: 	    None   then 0,
 //│ ╙──      	^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Expected 'then'/'else' clause; found application followed by newline instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found application followed by newline instead
 //│ ║  l.60: 	  if f of x is
 //│ ║        	     ^^^^^^^^^
 //│ ║  l.61: 	    Some v then v + 1
@@ -99,17 +99,17 @@ foo of
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.64: 	    Some v then v + 1
 //│ ╙──      	    ^^^^^^
-//│ ╔══[ERROR] Unexpected comma here
+//│ ╔══[PARSE ERROR] Unexpected comma here
 //│ ║  l.65: 	    None   then 0,
 //│ ╙──      	                 ^
-//│ ╔══[ERROR] Unexpected 'then'/'else' clause
+//│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
 //│ ║  l.63: 	  if g of y is
 //│ ║        	          ^^^^
 //│ ║  l.64: 	    Some v then v + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.65: 	    None   then 0,
 //│ ╙──      	^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Expected 'then'/'else' clause; found application followed by newline instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found application followed by newline instead
 //│ ║  l.63: 	  if g of y is
 //│ ║        	     ^^^^^^^^^
 //│ ║  l.64: 	    Some v then v + 1
@@ -135,10 +135,10 @@ if f of x is Some then 1 else 0
 // :dp
 if f of 0 and g of 1 then "ok"
 //│ |#if| |f| |#of| |0| |and| |g| |#of| |1| |#then| |"ok"|
-//│ ╔══[ERROR] Unexpected 'then'/'else' clause
+//│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
 //│ ║  l.136: 	if f of 0 and g of 1 then "ok"
 //│ ╙──       	        ^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Expected 'then'/'else' clause; found application instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found application instead
 //│ ║  l.136: 	if f of 0 and g of 1 then "ok"
 //│ ║         	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: 'if' expression started here:

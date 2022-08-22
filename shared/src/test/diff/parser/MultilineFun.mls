@@ -21,7 +21,7 @@ fun f(
 fun f(
 x) = x
 //│ |#fun| |f|(BEG:|↵|x|:END)| |#=| |x|
-//│ ╔══[ERROR] Unexpected identifier here
+//│ ╔══[PARSE ERROR] Unexpected identifier here
 //│ ║  l.22: 	x) = x
 //│ ╙──      	^
 //│ Parsed: {fun f =  => x}

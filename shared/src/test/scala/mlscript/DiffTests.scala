@@ -14,7 +14,6 @@ import mlscript.JSTestBackend.UnexpectedCrash
 import mlscript.JSTestBackend.TestCode
 import mlscript.codegen.typescript.TsTypegenCodeBuilder
 import org.scalatest.{funsuite, ParallelTestExecution}
-import javax.tools.Diagnostic
 
 class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
 // class DiffTests extends funsuite.AnyFunSuite {
@@ -111,6 +110,7 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
     var noJavaScript = false
     var noProvs = false
     var allowRuntimeErrors = false
+    var newParser = basePath.headOption.contains("parser")
 
     val backend = new JSTestBackend()
     val host = ReplHost()
@@ -138,6 +138,7 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
           case "AllowParseErrors" => allowParseErrors = true; mode
           case "AllowRuntimeErrors" => allowRuntimeErrors = true; mode
           case "ShowRelativeLineNums" => showRelativeLineNums = true; mode
+          case "NewParser" => newParser = true; mode
           case "NoJS" => noJavaScript = true; mode
           case "NoProvs" => noProvs = true; mode
           case "ne" => mode.copy(noExecution = true)
@@ -199,6 +200,7 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
         val globalStartLineNum = allLines.size - lines.size + 1
         
         var totalTypeErrors = 0
+        var totalParseErrors = 0
         var totalWarnings = 0
         var totalRuntimeErrors = 0
         var totalCodeGenErrors = 0
@@ -208,10 +210,19 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
           diags.foreach { diag =>
             val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
             val headStr = diag match {
-              case CompilationError(msg, loco) =>
-                totalTypeErrors += 1
-                s"╔══[ERROR] "
-              case Warning(msg, loco) =>
+              case ErrorReport(msg, loco, src) =>
+                src match {
+                  case Diagnostic.Lexing =>
+                    totalParseErrors += 1
+                    s"╔══[LEXICAL ERROR] "
+                  case Diagnostic.Parsing =>
+                    totalParseErrors += 1
+                    s"╔══[PARSE ERROR] "
+                  case _ => // TODO customize too
+                    totalTypeErrors += 1
+                    s"╔══[ERROR] "
+                }
+              case WarningReport(msg, loco, src) =>
                 totalWarnings += 1
                 s"╔══[WARNING] "
             }
@@ -254,10 +265,14 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
               }
             }
             if (diag.allMsgs.isEmpty) output("╙──")
-            if (!allowTypeErrors && !mode.fixme && (
-                !mode.expectTypeErrors && diag.isInstanceOf[CompilationError]
-              || !mode.expectWarnings && diag.isInstanceOf[Warning]
-            )) failures += globalLineNum
+            if (!mode.fixme && (
+              !allowTypeErrors && (
+                !mode.expectTypeErrors && diag.isInstanceOf[ErrorReport] && diag.source =:= Diagnostic.Typing
+                || !mode.expectWarnings && diag.isInstanceOf[WarningReport]
+              ) || !allowParseErrors
+                  && !mode.expectParseErrors && diag.isInstanceOf[ErrorReport] && (diag.source =:= Diagnostic.Lexing || diag.source =:= Diagnostic.Parsing)
+              )
+            ) failures += globalLineNum
             ()
           }
         }
@@ -266,7 +281,7 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
         
         // try to parse block of text into mlscript ast
         val ans = try {
-          if (basePath.headOption.contains("parser") || basePath.headOption.contains("mono")) {
+          if (newParser || basePath.headOption.contains("mono")) {
             // ??? : Parsed.Extra
             // Failure("",0,Parsed.Extra())
             val origin = Origin(testName, globalStartLineNum, fph)
@@ -313,7 +328,7 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
 
           // successfully parsed block into a valid syntactically valid program
           case Success(p, index) =>
-            if (mode.expectParseErrors)
+            if (mode.expectParseErrors && !newParser)
               failures += blockLineNum
             if (mode.showParse || mode.dbgParsing) output("Parsed: " + p)
             // if (mode.isDebugging) typer.resetState()
@@ -442,7 +457,7 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
               import Message._
               val diags = varianceWarnings.map{ case (tname, biVars) =>
                 val warnings = biVars.map( tname => msg"${tname.name} is irrelevant and may be removed" -> tname.toLoc).toList
-                Warning(msg"Type definition ${tname.name} has bivariant type parameters:" -> tname.toLoc :: warnings)
+                WarningReport(msg"Type definition ${tname.name} has bivariant type parameters:" -> tname.toLoc :: warnings)
               }.toList
               report(diags)
             }
@@ -661,6 +676,8 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
               // output(s"constructed types: " + ty)
             }
             
+            if (mode.expectParseErrors && totalParseErrors =:= 0)
+              failures += blockLineNum
             if (mode.expectTypeErrors && totalTypeErrors =:= 0)
               failures += blockLineNum
             if (mode.expectWarnings && totalWarnings =:= 0)

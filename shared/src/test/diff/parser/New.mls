@@ -1,25 +1,25 @@
 
 
-:e
+:pe
 new
 //│ |#new|
-//│ ╔══[ERROR] Unexpected end of input; an expression was expected here
+//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
 //│ ║  l.4: 	new
 //│ ╙──     	   ^
 //│ Parsed: {new {}}
 
-:e
+:pe
 (new)
 //│ |(BEG:|#new|:END)|
-//│ ╔══[ERROR] Unexpected end of input; an expression was expected here
+//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
 //│ ║  l.12: 	(new)
 //│ ╙──      	    ^
 //│ Parsed: {'(' new {}, ')'}
 
-:e
+:pe
 new {}
 //│ |#new| |{BEG:||:END}|
-//│ ╔══[ERROR] Unexpected record after `new` keyword
+//│ ╔══[PARSE ERROR] Unexpected record after `new` keyword
 //│ ║  l.20: 	new {}
 //│ ╙──      	    ^^
 //│ Parsed: {new {}}
@@ -57,38 +57,38 @@ new A of 1, 2, 3 { fun x = 1 }
 //│ Parsed: {new A(1, 2, 3,) {fun x = 1}}
 
 
-:e
+:pe
 new new
 //│ |#new| |#new|
-//│ ╔══[ERROR] Unexpected end of input; an expression was expected here
+//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
 //│ ║  l.61: 	new new
 //│ ╙──      	       ^
-//│ ╔══[ERROR] Unexpected object instantiation after `new` keyword
+//│ ╔══[PARSE ERROR] Unexpected object instantiation after `new` keyword
 //│ ║  l.61: 	new new
 //│ ╙──      	    ^^^
 //│ Parsed: {new {}}
 
-:e
+:pe
 new new {}
 //│ |#new| |#new| |{BEG:||:END}|
-//│ ╔══[ERROR] Unexpected record after `new` keyword
+//│ ╔══[PARSE ERROR] Unexpected record after `new` keyword
 //│ ║  l.72: 	new new {}
 //│ ╙──      	        ^^
-//│ ╔══[ERROR] Unexpected object instantiation after `new` keyword
+//│ ╔══[PARSE ERROR] Unexpected object instantiation after `new` keyword
 //│ ║  l.72: 	new new {}
 //│ ╙──      	    ^^^
 //│ Parsed: {new {}}
 
-:e
+:pe
 new {new}
 //│ |#new| |{BEG:|#new|:END}|
-//│ ╔══[ERROR] Unexpected end of input; an expression was expected here
+//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
 //│ ║  l.83: 	new {new}
 //│ ╙──      	        ^
-//│ ╔══[ERROR] Record field should have a name
+//│ ╔══[PARSE ERROR] Record field should have a name
 //│ ║  l.83: 	new {new}
 //│ ╙──      	     ^^^
-//│ ╔══[ERROR] Unexpected record after `new` keyword
+//│ ╔══[PARSE ERROR] Unexpected record after `new` keyword
 //│ ║  l.83: 	new {new}
 //│ ╙──      	    ^^^^^
 //│ Parsed: {new {}}

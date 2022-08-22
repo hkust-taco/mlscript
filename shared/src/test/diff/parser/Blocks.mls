@@ -10,7 +10,7 @@ b
 a,
 b
 //│ |a|,|↵|b|
-//│ ╔══[ERROR] Expected end of input; found comma instead
+//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
 //│ ║  l.10: 	a,
 //│ ╙──      	 ^
 //│ Parsed: {a}
@@ -18,7 +18,7 @@ b
 a,
 b,
 //│ |a|,|↵|b|,|
-//│ ╔══[ERROR] Expected end of input; found comma instead
+//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
 //│ ║  l.18: 	a,
 //│ ╙──      	 ^
 //│ Parsed: {a}
@@ -27,7 +27,7 @@ a,
 b,
 c
 //│ |a|,|↵|b|,|↵|c|
-//│ ╔══[ERROR] Expected end of input; found comma instead
+//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
 //│ ║  l.26: 	a,
 //│ ╙──      	 ^
 //│ Parsed: {a}
@@ -64,7 +64,7 @@ foo(
   b
 )
 //│ |foo|(BEG:|→|a|←|→|b|←|↵|:END)|
-//│ ╔══[ERROR] Unexpected indented block here
+//│ ╔══[PARSE ERROR] Unexpected indented block here
 //│ ║  l.64: 	  b
 //│ ║        	^^^
 //│ ║  l.65: 	)
@@ -77,10 +77,10 @@ foo of
   fun f = 1
   b
 //│ |foo| |#of|→|a|↵|#fun| |f| |#=| |1|↵|b|←|
-//│ ╔══[ERROR] Unexpected 'fun' keyword in expression position
+//│ ╔══[PARSE ERROR] Unexpected 'fun' keyword in expression position
 //│ ║  l.77: 	  fun f = 1
 //│ ╙──      	  ^^^
-//│ ╔══[ERROR] Unexpected '=' keyword here
+//│ ╔══[PARSE ERROR] Unexpected '=' keyword here
 //│ ║  l.77: 	  fun f = 1
 //│ ╙──      	        ^
 //│ Parsed: {foo ({a; f},)}
