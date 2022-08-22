@@ -45,15 +45,12 @@ object TSTypeArray {
   def apply(arr: js.Dynamic) = new TSTypeArray(arr)
 }
 
-abstract class TSIterator[T <: TSAny](it: js.Dynamic) extends TSAny(it) {
-  protected var cur: js.Dynamic = it
+class TSSymbolIter(it: js.Dynamic) {
+  private var cur: js.Dynamic = it
   def next(): Unit = cur = it.next()
   def done(): Boolean = cur.done
-  def value(): (String, T) = ???
-}
 
-class TSSymbolIter(it: js.Dynamic) extends TSIterator[TSSymbolObject](it) {
-  override def value(): (String, TSSymbolObject) = {
+  def value(): (String, TSSymbolObject) = {
     val data = cur.value
     (data.selectDynamic("0").toString, TSSymbolObject(data.selectDynamic("1")))
   }
