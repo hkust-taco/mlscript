@@ -62,8 +62,6 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) extends Module {
               writer.generate(s"def ${fullName}[${params.substring(0, params.length() - 2)}]: ${TSProgram.getMLSType(inter)}")
           }
           case f: TSFunctionType => {
-            if (f.dbg) writer.debug(s"${prefix}$showPrefix${name}", f.toString)
-          
             val nsName = getFullName()
             val fullName = if (nsName.equals("")) name else s"$nsName'${name}"
             val params = f.typeVars.foldLeft("")((p, t) => s"$p${t.name}, ") // TODO: add constraints

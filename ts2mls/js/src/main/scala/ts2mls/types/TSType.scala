@@ -5,7 +5,6 @@ import ts2mls.DecWriter
 import ts2mls.TSProgram
 
 abstract class TSType {
-  var dbg = false
   val priority: Int = 0
   override def toString(): String = ???
   def >(fieldName: String): TSType = throw new java.lang.Exception("Field is not allowed.")
