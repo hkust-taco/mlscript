@@ -3,6 +3,7 @@ package mlscript
 import mlscript.utils._, shorthands._
 
 
+/** Type of general Tokens */
 sealed abstract class Token {
   def describe: Str = this match {
     case SPACE => "space"
@@ -22,22 +23,23 @@ sealed abstract class Token {
   }
 }
 
-sealed trait SToken
+/** Type of 'Structured Tokens' aka 'Strokens',
+  * which use a `BRACKETS` construct instead of `OPEN_BRACKET`/`CLOSE_BRACKET` and `INDENT`/`DEINDENT` */
+sealed trait Stroken extends Token
 
-case object SPACE extends Token
-case object COMMA extends Token
-case object NEWLINE extends Token // TODO rm
-case object INDENT extends Token // TODO rm
-case object DEINDENT extends Token // TODO rm
-// final case class INDENTED(block: Ls[Token]) extends Token
-case object ERROR extends Token
-final case class LITVAL(value: Lit) extends Token
-final case class KEYWORD(name: String) extends Token
-final case class IDENT(name: String, symbolic: Bool) extends Token
-final case class OPEN_BRACKET(k: BracketKind) extends Token // TODO rm
-final case class CLOSE_BRACKET(k: BracketKind) extends Token // TODO rm
-final case class BRACKETS(k: BracketKind, contents: Ls[Token -> Loc]) extends Token
-final case class COMMENT(text: String) extends Token
+case object SPACE extends Token with Stroken
+case object COMMA extends Token with Stroken
+case object NEWLINE extends Token with Stroken // TODO rm
+case object INDENT extends Token
+case object DEINDENT extends Token
+case object ERROR extends Token with Stroken
+final case class LITVAL(value: Lit) extends Token with Stroken
+final case class KEYWORD(name: String) extends Token with Stroken
+final case class IDENT(name: String, symbolic: Bool) extends Token with Stroken
+final case class OPEN_BRACKET(k: BracketKind) extends Token
+final case class CLOSE_BRACKET(k: BracketKind) extends Token
+final case class BRACKETS(k: BracketKind, contents: Ls[Stroken -> Loc]) extends Token with Stroken
+final case class COMMENT(text: String) extends Token with Stroken
 
 
 sealed abstract class BracketKind {
@@ -47,7 +49,6 @@ sealed abstract class BracketKind {
     case Curly => '{' -> '}'
     case Square => '[' -> ']'
     case Angle => '‹' -> '›'
-    // case Indent => '\t' -> '\r'
     case Indent => '→' -> '←'
   }
   def name: Str = this match {
