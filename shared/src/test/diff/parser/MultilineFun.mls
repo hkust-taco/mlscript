@@ -1,5 +1,4 @@
 :AllowParseErrors
-:AllowTypeErrors // TODO rm
 
 
 fun f(
@@ -22,7 +21,7 @@ fun f(
 x) = x
 //│ |#fun| |f|(BEG:|↵|x|:END)| |#=| |x|
 //│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.22: 	x) = x
+//│ ║  l.21: 	x) = x
 //│ ╙──      	^
 //│ Parsed: {fun f =  => x}
 

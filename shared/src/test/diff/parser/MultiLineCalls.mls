@@ -1,5 +1,4 @@
 :AllowParseErrors
-:AllowTypeErrors // TODO rm
 
 
 f (
@@ -38,10 +37,10 @@ f (0, 1,
 f(,)
 //│ |f|(BEG:|,|:END)|
 //│ ╔══[PARSE ERROR] Unexpected comma in expression position
-//│ ║  l.38: 	f(,)
+//│ ║  l.37: 	f(,)
 //│ ╙──      	  ^
 //│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
-//│ ║  l.38: 	f(,)
+//│ ║  l.37: 	f(,)
 //│ ╙──      	   ^
 //│ Parsed: {f (undefined,)}
 
@@ -69,7 +68,7 @@ f
 of  0
 //│ |f|↵|#of| |0|
 //│ ╔══[PARSE ERROR] Unexpected 'of' keyword in expression position
-//│ ║  l.69: 	of  0
+//│ ║  l.68: 	of  0
 //│ ╙──      	^^
 //│ Parsed: {f; 0}
 
@@ -84,7 +83,7 @@ f
   of 1
 //│ |f|→|#of| |0|↵|#of| |1|←|
 //│ ╔══[PARSE ERROR] Unexpected 'of' keyword here
-//│ ║  l.84: 	  of 1
+//│ ║  l.83: 	  of 1
 //│ ╙──      	  ^^
 //│ Parsed: {f (0,)}
 

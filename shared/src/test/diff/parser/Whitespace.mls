@@ -1,23 +1,22 @@
 :AllowParseErrors
-:AllowTypeErrors // TODO rm
 
  
 //│ | |
 //│ ╔══[PARSE ERROR] Unexpected space in expression position
-//│ ║  l.4: 	 
+//│ ║  l.3: 	 
 //│ ╙──     	^
 //│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
-//│ ║  l.4: 	 
+//│ ║  l.3: 	 
 //│ ╙──     	 ^
 //│ Parsed: {undefined}
 
   
 //│ | |
 //│ ╔══[PARSE ERROR] Unexpected space in expression position
-//│ ║  l.14: 	  
+//│ ║  l.13: 	  
 //│ ╙──      	^^
 //│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
-//│ ║  l.14: 	  
+//│ ║  l.13: 	  
 //│ ╙──      	  ^
 //│ Parsed: {undefined}
 
@@ -25,7 +24,7 @@
  
 //│ | |→||←|
 //│ ╔══[PARSE ERROR] Unexpected space in expression position
-//│ ║  l.24: 	  
+//│ ║  l.23: 	  
 //│ ╙──      	^^
 //│ Parsed: {{}}
 

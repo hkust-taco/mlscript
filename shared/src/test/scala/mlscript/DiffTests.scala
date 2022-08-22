@@ -265,14 +265,19 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
               }
             }
             if (diag.allMsgs.isEmpty) output("╙──")
-            if (!mode.fixme && (
-              !allowTypeErrors && (
-                !mode.expectTypeErrors && diag.isInstanceOf[ErrorReport] && diag.source =:= Diagnostic.Typing
-                || !mode.expectWarnings && diag.isInstanceOf[WarningReport]
-              ) || !allowParseErrors
-                  && !mode.expectParseErrors && diag.isInstanceOf[ErrorReport] && (diag.source =:= Diagnostic.Lexing || diag.source =:= Diagnostic.Parsing)
-              )
-            ) failures += globalLineNum
+            
+            if (!mode.fixme) {
+              if (!allowTypeErrors
+                  && !mode.expectTypeErrors && diag.isInstanceOf[ErrorReport] && diag.source =:= Diagnostic.Typing)
+                failures += globalLineNum
+              if (!allowParseErrors
+                  && !mode.expectParseErrors && diag.isInstanceOf[ErrorReport] && (diag.source =:= Diagnostic.Lexing || diag.source =:= Diagnostic.Parsing))
+                failures += globalLineNum
+              if (!allowTypeErrors && !allowParseErrors
+                  && !mode.expectWarnings && diag.isInstanceOf[WarningReport])
+                failures += globalLineNum
+            }
+            
             ()
           }
         }

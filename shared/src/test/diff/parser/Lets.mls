@@ -1,5 +1,4 @@
 :AllowParseErrors
-:AllowTypeErrors // TODO rm
 
 
 let x = 1
@@ -41,16 +40,16 @@ let x = 1, y = 2; x + y
 let in person be the default in following meetings
 //│ |#let| |#in| |person| |be| |the| |default| |#in| |following| |meetings|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.41: 	let in person be the default in following meetings
+//│ ║  l.40: 	let in person be the default in following meetings
 //│ ╙──      	                 ^^^^^^^^^^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.41: 	let in person be the default in following meetings
+//│ ║  l.40: 	let in person be the default in following meetings
 //│ ╙──      	              ^^^^^^^^^^^^^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.41: 	let in person be the default in following meetings
+//│ ║  l.40: 	let in person be the default in following meetings
 //│ ╙──      	       ^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found 'in' keyword instead
-//│ ║  l.41: 	let in person be the default in following meetings
+//│ ║  l.40: 	let in person be the default in following meetings
 //│ ╙──      	                             ^^
 //│ Parsed: {person (be (the (default,),),)}
 

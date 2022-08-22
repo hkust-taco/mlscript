@@ -1,5 +1,4 @@
 :AllowParseErrors
-:AllowTypeErrors // TODO rm
 
 
 class Foo
@@ -78,7 +77,7 @@ class Foo(x, y, z)
 class Foo(x, y, z): Bar(z, x)
 //│ |#class| |Foo|(BEG:|x|,| |y|,| |z|:END)|#:| |Bar|(BEG:|z|,| |x|:END)|
 //│ ╔══[ERROR] not a recognized type: z, x,
-//│ ║  l.78: 	class Foo(x, y, z): Bar(z, x)
+//│ ║  l.77: 	class Foo(x, y, z): Bar(z, x)
 //│ ╙──      	                       ^^^^^^
 //│ Parsed: {class Foo(x, y, z,): <error>[] {}}
 

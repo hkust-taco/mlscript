@@ -1,5 +1,4 @@
 :AllowParseErrors
-:AllowTypeErrors // TODO rm
 
 
 fun discard(x) = ()
@@ -16,43 +15,43 @@ foo of
     None    then 0,  
 //│ |foo| |#of|→|discard| |#of| |#if| |f| |#of| |x| |is|→|Some|(BEG:|v|:END)| |#then| |v| |+| |1|↵|None| |#then| |0|←|↵|#if| |g| |#of| |y| |is|→|Some|(BEG:|v|:END)| |#then| |v| |+| |1|↵|None| |#then| |0|,| |←|←|
 //│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
-//│ ║  l.11: 	  discard of if f of x is
+//│ ║  l.10: 	  discard of if f of x is
 //│ ║        	                     ^^^^
-//│ ║  l.12: 	    Some(v) then v + 1
+//│ ║  l.11: 	    Some(v) then v + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.13: 	    None    then 0
+//│ ║  l.12: 	    None    then 0
 //│ ╙──      	^^^^^^^^^^^^^^^^^^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found application followed by newline instead
-//│ ║  l.11: 	  discard of if f of x is
+//│ ║  l.10: 	  discard of if f of x is
 //│ ║        	                ^^^^^^^^^
-//│ ║  l.12: 	    Some(v) then v + 1
+//│ ║  l.11: 	    Some(v) then v + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.13: 	    None    then 0
+//│ ║  l.12: 	    None    then 0
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.14: 	  if g of y is
+//│ ║  l.13: 	  if g of y is
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.15: 	    Some(v) then v + 1
+//│ ║  l.14: 	    Some(v) then v + 1
 //│ ║        	^^^^
 //│ ╟── Note: 'if' expression started here:
-//│ ║  l.11: 	  discard of if f of x is
+//│ ║  l.10: 	  discard of if f of x is
 //│ ╙──      	             ^^
 //│ ╔══[PARSE ERROR] Unexpected comma here
-//│ ║  l.16: 	    None    then 0,  
+//│ ║  l.15: 	    None    then 0,  
 //│ ╙──      	                  ^
 //│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
-//│ ║  l.14: 	  if g of y is
+//│ ║  l.13: 	  if g of y is
 //│ ║        	          ^^^^
-//│ ║  l.15: 	    Some(v) then v + 1
+//│ ║  l.14: 	    Some(v) then v + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.16: 	    None    then 0,  
+//│ ║  l.15: 	    None    then 0,  
 //│ ╙──      	^^^^^^^^^^^^^^^^^^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found application instead
-//│ ║  l.14: 	  if g of y is
+//│ ║  l.13: 	  if g of y is
 //│ ║        	     ^^^^^^^^^
-//│ ║  l.15: 	    Some(v) then v + 1
+//│ ║  l.14: 	    Some(v) then v + 1
 //│ ║        	^^^^
 //│ ╟── Note: 'if' expression started here:
-//│ ║  l.14: 	  if g of y is
+//│ ║  l.13: 	  if g of y is
 //│ ╙──      	  ^^
 //│ Parsed: {foo ({discard (if (f (undefined,)) then undefined,); if (g (undefined,)) then undefined},)}
 
@@ -66,60 +65,60 @@ foo of
   
 //│ |foo| |#of|→|#if| |f| |#of| |x| |is|→|Some| |v| |#then| |v| |+| |1|↵|None| |#then| |0|,|←|↵|#if| |g| |#of| |y| |is|→|Some| |v| |#then| |v| |+| |1|↵|None| |#then| |0|,|←|↵|←|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.61: 	    Some v then v + 1
+//│ ║  l.60: 	    Some v then v + 1
 //│ ╙──      	    ^^^^^^
 //│ ╔══[PARSE ERROR] Unexpected comma here
-//│ ║  l.62: 	    None   then 0,
+//│ ║  l.61: 	    None   then 0,
 //│ ╙──      	                 ^
 //│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
-//│ ║  l.60: 	  if f of x is
+//│ ║  l.59: 	  if f of x is
 //│ ║        	          ^^^^
-//│ ║  l.61: 	    Some v then v + 1
+//│ ║  l.60: 	    Some v then v + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.62: 	    None   then 0,
+//│ ║  l.61: 	    None   then 0,
 //│ ╙──      	^^^^^^^^^^^^^^^^^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found application followed by newline instead
-//│ ║  l.60: 	  if f of x is
+//│ ║  l.59: 	  if f of x is
 //│ ║        	     ^^^^^^^^^
-//│ ║  l.61: 	    Some v then v + 1
+//│ ║  l.60: 	    Some v then v + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.62: 	    None   then 0,
+//│ ║  l.61: 	    None   then 0,
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.63: 	  if g of y is
+//│ ║  l.62: 	  if g of y is
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.64: 	    Some v then v + 1
+//│ ║  l.63: 	    Some v then v + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.65: 	    None   then 0,
+//│ ║  l.64: 	    None   then 0,
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.66: 	  
+//│ ║  l.65: 	  
 //│ ║        	^^
 //│ ╟── Note: 'if' expression started here:
-//│ ║  l.60: 	  if f of x is
+//│ ║  l.59: 	  if f of x is
 //│ ╙──      	  ^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.64: 	    Some v then v + 1
+//│ ║  l.63: 	    Some v then v + 1
 //│ ╙──      	    ^^^^^^
 //│ ╔══[PARSE ERROR] Unexpected comma here
-//│ ║  l.65: 	    None   then 0,
+//│ ║  l.64: 	    None   then 0,
 //│ ╙──      	                 ^
 //│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
-//│ ║  l.63: 	  if g of y is
+//│ ║  l.62: 	  if g of y is
 //│ ║        	          ^^^^
-//│ ║  l.64: 	    Some v then v + 1
+//│ ║  l.63: 	    Some v then v + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.65: 	    None   then 0,
+//│ ║  l.64: 	    None   then 0,
 //│ ╙──      	^^^^^^^^^^^^^^^^^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found application followed by newline instead
-//│ ║  l.63: 	  if g of y is
+//│ ║  l.62: 	  if g of y is
 //│ ║        	     ^^^^^^^^^
-//│ ║  l.64: 	    Some v then v + 1
+//│ ║  l.63: 	    Some v then v + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.65: 	    None   then 0,
+//│ ║  l.64: 	    None   then 0,
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.66: 	  
+//│ ║  l.65: 	  
 //│ ║        	^^
 //│ ╟── Note: 'if' expression started here:
-//│ ║  l.63: 	  if g of y is
+//│ ║  l.62: 	  if g of y is
 //│ ╙──      	  ^^
 //│ Parsed: {foo ({if (f (undefined,)) then undefined; if (g (undefined,)) then undefined},)}
 
@@ -136,13 +135,13 @@ if f of x is Some then 1 else 0
 if f of 0 and g of 1 then "ok"
 //│ |#if| |f| |#of| |0| |and| |g| |#of| |1| |#then| |"ok"|
 //│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
-//│ ║  l.136: 	if f of 0 and g of 1 then "ok"
+//│ ║  l.135: 	if f of 0 and g of 1 then "ok"
 //│ ╙──       	        ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found application instead
-//│ ║  l.136: 	if f of 0 and g of 1 then "ok"
+//│ ║  l.135: 	if f of 0 and g of 1 then "ok"
 //│ ║         	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: 'if' expression started here:
-//│ ║  l.136: 	if f of 0 and g of 1 then "ok"
+//│ ║  l.135: 	if f of 0 and g of 1 then "ok"
 //│ ╙──       	^^
 //│ Parsed: {if (f (undefined,)) then undefined}
 
