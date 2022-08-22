@@ -3,7 +3,7 @@ package ts2mls
 import scala.collection.mutable.{HashMap, ListBuffer}
 import types._
 
-class TSNamespace(name: String, parent: Option[TSNamespace]) extends Module {
+class TSNamespace(name: String, parent: Option[TSNamespace]) {
   private val subSpace = HashMap[String, TSNamespace]()
   private val members = HashMap[String, TSType]()
 
@@ -27,12 +27,11 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) extends Module {
     members.put(name, tp)
   }
 
-  override def >(name: String): TSType = members.get(name) match {
+  def get(name: String): TSType = members.get(name) match {
     case Some(tst) => tst
-    case None if (!parent.isEmpty) => parent.get.>(name)
+    case None if (!parent.isEmpty) => parent.get.get(name)
     case _ => throw new java.lang.Exception(s"member $name not found.")
   }
-  override def >>(name: String): TSNamespace = subSpace.getOrElse(name, throw new java.lang.Exception(s"namespace $name not found."))
 
   override def toString(): String = s"namespace $name"
 
@@ -45,7 +44,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) extends Module {
     case _ => false
   }
 
-  override def visit(writer: DecWriter, prefix: String): Unit = {
+  def visit(writer: DecWriter, prefix: String): Unit = {
     order.toList.foreach((p) => p match {
       case Left(name) => subSpace(name).visit(writer, prefix + showPrefix)
       case Right(name) => {

@@ -5,10 +5,7 @@ import js.Dynamic.{global => g}
 import js.DynamicImplicits._
 import types._
 
-class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker) extends Module {
-  override def >(name: String): TSType = global.>(name)
-  override def >>(name: String): TSNamespace = global.>>(name)
-
+class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker) {
   private def visit(node: js.Dynamic): Unit = {
     val nodeObject = TSNodeObject(node)
     if (nodeObject.isToken) return
@@ -17,7 +14,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     if (nodeObject.isFunctionDeclaration) {
       val typeInfo = getFunctionType(nodeObject)(global, Map())
       if (!global.containsMember(name)) global.put(name, typeInfo)
-      else global.>(name) match {
+      else global.get(name) match {
         case old: TSFunctionType if (nodeObject.body.isUndefined) =>
           global.put(name, TSIntersectionType(old, typeInfo))
         case old: TSIntersectionType if (nodeObject.body.isUndefined) =>
@@ -326,7 +323,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
           val subNode = decs.get(index)
           val func = getFunctionType(subNode)(ns, Map())
           if (!ns.containsMember(name, false)) ns.put(name, func)
-          else ns.>(name) match {
+          else ns.get(name) match {
             case old: TSFunctionType if (subNode.body.isUndefined) =>
               ns.put(name, TSIntersectionType(old, func))
             case old: TSIntersectionType if (subNode.body.isUndefined) =>
