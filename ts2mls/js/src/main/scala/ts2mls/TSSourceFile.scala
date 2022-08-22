@@ -296,7 +296,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     }
   }
 
-  private def parseMembers(node: TSNodeObject, isClass: Boolean)(implicit ns: TSNamespace): TSFieldType = {
+  private def parseMembers(node: TSNodeObject, isClass: Boolean)(implicit ns: TSNamespace): TSType = {
     val name = node.symbol.escapedName
     val members = node.members
     val constraints = getTypeConstraints(node)(ns, Map())

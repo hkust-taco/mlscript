@@ -4,125 +4,34 @@ import scala.collection.mutable.HashMap
 import ts2mls.DecWriter
 import ts2mls.TSProgram
 
-abstract class TSType {
-  val priority: Int = 0
-  override def toString(): String = ???
-  def >(fieldName: String): TSType = throw new java.lang.Exception("Field is not allowed.")
-}
+abstract class TSAccessModifier
+case object Public extends TSAccessModifier
+case object Private extends TSAccessModifier
+case object Protected extends TSAccessModifier
 
-case class TSTypeVariable(val name: String, val constraint: Option[TSType]) extends TSType {
-  override val priority = 0
+case class TSMemberType(val base: TSType, val modifier: TSAccessModifier = Public) extends TSType
 
-  override def toString(): String = s"$name'"
+abstract class TSType
 
-  def getConstraint(ignoreTick: Boolean = false): String = constraint match {
-    case Some(t) => s"$name${if (ignoreTick) "" else "'"} <: $t"
-    case _ => ""
-  }
-}
+case class TSTypeVariable(val name: String, val constraint: Option[TSType]) extends TSType
 
-case class TSNamedType(typeName: String) extends TSType {
-  override val priority = 0
+case class TSNamedType(typeName: String) extends TSType
 
-  override def toString(): String = typeName
-}
+case class TSEnumType(name: String) extends TSType
 
-case class TSEnumType(name: String) extends TSType {
-  override val priority = 0
+case class TSTupleType(types: List[TSType]) extends TSType
 
-  override def toString(): String = name
-}
-
-case class TSTupleType(types: List[TSType]) extends TSType {
-  override val priority = 0
-  override def toString(): String = {
-    val body = types.foldLeft("")((s, t) => s"$s$t, ")
-    s"[${body.substring(0, body.length() - 2)}]"
-  }
-}
-
-case class TSFunctionType(params: List[TSType], res: TSType, val typeVars: List[TSTypeVariable]) extends TSType {
-  override val priority = 1
-  override def toString(): String = {
-    val rhs = if (res.priority < priority && res.priority > 0) s"($res)" else res.toString()
-    val body = 
-      if (params.length == 0) res.toString()
-      else {
-        val ps = params.foldLeft("")((ls: String, p: TSType) => ls + p.toString() + ", ")
-        s"(${ps.substring(0, ps.length() - 2)}) => ${rhs}"
-      }
-
-    val cons = typeVars.foldLeft("")((s, v) => {
-      val c = v.getConstraint()
-      if (c.isEmpty()) s else s"$s$c, "
-    })
-
-    if (cons.isEmpty()) body
-    else s"$body where ${cons.substring(0, cons.length() - 2)}"
-  }
-}
+case class TSFunctionType(params: List[TSType], res: TSType, val typeVars: List[TSTypeVariable]) extends TSType
 
 case class TSClassType(name: String, members: Map[String, TSMemberType], statics: Map[String, TSMemberType], typeVars: List[TSTypeVariable], parents: List[TSType])
-  extends TSFieldType(members, parents) {
-  override val priority = 0
-
-  override def toString(): String = {
-    val body = s"class $name"
-    val cons = typeVars.foldLeft("")((s, v) => {
-      val c = v.getConstraint()
-      if (c.isEmpty()) s else s"$s$c, "
-    })
-
-    if (cons.isEmpty()) body
-    else s"$body where ${cons.substring(0, cons.length() - 2)}"
-  }
-
-  def >>(name: String): TSMemberType =
-    statics.getOrElse(name, throw new java.lang.Exception(s"static $name not found."))
-}
+  extends TSType
 
 case class TSInterfaceType(name: String, members: Map[String, TSMemberType], typeVars: List[TSTypeVariable], parents: List[TSType])
-  extends TSFieldType(members, parents) {
-  override val priority = 0
+  extends TSType
 
-  override def toString(): String = {
-    val s = if (name.isEmpty()) ", " else "\n\t"
-    val memString = members.foldLeft("")((str, it) => str + s"$s${it._1}: ${it._2.toString()}")
-    val body =
-      if (name.isEmpty()) s"{${memString.substring(2)}}"
-      else s"interface $name {$memString\n}"
+case class TSArrayType(eleType: TSType) extends TSType
 
-    val cons = typeVars.foldLeft("")((s, v) => {
-      val c = v.getConstraint()
-      if (c.isEmpty()) s else s"$s$c, "
-    })
-
-    if (cons.isEmpty()) body
-    else s"$body where ${cons.substring(0, cons.length() - 2)}"
-  }
-}
-
-case class TSArrayType(eleType: TSType) extends TSType {
-  override val priority = 3
-  override def toString(): String = 
-    if (eleType.priority < priority && eleType.priority > 0) s"($eleType)[]"
-    else s"$eleType[]"
-}
-
-abstract class TSStructuralType(lhs: TSType, rhs: TSType, notion: String) extends TSType {
-  override val priority = 2
-
-  override def toString(): String = {
-    val slhs = lhs match {
-      case f: TSFunctionType => s"($f)"
-      case _ => lhs.toString()
-    }
-
-    val srhs = if (rhs.priority <= priority && rhs.priority > 0) s"($rhs)" else s"$rhs"
-
-    s"$slhs $notion $srhs"
-  }
-}
+abstract class TSStructuralType(lhs: TSType, rhs: TSType, notion: String) extends TSType
 
 case class TSUnionType(lhs: TSType, rhs: TSType) extends TSStructuralType(lhs, rhs, "|")
 case class TSIntersectionType(lhs: TSType, rhs: TSType) extends TSStructuralType(lhs, rhs, "&")
@@ -146,11 +55,4 @@ object TSIntersectionType {
   }
 }
 
-case class TSApplicationType(base: String, applied: List[TSType]) extends TSType {
-  override val priority = 0
-
-  override def toString(): String = {
-    val appBody = applied.foldLeft("")((body, app) => s"$body, $app")
-    s"$base<${appBody.substring(2)}>"
-  }
-}
+case class TSApplicationType(base: String, applied: List[TSType]) extends TSType
