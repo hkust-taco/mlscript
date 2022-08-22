@@ -64,7 +64,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
       raise(ErrorReport(msg -> S(loc(i, i + 1)) :: Nil, source = Lexing)) // TODO parse error
     // @inline 
     def go(j: Int, tok: Token) = lex(j, ind, (tok, loc(i, j)) :: acc)
-    c match{
+    c match {
       case ' ' =>
         val (_, j) = takeWhile(i)(_ === ' ')
         go(j, SPACE)
@@ -116,8 +116,11 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         go(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n)))
       case _ if isOpChar(c) =>
         val (n, j) = takeWhile(i)(isOpChar)
-        // go(j, IDENT(n, true))
-        go(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true))
+        if (n === "." && j < length && isIdentFirstChar(bytes(j))) {
+          val (name, k) = takeWhile(j)(isIdentChar)
+          go(k, SELECT(name))
+        }
+        else go(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true))
       case _ if isDigit(c) =>
         val (str, j) = takeWhile(i)(isDigit)
         go(j, LITVAL(IntLit(BigInt(str))))
@@ -241,6 +244,7 @@ object NewLexer {
     case (LITVAL(lv), _) => lv.idStr
     case (KEYWORD(name: String), _) => "#" + name
     case (IDENT(name: String, symbolic: Bool), _) => name
+    case (SELECT(name: String), _) => "." + name
     case (OPEN_BRACKET(k), _) => k.beg.toString
     case (CLOSE_BRACKET(k), _) => k.end.toString
     case (BRACKETS(k @ BracketKind.Indent, contents), _) =>

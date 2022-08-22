@@ -43,3 +43,8 @@
 //│ |(BEG:|(BEG:|[BEG:|{BEG:||:END}|:END]|:END)|:END)|
 //│ Parsed: {'(' '(' '(' '{' {} '}', ')', ')', ')'}
 
+
+fun f = ()
+//│ |#fun| |f| |#=| |(BEG:||:END)|
+//│ Parsed: {fun f = '('  ')'}
+

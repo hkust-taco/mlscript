@@ -370,7 +370,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Rcd(fields) =>
       fields.iterator.map(nv =>
         (if (nv._2.mut) "mut " else "") + nv._1.name + ": " + nv._2.value).mkString("{", ", ", "}")
-    case Sel(receiver, fieldName) => receiver.toString + "." + fieldName
+    case Sel(receiver, fieldName) => "(" + receiver.toString + ")." + fieldName
     case Let(isRec, name, rhs, body) =>
       s"let${if (isRec) " rec" else ""} $name = $rhs in $body" |> bra
     case Tup(xs) =>

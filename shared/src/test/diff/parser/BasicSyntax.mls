@@ -494,15 +494,18 @@ f x: 1 + 1, y: 2 2, z: 3 + 2 4 - 1
 
 
 x.y
-//│ |x|.|y|
-//│ Parsed: {. x y}
+//│ |x|.y|
+//│ Parsed: {(x).y}
 
 .y
-//│ |.|y|
-//│ ╔══[PARSE ERROR] Unexpected operator in expression position
+//│ |.y|
+//│ ╔══[PARSE ERROR] Unexpected selector in expression position
 //│ ║  l.500: 	.y
-//│ ╙──       	^
-//│ Parsed: {y}
+//│ ╙──       	^^
+//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.500: 	.y
+//│ ╙──       	  ^
+//│ Parsed: {undefined}
 
 
 2 + f of 3 + 3
@@ -514,12 +517,12 @@ x.y
   of 3 + 3
 //│ |2| |+| |2|→|#of| |3| |+| |3|←|
 //│ ╔══[PARSE ERROR] Unexpected 'of' keyword in expression position
-//│ ║  l.514: 	  of 3 + 3
+//│ ║  l.517: 	  of 3 + 3
 //│ ╙──       	  ^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.513: 	2 + 2
+//│ ║  l.516: 	2 + 2
 //│ ║         	    ^
-//│ ║  l.514: 	  of 3 + 3
+//│ ║  l.517: 	  of 3 + 3
 //│ ╙──       	^^^^^^^^^^
 //│ Parsed: {+ 2 (2 (+ 3 3,))}
 

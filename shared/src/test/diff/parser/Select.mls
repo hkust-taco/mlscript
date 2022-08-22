@@ -1,60 +1,75 @@
 
 x.a
-//│ |x|.|a|
+//│ |x|.a|
+//│ Parsed: {(x).a}
+
+x . a
+//│ |x| |.| |a|
 //│ Parsed: {. x a}
+
+x. a
+//│ |x|.| |a|
+//│ Parsed: {. x a}
+
+x .a
+//│ |x| |.a|
+//│ Parsed: {(x).a}
 
 x
   .a
-//│ |x|→|.|a|←|
-//│ Parsed: {. x a}
+//│ |x|→|.a|←|
+//│ Parsed: {(x).a}
 
 :pe
 x
 .a
-//│ |x|↵|.|a|
-//│ ╔══[PARSE ERROR] Unexpected operator in expression position
-//│ ║  l.13: 	.a
-//│ ╙──      	^
-//│ Parsed: {x; a}
+//│ |x|↵|.a|
+//│ ╔══[PARSE ERROR] Unexpected selector in expression position
+//│ ║  l.25: 	.a
+//│ ╙──      	^^
+//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.25: 	.a
+//│ ╙──      	  ^
+//│ Parsed: {x; undefined}
 
 x.a.b
-//│ |x|.|a|.|b|
-//│ Parsed: {. (. x a) b}
+//│ |x|.a|.b|
+//│ Parsed: {((x).a).b}
 
 x
   .a
   .b
-//│ |x|→|.|a|↵|.|b|←|
-//│ Parsed: {. (. x a) b}
+//│ |x|→|.a|↵|.b|←|
+//│ Parsed: {((x).a).b}
 
 x
   .a.b
-//│ |x|→|.|a|.|b|←|
-//│ Parsed: {. x (. a b)}
+//│ |x|→|.a|.b|←|
+//│ Parsed: {((x).a).b}
 
 // Perhaps surprising:
 x
   .a
     .b
-//│ |x|→|.|a|→|.|b|←|←|
-//│ Parsed: {. x (. a b)}
+//│ |x|→|.a|→|.b|←|←|
+//│ Parsed: {((x).a).b}
 
 x
   .a
     .b
     .c
   .d
-//│ |x|→|.|a|→|.|b|↵|.|c|←|↵|.|d|←|
-//│ Parsed: {. (. x (. (. a b) c)) d}
+//│ |x|→|.a|→|.b|↵|.c|←|↵|.d|←|
+//│ Parsed: {((((x).a).b).c).d}
 
 :pe
 .
 //│ |.|
 //│ ╔══[PARSE ERROR] Unexpected operator in expression position
-//│ ║  l.51: 	.
+//│ ║  l.66: 	.
 //│ ╙──      	^
 //│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
-//│ ║  l.51: 	.
+//│ ║  l.66: 	.
 //│ ╙──      	 ^
 //│ Parsed: {undefined}
 
@@ -62,7 +77,7 @@ x
 (.)
 //│ |(BEG:|.|:END)|
 //│ ╔══[PARSE ERROR] Unexpected operator here
-//│ ║  l.62: 	(.)
+//│ ║  l.77: 	(.)
 //│ ╙──      	 ^
 //│ Parsed: {'('  ')'}
 
@@ -70,21 +85,81 @@ x
 a, b
 //│ |a|,| |b|
 //│ ╔══[PARSE ERROR] Expected end of input; found comma instead
-//│ ║  l.70: 	a, b
+//│ ║  l.85: 	a, b
 //│ ╙──      	 ^
 //│ Parsed: {a}
 
 
-1
-//│ |1|
-//│ Parsed: {1}
+a .b .c
+//│ |a| |.b| |.c|
+//│ Parsed: {((a).b).c}
 
-()
-//│ |(BEG:||:END)|
-//│ Parsed: {'('  ')'}
+a + 1 .c
+//│ |a| |+| |1| |.c|
+//│ Parsed: {+ a (1).c}
 
-fun f = ()
-//│ |#fun| |f| |#=| |(BEG:||:END)|
-//│ Parsed: {fun f = '('  ')'}
+a + f(1) .c
+//│ |a| |+| |f|(BEG:|1|:END)| |.c|
+//│ Parsed: {+ a (f (1,)).c}
+
+a + f (1) .c
+//│ |a| |+| |f| |(BEG:|1|:END)| |.c|
+//│ Parsed: {+ a (f (1,)).c}
+
+a + f (1).c
+//│ |a| |+| |f| |(BEG:|1|:END)|.c|
+//│ Parsed: {+ a (f (1,)).c}
+
+f of x . y
+//│ |f| |#of| |x| |.| |y|
+//│ Parsed: {f (. x y,)}
+
+f of x .y
+//│ |f| |#of| |x| |.y|
+//│ Parsed: {f ((x).y,)}
+
+
+a
+  .b
+  +1
+  *2
+//│ |a|→|.b|↵|+|1|↵|*|2|←|
+//│ Parsed: {* (+ (a).b 1) 2}
+
+// TODO we should find a more uniform way of typing indented operator/selector/of blocks
+a
+  +1
+  *2
+  .b
+//│ |a|→|+|1|↵|*|2|↵|.b|←|
+//│ ╔══[PARSE ERROR] Unexpected selector in operator block
+//│ ║  l.133: 	  .b
+//│ ╙──       	  ^^
+//│ Parsed: {* (+ a 1) 2}
+
+
+1 .+ 2
+//│ |1| |.+| |2|
+//│ Parsed: {.+ 1 2}
+
+1 +. 2
+//│ |1| |+.| |2|
+//│ Parsed: {+. 1 2}
+
+1 .+! 2
+//│ |1| |.+!| |2|
+//│ Parsed: {.+! 1 2}
+
+0 * 1 .+. 2 * 3
+//│ |0| |*| |1| |.+.| |2| |*| |3|
+//│ Parsed: {* (* 0 (.+. 1 2)) 3}
+
+:w
+1 .+a 2
+//│ |1| |.+|a| |2|
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.158: 	1 .+a 2
+//│ ╙──       	    ^^^
+//│ Parsed: {.+ 1 (a (2,))}
 
 

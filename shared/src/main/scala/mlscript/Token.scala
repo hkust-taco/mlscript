@@ -15,6 +15,7 @@ sealed abstract class Token {
     case LITVAL(value) => "literal"
     case KEYWORD(name) => s"'$name' keyword"
     case IDENT(name, symbolic) => if (symbolic) "operator" else "identifier"
+    case SELECT(name) => "selector"
     case OPEN_BRACKET(k) => s"opening ${k.name}"
     case CLOSE_BRACKET(k) => s"closing ${k.name}"
     case BRACKETS(BracketKind.Indent, contents) => s"indented block"
@@ -36,6 +37,7 @@ case object ERROR extends Token with Stroken
 final case class LITVAL(value: Lit) extends Token with Stroken
 final case class KEYWORD(name: String) extends Token with Stroken
 final case class IDENT(name: String, symbolic: Bool) extends Token with Stroken
+final case class SELECT(name: String) extends Token with Stroken
 final case class OPEN_BRACKET(k: BracketKind) extends Token
 final case class CLOSE_BRACKET(k: BracketKind) extends Token
 final case class BRACKETS(k: BracketKind, contents: Ls[Stroken -> Loc]) extends Token with Stroken

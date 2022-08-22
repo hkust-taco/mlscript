@@ -130,8 +130,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       (prec(opStr.head), prec(r) - (if (r === '@' || r === '/' || r === ',') 1 else 0))
   }
   
-  def pe(msg: Message, l: Loc, rest: (Message, Opt[Loc])*): Unit =
-    err((msg -> S(l) :: rest.toList)) // TODO parse err
+  // def pe(msg: Message, l: Loc, rest: (Message, Opt[Loc])*): Unit =
+  //   err((msg -> S(l) :: rest.toList)) // TODO parse err
   
   
   
@@ -403,10 +403,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         R(Blk(es))
       case (LITVAL(lit), l0) :: _ =>
         consume
-        exprCont(lit.withLoc(S(l0)), prec)
+        exprCont(lit.withLoc(S(l0)), prec, allowNewlines = false)
       case (IDENT(nme, false), l0) :: _ =>
         consume
-        exprCont(Var(nme).withLoc(S(l0)), prec)
+        exprCont(Var(nme).withLoc(S(l0)), prec, allowNewlines = false)
       case (BRACKETS(bk @ (Round | Square | Curly), toks), loc) :: _ =>
         consume
         val res = rec(toks).concludeWith(_.argsMaybeIndented()) // TODO
@@ -419,7 +419,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
             Var("<error>") -> fld
         }))
         else Bra(false, Tup(res))
-        exprCont(bra.withLoc(S(loc)), prec)
+        exprCont(bra.withLoc(S(loc)), prec, allowNewlines = false)
       case (KEYWORD("let"), l0) :: _ =>
         consume
         val bs = bindings(Nil)
@@ -530,7 +530,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     // Tup(Nil).withLoc(lastLoc) // TODO FIXME produce error term instead
     UnitLit(true).withLoc(lastLoc) // TODO FIXME produce error term instead
   
-  def exprCont(acc: Term, prec: Int)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, s"`$acc`") { l =>
+  def exprCont(acc: Term, prec: Int, allowNewlines: Bool)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, s"`$acc`") { l =>
     cur match {
       case (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
         consume
@@ -540,11 +540,22 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           case L(rhs) =>
             L(IfOpApp(acc, v, rhs))
           case R(rhs) =>
-            exprCont(App(App(v, acc), rhs), prec)
+            exprCont(App(App(v, acc), rhs), prec, allowNewlines)
         }
       case (SPACE, l0) :: _ =>
         consume
-        exprCont(acc, prec)
+        exprCont(acc, prec, allowNewlines)
+      case (SELECT(name), l0) :: _ => // TODO precedence?
+        consume
+        exprCont(Sel(acc, Var(name).withLoc(S(l0))), prec, allowNewlines)
+      case (BRACKETS(Indent, (SELECT(name), l0) :: toks), _) :: _ =>
+        consume
+        val res = rec(toks).concludeWith(_.exprCont(Sel(acc, Var(name).withLoc(S(l0))), 0, allowNewlines = true))
+        if (allowNewlines) res match {
+          case L(ifb) => L(ifb) // TODO something else?
+          case R(res) => exprCont(res, 0, allowNewlines)
+        }
+        else res
       case (BRACKETS(Indent, (IDENT(opStr, true), l0) :: toks), _) :: _ =>
         consume
         rec(toks).concludeWith(_.opBlock(acc, opStr, l0))
@@ -559,6 +570,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         consume
         val e = expr(0)
         L(IfThen(acc, e))
+      case (NEWLINE, _) :: _ if allowNewlines =>
+        consume
+        exprCont(acc, 0, allowNewlines)
       case (COMMA | NEWLINE | KEYWORD("then" | "else" | "in" | ";" | "=")
         | IDENT(_, true) | BRACKETS(Curly, _), _) :: _ => R(acc)
       
@@ -566,7 +580,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         consume
         val as = rec(toks).concludeWith(_.argsMaybeIndented())
         val res = App(acc, Tup(as))
-        exprCont(res, 0) // ?!
+        exprCont(res, 0, allowNewlines = true) // ?!
         
       case (BRACKETS(Indent, (KEYWORD("then"|"else"), _) :: toks), _) :: _ => R(acc)
       
@@ -588,7 +602,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           }
           case _ => ???
         })
-        exprCont(res, 0)
+        exprCont(res, 0, allowNewlines = false)
         
       case c @ (h :: _) if (h._1 match {
         case KEYWORD(";") => false
@@ -599,7 +613,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
             consume
             val as = rec(toks).concludeWith(_.argsMaybeIndented())
             val res = App(acc, Tup(as).withLoc(S(loc)))
-            exprCont(res, 0)
+            exprCont(res, 0, allowNewlines = false)
           case _ =>
             val ofLess = c match {
               case (KEYWORD("of"), _) :: _ =>
@@ -616,7 +630,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 // -> ofKw :: Nil))
                 -> res.toLoc :: Nil))
             // R(res)
-            exprCont(res, 0)
+            exprCont(res, 0, allowNewlines = false)
         }
       case _ => R(acc)
     }
@@ -636,7 +650,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 case (IDENT(opStr2, true), opLoc2) :: _ =>
                   consume
                   opBlock(res, opStr2, opLoc2)
-                case _ => ???
+                case (tk, lo) :: _ =>
+                  err(msg"Unexpected ${tk.describe} in operator block" -> S(lo) :: Nil)
+                  consume
+                  R(res)
+                case Nil =>
+                  R(res)
               }
             case _ =>
               R(res)
