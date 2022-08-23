@@ -106,7 +106,6 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
             if (droppedNum > 0) {
               if (hasNewIndent) (INDENT, loc(j, k))
               else (NEWLINE, loc(i, k))
-            // } :: List.fill(droppedNum)((DEINDENT, loc(j, k))) ::: acc
             } :: List.fill(droppedNum)((DEINDENT, loc(j-1, k))) ::: acc
             else (NEWLINE, loc(i, k)) :: acc
           )
@@ -190,9 +189,8 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         case Nil =>
           stack match {
             case ((Indent, loc), oldAcc) :: _ =>
-              go(CLOSE_BRACKET(Indent) -> loc/*not proper loc...*/ :: Nil, false, stack, acc)
+              go(CLOSE_BRACKET(Indent) -> loc/*FIXME not proper loc...*/ :: Nil, false, stack, acc)
             case ((k, l0), oldAcc) :: stack =>
-              // ???
               raise(ErrorReport(msg"Unmatched opening ${k.name}" -> S(l0) :: (
                 if (k === Angle)
                   msg"Note that `<` without spaces around it is considered as an angle bracket and not as an operator" -> N :: Nil
@@ -250,14 +248,11 @@ object NewLexer {
     case (BRACKETS(k @ BracketKind.Indent, contents), _) =>
       k.beg.toString + printTokens(contents) + k.end.toString
     case (BRACKETS(k, contents), _) =>
-      // k.beg.toString + printTokens(contents) + k.end.toString
-      // k.beg.toString + "|BEGIN:" + printTokens(contents) + ":END|" + k.end.toString
-      k.beg.toString + "BEG:" + printTokens(contents) + ":END" + k.end.toString
+      k.beg.toString + printTokens(contents) + k.end.toString
     case (COMMENT(text: String), _) => "/*" + text + "*/"
   }
   def printTokens(ts: Ls[TokLoc]): Str =
     ts.iterator.map(printToken).mkString("|", "|", "|")
-    // ts.iterator.map(printToken).mkString("⟨", "|", "⟩")
   
   
 

@@ -22,7 +22,7 @@ import NewParser._
 abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: Diagnostic => Unit, val dbg: Bool) {
   outer =>
   
-  def rec(tokens: Ls[Stroken -> Loc]): NewParser = //wrap(tokens.length) { l =>
+  def rec(tokens: Ls[Stroken -> Loc]): NewParser =
     new NewParser(origin, tokens, raiseFun, dbg) {
       def doPrintDbg(msg: => Str): Unit = outer.printDbg("> " + msg)
     }
@@ -41,7 +41,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     doPrintDbg("│ " * this.indent + msg)
   protected var indent = 0
   private def wrap[R](args: Any)(mkRes: Unit => R)(implicit l: Line, n: Name): R = {
-    // printDbg(s"@ ${n.value}${if (args.isInstanceOf[Product]) args else s"($args)"}    [at l.${l.value}]")
     printDbg(s"@ ${n.value}${args match {
       case it: Iterable[_] => it.mkString("(", ",", ")")
       case _: Product => args
@@ -57,10 +56,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   }
   
   def parseAll[R](parser: => R): R = {
-    // val t = expr(0, allowSpace = false)
     val res = parser
-    // printDbg(p.cur)
-    // if (cur.nonEmpty) fail(cur)
     cur match {
       case c @ (tk, tkl) :: _ =>
         val (relevantToken, rl) = c.dropWhile(_._1 === SPACE).headOption.getOrElse(tk, tkl)
@@ -72,7 +68,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   
   def concludeWith[R](f: this.type => R): R = {
     val res = f(this)
-    // yeetSpaces match {
     cur.dropWhile(tk => (tk._1 === SPACE || tk._1 === NEWLINE) && { consume; true }) match {
       case c @ (tk, tkl) :: _ =>
         val (relevantToken, rl) = c.dropWhile(_._1 === SPACE).headOption.getOrElse(tk, tkl)
@@ -141,7 +136,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     NewLexer.printTokens(_cur.take(5)) + (if (_cur.size > 5) "..." else "")
   
   private def cur(implicit l: Line, n: Name) = {
-    // if (dbg) printDbg(s"l.${l.value} => ${n.value}\t\tinspects ${NewLexer printTokens _cur}")
     if (dbg) printDbg(s"? ${n.value}\t\tinspects ${summarizeCur}    [at l.${l.value}]")
     _cur
   }
@@ -150,14 +144,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     if (dbg) printDbg(s"! ${n.value}\t\tconsumes ${NewLexer.printTokens(_cur.take(1))}    [at l.${l.value}]")
     _cur = _cur.tailOption.getOrElse(Nil) // FIXME throw error if empty?
   }
+  
+  // TODO simplify logic – this is no longer used much
   def skip(tk: Stroken, ignored: Set[Stroken] = Set(SPACE), allowEnd: Bool = false, note: => Ls[Message -> Opt[Loc]] = Nil)
-        // (implicit n: Name): Loc \/ Opt[Loc] = {
         (implicit fe: FoundErr): (Bool, Opt[Loc]) = wrap(tk, ignored, allowEnd) { l =>
     require(!ignored(tk))
-    // if (!cur.headOption.forall(_._1 === tk)) {
-    //   // fail(cur)
-    //   err((msg"Expected: ${tk.describe}; found: ${ts.mkString("|")}" -> N :: Nil))
-    // }
     val skip_res = cur match {
       case (tk2, l2) :: _ =>
         if (ignored(tk2)) {
@@ -311,14 +302,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
             }
             foundErr || !success pipe { implicit fe =>
               val ps = funParams
-              // skip(KEYWORD("="))
               val asc = yeetSpaces match {
                 case (KEYWORD(":"), _) :: _ =>
                   consume
-                  // val e = expr(0)
-                  // S(e)
                   S(typ)
-                // case (KEYWORD("="), _) =>
                 case _ => N
               }
               yeetSpaces match {
@@ -337,7 +324,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                       err((
                         msg"Expected ':' or '=' followed by a function body or signature; found ${tkstr} instead" -> loc :: Nil))
                       consume
-                      // R(Def(false, v, L(ps.foldRight(errExpr: Term)((i, acc) => Lam(i, acc)))))
                       R(NuFunDef(v, Nil, L(ps.foldRight(errExpr: Term)((i, acc) => Lam(i, acc)))))
                   }
               }
@@ -379,7 +365,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     exprOrIf(prec, allowSpace)(et = false, fe = fe, l = implicitly) match {
       case R(e) => e
       case L(e) =>
-        // ??? // TODO
         err(msg"Expected an expression; found a 'then'/'else' clause instead" -> e.toLoc :: Nil)
         errExpr
     }

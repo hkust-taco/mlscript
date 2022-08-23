@@ -2,20 +2,20 @@
 
 
 fun Foo(#x, y) = x + y
-//│ |#fun| |Foo|(BEG:|##|x|,| |y|:END)| |#=| |x| |+| |y|
+//│ |#fun| |Foo|(|##|x|,| |y|)| |#=| |x| |+| |y|
 //│ Parsed: {fun Foo = #x, y, => + x y}
 
 fun Foo(x, #y) = x + y
-//│ |#fun| |Foo|(BEG:|x|,| |##|y|:END)| |#=| |x| |+| |y|
+//│ |#fun| |Foo|(|x|,| |##|y|)| |#=| |x| |+| |y|
 //│ Parsed: {fun Foo = x, #y, => + x y}
 
 fun Foo(#x, #y, #z) = if z then x + y else z
-//│ |#fun| |Foo|(BEG:|##|x|,| |##|y|,| |##|z|:END)| |#=| |#if| |z| |#then| |x| |+| |y| |#else| |z|
+//│ |#fun| |Foo|(|##|x|,| |##|y|,| |##|z|)| |#=| |#if| |z| |#then| |x| |+| |y| |#else| |z|
 //│ Parsed: {fun Foo = #x, #y, #z, => if (z) then + x y else z}
 
 
 class Foo(x, #y, z)
-//│ |#class| |Foo|(BEG:|x|,| |##|y|,| |z|:END)|
+//│ |#class| |Foo|(|x|,| |##|y|,| |z|)|
 //│ Parsed: {class Foo(x, #y, z,) {}}
 
 

@@ -86,7 +86,7 @@ x
 
 :pe
 (.)
-//│ |(BEG:|.|:END)|
+//│ |(|.|)|
 //│ ╔══[PARSE ERROR] Unexpected operator here
 //│ ║  l.88: 	(.)
 //│ ╙──      	 ^
@@ -110,15 +110,15 @@ a + 1 .c
 //│ Parsed: {+ a (1).c}
 
 a + f(1) .c
-//│ |a| |+| |f|(BEG:|1|:END)| |.c|
+//│ |a| |+| |f|(|1|)| |.c|
 //│ Parsed: {+ a (f (1,)).c}
 
 a + f (1) .c
-//│ |a| |+| |f| |(BEG:|1|:END)| |.c|
+//│ |a| |+| |f| |(|1|)| |.c|
 //│ Parsed: {+ a (f (1,)).c}
 
 a + f (1).c
-//│ |a| |+| |f| |(BEG:|1|:END)|.c|
+//│ |a| |+| |f| |(|1|)|.c|
 //│ Parsed: {+ a (f (1,)).c}
 
 f of x . y

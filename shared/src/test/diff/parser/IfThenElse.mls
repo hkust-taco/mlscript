@@ -148,7 +148,7 @@ if a ==
 if a is
   Some(x) then "defined"
   None    then "undefined"
-//│ |#if| |a| |is|→|Some|(BEG:|x|:END)| |#then| |"defined"|↵|None| |#then| |"undefined"|←|
+//│ |#if| |a| |is|→|Some|(|x|)| |#then| |"defined"|↵|None| |#then| |"undefined"|←|
 //│ Parsed: {if a is ‹(Some (x,)) then "defined"; (None) then "undefined"›}
 
 if a is
@@ -156,7 +156,7 @@ if a is
     Left(a)  then "left-defined"
     Right(b) then "right-defined"
   None       then "undefined"
-//│ |#if| |a| |is|→|Some|(BEG:|x|:END)| |and| |x| |is|→|Left|(BEG:|a|:END)| |#then| |"left-defined"|↵|Right|(BEG:|b|:END)| |#then| |"right-defined"|←|↵|None| |#then| |"undefined"|←|
+//│ |#if| |a| |is|→|Some|(|x|)| |and| |x| |is|→|Left|(|a|)| |#then| |"left-defined"|↵|Right|(|b|)| |#then| |"right-defined"|←|↵|None| |#then| |"undefined"|←|
 //│ Parsed: {if a is ‹Some (x,) and x is ‹(Left (a,)) then "left-defined"; (Right (b,)) then "right-defined"›; (None) then "undefined"›}
 
 if a is
@@ -294,7 +294,7 @@ if a is
   Left(x) then x
   let y = a + 1
   Right(0) then y
-//│ |#if| |a| |is|→|Left|(BEG:|x|:END)| |#then| |x|↵|#let| |y| |#=| |a| |+| |1|↵|Right|(BEG:|0|:END)| |#then| |y|←|
+//│ |#if| |a| |is|→|Left|(|x|)| |#then| |x|↵|#let| |y| |#=| |a| |+| |1|↵|Right|(|0|)| |#then| |y|←|
 //│ Parsed: {if a is ‹(Left (x,)) then x; let y = + a 1 in (Right (0,)) then y›}
 
 if a is
@@ -304,7 +304,7 @@ if a is
     Right(0) then y
     Right(x) then x + y
   else 0
-//│ |#if| |a| |is|→|Some|(BEG:|v|:END)| |and| |v| |is|→|Left|(BEG:|x|:END)| |#then| |x|↵|#let| |y| |#=| |v| |+| |1|↵|Right|(BEG:|0|:END)| |#then| |y|↵|Right|(BEG:|x|:END)| |#then| |x| |+| |y|←|↵|#else| |0|←|
+//│ |#if| |a| |is|→|Some|(|v|)| |and| |v| |is|→|Left|(|x|)| |#then| |x|↵|#let| |y| |#=| |v| |+| |1|↵|Right|(|0|)| |#then| |y|↵|Right|(|x|)| |#then| |x| |+| |y|←|↵|#else| |0|←|
 //│ Parsed: {if a is ‹Some (v,) and v is ‹(Left (x,)) then x; let y = + v 1 in (Right (0,)) then y; (Right (x,)) then + x y›; else 0›}
 
 if a is
@@ -313,7 +313,7 @@ if a is
     let y = x + 1
     Right(b) then "right-defined"
   None       then "undefined"
-//│ |#if| |a| |is|→|Some|(BEG:|x|:END)| |and| |x| |is|→|Left|(BEG:|a|:END)| |#then| |"left-defined"|↵|#let| |y| |#=| |x| |+| |1|↵|Right|(BEG:|b|:END)| |#then| |"right-defined"|←|↵|None| |#then| |"undefined"|←|
+//│ |#if| |a| |is|→|Some|(|x|)| |and| |x| |is|→|Left|(|a|)| |#then| |"left-defined"|↵|#let| |y| |#=| |x| |+| |1|↵|Right|(|b|)| |#then| |"right-defined"|←|↵|None| |#then| |"undefined"|←|
 //│ Parsed: {if a is ‹Some (x,) and x is ‹(Left (a,)) then "left-defined"; let y = + x 1 in (Right (b,)) then "right-defined"›; (None) then "undefined"›}
 
 :w
@@ -330,7 +330,7 @@ if a is
   Left(x) then x
   let y = a + 1
   then y
-//│ |#if| |a| |is|→|Left|(BEG:|x|:END)| |#then| |x|↵|#let| |y| |#=| |a| |+| |1|↵|#then| |y|←|
+//│ |#if| |a| |is|→|Left|(|x|)| |#then| |x|↵|#let| |y| |#=| |a| |+| |1|↵|#then| |y|←|
 //│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
 //│ ║  l.331: 	  let y = a + 1
 //│ ║         	          ^^^^^
@@ -345,7 +345,7 @@ if a is
 // Rust/Swift:
 :pe
 if let Some(x) = v then 123
-//│ |#if| |#let| |Some|(BEG:|x|:END)| |#=| |v| |#then| |123|
+//│ |#if| |#let| |Some|(|x|)| |#=| |v| |#then| |123|
 //│ ╔══[PARSE ERROR] Expected '=' keyword; found parenthesis section instead
 //│ ║  l.347: 	if let Some(x) = v then 123
 //│ ╙──       	           ^^^
@@ -366,7 +366,7 @@ if let Some(x) = v then 123
 // Swift:
 :pe
 if let Some(x) = v and cond then 123
-//│ |#if| |#let| |Some|(BEG:|x|:END)| |#=| |v| |and| |cond| |#then| |123|
+//│ |#if| |#let| |Some|(|x|)| |#=| |v| |and| |cond| |#then| |123|
 //│ ╔══[PARSE ERROR] Expected '=' keyword; found parenthesis section instead
 //│ ║  l.368: 	if let Some(x) = v and cond then 123
 //│ ╙──       	           ^^^
@@ -386,13 +386,13 @@ if let Some(x) = v and cond then 123
 
 // MLscript:
 if v is Some(x) and x is Left(y) then 123
-//│ |#if| |v| |is| |Some|(BEG:|x|:END)| |and| |x| |is| |Left|(BEG:|y|:END)| |#then| |123|
+//│ |#if| |v| |is| |Some|(|x|)| |and| |x| |is| |Left|(|y|)| |#then| |123|
 //│ Parsed: {if v is Some (x,) and x is (Left (y,)) then 123}
 
 // ML:
 :pe
 let Some(x) = v
-//│ |#let| |Some|(BEG:|x|:END)| |#=| |v|
+//│ |#let| |Some|(|x|)| |#=| |v|
 //│ ╔══[PARSE ERROR] Expected '=' keyword; found parenthesis section instead
 //│ ║  l.394: 	let Some(x) = v
 //│ ╙──       	        ^^^
@@ -402,7 +402,7 @@ let Some(x) = v
 //│ Parsed: {let Some = v in undefined}
 
 v as Some(x)
-//│ |v| |as| |Some|(BEG:|x|:END)|
+//│ |v| |as| |Some|(|x|)|
 //│ Parsed: {as v (Some (x,))}
 
 
@@ -486,7 +486,7 @@ if true
 
 :pe
 (if true)
-//│ |(BEG:|#if| |true|:END)|
+//│ |(|#if| |true|)|
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found reference instead
 //│ ║  l.488: 	(if true)
 //│ ║         	    ^^^^
@@ -497,7 +497,7 @@ if true
 
 :pe
 (if true then)
-//│ |(BEG:|#if| |true| |#then|:END)|
+//│ |(|#if| |true| |#then|)|
 //│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
 //│ ║  l.499: 	(if true then)
 //│ ╙──       	             ^

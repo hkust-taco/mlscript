@@ -1,35 +1,35 @@
 
 
 class Foo<A>
-//│ |#class| |Foo|‹BEG:|A|:END›|
+//│ |#class| |Foo|‹|A|›|
 //│ Parsed: {class Foo[A]() {}}
 
 
 
 class Foo‹A›
-//│ |#class| |Foo|‹BEG:|A|:END›|
+//│ |#class| |Foo|‹|A|›|
 //│ Parsed: {class Foo[A]() {}}
 
 
 (1)
-//│ |(BEG:|1|:END)|
+//│ |(|1|)|
 //│ Parsed: {'(' 1, ')'}
 
 
 foo<1,2,3>
-//│ |foo|‹BEG:|1|,|2|,|3|:END›|
+//│ |foo|‹|1|,|2|,|3|›|
 //│ Parsed: {foo‹1, 2, 3›}
 
 foo<1, 2, 3>
-//│ |foo|‹BEG:|1|,| |2|,| |3|:END›|
+//│ |foo|‹|1|,| |2|,| |3|›|
 //│ Parsed: {foo‹1, 2, 3›}
 
 foo<1, 2, 3>()
-//│ |foo|‹BEG:|1|,| |2|,| |3|:END›|(BEG:||:END)|
+//│ |foo|‹|1|,| |2|,| |3|›|(||)|
 //│ Parsed: {foo‹1, 2, 3› ()}
 
 foo<1, 2, 3>(1, 2, 3)
-//│ |foo|‹BEG:|1|,| |2|,| |3|:END›|(BEG:|1|,| |2|,| |3|:END)|
+//│ |foo|‹|1|,| |2|,| |3|›|(|1|,| |2|,| |3|)|
 //│ Parsed: {foo‹1, 2, 3› (1, 2, 3,)}
 
 1 < 2 > 4
@@ -59,18 +59,18 @@ foo<1, 2, 3>(1, 2, 3)
 
 :w
 1< 2> 4
-//│ |1|‹BEG:| |2|:END›| |4|
+//│ |1|‹| |2|›| |4|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.61: 	1< 2> 4
 //│ ╙──      	^^^^^^^
 //│ Parsed: {1‹2› (4,)}
 
 1< 2> (4)
-//│ |1|‹BEG:| |2|:END›| |(BEG:|4|:END)|
+//│ |1|‹| |2|›| |(|4|)|
 //│ Parsed: {1‹2› (4,)}
 
 1<2>(4)
-//│ |1|‹BEG:|2|:END›|(BEG:|4|:END)|
+//│ |1|‹|2|›|(|4|)|
 //│ Parsed: {1‹2› (4,)}
 
 1<>2

@@ -1,14 +1,14 @@
 
 ()
-//│ |(BEG:||:END)|
+//│ |(||)|
 //│ Parsed: {'('  ')'}
 
 []
-//│ |[BEG:||:END]|
+//│ |[||]|
 //│ Parsed: {'('  ')'}
 
 {}
-//│ |{BEG:||:END}|
+//│ |{||}|
 //│ Parsed: {'{' {} '}'}
 
 :pe
@@ -19,11 +19,11 @@
 //│ ╟── does not correspond to opening parenthesis
 //│ ║  l.15: 	(}
 //│ ╙──      	^
-//│ |(BEG:||:END)|
+//│ |(||)|
 //│ Parsed: {'('  ')'}
 
 (([{}]))
-//│ |(BEG:|(BEG:|[BEG:|{BEG:||:END}|:END]|:END)|:END)|
+//│ |(|(|[|{||}|]|)|)|
 //│ Parsed: {'(' '(' '(' '{' {} '}', ')', ')', ')'}
 
 :pe
@@ -40,11 +40,11 @@
 //│ ╟── does not correspond to opening parenthesis
 //│ ║  l.30: 	(([{})])
 //│ ╙──      	 ^
-//│ |(BEG:|(BEG:|[BEG:|{BEG:||:END}|:END]|:END)|:END)|
+//│ |(|(|[|{||}|]|)|)|
 //│ Parsed: {'(' '(' '(' '{' {} '}', ')', ')', ')'}
 
 
 fun f = ()
-//│ |#fun| |f| |#=| |(BEG:||:END)|
+//│ |#fun| |f| |#=| |(||)|
 //│ Parsed: {fun f = '('  ')'}
 

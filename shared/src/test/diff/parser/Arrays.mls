@@ -2,35 +2,35 @@
 
 
 []
-//│ |[BEG:||:END]|
+//│ |[||]|
 //│ Parsed: {'('  ')'}
 
 [1]
-//│ |[BEG:|1|:END]|
+//│ |[|1|]|
 //│ Parsed: {'(' 1, ')'}
 
 [1,]
-//│ |[BEG:|1|,|:END]|
+//│ |[|1|,|]|
 //│ Parsed: {'(' 1, ')'}
 
 [1, 2, 3]
-//│ |[BEG:|1|,| |2|,| |3|:END]|
+//│ |[|1|,| |2|,| |3|]|
 //│ Parsed: {'(' 1, 2, 3, ')'}
 
 ()
-//│ |(BEG:||:END)|
+//│ |(||)|
 //│ Parsed: {'('  ')'}
 
 (1)
-//│ |(BEG:|1|:END)|
+//│ |(|1|)|
 //│ Parsed: {'(' 1, ')'}
 
 (1,)
-//│ |(BEG:|1|,|:END)|
+//│ |(|1|,|)|
 //│ Parsed: {'(' 1, ')'}
 
 (1, 2, 3)
-//│ |(BEG:|1|,| |2|,| |3|:END)|
+//│ |(|1|,| |2|,| |3|)|
 //│ Parsed: {'(' 1, 2, 3, ')'}
 
 
@@ -70,18 +70,18 @@ f of
 
 
 let arr = []
-//│ |#let| |arr| |#=| |[BEG:||:END]|
+//│ |#let| |arr| |#=| |[||]|
 //│ Parsed: {let arr = '('  ')' in undefined}
 
 let arr = [
 ]
-//│ |#let| |arr| |#=| |[BEG:|↵|:END]|
+//│ |#let| |arr| |#=| |[|↵|]|
 //│ Parsed: {let arr = '('  ')' in undefined}
 
 let arr =
 [
 ]
-//│ |#let| |arr| |#=|↵|[BEG:|↵|:END]|
+//│ |#let| |arr| |#=|↵|[|↵|]|
 //│ ╔══[PARSE ERROR] Unexpected newline in expression position
 //│ ║  l.81: 	let arr =
 //│ ║        	         ^
@@ -92,20 +92,20 @@ let arr =
 let arr = [
   1
 ]
-//│ |#let| |arr| |#=| |[BEG:|→|1|←|↵|:END]|
+//│ |#let| |arr| |#=| |[|→|1|←|↵|]|
 //│ Parsed: {let arr = '(' 1, ')' in undefined}
 
 let arr = [
   1, 2
 ]
-//│ |#let| |arr| |#=| |[BEG:|→|1|,| |2|←|↵|:END]|
+//│ |#let| |arr| |#=| |[|→|1|,| |2|←|↵|]|
 //│ Parsed: {let arr = '(' 1, 2, ')' in undefined}
 
 let arr = [
   1,
   2
 ]
-//│ |#let| |arr| |#=| |[BEG:|→|1|,|↵|2|←|↵|:END]|
+//│ |#let| |arr| |#=| |[|→|1|,|↵|2|←|↵|]|
 //│ Parsed: {let arr = '(' 1, 2, ')' in undefined}
 
 

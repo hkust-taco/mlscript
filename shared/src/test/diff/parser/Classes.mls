@@ -6,13 +6,13 @@ class Foo
 //│ Parsed: {class Foo() {}}
 
 class Foo {}
-//│ |#class| |Foo| |{BEG:||:END}|
+//│ |#class| |Foo| |{||}|
 //│ Parsed: {class Foo() {}}
 
 class Foo {
   fun foo: int
 }
-//│ |#class| |Foo| |{BEG:|→|#fun| |foo|#:| |int|←|↵|:END}|
+//│ |#class| |Foo| |{|→|#fun| |foo|#:| |int|←|↵|}|
 //│ Parsed: {class Foo() {fun foo: [] -> int}}
 
 class Foo {
@@ -20,7 +20,7 @@ class Foo {
     class Baz
   }
 }
-//│ |#class| |Foo| |{BEG:|→|#class| |Bar| |{BEG:|→|#class| |Baz|←|↵|:END}|←|↵|:END}|
+//│ |#class| |Foo| |{|→|#class| |Bar| |{|→|#class| |Baz|←|↵|}|←|↵|}|
 //│ Parsed: {class Foo() {class Bar() {class Baz() {}}}}
 
 class Foo: Bar
@@ -32,18 +32,18 @@ class Foo: Bar, Baz
 //│ Parsed: {class Foo(): Bar, Baz {}}
 
 class Foo: Bar { fun f = 0 }
-//│ |#class| |Foo|#:| |Bar| |{BEG:| |#fun| |f| |#=| |0| |:END}|
+//│ |#class| |Foo|#:| |Bar| |{| |#fun| |f| |#=| |0| |}|
 //│ Parsed: {class Foo(): Bar {fun f = 0}}
 
 class Foo: Bar, Baz { fun f = 0 }
-//│ |#class| |Foo|#:| |Bar|,| |Baz| |{BEG:| |#fun| |f| |#=| |0| |:END}|
+//│ |#class| |Foo|#:| |Bar|,| |Baz| |{| |#fun| |f| |#=| |0| |}|
 //│ Parsed: {class Foo(): Bar, Baz {fun f = 0}}
 
 // * Pretty confusing... maybe we should find a way to reject this:
 class Foo: Bar { fun f = 0
   fun bar = 1
 }
-//│ |#class| |Foo|#:| |Bar| |{BEG:| |#fun| |f| |#=| |0|→|#fun| |bar| |#=| |1|←|↵|:END}|
+//│ |#class| |Foo|#:| |Bar| |{| |#fun| |f| |#=| |0|→|#fun| |bar| |#=| |1|←|↵|}|
 //│ Parsed: {class Foo(): Bar {fun f = 0 {fun bar = 1}}}
 
 // TODO disallow?
@@ -52,32 +52,42 @@ class Foo: Bar {
   fun f = 0
   fun bar = 1
   }
-//│ |#class| |Foo|#:| |Bar| |{BEG:|→|#fun| |f| |#=| |0|↵|#fun| |bar| |#=| |1|↵|←|:END}|
+//│ |#class| |Foo|#:| |Bar| |{|→|#fun| |f| |#=| |0|↵|#fun| |bar| |#=| |1|↵|←|}|
 //│ Parsed: {class Foo(): Bar {fun f = 0; fun bar = 1}}
 
 class Foo: Bar {
   fun f = 0
   fun bar = 1
 }
-//│ |#class| |Foo|#:| |Bar| |{BEG:|→|#fun| |f| |#=| |0|↵|#fun| |bar| |#=| |1|←|↵|:END}|
+//│ |#class| |Foo|#:| |Bar| |{|→|#fun| |f| |#=| |0|↵|#fun| |bar| |#=| |1|←|↵|}|
+//│ Parsed: {class Foo(): Bar {fun f = 0; fun bar = 1}}
+
+class Foo: Bar {
+  
+  fun f = 0
+  
+  fun bar = 1
+  
+}
+//│ |#class| |Foo|#:| |Bar| |{|→|#fun| |f| |#=| |0|↵|#fun| |bar| |#=| |1|←|↵|}|
 //│ Parsed: {class Foo(): Bar {fun f = 0; fun bar = 1}}
 
 
 // FIXME `(undefined,)`
 class Foo()
-//│ |#class| |Foo|(BEG:||:END)|
+//│ |#class| |Foo|(||)|
 //│ Parsed: {class Foo() {}}
 
 class Foo(x, y, z)
-//│ |#class| |Foo|(BEG:|x|,| |y|,| |z|:END)|
+//│ |#class| |Foo|(|x|,| |y|,| |z|)|
 //│ Parsed: {class Foo(x, y, z,) {}}
 
 
 // TODO
 class Foo(x, y, z): Bar(z, x)
-//│ |#class| |Foo|(BEG:|x|,| |y|,| |z|:END)|#:| |Bar|(BEG:|z|,| |x|:END)|
+//│ |#class| |Foo|(|x|,| |y|,| |z|)|#:| |Bar|(|z|,| |x|)|
 //│ ╔══[ERROR] not a recognized type: z, x,
-//│ ║  l.77: 	class Foo(x, y, z): Bar(z, x)
+//│ ║  l.87: 	class Foo(x, y, z): Bar(z, x)
 //│ ╙──      	                       ^^^^^^
 //│ Parsed: {class Foo(x, y, z,): <error>[] {}}
 

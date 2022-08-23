@@ -22,7 +22,7 @@ if f (
   0 then "ok"
   1 then "ko"
 )
-//│ |#if| |f| |(BEG:|→|0| |#then| |"ok"|↵|1| |#then| |"ko"|←|↵|:END)|
+//│ |#if| |f| |(|→|0| |#then| |"ok"|↵|1| |#then| |"ko"|←|↵|)|
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
 //│ ║  l.22: 	  0 then "ok"
 //│ ╙──      	    ^^^^

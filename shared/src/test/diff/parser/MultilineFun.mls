@@ -4,22 +4,22 @@
 fun f(
   x
 ) = x
-//│ |#fun| |f|(BEG:|→|x|←|↵|:END)| |#=| |x|
+//│ |#fun| |f|(|→|x|←|↵|)| |#=| |x|
 //│ Parsed: {fun f = x, => x}
 
 fun f(x
 ) = x
-//│ |#fun| |f|(BEG:|x|↵|:END)| |#=| |x|
+//│ |#fun| |f|(|x|↵|)| |#=| |x|
 //│ Parsed: {fun f = x, => x}
 
 fun f(
   x) = x
-//│ |#fun| |f|(BEG:|→|x|←|:END)| |#=| |x|
+//│ |#fun| |f|(|→|x|←|)| |#=| |x|
 //│ Parsed: {fun f = x, => x}
 
 fun f(
 x) = x
-//│ |#fun| |f|(BEG:|↵|x|:END)| |#=| |x|
+//│ |#fun| |f|(|↵|x|)| |#=| |x|
 //│ ╔══[PARSE ERROR] Unexpected identifier here
 //│ ║  l.21: 	x) = x
 //│ ╙──      	^
@@ -27,19 +27,19 @@ x) = x
 
 fun f(x,
   y) = x + y
-//│ |#fun| |f|(BEG:|x|,|→|y|←|:END)| |#=| |x| |+| |y|
+//│ |#fun| |f|(|x|,|→|y|←|)| |#=| |x| |+| |y|
 //│ Parsed: {fun f = x, {y}, => + x y}
 
 fun f(
   x,
   y) = x + y
-//│ |#fun| |f|(BEG:|→|x|,|↵|y|←|:END)| |#=| |x| |+| |y|
+//│ |#fun| |f|(|→|x|,|↵|y|←|)| |#=| |x| |+| |y|
 //│ Parsed: {fun f = x, y, => + x y}
 
 fun f(
   x,
   y
 ) = x + y
-//│ |#fun| |f|(BEG:|→|x|,|↵|y|←|↵|:END)| |#=| |x| |+| |y|
+//│ |#fun| |f|(|→|x|,|↵|y|←|↵|)| |#=| |x| |+| |y|
 //│ Parsed: {fun f = x, y, => + x y}
 

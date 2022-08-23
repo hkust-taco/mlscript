@@ -12,20 +12,20 @@ f 1
 //│ Parsed: {f (1,)}
 
 ()
-//│ |(BEG:||:END)|
+//│ |(||)|
 //│ Parsed: {'('  ')'}
 
 // FIXME `(undefined,)`
 f()
-//│ |f|(BEG:||:END)|
+//│ |f|(||)|
 //│ Parsed: {f ()}
 
 f(1)
-//│ |f|(BEG:|1|:END)|
+//│ |f|(|1|)|
 //│ Parsed: {f (1,)}
 
 f (1)
-//│ |f| |(BEG:|1|:END)|
+//│ |f| |(|1|)|
 //│ Parsed: {f (1,)}
 
 f of 1
@@ -44,7 +44,7 @@ f 1 + 1
 //│ Parsed: {f (+ 1 1,)}
 
 f(1 + 1)
-//│ |f|(BEG:|1| |+| |1|:END)|
+//│ |f|(|1| |+| |1|)|
 //│ Parsed: {f (+ 1 1,)}
 
 f of 1 + 1
@@ -52,7 +52,7 @@ f of 1 + 1
 //│ Parsed: {f (+ 1 1,)}
 
 f(1) + 1
-//│ |f|(BEG:|1|:END)| |+| |1|
+//│ |f|(|1|)| |+| |1|
 //│ Parsed: {+ (f (1,)) 1}
 
 1 2 3
@@ -175,7 +175,7 @@ foo
 
 foo
   of (1, 2, 3)
-//│ |foo|→|#of| |(BEG:|1|,| |2|,| |3|:END)|←|
+//│ |foo|→|#of| |(|1|,| |2|,| |3|)|←|
 //│ Parsed: {foo ('(' 1, 2, 3, ')',)}
 
 foo
@@ -229,7 +229,7 @@ foo
 //│ Parsed: {{1}}
 
 (1)
-//│ |(BEG:|1|:END)|
+//│ |(|1|)|
 //│ Parsed: {'(' 1, ')'}
 
 (1
@@ -243,7 +243,7 @@ foo
 //│ ╔══[PARSE ERROR] Unexpected closing parenthesis
 //│ ║  l.242: 	(1))
 //│ ╙──       	   ^
-//│ |(BEG:|1|:END)|
+//│ |(|1|)|
 //│ Parsed: {'(' 1, ')'}
 
 (
@@ -286,11 +286,11 @@ f 1
 //│ Parsed: {f (1,)}
 
 f(1)
-//│ |f|(BEG:|1|:END)|
+//│ |f|(|1|)|
 //│ Parsed: {f (1,)}
 
 f (1)
-//│ |f| |(BEG:|1|:END)|
+//│ |f| |(|1|)|
 //│ Parsed: {f (1,)}
 
 
@@ -302,50 +302,50 @@ f 1, 2, 3
 //│ Parsed: {f (1, 2, 3,)}
 
 f (1, 2, 3)
-//│ |f| |(BEG:|1|,| |2|,| |3|:END)|
+//│ |f| |(|1|,| |2|,| |3|)|
 //│ Parsed: {f (1, 2, 3,)}
 
 f(1, 2, 3)
-//│ |f|(BEG:|1|,| |2|,| |3|:END)|
+//│ |f|(|1|,| |2|,| |3|)|
 //│ Parsed: {f (1, 2, 3,)}
 
 f[]
-//│ |f|[BEG:||:END]|
+//│ |f|[||]|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.312: 	f[]
 //│ ╙──       	^^^
 //│ Parsed: {f ('('  ')',)}
 
 f[1]
-//│ |f|[BEG:|1|:END]|
+//│ |f|[|1|]|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.319: 	f[1]
 //│ ╙──       	^^^^
 //│ Parsed: {f ('(' 1, ')',)}
 
 f[1, 2, 3]
-//│ |f|[BEG:|1|,| |2|,| |3|:END]|
+//│ |f|[|1|,| |2|,| |3|]|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.326: 	f[1, 2, 3]
 //│ ╙──       	^^^^^^^^^^
 //│ Parsed: {f ('(' 1, 2, 3, ')',)}
 
 f{}
-//│ |f|{BEG:||:END}|
+//│ |f|{||}|
 //│ ╔══[PARSE ERROR] Expected end of input; found curly brace section instead
 //│ ║  l.333: 	f{}
 //│ ╙──       	 ^^
 //│ Parsed: {f}
 
 f{1}
-//│ |f|{BEG:|1|:END}|
+//│ |f|{|1|}|
 //│ ╔══[PARSE ERROR] Expected end of input; found curly brace section instead
 //│ ║  l.340: 	f{1}
 //│ ╙──       	 ^^^
 //│ Parsed: {f}
 
 f{1, 2, 3}
-//│ |f|{BEG:|1|,| |2|,| |3|:END}|
+//│ |f|{|1|,| |2|,| |3|}|
 //│ ╔══[PARSE ERROR] Expected end of input; found curly brace section instead
 //│ ║  l.347: 	f{1, 2, 3}
 //│ ╙──       	 ^^^^^^^^^
@@ -454,11 +454,11 @@ f x: 1, y: g 2, z: 3
 //│ Parsed: {f (x: 1, y: g (2, z: 3,),)}
 
 f(x: 1, y: g(2, z: 3))
-//│ |f|(BEG:|x|#:| |1|,| |y|#:| |g|(BEG:|2|,| |z|#:| |3|:END)|:END)|
+//│ |f|(|x|#:| |1|,| |y|#:| |g|(|2|,| |z|#:| |3|)|)|
 //│ Parsed: {f (x: 1, y: g (2, z: 3,),)}
 
 f(x: 1, y: g(2), z: 3)
-//│ |f|(BEG:|x|#:| |1|,| |y|#:| |g|(BEG:|2|:END)|,| |z|#:| |3|:END)|
+//│ |f|(|x|#:| |1|,| |y|#:| |g|(|2|)|,| |z|#:| |3|)|
 //│ Parsed: {f (x: 1, y: g (2,), z: 3,)}
 
 f  x: 1,  y:  g  2, z: 3

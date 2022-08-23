@@ -10,7 +10,7 @@ new
 
 :pe
 (new)
-//│ |(BEG:|#new|:END)|
+//│ |(|#new|)|
 //│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
 //│ ║  l.12: 	(new)
 //│ ╙──      	    ^
@@ -18,7 +18,7 @@ new
 
 :pe
 new {}
-//│ |#new| |{BEG:||:END}|
+//│ |#new| |{||}|
 //│ ╔══[PARSE ERROR] Unexpected record after `new` keyword
 //│ ║  l.20: 	new {}
 //│ ╙──      	    ^^
@@ -29,11 +29,11 @@ new A
 //│ Parsed: {new A() {}}
 
 new A()
-//│ |#new| |A|(BEG:||:END)|
+//│ |#new| |A|(||)|
 //│ Parsed: {new A() {}}
 
 new A(1, 2, 3)
-//│ |#new| |A|(BEG:|1|,| |2|,| |3|:END)|
+//│ |#new| |A|(|1|,| |2|,| |3|)|
 //│ Parsed: {new A(1, 2, 3,) {}}
 
 new A of 1, 2, 3
@@ -41,19 +41,19 @@ new A of 1, 2, 3
 //│ Parsed: {new A(1, 2, 3,) {}}
 
 new A { fun x = 1 }
-//│ |#new| |A| |{BEG:| |#fun| |x| |#=| |1| |:END}|
+//│ |#new| |A| |{| |#fun| |x| |#=| |1| |}|
 //│ Parsed: {new A() {fun x = 1}}
 
 new A() { fun x = 1 }
-//│ |#new| |A|(BEG:||:END)| |{BEG:| |#fun| |x| |#=| |1| |:END}|
+//│ |#new| |A|(||)| |{| |#fun| |x| |#=| |1| |}|
 //│ Parsed: {new A() {fun x = 1}}
 
 new A(1, 2, 3) { fun x = 1 }
-//│ |#new| |A|(BEG:|1|,| |2|,| |3|:END)| |{BEG:| |#fun| |x| |#=| |1| |:END}|
+//│ |#new| |A|(|1|,| |2|,| |3|)| |{| |#fun| |x| |#=| |1| |}|
 //│ Parsed: {new A(1, 2, 3,) {fun x = 1}}
 
 new A of 1, 2, 3 { fun x = 1 }
-//│ |#new| |A| |#of| |1|,| |2|,| |3| |{BEG:| |#fun| |x| |#=| |1| |:END}|
+//│ |#new| |A| |#of| |1|,| |2|,| |3| |{| |#fun| |x| |#=| |1| |}|
 //│ Parsed: {new A(1, 2, 3,) {fun x = 1}}
 
 
@@ -70,7 +70,7 @@ new new
 
 :pe
 new new {}
-//│ |#new| |#new| |{BEG:||:END}|
+//│ |#new| |#new| |{||}|
 //│ ╔══[PARSE ERROR] Unexpected record after `new` keyword
 //│ ║  l.72: 	new new {}
 //│ ╙──      	        ^^
@@ -81,7 +81,7 @@ new new {}
 
 :pe
 new {new}
-//│ |#new| |{BEG:|#new|:END}|
+//│ |#new| |{|#new|}|
 //│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
 //│ ║  l.83: 	new {new}
 //│ ╙──      	        ^
