@@ -237,6 +237,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         TupleType(fields.mapValues(f =>
             FieldType(f.in.map(rec), rec(f.out))(tp(f.toLoc, "tuple field"))
           ))(tyTp(ty.toLoc, "tuple type"))
+      case Splice(fields) => 
+        SpliceType(fields.map{ 
+          case L(l) => {
+            val t = rec(l)
+            val res = ArrayType(freshVar(t.prov).toUpper(t.prov))(t.prov)
+            constrain(t, res)(raise, t.prov, ctx)
+            L(t)
+          }
+          case R(f) => {
+            R(FieldType(f.in.map(rec), rec(f.out))(tp(f.toLoc, "splice field")))
+          }
+          })(tyTp(ty.toLoc, "splice type"))
       case Inter(lhs, rhs) => (if (simplify) rec(lhs) & (rec(rhs), _: TypeProvenance)
           else ComposedType(false, rec(lhs), rec(rhs)) _
         )(tyTp(ty.toLoc, "intersection type"))
@@ -564,6 +576,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case Assign(lhs, rhs) =>
         err(msg"Illegal assignment" -> prov.loco
           :: msg"cannot assign to ${lhs.describe}" -> lhs.toLoc :: Nil)
+      case Splc(es) => 
+        SpliceType(es.map{
+          case L(l) => L({
+            val t_l = typeTerm(l)
+            val t_a = ArrayType(freshVar(prov).toUpper(prov))(prov)
+            con(t_l, t_a, t_l)
+          }) 
+          case R(Fld(mt, sp, r)) => {
+            val t = typeTerm(r)
+            if (mt) { R(FieldType(Some(t), t)(t.prov)) } else {R(t.toUpper(t.prov))}
+          }
+        })(prov)
       case Bra(false, trm: Blk) => typeTerm(trm)
       case Bra(rcd, trm @ (_: Tup | _: Blk)) if funkyTuples => typeTerms(trm :: Nil, rcd, Nil)
       case Bra(_, trm) => typeTerm(trm)
@@ -850,6 +874,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         case ArrayType(f) =>
           val f2 = field(f)
           AppliedType(TypeName("MutArray"), Bounds(f2.in.getOrElse(Bot), f2.out) :: Nil)
+        case SpliceType(elems) => Splice(elems.map { 
+              case L(l) => L(go(l)) 
+              case R(v) => R(Field(v.lb.map(go(_)), go(v.ub))) })
         case NegType(t) => Neg(go(t))
         case ExtrType(true) => Bot
         case ExtrType(false) => Top
