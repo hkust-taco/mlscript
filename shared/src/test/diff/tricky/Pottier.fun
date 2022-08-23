@@ -38,9 +38,11 @@ let f = x => y => if true then { l: x; r: y } else { l: y; r: x } // 2-crown
 // Inspired by [Pottier 98, chap 13.5]
 
 let rec f = x => y => if true then x else { t: f x.t y.t }
-//│ f: 'a -> 'b -> 'a
+//│ f: 'a -> 'b -> 'c
 //│   where
 //│     'b <: {t: 'b}
-//│     'a := {t: 'a}
+//│     'a <: {t: 'a} & 'c
+//│     'c :> {t: 'c}
+
 
 

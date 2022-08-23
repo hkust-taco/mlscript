@@ -1,12 +1,11 @@
 :AllowParseErrors
-:AllowTypeErrors // TODO rm
 
 
 fun f(
   x
 ) = x
 //│ |#fun| |f|(|→|x|←|↵|)| |#=| |x|
-//│ Parsed: {fun f = {x}, => x}
+//│ Parsed: {fun f = x, => x}
 
 fun f(x
 ) = x
@@ -15,69 +14,32 @@ fun f(x
 
 fun f(
   x) = x
-//│ |#fun| |f|(|→|x|)| |#=| |x|
-//│ Parsed: {fun f = {x}, => x}
+//│ |#fun| |f|(|→|x|←|)| |#=| |x|
+//│ Parsed: {fun f = x, => x}
 
 fun f(
 x) = x
 //│ |#fun| |f|(|↵|x|)| |#=| |x|
-//│ ╔══[ERROR] Expected closing parenthesis; found identifier instead
-//│ ║  l.22: 	x) = x
+//│ ╔══[PARSE ERROR] Unexpected identifier here
+//│ ║  l.21: 	x) = x
 //│ ╙──      	^
-//│ ╔══[ERROR] Expected function parameter list; found closing parenthesis instead
-//│ ║  l.22: 	x) = x
-//│ ╙──      	 ^
 //│ Parsed: {fun f =  => x}
 
 fun f(x,
   y) = x + y
-//│ |#fun| |f|(|x|,|→|y|)| |#=| |x| |+| |y|
+//│ |#fun| |f|(|x|,|→|y|←|)| |#=| |x| |+| |y|
 //│ Parsed: {fun f = x, {y}, => + x y}
 
 fun f(
   x,
   y) = x + y
-//│ |#fun| |f|(|→|x|,|↵|y|)| |#=| |x| |+| |y|
-//│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.38: 	  x,
-//│ ║        	   ^
-//│ ╟── Note: indented block starts here:
-//│ ║  l.38: 	  x,
-//│ ╙──      	^^
-//│ ╔══[ERROR] Expected closing parenthesis; found identifier instead
-//│ ║  l.39: 	  y) = x + y
-//│ ╙──      	  ^
-//│ ╔══[ERROR] Expected function parameter list; found closing parenthesis instead
-//│ ║  l.39: 	  y) = x + y
-//│ ╙──      	   ^
-//│ Parsed: {fun f = {x}, => + x y}
+//│ |#fun| |f|(|→|x|,|↵|y|←|)| |#=| |x| |+| |y|
+//│ Parsed: {fun f = x, y, => + x y}
 
 fun f(
   x,
   y
 ) = x + y
 //│ |#fun| |f|(|→|x|,|↵|y|←|↵|)| |#=| |x| |+| |y|
-//│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.56: 	  x,
-//│ ║        	   ^
-//│ ╟── Note: indented block starts here:
-//│ ║  l.56: 	  x,
-//│ ╙──      	^^
-//│ ╔══[ERROR] Expected closing parenthesis; found identifier instead
-//│ ║  l.57: 	  y
-//│ ╙──      	  ^
-//│ ╔══[ERROR] Expected function parameter list; found deindentation instead
-//│ ║  l.57: 	  y
-//│ ║        	   ^
-//│ ║  l.58: 	) = x + y
-//│ ╙──      	
-//│ ╔══[ERROR] Expected ':' or '=' followed by a function body or signature; found newline instead
-//│ ║  l.57: 	  y
-//│ ║        	   ^
-//│ ║  l.58: 	) = x + y
-//│ ╙──      	
-//│ ╔══[ERROR] Expected end of input; found closing parenthesis instead
-//│ ║  l.58: 	) = x + y
-//│ ╙──      	^
-//│ Parsed: {fun f = {x}, => undefined}
+//│ Parsed: {fun f = x, y, => + x y}
 

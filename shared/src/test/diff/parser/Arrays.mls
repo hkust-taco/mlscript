@@ -1,10 +1,9 @@
 :AllowParseErrors
-:AllowTypeErrors // TODO rm
 
 
 []
-//│ |[|]|
-//│ Parsed: {'(' undefined, ')'}
+//│ |[||]|
+//│ Parsed: {'('  ')'}
 
 [1]
 //│ |[|1|]|
@@ -12,15 +11,15 @@
 
 [1,]
 //│ |[|1|,|]|
-//│ Parsed: {'(' 1, undefined, ')'}
+//│ Parsed: {'(' 1, ')'}
 
 [1, 2, 3]
 //│ |[|1|,| |2|,| |3|]|
 //│ Parsed: {'(' 1, 2, 3, ')'}
 
 ()
-//│ |(|)|
-//│ Parsed: {'(' undefined, ')'}
+//│ |(||)|
+//│ Parsed: {'('  ')'}
 
 (1)
 //│ |(|1|)|
@@ -28,7 +27,7 @@
 
 (1,)
 //│ |(|1|,|)|
-//│ Parsed: {'(' 1, undefined, ')'}
+//│ Parsed: {'(' 1, ')'}
 
 (1, 2, 3)
 //│ |(|1|,| |2|,| |3|)|
@@ -41,15 +40,15 @@
 
 1,
 //│ |1|,|
-//│ ╔══[ERROR] Expected end of input; found comma instead
-//│ ║  l.42: 	1,
+//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
+//│ ║  l.41: 	1,
 //│ ╙──      	 ^
 //│ Parsed: {1}
 
 1, 2, 3
 //│ |1|,| |2|,| |3|
-//│ ╔══[ERROR] Expected end of input; found comma instead
-//│ ║  l.49: 	1, 2, 3
+//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
+//│ ║  l.48: 	1, 2, 3
 //│ ╙──      	 ^
 //│ Parsed: {1}
 
@@ -59,40 +58,20 @@ f of 1, 2, 3
 
 f of
   1, 2, 3
-//│ |f| |#of|→|1|,| |2|,| |3|
-//│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.61: 	  1, 2, 3
-//│ ║        	   ^
-//│ ╟── Note: indented block starts here:
-//│ ║  l.61: 	  1, 2, 3
-//│ ╙──      	^^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.60: 	f of
-//│ ║        	^^^^
-//│ ║  l.61: 	  1, 2, 3
-//│ ╙──      	^^^^^^^^^
-//│ Parsed: {f ({1},) (2, 3,)}
+//│ |f| |#of|→|1|,| |2|,| |3|←|
+//│ Parsed: {f (1, 2, 3,)}
 
 f of
   1,
   2,
   3
-//│ |f| |#of|→|1|,|↵|2|,|↵|3|
-//│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.77: 	  1,
-//│ ║        	   ^
-//│ ╟── Note: indented block starts here:
-//│ ║  l.77: 	  1,
-//│ ╙──      	^^
-//│ ╔══[ERROR] Expected end of input; found comma instead
-//│ ║  l.78: 	  2,
-//│ ╙──      	   ^
-//│ Parsed: {f ({1},); 2}
+//│ |f| |#of|→|1|,|↵|2|,|↵|3|←|
+//│ Parsed: {f (1, 2, 3,)}
 
 
 let arr = []
-//│ |#let| |arr| |#=| |[|]|
-//│ Parsed: {let arr = '(' undefined, ')' in undefined}
+//│ |#let| |arr| |#=| |[||]|
+//│ Parsed: {let arr = '('  ')' in undefined}
 
 let arr = [
 ]
@@ -103,64 +82,46 @@ let arr =
 [
 ]
 //│ |#let| |arr| |#=|↵|[|↵|]|
-//│ ╔══[ERROR] Unexpected newline in expression position
-//│ ║  l.102: 	let arr =
-//│ ║         	         ^
-//│ ║  l.103: 	[
-//│ ╙──       	
+//│ ╔══[PARSE ERROR] Unexpected newline in expression position
+//│ ║  l.81: 	let arr =
+//│ ║        	         ^
+//│ ║  l.82: 	[
+//│ ╙──      	
 //│ Parsed: {let arr = '('  ')' in undefined}
 
 let arr = [
   1
 ]
 //│ |#let| |arr| |#=| |[|→|1|←|↵|]|
-//│ Parsed: {let arr = '(' {1}, ')' in undefined}
+//│ Parsed: {let arr = '(' 1, ')' in undefined}
 
 let arr = [
   1, 2
 ]
 //│ |#let| |arr| |#=| |[|→|1|,| |2|←|↵|]|
-//│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.120: 	  1, 2
-//│ ║         	   ^
-//│ ╟── Note: indented block starts here:
-//│ ║  l.120: 	  1, 2
-//│ ╙──       	^^
-//│ ╔══[ERROR] Expected closing square bracket; found literal instead
-//│ ║  l.120: 	  1, 2
-//│ ║         	     ^
-//│ ╟── Note: unmatched square bracket was opened here:
-//│ ║  l.119: 	let arr = [
-//│ ╙──       	          ^
-//│ ╔══[ERROR] Expected end of input; found deindentation instead
-//│ ║  l.120: 	  1, 2
-//│ ║         	      ^
-//│ ║  l.121: 	]
-//│ ╙──       	
-//│ Parsed: {let arr = '(' {1}, ')' in undefined}
+//│ Parsed: {let arr = '(' 1, 2, ')' in undefined}
 
 let arr = [
   1,
   2
 ]
 //│ |#let| |arr| |#=| |[|→|1|,|↵|2|←|↵|]|
-//│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.143: 	  1,
-//│ ║         	   ^
-//│ ╟── Note: indented block starts here:
-//│ ║  l.143: 	  1,
-//│ ╙──       	^^
-//│ ╔══[ERROR] Expected closing square bracket; found literal instead
-//│ ║  l.144: 	  2
-//│ ║         	  ^
-//│ ╟── Note: unmatched square bracket was opened here:
-//│ ║  l.142: 	let arr = [
-//│ ╙──       	          ^
-//│ ╔══[ERROR] Expected end of input; found deindentation instead
-//│ ║  l.144: 	  2
-//│ ║         	   ^
-//│ ║  l.145: 	]
-//│ ╙──       	
-//│ Parsed: {let arr = '(' {1}, ')' in undefined}
+//│ Parsed: {let arr = '(' 1, 2, ')' in undefined}
+
+:pe
+f [1, 2, 3]
+//│ |f| |[|1|,| |2|,| |3|]|
+//│ ╔══[PARSE ERROR] Unexpected comma here
+//│ ║  l.112: 	f [1, 2, 3]
+//│ ╙──       	    ^
+//│ Parsed: {(f)[1]}
+
+f([1, 2, 3])
+//│ |f|(|[|1|,| |2|,| |3|]|)|
+//│ Parsed: {f ('(' 1, 2, 3, ')',)}
+
+f of [1, 2, 3]
+//│ |f| |#of| |[|1|,| |2|,| |3|]|
+//│ Parsed: {f ('(' 1, 2, 3, ')',)}
 
 

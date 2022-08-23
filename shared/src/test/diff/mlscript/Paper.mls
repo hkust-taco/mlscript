@@ -55,12 +55,12 @@ let arg = if true then SomeAnd{value = 42; payload = 23} else None{}
 
 
 // * Note: there was a typo in the original paper submission: we used `(m: ~0)` instead of `(m: ~0 & int)`
-def div n m = n / (m: ~0 & int)
-//│ div: int -> (int & ~0) -> int
+def div n m = n / (m: ~0 & number)
+//│ div: number -> (number & ~0) -> number
 //│    = [Function: div]
 
 f x = div x 2
-//│ f: int -> int
+//│ f: number -> number
 //│  = [Function: f]
 
 :e // `:e` is used to indicate this error is expected
@@ -75,16 +75,16 @@ g (x: int) = div 100 x
 //│ ║  l.67: 	g (x: int) = div 100 x
 //│ ║        	                     ^
 //│ ╟── Note: constraint arises from type negation:
-//│ ║  l.58: 	def div n m = n / (m: ~0 & int)
+//│ ║  l.58: 	def div n m = n / (m: ~0 & number)
 //│ ║        	                      ^^
 //│ ╟── from reference:
-//│ ║  l.58: 	def div n m = n / (m: ~0 & int)
+//│ ║  l.58: 	def div n m = n / (m: ~0 & number)
 //│ ╙──      	                   ^
-//│ g: int -> (error | int)
+//│ g: int -> (error | number)
 //│  = [Function: g]
 
 div_opt n m = case m of { 0 -> None{} | _ -> Some{value = div n m} }
-//│ div_opt: int -> (0 | int & ~0) -> (None | Some[int])
+//│ div_opt: number -> (0 | number & ~0) -> (None | Some[number])
 //│        = [Function: div_opt]
 
 

@@ -35,7 +35,7 @@ class Lock[T]: { pins: T }
   method Map f = Lock { pins = f this.pins }
 def Lock pins = Lock { pins = pins }
 class Bank: { lock: Lock[int]; cash: int }
-  method Potential: int
+  method Potential: number
   method Potential = this.cash / this.lock.pins
   method Better: Bank -> bool
   method Better other = this.Potential > other.Potential
@@ -45,9 +45,9 @@ let lockA = Lock 20 in let lockB = Lock 30 in (Bank lockA 2000).Better(Bank lock
 //│ Declared Lock.Map: Lock['T] -> ('T -> 'a) -> Lock['a]
 //│ Defined Lock.Map: Lock['T] -> ('T -> 'pins) -> Lock['pins]
 //│ Defined class Bank
-//│ Declared Bank.Potential: Bank -> int
+//│ Declared Bank.Potential: Bank -> number
 //│ Declared Bank.Better: Bank -> Bank -> bool
-//│ Defined Bank.Potential: Bank -> int
+//│ Defined Bank.Potential: Bank -> number
 //│ Defined Bank.Better: Bank -> Bank -> bool
 //│ Lock: 'pins -> Lock['pins]
 //│ Bank: (Lock[int] & 'lock) -> (int & 'cash) -> (Bank with {cash: 'cash, lock: 'lock})
@@ -62,7 +62,7 @@ let lockA = Lock 20 in let lockB = Lock 30 in (Bank lockA 2000).Better(Bank lock
 //│     lock: Lock<int>
 //│     cash: int
 //│     constructor(fields: {lock: Lock<int>, cash: int})
-//│     readonly Potential: int
+//│     readonly Potential: number
 //│     Better(arg: Bank): bool
 //│ }
 //│ export declare const Lock<pins>: (arg: pins) => Lock<pins>

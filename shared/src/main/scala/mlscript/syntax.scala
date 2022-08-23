@@ -66,12 +66,14 @@ final case class With(trm: Term, fields: Rcd)                        extends Ter
 final case class CaseOf(trm: Term, cases: CaseBranches)              extends Term
 final case class Subs(arr: Term, idx: Term)                          extends Term
 final case class Assign(lhs: Term, rhs: Term)                        extends Term
+final case class Splc(fields: Ls[Either[Term, Fld]])                 extends Term
 final case class New(head: Opt[(NamedType, Term)], body: TypingUnit) extends Term // `new C(...)` or `new C(){...}` or `new{...}`
 final case class Block(unit: TypingUnit)                             extends Term
 final case class If(body: IfBody, els: Opt[Term])                    extends Term
+final case class TyApp(lhs: Term, targs: Ls[Type])                   extends Term
 
 sealed abstract class IfBody extends IfBodyImpl
-final case class IfTerm(expr: Term) extends IfBody // rm?
+// final case class IfTerm(expr: Term) extends IfBody // rm?
 final case class IfThen(expr: Term, rhs: Term) extends IfBody
 final case class IfElse(expr: Term) extends IfBody
 final case class IfLet(isRec: Bool, name: Var, rhs: Term, body: IfBody) extends IfBody
@@ -123,6 +125,7 @@ final case class Neg(base: Type)                         extends Type
 final case class Rem(base: Type, names: Ls[Var])         extends Type
 final case class Bounds(lb: Type, ub: Type)              extends Type
 final case class WithExtension(base: Type, rcd: Record)  extends Type
+final case class Splice(fields: Ls[Either[Type, Field]]) extends Type
 final case class Constrained(base: Type, where: Ls[TypeVar -> Bounds]) extends Type
 
 final case class Field(in: Opt[Type], out: Type)         extends FieldImpl
@@ -158,15 +161,15 @@ final case class NuTypeDef(
   nme: TypeName,
   tparams: Ls[TypeName],
   params: Tup, // the specialized parameters for that type
-  parents: Ls[NamedType],
+  parents: Ls[Term],
   body: TypingUnit
-) extends NuDecl
+) extends NuDecl with DesugaredStatement
 
 final case class NuFunDef(
   nme: Var,
   targs: Ls[TypeName],
   rhs: Term \/ PolyType,
-) extends NuDecl {
+) extends NuDecl with DesugaredStatement {
   val body: Located = rhs.fold(identity, identity)
 }
 

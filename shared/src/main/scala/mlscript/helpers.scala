@@ -62,6 +62,8 @@ abstract class TypeImpl extends Located { self: Type =>
         }
         else s"${nt._2.mutStr}${nme}: ${showField(nt._2, ctx)}"
       }.mkString("{", ", ", "}")
+    case Splice(fs) =>
+      fs.map{case L(l) => s"...${l.showIn(ctx, 0)}" case R(r) => s"${showField(r, ctx)}"}.mkString("(", ", ", ")")
     case Tuple(fs) =>
       fs.map(nt => s"${nt._2.mutStr}${nt._1.fold("")(_.name + ": ")}${showField(nt._2, ctx)},").mkString("(", " ", ")")
     case Union(TypeName("true"), TypeName("false")) | Union(TypeName("false"), TypeName("true")) =>
@@ -119,6 +121,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case AppliedType(n, ts) => ts
     case Rem(b, _) => b :: Nil
     case WithExtension(b, r) => b :: r :: Nil
+    case Splice(fs) => fs.flatMap{ case L(l) => l :: Nil case R(r) => r.in.toList ++ (r.out :: Nil) }
     case Constrained(b, ws) => b :: ws.flatMap(c => c._1 :: c._2 :: Nil)
   }
 
@@ -131,7 +134,8 @@ abstract class TypeImpl extends Located { self: Type =>
     case Inter(ty1, ty2) => ty1.collectFields ++ ty2.collectFields
     case _: Union | _: Function | _: Tuple | _: Recursive
         | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
-        | _: Literal | _: TypeVar | _: AppliedType | _: TypeName | _: Constrained =>
+        | _: Literal | _: TypeVar | _: AppliedType | _: TypeName 
+        | _: Constrained | _ : Splice =>
       Nil
   }
 
@@ -145,7 +149,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case Inter(lhs, rhs) => lhs.collectTypeNames ++ rhs.collectTypeNames
     case _: Union | _: Function | _: Record | _: Tuple | _: Recursive
         | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
-        | _: Literal | _: TypeVar | _: Constrained =>
+        | _: Literal | _: TypeVar | _: Constrained | _ : Splice =>
       Nil
   }
 
@@ -158,7 +162,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case Inter(ty1, ty2) => ty1.collectBodyFieldsAndTypes ++ ty2.collectBodyFieldsAndTypes
     case _: Union | _: Function | _: Tuple | _: Recursive
         | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
-        | _: Literal | _: TypeVar | _: AppliedType | _: TypeName | _: Constrained =>
+        | _: Literal | _: TypeVar | _: AppliedType | _: TypeName | _: Constrained | _ : Splice =>
       Nil
   }
 }
@@ -246,6 +250,7 @@ trait PgrmImpl { self: Pgrm =>
     }.partitionMap {
       case td: TypeDef => L(td)
       case ot: Terms => R(ot)
+      case _: NuFunDef | _: NuTypeDef => ???
     }
     diags.toList -> res
   }
@@ -300,7 +305,7 @@ trait NuDeclImpl extends Located { self: NuDecl =>
     case NuTypeDef(k, n, tps, sps, parents, bod) =>
       s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_.name).mkString("[", ", ", "]")}(${
         // sps.mkString("(",",",")")
-        sps})${if (parents.isEmpty) "" else ": "}${parents.map(_.show).mkString(", ")}"
+        sps})${if (parents.isEmpty) "" else ": "}${parents.mkString(", ")}"
   }
 }
 trait TypingUnitImpl extends Located { self: TypingUnit =>
@@ -378,8 +383,10 @@ trait TermImpl extends StatementImpl { self: Term =>
     case CaseOf(scrut, cases) =>  "`case` expression" 
     case Subs(arr, idx) => "array access"
     case Assign(lhs, rhs) => "assignment"
+    case Splc(fs) => "splice"
     case New(h, b) => "object instantiation"
     case If(_, _) => "if-else block"
+    case TyApp(_, _) => "type application"
   }
   
   override def toString: Str = print(false)
@@ -401,7 +408,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Rcd(fields) =>
       fields.iterator.map(nv =>
         (if (nv._2.mut) "mut " else "") + nv._1.name + ": " + nv._2.value).mkString("{", ", ", "}")
-    case Sel(receiver, fieldName) => receiver.toString + "." + fieldName
+    case Sel(receiver, fieldName) => "(" + receiver.toString + ")." + fieldName
     case Let(isRec, name, rhs, body) =>
       s"let${if (isRec) " rec" else ""} $name = $rhs in $body" |> bra
     case Tup(xs) =>
@@ -409,25 +416,31 @@ trait TermImpl extends StatementImpl { self: Term =>
         (if (t.mut) "mut " else "") + (if (t.spec) "#" else "") + n.fold("")(_.name + ": ") + t.value + ","
       // }.mkString("(", " ", ")")
       }.mkString(" ") |> bra
+    case Splc(fields) => fields.map{
+      case L(l) => s"...$l"
+      case R(Fld(m, s, r)) => (if (m) "mut " else "") + (if (s) "#" else "") + r
+    }.mkString("(", ", ", ")")
     case Bind(l, r) => s"$l as $r" |> bra
     case Test(l, r) => s"$l is $r" |> bra
     case With(t, fs) =>  s"$t with $fs" |> bra
     case CaseOf(s, c) => s"case $s of $c" |> bra
-    case Subs(a, i) => s"$a[$i]"
+    case Subs(a, i) => s"($a)[$i]"
     case Assign(lhs, rhs) => s" $lhs <- $rhs" |> bra
     case New(S((at, ar)), bod) => s"new ${at.show}($ar) ${bod.show}" |> bra
     case New(N, bod) => s"new ${bod.show}" |> bra
     case If(body, els) => s"if $body" + els.fold("")(" else " + _) |> bra
+    case TyApp(lhs, targs) => s"$lhs‹${targs.map(_.show).mkString(", ")}›"
   }}
   
   def toType: Diagnostic \/ Type =
-    try R(toType_!) catch {
+    try R(toType_!.withLocOf(this)) catch {
       case e: NotAType =>
         import Message._
-        L(CompilationError(msg"not a recognized type: ${e.trm.toString}"->e.trm.toLoc::Nil)) }
+        L(ErrorReport(msg"not a recognized type: ${e.trm.toString}"->e.trm.toLoc::Nil)) }
   protected def toType_! : Type = (this match {
     case Var(name) if name.startsWith("`") => TypeVar(R(name.tail), N)
     case Var(name) => TypeName(name)
+    case lit: Lit => Literal(lit)
     case App(App(Var("|"), lhs), rhs) => Union(lhs.toType_!, rhs.toType_!)
     case App(App(Var("&"), lhs), rhs) => Inter(lhs.toType_!, rhs.toType_!)
     case App(App(Var("=>"), lhs), rhs) => Function(lhs.toType_!, rhs.toType_!)
@@ -557,21 +570,20 @@ trait StatementImpl extends Located { self: Statement =>
         case v @ Var(nme) => R(TypeName(nme).withLocOf(v))
         case t =>
           import Message._
-          L(CompilationError(msg"illegal datatype type parameter shape: ${t.toString}" -> t.toLoc :: Nil))
+          L(ErrorReport(msg"illegal datatype type parameter shape: ${t.toString}" -> t.toLoc :: Nil))
       }
       val (diags2, cs) = desugarCases(bod, targs)
       val dataDefs = cs.collect{case td: TypeDef => td}
       (diags ::: diags2 ::: diags3) -> (TypeDef(Als, TypeName(v.name).withLocOf(v), targs,
           dataDefs.map(td => AppliedType(td.nme, td.tparams)).reduceOption(Union).getOrElse(Bot)
         ).withLocOf(hd) :: cs)
-    case t: Term => Nil -> (t :: Nil)
-    case d: Decl => Nil -> (d :: Nil)
+    case d: DesugaredStatement => Nil -> (d :: Nil)
   }
   import Message._
   protected def desugDefnPattern(pat: Term, args: Ls[Term]): (Ls[Diagnostic], Var, Ls[Term]) = pat match {
     case App(l, r) => desugDefnPattern(l, r :: args)
     case v: Var => (Nil, v, args)
-    case _ => (CompilationError(msg"Unsupported pattern shape" -> pat.toLoc :: Nil) :: Nil, Var("<error>"), args) // TODO
+    case _ => (ErrorReport(msg"Unsupported pattern shape" -> pat.toLoc :: Nil) :: Nil, Var("<error>"), args) // TODO
   }
   protected def desugarCases(bod: Term, baseTargs: Ls[TypeName]): (Ls[Diagnostic], Ls[Decl]) = bod match {
     case Blk(stmts) => desugarCases(stmts, baseTargs)
@@ -581,7 +593,7 @@ trait StatementImpl extends Located { self: Statement =>
         case S(n) -> Fld(_, _, d) => ???
       }
       desugarCases(stmts, baseTargs)
-    case _ => (CompilationError(msg"Unsupported data type case shape" -> bod.toLoc :: Nil) :: Nil, Nil)
+    case _ => (ErrorReport(msg"Unsupported data type case shape" -> bod.toLoc :: Nil) :: Nil, Nil)
   }
   protected def desugarCases(stmts: Ls[Statement], baseTargs: Ls[TypeName]): (Ls[Diagnostic], Ls[Decl]) = stmts match {
     case stmt :: stmts =>
@@ -668,8 +680,12 @@ trait StatementImpl extends Located { self: Statement =>
     case TypeDef(kind, nme, tparams, body, _, _) => nme :: tparams ::: body :: Nil
     case Subs(a, i) => a :: i :: Nil
     case Assign(lhs, rhs) => lhs :: rhs :: Nil
+    case Splc(fields) => fields.map{case L(l) => l case R(r) => r.value}
     case If(body, els) => body :: els.toList
     case d @ NuFunDef(v, ts, rhs) => v :: ts ::: d.body :: Nil
+    case TyApp(lhs, targs) => lhs :: targs
+    case New(base, bod) => base.toList.flatMap(ab => ab._1 :: ab._2 :: Nil) ::: bod :: Nil
+    case NuTypeDef(_, _, _, _, _, _) => ???
   }
   
   

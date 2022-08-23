@@ -1,37 +1,48 @@
 :AllowParseErrors
-:AllowTypeErrors // TODO rm
 
 
 f (
   0
 )
 //│ |f| |(|→|0|←|↵|)|
-//│ Parsed: {f ({0},)}
+//│ Parsed: {f (0,)}
 
-// TODO
 f (
   0,
   1
 )
 //│ |f| |(|→|0|,|↵|1|←|↵|)|
-//│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.13: 	  0,
-//│ ║        	   ^
-//│ ╟── Note: indented block starts here:
-//│ ║  l.13: 	  0,
-//│ ╙──      	^^
-//│ ╔══[ERROR] Expected closing parenthesis; found literal instead
-//│ ║  l.14: 	  1
-//│ ║        	  ^
-//│ ╟── Note: unmatched application parenthesis was opened here:
-//│ ║  l.12: 	f (
+//│ Parsed: {f (0, 1,)}
+
+f (
+  0,
+  1,
+)
+//│ |f| |(|→|0|,|↵|1|,|←|↵|)|
+//│ Parsed: {f (0, 1,)}
+
+f (0, 1)
+//│ |f| |(|0|,| |1|)|
+//│ Parsed: {f (0, 1,)}
+
+f (0, 1,)
+//│ |f| |(|0|,| |1|,|)|
+//│ Parsed: {f (0, 1,)}
+
+f (0, 1,
+)
+//│ |f| |(|0|,| |1|,|↵|)|
+//│ Parsed: {f (0, 1,)}
+
+f(,)
+//│ |f|(|,|)|
+//│ ╔══[PARSE ERROR] Unexpected comma in expression position
+//│ ║  l.37: 	f(,)
 //│ ╙──      	  ^
-//│ ╔══[ERROR] Expected end of input; found deindentation instead
-//│ ║  l.14: 	  1
-//│ ║        	   ^
-//│ ║  l.15: 	)
-//│ ╙──      	
-//│ Parsed: {f ({0},)}
+//│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
+//│ ║  l.37: 	f(,)
+//│ ╙──      	   ^
+//│ Parsed: {f (undefined,)}
 
 f (
   0
@@ -43,46 +54,57 @@ f (
 f of
   0,
   1
-//│ |f| |#of|→|0|,|↵|1|
-//│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.44: 	  0,
-//│ ║        	   ^
-//│ ╟── Note: indented block starts here:
-//│ ║  l.44: 	  0,
-//│ ╙──      	^^
-//│ Parsed: {f ({0},); 1}
+//│ |f| |#of|→|0|,|↵|1|←|
+//│ Parsed: {f (0, 1,)}
 
 f of
   0
   1
-//│ |f| |#of|→|0|↵|1|
+//│ |f| |#of|→|0|↵|1|←|
 //│ Parsed: {f ({0; 1},)}
 
 // :pe
 f
 of  0
 //│ |f|↵|#of| |0|
-//│ ╔══[ERROR] Unexpected 'of' keyword in expression position
-//│ ║  l.63: 	of  0
+//│ ╔══[PARSE ERROR] Unexpected 'of' keyword in expression position
+//│ ║  l.68: 	of  0
 //│ ╙──      	^^
 //│ Parsed: {f; 0}
 
 f
   (0)
-//│ |f|→|(|0|)|
-//│ Parsed: {f {'(' 0, ')'}}
+//│ |f|→|(|0|)|←|
+//│ Parsed: {f (0,)}
 
+// TODO
 f
   of 0
   of 1
-//│ |f|→|#of| |0|↵|#of| |1|
+//│ |f|→|#of| |0|↵|#of| |1|←|
 //│ Parsed: {f (0,) (1,)}
 
 f
   (0)
   (1)
-//│ |f|→|(|0|)|↵|(|1|)|
-//│ Parsed: {f {'(' 0, ')'; '(' 1, ')'}}
+//│ |f|→|(|0|)|↵|(|1|)|←|
+//│ Parsed: {f (0,) (1,)}
 
+f
+  of
+    0,
+    1
+//│ |f|→|#of|→|0|,|↵|1|←|←|
+//│ Parsed: {f (0, 1,)}
+
+2 + 2
+  (0)
+//│ |2| |+| |2|→|(|0|)|←|
+//│ Parsed: {+ 2 2 (0,)}
+
+2 + 2
+  of 0
+//│ |2| |+| |2|→|#of| |0|←|
+//│ Parsed: {+ 2 2 (0,)}
 
 

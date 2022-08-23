@@ -141,7 +141,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
       case Without(base, ns) => fieldsOf(base, paramTags).filter(ns contains _._1)
       case TypeBounds(lb, ub) => fieldsOf(ub, paramTags)
       case _: ObjectTag | _: FunctionType | _: ArrayBase | _: TypeVariable
-        | _: NegType | _: ExtrType | _: ComposedType => Map.empty
+        | _: NegType | _: ExtrType | _: ComposedType | _: SpliceType => Map.empty
     }
   }
   // ()
@@ -153,7 +153,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
     val allEnv = ctx.env.clone
     val allMthEnv = ctx.mthEnv.clone
     val newDefsInfo = newDefs0.iterator.map { case td => td.nme.name -> (td.kind, td.tparams.size) }.toMap
-    val newDefs = newDefs0.map { td0 =>
+    val newDefs = newDefs0.flatMap { td0 =>
       val n = td0.nme.name.capitalize
       val td = if (td0.nme.name.isCapitalized) td0
       else {
@@ -163,23 +163,26 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
       if (primitiveTypes.contains(n)) {
         err(msg"Type name '$n' is reserved.", td.nme.toLoc)
       }
-      allDefs.get(n).foreach { other =>
-        err(msg"Type '$n' is already defined.", td.nme.toLoc)
-      }
       td.tparams.groupBy(_.name).foreach { case s -> tps if tps.size > 1 => err(
           msg"Multiple declarations of type parameter ${s} in ${td.kind.str} definition" -> td.toLoc
             :: tps.map(tp => msg"Declared at" -> tp.toLoc))
         case _ =>
       }
-      val dummyTargs = td.tparams.map(p =>
-        freshVar(originProv(p.toLoc, s"${td.kind.str} type parameter", p.name), S(p.name))(ctx.lvl + 1))
-      val tparamsargs = td.tparams.lazyZip(dummyTargs)
-      val (bodyTy, tvars) = 
-        typeType2(td.body, simplify = false)(ctx.copy(lvl = 0), raise, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
-      val td1 = TypeDef(td.kind, td.nme, tparamsargs.toList, tvars, bodyTy,
-        td.mthDecls, td.mthDefs, baseClassesOf(td), td.toLoc)
-      allDefs += n -> td1
-      td1
+      allDefs.get(n) match {
+        case S(other) =>
+          err(msg"Type '$n' is already defined.", td.nme.toLoc)
+          N
+        case N =>
+          val dummyTargs = td.tparams.map(p =>
+            freshVar(originProv(p.toLoc, s"${td.kind.str} type parameter", p.name), S(p.name))(ctx.lvl + 1))
+          val tparamsargs = td.tparams.lazyZip(dummyTargs)
+          val (bodyTy, tvars) = 
+            typeType2(td.body, simplify = false)(ctx.copy(lvl = 0), raise, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
+          val td1 = TypeDef(td.kind, td.nme, tparamsargs.toList, tvars, bodyTy,
+            td.mthDecls, td.mthDefs, baseClassesOf(td), td.toLoc)
+          allDefs += n -> td1
+          S(td1)
+      }
     }
     import ctx.{tyDefs => oldDefs}
     
@@ -216,7 +219,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             val t2 = travsersed + R(tv)
             tv.lowerBounds.forall(checkCycle(_)(t2)) && tv.upperBounds.forall(checkCycle(_)(t2))
           }
-          case _: ExtrType | _: ObjectTag | _: FunctionType | _: RecordType | _: ArrayBase => true
+          case _: ExtrType | _: ObjectTag | _: FunctionType | _: RecordType | _: ArrayBase | _: SpliceType => true
         }
         // }()
         
@@ -263,6 +266,9 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                 false
               case _: ArrayType => 
                 err(msg"cannot inherit from a array type", prov.loco)
+                false
+              case _: SpliceType =>
+                err(msg"cannot inherit from a splice type", prov.loco)
                 false
               case _: Without =>
                 err(msg"cannot inherit from a field removal type", prov.loco)
@@ -646,6 +652,11 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           case TupleType(fields) => fields.foreach {
               case (_ , fieldTy) => fieldVarianceHelper(fieldTy)
             }
+          case SpliceType(elems) =>
+            elems.foreach {
+              case L(ty) => updateVariance(ty, curVariance)
+              case R(fld) => fieldVarianceHelper(fld)
+            }
           case FunctionType(lhs, rhs) =>
             updateVariance(lhs, curVariance.flip)
             updateVariance(rhs, curVariance)
@@ -659,9 +670,11 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
     // DiffTests for type variables that are not used at all
     // and hence are not set in the variance info map
     tyDefs.foreach { t =>
-      assert(t.tvarVariances.isEmpty)
-      t.tvarVariances = S(MutMap.empty)
-      t.tparamsargs.foreach { case (_, tvar) => t.tvarVariances.getOrElse(die).put(tvar, VarianceInfo.bi) }
+      if (t.tvarVariances.isEmpty) {
+        // * ^ This may not be empty if the type def was (erroneously) defined several types in the same block
+        t.tvarVariances = S(MutMap.empty)
+        t.tparamsargs.foreach { case (_, tvar) => t.tvarVariances.getOrElse(die).put(tvar, VarianceInfo.bi) }
+      }
     }
     
     var i = 1

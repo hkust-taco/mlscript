@@ -55,9 +55,13 @@ object Helpers {
     case UnitLit(value)  => s"UnitLit($value)"
     case Subs(arr, idx)  => s"Subs(${inspect(arr)}, ${inspect(idx)})"
     case Assign(f, v)    => s"Assign(${inspect(f)}, ${inspect(v)})"
-    case New(head, body) => s"New($head, ${inspect(body)})"
     case Block(unit) => s"Block(${inspect(unit)})"
-    case If(body, els) => s"If(...)"
+    case Splc(fs)       => 
+      val elems = fs.map{case L(l) => s"...${inspect(l)}" case R(Fld(_, _, r)) => inspect(r)}.mkString(", ")
+      s"Splc($elems)"
+    case If(bod, els) => s"If($bod, ${els.map(inspect)})"
+    case New(base, body) => s"New(${base}, ${body})"
+    case TyApp(base, targs) => s"TyApp(${inspect(base)}, ${targs})"
   }
 
   def inspect(t: TypingUnit): Str = t.entities.iterator

@@ -38,75 +38,83 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       annoyingCalls += 1
       
       lhs.cs.foreach { case Conjunct(lnf, vars, rnf, nvars) =>
-        vars.headOption match {
-          case S(v) =>
-            rec(v, rhs.toType() | Conjunct(lnf, vars - v, rnf, nvars).toType().neg(), true)
-          case N =>
-            implicit val etf: ExpandTupleFields = true
-            val fullRhs = nvars.iterator.map(DNF.mkDeep(_, true))
-              .foldLeft(rhs | DNF.mkDeep(rnf.toType(), false))(_ | _)
-            println(s"Consider ${lnf} <: ${fullRhs}")
-            
-            // The following crutch is necessary because the pesky Without types may get stuck
-            //  on type variables and type variable negations:
-            lnf match {
-              case LhsRefined(S(Without(NegType(tv: TV), ns)), tts, rcd, trs) =>
-                return rec((
-                  fullRhs.toType() | LhsRefined(N, tts, rcd, trs).toType().neg()).without(ns).neg(), tv, true)
-              case LhsRefined(S(Without(b, ns)), tts, rcd, trs) =>
-                assert(b.isInstanceOf[TV])
-                return rec(b, (
-                  fullRhs.toType() | LhsRefined(N, tts, rcd, trs).toType().neg()).without(ns), true)
-              case _ => ()
-            }
-            
-            // First, we filter out those RHS alternatives that obviously don't match our LHS:
-            val possible = fullRhs.cs.filter { r =>
+        
+        def local(): Unit = { // * Used to return early in simple cases
+          
+          vars.headOption match {
+            case S(v) =>
+              rec(v, rhs.toType() | Conjunct(lnf, vars - v, rnf, nvars).toType().neg(), true)
+            case N =>
+              implicit val etf: ExpandTupleFields = true
+              val fullRhs = nvars.iterator.map(DNF.mkDeep(_, true))
+                .foldLeft(rhs | DNF.mkDeep(rnf.toType(), false))(_ | _)
+              println(s"Consider ${lnf} <: ${fullRhs}")
               
-              // Note that without this subtyping check,
-              //  the number of constraints in the `eval1_ty_ugly = eval1_ty`
-              //  ExprProb subsumption test case explodes.
-              if ((r.rnf is RhsBot) && r.vars.isEmpty && r.nvars.isEmpty && lnf <:< r.lnf) {
-                println(s"OK  $lnf <: $r")
-                return ()
+              // The following crutch is necessary because the pesky Without types may get stuck
+              //  on type variables and type variable negations:
+              lnf match {
+                case LhsRefined(S(Without(NegType(tv: TV), ns)), tts, rcd, trs) =>
+                  return rec((
+                    fullRhs.toType() | LhsRefined(N, tts, rcd, trs).toType().neg()).without(ns).neg(), tv, true)
+                case LhsRefined(S(Without(b, ns)), tts, rcd, trs) =>
+                  assert(b.isInstanceOf[TV])
+                  return rec(b, (
+                    fullRhs.toType() | LhsRefined(N, tts, rcd, trs).toType().neg()).without(ns), true)
+                case _ => ()
               }
               
-              // println(s"Possible? $r ${lnf & r.lnf}")
-              !vars.exists(r.nvars) && ((lnf & r.lnf)(ctx, etf = false)).isDefined && ((lnf, r.rnf) match {
-                case (LhsRefined(_, ttags, _, _), RhsBases(objTags, rest, trs))
-                  if objTags.exists { case t: TraitTag => ttags(t); case _ => false }
-                  => false
-                case (LhsRefined(S(ot: ClassTag), _, _, _), RhsBases(objTags, rest, trs))
-                  => !objTags.contains(ot)
-                case _ => true
-              })
-            }
-            
-            println(s"Possible: " + possible)
-            
-            if (doFactorize) {
-              // We try to factorize the RHS to help make subsequent solving take shortcuts:
+              // First, we filter out those RHS alternatives that obviously don't match our LHS:
+              val possible = fullRhs.cs.filter { r =>
+                
+                // Note that without this subtyping check,
+                //  the number of constraints in the `eval1_ty_ugly = eval1_ty`
+                //  ExprProb subsumption test case explodes.
+                if ((r.rnf is RhsBot) && r.vars.isEmpty && r.nvars.isEmpty && lnf <:< r.lnf) {
+                  println(s"OK  $lnf <: $r")
+                  return ()
+                }
+                
+                // println(s"Possible? $r ${lnf & r.lnf}")
+                !vars.exists(r.nvars) && ((lnf & r.lnf)(ctx, etf = false)).isDefined && ((lnf, r.rnf) match {
+                  case (LhsRefined(_, ttags, _, _), RhsBases(objTags, rest, trs))
+                    if objTags.exists { case t: TraitTag => ttags(t); case _ => false }
+                    => false
+                  case (LhsRefined(S(ot: ClassTag), _, _, _), RhsBases(objTags, rest, trs))
+                    => !objTags.contains(ot)
+                  case _ => true
+                })
+              }
               
-              val fact = factorize(possible, sort = false)
+              println(s"Possible: " + possible)
               
-              println(s"Factorized: " + fact)
+              if (doFactorize) {
+                // We try to factorize the RHS to help make subsequent solving take shortcuts:
+                
+                val fact = factorize(possible, sort = false)
+                
+                println(s"Factorized: " + fact)
+                
+                // Finally, we enter the "annoying constraint" resolution routine:
+                annoying(Nil, lnf, fact, RhsBot)
+                
+              } else {
+                // Alternatively, without factorization (does not actually make a difference most of the time):
+                
+                annoying(Nil, lnf, possible.map(_.toType()), RhsBot)
+                
+              }
               
-              // Finally, we enter the "annoying constraint" resolution routine:
-              annoying(Nil, lnf, fact, RhsBot)
-              
-            } else {
-              // Alternatively, without factorization (does not actually make a difference most of the time):
-              
-              annoying(Nil, lnf, possible.map(_.toType()), RhsBot)
-              
-            }
-            
+          }
+          
         }
+        
+        local()
+        
       }
     }()
     
     /* Solve annoying constraints,
-        which are those that involve either unions and intersections at the wrong polarities, or negations.
+        which are those that involve either unions and intersections at the wrong polarities or negations.
         This works by constructing all pairs of "conjunct <: disjunct" implied by the conceptual
         "DNF <: CNF" form of the constraint. */
     def annoying(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
@@ -555,7 +563,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         detailedContext,
       ).flatten
       
-      raise(CompilationError(msgs))
+      raise(ErrorReport(msgs))
     }
     
     rec(lhs, rhs, true)(raise, Nil -> Nil)
@@ -581,6 +589,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         TupleType(fs.mapValues(_.update(extrude(_, lvl, !pol), extrude(_, lvl, pol))))(t.prov)
       case t @ ArrayType(ar) =>
         ArrayType(ar.update(extrude(_, lvl, !pol), extrude(_, lvl, pol)))(t.prov)
+      case t @ SpliceType(fs) => 
+        t.updateElems(extrude(_, lvl, pol), extrude(_, lvl, !pol), extrude(_, lvl, pol), t.prov)
       case w @ Without(b, ns) => Without(extrude(b, lvl, pol), ns)(w.prov)
       case tv: TypeVariable => cache.getOrElse(tv -> pol, {
         val nv = freshVar(tv.prov, tv.nameHint)(lvl)
@@ -612,7 +622,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     err(msg -> loco :: Nil)
   }
   def err(msgs: List[Message -> Opt[Loc]])(implicit raise: Raise): SimpleType = {
-    raise(CompilationError(msgs))
+    raise(ErrorReport(msgs))
     errType
   }
   def errType: SimpleType = ClassTag(ErrTypeId, Set.empty)(noProv)
@@ -621,7 +631,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     warn(msg -> loco :: Nil)
 
   def warn(msgs: List[Message -> Opt[Loc]])(implicit raise: Raise): Unit =
-    raise(Warning(msgs))
+    raise(WarningReport(msgs))
   
   
   // Note: maybe this and `extrude` should be merged?
@@ -676,6 +686,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case t @ RecordType(fs) => RecordType(fs.mapValues(_.update(freshen, freshen)))(t.prov)
       case t @ TupleType(fs) => TupleType(fs.mapValues(_.update(freshen, freshen)))(t.prov)
       case t @ ArrayType(ar) => ArrayType(ar.update(freshen, freshen))(t.prov)
+      case t @ SpliceType(fs) => t.updateElems(freshen, freshen, freshen, t.prov)
       case n @ NegType(neg) => NegType(freshen(neg))(n.prov)
       case e @ ExtrType(_) => e
       case p @ ProvType(und) => ProvType(freshen(und))(p.prov)

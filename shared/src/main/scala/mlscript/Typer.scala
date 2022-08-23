@@ -146,7 +146,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     val tv = freshVar(noProv)(1)
     import FunctionType.{ apply => fun }
     val intBinOpTy = fun(singleTup(IntType), fun(singleTup(IntType), IntType)(noProv))(noProv)
-    val intBinPred = fun(singleTup(IntType), fun(singleTup(IntType), BoolType)(noProv))(noProv)
+    val numberBinOpTy = fun(singleTup(DecType), fun(singleTup(DecType), DecType)(noProv))(noProv)
+    val numberBinPred = fun(singleTup(DecType), fun(singleTup(DecType), BoolType)(noProv))(noProv)
     Map(
       "true" -> TrueType,
       "false" -> FalseType,
@@ -163,10 +164,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       "mul" -> intBinOpTy,
       "div" -> intBinOpTy,
       "sqrt" -> fun(singleTup(IntType), IntType)(noProv),
-      "lt" -> intBinPred,
-      "le" -> intBinPred,
-      "gt" -> intBinPred,
-      "ge" -> intBinPred,
+      "lt" -> numberBinPred,
+      "le" -> numberBinPred,
+      "gt" -> numberBinPred,
+      "ge" -> numberBinPred,
       "concat" -> fun(singleTup(StrType), fun(singleTup(StrType), StrType)(noProv))(noProv),
       "eq" -> {
         val v = freshVar(noProv)(1)
@@ -180,12 +181,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       "+" -> intBinOpTy,
       "-" -> intBinOpTy,
       "*" -> intBinOpTy,
-      "/" -> intBinOpTy,
-      "<" -> intBinPred,
-      ">" -> intBinPred,
-      "<=" -> intBinPred,
-      ">=" -> intBinPred,
-      "==" -> intBinPred,
+      "/" -> numberBinOpTy,
+      "<" -> numberBinPred,
+      ">" -> numberBinPred,
+      "<=" -> numberBinPred,
+      ">=" -> numberBinPred,
+      "==" -> numberBinPred,
       "&&" -> fun(singleTup(BoolType), fun(singleTup(BoolType), BoolType)(noProv))(noProv),
       "||" -> fun(singleTup(BoolType), fun(singleTup(BoolType), BoolType)(noProv))(noProv),
       "id" -> {
@@ -236,6 +237,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         TupleType(fields.mapValues(f =>
             FieldType(f.in.map(rec), rec(f.out))(tp(f.toLoc, "tuple field"))
           ))(tyTp(ty.toLoc, "tuple type"))
+      case Splice(fields) => 
+        SpliceType(fields.map{ 
+          case L(l) => {
+            val t = rec(l)
+            val res = ArrayType(freshVar(t.prov).toUpper(t.prov))(t.prov)
+            constrain(t, res)(raise, t.prov, ctx)
+            L(t)
+          }
+          case R(f) => {
+            R(FieldType(f.in.map(rec), rec(f.out))(tp(f.toLoc, "splice field")))
+          }
+          })(tyTp(ty.toLoc, "splice type"))
       case Inter(lhs, rhs) => (if (simplify) rec(lhs) & (rec(rhs), _: TypeProvenance)
           else ComposedType(false, rec(lhs), rec(rhs)) _
         )(tyTp(ty.toLoc, "intersection type"))
@@ -354,7 +367,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           warn("Pure expression does nothing in statement position.", t.toLoc)
         else
           constrain(mkProxy(ty, TypeProvenance(t.toCoveringLoc, "expression in statement position")), UnitType)(
-            raise = err => raise(Warning( // Demote constraint errors from this to warnings
+            raise = err => raise(WarningReport( // Demote constraint errors from this to warnings
               msg"Expression in statement position should have type `unit`." -> N ::
               msg"Use the `discard` function to discard non-unit values, making the intent clearer." -> N ::
               err.allMsgs)),
@@ -425,7 +438,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     def con(lhs: SimpleType, rhs: SimpleType, res: SimpleType): SimpleType = {
       var errorsCount = 0
       constrain(lhs, rhs)({
-        case err: CompilationError =>
+        case err: ErrorReport =>
           // Note that we do not immediately abort constraining because we still
           //  care about getting the non-erroneous parts of the code return meaningful types.
           // In other words, this is so that errors do not interfere too much
@@ -563,6 +576,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case Assign(lhs, rhs) =>
         err(msg"Illegal assignment" -> prov.loco
           :: msg"cannot assign to ${lhs.describe}" -> lhs.toLoc :: Nil)
+      case Splc(es) => 
+        SpliceType(es.map{
+          case L(l) => L({
+            val t_l = typeTerm(l)
+            val t_a = ArrayType(freshVar(prov).toUpper(prov))(prov)
+            con(t_l, t_a, t_l)
+          }) 
+          case R(Fld(mt, sp, r)) => {
+            val t = typeTerm(r)
+            if (mt) { R(FieldType(Some(t), t)(t.prov)) } else {R(t.toUpper(t.prov))}
+          }
+        })(prov)
       case Bra(false, trm: Blk) => typeTerm(trm)
       case Bra(rcd, trm @ (_: Tup | _: Blk)) if funkyTuples => typeTerms(trm :: Nil, rcd, Nil)
       case Bra(_, trm) => typeTerm(trm)
@@ -679,6 +704,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case ((a_ty, tv), req) => a_ty & tv | req & a_ty.neg()
         }
         con(s_ty, req, cs_ty)
+      case If(_, _) | New(_, _) | TyApp(_, _) => ??? // TODO
     }
   }(r => s"$lvl. : ${r}")
   
@@ -848,6 +874,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         case ArrayType(f) =>
           val f2 = field(f)
           AppliedType(TypeName("MutArray"), Bounds(f2.in.getOrElse(Bot), f2.out) :: Nil)
+        case SpliceType(elems) => Splice(elems.map { 
+              case L(l) => L(go(l)) 
+              case R(v) => R(Field(v.lb.map(go(_)), go(v.ub))) })
         case NegType(t) => Neg(go(t))
         case ExtrType(true) => Bot
         case ExtrType(false) => Top
