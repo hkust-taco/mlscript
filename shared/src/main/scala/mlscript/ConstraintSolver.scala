@@ -563,7 +563,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         detailedContext,
       ).flatten
       
-      raise(TypeError(msgs))
+      raise(ErrorReport(msgs))
     }
     
     rec(lhs, rhs, true)(raise, Nil -> Nil)
@@ -620,7 +620,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     err(msg -> loco :: Nil)
   }
   def err(msgs: List[Message -> Opt[Loc]])(implicit raise: Raise): SimpleType = {
-    raise(TypeError(msgs))
+    raise(ErrorReport(msgs))
     errType
   }
   def errType: SimpleType = ClassTag(ErrTypeId, Set.empty)(noProv)
@@ -629,7 +629,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     warn(msg -> loco :: Nil)
 
   def warn(msgs: List[Message -> Opt[Loc]])(implicit raise: Raise): Unit =
-    raise(Warning(msgs))
+    raise(WarningReport(msgs))
   
   
   // Note: maybe this and `extrude` should be merged?

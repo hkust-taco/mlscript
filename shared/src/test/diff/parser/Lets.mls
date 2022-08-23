@@ -1,0 +1,57 @@
+:AllowParseErrors
+
+
+let x = 1
+//│ |#let| |x| |#=| |1|
+//│ Parsed: {let x = 1 in undefined}
+
+let x = 1, y = 2
+//│ |#let| |x| |#=| |1|,| |y| |#=| |2|
+//│ Parsed: {let x = 1 in let y = 2 in undefined}
+
+let x = 1, y = 2
+x + y
+//│ |#let| |x| |#=| |1|,| |y| |#=| |2|↵|x| |+| |y|
+//│ Parsed: {let x = 1 in let y = 2 in + x y}
+
+let x = 1 in x + 1
+//│ |#let| |x| |#=| |1| |#in| |x| |+| |1|
+//│ Parsed: {let x = 1 in + x 1}
+
+let x = 1, y = 2 in x + y
+//│ |#let| |x| |#=| |1|,| |y| |#=| |2| |#in| |x| |+| |y|
+//│ Parsed: {let x = 1 in let y = 2 in + x y}
+
+let in 123
+//│ |#let| |#in| |123|
+//│ Parsed: {123}
+
+let x = 1; x + 1
+//│ |#let| |x| |#=| |1|#;| |x| |+| |1|
+//│ Parsed: {let x = 1 in + x 1}
+
+let x = 1, y = 2; x + y
+//│ |#let| |x| |#=| |1|,| |y| |#=| |2|#;| |x| |+| |y|
+//│ Parsed: {let x = 1 in let y = 2 in + x y}
+
+
+
+
+let in person be the default in following meetings
+//│ |#let| |#in| |person| |be| |the| |default| |#in| |following| |meetings|
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.40: 	let in person be the default in following meetings
+//│ ╙──      	                 ^^^^^^^^^^^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.40: 	let in person be the default in following meetings
+//│ ╙──      	              ^^^^^^^^^^^^^^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.40: 	let in person be the default in following meetings
+//│ ╙──      	       ^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[PARSE ERROR] Expected end of input; found 'in' keyword instead
+//│ ║  l.40: 	let in person be the default in following meetings
+//│ ╙──      	                             ^^
+//│ Parsed: {person (be (the (default,),),)}
+
+
+

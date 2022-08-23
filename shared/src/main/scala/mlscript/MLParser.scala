@@ -23,7 +23,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   
   def toParams(t: Term): Tup = t match {
     case t: Tup => t
-    case _ => Tup((N, (t, false)) :: Nil)
+    case _ => Tup((N, Fld(false, false, t)) :: Nil)
   }
   def toParamsTy(t: Type): Tuple = t match {
     case t: Tuple => t
@@ -53,8 +53,8 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   
   def parens[p: P]: P[Term] = locate(P( "(" ~/ (kw("mut").!.? ~ term).rep(0, ",") ~ ",".!.? ~ ")" ).map {
     case (Seq(None -> t), N) => Bra(false, t)
-    case (Seq(Some(_) -> t), N) => Tup(N -> (t, true) :: Nil)   // ? single tuple with mutable
-    case (ts, _) => Tup(ts.iterator.map(f => N -> (f._2, f._1.isDefined)).toList)
+    case (Seq(Some(_) -> t), N) => Tup(N -> Fld(true, false, t) :: Nil)   // ? single tuple with mutable
+    case (ts, _) => Tup(ts.iterator.map(f => N -> Fld(f._1.isDefined, false, f._2)).toList)
   })
 
   def subtermNoSel[p: P]: P[Term] = P( parens | record | lit | variable )
@@ -79,8 +79,8 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def record[p: P]: P[Rcd] = locate(P(
       "{" ~/ (kw("mut").!.? ~ variable ~ "=" ~ term map L.apply).|(kw("mut").!.? ~ variable map R.apply).rep(sep = ";") ~ "}"
     ).map { fs => Rcd(fs.map{ 
-        case L((mut, v, t)) => v -> (t -> mut.isDefined)
-        case R(mut -> id) => id -> (id -> mut.isDefined) }.toList)})
+        case L((mut, v, t)) => v -> Fld(mut.isDefined, false, t)
+        case R(mut -> id) => id -> Fld(mut.isDefined, false, id) }.toList)})
   
   def fun[p: P]: P[Term] = locate(P( kw("fun") ~/ term ~ "->" ~ term ).map(nb => Lam(toParams(nb._1), nb._2)))
   

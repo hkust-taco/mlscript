@@ -1,7 +1,7 @@
 
 :p
 data type Boolean of Tru, Fals
-//│ Parsed: data type Boolean of Tru; Fals;;
+//│ Parsed: data type Boolean of {Tru; Fals};
 //│ Desugared: type alias Boolean = Tru[] | Fals[]
 //│ Desugared: class Tru: {}
 //│ Desugared: class Fals: {}
@@ -23,7 +23,7 @@ Boolean
 :p
 :e
 data type Bool2 of True2 & False2
-//│ Parsed: data type Bool2 of ((& True2) False2);;
+//│ Parsed: data type Bool2 of {& True2 False2};
 //│ Desugared: type alias Bool2 = &[True2, False2]
 //│ Desugared: class &[True2, False2]: {False2 <: False2, True2 <: True2}
 //│ Desugared: def &: [True2, False2] -> True2 -> False2 -> &[True2, False2]
@@ -110,7 +110,7 @@ Tru : Boolean
 data type List a of
   Nil
   Cons (head: a) (tail: List a)
-//│ Parsed: data type (List a) of Nil; ((Cons ((head: a,);)) ((tail: (List a),);));;
+//│ Parsed: data type List a of {Nil; Cons '(' {head: a,} ')' '(' {tail: List a,} ')'};
 //│ Desugared: type alias List[a] = Nil[a] | Cons[a]
 //│ Desugared: class Nil[a]: {}
 //│ Desugared: class Cons[a]: {head: a, tail: List[a]}
@@ -131,7 +131,7 @@ data type List a of
 // TODO interpret as free type variable?
 :p
 data type Ls of LsA a
-//│ Parsed: data type Ls of (LsA a);;
+//│ Parsed: data type Ls of {LsA a};
 //│ Desugared: type alias Ls = LsA[a]
 //│ Desugared: class LsA[a]: {a: a}
 //│ Desugared: def LsA: [a] -> a -> LsA[a]
@@ -144,7 +144,7 @@ data type Ls of LsA a
 
 :p
 data type Ls2 of LsA2 `a
-//│ Parsed: data type Ls2 of (LsA2 `a);;
+//│ Parsed: data type Ls2 of {LsA2 `a};
 //│ Desugared: type alias Ls2 = LsA2[]
 //│ Desugared: class LsA2: {`a: 'a}
 //│ Desugared: def LsA2: [] -> 'a -> LsA2[]
