@@ -1,0 +1,199 @@
+:AllowParseErrors
+
+
+[]
+//│ |[||]|
+//│ Parsed: {'('  ')'}
+
+[x: 1]
+//│ |[|x|#:| |1|]|
+//│ Parsed: {'(' x: 1, ')'}
+
+[x : 1]
+//│ |[|x| |#:| |1|]|
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.12: 	[x : 1]
+//│ ╙──      	   ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.12: 	[x : 1]
+//│ ╙──      	 ^^^^^
+//│ Parsed: {'(' x (1,), ')'}
+
+[x: 1,]
+//│ |[|x|#:| |1|,|]|
+//│ Parsed: {'(' x: 1, ')'}
+
+[x: 1, y:]
+//│ |[|x|#:| |1|,| |y|#:|]|
+//│ ╔══[PARSE ERROR] Unexpected end of square bracket section; an expression was expected here
+//│ ║  l.26: 	[x: 1, y:]
+//│ ╙──      	         ^
+//│ Parsed: {'(' x: 1, y: undefined, ')'}
+
+[x:, y: 1]
+//│ |[|x|#:|,| |y|#:| |1|]|
+//│ ╔══[PARSE ERROR] Unexpected comma in expression position
+//│ ║  l.33: 	[x:, y: 1]
+//│ ╙──      	   ^
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.33: 	[x:, y: 1]
+//│ ╙──      	      ^
+//│ Parsed: {'(' x: y (1,), ')'}
+
+[x:, y:]
+//│ |[|x|#:|,| |y|#:|]|
+//│ ╔══[PARSE ERROR] Unexpected comma in expression position
+//│ ║  l.43: 	[x:, y:]
+//│ ╙──      	   ^
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.43: 	[x:, y:]
+//│ ╙──      	      ^
+//│ ╔══[PARSE ERROR] Unexpected end of square bracket section; an expression was expected here
+//│ ║  l.43: 	[x:, y:]
+//│ ╙──      	       ^
+//│ Parsed: {'(' x: y (undefined,), ')'}
+
+[x: 1, 2, 3]
+//│ |[|x|#:| |1|,| |2|,| |3|]|
+//│ Parsed: {'(' x: 1, 2, 3, ')'}
+
+[1, y: 2, 3]
+//│ |[|1|,| |y|#:| |2|,| |3|]|
+//│ Parsed: {'(' 1, y: 2, 3, ')'}
+
+[x: 1, y: 2, z: 3]
+//│ |[|x|#:| |1|,| |y|#:| |2|,| |z|#:| |3|]|
+//│ Parsed: {'(' x: 1, y: 2, z: 3, ')'}
+
+()
+//│ |(||)|
+//│ Parsed: {'('  ')'}
+
+(x: 1)
+//│ |(|x|#:| |1|)|
+//│ Parsed: {'(' x: 1, ')'}
+
+(x:)
+//│ |(|x|#:|)|
+//│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
+//│ ║  l.76: 	(x:)
+//│ ╙──      	   ^
+//│ Parsed: {'(' x: undefined, ')'}
+
+(x: 1,)
+//│ |(|x|#:| |1|,|)|
+//│ Parsed: {'(' x: 1, ')'}
+
+(x: 1, 2, 3)
+//│ |(|x|#:| |1|,| |2|,| |3|)|
+//│ Parsed: {'(' x: 1, 2, 3, ')'}
+
+(1, y: 2, 3)
+//│ |(|1|,| |y|#:| |2|,| |3|)|
+//│ Parsed: {'(' 1, y: 2, 3, ')'}
+
+(x: 1, y: 2, z: 3)
+//│ |(|x|#:| |1|,| |y|#:| |2|,| |z|#:| |3|)|
+//│ Parsed: {'(' x: 1, y: 2, z: 3, ')'}
+
+
+1
+//│ |1|
+//│ Parsed: {1}
+
+x: 1
+//│ |x|#:| |1|
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.104: 	x: 1
+//│ ╙──       	 ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.104: 	x: 1
+//│ ╙──       	^^^^
+//│ Parsed: {x (1,)}
+
+1,
+//│ |1|,|
+//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
+//│ ║  l.114: 	1,
+//│ ╙──       	 ^
+//│ Parsed: {1}
+
+x: 1,
+//│ |x|#:| |1|,|
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.121: 	x: 1,
+//│ ╙──       	 ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.121: 	x: 1,
+//│ ╙──       	^^^^
+//│ Parsed: {x (1,)}
+
+1, 2, 3
+//│ |1|,| |2|,| |3|
+//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
+//│ ║  l.131: 	1, 2, 3
+//│ ╙──       	 ^
+//│ Parsed: {1}
+
+f of 1, 2, 3
+//│ |f| |#of| |1|,| |2|,| |3|
+//│ Parsed: {f (1, 2, 3,)}
+
+f of x: 1, y: 2, z: 3
+//│ |f| |#of| |x|#:| |1|,| |y|#:| |2|,| |z|#:| |3|
+//│ Parsed: {f (x: 1, y: 2, z: 3,)}
+
+f of x: 1, 2, z: 3
+//│ |f| |#of| |x|#:| |1|,| |2|,| |z|#:| |3|
+//│ Parsed: {f (x: 1, 2, z: 3,)}
+
+f of
+  x: 1, 2, 3
+//│ |f| |#of|→|x|#:| |1|,| |2|,| |3|←|
+//│ Parsed: {f (x: 1, 2, 3,)}
+
+f of
+  x: 1,
+  y: 2,
+  z: 3
+//│ |f| |#of|→|x|#:| |1|,|↵|y|#:| |2|,|↵|z|#:| |3|←|
+//│ Parsed: {f (x: 1, y: 2, z: 3,)}
+
+f of
+  x: 1
+  y: 2
+  z: 3
+//│ |f| |#of|→|x|#:| |1|↵|y|#:| |2|↵|z|#:| |3|←|
+//│ ╔══[PARSE ERROR] Unexpected named argument name here
+//│ ║  l.163: 	  x: 1
+//│ ╙──       	  ^
+//│ ╔══[PARSE ERROR] Unexpected named argument name here
+//│ ║  l.164: 	  y: 2
+//│ ╙──       	  ^
+//│ Parsed: {f (z: {1; 2; 3},)}
+
+f of
+  x: 1
+  2
+  z: 3
+//│ |f| |#of|→|x|#:| |1|↵|2|↵|z|#:| |3|←|
+//│ ╔══[PARSE ERROR] Unexpected named argument name here
+//│ ║  l.176: 	  x: 1
+//│ ╙──       	  ^
+//│ Parsed: {f (z: {1; 2; 3},)}
+
+f of
+  x: 1
+  y: 2
+  3
+//│ |f| |#of|→|x|#:| |1|↵|y|#:| |2|↵|3|←|
+//│ ╔══[PARSE ERROR] Unexpected named argument name here
+//│ ║  l.186: 	  x: 1
+//│ ╙──       	  ^
+//│ ╔══[PARSE ERROR] Unexpected named argument name here
+//│ ║  l.187: 	  y: 2
+//│ ╙──       	  ^
+//│ Parsed: {f ({1; 2; 3},)}
+
+
+

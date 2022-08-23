@@ -1,0 +1,50 @@
+
+()
+//│ |(||)|
+//│ Parsed: {'('  ')'}
+
+[]
+//│ |[||]|
+//│ Parsed: {'('  ')'}
+
+{}
+//│ |{||}|
+//│ Parsed: {'{' {} '}'}
+
+:pe
+(}
+//│ ╔══[PARSE ERROR] Mistmatched closing curly brace
+//│ ║  l.15: 	(}
+//│ ║        	 ^
+//│ ╟── does not correspond to opening parenthesis
+//│ ║  l.15: 	(}
+//│ ╙──      	^
+//│ |(||)|
+//│ Parsed: {'('  ')'}
+
+(([{}]))
+//│ |(|(|[|{||}|]|)|)|
+//│ Parsed: {'(' '(' '(' '{' {} '}', ')', ')', ')'}
+
+:pe
+(([{})])
+//│ ╔══[PARSE ERROR] Mistmatched closing parenthesis
+//│ ║  l.30: 	(([{})])
+//│ ║        	     ^
+//│ ╟── does not correspond to opening square bracket
+//│ ║  l.30: 	(([{})])
+//│ ╙──      	  ^
+//│ ╔══[PARSE ERROR] Mistmatched closing square bracket
+//│ ║  l.30: 	(([{})])
+//│ ║        	      ^
+//│ ╟── does not correspond to opening parenthesis
+//│ ║  l.30: 	(([{})])
+//│ ╙──      	 ^
+//│ |(|(|[|{||}|]|)|)|
+//│ Parsed: {'(' '(' '(' '{' {} '}', ')', ')', ')'}
+
+
+fun f = ()
+//│ |#fun| |f| |#=| |(||)|
+//│ Parsed: {fun f = '('  ')'}
+

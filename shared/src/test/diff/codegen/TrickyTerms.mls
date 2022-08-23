@@ -33,11 +33,10 @@ def f x = case 1 of { 1 -> x }
 //│ // Query 1
 //│ globalThis.f = function f(x) {
 //│   let a;
-//│   return (a = 1, a === 1 ? x : (function () {
+//│   return (a = 1, a === 1 ? x : (() => {
 //│     throw new Error("non-exhaustive case expression");
 //│   })());
 //│ };
-//│ res = f;
 //│ // End of generated code
 //│ f: 'a -> 'a
 //│  = [Function: f]
@@ -48,10 +47,8 @@ def tmp = 1
 def tmp = succ tmp
 //│ // Query 1
 //│ globalThis.tmp = 1;
-//│ res = tmp;
 //│ // Query 2
 //│ globalThis.tmp1 = succ(tmp);
-//│ res = tmp1;
 //│ // End of generated code
 //│ tmp: 1
 //│    = 1
@@ -67,17 +64,10 @@ let t = tmp in let tmp = 1 in t tmp
 //│ globalThis.tmp2 = function tmp2(tmp) {
 //│   return tmp;
 //│ };
-//│ res = tmp2;
 //│ // Query 2
-//│ res = tmp2((function (tmp) {
-//│   return tmp;
-//│ })(1));
+//│ res = tmp2(((tmp) => tmp)(1));
 //│ // Query 3
-//│ res = (function (t) {
-//│   return ((function (tmp) {
-//│     return t(tmp);
-//│   })(1));
-//│ })(tmp2);
+//│ res = ((t) => ((tmp) => t(tmp))(1))(tmp2);
 //│ // End of generated code
 //│ tmp: 'a -> 'a
 //│    = [Function: tmp2]

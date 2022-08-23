@@ -23,7 +23,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   
   def toParams(t: Term): Tup = t match {
     case t: Tup => t
-    case _ => Tup((N, (t, false)) :: Nil)
+    case _ => Tup((N, Fld(false, false, t)) :: Nil)
   }
   def toParamsTy(t: Type): Tuple = t match {
     case t: Tuple => t
@@ -59,9 +59,12 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
 
   def parens[_: P]: P[Term] = locate(P( "(" ~/ parenCell.rep(0, ",") ~ ",".!.? ~ ")" ).map {
     case (Seq(Right(t -> false)), N) => Bra(false, t)
-    case (Seq(Right(t -> true)), N) => Tup(N -> (t, true) :: Nil) // ? single tuple with mutable
+    case (Seq(Right(t -> true)), N) => Tup(N -> Fld(true, false, t) :: Nil) // ? single tuple with mutable
     case (ts, _) => 
-      if (ts.forall(_.isRight)) Tup(ts.iterator.map{ case R(f) => N -> f case _ => ??? }.toList)  // left unreachable
+      if (ts.forall(_.isRight)) Tup(ts.iterator.map {
+        case R(f) => N -> Fld(f._2, false, f._1)
+        case _ => ??? // left unreachable
+      }.toList)
       else Splc(ts.toList)
   })
 
@@ -87,8 +90,8 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def record[p: P]: P[Rcd] = locate(P(
       "{" ~/ (kw("mut").!.? ~ variable ~ "=" ~ term map L.apply).|(kw("mut").!.? ~ variable map R.apply).rep(sep = ";") ~ "}"
     ).map { fs => Rcd(fs.map{ 
-        case L((mut, v, t)) => v -> (t -> mut.isDefined)
-        case R(mut -> id) => id -> (id -> mut.isDefined) }.toList)})
+        case L((mut, v, t)) => v -> Fld(mut.isDefined, false, t)
+        case R(mut -> id) => id -> Fld(mut.isDefined, false, id) }.toList)})
   
   def fun[p: P]: P[Term] = locate(P( kw("fun") ~/ term ~ "->" ~ term ).map(nb => Lam(toParams(nb._1), nb._2)))
   

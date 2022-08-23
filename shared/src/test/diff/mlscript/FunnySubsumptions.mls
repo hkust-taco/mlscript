@@ -1,0 +1,62 @@
+:NoJS
+
+trait C
+trait D
+trait S
+trait T
+trait U
+//│ Defined trait C
+//│ Defined trait D
+//│ Defined trait S
+//│ Defined trait T
+//│ Defined trait U
+
+
+def A0: (C | {x:T}) & (D | {y:S})
+def B0: C&{y:S} | D&{x:T} | {x: T; y: S}
+//│ A0: D & {x: T} | {x: T, y: S} | C & {y: S} | C & D
+//│ B0: {x: T, y: S} | D & {x: T} | C & {y: S}
+
+:stats
+A0 = B0
+//│ {x: T, y: S} | D & {x: T} | C & {y: S}
+//│   <:  A0:
+//│ D & {x: T} | {x: T, y: S} | C & {y: S} | C & D
+//│ constrain calls  : 12
+//│ annoying  calls  : 6
+//│ subtyping calls  : 199
+
+:stats
+B0 = A0
+//│ D & {x: T} | {x: T, y: S} | C & {y: S} | C & D
+//│   <:  B0:
+//│ {x: T, y: S} | D & {x: T} | C & {y: S}
+//│ constrain calls  : 2
+//│ annoying  calls  : 32
+//│ subtyping calls  : 274
+
+
+def A1: C & {x : T} | D & {y : U}
+def B1: (C | D) & (C | {y : U}) & (D | {x : T})
+//│ A1: C & {x: T} | D & {y: U}
+//│ B1: C & {x: T} | D & {y: U} | C & D
+
+:stats
+A1 = B1
+//│ C & {x: T} | D & {y: U} | C & D
+//│   <:  A1:
+//│ C & {x: T} | D & {y: U}
+//│ constrain calls  : 2
+//│ annoying  calls  : 13
+//│ subtyping calls  : 200
+
+:stats
+B1 = A1
+//│ C & {x: T} | D & {y: U}
+//│   <:  B1:
+//│ C & {x: T} | D & {y: U} | C & D
+//│ constrain calls  : 12
+//│ annoying  calls  : 6
+//│ subtyping calls  : 180
+
+

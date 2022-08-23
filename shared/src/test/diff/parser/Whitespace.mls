@@ -1,0 +1,43 @@
+:AllowParseErrors
+
+ 
+//│ | |
+//│ ╔══[PARSE ERROR] Unexpected space in expression position
+//│ ║  l.3: 	 
+//│ ╙──     	^
+//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.3: 	 
+//│ ╙──     	 ^
+//│ Parsed: {undefined}
+
+  
+//│ | |
+//│ ╔══[PARSE ERROR] Unexpected space in expression position
+//│ ║  l.13: 	  
+//│ ╙──      	^^
+//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.13: 	  
+//│ ╙──      	  ^
+//│ Parsed: {undefined}
+
+  
+ 
+//│ | |→||←|
+//│ ╔══[PARSE ERROR] Unexpected space in expression position
+//│ ║  l.23: 	  
+//│ ╙──      	^^
+//│ Parsed: {{}}
+
+
+false(1 , 2 , 3)
+//│ |false|(|1| |,| |2| |,| |3|)|
+//│ Parsed: {false (1, 2, 3,)}
+
+false (1 ,2 ,3)
+//│ |false| |(|1| |,|2| |,|3|)|
+//│ Parsed: {false (1, 2, 3,)}
+
+false( 1 , 2 , 3 )
+//│ |false|(| |1| |,| |2| |,| |3| |)|
+//│ Parsed: {false (1, 2, 3,)}
+

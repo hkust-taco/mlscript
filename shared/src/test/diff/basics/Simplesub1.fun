@@ -354,9 +354,10 @@ let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
 //│   where
 //│     'x :> 'a -> 'a
 //│     'a :> 'x
-//│ res: 'a
+//│ res: ({u: 'u} & 'a) -> ('u | 'a) | 'b
 //│   where
 //│     'a :> ({u: 'u} & 'a) -> ('u | 'a)
+//│        <: 'b
 
 :ns
 let rec x = (let y = (x x); (z => z))

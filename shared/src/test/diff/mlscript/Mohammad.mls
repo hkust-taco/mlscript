@@ -22,11 +22,10 @@ def useCls c = case c of { Class -> c.x | int -> "oops" }
 //│ // Query 1
 //│ globalThis.useCls = function useCls(c) {
 //│   let a;
-//│   return (a = c, a instanceof Class ? c.x : Number.isInteger(a) ? "oops" : (function () {
+//│   return (a = c, a instanceof Class ? c.x : Number.isInteger(a) ? "oops" : (() => {
 //│     throw new Error("non-exhaustive case expression");
 //│   })());
 //│ };
-//│ res = useCls;
 //│ // End of generated code
 //│ useCls: ((Class with {x: 'x}) | int) -> ("oops" | 'x)
 //│       = [Function: useCls]
@@ -101,14 +100,14 @@ def useTrt t = case t of { T -> t.y | Class -> t.x }
 :e
 useTrt c
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.102: 	useTrt c
+//│ ║  l.101: 	useTrt c
 //│ ║         	^^^^^^^^
 //│ ╟── expression of type `Class & {x: ?x} & t | Class & {x: ?x} & ~?a` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.97: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
+//│ ║  l.96: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ║        	                                ^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.97: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
+//│ ║  l.96: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ╙──      	                    ^
 //│ res: 1 | error
 //│    = 1
@@ -228,7 +227,6 @@ trait Oops
 oo = Oops 2
 //│ // Query 1
 //│ globalThis.oo = Oops.build(2);
-//│ res = oo;
 //│ // End of generated code
 //│ oo: 2 & oops
 //│   = [Number: 2]
@@ -237,7 +235,7 @@ oo = Oops 2
 case oo of { Oops -> 1 }
 //│ // Query 1
 //│ let a;
-//│ res = (a = oo, Oops.is(a) ? 1 : (function () {
+//│ res = (a = oo, Oops.is(a) ? 1 : (() => {
 //│   throw new Error("non-exhaustive case expression");
 //│ })());
 //│ // End of generated code
