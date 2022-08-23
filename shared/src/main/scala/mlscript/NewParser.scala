@@ -525,7 +525,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case (SELECT(name), l0) :: _ => // TODO precedence?
         consume
         exprCont(Sel(acc, Var(name).withLoc(S(l0))), prec, allowNewlines)
-      case (br @ BRACKETS(Indent, (SELECT(name), l0) :: toks), _) :: _ =>
+      // case (br @ BRACKETS(Indent, (SELECT(name), l0) :: toks), _) :: _ =>
+      case (br @ BRACKETS(Indent, (SELECT(name), l0) :: toks), _) :: _ if prec <= 1 =>
         consume
         val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.exprCont(Sel(acc, Var(name).withLoc(S(l0))), 0, allowNewlines = true))
         if (allowNewlines) res match {
@@ -587,7 +588,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         R(App(acc, res))
       */
       // case (br @ BRACKETS(Indent, (BRACKETS(Round | Square, toks1), _) :: toks2), _) :: _ =>
-      case (br @ BRACKETS(Indent, toks @ (BRACKETS(Round | Square, _), _) :: _), _) :: _ =>
+      case (br @ BRACKETS(Indent, toks @ (BRACKETS(Round | Square, _), _) :: _), _) :: _ if prec <= 1 =>
         consume
         val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.exprCont(acc, 0, allowNewlines = true))
         res match {
@@ -628,7 +629,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           
       case c @ (h :: _) if (h._1 match {
         case KEYWORD(";" | "of") | BRACKETS(Round | Square, _)
-          | BRACKETS(Indent, (KEYWORD(";" | "of") | BRACKETS(Round | Square, _), _) :: _)
+          | BRACKETS(Indent, (
+              KEYWORD(";" | "of")
+              | BRACKETS(Round | Square, _)
+              | SELECT(_)
+            , _) :: _)
           => false
         case _ => true
       }) =>
@@ -699,7 +704,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case _ => ???
     }
   
-  def argsMaybeIndented(prec: Int = NoElsePrec)(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =
+  def argsMaybeIndented()(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =
     cur match {
       case (br @ BRACKETS(Indent, toks), _) :: _ if (toks.headOption match {
         case S((KEYWORD("then" | "else"), _)) => false

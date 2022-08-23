@@ -129,12 +129,78 @@ f of x .y
 //│ |f| |#of| |x| |.y|
 //│ Parsed: {f ((x).y,)}
 
+a + b
+  .c
+//│ |a| |+| |b|→|.c|←|
+//│ Parsed: {(+ a b).c}
+
+:pe
+a +
+  b
+  .c
+//│ |a| |+|→|b|↵|.c|←|
+//│ ╔══[PARSE ERROR] Unexpected selector in expression position
+//│ ║  l.140: 	  .c
+//│ ╙──       	  ^^
+//│ ╔══[PARSE ERROR] Unexpected end of indented block; an expression was expected here
+//│ ║  l.140: 	  .c
+//│ ╙──       	    ^
+//│ Parsed: {+ a {b; undefined}}
+
+a +
+  b
+    .c
+//│ |a| |+|→|b|→|.c|←|←|
+//│ Parsed: {+ a {(b).c}}
+
+a + b
+  .c * 2
+    .d - 1
+//│ |a| |+| |b|→|.c| |*| |2|→|.d| |-| |1|←|←|
+//│ Parsed: {- (* (+ a b).c 2).d 1}
+
+a + b
+  .c * 2
+  .d - 1
+//│ |a| |+| |b|→|.c| |*| |2|↵|.d| |-| |1|←|
+//│ Parsed: {- (* (+ a b).c 2).d 1}
+
 
 a
   .b
   of c
 //│ |a|→|.b|↵|#of| |c|←|
 //│ Parsed: {(a).b (c,)}
+
+a
+  .b + 1
+  of c
+//│ |a|→|.b| |+| |1|↵|#of| |c|←|
+//│ Parsed: {+ (a).b 1 (c,)}
+
+a
+  .b + 1
+    of c
+//│ |a|→|.b| |+| |1|→|#of| |c|←|←|
+//│ Parsed: {+ (a).b 1 (c,)}
+
+:pe
+a
+  .b +
+    1
+    of c
+//│ |a|→|.b| |+|→|1|↵|#of| |c|←|←|
+//│ ╔══[PARSE ERROR] Unexpected 'of' keyword in expression position
+//│ ║  l.191: 	    of c
+//│ ╙──       	    ^^
+//│ Parsed: {+ (a).b {1; c}}
+
+a
+  .b +
+    1
+      of c
+//│ |a|→|.b| |+|→|1|→|#of| |c|←|←|←|
+//│ Parsed: {+ (a).b {1 (c,)}}
 
 a
   .b
@@ -164,7 +230,7 @@ a
   .b
 //│ |a|→|+|1|↵|*|2|↵|.b|←|
 //│ ╔══[PARSE ERROR] Unexpected selector in operator block
-//│ ║  l.164: 	  .b
+//│ ║  l.230: 	  .b
 //│ ╙──       	  ^^
 //│ Parsed: {* (+ a 1) 2}
 
@@ -189,7 +255,7 @@ a
 1 .+a 2
 //│ |1| |.+|a| |2|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.189: 	1 .+a 2
+//│ ║  l.255: 	1 .+a 2
 //│ ╙──       	    ^^^
 //│ Parsed: {.+ 1 (a (2,))}
 
