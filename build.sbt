@@ -61,12 +61,22 @@ lazy val mlscriptJS = mlscript.js
 lazy val ts2mls = crossProject(JSPlatform, JVMPlatform).in(file("ts2mls"))
   .settings(
     name := "ts2mls",
-    scalaVersion := "2.13.8"
+    scalaVersion := "2.13.8",
+    scalacOptions ++= Seq(
+      "-deprecation"
+    )
   )
-  .jvmSettings()
+  .jvmSettings(
+    scalacOptions ++= Seq(
+      "-deprecation"
+    )
+  )
   .jsSettings(
     scalaJSUseMainModuleInitializer := true,
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.12" % "test"
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.12" % "test",
+    scalacOptions ++= Seq(
+      "-deprecation"
+    )
   )
   .dependsOn(mlscript % "compile->compile;test->test")
 
