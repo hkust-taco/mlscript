@@ -58,7 +58,7 @@ x =>
 
 (x =>)
 //│ |(|x| |=>|)|
-//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
+//│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
 //│ ║  l.59: 	(x =>)
 //│ ╙──      	     ^
 //│ Parsed: {'(' => x undefined, ')'}

@@ -40,7 +40,7 @@ final case class IDENT(name: String, symbolic: Bool) extends Token with Stroken
 final case class SELECT(name: String) extends Token with Stroken
 final case class OPEN_BRACKET(k: BracketKind) extends Token
 final case class CLOSE_BRACKET(k: BracketKind) extends Token
-final case class BRACKETS(k: BracketKind, contents: Ls[Stroken -> Loc]) extends Token with Stroken
+final case class BRACKETS(k: BracketKind, contents: Ls[Stroken -> Loc])(val innerLoc: Loc) extends Token with Stroken
 final case class COMMENT(text: String) extends Token with Stroken
 
 

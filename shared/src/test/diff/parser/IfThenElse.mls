@@ -498,7 +498,7 @@ if true
 :pe
 (if true then)
 //│ |(|#if| |true| |#then|)|
-//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
+//│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
 //│ ║  l.499: 	(if true then)
 //│ ╙──       	             ^
 //│ Parsed: {'(' if (true) then undefined, ')'}

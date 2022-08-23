@@ -320,7 +320,7 @@ class DiffTests
             val tokens = lexer.bracketedTokens
             // output(tokens.toString)
             output(NewLexer.printTokens(tokens))
-            val p = new NewParser(origin, tokens, raise, dbg = mode.dbgParsing) {
+            val p = new NewParser(origin, tokens, raise, dbg = mode.dbgParsing, N) {
               def doPrintDbg(msg: => Str): Unit =
                   // if (dbg) output("│ " * this.indent + msg)
                   if (dbg) output(msg)

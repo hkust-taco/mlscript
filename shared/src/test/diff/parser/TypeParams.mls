@@ -100,3 +100,20 @@ foo<1, 2, 3>(1, 2, 3)
 //│ ╙──      	    ^
 //│ Parsed: {< 1 2}
 
+
+foo<S, T>(1, 2, 3) & Bar<U>("ok")
+//│ |foo|‹|S|,| |T|›|(|1|,| |2|,| |3|)| |&| |Bar|‹|U|›|(|"ok"|)|
+//│ Parsed: {& (foo‹S, T› (1, 2, 3,)) (Bar‹U› ("ok",))}
+
+foo<Str, Int>(2 + 3) & Bar<MyClass>("ok")
+//│ |foo|‹|Str|,| |Int|›|(|2| |+| |3|)| |&| |Bar|‹|MyClass|›|(|"ok"|)|
+//│ Parsed: {& (foo‹Str, Int› (+ 2 3,)) (Bar‹MyClass› ("ok",))}
+
+:pe
+foo[S, T](1, 2, 3) & Bar[U]("ok")
+//│ |foo|[|S|,| |T|]|(|1|,| |2|,| |3|)| |&| |Bar|[|U|]|(|"ok"|)|
+//│ ╔══[PARSE ERROR] Unexpected comma here
+//│ ║  l.113: 	foo[S, T](1, 2, 3) & Bar[U]("ok")
+//│ ╙──       	     ^
+//│ Parsed: {& (foo[S] (1, 2, 3,)) (Bar[U] ("ok",))}
+

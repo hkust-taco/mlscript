@@ -39,7 +39,7 @@ f(,)
 //│ ╔══[PARSE ERROR] Unexpected comma in expression position
 //│ ║  l.37: 	f(,)
 //│ ╙──      	  ^
-//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
+//│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
 //│ ║  l.37: 	f(,)
 //│ ╙──      	   ^
 //│ Parsed: {f (undefined,)}

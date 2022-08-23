@@ -160,7 +160,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
               if (k0 =/= k1)
                 raise(ErrorReport(msg"Mistmatched closing ${k1.name}" -> S(l1) ::
                   msg"does not correspond to opening ${k0.name}" -> S(l0) :: Nil, source = Parsing))
-              go(rest, false, stack, BRACKETS(k0, acc.reverse) -> (l0 ++ l1) :: oldAcc)
+              go(rest, false, stack, BRACKETS(k0, acc.reverse)(l0.right ++ l1.left) -> (l0 ++ l1) :: oldAcc)
               // ???
             case Nil =>
               raise(ErrorReport(msg"Unexpected closing ${k1.name}" -> S(l1) :: Nil, source = Parsing))
