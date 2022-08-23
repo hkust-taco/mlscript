@@ -46,7 +46,7 @@ object Helpers {
     case Subs(arr, idx) => s"Subs(${inspect(arr)}, ${inspect(idx)})"
     case Assign(f, v)   => s"Assign(${inspect(f)}, ${inspect(v)})"
     case Splc(fs)       => 
-      val elems = fs.map{case L(l) => s"...${inspect(l)}" case R(r -> _) => inspect(r)}.mkString(", ")
+      val elems = fs.map{case L(l) => s"...${inspect(l)}" case R(Fld(_, _, r)) => inspect(r)}.mkString(", ")
       s"Splc($elems)"
     case If(bod, els) => s"If($bod, ${els.map(inspect)})"
     case New(base, body) => s"New(${base}, ${body})"

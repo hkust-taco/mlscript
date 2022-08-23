@@ -63,9 +63,12 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (ts, _) => 
       if (ts.forall(_.isRight)) Tup(ts.iterator.map {
         case R(f) => N -> Fld(f._2, false, f._1)
-        case _ => ??? // left unreachable
+        case _ => die // left unreachable
       }.toList)
-      else Splc(ts.toList)
+      else Splc(ts.map {
+        case R((v, m)) => R(Fld(m, false, v))
+        case L(spl) => L(spl)
+      }.toList)
   })
 
   def subtermNoSel[p: P]: P[Term] = P( parens | record | lit | variable )

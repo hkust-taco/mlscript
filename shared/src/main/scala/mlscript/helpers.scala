@@ -387,7 +387,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       }.mkString(" ") |> bra
     case Splc(fields) => fields.map{
       case L(l) => s"...$l"
-      case R(r -> m) => (if (m) "mut " else "") + s"$r"
+      case R(Fld(m, s, r)) => (if (m) "mut " else "") + (if (s) "#" else "") + r
     }.mkString("(", ", ", ")")
     case Bind(l, r) => s"$l as $r" |> bra
     case Test(l, r) => s"$l is $r" |> bra
@@ -648,7 +648,7 @@ trait StatementImpl extends Located { self: Statement =>
     case TypeDef(kind, nme, tparams, body, _, _) => nme :: tparams ::: body :: Nil
     case Subs(a, i) => a :: i :: Nil
     case Assign(lhs, rhs) => lhs :: rhs :: Nil
-    case Splc(fields) => fields.map{case L(l) => l case R(r) => r._1}
+    case Splc(fields) => fields.map{case L(l) => l case R(r) => r.value}
     case If(body, els) => body :: els.toList
     case d @ NuFunDef(v, ts, rhs) => v :: ts ::: d.body :: Nil
     case TyApp(lhs, targs) => lhs :: targs

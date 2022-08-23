@@ -583,7 +583,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             val t_a = ArrayType(freshVar(prov).toUpper(prov))(prov)
             con(t_l, t_a, t_l)
           }) 
-          case R(r -> mt) => {
+          case R(Fld(mt, sp, r)) => {
             val t = typeTerm(r)
             if (mt) { R(FieldType(Some(t), t)(t.prov)) } else {R(t.toUpper(t.prov))}
           }
