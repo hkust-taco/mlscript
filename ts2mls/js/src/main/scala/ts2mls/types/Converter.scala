@@ -25,79 +25,51 @@ object Converter {
     case TSUnionType(lhs, rhs) => s"(${convert(lhs)}) | (${convert(rhs)})"
     case TSIntersectionType(lhs, rhs) => s"(${convert(lhs)}) & (${convert(rhs)})"
     case TSTypeVariable(name, _) => name
-    case TSTupleType(lst) => s"(${convertTuple(lst)})"
+    case TSTupleType(lst) => s"(${lst.foldLeft("")((p, t) => s"$p${convert(t)}, ")})"
     case TSArrayType(element) => s"MutArray[${convert(element)}]"
     case TSEnumType(_) => "int"
     case TSMemberType(base, modifier) => convert(base)
     case TSInterfaceType(name, members, typeVars, parents) => convertRecord(s"trait $name", members, typeVars, parents)
     case TSClassType(name, members, _, typeVars, parents) => convertRecord(s"class $name", members, typeVars, parents)
-    case TSApplicationType(base, applied) => s"${base}[${convertApply(applied)}]"
+    case TSApplicationType(base, applied) => s"${base}[${applied.map((app) => convert(app)).reduceLeft((res, s) => s"$res, $s")}]"
     case _ => throw new Exception("Unknown TypeScript Type")
   }
 
-  private def convertTuple(types: List[TSType]): String =
-    types.foldLeft("")((p, t) => s"$p${convert(t)}, ")
-    
-
-  private def convertApply(applied: List[TSType]): String = {
-    if (applied.length == 0) throw new Exception("empty applied list.")
-
-    val res = applied.foldLeft("")((p, t) => s"$p${convert(t)}, ")
-    res.substring(0, res.length() - 2)
-  }
-
   private def convertRecord(typeName: String, members: Map[String, TSMemberType], typeVars: List[TSTypeVariable], parents: List[TSType]) = {
-    val rec = members.toList.foldLeft(" ")((p, m) => m._2.modifier match {
+    val allRecs = members.toList.map((m) => m._2.modifier match {
       case Public => {
         m._2.base match {
-          case TSFunctionType(_, _, typeVars) if (typeVars.length > 0) => p
+          case TSFunctionType(_, _, typeVars) if (typeVars.length > 0) =>
+            s"  method ${m._1}[${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]: ${convert(m._2)}" // TODO: add constraints
           case inter: TSIntersectionType => {
             val lst = TSIntersectionType.getOverloadTypeVariables(inter)
-            if (lst.isEmpty) s"$p${m._1}: ${convert(m._2)}; "
-            else p
+            if (lst.isEmpty) s"${m._1}: ${convert(m._2)}"
+            else
+              s"  method ${m._1}[${lst.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s") }]: ${convert(m._2)}" // TODO: add constraints
           }
-          case _ => s"$p${m._1}: ${convert(m._2)}; "
+          case _ => s"${m._1}: ${convert(m._2)}"
         }
       }
-      case _ => p
-    })
-    
-    val body = if (members.isEmpty) "{}"
-      else s"{${rec.substring(0, rec.length() - 2)} }"
-    
-    val res =
-      if (typeName.equals("trait ")) body
-      else {
-        val extBody = parents.foldLeft(body)((b, p) => s"$b & ${convert(p)}")
-        val params = typeVars.foldLeft("")((p, t) => s"$p${t.name}, ") // TODO: add constraints
-        if (params.length == 0)
-          s"$typeName: $extBody"
-        else
-          s"$typeName[${params.substring(0, params.length() - 2)}]: $extBody"
-      }
-
-    val methods = members.toList.foldLeft("")((p, m) => m._2.modifier match {
-      case Public => {
-        m._2.base match {
-          case TSFunctionType(_, _, typeVars) if (typeVars.length > 0) => {
-            val params = typeVars.foldLeft("")((p, t) => s"$p${t.name}, ") // TODO: add constraints
-            s"$p\n  method ${m._1}[${params.substring(0, params.length - 2)}]: ${convert(m._2)}"
-          }
-          case inter: TSIntersectionType => {
-            val lst = TSIntersectionType.getOverloadTypeVariables(inter)
-            if (lst.isEmpty) p
-            else {
-              val params = lst.foldLeft("")((p, t) => s"$p${t.name}, ") // TODO: add constraints
-              s"$p\n  method ${m._1}[${params.substring(0, params.length - 2)}]: ${convert(m._2)}"
-            }
-          }
-          case _ => p
-        }
-      }
-      case _ => p
+      case _ => ""
     })
 
-    if (methods.isEmpty()) res
-    else res + methods
+    val body = {
+      val lst = allRecs.filter((s) => !s.startsWith("  ") && !s.equals(""))
+      if (lst.isEmpty) "{}"
+      else s"{ ${lst.reduceLeft((bd, m) => s"$bd; $m")} }"
+    }
+    val methods = {
+      val lst = allRecs.filter(_.startsWith("  "))
+      if (lst.isEmpty) ""
+      else "\n" + lst.reduceLeft((bd, m) => s"$bd\n$m")
+    }
+    
+    if (typeName.equals("trait ")) body
+    else {
+      val bodyWithParents = parents.foldLeft(body)((b, p) => s"$b & ${convert(p)}")
+      if (typeVars.length == 0) s"$typeName: $bodyWithParents$methods"
+      else
+        s"$typeName[${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]: $bodyWithParents$methods" // TODO: add constraints
+    }
   }
 }

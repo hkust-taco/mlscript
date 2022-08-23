@@ -14,7 +14,7 @@ def doSome[T, U]: (((T) & (U)) -> ((T) & (U))) & ((string) -> (nothing))
 class G[T]: { g: T }
 def bar: (((G[string]) -> (G[string])) & ((G[number]) -> (G[number]))) & ((G[bool]) -> (G[bool]))
 def XX'f[T]: ((T) -> ((number) -> (string))) & ((T) -> ((bool) -> (string)))
-class WWW: { }
+class WWW: {}
   method F[T]: ((string) -> (T)) & ((number) -> (T))
 //│ Defined class M
 //│ Defined class N
