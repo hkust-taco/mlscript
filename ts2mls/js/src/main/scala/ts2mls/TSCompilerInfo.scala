@@ -6,7 +6,7 @@ import js.DynamicImplicits._
 import js.JSConverters._
 
 abstract class TSAny(v: js.Dynamic) {
-  lazy val isUndefined: Boolean = js.isUndefined(v)
+  val isUndefined: Boolean = js.isUndefined(v)
 }
 
 // array for information object in tsc
@@ -15,17 +15,17 @@ abstract class TSArray[T <: TSAny](arr: js.Dynamic) extends TSAny(arr) {
   lazy val length: Int = arr.length.asInstanceOf[Int]
 
   def foldLeft[U](init: U, index: Int = 0)(implicit f: (U, T) => U): U =
-    if (js.isUndefined(arr)) init
+    if (isUndefined) init
     else if (index < length) foldLeft(f(init, get(index)), index + 1)
     else init
 
   def foldLeftIndexed[U](init: U, index: Int = 0)(implicit f: (U, T, Int) => U): U =
-    if (js.isUndefined(arr)) init
+    if (isUndefined) init
     else if (index < length) foldLeftIndexed(f(init, get(index), index), index + 1)
     else init
 
   def foreach(f: T => Unit, index: Int = 0): Unit =
-    if (!js.isUndefined(arr))
+    if (!isUndefined)
       if (index < length) {
         f(get(index))
         foreach(f, index + 1)
@@ -58,7 +58,7 @@ object TSTypeArray {
 
 class TSSymbolMap(map: js.Dynamic) extends TSAny(map) {
   def foreach(f: TSSymbolObject => Unit): Unit =
-    if (!js.isUndefined(map)){
+    if (!isUndefined){
       val jsf: js.Function1[js.Dynamic, js.Any] =
         { (s: js.Dynamic) => f(TSSymbolObject(s)) }
       map.forEach(jsf)
@@ -111,7 +111,7 @@ class TSSymbolObject(sym: js.Dynamic) extends TSAny(sym) {
   private lazy val parent = TSSymbolObject(sym.parent)
   
   lazy val declaration =
-    if (js.isUndefined(sym)) TSNodeObject(sym)
+    if (isUndefined) TSNodeObject(sym)
     else if (declarations.isUndefined) TSNodeObject(sym.declarations)
     else declarations.get(0)
   lazy val escapedName: String = sym.escapedName.toString
