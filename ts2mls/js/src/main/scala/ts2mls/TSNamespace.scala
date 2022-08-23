@@ -44,7 +44,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
     case _ => false
   }
 
-  def visit(writer: DecWriter, prefix: String): Unit = {
+  def visit(writer: JSWriter, prefix: String): Unit = {
     order.toList.foreach((p) => p match {
       case Left(name) => subSpace(name).visit(writer, prefix + showPrefix)
       case Right(name) => {
@@ -56,20 +56,20 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
             val params = TSIntersectionType.getOverloadTypeVariables(inter).foldLeft("")((p, t) => s"$p${t.name}, ") // TODO: add constraints
 
             if (params.length() == 0)
-              writer.generate(s"def ${fullName}: ${TSProgram.getMLSType(inter)}")
+              writer.writeln(s"def ${fullName}: ${TSProgram.getMLSType(inter)}")
             else
-              writer.generate(s"def ${fullName}[${params.substring(0, params.length() - 2)}]: ${TSProgram.getMLSType(inter)}")
+              writer.writeln(s"def ${fullName}[${params.substring(0, params.length() - 2)}]: ${TSProgram.getMLSType(inter)}")
           }
           case f: TSFunctionType => {
             val nsName = getFullName()
             val fullName = if (nsName.equals("")) name else s"$nsName'${name}"
             val params = f.typeVars.foldLeft("")((p, t) => s"$p${t.name}, ") // TODO: add constraints
             if (params.length() == 0)
-              writer.generate(s"def ${fullName}: ${TSProgram.getMLSType(f)}")
+              writer.writeln(s"def ${fullName}: ${TSProgram.getMLSType(f)}")
             else
-              writer.generate(s"def ${fullName}[${params.substring(0, params.length() - 2)}]: ${TSProgram.getMLSType(f)}")
+              writer.writeln(s"def ${fullName}[${params.substring(0, params.length() - 2)}]: ${TSProgram.getMLSType(f)}")
           }
-          case _ => writer.generate(TSProgram.getMLSType(mem))
+          case _ => writer.writeln(TSProgram.getMLSType(mem))
         }
       }
     })
