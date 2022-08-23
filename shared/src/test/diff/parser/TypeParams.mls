@@ -115,5 +115,5 @@ foo[S, T](1, 2, 3) & Bar[U]("ok")
 //│ ╔══[PARSE ERROR] Unexpected comma here
 //│ ║  l.113: 	foo[S, T](1, 2, 3) & Bar[U]("ok")
 //│ ╙──       	     ^
-//│ Parsed: {& (foo[S] (1, 2, 3,)) (Bar[U] ("ok",))}
+//│ Parsed: {& ((foo)[S] (1, 2, 3,)) ((Bar)[U] ("ok",))}
 

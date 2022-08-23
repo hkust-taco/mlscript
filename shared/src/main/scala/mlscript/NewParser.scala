@@ -507,7 +507,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     // Tup(Nil).withLoc(lastLoc) // TODO FIXME produce error term instead
     UnitLit(true).withLoc(lastLoc) // TODO FIXME produce error term instead
   
-  def exprCont(acc: Term, prec: Int, allowNewlines: Bool)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, s"`$acc`") { l =>
+  def exprCont(acc: Term, prec: Int, allowNewlines: Bool)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, s"`$acc`", allowNewlines) { l =>
     cur match {
       case (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
         consume
@@ -578,12 +578,22 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         
       case (BRACKETS(Indent, (KEYWORD("then"|"else"), _) :: toks), _) :: _ => R(acc)
       
+      /* 
       case (br @ BRACKETS(Indent, toks), _) :: _ 
       if prec === 0 && !toks.dropWhile(_._1 === SPACE).headOption.map(_._1).contains(KEYWORD("else")) // FIXME
       =>
         consume
         val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockTerm)
         R(App(acc, res))
+      */
+      // case (br @ BRACKETS(Indent, (BRACKETS(Round | Square, toks1), _) :: toks2), _) :: _ =>
+      case (br @ BRACKETS(Indent, toks @ (BRACKETS(Round | Square, _), _) :: _), _) :: _ =>
+        consume
+        val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.exprCont(acc, 0, allowNewlines = true))
+        res match {
+          case L(ifb) => L(ifb) // TODO something else?
+          case R(res) => exprCont(res, 0, allowNewlines)
+        }
         
       case (br @ BRACKETS(Angle, toks), loc) :: _ =>
         consume
@@ -596,41 +606,38 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           }
           case _ => ???
         })
-        exprCont(res, 0, allowNewlines = false)
+        exprCont(res, 0, allowNewlines)
         
-      case (br @ BRACKETS(Square, toks), loc) :: _ =>consume
+      case (br @ BRACKETS(Square, toks), loc) :: _ =>
+        consume
         val idx = rec(toks, S(br.innerLoc), "subscript").concludeWith(_.expr(0))
         val res = Subs(acc, idx.withLoc(S(loc)))
-        exprCont(res, 0, allowNewlines = false)
+        exprCont(res, 0, allowNewlines)
         
+        case (br @ BRACKETS(Round, toks), loc) :: _ =>
+          consume
+          val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented())
+          val res = App(acc, Tup(as).withLoc(S(loc)))
+          exprCont(res, 0, allowNewlines)
+        case (KEYWORD("of"), _) :: _ =>
+          consume
+          val as = argsMaybeIndented()
+          // val as = argsOrIf(Nil) // TODO
+          val res = App(acc, Tup(as))
+          exprCont(res, 0, allowNewlines)
+          
       case c @ (h :: _) if (h._1 match {
-        case KEYWORD(";") => false
+        case KEYWORD(";" | "of") | BRACKETS(Round | Square, _)
+          | BRACKETS(Indent, (KEYWORD(";" | "of") | BRACKETS(Round | Square, _), _) :: _)
+          => false
         case _ => true
       }) =>
-        c match {
-          case (br @ BRACKETS(Round, toks), loc) :: _ =>
-            consume
-            val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented())
-            val res = App(acc, Tup(as).withLoc(S(loc)))
-            exprCont(res, 0, allowNewlines = false)
-          case _ =>
-            val ofLess = c match {
-              case (KEYWORD("of"), _) :: _ =>
-                consume
-                false
-              case _ =>
-                true
-            }
-            val as = argsMaybeIndented()
-            // val as = argsOrIf(Nil) // TODO
-            val res = App(acc, Tup(as))
-            if (ofLess)
-              raise(WarningReport(msg"Paren-less applications should use the 'of' keyword"
-                // -> ofKw :: Nil))
-                -> res.toLoc :: Nil))
-            // R(res)
-            exprCont(res, 0, allowNewlines = false)
-        }
+        val as = argsMaybeIndented()
+        val res = App(acc, Tup(as))
+        raise(WarningReport(msg"Paren-less applications should use the 'of' keyword"
+          -> res.toLoc :: Nil))
+        exprCont(res, 0, allowNewlines)
+        
       case _ => R(acc)
     }
   }

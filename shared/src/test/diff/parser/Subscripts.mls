@@ -1,44 +1,35 @@
 
 a[0]
 //│ |a|[|0|]|
-//│ Parsed: {a[0]}
+//│ Parsed: {(a)[0]}
 
 a[0][1]
 //│ |a|[|0|]|[|1|]|
-//│ Parsed: {a[0][1]}
+//│ Parsed: {((a)[0])[1]}
 
 a.x[0].y[1].z
 //│ |a|.x|[|0|]|.y|[|1|]|.z|
-//│ Parsed: {(((a).x[0]).y[1]).z}
+//│ Parsed: {(((((a).x)[0]).y)[1]).z}
 
 a + b [0] * 2
 //│ |a| |+| |b| |[|0|]| |*| |2|
-//│ Parsed: {+ a (* b[0] 2)}
+//│ Parsed: {+ a (* (b)[0] 2)}
 
-// TODO should disallow parsing of-less indented blocks as applications...
-:w
+foo
+  [1]
+//│ |foo|→|[|1|]|←|
+//│ Parsed: {(foo)[1]}
+
+// TODO lessen precedence when in indented block?
 Foo(bar) + 1
   ["hello"]
 //│ |Foo|(|bar|)| |+| |1|→|[|"hello"|]|←|
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.20: 	Foo(bar) + 1
-//│ ║        	           ^
-//│ ║  l.21: 	  ["hello"]
-//│ ╙──      	^^^^^^^^^^^^
-//│ Parsed: {+ (Foo (bar,)) (1 ('(' "hello", ')',))}
+//│ Parsed: {+ (Foo (bar,)) (1)["hello"]}
 
-:w
 Foo(bar) + 1
   [1]
   [2]
 //│ |Foo|(|bar|)| |+| |1|→|[|1|]|↵|[|2|]|←|
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.31: 	Foo(bar) + 1
-//│ ║        	           ^
-//│ ║  l.32: 	  [1]
-//│ ║        	^^^^^
-//│ ║  l.33: 	  [2]
-//│ ╙──      	^^^^^
-//│ Parsed: {+ (Foo (bar,)) (1 ({'(' 1, ')'; '(' 2, ')'},))}
+//│ Parsed: {+ (Foo (bar,)) ((1)[1])[2]}
 
 
