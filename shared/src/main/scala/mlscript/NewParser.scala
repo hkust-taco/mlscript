@@ -576,11 +576,28 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case (COMMA | NEWLINE | KEYWORD("then" | "else" | "in" | ";" | "=")
         | IDENT(_, true) | BRACKETS(Curly, _), _) :: _ => R(acc)
       
+      case (KEYWORD("of"), _) :: _ if prec <= 1 =>
+        consume
+        val as = argsMaybeIndented()
+        val res = App(acc, Tup(as))
+        exprCont(res, prec, allowNewlines)
       case (BRACKETS(Indent, (KEYWORD("of"), _) :: toks), _) :: _ if prec <= 1 =>
         consume
-        val as = rec(toks).concludeWith(_.argsMaybeIndented())
-        val res = App(acc, Tup(as))
-        exprCont(res, 0, allowNewlines = true) // ?!
+        // 
+        // val as = rec(toks).concludeWith(_.argsMaybeIndented())
+        // val res = App(acc, Tup(as))
+        // exprCont(res, 0, allowNewlines = true) // ?!
+        // 
+        val res = rec(toks).concludeWith { nested =>
+          val as = nested.argsMaybeIndented()
+          nested.exprCont(App(acc, Tup(as)), 0, allowNewlines = true)
+        }
+        // if (allowNewlines) 
+        res match {
+          case L(ifb) => L(ifb) // TODO something else?
+          case R(res) => exprCont(res, 0, allowNewlines)
+        }
+        // else res
         
       case (BRACKETS(Indent, (KEYWORD("then"|"else"), _) :: toks), _) :: _ => R(acc)
       

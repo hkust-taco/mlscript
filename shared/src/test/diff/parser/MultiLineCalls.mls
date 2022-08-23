@@ -82,10 +82,7 @@ f
   of 0
   of 1
 //│ |f|→|#of| |0|↵|#of| |1|←|
-//│ ╔══[PARSE ERROR] Unexpected 'of' keyword here
-//│ ║  l.83: 	  of 1
-//│ ╙──      	  ^^
-//│ Parsed: {f (0,)}
+//│ Parsed: {f (0,) (1,)}
 
 f
   (0)
