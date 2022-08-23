@@ -17,35 +17,21 @@ import org.scalatest.time._
 import org.scalatest.concurrent.{TimeLimitedTests, Signaler}
 
 
-class DiffTests(dir: os.Path)
+class DiffTests
   extends org.scalatest.funsuite.AnyFunSuite
   with org.scalatest.ParallelTestExecution
   with TimeLimitedTests
 {
-  private val allFiles = os.walk(dir).filter(_.toIO.isFile)
-
   import DiffTests._
 
-  private val files = allFiles.filter { file =>
-      val fileName = file.baseName
-      validExt(file.ext)
-  }
-
-  // Aggregate unstaged modified files to only run the tests on them, if there are any
-  private val modified: Set[Str] =
-    try os.proc("git", "status", "--porcelain", dir).call().out.lines().iterator.flatMap { gitStr =>
-      println(" [git] " + gitStr)
-      val prefix = gitStr.take(2)
-      val filePath = gitStr.drop(3)
-      val fileName = os.RelPath(filePath).baseName
-      if (prefix =:= "A " || prefix =:= "M ") N else S(fileName) // disregard modified files that are staged
-    }.toSet catch {
-      case err: Throwable => System.err.println("/!\\ git command failed with: " + err)
-      Set.empty
-    }
+  private val dir = defaultDir
   
-  private def filter(name: Str): Bool =
-    if (focused.nonEmpty) focused(name) else modified.isEmpty || modified(name)
+  private val allFiles = os.walk(dir).filter(_.toIO.isFile)
+
+  protected def getFiles() = allFiles.filter { file =>
+      val fileName = file.baseName
+      validExt(file.ext) && filter(fileName)
+  }
   
   val timeLimit = TimeLimit
   
@@ -62,7 +48,7 @@ class DiffTests(dir: os.Path)
     }
   }
   
-  files.foreach { file => val fileName = file.baseName; test(fileName) {
+  getFiles().foreach { file => val fileName = file.baseName; test(fileName) {
     
     val buf = mutable.ArrayBuffer.empty[Char]
     buf ++= s"Processed  $fileName"
@@ -742,7 +728,22 @@ object DiffTests {
     if (sys.env.get("CI").isDefined) Span(25, Seconds)
     else Span(5, Seconds)
   
+  private val defaultDir = os.pwd/"shared"/"src"/"test"/"diff"
+  
   private val validExt = Set("fun", "mls")
+  
+  // Aggregate unstaged modified files to only run the tests on them, if there are any
+  private val modified: Set[Str] =
+    try os.proc("git", "status", "--porcelain", defaultDir).call().out.lines().iterator.flatMap { gitStr =>
+      println(" [git] " + gitStr)
+      val prefix = gitStr.take(2)
+      val filePath = gitStr.drop(3)
+      val fileName = os.RelPath(filePath).baseName
+      if (prefix =:= "A " || prefix =:= "M ") N else S(fileName) // disregard modified files that are staged
+    }.toSet catch {
+      case err: Throwable => System.err.println("/!\\ git command failed with: " + err)
+      Set.empty
+    }
   
   // Allow overriding which specific tests to run, sometimes easier for development:
   private val focused = Set[Str](
@@ -765,10 +766,6 @@ object DiffTests {
     // "Subsume",
     // "Methods",
   )
-}
-
-class MLScriptDiffTests extends DiffTests(MLScriptDiffTests.defaultDir) {}
-
-object MLScriptDiffTests {
-  private val defaultDir = os.pwd/"shared"/"src"/"test"/"diff"
+  private def filter(name: Str): Bool =
+    if (focused.nonEmpty) focused(name) else modified.isEmpty || modified(name)
 }
