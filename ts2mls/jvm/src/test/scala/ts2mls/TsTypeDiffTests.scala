@@ -1,7 +1,6 @@
 package ts2mls
 
 import mlscript.DiffTests
-import mlscript.utils._, shorthands._
 
 class TsTypeDiffTests extends DiffTests {
   override protected def getFiles() =
