@@ -9,7 +9,7 @@ class TSTypeGenerationTest extends AnyFunSuite {
     val program = TSProgram(tsPath(data._1))
     var writer = JSWriter(diffPath(data._2))
     program.generate(writer)
-    writer.close
+    writer.close()
   })
 }
 
