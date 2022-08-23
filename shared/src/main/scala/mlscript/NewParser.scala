@@ -215,6 +215,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   
   def toParams(t: Term): Tup = t match {
     case t: Tup => t
+    case Bra(false, t: Tup) => t
     case _ => Tup((N, Fld(false, false, t)) :: Nil)
   }
   def toParamsTy(t: Type): Tuple = t match {
@@ -523,7 +524,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           case L(rhs) =>
             L(IfOpApp(acc, v, rhs))
           case R(rhs) =>
-            exprCont(App(App(v, toParams(acc)), toParams(rhs)), prec, allowNewlines)
+            opStr match {
+              case "=>" =>
+                exprCont(Lam(toParams(acc), rhs), prec, allowNewlines)
+              case _ =>
+                exprCont(App(App(v, toParams(acc)), toParams(rhs)), prec, allowNewlines)
+            }
         }
       case (SPACE, l0) :: _ =>
         consume

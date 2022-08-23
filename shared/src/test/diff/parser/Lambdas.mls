@@ -3,11 +3,11 @@
 
 x => x
 //│ |x| |=>| |x|
-//│ Parsed: {=> (x,) (x,)}
+//│ Parsed: {x, => x}
 
 (x) => x
 //│ |(|x|)| |=>| |x|
-//│ Parsed: {=> ('(' x, ')',) (x,)}
+//│ Parsed: {x, => x}
 
 // TODO
 fun x => x
@@ -26,7 +26,7 @@ let f = fun x => x
 //│ ╔══[PARSE ERROR] Unexpected 'fun' keyword in expression position
 //│ ║  l.24: 	let f = fun x => x
 //│ ╙──      	        ^^^
-//│ Parsed: {fun f = => (x,) (x,)}
+//│ Parsed: {fun f = x, => x}
 
 
 fun f x = x
@@ -39,7 +39,7 @@ fun f x = x
 
 (x, y) => x
 //│ |(|x|,| |y|)| |=>| |x|
-//│ Parsed: {=> ('(' x, y, ')',) (x,)}
+//│ Parsed: {x, y, => x}
 
 
 => 1
@@ -54,13 +54,13 @@ x =>
 //│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
 //│ ║  l.52: 	x =>
 //│ ╙──      	    ^
-//│ Parsed: {=> (x,) (undefined,)}
+//│ Parsed: {x, => undefined}
 
 (x =>)
 //│ |(|x| |=>|)|
 //│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
 //│ ║  l.59: 	(x =>)
 //│ ╙──      	     ^
-//│ Parsed: {'(' => (x,) (undefined,), ')'}
+//│ Parsed: {'(' x, => undefined, ')'}
 
 
