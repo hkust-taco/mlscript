@@ -30,9 +30,8 @@ object Converter {
     case TSEnumType(_) => "int"
     case TSMemberType(base, modifier) => convert(base)
     case TSInterfaceType(name, members, typeVars, parents) => convertRecord(s"trait $name", members, typeVars, parents)
-    case TSClassType(name, members, _, typeVars, parents) => convertRecord(s"class $name", members, typeVars, parents)
+    case TSClassType(name, members, _, typeVars, parents) => convertRecord(s"class $name", members, typeVars, parents) // TODO: deal with static members
     case TSApplicationType(base, applied) => s"${base}[${applied.map((app) => convert(app)).reduceLeft((res, s) => s"$res, $s")}]"
-    case _ => throw new Exception("Unknown TypeScript Type")
   }
 
   private def convertRecord(typeName: String, members: Map[String, TSMemberType], typeVars: List[TSTypeVariable], parents: List[TSType]) = {
@@ -50,21 +49,21 @@ object Converter {
           case _ => s"${m._1}: ${convert(m._2)}"
         }
       }
-      case _ => ""
+      case _ => "" // TODO: deal with private/protected members
     })
 
-    val body = {
+    val body = { // members without independent type parameters
       val lst = allRecs.filter((s) => !s.startsWith("  ") && !s.equals(""))
       if (lst.isEmpty) "{}"
       else s"{ ${lst.reduceLeft((bd, m) => s"$bd; $m")} }"
     }
-    val methods = {
+    val methods = { // members with independent type parameters, use methods instead
       val lst = allRecs.filter(_.startsWith("  "))
       if (lst.isEmpty) ""
       else "\n" + lst.reduceLeft((bd, m) => s"$bd\n$m")
     }
     
-    if (typeName.equals("trait ")) body
+    if (typeName.equals("trait ")) body // anonymous interfaces
     else {
       val bodyWithParents = parents.foldLeft(body)((b, p) => s"$b & ${convert(p)}")
       if (typeVars.length == 0) s"$typeName: $bodyWithParents$methods"
