@@ -481,21 +481,18 @@ if true
 if true
   then 0
     
-//│ |#if| |true|→|#then| |0|→||←|←|
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.482: 	  then 0
-//│ ╙──       	       ^
-//│ Parsed: {if (true) then 0 ()}
+//│ |#if| |true|→|#then| |0|←|
+//│ Parsed: {if (true) then 0}
 
 
 :pe
 (if true)
 //│ |(|#if| |true|)|
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found reference instead
-//│ ║  l.492: 	(if true)
+//│ ║  l.489: 	(if true)
 //│ ║         	    ^^^^
 //│ ╟── Note: 'if' expression started here:
-//│ ║  l.492: 	(if true)
+//│ ║  l.489: 	(if true)
 //│ ╙──       	 ^^
 //│ Parsed: {'(' if (true) then undefined, ')'}
 
@@ -503,7 +500,7 @@ if true
 (if true then)
 //│ |(|#if| |true| |#then|)|
 //│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
-//│ ║  l.503: 	(if true then)
+//│ ║  l.500: 	(if true then)
 //│ ╙──       	             ^
 //│ Parsed: {'(' if (true) then undefined, ')'}
 
@@ -511,7 +508,7 @@ if true
 if true then;
 //│ |#if| |true| |#then|#;|
 //│ ╔══[PARSE ERROR] Expected end of input; found ';' keyword instead
-//│ ║  l.511: 	if true then;
+//│ ║  l.508: 	if true then;
 //│ ╙──       	            ^
 //│ Parsed: {if (true) then undefined}
 

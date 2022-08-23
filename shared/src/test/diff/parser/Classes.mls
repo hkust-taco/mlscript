@@ -83,8 +83,19 @@ class Foo: Bar {
 //│ |#class| |Foo|#:| |Bar| |{|→|#fun| |f| |#=| |0|↵|#fun| |bar| |#=| |1|←|↵|}|
 //│ Parsed: {class Foo(): Bar {fun f = 0; fun bar = 1}}
 
+class Foo: Bar {
+  
+}
+//│ |#class| |Foo|#:| |Bar| |{|↵|}|
+//│ Parsed: {class Foo(): Bar {}}
 
-// FIXME `(undefined,)`
+fun foo =
+  class Foo: Bar {
+  
+  }
+//│ |#fun| |foo| |#=|→|#class| |Foo|#:| |Bar| |{|↵|}|←|
+//│ Parsed: {fun foo = {class Foo(): Bar {}}}
+
 class Foo()
 //│ |#class| |Foo|(||)|
 //│ Parsed: {class Foo() {}}

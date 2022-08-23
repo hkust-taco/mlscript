@@ -156,12 +156,15 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
           stack match {
             case ((Indent, loc), oldAcc) :: _ if k1 =/= Indent =>
               go(CLOSE_BRACKET(Indent) -> l1.left :: toks, false, stack, acc)
+            case ((Indent, loc), oldAcc) :: stack
+            if k1 === Indent && acc.forall { case (SPACE | NEWLINE, _) => true; case _ => false } =>
+              // * Ignore empty indented blocks:
+              go(rest, false, stack, oldAcc)
             case ((k0, l0), oldAcc) :: stack =>
               if (k0 =/= k1)
                 raise(ErrorReport(msg"Mistmatched closing ${k1.name}" -> S(l1) ::
                   msg"does not correspond to opening ${k0.name}" -> S(l0) :: Nil, source = Parsing))
               go(rest, false, stack, BRACKETS(k0, acc.reverse)(l0.right ++ l1.left) -> (l0 ++ l1) :: oldAcc)
-              // ???
             case Nil =>
               raise(ErrorReport(msg"Unexpected closing ${k1.name}" -> S(l1) :: Nil, source = Parsing))
               go(rest, false, stack, acc)

@@ -2,31 +2,16 @@
 
  
 //│ | |
-//│ ╔══[PARSE ERROR] Unexpected space in expression position
-//│ ║  l.3: 	 
-//│ ╙──     	^
-//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
-//│ ║  l.3: 	 
-//│ ╙──     	 ^
-//│ Parsed: {undefined}
+//│ Parsed: {}
 
   
 //│ | |
-//│ ╔══[PARSE ERROR] Unexpected space in expression position
-//│ ║  l.13: 	  
-//│ ╙──      	^^
-//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
-//│ ║  l.13: 	  
-//│ ╙──      	  ^
-//│ Parsed: {undefined}
+//│ Parsed: {}
 
   
  
-//│ | |→||←|
-//│ ╔══[PARSE ERROR] Unexpected space in expression position
-//│ ║  l.23: 	  
-//│ ╙──      	^^
-//│ Parsed: {{}}
+//│ | |
+//│ Parsed: {}
 
 
 false(1 , 2 , 3)

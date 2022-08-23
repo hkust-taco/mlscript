@@ -174,6 +174,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   
   private def curLoc = _cur.headOption.map(_._2)
   
+  /* // * TODO rm
   def blockTerm: Blk = {
     val ts = block(false, false)
     val es = ts.map {
@@ -184,6 +185,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     }
     Blk(es)
   }
+  */
+  
   def typingUnit: TypingUnit = {
     val ts = block(false, false)
     val es = ts.map {
@@ -228,6 +231,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     cur match {
       case Nil => Nil
       case (NEWLINE, _) :: _ => consume; block
+      case (SPACE, _) :: _ => consume; block
       case c =>
         val t = c match {
           case (KEYWORD(k @ ("class" | "trait" | "type")), l0) :: c =>
@@ -367,7 +371,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   
   def exprOrIf(prec: Int, allowSpace: Bool = true)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, allowSpace) { l =>
     cur match {
-      case (SPACE, l0) :: _ if allowSpace =>
+      case (SPACE, l0) :: _ if allowSpace => // Q: do we really need the `allowSpace` flag?
         consume
         exprOrIf(prec, allowSpace)
       case (br @ BRACKETS(Indent, toks), _) :: _ if (toks.headOption match { // TODO factor

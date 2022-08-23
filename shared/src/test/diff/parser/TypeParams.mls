@@ -46,22 +46,23 @@ foo<1, 2, 3>(1, 2, 3)
 //│ Parsed: {> (< 1 2) 4}
 
 :pe
+:w
 1< 2 > 4
 //│ ╔══[PARSE ERROR] Unmatched opening angle bracket
-//│ ║  l.49: 	1< 2 > 4
+//│ ║  l.50: 	1< 2 > 4
 //│ ║        	 ^
 //│ ╙── Note that `<` without spaces around it is considered as an angle bracket and not as an operator
 //│ | |2| |>| |4|1|
-//│ ╔══[PARSE ERROR] Unexpected space in expression position
-//│ ║  l.49: 	1< 2 > 4
-//│ ╙──      	  ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.50: 	1< 2 > 4
+//│ ╙──      	^^^^^^^^
 //│ Parsed: {> 2 (4 (1,))}
 
 :w
 1< 2> 4
 //│ |1|‹| |2|›| |4|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.61: 	1< 2> 4
+//│ ║  l.62: 	1< 2> 4
 //│ ╙──      	^^^^^^^
 //│ Parsed: {1‹2› (4,)}
 
@@ -80,15 +81,12 @@ foo<1, 2, 3>(1, 2, 3)
 :pe
 1< >2
 //│ ╔══[PARSE ERROR] Unmatched opening angle bracket
-//│ ║  l.81: 	1< >2
+//│ ║  l.82: 	1< >2
 //│ ║        	 ^
 //│ ╙── Note that `<` without spaces around it is considered as an angle bracket and not as an operator
 //│ | |>|2|1|
-//│ ╔══[PARSE ERROR] Unexpected space in expression position
-//│ ║  l.81: 	1< >2
-//│ ╙──      	  ^
 //│ ╔══[PARSE ERROR] Unexpected operator in expression position
-//│ ║  l.81: 	1< >2
+//│ ║  l.82: 	1< >2
 //│ ╙──      	   ^
 //│ Parsed: {2 (1,)}
 
@@ -96,7 +94,7 @@ foo<1, 2, 3>(1, 2, 3)
 1 < >2
 //│ |1| |<| |>|2|
 //│ ╔══[PARSE ERROR] Unexpected operator in expression position
-//│ ║  l.96: 	1 < >2
+//│ ║  l.94: 	1 < >2
 //│ ╙──      	    ^
 //│ Parsed: {< 1 2}
 
@@ -113,7 +111,7 @@ foo<Str, Int>(2 + 3) & Bar<MyClass>("ok")
 foo[S, T](1, 2, 3) & Bar[U]("ok")
 //│ |foo|[|S|,| |T|]|(|1|,| |2|,| |3|)| |&| |Bar|[|U|]|(|"ok"|)|
 //│ ╔══[PARSE ERROR] Unexpected comma here
-//│ ║  l.113: 	foo[S, T](1, 2, 3) & Bar[U]("ok")
+//│ ║  l.111: 	foo[S, T](1, 2, 3) & Bar[U]("ok")
 //│ ╙──       	     ^
 //│ Parsed: {& ((foo)[S] (1, 2, 3,)) ((Bar)[U] ("ok",))}
 
