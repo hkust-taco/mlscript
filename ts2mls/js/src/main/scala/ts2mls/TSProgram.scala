@@ -17,7 +17,7 @@ class TSProgram(filenames: Seq[String]) {
     filename -> TSSourceFile(program.getSourceFile(filename), globalNamespace)
   }).toMap
 
-  def visit(writer: JSWriter, prefix: String = ""): Unit = globalNamespace.visit(writer, prefix)
+  def generate(writer: JSWriter, prefix: String = ""): Unit = globalNamespace.generate(writer, prefix)
 }
 
 object TSProgram {

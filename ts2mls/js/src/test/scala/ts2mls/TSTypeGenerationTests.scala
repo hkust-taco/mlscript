@@ -8,7 +8,7 @@ class TSTypeGenerationTest extends AnyFunSuite {
   testsData.foreach((data) => test(data._2) {
     val program = TSProgram(tsPath(data._1))
     var writer = JSWriter(diffPath(data._2))
-    program.visit(writer)
+    program.generate(writer)
     writer.close
   })
 }

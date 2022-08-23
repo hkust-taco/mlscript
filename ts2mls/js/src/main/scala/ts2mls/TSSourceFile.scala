@@ -6,7 +6,7 @@ import js.DynamicImplicits._
 import types._
 
 class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker) {
-  private def visit(node: js.Dynamic): Unit = {
+  private def generate(node: js.Dynamic): Unit = {
     val nodeObject = TSNodeObject(node)
     if (nodeObject.isToken || nodeObject.symbol.isUndefined) return
 
@@ -14,7 +14,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     addNodeIntoNamespace(nodeObject, name)(global)
   }
 
-  TypeScript.forEachChild(sf, visit)
+  TypeScript.forEachChild(sf, generate)
 
   private def getApplicationArguments[T <: TSAny](args: TSArray[T])(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): List[TSType] =
     args.foldLeft(List[TSType]())((lst, arg) => arg match {

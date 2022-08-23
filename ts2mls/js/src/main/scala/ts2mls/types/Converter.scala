@@ -16,12 +16,10 @@ object Converter {
 
   def convert(tsType: TSType): String = tsType match {
     case TSNamedType(typeName) => primitiveName.getOrElse(typeName, typeName)
-    case TSFunctionType(params, res, constraint) => {
-      val func = 
-        if (params.length == 0) s"${primitiveName("void")} -> (${convert(res)})"
-        else params.foldRight(convert(res))((tst, mlst) => s"(${convert(tst)}) -> (${mlst})")
-      func
-    }
+    case TSFunctionType(params, res, constraint) =>
+      // since functions can be defined by both `def` and `method`, it only returns the type of functions
+      if (params.length == 0) s"${primitiveName("void")} -> (${convert(res)})"
+      else params.foldRight(convert(res))((tst, mlst) => s"(${convert(tst)}) -> (${mlst})")
     case TSUnionType(lhs, rhs) => s"(${convert(lhs)}) | (${convert(rhs)})"
     case TSIntersectionType(lhs, rhs) => s"(${convert(lhs)}) & (${convert(rhs)})"
     case TSTypeVariable(name, _) => name
