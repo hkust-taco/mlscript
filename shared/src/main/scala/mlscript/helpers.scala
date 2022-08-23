@@ -301,7 +301,7 @@ trait NuDeclImpl extends Located { self: NuDecl =>
     case NuTypeDef(k, n, tps, sps, parents, bod) =>
       s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_.name).mkString("[", ", ", "]")}(${
         // sps.mkString("(",",",")")
-        sps})${if (parents.isEmpty) "" else ": "}${parents.map(_.show).mkString(", ")}"
+        sps})${if (parents.isEmpty) "" else ": "}${parents.mkString(", ")}"
   }
 }
 trait TypingUnitImpl extends Located { self: TypingUnit =>

@@ -158,7 +158,7 @@ final case class NuTypeDef(
   nme: TypeName,
   tparams: Ls[TypeName],
   params: Tup, // the specialized parameters for that type
-  parents: Ls[NamedType],
+  parents: Ls[Term],
   body: TypingUnit
 ) extends NuDecl with DesugaredStatement
 

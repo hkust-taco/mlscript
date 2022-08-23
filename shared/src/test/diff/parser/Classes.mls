@@ -46,7 +46,7 @@ class Foo: Bar { fun f = 0
 //│ |#class| |Foo|#:| |Bar| |{| |#fun| |f| |#=| |0|→|#fun| |bar| |#=| |1|←|↵|}|
 //│ Parsed: {class Foo(): Bar {fun f = 0 {fun bar = 1}}}
 
-// TODO disallow?
+// TODO disallow? (i.e., require unindent before closing brace)
 // :e
 class Foo: Bar {
   fun f = 0
@@ -83,12 +83,18 @@ class Foo(x, y, z)
 //│ Parsed: {class Foo(x, y, z,) {}}
 
 
-// TODO
 class Foo(x, y, z): Bar(z, x)
 //│ |#class| |Foo|(|x|,| |y|,| |z|)|#:| |Bar|(|z|,| |x|)|
-//│ ╔══[ERROR] not a recognized type: z, x,
-//│ ║  l.87: 	class Foo(x, y, z): Bar(z, x)
-//│ ╙──      	                       ^^^^^^
-//│ Parsed: {class Foo(x, y, z,): <error>[] {}}
+//│ Parsed: {class Foo(x, y, z,): Bar (z, x,) {}}
+
+class Foo(x, y, z): Bar(z, x) {
+  fun blah(x) = x + y
+}
+//│ |#class| |Foo|(|x|,| |y|,| |z|)|#:| |Bar|(|z|,| |x|)| |{|→|#fun| |blah|(|x|)| |#=| |x| |+| |y|←|↵|}|
+//│ Parsed: {class Foo(x, y, z,): Bar (z, x,) {fun blah = x, => + x y}}
+
+class Foo(x, y): Bar(y, x), Baz(x + y)
+//│ |#class| |Foo|(|x|,| |y|)|#:| |Bar|(|y|,| |x|)|,| |Baz|(|x| |+| |y|)|
+//│ Parsed: {class Foo(x, y,): Bar (y, x,), Baz (+ x y,) {}}
 
 

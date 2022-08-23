@@ -268,18 +268,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 Tup(as).withLoc(S(loc))
               case _ => Tup(Nil)
             }
-            def parents(Sep: Stroken): Ls[NamedType] = yeetSpaces match {
+            def parents(Sep: Stroken): Ls[Term] = yeetSpaces match {
               case (Sep, _) :: _ =>
                 consume
-                (typ match {
-                  case nt: NamedType => nt
-                  // case at: AppliedType => at
-                  // case tn: TypeName => AppliedType(tn, Nil)
-                  // case App(nt: NamedType, Tup(args)) =>
-                  case _ =>
-                    // ??? // TODO raise
-                    AppliedType(TypeName("<error>"), Nil)
-                }) :: parents(COMMA)
+                expr(0) :: parents(COMMA)
               case _ => Nil
             }
             val ps = parents(KEYWORD(":"))
