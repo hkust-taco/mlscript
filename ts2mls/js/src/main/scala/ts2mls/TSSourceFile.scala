@@ -188,9 +188,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     val constraints = getTypeConstraints(node)(ns, Map())
     val tvMap = constaintsListToMap(constraints)
 
-    val nsName = ns.getFullName
-    val fullName = if (nsName.equals("")) name else s"$nsName'$name"    
-
+    val fullName = ns.getFullPath(name)
     if (isClass)
       TSClassType(fullName, getClassMembersType(members, 0, false)(ns, tvMap), getClassMembersType(members, 0, true)(ns, tvMap), constraints, getInheritList(node))
     else TSInterfaceType(fullName, getInterfacePropertiesType(members, 0)(ns, tvMap), constraints, getInheritList(node))
