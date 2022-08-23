@@ -96,17 +96,16 @@ object TypeScript {
     ts.createProgram(filenames.toJSArray, js.Dictionary("maxNodeModuleJsDepth" -> 0, "target" -> ts.ScriptTarget.ES5, "module" -> ts.ModuleKind.CommonJS))
 }
 
-class TSTypeChecker(checker: js.Dynamic) {
+object TSTypeChecker {
+  private var checker: js.Dynamic = null
+  def init(obj: js.Dynamic): Unit = checker = obj
+
   def getTypeOfSymbolAtLocation(sym: js.Dynamic): String =
     checker.typeToString(checker.getTypeOfSymbolAtLocation(sym, sym.valueDeclaration)).toString
 
   def getSignatureFromDeclaration(node: js.Dynamic) = checker.getSignatureFromDeclaration(node)
   def getReturnTypeOfSignature(signature: js.Dynamic) = checker.getReturnTypeOfSignature(signature)
   def getTypeFromTypeNode(token: js.Dynamic) = TSTypeObject(checker.getTypeFromTypeNode(token))
-}
-
-object TSTypeChecker {
-  def apply(checker: js.Dynamic) = new TSTypeChecker(checker)
 }
 
 class TSSymbolObject(sym: js.Dynamic) extends TSAny(sym) {
@@ -119,7 +118,7 @@ class TSSymbolObject(sym: js.Dynamic) extends TSAny(sym) {
   private lazy val parent = TSSymbolObject(sym.parent)
   lazy val declarations = TSNodeArray(sym.declarations)
 
-  def getType()(implicit checker: TSTypeChecker): String = checker.getTypeOfSymbolAtLocation(sym)
+  def getType(): String = TSTypeChecker.getTypeOfSymbolAtLocation(sym)
 
   def getFullName(): String =
     if (parent.isUndefined ||
@@ -172,10 +171,8 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) with TSTypeSource 
   lazy val name = TSIdentifierObject(node.name)
   lazy val locals = TSSymbolMap(node.locals)
 
-  def getReturnTypeOfSignature()(implicit checker: TSTypeChecker): TSTypeObject = {
-    val signature = checker.getSignatureFromDeclaration(node)
-    TSTypeObject(checker.getReturnTypeOfSignature(signature))
-  }
+  def getReturnTypeOfSignature(): TSTypeObject =
+    TSTypeObject(TSTypeChecker.getReturnTypeOfSignature(TSTypeChecker.getSignatureFromDeclaration(node)))
 
   private def getTypeField(t: TSNodeObject): TSNodeObject =
     if (t.isUndefined || !t.parameters.isUndefined || t.`type`.isUndefined || t.`type`.isToken) t else t.`type`
@@ -193,7 +190,7 @@ class TSTokenObject(token: js.Dynamic) extends TSAny(token) {
   lazy val isProtected = kind == TypeScript.syntaxKindProtected
   lazy val isStatic = kind == TypeScript.syntaxKindStatic
 
-  def getTypeFromTypeNode()(implicit checker: TSTypeChecker): TSTypeObject = checker.getTypeFromTypeNode(token)
+  def getTypeFromTypeNode(): TSTypeObject = TSTypeChecker.getTypeFromTypeNode(token)
 }
 
 object TSTokenObject {

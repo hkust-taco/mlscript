@@ -5,16 +5,16 @@ import js.Dynamic.{global => g}
 import js.DynamicImplicits._
 import types._
 
-class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker) {
-  private def generate(node: js.Dynamic): Unit = {
-    val nodeObject = TSNodeObject(node)
-    if (nodeObject.isToken || nodeObject.symbol.isUndefined) return
+object TSSourceFile {
+  def apply(sf: js.Dynamic, global: TSNamespace) = {
+    def generate(node: js.Dynamic): Unit = {
+      val nodeObject = TSNodeObject(node)
+      if (nodeObject.isToken || nodeObject.symbol.isUndefined) return
+      addNodeIntoNamespace(nodeObject, nodeObject.symbol.escapedName)(global)
+    }
 
-    val name = nodeObject.symbol.escapedName
-    addNodeIntoNamespace(nodeObject, name)(global)
+    TypeScript.forEachChild(sf, generate)
   }
-
-  TypeScript.forEachChild(sf, generate)
 
   private def getApplicationArguments[T <: TSAny](args: TSArray[T])(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): List[TSType] =
     args.foldLeft(List[TSType]())((lst, arg) => arg match {
@@ -22,10 +22,12 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       case tp: TSTypeObject => lst :+ getObjectType(tp)
     })
 
+  // due to the tsc's code, the type information can be stored everywhere
+  // all these branches are required. removing one of them would lead to errors
   private def getObjectType(node: TSTypeSource)(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): TSType = node match {
-    case node: TSNodeObject => {
+    case node: TSNodeObject => { // type of parameters would be stored in NodeObject
       val res = {
-        val typeNode = node.`type`
+        val typeNode = node.`type` // may be stored in node or type node(except union/intersection type)
         if (typeNode.isFunctionLike) getFunctionType(typeNode)
         else if (node.isFunctionLike) getFunctionType(node)
         else if (typeNode.hasTypeName) {
@@ -36,30 +38,31 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
           else if (ns.containsMember(name.split("'").toList)) TSNamedType(name)
           else TSEnumType(name)
         }
+        else if (node.hasTypeName)
+          tv.getOrElse(node.typeName.escapedText, TSNamedType(node.typeName.escapedText))
         else if (typeNode.isTupleTypeNode) TSTupleType(getTupleElements(typeNode.elements))
         else if (node.isTupleTypeNode) TSTupleType(getTupleElements(node.elements))
         else if (typeNode.isUnionTypeNode) getStructuralType(typeNode.typesToken, true)
         else if (typeNode.isIntersectionTypeNode) getStructuralType(typeNode.types,false)
         else if (typeNode.isArrayTypeNode) TSArrayType(getObjectType(typeNode.elementType.getTypeFromTypeNode))
         else if (node.isArrayTypeNode) TSArrayType(getObjectType(node.elementType.getTypeFromTypeNode))
-        else if (node.hasTypeName)
-          tv.getOrElse(node.typeName.escapedText, TSNamedType(node.typeName.escapedText))
         else if (!typeNode.isUndefined && !typeNode.members.isUndefined)
           TSInterfaceType("", getInterfacePropertiesType(typeNode.members, 0), List(), List())
-        else if (!node.dotDotDot.isUndefined) TSArrayType(TSNamedType("any"))
+        else if (!node.dotDotDot.isUndefined) TSArrayType(TSNamedType("any")) // variable parameter without type annotation
         else {
           val name = node.symbol.getType
           tv.getOrElse(name, TSNamedType(name))
         }
       }
       
+      // if this parameter is optional (with question mark or has an initial value)
       if (node.questionToken.isUndefined && node.initializer.isUndefined) res
       else res match {
         case TSNamedType(name) if (name.equals("undefined")) => res
         case _ => TSUnionType(res, TSNamedType("undefined"))
       }
     }
-    case obj: TSTypeObject => {
+    case obj: TSTypeObject => { // type of return values would be stored in NodeObject
       val dec = obj.declaration
       val args = obj.resolvedTypeArguments
       if (obj.isEnumType) TSEnumType(obj.aliasSymbol.escapedName)
@@ -83,12 +86,11 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     }
   }
 
-  private def getTypeConstraints(node: TSNodeObject)(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): List[TSTypeVariable] = {
+  private def getTypeConstraints(node: TSNodeObject)(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): List[TSTypeVariable] =
     node.typeParameters.foldLeft(List[TSTypeVariable]())((lst, tp) =>
       if (tp.constraint.isUndefined) lst :+ TSTypeVariable(tp.symbol.escapedName, None)
       else lst :+ TSTypeVariable(tp.symbol.escapedName, Some(getObjectType(tp.constraint.getTypeFromTypeNode)))
     )
-  }
 
   private def constaintsListToMap(constraints: List[TSTypeVariable]) =
     constraints.foldLeft(Map[String, TSTypeVariable]())((m, v) => 
@@ -128,6 +130,7 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
     })
 
   private def getInheritList(node: TSNodeObject)(implicit ns: TSNamespace): List[TSType] = {
+    // get parent's full name with namespaces
     def getFullName(name: String, exp: Either[TSNodeObject, TSIdentifierObject]): String =
       exp match {
         case Left(node) =>
@@ -152,11 +155,12 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       val isStatic = if (p.modifiers.isUndefined) false
                      else p.modifiers.foldLeft(false)((s, t) => t.isStatic)
 
+      // TODO: support `__constructor`
       if (!name.equals("__constructor") && isStatic == requireStatic) {
         val initializer = p.initializerNode
         val mem =
-          if (initializer.isUndefined || initializer.members.isUndefined) getObjectType(p)
-          else parseMembers(initializer, true)
+          if (initializer.isUndefined || initializer.members.isUndefined) getObjectType(p) // non-static members
+          else parseMembers(initializer, true) // static members
         val modifier = if (p.modifiers.isUndefined) Public
           else p.modifiers.foldLeft[TSAccessModifier](Public)((m, t) =>
             if (t.isPrivate) Private else if (t.isProtected) Protected else m
@@ -205,13 +209,15 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
   private def addFunctionIntoNamespace(fun: TSFunctionType, node: TSNodeObject, name: String)(implicit ns: TSNamespace) =
     if (!ns.containsMember(name, false)) ns.put(name, fun)
     else ns.get(name) match {
-      case old: TSFunctionType if (node.body.isUndefined) =>
+      case old: TSFunctionType if (node.body.isUndefined) => // the signature of overload function
         ns.put(name, TSIntersectionType(old, fun))
-      case old: TSIntersectionType if (node.body.isUndefined) =>
+      case old: TSIntersectionType if (node.body.isUndefined) => // the signature of overload function
         ns.put(name, TSIntersectionType(old, fun))
-      case _ => {}
+      case _ => {} // the implementation of the overload function. the type of this function may be wider, so just ignore it
     }
 
+  // overload functions in a sub-namespace need to provide an overload array
+  // because the namespace merely exports symbols rather than node objects themselves
   private def addNodeIntoNamespace(node: TSNodeObject, name: String, overload: Option[TSNodeArray] = None)(implicit ns: TSNamespace) =
     if (node.isFunctionDeclaration) overload match {
       case None => {
@@ -226,12 +232,12 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       }
     }
     else if (node.isClassDeclaration) {
-      ns.put(name, TSNamedType(name)) // placeholder for self reference
+      ns.put(name, TSNamedType(name)) // placeholder for self-reference
       val typeInfo = parseMembers(node, true)(ns)
       ns.put(name, typeInfo)
     }
     else if (node.isInterfaceDeclaration) {
-      ns.put(name, TSNamedType(name)) // placeholder for self reference
+      ns.put(name, TSNamedType(name)) // placeholder for self-reference
       val typeInfo = parseMembers(node, false)(ns)
       ns.put(name, typeInfo)
     }
@@ -239,14 +245,6 @@ class TSSourceFile(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSType
       parseNamespace(node)(ns)
     }
 
-  private def parseNamespace(node: TSNodeObject)(implicit ns: TSNamespace): Unit = {
-    val name = node.symbol.escapedName
-    val locals = node.locals
-    val sub = ns.derive(name)
-    parseNamespaceLocals(locals)(sub)
-  }
-}
-
-object TSSourceFile {
-  def apply(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker) = new TSSourceFile(sf, global)
+  private def parseNamespace(node: TSNodeObject)(implicit ns: TSNamespace): Unit =
+    parseNamespaceLocals(node.locals)(ns.derive(node.symbol.escapedName))
 }

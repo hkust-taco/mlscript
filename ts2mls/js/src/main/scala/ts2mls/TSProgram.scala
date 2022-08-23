@@ -12,9 +12,9 @@ class TSProgram(filenames: Seq[String]) {
   // check if files exist
   filenames.foreach((fn) => if (!program.fileExists(fn)) throw new Exception(s"file ${fn} doesn't exist."))
 
-  implicit private val checker: TSTypeChecker = TSTypeChecker(program.getTypeChecker())
   val globalNamespace = TSNamespace()
-
+  
+  TSTypeChecker.init(program.getTypeChecker())
   filenames.foreach(filename => TSSourceFile(program.getSourceFile(filename), globalNamespace))
 
   def generate(writer: JSWriter, prefix: String = ""): Unit = globalNamespace.generate(writer, prefix)
