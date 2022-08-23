@@ -125,7 +125,7 @@ class TSSymbolObject(sym: js.Dynamic) extends TSAny(sym) {
         parent.escapedName.equals("undefined") ||
         parent.escapedName.equals("") ||
         !parent.declaration.isNamespace) escapedName
-    else s"${parent.getFullName}'$escapedName"
+    else s"${parent.getFullName()}'$escapedName"
 }
 
 object TSSymbolObject {
@@ -134,7 +134,7 @@ object TSSymbolObject {
 
 case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
   private def getTypeField(t: TSNodeObject): TSNodeObject =
-    if (t.isUndefined || !t.parameters.isUndefined || t.`type`.isUndefined || t.`type`.isToken) t else t.`type`
+    if (t.isUndefined || !t.parameters.isUndefined || t.`type`().isUndefined || t.`type`().isToken) t else t.`type`()
 
   lazy val isToken = TypeScript.isToken(node)
   lazy val isFunctionDeclaration = !isUndefined && TypeScript.isFunctionDeclaration(node)
@@ -225,7 +225,7 @@ class TSIdentifierObject(id: js.Dynamic) extends TSAny(id) {
 
   def escapedText(): String =
     if (left.isUndefined) id.escapedText.toString
-    else s"${left.escapedText}'${right.escapedText}"
+    else s"${left.escapedText()}'${right.escapedText()}"
 }
 
 object TSIdentifierObject {

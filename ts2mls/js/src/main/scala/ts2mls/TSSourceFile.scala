@@ -18,7 +18,7 @@ object TSSourceFile {
 
   private def getApplicationArguments[T <: TSAny](args: TSArray[T])(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): List[TSType] =
     args.foldLeft(List[TSType]())((lst, arg) => arg match {
-      case token: TSTokenObject => lst :+ getObjectType(Right(token.getTypeFromTypeNode))
+      case token: TSTokenObject => lst :+ getObjectType(Right(token.getTypeFromTypeNode()))
       case tp: TSTypeObject => lst :+ getObjectType(Right(tp))
     })
 
@@ -27,11 +27,11 @@ object TSSourceFile {
   private def getObjectType(node: Either[TSNodeObject, TSTypeObject])(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): TSType = node match {
     case Left(node) => {
       val res = {
-        val typeNode = node.`type` // may be stored in node or type node(except union/intersection type)
+        val typeNode = node.`type`() // may be stored in node or type node(except union/intersection type)
         if (typeNode.isFunctionLike) getFunctionType(typeNode)
         else if (node.isFunctionLike) getFunctionType(node)
         else if (typeNode.hasTypeName) {
-          val name = typeNode.typeName.escapedText
+          val name = typeNode.typeName.escapedText()
           if (!typeNode.typeArguments.isUndefined)
             TSApplicationType(name, getApplicationArguments(typeNode.typeArguments))
           else if (tv.contains(name)) tv(name)
@@ -39,18 +39,18 @@ object TSSourceFile {
           else TSEnumType(name)
         }
         else if (node.hasTypeName)
-          tv.getOrElse(node.typeName.escapedText, TSNamedType(node.typeName.escapedText))
+          tv.getOrElse(node.typeName.escapedText(), TSNamedType(node.typeName.escapedText()))
         else if (typeNode.isTupleTypeNode) TSTupleType(getTupleElements(typeNode.elements))
         else if (node.isTupleTypeNode) TSTupleType(getTupleElements(node.elements))
         else if (typeNode.isUnionTypeNode) getStructuralType(typeNode.typesToken, true)
         else if (typeNode.isIntersectionTypeNode) getStructuralType(typeNode.types,false)
-        else if (typeNode.isArrayTypeNode) TSArrayType(getObjectType(Right(typeNode.elementType.getTypeFromTypeNode)))
-        else if (node.isArrayTypeNode) TSArrayType(getObjectType(Right(node.elementType.getTypeFromTypeNode)))
+        else if (typeNode.isArrayTypeNode) TSArrayType(getObjectType(Right(typeNode.elementType.getTypeFromTypeNode())))
+        else if (node.isArrayTypeNode) TSArrayType(getObjectType(Right(node.elementType.getTypeFromTypeNode())))
         else if (!typeNode.isUndefined && !typeNode.members.isUndefined)
           TSInterfaceType("", getInterfacePropertiesType(typeNode.members, 0), List(), List())
         else if (!node.dotDotDot.isUndefined) TSArrayType(TSNamedType("any")) // variable parameter without type annotation
         else {
-          val name = node.symbol.getType
+          val name = node.symbol.getType()
           tv.getOrElse(name, TSNamedType(name))
         }
       }
@@ -74,13 +74,13 @@ object TSSourceFile {
       else if (!args.isUndefined) TSApplicationType(obj.symbol.escapedName, getApplicationArguments(args))
       else if (!obj.symbol.isUndefined) {
           val symDec = obj.symbol.valueDeclaration
-          val name = obj.symbol.getFullName
+          val name = obj.symbol.getFullName()
           if (ns.containsMember(name.split("'").toList)) TSNamedType(name)
           else if (!symDec.isUndefined && !symDec.properties.isUndefined)
             TSInterfaceType("", getInterfacePropertiesType(symDec.properties, 0), List(), List())
           else if (!dec.isUndefined && !dec.members.isUndefined)
             TSInterfaceType("", getInterfacePropertiesType(dec.members, 0), List(), List())
-          else tv.getOrElse(obj.symbol.escapedName, TSNamedType(obj.symbol.getFullName)) 
+          else tv.getOrElse(obj.symbol.escapedName, TSNamedType(obj.symbol.getFullName())) 
       }
       else tv.getOrElse(obj.intrinsicName, TSNamedType(obj.intrinsicName))
     }
@@ -89,7 +89,7 @@ object TSSourceFile {
   private def getTypeConstraints(node: TSNodeObject)(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): List[TSTypeVariable] =
     node.typeParameters.foldLeft(List[TSTypeVariable]())((lst, tp) =>
       if (tp.constraint.isUndefined) lst :+ TSTypeVariable(tp.symbol.escapedName, None)
-      else lst :+ TSTypeVariable(tp.symbol.escapedName, Some(getObjectType(Right(tp.constraint.getTypeFromTypeNode))))
+      else lst :+ TSTypeVariable(tp.symbol.escapedName, Some(getObjectType(Right(tp.constraint.getTypeFromTypeNode()))))
     )
 
   private def constaintsListToMap(constraints: List[TSTypeVariable]) =
@@ -109,14 +109,14 @@ object TSSourceFile {
   private def getStructuralType[T <: TSAny](types: TSArray[T], isUnion: Boolean)(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): TSStructuralType = 
     types.foldLeft[Option[TSType]](None)((prev, cur) => prev match {
       case None => cur match {
-        case token: TSTokenObject => Some(getObjectType(Right(token.getTypeFromTypeNode)))
+        case token: TSTokenObject => Some(getObjectType(Right(token.getTypeFromTypeNode())))
         case tp: TSTypeObject => Some(getObjectType(Right(tp)))
         case node: TSNodeObject => Some(getObjectType(Left(node)))
       }
       case Some(p) => cur match {
         case token: TSTokenObject =>
-          if (isUnion) Some(TSUnionType(p, getObjectType(Right(token.getTypeFromTypeNode)))) else Some(TSIntersectionType(p, getObjectType(Right(token.getTypeFromTypeNode))))
-        case tp: TSTypeObject => Some()
+          if (isUnion) Some(TSUnionType(p, getObjectType(Right(token.getTypeFromTypeNode())))) else Some(TSIntersectionType(p, getObjectType(Right(token.getTypeFromTypeNode()))))
+        case tp: TSTypeObject =>
           if (isUnion) Some(TSUnionType(p, getObjectType(Right(tp)))) else Some(TSIntersectionType(p, getObjectType(Right(tp))))
         case node: TSNodeObject =>
           if (isUnion) Some(TSUnionType(p, getObjectType(Left(node)))) else Some(TSIntersectionType(p, getObjectType(Left(node))))
@@ -125,7 +125,7 @@ object TSSourceFile {
 
   private def getTupleElements[T <: TSAny](elements: TSArray[T])(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): List[TSType] =
     elements.foldLeft(List[TSType]())((lst, ele) => ele match {
-      case token: TSTokenObject => lst :+ getObjectType(Right(token.getTypeFromTypeNode))
+      case token: TSTokenObject => lst :+ getObjectType(Right(token.getTypeFromTypeNode()))
       case tp: TSTypeObject => lst :+ getObjectType(Right(tp))
     })
 
@@ -134,11 +134,11 @@ object TSSourceFile {
     def getFullName(name: String, exp: Either[TSNodeObject, TSIdentifierObject]): String =
       exp match {
         case Left(node) =>
-          if (name.equals("")) getFullName(node.name.escapedText, node.expression)
-          else getFullName(s"${node.name.escapedText}'$name", node.expression)
+          if (name.equals("")) getFullName(node.name.escapedText(), node.expression)
+          else getFullName(s"${node.name.escapedText()}'$name", node.expression)
         case Right(id) =>
-          if (name.equals("")) id.escapedText
-          else s"${id.escapedText}'$name"
+          if (name.equals("")) id.escapedText()
+          else s"${id.escapedText()}'$name"
       }
 
     node.heritageClauses.foldLeftIndexed(List[TSType]())((lst, h, index) => {
