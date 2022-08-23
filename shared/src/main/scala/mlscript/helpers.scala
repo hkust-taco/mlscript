@@ -250,6 +250,7 @@ trait PgrmImpl { self: Pgrm =>
     }.partitionMap {
       case td: TypeDef => L(td)
       case ot: Terms => R(ot)
+      case NuFunDef(nme, tys, rhs) => R(Def(false, nme, rhs))
       case _: NuFunDef | _: NuTypeDef => ???
     }
     diags.toList -> res

@@ -28,18 +28,18 @@ x) = x
 fun f(x,
   y) = x + y
 //│ |#fun| |f|(|x|,|→|y|←|)| |#=| |x| |+| |y|
-//│ Parsed: {fun f = x, {y}, => + x y}
+//│ Parsed: {fun f = x, {y}, => + (x,) (y,)}
 
 fun f(
   x,
   y) = x + y
 //│ |#fun| |f|(|→|x|,|↵|y|←|)| |#=| |x| |+| |y|
-//│ Parsed: {fun f = x, y, => + x y}
+//│ Parsed: {fun f = x, y, => + (x,) (y,)}
 
 fun f(
   x,
   y
 ) = x + y
 //│ |#fun| |f|(|→|x|,|↵|y|←|↵|)| |#=| |x| |+| |y|
-//│ Parsed: {fun f = x, y, => + x y}
+//│ Parsed: {fun f = x, y, => + (x,) (y,)}
 

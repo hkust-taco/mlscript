@@ -124,14 +124,14 @@ class DiffTests
     }
     val defaultMode = Mode()
     
-    var parseOnly = false
+    var parseOnly = basePath.headOption.contains("parser") || basePath.headOption.contains("mono")
     var allowTypeErrors = false
     var allowParseErrors = false // TODO use
     var showRelativeLineNums = false
     var noJavaScript = false
     var noProvs = false
     var allowRuntimeErrors = false
-    var newParser = basePath.headOption.contains("parser")
+    var newParser = basePath.headOption.contains("parser") || basePath.headOption.contains("mono")
 
     val backend = new JSTestBackend()
     val host = ReplHost()
@@ -308,34 +308,30 @@ class DiffTests
         // try to parse block of text into mlscript ast
         val ans = try {
           if (newParser || basePath.headOption.contains("mono")) {
-            // ??? : Parsed.Extra
-            // Failure("",0,Parsed.Extra())
+            
             val origin = Origin(testName, globalStartLineNum, fph)
-            // val raise: mlscript.Diagnostic => Unit = diag => //() // TODO
-            //   output("/!\\ Parse error: " + diag.theMsg //+s" at l.$globalLineNum:$col: $lineStr"
-            //     ) // TODO use reporting
             val lexer = new NewLexer(origin, raise, dbg = mode.dbgParsing)
-            // println(lexer.lex(0, ))
-            // val tokens = lexer.tokens
+            
             val tokens = lexer.bracketedTokens
-            // output(tokens.toString)
-            output(NewLexer.printTokens(tokens))
+            
+            if (mode.showParse || mode.dbgParsing || parseOnly)
+              output(NewLexer.printTokens(tokens))
+            
             val p = new NewParser(origin, tokens, raise, dbg = mode.dbgParsing, N) {
-              def doPrintDbg(msg: => Str): Unit =
-                  // if (dbg) output("│ " * this.indent + msg)
-                  if (dbg) output(msg)
+              def doPrintDbg(msg: => Str): Unit = if (dbg) output(msg)
             }
-            // val res = p.parse
-            // val res = p.parseAll(p.block)
             val res = p.parseAll(p.typingUnit)
-            // if (mode.showParse || mode.dbgParsing) 
-            output("Parsed: " + res.show)
-            // output(p.parse.toString)
-            // ???
+            
+            if (parseOnly)
+              output("Parsed: " + res.show)
             
             postProcess(basePath, testName, res).foreach(output)
             
-            Success(Pgrm(Nil), 0)
+            if (parseOnly)
+              Success(Pgrm(Nil), 0)
+            else
+              Success(Pgrm(res.entities.map(_.fold(identity, identity))), 0)
+            
           }
           else parse(processedBlockStr, p =>
             if (file.ext =:= "fun") new Parser(Origin(testName, globalStartLineNum, fph)).pgrm(p)

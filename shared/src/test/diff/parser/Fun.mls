@@ -18,7 +18,7 @@ fun f x = x
 
 fun f = x => x
 //│ |#fun| |f| |#=| |x| |=>| |x|
-//│ Parsed: {fun f = => x x}
+//│ Parsed: {fun f = => (x,) (x,)}
 
 // TODO
 fun x => x
@@ -33,7 +33,7 @@ fun x => x
 
 let f = x => x
 //│ |#let| |f| |#=| |x| |=>| |x|
-//│ Parsed: {let f = => x x in undefined}
+//│ Parsed: {fun f = => (x,) (x,)}
 
 // TODO
 let f = fun x => x
@@ -41,12 +41,12 @@ let f = fun x => x
 //│ ╔══[PARSE ERROR] Unexpected 'fun' keyword in expression position
 //│ ║  l.39: 	let f = fun x => x
 //│ ╙──      	        ^^^
-//│ Parsed: {let f = => x x in undefined}
+//│ Parsed: {fun f = => (x,) (x,)}
 
 
 f(x) + x
 //│ |f|(|x|)| |+| |x|
-//│ Parsed: {+ (f (x,)) x}
+//│ Parsed: {+ (f (x,),) (x,)}
 
 
 fun f(x, y) = x
@@ -90,15 +90,15 @@ fun f x y = x
 
 fun f(x, y)(a, b) = x + y * a / b
 //│ |#fun| |f|(|x|,| |y|)|(|a|,| |b|)| |#=| |x| |+| |y| |*| |a| |/| |b|
-//│ Parsed: {fun f = x, y, => a, b, => / (+ x (* y a)) b}
+//│ Parsed: {fun f = x, y, => a, b, => / (+ (x,) (* (y,) (a,),),) (b,)}
 
 fun f(x, y) of a, b = x + y * a / b
 //│ |#fun| |f|(|x|,| |y|)| |#of| |a|,| |b| |#=| |x| |+| |y| |*| |a| |/| |b|
-//│ Parsed: {fun f = x, y, => a, b, => / (+ x (* y a)) b}
+//│ Parsed: {fun f = x, y, => a, b, => / (+ (x,) (* (y,) (a,),),) (b,)}
 
 fun f of x, y of a, b = x + y * a / b
 //│ |#fun| |f| |#of| |x|,| |y| |#of| |a|,| |b| |#=| |x| |+| |y| |*| |a| |/| |b|
-//│ Parsed: {fun f = x, y (a, b,), => / (+ x (* y a)) b}
+//│ Parsed: {fun f = x, y (a, b,), => / (+ (x,) (* (y,) (a,),),) (b,)}
 
 
 fun f(Some(x)) = x
@@ -119,11 +119,11 @@ fun f(Some(x), Some(y)) = x
 
 fun f(Some of x, Some of y) = x + y
 //│ |#fun| |f|(|Some| |#of| |x|,| |Some| |#of| |y|)| |#=| |x| |+| |y|
-//│ Parsed: {fun f = Some (x, Some (y,),), => + x y}
+//│ Parsed: {fun f = Some (x, Some (y,),), => + (x,) (y,)}
 
 fun f of Some of x, Some of y = x + y
 //│ |#fun| |f| |#of| |Some| |#of| |x|,| |Some| |#of| |y| |#=| |x| |+| |y|
-//│ Parsed: {fun f = Some (x, Some (y,),), => + x y}
+//│ Parsed: {fun f = Some (x, Some (y,),), => + (x,) (y,)}
 
 
 fun f(x: Int, y: Int) = x

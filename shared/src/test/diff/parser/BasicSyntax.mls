@@ -33,26 +33,26 @@ f of 1
 
 1 + 1
 //│ |1| |+| |1|
-//│ Parsed: {+ 1 1}
+//│ Parsed: {+ (1,) (1,)}
 
 f 1 + 1
 //│ |f| |1| |+| |1|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.38: 	f 1 + 1
 //│ ╙──      	^^^^^^^
-//│ Parsed: {f (+ 1 1,)}
+//│ Parsed: {f (+ (1,) (1,),)}
 
 f(1 + 1)
 //│ |f|(|1| |+| |1|)|
-//│ Parsed: {f (+ 1 1,)}
+//│ Parsed: {f (+ (1,) (1,),)}
 
 f of 1 + 1
 //│ |f| |#of| |1| |+| |1|
-//│ Parsed: {f (+ 1 1,)}
+//│ Parsed: {f (+ (1,) (1,),)}
 
 f(1) + 1
 //│ |f|(|1|)| |+| |1|
-//│ Parsed: {+ (f (1,)) 1}
+//│ Parsed: {+ (f (1,),) (1,)}
 
 1 2 3
 //│ |1| |2| |3|
@@ -76,7 +76,7 @@ f(1) + 1
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.74: 	3 + 2 4 - 1
 //│ ╙──      	    ^^^^^^^
-//│ Parsed: {+ 3 (2 (- 4 1,))}
+//│ Parsed: {+ (3,) (2 (- (4,) (1,),),)}
 
 foo bar
   baz 1
@@ -257,7 +257,7 @@ foo
 //│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
 //│ ║  l.255: 	1+
 //│ ╙──       	  ^
-//│ Parsed: {+ 1 undefined}
+//│ Parsed: {+ (1,) (undefined,)}
 
 *
 //│ |*|
@@ -476,7 +476,7 @@ f x: 1 + 1, y: 2 2, z: 3 + 2 4 - 1
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.468: 	f x: 1 + 1, y: 2 2, z: 3 + 2 4 - 1
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ Parsed: {f (x: + 1 1, y: 2 (2, z: + 3 (2 (- 4 1,)),),)}
+//│ Parsed: {f (x: + (1,) (1,), y: 2 (2, z: + (3,) (2 (- (4,) (1,),),),),)}
 
 
 x.y
@@ -496,12 +496,12 @@ x.y
 
 2 + f of 3 + 3
 //│ |2| |+| |f| |#of| |3| |+| |3|
-//│ Parsed: {+ 2 (f (+ 3 3,))}
+//│ Parsed: {+ (2,) (f (+ (3,) (3,),),)}
 
 2 + 2
   of 3 + 3
 //│ |2| |+| |2|→|#of| |3| |+| |3|←|
-//│ Parsed: {+ 2 2 (+ 3 3,)}
+//│ Parsed: {+ (2,) (2,) (+ (3,) (3,),)}
 
 
 

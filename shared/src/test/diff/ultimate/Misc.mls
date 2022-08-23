@@ -1,0 +1,35 @@
+:NewParser
+
+
+1
+//│ res: 1
+//│    = 1
+
+2 + 2
+//│ res: int
+//│    = 4
+
+let r = { x: 1 }
+//│ r: {x: 1}
+//│  = { x: 1 }
+
+r.x + 1
+//│ res: int
+//│    = 2
+
+// TODO actually parse lambdas!
+x => x
+//│ ╔══[ERROR] identifier not found: =>
+//│ ║  l.21: 	x => x
+//│ ╙──      	  ^^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.21: 	x => x
+//│ ╙──      	^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.21: 	x => x
+//│ ╙──      	     ^
+//│ res: error
+//│ Code generation encountered an error:
+//│   unresolved symbol =>
+
+

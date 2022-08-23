@@ -3,7 +3,7 @@
 
 acc + 1
 //│ |acc| |+| |1|
-//│ Parsed: {+ acc 1}
+//│ Parsed: {+ (acc,) (1,)}
 
 acc
 + 1
@@ -21,7 +21,7 @@ acc
 acc +
   1
 //│ |acc| |+|→|1|←|
-//│ Parsed: {+ acc {1}}
+//│ Parsed: {+ (acc,) ({1},)}
 
 acc
   +
@@ -55,11 +55,11 @@ acc
 
 acc + 1 + 2 * 3
 //│ |acc| |+| |1| |+| |2| |*| |3|
-//│ Parsed: {+ (+ acc 1) (* 2 3)}
+//│ Parsed: {+ (+ (acc,) (1,),) (* (2,) (3,),)}
 
 acc+1+2*3
 //│ |acc|+|1|+|2|*|3|
-//│ Parsed: {+ (+ acc 1) (* 2 3)}
+//│ Parsed: {+ (+ (acc,) (1,),) (* (2,) (3,),)}
 
 acc +
   foo bar
@@ -68,19 +68,19 @@ acc +
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.65: 	  foo bar
 //│ ╙──      	  ^^^^^^^
-//│ Parsed: {+ acc {foo (bar,); baz}}
+//│ Parsed: {+ (acc,) ({foo (bar,); baz},)}
 
 a+
   b
   c
 //│ |a|+|→|b|↵|c|←|
-//│ Parsed: {+ a {b; c}}
+//│ Parsed: {+ (a,) ({b; c},)}
 
 a+
   b
 c
 //│ |a|+|→|b|←|↵|c|
-//│ Parsed: {+ a {b}; c}
+//│ Parsed: {+ (a,) ({b},); c}
 
 a
   +b
@@ -92,7 +92,7 @@ c
 a + b
   * 2
 //│ |a| |+| |b|→|*| |2|←|
-//│ Parsed: {+ a (* b 2)}
+//│ Parsed: {+ (a,) (* b 2,)}
 
 a(b)
   * 2
@@ -119,26 +119,26 @@ a + b
   + 1
   * 3
 //│ |a| |+| |b|→|*| |2|↵|+| |1|↵|*| |3|←|
-//│ Parsed: {+ a (* (+ (* b 2) 1) 3)}
+//│ Parsed: {+ (a,) (* (+ (* b 2) 1) 3,)}
 
 a + b
   * 2
     + 1
 //│ |a| |+| |b|→|*| |2|→|+| |1|←|←|
-//│ Parsed: {+ a (* b (+ 2 1))}
+//│ Parsed: {+ (a,) (* b (+ 2 1),)}
 
 a + b
     * 2
   - 1
 //│ |a| |+| |b|→|*| |2|←|→|-| |1|←|
-//│ Parsed: {- (+ a (* b 2)) 1}
+//│ Parsed: {- (+ (a,) (* b 2,)) 1}
 
 a + b
   * 2
     + 1
   * 3
 //│ |a| |+| |b|→|*| |2|→|+| |1|←|↵|*| |3|←|
-//│ Parsed: {+ a (* (* b (+ 2 1)) 3)}
+//│ Parsed: {+ (a,) (* (* b (+ 2 1)) 3,)}
 
 a +
   b
@@ -152,7 +152,7 @@ a +
 //│ ╔══[PARSE ERROR] Unexpected operator in expression position
 //│ ║  l.147: 	  * 3
 //│ ╙──       	  ^
-//│ Parsed: {+ a {* b 2; 1; 3}}
+//│ Parsed: {+ (a,) ({* b 2; 1; 3},)}
 
 a +
     b
@@ -163,7 +163,7 @@ a +
 //│ ╔══[PARSE ERROR] Unexpected operator in expression position
 //│ ║  l.160: 	    + 1
 //│ ╙──       	    ^
-//│ Parsed: {* (+ a {* b 2; 1}) 3}
+//│ Parsed: {* (+ (a,) ({* b 2; 1},)) 3}
 
 a +
   b
@@ -175,7 +175,7 @@ a +
 //│ ╔══[PARSE ERROR] Unexpected operator in expression position
 //│ ║  l.171: 	  +
 //│ ╙──       	  ^
-//│ Parsed: {+ a {* b 2; {* 1 3}}}
+//│ Parsed: {+ (a,) ({* b 2; {* 1 3}},)}
 
 a +
   b
@@ -184,7 +184,7 @@ a +
       1
         * 3
 //│ |a| |+|→|b|→|*| |2|↵|+|→|1|→|*| |3|←|←|←|←|
-//│ Parsed: {+ a {+ (* b 2) {* 1 3}}}
+//│ Parsed: {+ (a,) ({+ (* b 2) {* 1 3}},)}
 
 a +
   b
@@ -195,7 +195,7 @@ a +
 //│ ╔══[PARSE ERROR] Unexpected operator in expression position
 //│ ║  l.192: 	  + 1
 //│ ╙──       	  ^
-//│ Parsed: {+ a {* b 2; * 1 3}}
+//│ Parsed: {+ (a,) ({* b 2; * 1 3},)}
 
 a +
   b
@@ -203,6 +203,6 @@ a +
     + 1
       * 3
 //│ |a| |+|→|b|→|*| |2|↵|+| |1|→|*| |3|←|←|←|
-//│ Parsed: {+ a {+ (* b 2) (* 1 3)}}
+//│ Parsed: {+ (a,) ({+ (* b 2) (* 1 3)},)}
 
 

@@ -34,7 +34,7 @@ foo<1, 2, 3>(1, 2, 3)
 
 1 < 2 > 4
 //│ |1| |<| |2| |>| |4|
-//│ Parsed: {> (< 1 2) 4}
+//│ Parsed: {> (< (1,) (2,),) (4,)}
 
 :w
 1 < 2> 4
@@ -43,7 +43,7 @@ foo<1, 2, 3>(1, 2, 3)
 //│ ║        	     ^
 //│ ╙── Add spaces around it if you intended to use `<` as an operator
 //│ |1| |<| |2|>| |4|
-//│ Parsed: {> (< 1 2) 4}
+//│ Parsed: {> (< (1,) (2,),) (4,)}
 
 :pe
 :w
@@ -56,7 +56,7 @@ foo<1, 2, 3>(1, 2, 3)
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.50: 	1< 2 > 4
 //│ ╙──      	^^^^^^^^
-//│ Parsed: {> 2 (4 (1,))}
+//│ Parsed: {> (2,) (4 (1,),)}
 
 :w
 1< 2> 4
@@ -76,7 +76,7 @@ foo<1, 2, 3>(1, 2, 3)
 
 1<>2
 //│ |1|<>|2|
-//│ Parsed: {<> 1 2}
+//│ Parsed: {<> (1,) (2,)}
 
 :pe
 1< >2
@@ -96,16 +96,16 @@ foo<1, 2, 3>(1, 2, 3)
 //│ ╔══[PARSE ERROR] Unexpected operator in expression position
 //│ ║  l.94: 	1 < >2
 //│ ╙──      	    ^
-//│ Parsed: {< 1 2}
+//│ Parsed: {< (1,) (2,)}
 
 
 foo<S, T>(1, 2, 3) & Bar<U>("ok")
 //│ |foo|‹|S|,| |T|›|(|1|,| |2|,| |3|)| |&| |Bar|‹|U|›|(|"ok"|)|
-//│ Parsed: {& (foo‹S, T› (1, 2, 3,)) (Bar‹U› ("ok",))}
+//│ Parsed: {& (foo‹S, T› (1, 2, 3,),) (Bar‹U› ("ok",),)}
 
 foo<Str, Int>(2 + 3) & Bar<MyClass>("ok")
 //│ |foo|‹|Str|,| |Int|›|(|2| |+| |3|)| |&| |Bar|‹|MyClass|›|(|"ok"|)|
-//│ Parsed: {& (foo‹Str, Int› (+ 2 3,)) (Bar‹MyClass› ("ok",))}
+//│ Parsed: {& (foo‹Str, Int› (+ (2,) (3,),),) (Bar‹MyClass› ("ok",),)}
 
 :pe
 foo[S, T](1, 2, 3) & Bar[U]("ok")
@@ -113,5 +113,5 @@ foo[S, T](1, 2, 3) & Bar[U]("ok")
 //│ ╔══[PARSE ERROR] Unexpected comma here
 //│ ║  l.111: 	foo[S, T](1, 2, 3) & Bar[U]("ok")
 //│ ╙──       	     ^
-//│ Parsed: {& ((foo)[S] (1, 2, 3,)) ((Bar)[U] ("ok",))}
+//│ Parsed: {& ((foo)[S] (1, 2, 3,),) ((Bar)[U] ("ok",),)}
 

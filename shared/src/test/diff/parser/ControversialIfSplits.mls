@@ -73,7 +73,7 @@ if f of
 //│ ╟── Note: 'if' expression started here:
 //│ ║  l.61: 	if f of
 //│ ╙──      	^^
-//│ Parsed: {if (f (is 0 0,)) then undefined}
+//│ Parsed: {if (f (is (0,) (0,),)) then undefined}
 
 
 

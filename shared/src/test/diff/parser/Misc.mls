@@ -124,12 +124,12 @@ foo of
 
 print of Foo(x) is Some
 //│ |print| |#of| |Foo|(|x|)| |is| |Some|
-//│ Parsed: {print (is (Foo (x,)) Some,)}
+//│ Parsed: {print (is (Foo (x,),) (Some,),)}
 
 // FIXME parses wrong:
 if f of x is Some then 1 else 0
 //│ |#if| |f| |#of| |x| |is| |Some| |#then| |1| |#else| |0|
-//│ Parsed: {if (f (is x Some,)) then 1 else 0}
+//│ Parsed: {if (f (is (x,) (Some,),)) then 1 else 0}
 
 // :dp
 if f of 0 and g of 1 then "ok"
@@ -147,4 +147,4 @@ if f of 0 and g of 1 then "ok"
 
 A and B or C and D
 //│ |A| |and| |B| |or| |C| |and| |D|
-//│ Parsed: {or (and A B) (and C D)}
+//│ Parsed: {or (and (A,) (B,),) (and (C,) (D,),)}

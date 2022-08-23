@@ -281,7 +281,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
             val ps = parents(KEYWORD(":"))
             val body = curlyTypingUnit
             R(NuTypeDef(kind, tn, tparams, params, ps, body))
-          case (KEYWORD("fun"), l0) :: c => // TODO support rec?
+          
+          // TODO make `fun` by-name and `let` by-value
+          case (KEYWORD(kwStr @ ("fun" | "let")), l0) :: c => // TODO support rec?
             consume
             val (v, success) = yeetSpaces match {
               case (IDENT(idStr, false), l1) :: _ =>
@@ -521,7 +523,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           case L(rhs) =>
             L(IfOpApp(acc, v, rhs))
           case R(rhs) =>
-            exprCont(App(App(v, acc), rhs), prec, allowNewlines)
+            exprCont(App(App(v, toParams(acc)), toParams(rhs)), prec, allowNewlines)
         }
       case (SPACE, l0) :: _ =>
         consume
