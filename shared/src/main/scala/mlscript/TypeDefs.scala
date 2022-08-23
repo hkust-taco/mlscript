@@ -652,6 +652,11 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           case TupleType(fields) => fields.foreach {
               case (_ , fieldTy) => fieldVarianceHelper(fieldTy)
             }
+          case SpliceType(elems) =>
+            elems.foreach {
+              case L(ty) => updateVariance(ty, curVariance)
+              case R(fld) => fieldVarianceHelper(fld)
+            }
           case FunctionType(lhs, rhs) =>
             updateVariance(lhs, curVariance.flip)
             updateVariance(rhs, curVariance)

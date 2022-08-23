@@ -49,15 +49,15 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     locate(number.map(x => IntLit(BigInt(x))) | Lexer.stringliteral.map(StrLit(_))
     | P(kw("undefined")).map(x => UnitLit(true)) | P(kw("null")).map(x => UnitLit(false)))
   
-  def variable[_: P]: P[Var] = locate(ident.map(Var))
+  def variable[p: P]: P[Var] = locate(ident.map(Var))
 
-  def parenCell[_: P]: P[Either[Term, (Term, Boolean)]] = (("..." | kw("mut")).!.? ~ term).map {
+  def parenCell[p: P]: P[Either[Term, (Term, Boolean)]] = (("..." | kw("mut")).!.? ~ term).map {
     case (Some("..."), t) => Left(t)
     case (Some("mut"), t) => Right(t -> true)
     case (_, t) => Right(t -> false)
   }
 
-  def parens[_: P]: P[Term] = locate(P( "(" ~/ parenCell.rep(0, ",") ~ ",".!.? ~ ")" ).map {
+  def parens[p: P]: P[Term] = locate(P( "(" ~/ parenCell.rep(0, ",") ~ ",".!.? ~ ")" ).map {
     case (Seq(Right(t -> false)), N) => Bra(false, t)
     case (Seq(Right(t -> true)), N) => Tup(N -> Fld(true, false, t) :: Nil) // ? single tuple with mutable
     case (ts, _) => 
@@ -244,13 +244,13 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
         case (Some(_), v, t) => v -> Field(Some(t), t)
       } pipe Record))
 
-  def parTyCell[_: P]: P[Either[Type, (Type, Boolean)]] = (("..." | kw("mut")).!.? ~ ty). map {
+  def parTyCell[p: P]: P[Either[Type, (Type, Boolean)]] = (("..." | kw("mut")).!.? ~ ty). map {
     case (Some("..."), t) => Left(t)
     case (Some("mut"), t) => Right(t -> true)
     case (_, t) => Right(t -> false)
   }
 
-  def parTy[_: P]: P[Type] = locate(P( "(" ~/ parTyCell.rep(0, ",").map(_.map(N -> _).toList) ~ ",".!.? ~ ")" ).map {
+  def parTy[p: P]: P[Type] = locate(P( "(" ~/ parTyCell.rep(0, ",").map(_.map(N -> _).toList) ~ ",".!.? ~ ")" ).map {
     case (N -> Right(ty -> false) :: Nil, N) => ty
     case (fs, _) => 
       if (fs.forall(_._2.isRight))
