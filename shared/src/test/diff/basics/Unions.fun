@@ -222,7 +222,7 @@ x => bar(bar(x, 1), 0)
 
 
 let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
-//│ baz: (r: {_1: int & 'a, _2: 'a},) -> 'a
+//│ baz: (r: {_1: number & 'a, _2: 'a},) -> 'a
 
 :e
 baz(0)
@@ -254,10 +254,10 @@ x => baz(x, 0)
 x => baz(0, x)
 x => baz(x, x)
 (x, y) => baz(x, y)
-//│ res: (int & 'a) -> (0 | 'a)
+//│ res: (number & 'a) -> (0 | 'a)
 //│ res: 'a -> (0 | 'a)
-//│ res: (int & 'a) -> 'a
-//│ res: (int & 'a, 'a,) -> 'a
+//│ res: (number & 'a) -> 'a
+//│ res: (number & 'a, 'a,) -> 'a
 
 
 let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2

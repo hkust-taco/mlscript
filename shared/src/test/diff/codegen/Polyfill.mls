@@ -25,7 +25,7 @@ concat "a" "b"
 //│ function concat(x, y) {
 //│   if (arguments.length === 2) {
 //│     return x + y;
-//│   }else {
+//│   } else {
 //│     return (y) => x + y;
 //│   }
 //│ }
