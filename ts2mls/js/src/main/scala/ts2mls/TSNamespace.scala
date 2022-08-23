@@ -53,19 +53,19 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
             val params = TSIntersectionType.getOverloadTypeVariables(inter).map((t) => t.name) 
 
             if (params.isEmpty)
-              writer.writeln(s"def ${fullName}: ${TSProgram.getMLSType(inter)}")
+              writer.writeln(s"def ${fullName}: ${Converter.convert(inter)}")
             else // TODO: add constraints
-              writer.writeln(s"def ${fullName}[${params.reduceLeft((r, s) => s"$r, $s")}]: ${TSProgram.getMLSType(inter)}")
+              writer.writeln(s"def ${fullName}[${params.reduceLeft((r, s) => s"$r, $s")}]: ${Converter.convert(inter)}")
           }
           case f: TSFunctionType => {
             val fullName = getFullPath(name)
             val params = f.typeVars.map((t) => t.name) 
             if (params.isEmpty)
-              writer.writeln(s"def ${fullName}: ${TSProgram.getMLSType(f)}")
+              writer.writeln(s"def ${fullName}: ${Converter.convert(f)}")
             else // TODO: add constraints
-              writer.writeln(s"def ${fullName}[${params.reduceLeft((r, s) => s"$r, $s")}]: ${TSProgram.getMLSType(f)}")
+              writer.writeln(s"def ${fullName}[${params.reduceLeft((r, s) => s"$r, $s")}]: ${Converter.convert(f)}")
           }
-          case _ => writer.writeln(TSProgram.getMLSType(mem))
+          case _ => writer.writeln(Converter.convert(mem))
         }
       }
     })

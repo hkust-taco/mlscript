@@ -14,16 +14,12 @@ class TSProgram(filenames: Seq[String]) {
 
   implicit private val checker: TSTypeChecker = TSTypeChecker(program.getTypeChecker())
   val globalNamespace = TSNamespace()
-  
-  filenames.foreach(filename => {
-    filename -> TSSourceFile(program.getSourceFile(filename), globalNamespace)
-  })
+
+  filenames.foreach(filename => TSSourceFile(program.getSourceFile(filename), globalNamespace))
 
   def generate(writer: JSWriter, prefix: String = ""): Unit = globalNamespace.generate(writer, prefix)
 }
 
 object TSProgram {
-    def apply(filenames: Seq[String]) = new TSProgram(filenames)
-
-    def getMLSType(tp: TSType): String = Converter.convert(tp)
+  def apply(filenames: Seq[String]) = new TSProgram(filenames)
 }
