@@ -71,7 +71,7 @@ final case class If(body: IfBody, els: Opt[Term])                    extends Ter
 final case class TyApp(lhs: Term, targs: Ls[Type])                   extends Term
 
 sealed abstract class IfBody extends IfBodyImpl
-final case class IfTerm(expr: Term) extends IfBody // rm?
+// final case class IfTerm(expr: Term) extends IfBody // rm?
 final case class IfThen(expr: Term, rhs: Term) extends IfBody
 final case class IfElse(expr: Term) extends IfBody
 final case class IfLet(isRec: Bool, name: Var, rhs: Term, body: IfBody) extends IfBody
@@ -160,13 +160,13 @@ final case class NuTypeDef(
   params: Tup, // the specialized parameters for that type
   parents: Ls[NamedType],
   body: TypingUnit
-) extends NuDecl
+) extends NuDecl with DesugaredStatement
 
 final case class NuFunDef(
   nme: Var,
   targs: Ls[TypeName],
   rhs: Term \/ PolyType,
-) extends NuDecl {
+) extends NuDecl with DesugaredStatement {
   val body: Located = rhs.fold(identity, identity)
 }
 

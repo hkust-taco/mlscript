@@ -51,7 +51,10 @@ class JSBackend {
     case Bra(_, trm) => translatePattern(trm)
     case Tup(fields) => JSArrayPattern(fields map { case (_, Fld(_, _, t)) => translatePattern(t) })
     // Others are not supported yet.
-    case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf | _: Subs | _: Assign =>
+    case TyApp(base, _) =>
+      translatePattern(base)
+    case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf | _: Subs | _: Assign
+        | If(_, _) | New(_, _) =>
       throw CodeGenError(s"term ${inspect(t)} is not a valid pattern")
   }
 
@@ -161,7 +164,8 @@ class JSBackend {
         R(blkScope.tempVars `with` (stmts flatMap (_.desugared._2) map {
           case t: Term             => JSExprStmt(translateTerm(t))
           // TODO: find out if we need to support this.
-          case _: Def | _: TypeDef => throw CodeGenError("unexpected definitions in blocks")
+          case _: Def | _: TypeDef | _: NuFunDef | _: NuTypeDef =>
+            throw CodeGenError("unexpected definitions in blocks")
         })),
         Nil
       )
@@ -211,7 +215,7 @@ class JSBackend {
         case _ =>
           throw CodeGenError(s"illegal assignemnt left-hand side: ${inspect(lhs)}")
       }
-    case _: Bind | _: Test =>
+    case _: Bind | _: Test | If(_, _) | New(_, _) | TyApp(_, _) =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
 

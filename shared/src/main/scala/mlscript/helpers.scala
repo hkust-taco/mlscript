@@ -246,6 +246,7 @@ trait PgrmImpl { self: Pgrm =>
     }.partitionMap {
       case td: TypeDef => L(td)
       case ot: Terms => R(ot)
+      case _: NuFunDef | _: NuTypeDef => ???
     }
     diags.toList -> res
   }
@@ -349,6 +350,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Assign(lhs, rhs) => "assignment"
     case New(h, b) => "object instantiation"
     case If(_, _) => "if-else block"
+    case TyApp(_, _) => "type application"
   }
   
   override def toString: Str = print(false)
@@ -534,8 +536,7 @@ trait StatementImpl extends Located { self: Statement =>
       (diags ::: diags2 ::: diags3) -> (TypeDef(Als, TypeName(v.name).withLocOf(v), targs,
           dataDefs.map(td => AppliedType(td.nme, td.tparams)).reduceOption(Union).getOrElse(Bot)
         ).withLocOf(hd) :: cs)
-    case t: Term => Nil -> (t :: Nil)
-    case d: Decl => Nil -> (d :: Nil)
+    case d: DesugaredStatement => Nil -> (d :: Nil)
   }
   import Message._
   protected def desugDefnPattern(pat: Term, args: Ls[Term]): (Ls[Diagnostic], Var, Ls[Term]) = pat match {
@@ -641,6 +642,8 @@ trait StatementImpl extends Located { self: Statement =>
     case If(body, els) => body :: els.toList
     case d @ NuFunDef(v, ts, rhs) => v :: ts ::: d.body :: Nil
     case TyApp(lhs, targs) => lhs :: targs
+    case New(base, bod) => base.toList.flatMap(ab => ab._1 :: ab._2 :: Nil) ::: bod :: Nil
+    case NuTypeDef(_, _, _, _, _, _) => ???
   }
   
   
