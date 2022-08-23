@@ -24,10 +24,6 @@ class DiffTests
 {
   import DiffTests._
 
-  private val dir = defaultDir
-  
-  private val allFiles = os.walk(dir).filter(_.toIO.isFile)
-
   protected def getFiles() = allFiles.filter { file =>
       val fileName = file.baseName
       validExt(file.ext) && filter(fileName)
@@ -728,13 +724,15 @@ object DiffTests {
     if (sys.env.get("CI").isDefined) Span(25, Seconds)
     else Span(5, Seconds)
   
-  private val defaultDir = os.pwd/"shared"/"src"/"test"/"diff"
+  private val dir = os.pwd/"shared"/"src"/"test"/"diff"
+  
+  private val allFiles = os.walk(dir).filter(_.toIO.isFile)
   
   private val validExt = Set("fun", "mls")
   
   // Aggregate unstaged modified files to only run the tests on them, if there are any
   private val modified: Set[Str] =
-    try os.proc("git", "status", "--porcelain", defaultDir).call().out.lines().iterator.flatMap { gitStr =>
+    try os.proc("git", "status", "--porcelain", dir).call().out.lines().iterator.flatMap { gitStr =>
       println(" [git] " + gitStr)
       val prefix = gitStr.take(2)
       val filePath = gitStr.drop(3)
