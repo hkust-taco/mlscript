@@ -54,16 +54,3 @@ class B {}
 function swap(x: [A, B]): [B, A] {
   return [x[1], x[0]];
 }
-
-class FFF<T> {
-  constructor() {}
-  fff(x: T) {}
-}
-
-function fff(p: FFF<string>, s: string) {
-  p.fff(s);
-}
-
-function getFFF(): FFF<number> {
-  return new FFF<number>();
-}

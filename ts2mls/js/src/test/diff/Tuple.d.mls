@@ -12,12 +12,8 @@ def conv: ({ y: number }) -> (({ y: number }, { z: string }, ))
 class A: { x: number }
 class B: {}
 def swap: ((A, B, )) -> ((B, A, ))
-class FFF[T]: { fff: (T) -> (unit) }
-def fff: (FFF[string]) -> ((string) -> (unit))
-def getFFF: unit -> (FFF[number])
 //│ Defined class A
 //│ Defined class B
-//│ Defined class FFF[-T]
 //│ key: (string, bool,) -> string
 //│    = <missing implementation>
 //│ value: (string, bool,) -> bool
@@ -42,7 +38,3 @@ def getFFF: unit -> (FFF[number])
 //│     = <missing implementation>
 //│ swap: (A, B,) -> (B, A,)
 //│     = <missing implementation>
-//│ fff: FFF[string] -> string -> unit
-//│    = <missing implementation>
-//│ getFFF: unit -> FFF[number]
-//│       = <missing implementation>
