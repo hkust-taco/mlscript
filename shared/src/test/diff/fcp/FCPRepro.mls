@@ -16,7 +16,7 @@ type SigR[a] = a
 
 // FIXME
 type ExSigR = SigR['a]
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ Defined type alias ExSigR
 
 
 

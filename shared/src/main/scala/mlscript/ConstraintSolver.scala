@@ -192,7 +192,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }()
     
     /* Solve annoying constraints,
-        which are those that involve either unions and intersections at the wrong polarities, or negations.
+        which are those that involve either unions and intersections at the wrong polarities or negations.
         This works by constructing all pairs of "conjunct <: disjunct" implied by the conceptual
         "DNF <: CNF" form of the constraint. */
     def annoying(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
@@ -898,7 +898,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         detailedContext,
       ).flatten
       
-      raise(TypeError(msgs))
+      raise(ErrorReport(msgs))
     }
     
     rec(lhs, rhs, true)(raise, Nil -> Nil, outerCtx, shadows)
@@ -965,6 +965,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           nv.upperBounds = tv.upperBounds.map(extrude(_, lowerLvl, false, upperLvl))
           nv
         })
+      case t @ SpliceType(fs) => 
+        t.updateElems(extrude(_, lowerLvl, pol, upperLvl), extrude(_, lowerLvl, !pol, upperLvl), extrude(_, lowerLvl, pol, upperLvl), t.prov)
       case tv: TypeVariable => cache.getOrElse(tv -> pol, {
         // val nv = freshVar(tv.prov, S(tv), tv.nameHint)(lowerLvl)
         val nv = freshVar(tv.prov, N, tv.nameHint)(lowerLvl)
@@ -1066,7 +1068,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     err(msg -> loco :: Nil)
   }
   def err(msgs: List[Message -> Opt[Loc]])(implicit raise: Raise): SimpleType = {
-    raise(TypeError(msgs))
+    raise(ErrorReport(msgs))
     errType
   }
   def errType: SimpleType = ClassTag(ErrTypeId, Set.empty)(noProv)
@@ -1075,7 +1077,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     warn(msg -> loco :: Nil)
 
   def warn(msgs: List[Message -> Opt[Loc]])(implicit raise: Raise): Unit =
-    raise(Warning(msgs))
+    raise(WarningReport(msgs))
   
   
   
@@ -1209,6 +1211,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case t @ RecordType(fs) => RecordType(fs.mapValues(_.update(freshen, freshen)))(t.prov)
       case t @ TupleType(fs) => TupleType(fs.mapValues(_.update(freshen, freshen)))(t.prov)
       case t @ ArrayType(ar) => ArrayType(ar.update(freshen, freshen))(t.prov)
+      case t @ SpliceType(fs) => t.updateElems(freshen, freshen, freshen, t.prov)
       case n @ NegType(neg) => NegType(freshen(neg))(n.prov)
       case e @ ExtrType(_) => e
       case p @ ProvType(und) => ProvType(freshen(und))(p.prov)

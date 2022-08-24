@@ -440,13 +440,20 @@ final case class JSImmEvalFn(
     arguments: Ls[JSExpr]
 ) extends JSExpr {
   implicit def precedence: Int = 22
-  def toSourceCode: SourceCode = {
-    val fnName = name.getOrElse("")
-    (SourceCode(s"function $fnName${JSExpr.params(params)} ") ++ (body match {
-      case Left(expr) => expr.`return`.toSourceCode
-      case Right(stmts) =>
-        stmts.foldLeft(SourceCode.empty) { _ + _.toSourceCode }
-    }).block).parenthesized ++ JSExpr.arguments(arguments)
+  def toSourceCode: SourceCode = name match {
+    case None =>
+      (SourceCode(s"${JSExpr.params(params)} => ") ++ (body match {
+        case Left(expr: JSRecord) => expr.toSourceCode.parenthesized
+        case Left(expr) => expr.toSourceCode
+        case Right(stmts) =>
+          stmts.foldLeft(SourceCode.empty) { _ + _.toSourceCode }.block
+      })).parenthesized ++ JSExpr.arguments(arguments)
+    case Some(fnName) =>
+      (SourceCode(s"function $fnName${JSExpr.params(params)} ") ++ (body match {
+        case Left(expr) => expr.`return`.toSourceCode
+        case Right(stmts) =>
+          stmts.foldLeft(SourceCode.empty) { _ + _.toSourceCode }
+      }).block).parenthesized ++ JSExpr.arguments(arguments)
   }
 }
 

@@ -230,6 +230,7 @@ abstract class TyperHelpers { Typer: Typer =>
     case Overload(alts) => Overload(alts.map(f(pol, _).asInstanceOf[FunctionType]))(bt.prov)
     case TupleType(fields) => TupleType(fields.mapValues(_.update(f(pol.map(!_), _), f(pol, _))))(bt.prov)
     case ArrayType(inner) => ArrayType(inner.update(f(pol.map(!_), _), f(pol, _)))(bt.prov)
+    case sp @SpliceType(elems) => sp.updateElems(f(pol, _), f(pol.map(!_), _), f(pol, _))
     case wt @ Without(b: ComposedType, ns @ empty()) => Without(b.map(f(pol, _)), ns)(wt.prov) // FIXME very hacky
     case Without(base, names) => Without(f(pol, base), names)(bt.prov)
     case _: ClassTag => bt
@@ -306,6 +307,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case Overload(as) => Overload(as.map(f(_).asInstanceOf[FunctionType]))(prov)
       case RecordType(fields) => RecordType(fields.mapValues(_.update(f, f)))(prov)
       case TupleType(fields) => TupleType(fields.mapValues(_.update(f, f)))(prov)
+      case sp @ SpliceType(fs) => sp.updateElems(f, f, f)
       case ArrayType(inner) => ArrayType(inner.update(f, f))(prov)
       case ComposedType(pol, lhs, rhs) => ComposedType(pol, f(lhs), f(rhs))(prov)
       case NegType(negated) => NegType(f(negated))(prov)
@@ -523,6 +525,7 @@ abstract class TyperHelpers { Typer: Typer =>
           rcd.copy(fields = rcd.fields.filterNot(_._1 |> relevantNames))(rcd.prov)
         }
       case t @ ArrayType(ar) => t
+      case t @ SpliceType(fs) => ???  // TODO
       case n @ NegType(_ : ClassTag | _: FunctionType | _: RecordType) => n
       case n @ NegType(nt) if (nt match {
         case _: ComposedType | _: ExtrType | _: NegType => true
@@ -610,6 +613,7 @@ abstract class TyperHelpers { Typer: Typer =>
         case RecordType(fs) => fs.unzip._2.flatMap(childrenPolField)
         case TupleType(fs) => fs.unzip._2.flatMap(childrenPolField)
         case ArrayType(fld) => childrenPolField(fld)
+        case SpliceType(elems) => elems flatMap {case L(l) => pol -> l :: Nil case R(r) => childrenPolField(r)}
         case NegType(n) => pol.map(!_) -> n :: Nil
         case ExtrType(_) => Nil
         case ProxyType(und) => pol -> und :: Nil
@@ -678,6 +682,7 @@ abstract class TyperHelpers { Typer: Typer =>
       // case ConstrainedType(cs, und) => cs.flatMap(_._2.unzip._2) ::: und :: Nil
       case ConstrainedType(cs, und) =>
         cs.map(_._1) ::: cs.flatMap(_._2.unzip._2) ::: und :: Nil
+      case SpliceType(fs) => fs.flatMap{ case L(l) => l :: Nil case R(r) => r.lb.toList ::: r.ub :: Nil}
     }
     
     def getVars: SortedSet[TypeVariable] = {
@@ -762,6 +767,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case RecordType(fs) => fs.unzip._2.foreach(applyField(pol))
       case TupleType(fs) => fs.unzip._2.foreach(applyField(pol))
       case ArrayType(fld) => applyField(pol)(fld)
+      case SpliceType(elems) => elems foreach {case L(l) => apply(pol)(l) case R(r) => applyField(pol)(r)}
       case NegType(n) => apply(pol.map(!_))(n)
       case ExtrType(_) => ()
       case ProxyType(und) => apply(pol)(und)

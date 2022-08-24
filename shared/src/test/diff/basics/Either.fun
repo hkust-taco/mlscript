@@ -4,7 +4,7 @@
 data type Either l r of
   Left l
   Right r
-//│ Parsed: data type ((Either l) r) of (Left l); (Right r);;
+//│ Parsed: data type Either l r of {Left l; Right r};
 //│ Desugared: type alias Either[l, r] = Left[l, r] | Right[l, r]
 //│ Desugared: class Left[l, r]: {l: l}
 //│ Desugared: class Right[l, r]: {r: r}
@@ -32,10 +32,10 @@ data type Either l r of
 data type Either2 (l: _) (r: _) of
   Left2 l
   Right2 r
-//│ ╔══[ERROR] illegal datatype type parameter shape: ((l: _,);)
+//│ ╔══[ERROR] illegal datatype type parameter shape: '(' {l: _,} ')'
 //│ ║  l.32: 	data type Either2 (l: _) (r: _) of
 //│ ╙──      	                  ^^^^^^
-//│ ╔══[ERROR] illegal datatype type parameter shape: ((r: _,);)
+//│ ╔══[ERROR] illegal datatype type parameter shape: '(' {r: _,} ')'
 //│ ║  l.32: 	data type Either2 (l: _) (r: _) of
 //│ ╙──      	                         ^^^^^^
 //│ ╔══[ERROR] type identifier not found: l

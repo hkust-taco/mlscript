@@ -22,7 +22,7 @@ def useCls c = case c of { Class -> c.x | int -> "oops" }
 //│ // Query 1
 //│ globalThis.useCls = function useCls(c) {
 //│   let a;
-//│   return (a = c, a instanceof Class ? c.x : Number.isInteger(a) ? "oops" : (function () {
+//│   return (a = c, a instanceof Class ? c.x : Number.isInteger(a) ? "oops" : (() => {
 //│     throw new Error("non-exhaustive case expression");
 //│   })());
 //│ };
@@ -235,7 +235,7 @@ oo = Oops 2
 case oo of { Oops -> 1 }
 //│ // Query 1
 //│ let a;
-//│ res = (a = oo, Oops.is(a) ? 1 : (function () {
+//│ res = (a = oo, Oops.is(a) ? 1 : (() => {
 //│   throw new Error("non-exhaustive case expression");
 //│ })());
 //│ // End of generated code

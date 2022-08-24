@@ -947,7 +947,7 @@ def newRef4: forall 'a 's. 'a -> ST['s, (Ref['s, 'a], Ref['s, 'a])]
 runST4 (newRef4 1)
 //│ runST4: (forall 's. ST['s, ('a, 'b,)]) -> ('a, 'b,)
 //│ newRef4: 'a -> ST['s, (Ref['s, 'a], Ref['s, 'a],)]
-//│ res: (Ref[in ‘s_2382_2390 & 's out 's | ‘s_2382_2390 | 's0, 1], Ref[in ‘s_2382_2394 & 's0 out 's | ‘s_2382_2394, 1],)
+//│ res: (Ref[in ‘s_2382_2390 & 's out 's | 's0 | ‘s_2382_2390, 1], Ref[in ‘s_2382_2394 & 's0 out 's | 's0 | ‘s_2382_2394, 1],)
 
 // ("(\\(x :: forall a. a -> a) -> xauto x) :: (forall a. a -> a) -> (forall a. a -> a)", ok "(forall a. a -> a) -> (forall a. a -> a)")
 // FIXME
@@ -955,7 +955,7 @@ runST4 (newRef4 1)
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.954: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_2425_2426` is not an instance of type `'a_2425_2427`
+//│ ╟── type `‘a_2426_2427` is not an instance of type `'a_2426_2428`
 //│ ║  l.954: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║         	                                                      ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -970,7 +970,7 @@ xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.969: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║         	^^^^^
-//│ ╟── type `‘a_2441_2442` is not an instance of type `'a_2441_2443`
+//│ ╟── type `‘a_2442_2443` is not an instance of type `'a_2442_2444`
 //│ ║  l.969: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║         	                                         ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -1022,7 +1022,7 @@ test2 = test1
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.1018: 	test2 = test1
 //│ ║          	^^^^^^^^^^^^^
-//│ ╟── type `‘a_2510_2511` is not an instance of type `'a_2510_2512`
+//│ ╟── type `‘a_2511_2512` is not an instance of type `'a_2511_2513`
 //│ ║  l.1004: 	def test2: List[forall 'a. 'a -> 'a]
 //│ ║          	                       ^^
 //│ ╟── Note: constraint arises from quantified type variable:
