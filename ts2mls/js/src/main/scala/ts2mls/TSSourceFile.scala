@@ -9,14 +9,14 @@ object TSSourceFile {
   def apply(sf: js.Dynamic, global: TSNamespace) = {
     def generate(node: js.Dynamic): Unit = {
       val nodeObject = TSNodeObject(node)
-      if (nodeObject.isToken || nodeObject.symbol.isUndefined) return
-      addNodeIntoNamespace(nodeObject, nodeObject.symbol.escapedName)(global)
+      if (!nodeObject.isToken && !nodeObject.symbol.isUndefined)
+        addNodeIntoNamespace(nodeObject, nodeObject.symbol.escapedName)(global)
     }
 
     TypeScript.forEachChild(sf, generate)
   }
 
-  private def getApplicationArguments[T <: TSAny](args: TSArray[T])(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): List[TSType] =
+  private def getApplicationArguments[T <: TSAny](args: TSArray[T])(implicit ns: TSNamespace, tv: Set[String]): List[TSType] =
     args.foldLeft(List[TSType]())((lst, arg) => arg match {
       case token: TSTokenObject => lst :+ getObjectType(Right(token.getTypeFromTypeNode()))
       case tp: TSTypeObject => lst :+ getObjectType(Right(tp))
@@ -24,7 +24,7 @@ object TSSourceFile {
 
   // due to the tsc's code, the type information can be stored everywhere
   // all these branches are required. removing one of them would lead to errors
-  private def getObjectType(node: Either[TSNodeObject, TSTypeObject])(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): TSType = node match {
+  private def getObjectType(node: Either[TSNodeObject, TSTypeObject])(implicit ns: TSNamespace, tv: Set[String]): TSType = node match {
     case Left(node) => {
       val res = {
         val typeNode = node.`type`() // may be stored in node or type node(except union/intersection type)
@@ -34,12 +34,12 @@ object TSSourceFile {
           val name = typeNode.typeName.escapedText()
           if (!typeNode.typeArguments.isUndefined)
             TSApplicationType(name, getApplicationArguments(typeNode.typeArguments))
-          else if (tv.contains(name)) tv(name)
+          else if (tv(name)) TSTypeVariable(name)
           else if (ns.containsMember(name.split("'").toList)) TSNamedType(name)
           else TSEnumType(name)
         }
         else if (node.hasTypeName)
-          tv.getOrElse(node.typeName.escapedText(), TSNamedType(node.typeName.escapedText()))
+          if (tv(node.typeName.escapedText())) TSTypeVariable(node.typeName.escapedText()) else TSNamedType(node.typeName.escapedText())
         else if (typeNode.isTupleTypeNode) TSTupleType(getTupleElements(typeNode.elements))
         else if (node.isTupleTypeNode) TSTupleType(getTupleElements(node.elements))
         else if (typeNode.isUnionTypeNode) getStructuralType(typeNode.typesToken, true)
@@ -51,7 +51,7 @@ object TSSourceFile {
         else if (!node.dotDotDot.isUndefined) TSArrayType(TSNamedType("any")) // variable parameter without type annotation
         else {
           val name = node.symbol.getType()
-          tv.getOrElse(name, TSNamedType(name))
+          if (tv(name)) TSTypeVariable(name) else TSNamedType(name)
         }
       }
       
@@ -63,7 +63,8 @@ object TSSourceFile {
       }
     }
     case Right(obj) => {
-      val dec = obj.declaration
+      val sym = obj.symbol
+      val dec = sym.declaration
       val args = obj.resolvedTypeArguments
       if (obj.isEnumType) TSEnumType(obj.aliasSymbol.escapedName)
       else if (dec.isFunctionLike) getFunctionType(dec)
@@ -71,42 +72,42 @@ object TSSourceFile {
       else if (obj.isUnionType) getStructuralType(obj.types, true)
       else if (obj.isIntersectionType) getStructuralType(obj.types, false)
       else if (obj.isArrayType) TSArrayType(getObjectType(Right(args.get(0))))
-      else if (!args.isUndefined) TSApplicationType(obj.symbol.escapedName, getApplicationArguments(args))
-      else if (!obj.symbol.isUndefined) {
-          val symDec = obj.symbol.valueDeclaration
-          val name = obj.symbol.getFullName()
+      else if (!args.isUndefined) TSApplicationType(sym.escapedName, getApplicationArguments(args))
+      else if (!sym.isUndefined) {
+          val symDec = sym.valueDeclaration
+          val name = sym.getFullName()
           if (ns.containsMember(name.split("'").toList)) TSNamedType(name)
           else if (!symDec.isUndefined && !symDec.properties.isUndefined)
             TSInterfaceType("", getInterfacePropertiesType(symDec.properties, 0), List(), List())
           else if (!dec.isUndefined && !dec.members.isUndefined)
             TSInterfaceType("", getInterfacePropertiesType(dec.members, 0), List(), List())
-          else tv.getOrElse(obj.symbol.escapedName, TSNamedType(obj.symbol.getFullName())) 
+          else if (tv(sym.escapedName)) TSTypeVariable(sym.escapedName)
+          else TSNamedType(sym.getFullName())
       }
-      else tv.getOrElse(obj.intrinsicName, TSNamedType(obj.intrinsicName))
+      else if(tv(obj.intrinsicName)) TSTypeVariable(obj.intrinsicName)
+      else TSNamedType(obj.intrinsicName)
     }
   }
 
-  private def getTypeConstraints(node: TSNodeObject)(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): List[TSTypeVariable] =
+  private def getTypeConstraints(node: TSNodeObject)(implicit ns: TSNamespace, tv: Set[String]): List[TSTypeVariable] =
     node.typeParameters.foldLeft(List[TSTypeVariable]())((lst, tp) =>
       if (tp.constraint.isUndefined) lst :+ TSTypeVariable(tp.symbol.escapedName, None)
       else lst :+ TSTypeVariable(tp.symbol.escapedName, Some(getObjectType(Right(tp.constraint.getTypeFromTypeNode()))))
     )
 
-  private def constaintsListToMap(constraints: List[TSTypeVariable]) =
-    constraints.foldLeft(Map[String, TSTypeVariable]())((m, v) => 
-      m ++ Map(v.name -> TSTypeVariable(v.name, None)) // we will apply the constraints in the record declarations.
-    )
+  private def constaintsListToSet(constraints: List[TSTypeVariable]) =
+    constraints.map((c) => c.name).toSet
 
-  private def getFunctionType(node: TSNodeObject)(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): TSFunctionType = {
+  private def getFunctionType(node: TSNodeObject)(implicit ns: TSNamespace, tv: Set[String]): TSFunctionType = {
     val params = node.parameters
     val constraints = getTypeConstraints(node)
-    val ntv = constaintsListToMap(constraints) ++ tv
+    val ntv = constaintsListToSet(constraints) ++ tv
     val pList = params.foldLeft(List[TSType]())((lst, p) => lst :+ getObjectType(Left(p))(ns, ntv))
     val res = node.getReturnTypeOfSignature()
     TSFunctionType(pList, getObjectType(Right(res))(ns, ntv), constraints)
   }
 
-  private def getStructuralType[T <: TSAny](types: TSArray[T], isUnion: Boolean)(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): TSStructuralType = 
+  private def getStructuralType[T <: TSAny](types: TSArray[T], isUnion: Boolean)(implicit ns: TSNamespace, tv: Set[String]): TSStructuralType = 
     types.foldLeft[Option[TSType]](None)((prev, cur) => prev match {
       case None => cur match {
         case token: TSTokenObject => Some(getObjectType(Right(token.getTypeFromTypeNode())))
@@ -123,7 +124,7 @@ object TSSourceFile {
       }
     }).get.asInstanceOf[TSStructuralType]
 
-  private def getTupleElements[T <: TSAny](elements: TSArray[T])(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): List[TSType] =
+  private def getTupleElements[T <: TSAny](elements: TSArray[T])(implicit ns: TSNamespace, tv: Set[String]): List[TSType] =
     elements.foldLeft(List[TSType]())((lst, ele) => ele match {
       case token: TSTokenObject => lst :+ getObjectType(Right(token.getTypeFromTypeNode()))
       case tp: TSTypeObject => lst :+ getObjectType(Right(tp))
@@ -145,11 +146,11 @@ object TSSourceFile {
       val parent = h.types.get(index)
       val name = getFullName("", parent.expression)
       if (parent.typeArguments.isUndefined) lst :+ TSNamedType(name)
-      else lst :+ TSApplicationType(name, getApplicationArguments(parent.typeArguments)(ns, Map()))
+      else lst :+ TSApplicationType(name, getApplicationArguments(parent.typeArguments)(ns, Set()))
     })
   }
 
-  private def getClassMembersType(list: TSNodeArray, index: Int, requireStatic: Boolean)(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): Map[String, TSMemberType] =
+  private def getClassMembersType(list: TSNodeArray, index: Int, requireStatic: Boolean)(implicit ns: TSNamespace, tv: Set[String]): Map[String, TSMemberType] =
     list.foldLeft(Map[String, TSMemberType]())((mp, p) => {
       val name = p.symbol.escapedName
       val isStatic = if (p.modifiers.isUndefined) false
@@ -183,14 +184,14 @@ object TSSourceFile {
       else mp
     })
 
-  private def getInterfacePropertiesType(list: TSNodeArray, index: Int)(implicit ns: TSNamespace, tv: Map[String, TSTypeVariable]): Map[String, TSMemberType] =
+  private def getInterfacePropertiesType(list: TSNodeArray, index: Int)(implicit ns: TSNamespace, tv: Set[String]): Map[String, TSMemberType] =
     list.foldLeft(Map[String, TSMemberType]())((mp, p) => mp ++ Map(p.symbol.escapedName -> TSMemberType(getObjectType(Left(p)))))
 
   private def parseMembers(node: TSNodeObject, isClass: Boolean)(implicit ns: TSNamespace): TSType = {
     val name = node.symbol.escapedName
     val members = node.members
-    val constraints = getTypeConstraints(node)(ns, Map())
-    val tvMap = constaintsListToMap(constraints)
+    val constraints = getTypeConstraints(node)(ns, Set())
+    val tvMap = constaintsListToSet(constraints)
 
     val fullName = ns.getFullPath(name)
     if (isClass)
@@ -221,12 +222,12 @@ object TSSourceFile {
   private def addNodeIntoNamespace(node: TSNodeObject, name: String, overload: Option[TSNodeArray] = None)(implicit ns: TSNamespace) =
     if (node.isFunctionDeclaration) overload match {
       case None => {
-        val typeInfo = getFunctionType(node)(ns, Map())
+        val typeInfo = getFunctionType(node)(ns, Set())
         addFunctionIntoNamespace(typeInfo, node, name)
       }
       case Some(decs) => {
         decs.foreach((d) => {
-          val func = getFunctionType(d)(ns, Map())
+          val func = getFunctionType(d)(ns, Set())
           addFunctionIntoNamespace(func, d, name)
         })
       }

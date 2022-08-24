@@ -133,6 +133,9 @@ object TSSymbolObject {
 }
 
 case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
+  // if there are parentheses around the type information
+  // there will be another `type` field in the `type` field
+  // ues this function to get the true type information 
   private def getTypeField(t: TSNodeObject): TSNodeObject =
     if (t.isUndefined || !t.parameters.isUndefined || t.`type`().isUndefined || t.`type`().isToken) t else t.`type`()
 
@@ -191,7 +194,7 @@ class TSTokenObject(token: js.Dynamic) extends TSAny(token) {
   lazy val isProtected = kind == TypeScript.syntaxKindProtected
   lazy val isStatic = kind == TypeScript.syntaxKindStatic
 
-  def getTypeFromTypeNode(): TSTypeObject = TSTypeChecker.getTypeFromTypeNode(token)
+  def getTypeFromTypeNode() = TSTypeChecker.getTypeFromTypeNode(token)
 }
 
 object TSTokenObject {
@@ -201,18 +204,17 @@ object TSTokenObject {
 class TSTypeObject(obj: js.Dynamic) extends TSAny(obj) {
   private lazy val flags = obj.flags.asInstanceOf[Int]
 
-  lazy val symbol: TSSymbolObject = TSSymbolObject(obj.symbol)
+  lazy val symbol = TSSymbolObject(obj.symbol)
   lazy val resolvedTypeArguments = TSTypeArray(obj.resolvedTypeArguments)
-  lazy val intrinsicName: String = if (js.isUndefined(obj.intrinsicName)) null else obj.intrinsicName.toString
-  lazy val aliasSymbol: TSSymbolObject = TSSymbolObject(obj.aliasSymbol)
+  lazy val intrinsicName = if (js.isUndefined(obj.intrinsicName)) null else obj.intrinsicName.toString
+  lazy val aliasSymbol = TSSymbolObject(obj.aliasSymbol)
   lazy val types = TSTypeArray(obj.types)
 
-  lazy val isTupleType: Boolean = obj.checker.isTupleType(obj)
-  lazy val isArrayType: Boolean = obj.checker.isArrayType(obj)
-  lazy val isEnumType: Boolean = !aliasSymbol.isUndefined && obj.aliasSymbol.hasOwnProperty("exports")
-  lazy val isUnionType: Boolean = flags == TypeScript.typeFlagsUnion
-  lazy val isIntersectionType: Boolean = flags == TypeScript.typeFlagsInter
-  lazy val declaration: TSNodeObject = if (symbol.isUndefined) TSNodeObject(obj.symbol) else symbol.declaration
+  lazy val isTupleType = obj.checker.isTupleType(obj)
+  lazy val isArrayType = obj.checker.isArrayType(obj)
+  lazy val isEnumType = !aliasSymbol.isUndefined && obj.aliasSymbol.hasOwnProperty("exports")
+  lazy val isUnionType = flags == TypeScript.typeFlagsUnion
+  lazy val isIntersectionType = flags == TypeScript.typeFlagsInter
 }
 
 object TSTypeObject {

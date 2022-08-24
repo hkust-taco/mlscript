@@ -7,7 +7,7 @@ case object Protected extends TSAccessModifier
 
 abstract class TSType
 case class TSMemberType(val base: TSType, val modifier: TSAccessModifier = Public) extends TSType
-case class TSTypeVariable(val name: String, val constraint: Option[TSType]) extends TSType
+case class TSTypeVariable(val name: String, val constraint: Option[TSType] = None) extends TSType
 case class TSNamedType(typeName: String) extends TSType
 case class TSEnumType(name: String) extends TSType
 case class TSTupleType(types: List[TSType]) extends TSType

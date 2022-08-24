@@ -11,8 +11,6 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
   // easier to check the output one by one
   private val order = ListBuffer.empty[Either[String, String]]
 
-  private lazy val showPrefix = if (name.equals("")) "" else s"$name."
-
   def derive(name: String): TSNamespace = {
     if (subSpace.contains(name)) subSpace(name) // if the namespace has appeared in another file, just return it
     else {
@@ -23,10 +21,12 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
     }
   }
 
-  def put(name: String, tp: TSType): Unit = {
-    if (!members.contains(name)) order += Right(name)
-    members.put(name, tp)
-  }
+  def put(name: String, tp: TSType): Unit =
+    if (!members.contains(name)) {
+      order += Right(name)
+      members.put(name, tp)
+    }
+    else members.update(name, tp) // overload
 
   def get(name: String): TSType =
     members.getOrElse(name,
@@ -42,9 +42,9 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
     case _ => false
   }
 
-  def generate(writer: JSWriter, prefix: String): Unit = {
+  def generate(writer: JSWriter): Unit =
     order.toList.foreach((p) => p match {
-      case Left(name) => subSpace(name).generate(writer, prefix + showPrefix)
+      case Left(name) => subSpace(name).generate(writer)
       case Right(name) => {
         val mem = members(name)
         mem match {
@@ -69,7 +69,6 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
         }
       }
     })
-  }
 
   // generate full path with namespaces
   def getFullPath(nm: String): String = parent match {
@@ -79,5 +78,5 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
 }
 
 object TSNamespace {
-  def apply() = new TSNamespace("", None)
+  def apply() = new TSNamespace("", None) // global namespace
 }

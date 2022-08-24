@@ -17,7 +17,7 @@ class TSProgram(filenames: Seq[String]) {
   TSTypeChecker.init(program.getTypeChecker())
   filenames.foreach(filename => TSSourceFile(program.getSourceFile(filename), globalNamespace))
 
-  def generate(writer: JSWriter, prefix: String = ""): Unit = globalNamespace.generate(writer, prefix)
+  def generate(writer: JSWriter): Unit = globalNamespace.generate(writer)
 }
 
 object TSProgram {
