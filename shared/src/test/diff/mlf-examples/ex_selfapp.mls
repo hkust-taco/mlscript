@@ -193,7 +193,7 @@ rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ╟── from application:
 //│ ║  l.183: 	rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ╙──       	                                                       ^^^^^^^^^^^^^^^^^^^^^^
-//│ int -> Ba -> (nothing -> ('b | ‘b_489_491) -> (‘b_489_491 & 'b) & int -> ('b | ‘b_489_491) -> (‘b_489_490 & 'a)) -> (‘b_489_491 & 'b) -> (‘b_489_491 | 'a)
+//│ int -> Ba -> (nothing -> (‘b_489_491 | 'b) -> (‘b_489_491 & 'b) & int -> (‘b_489_491 | 'b) -> (‘b_489_490 & 'a)) -> (‘b_489_491 & 'b) -> (‘b_489_491 | 'a)
 //│   <:  k:
 //│ int -> Ba -> Ba
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -347,7 +347,7 @@ rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.51: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
 //│ ╙──      	                  ^^
-//│ int -> Baa -> (nothing -> ('b | ‘b_938_941) -> (‘b_938_941 & 'b) & int -> ('b | ‘b_938_941) -> (‘b_938_939 & 'a)) -> (‘b_938_941 & 'b) -> 'a
+//│ int -> Baa -> (nothing -> (‘b_938_941 | 'b) -> (‘b_938_941 & 'b) & int -> (‘b_938_941 | 'b) -> (‘b_938_939 & 'a)) -> (‘b_938_941 & 'b) -> 'a
 //│   <:  k:
 //│ int -> Baa -> Baa
 //│ ╔══[ERROR] Type mismatch in def definition:

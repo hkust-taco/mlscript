@@ -117,7 +117,7 @@ def eval2 eval2 e = case e of {
   | Nega -> 0 - (eval2 eval2 e.arg)
   | _ -> eval1 eval2 e
   }
-//│ eval2: ('a -> 'arg -> int & 'a -> 'rhs -> int & 'a -> 'lhs -> int & 'a) -> ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val}) | (Nega[?] with {arg: 'arg})) -> (int | 'val)
+//│ eval2: ('a -> 'rhs -> int & 'a -> 'lhs -> int & 'a -> 'arg -> int & 'a) -> ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val}) | (Nega[?] with {arg: 'arg})) -> (int | 'val)
 //│      = [Function: eval2]
 
 def eval2f eval2 e = case e of {

@@ -333,6 +333,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         TupleType(fields.mapValues(f =>
             FieldType(f.in.map(rec), rec(f.out))(tp(f.toLoc, "tuple field"))
           ))(tyTp(ty.toLoc, "tuple type"))
+      case Splice(fields) => 
+        SpliceType(fields.map{ 
+          case L(l) => {
+            val t = rec(l)
+            val res = ArrayType(freshVar(t.prov, N).toUpper(t.prov))(t.prov)
+            constrain(t, res)(raise, t.prov, ctx)
+            L(t)
+          }
+          case R(f) => {
+            R(FieldType(f.in.map(rec), rec(f.out))(tp(f.toLoc, "splice field")))
+          }
+          })(tyTp(ty.toLoc, "splice type"))
       case Inter(lhs, rhs) => (if (simplify) rec(lhs) & (rec(rhs), _: TypeProvenance)
           else ComposedType(false, rec(lhs), rec(rhs)) _
         )(tyTp(ty.toLoc, "intersection type"))
@@ -476,7 +488,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           warn("Pure expression does nothing in statement position.", t.toLoc)
         else
           constrain(mkProxy(ty, TypeProvenance(t.toCoveringLoc, "expression in statement position")), UnitType)(
-            raise = err => raise(Warning( // Demote constraint errors from this to warnings
+            raise = err => raise(WarningReport( // Demote constraint errors from this to warnings
               msg"Expression in statement position should have type `unit`." -> N ::
               msg"Use the `discard` function to discard non-unit values, making the intent clearer." -> N ::
               err.allMsgs)),
@@ -628,7 +640,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     def con(lhs: SimpleType, rhs: SimpleType, res: SimpleType)(implicit ctx: Ctx): SimpleType = {
       var errorsCount = 0
       constrain(lhs, rhs)({
-        case err: TypeError =>
+        case err: ErrorReport =>
           // Note that we do not immediately abort constraining because we still
           //  care about getting the non-erroneous parts of the code return meaningful types.
           // In other words, this is so that errors do not interfere too much
@@ -737,7 +749,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               :: fieldNames.map(tp => msg"Declared at" -> tp.toLoc))(raise)
           case _ =>
         }
-        RecordType.mk(fs.map { case (n, (t, mut)) => 
+        RecordType.mk(fs.map { case (n, Fld(mut, _, t)) => 
           if (n.name.isCapitalized)
             err(msg"Field identifiers must start with a small letter", term.toLoc)(raise)
           val tym = typeTerm(t)
@@ -751,7 +763,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case tup: Tup if funkyTuples =>
         typeTerms(tup :: Nil, false, Nil)
       case Tup(fs) =>
-        TupleType(fs.map { case (n, (t, mut)) =>
+        TupleType(fs.map { case (n, Fld(mut, _, t)) =>
           val tym = typeTerm(t)
           val fprov = tp(t.toLoc, (if (mut) "mutable " else "") + "tuple field")
           if (mut) {
@@ -804,6 +816,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case Assign(lhs, rhs) =>
         err(msg"Illegal assignment" -> prov.loco
           :: msg"cannot assign to ${lhs.describe}" -> lhs.toLoc :: Nil)
+      case Splc(es) => 
+        SpliceType(es.map{
+          case L(l) => L({
+            val t_l = typeTerm(l)
+            val t_a = ArrayType(freshVar(prov, N).toUpper(prov))(prov)
+            con(t_l, t_a, t_l)
+          }) 
+          case R(Fld(mt, sp, r)) => {
+            val t = typeTerm(r)
+            if (mt) { R(FieldType(Some(t), t)(t.prov)) } else {R(t.toUpper(t.prov))}
+          }
+        })(prov)
       case Bra(false, trm: Blk) => typeTerm(trm)
       case Bra(rcd, trm @ (_: Tup | _: Blk)) if funkyTuples => typeTerms(trm :: Nil, rcd, Nil)
       case Bra(_, trm) => typeTerm(trm)
@@ -912,7 +936,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           }
           a match {
             case tup @ Tup(as) =>
-              TupleType(as.map { case (n, (a, mut)) => // TODO handle mut?
+              TupleType(as.map { case (n, Fld(mut, spec, a)) => // TODO handle mut?
                 // assert(!mut)
                 val fprov = tp(a.toLoc, "argument")
                 val tym = typeArg(a)
@@ -1019,6 +1043,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case ((a_ty, tv), req) => a_ty & tv | req & a_ty.neg()
         }
         con(s_ty, req, cs_ty)
+      case If(_, _) =>
+        ??? // TODO
+      case New(_, _) | TyApp(_, _) => ??? // TODO
     }
   }(r => s"$lvl. : ${r}")
   
@@ -1076,10 +1103,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         (implicit ctx: Ctx, raise: Raise, prov: TypeProvenance): SimpleType
       = term match {
     case (trm @ Var(nme)) :: sts if rcd => // field punning
-      typeTerms(Tup(S(trm) -> (trm -> false) :: Nil) :: sts, rcd, fields)
+      typeTerms(Tup(S(trm) -> Fld(false, false, trm) :: Nil) :: sts, rcd, fields)
     case Blk(sts0) :: sts1 => typeTerms(sts0 ::: sts1, rcd, fields)
     case Tup(Nil) :: sts => typeTerms(sts, rcd, fields)
-    case Tup((no, (trm, tmut)) :: ofs) :: sts =>
+    case Tup((no, Fld(tmut, _, trm)) :: ofs) :: sts =>
       val ty = {
         trm match  {
           case Bra(false, t) if ctx.inPattern => // we use syntax `(x: (p))` to type `p` as a pattern and not a type...
@@ -1194,6 +1221,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         case ArrayType(f) =>
           val f2 = field(f)
           AppliedType(TypeName("MutArray"), Bounds(f2.in.getOrElse(Bot), f2.out) :: Nil)
+        case SpliceType(elems) => Splice(elems.map { 
+              case L(l) => L(go(l)) 
+              case R(v) => R(Field(v.lb.map(go(_)), go(v.ub))) })
         case NegType(t) => Neg(go(t))
         case ExtrType(true) => Bot
         case ExtrType(false) => Top

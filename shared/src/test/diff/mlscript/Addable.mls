@@ -101,21 +101,23 @@ addNTimes n 12
 
 rec def addNTimes a n =
   if n <= 0 then 0 else a.Add addNTimes a (n - 1)
-addNTimes n 12
 //│ addNTimes: 'addNTimes
 //│   where
-//│     'addNTimes :> 'a -> int -> (0 | 'b)
+//│     'addNTimes :> 'a -> int -> 'b
 //│     'a <: Addable['A]
 //│     'A :> 'addNTimes
 //│        <: 'a -> int -> 'b
+//│     'b :> 0
+
+addNTimes n 12
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.+3: 	addNTimes n 12
+//│ ║  l.+1: 	addNTimes n 12
 //│ ║        	^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b -> ?c` is not an instance of type `Num`
-//│ ║  l.+1: 	rec def addNTimes a n =
-//│ ║        	                  ^^^^^
-//│ ║  l.+2: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.102: 	rec def addNTimes a n =
+//│ ║         	                  ^^^^^
+//│ ║  l.103: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	class Num: Addable[Num] & { val: int }
 //│ ╙──     	                   ^^^

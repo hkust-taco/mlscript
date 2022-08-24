@@ -24,9 +24,7 @@ def pow1 x =
   in go
 //│ // Query 1
 //│ globalThis.pow1 = function pow1(x) {
-//│   return ((function (go) {
-//│     return go;
-//│   })(function go(n) {
+//│   return (((go) => go)(function go(n) {
 //│     return n > 0 ? go(n - 1) * x : 1;
 //│   }));
 //│ };

@@ -101,7 +101,7 @@ class Parser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     Index ~~ (NAME ~ ":" ~ (noCommas | suite) | noCommas.map(Var("") -> _)).rep(1, ",").map(_.toList) ~ ",".!.? ~~ Index
   ).map {
     case (_, (Var(""), x) :: Nil, N, _) => x
-    case (i0, xs, _, i1) => Tup(xs.map { case (n, t) => (n optionIf (_.name.nonEmpty), (t,false)) }).withLoc(i0, i1, origin)
+    case (i0, xs, _, i1) => Tup(xs.map { case (n, t) => (n optionIf (_.name.nonEmpty), Fld(false, false, t)) }).withLoc(i0, i1, origin)
   }
   
   def booleans[p: P]: P[Term] = P(binops rep (1, kw("and")) rep (1, kw("or"))) // TODO locs

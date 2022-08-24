@@ -64,7 +64,8 @@ class A'[B'] : {x': B'}
 //│     this["x'"] = fields["x'"];
 //│   }
 //│   get "C'"() {
-//│     return this["x'"];
+//│     const self = this;
+//│     return self["x'"];
 //│   }
 //│ }
 //│ // End of generated code
@@ -85,10 +86,12 @@ mm.P' f'
 //│     this["x'"] = fields["x'"];
 //│   }
 //│   get "N'"() {
-//│     return this["x'"];
+//│     const self = this;
+//│     return self["x'"];
 //│   }
 //│   "P'"(y$) {
-//│     return this["x'"] + y$;
+//│     const self = this;
+//│     return self["x'"] + y$;
 //│   }
 //│ }
 //│ // Query 1
@@ -218,9 +221,7 @@ def g' x' = x' with { c' = 24 }
 :js
 gg' = let w' = 2 in w' + w'
 //│ // Query 1
-//│ globalThis.gg$ = (function (w$) {
-//│   return w$ + w$;
-//│ })(2);
+//│ globalThis.gg$ = ((w$) => w$ + w$)(2);
 //│ // End of generated code
 //│ gg': int
 //│    = 4
@@ -279,13 +280,13 @@ trait T : {x': int}
 //│       if (!("N'" in instance)) {
 //│         Object.defineProperty(instance, "N'", {
 //│           get: function () {
-//│             return this["x'"];
+//│             return this1["x'"];
 //│           }
 //│         });
 //│       }
 //│       if (!("P'" in instance)) {
 //│         instance["P'"] = function (y$) {
-//│           return this["x'"] + y$;
+//│           return this1["x'"] + y$;
 //│         };
 //│       }
 //│       if (!("Q" in instance)) {
@@ -293,7 +294,7 @@ trait T : {x': int}
 //│           y$,
 //│           { "z'": z$ }
 //│         ]) {
-//│           return this["x'"] + y$ + z$;
+//│           return this1["x'"] + y$ + z$;
 //│         };
 //│       }
 //│     },
@@ -314,9 +315,7 @@ trait T : {x': int}
 :js
 let f' = fun x -> x + 1 in f' 2
 //│ // Query 1
-//│ res = (function (f$) {
-//│   return f$(2);
-//│ })((x) => x + 1);
+//│ res = ((f$) => f$(2))((x) => x + 1);
 //│ // End of generated code
 //│ res: int
 //│    = 3

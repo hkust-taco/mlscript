@@ -22,7 +22,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   }
   
   def toParam(t: Term): Tup =
-    Tup((N, (t, false)) :: Nil)
+    Tup((N, Fld(false, false, t)) :: Nil)
   
   def toParams(t: Term): Tup = t match {
     case t: Tup => t
@@ -53,11 +53,25 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     | P(kw("undefined")).map(x => UnitLit(true)) | P(kw("null")).map(x => UnitLit(false)))
   
   def variable[p: P]: P[Var] = locate(ident.map(Var))
-  
-  def parens[p: P]: P[Term] = locate(P( "(" ~/ (kw("mut").!.? ~ term).rep(0, ",") ~ ",".!.? ~ ")" ).map {
-    case (Seq(None -> t), N) => Bra(false, t)
-    case (Seq(Some(_) -> t), N) => Tup(N -> (t, true) :: Nil)   // ? single tuple with mutable
-    case (ts, _) => Tup(ts.iterator.map(f => N -> (f._2, f._1.isDefined)).toList)
+
+  def parenCell[p: P]: P[Either[Term, (Term, Boolean)]] = (("..." | kw("mut")).!.? ~ term).map {
+    case (Some("..."), t) => Left(t)
+    case (Some("mut"), t) => Right(t -> true)
+    case (_, t) => Right(t -> false)
+  }
+
+  def parens[p: P]: P[Term] = locate(P( "(" ~/ parenCell.rep(0, ",") ~ ",".!.? ~ ")" ).map {
+    case (Seq(Right(t -> false)), N) => Bra(false, t)
+    case (Seq(Right(t -> true)), N) => Tup(N -> Fld(true, false, t) :: Nil) // ? single tuple with mutable
+    case (ts, _) => 
+      if (ts.forall(_.isRight)) Tup(ts.iterator.map {
+        case R(f) => N -> Fld(f._2, false, f._1)
+        case _ => die // left unreachable
+      }.toList)
+      else Splc(ts.map {
+        case R((v, m)) => R(Fld(m, false, v))
+        case L(spl) => L(spl)
+      }.toList)
   })
 
   def subtermNoSel[p: P]: P[Term] = P( parens | record | lit | variable )
@@ -82,8 +96,8 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def record[p: P]: P[Rcd] = locate(P(
       "{" ~/ (kw("mut").!.? ~ variable ~ "=" ~ term map L.apply).|(kw("mut").!.? ~ variable map R.apply).rep(sep = ";") ~ "}"
     ).map { fs => Rcd(fs.map{ 
-        case L((mut, v, t)) => v -> (t -> mut.isDefined)
-        case R(mut -> id) => id -> (id -> mut.isDefined) }.toList)})
+        case L((mut, v, t)) => v -> Fld(mut.isDefined, false, t)
+        case R(mut -> id) => id -> Fld(mut.isDefined, false, id) }.toList)})
   
   def fun[p: P]: P[Term] = locate(P( kw("fun") ~/ term ~ "->" ~ term ).map(nb => Lam(toParams(nb._1), nb._2)))
   
@@ -238,12 +252,27 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
         case (None, v, t) => v -> Field(None, t)
         case (Some(_), v, t) => v -> Field(Some(t), t)
       } pipe Record))
-  def parTy[p: P]: P[Type] = locate(P( "(" ~/ (kw("mut").!.? ~ ty).rep(0, ",").map(_.map(N -> _).toList) ~ ",".!.? ~ ")" ).map {
-    case (N -> (N -> ty) :: Nil, N) => ty
-    case (fs, _) => Tuple(fs.map {
-        case (l, N -> t) => l -> Field(None, t)
-        case (l, S(_) -> t) => l -> Field(Some(t), t)
-      })
+
+  def parTyCell[p: P]: P[Either[Type, (Type, Boolean)]] = (("..." | kw("mut")).!.? ~ ty). map {
+    case (Some("..."), t) => Left(t)
+    case (Some("mut"), t) => Right(t -> true)
+    case (_, t) => Right(t -> false)
+  }
+
+  def parTy[p: P]: P[Type] = locate(P( "(" ~/ parTyCell.rep(0, ",").map(_.map(N -> _).toList) ~ ",".!.? ~ ")" ).map {
+    case (N -> Right(ty -> false) :: Nil, N) => ty
+    case (fs, _) => 
+      if (fs.forall(_._2.isRight))
+        Tuple(fs.map {
+          case (l, Right(t -> false)) => l -> Field(None, t)
+          case (l, Right(t -> true)) => l -> Field(Some(t), t)
+          case _ => ??? // unreachable
+        })
+      else Splice(fs.map{ _._2 match { 
+        case L(l) => L(l) 
+        case R(r -> true) => R(Field(Some(r), r))
+        case R(r -> false) => R(Field(None, r))
+      } })
   })
   def litTy[p: P]: P[Type] = P( lit.map(l => Literal(l).withLocOf(l)) )
   

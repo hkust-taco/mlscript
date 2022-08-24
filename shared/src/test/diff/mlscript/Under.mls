@@ -44,26 +44,24 @@ def foo { _ } = { _ }
 //│ res: 1
 //│    = 1
 
-// * This code leads to a syntax error in NodeJS: "Duplicate parameter name not allowed in this context",
-// *  so we got an undefined result here.
 :e
 def foo { _ ; _ } = 1
 //│ ╔══[ERROR] Multiple declarations of field name _ in record literal
-//│ ║  l.50: 	def foo { _ ; _ } = 1
+//│ ║  l.48: 	def foo { _ ; _ } = 1
 //│ ║        	        ^^^^^^^^^
 //│ ╟── Declared at
-//│ ║  l.50: 	def foo { _ ; _ } = 1
+//│ ║  l.48: 	def foo { _ ; _ } = 1
 //│ ║        	          ^
 //│ ╟── Declared at
-//│ ║  l.50: 	def foo { _ ; _ } = 1
+//│ ║  l.48: 	def foo { _ ; _ } = 1
 //│ ╙──      	              ^
 //│ foo: {_: anything, _: anything} -> 1
-//│    = undefined
+//│    = [Function: foo5]
 
 // :js
 def foo { _ = _ ; __ = _ } = 1
 //│ foo: {_: anything, __: anything} -> 1
-//│    = undefined
+//│    = [Function: foo6]
 
 rec def _ = 1
 //│ _: 1

@@ -99,10 +99,10 @@ def stepImpl_Ann_1 arrImpl = {
     update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
     fold   = fun f -> fun b -> fun ((r0, r1)) -> (arrImpl.fold: Fold['a, 'rep]) f b r0
   }
-//│ stepImpl_Ann_1: 'a -> {fold: forall 'c. 'c -> (forall 'd. 'd -> (forall 'a, 'c, 'd, 'b. (('c, 'c,) -> ('b | 'd)
+//│ stepImpl_Ann_1: 'a -> {fold: forall 'c. 'c -> (forall 'd. 'd -> (forall 'a, 'c, 'd, 'b. (('c, 'c,) -> ('d | 'b)
 //│   where
 //│     'a <: {fold: Fold['c, ?]}
-//│     'c <: nothing -> ('b | 'd) -> 'b))), init: forall 'a, 'e, 'f. ('e -> ('f, "hi",)
+//│     'c <: nothing -> ('d | 'b) -> 'b))), init: forall 'a, 'e, 'f. ('e -> ('f, "hi",)
 //│   where
 //│     'a <: {init: 'e -> 'f}), sub: forall 'c, 'g. ('g, 'c,) -> (forall 'a, 'g, 'h, 'i. ('h -> 'i
 //│   where
@@ -118,15 +118,15 @@ def stepImpl_Ann_2 (arrImpl: ArraysRep['a, 'r]) = {
     update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
     fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
   }
-//│ stepImpl_Ann_2: ArraysRep['a, 'r] -> {fold: forall 'c. 'c -> (forall 'd. 'd -> (forall 'a, 'r, 'c, 'd, 'b. (('r, 'c,) -> ('b | 'd)
+//│ stepImpl_Ann_2: ArraysRep['a, 'r] -> {fold: forall 'c. 'c -> (forall 'd. 'd -> (forall 'a, 'r, 'c, 'd, 'b. (('r, 'c,) -> ('d | 'b)
 //│   where
-//│     'c <: 'a -> ('b | 'd) -> 'b))), init: 'a -> ('r, "hi",), sub: ('r, 'c,) -> int -> 'a, update: ('r, 'c,) -> int -> 'a -> ('r, "hey",)}
+//│     'c <: 'a -> ('d | 'b) -> 'b))), init: 'a -> ('r, "hi",), sub: ('r, 'c,) -> int -> 'a, update: ('r, 'c,) -> int -> 'a -> ('r, "hey",)}
 //│               = [Function: stepImpl_Ann_2]
 
 stepImpl_ty = stepImpl_Ann_2
-//│ ArraysRep['a, 'r] -> {fold: forall 'c. 'c -> (forall 'd. 'd -> (forall 'a, 'r, 'c, 'd, 'b. (('r, 'c,) -> ('b | 'd)
+//│ ArraysRep['a, 'r] -> {fold: forall 'c. 'c -> (forall 'd. 'd -> (forall 'a, 'r, 'c, 'd, 'b. (('r, 'c,) -> ('d | 'b)
 //│   where
-//│     'c <: 'a -> ('b | 'd) -> 'b))), init: 'a -> ('r, "hi",), sub: ('r, 'c,) -> int -> 'a, update: ('r, 'c,) -> int -> 'a -> ('r, "hey",)}
+//│     'c <: 'a -> ('d | 'b) -> 'b))), init: 'a -> ('r, "hi",), sub: ('r, 'c,) -> int -> 'a, update: ('r, 'c,) -> int -> 'a -> ('r, "hey",)}
 //│   <:  stepImpl_ty:
 //│ ArraysRep['a, 'r] -> ArraysRep['a, ('r, string,)]
 //│            = [Function: stepImpl_Ann_2]
@@ -227,9 +227,9 @@ def stepImpl2_ arr = arr stepImpl_ty
 // def stepImpl2_Ann_1 arr = arr stepImpl_Ann_1
 
 def stepImpl2_Ann_2 arr = arr stepImpl_Ann_2
-//│ stepImpl2_Ann_2: ((forall 'a, 'r. ArraysRep['a, 'r] -> {fold: forall 'c. 'c -> (forall 'd. 'd -> (forall 'a, 'r, 'c, 'd, 'b. (('r, 'c,) -> ('b | 'd)
+//│ stepImpl2_Ann_2: ((forall 'a, 'r. ArraysRep['a, 'r] -> {fold: forall 'c. 'c -> (forall 'd. 'd -> (forall 'a, 'r, 'c, 'd, 'b. (('r, 'c,) -> ('d | 'b)
 //│   where
-//│     'c <: 'a -> ('b | 'd) -> 'b))), init: 'a -> ('r, "hi",), sub: ('r, 'c,) -> int -> 'a, update: ('r, 'c,) -> int -> 'a -> ('r, "hey",)}) -> 'e) -> 'e
+//│     'c <: 'a -> ('d | 'b) -> 'b))), init: 'a -> ('r, "hi",), sub: ('r, 'c,) -> int -> 'a, update: ('r, 'c,) -> int -> 'a -> ('r, "hey",)}) -> 'e) -> 'e
 //│                = [Function: stepImpl2_Ann_2]
 
 def stepImpl2_Ann_3 arr = arr stepImpl_Ann_3
@@ -252,9 +252,9 @@ def stepImpl2_Ann_4 arr = arr stepImpl_Ann_4
 def stepImpl2_Ann_2_Ann (arr: Arrays['a]) = arr stepImpl_Ann_2
 // def stepImpl2_Ann_2_Ann (arr: Arrays['a]) = arr stepImpl_Ann_2 : Arrays['a]
 // def stepImpl2_Ann_2_Ann (arr: ArraysRep['a, 'r]) = arr stepImpl_Ann_2
-//│ stepImpl2_Ann_2_Ann: Arrays['a] -> {fold: forall 'c. 'c -> (forall 'd. 'd -> (forall 'c, 'd, 'a0, 'b, 'r. ((‘Rep_1666_1711 & 'r, 'c,) -> ('b | 'd)
+//│ stepImpl2_Ann_2_Ann: Arrays['a] -> {fold: forall 'c. 'c -> (forall 'd. 'd -> (forall 'c, 'd, 'a0, 'b, 'r. ((‘Rep_1669_1714 & 'r, 'c,) -> ('d | 'b)
 //│   where
-//│     'c <: 'a0 -> ('b | 'd) -> 'b))), init: 'a0 -> ('r | ‘Rep_1666_1711, "hi",), sub: (‘Rep_1666_1711 & 'r, 'c,) -> int -> 'a0, update: (‘Rep_1666_1711 & 'r, 'c,) -> int -> 'a0 -> ('r | ‘Rep_1666_1711, "hey",)}
+//│     'c <: 'a0 -> ('d | 'b) -> 'b))), init: 'a0 -> ('r | ‘Rep_1669_1714, "hi",), sub: (‘Rep_1669_1714 & 'r, 'c,) -> int -> 'a0, update: (‘Rep_1669_1714 & 'r, 'c,) -> int -> 'a0 -> ('r | ‘Rep_1669_1714, "hey",)}
 //│                    = [Function: stepImpl2_Ann_2_Ann]
 
 
@@ -288,9 +288,9 @@ def step arr f = f (stepImpl2 arr)
 def step arr f = f (stepImpl2_Ann_2 arr)
 //│ 'c -> (forall 'c. (('d -> 'e) -> 'e
 //│   where
-//│     'c <: (forall 'a, 'r. ArraysRep['a, 'r] -> {fold: forall 'f. 'f -> (forall 'g. 'g -> (forall 'a, 'r, 'f, 'g, 'b. (('r, 'f,) -> ('b | 'g)
+//│     'c <: (forall 'a, 'r. ArraysRep['a, 'r] -> {fold: forall 'f. 'f -> (forall 'g. 'g -> (forall 'a, 'r, 'f, 'g, 'b. (('r, 'f,) -> ('g | 'b)
 //│   where
-//│     'f <: 'a -> ('b | 'g) -> 'b))), init: 'a -> ('r, "hi",), sub: ('r, 'f,) -> int -> 'a, update: ('r, 'f,) -> int -> 'a -> ('r, "hey",)}) -> 'd))
+//│     'f <: 'a -> ('g | 'b) -> 'b))), init: 'a -> ('r, "hi",), sub: ('r, 'f,) -> int -> 'a, update: ('r, 'f,) -> int -> 'a -> ('r, "hey",)}) -> 'd))
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step1]
@@ -311,7 +311,7 @@ def step arr f = f (stepImpl2_Ann_3 arr)
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.299: 	def step arr f = f (stepImpl2_Ann_3 arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_2213` is not an instance of type `'a_913_939`
+//│ ╟── type `‘a_2216` is not an instance of type `'a_913_939`
 //│ ║  l.262: 	def step: Arrays['a] -> Arrays['a]
 //│ ║         	                 ^^
 //│ ╟── Note: constraint arises from type variable:
@@ -332,9 +332,9 @@ def step arr f = f (stepImpl2_Ann_4 arr)
 //│     = [Function: step3]
 
 def step arr f = f (stepImpl2_Ann_2_Ann arr)
-//│ 'c -> (forall 'c, 'a. (({fold: forall 'd. 'd -> (forall 'e. 'e -> (forall 'd, 'e, 'a0, 'b, 'r. ((‘Rep_1666_1711 & 'r, 'd,) -> ('b | 'e)
+//│ 'c -> (forall 'c, 'a. (({fold: forall 'd. 'd -> (forall 'e. 'e -> (forall 'd, 'e, 'a0, 'b, 'r. ((‘Rep_1669_1714 & 'r, 'd,) -> ('e | 'b)
 //│   where
-//│     'd <: 'a0 -> ('b | 'e) -> 'b))), init: 'a0 -> ('r | ‘Rep_1666_1711, "hi",), sub: (‘Rep_1666_1711 & 'r, 'd,) -> int -> 'a0, update: (‘Rep_1666_1711 & 'r, 'd,) -> int -> 'a0 -> ('r | ‘Rep_1666_1711, "hey",)} -> 'f) -> 'f
+//│     'd <: 'a0 -> ('e | 'b) -> 'b))), init: 'a0 -> ('r | ‘Rep_1669_1714, "hi",), sub: (‘Rep_1669_1714 & 'r, 'd,) -> int -> 'a0, update: (‘Rep_1669_1714 & 'r, 'd,) -> int -> 'a0 -> ('r | ‘Rep_1669_1714, "hey",)} -> 'f) -> 'f
 //│   where
 //│     'c <: Arrays['a]))
 //│   <:  step:
@@ -342,9 +342,9 @@ def step arr f = f (stepImpl2_Ann_2_Ann arr)
 //│     = [Function: step4]
 
 def step (arr: Arrays['a]) f = f (stepImpl2_Ann_2_Ann arr)
-//│ Arrays['a] -> ({fold: forall 'c. 'c -> (forall 'd. 'd -> (forall 'c, 'd, 'a0, 'b, 'r. ((‘Rep_1666_1711 & 'r, 'c,) -> ('b | 'd)
+//│ Arrays['a] -> ({fold: forall 'c. 'c -> (forall 'd. 'd -> (forall 'c, 'd, 'a0, 'b, 'r. ((‘Rep_1669_1714 & 'r, 'c,) -> ('d | 'b)
 //│   where
-//│     'c <: 'a0 -> ('b | 'd) -> 'b))), init: 'a0 -> ('r | ‘Rep_1666_1711, "hi",), sub: (‘Rep_1666_1711 & 'r, 'c,) -> int -> 'a0, update: (‘Rep_1666_1711 & 'r, 'c,) -> int -> 'a0 -> ('r | ‘Rep_1666_1711, "hey",)} -> 'e) -> 'e
+//│     'c <: 'a0 -> ('d | 'b) -> 'b))), init: 'a0 -> ('r | ‘Rep_1669_1714, "hi",), sub: (‘Rep_1669_1714 & 'r, 'c,) -> int -> 'a0, update: (‘Rep_1669_1714 & 'r, 'c,) -> int -> 'a0 -> ('r | ‘Rep_1669_1714, "hey",)} -> 'e) -> 'e
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step5]
@@ -383,7 +383,7 @@ snb = mkMonoArray 5
 //│    = [Function (anonymous)]
 
 snb (fun arr -> arr.init true)
-//│ res: ‘Rep_2960_2964 | ‘Rep_2968_2972
+//│ res: ‘Rep_2964_2968 | ‘Rep_2972_2976
 //│    = [ [ [ [Array], 'hi' ], 'hi' ], 'hi' ]
 
 

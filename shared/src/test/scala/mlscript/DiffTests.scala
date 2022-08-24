@@ -13,18 +13,54 @@ import mlscript.JSTestBackend.Unimplemented
 import mlscript.JSTestBackend.UnexpectedCrash
 import mlscript.JSTestBackend.TestCode
 import mlscript.codegen.typescript.TsTypegenCodeBuilder
+import org.scalatest.{funsuite, ParallelTestExecution}
+import org.scalatest.time._
+import org.scalatest.concurrent.{TimeLimitedTests, Signaler}
 
-class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.ParallelTestExecution {
-// class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
+
+class DiffTests
+  extends funsuite.AnyFunSuite
+  with ParallelTestExecution
+  with TimeLimitedTests
+{
+  
+  
+  /**  Hook for dependent projects, like the monomorphizer. */
+  def postProcess(basePath: Ls[Str], testName: Str, unit: TypingUnit): Ls[Str] = Nil
+  
+  
+  private val inParallel = isInstanceOf[ParallelTestExecution]
   
   import DiffTests._
-  files.foreach { file => val fileName = file.baseName; test(fileName) {
+  
+  val timeLimit = TimeLimit
+  
+  override val defaultTestSignaler: Signaler = new Signaler {
+    @annotation.nowarn("msg=method stop in class Thread is deprecated") def apply(testThread: Thread): Unit = {
+      println(s"!! Test at $testThread has run out out time !! stopping...")
+      // * Thread.stop() is considered bad practice because normally it's better to implement proper logic
+      // * to terminate threads gracefully, avoiding leaving applications in a bad state.
+      // * But here we DGAF since all the test is doing is runnign a type checker and some Node REPL,
+      // * which would be a much bigger pain to make receptive to "gentle" interruption.
+      // * It would feel extremely wrong to intersperse the pure type checker algorithms
+      // * with ugly `Thread.isInterrupted` checks everywhere...
+      testThread.stop()
+    }
+  }
+  
+  files.foreach { file =>
+        val basePath = file.segments.drop(dir.segmentCount).toList.init
+        val testName = basePath.map(_ + "/").mkString + file.baseName
+        test(testName) {
     
-    val buf = mutable.ArrayBuffer.empty[Char]
-    buf ++= s"Processed  $fileName"
+    val baseStr = basePath.mkString("/")
     
-    // For some reason the color is sometimes wiped out when the line is later updated not in iTerm3:
-    // println(s"${Console.CYAN}Processing $fileName${Console.RESET}... ")
+    val testStr = " " * (8 - baseStr.length) + baseStr + ": " + file.baseName
+    
+    if (!inParallel) print(s"Processing $testStr")
+    
+    // * For some reason, the color is sometimes wiped out when the line is later updated not in iTerm3:
+    // if (!inParallel) print(s"${Console.CYAN}Processing${Console.RESET} $testStr ... ")
     
     val beginTime = System.nanoTime()
     
@@ -72,6 +108,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
       noSimplification: Bool = false,
       explainErrors: Bool = false,
       dbg: Bool = false,
+      dbgParsing: Bool = false,
       dbgSimplif: Bool = false,
       fullExceptionStack: Bool = false,
       stats: Bool = false,
@@ -91,7 +128,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     }
     val defaultMode = Mode()
     
+    var parseOnly = basePath.headOption.contains("parser") || basePath.headOption.contains("mono")
     var allowTypeErrors = false
+    var allowParseErrors = false // TODO use
     var showRelativeLineNums = false
     var noJavaScript = false
     var noProvs = false
@@ -104,6 +143,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     var noConstrainedTypes = false
     var irregularTypes = false
     var noArgGen = true
+    var newParser = basePath.headOption.contains("parser") || basePath.headOption.contains("mono")
 
     val backend = new JSTestBackend()
     val host = ReplHost()
@@ -118,6 +158,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           case "pe" => mode.copy(expectParseErrors = true)
           case "p" => mode.copy(showParse = true)
           case "d" => mode.copy(dbg = true)
+          case "dp" => mode.copy(dbgParsing = true)
           case "ds" => mode.copy(dbgSimplif = true)
           case "s" => mode.copy(fullExceptionStack = true)
           case "v" | "verbose" => mode.copy(verbose = true)
@@ -125,9 +166,12 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           case "ns" | "no-simpl" => mode.copy(noSimplification = true)
           case "stats" => mode.copy(stats = true)
           case "stdout" => mode.copy(stdout = true)
+          case "ParseOnly" => parseOnly = true; mode
           case "AllowTypeErrors" => allowTypeErrors = true; mode
+          case "AllowParseErrors" => allowParseErrors = true; mode
           case "AllowRuntimeErrors" => allowRuntimeErrors = true; mode
           case "ShowRelativeLineNums" => showRelativeLineNums = true; mode
+          case "NewParser" => newParser = true; mode
           case "NoJS" => noJavaScript = true; mode
           case "NoProvs" => noProvs = true; mode
           case "GeneralizeCurriedFunctions" => generalizeCurriedFunctions = true; mode
@@ -197,6 +241,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
         rec(rest.tail, if (hasBlankLines) defaultMode else mode)
       // process block of text and show output - type, expressions, errors
       case l :: ls =>
+        val blockLineNum = (allLines.size - lines.size) + 1
+        
         val block = (l :: ls.takeWhile(l => l.nonEmpty && !(
           l.startsWith(outputMarker)
           || l.startsWith(diffBegMarker)
@@ -207,13 +253,126 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
         val processedBlockStr = processedBlock.mkString
         val fph = new FastParseHelpers(block)
         val globalStartLineNum = allLines.size - lines.size + 1
-
+        
+        var totalTypeErrors = 0
+        var totalParseErrors = 0
+        var totalWarnings = 0
+        var totalRuntimeErrors = 0
+        var totalCodeGenErrors = 0
+        
+        // report errors and warnings
+        def report(diags: Ls[mlscript.Diagnostic]): Unit = {
+          diags.foreach { diag =>
+            val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
+            val headStr = diag match {
+              case ErrorReport(msg, loco, src) =>
+                src match {
+                  case Diagnostic.Lexing =>
+                    totalParseErrors += 1
+                    s"╔══[LEXICAL ERROR] "
+                  case Diagnostic.Parsing =>
+                    totalParseErrors += 1
+                    s"╔══[PARSE ERROR] "
+                  case _ => // TODO customize too
+                    totalTypeErrors += 1
+                    s"╔══[ERROR] "
+                }
+              case WarningReport(msg, loco, src) =>
+                totalWarnings += 1
+                s"╔══[WARNING] "
+            }
+            val lastMsgNum = diag.allMsgs.size - 1
+            var globalLineNum = blockLineNum  // solely used for reporting useful test failure messages
+            diag.allMsgs.zipWithIndex.foreach { case ((msg, loco), msgNum) =>
+              val isLast = msgNum =:= lastMsgNum
+              val msgStr = msg.showIn(sctx)
+              if (msgNum =:= 0) output(headStr + msgStr)
+              else output(s"${if (isLast && loco.isEmpty) "╙──" else "╟──"} ${msgStr}")
+              if (loco.isEmpty && diag.allMsgs.size =:= 1) output("╙──")
+              loco.foreach { loc =>
+                val (startLineNum, startLineStr, startLineCol) =
+                  loc.origin.fph.getLineColAt(loc.spanStart)
+                if (globalLineNum =:= 0) globalLineNum += startLineNum - 1
+                val (endLineNum, endLineStr, endLineCol) =
+                  loc.origin.fph.getLineColAt(loc.spanEnd)
+                var l = startLineNum
+                var c = startLineCol
+                while (l <= endLineNum) {
+                  val globalLineNum = loc.origin.startLineNum + l - 1
+                  val relativeLineNum = globalLineNum - blockLineNum + 1
+                  val shownLineNum =
+                    if (showRelativeLineNums && relativeLineNum > 0) s"l.+$relativeLineNum"
+                    else "l." + globalLineNum
+                  val prepre = "║  "
+                  val pre = s"$shownLineNum: "
+                  val curLine = loc.origin.fph.lines(l - 1)
+                  output(prepre + pre + "\t" + curLine)
+                  out.print(outputMarker
+                    + (if (isLast && l =:= endLineNum) "╙──" else prepre)
+                    + " " * pre.length + "\t" + " " * (c - 1))
+                  val lastCol = if (l =:= endLineNum) endLineCol else curLine.length + 1
+                  while (c < lastCol) { out.print('^'); c += 1 }
+                  if (c =:= startLineCol) out.print('^')
+                  out.println
+                  c = 1
+                  l += 1
+                }
+              }
+            }
+            if (diag.allMsgs.isEmpty) output("╙──")
+            
+            if (!mode.fixme) {
+              if (!allowTypeErrors
+                  && !mode.expectTypeErrors && diag.isInstanceOf[ErrorReport] && diag.source =:= Diagnostic.Typing)
+                failures += globalLineNum
+              if (!allowParseErrors
+                  && !mode.expectParseErrors && diag.isInstanceOf[ErrorReport] && (diag.source =:= Diagnostic.Lexing || diag.source =:= Diagnostic.Parsing))
+                failures += globalLineNum
+              if (!allowTypeErrors && !allowParseErrors
+                  && !mode.expectWarnings && diag.isInstanceOf[WarningReport])
+                failures += globalLineNum
+            }
+            
+            ()
+          }
+        }
+        
+        val raise: typer.Raise = d => report(d :: Nil)
+        
         // try to parse block of text into mlscript ast
-        val ans = try parse(processedBlockStr,
-          p => if (file.ext =:= "fun") new Parser(Origin(fileName, globalStartLineNum, fph)).pgrm(p)
-            else new MLParser(Origin(fileName, globalStartLineNum, fph)).pgrm(p),
-          verboseFailures = true)
-        match {
+        val ans = try {
+          if (newParser || basePath.headOption.contains("mono")) {
+            
+            val origin = Origin(testName, globalStartLineNum, fph)
+            val lexer = new NewLexer(origin, raise, dbg = mode.dbgParsing)
+            
+            val tokens = lexer.bracketedTokens
+            
+            if (mode.showParse || mode.dbgParsing || parseOnly)
+              output(NewLexer.printTokens(tokens))
+            
+            val p = new NewParser(origin, tokens, raise, dbg = mode.dbgParsing, N) {
+              def doPrintDbg(msg: => Str): Unit = if (dbg) output(msg)
+            }
+            val res = p.parseAll(p.typingUnit)
+            
+            if (parseOnly)
+              output("Parsed: " + res.show)
+            
+            postProcess(basePath, testName, res).foreach(output)
+            
+            if (parseOnly)
+              Success(Pgrm(Nil), 0)
+            else
+              Success(Pgrm(res.entities.map(_.fold(identity, identity))), 0)
+            
+          }
+          else parse(processedBlockStr, p =>
+            if (file.ext =:= "fun") new Parser(Origin(testName, globalStartLineNum, fph)).pgrm(p)
+            else new MLParser(Origin(testName, globalStartLineNum, fph)).pgrm(p),
+            verboseFailures = true
+          )
+        } match {
           case f: Failure =>
             val Failure(lbl, index, extra) = f
             val (lineNum, lineStr, col) = fph.getLineColAt(index)
@@ -225,10 +384,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
 
           // successfully parsed block into a valid syntactically valid program
           case Success(p, index) =>
-            val blockLineNum = (allLines.size - lines.size) + 1
-            if (mode.expectParseErrors)
+            if (mode.expectParseErrors && !newParser)
               failures += blockLineNum
-            if (mode.showParse) output("Parsed: " + p)
+            if (mode.showParse || mode.dbgParsing) output("Parsed: " + p)
             // if (mode.isDebugging) typer.resetState()
             if (mode.stats) typer.resetStats()
             typer.dbg = mode.dbg
@@ -244,71 +402,6 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             typer.verbose = mode.verbose
             typer.explainErrors = mode.explainErrors
             stdout = mode.stdout
-            
-            var totalTypeErrors = 0
-            var totalWarnings = 0
-            var totalRuntimeErrors = 0
-            var totalCodeGenErrors = 0
-            
-            // report errors and warnings
-            def report(diags: Ls[Diagnostic]): Unit = {
-              diags.foreach { diag =>
-                val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
-                val headStr = diag match {
-                  case TypeError(msg, loco) =>
-                    totalTypeErrors += 1
-                    s"╔══[ERROR] "
-                  case Warning(msg, loco) =>
-                    totalWarnings += 1
-                    s"╔══[WARNING] "
-                }
-                val lastMsgNum = diag.allMsgs.size - 1
-                var globalLineNum = blockLineNum  // solely used for reporting useful test failure messages
-                diag.allMsgs.zipWithIndex.foreach { case ((msg, loco), msgNum) =>
-                  val isLast = msgNum =:= lastMsgNum
-                  val msgStr = msg.showIn(sctx)
-                  if (msgNum =:= 0) output(headStr + msgStr)
-                  else output(s"${if (isLast && loco.isEmpty) "╙──" else "╟──"} ${msgStr}")
-                  if (loco.isEmpty && diag.allMsgs.size =:= 1) output("╙──")
-                  loco.foreach { loc =>
-                    val (startLineNum, startLineStr, startLineCol) =
-                      loc.origin.fph.getLineColAt(loc.spanStart)
-                    if (globalLineNum =:= 0) globalLineNum += startLineNum - 1
-                    val (endLineNum, endLineStr, endLineCol) =
-                      loc.origin.fph.getLineColAt(loc.spanEnd)
-                    var l = startLineNum
-                    var c = startLineCol
-                    while (l <= endLineNum) {
-                      val globalLineNum = loc.origin.startLineNum + l - 1
-                      val relativeLineNum = globalLineNum - blockLineNum + 1
-                      val shownLineNum =
-                        if (showRelativeLineNums && relativeLineNum > 0) s"l.+$relativeLineNum"
-                        else "l." + globalLineNum
-                      val prepre = "║  "
-                      val pre = s"$shownLineNum: "
-                      val curLine = loc.origin.fph.lines(l - 1)
-                      output(prepre + pre + "\t" + curLine)
-                      out.print(outputMarker
-                        + (if (isLast && l =:= endLineNum) "╙──" else prepre)
-                        + " " * pre.length + "\t" + " " * (c - 1))
-                      val lastCol = if (l =:= endLineNum) endLineCol else curLine.length + 1
-                      while (c < lastCol) { out.print('^'); c += 1 }
-                      out.println
-                      c = 1
-                      l += 1
-                    }
-                  }
-                }
-                if (diag.allMsgs.isEmpty) output("╙──")
-                if (!allowTypeErrors && !mode.fixme && (
-                    !mode.expectTypeErrors && diag.isInstanceOf[TypeError]
-                  || !mode.expectWarnings && diag.isInstanceOf[Warning]
-                )) failures += globalLineNum
-                ()
-              }
-            }
-            
-            val raise: typer.Raise = d => report(d :: Nil)
             
             val (diags, (typeDefs, stmts)) = p.desugared
             report(diags)
@@ -453,7 +546,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               import Message._
               val diags = varianceWarnings.map{ case (tname, biVars) =>
                 val warnings = biVars.map( tname => msg"${tname.name} is irrelevant and may be removed" -> tname.toLoc).toList
-                Warning(msg"Type definition ${tname.name} has bivariant type parameters:" -> tname.toLoc :: warnings)
+                WarningReport(msg"Type definition ${tname.name} has bivariant type parameters:" -> tname.toLoc :: warnings)
               }.toList
               report(diags)
             }
@@ -468,15 +561,15 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               }
 
               def showFirst(prefixLength: Int): Unit = replies match {
-                case (ReplHost.Error(err), log) :: rest =>
+                case (ReplHost.Error(isSyntaxError, content), log) :: rest =>
                   if (!(mode.expectTypeErrors
                       || mode.expectRuntimeErrors
                       || allowRuntimeErrors
                       || mode.fixme
                   )) failures += blockLineNum
                   totalRuntimeErrors += 1
-                  output("Runtime error:")
-                  err.split('\n') foreach { s => output("  " + s) }
+                  output((if (isSyntaxError) "Syntax" else "Runtime") + " error:")
+                  content.linesIterator.foreach { s => output("  " + s) }
                   outputLog(log)
                   replies = rest
                 case (ReplHost.Unexecuted(reason), log) :: rest =>
@@ -484,10 +577,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                   output(" " * (prefixLength + 2) + reason)
                   outputLog(log)
                   replies = rest
-                case (ReplHost.Result(result), log) :: rest =>
-                  result.split('\n').zipWithIndex foreach { case (s, i) =>
-                    if (i =:= 0) output(" " * prefixLength + "= " + s)
-                    else output(" " * (prefixLength + 2) + s)
+                case (ReplHost.Result(result, _), log) :: rest =>
+                  result.linesIterator.zipWithIndex.foreach { case (line, i) =>
+                    if (i =:= 0) output(" " * prefixLength + "= " + line)
+                    else output(" " * (prefixLength + 2) + line)
                   }
                   outputLog(log)
                   replies = rest
@@ -525,41 +618,76 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                   }
                   // Execute code.
                   if (!mode.noExecution) {
-                    prelude match {
-                      case Nil => ()
-                      case lines => host.execute(lines mkString " ")
-                    }
                     if (mode.showRepl) {
-                      println(s"Block [line: ${blockLineNum}] [file: ${file.baseName}]")
-                      if (queries.isEmpty)
-                        println(s"The block is empty")
+                      output(s"┌ Block at ${file.last}:${blockLineNum}")
+                    }
+                    // Execute the prelude code.
+                    prelude match {
+                      case Nil => {
+                        if (mode.showRepl) {
+                          output(s"├── No prelude")
+                          if (queries.isEmpty)
+                            output(s"└── No queries")
+                        }
+                      }
+                      case lines => {
+                        val preludeReply = host.execute(lines mkString " ")
+                        if (mode.showRepl) {
+                          output(s"├─┬ Prelude")
+                          output(s"│ ├── Code")
+                          lines.iterator.foreach { line => output(s"│ │   $line") }
+                          // Display successful results in multiple lines.
+                          // Display other results in single line.
+                          preludeReply match {
+                            case ReplHost.Result(content, intermediate) =>
+                              intermediate.foreach { value =>
+                                output(s"│ ├── Intermediate")
+                                value.linesIterator.foreach { line => output(s"│ │   $line") }  
+                              }
+                              output(s"│ └── Reply")
+                              content.linesIterator.foreach { line => output(s"│     $line") }  
+                            case other => output(s"│ └── Reply $other")
+                          }
+                        }
+                      }
+                    }
+                    if (mode.showRepl && queries.isEmpty) {
+                      output(s"└── No queries")
                     }
                     // Send queries to the host.
                     ExecutedResult(queries.zipWithIndex.map {
                       case (JSTestBackend.CodeQuery(preludeLines, codeLines, res), i) =>
                         val prelude = preludeLines.mkString
                         val code = codeLines.mkString
+                        val p0 = if (i + 1 == queries.length) "  " else "│ "
                         if (mode.showRepl) {
-                          println(s"├── Query ${i + 1}/${queries.length}")
-                          println(s"│ ├── Prelude: ${if (preludeLines.isEmpty) "<empty>" else prelude}")
-                          println(s"│ └── Code: ${code}")
+                          val p1 = if (i + 1 == queries.length) "└─" else "├─"
+                          output(s"$p1┬ Query ${i + 1}/${queries.length}")
+                          output(s"$p0├── Prelude: ${if (preludeLines.isEmpty) "<empty>" else prelude}")
+                          output(s"$p0├── Code: ${code}")
                         }
                         val reply = host.query(prelude, code, res)
                         if (mode.showRepl) {
-                          val prefix = if (i + 1 == queries.length) "└──" else "├──"
-                          println(s"$prefix Reply ${i + 1}/${queries.length}: $reply")
+                          // Show the intermediate reply if possible.
+                          reply match {
+                            case (ReplHost.Result(_, Some(intermediate)), log) => // TODO us `log`?
+                              output(s"$p0├── Intermediate: $intermediate")
+                            case _ => ()
+                          }
+                          val p1 = if (i + 1 == queries.length) "  └──" else s"$p0└──"
+                          output(s"$p1 Reply: ${reply._1}" + (if (reply._2.nonEmpty) s" with log: \"${reply._2}\"" else ""))
                         }
                         reply
                       case (JSTestBackend.AbortedQuery(reason), i) =>
                         if (mode.showRepl) {
                           val prefix = if (i + 1 == queries.length) "└──" else "├──"
-                          println(s"$prefix Query ${i + 1}/${queries.length}: <aborted: $reason>")
+                          output(s"$prefix Query ${i + 1}/${queries.length}: <aborted: $reason>")
                         }
                         (ReplHost.Unexecuted(reason), "")
                       case (JSTestBackend.EmptyQuery, i) =>
                         if (mode.showRepl) {
                           val prefix = if (i + 1 == queries.length) "└──" else "├──"
-                          println(s"$prefix Query ${i + 1}/${queries.length}: <empty>")
+                          output(s"$prefix Query ${i + 1}/${queries.length}: <empty>")
                         }
                         (ReplHost.Empty, "")
                     })
@@ -694,6 +822,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               // output(s"constructed types: " + ty)
             }
             
+            if (mode.expectParseErrors && totalParseErrors =:= 0)
+              failures += blockLineNum
             if (mode.expectTypeErrors && totalTypeErrors =:= 0)
               failures += blockLineNum
             if (mode.expectWarnings && totalWarnings =:= 0)
@@ -703,6 +833,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             if (mode.expectRuntimeErrors && totalRuntimeErrors =:= 0)
               failures += blockLineNum
         } catch {
+          case oh_noes: ThreadDeath => throw oh_noes
           case err: Throwable =>
             if (!mode.fixme)
               failures += allLines.size - lines.size
@@ -730,13 +861,18 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     val endTime = System.nanoTime()
     val timeStr = (((endTime - beginTime) / 1000 / 100).toDouble / 10.0).toString
     val testColor = if (testFailed) Console.RED else Console.GREEN
-    buf ++= s"${" " * (30 - fileName.size)}${testColor}${
+    
+    val resStr = s"${" " * (35 - testStr.size)}${testColor}${
       " " * (6 - timeStr.size)}$timeStr  ms${Console.RESET}"
+    
+    if (inParallel) println(s"${Console.CYAN}Processed${Console.RESET}  $testStr$resStr")
+    else println(resStr)
+    
     if (result =/= fileContents) {
-      buf ++= s"\n! Updated $file"
+      println(s"! Updated $file")
       os.write.over(file, result)
     }
-    println(buf.mkString)
+    
     if (testFailed)
       if (unmergedChanges.nonEmpty)
         fail(s"Unmerged non-output changes around: " + unmergedChanges.map("\n\t"+file.segments.toList.last+":"+_).mkString(", "))
@@ -746,6 +882,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
 }
 
 object DiffTests {
+  
+  private val TimeLimit =
+    if (sys.env.get("CI").isDefined) Span(25, Seconds)
+    else Span(5, Seconds)
   
   private val dir = os.pwd/"shared"/"src"/"test"/"diff"
   
@@ -787,122 +927,18 @@ object DiffTests {
     // "Subsume",
     // "Methods",
   )
-  private def filter(name: Str): Bool =
-    if (focused.nonEmpty) focused(name) else modified.isEmpty || modified(name)
+  // private def filter(name: Str): Bool =
+  private def filter(file: os.Path): Bool = {
+    val name = file.baseName
+    if (focused.nonEmpty) focused(name) else modified(name) || modified.isEmpty &&
+      true
+      // name.startsWith("new/")
+      // file.segments.toList.init.lastOption.contains("parser")
+  }
   
   private val files = allFiles.filter { file =>
       val fileName = file.baseName
-      validExt(file.ext) && filter(fileName)
-  }
-  
-  
-  /** Helper to run NodeJS on test input. */
-  final case class ReplHost() {
-    import java.io.{BufferedWriter, BufferedReader, InputStreamReader, OutputStreamWriter}
-    private val builder = new java.lang.ProcessBuilder()
-    builder.command("node", "--interactive")
-    private val proc = builder.start()
-
-    private val stdin = new BufferedWriter(new OutputStreamWriter(proc.getOutputStream))
-    private val stdout = new BufferedReader(new InputStreamReader(proc.getInputStream))
-    private val stderr = new BufferedReader(new InputStreamReader(proc.getErrorStream))
-
-    skipUntilPrompt()
-    execute("console.info = console.error")
-
-    private def skipUntilPrompt(): Unit = {
-      val buffer = new StringBuilder()
-      while (!buffer.endsWith("\n> ")) {
-        buffer.append(stdout.read().toChar)
-      }
-      buffer.delete(buffer.length - 3, buffer.length)
-      ()
-    }
-
-    private def consumeUntilPrompt(): ReplHost.Reply = {
-      val buffer = new StringBuilder()
-      while (!buffer.endsWith("\n> ")) {
-        buffer.append(stdout.read().toChar)
-      }
-      buffer.delete(buffer.length - 3, buffer.length)
-      val reply = buffer.toString()
-      val begin = reply.indexOf(0x200B)
-      val end = reply.lastIndexOf(0x200B)
-      if (begin >= 0 && end >= 0)
-        // `console.log` inserts a space between every two arguments,
-        // so + 1 and - 1 is necessary to get correct length.
-        ReplHost.Error(reply.substring(begin + 1, end))
-      else
-        ReplHost.Result(reply)
-    }
-
-    private def consumeStderr(): String = {
-      val buffer = new StringBuilder()
-      while (stderr.ready())
-        buffer.append(stderr.read().toChar)
-      buffer.toString()
-    }
-
-    private def send(code: Str, useEval: Bool = false): Unit = {
-      stdin.write(
-        if (useEval) "eval(" + JSLit.makeStringLiteral(code) + ")\n"
-        else if (code endsWith "\n") code
-        else code + "\n"
-      )
-      stdin.flush()
-    }
-
-    def query(prelude: Str, code: Str, res: Str): (ReplHost.Reply, String) = {
-      if (prelude.isEmpty && code.isEmpty) (ReplHost.Empty, "")
-      else {
-        val wrapped = s"$prelude try { $code } catch (e) { console.log('\\u200B' + e + '\\u200B'); }"
-        send(wrapped)
-        (consumeUntilPrompt() match {
-          case _: ReplHost.Result =>
-            send(if (res =:= "res") res else s"globalThis[\"${res}\"]")
-            consumeUntilPrompt()
-          case t => t
-        }, consumeStderr())
-      }
-    }
-
-    def execute(code: Str): Unit = {
-      send(code)
-      skipUntilPrompt()
-    }
-
-    def terminate(): Unit = proc.destroy()
-  }
-
-  object ReplHost {
-    /**
-      * The base class of all kinds of REPL replies.
-      */
-    sealed abstract class Reply
-
-    final case class Result(content: Str) extends Reply {
-      override def toString(): Str = s"[success] $content"
-    }
-
-    /**
-      * If the query is `Empty`, we will receive this.
-      */
-    final object Empty extends Reply {
-      override def toString(): Str = "[empty]"
-    }
-
-    /**
-      * If the query is `Unexecuted`, we will receive this.
-      */
-    final case class Unexecuted(message: Str) extends Reply {
-      override def toString(): Str = s"[unexecuted] $message"
-    }
-
-    /**
-      * If the `ReplHost` captured errors, it will response with `Error`.
-      */
-    final case class Error(message: Str) extends Reply {
-      override def toString(): Str = s"[error] $message"
-    }
+      // validExt(file.ext) && filter(fileName)
+      validExt(file.ext) && filter(file)
   }
 }
