@@ -177,7 +177,7 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
   lazy val name = TSIdentifierObject(node.name)
   lazy val locals = TSSymbolMap(node.locals)
 
-  def getReturnTypeOfSignature(): TSTypeObject =
+  def getReturnTypeOfSignature() =
     TSTypeObject(TSTypeChecker.getReturnTypeOfSignature(TSTypeChecker.getSignatureFromDeclaration(node)))
 
   def `type`(): TSNodeObject = getTypeField(TSNodeObject(node.selectDynamic("type")))
