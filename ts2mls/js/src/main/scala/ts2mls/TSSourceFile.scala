@@ -33,7 +33,7 @@ object TSSourceFile {
           if (!node.typeArguments.isUndefined && node.typeArguments.length > 0)
             TSApplicationType(name, getApplicationArguments(node.typeArguments))
           else if (tv(name)) TSTypeVariable(name)
-          else if (ns.containsMember(name.split("'").toList)) TSNamedType(name)
+          else if (ns.containsMember(name.split("'").toList)) TSNamedType(ns.getParentPath(name))
           else TSEnumType(name)
         }
         else if (node.isTupleTypeNode) TSTupleType(getTupleElements(node.elements))
@@ -72,7 +72,8 @@ object TSSourceFile {
       else if (!sym.isUndefined) {
           val symDec = sym.valueDeclaration
           val name = sym.getFullName()
-          if (ns.containsMember(name.split("'").toList)) TSNamedType(name)
+          val pathList = name.split("'").toList
+          if (ns.containsMember(pathList) || ns.containsMember(pathList.tail)) TSNamedType(ns.getParentPath(name))
           // there are two ways to store anonymous interface in TypeObject
           else if (!symDec.isUndefined && !symDec.properties.isUndefined)
             TSInterfaceType("", getInterfacePropertiesType(symDec.properties, 0), List(), List())
@@ -129,7 +130,7 @@ object TSSourceFile {
       case tp: TSTypeObject => lst :+ getObjectType(Right(tp))
     })
 
-  private def getInheritList(node: TSNodeObject)(implicit ns: TSNamespace, tv: Set[String]): List[TSType] = {
+  private def getHeritageList(node: TSNodeObject)(implicit ns: TSNamespace, tv: Set[String]): List[TSType] = {
     // get parent's full name with namespaces
     def getFullName(name: String, exp: Either[TSNodeObject, TSIdentifierObject]): String =
       exp match {
@@ -143,7 +144,7 @@ object TSSourceFile {
 
     node.heritageClauses.foldLeftIndexed(List[TSType]())((lst, h, index) => {
       val parent = h.types.get(index)
-      val name = getFullName("", parent.expression)
+      val name = ns.getParentPath(getFullName("", parent.expression))
       if (parent.typeArguments.isUndefined) lst :+ TSNamedType(name)
       else lst :+ TSApplicationType(name, getApplicationArguments(parent.typeArguments))
     })
@@ -194,8 +195,8 @@ object TSSourceFile {
 
     val fullName = ns.getFullPath(name)
     if (isClass)
-      TSClassType(fullName, getClassMembersType(members, 0, false)(ns, tvMap), getClassMembersType(members, 0, true)(ns, tvMap), constraints, getInheritList(node))
-    else TSInterfaceType(fullName, getInterfacePropertiesType(members, 0)(ns, tvMap), constraints, getInheritList(node))
+      TSClassType(fullName, getClassMembersType(members, 0, false)(ns, tvMap), getClassMembersType(members, 0, true)(ns, tvMap), constraints, getHeritageList(node))
+    else TSInterfaceType(fullName, getInterfacePropertiesType(members, 0)(ns, tvMap), constraints, getHeritageList(node))
   }
 
   private def parseNamespaceLocals(map: TSSymbolMap)(implicit ns: TSNamespace) =

@@ -75,6 +75,13 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
     case Some(p) => p.getFullPath(s"$name'$nm")
     case _ => nm
   }
+
+  def getParentPath(nm: String): String = parent match {
+    case Some(p) =>
+      if (members.contains(nm)) s"$name'$nm"
+      else p.getParentPath(nm)
+    case _ => nm
+  }
 }
 
 object TSNamespace {

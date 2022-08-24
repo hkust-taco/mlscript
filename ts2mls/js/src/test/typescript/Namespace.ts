@@ -19,6 +19,12 @@ namespace N1 {
     export function fff(x: boolean) {
       return 42;
     }
+
+    class BBB extends C {}
+
+    function gg(c: C): C {
+      return new C;
+    }
   }
 }
 

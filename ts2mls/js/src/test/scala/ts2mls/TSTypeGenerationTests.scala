@@ -18,20 +18,20 @@ object TSTypeGenerationTest {
   private def diffPath(filename: String) = s"ts2mls/js/src/test/diff/$filename"
 
   private val testsData = List(
-    (Seq("Array.ts"), "Array.d.mls"),
-    (Seq("BasicFunctions.ts"), "BasicFunctions.d.mls"),
-    (Seq("ClassMember.ts"), "ClassMember.d.mls"),
-    (Seq("Enum.ts"), "Enum.d.mls"),
-    (Seq("Heritage.ts"), "Heritage.d.mls"),
-    (Seq("HighOrderFunc.ts"), "HighOrderFunc.d.mls"),
-    (Seq("InterfaceMember.ts"), "InterfaceMember.d.mls"),
-    (Seq("Intersection.ts"), "Intersection.d.mls"),
-    (Seq("Multi1.ts", "Multi2.ts", "Multi3.ts"), "MultiFiles.d.mls"),
+    // (Seq("Array.ts"), "Array.d.mls"),
+    // (Seq("BasicFunctions.ts"), "BasicFunctions.d.mls"),
+    // (Seq("ClassMember.ts"), "ClassMember.d.mls"),
+    // (Seq("Enum.ts"), "Enum.d.mls"),
+    // (Seq("Heritage.ts"), "Heritage.d.mls"),
+    // (Seq("HighOrderFunc.ts"), "HighOrderFunc.d.mls"),
+    // (Seq("InterfaceMember.ts"), "InterfaceMember.d.mls"),
+    // (Seq("Intersection.ts"), "Intersection.d.mls"),
+    // (Seq("Multi1.ts", "Multi2.ts", "Multi3.ts"), "MultiFiles.d.mls"),
     (Seq("Namespace.ts"), "Namespace.d.mls"),
-    (Seq("Optional.ts"), "Optional.d.mls"),
-    (Seq("Overload.ts"), "Overload.d.mls"),
-    (Seq("Tuple.ts"), "Tuple.d.mls"),
-    (Seq("TypeVariable.ts"), "TypeVariable.d.mls"),
-    (Seq("Union.ts"), "Union.d.mls")
+    // (Seq("Optional.ts"), "Optional.d.mls"),
+    // (Seq("Overload.ts"), "Overload.d.mls"),
+    // (Seq("Tuple.ts"), "Tuple.d.mls"),
+    // (Seq("TypeVariable.ts"), "TypeVariable.d.mls"),
+    // (Seq("Union.ts"), "Union.d.mls")
   )
 }
