@@ -115,7 +115,7 @@ class TSSymbolObject(sym: js.Dynamic) extends TSAny(sym) {
     else if (declarations.isUndefined) TSNodeObject(sym.declarations)
     else declarations.get(0)
   lazy val escapedName: String = sym.escapedName.toString
-  lazy val valueDeclaration: TSNodeObject = TSNodeObject(sym.valueDeclaration)
+  lazy val valueDeclaration = TSNodeObject(sym.valueDeclaration)
   lazy val declarations = TSNodeArray(sym.declarations)
 
   def getType(): String = TSTypeChecker.getTypeOfSymbolAtLocation(sym)
