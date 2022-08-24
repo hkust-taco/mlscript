@@ -16,7 +16,7 @@ object Converter {
 
   def convert(tsType: TSType): String = tsType match {
     case TSNamedType(typeName) => primitiveName.getOrElse(typeName, typeName)
-    case TSFunctionType(params, res, constraint) =>
+    case TSFunctionType(params, res, _) =>
       // since functions can be defined by both `def` and `method`, it only returns the type of functions
       if (params.length == 0) s"${primitiveName("void")} -> (${convert(res)})"
       else params.foldRight(convert(res))((tst, mlst) => s"(${convert(tst)}) -> (${mlst})")
@@ -36,7 +36,7 @@ object Converter {
     val allRecs = members.toList.map((m) => m._2.modifier match {
       case Public => {
         m._2.base match {
-          case TSFunctionType(_, _, typeVars) if (typeVars.length > 0) =>
+          case TSFunctionType(_, _, typeVars) if (!typeVars.isEmpty) =>
             s"  method ${m._1}[${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]: ${convert(m._2)}" // TODO: add constraints
           case inter: TSIntersectionType => {
             val lst = TSIntersectionType.getOverloadTypeVariables(inter)
@@ -64,7 +64,7 @@ object Converter {
     if (typeName.equals("trait ")) body // anonymous interfaces
     else {
       val bodyWithParents = parents.foldLeft(body)((b, p) => s"$b & ${convert(p)}")
-      if (typeVars.length == 0) s"$typeName: $bodyWithParents$methods"
+      if (typeVars.isEmpty) s"$typeName: $bodyWithParents$methods"
       else
         s"$typeName[${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]: $bodyWithParents$methods" // TODO: add constraints
     }

@@ -100,7 +100,8 @@ object TSTypeChecker {
   def init(obj: js.Dynamic): Unit = checker = obj
 
   def getTypeOfSymbolAtLocation(sym: js.Dynamic): String =
-    checker.typeToString(checker.getTypeOfSymbolAtLocation(sym, sym.valueDeclaration)).toString
+    if (js.isUndefined(sym) || js.isUndefined(sym.valueDeclaration)) "null" // only null type has no valueDeclaration
+    else checker.typeToString(checker.getTypeOfSymbolAtLocation(sym, sym.valueDeclaration)).toString
 
   def getSignatureFromDeclaration(node: js.Dynamic) = checker.getSignatureFromDeclaration(node)
   def getReturnTypeOfSignature(signature: js.Dynamic) = checker.getReturnTypeOfSignature(signature)
@@ -132,14 +133,9 @@ object TSSymbolObject {
   def apply(node: js.Dynamic) = new TSSymbolObject(node)
 }
 
-case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
-  // if there are parentheses around the type information
-  // there will be another `type` field in the `type` field
-  // ues this function to get the true type information 
-  private def getTypeField(t: TSNodeObject): TSNodeObject =
-    if (t.isUndefined || !t.parameters.isUndefined || t.`type`().isUndefined || t.`type`().isToken) t else t.`type`()
-
+case class TSNodeObject(val node: js.Dynamic) extends TSAny(node) {
   lazy val isToken = TypeScript.isToken(node)
+  lazy val token = TSTokenObject(node)
   lazy val isFunctionDeclaration = !isUndefined && TypeScript.isFunctionDeclaration(node)
   lazy val isClassDeclaration = !isUndefined && TypeScript.isClassDeclaration(node)
   lazy val isInterfaceDeclaration = !isUndefined && TypeScript.isInterfaceDeclaration(node)
@@ -180,7 +176,7 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
   def getReturnTypeOfSignature() =
     TSTypeObject(TSTypeChecker.getReturnTypeOfSignature(TSTypeChecker.getSignatureFromDeclaration(node)))
 
-  def `type`(): TSNodeObject = getTypeField(TSNodeObject(node.selectDynamic("type")))
+  lazy val `type` = TSNodeObject(node.selectDynamic("type"))
 }
 
 object TSNodeObject {

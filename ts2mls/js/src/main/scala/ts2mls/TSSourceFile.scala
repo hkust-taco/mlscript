@@ -26,34 +26,30 @@ object TSSourceFile {
   // all these branches are required. removing one of them would lead to errors
   private def getObjectType(node: Either[TSNodeObject, TSTypeObject])(implicit ns: TSNamespace, tv: Set[String]): TSType = node match {
     case Left(node) => {
-      val res = {
-        val typeNode = node.`type`() // may be stored in node or type node(except union/intersection type)
-        if (typeNode.isFunctionLike) getFunctionType(typeNode)
-        else if (node.isFunctionLike) getFunctionType(node)
-        else if (typeNode.hasTypeName) {
-          val name = typeNode.typeName.escapedText()
-          if (!typeNode.typeArguments.isUndefined)
-            TSApplicationType(name, getApplicationArguments(typeNode.typeArguments))
+      val res: TSType =
+        if (node.isFunctionLike) getFunctionType(node)
+        else if (node.hasTypeName) { // `typeName` may contain the name of class/interface/type variable/ enum
+          val name = node.typeName.escapedText()
+          if (!node.typeArguments.isUndefined && node.typeArguments.length > 0)
+            TSApplicationType(name, getApplicationArguments(node.typeArguments))
           else if (tv(name)) TSTypeVariable(name)
           else if (ns.containsMember(name.split("'").toList)) TSNamedType(name)
           else TSEnumType(name)
         }
-        else if (node.hasTypeName)
-          if (tv(node.typeName.escapedText())) TSTypeVariable(node.typeName.escapedText()) else TSNamedType(node.typeName.escapedText())
-        else if (typeNode.isTupleTypeNode) TSTupleType(getTupleElements(typeNode.elements))
         else if (node.isTupleTypeNode) TSTupleType(getTupleElements(node.elements))
-        else if (typeNode.isUnionTypeNode) getStructuralType(typeNode.typesToken, true)
-        else if (typeNode.isIntersectionTypeNode) getStructuralType(typeNode.types,false)
-        else if (typeNode.isArrayTypeNode) TSArrayType(getObjectType(Right(typeNode.elementType.getTypeFromTypeNode())))
+        else if (node.isUnionTypeNode) getStructuralType(node.typesToken, true)
+        else if (node.isIntersectionTypeNode) getStructuralType(node.types,false)
         else if (node.isArrayTypeNode) TSArrayType(getObjectType(Right(node.elementType.getTypeFromTypeNode())))
-        else if (!typeNode.isUndefined && !typeNode.members.isUndefined)
-          TSInterfaceType("", getInterfacePropertiesType(typeNode.members, 0), List(), List())
+        else if (!node.members.isUndefined) // anonymous interface 
+          TSInterfaceType("", getInterfacePropertiesType(node.members, 0), List(), List())
+        else if (!node.`type`.isUndefined) // if the node has a `type` field, it can contain other type information
+          if (!node.`type`.isToken) getObjectType(Left(node.`type`))
+          else getObjectType(Right(node.`type`.token.getTypeFromTypeNode()))
         else if (!node.dotDotDot.isUndefined) TSArrayType(TSNamedType("any")) // variable parameter without type annotation
         else {
           val name = node.symbol.getType()
           if (tv(name)) TSTypeVariable(name) else TSNamedType(name)
         }
-      }
       
       // if this parameter is optional (with question mark or has an initial value)
       if (node.questionToken.isUndefined && node.initializer.isUndefined) res
@@ -72,17 +68,18 @@ object TSSourceFile {
       else if (obj.isUnionType) getStructuralType(obj.types, true)
       else if (obj.isIntersectionType) getStructuralType(obj.types, false)
       else if (obj.isArrayType) TSArrayType(getObjectType(Right(args.get(0))))
-      else if (!args.isUndefined) TSApplicationType(sym.escapedName, getApplicationArguments(args))
+      else if (!args.isUndefined && args.length > 0) TSApplicationType(sym.escapedName, getApplicationArguments(args))
       else if (!sym.isUndefined) {
           val symDec = sym.valueDeclaration
           val name = sym.getFullName()
           if (ns.containsMember(name.split("'").toList)) TSNamedType(name)
+          // there are two ways to store anonymous interface in TypeObject
           else if (!symDec.isUndefined && !symDec.properties.isUndefined)
             TSInterfaceType("", getInterfacePropertiesType(symDec.properties, 0), List(), List())
           else if (!dec.isUndefined && !dec.members.isUndefined)
             TSInterfaceType("", getInterfacePropertiesType(dec.members, 0), List(), List())
           else if (tv(sym.escapedName)) TSTypeVariable(sym.escapedName)
-          else TSNamedType(sym.getFullName())
+          else TSNamedType(name)
       }
       else if(tv(obj.intrinsicName)) TSTypeVariable(obj.intrinsicName)
       else TSNamedType(obj.intrinsicName)
@@ -101,7 +98,10 @@ object TSSourceFile {
   private def getFunctionType(node: TSNodeObject)(implicit ns: TSNamespace, tv: Set[String]): TSFunctionType = {
     val constraints = getTypeConstraints(node)
     val ntv = constaintsListToSet(constraints) ++ tv
-    val pList = node.parameters.foldLeft(List[TSType]())((lst, p) => lst :+ getObjectType(Left(p))(ns, ntv))
+    // in typescript, you can use `this` to explicitly specifies the callee
+    // but it never appears in the final javascript file
+    val pList = node.parameters.foldLeft(List[TSType]())((lst, p) => lst :+
+      (if (p.symbol.escapedName.equals("this")) TSNamedType("void") else getObjectType(Left(p))(ns, ntv)))
     val res = node.getReturnTypeOfSignature()
     TSFunctionType(pList, getObjectType(Right(res))(ns, ntv), constraints)
   }
