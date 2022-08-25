@@ -4,63 +4,21 @@ fun neg(#x) = 0 - x
 fun abs(#x) = if x > 0 then x else neg of x
 //│ |#fun| |neg|(|##|x|)| |#=| |0| |-| |x|↵|#fun| |abs|(|##|x|)| |#=| |#if| |x| |>| |0| |#then| |x| |#else| |neg| |#of| |x|
 //│ Parsed: {fun neg = #x, => - 0 x; fun abs = #x, => if (> x 0) then x else neg (x,)}
-//│ I can't infer the type of x now
-//│ [mono] ┌ MONO MODL
-//│ [mono] │ ┌───┬────────────────────────────────────────────────┐
-//│ [mono] │ │ 1 │ TypingUnit {                                   │
-//│ [mono] │ │ 2 │   neg = #x, => - 0 x                           │
-//│ [mono] │ │ 3 │   abs = #x, => if (> x 0) then x else neg (x,) │
-//│ [mono] │ │ 4 │ }                                              │
-//│ [mono] │ └───┴────────────────────────────────────────────────┘
-//│ [mono] │ ┌ MONO FUNC neg = #x, => - 0 x
-//│ [mono] │ │ ┌ MONO TERM - 0 x
-//│ [mono] │ │ │ ┌ MONO TERM - 0
-//│ [mono] │ │ │ │ ┌ MONO TERM -
-//│ [mono] │ │ │ │ └ MONO TERM -
-//│ [mono] │ │ │ │ ┌ MONO TERM 0
-//│ [mono] │ │ │ │ └ MONO TERM 0
-//│ [mono] │ │ │ │ ┌ SPEC CALL - with (0)
-//│ [mono] │ │ │ │ │ Not found: -
-//│ [mono] │ │ │ │ └ SPEC CALL
-//│ [mono] │ │ │ └ MONO TERM -(0)
-//│ [mono] │ │ │ ┌ MONO TERM x
-//│ [mono] │ │ │ └ MONO TERM x
-//│ [mono] │ │ └ MONO TERM (0 - x)
-//│ [mono] │ └ MONO FUNC
-//│ [mono] │   ┌───┬───────────────┐
-//│ [mono] │   │ 1 │ fun neg(#x) = │
-//│ [mono] │   │ 2 │   (0 - x)     │
-//│ [mono] │   └───┴───────────────┘
-//│ [mono] │ ┌ MONO FUNC abs = #x, => if (> x 0) then x else neg (x,)
-//│ [mono] │ │ ┌ MONO TERM if (> x 0) then x else neg (x,)
-//│ [mono] │ │ │ ┌ MONO TERM > x 0
-//│ [mono] │ │ │ │ ┌ MONO TERM > x
-//│ [mono] │ │ │ │ │ ┌ MONO TERM >
-//│ [mono] │ │ │ │ │ └ MONO TERM >
-//│ [mono] │ │ │ │ │ ┌ MONO TERM x
-//│ [mono] │ │ │ │ │ └ MONO TERM x
-//│ [mono] │ │ │ │ │ ┌ SPEC CALL > with (x)
-//│ [mono] │ │ │ │ │ │ Not found: >
-//│ [mono] │ │ │ │ │ └ SPEC CALL
-//│ [mono] │ │ │ │ └ MONO TERM >(x)
-//│ [mono] │ │ │ │ ┌ MONO TERM 0
-//│ [mono] │ │ │ │ └ MONO TERM 0
-//│ [mono] │ │ │ └ MONO TERM (x > 0)
-//│ [mono] │ │ │ ┌ MONO TERM x
-//│ [mono] │ │ │ └ MONO TERM x
-//│ [mono] │ │ │ ┌ MONO TERM neg (x,)
-//│ [mono] │ │ │ │ ┌ MONO TERM neg
-//│ [mono] │ │ │ │ └ MONO TERM neg
-//│ [mono] │ │ │ │ ┌ MONO TERM x
-//│ [mono] │ │ │ │ └ MONO TERM x
-//│ [mono] │ │ │ │ ┌ SPEC CALL neg with (x)
-//│ [mono] │ │ │ │ │ ┌ SPEC CALL function neg with (x)
+//│ Parsed:
+//│ TypingUnit(NuFunDef(neg, [], Lam(Tup(_: Var(x)), App(App(Var(-), IntLit(0)), Var(x)))), NuFunDef(abs, [], Lam(Tup(_: Var(x)), If((> x 0) then x, Some(App(Var(neg), Tup(_: Var(x))))))))
+//│ Monomorphized:
+//│ fun neg(#x) =
+//│   (0 - x)
+//│ fun abs(#x) =
+//│   if (x > 0) then x else neg__unknown()
+//│ fun neg__unknown() =
+//│   (0 - x)
 
 // UCS is not supported by the monomorphizer.
 if
   true  then "true"
   false then "false"
-//│ |#if|→|true| |#then| |"true"|↵|false| |#then| |"false"|
+//│ |#if|→|true| |#then| |"true"|↵|false| |#then| |"false"|←|
 //│ Parsed: {if ‹(true) then "true"; (false) then "false"›}
 //│ unsupported IfBlock
 //│ [mono] ┌ MONO MODL
@@ -69,7 +27,7 @@ if
 //│ [mono] │ │ 2 │   Code(List(if ‹(true) then "true"; (false) then "false"›)) │
 //│ [mono] │ │ 3 │ }                                                           │
 //│ [mono] │ └───┴─────────────────────────────────────────────────────────────┘
-//│ [mono] │ ┌ MONO TERM if ‹(true) then "true"; (false) then "false"›
+//│ [mono] │ ┌ MONO IF if ‹(true) then "true"; (false) then "false"›
 
 fun inc(#x) = x + 1
 fun dbl(#x) = x * 2
@@ -81,10 +39,10 @@ class Box(value) {
 new Box(0) {
   fun get = this.value + 1
 }
-//│ |#fun| |inc|(|##|x|)| |#=| |x| |+| |1|↵|#fun| |dbl|(|##|x|)| |#=| |x| |*| |2|↵|#fun| |app|(|f|,| |x|)| |#=| |f|(|x|)|↵|#class| |Box|(|value|)| |{|→|#fun| |map|(|f|)| |#=| |Box|(|f|(|value|)|)|↵|#fun| |get| |#=| |this|.|value|←|↵|}|↵|#new| |Box|(|0|)| |{|→|#fun| |get| |#=| |this|.|value| |+| |1|←|↵|}|
-//│ Parsed: {fun inc = #x, => + x 1; fun dbl = #x, => * x 2; fun app = f, x, => f (x,); class Box(value,) {fun map = f, => Box (f (value,),); fun get = . this value}; new Box(0,) {fun get = + (. this value) 1}}
+//│ |#fun| |inc|(|##|x|)| |#=| |x| |+| |1|↵|#fun| |dbl|(|##|x|)| |#=| |x| |*| |2|↵|#fun| |app|(|f|,| |x|)| |#=| |f|(|x|)|↵|#class| |Box|(|value|)| |{|→|#fun| |map|(|f|)| |#=| |Box|(|f|(|value|)|)|↵|#fun| |get| |#=| |this|.value|←|↵|}|↵|#new| |Box|(|0|)| |{|→|#fun| |get| |#=| |this|.value| |+| |1|←|↵|}|
+//│ Parsed: {fun inc = #x, => + x 1; fun dbl = #x, => * x 2; fun app = f, x, => f (x,); class Box(value,) {fun map = f, => Box (f (value,),); fun get = (this).value}; new Box(0,) {fun get = + (this).value 1}}
 //│ Parsed:
-//│ TypingUnit(NuFunDef(inc, [], Lam(Tup(_: Var(x)), App(App(Var(+), Var(x)), IntLit(1)))), NuFunDef(dbl, [], Lam(Tup(_: Var(x)), App(App(Var(*), Var(x)), IntLit(2)))), NuFunDef(app, [], Lam(Tup(_: Var(f), _: Var(x)), App(Var(f), Tup(_: Var(x))))), NuTypeDef(class, Box, (), Tup(_: Var(value)), (), TypingUnit(NuFunDef(map, [], Lam(Tup(_: Var(f)), App(Var(Box), Tup(_: App(Var(f), Tup(_: Var(value))))))), NuFunDef(get, [], App(App(Var(.), Var(this)), Var(value))))), New(Some((TypeName(Box),0,)), TypingUnit(NuFunDef(get, [], App(App(Var(+), App(App(Var(.), Var(this)), Var(value))), IntLit(1))))))
+//│ TypingUnit(NuFunDef(inc, [], Lam(Tup(_: Var(x)), App(App(Var(+), Var(x)), IntLit(1)))), NuFunDef(dbl, [], Lam(Tup(_: Var(x)), App(App(Var(*), Var(x)), IntLit(2)))), NuFunDef(app, [], Lam(Tup(_: Var(f), _: Var(x)), App(Var(f), Tup(_: Var(x))))), NuTypeDef(class, Box, (), Tup(_: Var(value)), (), TypingUnit(NuFunDef(map, [], Lam(Tup(_: Var(f)), App(Var(Box), Tup(_: App(Var(f), Tup(_: Var(value))))))), NuFunDef(get, [], Sel(Var(this), value)))), New(Some((TypeName(Box),0,)), TypingUnit(List(Right(fun get = + (this).value 1)))))
 //│ Monomorphized:
 //│ fun inc(#x) =
 //│   (x + 1)
@@ -102,7 +60,7 @@ pow(0, 123)
 //│ |#fun| |pow|(|##|n|,| |x|)| |#=|→|#if| |n| |>| |1| |#then| |pow|(|n| |-| |1|,| |x|)| |*| |x|↵|#else| |1|←|↵|pow|(|0|,| |123|)|
 //│ Parsed: {fun pow = #n, x, => {if (> n 1) then * (pow (- n 1, x,)) x else 1}; pow (0, 123,)}
 //│ Parsed:
-//│ TypingUnit(NuFunDef(pow, [], Lam(Tup(_: Var(n), _: Var(x)), Blk(If(...)))), App(Var(pow), Tup(_: IntLit(0), _: IntLit(123))))
+//│ TypingUnit(NuFunDef(pow, [], Lam(Tup(_: Var(n), _: Var(x)), Blk(If((> n 1) then * (pow (- n 1, x,)) x, Some(IntLit(1)))))), App(Var(pow), Tup(_: IntLit(0), _: IntLit(123))))
 //│ Monomorphized:
 //│ fun pow(#n, x) =
 //│   if (n > 1) then (pow((n - 1), x) * x) else 1

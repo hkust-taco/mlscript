@@ -2,7 +2,7 @@ package mlscript.mono
 
 import mlscript.{App, Asc, Assign, Bind, Blk, Block, Bra, CaseOf, Lam, Let, Lit,
                  New, Rcd, Sel, Subs, Term, Test, Tup, With, Var, Fld, If}
-import mlscript.{IfBody, IfTerm, IfThen, IfElse, IfLet, IfOpApp, IfOpsApp, IfBlock}
+import mlscript.{IfBody, IfThen, IfElse, IfLet, IfOpApp, IfOpsApp, IfBlock}
 import mlscript.UnitLit
 import mlscript.codegen.Helpers.inspect as showStructure
 

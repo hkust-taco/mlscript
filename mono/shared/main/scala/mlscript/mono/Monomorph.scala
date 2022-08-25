@@ -5,7 +5,7 @@ import mlscript.{TypingUnit, NuTypeDef, NuFunDef}
 import mlscript.{AppliedType, TypeName}
 import mlscript.{App, Asc, Assign, Bind, Blk, Block, Bra, CaseOf, Lam, Let, Lit,
                  New, Rcd, Sel, Subs, Term, Test, Tup, With, Var, Fld, If}
-import mlscript.{IfTerm, IfThen, IfElse, IfLet, IfOpApp, IfOpsApp, IfBlock}
+import mlscript.{IfThen, IfElse, IfLet, IfOpApp, IfOpsApp, IfBlock}
 import mlscript.{IntLit, DecLit, StrLit, UnitLit}
 import scala.collection.immutable.{HashMap}
 import scala.collection.mutable.{Map as MutMap, Set as MutSet}
@@ -130,7 +130,10 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
             kind, // kind
             tparams, // typeParams
             toFuncParams(params).toList, // params
-            parents.map((_, Nil)), // parents
+            parents.map {
+              case Var(name) => (TypeName(name), Nil)
+              case _ => throw MonomorphError("unsupported parent term")
+            }, // parents
             isolation // body
           )
           addPrototypeTypeDecl(typeDecl)
@@ -231,7 +234,6 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
           monomorphizeNew(typeName, toFuncArgs(args).toList, body)
         case Block(unit) => Expr.Isolated(monomorphizeBody(unit))
         case If(body, alternate) => body match
-          case term: IfTerm => throw MonomorphError("unsupported IfTerm")
           case IfThen(condition, consequent) =>
             Expr.IfThenElse(
               monomorphizeTerm(condition),
