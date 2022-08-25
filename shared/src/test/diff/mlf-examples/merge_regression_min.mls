@@ -3,19 +3,24 @@ def choose: 'a -> 'a -> 'a
 //│ choose: 'a -> 'a -> 'a
 //│       = <missing implementation>
 
-// FIXME type simplification regression
 rec def id1 x = choose x (id1 id1 x)
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ id1: 'id1
+//│   where
+//│     'id1 :> 'a -> 'b
+//│     'a :> 'id1
+//│        <: 'b
+//│     'b :> 'id1
+//│        <: 'a -> 'b
+//│    = <no result>
+//│      choose is not implemented
 
-// FIXME type simplification regression
 id1 id
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.11: 	id1 id
-//│ ║        	^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α52 -> α57)  <:  α19_43    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α52 -> α57)  <:  α19'
-//│ res: error
+//│ res: 'a -> 'b | 'c
+//│   where
+//│     'a :> 'a -> 'b
+//│        <: 'b
+//│     'b :> 'a -> 'b
+//│        <: 'a -> 'b & 'c
 //│    = <no result>
 //│      id1 and choose are not implemented
 
