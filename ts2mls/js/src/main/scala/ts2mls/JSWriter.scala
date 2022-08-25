@@ -8,7 +8,7 @@ class JSWriter(filename: String) {
   import JSWriter.{fs, createBuffer}
   private val out = fs.openSync(filename, "rs+")
   private var fileSize = 0
-  private var truncated = false
+  private var needTruncate = false
 
   def writeln(str: String): Unit = {
     val strln = s"$str\n"
@@ -17,18 +17,17 @@ class JSWriter(filename: String) {
     
     if (!strln.equals(buffer.toString())) {
       fs.writeSync(out, strln, fileSize).asInstanceOf[Int]
-      truncated = true
+      needTruncate = true
     }
 
     fileSize += strln.length
   }
 
   def close(): Unit = {
-    if (truncated) fs.truncateSync(out, fileSize) // remove other content to keep the file from chaos
+    if (needTruncate) fs.truncateSync(out, fileSize) // remove other content to keep the file from chaos
 
     fs.closeSync(out)
   }
-    
 }
 
 object JSWriter {
