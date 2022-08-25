@@ -146,7 +146,6 @@ case class TSNodeObject(val node: js.Dynamic) extends TSAny(node) {
   lazy val isTupleTypeNode = !isUndefined && TypeScript.isTupleTypeNode(node)
   lazy val isUnionTypeNode = !isUndefined && TypeScript.isUnionTypeNode(node)
   lazy val isIntersectionTypeNode = !isUndefined && TypeScript.isIntersectionTypeNode(node)
-  lazy val hasTypeName = !isUndefined && !typeName.isUndefined
 
   lazy val typeName = TSIdentifierObject(node.typeName)
   lazy val symbol = TSSymbolObject(node.symbol)

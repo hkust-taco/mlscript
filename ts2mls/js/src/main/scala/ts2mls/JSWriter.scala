@@ -7,16 +7,28 @@ import js.DynamicImplicits._
 class JSWriter(filename: String) {
   import JSWriter.{fs, createBuffer}
   private val out = fs.openSync(filename, "rs+")
+  private var fileSize = 0
+  private var truncated = false
 
   def writeln(str: String): Unit = {
     val strln = s"$str\n"
     val buffer = createBuffer(strln.length)
-    val len = fs.readSync(out, buffer, 0, strln.length)
-    if (!strln.equals(buffer.toString()))
-      fs.writeSync(out, strln, -strln.length)
+    val len = fs.readSync(out, buffer, 0, strln.length).asInstanceOf[Int]
+    
+    if (!strln.equals(buffer.toString())) {
+      fs.writeSync(out, strln, fileSize).asInstanceOf[Int]
+      truncated = true
+    }
+
+    fileSize += strln.length
   }
 
-  def close(): Unit = fs.closeSync(out)
+  def close(): Unit = {
+    if (truncated) fs.truncateSync(out, fileSize) // remove other content to keep the file from chaos
+
+    fs.closeSync(out)
+  }
+    
 }
 
 object JSWriter {

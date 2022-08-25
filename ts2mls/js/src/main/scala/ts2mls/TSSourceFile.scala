@@ -1,7 +1,6 @@
 package ts2mls
 
 import scala.scalajs.js
-import js.Dynamic.{global => g}
 import js.DynamicImplicits._
 import types._
 
@@ -28,7 +27,7 @@ object TSSourceFile {
     case Left(node) => {
       val res: TSType =
         if (node.isFunctionLike) getFunctionType(node)
-        else if (node.hasTypeName) { // `typeName` may contain the name of class/interface/type variable/ enum
+        else if (!node.typeName.isUndefined) { // `typeName` may contain the name of class/interface/type variable/ enum
           val name = node.typeName.escapedText()
           if (!node.typeArguments.isUndefined && node.typeArguments.length > 0)
             TSApplicationType(name, getApplicationArguments(node.typeArguments))
