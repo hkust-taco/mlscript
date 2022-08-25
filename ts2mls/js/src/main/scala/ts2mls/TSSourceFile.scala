@@ -28,13 +28,13 @@ object TSSourceFile {
         else if (node.isTypeVariableApplication) TSApplicationType(node.typeName.escapedText, getApplicationArguments(node.typeArguments))
         else if (node.isTypeVariable()) TSTypeVariable(node.typeName.escapedText)
         else if (node.isSymbolName()) TSNamedType(ns.getParentPath(node.typeName.escapedText))
-        else if (node.isEnum()) TSEnumType(node.typeName.escapedText)
+        else if (node.isEnum) TSEnumType(node.typeName.escapedText)
         else if (node.isTupleTypeNode) TSTupleType(getTupleElements(node.elements))
         else if (node.isUnionTypeNode) getStructuralType(node.typesToken, true)
         else if (node.isIntersectionTypeNode) getStructuralType(node.types,false)
         else if (node.isArrayTypeNode) TSArrayType(getObjectType(Right(node.elementType.typeNode)))
         else if (node.isAnonymousInterface) TSInterfaceType("", getInterfacePropertiesType(node.members), List(), List())
-        else if (node.isInTypeNode) getObjectType(node.`type`) // if the node has a `type` field, it can contain other type information
+        else if (node.hasTypeNode) getObjectType(node.`type`) // if the node has a `type` field, it can contain other type information
         else if (node.isDotsArray) TSArrayType(TSNamedType("any")) // variable parameter without type annotation
         else TSNamedType(node.symbol.symbolType) // built-in type
       

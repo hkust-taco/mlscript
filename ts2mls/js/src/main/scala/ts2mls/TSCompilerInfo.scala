@@ -24,6 +24,7 @@ object TypeScript {
   def isTupleTypeNode(node: js.Dynamic): Boolean = ts.isTupleTypeNode(node)
   def isUnionTypeNode(node: js.Dynamic): Boolean = ts.isUnionTypeNode(node)
   def isIntersectionTypeNode(node: js.Dynamic): Boolean = ts.isIntersectionTypeNode(node)
+  def isTypeReferenceNode(node: js.Dynamic): Boolean = ts.isTypeReferenceNode(node)
 
   def forEachChild(root: js.Dynamic, func: js.Dynamic => Unit): Unit = ts.forEachChild(root, func)
   def createProgram(filenames: Seq[String]): js.Dynamic = 
@@ -80,10 +81,11 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
   lazy val isTupleTypeNode = !isUndefined && TypeScript.isTupleTypeNode(node)
   lazy val isUnionTypeNode = !isUndefined && TypeScript.isUnionTypeNode(node)
   lazy val isIntersectionTypeNode = !isUndefined && TypeScript.isIntersectionTypeNode(node)
+  lazy val isEnum = TypeScript.isTypeReferenceNode(node)
   lazy val isAnonymousInterface = !isUndefined && !members.isUndefined
   lazy val isTypeVariableApplication = !isUndefined && !typeArguments.isUndefined
-  lazy val isDotsArray = !isUndefined && !isInTypeNode && !IsUndefined(node.dotDotDotToken)
-  lazy val isInTypeNode = !isUndefined && (`type` match {
+  lazy val isDotsArray = !isUndefined && !hasTypeNode && !IsUndefined(node.dotDotDotToken)
+  lazy val hasTypeNode = !isUndefined && (`type` match {
     case Left(node) => !node.isUndefined
     case Right(token) => !token.isUndefined
   })
@@ -139,9 +141,6 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
 
   def isSymbolName()(implicit ns: TSNamespace) = 
     !typeName.isUndefined && ns.containsMember(typeName.escapedText.split("'").toList)
-
-  def isEnum()(implicit ns: TSNamespace, tv: Set[String]) =
-    !typeName.isUndefined && !isTypeVariableApplication && ! isTypeVariable() && !isSymbolName()
 }
 
 object TSNodeObject {
