@@ -4,6 +4,7 @@ import scala.scalajs.js
 import js.Dynamic.{global => g}
 import js.DynamicImplicits._
 import js.JSConverters._
+import ts2mls.types._
 
 abstract class TSAny(v: js.Dynamic) {
   val isUndefined: Boolean = js.isUndefined(v)
@@ -131,6 +132,8 @@ object TSSymbolObject {
 }
 
 case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
+  private lazy val modifiers = TSTokenArray(node.modifiers)
+
   lazy val isToken = !isUndefined && TypeScript.isToken(node)
   lazy val isClassDeclaration = !isUndefined && TypeScript.isClassDeclaration(node)
   lazy val isInterfaceDeclaration = !isUndefined && TypeScript.isInterfaceDeclaration(node)
@@ -148,6 +151,8 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
     case Right(token) => !token.isUndefined
   })
   lazy val isOptional = !initializer.isUndefined || !questionToken.isUndefined
+  lazy val isStatic = if (modifiers.isUndefined) false
+                     else modifiers.foldLeft(false)((s, t) => t.isStatic)
 
   lazy val typeName = TSIdentifierObject(node.typeName)
   lazy val symbol = TSSymbolObject(node.symbol)
@@ -169,7 +174,11 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
   lazy val expression: Either[TSNodeObject, TSIdentifierObject] =
     if (js.isUndefined(node.expression.name)) Right(TSIdentifierObject(node.expression))
     else Left(TSNodeObject(node.expression))
-  lazy val modifiers = TSTokenArray(node.modifiers)
+  lazy val modifier =
+    if (modifiers.isUndefined) Public
+    else modifiers.foldLeft[TSAccessModifier](Public)(
+      (m, t) => if (t.isPrivate) Private else if (t.isProtected) Protected else m)
+
   lazy val dotDotDot = TSTokenObject(node.dotDotDotToken)
   lazy val name = TSIdentifierObject(node.name)
   lazy val locals = TSSymbolMap(node.locals)
@@ -190,6 +199,20 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
 
   def isEnum()(implicit ns: TSNamespace, tv: Set[String]) =
     !typeName.isUndefined && !isTypeVariableApplication && ! isTypeVariable() && !isSymbolName()
+
+  lazy val fullName = {
+    def getFullName(name: String, exp: Either[TSNodeObject, TSIdentifierObject]): String =
+      exp match {
+        case Left(node) =>
+          if (name.equals("")) getFullName(node.name.escapedText, node.expression)
+          else getFullName(s"${node.name.escapedText}'$name", node.expression)
+        case Right(id) =>
+          if (name.equals("")) id.escapedText
+          else s"${id.escapedText}'$name"
+      }
+
+    getFullName("", expression)
+  }
 }
 
 object TSNodeObject {

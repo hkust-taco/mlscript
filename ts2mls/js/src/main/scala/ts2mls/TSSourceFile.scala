@@ -98,20 +98,9 @@ object TSSourceFile {
     })
 
   private def getHeritageList(node: TSNodeObject)(implicit ns: TSNamespace, tv: Set[String]): List[TSType] = {
-    // get parent's full name with namespaces
-    def getFullName(name: String, exp: Either[TSNodeObject, TSIdentifierObject]): String =
-      exp match {
-        case Left(node) =>
-          if (name.equals("")) getFullName(node.name.escapedText, node.expression)
-          else getFullName(s"${node.name.escapedText}'$name", node.expression)
-        case Right(id) =>
-          if (name.equals("")) id.escapedText
-          else s"${id.escapedText}'$name"
-      }
-
     node.heritageClauses.foldLeftIndexed(List[TSType]())((lst, h, index) => {
       val parent = h.types.get(index)
-      val name = ns.getParentPath(getFullName("", parent.expression))
+      val name = ns.getParentPath(parent.fullName)
       if (parent.typeArguments.isUndefined) lst :+ TSNamedType(name)
       else lst :+ TSApplicationType(name, getApplicationArguments(parent.typeArguments))
     })
@@ -120,32 +109,25 @@ object TSSourceFile {
   private def getClassMembersType(list: TSNodeArray, requireStatic: Boolean)(implicit ns: TSNamespace, tv: Set[String]): Map[String, TSMemberType] =
     list.foldLeft(Map[String, TSMemberType]())((mp, p) => {
       val name = p.symbol.escapedName
-      val isStatic = if (p.modifiers.isUndefined) false
-                     else p.modifiers.foldLeft(false)((s, t) => t.isStatic)
 
       // TODO: support `__constructor`
-      if (!name.equals("__constructor") && isStatic == requireStatic) {
-        val initializer = p.initializerNode
+      if (!name.equals("__constructor") && p.isStatic == requireStatic) {
         val mem =
-          if (initializer.isUndefined || initializer.members.isUndefined) getObjectType(Left(p)) // non-static members
-          else parseMembers(initializer, true) // static members
-        val modifier = if (p.modifiers.isUndefined) Public
-          else p.modifiers.foldLeft[TSAccessModifier](Public)((m, t) =>
-            if (t.isPrivate) Private else if (t.isProtected) Protected else m
-          )
+          if (!p.isStatic) getObjectType(Left(p))
+          else parseMembers(p.initializerNode, true)
 
         mem match {
           case func: TSFunctionType => {
-            if (!mp.contains(name)) mp ++ Map(name -> TSMemberType(func, modifier))
+            if (!mp.contains(name)) mp ++ Map(name -> TSMemberType(func, p.modifier))
             else mp(name).base match {
               case old: TSFunctionType if (p.body.isUndefined) =>
-                mp.removed(name) ++ Map(name -> TSMemberType(TSIntersectionType(old, func), modifier))
+                mp.removed(name) ++ Map(name -> TSMemberType(TSIntersectionType(old, func), p.modifier))
               case old: TSIntersectionType if (p.body.isUndefined) =>
-                mp.removed(name) ++ Map(name -> TSMemberType(TSIntersectionType(old, func), modifier))
+                mp.removed(name) ++ Map(name -> TSMemberType(TSIntersectionType(old, func), p.modifier))
               case _ => mp
             }
           }
-          case _ => mp ++ Map(name -> TSMemberType(mem, modifier))
+          case _ => mp ++ Map(name -> TSMemberType(mem, p.modifier))
         }
       }
       else mp
