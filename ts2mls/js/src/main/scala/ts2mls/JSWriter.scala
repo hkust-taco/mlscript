@@ -6,12 +6,12 @@ import js.DynamicImplicits._
 
 class JSWriter(filename: String) {
   import JSWriter.{fs, createBuffer}
-  private val out = fs.openSync(filename, "w+")
+  private val out = fs.openSync(filename, "rs+")
 
   def writeln(str: String): Unit = {
     val strln = s"$str\n"
     val buffer = createBuffer(strln.length)
-    fs.readSync(out, buffer, 0, strln.length)
+    val len = fs.readSync(out, buffer, 0, strln.length)
     if (!strln.equals(buffer.toString()))
       fs.writeSync(out, strln, -strln.length)
   }
@@ -21,7 +21,6 @@ class JSWriter(filename: String) {
 
 object JSWriter {
   private val fs = g.require("fs") // must use fs module to manipulate files in JS
-  // private val buffer = g.require("buffer")
 
   def apply(filename: String) = new JSWriter(filename)
 
