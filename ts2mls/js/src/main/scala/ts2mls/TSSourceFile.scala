@@ -28,7 +28,7 @@ object TSSourceFile {
         else if (node.isTypeVariableSubstitution) TSSubstitutionType(node.typeName.escapedText, getSubstitutionArguments(node.typeArguments))
         else if (node.isTypeVariable()) TSTypeVariable(node.typeName.escapedText)
         else if (node.isSymbolName()) TSNamedType(ns.getParentPath(node.typeName.escapedText))
-        else if (node.isEnum) TSEnumType(node.typeName.escapedText)
+        else if (node.isEnum) TSEnumType()
         else if (node.isTupleTypeNode) TSTupleType(getTupleElements(node.elements))
         else if (node.isUnionTypeNode) getStructuralType(node.typesToken, true)
         else if (node.isIntersectionTypeNode) getStructuralType(node.types,false)
@@ -42,7 +42,7 @@ object TSSourceFile {
       else res
     }
     case Right(obj) =>
-      if (obj.isEnumType) TSEnumType(obj.aliasSymbol.escapedName)
+      if (obj.isEnumType) TSEnumType()
       else if (obj.isFunctionLike) getFunctionType(obj.symbol.declaration)
       else if (obj.isTupleType) TSTupleType(getTupleElements(obj.resolvedTypeArguments))
       else if (obj.isUnionType) getStructuralType(obj.types, true)

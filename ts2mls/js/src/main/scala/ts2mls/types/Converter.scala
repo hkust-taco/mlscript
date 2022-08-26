@@ -25,7 +25,7 @@ object Converter {
     case TSTypeVariable(name, _) => name
     case TSTupleType(lst) => s"(${lst.foldLeft("")((p, t) => s"$p${convert(t)}, ")})"
     case TSArrayType(element) => s"MutArray[${convert(element)}]"
-    case TSEnumType(_) => "int"
+    case TSEnumType() => "int"
     case TSMemberType(base, modifier) => convert(base)
     case TSInterfaceType(name, members, typeVars, parents) => convertRecord(s"trait $name", members, typeVars, parents)
     case TSClassType(name, members, _, typeVars, parents) => convertRecord(s"class $name", members, typeVars, parents) // TODO: deal with static members

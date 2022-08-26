@@ -1,6 +1,9 @@
 def pass: (int) -> (bool)
 def stop: unit -> (int)
+def g: (int) -> (int)
 //│ pass: int -> bool
 //│     = <missing implementation>
 //│ stop: unit -> int
 //│     = <missing implementation>
+//│ g: int -> int
+//│  = <missing implementation>

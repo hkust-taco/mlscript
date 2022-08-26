@@ -7,3 +7,9 @@ function pass(c: Color): boolean {
 function stop(): Color {
   return Color.Red;
 }
+
+enum Empty {}
+
+function g(x: Empty): Empty {
+  return x;
+}

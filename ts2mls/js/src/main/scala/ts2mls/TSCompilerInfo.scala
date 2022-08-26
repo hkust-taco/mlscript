@@ -12,6 +12,7 @@ object TypeScript {
   val typeFlagsUnion = ts.TypeFlags.Union.asInstanceOf[Int]
   val typeFlagsInter = ts.TypeFlags.Intersection.asInstanceOf[Int]
   val typeFlagsEnum = ts.TypeFlags.Enum.asInstanceOf[Int]
+  val typeFlagsEnumLiteral = ts.TypeFlags.EnumLiteral.asInstanceOf[Int]
   val typeFlagsObject = ts.TypeFlags.Object.asInstanceOf[Int]
   val typeFlagsTypeParameter = ts.TypeFlags.TypeParameter.asInstanceOf[Int]
   val syntaxKindPrivate = ts.SyntaxKind.PrivateKeyword.asInstanceOf[Int]
@@ -180,7 +181,8 @@ class TSTypeObject(obj: js.Dynamic) extends TSAny(obj) {
 
   lazy val isTupleType = obj.checker.isTupleType(obj)
   lazy val isArrayType = obj.checker.isArrayType(obj)
-  lazy val isEnumType = !aliasSymbol.isUndefined && obj.aliasSymbol.hasOwnProperty("exports")
+  lazy val isEnumType = (flags == TypeScript.typeFlagsEnum) ||
+    ((flags & TypeScript.typeFlagsEnumLiteral) == TypeScript.typeFlagsEnumLiteral)
   lazy val isUnionType = flags == TypeScript.typeFlagsUnion
   lazy val isIntersectionType = flags == TypeScript.typeFlagsInter
   lazy val isAnonymousInterface = !symbol.isUndefined && !declarationMembers.isUndefined
