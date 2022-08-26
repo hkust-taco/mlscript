@@ -183,19 +183,18 @@ class TSTypeObject(obj: js.Dynamic) extends TSAny(obj) {
   lazy val isArrayType = obj.checker.isArrayType(obj)
   lazy val isEnumType = (flags == TypeScript.typeFlagsEnum) ||
     ((flags & TypeScript.typeFlagsEnumLiteral) == TypeScript.typeFlagsEnumLiteral)
+
   lazy val isUnionType = flags == TypeScript.typeFlagsUnion
   lazy val isIntersectionType = flags == TypeScript.typeFlagsInter
   lazy val isAnonymousInterface = !symbol.isUndefined && !declarationMembers.isUndefined
   lazy val isFunctionLike =
     !symbol.isUndefined && !symbol.declaration.isUndefined && symbol.declaration.isFunctionLike
+
   lazy val isTypeParameter = flags == TypeScript.typeFlagsTypeParameter
-
+  lazy val isObject = flags == TypeScript.typeFlagsObject
+  lazy val isNamedObject = isObject && !obj.symbol.escapedName.equals("__type") && !obj.symbol.escapedName.equals("__object")
   lazy val isTypeParameterSubstitution =
-    !isUndefined && !resolvedTypeArguments.isUndefined && resolvedTypeArguments.length > 0
-
-  def isSymbolName()(implicit ns: TSNamespace) =
-    if (symbol.isUndefined) false
-    else ns.containsMember(symbol.fullName.split("'").toList) || ns.containsMember(symbol.escapedName)
+    !resolvedTypeArguments.isUndefined && resolvedTypeArguments.length > 0
 }
 
 object TSTypeObject {
