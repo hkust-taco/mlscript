@@ -44,7 +44,7 @@ object TSTypeChecker {
     else checker.typeToString(checker.getTypeOfSymbolAtLocation(sym, sym.valueDeclaration)).toString
 
   def getReturnTypeOfSignature(node: js.Dynamic) = checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(node))
-  def getTypeFromTypeNode(token: js.Dynamic) = TSTypeObject(checker.getTypeFromTypeNode(token))
+  def getTypeFromTypeNode(node: js.Dynamic) = TSTypeObject(checker.getTypeFromTypeNode(node))
 }
 
 class TSSymbolObject(sym: js.Dynamic) extends TSAny(sym) {
@@ -73,7 +73,7 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
   private lazy val modifiers = TSTokenArray(node.modifiers)
   private lazy val name = TSIdentifierObject(node.name)
   private lazy val expression: Either[TSNodeObject, TSIdentifierObject] =
-    if (js.isUndefined(node.expression.name)) Right(TSIdentifierObject(node.expression))
+    if (IsUndefined(node.expression.name)) Right(TSIdentifierObject(node.expression))
     else Left(TSNodeObject(node.expression))
 
   lazy val isToken = !isUndefined && TypeScript.isToken(node)
@@ -89,15 +89,14 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
   lazy val isAnonymousInterface = !isUndefined && !symbol.isUndefined && symbol.escapedName.equals("__type")
   lazy val isTypeParameterSubstitution = !isUndefined && !typeArguments.isUndefined
   lazy val isDotsArray = !isUndefined && !hasTypeNode && !IsUndefined(node.dotDotDotToken)
-  lazy val hasTypeNode = !isUndefined && (`type` match {
-    case Left(node) => !node.isUndefined
-    case Right(token) => !token.isUndefined
-  })
+  lazy val hasTypeNode = !isUndefined && !`type`.isUndefined
 
   lazy val hasImplementation = !IsUndefined(node.body)
   lazy val isOptional = !IsUndefined(node.initializer) || !IsUndefined(node.questionToken)
   lazy val isStatic = if (modifiers.isUndefined) false
                      else modifiers.foldLeft(false)((s, t) => t.isStatic)
+
+  lazy val typeNode = TSTypeChecker.getTypeFromTypeNode(node)
 
   lazy val typeName = TSIdentifierObject(node.typeName)
   lazy val symbol = TSSymbolObject(node.symbol)
@@ -120,11 +119,7 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
 
   lazy val locals = TSSymbolMap(node.locals)
   lazy val returnType = TSTypeObject(TSTypeChecker.getReturnTypeOfSignature(node))
-  lazy val `type`: Either[TSNodeObject, TSTypeObject] = {
-    val temp = TSNodeObject(node.selectDynamic("type"))
-    if (temp.isToken) Right(TSTokenObject(temp.node).typeNode)
-    else Left(temp)
-  }
+  lazy val `type` = TSNodeObject(node.selectDynamic("type"))
 
   lazy val fullName = {
     def getFullName(name: String, exp: Either[TSNodeObject, TSIdentifierObject]): String =

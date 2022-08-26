@@ -9,7 +9,7 @@ class ABC: {}
 def testABC: ((ABC) | (undefined)) -> (unit)
 def testSquareConfig: ((SquareConfig) | (undefined)) -> (unit)
 def err: (((number, string, )) | (undefined)) -> (unit)
-def toStr: (((number) | (bool)) | (undefined)) -> (string)
+def toStr: ((((number) | (false)) | (true)) | (undefined)) -> (string)
 def boo[T, U]: (((T) & (U)) | (undefined)) -> (unit)
 class B[T]: { b: T }
 def boom: ((B[nothing]) | (undefined)) -> (anything)
@@ -34,7 +34,7 @@ def boom: ((B[nothing]) | (undefined)) -> (anything)
 //│                 = <missing implementation>
 //│ err: ((number, string,) | undefined) -> unit
 //│    = <missing implementation>
-//│ toStr: (bool | number | undefined) -> string
+//│ toStr: (false | number | true | undefined) -> string
 //│      = <missing implementation>
 //│ boo: anything -> unit
 //│    = <missing implementation>

@@ -9,7 +9,7 @@ def id: ((M) -> (M)) & ((N) -> (N))
 def tst: (({ z: number }) -> ({ y: string })) & (({ z: bool }) -> ({ y: string }))
 def op: ((number) -> (((number) | (undefined)) -> (unit))) & ((number) -> (((bool) | (undefined)) -> (unit)))
 def swap: (((number, string, )) -> ((string, number, ))) & (((string, number, )) -> ((number, string, )))
-def u: (((number) | (bool)) -> (string)) & (({}) -> ((string) | ({})))
+def u: ((((number) | (false)) | (true)) -> (string)) & (({}) -> ((string) | ({})))
 def doSome[T, U]: (((T) & (U)) -> ((T) & (U))) & ((string) -> (nothing))
 class G[T]: { g: T }
 def bar: (((G[string]) -> (G[string])) & ((G[number]) -> (G[number]))) & ((G[bool]) -> (G[bool]))
