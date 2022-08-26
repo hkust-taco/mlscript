@@ -87,7 +87,7 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
   lazy val isIntersectionTypeNode = !isUndefined && TypeScript.isIntersectionTypeNode(node)
   lazy val isEnum = TypeScript.isTypeReferenceNode(node)
   lazy val isAnonymousInterface = !isUndefined && !symbol.isUndefined && symbol.escapedName.equals("__type")
-  lazy val isTypeVariableSubstitution = !isUndefined && !typeArguments.isUndefined
+  lazy val isTypeParameterSubstitution = !isUndefined && !typeArguments.isUndefined
   lazy val isDotsArray = !isUndefined && !hasTypeNode && !IsUndefined(node.dotDotDotToken)
   lazy val hasTypeNode = !isUndefined && (`type` match {
     case Left(node) => !node.isUndefined
@@ -140,7 +140,7 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
     getFullName("", expression)
   }
 
-  def isTypeVariable()(implicit tv: Set[String]) = 
+  def isTypeParameter()(implicit tv: Set[String]) = 
     !typeName.isUndefined && tv.contains(typeName.escapedText)
 
   def isSymbolName()(implicit ns: TSNamespace) = 
@@ -189,14 +189,15 @@ class TSTypeObject(obj: js.Dynamic) extends TSAny(obj) {
   lazy val isFunctionLike =
     !symbol.isUndefined && !symbol.declaration.isUndefined && symbol.declaration.isFunctionLike
 
-  lazy val isTypeVariableSubstitution =
+
+  lazy val isTypeParameterSubstitution =
     !isUndefined && !resolvedTypeArguments.isUndefined && resolvedTypeArguments.length > 0
 
   def isSymbolName()(implicit ns: TSNamespace) =
     if (symbol.isUndefined) false
     else ns.containsMember(symbol.fullName.split("'").toList) || ns.containsMember(symbol.escapedName)
 
-  def isTypeVariable()(implicit tv: Set[String]) = !symbol.isUndefined && tv.contains(symbol.escapedName)
+  def isTypeParameter()(implicit tv: Set[String]) = !symbol.isUndefined && tv.contains(symbol.escapedName)
 }
 
 object TSTypeObject {

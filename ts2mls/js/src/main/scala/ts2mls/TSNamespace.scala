@@ -50,7 +50,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
         mem match {
           case inter: TSIntersectionType => { // overloaded functions
             val fullName = getFullPath(name)
-            val params = TSIntersectionType.getOverloadTypeVariables(inter).map((t) => t.name) 
+            val params = TSIntersectionType.getOverloadTypeParameters(inter).map((t) => t.name) 
 
             if (params.isEmpty)
               writer.writeln(s"def ${fullName}: ${Converter.convert(inter)}")

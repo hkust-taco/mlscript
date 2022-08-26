@@ -25,8 +25,8 @@ object TSSourceFile {
     case Left(node) => {
       val res: TSType =
         if (node.isFunctionLike) getFunctionType(node)
-        else if (node.isTypeVariableSubstitution) TSSubstitutionType(node.typeName.escapedText, getSubstitutionArguments(node.typeArguments))
-        else if (node.isTypeVariable()) TSTypeVariable(node.typeName.escapedText)
+        else if (node.isTypeParameterSubstitution) TSSubstitutionType(node.typeName.escapedText, getSubstitutionArguments(node.typeArguments))
+        else if (node.isTypeParameter()) TSTypeParameter(node.typeName.escapedText)
         else if (node.isSymbolName()) TSNamedType(ns.getParentPath(node.typeName.escapedText))
         else if (node.isEnum) TSEnumType()
         else if (node.isTupleTypeNode) TSTupleType(getTupleElements(node.elements))
@@ -48,20 +48,20 @@ object TSSourceFile {
       else if (obj.isUnionType) getStructuralType(obj.types, true)
       else if (obj.isIntersectionType) getStructuralType(obj.types, false)
       else if (obj.isArrayType) TSArrayType(getObjectType(Right(obj.resolvedTypeArguments.get(0))))
-      else if (obj.isTypeVariableSubstitution) TSSubstitutionType(obj.symbol.escapedName, getSubstitutionArguments(obj.resolvedTypeArguments))
+      else if (obj.isTypeParameterSubstitution) TSSubstitutionType(obj.symbol.escapedName, getSubstitutionArguments(obj.resolvedTypeArguments))
       else if (obj.isSymbolName()) TSNamedType(ns.getParentPath(obj.symbol.fullName))
       else if (obj.isAnonymousInterface) TSInterfaceType("", getInterfacePropertiesType(obj.declarationMembers), List(), List())
-      else if (obj.isTypeVariable()) TSTypeVariable(obj.symbol.escapedName)
+      else if (obj.isTypeParameter()) TSTypeParameter(obj.symbol.escapedName)
       else TSNamedType(obj.intrinsicName)
   }
 
-  private def getTypeConstraints(node: TSNodeObject)(implicit ns: TSNamespace, tv: Set[String]): List[TSTypeVariable] =
-    node.typeParameters.foldLeft(List[TSTypeVariable]())((lst, tp) =>
-      if (tp.constraint.isUndefined) lst :+ TSTypeVariable(tp.symbol.escapedName, None)
-      else lst :+ TSTypeVariable(tp.symbol.escapedName, Some(getObjectType(Right(tp.constraint.typeNode))))
+  private def getTypeConstraints(node: TSNodeObject)(implicit ns: TSNamespace, tv: Set[String]): List[TSTypeParameter] =
+    node.typeParameters.foldLeft(List[TSTypeParameter]())((lst, tp) =>
+      if (tp.constraint.isUndefined) lst :+ TSTypeParameter(tp.symbol.escapedName, None)
+      else lst :+ TSTypeParameter(tp.symbol.escapedName, Some(getObjectType(Right(tp.constraint.typeNode))))
     )
 
-  private def constaintsListToSet(constraints: List[TSTypeVariable]) =
+  private def constaintsListToSet(constraints: List[TSTypeParameter]) =
     constraints.map((c) => c.name).toSet
 
   private def getFunctionType(node: TSNodeObject)(implicit ns: TSNamespace, tv: Set[String]): TSFunctionType = {
