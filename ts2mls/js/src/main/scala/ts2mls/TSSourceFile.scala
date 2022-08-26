@@ -72,8 +72,8 @@ object TSSourceFile {
   private def getHeritageList(node: TSNodeObject): List[TSType] =
     node.heritageClauses.foldLeftIndexed(List[TSType]())((lst, h, index) => {
       val parent = h.types.get(index)
-      if (parent.typeArguments.isUndefined) lst :+ TSReferenceType(parent.fullName)
-      else lst :+ TSSubstitutionType(parent.fullName, getSubstitutionArguments(parent.typeArguments))
+      if (parent.typeArguments.isUndefined) lst :+ TSReferenceType(parent.typeNode.symbol.fullName)
+      else lst :+ TSSubstitutionType(parent.typeNode.symbol.fullName, getSubstitutionArguments(parent.typeArguments))
     })
 
   private def getClassMembersType(list: TSNodeArray, requireStatic: Boolean): Map[String, TSMemberType] =
