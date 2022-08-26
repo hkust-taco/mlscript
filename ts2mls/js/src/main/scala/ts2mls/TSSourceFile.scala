@@ -38,7 +38,6 @@ object TSSourceFile {
     val res: TSType =
       if (node.isFunctionLike) getFunctionType(node)
       else if (node.hasTypeNode) getObjectType(node.`type`.typeNode) // if the node has a `type` field, it can contain other type information
-      else if (node.isDotsArray) TSArrayType(TSNamedType("any")) // variable parameter without type annotation
       else TSNamedType(node.symbol.symbolType) // built-in type
     if (node.isOptional) TSUnionType(res, TSNamedType("undefined"))
     else res
@@ -55,7 +54,10 @@ object TSSourceFile {
     // in typescript, you can use `this` to explicitly specifies the callee
     // but it never appears in the final javascript file
     val pList = node.parameters.foldLeft(List[TSType]())((lst, p) => lst :+
-      (if (p.symbol.escapedName.equals("this")) TSNamedType("void") else getDeclarationType(p)))
+      (if (p.symbol.escapedName.equals("this")) TSNamedType("void")
+      else
+        if (p.isOptional) TSUnionType(getObjectType(p.symType), TSNamedType("undefined"))
+        else getObjectType(p.symType)))
     TSFunctionType(pList, getObjectType(node.returnType), constraints)
   }
 

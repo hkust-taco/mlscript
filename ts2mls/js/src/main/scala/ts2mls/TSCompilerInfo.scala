@@ -39,6 +39,8 @@ object TSTypeChecker {
 
   def getReturnTypeOfSignature(node: js.Dynamic) = checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(node))
   def getTypeFromTypeNode(node: js.Dynamic) = TSTypeObject(checker.getTypeFromTypeNode(node))
+  def getType(sym: js.Dynamic, node: js.Dynamic) = checker.getTypeOfSymbolAtLocation(sym, node)
+  def isOptionalParameter(node: js.Dynamic) = checker.isOptionalParameter(node)
 }
 
 class TSSymbolObject(sym: js.Dynamic) extends TSAny(sym) {
@@ -70,7 +72,6 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
   lazy val isInterfaceDeclaration = !isUndefined && TypeScript.isInterfaceDeclaration(node)
   lazy val isFunctionLike = !isUndefined && TypeScript.isFunctionLike(node)
   lazy val isNamespace = !isUndefined && TypeScript.isNamespaceDeclaration(node)
-  lazy val isDotsArray = !isUndefined && !hasTypeNode && !IsUndefined(node.dotDotDotToken)
   lazy val hasTypeNode = !isUndefined && !`type`.isUndefined
 
   lazy val hasImplementation = !IsUndefined(node.body)
@@ -96,6 +97,8 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
   lazy val locals = TSSymbolMap(node.locals)
   lazy val returnType = TSTypeObject(TSTypeChecker.getReturnTypeOfSignature(node))
   lazy val `type` = TSNodeObject(node.selectDynamic("type"))
+
+  lazy val symType = TSTypeObject(TSTypeChecker.getType(node.symbol, node))
 }
 
 object TSNodeObject {
@@ -158,8 +161,6 @@ class TSIdentifierObject(id: js.Dynamic) extends TSAny(id) {
   lazy val escapedText: String =
     if (left.isUndefined) id.escapedText.toString()
     else s"${left.escapedText}'${right.escapedText}"
-
-  lazy val expression = TSIdentifierObject(id.expression)
 }
 
 object TSIdentifierObject {
