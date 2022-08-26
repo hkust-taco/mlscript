@@ -88,7 +88,6 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
   lazy val types = TSNodeArray(node.types)
   lazy val heritageClauses = TSNodeArray(node.heritageClauses)
   lazy val initializer = TSNodeObject(node.initializer)
-  lazy val typeArguments = TSTokenArray(node.typeArguments)
   lazy val modifier =
     if (modifiers.isUndefined) Public
     else modifiers.foldLeft[TSAccessModifier](Public)(
