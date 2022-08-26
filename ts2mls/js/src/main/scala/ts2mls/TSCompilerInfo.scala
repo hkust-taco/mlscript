@@ -82,7 +82,7 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
   lazy val isUnionTypeNode = !isUndefined && TypeScript.isUnionTypeNode(node)
   lazy val isIntersectionTypeNode = !isUndefined && TypeScript.isIntersectionTypeNode(node)
   lazy val isEnum = TypeScript.isTypeReferenceNode(node)
-  lazy val isAnonymousInterface = !isUndefined && !members.isUndefined
+  lazy val isAnonymousInterface = !isUndefined && !symbol.isUndefined && symbol.escapedName.equals("__type")
   lazy val isTypeVariableApplication = !isUndefined && !typeArguments.isUndefined
   lazy val isDotsArray = !isUndefined && !hasTypeNode && !IsUndefined(node.dotDotDotToken)
   lazy val hasTypeNode = !isUndefined && (`type` match {
