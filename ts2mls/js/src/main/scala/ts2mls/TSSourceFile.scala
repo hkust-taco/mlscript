@@ -15,20 +15,19 @@ object TSSourceFile {
     TypeScript.forEachChild(sf, generate)
   }
 
-  private def getSubstitutionArguments[T <: TSAny](args: TSArray[T])(implicit ns: TSNamespace, tv: Set[String]): List[TSType] =
+  private def getSubstitutionArguments[T <: TSAny](args: TSArray[T])(implicit tv: Set[String]): List[TSType] =
     args.foldLeft(List[TSType]())((lst, arg) => arg match {
       case token: TSTokenObject => lst :+ getObjectType(Right(token.typeNode))
       case tp: TSTypeObject => lst :+ getObjectType(Right(tp))
     })
 
-  private def getObjectType(node: Either[TSNodeObject, TSTypeObject])(implicit ns: TSNamespace, tv: Set[String]): TSType = node match {
+  private def getObjectType(node: Either[TSNodeObject, TSTypeObject])(implicit tv: Set[String]): TSType = node match {
     case Left(node) => {
       val res: TSType =
         if (node.isFunctionLike) getFunctionType(node)
         else if (node.isTypeParameterSubstitution) TSSubstitutionType(node.typeName.escapedText, getSubstitutionArguments(node.typeArguments))
-        else if (node.isTypeParameter()) TSTypeParameter(node.typeName.escapedText)
-        else if (node.isSymbolName()) TSNamedType(ns.getParentPath(node.typeName.escapedText))
-        else if (node.isEnum) TSEnumType()
+        else if (node.isReference)
+          if (tv.contains(node.typeName.escapedText)) TSTypeParameter(node.typeName.escapedText) else TSReferenceType(node.typeName.escapedText)
         else if (node.isTupleTypeNode) TSTupleType(getTupleElements(node.elements))
         else if (node.isUnionTypeNode) getStructuralType(node.typesToken, true)
         else if (node.isIntersectionTypeNode) getStructuralType(node.types,false)
@@ -49,13 +48,13 @@ object TSSourceFile {
       else if (obj.isIntersectionType) getStructuralType(obj.types, false)
       else if (obj.isArrayType) TSArrayType(getObjectType(Right(obj.resolvedTypeArguments.get(0))))
       else if (obj.isTypeParameterSubstitution) TSSubstitutionType(obj.symbol.escapedName, getSubstitutionArguments(obj.resolvedTypeArguments))
-      else if (obj.isNamedObject) TSNamedType(ns.getParentPath(obj.symbol.fullName))
+      else if (obj.isNamedObject) TSReferenceType(obj.symbol.fullName)
       else if (obj.isObject) TSInterfaceType("", getInterfacePropertiesType(obj.declarationMembers), List(), List())
       else if (obj.isTypeParameter) TSTypeParameter(obj.symbol.escapedName)
       else TSNamedType(obj.intrinsicName)
   }
 
-  private def getTypeConstraints(node: TSNodeObject)(implicit ns: TSNamespace, tv: Set[String]): List[TSTypeParameter] =
+  private def getTypeConstraints(node: TSNodeObject)(implicit tv: Set[String]): List[TSTypeParameter] =
     node.typeParameters.foldLeft(List[TSTypeParameter]())((lst, tp) =>
       if (tp.constraint.isUndefined) lst :+ TSTypeParameter(tp.symbol.escapedName, None)
       else lst :+ TSTypeParameter(tp.symbol.escapedName, Some(getObjectType(Right(tp.constraint.typeNode))))
@@ -64,17 +63,17 @@ object TSSourceFile {
   private def constaintsListToSet(constraints: List[TSTypeParameter]) =
     constraints.map((c) => c.name).toSet
 
-  private def getFunctionType(node: TSNodeObject)(implicit ns: TSNamespace, tv: Set[String]): TSFunctionType = {
+  private def getFunctionType(node: TSNodeObject)(implicit tv: Set[String]): TSFunctionType = {
     val constraints = getTypeConstraints(node)
     val ntv = constaintsListToSet(constraints) ++ tv
     // in typescript, you can use `this` to explicitly specifies the callee
     // but it never appears in the final javascript file
     val pList = node.parameters.foldLeft(List[TSType]())((lst, p) => lst :+
-      (if (p.symbol.escapedName.equals("this")) TSNamedType("void") else getObjectType(Left(p))(ns, ntv)))
-    TSFunctionType(pList, getObjectType(Right(node.returnType))(ns, ntv), constraints)
+      (if (p.symbol.escapedName.equals("this")) TSNamedType("void") else getObjectType(Left(p))(ntv)))
+    TSFunctionType(pList, getObjectType(Right(node.returnType))(ntv), constraints)
   }
 
-  private def getStructuralType[T <: TSAny](types: TSArray[T], isUnion: Boolean)(implicit ns: TSNamespace, tv: Set[String]): TSStructuralType = 
+  private def getStructuralType[T <: TSAny](types: TSArray[T], isUnion: Boolean)(implicit tv: Set[String]): TSStructuralType = 
     types.foldLeft[Option[TSType]](None)((prev, cur) => prev match {
       case None => cur match {
         case token: TSTokenObject => Some(getObjectType(Right(token.typeNode)))
@@ -91,22 +90,21 @@ object TSSourceFile {
       }
     }).get.asInstanceOf[TSStructuralType]
 
-  private def getTupleElements[T <: TSAny](elements: TSArray[T])(implicit ns: TSNamespace, tv: Set[String]): List[TSType] =
+  private def getTupleElements[T <: TSAny](elements: TSArray[T])(implicit tv: Set[String]): List[TSType] =
     elements.foldLeft(List[TSType]())((lst, ele) => ele match {
       case token: TSTokenObject => lst :+ getObjectType(Right(token.typeNode))
       case tp: TSTypeObject => lst :+ getObjectType(Right(tp))
     })
 
-  private def getHeritageList(node: TSNodeObject)(implicit ns: TSNamespace, tv: Set[String]): List[TSType] = {
+  private def getHeritageList(node: TSNodeObject)(implicit tv: Set[String]): List[TSType] = {
     node.heritageClauses.foldLeftIndexed(List[TSType]())((lst, h, index) => {
       val parent = h.types.get(index)
-      val name = ns.getParentPath(parent.fullName)
-      if (parent.typeArguments.isUndefined) lst :+ TSNamedType(name)
-      else lst :+ TSSubstitutionType(name, getSubstitutionArguments(parent.typeArguments))
+      if (parent.typeArguments.isUndefined) lst :+ TSReferenceType(parent.fullName)
+      else lst :+ TSSubstitutionType(parent.fullName, getSubstitutionArguments(parent.typeArguments))
     })
   }
 
-  private def getClassMembersType(list: TSNodeArray, requireStatic: Boolean)(implicit ns: TSNamespace, tv: Set[String]): Map[String, TSMemberType] =
+  private def getClassMembersType(list: TSNodeArray, requireStatic: Boolean)(implicit tv: Set[String]): Map[String, TSMemberType] =
     list.foldLeft(Map[String, TSMemberType]())((mp, p) => {
       val name = p.symbol.escapedName
 
@@ -114,7 +112,7 @@ object TSSourceFile {
       if (!name.equals("__constructor") && p.isStatic == requireStatic) {
         val mem =
           if (!p.isStatic) getObjectType(Left(p))
-          else parseMembers(p.initializer, true)
+          else parseMembers(name, p.initializer, true)
 
         mem match {
           case func: TSFunctionType => {
@@ -133,19 +131,17 @@ object TSSourceFile {
       else mp
     })
 
-  private def getInterfacePropertiesType(list: TSNodeArray)(implicit ns: TSNamespace, tv: Set[String]): Map[String, TSMemberType] =
+  private def getInterfacePropertiesType(list: TSNodeArray)(implicit tv: Set[String]): Map[String, TSMemberType] =
     list.foldLeft(Map[String, TSMemberType]())((mp, p) => mp ++ Map(p.symbol.escapedName -> TSMemberType(getObjectType(Left(p)))))
 
-  private def parseMembers(node: TSNodeObject, isClass: Boolean)(implicit ns: TSNamespace, tv: Set[String]): TSType = {
-    val name = node.symbol.escapedName
+  private def parseMembers(name: String, node: TSNodeObject, isClass: Boolean)(implicit tv: Set[String]): TSType = {
     val members = node.members
-    val constraints = getTypeConstraints(node)(ns, Set())
+    val constraints = getTypeConstraints(node)(Set())
     val tvMap = tv ++ constaintsListToSet(constraints)
 
-    val fullName = ns.getFullPath(name)
     if (isClass)
-      TSClassType(fullName, getClassMembersType(members, false)(ns, tvMap), getClassMembersType(members, true)(ns, tvMap), constraints, getHeritageList(node)(ns, tvMap))
-    else TSInterfaceType(fullName, getInterfacePropertiesType(members)(ns, tvMap), constraints, getHeritageList(node)(ns, tvMap))
+      TSClassType(name, getClassMembersType(members, false)(tvMap), getClassMembersType(members, true)(tvMap), constraints, getHeritageList(node)(tvMap))
+    else TSInterfaceType(name, getInterfacePropertiesType(members)(tvMap), constraints, getHeritageList(node)(tvMap))
   }
 
   private def parseNamespaceLocals(map: TSSymbolMap)(implicit ns: TSNamespace) =
@@ -171,24 +167,26 @@ object TSSourceFile {
   private def addNodeIntoNamespace(node: TSNodeObject, name: String, overload: Option[TSNodeArray] = None)(implicit ns: TSNamespace) =
     if (node.isFunctionLike) overload match {
       case None => {
-        val typeInfo = getFunctionType(node)(ns, Set())
+        val typeInfo = getFunctionType(node)(Set())
         addFunctionIntoNamespace(typeInfo, node, name)
       }
       case Some(decs) => {
         decs.foreach((d) => {
-          val func = getFunctionType(d)(ns, Set())
+          val func = getFunctionType(d)(Set())
           addFunctionIntoNamespace(func, d, name)
         })
       }
     }
     else if (node.isClassDeclaration) {
+      val fullName = ns.getFullPath(name)
       ns.put(name, TSNamedType(name)) // placeholder for self-reference
-      val typeInfo = parseMembers(node, true)(ns, Set())
+      val typeInfo = parseMembers(fullName, node, true)(Set())
       ns.put(name, typeInfo)
     }
     else if (node.isInterfaceDeclaration) {
+      val fullName = ns.getFullPath(name)
       ns.put(name, TSNamedType(name)) // placeholder for self-reference
-      val typeInfo = parseMembers(node, false)(ns, Set())
+      val typeInfo = parseMembers(fullName, node, false)(Set())
       ns.put(name, typeInfo)
     }
     else if (node.isNamespace) {

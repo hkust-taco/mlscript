@@ -85,7 +85,7 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
   lazy val isTupleTypeNode = !isUndefined && TypeScript.isTupleTypeNode(node)
   lazy val isUnionTypeNode = !isUndefined && TypeScript.isUnionTypeNode(node)
   lazy val isIntersectionTypeNode = !isUndefined && TypeScript.isIntersectionTypeNode(node)
-  lazy val isEnum = TypeScript.isTypeReferenceNode(node)
+  lazy val isReference = !isUndefined && TypeScript.isTypeReferenceNode(node)
   lazy val isAnonymousInterface = !isUndefined && !symbol.isUndefined && symbol.escapedName.equals("__type")
   lazy val isTypeParameterSubstitution = !isUndefined && !typeArguments.isUndefined
   lazy val isDotsArray = !isUndefined && !hasTypeNode && !IsUndefined(node.dotDotDotToken)
@@ -139,12 +139,6 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
 
     getFullName("", expression)
   }
-
-  def isTypeParameter()(implicit tv: Set[String]) = 
-    !typeName.isUndefined && tv.contains(typeName.escapedText)
-
-  def isSymbolName()(implicit ns: TSNamespace) = 
-    !typeName.isUndefined && ns.containsMember(typeName.escapedText.split("'").toList)
 }
 
 object TSNodeObject {
@@ -170,7 +164,7 @@ class TSTypeObject(obj: js.Dynamic) extends TSAny(obj) {
 
   lazy val symbol = TSSymbolObject(obj.symbol)
   lazy val resolvedTypeArguments = TSTypeArray(obj.resolvedTypeArguments)
-  lazy val intrinsicName = if (IsUndefined(obj.intrinsicName)) null else obj.intrinsicName.toString
+  lazy val intrinsicName = obj.intrinsicName.toString
   lazy val aliasSymbol = TSSymbolObject(obj.aliasSymbol)
   lazy val types = TSTypeArray(obj.types)
   lazy val declarationMembers =
