@@ -35,8 +35,7 @@ object TSTypeChecker {
   def init(obj: js.Dynamic): Unit = checker = obj
 
   def getTypeOfSymbolAtLocation(sym: js.Dynamic): String =
-    if (IsUndefined(sym) || IsUndefined(sym.valueDeclaration)) "null" // only null type has no valueDeclaration
-    else checker.typeToString(checker.getTypeOfSymbolAtLocation(sym, sym.valueDeclaration)).toString
+    checker.typeToString(checker.getTypeOfSymbolAtLocation(sym, sym.valueDeclaration)).toString
 
   def getReturnTypeOfSignature(node: js.Dynamic) = checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(node))
   def getTypeFromTypeNode(node: js.Dynamic) = TSTypeObject(checker.getTypeFromTypeNode(node))
@@ -46,8 +45,7 @@ class TSSymbolObject(sym: js.Dynamic) extends TSAny(sym) {
   private lazy val parent = TSSymbolObject(sym.parent)
   
   lazy val declaration =
-    if (isUndefined) TSNodeObject(g.undefined)
-    else if (declarations.isUndefined) TSNodeObject(g.undefined)
+    if (declarations.isUndefined) TSNodeObject(g.undefined)
     else declarations.get(0)
   lazy val escapedName: String = sym.escapedName.toString
   lazy val valueDeclaration = TSNodeObject(sym.valueDeclaration)
@@ -56,7 +54,7 @@ class TSSymbolObject(sym: js.Dynamic) extends TSAny(sym) {
   lazy val symbolType: String = TSTypeChecker.getTypeOfSymbolAtLocation(sym)
 
   lazy val fullName: String =
-    if (!parent.declaration.isNamespace) escapedName
+    if (parent.isUndefined || !parent.declaration.isNamespace) escapedName
     else s"${parent.fullName}'$escapedName"
 }
 
@@ -67,9 +65,7 @@ object TSSymbolObject {
 case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
   private lazy val modifiers = TSTokenArray(node.modifiers)
   private lazy val name = TSIdentifierObject(node.name)
-  private lazy val expression: Either[TSNodeObject, TSIdentifierObject] =
-    if (IsUndefined(node.expression.name)) Right(TSIdentifierObject(node.expression))
-    else Left(TSNodeObject(node.expression))
+  private lazy val expression = TSIdentifierObject(node.expression)
 
   lazy val isToken = !isUndefined && TypeScript.isToken(node)
   lazy val isClassDeclaration = !isUndefined && TypeScript.isClassDeclaration(node)
@@ -105,15 +101,10 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
   lazy val `type` = TSNodeObject(node.selectDynamic("type"))
 
   lazy val fullName = {
-    def getFullName(name: String, exp: Either[TSNodeObject, TSIdentifierObject]): String =
-      exp match {
-        case Left(node) =>
-          if (name.equals("")) getFullName(node.name.escapedText, node.expression)
-          else getFullName(s"${node.name.escapedText}'$name", node.expression)
-        case Right(id) =>
-          if (name.equals("")) id.escapedText
-          else s"${id.escapedText}'$name"
-      }
+    def getFullName(name: String, exp: TSIdentifierObject): String =
+      if (exp.isUndefined) name
+      else if (name.isEmpty) getFullName(exp.escapedText, exp.expression)
+      else getFullName(s"${exp.escapedText}'$name", exp.expression)
 
     getFullName("", expression)
   }
@@ -164,7 +155,7 @@ class TSTypeObject(obj: js.Dynamic) extends TSAny(obj) {
   lazy val isTypeParameter = flags == TypeScript.typeFlagsTypeParameter
   lazy val isObject = flags == TypeScript.typeFlagsObject
   lazy val isNamedObject = isObject && !obj.symbol.escapedName.equals("__type") && !obj.symbol.escapedName.equals("__object")
-  lazy val isTypeParameterSubstitution =
+  lazy val isTypeParameterSubstitution = isObject &&
     !resolvedTypeArguments.isUndefined && resolvedTypeArguments.length > 0
 }
 
@@ -175,10 +166,14 @@ object TSTypeObject {
 class TSIdentifierObject(id: js.Dynamic) extends TSAny(id) {
   private lazy val left = TSIdentifierObject(id.left)
   private lazy val right = TSIdentifierObject(id.right)
+  private lazy val name = TSIdentifierObject(id.name)
 
   lazy val escapedText: String =
-    if (left.isUndefined) id.escapedText.toString
+    if (!name.isUndefined) name.escapedText
+    else if (left.isUndefined) id.escapedText.toString()
     else s"${left.escapedText}'${right.escapedText}"
+
+  lazy val expression = TSIdentifierObject(id.expression)
 }
 
 object TSIdentifierObject {

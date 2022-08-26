@@ -17,38 +17,37 @@ object TSSourceFile {
 
   private def getSubstitutionArguments[T <: TSAny](args: TSArray[T]): List[TSType] =
     args.foldLeft(List[TSType]())((lst, arg) => arg match {
-      case token: TSTokenObject => lst :+ getObjectType(Right(token.typeNode))
-      case tp: TSTypeObject => lst :+ getObjectType(Right(tp))
+      case token: TSTokenObject => lst :+ getObjectType(token.typeNode)
+      case tp: TSTypeObject => lst :+ getObjectType(tp)
     })
 
-  private def getObjectType(node: Either[TSNodeObject, TSTypeObject]): TSType = node match {
-    case Left(node) => {
-      val res: TSType =
-        if (node.isFunctionLike) getFunctionType(node)
-        else if (node.hasTypeNode) getObjectType(Right(node.`type`.typeNode)) // if the node has a `type` field, it can contain other type information
-        else if (node.isDotsArray) TSArrayType(TSNamedType("any")) // variable parameter without type annotation
-        else TSNamedType(node.symbol.symbolType) // built-in type
-      if (node.isOptional) TSUnionType(res, TSNamedType("undefined"))
-      else res
-    }
-    case Right(obj) =>
-      if (obj.isEnumType) TSEnumType()
-      else if (obj.isFunctionLike) getFunctionType(obj.symbol.declaration)
-      else if (obj.isTupleType) TSTupleType(getTupleElements(obj.resolvedTypeArguments))
-      else if (obj.isUnionType) getStructuralType(obj.types, true)
-      else if (obj.isIntersectionType) getStructuralType(obj.types, false)
-      else if (obj.isArrayType) TSArrayType(getObjectType(Right(obj.resolvedTypeArguments.get(0))))
-      else if (obj.isTypeParameterSubstitution) TSSubstitutionType(obj.symbol.escapedName, getSubstitutionArguments(obj.resolvedTypeArguments))
-      else if (obj.isNamedObject) TSReferenceType(obj.symbol.fullName)
-      else if (obj.isObject) TSInterfaceType("", getInterfacePropertiesType(obj.declarationMembers), List(), List())
-      else if (obj.isTypeParameter) TSTypeParameter(obj.symbol.escapedName)
-      else TSNamedType(obj.intrinsicName)
+  private def getObjectType(obj: TSTypeObject): TSType =
+    if (obj.isEnumType) TSEnumType()
+    else if (obj.isFunctionLike) getFunctionType(obj.symbol.declaration)
+    else if (obj.isTupleType) TSTupleType(getTupleElements(obj.resolvedTypeArguments))
+    else if (obj.isUnionType) getStructuralType(obj.types, true)
+    else if (obj.isIntersectionType) getStructuralType(obj.types, false)
+    else if (obj.isArrayType) TSArrayType(getObjectType(obj.resolvedTypeArguments.get(0)))
+    else if (obj.isTypeParameterSubstitution) TSSubstitutionType(obj.symbol.escapedName, getSubstitutionArguments(obj.resolvedTypeArguments))
+    else if (obj.isNamedObject) TSReferenceType(obj.symbol.fullName)
+    else if (obj.isObject) TSInterfaceType("", getInterfacePropertiesType(obj.declarationMembers), List(), List())
+    else if (obj.isTypeParameter) TSTypeParameter(obj.symbol.escapedName)
+    else TSNamedType(obj.intrinsicName)
+
+  private def getDeclarationType(node: TSNodeObject): TSType = {
+    val res: TSType =
+      if (node.isFunctionLike) getFunctionType(node)
+      else if (node.hasTypeNode) getObjectType(node.`type`.typeNode) // if the node has a `type` field, it can contain other type information
+      else if (node.isDotsArray) TSArrayType(TSNamedType("any")) // variable parameter without type annotation
+      else TSNamedType(node.symbol.symbolType) // built-in type
+    if (node.isOptional) TSUnionType(res, TSNamedType("undefined"))
+    else res
   }
 
   private def getTypeConstraints(node: TSNodeObject): List[TSTypeParameter] =
     node.typeParameters.foldLeft(List[TSTypeParameter]())((lst, tp) =>
       if (tp.constraint.isUndefined) lst :+ TSTypeParameter(tp.symbol.escapedName, None)
-      else lst :+ TSTypeParameter(tp.symbol.escapedName, Some(getObjectType(Right(tp.constraint.typeNode))))
+      else lst :+ TSTypeParameter(tp.symbol.escapedName, Some(getObjectType(tp.constraint.typeNode)))
     )
 
   private def getFunctionType(node: TSNodeObject): TSFunctionType = {
@@ -56,27 +55,26 @@ object TSSourceFile {
     // in typescript, you can use `this` to explicitly specifies the callee
     // but it never appears in the final javascript file
     val pList = node.parameters.foldLeft(List[TSType]())((lst, p) => lst :+
-      (if (p.symbol.escapedName.equals("this")) TSNamedType("void") else getObjectType(Left(p))))
-    TSFunctionType(pList, getObjectType(Right(node.returnType)), constraints)
+      (if (p.symbol.escapedName.equals("this")) TSNamedType("void") else getDeclarationType(p)))
+    TSFunctionType(pList, getObjectType(node.returnType), constraints)
   }
 
   private def getStructuralType(types: TSTypeArray, isUnion: Boolean): TSStructuralType = 
     types.foldLeft[Option[TSType]](None)((prev, cur) => prev match {
-      case None => Some(getObjectType(Right(cur)))
+      case None => Some(getObjectType(cur))
       case Some(p) =>
-        if (isUnion) Some(TSUnionType(p, getObjectType(Right(cur)))) else Some(TSIntersectionType(p, getObjectType(Right(cur))))
+        if (isUnion) Some(TSUnionType(p, getObjectType(cur))) else Some(TSIntersectionType(p, getObjectType(cur)))
     }).get.asInstanceOf[TSStructuralType]
 
   private def getTupleElements(elements: TSTypeArray): List[TSType] =
-    elements.foldLeft(List[TSType]())((lst, ele) => lst :+ getObjectType(Right(ele)))
+    elements.foldLeft(List[TSType]())((lst, ele) => lst :+ getObjectType(ele))
 
-  private def getHeritageList(node: TSNodeObject): List[TSType] = {
+  private def getHeritageList(node: TSNodeObject): List[TSType] =
     node.heritageClauses.foldLeftIndexed(List[TSType]())((lst, h, index) => {
       val parent = h.types.get(index)
       if (parent.typeArguments.isUndefined) lst :+ TSReferenceType(parent.fullName)
       else lst :+ TSSubstitutionType(parent.fullName, getSubstitutionArguments(parent.typeArguments))
     })
-  }
 
   private def getClassMembersType(list: TSNodeArray, requireStatic: Boolean): Map[String, TSMemberType] =
     list.foldLeft(Map[String, TSMemberType]())((mp, p) => {
@@ -85,7 +83,7 @@ object TSSourceFile {
       // TODO: support `__constructor`
       if (!name.equals("__constructor") && p.isStatic == requireStatic) {
         val mem =
-          if (!p.isStatic) getObjectType(Left(p))
+          if (!p.isStatic) getDeclarationType(p)
           else parseMembers(name, p.initializer, true)
 
         mem match {
@@ -106,7 +104,7 @@ object TSSourceFile {
     })
 
   private def getInterfacePropertiesType(list: TSNodeArray): Map[String, TSMemberType] =
-    list.foldLeft(Map[String, TSMemberType]())((mp, p) => mp ++ Map(p.symbol.escapedName -> TSMemberType(getObjectType(Left(p)))))
+    list.foldLeft(Map[String, TSMemberType]())((mp, p) => mp ++ Map(p.symbol.escapedName -> TSMemberType(getDeclarationType(p))))
 
   private def parseMembers(name: String, node: TSNodeObject, isClass: Boolean): TSType = {
     val members = node.members

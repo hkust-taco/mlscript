@@ -59,7 +59,7 @@ object Converter {
     })
 
     val body = { // members without independent type parameters
-      val lst = allRecs.filter((s) => !s.startsWith("  ") && !s.equals(""))
+      val lst = allRecs.filter((s) => !s.startsWith("  ") && !s.isEmpty())
       if (lst.isEmpty) "{}"
       else s"{ ${lst.reduceLeft((bd, m) => s"$bd; $m")} }"
     }
