@@ -44,6 +44,14 @@ object TSNodeArray {
   def apply(arr: js.Dynamic) = new TSNodeArray(arr)
 }
 
+class TSSymbolArray(arr: js.Dynamic) extends TSArray[TSSymbolObject](arr) {
+  override def get(index: Int) = TSSymbolObject(arr.selectDynamic(index.toString))
+}
+
+object TSSymbolArray {
+  def apply(arr: js.Dynamic) = new TSSymbolArray(arr)
+}
+
 class TSTokenArray(arr: js.Dynamic) extends TSArray[TSTokenObject](arr) {
   override def get(index: Int) = TSTokenObject(arr.selectDynamic(index.toString))
 }

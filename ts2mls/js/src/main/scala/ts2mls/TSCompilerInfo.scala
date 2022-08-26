@@ -40,6 +40,7 @@ object TSTypeChecker {
   def getReturnTypeOfSignature(node: js.Dynamic) = checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(node))
   def getTypeFromTypeNode(node: js.Dynamic) = TSTypeObject(checker.getTypeFromTypeNode(node))
   def getTypeOfSymbolAtLocation(sym: js.Dynamic, node: js.Dynamic) = checker.getTypeOfSymbolAtLocation(sym, node)
+  def getPropertiesOfType(tp: js.Dynamic) = checker.getPropertiesOfType(tp)
 }
 
 class TSSymbolObject(sym: js.Dynamic) extends TSAny(sym) {
@@ -84,7 +85,6 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
   lazy val typeParameters = TSNodeArray(node.typeParameters)
   lazy val constraint = TSTokenObject(node.constraint)
   lazy val members = TSNodeArray(node.members)
-  lazy val properties =  TSNodeArray(node.properties)
   lazy val types = TSNodeArray(node.types)
   lazy val heritageClauses = TSNodeArray(node.heritageClauses)
   lazy val initializer = TSNodeObject(node.initializer)
@@ -126,11 +126,7 @@ class TSTypeObject(obj: js.Dynamic) extends TSAny(obj) {
   lazy val resolvedTypeArguments = TSTypeArray(obj.resolvedTypeArguments)
   lazy val intrinsicName = obj.intrinsicName.toString
   lazy val types = TSTypeArray(obj.types)
-  lazy val declarationMembers =
-    if (!symbol.declaration.isUndefined && !symbol.declaration.members.isUndefined)
-      symbol.declaration.members
-    else if (!symbol.valueDeclaration.isUndefined) symbol.valueDeclaration.properties
-    else TSNodeArray(g.undefined)
+  lazy val properties = TSSymbolArray(TSTypeChecker.getPropertiesOfType(obj))
 
   lazy val isTupleType = obj.checker.isTupleType(obj)
   lazy val isArrayType = obj.checker.isArrayType(obj)
@@ -138,13 +134,11 @@ class TSTypeObject(obj: js.Dynamic) extends TSAny(obj) {
 
   lazy val isUnionType = flags == TypeScript.typeFlagsUnion
   lazy val isIntersectionType = flags == TypeScript.typeFlagsInter
-  lazy val isAnonymousInterface = !symbol.isUndefined && !declarationMembers.isUndefined
   lazy val isFunctionLike = !symbol.isUndefined && !symbol.declaration.isUndefined && symbol.declaration.isFunctionLike
   lazy val isAnonymous = objectFlags == TypeScript.objectFlagsAnonymous
   lazy val isTypeParameter = flags == TypeScript.typeFlagsTypeParameter
   lazy val isObject = flags == TypeScript.typeFlagsObject
-  lazy val isTypeParameterSubstitution = isObject &&
-    !resolvedTypeArguments.isUndefined && resolvedTypeArguments.length > 0
+  lazy val isTypeParameterSubstitution = isObject && !resolvedTypeArguments.isUndefined
 }
 
 object TSTypeObject {

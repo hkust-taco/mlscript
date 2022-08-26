@@ -30,7 +30,7 @@ object TSSourceFile {
     else if (obj.isArrayType) TSArrayType(getObjectType(obj.resolvedTypeArguments.get(0)))
     else if (obj.isTypeParameterSubstitution) TSSubstitutionType(obj.symbol.escapedName, getSubstitutionArguments(obj.resolvedTypeArguments))
     else if (obj.isObject) {
-      if (obj.isAnonymous) TSInterfaceType("", getInterfacePropertiesType(obj.declarationMembers), List(), List())
+      if (obj.isAnonymous) TSInterfaceType("", getAnonymousPropertiesType(obj.properties), List(), List())
       else TSReferenceType(obj.symbol.fullName)
     }
     else if (obj.isTypeParameter) TSTypeParameter(obj.symbol.escapedName)
@@ -107,6 +107,9 @@ object TSSourceFile {
 
   private def getInterfacePropertiesType(list: TSNodeArray): Map[String, TSMemberType] =
     list.foldLeft(Map[String, TSMemberType]())((mp, p) => mp ++ Map(p.symbol.escapedName -> TSMemberType(getMemberType(p))))
+
+  private def getAnonymousPropertiesType(list: TSSymbolArray): Map[String, TSMemberType] =
+    list.foldLeft(Map[String, TSMemberType]())((mp, p) => mp ++ Map(p.escapedName -> TSMemberType(getMemberType(p.declaration))))
 
   private def parseMembers(name: String, node: TSNodeObject, isClass: Boolean): TSType = {
     val members = node.members
