@@ -51,7 +51,7 @@ object TSSourceFile {
       else if (obj.isTypeParameterSubstitution) TSSubstitutionType(obj.symbol.escapedName, getSubstitutionArguments(obj.resolvedTypeArguments))
       else if (obj.isSymbolName()) TSNamedType(ns.getParentPath(obj.symbol.fullName))
       else if (obj.isAnonymousInterface) TSInterfaceType("", getInterfacePropertiesType(obj.declarationMembers), List(), List())
-      else if (obj.isTypeParameter()) TSTypeParameter(obj.symbol.escapedName)
+      else if (obj.isTypeParameter) TSTypeParameter(obj.symbol.escapedName)
       else TSNamedType(obj.intrinsicName)
   }
 

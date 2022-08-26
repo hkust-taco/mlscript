@@ -188,7 +188,7 @@ class TSTypeObject(obj: js.Dynamic) extends TSAny(obj) {
   lazy val isAnonymousInterface = !symbol.isUndefined && !declarationMembers.isUndefined
   lazy val isFunctionLike =
     !symbol.isUndefined && !symbol.declaration.isUndefined && symbol.declaration.isFunctionLike
-
+  lazy val isTypeParameter = flags == TypeScript.typeFlagsTypeParameter
 
   lazy val isTypeParameterSubstitution =
     !isUndefined && !resolvedTypeArguments.isUndefined && resolvedTypeArguments.length > 0
@@ -196,8 +196,6 @@ class TSTypeObject(obj: js.Dynamic) extends TSAny(obj) {
   def isSymbolName()(implicit ns: TSNamespace) =
     if (symbol.isUndefined) false
     else ns.containsMember(symbol.fullName.split("'").toList) || ns.containsMember(symbol.escapedName)
-
-  def isTypeParameter()(implicit tv: Set[String]) = !symbol.isUndefined && tv.contains(symbol.escapedName)
 }
 
 object TSTypeObject {
