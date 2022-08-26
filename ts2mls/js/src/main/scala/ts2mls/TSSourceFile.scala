@@ -29,8 +29,10 @@ object TSSourceFile {
     else if (obj.isIntersectionType) getStructuralType(obj.types, false)
     else if (obj.isArrayType) TSArrayType(getObjectType(obj.resolvedTypeArguments.get(0)))
     else if (obj.isTypeParameterSubstitution) TSSubstitutionType(obj.symbol.escapedName, getSubstitutionArguments(obj.resolvedTypeArguments))
-    else if (obj.isNamedObject) TSReferenceType(obj.symbol.fullName)
-    else if (obj.isObject) TSInterfaceType("", getInterfacePropertiesType(obj.declarationMembers), List(), List())
+    else if (obj.isObject) {
+      if (obj.isAnonymous) TSInterfaceType("", getInterfacePropertiesType(obj.declarationMembers), List(), List())
+      else TSReferenceType(obj.symbol.fullName)
+    }
     else if (obj.isTypeParameter) TSTypeParameter(obj.symbol.escapedName)
     else TSNamedType(obj.intrinsicName)
 

@@ -17,6 +17,7 @@ object TypeScript {
   val syntaxKindPrivate = ts.SyntaxKind.PrivateKeyword.asInstanceOf[Int]
   val syntaxKindProtected = ts.SyntaxKind.ProtectedKeyword.asInstanceOf[Int]
   val syntaxKindStatic = ts.SyntaxKind.StaticKeyword.asInstanceOf[Int]
+  val objectFlagsAnonymous = ts.ObjectFlags.Anonymous.asInstanceOf[Int]
 
   def isToken(node: js.Dynamic): Boolean = ts.isToken(node)
   def isClassDeclaration(node: js.Dynamic): Boolean = ts.isClassDeclaration(node)
@@ -119,6 +120,7 @@ object TSTokenObject {
 
 class TSTypeObject(obj: js.Dynamic) extends TSAny(obj) {
   private lazy val flags = obj.flags.asInstanceOf[Int]
+  private lazy val objectFlags = if (IsUndefined(obj.objectFlags)) 0 else obj.objectFlags.asInstanceOf[Int]
 
   lazy val symbol = TSSymbolObject(obj.symbol)
   lazy val resolvedTypeArguments = TSTypeArray(obj.resolvedTypeArguments)
@@ -137,12 +139,10 @@ class TSTypeObject(obj: js.Dynamic) extends TSAny(obj) {
   lazy val isUnionType = flags == TypeScript.typeFlagsUnion
   lazy val isIntersectionType = flags == TypeScript.typeFlagsInter
   lazy val isAnonymousInterface = !symbol.isUndefined && !declarationMembers.isUndefined
-  lazy val isFunctionLike =
-    !symbol.isUndefined && !symbol.declaration.isUndefined && symbol.declaration.isFunctionLike
-
+  lazy val isFunctionLike = !symbol.isUndefined && !symbol.declaration.isUndefined && symbol.declaration.isFunctionLike
+  lazy val isAnonymous = objectFlags == TypeScript.objectFlagsAnonymous
   lazy val isTypeParameter = flags == TypeScript.typeFlagsTypeParameter
   lazy val isObject = flags == TypeScript.typeFlagsObject
-  lazy val isNamedObject = isObject && !symbol.escapedName.equals("__type") && !symbol.escapedName.equals("__object")
   lazy val isTypeParameterSubstitution = isObject &&
     !resolvedTypeArguments.isUndefined && resolvedTypeArguments.length > 0
 }
