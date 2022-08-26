@@ -25,7 +25,7 @@ object TSSourceFile {
     case Left(node) => {
       val res: TSType =
         if (node.isFunctionLike) getFunctionType(node)
-        else if (node.isTypeVariableApplication) TSSubstitutionType(node.typeName.escapedText, getSubstitutionArguments(node.typeArguments))
+        else if (node.isTypeVariableSubstitution) TSSubstitutionType(node.typeName.escapedText, getSubstitutionArguments(node.typeArguments))
         else if (node.isTypeVariable()) TSTypeVariable(node.typeName.escapedText)
         else if (node.isSymbolName()) TSNamedType(ns.getParentPath(node.typeName.escapedText))
         else if (node.isEnum) TSEnumType(node.typeName.escapedText)
@@ -48,7 +48,7 @@ object TSSourceFile {
       else if (obj.isUnionType) getStructuralType(obj.types, true)
       else if (obj.isIntersectionType) getStructuralType(obj.types, false)
       else if (obj.isArrayType) TSArrayType(getObjectType(Right(obj.resolvedTypeArguments.get(0))))
-      else if (obj.isTypeVariableApplication) TSSubstitutionType(obj.symbol.escapedName, getSubstitutionArguments(obj.resolvedTypeArguments))
+      else if (obj.isTypeVariableSubstitution) TSSubstitutionType(obj.symbol.escapedName, getSubstitutionArguments(obj.resolvedTypeArguments))
       else if (obj.isSymbolName()) TSNamedType(ns.getParentPath(obj.symbol.fullName))
       else if (obj.isAnonymousInterface) TSInterfaceType("", getInterfacePropertiesType(obj.declarationMembers), List(), List())
       else if (obj.isTypeVariable()) TSTypeVariable(obj.symbol.escapedName)

@@ -11,6 +11,9 @@ object TypeScript {
 
   val typeFlagsUnion = ts.TypeFlags.Union.asInstanceOf[Int]
   val typeFlagsInter = ts.TypeFlags.Intersection.asInstanceOf[Int]
+  val typeFlagsEnum = ts.TypeFlags.Enum.asInstanceOf[Int]
+  val typeFlagsObject = ts.TypeFlags.Object.asInstanceOf[Int]
+  val typeFlagsTypeParameter = ts.TypeFlags.TypeParameter.asInstanceOf[Int]
   val syntaxKindPrivate = ts.SyntaxKind.PrivateKeyword.asInstanceOf[Int]
   val syntaxKindProtected = ts.SyntaxKind.ProtectedKeyword.asInstanceOf[Int]
   val syntaxKindStatic = ts.SyntaxKind.StaticKeyword.asInstanceOf[Int]
@@ -83,7 +86,7 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
   lazy val isIntersectionTypeNode = !isUndefined && TypeScript.isIntersectionTypeNode(node)
   lazy val isEnum = TypeScript.isTypeReferenceNode(node)
   lazy val isAnonymousInterface = !isUndefined && !symbol.isUndefined && symbol.escapedName.equals("__type")
-  lazy val isTypeVariableApplication = !isUndefined && !typeArguments.isUndefined
+  lazy val isTypeVariableSubstitution = !isUndefined && !typeArguments.isUndefined
   lazy val isDotsArray = !isUndefined && !hasTypeNode && !IsUndefined(node.dotDotDotToken)
   lazy val hasTypeNode = !isUndefined && (`type` match {
     case Left(node) => !node.isUndefined
@@ -184,7 +187,7 @@ class TSTypeObject(obj: js.Dynamic) extends TSAny(obj) {
   lazy val isFunctionLike =
     !symbol.isUndefined && !symbol.declaration.isUndefined && symbol.declaration.isFunctionLike
 
-  lazy val isTypeVariableApplication =
+  lazy val isTypeVariableSubstitution =
     !isUndefined && !resolvedTypeArguments.isUndefined && resolvedTypeArguments.length > 0
 
   def isSymbolName()(implicit ns: TSNamespace) =
