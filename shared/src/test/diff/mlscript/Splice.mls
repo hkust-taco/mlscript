@@ -1,0 +1,106 @@
+:NoJS
+
+def t1 : (int, ...Array[int], bool)
+//│ t1: (int, ...Array[int], bool)
+
+def t2 : (int, ...(bool, int))
+//│ t2: (int, ...(bool, int,))
+
+:e
+def t3 : (int, ...bool, mut int)
+//│ ╔══[ERROR] Type mismatch in type reference:
+//│ ║  l.10: 	def t3 : (int, ...bool, mut int)
+//│ ║        	                  ^^^^
+//│ ╙── type `bool` does not match type `Array[?a]`
+//│ t3: (int, ...bool, int)
+
+:e
+def t4 : (int, ...int, bool)
+//│ ╔══[ERROR] Type mismatch in type reference:
+//│ ║  l.18: 	def t4 : (int, ...int, bool)
+//│ ║        	                  ^^^
+//│ ╙── type `int` does not match type `Array[?a]`
+//│ t4: (int, ...int, bool)
+
+:d
+def f1 : ('a, ...Array[int]) -> 'a
+//│ 1. Typing type Function(Tuple(List((None,Field(None,Splice(List(Right(Field(None,'a)), Left(AppliedType(TypeName(Array),List(TypeName(int)))))))))),'a)
+//│ | vars=Map() newDefsInfo=Map()
+//│ | CONSTRAIN Array[Int] <! Array‹α26'›
+//│ |   where 
+//│ | C Array[Int] <! Array‹α26'›    (0)
+//│ | | C Array‹Int› <! Array‹α26'›    (1)
+//│ | | | C Int <! α26'    (2)
+//│ => (SpliceType(List(Right('a25'), Left(Array[Int]))) -> 'a25') | 'a25'
+//│ ⬤ Typed as: (SpliceType(List(Right('a25'), Left(Array[Int]))) -> 'a25')
+//│  where: 
+//│ f1: ('a, ...Array[int]) -> 'a
+
+// FIXME
+def f1 (x, ...y) = x
+//│ ('a, ...Array[anything]) -> 'a
+//│   <:  f1:
+//│ ('a, ...Array[int]) -> 'a
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.40: 	def f1 (x, ...y) = x
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `('a, ...Array[int])` does not match type `(?a, ...?b)`
+//│ ║  l.26: 	def f1 : ('a, ...Array[int]) -> 'a
+//│ ║        	         ^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from splice:
+//│ ║  l.40: 	def f1 (x, ...y) = x
+//│ ╙──      	       ^^^^^^^^^
+
+:e
+errt = (1, ...2, 3)
+//│ ╔══[ERROR] Type mismatch in splice:
+//│ ║  l.55: 	errt = (1, ...2, 3)
+//│ ║        	       ^^^^^^^^^^^^
+//│ ╟── integer literal of type `2` does not match type `Array[?a]`
+//│ ║  l.55: 	errt = (1, ...2, 3)
+//│ ╙──      	              ^
+//│ errt: (1, ...2, 3)
+
+:e
+wrerr = (1, ...true, mut 3)
+//│ ╔══[ERROR] Type mismatch in splice:
+//│ ║  l.65: 	wrerr = (1, ...true, mut 3)
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `true` does not match type `Array[?a]`
+//│ ║  l.65: 	wrerr = (1, ...true, mut 3)
+//│ ╙──      	               ^^^^
+//│ wrerr: (1, ...true, 3)
+
+gt1 = (1, ...(1,2,3), 2)
+//│ gt1: (1, ...(1, 2, 3,), 2)
+
+gt1[0]
+//│ res: 1 | 2 | 3 | undefined
+
+//FIXME
+def arr1: Array[int]
+gt2 = (...arr1)
+//│ arr1: Array[int]
+//│ gt2: (...Array[int])
+
+:e
+(1, ...(true, false), "hi") : Array[int | bool]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.87: 	(1, ...(true, false), "hi") : Array[int | bool]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── string literal of type `"hi"` does not match type `bool | int`
+//│ ║  l.87: 	(1, ...(true, false), "hi") : Array[int | bool]
+//│ ║        	                      ^^^^
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.87: 	(1, ...(true, false), "hi") : Array[int | bool]
+//│ ╙──      	                                    ^^^^^^^^^^
+//│ res: Array[bool | int]
+
+a1 = (1,2,3,4,5)
+a2 = (1,2, ...a1, 4,5)
+//│ a1: (1, 2, 3, 4, 5,)
+//│ a2: (1, 2, ...(1, 2, 3, 4, 5,), 4, 5)
+
+// FIXME
+a2 : Array[int]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing

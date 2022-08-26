@@ -605,7 +605,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         nestedTypeProvFlow
       ).flatten
       
-      raise(TypeError(msgs))
+      raise(ErrorReport(msgs))
     }
     
     rec(lhs, rhs, true)(raise, Nil -> Nil)
@@ -631,6 +631,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         TupleType(fs.mapValues(_.update(extrude(_, lvl, !pol), extrude(_, lvl, pol))))(t.prov)
       case t @ ArrayType(ar) =>
         ArrayType(ar.update(extrude(_, lvl, !pol), extrude(_, lvl, pol)))(t.prov)
+      case t @ SpliceType(fs) => 
+        t.updateElems(extrude(_, lvl, pol), extrude(_, lvl, !pol), extrude(_, lvl, pol), t.prov)
       case w @ Without(b, ns) => Without(extrude(b, lvl, pol), ns)(w.prov)
       case tv: TypeVariable => cache.getOrElse(tv -> pol, {
         val nv = freshVar(tv.prov, tv.nameHint)(lvl)
@@ -662,7 +664,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     err(msg -> loco :: Nil)
   }
   def err(msgs: List[Message -> Opt[Loc]])(implicit raise: Raise): SimpleType = {
-    raise(TypeError(msgs))
+    raise(ErrorReport(msgs))
     errType
   }
   def errType: SimpleType = ClassTag(ErrTypeId, Set.empty)(noProv)
@@ -671,7 +673,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     warn(msg -> loco :: Nil)
 
   def warn(msgs: List[Message -> Opt[Loc]])(implicit raise: Raise): Unit =
-    raise(Warning(msgs))
+    raise(WarningReport(msgs))
   
   
   // Note: maybe this and `extrude` should be merged?
@@ -726,6 +728,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case t @ RecordType(fs) => RecordType(fs.mapValues(_.update(freshen, freshen)))(t.prov)
       case t @ TupleType(fs) => TupleType(fs.mapValues(_.update(freshen, freshen)))(t.prov)
       case t @ ArrayType(ar) => ArrayType(ar.update(freshen, freshen))(t.prov)
+      case t @ SpliceType(fs) => t.updateElems(freshen, freshen, freshen, t.prov)
       case n @ NegType(neg) => NegType(freshen(neg))(n.prov)
       case e @ ExtrType(_) => e
       case p @ ProvType(und) => ProvType(freshen(und))(p.prov)

@@ -1,0 +1,127 @@
+:AllowParseErrors
+
+
+[]
+//│ |[||]|
+//│ Parsed: {'('  ')'}
+
+[1]
+//│ |[|1|]|
+//│ Parsed: {'(' 1, ')'}
+
+[1,]
+//│ |[|1|,|]|
+//│ Parsed: {'(' 1, ')'}
+
+[1, 2, 3]
+//│ |[|1|,| |2|,| |3|]|
+//│ Parsed: {'(' 1, 2, 3, ')'}
+
+()
+//│ |(||)|
+//│ Parsed: {'('  ')'}
+
+(1)
+//│ |(|1|)|
+//│ Parsed: {'(' 1, ')'}
+
+(1,)
+//│ |(|1|,|)|
+//│ Parsed: {'(' 1, ')'}
+
+(1, 2, 3)
+//│ |(|1|,| |2|,| |3|)|
+//│ Parsed: {'(' 1, 2, 3, ')'}
+
+
+1
+//│ |1|
+//│ Parsed: {1}
+
+1,
+//│ |1|,|
+//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
+//│ ║  l.41: 	1,
+//│ ╙──      	 ^
+//│ Parsed: {1}
+
+1, 2, 3
+//│ |1|,| |2|,| |3|
+//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
+//│ ║  l.48: 	1, 2, 3
+//│ ╙──      	 ^
+//│ Parsed: {1}
+
+f of 1, 2, 3
+//│ |f| |#of| |1|,| |2|,| |3|
+//│ Parsed: {f (1, 2, 3,)}
+
+f of
+  1, 2, 3
+//│ |f| |#of|→|1|,| |2|,| |3|←|
+//│ Parsed: {f (1, 2, 3,)}
+
+f of
+  1,
+  2,
+  3
+//│ |f| |#of|→|1|,|↵|2|,|↵|3|←|
+//│ Parsed: {f (1, 2, 3,)}
+
+
+let arr = []
+//│ |#let| |arr| |#=| |[||]|
+//│ Parsed: {fun arr = '('  ')'}
+
+let arr = [
+]
+//│ |#let| |arr| |#=| |[|↵|]|
+//│ Parsed: {fun arr = '('  ')'}
+
+let arr =
+[
+]
+//│ |#let| |arr| |#=|↵|[|↵|]|
+//│ ╔══[PARSE ERROR] Unexpected newline in expression position
+//│ ║  l.81: 	let arr =
+//│ ║        	         ^
+//│ ║  l.82: 	[
+//│ ╙──      	
+//│ Parsed: {fun arr = '('  ')'}
+
+let arr = [
+  1
+]
+//│ |#let| |arr| |#=| |[|→|1|←|↵|]|
+//│ Parsed: {fun arr = '(' 1, ')'}
+
+let arr = [
+  1, 2
+]
+//│ |#let| |arr| |#=| |[|→|1|,| |2|←|↵|]|
+//│ Parsed: {fun arr = '(' 1, 2, ')'}
+
+let arr = [
+  1,
+  2
+]
+//│ |#let| |arr| |#=| |[|→|1|,|↵|2|←|↵|]|
+//│ Parsed: {fun arr = '(' 1, 2, ')'}
+
+:pe
+f [1, 2, 3]
+//│ |f| |[|1|,| |2|,| |3|]|
+//│ ╔══[PARSE ERROR] Unexpected comma here
+//│ ║  l.112: 	f [1, 2, 3]
+//│ ╙──       	    ^
+//│ Parsed: {(f)[1]}
+
+f([1, 2, 3])
+//│ |f|(|[|1|,| |2|,| |3|]|)|
+//│ Parsed: {f ('(' 1, 2, 3, ')',)}
+
+f of [1, 2, 3]
+//│ |f| |#of| |[|1|,| |2|,| |3|]|
+//│ Parsed: {f ('(' 1, 2, 3, ')',)}
+
+

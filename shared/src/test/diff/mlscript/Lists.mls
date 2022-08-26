@@ -152,6 +152,20 @@ Cons 1 (id res)
 //│    = { a: 1, b: 2, c: Nil {} }
 
 
+
+rec def filter p ls = case ls of
+  { Cons -> if p ls.head then Cons ls.head (filter p ls.tail) else filter p ls.tail
+  | Nil -> Nil
+  }
+//│ filter: ('head -> bool) -> 'a -> 'b
+//│   where
+//│     'b :> (Cons['head] with {tail: 'b}) | Nil
+//│     'a <: (Cons[?] with {head: 'head, tail: 'a}) | Nil
+//│       = [Function: filter]
+
+
+
+
 def Cons head = originalCons { head=0; tail=Nil } with { head }
 //│ Cons: 'a -> (Cons[0] with {head: 'a, tail: Nil})
 //│     = [Function: Cons3]

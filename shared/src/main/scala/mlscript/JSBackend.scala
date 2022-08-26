@@ -47,12 +47,12 @@ class JSBackend {
     // should returns ("{ x, y }", ["x", "y"])
     case Rcd(fields) =>
       JSObjectPattern(fields map {
-        case (Var(nme), (Var(als), _)) =>
+        case (Var(nme), Fld(_, _, Var(als))) =>
           val runtimeName = scope.declareParameter(als)
           val fieldName = JSField.emitValidFieldName(nme)
           if (runtimeName === fieldName) fieldName -> N
           else fieldName -> S(JSNamePattern(runtimeName))
-        case (Var(nme), (subTrm, _)) => 
+        case (Var(nme), Fld(_, _, subTrm)) => 
           JSField.emitValidFieldName(nme) -> S(translatePattern(subTrm))
       })
     // This branch supports `def f (x: int) = x`.
@@ -60,14 +60,17 @@ class JSBackend {
     // Replace literals with wildcards.
     case _: Lit      => JSWildcardPattern()
     case Bra(_, trm) => translatePattern(trm)
-    case Tup(fields) => JSArrayPattern(fields map { case (_, (t, _)) => translatePattern(t) })
+    case Tup(fields) => JSArrayPattern(fields map { case (_, Fld(_, _, t)) => translatePattern(t) })
     // Others are not supported yet.
-    case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf | _: Subs | _: Assign =>
+    case TyApp(base, _) =>
+      translatePattern(base)
+    case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf | _: Subs | _: Assign
+        | If(_, _) | New(_, _) | _: Splc =>
       throw CodeGenError(s"term ${inspect(t)} is not a valid pattern")
   }
 
   private def translateParams(t: Term)(implicit scope: Scope): Ls[JSPattern] = t match {
-    case Tup(params) => params map { case _ -> (p -> _) => translatePattern(p) }
+    case Tup(params) => params map { case _ -> Fld(_, _, p) => translatePattern(p) }
     case _           => throw CodeGenError(s"term $t is not a valid parameter list")
   }
 
@@ -108,7 +111,7 @@ class JSBackend {
     */
   protected def translateApp(term: App)(implicit scope: Scope): JSExpr = term match {
     // Binary expressions
-    case App(App(Var(op), Tup((N -> (lhs -> _)) :: Nil)), Tup((N -> (rhs -> _)) :: Nil))
+    case App(App(Var(op), Tup((N -> Fld(_, _, lhs)) :: Nil)), Tup((N -> Fld(_, _, rhs)) :: Nil))
         if JSBinary.operators contains op =>
       JSBinary(op, translateTerm(lhs), translateTerm(rhs))
     // If-expressions
@@ -120,7 +123,7 @@ class JSBackend {
         case Var(nme) => translateVar(nme, true)
         case _ => translateTerm(trm)
       }
-      callee(args map { case (_, (arg, _)) => translateTerm(arg) }: _*)
+      callee(args map { case (_, Fld(_, _, arg)) => translateTerm(arg) }: _*)
     case _ => throw CodeGenError(s"ill-formed application ${inspect(term)}")
   }
 
@@ -135,7 +138,7 @@ class JSBackend {
       JSArrowFn(patterns, lamScope.tempVars `with` translateTerm(body)(lamScope))
     case t: App => translateApp(t)
     case Rcd(fields) =>
-      JSRecord(fields map { case (key, (value, _)) =>
+      JSRecord(fields map { case (key, Fld(_, _, value)) =>
         key.name -> translateTerm(value)
       })
     case Sel(receiver, fieldName) =>
@@ -175,7 +178,8 @@ class JSBackend {
         R(blkScope.tempVars `with` (stmts flatMap (_.desugared._2) map {
           case t: Term             => JSExprStmt(translateTerm(t))
           // TODO: find out if we need to support this.
-          case _: Def | _: TypeDef => throw CodeGenError("unexpected definitions in blocks")
+          case _: Def | _: TypeDef | _: NuFunDef | _: NuTypeDef =>
+            throw CodeGenError("unexpected definitions in blocks")
         })),
         Nil
       )
@@ -209,13 +213,13 @@ class JSBackend {
           case S(fnName) => fnName
           case N         => polyfill.use("withConstruct", topLevelScope.declareRuntimeSymbol("withConstruct"))
         }),
-        translateTerm(trm) :: JSRecord(fields map { case (Var(name), (value, _)) =>
+        translateTerm(trm) :: JSRecord(fields map { case (Var(name), Fld(_, _, value)) =>
           name -> translateTerm(value)
         }) :: Nil
       )
     case Bra(_, trm) => translateTerm(trm)
     case Tup(terms) =>
-      JSArray(terms map { case (_, (term, _)) => translateTerm(term) })
+      JSArray(terms map { case (_, Fld(_, _, term)) => translateTerm(term) })
     case Subs(arr, idx) =>
       JSMember(translateTerm(arr), translateTerm(idx))
     case Assign(lhs, value) =>
@@ -225,7 +229,7 @@ class JSBackend {
         case _ =>
           throw CodeGenError(s"illegal assignemnt left-hand side: ${inspect(lhs)}")
       }
-    case _: Bind | _: Test =>
+    case _: Bind | _: Test | If(_, _) | New(_, _) | TyApp(_, _) | _: Splc =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
 

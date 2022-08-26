@@ -141,7 +141,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
       case Without(base, ns) => fieldsOf(base, paramTags).filter(ns contains _._1)
       case TypeBounds(lb, ub) => fieldsOf(ub, paramTags)
       case _: ObjectTag | _: FunctionType | _: ArrayBase | _: TypeVariable
-        | _: NegType | _: ExtrType | _: ComposedType => Map.empty
+        | _: NegType | _: ExtrType | _: ComposedType | _: SpliceType => Map.empty
     }
   }
   // ()
@@ -219,7 +219,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             val t2 = travsersed + R(tv)
             tv.lowerBounds.forall(checkCycle(_)(t2)) && tv.upperBounds.forall(checkCycle(_)(t2))
           }
-          case _: ExtrType | _: ObjectTag | _: FunctionType | _: RecordType | _: ArrayBase => true
+          case _: ExtrType | _: ObjectTag | _: FunctionType | _: RecordType | _: ArrayBase | _: SpliceType => true
         }
         // }()
         
@@ -266,6 +266,9 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                 false
               case _: ArrayType => 
                 err(msg"cannot inherit from a array type", prov.loco)
+                false
+              case _: SpliceType =>
+                err(msg"cannot inherit from a splice type", prov.loco)
                 false
               case _: Without =>
                 err(msg"cannot inherit from a field removal type", prov.loco)
@@ -648,6 +651,11 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           case ArrayType(inner) => fieldVarianceHelper(inner)
           case TupleType(fields) => fields.foreach {
               case (_ , fieldTy) => fieldVarianceHelper(fieldTy)
+            }
+          case SpliceType(elems) =>
+            elems.foreach {
+              case L(ty) => updateVariance(ty, curVariance)
+              case R(fld) => fieldVarianceHelper(fld)
             }
           case FunctionType(lhs, rhs) =>
             updateVariance(lhs, curVariance.flip)
