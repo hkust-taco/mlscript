@@ -25,16 +25,9 @@ object TSSourceFile {
     case Left(node) => {
       val res: TSType =
         if (node.isFunctionLike) getFunctionType(node)
-        // else if (node.isTypeParameterSubstitution) TSSubstitutionType(node.typeName.escapedText, getSubstitutionArguments(node.typeArguments))
-        else if (node.isTupleTypeNode) TSTupleType(getTupleElements(node.elements))
-        else if (node.isUnionTypeNode) getStructuralType(node.typesToken, true)
-        else if (node.isIntersectionTypeNode) getStructuralType(node.types,false)
-        else if (node.isArrayTypeNode) TSArrayType(getObjectType(Right(node.elementType.typeNode)))
-        else if (node.isAnonymousInterface) TSInterfaceType("", getInterfacePropertiesType(node.members), List(), List())
         else if (node.hasTypeNode) getObjectType(Right(node.`type`.typeNode)) // if the node has a `type` field, it can contain other type information
         else if (node.isDotsArray) TSArrayType(TSNamedType("any")) // variable parameter without type annotation
         else TSNamedType(node.symbol.symbolType) // built-in type
-      
       if (node.isOptional) TSUnionType(res, TSNamedType("undefined"))
       else res
     }
@@ -67,28 +60,15 @@ object TSSourceFile {
     TSFunctionType(pList, getObjectType(Right(node.returnType)), constraints)
   }
 
-  private def getStructuralType[T <: TSAny](types: TSArray[T], isUnion: Boolean): TSStructuralType = 
+  private def getStructuralType(types: TSTypeArray, isUnion: Boolean): TSStructuralType = 
     types.foldLeft[Option[TSType]](None)((prev, cur) => prev match {
-      case None => cur match {
-        case token: TSTokenObject => Some(getObjectType(Right(token.typeNode)))
-        case tp: TSTypeObject => Some(getObjectType(Right(tp)))
-        case node: TSNodeObject => Some(getObjectType(Left(node)))
-      }
-      case Some(p) => cur match {
-        case token: TSTokenObject =>
-          if (isUnion) Some(TSUnionType(p, getObjectType(Right(token.typeNode)))) else Some(TSIntersectionType(p, getObjectType(Right(token.typeNode))))
-        case tp: TSTypeObject =>
-          if (isUnion) Some(TSUnionType(p, getObjectType(Right(tp)))) else Some(TSIntersectionType(p, getObjectType(Right(tp))))
-        case node: TSNodeObject =>
-          if (isUnion) Some(TSUnionType(p, getObjectType(Left(node)))) else Some(TSIntersectionType(p, getObjectType(Left(node))))
-      }
+      case None => Some(getObjectType(Right(cur)))
+      case Some(p) =>
+        if (isUnion) Some(TSUnionType(p, getObjectType(Right(cur)))) else Some(TSIntersectionType(p, getObjectType(Right(cur))))
     }).get.asInstanceOf[TSStructuralType]
 
-  private def getTupleElements[T <: TSAny](elements: TSArray[T]): List[TSType] =
-    elements.foldLeft(List[TSType]())((lst, ele) => ele match {
-      case token: TSTokenObject => lst :+ getObjectType(Right(token.typeNode))
-      case tp: TSTypeObject => lst :+ getObjectType(Right(tp))
-    })
+  private def getTupleElements(elements: TSTypeArray): List[TSType] =
+    elements.foldLeft(List[TSType]())((lst, ele) => lst :+ getObjectType(Right(ele)))
 
   private def getHeritageList(node: TSNodeObject): List[TSType] = {
     node.heritageClauses.foldLeftIndexed(List[TSType]())((lst, h, index) => {

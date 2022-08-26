@@ -23,12 +23,7 @@ object TypeScript {
   def isClassDeclaration(node: js.Dynamic): Boolean = ts.isClassDeclaration(node)
   def isInterfaceDeclaration(node: js.Dynamic): Boolean = ts.isInterfaceDeclaration(node)
   def isFunctionLike(node: js.Dynamic): Boolean = ts.isFunctionLike(node)
-  def isArrayTypeNode(node: js.Dynamic): Boolean = ts.isArrayTypeNode(node)
   def isNamespaceDeclaration(node: js.Dynamic): Boolean = ts.isModuleDeclaration(node)
-  def isTupleTypeNode(node: js.Dynamic): Boolean = ts.isTupleTypeNode(node)
-  def isUnionTypeNode(node: js.Dynamic): Boolean = ts.isUnionTypeNode(node)
-  def isIntersectionTypeNode(node: js.Dynamic): Boolean = ts.isIntersectionTypeNode(node)
-  def isTypeReferenceNode(node: js.Dynamic): Boolean = ts.isTypeReferenceNode(node)
 
   def forEachChild(root: js.Dynamic, func: js.Dynamic => Unit): Unit = ts.forEachChild(root, func)
   def createProgram(filenames: Seq[String]): js.Dynamic = 
@@ -80,14 +75,7 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
   lazy val isClassDeclaration = !isUndefined && TypeScript.isClassDeclaration(node)
   lazy val isInterfaceDeclaration = !isUndefined && TypeScript.isInterfaceDeclaration(node)
   lazy val isFunctionLike = !isUndefined && TypeScript.isFunctionLike(node)
-  lazy val isArrayTypeNode = !isUndefined && TypeScript.isArrayTypeNode(node)
   lazy val isNamespace = !isUndefined && TypeScript.isNamespaceDeclaration(node)
-  lazy val isTupleTypeNode = !isUndefined && TypeScript.isTupleTypeNode(node)
-  lazy val isUnionTypeNode = !isUndefined && TypeScript.isUnionTypeNode(node)
-  lazy val isIntersectionTypeNode = !isUndefined && TypeScript.isIntersectionTypeNode(node)
-  lazy val isReference = !isUndefined && TypeScript.isTypeReferenceNode(node)
-  lazy val isAnonymousInterface = !isUndefined && !symbol.isUndefined && symbol.escapedName.equals("__type")
-  lazy val isTypeParameterSubstitution = !isUndefined && !typeArguments.isUndefined
   lazy val isDotsArray = !isUndefined && !hasTypeNode && !IsUndefined(node.dotDotDotToken)
   lazy val hasTypeNode = !isUndefined && !`type`.isUndefined
 
@@ -97,8 +85,6 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
                      else modifiers.foldLeft(false)((s, t) => t.isStatic)
 
   lazy val typeNode = TSTypeChecker.getTypeFromTypeNode(node)
-
-  lazy val typeName = TSIdentifierObject(node.typeName)
   lazy val symbol = TSSymbolObject(node.symbol)
   lazy val parameters = TSNodeArray(node.parameters)
   lazy val typeParameters = TSNodeArray(node.typeParameters)
@@ -106,10 +92,7 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
   lazy val members = TSNodeArray(node.members)
   lazy val properties =  TSNodeArray(node.properties)
   lazy val types = TSNodeArray(node.types)
-  lazy val typesToken = TSTokenArray(node.types) // for union
-  lazy val elementType = TSTokenObject(node.elementType)
   lazy val heritageClauses = TSNodeArray(node.heritageClauses)
-  lazy val elements = TSTokenArray(node.elements)
   lazy val initializer = TSNodeObject(node.initializer)
   lazy val typeArguments = TSTokenArray(node.typeArguments)
   lazy val modifier =
@@ -160,7 +143,6 @@ class TSTypeObject(obj: js.Dynamic) extends TSAny(obj) {
   lazy val symbol = TSSymbolObject(obj.symbol)
   lazy val resolvedTypeArguments = TSTypeArray(obj.resolvedTypeArguments)
   lazy val intrinsicName = obj.intrinsicName.toString
-  lazy val aliasSymbol = TSSymbolObject(obj.aliasSymbol)
   lazy val types = TSTypeArray(obj.types)
   lazy val declarationMembers =
     if (!symbol.declaration.isUndefined && !symbol.declaration.members.isUndefined)
