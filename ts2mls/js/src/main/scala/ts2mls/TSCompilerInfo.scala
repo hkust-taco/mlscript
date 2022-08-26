@@ -35,12 +35,11 @@ object TSTypeChecker {
   def init(obj: js.Dynamic): Unit = checker = obj
 
   def getTypeOfSymbolAtLocation(sym: js.Dynamic): String =
-    checker.typeToString(checker.getTypeOfSymbolAtLocation(sym, sym.valueDeclaration)).toString
+    checker.typeToString(getTypeOfSymbolAtLocation(sym, sym.valueDeclaration)).toString
 
   def getReturnTypeOfSignature(node: js.Dynamic) = checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(node))
   def getTypeFromTypeNode(node: js.Dynamic) = TSTypeObject(checker.getTypeFromTypeNode(node))
-  def getType(sym: js.Dynamic, node: js.Dynamic) = checker.getTypeOfSymbolAtLocation(sym, node)
-  def isOptionalParameter(node: js.Dynamic) = checker.isOptionalParameter(node)
+  def getTypeOfSymbolAtLocation(sym: js.Dynamic, node: js.Dynamic) = checker.getTypeOfSymbolAtLocation(sym, node)
 }
 
 class TSSymbolObject(sym: js.Dynamic) extends TSAny(sym) {
@@ -98,7 +97,7 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
   lazy val returnType = TSTypeObject(TSTypeChecker.getReturnTypeOfSignature(node))
   lazy val `type` = TSNodeObject(node.selectDynamic("type"))
 
-  lazy val symType = TSTypeObject(TSTypeChecker.getType(node.symbol, node))
+  lazy val symbolType = TSTypeObject(TSTypeChecker.getTypeOfSymbolAtLocation(node.symbol, node))
 }
 
 object TSNodeObject {

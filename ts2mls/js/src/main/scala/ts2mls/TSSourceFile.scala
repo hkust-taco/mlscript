@@ -34,10 +34,10 @@ object TSSourceFile {
     else if (obj.isTypeParameter) TSTypeParameter(obj.symbol.escapedName)
     else TSNamedType(obj.intrinsicName)
 
-  private def getDeclarationType(node: TSNodeObject): TSType = {
+  private def getMemberType(node: TSNodeObject): TSType = {
     val res: TSType =
       if (node.isFunctionLike) getFunctionType(node)
-      else if (node.hasTypeNode) getObjectType(node.`type`.typeNode) // if the node has a `type` field, it can contain other type information
+      else if (node.hasTypeNode) getObjectType(node.`type`.typeNode)
       else TSNamedType(node.symbol.symbolType) // built-in type
     if (node.isOptional) TSUnionType(res, TSNamedType("undefined"))
     else res
@@ -56,8 +56,8 @@ object TSSourceFile {
     val pList = node.parameters.foldLeft(List[TSType]())((lst, p) => lst :+
       (if (p.symbol.escapedName.equals("this")) TSNamedType("void")
       else
-        if (p.isOptional) TSUnionType(getObjectType(p.symType), TSNamedType("undefined"))
-        else getObjectType(p.symType)))
+        if (p.isOptional) TSUnionType(getObjectType(p.symbolType), TSNamedType("undefined"))
+        else getObjectType(p.symbolType)))
     TSFunctionType(pList, getObjectType(node.returnType), constraints)
   }
 
@@ -83,7 +83,7 @@ object TSSourceFile {
       // TODO: support `__constructor`
       if (!name.equals("__constructor") && p.isStatic == requireStatic) {
         val mem =
-          if (!p.isStatic) getDeclarationType(p)
+          if (!p.isStatic) getMemberType(p)
           else parseMembers(name, p.initializer, true)
 
         mem match {
@@ -104,7 +104,7 @@ object TSSourceFile {
     })
 
   private def getInterfacePropertiesType(list: TSNodeArray): Map[String, TSMemberType] =
-    list.foldLeft(Map[String, TSMemberType]())((mp, p) => mp ++ Map(p.symbol.escapedName -> TSMemberType(getDeclarationType(p))))
+    list.foldLeft(Map[String, TSMemberType]())((mp, p) => mp ++ Map(p.symbol.escapedName -> TSMemberType(getMemberType(p))))
 
   private def parseMembers(name: String, node: TSNodeObject, isClass: Boolean): TSType = {
     val members = node.members
