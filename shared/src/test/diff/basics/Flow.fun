@@ -2,7 +2,7 @@
 :p
 data L x
 data R x
-//│ Parsed: data (L x); data (R x);
+//│ Parsed: data L x; data R x;
 //│ Desugared: class L[x]: {x: x}
 //│ Desugared: class R[x]: {x: x}
 //│ Desugared: def L: [x] -> x -> L[x]
