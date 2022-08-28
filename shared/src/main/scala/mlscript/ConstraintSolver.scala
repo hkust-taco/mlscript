@@ -286,17 +286,58 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       constrainCalls += 1
       // Thread.sleep(10)  // useful for debugging constraint-solving explosions debugged on stdout
       recImpl(lhs, rhs)(raise,
-        if (sameLevel)
-          (if (cctx._1.headOption.exists(_ is lhs.prov)) cctx._1 else lhs :: cctx._1)
+       {
+        val newCctx = if (sameLevel) {
+          // add new simple type to the chain only if it's provenance
+          // is different from current chain head
+          ((if (cctx._1.headOption.exists(_.prov.equals(lhs.prov))) cctx._1 else lhs :: cctx._1)
           ->
-          (if (cctx._2.headOption.exists(_ is rhs.prov)) cctx._2 else rhs :: cctx._2)
-        else (lhs :: Nil) -> {
-          println(s"Adding ${nestedProv.map(pv => pv.desc ++ pv.chain.toString())} nested prov for $lhs and $rhs")
-          val a = nestedProv.map(prov => rhs.withProv(prov) :: Nil).getOrElse(rhs :: Nil)
-          println(s"Added $a nested prov for $lhs and $rhs")
-          a
+          (if (cctx._2.headOption.exists(_.prov.equals(rhs.prov))) cctx._2 else rhs :: cctx._2))
+          // ((if (cctx._1.headOption.exists(_ is lhs.prov)) cctx._1 else lhs :: cctx._1)
+          // ->
+          // (if (cctx._2.headOption.exists(_ is rhs.prov)) cctx._2 else rhs :: cctx._2))
+        } else (lhs :: Nil) -> {
+          println(s"For ${lhs} and ${rhs} creating nested prov chain")
+          nestedProv.map(prov => rhs.withProv(prov) :: Nil).getOrElse(rhs :: Nil)
         }
-      )
+
+        if (explainErrors) {
+          def printProv(prov: TP): Message =
+              if (prov.isType) msg"type"
+              else msg"${prov.desc} of type"
+        
+          def showNestingLevel(chain: Ls[ST], level: Int): Ls[Message -> Opt[Loc]] = {
+            val levelIndicator = s"-${">"*level}"
+            chain.flatMap { node =>
+              node.prov match {
+                case nestedProv: NestedTypeProvenance => 
+                  msg"$levelIndicator nested flow from ${printProv(nestedProv)} `${node.toString}` with desc: ${node.prov.desc}" -> nestedProv.loco :: Nil :::
+                    showNestingLevel(nestedProv.chain, level + 1)
+                case tprov => 
+                  msg"$levelIndicator flowing from ${printProv(tprov)} `${node.toString}` with desc: ${node.prov.desc}" -> tprov.loco :: Nil
+              }
+            }
+          }
+          
+          val oldProvFlow =
+            msg"========= Previous type provenance flow below =========" -> N ::
+            showNestingLevel(cctx._1, 1) :::
+            showNestingLevel(cctx._2, 1)
+
+          val newProvFlow =
+            msg"========= New type provenance flow below =========" -> N ::
+            showNestingLevel(newCctx._1, 1) :::
+            showNestingLevel(newCctx._2, 1)
+
+          
+          raise(WarningReport(oldProvFlow))
+          println(s"Prov flows before and after ${lhs} and ${rhs} at the same level: ${sameLevel}")
+          // println(s"Rhs and previous rhsChain head are same `cctx._2.headOption.exists(_ is rhs.prov)` ? - ${cctx._2.headOption.exists(_ is rhs.prov)}")
+          println(s"Rhs and previous rhsChain provs similar - `_.prov.equals(rhs.prov)`? - ${cctx._2.headOption.exists(_.prov.equals(rhs.prov))}")
+          raise(WarningReport(newProvFlow))
+        }
+        newCctx
+      })
     }
     def recImpl(lhs: SimpleType, rhs: SimpleType)
           (implicit raise: Raise, cctx: ConCtx): Unit =
@@ -306,8 +347,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       // println(s"[[ ${cctx._1.map(_.prov).mkString(", ")}  <<  ${cctx._2.map(_.prov).mkString(", ")} ]]")
       // println(s"{{ ${cache.mkString(", ")} }}")
       
-      lazy val provChain = Some(NestedTypeProvenance(cctx._1 reverse_::: cctx._2))
-      lazy val revProvChain = Some(NestedTypeProvenance((cctx._1 reverse_::: cctx._2).reverse))
+      lazy val provChain = Some(NestedTypeProvenance(cctx._1 ::: cctx._2))
+      lazy val revProvChain = Some(NestedTypeProvenance((cctx._1 ::: cctx._2).reverse))
 
       if (lhs === rhs) return ()
       
@@ -397,6 +438,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               fs0.find(_._1 === n1).fold {
                 reportError()
               } { case (n0, t0) =>
+                // recLb(t1, t0, revProvChain)
                 recLb(t1, t0)
                 rec(t0.ub, t1.ub, false, provChain)
               }
@@ -448,9 +490,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       val lhs = cctx._1.head
       val rhs = cctx._2.head
       
-      println(s"context part 1 -\n  $cctx._1\n and part 2 -\n $cctx._2\n")
-      println(s"CONSTRAINT FAILURE: $lhs <: $rhs")
-      println(s"CTX: ${cctx._1.zip(cctx._2).map(lr => s"${lr._1} <: ${lr._2} [${lr._1.prov}] [${lr._2.prov}]")}")
+      // println(s"context part 1 -\n  $cctx._1\n and part 2 -\n $cctx._2\n")
+      // println(s"CONSTRAINT FAILURE: $lhs <: $rhs")
+      // println(s"CTX: ${cctx._1.zip(cctx._2).map(lr => s"${lr._1} <: ${lr._2} [${lr._1.prov}] [${lr._2.prov}]")}")
       
       def doesntMatch(ty: SimpleType) = msg"does not match type `${ty.expNeg}`"
       def doesntHaveField(n: Str) = msg"does not have field '$n'"

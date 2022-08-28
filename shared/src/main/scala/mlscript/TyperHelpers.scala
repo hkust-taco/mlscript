@@ -71,6 +71,17 @@ abstract class TyperHelpers { Typer: Typer =>
   def subst(ts: PolymorphicType, map: Map[SimpleType, SimpleType]): PolymorphicType = 
     PolymorphicType(ts.level, subst(ts.body, map))
 
+  /**
+    * Apply a mapping to a simple type. If st is an unconstrained type variable
+    * it is returned as is. If it has constrains clone the type variable and
+    * apply subst to it's bounds.
+    *
+    * @param st
+    * @param map
+    * @param substInMap recursively apply subst to result of mapping if exists
+    * @param cache tracks substituted type variables
+    * @return
+    */
   def subst(st: SimpleType, map: Map[SimpleType, SimpleType], substInMap: Bool = false)
         (implicit cache: MutMap[TypeVariable, SimpleType] = MutMap.empty): SimpleType =
             // trace(s"subst($st)") {

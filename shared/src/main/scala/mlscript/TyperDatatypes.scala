@@ -233,6 +233,13 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   case class TypeRef(defn: TypeName, targs: Ls[SimpleType])(val prov: TypeProvenance) extends SimpleType {
     def level: Int = targs.iterator.map(_.level).maxOption.getOrElse(0)
     def expand(implicit ctx: Ctx): SimpleType = expandWith(paramTags = true)
+    /**
+      * Expands a type reference to actual typedef kind it refers to
+      *
+      * @param paramTags
+      * @param ctx
+      * @return
+      */
     def expandWith(paramTags: Bool)(implicit ctx: Ctx): SimpleType = {
       val td = ctx.tyDefs(defn.name)
       require(targs.size === td.tparamsargs.size)
@@ -244,6 +251,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
               if (tvv(tv).isContravariant) TopType else tv)(prov)
           }.toList)(noProv)
         else TopType
+      // substitute the arguments of type def
+      // with the arguments given to the type ref
       subst(td.kind match {
         case Als => td.bodyTy
         case Cls => clsNameToNomTag(td)(prov, ctx) & td.bodyTy & tparamTags
