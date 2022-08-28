@@ -548,7 +548,7 @@ class JSWebBackend extends JSBackend {
         // <results>.push(<name>);
         // ```
         .concat(otherStmts.flatMap {
-          case Def(recursive, Var(name), L(body)) =>
+          case Def(recursive, Var(name), L(body), withDef) =>
             val (translatedBody, sym) = if (recursive) {
               val sym = topLevelScope.declareValue(name)
               (translateTerm(body)(topLevelScope), sym)
@@ -559,7 +559,7 @@ class JSWebBackend extends JSBackend {
             topLevelScope.tempVars `with` JSConstDecl(sym.runtimeName, translatedBody) ::
               JSInvoke(resultsIdent("push"), JSIdent(sym.runtimeName) :: Nil).stmt :: Nil
           // Ignore type declarations.
-          case Def(_, _, R(_)) => Nil
+          case Def(_, _, R(_), withDef) => Nil
           // `exprs.push(<expr>)`.
           case term: Term =>
             topLevelScope.tempVars `with` JSInvoke(
@@ -614,7 +614,10 @@ class JSTestBackend extends JSBackend {
 
     // Generate statements.
     val queries = otherStmts.map {
-      case Def(recursive, Var(name), L(body)) =>
+      case Def(recursive, Var(name), L(body), true) =>
+        // Handle by-name case here.
+        ???
+      case Def(recursive, Var(name), L(body), false) =>
         (if (recursive) {
           val sym = scope.declareValue(name)
           try {
@@ -644,7 +647,7 @@ class JSTestBackend extends JSBackend {
             )
           case L(reason) => JSTestBackend.AbortedQuery(reason)
         }
-      case Def(_, Var(name), _) =>
+      case Def(_, Var(name), _, _) =>
         scope.declareStubValue(name)
         JSTestBackend.EmptyQuery
       case term: Term =>

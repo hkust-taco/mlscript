@@ -634,7 +634,7 @@ class DiffTests
             stmts.foreach {
               // statement only declares a new term with its type
               // but does not give a body/definition to it
-              case Def(isrec, nme, R(PolyType(tps, rhs))) =>
+              case Def(isrec, nme, R(PolyType(tps, rhs)), withDef) =>
                 typer.dbg = mode.dbg
                 val ty_sch = typer.PolymorphicType(0,
                   typer.typeType(rhs)(ctx.nextLevel, raise,
@@ -647,7 +647,7 @@ class DiffTests
                 if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
 
               // statement is defined and has a body/definition
-              case d @ Def(isrec, nme, L(rhs)) =>
+              case d @ Def(isrec, nme, L(rhs), withDef) =>
                 typer.dbg = mode.dbg
                 val ty_sch = typer.typeLetRhs(isrec, nme.name, rhs)(ctx, raise)
                 val exp = getType(ty_sch)

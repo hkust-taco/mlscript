@@ -26,6 +26,7 @@ def gensym = let n = { mut a = 0 } in fun () -> (incr n, n)
 //│     'a :> 0
 //│       = [Function (anonymous)]
 
+
 :p
 gensym1 = let n = { mut a = 0 } in fun () -> (incr n, n)
 //│ Parsed: let gensym1 = let n = {mut a: 0} in  => incr (n,), n,;
@@ -33,7 +34,7 @@ gensym1 = let n = { mut a = 0 } in fun () -> (incr n, n)
 //│ gensym1: () -> (unit, {mut a: 'a},)
 //│   where
 //│     'a :> 0
-//│        = [Function (anonymous)]
+//│        = <missing implementation>
 
 :js
 gensym ()
@@ -47,38 +48,36 @@ gensym ()
 
 :js
 gensym1 ()
-//│ // Query 1
-//│ res = gensym1();
+//│ // Query 1 aborted: gensym1 is not implemented
 //│ // End of generated code
 //│ res: (unit, {mut a: 'a},)
 //│   where
 //│     'a :> 0
-//│    = [ [], { a: 1 } ]
+//│    = <no result>
+//│      gensym1 is not implemented
 
 :js
 gensym1 = let n = { mut a = 0 } in fun () -> (incr n, n)
-//│ // Query 1
-//│ globalThis.gensym11 = ((n) => () => [
-//│   incr(n),
-//│   n
-//│ ])({ a: 0 });
+//│ // Query 1 is empty
 //│ // End of generated code
 //│ gensym1: () -> (unit, {mut a: 'a},)
 //│   where
 //│     'a :> 0
-//│        = [Function (anonymous)]
+//│        = <missing implementation>
 
 gensym1 ()
 //│ res: (unit, {mut a: 'a},)
 //│   where
 //│     'a :> 0
-//│    = [ [], { a: 1 } ]
+//│    = <no result>
+//│      gensym1 is not implemented
 
 gensym1 ()
 //│ res: (unit, {mut a: 'a},)
 //│   where
 //│     'a :> 0
-//│    = [ [], { a: 2 } ]
+//│    = <no result>
+//│      gensym1 is not implemented
 
 :js
 gensym ()

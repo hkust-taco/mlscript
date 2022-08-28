@@ -270,7 +270,7 @@ object OpApp {
 trait DeclImpl extends Located { self: Decl =>
   val body: Located
   def showBody: Str = this match {
-    case Def(_, _, rhs) => rhs.fold(_.toString, _.show)
+    case Def(_, _, rhs, withDef) => rhs.fold(_.toString, _.show)
     case td: TypeDef => td.body.show
   }
   def describe: Str = this match {
@@ -280,8 +280,8 @@ trait DeclImpl extends Located { self: Decl =>
   def show: Str = showHead + (this match {
     case TypeDef(Als, _, _, _, _, _) => " = "; case _ => ": " }) + showBody
   def showHead: Str = this match {
-    case Def(true, n, b) => s"rec def $n"
-    case Def(false, n, b) => s"def $n"
+    case Def(true, n, b, withDef) => s"rec def $n"
+    case Def(false, n, b, withDef) => s"def $n"
     case TypeDef(k, n, tps, b, _, _) =>
       s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_.name).mkString("[", ", ", "]")}"
   }
@@ -531,7 +531,7 @@ trait StatementImpl extends Located { self: Statement =>
   private def doDesugar: Ls[Diagnostic] -> Ls[DesugaredStatement] = this match {
     case l @ LetS(isrec, pat, rhs) =>
       val (diags, v, args) = desugDefnPattern(pat, Nil)
-      diags -> (Def(isrec, v, L(args.foldRight(rhs)(Lam(_, _)))).withLocOf(l) :: Nil) // TODO use v, not v.name
+      diags -> (Def(isrec, v, L(args.foldRight(rhs)(Lam(_, _))), true).withLocOf(l) :: Nil) // TODO use v, not v.name
     case d @ DataDefn(body) => desugarCases(body :: Nil, Nil)
     case d @ DatatypeDefn(hd, bod) =>
       val (diags, v, args) = desugDefnPattern(hd, Nil)
@@ -645,7 +645,7 @@ trait StatementImpl extends Located { self: Statement =>
     case Test(l, r) => l :: r :: Nil
     case With(t, fs) => t :: fs :: Nil
     case CaseOf(s, c) => s :: c :: Nil
-    case d @ Def(_, n, b) => n :: d.body :: Nil
+    case d @ Def(_, n, b, _) => n :: d.body :: Nil
     case TypeDef(kind, nme, tparams, body, _, _) => nme :: tparams ::: body :: Nil
     case Subs(a, i) => a :: i :: Nil
     case Assign(lhs, rhs) => lhs :: rhs :: Nil

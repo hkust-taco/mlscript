@@ -8,7 +8,7 @@ import mlscript.utils._, shorthands._
 final case class Pgrm(tops: Ls[Statement]) extends PgrmImpl
 
 sealed abstract class Decl extends DesugaredStatement with DeclImpl
-final case class Def(rec: Bool, nme: Var, rhs: Term \/ PolyType) extends Decl with Terms {
+final case class Def(rec: Bool, nme: Var, rhs: Term \/ PolyType, withDef: Bool = false) extends Decl with Terms {
   val body: Located = rhs.fold(identity, identity)
 }
 final case class TypeDef(
