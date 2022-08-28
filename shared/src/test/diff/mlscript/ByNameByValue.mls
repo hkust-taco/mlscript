@@ -1,0 +1,107 @@
+:js
+def incr x = x.a <- x.a + 1
+//│ // Prelude
+//│ let res;
+//│ // Query 1
+//│ globalThis.incr = function incr(x) {
+//│   return x.a = x.a + 1, [];
+//│ };
+//│ // End of generated code
+//│ incr: {mut a: int} -> unit
+//│     = [Function: incr]
+
+:p
+:js
+def gensym = let n = { mut a = 0 } in fun () -> (incr n, n)
+//│ Parsed: def gensym: let n = {mut a: 0} in  => incr (n,), n,;
+//│ Desugared: def gensym: let n = {mut a: 0} in  => incr (n,), n,
+//│ // Query 1
+//│ globalThis.gensym = ((n) => () => [
+//│   incr(n),
+//│   n
+//│ ])({ a: 0 });
+//│ // End of generated code
+//│ gensym: () -> (unit, {mut a: 'a},)
+//│   where
+//│     'a :> 0
+//│       = [Function (anonymous)]
+
+:p
+gensym1 = let n = { mut a = 0 } in fun () -> (incr n, n)
+//│ Parsed: let gensym1 = let n = {mut a: 0} in  => incr (n,), n,;
+//│ Desugared: def gensym1: let n = {mut a: 0} in  => incr (n,), n,
+//│ gensym1: () -> (unit, {mut a: 'a},)
+//│   where
+//│     'a :> 0
+//│        = [Function (anonymous)]
+
+:js
+gensym ()
+//│ // Query 1
+//│ res = gensym();
+//│ // End of generated code
+//│ res: (unit, {mut a: 'a},)
+//│   where
+//│     'a :> 0
+//│    = [ [], { a: 1 } ]
+
+:js
+gensym1 ()
+//│ // Query 1
+//│ res = gensym1();
+//│ // End of generated code
+//│ res: (unit, {mut a: 'a},)
+//│   where
+//│     'a :> 0
+//│    = [ [], { a: 1 } ]
+
+:js
+gensym1 = let n = { mut a = 0 } in fun () -> (incr n, n)
+//│ // Query 1
+//│ globalThis.gensym11 = ((n) => () => [
+//│   incr(n),
+//│   n
+//│ ])({ a: 0 });
+//│ // End of generated code
+//│ gensym1: () -> (unit, {mut a: 'a},)
+//│   where
+//│     'a :> 0
+//│        = [Function (anonymous)]
+
+gensym1 ()
+//│ res: (unit, {mut a: 'a},)
+//│   where
+//│     'a :> 0
+//│    = [ [], { a: 1 } ]
+
+gensym1 ()
+//│ res: (unit, {mut a: 'a},)
+//│   where
+//│     'a :> 0
+//│    = [ [], { a: 2 } ]
+
+:js
+gensym ()
+//│ // Query 1
+//│ res = gensym();
+//│ // End of generated code
+//│ res: (unit, {mut a: 'a},)
+//│   where
+//│     'a :> 0
+//│    = [ [], { a: 2 } ]
+
+// ?
+gensym ()
+//│ res: (unit, {mut a: 'a},)
+//│   where
+//│     'a :> 0
+//│    = [ [], { a: 3 } ]
+
+:js
+def d = 1
+//│ // Query 1
+//│ globalThis.d = 1;
+//│ // End of generated code
+//│ d: 1
+//│  = 1
+
