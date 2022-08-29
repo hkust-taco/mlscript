@@ -43,6 +43,7 @@ object TSTypeChecker {
   def getPropertiesOfType(tp: js.Dynamic) = checker.getPropertiesOfType(tp)
 
   def isImplementationOfOverload(node: js.Dynamic) = checker.isImplementationOfOverload(node)
+  def typeToTypeNode(tp: js.Dynamic) = checker.typeToTypeNode(tp)
 }
 
 class TSSymbolObject(sym: js.Dynamic) extends TSAny(sym) {
@@ -136,11 +137,11 @@ class TSTypeObject(obj: js.Dynamic) extends TSAny(obj) {
 
   lazy val isUnionType = flags == TypeScript.typeFlagsUnion
   lazy val isIntersectionType = flags == TypeScript.typeFlagsInter
-  lazy val isFunctionLike = !symbol.isUndefined && !symbol.declaration.isUndefined && symbol.declaration.isFunctionLike
+  lazy val isFunctionLike = TypeScript.isFunctionLike(TSTypeChecker.typeToTypeNode(obj))
   lazy val isAnonymous = objectFlags == TypeScript.objectFlagsAnonymous
   lazy val isTypeParameter = flags == TypeScript.typeFlagsTypeParameter
   lazy val isObject = flags == TypeScript.typeFlagsObject
-  lazy val isTypeParameterSubstitution = isObject && !resolvedTypeArguments.isUndefined
+  lazy val isTypeParameterSubstitution = isObject && !resolvedTypeArguments.isUndefined && resolvedTypeArguments.length > 0
 }
 
 object TSTypeObject {
