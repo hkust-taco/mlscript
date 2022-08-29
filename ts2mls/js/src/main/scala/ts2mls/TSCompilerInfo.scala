@@ -47,6 +47,7 @@ object TSTypeChecker {
   def isImplementationOfOverload(node: js.Dynamic) = checker.isImplementationOfOverload(node)
   def typeToTypeNode(tp: js.Dynamic) = checker.typeToTypeNode(tp)
   def getTypeArguments(tp: js.Dynamic) = checker.getTypeArguments(tp)
+  def getElementTypeOfArrayType(tp: js.Dynamic) = checker.getElementTypeOfArrayType(tp)
 }
 
 class TSSymbolObject(sym: js.Dynamic) extends TSAny(sym) {
@@ -136,6 +137,7 @@ class TSTypeObject(obj: js.Dynamic) extends TSAny(obj) {
   lazy val types = TSTypeArray(obj.types)
   lazy val properties = TSSymbolArray(TSTypeChecker.getPropertiesOfType(obj))
   lazy val node = TSNodeObject(TSTypeChecker.typeToTypeNode(obj))
+  lazy val elementTypeOfArray = TSTypeObject(TSTypeChecker.getElementTypeOfArrayType(obj))
 
   lazy val isTupleType = node.isTupleTypeNode
   lazy val isArrayType = node.isArrayTypeNode
