@@ -1,12 +1,12 @@
-trait IFoo: { a: string; b: (number) -> (number); c: unit -> (bool); d: (string) -> (unit) }
+trait IFoo: { a: string; b: (number) -> (number); c: unit -> ((false) | (true)); d: (string) -> (unit) }
 trait II[T]: { test: (T) -> (number) }
 def create: unit -> ({ v: (number) | (undefined) })
 def get: ({ t: string }) -> (string)
 trait IEvent: { callback: (unit) -> ((number) -> (unit)) }
-trait SearchFunc: { __call: (string) -> ((string) -> (bool)) }
+trait SearchFunc: { __call: (string) -> ((string) -> ((false) | (true))) }
 trait StringArray: { __index: (number) -> (string) }
 trait Counter: { __call: (number) -> (string); interval: number; reset: unit -> (unit) }
-trait Simple: { a: number; b: (bool) -> (string) }
+trait Simple: { a: number; b: ((false) | (true)) -> (string) }
 trait Simple2[T]: { abc: T }
 trait Next: {} & Simple
 trait TTT[T]: { ttt: (T) -> (T) }

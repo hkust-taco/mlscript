@@ -1,4 +1,4 @@
-def pass: (int) -> (bool)
+def pass: (int) -> ((false) | (true))
 def stop: unit -> (int)
 def g: (int) -> (int)
 //│ pass: int -> bool

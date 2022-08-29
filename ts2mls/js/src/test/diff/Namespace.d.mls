@@ -2,7 +2,7 @@ def N1'f: (anything) -> (number)
 def N1'ff: (anything) -> (number)
 class N1'C: { f: unit -> (unit) }
 trait N1'I: { f: unit -> (number) }
-def N1'N2'fff: (bool) -> (number)
+def N1'N2'fff: ((false) | (true)) -> (number)
 def N1'N2'gg: (N1'C) -> (N1'C)
 class N1'N2'BBB: {} & N1'C
 def AA'f: (anything) -> (string)

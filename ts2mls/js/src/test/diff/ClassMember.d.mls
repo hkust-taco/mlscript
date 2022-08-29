@@ -1,4 +1,4 @@
-class Student: { name: string; isFriend: (Student) -> (bool); addScore: (string) -> ((number) -> (unit)); getID: unit -> (number) }
+class Student: { name: string; isFriend: (Student) -> ((false) | (true)); addScore: (string) -> ((number) -> (unit)); getID: unit -> (number) }
 class Foo[T]: { bar: (T) -> (unit) }
 class EZ: { inc: (number) -> (number) }
 class Outer: {}

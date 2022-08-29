@@ -24,8 +24,6 @@ object TypeScript {
   def isNamespaceDeclaration(node: js.Dynamic): Boolean = ts.isModuleDeclaration(node)
   def isArrayTypeNode(node: js.Dynamic): Boolean = ts.isArrayTypeNode(node)
   def isTupleTypeNode(node: js.Dynamic): Boolean = ts.isTupleTypeNode(node)
-  def isUnionTypeNode(node: js.Dynamic): Boolean = ts.isUnionTypeNode(node)
-  def isIntersectionTypeNode(node: js.Dynamic): Boolean = ts.isIntersectionTypeNode(node)
 
   def forEachChild(root: js.Dynamic, func: js.Dynamic => Unit): Unit = ts.forEachChild(root, func)
   def createProgram(filenames: Seq[String]): js.Dynamic = 
@@ -81,8 +79,6 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
   lazy val hasTypeNode = !isUndefined && !`type`.isUndefined
   lazy val isArrayTypeNode = !isUndefined && TypeScript.isArrayTypeNode(node)
   lazy val isTupleTypeNode = !isUndefined && TypeScript.isTupleTypeNode(node)
-  lazy val isUnionTypeNode = !isUndefined && TypeScript.isUnionTypeNode(node)
-  lazy val isIntersectionTypeNode = !isUndefined && TypeScript.isIntersectionTypeNode(node)
   lazy val isImplementationOfOverload = TSTypeChecker.isImplementationOfOverload(node)
   lazy val isOptional = !IsUndefined(node.initializer) || !IsUndefined(node.questionToken)
   lazy val isStatic = if (modifiers.isUndefined) false
@@ -142,9 +138,8 @@ class TSTypeObject(obj: js.Dynamic) extends TSAny(obj) {
   lazy val isTupleType = node.isTupleTypeNode
   lazy val isArrayType = node.isArrayTypeNode
   lazy val isEnumType = (flags & TypeScript.typeFlagsEnumLike) > 0
-
-  lazy val isUnionType = node.isUnionTypeNode
-  lazy val isIntersectionType = node.isIntersectionTypeNode
+  lazy val isUnionType = obj.isUnion().asInstanceOf[Boolean]
+  lazy val isIntersectionType = obj.isIntersection().asInstanceOf[Boolean]
   lazy val isFunctionLike = node.isFunctionLike
   lazy val isAnonymous = objectFlags == TypeScript.objectFlagsAnonymous
   lazy val isTypeParameter = flags == TypeScript.typeFlagsTypeParameter

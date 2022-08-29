@@ -11,7 +11,7 @@ def clean: (MutArray[(string, number, )]) -> (MutArray[(string, number, )])
 def translate[T, U]: (MutArray[T]) -> (MutArray[U])
 def uu: (MutArray[((number) | (false)) | (true)]) -> (MutArray[((number) | (false)) | (true)])
 class Temp[T]: { x: T }
-def ta: (MutArray[Temp[bool]]) -> (MutArray[Temp[bool]])
+def ta: (MutArray[Temp[(false) | (true)]]) -> (MutArray[Temp[(false) | (true)]])
 def tat[T]: (MutArray[Temp[T]]) -> (MutArray[Temp[T]])
 //│ Defined class C
 //│ Defined trait I

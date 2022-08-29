@@ -1,5 +1,5 @@
 def getString: ((((string) | (number)) | (false)) | (true)) -> (string)
-def test: (bool) -> ((string) | (number))
+def test: ((false) | (true)) -> ((string) | (number))
 def run: (((number) -> (number)) | ((number) -> (string))) -> (anything)
 def get: ((MutArray[number]) | (MutArray[string])) -> (unit)
 def get2: (((string, string, )) | ((number, string, ))) -> (string)
