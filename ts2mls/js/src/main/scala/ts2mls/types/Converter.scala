@@ -18,11 +18,7 @@ object Converter {
 
   def convert(tsType: TSType)(implicit ns: TSNamespace): String = tsType match {
     case TSNamedType(typeName) => primitiveName.getOrElse(typeName, typeName)
-    case TSReferenceType(name) => {
-      val path = name.split("'").toList
-      if (ns.containsMember(path.tail) || ns.containsMember(path)) s"${ns.getParentPath(name)}"
-      else "int"
-    }
+    case TSReferenceType(name) => s"${ns.getParentPath(name)}"
     case TSFunctionType(params, res, _) =>
       // since functions can be defined by both `def` and `method`, it only returns the type of functions
       if (params.length == 0) s"${primitiveName("void")} -> (${convert(res)})"

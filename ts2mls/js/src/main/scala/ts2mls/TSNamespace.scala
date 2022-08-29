@@ -35,13 +35,6 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
   def containsMember(name: String, searchParent: Boolean = true): Boolean = 
     if (parent.isEmpty) members.contains(name) else (members.contains(name) || (searchParent && parent.get.containsMember(name)))
 
-  // an overload version for searching members like `Namespace1.Namespace2.ClassName`
-  def containsMember(path: List[String]): Boolean = path match {
-    case name :: Nil => containsMember(name)
-    case sub :: rest if (subSpace.contains(sub)) => subSpace(sub).containsMember(rest)
-    case _ => false
-  }
-
   def generate(writer: JSWriter): Unit =
     order.toList.foreach((p) => p match {
       case Left(name) => subSpace(name).generate(writer)
