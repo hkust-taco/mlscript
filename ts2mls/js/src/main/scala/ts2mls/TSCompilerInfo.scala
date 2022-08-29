@@ -41,6 +41,8 @@ object TSTypeChecker {
   def getTypeFromTypeNode(node: js.Dynamic) = TSTypeObject(checker.getTypeFromTypeNode(node))
   def getTypeOfSymbolAtLocation(sym: js.Dynamic, node: js.Dynamic) = checker.getTypeOfSymbolAtLocation(sym, node)
   def getPropertiesOfType(tp: js.Dynamic) = checker.getPropertiesOfType(tp)
+
+  def isImplementationOfOverload(node: js.Dynamic) = checker.isImplementationOfOverload(node)
 }
 
 class TSSymbolObject(sym: js.Dynamic) extends TSAny(sym) {
@@ -74,7 +76,7 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
   lazy val isNamespace = !isUndefined && TypeScript.isNamespaceDeclaration(node)
   lazy val hasTypeNode = !isUndefined && !`type`.isUndefined
 
-  lazy val hasImplementation = !IsUndefined(node.body)
+  lazy val isImplementationOfOverload = TSTypeChecker.isImplementationOfOverload(node)
   lazy val isOptional = !IsUndefined(node.initializer) || !IsUndefined(node.questionToken)
   lazy val isStatic = if (modifiers.isUndefined) false
                      else modifiers.foldLeft(false)((s, t) => t.isStatic)

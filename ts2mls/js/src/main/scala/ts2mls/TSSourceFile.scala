@@ -92,9 +92,9 @@ object TSSourceFile {
           case func: TSFunctionType => {
             if (!mp.contains(name)) mp ++ Map(name -> TSMemberType(func, p.modifier))
             else mp(name).base match {
-              case old: TSFunctionType if (!p.hasImplementation) =>
+              case old: TSFunctionType if (!p.isImplementationOfOverload) =>
                 mp.removed(name) ++ Map(name -> TSMemberType(TSIntersectionType(old, func), p.modifier))
-              case old: TSIntersectionType if (!p.hasImplementation) =>
+              case old: TSIntersectionType if (!p.isImplementationOfOverload) =>
                 mp.removed(name) ++ Map(name -> TSMemberType(TSIntersectionType(old, func), p.modifier))
               case _ => mp
             }
@@ -131,9 +131,9 @@ object TSSourceFile {
   private def addFunctionIntoNamespace(fun: TSFunctionType, node: TSNodeObject, name: String)(implicit ns: TSNamespace) =
     if (!ns.containsMember(name, false)) ns.put(name, fun)
     else ns.get(name) match {
-      case old: TSFunctionType if (!node.hasImplementation) => // the signature of overload function
+      case old: TSFunctionType if (!node.isImplementationOfOverload) => // the signature of overload function
         ns.put(name, TSIntersectionType(old, fun))
-      case old: TSIntersectionType if (!node.hasImplementation) => // the signature of overload function
+      case old: TSIntersectionType if (!node.isImplementationOfOverload) => // the signature of overload function
         ns.put(name, TSIntersectionType(old, fun))
       case _ => {} // the implementation of the overload function. the type of this function may be wider, so just ignore it
     }
