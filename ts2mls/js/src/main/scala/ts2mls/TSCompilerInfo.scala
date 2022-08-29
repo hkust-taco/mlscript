@@ -9,8 +9,6 @@ import ts2mls.types._
 object TypeScript {
   private val ts = g.require("typescript")
 
-  val typeFlagsUnion = ts.TypeFlags.Union.asInstanceOf[Int]
-  val typeFlagsInter = ts.TypeFlags.Intersection.asInstanceOf[Int]
   val typeFlagsEnumLike = ts.TypeFlags.EnumLike.asInstanceOf[Int]
   val typeFlagsObject = ts.TypeFlags.Object.asInstanceOf[Int]
   val typeFlagsTypeParameter = ts.TypeFlags.TypeParameter.asInstanceOf[Int]
@@ -38,7 +36,7 @@ object TSTypeChecker {
   private var checker: js.Dynamic = null
   def init(obj: js.Dynamic): Unit = checker = obj
 
-  def getTypeOfSymbolAtLocation(sym: js.Dynamic): String =
+  def getTypeStringOfSymbol(sym: js.Dynamic): String =
     checker.typeToString(getTypeOfSymbolAtLocation(sym, sym.valueDeclaration)).toString
 
   def getReturnTypeOfSignature(node: js.Dynamic) = checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(node))
@@ -48,6 +46,7 @@ object TSTypeChecker {
 
   def isImplementationOfOverload(node: js.Dynamic) = checker.isImplementationOfOverload(node)
   def typeToTypeNode(tp: js.Dynamic) = checker.typeToTypeNode(tp)
+  def getTypeArguments(tp: js.Dynamic) = checker.getTypeArguments(tp)
 }
 
 class TSSymbolObject(sym: js.Dynamic) extends TSAny(sym) {
@@ -57,10 +56,9 @@ class TSSymbolObject(sym: js.Dynamic) extends TSAny(sym) {
     if (declarations.isUndefined) TSNodeObject(g.undefined)
     else declarations.get(0)
   lazy val escapedName: String = sym.escapedName.toString
-  lazy val valueDeclaration = TSNodeObject(sym.valueDeclaration)
   lazy val declarations = TSNodeArray(sym.declarations)
 
-  lazy val symbolType: String = TSTypeChecker.getTypeOfSymbolAtLocation(sym)
+  lazy val symbolType: String = TSTypeChecker.getTypeStringOfSymbol(sym)
 
   lazy val fullName: String =
     if (parent.isUndefined || !parent.declaration.isNamespace) escapedName
@@ -133,7 +131,7 @@ class TSTypeObject(obj: js.Dynamic) extends TSAny(obj) {
   private lazy val objectFlags = if (IsUndefined(obj.objectFlags)) 0 else obj.objectFlags.asInstanceOf[Int]
 
   lazy val symbol = TSSymbolObject(obj.symbol)
-  lazy val resolvedTypeArguments = TSTypeArray(obj.resolvedTypeArguments)
+  lazy val typeArguments = TSTypeArray(TSTypeChecker.getTypeArguments(obj))
   lazy val intrinsicName = obj.intrinsicName.toString
   lazy val types = TSTypeArray(obj.types)
   lazy val properties = TSSymbolArray(TSTypeChecker.getPropertiesOfType(obj))
@@ -149,7 +147,7 @@ class TSTypeObject(obj: js.Dynamic) extends TSAny(obj) {
   lazy val isAnonymous = objectFlags == TypeScript.objectFlagsAnonymous
   lazy val isTypeParameter = flags == TypeScript.typeFlagsTypeParameter
   lazy val isObject = flags == TypeScript.typeFlagsObject
-  lazy val isTypeParameterSubstitution = isObject && !resolvedTypeArguments.isUndefined && resolvedTypeArguments.length > 0
+  lazy val isTypeParameterSubstitution = isObject && typeArguments.length > 0
 }
 
 object TSTypeObject {
