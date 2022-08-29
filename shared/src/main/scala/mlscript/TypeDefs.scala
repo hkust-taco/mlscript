@@ -8,7 +8,7 @@ import scala.annotation.tailrec
 import mlscript.utils._, shorthands._
 import mlscript.Message._
 
-class TypeDefs extends ConstraintSolver { self: Typer =>
+class TypeDefs extends NuTypeDefs { self: Typer =>
   import TypeProvenance.{apply => tp}
   
   
@@ -24,6 +24,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
    * @param mthDefs method definitions in a class or interface, not relevant for type alias
    * @param baseClasses base class if the class or interface inherits from any
    * @param toLoc source location related information
+   * @param positionals positional term parameters of the class
    */
   case class TypeDef(
     kind: TypeDefKind,
@@ -35,6 +36,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
     mthDefs: List[MethodDef[Left[Term, Type]]],
     baseClasses: Set[TypeName],
     toLoc: Opt[Loc],
+    positionals: Ls[Str],
   ) {
     def allBaseClasses(ctx: Ctx)(implicit traversed: Set[TypeName]): Set[TypeName] =
       baseClasses.map(v => TypeName(v.name.decapitalize)) ++
@@ -179,7 +181,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           val (bodyTy, tvars) = 
             typeType2(td.body, simplify = false)(ctx.copy(lvl = 0), raise, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
           val td1 = TypeDef(td.kind, td.nme, tparamsargs.toList, tvars, bodyTy,
-            td.mthDecls, td.mthDefs, baseClassesOf(td), td.toLoc)
+            td.mthDecls, td.mthDefs, baseClassesOf(td), td.toLoc, Nil)
           allDefs += n -> td1
           S(td1)
       }
@@ -682,7 +684,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
       val visitedSet: MutSet[Bool -> TypeVariable] = MutSet()
       varianceUpdated = false;
       tyDefs.foreach {
-        case t @ TypeDef(k, nme, _, _, body, mthDecls, mthDefs, _, _) =>
+        case t @ TypeDef(k, nme, _, _, body, mthDecls, mthDefs, _, _, _) =>
           trace(s"${k.str} ${nme.name}  ${
                 t.tvarVariances.getOrElse(die).iterator.map(kv => s"${kv._2} ${kv._1}").mkString("  ")}") {
             updateVariance(body, VarianceInfo.co)(t, visitedSet)

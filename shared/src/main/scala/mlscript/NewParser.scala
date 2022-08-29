@@ -192,9 +192,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     val es = ts.map {
       case L(t) =>
         err(msg"Unexpected 'then'/'else' clause" -> t.toLoc :: Nil)
-        L(errExpr)
-      case R(d: NuDecl) => R(d)
-      case R(e: Term) => L(e)
+        errExpr
+      case R(d: NuDecl) => d
+      case R(e: Term) => e
       case _ => ???
     }
     TypingUnit(es)

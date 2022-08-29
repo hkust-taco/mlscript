@@ -178,7 +178,7 @@ class JSBackend {
         R(blkScope.tempVars `with` (stmts flatMap (_.desugared._2) map {
           case t: Term             => JSExprStmt(translateTerm(t))
           // TODO: find out if we need to support this.
-          case _: Def | _: TypeDef | _: NuFunDef | _: NuTypeDef =>
+          case _: Def | _: TypeDef | _: NuFunDef /* | _: NuTypeDef */ =>
             throw CodeGenError("unexpected definitions in blocks")
         })),
         Nil
@@ -451,11 +451,11 @@ class JSBackend {
     val traits = new ListBuffer[TraitSymbol]()
     val classes = new ListBuffer[ClassSymbol]()
     typeDefs.foreach {
-      case TypeDef(Als, TypeName(name), tparams, body, _, _) =>
+      case TypeDef(Als, TypeName(name), tparams, body, _, _, _) =>
         topLevelScope.declareTypeAlias(name, tparams map { _.name }, body)
-      case TypeDef(Trt, TypeName(name), tparams, body, _, methods) =>
+      case TypeDef(Trt, TypeName(name), tparams, body, _, methods, _) =>
         traits += topLevelScope.declareTrait(name, tparams map { _.name }, body, methods)
-      case TypeDef(Cls, TypeName(name), tparams, baseType, _, members) =>
+      case TypeDef(Cls, TypeName(name), tparams, baseType, _, members, _) =>
         classes += topLevelScope.declareClass(name, tparams map { _.name }, baseType, members)
     }
     (traits.toList, classes.toList)

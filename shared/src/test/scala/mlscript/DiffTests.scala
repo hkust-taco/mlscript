@@ -330,7 +330,7 @@ class DiffTests
             if (parseOnly)
               Success(Pgrm(Nil), 0)
             else
-              Success(Pgrm(res.entities.map(_.fold(identity, identity))), 0)
+              Success(Pgrm(res.entities), 0)
             
           }
           else parse(processedBlockStr, p =>
@@ -347,7 +347,7 @@ class DiffTests
               failures += globalLineNum
             output("/!\\ Parse error: " + extra.trace().msg +
               s" at l.$globalLineNum:$col: $lineStr")
-
+            
           // successfully parsed block into a valid syntactically valid program
           case Success(p, index) =>
             if (mode.expectParseErrors && !newParser)
@@ -371,7 +371,10 @@ class DiffTests
             }
             
             val oldCtx = ctx
-            ctx = typer.processTypeDefs(typeDefs)(ctx, raise)
+            ctx = 
+              // if (newParser) typer.typeTypingUnit(tu)
+              // else 
+              typer.processTypeDefs(typeDefs)(ctx, raise)
             
             def getType(ty: typer.TypeScheme): Type = {
               val wty = ty.uninstantiatedBody

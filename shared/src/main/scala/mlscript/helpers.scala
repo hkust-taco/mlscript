@@ -251,7 +251,6 @@ trait PgrmImpl { self: Pgrm =>
       case td: TypeDef => L(td)
       case ot: Terms => R(ot)
       case NuFunDef(nme, tys, rhs) => R(Def(false, nme, rhs))
-      case _: NuFunDef | _: NuTypeDef => ???
     }
     diags.toList -> res
   }
@@ -278,12 +277,14 @@ trait DeclImpl extends Located { self: Decl =>
     case _: TypeDef => "type declaration"
   }
   def show: Str = showHead + (this match {
-    case TypeDef(Als, _, _, _, _, _) => " = "; case _ => ": " }) + showBody
+    case TypeDef(Als, _, _, _, _, _, _) => " = "; case _ => ": " }) + showBody
   def showHead: Str = this match {
     case Def(true, n, b) => s"rec def $n"
     case Def(false, n, b) => s"def $n"
-    case TypeDef(k, n, tps, b, _, _) =>
-      s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_.name).mkString("[", ", ", "]")}"
+    case TypeDef(k, n, tps, b, _, _, pos) =>
+      s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_.name).mkString("[", ", ", "]")}${
+        if (pos.isEmpty) "" else pos.mkString("(", ", ", ")")
+      }"
   }
 }
 
@@ -311,13 +312,15 @@ trait NuDeclImpl extends Located { self: NuDecl =>
 }
 trait TypingUnitImpl extends Located { self: TypingUnit =>
   def show: Str = entities.map {
-    case L(t) => t.toString
-    case R(d) => d.show
+    case t: Term => t.toString
+    case d: NuDecl => d.show
+    case _ => die
   }.mkString("{", "; ", "}")
-  lazy val children: List[Located] = entities.map(_.fold(identity, identity))
+  lazy val children: List[Located] = entities
 }
 
 trait TypeNameImpl extends Ordered[TypeName] { self: TypeName =>
+  val base: TypeName = this
   def compare(that: TypeName): Int = this.name compare that.name
 }
 
@@ -544,8 +547,30 @@ trait StatementImpl extends Located { self: Statement =>
       val (diags2, cs) = desugarCases(bod, targs)
       val dataDefs = cs.collect{case td: TypeDef => td}
       (diags ::: diags2 ::: diags3) -> (TypeDef(Als, TypeName(v.name).withLocOf(v), targs,
-          dataDefs.map(td => AppliedType(td.nme, td.tparams)).reduceOption(Union).getOrElse(Bot)
+          dataDefs.map(td => AppliedType(td.nme, td.tparams)).reduceOption(Union).getOrElse(Bot), Nil, Nil, Nil
         ).withLocOf(hd) :: cs)
+      case NuTypeDef(k, nme, tps, tup @ Tup(fs), pars, unit) =>
+        val diags = Buffer.empty[Diagnostic]
+        def tt(trm: Term): Type = trm.toType match {
+          case L(ds) => diags += ds; Top
+          case R(ty) => ty
+        }
+        val params = fs.map {
+          case (S(nme), Fld(mut, spec, trm)) =>
+            val ty = tt(trm)
+            nme -> Field(if (mut) S(ty) else N, ty)
+          case (N, Fld(mut, spec, nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top)
+          case _ => die
+        }
+        val pos = params.unzip._1
+        val bod = pars.map(tt).foldRight(Record(params): Type)(Inter)
+        val termName = Var(nme.name).withLocOf(nme)
+        val ctor = Def(false, termName, L(Lam(tup, App(termName, Tup(N -> Fld(false, false, Rcd(fs.map {
+          case (S(nme), fld) => nme -> fld
+          case (N, fld @ Fld(mut, spec, nme: Var)) => nme -> fld
+          case _ => die
+        })) :: Nil)))))
+        diags.toList -> (TypeDef(k, nme, tps, bod, Nil, Nil, pos) :: ctor :: Nil)
     case d: DesugaredStatement => Nil -> (d :: Nil)
   }
   import Message._
@@ -617,7 +642,7 @@ trait StatementImpl extends Located { self: Statement =>
           val tps = tparams.toList
           val ctor = Def(false, v, R(PolyType(tps,
             params.foldRight(AppliedType(clsNme, tps):Type)(Function(_, _))))).withLocOf(stmt)
-          val td = TypeDef(Cls, clsNme, tps, Record(fields.toList.mapValues(Field(None, _)))).withLocOf(stmt)
+          val td = TypeDef(Cls, clsNme, tps, Record(fields.toList.mapValues(Field(None, _))), Nil, Nil, Nil).withLocOf(stmt)
           td :: ctor :: cs
         case _ => ??? // TODO methods in data type defs? nested data type defs?
       }
@@ -646,7 +671,7 @@ trait StatementImpl extends Located { self: Statement =>
     case With(t, fs) => t :: fs :: Nil
     case CaseOf(s, c) => s :: c :: Nil
     case d @ Def(_, n, b) => n :: d.body :: Nil
-    case TypeDef(kind, nme, tparams, body, _, _) => nme :: tparams ::: body :: Nil
+    case TypeDef(kind, nme, tparams, body, _, _, pos) => nme :: tparams ::: pos ::: body :: Nil
     case Subs(a, i) => a :: i :: Nil
     case Assign(lhs, rhs) => lhs :: rhs :: Nil
     case Splc(fields) => fields.map{case L(l) => l case R(r) => r.value}
