@@ -24,6 +24,10 @@ object TypeScript {
   def isInterfaceDeclaration(node: js.Dynamic): Boolean = ts.isInterfaceDeclaration(node)
   def isFunctionLike(node: js.Dynamic): Boolean = ts.isFunctionLike(node)
   def isNamespaceDeclaration(node: js.Dynamic): Boolean = ts.isModuleDeclaration(node)
+  def isArrayTypeNode(node: js.Dynamic): Boolean = ts.isArrayTypeNode(node)
+  def isTupleTypeNode(node: js.Dynamic): Boolean = ts.isTupleTypeNode(node)
+  def isUnionTypeNode(node: js.Dynamic): Boolean = ts.isUnionTypeNode(node)
+  def isIntersectionTypeNode(node: js.Dynamic): Boolean = ts.isIntersectionTypeNode(node)
 
   def forEachChild(root: js.Dynamic, func: js.Dynamic => Unit): Unit = ts.forEachChild(root, func)
   def createProgram(filenames: Seq[String]): js.Dynamic = 
@@ -76,7 +80,10 @@ case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
   lazy val isFunctionLike = !isUndefined && TypeScript.isFunctionLike(node)
   lazy val isNamespace = !isUndefined && TypeScript.isNamespaceDeclaration(node)
   lazy val hasTypeNode = !isUndefined && !`type`.isUndefined
-
+  lazy val isArrayTypeNode = !isUndefined && TypeScript.isArrayTypeNode(node)
+  lazy val isTupleTypeNode = !isUndefined && TypeScript.isTupleTypeNode(node)
+  lazy val isUnionTypeNode = !isUndefined && TypeScript.isUnionTypeNode(node)
+  lazy val isIntersectionTypeNode = !isUndefined && TypeScript.isIntersectionTypeNode(node)
   lazy val isImplementationOfOverload = TSTypeChecker.isImplementationOfOverload(node)
   lazy val isOptional = !IsUndefined(node.initializer) || !IsUndefined(node.questionToken)
   lazy val isStatic = if (modifiers.isUndefined) false
@@ -130,14 +137,15 @@ class TSTypeObject(obj: js.Dynamic) extends TSAny(obj) {
   lazy val intrinsicName = obj.intrinsicName.toString
   lazy val types = TSTypeArray(obj.types)
   lazy val properties = TSSymbolArray(TSTypeChecker.getPropertiesOfType(obj))
+  lazy val node = TSNodeObject(TSTypeChecker.typeToTypeNode(obj))
 
-  lazy val isTupleType = obj.checker.isTupleType(obj)
-  lazy val isArrayType = obj.checker.isArrayType(obj)
+  lazy val isTupleType = node.isTupleTypeNode
+  lazy val isArrayType = node.isArrayTypeNode
   lazy val isEnumType = (flags & TypeScript.typeFlagsEnumLike) > 0
 
-  lazy val isUnionType = flags == TypeScript.typeFlagsUnion
-  lazy val isIntersectionType = flags == TypeScript.typeFlagsInter
-  lazy val isFunctionLike = TypeScript.isFunctionLike(TSTypeChecker.typeToTypeNode(obj))
+  lazy val isUnionType = node.isUnionTypeNode
+  lazy val isIntersectionType = node.isIntersectionTypeNode
+  lazy val isFunctionLike = node.isFunctionLike
   lazy val isAnonymous = objectFlags == TypeScript.objectFlagsAnonymous
   lazy val isTypeParameter = flags == TypeScript.typeFlagsTypeParameter
   lazy val isObject = flags == TypeScript.typeFlagsObject

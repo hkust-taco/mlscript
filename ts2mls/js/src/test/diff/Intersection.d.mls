@@ -4,7 +4,7 @@ def over: (((number) -> (string)) & (({}) -> (string))) -> (string)
 trait IA: { x: number }
 trait IB: { y: number }
 def iii: ((IA) & (IB)) -> ((IA) & (IB))
-def uu[U, V, T, P]: (((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))) -> (((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P)))
+def uu[U, V, T, P]: (((((U) & (T)) & ((U) & (P))) & ((V) & (T))) & ((V) & (P))) -> (((((U) & (T)) & ((U) & (P))) & ((V) & (T))) & ((V) & (P)))
 def iiii[U, T, V]: (((U) & (T)) & (V)) -> (((U) & (T)) & (V))
 def arr[U, T]: ((MutArray[U]) & (MutArray[T])) -> ((MutArray[U]) & (MutArray[T]))
 def tt[U, T, V]: (((U, T, )) & ((V, V, ))) -> (((U, T, )) & ((V, V, )))
@@ -23,7 +23,7 @@ def inter: ((A) & (B)) -> ((A) & (B))
 //│     = <missing implementation>
 //│ iii: (IA & IB) -> (IA & IB)
 //│    = <missing implementation>
-//│ uu: ('a & 'b | 'c & 'b) -> ('a & 'b | 'c & 'b)
+//│ uu: 'a -> 'a
 //│   = <missing implementation>
 //│ iiii: 'a -> 'a
 //│     = <missing implementation>
