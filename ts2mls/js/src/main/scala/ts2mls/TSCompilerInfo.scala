@@ -9,13 +9,13 @@ import ts2mls.types._
 object TypeScript {
   private val ts = g.require("typescript")
 
-  val typeFlagsEnumLike = ts.TypeFlags.EnumLike.asInstanceOf[Int]
-  val typeFlagsObject = ts.TypeFlags.Object.asInstanceOf[Int]
-  val typeFlagsTypeParameter = ts.TypeFlags.TypeParameter.asInstanceOf[Int]
-  val syntaxKindPrivate = ts.SyntaxKind.PrivateKeyword.asInstanceOf[Int]
-  val syntaxKindProtected = ts.SyntaxKind.ProtectedKeyword.asInstanceOf[Int]
-  val syntaxKindStatic = ts.SyntaxKind.StaticKeyword.asInstanceOf[Int]
-  val objectFlagsAnonymous = ts.ObjectFlags.Anonymous.asInstanceOf[Int]
+  val typeFlagsEnumLike = ts.TypeFlags.EnumLike
+  val typeFlagsObject = ts.TypeFlags.Object
+  val typeFlagsTypeParameter = ts.TypeFlags.TypeParameter
+  val syntaxKindPrivate = ts.SyntaxKind.PrivateKeyword
+  val syntaxKindProtected = ts.SyntaxKind.ProtectedKeyword
+  val syntaxKindStatic = ts.SyntaxKind.StaticKeyword
+  val objectFlagsAnonymous = ts.ObjectFlags.Anonymous
 
   def isToken(node: js.Dynamic) = ts.isToken(node)
   def isClassDeclaration(node: js.Dynamic) = ts.isClassDeclaration(node)
@@ -114,7 +114,7 @@ object TSNodeObject {
 }
 
 class TSTokenObject(token: js.Dynamic)(implicit checker: TSTypeChecker) extends TSAny(token) {
-  private lazy val kind = token.kind.asInstanceOf[Int]
+  private lazy val kind = token.kind
 
   lazy val isPrivate = kind == TypeScript.syntaxKindPrivate
   lazy val isProtected = kind == TypeScript.syntaxKindProtected
@@ -128,8 +128,8 @@ object TSTokenObject {
 }
 
 class TSTypeObject(obj: js.Dynamic)(implicit checker: TSTypeChecker) extends TSAny(obj) {
-  private lazy val flags = obj.flags.asInstanceOf[Int]
-  private lazy val objectFlags = if (IsUndefined(obj.objectFlags)) 0 else obj.objectFlags.asInstanceOf[Int]
+  private lazy val flags = obj.flags
+  private lazy val objectFlags = if (IsUndefined(obj.objectFlags)) 0 else obj.objectFlags
 
   lazy val symbol = TSSymbolObject(obj.symbol)
   lazy val typeArguments = TSTypeArray(checker.getTypeArguments(obj))
