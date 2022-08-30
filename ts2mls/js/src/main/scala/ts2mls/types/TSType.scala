@@ -10,7 +10,7 @@ case class TSMemberType(val base: TSType, val modifier: TSAccessModifier = Publi
 case class TSTypeParameter(val name: String, val constraint: Option[TSType] = None) extends TSType
 case class TSNamedType(typeName: String) extends TSType
 case class TSReferenceType(name: String) extends TSType
-case class TSEnumType() extends TSType
+case object TSEnumType extends TSType
 case class TSTupleType(types: List[TSType]) extends TSType
 case class TSFunctionType(params: List[TSType], res: TSType, val typeVars: List[TSTypeParameter]) extends TSType
 case class TSArrayType(eleType: TSType) extends TSType

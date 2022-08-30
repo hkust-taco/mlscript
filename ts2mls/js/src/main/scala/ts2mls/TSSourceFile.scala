@@ -5,15 +5,12 @@ import js.DynamicImplicits._
 import types._
 
 object TSSourceFile {
-  def apply(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker) = {
-    def generate(node: js.Dynamic): Unit = {
+  def apply(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker) =
+    TypeScript.forEachChild(sf, (node: js.Dynamic) => {
       val nodeObject = TSNodeObject(node)
       if (!nodeObject.isToken && !nodeObject.symbol.isUndefined)
         addNodeIntoNamespace(nodeObject, nodeObject.symbol.escapedName)(global)
-    }
-
-    TypeScript.forEachChild(sf, generate)
-  }
+    })
 
   private def getSubstitutionArguments[T <: TSAny](args: TSArray[T]): List[TSType] =
     args.foldLeft(List[TSType]())((lst, arg) => arg match {
@@ -22,7 +19,7 @@ object TSSourceFile {
     })
 
   private def getObjectType(obj: TSTypeObject): TSType =
-    if (obj.isEnumType) TSEnumType()
+    if (obj.isEnumType) TSEnumType
     else if (obj.isFunctionLike) getFunctionType(obj.symbol.declaration)
     else if (obj.isTupleType) TSTupleType(getTupleElements(obj.typeArguments))
     else if (obj.isUnionType) getStructuralType(obj.types, true)

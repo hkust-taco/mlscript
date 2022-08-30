@@ -23,10 +23,10 @@ object Converter {
       else params.foldRight(convert(res))((tst, mlst) => s"(${convert(tst)}) -> (${mlst})")
     case TSUnionType(lhs, rhs) => s"(${convert(lhs)}) | (${convert(rhs)})"
     case TSIntersectionType(lhs, rhs) => s"(${convert(lhs)}) & (${convert(rhs)})"
-    case TSTypeParameter(name, _) => name
+    case TSTypeParameter(name, _) => name // TODO: add constraints
     case TSTupleType(lst) => s"(${lst.foldLeft("")((p, t) => s"$p${convert(t)}, ")})"
     case TSArrayType(element) => s"MutArray[${convert(element)}]"
-    case TSEnumType() => "int"
+    case TSEnumType => "int"
     case TSMemberType(base, modifier) => convert(base)
     case TSInterfaceType(name, members, typeVars, parents) => convertRecord(s"trait $name", members, typeVars, parents)
     case TSClassType(name, members, _, typeVars, parents) => convertRecord(s"class $name", members, typeVars, parents) // TODO: deal with static members
@@ -38,7 +38,7 @@ object Converter {
     val allRecs = members.toList.map((m) => m._2.modifier match {
       case Public => {
         m._2.base match {
-          case f@ TSFunctionType(_, _, typeVars) if (!typeVars.isEmpty) =>
+          case f @ TSFunctionType(_, _, typeVars) if (!typeVars.isEmpty) =>
             s"  method ${m._1}[${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]: ${convert(f)}" // TODO: add constraints
           case inter: TSIntersectionType => {
             val lst = TSIntersectionType.getOverloadTypeParameters(inter)
