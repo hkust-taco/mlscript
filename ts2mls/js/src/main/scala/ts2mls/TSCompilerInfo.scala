@@ -31,6 +31,8 @@ object TypeScript {
 }
 
 object TSTypeChecker {
+  // the type checker should be singleton
+  // but it needs to be initialized after the program has been created
   private var checker: js.Dynamic = null
   def init(obj: js.Dynamic): Unit = checker = obj
 
@@ -38,7 +40,7 @@ object TSTypeChecker {
     checker.typeToString(getTypeOfSymbolAtLocation(sym, sym.valueDeclaration)).toString
 
   def getReturnTypeOfSignature(node: js.Dynamic) = checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(node))
-  def getTypeFromTypeNode(node: js.Dynamic) = TSTypeObject(checker.getTypeFromTypeNode(node))
+  def getTypeFromTypeNode(node: js.Dynamic) = checker.getTypeFromTypeNode(node)
   def getTypeOfSymbolAtLocation(sym: js.Dynamic, node: js.Dynamic) = checker.getTypeOfSymbolAtLocation(sym, node)
   def getPropertiesOfType(tp: js.Dynamic) = checker.getPropertiesOfType(tp)
 
@@ -51,6 +53,8 @@ object TSTypeChecker {
 class TSSymbolObject(sym: js.Dynamic) extends TSAny(sym) {
   private lazy val parent = TSSymbolObject(sym.parent)
 
+  // the first declaration of this symbol
+  // if there is no overloading, there is only one declaration
   lazy val declaration =
     if (declarations.isUndefined) TSNodeObject(g.undefined)
     else declarations.get(0)
@@ -59,6 +63,7 @@ class TSSymbolObject(sym: js.Dynamic) extends TSAny(sym) {
 
   lazy val symbolType: String = TSTypeChecker.getTypeStringOfSymbol(sym)
 
+  // get the full name of the symbol that is declared in namespaces
   lazy val fullName: String =
     if (parent.isUndefined || !parent.declaration.isNamespace) escapedName
     else s"${parent.fullName}'$escapedName"
@@ -71,20 +76,20 @@ object TSSymbolObject {
 case class TSNodeObject(node: js.Dynamic) extends TSAny(node) {
   private lazy val modifiers = TSTokenArray(node.modifiers)
 
-  lazy val isToken = !isUndefined && TypeScript.isToken(node)
-  lazy val isClassDeclaration = !isUndefined && TypeScript.isClassDeclaration(node)
-  lazy val isInterfaceDeclaration = !isUndefined && TypeScript.isInterfaceDeclaration(node)
-  lazy val isFunctionLike = !isUndefined && TypeScript.isFunctionLike(node)
-  lazy val isNamespace = !isUndefined && TypeScript.isNamespaceDeclaration(node)
-  lazy val hasTypeNode = !isUndefined && !`type`.isUndefined
-  lazy val isArrayTypeNode = !isUndefined && TypeScript.isArrayTypeNode(node)
-  lazy val isTupleTypeNode = !isUndefined && TypeScript.isTupleTypeNode(node)
+  lazy val isToken = TypeScript.isToken(node)
+  lazy val isClassDeclaration = TypeScript.isClassDeclaration(node)
+  lazy val isInterfaceDeclaration = TypeScript.isInterfaceDeclaration(node)
+  lazy val isFunctionLike = TypeScript.isFunctionLike(node)
+  lazy val isNamespace = TypeScript.isNamespaceDeclaration(node)
+  lazy val hasTypeNode = !`type`.isUndefined
+  lazy val isArrayTypeNode = TypeScript.isArrayTypeNode(node)
+  lazy val isTupleTypeNode = TypeScript.isTupleTypeNode(node)
   lazy val isImplementationOfOverload = TSTypeChecker.isImplementationOfOverload(node)
-  lazy val isOptional = !IsUndefined(node.initializer) || !IsUndefined(node.questionToken)
+  lazy val isOptional = !initializer.isUndefined || !IsUndefined(node.questionToken)
   lazy val isStatic = if (modifiers.isUndefined) false
                      else modifiers.foldLeft(false)((s, t) => t.isStatic)
 
-  lazy val typeNode = TSTypeChecker.getTypeFromTypeNode(node)
+  lazy val typeNode = TSTypeObject(TSTypeChecker.getTypeFromTypeNode(node))
   lazy val symbol = TSSymbolObject(node.symbol)
   lazy val parameters = TSNodeArray(node.parameters)
   lazy val typeParameters = TSNodeArray(node.typeParameters)
@@ -116,7 +121,7 @@ class TSTokenObject(token: js.Dynamic) extends TSAny(token) {
   lazy val isProtected = kind == TypeScript.syntaxKindProtected
   lazy val isStatic = kind == TypeScript.syntaxKindStatic
 
-  lazy val typeNode = TSTypeChecker.getTypeFromTypeNode(token)
+  lazy val typeNode = TSTypeObject(TSTypeChecker.getTypeFromTypeNode(token))
 }
 
 object TSTokenObject {
@@ -152,12 +157,7 @@ object TSTypeObject {
 }
 
 class TSIdentifierObject(id: js.Dynamic) extends TSAny(id) {
-  private lazy val left = TSIdentifierObject(id.left)
-  private lazy val right = TSIdentifierObject(id.right)
-
-  lazy val escapedText: String =
-    if (left.isUndefined) id.escapedText.toString()
-    else s"${left.escapedText}'${right.escapedText}"
+  lazy val escapedText: String = id.escapedText.toString()
 }
 
 object TSIdentifierObject {

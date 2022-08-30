@@ -29,10 +29,9 @@ object TSSourceFile {
     else if (obj.isIntersectionType) getStructuralType(obj.types, false)
     else if (obj.isArrayType) TSArrayType(getObjectType(obj.elementTypeOfArray))
     else if (obj.isTypeParameterSubstitution) TSSubstitutionType(obj.symbol.escapedName, getSubstitutionArguments(obj.typeArguments))
-    else if (obj.isObject) {
+    else if (obj.isObject)
       if (obj.isAnonymous) TSInterfaceType("", getAnonymousPropertiesType(obj.properties), List(), List())
       else TSReferenceType(obj.symbol.fullName)
-    }
     else if (obj.isTypeParameter) TSTypeParameter(obj.symbol.escapedName)
     else TSNamedType(obj.intrinsicName)
 
@@ -45,22 +44,23 @@ object TSSourceFile {
     else res
   }
 
-  private def getTypeConstraints(node: TSNodeObject): List[TSTypeParameter] =
+  private def getTypeParametes(node: TSNodeObject): List[TSTypeParameter] =
     node.typeParameters.foldLeft(List[TSTypeParameter]())((lst, tp) =>
       if (tp.constraint.isUndefined) lst :+ TSTypeParameter(tp.symbol.escapedName, None)
       else lst :+ TSTypeParameter(tp.symbol.escapedName, Some(getObjectType(tp.constraint.typeNode)))
     )
 
   private def getFunctionType(node: TSNodeObject): TSFunctionType = {
-    val constraints = getTypeConstraints(node)
+    val typeParameters = getTypeParametes(node)
     // in typescript, you can use `this` to explicitly specifies the callee
     // but it never appears in the final javascript file
-    val pList = node.parameters.foldLeft(List[TSType]())((lst, p) => lst :+
-      (if (p.symbol.escapedName.equals("this")) TSNamedType("void")
+    val pList = node.parameters.foldLeft(List[TSType]())((lst, p) => lst :+ (
+      if (p.symbol.escapedName.equals("this")) TSNamedType("void")
       else
         if (p.isOptional) TSUnionType(getObjectType(p.symbolType), TSNamedType("undefined"))
-        else getObjectType(p.symbolType)))
-    TSFunctionType(pList, getObjectType(node.returnType), constraints)
+        else getObjectType(p.symbolType))
+      )
+    TSFunctionType(pList, getObjectType(node.returnType), typeParameters)
   }
 
   private def getStructuralType(types: TSTypeArray, isUnion: Boolean): TSStructuralType = 
@@ -111,14 +111,10 @@ object TSSourceFile {
   private def getAnonymousPropertiesType(list: TSSymbolArray): Map[String, TSMemberType] =
     list.foldLeft(Map[String, TSMemberType]())((mp, p) => mp ++ Map(p.escapedName -> TSMemberType(getMemberType(p.declaration))))
 
-  private def parseMembers(name: String, node: TSNodeObject, isClass: Boolean): TSType = {
-    val members = node.members
-    val constraints = getTypeConstraints(node)
-
+  private def parseMembers(name: String, node: TSNodeObject, isClass: Boolean): TSType =
     if (isClass)
-      TSClassType(name, getClassMembersType(members, false), getClassMembersType(members, true), constraints, getHeritageList(node))
-    else TSInterfaceType(name, getInterfacePropertiesType(members), constraints, getHeritageList(node))
-  }
+      TSClassType(name, getClassMembersType(node.members, false), getClassMembersType(node.members, true), getTypeParametes(node), getHeritageList(node))
+    else TSInterfaceType(name, getInterfacePropertiesType(node.members), getTypeParametes(node), getHeritageList(node))
 
   private def parseNamespaceLocals(map: TSSymbolMap)(implicit ns: TSNamespace) =
     map.foreach((sym) => {

@@ -1,9 +1,7 @@
 package ts2mls;
 
 import scala.scalajs.js
-import js.Dynamic.{global => g}
 import js.DynamicImplicits._
-import scala.collection.mutable.HashMap
 import ts2mls.types._
 
 class TSProgram(filenames: Seq[String]) {

@@ -1,7 +1,5 @@
 package ts2mls.types
 
-import ts2mls.TSNamespace
-
 object Converter {
   private val primitiveName = Map[String, String](
     "boolean" -> "bool",
@@ -16,9 +14,9 @@ object Converter {
     "object" -> "{}"
   )
 
-  def convert(tsType: TSType)(implicit ns: TSNamespace): String = tsType match {
+  def convert(tsType: TSType): String = tsType match {
     case TSNamedType(typeName) => primitiveName.getOrElse(typeName, typeName)
-    case TSReferenceType(name) => s"${ns.getParentPath(name)}"
+    case TSReferenceType(name) => name
     case TSFunctionType(params, res, _) =>
       // since functions can be defined by both `def` and `method`, it only returns the type of functions
       if (params.length == 0) s"${primitiveName("void")} -> (${convert(res)})"
@@ -36,7 +34,7 @@ object Converter {
   }
 
   private def convertRecord(typeName: String, members: Map[String, TSMemberType],
-    typeVars: List[TSTypeParameter], parents: List[TSType])(implicit ns: TSNamespace) = {
+    typeVars: List[TSTypeParameter], parents: List[TSType]) = {
     val allRecs = members.toList.map((m) => m._2.modifier match {
       case Public => {
         m._2.base match {

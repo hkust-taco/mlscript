@@ -26,7 +26,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
       order += Right(name)
       members.put(name, tp)
     }
-    else members.update(name, tp) // overload
+    else members.update(name, tp)
 
   def get(name: String): TSType =
     members.getOrElse(name,
@@ -46,19 +46,19 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
             val params = TSIntersectionType.getOverloadTypeParameters(inter).map((t) => t.name) 
 
             if (params.isEmpty)
-              writer.writeln(s"def ${fullName}: ${Converter.convert(inter)(this)}")
+              writer.writeln(s"def ${fullName}: ${Converter.convert(inter)}")
             else // TODO: add constraints
-              writer.writeln(s"def ${fullName}[${params.reduceLeft((r, s) => s"$r, $s")}]: ${Converter.convert(inter)(this)}")
+              writer.writeln(s"def ${fullName}[${params.reduceLeft((r, s) => s"$r, $s")}]: ${Converter.convert(inter)}")
           }
           case f: TSFunctionType => {
             val fullName = getFullPath(name)
             val params = f.typeVars.map((t) => t.name) 
             if (params.isEmpty)
-              writer.writeln(s"def ${fullName}: ${Converter.convert(f)(this)}")
+              writer.writeln(s"def ${fullName}: ${Converter.convert(f)}")
             else // TODO: add constraints
-              writer.writeln(s"def ${fullName}[${params.reduceLeft((r, s) => s"$r, $s")}]: ${Converter.convert(f)(this)}")
+              writer.writeln(s"def ${fullName}[${params.reduceLeft((r, s) => s"$r, $s")}]: ${Converter.convert(f)}")
           }
-          case _ => writer.writeln(Converter.convert(mem)(this))
+          case _ => writer.writeln(Converter.convert(mem))
         }
       }
     })
@@ -66,13 +66,6 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
   // generate full path with namespaces
   def getFullPath(nm: String): String = parent match {
     case Some(p) => p.getFullPath(s"$name'$nm")
-    case _ => nm
-  }
-
-  def getParentPath(nm: String): String = parent match {
-    case Some(p) =>
-      if (members.contains(nm)) s"$name'$nm"
-      else p.getParentPath(nm)
     case _ => nm
   }
 }

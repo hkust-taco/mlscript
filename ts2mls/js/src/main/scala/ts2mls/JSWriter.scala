@@ -5,18 +5,18 @@ import js.Dynamic.{global => g}
 import js.DynamicImplicits._
 
 class JSWriter(filename: String) {
-  import JSWriter.{fs, createBuffer}
+  import JSWriter._
   private val out = fs.openSync(filename, "rs+")
-  private var fileSize = 0
+  private var fileSize = 0 // how many bytes we've written in the file
   private var needTruncate = false
 
   def writeln(str: String): Unit = {
     val strln = s"$str\n"
     val buffer = createBuffer(strln.length)
-    val len = fs.readSync(out, buffer, 0, strln.length).asInstanceOf[Int]
+    fs.readSync(out, buffer, 0, strln.length)
     
     if (!strln.equals(buffer.toString())) {
-      fs.writeSync(out, strln, fileSize).asInstanceOf[Int]
+      fs.writeSync(out, strln, fileSize)
       needTruncate = true
     }
 

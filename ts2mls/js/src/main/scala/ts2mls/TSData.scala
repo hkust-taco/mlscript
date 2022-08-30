@@ -1,7 +1,6 @@
 package ts2mls
 
 import scala.scalajs.js
-import js.Dynamic.{global => g}
 import js.DynamicImplicits._
 import js.JSConverters._
 
@@ -19,21 +18,18 @@ abstract class TSArray[T <: TSAny](arr: js.Dynamic) extends TSAny(arr) {
   lazy val length: Int = arr.length.asInstanceOf[Int]
 
   def foldLeft[U](init: U, index: Int = 0)(implicit f: (U, T) => U): U =
-    if (isUndefined) init
-    else if (index < length) foldLeft(f(init, get(index)), index + 1)
+    if (!isUndefined && index < length) foldLeft(f(init, get(index)), index + 1)
     else init
 
   def foldLeftIndexed[U](init: U, index: Int = 0)(implicit f: (U, T, Int) => U): U =
-    if (isUndefined) init
-    else if (index < length) foldLeftIndexed(f(init, get(index), index), index + 1)
+    if (!isUndefined && index < length) foldLeftIndexed(f(init, get(index), index), index + 1)
     else init
 
   def foreach(f: T => Unit, index: Int = 0): Unit =
-    if (!isUndefined)
-      if (index < length) {
-        f(get(index))
-        foreach(f, index + 1)
-      }
+    if (!isUndefined && index < length) {
+      f(get(index))
+      foreach(f, index + 1)
+    }
 }
 
 class TSNodeArray(arr: js.Dynamic) extends TSArray[TSNodeObject](arr) {
@@ -70,11 +66,8 @@ object TSTypeArray {
 
 class TSSymbolMap(map: js.Dynamic) extends TSAny(map) {
   def foreach(f: TSSymbolObject => Unit): Unit =
-    if (!isUndefined) {
-      val jsf: js.Function1[js.Dynamic, js.Any] =
-        { (s: js.Dynamic) => f(TSSymbolObject(s)) }
-      map.forEach(jsf)
-    }
+    if (!isUndefined)
+      map.forEach({ (s: js.Dynamic) => f(TSSymbolObject(s)) })
 }
 
 object TSSymbolMap {
