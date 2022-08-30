@@ -138,32 +138,20 @@ object TSSourceFile {
   // because the namespace merely exports symbols rather than node objects themselves
   private def addNodeIntoNamespace(node: TSNodeObject, name: String, overload: Option[TSNodeArray] = None)(implicit ns: TSNamespace) =
     if (node.isFunctionLike) overload match {
-      case None => {
-        val typeInfo = getFunctionType(node)
-        addFunctionIntoNamespace(typeInfo, node, name)
-      }
+      case None =>
+        addFunctionIntoNamespace(getFunctionType(node), node, name)
       case Some(decs) => {
-        decs.foreach((d) => {
-          val func = getFunctionType(d)
-          addFunctionIntoNamespace(func, d, name)
-        })
+        decs.foreach((d) =>
+          addFunctionIntoNamespace(getFunctionType(d), d, name)
+        )
       }
     }
-    else if (node.isClassDeclaration) {
-      val fullName = ns.getFullPath(name)
-      ns.put(name, TSNamedType(name)) // placeholder for self-reference
-      val typeInfo = parseMembers(fullName, node, true)
-      ns.put(name, typeInfo)
-    }
-    else if (node.isInterfaceDeclaration) {
-      val fullName = ns.getFullPath(name)
-      ns.put(name, TSNamedType(name)) // placeholder for self-reference
-      val typeInfo = parseMembers(fullName, node, false)
-      ns.put(name, typeInfo)
-    }
-    else if (node.isNamespace) {
-      parseNamespace(node)(ns)
-    }
+    else if (node.isClassDeclaration)
+      ns.put(name, parseMembers(ns.getFullPath(name), node, true))
+    else if (node.isInterfaceDeclaration)
+      ns.put(name, parseMembers(ns.getFullPath(name), node, false))
+    else if (node.isNamespace)
+      parseNamespace(node)
 
   private def parseNamespace(node: TSNodeObject)(implicit ns: TSNamespace): Unit =
     parseNamespaceLocals(node.locals)(ns.derive(node.symbol.escapedName))

@@ -38,13 +38,13 @@ object Converter {
     val allRecs = members.toList.map((m) => m._2.modifier match {
       case Public => {
         m._2.base match {
-          case TSFunctionType(_, _, typeVars) if (!typeVars.isEmpty) =>
-            s"  method ${m._1}[${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]: ${convert(m._2)}" // TODO: add constraints
+          case f@ TSFunctionType(_, _, typeVars) if (!typeVars.isEmpty) =>
+            s"  method ${m._1}[${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]: ${convert(f)}" // TODO: add constraints
           case inter: TSIntersectionType => {
             val lst = TSIntersectionType.getOverloadTypeParameters(inter)
-            if (lst.isEmpty) s"${m._1}: ${convert(m._2)}"
+            if (lst.isEmpty) s"${m._1}: ${convert(inter)}"
             else
-              s"  method ${m._1}[${lst.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s") }]: ${convert(m._2)}" // TODO: add constraints
+              s"  method ${m._1}[${lst.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s") }]: ${convert(inter)}" // TODO: add constraints
           }
           case _ => s"${m._1}: ${convert(m._2)}"
         }
