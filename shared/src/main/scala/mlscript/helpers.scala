@@ -7,6 +7,7 @@ import scala.collection.immutable.SortedSet
 import math.Ordered.orderingToOrdered
 
 import mlscript.utils._, shorthands._
+import scala.collection.immutable
 
 
 // Auxiliary definitions for types
@@ -317,6 +318,15 @@ trait TypingUnitImpl extends Located { self: TypingUnit =>
     case _ => die
   }.mkString("{", "; ", "}")
   lazy val children: List[Located] = entities
+  lazy val desugared: Ls[Diagnostic] -> TypingUnit = {
+    val diagnostics -> statements =
+      entities.foldRight[(List[Diagnostic], List[Statement])](Nil -> Nil) {
+        case (statement, ds -> ss) =>
+          val d -> s = statement.desugared
+          (d ::: ds) -> (s ::: ss)
+      }
+    diagnostics -> TypingUnit(statements)
+  }
 }
 
 trait TypeNameImpl extends Ordered[TypeName] { self: TypeName =>
@@ -571,6 +581,7 @@ trait StatementImpl extends Located { self: Statement =>
           case _ => die
         })) :: Nil)))))
         diags.toList -> (TypeDef(k, nme, tps, bod, Nil, Nil, pos) :: ctor :: Nil)
+    case If(body, otherwise) => Nil -> (body.desugar(otherwise) :: Nil)
     case d: DesugaredStatement => Nil -> (d :: Nil)
   }
   import Message._
@@ -747,5 +758,254 @@ trait IfBodyImpl extends Located { self: IfBody =>
     case IfLet(isRec, v, r, b) => s"${if (isRec) "rec " else ""}let $v = $r in $b"
     // case _ => ??? // TODO
   }
+
+  import IfBodyImpl._
+
+  /**
+    * Desugar an `IfBody` into pattern matches or a series of if-then-else
+    * expressions.
+    * 
+    * @param otherwise
+    * @return
+    */
+  def desugar(otherwise: Opt[Term]): Term = this match {
+    case IfLet(isRec, name, rhs, body) =>
+      Let(isRec, name, rhs, body.desugar(otherwise))
+    case IfThen(expr, rhs) => makeIf(expr, rhs, otherwise)
+    case IfOpApp(lhs, op, body) => desugarIfOpApp(lhs, op, body, otherwise)
+    case IfBlock(lines) => desugarIfBlock(lines, otherwise)
+    case IfElse(expr) => throw new Exception("invalid if-else at the body")
+    case IfOpsApp(lhs, opsRhss) => desugarIfOpsApp(lhs, opsRhss, otherwise)
+  }
+}
+
+object IfBodyImpl {
+  /**
+    * Desugar `IfOpsApp` to a series of if-then-else expressions.
+    *
+    * @param lhs the first parameter of `IfOpsApp`
+    * @param opsRhss the second parameter of `IfOpsApp`
+    * @param otherwise if there is no `else` case in `opsRhss`, we will use this one
+    * @return
+    */
+  def desugarIfOpsApp(lhs: Term, opsRhss: Ls[Var -> IfBody], otherwise: => Opt[Term]): Term = {
+    opsRhss match {
+      case (op, IfLet(isRec, name, value, body)) :: tail =>
+        Let(isRec, name, value, body.desugar(otherwise))
+      case (op, IfThen(rhs, consequent)) :: tail =>
+        makeIf(makeBinOp(lhs, op, rhs), consequent, desugarIfOpsApp(lhs, tail, otherwise))
+      case (lhsOp, IfOpApp(lhsRhs, op, consequent)) :: tail =>
+        lazy val alternate = desugarIfOpsApp(lhs, tail, otherwise)
+        consequent match {
+          case IfThen(rhs, consequent) =>
+            val test = makeBinOp(makeBinOp(lhs, lhsOp, lhsRhs), op, rhs)
+            makeIf(test, consequent, alternate)
+          case IfBlock(lines) =>
+            // `(lhs lhsOp lhsRhs) op _` is waiting for _. This is similar to `IfOpApp`.
+            desugarIfOpAppLines(lines, rhs => makeBinOp(makeBinOp(lhs, lhsOp, lhsRhs), op, rhs), S(alternate))
+          case IfOpsApp(rhsLhs, rhsOpsRhss) =>
+            // `(lhs lhsOp lhsRhs) op (rhsLhs op? rhsRhs?)`
+            // This is similar to the last case.
+            ???
+          case IfLet(isRec, name, rhs, body) =>
+            Let(isRec, name, rhs, body.desugar(S(alternate)))
+          case IfElse(expr) =>
+            // `(lhs lhsOp lhsRhs) op else` does not actually make sense.
+            throw new Exception("expect an if-body with right-hand side values")
+          case IfOpApp(rhsLhs, rhsOp, ifBody) =>
+            // `(lhs lhsOp lhsRhs) op (rhsLhs rhsOp _)`
+            // We need a more flexible `desugarIfOpApp` by which we can replace the test.
+            ???
+        }
+      case (op, IfBlock(lines)) :: tail =>
+        // (lhs op _?)
+        lazy val alternate = S(desugarIfOpsApp(lhs, tail, otherwise))
+        desugarIfOpAppLines(lines, makeBinOp(lhs, op, _), alternate)
+      case (op, IfOpsApp(rhs, rhsOpsRhss)) :: tail =>
+        // (lhs op rhs op? rhs?) Hmm, the precedence is weird. Which will win?
+        // Let just assume ((lhs op rhs) op? rhs?). This is easier.
+        lazy val alternate = S(desugarIfOpsApp(lhs, tail, otherwise))
+        desugarIfOpsApp(makeBinOp(lhs, op, rhs), rhsOpsRhss, alternate)
+      case (op, IfElse(fallback)) :: Nil => fallback // otherwise is discarded
+      case (_, IfElse(_)) :: _ => throw new Exception("if-else must be the last case")
+      case Nil => otherwise.getOrElse(UnitLit(true))
+    }
+  }
+
+  def desugarIfOpAppToMatch(lines: Ls[IfBody \/ Statement], otherwise: => Opt[Term])(implicit scrutinee: Term): CaseBranches =
+    lines match {
+      case L(IfLet(isRec, name, value, body)) :: tail =>
+        Wildcard(Let(isRec, name, value, CaseOf(scrutinee, desugarIfOpAppToMatch(tail, otherwise))))
+      case L(IfThen(pattern, consequent)) :: tail =>
+        Case(termToSimpleTerm(pattern), consequent, desugarIfOpAppToMatch(tail, otherwise))
+      case L(IfOpApp(pattern, Var(op), body)) :: tail =>
+        if (op === "and")
+          Case(termToSimpleTerm(pattern), body.desugar(otherwise), desugarIfOpAppToMatch(tail, otherwise))
+        else
+          throw new Exception("only `and` can be used as junction to `is` operator")
+      case L(IfElse(alternate)) :: _ => Wildcard(alternate)
+      case R(NuFunDef(name, _, L(value))) :: tail =>
+        // The new parser parses interleaved let as `NuFunDef`.
+        desugarIfOpAppToMatch(L(IfLet(false, name, value, IfBlock(tail))) :: Nil, otherwise)
+      case thing :: _ => throw new Exception("unsupported right-hand side values of `is`: " + thing)
+      case Nil => otherwise.fold[CaseBranches](NoCases)(Wildcard(_))
+    }
   
+  def desugarIfOpAppToIfThenElse(lhs: Term, op: Var, body: IfBody, otherwise: => Opt[Term]): Term =
+    body match {
+      case IfLet(isRec, name, value, body) =>
+        Let(isRec, name, value, body.desugar(otherwise))
+      case IfBlock(lines) =>
+        desugarIfOpAppLines(lines, rhs => App(App(op, lhs), rhs), otherwise)
+      case IfOpApp(rhs, op2, body) =>
+        // `lhs op rhs op2 _` The precedence is weird.
+        // Does the parser really make a tree like this?
+        // We just assume (lhs op rhs) op2 rhs2 for now.
+        val lhs2 = makeBinOp(lhs, op, rhs)
+        desugarIfOpApp(lhs2, op2, body, otherwise)
+      case IfOpsApp(rhs, opsRhss) =>
+        // `lhs op rhs _` We should pass to `desugarIfOpsApp`.
+        // Same precedence problem as the previous case.
+        // We just assume (lhs op rhs) op2 rhs2 for now.
+        val lhs2 = makeBinOp(lhs, op, rhs)
+        desugarIfOpsApp(lhs2, opsRhss, otherwise)
+      case IfThen(rhs, consequent) =>
+        // `lhs op rhs` => `consequent`
+        val test = makeBinOp(lhs, op, rhs)
+        makeIf(test, consequent, otherwise)
+      case IfElse(expr) =>
+        // `lhs op <else>` does not make sense.
+        throw new Exception("expect an if-body with right-hand side values")
+    }
+
+  def desugarIfBody(ifBody: IfBody, makeTest: Term => Term, otherwise: => Opt[Term]): Term =
+    ifBody match {
+      case IfLet(isRec, name, rhs, body) => ???
+      case IfOpApp(rhs, op, body) =>
+        desugarIfBody(body, rmhs => makeBinOp(makeTest(rhs), op, rmhs), otherwise)
+      case IfThen(rhs, consequent) => makeIf(makeTest(rhs), consequent, otherwise)
+      case IfBlock(lines) => desugarIfOpAppLines(lines, makeTest, otherwise)
+      case IfOpsApp(lhs, opsRhss) => ???
+      case IfElse(expr) => ???
+    }
+
+  def desugarIfOpApp(lhs: Term, op: Var, body: IfBody, otherwise: => Opt[Term]): Term =
+    op match {
+      case Var("is") => body match {
+        case IfThen(pattern, consequent) =>
+          makeIf(makeBinOp(lhs, Var("is"), pattern), consequent)
+        case IfBlock(lines) => CaseOf(lhs, desugarIfOpAppToMatch(lines, otherwise)(lhs))
+        case IfOpApp(pattern, op, body) =>
+          // `(lhs is pattern) op`
+          lazy val lhs2 = makeBinOp(lhs, Var("is"), pattern)
+          body match {
+            case IfOpsApp(lhs, opsRhss) => ???
+            case IfThen(expr, rhs) => ???
+            case IfOpApp(rhsLhs, rhsOp, body) =>
+              // `(lhs is pattern) op (rhsLhs rhsOp _)
+              desugarIfBody(body, rhsRhs => makeBinOp(lhs2, op, makeBinOp(rhsLhs, rhsOp, rhsRhs)), otherwise)
+            case IfLet(isRec, name, rhs, body) => ???
+            case IfBlock(lines) => 
+              val lhs2 = makeBinOp(lhs, Var("is"), pattern)
+              val makeTest = rhs2 => makeBinOp(lhs2, op, rhs2)
+              desugarIfOpAppLines(lines, makeTest, otherwise)
+            case IfElse(expr) => throw new Exception("when the operator is `is`, only if-block is valid")
+          }
+        case _ => throw new Exception("when the operator is `is`, only if-block is valid")
+      }
+      case _ => desugarIfOpAppToIfThenElse(lhs, op, body, otherwise)
+    }
+
+  /**
+    * Desugar an `IfBlock` in another `IfOpApp` into a seris of if-then-else
+    * expressions. We already has the left-hand side value and the operator.
+    * We can get the test by passing the right-hand side value to `makeTest`.
+    *
+    * @param lines the `lines` of `IfBlock`
+    * @param makeTest Pass the RHS value to it and you will get a test.
+    * @param otherwise the fallback case
+    * @return a series of if-then-else
+    */
+  def desugarIfOpAppLines(lines: Ls[IfBody \/ Statement], makeTest: Term => Term, otherwise: => Opt[Term]): Term =
+    lines match {
+      case L(IfLet(isRec, name, value, body)) :: tail =>
+        Let(isRec, name, value, desugarIfOpAppLines(L(body) :: tail, makeTest, otherwise))
+      case L(IfBlock(lines)) :: tail =>
+        // I don't think this case is common but it's not hard.
+        desugarIfBlock(lines, S(desugarIfBlock(tail, otherwise)))
+      case L(IfThen(rhs, consequent)) :: tail =>
+        makeIf(makeTest(rhs), consequent, desugarIfOpAppLines(tail, makeTest, otherwise))
+      case L(IfOpApp(lhsRhs, op, body)) :: tail =>
+        desugarIfOpApp(makeTest(lhsRhs), op, body, S(desugarIfOpAppLines(tail, makeTest, otherwise)))
+      case L(IfOpsApp(lhsRhs, rhsOpsRhss)) :: tail =>
+        // We assume the following precedence.
+        // (lhs op lhsRhs) op2 rhs2
+        val lhs = makeTest(lhsRhs)
+        desugarIfOpsApp(lhs, rhsOpsRhss, S(desugarIfOpAppLines(tail, makeTest, otherwise)))
+      case L(IfElse(alternate)) :: Nil => alternate
+      case L(IfElse(_)) :: _ => throw new Exception("if-else must be the last case")
+      case R(statement) :: tail =>
+        // TODO: In what case will there be statements?
+        throw new Exception("unexpected statement: " + statement)
+      case Nil => otherwise.getOrElse(UnitLit(true))
+    }
+
+  /**
+    * Desugar an `IfBlock` into a series of if-then-else expressions.
+    *
+    * @param lines the parameter of `IfBlock`
+    * @param otherwise the fallback case, if there is no else case in `line`
+    * @return a series of if-then-else expressions
+    */
+  def desugarIfBlock(lines: Ls[IfBody \/ Statement], otherwise: => Opt[Term]): Term =
+    lines match {
+      case L(IfLet(isRec, name, value, body)) :: tail =>
+        // Just unwrap the `IfBody` and continue desugaring.
+        Let(isRec, name, value, desugarIfBlock(L(body) :: tail, otherwise))
+      case L(IfBlock(lines)) :: tail =>
+        // I don't think this case is common but it's not hard.
+        // No, this case will is accessible after the first case above.
+        desugarIfBlock(lines, S(desugarIfBlock(tail, otherwise)))
+      case L(IfThen(test, consequent)) :: tail =>
+        makeIf(test, consequent, desugarIfBlock(tail, otherwise))
+      case L(IfOpApp(lhs, op, body)) :: tail =>
+        desugarIfOpApp(lhs, op, body, tail match {
+          case Nil => N
+          case _ => S(desugarIfBlock(tail, otherwise))
+        })
+      case L(IfOpsApp(lhs, opsRhss)) :: tail =>
+        desugarIfOpsApp(lhs, opsRhss, S(desugarIfBlock(tail, otherwise)))
+      case L(IfElse(alternate)) :: Nil => alternate // provided alternate is discarded
+      case L(IfElse(_)) :: _ => throw new Exception("if-else must be the last case")
+      case R(NuFunDef(name, _, L(value))) :: tail =>
+        // The new parser parses interleaved let as `NuFunDef`.
+        desugarIfBlock(L(IfLet(false, name, value, IfBlock(tail))) :: Nil, otherwise)
+      case R(statement) :: tail =>
+        // TODO: In what case will there be statements?
+        throw new Exception("unexpected statement: " + statement)
+      case Nil => otherwise.getOrElse(UnitLit(true))
+    }
+
+  def termToSimpleTerm(term: Term): SimpleTerm =
+    term match {
+      case simpleTerm: SimpleTerm => simpleTerm
+      case App(constructor: Var, _) => constructor // TODO: handle arguments
+      case _ => throw new Exception(s"$term is not a simple term")
+    }
+  def makeBinOp(lhs: Term, op: Var, rhs: Term): Term = App(App(op, lhs), rhs)
+
+  def makeIf(test: Term, consequent: Term, alternate: Term): Term =
+    If(IfThen(test, consequent), S(alternate))
+  def makeIf(test: Term, consequent: Term, otherwise: Opt[Term]): Term =
+    If(IfThen(test, consequent), otherwise)
+  def makeIf(test: Term, consequent: Term): Term =
+    If(IfThen(test, consequent), N)
+
+  // Implement if-then-else via function calls.
+  // def makeIf(test: Term, consequent: Term, alternate: Term): Term =
+  //   App(App(App(Var("if"), test), consequent), alternate)
+  // def makeIf(test: Term, consequent: Term, otherwise: Opt[Term]): Term =
+  //   App(App(App(Var("if"), test), consequent), otherwise.getOrElse(UnitLit(true)))
+  // def makeIf(test: Term, consequent: Term): Term =
+  //   App(App(App(Var("if"), test), consequent), UnitLit(true))
 }

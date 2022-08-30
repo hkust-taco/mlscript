@@ -100,6 +100,7 @@ class DiffTests
       expectParseErrors: Bool = false,
       fixme: Bool = false,
       showParse: Bool = false,
+      showAnatomy: Bool = false,
       verbose: Bool = false,
       noSimplification: Bool = false,
       explainErrors: Bool = false,
@@ -118,6 +119,7 @@ class DiffTests
       expectCodeGenErrors: Bool = false,
       showRepl: Bool = false,
       allowEscape: Bool = false,
+      showDesugared: Bool = false,
       // noProvs: Bool = false,
     ) {
       def isDebugging: Bool = dbg || dbgSimplif
@@ -129,6 +131,7 @@ class DiffTests
     var allowParseErrors = false // TODO use
     var showRelativeLineNums = false
     var noJavaScript = false
+    var showDesugared = false
     var noProvs = false
     var allowRuntimeErrors = false
     var newParser = basePath.headOption.contains("parser") || basePath.headOption.contains("mono")
@@ -145,6 +148,7 @@ class DiffTests
           case "w" => mode.copy(expectWarnings = true)
           case "pe" => mode.copy(expectParseErrors = true)
           case "p" => mode.copy(showParse = true)
+          case "a" => mode.copy(showAnatomy = true)
           case "d" => mode.copy(dbg = true)
           case "dp" => mode.copy(dbgParsing = true)
           case "ds" => mode.copy(dbgSimplif = true)
@@ -171,6 +175,7 @@ class DiffTests
           case "re" => mode.copy(expectRuntimeErrors = true)
           case "ShowRepl" => mode.copy(showRepl = true)
           case "escape" => mode.copy(allowEscape = true)
+          case "ShowDesugared" => showDesugared = true; mode
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)
@@ -324,6 +329,16 @@ class DiffTests
             
             if (parseOnly)
               output("Parsed: " + res.show)
+            if (mode.showAnatomy)
+              output("Anatomy: " + mlscript.codegen.Helpers.inspect(res))
+
+            if (showDesugared) {
+              val _ -> desugared = res.desugared
+              if (parseOnly)
+                output("Desugared: " + desugared.show)
+              if (mode.showAnatomy)
+                output("Desugared Anatomy: " + mlscript.codegen.Helpers.inspect(desugared))
+            }
             
             postProcess(basePath, testName, res).foreach(output)
             
