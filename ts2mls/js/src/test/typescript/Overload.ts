@@ -1,56 +1,54 @@
-function f(x: number): number;
+function f(x: number): string;
 function f(x: string): string;
 
 function f(x) {
-  if (typeof x == "number") return x + 42;
+  if (typeof x == "number") return "42";
   else return "->" + x;
 }
 
 class M {
-  foo(x: number): number;
+  foo(x: number): string;
   foo(x: string): string;
 
   foo(x) {
-    return x;
+    return x.toString();
   }
 }
 
-function app(f: (x: number) => void, x: number): void;
+function app(f: (x: string) => void, x: number): void;
 function app(f: (x: string) => void, x: string): void;
 
 function app(f, x): void {
-  f(x)
+  f(x.toString())
 }
 
-function create(x: number): () => number;
+function create(x: number): () => boolean;
 function create(x: boolean): () => boolean;
 
 function create(x) {
-  return function() { return x; }
+  return function() { return x == 0; }
 }
 
 function g0(x: string[]): string;
-function g0(x: object[]): object;
+function g0(x: object[]): string;
 
 function g0(x) {
-  return x[0];
+  return x[0].toString();
 }
 
 function db(x: number): number[];
-function db(x: object): object[];
+function db(x: object): number[];
 
 function db(x) {
-  return [x, x];
+  return [0, 1];
 }
 
 class N {}
 
-function id(x: M): M;
-function id(x: N): N;
+function id(x: M): void;
+function id(x: N): void;
 
-function id(x) { return x; }
-
-id({foo: function(x: boolean): void {}}) // it works
+function id(x) {}
 
 function tst(x: {z: number}): {y: string};
 function tst(x: {z: boolean}): {y: string};
@@ -64,7 +62,7 @@ function op(x: number, y?: boolean): void;
 
 function op(x, y) {}
 
-function swap(x: [number, string]): [string, number];
+function swap(x: [number, string]): [number, string];
 function swap(x: [string, number]): [number, string];
 
 function swap(x) {
@@ -72,34 +70,17 @@ function swap(x) {
 }
 
 function u(x: number | boolean): string;
-function u(x: object): string | object;
+function u(x: object): string;
 
 function u(x) {
   return x.toString();
 }
 
-function doSome<T, U>(x: T & U): T & U;
+function doSome<T, U>(x: T & U): never;
 function doSome<T, U>(x: string): never;
 
 function doSome<T, U>(x) {
-  if (typeof x == "string") {
-    while (true);
-  }
-  else {
-    return x;
-  }
-}
-
-class G<T> {
-  g: T
-}
-
-function bar(x: G<string>): G<string>;
-function bar(x: G<number>): G<number>;
-function bar(x: G<boolean>): G<boolean>;
-
-function bar(x) {
-  return x;
+  while (true);
 }
 
 namespace XX {

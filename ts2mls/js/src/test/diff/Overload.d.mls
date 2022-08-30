@@ -1,49 +1,44 @@
-def f: ((number) -> (number)) & ((string) -> (string))
-class M: { foo: ((number) -> (number)) & ((string) -> (string)) }
-def app: (((number) -> (unit)) -> ((number) -> (unit))) & (((string) -> (unit)) -> ((string) -> (unit)))
-def create: ((number) -> (unit -> (number))) & (((false) | (true)) -> (unit -> ((false) | (true))))
-def g0: ((MutArray[string]) -> (string)) & ((MutArray[{}]) -> ({}))
-def db: ((number) -> (MutArray[number])) & (({}) -> (MutArray[{}]))
+def f: ((number) -> (string)) & ((string) -> (string))
+class M: { foo: ((number) -> (string)) & ((string) -> (string)) }
+def app: (((string) -> (unit)) -> ((number) -> (unit))) & (((string) -> (unit)) -> ((string) -> (unit)))
+def create: ((number) -> (unit -> ((false) | (true)))) & (((false) | (true)) -> (unit -> ((false) | (true))))
+def g0: ((MutArray[string]) -> (string)) & ((MutArray[{}]) -> (string))
+def db: ((number) -> (MutArray[number])) & (({}) -> (MutArray[number]))
 class N: {}
-def id: ((M) -> (M)) & ((N) -> (N))
+def id: ((M) -> (unit)) & ((N) -> (unit))
 def tst: (({ z: number }) -> ({ y: string })) & (({ z: (false) | (true) }) -> ({ y: string }))
 def op: ((number) -> (((number) | (undefined)) -> (unit))) & ((number) -> ((((false) | (true)) | (undefined)) -> (unit)))
-def swap: (((number, string, )) -> ((string, number, ))) & (((string, number, )) -> ((number, string, )))
-def u: ((((number) | (false)) | (true)) -> (string)) & (({}) -> ((string) | ({})))
-def doSome[T, U]: (((T) & (U)) -> ((T) & (U))) & ((string) -> (nothing))
-class G[T]: { g: T }
-def bar: (((G[string]) -> (G[string])) & ((G[number]) -> (G[number]))) & ((G[(false) | (true)]) -> (G[(false) | (true)]))
+def swap: (((number, string, )) -> ((number, string, ))) & (((string, number, )) -> ((number, string, )))
+def u: ((((number) | (false)) | (true)) -> (string)) & (({}) -> (string))
+def doSome[T, U]: (((T) & (U)) -> (nothing)) & ((string) -> (nothing))
 def XX'f[T]: ((T) -> ((number) -> (string))) & ((T) -> (((false) | (true)) -> (string)))
 class WWW: {}
   method F[T]: ((string) -> (T)) & ((number) -> (T))
 //│ Defined class M
 //│ Defined class N
-//│ Defined class G[+T]
 //│ Defined class WWW
 //│ Declared WWW.F: WWW -> (number | string) -> nothing
-//│ f: (number | string) -> nothing
+//│ f: (number | string) -> string
 //│  = <missing implementation>
-//│ app: (nothing -> unit) -> (number | string) -> unit
+//│ app: (string -> unit) -> (number | string) -> unit
 //│    = <missing implementation>
-//│ create: (false | number | true) -> unit -> nothing
+//│ create: (false | number | true) -> unit -> bool
 //│       = <missing implementation>
 //│ g0: MutArray[in string] -> string
 //│   = <missing implementation>
-//│ db: anything -> MutArray[in anything out number]
+//│ db: anything -> MutArray[number]
 //│   = <missing implementation>
-//│ id: (M | N) -> nothing
+//│ id: (M | N) -> unit
 //│   = <missing implementation>
 //│ tst: {z: false | number | true} -> {y: string}
 //│    = <missing implementation>
 //│ op: number -> (false | number | true | undefined) -> unit
 //│   = <missing implementation>
-//│ swap: (number | string, number | string,) -> (nothing, nothing,)
+//│ swap: (number | string, number | string,) -> (number, string,)
 //│     = <missing implementation>
 //│ u: anything -> string
 //│  = <missing implementation>
 //│ doSome: anything -> nothing
 //│       = <missing implementation>
-//│ bar: G[nothing] -> G[nothing]
-//│    = <missing implementation>
 //│ XX'f: anything -> (false | number | true) -> string
 //│     = <missing implementation>
