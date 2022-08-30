@@ -17,16 +17,16 @@ object TypeScript {
   val syntaxKindStatic = ts.SyntaxKind.StaticKeyword.asInstanceOf[Int]
   val objectFlagsAnonymous = ts.ObjectFlags.Anonymous.asInstanceOf[Int]
 
-  def isToken(node: js.Dynamic): Boolean = ts.isToken(node)
-  def isClassDeclaration(node: js.Dynamic): Boolean = ts.isClassDeclaration(node)
-  def isInterfaceDeclaration(node: js.Dynamic): Boolean = ts.isInterfaceDeclaration(node)
-  def isFunctionLike(node: js.Dynamic): Boolean = ts.isFunctionLike(node)
-  def isNamespaceDeclaration(node: js.Dynamic): Boolean = ts.isModuleDeclaration(node)
-  def isArrayTypeNode(node: js.Dynamic): Boolean = ts.isArrayTypeNode(node)
-  def isTupleTypeNode(node: js.Dynamic): Boolean = ts.isTupleTypeNode(node)
+  def isToken(node: js.Dynamic) = ts.isToken(node)
+  def isClassDeclaration(node: js.Dynamic) = ts.isClassDeclaration(node)
+  def isInterfaceDeclaration(node: js.Dynamic) = ts.isInterfaceDeclaration(node)
+  def isFunctionLike(node: js.Dynamic) = ts.isFunctionLike(node)
+  def isNamespaceDeclaration(node: js.Dynamic) = ts.isModuleDeclaration(node)
+  def isArrayTypeNode(node: js.Dynamic) = ts.isArrayTypeNode(node)
+  def isTupleTypeNode(node: js.Dynamic) = ts.isTupleTypeNode(node)
 
-  def forEachChild(root: js.Dynamic, func: js.Dynamic => Unit): Unit = ts.forEachChild(root, func)
-  def createProgram(filenames: Seq[String]): js.Dynamic = 
+  def forEachChild(root: js.Dynamic, func: js.Dynamic => Unit) = ts.forEachChild(root, func)
+  def createProgram(filenames: Seq[String]) = 
     ts.createProgram(filenames.toJSArray, js.Dictionary("maxNodeModuleJsDepth" -> 0, "target" -> ts.ScriptTarget.ES5, "module" -> ts.ModuleKind.CommonJS))
 }
 

@@ -15,6 +15,7 @@ class JSWriter(filename: String) {
     val buffer = createBuffer(strln.length)
     fs.readSync(out, buffer, 0, strln.length)
     
+    // override when content is different
     if (!strln.equals(buffer.toString())) {
       fs.writeSync(out, strln, fileSize)
       needTruncate = true
