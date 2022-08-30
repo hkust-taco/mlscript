@@ -25,8 +25,8 @@ class DiffTests
   import DiffTests._
 
   // scala test will not execute a test if the test class has constructor parameters.
-  // override this function to get the correct paths of test files.
-  protected def getFiles() = allFiles.filter { file =>
+  // override this to get the correct paths of test files.
+  protected lazy val files = allFiles.filter { file =>
       val fileName = file.baseName
       validExt(file.ext) && filter(fileName)
   }
@@ -46,7 +46,7 @@ class DiffTests
     }
   }
   
-  getFiles().foreach { file => val fileName = file.baseName; test(fileName) {
+  files.foreach { file => val fileName = file.baseName; test(fileName) {
     
     val buf = mutable.ArrayBuffer.empty[Char]
     buf ++= s"Processed  $fileName"
