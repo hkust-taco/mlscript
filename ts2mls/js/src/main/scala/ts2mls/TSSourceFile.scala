@@ -5,7 +5,7 @@ import js.DynamicImplicits._
 import types._
 
 object TSSourceFile {
-  def apply(sf: js.Dynamic, global: TSNamespace) = {
+  def apply(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker) = {
     def generate(node: js.Dynamic): Unit = {
       val nodeObject = TSNodeObject(node)
       if (!nodeObject.isToken && !nodeObject.symbol.isUndefined)

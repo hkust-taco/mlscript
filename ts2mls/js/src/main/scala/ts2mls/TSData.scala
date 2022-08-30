@@ -32,44 +32,44 @@ abstract class TSArray[T <: TSAny](arr: js.Dynamic) extends TSAny(arr) {
     }
 }
 
-class TSNodeArray(arr: js.Dynamic) extends TSArray[TSNodeObject](arr) {
+class TSNodeArray(arr: js.Dynamic)(implicit checker: TSTypeChecker) extends TSArray[TSNodeObject](arr) {
   override def get(index: Int) = TSNodeObject(arr.selectDynamic(index.toString))
 }
 
 object TSNodeArray {
-  def apply(arr: js.Dynamic) = new TSNodeArray(arr)
+  def apply(arr: js.Dynamic)(implicit checker: TSTypeChecker) = new TSNodeArray(arr)
 }
 
-class TSSymbolArray(arr: js.Dynamic) extends TSArray[TSSymbolObject](arr) {
+class TSSymbolArray(arr: js.Dynamic)(implicit checker: TSTypeChecker) extends TSArray[TSSymbolObject](arr) {
   override def get(index: Int) = TSSymbolObject(arr.selectDynamic(index.toString))
 }
 
 object TSSymbolArray {
-  def apply(arr: js.Dynamic) = new TSSymbolArray(arr)
+  def apply(arr: js.Dynamic)(implicit checker: TSTypeChecker) = new TSSymbolArray(arr)
 }
 
-class TSTokenArray(arr: js.Dynamic) extends TSArray[TSTokenObject](arr) {
+class TSTokenArray(arr: js.Dynamic)(implicit checker: TSTypeChecker) extends TSArray[TSTokenObject](arr) {
   override def get(index: Int) = TSTokenObject(arr.selectDynamic(index.toString))
 }
 
 object TSTokenArray {
-  def apply(arr: js.Dynamic) = new TSTokenArray(arr)
+  def apply(arr: js.Dynamic)(implicit checker: TSTypeChecker) = new TSTokenArray(arr)
 }
 
-class TSTypeArray(arr: js.Dynamic) extends TSArray[TSTypeObject](arr) {
+class TSTypeArray(arr: js.Dynamic)(implicit checker: TSTypeChecker) extends TSArray[TSTypeObject](arr) {
   override def get(index: Int) = TSTypeObject(arr.selectDynamic(index.toString))
 }
 
 object TSTypeArray {
-  def apply(arr: js.Dynamic) = new TSTypeArray(arr)
+  def apply(arr: js.Dynamic)(implicit checker: TSTypeChecker) = new TSTypeArray(arr)
 }
 
-class TSSymbolMap(map: js.Dynamic) extends TSAny(map) {
+class TSSymbolMap(map: js.Dynamic)(implicit checker: TSTypeChecker) extends TSAny(map) {
   def foreach(f: TSSymbolObject => Unit): Unit =
     if (!isUndefined)
       map.forEach({ (s: js.Dynamic) => f(TSSymbolObject(s)) })
 }
 
 object TSSymbolMap {
-  def apply(map: js.Dynamic) = new TSSymbolMap(map)
+  def apply(map: js.Dynamic)(implicit checker: TSTypeChecker) = new TSSymbolMap(map)
 }
