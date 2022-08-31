@@ -736,83 +736,95 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         = trace(s"$lvl. Receiver: $receiver, Index: $index") {
     (receiver.unwrapProxies, index.unwrapProxies) match {
       // if one of receiver, index is Error, then return error
-      case (_, e @ ClassTag(ErrTypeId, _)) =>
-        err(msg"Encounter error at index during array indexing", e.prov.loco)
-      case (e @ ClassTag(ErrTypeId, _), _) =>
-        err(msg"Encounter error at receiver during array indexing", e.prov.loco)
+      case (_, e @ ClassTag(ErrTypeId, _)) => e
+      case (e @ ClassTag(ErrTypeId, _), _) => e
       // TupleType: fixed length of array, inherited from ArrayBase
       case (t @ TupleType(fs), ClassTag(IntLit(value), _)) =>  
         // check index validity and retrieve corresponding type
-        if (value >= fs.length || value < 0){
+        if (value >= fs.length || value < 0) {
           err(msg"Out of range!", t.prov.loco)
-        } else{
+        } else {
           fs(value.toInt)._2.ub
         }
-      // first param: match the generalised notion of array (the length might be unknown)
-      // second param:  match integer
-      case (t: ArrayBase, ClassTag(Var("int"), _) | ClassTag(IntLit(_), _) | TypeRef(TypeName("int"), _)) =>  // Index: int<number>
+      case (t: ArrayBase, ClassTag(Var("int"), _)) =>  
         t.inner.ub | TypeRef(TypeName("undefined"), Nil)(noProv)
-      // for the case with type ascription, like def k: int, it can be assigned a value or not
+      case (t: ArrayBase, ClassTag(IntLit(value), _) ) =>
+        if (value < 0) {
+          err(msg"Out of range!", t.prov.loco)
+        } else {
+          t.inner.ub | TypeRef(TypeName("undefined"), Nil)(noProv)
+        }
+      // for the case with type ascription, like k: T, it can be assigned a value or not
+      // this kind of type ascription hides more specific information about the underlying value
       case (t: ArrayBase, rf: TypeRef) => 
-        val r = rf.expand // SimpleType
+        val r  = rf.expand
         constrainIndex(t, r)
       case (rf: TypeRef, t @ ( ClassTag(IntLit(_), _) |  TypeRef(TypeName("int"), _) | ClassTag(Var("int"), _))) =>
         val r = rf.expand
-        //println(s"info: $r")
         constrainIndex(r, t)
       // disallow string indexing like "hello"[0]
       case s @ ((ClassTag(StrLit(_), _), _) | (TypeRef(TypeName("string"), _), _) | (ClassTag(Var("string"), _), _)) =>
         err(msg"mlscript doesn't allow string indexing", s._1.prov.loco)
       // StrLit: literal string; TypeRef: defined but not assigned value, so refer to the type; ClassTag(Var(..)): concat "bruh" "bruh", a variable but not a literal
       case (_, t @ (
-        ClassTag(StrLit(_), _) | TypeRef(TypeName("string"), _) | ClassTag(Var("string"), _) |
-        ClassTag(DecLit(_), _) | TypeRef(TypeName("decimal"), _) | ClassTag(Var("decimal"), _) |
-        ClassTag(Var("bool"), _) | TypeRef(TypeName("bool"), _) | 
+        ClassTag(StrLit(_), _) | ClassTag(Var("string"), _) |
+        ClassTag(DecLit(_), _) | ClassTag(Var("decimal"), _) |
+        ClassTag(Var("bool"), _) | 
         ClassTag(Var("true"), _) | ClassTag(Var("false"), _) |
         FunctionType(_, _) | RecordType(_)
       )) =>
         err(msg"The index must be an integer", t.prov.loco)
       case (t @ (
-        ClassTag(IntLit(_), _) | TypeRef(TypeName("int"), _) | ClassTag(Var("int"), _) |
-        ClassTag(StrLit(_), _) | TypeRef(TypeName("string"), _) | ClassTag(Var("string"), _) |
-        ClassTag(DecLit(_), _) | TypeRef(TypeName("decimal"), _) | ClassTag(Var("decimal"), _) |
-        ClassTag(Var("bool"), _) | TypeRef(TypeName("bool"), _) | 
+        ClassTag(IntLit(_), _) | ClassTag(Var("int"), _) |
+        ClassTag(StrLit(_), _) | ClassTag(Var("string"), _) |
+        ClassTag(DecLit(_), _) | ClassTag(Var("decimal"), _) |
+        ClassTag(Var("bool"), _) | 
         ClassTag(Var("true"), _) | ClassTag(Var("false"), _) |
         FunctionType(_, _) | RecordType(_)
       ), _) =>
         err(msg"The indexing operation should be acted on an array", t.prov.loco)
-      case (t : TypeVariable, _) =>
-        warn(msg"Get into this case 1!", t.prov.loco)
+      case (t : TypeVariable, index) =>
         val lb = t.lowerBounds
+
         val typeVar: SimpleType = freshVar(noProv)
+
+        if (t.level > index.level) {
+          extrude(t, index.level, false)
+          extrude(typeVar, index.level, false)
+        }
+
         t.indexedBy ::= (index, typeVar)
         lb.map(constrainIndex(_, index)).foldLeft(typeVar)(_ | _)
-      case (_, t: TypeVariable) =>
-        warn(msg"Get into this case 2!", t.prov.loco)
-        // if the (?A, ?R) info we want to register into some ?I
-        // has a higher level than ?A
-        // we need to extrude its components to the correct level, 
-        // using the extrude method.
+      case (receiver, t: TypeVariable) =>
         val lb = t.lowerBounds
+
         val typeVar: SimpleType = freshVar(noProv)
+
+        if (receiver.level > t.level) {
+          extrude(receiver, t.level, false)
+          extrude(typeVar, t.level, false)
+        }
+
         t.indexedIn ::= (receiver, typeVar)
+
         lb.map(constrainIndex(receiver, _)).foldLeft(typeVar)(_ | _)
+      // handle union type
       case (ComposedType(true, lhs, rhs), i) =>
         constrainIndex(lhs, i) | constrainIndex(rhs, i)
       case (t, ComposedType(true, lhs, rhs)) =>
         constrainIndex(t, lhs) | constrainIndex(t, rhs)
-      case (ComposedType(false, lhs, rhs), i) =>
+      // handle intersection type (to be implemented)
+      /*
+      case (ct @ ComposedType(false, lhs, rhs), i) =>
+        val dnf = DNF.mk(ct, false)
+        val dnf_type = dnf.toType()
         BoolType
-      case (t, ComposedType(false, lhs, rhs)) =>
+      case (t, ct @ ComposedType(false, lhs, rhs)) =>
+        // lhs ^ rhs
+        val dnf = DNF.mk(ct, false) // have type DNF
+        val dnf_type = dnf.toType()
         BoolType
-      // handle intersection (need to be normalized), Conjunct, DNF.mk, LhsNf, LhsRefined (base)
-      // DNF.mk to normalize
-      // DNF: normalized representaton of union of conjuncts
-      // of function
-      // LhsRefined (base: Opt[BaseType])
-      // LhsNF
-
-      // levels of let polymorphism, implement extrusion to the current level
+      */
       case _ => ???
     }
   } (r => s"==> $r")

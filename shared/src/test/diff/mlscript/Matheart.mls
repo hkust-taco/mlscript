@@ -1,224 +1,577 @@
-1+2
-//│ res: int
-//│    = 3
+// testing cases for various `case` in constrainIndex 
+("haha", 1)[0]
+//│ res: "haha"
+//│    = 'haha'
 
-record = {a = 1}
-record.a
-//│ record: {a: 1}
-//│       = { a: 1 }
+:e
+(1, 2, 3)[true]
+//│ ╔══[ERROR] The index must be an integer
+//│ ╙──
+//│ res: error
+//│    = undefined
+
+:e
+(1, 2, 3)[false]
+//│ ╔══[ERROR] The index must be an integer
+//│ ╙──
+//│ res: error
+//│    = undefined
+
+:e
+def my_str: string
+my_str = "h"
+(1, 2, 3)[my_str]
+//│ my_str: string
+//│       = <missing implementation>
+//│ "h"
+//│   <:  my_str:
+//│ string
+//│       = 'h'
+//│ ╔══[ERROR] The index must be an integer
+//│ ║  l.21: 	def my_str: string
+//│ ╙──      	            ^^^^^^
+//│ res: error
+//│    = undefined
+
+:e
+def my_a = false : bool
+(1, 2, 3)[my_a]
+//│ my_a: bool
+//│     = false
+//│ ╔══[ERROR] The index must be an integer
+//│ ║  l.37: 	def my_a = false : bool
+//│ ╙──      	                   ^^^^
+//│ res: error
+//│    = undefined
+
+:e
+(1, 2, 3)[false: bool]
+//│ ╔══[ERROR] The index must be an integer
+//│ ║  l.48: 	(1, 2, 3)[false: bool]
+//│ ╙──      	                 ^^^^
+//│ res: error
+//│    = undefined
+
+:e
+(1, 2, 3)[false || true]
+//│ ╔══[ERROR] The index must be an integer
+//│ ╙──
+//│ res: error
+//│    = undefined
+
+:e
+(1, 2, 3)["true"]
+//│ ╔══[ERROR] The index must be an integer
+//│ ║  l.63: 	(1, 2, 3)["true"]
+//│ ╙──      	          ^^^^^^
+//│ res: error
+//│    = undefined
+
+:e
+def s: string
+(1, 2, 3)[s]
+//│ s: string
+//│  = <missing implementation>
+//│ ╔══[ERROR] The index must be an integer
+//│ ║  l.71: 	def s: string
+//│ ╙──      	       ^^^^^^
+//│ res: error
+//│    = <no result>
+//│      s is not implemented
+
+:e
+(1, 2, 3)[concat "true"  "bruh"]
+//│ ╔══[ERROR] The index must be an integer
+//│ ╙──
+//│ res: error
+//│    = undefined
+
+concat "true" "bruh"
+//│ res: string
+//│    = 'truebruh'
+
+:e
+(1, 2, 3)["haha"]
+//│ ╔══[ERROR] The index must be an integer
+//│ ║  l.94: 	(1, 2, 3)["haha"]
+//│ ╙──      	          ^^^^^^
+//│ res: error
+//│    = undefined
+
+:pe
+(1, 2, 3)[-10]
+//│ /!\ Parse error: Expected end-of-input:1:10, found "[-10];" at l.102:10: (1, 2, 3)[-10]
+
+
+(1, 2, 3)[0]
 //│ res: 1
 //│    = 1
 
-def z: Array[int]
-z = (3, 5, 6)
-z[1]
-//│ z: Array[int]
+(1, 2, 3)[1]
+//│ res: 2
+//│    = 2
+
+:e
+(1, 2, 3)[3]
+//│ ╔══[ERROR] Out of range!
+//│ ║  l.115: 	(1, 2, 3)[3]
+//│ ╙──       	^^^^^^^^^
+//│ res: error
+//│    = undefined
+
+a = 2
+(1, 2, 3)[a]
+//│ a: 2
+//│  = 2
+//│ res: 3
+//│    = 3
+
+a = 1 + 1
+(1, 2, 3)[a]
+//│ a: int
+//│  = 2
+//│ res: 1 | 2 | 3 | undefined
+//│    = 3
+
+(1, 2, 3)[1 + 1]
+//│ res: 1 | 2 | 3 | undefined
+//│    = 3
+
+(1 + 1, 2, 3)[0]
+//│ res: int
+//│    = 2
+
+(1, "haha")[0]
+//│ res: 1
+//│    = 1
+
+(1, "haha")[1]
+//│ res: "haha"
+//│    = 'haha'
+
+zh = "你好"
+//│ zh: "你好"
+//│   = '′0⊐9'
+
+ch = "मनीष منش" 
+//│ ch: "मनीष منش"
+//│   = '⍐⍄⍨⍙ ᘅᘆᖈ'
+
+:e
+"foo"[2]
+//│ ╔══[ERROR] Type mismatch in array access:
+//│ ║  l.161: 	"foo"[2]
+//│ ║         	^^^^^^^^
+//│ ╟── string literal of type `"foo"` does not match type `Array[~undefined]`
+//│ ║  l.161: 	"foo"[2]
+//│ ╙──       	^^^^^
+//│ ╔══[ERROR] mlscript doesn't allow string indexing
+//│ ║  l.161: 	"foo"[2]
+//│ ╙──       	^^^^^
+//│ res: error
+//│    = 'o'
+
+:e
+"foo"[3]
+//│ ╔══[ERROR] Type mismatch in array access:
+//│ ║  l.175: 	"foo"[3]
+//│ ║         	^^^^^^^^
+//│ ╟── string literal of type `"foo"` does not match type `Array[~undefined]`
+//│ ║  l.175: 	"foo"[3]
+//│ ╙──       	^^^^^
+//│ ╔══[ERROR] mlscript doesn't allow string indexing
+//│ ║  l.175: 	"foo"[3]
+//│ ╙──       	^^^^^
+//│ res: error
+//│    = undefined
+
+('f', 'o', 'o')[2]
+//│ res: "o"
+//│    = 'o'
+
+(1, 2, 3)[(1, 2, 3)[0]]
+//│ res: 2
+//│    = 2
+
+(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[0]]]
+//│ res: 3
+//│    = 3
+
+:e
+(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[0]]]]
+//│ ╔══[ERROR] Out of range!
+//│ ║  l.201: 	(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[0]]]]
+//│ ╙──       	^^^^^^^^^
+//│ res: error
+//│    = undefined
+
+:e
+:ge
+(1, 2, 3)[k]
+//│ ╔══[ERROR] identifier not found: k
+//│ ║  l.210: 	(1, 2, 3)[k]
+//│ ╙──       	          ^
+//│ res: error
+//│ Code generation encountered an error:
+//│   unresolved symbol k
+
+:e
+3[1]
+//│ ╔══[ERROR] Type mismatch in array access:
+//│ ║  l.219: 	3[1]
+//│ ║         	^^^^
+//│ ╟── integer literal of type `3` does not match type `Array[~undefined]`
+//│ ║  l.219: 	3[1]
+//│ ╙──       	^
+//│ ╔══[ERROR] The indexing operation should be acted on an array
+//│ ║  l.219: 	3[1]
+//│ ╙──       	^
+//│ res: error
+//│    = undefined
+
+:e
+def k: int
+k[1]
+//│ k: int
 //│  = <missing implementation>
-//│ (3, 5, 6,)
-//│   <:  z:
-//│ Array[int]
-//│  = [ 3, 5, 6 ]
-//│ res: int | undefined
-//│    = 5
+//│ ╔══[ERROR] Type mismatch in array access:
+//│ ║  l.234: 	k[1]
+//│ ║         	^^^^
+//│ ╟── type `int` does not match type `Array[~undefined]`
+//│ ║  l.233: 	def k: int
+//│ ║         	       ^^^
+//│ ╟── but it flows into reference with expected type `Array[~undefined]`
+//│ ║  l.234: 	k[1]
+//│ ╙──       	^
+//│ ╔══[ERROR] The indexing operation should be acted on an array
+//│ ║  l.233: 	def k: int
+//│ ╙──       	       ^^^
+//│ res: error
+//│    = <no result>
+//│      k is not implemented
+
+:e
+(1 + 1)[0]
+//│ ╔══[ERROR] Type mismatch in array access:
+//│ ║  l.254: 	(1 + 1)[0]
+//│ ║         	^^^^^^^^^^
+//│ ╟── operator application of type `int` does not match type `Array[~undefined]`
+//│ ║  l.254: 	(1 + 1)[0]
+//│ ╙──       	 ^^^^^
+//│ ╔══[ERROR] The indexing operation should be acted on an array
+//│ ╙──
+//│ res: error
+//│    = undefined
+
+def k: int
+k = 0
+(1, 2, 3)[k]
+//│ k: int
+//│  = <missing implementation>
+//│ 0
+//│   <:  k:
+//│ int
+//│  = 0
+//│ res: 1 | 2 | 3 | undefined
+//│    = 1
+
+:e
+def k = 1 + 1: int
+def i: int
+k[i + 1]
+//│ int
+//│   <:  k:
+//│ int
+//│  = 2
+//│ i: int
+//│  = <missing implementation>
+//│ ╔══[ERROR] Type mismatch in array access:
+//│ ║  l.281: 	k[i + 1]
+//│ ║         	^^^^^^^^
+//│ ╟── type `int` does not match type `Array[~undefined]`
+//│ ║  l.266: 	def k: int
+//│ ║         	       ^^^
+//│ ╟── but it flows into reference with expected type `Array[~undefined]`
+//│ ║  l.281: 	k[i + 1]
+//│ ╙──       	^
+//│ ╔══[ERROR] The indexing operation should be acted on an array
+//│ ║  l.266: 	def k: int
+//│ ╙──       	       ^^^
+//│ res: error
+//│    = <no result>
+//│      i is not implemented
 
 
-//y = (3, "hello", 5.4)
-
-def st: Array[string] 
-st = ("hello", "world", "!")
-st[0]
-//│ st: Array[string]
-//│   = <missing implementation>
+def haha : Array[string]
+haha = ("hello", "world", "!")
+//│ haha: Array[string]
+//│     = <missing implementation>
 //│ ("hello", "world", "!",)
-//│   <:  st:
+//│   <:  haha:
 //│ Array[string]
-//│   = [ 'hello', 'world', '!' ]
+//│     = [ 'hello', 'world', '!' ]
+
+:pe
+haha[-1]
+//│ /!\ Parse error: Expected end-of-input:1:5, found "[-1];" at l.315:5: haha[-1]
+
+haha[4]
+//│ res: string | undefined
+//│    = undefined
+
+haha[2 + 2]
+//│ res: string | undefined
+//│    = undefined
+
+def k: int
+k = 0
+haha[k]
+//│ k: int
+//│  = <missing implementation>
+//│ 0
+//│   <:  k:
+//│ int
+//│  = 0
 //│ res: string | undefined
 //│    = 'hello'
 
-def ud: Array[int]
-ud[0]
-//│ ud: Array[int]
-//│   = <missing implementation>
-//│ res: int | undefined
-//│    = <no result>
-//│      ud is not implemented
+def haha2 : Array[int] // arraybase
+haha2[0]
+//│ haha2: Array[int]
+//│      = <missing implementation>
 
-def precise: Array[int] 
-precise = (3: int, 5:int, 9:int)
-precise[2]
-precise[3]
-//│ precise: Array[int]
-//│        = <missing implementation>
-//│ (int, int, int,)
-//│   <:  precise:
-//│ Array[int]
-//│        = [ 3, 5, 9 ]
-//│ res: int | undefined
-//│    = 9
-//│ res: int | undefined
+:e
+my_record = {x = (1,2); y = 2}
+my_record.x[my_record.y]
+//│ my_record: {x: (1, 2,), y: 2}
+//│          = { x: [ 1, 2 ], y: 2 }
+//│ ╔══[ERROR] Out of range!
+//│ ║  l.344: 	my_record = {x = (1,2); y = 2}
+//│ ╙──       	                 ^^^^^
+//│ res: error
 //│    = undefined
 
-class Lit: {val: int}
-class Add[E]: { lhs: E; rhs: E }
-class Nega[E]: { arg: E}
-def lit val = Lit { val }
-def add lhs rhs = Add { lhs; rhs }
-def nega arg = Nega { arg }
-//│ Defined class Lit
-//│ Defined class Add[+E]
-//│ Defined class Nega[+E]
-//│ lit: (int & 'val) -> (Lit with {val: 'val})
-//│    = [Function: lit]
-//│ add: ('lhs & 'E) -> ('E & 'rhs) -> (Add['E] with {lhs: 'lhs, rhs: 'rhs})
-//│    = [Function: add]
-//│ nega: 'arg -> Nega['arg]
-//│     = [Function: nega]
+:e
+def my_func x = (1, 2, 3)
+my_func[0]
+//│ my_func: anything -> (1, 2, 3,)
+//│        = [Function: my_func]
+//│ ╔══[ERROR] Type mismatch in array access:
+//│ ║  l.356: 	my_func[0]
+//│ ║         	^^^^^^^^^^
+//│ ╟── function of type `?a -> (1, 2, 3,)` does not match type `Array[~undefined]`
+//│ ║  l.355: 	def my_func x = (1, 2, 3)
+//│ ║         	            ^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `Array[~undefined]`
+//│ ║  l.356: 	my_func[0]
+//│ ╙──       	^^^^^^^
+//│ ╔══[ERROR] The indexing operation should be acted on an array
+//│ ║  l.355: 	def my_func x = (1, 2, 3)
+//│ ╙──       	            ^^^^^^^^^^^^^
+//│ res: error
+//│    = undefined
 
-rec def evalStub1 e = case e of {
-    Lit -> e.val
-    }
-//│ evalStub1: (Lit with {val: 'val}) -> 'val
-//│          = [Function: evalStub1]
 
-rec def evalStub2 e = case e of {
-    Lit -> e.val | Nega -> 0 - (evalStub2 e.arg)
-    }
-//│ evalStub2: 'a -> int
-//│   where
-//│     'a <: Lit | Nega[?] & {arg: 'a}
-//│          = [Function: evalStub2]
+(my_func 3)[0]
+//│ res: 1
+//│    = 1
 
-rec def eval e = case e of {
-    | Lit -> e.val 
-    | Add -> eval e.lhs + eval e.rhs
-    | Nega -> 0 - (eval e.arg)
-    }
-//│ eval: 'a -> int
-//│   where
-//│     'a <: Add[?] & {lhs: 'a, rhs: 'a} | Lit | Nega[?] & {arg: 'a}
-//│     = [Function: eval]
 
-def ex = add (lit 2) (lit 2)
-//│ ex: Add[Lit & {val: 2}]
-//│   = Add { lhs: Lit { val: 2 }, rhs: Lit { val: 2 } }
-
-eval ex
-//│ res: int
-//│    = 4
-
-def e: Add['e] as 'e
-//│ e: 'e
-//│   where
-//│     'e :> Add['e]
-//│  = <missing implementation>
-
-def e: Lit | Add['e] | Nega['e] as 'e
-def e = ex
-//│ e: 'e
-//│   where
-//│     'e :> Add['e] | Lit | Nega['e]
-//│  = <missing implementation>
-//│ Add[Lit & {val: 2}]
-//│   <:  e:
-//│ 'e
-//│   where
-//│     'e :> Add['e] | Lit | Nega['e]
-//│  = Add { lhs: Lit { val: 2 }, rhs: Lit { val: 2 } }
-
-class Automata
-class Binding
-//│ Defined class Automata
-//│ Defined class Binding
+// (1, 2, 3)[my_func 3]
 
 :e
-def exp: Array[Automata] -> Array[Binding]
-eval exp
-//│ exp: Array[Automata] -> Array[Binding]
-//│    = <missing implementation>
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.136: 	eval exp
-//│ ║         	^^^^^^^^
-//│ ╟── type `Array[Automata] -> Array[Binding]` does not match type `Add[?] & ?a | Lit & ?b | Nega[?] & ?c`
-//│ ║  l.135: 	def exp: Array[Automata] -> Array[Binding]
-//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `Add[?] & ?d | Lit & ?e | Nega[?] & ?f`
-//│ ║  l.136: 	eval exp
-//│ ║         	     ^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.92: 	rec def eval e = case e of {
-//│ ╙──      	                      ^
-//│ res: error | int
+(1, 2, 3)[my_func]
+//│ ╔══[ERROR] The index must be an integer
+//│ ║  l.355: 	def my_func x = (1, 2, 3)
+//│ ╙──       	            ^^^^^^^^^^^^^
+//│ res: error
+//│    = undefined
+
+(1, 2, 3)[(my_func 3)[0]]
+//│ res: 2
+//│    = 2
+
+pick_arr = (1, 3, 0, 2)
+rec def pick n m = if m > 0 then (pick pick_arr[n] (m-1)) else n
+//│ pick_arr: (1, 3, 0, 2,)
+//│         = [ 1, 3, 0, 2 ]
+//│ pick: 'a -> int -> 'a
+//│     = [Function: pick]
+
+pick 1 5
+//│ res: 1
+//│    = 3
+
+(case (1) of {1 ->  (1, 2) | 2 -> (3, 4) })[0]
+//│ res: 1 | 3
+//│    = 1
+
+a = if true then (0,1) else (3,4,5)
+//│ a: Array[0 | 1 | 3 | 4 | 5] & {_1: 0 | 3, _2: 1 | 4}
+//│  = [ 0, 1 ]
+
+i = if true then 0 else 1
+//│ 0 | 1
+//│   <:  i:
+//│ int
+//│  = 0
+
+a[i]
+//│ res: 0 | 1 | 3 | 4 | 5 | undefined
+//│    = 0
+
+:d
+def a: (1,2) | (3,4,5)
+//│ 1. Typing type Union(Tuple(List((None,Field(None,Literal(1))), (None,Field(None,Literal(2))))),Tuple(List((None,Field(None,Literal(3))), (None,Field(None,Literal(4))), (None,Field(None,Literal(5))))))
+//│ | vars=Map() newDefsInfo=Map()
+//│ => ((1<int,number>, 2<int,number>,) | (3<int,number>, 4<int,number>, 5<int,number>,)) | 
+//│ ⬤ Typed as: ((1<int,number>, 2<int,number>,) | (3<int,number>, 4<int,number>, 5<int,number>,))
+//│  where: 
+//│ a: Array[1 | 2 | 3 | 4 | 5] & {_1: 1 | 3, _2: 2 | 4}
+//│  = <missing implementation>
+
+:d
+def i: 0 | 1
+//│ 1. Typing type Union(Literal(0),Literal(1))
+//│ | vars=Map() newDefsInfo=Map()
+//│ => (0<int,number> | 1<int,number>) | 
+//│ ⬤ Typed as: (0<int,number> | 1<int,number>)
+//│  where: 
+//│ i: 0 | 1
+//│  = <missing implementation>
+
+a[0]
+//│ res: 1 | 3
 //│    = <no result>
-//│      exp is not implemented
+//│      a is not implemented
+
+
+a[i]
+//│ res: 1 | 2 | 3 | 4
+//│    = <no result>
+//│      a is not implemented
+
+(1, 2, 3)[i]
+//│ res: 1 | 2
+//│    = <no result>
+//│      i is not implemented
+
+def a:  (0, 1, 2) & {x: 1} // {x: 1} fieldtype
+//│ a: (0, 1, 2,) & {x: 1}
+//│  = <missing implementation>
+
+
+//a[0] // DNF.mk
 
 :e
-eval (e: Lit | Add['e'] | Nega[int] as 'e)
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.156: 	eval (e: Lit | Add['e'] | Nega[int] as 'e)
-//│ ║         	      ^
-//│ ╟── type `Lit` is not an instance of type `int`
-//│ ║  l.116: 	def e: Lit | Add['e] | Nega['e] as 'e
-//│ ║         	       ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.156: 	eval (e: Lit | Add['e'] | Nega[int] as 'e)
-//│ ╙──       	                               ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.156: 	eval (e: Lit | Add['e'] | Nega[int] as 'e)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` does not match type `Add[?] & ?a | Lit & ?b | Nega[?] & ?c`
-//│ ║  l.156: 	eval (e: Lit | Add['e'] | Nega[int] as 'e)
-//│ ║         	                               ^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.92: 	rec def eval e = case e of {
-//│ ║        	                      ^
-//│ ╟── from field selection:
-//│ ║  l.95: 	    | Nega -> 0 - (eval e.arg)
-//│ ╙──      	                        ^^^^^
-//│ res: error | int
-//│    = 4
+({x = 1} & {y = 1}).x
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.467: 	({x = 1} & {y = 1}).x
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── receiver of type `{_1: {x: 1, y: 1}}` does not have field 'x'
+//│ ║  l.467: 	({x = 1} & {y = 1}).x
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^
+//│ res: error
+//│    = undefined
 
-class MyArray[A]: { size: int; set: (int, A) -> (); get: int -> A}
-//│ Defined class MyArray[=A]
+:e
+({x = 1})[0]
+//│ ╔══[ERROR] Type mismatch in array access:
+//│ ║  l.478: 	({x = 1})[0]
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── record literal of type `{x: 1}` does not match type `Array[~undefined]`
+//│ ║  l.478: 	({x = 1})[0]
+//│ ╙──       	 ^^^^^^^
+//│ ╔══[ERROR] The indexing operation should be acted on an array
+//│ ║  l.478: 	({x = 1})[0]
+//│ ╙──       	 ^^^^^^^
+//│ res: error
+//│    = undefined
 
-dummy = MyArray {
-    size = 0;
-    set = fun (i, a) -> ();
-    get = fun i -> error
-  }
-//│ dummy: MyArray['A] with {get: anything -> nothing, set: (anything, anything,) -> (), size: 0}
-//│      = MyArray { size: 0, set: [Function: set], get: [Function: get] }
+:d
+def ar: (Array[0 | 1] & Array[1 | 2])
+//│ 1. Typing type Inter(AppliedType(TypeName(Array),List(Union(Literal(0),Literal(1)))),AppliedType(TypeName(Array),List(Union(Literal(1),Literal(2)))))
+//│ | vars=Map() newDefsInfo=Map()
+//│ => (Array[(0<int,number> | 1<int,number>)] & Array[(1<int,number> | 2<int,number>)]) | 
+//│ ⬤ Typed as: (Array[(0<int,number> | 1<int,number>)] & Array[(1<int,number> | 2<int,number>)])
+//│  where: 
+//│ ar: Array[1]
+//│   = <missing implementation>
 
-dummy: MyArray[int]
-//│ res: MyArray[int]
-//│    = MyArray { size: 0, set: [Function: set], get: [Function: get] }
+def foo x y = let inner a b = (x[a], b[y]) in inner
+//│ foo: Array[~undefined] -> anything -> anything -> Array[~undefined] -> (nothing, nothing,)
+//│    = [Function: foo]
 
-def ty2A: MyArray['a]
-//│ ty2A: MyArray['a]
-//│     = <missing implementation>
+kk = (0: int): int
+//│ kk: int
+//│   = 0
 
-:stats
-ty2A = ty2A
-//│ MyArray['a]
-//│   <:  ty2A:
-//│ MyArray['a]
-//│     = <no result>
-//│       ty2A is not implemented
-//│ constrain calls  : 9
-//│ annoying  calls  : 0
-//│ subtyping calls  : 0
+:d
+(1, 2, 3)[kk]
+//│ 0. Typing term (1, 2, 3,)[kk]
+//│ | 0. Typing term (1, 2, 3,)
+//│ | | 0. Typing term 1
+//│ | | 0. : 1<int,number>
+//│ | | 0. Typing term 2
+//│ | | 0. : 2<int,number>
+//│ | | 0. Typing term 3
+//│ | | 0. : 3<int,number>
+//│ | 0. : (1<int,number>, 2<int,number>, 3<int,number>,)
+//│ | 0. Typing term kk
+//│ | 0. : Int
+//│ | CONSTRAIN (1<int,number>, 2<int,number>, 3<int,number>,) <! Array‹~(Undefined)›
+//│ |   where 
+//│ | C (1<int,number>, 2<int,number>, 3<int,number>,) <! Array‹~(Undefined)›    (0)
+//│ | | C ((1<int,number> | 2<int,number>) | 3<int,number>) <! ~(Undefined)    (1)
+//│ | | | C (1<int,number> | 2<int,number>) <! ~(Undefined)    (2)
+//│ | | | | C 1<int,number> <! ~(Undefined)    (3)
+//│ | | | | | ARGH  DNF(1<int,number>{})  <!  DNF(~(undefined<>))
+//│ | | | | | | Consider 1<int,number>{} <: DNF(~(undefined<>))
+//│ | | | | | | Possible: List(~(undefined<>))
+//│ | | | | | | A  1<int,number>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | | A  1<int,number>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | | OK  1<int,number>{} & undefined<>  =:=  ⊥
+//│ | | | | C 2<int,number> <! ~(Undefined)    (4)
+//│ | | | | | ARGH  DNF(2<int,number>{})  <!  DNF(~(undefined<>))
+//│ | | | | | | Consider 2<int,number>{} <: DNF(~(undefined<>))
+//│ | | | | | | Possible: List(~(undefined<>))
+//│ | | | | | | A  2<int,number>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | | A  2<int,number>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | | OK  2<int,number>{} & undefined<>  =:=  ⊥
+//│ | | | C 3<int,number> <! ~(Undefined)    (5)
+//│ | | | | ARGH  DNF(3<int,number>{})  <!  DNF(~(undefined<>))
+//│ | | | | | Consider 3<int,number>{} <: DNF(~(undefined<>))
+//│ | | | | | Possible: List(~(undefined<>))
+//│ | | | | | A  3<int,number>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
+//│ | | | | | | A  3<int,number>{}  %  List(undefined<>)  <!  List()  %  ⊥
+//│ | | | | | | | OK  3<int,number>{} & undefined<>  =:=  ⊥
+//│ | 0. Receiver: (1<int,number>, 2<int,number>, 3<int,number>,), Index: Int
+//│ | | 0. Receiver: (1<int,number>, 2<int,number>, 3<int,number>,), Index: int<number>
+//│ | | ==> (((1<int,number> | 2<int,number>) | 3<int,number>) | Undefined)
+//│ | ==> (((1<int,number> | 2<int,number>) | 3<int,number>) | Undefined)
+//│ 0. : (((1<int,number> | 2<int,number>) | 3<int,number>) | Undefined)
+//│ ⬤ Typed as: (((1<int,number> | 2<int,number>) | 3<int,number>) | Undefined)
+//│  where: 
+//│ res: 1 | 2 | 3 | undefined
+//│    = 1
 
-def ty2B: MyArray[MyArray['a]]
-//│ ty2B: MyArray[MyArray['a]]
-//│     = <missing implementation>
 
-:stats
-ty2B = ty2A
-//│ MyArray['a]
-//│   <:  ty2B:
-//│ MyArray[MyArray['a]]
-//│     = <no result>
-//│       ty2A and ty2A are not implemented
-//│ constrain calls  : 7
-//│ annoying  calls  : 0
-//│ subtyping calls  : 0
+def foo x = x[1] // modify the Simplifier to adapt tp new change
+//│ foo: Array[~undefined] -> nothing
+//│    = [Function: foo1]
+
+
+foo ((1, 2, 3))
+//│ res: nothing
+//│    = 2
+
+nw = (1, 2, 3, 4, 5)
+def chose i = nw[i]
+//│ nw: (1, 2, 3, 4, 5,)
+//│   = [ 1, 2, 3, 4, 5 ]
+//│ chose: anything -> nothing
+//│      = [Function: chose]
+
+chose 2
+//│ res: nothing
+//│    = 3
