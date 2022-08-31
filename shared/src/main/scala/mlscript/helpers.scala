@@ -934,7 +934,10 @@ object IfBodyImpl {
         // I don't think this case is common but it's not hard.
         desugarIfBlock(lines, S(desugarIfBlock(tail, otherwise)))
       case L(IfThen(rhs, consequent)) :: tail =>
-        makeIf(makeTest(rhs), consequent, desugarIfOpAppLines(tail, makeTest, otherwise))
+        if (isWildcard(rhs))
+          consequent
+        else
+          makeIf(makeTest(rhs), consequent, desugarIfOpAppLines(tail, makeTest, otherwise))
       case L(IfOpApp(lhsRhs, op, body)) :: tail =>
         desugarIfOpApp(makeTest(lhsRhs), op, body, S(desugarIfOpAppLines(tail, makeTest, otherwise)))
       case L(IfOpsApp(lhsRhs, rhsOpsRhss)) :: tail =>
@@ -992,6 +995,18 @@ object IfBodyImpl {
       case App(constructor: Var, _) => constructor // TODO: handle arguments
       case _ => throw new Exception(s"$term is not a simple term")
     }
+
+  def isWildcard(term: Term): Bool =
+    term match {
+      case Bra(false, Var("_")) => true
+      case _: Bra => false
+      case Var(name) => name === "_"
+      case  _: Test| _: Asc| _: Assign| _: CaseOf| _: DecLit| _: IntLit
+        | _: StrLit | _: UnitLit | _: Splc | _: With | _: Bind
+        | _: Rcd | _: Let | _: Subs | _: New | _: Lam | _: App
+        | _: TyApp | _: Sel | _: Blk | _: If | _: Tup => false
+    }
+  
   def makeBinOp(lhs: Term, op: Var, rhs: Term): Term = App(App(op, lhs), rhs)
 
   def makeIf(test: Term, consequent: Term, alternate: Term): Term =
