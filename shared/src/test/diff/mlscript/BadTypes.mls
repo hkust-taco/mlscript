@@ -171,3 +171,34 @@ someRec: BadRec
 //│    = <no result>
 //│      someRec is not implemented
 
+
+
+type SigR[a] = a
+//│ Defined type alias SigR[+a]
+
+:e
+type SigR[a] = a
+//│ ╔══[ERROR] Type 'SigR' is already defined.
+//│ ║  l.+1: 	type SigR[a] = a
+//│ ╙──      	     ^^^^
+
+type ExSigR = SigR[int]
+//│ Defined type alias ExSigR
+
+:e
+type SigR[a, b] = a
+//│ ╔══[ERROR] Type 'SigR' is already defined.
+//│ ║  l.+1: 	type SigR[a, b] = a
+//│ ╙──      	     ^^^^
+
+type ExSigR2 = SigR[int]
+//│ Defined type alias ExSigR2
+
+:e
+type ExSigR3 = SigR[int, string]
+//│ ╔══[ERROR] Wrong number of type arguments – expected 1, found 2
+//│ ║  l.+1: 	type ExSigR3 = SigR[int, string]
+//│ ╙──      	               ^^^^^^^^^^^^^^^^^
+//│ Defined type alias ExSigR3
+
+

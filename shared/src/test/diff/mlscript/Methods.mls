@@ -183,7 +183,7 @@ ft = fun x -> fun y -> if (y) then gt x 0 else y
 //│   = [Function: fx]
 //│ fy: bool -> bool
 //│   = [Function: fy]
-//│ ft: int -> bool -> bool
+//│ ft: number -> bool -> bool
 //│   = [Function: ft]
 
 p.Map fx fy

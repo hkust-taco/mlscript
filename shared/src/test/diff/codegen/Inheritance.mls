@@ -34,7 +34,8 @@ class Y: X
 //│     this.x = fields.x;
 //│   }
 //│   get MX() {
-//│     return this.x;
+//│     const self = this;
+//│     return self.x;
 //│   }
 //│ }
 //│ // End of generated code

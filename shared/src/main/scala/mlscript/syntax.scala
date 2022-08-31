@@ -5,7 +5,7 @@ import mlscript.utils._, shorthands._
 
 // Terms
 
-final case class Pgrm(tops: Ls[Statement]) extends PgrmImpl
+final case class Pgrm(tops: Ls[Statement]) extends PgrmOrTypingUnit with PgrmImpl
 
 sealed abstract class Decl extends DesugaredStatement with DeclImpl
 final case class Def(rec: Bool, nme: Var, rhs: Term \/ PolyType) extends Decl with Terms {
@@ -16,8 +16,9 @@ final case class TypeDef(
   nme: TypeName,
   tparams: List[TypeName],
   body: Type,
-  mthDecls: List[MethodDef[Right[Term, Type]]] = Nil,
-  mthDefs: List[MethodDef[Left[Term, Type]]] = Nil,
+  mthDecls: List[MethodDef[Right[Term, Type]]],
+  mthDefs: List[MethodDef[Left[Term, Type]]],
+  positionals: Ls[Var],
 ) extends Decl
 
 /**
@@ -53,8 +54,8 @@ sealed abstract class Lit                                            extends Sim
 final case class Var(name: Str)                                      extends SimpleTerm with VarImpl
 final case class Lam(lhs: Term, rhs: Term)                           extends Term
 final case class App(lhs: Term, rhs: Term)                           extends Term
-final case class Tup(fields: Ls[Opt[Var] -> (Term -> Bool)])         extends Term
-final case class Rcd(fields: Ls[Var -> (Term -> Bool)])              extends Term
+final case class Tup(fields: Ls[Opt[Var] -> Fld])                    extends Term
+final case class Rcd(fields: Ls[Var -> Fld])                         extends Term
 final case class Sel(receiver: Term, fieldName: Var)                 extends Term
 final case class Let(isRec: Bool, name: Var, rhs: Term, body: Term)  extends Term
 final case class Blk(stmts: Ls[Statement])                           extends Term with BlkImpl
@@ -66,6 +67,22 @@ final case class With(trm: Term, fields: Rcd)                        extends Ter
 final case class CaseOf(trm: Term, cases: CaseBranches)              extends Term
 final case class Subs(arr: Term, idx: Term)                          extends Term
 final case class Assign(lhs: Term, rhs: Term)                        extends Term
+final case class Splc(fields: Ls[Either[Term, Fld]])                 extends Term
+final case class New(head: Opt[(NamedType, Term)], body: TypingUnit) extends Term // `new C(...)` or `new C(){...}` or `new{...}`
+final case class If(body: IfBody, els: Opt[Term])                    extends Term
+final case class TyApp(lhs: Term, targs: Ls[Type])                   extends Term
+
+sealed abstract class IfBody extends IfBodyImpl
+// final case class IfTerm(expr: Term) extends IfBody // rm?
+final case class IfThen(expr: Term, rhs: Term) extends IfBody
+final case class IfElse(expr: Term) extends IfBody
+final case class IfLet(isRec: Bool, name: Var, rhs: Term, body: IfBody) extends IfBody
+final case class IfOpApp(lhs: Term, op: Var, rhs: IfBody) extends IfBody
+final case class IfOpsApp(lhs: Term, opsRhss: Ls[Var -> IfBody]) extends IfBody
+final case class IfBlock(lines: Ls[IfBody \/ Statement]) extends IfBody
+// final case class IfApp(fun: Term, opsRhss: Ls[Var -> IfBody]) extends IfBody
+
+final case class Fld(mut: Bool, spec: Bool, value: Term)
 
 sealed abstract class CaseBranches extends CaseBranchesImpl
 final case class Case(pat: SimpleTerm, body: Term, rest: CaseBranches) extends CaseBranches
@@ -93,6 +110,8 @@ sealed trait Terms extends DesugaredStatement
 
 sealed abstract class Type extends TypeImpl
 
+sealed trait NamedType extends Type { val base: TypeName }
+
 sealed abstract class Composed(val pol: Bool) extends Type with ComposedImpl
 
 final case class Union(lhs: Type, rhs: Type)             extends Composed(true)
@@ -101,11 +120,12 @@ final case class Function(lhs: Type, rhs: Type)          extends Type
 final case class Record(fields: Ls[Var -> Field])        extends Type
 final case class Tuple(fields: Ls[Opt[Var] -> Field])    extends Type
 final case class Recursive(uv: TypeVar, body: Type)      extends Type
-final case class AppliedType(base: TypeName, targs: List[Type]) extends Type
+final case class AppliedType(base: TypeName, targs: List[Type]) extends Type with NamedType
 final case class Neg(base: Type)                         extends Type
 final case class Rem(base: Type, names: Ls[Var])         extends Type
 final case class Bounds(lb: Type, ub: Type)              extends Type
 final case class WithExtension(base: Type, rcd: Record)  extends Type
+final case class Splice(fields: Ls[Either[Type, Field]]) extends Type
 final case class Constrained(base: Type, where: Ls[TypeVar -> Bounds]) extends Type
 
 final case class Field(in: Opt[Type], out: Type)         extends FieldImpl
@@ -119,7 +139,7 @@ case object Bot                                          extends NullaryType
 final case class Literal(lit: Lit)                       extends NullaryType
 
 /** Reference to an existing type with the given name. */
-final case class TypeName(name: Str)                     extends NullaryType with TypeNameImpl
+final case class TypeName(name: Str)                     extends NullaryType with NamedType with TypeNameImpl
 
 final case class TypeVar(val identifier: Int \/ Str, nameHint: Opt[Str]) extends NullaryType with TypeVarImpl {
   require(nameHint.isEmpty || identifier.isLeft)
@@ -129,3 +149,29 @@ final case class TypeVar(val identifier: Int \/ Str, nameHint: Opt[Str]) extends
 
 final case class PolyType(targs: Ls[TypeName], body: Type) extends PolyTypeImpl
 
+
+// New Definitions AST
+
+final case class TypingUnit(entities: Ls[Statement]) extends PgrmOrTypingUnit with TypingUnitImpl
+
+sealed abstract class NuDecl extends Statement with NuDeclImpl
+
+final case class NuTypeDef(
+  kind: TypeDefKind,
+  nme: TypeName,
+  tparams: Ls[TypeName],
+  params: Tup, // the specialized parameters for that type
+  parents: Ls[Term],
+  body: TypingUnit
+) extends NuDecl with Statement
+
+final case class NuFunDef(
+  nme: Var,
+  targs: Ls[TypeName],
+  rhs: Term \/ PolyType,
+) extends NuDecl with DesugaredStatement {
+  val body: Located = rhs.fold(identity, identity)
+}
+
+
+sealed abstract class PgrmOrTypingUnit
