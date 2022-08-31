@@ -461,16 +461,17 @@ def a:  (0, 1, 2) & {x: 1} // {x: 1} fieldtype
 //│ a: (0, 1, 2,) & {x: 1}
 //│  = <missing implementation>
 
-//:e
-//a[0] 
+// FIXME
+a[0] 
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 :e
 ({x = 1} & {y = 1}).x
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.468: 	({x = 1} & {y = 1}).x
+//│ ║  l.469: 	({x = 1} & {y = 1}).x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── receiver of type `{_1: {x: 1, y: 1}}` does not have field 'x'
-//│ ║  l.468: 	({x = 1} & {y = 1}).x
+//│ ║  l.469: 	({x = 1} & {y = 1}).x
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ res: error
 //│    = undefined
@@ -478,13 +479,13 @@ def a:  (0, 1, 2) & {x: 1} // {x: 1} fieldtype
 :e
 ({x = 1})[0]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.479: 	({x = 1})[0]
+//│ ║  l.480: 	({x = 1})[0]
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── record literal of type `{x: 1}` does not match type `Array[~undefined]`
-//│ ║  l.479: 	({x = 1})[0]
+//│ ║  l.480: 	({x = 1})[0]
 //│ ╙──       	 ^^^^^^^
 //│ ╔══[ERROR] The indexing operation should be acted on an array
-//│ ║  l.479: 	({x = 1})[0]
+//│ ║  l.480: 	({x = 1})[0]
 //│ ╙──       	 ^^^^^^^
 //│ res: error
 //│    = undefined

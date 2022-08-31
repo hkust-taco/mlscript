@@ -80,9 +80,6 @@ r[0] <- "test"
 
 :e
 r[0] + 1
-//│ ╔══[WARNING] Get into this case 1!
-//│ ║  l.58: 	r = foo (fun a -> fun f -> f a)
-//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.82: 	r[0] + 1
 //│ ║        	^^^^^^
