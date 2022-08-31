@@ -130,7 +130,7 @@ case (null) of { undefined -> "undefined it is" | null -> "null it is" }
 //│ res: "null it is" | "undefined it is"
 //│    = 'null it is'
 
-
+:e
 absent = ()[0]
 //│ ╔══[ERROR] Out of range!
 //│ ╙──
