@@ -376,8 +376,21 @@ my_func[0]
 //│ res: 1
 //│    = 1
 
+:e
+(1, 2, 3)[my_func 0]
+//│ ╔══[ERROR] The index must be an integer
+//│ ║  l.355: 	def my_func x = (1, 2, 3)
+//│ ╙──       	                ^^^^^^^^^
+//│ res: error
+//│    = undefined
 
-// (1, 2, 3)[my_func 3]
+:e
+(1, 2, 3)[(1, 2)]
+//│ ╔══[ERROR] The index must be an integer
+//│ ║  l.388: 	(1, 2, 3)[(1, 2)]
+//│ ╙──       	          ^^^^^^
+//│ res: error
+//│    = undefined
 
 :e
 (1, 2, 3)[my_func]
@@ -420,23 +433,11 @@ a[i]
 //│ res: 0 | 1 | 3 | 4 | 5 | undefined
 //│    = 0
 
-:d
 def a: (1,2) | (3,4,5)
-//│ 1. Typing type Union(Tuple(List((None,Field(None,Literal(1))), (None,Field(None,Literal(2))))),Tuple(List((None,Field(None,Literal(3))), (None,Field(None,Literal(4))), (None,Field(None,Literal(5))))))
-//│ | vars=Map() newDefsInfo=Map()
-//│ => ((1<int,number>, 2<int,number>,) | (3<int,number>, 4<int,number>, 5<int,number>,)) | 
-//│ ⬤ Typed as: ((1<int,number>, 2<int,number>,) | (3<int,number>, 4<int,number>, 5<int,number>,))
-//│  where: 
 //│ a: Array[1 | 2 | 3 | 4 | 5] & {_1: 1 | 3, _2: 2 | 4}
 //│  = <missing implementation>
 
-:d
 def i: 0 | 1
-//│ 1. Typing type Union(Literal(0),Literal(1))
-//│ | vars=Map() newDefsInfo=Map()
-//│ => (0<int,number> | 1<int,number>) | 
-//│ ⬤ Typed as: (0<int,number> | 1<int,number>)
-//│  where: 
 //│ i: 0 | 1
 //│  = <missing implementation>
 
@@ -460,16 +461,16 @@ def a:  (0, 1, 2) & {x: 1} // {x: 1} fieldtype
 //│ a: (0, 1, 2,) & {x: 1}
 //│  = <missing implementation>
 
-
-//a[0] // DNF.mk
+//:e
+//a[0] 
 
 :e
 ({x = 1} & {y = 1}).x
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.467: 	({x = 1} & {y = 1}).x
+//│ ║  l.468: 	({x = 1} & {y = 1}).x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── receiver of type `{_1: {x: 1, y: 1}}` does not have field 'x'
-//│ ║  l.467: 	({x = 1} & {y = 1}).x
+//│ ║  l.468: 	({x = 1} & {y = 1}).x
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ res: error
 //│    = undefined
@@ -477,24 +478,18 @@ def a:  (0, 1, 2) & {x: 1} // {x: 1} fieldtype
 :e
 ({x = 1})[0]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.478: 	({x = 1})[0]
+//│ ║  l.479: 	({x = 1})[0]
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── record literal of type `{x: 1}` does not match type `Array[~undefined]`
-//│ ║  l.478: 	({x = 1})[0]
+//│ ║  l.479: 	({x = 1})[0]
 //│ ╙──       	 ^^^^^^^
 //│ ╔══[ERROR] The indexing operation should be acted on an array
-//│ ║  l.478: 	({x = 1})[0]
+//│ ║  l.479: 	({x = 1})[0]
 //│ ╙──       	 ^^^^^^^
 //│ res: error
 //│    = undefined
 
-:d
 def ar: (Array[0 | 1] & Array[1 | 2])
-//│ 1. Typing type Inter(AppliedType(TypeName(Array),List(Union(Literal(0),Literal(1)))),AppliedType(TypeName(Array),List(Union(Literal(1),Literal(2)))))
-//│ | vars=Map() newDefsInfo=Map()
-//│ => (Array[(0<int,number> | 1<int,number>)] & Array[(1<int,number> | 2<int,number>)]) | 
-//│ ⬤ Typed as: (Array[(0<int,number> | 1<int,number>)] & Array[(1<int,number> | 2<int,number>)])
-//│  where: 
 //│ ar: Array[1]
 //│   = <missing implementation>
 
@@ -506,52 +501,7 @@ kk = (0: int): int
 //│ kk: int
 //│   = 0
 
-:d
 (1, 2, 3)[kk]
-//│ 0. Typing term (1, 2, 3,)[kk]
-//│ | 0. Typing term (1, 2, 3,)
-//│ | | 0. Typing term 1
-//│ | | 0. : 1<int,number>
-//│ | | 0. Typing term 2
-//│ | | 0. : 2<int,number>
-//│ | | 0. Typing term 3
-//│ | | 0. : 3<int,number>
-//│ | 0. : (1<int,number>, 2<int,number>, 3<int,number>,)
-//│ | 0. Typing term kk
-//│ | 0. : Int
-//│ | CONSTRAIN (1<int,number>, 2<int,number>, 3<int,number>,) <! Array‹~(Undefined)›
-//│ |   where 
-//│ | C (1<int,number>, 2<int,number>, 3<int,number>,) <! Array‹~(Undefined)›    (0)
-//│ | | C ((1<int,number> | 2<int,number>) | 3<int,number>) <! ~(Undefined)    (1)
-//│ | | | C (1<int,number> | 2<int,number>) <! ~(Undefined)    (2)
-//│ | | | | C 1<int,number> <! ~(Undefined)    (3)
-//│ | | | | | ARGH  DNF(1<int,number>{})  <!  DNF(~(undefined<>))
-//│ | | | | | | Consider 1<int,number>{} <: DNF(~(undefined<>))
-//│ | | | | | | Possible: List(~(undefined<>))
-//│ | | | | | | A  1<int,number>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
-//│ | | | | | | | A  1<int,number>{}  %  List(undefined<>)  <!  List()  %  ⊥
-//│ | | | | | | | | OK  1<int,number>{} & undefined<>  =:=  ⊥
-//│ | | | | C 2<int,number> <! ~(Undefined)    (4)
-//│ | | | | | ARGH  DNF(2<int,number>{})  <!  DNF(~(undefined<>))
-//│ | | | | | | Consider 2<int,number>{} <: DNF(~(undefined<>))
-//│ | | | | | | Possible: List(~(undefined<>))
-//│ | | | | | | A  2<int,number>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
-//│ | | | | | | | A  2<int,number>{}  %  List(undefined<>)  <!  List()  %  ⊥
-//│ | | | | | | | | OK  2<int,number>{} & undefined<>  =:=  ⊥
-//│ | | | C 3<int,number> <! ~(Undefined)    (5)
-//│ | | | | ARGH  DNF(3<int,number>{})  <!  DNF(~(undefined<>))
-//│ | | | | | Consider 3<int,number>{} <: DNF(~(undefined<>))
-//│ | | | | | Possible: List(~(undefined<>))
-//│ | | | | | A  3<int,number>{}  %  List()  <!  List(~(undefined<>))  %  ⊥
-//│ | | | | | | A  3<int,number>{}  %  List(undefined<>)  <!  List()  %  ⊥
-//│ | | | | | | | OK  3<int,number>{} & undefined<>  =:=  ⊥
-//│ | 0. Receiver: (1<int,number>, 2<int,number>, 3<int,number>,), Index: Int
-//│ | | 0. Receiver: (1<int,number>, 2<int,number>, 3<int,number>,), Index: int<number>
-//│ | | ==> (((1<int,number> | 2<int,number>) | 3<int,number>) | Undefined)
-//│ | ==> (((1<int,number> | 2<int,number>) | 3<int,number>) | Undefined)
-//│ 0. : (((1<int,number> | 2<int,number>) | 3<int,number>) | Undefined)
-//│ ⬤ Typed as: (((1<int,number> | 2<int,number>) | 3<int,number>) | Undefined)
-//│  where: 
 //│ res: 1 | 2 | 3 | undefined
 //│    = 1
 

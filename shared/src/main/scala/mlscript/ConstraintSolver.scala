@@ -774,6 +774,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         FunctionType(_, _) | RecordType(_)
       )) =>
         err(msg"The index must be an integer", t.prov.loco)
+      case (_, t: ArrayBase) =>
+        err(msg"The index must be an integer", t.prov.loco)
       case (t @ (
         ClassTag(IntLit(_), _) | ClassTag(Var("int"), _) |
         ClassTag(StrLit(_), _) | ClassTag(Var("string"), _) |
@@ -787,7 +789,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         val lb = t.lowerBounds
 
         val typeVar: SimpleType = freshVar(noProv)
-
+        
+        // extrude to the correct level
         if (t.level > index.level) {
           extrude(t, index.level, false)
           extrude(typeVar, index.level, false)
@@ -800,6 +803,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
 
         val typeVar: SimpleType = freshVar(noProv)
 
+        // extrude to the correct level
         if (receiver.level > t.level) {
           extrude(receiver, t.level, false)
           extrude(typeVar, t.level, false)
