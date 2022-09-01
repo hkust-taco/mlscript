@@ -1,0 +1,10 @@
+class Student: { name: string; isFriend: (Student) -> ((false) | (true)); addScore: (string) -> ((number) -> (unit)); getID: unit -> (number) }
+class Foo[T]: { bar: (T) -> (unit) }
+class EZ: { inc: (number) -> (number) }
+class Outer: {}
+class TTT[T]: { ttt: (T) -> (T); ttt2: (T) -> (T) }
+//│ Defined class Student
+//│ Defined class Foo[-T]
+//│ Defined class EZ
+//│ Defined class Outer
+//│ Defined class TTT[=T]

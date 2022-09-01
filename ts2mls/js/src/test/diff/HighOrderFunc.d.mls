@@ -1,0 +1,9 @@
+def h1: ((number) -> (number)) -> ((number) -> (number))
+def h2: (string) -> (unit -> (string))
+def h3: ((number) -> (number)) -> (((number) -> (number)) -> ((number) -> (number)))
+//│ h1: (number -> number) -> number -> number
+//│   = <missing implementation>
+//│ h2: string -> unit -> string
+//│   = <missing implementation>
+//│ h3: (number -> number) -> (number -> number) -> number -> number
+//│   = <missing implementation>
