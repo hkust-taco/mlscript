@@ -42,8 +42,8 @@ foo / foo /
 :p
 discard / foo
     1
-//│ Parsed: (discard (foo 1;));
-//│ Desugared: (discard (foo 1;))
+//│ Parsed: discard (foo {1});
+//│ Desugared: discard (foo {1})
 
 :e
 discard foo
@@ -78,8 +78,8 @@ foo
 :p
 id id
   id
-//│ Parsed: ((id id) id;);
-//│ Desugared: ((id id) id;)
+//│ Parsed: id id {id};
+//│ Desugared: id id {id}
 //│ res: 'a -> 'a
 
 :p
@@ -87,24 +87,24 @@ id id id
   id id id
     id id id
       id id id
-//│ Parsed: (((id id) id) (((id id) id) (((id id) id) ((id id) id););););
-//│ Desugared: (((id id) id) (((id id) id) (((id id) id) ((id id) id);););)
+//│ Parsed: id id id {id id id {id id id {id id id}}};
+//│ Desugared: id id id {id id id {id id id {id id id}}}
 //│ res: 'a -> 'a
 
 :p
 id id /
   id id /
     id id
-//│ Parsed: ((id id) ((id id) (id id);););
-//│ Desugared: ((id id) ((id id) (id id););)
+//│ Parsed: id id {id id {id id}};
+//│ Desugared: id id {id id {id id}}
 //│ res: 'a -> 'a
 
 :p
 id id
     id id
   id id
-//│ Parsed: (((id id) (id id);) (id id););
-//│ Desugared: (((id id) (id id);) (id id);)
+//│ Parsed: id id {id id} {id id};
+//│ Desugared: id id {id id} {id id}
 //│ res: 'a -> 'a
 
 let foo =

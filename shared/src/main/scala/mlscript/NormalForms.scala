@@ -239,6 +239,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         | (RhsBases(_, S(L(_: ArrayBase)), _), _: FunctionType)
         | (RhsBases(_, S(R(_)), _), _: FunctionType | _: ArrayBase)
         => N
+      case (RhsBases(_, Some(Left(SpliceType(_))), _), _) | (_, _: SpliceType) => ??? // TODO
     }
     def | (that: (Var, FieldType)): Opt[RhsNf] = this match {
       case RhsBot => S(RhsField(that._1, that._2))

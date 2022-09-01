@@ -151,6 +151,18 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       s"(${fields.map(f => s"${f._1.fold("")(_.name+": ")}${f._2},").mkString(" ")})"
     // override def toString = s"(${fields.map(f => s"${f._1.fold("")(_+": ")}${f._2},").mkString(" ")})"
   }
+
+  case class SpliceType(elems: Ls[Either[SimpleType, FieldType]])(val prov: TypeProvenance) extends ArrayBase {
+    lazy val level: Int = elems.map{ case L(l) => l.level case R(r) => r.level }.max
+    lazy val inner: FieldType = elems.map {
+      case L(l) => l match { case a: ArrayBase => a.inner case _ => ??? }
+      case R(r) => r
+    }.reduceLeft(_ || _)
+
+    def updateElems(f: SimpleType => SimpleType, g: SimpleType => SimpleType, 
+      h: SimpleType => SimpleType,newProv: TypeProvenance = prov): SpliceType =
+      SpliceType(elems.map{case L(l) => L(f(l)) case R(r) => R(r.update(g, h))})(newProv)
+  }
   
   /** Polarity `pol` being `true` means Bot; `false` means Top. These are extrema of the subtyping lattice. */
   case class ExtrType(pol: Bool)(val prov: TypeProvenance) extends SimpleType {
@@ -229,7 +241,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     private var tag: Opt[Opt[ClassTag]] = N
     def mkTag(implicit ctx: Ctx): Opt[ClassTag] = tag.getOrElse {
       val res = ctx.tyDefs.get(defn.name) match {
-        case S(td @ TypeDef(Cls, _, _, _, _, _, _, _, _)) => S(clsNameToNomTag(td)(noProv, ctx))
+        case S(td: TypeDef) if td.kind is Cls => S(clsNameToNomTag(td)(noProv, ctx))
         case _ => N
       }
       tag = S(res)
@@ -274,7 +286,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       // else this.parentsST.union(that.parentsST)
       else Set(this, that)
     def level: Int = 0
-    override def toString = showProvOver(false)(id.idStr+s"<${parents.mkString(",")}>")
+    override def toString = showProvOver(false)(id.idStr+s"<${parents.map(_.show).mkString(",")}>")
   }
   
   case class TraitTag(id: SimpleTerm)(val prov: TypeProvenance) extends BaseTypeOrTag with ObjectTag with Factorizable {
