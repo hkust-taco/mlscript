@@ -1,0 +1,38 @@
+def inc[T]: (T) -> (number)
+class CC[T]: { print: (T) -> (unit) }
+def con[U, T]: (T) -> (U)
+class Printer[T]: { print: (T) -> (unit) }
+def setStringPrinter: (Printer[string]) -> (unit)
+def getStringPrinter: unit -> (Printer[string])
+def foo[T]: (Printer[T]) -> ((T) -> (T))
+def foo2[T]: (Printer[T]) -> ((T) -> (T))
+class F[T]: { x: T }
+  method GG[U]: (U) -> (T)
+trait I[T]: { x: T }
+  method GG[U]: (U) -> (T)
+class FFF[T]: { fff: (T) -> (unit) }
+def fff: (FFF[string]) -> ((string) -> (unit))
+def getFFF: unit -> (FFF[number])
+//│ Defined class CC[-T]
+//│ Defined class Printer[-T]
+//│ Defined class F[+T]
+//│ Declared F.GG: F['T] -> anything -> 'T
+//│ Defined trait I[+T]
+//│ Declared I.GG: I['T] -> anything -> 'T
+//│ Defined class FFF[-T]
+//│ inc: anything -> number
+//│    = <missing implementation>
+//│ con: anything -> nothing
+//│    = <missing implementation>
+//│ setStringPrinter: Printer[string] -> unit
+//│                 = <missing implementation>
+//│ getStringPrinter: unit -> Printer[string]
+//│                 = <missing implementation>
+//│ foo: Printer['a] -> 'a -> 'a
+//│    = <missing implementation>
+//│ foo2: Printer['a] -> 'a -> 'a
+//│     = <missing implementation>
+//│ fff: FFF[string] -> string -> unit
+//│    = <missing implementation>
+//│ getFFF: unit -> FFF[number]
+//│       = <missing implementation>

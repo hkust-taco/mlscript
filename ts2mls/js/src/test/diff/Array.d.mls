@@ -1,0 +1,42 @@
+def first: (MutArray[string]) -> (string)
+def getZero3: unit -> (MutArray[number])
+def first2: (MutArray[(number) -> (number)]) -> ((number) -> (number))
+def doEs: (MutArray[int]) -> (MutArray[int])
+class C: {}
+trait I: { i: number }
+def doCs: (MutArray[C]) -> (MutArray[C])
+def doIs: (MutArray[I]) -> (MutArray[I])
+def inter[U, T]: (MutArray[(U) & (T)]) -> (MutArray[(U) & (T)])
+def clean: (MutArray[(string, number, )]) -> (MutArray[(string, number, )])
+def translate[T, U]: (MutArray[T]) -> (MutArray[U])
+def uu: (MutArray[((number) | (false)) | (true)]) -> (MutArray[((number) | (false)) | (true)])
+class Temp[T]: { x: T }
+def ta: (MutArray[Temp[(false) | (true)]]) -> (MutArray[Temp[(false) | (true)]])
+def tat[T]: (MutArray[Temp[T]]) -> (MutArray[Temp[T]])
+//│ Defined class C
+//│ Defined trait I
+//│ Defined class Temp[+T]
+//│ first: MutArray[string] -> string
+//│      = <missing implementation>
+//│ getZero3: unit -> MutArray[number]
+//│         = <missing implementation>
+//│ first2: MutArray[number -> number] -> number -> number
+//│       = <missing implementation>
+//│ doEs: MutArray[int] -> MutArray[int]
+//│     = <missing implementation>
+//│ doCs: MutArray[C] -> MutArray[C]
+//│     = <missing implementation>
+//│ doIs: MutArray[I] -> MutArray[I]
+//│     = <missing implementation>
+//│ inter: MutArray['a] -> MutArray['a]
+//│      = <missing implementation>
+//│ clean: MutArray[(string, number,)] -> MutArray[(string, number,)]
+//│      = <missing implementation>
+//│ translate: MutArray['a] -> MutArray['b]
+//│          = <missing implementation>
+//│ uu: MutArray[false | number | true] -> MutArray[false | number | true]
+//│   = <missing implementation>
+//│ ta: MutArray[Temp[bool]] -> MutArray[Temp[bool]]
+//│   = <missing implementation>
+//│ tat: MutArray[Temp['a]] -> MutArray[Temp['a]]
+//│    = <missing implementation>

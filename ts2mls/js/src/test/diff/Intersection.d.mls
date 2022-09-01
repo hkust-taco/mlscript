@@ -1,0 +1,35 @@
+def extend[T, U]: (T) -> ((U) -> ((T) & (U)))
+def foo[T, U]: ((T) & (U)) -> (unit)
+def over: (((number) -> (string)) & (({}) -> (string))) -> (string)
+trait IA: { x: number }
+trait IB: { y: number }
+def iii: ((IA) & (IB)) -> ((IA) & (IB))
+def uu[U, V, T, P]: (((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))) -> (((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P)))
+def iiii[U, T, V]: (((U) & (T)) & (V)) -> (((U) & (T)) & (V))
+def arr[U, T]: ((MutArray[U]) & (MutArray[T])) -> ((MutArray[U]) & (MutArray[T]))
+def tt[U, T, V]: (((U, T, )) & ((V, V, ))) -> (((U, T, )) & ((V, V, )))
+class A: {}
+class B: {}
+def inter: ((A) & (B)) -> ((A) & (B))
+//│ Defined trait IA
+//│ Defined trait IB
+//│ Defined class A
+//│ Defined class B
+//│ extend: 'a -> 'b -> ('a & 'b)
+//│       = <missing implementation>
+//│ foo: anything -> unit
+//│    = <missing implementation>
+//│ over: (anything -> string) -> string
+//│     = <missing implementation>
+//│ iii: (IA & IB) -> (IA & IB)
+//│    = <missing implementation>
+//│ uu: ('a & 'b | 'c & 'b) -> ('a & 'b | 'c & 'b)
+//│   = <missing implementation>
+//│ iiii: 'a -> 'a
+//│     = <missing implementation>
+//│ arr: MutArray[in 'a | 'b out 'a & 'b] -> MutArray[in 'a | 'b out 'a & 'b]
+//│    = <missing implementation>
+//│ tt: ('a & 'b, 'b & 'c,) -> ('a & 'b, 'b & 'c,)
+//│   = <missing implementation>
+//│ inter: nothing -> nothing
+//│      = <missing implementation>

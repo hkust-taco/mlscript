@@ -1,0 +1,58 @@
+def hello: unit -> (unit)
+def add: (number) -> ((number) -> (number))
+def sub: (number) -> ((number) -> (number))
+def foo: unit -> (number)
+def id: (anything) -> (anything)
+def odd: (number) -> ((false) | (true))
+def isnull: (anything) -> ((false) | (true))
+def bar: unit -> (anything)
+def nu: (null) -> (null)
+def un: (undefined) -> (undefined)
+def fail: unit -> (nothing)
+def create: unit -> ({})
+def pa: (number) -> (number)
+def wtf: (anything) -> (unit)
+class Foooooo: { ooooooo: number }
+def inn: (Foooooo) -> (unit)
+def out: unit -> (Foooooo)
+trait Barrrrrrrrr: { rrrrrrr: number }
+def inn2: (Barrrrrrrrr) -> (unit)
+def out2: unit -> (Barrrrrrrrr)
+//│ Defined class Foooooo
+//│ Defined trait Barrrrrrrrr
+//│ hello: unit -> unit
+//│      = <missing implementation>
+//│ add: number -> number -> number
+//│    = <missing implementation>
+//│ sub: number -> number -> number
+//│    = <missing implementation>
+//│ foo: unit -> number
+//│    = <missing implementation>
+//│ id: anything -> anything
+//│   = <missing implementation>
+//│ odd: number -> bool
+//│    = <missing implementation>
+//│ isnull: anything -> bool
+//│       = <missing implementation>
+//│ bar: unit -> anything
+//│    = <missing implementation>
+//│ nu: null -> null
+//│   = <missing implementation>
+//│ un: undefined -> undefined
+//│   = <missing implementation>
+//│ fail: unit -> nothing
+//│     = <missing implementation>
+//│ create: unit -> anything
+//│       = <missing implementation>
+//│ pa: number -> number
+//│   = <missing implementation>
+//│ wtf: anything -> unit
+//│    = <missing implementation>
+//│ inn: Foooooo -> unit
+//│    = <missing implementation>
+//│ out: unit -> Foooooo
+//│    = <missing implementation>
+//│ inn2: Barrrrrrrrr -> unit
+//│     = <missing implementation>
+//│ out2: unit -> Barrrrrrrrr
+//│     = <missing implementation>

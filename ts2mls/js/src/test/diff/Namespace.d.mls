@@ -1,0 +1,31 @@
+def N1'f: (anything) -> (number)
+def N1'ff: (anything) -> (number)
+class N1'C: { f: unit -> (unit) }
+trait N1'I: { f: unit -> (number) }
+def N1'N2'fff: ((false) | (true)) -> (number)
+def N1'N2'gg: (N1'C) -> (N1'C)
+class N1'N2'BBB: {} & N1'C
+def AA'f: (anything) -> (string)
+class AA'C: { f: unit -> (unit) }
+trait AA'I: { f: unit -> (number) }
+def f1: (N1'C) -> (N1'C)
+def f2: (AA'C) -> (AA'C)
+//│ Defined class N1'C
+//│ Defined trait N1'I
+//│ Defined class N1'N2'BBB
+//│ Defined class AA'C
+//│ Defined trait AA'I
+//│ N1'f: anything -> number
+//│     = <missing implementation>
+//│ N1'ff: anything -> number
+//│      = <missing implementation>
+//│ N1'N2'fff: bool -> number
+//│          = <missing implementation>
+//│ N1'N2'gg: N1'C -> N1'C
+//│         = <missing implementation>
+//│ AA'f: anything -> string
+//│     = <missing implementation>
+//│ f1: N1'C -> N1'C
+//│   = <missing implementation>
+//│ f2: AA'C -> AA'C
+//│   = <missing implementation>

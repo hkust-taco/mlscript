@@ -32,6 +32,14 @@ class DiffTests
   private val inParallel = isInstanceOf[ParallelTestExecution]
   
   import DiffTests._
+
+  // scala test will not execute a test if the test class has constructor parameters.
+  // override this to get the correct paths of test files.
+  protected lazy val files = allFiles.filter { file =>
+      val fileName = file.baseName
+      // validExt(file.ext) && filter(fileName)
+      validExt(file.ext) && filter(file.relativeTo(pwd))
+  }
   
   val timeLimit = TimeLimit
   
@@ -847,11 +855,5 @@ object DiffTests {
       true
       // name.startsWith("new/")
       // file.segments.toList.init.lastOption.contains("parser")
-  }
-  
-  private val files = allFiles.filter { file =>
-      val fileName = file.baseName
-      // validExt(file.ext) && filter(fileName)
-      validExt(file.ext) && filter(file.relativeTo(pwd))
   }
 }
