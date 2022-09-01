@@ -5,12 +5,12 @@ import org.scalatest.funsuite.AnyFunSuite
 class TSTypeGenerationTest extends AnyFunSuite {
   import TSTypeGenerationTest._
   
-  testsData.foreach((data) => test(data._2) {
-    val program = TSProgram(tsPath(data._1))
-    var writer = JSWriter(diffPath(data._2))
-    program.generate(writer)
-    writer.close()
-  })
+  // testsData.foreach((data) => test(data._2) {
+  //   val program = TSProgram(tsPath(data._1))
+  //   var writer = JSWriter(diffPath(data._2))
+  //   program.generate(writer)
+  //   writer.close()
+  // })
 }
 
 object TSTypeGenerationTest {

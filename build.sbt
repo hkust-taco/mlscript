@@ -8,7 +8,7 @@ ThisBuild / organization     := "io.lptk"
 ThisBuild / organizationName := "LPTK"
 
 lazy val root = project.in(file("."))
-  .aggregate(mlscriptJS, mlscriptJVM)
+  .aggregate(mlscriptJS, mlscriptJVM, ts2mlsJS)
   .settings(
     publish := {},
     publishLocal := {},
