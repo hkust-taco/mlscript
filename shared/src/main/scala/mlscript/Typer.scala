@@ -440,7 +440,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   
   /** Infer the type of a term. */
   def typeTerm(term: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty): SimpleType
-        = trace(s"$lvl. Typing ${if (ctx.inPattern) "pattern" else "term"} $term") {
+        = trace(s"$lvl. Typing ${if (ctx.inPattern) "pattern" else "term"} ${mlscript.codegen.Helpers.inspect(term)}") {
     implicit val prov: TypeProvenance = ttp(term)
     
     def con(lhs: SimpleType, rhs: SimpleType, res: SimpleType): SimpleType = {
@@ -616,6 +616,22 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val newCtx = ctx.nest // TODO use
         val rhs_ty = typeTerm(lhs)
         ??? // TODO
+      case App(App(Var("is"), Tup((_ -> Fld(_, _, lhs)) :: Nil)), Tup((_ -> Fld(_, _, pat)) :: Nil)) =>
+        val (name, args) = pat match {
+          case Var(name) => (name, Nil)
+          case App(Var(name), Tup(args)) => (name, args)
+          case _ => return err(msg"The right-hand side of `is` must be a de-constructor.", pat.toLoc)(raise)
+        }
+        ctx.tyDefs.get(name) match {
+          case N => err("type identifier not found: " + name, pat.toLoc)(raise)
+          case S(td) =>
+            val classTag = td.kind match {
+              case Als => err(msg"can only match on classes and traits", pat.toLoc)(raise)
+              case Cls => clsNameToNomTag(td)(tp(pat.toLoc, "class pattern"), ctx)
+              case Trt => trtNameToNomTag(td)(tp(pat.toLoc, "trait pattern"), ctx)
+            }
+            con(typeTerm(lhs), classTag, BoolType)
+        }
       case App(f, a) =>
         val f_ty = typeTerm(f)
         val a_ty = typeTerm(a)
@@ -712,8 +728,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case ((a_ty, tv), req) => a_ty & tv | req & a_ty.neg()
         }
         con(s_ty, req, cs_ty)
-      case If(_, _) =>
-        ??? // TODO
+      case If(body, otherwise) =>
+        typeTerm(body.desugar(otherwise))
       case New(S((nmedTy, trm)), TypingUnit(Nil)) =>
         typeTerm(App(Var(nmedTy.base.name).withLocOf(nmedTy), trm))
       case New(base, args) => ???

@@ -12,15 +12,15 @@ object Helpers {
     if (visited.contains(t)) return "<circle>"
     visited += t
     t match {
-      case Var(name)     => s"Var($name)"
+      case Var(name)     => s"Var(\"$name\")"
       case Lam(lhs, rhs) => s"Lam(${inspect(lhs)}, ${inspect(rhs)})"
       case App(lhs, rhs) => s"App(${inspect(lhs)}, ${inspect(rhs)})"
       case Tup(fields) =>
-        val entries = fields map {
-          case (S(name), Fld(_, _, value)) => s"$name: ${inspect(value)}"
-          case (N, Fld(_, _, value))       => s"_: ${inspect(value)}"
-        }
-        s"Tup(${entries mkString ", "})"
+        lazy val entries = fields.iterator.map {
+          case (S(name), Fld(m, s, value)) => s"\"$name\": Fld($m, $s, ${inspect(value)})"
+          case (N, Fld(m, s, value))       => s"_: Fld($m, $s, ${inspect(value)})"
+        }.mkString("", " :: ", " :: Nil")
+        s"Tup(${if (fields.isEmpty) "Nil" else entries})"
       case Rcd(fields) =>
         val entries = fields.iterator
           .map { case k -> Fld(_, _, v) => s"${inspect(k)} = ${inspect(v)}" }

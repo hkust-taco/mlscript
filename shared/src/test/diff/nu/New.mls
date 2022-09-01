@@ -6,6 +6,21 @@ class Foo(x)
 //│ Foo: 'x -> (Foo with {x: 'x})
 //│    = [Function: Foo1]
 
+class Point(x, y)
+//│ Defined class Point
+//│ Point: ('x, 'y,) -> (Point with {x: 'x, y: 'y})
+//│      = [Function: Point1]
+
+class Size(w, h)
+//│ Defined class Size
+//│ Size: ('w, 'h,) -> (Size with {h: 'h, w: 'w})
+//│     = [Function: Size1]
+
+class Rectangle(position, size)
+//│ Defined class Rectangle
+//│ Rectangle: ('position, 'size,) -> (Rectangle with {position: 'position, size: 'size})
+//│          = [Function: Rectangle1]
+
 let f = Foo(1)
 //│ f: Foo & {x: 1}
 //│  = Foo { x: 1 }
@@ -16,9 +31,32 @@ let f = new Foo(1)
 //│ Code generation encountered an error:
 //│   cannot generate code for term New(Some((TypeName(Foo),1,)), TypingUnit(List()))
 
+Foo
+//│ res: 'x -> (Foo with {x: 'x})
+//│    = [Function: Foo1]
+
+let a = true
+if a then 0 else 1
+//│ a: true
+//│  = true
+//│ res: 0 | 1
+//│    = 0
+
+fun toEnglish(x) =
+  if x ==
+    0 then "zero"
+    1 then "one"
+    2 then "two"
+    _ then "I don't know."
+//│ toEnglish: number -> ("I don't know." | "one" | "two" | "zero")
+//│          = [Function: toEnglish]
+
 // TODO
-if f is Foo(a) then a else 0
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+:ge
+if f is Foo then 1 else 0
+//│ res: 0 | 1
+//│ Code generation encountered an error:
+//│   unresolved symbol is
 
 // case f of
 //   { Foo ->
@@ -28,6 +66,3 @@ if f is Foo(a) then a else 0
 //   }
 
 // Foo(A) =:= Foo & { x: A }
-
-
-

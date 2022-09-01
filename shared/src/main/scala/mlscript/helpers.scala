@@ -856,7 +856,7 @@ object IfBodyImpl {
       case IfLet(isRec, name, value, body) =>
         Let(isRec, name, value, body.desugar(otherwise))
       case IfBlock(lines) =>
-        desugarIfOpAppLines(lines, rhs => App(App(op, lhs), rhs), otherwise)
+        desugarIfOpAppLines(lines, rhs => makeBinOp(lhs, op, rhs), otherwise)
       case IfOpApp(rhs, op2, body) =>
         // `lhs op rhs op2 _` The precedence is weird.
         // Does the parser really make a tree like this?
@@ -1007,20 +1007,24 @@ object IfBodyImpl {
         | _: TyApp | _: Sel | _: Blk | _: If | _: Tup => false
     }
   
-  def makeBinOp(lhs: Term, op: Var, rhs: Term): Term = App(App(op, lhs), rhs)
 
-  def makeIf(test: Term, consequent: Term, alternate: Term): Term =
-    If(IfThen(test, consequent), S(alternate))
-  def makeIf(test: Term, consequent: Term, otherwise: Opt[Term]): Term =
-    If(IfThen(test, consequent), otherwise)
-  def makeIf(test: Term, consequent: Term): Term =
-    If(IfThen(test, consequent), N)
+  def makeMonuple(t: Term): Term = Tup((N -> Fld(false, false, t)) :: Nil)
+  def makeBinOp(lhs: Term, op: Var, rhs: Term): Term =
+    App(App(op, makeMonuple(lhs)), makeMonuple(rhs))
 
-  // Implement if-then-else via function calls.
+  // Following methods encode if-then-else with UCS syntax tree nodes.
   // def makeIf(test: Term, consequent: Term, alternate: Term): Term =
-  //   App(App(App(Var("if"), test), consequent), alternate)
+  //   If(IfThen(test, consequent), S(alternate))
   // def makeIf(test: Term, consequent: Term, otherwise: Opt[Term]): Term =
-  //   App(App(App(Var("if"), test), consequent), otherwise.getOrElse(UnitLit(true)))
+  //   If(IfThen(test, consequent), otherwise)
   // def makeIf(test: Term, consequent: Term): Term =
-  //   App(App(App(Var("if"), test), consequent), UnitLit(true))
+  //   If(IfThen(test, consequent), N)
+
+  // Following methods encode if-then-else with applications.
+  def makeIf(test: Term, consequent: Term, alternate: Term): Term =
+    App(App(App(Var("if"), test), consequent), alternate)
+  def makeIf(test: Term, consequent: Term, otherwise: Opt[Term]): Term =
+    App(App(App(Var("if"), test), consequent), otherwise.getOrElse(UnitLit(true)))
+  def makeIf(test: Term, consequent: Term): Term =
+    App(App(App(Var("if"), test), consequent), UnitLit(true))
 }
