@@ -11,11 +11,13 @@ object Converter {
     "null" -> "null",
     "undefined" -> "undefined",
     "never" -> "nothing",
-    "object" -> "{}"
+    "object" -> "{}",
+    "true" -> "true",
+    "false" -> "false"
   )
 
   def convert(tsType: TSType): String = tsType match {
-    case TSNamedType(typeName) => primitiveName.getOrElse(typeName, typeName)
+    case TSPrimitiveType(typeName) => primitiveName(typeName)
     case TSReferenceType(name) => name
     case TSFunctionType(params, res, _) =>
       // since functions can be defined by both `def` and `method`, it only returns the type of functions

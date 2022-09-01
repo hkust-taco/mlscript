@@ -30,14 +30,14 @@ object TSSourceFile {
       if (obj.isAnonymous) TSInterfaceType("", getAnonymousPropertiesType(obj.properties), List(), List())
       else TSReferenceType(obj.symbol.fullName)
     else if (obj.isTypeParameter) TSTypeParameter(obj.symbol.escapedName)
-    else TSNamedType(obj.intrinsicName)
+    else TSPrimitiveType(obj.intrinsicName)
 
   private def getMemberType(node: TSNodeObject): TSType = {
     val res: TSType =
       if (node.isFunctionLike) getFunctionType(node)
       else if (node.hasTypeNode) getObjectType(node.`type`.typeNode)
-      else TSNamedType(node.symbol.symbolType) // built-in type
-    if (node.isOptional) TSUnionType(res, TSNamedType("undefined"))
+      else TSPrimitiveType(node.symbol.symbolType) // built-in type
+    if (node.isOptional) TSUnionType(res, TSPrimitiveType("undefined"))
     else res
   }
 
@@ -51,9 +51,9 @@ object TSSourceFile {
     val pList = node.parameters.foldLeft(List[TSType]())((lst, p) => lst :+ (
       // in typescript, you can use `this` to explicitly specifies the callee
       // but it never appears in the final javascript file
-      if (p.symbol.escapedName.equals("this")) TSNamedType("void")
+      if (p.symbol.escapedName.equals("this")) TSPrimitiveType("void")
       else
-        if (p.isOptional) TSUnionType(getObjectType(p.symbolType), TSNamedType("undefined"))
+        if (p.isOptional) TSUnionType(getObjectType(p.symbolType), TSPrimitiveType("undefined"))
         else getObjectType(p.symbolType))
       )
     TSFunctionType(pList, getObjectType(node.returnType), getTypeParametes(node))
