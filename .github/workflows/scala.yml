@@ -20,8 +20,6 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: '17.x'
-    - name: Install TypeScript
-      run: npm install
     - name: Run tests
       run: sbt test
     - name: Check no changes
