@@ -1,4 +1,4 @@
-package ts2mls;
+package ts2mls
 
 import scala.scalajs.js
 import js.Dynamic.{global => g}
