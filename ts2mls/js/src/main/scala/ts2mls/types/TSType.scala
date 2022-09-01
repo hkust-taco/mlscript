@@ -1,4 +1,4 @@
-package ts2mls.types;
+package ts2mls.types
 
 abstract class TSAccessModifier
 case object Public extends TSAccessModifier
@@ -7,7 +7,7 @@ case object Protected extends TSAccessModifier
 
 abstract class TSType
 case class TSMemberType(val base: TSType, val modifier: TSAccessModifier = Public) extends TSType
-case class TSTypeParameter(val name: String, val constraint: Option[TSType] = None) extends TSType
+case class TSTypeParameter(val name: String, constraint: Option[TSType] = None) extends TSType
 case class TSNamedType(typeName: String) extends TSType
 case class TSReferenceType(name: String) extends TSType
 case object TSEnumType extends TSType

@@ -32,7 +32,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
     members.getOrElse(name,
       if (!parent.isEmpty) parent.get.get(name) else throw new Exception(s"member $name not found."))
 
-  def containsMember(name: String, searchParent: Boolean = true): Boolean = 
+  def containsMember(name: String, searchParent: Boolean = true): Boolean =
     if (parent.isEmpty) members.contains(name) else (members.contains(name) || (searchParent && parent.get.containsMember(name)))
 
   def generate(writer: JSWriter): Unit =
@@ -43,7 +43,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
         mem match {
           case inter: TSIntersectionType => { // overloaded functions
             val fullName = getFullPath(name)
-            val params = TSIntersectionType.getOverloadTypeParameters(inter).map((t) => t.name) 
+            val params = TSIntersectionType.getOverloadTypeParameters(inter).map((t) => t.name)
 
             if (params.isEmpty)
               writer.writeln(s"def ${fullName}: ${Converter.convert(inter)}")
@@ -52,7 +52,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
           }
           case f: TSFunctionType => {
             val fullName = getFullPath(name)
-            val params = f.typeVars.map((t) => t.name) 
+            val params = f.typeVars.map((t) => t.name)
             if (params.isEmpty)
               writer.writeln(s"def ${fullName}: ${Converter.convert(f)}")
             else // TODO: add constraints
@@ -63,7 +63,8 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
       }
     })
 
-  // generate full path with namespaces
+  // generate full path with namespaces' names
+  // e.g. f => Namespace1.Namespace2.f
   def getFullPath(nm: String): String = parent match {
     case Some(p) => p.getFullPath(s"$name'$nm")
     case _ => nm

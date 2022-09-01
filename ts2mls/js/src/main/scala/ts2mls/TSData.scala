@@ -67,7 +67,7 @@ object TSTypeArray {
 class TSSymbolMap(map: js.Dynamic)(implicit checker: TSTypeChecker) extends TSAny(map) {
   def foreach(f: TSSymbolObject => Unit): Unit =
     if (!isUndefined)
-      map.forEach({ (s: js.Dynamic) => f(TSSymbolObject(s)) })
+      map.forEach({(s: js.Dynamic) => f(TSSymbolObject(s))})
 }
 
 object TSSymbolMap {

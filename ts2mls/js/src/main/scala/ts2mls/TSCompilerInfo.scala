@@ -26,7 +26,7 @@ object TypeScript {
   def isTupleTypeNode(node: js.Dynamic) = ts.isTupleTypeNode(node)
 
   def forEachChild(root: js.Dynamic, func: js.Dynamic => Unit) = ts.forEachChild(root, func)
-  def createProgram(filenames: Seq[String]) = 
+  def createProgram(filenames: Seq[String]) =
     ts.createProgram(filenames.toJSArray, js.Dictionary("maxNodeModuleJsDepth" -> 0, "target" -> ts.ScriptTarget.ES5, "module" -> ts.ModuleKind.CommonJS))
 }
 

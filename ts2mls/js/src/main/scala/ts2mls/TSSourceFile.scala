@@ -48,19 +48,18 @@ object TSSourceFile {
     )
 
   private def getFunctionType(node: TSNodeObject): TSFunctionType = {
-    val typeParameters = getTypeParametes(node)
-    // in typescript, you can use `this` to explicitly specifies the callee
-    // but it never appears in the final javascript file
     val pList = node.parameters.foldLeft(List[TSType]())((lst, p) => lst :+ (
+      // in typescript, you can use `this` to explicitly specifies the callee
+      // but it never appears in the final javascript file
       if (p.symbol.escapedName.equals("this")) TSNamedType("void")
       else
         if (p.isOptional) TSUnionType(getObjectType(p.symbolType), TSNamedType("undefined"))
         else getObjectType(p.symbolType))
       )
-    TSFunctionType(pList, getObjectType(node.returnType), typeParameters)
+    TSFunctionType(pList, getObjectType(node.returnType), getTypeParametes(node))
   }
 
-  private def getStructuralType(types: TSTypeArray, isUnion: Boolean): TSStructuralType = 
+  private def getStructuralType(types: TSTypeArray, isUnion: Boolean): TSStructuralType =
     types.foldLeft[Option[TSType]](None)((prev, cur) => prev match {
       case None => Some(getObjectType(cur))
       case Some(p) =>
