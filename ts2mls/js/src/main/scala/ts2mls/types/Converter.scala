@@ -25,13 +25,13 @@ object Converter {
       else params.foldRight(convert(res))((tst, mlst) => s"(${convert(tst)}) -> (${mlst})")
     case TSUnionType(lhs, rhs) => s"(${convert(lhs)}) | (${convert(rhs)})"
     case TSIntersectionType(lhs, rhs) => s"(${convert(lhs)}) & (${convert(rhs)})"
-    case TSTypeParameter(name, _) => name // TODO: add constraints
+    case TSTypeParameter(name, _) => name // constraints should be translated where the type parameters were created rather than be used
     case TSTupleType(lst) => s"(${lst.foldLeft("")((p, t) => s"$p${convert(t)}, ")})"
     case TSArrayType(element) => s"MutArray[${convert(element)}]"
     case TSEnumType => "int"
-    case TSMemberType(base, modifier) => convert(base)
+    case TSMemberType(base, _) => convert(base) // TODO: support private/protected members
     case TSInterfaceType(name, members, typeVars, parents) => convertRecord(s"trait $name", members, typeVars, parents)
-    case TSClassType(name, members, _, typeVars, parents) => convertRecord(s"class $name", members, typeVars, parents) // TODO: deal with static members
+    case TSClassType(name, members, _, typeVars, parents) => convertRecord(s"class $name", members, typeVars, parents) // TODO: support static members
     case TSSubstitutionType(base, applied) => s"${base}[${applied.map((app) => convert(app)).reduceLeft((res, s) => s"$res, $s")}]"
   }
 
@@ -39,22 +39,22 @@ object Converter {
     typeVars: List[TSTypeParameter], parents: List[TSType]) = {
     val allRecs = members.toList.map((m) => m._2.modifier match {
       case Public => {
-        m._2.base match {
+        m._2.base match { // methods
           case f @ TSFunctionType(_, _, typeVars) if (!typeVars.isEmpty) =>
             s"  method ${m._1}[${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]: ${convert(f)}" // TODO: add constraints
-          case inter: TSIntersectionType => {
+          case inter: TSIntersectionType => { 
             val lst = TSIntersectionType.getOverloadTypeParameters(inter)
-            if (lst.isEmpty) s"${m._1}: ${convert(inter)}"
-            else
+            if (lst.isEmpty) s"${m._1}: ${convert(inter)}" // intersection type members
+            else // methods with overload
               s"  method ${m._1}[${lst.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s") }]: ${convert(inter)}" // TODO: add constraints
           }
-          case _ => s"${m._1}: ${convert(m._2)}"
+          case _ => s"${m._1}: ${convert(m._2)}" // other type members
         }
       }
       case _ => "" // TODO: deal with private/protected members
     })
 
-    val body = { // members without independent type parameters
+    val body = { // members without independent type parameters, translate them directly
       val lst = allRecs.filter((s) => !s.startsWith("  ") && !s.isEmpty())
       if (lst.isEmpty) "{}"
       else s"{ ${lst.reduceLeft((bd, m) => s"$bd; $m")} }"
@@ -66,7 +66,7 @@ object Converter {
     }
     
     if (typeName.equals("trait ")) body // anonymous interfaces
-    else {
+    else { // named interfaces and classes
       val bodyWithParents = parents.foldLeft(body)((b, p) => s"$b & ${convert(p)}")
       if (typeVars.isEmpty) s"$typeName: $bodyWithParents$methods"
       else

@@ -32,10 +32,11 @@ object TSSourceFile {
     else if (obj.isTypeParameter) TSTypeParameter(obj.symbol.escapedName)
     else TSPrimitiveType(obj.intrinsicName)
 
+  // get the type of a member in classes/named interfaces/anonymous interfaces
   private def getMemberType(node: TSNodeObject): TSType = {
     val res: TSType =
       if (node.isFunctionLike) getFunctionType(node)
-      else if (node.hasTypeNode) getObjectType(node.`type`.typeNode)
+      else if (!node.`type`.isUndefined) getObjectType(node.`type`.typeNode)
       else TSPrimitiveType(node.symbol.symbolType) // built-in type
     if (node.isOptional) TSUnionType(res, TSPrimitiveType("undefined"))
     else res
@@ -87,13 +88,9 @@ object TSSourceFile {
         mem match {
           case func: TSFunctionType => {
             if (!mp.contains(name)) mp ++ Map(name -> TSMemberType(func, p.modifier))
-            else mp(name).base match {
-              case old: TSFunctionType if (!p.isImplementationOfOverload) =>
-                mp.removed(name) ++ Map(name -> TSMemberType(TSIntersectionType(old, func), p.modifier))
-              case old: TSIntersectionType if (!p.isImplementationOfOverload) =>
-                mp.removed(name) ++ Map(name -> TSMemberType(TSIntersectionType(old, func), p.modifier))
-              case _ => mp
-            }
+            else if (!p.isImplementationOfOverload) // deal with functions overloading
+              mp.removed(name) ++ Map(name -> TSMemberType(TSIntersectionType(mp(name), func), p.modifier))
+            else mp
           }
           case _ => mp ++ Map(name -> TSMemberType(mem, p.modifier))
         }
@@ -114,21 +111,15 @@ object TSSourceFile {
 
   private def parseNamespaceLocals(map: TSSymbolMap)(implicit ns: TSNamespace) =
     map.foreach((sym) => {
-      val name = sym.escapedName
       val node = sym.declaration
       if (!node.isToken)
-        addNodeIntoNamespace(node, name, if (node.isFunctionLike) Some(sym.declarations) else None)
+        addNodeIntoNamespace(node, sym.escapedName, if (node.isFunctionLike) Some(sym.declarations) else None)
     })
 
   private def addFunctionIntoNamespace(fun: TSFunctionType, node: TSNodeObject, name: String)(implicit ns: TSNamespace) =
     if (!ns.containsMember(name, false)) ns.put(name, fun)
-    else ns.get(name) match {
-      case old: TSFunctionType if (!node.isImplementationOfOverload) => // the signature of overload function
-        ns.put(name, TSIntersectionType(old, fun))
-      case old: TSIntersectionType if (!node.isImplementationOfOverload) => // the signature of overload function
-        ns.put(name, TSIntersectionType(old, fun))
-      case _ => {} // the implementation of the overload function. the type of this function may be wider, so just ignore it
-    }
+    else if (!node.isImplementationOfOverload)
+      ns.put(name, TSIntersectionType(ns.get(name), fun))
 
   // overload functions in a sub-namespace need to provide an overload array
   // because the namespace merely exports symbols rather than node objects themselves

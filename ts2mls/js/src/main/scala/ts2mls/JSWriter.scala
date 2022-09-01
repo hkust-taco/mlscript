@@ -10,21 +10,21 @@ class JSWriter(filename: String) {
   private var fileSize = 0 // how many bytes we've written in the file
   private var needTruncate = false
 
-  def writeln(str: String): Unit = {
-    val strln = s"$str\n"
+  def writeln(str: String) = {
+    val strln = str + "\n"
     val buffer = createBuffer(strln.length)
     fs.readSync(out, buffer, 0, strln.length)
     
-    // override when content is different
+    // override when the content is different
     if (!strln.equals(buffer.toString())) {
       fs.writeSync(out, strln, fileSize)
-      needTruncate = true
+      needTruncate = true // if the file has been modified, we need to truncate the file to keep it clean
     }
 
     fileSize += strln.length
   }
 
-  def close(): Unit = {
+  def close() = {
     if (needTruncate) fs.truncateSync(out, fileSize) // remove other content to keep the file from chaos
 
     fs.closeSync(out)

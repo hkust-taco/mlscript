@@ -21,7 +21,7 @@ object TypeScript {
   def isClassDeclaration(node: js.Dynamic) = ts.isClassDeclaration(node)
   def isInterfaceDeclaration(node: js.Dynamic) = ts.isInterfaceDeclaration(node)
   def isFunctionLike(node: js.Dynamic) = ts.isFunctionLike(node)
-  def isNamespaceDeclaration(node: js.Dynamic) = ts.isModuleDeclaration(node)
+  def isModuleDeclaration(node: js.Dynamic) = ts.isModuleDeclaration(node)
   def isArrayTypeNode(node: js.Dynamic) = ts.isArrayTypeNode(node)
   def isTupleTypeNode(node: js.Dynamic) = ts.isTupleTypeNode(node)
 
@@ -62,7 +62,8 @@ class TSSymbolObject(sym: js.Dynamic)(implicit checker: TSTypeChecker) extends T
 
   lazy val symbolType: String = checker.getTypeStringOfSymbol(sym)
 
-  // get the full name of the symbol that is declared in namespaces
+  // get the full name of the reference symbol
+  // e.g. class A extends B => class A extends SomeNamespace'B
   lazy val fullName: String =
     if (parent.isUndefined || !parent.declaration.isNamespace) escapedName
     else s"${parent.fullName}'$escapedName"
@@ -79,11 +80,16 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val isClassDeclaration = TypeScript.isClassDeclaration(node)
   lazy val isInterfaceDeclaration = TypeScript.isInterfaceDeclaration(node)
   lazy val isFunctionLike = TypeScript.isFunctionLike(node)
-  lazy val isNamespace = TypeScript.isNamespaceDeclaration(node)
-  lazy val hasTypeNode = !`type`.isUndefined
+
+  // `TypeScript.isModuleDeclaration` works on both namespaces and modules
+  // but namespaces are more recommended, so we merely use `isNamespace` here
+  lazy val isNamespace = TypeScript.isModuleDeclaration(node)
   lazy val isArrayTypeNode = TypeScript.isArrayTypeNode(node)
   lazy val isTupleTypeNode = TypeScript.isTupleTypeNode(node)
   lazy val isImplementationOfOverload = checker.isImplementationOfOverload(node)
+
+  // if a node has an initializer or is marked by a question notation
+  // it is ok if we provide nothing
   lazy val isOptional = !initializer.isUndefined || !IsUndefined(node.questionToken)
   lazy val isStatic = if (modifiers.isUndefined) false
                      else modifiers.foldLeft(false)((s, t) => t.isStatic)

@@ -40,23 +40,22 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
       case Left(name) => subSpace(name).generate(writer)
       case Right(name) => {
         val mem = members(name)
+        val fullName = getFullPath(name)
         mem match {
           case inter: TSIntersectionType => { // overloaded functions
-            val fullName = getFullPath(name)
-            val params = TSIntersectionType.getOverloadTypeParameters(inter).map((t) => t.name)
+            val typeParams = TSIntersectionType.getOverloadTypeParameters(inter).map((t) => t.name)
 
-            if (params.isEmpty)
+            if (typeParams.isEmpty)
               writer.writeln(s"def ${fullName}: ${Converter.convert(inter)}")
             else // TODO: add constraints
-              writer.writeln(s"def ${fullName}[${params.reduceLeft((r, s) => s"$r, $s")}]: ${Converter.convert(inter)}")
+              writer.writeln(s"def ${fullName}[${typeParams.reduceLeft((r, s) => s"$r, $s")}]: ${Converter.convert(inter)}")
           }
           case f: TSFunctionType => {
-            val fullName = getFullPath(name)
-            val params = f.typeVars.map((t) => t.name)
-            if (params.isEmpty)
+            val typeParams = f.typeVars.map((t) => t.name)
+            if (typeParams.isEmpty)
               writer.writeln(s"def ${fullName}: ${Converter.convert(f)}")
             else // TODO: add constraints
-              writer.writeln(s"def ${fullName}[${params.reduceLeft((r, s) => s"$r, $s")}]: ${Converter.convert(f)}")
+              writer.writeln(s"def ${fullName}[${typeParams.reduceLeft((r, s) => s"$r, $s")}]: ${Converter.convert(f)}")
           }
           case _ => writer.writeln(Converter.convert(mem))
         }

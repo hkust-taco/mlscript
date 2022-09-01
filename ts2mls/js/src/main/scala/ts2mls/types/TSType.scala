@@ -1,11 +1,11 @@
 package ts2mls.types
 
-abstract class TSAccessModifier
+sealed abstract class TSAccessModifier
 case object Public extends TSAccessModifier
 case object Private extends TSAccessModifier
 case object Protected extends TSAccessModifier
 
-abstract class TSType
+sealed abstract class TSType
 case class TSMemberType(val base: TSType, val modifier: TSAccessModifier = Public) extends TSType
 case class TSTypeParameter(val name: String, constraint: Option[TSType] = None) extends TSType
 case class TSPrimitiveType(typeName: String) extends TSType
@@ -26,7 +26,7 @@ case class TSInterfaceType(name: String,
                            typeVars: List[TSTypeParameter],
                            parents: List[TSType]) extends TSType
 
-abstract class TSStructuralType(lhs: TSType, rhs: TSType, notion: String) extends TSType
+sealed abstract class TSStructuralType(lhs: TSType, rhs: TSType, notion: String) extends TSType
 case class TSUnionType(lhs: TSType, rhs: TSType) extends TSStructuralType(lhs, rhs, "|")
 case class TSIntersectionType(lhs: TSType, rhs: TSType) extends TSStructuralType(lhs, rhs, "&")
 
