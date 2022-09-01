@@ -8,7 +8,7 @@ ThisBuild / organization     := "io.lptk"
 ThisBuild / organizationName := "LPTK"
 
 lazy val root = project.in(file("."))
-  .aggregate(mlscriptJS, mlscriptJVM, ts2mlsJS)
+  .aggregate(mlscriptJS, mlscriptJVM)
   .settings(
     publish := {},
     publishLocal := {},
@@ -58,26 +58,26 @@ lazy val mlscript = crossProject(JSPlatform, JVMPlatform).in(file("."))
 lazy val mlscriptJVM = mlscript.jvm
 lazy val mlscriptJS = mlscript.js
 
-lazy val ts2mls = crossProject(JSPlatform, JVMPlatform).in(file("ts2mls"))
-  .settings(
-    name := "ts2mls",
-    scalaVersion := "2.13.8",
-    scalacOptions ++= Seq(
-      "-deprecation"
-    )
-  )
-  .jvmSettings()
-  .jsSettings(
-    scalaJSUseMainModuleInitializer := true,
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.12" % "test"
-  )
-  .dependsOn(mlscript % "compile->compile;test->test")
+// lazy val ts2mls = crossProject(JSPlatform, JVMPlatform).in(file("ts2mls"))
+//   .settings(
+//     name := "ts2mls",
+//     scalaVersion := "2.13.8",
+//     scalacOptions ++= Seq(
+//       "-deprecation"
+//     )
+//   )
+//   .jvmSettings()
+//   .jsSettings(
+//     scalaJSUseMainModuleInitializer := true,
+//     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.12" % "test"
+//   )
+//   .dependsOn(mlscript % "compile->compile;test->test")
 
-lazy val ts2mlsJS = ts2mls.js
-lazy val ts2mlsJVM = ts2mls.jvm
+// lazy val ts2mlsJS = ts2mls.js
+// lazy val ts2mlsJVM = ts2mls.jvm
 
-val tsTypeDiffTests = taskKey[Unit]("")
+// val tsTypeDiffTests = taskKey[Unit]("")
 
-tsTypeDiffTests := (Def.task{
-  (ts2mlsJVM / Test / test).value
-} triggeredBy (ts2mlsJS / Test / test)).value
+// tsTypeDiffTests := (Def.task{
+//   (ts2mlsJVM / Test / test).value
+// } triggeredBy (ts2mlsJS / Test / test)).value
