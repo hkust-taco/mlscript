@@ -250,7 +250,7 @@ trait PgrmImpl { self: Pgrm =>
     }.partitionMap {
       case td: TypeDef => L(td)
       case ot: Terms => R(ot)
-      case NuFunDef(nme, tys, rhs) => R(Def(false, nme, rhs))
+      case NuFunDef(nme, tys, rhs) => R(Def(false, nme, rhs, true))
       case _: NuFunDef | _: NuTypeDef => ???
     }
     diags.toList -> res
@@ -531,7 +531,7 @@ trait StatementImpl extends Located { self: Statement =>
   private def doDesugar: Ls[Diagnostic] -> Ls[DesugaredStatement] = this match {
     case l @ LetS(isrec, pat, rhs) =>
       val (diags, v, args) = desugDefnPattern(pat, Nil)
-      diags -> (Def(isrec, v, L(args.foldRight(rhs)(Lam(_, _))), true).withLocOf(l) :: Nil) // TODO use v, not v.name
+      diags -> (Def(isrec, v, L(args.foldRight(rhs)(Lam(_, _))), false).withLocOf(l) :: Nil) // TODO use v, not v.name
     case d @ DataDefn(body) => desugarCases(body :: Nil, Nil)
     case d @ DatatypeDefn(hd, bod) =>
       val (diags, v, args) = desugDefnPattern(hd, Nil)
@@ -616,7 +616,7 @@ trait StatementImpl extends Located { self: Statement =>
           val clsNme = TypeName(v.name).withLocOf(v)
           val tps = tparams.toList
           val ctor = Def(false, v, R(PolyType(tps,
-            params.foldRight(AppliedType(clsNme, tps):Type)(Function(_, _))))).withLocOf(stmt)
+            params.foldRight(AppliedType(clsNme, tps):Type)(Function(_, _)))), true).withLocOf(stmt)
           val td = TypeDef(Cls, clsNme, tps, Record(fields.toList.mapValues(Field(None, _)))).withLocOf(stmt)
           td :: ctor :: cs
         case _ => ??? // TODO methods in data type defs? nested data type defs?

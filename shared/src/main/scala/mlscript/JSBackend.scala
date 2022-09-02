@@ -89,7 +89,8 @@ class JSBackend {
           throw new UnimplementedError(sym)
       case S(sym: ValueSymbol) =>
         visitedSymbols += sym
-        JSIdent(sym.runtimeName)
+        val ident = JSIdent(sym.runtimeName)
+        if (sym.isByName) ident() else ident
       case S(sym: ClassSymbol) =>
         if (isCallee)
           JSNew(JSIdent(sym.runtimeName))
@@ -614,10 +615,7 @@ class JSTestBackend extends JSBackend {
 
     // Generate statements.
     val queries = otherStmts.map {
-      case Def(recursive, Var(name), L(body), true) =>
-        // Handle by-name case here.
-        ???
-      case Def(recursive, Var(name), L(body), false) =>
+      case Def(recursive, Var(name), L(body), withDef) =>
         (if (recursive) {
           val sym = scope.declareValue(name)
           try {
@@ -636,7 +634,19 @@ class JSTestBackend extends JSBackend {
             case e: Throwable => throw e
           }) map { expr => (expr, scope.declareValue(name)) }
         }) match { 
-          case R((expr, sym)) =>
+          case R((originalExpr, sym)) =>
+            println(s"Now we are at $name withDef = $withDef")
+            val expr = body match {
+              case _: Lam =>
+                sym.isByName = false
+                originalExpr
+              case _ =>
+                sym.isByName = withDef
+                if (withDef)
+                  JSArrowFn(Nil, L(originalExpr))
+                else
+                  originalExpr
+            }
             JSTestBackend.CodeQuery(
               scope.tempVars.emit(),
               ((JSIdent("globalThis").member(sym.runtimeName) := (expr match {

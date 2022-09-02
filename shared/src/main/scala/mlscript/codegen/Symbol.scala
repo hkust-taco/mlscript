@@ -28,6 +28,7 @@ sealed trait TypeSymbol extends LexicalSymbol {
 
 sealed class ValueSymbol(val lexicalName: Str, val runtimeName: Str) extends RuntimeSymbol {
   override def toString: Str = s"value $lexicalName"
+  var isByName: Bool = false
 }
 
 object ValueSymbol {

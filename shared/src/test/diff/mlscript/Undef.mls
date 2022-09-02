@@ -4,7 +4,7 @@ class Undef
 
 def undef = Undef{}
 //│ undef: Undef
-//│      = Undef {}
+//│      = [Function: undef]
 
 
 def example: int | Undef

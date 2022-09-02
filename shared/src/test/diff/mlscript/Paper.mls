@@ -126,7 +126,7 @@ def Cons head tail = Cons { value = head; tail = tail }
 
 def None = None{}
 //│ None: None
-//│     = None {}
+//│     = [Function: None1]
 
 rec def unzip xs = case xs of {
   | None -> { fst = None; snd = None }
@@ -153,7 +153,7 @@ def unzip_ty = unzip
 //│ ('value & 'A) -> (List['A] & 'tail) -> (Cons['A] with {tail: 'tail, value: 'value})
 //│   <:  Cons_ty:
 //│ 'a -> (List['a] & 'b) -> (Cons['a] with {tail: 'b})
-//│        = [Function: Cons1]
+//│        = [Function: Cons_ty]
 //│ 'a -> {fst: 'tail, snd: 'tail0}
 //│   where
 //│     'tail0 :> (Cons['value] with {tail: 'tail0}) | None
@@ -161,7 +161,7 @@ def unzip_ty = unzip
 //│     'a <: None | Some[?] & {tail: 'a, value: {fst: 'value0, snd: 'value}}
 //│   <:  unzip_ty:
 //│ List[{fst: 'a, snd: 'b}] -> {fst: List['a], snd: List['b]}
-//│         = [Function: unzip]
+//│         = [Function: unzip_ty]
 
 
 
