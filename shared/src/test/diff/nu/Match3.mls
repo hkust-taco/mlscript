@@ -1,0 +1,72 @@
+:NewParser
+
+class N()
+class M()
+//│ Defined class N
+//│ Defined class M
+//│ N: () -> N
+//│  = [Function: N1]
+//│ M: () -> M
+//│  = [Function: M1]
+
+fun eval_expr(v) =
+  if v is
+    M then let tmp = v.l; v
+    N then v
+//│ eval_expr: (M & {l: anything} & 'a | N & 'a) -> 'a
+//│          = [Function: eval_expr]
+
+eval_expr of new N()
+//│ res: N
+//│    = undefined
+
+:e
+eval_expr of new M()
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.24: 	eval_expr of new M()
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `M` does not have field 'l'
+//│ ║  l.4: 	class M()
+//│ ║       	      ^
+//│ ╟── but it flows into application with expected type `{l: ?l}`
+//│ ║  l.24: 	eval_expr of new M()
+//│ ║        	                 ^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.14: 	    M then let tmp = v.l; v
+//│ ║        	                     ^^^
+//│ ╟── from reference:
+//│ ║  l.13: 	  if v is
+//│ ╙──      	     ^
+//│ res: error | M
+//│    = undefined
+
+fun eval_expr(v) =
+  if v is
+    M then let tmp = v.l; tmp
+    N then v
+//│ eval_expr: (M & {l: 'l} | N & 'l) -> 'l
+//│          = [Function: eval_expr1]
+
+eval_expr of new N()
+//│ res: N
+//│    = undefined
+
+:e
+eval_expr of new M()
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.55: 	eval_expr of new M()
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `M` does not have field 'l'
+//│ ║  l.4: 	class M()
+//│ ║       	      ^
+//│ ╟── but it flows into application with expected type `{l: ?l}`
+//│ ║  l.55: 	eval_expr of new M()
+//│ ║        	                 ^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.45: 	    M then let tmp = v.l; tmp
+//│ ║        	                     ^^^
+//│ ╟── from reference:
+//│ ║  l.44: 	  if v is
+//│ ╙──      	     ^
+//│ res: error
+//│    = undefined

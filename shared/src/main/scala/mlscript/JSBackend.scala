@@ -112,8 +112,8 @@ class JSBackend {
   protected def translateApp(term: App)(implicit scope: Scope): JSExpr = term match {
     // Binary expressions
     case App(App(Var(op), Tup((N -> Fld(_, _, lhs)) :: Nil)), Tup((N -> Fld(_, _, rhs)) :: Nil))
-        if JSBinary.operators contains op =>
-      JSBinary(op, translateTerm(lhs), translateTerm(rhs))
+        if JSBinary.operators(op) || op === "is" =>
+      JSBinary(if (op === "is") "instanceof" else op, translateTerm(lhs), translateTerm(rhs))
     // If-expressions
     case App(App(App(Var("if"), tst), con), alt) =>
       JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
@@ -229,6 +229,26 @@ class JSBackend {
         case _ =>
           throw CodeGenError(s"illegal assignemnt left-hand side: ${inspect(lhs)}")
       }
+    case New(N, _) => ??? // TODO: Deal with empty heads.
+    case New(S((klass, args)), body) =>
+      val className = klass match {
+        case TypeName(name) => name
+        case AppliedType(TypeName(name), _) => name
+      }
+      val arguments = args match {
+        case Tup(fields) => fields.map(t => translateTerm(t._2.value))
+        case _ => throw CodeGenError(s"ill-formed arguments: ${inspect(args)}")
+      }
+      scope.getClassSymbol(className) match {
+        case N => throw CodeGenError(s"class not found: $className")
+        case S(classSymbol) if classSymbol.positionals.length =/= arguments.length => 
+          throw CodeGenError(
+            s"class $className expects ${classSymbol.positionals.length} arguments but ${arguments.length} are given")
+        case S(classSymbol) => 
+          val fields = JSRecord(classSymbol.positionals.zip(arguments))
+          JSInvoke(JSIdent(classSymbol.runtimeName), fields :: Nil, true)
+      }
+      // TODO: Access positionals and 
     case _: Bind | _: Test | If(_, _) | New(_, _) | TyApp(_, _) | _: Splc =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
@@ -258,7 +278,7 @@ class JSBackend {
           // JS is dumb so `instanceof String` won't actually work on "primitive" strings...
           JSBinary("===", scrut.member("constructor"), JSLit("String"))
         case Var(name) => topLevelScope.getType(name) match {
-          case S(ClassSymbol(_, runtimeName, _, _, _)) => JSInstanceOf(scrut, JSIdent(runtimeName))
+          case S(ClassSymbol(_, runtimeName, _, _, _, _)) => JSInstanceOf(scrut, JSIdent(runtimeName))
           case S(TraitSymbol(_, runtimeName, _, _, _)) => JSIdent(runtimeName)("is")(scrut)
           case S(_: TypeAliasSymbol) => throw new CodeGenError(s"cannot match type alias $name")
           case N => throw new CodeGenError(s"unknown match case: $name")
@@ -455,8 +475,14 @@ class JSBackend {
         topLevelScope.declareTypeAlias(name, tparams map { _.name }, body)
       case TypeDef(Trt, TypeName(name), tparams, body, _, methods, _) =>
         traits += topLevelScope.declareTrait(name, tparams map { _.name }, body, methods)
-      case TypeDef(Cls, TypeName(name), tparams, baseType, _, members, _) =>
-        classes += topLevelScope.declareClass(name, tparams map { _.name }, baseType, members)
+      case TypeDef(Cls, TypeName(name), tparams, baseType, _, members, positionals) =>
+        classes += topLevelScope.declareClass(
+          name, 
+          tparams.map(_.name),
+          positionals.map(_.name),
+          baseType, 
+          members
+        )
     }
     (traits.toList, classes.toList)
   }

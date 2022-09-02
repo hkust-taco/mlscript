@@ -581,7 +581,15 @@ trait StatementImpl extends Located { self: Statement =>
           case _ => die
         })) :: Nil)))))
         diags.toList -> (TypeDef(k, nme, tps, bod, Nil, Nil, pos) :: ctor :: Nil)
-    case If(body, otherwise) => Nil -> (body.desugar(otherwise) :: Nil)
+    case If(body, otherwise) =>
+      // TODO: Remove this branch after moving desugaring logics to the typer.
+      val desugaredOtherwise = otherwise.map {
+        _.desugared match {
+          case _ -> ((t: Term) :: Nil) => t
+          case _ => throw new Exception("terms should always be desugared to terms")
+        }
+      }
+      Nil -> (body.desugar(desugaredOtherwise) :: Nil)
     case d: DesugaredStatement => Nil -> (d :: Nil)
   }
   import Message._
@@ -837,7 +845,10 @@ object IfBodyImpl {
       case L(IfLet(isRec, name, value, body)) :: tail =>
         Wildcard(Let(isRec, name, value, CaseOf(scrutinee, desugarIfOpAppToMatch(tail, otherwise))))
       case L(IfThen(pattern, consequent)) :: tail =>
-        Case(termToSimpleTerm(pattern), consequent, desugarIfOpAppToMatch(tail, otherwise))
+        if (isWildcard(pattern))
+          Wildcard(consequent) // `tail` and `otherwise` are both discarded.
+        else
+          Case(termToSimpleTerm(pattern), consequent, desugarIfOpAppToMatch(tail, otherwise))
       case L(IfOpApp(pattern, Var(op), body)) :: tail =>
         if (op === "and")
           Case(termToSimpleTerm(pattern), body.desugar(otherwise), desugarIfOpAppToMatch(tail, otherwise))

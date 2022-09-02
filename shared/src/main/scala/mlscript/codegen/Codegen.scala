@@ -463,15 +463,17 @@ final case class JSTenary(tst: JSExpr, csq: JSExpr, alt: JSExpr) extends JSExpr 
     tst.embed ++ SourceCode(" ? ") ++ csq.embed ++ SourceCode(" : ") ++ alt.embed
 }
 
-final case class JSInvoke(callee: JSExpr, arguments: Ls[JSExpr]) extends JSExpr {
+final case class JSInvoke(callee: JSExpr, arguments: Ls[JSExpr], isNew: Bool = false) extends JSExpr {
   implicit def precedence: Int = 20
   def toSourceCode =
-    callee.embed(precedence) ++ arguments.zipWithIndex
-      .foldLeft(SourceCode.empty) { case (x, (y, i)) =>
-        x ++ y.embed(JSCommaExpr.outerPrecedence) ++
-        (if (i === arguments.length - 1) SourceCode.empty else SourceCode(", "))
-      }
-      .parenthesized
+    (if (isNew) SourceCode("new ") else SourceCode.empty) ++
+      callee.embed(precedence) ++
+      arguments.iterator.zipWithIndex
+        .foldLeft(SourceCode.empty) { case (x, (y, i)) =>
+          x ++ y.embed(JSCommaExpr.outerPrecedence) ++
+          (if (i === arguments.length - 1) SourceCode.empty else SourceCode(", "))
+        }
+        .parenthesized
 }
 
 final case class JSUnary(op: Str, arg: JSExpr) extends JSExpr {

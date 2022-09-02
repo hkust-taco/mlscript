@@ -1,0 +1,120 @@
+:NewParser
+
+()
+//│ res: ()
+//│    = []
+
+class Test(value)
+//│ Defined class Test
+//│ Test: 'value -> (Test with {value: 'value})
+//│     = [Function: Test1]
+
+fun foo(x) =
+  if x is
+    Test then x.value
+    _ then 1
+//│ foo: ((Test with {value: 'value}) | ~Test) -> (1 | 'value)
+//│    = [Function: foo]
+
+let t = Test(0)
+//│ t: Test & {value: 0}
+//│  = Test { value: 0 }
+
+// FIXME: The evaluation result should not be `undefined`.
+foo of Test
+//│ res: 1
+//│    = undefined
+
+foo of t
+//│ res: 0 | 1
+//│    = undefined
+
+class Toast(name)
+//│ Defined class Toast
+//│ Toast: 'name -> (Toast with {name: 'name})
+//│      = [Function: Toast1]
+
+fun bar(x) =
+  if x is
+    Test then x.value
+    Toast then x.name
+//│ bar: ((Test with {value: 'value}) | (Toast with {name: 'value})) -> 'value
+//│    = [Function: bar]
+
+:e
+bar of Test
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.45: 	bar of Test
+//│ ║        	^^^^^^^^^^^
+//│ ╟── function of type `?a -> ?b` does not match type `Test & ?c | Toast & ?d`
+//│ ║  l.7: 	class Test(value)
+//│ ║       	      ^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `Test & ?e | Toast & ?f`
+//│ ║  l.45: 	bar of Test
+//│ ║        	       ^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.38: 	  if x is
+//│ ╙──      	     ^
+//│ res: error
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
+
+:e
+bar of "ops"
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.63: 	bar of "ops"
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── string literal of type `"ops"` does not match type `Test & ?a | Toast & ?b`
+//│ ║  l.63: 	bar of "ops"
+//│ ║        	       ^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.38: 	  if x is
+//│ ╙──      	     ^
+//│ res: error
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
+
+fun baz(x) =
+  if x is
+    Test then x
+    Toast then x
+//│ baz: ('a & (Test | Toast)) -> 'a
+//│    = [Function: baz]
+
+:e
+baz of "oops"
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.85: 	baz of "oops"
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── string literal of type `"oops"` does not match type `Test & ?a | Toast & ?b`
+//│ ║  l.85: 	baz of "oops"
+//│ ║        	       ^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.78: 	  if x is
+//│ ╙──      	     ^
+//│ res: error
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
+
+fun test3(x) =
+  if x is
+    1 then true
+    true then true
+    _ then false
+//│ test3: anything -> bool
+//│      = [Function: test3]
+
+:ns
+test3
+//│ res: 'a -> (true | false)
+//│   where
+//│     'a <: 1 & 'b | (true & 'c | 'd & ~true) & ~1
+//│    = [Function: test3]
+
+fun test3(x) =
+  if x is
+    1 then x
+    true then true
+    _ then false
+//│ test3: (1 & 'a | ~1) -> (false | true | 'a)
+//│      = [Function: test31]

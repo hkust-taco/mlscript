@@ -195,17 +195,31 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     case TypeDef(Trt, TypeName(name), tparams, body, _, mthdDefs, _) =>
       declareTrait(name, tparams map { _.name }, body, mthdDefs)
     case TypeDef(Cls, TypeName(name), tparams, baseType, _, members, _) =>
-      declareClass(name, tparams map { _.name }, baseType, members)
+      declareClass(
+        name,
+        tparams.map(_.name),
+        typeDef.positionals.map(_.name),
+        baseType,
+        members
+      )
   }
 
   def declareClass(
       lexicalName: Str,
       params: Ls[Str],
+      positionals: Ls[Str],
       base: Type,
       methods: Ls[MethodDef[Left[Term, Type]]]
   ): ClassSymbol = {
     val runtimeName = allocateRuntimeName(lexicalName)
-    val symbol = ClassSymbol(lexicalName, runtimeName, params.sorted, base, methods)
+    val symbol = ClassSymbol(
+      lexicalName, 
+      runtimeName, 
+      params.sorted, 
+      positionals,
+      base, 
+      methods
+    )
     register(symbol)
     symbol
   }

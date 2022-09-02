@@ -72,7 +72,8 @@ final case class StubValueSymbol(
 final case class ClassSymbol(
     lexicalName: Str,
     runtimeName: Str,
-    params: Ls[Str],
+    params: Ls[Str], // Uh, this should be renamed to `typeParams`.
+    val positionals: Ls[Str],
     body: Type,
     methods: Ls[MethodDef[Left[Term, Type]]],
 ) extends TypeSymbol

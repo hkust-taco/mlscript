@@ -1,0 +1,71 @@
+:NewParser
+
+class A()
+class B()
+//│ Defined class A
+//│ Defined class B
+//│ A: () -> A
+//│  = [Function: A1]
+//│ B: () -> B
+//│  = [Function: B1]
+
+:e
+if 1 is A then 0
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.13: 	if 1 is A then 0
+//│ ║        	   ^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `A`
+//│ ║  l.13: 	if 1 is A then 0
+//│ ║        	   ^
+//│ ╟── Note: constraint arises from class pattern:
+//│ ║  l.13: 	if 1 is A then 0
+//│ ╙──      	        ^
+//│ res: 0 | undefined
+//│    = undefined
+
+:e
+if 1 is
+  A then 0
+  B then 1
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.27: 	if 1 is
+//│ ║        	   ^^^^
+//│ ║  l.28: 	  A then 0
+//│ ║        	^^^^^^^^^^
+//│ ║  l.29: 	  B then 1
+//│ ║        	^^^^^^^^^^
+//│ ╟── integer literal of type `1` does not match type `A | B`
+//│ ║  l.27: 	if 1 is
+//│ ╙──      	   ^
+//│ res: 0 | 1
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
+
+class Foo()
+class Bar()
+//│ Defined class Foo
+//│ Defined class Bar
+//│ Foo: () -> Foo
+//│    = [Function: Foo1]
+//│ Bar: () -> Bar
+//│    = [Function: Bar1]
+
+fun f(x) =
+  if x is
+    Foo then 0
+    Bar then 1
+//│ f: (Bar | Foo) -> (0 | 1)
+//│  = [Function: f]
+
+fun f(x) =
+  if x
+    is Foo then 0
+    is Bar then 1
+//│ f: nothing -> (0 | 1 | undefined)
+//│  = [Function: f1]
+
+fun f(x) =
+  if x is Foo then 0
+  else if x is Bar then 1
+//│ f: nothing -> (0 | 1 | undefined)
+//│  = [Function: f2]
