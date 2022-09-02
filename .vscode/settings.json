@@ -7,4 +7,11 @@
     "files.watcherExclude": {
         "**/target": true
     },
+    "[typescript]": {
+        "editor.quickSuggestions": {
+            "comments": "off",
+            "other": "off",
+            "strings": "off"
+        }
+    }
 }
