@@ -1,121 +1,1152 @@
 :NoJS
 :AllowTypeErrors
 
-def succ: int -> int
 def succ x = x + 1
 //│ succ: int -> int
-//│ int -> int
-//│   <:  succ:
-//│ int -> int
 
 
 x1 = false
 x2 = x1
-x3 = x2
 //│ x1: false
 //│ x2: false
-//│ x3: false
+
 
 :ex
-succ x3
+succ x2
+//│ ╔══[WARNING] ========= Previous type provenance flow below =========
+//│ ╙──
+//│ ╔══[WARNING] ========= New type provenance flow below =========
+//│ ╟── -> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── -> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ╙──      	^^^^^^^
+//│ ╔══[WARNING] ========= Previous type provenance flow below =========
+//│ ╟── -> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── -> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ╙──      	^^^^^^^
+//│ ╔══[WARNING] ========= New type provenance flow below =========
+//│ ╟── -> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── -> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── -> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ╙──      	^^^^^^^
+//│ ╔══[WARNING] ========= Previous type provenance flow below =========
+//│ ╟── -> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── -> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── -> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ╙──      	^^^^^^^
+//│ ╔══[WARNING] ========= New type provenance flow below =========
+//│ ╟── -> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── -> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── -> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── -> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ╙──      	^^^^^^^
+//│ ╔══[WARNING] ========= Previous type provenance flow below =========
+//│ ╟── -> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── -> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── -> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── -> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ╙──      	^^^^^^^
+//│ ╔══[WARNING] ========= New type provenance flow below =========
+//│ ╟── -> flowing from argument of type `[([[[false<bool>]]],)]` with desc: argument
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── ->> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╙── -> flowing from expression of type `(α26,)` with desc: expression
+//│ ╔══[WARNING] ========= Previous type provenance flow below =========
+//│ ╟── -> flowing from argument of type `[([[[false<bool>]]],)]` with desc: argument
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── ->> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╙── -> flowing from expression of type `(α26,)` with desc: expression
+//│ ╔══[WARNING] ========= New type provenance flow below =========
+//│ ╟── -> flowing from expression of type `([[[false<bool>]]],)` with desc: expression
+//│ ╟── -> flowing from argument of type `[([[[false<bool>]]],)]` with desc: argument
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── ->> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╙── -> flowing from expression of type `(α26,)` with desc: expression
+//│ ╔══[WARNING] ========= Previous type provenance flow below =========
+//│ ╟── -> flowing from expression of type `([[[false<bool>]]],)` with desc: expression
+//│ ╟── -> flowing from argument of type `[([[[false<bool>]]],)]` with desc: argument
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── ->> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╙── -> flowing from expression of type `(α26,)` with desc: expression
+//│ ╔══[WARNING] ========= New type provenance flow below =========
+//│ ╟── -> flowing from reference of type `[[[false<bool>]]]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `([[[false<bool>]]],)` with desc: expression
+//│ ╟── ->> flowing from argument of type `[([[[false<bool>]]],)]` with desc: argument
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── ->>> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from expression of type `(α26,)` with desc: expression
+//│ ╙── -> flowing from variable of type `α26` with desc: variable
+//│ ╔══[WARNING] ========= Previous type provenance flow below =========
+//│ ╟── -> flowing from reference of type `[[[false<bool>]]]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `([[[false<bool>]]],)` with desc: expression
+//│ ╟── ->> flowing from argument of type `[([[[false<bool>]]],)]` with desc: argument
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── ->>> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from expression of type `(α26,)` with desc: expression
+//│ ╙── -> flowing from variable of type `α26` with desc: variable
+//│ ╔══[WARNING] ========= New type provenance flow below =========
+//│ ╟── -> flowing from reference of type `[[false<bool>]]` with desc: reference
+//│ ║  l.9: 	x2 = x1
+//│ ║       	     ^^
+//│ ╟── -> flowing from reference of type `[[[false<bool>]]]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `([[[false<bool>]]],)` with desc: expression
+//│ ╟── ->> flowing from argument of type `[([[[false<bool>]]],)]` with desc: argument
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── ->>> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from expression of type `(α26,)` with desc: expression
+//│ ╙── -> flowing from variable of type `α26` with desc: variable
+//│ ╔══[WARNING] ========= Previous type provenance flow below =========
+//│ ╟── -> flowing from reference of type `[[false<bool>]]` with desc: reference
+//│ ║  l.9: 	x2 = x1
+//│ ║       	     ^^
+//│ ╟── -> flowing from reference of type `[[[false<bool>]]]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `([[[false<bool>]]],)` with desc: expression
+//│ ╟── ->> flowing from argument of type `[([[[false<bool>]]],)]` with desc: argument
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── ->>> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from expression of type `(α26,)` with desc: expression
+//│ ╙── -> flowing from variable of type `α26` with desc: variable
+//│ ╔══[WARNING] ========= New type provenance flow below =========
+//│ ╟── -> flowing from reference of type `[false<bool>]` with desc: reference
+//│ ║  l.8: 	x1 = false
+//│ ║       	     ^^^^^
+//│ ╟── -> flowing from reference of type `[[false<bool>]]` with desc: reference
+//│ ║  l.9: 	x2 = x1
+//│ ║       	     ^^
+//│ ╟── -> flowing from reference of type `[[[false<bool>]]]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `([[[false<bool>]]],)` with desc: expression
+//│ ╟── ->> flowing from argument of type `[([[[false<bool>]]],)]` with desc: argument
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── ->>> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from expression of type `(α26,)` with desc: expression
+//│ ╙── -> flowing from variable of type `α26` with desc: variable
+//│ ╔══[WARNING] ========= Previous type provenance flow below =========
+//│ ╟── -> flowing from reference of type `[false<bool>]` with desc: reference
+//│ ║  l.8: 	x1 = false
+//│ ║       	     ^^^^^
+//│ ╟── -> flowing from reference of type `[[false<bool>]]` with desc: reference
+//│ ║  l.9: 	x2 = x1
+//│ ║       	     ^^
+//│ ╟── -> flowing from reference of type `[[[false<bool>]]]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `([[[false<bool>]]],)` with desc: expression
+//│ ╟── ->> flowing from argument of type `[([[[false<bool>]]],)]` with desc: argument
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── ->>> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from expression of type `(α26,)` with desc: expression
+//│ ╙── -> flowing from variable of type `α26` with desc: variable
+//│ ╔══[WARNING] ========= New type provenance flow below =========
+//│ ╟── -> flowing from type `false<bool>` with desc: type
+//│ ╟── -> flowing from reference of type `[false<bool>]` with desc: reference
+//│ ║  l.8: 	x1 = false
+//│ ║       	     ^^^^^
+//│ ╟── -> flowing from reference of type `[[false<bool>]]` with desc: reference
+//│ ║  l.9: 	x2 = x1
+//│ ║       	     ^^
+//│ ╟── -> flowing from reference of type `[[[false<bool>]]]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `([[[false<bool>]]],)` with desc: expression
+//│ ╟── ->> flowing from argument of type `[([[[false<bool>]]],)]` with desc: argument
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── ->>> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from expression of type `(α26,)` with desc: expression
+//│ ╙── -> flowing from variable of type `α26` with desc: variable
+//│ ╔══[WARNING] ========= Previous type provenance flow below =========
+//│ ╟── -> flowing from type `false<bool>` with desc: type
+//│ ╟── -> flowing from reference of type `[false<bool>]` with desc: reference
+//│ ║  l.8: 	x1 = false
+//│ ║       	     ^^^^^
+//│ ╟── -> flowing from reference of type `[[false<bool>]]` with desc: reference
+//│ ║  l.9: 	x2 = x1
+//│ ║       	     ^^
+//│ ╟── -> flowing from reference of type `[[[false<bool>]]]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `([[[false<bool>]]],)` with desc: expression
+//│ ╟── ->> flowing from argument of type `[([[[false<bool>]]],)]` with desc: argument
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── ->>> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from expression of type `(α26,)` with desc: expression
+//│ ╙── -> flowing from variable of type `α26` with desc: variable
+//│ ╔══[WARNING] ========= New type provenance flow below =========
+//│ ╟── -> flowing from type `false<bool>` with desc: type
+//│ ╟── -> flowing from reference of type `[false<bool>]` with desc: reference
+//│ ║  l.8: 	x1 = false
+//│ ║       	     ^^^^^
+//│ ╟── -> flowing from reference of type `[[false<bool>]]` with desc: reference
+//│ ║  l.9: 	x2 = x1
+//│ ║       	     ^^
+//│ ╟── -> flowing from reference of type `[[[false<bool>]]]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `([[[false<bool>]]],)` with desc: expression
+//│ ╟── ->> flowing from argument of type `[([[[false<bool>]]],)]` with desc: argument
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── ->>> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from expression of type `(α26,)` with desc: expression
+//│ ╙── -> flowing from variable of type `α26` with desc: variable
+//│ ╔══[WARNING] ========= Previous type provenance flow below =========
+//│ ╟── -> flowing from type `false<bool>` with desc: type
+//│ ╟── -> flowing from reference of type `[false<bool>]` with desc: reference
+//│ ║  l.8: 	x1 = false
+//│ ║       	     ^^^^^
+//│ ╟── -> flowing from reference of type `[[false<bool>]]` with desc: reference
+//│ ║  l.9: 	x2 = x1
+//│ ║       	     ^^
+//│ ╟── -> flowing from reference of type `[[[false<bool>]]]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `([[[false<bool>]]],)` with desc: expression
+//│ ╟── ->> flowing from argument of type `[([[[false<bool>]]],)]` with desc: argument
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── ->>> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from expression of type `(α26,)` with desc: expression
+//│ ╙── -> flowing from variable of type `α26` with desc: variable
+//│ ╔══[WARNING] ========= New type provenance flow below =========
+//│ ╟── -> flowing from type `false<bool>` with desc: type
+//│ ╟── -> flowing from reference of type `[false<bool>]` with desc: reference
+//│ ║  l.8: 	x1 = false
+//│ ║       	     ^^^^^
+//│ ╟── -> flowing from reference of type `[[false<bool>]]` with desc: reference
+//│ ║  l.9: 	x2 = x1
+//│ ║       	     ^^
+//│ ╟── -> flowing from reference of type `[[[false<bool>]]]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `([[[false<bool>]]],)` with desc: expression
+//│ ╟── ->> flowing from argument of type `[([[[false<bool>]]],)]` with desc: argument
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── ->>> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from expression of type `(α26,)` with desc: expression
+//│ ╟── -> flowing from reference of type `[[[int<number>]]]` with desc: reference
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^
+//│ ╙── -> flowing from variable of type `α26` with desc: variable
+//│ ╔══[WARNING] ========= Previous type provenance flow below =========
+//│ ╟── -> flowing from type `false<bool>` with desc: type
+//│ ╟── -> flowing from reference of type `[false<bool>]` with desc: reference
+//│ ║  l.8: 	x1 = false
+//│ ║       	     ^^^^^
+//│ ╟── -> flowing from reference of type `[[false<bool>]]` with desc: reference
+//│ ║  l.9: 	x2 = x1
+//│ ║       	     ^^
+//│ ╟── -> flowing from reference of type `[[[false<bool>]]]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `([[[false<bool>]]],)` with desc: expression
+//│ ╟── ->> flowing from argument of type `[([[[false<bool>]]],)]` with desc: argument
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── ->>> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from expression of type `(α26,)` with desc: expression
+//│ ╟── -> flowing from reference of type `[[[int<number>]]]` with desc: reference
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^
+//│ ╙── -> flowing from variable of type `α26` with desc: variable
+//│ ╔══[WARNING] ========= New type provenance flow below =========
+//│ ╟── -> flowing from type `false<bool>` with desc: type
+//│ ╟── -> flowing from reference of type `[false<bool>]` with desc: reference
+//│ ║  l.8: 	x1 = false
+//│ ║       	     ^^^^^
+//│ ╟── -> flowing from reference of type `[[false<bool>]]` with desc: reference
+//│ ║  l.9: 	x2 = x1
+//│ ║       	     ^^
+//│ ╟── -> flowing from reference of type `[[[false<bool>]]]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `([[[false<bool>]]],)` with desc: expression
+//│ ╟── ->> flowing from argument of type `[([[[false<bool>]]],)]` with desc: argument
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── ->>> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from expression of type `(α26,)` with desc: expression
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `([α21'],)` with desc: expression
+//│ ╟── ->> flowing from argument of type `[([α21'],)]` with desc: argument
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from operator application of type `([([α21'],)] -> α22')` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^
+//│ ╟── ->>> flowing from applied expression of type `[[(int<number> -> (int<number> -> int<number>))]]` with desc: applied expression
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	               ^
+//│ ╟── ->>> flowing from reference of type `[(int<number> -> (int<number> -> int<number>))]` with desc: reference
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	               ^
+//│ ╟── ->>> flowing from expression of type `(int<number> -> (int<number> -> int<number>))` with desc: expression
+//│ ╟── ->> flowing from expression of type `(int<number>,)` with desc: expression
+//│ ╟── -> flowing from reference of type `[[[int<number>]]]` with desc: reference
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^
+//│ ╙── -> flowing from variable of type `α26` with desc: variable
+//│ ╔══[WARNING] ========= Previous type provenance flow below =========
+//│ ╟── -> flowing from type `false<bool>` with desc: type
+//│ ╟── -> flowing from reference of type `[false<bool>]` with desc: reference
+//│ ║  l.8: 	x1 = false
+//│ ║       	     ^^^^^
+//│ ╟── -> flowing from reference of type `[[false<bool>]]` with desc: reference
+//│ ║  l.9: 	x2 = x1
+//│ ║       	     ^^
+//│ ╟── -> flowing from reference of type `[[[false<bool>]]]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `([[[false<bool>]]],)` with desc: expression
+//│ ╟── ->> flowing from argument of type `[([[[false<bool>]]],)]` with desc: argument
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── ->>> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from expression of type `(α26,)` with desc: expression
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `([α21'],)` with desc: expression
+//│ ╟── ->> flowing from argument of type `[([α21'],)]` with desc: argument
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from operator application of type `([([α21'],)] -> α22')` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^
+//│ ╟── ->>> flowing from applied expression of type `[[(int<number> -> (int<number> -> int<number>))]]` with desc: applied expression
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	               ^
+//│ ╟── ->>> flowing from reference of type `[(int<number> -> (int<number> -> int<number>))]` with desc: reference
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	               ^
+//│ ╟── ->>> flowing from expression of type `(int<number> -> (int<number> -> int<number>))` with desc: expression
+//│ ╟── ->> flowing from expression of type `(int<number>,)` with desc: expression
+//│ ╟── -> flowing from reference of type `[[[int<number>]]]` with desc: reference
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^
+//│ ╙── -> flowing from variable of type `α26` with desc: variable
+//│ ╔══[WARNING] ========= New type provenance flow below =========
+//│ ╟── -> flowing from type `false<bool>` with desc: type
+//│ ╟── -> flowing from reference of type `[false<bool>]` with desc: reference
+//│ ║  l.8: 	x1 = false
+//│ ║       	     ^^^^^
+//│ ╟── -> flowing from reference of type `[[false<bool>]]` with desc: reference
+//│ ║  l.9: 	x2 = x1
+//│ ║       	     ^^
+//│ ╟── -> flowing from reference of type `[[[false<bool>]]]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `([[[false<bool>]]],)` with desc: expression
+//│ ╟── ->> flowing from argument of type `[([[[false<bool>]]],)]` with desc: argument
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── ->>> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from expression of type `(α26,)` with desc: expression
+//│ ╟── -> flowing from type `[int<number>]` with desc: type
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `([α21'],)` with desc: expression
+//│ ╟── ->> flowing from argument of type `[([α21'],)]` with desc: argument
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from operator application of type `([([α21'],)] -> α22')` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^
+//│ ╟── ->>> flowing from applied expression of type `[[(int<number> -> (int<number> -> int<number>))]]` with desc: applied expression
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	               ^
+//│ ╟── ->>> flowing from reference of type `[(int<number> -> (int<number> -> int<number>))]` with desc: reference
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	               ^
+//│ ╟── ->>> flowing from expression of type `(int<number> -> (int<number> -> int<number>))` with desc: expression
+//│ ╟── ->> flowing from expression of type `(int<number>,)` with desc: expression
+//│ ╟── -> flowing from reference of type `[[[int<number>]]]` with desc: reference
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^
+//│ ╙── -> flowing from variable of type `α26` with desc: variable
+//│ ╔══[WARNING] ========= Previous type provenance flow below =========
+//│ ╟── -> flowing from type `false<bool>` with desc: type
+//│ ╟── -> flowing from reference of type `[false<bool>]` with desc: reference
+//│ ║  l.8: 	x1 = false
+//│ ║       	     ^^^^^
+//│ ╟── -> flowing from reference of type `[[false<bool>]]` with desc: reference
+//│ ║  l.9: 	x2 = x1
+//│ ║       	     ^^
+//│ ╟── -> flowing from reference of type `[[[false<bool>]]]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `([[[false<bool>]]],)` with desc: expression
+//│ ╟── ->> flowing from argument of type `[([[[false<bool>]]],)]` with desc: argument
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── ->>> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from expression of type `(α26,)` with desc: expression
+//│ ╟── -> flowing from type `[int<number>]` with desc: type
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `([α21'],)` with desc: expression
+//│ ╟── ->> flowing from argument of type `[([α21'],)]` with desc: argument
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from operator application of type `([([α21'],)] -> α22')` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^
+//│ ╟── ->>> flowing from applied expression of type `[[(int<number> -> (int<number> -> int<number>))]]` with desc: applied expression
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	               ^
+//│ ╟── ->>> flowing from reference of type `[(int<number> -> (int<number> -> int<number>))]` with desc: reference
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	               ^
+//│ ╟── ->>> flowing from expression of type `(int<number> -> (int<number> -> int<number>))` with desc: expression
+//│ ╟── ->> flowing from expression of type `(int<number>,)` with desc: expression
+//│ ╟── -> flowing from reference of type `[[[int<number>]]]` with desc: reference
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^
+//│ ╙── -> flowing from variable of type `α26` with desc: variable
+//│ ╔══[WARNING] ========= New type provenance flow below =========
+//│ ╟── -> flowing from type `false<bool>` with desc: type
+//│ ╟── -> flowing from reference of type `[false<bool>]` with desc: reference
+//│ ║  l.8: 	x1 = false
+//│ ║       	     ^^^^^
+//│ ╟── -> flowing from reference of type `[[false<bool>]]` with desc: reference
+//│ ║  l.9: 	x2 = x1
+//│ ║       	     ^^
+//│ ╟── -> flowing from reference of type `[[[false<bool>]]]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `([[[false<bool>]]],)` with desc: expression
+//│ ╟── ->> flowing from argument of type `[([[[false<bool>]]],)]` with desc: argument
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── ->>> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from expression of type `(α26,)` with desc: expression
+//│ ╟── -> flowing from type `[int<number>]` with desc: type
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `([α21'],)` with desc: expression
+//│ ╟── ->> flowing from argument of type `[([α21'],)]` with desc: argument
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from operator application of type `([([α21'],)] -> α22')` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^
+//│ ╟── ->>> flowing from applied expression of type `[[(int<number> -> (int<number> -> int<number>))]]` with desc: applied expression
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	               ^
+//│ ╟── ->>> flowing from reference of type `[(int<number> -> (int<number> -> int<number>))]` with desc: reference
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	               ^
+//│ ╟── ->>> flowing from expression of type `(int<number> -> (int<number> -> int<number>))` with desc: expression
+//│ ╟── ->> flowing from expression of type `(int<number>,)` with desc: expression
+//│ ╟── -> flowing from reference of type `[[[int<number>]]]` with desc: reference
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^
+//│ ╙── -> flowing from variable of type `α26` with desc: variable
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.20: 	succ x3
+//│ ║  l.15: 	succ x2
 //│ ║        	^^^^^^^
 //│ ╟── reference of type `false` is not an instance of type `int`
-//│ ║  l.12: 	x1 = false
-//│ ║        	     ^^^^^
+//│ ║  l.8: 	x1 = false
+//│ ║       	     ^^^^^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.20: 	succ x3
+//│ ║  l.15: 	succ x2
 //│ ║        	     ^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.4: 	def succ: int -> int
-//│ ║       	          ^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^
 //│ ╟── ========= Additional explanations below =========
 //│ ╟── [info] flowing from type `false`
-//│ ╟── [info] flowing from type `false`
 //│ ╟── [info] flowing from reference of type `false`
-//│ ║  l.12: 	x1 = false
-//│ ║        	     ^^^^^
+//│ ║  l.8: 	x1 = false
+//│ ║       	     ^^^^^
 //│ ╟── [info] flowing from reference of type `false`
-//│ ║  l.13: 	x2 = x1
+//│ ║  l.9: 	x2 = x1
+//│ ║       	     ^^
+//│ ╟── [info] flowing from reference of type `false`
+//│ ║  l.15: 	succ x2
 //│ ║        	     ^^
-//│ ╟── [info] flowing from reference of type `false`
-//│ ║  l.14: 	x3 = x2
-//│ ║        	     ^^
-//│ ╟── [info] flowing from reference of type `false`
-//│ ║  l.20: 	succ x3
-//│ ║        	     ^^
+//│ ╟── [info] flowing from <nested> of type `false`
+//│ ╟── [info] flowing into variable of type `?a`
+//│ ╟── [info] flowing into reference of type `int`
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^
 //│ ╟── [info] flowing into <nested> of type `int`
 //│ ╟── [info] flowing into type `int`
-//│ ║  l.4: 	def succ: int -> int
-//│ ║       	          ^^^
-//│ ╟── [info] flowing into type `int`
-//│ ║  l.4: 	def succ: int -> int
-//│ ║       	          ^^^
-//│ ╟── [info] flowing into type `int`
-//│ ║  l.4: 	def succ: int -> int
-//│ ║       	          ^^^
-//│ ╟── [info] flowing into type `int`
-//│ ║  l.4: 	def succ: int -> int
-//│ ║       	          ^^^
-//│ ╟── [info] flowing into type `int`
-//│ ║  l.4: 	def succ: int -> int
-//│ ║       	          ^^^
 //│ ╟── ========= Nested type provenance flow below =========
 //│ ╟── -> flowing from type `false`
-//│ ╟── -> flowing from type `false`
 //│ ╟── -> flowing from reference of type `false`
-//│ ║  l.12: 	x1 = false
-//│ ║        	     ^^^^^
+//│ ║  l.8: 	x1 = false
+//│ ║       	     ^^^^^
 //│ ╟── -> flowing from reference of type `false`
-//│ ║  l.13: 	x2 = x1
-//│ ║        	     ^^
+//│ ║  l.9: 	x2 = x1
+//│ ║       	     ^^
 //│ ╟── -> flowing from reference of type `false`
-//│ ║  l.14: 	x3 = x2
+//│ ║  l.15: 	succ x2
 //│ ║        	     ^^
-//│ ╟── -> flowing from reference of type `false`
-//│ ║  l.20: 	succ x3
-//│ ║        	     ^^
-//│ ╟── -> flowing from type `int`
-//│ ║  l.4: 	def succ: int -> int
-//│ ║       	          ^^^
-//│ ╟── -> flowing from type `int`
-//│ ║  l.4: 	def succ: int -> int
-//│ ║       	          ^^^
-//│ ╟── -> flowing from type `int`
-//│ ║  l.4: 	def succ: int -> int
-//│ ║       	          ^^^
-//│ ╟── -> flowing from type `int`
-//│ ║  l.4: 	def succ: int -> int
-//│ ║       	          ^^^
-//│ ╟── -> flowing from type `int`
-//│ ║  l.4: 	def succ: int -> int
-//│ ║       	          ^^^
-//│ ╟── -> Nested type provenance with info: <nesting info here>
-//│ ╟── ->> flowing from argument of type `(false,)`
-//│ ║  l.20: 	succ x3
-//│ ║        	     ^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
 //│ ╟── ->> flowing from expression of type `(false,)`
-//│ ╟── ->> flowing from type `(int,)`
-//│ ║  l.4: 	def succ: int -> int
-//│ ║       	          ^^^
-//│ ╟── ->> Nested type provenance with info: <nesting info here>
-//│ ╟── ->>> flowing from application of type `false -> ?a`
-//│ ║  l.20: 	succ x3
+//│ ╟── ->> flowing from argument of type `(false,)`
+//│ ║  l.15: 	succ x2
+//│ ║        	     ^^
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from application of type `false -> ?b`
+//│ ║  l.15: 	succ x2
 //│ ║        	^^^^^^^
-//│ ╟── ->>> flowing from application of type `false -> ?a`
-//│ ║  l.20: 	succ x3
-//│ ║        	^^^^^^^
-//│ ╟── ->>> flowing from application of type `false -> ?a`
-//│ ║  l.20: 	succ x3
-//│ ║        	^^^^^^^
-//│ ╟── ->>> flowing from type `int -> int`
-//│ ║  l.4: 	def succ: int -> int
-//│ ║       	          ^^^^^^^^^^
-//│ ╟── ->>> flowing from reference of type `int -> int`
-//│ ║  l.20: 	succ x3
+//│ ╟── ->>> flowing from applied expression of type `?c -> ?d`
+//│ ║  l.15: 	succ x2
 //│ ║        	^^^^
-//│ ╟── ->>> flowing from applied expression of type `int -> int`
-//│ ║  l.20: 	succ x3
-//│ ╙──      	^^^^
+//│ ╟── ->>> flowing from reference of type `?e -> ?f`
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->>> flowing from function of type `?g -> ?h`
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from expression of type `(?i,)`
+//│ ╟── -> flowing from type `int`
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `(?j,)`
+//│ ╟── ->> flowing from argument of type `(?k,)`
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from operator application of type `?l -> ?m`
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^
+//│ ╟── ->>> flowing from applied expression of type `int -> int -> int`
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	               ^
+//│ ╟── ->>> flowing from reference of type `int -> int -> int`
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	               ^
+//│ ╟── ->>> flowing from expression of type `int -> int -> int`
+//│ ╟── ->> flowing from expression of type `(int,)`
+//│ ╟── -> flowing from reference of type `int`
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^
+//│ ╙── -> flowing from variable of type `?n`
+//│ ╔══[WARNING] ========= Previous type provenance flow below =========
+//│ ╟── -> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── -> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── -> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── -> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ╙──      	^^^^^^^
+//│ ╔══[WARNING] ========= New type provenance flow below =========
+//│ ╟── -> flowing from operator application of type `α27` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── -> flowing from application of type `α28` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ╙──      	^^^^^^^
+//│ ╔══[WARNING] ========= Previous type provenance flow below =========
+//│ ╟── -> flowing from operator application of type `α27` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── -> flowing from application of type `α28` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ╙──      	^^^^^^^
+//│ ╔══[WARNING] ========= New type provenance flow below =========
+//│ ╟── -> flowing from operator application of type `α27` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── -> flowing from application of type `α28` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ╙──      	^^^^^^^
+//│ ╔══[WARNING] ========= Previous type provenance flow below =========
+//│ ╟── -> flowing from operator application of type `α27` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── -> flowing from application of type `α28` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ╙──      	^^^^^^^
+//│ ╔══[WARNING] ========= New type provenance flow below =========
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `(int<number> -> int<number>)` with desc: expression
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from expression of type `(int<number> -> (int<number> -> int<number>))` with desc: expression
+//│ ╟── ->>> flowing from reference of type `[(int<number> -> (int<number> -> int<number>))]` with desc: reference
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	               ^
+//│ ╟── ->>> flowing from applied expression of type `[[(int<number> -> (int<number> -> int<number>))]]` with desc: applied expression
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	               ^
+//│ ╟── ->>> flowing from operator application of type `([([α21'],)] -> α22')` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^
+//│ ╟── ->> flowing from operator application of type `α22'` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^
+//│ ╟── ->> flowing from applied expression of type `[α22']` with desc: applied expression
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^
+//│ ╟── ->> flowing from operator application of type `([(1<int,number>,)] -> α23')` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^^^
+//│ ╟── -> flowing from operator application of type `α27` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── -> flowing from application of type `α28` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ╙──      	^^^^^^^
+//│ ╔══[WARNING] ========= Previous type provenance flow below =========
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `(int<number> -> int<number>)` with desc: expression
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from expression of type `(int<number> -> (int<number> -> int<number>))` with desc: expression
+//│ ╟── ->>> flowing from reference of type `[(int<number> -> (int<number> -> int<number>))]` with desc: reference
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	               ^
+//│ ╟── ->>> flowing from applied expression of type `[[(int<number> -> (int<number> -> int<number>))]]` with desc: applied expression
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	               ^
+//│ ╟── ->>> flowing from operator application of type `([([α21'],)] -> α22')` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^
+//│ ╟── ->> flowing from operator application of type `α22'` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^
+//│ ╟── ->> flowing from applied expression of type `[α22']` with desc: applied expression
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^
+//│ ╟── ->> flowing from operator application of type `([(1<int,number>,)] -> α23')` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^^^
+//│ ╟── -> flowing from operator application of type `α27` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── -> flowing from application of type `α28` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ╙──      	^^^^^^^
+//│ ╔══[WARNING] ========= New type provenance flow below =========
+//│ ╟── -> flowing from type `[int<number>]` with desc: type
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `(int<number> -> int<number>)` with desc: expression
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from expression of type `(int<number> -> (int<number> -> int<number>))` with desc: expression
+//│ ╟── ->>> flowing from reference of type `[(int<number> -> (int<number> -> int<number>))]` with desc: reference
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	               ^
+//│ ╟── ->>> flowing from applied expression of type `[[(int<number> -> (int<number> -> int<number>))]]` with desc: applied expression
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	               ^
+//│ ╟── ->>> flowing from operator application of type `([([α21'],)] -> α22')` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^
+//│ ╟── ->> flowing from operator application of type `α22'` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^
+//│ ╟── ->> flowing from applied expression of type `[α22']` with desc: applied expression
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^
+//│ ╟── ->> flowing from operator application of type `([(1<int,number>,)] -> α23')` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^^^
+//│ ╟── -> flowing from operator application of type `α27` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── -> flowing from application of type `α28` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ╙──      	^^^^^^^
+//│ ╔══[WARNING] ========= Previous type provenance flow below =========
+//│ ╟── -> flowing from type `[int<number>]` with desc: type
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `(int<number> -> int<number>)` with desc: expression
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from expression of type `(int<number> -> (int<number> -> int<number>))` with desc: expression
+//│ ╟── ->>> flowing from reference of type `[(int<number> -> (int<number> -> int<number>))]` with desc: reference
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	               ^
+//│ ╟── ->>> flowing from applied expression of type `[[(int<number> -> (int<number> -> int<number>))]]` with desc: applied expression
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	               ^
+//│ ╟── ->>> flowing from operator application of type `([([α21'],)] -> α22')` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^
+//│ ╟── ->> flowing from operator application of type `α22'` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^
+//│ ╟── ->> flowing from applied expression of type `[α22']` with desc: applied expression
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^
+//│ ╟── ->> flowing from operator application of type `([(1<int,number>,)] -> α23')` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^^^
+//│ ╟── -> flowing from operator application of type `α27` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── -> flowing from application of type `α28` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ╙──      	^^^^^^^
+//│ ╔══[WARNING] ========= New type provenance flow below =========
+//│ ╟── -> flowing from type `[int<number>]` with desc: type
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from expression of type `(int<number> -> int<number>)` with desc: expression
+//│ ╟── ->> flowing into nested prov with desc: <nested>
+//│ ╟── ->>> flowing from expression of type `(int<number> -> (int<number> -> int<number>))` with desc: expression
+//│ ╟── ->>> flowing from reference of type `[(int<number> -> (int<number> -> int<number>))]` with desc: reference
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	               ^
+//│ ╟── ->>> flowing from applied expression of type `[[(int<number> -> (int<number> -> int<number>))]]` with desc: applied expression
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	               ^
+//│ ╟── ->>> flowing from operator application of type `([([α21'],)] -> α22')` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^
+//│ ╟── ->> flowing from operator application of type `α22'` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^
+//│ ╟── ->> flowing from applied expression of type `[α22']` with desc: applied expression
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^
+//│ ╟── ->> flowing from operator application of type `([(1<int,number>,)] -> α23')` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^^^
+//│ ╟── -> flowing from operator application of type `α27` with desc: operator application
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	             ^^^^^
+//│ ╟── -> flowing into nested prov with desc: <nested>
+//│ ╟── ->> flowing from function of type `(α26 -> α27)` with desc: function
+//│ ║  l.4: 	def succ x = x + 1
+//│ ║       	         ^^^^^^^^^
+//│ ╟── ->> flowing from reference of type `[(α26 -> α27)]` with desc: reference
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from applied expression of type `[[(α26 -> α27)]]` with desc: applied expression
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^
+//│ ╟── ->> flowing from application of type `([([[[false<bool>]]],)] -> α28)` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ║        	^^^^^^^
+//│ ╟── -> flowing from application of type `α28` with desc: application
+//│ ║  l.15: 	succ x2
+//│ ╙──      	^^^^^^^
 //│ res: error | int

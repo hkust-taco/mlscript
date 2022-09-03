@@ -22,6 +22,18 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     println(s"CONSTRAIN $lhs <! $rhs")
     println(s"  where ${FunctionType(lhs, rhs)(noProv).showBounds}")
     
+    /* Stores the chain of provenances that lead to a given constraint
+     * for a constraint a <: b, the LHS and RHS indicate the chain of
+     * provenances that leads to the type a and type b respectively.
+     * 
+     * The newest element in the list is the most recent provenance and
+     * the last element is the oldest or starting/origin provenance.
+     * 
+     * Taken together as LHS reverse_::: RHS, we get the complete
+     * flow of a type from a it's producer to it's consumer. LHS needs
+     * to be reversed because the starting provenance is at the end of
+     * the LHS list.
+     */
     type ConCtx = Ls[SimpleType] -> Ls[SimpleType]
     
     
@@ -290,15 +302,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         val newCctx = if (sameLevel) {
           // add new simple type to the chain only if it's provenance
           // is different from current chain head
-          ((if (cctx._1.headOption.exists(_.prov.equals(lhs.prov))) cctx._1 else lhs :: cctx._1)
+          ((if (cctx._1.headOption.exists(_.prov is lhs.prov)) cctx._1 else lhs :: cctx._1)
           ->
-          (if (cctx._2.headOption.exists(_.prov.equals(rhs.prov))) cctx._2 else rhs :: cctx._2))
-          // ((if (cctx._1.headOption.exists(_ is lhs.prov)) cctx._1 else lhs :: cctx._1)
-          // ->
-          // (if (cctx._2.headOption.exists(_ is rhs.prov)) cctx._2 else rhs :: cctx._2))
-        } else (lhs :: Nil) -> {
+          (if (cctx._2.headOption.exists(_.prov is rhs.prov)) cctx._2 else rhs :: cctx._2))
+        } else {
           println(s"For ${lhs} and ${rhs} creating nested prov chain")
-          nestedProv.map(prov => rhs.withProv(prov) :: Nil).getOrElse(rhs :: Nil)
+          (lhs :: nestedProv.map(nested => lhs.withProv(nested) :: Nil).getOrElse(Nil)) -> (rhs :: Nil)
         }
 
         if (explainErrors) {
@@ -311,7 +320,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             chain.flatMap { node =>
               node.prov match {
                 case nestedProv: NestedTypeProvenance => 
-                  msg"$levelIndicator nested flow from ${printProv(nestedProv)} `${node.toString}` with desc: ${node.prov.desc}" -> nestedProv.loco :: Nil :::
+                  msg"$levelIndicator flowing into nested prov with desc: ${node.prov.desc}" -> nestedProv.loco ::
                     showNestingLevel(nestedProv.chain, level + 1)
                 case tprov => 
                   msg"$levelIndicator flowing from ${printProv(tprov)} `${node.toString}` with desc: ${node.prov.desc}" -> tprov.loco :: Nil
@@ -382,6 +391,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rec(r0, r1, false, provChain)
           case (prim: ClassTag, ot: ObjectTag)
             if prim.parentsST.contains(ot.id) => ()
+          // for constraining type variables a new bound is created
+          // the `newBound`'s provenance must record the whole flow
+          // of the type variable from it's producer to it's consumer
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
             val newBound = (cctx._1 ::: cctx._2.reverse).foldRight(rhs)((c, ty) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
@@ -611,7 +623,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         chain.flatMap { node =>
           node.prov match {
             case nestedProv: NestedTypeProvenance => 
-              msg"$levelIndicator Nested type provenance with info: ${nestedProv.nestingInfo.toString()}" -> N ::
+              msg"$levelIndicator flowing into nested prov with desc: ${node.prov.desc}" -> nestedProv.loco ::
                 showNestingLevel(nestedProv.chain, level + 1)
             case tprov => 
               msg"$levelIndicator flowing from ${printProv(tprov)} `${node.expPos}`" -> tprov.loco :: Nil
