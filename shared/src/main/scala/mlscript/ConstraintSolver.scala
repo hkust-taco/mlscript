@@ -10,14 +10,28 @@ import mlscript.Message._
 
 class ConstraintSolver extends NormalForms { self: Typer =>
   def verboseConstraintProvenanceHints: Bool = verbose
-  // TODO: maintain state across multiple constrain calls
-  val provenanceCounter: MutMap[TypeProvenance, Int] = MutMap();
+  /** Maps provenances locations to a counter. The counter tracks
+   * the number of the times the location has been visited, and the
+   * number of visits that have led to constraining failures.
+  */
+  val provLocoCounter: MutMap[Loc, (Int, Int)] = MutMap();
   
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
   def constrain(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx): Unit = {
     // We need a cache to remember the subtyping tests in process; we also make the cache remember
     // past subtyping tests for performance reasons (it reduces the complexity of the algoritghm):
     val cache: MutSet[(SimpleType, SimpleType)] = MutSet.empty
+    
+    /* Count the number of times a location has been visited in this constraining call */
+    val currentProvLocoCounter: MutMap[Loc, Int] = MutMap(); 
+    def incrementProvLocoCounter(st: ST): Unit = {
+      st.prov.loco.foreach(loco =>
+        currentProvLocoCounter.updateWith(loco) {
+          case Some(count) => Some(count + 1)
+          case None => Some(1)
+        }
+      )
+    }
     
     println(s"CONSTRAIN $lhs <! $rhs")
     println(s"  where ${FunctionType(lhs, rhs)(noProv).showBounds}")
@@ -314,59 +328,63 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     def rec(lhs: SimpleType, rhs: SimpleType, nestedProv: Opt[NestedTypeProvenance] = N)
           (implicit raise: Raise, cctx: ConCtx): Unit = {
       constrainCalls += 1
-      // Thread.sleep(10)  // useful for debugging constraint-solving explosions debugged on stdout
-      recImpl(lhs, rhs)(raise,
-       {
-        val newCctx = nestedProv match {
-          case N => 
-            // add new simple type to the chain only if it's provenance
-            // is different from current chain head
-            ((if (cctx._1.headOption.exists(_.prov is lhs.prov)) cctx._1 else lhs :: cctx._1)
-            ->
-            (if (cctx._1.headOption.exists(_.prov is rhs.prov)) cctx._2 else rhs :: cctx._2))
-          case S(nested) => 
-            // the provenance chain for the constructor from the previous level
-            // connects the provenances of lhs and rhs
-            (lhs :: lhs.withProv(nested) :: Nil) -> (rhs :: Nil)
-        }
-
-        if (explainErrors) {
-          def printProv(prov: TP): Message =
-              if (prov.isType) msg"type"
-              else msg"${prov.desc} of type"
-        
-          def showNestingLevel(chain: Ls[ST], level: Int): Ls[Message -> Opt[Loc]] = {
-            val levelIndicator = s"-${">"*level}"
-            chain.flatMap { node =>
-              node.prov match {
-                case nestedProv: NestedTypeProvenance => 
-                  msg"$levelIndicator flowing into nested prov with desc: ${node.prov.desc}" -> nestedProv.loco ::
-                    showNestingLevel(nestedProv.chain, level + 1)
-                case tprov => 
-                  msg"$levelIndicator flowing from ${printProv(tprov)} `${node.toString}` with desc: ${node.prov.desc}" -> tprov.loco :: Nil
-              }
+      val sameLhs = cctx._1.headOption.exists(_.prov is lhs.prov)
+      val sameRhs = cctx._1.headOption.exists(_.prov is rhs.prov)
+      if (!sameLhs) incrementProvLocoCounter(lhs)
+      if (!sameRhs) incrementProvLocoCounter(rhs)
+      
+      val newCctx = nestedProv match {
+        case N => 
+          // add new simple type to the chain only if it's provenance
+          // is different from current chain head
+          ((if (sameLhs) cctx._1 else lhs :: cctx._1)
+          ->
+          (if (sameRhs) cctx._2 else rhs :: cctx._2))
+        case S(nested) => 
+          // the provenance chain for the constructor from the previous level
+          // connects the provenances of lhs and rhs
+          (lhs :: lhs.withProv(nested) :: Nil) -> (rhs :: Nil)
+      }
+      
+      // show provenance chains from both contexts to emphasize the new node added
+      if (explainErrors) {
+        def printProv(prov: TP): Message =
+            if (prov.isType) msg"type"
+            else msg"${prov.desc} of type"
+      
+        def showNestingLevel(chain: Ls[ST], level: Int): Ls[Message -> Opt[Loc]] = {
+          val levelIndicator = s"-${">"*level}"
+          chain.flatMap { node =>
+            node.prov match {
+              case nestedProv: NestedTypeProvenance => 
+                msg"$levelIndicator flowing into nested prov with desc: ${node.prov.desc}" -> nestedProv.loco ::
+                  showNestingLevel(nestedProv.chain, level + 1)
+              case tprov => 
+                msg"$levelIndicator flowing from ${printProv(tprov)} `${node.toString}` with desc: ${node.prov.desc}" -> tprov.loco :: Nil
             }
           }
-          
-          val oldProvFlow =
-            msg"========= Previous type provenance flow below =========" -> N ::
-            showNestingLevel(cctx._1, 1) :::
-            showNestingLevel(cctx._2, 1)
-
-          val newProvFlow =
-            msg"========= New type provenance flow below =========" -> N ::
-            showNestingLevel(newCctx._1, 1) :::
-            showNestingLevel(newCctx._2, 1)
-
-          
-          raise(WarningReport(oldProvFlow))
-          println(s"Prov flows before and after ${lhs} and ${rhs}")
-          // println(s"Rhs and previous rhsChain head are same `cctx._2.headOption.exists(_ is rhs.prov)` ? - ${cctx._2.headOption.exists(_ is rhs.prov)}")
-          println(s"Rhs and previous rhsChain provs similar - `_.prov.equals(rhs.prov)`? - ${cctx._2.headOption.exists(_.prov.equals(rhs.prov))}")
-          raise(WarningReport(newProvFlow))
         }
-        newCctx
-      })
+        
+        val oldProvFlow =
+          msg"========= Previous type provenance flow below =========" -> N ::
+          showNestingLevel(cctx._1, 1) :::
+          showNestingLevel(cctx._2, 1)
+
+        val newProvFlow =
+          msg"========= New type provenance flow below =========" -> N ::
+          showNestingLevel(newCctx._1, 1) :::
+          showNestingLevel(newCctx._2, 1)
+
+        
+        raise(WarningReport(oldProvFlow))
+        println(s"Prov flows before and after ${lhs} and ${rhs}")
+        // println(s"Rhs and previous rhsChain head are same `cctx._2.headOption.exists(_ is rhs.prov)` ? - ${cctx._2.headOption.exists(_ is rhs.prov)}")
+        println(s"Rhs and previous rhsChain provs similar - `_.prov.equals(rhs.prov)`? - ${cctx._2.headOption.exists(_.prov.equals(rhs.prov))}")
+        raise(WarningReport(newProvFlow))
+      }
+      
+      // Thread.sleep(10)  // useful for debugging constraint-solving explosions debugged on stdout
+      recImpl(lhs, rhs)(raise, newCctx)
     }
     def recImpl(lhs: SimpleType, rhs: SimpleType)
           (implicit raise: Raise, cctx: ConCtx): Unit =
@@ -519,6 +537,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }}()
     
     def reportError(failureOpt: Opt[Message] = N)(implicit cctx: ConCtx): Unit = {
+      // update top level provenance counter with location counts
+      // from current constraint call. constrain errors adds to
+      // both total and erroneous location counts
+      currentProvLocoCounter.iterator.foreach { case (loco, count) => 
+        provLocoCounter.updateWith(loco) {
+          case Some((total, wrong)) => Some((total + count, wrong + count))
+          case None => Some((count, count))
+        }
+      }
+      
       val lhs = cctx._1.head
       val rhs = cctx._2.head
       
