@@ -618,6 +618,18 @@ class JSTestBackend extends JSBackend {
       case Def(recursive, Var(name), L(body), withDef) =>
         (if (recursive) {
           val sym = scope.declareValue(name)
+          // The following match fixes:
+          // rec def x = x ~> function x() { return x /* wrong, should be x() */ }
+          // because `body` is translated first, when translating the body
+          // sym.isByName is defaultly false, the decision of isByName WRONGLY happens
+          // after translating the body
+          // TODO: don't use mut isByName, update sym generation methods (scope.declareValue...)
+          body match {
+            case _: Lam =>
+              sym.isByName = false
+            case _ =>
+              sym.isByName = withDef
+          }
           try {
             R((translateTerm(body), sym))
           } catch {

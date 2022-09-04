@@ -47,11 +47,11 @@ def dv = D{}
 //│ ║  l.42: 	def dv = D{}
 //│ ╙──      	          ^^
 //│ dv: D & {x: nothing, y: nothing} | error
-//│   = D { x: undefined, y: undefined }
+//│   = [Function: dv]
 
 def dv = D { x = 0; y = "hello" }
 //│ dv: D & {x: 0, y: "hello"}
-//│   = D { x: 0, y: 'hello' }
+//│   = [Function: dv1]
 
 :e
 dv: nothing
@@ -109,7 +109,7 @@ E{}
 def ev = E { x = 1 }
 ev: C
 //│ ev: E & {x: 1}
-//│   = E {}
+//│   = [Function: ev]
 //│ res: C
 //│    = E {}
 
@@ -135,18 +135,18 @@ def t = T1 (A { x = 1 })
 //│ ║  l.117: 	trait T1: C & A
 //│ ╙──       	          ^^^^^
 //│ t: error | {x: 1} & a & t1
-//│  = { x: 1 }
+//│  = [Function: t]
 
 def t = T1 (A (C { x = 1 }))
 //│ t: C & {x: 1} & a & t1
-//│  = C { x: 1 }
+//│  = [Function: t1]
 
 class CA: C & A
 //│ Defined class CA
 
 def t = T1 (CA { x = 1 })
 //│ t: CA & {x: 1} & t1
-//│  = CA { x: 1 }
+//│  = [Function: t2]
 
 
 class C1: B & T1 & { y: "hi" | "hello" }
@@ -161,11 +161,11 @@ def c1 = C1 { }
 //│ ║  l.156: 	def c1 = C1 { }
 //│ ╙──       	            ^^^
 //│ c1: C1 & {x: nothing, y: nothing} | error
-//│   = C1 { y: undefined, x: undefined }
+//│   = [Function: c1]
 
 def c1 = C1 { x = 1; y = "hi" }
 //│ c1: C1 & {x: 1, y: "hi"}
-//│   = C1 { y: 'hi', x: 1 }
+//│   = [Function: c11]
 
 c1: T1
 //│ res: T1

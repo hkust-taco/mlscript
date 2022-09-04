@@ -109,3 +109,12 @@ f 1
 //│ res: 1
 //│    = 1
 
+:js
+rec def xx = xx
+//│ // Query 1
+//│ globalThis.xx = function xx() {
+//│   return xx();
+//│ };
+//│ // End of generated code
+//│ xx: nothing
+//│   = [Function: xx]

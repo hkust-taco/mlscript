@@ -1,7 +1,7 @@
 
 def x = 1
 //│ x: 1
-//│  = 1
+//│  = [Function: x]
 
 1
 //│ res: 1
@@ -17,23 +17,23 @@ def x = 1
 def x = 1;
 2
 //│ x: 1
-//│  = 1
+//│  = [Function: x1]
 //│ res: 2
 //│    = 2
 
 def x = 1;;
 2
 //│ x: 1
-//│  = 1
+//│  = [Function: x2]
 //│ res: 2
 //│    = 2
 
 def x = 1
 def y = 2
 //│ x: 1
-//│  = 1
+//│  = [Function: x3]
 //│ y: 2
-//│  = 2
+//│  = [Function: y]
 
 1
 2
@@ -50,7 +50,7 @@ def x = add x 1
 //│ res: 1
 //│    = 1
 //│ x: int
-//│  = 2
+//│  = [Function: x4]
 
 def x = 1
 x
@@ -58,15 +58,15 @@ def y = 2
 y
 def z = x + y
 //│ x: 1
-//│  = 1
+//│  = [Function: x5]
 //│ res: 1
 //│    = 1
 //│ y: 2
-//│  = 2
+//│  = [Function: y1]
 //│ res: 2
 //│    = 2
 //│ z: int
-//│  = 3
+//│  = [Function: z]
 
 :e
 1

@@ -12,7 +12,7 @@ def originalCons = Cons  // Note: type still seems over-complicated because we p
 
 def Nil = Nil {}
 //│ Nil: Nil
-//│    = Nil {}
+//│    = [Function: Nil1]
 
 def Cons head tail = Cons { head; tail }
 //│ Cons: ('head & 'A) -> (List['A] & 'tail) -> (Cons['A] with {head: 'head, tail: 'tail})
@@ -25,11 +25,11 @@ Cons 2
 
 def c = Cons 2 Nil
 //│ c: Cons[2] with {tail: Nil}
-//│  = Cons { head: 2, tail: Nil {} }
+//│  = [Function: c]
 
 def d = Cons 1 c
 //│ d: Cons[1 | 2] with {head: 1, tail: Cons[2] with {tail: Nil}}
-//│  = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
+//│  = [Function: d]
 
 d.head
 //│ res: 1
@@ -180,7 +180,7 @@ res.head
 
 def c = Cons 1
 //│ c: Cons[0] with {head: 1, tail: Nil}
-//│  = Cons { head: 1, tail: Nil {} }
+//│  = [Function: c1]
 
 c.head
 //│ res: 1
