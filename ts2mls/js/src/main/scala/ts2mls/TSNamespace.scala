@@ -11,7 +11,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
   // easier to check the output one by one
   private val order = ListBuffer.empty[Either[String, String]]
 
-  def derive(name: String): TSNamespace = {
+  def derive(name: String): TSNamespace =
     if (subSpace.contains(name)) subSpace(name) // if the namespace has appeared in another file, just return it
     else {
       val sub = new TSNamespace(name, Some(this))
@@ -19,7 +19,6 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
       order += Left(name)
       sub
     }
-  }
 
   def put(name: String, tp: TSType): Unit =
     if (!members.contains(name)) {
