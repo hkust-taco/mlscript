@@ -17,7 +17,7 @@ class JSWriter(filename: String) {
     
     // override when the content is different
     if (!strln.equals(buffer.toString())) {
-      fs.writeSync(out, strln)
+      fs.writeSync(out, strln, fileSize) // `fileSize` is the offset from the beginning of the file
       needTruncate = true // if the file has been modified, we need to truncate the file to keep it clean
     }
 
