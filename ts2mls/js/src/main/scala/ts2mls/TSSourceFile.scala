@@ -3,6 +3,7 @@ package ts2mls
 import scala.scalajs.js
 import js.DynamicImplicits._
 import types._
+import mlscript.utils._
 
 object TSSourceFile {
   def apply(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker) =
@@ -52,7 +53,7 @@ object TSSourceFile {
     val pList = node.parameters.foldLeft(List[TSType]())((lst, p) => lst :+ (
       // in typescript, you can use `this` to explicitly specifies the callee
       // but it never appears in the final javascript file
-      if (p.symbol.escapedName.equals("this")) TSPrimitiveType("void")
+      if (p.symbol.escapedName === "this") TSPrimitiveType("void")
       else
         if (p.isOptional) TSUnionType(getObjectType(p.symbolType), TSPrimitiveType("undefined"))
         else getObjectType(p.symbolType))
@@ -80,7 +81,7 @@ object TSSourceFile {
       val name = p.symbol.escapedName
 
       // TODO: support `__constructor`
-      if (!name.equals("__constructor") && p.isStatic == requireStatic) {
+      if (name =/= "__constructor" && p.isStatic == requireStatic) {
         val mem =
           if (!p.isStatic) getMemberType(p)
           else parseMembers(name, p.initializer, true)

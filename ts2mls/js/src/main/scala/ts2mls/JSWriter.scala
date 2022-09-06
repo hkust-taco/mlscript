@@ -3,6 +3,7 @@ package ts2mls
 import scala.scalajs.js
 import js.Dynamic.{global => g}
 import js.DynamicImplicits._
+import mlscript.utils._
 
 class JSWriter(filename: String) {
   import JSWriter._
@@ -16,7 +17,7 @@ class JSWriter(filename: String) {
     fs.readSync(out, buffer, 0, strln.length)
     
     // override when the content is different
-    if (!strln.equals(buffer.toString())) {
+    if (strln =/= buffer.toString()) {
       fs.writeSync(out, strln, fileSize) // `fileSize` is the offset from the beginning of the file
       needTruncate = true // if the file has been modified, we need to truncate the file to keep it clean
     }

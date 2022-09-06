@@ -1,5 +1,7 @@
 package ts2mls.types
 
+import mlscript.utils._
+
 object Converter {
   private val primitiveName = Map[String, String](
     "boolean" -> "bool",
@@ -65,7 +67,7 @@ object Converter {
       else "\n" + lst.reduceLeft((bd, m) => s"$bd\n$m")
     }
     
-    if (typeName.equals("trait ")) body // anonymous interfaces
+    if (typeName === "trait ") body // anonymous interfaces
     else { // named interfaces and classes
       val bodyWithParents = parents.foldLeft(body)((b, p) => s"$b & ${convert(p)}")
       if (typeVars.isEmpty) s"$typeName: $bodyWithParents$methods"
