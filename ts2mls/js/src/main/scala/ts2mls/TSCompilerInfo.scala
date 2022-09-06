@@ -88,8 +88,11 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val isTupleTypeNode = TypeScript.isTupleTypeNode(node)
   lazy val isImplementationOfOverload = checker.isImplementationOfOverload(node)
 
-  // if a node has an initializer or is marked by a question notation
-  // it is ok if we provide nothing
+  // if a node has an initializer or is marked by a question notation it is optional
+  // e.g. `function f(x?: int) {}`, we can use it directly: `f()`.
+  // in this case, there would be a question token.
+  // e.g. `function f(x: int = 42) {}`, we can use it directly: `f()`.
+  // in this case, the initializer would store the default value and be non-empty.
   lazy val isOptional = !initializer.isUndefined || !IsUndefined(node.questionToken)
   lazy val isStatic = if (modifiers.isUndefined) false
                      else modifiers.foldLeft(false)((s, t) => t.isStatic)
