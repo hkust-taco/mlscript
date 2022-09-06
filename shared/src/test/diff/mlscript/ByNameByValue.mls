@@ -145,7 +145,7 @@ rec def xs = Cons 0 (Cons 1 xs)
 //│     'tail :> Cons[0 | 1] with {head: 0, tail: Cons[0 | 1] with {head: 1, tail: 'tail}}
 //│   = [Function: xs]
 
-// FIXME
+:re
 xs
 //│ res: 'tail
 //│   where

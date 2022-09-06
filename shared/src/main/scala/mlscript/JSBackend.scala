@@ -90,7 +90,7 @@ class JSBackend {
       case S(sym: ValueSymbol) =>
         visitedSymbols += sym
         val ident = JSIdent(sym.runtimeName)
-        if (sym.dummyWrapping) ident() else ident
+        if (sym.thunkify) ident() else ident
       case S(sym: ClassSymbol) =>
         if (isCallee)
           JSNew(JSIdent(sym.runtimeName))
@@ -520,7 +520,7 @@ class JSBackend {
     sorted.flatMap(sym => if (classSymbols.contains(sym)) S(sym -> baseClasses.get(sym)) else N)
   }
 
-  protected def needsDummyWrapping(body: Term, withDef: Boolean): Boolean = {
+  protected def needsThunkify(body: Term, withDef: Boolean): Boolean = {
     body match {
       case _: Lam => false
       case _ => withDef
@@ -558,13 +558,13 @@ class JSWebBackend extends JSBackend {
         .concat(otherStmts.flatMap {
           case Def(recursive, Var(name), L(body), withDef) =>
             val (originalExpr, sym) = if (recursive) {
-              val sym = topLevelScope.declareValue(name, needsDummyWrapping(body, withDef))
+              val sym = topLevelScope.declareValue(name, needsThunkify(body, withDef))
               (translateTerm(body)(topLevelScope), sym)
             } else {
               val translatedBody = translateTerm(body)(topLevelScope)
-              (translatedBody, topLevelScope.declareValue(name, needsDummyWrapping(body, withDef)))
+              (translatedBody, topLevelScope.declareValue(name, needsThunkify(body, withDef)))
             }
-            val translatedBody = if (sym.dummyWrapping) JSArrowFn(Nil, L(originalExpr)) else originalExpr
+            val translatedBody = if (sym.thunkify) JSArrowFn(Nil, L(originalExpr)) else originalExpr
             topLevelScope.tempVars `with` JSConstDecl(sym.runtimeName, translatedBody) ::
               JSInvoke(resultsIdent("push"), JSIdent(sym.runtimeName) :: Nil).stmt :: Nil
           // Ignore type declarations.
@@ -625,7 +625,7 @@ class JSTestBackend extends JSBackend {
     val queries = otherStmts.map {
       case Def(recursive, Var(name), L(body), withDef) =>
         (if (recursive) {
-          val sym = scope.declareValue(name, needsDummyWrapping(body, withDef))
+          val sym = scope.declareValue(name, needsThunkify(body, withDef))
           try {
             R((translateTerm(body), sym))
           } catch {
@@ -640,11 +640,11 @@ class JSTestBackend extends JSBackend {
               scope.declareStubValue(name, e.symbol)
               L(e.getMessage())
             case e: Throwable => throw e
-          }) map { expr => (expr, scope.declareValue(name, needsDummyWrapping(body, withDef))) }
+          }) map { expr => (expr, scope.declareValue(name, needsThunkify(body, withDef))) }
         }) match { 
           case R((originalExpr, sym)) =>
             val expr = 
-              if (sym.dummyWrapping)
+              if (sym.thunkify)
                 JSArrowFn(Nil, L(originalExpr))
               else
                 originalExpr
