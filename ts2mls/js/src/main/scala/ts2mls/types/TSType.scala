@@ -16,15 +16,20 @@ case class TSFunctionType(params: List[TSType], res: TSType, val typeVars: List[
 case class TSArrayType(eleType: TSType) extends TSType
 case class TSSubstitutionType(base: String, applied: List[TSType]) extends TSType
 
-case class TSClassType(name: String,
-                       members: Map[String, TSMemberType],
-                       statics: Map[String, TSMemberType],
-                       typeVars: List[TSTypeParameter],
-                       parents: List[TSType]) extends TSType
-case class TSInterfaceType(name: String,
-                           members: Map[String, TSMemberType],
-                           typeVars: List[TSTypeParameter],
-                           parents: List[TSType]) extends TSType
+case class TSClassType(
+    name: String,
+    members: Map[String, TSMemberType],
+    statics: Map[String, TSMemberType],
+    typeVars: List[TSTypeParameter],
+    parents: List[TSType],
+  ) extends TSType
+
+case class TSInterfaceType(
+    name: String,
+    members: Map[String, TSMemberType],
+    typeVars: List[TSTypeParameter],
+    parents: List[TSType],
+  ) extends TSType
 
 sealed abstract class TSStructuralType(lhs: TSType, rhs: TSType, notion: String) extends TSType
 case class TSUnionType(lhs: TSType, rhs: TSType) extends TSStructuralType(lhs, rhs, "|")
