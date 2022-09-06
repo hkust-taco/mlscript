@@ -50,6 +50,5 @@ object TSIntersectionType {
         case TSFunctionType(_, _, v) => v
         case _ => List()
       })).distinct
-    case _ => List()
   }
 }
