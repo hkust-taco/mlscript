@@ -177,4 +177,6 @@ fun = 1
 //│ Parsed: {fun <error> = undefined}
 
 
-
+fun add(x: number, y: number): number
+//│ |#fun| |add|(|x|#:| |number|,| |y|#:| |number|)|#:| |number|
+//│ Parsed: {fun add = x: number, y: number, => undefined : TypeName(number)}
