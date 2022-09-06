@@ -26,14 +26,13 @@ sealed trait TypeSymbol extends LexicalSymbol {
   val body: Type
 }
 
-sealed class ValueSymbol(val lexicalName: Str, val runtimeName: Str) extends RuntimeSymbol {
+sealed class ValueSymbol(val lexicalName: Str, val runtimeName: Str, val dummyWrapping: Boolean) extends RuntimeSymbol {
   override def toString: Str = s"value $lexicalName"
-  var isByName: Bool = false
 }
 
 object ValueSymbol {
-  def apply(lexicalName: Str, runtimeName: Str): ValueSymbol =
-    new ValueSymbol(lexicalName, runtimeName)
+  def apply(lexicalName: Str, runtimeName: Str, dummyWrapping: Boolean): ValueSymbol =
+    new ValueSymbol(lexicalName, runtimeName, dummyWrapping)
 }
 
 sealed case class TypeAliasSymbol(

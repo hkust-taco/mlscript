@@ -90,7 +90,7 @@ class JSBackend {
       case S(sym: ValueSymbol) =>
         visitedSymbols += sym
         val ident = JSIdent(sym.runtimeName)
-        if (sym.isByName) ident() else ident
+        if (sym.dummyWrapping) ident() else ident
       case S(sym: ClassSymbol) =>
         if (isCallee)
           JSNew(JSIdent(sym.runtimeName))
@@ -290,7 +290,7 @@ class JSBackend {
         case Lam(params, body) =>
           val methodScope = scope.derive(s"Method $name")
           val methodParams = translateParams(params)(methodScope)
-          methodScope.declareValue("this")
+          methodScope.declareValue("this", false)
           instance(name) := JSFuncExpr(
             N,
             methodParams,
@@ -299,7 +299,7 @@ class JSBackend {
         // Define getters for pure expressions.
         case term =>
           val getterScope = scope.derive(s"Getter $name")
-          getterScope.declareValue("this")
+          getterScope.declareValue("this", false)
           id("Object")("defineProperty")(
             instance,
             JSExpr(name),
@@ -519,6 +519,13 @@ class JSBackend {
     // units. So we filter them out here.
     sorted.flatMap(sym => if (classSymbols.contains(sym)) S(sym -> baseClasses.get(sym)) else N)
   }
+
+  protected def needsDummyWrapping(body: Term, withDef: Boolean): Boolean = {
+    body match {
+      case _: Lam => false
+      case _ => withDef
+    }
+  }
 }
 
 class JSWebBackend extends JSBackend {
@@ -550,13 +557,14 @@ class JSWebBackend extends JSBackend {
         // ```
         .concat(otherStmts.flatMap {
           case Def(recursive, Var(name), L(body), withDef) =>
-            val (translatedBody, sym) = if (recursive) {
-              val sym = topLevelScope.declareValue(name)
+            val (originalExpr, sym) = if (recursive) {
+              val sym = topLevelScope.declareValue(name, needsDummyWrapping(body, withDef))
               (translateTerm(body)(topLevelScope), sym)
             } else {
               val translatedBody = translateTerm(body)(topLevelScope)
-              (translatedBody, topLevelScope.declareValue(name))
+              (translatedBody, topLevelScope.declareValue(name, needsDummyWrapping(body, withDef)))
             }
+            val translatedBody = if (sym.dummyWrapping) JSArrowFn(Nil, L(originalExpr)) else originalExpr
             topLevelScope.tempVars `with` JSConstDecl(sym.runtimeName, translatedBody) ::
               JSInvoke(resultsIdent("push"), JSIdent(sym.runtimeName) :: Nil).stmt :: Nil
           // Ignore type declarations.
@@ -574,7 +582,7 @@ class JSWebBackend extends JSBackend {
 }
 
 class JSTestBackend extends JSBackend {
-  private val lastResultSymbol = topLevelScope declareValue "res"
+  private val lastResultSymbol = topLevelScope.declareValue("res", false)
   private val resultIdent = JSIdent(lastResultSymbol.runtimeName)
 
   private var numRun = 0
@@ -617,19 +625,7 @@ class JSTestBackend extends JSBackend {
     val queries = otherStmts.map {
       case Def(recursive, Var(name), L(body), withDef) =>
         (if (recursive) {
-          val sym = scope.declareValue(name)
-          // The following match fixes:
-          // rec def x = x ~> function x() { return x /* wrong, should be x() */ }
-          // because `body` is translated first, when translating the body
-          // sym.isByName is defaultly false, the decision of isByName WRONGLY happens
-          // after translating the body
-          // TODO: don't use mut isByName, update sym generation methods (scope.declareValue...)
-          body match {
-            case _: Lam =>
-              sym.isByName = false
-            case _ =>
-              sym.isByName = withDef
-          }
+          val sym = scope.declareValue(name, needsDummyWrapping(body, withDef))
           try {
             R((translateTerm(body), sym))
           } catch {
@@ -644,21 +640,14 @@ class JSTestBackend extends JSBackend {
               scope.declareStubValue(name, e.symbol)
               L(e.getMessage())
             case e: Throwable => throw e
-          }) map { expr => (expr, scope.declareValue(name)) }
+          }) map { expr => (expr, scope.declareValue(name, needsDummyWrapping(body, withDef))) }
         }) match { 
           case R((originalExpr, sym)) =>
-            println(s"Now we are at $name withDef = $withDef")
-            val expr = body match {
-              case _: Lam =>
-                sym.isByName = false
+            val expr = 
+              if (sym.dummyWrapping)
+                JSArrowFn(Nil, L(originalExpr))
+              else
                 originalExpr
-              case _ =>
-                sym.isByName = withDef
-                if (withDef)
-                  JSArrowFn(Nil, L(originalExpr))
-                else
-                  originalExpr
-            }
             JSTestBackend.CodeQuery(
               scope.tempVars.emit(),
               ((JSIdent("globalThis").member(sym.runtimeName) := (expr match {

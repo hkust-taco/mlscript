@@ -118,3 +118,37 @@ rec def xx = xx
 //│ // End of generated code
 //│ xx: nothing
 //│   = [Function: xx]
+
+class Nil: {}
+class Cons[A]: { head: A; tail: List[A] }
+type List[A] = Nil | Cons[A]
+//│ Defined class Nil
+//│ Defined class Cons[+A]
+//│ Defined type alias List[+A]
+
+def Nil = Nil {}
+def Cons head tail = Cons { head; tail }
+//│ Nil: Nil
+//│    = [Function: Nil1]
+//│ Cons: ('head & 'A) -> (List['A] & 'tail) -> (Cons['A] with {head: 'head, tail: 'tail})
+//│     = [Function: Cons1]
+
+:js
+rec def xs = Cons 0 (Cons 1 xs)
+//│ // Query 1
+//│ globalThis.xs = function xs() {
+//│   return Cons1(0)(Cons1(1)(xs()));
+//│ };
+//│ // End of generated code
+//│ xs: 'tail
+//│   where
+//│     'tail :> Cons[0 | 1] with {head: 0, tail: Cons[0 | 1] with {head: 1, tail: 'tail}}
+//│   = [Function: xs]
+
+// FIXME
+xs
+//│ res: 'tail
+//│   where
+//│     'tail :> Cons[0 | 1] with {head: 0, tail: Cons[0 | 1] with {head: 1, tail: 'tail}}
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
