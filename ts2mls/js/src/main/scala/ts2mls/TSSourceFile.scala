@@ -38,7 +38,7 @@ object TSSourceFile {
     val res: TSType =
       if (node.isFunctionLike) getFunctionType(node)
       else if (!node.`type`.isUndefined) getObjectType(node.`type`.typeNode)
-      else TSPrimitiveType(node.symbol.symbolType) // built-in type
+      else TSPrimitiveType(node.symbol.builtinType)
     if (node.isOptional) TSUnionType(res, TSPrimitiveType("undefined"))
     else res
   }

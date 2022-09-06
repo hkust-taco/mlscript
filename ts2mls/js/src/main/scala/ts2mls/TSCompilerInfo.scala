@@ -60,7 +60,7 @@ class TSSymbolObject(sym: js.Dynamic)(implicit checker: TSTypeChecker) extends T
   lazy val escapedName: String = sym.escapedName.toString
   lazy val declarations = TSNodeArray(sym.declarations)
 
-  lazy val symbolType: String = checker.getTypeStringOfSymbol(sym)
+  lazy val builtinType: String = checker.getTypeStringOfSymbol(sym) // the name of built-in type like `string`
 
   // get the full name of the reference symbol
   // e.g. class A extends B => class A extends SomeNamespace'B
