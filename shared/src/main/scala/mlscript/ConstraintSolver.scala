@@ -2,7 +2,7 @@ package mlscript
 
 import scala.collection.mutable
 import scala.collection.mutable.{Map => MutMap, Set => MutSet}
-import scala.collection.immutable.{SortedSet, SortedMap}
+import scala.collection.immutable.{SortedSet, SortedMap, List}
 import scala.util.chaining._
 import scala.annotation.tailrec
 import mlscript.utils._, shorthands._
@@ -14,7 +14,30 @@ class ConstraintSolver extends NormalForms { self: Typer =>
    * the number of the times the location has been visited, and the
    * number of visits that have led to constraining failures.
   */
-  val provLocoCounter: MutMap[Loc, (Int, Int)] = MutMap();
+  val typeLocoCounter: MutMap[Loc, (Int, Int)] = MutMap();
+  def updateTypeLocoCounter(st: ST, change: (Int, Int)): Unit = {
+    st.prov.loco.foreach(loco =>
+      typeLocoCounter.updateWith(loco) {
+        case Some((total, wrong)) => Some((total + change._1, wrong + change._2))
+        case None => Some(change)
+      }
+    )
+  }
+  
+  /* Stores the chain of provenances that lead to a given constraint
+    * for a constraint a <: b, the LHS and RHS indicate the chain of
+    * provenances that leads to the type a and type b respectively.
+    * 
+    * The newest element in the list is the most recent provenance and
+    * the last element is the oldest or starting/origin provenance.
+    * 
+    * Taken together as LHS reverse_::: RHS, we get the complete
+    * flow of a type from a it's producer to it's consumer. LHS needs
+    * to be reversed because the starting provenance is at the end of
+    * the LHS list.
+    */
+  type ConCtx = Ls[ST] -> Ls[ST]
+  var erroneousChains: Ls[ConCtx] = List()
   
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
   def constrain(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx): Unit = {
@@ -22,33 +45,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     // past subtyping tests for performance reasons (it reduces the complexity of the algoritghm):
     val cache: MutSet[(SimpleType, SimpleType)] = MutSet.empty
     
-    /* Count the number of times a location has been visited in this constraining call */
-    val currentProvLocoCounter: MutMap[Loc, Int] = MutMap(); 
-    def incrementProvLocoCounter(st: ST): Unit = {
-      st.prov.loco.foreach(loco =>
-        currentProvLocoCounter.updateWith(loco) {
-          case Some(count) => Some(count + 1)
-          case None => Some(1)
-        }
-      )
-    }
-    
     println(s"CONSTRAIN $lhs <! $rhs")
     println(s"  where ${FunctionType(lhs, rhs)(noProv).showBounds}")
-    
-    /* Stores the chain of provenances that lead to a given constraint
-     * for a constraint a <: b, the LHS and RHS indicate the chain of
-     * provenances that leads to the type a and type b respectively.
-     * 
-     * The newest element in the list is the most recent provenance and
-     * the last element is the oldest or starting/origin provenance.
-     * 
-     * Taken together as LHS reverse_::: RHS, we get the complete
-     * flow of a type from a it's producer to it's consumer. LHS needs
-     * to be reversed because the starting provenance is at the end of
-     * the LHS list.
-     */
-    type ConCtx = Ls[SimpleType] -> Ls[SimpleType]
     
     
     def mkCase[A](str: Str)(k: Str => A)(implicit dbgHelp: Str): A = {
@@ -330,8 +328,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       constrainCalls += 1
       val sameLhs = cctx._1.headOption.exists(_.prov is lhs.prov)
       val sameRhs = cctx._1.headOption.exists(_.prov is rhs.prov)
-      if (!sameLhs) incrementProvLocoCounter(lhs)
-      if (!sameRhs) incrementProvLocoCounter(rhs)
+      if (!sameLhs) updateTypeLocoCounter(lhs, (1, 0))
+      if (!sameRhs) updateTypeLocoCounter(rhs, (1, 0))
       
       val newCctx = nestedProv match {
         case N => 
@@ -537,15 +535,22 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }}()
     
     def reportError(failureOpt: Opt[Message] = N)(implicit cctx: ConCtx): Unit = {
-      // update top level provenance counter with location counts
-      // from current constraint call. constrain errors adds to
-      // both total and erroneous location counts
-      currentProvLocoCounter.iterator.foreach { case (loco, count) => 
-        provLocoCounter.updateWith(loco) {
-          case Some((total, wrong)) => Some((total + count, wrong + count))
-          case None => Some((count, count))
-        }
-      }
+      val lhsChain: List[ST] = cctx._1
+      val rhsChain: List[ST] = cctx._2
+      
+      // increment wrong counts of locations in current provenance chain
+      // however consider only the initial non-nested locations as erroneous
+      // because nested provenances show that a type flowed through a constructor
+      // correctly from being consumed to being produced
+      // Note: we have to reverse the rhs chain because the non-nested
+      // provenances are near the tail i.e. the 
+      // store chain for later heuristic based reporting
+      erroneousChains ::= cctx
+      lhsChain.iterator
+        .takeWhile(st => !(st.prov.isInstanceOf[NestedTypeProvenance]))
+        .++(rhsChain.reverseIterator
+              .takeWhile(st => !(st.prov.isInstanceOf[NestedTypeProvenance])))
+        .foreach(updateTypeLocoCounter(_, (0, -1)))
       
       val lhs = cctx._1.head
       val rhs = cctx._2.head
@@ -581,9 +586,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               if (fs.sizeCompare(1) > 0) "s" else ""}: ${fs.map(_._1.name).mkString(", ")})"
         case _ => doesntMatch(rhs)
       })
-      
-      val lhsChain: List[ST] = cctx._1
-      val rhsChain: List[ST] = cctx._2
       
       // The first located provenance coming from the left
       val lhsProv = lhsChain.iterator
