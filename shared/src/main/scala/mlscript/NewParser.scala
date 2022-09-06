@@ -227,7 +227,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case L(d) => raise(d); Top // TODO better
       case R(ty) => ty
     }
-  
+
   def block(implicit et: ExpectThen, fe: FoundErr): Ls[IfBody \/ Statement] =
     cur match {
       case Nil => Nil
@@ -316,8 +316,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 case c =>
                   asc match {
                     case S(ty) =>
-                      R(NuFunDef(v, Nil, L(ps.foldRight(Asc(UnitLit(true), ty): Term)((i, acc) => Lam(i, acc)))))
-                      // R(NuFunDef(v, Nil, R(PolyType(Nil, ty)))) // TODO rm PolyType after FCP is merged
+                      R(NuFunDef(v, Nil, R(PolyType(Nil, ps.foldRight(ty)((p, r) => Function(p.toType match {
+                        case L(diag) => raise(diag); Top // TODO better
+                        case R(tp) => tp
+                      }, r)))))) // TODO rm PolyType after FCP is merged
                     case N =>
                       // TODO dedup:
                       val (tkstr, loc) = c.headOption.fold(("end of input", lastLoc))(_.mapFirst(_.describe).mapSecond(some))
