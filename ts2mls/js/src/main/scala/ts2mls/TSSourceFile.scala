@@ -89,9 +89,23 @@ object TSSourceFile {
         mem match {
           case func: TSFunctionType => {
             if (!mp.contains(name)) mp ++ Map(name -> TSMemberType(func, p.modifier))
-            else if (!p.isImplementationOfOverload) // deal with functions overloading
-              mp.removed(name) ++ Map(name -> TSMemberType(TSIntersectionType(mp(name), func), p.modifier))
-            else mp
+            else { // deal with functions overloading
+              val old = mp(name)
+              val res = old.base match {
+                case f @ TSFunctionType(_, _, tv) =>
+                  if (!tv.isEmpty || !func.typeVars.isEmpty) TSTypeWithComment(func, s"warning: the overload of function $name may be not supported yet")
+                  else if (!p.isImplementationOfOverload) TSIntersectionType(f, func)
+                  else f
+                case int: TSIntersectionType =>
+                  if (!func.typeVars.isEmpty) TSTypeWithComment(func, s"warning: the overload of function $name may be not supported yet")
+                  else if (!p.isImplementationOfOverload) TSIntersectionType(int, func)
+                  else int
+                case TSTypeWithComment(_, cmt) => TSTypeWithComment(func, cmt)
+                case _ => old.base
+              }
+
+              mp.removed(name) ++ Map(name -> TSMemberType(res, p.modifier))
+            }
           }
           case _ => mp ++ Map(name -> TSMemberType(mem, p.modifier))
         }
@@ -119,8 +133,23 @@ object TSSourceFile {
 
   private def addFunctionIntoNamespace(fun: TSFunctionType, node: TSNodeObject, name: String)(implicit ns: TSNamespace) =
     if (!ns.containsMember(name, false)) ns.put(name, fun)
-    else if (!node.isImplementationOfOverload)
-      ns.put(name, TSIntersectionType(ns.get(name), fun))
+    else {
+      val old = ns.get(name)
+      val res = old match {
+        case f @ TSFunctionType(_, _, tv) =>
+          if (!tv.isEmpty || !fun.typeVars.isEmpty) TSTypeWithComment(fun, s"warning: the overload of function $name may be not supported yet")
+          else if (!node.isImplementationOfOverload) TSIntersectionType(f, fun)
+          else f
+        case int: TSIntersectionType =>
+          if (!fun.typeVars.isEmpty) TSTypeWithComment(fun, s"warning: the overload of function $name may be not supported yet")
+          else if (!node.isImplementationOfOverload) TSIntersectionType(int, fun)
+          else old
+        case TSTypeWithComment(_, cmt) => TSTypeWithComment(fun, cmt)
+        case _ => old
+      }
+      
+      ns.put(name, res)
+    } 
 
   // overload functions in a sub-namespace need to provide an overload array
   // because the namespace merely exports symbols rather than node objects themselves

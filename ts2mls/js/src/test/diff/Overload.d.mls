@@ -10,14 +10,15 @@ def tst: (({ z: number }) -> ({ y: string })) & (({ z: (false) | (true) }) -> ({
 def op: ((number) -> (((number) | (undefined)) -> (unit))) & ((number) -> ((((false) | (true)) | (undefined)) -> (unit)))
 def swap: (((number, string, )) -> ((number, string, ))) & (((string, number, )) -> ((number, string, )))
 def u: ((((number) | (false)) | (true)) -> (string)) & (({}) -> (string))
-def doSome[T, U]: (((T) & (U)) -> (nothing)) & ((string) -> (nothing))
-def XX'f[T]: ((T) -> ((number) -> (string))) & ((T) -> (((false) | (true)) -> (string)))
+def doSome[T, U]: (anything) -> (unit) /* warning: the overload of function doSome may be not supported yet */
+def XX'f[T]: (T) -> ((anything) -> (string)) /* warning: the overload of function f may be not supported yet */
 class WWW: {}
-  method F[T]: ((string) -> (T)) & ((number) -> (T))
+  method F[T]: (T) -> (anything) /* warning: the overload of function F may be not supported yet */
+def baz: unit -> (anything) /* warning: the overload of function baz may be not supported yet */
 //│ Defined class M
 //│ Defined class N
 //│ Defined class WWW
-//│ Declared WWW.F: WWW -> (number | string) -> nothing
+//│ Declared WWW.F: WWW -> anything -> anything
 //│ f: (number | string) -> string
 //│  = <missing implementation>
 //│ app: (string -> unit) -> (number | string) -> unit
@@ -38,7 +39,9 @@ class WWW: {}
 //│     = <missing implementation>
 //│ u: anything -> string
 //│  = <missing implementation>
-//│ doSome: anything -> nothing
+//│ doSome: anything -> unit
 //│       = <missing implementation>
-//│ XX'f: anything -> (false | number | true) -> string
+//│ XX'f: anything -> anything -> string
 //│     = <missing implementation>
+//│ baz: unit -> anything
+//│    = <missing implementation>

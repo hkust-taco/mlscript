@@ -35,6 +35,7 @@ object Converter {
     case TSInterfaceType(name, members, typeVars, parents) => convertRecord(s"trait $name", members, typeVars, parents)
     case TSClassType(name, members, _, typeVars, parents) => convertRecord(s"class $name", members, typeVars, parents) // TODO: support static members
     case TSSubstitutionType(base, applied) => s"${base}[${applied.map((app) => convert(app)).reduceLeft((res, s) => s"$res, $s")}]"
+    case TSTypeWithComment(base, cmt) => s"${convert(base)} /* $cmt */"
   }
 
   private def convertRecord(typeName: String, members: Map[String, TSMemberType],
@@ -49,6 +50,11 @@ object Converter {
             if (lst.isEmpty) s"${m._1}: ${convert(inter)}" // intersection type members
             else // methods with overload
               s"  method ${m._1}[${lst.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s") }]: ${convert(inter)}" // TODO: add constraints
+          }
+          case TSTypeWithComment(base, cmt) => base match {
+            case f @ TSFunctionType(_, _, typeVars) if (!typeVars.isEmpty) =>
+              s"  method ${m._1}[${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]: ${convert(f)} /* $cmt */" // TODO: add constraints
+            case _ => s"${m._1}: ${convert(m._2)}/* $cmt */"
           }
           case _ => s"${m._1}: ${convert(m._2)}" // other type members
         }

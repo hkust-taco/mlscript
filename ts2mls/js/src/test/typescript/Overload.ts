@@ -87,7 +87,7 @@ namespace XX {
   export function f<T>(x: T, n: number): string;
   export function f<T>(x: T, n: boolean): string;
 
-  export function f<T>(x, n) {
+  export function f<T>(x: T, n) {
     return "";
   }
 }
@@ -96,7 +96,14 @@ class WWW {
   F<T>(x: string): T;
   F<T>(x: number): T;
 
-  F<T>(x) {
+  F<T>(x: T) {
     return null;
   }
+}
+
+function baz<T>(): T;
+function baz<U, T>(): U;
+function baz<U, T, P>(): P;
+function baz() {
+  return null;
 }
