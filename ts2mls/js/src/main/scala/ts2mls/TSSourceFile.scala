@@ -39,7 +39,7 @@ object TSSourceFile {
       if (node.isFunctionLike) getFunctionType(node)
       else if (!node.`type`.isUndefined) getObjectType(node.`type`.typeNode)
       else TSPrimitiveType(node.symbol.builtinType)
-    if (node.isOptional) TSUnionType(res, TSPrimitiveType("undefined"))
+    if (node.symbol.isOptionalMember) TSUnionType(res, TSPrimitiveType("undefined"))
     else res
   }
 
@@ -54,10 +54,9 @@ object TSSourceFile {
       // in typescript, you can use `this` to explicitly specifies the callee
       // but it never appears in the final javascript file
       if (p.symbol.escapedName === "this") TSPrimitiveType("void")
-      else
-        if (p.isOptional) TSUnionType(getObjectType(p.symbolType), TSPrimitiveType("undefined"))
-        else getObjectType(p.symbolType))
-      )
+      else if (p.isOptionalParameter) TSUnionType(getObjectType(p.symbolType), TSPrimitiveType("undefined"))
+      else getObjectType(p.symbolType))
+    )
     TSFunctionType(pList, getObjectType(node.returnType), getTypeParametes(node))
   }
 

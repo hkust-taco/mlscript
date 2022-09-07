@@ -16,6 +16,7 @@ object TypeScript {
   val syntaxKindProtected = ts.SyntaxKind.ProtectedKeyword
   val syntaxKindStatic = ts.SyntaxKind.StaticKeyword
   val objectFlagsAnonymous = ts.ObjectFlags.Anonymous
+  val symbolFlagsOptional = ts.SymbolFlags.Optional
 
   def isToken(node: js.Dynamic) = ts.isToken(node)
   def isClassDeclaration(node: js.Dynamic) = ts.isClassDeclaration(node)
@@ -43,6 +44,7 @@ class TSTypeChecker(checker: js.Dynamic) {
   def typeToTypeNode(tp: js.Dynamic) = checker.typeToTypeNode(tp)
   def getTypeArguments(tp: js.Dynamic) = checker.getTypeArguments(tp)
   def getElementTypeOfArrayType(tp: js.Dynamic) = checker.getElementTypeOfArrayType(tp)
+  def isOptionalParameter(node: js.Dynamic) = checker.isOptionalParameter(node)
 }
 
 object TSTypeChecker {
@@ -51,6 +53,7 @@ object TSTypeChecker {
 
 class TSSymbolObject(sym: js.Dynamic)(implicit checker: TSTypeChecker) extends TSAny(sym) {
   private lazy val parent = TSSymbolObject(sym.parent)
+  private lazy val flags = sym.flags
 
   // the first declaration of this symbol
   // if there is no overloading, there is only one declaration
@@ -61,6 +64,7 @@ class TSSymbolObject(sym: js.Dynamic)(implicit checker: TSTypeChecker) extends T
   lazy val declarations = TSNodeArray(sym.declarations)
 
   lazy val builtinType: String = checker.getTypeStringOfSymbol(sym) // the name of built-in type like `string`
+  lazy val isOptionalMember = (flags & TypeScript.symbolFlagsOptional) > 0
 
   // get the full name of the reference symbol
   // e.g. class A extends B => class A extends SomeNamespace'B
@@ -93,7 +97,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   // in this case, there would be a question token.
   // e.g. `function f(x: int = 42) {}`, we can use it directly: `f()`.
   // in this case, the initializer would store the default value and be non-empty.
-  lazy val isOptional = !initializer.isUndefined || !IsUndefined(node.questionToken)
+  lazy val isOptionalParameter = checker.isOptionalParameter(node)
   lazy val isStatic = if (modifiers.isUndefined) false
                      else modifiers.foldLeft(false)((s, t) => t.isStatic)
 

@@ -1,6 +1,6 @@
 trait IFoo: { a: string; b: (number) -> (number); c: unit -> ((false) | (true)); d: (string) -> (unit) }
 trait II[T]: { test: (T) -> (number) }
-def create: unit -> ({ v: (number) | (undefined) })
+def create: unit -> ({ v: number })
 def get: ({ t: string }) -> (string)
 trait IEvent: { callback: (unit) -> ((number) -> (unit)) }
 trait SearchFunc: { __call: (string) -> ((string) -> ((false) | (true))) }
@@ -20,7 +20,7 @@ trait TTT[T]: { ttt: (T) -> (T) }
 //│ Defined trait Simple2[+T]
 //│ Defined trait Next
 //│ Defined trait TTT[=T]
-//│ create: unit -> {v: number | undefined}
+//│ create: unit -> {v: number}
 //│       = <missing implementation>
 //│ get: {t: string} -> string
 //│    = <missing implementation>
