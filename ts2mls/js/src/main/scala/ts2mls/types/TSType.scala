@@ -34,4 +34,7 @@ case class TSInterfaceType(
 sealed abstract class TSStructuralType(lhs: TSType, rhs: TSType, notion: String) extends TSType
 case class TSUnionType(lhs: TSType, rhs: TSType) extends TSStructuralType(lhs, rhs, "|")
 case class TSIntersectionType(lhs: TSType, rhs: TSType) extends TSStructuralType(lhs, rhs, "&")
-case class TSTypeWithComment(base: TSType, comment: String) extends TSType // TODO: need to be renamed
+
+case class TSIgnoredOverload(base: TSFunctionType, name: String) extends TSType {
+  val warning = s"/* warning: the overload of function $name is not supported yet. */"
+}

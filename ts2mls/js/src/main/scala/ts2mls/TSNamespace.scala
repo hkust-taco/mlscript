@@ -50,15 +50,12 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
             else // TODO: add constraints
               writer.writeln(s"def ${fullName}[${typeParams.reduceLeft((r, s) => s"$r, $s")}]: ${Converter.convert(f)}")
           }
-          case TSTypeWithComment(base, cmt) => base match {
-            case f @ TSFunctionType(_, _, tv) => {
-              val typeParams = tv.map((t) => t.name)
+          case overload @ TSIgnoredOverload(base, _) => {
+            val typeParams = base.typeVars.map((t) => t.name)
               if (typeParams.isEmpty)
-                writer.writeln(s"def ${fullName}: ${Converter.convert(f)} /* $cmt */")
+                writer.writeln(s"def ${fullName}: ${Converter.convert(base)} ${overload.warning}")
               else // TODO: add constraints
-                writer.writeln(s"def ${fullName}[${typeParams.reduceLeft((r, s) => s"$r, $s")}]: ${Converter.convert(f)} /* $cmt */")
-            }
-            case _ => writer.writeln(s"def ${fullName}: ${Converter.convert(base)} /* $cmt */")
+                writer.writeln(s"def ${fullName}[${typeParams.reduceLeft((r, s) => s"$r, $s")}]: ${Converter.convert(base)} ${overload.warning}")
           }
           case _ => writer.writeln(Converter.convert(mem))
         }

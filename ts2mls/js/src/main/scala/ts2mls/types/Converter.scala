@@ -18,7 +18,8 @@ object Converter {
     "false" -> "false"
   )
 
-  def convert(tsType: TSType): String = tsType match {
+  // suppress "match may not be exhaustive". `TSIgnoredOverload` will never appear here.
+  def convert(tsType: TSType): String = (tsType: @unchecked) match {
     case TSPrimitiveType(typeName) => primitiveName(typeName)
     case TSReferenceType(name) => name
     case TSFunctionType(params, res, _) =>
@@ -35,7 +36,6 @@ object Converter {
     case TSInterfaceType(name, members, typeVars, parents) => convertRecord(s"trait $name", members, typeVars, parents)
     case TSClassType(name, members, _, typeVars, parents) => convertRecord(s"class $name", members, typeVars, parents) // TODO: support static members
     case TSSubstitutionType(base, applied) => s"${base}[${applied.map((app) => convert(app)).reduceLeft((res, s) => s"$res, $s")}]"
-    case TSTypeWithComment(base, cmt) => s"${convert(base)} /* $cmt */"
   }
 
   private def convertRecord(typeName: String, members: Map[String, TSMemberType],
@@ -45,12 +45,10 @@ object Converter {
         m._2.base match { // methods
           case f @ TSFunctionType(_, _, typeVars) if (!typeVars.isEmpty) =>
             s"  method ${m._1}[${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]: ${convert(f)}" // TODO: add constraints
-          case inter: TSIntersectionType => s"${m._1}: ${convert(inter)}"
-          case TSTypeWithComment(base, cmt) => base match {
-            case f @ TSFunctionType(_, _, typeVars) if (!typeVars.isEmpty) =>
-              s"  method ${m._1}[${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]: ${convert(f)} /* $cmt */" // TODO: add constraints
-            case _ => s"${m._1}: ${convert(m._2)}/* $cmt */"
-          }
+          case overload @ TSIgnoredOverload(base, _) =>
+            if (!base.typeVars.isEmpty)
+              s"  method ${m._1}[${base.typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]: ${convert(base)} ${overload.warning}" // TODO: add constraints
+            else s"${m._1}: ${convert(m._2)}${overload.warning}"
           case _ => s"${m._1}: ${convert(m._2)}" // other type members
         }
       }

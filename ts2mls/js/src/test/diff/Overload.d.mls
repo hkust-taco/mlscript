@@ -10,11 +10,11 @@ def tst: (({ z: number }) -> ({ y: string })) & (({ z: (false) | (true) }) -> ({
 def op: ((number) -> (((number) | (undefined)) -> (unit))) & ((number) -> ((((false) | (true)) | (undefined)) -> (unit)))
 def swap: (((number, string, )) -> ((number, string, ))) & (((string, number, )) -> ((number, string, )))
 def u: ((((number) | (false)) | (true)) -> (string)) & (({}) -> (string))
-def doSome[T, U]: (anything) -> (unit) /* warning: the overload of function doSome is not supported yet */
-def XX'f[T]: (T) -> ((anything) -> (string)) /* warning: the overload of function f is not supported yet */
+def doSome[T, U]: (anything) -> (unit) /* warning: the overload of function doSome is not supported yet. */
+def XX'f[T]: (T) -> ((anything) -> (string)) /* warning: the overload of function f is not supported yet. */
 class WWW: {}
-  method F[T]: (T) -> (anything) /* warning: the overload of function F may be not supported yet */
-def baz: unit -> (anything) /* warning: the overload of function baz is not supported yet */
+  method F[T]: (T) -> (anything) /* warning: the overload of function F is not supported yet. */
+def baz: unit -> (anything) /* warning: the overload of function baz is not supported yet. */
 //│ Defined class M
 //│ Defined class N
 //│ Defined class WWW

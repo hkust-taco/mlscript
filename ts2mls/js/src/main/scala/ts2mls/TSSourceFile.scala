@@ -91,14 +91,14 @@ object TSSourceFile {
               val old = mp(name)
               val res = old.base match {
                 case f @ TSFunctionType(_, _, tv) =>
-                  if (!tv.isEmpty || !func.typeVars.isEmpty) TSTypeWithComment(func, s"warning: the overload of function $name may be not supported yet")
+                  if (!tv.isEmpty || !func.typeVars.isEmpty) TSIgnoredOverload(func, name)
                   else if (!p.isImplementationOfOverload) TSIntersectionType(f, func)
                   else f
                 case int: TSIntersectionType =>
-                  if (!func.typeVars.isEmpty) TSTypeWithComment(func, s"warning: the overload of function $name may be not supported yet")
+                  if (!func.typeVars.isEmpty) TSIgnoredOverload(func, name)
                   else if (!p.isImplementationOfOverload) TSIntersectionType(int, func)
                   else int
-                case TSTypeWithComment(_, cmt) => TSTypeWithComment(func, cmt)
+                case TSIgnoredOverload(_, name) => TSIgnoredOverload(func, name) // the implementation is always after declarations
                 case _ => old.base
               }
 
@@ -136,14 +136,14 @@ object TSSourceFile {
       val old = ns.get(name)
       val res = old match {
         case f @ TSFunctionType(_, _, tv) =>
-          if (!tv.isEmpty || !fun.typeVars.isEmpty) TSTypeWithComment(fun, s"warning: the overload of function $name is not supported yet")
+          if (!tv.isEmpty || !fun.typeVars.isEmpty) TSIgnoredOverload(fun, name)
           else if (!node.isImplementationOfOverload) TSIntersectionType(f, fun)
           else f
         case int: TSIntersectionType =>
-          if (!fun.typeVars.isEmpty) TSTypeWithComment(fun, s"warning: the overload of function $name is not supported yet")
+          if (!fun.typeVars.isEmpty) TSIgnoredOverload(fun, name)
           else if (!node.isImplementationOfOverload) TSIntersectionType(int, fun)
           else old
-        case TSTypeWithComment(_, cmt) => TSTypeWithComment(fun, cmt)
+        case TSIgnoredOverload(_, name) => TSIgnoredOverload(fun, name) // the implementation is always after declarations
         case _ => old
       }
       
