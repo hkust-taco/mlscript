@@ -35,21 +35,3 @@ sealed abstract class TSStructuralType(lhs: TSType, rhs: TSType, notion: String)
 case class TSUnionType(lhs: TSType, rhs: TSType) extends TSStructuralType(lhs, rhs, "|")
 case class TSIntersectionType(lhs: TSType, rhs: TSType) extends TSStructuralType(lhs, rhs, "&")
 case class TSTypeWithComment(base: TSType, comment: String) extends TSType
-
-object TSIntersectionType {
-  // we use an intersection type to indicate overloading functions
-  // so if the function has type parameters, use this function to get them
-  def getOverloadTypeParameters(inter: TSIntersectionType): List[TSTypeParameter] = inter match {
-    case TSIntersectionType(lhs, rhs) =>
-      ((lhs match {
-        case i: TSIntersectionType => getOverloadTypeParameters(i)
-        case TSFunctionType(_, _, v) => v
-        case _ => List()
-      }) :::
-      (rhs match {
-        case i: TSIntersectionType => getOverloadTypeParameters(i)
-        case TSFunctionType(_, _, v) => v
-        case _ => List()
-      })).distinct
-  }
-}

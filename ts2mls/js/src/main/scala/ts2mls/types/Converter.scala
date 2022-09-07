@@ -45,12 +45,7 @@ object Converter {
         m._2.base match { // methods
           case f @ TSFunctionType(_, _, typeVars) if (!typeVars.isEmpty) =>
             s"  method ${m._1}[${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]: ${convert(f)}" // TODO: add constraints
-          case inter: TSIntersectionType => { 
-            val lst = TSIntersectionType.getOverloadTypeParameters(inter)
-            if (lst.isEmpty) s"${m._1}: ${convert(inter)}" // intersection type members
-            else // methods with overload
-              s"  method ${m._1}[${lst.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s") }]: ${convert(inter)}" // TODO: add constraints
-          }
+          case inter: TSIntersectionType => s"${m._1}: ${convert(inter)}"
           case TSTypeWithComment(base, cmt) => base match {
             case f @ TSFunctionType(_, _, typeVars) if (!typeVars.isEmpty) =>
               s"  method ${m._1}[${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]: ${convert(f)} /* $cmt */" // TODO: add constraints

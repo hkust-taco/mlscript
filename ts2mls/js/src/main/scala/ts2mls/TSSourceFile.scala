@@ -137,11 +137,11 @@ object TSSourceFile {
       val old = ns.get(name)
       val res = old match {
         case f @ TSFunctionType(_, _, tv) =>
-          if (!tv.isEmpty || !fun.typeVars.isEmpty) TSTypeWithComment(fun, s"warning: the overload of function $name may be not supported yet")
+          if (!tv.isEmpty || !fun.typeVars.isEmpty) TSTypeWithComment(fun, s"warning: the overload of function $name is not supported yet")
           else if (!node.isImplementationOfOverload) TSIntersectionType(f, fun)
           else f
         case int: TSIntersectionType =>
-          if (!fun.typeVars.isEmpty) TSTypeWithComment(fun, s"warning: the overload of function $name may be not supported yet")
+          if (!fun.typeVars.isEmpty) TSTypeWithComment(fun, s"warning: the overload of function $name is not supported yet")
           else if (!node.isImplementationOfOverload) TSIntersectionType(int, fun)
           else old
         case TSTypeWithComment(_, cmt) => TSTypeWithComment(fun, cmt)
