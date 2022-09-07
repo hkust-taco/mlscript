@@ -32,9 +32,6 @@ object TypeScript {
 }
 
 class TSTypeChecker(checker: js.Dynamic) {
-  def getTypeStringOfSymbol(sym: js.Dynamic): String =
-    checker.typeToString(getTypeOfSymbolAtLocation(sym, sym.valueDeclaration)).toString
-
   def getReturnTypeOfSignature(node: js.Dynamic) = checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(node))
   def getTypeFromTypeNode(node: js.Dynamic) = checker.getTypeFromTypeNode(node)
   def getTypeOfSymbolAtLocation(sym: js.Dynamic, node: js.Dynamic) = checker.getTypeOfSymbolAtLocation(sym, node)
@@ -62,8 +59,8 @@ class TSSymbolObject(sym: js.Dynamic)(implicit checker: TSTypeChecker) extends T
     else declarations.get(0)
   lazy val escapedName: String = sym.escapedName.toString
   lazy val declarations = TSNodeArray(sym.declarations)
+  lazy val `type` = TSTypeObject(sym.selectDynamic("type"))
 
-  lazy val builtinType: String = checker.getTypeStringOfSymbol(sym) // the name of built-in type like `string`
   lazy val isOptionalMember = (flags & TypeScript.symbolFlagsOptional) > 0
 
   // get the full name of the reference symbol

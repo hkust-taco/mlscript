@@ -37,8 +37,7 @@ object TSSourceFile {
   private def getMemberType(node: TSNodeObject): TSType = {
     val res: TSType =
       if (node.isFunctionLike) getFunctionType(node)
-      else if (!node.`type`.isUndefined) getObjectType(node.`type`.typeNode)
-      else TSPrimitiveType(node.symbol.builtinType)
+      else getObjectType(node.`type`.typeNode)
     if (node.symbol.isOptionalMember) TSUnionType(res, TSPrimitiveType("undefined"))
     else res
   }
@@ -116,7 +115,8 @@ object TSSourceFile {
     list.foldLeft(Map[String, TSMemberType]())((mp, p) => mp ++ Map(p.symbol.escapedName -> TSMemberType(getMemberType(p))))
 
   private def getAnonymousPropertiesType(list: TSSymbolArray): Map[String, TSMemberType] =
-    list.foldLeft(Map[String, TSMemberType]())((mp, p) => mp ++ Map(p.escapedName -> TSMemberType(getMemberType(p.declaration))))
+    list.foldLeft(Map[String, TSMemberType]())((mp, p) =>
+      mp ++ Map(p.escapedName -> TSMemberType(if (p.`type`.isUndefined) getMemberType(p.declaration) else getObjectType(p.`type`))))
 
   private def parseMembers(name: String, node: TSNodeObject, isClass: Boolean): TSType =
     if (isClass)
