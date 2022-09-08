@@ -227,7 +227,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case L(d) => raise(d); Top // TODO better
       case R(ty) => ty
     }
-
+  
   def block(implicit et: ExpectThen, fe: FoundErr): Ls[IfBody \/ Statement] =
     cur match {
       case Nil => Nil
@@ -533,7 +533,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                   case R(p) => R(Lam(toParams(acc), p))
                   case L(b) => err(msg"Unexpected ifBody" -> b.toLoc :: Nil); L(b)
                 }
-                // exprCont(Lam(toParams(acc), rhs), prec, allowNewlines)
               }
               case _ =>
                 exprCont(App(App(v, toParams(acc)), toParams(rhs)), prec, allowNewlines)
