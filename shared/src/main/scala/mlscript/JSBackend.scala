@@ -88,7 +88,7 @@ class JSBackend {
         else
           throw new UnimplementedError(sym)
       case S(sym: ValueSymbol) =>
-        if (sym.isByvalueRec.getOrElse(false) && !sym.isLam) throw CodeGenError(s"recursive by-value use of ${name} is forbidden") // rec & NOT need to thunkify (byvalue and  ==> rec by-value use of non-fun
+        if (sym.isByvalueRec.getOrElse(false) && !sym.isLam) throw CodeGenError(s"recursive by-value use of ${name} is forbidden")
         visitedSymbols += sym
         val ident = JSIdent(sym.runtimeName)
         if (sym.isByvalueRec.isEmpty && !sym.isLam) ident() else ident
@@ -520,13 +520,7 @@ class JSBackend {
     // units. So we filter them out here.
     sorted.flatMap(sym => if (classSymbols.contains(sym)) S(sym -> baseClasses.get(sym)) else N)
   }
-
-  protected def needsThunkify(body: Term, isByname: Boolean): Boolean = {
-    body match {
-      case _: Lam => false
-      case _ => isByname
-    }
-  }
+  
 }
 
 class JSWebBackend extends JSBackend {

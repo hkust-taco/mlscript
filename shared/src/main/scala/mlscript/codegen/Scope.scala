@@ -235,7 +235,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     symbol
   }
 
-  def declareValue(lexicalName: Str, isByvalueRec: Option[Boolean], thunkify: Boolean): ValueSymbol = {
+  def declareValue(lexicalName: Str, isByvalueRec: Option[Boolean], isLam: Boolean): ValueSymbol = {
     val runtimeName = lexicalValueSymbols.get(lexicalName) match {
       // If we are implementing a stub symbol and the stub symbol did not shadow any other
       // symbols, it is safe to reuse its `runtimeName`.
@@ -243,7 +243,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       case S(sym: BuiltinSymbol) if !sym.accessed    => sym.runtimeName
       case _                                         => allocateRuntimeName(lexicalName)
     }
-    val symbol = ValueSymbol(lexicalName, runtimeName, isByvalueRec, thunkify)
+    val symbol = ValueSymbol(lexicalName, runtimeName, isByvalueRec, isLam)
     register(symbol)
     symbol
   }
