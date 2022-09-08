@@ -38,7 +38,7 @@ function clean(x: [string, number][]): [string, number][] {
 }
 
 function translate<T, U>(x: T[]): U[] {
-  return []; // TODO:
+  return [];
 }
 
 function uu(x: (number | boolean)[]): (number | boolean)[] {
