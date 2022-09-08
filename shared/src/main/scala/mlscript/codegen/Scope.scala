@@ -194,11 +194,11 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
   }
 
   def declareTypeSymbol(typeDef: TypeDef): TypeSymbol = typeDef match {
-    case TypeDef(Als, TypeName(name), tparams, body, _, _) =>
+    case TypeDef(Als, TypeName(name), tparams, body, _, _, _) =>
       declareTypeAlias(name, tparams map { _.name }, body)
-    case TypeDef(Trt, TypeName(name), tparams, body, _, mthdDefs) =>
+    case TypeDef(Trt, TypeName(name), tparams, body, _, mthdDefs, _) =>
       declareTrait(name, tparams map { _.name }, body, mthdDefs)
-    case TypeDef(Cls, TypeName(name), tparams, baseType, _, members) =>
+    case TypeDef(Cls, TypeName(name), tparams, baseType, _, members, _) =>
       declareClass(name, tparams map { _.name }, baseType, members)
   }
 

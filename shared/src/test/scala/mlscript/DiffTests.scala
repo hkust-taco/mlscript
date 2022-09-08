@@ -32,6 +32,14 @@ class DiffTests
   private val inParallel = isInstanceOf[ParallelTestExecution]
   
   import DiffTests._
+
+  // scala test will not execute a test if the test class has constructor parameters.
+  // override this to get the correct paths of test files.
+  protected lazy val files = allFiles.filter { file =>
+      val fileName = file.baseName
+      // validExt(file.ext) && filter(fileName)
+      validExt(file.ext) && filter(file.relativeTo(pwd))
+  }
   
   val timeLimit = TimeLimit
   
@@ -330,7 +338,7 @@ class DiffTests
             if (parseOnly)
               Success(Pgrm(Nil), 0)
             else
-              Success(Pgrm(res.entities.map(_.fold(identity, identity))), 0)
+              Success(Pgrm(res.entities), 0)
             
           }
           else parse(processedBlockStr, p =>
@@ -347,7 +355,7 @@ class DiffTests
               failures += globalLineNum
             output("/!\\ Parse error: " + extra.trace().msg +
               s" at l.$globalLineNum:$col: $lineStr")
-
+            
           // successfully parsed block into a valid syntactically valid program
           case Success(p, index) =>
             if (mode.expectParseErrors && !newParser)
@@ -371,7 +379,10 @@ class DiffTests
             }
             
             val oldCtx = ctx
-            ctx = typer.processTypeDefs(typeDefs)(ctx, raise)
+            ctx = 
+              // if (newParser) typer.typeTypingUnit(tu)
+              // else 
+              typer.processTypeDefs(typeDefs)(ctx, raise)
             
             def getType(ty: typer.TypeScheme): Type = {
               val wty = ty.uninstantiatedBody
@@ -798,20 +809,20 @@ object DiffTests {
     if (sys.env.get("CI").isDefined) Span(25, Seconds)
     else Span(5, Seconds)
   
-  private val dir = os.pwd/"shared"/"src"/"test"/"diff"
+  private val pwd = os.pwd
+  private val dir = pwd/"shared"/"src"/"test"/"diff"
   
   private val allFiles = os.walk(dir).filter(_.toIO.isFile)
   
   private val validExt = Set("fun", "mls")
   
   // Aggregate unstaged modified files to only run the tests on them, if there are any
-  private val modified: Set[Str] =
+  private val modified: Set[os.RelPath] =
     try os.proc("git", "status", "--porcelain", dir).call().out.lines().iterator.flatMap { gitStr =>
       println(" [git] " + gitStr)
       val prefix = gitStr.take(2)
-      val filePath = gitStr.drop(3)
-      val fileName = os.RelPath(filePath).baseName
-      if (prefix =:= "A " || prefix =:= "M ") N else S(fileName) // disregard modified files that are staged
+      val filePath = os.RelPath(gitStr.drop(3))
+      if (prefix =:= "A " || prefix =:= "M ") N else S(filePath) // disregard modified files that are staged
     }.toSet catch {
       case err: Throwable => System.err.println("/!\\ git command failed with: " + err)
       Set.empty
@@ -838,19 +849,12 @@ object DiffTests {
     // "TraitMatching",
     // "Subsume",
     // "Methods",
-  )
+  ).map(os.RelPath(_))
   // private def filter(name: Str): Bool =
-  private def filter(file: os.Path): Bool = {
-    val name = file.baseName
-    if (focused.nonEmpty) focused(name) else modified(name) || modified.isEmpty &&
+  private def filter(file: os.RelPath): Bool = {
+    if (focused.nonEmpty) focused(file) else modified(file) || modified.isEmpty &&
       true
       // name.startsWith("new/")
       // file.segments.toList.init.lastOption.contains("parser")
-  }
-  
-  private val files = allFiles.filter { file =>
-      val fileName = file.baseName
-      // validExt(file.ext) && filter(fileName)
-      validExt(file.ext) && filter(file)
   }
 }

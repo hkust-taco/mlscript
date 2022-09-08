@@ -90,29 +90,3 @@ baz "oops"
 //│   Error: non-exhaustive case expression
 
 
-
-def test3 x = case x of
-  { 1 -> true
-  | true -> true
-  | _ -> false
-  }
-//│ test3: anything -> bool
-//│      = [Function: test3]
-
-:ns
-test3
-//│ res: 'a -> (true | false)
-//│   where
-//│     'a <: 1 & 'b | (true & 'c | 'd & ~true) & ~1
-//│    = [Function: test3]
-
-
-def test3 x = case x of
-  { 1 -> x
-  | true -> true
-  | _ -> false
-  }
-//│ test3: (1 & 'a | ~1) -> (false | true | 'a)
-//│      = [Function: test31]
-
-

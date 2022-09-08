@@ -1,0 +1,15 @@
+:NewParser
+
+
+// FIXME
+let f =
+  let tmp = "ok"
+  123
+//│ ╔══[ERROR] Illegal position for this definition statement.
+//│ ║  l.6: 	  let tmp = "ok"
+//│ ╙──     	      ^^^^^^^^^^
+//│ f: 123
+//│ Code generation encountered an error:
+//│   unexpected definitions in blocks
+
+
