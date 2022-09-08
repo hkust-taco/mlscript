@@ -528,8 +528,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
             L(IfOpApp(acc, v, rhs))
           case R(rhs) =>
             opStr match {
-              case "=>" =>
-                exprCont(Lam(toParams(acc), rhs), prec, allowNewlines)
+              case "=>" => {
+                exprCont(rhs, prec, allowNewlines) match {
+                  case R(p) => R(Lam(toParams(acc), p))
+                  case L(b) => err(msg"Unexpected ifBody" -> b.toLoc :: Nil); L(b)
+                }
+                // exprCont(Lam(toParams(acc), rhs), prec, allowNewlines)
+              }
               case _ =>
                 exprCont(App(App(v, toParams(acc)), toParams(rhs)), prec, allowNewlines)
             }
