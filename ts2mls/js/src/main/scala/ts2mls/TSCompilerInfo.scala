@@ -16,7 +16,7 @@ object TypeScript {
   val syntaxKindProtected = ts.SyntaxKind.ProtectedKeyword
   val syntaxKindStatic = ts.SyntaxKind.StaticKeyword
   val objectFlagsAnonymous = ts.ObjectFlags.Anonymous
-  val symbolFlagsOptional = ts.SymbolFlags.Optional
+  val symbolFlagsOptional = ts.SymbolFlags.Optional // this flag is only for checking optional members of interfaces
 
   def isToken(node: js.Dynamic) = ts.isToken(node)
   def isClassDeclaration(node: js.Dynamic) = ts.isClassDeclaration(node)

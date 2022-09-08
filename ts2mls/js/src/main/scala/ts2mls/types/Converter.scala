@@ -18,8 +18,7 @@ object Converter {
     "false" -> "false"
   )
 
-  // suppress "match may not be exhaustive". `TSIgnoredOverload` will never appear here.
-  def convert(tsType: TSType): String = (tsType: @unchecked) match {
+  def convert(tsType: TSType): String = tsType match {
     case TSPrimitiveType(typeName) => primitiveName(typeName)
     case TSReferenceType(name) => name
     case TSFunctionType(params, res, _) =>
@@ -36,6 +35,7 @@ object Converter {
     case TSInterfaceType(name, members, typeVars, parents) => convertRecord(s"trait $name", members, typeVars, parents)
     case TSClassType(name, members, _, typeVars, parents) => convertRecord(s"class $name", members, typeVars, parents) // TODO: support static members
     case TSSubstitutionType(base, applied) => s"${base}[${applied.map((app) => convert(app)).reduceLeft((res, s) => s"$res, $s")}]"
+    case overload @ TSIgnoredOverload(base, _) => s"${convert(base)} ${overload.warning}"
   }
 
   private def convertRecord(typeName: String, members: Map[String, TSMemberType],
@@ -47,8 +47,8 @@ object Converter {
             s"  method ${m._1}[${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]: ${convert(f)}" // TODO: add constraints
           case overload @ TSIgnoredOverload(base, _) =>
             if (!base.typeVars.isEmpty)
-              s"  method ${m._1}[${base.typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]: ${convert(base)} ${overload.warning}" // TODO: add constraints
-            else s"${m._1}: ${convert(m._2)}${overload.warning}"
+              s"  method ${m._1}[${base.typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]: ${convert(overload)}" // TODO: add constraints
+            else s"${m._1}: ${convert(overload)}"
           case _ => s"${m._1}: ${convert(m._2)}" // other type members
         }
       }

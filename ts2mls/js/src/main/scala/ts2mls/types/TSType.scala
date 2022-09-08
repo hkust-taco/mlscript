@@ -35,6 +35,9 @@ sealed abstract class TSStructuralType(lhs: TSType, rhs: TSType, notion: String)
 case class TSUnionType(lhs: TSType, rhs: TSType) extends TSStructuralType(lhs, rhs, "|")
 case class TSIntersectionType(lhs: TSType, rhs: TSType) extends TSStructuralType(lhs, rhs, "&")
 
+// ts2mls doesn't support overloading functions with type parameters
+// TSIgnoredOverload is used to store these functions and raise a warning later
+// only the most general overloading form would be stored
 case class TSIgnoredOverload(base: TSFunctionType, name: String) extends TSType {
   val warning = s"/* warning: the overload of function $name is not supported yet. */"
 }

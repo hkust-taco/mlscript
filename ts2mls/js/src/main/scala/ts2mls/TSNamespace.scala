@@ -53,9 +53,9 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
           case overload @ TSIgnoredOverload(base, _) => {
             val typeParams = base.typeVars.map((t) => t.name)
               if (typeParams.isEmpty)
-                writer.writeln(s"def ${fullName}: ${Converter.convert(base)} ${overload.warning}")
+                writer.writeln(s"def ${fullName}: ${Converter.convert(overload)}")
               else // TODO: add constraints
-                writer.writeln(s"def ${fullName}[${typeParams.reduceLeft((r, s) => s"$r, $s")}]: ${Converter.convert(base)} ${overload.warning}")
+                writer.writeln(s"def ${fullName}[${typeParams.reduceLeft((r, s) => s"$r, $s")}]: ${Converter.convert(overload)}")
           }
           case _ => writer.writeln(Converter.convert(mem))
         }
