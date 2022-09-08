@@ -5,14 +5,14 @@
 
 :e
 (1, 2, 3)[true]
-//│ ╔══[ERROR] The index must be an integer
+//│ ╔══[ERROR] The receiver and index should have the correct type
 //│ ╙──
 //│ res: error
 //│    = undefined
 
 :e
 (1, 2, 3)[false]
-//│ ╔══[ERROR] The index must be an integer
+//│ ╔══[ERROR] The receiver and index should have the correct type
 //│ ╙──
 //│ res: error
 //│    = undefined
@@ -27,9 +27,8 @@ my_str = "h"
 //│   <:  my_str:
 //│ string
 //│       = 'h'
-//│ ╔══[ERROR] The index must be an integer
-//│ ║  l.21: 	def my_str: string
-//│ ╙──      	            ^^^^^^
+//│ ╔══[ERROR] The receiver and index should have the correct type
+//│ ╙──
 //│ res: error
 //│    = undefined
 
@@ -38,32 +37,29 @@ def my_a = false : bool
 (1, 2, 3)[my_a]
 //│ my_a: bool
 //│     = false
-//│ ╔══[ERROR] The index must be an integer
-//│ ║  l.37: 	def my_a = false : bool
-//│ ╙──      	                   ^^^^
+//│ ╔══[ERROR] The receiver and index should have the correct type
+//│ ╙──
 //│ res: error
 //│    = undefined
 
 :e
 (1, 2, 3)[false: bool]
-//│ ╔══[ERROR] The index must be an integer
-//│ ║  l.48: 	(1, 2, 3)[false: bool]
-//│ ╙──      	                 ^^^^
+//│ ╔══[ERROR] The receiver and index should have the correct type
+//│ ╙──
 //│ res: error
 //│    = undefined
 
 :e
 (1, 2, 3)[false || true]
-//│ ╔══[ERROR] The index must be an integer
+//│ ╔══[ERROR] The receiver and index should have the correct type
 //│ ╙──
 //│ res: error
 //│    = undefined
 
 :e
 (1, 2, 3)["true"]
-//│ ╔══[ERROR] The index must be an integer
-//│ ║  l.63: 	(1, 2, 3)["true"]
-//│ ╙──      	          ^^^^^^
+//│ ╔══[ERROR] The receiver and index should have the correct type
+//│ ╙──
 //│ res: error
 //│    = undefined
 
@@ -72,16 +68,15 @@ def s: string
 (1, 2, 3)[s]
 //│ s: string
 //│  = <missing implementation>
-//│ ╔══[ERROR] The index must be an integer
-//│ ║  l.71: 	def s: string
-//│ ╙──      	       ^^^^^^
+//│ ╔══[ERROR] The receiver and index should have the correct type
+//│ ╙──
 //│ res: error
 //│    = <no result>
 //│      s is not implemented
 
 :e
 (1, 2, 3)[concat "true"  "bruh"]
-//│ ╔══[ERROR] The index must be an integer
+//│ ╔══[ERROR] The receiver and index should have the correct type
 //│ ╙──
 //│ res: error
 //│    = undefined
@@ -92,15 +87,14 @@ concat "true" "bruh"
 
 :e
 (1, 2, 3)["haha"]
-//│ ╔══[ERROR] The index must be an integer
-//│ ║  l.94: 	(1, 2, 3)["haha"]
-//│ ╙──      	          ^^^^^^
+//│ ╔══[ERROR] The receiver and index should have the correct type
+//│ ╙──
 //│ res: error
 //│    = undefined
 
 :pe
 (1, 2, 3)[-10]
-//│ /!\ Parse error: Expected end-of-input:1:10, found "[-10];" at l.102:10: (1, 2, 3)[-10]
+//│ /!\ Parse error: Expected end-of-input:1:10, found "[-10];" at l.96:10: (1, 2, 3)[-10]
 
 
 (1, 2, 3)[0]
@@ -114,7 +108,7 @@ concat "true" "bruh"
 :e
 (1, 2, 3)[3]
 //│ ╔══[ERROR] Out of range!
-//│ ║  l.115: 	(1, 2, 3)[3]
+//│ ║  l.109: 	(1, 2, 3)[3]
 //│ ╙──       	^^^^^^^^^
 //│ res: error
 //│    = undefined
@@ -160,13 +154,13 @@ ch = "मनीष منش"
 :e
 "foo"[2]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.161: 	"foo"[2]
+//│ ║  l.155: 	"foo"[2]
 //│ ║         	^^^^^^^^
 //│ ╟── string literal of type `"foo"` does not match type `Array[~undefined]`
-//│ ║  l.161: 	"foo"[2]
+//│ ║  l.155: 	"foo"[2]
 //│ ╙──       	^^^^^
 //│ ╔══[ERROR] mlscript doesn't allow string indexing
-//│ ║  l.161: 	"foo"[2]
+//│ ║  l.155: 	"foo"[2]
 //│ ╙──       	^^^^^
 //│ res: error
 //│    = 'o'
@@ -174,13 +168,13 @@ ch = "मनीष منش"
 :e
 "foo"[3]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.175: 	"foo"[3]
+//│ ║  l.169: 	"foo"[3]
 //│ ║         	^^^^^^^^
 //│ ╟── string literal of type `"foo"` does not match type `Array[~undefined]`
-//│ ║  l.175: 	"foo"[3]
+//│ ║  l.169: 	"foo"[3]
 //│ ╙──       	^^^^^
 //│ ╔══[ERROR] mlscript doesn't allow string indexing
-//│ ║  l.175: 	"foo"[3]
+//│ ║  l.169: 	"foo"[3]
 //│ ╙──       	^^^^^
 //│ res: error
 //│    = undefined
@@ -200,7 +194,7 @@ ch = "मनीष منش"
 :e
 (1, 2, 3)[(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[0]]]]
 //│ ╔══[ERROR] Out of range!
-//│ ║  l.201: 	(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[0]]]]
+//│ ║  l.195: 	(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[(1, 2, 3)[0]]]]
 //│ ╙──       	^^^^^^^^^
 //│ res: error
 //│    = undefined
@@ -209,7 +203,7 @@ ch = "मनीष منش"
 :ge
 (1, 2, 3)[k]
 //│ ╔══[ERROR] identifier not found: k
-//│ ║  l.210: 	(1, 2, 3)[k]
+//│ ║  l.204: 	(1, 2, 3)[k]
 //│ ╙──       	          ^
 //│ res: error
 //│ Code generation encountered an error:
@@ -218,14 +212,13 @@ ch = "मनीष منش"
 :e
 3[1]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.219: 	3[1]
+//│ ║  l.213: 	3[1]
 //│ ║         	^^^^
 //│ ╟── integer literal of type `3` does not match type `Array[~undefined]`
-//│ ║  l.219: 	3[1]
+//│ ║  l.213: 	3[1]
 //│ ╙──       	^
-//│ ╔══[ERROR] The indexing operation should be acted on an array
-//│ ║  l.219: 	3[1]
-//│ ╙──       	^
+//│ ╔══[ERROR] The receiver and index should have the correct type
+//│ ╙──
 //│ res: error
 //│    = undefined
 
@@ -235,17 +228,16 @@ k[1]
 //│ k: int
 //│  = <missing implementation>
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.234: 	k[1]
+//│ ║  l.227: 	k[1]
 //│ ║         	^^^^
 //│ ╟── type `int` does not match type `Array[~undefined]`
-//│ ║  l.233: 	def k: int
+//│ ║  l.226: 	def k: int
 //│ ║         	       ^^^
 //│ ╟── but it flows into reference with expected type `Array[~undefined]`
-//│ ║  l.234: 	k[1]
+//│ ║  l.227: 	k[1]
 //│ ╙──       	^
-//│ ╔══[ERROR] The indexing operation should be acted on an array
-//│ ║  l.233: 	def k: int
-//│ ╙──       	       ^^^
+//│ ╔══[ERROR] The receiver and index should have the correct type
+//│ ╙──
 //│ res: error
 //│    = <no result>
 //│      k is not implemented
@@ -253,12 +245,12 @@ k[1]
 :e
 (1 + 1)[0]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.254: 	(1 + 1)[0]
+//│ ║  l.246: 	(1 + 1)[0]
 //│ ║         	^^^^^^^^^^
 //│ ╟── operator application of type `int` does not match type `Array[~undefined]`
-//│ ║  l.254: 	(1 + 1)[0]
+//│ ║  l.246: 	(1 + 1)[0]
 //│ ╙──       	 ^^^^^
-//│ ╔══[ERROR] The indexing operation should be acted on an array
+//│ ╔══[ERROR] The receiver and index should have the correct type
 //│ ╙──
 //│ res: error
 //│    = undefined
@@ -286,17 +278,16 @@ k[i + 1]
 //│ i: int
 //│  = <missing implementation>
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.281: 	k[i + 1]
+//│ ║  l.273: 	k[i + 1]
 //│ ║         	^^^^^^^^
 //│ ╟── type `int` does not match type `Array[~undefined]`
-//│ ║  l.266: 	def k: int
+//│ ║  l.258: 	def k: int
 //│ ║         	       ^^^
 //│ ╟── but it flows into reference with expected type `Array[~undefined]`
-//│ ║  l.281: 	k[i + 1]
+//│ ║  l.273: 	k[i + 1]
 //│ ╙──       	^
-//│ ╔══[ERROR] The indexing operation should be acted on an array
-//│ ║  l.266: 	def k: int
-//│ ╙──       	       ^^^
+//│ ╔══[ERROR] The receiver and index should have the correct type
+//│ ╙──
 //│ res: error
 //│    = <no result>
 //│      i is not implemented
@@ -313,7 +304,7 @@ haha = ("hello", "world", "!")
 
 :pe
 haha[-1]
-//│ /!\ Parse error: Expected end-of-input:1:5, found "[-1];" at l.315:5: haha[-1]
+//│ /!\ Parse error: Expected end-of-input:1:5, found "[-1];" at l.306:5: haha[-1]
 
 haha[4]
 //│ res: string | undefined
@@ -346,7 +337,7 @@ my_record.x[my_record.y]
 //│ my_record: {x: (1, 2,), y: 2}
 //│          = { x: [ 1, 2 ], y: 2 }
 //│ ╔══[ERROR] Out of range!
-//│ ║  l.344: 	my_record = {x = (1,2); y = 2}
+//│ ║  l.335: 	my_record = {x = (1,2); y = 2}
 //│ ╙──       	                 ^^^^^
 //│ res: error
 //│    = undefined
@@ -357,17 +348,16 @@ my_func[0]
 //│ my_func: anything -> (1, 2, 3,)
 //│        = [Function: my_func]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.356: 	my_func[0]
+//│ ║  l.347: 	my_func[0]
 //│ ║         	^^^^^^^^^^
 //│ ╟── function of type `?a -> (1, 2, 3,)` does not match type `Array[~undefined]`
-//│ ║  l.355: 	def my_func x = (1, 2, 3)
+//│ ║  l.346: 	def my_func x = (1, 2, 3)
 //│ ║         	            ^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Array[~undefined]`
-//│ ║  l.356: 	my_func[0]
+//│ ║  l.347: 	my_func[0]
 //│ ╙──       	^^^^^^^
-//│ ╔══[ERROR] The indexing operation should be acted on an array
-//│ ║  l.355: 	def my_func x = (1, 2, 3)
-//│ ╙──       	            ^^^^^^^^^^^^^
+//│ ╔══[ERROR] The receiver and index should have the correct type
+//│ ╙──
 //│ res: error
 //│    = undefined
 
@@ -378,25 +368,22 @@ my_func[0]
 
 :e
 (1, 2, 3)[my_func 0]
-//│ ╔══[ERROR] The index must be an integer
-//│ ║  l.355: 	def my_func x = (1, 2, 3)
-//│ ╙──       	                ^^^^^^^^^
+//│ ╔══[ERROR] The receiver and index should have the correct type
+//│ ╙──
 //│ res: error
 //│    = undefined
 
 :e
 (1, 2, 3)[(1, 2)]
-//│ ╔══[ERROR] The index must be an integer
-//│ ║  l.388: 	(1, 2, 3)[(1, 2)]
-//│ ╙──       	          ^^^^^^
+//│ ╔══[ERROR] The receiver and index should have the correct type
+//│ ╙──
 //│ res: error
 //│    = undefined
 
 :e
 (1, 2, 3)[my_func]
-//│ ╔══[ERROR] The index must be an integer
-//│ ║  l.355: 	def my_func x = (1, 2, 3)
-//│ ╙──       	            ^^^^^^^^^^^^^
+//│ ╔══[ERROR] The receiver and index should have the correct type
+//│ ╙──
 //│ res: error
 //│    = undefined
 
@@ -412,7 +399,7 @@ rec def pick n m = if m > 0 then (pick pick_arr[n] (m-1)) else n
 //│     = [Function: pick]
 
 pick 1 5
-//│ res: 1
+//│ res: 0 | 1 | 2 | 3
 //│    = 3
 
 (case (1) of {1 ->  (1, 2) | 2 -> (3, 4) })[0]
@@ -463,15 +450,20 @@ def a:  (0, 1, 2) & {x: 1} // {x: 1} fieldtype
 
 // FIXME
 a[0] 
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╔══[ERROR] Intersection type to be implemented
+//│ ║  l.447: 	def a:  (0, 1, 2) & {x: 1} // {x: 1} fieldtype
+//│ ╙──       	        ^^^^^^^^^^^^^^^^^^
+//│ res: error
+//│    = <no result>
+//│      a is not implemented
 
 :e
 ({x = 1} & {y = 1}).x
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.469: 	({x = 1} & {y = 1}).x
+//│ ║  l.461: 	({x = 1} & {y = 1}).x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── receiver of type `{_1: {x: 1, y: 1}}` does not have field 'x'
-//│ ║  l.469: 	({x = 1} & {y = 1}).x
+//│ ║  l.461: 	({x = 1} & {y = 1}).x
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ res: error
 //│    = undefined
@@ -479,14 +471,13 @@ a[0]
 :e
 ({x = 1})[0]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.480: 	({x = 1})[0]
+//│ ║  l.472: 	({x = 1})[0]
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── record literal of type `{x: 1}` does not match type `Array[~undefined]`
-//│ ║  l.480: 	({x = 1})[0]
+//│ ║  l.472: 	({x = 1})[0]
 //│ ╙──       	 ^^^^^^^
-//│ ╔══[ERROR] The indexing operation should be acted on an array
-//│ ║  l.480: 	({x = 1})[0]
-//│ ╙──       	 ^^^^^^^
+//│ ╔══[ERROR] The receiver and index should have the correct type
+//│ ╙──
 //│ res: error
 //│    = undefined
 
@@ -513,7 +504,7 @@ def foo x = x[1] // modify the Simplifier to adapt tp new change
 
 
 foo ((1, 2, 3))
-//│ res: nothing
+//│ res: 2
 //│    = 2
 
 nw = (1, 2, 3, 4, 5)
@@ -524,5 +515,5 @@ def chose i = nw[i]
 //│      = [Function: chose]
 
 chose 2
-//│ res: nothing
+//│ res: 3
 //│    = 3

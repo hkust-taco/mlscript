@@ -341,8 +341,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             rhs.lowerBounds ::= newBound // update the bound
             rhs.upperBounds.foreach(rec(lhs, _, true)) // propagate from the bound
-            
-            // lhs <: rhs (type variable)
 
             // a: rhs, i: index, a[i]: result
             // (index, result) is one of the meta-info in indexedBy
@@ -620,10 +618,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         nv.indexedBy = tv.indexedBy
         nv.indexedIn = tv.indexedIn
 
-        nv.indexedBy.foreach { case (index, result) =>
-          { extrude(index, lvl, pol); extrude(result, lvl, pol) } }
-        nv.indexedIn.foreach { case (receiver, result) =>
-          {extrude(receiver, lvl, pol); extrude(result, lvl, pol)} }
+        nv.indexedBy = nv.indexedBy.map { case (index, result) => 
+          (extrude(index, lvl, pol), extrude(result, lvl, pol))}
+        nv.indexedIn = nv.indexedIn.map { case (receiver, result) =>
+          (extrude(receiver, lvl, pol), extrude(result, lvl, pol))}
+
         nv
       })
       case n @ NegType(neg) => NegType(extrude(neg, lvl, pol))(n.prov)
@@ -688,11 +687,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             tv2.indexedBy = tv.indexedBy
             tv2.indexedIn = tv.indexedIn
 
-            tv2.indexedBy.foreach { case (index, result) => 
-              { freshen(index); freshen(result) } }
-            
-            tv2.indexedIn.foreach { case(receiver, result) =>
-              { freshen(receiver); freshen(result) } }
+            tv2.indexedBy = tv2.indexedBy.map { case (index, result) =>
+              (freshen(index), freshen(result)) }
+
+            tv2.indexedIn = tv2.indexedIn.map { case (receiver, result) =>
+              (freshen(receiver), freshen(result)) }
 
             tv2
           } else {
@@ -708,11 +707,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           v.indexedBy = tv.indexedBy
           v.indexedIn = tv.indexedIn
 
-          v.indexedBy.foreach { case (index, result) => 
-            { freshen(index); freshen(result) } }
-          
-          v.indexedIn.foreach { case(receiver, result) =>
-            { freshen(receiver); freshen(result) } }
+          v.indexedBy = v.indexedBy.map { case (index, result) =>
+            (freshen(index), freshen(result)) }
+
+          v.indexedIn = v.indexedIn.map { case (receiver, result) =>
+            (freshen(receiver), freshen(result))}
 
           v
       }
@@ -777,25 +776,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case s @ ((ClassTag(StrLit(_), _), _) | (TypeRef(TypeName("string"), _), _) | (ClassTag(Var("string"), _), _)) =>
         err(msg"mlscript doesn't allow string indexing", s._1.prov.loco)
       // StrLit: literal string; TypeRef: defined but not assigned value, so refer to the type; ClassTag(Var(..)): concat "bruh" "bruh", a variable but not a literal
-      case (_, t @ (
-        ClassTag(StrLit(_), _) | ClassTag(Var("string"), _) |
-        ClassTag(DecLit(_), _) | ClassTag(Var("decimal"), _) |
-        ClassTag(Var("bool"), _) | 
-        ClassTag(Var("true"), _) | ClassTag(Var("false"), _) |
-        FunctionType(_, _) | RecordType(_)
-      )) =>
-        err(msg"The index must be an integer", t.prov.loco)
-      case (_, t: ArrayBase) =>
-        err(msg"The index must be an integer", t.prov.loco)
-      case (t @ (
-        ClassTag(IntLit(_), _) | ClassTag(Var("int"), _) |
-        ClassTag(StrLit(_), _) | ClassTag(Var("string"), _) |
-        ClassTag(DecLit(_), _) | ClassTag(Var("decimal"), _) |
-        ClassTag(Var("bool"), _) | 
-        ClassTag(Var("true"), _) | ClassTag(Var("false"), _) |
-        FunctionType(_, _) | RecordType(_)
-      ), _) =>
-        err(msg"The indexing operation should be acted on an array", t.prov.loco)
       case (t : TypeVariable, index) =>
         val lb = t.lowerBounds
 
@@ -829,18 +809,17 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case (t, ComposedType(true, lhs, rhs)) =>
         constrainIndex(t, lhs) | constrainIndex(t, rhs)
       // handle intersection type (to be implemented)
-      /*
       case (ct @ ComposedType(false, lhs, rhs), i) =>
         val dnf = DNF.mk(ct, false)
         val dnf_type = dnf.toType()
-        BoolType
+        err(msg"Intersection type to be implemented", ct.prov.loco)
       case (t, ct @ ComposedType(false, lhs, rhs)) =>
         // lhs ^ rhs
         val dnf = DNF.mk(ct, false) // have type DNF
         val dnf_type = dnf.toType()
-        BoolType
-      */
-      case _ => ???
+        err(msg"Intersection type to be implemented", ct.prov.loco)
+      case _ => 
+        err(msg"The receiver and index should have the correct type", None)
     }
   } (r => s"==> $r")
 }

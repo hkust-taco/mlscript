@@ -152,10 +152,13 @@ f(1,2,3) : 1 | 2 | 3
 //│ ╟── type `int` does not match type `Array[~undefined]`
 //│ ║  l.57: 	def arr: Array[int]
 //│ ╙──      	               ^^^
-//│ ╔══[ERROR] The indexing operation should be acted on an array
-//│ ║  l.57: 	def arr: Array[int]
-//│ ╙──      	               ^^^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╔══[ERROR] The receiver and index should have the correct type
+//│ ╙──
+//│ ╔══[ERROR] The receiver and index should have the correct type
+//│ ╙──
+//│ res: error
+//│ Runtime error:
+//│   TypeError: Cannot read properties of undefined (reading '2')
 
 
 class A: { x: int }
@@ -303,13 +306,13 @@ a2.x
 :e
 a2._1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.304: 	a2._1
+//│ ║  l.307: 	a2._1
 //│ ║         	^^^^^
 //│ ╟── type `Array[?a]` does not match type `{_1: ?b} | ~{_2: true, x: "haha"}`
-//│ ║  l.281: 	def rep5: 'a -> Array['a]
+//│ ║  l.284: 	def rep5: 'a -> Array['a]
 //│ ║         	                ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?b} | ~{_2: true, x: "haha"}`
-//│ ║  l.304: 	a2._1
+//│ ║  l.307: 	a2._1
 //│ ╙──       	^^
 //│ res: error
 //│    = undefined
@@ -392,4 +395,4 @@ pf((1,2,3))
 //│ p1: Array[bool | int | string] | T
 //│ p2: Array[bool | int | string] | T
 //│ pf: (Array[~undefined] & {_1: 'a}) -> (nothing, 'a,)
-//│ res: (nothing, 1,)
+//│ res: (2, 1,)
