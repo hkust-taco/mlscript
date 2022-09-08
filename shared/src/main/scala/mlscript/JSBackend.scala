@@ -88,7 +88,7 @@ class JSBackend {
         else
           throw new UnimplementedError(sym)
       case S(sym: ValueSymbol) =>
-        if (sym.isByvalueRec.getOrElse(false) && !sym.isLam) throw CodeGenError(s"recursive by-value use of ${name} is forbidden")
+        if (sym.isByvalueRec.getOrElse(false) && !sym.isLam) throw CodeGenError(s"unguarded recursive use of by-value binding $name")
         visitedSymbols += sym
         val ident = JSIdent(sym.runtimeName)
         if (sym.isByvalueRec.isEmpty && !sym.isLam) ident() else ident
@@ -553,9 +553,12 @@ class JSWebBackend extends JSBackend {
         .concat(otherStmts.flatMap {
           case Def(recursive, Var(name), L(body), isByname) =>
             val (originalExpr, sym) = if (recursive) {
-              val isByvalueRec = if (isByname) None else Some(true)
-              val sym = topLevelScope.declareValue(name, isByvalueRec, body.isInstanceOf[Lam])
-              (translateTerm(body)(topLevelScope), sym)
+              val isByvalueRecIn = if (isByname) None else Some(true)
+              val sym = topLevelScope.declareValue(name, isByvalueRecIn, body.isInstanceOf[Lam])
+              val translated = translateTerm(body)(topLevelScope)
+              topLevelScope.unregisterSymbol(sym)
+              val isByvalueRecOut = if (isByname) None else Some(false)
+              (translated, topLevelScope.declareValue(name, isByvalueRecOut, body.isInstanceOf[Lam]))
             } else {
               val translatedBody = translateTerm(body)(topLevelScope)
               val isByvalueRec = if (isByname) None else Some(false)
@@ -622,15 +625,22 @@ class JSTestBackend extends JSBackend {
     val queries = otherStmts.map {
       case Def(recursive, Var(name), L(body), isByname) =>
         (if (recursive) {
-          val isByvalueRec = if (isByname) None else Some(true)
-          val sym = scope.declareValue(name, isByvalueRec, body.isInstanceOf[Lam])
+          val isByvalueRecIn = if (isByname) None else Some(true)
+          val sym = scope.declareValue(name, isByvalueRecIn, body.isInstanceOf[Lam])
           try {
-            R((translateTerm(body), sym))
+            val translated = translateTerm(body)
+            scope.unregisterSymbol(sym)
+            val isByvalueRecOut = if (isByname) None else Some(false)
+            R((translated, scope.declareValue(name, isByvalueRecOut, body.isInstanceOf[Lam])))
           } catch {
             case e: UnimplementedError =>
               scope.stubize(sym, e.symbol)
               L(e.getMessage())
-            case e: Throwable => throw e
+            case e: Throwable =>
+              scope.unregisterSymbol(sym)
+              val isByvalueRecOut = if (isByname) None else Some(false)
+              scope.declareValue(name, isByvalueRecOut, body.isInstanceOf[Lam])
+              throw e
           }
         } else {
           (try R(translateTerm(body)) catch {

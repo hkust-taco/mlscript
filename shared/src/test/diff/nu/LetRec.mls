@@ -51,14 +51,43 @@ f()
 
 // TODO (for later) this should be rejected by the type checker
 :ge
+:js
 let rec f =
   f
 //│ f: nothing
 //│ Code generation encountered an error:
-//│   recursive by-value use of f is forbidden
+//│   unguarded recursive use of by-value binding f
 
-// FIXME this is not a recursive use!
+:re
+:js
 f
+//│ // Query 1
+//│ res = f3;
+//│ // End of generated code
 //│ res: nothing
-//│ Code generation encountered an error:
-//│   recursive by-value use of f is forbidden
+//│ Runtime error:
+//│   ReferenceError: f3 is not defined
+
+:p
+let rec f = 1
+//│ |#let| |#rec| |f| |#=| |1|
+//│ Parsed: let rec f = 1;
+//│ Desugared: rec def f: 1
+//│ f: 1
+//│  = 1
+
+// TODO FIX undefined: should `return 1`;
+:p
+:js
+let rec f =
+  1
+//│ |#let| |#rec| |f| |#=|→|1|←|
+//│ Parsed: let rec f = {1};
+//│ Desugared: rec def f: {1}
+//│ // Query 1
+//│ globalThis.f5 = (() => {
+//│   1;
+//│ })();
+//│ // End of generated code
+//│ f: 1
+//│  = undefined

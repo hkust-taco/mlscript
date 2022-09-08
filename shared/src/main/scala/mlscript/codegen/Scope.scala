@@ -125,6 +125,10 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     ()
   }
 
+  def unregisterSymbol(symbol: ValueSymbol): Unit = {
+    unregister(symbol)
+  }
+
   def getType(name: Str): Opt[TypeSymbol] = lexicalTypeSymbols.get(name)
 
   /**
