@@ -189,6 +189,6 @@ fun apply2(x: number, f: int => number => number): number
 //│ |#fun| |apply2|(|x|#:| |number|,| |f|#:| |int| |=>| |number| |=>| |number|)|#:| |number|
 //│ Parsed: {fun apply2: [] -> (x: number, f: int -> number -> number,) -> number}
 
-fun apply3(x: number, f: int => number => number): number = f(42, x)
-//│ |#fun| |apply3|(|x|#:| |number|,| |f|#:| |int| |=>| |number| |=>| |number|)|#:| |number| |#=| |f|(|42|,| |x|)|
-//│ Parsed: {fun apply3 = x: number, f: int, => number, => number, => f (42, x,) : TypeName(number)}
+fun apply3(x: number, f: (int => number) => number): number
+//│ |#fun| |apply3|(|x|#:| |number|,| |f|#:| |(|int| |=>| |number|)| |=>| |number|)|#:| |number|
+//│ Parsed: {fun apply3: [] -> (x: number, f: (int -> number) -> number,) -> number}

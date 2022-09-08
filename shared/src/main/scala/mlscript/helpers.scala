@@ -422,16 +422,16 @@ trait TermImpl extends StatementImpl { self: Term =>
       case p: TypeName => AppliedType(p, rhs.toType_! :: Nil)
       case _ => throw new NotAType(this)
     }
-    // TODO:
     case Tup(fields) => Tuple(fields.map(fld => (fld._1, fld._2 match {
       case Fld(_, _, v) => Field(N, v.toType_!)
     })))
+    case Bra(rcd, trm) if (!rcd) => trm.toType_!
+    // TODO:
     // case Rcd(fields) => ???
     // case Sel(receiver, fieldName) => ???
     // case Let(isRec, name, rhs, body) => ???
     // case Blk(stmts) => ???
-    case Bra(rcd, trm) if (!rcd) => trm.toType_!
-    // case Bra(rcd, trm) => ???
+      // case Bra(rcd, trm) => ???
     // case Asc(trm, ty) => ???
     // case Bind(lhs, rhs) => ???
     // case Test(trm, ty) => ???
