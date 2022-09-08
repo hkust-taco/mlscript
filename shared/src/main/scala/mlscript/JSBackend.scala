@@ -88,6 +88,7 @@ class JSBackend {
         else
           throw new UnimplementedError(sym)
       case S(sym: ValueSymbol) =>
+        if (sym.isRec && !sym.isByname) throw CodeGenError(s"recursive by-value use of ${name} is forbidden")
         visitedSymbols += sym
         val ident = JSIdent(sym.runtimeName)
         if (sym.thunkify) ident() else ident
@@ -290,7 +291,7 @@ class JSBackend {
         case Lam(params, body) =>
           val methodScope = scope.derive(s"Method $name")
           val methodParams = translateParams(params)(methodScope)
-          methodScope.declareValue("this", false)
+          methodScope.declareValue("this", false, false, false)
           instance(name) := JSFuncExpr(
             N,
             methodParams,
@@ -299,7 +300,7 @@ class JSBackend {
         // Define getters for pure expressions.
         case term =>
           val getterScope = scope.derive(s"Getter $name")
-          getterScope.declareValue("this", false)
+          getterScope.declareValue("this", false, false, false)
           id("Object")("defineProperty")(
             instance,
             JSExpr(name),
@@ -558,13 +559,13 @@ class JSWebBackend extends JSBackend {
         .concat(otherStmts.flatMap {
           case Def(recursive, Var(name), L(body), withDef) =>
             val (originalExpr, sym) = if (recursive) {
-              val sym = topLevelScope.declareValue(name, needsThunkify(body, withDef))
+              val sym = topLevelScope.declareValue(name, withDef, needsThunkify(body, withDef), true)
               (translateTerm(body)(topLevelScope), sym)
             } else {
               val translatedBody = translateTerm(body)(topLevelScope)
-              (translatedBody, topLevelScope.declareValue(name, needsThunkify(body, withDef)))
+              (translatedBody, topLevelScope.declareValue(name, withDef, needsThunkify(body, withDef), false))
             }
-            val translatedBody = if (sym.thunkify) JSArrowFn(Nil, L(originalExpr)) else originalExpr
+            val translatedBody = if (needsThunkify(body, sym.isByname)) JSArrowFn(Nil, L(originalExpr)) else originalExpr
             topLevelScope.tempVars `with` JSConstDecl(sym.runtimeName, translatedBody) ::
               JSInvoke(resultsIdent("push"), JSIdent(sym.runtimeName) :: Nil).stmt :: Nil
           // Ignore type declarations.
@@ -582,7 +583,7 @@ class JSWebBackend extends JSBackend {
 }
 
 class JSTestBackend extends JSBackend {
-  private val lastResultSymbol = topLevelScope.declareValue("res", false)
+  private val lastResultSymbol = topLevelScope.declareValue("res", false, false, false)
   private val resultIdent = JSIdent(lastResultSymbol.runtimeName)
 
   private var numRun = 0
@@ -625,7 +626,7 @@ class JSTestBackend extends JSBackend {
     val queries = otherStmts.map {
       case Def(recursive, Var(name), L(body), withDef) =>
         (if (recursive) {
-          val sym = scope.declareValue(name, needsThunkify(body, withDef))
+          val sym = scope.declareValue(name, withDef, needsThunkify(body, withDef), true)
           try {
             R((translateTerm(body), sym))
           } catch {
@@ -640,7 +641,7 @@ class JSTestBackend extends JSBackend {
               scope.declareStubValue(name, e.symbol)
               L(e.getMessage())
             case e: Throwable => throw e
-          }) map { expr => (expr, scope.declareValue(name, needsThunkify(body, withDef))) }
+          }) map { expr => (expr, scope.declareValue(name, withDef, needsThunkify(body, withDef), false)) }
         }) match { 
           case R((originalExpr, sym)) =>
             val expr = 
