@@ -11,7 +11,7 @@
 
 let r = { x: 1 }
 //│ r: {x: 1}
-//│  = [Function: r]
+//│  = { x: 1 }
 
 r.x + 1
 //│ res: int

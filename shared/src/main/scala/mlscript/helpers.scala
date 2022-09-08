@@ -250,7 +250,7 @@ trait PgrmImpl { self: Pgrm =>
     }.partitionMap {
       case td: TypeDef => L(td)
       case ot: Terms => R(ot)
-      case NuFunDef(nme, tys, rhs) => R(Def(false, nme, rhs, true))
+      case NuFunDef(isLetRec, nme, tys, rhs) => R(Def(isLetRec.getOrElse(true), nme, rhs, isLetRec.isEmpty))
       case _: NuFunDef | _: NuTypeDef => ???
     }
     diags.toList -> res
@@ -290,7 +290,7 @@ trait DeclImpl extends Located { self: Decl =>
 trait NuDeclImpl extends Located { self: NuDecl =>
   val body: Located
   def showBody: Str = this match {
-    case NuFunDef(_, _, rhs) => rhs.fold(_.toString, _.show)
+    case NuFunDef(_, _, _, rhs) => rhs.fold(_.toString, _.show)
     case td: NuTypeDef => td.body.show
   }
   def describe: Str = this match {
@@ -298,11 +298,13 @@ trait NuDeclImpl extends Located { self: NuDecl =>
     case _: NuTypeDef => "type declaration"
   }
   def show: Str = showHead + (this match {
-    case NuTypeDef(Als, _, _, _, _, _) | NuFunDef(_, _, L(_)) => " = "
+    case NuTypeDef(Als, _, _, _, _, _) | NuFunDef(_, _, _, L(_)) => " = "
     case NuTypeDef(Cls, _, _, _, _, _) => " "
     case _ => ": " }) + showBody
   def showHead: Str = this match {
-    case NuFunDef(n, _, b) => s"fun $n"
+    case NuFunDef(N, n, _, b) => s"fun $n"
+    case NuFunDef(S(false), n, _, b) => s"let $n"
+    case NuFunDef(S(true), n, _, b) => s"let rec $n"
     case NuTypeDef(k, n, tps, sps, parents, bod) =>
       s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_.name).mkString("[", ", ", "]")}(${
         // sps.mkString("(",",",")")
@@ -651,7 +653,7 @@ trait StatementImpl extends Located { self: Statement =>
     case Assign(lhs, rhs) => lhs :: rhs :: Nil
     case Splc(fields) => fields.map{case L(l) => l case R(r) => r.value}
     case If(body, els) => body :: els.toList
-    case d @ NuFunDef(v, ts, rhs) => v :: ts ::: d.body :: Nil
+    case d @ NuFunDef(_, v, ts, rhs) => v :: ts ::: d.body :: Nil
     case TyApp(lhs, targs) => lhs :: targs
     case New(base, bod) => base.toList.flatMap(ab => ab._1 :: ab._2 :: Nil) ::: bod :: Nil
     case NuTypeDef(_, _, _, _, _, _) => ???

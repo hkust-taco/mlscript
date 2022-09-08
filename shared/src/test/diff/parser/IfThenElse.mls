@@ -295,7 +295,7 @@ if a is
   let y = a + 1
   Right(0) then y
 //│ |#if| |a| |is|→|Left|(|x|)| |#then| |x|↵|#let| |y| |#=| |a| |+| |1|↵|Right|(|0|)| |#then| |y|←|
-//│ Parsed: {if a is ‹(Left (x,)) then x; fun y = + (a,) (1,); (Right (0,)) then y›}
+//│ Parsed: {if a is ‹(Left (x,)) then x; let y = + (a,) (1,); (Right (0,)) then y›}
 
 if a is
   Some(v) and v is
@@ -305,7 +305,7 @@ if a is
     Right(x) then x + y
   else 0
 //│ |#if| |a| |is|→|Some|(|v|)| |and| |v| |is|→|Left|(|x|)| |#then| |x|↵|#let| |y| |#=| |v| |+| |1|↵|Right|(|0|)| |#then| |y|↵|Right|(|x|)| |#then| |x| |+| |y|←|↵|#else| |0|←|
-//│ Parsed: {if a is ‹Some (v,) and v is ‹(Left (x,)) then x; fun y = + (v,) (1,); (Right (0,)) then y; (Right (x,)) then + (x,) (y,)›; else 0›}
+//│ Parsed: {if a is ‹Some (v,) and v is ‹(Left (x,)) then x; let y = + (v,) (1,); (Right (0,)) then y; (Right (x,)) then + (x,) (y,)›; else 0›}
 
 if a is
   Some(x) and x is
@@ -314,7 +314,7 @@ if a is
     Right(b) then "right-defined"
   None       then "undefined"
 //│ |#if| |a| |is|→|Some|(|x|)| |and| |x| |is|→|Left|(|a|)| |#then| |"left-defined"|↵|#let| |y| |#=| |x| |+| |1|↵|Right|(|b|)| |#then| |"right-defined"|←|↵|None| |#then| |"undefined"|←|
-//│ Parsed: {if a is ‹Some (x,) and x is ‹(Left (a,)) then "left-defined"; fun y = + (x,) (1,); (Right (b,)) then "right-defined"›; (None) then "undefined"›}
+//│ Parsed: {if a is ‹Some (x,) and x is ‹(Left (a,)) then "left-defined"; let y = + (x,) (1,); (Right (b,)) then "right-defined"›; (None) then "undefined"›}
 
 :w
 if a is
@@ -336,7 +336,7 @@ if a is
 //│ ║         	          ^^^^^
 //│ ║  l.332: 	  then y
 //│ ╙──       	^^^^^^^^
-//│ Parsed: {if a is ‹(Left (x,)) then x; fun y = undefined›}
+//│ Parsed: {if a is ‹(Left (x,)) then x; let y = undefined›}
 
 
 
@@ -392,7 +392,7 @@ if v is Some(x) and x is Left(y) then 123
 // ML:
 let Some(x) = v
 //│ |#let| |Some|(|x|)| |#=| |v|
-//│ Parsed: {fun Some = x, => v}
+//│ Parsed: {let Some = x, => v}
 
 v as Some(x)
 //│ |v| |as| |Some|(|x|)|
