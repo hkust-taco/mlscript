@@ -355,7 +355,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     private final def ubRecOccs_$(implicit ctx: Ctx): Opt[Opt[Bool]] =
       TupleType(upperBounds.map(N -> _.toUpper(noProv)))(noProv).getVarsPol(S(false)).get(this)
     
-    override def toString: String = showProvOver(false)(nameHint.getOrElse("α") + uid + "'" * level + " [indexedIn: " + indexedIn + ", indexedBy: " + indexedBy + "]")
+    override def toString: String = showProvOver(false)(nameHint.getOrElse("α") + uid + "'" * level + indexedIn.map("#"+_).mkString + indexedBy.map("%"+_).mkString)
   }
   type TV = TypeVariable
   private var freshCount = 0
