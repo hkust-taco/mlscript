@@ -152,8 +152,8 @@ class TSTypeObject(obj: js.Dynamic)(implicit checker: TSTypeChecker) extends TSA
   lazy val isTupleType = node.isTupleTypeNode
   lazy val isArrayType = node.isArrayTypeNode
   lazy val isEnumType = (flags & TypeScript.typeFlagsEnumLike) > 0
-  lazy val isUnionType = obj.isUnion().asInstanceOf[Boolean]
-  lazy val isIntersectionType = obj.isIntersection().asInstanceOf[Boolean]
+  lazy val isUnionType = obj.isUnion()
+  lazy val isIntersectionType = obj.isIntersection()
   lazy val isFunctionLike = node.isFunctionLike
   lazy val isAnonymous = objectFlags == TypeScript.objectFlagsAnonymous
   lazy val isTypeParameter = flags == TypeScript.typeFlagsTypeParameter

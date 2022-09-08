@@ -59,12 +59,12 @@ object TSSourceFile {
     TSFunctionType(pList, getObjectType(node.returnType), getTypeParametes(node))
   }
 
-  private def getStructuralType(types: TSTypeArray, isUnion: Boolean): TSStructuralType =
+  private def getStructuralType(types: TSTypeArray, isUnion: Boolean): TSType =
     types.foldLeft[Option[TSType]](None)((prev, cur) => prev match {
       case None => Some(getObjectType(cur))
       case Some(p) =>
         if (isUnion) Some(TSUnionType(p, getObjectType(cur))) else Some(TSIntersectionType(p, getObjectType(cur)))
-    }).get.asInstanceOf[TSStructuralType]
+    }).get
 
   private def getTupleElements(elements: TSTypeArray): List[TSType] =
     elements.foldLeft(List[TSType]())((lst, ele) => lst :+ getObjectType(ele))
