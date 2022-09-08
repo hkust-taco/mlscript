@@ -16,35 +16,41 @@ f(12)
 //│ res: bool
 //│    = false
 
-// FIXME this should be allowed since it's a function!
 :js
 let rec f(x) = x > 0 && f(x - 1)
+//│ // Query 1
+//│ globalThis.f1 = function f1(x) {
+//│   return x > 0 && f1(x - 1);
+//│ };
+//│ // End of generated code
 //│ f: int -> bool
-//│ Code generation encountered an error:
-//│   recursive by-value use of f is forbidden
+//│  = [Function: f1]
 
-// FIXME this should be allowed since it's a function!
 f(12)
 //│ res: bool
-//│ Code generation encountered an error:
-//│   recursive by-value use of f is forbidden
+//│    = false
 
-// FIXME this should be allowed since it's a function!
 :js
 let rec f() =
   f()
+//│ // Query 1
+//│ globalThis.f2 = function f2() {
+//│   return ((() => {
+//│     f2();
+//│   })());
+//│ };
+//│ // End of generated code
 //│ f: () -> nothing
-//│ Code generation encountered an error:
-//│   recursive by-value use of f is forbidden
+//│  = [Function: f2]
 
-:ge
+:re
 f()
 //│ res: nothing
-//│ Code generation encountered an error:
-//│   recursive by-value use of f is forbidden
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 // TODO (for later) this should be rejected by the type checker
-:js
+:ge
 let rec f =
   f
 //│ f: nothing
@@ -56,7 +62,3 @@ f
 //│ res: nothing
 //│ Code generation encountered an error:
 //│   recursive by-value use of f is forbidden
-
-
-
-

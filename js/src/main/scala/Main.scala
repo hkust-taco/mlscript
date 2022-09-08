@@ -348,7 +348,7 @@ object Main {
         case err: ErrorReport =>
           if (stopAtFirstError) decls = Nil
           val culprit = d match {
-            case Def(isrec, nme, rhs, withDef)  => "def " + nme
+            case Def(isrec, nme, rhs, isByname)  => "def " + nme
             case _: DesugaredStatement => "statement"
           }
           res ++= report(err)

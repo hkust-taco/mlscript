@@ -250,7 +250,8 @@ trait PgrmImpl { self: Pgrm =>
     }.partitionMap {
       case td: TypeDef => L(td)
       case ot: Terms => R(ot)
-      case NuFunDef(isLetRec, nme, tys, rhs) => R(Def(isLetRec.getOrElse(true), nme, rhs, isLetRec.isEmpty))
+      case NuFunDef(isLetRec, nme, tys, rhs) =>
+        R(Def(isLetRec.getOrElse(true), nme, rhs, isLetRec.isEmpty))
       case _: NuFunDef | _: NuTypeDef => ???
     }
     diags.toList -> res
@@ -270,7 +271,7 @@ object OpApp {
 trait DeclImpl extends Located { self: Decl =>
   val body: Located
   def showBody: Str = this match {
-    case Def(_, _, rhs, withDef) => rhs.fold(_.toString, _.show)
+    case Def(_, _, rhs, isByname) => rhs.fold(_.toString, _.show)
     case td: TypeDef => td.body.show
   }
   def describe: Str = this match {
@@ -280,8 +281,8 @@ trait DeclImpl extends Located { self: Decl =>
   def show: Str = showHead + (this match {
     case TypeDef(Als, _, _, _, _, _) => " = "; case _ => ": " }) + showBody
   def showHead: Str = this match {
-    case Def(true, n, b, withDef) => s"rec def $n"
-    case Def(false, n, b, withDef) => s"def $n"
+    case Def(true, n, b, isByname) => s"rec def $n"
+    case Def(false, n, b, isByname) => s"def $n"
     case TypeDef(k, n, tps, b, _, _) =>
       s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_.name).mkString("[", ", ", "]")}"
   }
