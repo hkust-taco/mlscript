@@ -316,7 +316,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 case c =>
                   asc match {
                     case S(ty) =>
-                      R(NuFunDef(v, Nil, R(PolyType(Nil, ty)))) // TODO rm PolyType after FCP is merged
+                      R(NuFunDef(v, Nil, R(PolyType(Nil, ps.foldRight(ty)((p, r) => Function(p.toType match {
+                        case L(diag) => raise(diag); Top // TODO better
+                        case R(tp) => tp
+                      }, r)))))) // TODO rm PolyType after FCP is merged
                     case N =>
                       // TODO dedup:
                       val (tkstr, loc) = c.headOption.fold(("end of input", lastLoc))(_.mapFirst(_.describe).mapSecond(some))
@@ -525,8 +528,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
             L(IfOpApp(acc, v, rhs))
           case R(rhs) =>
             opStr match {
-              case "=>" =>
-                exprCont(Lam(toParams(acc), rhs), prec, allowNewlines)
+              case "=>" => {
+                exprCont(rhs, prec, allowNewlines) match {
+                  case R(p) => R(Lam(toParams(acc), p))
+                  case L(b) => err(msg"Unexpected ifBody" -> b.toLoc :: Nil); L(b)
+                }
+              }
               case _ =>
                 exprCont(App(App(v, toParams(acc)), toParams(rhs)), prec, allowNewlines)
             }

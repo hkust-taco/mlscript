@@ -422,8 +422,10 @@ trait TermImpl extends StatementImpl { self: Term =>
       case p: TypeName => AppliedType(p, rhs.toType_! :: Nil)
       case _ => throw new NotAType(this)
     }
+    case Tup(fields) => Tuple(fields.map(fld => (fld._1, fld._2 match {
+      case Fld(m, s, v) => val ty = v.toType_!; Field(Option.when(m)(ty), ty)
+    })))
     // TODO:
-    // case Tup(fields) => ???
     // case Rcd(fields) => ???
     // case Sel(receiver, fieldName) => ???
     // case Let(isRec, name, rhs, body) => ???
