@@ -425,7 +425,6 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Tup(fields) => Tuple(fields.map(fld => (fld._1, fld._2 match {
       case Fld(_, _, v) => Field(N, v.toType_!)
     })))
-    case Bra(rcd, trm) if (!rcd) => trm.toType_!
     // TODO:
     // case Rcd(fields) => ???
     // case Sel(receiver, fieldName) => ???
