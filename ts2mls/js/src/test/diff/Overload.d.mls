@@ -1,47 +1,57 @@
-def f: ((number) -> (string)) & ((string) -> (string))
-class M: { foo: ((number) -> (string)) & ((string) -> (string)) }
-def app: (((string) -> (unit)) -> ((number) -> (unit))) & (((string) -> (unit)) -> ((string) -> (unit)))
-def create: ((number) -> (unit -> ((false) | (true)))) & (((false) | (true)) -> (unit -> ((false) | (true))))
-def g0: ((MutArray[string]) -> (string)) & ((MutArray[{}]) -> (string))
-def db: ((number) -> (MutArray[number])) & (({}) -> (MutArray[number]))
-class N: {}
-def id: ((M) -> (unit)) & ((N) -> (unit))
-def tst: (({ z: number }) -> ({ y: string })) & (({ z: (false) | (true) }) -> ({ y: string }))
-def op: ((number) -> (((number) | (undefined)) -> (unit))) & ((number) -> ((((false) | (true)) | (undefined)) -> (unit)))
-def swap: (((number, string, )) -> ((number, string, ))) & (((string, number, )) -> ((number, string, )))
-def u: ((((number) | (false)) | (true)) -> (string)) & (({}) -> (string))
-def doSome[T, U]: (anything) -> (unit) /* warning: the overload of function doSome is not supported yet. */
-def XX'f[T]: (T) -> ((anything) -> (string)) /* warning: the overload of function f is not supported yet. */
-class WWW: {}
-  method F[T]: (T) -> (anything) /* warning: the overload of function F is not supported yet. */
-def baz: unit -> (anything) /* warning: the overload of function baz is not supported yet. */
-//│ Defined class M
-//│ Defined class N
-//│ Defined class WWW
-//│ Declared WWW.F: WWW -> anything -> anything
-//│ f: (number | string) -> string
-//│  = <missing implementation>
-//│ app: (string -> unit) -> (number | string) -> unit
-//│    = <missing implementation>
-//│ create: (false | number | true) -> unit -> bool
-//│       = <missing implementation>
-//│ g0: MutArray[in string] -> string
-//│   = <missing implementation>
-//│ db: anything -> MutArray[number]
-//│   = <missing implementation>
-//│ id: (M | N) -> unit
-//│   = <missing implementation>
-//│ tst: {z: false | number | true} -> {y: string}
-//│    = <missing implementation>
-//│ op: number -> (false | number | true | undefined) -> unit
-//│   = <missing implementation>
-//│ swap: (number | string, number | string,) -> (number, string,)
-//│     = <missing implementation>
-//│ u: anything -> string
-//│  = <missing implementation>
-//│ doSome: anything -> unit
-//│       = <missing implementation>
-//│ XX'f: anything -> anything -> string
-//│     = <missing implementation>
-//│ baz: unit -> anything
-//│    = <missing implementation>
+:NewParser
+:ParseOnly
+ fun f((_: number): string) & ((_: string): string)
+class M(foo: ((_: number): string) & ((_: string): string))
+ fun app((_: (_: string): unit, _: number): unit) & ((_: (_: string): unit, _: string): unit)
+ fun create((_: number): (): bool) & ((_: bool): (): bool)
+ fun g0((_: MutArray[string]): string) & ((_: MutArray[object]): string)
+ fun db((_: number): MutArray[number]) & ((_: object): MutArray[number])
+class N
+ fun id((_: M): unit) & ((_: N): unit)
+ fun tst((_: (z: number)): (y: string)) & ((_: (z: bool)): (y: string))
+ fun op((_: number, _: (number) | (undefined)): unit) & ((_: number, _: (bool) | (undefined)): unit)
+ fun swap((_: (number, string, )): (number, string, )) & ((_: (string, number, )): (number, string, ))
+ fun u((_: (number) | (bool)): string) & ((_: object): string)
+fun doSome(_: anything): unit /* warning: the overload of function doSome is not supported yet. */
+namespace XX {
+  fun f(_: T, _: anything): string /* warning: the overload of function f is not supported yet. */
+}
+class WWW(F: (_: T): anything /* warning: the overload of function F is not supported yet. */)
+fun baz(): anything /* warning: the overload of function baz is not supported yet. */
+//│ | |#fun| |f|(|(|_|#:| |number|)|#:| |string|)| |&| |(|(|_|#:| |string|)|#:| |string|)|↵|#class| |M|(|foo|#:| |(|(|_|#:| |number|)|#:| |string|)| |&| |(|(|_|#:| |string|)|#:| |string|)|)|→|#fun| |app|(|(|_|#:| |(|_|#:| |string|)|#:| |unit|,| |_|#:| |number|)|#:| |unit|)| |&| |(|(|_|#:| |(|_|#:| |string|)|#:| |unit|,| |_|#:| |string|)|#:| |unit|)|↵|#fun| |create|(|(|_|#:| |number|)|#:| |(||)|#:| |bool|)| |&| |(|(|_|#:| |bool|)|#:| |(||)|#:| |bool|)|↵|#fun| |g0|(|(|_|#:| |MutArray|[|string|]|)|#:| |string|)| |&| |(|(|_|#:| |MutArray|[|object|]|)|#:| |string|)|↵|#fun| |db|(|(|_|#:| |number|)|#:| |MutArray|[|number|]|)| |&| |(|(|_|#:| |object|)|#:| |MutArray|[|number|]|)|←|↵|#class| |N|→|#fun| |id|(|(|_|#:| |M|)|#:| |unit|)| |&| |(|(|_|#:| |N|)|#:| |unit|)|↵|#fun| |tst|(|(|_|#:| |(|z|#:| |number|)|)|#:| |(|y|#:| |string|)|)| |&| |(|(|_|#:| |(|z|#:| |bool|)|)|#:| |(|y|#:| |string|)|)|↵|#fun| |op|(|(|_|#:| |number|,| |_|#:| |(|number|)| ||| |(|undefined|)|)|#:| |unit|)| |&| |(|(|_|#:| |number|,| |_|#:| |(|bool|)| ||| |(|undefined|)|)|#:| |unit|)|↵|#fun| |swap|(|(|_|#:| |(|number|,| |string|,| |)|)|#:| |(|number|,| |string|,| |)|)| |&| |(|(|_|#:| |(|string|,| |number|,| |)|)|#:| |(|number|,| |string|,| |)|)|↵|#fun| |u|(|(|_|#:| |(|number|)| ||| |(|bool|)|)|#:| |string|)| |&| |(|(|_|#:| |object|)|#:| |string|)|←|↵|#fun| |doSome|(|_|#:| |anything|)|#:| |unit| |/*| |warning|#:| |the| |overload| |#of| |function| |doSome| |is| |not| |supported| |yet|.| |*/|↵|namespace| |XX| |{|→|#fun| |f|(|_|#:| |T|,| |_|#:| |anything|)|#:| |string| |/*| |warning|#:| |the| |overload| |#of| |function| |f| |is| |not| |supported| |yet|.| |*/|←|↵|}|↵|#class| |WWW|(|F|#:| |(|_|#:| |T|)|#:| |anything| |/*| |warning|#:| |the| |overload| |#of| |function| |F| |is| |not| |supported| |yet|.| |*/|)|↵|#fun| |baz|(||)|#:| |anything| |/*| |warning|#:| |the| |overload| |#of| |function| |baz| |is| |not| |supported| |yet|.| |*/|
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.3: 	 fun f((_: number): string) & ((_: string): string)
+//│ ╙──     	                  ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.3: 	 fun f((_: number): string) & ((_: string): string)
+//│ ╙──     	       ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[PARSE ERROR] Expected function parameter list; found operator instead
+//│ ║  l.3: 	 fun f((_: number): string) & ((_: string): string)
+//│ ╙──     	                            ^
+//│ ╔══[PARSE ERROR] Expected ':' or '=' followed by a function body or signature; found parenthesis section instead
+//│ ║  l.3: 	 fun f((_: number): string) & ((_: string): string)
+//│ ╙──     	                              ^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.4: 	class M(foo: ((_: number): string) & ((_: string): string))
+//│ ╙──     	                         ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.4: 	class M(foo: ((_: number): string) & ((_: string): string))
+//│ ╙──     	              ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.4: 	class M(foo: ((_: number): string) & ((_: string): string))
+//│ ╙──     	                                                 ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.4: 	class M(foo: ((_: number): string) & ((_: string): string))
+//│ ╙──     	                                      ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
+//│ ║  l.5: 	 fun app((_: (_: string): unit, _: number): unit) & ((_: (_: string): unit, _: string): unit)
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.6: 	 fun create((_: number): (): bool) & ((_: bool): (): bool)
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.7: 	 fun g0((_: MutArray[string]): string) & ((_: MutArray[object]): string)
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.8: 	 fun db((_: number): MutArray[number]) & ((_: object): MutArray[number])
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.9: 	class N
+//│ ╙──     	^
+//│ Parsed: {fun f = '(' _: number, ')' (string,), => undefined; class M(foo: & ('(' _: number, ')' (string,),) ('(' _: string, ')' (string,),),) {}}

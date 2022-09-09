@@ -235,12 +235,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case (SPACE, _) :: _ => consume; block
       case c =>
         val t = c match {
-          case (KEYWORD(k @ ("class" | "trait" | "type")), l0) :: c =>
+          case (KEYWORD(k @ ("class" | "trait" | "type" | "namespace")), l0) :: c =>
             consume
             val kind = k match {
               case "class" => Cls
               case "trait" => Trt
               case "type" => Als
+              case "namespace" => Nms
               case _ => die
             }
             val (tn, success) = yeetSpaces match {

@@ -34,30 +34,38 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
   def containsMember(name: String, searchParent: Boolean = true): Boolean =
     if (parent.isEmpty) members.contains(name) else (members.contains(name) || (searchParent && parent.get.containsMember(name)))
 
-  def generate(writer: JSWriter): Unit =
+  def generate(writer: JSWriter, indent: String): Unit =
     order.toList.foreach((p) => p match {
-      case Left(name) => subSpace(name).generate(writer)
+      case Left(subName) => {
+        writer.writeln(s"${indent}namespace $subName {")
+        subSpace(subName).generate(writer, indent + "  ")
+        writer.writeln(s"$indent}")
+      }
       case Right(name) => {
         val mem = members(name)
-        val fullName = getFullPath(name)
+        // val fullName = getFullPath(name)
         mem match {
           case inter: TSIntersectionType => // overloaded functions
-            writer.writeln(s"def ${fullName}: ${Converter.convert(inter)}")
-          case f: TSFunctionType => {
-            val typeParams = f.typeVars.map((t) => t.name)
-            if (typeParams.isEmpty)
-              writer.writeln(s"def ${fullName}: ${Converter.convert(f)}")
-            else // TODO: add constraints
-              writer.writeln(s"def ${fullName}[${typeParams.reduceLeft((r, s) => s"$r, $s")}]: ${Converter.convert(f)}")
-          }
-          case overload @ TSIgnoredOverload(base, _) => {
-            val typeParams = base.typeVars.map((t) => t.name)
-              if (typeParams.isEmpty)
-                writer.writeln(s"def ${fullName}: ${Converter.convert(overload)}")
-              else // TODO: add constraints
-                writer.writeln(s"def ${fullName}[${typeParams.reduceLeft((r, s) => s"$r, $s")}]: ${Converter.convert(overload)}")
-          }
-          case _ => writer.writeln(Converter.convert(mem))
+            writer.writeln(s"${indent} fun ${name}${Converter.convert(inter)}")
+          case f: TSFunctionType =>
+            writer.writeln(s"${indent}fun ${name}${Converter.convert(f)}")
+          // {
+          //   val typeParams = f.typeVars.map((t) => t.name)
+          //   if (typeParams.isEmpty)
+          //     writer.writeln(s"def ${fullName}: ${Converter.convert(f)}")
+          //   else // TODO: add constraints
+          //     writer.writeln(s"def ${fullName}[${typeParams.reduceLeft((r, s) => s"$r, $s")}]: ${Converter.convert(f)}")
+          // }
+          case overload @ TSIgnoredOverload(base, _) =>
+            writer.writeln(s"${indent}fun ${name}${Converter.convert(overload)}")
+          // {
+          //   val typeParams = base.typeVars.map((t) => t.name)
+          //     if (typeParams.isEmpty)
+          //       writer.writeln(s"def ${fullName}: ${Converter.convert(overload)}")
+          //     else // TODO: add constraints
+          //       writer.writeln(s"def ${fullName}[${typeParams.reduceLeft((r, s) => s"$r, $s")}]: ${Converter.convert(overload)}")
+          // }
+          case _ => writer.writeln(indent + Converter.convert(mem))
         }
       }
     })

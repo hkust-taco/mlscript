@@ -1,42 +1,97 @@
-def first: (MutArray[string]) -> (string)
-def getZero3: unit -> (MutArray[number])
-def first2: (MutArray[(number) -> (number)]) -> ((number) -> (number))
-def doEs: (MutArray[int]) -> (MutArray[int])
-class C: {}
-trait I: { i: number }
-def doCs: (MutArray[C]) -> (MutArray[C])
-def doIs: (MutArray[I]) -> (MutArray[I])
-def inter[U, T]: (MutArray[(U) & (T)]) -> (MutArray[(U) & (T)])
-def clean: (MutArray[(string, number, )]) -> (MutArray[(string, number, )])
-def translate[T, U]: (MutArray[T]) -> (MutArray[U])
-def uu: (MutArray[((number) | (false)) | (true)]) -> (MutArray[((number) | (false)) | (true)])
-class Temp[T]: { x: T }
-def ta: (MutArray[Temp[(false) | (true)]]) -> (MutArray[Temp[(false) | (true)]])
-def tat[T]: (MutArray[Temp[T]]) -> (MutArray[Temp[T]])
-//│ Defined class C
-//│ Defined trait I
-//│ Defined class Temp[+T]
-//│ first: MutArray[string] -> string
-//│      = <missing implementation>
-//│ getZero3: unit -> MutArray[number]
-//│         = <missing implementation>
-//│ first2: MutArray[number -> number] -> number -> number
-//│       = <missing implementation>
-//│ doEs: MutArray[int] -> MutArray[int]
-//│     = <missing implementation>
-//│ doCs: MutArray[C] -> MutArray[C]
-//│     = <missing implementation>
-//│ doIs: MutArray[I] -> MutArray[I]
-//│     = <missing implementation>
-//│ inter: MutArray['a] -> MutArray['a]
-//│      = <missing implementation>
-//│ clean: MutArray[(string, number,)] -> MutArray[(string, number,)]
-//│      = <missing implementation>
-//│ translate: MutArray['a] -> MutArray['b]
-//│          = <missing implementation>
-//│ uu: MutArray[false | number | true] -> MutArray[false | number | true]
-//│   = <missing implementation>
-//│ ta: MutArray[Temp[bool]] -> MutArray[Temp[bool]]
-//│   = <missing implementation>
-//│ tat: MutArray[Temp['a]] -> MutArray[Temp['a]]
-//│    = <missing implementation>
+:NewParser
+:ParseOnly
+fun first(_: MutArray[string]): string
+fun getZero3(): MutArray[number]
+fun first2(_: MutArray[(_: number): number]): (_: number): number
+fun doEs(_: MutArray[int]): MutArray[int]
+class C
+trait I(i: number)
+fun doCs(_: MutArray[C]): MutArray[C]
+fun doIs(_: MutArray[I]): MutArray[I]
+fun inter(_: MutArray[(U) & (T)]): MutArray[(U) & (T)]
+fun clean(_: MutArray[(string, number, )]): MutArray[(string, number, )]
+fun translate(_: MutArray[T]): MutArray[U]
+fun uu(_: MutArray[(number) | (bool)]): MutArray[(number) | (bool)]
+class Temp<T>(x: T)
+fun ta(_: MutArray[Temp[bool]]): MutArray[Temp[bool]]
+fun tat(_: MutArray[Temp[T]]): MutArray[Temp[T]]
+//│ |#fun| |first|(|_|#:| |MutArray|[|string|]|)|#:| |string|↵|#fun| |getZero3|(||)|#:| |MutArray|[|number|]|↵|#fun| |first2|(|_|#:| |MutArray|[|(|_|#:| |number|)|#:| |number|]|)|#:| |(|_|#:| |number|)|#:| |number|↵|#fun| |doEs|(|_|#:| |MutArray|[|int|]|)|#:| |MutArray|[|int|]|↵|#class| |C|↵|#trait| |I|(|i|#:| |number|)|↵|#fun| |doCs|(|_|#:| |MutArray|[|C|]|)|#:| |MutArray|[|C|]|↵|#fun| |doIs|(|_|#:| |MutArray|[|I|]|)|#:| |MutArray|[|I|]|↵|#fun| |inter|(|_|#:| |MutArray|[|(|U|)| |&| |(|T|)|]|)|#:| |MutArray|[|(|U|)| |&| |(|T|)|]|↵|#fun| |clean|(|_|#:| |MutArray|[|(|string|,| |number|,| |)|]|)|#:| |MutArray|[|(|string|,| |number|,| |)|]|↵|#fun| |translate|(|_|#:| |MutArray|[|T|]|)|#:| |MutArray|[|U|]|↵|#fun| |uu|(|_|#:| |MutArray|[|(|number|)| ||| |(|bool|)|]|)|#:| |MutArray|[|(|number|)| ||| |(|bool|)|]|↵|#class| |Temp|‹|T|›|(|x|#:| |T|)|↵|#fun| |ta|(|_|#:| |MutArray|[|Temp|[|bool|]|]|)|#:| |MutArray|[|Temp|[|bool|]|]|↵|#fun| |tat|(|_|#:| |MutArray|[|Temp|[|T|]|]|)|#:| |MutArray|[|Temp|[|T|]|]|
+//│ ╔══[ERROR] not a recognized type: (MutArray)[string]
+//│ ║  l.3: 	fun first(_: MutArray[string]): string
+//│ ╙──     	             ^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (MutArray)[number]
+//│ ║  l.4: 	fun getZero3(): MutArray[number]
+//│ ╙──     	                ^^^^^^^^^^^^^^^^
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.5: 	fun first2(_: MutArray[(_: number): number]): (_: number): number
+//│ ╙──     	                                  ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.5: 	fun first2(_: MutArray[(_: number): number]): (_: number): number
+//│ ╙──     	                       ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.5: 	fun first2(_: MutArray[(_: number): number]): (_: number): number
+//│ ╙──     	                                                         ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.5: 	fun first2(_: MutArray[(_: number): number]): (_: number): number
+//│ ╙──     	                                              ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: '(' _: number, ')'
+//│ ║  l.5: 	fun first2(_: MutArray[(_: number): number]): (_: number): number
+//│ ╙──     	                                              ^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (MutArray)['(' _: number, ')' (number,)]
+//│ ║  l.5: 	fun first2(_: MutArray[(_: number): number]): (_: number): number
+//│ ╙──     	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (MutArray)[int]
+//│ ║  l.6: 	fun doEs(_: MutArray[int]): MutArray[int]
+//│ ╙──     	                            ^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (MutArray)[int]
+//│ ║  l.6: 	fun doEs(_: MutArray[int]): MutArray[int]
+//│ ╙──     	            ^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (MutArray)[C]
+//│ ║  l.9: 	fun doCs(_: MutArray[C]): MutArray[C]
+//│ ╙──     	                          ^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (MutArray)[C]
+//│ ║  l.9: 	fun doCs(_: MutArray[C]): MutArray[C]
+//│ ╙──     	            ^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (MutArray)[I]
+//│ ║  l.10: 	fun doIs(_: MutArray[I]): MutArray[I]
+//│ ╙──      	                          ^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (MutArray)[I]
+//│ ║  l.10: 	fun doIs(_: MutArray[I]): MutArray[I]
+//│ ╙──      	            ^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (MutArray)[& (U,) (T,)]
+//│ ║  l.11: 	fun inter(_: MutArray[(U) & (T)]): MutArray[(U) & (T)]
+//│ ╙──      	                                   ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (MutArray)[& (U,) (T,)]
+//│ ║  l.11: 	fun inter(_: MutArray[(U) & (T)]): MutArray[(U) & (T)]
+//│ ╙──      	             ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (MutArray)['(' string, number, ')']
+//│ ║  l.12: 	fun clean(_: MutArray[(string, number, )]): MutArray[(string, number, )]
+//│ ╙──      	                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (MutArray)['(' string, number, ')']
+//│ ║  l.12: 	fun clean(_: MutArray[(string, number, )]): MutArray[(string, number, )]
+//│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (MutArray)[U]
+//│ ║  l.13: 	fun translate(_: MutArray[T]): MutArray[U]
+//│ ╙──      	                               ^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (MutArray)[T]
+//│ ║  l.13: 	fun translate(_: MutArray[T]): MutArray[U]
+//│ ╙──      	                 ^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (MutArray)[| (number,) (bool,)]
+//│ ║  l.14: 	fun uu(_: MutArray[(number) | (bool)]): MutArray[(number) | (bool)]
+//│ ╙──      	                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (MutArray)[| (number,) (bool,)]
+//│ ║  l.14: 	fun uu(_: MutArray[(number) | (bool)]): MutArray[(number) | (bool)]
+//│ ╙──      	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (MutArray)[(Temp)[bool]]
+//│ ║  l.16: 	fun ta(_: MutArray[Temp[bool]]): MutArray[Temp[bool]]
+//│ ╙──      	                                 ^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (MutArray)[(Temp)[bool]]
+//│ ║  l.16: 	fun ta(_: MutArray[Temp[bool]]): MutArray[Temp[bool]]
+//│ ╙──      	          ^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (MutArray)[(Temp)[T]]
+//│ ║  l.17: 	fun tat(_: MutArray[Temp[T]]): MutArray[Temp[T]]
+//│ ╙──      	                               ^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (MutArray)[(Temp)[T]]
+//│ ║  l.17: 	fun tat(_: MutArray[Temp[T]]): MutArray[Temp[T]]
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^
+//│ Parsed: {fun first: [] -> anything -> string; fun getZero3: [] -> () -> anything; fun first2: [] -> anything -> anything; fun doEs: [] -> anything -> anything; class C() {}; trait I(i: number,): {}; fun doCs: [] -> anything -> anything; fun doIs: [] -> anything -> anything; fun inter: [] -> anything -> anything; fun clean: [] -> anything -> anything; fun translate: [] -> anything -> anything; fun uu: [] -> anything -> anything; class Temp[T](x: T,) {}; fun ta: [] -> anything -> anything; fun tat: [] -> anything -> anything}

@@ -1,35 +1,44 @@
-def extend[T, U]: (T) -> ((U) -> ((T) & (U)))
-def foo[T, U]: ((T) & (U)) -> (unit)
-def over: (((number) -> (string)) & (({}) -> (string))) -> (string)
-trait IA: { x: number }
-trait IB: { y: number }
-def iii: ((IA) & (IB)) -> ((IA) & (IB))
-def uu[U, V, T, P]: (((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))) -> (((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P)))
-def iiii[U, T, V]: (((U) & (T)) & (V)) -> (((U) & (T)) & (V))
-def arr[U, T]: ((MutArray[U]) & (MutArray[T])) -> ((MutArray[U]) & (MutArray[T]))
-def tt[U, T, V]: (((U, T, )) & ((V, V, ))) -> (((U, T, )) & ((V, V, )))
-class A: {}
-class B: {}
-def inter: ((A) & (B)) -> ((A) & (B))
-//│ Defined trait IA
-//│ Defined trait IB
-//│ Defined class A
-//│ Defined class B
-//│ extend: 'a -> 'b -> ('a & 'b)
-//│       = <missing implementation>
-//│ foo: anything -> unit
-//│    = <missing implementation>
-//│ over: (anything -> string) -> string
-//│     = <missing implementation>
-//│ iii: (IA & IB) -> (IA & IB)
-//│    = <missing implementation>
-//│ uu: ('a & 'b | 'c & 'b) -> ('a & 'b | 'c & 'b)
-//│   = <missing implementation>
-//│ iiii: 'a -> 'a
-//│     = <missing implementation>
-//│ arr: MutArray[in 'a | 'b out 'a & 'b] -> MutArray[in 'a | 'b out 'a & 'b]
-//│    = <missing implementation>
-//│ tt: ('a & 'b, 'b & 'c,) -> ('a & 'b, 'b & 'c,)
-//│   = <missing implementation>
-//│ inter: nothing -> nothing
-//│      = <missing implementation>
+:NewParser
+:ParseOnly
+fun extend(_: T, _: U): (T) & (U)
+fun foo(_: (T) & (U)): unit
+fun over(_: ((_: number): string) & ((_: object): string)): string
+trait IA(x: number)
+trait IB(y: number)
+fun iii(_: (IA) & (IB)): (IA) & (IB)
+fun uu(_: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))): ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))
+fun iiii(_: ((U) & (T)) & (V)): ((U) & (T)) & (V)
+fun arr(_: (MutArray[U]) & (MutArray[T])): (MutArray[U]) & (MutArray[T])
+fun tt(_: ((U, T, )) & ((V, V, ))): ((U, T, )) & ((V, V, ))
+class A
+class B
+fun inter(_: (A) & (B)): (A) & (B)
+//│ |#fun| |extend|(|_|#:| |T|,| |_|#:| |U|)|#:| |(|T|)| |&| |(|U|)|↵|#fun| |foo|(|_|#:| |(|T|)| |&| |(|U|)|)|#:| |unit|↵|#fun| |over|(|_|#:| |(|(|_|#:| |number|)|#:| |string|)| |&| |(|(|_|#:| |object|)|#:| |string|)|)|#:| |string|↵|#trait| |IA|(|x|#:| |number|)|↵|#trait| |IB|(|y|#:| |number|)|↵|#fun| |iii|(|_|#:| |(|IA|)| |&| |(|IB|)|)|#:| |(|IA|)| |&| |(|IB|)|↵|#fun| |uu|(|_|#:| |(|(|(|(|U|)| |&| |(|T|)|)| ||| |(|(|U|)| |&| |(|P|)|)|)| ||| |(|(|V|)| |&| |(|T|)|)|)| ||| |(|(|V|)| |&| |(|P|)|)|)|#:| |(|(|(|(|U|)| |&| |(|T|)|)| ||| |(|(|U|)| |&| |(|P|)|)|)| ||| |(|(|V|)| |&| |(|T|)|)|)| ||| |(|(|V|)| |&| |(|P|)|)|↵|#fun| |iiii|(|_|#:| |(|(|U|)| |&| |(|T|)|)| |&| |(|V|)|)|#:| |(|(|U|)| |&| |(|T|)|)| |&| |(|V|)|↵|#fun| |arr|(|_|#:| |(|MutArray|[|U|]|)| |&| |(|MutArray|[|T|]|)|)|#:| |(|MutArray|[|U|]|)| |&| |(|MutArray|[|T|]|)|↵|#fun| |tt|(|_|#:| |(|(|U|,| |T|,| |)|)| |&| |(|(|V|,| |V|,| |)|)|)|#:| |(|(|U|,| |T|,| |)|)| |&| |(|(|V|,| |V|,| |)|)|↵|#class| |A|↵|#class| |B|↵|#fun| |inter|(|_|#:| |(|A|)| |&| |(|B|)|)|#:| |(|A|)| |&| |(|B|)|
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.5: 	fun over(_: ((_: number): string) & ((_: object): string)): string
+//│ ╙──     	                        ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.5: 	fun over(_: ((_: number): string) & ((_: object): string)): string
+//│ ╙──     	             ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.5: 	fun over(_: ((_: number): string) & ((_: object): string)): string
+//│ ╙──     	                                                ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.5: 	fun over(_: ((_: number): string) & ((_: object): string)): string
+//│ ╙──     	                                     ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: '(' _: number, ')'
+//│ ║  l.5: 	fun over(_: ((_: number): string) & ((_: object): string)): string
+//│ ╙──     	             ^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (MutArray)[U]
+//│ ║  l.11: 	fun arr(_: (MutArray[U]) & (MutArray[T])): (MutArray[U]) & (MutArray[T])
+//│ ╙──      	                                            ^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (MutArray)[U]
+//│ ║  l.11: 	fun arr(_: (MutArray[U]) & (MutArray[T])): (MutArray[U]) & (MutArray[T])
+//│ ╙──      	            ^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: '(' U, T, ')'
+//│ ║  l.12: 	fun tt(_: ((U, T, )) & ((V, V, ))): ((U, T, )) & ((V, V, ))
+//│ ╙──      	                                     ^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: '(' U, T, ')'
+//│ ║  l.12: 	fun tt(_: ((U, T, )) & ((V, V, ))): ((U, T, )) & ((V, V, ))
+//│ ╙──      	           ^^^^^^^^
+//│ Parsed: {fun extend: [] -> (_: T, _: U,) -> ((T,) & (U,)); fun foo: [] -> (_: (T,) & (U,),) -> unit; fun over: [] -> anything -> string; trait IA(x: number,): {}; trait IB(y: number,): {}; fun iii: [] -> (_: (IA,) & (IB,),) -> ((IA,) & (IB,)); fun uu: [] -> (_: ((((U,) & (T,),) | ((U,) & (P,),),) | ((V,) & (T,),),) | ((V,) & (P,),),) -> (((((U,) & (T,),) | ((U,) & (P,),),) | ((V,) & (T,),),) | ((V,) & (P,),)); fun iiii: [] -> (_: ((U,) & (T,),) & (V,),) -> (((U,) & (T,),) & (V,)); fun arr: [] -> anything -> anything; fun tt: [] -> anything -> anything; class A() {}; class B() {}; fun inter: [] -> (_: (A,) & (B,),) -> ((A,) & (B,))}

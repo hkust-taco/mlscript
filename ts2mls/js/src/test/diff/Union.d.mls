@@ -1,21 +1,32 @@
-def getString: ((((string) | (number)) | (false)) | (true)) -> (string)
-def test: ((false) | (true)) -> ((string) | (number))
-def run: (((number) -> (number)) | ((number) -> (string))) -> (anything)
-def get: ((MutArray[number]) | (MutArray[string])) -> (unit)
-def get2: (((string, string, )) | ((number, string, ))) -> (string)
-def typeVar[T, U]: ((T) | (U)) -> ((T) | (U))
-def uuuu: ((((string) | (number)) | (false)) | (true)) -> ((((string) | (number)) | (false)) | (true))
-//│ getString: (false | number | string | true) -> string
-//│          = <missing implementation>
-//│ test: bool -> (number | string)
-//│     = <missing implementation>
-//│ run: (number -> (number | string)) -> anything
-//│    = <missing implementation>
-//│ get: MutArray[out number | string] -> unit
-//│    = <missing implementation>
-//│ get2: (number | string, string,) -> string
-//│     = <missing implementation>
-//│ typeVar: 'a -> 'a
-//│        = <missing implementation>
-//│ uuuu: (false | number | string | true) -> (false | number | string | true)
-//│     = <missing implementation>
+:NewParser
+:ParseOnly
+fun getString(_: ((string) | (number)) | (bool)): string
+fun test(_: bool): (string) | (number)
+fun run(_: ((_: number): number) | ((_: number): string)): anything
+fun get(_: (MutArray[number]) | (MutArray[string])): unit
+fun get2(_: ((string, string, )) | ((number, string, ))): string
+fun typeVar(_: (T) | (U)): (T) | (U)
+fun uuuu(_: ((string) | (number)) | (bool)): ((string) | (number)) | (bool)
+//│ |#fun| |getString|(|_|#:| |(|(|string|)| ||| |(|number|)|)| ||| |(|bool|)|)|#:| |string|↵|#fun| |test|(|_|#:| |bool|)|#:| |(|string|)| ||| |(|number|)|↵|#fun| |run|(|_|#:| |(|(|_|#:| |number|)|#:| |number|)| ||| |(|(|_|#:| |number|)|#:| |string|)|)|#:| |anything|↵|#fun| |get|(|_|#:| |(|MutArray|[|number|]|)| ||| |(|MutArray|[|string|]|)|)|#:| |unit|↵|#fun| |get2|(|_|#:| |(|(|string|,| |string|,| |)|)| ||| |(|(|number|,| |string|,| |)|)|)|#:| |string|↵|#fun| |typeVar|(|_|#:| |(|T|)| ||| |(|U|)|)|#:| |(|T|)| ||| |(|U|)|↵|#fun| |uuuu|(|_|#:| |(|(|string|)| ||| |(|number|)|)| ||| |(|bool|)|)|#:| |(|(|string|)| ||| |(|number|)|)| ||| |(|bool|)|
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.5: 	fun run(_: ((_: number): number) | ((_: number): string)): anything
+//│ ╙──     	                       ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.5: 	fun run(_: ((_: number): number) | ((_: number): string)): anything
+//│ ╙──     	            ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.5: 	fun run(_: ((_: number): number) | ((_: number): string)): anything
+//│ ╙──     	                                               ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.5: 	fun run(_: ((_: number): number) | ((_: number): string)): anything
+//│ ╙──     	                                    ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: '(' _: number, ')'
+//│ ║  l.5: 	fun run(_: ((_: number): number) | ((_: number): string)): anything
+//│ ╙──     	            ^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (MutArray)[number]
+//│ ║  l.6: 	fun get(_: (MutArray[number]) | (MutArray[string])): unit
+//│ ╙──     	            ^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: '(' string, string, ')'
+//│ ║  l.7: 	fun get2(_: ((string, string, )) | ((number, string, ))): string
+//│ ╙──     	             ^^^^^^^^^^^^^^^^^^
+//│ Parsed: {fun getString: [] -> (_: ((string,) | (number,),) | (bool,),) -> string; fun test: [] -> (_: bool,) -> ((string,) | (number,)); fun run: [] -> anything -> anything; fun get: [] -> anything -> unit; fun get2: [] -> anything -> string; fun typeVar: [] -> (_: (T,) | (U,),) -> ((T,) | (U,)); fun uuuu: [] -> (_: ((string,) | (number,),) | (bool,),) -> (((string,) | (number,),) | (bool,))}

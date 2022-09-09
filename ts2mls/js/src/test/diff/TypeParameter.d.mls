@@ -1,38 +1,65 @@
-def inc[T]: (T) -> (number)
-class CC[T]: { print: (T) -> (unit) }
-def con[U, T]: (T) -> (U)
-class Printer[T]: { print: (T) -> (unit) }
-def setStringPrinter: (Printer[string]) -> (unit)
-def getStringPrinter: unit -> (Printer[string])
-def foo[T]: (Printer[T]) -> ((T) -> (T))
-def foo2[T]: (Printer[T]) -> ((T) -> (T))
-class F[T]: { x: T }
-  method GG[U]: (U) -> (T)
-trait I[T]: { x: T }
-  method GG[U]: (U) -> (T)
-class FFF[T]: { fff: (T) -> (unit) }
-def fff: (FFF[string]) -> ((string) -> (unit))
-def getFFF: unit -> (FFF[number])
-//│ Defined class CC[-T]
-//│ Defined class Printer[-T]
-//│ Defined class F[+T]
-//│ Declared F.GG: F['T] -> anything -> 'T
-//│ Defined trait I[+T]
-//│ Declared I.GG: I['T] -> anything -> 'T
-//│ Defined class FFF[-T]
-//│ inc: anything -> number
-//│    = <missing implementation>
-//│ con: anything -> nothing
-//│    = <missing implementation>
-//│ setStringPrinter: Printer[string] -> unit
-//│                 = <missing implementation>
-//│ getStringPrinter: unit -> Printer[string]
-//│                 = <missing implementation>
-//│ foo: Printer['a] -> 'a -> 'a
-//│    = <missing implementation>
-//│ foo2: Printer['a] -> 'a -> 'a
-//│     = <missing implementation>
-//│ fff: FFF[string] -> string -> unit
-//│    = <missing implementation>
-//│ getFFF: unit -> FFF[number]
-//│       = <missing implementation>
+:NewParser
+:ParseOnly
+fun inc(_: T): number
+class CC<T>(print: (_: T): unit)
+fun con(_: T): U
+class Printer<T>(print: (_: T): unit)
+fun setStringPrinter(_: Printer[string]): unit
+fun getStringPrinter(): Printer[string]
+fun foo(_: Printer[T], _: T): T
+fun foo2(_: Printer[T], _: T): T
+class F<T>(x: T, GG: (_: U): T)
+trait I<T>(x: T, GG: (_: U): T)
+class FFF<T>(fff: (_: T): unit)
+fun fff(_: FFF[string], _: string): unit
+fun getFFF(): FFF[number]
+//│ |#fun| |inc|(|_|#:| |T|)|#:| |number|↵|#class| |CC|‹|T|›|(|print|#:| |(|_|#:| |T|)|#:| |unit|)|↵|#fun| |con|(|_|#:| |T|)|#:| |U|↵|#class| |Printer|‹|T|›|(|print|#:| |(|_|#:| |T|)|#:| |unit|)|↵|#fun| |setStringPrinter|(|_|#:| |Printer|[|string|]|)|#:| |unit|↵|#fun| |getStringPrinter|(||)|#:| |Printer|[|string|]|↵|#fun| |foo|(|_|#:| |Printer|[|T|]|,| |_|#:| |T|)|#:| |T|↵|#fun| |foo2|(|_|#:| |Printer|[|T|]|,| |_|#:| |T|)|#:| |T|↵|#class| |F|‹|T|›|(|x|#:| |T|,| |GG|#:| |(|_|#:| |U|)|#:| |T|)|↵|#trait| |I|‹|T|›|(|x|#:| |T|,| |GG|#:| |(|_|#:| |U|)|#:| |T|)|↵|#class| |FFF|‹|T|›|(|fff|#:| |(|_|#:| |T|)|#:| |unit|)|↵|#fun| |fff|(|_|#:| |FFF|[|string|]|,| |_|#:| |string|)|#:| |unit|↵|#fun| |getFFF|(||)|#:| |FFF|[|number|]|
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.4: 	class CC<T>(print: (_: T): unit)
+//│ ╙──     	                         ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.4: 	class CC<T>(print: (_: T): unit)
+//│ ╙──     	                   ^^^^^^^^^^^^
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.6: 	class Printer<T>(print: (_: T): unit)
+//│ ╙──     	                              ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.6: 	class Printer<T>(print: (_: T): unit)
+//│ ╙──     	                        ^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (Printer)[string]
+//│ ║  l.7: 	fun setStringPrinter(_: Printer[string]): unit
+//│ ╙──     	                        ^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (Printer)[string]
+//│ ║  l.8: 	fun getStringPrinter(): Printer[string]
+//│ ╙──     	                        ^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (Printer)[T]
+//│ ║  l.9: 	fun foo(_: Printer[T], _: T): T
+//│ ╙──     	           ^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (Printer)[T]
+//│ ║  l.10: 	fun foo2(_: Printer[T], _: T): T
+//│ ╙──      	            ^^^^^^^^^^
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.11: 	class F<T>(x: T, GG: (_: U): T)
+//│ ╙──      	                           ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.11: 	class F<T>(x: T, GG: (_: U): T)
+//│ ╙──      	                     ^^^^^^^^^
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.12: 	trait I<T>(x: T, GG: (_: U): T)
+//│ ╙──      	                           ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.12: 	trait I<T>(x: T, GG: (_: U): T)
+//│ ╙──      	                     ^^^^^^^^^
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.13: 	class FFF<T>(fff: (_: T): unit)
+//│ ╙──      	                        ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.13: 	class FFF<T>(fff: (_: T): unit)
+//│ ╙──      	                  ^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (FFF)[string]
+//│ ║  l.14: 	fun fff(_: FFF[string], _: string): unit
+//│ ╙──      	           ^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: (FFF)[number]
+//│ ║  l.15: 	fun getFFF(): FFF[number]
+//│ ╙──      	              ^^^^^^^^^^^
+//│ Parsed: {fun inc: [] -> (_: T,) -> number; class CC[T](print: '(' _: T, ')' (unit,),) {}; fun con: [] -> (_: T,) -> U; class Printer[T](print: '(' _: T, ')' (unit,),) {}; fun setStringPrinter: [] -> anything -> unit; fun getStringPrinter: [] -> () -> anything; fun foo: [] -> anything -> T; fun foo2: [] -> anything -> T; class F[T](x: T, GG: '(' _: U, ')' (T,),) {}; trait I[T](x: T, GG: '(' _: U, ')' (T,),): {}; class FFF[T](fff: '(' _: T, ')' (unit,),) {}; fun fff: [] -> anything -> unit; fun getFFF: [] -> () -> anything}

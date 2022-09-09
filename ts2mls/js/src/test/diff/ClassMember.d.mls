@@ -1,10 +1,51 @@
-class Student: { name: string; isFriend: (Student) -> ((false) | (true)); addScore: (string) -> ((number) -> (unit)); getID: unit -> (number) }
-class Foo[T]: { bar: (T) -> (unit) }
-class EZ: { inc: (number) -> (number) }
-class Outer: {}
-class TTT[T]: { ttt: (T) -> (T); ttt2: (T) -> (T) }
-//│ Defined class Student
-//│ Defined class Foo[-T]
-//│ Defined class EZ
-//│ Defined class Outer
-//│ Defined class TTT[=T]
+:NewParser
+:ParseOnly
+class Student(name: string, isFriend: (_: Student): bool, addScore: (_: string, _: number): unit, getID: (): number)
+class Foo<T>(bar: (_: T): unit)
+class EZ(inc: (_: number): number)
+class Outer
+class TTT<T>(ttt: (_: T): T, ttt2: (_: T): T)
+//│ |#class| |Student|(|name|#:| |string|,| |isFriend|#:| |(|_|#:| |Student|)|#:| |bool|,| |addScore|#:| |(|_|#:| |string|,| |_|#:| |number|)|#:| |unit|,| |getID|#:| |(||)|#:| |number|)|↵|#class| |Foo|‹|T|›|(|bar|#:| |(|_|#:| |T|)|#:| |unit|)|↵|#class| |EZ|(|inc|#:| |(|_|#:| |number|)|#:| |number|)|↵|#class| |Outer|↵|#class| |TTT|‹|T|›|(|ttt|#:| |(|_|#:| |T|)|#:| |T|,| |ttt2|#:| |(|_|#:| |T|)|#:| |T|)|
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.3: 	class Student(name: string, isFriend: (_: Student): bool, addScore: (_: string, _: number): unit, getID: (): number)
+//│ ╙──     	                                                  ^
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.3: 	class Student(name: string, isFriend: (_: Student): bool, addScore: (_: string, _: number): unit, getID: (): number)
+//│ ╙──     	                                                                                          ^
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.3: 	class Student(name: string, isFriend: (_: Student): bool, addScore: (_: string, _: number): unit, getID: (): number)
+//│ ╙──     	                                                                                                           ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.3: 	class Student(name: string, isFriend: (_: Student): bool, addScore: (_: string, _: number): unit, getID: (): number)
+//│ ╙──     	                                                                                                         ^^^^^^^^^^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.3: 	class Student(name: string, isFriend: (_: Student): bool, addScore: (_: string, _: number): unit, getID: (): number)
+//│ ╙──     	                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.3: 	class Student(name: string, isFriend: (_: Student): bool, addScore: (_: string, _: number): unit, getID: (): number)
+//│ ╙──     	                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.4: 	class Foo<T>(bar: (_: T): unit)
+//│ ╙──     	                        ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.4: 	class Foo<T>(bar: (_: T): unit)
+//│ ╙──     	                  ^^^^^^^^^^^^
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.5: 	class EZ(inc: (_: number): number)
+//│ ╙──     	                         ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.5: 	class EZ(inc: (_: number): number)
+//│ ╙──     	              ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.7: 	class TTT<T>(ttt: (_: T): T, ttt2: (_: T): T)
+//│ ╙──     	                        ^
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.7: 	class TTT<T>(ttt: (_: T): T, ttt2: (_: T): T)
+//│ ╙──     	                                         ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.7: 	class TTT<T>(ttt: (_: T): T, ttt2: (_: T): T)
+//│ ╙──     	                                   ^^^^^^^^^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.7: 	class TTT<T>(ttt: (_: T): T, ttt2: (_: T): T)
+//│ ╙──     	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Parsed: {class Student(name: string, isFriend: '(' _: Student, ')' (bool, addScore: '(' _: string, _: number, ')' (unit, getID: '('  ')' (number,),),),) {}; class Foo[T](bar: '(' _: T, ')' (unit,),) {}; class EZ(inc: '(' _: number, ')' (number,),) {}; class Outer() {}; class TTT[T](ttt: '(' _: T, ')' (T, ttt2: '(' _: T, ')' (T,),),) {}}
