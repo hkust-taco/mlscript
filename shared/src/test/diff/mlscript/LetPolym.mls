@@ -44,7 +44,7 @@ def test =
     in local
   ) add
 //│ test: ('a -> int) -> 'a -> int -> int
-//│     = [Function (anonymous)]
+//│     = [Function: test2]
 
 def test =
   (fun f -> fun x ->
@@ -52,7 +52,7 @@ def test =
     in local
   ) add "1"
 //│ test: ("1" -> int) -> int -> int
-//│     = [Function (anonymous)]
+//│     = [Function: test3]
 
 def test =
   (fun f -> fun x ->

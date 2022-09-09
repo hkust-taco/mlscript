@@ -71,12 +71,12 @@ f of
 
 let arr = []
 //│ |#let| |arr| |#=| |[||]|
-//│ Parsed: {fun arr = '('  ')'}
+//│ Parsed: {let arr = '('  ')'}
 
 let arr = [
 ]
 //│ |#let| |arr| |#=| |[|↵|]|
-//│ Parsed: {fun arr = '('  ')'}
+//│ Parsed: {let arr = '('  ')'}
 
 let arr =
 [
@@ -87,26 +87,26 @@ let arr =
 //│ ║        	         ^
 //│ ║  l.82: 	[
 //│ ╙──      	
-//│ Parsed: {fun arr = '('  ')'}
+//│ Parsed: {let arr = '('  ')'}
 
 let arr = [
   1
 ]
 //│ |#let| |arr| |#=| |[|→|1|←|↵|]|
-//│ Parsed: {fun arr = '(' 1, ')'}
+//│ Parsed: {let arr = '(' 1, ')'}
 
 let arr = [
   1, 2
 ]
 //│ |#let| |arr| |#=| |[|→|1|,| |2|←|↵|]|
-//│ Parsed: {fun arr = '(' 1, 2, ')'}
+//│ Parsed: {let arr = '(' 1, 2, ')'}
 
 let arr = [
   1,
   2
 ]
 //│ |#let| |arr| |#=| |[|→|1|,|↵|2|←|↵|]|
-//│ Parsed: {fun arr = '(' 1, 2, ')'}
+//│ Parsed: {let arr = '(' 1, 2, ')'}
 
 :pe
 f [1, 2, 3]

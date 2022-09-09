@@ -43,6 +43,6 @@ fun con = concat
 //│ string -> string -> string
 //│   <:  con:
 //│ string -> string -> string
-//│    = [Function: concat]
+//│    = [Function: con]
 
 

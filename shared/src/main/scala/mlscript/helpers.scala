@@ -250,8 +250,9 @@ trait PgrmImpl { self: Pgrm =>
     }.partitionMap {
       case td: TypeDef => L(td)
       case ot: Terms => R(ot)
-      case NuFunDef(nme, tys, rhs) => R(Def(false, nme, rhs))
-    }
+      case NuFunDef(isLetRec, nme, tys, rhs) =>
+        R(Def(isLetRec.getOrElse(true), nme, rhs, isLetRec.isEmpty))
+   }
     diags.toList -> res
   }
   override def toString = tops.map("" + _ + ";").mkString(" ")
@@ -269,7 +270,7 @@ object OpApp {
 trait DeclImpl extends Located { self: Decl =>
   val body: Located
   def showBody: Str = this match {
-    case Def(_, _, rhs) => rhs.fold(_.toString, _.show)
+    case Def(_, _, rhs, isByname) => rhs.fold(_.toString, _.show)
     case td: TypeDef => td.body.show
   }
   def describe: Str = this match {
@@ -279,8 +280,8 @@ trait DeclImpl extends Located { self: Decl =>
   def show: Str = showHead + (this match {
     case TypeDef(Als, _, _, _, _, _, _) => " = "; case _ => ": " }) + showBody
   def showHead: Str = this match {
-    case Def(true, n, b) => s"rec def $n"
-    case Def(false, n, b) => s"def $n"
+    case Def(true, n, b, isByname) => s"rec def $n"
+    case Def(false, n, b, isByname) => s"def $n"
     case TypeDef(k, n, tps, b, _, _, pos) =>
       s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_.name).mkString("[", ", ", "]")}${
         if (pos.isEmpty) "" else pos.mkString("(", ", ", ")")
@@ -291,7 +292,7 @@ trait DeclImpl extends Located { self: Decl =>
 trait NuDeclImpl extends Located { self: NuDecl =>
   val body: Located
   def showBody: Str = this match {
-    case NuFunDef(_, _, rhs) => rhs.fold(_.toString, _.show)
+    case NuFunDef(_, _, _, rhs) => rhs.fold(_.toString, _.show)
     case td: NuTypeDef => td.body.show
   }
   def describe: Str = this match {
@@ -299,11 +300,13 @@ trait NuDeclImpl extends Located { self: NuDecl =>
     case _: NuTypeDef => "type declaration"
   }
   def show: Str = showHead + (this match {
-    case NuTypeDef(Als, _, _, _, _, _) | NuFunDef(_, _, L(_)) => " = "
+    case NuTypeDef(Als, _, _, _, _, _) | NuFunDef(_, _, _, L(_)) => " = "
     case NuTypeDef(Cls, _, _, _, _, _) => " "
     case _ => ": " }) + showBody
   def showHead: Str = this match {
-    case NuFunDef(n, _, b) => s"fun $n"
+    case NuFunDef(N, n, _, b) => s"fun $n"
+    case NuFunDef(S(false), n, _, b) => s"let $n"
+    case NuFunDef(S(true), n, _, b) => s"let rec $n"
     case NuTypeDef(k, n, tps, sps, parents, bod) =>
       s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_.name).mkString("[", ", ", "]")}(${
         // sps.mkString("(",",",")")
@@ -536,7 +539,7 @@ trait StatementImpl extends Located { self: Statement =>
   private def doDesugar: Ls[Diagnostic] -> Ls[DesugaredStatement] = this match {
     case l @ LetS(isrec, pat, rhs) =>
       val (diags, v, args) = desugDefnPattern(pat, Nil)
-      diags -> (Def(isrec, v, L(args.foldRight(rhs)(Lam(_, _)))).withLocOf(l) :: Nil) // TODO use v, not v.name
+      diags -> (Def(isrec, v, L(args.foldRight(rhs)(Lam(_, _))), false).withLocOf(l) :: Nil) // TODO use v, not v.name
     case d @ DataDefn(body) => desugarCases(body :: Nil, Nil)
     case d @ DatatypeDefn(hd, bod) =>
       val (diags, v, args) = desugDefnPattern(hd, Nil)
@@ -571,7 +574,7 @@ trait StatementImpl extends Located { self: Statement =>
           case (S(nme), fld) => nme -> fld
           case (N, fld @ Fld(mut, spec, nme: Var)) => nme -> fld
           case _ => die
-        })) :: Nil)))))
+        })) :: Nil)))), true)
         diags.toList -> (TypeDef(k, nme, tps, bod, Nil, Nil, pos) :: ctor :: Nil)
     case d: DesugaredStatement => Nil -> (d :: Nil)
   }
@@ -643,7 +646,7 @@ trait StatementImpl extends Located { self: Statement =>
           val clsNme = TypeName(v.name).withLocOf(v)
           val tps = tparams.toList
           val ctor = Def(false, v, R(PolyType(tps,
-            params.foldRight(AppliedType(clsNme, tps):Type)(Function(_, _))))).withLocOf(stmt)
+            params.foldRight(AppliedType(clsNme, tps):Type)(Function(_, _)))), true).withLocOf(stmt)
           val td = TypeDef(Cls, clsNme, tps, Record(fields.toList.mapValues(Field(None, _))), Nil, Nil, Nil).withLocOf(stmt)
           td :: ctor :: cs
         case _ => ??? // TODO methods in data type defs? nested data type defs?
@@ -672,13 +675,13 @@ trait StatementImpl extends Located { self: Statement =>
     case Test(l, r) => l :: r :: Nil
     case With(t, fs) => t :: fs :: Nil
     case CaseOf(s, c) => s :: c :: Nil
-    case d @ Def(_, n, b) => n :: d.body :: Nil
+    case d @ Def(_, n, b, _) => n :: d.body :: Nil
     case TypeDef(kind, nme, tparams, body, _, _, pos) => nme :: tparams ::: pos ::: body :: Nil
     case Subs(a, i) => a :: i :: Nil
     case Assign(lhs, rhs) => lhs :: rhs :: Nil
     case Splc(fields) => fields.map{case L(l) => l case R(r) => r.value}
     case If(body, els) => body :: els.toList
-    case d @ NuFunDef(v, ts, rhs) => v :: ts ::: d.body :: Nil
+    case d @ NuFunDef(_, v, ts, rhs) => v :: ts ::: d.body :: Nil
     case TyApp(lhs, targs) => lhs :: targs
     case New(base, bod) => base.toList.flatMap(ab => ab._1 :: ab._2 :: Nil) ::: bod :: Nil
     case NuTypeDef(_, _, _, _, _, _) => ???

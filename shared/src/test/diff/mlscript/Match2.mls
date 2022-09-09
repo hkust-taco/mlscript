@@ -12,7 +12,7 @@ def foo x = case x of
 // Q: why type of `value` widened?
 def t = Test { value = 0 }
 //│ t: Test & {value: 0}
-//│  = Test { value: 0 }
+//│  = [Function: t]
 
 foo Test
 //│ res: 1

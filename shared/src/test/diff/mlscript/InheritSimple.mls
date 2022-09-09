@@ -7,11 +7,11 @@ class Child: Parent
 
 def p = Parent{}
 //│ p: Parent
-//│  = Parent {}
+//│  = [Function: p]
 
 def c = Child(p)
 //│ c: Child
-//│  = Child {}
+//│  = [Function: c]
 
 :e
 c.name

@@ -38,7 +38,7 @@ Nil{}
 
 def Nil = Nil { size = 0 }
 //│ Nil: Nil & {size: 0}
-//│    = Nil { size: 0 }
+//│    = [Function: Nil1]
 
 :e
 :re
@@ -81,7 +81,7 @@ Nil: ListBase[anything]
 
 def c = Cons 1 Nil
 //│ c: Cons[1] with {tail: Nil & {size: 0}}
-//│  = Cons { size: 1, head: 1, tail: Nil { size: 0 } }
+//│  = [Function: c]
 
 c: ListBase[int]
 //│ res: ListBase[?]
@@ -101,11 +101,7 @@ c.size
 
 def d = Cons 2 c
 //│ d: Cons[1 | 2] with {head: 2, tail: Cons[1] with {tail: Nil & {size: 0}}}
-//│  = Cons {
-//│      size: 2,
-//│      head: 2,
-//│      tail: Cons { size: 1, head: 1, tail: Nil { size: 0 } }
-//│    }
+//│  = [Function: d]
 
 d.head
 //│ res: 2
