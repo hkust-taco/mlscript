@@ -3,7 +3,7 @@
 
 def True = true
 //│ True: true
-//│     = true
+//│     = [Function: True]
 
 def inc: int -> int
 //│ inc: int -> int

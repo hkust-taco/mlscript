@@ -54,7 +54,7 @@ def e = E{}
 //│ E['A]
 //│   <:  e:
 //│ E[?]
-//│  = E {}
+//│  = [Function: e]
 
 
 type Als1[A] = int -> A

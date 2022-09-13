@@ -46,14 +46,18 @@ def f x = case 1 of { 1 -> x }
 def tmp = 1
 def tmp = succ tmp
 //│ // Query 1
-//│ globalThis.tmp = 1;
+//│ globalThis.tmp = function tmp() {
+//│   return 1;
+//│ };
 //│ // Query 2
-//│ globalThis.tmp1 = succ(tmp);
+//│ globalThis.tmp1 = function tmp1() {
+//│   return succ(tmp());
+//│ };
 //│ // End of generated code
 //│ tmp: 1
-//│    = 1
+//│    = [Function: tmp]
 //│ tmp: int
-//│    = 2
+//│    = [Function: tmp1]
 
 // Local shadowing:
 :js

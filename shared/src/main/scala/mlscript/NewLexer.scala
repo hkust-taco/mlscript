@@ -235,6 +235,7 @@ object NewLexer {
     // "and",
     // "or",
     "let",
+    "rec",
     "in",
     // "any",
     // "all",

@@ -353,8 +353,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   
   def typeStatement(s: DesugaredStatement, allowPure: Bool)
         (implicit ctx: Ctx, raise: Raise): PolymorphicType \/ Ls[Binding] = s match {
-    case Def(false, Var("_"), L(rhs)) => typeStatement(rhs, allowPure)
-    case Def(isrec, nme, L(rhs)) => // TODO reject R(..)
+    case Def(false, Var("_"), L(rhs), isByname) => typeStatement(rhs, allowPure)
+    case Def(isrec, nme, L(rhs), isByname) => // TODO reject R(..)
       if (nme.name === "_")
         err(msg"Illegal definition name: ${nme.name}", nme.toLoc)(raise)
       val ty_sch = typeLetRhs(isrec, nme.name, rhs)

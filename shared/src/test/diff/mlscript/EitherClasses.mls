@@ -17,7 +17,7 @@ def Right value = Right{ value }
 
 def testVal = if true then Left 1 else Right 2
 //│ testVal: Left[1] | Right[2]
-//│        = Left { value: 1 }
+//│        = [Function: testVal]
 
 testVal.value
 //│ res: 1 | 2
@@ -28,7 +28,7 @@ def res = case testVal of
   | Right -> 1
   }
 //│ res: 1
-//│    = 1
+//│    = [Function: res1]
 
 res: 1
 //│ res: 1
@@ -43,5 +43,5 @@ def res = case testVal of
   | Right -> 1
   }
 //│ res: 1 | Left[1]
-//│    = Left { value: 1 }
+//│    = [Function: res2]
 

@@ -25,13 +25,15 @@ def c = b
 def q = 0
 //│ // Query 1 aborted: b and a are not implemented
 //│ // Query 2
-//│ globalThis.q = 0;
+//│ globalThis.q = function q() {
+//│   return 0;
+//│ };
 //│ // End of generated code
 //│ c: int
 //│  = <no result>
 //│    b and a are not implemented
 //│ q: 0
-//│  = 0
+//│  = [Function: q]
 
 // We will display all unimplemented symbols.
 :js
@@ -78,18 +80,22 @@ a = 0
 
 def b = a
 //│ b: int
-//│  = 0
+//│  = [Function: b]
 
 // Declare JavaScript reserved words.
 :js
 def break = 1
 def str = "str"
 //│ // Query 1
-//│ globalThis.break1 = 1;
+//│ globalThis.break1 = function break1() {
+//│   return 1;
+//│ };
 //│ // Query 2
-//│ globalThis.str = "str";
+//│ globalThis.str = function str() {
+//│   return "str";
+//│ };
 //│ // End of generated code
 //│ break: 1
-//│      = 1
+//│      = [Function: break1]
 //│ str: "str"
-//│    = 'str'
+//│    = [Function: str]

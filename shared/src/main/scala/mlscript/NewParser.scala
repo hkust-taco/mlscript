@@ -290,6 +290,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           // TODO make `fun` by-name and `let` by-value
           case (KEYWORD(kwStr @ ("fun" | "let")), l0) :: c => // TODO support rec?
             consume
+            val isLetRec = yeetSpaces match {
+              case (KEYWORD("rec"), l1) :: _ if kwStr === "let" =>
+                consume
+                S(true)
+              case c => if (kwStr === "fun") N else S(false)
+            }
             val (v, success) = yeetSpaces match {
               case (IDENT(idStr, false), l1) :: _ =>
                 consume
@@ -316,11 +322,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                   consume
                   val body = expr(0)
                   val annotatedBody = asc.fold(body)(ty => Asc(body, ty))
-                  R(NuFunDef(v, Nil, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))))
+                  R(NuFunDef(isLetRec, v, Nil, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))))
                 case c =>
                   asc match {
                     case S(ty) =>
-                      R(NuFunDef(v, Nil, R(PolyType(Nil, ps.foldRight(ty)((p, r) => Function(p.toType match {
+                      R(NuFunDef(isLetRec, v, Nil, R(PolyType(Nil, ps.foldRight(ty)((p, r) => Function(p.toType match {
                         case L(diag) => raise(diag); Top // TODO better
                         case R(tp) => tp
                       }, r)))))) // TODO rm PolyType after FCP is merged
@@ -330,7 +336,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                       err((
                         msg"Expected ':' or '=' followed by a function body or signature; found ${tkstr} instead" -> loc :: Nil))
                       consume
-                      R(NuFunDef(v, Nil, L(ps.foldRight(errExpr: Term)((i, acc) => Lam(i, acc)))))
+                      R(NuFunDef(isLetRec, v, Nil, L(ps.foldRight(errExpr: Term)((i, acc) => Lam(i, acc)))))
                   }
               }
             }

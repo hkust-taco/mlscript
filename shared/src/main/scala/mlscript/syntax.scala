@@ -8,7 +8,7 @@ import mlscript.utils._, shorthands._
 final case class Pgrm(tops: Ls[Statement]) extends PgrmOrTypingUnit with PgrmImpl
 
 sealed abstract class Decl extends DesugaredStatement with DeclImpl
-final case class Def(rec: Bool, nme: Var, rhs: Term \/ PolyType) extends Decl with Terms {
+final case class Def(rec: Bool, nme: Var, rhs: Term \/ PolyType, isByname: Bool) extends Decl with Terms {
   val body: Located = rhs.fold(identity, identity)
 }
 final case class TypeDef(
@@ -167,6 +167,7 @@ final case class NuTypeDef(
 ) extends NuDecl with Statement
 
 final case class NuFunDef(
+  isLetRec: Opt[Bool], // None means it's a `fun`, which is always recursive; Some means it's a `let`
   nme: Var,
   targs: Ls[TypeName],
   rhs: Term \/ PolyType,

@@ -26,10 +26,21 @@ def eval1 eval1 e = case e of {
 //│ subtyping calls  : 54
 
 :stats
+:js
 def eval1f eval1 e = case e of {
   | Lit -> e.val
   | Add -> eval1 e.lhs + eval1 e.rhs
   }
+//│ // Query 1
+//│ globalThis.eval1f = function eval1f(eval1) {
+//│   return ((e) => {
+//│     let a;
+//│     return (a = e, a instanceof Lit ? e.val : a instanceof Add ? eval1(e.lhs) + eval1(e.rhs) : (() => {
+//│       throw new Error("non-exhaustive case expression");
+//│     })());
+//│   });
+//│ };
+//│ // End of generated code
 //│ eval1f: ('rhs -> int) -> ((Add[?] with {lhs: 'rhs, rhs: 'rhs}) | (Lit with {val: 'val})) -> (int | 'val)
 //│       = [Function: eval1f]
 //│ constrain calls  : 32
@@ -53,7 +64,7 @@ def eval1_fixed_1 = eval1 eval1
 //│ eval1_fixed_1: (Add[?] & {lhs: 'a, rhs: 'a} | (Lit with {val: 'val})) -> (int | 'val)
 //│   where
 //│     'a <: Add[?] & {lhs: 'a, rhs: 'a} | Lit
-//│              = [Function (anonymous)]
+//│              = [Function: eval1_fixed_1]
 
 eval1_fixed_1 e1
 //│ res: int
@@ -64,21 +75,21 @@ rec def eval1_fixed_2 = eval1f (fun x -> eval1f eval1_fixed_2 x)
 //│ eval1_fixed_2: 'a -> int
 //│   where
 //│     'a <: Add[?] & {lhs: 'a, rhs: 'a} | Lit
-//│              = [Function (anonymous)]
+//│              = [Function: eval1_fixed_2]
 
 eval1_fixed_2 e1
 //│ res: int
 //│    = 6
 
 
-// Tying the know without a recursive def:
+// Tying the knot without a recursive def:
 def eval1_fixed_3 =
   let fixed fixed = eval1f (fun x -> eval1f (fixed fixed) x)
   in fixed fixed
 //│ eval1_fixed_3: (Add[?] & {lhs: 'a, rhs: 'a} | (Lit with {val: 'val})) -> (int | 'val)
 //│   where
 //│     'a <: Add[?] & {lhs: 'a, rhs: 'a} | Lit
-//│              = [Function (anonymous)]
+//│              = [Function: eval1_fixed_3]
 
 eval1_fixed_3 e1
 //│ res: int
@@ -123,7 +134,7 @@ def eval2_fixed_1 = eval2 eval2
 //│ eval2_fixed_1: (Add[?] & {lhs: 'a, rhs: 'a} | (Lit with {val: 'val}) | Nega[?] & {arg: 'a}) -> (int | 'val)
 //│   where
 //│     'a <: Add[?] & {lhs: 'a, rhs: 'a} | Lit | Nega[?] & {arg: 'a}
-//│              = [Function (anonymous)]
+//│              = [Function: eval2_fixed_1]
 
 eval2_fixed_1 e1
 eval2_fixed_1 e2
@@ -140,7 +151,7 @@ def eval2_fixed_2 = fix eval2f
 //│ eval2_fixed_2: 'a -> int
 //│   where
 //│     'a <: Add[?] & {lhs: 'a, rhs: 'a} | Lit | Nega[?] & {arg: 'a}
-//│              = [Function (anonymous)]
+//│              = [Function: eval2_fixed_2]
 
 eval2_fixed_2 e1
 eval2_fixed_2 e2
@@ -157,13 +168,17 @@ eval2_fixed_2 e2
 
 
 // FIXME should be a code-gen error
-:re
+:js
 rec def eval1_fixed = eval1f (eval1f eval1_fixed)
+//│ // Query 1
+//│ globalThis["eval1_fixed"] = function eval1_fixed() {
+//│   return eval1f(eval1f(eval1_fixed()));
+//│ };
+//│ // End of generated code
 //│ eval1_fixed: 'a -> int
 //│   where
 //│     'a <: Add[?] & {lhs: 'a, rhs: 'a} | Lit
-//│ Runtime error:
-//│   ReferenceError: eval1_fixed is not defined
+//│            = [Function: eval1_fixed]
 
 rec def eval1_fixed() = eval1f (eval1f (eval1_fixed()))
 //│ eval1_fixed: () -> 'a -> int
@@ -189,16 +204,16 @@ def eval1_fixed = eval1f (fun x -> eval1f eval1f x)
 //│ ║  l.+1: 	def eval1_fixed = eval1f (fun x -> eval1f eval1f x)
 //│ ║        	                                   ^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> (?val | ?b)` is not an instance of type `int`
-//│ ║  l.29: 	def eval1f eval1 e = case e of {
+//│ ║  l.30: 	def eval1f eval1 e = case e of {
 //│ ║        	                 ^^^^^^^^^^^^^^^
-//│ ║  l.30: 	  | Lit -> e.val
+//│ ║  l.31: 	  | Lit -> e.val
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║  l.32: 	  | Add -> eval1 e.lhs + eval1 e.rhs
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.32: 	  }
+//│ ║  l.33: 	  }
 //│ ║        	^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║  l.32: 	  | Add -> eval1 e.lhs + eval1 e.rhs
 //│ ╙──      	                         ^^^^^^^^^^^
 //│ eval1_fixed: (Add[?] & {lhs: Add[?] & {lhs: nothing -> int, rhs: nothing -> int} | Lit, rhs: Add[?] & {lhs: nothing -> int, rhs: nothing -> int} | Lit} | (Lit with {val: 'val})) -> (int | 'val)
 
@@ -207,25 +222,25 @@ rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> (?val | ?b)` does not match type `Add[?] & ?c | Lit & ?d`
-//│ ║  l.29: 	def eval1f eval1 e = case e of {
+//│ ║  l.30: 	def eval1f eval1 e = case e of {
 //│ ║        	                 ^^^^^^^^^^^^^^^
-//│ ║  l.30: 	  | Lit -> e.val
+//│ ║  l.31: 	  | Lit -> e.val
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║  l.32: 	  | Add -> eval1 e.lhs + eval1 e.rhs
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.32: 	  }
+//│ ║  l.33: 	  }
 //│ ║        	^^^
 //│ ╟── but it flows into application with expected type `Add[?] & ?e | Lit & ?f`
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.29: 	def eval1f eval1 e = case e of {
+//│ ║  l.30: 	def eval1f eval1 e = case e of {
 //│ ╙──      	                          ^
 //│ ╔══[ERROR] Type mismatch in binding of application:
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` is not a function
-//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║  l.32: 	  | Add -> eval1 e.lhs + eval1 e.rhs
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
@@ -241,13 +256,13 @@ rec def eval1_fixed = eval1f eval1_fixed e1
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f eval1_fixed e1
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` is not a function
-//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║  l.32: 	  | Add -> eval1 e.lhs + eval1 e.rhs
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into application with expected type `?rhs -> ?a`
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f eval1_fixed e1
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║  l.32: 	  | Add -> eval1 e.lhs + eval1 e.rhs
 //│ ║        	                         ^^^^^^^^^^^
 //│ ╟── from reference:
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f eval1_fixed e1
@@ -256,13 +271,13 @@ rec def eval1_fixed = eval1f eval1_fixed e1
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f eval1_fixed e1
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` is not a function
-//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║  l.32: 	  | Add -> eval1 e.lhs + eval1 e.rhs
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into application with expected type `?lhs -> ?a`
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f eval1_fixed e1
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║  l.32: 	  | Add -> eval1 e.lhs + eval1 e.rhs
 //│ ║        	           ^^^^^^^^^^^
 //│ ╟── from reference:
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f eval1_fixed e1
@@ -288,7 +303,7 @@ eval2_broken eval2_broken e2
 //│ ║  l.20: 	  | Add -> eval1 eval1 e.lhs + eval1 eval1 e.rhs
 //│ ║        	                               ^^^^^^^^^^^^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.274: 	  | Nega -> e.arg
+//│ ║  l.289: 	  | Nega -> e.arg
 //│ ╙──       	            ^^^^^
 //│ res: error | int
 
@@ -305,13 +320,13 @@ fix eval2f_oops e2
 //│ ║  l.+1: 	fix eval2f_oops e2
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` does not match type `Add[?] & ?c | Lit & ?d`
-//│ ║  l.135: 	def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
+//│ ║  l.146: 	def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
 //│ ║         	                                    ^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.18: 	def eval1 eval1 e = case e of {
 //│ ║        	                         ^
 //│ ╟── from reference:
-//│ ║  l.296: 	def eval2f_oops eval2 e = case e of {
+//│ ║  l.311: 	def eval2f_oops eval2 e = case e of {
 //│ ╙──       	                               ^
 //│ res: error | int
 

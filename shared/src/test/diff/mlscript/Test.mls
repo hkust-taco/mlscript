@@ -25,7 +25,7 @@ test: (Person & {age: int} | Animal) -> int
 
 def a = Animal{}
 //│ a: Animal
-//│  = Animal {}
+//│  = [Function: a]
 
 a: {}
 //│ res: anything
@@ -33,7 +33,7 @@ a: {}
 
 def p = Person "Bob" 42
 //│ p: Person & {age: 42, name: "Bob"}
-//│  = Person { name: 'Bob', age: 42 }
+//│  = [Function: p]
 
 p: { age: int }
 //│ res: {age: int}
