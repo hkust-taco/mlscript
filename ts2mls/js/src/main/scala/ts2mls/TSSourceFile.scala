@@ -163,9 +163,9 @@ object TSSourceFile {
       }
     }
     else if (node.isClassDeclaration)
-      ns.put(name, parseMembers(ns.getFullPath(name), node, true))
+      ns.put(name, parseMembers(name, node, true))
     else if (node.isInterfaceDeclaration)
-      ns.put(name, parseMembers(ns.getFullPath(name), node, false))
+      ns.put(name, parseMembers(name, node, false))
     else if (node.isNamespace)
       parseNamespace(node)
 

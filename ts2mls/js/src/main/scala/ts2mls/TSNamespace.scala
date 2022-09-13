@@ -72,10 +72,10 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
 
   // generate full path with namespaces' names
   // e.g. f => Namespace1.Namespace2.f
-  def getFullPath(nm: String): String = parent match {
-    case Some(p) => p.getFullPath(s"$name'$nm")
-    case _ => nm
-  }
+  // def getFullPath(nm: String): String = parent match {
+  //   case Some(p) => p.getFullPath(s"$name'$nm")
+  //   case _ => nm
+  // }
 }
 
 object TSNamespace {
