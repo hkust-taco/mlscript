@@ -84,6 +84,16 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         val (txt, k) =
           takeWhile(j)(c => c =/= '\n')
         go(k, COMMENT(txt))
+      case '/' if bytes.lift(i + 1).contains('*') =>
+        val j = i + 2
+        var prev1 = '/'; var prev2 = '*'
+        val (txt, k) =
+          takeWhile(j)(c => {
+            val r = prev1 =/= '*' || prev2 =/= '/'
+            prev1 = prev2; prev2 = c
+            r
+          })
+        go(k, COMMENT(txt.dropRight(2)))
       case BracketKind(Left(k)) => go(i + 1, OPEN_BRACKET(k))
       case BracketKind(Right(k)) => go(i + 1, CLOSE_BRACKET(k))
       case '\n' =>
