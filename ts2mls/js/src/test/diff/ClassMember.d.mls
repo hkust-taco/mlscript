@@ -1,9 +1,21 @@
 :NewParser
 :ParseOnly
-class Student(name: string, isFriend: Student => bool, addScore: string => number => unit, getID: unit => number)
-class Foo<T>(bar: T => unit)
-class EZ(inc: number => number)
-class Outer
-class TTT<T>(ttt: T => T, ttt2: T => T)
-//│ |#class| |Student|(|name|#:| |string|,| |isFriend|#:| |Student| |=>| |bool|,| |addScore|#:| |string| |=>| |number| |=>| |unit|,| |getID|#:| |unit| |=>| |number|)|↵|#class| |Foo|‹|T|›|(|bar|#:| |T| |=>| |unit|)|↵|#class| |EZ|(|inc|#:| |number| |=>| |number|)|↵|#class| |Outer|↵|#class| |TTT|‹|T|›|(|ttt|#:| |T| |=>| |T|,| |ttt2|#:| |T| |=>| |T|)|
-//│ Parsed: {class Student(name: string, isFriend: Student, => bool, addScore: string, => number, => unit, getID: unit, => number,) {}; class Foo[T](bar: T, => unit,) {}; class EZ(inc: number, => number,) {}; class Outer() {}; class TTT[T](ttt: T, => T, ttt2: T, => T,) {}}
+class Student {
+  let name: string
+  let isFriend: Student => bool
+  let addScore: string => number => unit
+  let getID: unit => number
+}
+class Foo<T> {
+  let bar: T => unit
+}
+class EZ {
+  let inc: number => number
+}
+class Outer {}
+class TTT<T> {
+  let ttt: T => T
+  let ttt2: T => T
+}
+//│ |#class| |Student| |{|→|#let| |name|#:| |string|↵|#let| |isFriend|#:| |Student| |=>| |bool|↵|#let| |addScore|#:| |string| |=>| |number| |=>| |unit|↵|#let| |getID|#:| |unit| |=>| |number|←|↵|}|↵|#class| |Foo|‹|T|›| |{|→|#let| |bar|#:| |T| |=>| |unit|←|↵|}|↵|#class| |EZ| |{|→|#let| |inc|#:| |number| |=>| |number|←|↵|}|↵|#class| |Outer| |{||}|↵|#class| |TTT|‹|T|›| |{|→|#let| |ttt|#:| |T| |=>| |T|↵|#let| |ttt2|#:| |T| |=>| |T|←|↵|}|
+//│ Parsed: {class Student() {fun name: [] -> string; fun isFriend: [] -> Student -> bool; fun addScore: [] -> string -> number -> unit; fun getID: [] -> unit -> number}; class Foo[T]() {fun bar: [] -> T -> unit}; class EZ() {fun inc: [] -> number -> number}; class Outer() {}; class TTT[T]() {fun ttt: [] -> T -> T; fun ttt2: [] -> T -> T}}

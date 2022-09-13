@@ -18,7 +18,7 @@ object Converter {
     "false" -> "" // will not appear individually
   )
 
-  def convert(tsType: TSType): String = tsType match {
+  def convert(tsType: TSType)(implicit indent: String = ""): String = tsType match {
     case TSPrimitiveType(typeName) => primitiveName(typeName)
     case TSReferenceType(name) => name
     case TSFunctionType(params, res, _) =>
@@ -43,16 +43,18 @@ object Converter {
     case TSArrayType(element) => s"MutArray<${convert(element)}>"
     case TSEnumType => "int"
     case TSMemberType(base, _) => convert(base) // TODO: support private/protected members
-    case TSInterfaceType(name, members, typeVars, parents) => convertRecord(s"trait $name", members, typeVars, parents)
-    case TSClassType(name, members, _, typeVars, parents) => convertRecord(s"class $name", members, typeVars, parents) // TODO: support static members
+    case TSInterfaceType(name, members, typeVars, parents) => convertRecord(s"trait $name", members, typeVars, parents)(indent)
+    case TSClassType(name, members, _, typeVars, parents) => convertRecord(s"class $name", members, typeVars, parents)(indent) // TODO: support static members
     case TSSubstitutionType(base, applied) => s"${base}<${applied.map((app) => convert(app)).reduceLeft((res, s) => s"$res, $s")}>"
     case overload @ TSIgnoredOverload(base, _) => s"${convert(base)} ${overload.warning}"
   }
 
   private def convertRecord(typeName: String, members: Map[String, TSMemberType],
-    typeVars: List[TSTypeParameter], parents: List[TSType]) = {
+    typeVars: List[TSTypeParameter], parents: List[TSType])(implicit indent: String) = {
     val allRecs = members.toList.map((m) => m._2.modifier match {
-      case Public => s"${m._1}: ${convert(m._2)}"
+      case Public =>
+        if (typeName === "trait ") s"${m._1}: ${convert(m._2)},"
+        else s"${indent}  let ${m._1}: ${convert(m._2)}\n"
       // case Public => {
       //   m._2.base match { // methods
       //     case f @ TSFunctionType(_, _, typeVars) if (!typeVars.isEmpty) =>
@@ -69,8 +71,9 @@ object Converter {
 
     val body = { // members without independent type parameters, translate them directly
       val lst = allRecs.filter((s) => !s.isEmpty())
-      if (lst.isEmpty) ""
-      else s"(${lst.reduceLeft((bd, m) => s"$bd, $m")})"
+      if (lst.isEmpty) "{}"
+      else if (typeName === "trait ") s"(${lst.reduceLeft((bd, m) => s"$bd$m")})"
+      else s"{\n${lst.reduceLeft((bd, m) => s"$bd$m")}$indent}"
     }
     // val methods = { // members with independent type parameters, use methods instead
     //   val lst = allRecs.filter(_.startsWith("  "))
@@ -78,14 +81,14 @@ object Converter {
     //   else "\n" + lst.reduceLeft((bd, m) => s"$bd\n$m")
     // }
     
-    if (typeName.equals("trait ")) body // anonymous interfaces
+    if (typeName === "trait ") body // anonymous interfaces
     else { // named interfaces and classes
-      val bodyWithParents =
-        if (parents.isEmpty) body
-        else parents.foldLeft(s"$body: ")((b, p) => s"$b${convert(p)}, ").dropRight(2)
-      if (typeVars.isEmpty) s"$typeName$bodyWithParents"
+      val herirage =
+        if (parents.isEmpty) ""
+        else parents.foldLeft("(): ")((b, p) => s"$b${convert(p)}, ").dropRight(2)
+      if (typeVars.isEmpty) s"$typeName$herirage $body"
       else
-        s"$typeName<${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}>$bodyWithParents" // TODO: add constraints
+        s"$typeName<${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}>$herirage $body" // TODO: add constraints
     }
   }
 }
