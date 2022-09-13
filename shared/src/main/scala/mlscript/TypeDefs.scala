@@ -227,6 +227,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
         
         val rightParents = td.kind match {
           case Als => checkCycle(td.bodyTy)(Set.single(L(td.nme)))
+          case Nms => checkCycle(td.bodyTy)(Set.single(L(td.nme)))
           case k: ObjDefKind =>
             val parentsClasses = MutSet.empty[TypeRef]
             def checkParents(ty: SimpleType): Bool = ty match {
@@ -246,6 +247,9 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
                     } else
                       checkParents(tr.expand)
                   case Trt => checkParents(tr.expand)
+                  case Nms =>
+                    err(msg"cannot inherit from a namespace", prov.loco)
+                    false
                   case Als => 
                     err(msg"cannot inherit from a type alias", prov.loco)
                     false

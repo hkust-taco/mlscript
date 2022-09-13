@@ -20,31 +20,5 @@ namespace AA {
 }
 let f1: N1'C => N1'C
 let f2: AA'C => AA'C
-//│ |namespace| |N1| |{|→|#let| |f|#:| |anything| |=>| |number|↵|#let| |ff|#:| |anything| |=>| |number|↵|#class| |N1'C|(|f|#:| |unit| |=>| |unit|)|↵|#trait| |N1'I|(|f|#:| |unit| |=>| |number|)|↵|namespace| |N2| |{|→|#let| |fff|#:| |bool| |=>| |number|↵|#let| |gg|#:| |N1'C| |=>| |N1'C|↵|#class| |N1'N2'BBB|#:| |N1'C|←|↵|}|←|↵|}|↵|namespace| |AA| |{|→|#let| |f|#:| |anything| |=>| |string|↵|#class| |AA'C|(|f|#:| |unit| |=>| |unit|)|↵|#trait| |AA'I|(|f|#:| |unit| |=>| |number|)|↵|namespace| |N2| |{|↵|}|←|↵|}|↵|#let| |f1|#:| |N1'C| |=>| |N1'C|↵|#let| |f2|#:| |AA'C| |=>| |AA'C|
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.3: 	namespace N1 {
-//│ ╙──     	^^^^^^^^^^^^
-//│ ╔══[PARSE ERROR] Expected end of input; found curly brace section instead
-//│ ║  l.3: 	namespace N1 {
-//│ ║       	             ^
-//│ ║  l.4: 	  let f: anything => number
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.5: 	  let ff: anything => number
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.6: 	  class N1'C(f: unit => unit)
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.7: 	  trait N1'I(f: unit => number)
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.8: 	  namespace N2 {
-//│ ║       	^^^^^^^^^^^^^^^^
-//│ ║  l.9: 	    let fff: bool => number
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.10: 	    let gg: N1'C => N1'C
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.11: 	    class N1'N2'BBB: N1'C
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.12: 	  }
-//│ ║        	^^^
-//│ ║  l.13: 	}
-//│ ╙──      	^
-//│ Parsed: {namespace (N1,)}
+//│ |#namespace| |N1| |{|→|#let| |f|#:| |anything| |=>| |number|↵|#let| |ff|#:| |anything| |=>| |number|↵|#class| |N1'C|(|f|#:| |unit| |=>| |unit|)|↵|#trait| |N1'I|(|f|#:| |unit| |=>| |number|)|↵|#namespace| |N2| |{|→|#let| |fff|#:| |bool| |=>| |number|↵|#let| |gg|#:| |N1'C| |=>| |N1'C|↵|#class| |N1'N2'BBB|#:| |N1'C|←|↵|}|←|↵|}|↵|#namespace| |AA| |{|→|#let| |f|#:| |anything| |=>| |string|↵|#class| |AA'C|(|f|#:| |unit| |=>| |unit|)|↵|#trait| |AA'I|(|f|#:| |unit| |=>| |number|)|↵|#namespace| |N2| |{|↵|}|←|↵|}|↵|#let| |f1|#:| |N1'C| |=>| |N1'C|↵|#let| |f2|#:| |AA'C| |=>| |AA'C|
+//│ Parsed: {namespace N1(): {fun f: [] -> anything -> number; fun ff: [] -> anything -> number; class N1'C(f: unit, => unit,) {}; trait N1'I(f: unit, => number,): {}; namespace N2(): {fun fff: [] -> bool -> number; fun gg: [] -> N1'C -> N1'C; class N1'N2'BBB(): N1'C {}}}; namespace AA(): {fun f: [] -> anything -> string; class AA'C(f: unit, => unit,) {}; trait AA'I(f: unit, => number,): {}; namespace N2(): {}}; fun f1: [] -> N1'C -> N1'C; fun f2: [] -> AA'C -> AA'C}

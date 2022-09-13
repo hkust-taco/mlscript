@@ -14,19 +14,5 @@ let multi4: unit => unit
 trait Base(a: number)
 class AnotherFoo: AnotherBase
 let multi5: unit => unit
-//│ |#let| |multi1|#:| |number| |=>| |number|↵|#let| |multi3|#:| |unit| |=>| |unit|↵|#class| |Foo|#:| |Base|↵|#trait| |AnotherBase|(|y|#:| |string|)|↵|namespace| |N| |{|→|#let| |f|#:| |unit| |=>| |unit|↵|#let| |g|#:| |unit| |=>| |unit|↵|#let| |h|#:| |unit| |=>| |unit|←|↵|}|↵|#let| |multi2|#:| |string| |=>| |string|↵|#let| |multi4|#:| |unit| |=>| |unit|↵|#trait| |Base|(|a|#:| |number|)|↵|#class| |AnotherFoo|#:| |AnotherBase|↵|#let| |multi5|#:| |unit| |=>| |unit|
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.7: 	namespace N {
-//│ ╙──     	^^^^^^^^^^^
-//│ ╔══[PARSE ERROR] Expected end of input; found curly brace section instead
-//│ ║  l.7: 	namespace N {
-//│ ║       	            ^
-//│ ║  l.8: 	  let f: unit => unit
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.9: 	  let g: unit => unit
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.10: 	  let h: unit => unit
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.11: 	}
-//│ ╙──      	^
-//│ Parsed: {fun multi1: [] -> number -> number; fun multi3: [] -> unit -> unit; class Foo(): Base {}; trait AnotherBase(y: string,): {}; namespace (N,)}
+//│ |#let| |multi1|#:| |number| |=>| |number|↵|#let| |multi3|#:| |unit| |=>| |unit|↵|#class| |Foo|#:| |Base|↵|#trait| |AnotherBase|(|y|#:| |string|)|↵|#namespace| |N| |{|→|#let| |f|#:| |unit| |=>| |unit|↵|#let| |g|#:| |unit| |=>| |unit|↵|#let| |h|#:| |unit| |=>| |unit|←|↵|}|↵|#let| |multi2|#:| |string| |=>| |string|↵|#let| |multi4|#:| |unit| |=>| |unit|↵|#trait| |Base|(|a|#:| |number|)|↵|#class| |AnotherFoo|#:| |AnotherBase|↵|#let| |multi5|#:| |unit| |=>| |unit|
+//│ Parsed: {fun multi1: [] -> number -> number; fun multi3: [] -> unit -> unit; class Foo(): Base {}; trait AnotherBase(y: string,): {}; namespace N(): {fun f: [] -> unit -> unit; fun g: [] -> unit -> unit; fun h: [] -> unit -> unit}; fun multi2: [] -> string -> string; fun multi4: [] -> unit -> unit; trait Base(a: number,): {}; class AnotherFoo(): AnotherBase {}; fun multi5: [] -> unit -> unit}
