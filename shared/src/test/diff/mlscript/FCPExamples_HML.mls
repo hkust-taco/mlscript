@@ -29,7 +29,7 @@ class Nil[a]: List[a]
   method Head = error
   method Tail = this
 def nil: List['a]
-def nil = Nil {}
+nil = Nil {}
 //│ Defined class Nil[+a]
 //│ Defined Nil.Head: Nil[?] -> nothing
 //│ Defined Nil.Tail: (Nil['a] & 'this) -> (Nil['a] & 'this)
@@ -116,7 +116,7 @@ def inc = succ
 //│ int -> int
 //│   <:  inc:
 //│ int -> int
-//│    = [Function: succ]
+//│    = [Function: inc]
 
 def choose: forall 'a. 'a -> 'a -> 'a
 def choose x y = if true then x else y
@@ -246,24 +246,21 @@ fun f -> poly f
 // FreezeML C4
 def ids = single id
 //│ ids: List[forall 'a. 'a -> 'a]
-//│    = Cons { head: [Function: id1], tail: Nil {} }
+//│    = [Function: ids]
 
 // ============ Sec 7 ============
 
 def xs = cons id ids
 //│ xs: List[forall 'a. 'a -> 'a]
-//│   = Cons {
-//│       head: [Function: id1],
-//│       tail: Cons { head: [Function: id1], tail: Nil {} }
-//│     }
+//│   = [Function: xs]
 
 def ys = tail ids
 //│ ys: List[forall 'a. 'a -> 'a]
-//│   = Nil {}
+//│   = [Function: ys]
 
 def zs = map id (tail (cons id ids))
 //│ zs: List[forall 'a. 'a -> 'a]
-//│   = Cons { head: [Function: id1], tail: Nil {} }
+//│   = [Function: zs]
 
 def foo: (int -> (forall 'a. 'a -> 'a)) -> int
 poly (fun x -> x)

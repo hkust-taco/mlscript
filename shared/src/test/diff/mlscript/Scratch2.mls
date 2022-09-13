@@ -83,7 +83,7 @@ def zero = z
 //│ anything -> (forall 'a. 'a -> 'a)
 //│   <:  zero:
 //│ ChurchInt
-//│     = [Function: z]
+//│     = [Function: zero]
 
 
 wrap x = { x }

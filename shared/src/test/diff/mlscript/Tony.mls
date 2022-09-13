@@ -12,7 +12,7 @@ def flatMap3 = fun f -> fun opt -> case opt of { Some -> f opt | _ -> opt }
 
 def arg = if true then Some{value = 42} with {payload = 23} else None {}
 //│ arg: None | Some[42] & {payload: 23}
-//│    = Some { value: 42, payload: 23 }
+//│    = [Function: arg]
 
 // > TODO don't distribute neg inters + handle better at constraint top level
 :stats
@@ -26,7 +26,7 @@ flatMap3 (fun x -> add x.value x.payload) arg
 
 def arg = if true then Some{value = 42} else None {}
 //│ arg: None | Some[42]
-//│    = Some { value: 42 }
+//│    = [Function: arg1]
 
 flatMap3 (fun x -> x.value) arg
 //│ res: 42 | None
@@ -35,7 +35,7 @@ flatMap3 (fun x -> x.value) arg
 
 def foo = flatMap3 (fun x -> x.value)
 //│ foo: ((Some[?] with {value: 'a}) | 'a & ~some) -> 'a
-//│    = [Function (anonymous)]
+//│    = [Function: foo]
 
 foo arg
 //│ res: 42 | None
@@ -47,7 +47,7 @@ foo 1
 
 def fn = foo None
 //│ fn: anything -> None
-//│   = [Function (anonymous)]
+//│   = [Function: fn]
 
 // :d
 fn{} // foo None {}
@@ -69,7 +69,7 @@ fun f -> flatMap3 f arg
 
 def foo = flatMap3 (fun x -> x)
 //│ foo: ('a & (Some[?] | ~some)) -> 'a
-//│    = [Function (anonymous)]
+//│    = [Function: foo1]
 
 foo 1
 //│ res: 1

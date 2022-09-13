@@ -55,7 +55,7 @@ def tail l = l.Tail
 
 // Used to represent `[]` in the papers
 def nil: List['a]
-def nil = Nil {}
+nil = Nil {}
 //│ nil: List[nothing]
 //│    = <missing implementation>
 //│ Nil[nothing]
@@ -128,7 +128,7 @@ def ids = single id
 //│ List[forall 'a. 'a -> 'a]
 //│   <:  ids:
 //│ List[forall 'a. 'a -> 'a]
-//│    = Cons { head: [Function: id1], tail: Nil {} }
+//│    = [Function: ids]
 
 def inc: int -> int
 def inc = succ
@@ -137,7 +137,7 @@ def inc = succ
 //│ int -> int
 //│   <:  inc:
 //│ int -> int
-//│    = [Function: succ]
+//│    = [Function: inc]
 
 def choose: 'a -> 'a -> 'a
 def choose x y = if true then x else y

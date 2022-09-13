@@ -14,7 +14,7 @@ def IntMonoid = IntMonoid {}
 //│ Defined IntMonoid.Empty: IntMonoid -> 0
 //│ Defined IntMonoid.Add: IntMonoid -> int -> int -> int
 //│ IntMonoid: IntMonoid
-//│          = IntMonoid {}
+//│          = [Function: IntMonoid1]
 
 class Num: { val: int }
 //│ Defined class Num

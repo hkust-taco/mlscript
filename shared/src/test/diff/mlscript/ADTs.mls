@@ -41,7 +41,7 @@ rec def eval e = case e of {
 
 def ex = add (lit 2) (lit 2)
 //│ ex: Add[Lit & {val: 2}]
-//│   = Add { lhs: Lit { val: 2 }, rhs: Lit { val: 2 } }
+//│   = [Function: ex]
 
 eval ex
 //│ res: int
@@ -71,7 +71,7 @@ def e = ex
 //│ 'e
 //│   where
 //│     'e :> Add['e] | Lit | Nega['e]
-//│  = Add { lhs: Lit { val: 2 }, rhs: Lit { val: 2 } }
+//│  = [Function: e1]
 
 eval e
 //│ res: int

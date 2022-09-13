@@ -93,7 +93,7 @@ pow: ChurchInt -> ChurchInt -> ChurchInt
 
 def unit = id
 //│ unit: 'a -> 'a
-//│     = [Function: id]
+//│     = [Function: unit]
 
 type Unit_t = 'a -> 'a
 unit : Unit_t

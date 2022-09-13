@@ -2,6 +2,7 @@ target/
 .bloop/
 .metals/
 .bsp/
+node_modules/
 metals.sbt
 project/Dependencies.scala
 project/metals.sbt

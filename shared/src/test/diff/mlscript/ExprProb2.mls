@@ -26,10 +26,21 @@ def eval1 eval1 e = case e of {
 //│ subtyping calls  : 55
 
 :stats
+:js
 def eval1f eval1 e = case e of {
   | Lit -> e.val
   | Add -> eval1 e.lhs + eval1 e.rhs
   }
+//│ // Query 1
+//│ globalThis.eval1f = function eval1f(eval1) {
+//│   return ((e) => {
+//│     let a;
+//│     return (a = e, a instanceof Lit ? e.val : a instanceof Add ? eval1(e.lhs) + eval1(e.rhs) : (() => {
+//│       throw new Error("non-exhaustive case expression");
+//│     })());
+//│   });
+//│ };
+//│ // End of generated code
 //│ eval1f: ('rhs -> int & 'lhs -> int) -> ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val})) -> (int | 'val)
 //│       = [Function: eval1f]
 //│ constrain calls  : 32
@@ -48,7 +59,7 @@ e1 = add (lit 1) (add (lit 2) (lit 3))
 :e
 eval1 eval1 e1
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.49: 	eval1 eval1 e1
+//│ ║  l.60: 	eval1 eval1 e1
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‹∀ 0. (α55' -> (α56' -> (val58' | α67')))›  <:  α55_166    PolymorphicType  TypeVariable
@@ -59,13 +70,13 @@ eval1 eval1 e1
 :e
 def eval1_fixed_1 = eval1 eval1
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.60: 	def eval1_fixed_1 = eval1 eval1
+//│ ║  l.71: 	def eval1_fixed_1 = eval1 eval1
 //│ ║        	                    ^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‹∀ 0. (α55' -> (α56' -> (val58' | α67')))›  <:  α55_193'    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. (α55' -> (α56' -> (val58' | α67')))›  <:  α55'
 //│ eval1_fixed_1: error
-//│              = [Function (anonymous)]
+//│              = [Function: eval1_fixed_1]
 
 eval1_fixed_1 e1
 //│ res: error
@@ -76,7 +87,7 @@ rec def eval1_fixed_2 = eval1f (fun x -> eval1f eval1_fixed_2 x)
 //│ eval1_fixed_2: 'a -> int
 //│   where
 //│     'a <: Add[?] & {lhs: 'a, rhs: 'a} | Lit
-//│              = [Function (anonymous)]
+//│              = [Function: eval1_fixed_2]
 
 eval1_fixed_2 e1
 //│ res: int
@@ -84,18 +95,18 @@ eval1_fixed_2 e1
 
 
 :e
-// Tying the know without a recursive def:
+// Tying the knot without a recursive def:
 def eval1_fixed_3 =
   let fixed fixed = eval1f (fun x -> eval1f (fixed fixed) x)
   in fixed fixed
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.90: 	  in fixed fixed
-//│ ║        	     ^^^^^^^^^^^
+//│ ║  l.101: 	  in fixed fixed
+//│ ║         	     ^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‹∀ 1. (α285'' -> α313'')›  <:  α285_382'    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 1. (α285'' -> α313'')›  <:  α285''
 //│ eval1_fixed_3: error
-//│              = [Function (anonymous)]
+//│              = [Function: eval1_fixed_3]
 
 eval1_fixed_3 e1
 //│ res: error
@@ -139,13 +150,13 @@ e2 = add (lit 1) (nega e1)
 :e
 def eval2_fixed_1 = eval2 eval2
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.140: 	def eval2_fixed_1 = eval2 eval2
+//│ ║  l.151: 	def eval2_fixed_1 = eval2 eval2
 //│ ║         	                    ^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‹∀ 0. (α432' -> (α433' -> (α439' | α454')))›  <:  α432_588'    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. (α432' -> (α433' -> (α439' | α454')))›  <:  α432'
 //│ eval2_fixed_1: error
-//│              = [Function (anonymous)]
+//│              = [Function: eval2_fixed_1]
 
 eval2_fixed_1 e1
 eval2_fixed_1 e2
@@ -168,7 +179,7 @@ def eval2_fixed_2 = fix eval2f
 //│ eval2_fixed_2: 'a -> int
 //│   where
 //│     'a <: Add[?] & {lhs: 'a, rhs: 'a} | Lit | Nega[?] & {arg: 'a}
-//│              = [Function (anonymous)]
+//│              = [Function: eval2_fixed_2]
 
 eval2_fixed_2 e1
 eval2_fixed_2 e2
@@ -185,13 +196,17 @@ eval2_fixed_2 e2
 
 
 // FIXME should be a code-gen error
-:re
+:js
 rec def eval1_fixed = eval1f (eval1f eval1_fixed)
+//│ // Query 1
+//│ globalThis["eval1_fixed"] = function eval1_fixed() {
+//│   return eval1f(eval1f(eval1_fixed()));
+//│ };
+//│ // End of generated code
 //│ eval1_fixed: 'a -> int
 //│   where
 //│     'a <: Add[?] & {lhs: 'a, rhs: 'a} | Lit
-//│ Runtime error:
-//│   ReferenceError: eval1_fixed is not defined
+//│            = [Function: eval1_fixed]
 
 rec def eval1_fixed() = eval1f (eval1f (eval1_fixed()))
 //│ eval1_fixed: () -> 'a -> int
@@ -217,16 +232,16 @@ def eval1_fixed = eval1f (fun x -> eval1f eval1f x)
 //│ ║  l.+1: 	def eval1_fixed = eval1f (fun x -> eval1f eval1f x)
 //│ ║        	                                   ^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> (?val | ?b)` is not an instance of type `int`
-//│ ║  l.29: 	def eval1f eval1 e = case e of {
+//│ ║  l.30: 	def eval1f eval1 e = case e of {
 //│ ║        	                 ^^^^^^^^^^^^^^^
-//│ ║  l.30: 	  | Lit -> e.val
+//│ ║  l.31: 	  | Lit -> e.val
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║  l.32: 	  | Add -> eval1 e.lhs + eval1 e.rhs
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.32: 	  }
+//│ ║  l.33: 	  }
 //│ ║        	^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║  l.32: 	  | Add -> eval1 e.lhs + eval1 e.rhs
 //│ ╙──      	                         ^^^^^^^^^^^
 //│ eval1_fixed: (Add[?] | (Lit with {val: 'val})) -> (int | 'val)
 
@@ -235,19 +250,19 @@ rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> (?val | ?b)` does not match type `Add[?] & ?c | Lit & ?d`
-//│ ║  l.29: 	def eval1f eval1 e = case e of {
+//│ ║  l.30: 	def eval1f eval1 e = case e of {
 //│ ║        	                 ^^^^^^^^^^^^^^^
-//│ ║  l.30: 	  | Lit -> e.val
+//│ ║  l.31: 	  | Lit -> e.val
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║  l.32: 	  | Add -> eval1 e.lhs + eval1 e.rhs
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.32: 	  }
+//│ ║  l.33: 	  }
 //│ ║        	^^^
 //│ ╟── but it flows into application with expected type `Add[?] & ?e | Lit & ?f`
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.29: 	def eval1f eval1 e = case e of {
+//│ ║  l.30: 	def eval1f eval1 e = case e of {
 //│ ╙──      	                          ^
 //│ eval1_fixed: (Add[?] | (Lit with {val: 'val})) -> (int | 'val)
 
@@ -257,13 +272,13 @@ rec def eval1_fixed = eval1f eval1_fixed e1
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f eval1_fixed e1
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` is not a function
-//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║  l.32: 	  | Add -> eval1 e.lhs + eval1 e.rhs
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into application with expected type `?rhs -> ?a`
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f eval1_fixed e1
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║  l.32: 	  | Add -> eval1 e.lhs + eval1 e.rhs
 //│ ║        	                         ^^^^^^^^^^^
 //│ ╟── from reference:
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f eval1_fixed e1

@@ -192,9 +192,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     val es = ts.map {
       case L(t) =>
         err(msg"Unexpected 'then'/'else' clause" -> t.toLoc :: Nil)
-        L(errExpr)
-      case R(d: NuDecl) => R(d)
-      case R(e: Term) => L(e)
+        errExpr
+      case R(d: NuDecl) => d
+      case R(e: Term) => e
       case _ => ???
     }
     TypingUnit(es)
@@ -286,6 +286,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           // TODO make `fun` by-name and `let` by-value
           case (KEYWORD(kwStr @ ("fun" | "let")), l0) :: c => // TODO support rec?
             consume
+            val isLetRec = yeetSpaces match {
+              case (KEYWORD("rec"), l1) :: _ if kwStr === "let" =>
+                consume
+                S(true)
+              case c => if (kwStr === "fun") N else S(false)
+            }
             val (v, success) = yeetSpaces match {
               case (IDENT(idStr, false), l1) :: _ =>
                 consume
@@ -312,18 +318,21 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                   consume
                   val body = expr(0)
                   val annotatedBody = asc.fold(body)(ty => Asc(body, ty))
-                  R(NuFunDef(v, Nil, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))))
+                  R(NuFunDef(isLetRec, v, Nil, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))))
                 case c =>
                   asc match {
                     case S(ty) =>
-                      R(NuFunDef(v, Nil, R(PolyType(Nil, ty)))) // TODO rm PolyType after FCP is merged
+                      R(NuFunDef(isLetRec, v, Nil, R(PolyType(Nil, ps.foldRight(ty)((p, r) => Function(p.toType match {
+                        case L(diag) => raise(diag); Top // TODO better
+                        case R(tp) => tp
+                      }, r)))))) // TODO rm PolyType after FCP is merged
                     case N =>
                       // TODO dedup:
                       val (tkstr, loc) = c.headOption.fold(("end of input", lastLoc))(_.mapFirst(_.describe).mapSecond(some))
                       err((
                         msg"Expected ':' or '=' followed by a function body or signature; found ${tkstr} instead" -> loc :: Nil))
                       consume
-                      R(NuFunDef(v, Nil, L(ps.foldRight(errExpr: Term)((i, acc) => Lam(i, acc)))))
+                      R(NuFunDef(isLetRec, v, Nil, L(ps.foldRight(errExpr: Term)((i, acc) => Lam(i, acc)))))
                   }
               }
             }
@@ -525,8 +534,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
             L(IfOpApp(acc, v, rhs))
           case R(rhs) =>
             opStr match {
-              case "=>" =>
-                exprCont(Lam(toParams(acc), rhs), prec, allowNewlines)
+              case "=>" => {
+                exprCont(rhs, prec, allowNewlines) match {
+                  case R(p) => R(Lam(toParams(acc), p))
+                  case L(b) => err(msg"Unexpected ifBody" -> b.toLoc :: Nil); L(b)
+                }
+              }
               case _ =>
                 exprCont(App(App(v, toParams(acc)), toParams(rhs)), prec, allowNewlines)
             }

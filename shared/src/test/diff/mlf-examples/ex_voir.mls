@@ -38,7 +38,7 @@ def nil = Nil {}
 //│ Nil[nothing]
 //│   <:  nil:
 //│ List[nothing]
-//│    = Nil {}
+//│    = [Function: nil]
 
 
 
@@ -73,13 +73,13 @@ def test_ = choose3 id_
 def test2 = test succ
 def test2_ = test_ succ
 //│ test: 'a -> (forall 'b. 'b -> (Sid | 'a | 'b))
-//│     = [Function (anonymous)]
+//│     = [Function: test]
 //│ test_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. 'c -> 'c | 'a | 'b))
-//│      = [Function (anonymous)]
+//│      = [Function: test_]
 //│ test2: 'a -> (int -> int | Sid | 'a)
-//│      = [Function (anonymous)]
+//│      = [Function: test2]
 //│ test2_: 'a -> (forall 'a. int -> int | 'a)
-//│       = [Function (anonymous)]
+//│       = [Function: test2_]
 
 // (* Messages d'erreur foireux : *)
 // type s1 = ['a] 'a -> int * int ;;

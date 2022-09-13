@@ -1,0 +1,93 @@
+:NewParser
+
+:js
+fun f(x) = x > 0 && f(x - 1)
+//│ // Prelude
+//│ let res;
+//│ // Query 1
+//│ globalThis.f = function f(x) {
+//│   return x > 0 && f(x - 1);
+//│ };
+//│ // End of generated code
+//│ f: int -> bool
+//│  = [Function: f]
+
+f(12)
+//│ res: bool
+//│    = false
+
+:js
+let rec f(x) = x > 0 && f(x - 1)
+//│ // Query 1
+//│ globalThis.f1 = function f1(x) {
+//│   return x > 0 && f1(x - 1);
+//│ };
+//│ // End of generated code
+//│ f: int -> bool
+//│  = [Function: f1]
+
+f(12)
+//│ res: bool
+//│    = false
+
+:js
+let rec f() =
+  f()
+//│ // Query 1
+//│ globalThis.f2 = function f2() {
+//│   return ((() => {
+//│     f2();
+//│   })());
+//│ };
+//│ // End of generated code
+//│ f: () -> nothing
+//│  = [Function: f2]
+
+:re
+f()
+//│ res: nothing
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
+
+// TODO (for later) this should be rejected by the type checker
+:ge
+:js
+let rec f =
+  f
+//│ f: nothing
+//│ Code generation encountered an error:
+//│   unguarded recursive use of by-value binding f
+
+:re
+:js
+f
+//│ // Query 1
+//│ res = f3;
+//│ // End of generated code
+//│ res: nothing
+//│ Runtime error:
+//│   ReferenceError: f3 is not defined
+
+:p
+let rec f = 1
+//│ |#let| |#rec| |f| |#=| |1|
+//│ Parsed: let rec f = 1;
+//│ Desugared: rec def f: 1
+//│ f: 1
+//│  = 1
+
+// TODO FIX undefined: should `return 1`;
+:p
+:js
+let rec f =
+  1
+//│ |#let| |#rec| |f| |#=|→|1|←|
+//│ Parsed: let rec f = {1};
+//│ Desugared: rec def f: {1}
+//│ // Query 1
+//│ globalThis.f5 = (() => {
+//│   1;
+//│ })();
+//│ // End of generated code
+//│ f: 1
+//│  = undefined

@@ -190,9 +190,9 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   
   def defDecl[p: P]: P[Def] =
     locate(P((kw("def") ~ variable ~ tyParams ~ ":" ~/ ty map {
-      case (id, tps, t) => Def(true, id, R(PolyType(tps.map(L(_)), t)))
+      case (id, tps, t) => Def(true, id, R(PolyType(tps.map(L(_)), t)), true)
     }) | (kw("rec").!.?.map(_.isDefined) ~ kw("def") ~/ variable ~ subterm.rep ~ "=" ~ term map {
-      case (rec, id, ps, bod) => Def(rec, id, L(ps.foldRight(bod)((i, acc) => Lam(toParams(i), acc))))
+      case (rec, id, ps, bod) => Def(rec, id, L(ps.foldRight(bod)((i, acc) => Lam(toParams(i), acc))), true)
     })))
   
   def tyKind[p: P]: P[TypeDefKind] = (kw("class") | kw("trait") | kw("type")).! map {
@@ -204,9 +204,9 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     P((tyKind ~/ tyName ~ tyParams).flatMap {
       case (k @ (Cls | Trt), id, ts) => (":" ~ ty).? ~ (mthDecl(id) | mthDef(id)).rep.map(_.toList) map {
         case (bod, ms) => TypeDef(k, id, ts, bod.getOrElse(Top), 
-          ms.collect { case R(md) => md }, ms.collect{ case L(md) => md })
+          ms.collect { case R(md) => md }, ms.collect{ case L(md) => md }, Nil)
       }
-      case (k @ Als, id, ts) => "=" ~ ty map (bod => TypeDef(k, id, ts, bod))
+      case (k @ Als, id, ts) => "=" ~ ty map (bod => TypeDef(k, id, ts, bod, Nil, Nil, Nil))
     })
   def tyParams[p: P]: P[Ls[TypeName]] =
     ("[" ~ tyName.rep(0, ",") ~ "]").?.map(_.toList.flatten)

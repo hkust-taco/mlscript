@@ -76,7 +76,7 @@ object Main {
               typeCheckResult.zip(pgrm.desugared._2._2) foreach { case ((name, ty), origin) =>
                 val value = origin match {
                   // Do not extract from results if its a type declaration.
-                  case Def(_, _, R(_)) => N
+                  case Def(_, _, R(_), _) => N
                   // Otherwise, `origin` is either a term or a definition.
                   case _ => results match {
                     case head :: next =>
@@ -300,7 +300,7 @@ object Main {
       val d = decls.head
       decls = decls.tail
       try d match {
-        case d @ Def(isrec, nme, L(rhs)) =>
+        case d @ Def(isrec, nme, L(rhs), _) =>
           val ty_sch = typeLetRhs(isrec, nme.name, rhs)(ctx, raise)
           val inst = ty_sch.instantiate(ctx, raise, Shadows.empty)
           println(s"Typed `$nme` as: $inst")
@@ -315,7 +315,7 @@ object Main {
           }
           res ++= formatBinding(d.nme.name, ty_sch)
           results append S(d.nme.name) -> (getType(ty_sch).show)
-        case d @ Def(isrec, nme, R(PolyType(tps, rhs))) =>
+        case d @ Def(isrec, nme, R(PolyType(tps, rhs)), _) =>
           declared.get(nme) match {
             case S(sign) =>
               import Message.MessageContext
@@ -359,7 +359,7 @@ object Main {
         case err: ErrorReport =>
           if (stopAtFirstError) decls = Nil
           val culprit = d match {
-            case Def(isrec, nme, rhs)  => "def " + nme
+            case Def(isrec, nme, rhs, isByname)  => "def " + nme
             case _: DesugaredStatement => "statement"
           }
           res ++= report(err)

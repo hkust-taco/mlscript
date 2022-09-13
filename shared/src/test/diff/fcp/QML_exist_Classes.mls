@@ -53,12 +53,7 @@ def baseImpl = ArraysImpl {
 //│ baseImpl: ArraysImpl['Rep, 'Rep] with {fold: forall 'a. 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('c -> 'd
 //│   where
 //│     'a <: 'c -> 'b -> 'd))), init: forall 'e. 'e -> 'e, sub: forall 'f. 'f -> int -> 'f, update: 'a -> int -> (forall 'g. 'g -> 'g)}
-//│         = ArraysImpl {
-//│             init: [Function: init],
-//│             sub: [Function: sub],
-//│             update: [Function: update],
-//│             fold: [Function: fold]
-//│           }
+//│         = [Function: baseImpl]
 
 def base: Arrays['a]
 def base f = f baseImpl
@@ -167,16 +162,16 @@ def simpleStepImpl2_ty (arr: Arrays['a]) = arr simpleStepImpl
 //│   <:  simpleStepImpl2_ty:
 //│ (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> ArraysImpl['A, ('Rep, string,)]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.154: 	def simpleStepImpl2_ty (arr: Arrays['a]) = arr simpleStepImpl
+//│ ║  l.149: 	def simpleStepImpl2_ty (arr: Arrays['a]) = arr simpleStepImpl
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘Rep_1406` is not an instance of type `'Rep_1118_1221`
-//│ ║  l.108: 	def simpleStepImpl2_ty: (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> ArraysImpl['A, ('Rep, string)]
+//│ ║  l.103: 	def simpleStepImpl2_ty: (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> ArraysImpl['A, ('Rep, string)]
 //│ ║         	                                                                                          ^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.42: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                         ^^^^
 //│ ╟── from reference:
-//│ ║  l.78: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.Sub r0 i;
+//│ ║  l.73: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.Sub r0 i;
 //│ ╙──      	                                                    ^^
 //│                   = [Function: simpleStepImpl2_ty1]
 
@@ -215,7 +210,7 @@ def simpleStep arr f = f (simpleStepImpl2_ty arr)
 //│   <:  simpleStep:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.211: 	def simpleStep arr f = f (simpleStepImpl2_ty arr)
+//│ ║  l.206: 	def simpleStep arr f = f (simpleStepImpl2_ty arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘Rep_1777_1778` is not an instance of type `'Rep_1777_1779`
 //│ ║  l.42: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -240,7 +235,7 @@ sb (fun arr -> arr.Sub (arr.Init true) 1)
 :e // * Expected – argument order confusion
 sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.241: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
+//│ ║  l.236: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘Rep_1881` is not an instance of type `int`
 //│ ║  l.42: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -249,7 +244,7 @@ sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ║  l.17: 	  method Sub: Rep -> int -> A
 //│ ║        	                     ^^^
 //│ ╟── from application:
-//│ ║  l.241: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
+//│ ║  l.236: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ║         	                          ^^^^^^^^^^^^^
 //│ ╟── Note: class type parameter Rep is defined at:
 //│ ║  l.15: 	class ArraysRep[A, Rep]
@@ -265,7 +260,7 @@ sb (fun arr -> arr.Update (arr.Init true) 1 false)
 :e // * Rightly prevent skolem confusion
 sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.266: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
+//│ ║  l.261: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘Rep_1992` is not an instance of type `'Rep_1957_1974`
 //│ ║  l.42: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -274,7 +269,7 @@ sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ║  l.42: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                         ^^^^
 //│ ╟── from application:
-//│ ║  l.266: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
+//│ ║  l.261: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ╙──       	                                             ^^^^^^^^^^^^^^
 //│ res: error
 //│    = [Function (anonymous)]
@@ -457,7 +452,7 @@ def step arr f = f (stepImpl2_ty arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.453: 	def step arr f = f (stepImpl2_ty arr)
+//│ ║  l.448: 	def step arr f = f (stepImpl2_ty arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘Rep_4199_4200` is not an instance of type `'Rep_4199_4201`
 //│ ║  l.42: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -469,7 +464,7 @@ def step arr f = f (stepImpl2_ty arr)
 :e
 def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.470: 	def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
+//│ ║  l.465: 	def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
 //│ ║         	                                  ^^^^^^^^^^^^^^^^
 //│ ╟── type `‘Rep_4214_4215` is not an instance of type `'Rep_4214_4216`
 //│ ║  l.42: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r

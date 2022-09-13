@@ -17,6 +17,11 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
+    - uses: actions/setup-node@v3
+      with:
+        node-version: '17.x'
+    - name: Install TypeScript
+      run: npm ci
     - name: Run tests
       run: sbt test
     - name: Check no changes

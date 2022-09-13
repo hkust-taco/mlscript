@@ -33,7 +33,7 @@ fun x => x
 
 let f = x => x
 //│ |#let| |f| |#=| |x| |=>| |x|
-//│ Parsed: {fun f = x, => x}
+//│ Parsed: {let f = x, => x}
 
 // TODO
 let f = fun x => x
@@ -41,7 +41,7 @@ let f = fun x => x
 //│ ╔══[PARSE ERROR] Unexpected 'fun' keyword in expression position
 //│ ║  l.39: 	let f = fun x => x
 //│ ╙──      	        ^^^
-//│ Parsed: {fun f = x, => x}
+//│ Parsed: {let f = x, => x}
 
 
 f(x) + x
@@ -177,4 +177,18 @@ fun = 1
 //│ Parsed: {fun <error> = undefined}
 
 
+fun add(x: number, y: number): number
+//│ |#fun| |add|(|x|#:| |number|,| |y|#:| |number|)|#:| |number|
+//│ Parsed: {fun add: (x: number, y: number,) -> number}
 
+fun apply(x: int, f: int => int): int
+//│ |#fun| |apply|(|x|#:| |int|,| |f|#:| |int| |=>| |int|)|#:| |int|
+//│ Parsed: {fun apply: (x: int, f: int -> int,) -> int}
+
+fun apply2(x: number, f: int => number => number): number
+//│ |#fun| |apply2|(|x|#:| |number|,| |f|#:| |int| |=>| |number| |=>| |number|)|#:| |number|
+//│ Parsed: {fun apply2: (x: number, f: int -> number -> number,) -> number}
+
+fun apply3(x: number, f: (int => number) => number): number
+//│ |#fun| |apply3|(|x|#:| |number|,| |f|#:| |(|int| |=>| |number|)| |=>| |number|)|#:| |number|
+//│ Parsed: {fun apply3: (x: number, f: (int -> number) -> number,) -> number}

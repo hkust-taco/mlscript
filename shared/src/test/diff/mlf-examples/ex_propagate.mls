@@ -29,7 +29,7 @@ def id_ = id : Sid -> Sid
 //│ id: 'a -> 'a
 //│   = [Function: id]
 //│ id_: Sid -> Sid
-//│    = [Function: id]
+//│    = [Function: id_]
 
 // (* Next: We do not give enough information. *)
 // untype fun x -> ((fun y -> y y) : 'a -> sid)

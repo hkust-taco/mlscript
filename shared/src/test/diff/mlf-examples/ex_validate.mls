@@ -38,7 +38,7 @@ def nil = Nil {}
 //│ Nil[nothing]
 //│   <:  nil:
 //│ List[nothing]
-//│    = Nil {}
+//│    = [Function: nil]
 
 // ============ Type signatures for functions used in the examples ============
 
@@ -130,7 +130,7 @@ def z = succ : int -> int
 //│ succ: int -> int
 //│     = [Function: succ]
 //│ z: int -> int
-//│  = [Function: succ]
+//│  = [Function: z]
 
 // let id x = x
 // let z = choose (id:id) id
@@ -143,11 +143,11 @@ def z = (choose succ id) 10
 //│ id: 'a -> 'a
 //│   = [Function: id]
 //│ z: 'a -> 'a | Id
-//│  = [Function: id]
+//│  = [Function: z1]
 //│ z: int
-//│  = 10
+//│  = [Function: z2]
 //│ z: int
-//│  = 11
+//│  = [Function: z3]
 
 // untype fun x -> x x
 fun x -> x x
@@ -167,11 +167,11 @@ def delta_ x = x x
 // :e // FIXME? failed with genLamBodies but works with quantif extrus
 def z = delta (delta id)
 //│ z: Id
-//│  = [Function: id]
+//│  = [Function: z4]
 
 def z_ = delta_ (delta_ id)
 //│ z_: 'a -> 'a
-//│   = [Function: id]
+//│   = [Function: z_]
 
 // untype delta succ
 :e
@@ -208,11 +208,11 @@ delta_ succ
 // :e // FIXME? failed with genLamBodies but works with quantif extrus
 def z = delta (choose id id)
 //│ z: Id
-//│  = [Function: id]
+//│  = [Function: z5]
 
 def z_ = delta_ (choose id id)
 //│ z_: 'a -> 'a
-//│   = [Function: id]
+//│   = [Function: z_1]
 
 // let step g = (g 1) - (g 0)
 // let apply_to_id f = f id
@@ -228,11 +228,11 @@ def test2_ = apply_to_id delta_
 //│ apply_to_id: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
 //│            = [Function: apply_to_id]
 //│ test1: int
-//│      = 1
+//│      = [Function: test1]
 //│ test2: Id
-//│      = [Function: id]
+//│      = [Function: test2]
 //│ test2_: 'a -> 'a
-//│       = [Function: id]
+//│       = [Function: test2_]
 
 // type s  = ['a] list ('a) -> bool
 // let annote_s (x:id) = (x : s -> s)
@@ -264,9 +264,9 @@ let t = fun x -> fun y ->
     (isnil (cons 1 (cons 2 (cons 3 nil))), isnil nil, isnil (cons "ok" nil), isnil (cons true nil)) 
   in t id isnil
 //│ res: (bool, bool, bool, bool,)
-//│    = [ false, true, false, false ]
+//│    = [ false, false, false, false ]
 //│ res: (bool, bool, bool, bool,)
-//│    = [ false, true, false, false ]
+//│    = [ false, false, false, false ]
 
 // untype fun x y ->
 //   let isnil = (x:id) y in
@@ -368,9 +368,9 @@ def ff_ = fun g ->
 def bigtest = ff aa
 def bigtest_ = ff_ aa
 //│ bigtest: int
-//│        = 10
+//│        = [Function: bigtest]
 //│ bigtest_: int
-//│         = 10
+//│         = [Function: bigtest_]
 
 // (* Variable libre / variable li�e dans les annotations. *)
 // let example f = (f:['a] 'a -> int -> 'b) f
@@ -787,7 +787,7 @@ def a = fun f -> f id
 //│ church_zero: anything -> (forall 'a. 'a -> 'a)
 //│            = [Function: church_zero]
 //│ church_un: 'a -> 'a
-//│          = [Function: id2]
+//│          = [Function: church_un]
 //│ church_succ: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
@@ -814,9 +814,9 @@ def test2 = app f a
 //│     'a <: 'b -> 'c))
 //│    = [Function: app]
 //│ test1: Sid
-//│      = [Function: id2]
+//│      = [Function: test11]
 //│ test2: Sid
-//│      = [Function: id2]
+//│      = [Function: test22]
 
 
 // (* Create occur-checks. *)
@@ -845,11 +845,11 @@ def t = let x = fun y -> y in x x
 def t = let x = (fun y -> y) : forall 'a. 'a -> 'a in x x
 def t = let x = (fun y -> y) : 'a in x x
 //│ t: 'a -> 'a
-//│  = [Function (anonymous)]
+//│  = [Function: t5]
 //│ t: 'a -> 'a
-//│  = [Function (anonymous)]
+//│  = [Function: t6]
 //│ t: 'a -> 'a
-//│  = [Function (anonymous)]
+//│  = [Function: t7]
 
 
 // untype  fun x -> ( (((x:'a) : sid):'a), (x:'a) x)

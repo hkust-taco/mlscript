@@ -103,13 +103,13 @@ def a0_ = a2_ a1
 //│     'c <: (forall 'a. 'a -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
 //│   where
 //│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
-//│   = [Function (anonymous)]
+//│   = [Function: a0]
 //│ a0_: 'a -> 'b
 //│   where
 //│     'c <: (forall 'a. 'a -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
 //│   where
 //│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
-//│    = [Function (anonymous)]
+//│    = [Function: a0_]
 
 // let test0 = 
 //   (fun f -> f (fun h -> h id))
@@ -131,9 +131,9 @@ def test0_ =
         ((fun t -> (fun u -> fun v -> v) (g t) (t (fun f -> fun x -> x)))
           (fun x -> ((fun f -> fun x -> f x) x) (fun f -> fun x -> x))))
 //│ test0: Sid
-//│      = [Function: id]
+//│      = [Function: test0]
 //│ test0_: 'a -> 'a
-//│       = [Function: id]
+//│       = [Function: test0_]
 
 
 // (** Encoding in F+eta **)
@@ -187,7 +187,7 @@ def test_in_F_eta =
         ((fun t -> (fun u -> fun v -> v) ((a1_sid_to_nat g) t) (t (fun f -> fun x -> x)))
           (fun x -> ((fun f -> fun x -> f x) x) (fun f -> fun x -> x))))
 //│ test_in_F_eta: Sid
-//│              = [Function: id]
+//│              = [Function: test_in_F_eta]
 
 def test_in_F_eta_ = 
   (fun f -> f (fun h -> h id))
@@ -196,7 +196,7 @@ def test_in_F_eta_ =
         ((fun t -> (fun u -> fun v -> v) ((a1_sid_to_nat_ g) t) (t (fun f -> fun x -> x)))
           (fun x -> ((fun f -> fun x -> f x) x) (fun f -> fun x -> x))))
 //│ test_in_F_eta_: 'a -> 'a
-//│               = [Function: id]
+//│               = [Function: test_in_F_eta_]
 
 // (*
 // (* Le terme dans la syntaxe de Joe Wells *)
@@ -278,7 +278,7 @@ def a0'_ = a2'_ a1'
 //│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α41_42'' -> α41_42'')››  <:  α31_1089'    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α41_42'' -> α41_42'')››  <:  α31_33''
 //│ a0'_: error
-//│     = [Function (anonymous)]
+//│     = [Function: a0$_]
 :ResetFuel
 
 // * ^ Strangely, this one works[ed] with recursive types:
@@ -290,7 +290,7 @@ def a0'_ = a2'_ a1'
 //│     'c <: (forall 'a. 'a -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
 //│   where
 //│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
-//│     = [Function (anonymous)]
+//│     = [Function: a0$_1]
 :NoRecursiveTypes
 
 // type a1'_sid = ['a = sid] ('a -> 'a) -> 'a -> 'a;;

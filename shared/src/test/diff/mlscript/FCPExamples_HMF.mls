@@ -29,7 +29,7 @@ class Nil[a]: List[a]
   method Head = error
   method Tail = this
 def nil: List['a]
-def nil = Nil {}
+nil = Nil {}
 //│ Defined class Nil[+a]
 //│ Defined Nil.Head: Nil[?] -> nothing
 //│ Defined Nil.Tail: (Nil['a] & 'this) -> (Nil['a] & 'this)
@@ -156,14 +156,11 @@ app poly id
 // FreezeML F2
 def ids = single id
 //│ ids: List[forall 'a. 'a -> 'a]
-//│    = Cons { head: [Function: id], tail: Nil {} }
+//│    = [Function: ids]
 
 def idss = single ids
 //│ idss: List[List[forall 'a. 'a -> 'a]]
-//│     = Cons {
-//│         head: Cons { head: [Function: id], tail: Nil {} },
-//│         tail: Nil {}
-//│       }
+//│     = [Function: idss]
 
 def revapp x f = f x
 //│ revapp: 'a -> (forall 'b. ('a -> 'b) -> 'b)
@@ -285,7 +282,4 @@ const x y = x
 // FreezeML C5
 def xs = cons id ids
 //│ xs: List[forall 'a. 'a -> 'a]
-//│   = Cons {
-//│       head: [Function: id],
-//│       tail: Cons { head: [Function: id], tail: Nil {} }
-//│     }
+//│   = [Function: xs]

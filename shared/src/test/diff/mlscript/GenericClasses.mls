@@ -3,7 +3,7 @@ class None: {}
 def None = None{}
 //│ Defined class None
 //│ None: None
-//│     = None {}
+//│     = [Function: None1]
 
 class Some[A]: { value: A }
 def Some v = Some { value = v }

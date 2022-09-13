@@ -5,14 +5,36 @@
 //│    = [ x: [Function (anonymous)] ]
 
 :js
+def f = 0
+//│ // Query 1
+//│ globalThis.f = function f() {
+//│   return 0;
+//│ };
+//│ // End of generated code
+//│ f: 0
+//│  = [Function: f]
+
+:js
+f
+//│ // Query 1
+//│ res = f();
+//│ // End of generated code
+//│ res: 0
+//│    = 0
+
+:js
 class Box[T]: { inner: T }
   method Map: (T -> 'a) -> Box['a]
   method Map f = Box { inner = f this.inner }
   method Get = this.inner
+  method Get2 () = this.inner
+  method Foo () = 0
 //│ Defined class Box[+T]
 //│ Declared Box.Map: Box['T] -> ('T -> 'a) -> Box['a]
 //│ Defined Box.Map: Box['T] -> ('T -> 'inner) -> Box['inner]
 //│ Defined Box.Get: Box['T] -> 'T
+//│ Defined Box.Get2: Box['T] -> () -> 'T
+//│ Defined Box.Foo: Box[?] -> () -> 0
 //│ // Prelude
 //│ class Box {
 //│   constructor(fields) {
@@ -25,6 +47,13 @@ class Box[T]: { inner: T }
 //│   get Get() {
 //│     const self = this;
 //│     return self.inner;
+//│   }
+//│   Get2() {
+//│     const self = this;
+//│     return self.inner;
+//│   }
+//│   Foo() {
+//│     return 0;
 //│   }
 //│ }
 //│ // End of generated code
@@ -43,19 +72,23 @@ def Box value = Box { inner = value }
 def box1 = Box 1
 def box2 = box1.Map (fun x -> add x 1)
 //│ // Query 1
-//│ globalThis.box1 = Box1(1);
+//│ globalThis.box1 = function box1() {
+//│   return Box1(1);
+//│ };
 //│ // Query 2
-//│ globalThis.box2 = box1.Map((x) => add(x)(1));
+//│ globalThis.box2 = function box2() {
+//│   return box1().Map((x) => add(x)(1));
+//│ };
 //│ // End of generated code
 //│ box1: Box[1]
-//│     = Box { inner: 1 }
+//│     = [Function: box1]
 //│ box2: Box[int]
-//│     = Box { inner: 2 }
+//│     = [Function: box2]
 
 :js
 box2.inner + box2.Get
 //│ // Query 1
-//│ res = box2.inner + box2.Get;
+//│ res = box2().inner + box2().Get;
 //│ // End of generated code
 //│ res: int
 //│    = 4
@@ -165,13 +198,13 @@ def f: Box[?] -> int
 :e
 f(Box{})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.166: 	f(Box{})
+//│ ║  l.199: 	f(Box{})
 //│ ║         	^^^^^^^^
 //│ ╟── record literal of type `anything` does not match type `nothing`
-//│ ║  l.166: 	f(Box{})
+//│ ║  l.199: 	f(Box{})
 //│ ║         	     ^^
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.161: 	def f: Box[?] -> int
+//│ ║  l.194: 	def f: Box[?] -> int
 //│ ╙──       	           ^
 //│ res: error
 //│    = <no result>
