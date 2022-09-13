@@ -15,22 +15,4 @@ class A(x: number)
 class B
 let swap: (A, B, ) => (B, A, )
 //│ |#let| |key|#:| |(|string|,| |bool|,| |)| |=>| |string|↵|#let| |value|#:| |(|string|,| |bool|,| |)| |=>| |bool|↵|#let| |third|#:| |(|number|,| |number|,| |number|,| |)| |=>| |number|↵|#let| |vec2|#:| |number| |=>| |number| |=>| |(|number|,| |number|,| |)|↵|#let| |twoFunctions|#:| |(|number| |=>| |number|,| |number| |=>| |number|,| |)| |=>| |number| |=>| |number|↵|#let| |tupleIt|#:| |string| |=>| |(|unit| |=>| |string|,| |)|↵|#let| |s|#:| |bool| |=>| |(|(|string|)| ||| |(|number|)|,| |(|number|)| ||| |(|bool|)|,| |)|↵|#let| |s2|#:| |(|bool|,| |(|string|)| ||| |(|number|)|,| |)| |=>| |(|string|)| ||| |(|number|)|↵|#let| |ex|#:| |T| |=>| |U| |=>| |(|T|,| |U|,| |(|T|)| |&| |(|U|)|,| |)|↵|#let| |foo|#:| |(|(|T|)| |&| |(|U|)|,| |)| |=>| |unit|↵|#let| |conv|#:| |(|y|#:| |number|)| |=>| |(|(|y|#:| |number|)|,| |(|z|#:| |string|)|,| |)|↵|#class| |A|(|x|#:| |number|)|↵|#class| |B|↵|#let| |swap|#:| |(|A|,| |B|,| |)| |=>| |(|B|,| |A|,| |)|
-//│ ╔══[ERROR] not a recognized type: '(' number, number, ')'
-//│ ║  l.6: 	let vec2: number => number => (number, number, )
-//│ ╙──     	                              ^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '(' unit, => string, ')'
-//│ ║  l.8: 	let tupleIt: string => (unit => string, )
-//│ ╙──     	                       ^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '(' | (string,) (number,), | (number,) (bool,), ')'
-//│ ║  l.9: 	let s: bool => ((string) | (number), (number) | (bool), )
-//│ ╙──     	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '(' T, U, & (T,) (U,), ')'
-//│ ║  l.11: 	let ex: T => U => (T, U, (T) & (U), )
-//│ ╙──      	                  ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '(' '(' y: number, ')', '(' z: string, ')', ')'
-//│ ║  l.13: 	let conv: (y: number) => ((y: number), (z: string), )
-//│ ╙──      	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '(' B, A, ')'
-//│ ║  l.16: 	let swap: (A, B, ) => (B, A, )
-//│ ╙──      	                      ^^^^^^^^
-//│ Parsed: {fun key: [] -> (string, bool,) -> string; fun value: [] -> (string, bool,) -> bool; fun third: [] -> (number, number, number,) -> number; fun vec2: [] -> anything; fun twoFunctions: [] -> (number -> number, number -> number,) -> number -> number; fun tupleIt: [] -> anything; fun s: [] -> anything; fun s2: [] -> (bool, (string,) | (number,),) -> ((string,) | (number,)); fun ex: [] -> anything; fun foo: [] -> ((T,) & (U,)) -> unit; fun conv: [] -> anything; class A(x: number,) {}; class B() {}; fun swap: [] -> anything}
+//│ Parsed: {fun key: [] -> (string, bool,) -> string; fun value: [] -> (string, bool,) -> bool; fun third: [] -> (number, number, number,) -> number; fun vec2: [] -> number -> number -> (number, number,); fun twoFunctions: [] -> (number -> number, number -> number,) -> number -> number; fun tupleIt: [] -> string -> (unit -> string,); fun s: [] -> bool -> ((string,) | (number,), (number,) | (bool,),); fun s2: [] -> (bool, (string,) | (number,),) -> ((string,) | (number,)); fun ex: [] -> T -> U -> (T, U, (T,) & (U,),); fun foo: [] -> ((T,) & (U,)) -> unit; fun conv: [] -> (y: number,) -> ((y: number,), (z: string,),); class A(x: number,) {}; class B() {}; fun swap: [] -> (A, B,) -> (B, A,)}

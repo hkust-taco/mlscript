@@ -25,10 +25,7 @@ let boom: (B<nothing>) | (undefined) => anything
 //│ ╔══[ERROR] not a recognized type: MutArray‹object›
 //│ ║  l.9: 	let getOrElse: (MutArray<object>) | (undefined) => object
 //│ ╙──     	                ^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '(' number, string, ')'
-//│ ║  l.13: 	let err: ((number, string, )) | (undefined) => unit
-//│ ╙──      	          ^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] not a recognized type: B‹nothing›
 //│ ║  l.17: 	let boom: (B<nothing>) | (undefined) => anything
 //│ ╙──      	           ^^^^^^^^^
-//│ Parsed: {fun buildName: [] -> string -> ((string,) | (undefined,)) -> string; fun buildName2: [] -> string -> ((string,) | (undefined,)) -> string; fun buildName3: [] -> anything; fun buildName4: [] -> anything; trait SquareConfig(color: | (string,) (undefined,), width: | (number,) (undefined,),): {}; fun did: [] -> number -> ((number -> number,) | (undefined,)) -> number; fun getOrElse: [] -> anything; class ABC() {}; fun testABC: [] -> ((ABC,) | (undefined,)) -> unit; fun testSquareConfig: [] -> ((SquareConfig,) | (undefined,)) -> unit; fun err: [] -> anything; fun toStr: [] -> (((number,) | (bool,),) | (undefined,)) -> string; fun boo: [] -> (((T,) & (U,),) | (undefined,)) -> unit; class B[T](b: T,) {}; fun boom: [] -> anything}
+//│ Parsed: {fun buildName: [] -> string -> ((string,) | (undefined,)) -> string; fun buildName2: [] -> string -> ((string,) | (undefined,)) -> string; fun buildName3: [] -> anything; fun buildName4: [] -> anything; trait SquareConfig(color: | (string,) (undefined,), width: | (number,) (undefined,),): {}; fun did: [] -> number -> ((number -> number,) | (undefined,)) -> number; fun getOrElse: [] -> anything; class ABC() {}; fun testABC: [] -> ((ABC,) | (undefined,)) -> unit; fun testSquareConfig: [] -> ((SquareConfig,) | (undefined,)) -> unit; fun err: [] -> (((number, string,),) | (undefined,)) -> unit; fun toStr: [] -> (((number,) | (bool,),) | (undefined,)) -> string; fun boo: [] -> (((T,) & (U,),) | (undefined,)) -> unit; class B[T](b: T,) {}; fun boom: [] -> anything}

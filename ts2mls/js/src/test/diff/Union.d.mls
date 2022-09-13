@@ -11,7 +11,4 @@ let uuuu: ((string) | (number)) | (bool) => ((string) | (number)) | (bool)
 //│ ╔══[ERROR] not a recognized type: MutArray‹number›
 //│ ║  l.6: 	let get: (MutArray<number>) | (MutArray<string>) => unit
 //│ ╙──     	          ^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '(' string, string, ')'
-//│ ║  l.7: 	let get2: ((string, string, )) | ((number, string, )) => string
-//│ ╙──     	           ^^^^^^^^^^^^^^^^^^
-//│ Parsed: {fun getString: [] -> (((string,) | (number,),) | (bool,)) -> string; fun test: [] -> bool -> ((string,) | (number,)); fun run: [] -> ((number -> number,) | (number -> string,)) -> anything; fun get: [] -> anything; fun get2: [] -> anything; fun typeVar: [] -> ((T,) | (U,)) -> ((T,) | (U,)); fun uuuu: [] -> (((string,) | (number,),) | (bool,)) -> (((string,) | (number,),) | (bool,))}
+//│ Parsed: {fun getString: [] -> (((string,) | (number,),) | (bool,)) -> string; fun test: [] -> bool -> ((string,) | (number,)); fun run: [] -> ((number -> number,) | (number -> string,)) -> anything; fun get: [] -> anything; fun get2: [] -> (((string, string,),) | ((number, string,),)) -> string; fun typeVar: [] -> ((T,) | (U,)) -> ((T,) | (U,)); fun uuuu: [] -> (((string,) | (number,),) | (bool,)) -> (((string,) | (number,),) | (bool,))}

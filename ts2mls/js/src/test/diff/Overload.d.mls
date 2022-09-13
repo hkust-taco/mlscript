@@ -25,12 +25,6 @@ let baz: unit => anything /* warning: the overload of function baz is not suppor
 //│ ╔══[ERROR] not a recognized type: MutArray‹number›
 //│ ║  l.8: 	let db: (number => MutArray<number>) & (object => MutArray<number>)
 //│ ╙──     	                   ^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '(' y: string, ')'
-//│ ║  l.11: 	let tst: ((z: number) => (y: string)) & ((z: bool) => (y: string))
-//│ ╙──      	                         ^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '(' number, string, ')'
-//│ ║  l.13: 	let swap: ((number, string, ) => (number, string, )) & ((string, number, ) => (number, string, ))
-//│ ╙──      	                                 ^^^^^^^^^^^^^^^^^^
 //│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
 //│ ║  l.15: 	let doSome: anything => unit /* warning: the overload of function doSome is not supported yet. */
 //│ ╙──      	                                       ^
@@ -57,4 +51,4 @@ let baz: unit => anything /* warning: the overload of function baz is not suppor
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.18: 	}
 //│ ╙──      	^
-//│ Parsed: {fun f: [] -> (number -> string,) & (string -> string,); class M(foo: & (number, => string,) (string, => string,),) {}; fun app: [] -> (string -> unit -> number -> unit,) & (string -> unit -> string -> unit,); fun create: [] -> (number -> unit -> bool,) & (bool -> unit -> bool,); fun g0: [] -> anything; fun db: [] -> anything; class N() {}; fun id: [] -> (M -> unit,) & (N -> unit,); fun tst: [] -> anything; fun op: [] -> (number -> ((number,) | (undefined,)) -> unit,) & (number -> ((bool,) | (undefined,)) -> unit,); fun swap: [] -> anything; fun u: [] -> (((number,) | (bool,)) -> string,) & (object -> string,); fun doSome: [] -> anything -> /*[(unit,), (warning[(the[(overload[(function[(is[(doSome,), (not[(supported[(.[(yet,), (XX,)],)],)],)],)],)],)],)],)]}
+//│ Parsed: {fun f: [] -> (number -> string,) & (string -> string,); class M(foo: & (number, => string,) (string, => string,),) {}; fun app: [] -> (string -> unit -> number -> unit,) & (string -> unit -> string -> unit,); fun create: [] -> (number -> unit -> bool,) & (bool -> unit -> bool,); fun g0: [] -> anything; fun db: [] -> anything; class N() {}; fun id: [] -> (M -> unit,) & (N -> unit,); fun tst: [] -> ((z: number,) -> (y: string,),) & ((z: bool,) -> (y: string,),); fun op: [] -> (number -> ((number,) | (undefined,)) -> unit,) & (number -> ((bool,) | (undefined,)) -> unit,); fun swap: [] -> ((number, string,) -> (number, string,),) & ((string, number,) -> (number, string,),); fun u: [] -> (((number,) | (bool,)) -> string,) & (object -> string,); fun doSome: [] -> anything -> /*[(unit,), (warning[(the[(overload[(function[(is[(doSome,), (not[(supported[(.[(yet,), (XX,)],)],)],)],)],)],)],)],)]}

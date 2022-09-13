@@ -17,7 +17,4 @@ let inter: (A) & (B) => (A) & (B)
 //│ ╔══[ERROR] not a recognized type: MutArray‹U›
 //│ ║  l.11: 	let arr: (MutArray<U>) & (MutArray<T>) => (MutArray<U>) & (MutArray<T>)
 //│ ╙──      	          ^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '(' U, T, ')'
-//│ ║  l.12: 	let tt: ((U, T, )) & ((V, V, )) => ((U, T, )) & ((V, V, ))
-//│ ╙──      	         ^^^^^^^^
-//│ Parsed: {fun extend: [] -> T -> U -> ((T,) & (U,)); fun foo: [] -> ((T,) & (U,)) -> unit; fun over: [] -> ((number -> string,) & (object -> string,)) -> string; trait IA(x: number,): {}; trait IB(y: number,): {}; fun iii: [] -> ((IA,) & (IB,)) -> ((IA,) & (IB,)); fun uu: [] -> (((((U,) & (T,),) | ((U,) & (P,),),) | ((V,) & (T,),),) | ((V,) & (P,),)) -> (((((U,) & (T,),) | ((U,) & (P,),),) | ((V,) & (T,),),) | ((V,) & (P,),)); fun iiii: [] -> (((U,) & (T,),) & (V,)) -> (((U,) & (T,),) & (V,)); fun arr: [] -> anything; fun tt: [] -> anything; class A() {}; class B() {}; fun inter: [] -> ((A,) & (B,)) -> ((A,) & (B,))}
+//│ Parsed: {fun extend: [] -> T -> U -> ((T,) & (U,)); fun foo: [] -> ((T,) & (U,)) -> unit; fun over: [] -> ((number -> string,) & (object -> string,)) -> string; trait IA(x: number,): {}; trait IB(y: number,): {}; fun iii: [] -> ((IA,) & (IB,)) -> ((IA,) & (IB,)); fun uu: [] -> (((((U,) & (T,),) | ((U,) & (P,),),) | ((V,) & (T,),),) | ((V,) & (P,),)) -> (((((U,) & (T,),) | ((U,) & (P,),),) | ((V,) & (T,),),) | ((V,) & (P,),)); fun iiii: [] -> (((U,) & (T,),) & (V,)) -> (((U,) & (T,),) & (V,)); fun arr: [] -> anything; fun tt: [] -> (((U, T,),) & ((V, V,),)) -> (((U, T,),) & ((V, V,),)); class A() {}; class B() {}; fun inter: [] -> ((A,) & (B,)) -> ((A,) & (B,))}
