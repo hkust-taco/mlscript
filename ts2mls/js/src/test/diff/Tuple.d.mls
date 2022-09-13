@@ -1,78 +1,36 @@
 :NewParser
 :ParseOnly
-fun key(_: (string, bool, )): string
-fun value(_: (string, bool, )): bool
-fun third(_: (number, number, number, )): number
-fun vec2(_: number, _: number): (number, number, )
-fun twoFunctions(_: ((_: number): number, (_: number): number, ), _: number): number
-fun tupleIt(_: string): ((): string, )
-fun s(_: bool): ((string) | (number), (number) | (bool), )
-fun s2(_: (bool, (string) | (number), )): (string) | (number)
-fun ex(_: T, _: U): (T, U, (T) & (U), )
-fun foo(_: ((T) & (U), )): unit
-fun conv(_: (y: number)): ((y: number), (z: string), )
+let key: (string, bool, ) => string
+let value: (string, bool, ) => bool
+let third: (number, number, number, ) => number
+let vec2: number => number => (number, number, )
+let twoFunctions: (number => number, number => number, ) => number => number
+let tupleIt: string => (unit => string, )
+let s: bool => ((string) | (number), (number) | (bool), )
+let s2: (bool, (string) | (number), ) => (string) | (number)
+let ex: T => U => (T, U, (T) & (U), )
+let foo: ((T) & (U), ) => unit
+let conv: (y: number) => ((y: number), (z: string), )
 class A(x: number)
 class B
-fun swap(_: (A, B, )): (B, A, )
-//│ |#fun| |key|(|_|#:| |(|string|,| |bool|,| |)|)|#:| |string|↵|#fun| |value|(|_|#:| |(|string|,| |bool|,| |)|)|#:| |bool|↵|#fun| |third|(|_|#:| |(|number|,| |number|,| |number|,| |)|)|#:| |number|↵|#fun| |vec2|(|_|#:| |number|,| |_|#:| |number|)|#:| |(|number|,| |number|,| |)|↵|#fun| |twoFunctions|(|_|#:| |(|(|_|#:| |number|)|#:| |number|,| |(|_|#:| |number|)|#:| |number|,| |)|,| |_|#:| |number|)|#:| |number|↵|#fun| |tupleIt|(|_|#:| |string|)|#:| |(|(||)|#:| |string|,| |)|↵|#fun| |s|(|_|#:| |bool|)|#:| |(|(|string|)| ||| |(|number|)|,| |(|number|)| ||| |(|bool|)|,| |)|↵|#fun| |s2|(|_|#:| |(|bool|,| |(|string|)| ||| |(|number|)|,| |)|)|#:| |(|string|)| ||| |(|number|)|↵|#fun| |ex|(|_|#:| |T|,| |_|#:| |U|)|#:| |(|T|,| |U|,| |(|T|)| |&| |(|U|)|,| |)|↵|#fun| |foo|(|_|#:| |(|(|T|)| |&| |(|U|)|,| |)|)|#:| |unit|↵|#fun| |conv|(|_|#:| |(|y|#:| |number|)|)|#:| |(|(|y|#:| |number|)|,| |(|z|#:| |string|)|,| |)|↵|#class| |A|(|x|#:| |number|)|↵|#class| |B|↵|#fun| |swap|(|_|#:| |(|A|,| |B|,| |)|)|#:| |(|B|,| |A|,| |)|
-//│ ╔══[ERROR] not a recognized type: '(' string, bool, ')'
-//│ ║  l.3: 	fun key(_: (string, bool, )): string
-//│ ╙──     	           ^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '(' string, bool, ')'
-//│ ║  l.4: 	fun value(_: (string, bool, )): bool
-//│ ╙──     	             ^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '(' number, number, number, ')'
-//│ ║  l.5: 	fun third(_: (number, number, number, )): number
-//│ ╙──     	             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+let swap: (A, B, ) => (B, A, )
+//│ |#let| |key|#:| |(|string|,| |bool|,| |)| |=>| |string|↵|#let| |value|#:| |(|string|,| |bool|,| |)| |=>| |bool|↵|#let| |third|#:| |(|number|,| |number|,| |number|,| |)| |=>| |number|↵|#let| |vec2|#:| |number| |=>| |number| |=>| |(|number|,| |number|,| |)|↵|#let| |twoFunctions|#:| |(|number| |=>| |number|,| |number| |=>| |number|,| |)| |=>| |number| |=>| |number|↵|#let| |tupleIt|#:| |string| |=>| |(|unit| |=>| |string|,| |)|↵|#let| |s|#:| |bool| |=>| |(|(|string|)| ||| |(|number|)|,| |(|number|)| ||| |(|bool|)|,| |)|↵|#let| |s2|#:| |(|bool|,| |(|string|)| ||| |(|number|)|,| |)| |=>| |(|string|)| ||| |(|number|)|↵|#let| |ex|#:| |T| |=>| |U| |=>| |(|T|,| |U|,| |(|T|)| |&| |(|U|)|,| |)|↵|#let| |foo|#:| |(|(|T|)| |&| |(|U|)|,| |)| |=>| |unit|↵|#let| |conv|#:| |(|y|#:| |number|)| |=>| |(|(|y|#:| |number|)|,| |(|z|#:| |string|)|,| |)|↵|#class| |A|(|x|#:| |number|)|↵|#class| |B|↵|#let| |swap|#:| |(|A|,| |B|,| |)| |=>| |(|B|,| |A|,| |)|
 //│ ╔══[ERROR] not a recognized type: '(' number, number, ')'
-//│ ║  l.6: 	fun vec2(_: number, _: number): (number, number, )
-//│ ╙──     	                                ^^^^^^^^^^^^^^^^^^
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.7: 	fun twoFunctions(_: ((_: number): number, (_: number): number, ), _: number): number
-//│ ╙──     	                                ^
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.7: 	fun twoFunctions(_: ((_: number): number, (_: number): number, ), _: number): number
-//│ ╙──     	                                                     ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.7: 	fun twoFunctions(_: ((_: number): number, (_: number): number, ), _: number): number
-//│ ╙──     	                                          ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.7: 	fun twoFunctions(_: ((_: number): number, (_: number): number, ), _: number): number
-//│ ╙──     	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '(' '(' _: number, ')' (number, '(' _: number, ')' (number,),), ')'
-//│ ║  l.7: 	fun twoFunctions(_: ((_: number): number, (_: number): number, ), _: number): number
-//│ ╙──     	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.8: 	fun tupleIt(_: string): ((): string, )
-//│ ╙──     	                           ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.8: 	fun tupleIt(_: string): ((): string, )
-//│ ╙──     	                         ^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '(' '('  ')' (string,), ')'
-//│ ║  l.8: 	fun tupleIt(_: string): ((): string, )
-//│ ╙──     	                        ^^^^^^^^^^^^^^
+//│ ║  l.6: 	let vec2: number => number => (number, number, )
+//│ ╙──     	                              ^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: '(' unit, => string, ')'
+//│ ║  l.8: 	let tupleIt: string => (unit => string, )
+//│ ╙──     	                       ^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] not a recognized type: '(' | (string,) (number,), | (number,) (bool,), ')'
-//│ ║  l.9: 	fun s(_: bool): ((string) | (number), (number) | (bool), )
-//│ ╙──     	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '(' bool, | (string,) (number,), ')'
-//│ ║  l.10: 	fun s2(_: (bool, (string) | (number), )): (string) | (number)
-//│ ╙──      	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.9: 	let s: bool => ((string) | (number), (number) | (bool), )
+//│ ╙──     	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] not a recognized type: '(' T, U, & (T,) (U,), ')'
-//│ ║  l.11: 	fun ex(_: T, _: U): (T, U, (T) & (U), )
-//│ ╙──      	                    ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '(' & (T,) (U,), ')'
-//│ ║  l.12: 	fun foo(_: ((T) & (U), )): unit
-//│ ╙──      	           ^^^^^^^^^^^^^
+//│ ║  l.11: 	let ex: T => U => (T, U, (T) & (U), )
+//│ ╙──      	                  ^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] not a recognized type: '(' '(' y: number, ')', '(' z: string, ')', ')'
-//│ ║  l.13: 	fun conv(_: (y: number)): ((y: number), (z: string), )
-//│ ╙──      	                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '(' y: number, ')'
-//│ ║  l.13: 	fun conv(_: (y: number)): ((y: number), (z: string), )
-//│ ╙──      	            ^^^^^^^^^^^
+//│ ║  l.13: 	let conv: (y: number) => ((y: number), (z: string), )
+//│ ╙──      	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] not a recognized type: '(' B, A, ')'
-//│ ║  l.16: 	fun swap(_: (A, B, )): (B, A, )
-//│ ╙──      	                       ^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '(' A, B, ')'
-//│ ║  l.16: 	fun swap(_: (A, B, )): (B, A, )
-//│ ╙──      	            ^^^^^^^^
-//│ Parsed: {fun key: [] -> anything -> string; fun value: [] -> anything -> bool; fun third: [] -> anything -> number; fun vec2: [] -> (_: number, _: number,) -> anything; fun twoFunctions: [] -> anything -> number; fun tupleIt: [] -> (_: string,) -> anything; fun s: [] -> (_: bool,) -> anything; fun s2: [] -> anything -> ((string,) | (number,)); fun ex: [] -> (_: T, _: U,) -> anything; fun foo: [] -> anything -> unit; fun conv: [] -> anything -> anything; class A(x: number,) {}; class B() {}; fun swap: [] -> anything -> anything}
+//│ ║  l.16: 	let swap: (A, B, ) => (B, A, )
+//│ ╙──      	                      ^^^^^^^^
+//│ Parsed: {fun key: [] -> (string, bool,) -> string; fun value: [] -> (string, bool,) -> bool; fun third: [] -> (number, number, number,) -> number; fun vec2: [] -> anything; fun twoFunctions: [] -> (number -> number, number -> number,) -> number -> number; fun tupleIt: [] -> anything; fun s: [] -> anything; fun s2: [] -> (bool, (string,) | (number,),) -> ((string,) | (number,)); fun ex: [] -> anything; fun foo: [] -> ((T,) & (U,)) -> unit; fun conv: [] -> anything; class A(x: number,) {}; class B() {}; fun swap: [] -> anything}

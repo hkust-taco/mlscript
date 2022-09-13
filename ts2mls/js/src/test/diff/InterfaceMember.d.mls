@@ -1,91 +1,19 @@
 :NewParser
 :ParseOnly
-trait IFoo(a: string, b: (_: number): number, c: (): bool, d: (_: string): unit)
-trait II<T>(test: (_: T): number)
-fun create(): (v: number)
-fun get(_: (t: string)): string
-trait IEvent(callback: (_: unit): (_: number): unit)
-trait SearchFunc(__call: (_: string, _: string): bool)
-trait StringArray(__index: (_: number): string)
-trait Counter(__call: (_: number): string, interval: number, reset: (): unit)
-trait Simple(a: number, b: (_: bool): string)
+trait IFoo(a: string, b: number => number, c: unit => bool, d: string => unit)
+trait II<T>(test: T => number)
+let create: unit => (v: number)
+let get: (t: string) => string
+trait IEvent(callback: unit => number => unit)
+trait SearchFunc(__call: string => string => bool)
+trait StringArray(__index: number => string)
+trait Counter(__call: number => string, interval: number, reset: unit => unit)
+trait Simple(a: number, b: bool => string)
 trait Simple2<T>(abc: T)
 trait Next: Simple
-trait TTT<T>(ttt: (_: T): T)
-//│ |#trait| |IFoo|(|a|#:| |string|,| |b|#:| |(|_|#:| |number|)|#:| |number|,| |c|#:| |(||)|#:| |bool|,| |d|#:| |(|_|#:| |string|)|#:| |unit|)|↵|#trait| |II|‹|T|›|(|test|#:| |(|_|#:| |T|)|#:| |number|)|↵|#fun| |create|(||)|#:| |(|v|#:| |number|)|↵|#fun| |get|(|_|#:| |(|t|#:| |string|)|)|#:| |string|↵|#trait| |IEvent|(|callback|#:| |(|_|#:| |unit|)|#:| |(|_|#:| |number|)|#:| |unit|)|↵|#trait| |SearchFunc|(|__call|#:| |(|_|#:| |string|,| |_|#:| |string|)|#:| |bool|)|↵|#trait| |StringArray|(|__index|#:| |(|_|#:| |number|)|#:| |string|)|↵|#trait| |Counter|(|__call|#:| |(|_|#:| |number|)|#:| |string|,| |interval|#:| |number|,| |reset|#:| |(||)|#:| |unit|)|↵|#trait| |Simple|(|a|#:| |number|,| |b|#:| |(|_|#:| |bool|)|#:| |string|)|↵|#trait| |Simple2|‹|T|›|(|abc|#:| |T|)|↵|#trait| |Next|#:| |Simple|↵|#trait| |TTT|‹|T|›|(|ttt|#:| |(|_|#:| |T|)|#:| |T|)|
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.3: 	trait IFoo(a: string, b: (_: number): number, c: (): bool, d: (_: string): unit)
-//│ ╙──     	                                    ^
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.3: 	trait IFoo(a: string, b: (_: number): number, c: (): bool, d: (_: string): unit)
-//│ ╙──     	                                                   ^
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.3: 	trait IFoo(a: string, b: (_: number): number, c: (): bool, d: (_: string): unit)
-//│ ╙──     	                                                                         ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.3: 	trait IFoo(a: string, b: (_: number): number, c: (): bool, d: (_: string): unit)
-//│ ╙──     	                                                              ^^^^^^^^^^^^^^^^^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.3: 	trait IFoo(a: string, b: (_: number): number, c: (): bool, d: (_: string): unit)
-//│ ╙──     	                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.3: 	trait IFoo(a: string, b: (_: number): number, c: (): bool, d: (_: string): unit)
-//│ ╙──     	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.4: 	trait II<T>(test: (_: T): number)
-//│ ╙──     	                        ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.4: 	trait II<T>(test: (_: T): number)
-//│ ╙──     	                  ^^^^^^^^^^^^^^
+trait TTT<T>(ttt: T => T)
+//│ |#trait| |IFoo|(|a|#:| |string|,| |b|#:| |number| |=>| |number|,| |c|#:| |unit| |=>| |bool|,| |d|#:| |string| |=>| |unit|)|↵|#trait| |II|‹|T|›|(|test|#:| |T| |=>| |number|)|↵|#let| |create|#:| |unit| |=>| |(|v|#:| |number|)|↵|#let| |get|#:| |(|t|#:| |string|)| |=>| |string|↵|#trait| |IEvent|(|callback|#:| |unit| |=>| |number| |=>| |unit|)|↵|#trait| |SearchFunc|(|__call|#:| |string| |=>| |string| |=>| |bool|)|↵|#trait| |StringArray|(|__index|#:| |number| |=>| |string|)|↵|#trait| |Counter|(|__call|#:| |number| |=>| |string|,| |interval|#:| |number|,| |reset|#:| |unit| |=>| |unit|)|↵|#trait| |Simple|(|a|#:| |number|,| |b|#:| |bool| |=>| |string|)|↵|#trait| |Simple2|‹|T|›|(|abc|#:| |T|)|↵|#trait| |Next|#:| |Simple|↵|#trait| |TTT|‹|T|›|(|ttt|#:| |T| |=>| |T|)|
 //│ ╔══[ERROR] not a recognized type: '(' v: number, ')'
-//│ ║  l.5: 	fun create(): (v: number)
-//│ ╙──     	              ^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '(' t: string, ')'
-//│ ║  l.6: 	fun get(_: (t: string)): string
-//│ ╙──     	           ^^^^^^^^^^^
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.7: 	trait IEvent(callback: (_: unit): (_: number): unit)
-//│ ╙──     	                                ^
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.7: 	trait IEvent(callback: (_: unit): (_: number): unit)
-//│ ╙──     	                                             ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.7: 	trait IEvent(callback: (_: unit): (_: number): unit)
-//│ ╙──     	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.8: 	trait SearchFunc(__call: (_: string, _: string): bool)
-//│ ╙──     	                                               ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.8: 	trait SearchFunc(__call: (_: string, _: string): bool)
-//│ ╙──     	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.9: 	trait StringArray(__index: (_: number): string)
-//│ ╙──     	                                      ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.9: 	trait StringArray(__index: (_: number): string)
-//│ ╙──     	                           ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.10: 	trait Counter(__call: (_: number): string, interval: number, reset: (): unit)
-//│ ╙──      	                                 ^
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.10: 	trait Counter(__call: (_: number): string, interval: number, reset: (): unit)
-//│ ╙──      	                                                                      ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.10: 	trait Counter(__call: (_: number): string, interval: number, reset: (): unit)
-//│ ╙──      	                                                                    ^^^^^^^^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.10: 	trait Counter(__call: (_: number): string, interval: number, reset: (): unit)
-//│ ╙──      	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.11: 	trait Simple(a: number, b: (_: bool): string)
-//│ ╙──      	                                    ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.11: 	trait Simple(a: number, b: (_: bool): string)
-//│ ╙──      	                           ^^^^^^^^^^^^^^^^^
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.14: 	trait TTT<T>(ttt: (_: T): T)
-//│ ╙──      	                        ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.14: 	trait TTT<T>(ttt: (_: T): T)
-//│ ╙──      	                  ^^^^^^^^^
-//│ Parsed: {trait IFoo(a: string, b: '(' _: number, ')' (number, c: '('  ')' (bool, d: '(' _: string, ')' (unit,),),),): {}; trait II[T](test: '(' _: T, ')' (number,),): {}; fun create: [] -> () -> anything; fun get: [] -> anything -> string; trait IEvent(callback: '(' _: unit, ')' ('(' _: number, ')' (unit,),),): {}; trait SearchFunc(__call: '(' _: string, _: string, ')' (bool,),): {}; trait StringArray(__index: '(' _: number, ')' (string,),): {}; trait Counter(__call: '(' _: number, ')' (string, interval: number, reset: '('  ')' (unit,),),): {}; trait Simple(a: number, b: '(' _: bool, ')' (string,),): {}; trait Simple2[T](abc: T,): {}; trait Next(): Simple: {}; trait TTT[T](ttt: '(' _: T, ')' (T,),): {}}
+//│ ║  l.5: 	let create: unit => (v: number)
+//│ ╙──     	                    ^^^^^^^^^^^
+//│ Parsed: {trait IFoo(a: string, b: number, => number, c: unit, => bool, d: string, => unit,): {}; trait II[T](test: T, => number,): {}; fun create: [] -> anything; fun get: [] -> (t: string,) -> string; trait IEvent(callback: unit, => number, => unit,): {}; trait SearchFunc(__call: string, => string, => bool,): {}; trait StringArray(__index: number, => string,): {}; trait Counter(__call: number, => string, interval: number, reset: unit, => unit,): {}; trait Simple(a: number, b: bool, => string,): {}; trait Simple2[T](abc: T,): {}; trait Next(): Simple: {}; trait TTT[T](ttt: T, => T,): {}}

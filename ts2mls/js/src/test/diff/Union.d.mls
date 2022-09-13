@@ -1,32 +1,17 @@
 :NewParser
 :ParseOnly
-fun getString(_: ((string) | (number)) | (bool)): string
-fun test(_: bool): (string) | (number)
-fun run(_: ((_: number): number) | ((_: number): string)): anything
-fun get(_: (MutArray<number>) | (MutArray<string>)): unit
-fun get2(_: ((string, string, )) | ((number, string, ))): string
-fun typeVar(_: (T) | (U)): (T) | (U)
-fun uuuu(_: ((string) | (number)) | (bool)): ((string) | (number)) | (bool)
-//│ |#fun| |getString|(|_|#:| |(|(|string|)| ||| |(|number|)|)| ||| |(|bool|)|)|#:| |string|↵|#fun| |test|(|_|#:| |bool|)|#:| |(|string|)| ||| |(|number|)|↵|#fun| |run|(|_|#:| |(|(|_|#:| |number|)|#:| |number|)| ||| |(|(|_|#:| |number|)|#:| |string|)|)|#:| |anything|↵|#fun| |get|(|_|#:| |(|MutArray|‹|number|›|)| ||| |(|MutArray|‹|string|›|)|)|#:| |unit|↵|#fun| |get2|(|_|#:| |(|(|string|,| |string|,| |)|)| ||| |(|(|number|,| |string|,| |)|)|)|#:| |string|↵|#fun| |typeVar|(|_|#:| |(|T|)| ||| |(|U|)|)|#:| |(|T|)| ||| |(|U|)|↵|#fun| |uuuu|(|_|#:| |(|(|string|)| ||| |(|number|)|)| ||| |(|bool|)|)|#:| |(|(|string|)| ||| |(|number|)|)| ||| |(|bool|)|
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.5: 	fun run(_: ((_: number): number) | ((_: number): string)): anything
-//│ ╙──     	                       ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.5: 	fun run(_: ((_: number): number) | ((_: number): string)): anything
-//│ ╙──     	            ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.5: 	fun run(_: ((_: number): number) | ((_: number): string)): anything
-//│ ╙──     	                                               ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.5: 	fun run(_: ((_: number): number) | ((_: number): string)): anything
-//│ ╙──     	                                    ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '(' _: number, ')'
-//│ ║  l.5: 	fun run(_: ((_: number): number) | ((_: number): string)): anything
-//│ ╙──     	            ^^^^^^^^^^^
+let getString: ((string) | (number)) | (bool) => string
+let test: bool => (string) | (number)
+let run: (number => number) | (number => string) => anything
+let get: (MutArray<number>) | (MutArray<string>) => unit
+let get2: ((string, string, )) | ((number, string, )) => string
+let typeVar: (T) | (U) => (T) | (U)
+let uuuu: ((string) | (number)) | (bool) => ((string) | (number)) | (bool)
+//│ |#let| |getString|#:| |(|(|string|)| ||| |(|number|)|)| ||| |(|bool|)| |=>| |string|↵|#let| |test|#:| |bool| |=>| |(|string|)| ||| |(|number|)|↵|#let| |run|#:| |(|number| |=>| |number|)| ||| |(|number| |=>| |string|)| |=>| |anything|↵|#let| |get|#:| |(|MutArray|‹|number|›|)| ||| |(|MutArray|‹|string|›|)| |=>| |unit|↵|#let| |get2|#:| |(|(|string|,| |string|,| |)|)| ||| |(|(|number|,| |string|,| |)|)| |=>| |string|↵|#let| |typeVar|#:| |(|T|)| ||| |(|U|)| |=>| |(|T|)| ||| |(|U|)|↵|#let| |uuuu|#:| |(|(|string|)| ||| |(|number|)|)| ||| |(|bool|)| |=>| |(|(|string|)| ||| |(|number|)|)| ||| |(|bool|)|
 //│ ╔══[ERROR] not a recognized type: MutArray‹number›
-//│ ║  l.6: 	fun get(_: (MutArray<number>) | (MutArray<string>)): unit
-//│ ╙──     	            ^^^^^^^^^^^^^^^
+//│ ║  l.6: 	let get: (MutArray<number>) | (MutArray<string>) => unit
+//│ ╙──     	          ^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] not a recognized type: '(' string, string, ')'
-//│ ║  l.7: 	fun get2(_: ((string, string, )) | ((number, string, ))): string
-//│ ╙──     	             ^^^^^^^^^^^^^^^^^^
-//│ Parsed: {fun getString: [] -> (_: ((string,) | (number,),) | (bool,),) -> string; fun test: [] -> (_: bool,) -> ((string,) | (number,)); fun run: [] -> anything -> anything; fun get: [] -> anything -> unit; fun get2: [] -> anything -> string; fun typeVar: [] -> (_: (T,) | (U,),) -> ((T,) | (U,)); fun uuuu: [] -> (_: ((string,) | (number,),) | (bool,),) -> (((string,) | (number,),) | (bool,))}
+//│ ║  l.7: 	let get2: ((string, string, )) | ((number, string, )) => string
+//│ ╙──     	           ^^^^^^^^^^^^^^^^^^
+//│ Parsed: {fun getString: [] -> (((string,) | (number,),) | (bool,)) -> string; fun test: [] -> bool -> ((string,) | (number,)); fun run: [] -> ((number -> number,) | (number -> string,)) -> anything; fun get: [] -> anything; fun get2: [] -> anything; fun typeVar: [] -> ((T,) | (U,)) -> ((T,) | (U,)); fun uuuu: [] -> (((string,) | (number,),) | (bool,)) -> (((string,) | (number,),) | (bool,))}

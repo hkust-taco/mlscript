@@ -1,49 +1,7 @@
 :NewParser
 :ParseOnly
-fun h1(_: (_: number): number, _: number): number
-fun h2(_: string): (): string
-fun h3(_: (_: number): number, _: (_: number): number): (_: number): number
-//│ |#fun| |h1|(|_|#:| |(|_|#:| |number|)|#:| |number|,| |_|#:| |number|)|#:| |number|↵|#fun| |h2|(|_|#:| |string|)|#:| |(||)|#:| |string|↵|#fun| |h3|(|_|#:| |(|_|#:| |number|)|#:| |number|,| |_|#:| |(|_|#:| |number|)|#:| |number|)|#:| |(|_|#:| |number|)|#:| |number|
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.3: 	fun h1(_: (_: number): number, _: number): number
-//│ ╙──     	                     ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.3: 	fun h1(_: (_: number): number, _: number): number
-//│ ╙──     	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '(' _: number, ')'
-//│ ║  l.3: 	fun h1(_: (_: number): number, _: number): number
-//│ ╙──     	          ^^^^^^^^^^^
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.4: 	fun h2(_: string): (): string
-//│ ╙──     	                     ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.4: 	fun h2(_: string): (): string
-//│ ╙──     	                   ^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '('  ')'
-//│ ║  l.4: 	fun h2(_: string): (): string
-//│ ╙──     	                   ^^
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.5: 	fun h3(_: (_: number): number, _: (_: number): number): (_: number): number
-//│ ╙──     	                     ^
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.5: 	fun h3(_: (_: number): number, _: (_: number): number): (_: number): number
-//│ ╙──     	                                             ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.5: 	fun h3(_: (_: number): number, _: (_: number): number): (_: number): number
-//│ ╙──     	                                  ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.5: 	fun h3(_: (_: number): number, _: (_: number): number): (_: number): number
-//│ ╙──     	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.5: 	fun h3(_: (_: number): number, _: (_: number): number): (_: number): number
-//│ ╙──     	                                                                   ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.5: 	fun h3(_: (_: number): number, _: (_: number): number): (_: number): number
-//│ ╙──     	                                                        ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '(' _: number, ')'
-//│ ║  l.5: 	fun h3(_: (_: number): number, _: (_: number): number): (_: number): number
-//│ ╙──     	                                                        ^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '(' _: number, ')'
-//│ ║  l.5: 	fun h3(_: (_: number): number, _: (_: number): number): (_: number): number
-//│ ╙──     	          ^^^^^^^^^^^
-//│ Parsed: {fun h1: [] -> anything -> number; fun h2: [] -> (_: string,) -> anything; fun h3: [] -> anything -> anything}
+let h1: number => number => number => number
+let h2: string => unit => string
+let h3: number => number => number => number => number => number
+//│ |#let| |h1|#:| |number| |=>| |number| |=>| |number| |=>| |number|↵|#let| |h2|#:| |string| |=>| |unit| |=>| |string|↵|#let| |h3|#:| |number| |=>| |number| |=>| |number| |=>| |number| |=>| |number| |=>| |number|
+//│ Parsed: {fun h1: [] -> number -> number -> number -> number; fun h2: [] -> string -> unit -> string; fun h3: [] -> number -> number -> number -> number -> number -> number}

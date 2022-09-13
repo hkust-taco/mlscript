@@ -23,11 +23,9 @@ object Converter {
     case TSReferenceType(name) => name
     case TSFunctionType(params, res, _) =>
       // since functions can be defined by both `def` and `method`, it only returns the type of functions
-      if (params.length == 0) s"(): ${convert(res)}"
-      else {
-        val list = params.map((p) => s"_: ${convert(p)}").reduceLeft((r, p) => s"$r, $p")
-        s"($list): ${convert(res)}"
-      }
+      if (params.length == 0) s"${primitiveName("void")} => ${convert(res)}"
+      else
+        params.foldRight(convert(res))((p, f) => s"${convert(p)} => $f")
     case TSUnionType(lhs, rhs) => {
       val lres = convert(lhs)
       val rres = convert(rhs)

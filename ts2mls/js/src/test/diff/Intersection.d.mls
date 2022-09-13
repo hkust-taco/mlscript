@@ -1,44 +1,23 @@
 :NewParser
 :ParseOnly
-fun extend(_: T, _: U): (T) & (U)
-fun foo(_: (T) & (U)): unit
-fun over(_: ((_: number): string) & ((_: object): string)): string
+let extend: T => U => (T) & (U)
+let foo: (T) & (U) => unit
+let over: (number => string) & (object => string) => string
 trait IA(x: number)
 trait IB(y: number)
-fun iii(_: (IA) & (IB)): (IA) & (IB)
-fun uu(_: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))): ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))
-fun iiii(_: ((U) & (T)) & (V)): ((U) & (T)) & (V)
-fun arr(_: (MutArray<U>) & (MutArray<T>)): (MutArray<U>) & (MutArray<T>)
-fun tt(_: ((U, T, )) & ((V, V, ))): ((U, T, )) & ((V, V, ))
+let iii: (IA) & (IB) => (IA) & (IB)
+let uu: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P)) => ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))
+let iiii: ((U) & (T)) & (V) => ((U) & (T)) & (V)
+let arr: (MutArray<U>) & (MutArray<T>) => (MutArray<U>) & (MutArray<T>)
+let tt: ((U, T, )) & ((V, V, )) => ((U, T, )) & ((V, V, ))
 class A
 class B
-fun inter(_: (A) & (B)): (A) & (B)
-//│ |#fun| |extend|(|_|#:| |T|,| |_|#:| |U|)|#:| |(|T|)| |&| |(|U|)|↵|#fun| |foo|(|_|#:| |(|T|)| |&| |(|U|)|)|#:| |unit|↵|#fun| |over|(|_|#:| |(|(|_|#:| |number|)|#:| |string|)| |&| |(|(|_|#:| |object|)|#:| |string|)|)|#:| |string|↵|#trait| |IA|(|x|#:| |number|)|↵|#trait| |IB|(|y|#:| |number|)|↵|#fun| |iii|(|_|#:| |(|IA|)| |&| |(|IB|)|)|#:| |(|IA|)| |&| |(|IB|)|↵|#fun| |uu|(|_|#:| |(|(|(|(|U|)| |&| |(|T|)|)| ||| |(|(|U|)| |&| |(|P|)|)|)| ||| |(|(|V|)| |&| |(|T|)|)|)| ||| |(|(|V|)| |&| |(|P|)|)|)|#:| |(|(|(|(|U|)| |&| |(|T|)|)| ||| |(|(|U|)| |&| |(|P|)|)|)| ||| |(|(|V|)| |&| |(|T|)|)|)| ||| |(|(|V|)| |&| |(|P|)|)|↵|#fun| |iiii|(|_|#:| |(|(|U|)| |&| |(|T|)|)| |&| |(|V|)|)|#:| |(|(|U|)| |&| |(|T|)|)| |&| |(|V|)|↵|#fun| |arr|(|_|#:| |(|MutArray|‹|U|›|)| |&| |(|MutArray|‹|T|›|)|)|#:| |(|MutArray|‹|U|›|)| |&| |(|MutArray|‹|T|›|)|↵|#fun| |tt|(|_|#:| |(|(|U|,| |T|,| |)|)| |&| |(|(|V|,| |V|,| |)|)|)|#:| |(|(|U|,| |T|,| |)|)| |&| |(|(|V|,| |V|,| |)|)|↵|#class| |A|↵|#class| |B|↵|#fun| |inter|(|_|#:| |(|A|)| |&| |(|B|)|)|#:| |(|A|)| |&| |(|B|)|
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.5: 	fun over(_: ((_: number): string) & ((_: object): string)): string
-//│ ╙──     	                        ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.5: 	fun over(_: ((_: number): string) & ((_: object): string)): string
-//│ ╙──     	             ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.5: 	fun over(_: ((_: number): string) & ((_: object): string)): string
-//│ ╙──     	                                                ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.5: 	fun over(_: ((_: number): string) & ((_: object): string)): string
-//│ ╙──     	                                     ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '(' _: number, ')'
-//│ ║  l.5: 	fun over(_: ((_: number): string) & ((_: object): string)): string
-//│ ╙──     	             ^^^^^^^^^^^
+let inter: (A) & (B) => (A) & (B)
+//│ |#let| |extend|#:| |T| |=>| |U| |=>| |(|T|)| |&| |(|U|)|↵|#let| |foo|#:| |(|T|)| |&| |(|U|)| |=>| |unit|↵|#let| |over|#:| |(|number| |=>| |string|)| |&| |(|object| |=>| |string|)| |=>| |string|↵|#trait| |IA|(|x|#:| |number|)|↵|#trait| |IB|(|y|#:| |number|)|↵|#let| |iii|#:| |(|IA|)| |&| |(|IB|)| |=>| |(|IA|)| |&| |(|IB|)|↵|#let| |uu|#:| |(|(|(|(|U|)| |&| |(|T|)|)| ||| |(|(|U|)| |&| |(|P|)|)|)| ||| |(|(|V|)| |&| |(|T|)|)|)| ||| |(|(|V|)| |&| |(|P|)|)| |=>| |(|(|(|(|U|)| |&| |(|T|)|)| ||| |(|(|U|)| |&| |(|P|)|)|)| ||| |(|(|V|)| |&| |(|T|)|)|)| ||| |(|(|V|)| |&| |(|P|)|)|↵|#let| |iiii|#:| |(|(|U|)| |&| |(|T|)|)| |&| |(|V|)| |=>| |(|(|U|)| |&| |(|T|)|)| |&| |(|V|)|↵|#let| |arr|#:| |(|MutArray|‹|U|›|)| |&| |(|MutArray|‹|T|›|)| |=>| |(|MutArray|‹|U|›|)| |&| |(|MutArray|‹|T|›|)|↵|#let| |tt|#:| |(|(|U|,| |T|,| |)|)| |&| |(|(|V|,| |V|,| |)|)| |=>| |(|(|U|,| |T|,| |)|)| |&| |(|(|V|,| |V|,| |)|)|↵|#class| |A|↵|#class| |B|↵|#let| |inter|#:| |(|A|)| |&| |(|B|)| |=>| |(|A|)| |&| |(|B|)|
 //│ ╔══[ERROR] not a recognized type: MutArray‹U›
-//│ ║  l.11: 	fun arr(_: (MutArray<U>) & (MutArray<T>)): (MutArray<U>) & (MutArray<T>)
-//│ ╙──      	                                            ^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: MutArray‹U›
-//│ ║  l.11: 	fun arr(_: (MutArray<U>) & (MutArray<T>)): (MutArray<U>) & (MutArray<T>)
-//│ ╙──      	            ^^^^^^^^^^
+//│ ║  l.11: 	let arr: (MutArray<U>) & (MutArray<T>) => (MutArray<U>) & (MutArray<T>)
+//│ ╙──      	          ^^^^^^^^^^
 //│ ╔══[ERROR] not a recognized type: '(' U, T, ')'
-//│ ║  l.12: 	fun tt(_: ((U, T, )) & ((V, V, ))): ((U, T, )) & ((V, V, ))
-//│ ╙──      	                                     ^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: '(' U, T, ')'
-//│ ║  l.12: 	fun tt(_: ((U, T, )) & ((V, V, ))): ((U, T, )) & ((V, V, ))
-//│ ╙──      	           ^^^^^^^^
-//│ Parsed: {fun extend: [] -> (_: T, _: U,) -> ((T,) & (U,)); fun foo: [] -> (_: (T,) & (U,),) -> unit; fun over: [] -> anything -> string; trait IA(x: number,): {}; trait IB(y: number,): {}; fun iii: [] -> (_: (IA,) & (IB,),) -> ((IA,) & (IB,)); fun uu: [] -> (_: ((((U,) & (T,),) | ((U,) & (P,),),) | ((V,) & (T,),),) | ((V,) & (P,),),) -> (((((U,) & (T,),) | ((U,) & (P,),),) | ((V,) & (T,),),) | ((V,) & (P,),)); fun iiii: [] -> (_: ((U,) & (T,),) & (V,),) -> (((U,) & (T,),) & (V,)); fun arr: [] -> anything -> anything; fun tt: [] -> anything -> anything; class A() {}; class B() {}; fun inter: [] -> (_: (A,) & (B,),) -> ((A,) & (B,))}
+//│ ║  l.12: 	let tt: ((U, T, )) & ((V, V, )) => ((U, T, )) & ((V, V, ))
+//│ ╙──      	         ^^^^^^^^
+//│ Parsed: {fun extend: [] -> T -> U -> ((T,) & (U,)); fun foo: [] -> ((T,) & (U,)) -> unit; fun over: [] -> ((number -> string,) & (object -> string,)) -> string; trait IA(x: number,): {}; trait IB(y: number,): {}; fun iii: [] -> ((IA,) & (IB,)) -> ((IA,) & (IB,)); fun uu: [] -> (((((U,) & (T,),) | ((U,) & (P,),),) | ((V,) & (T,),),) | ((V,) & (P,),)) -> (((((U,) & (T,),) | ((U,) & (P,),),) | ((V,) & (T,),),) | ((V,) & (P,),)); fun iiii: [] -> (((U,) & (T,),) & (V,)) -> (((U,) & (T,),) & (V,)); fun arr: [] -> anything; fun tt: [] -> anything; class A() {}; class B() {}; fun inter: [] -> ((A,) & (B,)) -> ((A,) & (B,))}
