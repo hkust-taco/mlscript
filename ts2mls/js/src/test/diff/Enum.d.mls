@@ -4,4 +4,4 @@ let pass: int => bool
 let stop: unit => int
 let g: int => int
 //│ |#let| |pass|#:| |int| |=>| |bool|↵|#let| |stop|#:| |unit| |=>| |int|↵|#let| |g|#:| |int| |=>| |int|
-//│ Parsed: {fun pass: [] -> int -> bool; fun stop: [] -> unit -> int; fun g: [] -> int -> int}
+//│ Parsed: {let pass: [] -> int -> bool; let stop: [] -> unit -> int; let g: [] -> int -> int}
