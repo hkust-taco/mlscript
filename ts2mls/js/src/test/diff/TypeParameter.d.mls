@@ -14,22 +14,4 @@ class FFF<T>(fff: T => unit)
 let fff: FFF<string> => string => unit
 let getFFF: unit => FFF<number>
 //│ |#let| |inc|#:| |T| |=>| |number|↵|#class| |CC|‹|T|›|(|print|#:| |T| |=>| |unit|)|↵|#let| |con|#:| |T| |=>| |U|↵|#class| |Printer|‹|T|›|(|print|#:| |T| |=>| |unit|)|↵|#let| |setStringPrinter|#:| |Printer|‹|string|›| |=>| |unit|↵|#let| |getStringPrinter|#:| |unit| |=>| |Printer|‹|string|›|↵|#let| |foo|#:| |Printer|‹|T|›| |=>| |T| |=>| |T|↵|#let| |foo2|#:| |Printer|‹|T|›| |=>| |T| |=>| |T|↵|#class| |F|‹|T|›|(|x|#:| |T|,| |GG|#:| |U| |=>| |T|)|↵|#trait| |I|‹|T|›|(|x|#:| |T|,| |GG|#:| |U| |=>| |T|)|↵|#class| |FFF|‹|T|›|(|fff|#:| |T| |=>| |unit|)|↵|#let| |fff|#:| |FFF|‹|string|›| |=>| |string| |=>| |unit|↵|#let| |getFFF|#:| |unit| |=>| |FFF|‹|number|›|
-//│ ╔══[ERROR] not a recognized type: Printer‹string›
-//│ ║  l.7: 	let setStringPrinter: Printer<string> => unit
-//│ ╙──     	                      ^^^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: Printer‹string›
-//│ ║  l.8: 	let getStringPrinter: unit => Printer<string>
-//│ ╙──     	                              ^^^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: Printer‹T›
-//│ ║  l.9: 	let foo: Printer<T> => T => T
-//│ ╙──     	         ^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: Printer‹T›
-//│ ║  l.10: 	let foo2: Printer<T> => T => T
-//│ ╙──      	          ^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: FFF‹string›
-//│ ║  l.14: 	let fff: FFF<string> => string => unit
-//│ ╙──      	         ^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: FFF‹number›
-//│ ║  l.15: 	let getFFF: unit => FFF<number>
-//│ ╙──      	                    ^^^^^^^^^^
-//│ Parsed: {fun inc: [] -> T -> number; class CC[T](print: T, => unit,) {}; fun con: [] -> T -> U; class Printer[T](print: T, => unit,) {}; fun setStringPrinter: [] -> anything; fun getStringPrinter: [] -> anything; fun foo: [] -> anything; fun foo2: [] -> anything; class F[T](x: T, GG: U, => T,) {}; trait I[T](x: T, GG: U, => T,): {}; class FFF[T](fff: T, => unit,) {}; fun fff: [] -> anything; fun getFFF: [] -> anything}
+//│ Parsed: {fun inc: [] -> T -> number; class CC[T](print: T, => unit,) {}; fun con: [] -> T -> U; class Printer[T](print: T, => unit,) {}; fun setStringPrinter: [] -> Printer[string] -> unit; fun getStringPrinter: [] -> unit -> Printer[string]; fun foo: [] -> Printer[T] -> T -> T; fun foo2: [] -> Printer[T] -> T -> T; class F[T](x: T, GG: U, => T,) {}; trait I[T](x: T, GG: U, => T,): {}; class FFF[T](fff: T, => unit,) {}; fun fff: [] -> FFF[string] -> string -> unit; fun getFFF: [] -> unit -> FFF[number]}
