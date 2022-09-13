@@ -3,21 +3,21 @@
 class A(foo: (): unit)
 class B: A
 class C<T>(set: (_: T): unit, get: (): T)
-class D: C[number]
+class D: C<number>
 trait Wu(x: bool)
 class WuWu(y: bool): Wu
 trait WuWuWu(z: bool): WuWu
 trait Never(w: (): nothing): WuWuWu
 class VG<T>(x: T)
-class Home<T>(y: T): VG[string]
+class Home<T>(y: T): VG<string>
 trait O<I>(xx: (_: I): I)
-class OR<R>(xx: (_: R): R): O[R]
+class OR<R>(xx: (_: R): R): O<R>
 namespace Five {
   class Five'ROTK(wu: string)
   class Five'Y: Five'ROTK
 }
 class Y: Five'ROTK
-//│ |#class| |A|(|foo|#:| |(||)|#:| |unit|)|↵|#class| |B|#:| |A|↵|#class| |C|‹|T|›|(|set|#:| |(|_|#:| |T|)|#:| |unit|,| |get|#:| |(||)|#:| |T|)|↵|#class| |D|#:| |C|[|number|]|↵|#trait| |Wu|(|x|#:| |bool|)|↵|#class| |WuWu|(|y|#:| |bool|)|#:| |Wu|↵|#trait| |WuWuWu|(|z|#:| |bool|)|#:| |WuWu|↵|#trait| |Never|(|w|#:| |(||)|#:| |nothing|)|#:| |WuWuWu|↵|#class| |VG|‹|T|›|(|x|#:| |T|)|↵|#class| |Home|‹|T|›|(|y|#:| |T|)|#:| |VG|[|string|]|↵|#trait| |O|‹|I|›|(|xx|#:| |(|_|#:| |I|)|#:| |I|)|↵|#class| |OR|‹|R|›|(|xx|#:| |(|_|#:| |R|)|#:| |R|)|#:| |O|[|R|]|↵|namespace| |Five| |{|→|#class| |Five'ROTK|(|wu|#:| |string|)|↵|#class| |Five'Y|#:| |Five'ROTK|←|↵|}|↵|#class| |Y|#:| |Five'ROTK|
+//│ |#class| |A|(|foo|#:| |(||)|#:| |unit|)|↵|#class| |B|#:| |A|↵|#class| |C|‹|T|›|(|set|#:| |(|_|#:| |T|)|#:| |unit|,| |get|#:| |(||)|#:| |T|)|↵|#class| |D|#:| |C|‹|number|›|↵|#trait| |Wu|(|x|#:| |bool|)|↵|#class| |WuWu|(|y|#:| |bool|)|#:| |Wu|↵|#trait| |WuWuWu|(|z|#:| |bool|)|#:| |WuWu|↵|#trait| |Never|(|w|#:| |(||)|#:| |nothing|)|#:| |WuWuWu|↵|#class| |VG|‹|T|›|(|x|#:| |T|)|↵|#class| |Home|‹|T|›|(|y|#:| |T|)|#:| |VG|‹|string|›|↵|#trait| |O|‹|I|›|(|xx|#:| |(|_|#:| |I|)|#:| |I|)|↵|#class| |OR|‹|R|›|(|xx|#:| |(|_|#:| |R|)|#:| |R|)|#:| |O|‹|R|›|↵|namespace| |Five| |{|→|#class| |Five'ROTK|(|wu|#:| |string|)|↵|#class| |Five'Y|#:| |Five'ROTK|←|↵|}|↵|#class| |Y|#:| |Five'ROTK|
 //│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
 //│ ║  l.3: 	class A(foo: (): unit)
 //│ ╙──     	               ^
@@ -49,10 +49,10 @@ class Y: Five'ROTK
 //│ ║  l.13: 	trait O<I>(xx: (_: I): I)
 //│ ╙──      	               ^^^^^^^^^
 //│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.14: 	class OR<R>(xx: (_: R): R): O[R]
+//│ ║  l.14: 	class OR<R>(xx: (_: R): R): O<R>
 //│ ╙──      	                      ^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.14: 	class OR<R>(xx: (_: R): R): O[R]
+//│ ║  l.14: 	class OR<R>(xx: (_: R): R): O<R>
 //│ ╙──      	                ^^^^^^^^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.15: 	namespace Five {
@@ -66,4 +66,4 @@ class Y: Five'ROTK
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.18: 	}
 //│ ╙──      	^
-//│ Parsed: {class A(foo: '('  ')' (unit,),) {}; class B(): A {}; class C[T](set: '(' _: T, ')' (unit, get: '('  ')' (T,),),) {}; class D(): (C)[number] {}; trait Wu(x: bool,): {}; class WuWu(y: bool,): Wu {}; trait WuWuWu(z: bool,): WuWu: {}; trait Never(w: '('  ')' (nothing,),): WuWuWu: {}; class VG[T](x: T,) {}; class Home[T](y: T,): (VG)[string] {}; trait O[I](xx: '(' _: I, ')' (I,),): {}; class OR[R](xx: '(' _: R, ')' (R,),): (O)[R] {}; namespace (Five,)}
+//│ Parsed: {class A(foo: '('  ')' (unit,),) {}; class B(): A {}; class C[T](set: '(' _: T, ')' (unit, get: '('  ')' (T,),),) {}; class D(): C‹number› {}; trait Wu(x: bool,): {}; class WuWu(y: bool,): Wu {}; trait WuWuWu(z: bool,): WuWu: {}; trait Never(w: '('  ')' (nothing,),): WuWuWu: {}; class VG[T](x: T,) {}; class Home[T](y: T,): VG‹string› {}; trait O[I](xx: '(' _: I, ')' (I,),): {}; class OR[R](xx: '(' _: R, ')' (R,),): O‹R› {}; namespace (Five,)}

@@ -8,12 +8,12 @@ trait IB(y: number)
 fun iii(_: (IA) & (IB)): (IA) & (IB)
 fun uu(_: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))): ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))
 fun iiii(_: ((U) & (T)) & (V)): ((U) & (T)) & (V)
-fun arr(_: (MutArray[U]) & (MutArray[T])): (MutArray[U]) & (MutArray[T])
+fun arr(_: (MutArray<U>) & (MutArray<T>)): (MutArray<U>) & (MutArray<T>)
 fun tt(_: ((U, T, )) & ((V, V, ))): ((U, T, )) & ((V, V, ))
 class A
 class B
 fun inter(_: (A) & (B)): (A) & (B)
-//│ |#fun| |extend|(|_|#:| |T|,| |_|#:| |U|)|#:| |(|T|)| |&| |(|U|)|↵|#fun| |foo|(|_|#:| |(|T|)| |&| |(|U|)|)|#:| |unit|↵|#fun| |over|(|_|#:| |(|(|_|#:| |number|)|#:| |string|)| |&| |(|(|_|#:| |object|)|#:| |string|)|)|#:| |string|↵|#trait| |IA|(|x|#:| |number|)|↵|#trait| |IB|(|y|#:| |number|)|↵|#fun| |iii|(|_|#:| |(|IA|)| |&| |(|IB|)|)|#:| |(|IA|)| |&| |(|IB|)|↵|#fun| |uu|(|_|#:| |(|(|(|(|U|)| |&| |(|T|)|)| ||| |(|(|U|)| |&| |(|P|)|)|)| ||| |(|(|V|)| |&| |(|T|)|)|)| ||| |(|(|V|)| |&| |(|P|)|)|)|#:| |(|(|(|(|U|)| |&| |(|T|)|)| ||| |(|(|U|)| |&| |(|P|)|)|)| ||| |(|(|V|)| |&| |(|T|)|)|)| ||| |(|(|V|)| |&| |(|P|)|)|↵|#fun| |iiii|(|_|#:| |(|(|U|)| |&| |(|T|)|)| |&| |(|V|)|)|#:| |(|(|U|)| |&| |(|T|)|)| |&| |(|V|)|↵|#fun| |arr|(|_|#:| |(|MutArray|[|U|]|)| |&| |(|MutArray|[|T|]|)|)|#:| |(|MutArray|[|U|]|)| |&| |(|MutArray|[|T|]|)|↵|#fun| |tt|(|_|#:| |(|(|U|,| |T|,| |)|)| |&| |(|(|V|,| |V|,| |)|)|)|#:| |(|(|U|,| |T|,| |)|)| |&| |(|(|V|,| |V|,| |)|)|↵|#class| |A|↵|#class| |B|↵|#fun| |inter|(|_|#:| |(|A|)| |&| |(|B|)|)|#:| |(|A|)| |&| |(|B|)|
+//│ |#fun| |extend|(|_|#:| |T|,| |_|#:| |U|)|#:| |(|T|)| |&| |(|U|)|↵|#fun| |foo|(|_|#:| |(|T|)| |&| |(|U|)|)|#:| |unit|↵|#fun| |over|(|_|#:| |(|(|_|#:| |number|)|#:| |string|)| |&| |(|(|_|#:| |object|)|#:| |string|)|)|#:| |string|↵|#trait| |IA|(|x|#:| |number|)|↵|#trait| |IB|(|y|#:| |number|)|↵|#fun| |iii|(|_|#:| |(|IA|)| |&| |(|IB|)|)|#:| |(|IA|)| |&| |(|IB|)|↵|#fun| |uu|(|_|#:| |(|(|(|(|U|)| |&| |(|T|)|)| ||| |(|(|U|)| |&| |(|P|)|)|)| ||| |(|(|V|)| |&| |(|T|)|)|)| ||| |(|(|V|)| |&| |(|P|)|)|)|#:| |(|(|(|(|U|)| |&| |(|T|)|)| ||| |(|(|U|)| |&| |(|P|)|)|)| ||| |(|(|V|)| |&| |(|T|)|)|)| ||| |(|(|V|)| |&| |(|P|)|)|↵|#fun| |iiii|(|_|#:| |(|(|U|)| |&| |(|T|)|)| |&| |(|V|)|)|#:| |(|(|U|)| |&| |(|T|)|)| |&| |(|V|)|↵|#fun| |arr|(|_|#:| |(|MutArray|‹|U|›|)| |&| |(|MutArray|‹|T|›|)|)|#:| |(|MutArray|‹|U|›|)| |&| |(|MutArray|‹|T|›|)|↵|#fun| |tt|(|_|#:| |(|(|U|,| |T|,| |)|)| |&| |(|(|V|,| |V|,| |)|)|)|#:| |(|(|U|,| |T|,| |)|)| |&| |(|(|V|,| |V|,| |)|)|↵|#class| |A|↵|#class| |B|↵|#fun| |inter|(|_|#:| |(|A|)| |&| |(|B|)|)|#:| |(|A|)| |&| |(|B|)|
 //│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
 //│ ║  l.5: 	fun over(_: ((_: number): string) & ((_: object): string)): string
 //│ ╙──     	                        ^
@@ -29,12 +29,12 @@ fun inter(_: (A) & (B)): (A) & (B)
 //│ ╔══[ERROR] not a recognized type: '(' _: number, ')'
 //│ ║  l.5: 	fun over(_: ((_: number): string) & ((_: object): string)): string
 //│ ╙──     	             ^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: (MutArray)[U]
-//│ ║  l.11: 	fun arr(_: (MutArray[U]) & (MutArray[T])): (MutArray[U]) & (MutArray[T])
-//│ ╙──      	                                            ^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: (MutArray)[U]
-//│ ║  l.11: 	fun arr(_: (MutArray[U]) & (MutArray[T])): (MutArray[U]) & (MutArray[T])
-//│ ╙──      	            ^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: MutArray‹U›
+//│ ║  l.11: 	fun arr(_: (MutArray<U>) & (MutArray<T>)): (MutArray<U>) & (MutArray<T>)
+//│ ╙──      	                                            ^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: MutArray‹U›
+//│ ║  l.11: 	fun arr(_: (MutArray<U>) & (MutArray<T>)): (MutArray<U>) & (MutArray<T>)
+//│ ╙──      	            ^^^^^^^^^^
 //│ ╔══[ERROR] not a recognized type: '(' U, T, ')'
 //│ ║  l.12: 	fun tt(_: ((U, T, )) & ((V, V, ))): ((U, T, )) & ((V, V, ))
 //│ ╙──      	                                     ^^^^^^^^

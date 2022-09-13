@@ -2,11 +2,11 @@
 :ParseOnly
 fun buildName(_: string, _: (string) | (undefined)): string
 fun buildName2(_: string, _: (string) | (undefined)): string
-fun buildName3(_: string, _: MutArray[string]): string
-fun buildName4(_: string, _: MutArray[anything]): string
+fun buildName3(_: string, _: MutArray<string>): string
+fun buildName4(_: string, _: MutArray<anything>): string
 trait SquareConfig(color: (string) | (undefined), width: (number) | (undefined))
 fun did(_: number, _: ((_: number): number) | (undefined)): number
-fun getOrElse(_: (MutArray[object]) | (undefined)): object
+fun getOrElse(_: (MutArray<object>) | (undefined)): object
 class ABC
 fun testABC(_: (ABC) | (undefined)): unit
 fun testSquareConfig(_: (SquareConfig) | (undefined)): unit
@@ -14,14 +14,14 @@ fun err(_: ((number, string, )) | (undefined)): unit
 fun toStr(_: ((number) | (bool)) | (undefined)): string
 fun boo(_: ((T) & (U)) | (undefined)): unit
 class B<T>(b: T)
-fun boom(_: (B[nothing]) | (undefined)): anything
-//│ |#fun| |buildName|(|_|#:| |string|,| |_|#:| |(|string|)| ||| |(|undefined|)|)|#:| |string|↵|#fun| |buildName2|(|_|#:| |string|,| |_|#:| |(|string|)| ||| |(|undefined|)|)|#:| |string|↵|#fun| |buildName3|(|_|#:| |string|,| |_|#:| |MutArray|[|string|]|)|#:| |string|↵|#fun| |buildName4|(|_|#:| |string|,| |_|#:| |MutArray|[|anything|]|)|#:| |string|↵|#trait| |SquareConfig|(|color|#:| |(|string|)| ||| |(|undefined|)|,| |width|#:| |(|number|)| ||| |(|undefined|)|)|↵|#fun| |did|(|_|#:| |number|,| |_|#:| |(|(|_|#:| |number|)|#:| |number|)| ||| |(|undefined|)|)|#:| |number|↵|#fun| |getOrElse|(|_|#:| |(|MutArray|[|object|]|)| ||| |(|undefined|)|)|#:| |object|↵|#class| |ABC|↵|#fun| |testABC|(|_|#:| |(|ABC|)| ||| |(|undefined|)|)|#:| |unit|↵|#fun| |testSquareConfig|(|_|#:| |(|SquareConfig|)| ||| |(|undefined|)|)|#:| |unit|↵|#fun| |err|(|_|#:| |(|(|number|,| |string|,| |)|)| ||| |(|undefined|)|)|#:| |unit|↵|#fun| |toStr|(|_|#:| |(|(|number|)| ||| |(|bool|)|)| ||| |(|undefined|)|)|#:| |string|↵|#fun| |boo|(|_|#:| |(|(|T|)| |&| |(|U|)|)| ||| |(|undefined|)|)|#:| |unit|↵|#class| |B|‹|T|›|(|b|#:| |T|)|↵|#fun| |boom|(|_|#:| |(|B|[|nothing|]|)| ||| |(|undefined|)|)|#:| |anything|
-//│ ╔══[ERROR] not a recognized type: (MutArray)[string]
-//│ ║  l.5: 	fun buildName3(_: string, _: MutArray[string]): string
-//│ ╙──     	                             ^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: (MutArray)[anything]
-//│ ║  l.6: 	fun buildName4(_: string, _: MutArray[anything]): string
-//│ ╙──     	                             ^^^^^^^^^^^^^^^^^^
+fun boom(_: (B<nothing>) | (undefined)): anything
+//│ |#fun| |buildName|(|_|#:| |string|,| |_|#:| |(|string|)| ||| |(|undefined|)|)|#:| |string|↵|#fun| |buildName2|(|_|#:| |string|,| |_|#:| |(|string|)| ||| |(|undefined|)|)|#:| |string|↵|#fun| |buildName3|(|_|#:| |string|,| |_|#:| |MutArray|‹|string|›|)|#:| |string|↵|#fun| |buildName4|(|_|#:| |string|,| |_|#:| |MutArray|‹|anything|›|)|#:| |string|↵|#trait| |SquareConfig|(|color|#:| |(|string|)| ||| |(|undefined|)|,| |width|#:| |(|number|)| ||| |(|undefined|)|)|↵|#fun| |did|(|_|#:| |number|,| |_|#:| |(|(|_|#:| |number|)|#:| |number|)| ||| |(|undefined|)|)|#:| |number|↵|#fun| |getOrElse|(|_|#:| |(|MutArray|‹|object|›|)| ||| |(|undefined|)|)|#:| |object|↵|#class| |ABC|↵|#fun| |testABC|(|_|#:| |(|ABC|)| ||| |(|undefined|)|)|#:| |unit|↵|#fun| |testSquareConfig|(|_|#:| |(|SquareConfig|)| ||| |(|undefined|)|)|#:| |unit|↵|#fun| |err|(|_|#:| |(|(|number|,| |string|,| |)|)| ||| |(|undefined|)|)|#:| |unit|↵|#fun| |toStr|(|_|#:| |(|(|number|)| ||| |(|bool|)|)| ||| |(|undefined|)|)|#:| |string|↵|#fun| |boo|(|_|#:| |(|(|T|)| |&| |(|U|)|)| ||| |(|undefined|)|)|#:| |unit|↵|#class| |B|‹|T|›|(|b|#:| |T|)|↵|#fun| |boom|(|_|#:| |(|B|‹|nothing|›|)| ||| |(|undefined|)|)|#:| |anything|
+//│ ╔══[ERROR] not a recognized type: MutArray‹string›
+//│ ║  l.5: 	fun buildName3(_: string, _: MutArray<string>): string
+//│ ╙──     	                             ^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: MutArray‹anything›
+//│ ║  l.6: 	fun buildName4(_: string, _: MutArray<anything>): string
+//│ ╙──     	                             ^^^^^^^^^^^^^^^^^
 //│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
 //│ ║  l.8: 	fun did(_: number, _: ((_: number): number) | (undefined)): number
 //│ ╙──     	                                  ^
@@ -31,13 +31,13 @@ fun boom(_: (B[nothing]) | (undefined)): anything
 //│ ╔══[ERROR] not a recognized type: '(' _: number, ')'
 //│ ║  l.8: 	fun did(_: number, _: ((_: number): number) | (undefined)): number
 //│ ╙──     	                       ^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: (MutArray)[object]
-//│ ║  l.9: 	fun getOrElse(_: (MutArray[object]) | (undefined)): object
-//│ ╙──     	                  ^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: MutArray‹object›
+//│ ║  l.9: 	fun getOrElse(_: (MutArray<object>) | (undefined)): object
+//│ ╙──     	                  ^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] not a recognized type: '(' number, string, ')'
 //│ ║  l.13: 	fun err(_: ((number, string, )) | (undefined)): unit
 //│ ╙──      	            ^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: (B)[nothing]
-//│ ║  l.17: 	fun boom(_: (B[nothing]) | (undefined)): anything
-//│ ╙──      	             ^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: B‹nothing›
+//│ ║  l.17: 	fun boom(_: (B<nothing>) | (undefined)): anything
+//│ ╙──      	             ^^^^^^^^^
 //│ Parsed: {fun buildName: [] -> (_: string, _: (string,) | (undefined,),) -> string; fun buildName2: [] -> (_: string, _: (string,) | (undefined,),) -> string; fun buildName3: [] -> anything -> string; fun buildName4: [] -> anything -> string; trait SquareConfig(color: | (string,) (undefined,), width: | (number,) (undefined,),): {}; fun did: [] -> anything -> number; fun getOrElse: [] -> anything -> object; class ABC() {}; fun testABC: [] -> (_: (ABC,) | (undefined,),) -> unit; fun testSquareConfig: [] -> (_: (SquareConfig,) | (undefined,),) -> unit; fun err: [] -> anything -> unit; fun toStr: [] -> (_: ((number,) | (bool,),) | (undefined,),) -> string; fun boo: [] -> (_: ((T,) & (U,),) | (undefined,),) -> unit; class B[T](b: T,) {}; fun boom: [] -> anything -> anything}

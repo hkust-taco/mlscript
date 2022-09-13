@@ -4,16 +4,16 @@ fun inc(_: T): number
 class CC<T>(print: (_: T): unit)
 fun con(_: T): U
 class Printer<T>(print: (_: T): unit)
-fun setStringPrinter(_: Printer[string]): unit
-fun getStringPrinter(): Printer[string]
-fun foo(_: Printer[T], _: T): T
-fun foo2(_: Printer[T], _: T): T
+fun setStringPrinter(_: Printer<string>): unit
+fun getStringPrinter(): Printer<string>
+fun foo(_: Printer<T>, _: T): T
+fun foo2(_: Printer<T>, _: T): T
 class F<T>(x: T, GG: (_: U): T)
 trait I<T>(x: T, GG: (_: U): T)
 class FFF<T>(fff: (_: T): unit)
-fun fff(_: FFF[string], _: string): unit
-fun getFFF(): FFF[number]
-//│ |#fun| |inc|(|_|#:| |T|)|#:| |number|↵|#class| |CC|‹|T|›|(|print|#:| |(|_|#:| |T|)|#:| |unit|)|↵|#fun| |con|(|_|#:| |T|)|#:| |U|↵|#class| |Printer|‹|T|›|(|print|#:| |(|_|#:| |T|)|#:| |unit|)|↵|#fun| |setStringPrinter|(|_|#:| |Printer|[|string|]|)|#:| |unit|↵|#fun| |getStringPrinter|(||)|#:| |Printer|[|string|]|↵|#fun| |foo|(|_|#:| |Printer|[|T|]|,| |_|#:| |T|)|#:| |T|↵|#fun| |foo2|(|_|#:| |Printer|[|T|]|,| |_|#:| |T|)|#:| |T|↵|#class| |F|‹|T|›|(|x|#:| |T|,| |GG|#:| |(|_|#:| |U|)|#:| |T|)|↵|#trait| |I|‹|T|›|(|x|#:| |T|,| |GG|#:| |(|_|#:| |U|)|#:| |T|)|↵|#class| |FFF|‹|T|›|(|fff|#:| |(|_|#:| |T|)|#:| |unit|)|↵|#fun| |fff|(|_|#:| |FFF|[|string|]|,| |_|#:| |string|)|#:| |unit|↵|#fun| |getFFF|(||)|#:| |FFF|[|number|]|
+fun fff(_: FFF<string>, _: string): unit
+fun getFFF(): FFF<number>
+//│ |#fun| |inc|(|_|#:| |T|)|#:| |number|↵|#class| |CC|‹|T|›|(|print|#:| |(|_|#:| |T|)|#:| |unit|)|↵|#fun| |con|(|_|#:| |T|)|#:| |U|↵|#class| |Printer|‹|T|›|(|print|#:| |(|_|#:| |T|)|#:| |unit|)|↵|#fun| |setStringPrinter|(|_|#:| |Printer|‹|string|›|)|#:| |unit|↵|#fun| |getStringPrinter|(||)|#:| |Printer|‹|string|›|↵|#fun| |foo|(|_|#:| |Printer|‹|T|›|,| |_|#:| |T|)|#:| |T|↵|#fun| |foo2|(|_|#:| |Printer|‹|T|›|,| |_|#:| |T|)|#:| |T|↵|#class| |F|‹|T|›|(|x|#:| |T|,| |GG|#:| |(|_|#:| |U|)|#:| |T|)|↵|#trait| |I|‹|T|›|(|x|#:| |T|,| |GG|#:| |(|_|#:| |U|)|#:| |T|)|↵|#class| |FFF|‹|T|›|(|fff|#:| |(|_|#:| |T|)|#:| |unit|)|↵|#fun| |fff|(|_|#:| |FFF|‹|string|›|,| |_|#:| |string|)|#:| |unit|↵|#fun| |getFFF|(||)|#:| |FFF|‹|number|›|
 //│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
 //│ ║  l.4: 	class CC<T>(print: (_: T): unit)
 //│ ╙──     	                         ^
@@ -26,18 +26,18 @@ fun getFFF(): FFF[number]
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.6: 	class Printer<T>(print: (_: T): unit)
 //│ ╙──     	                        ^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: (Printer)[string]
-//│ ║  l.7: 	fun setStringPrinter(_: Printer[string]): unit
-//│ ╙──     	                        ^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: (Printer)[string]
-//│ ║  l.8: 	fun getStringPrinter(): Printer[string]
-//│ ╙──     	                        ^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: (Printer)[T]
-//│ ║  l.9: 	fun foo(_: Printer[T], _: T): T
-//│ ╙──     	           ^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: (Printer)[T]
-//│ ║  l.10: 	fun foo2(_: Printer[T], _: T): T
-//│ ╙──      	            ^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: Printer‹string›
+//│ ║  l.7: 	fun setStringPrinter(_: Printer<string>): unit
+//│ ╙──     	                        ^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: Printer‹string›
+//│ ║  l.8: 	fun getStringPrinter(): Printer<string>
+//│ ╙──     	                        ^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: Printer‹T›
+//│ ║  l.9: 	fun foo(_: Printer<T>, _: T): T
+//│ ╙──     	           ^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: Printer‹T›
+//│ ║  l.10: 	fun foo2(_: Printer<T>, _: T): T
+//│ ╙──      	            ^^^^^^^^^
 //│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
 //│ ║  l.11: 	class F<T>(x: T, GG: (_: U): T)
 //│ ╙──      	                           ^
@@ -56,10 +56,10 @@ fun getFFF(): FFF[number]
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.13: 	class FFF<T>(fff: (_: T): unit)
 //│ ╙──      	                  ^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: (FFF)[string]
-//│ ║  l.14: 	fun fff(_: FFF[string], _: string): unit
-//│ ╙──      	           ^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: (FFF)[number]
-//│ ║  l.15: 	fun getFFF(): FFF[number]
-//│ ╙──      	              ^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: FFF‹string›
+//│ ║  l.14: 	fun fff(_: FFF<string>, _: string): unit
+//│ ╙──      	           ^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: FFF‹number›
+//│ ║  l.15: 	fun getFFF(): FFF<number>
+//│ ╙──      	              ^^^^^^^^^^
 //│ Parsed: {fun inc: [] -> (_: T,) -> number; class CC[T](print: '(' _: T, ')' (unit,),) {}; fun con: [] -> (_: T,) -> U; class Printer[T](print: '(' _: T, ')' (unit,),) {}; fun setStringPrinter: [] -> anything -> unit; fun getStringPrinter: [] -> () -> anything; fun foo: [] -> anything -> T; fun foo2: [] -> anything -> T; class F[T](x: T, GG: '(' _: U, ')' (T,),) {}; trait I[T](x: T, GG: '(' _: U, ')' (T,),): {}; class FFF[T](fff: '(' _: T, ')' (unit,),) {}; fun fff: [] -> anything -> unit; fun getFFF: [] -> () -> anything}

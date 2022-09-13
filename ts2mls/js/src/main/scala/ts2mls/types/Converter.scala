@@ -39,12 +39,12 @@ object Converter {
     case TSIntersectionType(lhs, rhs) => s"(${convert(lhs)}) & (${convert(rhs)})"
     case TSTypeParameter(name, _) => name // constraints should be translated where the type parameters were created rather than be used
     case TSTupleType(lst) => s"(${lst.foldLeft("")((p, t) => s"$p${convert(t)}, ")})"
-    case TSArrayType(element) => s"MutArray[${convert(element)}]"
+    case TSArrayType(element) => s"MutArray<${convert(element)}>"
     case TSEnumType => "int"
     case TSMemberType(base, _) => convert(base) // TODO: support private/protected members
     case TSInterfaceType(name, members, typeVars, parents) => convertRecord(s"trait $name", members, typeVars, parents)
     case TSClassType(name, members, _, typeVars, parents) => convertRecord(s"class $name", members, typeVars, parents) // TODO: support static members
-    case TSSubstitutionType(base, applied) => s"${base}[${applied.map((app) => convert(app)).reduceLeft((res, s) => s"$res, $s")}]"
+    case TSSubstitutionType(base, applied) => s"${base}<${applied.map((app) => convert(app)).reduceLeft((res, s) => s"$res, $s")}>"
     case overload @ TSIgnoredOverload(base, _) => s"${convert(base)} ${overload.warning}"
   }
 

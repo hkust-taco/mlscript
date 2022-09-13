@@ -3,11 +3,11 @@
 fun getString(_: ((string) | (number)) | (bool)): string
 fun test(_: bool): (string) | (number)
 fun run(_: ((_: number): number) | ((_: number): string)): anything
-fun get(_: (MutArray[number]) | (MutArray[string])): unit
+fun get(_: (MutArray<number>) | (MutArray<string>)): unit
 fun get2(_: ((string, string, )) | ((number, string, ))): string
 fun typeVar(_: (T) | (U)): (T) | (U)
 fun uuuu(_: ((string) | (number)) | (bool)): ((string) | (number)) | (bool)
-//│ |#fun| |getString|(|_|#:| |(|(|string|)| ||| |(|number|)|)| ||| |(|bool|)|)|#:| |string|↵|#fun| |test|(|_|#:| |bool|)|#:| |(|string|)| ||| |(|number|)|↵|#fun| |run|(|_|#:| |(|(|_|#:| |number|)|#:| |number|)| ||| |(|(|_|#:| |number|)|#:| |string|)|)|#:| |anything|↵|#fun| |get|(|_|#:| |(|MutArray|[|number|]|)| ||| |(|MutArray|[|string|]|)|)|#:| |unit|↵|#fun| |get2|(|_|#:| |(|(|string|,| |string|,| |)|)| ||| |(|(|number|,| |string|,| |)|)|)|#:| |string|↵|#fun| |typeVar|(|_|#:| |(|T|)| ||| |(|U|)|)|#:| |(|T|)| ||| |(|U|)|↵|#fun| |uuuu|(|_|#:| |(|(|string|)| ||| |(|number|)|)| ||| |(|bool|)|)|#:| |(|(|string|)| ||| |(|number|)|)| ||| |(|bool|)|
+//│ |#fun| |getString|(|_|#:| |(|(|string|)| ||| |(|number|)|)| ||| |(|bool|)|)|#:| |string|↵|#fun| |test|(|_|#:| |bool|)|#:| |(|string|)| ||| |(|number|)|↵|#fun| |run|(|_|#:| |(|(|_|#:| |number|)|#:| |number|)| ||| |(|(|_|#:| |number|)|#:| |string|)|)|#:| |anything|↵|#fun| |get|(|_|#:| |(|MutArray|‹|number|›|)| ||| |(|MutArray|‹|string|›|)|)|#:| |unit|↵|#fun| |get2|(|_|#:| |(|(|string|,| |string|,| |)|)| ||| |(|(|number|,| |string|,| |)|)|)|#:| |string|↵|#fun| |typeVar|(|_|#:| |(|T|)| ||| |(|U|)|)|#:| |(|T|)| ||| |(|U|)|↵|#fun| |uuuu|(|_|#:| |(|(|string|)| ||| |(|number|)|)| ||| |(|bool|)|)|#:| |(|(|string|)| ||| |(|number|)|)| ||| |(|bool|)|
 //│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
 //│ ║  l.5: 	fun run(_: ((_: number): number) | ((_: number): string)): anything
 //│ ╙──     	                       ^
@@ -23,9 +23,9 @@ fun uuuu(_: ((string) | (number)) | (bool)): ((string) | (number)) | (bool)
 //│ ╔══[ERROR] not a recognized type: '(' _: number, ')'
 //│ ║  l.5: 	fun run(_: ((_: number): number) | ((_: number): string)): anything
 //│ ╙──     	            ^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: (MutArray)[number]
-//│ ║  l.6: 	fun get(_: (MutArray[number]) | (MutArray[string])): unit
-//│ ╙──     	            ^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: MutArray‹number›
+//│ ║  l.6: 	fun get(_: (MutArray<number>) | (MutArray<string>)): unit
+//│ ╙──     	            ^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] not a recognized type: '(' string, string, ')'
 //│ ║  l.7: 	fun get2(_: ((string, string, )) | ((number, string, ))): string
 //│ ╙──     	             ^^^^^^^^^^^^^^^^^^
