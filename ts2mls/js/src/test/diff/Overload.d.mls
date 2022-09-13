@@ -1,48 +1,48 @@
 :NewParser
 :ParseOnly
-let f: ((number) => (string)) & ((string) => (string))
-class M(foo: ((number) => (string)) & ((string) => (string)))
-let app: (((string) => (unit)) => ((number) => (unit))) & (((string) => (unit)) => ((string) => (unit)))
-let create: ((number) => (unit => bool)) & ((bool) => (unit => bool))
-let g0: ((MutArray<string>) => (string)) & ((MutArray<object>) => (string))
-let db: ((number) => (MutArray<number>)) & ((object) => (MutArray<number>))
+let f: (number => string) & (string => string)
+class M(foo: (number => string) & (string => string))
+let app: ((string => unit) => number => unit) & ((string => unit) => string => unit)
+let create: (number => unit => bool) & (bool => unit => bool)
+let g0: (MutArray<string> => string) & (MutArray<object> => string)
+let db: (number => MutArray<number>) & (object => MutArray<number>)
 class N
-let id: ((M) => (unit)) & ((N) => (unit))
-let tst: (((z: number)) => ((y: string))) & (((z: bool)) => ((y: string)))
-let op: ((number) => (((number) | (undefined)) => (unit))) & ((number) => (((bool) | (undefined)) => (unit)))
-let swap: (((number, string, )) => ((number, string, ))) & (((string, number, )) => ((number, string, )))
-let u: (((number) | (bool)) => (string)) & ((object) => (string))
-let doSome: (anything) => (unit) /* warning: the overload of function doSome is not supported yet. */
+let id: (M => unit) & (N => unit)
+let tst: ((z: number) => (y: string)) & ((z: bool) => (y: string))
+let op: (number => (number) | (undefined) => unit) & (number => (bool) | (undefined) => unit)
+let swap: ((number, string, ) => (number, string, )) & ((string, number, ) => (number, string, ))
+let u: ((number) | (bool) => string) & (object => string)
+let doSome: anything => unit /* warning: the overload of function doSome is not supported yet. */
 namespace XX {
-  let f: (T) => ((anything) => (string)) /* warning: the overload of function f is not supported yet. */
+  let f: T => anything => string /* warning: the overload of function f is not supported yet. */
 }
-class WWW(F: (T) => (anything) /* warning: the overload of function F is not supported yet. */)
+class WWW(F: T => anything /* warning: the overload of function F is not supported yet. */)
 let baz: unit => anything /* warning: the overload of function baz is not supported yet. */
-//│ |#let| |f|#:| |(|(|number|)| |=>| |(|string|)|)| |&| |(|(|string|)| |=>| |(|string|)|)|↵|#class| |M|(|foo|#:| |(|(|number|)| |=>| |(|string|)|)| |&| |(|(|string|)| |=>| |(|string|)|)|)|↵|#let| |app|#:| |(|(|(|string|)| |=>| |(|unit|)|)| |=>| |(|(|number|)| |=>| |(|unit|)|)|)| |&| |(|(|(|string|)| |=>| |(|unit|)|)| |=>| |(|(|string|)| |=>| |(|unit|)|)|)|↵|#let| |create|#:| |(|(|number|)| |=>| |(|unit| |=>| |bool|)|)| |&| |(|(|bool|)| |=>| |(|unit| |=>| |bool|)|)|↵|#let| |g0|#:| |(|(|MutArray|‹|string|›|)| |=>| |(|string|)|)| |&| |(|(|MutArray|‹|object|›|)| |=>| |(|string|)|)|↵|#let| |db|#:| |(|(|number|)| |=>| |(|MutArray|‹|number|›|)|)| |&| |(|(|object|)| |=>| |(|MutArray|‹|number|›|)|)|↵|#class| |N|↵|#let| |id|#:| |(|(|M|)| |=>| |(|unit|)|)| |&| |(|(|N|)| |=>| |(|unit|)|)|↵|#let| |tst|#:| |(|(|(|z|#:| |number|)|)| |=>| |(|(|y|#:| |string|)|)|)| |&| |(|(|(|z|#:| |bool|)|)| |=>| |(|(|y|#:| |string|)|)|)|↵|#let| |op|#:| |(|(|number|)| |=>| |(|(|(|number|)| ||| |(|undefined|)|)| |=>| |(|unit|)|)|)| |&| |(|(|number|)| |=>| |(|(|(|bool|)| ||| |(|undefined|)|)| |=>| |(|unit|)|)|)|↵|#let| |swap|#:| |(|(|(|number|,| |string|,| |)|)| |=>| |(|(|number|,| |string|,| |)|)|)| |&| |(|(|(|string|,| |number|,| |)|)| |=>| |(|(|number|,| |string|,| |)|)|)|↵|#let| |u|#:| |(|(|(|number|)| ||| |(|bool|)|)| |=>| |(|string|)|)| |&| |(|(|object|)| |=>| |(|string|)|)|↵|#let| |doSome|#:| |(|anything|)| |=>| |(|unit|)| |/*| |warning|#:| |the| |overload| |#of| |function| |doSome| |is| |not| |supported| |yet|.| |*/|↵|#namespace| |XX| |{|→|#let| |f|#:| |(|T|)| |=>| |(|(|anything|)| |=>| |(|string|)|)| |/*| |warning|#:| |the| |overload| |#of| |function| |f| |is| |not| |supported| |yet|.| |*/|←|↵|}|↵|#class| |WWW|(|F|#:| |(|T|)| |=>| |(|anything|)| |/*| |warning|#:| |the| |overload| |#of| |function| |F| |is| |not| |supported| |yet|.| |*/|)|↵|#let| |baz|#:| |unit| |=>| |anything| |/*| |warning|#:| |the| |overload| |#of| |function| |baz| |is| |not| |supported| |yet|.| |*/|
+//│ |#let| |f|#:| |(|number| |=>| |string|)| |&| |(|string| |=>| |string|)|↵|#class| |M|(|foo|#:| |(|number| |=>| |string|)| |&| |(|string| |=>| |string|)|)|↵|#let| |app|#:| |(|(|string| |=>| |unit|)| |=>| |number| |=>| |unit|)| |&| |(|(|string| |=>| |unit|)| |=>| |string| |=>| |unit|)|↵|#let| |create|#:| |(|number| |=>| |unit| |=>| |bool|)| |&| |(|bool| |=>| |unit| |=>| |bool|)|↵|#let| |g0|#:| |(|MutArray|‹|string|›| |=>| |string|)| |&| |(|MutArray|‹|object|›| |=>| |string|)|↵|#let| |db|#:| |(|number| |=>| |MutArray|‹|number|›|)| |&| |(|object| |=>| |MutArray|‹|number|›|)|↵|#class| |N|↵|#let| |id|#:| |(|M| |=>| |unit|)| |&| |(|N| |=>| |unit|)|↵|#let| |tst|#:| |(|(|z|#:| |number|)| |=>| |(|y|#:| |string|)|)| |&| |(|(|z|#:| |bool|)| |=>| |(|y|#:| |string|)|)|↵|#let| |op|#:| |(|number| |=>| |(|number|)| ||| |(|undefined|)| |=>| |unit|)| |&| |(|number| |=>| |(|bool|)| ||| |(|undefined|)| |=>| |unit|)|↵|#let| |swap|#:| |(|(|number|,| |string|,| |)| |=>| |(|number|,| |string|,| |)|)| |&| |(|(|string|,| |number|,| |)| |=>| |(|number|,| |string|,| |)|)|↵|#let| |u|#:| |(|(|number|)| ||| |(|bool|)| |=>| |string|)| |&| |(|object| |=>| |string|)|↵|#let| |doSome|#:| |anything| |=>| |unit| |/*| |warning|#:| |the| |overload| |#of| |function| |doSome| |is| |not| |supported| |yet|.| |*/|↵|#namespace| |XX| |{|→|#let| |f|#:| |T| |=>| |anything| |=>| |string| |/*| |warning|#:| |the| |overload| |#of| |function| |f| |is| |not| |supported| |yet|.| |*/|←|↵|}|↵|#class| |WWW|(|F|#:| |T| |=>| |anything| |/*| |warning|#:| |the| |overload| |#of| |function| |F| |is| |not| |supported| |yet|.| |*/|)|↵|#let| |baz|#:| |unit| |=>| |anything| |/*| |warning|#:| |the| |overload| |#of| |function| |baz| |is| |not| |supported| |yet|.| |*/|
 //│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.15: 	let doSome: (anything) => (unit) /* warning: the overload of function doSome is not supported yet. */
-//│ ╙──      	                                           ^
+//│ ║  l.15: 	let doSome: anything => unit /* warning: the overload of function doSome is not supported yet. */
+//│ ╙──      	                                       ^
 //│ ╔══[PARSE ERROR] Unexpected operator in expression position
-//│ ║  l.15: 	let doSome: (anything) => (unit) /* warning: the overload of function doSome is not supported yet. */
-//│ ╙──      	                                                                                                   ^^
+//│ ║  l.15: 	let doSome: anything => unit /* warning: the overload of function doSome is not supported yet. */
+//│ ╙──      	                                                                                               ^^
 //│ ╔══[PARSE ERROR] Unexpected newline in expression position
-//│ ║  l.15: 	let doSome: (anything) => (unit) /* warning: the overload of function doSome is not supported yet. */
-//│ ║        	                                                                                                     ^
+//│ ║  l.15: 	let doSome: anything => unit /* warning: the overload of function doSome is not supported yet. */
+//│ ║        	                                                                                                 ^
 //│ ║  l.16: 	namespace XX {
 //│ ╙──      	
 //│ ╔══[PARSE ERROR] Unexpected 'namespace' keyword in expression position
 //│ ║  l.16: 	namespace XX {
 //│ ╙──      	^^^^^^^^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.15: 	let doSome: (anything) => (unit) /* warning: the overload of function doSome is not supported yet. */
-//│ ║        	                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.15: 	let doSome: anything => unit /* warning: the overload of function doSome is not supported yet. */
+//│ ║        	                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.16: 	namespace XX {
 //│ ╙──      	^^^^^^^^^^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found curly brace section instead
 //│ ║  l.16: 	namespace XX {
 //│ ║        	             ^
-//│ ║  l.17: 	  let f: (T) => ((anything) => (string)) /* warning: the overload of function f is not supported yet. */
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.17: 	  let f: T => anything => string /* warning: the overload of function f is not supported yet. */
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.18: 	}
 //│ ╙──      	^
-//│ Parsed: {fun f: [] -> (number -> (string,),) & (string -> (string,),); class M(foo: & (number, => '(' string, ')',) (string, => '(' string, ')',),) {}; fun app: [] -> ((string -> (unit,)) -> (number -> (unit,),),) & ((string -> (unit,)) -> (string -> (unit,),),); fun create: [] -> (number -> (unit -> bool,),) & (bool -> (unit -> bool,),); fun g0: [] -> (MutArray[string] -> (string,),) & (MutArray[object] -> (string,),); fun db: [] -> (number -> (MutArray[number],),) & (object -> (MutArray[number],),); class N() {}; fun id: [] -> (M -> (unit,),) & (N -> (unit,),); fun tst: [] -> ((z: number,) -> ((y: string,),),) & ((z: bool,) -> ((y: string,),),); fun op: [] -> (number -> (((number,) | (undefined,)) -> (unit,),),) & (number -> (((bool,) | (undefined,)) -> (unit,),),); fun swap: [] -> ((number, string,) -> ((number, string,),),) & ((string, number,) -> ((number, string,),),); fun u: [] -> (((number,) | (bool,)) -> (string,),) & (object -> (string,),); fun doSome: [] -> anything -> /*[(unit,), (warning[(the[(overload[(function[(is[(doSome,), (not[(supported[(.[(yet,), (XX,)],)],)],)],)],)],)],)],)]}
+//│ Parsed: {fun f: [] -> (number -> string,) & (string -> string,); class M(foo: & (number, => string,) (string, => string,),) {}; fun app: [] -> ((string -> unit) -> number -> unit,) & ((string -> unit) -> string -> unit,); fun create: [] -> (number -> unit -> bool,) & (bool -> unit -> bool,); fun g0: [] -> (MutArray[string] -> string,) & (MutArray[object] -> string,); fun db: [] -> (number -> MutArray[number],) & (object -> MutArray[number],); class N() {}; fun id: [] -> (M -> unit,) & (N -> unit,); fun tst: [] -> ((z: number,) -> (y: string,),) & ((z: bool,) -> (y: string,),); fun op: [] -> (number -> ((number,) | (undefined,)) -> unit,) & (number -> ((bool,) | (undefined,)) -> unit,); fun swap: [] -> ((number, string,) -> (number, string,),) & ((string, number,) -> (number, string,),); fun u: [] -> (((number,) | (bool,)) -> string,) & (object -> string,); fun doSome: [] -> anything -> /*[(unit,), (warning[(the[(overload[(function[(is[(doSome,), (not[(supported[(.[(yet,), (XX,)],)],)],)],)],)],)],)],)]}

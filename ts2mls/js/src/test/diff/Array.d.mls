@@ -1,95 +1,23 @@
 :NewParser
 :ParseOnly
-let first: (MutArray<string>) => (string)
+let first: MutArray<string> => string
 let getZero3: unit => MutArray<number>
-let first2: (MutArray<(number) => (number)>) => ((number) => (number))
-let doEs: (MutArray<int>) => (MutArray<int>)
+let first2: MutArray<number => number> => number => number
+let doEs: MutArray<int> => MutArray<int>
 class C
 trait I(i: number)
-let doCs: (MutArray<C>) => (MutArray<C>)
-let doIs: (MutArray<I>) => (MutArray<I>)
-let inter: (MutArray<(U) & (T)>) => (MutArray<(U) & (T)>)
-let clean: (MutArray<(string, number, )>) => (MutArray<(string, number, )>)
-let translate: (MutArray<T>) => (MutArray<U>)
-let uu: (MutArray<(number) | (bool)>) => (MutArray<(number) | (bool)>)
+let doCs: MutArray<C> => MutArray<C>
+let doIs: MutArray<I> => MutArray<I>
+let inter: MutArray<(U) & (T)> => MutArray<(U) & (T)>
+let clean: MutArray<(string, number, )> => MutArray<(string, number, )>
+let translate: MutArray<T> => MutArray<U>
+let uu: MutArray<(number) | (bool)> => MutArray<(number) | (bool)>
 class Temp<T>(x: T)
-let ta: (MutArray<Temp<bool>>) => (MutArray<Temp<bool>>)
-let tat: (MutArray<Temp<T>>) => (MutArray<Temp<T>>)
-//│ ╔══[PARSE ERROR] Mistmatched closing parenthesis
-//│ ║  l.5: 	let first2: (MutArray<(number) => (number)>) => ((number) => (number))
-//│ ║       	                                           ^
-//│ ╟── does not correspond to opening angle bracket
-//│ ║  l.5: 	let first2: (MutArray<(number) => (number)>) => ((number) => (number))
-//│ ╙──     	                     ^
-//│ ╔══[PARSE ERROR] Mistmatched closing parenthesis
-//│ ║  l.11: 	let inter: (MutArray<(U) & (T)>) => (MutArray<(U) & (T)>)
-//│ ║        	                               ^
-//│ ╟── does not correspond to opening angle bracket
-//│ ║  l.11: 	let inter: (MutArray<(U) & (T)>) => (MutArray<(U) & (T)>)
-//│ ╙──      	                    ^
-//│ ╔══[PARSE ERROR] Mistmatched closing parenthesis
-//│ ║  l.11: 	let inter: (MutArray<(U) & (T)>) => (MutArray<(U) & (T)>)
-//│ ║        	                                                        ^
-//│ ╟── does not correspond to opening angle bracket
-//│ ║  l.11: 	let inter: (MutArray<(U) & (T)>) => (MutArray<(U) & (T)>)
-//│ ╙──      	                                             ^
-//│ ╔══[PARSE ERROR] Mistmatched closing parenthesis
-//│ ║  l.12: 	let clean: (MutArray<(string, number, )>) => (MutArray<(string, number, )>)
-//│ ║        	                                        ^
-//│ ╟── does not correspond to opening angle bracket
-//│ ║  l.12: 	let clean: (MutArray<(string, number, )>) => (MutArray<(string, number, )>)
-//│ ╙──      	                    ^
-//│ ╔══[PARSE ERROR] Mistmatched closing parenthesis
-//│ ║  l.12: 	let clean: (MutArray<(string, number, )>) => (MutArray<(string, number, )>)
-//│ ║        	                                                                          ^
-//│ ╟── does not correspond to opening angle bracket
-//│ ║  l.12: 	let clean: (MutArray<(string, number, )>) => (MutArray<(string, number, )>)
-//│ ╙──      	                                                      ^
-//│ ╔══[PARSE ERROR] Mistmatched closing parenthesis
-//│ ║  l.14: 	let uu: (MutArray<(number) | (bool)>) => (MutArray<(number) | (bool)>)
-//│ ║        	                                    ^
-//│ ╟── does not correspond to opening angle bracket
-//│ ║  l.14: 	let uu: (MutArray<(number) | (bool)>) => (MutArray<(number) | (bool)>)
-//│ ╙──      	                 ^
-//│ ╔══[PARSE ERROR] Mistmatched closing parenthesis
-//│ ║  l.14: 	let uu: (MutArray<(number) | (bool)>) => (MutArray<(number) | (bool)>)
-//│ ║        	                                                                     ^
-//│ ╟── does not correspond to opening angle bracket
-//│ ║  l.14: 	let uu: (MutArray<(number) | (bool)>) => (MutArray<(number) | (bool)>)
-//│ ╙──      	                                                  ^
-//│ ╔══[PARSE ERROR] Mistmatched closing parenthesis
-//│ ║  l.16: 	let ta: (MutArray<Temp<bool>>) => (MutArray<Temp<bool>>)
-//│ ║        	                             ^
-//│ ╟── does not correspond to opening angle bracket
-//│ ║  l.16: 	let ta: (MutArray<Temp<bool>>) => (MutArray<Temp<bool>>)
-//│ ╙──      	                      ^
-//│ ╔══[PARSE ERROR] Mistmatched closing parenthesis
-//│ ║  l.16: 	let ta: (MutArray<Temp<bool>>) => (MutArray<Temp<bool>>)
-//│ ║        	                                                       ^
-//│ ╟── does not correspond to opening angle bracket
-//│ ║  l.16: 	let ta: (MutArray<Temp<bool>>) => (MutArray<Temp<bool>>)
-//│ ╙──      	                                                ^
-//│ ╔══[PARSE ERROR] Mistmatched closing parenthesis
-//│ ║  l.17: 	let tat: (MutArray<Temp<T>>) => (MutArray<Temp<T>>)
-//│ ║        	                           ^
-//│ ╟── does not correspond to opening angle bracket
-//│ ║  l.17: 	let tat: (MutArray<Temp<T>>) => (MutArray<Temp<T>>)
-//│ ╙──      	                       ^
-//│ ╔══[PARSE ERROR] Mistmatched closing parenthesis
-//│ ║  l.17: 	let tat: (MutArray<Temp<T>>) => (MutArray<Temp<T>>)
-//│ ║        	                                                  ^
-//│ ╟── does not correspond to opening angle bracket
-//│ ║  l.17: 	let tat: (MutArray<Temp<T>>) => (MutArray<Temp<T>>)
-//│ ╙──      	                                              ^
+let ta: MutArray<Temp<bool>> => MutArray<Temp<bool>>
+let tat: MutArray<Temp<T>> => MutArray<Temp<T>>
 //│ ╔══[PARSE ERROR] Unmatched opening angle bracket
-//│ ║  l.17: 	let tat: (MutArray<Temp<T>>) => (MutArray<Temp<T>>)
-//│ ║        	                                         ^
+//│ ║  l.17: 	let tat: MutArray<Temp<T>> => MutArray<Temp<T>>
+//│ ║        	                                           ^
 //│ ╙── Note that `<` without spaces around it is considered as an angle bracket and not as an operator
-//│ |Temp|‹|T|>>|›|MutArray|
-//│ ╔══[PARSE ERROR] Unexpected end of angle bracket section; an expression was expected here
-//│ ║  l.17: 	let tat: (MutArray<Temp<T>>) => (MutArray<Temp<T>>)
-//│ ╙──      	                                                  ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.17: 	let tat: (MutArray<Temp<T>>) => (MutArray<Temp<T>>)
-//│ ╙──      	                                 ^^^^^^^^^^^^^^^^^
-//│ Parsed: {Temp‹>>[(T,), (undefined,)]› (MutArray,)}
+//│ |T|>>|Temp|
+//│ Parsed: {>> (T,) (Temp,)}
