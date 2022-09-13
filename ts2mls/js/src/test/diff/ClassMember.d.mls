@@ -1,9 +1,9 @@
 :NewParser
 :ParseOnly
-class Student(name: string, isFriend: Student => bool, addScore: string => number => unit, getID: unit => number)
-class Foo<T>(bar: T => unit)
-class EZ(inc: number => number)
+class Student(name: string, isFriend: (Student) => (bool), addScore: (string) => ((number) => (unit)), getID: unit => number)
+class Foo<T>(bar: (T) => (unit))
+class EZ(inc: (number) => (number))
 class Outer
-class TTT<T>(ttt: T => T, ttt2: T => T)
-//│ |#class| |Student|(|name|#:| |string|,| |isFriend|#:| |Student| |=>| |bool|,| |addScore|#:| |string| |=>| |number| |=>| |unit|,| |getID|#:| |unit| |=>| |number|)|↵|#class| |Foo|‹|T|›|(|bar|#:| |T| |=>| |unit|)|↵|#class| |EZ|(|inc|#:| |number| |=>| |number|)|↵|#class| |Outer|↵|#class| |TTT|‹|T|›|(|ttt|#:| |T| |=>| |T|,| |ttt2|#:| |T| |=>| |T|)|
-//│ Parsed: {class Student(name: string, isFriend: Student, => bool, addScore: string, => number, => unit, getID: unit, => number,) {}; class Foo[T](bar: T, => unit,) {}; class EZ(inc: number, => number,) {}; class Outer() {}; class TTT[T](ttt: T, => T, ttt2: T, => T,) {}}
+class TTT<T>(ttt: (T) => (T), ttt2: (T) => (T))
+//│ |#class| |Student|(|name|#:| |string|,| |isFriend|#:| |(|Student|)| |=>| |(|bool|)|,| |addScore|#:| |(|string|)| |=>| |(|(|number|)| |=>| |(|unit|)|)|,| |getID|#:| |unit| |=>| |number|)|↵|#class| |Foo|‹|T|›|(|bar|#:| |(|T|)| |=>| |(|unit|)|)|↵|#class| |EZ|(|inc|#:| |(|number|)| |=>| |(|number|)|)|↵|#class| |Outer|↵|#class| |TTT|‹|T|›|(|ttt|#:| |(|T|)| |=>| |(|T|)|,| |ttt2|#:| |(|T|)| |=>| |(|T|)|)|
+//│ Parsed: {class Student(name: string, isFriend: Student, => '(' bool, ')', addScore: string, => '(' number, => '(' unit, ')', ')', getID: unit, => number,) {}; class Foo[T](bar: T, => '(' unit, ')',) {}; class EZ(inc: number, => '(' number, ')',) {}; class Outer() {}; class TTT[T](ttt: T, => '(' T, ')', ttt2: T, => '(' T, ')',) {}}
