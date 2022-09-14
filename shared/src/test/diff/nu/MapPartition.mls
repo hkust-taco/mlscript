@@ -1,0 +1,140 @@
+:NewParser
+
+class Left(value)
+class Right(value)
+//│ Defined class Left
+//│ Defined class Right
+//│ Left: 'value -> (Left with {value: 'value})
+//│     = [Function: Left1]
+//│ Right: 'value -> (Right with {value: 'value})
+//│      = [Function: Right1]
+
+// TODO :: as a class name
+class Nil
+class ::(head, tail)
+//│ ╔══[PARSE ERROR] Expected a type name; found operator instead
+//│ ║  l.14: 	class ::(head, tail)
+//│ ╙──      	      ^^
+//│ ╔══[ERROR] Type names must start with a capital letter
+//│ ║  l.14: 	class ::(head, tail)
+//│ ╙──      	        ^
+//│ Defined class Nil
+//│ Defined class <error>
+//│ Nil: () -> Nil
+//│    = [Function: Nil1]
+//│ <error>: ('head, 'tail,) -> (<error> with {head: 'head, tail: 'tail})
+//│ Syntax error:
+//│   Unexpected token '<'
+
+
+fun mapPartition(f, xs) = if xs is
+  Nil then (Nil, Nil)
+  x :: xs then
+    let (l, r) = mapPartition(f, xs)
+    case f(x) of Left(v)  then (v :: l, r)
+              Right(v) then (l, v :: r)
+//│ ╔══[PARSE ERROR] Expected a function name; found parenthesis section instead
+//│ ║  l.33: 	    let (l, r) = mapPartition(f, xs)
+//│ ╙──      	        ^^^^^^
+//│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
+//│ ║  l.35: 	              Right(v) then (l, v :: r)
+//│ ╙──      	              ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.34: 	    case f(x) of Left(v)  then (v :: l, r)
+//│ ║        	                               ^^^^^^^^^^^
+//│ ║  l.35: 	              Right(v) then (l, v :: r)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
+//│ ║  l.34: 	    case f(x) of Left(v)  then (v :: l, r)
+//│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.35: 	              Right(v) then (l, v :: r)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.34: 	    case f(x) of Left(v)  then (v :: l, r)
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.35: 	              Right(v) then (l, v :: r)
+//│ ╙──      	^^^^^^^^^^^^^^
+//│ /!!!\ Uncaught error: java.lang.Exception: :: (x,) (xs,) is not a simple term
+//│ 	at: mlscript.IfBodyImpl$.termToSimpleTerm(helpers.scala:1007)
+//│ 	at: mlscript.IfBodyImpl$.desugarIfOpAppToMatch(helpers.scala:851)
+//│ 	at: mlscript.IfBodyImpl$.desugarIfOpAppToMatch(helpers.scala:851)
+//│ 	at: mlscript.IfBodyImpl$.desugarIfOpApp(helpers.scala:908)
+//│ 	at: mlscript.IfBodyImpl.desugar(helpers.scala:783)
+//│ 	at: mlscript.IfBodyImpl.desugar$(helpers.scala:779)
+//│ 	at: mlscript.IfBody.desugar(syntax.scala:75)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:732)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:738)
+
+// * We don't support vertical alignment (on purpose!)
+:pe
+fun mapPartition(f, xs) = if xs is
+  Nil then (Nil, Nil)
+  x :: xs and mapPartition(f, xs) is (l, r)
+          and f(x) is Left(v)  then (v :: l, r)
+                   Right(v) then (l, v :: r)
+//│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
+//│ ║  l.75: 	                   Right(v) then (l, v :: r)
+//│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.74: 	          and f(x) is Left(v)  then (v :: l, r)
+//│ ║        	                                    ^^^^^^^^^^^
+//│ ║  l.75: 	                   Right(v) then (l, v :: r)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ /!!!\ Uncaught error: java.lang.Exception: :: (x,) (xs,) is not a simple term
+//│ 	at: mlscript.IfBodyImpl$.termToSimpleTerm(helpers.scala:1007)
+//│ 	at: mlscript.IfBodyImpl$.desugarIfOpAppToMatch(helpers.scala:854)
+//│ 	at: mlscript.IfBodyImpl$.desugarIfOpAppToMatch(helpers.scala:851)
+//│ 	at: mlscript.IfBodyImpl$.desugarIfOpApp(helpers.scala:908)
+//│ 	at: mlscript.IfBodyImpl.desugar(helpers.scala:783)
+//│ 	at: mlscript.IfBodyImpl.desugar$(helpers.scala:779)
+//│ 	at: mlscript.IfBody.desugar(syntax.scala:75)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:732)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:738)
+
+
+fun mapPartition(f, xs) = if xs is
+  Nil then Nil
+  x :: xs and
+    let (l, r) = mapPartition(f, xs)
+    f(x) is
+      Left(v)  then (v :: l, r)
+      Right(v) then (l, v :: r)
+//│ ╔══[PARSE ERROR] Expected a function name; found parenthesis section instead
+//│ ║  l.100: 	    let (l, r) = mapPartition(f, xs)
+//│ ╙──       	        ^^^^^^
+//│ /!!!\ Uncaught error: java.lang.Exception: :: (x,) (xs,) is not a simple term
+//│ 	at: mlscript.IfBodyImpl$.termToSimpleTerm(helpers.scala:1007)
+//│ 	at: mlscript.IfBodyImpl$.desugarIfOpAppToMatch(helpers.scala:854)
+//│ 	at: mlscript.IfBodyImpl$.desugarIfOpAppToMatch(helpers.scala:851)
+//│ 	at: mlscript.IfBodyImpl$.desugarIfOpApp(helpers.scala:908)
+//│ 	at: mlscript.IfBodyImpl.desugar(helpers.scala:783)
+//│ 	at: mlscript.IfBodyImpl.desugar$(helpers.scala:779)
+//│ 	at: mlscript.IfBody.desugar(syntax.scala:75)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:732)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:738)
+
+
+fun mapPartition(f, xs) = if xs is
+  Nil then Nil
+  x :: xs and f(x) is
+    let (l, r) = mapPartition(f, xs)
+    Left(v)  then (v :: l, r)
+    Right(v) then (l, v :: r)
+//│ ╔══[PARSE ERROR] Expected a function name; found parenthesis section instead
+//│ ║  l.123: 	    let (l, r) = mapPartition(f, xs)
+//│ ╙──       	        ^^^^^^
+//│ /!!!\ Uncaught error: java.lang.Exception: :: (x,) (xs,) is not a simple term
+//│ 	at: mlscript.IfBodyImpl$.termToSimpleTerm(helpers.scala:1007)
+//│ 	at: mlscript.IfBodyImpl$.desugarIfOpAppToMatch(helpers.scala:854)
+//│ 	at: mlscript.IfBodyImpl$.desugarIfOpAppToMatch(helpers.scala:851)
+//│ 	at: mlscript.IfBodyImpl$.desugarIfOpApp(helpers.scala:908)
+//│ 	at: mlscript.IfBodyImpl.desugar(helpers.scala:783)
+//│ 	at: mlscript.IfBodyImpl.desugar$(helpers.scala:779)
+//│ 	at: mlscript.IfBody.desugar(syntax.scala:75)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:732)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:738)
+
