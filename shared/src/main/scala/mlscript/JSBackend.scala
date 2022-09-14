@@ -459,6 +459,7 @@ class JSBackend {
         traits += topLevelScope.declareTrait(name, tparams map { _.name }, body, methods)
       case TypeDef(Cls, TypeName(name), tparams, baseType, _, members, _) =>
         classes += topLevelScope.declareClass(name, tparams map { _.name }, baseType, members)
+      case TypeDef(Nms, TypeName(name), _, _, _, members, _) => () // TODO: deal with namespace
     }
     (traits.toList, classes.toList)
   }
