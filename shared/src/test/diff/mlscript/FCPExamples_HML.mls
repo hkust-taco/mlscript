@@ -110,13 +110,13 @@ def id x = x
 //│   = [Function: id1]
 
 def inc: int -> int
-def inc = succ
+inc = succ
 //│ inc: int -> int
 //│    = <missing implementation>
 //│ int -> int
 //│   <:  inc:
 //│ int -> int
-//│    = [Function: inc]
+//│    = [Function: succ]
 
 def choose: forall 'a. 'a -> 'a -> 'a
 def choose x y = if true then x else y
@@ -244,23 +244,26 @@ fun f -> poly f
 // ============ Sec 4 ============
 
 // FreezeML C4
-def ids = single id
+ids = single id
 //│ ids: List[forall 'a. 'a -> 'a]
-//│    = [Function: ids]
+//│    = Cons { head: [Function: id1], tail: Nil {} }
 
 // ============ Sec 7 ============
 
-def xs = cons id ids
+xs = cons id ids
 //│ xs: List[forall 'a. 'a -> 'a]
-//│   = [Function: xs]
+//│   = Cons {
+//│       head: [Function: id1],
+//│       tail: Cons { head: [Function: id1], tail: Nil {} }
+//│     }
 
-def ys = tail ids
+ys = tail ids
 //│ ys: List[forall 'a. 'a -> 'a]
-//│   = [Function: ys]
+//│   = Nil {}
 
-def zs = map id (tail (cons id ids))
+zs = map id (tail (cons id ids))
 //│ zs: List[forall 'a. 'a -> 'a]
-//│   = [Function: zs]
+//│   = Cons { head: [Function: id1], tail: Nil {} }
 
 def foo: (int -> (forall 'a. 'a -> 'a)) -> int
 poly (fun x -> x)

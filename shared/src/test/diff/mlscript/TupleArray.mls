@@ -55,13 +55,13 @@ def r: (1,2,3) \ _12345
 //│  = <missing implementation>
 
 def arr: Array[int]
-def arr = (1,2)
+arr = (1,2)
 //│ arr: Array[int]
 //│    = <missing implementation>
 //│ (1, 2,)
 //│   <:  arr:
 //│ Array[int]
-//│    = [Function: arr]
+//│    = [ 1, 2 ]
 
 fr = f r
 fr : Array[int] & {b: int}

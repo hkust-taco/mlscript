@@ -154,13 +154,16 @@ app poly id
 //│    = [ 1, true ]
 
 // FreezeML F2
-def ids = single id
+ids = single id
 //│ ids: List[forall 'a. 'a -> 'a]
-//│    = [Function: ids]
+//│    = Cons { head: [Function: id], tail: Nil {} }
 
-def idss = single ids
+idss = single ids
 //│ idss: List[List[forall 'a. 'a -> 'a]]
-//│     = [Function: idss]
+//│     = Cons {
+//│         head: Cons { head: [Function: id], tail: Nil {} },
+//│         tail: Nil {}
+//│       }
 
 def revapp x f = f x
 //│ revapp: 'a -> (forall 'b. ('a -> 'b) -> 'b)
@@ -280,6 +283,9 @@ const x y = x
 // ============ Sec 6 ============
 
 // FreezeML C5
-def xs = cons id ids
+xs = cons id ids
 //│ xs: List[forall 'a. 'a -> 'a]
-//│   = [Function: xs]
+//│   = Cons {
+//│       head: [Function: id],
+//│       tail: Cons { head: [Function: id], tail: Nil {} }
+//│     }

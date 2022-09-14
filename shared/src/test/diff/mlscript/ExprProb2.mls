@@ -195,7 +195,6 @@ eval2_fixed_2 e2
 
 
 
-// FIXME should be a code-gen error
 :js
 rec def eval1_fixed = eval1f (eval1f eval1_fixed)
 //│ // Query 1
@@ -207,6 +206,12 @@ rec def eval1_fixed = eval1f (eval1f eval1_fixed)
 //│   where
 //│     'a <: Add[?] & {lhs: 'a, rhs: 'a} | Lit
 //│            = [Function: eval1_fixed]
+
+:re
+eval1_fixed e1
+//│ res: int
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 rec def eval1_fixed() = eval1f (eval1f (eval1_fixed()))
 //│ eval1_fixed: () -> 'a -> int
@@ -298,8 +303,8 @@ eval2_broken eval2_broken e2
 //│ ║  l.+1: 	eval2_broken eval2_broken e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α1033' -> (α1034' -> (arg1036' | α1051')))›  <:  α1033_1097    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α1033' -> (α1034' -> (arg1036' | α1051')))›  <:  α1033'
+//│ ╟── this constraint:  ‹∀ 0. (α1062' -> (α1063' -> (arg1065' | α1080')))›  <:  α1062_1126    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α1062' -> (α1063' -> (arg1065' | α1080')))›  <:  α1062'
 //│ res: error
 
 
@@ -315,8 +320,8 @@ fix eval2f_oops e2
 //│ ║  l.+1: 	fix eval2f_oops e2
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α1118_1189 -> (α1123_1196 | α1138_1197))  <:  α626_1214    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α1118' -> (α1123' | α1138'))  <:  α626_1176'''
+//│ ╟── this constraint:  (α1147_1218 -> (α1152_1225 | α1167_1226))  <:  α626_1243    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α1147' -> (α1152' | α1167'))  <:  α626_1205'''
 //│ res: error
 
 

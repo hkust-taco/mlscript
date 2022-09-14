@@ -29,7 +29,7 @@ class Nil[a]: List[a]
   method Head = error
   method Tail = this
 def nil: List['a]
-def nil = Nil {}
+nil = Nil {}
 //│ Defined class Nil[+a]
 //│ Defined Nil.Head: Nil[?] -> nothing
 //│ Defined Nil.Tail: (Nil['a] & 'this) -> (Nil['a] & 'this)
@@ -38,7 +38,7 @@ def nil = Nil {}
 //│ Nil[nothing]
 //│   <:  nil:
 //│ List[nothing]
-//│    = [Function: nil]
+//│    = Nil {}
 
 
 

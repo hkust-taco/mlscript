@@ -136,22 +136,22 @@ def id x = x
 //│   = [Function: id1]
 
 def ids: List[forall 'a. 'a -> 'a]
-def ids = single id
+ids = single id
 //│ ids: List[forall 'a. 'a -> 'a]
 //│    = <missing implementation>
 //│ List[forall 'a. 'a -> 'a]
 //│   <:  ids:
 //│ List[forall 'a. 'a -> 'a]
-//│    = [Function: ids]
+//│    = Cons { head: [Function: id1], tail: Nil {} }
 
 def inc: int -> int
-def inc = succ
+inc = succ
 //│ inc: int -> int
 //│    = <missing implementation>
 //│ int -> int
 //│   <:  inc:
 //│ int -> int
-//│    = [Function: inc]
+//│    = [Function: succ]
 
 def choose: 'a -> 'a -> 'a
 def choose x y = if true then x else y

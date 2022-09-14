@@ -2,9 +2,9 @@
 class Undef
 //│ Defined class Undef
 
-def undef = Undef{}
+undef = Undef{}
 //│ undef: Undef
-//│      = [Function: undef]
+//│      = Undef {}
 
 
 def example: int | Undef

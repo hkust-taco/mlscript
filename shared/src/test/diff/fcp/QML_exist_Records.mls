@@ -22,7 +22,7 @@ type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 
 
 def baseImpl: ArraysRep['a, 'a]
-def baseImpl = {
+baseImpl = {
     init   = fun a -> a;
     sub    = fun r -> fun (i : int) -> r;
     update = fun r -> fun (i : int) -> fun a -> a;
@@ -35,7 +35,12 @@ def baseImpl = {
 //│     'a <: 'c -> 'b -> 'd))), init: forall 'e. 'e -> 'e, sub: forall 'f. 'f -> int -> 'f, update: 'a -> int -> (forall 'g. 'g -> 'g)}
 //│   <:  baseImpl:
 //│ ArraysRep['a, 'a]
-//│         = [Function: baseImpl]
+//│         = {
+//│             init: [Function: init],
+//│             sub: [Function: sub],
+//│             update: [Function: update],
+//│             fold: [Function: fold]
+//│           }
 
 def base: Arrays['a]
 def base f = f baseImpl
@@ -154,13 +159,13 @@ stepImpl_ty = stepImpl_Ann_3
 //│   <:  stepImpl_ty:
 //│ ArraysRep['a, 'r] -> ArraysRep['a, ('r, string,)]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.146: 	stepImpl_ty = stepImpl_Ann_3
+//│ ║  l.151: 	stepImpl_ty = stepImpl_Ann_3
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a_1074` is not an instance of type `'a_913_939`
-//│ ║  l.50: 	def stepImpl_ty: ArraysRep['a, 'r] -> ArraysRep['a, ('r, string)]
+//│ ║  l.55: 	def stepImpl_ty: ArraysRep['a, 'r] -> ArraysRep['a, ('r, string)]
 //│ ║        	                           ^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.134: 	    fold   = (fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0) : Fold['a, ('rep, string)]
+//│ ║  l.139: 	    fold   = (fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0) : Fold['a, ('rep, string)]
 //│ ╙──       	                                                                              ^^
 //│            = [Function: stepImpl_Ann_3]
 
@@ -304,13 +309,13 @@ def step arr f = f (stepImpl2_Ann_3 arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.294: 	def step arr f = f (stepImpl2_Ann_3 arr)
+//│ ║  l.299: 	def step arr f = f (stepImpl2_Ann_3 arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a_2216` is not an instance of type `'a_913_939`
-//│ ║  l.257: 	def step: Arrays['a] -> Arrays['a]
+//│ ║  l.262: 	def step: Arrays['a] -> Arrays['a]
 //│ ║         	                 ^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.134: 	    fold   = (fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0) : Fold['a, ('rep, string)]
+//│ ║  l.139: 	    fold   = (fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0) : Fold['a, ('rep, string)]
 //│ ╙──       	                                                                              ^^
 //│     = [Function: step2]
 

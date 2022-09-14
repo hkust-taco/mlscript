@@ -6,13 +6,13 @@
 class Nil
 class Cons[a]: { head: a; tail: List[a] }
 type List[a] = Nil | Cons[a]
-def Nil = Nil {}
-def Cons (head, tail) = Cons { head; tail }
+Nil = Nil {}
+Cons (head, tail) = Cons { head; tail }
 //│ Defined class Nil
 //│ Defined class Cons[+a]
 //│ Defined type alias List[+a]
 //│ Nil: Nil
-//│    = [Function: Nil1]
+//│    = Nil {}
 //│ Cons: ('head & 'a, List['a] & 'tail,) -> (Cons['a] with {head: 'head, tail: 'tail})
 //│     = [Function: Cons1]
 
@@ -21,21 +21,21 @@ def Cons (head, tail) = Cons { head; tail }
 // let trois = Cons (10, un) ;;
 // let quatre = Cons ("ok", deux) ;;
 // let cinq = Cons ("zozo", quatre) ;;
-def un = Nil
-def deux = Nil
-def trois = Cons (10, un)
-def quatre = Cons ("ok", deux)
-def cinq = Cons ("zozo", quatre)
+un = Nil
+deux = Nil
+trois = Cons (10, un)
+quatre = Cons ("ok", deux)
+cinq = Cons ("zozo", quatre)
 //│ un: Nil
-//│   = [Function: un]
+//│   = Nil {}
 //│ deux: Nil
-//│     = [Function: deux]
+//│     = Nil {}
 //│ trois: Cons[10] with {tail: Nil}
-//│      = [Function: trois]
+//│      = Cons { head: 10, tail: Nil {} }
 //│ quatre: Cons["ok"] with {tail: Nil}
-//│       = [Function: quatre]
+//│       = Cons { head: 'ok', tail: Nil {} }
 //│ cinq: Cons["ok" | "zozo"] with {head: "zozo", tail: Cons["ok"] with {tail: Nil}}
-//│     = [Function: cinq]
+//│     = Cons { head: 'zozo', tail: Cons { head: 'ok', tail: Nil {} } }
 
 // let id x = x 
 def id x = x

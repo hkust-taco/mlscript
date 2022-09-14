@@ -223,28 +223,28 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 // :e // FIXME? failed with genLamBodies but works with quantif extrus
 // * Note: this one requires `:DistributeForalls`
 // :e // due to tapping
-def zog = printInt (add (nfind table "one") (nfind table "two"))
+zog = printInt (add (nfind table "one") (nfind table "two"))
 //│ zog: string
-//│    = [Function: zog]
+//│    = '0'
 
 // Repro:
 
 // :e // FIXME? failed with genLamBodies but works with quantif extrus
 //:e // due to tapping
 // :e // FIXME? refreshing-extr
-def a = add (nfind table "one")
+a = add (nfind table "one")
 //│ a: ChurchInt -> (forall 'b. 'b -> (forall 'b, 'a, 'c. ('a -> 'c
 //│   where
 //│     'b <: 'a -> 'a & 'a -> 'c)) | ChurchInt)
-//│  = [Function: a]
+//│  = [Function (anonymous)]
 
 // :e // FIXME? refreshing-extr
-def b = (nfind table "two")
+b = (nfind table "two")
 //│ b: ('a & 'b) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('f | 'e)
 //│   where
 //│     'a <: 'c -> 'd & 'd -> 'e
 //│     'b <: 'c -> 'e))
-//│  = [Function: b]
+//│  = [Function (anonymous)]
 
 // * Note: this one requires `:DistributeForalls`
 // :d
@@ -258,7 +258,7 @@ a b
 // :e // FIXME? refreshing-extr
 //:e // due to tapping
 // :e // Works since inconsistent constrained types...
-def zog_ = printInt_ (add_ (nfind table "one") (nfind table "two"))
+zog_ = printInt_ (add_ (nfind table "one") (nfind table "two"))
 //│ zog_: string
-//│     = [Function: zog_]
+//│     = '0'
 

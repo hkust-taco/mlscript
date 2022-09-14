@@ -29,7 +29,7 @@ class Nil[a]: List[a]
   method Head = error
   method Tail = this
 def nil: List['a]
-def nil = Nil {}
+nil = Nil {}
 //│ Defined class Nil[+a]
 //│ Defined Nil.Head: Nil[?] -> nothing
 //│ Defined Nil.Tail: (Nil['a] & 'this) -> (Nil['a] & 'this)
@@ -38,7 +38,7 @@ def nil = Nil {}
 //│ Nil[nothing]
 //│   <:  nil:
 //│ List[nothing]
-//│    = [Function: nil]
+//│    = Nil {}
 
 // ============ Type signatures for functions used in the examples ============
 
@@ -137,17 +137,17 @@ def z = succ : int -> int
 // let z = (choose id succ) 10
 // let z = (choose succ id) 10
 def id x = x
-def z = choose (id : Id) id
-def z = (choose id succ) 10
-def z = (choose succ id) 10
+z = choose (id : Id) id
+z = (choose id succ) 10
+z = (choose succ id) 10
 //│ id: 'a -> 'a
 //│   = [Function: id]
 //│ z: 'a -> 'a | Id
-//│  = [Function: z1]
+//│  = [Function: id]
 //│ z: int
-//│  = [Function: z2]
+//│  = 10
 //│ z: int
-//│  = [Function: z3]
+//│  = 11
 
 // untype fun x -> x x
 fun x -> x x
@@ -220,19 +220,19 @@ def z_ = delta_ (choose id id)
 // let test2 = apply_to_id delta
 def step g = (g 1) - (g 0)
 def apply_to_id f = f id
-def test1 = apply_to_id step
-def test2 = apply_to_id delta
-def test2_ = apply_to_id delta_
+test1 = apply_to_id step
+test2 = apply_to_id delta
+test2_ = apply_to_id delta_
 //│ step: (0 -> int & 1 -> int) -> int
 //│     = [Function: step]
 //│ apply_to_id: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
 //│            = [Function: apply_to_id]
 //│ test1: int
-//│      = [Function: test1]
+//│      = 1
 //│ test2: Id
-//│      = [Function: test2]
+//│      = [Function: id]
 //│ test2_: 'a -> 'a
-//│       = [Function: test2_]
+//│       = [Function: id]
 
 // type s  = ['a] list ('a) -> bool
 // let annote_s (x:id) = (x : s -> s)
@@ -264,9 +264,9 @@ let t = fun x -> fun y ->
     (isnil (cons 1 (cons 2 (cons 3 nil))), isnil nil, isnil (cons "ok" nil), isnil (cons true nil)) 
   in t id isnil
 //│ res: (bool, bool, bool, bool,)
-//│    = [ false, false, false, false ]
+//│    = [ false, true, false, false ]
 //│ res: (bool, bool, bool, bool,)
-//│    = [ false, false, false, false ]
+//│    = [ false, true, false, false ]
 
 // untype fun x y ->
 //   let isnil = (x:id) y in
@@ -365,12 +365,12 @@ def ff_ = fun g ->
 //│    = [Function: ff_]
 
 // let bigtest = ff aa
-def bigtest = ff aa
-def bigtest_ = ff_ aa
+bigtest = ff aa
+bigtest_ = ff_ aa
 //│ bigtest: int
-//│        = [Function: bigtest]
+//│        = 10
 //│ bigtest_: int
-//│         = [Function: bigtest_]
+//│         = 10
 
 // (* Variable libre / variable li�e dans les annotations. *)
 // let example f = (f:['a] 'a -> int -> 'b) f
