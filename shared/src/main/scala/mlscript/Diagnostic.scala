@@ -61,7 +61,19 @@ final case class Loc(spanStart: Int, spanEnd: Int, origin: Origin) {
   def left: Loc = copy(spanEnd = spanStart)
 }
 
+object Loc {
+  implicit val LocOrdering: Ordering[Loc] = new Ordering[Loc] {
+    override def compare(x: Loc, y: Loc): Int = {
+      val startComp = x.spanStart.compare(y.spanStart)
+      if (startComp === 0) {
+        x.spanEnd.compare(y.spanEnd)
+      } else {
+        startComp
+      }
+    }
+  }
+}
+
 final case class Origin(fileName: Str, startLineNum: Int, fph: FastParseHelpers) {
   override def toString = s"$fileName:+$startLineNum"
 }
-

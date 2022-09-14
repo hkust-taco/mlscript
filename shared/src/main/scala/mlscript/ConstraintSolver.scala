@@ -1,43 +1,18 @@
 package mlscript
 
 import scala.collection.mutable
-import scala.collection.mutable.{Map => MutMap, Set => MutSet}
+import scala.collection.mutable.{Map => MutMap, Set => MutSet, SortedMap => MutSortedMap}
 import scala.collection.immutable.{SortedSet, SortedMap, List}
 import scala.util.chaining._
 import scala.annotation.tailrec
 import mlscript.utils._, shorthands._
 import mlscript.Message._
+import scala.collection.immutable
 
 class ConstraintSolver extends NormalForms { self: Typer =>
   def verboseConstraintProvenanceHints: Bool = verbose
-  /** Maps provenances locations to a counter. The counter tracks
-   * the number of the times the location has been visited, and the
-   * number of visits that have led to constraining failures.
-  */
-  val typeLocoCounter: MutMap[Loc, (Int, Int)] = MutMap();
-  def updateTypeLocoCounter(st: ST, change: (Int, Int)): Unit = {
-    st.prov.loco.foreach(loco =>
-      typeLocoCounter.updateWith(loco) {
-        case Some((total, wrong)) => Some((total + change._1, wrong + change._2))
-        case None => Some(change)
-      }
-    )
-  }
-  
-  /* Stores the chain of provenances that lead to a given constraint
-    * for a constraint a <: b, the LHS and RHS indicate the chain of
-    * provenances that leads to the type a and type b respectively.
-    * 
-    * The newest element in the list is the most recent provenance and
-    * the last element is the oldest or starting/origin provenance.
-    * 
-    * Taken together as LHS reverse_::: RHS, we get the complete
-    * flow of a type from a it's producer to it's consumer. LHS needs
-    * to be reversed because the starting provenance is at the end of
-    * the LHS list.
-    */
   type ConCtx = Ls[ST] -> Ls[ST]
-  var erroneousChains: Ls[ConCtx] = List()
+  val errorSimplifer: ErrorSimplifier = ErrorSimplifier()
   
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
   def constrain(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx): Unit = {
@@ -327,9 +302,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           (implicit raise: Raise, cctx: ConCtx): Unit = {
       constrainCalls += 1
       val sameLhs = cctx._1.headOption.exists(_.prov is lhs.prov)
-      val sameRhs = cctx._1.headOption.exists(_.prov is rhs.prov)
-      if (!sameLhs) updateTypeLocoCounter(lhs, (1, 0))
-      if (!sameRhs) updateTypeLocoCounter(rhs, (1, 0))
+      val sameRhs = cctx._2.headOption.exists(_.prov is rhs.prov)
+      if (!sameLhs) errorSimplifer.updateCounter(lhs, (1, 0))
+      if (!sameRhs) errorSimplifer.updateCounter(rhs, (1, 0))
       
       val newCctx = nestedProv match {
         case N => 
@@ -339,13 +314,14 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           ->
           (if (sameRhs) cctx._2 else rhs :: cctx._2))
         case S(nested) => 
+          scala.Predef.println(nested.nestingInfo)
           // the provenance chain for the constructor from the previous level
           // connects the provenances of lhs and rhs
           (lhs :: lhs.withProv(nested) :: Nil) -> (rhs :: Nil)
       }
       
       // show provenance chains from both contexts to emphasize the new node added
-      if (explainErrors) {
+      if (explainErrors && verbose) {
         def printProv(prov: TP): Message =
             if (prov.isType) msg"type"
             else msg"${prov.desc} of type"
@@ -423,8 +399,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_, p @ ProvType(und)) => rec(lhs, und)
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs)
           case (FunctionType(l0, r0), FunctionType(l1, r1)) =>
-            rec(l1, l0, revProvChain)
-            rec(r0, r1, provChain)
+            rec(l1, l0, revProvChain.map(_.updateInfo("function lhs")))
+            rec(r0, r1, provChain.map(_.updateInfo("function rhs")))
           case (prim: ClassTag, ot: ObjectTag)
             if prim.parentsST.contains(ot.id) => ()
           // for constraining type variables a new bound is created
@@ -459,8 +435,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                   msg"Wrong tuple field name: found '${ln.name}' instead of '${rn.name}'",
                   lhs.prov.loco // TODO better loco
               )}}
-              recLb(r, l, provChain)
-              rec(l.ub, r.ub, provChain)
+              recLb(r, l, provChain.map(_.updateInfo("tuple lower bound")))
+              rec(l.ub, r.ub, provChain.map(_.updateInfo("tuple upper bound")))
             }
           case (t: ArrayBase, a: ArrayType) =>
             recLb(a.inner, t.inner, provChain)
@@ -535,23 +511,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }}()
     
     def reportError(failureOpt: Opt[Message] = N)(implicit cctx: ConCtx): Unit = {
+      errorSimplifer.addChain(cctx)
+      
       val lhsChain: List[ST] = cctx._1
       val rhsChain: List[ST] = cctx._2
-      
-      // increment wrong counts of locations in current provenance chain
-      // however consider only the initial non-nested locations as erroneous
-      // because nested provenances show that a type flowed through a constructor
-      // correctly from being consumed to being produced
-      // Note: we have to reverse the rhs chain because the non-nested
-      // provenances are near the tail i.e. the 
-      // store chain for later heuristic based reporting
-      erroneousChains ::= cctx
-      lhsChain.iterator
-        .takeWhile(st => !(st.prov.isInstanceOf[NestedTypeProvenance]))
-        .++(rhsChain.reverseIterator
-              .takeWhile(st => !(st.prov.isInstanceOf[NestedTypeProvenance])))
-        .foreach(updateTypeLocoCounter(_, (0, -1)))
-      
       val lhs = cctx._1.head
       val rhs = cctx._2.head
       
@@ -668,26 +631,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           msg"${msgHead} is defined at:" -> l.loco 
       }
       
-      def showNestingLevel(chain: Ls[ST], level: Int): Ls[Message -> Opt[Loc]] = {
-        val levelIndicator = s"-${">"*level}"
-        chain.flatMap { node =>
-          node.prov match {
-            case nestedProv: NestedTypeProvenance => 
-              msg"$levelIndicator flowing into nested prov with desc: ${node.prov.desc}" -> nestedProv.loco ::
-                showNestingLevel(nestedProv.chain, level + 1)
-            case tprov => 
-              msg"$levelIndicator flowing from ${printProv(tprov)} `${node.expPos}`" -> tprov.loco :: Nil
-          }
-        }
-      }
-      
-      val nestedTypeProvFlow =
-        if (explainErrors)
-          msg"========= Nested type provenance flow below =========" -> N ::
-          showNestingLevel(lhsChain, 1) :::
-          showNestingLevel(rhsChain, 1)
-        else Nil
-      
       val detailedContext =
         if (explainErrors)
           msg"========= Additional explanations below =========" -> N ::
@@ -706,7 +649,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         constraintProvenanceHints,
         originProvHints,
         detailedContext,
-        nestedTypeProvFlow
+        errorSimplifer.nestedTypeProvFlow(cctx)
       ).flatten
       
       raise(ErrorReport(msgs))
@@ -844,5 +787,123 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     freshen(ty)
   }
   
-  
+  /** Stores information related to errors occuring during the
+  * constraining phase of type inference. It also implements
+  * various methods to process the information and generate
+  * better error messages.
+  */
+  case class ErrorSimplifier() {
+    /** Maps provenances locations to a counter. The counter tracks
+     * the number of the times the location has been visited, and the
+     * number of visits that have led to constraining failures.
+    */
+    val locoCounter: MutMap[Loc, (Int, Int)] = MutMap();
+    def updateCounter(st: ST, change: (Int, Int)): Unit = {
+      st.prov.loco.foreach(loco =>
+        locoCounter.updateWith(loco) {
+          case Some((total, wrong)) => Some((total + change._1, wrong + change._2))
+          case None => Some(change)
+        }
+      )
+    }
+    
+    /* Stores the chain of provenances that lead to a given constraint
+      * for a constraint a <: b, the LHS and RHS indicate the chain of
+      * provenances that leads to the type a and type b respectively.
+      * 
+      * The newest element in the list is the most recent provenance and
+      * the last element is the oldest or starting/origin provenance.
+      * 
+      * Taken together as LHS reverse_::: RHS, we get the complete
+      * flow of a type from a it's producer to it's consumer. LHS needs
+      * to be reversed because the starting provenance is at the end of
+      * the LHS list.
+      */
+    var chains: Ls[ConCtx] = List()
+    /** Increment wrong counts of locations in current provenance chain
+      * however consider only the initial non-nested locations as erroneous
+      * because nested provenances show that a type flowed through a constructor
+      * correctly from being consumed to being produced
+      * Note: we have to reverse the rhs chain because the non-nested
+      * provenances are near the tail i.e. the 
+      * store chain for later heuristic based reporting
+      * @param errorChain
+      */
+    def addChain(chain: ConCtx): Unit = {
+      chains ::= chain
+      // update locations counters
+      chain._1.iterator
+        .takeWhile(st => !(st.prov.isInstanceOf[NestedTypeProvenance]))
+        .++(chain._2.reverseIterator
+              .takeWhile(st => !(st.prov.isInstanceOf[NestedTypeProvenance])))
+        .foreach(errorSimplifer.updateCounter(_, (0, 1)))
+    }
+    
+    /**
+      * Display a chain of provenances with nested levels where
+      * a provenances is wrapped into a nested provenance
+      *
+      * @param chain
+      * @param level
+      * @param ctx
+      * @return
+      */
+    def showNestingLevel(chain: Ls[ST], level: Int)(implicit ctx: Ctx): Ls[Message -> Opt[Loc]] = {
+      val levelIndicator = s"-${">"*level}"
+      chain.flatMap { node =>
+        node.prov match {
+          case nestedProv: NestedTypeProvenance => 
+            msg"$levelIndicator flowing into nested prov with desc: ${node.prov.desc}" -> nestedProv.loco ::
+              showNestingLevel(nestedProv.chain, level + 1)
+          case tprov => 
+            val locCount =
+              tprov.loco.map(loc => locoCounter.getOrElse(loc, (-1, -1)))
+                .getOrElse((-1, -1))
+            val provInfo = if (tprov.isType) msg"type" else msg"${tprov.desc} of type"
+            msg"$levelIndicator flowing from ${provInfo} expanded: `${node.expPos}` raw: `${node.toString}` counter: ${locCount.toString} prov: ${tprov.loco.toString}" -> tprov.loco :: Nil
+        }
+      }
+    }
+    
+    /**
+      * Filter chain based on rules
+      *
+      * @param chain lhs and rhs sides of chain joined together
+      * @param prev last visited accpted link in the chain
+      * @return
+      */
+    def filterChain(chain: Ls[ST], prev: Opt[ST]): Ls[ST] = chain match {
+      case tprov :: rest =>
+        val hasLoco = tprov.prov.loco.isDefined
+        val prevLocoSame = prev.map(_.prov.loco is tprov.prov.loco).getOrElse(false)
+        (tprov.prov, hasLoco, prevLocoSame) match {
+          case (ntprov: NestedTypeProvenance, _, _) =>
+            val nestedChain = filterChain(ntprov.chain, prev)
+            val restChain = filterChain(rest, nestedChain.lastOption)
+            // ntprov.chain = nestedChain  // update chain of nested prov with filtered chain
+            tprov :: restChain
+          case (_, false, _) => filterChain(rest, prev)
+          case (_, true, false) => tprov :: filterChain(rest, Some(tprov))
+          case (_, true, true) => filterChain(rest, Some(tprov))
+        }
+      case Nil => Nil
+    }
+    
+    def nestedTypeProvFlow(chain: ConCtx)(implicit ctx: Ctx): Ls[Message -> Opt[Loc]] =
+      if (explainErrors)
+        msg"========= Nested type provenance flow below =========" -> N ::
+        showNestingLevel(filterChain(chain._1 ::: chain._2, N), 1)
+      else Nil
+    
+    /**
+      * Show marked locations and their count
+      */
+    def locationsMarked(): Ls[Message -> Opt[Loc]] =
+      if (explainErrors)
+        msg"========= Locations counted below =========" -> N ::
+        locoCounter.iterator.map { case (loc, (total, wrong)) =>
+          msg"total count ${total.toString} and wrong count ${wrong.toString}" -> Some(loc)
+        }.toList
+      else Nil
+  }
 }

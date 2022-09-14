@@ -19,11 +19,16 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString: Str = (if (isOrigin) "o: " else "") + "‹"+loco.fold(desc)(desc+":"+_)+"›"
   }
 
-  case class NestingInfo() {
-    override def toString: Str = "<nesting info here>"
+  case class NestingInfo(info: Str = "<nesting info here>") {
+    override def toString: Str = info
   }
-  class NestedTypeProvenance(val chain: Ls[SimpleType], val nestingInfo: NestingInfo = NestingInfo()) extends TypeProvenance(N, "<nested>") {
+  class NestedTypeProvenance(var chain: Ls[SimpleType], var nestingInfo: NestingInfo = NestingInfo()) extends TypeProvenance(N, "<nested>") {
     override def toString: Str = "<nested> " + chain.mkString(" -> ") + " <nested>"
+    
+    def updateInfo(newInfo: Str): NestedTypeProvenance = {
+      nestingInfo = NestingInfo(newInfo)
+      this
+    }
   }
 
   object NestedTypeProvenance {
