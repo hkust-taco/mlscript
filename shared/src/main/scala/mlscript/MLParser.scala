@@ -119,17 +119,17 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def apps[p: P]: P[Term] = P( subterm.rep(1).map(_.reduce(mkApp)) )
   
   def _match[p: P]: P[CaseOf] =
-    locate(P( kw("case") ~/ term ~ "of" ~ "{" ~ "|".? ~ matchArms ~ "}" ).map(CaseOf.tupled))
-  def matchArms[p: P]: P[CaseBranches] = P(
+    locate(P( kw("case") ~/ term ~ "of" ~ ("{" ~ "|".? ~ matchArms("|") ~ "}" | matchArms(",")) ).map(CaseOf.tupled))
+  def matchArms[p: P](sep: Str): P[CaseBranches] = P(
     ( ("_" ~ "->" ~ term).map(Wildcard)
-    | ((lit | variable) ~ "->" ~ term ~ matchArms2)
+    | ((lit | variable) ~ "->" ~ term ~ matchArms2(sep))
       .map { case (t, b, rest) => Case(t, b, rest) }
     ).?.map {
       case None => NoCases
       case Some(b) => b
     }
   )
-  def matchArms2[p: P]: P[CaseBranches] = ("|" ~ matchArms).?.map(_.getOrElse(NoCases))
+  def matchArms2[p: P](sep: Str): P[CaseBranches] = (sep ~ matchArms(sep)).?.map(_.getOrElse(NoCases))
   
   private val prec: Map[Char,Int] = List(
     ":",
