@@ -19,9 +19,5 @@ class Temp<T> {
 }
 let ta: MutArray<Temp<bool>> => MutArray<Temp<bool>>
 let tat: MutArray<Temp<T>> => MutArray<Temp<T>>
-//│ ╔══[PARSE ERROR] Unmatched opening angle bracket
-//│ ║  l.21: 	let tat: MutArray<Temp<T>> => MutArray<Temp<T>>
-//│ ║        	                                           ^
-//│ ╙── Note that `<` without spaces around it is considered as an angle bracket and not as an operator
-//│ |T|>>|Temp|
-//│ Parsed: {>> (T,) (Temp,)}
+//│ |#let| |first|#:| |MutArray|‹|string|›| |=>| |string|↵|#let| |getZero3|#:| |unit| |=>| |MutArray|‹|number|›|↵|#let| |first2|#:| |MutArray|‹|number| |=>| |number|›| |=>| |number| |=>| |number|↵|#let| |doEs|#:| |MutArray|‹|int|›| |=>| |MutArray|‹|int|›|↵|#class| |C| |{||}|↵|#trait| |I| |{|→|#let| |i|#:| |number|←|↵|}|↵|#let| |doCs|#:| |MutArray|‹|C|›| |=>| |MutArray|‹|C|›|↵|#let| |doIs|#:| |MutArray|‹|I|›| |=>| |MutArray|‹|I|›|↵|#let| |inter|#:| |MutArray|‹|(|U|)| |&| |(|T|)|›| |=>| |MutArray|‹|(|U|)| |&| |(|T|)|›|↵|#let| |clean|#:| |MutArray|‹|(|string|,| |number|,| |)|›| |=>| |MutArray|‹|(|string|,| |number|,| |)|›|↵|#let| |translate|#:| |MutArray|‹|T|›| |=>| |MutArray|‹|U|›|↵|#let| |uu|#:| |MutArray|‹|(|number|)| ||| |(|bool|)|›| |=>| |MutArray|‹|(|number|)| ||| |(|bool|)|›|↵|#class| |Temp|‹|T|›| |{|→|#let| |x|#:| |T|←|↵|}|↵|#let| |ta|#:| |MutArray|‹|Temp|‹|bool|›|›| |=>| |MutArray|‹|Temp|‹|bool|›|›|↵|#let| |tat|#:| |MutArray|‹|Temp|‹|T|›|›| |=>| |MutArray|‹|Temp|‹|T|›|›|
+//│ Parsed: {let first: [] -> MutArray[string] -> string; let getZero3: [] -> unit -> MutArray[number]; let first2: [] -> MutArray[number -> number] -> number -> number; let doEs: [] -> MutArray[int] -> MutArray[int]; class C() {}; trait I(): {let i: [] -> number}; let doCs: [] -> MutArray[C] -> MutArray[C]; let doIs: [] -> MutArray[I] -> MutArray[I]; let inter: [] -> MutArray[(U,) & (T,)] -> MutArray[(U,) & (T,)]; let clean: [] -> MutArray[(string, number,)] -> MutArray[(string, number,)]; let translate: [] -> MutArray[T] -> MutArray[U]; let uu: [] -> MutArray[(number,) | (bool,)] -> MutArray[(number,) | (bool,)]; class Temp[T]() {let x: [] -> T}; let ta: [] -> MutArray[Temp[bool]] -> MutArray[Temp[bool]]; let tat: [] -> MutArray[Temp[T]] -> MutArray[Temp[T]]}

@@ -129,6 +129,8 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
           val (name, k) = takeWhile(j)(isIdentChar)
           go(k, SELECT(name))
         }
+        else if (c === '>' && n.length > 1 && n.foldLeft(true)((r, i) => r && (i === c)))
+          go(i + 1, IDENT(">", true))
         else go(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true))
       case _ if isDigit(c) =>
         val (str, j) = takeWhile(i)(isDigit)
@@ -174,7 +176,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
               if (k0 =/= k1)
                 raise(ErrorReport(msg"Mistmatched closing ${k1.name}" -> S(l1) ::
                   msg"does not correspond to opening ${k0.name}" -> S(l0) :: Nil, source = Parsing))
-              go(rest, false, stack, BRACKETS(k0, acc.reverse)(l0.right ++ l1.left) -> (l0 ++ l1) :: oldAcc)
+              go(rest, true, stack, BRACKETS(k0, acc.reverse)(l0.right ++ l1.left) -> (l0 ++ l1) :: oldAcc)
             case Nil =>
               raise(ErrorReport(msg"Unexpected closing ${k1.name}" -> S(l1) :: Nil, source = Parsing))
               go(rest, false, stack, acc)
