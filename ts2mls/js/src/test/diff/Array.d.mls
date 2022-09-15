@@ -1,23 +1,23 @@
 :NewParser
 :ParseOnly
-let first: MutArray<string> => string
-let getZero3: unit => MutArray<number>
-let first2: MutArray<number => number> => number => number
-let doEs: MutArray<int> => MutArray<int>
+fun first: MutArray<string> => string
+fun getZero3: unit => MutArray<number>
+fun first2: MutArray<number => number> => number => number
+fun doEs: MutArray<int> => MutArray<int>
 class C {}
 trait I {
   let i: number
 }
-let doCs: MutArray<C> => MutArray<C>
-let doIs: MutArray<I> => MutArray<I>
-let inter: MutArray<(U) & (T)> => MutArray<(U) & (T)>
-let clean: MutArray<(string, number, )> => MutArray<(string, number, )>
-let translate: MutArray<T> => MutArray<U>
-let uu: MutArray<(number) | (bool)> => MutArray<(number) | (bool)>
+fun doCs: MutArray<C> => MutArray<C>
+fun doIs: MutArray<I> => MutArray<I>
+fun inter: MutArray<(U) & (T)> => MutArray<(U) & (T)>
+fun clean: MutArray<(string, number, )> => MutArray<(string, number, )>
+fun translate: MutArray<T> => MutArray<U>
+fun uu: MutArray<(number) | (bool)> => MutArray<(number) | (bool)>
 class Temp<T> {
   let x: T
 }
-let ta: MutArray<Temp<bool>> => MutArray<Temp<bool>>
-let tat: MutArray<Temp<T>> => MutArray<Temp<T>>
-//│ |#let| |first|#:| |MutArray|‹|string|›| |=>| |string|↵|#let| |getZero3|#:| |unit| |=>| |MutArray|‹|number|›|↵|#let| |first2|#:| |MutArray|‹|number| |=>| |number|›| |=>| |number| |=>| |number|↵|#let| |doEs|#:| |MutArray|‹|int|›| |=>| |MutArray|‹|int|›|↵|#class| |C| |{||}|↵|#trait| |I| |{|→|#let| |i|#:| |number|←|↵|}|↵|#let| |doCs|#:| |MutArray|‹|C|›| |=>| |MutArray|‹|C|›|↵|#let| |doIs|#:| |MutArray|‹|I|›| |=>| |MutArray|‹|I|›|↵|#let| |inter|#:| |MutArray|‹|(|U|)| |&| |(|T|)|›| |=>| |MutArray|‹|(|U|)| |&| |(|T|)|›|↵|#let| |clean|#:| |MutArray|‹|(|string|,| |number|,| |)|›| |=>| |MutArray|‹|(|string|,| |number|,| |)|›|↵|#let| |translate|#:| |MutArray|‹|T|›| |=>| |MutArray|‹|U|›|↵|#let| |uu|#:| |MutArray|‹|(|number|)| ||| |(|bool|)|›| |=>| |MutArray|‹|(|number|)| ||| |(|bool|)|›|↵|#class| |Temp|‹|T|›| |{|→|#let| |x|#:| |T|←|↵|}|↵|#let| |ta|#:| |MutArray|‹|Temp|‹|bool|›|›| |=>| |MutArray|‹|Temp|‹|bool|›|›|↵|#let| |tat|#:| |MutArray|‹|Temp|‹|T|›|›| |=>| |MutArray|‹|Temp|‹|T|›|›|
-//│ Parsed: {let first: [] -> MutArray[string] -> string; let getZero3: [] -> unit -> MutArray[number]; let first2: [] -> MutArray[number -> number] -> number -> number; let doEs: [] -> MutArray[int] -> MutArray[int]; class C() {}; trait I(): {let i: [] -> number}; let doCs: [] -> MutArray[C] -> MutArray[C]; let doIs: [] -> MutArray[I] -> MutArray[I]; let inter: [] -> MutArray[(U,) & (T,)] -> MutArray[(U,) & (T,)]; let clean: [] -> MutArray[(string, number,)] -> MutArray[(string, number,)]; let translate: [] -> MutArray[T] -> MutArray[U]; let uu: [] -> MutArray[(number,) | (bool,)] -> MutArray[(number,) | (bool,)]; class Temp[T]() {let x: [] -> T}; let ta: [] -> MutArray[Temp[bool]] -> MutArray[Temp[bool]]; let tat: [] -> MutArray[Temp[T]] -> MutArray[Temp[T]]}
+fun ta: MutArray<Temp<bool>> => MutArray<Temp<bool>>
+fun tat: MutArray<Temp<T>> => MutArray<Temp<T>>
+//│ |#fun| |first|#:| |MutArray|‹|string|›| |=>| |string|↵|#fun| |getZero3|#:| |unit| |=>| |MutArray|‹|number|›|↵|#fun| |first2|#:| |MutArray|‹|number| |=>| |number|›| |=>| |number| |=>| |number|↵|#fun| |doEs|#:| |MutArray|‹|int|›| |=>| |MutArray|‹|int|›|↵|#class| |C| |{||}|↵|#trait| |I| |{|→|#let| |i|#:| |number|←|↵|}|↵|#fun| |doCs|#:| |MutArray|‹|C|›| |=>| |MutArray|‹|C|›|↵|#fun| |doIs|#:| |MutArray|‹|I|›| |=>| |MutArray|‹|I|›|↵|#fun| |inter|#:| |MutArray|‹|(|U|)| |&| |(|T|)|›| |=>| |MutArray|‹|(|U|)| |&| |(|T|)|›|↵|#fun| |clean|#:| |MutArray|‹|(|string|,| |number|,| |)|›| |=>| |MutArray|‹|(|string|,| |number|,| |)|›|↵|#fun| |translate|#:| |MutArray|‹|T|›| |=>| |MutArray|‹|U|›|↵|#fun| |uu|#:| |MutArray|‹|(|number|)| ||| |(|bool|)|›| |=>| |MutArray|‹|(|number|)| ||| |(|bool|)|›|↵|#class| |Temp|‹|T|›| |{|→|#let| |x|#:| |T|←|↵|}|↵|#fun| |ta|#:| |MutArray|‹|Temp|‹|bool|›|›| |=>| |MutArray|‹|Temp|‹|bool|›|›|↵|#fun| |tat|#:| |MutArray|‹|Temp|‹|T|›|›| |=>| |MutArray|‹|Temp|‹|T|›|›|
+//│ Parsed: {fun first: [] -> MutArray[string] -> string; fun getZero3: [] -> unit -> MutArray[number]; fun first2: [] -> MutArray[number -> number] -> number -> number; fun doEs: [] -> MutArray[int] -> MutArray[int]; class C() {}; trait I(): {let i: [] -> number}; fun doCs: [] -> MutArray[C] -> MutArray[C]; fun doIs: [] -> MutArray[I] -> MutArray[I]; fun inter: [] -> MutArray[(U,) & (T,)] -> MutArray[(U,) & (T,)]; fun clean: [] -> MutArray[(string, number,)] -> MutArray[(string, number,)]; fun translate: [] -> MutArray[T] -> MutArray[U]; fun uu: [] -> MutArray[(number,) | (bool,)] -> MutArray[(number,) | (bool,)]; class Temp[T]() {let x: [] -> T}; fun ta: [] -> MutArray[Temp[bool]] -> MutArray[Temp[bool]]; fun tat: [] -> MutArray[Temp[T]] -> MutArray[Temp[T]]}

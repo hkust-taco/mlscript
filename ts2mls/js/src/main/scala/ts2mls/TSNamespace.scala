@@ -47,9 +47,9 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
         // val fullName = getFullPath(name)
         mem match {
           case inter: TSIntersectionType => // overloaded functions
-            writer.writeln(s"${indent}let ${name}: ${Converter.convert(inter)}")
+            writer.writeln(s"${indent}fun ${name}: ${Converter.convert(inter)}")
           case f: TSFunctionType =>
-            writer.writeln(s"${indent}let ${name}: ${Converter.convert(f)}")
+            writer.writeln(s"${indent}fun ${name}: ${Converter.convert(f)}")
           // {
           //   val typeParams = f.typeVars.map((t) => t.name)
           //   if (typeParams.isEmpty)
@@ -58,7 +58,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
           //     writer.writeln(s"def ${fullName}[${typeParams.reduceLeft((r, s) => s"$r, $s")}]: ${Converter.convert(f)}")
           // }
           case overload @ TSIgnoredOverload(base, _) =>
-            writer.writeln(s"${indent}let ${name}: ${Converter.convert(overload)}")
+            writer.writeln(s"${indent}fun ${name}: ${Converter.convert(overload)}")
           // {
           //   val typeParams = base.typeVars.map((t) => t.name)
           //     if (typeParams.isEmpty)

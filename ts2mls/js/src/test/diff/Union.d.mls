@@ -1,11 +1,11 @@
 :NewParser
 :ParseOnly
-let getString: ((string) | (number)) | (bool) => string
-let test: bool => (string) | (number)
-let run: (number => number) | (number => string) => anything
-let get: (MutArray<number>) | (MutArray<string>) => unit
-let get2: ((string, string, )) | ((number, string, )) => string
-let typeVar: (T) | (U) => (T) | (U)
-let uuuu: ((string) | (number)) | (bool) => ((string) | (number)) | (bool)
-//│ |#let| |getString|#:| |(|(|string|)| ||| |(|number|)|)| ||| |(|bool|)| |=>| |string|↵|#let| |test|#:| |bool| |=>| |(|string|)| ||| |(|number|)|↵|#let| |run|#:| |(|number| |=>| |number|)| ||| |(|number| |=>| |string|)| |=>| |anything|↵|#let| |get|#:| |(|MutArray|‹|number|›|)| ||| |(|MutArray|‹|string|›|)| |=>| |unit|↵|#let| |get2|#:| |(|(|string|,| |string|,| |)|)| ||| |(|(|number|,| |string|,| |)|)| |=>| |string|↵|#let| |typeVar|#:| |(|T|)| ||| |(|U|)| |=>| |(|T|)| ||| |(|U|)|↵|#let| |uuuu|#:| |(|(|string|)| ||| |(|number|)|)| ||| |(|bool|)| |=>| |(|(|string|)| ||| |(|number|)|)| ||| |(|bool|)|
-//│ Parsed: {let getString: [] -> (((string,) | (number,),) | (bool,)) -> string; let test: [] -> bool -> ((string,) | (number,)); let run: [] -> ((number -> number,) | (number -> string,)) -> anything; let get: [] -> ((MutArray[number],) | (MutArray[string],)) -> unit; let get2: [] -> (((string, string,),) | ((number, string,),)) -> string; let typeVar: [] -> ((T,) | (U,)) -> ((T,) | (U,)); let uuuu: [] -> (((string,) | (number,),) | (bool,)) -> (((string,) | (number,),) | (bool,))}
+fun getString: ((string) | (number)) | (bool) => string
+fun test: bool => (string) | (number)
+fun run: (number => number) | (number => string) => anything
+fun get: (MutArray<number>) | (MutArray<string>) => unit
+fun get2: ((string, string, )) | ((number, string, )) => string
+fun typeVar: (T) | (U) => (T) | (U)
+fun uuuu: ((string) | (number)) | (bool) => ((string) | (number)) | (bool)
+//│ |#fun| |getString|#:| |(|(|string|)| ||| |(|number|)|)| ||| |(|bool|)| |=>| |string|↵|#fun| |test|#:| |bool| |=>| |(|string|)| ||| |(|number|)|↵|#fun| |run|#:| |(|number| |=>| |number|)| ||| |(|number| |=>| |string|)| |=>| |anything|↵|#fun| |get|#:| |(|MutArray|‹|number|›|)| ||| |(|MutArray|‹|string|›|)| |=>| |unit|↵|#fun| |get2|#:| |(|(|string|,| |string|,| |)|)| ||| |(|(|number|,| |string|,| |)|)| |=>| |string|↵|#fun| |typeVar|#:| |(|T|)| ||| |(|U|)| |=>| |(|T|)| ||| |(|U|)|↵|#fun| |uuuu|#:| |(|(|string|)| ||| |(|number|)|)| ||| |(|bool|)| |=>| |(|(|string|)| ||| |(|number|)|)| ||| |(|bool|)|
+//│ Parsed: {fun getString: [] -> (((string,) | (number,),) | (bool,)) -> string; fun test: [] -> bool -> ((string,) | (number,)); fun run: [] -> ((number -> number,) | (number -> string,)) -> anything; fun get: [] -> ((MutArray[number],) | (MutArray[string],)) -> unit; fun get2: [] -> (((string, string,),) | ((number, string,),)) -> string; fun typeVar: [] -> ((T,) | (U,)) -> ((T,) | (U,)); fun uuuu: [] -> (((string,) | (number,),) | (bool,)) -> (((string,) | (number,),) | (bool,))}
