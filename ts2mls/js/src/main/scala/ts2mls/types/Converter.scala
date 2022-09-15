@@ -83,7 +83,7 @@ object Converter {
     
     if (typeName === "trait ") body // anonymous interfaces
     else { // named interfaces and classes
-      val herirage =
+      val inheritance =
         if (parents.isEmpty) ""
         else parents.foldLeft("(): ")((b, p) => s"$b${convert(p)}, ").dropRight(2)
       if (typeVars.isEmpty) s"$typeName$herirage $body"
