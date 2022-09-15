@@ -86,9 +86,9 @@ object Converter {
       val inheritance =
         if (parents.isEmpty) ""
         else parents.foldLeft("(): ")((b, p) => s"$b${convert(p)}, ").dropRight(2)
-      if (typeVars.isEmpty) s"$typeName$herirage $body"
+      if (typeVars.isEmpty) s"$typeName$inheritance $body"
       else
-        s"$typeName<${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}>$herirage $body" // TODO: add constraints
+        s"$typeName<${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}>$inheritance $body" // TODO: add constraints
     }
   }
 }
