@@ -54,7 +54,11 @@ object Converter {
     val allRecs = members.toList.map((m) => m._2.modifier match {
       case Public =>
         if (typeName === "trait ") s"${m._1}: ${convert(m._2)},"
-        else s"${indent}  let ${m._1}: ${convert(m._2)}\n"
+        else m._2.base match {
+          case _: TSFunctionType => s"${indent}  fun ${m._1}: ${convert(m._2)}\n"
+          case _: TSIgnoredOverload => s"${indent}  fun ${m._1}: ${convert(m._2)}\n"
+          case _ => s"${indent}  let ${m._1}: ${convert(m._2)}\n"
+        }
       // case Public => {
       //   m._2.base match { // methods
       //     case f @ TSFunctionType(_, _, typeVars) if (!typeVars.isEmpty) =>
