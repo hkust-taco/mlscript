@@ -137,10 +137,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   
   private def cur(implicit l: Line, n: Name) = {
     if (dbg) printDbg(s"? ${n.value}\t\tinspects ${summarizeCur}    [at l.${l.value}]")
-    _cur.dropWhile(_._1 match {
+    while (_cur match {
       case COMMENT(_) => true
       case _ => false
-    })
+    }) consume
+    _cur
   }
   
   def consume(implicit l: Line, n: Name): Unit = {
