@@ -1,25 +1,25 @@
 :NewParser
 :ParseOnly
-class Student {
+class Student(_: string, _: number) {
   let name: string
   fun isFriend: Student => bool
   fun addScore: string => number => unit
   fun getID: unit => number
 }
-class Foo<T> {
+class Foo<T>() {
   fun bar: T => unit
 }
-class EZ {
+class EZ() {
   fun inc: number => number
 }
-class Outer {
-  class Inner {
+class Outer() {
+  class Inner() {
     let a: number
   }
 }
-class TTT<T> {
+class TTT<T>() {
   fun ttt: T => T
   fun ttt2: T => T
 }
-//│ |#class| |Student| |{|→|#let| |name|#:| |string|↵|#fun| |isFriend|#:| |Student| |=>| |bool|↵|#fun| |addScore|#:| |string| |=>| |number| |=>| |unit|↵|#fun| |getID|#:| |unit| |=>| |number|←|↵|}|↵|#class| |Foo|‹|T|›| |{|→|#fun| |bar|#:| |T| |=>| |unit|←|↵|}|↵|#class| |EZ| |{|→|#fun| |inc|#:| |number| |=>| |number|←|↵|}|↵|#class| |Outer| |{|→|#class| |Inner| |{|→|#let| |a|#:| |number|←|↵|}|←|↵|}|↵|#class| |TTT|‹|T|›| |{|→|#fun| |ttt|#:| |T| |=>| |T|↵|#fun| |ttt2|#:| |T| |=>| |T|←|↵|}|
-//│ Parsed: {class Student() {let name: [] -> string; fun isFriend: [] -> Student -> bool; fun addScore: [] -> string -> number -> unit; fun getID: [] -> unit -> number}; class Foo[T]() {fun bar: [] -> T -> unit}; class EZ() {fun inc: [] -> number -> number}; class Outer() {class Inner() {let a: [] -> number}}; class TTT[T]() {fun ttt: [] -> T -> T; fun ttt2: [] -> T -> T}}
+//│ |#class| |Student|(|_|#:| |string|,| |_|#:| |number|)| |{|→|#let| |name|#:| |string|↵|#fun| |isFriend|#:| |Student| |=>| |bool|↵|#fun| |addScore|#:| |string| |=>| |number| |=>| |unit|↵|#fun| |getID|#:| |unit| |=>| |number|←|↵|}|↵|#class| |Foo|‹|T|›|(||)| |{|→|#fun| |bar|#:| |T| |=>| |unit|←|↵|}|↵|#class| |EZ|(||)| |{|→|#fun| |inc|#:| |number| |=>| |number|←|↵|}|↵|#class| |Outer|(||)| |{|→|#class| |Inner|(||)| |{|→|#let| |a|#:| |number|←|↵|}|←|↵|}|↵|#class| |TTT|‹|T|›|(||)| |{|→|#fun| |ttt|#:| |T| |=>| |T|↵|#fun| |ttt2|#:| |T| |=>| |T|←|↵|}|
+//│ Parsed: {class Student(_: string, _: number,) {let name: [] -> string; fun isFriend: [] -> Student -> bool; fun addScore: [] -> string -> number -> unit; fun getID: [] -> unit -> number}; class Foo[T]() {fun bar: [] -> T -> unit}; class EZ() {fun inc: [] -> number -> number}; class Outer() {class Inner() {let a: [] -> number}}; class TTT[T]() {fun ttt: [] -> T -> T; fun ttt2: [] -> T -> T}}

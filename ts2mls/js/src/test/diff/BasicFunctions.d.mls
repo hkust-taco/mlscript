@@ -14,15 +14,15 @@ fun fail: unit => nothing
 fun create: unit => object
 fun pa: number => number
 fun wtf: anything => unit
-class Foooooo {
+class Foooooo() {
   let ooooooo: number
 }
 fun inn: Foooooo => unit
 fun out: unit => Foooooo
-trait Barrrrrrrrr {
+trait Barrrrrrrrr() {
   let rrrrrrr: number
 }
 fun inn2: Barrrrrrrrr => unit
 fun out2: unit => Barrrrrrrrr
-//│ |#fun| |hello|#:| |unit| |=>| |unit|↵|#fun| |add|#:| |number| |=>| |number| |=>| |number|↵|#fun| |sub|#:| |number| |=>| |number| |=>| |number|↵|#fun| |foo|#:| |unit| |=>| |number|↵|#fun| |id|#:| |anything| |=>| |anything|↵|#fun| |odd|#:| |number| |=>| |bool|↵|#fun| |isnull|#:| |anything| |=>| |bool|↵|#fun| |bar|#:| |unit| |=>| |anything|↵|#fun| |nu|#:| |null| |=>| |null|↵|#fun| |un|#:| |undefined| |=>| |undefined|↵|#fun| |fail|#:| |unit| |=>| |nothing|↵|#fun| |create|#:| |unit| |=>| |object|↵|#fun| |pa|#:| |number| |=>| |number|↵|#fun| |wtf|#:| |anything| |=>| |unit|↵|#class| |Foooooo| |{|→|#let| |ooooooo|#:| |number|←|↵|}|↵|#fun| |inn|#:| |Foooooo| |=>| |unit|↵|#fun| |out|#:| |unit| |=>| |Foooooo|↵|#trait| |Barrrrrrrrr| |{|→|#let| |rrrrrrr|#:| |number|←|↵|}|↵|#fun| |inn2|#:| |Barrrrrrrrr| |=>| |unit|↵|#fun| |out2|#:| |unit| |=>| |Barrrrrrrrr|
+//│ |#fun| |hello|#:| |unit| |=>| |unit|↵|#fun| |add|#:| |number| |=>| |number| |=>| |number|↵|#fun| |sub|#:| |number| |=>| |number| |=>| |number|↵|#fun| |foo|#:| |unit| |=>| |number|↵|#fun| |id|#:| |anything| |=>| |anything|↵|#fun| |odd|#:| |number| |=>| |bool|↵|#fun| |isnull|#:| |anything| |=>| |bool|↵|#fun| |bar|#:| |unit| |=>| |anything|↵|#fun| |nu|#:| |null| |=>| |null|↵|#fun| |un|#:| |undefined| |=>| |undefined|↵|#fun| |fail|#:| |unit| |=>| |nothing|↵|#fun| |create|#:| |unit| |=>| |object|↵|#fun| |pa|#:| |number| |=>| |number|↵|#fun| |wtf|#:| |anything| |=>| |unit|↵|#class| |Foooooo|(||)| |{|→|#let| |ooooooo|#:| |number|←|↵|}|↵|#fun| |inn|#:| |Foooooo| |=>| |unit|↵|#fun| |out|#:| |unit| |=>| |Foooooo|↵|#trait| |Barrrrrrrrr|(||)| |{|→|#let| |rrrrrrr|#:| |number|←|↵|}|↵|#fun| |inn2|#:| |Barrrrrrrrr| |=>| |unit|↵|#fun| |out2|#:| |unit| |=>| |Barrrrrrrrr|
 //│ Parsed: {fun hello: [] -> unit -> unit; fun add: [] -> number -> number -> number; fun sub: [] -> number -> number -> number; fun foo: [] -> unit -> number; fun id: [] -> anything -> anything; fun odd: [] -> number -> bool; fun isnull: [] -> anything -> bool; fun bar: [] -> unit -> anything; fun nu: [] -> null -> null; fun un: [] -> undefined -> undefined; fun fail: [] -> unit -> nothing; fun create: [] -> unit -> object; fun pa: [] -> number -> number; fun wtf: [] -> anything -> unit; class Foooooo() {let ooooooo: [] -> number}; fun inn: [] -> Foooooo -> unit; fun out: [] -> unit -> Foooooo; trait Barrrrrrrrr(): {let rrrrrrr: [] -> number}; fun inn2: [] -> Barrrrrrrrr -> unit; fun out2: [] -> unit -> Barrrrrrrrr}

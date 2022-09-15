@@ -43,14 +43,16 @@ object Converter {
     case TSArrayType(element) => s"MutArray<${convert(element)}>"
     case TSEnumType => "int"
     case TSMemberType(base, _) => convert(base) // TODO: support private/protected members
-    case TSInterfaceType(name, members, typeVars, parents) => convertRecord(s"trait $name", members, typeVars, parents, Map())(indent)
-    case TSClassType(name, members, statics, typeVars, parents) => convertRecord(s"class $name", members, typeVars, parents, statics)(indent)
+    case TSInterfaceType(name, members, typeVars, parents) =>
+      convertRecord(s"trait $name", members, typeVars, parents, Map(), List())(indent)
+    case TSClassType(name, members, statics, typeVars, parents, cons) =>
+      convertRecord(s"class $name", members, typeVars, parents, statics, cons)(indent)
     case TSSubstitutionType(base, applied) => s"${base}<${applied.map((app) => convert(app)).reduceLeft((res, s) => s"$res, $s")}>"
     case overload @ TSIgnoredOverload(base, _) => s"${convert(base)} ${overload.warning}"
   }
 
-  private def convertRecord(typeName: String, members: Map[String, TSMemberType],
-    typeVars: List[TSTypeParameter], parents: List[TSType], statics: Map[String, TSMemberType])(implicit indent: String) = {
+  private def convertRecord(typeName: String, members: Map[String, TSMemberType], typeVars: List[TSTypeParameter],
+    parents: List[TSType], statics: Map[String, TSMemberType], constructorList: List[TSType])(implicit indent: String) = {
     val allRecs = members.toList.map((m) => m._2.modifier match {
       case Public =>
         if (typeName === "trait ") s"${m._1}: ${convert(m._2)},"
@@ -94,9 +96,13 @@ object Converter {
     
     if (typeName === "trait ") body // anonymous interfaces
     else { // named interfaces and classes
+      val constructor =
+        if (constructorList.isEmpty) "()"
+        else s"(${constructorList.map(p => "_: " + convert(p)).reduceLeft((res, p) => s"$res, $p")})"
+
       val inheritance =
-        if (parents.isEmpty) ""
-        else parents.foldLeft("(): ")((b, p) => s"$b${convert(p)}, ").dropRight(2)
+        if (parents.isEmpty) constructor
+        else parents.foldLeft(s"$constructor: ")((b, p) => s"$b${convert(p)}, ").dropRight(2)
       if (typeVars.isEmpty) s"${indent}$typeName$inheritance $body"
       else
         s"${indent}$typeName<${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}>$inheritance $body" // TODO: add constraints

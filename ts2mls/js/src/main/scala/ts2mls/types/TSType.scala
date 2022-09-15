@@ -22,6 +22,7 @@ case class TSClassType(
     statics: Map[String, TSMemberType],
     typeVars: List[TSTypeParameter],
     parents: List[TSType],
+    constructor: List[TSType]
   ) extends TSType
 
 case class TSInterfaceType(

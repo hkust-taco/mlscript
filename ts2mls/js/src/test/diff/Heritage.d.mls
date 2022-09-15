@@ -1,15 +1,15 @@
 :NewParser
 :ParseOnly
-class A {
+class A() {
   fun foo: unit => unit
 }
 class B(): A {}
-class C<T> {
+class C<T>() {
   fun set: T => unit
   fun get: unit => T
 }
 class D(): C<number> {}
-trait Wu {
+trait Wu() {
   let x: bool
 }
 class WuWu(): Wu {
@@ -21,24 +21,24 @@ trait WuWuWu(): WuWu {
 trait Never(): WuWuWu {
   fun w: unit => nothing
 }
-class VG<T> {
+class VG<T>() {
   let x: T
 }
 class Home<T>(): VG<string> {
   let y: T
 }
-trait O<I> {
+trait O<I>() {
   fun xx: I => I
 }
 class OR<R>(): O<R> {
   fun xx: R => R
 }
 namespace Five {
-  class ROTK {
+  class ROTK() {
     let wu: string
   }
   class Y(): Five'ROTK {}
 }
 class Y(): Five'ROTK {}
-//│ |#class| |A| |{|→|#fun| |foo|#:| |unit| |=>| |unit|←|↵|}|↵|#class| |B|(||)|#:| |A| |{||}|↵|#class| |C|‹|T|›| |{|→|#fun| |set|#:| |T| |=>| |unit|↵|#fun| |get|#:| |unit| |=>| |T|←|↵|}|↵|#class| |D|(||)|#:| |C|‹|number|›| |{||}|↵|#trait| |Wu| |{|→|#let| |x|#:| |bool|←|↵|}|↵|#class| |WuWu|(||)|#:| |Wu| |{|→|#let| |y|#:| |bool|←|↵|}|↵|#trait| |WuWuWu|(||)|#:| |WuWu| |{|→|#let| |z|#:| |bool|←|↵|}|↵|#trait| |Never|(||)|#:| |WuWuWu| |{|→|#fun| |w|#:| |unit| |=>| |nothing|←|↵|}|↵|#class| |VG|‹|T|›| |{|→|#let| |x|#:| |T|←|↵|}|↵|#class| |Home|‹|T|›|(||)|#:| |VG|‹|string|›| |{|→|#let| |y|#:| |T|←|↵|}|↵|#trait| |O|‹|I|›| |{|→|#fun| |xx|#:| |I| |=>| |I|←|↵|}|↵|#class| |OR|‹|R|›|(||)|#:| |O|‹|R|›| |{|→|#fun| |xx|#:| |R| |=>| |R|←|↵|}|↵|#namespace| |Five| |{|→|#class| |ROTK| |{|→|#let| |wu|#:| |string|←|↵|}|↵|#class| |Y|(||)|#:| |Five'ROTK| |{||}|←|↵|}|↵|#class| |Y|(||)|#:| |Five'ROTK| |{||}|
+//│ |#class| |A|(||)| |{|→|#fun| |foo|#:| |unit| |=>| |unit|←|↵|}|↵|#class| |B|(||)|#:| |A| |{||}|↵|#class| |C|‹|T|›|(||)| |{|→|#fun| |set|#:| |T| |=>| |unit|↵|#fun| |get|#:| |unit| |=>| |T|←|↵|}|↵|#class| |D|(||)|#:| |C|‹|number|›| |{||}|↵|#trait| |Wu|(||)| |{|→|#let| |x|#:| |bool|←|↵|}|↵|#class| |WuWu|(||)|#:| |Wu| |{|→|#let| |y|#:| |bool|←|↵|}|↵|#trait| |WuWuWu|(||)|#:| |WuWu| |{|→|#let| |z|#:| |bool|←|↵|}|↵|#trait| |Never|(||)|#:| |WuWuWu| |{|→|#fun| |w|#:| |unit| |=>| |nothing|←|↵|}|↵|#class| |VG|‹|T|›|(||)| |{|→|#let| |x|#:| |T|←|↵|}|↵|#class| |Home|‹|T|›|(||)|#:| |VG|‹|string|›| |{|→|#let| |y|#:| |T|←|↵|}|↵|#trait| |O|‹|I|›|(||)| |{|→|#fun| |xx|#:| |I| |=>| |I|←|↵|}|↵|#class| |OR|‹|R|›|(||)|#:| |O|‹|R|›| |{|→|#fun| |xx|#:| |R| |=>| |R|←|↵|}|↵|#namespace| |Five| |{|→|#class| |ROTK|(||)| |{|→|#let| |wu|#:| |string|←|↵|}|↵|#class| |Y|(||)|#:| |Five'ROTK| |{||}|←|↵|}|↵|#class| |Y|(||)|#:| |Five'ROTK| |{||}|
 //│ Parsed: {class A() {fun foo: [] -> unit -> unit}; class B(): A {}; class C[T]() {fun set: [] -> T -> unit; fun get: [] -> unit -> T}; class D(): C‹number› {}; trait Wu(): {let x: [] -> bool}; class WuWu(): Wu {let y: [] -> bool}; trait WuWuWu(): WuWu: {let z: [] -> bool}; trait Never(): WuWuWu: {fun w: [] -> unit -> nothing}; class VG[T]() {let x: [] -> T}; class Home[T](): VG‹string› {let y: [] -> T}; trait O[I](): {fun xx: [] -> I -> I}; class OR[R](): O‹R› {fun xx: [] -> R -> R}; namespace Five(): {class ROTK() {let wu: [] -> string}; class Y(): Five'ROTK {}}; class Y(): Five'ROTK {}}

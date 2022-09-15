@@ -1,40 +1,40 @@
 :NewParser
 :ParseOnly
-trait IFoo {
+trait IFoo() {
   let a: string
   fun b: number => number
   fun c: unit => bool
   fun d: string => unit
 }
-trait II<T> {
+trait II<T>() {
   fun test: T => number
 }
 fun create: unit => (v: number,)
 fun get: (t: string,) => string
-trait IEvent {
+trait IEvent() {
   fun callback: unit => number => unit
 }
-trait SearchFunc {
+trait SearchFunc() {
   fun __call: string => string => bool
 }
-trait StringArray {
+trait StringArray() {
   fun __index: number => string
 }
-trait Counter {
+trait Counter() {
   fun __call: number => string
   let interval: number
   fun reset: unit => unit
 }
-trait Simple {
+trait Simple() {
   let a: number
   fun b: bool => string
 }
-trait Simple2<T> {
+trait Simple2<T>() {
   let abc: T
 }
 trait Next(): Simple {}
-trait TTT<T> {
+trait TTT<T>() {
   fun ttt: T => T
 }
-//│ |#trait| |IFoo| |{|→|#let| |a|#:| |string|↵|#fun| |b|#:| |number| |=>| |number|↵|#fun| |c|#:| |unit| |=>| |bool|↵|#fun| |d|#:| |string| |=>| |unit|←|↵|}|↵|#trait| |II|‹|T|›| |{|→|#fun| |test|#:| |T| |=>| |number|←|↵|}|↵|#fun| |create|#:| |unit| |=>| |(|v|#:| |number|,|)|↵|#fun| |get|#:| |(|t|#:| |string|,|)| |=>| |string|↵|#trait| |IEvent| |{|→|#fun| |callback|#:| |unit| |=>| |number| |=>| |unit|←|↵|}|↵|#trait| |SearchFunc| |{|→|#fun| |__call|#:| |string| |=>| |string| |=>| |bool|←|↵|}|↵|#trait| |StringArray| |{|→|#fun| |__index|#:| |number| |=>| |string|←|↵|}|↵|#trait| |Counter| |{|→|#fun| |__call|#:| |number| |=>| |string|↵|#let| |interval|#:| |number|↵|#fun| |reset|#:| |unit| |=>| |unit|←|↵|}|↵|#trait| |Simple| |{|→|#let| |a|#:| |number|↵|#fun| |b|#:| |bool| |=>| |string|←|↵|}|↵|#trait| |Simple2|‹|T|›| |{|→|#let| |abc|#:| |T|←|↵|}|↵|#trait| |Next|(||)|#:| |Simple| |{||}|↵|#trait| |TTT|‹|T|›| |{|→|#fun| |ttt|#:| |T| |=>| |T|←|↵|}|
+//│ |#trait| |IFoo|(||)| |{|→|#let| |a|#:| |string|↵|#fun| |b|#:| |number| |=>| |number|↵|#fun| |c|#:| |unit| |=>| |bool|↵|#fun| |d|#:| |string| |=>| |unit|←|↵|}|↵|#trait| |II|‹|T|›|(||)| |{|→|#fun| |test|#:| |T| |=>| |number|←|↵|}|↵|#fun| |create|#:| |unit| |=>| |(|v|#:| |number|,|)|↵|#fun| |get|#:| |(|t|#:| |string|,|)| |=>| |string|↵|#trait| |IEvent|(||)| |{|→|#fun| |callback|#:| |unit| |=>| |number| |=>| |unit|←|↵|}|↵|#trait| |SearchFunc|(||)| |{|→|#fun| |__call|#:| |string| |=>| |string| |=>| |bool|←|↵|}|↵|#trait| |StringArray|(||)| |{|→|#fun| |__index|#:| |number| |=>| |string|←|↵|}|↵|#trait| |Counter|(||)| |{|→|#fun| |__call|#:| |number| |=>| |string|↵|#let| |interval|#:| |number|↵|#fun| |reset|#:| |unit| |=>| |unit|←|↵|}|↵|#trait| |Simple|(||)| |{|→|#let| |a|#:| |number|↵|#fun| |b|#:| |bool| |=>| |string|←|↵|}|↵|#trait| |Simple2|‹|T|›|(||)| |{|→|#let| |abc|#:| |T|←|↵|}|↵|#trait| |Next|(||)|#:| |Simple| |{||}|↵|#trait| |TTT|‹|T|›|(||)| |{|→|#fun| |ttt|#:| |T| |=>| |T|←|↵|}|
 //│ Parsed: {trait IFoo(): {let a: [] -> string; fun b: [] -> number -> number; fun c: [] -> unit -> bool; fun d: [] -> string -> unit}; trait II[T](): {fun test: [] -> T -> number}; fun create: [] -> unit -> (v: number,); fun get: [] -> (t: string,) -> string; trait IEvent(): {fun callback: [] -> unit -> number -> unit}; trait SearchFunc(): {fun __call: [] -> string -> string -> bool}; trait StringArray(): {fun __index: [] -> number -> string}; trait Counter(): {fun __call: [] -> number -> string; let interval: [] -> number; fun reset: [] -> unit -> unit}; trait Simple(): {let a: [] -> number; fun b: [] -> bool -> string}; trait Simple2[T](): {let abc: [] -> T}; trait Next(): Simple: {}; trait TTT[T](): {fun ttt: [] -> T -> T}}

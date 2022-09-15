@@ -78,7 +78,6 @@ object TSSourceFile {
     list.foldLeft(Map[String, TSMemberType]())((mp, p) => {
       val name = p.symbol.escapedName
 
-      // TODO: support `__constructor`
       if (name =/= "__constructor" && p.isStatic == requireStatic) {
         val mem =
           if (!p.isStatic) getMemberType(p)
@@ -111,6 +110,14 @@ object TSSourceFile {
       else mp
     })
 
+  private def getConstructorList(members: TSNodeArray): List[TSType] =
+    members.foldLeft(List[TSType]())((lst, mem) => {
+      val name = mem.symbol.escapedName
+
+      if (name =/= "__constructor") lst
+      else mem.parameters.foldLeft(List[TSType]())((res, p) => res :+ getMemberType(p))
+    })
+
   private def getInterfacePropertiesType(list: TSNodeArray): Map[String, TSMemberType] =
     list.foldLeft(Map[String, TSMemberType]())((mp, p) => mp ++ Map(p.symbol.escapedName -> TSMemberType(getMemberType(p))))
 
@@ -120,7 +127,8 @@ object TSSourceFile {
 
   private def parseMembers(name: String, node: TSNodeObject, isClass: Boolean): TSType =
     if (isClass)
-      TSClassType(name, getClassMembersType(node.members, false), getClassMembersType(node.members, true), getTypeParametes(node), getHeritageList(node))
+      TSClassType(name, getClassMembersType(node.members, false), getClassMembersType(node.members, true),
+        getTypeParametes(node), getHeritageList(node), getConstructorList(node.members))
     else TSInterfaceType(name, getInterfacePropertiesType(node.members), getTypeParametes(node), getHeritageList(node))
 
   private def parseNamespaceLocals(map: TSSymbolMap)(implicit ns: TSNamespace) =

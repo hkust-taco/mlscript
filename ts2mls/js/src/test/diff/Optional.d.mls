@@ -4,21 +4,21 @@ fun buildName: string => (string) | (undefined) => string
 fun buildName2: string => (string) | (undefined) => string
 fun buildName3: string => MutArray<string> => string
 fun buildName4: string => MutArray<anything> => string
-trait SquareConfig {
+trait SquareConfig() {
   let color: (string) | (undefined)
   let width: (number) | (undefined)
 }
 fun did: number => (number => number) | (undefined) => number
 fun getOrElse: (MutArray<object>) | (undefined) => object
-class ABC {}
+class ABC() {}
 fun testABC: (ABC) | (undefined) => unit
 fun testSquareConfig: (SquareConfig) | (undefined) => unit
 fun err: ((number, string, )) | (undefined) => unit
 fun toStr: ((number) | (bool)) | (undefined) => string
 fun boo: ((T) & (U)) | (undefined) => unit
-class B<T> {
+class B<T>() {
   let b: T
 }
 fun boom: (B<nothing>) | (undefined) => anything
-//│ |#fun| |buildName|#:| |string| |=>| |(|string|)| ||| |(|undefined|)| |=>| |string|↵|#fun| |buildName2|#:| |string| |=>| |(|string|)| ||| |(|undefined|)| |=>| |string|↵|#fun| |buildName3|#:| |string| |=>| |MutArray|‹|string|›| |=>| |string|↵|#fun| |buildName4|#:| |string| |=>| |MutArray|‹|anything|›| |=>| |string|↵|#trait| |SquareConfig| |{|→|#let| |color|#:| |(|string|)| ||| |(|undefined|)|↵|#let| |width|#:| |(|number|)| ||| |(|undefined|)|←|↵|}|↵|#fun| |did|#:| |number| |=>| |(|number| |=>| |number|)| ||| |(|undefined|)| |=>| |number|↵|#fun| |getOrElse|#:| |(|MutArray|‹|object|›|)| ||| |(|undefined|)| |=>| |object|↵|#class| |ABC| |{||}|↵|#fun| |testABC|#:| |(|ABC|)| ||| |(|undefined|)| |=>| |unit|↵|#fun| |testSquareConfig|#:| |(|SquareConfig|)| ||| |(|undefined|)| |=>| |unit|↵|#fun| |err|#:| |(|(|number|,| |string|,| |)|)| ||| |(|undefined|)| |=>| |unit|↵|#fun| |toStr|#:| |(|(|number|)| ||| |(|bool|)|)| ||| |(|undefined|)| |=>| |string|↵|#fun| |boo|#:| |(|(|T|)| |&| |(|U|)|)| ||| |(|undefined|)| |=>| |unit|↵|#class| |B|‹|T|›| |{|→|#let| |b|#:| |T|←|↵|}|↵|#fun| |boom|#:| |(|B|‹|nothing|›|)| ||| |(|undefined|)| |=>| |anything|
+//│ |#fun| |buildName|#:| |string| |=>| |(|string|)| ||| |(|undefined|)| |=>| |string|↵|#fun| |buildName2|#:| |string| |=>| |(|string|)| ||| |(|undefined|)| |=>| |string|↵|#fun| |buildName3|#:| |string| |=>| |MutArray|‹|string|›| |=>| |string|↵|#fun| |buildName4|#:| |string| |=>| |MutArray|‹|anything|›| |=>| |string|↵|#trait| |SquareConfig|(||)| |{|→|#let| |color|#:| |(|string|)| ||| |(|undefined|)|↵|#let| |width|#:| |(|number|)| ||| |(|undefined|)|←|↵|}|↵|#fun| |did|#:| |number| |=>| |(|number| |=>| |number|)| ||| |(|undefined|)| |=>| |number|↵|#fun| |getOrElse|#:| |(|MutArray|‹|object|›|)| ||| |(|undefined|)| |=>| |object|↵|#class| |ABC|(||)| |{||}|↵|#fun| |testABC|#:| |(|ABC|)| ||| |(|undefined|)| |=>| |unit|↵|#fun| |testSquareConfig|#:| |(|SquareConfig|)| ||| |(|undefined|)| |=>| |unit|↵|#fun| |err|#:| |(|(|number|,| |string|,| |)|)| ||| |(|undefined|)| |=>| |unit|↵|#fun| |toStr|#:| |(|(|number|)| ||| |(|bool|)|)| ||| |(|undefined|)| |=>| |string|↵|#fun| |boo|#:| |(|(|T|)| |&| |(|U|)|)| ||| |(|undefined|)| |=>| |unit|↵|#class| |B|‹|T|›|(||)| |{|→|#let| |b|#:| |T|←|↵|}|↵|#fun| |boom|#:| |(|B|‹|nothing|›|)| ||| |(|undefined|)| |=>| |anything|
 //│ Parsed: {fun buildName: [] -> string -> ((string,) | (undefined,)) -> string; fun buildName2: [] -> string -> ((string,) | (undefined,)) -> string; fun buildName3: [] -> string -> MutArray[string] -> string; fun buildName4: [] -> string -> MutArray[anything] -> string; trait SquareConfig(): {let color: [] -> (string,) | (undefined,); let width: [] -> (number,) | (undefined,)}; fun did: [] -> number -> ((number -> number,) | (undefined,)) -> number; fun getOrElse: [] -> ((MutArray[object],) | (undefined,)) -> object; class ABC() {}; fun testABC: [] -> ((ABC,) | (undefined,)) -> unit; fun testSquareConfig: [] -> ((SquareConfig,) | (undefined,)) -> unit; fun err: [] -> (((number, string,),) | (undefined,)) -> unit; fun toStr: [] -> (((number,) | (bool,),) | (undefined,)) -> string; fun boo: [] -> (((T,) & (U,),) | (undefined,)) -> unit; class B[T]() {let b: [] -> T}; fun boom: [] -> ((B[nothing],) | (undefined,)) -> anything}
