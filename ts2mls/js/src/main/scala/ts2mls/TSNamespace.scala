@@ -66,10 +66,10 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
           //     else // TODO: add constraints
           //       writer.writeln(s"def ${fullName}[${typeParams.reduceLeft((r, s) => s"$r, $s")}]: ${Converter.convert(overload)}")
           // }
-          case _: TSClassType => writer.writeln(indent + Converter.convert(mem)(indent))
+          case _: TSClassType => writer.writeln(Converter.convert(mem)(indent))
           case _ @ TSInterfaceType(name, _, _, _) if (name =/= "") =>
-            writer.writeln(indent + Converter.convert(mem)(indent))
-          case _ => writer.writeln(indent + Converter.convert(mem))
+            writer.writeln(Converter.convert(mem)(indent))
+          case _ => writer.writeln(Converter.convert(mem))
         }
       }
     })

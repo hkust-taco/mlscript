@@ -43,14 +43,14 @@ object Converter {
     case TSArrayType(element) => s"MutArray<${convert(element)}>"
     case TSEnumType => "int"
     case TSMemberType(base, _) => convert(base) // TODO: support private/protected members
-    case TSInterfaceType(name, members, typeVars, parents) => convertRecord(s"trait $name", members, typeVars, parents)(indent)
-    case TSClassType(name, members, _, typeVars, parents) => convertRecord(s"class $name", members, typeVars, parents)(indent) // TODO: support static members
+    case TSInterfaceType(name, members, typeVars, parents) => convertRecord(s"trait $name", members, typeVars, parents, Map())(indent)
+    case TSClassType(name, members, statics, typeVars, parents) => convertRecord(s"class $name", members, typeVars, parents, statics)(indent)
     case TSSubstitutionType(base, applied) => s"${base}<${applied.map((app) => convert(app)).reduceLeft((res, s) => s"$res, $s")}>"
     case overload @ TSIgnoredOverload(base, _) => s"${convert(base)} ${overload.warning}"
   }
 
   private def convertRecord(typeName: String, members: Map[String, TSMemberType],
-    typeVars: List[TSTypeParameter], parents: List[TSType])(implicit indent: String) = {
+    typeVars: List[TSTypeParameter], parents: List[TSType], statics: Map[String, TSMemberType])(implicit indent: String) = {
     val allRecs = members.toList.map((m) => m._2.modifier match {
       case Public =>
         if (typeName === "trait ") s"${m._1}: ${convert(m._2)},"
@@ -71,7 +71,14 @@ object Converter {
       //   }
       // }
       case _ => "" // TODO: deal with private/protected members
-    })
+    }) :::
+      statics.toList.map((s) => s._2.modifier match {
+        case Public => s._2.base match {
+          case _: TSClassType => convert(s._2)(indent + "  ") + "\n"
+          case _ => "" // TODO: deal with other static type
+        }
+        case _ => "" // TODO: deal with private/protected members
+      })
 
     val body = { // members without independent type parameters, translate them directly
       val lst = allRecs.filter((s) => !s.isEmpty())
@@ -90,9 +97,9 @@ object Converter {
       val inheritance =
         if (parents.isEmpty) ""
         else parents.foldLeft("(): ")((b, p) => s"$b${convert(p)}, ").dropRight(2)
-      if (typeVars.isEmpty) s"$typeName$inheritance $body"
+      if (typeVars.isEmpty) s"${indent}$typeName$inheritance $body"
       else
-        s"$typeName<${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}>$inheritance $body" // TODO: add constraints
+        s"${indent}$typeName<${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}>$inheritance $body" // TODO: add constraints
     }
   }
 }
