@@ -4,10 +4,10 @@ namespace N1 {
   fun f(_: anything): number
   fun ff(_: anything): number
   class C() {
-    fun f: unit => unit
+    fun f(): unit
   }
   trait I() {
-    fun f: unit => number
+    fun f(): number
   }
   namespace N2 {
     fun fff(_: bool): number
@@ -18,15 +18,15 @@ namespace N1 {
 namespace AA {
   fun f(_: anything): string
   class C() {
-    fun f: unit => unit
+    fun f(): unit
   }
   trait I() {
-    fun f: unit => number
+    fun f(): number
   }
   namespace N2 {
   }
 }
 fun f1(_: N1'C): N1'C
 fun f2(_: AA'C): AA'C
-//│ |#namespace| |N1| |{|→|#fun| |f|(|_|#:| |anything|)|#:| |number|↵|#fun| |ff|(|_|#:| |anything|)|#:| |number|↵|#class| |C|(||)| |{|→|#fun| |f|#:| |unit| |=>| |unit|←|↵|}|↵|#trait| |I|(||)| |{|→|#fun| |f|#:| |unit| |=>| |number|←|↵|}|↵|#namespace| |N2| |{|→|#fun| |fff|(|_|#:| |bool|)|#:| |number|↵|#fun| |gg|(|_|#:| |N1'C|)|#:| |N1'C|↵|#class| |BBB|(||)|#:| |N1'C| |{||}|←|↵|}|←|↵|}|↵|#namespace| |AA| |{|→|#fun| |f|(|_|#:| |anything|)|#:| |string|↵|#class| |C|(||)| |{|→|#fun| |f|#:| |unit| |=>| |unit|←|↵|}|↵|#trait| |I|(||)| |{|→|#fun| |f|#:| |unit| |=>| |number|←|↵|}|↵|#namespace| |N2| |{|↵|}|←|↵|}|↵|#fun| |f1|(|_|#:| |N1'C|)|#:| |N1'C|↵|#fun| |f2|(|_|#:| |AA'C|)|#:| |AA'C|
-//│ Parsed: {namespace N1(): {fun f: [] -> (_: anything,) -> number; fun ff: [] -> (_: anything,) -> number; class C() {fun f: [] -> unit -> unit}; trait I(): {fun f: [] -> unit -> number}; namespace N2(): {fun fff: [] -> (_: bool,) -> number; fun gg: [] -> (_: N1'C,) -> N1'C; class BBB(): N1'C {}}}; namespace AA(): {fun f: [] -> (_: anything,) -> string; class C() {fun f: [] -> unit -> unit}; trait I(): {fun f: [] -> unit -> number}; namespace N2(): {}}; fun f1: [] -> (_: N1'C,) -> N1'C; fun f2: [] -> (_: AA'C,) -> AA'C}
+//│ |#namespace| |N1| |{|→|#fun| |f|(|_|#:| |anything|)|#:| |number|↵|#fun| |ff|(|_|#:| |anything|)|#:| |number|↵|#class| |C|(||)| |{|→|#fun| |f|(||)|#:| |unit|←|↵|}|↵|#trait| |I|(||)| |{|→|#fun| |f|(||)|#:| |number|←|↵|}|↵|#namespace| |N2| |{|→|#fun| |fff|(|_|#:| |bool|)|#:| |number|↵|#fun| |gg|(|_|#:| |N1'C|)|#:| |N1'C|↵|#class| |BBB|(||)|#:| |N1'C| |{||}|←|↵|}|←|↵|}|↵|#namespace| |AA| |{|→|#fun| |f|(|_|#:| |anything|)|#:| |string|↵|#class| |C|(||)| |{|→|#fun| |f|(||)|#:| |unit|←|↵|}|↵|#trait| |I|(||)| |{|→|#fun| |f|(||)|#:| |number|←|↵|}|↵|#namespace| |N2| |{|↵|}|←|↵|}|↵|#fun| |f1|(|_|#:| |N1'C|)|#:| |N1'C|↵|#fun| |f2|(|_|#:| |AA'C|)|#:| |AA'C|
+//│ Parsed: {namespace N1(): {fun f: [] -> (_: anything,) -> number; fun ff: [] -> (_: anything,) -> number; class C() {fun f: [] -> () -> unit}; trait I(): {fun f: [] -> () -> number}; namespace N2(): {fun fff: [] -> (_: bool,) -> number; fun gg: [] -> (_: N1'C,) -> N1'C; class BBB(): N1'C {}}}; namespace AA(): {fun f: [] -> (_: anything,) -> string; class C() {fun f: [] -> () -> unit}; trait I(): {fun f: [] -> () -> number}; namespace N2(): {}}; fun f1: [] -> (_: N1'C,) -> N1'C; fun f2: [] -> (_: AA'C,) -> AA'C}

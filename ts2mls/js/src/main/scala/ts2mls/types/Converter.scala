@@ -66,7 +66,7 @@ object Converter {
       case Public =>
         if (typeName === "trait ") s"${m._1}: ${convert(m._2)},"
         else m._2.base match {
-          case _: TSFunctionType => s"${indent}  fun ${m._1}: ${convert(m._2)}\n"
+          case _: TSFunctionType => s"${generateFunDeclaration(m._2.base, m._1)(indent + "  ")}\n"
           case _: TSIgnoredOverload => s"${indent}  fun ${m._1}: ${convert(m._2)}\n"
           case _ => s"${indent}  let ${m._1}: ${convert(m._2)}\n"
         }
