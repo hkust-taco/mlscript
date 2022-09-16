@@ -115,3 +115,14 @@ foo[S, T](1, 2, 3) & Bar[U]("ok")
 //│ ╙──       	     ^
 //│ Parsed: {& ((foo)[S] (1, 2, 3,),) ((Bar)[U] ("ok",),)}
 
+class Foo<T> {}
+//│ |#class| |Foo|‹|T|›| |{||}|
+//│ Parsed: {class Foo[T]() {}}
+
+fun foo<T>(x: T): string = "rua"
+//│ |#fun| |foo|‹|T|›|(|x|#:| |T|)|#:| |string| |#=| |"rua"|
+//│ Parsed: {fun foo = x: T, => "rua" : TypeName(string)}
+
+foo<int>(42)
+//│ |foo|‹|int|›|(|42|)|
+//│ Parsed: {foo‹int› (42,)}

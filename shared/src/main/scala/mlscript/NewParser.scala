@@ -311,6 +311,17 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 (Var("<error>").withLoc(curLoc.map(_.left)), false)
             }
             foundErr || !success pipe { implicit fe =>
+              val tparams = yeetSpaces match {
+                case (br @ BRACKETS(Angle, toks), loc) :: _ =>
+                  consume
+                  val ts = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()).map {
+                    case (N, Fld(false, false, v @ Var(nme))) =>
+                      TypeName(nme).withLocOf(v)
+                    case _ => ???
+                  }
+                  ts
+                case _ => Nil
+              }
               val ps = funParams
               val asc = yeetSpaces match {
                 case (KEYWORD(":"), _) :: _ =>
@@ -323,11 +334,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                   consume
                   val body = expr(0)
                   val annotatedBody = asc.fold(body)(ty => Asc(body, ty))
-                  R(NuFunDef(isLetRec, v, Nil, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))))
+                  R(NuFunDef(isLetRec, v, tparams, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))))
                 case c =>
                   asc match {
                     case S(ty) =>
-                      R(NuFunDef(isLetRec, v, Nil, R(PolyType(Nil, ps.foldRight(ty)((p, r) => Function(p.toType match {
+                      R(NuFunDef(isLetRec, v, tparams, R(PolyType(Nil, ps.foldRight(ty)((p, r) => Function(p.toType match {
                         case L(diag) => raise(diag); Top // TODO better
                         case R(tp) => tp
                       }, r)))))) // TODO rm PolyType after FCP is merged
