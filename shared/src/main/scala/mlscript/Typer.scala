@@ -290,6 +290,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case AbstractConstructor(_, _) => die
           case t: TypeScheme => t.instantiate
         }
+      case tn @ TypeTag(name) => rec(TypeName(name.decapitalize))
       case tn @ TypeName(name) =>
         val tyLoc = ty.toLoc
         val tpr = tyTp(tyLoc, "type reference")
@@ -897,7 +898,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           WithExtension(go(base), Record(rcd.fields.mapValues(field)))
         case ProxyType(und) => go(und)
         case tag: ObjectTag => tag.id match {
-          case Var(n) => TypeName(n)
+          case Var(n) =>
+            if (primitiveTypes.contains(n) // primitives like `int` are internally maintained as class tags
+              || n.isCapitalized // rigid type params like A in class Foo[A]
+              || n.startsWith("'") // rigid type varibales
+              || n === "this" // `this` type
+            ) TypeName(n)
+            else TypeTag(n.capitalize)
           case lit: Lit => Literal(lit)
         }
         case TypeRef(td, Nil) => td

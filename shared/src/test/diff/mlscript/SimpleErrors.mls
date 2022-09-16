@@ -37,14 +37,14 @@ trait MyTrait: { value: anything }
 //│ Defined trait MyTrait
 
 def test1 x = case x of { MyTrait -> x.value | _ -> 0 }
-//│ test1: ({value: 'value} & myTrait | ~myTrait) -> (0 | 'value)
+//│ test1: ({value: 'value} & #MyTrait | ~#MyTrait) -> (0 | 'value)
 
 :e
 test1 1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.43: 	test1 1
 //│ ║        	^^^^^^^
-//│ ╟── expression of type `1 & myTrait | 1 & ~?a` does not have field 'value'
+//│ ╟── expression of type `1 & #MyTrait | 1 & ~?a` does not have field 'value'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.39: 	def test1 x = case x of { MyTrait -> x.value | _ -> 0 }
 //│ ║        	                                     ^^^^^^^
