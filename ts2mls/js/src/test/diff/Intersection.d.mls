@@ -1,21 +1,21 @@
 :NewParser
 :ParseOnly
-fun extend: T => U => (T) & (U)
-fun foo: (T) & (U) => unit
-fun over: (number => string) & (object => string) => string
+fun extend<T, U>(_: T, _: U): (T) & (U)
+fun foo<T, U>(_: (T) & (U)): unit
+fun over(_: (number => string) & (object => string)): string
 trait IA() {
   let x: number
 }
 trait IB() {
   let y: number
 }
-fun iii: (IA) & (IB) => (IA) & (IB)
-fun uu: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P)) => ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))
-fun iiii: ((U) & (T)) & (V) => ((U) & (T)) & (V)
-fun arr: (MutArray<U>) & (MutArray<T>) => (MutArray<U>) & (MutArray<T>)
-fun tt: ((U, T, )) & ((V, V, )) => ((U, T, )) & ((V, V, ))
+fun iii(_: (IA) & (IB)): (IA) & (IB)
+fun uu<U, V, T, P>(_: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))): ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))
+fun iiii<U, T, V>(_: ((U) & (T)) & (V)): ((U) & (T)) & (V)
+fun arr<U, T>(_: (MutArray<U>) & (MutArray<T>)): (MutArray<U>) & (MutArray<T>)
+fun tt<U, T, V>(_: ((U, T, )) & ((V, V, ))): ((U, T, )) & ((V, V, ))
 class A() {}
 class B() {}
-fun inter: (A) & (B) => (A) & (B)
-//│ |#fun| |extend|#:| |T| |=>| |U| |=>| |(|T|)| |&| |(|U|)|↵|#fun| |foo|#:| |(|T|)| |&| |(|U|)| |=>| |unit|↵|#fun| |over|#:| |(|number| |=>| |string|)| |&| |(|object| |=>| |string|)| |=>| |string|↵|#trait| |IA|(||)| |{|→|#let| |x|#:| |number|←|↵|}|↵|#trait| |IB|(||)| |{|→|#let| |y|#:| |number|←|↵|}|↵|#fun| |iii|#:| |(|IA|)| |&| |(|IB|)| |=>| |(|IA|)| |&| |(|IB|)|↵|#fun| |uu|#:| |(|(|(|(|U|)| |&| |(|T|)|)| ||| |(|(|U|)| |&| |(|P|)|)|)| ||| |(|(|V|)| |&| |(|T|)|)|)| ||| |(|(|V|)| |&| |(|P|)|)| |=>| |(|(|(|(|U|)| |&| |(|T|)|)| ||| |(|(|U|)| |&| |(|P|)|)|)| ||| |(|(|V|)| |&| |(|T|)|)|)| ||| |(|(|V|)| |&| |(|P|)|)|↵|#fun| |iiii|#:| |(|(|U|)| |&| |(|T|)|)| |&| |(|V|)| |=>| |(|(|U|)| |&| |(|T|)|)| |&| |(|V|)|↵|#fun| |arr|#:| |(|MutArray|‹|U|›|)| |&| |(|MutArray|‹|T|›|)| |=>| |(|MutArray|‹|U|›|)| |&| |(|MutArray|‹|T|›|)|↵|#fun| |tt|#:| |(|(|U|,| |T|,| |)|)| |&| |(|(|V|,| |V|,| |)|)| |=>| |(|(|U|,| |T|,| |)|)| |&| |(|(|V|,| |V|,| |)|)|↵|#class| |A|(||)| |{||}|↵|#class| |B|(||)| |{||}|↵|#fun| |inter|#:| |(|A|)| |&| |(|B|)| |=>| |(|A|)| |&| |(|B|)|
-//│ Parsed: {fun extend: [] -> T -> U -> ((T,) & (U,)); fun foo: [] -> ((T,) & (U,)) -> unit; fun over: [] -> ((number -> string,) & (object -> string,)) -> string; trait IA(): {let x: [] -> number}; trait IB(): {let y: [] -> number}; fun iii: [] -> ((IA,) & (IB,)) -> ((IA,) & (IB,)); fun uu: [] -> (((((U,) & (T,),) | ((U,) & (P,),),) | ((V,) & (T,),),) | ((V,) & (P,),)) -> (((((U,) & (T,),) | ((U,) & (P,),),) | ((V,) & (T,),),) | ((V,) & (P,),)); fun iiii: [] -> (((U,) & (T,),) & (V,)) -> (((U,) & (T,),) & (V,)); fun arr: [] -> ((MutArray[U],) & (MutArray[T],)) -> ((MutArray[U],) & (MutArray[T],)); fun tt: [] -> (((U, T,),) & ((V, V,),)) -> (((U, T,),) & ((V, V,),)); class A() {}; class B() {}; fun inter: [] -> ((A,) & (B,)) -> ((A,) & (B,))}
+fun inter(_: (A) & (B)): (A) & (B)
+//│ |#fun| |extend|‹|T|,| |U|›|(|_|#:| |T|,| |_|#:| |U|)|#:| |(|T|)| |&| |(|U|)|↵|#fun| |foo|‹|T|,| |U|›|(|_|#:| |(|T|)| |&| |(|U|)|)|#:| |unit|↵|#fun| |over|(|_|#:| |(|number| |=>| |string|)| |&| |(|object| |=>| |string|)|)|#:| |string|↵|#trait| |IA|(||)| |{|→|#let| |x|#:| |number|←|↵|}|↵|#trait| |IB|(||)| |{|→|#let| |y|#:| |number|←|↵|}|↵|#fun| |iii|(|_|#:| |(|IA|)| |&| |(|IB|)|)|#:| |(|IA|)| |&| |(|IB|)|↵|#fun| |uu|‹|U|,| |V|,| |T|,| |P|›|(|_|#:| |(|(|(|(|U|)| |&| |(|T|)|)| ||| |(|(|U|)| |&| |(|P|)|)|)| ||| |(|(|V|)| |&| |(|T|)|)|)| ||| |(|(|V|)| |&| |(|P|)|)|)|#:| |(|(|(|(|U|)| |&| |(|T|)|)| ||| |(|(|U|)| |&| |(|P|)|)|)| ||| |(|(|V|)| |&| |(|T|)|)|)| ||| |(|(|V|)| |&| |(|P|)|)|↵|#fun| |iiii|‹|U|,| |T|,| |V|›|(|_|#:| |(|(|U|)| |&| |(|T|)|)| |&| |(|V|)|)|#:| |(|(|U|)| |&| |(|T|)|)| |&| |(|V|)|↵|#fun| |arr|‹|U|,| |T|›|(|_|#:| |(|MutArray|‹|U|›|)| |&| |(|MutArray|‹|T|›|)|)|#:| |(|MutArray|‹|U|›|)| |&| |(|MutArray|‹|T|›|)|↵|#fun| |tt|‹|U|,| |T|,| |V|›|(|_|#:| |(|(|U|,| |T|,| |)|)| |&| |(|(|V|,| |V|,| |)|)|)|#:| |(|(|U|,| |T|,| |)|)| |&| |(|(|V|,| |V|,| |)|)|↵|#class| |A|(||)| |{||}|↵|#class| |B|(||)| |{||}|↵|#fun| |inter|(|_|#:| |(|A|)| |&| |(|B|)|)|#:| |(|A|)| |&| |(|B|)|
+//│ Parsed: {fun extend: [] -> (_: T, _: U,) -> ((T,) & (U,)); fun foo: [] -> (_: (T,) & (U,),) -> unit; fun over: [] -> (_: (number -> string,) & (object -> string,),) -> string; trait IA(): {let x: [] -> number}; trait IB(): {let y: [] -> number}; fun iii: [] -> (_: (IA,) & (IB,),) -> ((IA,) & (IB,)); fun uu: [] -> (_: ((((U,) & (T,),) | ((U,) & (P,),),) | ((V,) & (T,),),) | ((V,) & (P,),),) -> (((((U,) & (T,),) | ((U,) & (P,),),) | ((V,) & (T,),),) | ((V,) & (P,),)); fun iiii: [] -> (_: ((U,) & (T,),) & (V,),) -> (((U,) & (T,),) & (V,)); fun arr: [] -> (_: (MutArray[U],) & (MutArray[T],),) -> ((MutArray[U],) & (MutArray[T],)); fun tt: [] -> (_: ((U, T,),) & ((V, V,),),) -> (((U, T,),) & ((V, V,),)); class A() {}; class B() {}; fun inter: [] -> (_: (A,) & (B,),) -> ((A,) & (B,))}

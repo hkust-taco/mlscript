@@ -18,6 +18,15 @@ object Converter {
     "false" -> "" // will not appear individually
   )
 
+  def generateFunDeclaration(tsType: TSType, name: String)(implicit indent: String = ""): String = tsType match {
+    case TSFunctionType(params, res, typeVars) => {
+      val pList = if (params.isEmpty) "" else params.map(p => "_: " + convert(p)("")).reduceLeft((r, p) => s"$r, $p")
+      val tpList = if (typeVars.isEmpty) "" else s"<${typeVars.map(p => convert(p)("")).reduceLeft((r, p) => s"$r, $p")}>"
+      s"${indent}fun $name$tpList($pList): ${convert(res)("")}"
+    }
+    case _ => convert(tsType) // TODO: overload
+  }
+
   def convert(tsType: TSType)(implicit indent: String = ""): String = tsType match {
     case TSPrimitiveType(typeName) => primitiveName(typeName)
     case TSReferenceType(name) => name

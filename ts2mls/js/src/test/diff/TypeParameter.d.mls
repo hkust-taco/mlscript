@@ -1,17 +1,17 @@
 :NewParser
 :ParseOnly
-fun inc: T => number
+fun inc<T>(_: T): number
 class CC<T>() {
   fun print: T => unit
 }
-fun con: T => U
+fun con<U, T>(_: T): U
 class Printer<T>() {
   fun print: T => unit
 }
-fun setStringPrinter: Printer<string> => unit
-fun getStringPrinter: unit => Printer<string>
-fun foo: Printer<T> => T => T
-fun foo2: Printer<T> => T => T
+fun setStringPrinter(_: Printer<string>): unit
+fun getStringPrinter(): Printer<string>
+fun foo<T>(_: Printer<T>, _: T): T
+fun foo2<T>(_: Printer<T>, _: T): T
 class F<T>() {
   let x: T
   fun GG: U => T
@@ -23,7 +23,7 @@ trait I<T>() {
 class FFF<T>() {
   fun fff: T => unit
 }
-fun fff: FFF<string> => string => unit
-fun getFFF: unit => FFF<number>
-//│ |#fun| |inc|#:| |T| |=>| |number|↵|#class| |CC|‹|T|›|(||)| |{|→|#fun| |print|#:| |T| |=>| |unit|←|↵|}|↵|#fun| |con|#:| |T| |=>| |U|↵|#class| |Printer|‹|T|›|(||)| |{|→|#fun| |print|#:| |T| |=>| |unit|←|↵|}|↵|#fun| |setStringPrinter|#:| |Printer|‹|string|›| |=>| |unit|↵|#fun| |getStringPrinter|#:| |unit| |=>| |Printer|‹|string|›|↵|#fun| |foo|#:| |Printer|‹|T|›| |=>| |T| |=>| |T|↵|#fun| |foo2|#:| |Printer|‹|T|›| |=>| |T| |=>| |T|↵|#class| |F|‹|T|›|(||)| |{|→|#let| |x|#:| |T|↵|#fun| |GG|#:| |U| |=>| |T|←|↵|}|↵|#trait| |I|‹|T|›|(||)| |{|→|#let| |x|#:| |T|↵|#fun| |GG|#:| |U| |=>| |T|←|↵|}|↵|#class| |FFF|‹|T|›|(||)| |{|→|#fun| |fff|#:| |T| |=>| |unit|←|↵|}|↵|#fun| |fff|#:| |FFF|‹|string|›| |=>| |string| |=>| |unit|↵|#fun| |getFFF|#:| |unit| |=>| |FFF|‹|number|›|
-//│ Parsed: {fun inc: [] -> T -> number; class CC[T]() {fun print: [] -> T -> unit}; fun con: [] -> T -> U; class Printer[T]() {fun print: [] -> T -> unit}; fun setStringPrinter: [] -> Printer[string] -> unit; fun getStringPrinter: [] -> unit -> Printer[string]; fun foo: [] -> Printer[T] -> T -> T; fun foo2: [] -> Printer[T] -> T -> T; class F[T]() {let x: [] -> T; fun GG: [] -> U -> T}; trait I[T](): {let x: [] -> T; fun GG: [] -> U -> T}; class FFF[T]() {fun fff: [] -> T -> unit}; fun fff: [] -> FFF[string] -> string -> unit; fun getFFF: [] -> unit -> FFF[number]}
+fun fff(_: FFF<string>, _: string): unit
+fun getFFF(): FFF<number>
+//│ |#fun| |inc|‹|T|›|(|_|#:| |T|)|#:| |number|↵|#class| |CC|‹|T|›|(||)| |{|→|#fun| |print|#:| |T| |=>| |unit|←|↵|}|↵|#fun| |con|‹|U|,| |T|›|(|_|#:| |T|)|#:| |U|↵|#class| |Printer|‹|T|›|(||)| |{|→|#fun| |print|#:| |T| |=>| |unit|←|↵|}|↵|#fun| |setStringPrinter|(|_|#:| |Printer|‹|string|›|)|#:| |unit|↵|#fun| |getStringPrinter|(||)|#:| |Printer|‹|string|›|↵|#fun| |foo|‹|T|›|(|_|#:| |Printer|‹|T|›|,| |_|#:| |T|)|#:| |T|↵|#fun| |foo2|‹|T|›|(|_|#:| |Printer|‹|T|›|,| |_|#:| |T|)|#:| |T|↵|#class| |F|‹|T|›|(||)| |{|→|#let| |x|#:| |T|↵|#fun| |GG|#:| |U| |=>| |T|←|↵|}|↵|#trait| |I|‹|T|›|(||)| |{|→|#let| |x|#:| |T|↵|#fun| |GG|#:| |U| |=>| |T|←|↵|}|↵|#class| |FFF|‹|T|›|(||)| |{|→|#fun| |fff|#:| |T| |=>| |unit|←|↵|}|↵|#fun| |fff|(|_|#:| |FFF|‹|string|›|,| |_|#:| |string|)|#:| |unit|↵|#fun| |getFFF|(||)|#:| |FFF|‹|number|›|
+//│ Parsed: {fun inc: [] -> (_: T,) -> number; class CC[T]() {fun print: [] -> T -> unit}; fun con: [] -> (_: T,) -> U; class Printer[T]() {fun print: [] -> T -> unit}; fun setStringPrinter: [] -> (_: Printer[string],) -> unit; fun getStringPrinter: [] -> () -> Printer[string]; fun foo: [] -> (_: Printer[T], _: T,) -> T; fun foo2: [] -> (_: Printer[T], _: T,) -> T; class F[T]() {let x: [] -> T; fun GG: [] -> U -> T}; trait I[T](): {let x: [] -> T; fun GG: [] -> U -> T}; class FFF[T]() {fun fff: [] -> T -> unit}; fun fff: [] -> (_: FFF[string], _: string,) -> unit; fun getFFF: [] -> () -> FFF[number]}

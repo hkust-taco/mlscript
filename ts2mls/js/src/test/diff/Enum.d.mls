@@ -1,7 +1,7 @@
 :NewParser
 :ParseOnly
-fun pass: int => bool
-fun stop: unit => int
-fun g: int => int
-//│ |#fun| |pass|#:| |int| |=>| |bool|↵|#fun| |stop|#:| |unit| |=>| |int|↵|#fun| |g|#:| |int| |=>| |int|
-//│ Parsed: {fun pass: [] -> int -> bool; fun stop: [] -> unit -> int; fun g: [] -> int -> int}
+fun pass(_: int): bool
+fun stop(): int
+fun g(_: int): int
+//│ |#fun| |pass|(|_|#:| |int|)|#:| |bool|↵|#fun| |stop|(||)|#:| |int|↵|#fun| |g|(|_|#:| |int|)|#:| |int|
+//│ Parsed: {fun pass: [] -> (_: int,) -> bool; fun stop: [] -> () -> int; fun g: [] -> (_: int,) -> int}

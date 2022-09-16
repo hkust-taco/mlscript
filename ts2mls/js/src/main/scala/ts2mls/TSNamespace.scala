@@ -49,7 +49,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
           case inter: TSIntersectionType => // overloaded functions
             writer.writeln(s"${indent}fun ${name}: ${Converter.convert(inter)}")
           case f: TSFunctionType =>
-            writer.writeln(s"${indent}fun ${name}: ${Converter.convert(f)}")
+            writer.writeln(Converter.generateFunDeclaration(f, name)(indent))
           // {
           //   val typeParams = f.typeVars.map((t) => t.name)
           //   if (typeParams.isEmpty)
@@ -67,7 +67,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
           //       writer.writeln(s"def ${fullName}[${typeParams.reduceLeft((r, s) => s"$r, $s")}]: ${Converter.convert(overload)}")
           // }
           case _: TSClassType => writer.writeln(Converter.convert(mem)(indent))
-          case _ @ TSInterfaceType(name, _, _, _) if (name =/= "") =>
+          case TSInterfaceType(name, _, _, _) if (name =/= "") =>
             writer.writeln(Converter.convert(mem)(indent))
           case _ => writer.writeln(Converter.convert(mem))
         }
