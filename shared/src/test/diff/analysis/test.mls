@@ -2,91 +2,22 @@
 :AllowTypeErrors
 
 :ex
-def succ x = x + 1
-x1 = false
-x2 = x1
-succ x2
-//│ succ: int -> int
-//│ x1: false
-//│ x2: false
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.8: 	succ x2
-//│ ║       	^^^^^^^
-//│ ╟── reference of type `false` is not an instance of type `int`
-//│ ║  l.6: 	x1 = false
-//│ ║       	     ^^^^^
-//│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.8: 	succ x2
-//│ ║       	     ^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.5: 	def succ x = x + 1
-//│ ║       	             ^
-//│ ╟── ========= Additional explanations below =========
-//│ ╟── [info] flowing from type `false`
-//│ ╟── [info] flowing from reference of type `false`
-//│ ║  l.6: 	x1 = false
-//│ ║       	     ^^^^^
-//│ ╟── [info] flowing from reference of type `false`
-//│ ║  l.7: 	x2 = x1
-//│ ║       	     ^^
-//│ ╟── [info] flowing from reference of type `false`
-//│ ║  l.8: 	succ x2
-//│ ║       	     ^^
-//│ ╟── [info] flowing from <nested> of type `false`
-//│ ╟── [info] flowing into variable of type `?a`
-//│ ╟── [info] flowing into reference of type `int`
-//│ ║  l.5: 	def succ x = x + 1
-//│ ║       	             ^
-//│ ╟── [info] flowing into <nested> of type `int`
-//│ ╟── [info] flowing into type `int`
-//│ ╟── ========= Nested type provenance flow below =========
-//│ ╟── -> flowing from reference of type expanded: `false` raw: `[false<bool>]` counter: (1,1) prov: Some(Loc(24,29,analysis/test:+5))
-//│ ║  l.6: 	x1 = false
-//│ ║       	     ^^^^^
-//│ ╟── -> flowing from reference of type expanded: `false` raw: `[[false<bool>]]` counter: (1,1) prov: Some(Loc(35,37,analysis/test:+5))
-//│ ║  l.7: 	x2 = x1
-//│ ║       	     ^^
-//│ ╟── -> flowing from reference of type expanded: `false` raw: `[[[false<bool>]]]` counter: (2,1) prov: Some(Loc(43,45,analysis/test:+5))
-//│ ║  l.8: 	succ x2
-//│ ║       	     ^^
-//│ ╟── -> flowing into nested prov with desc: <nested>
-//│ ╟── ->> flowing from expression of type expanded: `(false,)` raw: `([[[false<bool>]]],)` counter: (-1,-1) prov: None
-//│ ╟── ->> flowing from argument of type expanded: `(false,)` raw: `[([[[false<bool>]]],)]` counter: (2,1) prov: Some(Loc(43,45,analysis/test:+5))
-//│ ║  l.8: 	succ x2
-//│ ║       	     ^^
-//│ ╟── ->> flowing into nested prov with desc: <nested>
-//│ ╟── ->>> flowing from application of type expanded: `false -> ?b` raw: `([([[[false<bool>]]],)] -> α28)` counter: (1,0) prov: Some(Loc(38,45,analysis/test:+5))
-//│ ║  l.8: 	succ x2
-//│ ║       	^^^^^^^
-//│ ╟── ->>> flowing from applied expression of type expanded: `?c -> ?d` raw: `[[(α26 -> α27)]]` counter: (2,0) prov: Some(Loc(38,42,analysis/test:+5))
-//│ ║  l.8: 	succ x2
-//│ ║       	^^^^
-//│ ╟── ->>> flowing from reference of type expanded: `?e -> ?f` raw: `[(α26 -> α27)]` counter: (2,0) prov: Some(Loc(38,42,analysis/test:+5))
-//│ ║  l.8: 	succ x2
-//│ ║       	^^^^
-//│ ╟── ->>> flowing from function of type expanded: `?g -> ?h` raw: `(α26 -> α27)` counter: (1,0) prov: Some(Loc(9,18,analysis/test:+5))
-//│ ║  l.5: 	def succ x = x + 1
-//│ ║       	         ^^^^^^^^^
-//│ ╟── ->> flowing from expression of type expanded: `(?i,)` raw: `(α26,)` counter: (-1,-1) prov: None
-//│ ╟── -> flowing into nested prov with desc: <nested>
-//│ ╟── ->> flowing from expression of type expanded: `(?j,)` raw: `([α21'],)` counter: (-1,-1) prov: None
-//│ ╟── ->> flowing from argument of type expanded: `(?k,)` raw: `[([α21'],)]` counter: (3,1) prov: Some(Loc(13,14,analysis/test:+5))
-//│ ║  l.5: 	def succ x = x + 1
-//│ ║       	             ^
-//│ ╟── ->> flowing into nested prov with desc: <nested>
-//│ ╟── ->>> flowing from operator application of type expanded: `?l -> ?m` raw: `([([α21'],)] -> α22')` counter: (3,0) prov: Some(Loc(13,16,analysis/test:+5))
-//│ ║  l.5: 	def succ x = x + 1
-//│ ║       	             ^^^
-//│ ╟── ->>> flowing from applied expression of type expanded: `int -> int -> int` raw: `[[(int<number> -> (int<number> -> int<number>))]]` counter: (2,0) prov: Some(Loc(15,16,analysis/test:+5))
-//│ ║  l.5: 	def succ x = x + 1
-//│ ║       	               ^
-//│ ╟── ->>> flowing from reference of type expanded: `int -> int -> int` raw: `[(int<number> -> (int<number> -> int<number>))]` counter: (2,0) prov: Some(Loc(15,16,analysis/test:+5))
-//│ ║  l.5: 	def succ x = x + 1
-//│ ║       	               ^
-//│ ╟── ->>> flowing from expression of type expanded: `int -> int -> int` raw: `(int<number> -> (int<number> -> int<number>))` counter: (-1,-1) prov: None
-//│ ╟── ->> flowing from expression of type expanded: `(int,)` raw: `(int<number>,)` counter: (-1,-1) prov: None
-//│ ╟── -> flowing from reference of type expanded: `int` raw: `[[[int<number>]]]` counter: (3,1) prov: Some(Loc(13,14,analysis/test:+5))
-//│ ║  l.5: 	def succ x = x + 1
-//│ ╙──     	             ^
-//│ res: error | int
+// def succ x = x + 1
+// x1 = false
+// x2 = x1
+// succ x2
 
+:ex
+// def succ x = x + 1
+// x1 = false
+// f1 y1 = succ y1
+// h1 f x = f x
+// h1 f1 x1
+
+:ex
+// class Tuple: { left: bool; right: int }
+// def succ x = x + 1
+// x1 = false
+// x2 = x1
+// x3 = Tuple { left = x2; right = 1 }
+// succ x3.left

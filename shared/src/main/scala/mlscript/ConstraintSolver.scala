@@ -314,7 +314,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           ->
           (if (sameRhs) cctx._2 else rhs :: cctx._2))
         case S(nested) => 
-          scala.Predef.println(nested.nestingInfo)
           // the provenance chain for the constructor from the previous level
           // connects the provenances of lhs and rhs
           (lhs :: lhs.withProv(nested) :: Nil) -> (rhs :: Nil)
@@ -353,7 +352,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         raise(WarningReport(oldProvFlow))
         println(s"Prov flows before and after ${lhs} and ${rhs}")
         // println(s"Rhs and previous rhsChain head are same `cctx._2.headOption.exists(_ is rhs.prov)` ? - ${cctx._2.headOption.exists(_ is rhs.prov)}")
-        println(s"Rhs and previous rhsChain provs similar - `_.prov.equals(rhs.prov)`? - ${cctx._2.headOption.exists(_.prov.equals(rhs.prov))}")
         raise(WarningReport(newProvFlow))
       }
       
@@ -853,14 +851,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       chain.flatMap { node =>
         node.prov match {
           case nestedProv: NestedTypeProvenance => 
-            msg"$levelIndicator flowing into nested prov with desc: ${node.prov.desc}" -> nestedProv.loco ::
+            // msg"$levelIndicator flowing into nested prov with desc: ${node.prov.desc}" -> nestedProv.loco ::
+            msg"$levelIndicator with desc: ${node.prov.desc}" -> nestedProv.loco ::
               showNestingLevel(nestedProv.chain, level + 1)
           case tprov => 
             val locCount =
               tprov.loco.map(loc => locoCounter.getOrElse(loc, (-1, -1)))
                 .getOrElse((-1, -1))
             val provInfo = if (tprov.isType) msg"type" else msg"${tprov.desc} of type"
-            msg"$levelIndicator flowing from ${provInfo} expanded: `${node.expPos}` raw: `${node.toString}` counter: ${locCount.toString} prov: ${tprov.loco.toString}" -> tprov.loco :: Nil
+            // msg"$levelIndicator flowing from ${provInfo} expanded: `${node.expPos}` raw: `${node.toString}` counter: ${locCount.toString} prov: ${tprov.loco.toString}" -> tprov.loco :: Nil
+            msg"$levelIndicator ${provInfo} `${node.expPos}`" -> tprov.loco :: Nil
         }
       }
     }
@@ -892,7 +892,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     def nestedTypeProvFlow(chain: ConCtx)(implicit ctx: Ctx): Ls[Message -> Opt[Loc]] =
       if (explainErrors)
         msg"========= Nested type provenance flow below =========" -> N ::
-        showNestingLevel(filterChain(chain._1 ::: chain._2, N), 1)
+        // showNestingLevel(filterChain(chain._1 ::: chain._2, N), 1)
+        showNestingLevel(chain._1 ::: chain._2, 1)
       else Nil
     
     /**
