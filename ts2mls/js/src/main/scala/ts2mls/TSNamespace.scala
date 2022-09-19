@@ -44,28 +44,13 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
       }
       case Right(name) => {
         val mem = members(name)
-        // val fullName = getFullPath(name)
         mem match {
           case inter: TSIntersectionType => // overloaded functions
-            writer.writeln(s"${indent}fun ${name}: ${Converter.convert(inter)}")
+            writer.writeln(Converter.generateFunDeclaration(inter, name)(indent))
           case f: TSFunctionType =>
             writer.writeln(Converter.generateFunDeclaration(f, name)(indent))
-          // {
-          //   val typeParams = f.typeVars.map((t) => t.name)
-          //   if (typeParams.isEmpty)
-          //     writer.writeln(s"def ${fullName}: ${Converter.convert(f)}")
-          //   else // TODO: add constraints
-          //     writer.writeln(s"def ${fullName}[${typeParams.reduceLeft((r, s) => s"$r, $s")}]: ${Converter.convert(f)}")
-          // }
           case overload: TSIgnoredOverload =>
             writer.writeln(Converter.generateFunDeclaration(overload, name)(indent))
-          // {
-          //   val typeParams = base.typeVars.map((t) => t.name)
-          //     if (typeParams.isEmpty)
-          //       writer.writeln(s"def ${fullName}: ${Converter.convert(overload)}")
-          //     else // TODO: add constraints
-          //       writer.writeln(s"def ${fullName}[${typeParams.reduceLeft((r, s) => s"$r, $s")}]: ${Converter.convert(overload)}")
-          // }
           case _: TSClassType => writer.writeln(Converter.convert(mem)(indent))
           case TSInterfaceType(name, _, _, _) if (name =/= "") =>
             writer.writeln(Converter.convert(mem)(indent))
@@ -73,13 +58,6 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
         }
       }
     })
-
-  // generate full path with namespaces' names
-  // e.g. f => Namespace1.Namespace2.f
-  // def getFullPath(nm: String): String = parent match {
-  //   case Some(p) => p.getFullPath(s"$name'$nm")
-  //   case _ => nm
-  // }
 }
 
 object TSNamespace {

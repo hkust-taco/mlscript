@@ -26,6 +26,7 @@ object Converter {
       s"${indent}fun $name$tpList($pList): ${convert(res)("")}"
     }
     case overload @ TSIgnoredOverload(base, _) => s"${generateFunDeclaration(base, name)} ${overload.warning}"
+    case inter: TSIntersectionType => s"${indent}fun ${name}: ${Converter.convert(inter)}"
     case _ => throw new Exception("non-function type is not allowed.")
   }
 
@@ -69,20 +70,9 @@ object Converter {
         if (typeName === "trait ") s"${m._1}: ${convert(m._2)},"
         else m._2.base match {
           case _: TSFunctionType => s"${generateFunDeclaration(m._2.base, m._1)(indent + "  ")}\n"
-          case _: TSIgnoredOverload => s"${indent}  fun ${m._1}: ${convert(m._2)}\n"
+          case _: TSIgnoredOverload => s"${generateFunDeclaration(m._2.base, m._1)(indent + "  ")}\n"
           case _ => s"${indent}  let ${m._1}: ${convert(m._2)}\n"
         }
-      // case Public => {
-      //   m._2.base match { // methods
-      //     case f @ TSFunctionType(_, _, typeVars) if (!typeVars.isEmpty) =>
-      //       s"  method ${m._1}[${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]: ${convert(f)}" // TODO: add constraints
-      //     case overload @ TSIgnoredOverload(base, _) =>
-      //       if (!base.typeVars.isEmpty)
-      //         s"  method ${m._1}[${base.typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]: ${convert(overload)}" // TODO: add constraints
-      //       else s"${m._1}: ${convert(overload)}"
-      //     case _ => s"${m._1}: ${convert(m._2)}" // other type members
-      //   }
-      // }
       case _ => "" // TODO: deal with private/protected members
     }) :::
       statics.toList.map((s) => s._2.modifier match {
@@ -99,11 +89,6 @@ object Converter {
       else if (typeName === "trait ") s"(${lst.reduceLeft((bd, m) => s"$bd$m")})"
       else s"{\n${lst.reduceLeft((bd, m) => s"$bd$m")}$indent}"
     }
-    // val methods = { // members with independent type parameters, use methods instead
-    //   val lst = allRecs.filter(_.startsWith("  "))
-    //   if (lst.isEmpty) ""
-    //   else "\n" + lst.reduceLeft((bd, m) => s"$bd\n$m")
-    // }
     
     if (typeName === "trait ") body // anonymous interfaces
     else { // named interfaces and classes
