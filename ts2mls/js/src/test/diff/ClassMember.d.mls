@@ -2,7 +2,7 @@
 :ParseOnly
 class Student(v0: string, v1: number) {
   let name: string
-  fun isFriend(v0: Student): bool
+  fun isFriend(v0: Student): (false) | (true)
   fun addScore(v0: string, v1: number): unit
   fun getID(): number
 }
@@ -21,5 +21,5 @@ class TTT<T>() {
   fun ttt(v0: T): T
   fun ttt2(v0: T): T
 }
-//│ |#class| |Student|(|v0|#:| |string|,| |v1|#:| |number|)| |{|→|#let| |name|#:| |string|↵|#fun| |isFriend|(|v0|#:| |Student|)|#:| |bool|↵|#fun| |addScore|(|v0|#:| |string|,| |v1|#:| |number|)|#:| |unit|↵|#fun| |getID|(||)|#:| |number|←|↵|}|↵|#class| |Foo|‹|T|›|(||)| |{|→|#fun| |bar|(|v0|#:| |T|)|#:| |unit|←|↵|}|↵|#class| |EZ|(||)| |{|→|#fun| |inc|(|v0|#:| |number|)|#:| |number|←|↵|}|↵|#class| |Outer|(||)| |{|→|#class| |Inner|(||)| |{|→|#let| |a|#:| |number|←|↵|}|←|↵|}|↵|#class| |TTT|‹|T|›|(||)| |{|→|#fun| |ttt|(|v0|#:| |T|)|#:| |T|↵|#fun| |ttt2|(|v0|#:| |T|)|#:| |T|←|↵|}|
-//│ Parsed: {class Student(v0: string, v1: number,) {let name: [] -> string; fun isFriend: [] -> (v0: Student,) -> bool; fun addScore: [] -> (v0: string, v1: number,) -> unit; fun getID: [] -> () -> number}; class Foo[T]() {fun bar: [] -> (v0: T,) -> unit}; class EZ() {fun inc: [] -> (v0: number,) -> number}; class Outer() {class Inner() {let a: [] -> number}}; class TTT[T]() {fun ttt: [] -> (v0: T,) -> T; fun ttt2: [] -> (v0: T,) -> T}}
+//│ |#class| |Student|(|v0|#:| |string|,| |v1|#:| |number|)| |{|→|#let| |name|#:| |string|↵|#fun| |isFriend|(|v0|#:| |Student|)|#:| |(|false|)| ||| |(|true|)|↵|#fun| |addScore|(|v0|#:| |string|,| |v1|#:| |number|)|#:| |unit|↵|#fun| |getID|(||)|#:| |number|←|↵|}|↵|#class| |Foo|‹|T|›|(||)| |{|→|#fun| |bar|(|v0|#:| |T|)|#:| |unit|←|↵|}|↵|#class| |EZ|(||)| |{|→|#fun| |inc|(|v0|#:| |number|)|#:| |number|←|↵|}|↵|#class| |Outer|(||)| |{|→|#class| |Inner|(||)| |{|→|#let| |a|#:| |number|←|↵|}|←|↵|}|↵|#class| |TTT|‹|T|›|(||)| |{|→|#fun| |ttt|(|v0|#:| |T|)|#:| |T|↵|#fun| |ttt2|(|v0|#:| |T|)|#:| |T|←|↵|}|
+//│ Parsed: {class Student(v0: string, v1: number,) {let name: [] -> string; fun isFriend: [] -> (v0: Student,) -> ((false,) | (true,)); fun addScore: [] -> (v0: string, v1: number,) -> unit; fun getID: [] -> () -> number}; class Foo[T]() {fun bar: [] -> (v0: T,) -> unit}; class EZ() {fun inc: [] -> (v0: number,) -> number}; class Outer() {class Inner() {let a: [] -> number}}; class TTT[T]() {fun ttt: [] -> (v0: T,) -> T; fun ttt2: [] -> (v0: T,) -> T}}

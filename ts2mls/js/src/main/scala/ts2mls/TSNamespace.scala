@@ -57,8 +57,8 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
           //   else // TODO: add constraints
           //     writer.writeln(s"def ${fullName}[${typeParams.reduceLeft((r, s) => s"$r, $s")}]: ${Converter.convert(f)}")
           // }
-          case overload @ TSIgnoredOverload(base, _) =>
-            writer.writeln(s"${indent}fun ${name}: ${Converter.convert(overload)}")
+          case overload: TSIgnoredOverload =>
+            writer.writeln(Converter.generateFunDeclaration(overload, name)(indent))
           // {
           //   val typeParams = base.typeVars.map((t) => t.name)
           //     if (typeParams.isEmpty)

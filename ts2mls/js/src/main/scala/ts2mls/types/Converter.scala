@@ -15,8 +15,8 @@ object Converter {
     "undefined" -> "undefined",
     "never" -> "nothing",
     "object" -> "object",
-    "true" -> "bool", // will not appear individually
-    "false" -> "" // will not appear individually
+    "true" -> "true", // will not appear individually
+    "false" -> "false" // will not appear individually
   )
 
   def generateFunDeclaration(tsType: TSType, name: String)(implicit indent: String = ""): String = tsType match {
@@ -25,7 +25,8 @@ object Converter {
       val tpList = if (typeVars.isEmpty) "" else s"<${typeVars.map(p => convert(p)("")).reduceLeft((r, p) => s"$r, $p")}>"
       s"${indent}fun $name$tpList($pList): ${convert(res)("")}"
     }
-    case _ => convert(tsType) // TODO: overload
+    case overload @ TSIgnoredOverload(base, _) => s"${generateFunDeclaration(base, name)} ${overload.warning}"
+    case _ => throw new Exception("non-function type is not allowed.")
   }
 
   def convert(tsType: TSType)(implicit indent: String = ""): String = tsType match {
