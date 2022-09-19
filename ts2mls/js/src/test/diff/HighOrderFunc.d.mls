@@ -1,7 +1,7 @@
 :NewParser
 :ParseOnly
-fun h1(_: number => number, _: number): number
-fun h2(_: string): unit => string
-fun h3(_: number => number, _: number => number): number => number
-//│ |#fun| |h1|(|_|#:| |number| |=>| |number|,| |_|#:| |number|)|#:| |number|↵|#fun| |h2|(|_|#:| |string|)|#:| |unit| |=>| |string|↵|#fun| |h3|(|_|#:| |number| |=>| |number|,| |_|#:| |number| |=>| |number|)|#:| |number| |=>| |number|
-//│ Parsed: {fun h1: [] -> (_: number -> number, _: number,) -> number; fun h2: [] -> (_: string,) -> unit -> string; fun h3: [] -> (_: number -> number, _: number -> number,) -> number -> number}
+fun h1(v0: number => number, v1: number): number
+fun h2(v0: string): unit => string
+fun h3(v0: number => number, v1: number => number): number => number
+//│ |#fun| |h1|(|v0|#:| |number| |=>| |number|,| |v1|#:| |number|)|#:| |number|↵|#fun| |h2|(|v0|#:| |string|)|#:| |unit| |=>| |string|↵|#fun| |h3|(|v0|#:| |number| |=>| |number|,| |v1|#:| |number| |=>| |number|)|#:| |number| |=>| |number|
+//│ Parsed: {fun h1: [] -> (v0: number -> number, v1: number,) -> number; fun h2: [] -> (v0: string,) -> unit -> string; fun h3: [] -> (v0: number -> number, v1: number -> number,) -> number -> number}

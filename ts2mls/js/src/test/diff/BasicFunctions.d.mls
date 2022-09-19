@@ -1,28 +1,28 @@
 :NewParser
 :ParseOnly
 fun hello(): unit
-fun add(_: number, _: number): number
-fun sub(_: number, _: number): number
+fun add(v0: number, v1: number): number
+fun sub(v0: number, v1: number): number
 fun foo(): number
-fun id(_: anything): anything
-fun odd(_: number): bool
-fun isnull(_: anything): bool
+fun id(v0: anything): anything
+fun odd(v0: number): bool
+fun isnull(v0: anything): bool
 fun bar(): anything
-fun nu(_: null): null
-fun un(_: undefined): undefined
+fun nu(v0: null): null
+fun un(v0: undefined): undefined
 fun fail(): nothing
 fun create(): object
-fun pa(_: number): number
-fun wtf(_: anything): unit
+fun pa(v0: number): number
+fun wtf(v0: anything): unit
 class Foooooo() {
   let ooooooo: number
 }
-fun inn(_: Foooooo): unit
+fun inn(v0: Foooooo): unit
 fun out(): Foooooo
 trait Barrrrrrrrr() {
   let rrrrrrr: number
 }
-fun inn2(_: Barrrrrrrrr): unit
+fun inn2(v0: Barrrrrrrrr): unit
 fun out2(): Barrrrrrrrr
-//│ |#fun| |hello|(||)|#:| |unit|↵|#fun| |add|(|_|#:| |number|,| |_|#:| |number|)|#:| |number|↵|#fun| |sub|(|_|#:| |number|,| |_|#:| |number|)|#:| |number|↵|#fun| |foo|(||)|#:| |number|↵|#fun| |id|(|_|#:| |anything|)|#:| |anything|↵|#fun| |odd|(|_|#:| |number|)|#:| |bool|↵|#fun| |isnull|(|_|#:| |anything|)|#:| |bool|↵|#fun| |bar|(||)|#:| |anything|↵|#fun| |nu|(|_|#:| |null|)|#:| |null|↵|#fun| |un|(|_|#:| |undefined|)|#:| |undefined|↵|#fun| |fail|(||)|#:| |nothing|↵|#fun| |create|(||)|#:| |object|↵|#fun| |pa|(|_|#:| |number|)|#:| |number|↵|#fun| |wtf|(|_|#:| |anything|)|#:| |unit|↵|#class| |Foooooo|(||)| |{|→|#let| |ooooooo|#:| |number|←|↵|}|↵|#fun| |inn|(|_|#:| |Foooooo|)|#:| |unit|↵|#fun| |out|(||)|#:| |Foooooo|↵|#trait| |Barrrrrrrrr|(||)| |{|→|#let| |rrrrrrr|#:| |number|←|↵|}|↵|#fun| |inn2|(|_|#:| |Barrrrrrrrr|)|#:| |unit|↵|#fun| |out2|(||)|#:| |Barrrrrrrrr|
-//│ Parsed: {fun hello: [] -> () -> unit; fun add: [] -> (_: number, _: number,) -> number; fun sub: [] -> (_: number, _: number,) -> number; fun foo: [] -> () -> number; fun id: [] -> (_: anything,) -> anything; fun odd: [] -> (_: number,) -> bool; fun isnull: [] -> (_: anything,) -> bool; fun bar: [] -> () -> anything; fun nu: [] -> (_: null,) -> null; fun un: [] -> (_: undefined,) -> undefined; fun fail: [] -> () -> nothing; fun create: [] -> () -> object; fun pa: [] -> (_: number,) -> number; fun wtf: [] -> (_: anything,) -> unit; class Foooooo() {let ooooooo: [] -> number}; fun inn: [] -> (_: Foooooo,) -> unit; fun out: [] -> () -> Foooooo; trait Barrrrrrrrr(): {let rrrrrrr: [] -> number}; fun inn2: [] -> (_: Barrrrrrrrr,) -> unit; fun out2: [] -> () -> Barrrrrrrrr}
+//│ |#fun| |hello|(||)|#:| |unit|↵|#fun| |add|(|v0|#:| |number|,| |v1|#:| |number|)|#:| |number|↵|#fun| |sub|(|v0|#:| |number|,| |v1|#:| |number|)|#:| |number|↵|#fun| |foo|(||)|#:| |number|↵|#fun| |id|(|v0|#:| |anything|)|#:| |anything|↵|#fun| |odd|(|v0|#:| |number|)|#:| |bool|↵|#fun| |isnull|(|v0|#:| |anything|)|#:| |bool|↵|#fun| |bar|(||)|#:| |anything|↵|#fun| |nu|(|v0|#:| |null|)|#:| |null|↵|#fun| |un|(|v0|#:| |undefined|)|#:| |undefined|↵|#fun| |fail|(||)|#:| |nothing|↵|#fun| |create|(||)|#:| |object|↵|#fun| |pa|(|v0|#:| |number|)|#:| |number|↵|#fun| |wtf|(|v0|#:| |anything|)|#:| |unit|↵|#class| |Foooooo|(||)| |{|→|#let| |ooooooo|#:| |number|←|↵|}|↵|#fun| |inn|(|v0|#:| |Foooooo|)|#:| |unit|↵|#fun| |out|(||)|#:| |Foooooo|↵|#trait| |Barrrrrrrrr|(||)| |{|→|#let| |rrrrrrr|#:| |number|←|↵|}|↵|#fun| |inn2|(|v0|#:| |Barrrrrrrrr|)|#:| |unit|↵|#fun| |out2|(||)|#:| |Barrrrrrrrr|
+//│ Parsed: {fun hello: [] -> () -> unit; fun add: [] -> (v0: number, v1: number,) -> number; fun sub: [] -> (v0: number, v1: number,) -> number; fun foo: [] -> () -> number; fun id: [] -> (v0: anything,) -> anything; fun odd: [] -> (v0: number,) -> bool; fun isnull: [] -> (v0: anything,) -> bool; fun bar: [] -> () -> anything; fun nu: [] -> (v0: null,) -> null; fun un: [] -> (v0: undefined,) -> undefined; fun fail: [] -> () -> nothing; fun create: [] -> () -> object; fun pa: [] -> (v0: number,) -> number; fun wtf: [] -> (v0: anything,) -> unit; class Foooooo() {let ooooooo: [] -> number}; fun inn: [] -> (v0: Foooooo,) -> unit; fun out: [] -> () -> Foooooo; trait Barrrrrrrrr(): {let rrrrrrr: [] -> number}; fun inn2: [] -> (v0: Barrrrrrrrr,) -> unit; fun out2: [] -> () -> Barrrrrrrrr}

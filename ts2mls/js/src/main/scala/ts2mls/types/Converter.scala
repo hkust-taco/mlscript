@@ -1,6 +1,7 @@
 package ts2mls.types
 
 import mlscript.utils._
+import scala.runtime.Statics
 
 object Converter {
   private val primitiveName = Map[String, String](
@@ -20,7 +21,7 @@ object Converter {
 
   def generateFunDeclaration(tsType: TSType, name: String)(implicit indent: String = ""): String = tsType match {
     case TSFunctionType(params, res, typeVars) => {
-      val pList = if (params.isEmpty) "" else params.map(p => "_: " + convert(p)("")).reduceLeft((r, p) => s"$r, $p")
+      val pList = if (params.isEmpty) "" else params.zipWithIndex.map(p => s"v${p._2}: ${convert(p._1)("")}").reduceLeft((r, p) => s"$r, $p")
       val tpList = if (typeVars.isEmpty) "" else s"<${typeVars.map(p => convert(p)("")).reduceLeft((r, p) => s"$r, $p")}>"
       s"${indent}fun $name$tpList($pList): ${convert(res)("")}"
     }
@@ -107,7 +108,7 @@ object Converter {
     else { // named interfaces and classes
       val constructor =
         if (constructorList.isEmpty) "()"
-        else s"(${constructorList.map(p => "_: " + convert(p)).reduceLeft((res, p) => s"$res, $p")})"
+        else s"(${constructorList.zipWithIndex.map(p => s"v${p._2}: ${convert(p._1)("")}").reduceLeft((res, p) => s"$res, $p")})"
 
       val inheritance =
         if (parents.isEmpty) constructor

@@ -1,24 +1,24 @@
 :NewParser
 :ParseOnly
-fun buildName(_: string, _: (string) | (undefined)): string
-fun buildName2(_: string, _: (string) | (undefined)): string
-fun buildName3(_: string, _: MutArray<string>): string
-fun buildName4(_: string, _: MutArray<anything>): string
+fun buildName(v0: string, v1: (string) | (undefined)): string
+fun buildName2(v0: string, v1: (string) | (undefined)): string
+fun buildName3(v0: string, v1: MutArray<string>): string
+fun buildName4(v0: string, v1: MutArray<anything>): string
 trait SquareConfig() {
   let color: (string) | (undefined)
   let width: (number) | (undefined)
 }
-fun did(_: number, _: (number => number) | (undefined)): number
-fun getOrElse(_: (MutArray<object>) | (undefined)): object
+fun did(v0: number, v1: (number => number) | (undefined)): number
+fun getOrElse(v0: (MutArray<object>) | (undefined)): object
 class ABC() {}
-fun testABC(_: (ABC) | (undefined)): unit
-fun testSquareConfig(_: (SquareConfig) | (undefined)): unit
-fun err(_: ((number, string, )) | (undefined)): unit
-fun toStr(_: ((number) | (bool)) | (undefined)): string
-fun boo<T, U>(_: ((T) & (U)) | (undefined)): unit
+fun testABC(v0: (ABC) | (undefined)): unit
+fun testSquareConfig(v0: (SquareConfig) | (undefined)): unit
+fun err(v0: ((number, string, )) | (undefined)): unit
+fun toStr(v0: ((number) | (bool)) | (undefined)): string
+fun boo<T, U>(v0: ((T) & (U)) | (undefined)): unit
 class B<T>() {
   let b: T
 }
-fun boom(_: (B<nothing>) | (undefined)): anything
-//│ |#fun| |buildName|(|_|#:| |string|,| |_|#:| |(|string|)| ||| |(|undefined|)|)|#:| |string|↵|#fun| |buildName2|(|_|#:| |string|,| |_|#:| |(|string|)| ||| |(|undefined|)|)|#:| |string|↵|#fun| |buildName3|(|_|#:| |string|,| |_|#:| |MutArray|‹|string|›|)|#:| |string|↵|#fun| |buildName4|(|_|#:| |string|,| |_|#:| |MutArray|‹|anything|›|)|#:| |string|↵|#trait| |SquareConfig|(||)| |{|→|#let| |color|#:| |(|string|)| ||| |(|undefined|)|↵|#let| |width|#:| |(|number|)| ||| |(|undefined|)|←|↵|}|↵|#fun| |did|(|_|#:| |number|,| |_|#:| |(|number| |=>| |number|)| ||| |(|undefined|)|)|#:| |number|↵|#fun| |getOrElse|(|_|#:| |(|MutArray|‹|object|›|)| ||| |(|undefined|)|)|#:| |object|↵|#class| |ABC|(||)| |{||}|↵|#fun| |testABC|(|_|#:| |(|ABC|)| ||| |(|undefined|)|)|#:| |unit|↵|#fun| |testSquareConfig|(|_|#:| |(|SquareConfig|)| ||| |(|undefined|)|)|#:| |unit|↵|#fun| |err|(|_|#:| |(|(|number|,| |string|,| |)|)| ||| |(|undefined|)|)|#:| |unit|↵|#fun| |toStr|(|_|#:| |(|(|number|)| ||| |(|bool|)|)| ||| |(|undefined|)|)|#:| |string|↵|#fun| |boo|‹|T|,| |U|›|(|_|#:| |(|(|T|)| |&| |(|U|)|)| ||| |(|undefined|)|)|#:| |unit|↵|#class| |B|‹|T|›|(||)| |{|→|#let| |b|#:| |T|←|↵|}|↵|#fun| |boom|(|_|#:| |(|B|‹|nothing|›|)| ||| |(|undefined|)|)|#:| |anything|
-//│ Parsed: {fun buildName: [] -> (_: string, _: (string,) | (undefined,),) -> string; fun buildName2: [] -> (_: string, _: (string,) | (undefined,),) -> string; fun buildName3: [] -> (_: string, _: MutArray[string],) -> string; fun buildName4: [] -> (_: string, _: MutArray[anything],) -> string; trait SquareConfig(): {let color: [] -> (string,) | (undefined,); let width: [] -> (number,) | (undefined,)}; fun did: [] -> (_: number, _: (number -> number,) | (undefined,),) -> number; fun getOrElse: [] -> (_: (MutArray[object],) | (undefined,),) -> object; class ABC() {}; fun testABC: [] -> (_: (ABC,) | (undefined,),) -> unit; fun testSquareConfig: [] -> (_: (SquareConfig,) | (undefined,),) -> unit; fun err: [] -> (_: ((number, string,),) | (undefined,),) -> unit; fun toStr: [] -> (_: ((number,) | (bool,),) | (undefined,),) -> string; fun boo: [] -> (_: ((T,) & (U,),) | (undefined,),) -> unit; class B[T]() {let b: [] -> T}; fun boom: [] -> (_: (B[nothing],) | (undefined,),) -> anything}
+fun boom(v0: (B<nothing>) | (undefined)): anything
+//│ |#fun| |buildName|(|v0|#:| |string|,| |v1|#:| |(|string|)| ||| |(|undefined|)|)|#:| |string|↵|#fun| |buildName2|(|v0|#:| |string|,| |v1|#:| |(|string|)| ||| |(|undefined|)|)|#:| |string|↵|#fun| |buildName3|(|v0|#:| |string|,| |v1|#:| |MutArray|‹|string|›|)|#:| |string|↵|#fun| |buildName4|(|v0|#:| |string|,| |v1|#:| |MutArray|‹|anything|›|)|#:| |string|↵|#trait| |SquareConfig|(||)| |{|→|#let| |color|#:| |(|string|)| ||| |(|undefined|)|↵|#let| |width|#:| |(|number|)| ||| |(|undefined|)|←|↵|}|↵|#fun| |did|(|v0|#:| |number|,| |v1|#:| |(|number| |=>| |number|)| ||| |(|undefined|)|)|#:| |number|↵|#fun| |getOrElse|(|v0|#:| |(|MutArray|‹|object|›|)| ||| |(|undefined|)|)|#:| |object|↵|#class| |ABC|(||)| |{||}|↵|#fun| |testABC|(|v0|#:| |(|ABC|)| ||| |(|undefined|)|)|#:| |unit|↵|#fun| |testSquareConfig|(|v0|#:| |(|SquareConfig|)| ||| |(|undefined|)|)|#:| |unit|↵|#fun| |err|(|v0|#:| |(|(|number|,| |string|,| |)|)| ||| |(|undefined|)|)|#:| |unit|↵|#fun| |toStr|(|v0|#:| |(|(|number|)| ||| |(|bool|)|)| ||| |(|undefined|)|)|#:| |string|↵|#fun| |boo|‹|T|,| |U|›|(|v0|#:| |(|(|T|)| |&| |(|U|)|)| ||| |(|undefined|)|)|#:| |unit|↵|#class| |B|‹|T|›|(||)| |{|→|#let| |b|#:| |T|←|↵|}|↵|#fun| |boom|(|v0|#:| |(|B|‹|nothing|›|)| ||| |(|undefined|)|)|#:| |anything|
+//│ Parsed: {fun buildName: [] -> (v0: string, v1: (string,) | (undefined,),) -> string; fun buildName2: [] -> (v0: string, v1: (string,) | (undefined,),) -> string; fun buildName3: [] -> (v0: string, v1: MutArray[string],) -> string; fun buildName4: [] -> (v0: string, v1: MutArray[anything],) -> string; trait SquareConfig(): {let color: [] -> (string,) | (undefined,); let width: [] -> (number,) | (undefined,)}; fun did: [] -> (v0: number, v1: (number -> number,) | (undefined,),) -> number; fun getOrElse: [] -> (v0: (MutArray[object],) | (undefined,),) -> object; class ABC() {}; fun testABC: [] -> (v0: (ABC,) | (undefined,),) -> unit; fun testSquareConfig: [] -> (v0: (SquareConfig,) | (undefined,),) -> unit; fun err: [] -> (v0: ((number, string,),) | (undefined,),) -> unit; fun toStr: [] -> (v0: ((number,) | (bool,),) | (undefined,),) -> string; fun boo: [] -> (v0: ((T,) & (U,),) | (undefined,),) -> unit; class B[T]() {let b: [] -> T}; fun boom: [] -> (v0: (B[nothing],) | (undefined,),) -> anything}
