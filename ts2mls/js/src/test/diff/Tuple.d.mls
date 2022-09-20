@@ -1,20 +1,20 @@
 :NewParser
 :ParseOnly
-fun key(v0: (string, (false) | (true), )): string
-fun value(v0: (string, (false) | (true), )): (false) | (true)
-fun third(v0: (number, number, number, )): number
-fun vec2(v0: number, v1: number): (number, number, )
-fun twoFunctions(v0: (number => number, number => number, ), v1: number): number
-fun tupleIt(v0: string): (unit => string, )
-fun s(v0: (false) | (true)): ((string) | (number), ((number) | (false)) | (true), )
-fun s2(v0: ((false) | (true), (string) | (number), )): (string) | (number)
-fun ex<T, U>(v0: T, v1: U): (T, U, (T) & (U), )
-fun foo<T, U>(v0: ((T) & (U), )): unit
-fun conv(v0: (y: number,)): ((y: number,), (z: string,), )
+fun key(x: (string, (false) | (true), )): string
+fun value(x: (string, (false) | (true), )): (false) | (true)
+fun third(x: (number, number, number, )): number
+fun vec2(x: number, y: number): (number, number, )
+fun twoFunctions(ff: ((number) => number, (number) => number, ), x: number): number
+fun tupleIt(x: string): (unit => string, )
+fun s(flag: (false) | (true)): ((string) | (number), ((number) | (false)) | (true), )
+fun s2(t: ((false) | (true), (string) | (number), )): (string) | (number)
+fun ex<T, U>(x: T, y: U): (T, U, (T) & (U), )
+fun foo<T, U>(x: ((T) & (U), )): unit
+fun conv(x: (y: number,)): ((y: number,), (z: string,), )
 class A() {
   let x: number
 }
 class B() {}
-fun swap(v0: (A, B, )): (B, A, )
-//│ |#fun| |key|(|v0|#:| |(|string|,| |(|false|)| ||| |(|true|)|,| |)|)|#:| |string|↵|#fun| |value|(|v0|#:| |(|string|,| |(|false|)| ||| |(|true|)|,| |)|)|#:| |(|false|)| ||| |(|true|)|↵|#fun| |third|(|v0|#:| |(|number|,| |number|,| |number|,| |)|)|#:| |number|↵|#fun| |vec2|(|v0|#:| |number|,| |v1|#:| |number|)|#:| |(|number|,| |number|,| |)|↵|#fun| |twoFunctions|(|v0|#:| |(|number| |=>| |number|,| |number| |=>| |number|,| |)|,| |v1|#:| |number|)|#:| |number|↵|#fun| |tupleIt|(|v0|#:| |string|)|#:| |(|unit| |=>| |string|,| |)|↵|#fun| |s|(|v0|#:| |(|false|)| ||| |(|true|)|)|#:| |(|(|string|)| ||| |(|number|)|,| |(|(|number|)| ||| |(|false|)|)| ||| |(|true|)|,| |)|↵|#fun| |s2|(|v0|#:| |(|(|false|)| ||| |(|true|)|,| |(|string|)| ||| |(|number|)|,| |)|)|#:| |(|string|)| ||| |(|number|)|↵|#fun| |ex|‹|T|,| |U|›|(|v0|#:| |T|,| |v1|#:| |U|)|#:| |(|T|,| |U|,| |(|T|)| |&| |(|U|)|,| |)|↵|#fun| |foo|‹|T|,| |U|›|(|v0|#:| |(|(|T|)| |&| |(|U|)|,| |)|)|#:| |unit|↵|#fun| |conv|(|v0|#:| |(|y|#:| |number|,|)|)|#:| |(|(|y|#:| |number|,|)|,| |(|z|#:| |string|,|)|,| |)|↵|#class| |A|(||)| |{|→|#let| |x|#:| |number|←|↵|}|↵|#class| |B|(||)| |{||}|↵|#fun| |swap|(|v0|#:| |(|A|,| |B|,| |)|)|#:| |(|B|,| |A|,| |)|
-//│ Parsed: {fun key: [] -> (v0: (string, (false,) | (true,),),) -> string; fun value: [] -> (v0: (string, (false,) | (true,),),) -> ((false,) | (true,)); fun third: [] -> (v0: (number, number, number,),) -> number; fun vec2: [] -> (v0: number, v1: number,) -> (number, number,); fun twoFunctions: [] -> (v0: (number -> number, number -> number,), v1: number,) -> number; fun tupleIt: [] -> (v0: string,) -> (unit -> string,); fun s: [] -> (v0: (false,) | (true,),) -> ((string,) | (number,), ((number,) | (false,),) | (true,),); fun s2: [] -> (v0: ((false,) | (true,), (string,) | (number,),),) -> ((string,) | (number,)); fun ex: [] -> (v0: T, v1: U,) -> (T, U, (T,) & (U,),); fun foo: [] -> (v0: ((T,) & (U,),),) -> unit; fun conv: [] -> (v0: (y: number,),) -> ((y: number,), (z: string,),); class A() {let x: [] -> number}; class B() {}; fun swap: [] -> (v0: (A, B,),) -> (B, A,)}
+fun swap(x: (A, B, )): (B, A, )
+//│ |#fun| |key|(|x|#:| |(|string|,| |(|false|)| ||| |(|true|)|,| |)|)|#:| |string|↵|#fun| |value|(|x|#:| |(|string|,| |(|false|)| ||| |(|true|)|,| |)|)|#:| |(|false|)| ||| |(|true|)|↵|#fun| |third|(|x|#:| |(|number|,| |number|,| |number|,| |)|)|#:| |number|↵|#fun| |vec2|(|x|#:| |number|,| |y|#:| |number|)|#:| |(|number|,| |number|,| |)|↵|#fun| |twoFunctions|(|ff|#:| |(|(|number|)| |=>| |number|,| |(|number|)| |=>| |number|,| |)|,| |x|#:| |number|)|#:| |number|↵|#fun| |tupleIt|(|x|#:| |string|)|#:| |(|unit| |=>| |string|,| |)|↵|#fun| |s|(|flag|#:| |(|false|)| ||| |(|true|)|)|#:| |(|(|string|)| ||| |(|number|)|,| |(|(|number|)| ||| |(|false|)|)| ||| |(|true|)|,| |)|↵|#fun| |s2|(|t|#:| |(|(|false|)| ||| |(|true|)|,| |(|string|)| ||| |(|number|)|,| |)|)|#:| |(|string|)| ||| |(|number|)|↵|#fun| |ex|‹|T|,| |U|›|(|x|#:| |T|,| |y|#:| |U|)|#:| |(|T|,| |U|,| |(|T|)| |&| |(|U|)|,| |)|↵|#fun| |foo|‹|T|,| |U|›|(|x|#:| |(|(|T|)| |&| |(|U|)|,| |)|)|#:| |unit|↵|#fun| |conv|(|x|#:| |(|y|#:| |number|,|)|)|#:| |(|(|y|#:| |number|,|)|,| |(|z|#:| |string|,|)|,| |)|↵|#class| |A|(||)| |{|→|#let| |x|#:| |number|←|↵|}|↵|#class| |B|(||)| |{||}|↵|#fun| |swap|(|x|#:| |(|A|,| |B|,| |)|)|#:| |(|B|,| |A|,| |)|
+//│ Parsed: {fun key: [] -> (x: (string, (false,) | (true,),),) -> string; fun value: [] -> (x: (string, (false,) | (true,),),) -> ((false,) | (true,)); fun third: [] -> (x: (number, number, number,),) -> number; fun vec2: [] -> (x: number, y: number,) -> (number, number,); fun twoFunctions: [] -> (ff: (number -> number, number -> number,), x: number,) -> number; fun tupleIt: [] -> (x: string,) -> (unit -> string,); fun s: [] -> (flag: (false,) | (true,),) -> ((string,) | (number,), ((number,) | (false,),) | (true,),); fun s2: [] -> (t: ((false,) | (true,), (string,) | (number,),),) -> ((string,) | (number,)); fun ex: [] -> (x: T, y: U,) -> (T, U, (T,) & (U,),); fun foo: [] -> (x: ((T,) & (U,),),) -> unit; fun conv: [] -> (x: (y: number,),) -> ((y: number,), (z: string,),); class A() {let x: [] -> number}; class B() {}; fun swap: [] -> (x: (A, B,),) -> (B, A,)}

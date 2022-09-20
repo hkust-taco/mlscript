@@ -1,6 +1,6 @@
 :NewParser
 :ParseOnly
-fun multi1(v0: number): number
+fun multi1(x: number): number
 fun multi3(): unit
 class Foo(): Base {}
 trait AnotherBase() {
@@ -11,12 +11,12 @@ namespace N {
   fun g(): unit
   fun h(): unit
 }
-fun multi2(v0: string): string
+fun multi2(x: string): string
 fun multi4(): unit
 trait Base() {
   let a: number
 }
 class AnotherFoo(): AnotherBase {}
 fun multi5(): unit
-//│ |#fun| |multi1|(|v0|#:| |number|)|#:| |number|↵|#fun| |multi3|(||)|#:| |unit|↵|#class| |Foo|(||)|#:| |Base| |{||}|↵|#trait| |AnotherBase|(||)| |{|→|#let| |y|#:| |string|←|↵|}|↵|#namespace| |N| |{|→|#fun| |f|(||)|#:| |unit|↵|#fun| |g|(||)|#:| |unit|↵|#fun| |h|(||)|#:| |unit|←|↵|}|↵|#fun| |multi2|(|v0|#:| |string|)|#:| |string|↵|#fun| |multi4|(||)|#:| |unit|↵|#trait| |Base|(||)| |{|→|#let| |a|#:| |number|←|↵|}|↵|#class| |AnotherFoo|(||)|#:| |AnotherBase| |{||}|↵|#fun| |multi5|(||)|#:| |unit|
-//│ Parsed: {fun multi1: [] -> (v0: number,) -> number; fun multi3: [] -> () -> unit; class Foo(): Base {}; trait AnotherBase(): {let y: [] -> string}; namespace N(): {fun f: [] -> () -> unit; fun g: [] -> () -> unit; fun h: [] -> () -> unit}; fun multi2: [] -> (v0: string,) -> string; fun multi4: [] -> () -> unit; trait Base(): {let a: [] -> number}; class AnotherFoo(): AnotherBase {}; fun multi5: [] -> () -> unit}
+//│ |#fun| |multi1|(|x|#:| |number|)|#:| |number|↵|#fun| |multi3|(||)|#:| |unit|↵|#class| |Foo|(||)|#:| |Base| |{||}|↵|#trait| |AnotherBase|(||)| |{|→|#let| |y|#:| |string|←|↵|}|↵|#namespace| |N| |{|→|#fun| |f|(||)|#:| |unit|↵|#fun| |g|(||)|#:| |unit|↵|#fun| |h|(||)|#:| |unit|←|↵|}|↵|#fun| |multi2|(|x|#:| |string|)|#:| |string|↵|#fun| |multi4|(||)|#:| |unit|↵|#trait| |Base|(||)| |{|→|#let| |a|#:| |number|←|↵|}|↵|#class| |AnotherFoo|(||)|#:| |AnotherBase| |{||}|↵|#fun| |multi5|(||)|#:| |unit|
+//│ Parsed: {fun multi1: [] -> (x: number,) -> number; fun multi3: [] -> () -> unit; class Foo(): Base {}; trait AnotherBase(): {let y: [] -> string}; namespace N(): {fun f: [] -> () -> unit; fun g: [] -> () -> unit; fun h: [] -> () -> unit}; fun multi2: [] -> (x: string,) -> string; fun multi4: [] -> () -> unit; trait Base(): {let a: [] -> number}; class AnotherFoo(): AnotherBase {}; fun multi5: [] -> () -> unit}

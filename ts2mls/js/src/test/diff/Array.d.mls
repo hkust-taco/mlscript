@@ -1,23 +1,23 @@
 :NewParser
 :ParseOnly
-fun first(v0: MutArray<string>): string
+fun first(x: MutArray<string>): string
 fun getZero3(): MutArray<number>
-fun first2(v0: MutArray<number => number>): number => number
-fun doEs(v0: MutArray<int>): MutArray<int>
+fun first2(fs: MutArray<(number) => number>): (number) => number
+fun doEs(e: MutArray<int>): MutArray<int>
 class C() {}
 trait I() {
   let i: number
 }
-fun doCs(v0: MutArray<C>): MutArray<C>
-fun doIs(v0: MutArray<I>): MutArray<I>
-fun inter<U, T>(v0: MutArray<(U) & (T)>): MutArray<(U) & (T)>
-fun clean(v0: MutArray<(string, number, )>): MutArray<(string, number, )>
-fun translate<T, U>(v0: MutArray<T>): MutArray<U>
-fun uu(v0: MutArray<((number) | (false)) | (true)>): MutArray<((number) | (false)) | (true)>
+fun doCs(c: MutArray<C>): MutArray<C>
+fun doIs(i: MutArray<I>): MutArray<I>
+fun inter<U, T>(x: MutArray<(U) & (T)>): MutArray<(U) & (T)>
+fun clean(x: MutArray<(string, number, )>): MutArray<(string, number, )>
+fun translate<T, U>(x: MutArray<T>): MutArray<U>
+fun uu(x: MutArray<((number) | (false)) | (true)>): MutArray<((number) | (false)) | (true)>
 class Temp<T>() {
   let x: T
 }
-fun ta(v0: MutArray<Temp<(false) | (true)>>): MutArray<Temp<(false) | (true)>>
-fun tat<T>(v0: MutArray<Temp<T>>): MutArray<Temp<T>>
-//│ |#fun| |first|(|v0|#:| |MutArray|‹|string|›|)|#:| |string|↵|#fun| |getZero3|(||)|#:| |MutArray|‹|number|›|↵|#fun| |first2|(|v0|#:| |MutArray|‹|number| |=>| |number|›|)|#:| |number| |=>| |number|↵|#fun| |doEs|(|v0|#:| |MutArray|‹|int|›|)|#:| |MutArray|‹|int|›|↵|#class| |C|(||)| |{||}|↵|#trait| |I|(||)| |{|→|#let| |i|#:| |number|←|↵|}|↵|#fun| |doCs|(|v0|#:| |MutArray|‹|C|›|)|#:| |MutArray|‹|C|›|↵|#fun| |doIs|(|v0|#:| |MutArray|‹|I|›|)|#:| |MutArray|‹|I|›|↵|#fun| |inter|‹|U|,| |T|›|(|v0|#:| |MutArray|‹|(|U|)| |&| |(|T|)|›|)|#:| |MutArray|‹|(|U|)| |&| |(|T|)|›|↵|#fun| |clean|(|v0|#:| |MutArray|‹|(|string|,| |number|,| |)|›|)|#:| |MutArray|‹|(|string|,| |number|,| |)|›|↵|#fun| |translate|‹|T|,| |U|›|(|v0|#:| |MutArray|‹|T|›|)|#:| |MutArray|‹|U|›|↵|#fun| |uu|(|v0|#:| |MutArray|‹|(|(|number|)| ||| |(|false|)|)| ||| |(|true|)|›|)|#:| |MutArray|‹|(|(|number|)| ||| |(|false|)|)| ||| |(|true|)|›|↵|#class| |Temp|‹|T|›|(||)| |{|→|#let| |x|#:| |T|←|↵|}|↵|#fun| |ta|(|v0|#:| |MutArray|‹|Temp|‹|(|false|)| ||| |(|true|)|›|›|)|#:| |MutArray|‹|Temp|‹|(|false|)| ||| |(|true|)|›|›|↵|#fun| |tat|‹|T|›|(|v0|#:| |MutArray|‹|Temp|‹|T|›|›|)|#:| |MutArray|‹|Temp|‹|T|›|›|
-//│ Parsed: {fun first: [] -> (v0: MutArray[string],) -> string; fun getZero3: [] -> () -> MutArray[number]; fun first2: [] -> (v0: MutArray[number -> number],) -> number -> number; fun doEs: [] -> (v0: MutArray[int],) -> MutArray[int]; class C() {}; trait I(): {let i: [] -> number}; fun doCs: [] -> (v0: MutArray[C],) -> MutArray[C]; fun doIs: [] -> (v0: MutArray[I],) -> MutArray[I]; fun inter: [] -> (v0: MutArray[(U,) & (T,)],) -> MutArray[(U,) & (T,)]; fun clean: [] -> (v0: MutArray[(string, number,)],) -> MutArray[(string, number,)]; fun translate: [] -> (v0: MutArray[T],) -> MutArray[U]; fun uu: [] -> (v0: MutArray[((number,) | (false,),) | (true,)],) -> MutArray[((number,) | (false,),) | (true,)]; class Temp[T]() {let x: [] -> T}; fun ta: [] -> (v0: MutArray[Temp[(false,) | (true,)]],) -> MutArray[Temp[(false,) | (true,)]]; fun tat: [] -> (v0: MutArray[Temp[T]],) -> MutArray[Temp[T]]}
+fun ta(ts: MutArray<Temp<(false) | (true)>>): MutArray<Temp<(false) | (true)>>
+fun tat<T>(ts: MutArray<Temp<T>>): MutArray<Temp<T>>
+//│ |#fun| |first|(|x|#:| |MutArray|‹|string|›|)|#:| |string|↵|#fun| |getZero3|(||)|#:| |MutArray|‹|number|›|↵|#fun| |first2|(|fs|#:| |MutArray|‹|(|number|)| |=>| |number|›|)|#:| |(|number|)| |=>| |number|↵|#fun| |doEs|(|e|#:| |MutArray|‹|int|›|)|#:| |MutArray|‹|int|›|↵|#class| |C|(||)| |{||}|↵|#trait| |I|(||)| |{|→|#let| |i|#:| |number|←|↵|}|↵|#fun| |doCs|(|c|#:| |MutArray|‹|C|›|)|#:| |MutArray|‹|C|›|↵|#fun| |doIs|(|i|#:| |MutArray|‹|I|›|)|#:| |MutArray|‹|I|›|↵|#fun| |inter|‹|U|,| |T|›|(|x|#:| |MutArray|‹|(|U|)| |&| |(|T|)|›|)|#:| |MutArray|‹|(|U|)| |&| |(|T|)|›|↵|#fun| |clean|(|x|#:| |MutArray|‹|(|string|,| |number|,| |)|›|)|#:| |MutArray|‹|(|string|,| |number|,| |)|›|↵|#fun| |translate|‹|T|,| |U|›|(|x|#:| |MutArray|‹|T|›|)|#:| |MutArray|‹|U|›|↵|#fun| |uu|(|x|#:| |MutArray|‹|(|(|number|)| ||| |(|false|)|)| ||| |(|true|)|›|)|#:| |MutArray|‹|(|(|number|)| ||| |(|false|)|)| ||| |(|true|)|›|↵|#class| |Temp|‹|T|›|(||)| |{|→|#let| |x|#:| |T|←|↵|}|↵|#fun| |ta|(|ts|#:| |MutArray|‹|Temp|‹|(|false|)| ||| |(|true|)|›|›|)|#:| |MutArray|‹|Temp|‹|(|false|)| ||| |(|true|)|›|›|↵|#fun| |tat|‹|T|›|(|ts|#:| |MutArray|‹|Temp|‹|T|›|›|)|#:| |MutArray|‹|Temp|‹|T|›|›|
+//│ Parsed: {fun first: [] -> (x: MutArray[string],) -> string; fun getZero3: [] -> () -> MutArray[number]; fun first2: [] -> (fs: MutArray[number -> number],) -> number -> number; fun doEs: [] -> (e: MutArray[int],) -> MutArray[int]; class C() {}; trait I(): {let i: [] -> number}; fun doCs: [] -> (c: MutArray[C],) -> MutArray[C]; fun doIs: [] -> (i: MutArray[I],) -> MutArray[I]; fun inter: [] -> (x: MutArray[(U,) & (T,)],) -> MutArray[(U,) & (T,)]; fun clean: [] -> (x: MutArray[(string, number,)],) -> MutArray[(string, number,)]; fun translate: [] -> (x: MutArray[T],) -> MutArray[U]; fun uu: [] -> (x: MutArray[((number,) | (false,),) | (true,)],) -> MutArray[((number,) | (false,),) | (true,)]; class Temp[T]() {let x: [] -> T}; fun ta: [] -> (ts: MutArray[Temp[(false,) | (true,)]],) -> MutArray[Temp[(false,) | (true,)]]; fun tat: [] -> (ts: MutArray[Temp[T]],) -> MutArray[Temp[T]]}

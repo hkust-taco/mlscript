@@ -49,12 +49,13 @@ object TSSourceFile {
     )
 
   private def getFunctionType(node: TSNodeObject): TSFunctionType = {
-    val pList = node.parameters.foldLeft(List[TSType]())((lst, p) => lst :+ (
+    val pList = node.parameters.foldLeft(List[TSParameterType]())((lst, p) => (
       // in typescript, you can use `this` to explicitly specifies the callee
       // but it never appears in the final javascript file
-      if (p.symbol.escapedName === "this") TSPrimitiveType("void")
-      else if (p.isOptionalParameter) TSUnionType(getObjectType(p.symbolType), TSPrimitiveType("undefined"))
-      else getObjectType(p.symbolType))
+      if (p.symbol.escapedName === "this") lst
+      else if (p.isOptionalParameter)
+        lst :+ TSParameterType(p.symbol.escapedName, TSUnionType(getObjectType(p.symbolType), TSPrimitiveType("undefined")))
+      else lst :+ TSParameterType(p.symbol.escapedName, getObjectType(p.symbolType)))
     )
     TSFunctionType(pList, getObjectType(node.returnType), getTypeParametes(node))
   }
@@ -110,12 +111,13 @@ object TSSourceFile {
       else mp
     })
 
-  private def getConstructorList(members: TSNodeArray): List[TSType] =
-    members.foldLeft(List[TSType]())((lst, mem) => {
+  private def getConstructorList(members: TSNodeArray): List[TSParameterType] =
+    members.foldLeft(List[TSParameterType]())((lst, mem) => {
       val name = mem.symbol.escapedName
 
       if (name =/= "__constructor") lst
-      else mem.parameters.foldLeft(List[TSType]())((res, p) => res :+ getMemberType(p))
+      else mem.parameters.foldLeft(List[TSParameterType]())((res, p) =>
+        res :+ TSParameterType(p.symbol.escapedName, getMemberType(p)))
     })
 
   private def getInterfacePropertiesType(list: TSNodeArray): Map[String, TSMemberType] =

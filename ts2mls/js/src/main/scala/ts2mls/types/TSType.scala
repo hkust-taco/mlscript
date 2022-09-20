@@ -6,13 +6,14 @@ case object Private extends TSAccessModifier
 case object Protected extends TSAccessModifier
 
 sealed abstract class TSType
+case class TSParameterType(name: String, val tp: TSType) extends TSType // name: tp
 case class TSMemberType(val base: TSType, val modifier: TSAccessModifier = Public) extends TSType
 case class TSTypeParameter(val name: String, constraint: Option[TSType] = None) extends TSType
 case class TSPrimitiveType(typeName: String) extends TSType
 case class TSReferenceType(name: String) extends TSType
 case object TSEnumType extends TSType
 case class TSTupleType(types: List[TSType]) extends TSType
-case class TSFunctionType(params: List[TSType], res: TSType, val typeVars: List[TSTypeParameter]) extends TSType
+case class TSFunctionType(params: List[TSParameterType], res: TSType, val typeVars: List[TSTypeParameter]) extends TSType
 case class TSArrayType(eleType: TSType) extends TSType
 case class TSSubstitutionType(base: String, applied: List[TSType]) extends TSType
 
@@ -22,7 +23,7 @@ case class TSClassType(
     statics: Map[String, TSMemberType],
     typeVars: List[TSTypeParameter],
     parents: List[TSType],
-    constructor: List[TSType]
+    constructor: List[TSParameterType]
   ) extends TSType
 
 case class TSInterfaceType(

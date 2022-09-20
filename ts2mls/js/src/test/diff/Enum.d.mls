@@ -1,7 +1,7 @@
 :NewParser
 :ParseOnly
-fun pass(v0: int): (false) | (true)
+fun pass(c: int): (false) | (true)
 fun stop(): int
-fun g(v0: int): int
-//│ |#fun| |pass|(|v0|#:| |int|)|#:| |(|false|)| ||| |(|true|)|↵|#fun| |stop|(||)|#:| |int|↵|#fun| |g|(|v0|#:| |int|)|#:| |int|
-//│ Parsed: {fun pass: [] -> (v0: int,) -> ((false,) | (true,)); fun stop: [] -> () -> int; fun g: [] -> (v0: int,) -> int}
+fun g(x: int): int
+//│ |#fun| |pass|(|c|#:| |int|)|#:| |(|false|)| ||| |(|true|)|↵|#fun| |stop|(||)|#:| |int|↵|#fun| |g|(|x|#:| |int|)|#:| |int|
+//│ Parsed: {fun pass: [] -> (c: int,) -> ((false,) | (true,)); fun stop: [] -> () -> int; fun g: [] -> (x: int,) -> int}

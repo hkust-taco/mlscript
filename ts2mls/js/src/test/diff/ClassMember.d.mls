@@ -1,16 +1,16 @@
 :NewParser
 :ParseOnly
-class Student(v0: string, v1: number) {
+class Student(s: string, age: number) {
   let name: string
-  fun isFriend(v0: Student): (false) | (true)
-  fun addScore(v0: string, v1: number): unit
+  fun isFriend(other: Student): (false) | (true)
+  fun addScore(sub: string, score: number): unit
   fun getID(): number
 }
 class Foo<T>() {
-  fun bar(v0: T): unit
+  fun bar(x: T): unit
 }
 class EZ() {
-  fun inc(v0: number): number
+  fun inc(x: number): number
 }
 class Outer() {
   class Inner() {
@@ -18,8 +18,8 @@ class Outer() {
   }
 }
 class TTT<T>() {
-  fun ttt(v0: T): T
-  fun ttt2(v0: T): T
+  fun ttt(x: T): T
+  fun ttt2(x: T): T
 }
-//│ |#class| |Student|(|v0|#:| |string|,| |v1|#:| |number|)| |{|→|#let| |name|#:| |string|↵|#fun| |isFriend|(|v0|#:| |Student|)|#:| |(|false|)| ||| |(|true|)|↵|#fun| |addScore|(|v0|#:| |string|,| |v1|#:| |number|)|#:| |unit|↵|#fun| |getID|(||)|#:| |number|←|↵|}|↵|#class| |Foo|‹|T|›|(||)| |{|→|#fun| |bar|(|v0|#:| |T|)|#:| |unit|←|↵|}|↵|#class| |EZ|(||)| |{|→|#fun| |inc|(|v0|#:| |number|)|#:| |number|←|↵|}|↵|#class| |Outer|(||)| |{|→|#class| |Inner|(||)| |{|→|#let| |a|#:| |number|←|↵|}|←|↵|}|↵|#class| |TTT|‹|T|›|(||)| |{|→|#fun| |ttt|(|v0|#:| |T|)|#:| |T|↵|#fun| |ttt2|(|v0|#:| |T|)|#:| |T|←|↵|}|
-//│ Parsed: {class Student(v0: string, v1: number,) {let name: [] -> string; fun isFriend: [] -> (v0: Student,) -> ((false,) | (true,)); fun addScore: [] -> (v0: string, v1: number,) -> unit; fun getID: [] -> () -> number}; class Foo[T]() {fun bar: [] -> (v0: T,) -> unit}; class EZ() {fun inc: [] -> (v0: number,) -> number}; class Outer() {class Inner() {let a: [] -> number}}; class TTT[T]() {fun ttt: [] -> (v0: T,) -> T; fun ttt2: [] -> (v0: T,) -> T}}
+//│ |#class| |Student|(|s|#:| |string|,| |age|#:| |number|)| |{|→|#let| |name|#:| |string|↵|#fun| |isFriend|(|other|#:| |Student|)|#:| |(|false|)| ||| |(|true|)|↵|#fun| |addScore|(|sub|#:| |string|,| |score|#:| |number|)|#:| |unit|↵|#fun| |getID|(||)|#:| |number|←|↵|}|↵|#class| |Foo|‹|T|›|(||)| |{|→|#fun| |bar|(|x|#:| |T|)|#:| |unit|←|↵|}|↵|#class| |EZ|(||)| |{|→|#fun| |inc|(|x|#:| |number|)|#:| |number|←|↵|}|↵|#class| |Outer|(||)| |{|→|#class| |Inner|(||)| |{|→|#let| |a|#:| |number|←|↵|}|←|↵|}|↵|#class| |TTT|‹|T|›|(||)| |{|→|#fun| |ttt|(|x|#:| |T|)|#:| |T|↵|#fun| |ttt2|(|x|#:| |T|)|#:| |T|←|↵|}|
+//│ Parsed: {class Student(s: string, age: number,) {let name: [] -> string; fun isFriend: [] -> (other: Student,) -> ((false,) | (true,)); fun addScore: [] -> (sub: string, score: number,) -> unit; fun getID: [] -> () -> number}; class Foo[T]() {fun bar: [] -> (x: T,) -> unit}; class EZ() {fun inc: [] -> (x: number,) -> number}; class Outer() {class Inner() {let a: [] -> number}}; class TTT[T]() {fun ttt: [] -> (x: T,) -> T; fun ttt2: [] -> (x: T,) -> T}}

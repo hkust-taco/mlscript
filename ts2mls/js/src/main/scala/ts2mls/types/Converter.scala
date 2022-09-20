@@ -21,7 +21,7 @@ object Converter {
 
   def generateFunDeclaration(tsType: TSType, name: String)(implicit indent: String = ""): String = tsType match {
     case TSFunctionType(params, res, typeVars) => {
-      val pList = if (params.isEmpty) "" else params.zipWithIndex.map(p => s"v${p._2}: ${convert(p._1)("")}").reduceLeft((r, p) => s"$r, $p")
+      val pList = if (params.isEmpty) "" else params.map(p => s"${convert(p)("")}").reduceLeft((r, p) => s"$r, $p")
       val tpList = if (typeVars.isEmpty) "" else s"<${typeVars.map(p => convert(p)("")).reduceLeft((r, p) => s"$r, $p")}>"
       s"${indent}fun $name$tpList($pList): ${convert(res)("")}"
     }
@@ -34,13 +34,9 @@ object Converter {
     case TSPrimitiveType(typeName) => primitiveName(typeName)
     case TSReferenceType(name) => name
     case TSFunctionType(params, res, _) =>
-      // since functions can be defined by both `def` and `method`, it only returns the type of functions
       if (params.length == 0) s"${primitiveName("void")} => ${convert(res)}"
       else
-        params.foldRight(convert(res))((p, f) => p match {
-          case _: TSFunctionType => s"(${convert(p)}) => $f"
-          case _ => s"${convert(p)} => $f"
-        })
+        params.foldRight(convert(res))((p, f) => s"(${convert(p.tp)}) => $f")
     case TSUnionType(lhs, rhs) => {
       val lres = convert(lhs)
       val rres = convert(rhs)
@@ -61,6 +57,7 @@ object Converter {
       convertRecord(s"class $name", members, typeVars, parents, statics, cons)(indent)
     case TSSubstitutionType(base, applied) => s"${base}<${applied.map((app) => convert(app)).reduceLeft((res, s) => s"$res, $s")}>"
     case overload @ TSIgnoredOverload(base, _) => s"${convert(base)} ${overload.warning}"
+    case TSParameterType(name, tp) => s"${name}: ${convert(tp)}"
   }
 
   private def convertRecord(typeName: String, members: Map[String, TSMemberType], typeVars: List[TSTypeParameter],
@@ -94,7 +91,7 @@ object Converter {
     else { // named interfaces and classes
       val constructor =
         if (constructorList.isEmpty) "()"
-        else s"(${constructorList.zipWithIndex.map(p => s"v${p._2}: ${convert(p._1)("")}").reduceLeft((res, p) => s"$res, $p")})"
+        else s"(${constructorList.map(p => s"${convert(p)("")}").reduceLeft((res, p) => s"$res, $p")})"
 
       val inheritance =
         if (parents.isEmpty) constructor
