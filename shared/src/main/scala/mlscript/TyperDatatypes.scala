@@ -234,7 +234,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         else TopType
       subst(td.kind match {
         case Als => td.bodyTy
-        case Nms => td.bodyTy // TODO: deal with namespaces
+        case Nms => td.bodyTy
         case Cls => clsNameToNomTag(td)(prov, ctx) & td.bodyTy & tparamTags
         case Trt => trtNameToNomTag(td)(prov, ctx) & td.bodyTy & tparamTags
       }, td.targs.lazyZip(targs).toMap) //.withProv(prov)

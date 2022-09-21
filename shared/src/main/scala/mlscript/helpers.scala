@@ -436,7 +436,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     // TODO:
     // case Rcd(fields) => ???
     // case Sel(receiver, fieldName) => ???
-    // case Let(isRec, name, rhs, body) => 
+    // case Let(isRec, name, rhs, body) => ???
     // case Blk(stmts) => ???
     // case Bra(rcd, trm) => ???
     // case Asc(trm, ty) => ???

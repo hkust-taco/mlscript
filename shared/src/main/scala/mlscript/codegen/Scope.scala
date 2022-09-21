@@ -200,8 +200,8 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       declareTrait(name, tparams map { _.name }, body, mthdDefs)
     case TypeDef(Cls, TypeName(name), tparams, baseType, _, members, _) =>
       declareClass(name, tparams map { _.name }, baseType, members)
-    case TypeDef(Nms, TypeName(name), _, body, _, _, _) =>
-      throw CodeGenError("Namespaces are not supported yet.") // TODO: deal with namespaces
+    case TypeDef(Nms, _, _, _, _, _, _) =>
+      throw CodeGenError("Namespaces are not supported yet.")
   }
 
   def declareClass(
