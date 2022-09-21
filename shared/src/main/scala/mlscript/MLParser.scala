@@ -204,7 +204,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
           ms.collect { case R(md) => md }, ms.collect{ case L(md) => md }, Nil)
       }
       case (k @ Als, id, ts) => "=" ~ ty map (bod => TypeDef(k, id, ts, bod, Nil, Nil, Nil))
-      case (k @ Nms, id, _) => "=" ~ ty map (bod => TypeDef(k, id, Nil, bod, Nil, Nil, Nil)) // TODO: deal with namespaces
+      case (k @ Nms, id, _) => "=" ~ ty map (bod => TypeDef(k, id, Nil, bod, Nil, Nil, Nil))
     })
   def tyParams[p: P]: P[Ls[TypeName]] =
     ("[" ~ tyName.rep(0, ",") ~ "]").?.map(_.toList.flatten)

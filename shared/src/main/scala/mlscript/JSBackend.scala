@@ -459,7 +459,7 @@ class JSBackend {
         traits += topLevelScope.declareTrait(name, tparams map { _.name }, body, methods)
       case TypeDef(Cls, TypeName(name), tparams, baseType, _, members, _) =>
         classes += topLevelScope.declareClass(name, tparams map { _.name }, baseType, members)
-      case TypeDef(Nms, TypeName(name), _, _, _, members, _) => throw CodeGenError("Namespaces are not supported yet.") // TODO: deal with namespaces
+      case TypeDef(Nms, _, _, _, _, _, _) => throw CodeGenError("Namespaces are not supported yet.")
     }
     (traits.toList, classes.toList)
   }
