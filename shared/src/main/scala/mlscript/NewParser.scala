@@ -311,7 +311,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 (Var("<error>").withLoc(curLoc.map(_.left)), false)
             }
             foundErr || !success pipe { implicit fe =>
-              val tparams = yeetSpaces match {
+              val tparams = if (kwStr === "let") Ls[TypeName]() else yeetSpaces match {
                 case (br @ BRACKETS(Angle, toks), loc) :: _ =>
                   consume
                   val ts = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()).map {

@@ -84,14 +84,14 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         val (txt, k) =
           takeWhile(j)(c => c =/= '\n')
         go(k, COMMENT(txt))
-      case '/' if bytes.lift(i + 1).contains('*') =>
+      case '/' if bytes.lift(i + 1).contains('*') => // multiple-line comment
         val j = i + 2
         var prev1 = '/'; var prev2 = '*'
         val (txt, k) =
           takeWhile(j)(c => {
-            val r = prev1 =/= '*' || prev2 =/= '/'
+            val res = prev1 =/= '*' || prev2 =/= '/'
             prev1 = prev2; prev2 = c
-            r
+            res
           })
         go(k, COMMENT(txt.dropRight(2)))
       case BracketKind(Left(k)) => go(i + 1, OPEN_BRACKET(k))
@@ -130,7 +130,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
           go(k, SELECT(name))
         }
         else if (c === '>' && n.length > 1 && n.foldLeft(true)((r, i) => r && (i === c)))
-          go(i + 1, IDENT(">", true))
+          go(i + 1, IDENT(">", true)) // split  `>>` to `>` and `>` so that code like `A<B<C>>` can be parsed correctly
         else go(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true))
       case _ if isDigit(c) =>
         val (str, j) = takeWhile(i)(isDigit)
