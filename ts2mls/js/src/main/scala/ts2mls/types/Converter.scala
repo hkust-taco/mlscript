@@ -69,7 +69,7 @@ object Converter {
           case _: TSClassType => convert(s._2)(indent + "  ") + "\n"
           case _ => "" // TODO: deal with other static type
         }
-        case _ => "" // TODO: deal with private/protected members
+        case _ => "" // TODO: deal with private/protected static members
       })
 
     val body = { // members without independent type parameters, translate them directly

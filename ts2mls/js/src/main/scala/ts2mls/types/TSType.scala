@@ -6,7 +6,7 @@ case object Private extends TSAccessModifier
 case object Protected extends TSAccessModifier
 
 sealed abstract class TSType
-case class TSParameterType(name: String, val tp: TSType) extends TSType // name: tp
+case class TSParameterType(name: String, val tp: TSType) extends TSType // record both parameter's name and parameter's type
 case class TSMemberType(val base: TSType, val modifier: TSAccessModifier = Public) extends TSType
 case class TSTypeParameter(val name: String, constraint: Option[TSType] = None) extends TSType
 case class TSPrimitiveType(typeName: String) extends TSType
