@@ -1,7 +1,6 @@
 package ts2mls.types
 
 import mlscript.utils._
-import scala.runtime.Statics
 
 object Converter {
   private val primitiveName = Map[String, String](
@@ -15,8 +14,8 @@ object Converter {
     "undefined" -> "undefined",
     "never" -> "nothing",
     "object" -> "object",
-    "true" -> "true", // will not appear individually
-    "false" -> "false" // will not appear individually
+    "true" -> "true",
+    "false" -> "false"
   )
 
   def generateFunDeclaration(tsType: TSType, name: String)(implicit indent: String = ""): String = tsType match {
@@ -37,14 +36,7 @@ object Converter {
       if (params.length == 0) s"${primitiveName("void")} => ${convert(res)}"
       else
         params.foldRight(convert(res))((p, f) => s"(${convert(p.tp)}) => $f")
-    case TSUnionType(lhs, rhs) => {
-      val lres = convert(lhs)
-      val rres = convert(rhs)
-
-      if (lres.isEmpty()) rres
-      else if (rres.isEmpty()) lres
-      else s"($lres) | ($rres)"
-    }
+    case TSUnionType(lhs, rhs) => s"(${convert(lhs)}) | (${convert(rhs)})"
     case TSIntersectionType(lhs, rhs) => s"(${convert(lhs)}) & (${convert(rhs)})"
     case TSTypeParameter(name, _) => name // constraints should be translated where the type parameters were created rather than be used
     case TSTupleType(lst) => s"(${lst.foldLeft("")((p, t) => s"$p${convert(t)}, ")})"
