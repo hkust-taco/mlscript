@@ -129,8 +129,6 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
           val (name, k) = takeWhile(j)(isIdentChar)
           go(k, SELECT(name))
         }
-        else if (c === '>' && n.length > 1 && n.foldLeft(true)((r, i) => r && (i === c)))
-          go(i + 1, IDENT(">", true)) // split  `>>` to `>` and `>` so that code like `A<B<C>>` can be parsed correctly
         else go(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true))
       case _ if isDigit(c) =>
         val (str, j) = takeWhile(i)(isDigit)
@@ -192,6 +190,12 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
           case _ => false
         }) =>
           go(CLOSE_BRACKET(Angle) -> loc :: rest, false, stack, acc)
+        case (IDENT(id, true), loc) :: rest
+        if (canStartAngles && id.forall(_ == '>') && id.length > 1 && (stack match {
+          case ((Angle, _), _) :: _ => true
+          case _ => false
+        })) => // split  `>>` to `>` and `>` so that code like `A<B<C>>` can be parsed correctly
+          go((CLOSE_BRACKET(Angle) -> loc.left) :: (IDENT(id.drop(1), true) -> loc) :: rest, false, stack, acc)
         case ((tk @ IDENT(">", true), loc)) :: rest if canStartAngles =>
           raise(WarningReport(msg"This looks like an angle bracket, but it does not close any angle bracket section" -> S(loc) ::
             msg"Add spaces around it if you intended to use `<` as an operator" -> N :: Nil, source = Parsing))
