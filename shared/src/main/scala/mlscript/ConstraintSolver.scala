@@ -645,9 +645,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         mismatchMessage,
         flowHint,
         constraintProvenanceHints,
-        originProvHints,
-        detailedContext,
-        errorSimplifer.nestedTypeProvFlow(cctx)
+        // originProvHints,
+        // detailedContext,
+        // errorSimplifer.nestedTypeProvFlow(cctx),
+        errorSimplifer.locationRanking(cctx, errorSimplifer.OchiaiHeuristic)
       ).flatten
       
       raise(ErrorReport(msgs))
@@ -795,7 +796,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
      * the number of the times the location has been visited, and the
      * number of visits that have led to constraining failures.
     */
-    val locoCounter: MutMap[Loc, (Int, Int)] = MutMap();
+    type LocoCounter = MutMap[Loc, (Int, Int)]
+    val locoCounter: LocoCounter = MutMap();
     def updateCounter(st: ST, change: (Int, Int)): Unit = {
       st.prov.loco.foreach(loco =>
         locoCounter.updateWith(loco) {
@@ -835,6 +837,19 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         .++(chain._2.reverseIterator
               .takeWhile(st => !(st.prov.isInstanceOf[NestedTypeProvenance])))
         .foreach(errorSimplifer.updateCounter(_, (0, 1)))
+    }
+    
+    def flattenChain(chain: ConCtx): Ls[Loc] = {
+      def inner(chain: Ls[ST]): Ls[Loc] = {
+        chain.flatMap(st => st.prov match {
+          case nested: NestedTypeProvenance => inner(nested.chain)
+          case simple: TypeProvenance => simple.loco match {
+            case None => Ls.empty
+            case Some(value) => value :: Nil
+          }
+        })
+      }
+      inner(chain._1 ::: chain._2)
     }
     
     /**
@@ -906,5 +921,78 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           msg"total count ${total.toString} and wrong count ${wrong.toString}" -> Some(loc)
         }.toList
       else Nil
+      
+    /**
+      * Show error locations and their rank
+      */
+    def locationRanking(chain: ConCtx, heuristic: Heuristic): Ls[Message -> Opt[Loc]] = {
+      val locations = flattenChain(chain)
+      val ranking = heuristic.debugLocationRanking(heuristic.rankLocations(locations))
+      val name = heuristic.name
+      if (explainErrors)
+        msg"========= Suspicious locations ranked by $name: most suspect first =========" -> N ::
+        ranking.iterator
+        .filter { case (_, ranking) => ranking =/= 0.0 } // remove unnecessary locations
+        .map { case (loc, ranking) =>
+          val counter = locoCounter.getOrElse(loc, (-1, -1))
+          msg"Ranking ${ranking.toString()} with total and wrong count: ${counter.toString()}" -> Some(loc)
+        }.toList
+      else Nil
+    }
+      
+    /** Heuristic for guessing suspicious-ness of a location as the cause
+      * of the fault. Higher score indicates more suspicious location.
+      * 
+      * Concrete classes are expected to implement specific heuristics, using
+      * location counter and error chains attributes of super class.
+      */
+    trait Heuristic {
+      def score(loco: Loc): Double
+      val ordering: Ordering[Loc]
+      val name: Str
+      // rank locations in descending order of suspicion i.e. higher score first
+      def rankLocations(chain: Ls[Loc]): Ls[Loc] =
+        chain.sorted(ordering).reverse
+      def debugLocationRanking(chain: Ls[Loc]): Ls[Loc -> Double] =
+        chain.map(loc => (loc, score(loc)))
+    }
+    val OchiaiHeuristic: Heuristic = new Heuristic {
+      override def score(loco: Loc): Double = {
+        locoCounter.get(loco) match {
+          case None => 0
+          case Some((total, wrong)) =>
+            val totalWrong = chains.length
+            val denom = math.sqrt(totalWrong * (wrong + (total - wrong)))
+            
+            if (denom =/= 0) wrong / denom else 0
+        }
+      }
+
+      override val ordering: Ordering[Loc] = new Ordering[Loc] {
+        override def compare(x: Loc, y: Loc): Int = score(x).compare(score(y))
+      }
+      
+      val name: Str = "Ochiai"
+    }
+
+    val DStarHeuristic: Heuristic = new Heuristic {
+      val exponent = 2
+      override def score(loco: Loc): Double = {
+        locoCounter.get(loco) match {
+          case None => 0
+          case Some((total, wrong)) =>
+            val totalWrong = chains.length
+            val denom = math.sqrt(totalWrong * (wrong + (total - wrong)))
+            
+            if (denom =/= 0) (wrong ^ exponent) / denom else 0
+        }
+      }
+
+      override val ordering: Ordering[Loc] = new Ordering[Loc] {
+        override def compare(x: Loc, y: Loc): Int = score(x).compare(score(y))
+      }
+      
+      val name: Str = s"DStart $exponent"
+    }
   }
 }

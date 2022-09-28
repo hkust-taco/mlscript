@@ -8,16 +8,86 @@
 // succ x2
 
 :ex
-// def succ x = x + 1
-// x1 = false
-// f1 y1 = succ y1
-// h1 f x = f x
-// h1 f1 x1
+def succ x = x + 1
+x1 = false
+f1 y1 = succ y1
+h1 f x = f x
+h1 f1 x1
+//│ succ: int -> int
+//│ x1: false
+//│ f1: int -> int
+//│ h1: ('a -> 'b) -> 'a -> 'b
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.15: 	h1 f1 x1
+//│ ║        	^^^^^^^^
+//│ ╟── reference of type `false` is not an instance of type `int`
+//│ ║  l.12: 	x1 = false
+//│ ║        	     ^^^^^
+//│ ╟── but it flows into reference with expected type `int`
+//│ ║  l.15: 	h1 f1 x1
+//│ ║        	      ^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.11: 	def succ x = x + 1
+//│ ║        	             ^
+//│ ╟── from reference:
+//│ ║  l.14: 	h1 f x = f x
+//│ ║        	           ^
+//│ ╟── ========= Suspicious locations ranked by Ochiai: most suspect first =========
+//│ ╟── Ranking 1.0 with total and wrong count: (1,1)
+//│ ║  l.12: 	x1 = false
+//│ ║        	     ^^^^^
+//│ ╟── Ranking 0.7071067811865475 with total and wrong count: (2,1)
+//│ ║  l.15: 	h1 f1 x1
+//│ ║        	      ^^
+//│ ╟── Ranking 0.7071067811865475 with total and wrong count: (2,1)
+//│ ║  l.15: 	h1 f1 x1
+//│ ║        	      ^^
+//│ ╟── Ranking 0.5773502691896258 with total and wrong count: (3,1)
+//│ ║  l.14: 	h1 f x = f x
+//│ ║        	           ^
+//│ ╟── Ranking 0.5773502691896258 with total and wrong count: (3,1)
+//│ ║  l.14: 	h1 f x = f x
+//│ ╙──      	           ^
+//│ res: error | int
 
 :ex
-// class Tuple: { left: bool; right: int }
-// def succ x = x + 1
-// x1 = false
-// x2 = x1
-// x3 = Tuple { left = x2; right = 1 }
-// succ x3.left
+class Tuple: { left: bool; right: int }
+def succ x = x + 1
+x1 = false
+x2 = x1
+x3 = Tuple { left = x2; right = 1 }
+succ x3.left
+//│ Defined class Tuple
+//│ succ: int -> int
+//│ x1: false
+//│ x2: false
+//│ x3: Tuple & {left: false, right: 1}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.59: 	succ x3.left
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── reference of type `false` is not an instance of type `int`
+//│ ║  l.56: 	x1 = false
+//│ ║        	     ^^^^^
+//│ ╟── but it flows into reference with expected type `int`
+//│ ║  l.59: 	succ x3.left
+//│ ║        	     ^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.55: 	def succ x = x + 1
+//│ ║        	             ^
+//│ ╟── ========= Suspicious locations ranked by Ochiai: most suspect first =========
+//│ ╟── Ranking 0.4082482904638631 with total and wrong count: (3,1)
+//│ ║  l.55: 	def succ x = x + 1
+//│ ║        	             ^
+//│ ╟── Ranking 0.4082482904638631 with total and wrong count: (3,1)
+//│ ║  l.55: 	def succ x = x + 1
+//│ ║        	             ^
+//│ ╟── Ranking 0.4082482904638631 with total and wrong count: (3,1)
+//│ ║  l.58: 	x3 = Tuple { left = x2; right = 1 }
+//│ ║        	                    ^^
+//│ ╟── Ranking 0.4082482904638631 with total and wrong count: (3,1)
+//│ ║  l.57: 	x2 = x1
+//│ ║        	     ^^
+//│ ╟── Ranking 0.4082482904638631 with total and wrong count: (3,1)
+//│ ║  l.56: 	x1 = false
+//│ ╙──      	     ^^^^^
+//│ res: error | int
