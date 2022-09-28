@@ -7,7 +7,7 @@ import scala.collection.mutable.ListBuffer
 import mlscript.{JSField, JSLit}
 import scala.collection.mutable.{Set => MutSet}
 
-class JSBackend {
+class JSBackend(allowUnresolvedSymbols: Boolean) {
   /**
     * The root scope of the program.
     */
@@ -103,7 +103,11 @@ class JSBackend {
         case S(sym: TypeAliasSymbol) =>
           throw CodeGenError(s"type alias ${name} is not a valid expression")
         case S(_) => throw new Exception("register mismatch in scope")
-        case N => throw CodeGenError(s"unresolved symbol ${name}")
+        case N =>
+          if (allowUnresolvedSymbols)
+            JSIdent(name)
+          else
+            throw CodeGenError(s"unresolved symbol ${name}")
       }
     }
 
@@ -523,7 +527,7 @@ class JSBackend {
   
 }
 
-class JSWebBackend extends JSBackend {
+class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
   // Name of the array that contains execution results
   val resultsName: Str = topLevelScope declareRuntimeSymbol "results"
 
@@ -581,7 +585,7 @@ class JSWebBackend extends JSBackend {
   }
 }
 
-class JSTestBackend extends JSBackend {
+class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
   private val lastResultSymbol = topLevelScope.declareValue("res", Some(false), false)
   private val resultIdent = JSIdent(lastResultSymbol.runtimeName)
 
