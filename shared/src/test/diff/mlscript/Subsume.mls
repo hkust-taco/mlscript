@@ -25,13 +25,13 @@ def f = 42
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.3: 	def f: int -> int
 //│ ╙──     	       ^^^^^^^^^^
-//│  = 42
+//│  = [Function: f1]
 
 :re
 f 1
 //│ res: int
 //│ Runtime error:
-//│   TypeError: f1 is not a function
+//│   TypeError: f1(...) is not a function
 
 fun x -> f x
 //│ res: int -> int
@@ -47,7 +47,7 @@ def boom = 1
 //│ 1
 //│   <:  boom:
 //│ anything
-//│     = 1
+//│     = [Function: boom]
 
 :e
 add boom 1
@@ -82,7 +82,7 @@ def boom = 1
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.67: 	def boom: nothing
 //│ ╙──      	          ^^^^^^^
-//│     = 1
+//│     = [Function: boom1]
 
 
 def boom: 'a
@@ -103,7 +103,7 @@ def boom = 1
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.88: 	def boom: 'a
 //│ ╙──      	          ^^
-//│     = 1
+//│     = [Function: boom2]
 
 
 
@@ -214,7 +214,7 @@ def f = impl
 //│ ╟── from reference:
 //│ ║  l.196: 	def impl a = a a
 //│ ╙──       	             ^
-//│  = [Function: impl]
+//│  = [Function: f2]
 
 :re
 f 1 
@@ -363,7 +363,7 @@ def self2 = self1
 //│ 'a
 //│   where
 //│     'a := 'a -> 'b
-//│      = [Function: res]
+//│      = [Function: self2]
 
 
 fun p -> fun q -> p q p

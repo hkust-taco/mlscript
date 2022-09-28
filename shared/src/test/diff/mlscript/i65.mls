@@ -11,10 +11,12 @@
 :js
 def foo = "oops"
 //│ // Query 1
-//│ globalThis.foo = "oops";
+//│ globalThis.foo = function foo() {
+//│   return "oops";
+//│ };
 //│ // End of generated code
 //│ foo: "oops"
-//│    = 'oops'
+//│    = [Function: foo]
 
 :js
 res
@@ -39,7 +41,7 @@ res
 :js
 foo
 //│ // Query 1
-//│ res = foo;
+//│ res = foo();
 //│ // End of generated code
 //│ res: "oops"
 //│    = 'oops'

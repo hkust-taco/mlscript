@@ -17,7 +17,7 @@ def pow1 = z (fun pow0 -> fun n -> fun x ->
     else 1
   )
 //│ pow1: int -> int -> int
-//│     = [Function (anonymous)]
+//│     = [Function: pow1]
 
 pow1 3 4
 //│ res: int
@@ -33,14 +33,14 @@ def pow pow n x =
 def pow = z pow
 pow 3 4
 //│ pow: int -> int -> int
-//│    = [Function (anonymous)]
+//│    = [Function: pow2]
 //│ res: int
 //│    = 64
 
 
 def oops = z (fun f -> f)
 //│ oops: anything -> nothing
-//│     = [Function (anonymous)]
+//│     = [Function: oops]
 
 :re
 oops 1

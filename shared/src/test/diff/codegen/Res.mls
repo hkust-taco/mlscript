@@ -55,17 +55,19 @@ res == 4
 :js
 def res = 0
 //│ // Query 1
-//│ globalThis.res1 = 0;
+//│ globalThis.res1 = function res1() {
+//│   return 0;
+//│ };
 //│ // End of generated code
 //│ res: 0
-//│    = 0
+//│    = [Function: res1]
 
 // However, we can shadow `res`!
 
 :js
 res + 1
 //│ // Query 1
-//│ res = res1 + 1;
+//│ res = res1() + 1;
 //│ // End of generated code
 //│ res: int
 //│    = 1

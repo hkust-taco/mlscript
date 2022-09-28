@@ -124,7 +124,7 @@ def mkInteger2 = mkInteger
 //│     'a :> Integer with {addOne: {value: int} -> 'a}
 //│   <:  mkInteger2:
 //│ int -> Integer
-//│           = [Function: mkInteger]
+//│           = [Function: mkInteger2]
 
 addOne1 (mkInteger2 42)
 //│ res: Integer
@@ -185,7 +185,7 @@ def mkIntegerPrecise2 = mkIntegerPrecise
 //│ (int & 'value) -> (Integer with {value: 'value})
 //│   <:  mkIntegerPrecise2:
 //│ (int & 'a) -> (Integer\addOne with {value: 'a})
-//│                  = [Function: mkIntegerPrecise2]
+//│                  = [Function: mkIntegerPrecise21]
 
 n = mkIntegerPrecise2 42
 //│ n: Integer & {value: 42}
@@ -217,7 +217,7 @@ def mkIntegerPrecise3 = mkInteger
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.202: 	def mkIntegerPrecise3: (int & 'a) -> (Integer & { value: 'a })
 //│ ╙──       	                                                         ^^
-//│                  = [Function: mkInteger]
+//│                  = [Function: mkIntegerPrecise3]
 
 
 :e

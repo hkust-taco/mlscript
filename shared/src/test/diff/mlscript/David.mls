@@ -4,9 +4,9 @@ def bb = (fun a -> fun b -> toBool (if b then not a else not a)) true
 //│ toBool: anything -> true
 //│       = [Function: toBool]
 //│ b: true
-//│  = true
+//│  = [Function: b]
 //│ bb: bool -> true
-//│   = [Function (anonymous)]
+//│   = [Function: bb]
 
 def isInt = fun x -> b
 //│ isInt: anything -> true
@@ -20,13 +20,13 @@ def addOneB = bb
 //│ selectBoolOrInt: anything -> (1 | true)
 //│                = [Function: selectBoolOrInt]
 //│ r1: 1 | true
-//│   = 1
+//│   = [Function: r1]
 //│ r2: 1 | true
-//│   = 1
+//│   = [Function: r2]
 //│ addOneI: int -> int
 //│        = [Function: addOneI]
 //│ addOneB: bool -> true
-//│        = [Function (anonymous)]
+//│        = [Function: addOneB]
 
 def addOne = fun x -> 
     if (isInt x) 
@@ -36,7 +36,7 @@ def r3 = isInt r2
 //│ addOne: nothing -> (int | true)
 //│       = [Function: addOne]
 //│ r3: true
-//│   = true
+//│   = [Function: r3]
 
 :e
 def r4 = addOne (selectBoolOrInt 1)
@@ -56,7 +56,7 @@ def r4 = addOne (selectBoolOrInt 1)
 //│ ║  l.33: 	    then addOneI x 
 //│ ╙──      	                 ^
 //│ r4: error | int | true
-//│   = 2
+//│   = [Function: r4]
 
 :e
 def r4 = let tmp = selectBoolOrInt 1 in case tmp of { int -> addOne tmp }
@@ -73,7 +73,7 @@ def r4 = let tmp = selectBoolOrInt 1 in case tmp of { int -> addOne tmp }
 //│ ║  l.62: 	def r4 = let tmp = selectBoolOrInt 1 in case tmp of { int -> addOne tmp }
 //│ ╙──      	                                                      ^^^
 //│ r4: error | int | true
-//│   = 2
+//│   = [Function: r41]
 
 // TODO improve:
 //    Note the strange lack of specific provenance flows for `1` and `bool`.
@@ -93,7 +93,7 @@ def r4 = let tmp = selectBoolOrInt 1 in case tmp of { int -> addOne tmp | _ -> 0
 //│ ║  l.84: 	def r4 = let tmp = selectBoolOrInt 1 in case tmp of { int -> addOne tmp | _ -> 0 }
 //│ ╙──      	                                             ^^^
 //│ r4: int | true
-//│   = 2
+//│   = [Function: r42]
 
 def addOne x = case x of {
   | int -> addOneI x 
@@ -104,7 +104,7 @@ def addOne x = case x of {
 
 def r4 = addOne (selectBoolOrInt 1)
 //│ r4: int | true
-//│   = 2
+//│   = [Function: r43]
 
 
 

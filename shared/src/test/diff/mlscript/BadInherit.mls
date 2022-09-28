@@ -166,14 +166,13 @@ c: Cycle1
 //│ ║  l.163: 	def c = Cycle1 error
 //│ ╙──       	        ^^^^^^
 //│ c: error
-//│ Runtime error:
-//│   ReferenceError: Cycle1 is not defined
+//│  = [Function: c1]
 //│ ╔══[ERROR] type identifier not found: Cycle1
 //│ ║  l.164: 	c: Cycle1
 //│ ╙──       	   ^^^^^^
 //│ res: error
 //│ Runtime error:
-//│   ReferenceError: c1 is not defined
+//│   ReferenceError: Cycle1 is not defined
 
 
 type N[A] = ~A
@@ -183,7 +182,7 @@ type N[A] = ~A
 :ge
 class Cycle: N[Cycle]
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.184: 	class Cycle: N[Cycle]
+//│ ║  l.183: 	class Cycle: N[Cycle]
 //│ ╙──       	      ^^^^^^^^^^^^^^^
 //│ Code generation encountered an error:
 //│   cannot inherit from type alias N
@@ -211,37 +210,37 @@ E{}: 1
 E{}: int
 E{} + 1
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.210: 	E{}: 1
+//│ ║  l.209: 	E{}: 1
 //│ ║         	^^^
 //│ ╟── application of type `E` does not match type `1`
 //│ ╟── Note: constraint arises from literal type:
-//│ ║  l.210: 	E{}: 1
+//│ ║  l.209: 	E{}: 1
 //│ ║         	     ^
 //│ ╟── Note: class E is defined at:
-//│ ║  l.206: 	class E: 1
+//│ ║  l.205: 	class E: 1
 //│ ╙──       	      ^
 //│ res: 1
 //│    = E {}
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.211: 	E{}: int
+//│ ║  l.210: 	E{}: int
 //│ ║         	^^^
 //│ ╟── application of type `E` is not an instance of type `int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.211: 	E{}: int
+//│ ║  l.210: 	E{}: int
 //│ ║         	     ^^^
 //│ ╟── Note: class E is defined at:
-//│ ║  l.206: 	class E: 1
+//│ ║  l.205: 	class E: 1
 //│ ╙──       	      ^
 //│ res: int
 //│    = E {}
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.212: 	E{} + 1
+//│ ║  l.211: 	E{} + 1
 //│ ║         	^^^^^
 //│ ╟── application of type `E` is not an instance of type `int`
-//│ ║  l.212: 	E{} + 1
+//│ ║  l.211: 	E{} + 1
 //│ ║         	^^^
 //│ ╟── Note: class E is defined at:
-//│ ║  l.206: 	class E: 1
+//│ ║  l.205: 	class E: 1
 //│ ╙──       	      ^
 //│ res: error | int
 //│    = '[object Object]1'
@@ -251,10 +250,10 @@ E{} + 1
 class F: nothing
 F{}
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.251: 	class F: nothing
+//│ ║  l.250: 	class F: nothing
 //│ ╙──       	      ^^^^^^^^^^
 //│ ╔══[ERROR] identifier not found: F
-//│ ║  l.252: 	F{}
+//│ ║  l.251: 	F{}
 //│ ╙──       	^
 //│ res: error
 //│ Code generation encountered an error:
@@ -265,10 +264,10 @@ F{}
 class String
 class Bool
 //│ ╔══[ERROR] Type name 'String' is reserved.
-//│ ║  l.265: 	class String
+//│ ║  l.264: 	class String
 //│ ╙──       	      ^^^^^^
 //│ ╔══[ERROR] Type name 'Bool' is reserved.
-//│ ║  l.266: 	class Bool
+//│ ║  l.265: 	class Bool
 //│ ╙──       	      ^^^^
 //│ Defined class String
 //│ Defined class Bool
@@ -284,7 +283,7 @@ true : Bool
 :e
 class Weird: {} | {}
 //│ ╔══[ERROR] cannot inherit from a type union
-//│ ║  l.285: 	class Weird: {} | {}
+//│ ║  l.284: 	class Weird: {} | {}
 //│ ╙──       	      ^^^^^^^^^^^^^^
 
 
@@ -294,7 +293,7 @@ class A
 type Id[T] = T
 class B: Id[A]
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.295: 	class B: Id[A]
+//│ ║  l.294: 	class B: Id[A]
 //│ ╙──       	      ^^^^^^^^
 //│ Defined class A
 //│ Defined type alias Id[+T]
@@ -306,7 +305,7 @@ class B: Id[A]
 class Class3A
 class Class3B: Class3A & 'a
 //│ ╔══[ERROR] cannot inherit from a type variable
-//│ ║  l.307: 	class Class3B: Class3A & 'a
+//│ ║  l.306: 	class Class3B: Class3A & 'a
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^
 //│ Defined class Class3A
 

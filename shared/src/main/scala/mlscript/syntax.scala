@@ -5,10 +5,10 @@ import mlscript.utils._, shorthands._
 
 // Terms
 
-final case class Pgrm(tops: Ls[Statement]) extends PgrmImpl
+final case class Pgrm(tops: Ls[Statement]) extends PgrmOrTypingUnit with PgrmImpl
 
 sealed abstract class Decl extends DesugaredStatement with DeclImpl
-final case class Def(rec: Bool, nme: Var, rhs: Term \/ PolyType) extends Decl with Terms {
+final case class Def(rec: Bool, nme: Var, rhs: Term \/ PolyType, isByname: Bool) extends Decl with Terms {
   val body: Located = rhs.fold(identity, identity)
 }
 final case class TypeDef(
@@ -16,8 +16,9 @@ final case class TypeDef(
   nme: TypeName,
   tparams: List[TypeName],
   body: Type,
-  mthDecls: List[MethodDef[Right[Term, Type]]] = Nil,
-  mthDefs: List[MethodDef[Left[Term, Type]]] = Nil,
+  mthDecls: List[MethodDef[Right[Term, Type]]],
+  mthDefs: List[MethodDef[Left[Term, Type]]],
+  positionals: Ls[Var],
 ) extends Decl
 
 /**
@@ -109,7 +110,7 @@ sealed trait Terms extends DesugaredStatement
 
 sealed abstract class Type extends TypeImpl
 
-sealed trait NamedType extends Type
+sealed trait NamedType extends Type { val base: TypeName }
 
 sealed abstract class Composed(val pol: Bool) extends Type with ComposedImpl
 
@@ -151,7 +152,7 @@ final case class PolyType(targs: Ls[TypeName], body: Type) extends PolyTypeImpl
 
 // New Definitions AST
 
-final case class TypingUnit(entities: Ls[Term \/ NuDecl]) extends TypingUnitImpl
+final case class TypingUnit(entities: Ls[Statement]) extends PgrmOrTypingUnit with TypingUnitImpl
 
 sealed abstract class NuDecl extends Statement with NuDeclImpl
 
@@ -162,9 +163,10 @@ final case class NuTypeDef(
   params: Tup, // the specialized parameters for that type
   parents: Ls[Term],
   body: TypingUnit
-) extends NuDecl with DesugaredStatement
+) extends NuDecl with Statement
 
 final case class NuFunDef(
+  isLetRec: Opt[Bool], // None means it's a `fun`, which is always recursive; Some means it's a `let`
   nme: Var,
   targs: Ls[TypeName],
   rhs: Term \/ PolyType,
@@ -173,3 +175,4 @@ final case class NuFunDef(
 }
 
 
+sealed abstract class PgrmOrTypingUnit

@@ -74,7 +74,7 @@ def bar0 = foo
 //│ ╟── from refined scrutinee:
 //│ ║  l.31: 	def foo b x = case b of {
 //│ ╙──      	                   ^
-//│     = [Function: foo]
+//│     = [Function: bar0]
 
 def bar1: Type1[int] -> int -> Type1[int]
 bar1 d1
@@ -177,7 +177,7 @@ def bar1 = foo
 //│ ╟── from applied type reference:
 //│ ║  l.79: 	def bar1: Type1[int] -> int -> Type1[int]
 //│ ╙──      	                               ^^^^^^^^^^
-//│     = [Function: foo]
+//│     = [Function: bar1]
 
 def bar2: Base1['a] -> 'a -> Base1['a]
 bar2 d1
@@ -225,5 +225,5 @@ def bar2 = foo
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.4: 	class Derived1: Base1[int] & { x: int }
 //│ ╙──     	                      ^^^
-//│     = [Function: foo]
+//│     = [Function: bar2]
 

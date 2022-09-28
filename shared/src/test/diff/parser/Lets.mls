@@ -3,14 +3,14 @@
 
 let x = 1
 //│ |#let| |x| |#=| |1|
-//│ Parsed: {fun x = 1}
+//│ Parsed: {let x = 1}
 
 let x = 1, y = 2
 //│ |#let| |x| |#=| |1|,| |y| |#=| |2|
 //│ ╔══[PARSE ERROR] Expected end of input; found comma instead
 //│ ║  l.8: 	let x = 1, y = 2
 //│ ╙──     	         ^
-//│ Parsed: {fun x = 1}
+//│ Parsed: {let x = 1}
 
 let x = 1, y = 2
 x + y
@@ -18,21 +18,21 @@ x + y
 //│ ╔══[PARSE ERROR] Expected end of input; found comma instead
 //│ ║  l.15: 	let x = 1, y = 2
 //│ ╙──      	         ^
-//│ Parsed: {fun x = 1}
+//│ Parsed: {let x = 1}
 
 let x = 1 in x + 1
 //│ |#let| |x| |#=| |1| |#in| |x| |+| |1|
 //│ ╔══[PARSE ERROR] Expected end of input; found 'in' keyword instead
 //│ ║  l.23: 	let x = 1 in x + 1
 //│ ╙──      	          ^^
-//│ Parsed: {fun x = 1}
+//│ Parsed: {let x = 1}
 
 let x = 1, y = 2 in x + y
 //│ |#let| |x| |#=| |1|,| |y| |#=| |2| |#in| |x| |+| |y|
 //│ ╔══[PARSE ERROR] Expected end of input; found comma instead
 //│ ║  l.30: 	let x = 1, y = 2 in x + y
 //│ ╙──      	         ^
-//│ Parsed: {fun x = 1}
+//│ Parsed: {let x = 1}
 
 let in 123
 //│ |#let| |#in| |123|
@@ -45,21 +45,21 @@ let in 123
 //│ ╔══[PARSE ERROR] Expected ':' or '=' followed by a function body or signature; found end of input instead
 //│ ║  l.37: 	let in 123
 //│ ╙──      	          ^
-//│ Parsed: {fun <error> = undefined}
+//│ Parsed: {let <error> = undefined}
 
 let x = 1; x + 1
 //│ |#let| |x| |#=| |1|#;| |x| |+| |1|
 //│ ╔══[PARSE ERROR] Expected end of input; found ';' keyword instead
 //│ ║  l.50: 	let x = 1; x + 1
 //│ ╙──      	         ^
-//│ Parsed: {fun x = 1}
+//│ Parsed: {let x = 1}
 
 let x = 1, y = 2; x + y
 //│ |#let| |x| |#=| |1|,| |y| |#=| |2|#;| |x| |+| |y|
 //│ ╔══[PARSE ERROR] Expected end of input; found comma instead
 //│ ║  l.57: 	let x = 1, y = 2; x + y
 //│ ╙──      	         ^
-//│ Parsed: {fun x = 1}
+//│ Parsed: {let x = 1}
 
 
 
@@ -78,7 +78,7 @@ let in person be the default in following meetings
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
 //│ ║  l.67: 	let in person be the default in following meetings
 //│ ╙──      	                 ^^^
-//│ Parsed: {fun <error> = undefined}
+//│ Parsed: {let <error> = undefined}
 
 
 

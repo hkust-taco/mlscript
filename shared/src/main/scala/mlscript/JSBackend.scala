@@ -88,8 +88,10 @@ class JSBackend {
         else
           throw new UnimplementedError(sym)
       case S(sym: ValueSymbol) =>
+        if (sym.isByvalueRec.getOrElse(false) && !sym.isLam) throw CodeGenError(s"unguarded recursive use of by-value binding $name")
         visitedSymbols += sym
-        JSIdent(sym.runtimeName)
+        val ident = JSIdent(sym.runtimeName)
+        if (sym.isByvalueRec.isEmpty && !sym.isLam) ident() else ident
       case S(sym: ClassSymbol) =>
         if (isCallee)
           JSNew(JSIdent(sym.runtimeName))
@@ -178,7 +180,7 @@ class JSBackend {
         R(blkScope.tempVars `with` (stmts flatMap (_.desugared._2) map {
           case t: Term             => JSExprStmt(translateTerm(t))
           // TODO: find out if we need to support this.
-          case _: Def | _: TypeDef | _: NuFunDef | _: NuTypeDef =>
+          case _: Def | _: TypeDef | _: NuFunDef /* | _: NuTypeDef */ =>
             throw CodeGenError("unexpected definitions in blocks")
         })),
         Nil
@@ -289,7 +291,7 @@ class JSBackend {
         case Lam(params, body) =>
           val methodScope = scope.derive(s"Method $name")
           val methodParams = translateParams(params)(methodScope)
-          methodScope.declareValue("this")
+          methodScope.declareValue("this", Some(false), false)
           instance(name) := JSFuncExpr(
             N,
             methodParams,
@@ -298,7 +300,7 @@ class JSBackend {
         // Define getters for pure expressions.
         case term =>
           val getterScope = scope.derive(s"Getter $name")
-          getterScope.declareValue("this")
+          getterScope.declareValue("this", Some(false), false)
           id("Object")("defineProperty")(
             instance,
             JSExpr(name),
@@ -451,11 +453,11 @@ class JSBackend {
     val traits = new ListBuffer[TraitSymbol]()
     val classes = new ListBuffer[ClassSymbol]()
     typeDefs.foreach {
-      case TypeDef(Als, TypeName(name), tparams, body, _, _) =>
+      case TypeDef(Als, TypeName(name), tparams, body, _, _, _) =>
         topLevelScope.declareTypeAlias(name, tparams map { _.name }, body)
-      case TypeDef(Trt, TypeName(name), tparams, body, _, methods) =>
+      case TypeDef(Trt, TypeName(name), tparams, body, _, methods, _) =>
         traits += topLevelScope.declareTrait(name, tparams map { _.name }, body, methods)
-      case TypeDef(Cls, TypeName(name), tparams, baseType, _, members) =>
+      case TypeDef(Cls, TypeName(name), tparams, baseType, _, members, _) =>
         classes += topLevelScope.declareClass(name, tparams map { _.name }, baseType, members)
     }
     (traits.toList, classes.toList)
@@ -518,6 +520,7 @@ class JSBackend {
     // units. So we filter them out here.
     sorted.flatMap(sym => if (classSymbols.contains(sym)) S(sym -> baseClasses.get(sym)) else N)
   }
+  
 }
 
 class JSWebBackend extends JSBackend {
@@ -548,18 +551,24 @@ class JSWebBackend extends JSBackend {
         // <results>.push(<name>);
         // ```
         .concat(otherStmts.flatMap {
-          case Def(recursive, Var(name), L(body)) =>
-            val (translatedBody, sym) = if (recursive) {
-              val sym = topLevelScope.declareValue(name)
-              (translateTerm(body)(topLevelScope), sym)
+          case Def(recursive, Var(name), L(body), isByname) =>
+            val (originalExpr, sym) = if (recursive) {
+              val isByvalueRecIn = if (isByname) None else Some(true)
+              val sym = topLevelScope.declareValue(name, isByvalueRecIn, body.isInstanceOf[Lam])
+              val translated = translateTerm(body)(topLevelScope)
+              topLevelScope.unregisterSymbol(sym)
+              val isByvalueRecOut = if (isByname) None else Some(false)
+              (translated, topLevelScope.declareValue(name, isByvalueRecOut, body.isInstanceOf[Lam]))
             } else {
               val translatedBody = translateTerm(body)(topLevelScope)
-              (translatedBody, topLevelScope.declareValue(name))
+              val isByvalueRec = if (isByname) None else Some(false)
+              (translatedBody, topLevelScope.declareValue(name, isByvalueRec, body.isInstanceOf[Lam]))
             }
+            val translatedBody = if (sym.isByvalueRec.isEmpty && !sym.isLam) JSArrowFn(Nil, L(originalExpr)) else originalExpr
             topLevelScope.tempVars `with` JSConstDecl(sym.runtimeName, translatedBody) ::
               JSInvoke(resultsIdent("push"), JSIdent(sym.runtimeName) :: Nil).stmt :: Nil
           // Ignore type declarations.
-          case Def(_, _, R(_)) => Nil
+          case Def(_, _, R(_), isByname) => Nil
           // `exprs.push(<expr>)`.
           case term: Term =>
             topLevelScope.tempVars `with` JSInvoke(
@@ -573,7 +582,7 @@ class JSWebBackend extends JSBackend {
 }
 
 class JSTestBackend extends JSBackend {
-  private val lastResultSymbol = topLevelScope declareValue "res"
+  private val lastResultSymbol = topLevelScope.declareValue("res", Some(false), false)
   private val resultIdent = JSIdent(lastResultSymbol.runtimeName)
 
   private var numRun = 0
@@ -614,16 +623,24 @@ class JSTestBackend extends JSBackend {
 
     // Generate statements.
     val queries = otherStmts.map {
-      case Def(recursive, Var(name), L(body)) =>
+      case Def(recursive, Var(name), L(body), isByname) =>
         (if (recursive) {
-          val sym = scope.declareValue(name)
+          val isByvalueRecIn = if (isByname) None else Some(true)
+          val sym = scope.declareValue(name, isByvalueRecIn, body.isInstanceOf[Lam])
           try {
-            R((translateTerm(body), sym))
+            val translated = translateTerm(body)
+            scope.unregisterSymbol(sym)
+            val isByvalueRecOut = if (isByname) None else Some(false)
+            R((translated, scope.declareValue(name, isByvalueRecOut, body.isInstanceOf[Lam])))
           } catch {
             case e: UnimplementedError =>
               scope.stubize(sym, e.symbol)
               L(e.getMessage())
-            case e: Throwable => throw e
+            case e: Throwable =>
+              scope.unregisterSymbol(sym)
+              val isByvalueRecOut = if (isByname) None else Some(false)
+              scope.declareValue(name, isByvalueRecOut, body.isInstanceOf[Lam])
+              throw e
           }
         } else {
           (try R(translateTerm(body)) catch {
@@ -631,9 +648,17 @@ class JSTestBackend extends JSBackend {
               scope.declareStubValue(name, e.symbol)
               L(e.getMessage())
             case e: Throwable => throw e
-          }) map { expr => (expr, scope.declareValue(name)) }
-        }) match { 
-          case R((expr, sym)) =>
+          }) map {
+            val isByvalueRec = if (isByname) None else Some(false)
+            expr => (expr, scope.declareValue(name, isByvalueRec, body.isInstanceOf[Lam]))
+          }
+        }) match {
+          case R((originalExpr, sym)) =>
+            val expr = 
+              if (sym.isByvalueRec.isEmpty && !sym.isLam)
+                JSArrowFn(Nil, L(originalExpr))
+              else
+                originalExpr
             JSTestBackend.CodeQuery(
               scope.tempVars.emit(),
               ((JSIdent("globalThis").member(sym.runtimeName) := (expr match {
@@ -644,7 +669,7 @@ class JSTestBackend extends JSBackend {
             )
           case L(reason) => JSTestBackend.AbortedQuery(reason)
         }
-      case Def(_, Var(name), _) =>
+      case Def(_, Var(name), _, _) =>
         scope.declareStubValue(name)
         JSTestBackend.EmptyQuery
       case term: Term =>
