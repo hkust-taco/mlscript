@@ -3,11 +3,11 @@ def a = 1
 def b = 2
 def c = 3
 //│ a: 1
-//│  = 1
+//│  = [Function: a]
 //│ b: 2
-//│  = 2
+//│  = [Function: b]
 //│ c: 3
-//│  = 3
+//│  = [Function: c]
 
 if true then if true then a else b else a
 //│ res: 1 | 2
@@ -24,7 +24,7 @@ class Bar: {}
 
 def foo = Foo { field = id 1 }
 //│ foo: Foo[1]
-//│    = Foo { field: 1 }
+//│    = [Function: foo]
 
 (if true then foo else { field = 2 }).field
 //│ res: 1 | 2

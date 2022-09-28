@@ -61,7 +61,7 @@ def arr = (1,2)
 //│ (1, 2,)
 //│   <:  arr:
 //│ Array[int]
-//│    = [ 1, 2 ]
+//│    = [Function: arr]
 
 fr = f r
 fr : Array[int] & {b: int}

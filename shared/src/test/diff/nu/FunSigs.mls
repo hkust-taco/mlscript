@@ -1,0 +1,48 @@
+:NewParser
+
+
+fun log(msg: string): unit
+//│ log: (msg: string,) -> unit
+//│    = <missing implementation>
+
+let f =
+  log("ok")
+  123
+//│ f: 123
+//│  = <no result>
+//│    log is not implemented
+
+// FIXME
+fun log: string -> unit
+//│ ╔══[PARSE ERROR] Unexpected '->' keyword in expression position
+//│ ║  l.16: 	fun log: string -> unit
+//│ ╙──      	                ^^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.16: 	fun log: string -> unit
+//│ ╙──      	         ^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Wrong number of type arguments – expected 0, found 1
+//│ ║  l.16: 	fun log: string -> unit
+//│ ╙──      	         ^^^^^^^^^^^^^^
+//│ log: string
+//│    = <missing implementation>
+
+fun log: string => unit
+//│ log: string -> unit
+//│    = <missing implementation>
+
+log("ok")
+//│ = <no result>
+//│   log is not implemented
+
+
+fun con: string => string => string
+//│ con: string -> string -> string
+//│    = <missing implementation>
+
+fun con = concat
+//│ string -> string -> string
+//│   <:  con:
+//│ string -> string -> string
+//│    = [Function: con]
+
+

@@ -1,0 +1,15 @@
+
+// TODO comments
+1 // whoops
+//│ |1| |/* whoops*/|
+//│ ╔══[PARSE ERROR] Unexpected comment in expression position
+//│ ║  l.3: 	1 // whoops
+//│ ╙──     	  ^^^^^^^^^
+//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.3: 	1 // whoops
+//│ ╙──     	           ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.3: 	1 // whoops
+//│ ╙──     	^^^^^^^^^^^
+//│ Parsed: {1 (undefined,)}
+

@@ -26,7 +26,7 @@ let f = fun x => x
 //│ ╔══[PARSE ERROR] Unexpected 'fun' keyword in expression position
 //│ ║  l.24: 	let f = fun x => x
 //│ ╙──      	        ^^^
-//│ Parsed: {fun f = x, => x}
+//│ Parsed: {let f = x, => x}
 
 
 fun f x = x

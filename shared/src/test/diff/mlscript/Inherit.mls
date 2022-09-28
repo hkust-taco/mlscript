@@ -7,7 +7,7 @@ class Child: Parent & { age: int }
 
 def p = Parent{ name = "Bob" }
 //│ p: Parent & {name: "Bob"}
-//│  = Parent { name: 'Bob' }
+//│  = [Function: p]
 
 p: Parent
 //│ res: Parent
@@ -22,11 +22,11 @@ def c = Child(Parent { name = "Bob" })
 //│ ║  l.17: 	def c = Child(Parent { name = "Bob" })
 //│ ╙──      	              ^^^^^^^^^^^^^^^^^^^^^^^
 //│ c: Child & {age: nothing, name: "Bob"} | error
-//│  = Child { name: 'Bob', age: undefined }
+//│  = [Function: c]
 
 def c = Child(Parent { name = "Bob" } with { age = 123 })
 //│ c: Child & {age: 123, name: "Bob"}
-//│  = Child { name: 'Bob', age: 123 }
+//│  = [Function: c1]
 
 c: Parent
 //│ res: Parent

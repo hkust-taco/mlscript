@@ -1,0 +1,40 @@
+def key: ((string, (false) | (true), )) -> (string)
+def value: ((string, (false) | (true), )) -> ((false) | (true))
+def third: ((number, number, number, )) -> (number)
+def vec2: (number) -> ((number) -> ((number, number, )))
+def twoFunctions: (((number) -> (number), (number) -> (number), )) -> ((number) -> (number))
+def tupleIt: (string) -> ((unit -> (string), ))
+def s: ((false) | (true)) -> (((string) | (number), ((number) | (false)) | (true), ))
+def s2: (((false) | (true), (string) | (number), )) -> ((string) | (number))
+def ex[T, U]: (T) -> ((U) -> ((T, U, (T) & (U), )))
+def foo[T, U]: (((T) & (U), )) -> (unit)
+def conv: ({ y: number }) -> (({ y: number }, { z: string }, ))
+class A: { x: number }
+class B: {}
+def swap: ((A, B, )) -> ((B, A, ))
+//│ Defined class A
+//│ Defined class B
+//│ key: (string, bool,) -> string
+//│    = <missing implementation>
+//│ value: (string, bool,) -> bool
+//│      = <missing implementation>
+//│ third: (number, number, number,) -> number
+//│      = <missing implementation>
+//│ vec2: number -> number -> (number, number,)
+//│     = <missing implementation>
+//│ twoFunctions: (number -> number, number -> number,) -> number -> number
+//│             = <missing implementation>
+//│ tupleIt: string -> (unit -> string,)
+//│        = <missing implementation>
+//│ s: bool -> (number | string, false | number | true,)
+//│  = <missing implementation>
+//│ s2: (bool, number | string,) -> (number | string)
+//│   = <missing implementation>
+//│ ex: 'a -> 'b -> ('a, 'b, 'a & 'b,)
+//│   = <missing implementation>
+//│ foo: anything -> unit
+//│    = <missing implementation>
+//│ conv: {y: number} -> ({y: number}, {z: string},)
+//│     = <missing implementation>
+//│ swap: (A, B,) -> (B, A,)
+//│     = <missing implementation>
