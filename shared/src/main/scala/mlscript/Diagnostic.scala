@@ -30,7 +30,7 @@ final case class ErrorReport(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]], sou
 }
 object ErrorReport {
   def apply(msgs: Ls[Message -> Opt[Loc]], source: Source = Typing): ErrorReport =
-    ErrorReport(msgs.head._1.show.toString, msgs, source)
+    ErrorReport(msgs.head._1.show, msgs, source)
 }
 
 final case class WarningReport(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]], source: Source) extends Diagnostic(mainMsg) {
@@ -38,7 +38,7 @@ final case class WarningReport(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]], s
 }
 object WarningReport {
   def apply(msgs: Ls[Message -> Opt[Loc]], source: Source = Typing): WarningReport =
-    WarningReport(msgs.head._1.show.toString, msgs, source)
+    WarningReport(msgs.head._1.show, msgs, source)
 }
 
 

@@ -446,7 +446,7 @@ class DiffTests
                       val tvarVariance = tvv.getOrElse(tvar, throw new Exception(
                         s"Type variable $tvar not found in variance store ${ttd.tvarVariances} for $ttd"))
                       SourceCode(s"${tvarVariance.show}${tname.name}")
-                    }.toList).toString()
+                    })
                   else
                     SourceCode("")
                 output(s"Defined " + td.kind.str + " " + tn + params)
@@ -488,8 +488,8 @@ class DiffTests
             
             if (!varianceWarnings.isEmpty) {
               import Message._
-              val diags = varianceWarnings.map{ case (tname, biVars) =>
-                val warnings = biVars.map( tname => msg"${tname.name} is irrelevant and may be removed" -> tname.toLoc).toList
+              val diags = varianceWarnings.iterator.map { case (tname, biVars) =>
+                val warnings = biVars.map( tname => msg"${tname.name} is irrelevant and may be removed" -> tname.toLoc)
                 WarningReport(msg"Type definition ${tname.name} has bivariant type parameters:" -> tname.toLoc :: warnings)
               }.toList
               report(diags)

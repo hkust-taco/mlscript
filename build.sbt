@@ -2,7 +2,7 @@ import Wart._
 
 enablePlugins(ScalaJSPlugin)
 
-ThisBuild / scalaVersion     := "2.13.8"
+ThisBuild / scalaVersion     := "2.13.9"
 ThisBuild / version          := "0.1.0-SNAPSHOT"
 ThisBuild / organization     := "io.lptk"
 ThisBuild / organizationName := "LPTK"
@@ -35,13 +35,11 @@ lazy val mlscript = crossProject(JSPlatform, JVMPlatform).in(file("."))
       StringPlusAny, Any,
       JavaSerializable, Serializable, Product,
       LeakingSealed, Overloading,
-      Option2Iterable, TraversableOps, ListAppend
+      Option2Iterable, IterableOps, ListAppend
     ),
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.12" % Test,
-    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.8",
+    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.3.0",
     libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.3.3",
-    libraryDependencies += "com.lihaoyi" %% "fansi" % "0.2.14",
-    // libraryDependencies += "com.lihaoyi" %%% "fansi" % "0.2.7", // FIXME does not resolve — why?
     libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.8.0",
     // 
     watchSources += WatchSource(

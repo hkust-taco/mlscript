@@ -646,7 +646,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         case Some(tv) => tv
         case None if rigidify =>
           val rv = TraitTag( // Rigid type variables (ie, skolems) are encoded as TraitTag-s
-            Var(tv.nameHint.getOrElse("_"+freshVar(noProv).toString).toString))(tv.prov)
+            Var(tv.nameHint.getOrElse("_"+freshVar(noProv).toString)))(tv.prov)
           if (tv.lowerBounds.nonEmpty || tv.upperBounds.nonEmpty) {
             // The bounds of `tv` may be recursive (refer to `tv` itself),
             //    so here we create a fresh variabe that will be able to tie the presumed recursive knot

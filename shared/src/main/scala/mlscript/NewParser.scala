@@ -133,7 +133,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   private var _cur: Ls[TokLoc] = tokens
   
   private def summarizeCur =
-    NewLexer.printTokens(_cur.take(5)) + (if (_cur.size > 5) "..." else "")
+    NewLexer.printTokens(_cur.take(5)) + (if (_cur.sizeIs > 5) "..." else "")
   
   private def cur(implicit l: Line, n: Name) = {
     if (dbg) printDbg(s"? ${n.value}\t\tinspects ${summarizeCur}    [at l.${l.value}]")

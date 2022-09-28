@@ -184,7 +184,7 @@ object Main {
                   // The rest of the message may not make sense if we don't also print the provs
                   // For example we'd get things like "Declared at\nDeclared at" for dup type params...
                   err.allMsgs.tail
-                    .map(_._1.show.toString + "<br/>")
+                    .map(_._1.show + "<br/>")
                     .mkString("&nbsp;&nbsp;&nbsp;&nbsp;")}-->
                 </font></b><br/>"""
     }

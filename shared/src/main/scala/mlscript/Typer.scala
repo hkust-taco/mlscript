@@ -266,7 +266,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case Neg(t) => NegType(rec(t))(tyTp(ty.toLoc, "type negation"))
       case Record(fs) => 
         val prov = tyTp(ty.toLoc, "record type")
-        fs.groupMap(_._1.name)(_._1).foreach { case s -> fieldNames if fieldNames.size > 1 => err(
+        fs.groupMap(_._1.name)(_._1).foreach { case s -> fieldNames if fieldNames.sizeIs > 1 => err(
             msg"Multiple declarations of field name ${s} in ${prov.desc}" -> ty.toLoc
               :: fieldNames.map(tp => msg"Declared at" -> tp.toLoc))(raise)
           case _ =>
@@ -293,7 +293,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case tn @ TypeName(name) =>
         val tyLoc = ty.toLoc
         val tpr = tyTp(tyLoc, "type reference")
-        vars.get(name).getOrElse {
+        vars.getOrElse(name, {
           typeNamed(tyLoc, name) match {
             case R((_, tpnum)) =>
               if (tpnum =/= 0) {
@@ -311,7 +311,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                 case _ => e()
               }
           }
-        }
+        })
       case tv: TypeVar =>
         // assert(ty.toLoc.isDefined)
         recVars.getOrElse(tv,
@@ -512,7 +512,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         typeTerm(lhs) & (typeTerm(rhs), prov)
       case Rcd(fs) =>
         val prov = tp(term.toLoc, "record literal")
-        fs.groupMap(_._1.name)(_._1).foreach { case s -> fieldNames if fieldNames.size > 1 => err(
+        fs.groupMap(_._1.name)(_._1).foreach { case s -> fieldNames if fieldNames.sizeIs > 1 => err(
             msg"Multiple declarations of field name ${s} in ${prov.desc}" -> term.toLoc
               :: fieldNames.map(tp => msg"Declared at" -> tp.toLoc))(raise)
           case _ =>
@@ -842,7 +842,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             (Var("_" + (i + 1)), t.toUpper(noProv))
         }.toList
         RecordType.mk(fs)(prov)
-      } else TupleType(fields.reverseIterator.mapValues(_.toUpper(noProv)).toList)(prov)
+      } else TupleType(fields.reverseIterator.mapValues(_.toUpper(noProv)))(prov)
   }
   
   
