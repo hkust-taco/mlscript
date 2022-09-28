@@ -10,7 +10,7 @@ class Success: { result: anything }
 def NotFound = NotFound {}
 def Success result = Success { result }
 //│ NotFound: NotFound
-//│         = NotFound {}
+//│         = [Function: NotFound1]
 //│ Success: 'result -> (Success with {result: 'result})
 //│        = [Function: Success1]
 
@@ -30,7 +30,7 @@ type List[A] = Nil | Cons[A]
 
 def Nil = Nil {}
 //│ Nil: Nil
-//│    = Nil {}
+//│    = [Function: Nil1]
 
 def Cons head tail = Cons { head; tail }
 //│ Cons: ('head & 'A) -> (List['A] & 'tail) -> (Cons['A] with {head: 'head, tail: 'tail})
@@ -86,55 +86,21 @@ class App[a]: Lambda & { lhs: a; rhs: a }
 //│ Defined class Abs[+a]
 //│ Defined class App[+a]
 
-def f x = (x.a <- 0, x)
-//│ f: ({mut a: in 0} & 'a) -> (unit, 'a,)
-//│  = [Function: f]
-
-f { mut a = 1 }
-//│ res: (unit, {mut a: 'a},)
-//│   where
-//│     'a :> 0 | 1
-//│    = [ [], { a: 0 } ]
+:js
+def incr: {a: int} -> unit
+// def incr x = x.a <- x.a + 1
+//│ // Query 1 is empty
+//│ // End of generated code
+//│ incr: {a: int} -> unit
+//│     = <missing implementation>
 
 :js
-def incr x = x.a <- x.a + 1
-//│ // Query 1
-//│ globalThis.incr = function incr(x) {
-//│   return x.a = x.a + 1, [];
-//│ };
+def gensym: () -> (unit, {a: 'a},)
+// def gensym = let n = { mut a = 0 } in fun () -> (incr n, n)
+//│ // Query 1 is empty
 //│ // End of generated code
-//│ incr: {mut a: int} -> unit
-//│     = [Function: incr]
-
-:js
-def gensym = let n = { mut a = 0 } in fun () -> (incr n, n)
-//│ // Query 1
-//│ globalThis.gensym = ((n) => () => [
-//│   incr(n),
-//│   n
-//│ ])({ a: 0 });
-//│ // End of generated code
-//│ gensym: () -> (unit, {mut a: 'a},)
-//│   where
-//│     'a :> 0
-//│       = [Function (anonymous)]
-
-:js
-gensym ()
-//│ // Query 1
-//│ res = gensym();
-//│ // End of generated code
-//│ res: (unit, {mut a: 'a},)
-//│   where
-//│     'a :> 0
-//│    = [ [], { a: 1 } ]
-
-// ?
-gensym ()
-//│ res: (unit, {mut a: 'a},)
-//│   where
-//│     'a :> 0
-//│    = [ [], { a: 2 } ]
+//│ gensym: () -> (unit, {a: nothing},)
+//│       = <missing implementation>
 
 def int_to_string: int -> string
 //│ int_to_string: int -> string
@@ -148,7 +114,7 @@ def eval_lambda eval_rec subst v = case v of {
     | Abs -> eval_rec (Cons (Tuple l1.name l2) Nil) l1.body
     | _ -> App { lhs = l1; rhs = l2 }
     }
-  | Abs -> let new_name = int_to_string (gensym ())._2.a in
+  | Abs -> let new_name = int_to_string ((gensym ())._2.a) in
     Abs { name = new_name;
           body = eval_rec (Cons (Tuple v.name (Var { name = new_name })) subst) v.body }
   }
@@ -416,6 +382,3 @@ def eval_lexpr' eval_rec subst v = case v of {
 //│     'b <: (Cons[?] with {head: {_1: string, _2: 'c -> 'result}, tail: 'b}) | Nil
 //│            = <no result>
 //│              eval_var, list_assoc and eq are not implemented
-
-// rec def eval4 subst = eval_lexpr' eval4 subst ???
-
