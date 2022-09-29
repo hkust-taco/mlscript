@@ -45,7 +45,8 @@ class DiffTests
   
   override val defaultTestSignaler: Signaler = new Signaler {
     @annotation.nowarn("msg=method stop in class Thread is deprecated") def apply(testThread: Thread): Unit = {
-      println(s"!! Test at $testThread has run out out time !! stopping...")
+      println(s"!! Test at $testThread has run out out time !! stopping..." +
+        "\n\tNote: you can increase this limit by changing DiffTests.TimeLimit")
       // * Thread.stop() is considered bad practice because normally it's better to implement proper logic
       // * to terminate threads gracefully, avoiding leaving applications in a bad state.
       // * But here we DGAF since all the test is doing is runnign a type checker and some Node REPL,
@@ -807,7 +808,7 @@ object DiffTests {
   
   private val TimeLimit =
     if (sys.env.get("CI").isDefined) Span(25, Seconds)
-    else Span(5, Seconds)
+    else Span(10, Seconds)
   
   private val pwd = os.pwd
   private val dir = pwd/"shared"/"src"/"test"/"diff"
