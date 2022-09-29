@@ -149,11 +149,11 @@ final class TsTypegenCodeBuilder {
     var traitDeclaration = SourceCode(s"export interface $traitName") ++ SourceCode.paramList(typeParams)
     val superTraits = typeScope.resolveImplementedTraits(traitBody)
     if (!superTraits.isEmpty) {
-      val superTraitsCode = superTraits.map(symb => {
+      val superTraitsCode = superTraits.map { symb =>
         val traitName = symb.lexicalName
         val traitParams = symb.params.iterator.map(SourceCode(_)).toList
         SourceCode(s"$traitName") ++ SourceCode.paramList(traitParams)
-      }).toList
+      }
       traitDeclaration ++= SourceCode(" extends ") ++ SourceCode.sepBy(superTraitsCode)
     }
     traitDeclaration ++= SourceCode.space ++ SourceCode.openCurlyBrace
@@ -433,7 +433,6 @@ final class TsTypegenCodeBuilder {
               val argType = toTsType(field._2.out)
               SourceCode(s"$arg: ") ++ argType
             }
-            .toList
           SourceCode.sepBy(argList).parenthesized
         }
         // regular tuple becomes fixed length array
@@ -504,7 +503,7 @@ final class TsTypegenCodeBuilder {
               // recursive type variable from outer scope have been converted
               // to type aliases. They do not need to be part of type parameters.
               // filter for type vars that are not declared as type aliases in type scope
-              typeVarMapping.get(tup._1).flatMap(varName => typeScope.getTypeAliasSymbol(varName.toString())).isEmpty
+              typeVarMapping.get(tup._1).flatMap(varName => typeScope.getTypeAliasSymbol(varName)).isEmpty
             )
             .map(_._2)
             .toList
@@ -564,19 +563,16 @@ final class TsTypegenCodeBuilder {
         toTsType(Inter(Rem(base, rcd.fields.map(tup => tup._1)), rcd))
       // get clash free name for type variable
       case t @ TypeVar(_, _) =>
-        val tvarName = typegenCtx.typeVarMapping
-          .get(t)
-          .getOrElse({
-            throw CodeGenError(s"Did not find mapping for type variable $t. Unable to generated ts type.")
-          })
+        val tvarName = typegenCtx.typeVarMapping.getOrElse(t,
+          throw CodeGenError(s"Did not find mapping for type variable $t. Unable to generated ts type."))
 
         // return type alias form if it exists
-        typeScope.getTypeAliasSymbol(tvarName).map(taliasInfo => {
+        typeScope.getTypeAliasSymbol(tvarName).map { taliasInfo =>
           SourceCode(taliasInfo.lexicalName) ++ SourceCode.paramList(taliasInfo.params.map(SourceCode(_)))
-        }).getOrElse(SourceCode(tvarName))
+        }.getOrElse(SourceCode(tvarName))
       case Constrained(base, where) =>
         throw CodeGenError(s"Cannot generate type for `where` clause $where")
-      case _: Splice =>
+      case _: Splice | _: TypeTag =>
         throw CodeGenError(s"Cannot yet generate type for splices")
     }
   }

@@ -36,11 +36,11 @@ Hey t
 //│ ╟── Note: constraint arises from record type:
 //│ ║  l.22: 	trait Hey: { x: int }
 //│ ╙──      	           ^^^^^^^^^^
-//│ res: (1, 2, 3,) & hey | error
+//│ res: (1, 2, 3,) & #Hey | error
 //│    = [ 1, 2, 3 ]
 
 htx = Hey tx
-//│ htx: (1, 2, 3,) & {x: 1} & hey
+//│ htx: (1, 2, 3,) & {x: 1} & #Hey
 //│    = [ 1, 2, 3, x: 1 ]
 
 htx.x
@@ -102,10 +102,10 @@ f htx
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.73: 	f htx
 //│ ║        	^^^^^
-//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` does not match type `(?a, ?b,) | ~hey`
+//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` does not match type `(?a, ?b,) | ~#Hey`
 //│ ║  l.11: 	tx = t with { x = 1 }
 //│ ║        	     ^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(?c, ?d,) | ~hey`
+//│ ╟── but it flows into reference with expected type `(?c, ?d,) | ~#Hey`
 //│ ║  l.73: 	f htx
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from tuple literal:
@@ -116,7 +116,7 @@ f htx
 
 
 g arg = case arg of { Hey -> arg.x | _ -> () }
-//│ g: ({x: 'x} & hey | ~hey) -> (() | 'x)
+//│ g: ({x: 'x} & #Hey | ~#Hey) -> (() | 'x)
 //│  = [Function: g]
 
 g htx
@@ -128,7 +128,7 @@ g tx
 
 // TODO: pattern match for traits in JavaScript
 g arg = case arg of { Hey -> arg.x | _ -> arg.y }
-//│ g: ({x: 'x} & hey | {y: 'x} & ~hey) -> 'x
+//│ g: ({x: 'x} & #Hey | {y: 'x} & ~#Hey) -> 'x
 //│  = [Function: g1]
 
 g htx
@@ -143,7 +143,7 @@ g tx
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.142: 	g tx
 //│ ║         	^^^^
-//│ ╟── expression of type `(1, 2, 3,) & {x: 1} & ~hey` does not have field 'y'
+//│ ╟── expression of type `(1, 2, 3,) & {x: 1} & ~#Hey` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.130: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ╙──       	                                          ^^^^^

@@ -111,7 +111,7 @@ T { x = 0 }
 //│ // Query 1
 //│ res = T.build({ x: 0 });
 //│ // End of generated code
-//│ res: {x: 0} & t
+//│ res: {x: 0} & #T
 //│    = { x: 0 }
 
 // App(callee, Tup(args)): Call a constructor
