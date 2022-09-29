@@ -7,7 +7,14 @@ import js.JSConverters._
 import ts2mls.types._
 
 object TypeScript {
-  private val ts = g.require("typescript")
+  private val ts: js.Dynamic = try g.require("typescript") catch {
+    case _ : Throwable => {
+      System.err.println("Cannot find typescript in the current directory. Please install by running \"npm install\".")
+      val process = g.require("process")
+      process.exit(-1)
+      g.undefined
+    }
+  }
 
   val typeFlagsEnumLike = ts.TypeFlags.EnumLike
   val typeFlagsObject = ts.TypeFlags.Object
