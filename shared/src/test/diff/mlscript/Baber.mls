@@ -1,0 +1,37 @@
+
+class Foo[A]: { x: A }
+class Bar
+//│ Defined class Foo[+A]
+//│ Defined class Bar
+
+def f e = case e of
+  Foo -> e.y,
+  Foo -> e.z,
+  _ -> e
+//│ f: (Foo[?] & {y: 'y} | 'y & ~#Foo) -> 'y
+//│  = [Function: f]
+
+:ns
+f
+//│ res: 'a -> ('y | 'z | 'b)
+//│   where
+//│     'a <: #Foo & 'c | (#Foo & 'd | 'b & ~#Foo) & ~#Foo
+//│     'd <: {z: 'z}
+//│     'c <: {y: 'y}
+//│    = [Function: f]
+
+class Foo2: Foo[int] & { y: int }
+//│ Defined class Foo2
+
+f (Foo2{x=1;y=2})
+//│ res: 2
+//│    = 2
+
+// #Foo
+
+def f e = case e of
+  Foo2 -> e.y,
+  Foo -> e.z,
+//│ f: ((Foo2\x with {y: 'y}) | Foo[?] & {z: 'y} & ~#Foo2) -> 'y
+//│  = [Function: f1]
+

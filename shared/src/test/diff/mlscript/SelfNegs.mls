@@ -1,0 +1,20 @@
+
+// * Here the two occurrences of `'a` in different types are separate:
+def foo(f: (~'a) -> 'a, a: 'a) =
+  f a
+//│ foo: (~'a -> 'a, ~'a,) -> 'a
+//│    = [Function: foo]
+
+def foo(fa: ((~'a) -> 'a, 'a)) =
+  fa._1 fa._2
+//│ foo: (~'a -> 'a, 'a,) -> 'a
+//│    = [Function: foo1]
+
+:ns
+foo
+//│ res: (~'a -> 'a, 'a,) -> 'b
+//│   where
+//│     'a <: 'b & 'c
+//│     'c <: ~'a
+//│    = [Function: foo1]
+
