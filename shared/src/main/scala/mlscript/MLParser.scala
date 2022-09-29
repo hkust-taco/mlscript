@@ -204,7 +204,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
           ms.collect { case R(md) => md }, ms.collect{ case L(md) => md }, Nil)
       }
       case (k @ Als, id, ts) => "=" ~ ty map (bod => TypeDef(k, id, ts, bod, Nil, Nil, Nil))
-      case (k @ Nms, _, _) => throw new AssertionError("Namespaces are not supported yet.")
+      case (k @ Nms, _, _) => throw new NotImplementedError("Namespaces are not supported yet.")
     })
   def tyParams[p: P]: P[Ls[TypeName]] =
     ("[" ~ tyName.rep(0, ",") ~ "]").?.map(_.toList.flatten)
