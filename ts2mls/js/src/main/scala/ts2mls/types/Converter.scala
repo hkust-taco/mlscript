@@ -26,7 +26,7 @@ object Converter {
     }
     case overload @ TSIgnoredOverload(base, _) => s"${generateFunDeclaration(base, name)} ${overload.warning}"
     case inter: TSIntersectionType => s"${indent}fun ${name}: ${Converter.convert(inter)}"
-    case _ => throw new Exception("non-function type is not allowed.")
+    case _ => require(false, "non-function type is not allowed."); ""
   }
 
   def convert(tsType: TSType)(implicit indent: String = ""): String = tsType match {
