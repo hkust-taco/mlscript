@@ -91,7 +91,7 @@ def f x = let xx = id2 x in case xx of { A -> B{} | _ -> xx }
 
 // Actually ~A !!
 def g x = case x of { A -> id2 x | _ -> x }
-//│ g: ('a & (A | ~a)) -> 'a
+//│ g: ('a & (A | ~#A)) -> 'a
 //│  = [Function: g]
 
 g (C{})
