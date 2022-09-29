@@ -57,15 +57,13 @@ object Polyfill {
       "prettyPrint",
       (name: Str) => {
         val arg = JSIdent("value")
-        val default = arg.member("constructor").member("name") + JSExpr(" ") +
-          JSIdent("JSON").member("stringify")(arg, JSIdent("undefined"), JSIdent("2"))
         JSFuncDecl(
           name,
           JSNamePattern("value") :: Nil,
           arg
             .typeof()
             .switch(
-              default.`return` :: Nil,
+              JSIdent("String")(arg).`return` :: Nil,
               JSExpr("number") -> Nil,
               JSExpr("boolean") -> {
                 arg.member("toString")().`return` :: Nil
@@ -76,7 +74,21 @@ object Polyfill {
                 val repr = JSExpr("[Function: ") + name + JSExpr("]")
                 (repr.`return` :: Nil)
               },
-              JSExpr("string") -> ((JSExpr("\"") + arg + JSExpr("\"")).`return` :: Nil)
+              JSExpr("string") -> ((JSExpr("\"") + arg + JSExpr("\"")).`return` :: Nil),
+              JSExpr("undefined") -> (JSExpr("undefined").`return` :: Nil),
+              JSExpr("object") -> (JSIfStmt(
+                arg :=== JSIdent("null"),
+                JSExpr("null").`return` :: Nil,
+                JSTryStmt(
+                  (arg.member("constructor").member("name") +
+                    JSExpr(" ") +
+                    JSIdent("JSON").member("stringify")(arg, JSIdent("undefined"), JSIdent("2"))).`return` :: Nil,
+                  JSCatchClause(
+                    JSIdent("_"),
+                    JSIdent("String")(arg).`return` :: Nil,
+                  )
+                ) :: Nil,
+              ) :: Nil)
             ) :: Nil,
         )
       }
