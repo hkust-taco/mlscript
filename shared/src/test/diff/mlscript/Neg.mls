@@ -82,7 +82,7 @@ def f: ~lit & {x:int} -> int // Note the precedence!
 //│  = <missing implementation>
 
 def f: (~lit & {x:int}) -> int
-//│ f: ({x: int} & ~lit) -> int
+//│ f: ({x: int} & ~#Lit) -> int
 //│  = <missing implementation>
 
 // :ds
@@ -133,6 +133,6 @@ def f: (~{x: 1 | 2} & 'a | ~{x: 2 | 3} & 'a) -> 'a
 //│  = <missing implementation>
 
 def f: (~{x: 1 | 2} & ~lit & 'a | ~{x: 2 | 3} & ~lit & 'a) -> 'a
-//│ f: ('a & ~{x: 2} & ~lit) -> 'a
+//│ f: ('a & ~{x: 2} & ~#Lit) -> 'a
 //│  = <missing implementation>
 

@@ -6,7 +6,7 @@ class None: {}
 
 
 def flatMap3 = fun f -> fun opt -> case opt of { Some -> f opt | _ -> opt }
-//│ flatMap3: ('a -> 'b) -> (Some[?] & 'a | 'b & ~some) -> 'b
+//│ flatMap3: ('a -> 'b) -> (Some[?] & 'a | 'b & ~#Some) -> 'b
 //│         = [Function: flatMap3]
 
 
@@ -34,7 +34,7 @@ flatMap3 (fun x -> x.value) arg
 
 
 def foo = flatMap3 (fun x -> x.value)
-//│ foo: ((Some[?] with {value: 'a}) | 'a & ~some) -> 'a
+//│ foo: ((Some[?] with {value: 'a}) | 'a & ~#Some) -> 'a
 //│    = [Function: foo]
 
 foo arg
@@ -68,7 +68,7 @@ fun f -> flatMap3 f arg
 
 
 def foo = flatMap3 (fun x -> x)
-//│ foo: ('a & (Some[?] | ~some)) -> 'a
+//│ foo: ('a & (Some[?] | ~#Some)) -> 'a
 //│    = [Function: foo1]
 
 foo 1

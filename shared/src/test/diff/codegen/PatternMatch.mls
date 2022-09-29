@@ -4,7 +4,7 @@ trait T
 // Traits with Primitives
 
 t = T 1
-//│ t: 1 & t
+//│ t: 1 & #T
 //│  = [Number: 1]
 
 t + 1

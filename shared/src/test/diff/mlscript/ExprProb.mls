@@ -32,7 +32,7 @@ rec def eval1_stub k e = case e of {
   }
 //│ eval1_stub: ('a -> 'b) -> 'c -> 'b
 //│   where
-//│     'c <: Add[?] & {lhs: 'c} | 'a & ~add
+//│     'c <: Add[?] & {lhs: 'c} | 'a & ~#Add
 //│           = [Function: eval1_stub]
 
 rec def eval1_stub k e = case e of {
@@ -41,7 +41,7 @@ rec def eval1_stub k e = case e of {
   }
 //│ eval1_stub: ('a -> int) -> 'b -> int
 //│   where
-//│     'b <: Add[?] & {lhs: 'b, rhs: 'b} | 'a & ~add
+//│     'b <: Add[?] & {lhs: 'b, rhs: 'b} | 'a & ~#Add
 //│           = [Function: eval1_stub1]
 
 :ns
@@ -55,7 +55,7 @@ rec def eval1_stub e = case e of {
 //│     'eval1_stub :> 'a -> (1 | 'b | 0)
 //│                 <: 'lhs -> 'b
 //│     'b :> 1 | 'b | 0
-//│     'a <: lit & 'c | (add & 'd | 'e & ~add) & ~lit
+//│     'a <: #Lit & 'c | (#Add & 'd | 'e & ~#Add) & ~#Lit
 //│     'd <: {lhs: 'lhs}
 //│     'lhs <: 'a
 //│           = [Function: eval1_stub2]
@@ -75,7 +75,7 @@ rec def eval1 k e = case e of {
   }
 //│ eval1: ('a -> int) -> 'b -> int
 //│   where
-//│     'b <: Add[?] & {lhs: 'b, rhs: 'b} | Lit | 'a & ~add & ~lit
+//│     'b <: Add[?] & {lhs: 'b, rhs: 'b} | Lit | 'a & ~#Add & ~#Lit
 //│      = [Function: eval1]
 //│ constrain calls  : 79
 //│ annoying  calls  : 0
@@ -96,7 +96,7 @@ eval1
 //│     'h :> 'val | 'c | 'd
 //│        <: int
 //│     'c := int
-//│     'b <: lit & 'i | (add & 'j | 'k & ~add) & ~lit
+//│     'b <: #Lit & 'i | (#Add & 'j | 'k & ~#Add) & ~#Lit
 //│     'j <: {rhs: 'rhs} & {lhs: 'lhs}
 //│     'lhs <: 'b
 //│     'rhs <: 'b
@@ -134,7 +134,7 @@ error: ('a & ~Add[?]) -> 'a
 
 :re
 error: ('a & ~add) -> 'a
-//│ res: ('a & ~add) -> 'a
+//│ res: ('a & ~#Add) -> 'a
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
@@ -156,7 +156,7 @@ eval1_ty_ugly
 def eval1_ty_ugly = eval1
 //│ ('a -> int) -> 'b -> int
 //│   where
-//│     'b <: Add[?] & {lhs: 'b, rhs: 'b} | Lit | 'a & ~add & ~lit
+//│     'b <: Add[?] & {lhs: 'b, rhs: 'b} | Lit | 'a & ~#Add & ~#Lit
 //│   <:  eval1_ty_ugly:
 //│ ('a -> int) -> 'b -> int
 //│   where
@@ -170,13 +170,13 @@ def eval1_ty_ugly = eval1
 def eval1_ty: ('a -> int) -> (Lit | Add['b] | 'a & ~lit & ~add as 'b) -> int
 //│ eval1_ty: ('a -> int) -> 'b -> int
 //│   where
-//│     'b := Lit | Add['b] | 'a & ~lit & ~add
+//│     'b := Lit | Add['b] | 'a & ~#Lit & ~#Add
 //│         = <missing implementation>
 
 eval1_ty
 //│ res: ('a -> int) -> 'b -> int
 //│   where
-//│     'b <: 'a & ~add & ~lit | Add['b] | Lit
+//│     'b <: 'a & ~#Add & ~#Lit | Add['b] | Lit
 //│    = <no result>
 //│      eval1_ty is not implemented
 
@@ -184,11 +184,11 @@ eval1_ty
 def eval1_ty = eval1
 //│ ('a -> int) -> 'b -> int
 //│   where
-//│     'b <: Add[?] & {lhs: 'b, rhs: 'b} | Lit | 'a & ~add & ~lit
+//│     'b <: Add[?] & {lhs: 'b, rhs: 'b} | Lit | 'a & ~#Add & ~#Lit
 //│   <:  eval1_ty:
 //│ ('a -> int) -> 'b -> int
 //│   where
-//│     'b <: 'a & ~add & ~lit | Add['b] | Lit
+//│     'b <: 'a & ~#Add & ~#Lit | Add['b] | Lit
 //│         = [Function: eval1_ty]
 //│ constrain calls  : 78
 //│ annoying  calls  : 36
@@ -198,7 +198,7 @@ def eval1_ty = eval1
 eval1_ty_ugly = eval1_ty
 //│ ('a -> int) -> 'b -> int
 //│   where
-//│     'b <: 'a & ~add & ~lit | Add['b] | Lit
+//│     'b <: 'a & ~#Add & ~#Lit | Add['b] | Lit
 //│   <:  eval1_ty_ugly:
 //│ ('a -> int) -> 'b -> int
 //│   where
@@ -216,7 +216,7 @@ eval1_ty = eval1_ty_ugly
 //│   <:  eval1_ty:
 //│ ('a -> int) -> 'b -> int
 //│   where
-//│     'b <: 'a & ~add & ~lit | Add['b] | Lit
+//│     'b <: 'a & ~#Add & ~#Lit | Add['b] | Lit
 //│         = [Function: eval1]
 //│ constrain calls  : 139
 //│ annoying  calls  : 315
@@ -240,7 +240,7 @@ eval1_ty
 def eval1_ty = eval1
 //│ ('a -> int) -> 'b -> int
 //│   where
-//│     'b <: Add[?] & {lhs: 'b, rhs: 'b} | Lit | 'a & ~add & ~lit
+//│     'b <: Add[?] & {lhs: 'b, rhs: 'b} | Lit | 'a & ~#Add & ~#Lit
 //│   <:  eval1_ty:
 //│ ('a -> int) -> E1['a] -> int
 //│         = [Function: eval1_ty2]
@@ -257,7 +257,7 @@ rec def pretty1 k e = case e of {
   }
 //│ pretty1: ('a -> string) -> 'b -> string
 //│   where
-//│     'b <: Add[?] & {lhs: 'b, rhs: 'b} | Lit | 'a & ~add & ~lit
+//│     'b <: Add[?] & {lhs: 'b, rhs: 'b} | Lit | 'a & ~#Add & ~#Lit
 //│        = [Function: pretty1]
 //│ constrain calls  : 90
 //│ annoying  calls  : 0
@@ -275,7 +275,7 @@ rec def prettier1 k ev e = case e of {
   }
 //│ prettier1: ('a -> string) -> ('rhs -> number) -> 'b -> string
 //│   where
-//│     'b <: Add[?] & {lhs: 'rhs & 'b, rhs: 'rhs & 'b} | Lit | 'a & ~add & ~lit
+//│     'b <: Add[?] & {lhs: 'rhs & 'b, rhs: 'rhs & 'b} | Lit | 'a & ~#Add & ~#Lit
 //│          = [Function: prettier1]
 //│ constrain calls  : 297
 //│ annoying  calls  : 0
@@ -291,8 +291,8 @@ rec def prettier11 k ev e = case e of {
   }
 //│ prettier11: ('a -> string) -> ('rhs -> number) -> 'b -> string
 //│   where
-//│     'b <: Add[?] & {lhs: 'c, rhs: 'rhs & 'b} | Lit | 'a & ~add & ~lit
-//│     'c <: Add[?] & {lhs: 'c, rhs: 'c} | Lit | 'a & ~add & ~lit
+//│     'b <: Add[?] & {lhs: 'c, rhs: 'rhs & 'b} | Lit | 'a & ~#Add & ~#Lit
+//│     'c <: Add[?] & {lhs: 'c, rhs: 'c} | Lit | 'a & ~#Add & ~#Lit
 //│           = [Function: prettier11]
 //│ constrain calls  : 194
 //│ annoying  calls  : 0
@@ -307,9 +307,9 @@ rec def prettier12 k ev e = case e of {
       in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
   | _ -> k e
   }
-//│ prettier12: ('a -> string) -> ('b -> number) -> (Add[?] & {lhs: 'c, rhs: 'c} & 'b | Lit | 'a & ~add & ~lit) -> string
+//│ prettier12: ('a -> string) -> ('b -> number) -> (Add[?] & {lhs: 'c, rhs: 'c} & 'b | Lit | 'a & ~#Add & ~#Lit) -> string
 //│   where
-//│     'c <: Add[?] & {lhs: 'c, rhs: 'c} | Lit | 'a & ~add & ~lit
+//│     'c <: Add[?] & {lhs: 'c, rhs: 'c} | Lit | 'a & ~#Add & ~#Lit
 //│           = [Function: prettier12]
 //│ constrain calls  : 167
 //│ annoying  calls  : 0
@@ -381,7 +381,7 @@ rec def eval2 k = eval1 (fun x -> case x of {
   })
 //│ eval2: ('a -> int) -> 'b -> int
 //│   where
-//│     'b <: Add[?] & {lhs: 'b, rhs: 'b} | Lit | Nega[?] & {arg: 'b} | 'a & ~add & ~lit & ~nega
+//│     'b <: Add[?] & {lhs: 'b, rhs: 'b} | Lit | Nega[?] & {arg: 'b} | 'a & ~#Add & ~#Lit & ~#Nega
 //│      = [Function: eval2]
 
 
@@ -392,7 +392,7 @@ rec def prettier2 k ev = prettier1 (fun x -> case x of {
   }) ev
 //│ prettier2: ('a -> string) -> ('rhs -> number) -> 'b -> string
 //│   where
-//│     'b <: Add[?] & {lhs: 'rhs & 'b, rhs: 'rhs & 'b} | Lit | Nega[?] & {arg: 'b} | 'a & ~add & ~lit & ~nega
+//│     'b <: Add[?] & {lhs: 'rhs & 'b, rhs: 'rhs & 'b} | Lit | Nega[?] & {arg: 'b} | 'a & ~#Add & ~#Lit & ~#Nega
 //│          = [Function: prettier2]
 //│ constrain calls  : 119
 //│ annoying  calls  : 0
@@ -406,9 +406,9 @@ rec def prettier22 k ev = prettier12 (fun x -> case x of {
 //│ prettier22: ('a -> string) -> ('b -> number) -> 'c -> string
 //│   where
 //│     'b <: {lhs: 'd, rhs: 'd}
-//│     'd <: Add[?] & {lhs: 'd, rhs: 'd} | Lit | 'e & ~add & ~lit
-//│     'e <: Nega[?] & {arg: 'c} | 'a & ~nega
-//│     'c <: Add[?] & 'b | Lit | 'e & ~add & ~lit
+//│     'd <: Add[?] & {lhs: 'd, rhs: 'd} | Lit | 'e & ~#Add & ~#Lit
+//│     'e <: Nega[?] & {arg: 'c} | 'a & ~#Nega
+//│     'c <: Add[?] & 'b | Lit | 'e & ~#Add & ~#Lit
 //│           = [Function: prettier22]
 //│ constrain calls  : 173
 //│ annoying  calls  : 0
@@ -462,9 +462,9 @@ prettier22 done
 //│ res: ('a -> number) -> 'b -> string
 //│   where
 //│     'a <: {lhs: 'c, rhs: 'c}
-//│     'c <: Add[?] & {lhs: 'c, rhs: 'c} | Lit | 'd & ~add & ~lit
+//│     'c <: Add[?] & {lhs: 'c, rhs: 'c} | Lit | 'd & ~#Add & ~#Lit
 //│     'd <: Nega[?] & {arg: 'b}
-//│     'b <: Add[?] & 'a | Lit | 'd & ~add & ~lit
+//│     'b <: Add[?] & 'a | Lit | 'd & ~#Add & ~#Lit
 //│    = [Function (anonymous)]
 
 :stats
@@ -482,9 +482,9 @@ prettier2 done (eval1 done)
 prettier22 done (eval1 done)
 //│ res: 'a -> string
 //│   where
-//│     'a <: Add[?] & {lhs: 'b, rhs: 'b} & 'c | Lit | 'd & ~add & ~lit
+//│     'a <: Add[?] & {lhs: 'b, rhs: 'b} & 'c | Lit | 'd & ~#Add & ~#Lit
 //│     'c <: Add[?] & {lhs: 'c, rhs: 'c} | Lit
-//│     'b <: Add[?] & {lhs: 'b, rhs: 'b} | Lit | 'd & ~add & ~lit
+//│     'b <: Add[?] & {lhs: 'b, rhs: 'b} | Lit | 'd & ~#Add & ~#Lit
 //│     'd <: Nega[?] & {arg: 'a}
 //│    = [Function (anonymous)]
 
@@ -513,9 +513,9 @@ prettier22 done (eval2 done) e2
 prettier22 done (eval2 done) d2
 //│ res: 'a -> string
 //│   where
-//│     'a <: Add[?] & {lhs: 'b, rhs: 'b} & 'c | Lit | 'd & ~add & ~lit
+//│     'a <: Add[?] & {lhs: 'b, rhs: 'b} & 'c | Lit | 'd & ~#Add & ~#Lit
 //│     'c <: Add[?] & {lhs: 'c, rhs: 'c} | Lit | Nega[?] & {arg: 'c}
-//│     'b <: Add[?] & {lhs: 'b, rhs: 'b} | Lit | 'd & ~add & ~lit
+//│     'b <: Add[?] & {lhs: 'b, rhs: 'b} | Lit | 'd & ~#Add & ~#Lit
 //│     'd <: Nega[?] & {arg: 'a}
 //│    = [Function (anonymous)]
 //│ res: string

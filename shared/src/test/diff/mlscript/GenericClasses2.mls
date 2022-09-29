@@ -47,7 +47,7 @@ class Bar3: Foo2[int]
 :ns
 Bar2
 Bar3
-//│ res: {x: 'x} -> (bar2 & {Foo2#A = int, x: 'x})
+//│ res: {x: 'x} -> (#Bar2 & {Foo2#A = int, x: 'x})
 //│   where
 //│     'x <: int
 //│    = [Function: res]
