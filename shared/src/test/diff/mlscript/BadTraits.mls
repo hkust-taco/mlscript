@@ -21,7 +21,7 @@ T {}
 //│ ╟── from intersection type:
 //│ ║  l.7: 	trait T: A & B
 //│ ╙──     	         ^^^^^
-//│ res: error | t
+//│ res: error | #T
 //│    = {}
 
 def a = A{}
@@ -48,7 +48,7 @@ T a
 //│ ╟── Note: class A is defined at:
 //│ ║  l.1: 	class A
 //│ ╙──     	      ^
-//│ res: A & t | error
+//│ res: A & #T | error
 //│    = A {}
 
 :e
@@ -72,7 +72,7 @@ T A
 //│ ╟── Note: class constructor A is defined at:
 //│ ║  l.1: 	class A
 //│ ╙──     	      ^
-//│ res: anything -> A & t | error
+//│ res: anything -> A & #T | error
 //│    = [Function (anonymous)]
 
 :e
@@ -92,7 +92,7 @@ T (B {})
 //│ ╟── Note: class B is defined at:
 //│ ║  l.2: 	class B
 //│ ╙──     	      ^
-//│ res: B & t | error
+//│ res: B & #T | error
 //│    = B {}
 
 def t = T error
@@ -132,11 +132,11 @@ trait S: { x: int }
 //│ Defined trait S
 
 s = S{ x = 1 }
-//│ s: {x: 1} & s
+//│ s: {x: 1} & #S
 //│  = { x: 1 }
 
 t = s: s
-//│ t: s
+//│ t: #S
 //│  = { x: 1 }
 
 :e
@@ -144,7 +144,7 @@ t.x
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.143: 	t.x
 //│ ║         	^^^
-//│ ╟── type `s` does not have field 'x'
+//│ ╟── type `#S` does not have field 'x'
 //│ ║  l.138: 	t = s: s
 //│ ║         	       ^
 //│ ╟── but it flows into reference with expected type `{x: ?x}`

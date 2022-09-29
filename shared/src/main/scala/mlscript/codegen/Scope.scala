@@ -171,7 +171,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
           throw new CodeGenError(s"undeclared type name $name when resolving base classes")
       }
     }
-    if (baseClasses.length > 1)
+    if (baseClasses.lengthIs > 1)
       throw CodeGenError(
         s"cannot have ${baseClasses.length} base classes: " +
         baseClasses.map { _.lexicalName }.mkString(", ")

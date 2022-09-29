@@ -230,7 +230,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
             tparamField(defn, tp) -> FieldType(
               Some(if (tvv(tv).isCovariant) BotType else tv),
               if (tvv(tv).isContravariant) TopType else tv)(prov)
-          }.toList)(noProv)
+          })(noProv)
         else TopType
       subst(td.kind match {
         case Als => td.bodyTy

@@ -13,7 +13,7 @@ Lit
 def eval0: ('b -> ('c & int)) -> (Lit & {val: int} | Add & {lhs: 'a; rhs: 'a} | ~lit & ~add & 'b as 'a) -> (int | 'c)
 //│ eval0: ('b -> int) -> 'a -> int
 //│   where
-//│     'a <: 'b & ~add & ~lit | Add & {lhs: 'a, rhs: 'a} | Lit & {val: int}
+//│     'a <: 'b & ~#Add & ~#Lit | Add & {lhs: 'a, rhs: 'a} | Lit & {val: int}
 //│      = <missing implementation>
 
 def evalUgly: ('b -> ('c & int)) -> (Lit & {val: int} | Add & {lhs: 'a; rhs: 'a} | ~Lit & ~Add & 'b as 'a) -> (int | 'c)
@@ -46,7 +46,7 @@ rec def evalImpl f e = case e of {
   }
 //│ evalImpl: ('a -> int) -> 'b -> int
 //│   where
-//│     'b <: Add & {lhs: 'b, rhs: 'b} | Lit & {val: int} | 'a & ~add & ~lit
+//│     'b <: Add & {lhs: 'b, rhs: 'b} | Lit & {val: int} | 'a & ~#Add & ~#Lit
 //│         = [Function: evalImpl]
 
 rec def evalPeel f e = case e of {
@@ -54,12 +54,12 @@ rec def evalPeel f e = case e of {
   | Add -> eval f e.lhs + eval f e.rhs
   | _ -> f e
   }
-//│ evalPeel: ('b -> (int & 'val)) -> ('b & ~add & ~lit | Add & {lhs: Expr['b], rhs: Expr['b]} | Lit & {val: 'val}) -> (int | 'val)
+//│ evalPeel: ('b -> (int & 'val)) -> ('b & ~#Add & ~#Lit | Add & {lhs: Expr['b], rhs: Expr['b]} | Lit & {val: 'val}) -> (int | 'val)
 //│         = <no result>
 //│           eval is not implemented
 
 eval = evalPeel
-//│ ('b -> (int & 'val)) -> ('b & ~add & ~lit | Add & {lhs: Expr['b], rhs: Expr['b]} | Lit & {val: 'val}) -> (int | 'val)
+//│ ('b -> (int & 'val)) -> ('b & ~#Add & ~#Lit | Add & {lhs: Expr['b], rhs: Expr['b]} | Lit & {val: 'val}) -> (int | 'val)
 //│   <:  eval:
 //│ ('b -> int) -> Expr['b] -> int
 //│     = <no result>
@@ -68,7 +68,7 @@ eval = evalPeel
 eval = evalImpl
 //│ ('a -> int) -> 'b -> int
 //│   where
-//│     'b <: Add & {lhs: 'b, rhs: 'b} | Lit & {val: int} | 'a & ~add & ~lit
+//│     'b <: Add & {lhs: 'b, rhs: 'b} | Lit & {val: int} | 'a & ~#Add & ~#Lit
 //│   <:  eval:
 //│ ('b -> int) -> Expr['b] -> int
 //│     = [Function: evalImpl]
@@ -76,17 +76,17 @@ eval = evalImpl
 eval0 = evalImpl
 //│ ('a -> int) -> 'b -> int
 //│   where
-//│     'b <: Add & {lhs: 'b, rhs: 'b} | Lit & {val: int} | 'a & ~add & ~lit
+//│     'b <: Add & {lhs: 'b, rhs: 'b} | Lit & {val: int} | 'a & ~#Add & ~#Lit
 //│   <:  eval0:
 //│ ('b -> int) -> 'a -> int
 //│   where
-//│     'a <: 'b & ~add & ~lit | Add & {lhs: 'a, rhs: 'a} | Lit & {val: int}
+//│     'a <: 'b & ~#Add & ~#Lit | Add & {lhs: 'a, rhs: 'a} | Lit & {val: int}
 //│      = [Function: evalImpl]
 
 evalUgly = evalImpl
 //│ ('a -> int) -> 'b -> int
 //│   where
-//│     'b <: Add & {lhs: 'b, rhs: 'b} | Lit & {val: int} | 'a & ~add & ~lit
+//│     'b <: Add & {lhs: 'b, rhs: 'b} | Lit & {val: int} | 'a & ~#Add & ~#Lit
 //│   <:  evalUgly:
 //│ ('b -> int) -> 'a -> int
 //│   where
@@ -96,7 +96,7 @@ evalUgly = evalImpl
 eval1 = evalImpl
 //│ ('a -> int) -> 'b -> int
 //│   where
-//│     'b <: Add & {lhs: 'b, rhs: 'b} | Lit & {val: int} | 'a & ~add & ~lit
+//│     'b <: Add & {lhs: 'b, rhs: 'b} | Lit & {val: int} | 'a & ~#Add & ~#Lit
 //│   <:  eval1:
 //│ ('b -> int) -> Expr['b] -> int
 //│      = [Function: evalImpl]

@@ -165,7 +165,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
       if (primitiveTypes.contains(n)) {
         err(msg"Type name '$n' is reserved.", td.nme.toLoc)
       }
-      td.tparams.groupBy(_.name).foreach { case s -> tps if tps.size > 1 => err(
+      td.tparams.groupBy(_.name).foreach { case s -> tps if tps.sizeIs > 1 => err(
           msg"Multiple declarations of type parameter ${s} in ${td.kind.str} definition" -> td.toLoc
             :: tps.map(tp => msg"Declared at" -> tp.toLoc))
         case _ =>
@@ -201,7 +201,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
             td.mthDefs.iterator.map(md => md.nme.copy().withLocOf(md)).toSet)
           ) { case ((decls1, defns1), (decls2, defns2)) => (
             (decls1.toSeq ++ decls2.toSeq).groupBy(identity).map { case (mn, mns) =>
-              if (mns.size > 1) Var(mn.name).withLoc(td.toLoc) else mn }.toSet,
+              if (mns.sizeIs > 1) Var(mn.name).withLoc(td.toLoc) else mn }.toSet,
             defns1 ++ defns2
           )}
         
@@ -507,7 +507,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
                 case N =>
               }
               tparams.groupBy(_.name).foreach {
-                case s -> tps if tps.size > 1 => err(
+                case s -> tps if tps.sizeIs > 1 => err(
                   msg"Multiple declarations of type parameter ${s} in ${prov.desc}" -> md.toLoc ::
                   tps.map(tp => msg"Declared at" -> tp.toLoc))
                 case _ =>

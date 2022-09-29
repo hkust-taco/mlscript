@@ -141,6 +141,7 @@ final case class Literal(lit: Lit)                       extends NullaryType
 
 /** Reference to an existing type with the given name. */
 final case class TypeName(name: Str)                     extends NullaryType with NamedType with TypeNameImpl
+final case class TypeTag (name: Str)                     extends NullaryType
 
 final case class TypeVar(val identifier: Int \/ Str, nameHint: Opt[Str]) extends NullaryType with TypeVarImpl {
   require(nameHint.isEmpty || identifier.isLeft)
