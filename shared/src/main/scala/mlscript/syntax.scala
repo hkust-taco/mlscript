@@ -48,6 +48,7 @@ sealed trait ObjDefKind
 case object Cls extends TypeDefKind("class") with ObjDefKind
 case object Trt extends TypeDefKind("trait") with ObjDefKind
 case object Als extends TypeDefKind("type alias")
+case object Nms extends TypeDefKind("namespace")
 
 sealed abstract class Term                                           extends Terms with TermImpl
 sealed abstract class Lit                                            extends SimpleTerm with LitImpl

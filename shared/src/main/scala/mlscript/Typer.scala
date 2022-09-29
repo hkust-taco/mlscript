@@ -308,6 +308,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                   case Trt => trtNameToNomTag(td)(tyTp(tyLoc, "trait tag"), ctx)
                   case Als => err(
                     msg"Type alias ${name.capitalize} cannot be used as a type tag", tyLoc)(raise)
+                  case Nms => err(
+                    msg"Namespaces ${name.capitalize} cannot be used as a type tag", tyLoc)(raise)
                 }
                 case _ => e()
               }
@@ -751,6 +753,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             case Some(td) =>
               td.kind match {
                 case Als => err(msg"can only match on classes and traits", pat.toLoc)(raise)
+                case Nms => err(msg"can only match on classes and traits", pat.toLoc)(raise)
                 case Cls => clsNameToNomTag(td)(tp(pat.toLoc, "class pattern"), ctx)
                 case Trt => trtNameToNomTag(td)(tp(pat.toLoc, "trait pattern"), ctx)
               }
