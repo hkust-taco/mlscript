@@ -165,7 +165,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
       if (primitiveTypes.contains(n)) {
         err(msg"Type name '$n' is reserved.", td.nme.toLoc)
       }
-      td.tparams.groupBy(_.name).foreach { case s -> tps if tps.size > 1 => err(
+      td.tparams.groupBy(_.name).foreach { case s -> tps if tps.sizeIs > 1 => err(
           msg"Multiple declarations of type parameter ${s} in ${td.kind.str} definition" -> td.toLoc
             :: tps.map(tp => msg"Declared at" -> tp.toLoc))
         case _ =>
@@ -201,7 +201,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
             td.mthDefs.iterator.map(md => md.nme.copy().withLocOf(md)).toSet)
           ) { case ((decls1, defns1), (decls2, defns2)) => (
             (decls1.toSeq ++ decls2.toSeq).groupBy(identity).map { case (mn, mns) =>
-              if (mns.size > 1) Var(mn.name).withLoc(td.toLoc) else mn }.toSet,
+              if (mns.sizeIs > 1) Var(mn.name).withLoc(td.toLoc) else mn }.toSet,
             defns1 ++ defns2
           )}
         
@@ -227,6 +227,9 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
         
         val rightParents = td.kind match {
           case Als => checkCycle(td.bodyTy)(Set.single(L(td.nme)))
+          case Nms =>
+            err(msg"a namespace cannot inherit from others", prov.loco)
+            false
           case k: ObjDefKind =>
             val parentsClasses = MutSet.empty[TypeRef]
             def checkParents(ty: SimpleType): Bool = ty match {
@@ -246,6 +249,9 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
                     } else
                       checkParents(tr.expand)
                   case Trt => checkParents(tr.expand)
+                  case Nms =>
+                    err(msg"cannot inherit from a namespace", prov.loco)
+                    false
                   case Als => 
                     err(msg"cannot inherit from a type alias", prov.loco)
                     false
@@ -501,7 +507,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
                 case N =>
               }
               tparams.groupBy(_.name).foreach {
-                case s -> tps if tps.size > 1 => err(
+                case s -> tps if tps.sizeIs > 1 => err(
                   msg"Multiple declarations of type parameter ${s} in ${prov.desc}" -> md.toLoc ::
                   tps.map(tp => msg"Declared at" -> tp.toLoc))
                 case _ =>

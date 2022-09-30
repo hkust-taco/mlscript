@@ -7,7 +7,7 @@ class C: { x: 0 | 1 }
 
 
 A { x = 1 }
-//│ res: {x: 1} & a
+//│ res: {x: 1} & #A
 //│    = { x: 1 }
 
 :e
@@ -21,7 +21,7 @@ A {}
 //│ ╟── Note: constraint arises from record type:
 //│ ║  l.1: 	trait A: { x: int }
 //│ ╙──     	         ^^^^^^^^^^
-//│ res: error | a
+//│ res: error | #A
 //│    = {}
 
 
@@ -122,10 +122,10 @@ def t = T1 (A { x = 1 })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.121: 	def t = T1 (A { x = 1 })
 //│ ║         	        ^^^^^^^^^^^^^^^^
-//│ ╟── record literal of type `{x: 1}` does not match type `C | ~a`
+//│ ╟── record literal of type `{x: 1}` does not match type `C | ~#A`
 //│ ║  l.121: 	def t = T1 (A { x = 1 })
 //│ ║         	              ^^^^^^^^^
-//│ ╟── but it flows into application with expected type `C | ~a`
+//│ ╟── but it flows into application with expected type `C | ~#A`
 //│ ║  l.121: 	def t = T1 (A { x = 1 })
 //│ ║         	            ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -134,18 +134,18 @@ def t = T1 (A { x = 1 })
 //│ ╟── from intersection type:
 //│ ║  l.117: 	trait T1: C & A
 //│ ╙──       	          ^^^^^
-//│ t: error | {x: 1} & a & t1
+//│ t: error | {x: 1} & #A & #T1
 //│  = [Function: t]
 
 def t = T1 (A (C { x = 1 }))
-//│ t: C & {x: 1} & a & t1
+//│ t: C & {x: 1} & #A & #T1
 //│  = [Function: t1]
 
 class CA: C & A
 //│ Defined class CA
 
 def t = T1 (CA { x = 1 })
-//│ t: CA & {x: 1} & t1
+//│ t: CA & {x: 1} & #T1
 //│  = [Function: t2]
 
 

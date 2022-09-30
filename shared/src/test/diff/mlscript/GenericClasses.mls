@@ -147,7 +147,7 @@ f: (Foo2[?] & 'a) -> 'a
 //│ res: (Foo2[?] & 'a) -> 'a
 //│   where
 //│     'a :> Foo2[?] & 'a
-//│        <: (foo2 | ~{Foo2#A} | ~foo2 | ~(foo2 & {Foo2#A})) & (foo2 | ~(foo2 & {Foo2#A}))
+//│        <: (#Foo2 | ~{Foo2#A} | ~#Foo2 | ~(#Foo2 & {Foo2#A})) & (#Foo2 | ~(#Foo2 & {Foo2#A}))
 //│    = [Function: f]
 
 f
@@ -238,7 +238,7 @@ f: (Foo2_Co[?] & 'a) -> 'a
 //│ res: (Foo2_Co[?] & 'a) -> 'a
 //│   where
 //│     'a :> Foo2_Co[?] & 'a
-//│        <: (foo2_Co | ~{Foo2_Co#A} | ~foo2_Co | ~(foo2_Co & {Foo2_Co#A})) & (foo2_Co | ~(foo2_Co & {Foo2_Co#A}))
+//│        <: (#Foo2_Co | ~{Foo2_Co#A} | ~#Foo2_Co | ~(#Foo2_Co & {Foo2_Co#A})) & (#Foo2_Co | ~(#Foo2_Co & {Foo2_Co#A}))
 //│    = [Function: f1]
 
 f
@@ -310,7 +310,7 @@ f: (Foo2_Bi[?] & 'a) -> 'a
 //│ res: (Foo2_Bi[?] & 'a) -> 'a
 //│   where
 //│     'a :> Foo2_Bi[?] & 'a
-//│        <: (foo2_Bi | ~{Foo2_Bi#A} | ~foo2_Bi | ~(foo2_Bi & {Foo2_Bi#A})) & (foo2_Bi | ~(foo2_Bi & {Foo2_Bi#A}))
+//│        <: (#Foo2_Bi | ~{Foo2_Bi#A} | ~#Foo2_Bi | ~(#Foo2_Bi & {Foo2_Bi#A})) & (#Foo2_Bi | ~(#Foo2_Bi & {Foo2_Bi#A}))
 //│    = [Function: f2]
 
 f

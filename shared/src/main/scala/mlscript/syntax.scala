@@ -48,6 +48,7 @@ sealed trait ObjDefKind
 case object Cls extends TypeDefKind("class") with ObjDefKind
 case object Trt extends TypeDefKind("trait") with ObjDefKind
 case object Als extends TypeDefKind("type alias")
+case object Nms extends TypeDefKind("namespace")
 
 sealed abstract class Term                                           extends Terms with TermImpl
 sealed abstract class Lit                                            extends SimpleTerm with LitImpl
@@ -140,6 +141,7 @@ final case class Literal(lit: Lit)                       extends NullaryType
 
 /** Reference to an existing type with the given name. */
 final case class TypeName(name: Str)                     extends NullaryType with NamedType with TypeNameImpl
+final case class TypeTag (name: Str)                     extends NullaryType
 
 final case class TypeVar(val identifier: Int \/ Str, nameHint: Opt[Str]) extends NullaryType with TypeVarImpl {
   require(nameHint.isEmpty || identifier.isLeft)

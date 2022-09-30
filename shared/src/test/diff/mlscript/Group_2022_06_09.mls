@@ -108,7 +108,7 @@ def evalN evalN k e = case e of {
   | Neg -> 0 - evalN evalN k e.e
   | _ -> k e
   }
-//│ evalN: ('a -> 'b -> 'e -> int & 'a) -> ('c -> 'd & 'b) -> ((Neg with {e: 'e}) | 'c & ~neg) -> (int | 'd)
+//│ evalN: ('a -> 'b -> 'e -> int & 'a) -> ('c -> 'd & 'b) -> ((Neg with {e: 'e}) | 'c & ~#Neg) -> (int | 'd)
 //│      = [Function: evalN1]
 
 
@@ -133,7 +133,7 @@ ev2 = evalComposed evalComposed
 //│   where
 //│     'a <: 'b | (Neg with {e: 'a})
 //│     'b <: (Add with {lhs: 'c, rhs: 'c}) | Lit
-//│     'c <: (Neg with {e: 'c}) | 'b & ~neg
+//│     'c <: (Neg with {e: 'c}) | 'b & ~#Neg
 //│    = [Function (anonymous)]
 
 ev2 e3
@@ -152,7 +152,7 @@ ev2_ty = ev2
 //│   where
 //│     'a <: 'b | (Neg with {e: 'a})
 //│     'b <: (Add with {lhs: 'c, rhs: 'c}) | Lit
-//│     'c <: (Neg with {e: 'c}) | 'b & ~neg
+//│     'c <: (Neg with {e: 'c}) | 'b & ~#Neg
 //│   <:  ev2_ty:
 //│ 'a -> int
 //│   where

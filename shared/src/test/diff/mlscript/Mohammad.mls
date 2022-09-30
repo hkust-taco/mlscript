@@ -94,7 +94,7 @@ class D: T & {z: int}
 //│ // End of generated code
 
 def useTrt t = case t of { T -> t.y | Class -> t.x }
-//│ useTrt: ((Class with {x: 'y}) & ~t | {y: 'y} & t) -> 'y
+//│ useTrt: ((Class with {x: 'y}) & ~#T | {y: 'y} & #T) -> 'y
 //│       = [Function: useTrt]
 
 :e
@@ -102,7 +102,7 @@ useTrt c
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.101: 	useTrt c
 //│ ║         	^^^^^^^^
-//│ ╟── expression of type `Class & {x: ?x} & t | Class & {x: ?x} & ~?a` does not have field 'y'
+//│ ╟── expression of type `Class & {x: ?x} & #T | Class & {x: ?x} & ~?a` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.96: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ║        	                                ^^^
@@ -114,6 +114,21 @@ useTrt c
 
 useTrt (c with { y = 1 })
 //│ res: 1
+//│    = 1
+
+:e
+useTrt c
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.120: 	useTrt c
+//│ ║         	^^^^^^^^
+//│ ╟── expression of type `Class & {x: ?x} & #T | Class & {x: ?x} & ~?a` does not have field 'y'
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.96: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
+//│ ║        	                                ^^^
+//│ ╟── from refined scrutinee:
+//│ ║  l.96: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
+//│ ╙──      	                    ^
+//│ res: 1 | error
 //│    = 1
 
 d = D{z = 1213}
@@ -228,7 +243,7 @@ oo = Oops 2
 //│ // Query 1
 //│ globalThis.oo = Oops.build(2);
 //│ // End of generated code
-//│ oo: 2 & oops
+//│ oo: 2 & #Oops
 //│   = [Number: 2]
 
 :js
