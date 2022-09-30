@@ -38,7 +38,7 @@ MLscript supports union, intersection, and complement (or negation) connectives,
 To compile the project and run the tests, all you need is a recent Java Virtual Machine (JVM), the Scala Build Tool (SBT), NodeJS, and TypeScript.
 
 The simplest way to set up the JVM and SBT is through the `coursier` tool.
-We explicitly support NodeJS versions `v16.14.x`, `v16.15.x`, `v16.16.x`, and `v17.x.x`.
+We explicitly support NodeJS versions `v16.14.x`, `v16.15.x`, `v16.16.x`, `v17.x.x`, and `v18.x.x`.
 
 To install TypeScript by using NodeJS, you can simply run `npm install` in the current directory. **Notably, the global installed TypeScript would not be found by ScalaJS.**
 We explicitly support TypeScript versions `4.7.4`.
