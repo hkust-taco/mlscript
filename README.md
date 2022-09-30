@@ -67,6 +67,9 @@ you can indicate the test you want in `shared/src/test/scala/mlscript/DiffTests.
   ).map(os.RelPath(_))
 ```
 
+Individual tests can also be run with `-z`.
+For example, `~mlscriptJVM/testOnly mlscript.DiffTests -- -z parser` will watch for file changes and continuously run all parser tests (those that have "parser" in their name).
+
 To run the tests in ts2mls sub-project individually,
 you can indicate the test you want in `ts2mls/js/src/test/scala/ts2mls/TSTypeGenerationTests.scala`:
 
