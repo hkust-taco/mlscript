@@ -60,7 +60,7 @@ To run the tests in main MLScript project individually,
 you can indicate the test you want in `shared/src/test/scala/mlscript/DiffTests.scala`:
 
 ```scala
-// Allow overriding which specific tests to run, sometimes easier for development:
+  // Allow overriding which specific tests to run, sometimes easier for development:
   private val focused = Set[Str](
     // Add the test file path here like this:
     "shared/src/test/diff/mlscript/Methods.mls"
