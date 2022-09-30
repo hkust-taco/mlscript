@@ -7,17 +7,17 @@ These features can be used to implement expressive class hierarchies as well as 
 
 MLscript supports union, intersection, and complement (or negation) connectives, making sure they form a Boolean algebra, and add enough structure to derive a sound and complete type inference algorithm.
 
-## Getting Started Guide
+## Getting Started
 
 ### Project Structure
 
 #### Sub-Projects
 
-- The ts2mls sub-project allows you to use TypeScript libraries in MLScript. It can generate libraries' declaration information in MLScript by parsing TypeScript AST, which can be used in MLScript type checking.
+- The ts2mls sub-project allows you to use TypeScript libraries in MLscript. It can generate libraries' declaration information in MLscript by parsing TypeScript AST, which can be used in MLscript type checking.
 
 #### Directories
 
-- The `shared/src/main/scala/mlscript/` directory contains the sources of the MLscript compiler.
+- The `shared/src/main/scala/mlscript` directory contains the sources of the MLscript compiler.
 
 - The `shared/src/test/scala/mlscript` directory contains the sources of the testing infrastructure.
 
@@ -35,20 +35,21 @@ MLscript supports union, intersection, and complement (or negation) connectives,
 
 ### Prerequisites
 
-To compile the project and run the tests, all you need is a recent Java Virtual Machine (JVM), the Scala Build Tool (SBT), NodeJS, and TypeScript.
+You need [JDK supported by Scala][supported-jdk-versions], [sbt][sbt], [Node.js][node.js], and TypeScript to compile the project and run the tests.
 
-The simplest way to set up the JVM and SBT is through the `coursier` tool.
-We explicitly support NodeJS versions `v16.14.x`, `v16.15.x`, `v16.16.x`, `v17.x.x`, and `v18.x.x`.
+We recommend you to install JDK and sbt via [coursier][coursier]. The versions of Node.js that passed our tests are from v16.14 to v16.17, v17 and v18. Run `npm install` to install TypeScript. **Note that ScalaJS cannot find the global installed TypeScript.** We explicitly support TypeScript v4.7.4.
 
-To install TypeScript by using NodeJS, you can simply run `npm install` in the current directory. **Notably, the global installed TypeScript would not be found by ScalaJS.**
-We explicitly support TypeScript versions `4.7.4`.
+[supported-jdk-versions]: https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html
+[sbt]: https://www.scala-sbt.org/
+[node.js]: https://nodejs.org/
+[coursier]: https://get-coursier.io/
 
 ### Running the tests
 
-Running the main MLScript tests only requires the Scala Build Tool installed.
+Running the main MLscript tests only requires the Scala Build Tool installed.
 In the terminal, run `sbt mlscriptJVM/test`.
 
-Running the ts2mls MLScript tests requires NodeJS, and TypeScript in addition.
+Running the ts2mls MLscript tests requires NodeJS, and TypeScript in addition.
 In the terminal, run `sbt ts2mlsJS/test`.
 
 You can also run all tests simultaneously.
