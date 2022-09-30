@@ -87,4 +87,3 @@ in `shared/src/main/scala/mlscript`,
 have it compile to JavaScript on file change with command
 `sbt ~fastOptJS`,
 and immediately see the results in your browser by refreshing the page with `F5`.
-
