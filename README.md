@@ -78,7 +78,7 @@ private val testsData = List(
   )
 ```
 
-### Running the demo locally
+### Running the web demo locally
 
 To run the demo on your computer, compile the project with `sbt fastOptJS`, then open the `local_testing.html` file in your browser.
 
