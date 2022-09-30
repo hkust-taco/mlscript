@@ -12,7 +12,6 @@ object TypeScript {
       System.err.println("Cannot find typescript in the current directory. Please install by running \"npm install\".")
       val process = g.require("process")
       process.exit(-1)
-      g.undefined
     }
   }
 
