@@ -7,7 +7,7 @@ import scala.collection.mutable.ListBuffer
 import mlscript.{JSField, JSLit}
 import scala.collection.mutable.{Set => MutSet}
 
-class JSBackend {
+class JSBackend(allowUnresolvedSymbols: Boolean) {
   /**
     * The root scope of the program.
     */
@@ -103,7 +103,11 @@ class JSBackend {
         case S(sym: TypeAliasSymbol) =>
           throw CodeGenError(s"type alias ${name} is not a valid expression")
         case S(_) => throw new Exception("register mismatch in scope")
-        case N => throw CodeGenError(s"unresolved symbol ${name}")
+        case N =>
+          if (allowUnresolvedSymbols)
+            JSIdent(name)
+          else
+            throw CodeGenError(s"unresolved symbol ${name}")
       }
     }
 
@@ -459,6 +463,7 @@ class JSBackend {
         traits += topLevelScope.declareTrait(name, tparams map { _.name }, body, methods)
       case TypeDef(Cls, TypeName(name), tparams, baseType, _, members, _) =>
         classes += topLevelScope.declareClass(name, tparams map { _.name }, baseType, members)
+      case TypeDef(Nms, _, _, _, _, _, _) => throw CodeGenError("Namespaces are not supported yet.")
     }
     (traits.toList, classes.toList)
   }
@@ -494,7 +499,7 @@ class JSBackend {
           throw new CodeGenError(s"undeclared type name $name when resolving base classes")
       }
     }
-    if (baseClasses.length > 1)
+    if (baseClasses.lengthIs > 1)
       throw CodeGenError(
         s"cannot have ${baseClasses.length} base classes: " +
         baseClasses.map { _.lexicalName }.mkString(", ")
@@ -523,7 +528,7 @@ class JSBackend {
   
 }
 
-class JSWebBackend extends JSBackend {
+class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
   // Name of the array that contains execution results
   val resultsName: Str = topLevelScope declareRuntimeSymbol "results"
 
@@ -581,7 +586,7 @@ class JSWebBackend extends JSBackend {
   }
 }
 
-class JSTestBackend extends JSBackend {
+class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
   private val lastResultSymbol = topLevelScope.declareValue("res", Some(false), false)
   private val resultIdent = JSIdent(lastResultSymbol.runtimeName)
 

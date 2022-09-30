@@ -266,7 +266,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case Neg(t) => NegType(rec(t))(tyTp(ty.toLoc, "type negation"))
       case Record(fs) => 
         val prov = tyTp(ty.toLoc, "record type")
-        fs.groupMap(_._1.name)(_._1).foreach { case s -> fieldNames if fieldNames.size > 1 => err(
+        fs.groupMap(_._1.name)(_._1).foreach { case s -> fieldNames if fieldNames.sizeIs > 1 => err(
             msg"Multiple declarations of field name ${s} in ${prov.desc}" -> ty.toLoc
               :: fieldNames.map(tp => msg"Declared at" -> tp.toLoc))(raise)
           case _ =>
@@ -290,10 +290,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case AbstractConstructor(_, _) => die
           case t: TypeScheme => t.instantiate
         }
+      case tn @ TypeTag(name) => rec(TypeName(name.decapitalize))
       case tn @ TypeName(name) =>
         val tyLoc = ty.toLoc
         val tpr = tyTp(tyLoc, "type reference")
-        vars.get(name).getOrElse {
+        vars.getOrElse(name, {
           typeNamed(tyLoc, name) match {
             case R((_, tpnum)) =>
               if (tpnum =/= 0) {
@@ -307,11 +308,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                   case Trt => trtNameToNomTag(td)(tyTp(tyLoc, "trait tag"), ctx)
                   case Als => err(
                     msg"Type alias ${name.capitalize} cannot be used as a type tag", tyLoc)(raise)
+                  case Nms => err(
+                    msg"Namespaces ${name.capitalize} cannot be used as a type tag", tyLoc)(raise)
                 }
                 case _ => e()
               }
           }
-        }
+        })
       case tv: TypeVar =>
         // assert(ty.toLoc.isDefined)
         recVars.getOrElse(tv,
@@ -512,7 +515,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         typeTerm(lhs) & (typeTerm(rhs), prov)
       case Rcd(fs) =>
         val prov = tp(term.toLoc, "record literal")
-        fs.groupMap(_._1.name)(_._1).foreach { case s -> fieldNames if fieldNames.size > 1 => err(
+        fs.groupMap(_._1.name)(_._1).foreach { case s -> fieldNames if fieldNames.sizeIs > 1 => err(
             msg"Multiple declarations of field name ${s} in ${prov.desc}" -> term.toLoc
               :: fieldNames.map(tp => msg"Declared at" -> tp.toLoc))(raise)
           case _ =>
@@ -750,6 +753,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             case Some(td) =>
               td.kind match {
                 case Als => err(msg"can only match on classes and traits", pat.toLoc)(raise)
+                case Nms => err(msg"can only match on classes and traits", pat.toLoc)(raise)
                 case Cls => clsNameToNomTag(td)(tp(pat.toLoc, "class pattern"), ctx)
                 case Trt => trtNameToNomTag(td)(tp(pat.toLoc, "trait pattern"), ctx)
               }
@@ -842,7 +846,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             (Var("_" + (i + 1)), t.toUpper(noProv))
         }.toList
         RecordType.mk(fs)(prov)
-      } else TupleType(fields.reverseIterator.mapValues(_.toUpper(noProv)).toList)(prov)
+      } else TupleType(fields.reverseIterator.mapValues(_.toUpper(noProv)))(prov)
   }
   
   
@@ -897,7 +901,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           WithExtension(go(base), Record(rcd.fields.mapValues(field)))
         case ProxyType(und) => go(und)
         case tag: ObjectTag => tag.id match {
-          case Var(n) => TypeName(n)
+          case Var(n) =>
+            if (primitiveTypes.contains(n) // primitives like `int` are internally maintained as class tags
+              || n.isCapitalized // rigid type params like A in class Foo[A]
+              || n.startsWith("'") // rigid type varibales
+              || n === "this" // `this` type
+            ) TypeName(n)
+            else TypeTag(n.capitalize)
           case lit: Lit => Literal(lit)
         }
         case TypeRef(td, Nil) => td

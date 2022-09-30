@@ -184,7 +184,7 @@ object Main {
                   // The rest of the message may not make sense if we don't also print the provs
                   // For example we'd get things like "Declared at\nDeclared at" for dup type params...
                   err.allMsgs.tail
-                    .map(_._1.show.toString + "<br/>")
+                    .map(_._1.show + "<br/>")
                     .mkString("&nbsp;&nbsp;&nbsp;&nbsp;")}-->
                 </font></b><br/>"""
     }
@@ -207,7 +207,7 @@ object Main {
         def debugOutput(msg: => Str): Unit = println(msg)
       }
       val sim = SimplifyPipeline(wty)(ctx)
-      val exp = typer.expandType(sim, true)
+      val exp = typer.expandType(sim)
       exp
     }
     def formatBinding(nme: Str, ty: TypeScheme): Str = {
@@ -292,6 +292,9 @@ object Main {
     
     var declared: Map[Var, typer.PolymorphicType] = Map.empty
     
+    def htmlize(str: Str): Str =
+      str.replace("\n", "<br/>").replace("  ", "&emsp;")
+    
     var decls = stmts
     while (decls.nonEmpty) {
       val d = decls.head
@@ -311,7 +314,7 @@ object Main {
               ctx += nme.name -> ty_sch
           }
           res ++= formatBinding(d.nme.name, ty_sch)
-          results append S(d.nme.name) -> (getType(ty_sch).show)
+          results append S(d.nme.name) -> htmlize(getType(ty_sch).show)
         case d @ Def(isrec, nme, R(PolyType(tps, rhs)), _) =>
           declared.get(nme) match {
             case S(sign) =>
@@ -326,14 +329,14 @@ object Main {
             vars = tps.map(tp => tp.name -> freshVar(noProv/*FIXME*/)(1)).toMap))
           ctx += nme.name -> ty_sch
           declared += nme -> ty_sch
-          results append S(d.nme.name) -> getType(ty_sch).show
+          results append S(d.nme.name) -> htmlize(getType(ty_sch).show)
         case s: DesugaredStatement =>
           typer.typeStatement(s, allowPure = true) match {
             case R(binds) =>
               binds.foreach { case (nme, pty) =>
                 ctx += nme -> pty
                 res ++= formatBinding(nme, pty)
-                results append S(nme) -> getType(pty).show
+                results append S(nme) -> htmlize(getType(pty).show)
               }
             case L(pty) =>
               val exp = getType(pty)
@@ -341,7 +344,7 @@ object Main {
                 val nme = "res"
                 ctx += nme -> pty
                 res ++= formatBinding(nme, pty)
-                results append N -> getType(pty).show
+                results append N -> htmlize(getType(pty).show)
               }
           }
       } catch {

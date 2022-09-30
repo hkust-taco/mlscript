@@ -119,17 +119,17 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def apps[p: P]: P[Term] = P( subterm.rep(1).map(_.reduce(mkApp)) )
   
   def _match[p: P]: P[CaseOf] =
-    locate(P( kw("case") ~/ term ~ "of" ~ "{" ~ "|".? ~ matchArms ~ "}" ).map(CaseOf.tupled))
-  def matchArms[p: P]: P[CaseBranches] = P(
+    locate(P( kw("case") ~/ term ~ "of" ~ ("{" ~ "|".? ~ matchArms("|") ~ "}" | matchArms(",")) ).map(CaseOf.tupled))
+  def matchArms[p: P](sep: Str): P[CaseBranches] = P(
     ( ("_" ~ "->" ~ term).map(Wildcard)
-    | ((lit | variable) ~ "->" ~ term ~ matchArms2)
+    | ((lit | variable) ~ "->" ~ term ~ matchArms2(sep))
       .map { case (t, b, rest) => Case(t, b, rest) }
     ).?.map {
       case None => NoCases
       case Some(b) => b
     }
   )
-  def matchArms2[p: P]: P[CaseBranches] = ("|" ~ matchArms).?.map(_.getOrElse(NoCases))
+  def matchArms2[p: P](sep: Str): P[CaseBranches] = (sep ~ matchArms(sep)).?.map(_.getOrElse(NoCases))
   
   private val prec: Map[Char,Int] = List(
     ":",
@@ -204,6 +204,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
           ms.collect { case R(md) => md }, ms.collect{ case L(md) => md }, Nil)
       }
       case (k @ Als, id, ts) => "=" ~ ty map (bod => TypeDef(k, id, ts, bod, Nil, Nil, Nil))
+      case (k @ Nms, _, _) => throw new NotImplementedError("Namespaces are not supported yet.")
     })
   def tyParams[p: P]: P[Ls[TypeName]] =
     ("[" ~ tyName.rep(0, ",") ~ "]").?.map(_.toList.flatten)
@@ -235,8 +236,9 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   }
   def ctor[p: P]: P[Type] = locate(P( tyName ~ "[" ~ ty.rep(0, ",") ~ "]" ) map {
     case (tname, targs) => AppliedType(tname, targs.toList)
-  }) | tyNeg | tyName | tyVar | tyWild | litTy
+  }) | tyNeg | tyName | tyTag | tyVar | tyWild | litTy
   def tyNeg[p: P]: P[Type] = locate(P("~" ~/ tyNoFun map { t => Neg(t) }))
+  def tyTag[p: P]: P[TypeTag] = locate(P("#" ~~ (ident map TypeTag)))
   def tyName[p: P]: P[TypeName] = locate(P(ident map TypeName))
   def tyVar[p: P]: P[TypeVar] = locate(P("'" ~ ident map (id => TypeVar(R("'" + id), N))))
   def tyWild[p: P]: P[Bounds] = locate(P("?".! map (_ => Bounds(Bot, Top))))

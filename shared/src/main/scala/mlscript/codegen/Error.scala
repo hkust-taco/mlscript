@@ -27,6 +27,6 @@ final case class UnimplementedError(symbol: StubValueSymbol)
           joined
         }
       }
-      val be = if (names.length > 1) "are" else "is"
+      val be = if (names.lengthIs > 1) "are" else "is"
       s"$concat $be not implemented"
     })

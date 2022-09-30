@@ -11,7 +11,7 @@ class Banana
 // val foo : ([> `Apple ] as 'a) -> 'b -> ('a -> 'b) -> 'b = <fun>
 
 def foo x default otherwise = case x of { Apple -> default | _ -> otherwise x }
-//│ foo: (Apple | 'a & ~apple) -> 'b -> ('a -> 'b) -> 'b
+//│ foo: (Apple | 'a & ~#Apple) -> 'b -> ('a -> 'b) -> 'b
 //│    = [Function: foo]
 
 // utop # foo `Apple ;;

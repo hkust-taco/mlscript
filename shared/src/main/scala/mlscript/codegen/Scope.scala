@@ -4,7 +4,7 @@ import mlscript.utils.shorthands._
 import mlscript.{JSStmt, JSExpr, JSLetDecl}
 import mlscript.Type
 import scala.reflect.ClassTag
-import mlscript.{TypeName, Top, Bot, TypeDef, Als, Trt, Cls}
+import mlscript.{TypeName, Top, Bot, TypeDef, Als, Trt, Cls, Nms}
 import mlscript.MethodDef
 import mlscript.Term
 import mlscript.utils.{AnyOps, lastWords}
@@ -171,7 +171,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
           throw new CodeGenError(s"undeclared type name $name when resolving base classes")
       }
     }
-    if (baseClasses.length > 1)
+    if (baseClasses.lengthIs > 1)
       throw CodeGenError(
         s"cannot have ${baseClasses.length} base classes: " +
         baseClasses.map { _.lexicalName }.mkString(", ")
@@ -200,6 +200,8 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       declareTrait(name, tparams map { _.name }, body, mthdDefs)
     case TypeDef(Cls, TypeName(name), tparams, baseType, _, members, _) =>
       declareClass(name, tparams map { _.name }, baseType, members)
+    case TypeDef(Nms, _, _, _, _, _, _) =>
+      throw CodeGenError("Namespaces are not supported yet.")
   }
 
   def declareClass(
