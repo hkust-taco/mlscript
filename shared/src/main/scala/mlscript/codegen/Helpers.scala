@@ -52,4 +52,17 @@ object Helpers {
     case New(base, body) => s"New(${base}, ${body})"
     case TyApp(base, targs) => s"TyApp(${inspect(base)}, ${targs})"
   }
+
+  def inspect(t: TypingUnit): Str = t.entities.iterator
+    .map {
+      case term: Term => inspect(term)
+      case NuFunDef(lt, nme, targs, L(term)) =>
+        s"NuFunDef(${lt}, ${nme.name}, ${targs.mkString("[", ", ", "]")}, ${inspect(term)})"
+      case NuFunDef(lt, nme, targs, R(ty)) =>
+        s"NuFunDef(${lt}, ${nme.name}, ${targs.mkString("[", ", ", "]")}, $ty)"
+      case NuTypeDef(kind, nme, tparams, params, parents, body) =>
+        s"NuTypeDef(${kind.str}, ${nme.name}, ${tparams.mkString("(", ", ", ")")}, ${
+          inspect(params)}, ${parents.mkString("(", ", ", ")")}, ${inspect(body)})"
+    }
+    .mkString("TypingUnit(", ", ", ")")
 }

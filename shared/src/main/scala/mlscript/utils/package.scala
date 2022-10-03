@@ -39,6 +39,8 @@ package object utils {
     def decapitalize: String =
       if (self.length === 0 || !self.charAt(0).isUpper) self
       else self.updated(0, self.charAt(0).toLower)
+    @SuppressWarnings(Array("org.wartremover.warts.Equals"))
+    def ===(other: String): Bool = self.equals(other)
   }
   
   implicit class IterableOps[A](private val self: IterableOnce[A]) extends AnyVal {
