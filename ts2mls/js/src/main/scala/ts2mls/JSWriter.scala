@@ -7,7 +7,8 @@ import mlscript.utils._
 
 class JSWriter(filename: String) {
   import JSWriter._
-  private val out = fs.openSync(filename, "rs+")
+  private val out =
+    if (fs.existsSync(filename)) fs.openSync(filename, "rs+") else fs.openSync(filename, "w+")
   private var fileSize = 0 // how many bytes we've written in the file
   private var needTruncate = false
 

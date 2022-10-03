@@ -1,0 +1,11 @@
+:NewParser
+:ParseOnly
+trait None() {
+  let _tag: undefined
+}
+trait Some<A>() {
+  let _tag: undefined
+  let value: A
+}
+//│ |#trait| |None|(||)| |{|→|#let| |_tag|#:| |undefined|←|↵|}|↵|#trait| |Some|‹|A|›|(||)| |{|→|#let| |_tag|#:| |undefined|↵|#let| |value|#:| |A|←|↵|}|
+//│ Parsed: {trait None(): {let _tag: [] -> undefined}; trait Some[A](): {let _tag: [] -> undefined; let value: [] -> A}}
