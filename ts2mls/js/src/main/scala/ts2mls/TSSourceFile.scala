@@ -176,6 +176,8 @@ object TSSourceFile {
       ns.put(name, parseMembers(name, node, true))
     else if (node.isInterfaceDeclaration)
       ns.put(name, parseMembers(name, node, false))
+    else if (node.isTypeAliasDeclaration)
+      ns.put(name, TSTypeAlias(name, getMemberType(node)))
     else if (node.isNamespace)
       parseNamespace(node)
 
