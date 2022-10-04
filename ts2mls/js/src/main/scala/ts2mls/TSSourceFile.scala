@@ -33,6 +33,11 @@ object TSSourceFile {
     else if (obj.isTypeParameter) TSTypeParameter(obj.symbol.escapedName)
     else TSPrimitiveType(obj.intrinsicName)
 
+  private def getTypeAlias(tn: TSNodeObject): TSType =
+    if (tn.isFunctionLike) getFunctionType(tn)
+    else if (tn.isTupleTypeNode) TSTupleType(getTupleElements(tn.typeNode.typeArguments))
+    else getObjectType(tn.typeNode)
+
   // get the type of a member in classes/named interfaces/anonymous interfaces
   private def getMemberType(node: TSNodeObject): TSType = {
     val res: TSType =
@@ -178,7 +183,7 @@ object TSSourceFile {
     else if (node.isInterfaceDeclaration)
       ns.put(name, parseMembers(name, node, false))
     else if (node.isTypeAliasDeclaration)
-      ns.put(name, TSTypeAlias(name, getMemberType(node)))
+      ns.put(name, TSTypeAlias(name, getTypeAlias(node.`type`)))
     else if (node.isNamespace)
       parseNamespace(node)
 

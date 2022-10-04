@@ -9,4 +9,4 @@ interface Some<A> {
 
 type Option<A> = None | Some<A>
 type Func = (x: number) => number
-
+type S2 = [string, string]
