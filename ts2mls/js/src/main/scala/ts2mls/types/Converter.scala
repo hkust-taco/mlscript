@@ -50,7 +50,7 @@ object Converter {
     case TSSubstitutionType(base, applied) => s"${base}<${applied.map((app) => convert(app)).reduceLeft((res, s) => s"$res, $s")}>"
     case overload @ TSIgnoredOverload(base, _) => s"${convert(base)} ${overload.warning}"
     case TSParameterType(name, tp) => s"${name}: ${convert(tp)}"
-    case TSTypeAlias(name, ori) => s"type $name = ${convert(ori)}"
+    case TSTypeAlias(name, ori) => s"type $name: ${convert(ori)}"
   }
 
   private def convertRecord(typeName: String, members: Map[String, TSMemberType], typeVars: List[TSTypeParameter],

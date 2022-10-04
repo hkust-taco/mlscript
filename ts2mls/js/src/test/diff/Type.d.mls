@@ -7,12 +7,6 @@ trait Some<A>() {
   let _tag: undefined
   let value: A
 }
-type Option = (None) | (Some<A>)
-//│ |#trait| |None|(||)| |{|→|#let| |_tag|#:| |undefined|←|↵|}|↵|#trait| |Some|‹|A|›|(||)| |{|→|#let| |_tag|#:| |undefined|↵|#let| |value|#:| |A|←|↵|}|↵|type| |Option| |#=| |(|None|)| ||| |(|Some|‹|A|›|)|
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.10: 	type Option = (None) | (Some<A>)
-//│ ╙──      	^^^^^^^^^^^
-//│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.10: 	type Option = (None) | (Some<A>)
-//│ ╙──      	            ^
-//│ Parsed: {trait None(): {let _tag: [] -> undefined}; trait Some[A](): {let _tag: [] -> undefined; let value: [] -> A}; type (Option,)}
+type Option: (None) | (Some<A>)
+//│ |#trait| |None|(||)| |{|→|#let| |_tag|#:| |undefined|←|↵|}|↵|#trait| |Some|‹|A|›|(||)| |{|→|#let| |_tag|#:| |undefined|↵|#let| |value|#:| |A|←|↵|}|↵|#type| |Option|#:| |(|None|)| ||| |(|Some|‹|A|›|)|
+//│ Parsed: {trait None(): {let _tag: [] -> undefined}; trait Some[A](): {let _tag: [] -> undefined; let value: [] -> A}; type alias Option(): | (None,) (Some‹A›,) = {}}
