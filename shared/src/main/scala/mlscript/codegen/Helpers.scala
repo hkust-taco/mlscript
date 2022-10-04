@@ -21,7 +21,7 @@ object Helpers {
       val entries = fields.iterator
         .map { case k -> Fld(_, _, v) => s"${inspect(k)} = ${inspect(v)}" }
         .mkString(", ")
-      s"Rcd($entries})"
+      s"Rcd($entries)"
     case Sel(receiver, fieldName)    => s"Sel(${inspect(receiver)}, $fieldName)"
     case Let(isRec, name, rhs, body) => s"Let($isRec, $name, ${inspect(rhs)}, ${inspect(body)})"
     case Blk(stmts)                  => s"Blk(...)"
@@ -62,7 +62,7 @@ object Helpers {
         s"NuFunDef(${lt}, ${nme.name}, ${targs.mkString("[", ", ", "]")}, $ty)"
       case NuTypeDef(kind, nme, tparams, params, parents, body) =>
         s"NuTypeDef(${kind.str}, ${nme.name}, ${tparams.mkString("(", ", ", ")")}, ${
-          inspect(params)}, ${parents.mkString("(", ", ", ")")}, ${inspect(body)})"
+          inspect(params)}, ${parents.map(inspect).mkString("(", ", ", ")")}, ${inspect(body)})"
     }
     .mkString("TypingUnit(", ", ", ")")
 }

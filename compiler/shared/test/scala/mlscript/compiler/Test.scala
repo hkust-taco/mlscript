@@ -8,7 +8,8 @@ import scala.collection.mutable.StringBuilder
 import mlscript.compiler.ClassLifter
 import mlscript.Term
 
-class Test extends DiffTests {
+class DiffTestCompiler extends DiffTests {
+  import DiffTestCompiler.*
   override def postProcess(basePath: List[Str], testName: Str, unit: TypingUnit): List[Str] = 
     val outputBuilder = StringBuilder()
     outputBuilder ++= "Parsed:\n"
@@ -23,8 +24,21 @@ class Test extends DiffTests {
       case any: Throwable => outputBuilder ++= "Lifting failed: " ++ any.toString() ++ "\n" ++ any.getStackTrace().map(_.toString()).mkString("\n")
     }
     outputBuilder.toString().linesIterator.toList
+  
+  override protected lazy val files = allFiles.filter { file =>
+      val fileName = file.baseName
+      validExt(file.ext) && filter(file.relativeTo(pwd))
+  }
 }
 
-object Test {
-  private val dir = os.pwd/"mono"/"shared"/"test"/"diff"
+object DiffTestCompiler{
+
+  private val pwd = os.pwd
+  private val dir = pwd/"compiler"/"shared"/"test"/"diff"
+  
+  private val allFiles = os.walk(dir).filter(_.toIO.isFile)
+  
+  private val validExt = Set("fun", "mls")
+
+  private def filter(file: os.RelPath) = DiffTests.filter(file)
 }

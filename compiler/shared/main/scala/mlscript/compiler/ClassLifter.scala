@@ -127,7 +127,8 @@ class ClassLifter { self: ClassLifter =>
         val newCls = NuTypeDef(Trt, TypeName(""), Nil, Tup(flds.map(x => x.copy(_1 = Some(x._1)))), Nil, TypingUnit(Nil))
         List(newCls)
       case TyApp(Var(nm), targs) => findTpDef(nm).toList
-      ???
+      //SPECIAL CARE: Tup related issue
+      case Tup(flds) => flds.filter(_._1.isEmpty).flatMap(fld => getParentClsByTerm(fld._2.value))
     }
     
     tp :: tp.parents.flatMap(getParentClsByTerm).flatMap(getSupClsesByType)
@@ -206,6 +207,7 @@ class ClassLifter { self: ClassLifter =>
   }
   private def isTypeUsed(trm: Located)(implicit varNm: TypeName): Boolean = trm match{
     case Asc(trm, TypeName(ty)) if ty === varNm.name => true
+    //SPECIAL CARE: Tup related issue
     case Tup(tupLst) if tupLst.find{
                           case (Some(_), Fld(_, _, Var(name))) => name === varNm.name
                           case _ => false
@@ -221,7 +223,7 @@ class ClassLifter { self: ClassLifter =>
         if(targs.contains(varNm)) false
         else isTypeUsed(trm)
       //poly type functions
-      case NuFunDef(_, _, targs, Right(_)) => ???
+      case NuFunDef(_, _, targs, Right(polyType)) => ???
       //typeDefs: should be filtered out in advance
       case _: NuTypeDef => throw new Exception("should not reach")
     }.isDefined
@@ -279,10 +281,6 @@ class ClassLifter { self: ClassLifter =>
   }
   def liftEntities(entities: List[Statement]): List[Statement] = {
     retSeq = Nil
-    // given parList: List[ParFields] = Nil
-    // given localVs: Set[String] = Set()
-    // println(s"new entities: \n${PrettyPrinter.show(TypingUnit(entities))}")
-    // given globFields: TypingUnit = TypingUnit(entities)
     entities.flatMap{
       case nType: NuTypeDef => Some(nType)
       case _ => None

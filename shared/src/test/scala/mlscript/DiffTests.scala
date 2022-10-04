@@ -133,14 +133,14 @@ class DiffTests
     }
     val defaultMode = Mode()
     
-    var parseOnly = basePath.headOption.contains("parser") || basePath.headOption.contains("mono")
+    var parseOnly = basePath.headOption.contains("parser") || basePath.headOption.contains("compiler")
     var allowTypeErrors = false
     var allowParseErrors = false // TODO use
     var showRelativeLineNums = false
     var noJavaScript = false
     var noProvs = false
     var allowRuntimeErrors = false
-    var newParser = basePath.headOption.contains("parser") || basePath.headOption.contains("mono")
+    var newParser = basePath.headOption.contains("parser") || basePath.headOption.contains("compiler")
 
     val backend = new JSTestBackend()
     val host = ReplHost()
@@ -316,7 +316,7 @@ class DiffTests
         
         // try to parse block of text into mlscript ast
         val ans = try {
-          if (newParser || basePath.headOption.contains("mono")) {
+          if (newParser || basePath.headOption.contains("compiler")) {
             
             val origin = Origin(testName, globalStartLineNum, fph)
             val lexer = new NewLexer(origin, raise, dbg = mode.dbgParsing)
@@ -852,7 +852,7 @@ object DiffTests {
     // "Methods",
   ).map(os.RelPath(_))
   // private def filter(name: Str): Bool =
-  private def filter(file: os.RelPath): Bool = {
+  def filter(file: os.RelPath): Bool = {
     if (focused.nonEmpty) focused(file) else modified(file) || modified.isEmpty &&
       true
       // name.startsWith("new/")

@@ -86,6 +86,6 @@ lazy val mlscript_compiler = crossProject(JSPlatform, JVMPlatform).in(file("comp
     scalaVersion := "3.1.3",
     sourceDirectory := baseDirectory.value.getParentFile()/"shared",
     watchSources += WatchSource(
-      baseDirectory.value.getParentFile()/"shared/test/diff", "*.mls", NothingFilter),
+      baseDirectory.value.getParentFile()/"shared"/"test"/"diff", "*.mls", NothingFilter),
   )
   .dependsOn(mlscript % "compile->compile;test->test")
