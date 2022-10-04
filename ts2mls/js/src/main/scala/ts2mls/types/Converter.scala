@@ -76,7 +76,7 @@ object Converter {
     val body = { // members without independent type parameters, translate them directly
       val lst = allRecs.filter((s) => !s.isEmpty())
       if (lst.isEmpty) "{}"
-      else if (typeName === "trait ") s"(${lst.reduceLeft((bd, m) => s"$bd$m")})"
+      else if (typeName === "trait ") s"{${lst.reduceLeft((bd, m) => s"$bd$m")}}"
       else s"{\n${lst.reduceLeft((bd, m) => s"$bd$m")}$indent}"
     }
     
