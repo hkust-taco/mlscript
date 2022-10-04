@@ -37,6 +37,7 @@ object TSSourceFile {
   private def getMemberType(node: TSNodeObject): TSType = {
     val res: TSType =
       if (node.isFunctionLike) getFunctionType(node)
+      else if (node.`type`.isFunctionLike) getFunctionType(node.`type`)
       else getObjectType(node.`type`.typeNode)
     if (node.symbol.isOptionalMember) TSUnionType(res, TSPrimitiveType("undefined"))
     else res
