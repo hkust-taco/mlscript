@@ -337,7 +337,6 @@ trait TermImpl extends StatementImpl { self: Term =>
     }))
     case Rcd(fields) => Rcd(fields.map {
       case (name, Fld(mut, spec, value)) => (name, Fld(mut, spec, transform(value)))
-      case (name, Fld(mut, spec, value)) => (name, Fld(mut, spec, transform(value)))
     })
     case Tup(fields) => Tup(fields.map {
       case (name, Fld(mut, spec, value)) => (name, Fld(mut, spec, transform(value)))
@@ -353,6 +352,8 @@ trait TermImpl extends StatementImpl { self: Term =>
     case App(lhs, rhs) => App(transform(lhs), transform(rhs))
     case Blk(stmts) => Blk(stmts.map {
       case term: Term => transform(term)
+      case NuFunDef(isLetRec, nme, targs, Left(rhs)) => NuFunDef(isLetRec, nme, targs, Left(transform(rhs)))
+      case others => ??? 
     })
     case Let(isRec, name, rhs, body) =>
       Let(isRec, name, transform(rhs), transform(body))
@@ -360,6 +361,10 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Bra(rcd, trm) => Bra(rcd, transform(trm))
     case If(body, els) => If(body.map(transform), els.map(transform))
     case TyApp(lhs, targs) => TyApp(transform(lhs), targs)
+    case Splc(fields) => Splc(fields.map{
+      case Left(value) => Left(transform(value))
+      case Right(Fld(mut, spec, value)) => Right(Fld(mut, spec, transform(value)))
+    })
     case DecLit(_) | IntLit(_) | StrLit(_) | UnitLit(_) | Var(_) => self
   }
 
@@ -772,6 +777,7 @@ trait IfBodyImpl extends Located { self: IfBody =>
   def map(transform: Term => Term): IfBody = this match{
     case IfThen(expr, rhs) => IfThen(expr.map(transform), rhs.map(transform))
     case IfElse(expr) => IfElse(expr.map(transform))
+    case _ => ??? 
   }
 
   def children: List[Located] = this match {

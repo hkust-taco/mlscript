@@ -63,6 +63,7 @@ object Helpers {
       case NuTypeDef(kind, nme, tparams, params, parents, body) =>
         s"NuTypeDef(${kind.str}, ${nme.name}, ${tparams.mkString("(", ", ", ")")}, ${
           inspect(params)}, ${parents.map(inspect).mkString("(", ", ", ")")}, ${inspect(body)})"
+      case others => others.toString()
     }
     .mkString("TypingUnit(", ", ", ")")
 }
