@@ -10,5 +10,10 @@ trait Some<A>() {
 type Option = (None) | (Some<A>)
 type Func = (number) => number
 type S2 = (string, string, )
-//│ |#trait| |None|(||)| |{|→|#let| |_tag|#:| |undefined|←|↵|}|↵|#trait| |Some|‹|A|›|(||)| |{|→|#let| |_tag|#:| |undefined|↵|#let| |value|#:| |A|←|↵|}|↵|#type| |Option| |#=| |(|None|)| ||| |(|Some|‹|A|›|)|↵|#type| |Func| |#=| |(|number|)| |=>| |number|↵|#type| |S2| |#=| |(|string|,| |string|,| |)|
-//│ Parsed: {trait None(): {let _tag: [] -> undefined}; trait Some[A](): {let _tag: [] -> undefined; let value: [] -> A}; type alias Option(): | (None,) (Some‹A›,) = {}; type alias Func(): number, => number = {}; type alias S2(): '(' string, string, ')' = {}}
+trait I1() {}
+trait I2() {}
+type I3 = (I1) & (I2)
+type StringArray = Array<string>
+type SomeInterface = (x: number,y: number,)
+//│ |#trait| |None|(||)| |{|→|#let| |_tag|#:| |undefined|←|↵|}|↵|#trait| |Some|‹|A|›|(||)| |{|→|#let| |_tag|#:| |undefined|↵|#let| |value|#:| |A|←|↵|}|↵|#type| |Option| |#=| |(|None|)| ||| |(|Some|‹|A|›|)|↵|#type| |Func| |#=| |(|number|)| |=>| |number|↵|#type| |S2| |#=| |(|string|,| |string|,| |)|↵|#trait| |I1|(||)| |{||}|↵|#trait| |I2|(||)| |{||}|↵|#type| |I3| |#=| |(|I1|)| |&| |(|I2|)|↵|#type| |StringArray| |#=| |Array|‹|string|›|↵|#type| |SomeInterface| |#=| |(|x|#:| |number|,|y|#:| |number|,|)|
+//│ Parsed: {trait None(): {let _tag: [] -> undefined}; trait Some[A](): {let _tag: [] -> undefined; let value: [] -> A}; type alias Option(): | (None,) (Some‹A›,) = {}; type alias Func(): number, => number = {}; type alias S2(): '(' string, string, ')' = {}; trait I1(): {}; trait I2(): {}; type alias I3(): & (I1,) (I2,) = {}; type alias StringArray(): Array‹string› = {}; type alias SomeInterface(): '(' x: number, y: number, ')' = {}}
