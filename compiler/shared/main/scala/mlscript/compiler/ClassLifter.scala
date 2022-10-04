@@ -43,6 +43,21 @@ class ClassLifter { self: ClassLifter =>
     }.headOption
   }
 
+  /**
+    * Structure used to store a class-related information. 
+    * List[ParFields] stores a class hierarchy from inner-most to the other-most
+    * For class hierarchy like:
+      class A(x): supA, supB{
+        class B { ... }
+      }
+    * Will be stored as:
+      Parfield(par$A, A, [(body of) A, supA, supB, sup of supA, ...]),
+      Parfield(par$B, B, [(body of) A$B(here the class name is changed into lifted name)]),
+      ...
+    * @param parVName name of the pointer inner classes should use to access fields the class in this level
+    * @param outerNm name of this level of class
+    * @param supClsList this level of class itself with all the super classes of it (as NuTypeDefs, renamed into lifted name)
+    */
   case class ParFields(parVName: String, outerNm: String, supClsList: List[NuTypeDef]){
     override def toString(): String = parVName ++ "#" ++ outerNm ++ ":" ++ supClsList.map(_.nme.name).mkString("[", ", ", "]")
     def findCls(clsNm: String): Option[(NuTypeDef, NuTypeDef)] = {
@@ -79,7 +94,6 @@ class ClassLifter { self: ClassLifter =>
   }
   private def buildPath(name: String)(implicit parFields: List[ParFields], globalFlds: TypingUnit): (Term, Option[Term]) = {
     type FoldResult = (FieldType, List[String], String) //status, parPath, clsName
-    // println(s"building path to $name in $parFields")
     if(parFields.isEmpty) (Var(name), None)
     else {
       val re = parFields.updated(0, ParFields("this", parFields.head.outerNm, parFields.head.supClsList)).foldLeft[FoldResult]((UnKnown(), Nil, ""))(
@@ -93,8 +107,7 @@ class ClassLifter { self: ClassLifter =>
             }
           case _ => rlt
         }
-      );
-      // println("result: " ++ re.toString())
+      )
       re._1 match {
         case _: FieldNameType =>
           (selPath2Term(re._2, Var(name)), None)
@@ -106,8 +119,6 @@ class ClassLifter { self: ClassLifter =>
             (Var(re._3), Some(Var(re._2.head)))
           }
         case _: UnKnown =>
-          // println(s"cannot find identifier $name")
-          // println(s"searching field: ${parFields.mkString("[", ", ", "]")}")
           (Var(name), None)
       }
     }
@@ -138,7 +149,6 @@ class ClassLifter { self: ClassLifter =>
     def fldMapForRcd(oflds: List[(Var, Fld)], func: Term => Term): List[(Var, Fld)] = {
       oflds.map{ case (vdef, Fld(b1, b2, oTerm)) => (vdef, Fld(b1, b2, func(oTerm)))}
     }
-    // println(s"lifting expr ${mlscript.codegen.Helpers.inspect(target)}")
     target match{
       case Var(name) if !localVars.contains(name) => buildPath(name)._1
       case Lam(Var(nm), body) => 
@@ -161,7 +171,6 @@ class ClassLifter { self: ClassLifter =>
       
       //calling constructors
       case App(Var(nm), rhs@Tup(flds)) => 
-        // println(s"here: nm = $nm, parFields = ${parFields.mkString("[", ", ", "]")}")
         val (nName, parArg) = buildPath(nm)
         parArg match{
           case None => App(nName, Tup(flds.map(tupleEntityMapTrm(liftTerm))))
@@ -231,9 +240,6 @@ class ClassLifter { self: ClassLifter =>
 
   private def liftNestedClass(tyDef: NuTypeDef)(implicit parFields: List[ParFields], globalFlds: TypingUnit): TypeName = {
     val NuTypeDef(kind, TypeName(tpName), tparams, params, parents, body) = tyDef
-    // println("find parents" + parents.map(mlscript.codegen.Helpers.inspect(_)).mkString("[", ", ", "]"))
-    // println(s"lift class ${tyDef.nme.name}: ")
-    // println(PrettyPrinter.show(rawBody))
     val knownTypeParams = (tparams ++ parFields.map(_.supClsList.head).flatMap(_.tparams)).distinct
     val innerClasses = body.entities.flatMap{
       case subTypeDef: NuTypeDef => Some(subTypeDef) 
@@ -248,7 +254,6 @@ class ClassLifter { self: ClassLifter =>
     }
     val supCls = getSupClsesByType(nTypeDef)
     val nParFields = ParFields(parVariableNm, tpName, supCls) :: parFields
-    // println(s"handle $tpName, using ${nParFields.mkString("[", ", ", "]")}")
     val nBody = TypingUnit(body.entities.flatMap{
       case term: Term => Some(liftTerm(term)(Set(), nParFields, globalFlds, knownTypeParams))
       case _: NuTypeDef => None
@@ -268,16 +273,10 @@ class ClassLifter { self: ClassLifter =>
     TypeName(liftedTypeName)
   }
 
-  def liftClass(tyDef: NuTypeDef): List[NuTypeDef] = {
+  def liftSingleClass(tyDef: NuTypeDef): List[NuTypeDef] = {
     retSeq = Nil
     liftNestedClass(tyDef)(Nil, TypingUnit(Nil))
-    val re = retSeq.toList
-    // println("<<<<<<<<<<<<<<<< class lifting result ================");
-    // println(s"$tyDef\n================>");
-    // re.map(tpDefi => PrettyPrinter.showTypeDef(tpDefi, 0)).map(println(_));
-    // re.map(_.show).map(println(_));
-    // println("================ class lifting result >>>>>>>>>>>>>>>>");
-    re
+    retSeq.toList
   }
   def liftEntities(entities: List[Statement]): List[Statement] = {
     retSeq = Nil
@@ -292,10 +291,6 @@ class ClassLifter { self: ClassLifter =>
       case rest => Some(rest)
     }
     val re = retSeq.toList
-    // println("================ class lifting result >>>>>>>>>>>>>>>>");
-    // re.map(tpDefi => PrettyPrinter.showTypeDef(tpDefi, 0)).map(println(_));
-    // println(PrettyPrinter.show(TypingUnit(nEtts)))
-    // println("<<<<<<<<<<<<<<<< class lifting result ================");
     re ++ nEtts
   }
   def liftTypingUnit(rawUnit: TypingUnit): TypingUnit = {
