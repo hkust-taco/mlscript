@@ -7,8 +7,8 @@ trait Some<A>() {
   let _tag: undefined
   let value: A
 }
-type Option: (None) | (Some<A>)
-type Func: (number) => number
-type S2: (string, string, )
-//│ |#trait| |None|(||)| |{|→|#let| |_tag|#:| |undefined|←|↵|}|↵|#trait| |Some|‹|A|›|(||)| |{|→|#let| |_tag|#:| |undefined|↵|#let| |value|#:| |A|←|↵|}|↵|#type| |Option|#:| |(|None|)| ||| |(|Some|‹|A|›|)|↵|#type| |Func|#:| |(|number|)| |=>| |number|↵|#type| |S2|#:| |(|string|,| |string|,| |)|
+type Option = (None) | (Some<A>)
+type Func = (number) => number
+type S2 = (string, string, )
+//│ |#trait| |None|(||)| |{|→|#let| |_tag|#:| |undefined|←|↵|}|↵|#trait| |Some|‹|A|›|(||)| |{|→|#let| |_tag|#:| |undefined|↵|#let| |value|#:| |A|←|↵|}|↵|#type| |Option| |#=| |(|None|)| ||| |(|Some|‹|A|›|)|↵|#type| |Func| |#=| |(|number|)| |=>| |number|↵|#type| |S2| |#=| |(|string|,| |string|,| |)|
 //│ Parsed: {trait None(): {let _tag: [] -> undefined}; trait Some[A](): {let _tag: [] -> undefined; let value: [] -> A}; type alias Option(): | (None,) (Some‹A›,) = {}; type alias Func(): number, => number = {}; type alias S2(): '(' string, string, ')' = {}}
