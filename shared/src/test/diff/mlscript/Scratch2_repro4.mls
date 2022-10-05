@@ -13,10 +13,10 @@ def s n = fun f -> fun x -> f (n f x)
 // def s n = fun f -> fun x -> (n f x)
 // def s n = fun f -> n f
 // def s n = n
-//│ s: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ s: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('c -> 'f
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e)))
+//│     'a <: 'b -> ('c -> 'd & 'e)
+//│     'b <: 'd -> 'f)))
 //│  = [Function: s]
 
 def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -30,25 +30,25 @@ def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M
 // :d
 // :e // skolem extrusion?
 succ = s
-//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('c -> 'f
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e)))
+//│     'a <: 'b -> ('c -> 'd & 'e)
+//│     'b <: 'd -> 'f)))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: s]
 
 def s n = fun f -> fun x -> (n f x)
-//│ s: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('c -> 'd
+//│ s: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'd
 //│   where
-//│     'a <: 'b -> 'c -> 'd)))
+//│     'a <: 'b -> ('c -> 'd & 'e))))
 //│  = [Function: s1]
 
 // :e // skolem extrusion?
 succ = s
-//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('c -> 'd
+//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'd
 //│   where
-//│     'a <: 'b -> 'c -> 'd)))
+//│     'a <: 'b -> ('c -> 'd & 'e))))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: s1]

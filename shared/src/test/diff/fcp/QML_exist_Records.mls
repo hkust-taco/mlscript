@@ -30,9 +30,9 @@ baseImpl = {
   }
 //│ baseImpl: ArraysRep['a, 'a]
 //│         = <missing implementation>
-//│ {fold: forall 'a. 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('c -> 'd
+//│ {fold: forall 'a. 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'd
 //│   where
-//│     'a <: 'c -> 'b -> 'd))), init: forall 'e. 'e -> 'e, sub: forall 'f. 'f -> int -> 'f, update: 'a -> int -> (forall 'g. 'g -> 'g)}
+//│     'a <: 'c -> ('b -> 'd & 'e)))), init: forall 'f. 'f -> 'f, sub: forall 'g. 'g -> int -> 'g, update: forall 'h. 'h -> int -> (forall 'i. 'i -> 'i)}
 //│   <:  baseImpl:
 //│ ArraysRep['a, 'a]
 //│         = {
@@ -46,7 +46,7 @@ def base: Arrays['a]
 def base f = f baseImpl
 //│ base: Arrays['a]
 //│     = <missing implementation>
-//│ ((forall 'a. ArraysRep['a, 'a]) -> 'b) -> 'b
+//│ ((forall 'a. ArraysRep['a, 'a]) -> 'b & 'c) -> 'b
 //│   <:  base:
 //│ Arrays['a]
 //│     = [Function: base]
@@ -63,27 +63,27 @@ def stepImpl arrImpl = {
     update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
     fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
   }
-//│ stepImpl: 'a -> {fold: forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. (('d, 'a,) -> 'e
+//│ stepImpl: 'a -> {fold: forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'fold, 'h. (('d, 'h,) -> 'e
 //│   where
-//│     'a <: {fold: 'b -> 'c -> 'd -> 'e}))), init: forall 'a, 'f, 'g. ('f -> ('g, "hi",)
+//│     'a <: {fold: 'b -> ('c -> ('d -> 'e & 'f) & 'g) & 'fold}))), init: forall 'a, 'i, 'j, 'init. ('i -> ('j, "hi",)
 //│   where
-//│     'a <: {init: 'f -> 'g}), sub: forall 'h. ('h, 'a,) -> (forall 'a, 'h, 'i, 'j. ('i -> 'j
+//│     'a <: {init: 'i -> 'j & 'init}), sub: forall 'k, 'l. ('k, 'l,) -> (forall 'a, 'k, 'm, 'n, 'o, 'sub. ('m -> 'n
 //│   where
-//│     'a <: {sub: 'h -> 'i -> 'j})), update: forall 'k. ('k, 'a,) -> (forall 'l. 'l -> (forall 'a, 'k, 'l, 'm, 'n. ('m -> ('n, "hey",)
+//│     'a <: {sub: 'k -> ('m -> 'n & 'o) & 'sub})), update: forall 'p, 'q. ('p, 'q,) -> (forall 'r. 'r -> (forall 'a, 'p, 'r, 's, 't, 'u, 'v, 'update. ('s -> ('t, "hey",)
 //│   where
-//│     'a <: {update: 'k -> 'l -> 'm -> 'n})))}
+//│     'a <: {update: 'p -> ('r -> ('s -> 't & 'u) & 'v) & 'update})))}
 //│         = [Function: stepImpl]
 
 stepImpl_ty = stepImpl
-//│ 'a -> {fold: forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. (('d, 'a,) -> 'e
+//│ 'a -> {fold: forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'fold, 'h. (('d, 'h,) -> 'e
 //│   where
-//│     'a <: {fold: 'b -> 'c -> 'd -> 'e}))), init: forall 'a, 'f, 'g. ('f -> ('g, "hi",)
+//│     'a <: {fold: 'b -> ('c -> ('d -> 'e & 'f) & 'g) & 'fold}))), init: forall 'a, 'i, 'j, 'init. ('i -> ('j, "hi",)
 //│   where
-//│     'a <: {init: 'f -> 'g}), sub: forall 'h. ('h, 'a,) -> (forall 'a, 'h, 'i, 'j. ('i -> 'j
+//│     'a <: {init: 'i -> 'j & 'init}), sub: forall 'k, 'l. ('k, 'l,) -> (forall 'a, 'k, 'm, 'n, 'o, 'sub. ('m -> 'n
 //│   where
-//│     'a <: {sub: 'h -> 'i -> 'j})), update: forall 'k. ('k, 'a,) -> (forall 'l. 'l -> (forall 'a, 'k, 'l, 'm, 'n. ('m -> ('n, "hey",)
+//│     'a <: {sub: 'k -> ('m -> 'n & 'o) & 'sub})), update: forall 'p, 'q. ('p, 'q,) -> (forall 'r. 'r -> (forall 'a, 'p, 'r, 's, 't, 'u, 'v, 'update. ('s -> ('t, "hey",)
 //│   where
-//│     'a <: {update: 'k -> 'l -> 'm -> 'n})))}
+//│     'a <: {update: 'p -> ('r -> ('s -> 't & 'u) & 'v) & 'update})))}
 //│   <:  stepImpl_ty:
 //│ ArraysRep['a, 'r] -> ArraysRep['a, ('r, string,)]
 //│            = [Function: stepImpl]
@@ -99,16 +99,16 @@ def stepImpl_Ann_1 arrImpl = {
     update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
     fold   = fun f -> fun b -> fun ((r0, r1)) -> (arrImpl.fold: Fold['a, 'rep]) f b r0
   }
-//│ stepImpl_Ann_1: 'a -> {fold: forall 'c. 'c -> (forall 'd. 'd -> (forall 'a, 'c, 'd, 'b. (('c, 'c,) -> ('d | 'b)
+//│ stepImpl_Ann_1: 'c -> {fold: forall 'd. 'd -> (forall 'e. 'e -> (forall 'c, 'd, 'e, 'a, 'rep, 'fold, 'a0, 'b, 'f, 'g, 'rep0, 'h. (('g & 'rep0, 'h,) -> ('e | 'f)
 //│   where
-//│     'a <: {fold: Fold['c, ?]}
-//│     'c <: nothing -> ('d | 'b) -> 'b))), init: forall 'a, 'e, 'f. ('e -> ('f, "hi",)
+//│     'c <: {fold: Fold['a, 'rep] & 'fold}
+//│     'd <: 'a0 -> ('b | 'e) -> ('b & 'f)))), init: forall 'c, 'i, 'j, 'init. ('i -> ('j, "hi",)
 //│   where
-//│     'a <: {init: 'e -> 'f}), sub: forall 'c, 'g. ('g, 'c,) -> (forall 'a, 'g, 'h, 'i. ('h -> 'i
+//│     'c <: {init: 'i -> 'j & 'init}), sub: forall 'k, 'l. ('k, 'l,) -> (forall 'c, 'k, 'm, 'n, 'o, 'sub. ('m -> 'n
 //│   where
-//│     'a <: {sub: 'g -> 'h -> 'i})), update: forall 'c, 'j. ('j, 'c,) -> (forall 'k. 'k -> (forall 'a, 'j, 'k, 'l, 'm. ('l -> ('m, "hey",)
+//│     'c <: {sub: 'k -> ('m -> 'n & 'o) & 'sub})), update: forall 'p, 'q. ('p, 'q,) -> (forall 'r. 'r -> (forall 'c, 'p, 'r, 's, 't, 'u, 'v, 'update. ('s -> ('t, "hey",)
 //│   where
-//│     'a <: {update: 'j -> 'k -> 'l -> 'm})))}
+//│     'c <: {update: 'p -> ('r -> ('s -> 't & 'u) & 'v) & 'update})))}
 //│               = [Function: stepImpl_Ann_1]
 
 // * Still not enough to type `step` later in the file – this annotation actually doesn't help at all
@@ -118,15 +118,15 @@ def stepImpl_Ann_2 (arrImpl: ArraysRep['a, 'r]) = {
     update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
     fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
   }
-//│ stepImpl_Ann_2: ArraysRep['a, 'r] -> {fold: forall 'c. 'c -> (forall 'd. 'd -> (forall 'a, 'r, 'c, 'd, 'b. (('r, 'c,) -> ('d | 'b)
+//│ stepImpl_Ann_2: ArraysRep['a, 'r] -> {fold: forall 'c. 'c -> (forall 'd. 'd -> (forall 'a, 'r, 'c, 'd, 'b, 'e, 'f, 'g. (('r & 'f, 'g,) -> ('d | 'e)
 //│   where
-//│     'c <: 'a -> ('d | 'b) -> 'b))), init: 'a -> ('r, "hi",), sub: ('r, 'c,) -> int -> 'a, update: ('r, 'c,) -> int -> 'a -> ('r, "hey",)}
+//│     'c <: 'a -> ('b | 'd) -> ('b & 'e)))), init: forall 'h, 'i. ('a & 'h) -> ('r | 'i, "hi",), sub: forall 'j, 'k. ('r & 'j, 'k,) -> (forall 'l, 'm, 'n. (int & 'l & 'm) -> ('a | 'n)), update: forall 'o, 'p. ('r & 'o, 'p,) -> (forall 'm. (int & 'm) -> (forall 'q, 's. ('a & 'q) -> ('r | 's, "hey",)))}
 //│               = [Function: stepImpl_Ann_2]
 
 stepImpl_ty = stepImpl_Ann_2
-//│ ArraysRep['a, 'r] -> {fold: forall 'c. 'c -> (forall 'd. 'd -> (forall 'a, 'r, 'c, 'd, 'b. (('r, 'c,) -> ('d | 'b)
+//│ ArraysRep['a, 'r] -> {fold: forall 'c. 'c -> (forall 'd. 'd -> (forall 'a, 'r, 'c, 'd, 'b, 'e, 'f, 'g. (('r & 'f, 'g,) -> ('d | 'e)
 //│   where
-//│     'c <: 'a -> ('d | 'b) -> 'b))), init: 'a -> ('r, "hi",), sub: ('r, 'c,) -> int -> 'a, update: ('r, 'c,) -> int -> 'a -> ('r, "hey",)}
+//│     'c <: 'a -> ('b | 'd) -> ('b & 'e)))), init: forall 'h, 'i. ('a & 'h) -> ('r | 'i, "hi",), sub: forall 'j, 'k. ('r & 'j, 'k,) -> (forall 'l, 'm, 'n. (int & 'l & 'm) -> ('a | 'n)), update: forall 'o, 'p. ('r & 'o, 'p,) -> (forall 'm. (int & 'm) -> (forall 'q, 's. ('a & 'q) -> ('r | 's, "hey",)))}
 //│   <:  stepImpl_ty:
 //│ ArraysRep['a, 'r] -> ArraysRep['a, ('r, string,)]
 //│            = [Function: stepImpl_Ann_2]
@@ -138,30 +138,30 @@ def stepImpl_Ann_3 arrImpl = {
     update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
     fold   = (fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0) : Fold['a, ('rep, string)]
   }
-//│ stepImpl_Ann_3: ({fold: (‘a_913_939 -> ‘b_914_940 -> ‘b_914_940) -> ‘b_914_940 -> ‘rep_915_945 -> ‘b_914_940} & 'a) -> {fold: Fold[nothing, ('a, string,)], init: forall 'a, 'b, 'c. ('b -> ('c, "hi",)
+//│ stepImpl_Ann_3: ({fold: (‘a_1055_1081 -> (‘b_1056_1082 & 'b) -> (‘b_1056_1082 | 'c) | 'd) -> ((‘b_1056_1082 | 'c) -> ((‘rep_1057_1087 | 'e) -> (‘b_1056_1082 & 'b) & 'f) & 'g) & 'fold} & 'h) -> {fold: Fold['a, ('rep, string,)], init: forall 'h, 'i, 'j, 'init. ('i -> ('j, "hi",)
 //│   where
-//│     'a <: {init: 'b -> 'c}), sub: forall 'd. ('d, 'a,) -> (forall 'a, 'd, 'e, 'f. ('e -> 'f
+//│     'h <: {init: 'i -> 'j & 'init}), sub: forall 'k, 'l. ('k, 'l,) -> (forall 'h, 'k, 'm, 'n, 'o, 'sub. ('m -> 'n
 //│   where
-//│     'a <: {sub: 'd -> 'e -> 'f})), update: forall 'g. ('g, 'a,) -> (forall 'h. 'h -> (forall 'a, 'g, 'h, 'i, 'j. ('i -> ('j, "hey",)
+//│     'h <: {sub: 'k -> ('m -> 'n & 'o) & 'sub})), update: forall 'p, 'q. ('p, 'q,) -> (forall 'r. 'r -> (forall 'h, 'p, 'r, 's, 't, 'u, 'v, 'update. ('s -> ('t, "hey",)
 //│   where
-//│     'a <: {update: 'g -> 'h -> 'i -> 'j})))}
+//│     'h <: {update: 'p -> ('r -> ('s -> 't & 'u) & 'v) & 'update})))}
 //│               = [Function: stepImpl_Ann_3]
 
 :e
 stepImpl_ty = stepImpl_Ann_3
-//│ ({fold: (‘a_913_939 -> ‘b_914_940 -> ‘b_914_940) -> ‘b_914_940 -> ‘rep_915_945 -> ‘b_914_940} & 'a) -> {fold: Fold[nothing, ('a, string,)], init: forall 'a, 'b, 'c. ('b -> ('c, "hi",)
+//│ ({fold: (‘a_1055_1081 -> (‘b_1056_1082 & 'b) -> (‘b_1056_1082 | 'c) | 'd) -> ((‘b_1056_1082 | 'c) -> ((‘rep_1057_1087 | 'e) -> (‘b_1056_1082 & 'b) & 'f) & 'g) & 'fold} & 'h) -> {fold: Fold['a, ('rep, string,)], init: forall 'h, 'i, 'j, 'init. ('i -> ('j, "hi",)
 //│   where
-//│     'a <: {init: 'b -> 'c}), sub: forall 'd. ('d, 'a,) -> (forall 'a, 'd, 'e, 'f. ('e -> 'f
+//│     'h <: {init: 'i -> 'j & 'init}), sub: forall 'k, 'l. ('k, 'l,) -> (forall 'h, 'k, 'm, 'n, 'o, 'sub. ('m -> 'n
 //│   where
-//│     'a <: {sub: 'd -> 'e -> 'f})), update: forall 'g. ('g, 'a,) -> (forall 'h. 'h -> (forall 'a, 'g, 'h, 'i, 'j. ('i -> ('j, "hey",)
+//│     'h <: {sub: 'k -> ('m -> 'n & 'o) & 'sub})), update: forall 'p, 'q. ('p, 'q,) -> (forall 'r. 'r -> (forall 'h, 'p, 'r, 's, 't, 'u, 'v, 'update. ('s -> ('t, "hey",)
 //│   where
-//│     'a <: {update: 'g -> 'h -> 'i -> 'j})))}
+//│     'h <: {update: 'p -> ('r -> ('s -> 't & 'u) & 'v) & 'update})))}
 //│   <:  stepImpl_ty:
 //│ ArraysRep['a, 'r] -> ArraysRep['a, ('r, string,)]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.151: 	stepImpl_ty = stepImpl_Ann_3
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_1074` is not an instance of type `'a_913_939`
+//│ ╟── type `‘a_1284` is not an instance of type `'a_1055_1081`
 //│ ║  l.55: 	def stepImpl_ty: ArraysRep['a, 'r] -> ArraysRep['a, ('r, string)]
 //│ ║        	                           ^^
 //│ ╟── Note: constraint arises from type variable:
@@ -177,10 +177,11 @@ def stepImpl_Ann_4 arrImpl = {
     update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
     fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
   } : ArraysRep['a, 'r]
-//│ stepImpl_Ann_4: {fold: ('a -> ‘b_1217_1241 -> ‘b_1217_1241) -> ‘b_1217_1241 -> 'b -> ‘b_1217_1241, init: 'a -> ('b & 'c), sub: 'b -> int -> 'a, update: 'b -> int -> 'a -> ('b & 'c)} -> ArraysRep['a, 'r]
+//│ stepImpl_Ann_4: ({fold: ('a -> (‘b_1427_1451 & 'b) -> (‘b_1427_1451 | 'c) | 'd) -> ((‘b_1427_1451 | 'c) -> ('e -> (‘b_1427_1451 & 'b) & 'f) & 'g) & 'fold, init: 'h -> ('e & 'i & 'j & 'k & 'l) & 'init, sub: 'l -> ((int | 'm) -> ('a & 'n) & 'o) & 'sub, update: 'k -> ((int | 'm | 'p) -> ('q -> ('e & 'j & 'k & 'l & 's) & 't) & 'u) & 'update} & 'v) -> ArraysRep['a, 'r]
 //│   where
-//│     'r :> ('c, "hey" | "hi",)
-//│        <: ('b, anything,)
+//│     'r :> ('i | 's, "hey" | "hi",)
+//│        <: ('e & 'j & 'k & 'l, 'w & 'x & 'y,)
+//│     'a <: 'q & 'h
 //│               = [Function: stepImpl_Ann_4]
 
 test = stepImpl_Ann_4 baseImpl
@@ -196,10 +197,11 @@ test = stepImpl_Ann_4 baseImpl
 //│       }
 
 stepImpl_ty = stepImpl_Ann_4
-//│ {fold: ('a -> ‘b_1217_1241 -> ‘b_1217_1241) -> ‘b_1217_1241 -> 'b -> ‘b_1217_1241, init: 'a -> ('b & 'c), sub: 'b -> int -> 'a, update: 'b -> int -> 'a -> ('b & 'c)} -> ArraysRep['a, 'r]
+//│ ({fold: ('a -> (‘b_1427_1451 & 'b) -> (‘b_1427_1451 | 'c) | 'd) -> ((‘b_1427_1451 | 'c) -> ('e -> (‘b_1427_1451 & 'b) & 'f) & 'g) & 'fold, init: 'h -> ('e & 'i & 'j & 'k & 'l) & 'init, sub: 'l -> ((int | 'm) -> ('a & 'n) & 'o) & 'sub, update: 'k -> ((int | 'm | 'p) -> ('q -> ('e & 'j & 'k & 'l & 's) & 't) & 'u) & 'update} & 'v) -> ArraysRep['a, 'r]
 //│   where
-//│     'r :> ('c, "hey" | "hi",)
-//│        <: ('b, anything,)
+//│     'r :> ('i | 's, "hey" | "hi",)
+//│        <: ('e & 'j & 'k & 'l, 'w & 'x & 'y,)
+//│     'a <: 'q & 'h
 //│   <:  stepImpl_ty:
 //│ ArraysRep['a, 'r] -> ArraysRep['a, ('r, string,)]
 //│            = [Function: stepImpl_Ann_4]
@@ -208,53 +210,54 @@ stepImpl_ty = stepImpl_Ann_4
 // def stepImpl2 (arr: Arrays['a]) = arr stepImpl
 
 def stepImpl2 arr = arr stepImpl
-//│ stepImpl2: ((forall 'a. 'a -> {fold: forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. (('d, 'a,) -> 'e
+//│ stepImpl2: ((forall 'a. 'a -> {fold: forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'fold, 'h. (('d, 'h,) -> 'e
 //│   where
-//│     'a <: {fold: 'b -> 'c -> 'd -> 'e}))), init: forall 'a, 'f, 'g. ('f -> ('g, "hi",)
+//│     'a <: {fold: 'b -> ('c -> ('d -> 'e & 'f) & 'g) & 'fold}))), init: forall 'a, 'i, 'j, 'init. ('i -> ('j, "hi",)
 //│   where
-//│     'a <: {init: 'f -> 'g}), sub: forall 'h. ('h, 'a,) -> (forall 'a, 'h, 'i, 'j. ('i -> 'j
+//│     'a <: {init: 'i -> 'j & 'init}), sub: forall 'k, 'l. ('k, 'l,) -> (forall 'a, 'k, 'm, 'n, 'o, 'sub. ('m -> 'n
 //│   where
-//│     'a <: {sub: 'h -> 'i -> 'j})), update: forall 'k. ('k, 'a,) -> (forall 'l. 'l -> (forall 'a, 'k, 'l, 'm, 'n. ('m -> ('n, "hey",)
+//│     'a <: {sub: 'k -> ('m -> 'n & 'o) & 'sub})), update: forall 'p, 'q. ('p, 'q,) -> (forall 'r. 'r -> (forall 'a, 'p, 'r, 's, 't, 'u, 'v, 'update. ('s -> ('t, "hey",)
 //│   where
-//│     'a <: {update: 'k -> 'l -> 'm -> 'n})))}) -> 'o) -> 'o
+//│     'a <: {update: 'p -> ('r -> ('s -> 't & 'u) & 'v) & 'update})))}) -> 'w & 'x) -> 'w
 //│          = [Function: stepImpl2]
 
 def stepImpl2_ arr = arr stepImpl_ty
-//│ stepImpl2_: ((forall 'a, 'r. ArraysRep['a, 'r] -> ArraysRep['a, ('r, string,)]) -> 'b) -> 'b
+//│ stepImpl2_: ((forall 'a, 'r. ArraysRep['a, 'r] -> ArraysRep['a, ('r, string,)]) -> 'b & 'c) -> 'b
 //│           = [Function: stepImpl2_]
 
 // * Expectedly doesn't work (see comment on `stepImpl_Ann_1`)
 // def stepImpl2_Ann_1 arr = arr stepImpl_Ann_1
 
 def stepImpl2_Ann_2 arr = arr stepImpl_Ann_2
-//│ stepImpl2_Ann_2: ((forall 'a, 'r. ArraysRep['a, 'r] -> {fold: forall 'c. 'c -> (forall 'd. 'd -> (forall 'a, 'r, 'c, 'd, 'b. (('r, 'c,) -> ('d | 'b)
+//│ stepImpl2_Ann_2: ((forall 'a, 'r. ArraysRep['a, 'r] -> {fold: forall 'c. 'c -> (forall 'd. 'd -> (forall 'a, 'r, 'c, 'd, 'b, 'e, 'f, 'g. (('r & 'f, 'g,) -> ('d | 'e)
 //│   where
-//│     'c <: 'a -> ('d | 'b) -> 'b))), init: 'a -> ('r, "hi",), sub: ('r, 'c,) -> int -> 'a, update: ('r, 'c,) -> int -> 'a -> ('r, "hey",)}) -> 'e) -> 'e
+//│     'c <: 'a -> ('b | 'd) -> ('b & 'e)))), init: forall 'h, 'i. ('a & 'h) -> ('r | 'i, "hi",), sub: forall 'j, 'k. ('r & 'j, 'k,) -> (forall 'l, 'm, 'n. (int & 'l & 'm) -> ('a | 'n)), update: forall 'o, 'p. ('r & 'o, 'p,) -> (forall 'm. (int & 'm) -> (forall 'q, 's. ('a & 'q) -> ('r | 's, "hey",)))}) -> 't & 'u) -> 't
 //│                = [Function: stepImpl2_Ann_2]
 
 def stepImpl2_Ann_3 arr = arr stepImpl_Ann_3
-//│ stepImpl2_Ann_3: ((forall 'a. ({fold: (‘a_913_939 -> ‘b_914_940 -> ‘b_914_940) -> ‘b_914_940 -> ‘rep_915_945 -> ‘b_914_940} & 'a) -> {fold: Fold[nothing, ('a, string,)], init: forall 'a, 'b, 'c. ('b -> ('c, "hi",)
+//│ stepImpl2_Ann_3: ((forall 'b, 'c, 'd, 'e, 'f, 'g, 'fold, 'h, 'a, 'rep. ({fold: (‘a_1055_1081 -> (‘b_1056_1082 & 'b) -> (‘b_1056_1082 | 'c) | 'd) -> ((‘b_1056_1082 | 'c) -> ((‘rep_1057_1087 | 'e) -> (‘b_1056_1082 & 'b) & 'f) & 'g) & 'fold} & 'h) -> {fold: Fold['a, ('rep, string,)], init: forall 'h, 'i, 'j, 'init. ('i -> ('j, "hi",)
 //│   where
-//│     'a <: {init: 'b -> 'c}), sub: forall 'd. ('d, 'a,) -> (forall 'a, 'd, 'e, 'f. ('e -> 'f
+//│     'h <: {init: 'i -> 'j & 'init}), sub: forall 'k, 'l. ('k, 'l,) -> (forall 'h, 'k, 'm, 'n, 'o, 'sub. ('m -> 'n
 //│   where
-//│     'a <: {sub: 'd -> 'e -> 'f})), update: forall 'g. ('g, 'a,) -> (forall 'h. 'h -> (forall 'a, 'g, 'h, 'i, 'j. ('i -> ('j, "hey",)
+//│     'h <: {sub: 'k -> ('m -> 'n & 'o) & 'sub})), update: forall 'p, 'q. ('p, 'q,) -> (forall 'r. 'r -> (forall 'h, 'p, 'r, 's, 't, 'u, 'v, 'update. ('s -> ('t, "hey",)
 //│   where
-//│     'a <: {update: 'g -> 'h -> 'i -> 'j})))}) -> 'k) -> 'k
+//│     'h <: {update: 'p -> ('r -> ('s -> 't & 'u) & 'v) & 'update})))}) -> 'w & 'x) -> 'w
 //│                = [Function: stepImpl2_Ann_3]
 
 def stepImpl2_Ann_4 arr = arr stepImpl_Ann_4
-//│ stepImpl2_Ann_4: ((forall 'a, 'b, 'c, 'r. {fold: ('a -> ‘b_1217_1241 -> ‘b_1217_1241) -> ‘b_1217_1241 -> 'b -> ‘b_1217_1241, init: 'a -> ('b & 'c), sub: 'b -> int -> 'a, update: 'b -> int -> 'a -> ('b & 'c)} -> ArraysRep['a, 'r]) -> 'd) -> 'd
+//│ stepImpl2_Ann_4: ((forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'fold, 'j, 'k, 'l, 'm, 'init, 'n, 'o, 'p, 'sub, 'q, 's, 't, 'u, 'update, 'v, 'r, 'w, 'x, 'y. ({fold: ('a -> (‘b_1427_1451 & 'd) -> (‘b_1427_1451 | 'e) | 'f) -> ((‘b_1427_1451 | 'e) -> ('g -> (‘b_1427_1451 & 'd) & 'h) & 'i) & 'fold, init: 'c -> ('g & 'j & 'k & 'l & 'm) & 'init, sub: 'm -> ((int | 'n) -> ('a & 'o) & 'p) & 'sub, update: 'l -> ((int | 'n | 'q) -> ('b -> ('g & 'k & 'l & 'm & 's) & 't) & 'u) & 'update} & 'v) -> ArraysRep['a, 'r]) -> 'z & 'a1) -> 'z
 //│   where
-//│     'r :> ('c, "hey" | "hi",)
-//│        <: ('b, anything,)
+//│     'r :> ('j | 's, "hey" | "hi",)
+//│        <: ('g & 'k & 'l & 'm, 'w & 'x & 'y,)
+//│     'a <: 'b & 'c
 //│                = [Function: stepImpl2_Ann_4]
 
 def stepImpl2_Ann_2_Ann (arr: Arrays['a]) = arr stepImpl_Ann_2
 // def stepImpl2_Ann_2_Ann (arr: Arrays['a]) = arr stepImpl_Ann_2 : Arrays['a]
 // def stepImpl2_Ann_2_Ann (arr: ArraysRep['a, 'r]) = arr stepImpl_Ann_2
-//│ stepImpl2_Ann_2_Ann: Arrays['a] -> {fold: forall 'c. 'c -> (forall 'd. 'd -> (forall 'c, 'd, 'a0, 'b, 'r. ((‘Rep_1669_1714 & 'r, 'c,) -> ('d | 'b)
+//│ stepImpl2_Ann_2_Ann: Arrays['a] -> ({fold: forall 'c. 'c -> (forall 'd. 'd -> (forall 'c, 'd, 'a0, 'a1, 'a2, 'b, 'e, 'r, 'r0, 'f, 'g. ((‘Rep_2122_2167 & 'r & 'r0 & 'f, 'g,) -> ('e | 'd)
 //│   where
-//│     'c <: 'a0 -> ('d | 'b) -> 'b))), init: 'a0 -> ('r | ‘Rep_1669_1714, "hi",), sub: (‘Rep_1669_1714 & 'r, 'c,) -> int -> 'a0, update: (‘Rep_1669_1714 & 'r, 'c,) -> int -> 'a0 -> ('r | ‘Rep_1669_1714, "hey",)}
+//│     'c <: ('a0 | 'a1 | 'a2) -> ('b | 'd) -> ('b & 'e)))), init: forall 'h, 'i. ('h & 'a1 & 'a0) -> ('r | ‘Rep_2122_2167 | 'i, "hi",), sub: forall 'j, 'k. (‘Rep_2122_2167 & 'r & 'j & 'r0, 'k,) -> (forall 'l, 'm, 'n. (int & 'l & 'm) -> ('a0 | 'a1 | 'a2 | 'n)), update: forall 'o, 'p. (‘Rep_2122_2167 & 'r & 'r0 & 'o, 'p,) -> (forall 'm. (int & 'm) -> (forall 'q, 's. ('a1 & 'a0 & 'q) -> ('r | ‘Rep_2122_2167 | 's, "hey",)))} | 't)
 //│                    = [Function: stepImpl2_Ann_2_Ann]
 
 
@@ -267,17 +270,17 @@ def step: Arrays['a] -> Arrays['a]
 // *  and it not being known at the `stepImpl` definition site.
 // * But this problem actually disappeared after fixing a subtle bug in type freshening...!
 def step arr f = f (stepImpl2 arr)
-//│ 'a -> (forall 'a. (('b -> 'c) -> 'c
+//│ 'a -> (forall 'a. (('b -> 'c & 'd) -> 'c
 //│   where
-//│     'a <: (forall 'd. 'd -> {fold: forall 'e. 'e -> (forall 'f. 'f -> (forall 'd, 'e, 'f, 'g, 'h. (('g, 'd,) -> 'h
+//│     'a <: (forall 'e. 'e -> {fold: forall 'f. 'f -> (forall 'g. 'g -> (forall 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'fold, 'l. (('h, 'l,) -> 'i
 //│   where
-//│     'd <: {fold: 'e -> 'f -> 'g -> 'h}))), init: forall 'd, 'i, 'j. ('i -> ('j, "hi",)
+//│     'e <: {fold: 'f -> ('g -> ('h -> 'i & 'j) & 'k) & 'fold}))), init: forall 'e, 'm, 'n, 'init. ('m -> ('n, "hi",)
 //│   where
-//│     'd <: {init: 'i -> 'j}), sub: forall 'k. ('k, 'd,) -> (forall 'd, 'k, 'l, 'm. ('l -> 'm
+//│     'e <: {init: 'm -> 'n & 'init}), sub: forall 'o, 'p. ('o, 'p,) -> (forall 'e, 'o, 'q, 'r, 's, 'sub. ('q -> 'r
 //│   where
-//│     'd <: {sub: 'k -> 'l -> 'm})), update: forall 'n. ('n, 'd,) -> (forall 'o. 'o -> (forall 'd, 'n, 'o, 'p, 'q. ('p -> ('q, "hey",)
+//│     'e <: {sub: 'o -> ('q -> 'r & 's) & 'sub})), update: forall 't, 'u. ('t, 'u,) -> (forall 'v. 'v -> (forall 'e, 't, 'v, 'w, 'x, 'y, 'z, 'update. ('w -> ('x, "hey",)
 //│   where
-//│     'd <: {update: 'n -> 'o -> 'p -> 'q})))}) -> 'b))
+//│     'e <: {update: 't -> ('v -> ('w -> 'x & 'y) & 'z) & 'update})))}) -> ('a1 & 'b)))
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step]
@@ -286,33 +289,33 @@ def step arr f = f (stepImpl2 arr)
 // def step arr f = f (stepImpl2_Ann_1 arr)
 
 def step arr f = f (stepImpl2_Ann_2 arr)
-//│ 'c -> (forall 'c. (('d -> 'e) -> 'e
+//│ 'c -> (forall 'c, 'd, 'e, 'f, 'g. (('e -> 'f & 'g) -> 'f
 //│   where
-//│     'c <: (forall 'a, 'r. ArraysRep['a, 'r] -> {fold: forall 'f. 'f -> (forall 'g. 'g -> (forall 'a, 'r, 'f, 'g, 'b. (('r, 'f,) -> ('g | 'b)
+//│     'c <: (forall 'a, 'r. ArraysRep['a, 'r] -> {fold: forall 'h. 'h -> (forall 'i. 'i -> (forall 'a, 'r, 'h, 'i, 'b, 'j, 'k, 'l. (('r & 'k, 'l,) -> ('i | 'j)
 //│   where
-//│     'f <: 'a -> ('g | 'b) -> 'b))), init: 'a -> ('r, "hi",), sub: ('r, 'f,) -> int -> 'a, update: ('r, 'f,) -> int -> 'a -> ('r, "hey",)}) -> 'd))
+//│     'h <: 'a -> ('b | 'i) -> ('b & 'j)))), init: forall 'm, 'n. ('a & 'm) -> ('r | 'n, "hi",), sub: forall 'o, 'p. ('r & 'o, 'p,) -> (forall 'q, 's, 't. (int & 'q & 's) -> ('a | 't)), update: forall 'u, 'v. ('r & 'u, 'v,) -> (forall 's. (int & 's) -> (forall 'w, 'x. ('a & 'w) -> ('r | 'x, "hey",)))}) -> ('d & 'e)))
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step1]
 
 :e
 def step arr f = f (stepImpl2_Ann_3 arr)
-//│ 'a -> (forall 'a. (('b -> 'c) -> 'c
+//│ 'b -> (forall 'b. (('c -> 'd & 'e) -> 'd
 //│   where
-//│     'a <: (forall 'd. ({fold: (‘a_913_939 -> ‘b_914_940 -> ‘b_914_940) -> ‘b_914_940 -> ‘rep_915_945 -> ‘b_914_940} & 'd) -> {fold: Fold[nothing, ('d, string,)], init: forall 'd, 'e, 'f. ('e -> ('f, "hi",)
+//│     'b <: (forall 'f, 'g, 'h, 'i, 'j, 'k, 'fold, 'l, 'a, 'rep. ({fold: (‘a_1055_1081 -> (‘b_1056_1082 & 'f) -> (‘b_1056_1082 | 'g) | 'h) -> ((‘b_1056_1082 | 'g) -> ((‘rep_1057_1087 | 'i) -> (‘b_1056_1082 & 'f) & 'j) & 'k) & 'fold} & 'l) -> {fold: Fold['a, ('rep, string,)], init: forall 'l, 'm, 'n, 'init. ('m -> ('n, "hi",)
 //│   where
-//│     'd <: {init: 'e -> 'f}), sub: forall 'g. ('g, 'd,) -> (forall 'd, 'g, 'h, 'i. ('h -> 'i
+//│     'l <: {init: 'm -> 'n & 'init}), sub: forall 'o, 'p. ('o, 'p,) -> (forall 'l, 'o, 'q, 'r, 's, 'sub. ('q -> 'r
 //│   where
-//│     'd <: {sub: 'g -> 'h -> 'i})), update: forall 'j. ('j, 'd,) -> (forall 'k. 'k -> (forall 'd, 'j, 'k, 'l, 'm. ('l -> ('m, "hey",)
+//│     'l <: {sub: 'o -> ('q -> 'r & 's) & 'sub})), update: forall 't, 'u. ('t, 'u,) -> (forall 'v. 'v -> (forall 'l, 't, 'v, 'w, 'x, 'y, 'z, 'update. ('w -> ('x, "hey",)
 //│   where
-//│     'd <: {update: 'j -> 'k -> 'l -> 'm})))}) -> 'b))
+//│     'l <: {update: 't -> ('v -> ('w -> 'x & 'y) & 'z) & 'update})))}) -> ('a1 & 'c)))
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.299: 	def step arr f = f (stepImpl2_Ann_3 arr)
+//│ ║  l.302: 	def step arr f = f (stepImpl2_Ann_3 arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_2216` is not an instance of type `'a_913_939`
-//│ ║  l.262: 	def step: Arrays['a] -> Arrays['a]
+//│ ╟── type `‘a_2803` is not an instance of type `'a_1055_1081`
+//│ ║  l.265: 	def step: Arrays['a] -> Arrays['a]
 //│ ║         	                 ^^
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.139: 	    fold   = (fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0) : Fold['a, ('rep, string)]
@@ -321,20 +324,21 @@ def step arr f = f (stepImpl2_Ann_3 arr)
 
 // * This used to be the only working one based on an internal annotation
 def step arr f = f (stepImpl2_Ann_4 arr)
-//│ 'b -> (forall 'b. (('c -> 'd) -> 'd
+//│ 'b -> (forall 'b. (('c -> 'd & 'e) -> 'd
 //│   where
-//│     'b <: (forall 'b, 'a, 'e, 'f, 'r. {fold: ('a -> ‘b_1217_1241 -> ‘b_1217_1241) -> ‘b_1217_1241 -> 'e -> ‘b_1217_1241, init: 'a -> ('e & 'f), sub: 'e -> int -> 'a, update: 'e -> int -> 'a -> ('e & 'f)} -> ArraysRep['a, 'r]) -> 'c))
+//│     'b <: (forall 'a, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm, 'fold, 'n, 'o, 'p, 'q, 'init, 's, 't, 'u, 'sub, 'v, 'w, 'x, 'y, 'update, 'z, 'r, 'a1, 'b1, 'c1. ({fold: ('a -> (‘b_1427_1451 & 'h) -> (‘b_1427_1451 | 'i) | 'j) -> ((‘b_1427_1451 | 'i) -> ('k -> (‘b_1427_1451 & 'h) & 'l) & 'm) & 'fold, init: 'g -> ('k & 'n & 'o & 'p & 'q) & 'init, sub: 'q -> ((int | 's) -> ('a & 't) & 'u) & 'sub, update: 'p -> ((int | 's | 'v) -> ('f -> ('k & 'o & 'p & 'q & 'w) & 'x) & 'y) & 'update} & 'z) -> ArraysRep['a, 'r]) -> ('d1 & 'c)))
 //│   where
-//│     'r :> ('f, "hey" | "hi",)
-//│        <: ('e, 'b,)
+//│     'r :> ('n | 'w, "hey" | "hi",)
+//│        <: ('k & 'o & 'p & 'q, 'a1 & 'b1 & 'c1,)
+//│     'a <: 'f & 'g
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step3]
 
 def step arr f = f (stepImpl2_Ann_2_Ann arr)
-//│ 'c -> (forall 'c, 'a. (({fold: forall 'd. 'd -> (forall 'e. 'e -> (forall 'd, 'e, 'a0, 'b, 'r. ((‘Rep_1669_1714 & 'r, 'd,) -> ('e | 'b)
+//│ 'c -> (forall 'c, 'a, 'd, 'e, 'f. ((({fold: forall 'g. 'g -> (forall 'h. 'h -> (forall 'g, 'h, 'a0, 'a1, 'a2, 'b, 'i, 'r, 'r0, 'j, 'k. ((‘Rep_2122_2167 & 'r & 'r0 & 'j, 'k,) -> ('i | 'h)
 //│   where
-//│     'd <: 'a0 -> ('e | 'b) -> 'b))), init: 'a0 -> ('r | ‘Rep_1669_1714, "hi",), sub: (‘Rep_1669_1714 & 'r, 'd,) -> int -> 'a0, update: (‘Rep_1669_1714 & 'r, 'd,) -> int -> 'a0 -> ('r | ‘Rep_1669_1714, "hey",)} -> 'f) -> 'f
+//│     'g <: ('a0 | 'a1 | 'a2) -> ('b | 'h) -> ('b & 'i)))), init: forall 'l, 'm. ('l & 'a1 & 'a0) -> ('r | ‘Rep_2122_2167 | 'm, "hi",), sub: forall 'n, 'o. (‘Rep_2122_2167 & 'r & 'n & 'r0, 'o,) -> (forall 'p, 'q, 's. (int & 'p & 'q) -> ('a0 | 'a1 | 'a2 | 's)), update: forall 't, 'u. (‘Rep_2122_2167 & 'r & 'r0 & 't, 'u,) -> (forall 'q. (int & 'q) -> (forall 'v, 'w. ('a1 & 'a0 & 'v) -> ('r | ‘Rep_2122_2167 | 'w, "hey",)))} | 'd) -> 'e & 'f) -> 'e
 //│   where
 //│     'c <: Arrays['a]))
 //│   <:  step:
@@ -342,18 +346,18 @@ def step arr f = f (stepImpl2_Ann_2_Ann arr)
 //│     = [Function: step4]
 
 def step (arr: Arrays['a]) f = f (stepImpl2_Ann_2_Ann arr)
-//│ Arrays['a] -> ({fold: forall 'c. 'c -> (forall 'd. 'd -> (forall 'c, 'd, 'a0, 'b, 'r. ((‘Rep_1669_1714 & 'r, 'c,) -> ('d | 'b)
+//│ Arrays['a] -> (forall 'c, 'd, 'e. (({fold: forall 'f. 'f -> (forall 'g. 'g -> (forall 'f, 'g, 'a0, 'a1, 'a2, 'b, 'h, 'r, 'r0, 'i, 'j. ((‘Rep_2122_2167 & 'r & 'r0 & 'i, 'j,) -> ('h | 'g)
 //│   where
-//│     'c <: 'a0 -> ('d | 'b) -> 'b))), init: 'a0 -> ('r | ‘Rep_1669_1714, "hi",), sub: (‘Rep_1669_1714 & 'r, 'c,) -> int -> 'a0, update: (‘Rep_1669_1714 & 'r, 'c,) -> int -> 'a0 -> ('r | ‘Rep_1669_1714, "hey",)} -> 'e) -> 'e
+//│     'f <: ('a0 | 'a1 | 'a2) -> ('b | 'g) -> ('b & 'h)))), init: forall 'k, 'l. ('k & 'a1 & 'a0) -> ('r | ‘Rep_2122_2167 | 'l, "hi",), sub: forall 'm, 'n. (‘Rep_2122_2167 & 'r & 'm & 'r0, 'n,) -> (forall 'o, 'p, 'q. (int & 'o & 'p) -> ('a0 | 'a1 | 'a2 | 'q)), update: forall 's, 't. (‘Rep_2122_2167 & 'r & 'r0 & 's, 't,) -> (forall 'p. (int & 'p) -> (forall 'u, 'v. ('a1 & 'a0 & 'u) -> ('r | ‘Rep_2122_2167 | 'v, "hey",)))} | 'c) -> 'd & 'e) -> 'd)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step5]
 
 // * Also works, but this one is easier as it internally uses the fully-annotated `stepImpl_ty`
 def step arr f = f (stepImpl2_ arr)
-//│ 'b -> (forall 'b. (('c -> 'd) -> 'd
+//│ 'b -> (forall 'b. (('c -> 'd & 'e) -> 'd
 //│   where
-//│     'b <: (forall 'a, 'r. ArraysRep['a, 'r] -> ArraysRep['a, ('r, string,)]) -> 'c))
+//│     'b <: (forall 'a, 'r. ArraysRep['a, 'r] -> ArraysRep['a, ('r, string,)]) -> ('f & 'c)))
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step6]
@@ -383,7 +387,7 @@ snb = mkMonoArray 5
 //│    = [Function (anonymous)]
 
 snb (fun arr -> arr.init true)
-//│ res: ‘Rep_2964_2968 | ‘Rep_2972_2976
+//│ res: ‘Rep_3684_3688 | ‘Rep_3692_3696
 //│    = [ [ [ [Array], 'hi' ], 'hi' ], 'hi' ]
 
 

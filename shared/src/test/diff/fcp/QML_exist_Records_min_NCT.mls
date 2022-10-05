@@ -17,12 +17,12 @@ type Arrays = (ArraysRep -> 'r) -> 'r
 
 // :d
 def stepImpl arrImpl = { fold = fun f ->  arrImpl.fold f }
-//│ stepImpl: {fold: 'a -> 'b} -> {fold: 'a -> 'b}
+//│ stepImpl: ({fold: 'a -> 'b & 'fold} & 'c) -> {fold: forall 'd, 'e. ('a & 'd) -> ('e | 'b)}
 //│         = [Function: stepImpl]
 
 // :d
 def stepImpl2 arr = arr stepImpl
-//│ stepImpl2: ((forall 'a, 'b. {fold: 'a -> 'b} -> {fold: 'a -> 'b}) -> 'c) -> 'c
+//│ stepImpl2: ((forall 'a, 'b, 'fold, 'c. ({fold: 'a -> 'b & 'fold} & 'c) -> {fold: forall 'd, 'e. ('a & 'd) -> ('e | 'b)}) -> 'f & 'g) -> 'f
 //│          = [Function: stepImpl2]
 
 def step: Arrays -> Arrays
@@ -32,13 +32,13 @@ def step: Arrays -> Arrays
 // :d
 :e
 def step arr f = f (stepImpl2 arr)
-//│ ((forall 'a, 'b. {fold: 'a -> 'b} -> {fold: 'a -> 'b}) -> 'c) -> (forall 'd. ('c -> 'd) -> 'd)
+//│ ((forall 'a, 'b, 'fold, 'c. ({fold: 'a -> 'b & 'fold} & 'c) -> {fold: forall 'd, 'e. ('a & 'd) -> ('e | 'b)}) -> 'f & 'g) -> (forall 'h, 'i, 'j. (('h | 'f) -> 'i & 'j) -> 'i)
 //│   <:  step:
 //│ Arrays -> Arrays
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.34: 	def step arr f = f (stepImpl2 arr)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘b_121_124` is not an instance of type `'b_121_125`
+//│ ╟── type `‘b_153_156` is not an instance of type `'b_153_157`
 //│ ║  l.12: 	type ArraysRep = { fold: forall 'b. 'b -> 'b }
 //│ ║        	                                ^^
 //│ ╟── Note: constraint arises from quantified type variable:

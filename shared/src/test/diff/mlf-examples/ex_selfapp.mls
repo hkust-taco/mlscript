@@ -20,7 +20,7 @@ Cons (head, tail) = Cons { head; tail }
 //│ Defined type alias List[+a]
 //│ Nil: Nil
 //│    = Nil {}
-//│ Cons: ('head & 'a, List['a] & 'tail,) -> (Cons['a] with {head: 'head, tail: 'tail})
+//│ Cons: ('b & 'head & 'a, List['a] & 'c & 'tail,) -> ((Cons['a] with {head: 'head, tail: 'tail}) | 'd)
 //│     = [Function: Cons1]
 
 // let rec foo =
@@ -82,24 +82,24 @@ def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun 
 //│ ║  l.80: 	def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> Cons (x, xs)) Nil
 //│ ║        	                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (cons<> & {head: head26_153'', tail: tail27_150'', Cons#a: mut a22_151''..a22_151''})  <:  List[a22_151'']    ComposedType  TypeRef
-//│ ╙──  ... looks like:  (cons<> & {head: head26_147'''', tail: tail27_144'''', Cons#a: mut a22_145''''..a22_145''''})  <:  List[a22_145'''']
-//│ build: (forall 'b. (anything -> 'b -> 'b) -> 'b -> 'b) -> error
+//│ ╟── this constraint:  (cons<> & {head: head26_159'', tail: tail27_156'', Cons#a: mut a22_157''..a22_157''})  <:  List[a22_157'']    ComposedType  TypeRef
+//│ ╙──  ... looks like:  (cons<> & {head: head26_153'''', tail: tail27_150'''', Cons#a: mut a22_151''''..a22_151''''})  <:  List[a22_151'''']
+//│ build: (forall 'b. (('a & 'c & 'a0) -> 'b -> 'b) -> 'b -> 'b) -> (error | 'd)
 //│      = [Function: build]
 
 // * ^ Not sure why this one only works with recursive types:
 :RecursiveTypes
 // :e // FIXME? refreshing-extr
 def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> Cons (x, xs)) Nil
-//│ build: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> 'tail
+//│ build: (forall 'b. (('a & 'c & 'a0) -> 'b -> 'b) -> 'b -> 'b) -> ('tail | 'd)
 //│   where
-//│     'tail :> (Cons['a] with {tail: 'tail}) | Nil
+//│     'tail :> (Cons['a0 | 'c] with {head: 'head | 'c, tail: 'tail}) | Nil
 //│      = [Function: build1]
 :NoRecursiveTypes
 
 
 def build_ = fun g -> g (fun x -> fun xs -> Cons (x, xs)) Nil
-//│ build_: ((forall 'b. 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))) -> Nil -> 'c) -> 'c
+//│ build_: ((forall 'b. 'b -> (forall 'a, 'c, 'd, 'tail, 'head, 'e. (List['a] & 'c & 'd & 'tail) -> ((Cons['a | 'b] with {head: 'head | 'b, tail: 'tail}) | 'e))) -> (Nil -> 'f & 'g) & 'h) -> 'f
 //│       = [Function: build_]
 
 :e
@@ -108,8 +108,8 @@ build_ : forall 'a. (forall 'b. (('a -> 'b -> 'b) -> 'b -> 'b)) -> List['a]
 //│ ║  l.106: 	build_ : forall 'a. (forall 'b. (('a -> 'b -> 'b) -> 'b -> 'b)) -> List['a]
 //│ ║         	^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (cons<> & {head: head26_300', tail: tail27_297', Cons#a: mut a22_298'..a22_298'})  <:  List[‘a_282']    ComposedType  TypeRef
-//│ ╙──  ... looks like:  (cons<> & {head: head26_294'''', tail: tail27_291'''', Cons#a: mut a22_292''''..a22_292''''})  <:  List[‘a_282']
+//│ ╟── this constraint:  (cons<> & {head: head26_334', tail: tail27_331', Cons#a: mut a22_332'..a22_332'})  <:  List[‘a_316']    ComposedType  TypeRef
+//│ ╙──  ... looks like:  (cons<> & {head: head26_328'''', tail: tail27_325'''', Cons#a: mut a22_326''''..a22_326''''})  <:  List[‘a_316']
 //│ res: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> List['a]
 //│    = [Function: build_]
 
@@ -126,12 +126,12 @@ def nil: Ls['a]
 
 // :e // FIXME? refreshing-extr
 def build2 = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> cons (x, xs)) nil
-//│ build2: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
+//│ build2: (forall 'b. (('a & 'c) -> 'b -> 'b) -> 'b -> 'b) -> (Ls['a0 | 'c] | 'd)
 //│       = <no result>
 //│         cons is not implemented
 
 def build2_ = fun g -> g (fun x -> fun xs -> cons (x, xs)) nil
-//│ build2_: ((forall 'b. 'b -> (forall 'a. Ls['a] -> Ls['a | 'b])) -> Ls[nothing] -> 'c) -> 'c
+//│ build2_: ((forall 'b. 'b -> (forall 'a, 'c, 'd. (Ls['a] & 'c) -> (Ls['a | 'b] | 'd))) -> (Ls['d] -> 'e & 'f) & 'g) -> 'e
 //│        = <no result>
 //│          cons is not implemented
 
@@ -165,7 +165,7 @@ def z = (fun c -> fun n -> n) : Baa
 def z_ = fun c -> fun n -> n
 //│ z: Baa
 //│  = [Function: z]
-//│ z_: anything -> (forall 'a. 'a -> 'a)
+//│ z_: 'a -> (forall 'b. 'b -> 'b)
 //│   = [Function: z_]
 
 
@@ -184,7 +184,7 @@ rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
 //│ ║  l.183: 	rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘b_489_491` is not an instance of type `'b_489_490`
+//│ ╟── type `‘b_539_541` is not an instance of type `'b_539_540`
 //│ ║  l.50: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
 //│ ║        	                 ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -193,16 +193,16 @@ rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ╟── from application:
 //│ ║  l.183: 	rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ╙──       	                                                       ^^^^^^^^^^^^^^^^^^^^^^
-//│ int -> Ba -> (nothing -> (‘b_489_491 | 'b) -> (‘b_489_491 & 'b) & int -> (‘b_489_491 | 'b) -> (‘b_489_490 & 'a)) -> (‘b_489_491 & 'b) -> (‘b_489_491 | 'a)
+//│ int -> Ba -> (nothing -> (‘b_539_541 | 'b) -> (‘b_539_541 & 'b) & int -> (‘b_539_541 | 'b) -> (‘b_539_540 & 'a)) -> (‘b_539_541 & 'b) -> (‘b_539_541 | 'a)
 //│   <:  k:
 //│ int -> Ba -> Ba
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.183: 	rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘b_489_491` is not an instance of type `'b_516_517`
+//│ ╟── type `‘b_539_541` is not an instance of type `'b_566_567`
 //│ ║  l.50: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
 //│ ║        	                 ^^
-//│ ╟── but it flows into application with expected type `‘b_516_517`
+//│ ╟── but it flows into application with expected type `‘b_566_567`
 //│ ║  l.183: 	rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	                                                       ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -214,16 +214,16 @@ rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 rec def k = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
 //│ 'k
 //│   where
-//│     'k :> int -> ('k -> (anything -> (forall 'a. 'a -> 'a)) -> 'b -> 'c -> 'd) -> (int -> 'd -> 'e & 'b) -> 'c -> 'e
+//│     'k :> int -> ('k -> (forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> 'c -> 'd -> 'e) -> (int -> 'e -> 'f & 'c) -> 'd -> 'f
 //│   <:  k:
 //│ int -> Ba -> Ba
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.214: 	rec def k = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> (forall ?b. ?b -> ?b)` is not an instance of type `'b_574_575`
+//│ ╟── function of type `?a -> (forall ?b. ?b -> ?b)` is not an instance of type `'b_626_627`
 //│ ║  l.165: 	def z_ = fun c -> fun n -> n
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `‘b_574_575`
+//│ ╟── but it flows into reference with expected type `‘b_626_627`
 //│ ║  l.214: 	rec def k = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
 //│ ║         	                                                                 ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -234,7 +234,7 @@ rec def k = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
 rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k_ z_ c n)
 //│ k_: 'k_
 //│   where
-//│     'k_ :> int -> ('k_ -> (anything -> (forall 'a. 'a -> 'a)) -> 'b -> 'c -> 'd) -> (int -> 'd -> 'e & 'b) -> 'c -> 'e
+//│     'k_ :> int -> ('k_ -> (forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> 'c -> 'd -> 'e) -> (int -> 'e -> 'f & 'c) -> 'd -> 'f
 //│   = [Function: k_]
 
 
@@ -256,17 +256,18 @@ rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k_ z_ c n)
 
 // :e // FIXME? fails with genLamBodies
 def bfoo xs = build (foldr k z xs)
-//│ bfoo: 'a -> 'tail
+//│ bfoo: ('b & 'c) -> ('tail | 'd)
 //│   where
-//│     'tail :> (Cons[int] with {tail: 'tail}) | Nil
-//│     'a <: (Cons[?] with {head: int, tail: 'a}) | Nil
+//│     'tail :> (Cons['a | 'head | int | 'e] with {head: 'head | int | 'e, tail: 'tail}) | Nil
+//│     'c <: Cons['head0] & 'f | Nil & 'g
+//│     'f <: {head: int & 'head0, tail: 'c}
 //│     = [Function: bfoo]
 
 // FIXedME // works with quantif extrus
 :e // due to tapping
 def bfoo_ xs = build_ (foldr k_ z_ xs)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.267: 	def bfoo_ xs = build_ (foldr k_ z_ xs)
+//│ ║  l.268: 	def bfoo_ xs = build_ (foldr k_ z_ xs)
 //│ ║         	               ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?b -> (forall ?c. ?c -> ?c)` does not match type `Cons[?a] | Nil`
 //│ ║  l.165: 	def z_ = fun c -> fun n -> n
@@ -277,9 +278,10 @@ def bfoo_ xs = build_ (foldr k_ z_ xs)
 //│ ╟── from reference:
 //│ ║  l.101: 	def build_ = fun g -> g (fun x -> fun xs -> Cons (x, xs)) Nil
 //│ ╙──       	                                                     ^^
-//│ bfoo_: 'a -> error
+//│ bfoo_: ('a & 'b) -> (error | 'c)
 //│   where
-//│     'a <: (Cons[?] with {head: int, tail: 'a}) | Nil
+//│     'b <: Cons['d] & 'e | Nil & 'f
+//│     'e <: {head: int & 'head & 'd, tail: 'b}
 //│      = [Function: bfoo_]
 
 
@@ -339,43 +341,40 @@ def k: int -> Baa -> Baa
 :e
 rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.340: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║  l.342: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `int` is not an instance of type `'a_937_940`
-//│ ║  l.340: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ╟── operator application of type `int` is not an instance of type `'a_1021_1024`
+//│ ║  l.342: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	                                                           ^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.51: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
 //│ ╙──      	                  ^^
-//│ int -> Baa -> (nothing -> (‘b_938_941 | 'b) -> (‘b_938_941 & 'b) & int -> (‘b_938_941 | 'b) -> (‘b_938_939 & 'a)) -> (‘b_938_941 & 'b) -> 'a
+//│ int -> Baa -> (nothing -> (‘b_1022_1025 | 'b) -> (‘b_1022_1025 & 'b) & int -> (‘b_1022_1025 | 'b) -> (‘b_1022_1023 & 'a)) -> (‘b_1022_1025 & 'b) -> 'a
 //│   <:  k:
 //│ int -> Baa -> Baa
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.340: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║  l.342: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘b_967_969` is not an instance of type `'b_938_941`
+//│ ╟── type `‘b_1022_1025` is not an instance of type `'b_1051_1053`
 //│ ║  l.51: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
 //│ ║        	                     ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.51: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
-//│ ║        	                     ^^
-//│ ╟── from reference:
-//│ ║  l.340: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
-//│ ╙──       	                                                                            ^
+//│ ╙──      	                     ^^
 //│  = [Function: k2]
 
 :e // FIXME?
 def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
-//│ int -> Baa -> (forall 'a. 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ (int & 'c) -> Baa -> (forall 'd. 'd -> (forall 'd, 'e, 'f, 'g, 'h, 'a, 'b, 'i. (('f & 'b & 'i) -> 'g
 //│   where
-//│     'a <: int -> 'b -> 'c & nothing -> 'b -> 'b)))
+//│     'd <: (int | 'e) -> ('f -> 'g & 'h) & 'a -> 'b -> ('f & 'b))))
 //│   <:  k:
 //│ int -> Baa -> Baa
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.368: 	def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║  l.367: 	def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `int` is not an instance of type `'a_1021`
-//│ ║  l.368: 	def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ╟── operator application of type `int` is not an instance of type `'a_1117`
+//│ ║  l.367: 	def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	                                                       ^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.51: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
@@ -384,10 +383,10 @@ def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 
 // * Using `k` here on purpose to simulate an annotated rec def
 def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z c n)
-//│ k_: int -> (forall 'a. 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> 'd
+//│ k_: (int & 'a) -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k. ('h -> 'f
 //│   where
-//│     'b <: int -> 'c -> 'd
-//│     'a <: (int -> Baa -> Baa) -> Baa -> 'b -> 'e -> 'c))))
+//│     'c <: (int | 'd) -> ('e -> 'f & 'g)
+//│     'b <: (int -> Baa -> Baa) -> (Baa -> ('c -> ('h -> 'e & 'i) & 'j) & 'k)))))
 //│   = [Function: k_1]
 
 rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k_ z c n)
@@ -401,7 +400,7 @@ rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k_ z c n)
 rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k_ z_ c n)
 //│ k_: 'k_
 //│   where
-//│     'k_ :> int -> ('k_ -> (anything -> (forall 'a. 'a -> 'a)) -> 'b -> 'c -> 'd) -> (int -> 'd -> 'e & 'b) -> 'c -> 'e
+//│     'k_ :> int -> ('k_ -> (forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> 'c -> 'd -> 'e) -> (int -> 'e -> 'f & 'c) -> 'd -> 'f
 //│   = [Function: k_3]
 
 // k = k_ // nope

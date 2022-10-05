@@ -36,7 +36,7 @@ cons (head, tail) = Cons { head; tail }
 //│   <:  nil:
 //│ Ls[nothing]
 //│    = Nil {}
-//│ ('head & 'A, Ls['A] & 'tail,) -> (Cons['A] with {head: 'head, tail: 'tail})
+//│ ('a & 'head & 'A, Ls['A] & 'b & 'tail,) -> ((Cons['A] with {head: 'head, tail: 'tail}) | 'c)
 //│   <:  cons:
 //│ ('a, Ls['a],) -> Ls['a]
 //│     = [Function: cons]
@@ -47,7 +47,7 @@ cons (head, tail) = Cons { head; tail }
 
 
 def build0 (g: forall 'b. ('a -> 'b) -> 'b) = g single
-//│ build0: (forall 'b. ('a -> 'b) -> 'b) -> Ls['a]
+//│ build0: (forall 'b. (('a & 'a0) -> 'b) -> 'b) -> (Ls['a0] | 'c)
 //│       = <no result>
 //│         single is not implemented
 
@@ -62,28 +62,29 @@ res: Ls[int]
 
 
 def build0 (g: forall 'b. ('a -> 'b) -> 'b) = g (fun x -> single ((x, x)))
-//│ build0: (forall 'b. ('a -> 'b) -> 'b) -> Ls[('a, 'a,)]
+//│ build0: (forall 'b. (('a & 'c) -> 'b) -> 'b) -> (Ls['a0 | ('c, 'c,)] | 'd)
 //│       = <no result>
 //│         single is not implemented
 
 def build0 (g: forall 'b. ('a -> 'a -> 'b) -> 'b) = g (fun x -> fun y -> single ((x,y)))
-//│ build0: (forall 'b. ('a -> 'a -> 'b) -> 'b) -> Ls[('a, 'a,)]
+//│ build0: (forall 'b. (('a & 'c & 'd) -> ('a & 'c & 'd) -> 'b) -> 'b) -> (Ls['a0 | ('d, 'c,)] | 'e)
 //│       = <no result>
 //│         single is not implemented
 
 def build0 (g: forall 'b. ('a -> 'b -> 'b) -> 'b) = g (fun x -> fun y -> single ((x,y)))
-//│ build0: (forall 'b. ('a -> 'b -> 'b) -> 'b) -> 'c
+//│ build0: (forall 'b. (('a & 'c) -> 'b -> 'b) -> 'b) -> ('d | 'e)
 //│   where
-//│     'c :> Ls[('a, 'c,)]
+//│     'd :> Ls['a0]
+//│     'a0 :> ('c, 'd,)
 //│       = <no result>
 //│         single is not implemented
 
 def build0 (g: forall 'b. (('a, 'b) -> 'b) -> 'b) = g cons
-//│ build0: (forall 'b. (('a, 'b,) -> 'b) -> 'b) -> Ls['a]
+//│ build0: (forall 'b. (('a & 'a0, 'b,) -> 'b) -> 'b) -> (Ls['a0] | 'c)
 //│       = [Function: build01]
 
 def build0 (g: forall 'b. (('a, 'b) -> 'b) -> 'b) = g (fun (x, xs) -> cons (x, xs))
-//│ build0: (forall 'b. (('a, 'b,) -> 'b) -> 'b) -> Ls['a]
+//│ build0: (forall 'b. (('a & 'c & 'a0, 'b,) -> 'b) -> 'b) -> (Ls['a0] | 'd)
 //│       = [Function: build02]
 
 def g: forall 'b. (('a, 'b) -> 'b) -> 'b
@@ -110,7 +111,7 @@ def cons2: ('a, {x:'a}) -> {x:'a}
 //│      = <missing implementation>
 
 f (x, xs) = cons2 (x, xs)
-//│ f: ('a, {x: 'a},) -> {x: 'a}
+//│ f: ('b & 'a, {x: 'a} & 'c,) -> ({x: 'a} | 'd)
 //│  = <no result>
 //│    cons2 is not implemented
 
@@ -121,7 +122,7 @@ g f
 
 
 def build0 (g: forall 'b. ('a -> 'b -> 'b) -> 'b) = g (fun x -> fun xs -> cons (x, xs))
-//│ build0: (forall 'b. ('a -> 'b -> 'b) -> 'b) -> Ls['a]
+//│ build0: (forall 'b. (('a & 'c) -> 'b -> 'b) -> 'b) -> (Ls['a0 | 'c] | 'd)
 //│       = [Function: build03]
 
 :re
@@ -136,7 +137,7 @@ build0 (fun k -> k 1 error)
 
 
 def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> cons (x, xs)) nil
-//│ build: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
+//│ build: (forall 'b. (('a & 'c) -> 'b -> 'b) -> 'b -> 'b) -> (Ls['a0 | 'c] | 'd)
 //│      = [Function: build]
 
 xs0 = build (fun c -> fun n -> n)
@@ -180,13 +181,13 @@ build: forall 'a. (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 :e
 build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.181: 	build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
+//│ ║  l.182: 	build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 //│ ║         	^^^^^
-//│ ╟── type `Ls[?a]` is not an instance of type `'b_636`
-//│ ║  l.181: 	build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
+//│ ╟── type `Ls[?a]` is not an instance of type `'b_694`
+//│ ║  l.182: 	build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 //│ ║         	               ^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.138: 	def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> cons (x, xs)) nil
+//│ ║  l.139: 	def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> cons (x, xs)) nil
 //│ ╙──       	                           ^^
 //│ res: (('a -> Ls['a] -> Ls['a | error]) -> Ls['a | error] -> Ls['a]) -> Ls['a | error]
 //│    = [Function: build]
@@ -197,7 +198,7 @@ build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 
 
 def build_ = fun g -> g (fun x -> fun xs -> cons (x, xs)) nil
-//│ build_: ((forall 'b. 'b -> (forall 'a. Ls['a] -> Ls['a | 'b])) -> Ls[nothing] -> 'c) -> 'c
+//│ build_: ((forall 'b. 'b -> (forall 'a, 'c, 'd. (Ls['a] & 'c) -> (Ls['a | 'b] | 'd))) -> (Ls['d] -> 'e & 'f) & 'g) -> 'e
 //│       = [Function: build_]
 
 build_ (fun c -> fun n -> n)
@@ -237,41 +238,41 @@ def b: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 //│  = <missing implementation>
 
 b = build_
-//│ ((forall 'b. 'b -> (forall 'a. Ls['a] -> Ls['a | 'b])) -> Ls[nothing] -> 'c) -> 'c
+//│ ((forall 'b. 'b -> (forall 'a, 'c, 'd. (Ls['a] & 'c) -> (Ls['a | 'b] | 'd))) -> (Ls['d] -> 'e & 'f) & 'g) -> 'e
 //│   <:  b:
 //│ (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 //│  = [Function: build_]
 
 b g = build_ g
-//│ ((forall 'b. 'b -> (forall 'a. Ls['a] -> Ls['a | 'b])) -> Ls[nothing] -> 'c) -> 'c
+//│ ((forall 'b. 'b -> (forall 'a, 'c, 'd. (Ls['a] & 'c) -> (Ls['a | 'b] | 'd))) -> (Ls['d] -> ('e & 'f) & 'g) & 'h & 'i) -> 'f
 //│   <:  b:
 //│ (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 //│  = [Function: b1]
 
 b g = build_ (fun x -> g x)
-//│ ((forall 'b. 'b -> (forall 'a. Ls['a] -> Ls['a | 'b])) -> Ls[nothing] -> 'c) -> 'c
+//│ ((forall 'b. 'b -> (forall 'a, 'c, 'd. (Ls['a] & 'c) -> (Ls['a | 'b] | 'd)) | 'e) -> (Ls['d] -> ('f & 'g) & 'h & 'i) & 'j) -> 'g
 //│   <:  b:
 //│ (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 //│  = [Function: b2]
 
 :e
 b g x = build_ g x
-//│ 'b -> (forall 'b, 'c, 'd. ('c -> 'd
+//│ 'b -> (forall 'b, 'c, 'd, 'e, 'f, 'g. ('c -> 'd
 //│   where
-//│     'b <: (forall 'e. 'e -> (forall 'a. Ls['a] -> Ls['a | 'e])) -> Ls[nothing] -> 'c -> 'd))
+//│     'b <: (forall 'h. 'h -> (forall 'a, 'i, 'j. (Ls['a] & 'i) -> (Ls['a | 'h] | 'j))) -> (Ls['j] -> ('c -> 'd & 'e & 'f) & 'g)))
 //│   <:  b:
 //│ (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.258: 	b g x = build_ g x
+//│ ║  l.259: 	b g x = build_ g x
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Ls[?a]` is not a function
 //│ ║  l.23: 	def nil: Ls['a]
 //│ ║        	         ^^^^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.258: 	b g x = build_ g x
+//│ ║  l.259: 	b g x = build_ g x
 //│ ║         	        ^^^^^^^^^^
 //│ ╟── from application:
-//│ ║  l.199: 	def build_ = fun g -> g (fun x -> fun xs -> cons (x, xs)) nil
+//│ ║  l.200: 	def build_ = fun g -> g (fun x -> fun xs -> cons (x, xs)) nil
 //│ ╙──       	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│  = [Function: b3]
 

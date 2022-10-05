@@ -501,7 +501,8 @@ trait TypeSimplifier { self: Typer =>
     
     // val allVars = st.getVars
     val allVars = analyzed1.iterator.map(_._1).toSortedSet
-    val rewritableVars = allVars.filterNot(constrainedVars)
+    // val rewritableVars = allVars.filterNot(constrainedVars)
+    val rewritableVars = allVars.filter(v => v.level <= 1 && !constrainedVars(v))
     
     var recVars = MutSet.from(allVars.iterator.filter(_.isRecursive_$))
     

@@ -41,7 +41,7 @@ rec def to_ch n =
   s (to_ch n)
 // rec def to_ch n =
 //   to_ch n
-//│ to_ch: anything -> anything -> nothing
+//│ to_ch: anything -> (forall 'a, 'b. 'a -> 'b)
 //│      = [Function: to_ch]
 
 :ns
@@ -75,7 +75,7 @@ to_ch 1 2
 // :e // fails with quantif extrus
 // :e // fails with gen lam bodies
 to_church = to_ch
-//│ anything -> anything -> nothing
+//│ anything -> (forall 'a, 'b. 'a -> 'b)
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│          = [Function: to_ch]

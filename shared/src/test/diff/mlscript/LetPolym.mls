@@ -155,7 +155,7 @@ def test =
     let local g x = f (g x)
     in local
   ) add
-//│ test: ('a -> int) -> 'a -> int -> int
+//│ test: ('a -> (int & 'b) & 'c) -> 'a -> (int -> int | 'd)
 //│     = [Function: test10]
 
 def test =
@@ -163,7 +163,7 @@ def test =
     let local g = f (g x)
     in local
   ) add "1"
-//│ test: ("1" -> int) -> int -> int
+//│ test: ("1" -> (int & 'a) & 'b) -> (int -> int | 'c)
 //│     = [Function: test11]
 
 def test =

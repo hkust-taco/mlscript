@@ -95,9 +95,9 @@ def map f tree = case tree of {
   | Leaf -> Leaf { value = f tree.value }
   | Node -> Node { subTree = map (mapTwo f) tree.subTree }
   }
-//│ 'a -> (forall 'a, 'value, 'value0, 'b, 'c, 'A, 'd, 'e. (((Leaf['a] with {value: 'value}) | (Node['a] with {subTree: PerfectTree[('b, 'd,)]})) -> (Leaf['value0] | (Node['A] with {subTree: PerfectTree[('c, 'e,)]}))
+//│ 'c -> (forall 'c, 'value, 'd, 'value0, 'A, 'e, 'f, 'A0, 'g, 'h, 'i, 'a, 'j, 'subTree, 'k, 'subTree0, 'b, 'l, 'm. (('i & ((Leaf['a] with {value: 'value}) & 'j | (Node['a] with {subTree: PerfectTree[('e, 'g,) & 'a] & 'subTree}) & 'k)) -> ((Leaf['A] with {value: 'value0}) | (Node['A0] with {subTree: 'subTree0 | PerfectTree['b | ('f, 'h,)]}) | 'l | 'm)
 //│   where
-//│     'a <: 'value -> 'value0 & 'b -> ('c & 'A) & 'd -> ('A & 'e)))
+//│     'c <: 'value -> ('d & 'value0 & 'A) & 'e -> ('f & 'A0) & 'g -> ('A0 & 'h)))
 //│   <:  map:
 //│ ('a -> 'b) -> PerfectTree['a] -> PerfectTree['b]
 //│    = <no result>

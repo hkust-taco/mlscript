@@ -44,13 +44,13 @@ def f: 'a -> 'b
 
 // FIXME type simplifier should not treat 'a as negative here as it's quantified in neg pos:
 def foo: (forall 'a. 'a -> 'b) -> 'b
-//│ foo: (nothing -> 'b) -> 'b
+//│ foo: (forall 'a. 'a -> 'b) -> 'b
 //│    = <missing implementation>
 
 
 // Notice `id` returns its arg of locally-quantified type 'a, which is extruded to `anything`:
 foo id
-//│ res: ‘a_83_85
+//│ res: ‘a_85_87
 //│    = <no result>
 //│      foo is not implemented
 
@@ -59,7 +59,7 @@ foo (fun a -> a + 1)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.58: 	foo (fun a -> a + 1)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_95` is not an instance of type `int`
+//│ ╟── type `‘a_97` is not an instance of type `int`
 //│ ║  l.46: 	def foo: (forall 'a. 'a -> 'b) -> 'b
 //│ ║        	                 ^^
 //│ ╟── Note: constraint arises from reference:

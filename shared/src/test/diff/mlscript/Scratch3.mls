@@ -9,14 +9,14 @@
 
 
 def z f x = x
-//│ z: anything -> (forall 'a. 'a -> 'a)
+//│ z: 'a -> (forall 'b. 'b -> 'b)
 //│  = [Function: z]
 
 def s n f x = f (n f x)
-//│ s: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ s: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('e -> 'd
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e)))
+//│     'b <: 'c -> 'd
+//│     'a <: 'b -> ('e -> 'c & 'f))))
 //│  = [Function: s]
 
 
@@ -34,10 +34,10 @@ def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M
 // :e // due to tapping
 // :e // skolem extrusion?
 succ = s
-//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('e -> 'd
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e)))
+//│     'b <: 'c -> 'd
+//│     'a <: 'b -> ('e -> 'c & 'f))))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: s]
@@ -50,10 +50,10 @@ def succ0: forall 'M. (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (('M -> 'M) -> ('
 //│      = <missing implementation>
 
 succ0 = s
-//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('e -> 'd
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e)))
+//│     'b <: 'c -> 'd
+//│     'a <: 'b -> ('e -> 'c & 'f))))
 //│   <:  succ0:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> ('M -> 'M) -> 'M -> 'M
 //│      = [Function: s]
@@ -65,9 +65,9 @@ succ0 = s
 // :e // due to tapping
 // :e // skolem extrusion?
 def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
-//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'a. 'a -> (forall 'a, 'N0, 'b. ('N0 -> 'b
+//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'a. 'a -> (forall 'a, 'N0, 'b, 'c, 'd. (('N0 & 'b & 'd) -> 'c
 //│   where
-//│     'a <: 'N0 -> 'N0 & 'N0 -> 'b)))
+//│     'a <: 'N0 -> ('N0 & 'b) & 'b -> 'c)))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: succ2]
@@ -76,24 +76,24 @@ def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x
 
 // :d
 n1 = s z
-//│ n1: 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ n1: 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('e -> 'c
 //│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'd -> 'e))
+//│     'a <: 'b -> 'c
+//│     'd <: 'a -> ('e -> 'b & 'f)))
 //│   = [Function (anonymous)]
 
 n2 = s (s z)
-//│ n2: 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ n2: 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('e -> 'c
 //│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'd -> 'e))
+//│     'a <: 'b -> 'c
+//│     'd <: 'a -> ('e -> 'b & 'f)))
 //│   = [Function (anonymous)]
 
 n3 = s (s (s z))
-//│ n3: 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ n3: 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('e -> 'c
 //│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'd -> 'e))
+//│     'a <: 'b -> 'c
+//│     'd <: 'a -> ('e -> 'b & 'f)))
 //│   = [Function (anonymous)]
 
 // def wrap: 'WRA -> 'WRA
@@ -108,8 +108,8 @@ wrap x = { x }
 n1w = n1 wrap
 //│ n1w: 'a -> 'b
 //│   where
-//│     'c <: 'd -> 'a -> 'e
-//│     'd <: 'e -> 'b
+//│     'c <: 'd -> 'b
+//│     'e <: 'c -> ('a -> 'd & 'f)
 //│    = [Function (anonymous)]
 
 // :d
@@ -146,10 +146,10 @@ res.x.x.x + 1
 :DistributeForalls
 
 succ = s
-//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('e -> 'd
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e)))
+//│     'b <: 'c -> 'd
+//│     'a <: 'b -> ('e -> 'c & 'f))))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: s]

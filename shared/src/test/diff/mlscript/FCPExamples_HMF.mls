@@ -20,7 +20,7 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
+//│ 'b -> (forall 'a, 'c, 'tail, 'head, 'd. (List['a] & 'c & 'tail) -> ((Cons['a | 'b] with {head: 'head | 'b, tail: 'tail}) | 'd))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -53,7 +53,7 @@ def head: forall 'a. List['a] -> 'a
 def head l = l.Head
 //│ head: List['a] -> 'a
 //│     = <missing implementation>
-//│ List['a] -> 'a
+//│ (List['a & 'b] & 'c & 'this) -> 'b
 //│   <:  head:
 //│ List['a] -> 'a
 //│     = [Function: head]
@@ -62,25 +62,25 @@ def tail: forall 'a. List['a] -> List['a]
 def tail l = l.Tail
 //│ tail: List['a] -> List['a]
 //│     = <missing implementation>
-//│ List['a] -> List['a]
+//│ (List['a] & 'b & 'this) -> (List['a] | 'c)
 //│   <:  tail:
 //│ List['a] -> List['a]
 //│     = [Function: tail]
 
 def is_empty: forall 'a. List['a] -> bool
 def is_empty l = eq l nil
-//│ is_empty: List[?] -> bool
+//│ is_empty: List['a] -> bool
 //│         = <missing implementation>
-//│ anything -> bool
+//│ ('a & 'b) -> (bool | 'c)
 //│   <:  is_empty:
-//│ List[?] -> bool
+//│ List['a] -> bool
 //│         = [Function: is_empty]
 
 def single: forall 'a. 'a -> List['a]
 def single x = cons x nil
 //│ single: 'a -> List['a]
 //│       = <missing implementation>
-//│ 'a -> List['a]
+//│ ('a & 'b) -> (List['b] | 'c)
 //│   <:  single:
 //│ 'a -> List['a]
 //│       = [Function: single]
@@ -89,18 +89,18 @@ def length: forall 'a. List['a] -> int
 rec def length l =
   if is_empty l then 0
   else succ (length (tail l))
-//│ length: List[?] -> int
+//│ length: List['a] -> int
 //│       = <missing implementation>
 //│ List[?] -> int
 //│   <:  length:
-//│ List[?] -> int
+//│ List['a] -> int
 //│       = [Function: length]
 
 def choose: forall 'a. 'a -> 'a -> 'a
 def choose x y = if true then x else y
 //│ choose: 'a -> 'a -> 'a
 //│       = <missing implementation>
-//│ 'a -> (forall 'b. 'b -> ('a | 'b))
+//│ 'a -> (forall 'b, 'c, 'd. ('b & 'c & 'd) -> ('a | 'd))
 //│   <:  choose:
 //│ 'a -> 'a -> 'a
 //│       = [Function: choose]
@@ -134,7 +134,7 @@ def id x = x
 
 // FreezeML B1
 def poly f = (f 1, f true)
-//│ poly: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+//│ poly: (true -> 'a & 1 -> 'b & 'c) -> ('b, 'a,)
 //│     = [Function: poly]
 
 // FreezeML A10
@@ -166,7 +166,7 @@ idss = single ids
 //│       }
 
 def revapp x f = f x
-//│ revapp: 'a -> (forall 'b. ('a -> 'b) -> 'b)
+//│ revapp: 'a -> (forall 'b, 'c. ('a -> 'b & 'c) -> 'b)
 //│       = [Function: revapp]
 
 // FreezeML D2
@@ -248,7 +248,7 @@ app runST argST
 
 // c.f. FreezeML A1
 fun x -> fun y -> x
-//│ res: 'a -> anything -> 'a
+//│ res: 'a -> (forall 'b. 'b -> 'a)
 //│    = [Function: res]
 
 // FreezeML C4
@@ -271,13 +271,13 @@ def poly: (forall 'a. 'a -> 'a) -> (int, bool)
 def poly f = (f 1, f true)
 //│ poly: (forall 'a. 'a -> 'a) -> (int, bool,)
 //│     = <missing implementation>
-//│ (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+//│ (true -> 'a & 1 -> 'b & 'c) -> ('b, 'a,)
 //│   <:  poly:
 //│ (forall 'a. 'a -> 'a) -> (int, bool,)
 //│     = [Function: poly1]
 
 const x y = x
-//│ const: 'a -> anything -> 'a
+//│ const: 'a -> (forall 'b. 'b -> 'a)
 //│      = [Function: const1]
 
 // ============ Sec 6 ============

@@ -227,7 +227,7 @@ x => {l: x x, r: x }
 res 1 2
 //│ res: 'a -> 'b
 //│   where
-//│     'c <: 'c -> 'a -> 'b
+//│     'c <: 'c -> ('a -> 'b & 'd)
 
 
 let rec trutru = g => trutru (g true)
@@ -396,8 +396,8 @@ let rec x = (let y = (x x); (z => z))
 //│ ║  l.+1: 	(w => x => x) ((y => y y) (y => y y))
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α686_688' -> α687_689')›  <:  α686_695    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α686_688' -> α687_689')›  <:  α686_688'
+//│ ╟── this constraint:  ‹∀ 0. (α688_690' -> α689_691')›  <:  α688_697    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α688_690' -> α689_691')›  <:  α688_690'
 //│ res: 'a -> 'a
 
 :NoCycleCheck

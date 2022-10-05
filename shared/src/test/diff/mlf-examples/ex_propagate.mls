@@ -17,9 +17,9 @@ def k_ = fun x -> fun y -> y
 //│      = [Function: delta]
 //│ delta_: ('a -> 'b & 'a) -> 'b
 //│       = [Function: delta_]
-//│ k: anything -> Sid
+//│ k: 'a -> Sid
 //│  = [Function: k]
-//│ k_: anything -> (forall 'a. 'a -> 'a)
+//│ k_: 'a -> (forall 'b. 'b -> 'b)
 //│   = [Function: k_]
 
 // let id x = x

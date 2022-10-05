@@ -18,7 +18,7 @@ def Nil = Nil {}
 //│ Nil: Nil
 
 def Cons head tail = Cons { head; tail }
-//│ Cons: 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
+//│ Cons: 'b -> (forall 'a, 'c, 'tail, 'head, 'd. (List['a] & 'c & 'tail) -> ((Cons['a | 'b] with {head: 'head | 'b, tail: 'tail}) | 'd))
 
 // ------------ Type signatures for functions used in the examples ------------
 // (I guess)
@@ -47,22 +47,22 @@ class Collection[a]: { l: List[a] }
   method Mem x = mem x this.l
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
-//│ Defined Collection.Mem: Collection[?] -> anything -> bool
-//│ Defined Collection.Fold: Collection['a] -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c -> 'c
+//│ Defined Collection.Mem: Collection['a] -> (forall 'a, 'b, 'c, 'd, 'e. ('b & 'c & 'a) -> (false | true | 'd | 'e))
+//│ Defined Collection.Fold: Collection['a] -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'head, 'd, 'e, 'f, 'g, 'h. (('c & 'f) -> ('g | 'h | 'c)
 //│   where
-//│     'b <: 'c -> 'a -> 'c)))
+//│     'b <: 'c -> (('a | 'head) -> ('c & 'd) & 'e))))
 
 def coll_mem c x = c.Mem x
-//│ coll_mem: 'a -> (forall 'a. ('a -> bool
+//│ coll_mem: 'b -> (forall 'b, 'a, 'c, 'd, 'e, 'f, 'g, 'h. (('c & 'd & 'e & 'f) -> (false | true | 'g | 'h)
 //│   where
-//│     'a <: Collection['a]))
+//│     'b <: Collection['a]))
 
 // typo in the paper? it was `fun x -> fun y -> ...`
 def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
   let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
   (l1, l2)
-//│ simple_and_double: Collection['a | 'b] -> (forall 'c. 'c, forall 'd. 'd,)
+//│ simple_and_double: (Collection['a & 'b & 'c & 'a0 | 'a1 & 'd] & 'e) -> (forall 'f, 'g, 'a2, 'h, 'head, 'i, 'j. 'f | 'g | 'i | 'j, forall 'k, 'l, 'm, 'a3, 'n, 'head0, 'o, 'p. 'k | 'l | 'o | 'p,)
 //│   where
-//│     'd :> (Cons[('b, 'b,)] with {tail: 'd}) | Nil
-//│     'c :> (Cons['a] with {tail: 'c}) | Nil
+//│     'l :> (Cons[('m | 'd, 'm | 'd,) | 'a3 | 'n] with {head: ('m | 'd, 'm | 'd,) | 'head0 | 'n, tail: 'l}) | Nil
+//│     'g :> (Cons['a2 | 'a0 | 'h | 'c] with {head: 'head | 'h | 'c, tail: 'g}) | Nil

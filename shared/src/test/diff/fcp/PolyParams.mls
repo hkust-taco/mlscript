@@ -4,7 +4,7 @@
 
 def foo(f: forall 'a. 'a -> 'a) =
   (f 1, f true)
-//│ foo: (forall 'a. 'a -> 'a) -> (1, true,)
+//│ foo: (forall 'a. 'a -> 'a) -> (1 | 'b, true | 'c,)
 //│    = [Function: foo]
 
 fooid = foo id
@@ -20,7 +20,7 @@ fooid._2
 
 def foo(f: (forall 'A. 'A -> 'A) -> (forall 'B. 'B -> 'B)) =
   id f id (f id)
-//│ foo: ((forall 'A. 'A -> 'A) -> (forall 'B. 'B -> 'B)) -> (forall 'B. 'B -> 'B)
+//│ foo: ((forall 'A. 'A -> 'A) -> (forall 'B. 'B -> 'B)) -> (forall 'B. 'B -> 'B | 'a)
 //│    = [Function: foo1]
 
 foo id
@@ -34,14 +34,14 @@ foo id id
 
 
 def bui_ty: forall 'a. (forall 'b. 'a -> 'b) -> ()
-//│ bui_ty: (nothing -> anything) -> ()
+//│ bui_ty: (forall 'b. 'a -> 'b) -> ()
 //│       = <missing implementation>
 
 // :d
 bui_ty = bui_ty
-//│ (nothing -> anything) -> ()
+//│ (forall 'b. 'a -> 'b) -> ()
 //│   <:  bui_ty:
-//│ (nothing -> anything) -> ()
+//│ (forall 'b. 'a -> 'b) -> ()
 //│       = <no result>
 //│         bui_ty is not implemented
 

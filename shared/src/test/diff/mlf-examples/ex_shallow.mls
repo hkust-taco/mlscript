@@ -15,19 +15,19 @@ def auto (x: Sid) = x x
 def auto_ x = x x
 def id x = x
 def k x y = x
-//│ auto: Sid -> Sid
+//│ auto: Sid -> (Sid | 'a)
 //│     = [Function: auto]
 //│ auto_: ('a -> 'b & 'a) -> 'b
 //│      = [Function: auto_]
 //│ id: 'a -> 'a
 //│   = [Function: id]
-//│ k: 'a -> anything -> 'a
+//│ k: 'a -> (forall 'b. 'b -> 'a)
 //│  = [Function: k]
 
 // (* church_zero is like the sequence *)
 // let church_zero = fun f -> id
 def church_zero = fun f -> id
-//│ church_zero: anything -> (forall 'a. 'a -> 'a)
+//│ church_zero: 'a -> (forall 'b. 'b -> 'b)
 //│            = [Function: church_zero]
 
 // (* church_un is like apply *)
@@ -48,10 +48,10 @@ def church_two = fun f -> fun x -> f (f x)
 
 // let church_succ n = fun f x -> f (n f x)
 def church_succ n = fun f -> fun x -> f (n f x)
-//│ church_succ: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ church_succ: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('c -> 'f
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e)))
+//│     'a <: 'b -> ('c -> 'd & 'e)
+//│     'b <: 'd -> 'f)))
 //│            = [Function: church_succ]
 
 // (* We build the a0 of the icfp version paper *)
@@ -78,37 +78,37 @@ def a2_ (x: A1) =
 def a0 = a2 a1
 def a0_ = a2_ a1
 //│ Defined type alias A1
-//│ a1: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
+//│ a1: ((forall 'a. 'a -> 'a) -> 'b & 'c) -> 'b
 //│   = [Function: a1]
 //│ a3: 'a -> (forall 'a. ('b -> 'c
 //│   where
-//│     'a <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│     'a <: (forall 'd. 'd -> (forall 'd, 'e, 'f, 'g. ('e -> 'g
 //│   where
-//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'c))
+//│     'd <: 'e -> 'f & 'f -> 'g))) -> 'c))
 //│   = [Function: a3]
-//│ a2: A1 -> (forall 'a. ('b -> 'c
+//│ a2: A1 -> (forall 'a. ('b -> 'c | 'd
 //│   where
-//│     'a <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│     'a <: (forall 'e. 'e -> (forall 'e, 'f, 'g, 'h. ('f -> 'h
 //│   where
-//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'c))
+//│     'e <: 'f -> 'g & 'g -> 'h))) -> 'c))
 //│   = [Function: a2]
-//│ a2_: A1 -> (forall 'a. ('b -> 'c
+//│ a2_: A1 -> (forall 'a. ('b -> 'c | 'd
 //│   where
-//│     'a <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│     'a <: (forall 'e. 'e -> (forall 'e, 'f, 'g, 'h. ('f -> 'h
 //│   where
-//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'c))
+//│     'e <: 'f -> 'g & 'g -> 'h))) -> 'c))
 //│    = [Function: a2_]
 //│ a0: 'a -> 'b
 //│   where
-//│     'c <: (forall 'a. 'a -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
+//│     'c <: (forall 'd. 'd -> (forall 'd, 'e, 'f, 'g. ('e -> 'g
 //│   where
-//│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
+//│     'd <: 'e -> 'f & 'f -> 'g))) -> 'b
 //│   = [Function: a0]
 //│ a0_: 'a -> 'b
 //│   where
-//│     'c <: (forall 'a. 'a -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
+//│     'c <: (forall 'd. 'd -> (forall 'd, 'e, 'f, 'g. ('e -> 'g
 //│   where
-//│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
+//│     'd <: 'e -> 'f & 'f -> 'g))) -> 'b
 //│    = [Function: a0_]
 
 // let test0 = 
@@ -222,13 +222,13 @@ type A1' = forall 'a. (('a | Sid) -> ('a | Sid)) -> ('a | Sid) -> ('a | Sid)
 // let a0' = a2' a1';;
 
 def either x y = if true then x else y
-//│ either: 'a -> (forall 'b. 'b -> ('a | 'b))
+//│ either: 'a -> (forall 'b, 'c, 'd. ('b & 'c & 'd) -> ('a | 'd))
 //│       = [Function: either]
 
 def a1' = fun f -> fun x -> f (f (either id x))
-//│ a1': 'a -> (forall 'a. ('b -> 'c
+//│ a1': 'a -> (forall 'a. (('b & 'c & 'd & 'e & 'f) -> 'g
 //│   where
-//│     'a <: (forall 'd, 'b. 'd -> 'd | 'b) -> 'e & 'e -> 'c))
+//│     'a <: (forall 'h, 'b. 'h -> 'h | 'b) -> 'i & 'i -> 'g))
 //│    = [Function: a1$]
 
 // FIXME: ClassCastException: mlscript.TyperDatatypes$TraitTag cannot be cast to mlscript.TyperDatatypes$TypeVariable
@@ -247,15 +247,15 @@ def a2'_ x =
   ) a3
 //│ a2'_: ((forall 'a. 'a -> (forall 'a. ('b -> 'c
 //│   where
-//│     'a <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│     'a <: (forall 'd. 'd -> (forall 'd, 'e, 'f, 'g. ('e -> 'g
 //│   where
-//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'c))) -> (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│     'd <: 'e -> 'f & 'f -> 'g))) -> 'c)) | 'h) -> ((forall 'd. 'd -> (forall 'd, 'e, 'f, 'g. ('e -> 'g
 //│   where
-//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'b & (forall 'g, 'h. ('g -> 'h & 'g) -> 'h) -> (forall 'i. 'i -> 'i) -> 'b) -> (forall 'j. ('b -> 'k
+//│     'd <: 'e -> 'f & 'f -> 'g))) -> 'i & 'j) & (forall 'k, 'l. ('k -> 'l & 'k) -> 'l) -> ((forall 'm. 'm -> 'm) -> 'n & 'o) & 'p) -> (forall 'q. ('r -> 's | 't
 //│   where
-//│     'j <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│     'q <: (forall 'd. 'd -> (forall 'd, 'e, 'f, 'g. ('e -> 'g
 //│   where
-//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'k))
+//│     'd <: 'e -> 'f & 'f -> 'g))) -> 's))
 //│     = [Function: a2$_]
 
 // FIXME
@@ -275,8 +275,8 @@ def a0'_ = a2'_ a1'
 //│ ║  l.273: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α41_42'' -> α41_42'')››  <:  α31_1089'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α41_42'' -> α41_42'')››  <:  α31_33''
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α43_44'' -> α43_44'')››  <:  α33_1143'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α43_44'' -> α43_44'')››  <:  α33_35''
 //│ a0'_: error
 //│     = [Function: a0$_]
 :ResetFuel
@@ -287,9 +287,9 @@ def a0'_ = a2'_ a1'
 def a0'_ = a2'_ a1'
 //│ a0'_: 'a -> 'b
 //│   where
-//│     'c <: (forall 'a. 'a -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
+//│     'c <: (forall 'd. 'd -> (forall 'd, 'e, 'f, 'g. ('e -> 'g
 //│   where
-//│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
+//│     'd <: 'e -> 'f & 'f -> 'g))) -> 'b
 //│     = [Function: a0$_1]
 :NoRecursiveTypes
 

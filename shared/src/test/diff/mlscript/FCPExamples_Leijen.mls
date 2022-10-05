@@ -53,7 +53,7 @@ def head: List['a] -> 'a
 def head l = l.Head
 //│ head: List['a] -> 'a
 //│     = <missing implementation>
-//│ List['a] -> 'a
+//│ (List['a & 'b] & 'c & 'this) -> 'b
 //│   <:  head:
 //│ List['a] -> 'a
 //│     = [Function: head]
@@ -62,7 +62,7 @@ def tail: List['a] -> List['a]
 def tail l = l.Tail
 //│ tail: List['a] -> List['a]
 //│     = <missing implementation>
-//│ List['a] -> List['a]
+//│ (List['a] & 'b & 'this) -> (List['a] | 'c)
 //│   <:  tail:
 //│ List['a] -> List['a]
 //│     = [Function: tail]
@@ -81,25 +81,25 @@ def cons: 'a -> List['a] -> List['a]
 def cons head tail = Cons { head; tail }
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
+//│ 'b -> (forall 'a, 'c, 'tail, 'head, 'd. (List['a] & 'c & 'tail) -> ((Cons['a | 'b] with {head: 'head | 'b, tail: 'tail}) | 'd))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
 
 def is_empty: forall 'a. List['a] -> bool
 def is_empty l = eq l nil
-//│ is_empty: List[?] -> bool
+//│ is_empty: List['a] -> bool
 //│         = <missing implementation>
-//│ anything -> bool
+//│ ('a & 'b) -> (bool | 'c)
 //│   <:  is_empty:
-//│ List[?] -> bool
+//│ List['a] -> bool
 //│         = [Function: is_empty]
 
 def single: 'a -> List['a]
 def single x = cons x nil
 //│ single: 'a -> List['a]
 //│       = <missing implementation>
-//│ 'a -> List['a]
+//│ ('b & 'a) -> (List['a] | 'c)
 //│   <:  single:
 //│ 'a -> List['a]
 //│       = [Function: single]
@@ -157,7 +157,7 @@ def choose: 'a -> 'a -> 'a
 def choose x y = if true then x else y
 //│ choose: 'a -> 'a -> 'a
 //│       = <missing implementation>
-//│ 'a -> (forall 'b. 'b -> ('a | 'b))
+//│ 'a -> (forall 'b, 'c, 'd. ('b & 'c & 'd) -> ('a | 'd))
 //│   <:  choose:
 //│ 'a -> 'a -> 'a
 //│       = [Function: choose]
@@ -184,18 +184,18 @@ def takeAuto: ((forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)) -> (forall 'a. 'a
 def takeAuto auto = auto id
 //│ takeAuto: ((forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0)) -> (forall 'a1. 'a1 -> 'a1)
 //│         = <missing implementation>
-//│ ((forall 'a. 'a -> 'a) -> 'b) -> 'b
+//│ ((forall 'a. 'a -> 'a) -> 'b & 'c) -> 'b
 //│   <:  takeAuto:
 //│ ((forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0)) -> (forall 'a1. 'a1 -> 'a1)
 //│         = [Function: takeAuto]
 
 def const: forall 'a 'b. 'a -> 'b -> 'a
 def const x y = x
-//│ const: 'a -> anything -> 'a
+//│ const: 'a -> 'b -> 'a
 //│      = <missing implementation>
-//│ 'a -> anything -> 'a
+//│ 'a -> (forall 'b. 'b -> 'a)
 //│   <:  const:
-//│ 'a -> anything -> 'a
+//│ 'a -> 'b -> 'a
 //│      = [Function: const1]
 
 def map: ('a -> 'b) -> List['a] -> List['b]
@@ -224,27 +224,27 @@ def revapp: 'a -> ('a -> 'b) -> 'b
 def revapp x f = f x
 //│ revapp: 'a -> ('a -> 'b) -> 'b
 //│       = <missing implementation>
-//│ 'a -> (forall 'b. ('a -> 'b) -> 'b)
+//│ 'a -> (forall 'b, 'c. ('a -> 'b & 'c) -> 'b)
 //│   <:  revapp:
 //│ 'a -> ('a -> 'b) -> 'b
 //│       = [Function: revapp]
 
 def fst: forall 'a 'b. (('a, 'b),) -> 'a
 def fst ((x, _),) = x
-//│ fst: ('a, anything,) -> 'a
+//│ fst: ('a, 'b,) -> 'a
 //│    = <missing implementation>
-//│ ('a, anything,) -> 'a
+//│ ('a, 'b,) -> 'a
 //│   <:  fst:
-//│ ('a, anything,) -> 'a
+//│ ('a, 'b,) -> 'a
 //│    = [Function: fst]
 
 def snd: forall 'a 'b. (('a, 'b),) -> 'b
 def snd ((_, x),) = x
-//│ snd: (anything, 'b,) -> 'b
+//│ snd: ('a, 'b,) -> 'b
 //│    = <missing implementation>
-//│ (anything, 'a,) -> 'a
+//│ ('a, 'b,) -> 'b
 //│   <:  snd:
-//│ (anything, 'b,) -> 'b
+//│ ('a, 'b,) -> 'b
 //│    = [Function: snd]
 
 :ng
@@ -314,7 +314,7 @@ single id
 
 // ,("choose (\\x y -> x) (\\x y -> y)", ok "forall a. a -> a -> a")
 choose (fun x -> fun y -> x) (fun x -> fun y -> y)
-//│ res: 'a -> (forall 'b. 'b -> ('a | 'b))
+//│ res: ('a & 'b) -> (forall 'c, 'd. ('c & 'd) -> ('a | 'd))
 //│    = [Function (anonymous)]
 
 // ,("choose id", ok "forall (a >= forall b. b -> b). a -> a")
@@ -369,7 +369,7 @@ runST (returnST 1)
 // ,("runST (newRef 1)", Wrong)
 :ng
 runST (newRef 1)
-//│ res: Ref[in ‘s_953_961 & 's out 's | ‘s_953_961, 1]
+//│ res: Ref[in ‘s_1015_1023 & 's out 's | ‘s_1015_1023, 1]
 
 // ,("apply runST (returnST 1)", ok "Int")
 :ng
@@ -387,7 +387,7 @@ map xauto (map xauto ids)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.386: 	map xauto (map xauto ids)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘b_1023_1024` is not an instance of type `'b_1023_1025`
+//│ ╟── type `‘b_1085_1086` is not an instance of type `'b_1085_1087`
 //│ ║  l.174: 	def xauto : forall 'a. (forall 'b. 'b -> 'b) -> 'a -> 'a
 //│ ║         	                               ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -445,7 +445,7 @@ app (map head) (single ids)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.444: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘d_1147` is not an instance of type `int`
+//│ ╟── type `‘d_1209` is not an instance of type `int`
 //│ ║  l.444: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
 //│ ║         	                                                      ^^
 //│ ╟── Note: constraint arises from type reference:
@@ -516,7 +516,7 @@ fun x -> (x : List[forall 'a. 'a -> 'a])
 
 // ,("\\x -> let polys (xs :: [forall a . a -> a]) = 1; f y = x in polys [f::some a. forall b. b -> a]",Wrong)  -- escape in unify (with rigid annotations, otherwise we get a skolem mismatch)
 fun x -> let polys (xs: List[forall 'a. 'a -> 'a]) = 1 in let f y = x in polys (single (f : forall 'b. 'b -> 'a))
-//│ res: ‘a_1290_1293 -> 1
+//│ res: ‘a_1352_1355 -> 1
 //│    = [Function: res]
 
 // ,("ids :: forall b. [forall a. a -> b]", Wrong)                                                       -- unify different skolems
@@ -525,13 +525,13 @@ ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.524: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ║         	^^^
-//│ ╟── type `‘a_1305` is not an instance of type `'b_1304`
+//│ ╟── type `‘a_1367` is not an instance of type `'b_1366`
 //│ ║  l.524: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ║         	                             ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.524: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ╙──       	             ^^
-//│ res: List[anything -> nothing]
+//│ res: List[forall 'a. 'a -> nothing]
 //│    = Cons { head: [Function: id1], tail: Nil {} }
 
 // -- co/contra variance
@@ -600,7 +600,7 @@ single (id : forall 'a. 'a -> 'a)
 
 // ,("\\x -> ((\\y -> x) :: some a. forall b. b -> a)", ok "forall a. forall (b >= forall c. c -> a). a -> b")
 fun x -> (fun y -> x) : forall 'b. 'b -> 'a
-//│ res: 'a -> anything -> 'a
+//│ res: 'a -> (forall 'b. 'b -> 'a)
 //│    = [Function: res]
 
 // ,("\\(f :: forall a. a -> a) -> ((f f) :: forall a. a -> a)", ok "forall (a >= forall b. b -> b). (forall b. b -> b) -> a")
@@ -620,7 +620,7 @@ choose inc id
 
 // ,("choose inc (id :: forall a. a -> a)", if SupportRigidAnnotations `elem` features then Wrong else ok "Int -> Int")
 choose inc (id : forall 'a. 'a -> 'a)
-//│ res: int -> int
+//│ res: (int & 'a) -> ('a | int)
 //│    = [Function: succ]
 
 // ,("choose inc (id :: some a. a -> a)", ok "Int -> Int")
@@ -700,7 +700,7 @@ choose id auto
 
 // ,("\\x y -> x", ok "forall a. forall (b >= forall c. c -> a). a -> b")
 fun x -> fun y -> x
-//│ res: 'a -> anything -> 'a
+//│ res: 'a -> (forall 'b. 'b -> 'a)
 //│    = [Function: res]
 
 // ]
@@ -727,27 +727,27 @@ let pauto (f: forall 'a. 'a -> 'a) = f in map pauto (map pauto ids)
 
 // ,("\\x -> rigid (\\y -> x)", ok "forall a. a -> (forall b. b -> a)")
 f = fun x -> fun y -> x
-//│ f: 'a -> anything -> 'a
+//│ f: 'a -> (forall 'b. 'b -> 'a)
 //│  = [Function: f]
 
 // ,("\\x -> rigid (\\y -> const x y)", ok "forall a. a -> (forall b. b -> a)")
 fun x -> fun y -> const x y
-//│ res: 'a -> anything -> 'a
+//│ res: 'a -> (forall 'c, 'b, 'd. ('c & 'b) -> ('a | 'd))
 //│    = [Function: res]
 
 // ,("let c x = rigid (\\y -> x) in \\x y -> c x y", ok "forall a b. a -> b -> a")
 let c x = fun y -> x in fun x -> fun y -> c x y
-//│ res: 'a -> anything -> 'a
+//│ res: 'a -> (forall 'b, 'c, 'd. ('b & 'c) -> ('a | 'd))
 //│    = [Function (anonymous)]
 
 // ,("choose plus (\\x -> id)", ok "Int -> Int -> Int")
 choose add (fun x -> id)
-//│ res: int -> int -> int
+//│ res: (int & 'a) -> int -> int
 //│    = [Function: add]
 
 // ,("choose plus (\\x -> rigid id)", Wrong)      
 choose add (fun x -> id)
-//│ res: int -> int -> int
+//│ res: (int & 'a) -> int -> int
 //│    = [Function: add]
 
 // ,("choose inc (rigid id)", Wrong)  
@@ -774,17 +774,17 @@ revapp id auto
 
 // ,("[const]", ok "forall a b. [a -> b -> a]")
 single const
-//│ res: List[forall 'a. 'a -> anything -> 'a]
+//│ res: List[forall 'a, 'b. 'a -> 'b -> 'a]
 //│    = Cons { head: [Function: const1], tail: Nil {} }
 
 // ,("[rigid const]", ok "[forall a b. a -> b -> a]")    
 single const
-//│ res: List[forall 'a. 'a -> anything -> 'a]
+//│ res: List[forall 'a, 'b. 'a -> 'b -> 'a]
 //│    = Cons { head: [Function: const1], tail: Nil {} }
 
 // ,("[const :: some a. forall b. a -> b -> a]", ok "forall a. [forall b. a -> b -> a]")
 single (const : forall 'b. 'a -> 'b -> 'a)
-//│ res: List[forall 'a. 'a -> anything -> 'a]
+//│ res: List[forall 'a, 'b. 'a -> 'b -> 'a]
 //│    = Cons { head: [Function: const1], tail: Nil {} }
 
 // ,("[const :: some b. forall a. a -> b -> a]", ok "forall b. [forall a. a -> b -> a]")
@@ -822,7 +822,7 @@ returnST 1 : forall 's. ST['s, int]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.821: 	returnST 1 : forall 's. ST['s, int]
 //│ ║         	^^^^^^^^^^
-//│ ╟── type `‘s_1994_1995` is not an instance of type `'s_1994_1996`
+//│ ╟── type `‘s_2087_2088` is not an instance of type `'s_2087_2089`
 //│ ║  l.821: 	returnST 1 : forall 's. ST['s, int]
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -867,7 +867,7 @@ cons (single id) (single ids)
 
 // ,("([id] :: [forall a. a -> a]) : [[\\x -> x]]", ok "[[forall a. a -> a]]")
 cons (single id : List[forall 'a. 'a -> 'a]) (single (single (fun x -> x)))
-//│ res: List[List[forall 'a. 'a -> 'a]]
+//│ res: List[List[forall 'a, 'b, 'a0. 'a | ('b & 'a0) -> ('a0 | 'b)] | 'c]
 //│    = Cons {
 //│        head: Cons { head: [Function: id1], tail: Nil {} },
 //│        tail: Cons {
@@ -888,12 +888,12 @@ revapp (fun f -> f f) takeAuto
 
 // ,("apply (\\f -> choose auto f) (auto :: (forall a. a -> a) -> (forall a. a -> a))", ok "(forall a. a -> a) -> (forall a. a -> a)")
 app (fun f -> choose auto f) (auto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a))
-//│ res: (forall 'a, 'a0. 'a -> 'a & 'a0 -> 'a0) -> (forall 'a1. 'a1 -> 'a1)
+//│ res: (forall 'a, 'a0. 'a -> 'a & 'a0 -> 'a0) -> (forall 'a1, 'a2. ('a1 & 'a2) -> ('a2 | 'a1))
 //│    = [Function: auto]
 
 // ,("revapp (auto :: (forall a. a -> a) -> (forall a. a -> a)) (\\f -> choose auto f)", ok "(forall a. a -> a) -> (forall a. a -> a)")
 revapp (auto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)) (fun f -> choose auto f)
-//│ res: (forall 'a, 'a0. 'a -> 'a & 'a0 -> 'a0) -> (forall 'a1. 'a1 -> 'a1)
+//│ res: (forall 'a, 'a0. 'a -> 'a & 'a0 -> 'a0) -> (forall 'a1, 'a2. ('a1 & 'a2) -> ('a1 | 'a2))
 //│    = [Function: auto]
 
 // ============ Eta expansion of polymorphic types ============
@@ -931,7 +931,7 @@ fun x -> (auto x, (x : int -> int) 1)
 def runST2: forall 'a. (forall 's. (ST['s, 'a], ST['s, 'a])) -> 'a
 runST2 ((newRef 1, newRef 2))
 //│ runST2: (forall 's. (ST['s, 'a], ST['s, 'a],)) -> 'a
-//│ res: Ref[in ‘s_2274_2282 & 's | ‘s_2274_2286 & 's out 's | ‘s_2274_2282 | ‘s_2274_2286, 1 | 2]
+//│ res: Ref[in ‘s_2374_2382 & 's | ‘s_2374_2386 & 's out 's | ‘s_2374_2382 | ‘s_2374_2386, 1 | 2]
 
 :ng
 def runST3: forall 'a. (forall 's. ST[('s, 's), 'a]) -> 'a
@@ -939,7 +939,7 @@ def newRef3: forall 'a 's. 'a -> ST[('s, 's), Ref['s, 'a]]
 runST3 (newRef3 1)
 //│ runST3: (forall 's. ST[('s, 's,), 'a]) -> 'a
 //│ newRef3: 'a -> ST[('s, 's,), Ref['s, 'a]]
-//│ res: Ref[in ‘s_2329_2337 & 's out 's | ‘s_2329_2337, 1]
+//│ res: Ref[in ‘s_2429_2437 & 's out 's | ‘s_2429_2437, 1]
 
 :ng
 def runST4: forall 'a 'b. (forall 's. ST['s, ('a, 'b)]) -> ('a, 'b)
@@ -947,7 +947,7 @@ def newRef4: forall 'a 's. 'a -> ST['s, (Ref['s, 'a], Ref['s, 'a])]
 runST4 (newRef4 1)
 //│ runST4: (forall 's. ST['s, ('a, 'b,)]) -> ('a, 'b,)
 //│ newRef4: 'a -> ST['s, (Ref['s, 'a], Ref['s, 'a],)]
-//│ res: (Ref[in ‘s_2382_2390 & 's out 's | 's0 | ‘s_2382_2390, 1], Ref[in ‘s_2382_2394 & 's0 out 's | 's0 | ‘s_2382_2394, 1],)
+//│ res: (Ref[in ‘s_2482_2490 & 's out 's | 's0 | ‘s_2482_2490, 1], Ref[in ‘s_2482_2494 & 's0 out 's | 's0 | ‘s_2482_2494, 1],)
 
 // ("(\\(x :: forall a. a -> a) -> xauto x) :: (forall a. a -> a) -> (forall a. a -> a)", ok "(forall a. a -> a) -> (forall a. a -> a)")
 // FIXME
@@ -955,7 +955,7 @@ runST4 (newRef4 1)
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.954: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_2426_2427` is not an instance of type `'a_2426_2428`
+//│ ╟── type `‘a_2526_2527` is not an instance of type `'a_2526_2528`
 //│ ║  l.954: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║         	                                                      ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -970,7 +970,7 @@ xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.969: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║         	^^^^^
-//│ ╟── type `‘a_2442_2443` is not an instance of type `'a_2442_2444`
+//│ ╟── type `‘a_2542_2543` is not an instance of type `'a_2542_2544`
 //│ ║  l.969: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║         	                                         ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -1022,7 +1022,7 @@ test2 = test1
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.1018: 	test2 = test1
 //│ ║          	^^^^^^^^^^^^^
-//│ ╟── type `‘a_2511_2512` is not an instance of type `'a_2511_2513`
+//│ ╟── type `‘a_2611_2612` is not an instance of type `'a_2611_2613`
 //│ ║  l.1004: 	def test2: List[forall 'a. 'a -> 'a]
 //│ ║          	                       ^^
 //│ ╟── Note: constraint arises from quantified type variable:

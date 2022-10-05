@@ -10,7 +10,7 @@ def zero: forall 'a. ('a -> 'a) -> ('a -> 'a)
 def zero f = fun x -> x
 //│ zero: ('a -> 'a) -> 'a -> 'a
 //│     = <missing implementation>
-//│ anything -> (forall 'a. 'a -> 'a)
+//│ 'a -> (forall 'b. 'b -> 'b)
 //│   <:  zero:
 //│ ('a -> 'a) -> 'a -> 'a
 //│     = [Function: zero]
@@ -54,7 +54,7 @@ foo_ty = foo
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.50: 	foo_ty = foo
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── type `‘b_108_109` is not an instance of type `'b_108_110`
+//│ ╟── type `‘b_110_111` is not an instance of type `'b_110_112`
 //│ ║  l.42: 	def foo_ty: 'a -> (forall 'b. 'b -> ('a, 'b,))
 //│ ║        	                          ^^
 //│ ╟── Note: constraint arises from quantified type variable:

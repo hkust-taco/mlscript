@@ -11,9 +11,9 @@ def app n f = n f
 //│    = [Function: app]
 
 def g x y = app x y
-//│ g: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ g: 'a -> (forall 'a, 'b, 'c, 'd, 'e. (('b & 'e) -> 'd
 //│   where
-//│     'a <: 'b -> 'c))
+//│     'a <: 'b -> ('c & 'd)))
 //│  = [Function: g]
 
 :e
@@ -43,11 +43,11 @@ def app p q = p q
 //│    = [Function: app1]
 
 def mul r s = r (app s) id
-//│ mul: 'a -> (forall 'a. ('b -> 'c
+//│ mul: 'a -> (forall 'a. (('b & 'c) -> 'd
 //│   where
-//│     'a <: (forall 'b, 'd, 'e. ('d -> 'e
+//│     'a <: (forall 'b, 'e, 'f, 'g. ('e -> 'f | 'g
 //│   where
-//│     'b <: 'd -> 'e)) -> (forall 'f. 'f -> 'f) -> 'c))
+//│     'b <: 'e -> 'f)) -> ((forall 'h. 'h -> 'h) -> 'd & 'i)))
 //│    = [Function: mul]
 
 :e
@@ -66,9 +66,9 @@ mul id {}
 //│   TypeError: p is not a function
 
 def fact t = mul t {}
-//│ fact: ((forall 'a, 'b, 'c. ('b -> 'c
+//│ fact: ((forall 'a, 'b, 'c, 'd. ('b -> 'c | 'd
 //│   where
-//│     'a <: 'b -> 'c)) -> (forall 'd. 'd -> 'd) -> 'e) -> 'e
+//│     'a <: 'b -> 'c)) -> ((forall 'e. 'e -> 'e) -> ('f & 'g) & 'h) & 'i & 'j) -> 'g
 //│     = [Function: fact]
 
 :e
@@ -87,11 +87,11 @@ fact id
 //│   TypeError: p is not a function
 
 def mul r s = r (app s)
-//│ mul: 'a -> (forall 'a. ('b -> 'c
+//│ mul: 'a -> (forall 'a. (('b & 'c) -> 'd
 //│   where
-//│     'a <: (forall 'b, 'd, 'e. ('d -> 'e
+//│     'a <: (forall 'b, 'e, 'f, 'g. ('e -> 'f | 'g
 //│   where
-//│     'b <: 'd -> 'e)) -> 'c))
+//│     'b <: 'e -> 'f)) -> 'd))
 //│    = [Function: mul1]
 
 mul id id {}
@@ -116,22 +116,22 @@ def succ n f x = f (n f x)
 //│     = <missing implementation>
 //│ 'a -> (forall 'b. 'b -> (forall 'b. ('c -> 'd
 //│   where
-//│     'b <: (forall 'a, 'b, 'c, 'e. ('e
+//│     'b <: (forall 'a, 'b, 'c, 'e, 'f. ('e
 //│   where
-//│     'a <: 'b -> 'c -> 'e)) -> 'd)))
+//│     'a <: 'b -> ('c -> 'e & 'f))) -> 'd)))
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│     = [Function: succ1]
 
 def add n m = n succ m
 def f x y = add x y
-//│ add: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ add: 'a -> (forall 'a, 'b, 'c, 'd. ('b -> 'c
 //│   where
-//│     'a <: (ChurchInt -> ChurchInt) -> 'b -> 'c))
+//│     'a <: (ChurchInt -> ChurchInt) -> ('b -> 'c & 'd)))
 //│    = [Function: add]
-//│ f: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ f: 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('b & 'f) -> 'd
 //│   where
-//│     'a <: (ChurchInt -> ChurchInt) -> 'b -> 'c))
+//│     'a <: (ChurchInt -> ChurchInt) -> ('b -> ('c & 'd) & 'e)))
 //│  = [Function: f]
 
 :e

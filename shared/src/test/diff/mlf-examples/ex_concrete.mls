@@ -13,7 +13,7 @@ Cons (head, tail) = Cons { head; tail }
 //│ Defined type alias List[+a]
 //│ Nil: Nil
 //│    = Nil {}
-//│ Cons: ('head & 'a, List['a] & 'tail,) -> (Cons['a] with {head: 'head, tail: 'tail})
+//│ Cons: ('b & 'head & 'a, List['a] & 'c & 'tail,) -> ((Cons['a] with {head: 'head, tail: 'tail}) | 'd)
 //│     = [Function: Cons1]
 
 // let un = Nil ;;

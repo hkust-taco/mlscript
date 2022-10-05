@@ -7,7 +7,7 @@ type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ Defined type alias ChurchInt
 
 def zero f x = x
-//│ zero: anything -> (forall 'a. 'a -> 'a)
+//│ zero: 'a -> (forall 'b. 'b -> 'b)
 //│     = [Function: zero]
 
 zero: ChurchInt
@@ -20,9 +20,9 @@ def succ n f x = f (n f x)
 //│     = <missing implementation>
 //│ 'a -> (forall 'b. 'b -> (forall 'b. ('c -> 'd
 //│   where
-//│     'b <: (forall 'a, 'b, 'c, 'e. ('e
+//│     'b <: (forall 'a, 'b, 'c, 'e, 'f. ('e
 //│   where
-//│     'a <: 'b -> 'c -> 'e)) -> 'd)))
+//│     'a <: 'b -> ('c -> 'e & 'f))) -> 'd)))
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│     = [Function: succ1]
@@ -31,7 +31,7 @@ def succ n f x = f (n f x)
 rec def to_church n =
   if n == 0 then zero
   else succ (to_church (n - 1))
-//│ to_church: int -> (anything -> (forall 'a. 'a -> 'a) | ChurchInt)
+//│ to_church: int -> (forall 'a. 'a -> (forall 'b. 'b -> 'b) | ChurchInt)
 //│          = [Function: to_church]
 
 to_church: int -> ChurchInt
@@ -40,9 +40,9 @@ to_church: int -> ChurchInt
 
 // def add: ChurchInt -> ChurchInt -> ChurchInt
 def add n m = n succ m
-//│ add: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ add: 'a -> (forall 'a, 'b, 'c, 'd. ('b -> 'c
 //│   where
-//│     'a <: (ChurchInt -> ChurchInt) -> 'b -> 'c))
+//│     'a <: (ChurchInt -> ChurchInt) -> ('b -> 'c & 'd)))
 //│    = [Function: add]
 
 add: ChurchInt -> ChurchInt -> ChurchInt
@@ -51,11 +51,11 @@ add: ChurchInt -> ChurchInt -> ChurchInt
 
 // def mul: ChurchInt -> ChurchInt -> ChurchInt
 def mul n m = n (add m) zero
-//│ mul: 'a -> (forall 'a. ('a -> 'b
+//│ mul: 'a -> (forall 'a. ('b -> 'c
 //│   where
-//│     'a <: (forall 'c, 'd, 'e. ('d -> 'e
+//│     'a <: (forall 'd, 'e, 'f, 'g, 'h. ('e -> 'f | 'h
 //│   where
-//│     'c <: (ChurchInt -> ChurchInt) -> 'd -> 'e)) -> ('a -> (forall 'f. 'f -> 'f)) -> 'b))
+//│     'd <: (ChurchInt -> ChurchInt) -> ('e -> 'f & 'g))) -> ((forall 'i. 'i -> (forall 'j. 'j -> 'j)) -> 'c & 'k)))
 //│    = [Function: mul]
 
 :e // fails since the fix to spurious-TV-cycles
@@ -64,20 +64,20 @@ mul: ChurchInt -> ChurchInt -> ChurchInt
 //│ ║  l.62: 	mul: ChurchInt -> ChurchInt -> ChurchInt
 //│ ║        	^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ChurchInt  <:  'a21_250    TypeRef  TypeVariable
+//│ ╟── this constraint:  ChurchInt  <:  'a21_268    TypeRef  TypeVariable
 //│ ╙──  ... looks like:  ChurchInt  <:  'a21_22''
 //│ res: ChurchInt -> ChurchInt -> ChurchInt
 //│    = [Function: mul]
 
 // def pow: ChurchInt -> ChurchInt -> ChurchInt
 def pow n m = n (mul m) (succ zero)
-//│ pow: 'a -> (forall 'a. ('a -> 'b
+//│ pow: 'a -> (forall 'a, 'b, 'c, 'd. ('d -> 'b
 //│   where
-//│     'a <: (forall 'c. ('a -> 'd
+//│     'a <: (forall 'e. ('f -> 'g | 'h
 //│   where
-//│     'c <: (forall 'e, 'f, 'g. ('f -> 'g
+//│     'e <: (forall 'i, 'j, 'k, 'l, 'm, 'n. ('k -> 'l | 'n
 //│   where
-//│     'e <: (ChurchInt -> ChurchInt) -> 'f -> 'g)) -> ('a -> (forall 'h. 'h -> 'h)) -> 'd)) -> ChurchInt -> 'b))
+//│     'i <: (ChurchInt -> (ChurchInt | 'j)) -> ('k -> 'l & 'm))) -> ((forall 'o. 'o -> (forall 'p. 'p -> 'p)) -> 'g & 'q))) -> ((forall 'j. ChurchInt | 'j) -> 'b & 'c)))
 //│    = [Function: pow]
 
 :e
@@ -86,7 +86,7 @@ pow: ChurchInt -> ChurchInt -> ChurchInt
 //│ ║  l.84: 	pow: ChurchInt -> ChurchInt -> ChurchInt
 //│ ║        	^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α24_27'' -> ‹∀ 2. (α25_26''' -> α25_26''')›)››  <:  'a21_413    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α24_27'' -> ‹∀ 2. (α25_26''' -> α25_26''')›)››  <:  'a21_449    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α24_27'' -> ‹∀ 2. (α25_26''' -> α25_26''')›)››  <:  'a21_22''
 //│ res: ChurchInt -> ChurchInt -> ChurchInt
 //│    = [Function: pow]
@@ -102,13 +102,13 @@ unit : Unit_t
 //│    = [Function: id]
 
 def tru x _ = x unit
-//│ tru: 'a -> (forall 'a. ('a -> 'b
+//│ tru: 'a -> (forall 'a. ('b -> 'c
 //│   where
-//│     'a <: (forall 'c. 'c -> 'c) -> 'b))
+//│     'a <: (forall 'd. 'd -> 'd) -> 'c))
 //│    = [Function: tru]
 
 def fls _ x = x unit
-//│ fls: anything -> ((forall 'a. 'a -> 'a) -> 'b) -> 'b
+//│ fls: 'a -> ((forall 'b. 'b -> 'b) -> 'c & 'd) -> 'c
 //│    = [Function: fls]
 
 type If_t = (Unit_t -> 'a) -> (Unit_t -> 'a) -> 'a
@@ -121,9 +121,9 @@ fls : If_t
 //│    = [Function: fls]
 
 def iszero n = n (fun _ -> fls) tru
-//│ iszero: (('a -> 'a -> ((forall 'b. 'b -> 'b) -> 'c) -> 'c) -> (forall 'a. 'a -> (forall 'a. ('a -> 'd
+//│ iszero: ((forall 'a. 'a -> (forall 'b. 'b -> ((forall 'c. 'c -> 'c) -> 'd & 'e) -> 'd)) -> ((forall 'f. 'f -> (forall 'f. ('g -> 'h
 //│   where
-//│     'a <: (forall 'b. 'b -> 'b) -> 'd))) -> 'e) -> 'e
+//│     'f <: (forall 'c. 'c -> 'c) -> 'h))) -> 'i & 'j) & 'k) -> 'i
 //│       = [Function: iszero]
 
 iszero : ChurchInt -> If_t
@@ -131,24 +131,24 @@ iszero : ChurchInt -> If_t
 //│    = [Function: iszero]
 
 def pair x y f = f x y
-//│ pair: 'a -> (forall 'b. 'b -> (forall 'c. ('a -> 'b -> 'c) -> 'c))
+//│ pair: 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'e. ('a -> ('b -> 'c & 'd) & 'e) -> 'c))
 //│     = [Function: pair]
 
 def fst p = p (fun x -> fun _ -> x)
-//│ fst: ((forall 'a. 'a -> anything -> 'a) -> 'b) -> 'b
+//│ fst: ((forall 'a. 'a -> (forall 'b. 'b -> 'a)) -> 'c & 'd) -> 'c
 //│    = [Function: fst]
 
 def snd p = p (fun _ -> fun x -> x)
-//│ snd: ((anything -> (forall 'a. 'a -> 'a)) -> 'b) -> 'b
+//│ snd: ((forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> 'c & 'd) -> 'c
 //│    = [Function: snd]
 
 def pred n =
   let s p = pair (snd p) (succ (snd p)) in
   let z = pair zero zero in
   fst (n s z)
-//│ pred: ((forall 'a. (('a -> (forall 'b. 'b -> 'b)) -> (‘a_615_620 -> ‘a_615_620) -> ‘a_615_620 -> ‘a_615_620 & 'a) -> ((forall 'a. ('c
+//│ pred: ((forall 'a, 'b, 'c, 'd, 'e, 'f. ((forall 'g. 'g -> (forall 'h. 'h -> 'h)) -> ((‘a_681_686 -> ‘a_681_686) -> ‘a_681_686 -> ‘a_681_686 & 'a & 'b) & 'c) -> (((forall 'c, 'd. ('d | 'i
 //│   where
-//│     'a <: ('a -> (forall 'b. 'b -> 'b)) -> 'c)) -> ChurchInt -> 'd) -> 'd) -> ((('a -> (forall 'e. 'e -> 'e)) -> ('a -> (forall 'e. 'e -> 'e)) -> 'f) -> 'f) -> (forall 'a, 'g. 'g -> 'a -> 'g) -> 'h) -> 'h
+//│     'c <: (forall 'g. 'g -> (forall 'h. 'h -> 'h)) -> ('j & 'i))) -> ((forall 'k. ChurchInt | 'e | 'k) -> 'l & 'm) & 'n) -> 'l | 'f)) -> ((((forall 'o. 'o -> (forall 'p. 'p -> 'p) | 'q | 'r) -> ((forall 'o. 'o -> (forall 'p. 'p -> 'p) | 'r) -> 's & 't) & 'u) -> 's | 'v) -> ((forall 'w. 'w -> (forall 'x. 'x -> 'w)) -> ('y & 'z) & 'a1) & 'b1) & 'c1) -> 'z
 //│     = [Function: pred]
 
 pred : ChurchInt -> ChurchInt
@@ -161,9 +161,9 @@ rec def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n (f
 //│ ║  l.159: 	rec def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n (fact (pred n)))
 //│ ║         	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α24_27'' -> ‹∀ 2. (α25_26''' -> α25_26''')›)››  <:  α126_899'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α24_27'' -> ‹∀ 2. (α25_26''' -> α25_26''')›)››  <:  α126_899'
-//│ fact: ChurchInt -> (anything -> (forall 'a. 'a -> 'a) | ChurchInt)
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α24_27'' -> ‹∀ 2. (α25_26''' -> α25_26''')›)››  <:  α132_1007'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α24_27'' -> ‹∀ 2. (α25_26''' -> α25_26''')›)››  <:  α132_1007'
+//│ fact: ChurchInt -> (forall 'a. 'a -> (forall 'b. 'b -> 'b) | ChurchInt)
 //│     = [Function: fact]
 
 :e
@@ -180,7 +180,7 @@ def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n {})
 //│ ╟── from reference:
 //│ ║  l.53: 	def mul n m = n (add m) zero
 //│ ╙──      	                     ^
-//│ fact: ChurchInt -> (error | ChurchInt)
+//│ fact: ChurchInt -> (error | ChurchInt | 'a)
 //│     = [Function: fact1]
 
 fact : ChurchInt -> ChurchInt

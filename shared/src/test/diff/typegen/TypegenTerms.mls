@@ -96,16 +96,13 @@ def f: ('c -> 'a as 'a) -> 'c -> int
 //│ export declare const res: {readonly a: string, readonly b: int}
 //│ // end ts
 
+// FIXME
 :ts
 def nonsense x y = if x.a == y.b then x y else fun y -> x
 def g = fun x -> fun y -> if x == y then x y else y x
 // complex types
-//│ nonsense: ('a -> 'b & {a: number} & 'c) -> ({b: number} & 'a) -> (anything -> 'c | 'b)
-//│ g: nothing -> nothing -> nothing
-//│ // start ts
-//│ export declare const nonsense<a, b, c>: (arg: ((arg1: a) => b) & {readonly a: number} & c) => (arg2: {readonly b: number} & a) => ((arg3: unknown) => c) | b
-//│ export declare const g: (arg: never) => (arg1: never) => never
-//│ // end ts
+//│ nonsense: ('a -> 'b & {a: number} & 'c) -> ({b: number} & 'a) -> (forall 'd. 'd -> 'c | 'b)
+//│ /!!!\ Uncaught error: scala.MatchError: PolyType(List(Right(α138)),Union(Function(Tuple(List((None,Field(None,α138)))),α137),α136)) (of class mlscript.PolyType)
 
 :ts
 def x: int | ~string
@@ -158,6 +155,6 @@ def weird: ((int, bool) | 'a) -> 'a
 //│ weird: 'a
 //│   where
 //│     'a :> (int, int,) -> 'a
-//│ /!!!\ Uncaught error: mlscript.codegen.CodeGenError: Cannot generate type for `where` clause List((α230,Bounds(Function(Tuple(List((None,Field(None,TypeName(int))), (None,Field(None,TypeName(int))))),α230),Top)))
+//│ /!!!\ Uncaught error: mlscript.codegen.CodeGenError: Cannot generate type for `where` clause List((α216,Bounds(Function(Tuple(List((None,Field(None,TypeName(int))), (None,Field(None,TypeName(int))))),α216),Top)))
 
 

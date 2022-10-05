@@ -1,0 +1,21 @@
+:NoJS
+
+def f: 'a -> int
+//│ f: anything -> int
+
+def f: forall 'a. 'a -> int
+//│ f: 'a -> int
+
+def f: forall 'a. int -> 'a
+//│ f: int -> 'a
+
+def f: (forall 'a. 'a -> 'b) -> 'b
+//│ f: (forall 'a. 'a -> 'b) -> 'b
+
+def f: (forall 'a. 'b -> 'a) -> 'b
+//│ f: (forall 'a. nothing -> 'a) -> nothing
+
+def f: (forall 'a. 'b -> 'a) -> 'b -> 'b
+//│ f: (forall 'a. 'b -> 'a) -> 'b -> 'b
+
+

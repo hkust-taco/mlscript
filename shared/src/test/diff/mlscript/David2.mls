@@ -144,17 +144,18 @@ def mkIntegerPrecise value = Integer { value; addOne = addOne1 }
 //│                 = [Function: mkIntegerPrecise]
 
 def mkIntegerPrecise value = Integer { value; addOne = fun n -> mkInteger (n.value + 1) }
-//│ mkIntegerPrecise: (int & 'value) -> (Integer with {addOne: forall 'a. {value: int} -> 'a, value: 'value})
+//│ mkIntegerPrecise: (int & 'value) -> (Integer with {addOne: forall 'value0, 'value1, 'a, 'b, 'addOne, 'c, 'd. ({value: int & 'value0 & 'value1} & 'a) -> ('b | 'd), value: 'value})
 //│   where
-//│     'a :> Integer with {addOne: {value: int} -> 'a}
+//│     'b :> Integer with {addOne: 'addOne}
+//│     'addOne :> ({value: int & 'value1} & 'c) -> 'b
 //│                 = [Function: mkIntegerPrecise1]
 
 def mkIntegerPrecise value = Integer { value; addOne = fun (n: Integer) -> mkInteger2 (n.value + 1) }
-//│ mkIntegerPrecise: (int & 'value) -> (Integer with {value: 'value})
+//│ mkIntegerPrecise: (int & 'value) -> (Integer with {addOne: forall 'a. Integer -> (Integer | 'a), value: 'value})
 //│                 = [Function: mkIntegerPrecise2]
 
 n = mkIntegerPrecise 42
-//│ n: Integer & {value: 42}
+//│ n: Integer with {addOne: forall 'a. Integer -> (Integer | 'a), value: 42}
 //│  = Integer { value: 42, addOne: [Function: addOne] }
 
 addOne1 n
@@ -165,7 +166,7 @@ def mkIntegerPrecise2: (int & 'a) -> (Integer & { value: 'a })
 def mkIntegerPrecise2 = mkIntegerPrecise
 //│ mkIntegerPrecise2: (int & 'a) -> (Integer\addOne with {value: 'a})
 //│                  = <missing implementation>
-//│ (int & 'value) -> (Integer with {value: 'value})
+//│ (int & 'value) -> (Integer with {addOne: forall 'a. Integer -> (Integer | 'a), value: 'value})
 //│   <:  mkIntegerPrecise2:
 //│ (int & 'a) -> (Integer\addOne with {value: 'a})
 //│                  = [Function: mkIntegerPrecise21]
@@ -192,13 +193,13 @@ def mkIntegerPrecise3 = mkInteger
 //│   <:  mkIntegerPrecise3:
 //│ (int & 'a) -> (Integer\addOne with {value: 'a})
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.186: 	def mkIntegerPrecise3 = mkInteger
+//│ ║  l.187: 	def mkIntegerPrecise3 = mkInteger
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `int` is not an instance of type `'a_520`
+//│ ╟── operator application of type `int` is not an instance of type `'a_539`
 //│ ║  l.72: 	rec def mkInteger value = Integer { value; addOne = fun n -> mkInteger (n.value + 1) }
 //│ ║        	                                                                        ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.185: 	def mkIntegerPrecise3: (int & 'a) -> (Integer & { value: 'a })
+//│ ║  l.186: 	def mkIntegerPrecise3: (int & 'a) -> (Integer & { value: 'a })
 //│ ╙──       	                                                         ^^
 //│                  = [Function: mkIntegerPrecise3]
 
@@ -206,10 +207,10 @@ def mkIntegerPrecise3 = mkInteger
 :e
 addOne1 (Str { value = ""; addOne = error })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.207: 	addOne1 (Str { value = ""; addOne = error })
+//│ ║  l.208: 	addOne1 (Str { value = ""; addOne = error })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Str & {addOne: ?addOne, value: ?value}` does not match type `Integer & ?a`
-//│ ║  l.207: 	addOne1 (Str { value = ""; addOne = error })
+//│ ║  l.208: 	addOne1 (Str { value = ""; addOne = error })
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.11: 	addOne1 x = case x of {
@@ -253,7 +254,7 @@ addOne2 (mkStr "hello")
 //│    = Str { value: 'hello1', addOne: [Function: addOne] }
 
 union = if true then mkIntegerPrecise 42 else mkStr "hello"
-//│ union: Integer & {value: 42} | Str
+//│ union: (Integer with {addOne: forall 'a. Integer -> (Integer | 'a), value: 42}) | Str
 //│      = Integer { value: 42, addOne: [Function: addOne] }
 
 union2 = addOne2 union

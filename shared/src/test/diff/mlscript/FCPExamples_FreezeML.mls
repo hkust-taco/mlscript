@@ -39,7 +39,7 @@ def head: List['a] -> 'a
 def head l = l.Head
 //│ head: List['a] -> 'a
 //│     = <missing implementation>
-//│ List['a] -> 'a
+//│ (List['a & 'b] & 'c & 'this) -> 'b
 //│   <:  head:
 //│ List['a] -> 'a
 //│     = [Function: head]
@@ -48,7 +48,7 @@ def tail: List['a] -> List['a]
 def tail l = l.Tail
 //│ tail: List['a] -> List['a]
 //│     = <missing implementation>
-//│ List['a] -> List['a]
+//│ (List['a] & 'b & 'this) -> (List['a] | 'c)
 //│   <:  tail:
 //│ List['a] -> List['a]
 //│     = [Function: tail]
@@ -67,25 +67,25 @@ def cons: 'a -> List['a] -> List['a]
 def cons head tail = Cons { head; tail }
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
+//│ 'b -> (forall 'a, 'c, 'tail, 'head, 'd. (List['a] & 'c & 'tail) -> ((Cons['a | 'b] with {head: 'head | 'b, tail: 'tail}) | 'd))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
 
 def is_empty: forall 'a. List['a] -> bool
 def is_empty l = eq l nil
-//│ is_empty: List[?] -> bool
+//│ is_empty: List['a] -> bool
 //│         = <missing implementation>
-//│ anything -> bool
+//│ ('a & 'b) -> (bool | 'c)
 //│   <:  is_empty:
-//│ List[?] -> bool
+//│ List['a] -> bool
 //│         = [Function: is_empty]
 
 def single: 'a -> List['a]
 def single x = cons x nil
 //│ single: 'a -> List['a]
 //│       = <missing implementation>
-//│ 'a -> List['a]
+//│ ('b & 'a) -> (List['a] | 'c)
 //│   <:  single:
 //│ 'a -> List['a]
 //│       = [Function: single]
@@ -143,7 +143,7 @@ def choose: 'a -> 'a -> 'a
 def choose x y = if true then x else y
 //│ choose: 'a -> 'a -> 'a
 //│       = <missing implementation>
-//│ 'a -> (forall 'b. 'b -> ('a | 'b))
+//│ 'a -> (forall 'b, 'c, 'd. ('b & 'c & 'd) -> ('a | 'd))
 //│   <:  choose:
 //│ 'a -> 'a -> 'a
 //│       = [Function: choose]
@@ -152,7 +152,7 @@ def poly: (forall 'a. 'a -> 'a) -> (int, bool)
 def poly f = (f 1, f true)
 //│ poly: (forall 'a. 'a -> 'a) -> (int, bool,)
 //│     = <missing implementation>
-//│ (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+//│ (true -> 'a & 1 -> 'b & 'c) -> ('b, 'a,)
 //│   <:  poly:
 //│ (forall 'a. 'a -> 'a) -> (int, bool,)
 //│     = [Function: poly]
@@ -201,7 +201,7 @@ def revapp: 'a -> ('a -> 'b) -> 'b
 def revapp x f = f x
 //│ revapp: 'a -> ('a -> 'b) -> 'b
 //│       = <missing implementation>
-//│ 'a -> (forall 'b. ('a -> 'b) -> 'b)
+//│ 'a -> (forall 'b, 'c. ('a -> 'b & 'c) -> 'b)
 //│   <:  revapp:
 //│ 'a -> ('a -> 'b) -> 'b
 //│       = [Function: revapp]
@@ -210,9 +210,9 @@ def flip: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 def flip f = fun x -> fun y -> f y x
 //│ flip: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 //│     = <missing implementation>
-//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('c -> 'd
+//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'd
 //│   where
-//│     'a <: 'c -> 'b -> 'd)))
+//│     'a <: 'c -> ('b -> 'd & 'e))))
 //│   <:  flip:
 //│ ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 //│     = [Function: flip]
@@ -230,7 +230,7 @@ def argST: ST['s, int]
 
 // A1
 const2 x y = y
-//│ const2: anything -> (forall 'a. 'a -> 'a)
+//│ const2: 'a -> (forall 'b. 'b -> 'b)
 //│       = [Function: const2]
 
 // A2
@@ -420,17 +420,17 @@ def lst: List[forall 'a. int -> 'a -> 'a]
 // E1
 :ng
 k h lst
-//│ res: int -> (forall 'a. 'a -> 'a)
+//│ res: int -> (forall 'a, 'a0. ('a & 'a0) -> ('a | 'a0))
 
 // E2
 :ng
 k (fun x -> h x) lst
-//│ res: int -> (forall 'a. 'a -> 'a)
+//│ res: int -> (forall 'a, 'a0. ('a & 'a0) -> ('a | 'a0))
 
 // E3
 :ng
 def r: (forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> int
-//│ r: (nothing -> (forall 'b. 'b -> 'b)) -> int
+//│ r: (forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> int
 :ng
 r (fun x -> fun y -> y)
 //│ res: int
@@ -473,7 +473,7 @@ let f = revapp id in f poly
 
 // F10
 a = choose id (fun (x: (forall 'a. 'a -> 'a)) -> auto_ x)
-//│ a: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
+//│ a: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b | 'c)
 //│  = [Function: id1]
 
 a id
@@ -506,7 +506,7 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.505: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ║         	                                  ^^^^^^^
-//│ ╟── type `‘a_1180_1181` is not an instance of type `'a_1180_1182`
+//│ ╟── type `‘a_1230_1231` is not an instance of type `'a_1230_1232`
 //│ ║  l.169: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -516,13 +516,13 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│   where
 //│     'b :> (forall 'a. 'a -> 'a) | (forall 'a0, 'c. ('a0 -> 'a0) -> 'c)
 //│     'c :> error
-//│     'a0 :> ‘a_1180_1181
-//│         <: ‘a_1180_1182
+//│     'a0 :> ‘a_1230_1231
+//│         <: ‘a_1230_1232
 //│    = [Function: id1]
 
 // * The skolem used to (unsafely) leak into this type – see also `Skolems.mls`:
 res
-//│ res: (('a | ‘a_1180_1181) -> (‘a_1180_1182 & 'a) & 'a0) -> ('a0 | error)
+//│ res: (('a | ‘a_1230_1231) -> (‘a_1230_1232 & 'a) & 'a0) -> ('a0 | error)
 //│    = [Function: id1]
 
 :e // skolem extrusion
@@ -530,7 +530,7 @@ res id
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.529: 	res id
 //│ ║         	^^^^^^
-//│ ╟── type `‘a_1180_1181` is not an instance of type `'a_1180_1182`
+//│ ╟── type `‘a_1230_1231` is not an instance of type `'a_1230_1232`
 //│ ║  l.169: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -548,7 +548,7 @@ a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.547: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a_1209`
+//│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a_1259`
 //│ ║  l.547: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:

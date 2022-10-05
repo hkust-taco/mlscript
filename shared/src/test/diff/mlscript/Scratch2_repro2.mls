@@ -6,10 +6,10 @@ def s n = fun f -> fun x -> f (n f x)
 // def s n = fun f -> fun x -> (n f x)
 // def s n = fun f -> n f
 // def s n = n
-//│ s: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ s: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('c -> 'f
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e)))
+//│     'a <: 'b -> ('c -> 'd & 'e)
+//│     'b <: 'd -> 'f)))
 //│  = [Function: s]
 
 // type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -40,7 +40,7 @@ sz = s zero
 sz1 = sz 1
 //│ sz1: 'a -> 'b
 //│   where
-//│     'c <: 'd -> 'a -> 'e
+//│     'c <: 'd -> ('a -> 'e & 'f)
 //│     'd <: 'e -> 'b
 //│    = <no result>
 //│      sz and zero are not implemented
@@ -64,7 +64,7 @@ sz1 2
 sz true
 //│ res: 'a -> 'b
 //│   where
-//│     'c <: 'd -> 'a -> 'e
+//│     'c <: 'd -> ('a -> 'e & 'f)
 //│     'd <: 'e -> 'b
 //│    = <no result>
 //│      sz and zero are not implemented
@@ -75,10 +75,10 @@ sz: ChI
 //│      sz and zero are not implemented
 
 s zero
-//│ res: 'a -> (forall 'a, 'b, 'c, 'd. ('b -> 'd
+//│ res: 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('b -> 'e
 //│   where
-//│     'e <: 'a -> 'b -> 'c
-//│     'a <: 'c -> 'd))
+//│     'f <: 'a -> ('b -> 'c & 'd)
+//│     'a <: 'c -> 'e))
 //│    = <no result>
 //│      zero is not implemented
 
@@ -109,7 +109,7 @@ s zero : ChI
 // :ns
 // :d
 def example f = (f: forall 'a. 'a -> 'a)
-//│ example: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ example: (forall 'a. 'a -> 'a & 'b) -> (forall 'a. 'a -> 'a)
 //│        = [Function: example]
 
 :e
@@ -134,7 +134,7 @@ example succ
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.133: 	example succ
 //│ ║         	^^^^^^^^^^^^
-//│ ╟── type `‘a_263` is not an instance of type `int`
+//│ ╟── type `‘a_273` is not an instance of type `int`
 //│ ║  l.111: 	def example f = (f: forall 'a. 'a -> 'a)
 //│ ╙──       	                           ^^
 //│ res: error
@@ -149,12 +149,12 @@ example id
 
 // FIXME: Rigid variable extrusion here! We should clean extr contexts of local rigids before returning them....
 def example f = ((0, f) : forall 'a. (0, 'a))
-//│ example: ‘a_276_277 -> (0, nothing,)
+//│ example: (‘a_286_287 & 'b) -> (forall 'a. (0, 'a,))
 //│        = [Function: example1]
 
 // FIXME same
 def example f = ((0, f) : forall 'a. (0, 'a -> 'a))
-//│ example: (‘a_284_285 -> ‘a_284_285) -> (forall 'a. (0, 'a -> 'a,))
+//│ example: (‘a_298_299 -> ‘a_298_299 & 'b) -> (forall 'a. (0, 'a -> 'a,))
 //│        = [Function: example2]
 
 
@@ -184,7 +184,7 @@ id_ty = id
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.176: 	id_ty = id
 //│ ║         	^^^^^^^^^^
-//│ ╟── type `‘a_321` is not a function
+//│ ╟── type `‘a_337` is not a function
 //│ ║  l.162: 	def id_ty: forall 'a. 'a -> 'a
 //│ ║         	                  ^^
 //│ ╟── Note: constraint arises from application:
