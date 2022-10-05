@@ -17,3 +17,7 @@ interface I2 {}
 type I3 = I1 & I2
 type StringArray = string[]
 type SomeInterface = { x: number, y: number }
+
+class ABC {}
+type DEF = ABC
+type TP<A, B, C> = [A, B, C]
