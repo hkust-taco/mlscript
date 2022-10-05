@@ -51,8 +51,8 @@ object Converter {
     case overload @ TSIgnoredOverload(base, _) => s"${convert(base)} ${overload.warning}"
     case TSParameterType(name, tp) => s"${name}: ${convert(tp)}"
     case TSTypeAlias(name, ori, tp) =>
-      if (tp.isEmpty) s"type $name = ${convert(ori)}"
-      else s"type $name<${tp.map(t => convert(t)).reduceLeft((s, t) => s"$s, $t")}> = ${convert(ori)}"
+      if (tp.isEmpty) s"${indent}type $name = ${convert(ori)}"
+      else s"${indent}type $name<${tp.map(t => convert(t)).reduceLeft((s, t) => s"$s, $t")}> = ${convert(ori)}"
   }
 
   private def convertRecord(typeName: String, members: Map[String, TSMemberType], typeVars: List[TSTypeParameter],

@@ -21,3 +21,13 @@ type SomeInterface = { x: number, y: number }
 class ABC {}
 type DEF = ABC
 type TP<A, B, C> = [A, B, C]
+
+namespace NA {
+	export type B = string
+	function fb(b: B) {}
+}
+
+class NC {
+	constructor() {}
+	b: NA.B
+}
