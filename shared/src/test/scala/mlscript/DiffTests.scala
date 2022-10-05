@@ -651,7 +651,7 @@ class DiffTests
                 val ty_sch = typer.PolymorphicType(0,
                   typer.typeType(rhs)(ctx.nextLevel, raise,
                     vars = tps.map(tp => tp.name -> typer.freshVar(typer.noProv/*FIXME*/)(1)).toMap))
-                ctx += nme.name -> ty_sch
+                ctx += nme.name -> typer.VarSymbol(ty_sch, nme)
                 declared += nme.name -> ty_sch
                 val exp = getType(ty_sch)
                 output(s"$nme: ${exp.show}")
@@ -669,7 +669,7 @@ class DiffTests
                   // statement has a body but it's type was not declared
                   // infer it's type and store it for lookup and type gen
                   case N =>
-                    ctx += nme.name -> ty_sch
+                    ctx += nme.name -> typer.VarSymbol(ty_sch, nme)
                     output(s"$nme: ${exp.show}")
                     if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
                     
@@ -677,7 +677,7 @@ class DiffTests
                   // both are used to compute a subsumption (What is this??)
                   // the inferred type is used to for ts type gen
                   case S(sign) =>
-                    ctx += nme.name -> sign
+                    ctx += nme.name -> typer.VarSymbol(sign, nme)
                     val sign_exp = getType(sign)
                     output(exp.show)
                     output(s"  <:  $nme:")
@@ -696,7 +696,7 @@ class DiffTests
                     binds.foreach {
                       case (nme, pty) =>
                         val ptType = getType(pty)
-                        ctx += nme -> pty
+                        ctx += nme -> typer.VarSymbol(pty, Var(nme))
                         output(s"$nme: ${ptType.show}")
                         prefixLength = nme.length()
                         if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(ptType, Some(nme))
@@ -707,7 +707,7 @@ class DiffTests
                   case L(pty) =>
                     val exp = getType(pty)
                     if (exp =/= TypeName("unit")) {
-                      ctx += "res" -> pty
+                      ctx += "res" -> typer.VarSymbol(pty, Var("res"))
                       output(s"res: ${exp.show}")
                       if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, None)
                       prefixLength = 3

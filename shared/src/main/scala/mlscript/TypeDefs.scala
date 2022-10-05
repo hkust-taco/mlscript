@@ -337,7 +337,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
                         singleTup(tv), tv & nomTag & RecordType.mk(tparamTags)(noProv)
                       )(originProv(td.nme.toLoc, "trait constructor", td.nme.name)))
                   }
-                  ctx += n.name -> ctor
+                  ctx += n.name -> VarSymbol(ctor, Var(n.name))
               }
               true
             }
@@ -491,7 +491,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
           def go(md: MethodDef[_ <: Term \/ Type]): (Str, MethodType) = {
             val thisTag = TraitTag(Var("this"))(noProv)
             val thisTy = thisTag & tr
-            thisCtx += "this" -> thisTy
+            thisCtx += "this" -> VarSymbol(thisTy, Var("this"))
             val MethodDef(rec, prt, nme, tparams, rhs) = md
             val prov: TypeProvenance = tp(md.toLoc,
               (if (!top) "inherited " else "")

@@ -65,7 +65,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   object Ctx {
     def init: Ctx = Ctx(
       parent = N,
-      env = MutMap.from(builtinBindings),
+      env = MutMap.from(builtinBindings.iterator.map(nt => nt._1 -> VarSymbol(nt._2, Var(nt._1)))),
       mthEnv = MutMap.empty,
       lvl = 0,
       inPattern = false,
@@ -288,7 +288,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case TypeName("this") =>
         ctx.env.getOrElse("this", err(msg"undeclared this" -> ty.toLoc :: Nil)) match {
           case AbstractConstructor(_, _) => die
-          case t: TypeScheme => t.instantiate
+          case VarSymbol(t: TypeScheme, _) => t.instantiate
         }
       case tn @ TypeTag(name) => rec(TypeName(name.decapitalize))
       case tn @ TypeName(name) =>
@@ -361,7 +361,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       if (nme.name === "_")
         err(msg"Illegal definition name: ${nme.name}", nme.toLoc)(raise)
       val ty_sch = typeLetRhs(isrec, nme.name, rhs)
-      ctx += nme.name -> ty_sch
+      nme.uid = S(nextUid)
+      ctx += nme.name -> VarSymbol(ty_sch, nme)
       R(nme.name -> ty_sch :: Nil)
     case t @ Tup(fs) if !allowPure => // Note: not sure this is still used!
       val thing = fs match {
@@ -402,7 +403,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         // TypeProvenance(rhs.toLoc, "let-bound value"),
         S(nme)
       )(lvl + 1)
-      ctx += nme -> e_ty
+      ctx += nme -> VarSymbol(e_ty, Var(nme))
       val ty = typeTerm(rhs)(ctx.nextLevel, raise, vars)
       constrain(ty, e_ty)(raise, TypeProvenance(rhs.toLoc, "binding of " + rhs.describe), ctx)
       e_ty
@@ -431,11 +432,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   object ValidPatVar {
     def unapply(v: Var)(implicit ctx: Ctx, raise: Raise): Opt[Str] =
       if (ctx.inPattern && v.isPatVar) {
-        ctx.parent.dlof(_.get(v.name))(N) |>? { case S(ts: TypeScheme) => ts.instantiate(0).unwrapProxies } |>? {
-          case S(ClassTag(Var(v.name), _)) =>
-            warn(msg"Variable name '${v.name}' already names a symbol in scope. " +
-              s"If you want to refer to that symbol, you can use `scope.${v.name}`; " +
-              s"if not, give your future readers a break and use another name :^)", v.toLoc)
+        ctx.parent.dlof(_.get(v.name))(N) |>? { case S(VarSymbol(ts: TypeScheme, _)) =>
+          ts.instantiate(0).unwrapProxies } |>? {
+            case S(ClassTag(Var(v.name), _)) =>
+              warn(msg"Variable name '${v.name}' already names a symbol in scope. " +
+                s"If you want to refer to that symbol, you can use `scope.${v.name}`; " +
+                s"if not, give your future readers a break and use another name :^)", v.toLoc)
         }
         ValidVar.unapply(v)
       } else N
@@ -485,8 +487,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case (v @ ValidPatVar(nme)) =>
         val prov = tp(if (verboseConstraintProvenanceHints) v.toLoc else N, "variable")
         // Note: only look at ctx.env, and not the outer ones!
-        ctx.env.get(nme).collect { case ts: TypeScheme => ts.instantiate }
-          .getOrElse(new TypeVariable(lvl, Nil, Nil)(prov).tap(ctx += nme -> _))
+        ctx.env.get(nme).collect { case VarSymbol(ts, dv) => assert(v.uid.isDefined); v.uid = dv.uid; ts.instantiate }
+          .getOrElse {
+            val res = new TypeVariable(lvl, Nil, Nil)(prov)
+            v.uid = S(nextUid)
+            ctx += nme -> VarSymbol(res, v)
+            res
+          }
       case v @ ValidVar(name) =>
         val ty = ctx.get(name).fold(err("identifier not found: " + name, term.toLoc): TypeScheme) {
           case AbstractConstructor(absMths, traitWithMths) =>
@@ -501,7 +508,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                   :: absMths.map { case mn => msg"Hint: method ${mn.name} is abstract" -> mn.toLoc }.toList
               )
             )
-          case ty: TypeScheme => ty
+          case VarSymbol(ty: TypeScheme, _) => ty
         }.instantiate
         mkProxy(ty, prov)
         // ^ TODO maybe use a description passed in param?
@@ -608,10 +615,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         err(msg"Unsupported pattern shape${
           if (dbg) " ("+pat.getClass.toString+")" else ""}:", pat.toLoc)(raise)
       case Lam(pat, body) =>
-        val newBindings = mutable.Map.empty[Str, TypeVariable]
         val newCtx = ctx.nest
         val param_ty = typePattern(pat)(newCtx, raise, vars)
-        newCtx ++= newBindings
         val body_ty = typeTerm(body)(newCtx, raise, vars)
         FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
       case App(App(Var("and"), lhs), rhs) =>
@@ -683,7 +688,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case Let(isrec, nme, rhs, bod) =>
         val n_ty = typeLetRhs(isrec, nme.name, rhs)
         val newCtx = ctx.nest
-        newCtx += nme.name -> n_ty
+        newCtx += nme.name -> VarSymbol(n_ty, nme)
         typeTerm(bod)(newCtx, raise)
       // case Blk(s :: stmts) =>
       //   val (newCtx, ty) = typeStatement(s)
@@ -733,7 +738,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       val newCtx = ctx.nest
       scrutVar match {
         case Some(v) =>
-          newCtx += v.name -> fv
+          newCtx += v.name -> VarSymbol(fv, v)
           val b_ty = typeTerm(b)(newCtx, raise)
           (fv -> TopType :: Nil) -> b_ty
         case _ =>
@@ -765,7 +770,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           val tv = freshVar(tp(v.toLoc, "refined scrutinee"),
             // S(v.name), // this one seems a bit excessive
           )
-          newCtx += v.name -> tv
+          newCtx += v.name -> VarSymbol(tv, v)
           val bod_ty = typeTerm(bod)(newCtx, raise)
           (patTy -> tv, bod_ty, typeArms(scrutVar, rest))
         case N =>
@@ -807,7 +812,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           
           // constrain(ty, t_ty)(raise, prov)
           constrain(t_ty, ty)(raise, prov, ctx)
-          ctx += nme.name -> t_ty
+          ctx += nme.name -> VarSymbol(t_ty, nme)
           
           t_ty
           // ty
@@ -815,7 +820,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           // ComposedType(true, t_ty, ty)(prov) // loops!
           
         case S(nme) =>
-          ctx += nme.name -> ty
+          ctx += nme.name -> VarSymbol(ty, nme)
           ty
         case _ =>
           ty
@@ -833,7 +838,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       val (diags, desug) = s.desugared
       diags.foreach(raise)
       val newBindings = desug.flatMap(typeStatement(_, allowPure = false).toOption)
-      ctx ++= newBindings.flatten
+      ctx ++= newBindings.iterator.flatten.map(nt => nt._1 -> VarSymbol(nt._2, Var(nt._1)))
       typeTerms(sts, rcd, fields)
     case Nil =>
       if (rcd) {
@@ -923,6 +928,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     val res = go(st)
     if (bounds.isEmpty) res
     else Constrained(res, bounds)
+  }
+  
+  
+  private var curUid: Int = 0
+  def nextUid: Int = {
+    val res = curUid
+    curUid += 1
+    res
   }
   
 }

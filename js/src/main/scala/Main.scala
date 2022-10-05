@@ -311,7 +311,7 @@ object Main {
               subsume(ty_sch, sign)(ctx, raise, TypeProvenance(d.toLoc, "def definition"))
               // Note: keeping the less precise declared type signature here (no ctx update)
             case N =>
-              ctx += nme.name -> ty_sch
+              ctx += nme.name -> VarSymbol(ty_sch, nme)
           }
           res ++= formatBinding(d.nme.name, ty_sch)
           results append S(d.nme.name) -> htmlize(getType(ty_sch).show)
@@ -327,14 +327,14 @@ object Main {
           }
           val ty_sch = PolymorphicType(0, typeType(rhs)(ctx.nextLevel, raise,
             vars = tps.map(tp => tp.name -> freshVar(noProv/*FIXME*/)(1)).toMap))
-          ctx += nme.name -> ty_sch
+          ctx += nme.name -> VarSymbol(ty_sch, nme)
           declared += nme -> ty_sch
           results append S(d.nme.name) -> htmlize(getType(ty_sch).show)
         case s: DesugaredStatement =>
           typer.typeStatement(s, allowPure = true) match {
             case R(binds) =>
               binds.foreach { case (nme, pty) =>
-                ctx += nme -> pty
+                ctx += nme -> VarSymbol(pty, Var(nme))
                 res ++= formatBinding(nme, pty)
                 results append S(nme) -> htmlize(getType(pty).show)
               }
@@ -342,7 +342,7 @@ object Main {
               val exp = getType(pty)
               if (exp =/= TypeName("unit")) {
                 val nme = "res"
-                ctx += nme -> pty
+                ctx += nme -> VarSymbol(pty, Var(nme))
                 res ++= formatBinding(nme, pty)
                 results append N -> htmlize(getType(pty).show)
               }
