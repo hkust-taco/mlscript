@@ -826,7 +826,7 @@ class Test9B: Test9A[int]
 //│ ╟── type `Test9A[int] -> int` is not an instance of type `X_788`
 //│ ║  l.815: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	                   ^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into method declaration with expected type `x_788`
+//│ ╟── but it flows into method declaration with expected type `#X_788`
 //│ ║  l.815: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:

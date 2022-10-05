@@ -134,7 +134,7 @@ def evalN evalN k e = case e of {
   | Neg -> 0 - evalN evalN k e.e
   | _ -> k e
   }
-//│ evalN: ('a -> 'b -> 'e -> int & 'a) -> ('c -> 'd & 'b) -> ((Neg with {e: 'e}) | 'c & ~neg) -> (int | 'd)
+//│ evalN: ('a -> 'b -> 'e -> int & 'a) -> ('c -> 'd & 'b) -> ((Neg with {e: 'e}) | 'c & ~#Neg) -> (int | 'd)
 //│      = [Function: evalN1]
 
 

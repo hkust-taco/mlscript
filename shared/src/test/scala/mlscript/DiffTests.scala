@@ -45,7 +45,8 @@ class DiffTests
   
   override val defaultTestSignaler: Signaler = new Signaler {
     @annotation.nowarn("msg=method stop in class Thread is deprecated") def apply(testThread: Thread): Unit = {
-      println(s"!! Test at $testThread has run out out time !! stopping...")
+      println(s"!! Test at $testThread has run out out time !! stopping..." +
+        "\n\tNote: you can increase this limit by changing DiffTests.TimeLimit")
       // * Thread.stop() is considered bad practice because normally it's better to implement proper logic
       // * to terminate threads gracefully, avoiding leaving applications in a bad state.
       // * But here we DGAF since all the test is doing is runnign a type checker and some Node REPL,
@@ -509,7 +510,7 @@ class DiffTests
                       val tvarVariance = tvv.getOrElse(tvar, throw new Exception(
                         s"Type variable $tvar not found in variance store ${ttd.tvarVariances} for $ttd"))
                       SourceCode(s"${tvarVariance.show}${tname.name}")
-                    }.toList).toString()
+                    })
                   else
                     SourceCode("")
                 output(s"Defined " + td.kind.str + " " + tn + params)
@@ -555,8 +556,8 @@ class DiffTests
             
             if (!varianceWarnings.isEmpty) {
               import Message._
-              val diags = varianceWarnings.map{ case (tname, biVars) =>
-                val warnings = biVars.map( tname => msg"${tname.name} is irrelevant and may be removed" -> tname.toLoc).toList
+              val diags = varianceWarnings.iterator.map { case (tname, biVars) =>
+                val warnings = biVars.map( tname => msg"${tname.name} is irrelevant and may be removed" -> tname.toLoc)
                 WarningReport(msg"Type definition ${tname.name} has bivariant type parameters:" -> tname.toLoc :: warnings)
               }.toList
               report(diags)
@@ -896,7 +897,7 @@ object DiffTests {
   
   private val TimeLimit =
     if (sys.env.get("CI").isDefined) Span(25, Seconds)
-    else Span(5, Seconds)
+    else Span(10, Seconds)
   
   private val pwd = os.pwd
   private val dir = pwd/"shared"/"src"/"test"/"diff"

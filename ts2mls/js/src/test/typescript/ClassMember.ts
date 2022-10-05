@@ -1,7 +1,7 @@
 class Student {
   name: string
 
-  constructor() {}
+  constructor(s: string, age: number) {}
 
   
   getID() { return 114514; }

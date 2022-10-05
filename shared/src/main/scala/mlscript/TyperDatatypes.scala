@@ -359,10 +359,11 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
             tparamField(defn, tp) -> FieldType(
               Some(if (tvv(tv).isCovariant) BotType else tv),
               if (tvv(tv).isContravariant) TopType else tv)(prov)
-          }.toList)(noProv)
+          })(noProv)
         else TopType
       subst(td.kind match {
         case Als => td.bodyTy
+        case Nms => throw new NotImplementedError("Namespaces are not supported yet.")
         case Cls => clsNameToNomTag(td)(prov, ctx) & td.bodyTy & tparamTags
         case Trt => trtNameToNomTag(td)(prov, ctx) & td.bodyTy & tparamTags
       // }, (td.targs.lazyZip(targs) ++ td.tvars.map(tv => tv -> freshenAbove(0, tv)(tv.level))).toMap)

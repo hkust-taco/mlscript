@@ -134,11 +134,11 @@ trait S: { x: int }
 //│ Defined trait S
 
 s = S{ x = 1 }
-//│ s: {x: 1} & s
+//│ s: {x: 1} & #S
 //│  = { x: 1 }
 
 t = s: s
-//│ t: s
+//│ t: #S
 //│  = { x: 1 }
 
 :e
@@ -146,7 +146,7 @@ t.x
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.145: 	t.x
 //│ ║         	^^^
-//│ ╟── type `s` does not have field 'x'
+//│ ╟── type `#S` does not have field 'x'
 //│ ║  l.140: 	t = s: s
 //│ ║         	       ^
 //│ ╟── but it flows into reference with expected type `{x: ?x}`

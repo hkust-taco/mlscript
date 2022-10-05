@@ -195,6 +195,12 @@ eval2_fixed_2 e2
 
 
 
+:ge
+let rec eval1_fixed = eval1f (eval1f eval1_fixed) in eval1_fixed e1
+//│ res: int
+//│ Code generation encountered an error:
+//│   recursive non-function definition eval1_fixed is not supported
+
 :js
 rec def eval1_fixed = eval1f (eval1f eval1_fixed)
 //│ // Query 1
@@ -303,8 +309,8 @@ eval2_broken eval2_broken e2
 //│ ║  l.+1: 	eval2_broken eval2_broken e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α1062' -> (α1063' -> (arg1065' | α1080')))›  <:  α1062_1126    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α1062' -> (α1063' -> (arg1065' | α1080')))›  <:  α1062'
+//│ ╟── this constraint:  ‹∀ 0. (α1114' -> (α1115' -> (arg1117' | α1132')))›  <:  α1114_1178    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α1114' -> (α1115' -> (arg1117' | α1132')))›  <:  α1114'
 //│ res: error
 
 
@@ -320,8 +326,8 @@ fix eval2f_oops e2
 //│ ║  l.+1: 	fix eval2f_oops e2
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α1147_1218 -> (α1152_1225 | α1167_1226))  <:  α626_1243    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α1147' -> (α1152' | α1167'))  <:  α626_1205'''
+//│ ╟── this constraint:  (α1199_1270 -> (α1204_1277 | α1219_1278))  <:  α626_1295    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α1199' -> (α1204' | α1219'))  <:  α626_1257'''
 //│ res: error
 
 

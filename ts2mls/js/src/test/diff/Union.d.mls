@@ -1,21 +1,11 @@
-def getString: ((((string) | (number)) | (false)) | (true)) -> (string)
-def test: ((false) | (true)) -> ((string) | (number))
-def run: (((number) -> (number)) | ((number) -> (string))) -> (anything)
-def get: ((MutArray[number]) | (MutArray[string])) -> (unit)
-def get2: (((string, string, )) | ((number, string, ))) -> (string)
-def typeVar[T, U]: ((T) | (U)) -> ((T) | (U))
-def uuuu: ((((string) | (number)) | (false)) | (true)) -> ((((string) | (number)) | (false)) | (true))
-//│ getString: (false | number | string | true) -> string
-//│          = <missing implementation>
-//│ test: bool -> (number | string)
-//│     = <missing implementation>
-//│ run: (number -> (number | string)) -> anything
-//│    = <missing implementation>
-//│ get: MutArray[out number | string] -> unit
-//│    = <missing implementation>
-//│ get2: (number | string, string,) -> string
-//│     = <missing implementation>
-//│ typeVar: 'a -> 'a
-//│        = <missing implementation>
-//│ uuuu: (false | number | string | true) -> (false | number | string | true)
-//│     = <missing implementation>
+:NewParser
+:ParseOnly
+fun getString(x: (((string) | (number)) | (false)) | (true)): string
+fun test(x: (false) | (true)): (string) | (number)
+fun run(f: ((number) => number) | ((number) => string)): anything
+fun get(arr: (MutArray<number>) | (MutArray<string>)): unit
+fun get2(t: ((string, string, )) | ((number, string, ))): string
+fun typeVar<T, U>(x: (T) | (U)): (T) | (U)
+fun uuuu(x: (((string) | (number)) | (false)) | (true)): (((string) | (number)) | (false)) | (true)
+//│ |#fun| |getString|(|x|#:| |(|(|(|string|)| ||| |(|number|)|)| ||| |(|false|)|)| ||| |(|true|)|)|#:| |string|↵|#fun| |test|(|x|#:| |(|false|)| ||| |(|true|)|)|#:| |(|string|)| ||| |(|number|)|↵|#fun| |run|(|f|#:| |(|(|number|)| |=>| |number|)| ||| |(|(|number|)| |=>| |string|)|)|#:| |anything|↵|#fun| |get|(|arr|#:| |(|MutArray|‹|number|›|)| ||| |(|MutArray|‹|string|›|)|)|#:| |unit|↵|#fun| |get2|(|t|#:| |(|(|string|,| |string|,| |)|)| ||| |(|(|number|,| |string|,| |)|)|)|#:| |string|↵|#fun| |typeVar|‹|T|,| |U|›|(|x|#:| |(|T|)| ||| |(|U|)|)|#:| |(|T|)| ||| |(|U|)|↵|#fun| |uuuu|(|x|#:| |(|(|(|string|)| ||| |(|number|)|)| ||| |(|false|)|)| ||| |(|true|)|)|#:| |(|(|(|string|)| ||| |(|number|)|)| ||| |(|false|)|)| ||| |(|true|)|
+//│ Parsed: {fun getString: [] -> (x: (((string,) | (number,),) | (false,),) | (true,),) -> string; fun test: [] -> (x: (false,) | (true,),) -> ((string,) | (number,)); fun run: [] -> (f: (number -> number,) | (number -> string,),) -> anything; fun get: [] -> (arr: (MutArray[number],) | (MutArray[string],),) -> unit; fun get2: [] -> (t: ((string, string,),) | ((number, string,),),) -> string; fun typeVar: [] -> (x: (T,) | (U,),) -> ((T,) | (U,)); fun uuuu: [] -> (x: (((string,) | (number,),) | (false,),) | (true,),) -> ((((string,) | (number,),) | (false,),) | (true,))}

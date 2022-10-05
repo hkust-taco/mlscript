@@ -48,6 +48,7 @@ abstract class TypeImpl extends Located { self: Type =>
       "‘" + name.tail
     case TypeName(name) => name
     // case uv: TypeVar => ctx.vs.getOrElse(uv, s"[??? $uv ???]")
+    case TypeTag(name) => "#"+name
     case uv: TypeVar => ctx.vs(uv)
     case Recursive(n, b) => parensIf(s"${b.showIn(ctx, 2)} as ${ctx.vs(n)}", outerPrec > 1)
     case WithExtension(b, r) => parensIf(s"${b.showIn(ctx, 2)} with ${r.showIn(ctx, 0)}", outerPrec > 1)
@@ -145,7 +146,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case _: Union | _: Function | _: Tuple | _: Recursive
         | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
         | _: Literal | _: TypeVar | _: AppliedType | _: TypeName 
-        | _: Constrained | _ : Splice =>
+        | _: Constrained | _ : Splice | _: TypeTag =>
       Nil
   }
 
@@ -159,7 +160,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case Inter(lhs, rhs) => lhs.collectTypeNames ++ rhs.collectTypeNames
     case _: Union | _: Function | _: Record | _: Tuple | _: Recursive
         | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
-        | _: Literal | _: TypeVar | _: Constrained | _ : Splice =>
+        | _: Literal | _: TypeVar | _: Constrained | _ : Splice | _: TypeTag =>
       Nil
   }
 
@@ -172,7 +173,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case Inter(ty1, ty2) => ty1.collectBodyFieldsAndTypes ++ ty2.collectBodyFieldsAndTypes
     case _: Union | _: Function | _: Tuple | _: Recursive
         | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
-        | _: Literal | _: TypeVar | _: AppliedType | _: TypeName | _: Constrained | _ : Splice =>
+        | _: Literal | _: TypeVar | _: AppliedType | _: TypeName | _: Constrained | _ : Splice | _: TypeTag =>
       Nil
   }
 }
@@ -440,6 +441,11 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Tup(fields) => Tuple(fields.map(fld => (fld._1, fld._2 match {
       case Fld(m, s, v) => val ty = v.toType_!; Field(Option.when(m)(ty), ty)
     })))
+    case Bra(rcd, trm) if (!rcd) => trm.toType_!
+    case TyApp(lhs, targs) => lhs.toType_! match {
+      case p: TypeName => AppliedType(p, targs)
+      case _ => throw new NotAType(this)
+    }
     // TODO:
     // case Rcd(fields) => ???
     // case Sel(receiver, fieldName) => ???

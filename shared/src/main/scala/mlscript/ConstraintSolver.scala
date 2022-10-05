@@ -1168,6 +1168,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             // {if (tv.nameHint.isDefined) freshVar(noProv,N,S("")).toString
             // Var(tv.nameHint.getOrElse("_"+freshVar(noProv,N).toString).toString)}
             // Var(tv.nameHint.getOrElse("_"+freshVar(noProv,N).toString).toString)
+            // Var(tv.nameHint.getOrElse("_"+freshVar(noProv).toString)))(tv.prov)
             Var(tv.nameHint.getOrElse("")+"_"+freshVar(noProv,N,S("")).mkStr)
           )(tv.prov)
           if (tv.lowerBounds.nonEmpty || tv.upperBounds.nonEmpty) {

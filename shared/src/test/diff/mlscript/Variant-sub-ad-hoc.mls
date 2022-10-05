@@ -12,7 +12,7 @@ def None = None{}
 
 def flatMap = fun f -> fun opt ->
   case opt of { Some -> f opt.v | _ -> opt }
-//│ flatMap: ('v -> 'a) -> (Some & {v: 'v} | 'a & ~some) -> 'a
+//│ flatMap: ('v -> 'a) -> (Some & {v: 'v} | 'a & ~#Some) -> 'a
 //│        = [Function: flatMap]
 
 f = fun x -> Some x

@@ -1,26 +1,25 @@
 package mlscript
 
-import fansi.{ Str => FStr }
 import scala.language.implicitConversions
 import mlscript.utils._, shorthands._
 
 final case class Message(bits: Ls[Message.Bit]) {
-  def show: FStr = {
+  def show: Str = {
     val ctx = ShowCtx.mk(typeBits)
     showIn(ctx)
   }
   def typeBits: Ls[Type] = bits.collect{ case Message.Code(t) => t }
-  def showIn(ctx: ShowCtx): FStr = {
-    FStr.join(bits.map {
-      case Message.Code(ty) => ty.showIn(ctx, 0): FStr // TODO make Type use FStr
+  def showIn(ctx: ShowCtx): Str = {
+    bits.map {
+      case Message.Code(ty) => ty.showIn(ctx, 0)
       case Message.Text(txt) => txt
-    }: _*)
+    }.mkString
   }
   def showDbg: Str = {
-    FStr.join(bits.map {
-      case Message.Code(trm) => s"$trm": FStr
+    bits.iterator.map {
+      case Message.Code(trm) => s"$trm"
       case Message.Text(txt) => txt
-    }: _*).toString
+    }.mkString
   }
   def +(that: Message): Message = Message(bits ++ that.bits)
 }
@@ -32,8 +31,7 @@ object Message {
   def join(msgs: Seq[Message]): Message = Message(msgs.iterator.flatMap(_.bits).toList)
   
   sealed abstract class Bit
-  final case class Text(str: FStr) extends Bit
-  implicit def fromFStr(str: FStr): Message = Message(Text(str)::Nil)
+  final case class Text(str: Str) extends Bit
   final case class Code(ty: Type) extends Bit
   implicit def fromType(ty: Type): Message = Message(Code(ty)::Nil)
   implicit def fromStr(str: Str): Message = Message(Text(str)::Nil)
