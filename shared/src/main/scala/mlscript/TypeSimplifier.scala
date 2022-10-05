@@ -272,7 +272,8 @@ trait TypeSimplifier { self: Typer =>
                   case S(ft @ FunctionType(l, r)) =>
                     S(FunctionType(go(l, pol.map(!_)), go(r, pol))(ft.prov)) -> nFields
                   case S(ot @ Overload(alts)) =>
-                    S(Overload(alts.map(go(_, pol).asInstanceOf[FunctionType]))(noProv)) -> nFields
+                    // S(Overload(alts.map(go(_, pol).asInstanceOf[FunctionType]))(noProv)) -> nFields
+                    S(ot.mapAlts(pol)((p, t) => go(t, p))) -> nFields
                   case S(at @ ArrayType(inner)) =>
                     S(ArrayType(inner.update(go(_, pol.map(!_)), go(_, pol)))(at.prov)) -> nFields
                   case S(sp @ SpliceType(elems)) =>
@@ -386,7 +387,8 @@ trait TypeSimplifier { self: Typer =>
     }
     Analyze1(pol)(st)
     
-    println(s"[inv] ${occursInvariantly.iterator.mkString(", ")}")
+    println(s"[inv] ${occursInvariantly.mkString(", ")}")
+    println(s"[con] ${constrainedVars.mkString(", ")}")
     println(s"[nums] ${occNums.iterator
       .map(occ => s"${printPol(S(occ._1._1))}${occ._1._2} ${occ._2}")
       .mkString(" ; ")
@@ -688,7 +690,7 @@ trait TypeSimplifier { self: Typer =>
         case L(l) => L(transform(l, pol, semp)) 
         case R(r) => R(transformField(r))})(st.prov)
       case FunctionType(l, r) => FunctionType(transform(l, pol.map(!_), semp), transform(r, pol, semp))(st.prov)
-      case Overload(as) => Overload(as.map(transform(_, pol, parents).asInstanceOf[FunctionType]))(st.prov)
+      case ot @ Overload(as) => ot.mapAlts(pol)((p, t) => transform(t, p, parents))
       case _: ObjectTag | ExtrType(_) => st
       case tv: TypeVariable if parents.exists(_ === tv) =>
         if (pol.getOrElse(lastWords(s"parent in invariant position $tv $parents"))) BotType else TopType
@@ -773,10 +775,14 @@ trait TypeSimplifier { self: Typer =>
       case PolymorphicType(lvl, bod) => PolymorphicType.mk(lvl, transform(bod, pol, parents)) // FIXME? parent or None?
       case ConstrainedType(cs, bod) =>
         ConstrainedType(
-        cs.map { case (tv, bs) =>
-          (transform(tv, N, semp).asInstanceOf[TV] // FIXME
-            ) -> bs.map{case (p, b) => p -> transform(b, S(p), semp) }}
-        , transform(bod, pol, parents)) // FIXME? parent or None?
+          cs.map { case (tv, bs) =>
+            (transform(tv, N, semp) match {
+              case tv: TV => tv
+              case other => lastWords(s"not supposed to transform a constrained variable into a non-variable: $other")
+            }) -> bs.map { case (p, b) => p -> transform(b, S(p), semp) }
+          },
+          transform(bod, pol, parents)
+        )
     }
     }(r => s"~> $r")
     

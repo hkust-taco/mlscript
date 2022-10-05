@@ -227,7 +227,7 @@ abstract class TyperHelpers { Typer: Typer =>
   
   def mapPol(bt: BaseType, pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType): BaseType = bt match {
     case FunctionType(lhs, rhs) => FunctionType(f(pol.map(!_), lhs), f(pol, rhs))(bt.prov)
-    case Overload(alts) => Overload(alts.map(f(pol, _).asInstanceOf[FunctionType]))(bt.prov)
+    case ov @ Overload(alts) => ov.mapAlts(pol)(f)
     case TupleType(fields) => TupleType(fields.mapValues(_.update(f(pol.map(!_), _), f(pol, _))))(bt.prov)
     case ArrayType(inner) => ArrayType(inner.update(f(pol.map(!_), _), f(pol, _)))(bt.prov)
     case sp @SpliceType(elems) => sp.updateElems(f(pol, _), f(pol.map(!_), _), f(pol, _))
@@ -304,7 +304,7 @@ abstract class TyperHelpers { Typer: Typer =>
     def map(f: SimpleType => SimpleType): SimpleType = this match {
       case TypeBounds(lb, ub) => TypeBounds(f(lb), f(ub))(prov)
       case FunctionType(lhs, rhs) => FunctionType(f(lhs), f(rhs))(prov)
-      case Overload(as) => Overload(as.map(f(_).asInstanceOf[FunctionType]))(prov)
+      case ov @ Overload(as) => ov.mapAlts(N)((_, x) => f(x))
       case RecordType(fields) => RecordType(fields.mapValues(_.update(f, f)))(prov)
       case TupleType(fields) => TupleType(fields.mapValues(_.update(f, f)))(prov)
       case sp @ SpliceType(fs) => sp.updateElems(f, f, f)
@@ -476,7 +476,8 @@ abstract class TyperHelpers { Typer: Typer =>
         case (_, _: TypeRef) =>
           false // TODO try to expand them (this requires populating the cache because of recursive types)
         case (_: PolymorphicType, _) | (_, _: PolymorphicType) => false
-        case (_: Overload, _) | (_, _: Overload) => false // TODO
+        case (_, ov: Overload) => ov.alts.forall(this <:< _)
+        case (ov: Overload, _) => ov.alts.exists(_ <:< this)
         case (_: ConstrainedType, _) => false
         case (_: Without, _) | (_, _: Without)
           | (_: ArrayBase, _) | (_, _: ArrayBase)
@@ -541,6 +542,8 @@ abstract class TyperHelpers { Typer: Typer =>
       case TypeBounds(lo, hi) => hi.withoutPos(names)
       case _: TypeVariable | _: NegType | _: TypeRef => Without(this, names)(noProv)
       case PolymorphicType(plvl, bod) => PolymorphicType.mk(plvl, bod.withoutPos(names))
+      case ot: Overload => ot
+      case ct: ConstrainedType => ct
     }
     def unwrapAll(implicit ctx: Ctx): SimpleType = unwrapProxies match {
       case tr: TypeRef => tr.expand.unwrapAll

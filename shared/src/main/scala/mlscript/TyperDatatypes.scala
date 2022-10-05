@@ -78,8 +78,11 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   
   // case class ConstrainedType(constraints: List[ST -> ST], body: ST) extends SimpleType { // TODO add own prov?
+  
+  /** `(true, T)` means `:> T` and `(false, T)` means `<: T` */
   type Constr = List[(Bool -> ST)]
   type Constrs = List[TV -> Constr]
+  
   case class ConstrainedType(constraints: Constrs, body: ST) extends SimpleType { // TODO add own prov?
     val prov: TypeProvenance = body.prov
     // lazy val level =
@@ -190,6 +193,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   case class Overload(alts: Ls[FunctionType])(val prov: TypeProvenance) extends MiscBaseType {
     require(alts.length > 1)
+    def mapAlts(pol: Opt[Bool])(f: (Opt[Bool], SimpleType) => SimpleType): Overload =
+      Overload(alts.map(ft => FunctionType(f(pol.map(!_), ft.lhs), f(pol, ft.rhs))(ft.prov)))(prov)
     def approximatePos: FunctionType = {
       val (lhss, rhss) = alts.map(ft => ft.lhs -> ft.rhs).unzip
       FunctionType(lhss.reduce(_ & _), rhss.reduce(_ | _))(prov)
@@ -206,7 +211,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     lazy val level: Level = levelBelow(MaxLevel)(MutSet.empty)
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = fields.iterator.map(_._2.levelBelow(ub)).maxOption.getOrElse(MinLevel)
     override def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx:Ctx, raise:Raise, shadows: Shadows, freshened: MutMap[TV, ST]): RecordType =
-      self.freshenAbove(lim, this, rigidify).asInstanceOf[RecordType]
+      // self.freshenAbove(lim, this, rigidify).asInstanceOf[RecordType]
+      self.mapPol(this, N, false)((_, x) => x.freshenAbove(lim, rigidify))
     def toInter: SimpleType =
       fields.map(f => RecordType(f :: Nil)(prov)).foldLeft(TopType: ST)(((l, r) => ComposedType(false, l, r)(noProv)))
     def mergeAllFields(fs: Iterable[Var -> FieldType]): RecordType = {
