@@ -33,6 +33,7 @@ object TSSourceFile {
     else if (obj.isTypeParameter) TSTypeParameter(obj.symbol.escapedName)
     else TSPrimitiveType(obj.intrinsicName)
 
+  // the function `getMemberType` can't process function/tuple type alias correctly
   private def getTypeAlias(tn: TSNodeObject): TSType =
     if (tn.isFunctionLike) getFunctionType(tn)
     else if (tn.isTupleTypeNode) TSTupleType(getTupleElements(tn.typeNode.typeArguments))
@@ -42,7 +43,6 @@ object TSSourceFile {
   private def getMemberType(node: TSNodeObject): TSType = {
     val res: TSType =
       if (node.isFunctionLike) getFunctionType(node)
-      else if (node.`type`.isFunctionLike) getFunctionType(node.`type`)
       else getObjectType(node.`type`.typeNode)
     if (node.symbol.isOptionalMember) TSUnionType(res, TSPrimitiveType("undefined"))
     else res

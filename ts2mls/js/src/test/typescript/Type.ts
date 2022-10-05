@@ -31,3 +31,5 @@ class NC {
 	constructor() {}
 	b: NA.B
 }
+
+type G = DEF
