@@ -60,6 +60,12 @@ final case class Sel(receiver: Term, fieldName: Var)                 extends Ter
 final case class Let(isRec: Bool, name: Var, rhs: Term, body: Term)  extends Term
 final case class Blk(stmts: Ls[Statement])                           extends Term with BlkImpl
 final case class Bra(rcd: Bool, trm: Term)                           extends Term
+/**
+  * User ascribes a term with a type
+  *
+  * @param trm
+  * @param ty
+  */
 final case class Asc(trm: Term, ty: Type)                            extends Term
 final case class Bind(lhs: Term, rhs: Term)                          extends Term
 final case class Test(trm: Term, ty: Term)                           extends Term

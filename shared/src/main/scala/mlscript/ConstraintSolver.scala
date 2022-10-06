@@ -303,8 +303,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       constrainCalls += 1
       val sameLhs = cctx._1.headOption.exists(_.prov is lhs.prov)
       val sameRhs = cctx._2.headOption.exists(_.prov is rhs.prov)
-      if (!sameLhs) errorSimplifer.updateCounter(lhs, (1, 0))
-      if (!sameRhs) errorSimplifer.updateCounter(rhs, (1, 0))
       
       val newCctx = nestedProv match {
         case N => 
@@ -348,7 +346,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           showNestingLevel(newCctx._1, 1) :::
           showNestingLevel(newCctx._2, 1)
 
-        
         raise(WarningReport(oldProvFlow))
         println(s"Prov flows before and after ${lhs} and ${rhs}")
         // println(s"Rhs and previous rhsChain head are same `cctx._2.headOption.exists(_ is rhs.prov)` ? - ${cctx._2.headOption.exists(_ is rhs.prov)}")
@@ -361,11 +358,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     def recImpl(lhs: SimpleType, rhs: SimpleType)
           (implicit raise: Raise, cctx: ConCtx): Unit =
     // trace(s"C $lhs <! $rhs") {
-    trace(s"C $lhs <! $rhs    (${cache.size}) where lhs is ${lhs.getClass.getSimpleName} and rhs is ${rhs.getClass.getSimpleName} and cctx is $cctx}") {
+    trace(s"C $lhs <! $rhs    (${cache.size}) where ${lhs.getClass.getSimpleName} <: ${rhs.getClass.getSimpleName}}") {
     // trace(s"C $lhs <! $rhs  ${lhs.getClass.getSimpleName}  ${rhs.getClass.getSimpleName}") {
       // println(s"[[ ${cctx._1.map(_.prov).mkString(", ")}  <<  ${cctx._2.map(_.prov).mkString(", ")} ]]")
       // println(s"{{ ${cache.mkString(", ")} }}")
       
+      // errorSimplifer.reportInfo(S(cctx), 3)
       lazy val provChain = Some(NestedTypeProvenance(cctx._1 ::: cctx._2))
       lazy val revProvChain = Some(NestedTypeProvenance((cctx._1 ::: cctx._2).reverse))
 
@@ -397,6 +395,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_, p @ ProvType(und)) => rec(lhs, und)
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs)
           case (FunctionType(l0, r0), FunctionType(l1, r1)) =>
+            errorSimplifer.updateCounter(cctx, (1, 0))
+            errorSimplifer.reportInfo(S(cctx), 3)
             rec(l1, l0, revProvChain.map(_.updateInfo("function lhs")))
             rec(r0, r1, provChain.map(_.updateInfo("function rhs")))
           case (prim: ClassTag, ot: ObjectTag)
@@ -427,6 +427,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             println(s"   and ${lhs0.showBounds}")
             rec(lhs, rhs)
           case (TupleType(fs0), TupleType(fs1)) if fs0.size === fs1.size => // TODO generalize (coerce compatible tuples)
+            errorSimplifer.updateCounter(cctx, (1, 0))
+            errorSimplifer.reportInfo(S(cctx), 3)
             fs0.lazyZip(fs1).foreach { case ((ln, l), (rn, r)) =>
               ln.foreach { ln => rn.foreach { rn =>
                 if (ln =/= rn) err(
@@ -456,6 +458,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rec(err, l0, provChain)
             rec(r0, err, provChain)
           case (RecordType(fs0), RecordType(fs1)) =>
+            errorSimplifer.updateCounter(cctx, (1, 0))
+            errorSimplifer.reportInfo(S(cctx), 3)
             fs1.foreach { case (n1, t1) =>
               fs0.find(_._1 === n1).fold {
                 reportError()
@@ -641,14 +645,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           }
         else Nil
       
+      errorSimplifer.reportInfo(N, 2)
       val msgs = Ls[Ls[Message -> Opt[Loc]]](
         mismatchMessage,
         flowHint,
         constraintProvenanceHints,
-        // originProvHints,
-        // detailedContext,
-        // errorSimplifer.nestedTypeProvFlow(cctx),
-        errorSimplifer.locationRanking(cctx, errorSimplifer.OchiaiHeuristic)
+        originProvHints,
+        detailedContext,
       ).flatten
       
       raise(ErrorReport(msgs))
@@ -790,21 +793,34 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   * constraining phase of type inference. It also implements
   * various methods to process the information and generate
   * better error messages.
+  *
+  * @param simplifyError
+  *   Config flag to report error simplification info
   */
-  case class ErrorSimplifier() {
+  case class ErrorSimplifier(var simplifyError: Bool = false) {
     /** Maps provenances locations to a counter. The counter tracks
      * the number of the times the location has been visited, and the
      * number of visits that have led to constraining failures.
     */
     type LocoCounter = MutMap[Loc, (Int, Int)]
     val locoCounter: LocoCounter = MutMap();
-    def updateCounter(st: ST, change: (Int, Int)): Unit = {
-      st.prov.loco.foreach(loco =>
-        locoCounter.updateWith(loco) {
-          case Some((total, wrong)) => Some((total + change._1, wrong + change._2))
-          case None => Some(change)
-        }
-      )
+    val strategy: Strategy = OchiaiStrategy();
+    
+    def updateCounter(loco: Loc, change: (Int, Int)): Unit = {
+      locoCounter.updateWith(loco) {
+        case Some((total, wrong)) => Some((total + change._1, wrong + change._2))
+        case None => Some(change)
+      }
+      ()
+    }
+    
+    def updateCounter(st: ST, change: (Int, Int)): Unit = st.prov match {
+      case nested: NestedTypeProvenance => nested.chain.foreach(updateCounter(_, change))
+      case simple: TypeProvenance => simple.loco.foreach(updateCounter(_, change))
+    }
+    
+    def updateCounter(cctx: ConCtx, change: (Int, Int)): Unit = {
+      (cctx._1 ::: cctx._2).foreach(updateCounter(_, change))
     }
     
     /* Stores the chain of provenances that lead to a given constraint
@@ -826,17 +842,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       * correctly from being consumed to being produced
       * Note: we have to reverse the rhs chain because the non-nested
       * provenances are near the tail i.e. the 
-      * store chain for later heuristic based reporting
+      * store chain for later strategy based reporting
       * @param errorChain
       */
     def addChain(chain: ConCtx): Unit = {
       chains ::= chain
-      // update locations counters
-      chain._1.iterator
-        .takeWhile(st => !(st.prov.isInstanceOf[NestedTypeProvenance]))
-        .++(chain._2.reverseIterator
-              .takeWhile(st => !(st.prov.isInstanceOf[NestedTypeProvenance])))
-        .foreach(errorSimplifer.updateCounter(_, (0, 1)))
+      updateCounter(chain, (0, 1))
     }
     
     def flattenChain(chain: ConCtx): Ls[Loc] = {
@@ -847,6 +858,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             case None => Ls.empty
             case Some(value) => value :: Nil
           }
+        })
+      }
+      inner(chain._1 ::: chain._2)
+    }
+    
+    def flattenChainToProvList(chain: ConCtx): Ls[TypeProvenance] = {
+      def inner(chain: Ls[ST], level: Int = 0): Ls[TypeProvenance] = {
+        chain.flatMap(st => st.prov match {
+          case nested: NestedTypeProvenance => inner(nested.chain, level + 1)
+          case simple: TypeProvenance => simple.copy(desc = s"$level ${simple.desc}") :: Nil
         })
       }
       inner(chain._1 ::: chain._2)
@@ -880,6 +901,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       }
     }
     
+    def nestedTypeProvFlow(chain: ConCtx)(implicit ctx: Ctx): Ls[Message -> Opt[Loc]] =
+      if (explainErrors)
+        msg"========= Nested type provenance flow below =========" -> N ::
+        // showNestingLevel(filterChain(chain._1 ::: chain._2, N), 1)
+        showNestingLevel(chain._1 ::: chain._2, 1)
+      else Nil
+    
     /**
       * Filter chain based on rules
       *
@@ -904,49 +932,74 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case Nil => Nil
     }
     
-    def nestedTypeProvFlow(chain: ConCtx)(implicit ctx: Ctx): Ls[Message -> Opt[Loc]] =
-      if (explainErrors)
-        msg"========= Nested type provenance flow below =========" -> N ::
-        // showNestingLevel(filterChain(chain._1 ::: chain._2, N), 1)
-        showNestingLevel(chain._1 ::: chain._2, 1)
-      else Nil
-    
-    /**
-      * Show marked locations and their count
+    /** Report error simplification information by raising error/warning messages
+      *
+      * @param infoLevel
+      *   Level of detail for error simplification reporting
+      *   * 0 - most suspect locations for a chain
+      *   * 1 - all locations ranked in descending order of suspicion
+      *   * 2 - all locations and their counts in the location counter mapping
+      *   * 3 - all chain locations with their counts in flow order from producer to consumer
       */
-    def locationsMarked(): Ls[Message -> Opt[Loc]] =
-      if (explainErrors)
-        msg"========= Locations counted below =========" -> N ::
-        locoCounter.iterator.map { case (loc, (total, wrong)) =>
-          msg"total count ${total.toString} and wrong count ${wrong.toString}" -> Some(loc)
-        }.toList
-      else Nil
+    def reportInfo(chain: Opt[ConCtx], infoLevel: Int = 0, strategy: Strategy = strategy)
+      (implicit raise: Raise): Unit =
+    {
+      if (!simplifyError) return
       
-    /**
-      * Show error locations and their rank
-      */
-    def locationRanking(chain: ConCtx, heuristic: Heuristic): Ls[Message -> Opt[Loc]] = {
-      val locations = flattenChain(chain)
-      val ranking = heuristic.debugLocationRanking(heuristic.rankLocations(locations))
-      val name = heuristic.name
-      if (explainErrors)
-        msg"========= Suspicious locations ranked by $name: most suspect first =========" -> N ::
-        ranking.iterator
-        .filter { case (_, ranking) => ranking =/= 0.0 } // remove unnecessary locations
-        .map { case (loc, ranking) =>
-          val counter = locoCounter.getOrElse(loc, (-1, -1))
-          msg"Ranking ${ranking.toString()} with total and wrong count: ${counter.toString()}" -> Some(loc)
-        }.toList
-      else Nil
+      val messages: Ls[Message -> Opt[Loc]] = infoLevel match {
+        // most suspect locations in a given chain
+        case 0 =>
+          val locations = flattenChain(chain.getOrElse(Nil -> Nil))
+          val ranking = strategy.debugLocationRanking(strategy.rankLocations(locations))
+          val name = strategy.name
+          msg"========= Most suspicious locations ($name) =========" -> N ::
+          ranking.iterator
+          .filter { case (_, 0.0) => false; case _ => true}
+          .map { case (loc, ranking) =>
+            val counter = locoCounter.getOrElse(loc, (-1, -1))
+            msg"Ranking ${ranking.toString()} with total and wrong count: ${counter.toString()}" -> Some(loc)
+          }.toList
+        // all chain locations in descending order of suspicion
+        case 1 =>
+          val locations = flattenChain(chain.getOrElse(Nil -> Nil))
+          val ranking = strategy.debugLocationRanking(strategy.rankLocations(locations))
+          val name = strategy.name
+          msg"========= All suspicious locations ($name) =========" -> N ::
+          ranking.iterator
+          .map { case (loc, ranking) =>
+            val counter = locoCounter.getOrElse(loc, (-1, -1))
+            msg"Ranking ${ranking.toString()} with total and wrong count: ${counter.toString()}" -> Some(loc)
+          }.toList
+        // all locations in the mapping in descending order of counter
+        case 2 =>
+          msg"========= All locations and counts =========" -> N ::
+          locoCounter
+          .toSortedSet.iterator
+          .map { case (loc, counter) =>
+            msg"(total, wrong): ${counter.toString()}" -> Some(loc)
+          }.toList
+        // all chain locations with their counts in flow order from producer to consumer
+        case 3 =>
+          msg"========= All chain locations and count =========" -> N ::
+          flattenChainToProvList(chain.getOrElse(Nil -> Nil))
+          .collect {
+            case TypeProvenance(S(loco), desc, _, _) =>
+              val counter = locoCounter.getOrElse(loco, (-1, -1))
+              msg"(total, wrong): ${counter.toString()} with $desc" -> Some(loco)
+          }
+        case _ => Nil
+      }
+      
+      raise(WarningReport(messages))
     }
-      
-    /** Heuristic for guessing suspicious-ness of a location as the cause
+    
+    /** Strategy for guessing suspicious-ness of a location as the cause
       * of the fault. Higher score indicates more suspicious location.
       * 
       * Concrete classes are expected to implement specific heuristics, using
       * location counter and error chains attributes of super class.
       */
-    trait Heuristic {
+    trait Strategy {
       def score(loco: Loc): Double
       val ordering: Ordering[Loc]
       val name: Str
@@ -956,7 +1009,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       def debugLocationRanking(chain: Ls[Loc]): Ls[Loc -> Double] =
         chain.map(loc => (loc, score(loc)))
     }
-    val OchiaiHeuristic: Heuristic = new Heuristic {
+    
+    case class OchiaiStrategy() extends Strategy {
       override def score(loco: Loc): Double = {
         locoCounter.get(loco) match {
           case None => 0
@@ -975,7 +1029,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       val name: Str = "Ochiai"
     }
 
-    val DStarHeuristic: Heuristic = new Heuristic {
+    case class DStarStrategy() extends Strategy {
       val exponent = 2
       override def score(loco: Loc): Double = {
         locoCounter.get(loco) match {

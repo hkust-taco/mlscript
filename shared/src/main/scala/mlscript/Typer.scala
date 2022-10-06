@@ -18,6 +18,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   
   def funkyTuples: Bool = false
   def doFactorize: Bool = false
+  def setErrorSimplification(simplifyError: Bool): Unit =
+    errorSimplifer.simplifyError = simplifyError
   
   var recordProvenances: Boolean = true
   
@@ -442,7 +444,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   def typeTerm(term: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty): SimpleType
         = trace(s"$lvl. Typing ${if (ctx.inPattern) "pattern" else "term"} $term") {
     implicit val prov: TypeProvenance = ttp(term)
-    
+
+    /** Constrain lhs and rhs type and handle errors if any
+      *
+      * @param lhs
+      * @param rhs
+      * @param res
+      * @return
+      */
     def con(lhs: SimpleType, rhs: SimpleType, res: SimpleType): SimpleType = {
       var errorsCount = 0
       constrain(lhs, rhs)({
@@ -623,7 +632,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val arg_ty = mkProxy(a_ty, tp(a.toCoveringLoc, "argument"))
           // ^ Note: this no longer really makes a difference, due to tupled arguments by default
         val funProv = tp(f.toCoveringLoc, "applied expression")
-        val fun_ty = mkProxy(f_ty, funProv)
+        // val fun_ty = mkProxy(f_ty, funProv)
+        val fun_ty = f_ty
           // ^ This is mostly not useful, except in test Tuples.fun with `(1, true, "hey").2`
         val resTy = con(fun_ty, FunctionType(arg_ty, res)(
           prov

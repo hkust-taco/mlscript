@@ -126,6 +126,8 @@ class DiffTests
       expectCodeGenErrors: Bool = false,
       showRepl: Bool = false,
       allowEscape: Bool = false,
+      // capture nested prov, apply hueristics and find faulty locations
+      simplifyError: Bool = false,
       // noProvs: Bool = false,
     ) {
       def isDebugging: Bool = dbg || dbgSimplif
@@ -179,6 +181,7 @@ class DiffTests
           case "re" => mode.copy(expectRuntimeErrors = true)
           case "ShowRepl" => mode.copy(showRepl = true)
           case "escape" => mode.copy(allowEscape = true)
+          case "simplifyError" => mode.copy(simplifyError = true)
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)
@@ -368,6 +371,7 @@ class DiffTests
             typer.recordProvenances = !noProvs && !mode.dbg && !mode.dbgSimplif || mode.explainErrors
             typer.verbose = mode.verbose
             typer.explainErrors = mode.explainErrors
+            typer.setErrorSimplification(mode.simplifyError)
             stdout = mode.stdout
             
             val (diags, (typeDefs, stmts)) = p.desugared

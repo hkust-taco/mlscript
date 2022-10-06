@@ -147,8 +147,18 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
     }
   }
   // ()
-  
-  
+
+  /** Add type definitions to context. Raises error if a type defintion
+    * has already been defined or it is malformed.
+    *
+    * @param newDefs0
+    *   defintions created in current block
+    * @param ctx
+    *   previous context
+    * @param raise
+    *   method to raise errors
+    * @return
+    */
   def processTypeDefs(newDefs0: List[mlscript.TypeDef])(implicit ctx: Ctx, raise: Raise): Ctx = {
     
     var allDefs = ctx.tyDefs
