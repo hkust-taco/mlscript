@@ -154,7 +154,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
       case p: ProxyType => fieldsOf(p.underlying, paramTags)
       case Without(base, ns) => fieldsOf(base, paramTags).filter(ns contains _._1)
       case TypeBounds(lb, ub) => fieldsOf(ub, paramTags)
-      case _: ObjectTag | _: FunctionType | _: ArrayBase | _: TypeVariable
+      case _: ObjectTag | _: FunctionType | _: ArrayBase | _: TypeVariable | _: ConstrainedType
         | _: NegType | _: ExtrType | _: ComposedType | _: SpliceType => Map.empty
     }
   }
@@ -721,11 +721,15 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
           case Without(base, names) => updateVariance(base, curVariance.flip)
           case PolymorphicType(lvl, bod) => updateVariance(bod, curVariance)
           case ConstrainedType(cs, bod) =>
-            cs.foreach(_._2.foreach(pb =>
-              // if (pb._1) updateVariance(pb._2, curVariance)
-              // else updateVariance(pb._2, curVariance.flip)
-              updateVariance(pb._2, if (pb._1) VarianceInfo.co else VarianceInfo.contra)
-            ))
+            // cs.foreach(_._2.foreach(pb =>
+            //   // if (pb._1) updateVariance(pb._2, curVariance)
+            //   // else updateVariance(pb._2, curVariance.flip)
+            //   updateVariance(pb._2, if (pb._1) VarianceInfo.co else VarianceInfo.contra)
+            // ))
+            cs.foreach { lu =>
+              updateVariance(lu._1, VarianceInfo.co)
+              updateVariance(lu._2, VarianceInfo.contra)
+            }
             updateVariance(bod, curVariance)
         }
       }()

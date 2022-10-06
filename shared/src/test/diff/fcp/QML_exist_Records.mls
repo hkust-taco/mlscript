@@ -101,8 +101,8 @@ def stepImpl_Ann_1 arrImpl = {
   }
 //│ stepImpl_Ann_1: 'c -> {fold: forall 'd. 'd -> (forall 'e. 'e -> (forall 'c, 'd, 'e, 'a, 'rep, 'fold, 'a0, 'b, 'f, 'g, 'rep0, 'h. (('g & 'rep0, 'h,) -> ('e | 'f)
 //│   where
-//│     'c <: {fold: Fold['a, 'rep] & 'fold}
-//│     'd <: 'a0 -> ('b | 'e) -> ('b & 'f)))), init: forall 'c, 'i, 'j, 'init. ('i -> ('j, "hi",)
+//│     'd <: 'a0 -> ('b | 'e) -> ('b & 'f)
+//│     'c <: {fold: Fold['a, 'rep] & 'fold}))), init: forall 'c, 'i, 'j, 'init. ('i -> ('j, "hi",)
 //│   where
 //│     'c <: {init: 'i -> 'j & 'init}), sub: forall 'k, 'l. ('k, 'l,) -> (forall 'c, 'k, 'm, 'n, 'o, 'sub. ('m -> 'n
 //│   where

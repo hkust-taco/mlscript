@@ -81,8 +81,8 @@ def simpleStepImpl arrImpl = ArraysImpl {
   }
 //│ simpleStepImpl: (ArraysRep[in 'A | 'A0 | 'A1 & 'A2 out 'A & 'A0 & 'A3 & ('A2 | 'A4), in 'Rep | 'a & 'c & 'd & 'e & 'Rep0 & 'Rep1 | 'a & 'c & 'e & 'Rep0 & 'f & 'Rep2 | 'Rep3 out 'Rep2 & ('a | 'Rep) & ('c | 'Rep1) & ('Rep0 | 'Rep3 | 'Rep4)] & 'g) -> ((ArraysImpl['A1, 'Rep5] with {fold: forall 'h. 'h -> (forall 'i. 'i -> (forall 'g, 'h, 'i, 'A5, 'Rep6, 'b, 'j, 'k, 'l. (('Rep6 & 'k, 'l,) -> ('i | 'j)
 //│   where
-//│     'g <: ArraysRep['A5, 'Rep6]
-//│     'h <: 'A5 -> ('b | 'i) -> ('b & 'j)))) | 'fold, init: forall 'g, 'A6, 'Rep7, 'm, 'n, 'init. (('A6 & 'n) -> ('m, "initialized",) | 'init
+//│     'h <: 'A5 -> ('b | 'i) -> ('b & 'j)
+//│     'g <: ArraysRep['A5, 'Rep6]))) | 'fold, init: forall 'g, 'A6, 'Rep7, 'm, 'n, 'init. (('A6 & 'n) -> ('m, "initialized",) | 'init
 //│   where
 //│     'g <: ArraysRep['A6, 'Rep7]), sub: forall 'o, 'p. ('o, 'p,) -> (forall 'g, 'o, 'A7, 'q, 'Rep8, 'r. ((int & 'r) -> 'q
 //│   where
@@ -116,8 +116,8 @@ def simpleStepImpl2_ty: (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> Arrays
 def simpleStepImpl2 arr = arr simpleStepImpl
 //│ simpleStepImpl2: ((forall 'A, 'A0, 'A1, 'a, 'c, 'A2, 'A3, 'A4, 'Rep, 'Rep0, 'd, 'e, 'f, 'g, 'Rep1, 'Rep2, 'h, 'Rep3, 'Rep4, 'i, 'Rep5, 'j, 'k, 'l. (ArraysRep[in 'A | 'A0 | 'A1 & 'A2 out 'A & 'A0 & 'A3 & ('A2 | 'A4), in 'Rep | 'd & 'e & 'f & 'g & 'Rep1 & 'Rep0 | 'd & 'e & 'g & 'Rep1 & 'h & 'Rep2 | 'Rep3 out 'Rep2 & ('d | 'Rep) & ('e | 'Rep0) & ('Rep1 | 'Rep3 | 'Rep4)] & 'i) -> ((ArraysImpl['A1, 'Rep5] with {fold: forall 'm. 'm -> (forall 'n. 'n -> (forall 'i, 'm, 'n, 'A5, 'Rep6, 'b, 'o, 'p, 'q. (('Rep6 & 'p, 'q,) -> ('n | 'o)
 //│   where
-//│     'i <: ArraysRep['A5, 'Rep6]
-//│     'm <: 'A5 -> ('b | 'n) -> ('b & 'o)))) | 'fold, init: forall 'i, 'A6, 'Rep7, 'r, 's, 'init. (('A6 & 's) -> ('r, "initialized",) | 'init
+//│     'm <: 'A5 -> ('b | 'n) -> ('b & 'o)
+//│     'i <: ArraysRep['A5, 'Rep6]))) | 'fold, init: forall 'i, 'A6, 'Rep7, 'r, 's, 'init. (('A6 & 's) -> ('r, "initialized",) | 'init
 //│   where
 //│     'i <: ArraysRep['A6, 'Rep7]), sub: forall 't, 'u. ('t, 'u,) -> (forall 'i, 't, 'A7, 'v, 'Rep8, 'w. ((int & 'w) -> 'v
 //│   where
@@ -161,16 +161,16 @@ simpleStepImpl2_ty = simpleStepImpl2
 
 :e // * Annotation is actually counter-productive... probably because the rigid universal in Arrays gets extruded!
 def simpleStepImpl2_ty (arr: Arrays['a]) = arr simpleStepImpl
-//│ Arrays['a] -> ((ArraysImpl[in 'A & 'c & 'A0 & 'a0 & 'd & 'A1 out 'a0 | 'A | 'A2, in (‘Rep_1320_1423 & 'e & 'Rep & 'f & 'g, 'h & 'i & 'j,) & 'Rep0 out (‘Rep_1320_1423 | 'f | 'k | 'l | 'm, "initialized" | "updated",) | 'Rep0 | 'Rep1] with {fold: forall 'n. 'n -> (forall 'o. 'o -> (forall 'n, 'o, 'p, 'A3, 'Rep2, 'b, 'q, 'r, 's. (('Rep2 & 'r, 's,) -> ('q | 'o)
+//│ Arrays['a] -> ((ArraysImpl[in 'a0 & 'A & 'c & 'A0 & 'd & 'A1 out 'a0 | 'A | 'A2, in (‘Rep_1320_1423 & 'Rep & 'e & 'f & 'g, 'h & 'i & 'j,) & 'Rep0 out (‘Rep_1320_1423 | 'f | 'k | 'l | 'm, "initialized" | "updated",) | 'Rep0 | 'Rep1] with {fold: forall 'n. 'n -> (forall 'o. 'o -> (forall 'a0, 'Rep, 'm, 'n, 'o, 'p, 'A3, 'Rep2, 'b, 'q, 'r, 's. (('Rep2 & 'r, 's,) -> ('q | 'o)
 //│   where
-//│     'p <: ArraysRep['A3, 'Rep2]
-//│     'n <: 'A3 -> ('b | 'o) -> ('b & 'q)))) | 'fold, init: forall 'p, 'A4, 'Rep3, 't, 'u, 'init. (('A4 & 'u) -> ('t, "initialized",) | 'init
+//│     'n <: 'A3 -> ('b | 'o) -> ('b & 'q)
+//│     ArraysRep['a0, in ‘Rep_1320_1423 & 'Rep out ‘Rep_1320_1423 | 'm] | 'p <: ArraysRep['A3, 'Rep2]))) | 'fold, init: forall 'a0, 'Rep, 'm, 'p, 'A4, 'Rep3, 't, 'u, 'init. (('A4 & 'u) -> ('t, "initialized",) | 'init
 //│   where
-//│     'p <: ArraysRep['A4, in 'Rep3 & 't out 'Rep3]), sub: forall 'v, 'w. ('v, 'w,) -> (forall 'p, 'v, 'A5, 'x, 'Rep4, 'y. ((int & 'y) -> 'x
+//│     ArraysRep['a0, in ‘Rep_1320_1423 & 'Rep out ‘Rep_1320_1423 | 'm] | 'p <: ArraysRep['A4, in 'Rep3 & 't out 'Rep3]), sub: forall 'v, 'w. ('v, 'w,) -> (forall 'a0, 'Rep, 'm, 'p, 'v, 'A5, 'x, 'Rep4, 'y. ((int & 'y) -> 'x
 //│   where
-//│     'p <: ArraysRep[in 'A5 & 'x out 'A5, in 'Rep4 out 'Rep4 | 'v])) | 'sub, update: forall 'z, 'a1. ('z, 'a1,) -> (forall 'y, 'b1. (int & 'b1 & 'y) -> (forall 'p, 'z, 'A6, 'Rep5, 'c1, 'd1. (('A6 & 'd1) -> ('c1 | 'z, "updated",)
+//│     ArraysRep['a0, in ‘Rep_1320_1423 & 'Rep out ‘Rep_1320_1423 | 'm] | 'p <: ArraysRep[in 'A5 & 'x out 'A5, in 'Rep4 out 'Rep4 | 'v])) | 'sub, update: forall 'z, 'a1. ('z, 'a1,) -> (forall 'y, 'b1. (int & 'b1 & 'y) -> (forall 'a0, 'Rep, 'm, 'p, 'z, 'A6, 'Rep5, 'c1, 'd1. (('A6 & 'd1) -> ('c1 | 'z, "updated",)
 //│   where
-//│     'p <: ArraysRep['A6, in 'Rep5 & 'c1 out 'Rep5 | 'z]))) | 'update}) | 'e1)
+//│     ArraysRep['a0, in ‘Rep_1320_1423 & 'Rep out ‘Rep_1320_1423 | 'm] | 'p <: ArraysRep['A6, in 'Rep5 & 'c1 out 'Rep5 | 'z]))) | 'update}) | 'e1)
 //│   <:  simpleStepImpl2_ty:
 //│ (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> ArraysImpl['A, ('Rep, string,)]
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -457,16 +457,16 @@ def step arr f = f (stepImpl2 arr)
 
 // * Now the annotation is okay because the result no longer extrudes it...
 def step (arr: Arrays['a]) f = f (stepImpl2 arr)
-//│ Arrays['a] -> (forall 'A, 'c, 'A0, 'a0, 'A1, 'd, 'A2, 'A3, 'A4, 'e, 'Rep, 'f, 'g, 'Rep0, 'Rep1, 'h, 'i, 'j, 'Rep2, 'Rep3, 'k, 'l, 'm, 'n, 'o, 'p, 'Rep4. (((ArraysImpl[in 'A & 'c & 'A0 & 'a0 & 'A1 & 'd & 'A2 & 'A3 out 'a0 | 'A | 'A4, in (‘Rep_4315_4487 & 'e & 'Rep & 'f & 'g & 'Rep0 & 'Rep1, ‘Rep_4315_4487 & 'Rep & 'h & 'i & 'j & 'Rep2,) & 'Rep3 out (‘Rep_4315_4487 | 'f | 'k | 'l | 'm | 'n, ‘Rep_4315_4487 | 'i | 'o | 'p | 'n,) | 'Rep3 | 'Rep4] with {fold: forall 'q. 'q -> (forall 'r. 'r -> (forall 'q, 'r, 's, 'A5, 'Rep5, 'A6, 'Rep6, 'b, 't, 'b0, 'u, 'v, 'w. (('Rep6 & 'v, 'Rep5 & 'w,) -> ('r | 't)
+//│ Arrays['a] -> (forall 'a0, 'A, 'c, 'A0, 'A1, 'd, 'A2, 'A3, 'A4, 'Rep, 'e, 'f, 'g, 'Rep0, 'Rep1, 'h, 'i, 'j, 'Rep2, 'Rep3, 'k, 'l, 'm, 'n, 'o, 'p, 'Rep4. (((ArraysImpl[in 'a0 & 'A & 'c & 'A0 & 'A1 & 'd & 'A2 & 'A3 out 'a0 | 'A | 'A4, in (‘Rep_4315_4487 & 'Rep & 'e & 'f & 'g & 'Rep0 & 'Rep1, ‘Rep_4315_4487 & 'Rep & 'h & 'i & 'j & 'Rep2,) & 'Rep3 out (‘Rep_4315_4487 | 'f | 'k | 'l | 'm | 'n, ‘Rep_4315_4487 | 'i | 'o | 'p | 'n,) | 'Rep3 | 'Rep4] with {fold: forall 'q. 'q -> (forall 'r. 'r -> (forall 'a0, 'Rep, 'n, 'q, 'r, 's, 'A5, 'Rep5, 'A6, 'Rep6, 'b, 't, 'b0, 'u, 'v, 'w. (('Rep6 & 'v, 'Rep5 & 'w,) -> ('r | 't)
 //│   where
-//│     's <: ArraysRep['A5, 'Rep5] & ArraysRep['A6, 'Rep6]
-//│     'q <: 'A5 -> ('b | 'r) -> ('b & 't) & 'A6 -> ('b0 | 'r) -> ('b & 't & 'b0 & 'u)))) | 'fold, init: forall 's, 'A7, 'Rep7, 'x, 'A8, 'Rep8, 'y, 'z, 'init. (('A7 & 'A8 & 'z) -> ('x, 'y,) | 'init
+//│     'q <: 'A5 -> ('b | 'r) -> ('b & 't) & 'A6 -> ('b0 | 'r) -> ('b & 't & 'b0 & 'u)
+//│     ArraysRep['a0, in ‘Rep_4315_4487 & 'Rep out ‘Rep_4315_4487 | 'n] | 's <: ArraysRep['A5, 'Rep5] & ArraysRep['A6, 'Rep6]))) | 'fold, init: forall 'a0, 'Rep, 'n, 's, 'A7, 'Rep7, 'x, 'A8, 'Rep8, 'y, 'z, 'init. (('A7 & 'A8 & 'z) -> ('x, 'y,) | 'init
 //│   where
-//│     's <: ArraysRep['A7, in 'Rep7 & 'x out 'Rep7] & ArraysRep['A8, in 'Rep8 & 'y out 'Rep8]), sub: forall 'a1, 'b1. ('a1, 'b1,) -> (forall 's, 'a1, 'b1, 'A9, 'c1, 'd1, 'e1, 'Rep9, 'A10, 'f1, 'Rep10, 'g1. ((int & 'g1) -> 'e1
+//│     ArraysRep['a0, in ‘Rep_4315_4487 & 'Rep out ‘Rep_4315_4487 | 'n] | 's <: ArraysRep['A7, in 'Rep7 & 'x out 'Rep7] & ArraysRep['A8, in 'Rep8 & 'y out 'Rep8]), sub: forall 'a1, 'b1. ('a1, 'b1,) -> (forall 'a0, 'Rep, 'n, 's, 'a1, 'b1, 'A9, 'c1, 'd1, 'e1, 'Rep9, 'A10, 'f1, 'Rep10, 'g1. ((int & 'g1) -> 'e1
 //│   where
-//│     's <: ArraysRep[in 'A9 & 'c1 & 'd1 & 'e1 out 'A9, in 'Rep9 out 'Rep9 | 'a1] & ArraysRep[in 'd1 & 'e1 & 'A10 & 'f1 out 'A10, in 'Rep10 out 'Rep10 | 'b1])) | 'sub, update: forall 'h1, 'i1. ('h1, 'i1,) -> (forall 'g1, 'j1. (int & 'j1 & 'g1) -> (forall 's, 'h1, 'i1, 'A11, 'Rep11, 'k1, 'A12, 'Rep12, 'l1, 'm1, 'n1. (('A11 & 'A12 & 'm1) -> (('h1 | 'k1, 'i1 | 'l1,) | 'n1)
+//│     ArraysRep['a0, in ‘Rep_4315_4487 & 'Rep out ‘Rep_4315_4487 | 'n] | 's <: ArraysRep[in 'A9 & 'c1 & 'd1 & 'e1 out 'A9, in 'Rep9 out 'Rep9 | 'a1] & ArraysRep[in 'd1 & 'e1 & 'A10 & 'f1 out 'A10, in 'Rep10 out 'Rep10 | 'b1])) | 'sub, update: forall 'h1, 'i1. ('h1, 'i1,) -> (forall 'g1, 'j1. (int & 'j1 & 'g1) -> (forall 'a0, 'Rep, 'n, 's, 'h1, 'i1, 'A11, 'Rep11, 'k1, 'A12, 'Rep12, 'l1, 'm1, 'n1. (('A11 & 'A12 & 'm1) -> (('h1 | 'k1, 'i1 | 'l1,) | 'n1)
 //│   where
-//│     's <: ArraysRep['A11, in 'Rep11 & 'k1 out 'Rep11 | 'h1] & ArraysRep['A12, in 'Rep12 & 'l1 out 'Rep12 | 'i1]))) | 'update}) | 'o1) -> 'p1 & 'q1) -> 'p1)
+//│     ArraysRep['a0, in ‘Rep_4315_4487 & 'Rep out ‘Rep_4315_4487 | 'n] | 's <: ArraysRep['A11, in 'Rep11 & 'k1 out 'Rep11 | 'h1] & ArraysRep['A12, in 'Rep12 & 'l1 out 'Rep12 | 'i1]))) | 'update}) | 'o1) -> 'p1 & 'q1) -> 'p1)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step1]

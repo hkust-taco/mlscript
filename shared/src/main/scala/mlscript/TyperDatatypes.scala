@@ -80,8 +80,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   // case class ConstrainedType(constraints: List[ST -> ST], body: ST) extends SimpleType { // TODO add own prov?
   
   /** `(true, T)` means `:> T` and `(false, T)` means `<: T` */
-  type Constr = List[(Bool -> ST)]
-  type Constrs = List[TV -> Constr]
+  // type Constr = List[(ST -> ST)]
+  type Constrs = List[ST -> ST]
   
   case class ConstrainedType(constraints: Constrs, body: ST) extends SimpleType { // TODO add own prov?
     val prov: TypeProvenance = body.prov
@@ -105,10 +105,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     //     case (false, b) => s"${vbs._1} <: $b"
     //   }).mkString(", ")} => $body)"
     override def toString: Str =
-      s"{$body where: ${constraints.flatMap(vbs => vbs._2.map {
-        case (true, b) => s"${vbs._1} :> $b"
-        case (false, b) => s"${vbs._1} <: $b"
-      }).mkString(", ")}}"
+      s"{$body where: ${constraints.map {
+        case (lb, ub) => s"$lb :> $ub"
+      }.mkString(", ")}}"
   }
   object ConstrainedType {
     def mk(constraints: Constrs, body: ST): ST =

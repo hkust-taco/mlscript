@@ -53,9 +53,9 @@ add: ChurchInt -> ChurchInt -> ChurchInt
 def mul n m = n (add m) zero
 //│ mul: 'a -> (forall 'a. ('b -> 'c
 //│   where
-//│     'a <: (forall 'd, 'e, 'f, 'g, 'h. ('e -> 'f | 'h
+//│     'a <: (forall 'd, 'b, 'e, 'f, 'g, 'h. ('e -> 'f | 'h
 //│   where
-//│     'd <: (ChurchInt -> ChurchInt) -> ('e -> 'f & 'g))) -> ((forall 'i. 'i -> (forall 'j. 'j -> 'j)) -> 'c & 'k)))
+//│     'd | 'b <: (ChurchInt -> ChurchInt) -> ('e -> 'f & 'g))) -> ((forall 'i. 'i -> (forall 'j. 'j -> 'j)) -> 'c & 'k)))
 //│    = [Function: mul]
 
 :e // fails since the fix to spurious-TV-cycles
@@ -71,13 +71,13 @@ mul: ChurchInt -> ChurchInt -> ChurchInt
 
 // def pow: ChurchInt -> ChurchInt -> ChurchInt
 def pow n m = n (mul m) (succ zero)
-//│ pow: 'a -> (forall 'a, 'b, 'c, 'd. ('d -> 'b
+//│ pow: 'a -> (forall 'a, 'b, 'c. ('d -> 'b
 //│   where
-//│     'a <: (forall 'e. ('f -> 'g | 'h
+//│     'a <: (forall 'e, 'd. ('f -> 'g | 'h
 //│   where
-//│     'e <: (forall 'i, 'j, 'k, 'l, 'm, 'n. ('k -> 'l | 'n
+//│     'e | 'd <: (forall 'i, 'f, 'j, 'k, 'l, 'm, 'n. ('k -> 'l | 'n
 //│   where
-//│     'i <: (ChurchInt -> (ChurchInt | 'j)) -> ('k -> 'l & 'm))) -> ((forall 'o. 'o -> (forall 'p. 'p -> 'p)) -> 'g & 'q))) -> ((forall 'j. ChurchInt | 'j) -> 'b & 'c)))
+//│     'i | 'f <: (ChurchInt -> (ChurchInt | 'j)) -> ('k -> 'l & 'm))) -> ((forall 'o. 'o -> (forall 'p. 'p -> 'p)) -> 'g & 'q))) -> ((forall 'j. ChurchInt | 'j) -> 'b & 'c)))
 //│    = [Function: pow]
 
 :e

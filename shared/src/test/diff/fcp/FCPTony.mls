@@ -66,9 +66,9 @@ mul id {}
 //│   TypeError: p is not a function
 
 def fact t = mul t {}
-//│ fact: ((forall 'a, 'b, 'c, 'd. ('b -> 'c | 'd
+//│ fact: ((forall 'a, 'b, 'c. ('a -> 'b | 'c
 //│   where
-//│     'a <: 'b -> 'c)) -> ((forall 'e. 'e -> 'e) -> ('f & 'g) & 'h) & 'i & 'j) -> 'g
+//│     anything <: 'a -> 'b)) -> ((forall 'd. 'd -> 'd) -> ('e & 'f) & 'g) & 'h & 'i) -> 'f
 //│     = [Function: fact]
 
 :e

@@ -319,7 +319,8 @@ abstract class TyperHelpers { Typer: Typer =>
       case PolymorphicType(plvl, und) => PolymorphicType(plvl, f(und))
       case ConstrainedType(cs, bod) =>
         // ConstrainedType(cs.mapValues(_.mapValues(f)), f(bod))
-        ConstrainedType(cs.mapKeys(f(_).asInstanceOf[TV]).mapValues(_.mapValues(f)), f(bod))
+        // ConstrainedType(cs.mapKeys(f(_).asInstanceOf[TV]).mapValues(_.mapValues(f)), f(bod))
+        ConstrainedType(cs.map(lu => f(lu._1) -> f(lu._2)), f(bod))
       case _: TypeVariable | _: ObjectTag | _: ExtrType => this
     }
     def mapPol(pol: Opt[Bool], smart: Bool = false)(f: (Opt[Bool], SimpleType) => SimpleType)
@@ -344,7 +345,8 @@ abstract class TyperHelpers { Typer: Typer =>
         if (smart) PolymorphicType.mk(plvl, f(pol, und)) else PolymorphicType(plvl, f(pol, und))
       case ConstrainedType(cs, bod) =>
         // ConstrainedType(cs.map(tvbs => tvbs.mapV), f(pol, bod))
-        ConstrainedType(cs.mapValues(_.map(b => b._1 -> f.tupled(b.mapFirst(some)))), f(pol, bod))
+        // ConstrainedType(cs.mapValues(_.map(b => b._1 -> f.tupled(b.mapFirst(some)))), f(pol, bod))
+        ConstrainedType(cs.map(lu => f(S(true), lu._1) -> f(S(false), lu._2)), f(pol, bod))
       case _: TypeVariable | _: ObjectTag | _: ExtrType => this
     }
     
@@ -632,7 +634,8 @@ abstract class TyperHelpers { Typer: Typer =>
           // }) ::: bod :: Nil
           
           // cs.map(_._1) ::: 
-          cs.flatMap(vbs => vbs._2.mapKeys(some)) ::: pol -> bod :: Nil
+          // cs.flatMap(vbs => vbs._2.mapKeys(some)) ::: pol -> bod :: Nil
+          cs.flatMap(vbs => S(true) -> vbs._1 :: S(false) -> vbs._2 :: Nil) ::: pol -> bod :: Nil
           
           // ???
     }}
@@ -684,7 +687,8 @@ abstract class TyperHelpers { Typer: Typer =>
       case PolymorphicType(_, und) => und :: Nil
       // case ConstrainedType(cs, und) => cs.flatMap(_._2.unzip._2) ::: und :: Nil
       case ConstrainedType(cs, und) =>
-        cs.map(_._1) ::: cs.flatMap(_._2.unzip._2) ::: und :: Nil
+        // cs.map(_._1) ::: cs.flatMap(_._2.unzip._2) ::: und :: Nil
+        cs.flatMap(lu => lu._1 :: lu._2 :: Nil) ::: und :: Nil
       case SpliceType(fs) => fs.flatMap{ case L(l) => l :: Nil case R(r) => r.lb.toList ::: r.ub :: Nil}
     }
     
@@ -783,9 +787,14 @@ abstract class TyperHelpers { Typer: Typer =>
         if (pol =/= S(false)) apply(S(true))(ub)
       case PolymorphicType(plvl, und) => apply(pol)(und)
       case ConstrainedType(cs, bod) =>
-        cs.foreach(_._2.foreach{
-          case (pol, b) => apply(S(pol))(b)
-        })
+        // cs.foreach(_._2.foreach{
+        //   case (pol, b) => apply(S(pol))(b)
+        // })
+        cs.foreach {
+          case (lo, hi) =>
+            apply(S(true))(lo)
+            apply(S(false))(hi)
+        }
         apply(pol)(bod)
     }
     def applyField(pol: Opt[Bool])(fld: FieldType): Unit = {

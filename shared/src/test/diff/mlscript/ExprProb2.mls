@@ -168,9 +168,9 @@ eval2_fixed_1 e2
 // FIXME strange type
 // :e
 def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
-//│ fix: ((forall 'a, 'b, 'c, 'd. ('b -> 'c
+//│ fix: ((forall 'a, 'b. ('c -> 'd
 //│   where
-//│     'a <: 'a -> ('b -> 'c & 'd))) -> 'e) -> 'e
+//│     forall 'e, 'f. ('a & 'e) -> ('f | 'b) | 'a <: (forall 'e, 'f. ('a & 'e) -> ('f | 'b) | 'a) -> ('c -> 'd & 'g))) -> 'b) -> 'b
 //│    = [Function: fix]
 
 //:e // due to tapping
@@ -309,8 +309,8 @@ eval2_broken eval2_broken e2
 //│ ║  l.+1: 	eval2_broken eval2_broken e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α1116' -> (α1117' -> (arg1119' | α1134')))›  <:  α1116_1180    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α1116' -> (α1117' -> (arg1119' | α1134')))›  <:  α1116'
+//│ ╟── this constraint:  ‹∀ 0. (α1122' -> (α1123' -> (arg1125' | α1140')))›  <:  α1122_1186    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α1122' -> (α1123' -> (arg1125' | α1140')))›  <:  α1122'
 //│ res: error
 
 
@@ -326,8 +326,8 @@ fix eval2f_oops e2
 //│ ║  l.+1: 	fix eval2f_oops e2
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α1201_1272 -> (α1206_1279 | α1221_1280))  <:  α626_1297    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α1201' -> (α1206' | α1221'))  <:  α626_1259'''
+//│ ╟── this constraint:  (α1207_1278 -> (α1212_1285 | α1227_1286))  <:  α626_1303    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α1207' -> (α1212' | α1227'))  <:  α626_1265'''
 //│ res: error
 
 

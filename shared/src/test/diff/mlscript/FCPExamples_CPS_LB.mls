@@ -60,7 +60,7 @@ def print t = t () nil (fun () -> fun r -> log (concat "," r))
 s x x (s x x e)
 //│ res: (() -> ((List['a | string] | 'b) -> 'c & 'd) & 'e) -> 'c
 //│   where
-//│     'f <: List['a]
+//│     List["x"] <: List['a]
 
 
 // :e // FIXME? refreshing-extr

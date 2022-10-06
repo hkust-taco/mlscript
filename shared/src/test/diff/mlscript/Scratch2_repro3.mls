@@ -69,9 +69,9 @@ def to_ch n =
 //   s (to_church n)
 // def to_ch =
 //   s (to_church 0)
-//│ to_ch: (int & 'a) -> (forall 'b, 'c, 'd, 'e, 'f. (('e & 'c) -> (forall 'd, 'g. 'g -> 'g | 'd) | 'f
+//│ to_ch: (int & 'a) -> (forall 'b. (('c & 'd) -> (forall 'e, 'f. 'f -> 'f | 'e) | 'b
 //│   where
-//│     'b <: 'c -> 'd))
+//│     forall 'M, 'g. ('M -> 'M) -> 'M -> 'M | 'g <: 'd -> 'e))
 //│      = <no result>
 //│        to_church is not implemented
 
@@ -93,9 +93,9 @@ def to_ch n =
 // :e // FIXME?
 // :e // skolem extrusion?
 to_church = to_ch
-//│ (int & 'a) -> (forall 'b, 'c, 'd, 'e, 'f. (('e & 'c) -> (forall 'd, 'g. 'g -> 'g | 'd) | 'f
+//│ (int & 'a) -> (forall 'b. (('c & 'd) -> (forall 'e, 'f. 'f -> 'f | 'e) | 'b
 //│   where
-//│     'b <: 'c -> 'd))
+//│     forall 'M, 'g. ('M -> 'M) -> 'M -> 'M | 'g <: 'd -> 'e))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│          = <no result>
@@ -110,18 +110,18 @@ to_church = to_ch
 def to_ch n =
   if true then z
   else s (to_church n)
-//│ to_ch: (int & 'a) -> (forall 'b, 'c, 'd, 'e, 'f. (('e & 'c) -> (forall 'd, 'g. 'g -> 'g | 'd) | 'f
+//│ to_ch: (int & 'a) -> (forall 'b. (('c & 'd) -> (forall 'e, 'f. 'f -> 'f | 'e) | 'b
 //│   where
-//│     'b <: 'c -> 'd))
+//│     forall 'M, 'g. ('M -> 'M) -> 'M -> 'M | 'g <: 'd -> 'e))
 //│      = <no result>
 //│        to_church, to_ch and to_church are not implemented
 
 // :e // FIXME?
 // :e // skolem extrusion?
 to_church = to_ch
-//│ (int & 'a) -> (forall 'b, 'c, 'd, 'e, 'f. (('e & 'c) -> (forall 'd, 'g. 'g -> 'g | 'd) | 'f
+//│ (int & 'a) -> (forall 'b. (('c & 'd) -> (forall 'e, 'f. 'f -> 'f | 'e) | 'b
 //│   where
-//│     'b <: 'c -> 'd))
+//│     forall 'M, 'g. ('M -> 'M) -> 'M -> 'M | 'g <: 'd -> 'e))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│          = <no result>
@@ -146,7 +146,7 @@ to_church = to_ch
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.142: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘M_282_286` is not an instance of type `'M_282_285`
+//│ ╟── type `‘M_294_298` is not an instance of type `'M_294_297`
 //│ ║  l.41: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                              ^^
 //│ ╟── Note: constraint arises from quantified type variable:

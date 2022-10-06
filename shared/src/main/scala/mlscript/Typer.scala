@@ -108,9 +108,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         implicit val freshened: MutMap[TV, ST] = MutMap.empty
         // assert(newCtx.extrCtx.isEmpty) // TODO
         
-        val cty = ConstrainedType.mk(newCtx.extrCtx.iterator.mapValues(_.iterator
-            .filter(_._2.level > lvl) // does not seem to change anything!
-            .toList).toList, innerTy)
+        // val cty = ConstrainedType.mk(newCtx.extrCtx.iterator.mapValues(_.iterator
+        //     .filter(_._2.level > lvl) // does not seem to change anything!
+        //     .toList).toList, innerTy)
+        val cty = ConstrainedType.mk(newCtx.extrCtx.iterator.flatMap { case (tv, bs) =>
+          bs.iterator.filter(_._2.level > lvl) // does not seem to change anything!
+            .map { case (p, b) => if (p) (b, tv) else (tv, b) }
+          }.toList, innerTy)
         
         // println(s"Inferred poly constr: $cty")
         // println(s"where ${cty.showBounds}")
@@ -438,11 +442,15 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         tv.assignedTo = S(bod)
         tv
       case Rem(base, fs) => Without(rec(base), fs.toSortedSet)(tyTp(ty.toLoc, "field removal type"))
-      case Constrained(base, where) =>
+      case Constrained(base, tvbs, where) =>
         val res = rec(base)
-        where.foreach { case (tv, Bounds(lb, ub)) =>
+        tvbs.foreach { case (tv, Bounds(lb, ub)) =>
           constrain(rec(lb), tv)(raise, tp(lb.toLoc, "lower bound specifiation"), ctx)
           constrain(tv, rec(ub))(raise, tp(ub.toLoc, "upper bound specifiation"), ctx)
+        }
+        where.foreach { case Bounds(lo, hi) =>
+          constrain(rec(lo), rec(hi))(raise,
+            tp(mergeOptions(lo.toLoc, hi.toLoc)(_ ++ _), "constraint specifiation"), ctx)
         }
         res
       case PolyType(vars, ty) =>
@@ -548,10 +556,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val processed = MutSet.empty[TV]
         def destroyConstrainedTypes(ty: ST): ST = ty match {
           case ConstrainedType(cs, body) =>
-            cs.foreach { case (tv, bs) => bs.foreach {
-              case (true, b) => constrain(b, tv)
-              case (false, b) => constrain(tv, b)
-            }}
+            // cs.foreach { case (tv, bs) => bs.foreach {
+            //   case (true, b) => constrain(b, tv)
+            //   case (false, b) => constrain(tv, b)
+            // }}
+            cs.foreach { case (lo, hi) => constrain(lo, hi) }
             body
           case tv: TV =>
             processed.setAndIfUnset(tv) {
@@ -1273,18 +1282,36 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           if (qvars.isEmpty) b else
             PolyType(qvars.map(_.asTypeVar pipe (R(_))).toList, b)
         case ConstrainedType(cs, bod) =>
-          Constrained(go(bod), cs.map { case (tv, bs) =>
-            val (lbs, ubs) = bs.partition(_._1)
-            val lb = go(lbs.unzip._2.foldLeft(BotType: ST)(_ | _))
-            val ub = go(ubs.unzip._2.foldLeft(TopType: ST)(_ & _))
-            tv.asTypeVar -> Bounds(lb, ub)
-          })
+          // Constrained(go(bod), cs.map { case (tv, bs) =>
+          //   val (lbs, ubs) = bs.partition(_._1)
+          //   val lb = go(lbs.unzip._2.foldLeft(BotType: ST)(_ | _))
+          //   val ub = go(ubs.unzip._2.foldLeft(TopType: ST)(_ & _))
+          //   tv.asTypeVar -> Bounds(lb, ub)
+          // })
+          
+          // // TODO group bounds by TV!
+          // Constrained(go(bod), Nil, cs.map { case (lo, hi) =>
+          //   Bounds(go(lo), go(hi))
+          // })
+          
+          // val bounds = cs.map { case (lo, hi) => Bounds(go(lo), go(hi)) }
+          // val (ubs, others1) = bounds.groupMap(_.lb)(_.ub).toList.partition(_._2.sizeIs > 1)
+          // val (lbs, others2) = others1.groupMap(_.ub)(_.lb).toList.partition(_._2.sizeIs > 1)
+          // Constrained(go(bod), Nil, ubs)
+          
+          val (ubs, others1) = cs.groupMap(_._1)(_._2).toList.partition(_._2.sizeIs > 1)
+          // val (lbs, others2) = others1.groupMap(_._2)(_._1).toList.partition(_._2.sizeIs > 1)
+          val lbs = others1.mapValues(_.head).groupMap(_._2)(_._1).toList
+          val bounds = (ubs.mapValues(_.reduce(_ & _)) ++ lbs.mapValues(_.reduce(_ | _)).map(_.swap))
+          val procesased = bounds.map { case (lo, hi) => Bounds(go(lo), go(hi)) }
+          Constrained(go(bod), Nil, procesased)
+          
     }
     // }(r => s"~> $r")
     
     val res = go(st)
     if (bounds.isEmpty) res
-    else Constrained(res, bounds)
+    else Constrained(res, bounds, Nil)
   }
   
 }

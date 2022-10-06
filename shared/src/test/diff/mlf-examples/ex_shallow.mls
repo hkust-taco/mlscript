@@ -86,29 +86,41 @@ def a0_ = a2_ a1
 //│   where
 //│     'd <: 'e -> 'f & 'f -> 'g))) -> 'c))
 //│   = [Function: a3]
-//│ a2: A1 -> (forall 'a. ('b -> 'c | 'd
+//│ a2: A1 -> ('a -> 'b | 'c
 //│   where
-//│     'a <: (forall 'e. 'e -> (forall 'e, 'f, 'g, 'h. ('f -> 'h
+//│     forall 'd. 'd -> (forall 'e. 'e -> (forall 'd, 'e, 'f, 'g, 'h, 'i. ('f -> 'i
 //│   where
-//│     'e <: 'f -> 'g & 'g -> 'h))) -> 'c))
+//│     'e <: 'g -> 'i
+//│     'd <: 'e -> ('f -> 'g & 'h)))) | 'j <: (forall 'k. 'k -> (forall 'k, 'l, 'm, 'n. ('l -> 'n
+//│   where
+//│     'k <: 'l -> 'm & 'm -> 'n))) -> 'b)
 //│   = [Function: a2]
-//│ a2_: A1 -> (forall 'a. ('b -> 'c | 'd
+//│ a2_: A1 -> ('a -> 'b | 'c
 //│   where
-//│     'a <: (forall 'e. 'e -> (forall 'e, 'f, 'g, 'h. ('f -> 'h
+//│     forall 'd. 'd -> (forall 'e. 'e -> (forall 'd, 'e, 'f, 'g, 'h, 'i. ('f -> 'i
 //│   where
-//│     'e <: 'f -> 'g & 'g -> 'h))) -> 'c))
+//│     'd <: 'e -> ('f -> 'g & 'h)
+//│     'e <: 'g -> 'i))) | 'j <: (forall 'k. 'k -> (forall 'k, 'l, 'm, 'n. ('l -> 'n
+//│   where
+//│     'k <: 'l -> 'm & 'm -> 'n))) -> 'b)
 //│    = [Function: a2_]
 //│ a0: 'a -> 'b
 //│   where
-//│     'c <: (forall 'd. 'd -> (forall 'd, 'e, 'f, 'g. ('e -> 'g
+//│     forall 'c. 'c -> (forall 'd. 'd -> (forall 'c, 'd, 'e, 'f, 'g, 'h. ('e -> 'h
 //│   where
-//│     'd <: 'e -> 'f & 'f -> 'g))) -> 'b
+//│     'd <: 'f -> 'h
+//│     'c <: 'd -> ('e -> 'f & 'g)))) <: (forall 'i. 'i -> (forall 'i, 'j, 'k, 'l. ('j -> 'l
+//│   where
+//│     'i <: 'j -> 'k & 'k -> 'l))) -> 'b
 //│   = [Function: a0]
 //│ a0_: 'a -> 'b
 //│   where
-//│     'c <: (forall 'd. 'd -> (forall 'd, 'e, 'f, 'g. ('e -> 'g
+//│     forall 'c. 'c -> (forall 'd. 'd -> (forall 'c, 'd, 'e, 'f, 'g, 'h. ('e -> 'h
 //│   where
-//│     'd <: 'e -> 'f & 'f -> 'g))) -> 'b
+//│     'd <: 'f -> 'h
+//│     'c <: 'd -> ('e -> 'f & 'g)))) <: (forall 'i. 'i -> (forall 'i, 'j, 'k, 'l. ('j -> 'l
+//│   where
+//│     'i <: 'j -> 'k & 'k -> 'l))) -> 'b
 //│    = [Function: a0_]
 
 // let test0 = 
@@ -251,17 +263,20 @@ def a2'_ x =
 //│   where
 //│     'd <: 'e -> 'f & 'f -> 'g))) -> 'c)) | 'h) -> ((forall 'd. 'd -> (forall 'd, 'e, 'f, 'g. ('e -> 'g
 //│   where
-//│     'd <: 'e -> 'f & 'f -> 'g))) -> 'i & 'j) & (forall 'k, 'l. ('k -> 'l & 'k) -> 'l) -> ((forall 'm. 'm -> 'm) -> 'n & 'o) & 'p) -> (forall 'q. ('r -> 's | 't
+//│     'd <: 'e -> 'f & 'f -> 'g))) -> 'i & 'j) & (forall 'k, 'l. ('k -> 'l & 'k) -> 'l) -> ((forall 'm. 'm -> 'm) -> 'n & 'o) & 'p) -> ('q -> 'r | 's
 //│   where
-//│     'q <: (forall 'd. 'd -> (forall 'd, 'e, 'f, 'g. ('e -> 'g
+//│     forall 't. 't -> (forall 'u. 'u -> (forall 't, 'u, 'v, 'w, 'x, 'y. ('v -> 'y
 //│   where
-//│     'd <: 'e -> 'f & 'f -> 'g))) -> 's))
+//│     'u <: 'w -> 'y
+//│     't <: 'u -> ('v -> 'w & 'x)))) | 'z <: (forall 'd. 'd -> (forall 'd, 'e, 'f, 'g. ('e -> 'g
+//│   where
+//│     'd <: 'e -> 'f & 'f -> 'g))) -> 'r)
 //│     = [Function: a2$_]
 
 // FIXME
 def a0' = a2' a1'
 //│ ╔══[ERROR] identifier not found: a2'
-//│ ║  l.262: 	def a0' = a2' a1'
+//│ ║  l.277: 	def a0' = a2' a1'
 //│ ╙──       	          ^^^
 //│ a0': error
 //│ Code generation encountered an error:
@@ -272,10 +287,10 @@ def a0' = a2' a1'
 :Fuel 15000
 def a0'_ = a2'_ a1'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.273: 	def a0'_ = a2'_ a1'
+//│ ║  l.288: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α43_44'' -> α43_44'')››  <:  α33_1143'    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α43_44'' -> α43_44'')››  <:  α33_1229'    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α43_44'' -> α43_44'')››  <:  α33_35''
 //│ a0'_: error
 //│     = [Function: a0$_]
@@ -287,9 +302,12 @@ def a0'_ = a2'_ a1'
 def a0'_ = a2'_ a1'
 //│ a0'_: 'a -> 'b
 //│   where
-//│     'c <: (forall 'd. 'd -> (forall 'd, 'e, 'f, 'g. ('e -> 'g
+//│     forall 'c. 'c -> (forall 'd. 'd -> (forall 'c, 'd, 'e, 'f, 'g, 'h. ('e -> 'h
 //│   where
-//│     'd <: 'e -> 'f & 'f -> 'g))) -> 'b
+//│     'd <: 'f -> 'h
+//│     'c <: 'd -> ('e -> 'f & 'g)))) <: (forall 'i. 'i -> (forall 'i, 'j, 'k, 'l. ('j -> 'l
+//│   where
+//│     'i <: 'j -> 'k & 'k -> 'l))) -> 'b
 //│     = [Function: a0$_1]
 :NoRecursiveTypes
 

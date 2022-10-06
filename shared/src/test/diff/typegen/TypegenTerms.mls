@@ -69,7 +69,7 @@ def f: ('c -> 'a as 'a) -> 'c -> int
 //│ l: 'l
 //│   where
 //│     'l :> int -> 'l
-//│ /!!!\ Uncaught error: mlscript.codegen.CodeGenError: Cannot generate type for `where` clause List((α109,Bounds(Function(Tuple(List((None,Field(None,TypeName(int))))),α109),Top)))
+//│ /!!!\ Uncaught error: mlscript.codegen.CodeGenError: Cannot generate type for `where` clause List()
 
 :ts
 :e
@@ -155,6 +155,6 @@ def weird: ((int, bool) | 'a) -> 'a
 //│ weird: 'a
 //│   where
 //│     'a :> (int, int,) -> 'a
-//│ /!!!\ Uncaught error: mlscript.codegen.CodeGenError: Cannot generate type for `where` clause List((α216,Bounds(Function(Tuple(List((None,Field(None,TypeName(int))), (None,Field(None,TypeName(int))))),α216),Top)))
+//│ /!!!\ Uncaught error: mlscript.codegen.CodeGenError: Cannot generate type for `where` clause List()
 
 

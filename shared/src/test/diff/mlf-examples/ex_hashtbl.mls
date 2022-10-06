@@ -184,8 +184,8 @@ def add_ n m = n succ_ m
 //│   where
 //│     'a <: (forall 'd. 'd -> (forall 'e. 'e -> (forall 'd, 'e, 'f, 'g, 'h, 'i. ('h -> 'g
 //│   where
-//│     'e <: 'f -> 'g
-//│     'd <: 'e -> ('h -> 'f & 'i))))) -> ('b -> 'c & 'j)))
+//│     'd <: 'e -> ('h -> 'f & 'i)
+//│     'e <: 'f -> 'g)))) -> ('b -> 'c & 'j)))
 //│     = [Function: add_]
 
 // let printInt (n:Int) = print (n (fun x -> x+1) 0)
@@ -210,8 +210,8 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│      = Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
 //│ table: List[("one" | "two", forall 'a, 'b. ('a & 'b) -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g. (('c & 'e) -> ('d | 'g)
 //│   where
-//│     'a <: 'c -> 'd
-//│     'b <: 'e -> 'f & 'f -> 'g)),)]
+//│     'b <: 'e -> 'f & 'f -> 'g
+//│     'a <: 'c -> 'd)),)]
 //│      = Cons {
 //│          head: [ 'two', [Function (anonymous)] ],
 //│          tail: Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }

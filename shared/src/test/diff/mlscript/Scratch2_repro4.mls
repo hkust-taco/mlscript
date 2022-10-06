@@ -15,8 +15,8 @@ def s n = fun f -> fun x -> f (n f x)
 // def s n = n
 //│ s: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('c -> 'f
 //│   where
-//│     'a <: 'b -> ('c -> 'd & 'e)
-//│     'b <: 'd -> 'f)))
+//│     'b <: 'd -> 'f
+//│     'a <: 'b -> ('c -> 'd & 'e))))
 //│  = [Function: s]
 
 def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))

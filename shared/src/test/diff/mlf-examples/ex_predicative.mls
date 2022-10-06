@@ -57,18 +57,18 @@ delta' id
 def t a b c d e = (fun x -> a x x) ((fun y -> b (c y)) (d e))
 //│ t: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'd. 'd -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm, 'n. ('j -> 'm
 //│   where
-//│     'b <: 'e -> ('f & 'g & 'h)
 //│     'c <: 'i -> 'e
-//│     'd <: 'j -> ('i & 'k)
-//│     'a <: 'h -> ('h -> ('l & 'm) & 'n))))))
+//│     'b <: 'e -> ('f & 'g & 'h)
+//│     'a <: 'h -> ('h -> ('l & 'm) & 'n)
+//│     'd <: 'j -> ('i & 'k))))))
 //│  = [Function: t]
 
 // let t w z a b = (fun y -> (fun x -> w (x y) z) a) b ;;
 def t w z a b = (fun y -> (fun x -> w (x y) z) a) b
 //│ t: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j. (('d & 'j) -> 'h
 //│   where
-//│     'c <: 'd -> 'e
-//│     'a <: 'e -> ('b -> ('f & 'g & 'h) & 'i)))))
+//│     'a <: 'e -> ('b -> ('f & 'g & 'h) & 'i)
+//│     'c <: 'd -> 'e))))
 //│  = [Function: t1]
 
 // let t y a = (fun x -> x (x y)) ((fun z -> z) (fun x -> a x)) ;;
@@ -81,7 +81,7 @@ def t y a = (fun x -> x (x y)) ((fun z -> z) (fun x -> a x))
 (fun x -> fun y -> x y) (fun y -> fun x -> x y)
 //│ res: 'a -> 'b
 //│   where
-//│     'c <: 'a -> 'b
+//│     forall 'c. 'c -> (forall 'd, 'e. ('c -> 'd & 'e) -> 'd) <: 'a -> 'b
 //│    = [Function (anonymous)]
 
 // (* Rank 3 *)
@@ -122,7 +122,7 @@ type Sk = forall 'a 'b. 'a -> 'b -> 'a
 //│    = [Function (anonymous)]
 //│ res: 'a -> 'b
 //│   where
-//│     'c <: 'c -> ('a -> 'b & 'd)
+//│     forall 'c. 'c -> (forall 'd. 'd -> 'c) <: (forall 'c. 'c -> (forall 'd. 'd -> 'c)) -> ('a -> 'b & 'e)
 //│    = [Function (anonymous)]
 
 // (* Rank 3 *)
@@ -133,7 +133,7 @@ type Sk = forall 'a 'b. 'a -> 'b -> 'a
 //│    = [Function (anonymous)]
 //│ res: 'a -> 'b
 //│   where
-//│     'c <: 'c -> ('a -> 'b & 'd)
+//│     forall 'c. 'c -> (forall 'd. 'd -> 'c) <: (forall 'c. 'c -> (forall 'd. 'd -> 'c)) -> ('a -> 'b & 'e)
 //│    = [Function (anonymous)]
 
 
@@ -191,26 +191,54 @@ def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (f
 //│ ║  l.189: 	def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
 //│ ║         	                                                                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α938_977^6  <:  ((‹∀ 0. ‹∀ 1. (α808_811'' -> ‹∀ 2. (α809_810''' -> α809_810''')›)››,) -> α940_1005^6)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α938_977^6  <:  ((‹∀ 0. ‹∀ 1. (α808_811'' -> ‹∀ 2. (α809_810''' -> α809_810''')›)››,) -> α940_978^8)
-//│ t: 'b -> (forall 'c, 'd. ('c & 'd) -> (forall 'c, 'd, 'e, 'f, 'g, 'h, 'a, 'i, 'j, 'k, 'l. (('e & 'a & 'i & 'l) -> ('i | 'f)
+//│ ╟── this constraint:  α953_992^6  <:  ((‹∀ 0. ‹∀ 1. (α823_826'' -> ‹∀ 2. (α824_825''' -> α824_825''')›)››,) -> α955_1020^6)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α953_992^6  <:  ((‹∀ 0. ‹∀ 1. (α823_826'' -> ‹∀ 2. (α824_825''' -> α824_825''')›)››,) -> α955_993^8)
+//│ t: 'b -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h. ('c & 'd) -> (forall 'b, 'c, 'i, 'j, 'e, 'f, 'g. (('i & 'a & 'k & 'l) -> ('k | 'j)
 //│   where
-//│     'c <: 'e -> 'f
-//│     'g <: (error | 'h) -> ('d -> ('a -> ('a & 'i) & 'j) & 'k))) | 'm)
+//│     'c <: 'i -> 'j
+//│     ChurchInt -> (forall 'b, 'c, 'i, 'j, 'm, 'e, 'f. ('c & 'm) -> (forall 'b, 'i, 'j, 'e, 'f. (('i & 'a0 & 'n & 'o) -> ('n | 'j)
+//│   where
+//│     'c <: 'i -> 'j
+//│     ChurchInt -> (forall 'b, 'c, 'i, 'j, 'p, 'e. ('c & 'p) -> (forall 'b, 'c, 'i, 'j, 'e. (('i & 'a1 & 'q & 'r) -> ('q | 'j)
+//│   where
+//│     'c <: 'i -> 'j
+//│     forall 's. 's -> 'b | 'e <: (error | 't | 'u) -> ('p -> ('a1 -> ('a1 & 'q) & 'v) & 'w))) | 'x) | 'f <: (error | 'u | 'y) -> ('m -> ('a0 -> ('a0 & 'n) & 'z) & 'a1))) | 'b1) | 'g <: (error | 'u) -> ('d -> ('a -> ('a & 'k) & 'c1) & 'd1))) | 'h)
 //│  = [Function: t3]
 
 // :e // fails after new-refreshing-extrusion
 // :e // Works since inconsistent constrained types...
 def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
-//│ t2: 'a -> (forall 'b. 'b -> (forall 'b, 'c, 'd, 'e, 'f, 'g. ('h -> 'i
+//│ t2: 'a -> (forall 'b. 'b -> (forall 'a, 'c, 'd, 'e. ('f -> 'g
 //│   where
-//│     'c <: 'd -> ('b -> 'e & 'f)
-//│     'g <: (forall 'j. 'j -> (forall 'j. (('k -> ((forall 'l. 'l -> (forall 'j, 'l. ('m -> 'n
+//│     forall 'h. 'h -> (forall 'h, 'i, 'j, 'k. ('i -> 'k
 //│   where
-//│     'j <: (forall 'o. 'o -> (forall 'p. 'p -> 'p)) -> ('l -> ('m -> 'q & 'r) & 's)
-//│     'l <: 'q -> 'n))) -> 't & 'u) & 'v) -> 't
+//│     'h <: 'i -> 'j & 'j -> 'k)) | 'l <: (forall 'm. 'm -> (forall 'm. (('n -> ((forall 'o. 'o -> (forall 'm, 'o, 'p, 'q. ('r -> 'q
 //│   where
-//│     'j <: (forall 'o. 'o -> (forall 'p. 'p -> 'p)) -> 'k))) -> ((((forall 'o. 'o -> (forall 'p. 'p -> 'p)) -> ((forall 'o. 'o -> (forall 'p. 'p -> 'p)) -> 'w & 'x) & 'y) -> 'w) -> ((forall 'z. 'z -> (forall 'a1. 'a1 -> 'z)) -> 'd & 'b1) & 'c1) & 'e -> ('h -> 'i & 'd1))) | 'e1)
+//│     'o <: 'p -> 'q
+//│     'm <: (forall 's. 's -> (forall 't. 't -> 't)) -> ('o -> ('r -> 'p & 'u) & 'v)))) -> 'w & 'x) & 'y) -> 'w
+//│   where
+//│     'm <: (forall 's. 's -> (forall 't. 't -> 't)) -> 'n))) -> ((((forall 's. 's -> (forall 't. 't -> 't)) -> ((forall 's. 's -> (forall 't. 't -> 't)) -> 'z & 'a1) & 'b1) -> 'z) -> ((forall 'c1. 'c1 -> (forall 'd1. 'd1 -> 'c1)) -> 'e1 & 'f1) & 'g1) & 'h1 -> ('f -> 'g & 'i1)
+//│     ((forall 'j1. 'j1 -> (forall 's. 's -> (forall 't. 't -> 't))) -> ((forall 'c1. 'c1 -> (forall 'd1. 'd1 -> 'c1)) -> ((forall 'k1. 'k1 -> (forall 'k1, 'l1, 'm1. ('l1 -> 'm1
+//│   where
+//│     'k1 <: 'l1 -> 'm1))) -> ((forall 'n1. 'n1 -> (forall 'a, 'c, 'd. ('o1 -> 'p1
+//│   where
+//│     'q1 <: (forall 'm. 'm -> (forall 'm. (('n -> ((forall 'o. 'o -> (forall 'm, 'o, 'p, 'q. ('r -> 'q
+//│   where
+//│     'o <: 'p -> 'q
+//│     'm <: (forall 's. 's -> (forall 't. 't -> 't)) -> ('o -> ('r -> 'p & 'u) & 'v)))) -> 'w & 'x) & 'y) -> 'w
+//│   where
+//│     'm <: (forall 's. 's -> (forall 't. 't -> 't)) -> 'n))) -> ((((forall 's. 's -> (forall 't. 't -> 't)) -> ((forall 's. 's -> (forall 't. 't -> 't)) -> 'z & 'a1) & 'b1) -> 'z) -> ((forall 'c1. 'c1 -> (forall 'd1. 'd1 -> 'c1)) -> 'r1 & 's1) & 't1) & 'u1 -> ('o1 -> 'p1 & 'v1)
+//│     ((forall 'j1. 'j1 -> (forall 's. 's -> (forall 't. 't -> 't))) -> ((forall 'c1. 'c1 -> (forall 'd1. 'd1 -> 'c1)) -> ((forall 'k1. 'k1 -> (forall 'k1, 'l1, 'm1. ('l1 -> 'm1
+//│   where
+//│     'k1 <: 'l1 -> 'm1))) -> ((forall 'w1. 'w1 -> (forall 'a, 'c. ('x1 -> 'y1
+//│   where
+//│     'z1 <: (forall 'm. 'm -> (forall 'm. (('n -> ((forall 'o. 'o -> (forall 'm, 'o, 'p, 'q. ('r -> 'q
+//│   where
+//│     'o <: 'p -> 'q
+//│     'm <: (forall 's. 's -> (forall 't. 't -> 't)) -> ('o -> ('r -> 'p & 'u) & 'v)))) -> 'w & 'x) & 'y) -> 'w
+//│   where
+//│     'm <: (forall 's. 's -> (forall 't. 't -> 't)) -> 'n))) -> ((((forall 's. 's -> (forall 't. 't -> 't)) -> ((forall 's. 's -> (forall 't. 't -> 't)) -> 'z & 'a1) & 'b1) -> 'z) -> ((forall 'c1. 'c1 -> (forall 'd1. 'd1 -> 'c1)) -> 'a2 & 'b2) & 'c2) & 'd2 -> ('x1 -> 'y1 & 'e2)
+//│     forall 'f2. 'f2 -> 'a | 'c <: 'a2 -> ('w1 -> 'd2 & 'g2)))) -> 'h2 & 'i2) & 'j2) & 'k2) & 'z1) -> 'h2 | 'd <: 'r1 -> ('n1 -> 'u1 & 'l2)))) -> 'm2 & 'n2) & 'o2) & 'p2) & 'q1) -> 'm2 | 'e <: 'e1 -> ('b -> 'h1 & 'q2))) | 'r2)
 //│   = [Function: t21]
 
 // :e // fails since the fix to spurious-TV-cycles // succeeds since the fix to the fix to spurious-TV-cycles...
@@ -230,25 +258,53 @@ t2 id succ 0
 def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
 def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.230: 	def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
+//│ ║  l.258: 	def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
 //│ ║         	                                                                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α1970_2009^6  <:  ((‹∀ 0. ‹∀ 1. (α808_811'' -> ‹∀ 2. (α809_810''' -> α809_810''')›)››,) -> α1972_2037^6)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α1970_2009^6  <:  ((‹∀ 0. ‹∀ 1. (α808_811'' -> ‹∀ 2. (α809_810''' -> α809_810''')›)››,) -> α1972_2010^8)
-//│ t: 'b -> (forall 'c, 'd. ('c & 'd) -> (forall 'c, 'd, 'e, 'f, 'g, 'h, 'a, 'i, 'j, 'k, 'l. (('e & 'a & 'i & 'l) -> ('i | 'f)
+//│ ╟── this constraint:  α2159_2198^6  <:  ((‹∀ 0. ‹∀ 1. (α823_826'' -> ‹∀ 2. (α824_825''' -> α824_825''')›)››,) -> α2161_2226^6)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α2159_2198^6  <:  ((‹∀ 0. ‹∀ 1. (α823_826'' -> ‹∀ 2. (α824_825''' -> α824_825''')›)››,) -> α2161_2199^8)
+//│ t: 'b -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h. ('c & 'd) -> (forall 'b, 'c, 'i, 'j, 'e, 'f, 'g. (('i & 'a & 'k & 'l) -> ('k | 'j)
 //│   where
-//│     'c <: 'e -> 'f
-//│     'g <: (error | 'h) -> ('d -> ('a -> ('a & 'i) & 'j) & 'k))) | 'm)
+//│     'c <: 'i -> 'j
+//│     ChurchInt -> (forall 'b, 'c, 'i, 'j, 'm, 'e, 'f. ('c & 'm) -> (forall 'b, 'i, 'j, 'e, 'f. (('i & 'a0 & 'n & 'o) -> ('n | 'j)
+//│   where
+//│     'c <: 'i -> 'j
+//│     ChurchInt -> (forall 'b, 'c, 'i, 'j, 'p, 'e. ('c & 'p) -> (forall 'b, 'c, 'i, 'j, 'e. (('i & 'a1 & 'q & 'r) -> ('q | 'j)
+//│   where
+//│     'c <: 'i -> 'j
+//│     forall 's. 's -> 'b | 'e <: (error | 't | 'u) -> ('p -> ('a1 -> ('a1 & 'q) & 'v) & 'w))) | 'x) | 'f <: (error | 'u | 'y) -> ('m -> ('a0 -> ('a0 & 'n) & 'z) & 'a1))) | 'b1) | 'g <: (error | 'u) -> ('d -> ('a -> ('a & 'k) & 'c1) & 'd1))) | 'h)
 //│  = [Function: t4]
-//│ t2: 'a -> (forall 'b. 'b -> (forall 'b, 'c, 'd, 'e, 'f, 'g. ('h -> 'i
+//│ t2: 'a -> (forall 'b. 'b -> (forall 'a, 'c, 'd, 'e. ('f -> 'g
 //│   where
-//│     'c <: 'd -> ('b -> 'e & 'f)
-//│     'g <: (forall 'j. 'j -> (forall 'j. (('k -> ((forall 'l. 'l -> (forall 'j, 'l. ('m -> 'n
+//│     forall 'h. 'h -> (forall 'h, 'i, 'j, 'k, 'l. ('i -> 'l
 //│   where
-//│     'j <: (forall 'o. 'o -> (forall 'p. 'p -> 'p)) -> ('l -> ('m -> 'q & 'r) & 's)
-//│     'l <: 'q -> 'n))) -> 't & 'u) & 'v) -> 't
+//│     'h <: 'i -> 'j & 'j -> 'k & 'k -> 'l)) | 'm <: (forall 'n. 'n -> (forall 'n. (('o -> ((forall 'p. 'p -> (forall 'n. ('q -> 'r
 //│   where
-//│     'j <: (forall 'o. 'o -> (forall 'p. 'p -> 'p)) -> 'k))) -> ((((forall 'o. 'o -> (forall 'p. 'p -> 'p)) -> ((forall 'o. 'o -> (forall 'p. 'p -> 'p)) -> 'w & 'x) & 'y) -> 'w) -> ((forall 'z. 'z -> (forall 'a1. 'a1 -> 'z)) -> 'd & 'b1) & 'c1) & 'e -> ('h -> 'i & 'd1))) | 'e1)
+//│     'p <: 's -> 'r
+//│     'n <: (forall 't. 't -> (forall 'u. 'u -> 'u)) -> ('p -> ('q -> 's & 'v) & 'w)))) -> 'x & 'y) & 'z) -> 'x
+//│   where
+//│     'n <: (forall 't. 't -> (forall 'u. 'u -> 'u)) -> 'o))) -> ((((forall 't. 't -> (forall 'u. 'u -> 'u)) -> ((forall 't. 't -> (forall 'u. 'u -> 'u)) -> 'a1 & 'b1) & 'c1) -> 'a1) -> ((forall 'd1. 'd1 -> (forall 'e1. 'e1 -> 'd1)) -> 'f1 & 'g1) & 'h1) & 'i1 -> ('f -> 'g & 'j1)
+//│     ((forall 'k1. 'k1 -> (forall 't. 't -> (forall 'u. 'u -> 'u))) -> ((forall 'd1. 'd1 -> (forall 'e1. 'e1 -> 'd1)) -> ((forall 'l1. 'l1 -> (forall 'l1, 'm1, 'n1. ('m1 -> 'n1
+//│   where
+//│     'l1 <: 'm1 -> 'n1))) -> ((forall 'o1. 'o1 -> (forall 'a, 'c, 'd. ('p1 -> 'q1
+//│   where
+//│     'r1 <: (forall 'n. 'n -> (forall 'n. (('o -> ((forall 'p. 'p -> (forall 'n. ('q -> 'r
+//│   where
+//│     'p <: 's -> 'r
+//│     'n <: (forall 't. 't -> (forall 'u. 'u -> 'u)) -> ('p -> ('q -> 's & 'v) & 'w)))) -> 'x & 'y) & 'z) -> 'x
+//│   where
+//│     'n <: (forall 't. 't -> (forall 'u. 'u -> 'u)) -> 'o))) -> ((((forall 't. 't -> (forall 'u. 'u -> 'u)) -> ((forall 't. 't -> (forall 'u. 'u -> 'u)) -> 'a1 & 'b1) & 'c1) -> 'a1) -> ((forall 'd1. 'd1 -> (forall 'e1. 'e1 -> 'd1)) -> 's1 & 't1) & 'u1) & 'v1 -> ('p1 -> 'q1 & 'w1)
+//│     ((forall 'k1. 'k1 -> (forall 't. 't -> (forall 'u. 'u -> 'u))) -> ((forall 'd1. 'd1 -> (forall 'e1. 'e1 -> 'd1)) -> ((forall 'l1. 'l1 -> (forall 'l1, 'm1, 'n1. ('m1 -> 'n1
+//│   where
+//│     'l1 <: 'm1 -> 'n1))) -> ((forall 'x1. 'x1 -> (forall 'a, 'c. ('y1 -> 'z1
+//│   where
+//│     'a2 <: (forall 'n. 'n -> (forall 'n. (('o -> ((forall 'p. 'p -> (forall 'n. ('q -> 'r
+//│   where
+//│     'p <: 's -> 'r
+//│     'n <: (forall 't. 't -> (forall 'u. 'u -> 'u)) -> ('p -> ('q -> 's & 'v) & 'w)))) -> 'x & 'y) & 'z) -> 'x
+//│   where
+//│     'n <: (forall 't. 't -> (forall 'u. 'u -> 'u)) -> 'o))) -> ((((forall 't. 't -> (forall 'u. 'u -> 'u)) -> ((forall 't. 't -> (forall 'u. 'u -> 'u)) -> 'a1 & 'b1) & 'c1) -> 'a1) -> ((forall 'd1. 'd1 -> (forall 'e1. 'e1 -> 'd1)) -> 'b2 & 'c2) & 'd2) & 'e2 -> ('y1 -> 'z1 & 'f2)
+//│     forall 'g2. 'g2 -> 'a | 'c <: 'b2 -> ('x1 -> 'e2 & 'h2)))) -> 'i2 & 'j2) & 'k2) & 'l2) & 'a2) -> 'i2 | 'd <: 's1 -> ('o1 -> 'v1 & 'm2)))) -> 'n2 & 'o2) & 'p2) & 'q2) & 'r1) -> 'n2 | 'e <: 'f1 -> ('b -> 'i1 & 'r2))) | 's2)
 //│   = [Function: t22]
 
 // (* This comment is from the ORIGINAL PAGE: *)
@@ -268,11 +324,11 @@ t id succ 0
 :e // Fails since inconsistent constrained types
 t2 id succ 0
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.269: 	t2 id succ 0
+//│ ║  l.325: 	t2 id succ 0
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  int<number>  <:  α809_3400    ClassTag  TypeVariable
-//│ ╙──  ... looks like:  int<number>  <:  α809_810'''
+//│ ╟── this constraint:  int<number>  <:  α824_3766    ClassTag  TypeVariable
+//│ ╙──  ... looks like:  int<number>  <:  α824_825'''
 //│ res: error
 //│    = 6
 
@@ -302,11 +358,11 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 :e // FIXME? refreshing-extr
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.303: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.359: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α3535_3537' -> α3536_3538')›  <:  α3535_3544    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α3535_3537' -> α3536_3538')›  <:  α3535_3537'
+//│ ╟── this constraint:  ‹∀ 0. (α3901_3903' -> α3902_3904')›  <:  α3901_3910    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α3901_3903' -> α3902_3904')›  <:  α3901_3903'
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
@@ -316,7 +372,9 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 (fun f -> fun x -> f (f x)) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ res: 'a -> 'b
 //│   where
-//│     'c <: 'a -> 'd & 'd -> 'b
+//│     'c -> 'd
+//│   where
+//│     forall 'e. 'e -> (forall 'f. 'f -> 'e) <: 'c -> 'g & 'g -> 'd <: 'a -> 'h & 'h -> 'b
 //│    = [Function (anonymous)]
 
 //     * Rank 4, alternate formulation, untypeable in F2, but F3
@@ -325,7 +383,9 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 (fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ res: 'a -> 'b
 //│   where
-//│     'c <: 'a -> 'd & 'd -> 'b
+//│     'c -> 'd
+//│   where
+//│     forall 'e. 'e -> (forall 'f. 'f -> 'e) <: 'c -> 'g & 'g -> 'd <: 'a -> 'h & 'h -> 'b
 //│    = [Function (anonymous)]
 
 //     * Rank 5, causes huge blowup. Do not attempt to output skeletons !
@@ -336,7 +396,13 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 (fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ res: 'a -> 'b
 //│   where
-//│     'c <: 'a -> 'd & 'd -> 'b
+//│     'c -> 'd
+//│   where
+//│     'e -> 'f
+//│   where
+//│     'g -> 'h
+//│   where
+//│     forall 'i. 'i -> (forall 'j. 'j -> 'i) <: 'g -> 'k & 'k -> 'h <: 'e -> 'l & 'l -> 'f <: 'c -> 'm & 'm -> 'd <: 'a -> 'n & 'n -> 'b
 //│    = [Function (anonymous)]
 
 
@@ -351,11 +417,11 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 :re
 (fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.352: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
+//│ ║  l.418: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. {(α3769_3774'' -> α3771_3773'') where: α3762' <: ((α3770_3772'',) -> α3771_3773'')}›  <:  α3769_3784'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. {(α3769_3774'' -> α3771_3773'') where: α3762' <: ((α3770_3772'',) -> α3771_3773'')}›  <:  α3769_3774''
+//│ ╟── this constraint:  ‹∀ 1. {(α4197_4202'' -> α4199_4201'') where: α4190' :> ((α4198_4200'',) -> α4199_4201'')}›  <:  α4197_4212'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. {(α4197_4202'' -> α4199_4201'') where: α4190' :> ((α4198_4200'',) -> α4199_4201'')}›  <:  α4197_4202''
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded

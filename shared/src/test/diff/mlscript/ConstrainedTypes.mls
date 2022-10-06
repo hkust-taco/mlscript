@@ -54,7 +54,7 @@ def f n m = n 0
 f {}
 //│ res: 'a -> 'b
 //│   where
-//│     'c <: 0 -> 'b
+//│     anything <: 0 -> 'b
 //│    = [Function (anonymous)]
 
 :e
@@ -78,11 +78,11 @@ def test extr =
   let f n m = n 0
   in let _ = extr f
   in f 0
-//│ test: ((forall 'a. 'a -> (forall 'a, 'b, 'c. ('c -> 'b
+//│ test: ((forall 'a. 'a -> (forall 'a, 'b, 'c, 'd. ('d -> 'c
 //│   where
-//│     'a <: 0 -> 'b))) -> 'd & 'e) -> (forall 'f, 'g, 'h, 'i. ('h -> 'g | 'i
+//│     'a <: (0 | 'b) -> 'c))) -> 'e & 'f) -> (forall 'b, 'g, 'h, 'i. ('h -> 'g | 'i
 //│   where
-//│     'f <: 0 -> 'g))
+//│     0 | 'b <: (0 | 'b) -> 'g))
 //│     = [Function: test]
 
 :e
@@ -105,13 +105,13 @@ def test extr x =
   let f n m = x (n 0)
   in let _ = extr f
   in f 0
-//│ test: ((forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> 'd
+//│ test: ((forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f -> 'd
 //│   where
 //│     'b <: 'c -> 'd
-//│     'a <: 0 -> 'c))) -> 'f & 'g) -> (forall 'h. ('b & 'h) -> (forall 'h, 'i, 'j, 'k, 'l, 'm. ('l -> 'j | 'm
+//│     'a <: (0 | 'e) -> 'c))) -> 'g & 'h) -> (forall 'i. ('b & 'i) -> (forall 'e, 'i, 'j, 'k, 'l, 'm. ('l -> 'k | 'm
 //│   where
-//│     'h <: 'i -> 'j
-//│     'k <: 0 -> 'i)))
+//│     'i <: 'j -> 'k
+//│     0 | 'e <: (0 | 'e) -> 'j)))
 //│     = [Function: test1]
 
 :e
@@ -134,15 +134,15 @@ def test extr x =
 //│ test: 'a -> (forall 'b. 'b -> (forall 'b, 'c, 'd, 'e, 'f, 'g. ('f -> 'd | 'g
 //│   where
 //│     'b <: 'c -> 'd
-//│     'e <: 0 -> 'c)))
+//│     0 | 'e <: (0 | 'e) -> 'c)))
 //│     = [Function: test2]
 
 // Error delayed by inconsistent constrained types
 test 0 1
 //│ res: 'a -> 'b
 //│   where
-//│     'c <: 'd -> 'b
-//│     'e <: 0 -> 'd
+//│     1 <: 'c -> 'b
+//│     0 <: 0 -> 'c
 //│    = [Function (anonymous)]
 
 :e
@@ -165,14 +165,14 @@ def test extr x =
   in f 0
 //│ test: 'a -> (forall 'b. 'b -> (forall 'b, 'c, 'd, 'e, 'f, 'g. ('f -> 'd | 'g
 //│   where
-//│     'c <: 'b -> (0 -> 'd & 'e))))
+//│     0 | 'c <: 'b -> ((0 | 'c) -> 'd & 'e))))
 //│     = [Function: test3]
 
 // Error delayed by inconsistent constrained types
 test 0 1
 //│ res: 'a -> 'b
 //│   where
-//│     'c <: 1 -> (0 -> 'b & 'd)
+//│     0 <: 1 -> (0 -> 'b & 'c)
 //│    = [Function (anonymous)]
 
 :e

@@ -36,8 +36,8 @@ def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M
 succ = s
 //│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('e -> 'd
 //│   where
-//│     'b <: 'c -> 'd
-//│     'a <: 'b -> ('e -> 'c & 'f))))
+//│     'a <: 'b -> ('e -> 'c & 'f)
+//│     'b <: 'c -> 'd)))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: s]
@@ -52,8 +52,8 @@ def succ0: forall 'M. (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (('M -> 'M) -> ('
 succ0 = s
 //│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('e -> 'd
 //│   where
-//│     'b <: 'c -> 'd
-//│     'a <: 'b -> ('e -> 'c & 'f))))
+//│     'a <: 'b -> ('e -> 'c & 'f)
+//│     'b <: 'c -> 'd)))
 //│   <:  succ0:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> ('M -> 'M) -> 'M -> 'M
 //│      = [Function: s]
@@ -76,24 +76,33 @@ def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x
 
 // :d
 n1 = s z
-//│ n1: 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('e -> 'c
+//│ n1: 'a -> (forall 'a, 'b, 'c. ('d -> 'c
 //│   where
 //│     'a <: 'b -> 'c
-//│     'd <: 'a -> ('e -> 'b & 'f)))
+//│     forall 'e. 'e -> (forall 'f. 'f -> 'f) <: 'a -> ('d -> 'b & 'g)))
 //│   = [Function (anonymous)]
 
 n2 = s (s z)
-//│ n2: 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('e -> 'c
+//│ n2: 'a -> (forall 'a, 'b, 'c. ('d -> 'c
 //│   where
 //│     'a <: 'b -> 'c
-//│     'd <: 'a -> ('e -> 'b & 'f)))
+//│     forall 'e. 'e -> (forall 'e, 'f, 'g. ('h -> 'g
+//│   where
+//│     'e <: 'f -> 'g
+//│     forall 'i. 'i -> (forall 'j. 'j -> 'j) <: 'e -> ('h -> 'f & 'k))) <: 'a -> ('d -> 'b & 'l)))
 //│   = [Function (anonymous)]
 
 n3 = s (s (s z))
-//│ n3: 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('e -> 'c
+//│ n3: 'a -> (forall 'a, 'b, 'c. ('d -> 'c
 //│   where
-//│     'a <: 'b -> 'c
-//│     'd <: 'a -> ('e -> 'b & 'f)))
+//│     forall 'e. 'e -> (forall 'e, 'f, 'g. ('h -> 'g
+//│   where
+//│     'e <: 'f -> 'g
+//│     forall 'i. 'i -> (forall 'i, 'j, 'k. ('l -> 'k
+//│   where
+//│     'i <: 'j -> 'k
+//│     forall 'm. 'm -> (forall 'n. 'n -> 'n) <: 'i -> ('l -> 'j & 'o))) <: 'e -> ('h -> 'f & 'p))) <: 'a -> ('d -> 'b & 'q)
+//│     'a <: 'b -> 'c))
 //│   = [Function (anonymous)]
 
 // def wrap: 'WRA -> 'WRA
@@ -108,8 +117,8 @@ wrap x = { x }
 n1w = n1 wrap
 //│ n1w: 'a -> 'b
 //│   where
-//│     'c <: 'd -> 'b
-//│     'e <: 'c -> ('a -> 'd & 'f)
+//│     forall 'c. 'c -> (forall 'd. 'd -> 'd) <: (forall 'e. 'e -> {x: 'e}) -> ('a -> 'f & 'g)
+//│     forall 'e. 'e -> {x: 'e} <: 'f -> 'b
 //│    = [Function (anonymous)]
 
 // :d
@@ -148,8 +157,8 @@ res.x.x.x + 1
 succ = s
 //│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('e -> 'd
 //│   where
-//│     'b <: 'c -> 'd
-//│     'a <: 'b -> ('e -> 'c & 'f))))
+//│     'a <: 'b -> ('e -> 'c & 'f)
+//│     'b <: 'c -> 'd)))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: s]

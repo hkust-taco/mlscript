@@ -101,8 +101,8 @@ trait TypeSimplifier { self: Typer =>
       case _ =>
         
         val rw = ty match {
-          case ConstrainedType(cs, body) =>
-            ConstrainedType(cs.map(_.mapFirst(renew)), body)
+          // case ConstrainedType(cs, body) =>
+          //   ConstrainedType(cs.map(_.mapFirst(renew)), body)
           case _ => ty
         }
         
@@ -303,9 +303,10 @@ trait TypeSimplifier { self: Typer =>
         }, sort = true)
       }.foldLeft(BotType: ST)(_ | _) |> factorize(ctx)
       val res = otherCs2 | csNegs2
-      val cons = dnf.cons.map(_.mapSecond(_.map{case(p,b)=>p->go(b,S(p))})
-        // .mapFirst(v => renew(v))
-        )
+      // val cons = dnf.cons.map(_.mapSecond(_.map{case(p,b)=>p->go(b,S(p))})
+      //   // .mapFirst(v => renew(v))
+      //   )
+      val cons = dnf.cons.map { case (lo,hi) => (go(lo,S(true)), go(hi,S(false))) }
       PolymorphicType.mk(dnf.polymLevel, ConstrainedType.mk(cons, res))
     }
         
@@ -348,7 +349,7 @@ trait TypeSimplifier { self: Typer =>
     
     val occNums: MutMap[(Bool, TypeVariable), Int] = LinkedHashMap.empty[(Bool, TypeVariable), Int].withDefaultValue(0)
     val occursInvariantly = MutSet.empty[TV]
-    val constrainedVars = MutSet.empty[TV]
+    val constrainedVars = MutSet.empty[TV] // TODO rm
     
     val analyzed1 = MutSet.empty[PolarVariable]
     
@@ -376,10 +377,10 @@ trait TypeSimplifier { self: Typer =>
                 if (pol =/= S(true))
                   analyzed1.setAndIfUnset(tv -> false) { tv.upperBounds.foreach(apply(S(false))) }
             }
-          case ConstrainedType(cs, bod) =>
-            // occursInvariantly ++= cs.iterator.map(_._1)
-            constrainedVars ++= cs.iterator.map(_._1)
-            super.apply(pol)(st)
+          // case ConstrainedType(cs, bod) =>
+          //   // occursInvariantly ++= cs.iterator.map(_._1)
+          //   constrainedVars ++= cs.iterator.map(_._1)
+          //   super.apply(pol)(st)
           case _ =>
             super.apply(pol)(st)
         }
@@ -438,7 +439,8 @@ trait TypeSimplifier { self: Typer =>
         if (pol) analyze2(ub, true) else analyze2(lb, false)
       case PolymorphicType(lvl, bod) => analyze2(bod, pol)
       case ConstrainedType(cs, bod) =>
-        cs.foreach(_._2.foreach(pb => analyze2(pb._2, pb._1)))
+        // cs.foreach(_._2.foreach(pb => analyze2(pb._2, pb._1)))
+        cs.foreach { case (lo, hi) => analyze2(lo, true); analyze2(hi, false) }
         analyze2(bod, pol)
     }
     }
@@ -775,11 +777,14 @@ trait TypeSimplifier { self: Typer =>
       case PolymorphicType(lvl, bod) => PolymorphicType.mk(lvl, transform(bod, pol, parents)) // FIXME? parent or None?
       case ConstrainedType(cs, bod) =>
         ConstrainedType(
-          cs.map { case (tv, bs) =>
-            (transform(tv, N, semp) match {
-              case tv: TV => tv
-              case other => lastWords(s"not supposed to transform a constrained variable into a non-variable: $other")
-            }) -> bs.map { case (p, b) => p -> transform(b, S(p), semp) }
+          // cs.map { case (tv, bs) =>
+          //   (transform(tv, N, semp) match {
+          //     case tv: TV => tv
+          //     case other => lastWords(s"not supposed to transform a constrained variable into a non-variable: $other")
+          //   }) -> bs.map { case (p, b) => p -> transform(b, S(p), semp) }
+          // },
+          cs.map { case (lo, hi) =>
+            (transform(lo, S(true), semp), transform(hi, S(false), semp))
           },
           transform(bod, pol, parents)
         )

@@ -213,12 +213,12 @@ fun z -> omega z
 
 (fun x -> fun y -> x y) omegad
 (fun x -> fun y -> x y) omega
+//│ res: 'b -> 'c
+//│   where
+//│     forall 'd. (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a | 'd) <: 'b -> 'c
 //│ res: 'a -> 'b
 //│   where
-//│     'c <: 'a -> 'b
-//│ res: 'a -> 'b
-//│   where
-//│     'c <: 'a -> 'b
+//│     forall 'c, 'd. ('c -> 'd & 'c) -> 'd <: 'a -> 'b
 
 // ------------ Sec 4.3 ------------
 // affects the order of bindings in the result type in MLF, not very interesting otherwise

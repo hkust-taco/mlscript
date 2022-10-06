@@ -751,10 +751,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rec(poly.instantiate, rhs, true)
           case (ConstrainedType(cs, bod), _) =>
             trace(s"DISCHARGE CONSTRAINTS") {
-              cs.foreach { case (tv, bs) => bs.foreach {
-                case (true, b) => rec(b, tv, false)
-                case (false, b) => rec(tv, b, false)
-              }}
+              cs.foreach { case (lb, ub) => 
+               rec(lb, ub, false)
+              }
             }()
             rec(bod, rhs, true)
           case (_, ComposedType(true, l, r)) =>
@@ -1043,21 +1042,22 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         // PolymorphicType(polymLevel, extrude(body, lowerLvl, pol, upperLvl = polymLevel))
         PolymorphicType(polymLevel, extrude(body, lowerLvl, pol, upperLvl = upperLvl min polymLevel))
       case ConstrainedType(cs, bod) =>
-        ConstrainedType(cs.map { case (tv, bs) =>
-          val nv = extrude(tv, lowerLvl, pol, upperLvl).asInstanceOf[TV] // FIXME
+        ConstrainedType(cs.map { case (lo, hi) =>
+          // val nv = extrude(tv, lowerLvl, pol, upperLvl).asInstanceOf[TV] // FIXME
           
-          // * Intuitively feels like we should be discharging the constraints if the variable is extruded here...
-          // *  but not doing so does not seem to cause problems... (?)
+          // // * Intuitively feels like we should be discharging the constraints if the variable is extruded here...
+          // // *  but not doing so does not seem to cause problems... (?)
           
-          // if (tv.level > lowerLvl && tv.level <= upperLvl) {
-          //   assert(nv =/= tv)
-          //   ???
-          // } else {
-          //   assert(nv === tv)
-            nv -> bs.map {
-              case (pol, b) => (pol, extrude(b, lowerLvl, pol, upperLvl))
-            }
-          // }
+          // // if (tv.level > lowerLvl && tv.level <= upperLvl) {
+          // //   assert(nv =/= tv)
+          // //   ???
+          // // } else {
+          // //   assert(nv === tv)
+          //   nv -> bs.map {
+          //     case (pol, b) => (pol, extrude(b, lowerLvl, pol, upperLvl))
+          //   }
+          // // }
+          extrude(lo, lowerLvl, true, upperLvl) -> extrude(hi, lowerLvl, false, upperLvl)
         }, extrude(bod, lowerLvl, pol, upperLvl))
       case o @ Overload(alts) => Overload(alts.map(extrude(_, lowerLvl, pol, upperLvl).asInstanceOf[FunctionType]))(o.prov)
     }
@@ -1232,7 +1232,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         // freshenImpl(bod, below = lvl))
         freshenImpl(bod, below = below min lvl))
       case ct @ ConstrainedType(cs, bod) =>
-        val cs2 = cs.mapKeys(freshen(_).asInstanceOf[TV]).mapValues(_.mapValues(freshen))
+        // val cs2 = cs.mapKeys(freshen(_).asInstanceOf[TV]).mapValues(_.mapValues(freshen))
+        val cs2 = cs.map(lu => freshen(lu._1) -> freshen(lu._2))
         // trace(s"COPYING CONSTRAINTS   (${shadows.size})") {
         /* 
         trace(s"COPYING CONSTRAINTS   (${cs.mkString(", ")})") {

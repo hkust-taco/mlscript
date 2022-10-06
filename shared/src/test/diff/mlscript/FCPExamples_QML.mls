@@ -378,8 +378,8 @@ def step = fun xx -> xx (fun ((((xinit, xsub), xupdate), xfold),) ->
 //│   where
 //│     'c <: 'g -> 'h & 'g -> 'i), forall 'j. 'j -> (forall 'd, 'j, 'k, 'l, 'm, 'n, 'o, 'p, 'q, 'r, 's, 't, 'u, 'a, 'b, 'a0, 'b0, 'v, 'w, 'x, 'y. ((int & 'v & 'w & 'x & 'y) -> 'p
 //│   where
-//│     'd <: 'k -> ((int | 'l | 'm) -> ('n & 'o & 'p) & 'q) & 'r -> ((int | 's | 'm) -> ('o & 'p & 't) & 'u)
-//│     'j <: ('k & 'a & 'a0, 'b & 'r & 'b0,))),), forall 'z. 'z -> (forall 'y, 'a1. (int & 'y & 'a1) -> (forall 'e, 'm, 'z, 'a1, 'b1, 'b1, 'a2, 'b2, 'c1, 'a3, 'd1, 'b3, 'a4, 'b4, 'e1, 'f1, 'g1, 'h1, 'i1, 'j1, 'k1, 'l1, 'm1, 'n1. ('g1 -> (('h1 | 'd1, 'c1 | 'k1,) | 'n1)
+//│     'j <: ('k & 'a & 'a0, 'b & 'r & 'b0,)
+//│     'd <: 'k -> ((int | 'l | 'm) -> ('n & 'o & 'p) & 'q) & 'r -> ((int | 's | 'm) -> ('o & 'p & 't) & 'u))),), forall 'z. 'z -> (forall 'y, 'a1. (int & 'y & 'a1) -> (forall 'e, 'm, 'z, 'a1, 'b1, 'b1, 'a2, 'b2, 'c1, 'a3, 'd1, 'b3, 'a4, 'b4, 'e1, 'f1, 'g1, 'h1, 'i1, 'j1, 'k1, 'l1, 'm1, 'n1. ('g1 -> (('h1 | 'd1, 'c1 | 'k1,) | 'n1)
 //│   where
 //│     'z <: ('a1 & 'b1 & 'a2 & 'a3 & 'd1 & 'a4, 'b1 & 'b2 & 'c1 & 'b3 & 'b4 & 'e1,)
 //│     'e <: 'b1 -> ((int | 'f1 | 'm) -> ('g1 -> 'h1 & 'i1) & 'j1) & 'e1 -> ((int | 'm) -> ('g1 -> 'k1 & 'l1) & 'm1)))),), forall 'o1. 'o1 -> (forall 'p1. 'p1 -> (forall 'f, 'o1, 'p1, 'q1, 'r1, 's1, 't1, 'u1, 'v1, 'w1, 'x1, 'a5, 'a6, 'b5, 'b6, 'y1. ((('v1 & 'a5 & 'a6, 'r1 & 'b5 & 'b6,) & 'y1) -> 's1

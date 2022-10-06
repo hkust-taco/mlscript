@@ -104,7 +104,7 @@ abstract class TypeImpl extends Located { self: Type =>
           .mkString("forall ", ", ", ".")} ${body.showIn(ctx, 1)}",
         outerPrec > 1 // or 0?
       )
-    case Constrained(b, ws) => parensIf(s"${b.showIn(ctx, 0)}\n  where${ws.map {
+    case Constrained(b, bs, ws) => parensIf(s"${b.showIn(ctx, 0)}\n  where${bs.map {
       case (uv, Bounds(Bot, ub)) =>
         s"\n    ${ctx.vs(uv)} <: ${ub.showIn(ctx, 0)}"
       case (uv, Bounds(lb, Top)) =>
@@ -115,6 +115,8 @@ abstract class TypeImpl extends Located { self: Type =>
         val vstr = ctx.vs(uv)
         s"\n    ${vstr             } :> ${lb.showIn(ctx, 0)}" +
         s"\n    ${" " * vstr.length} <: ${ub.showIn(ctx, 0)}"
+    }.mkString}${ws.map{
+      case Bounds(lo, hi) => s"\n    ${lo.showIn(ctx, 0)} <: ${hi.showIn(ctx, 0)}" // TODO print differently from bs?
     }.mkString}", outerPrec > 0)
   }
   
@@ -133,7 +135,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case WithExtension(b, r) => b :: r :: Nil
     case PolyType(targs, body) => targs.map(_.fold(identity, identity)) :+ body
     case Splice(fs) => fs.flatMap{ case L(l) => l :: Nil case R(r) => r.in.toList ++ (r.out :: Nil) }
-    case Constrained(b, ws) => b :: ws.flatMap(c => c._1 :: c._2 :: Nil)
+    case Constrained(b, bs, ws) => b :: bs.flatMap(c => c._1 :: c._2 :: Nil) ::: ws.flatMap(c => c.lb :: c.ub :: Nil)
   }
 
   /**
