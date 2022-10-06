@@ -74,6 +74,12 @@ r[0] <- "test"
 //│ ║        	        ^^^^^^
 //│ ╟── but it flows into assigned array element with expected type `~"test"`
 //│ ║  l.68: 	r[0] <- "test"
+//│ ║        	^^^^
+//│ ╟── Note: constraint arises from type negation:
+//│ ║  l.53: 	def foo: ('a -> (~'a -> anything) -> anything) -> MutArray['a]
+//│ ║        	                 ^^^
+//│ ╟── from assigned array element:
+//│ ║  l.68: 	r[0] <- "test"
 //│ ╙──      	^^^^
 //│ = <no result>
 //│   r and foo are not implemented
@@ -81,10 +87,10 @@ r[0] <- "test"
 :e
 r[0] + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.82: 	r[0] + 1
+//│ ║  l.88: 	r[0] + 1
 //│ ║        	^^^^^^
 //│ ╟── possibly-undefined array access of type `undefined` is not an instance of type `int`
-//│ ║  l.82: 	r[0] + 1
+//│ ║  l.88: 	r[0] + 1
 //│ ╙──      	^^^^
 //│ res: error | int
 //│    = <no result>

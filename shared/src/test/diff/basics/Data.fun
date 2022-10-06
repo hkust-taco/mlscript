@@ -40,9 +40,9 @@ bar {age: 1} // TODO B/E
 //│ ╟── tuple of type `anything` does not have field 'age'
 //│ ║  l.34: 	bar {}
 //│ ║        	    ^^
-//│ ╟── Note: constraint arises from field selection:
+//│ ╟── Note: constraint arises from receiver:
 //│ ║  l.27: 	let bar (q: Person _) = q.age
-//│ ║        	                         ^^^^
+//│ ║        	                        ^
 //│ ╟── from binding:
 //│ ║  l.27: 	let bar (q: Person _) = q.age
 //│ ╙──      	         ^^^^^^^^^^^
@@ -53,9 +53,9 @@ bar {age: 1} // TODO B/E
 //│ ╟── record of type `{name: "Bob"}` does not have field 'age'
 //│ ║  l.35: 	bar {name: "Bob"}
 //│ ║        	    ^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from field selection:
+//│ ╟── Note: constraint arises from receiver:
 //│ ║  l.27: 	let bar (q: Person _) = q.age
-//│ ║        	                         ^^^^
+//│ ║        	                        ^
 //│ ╟── from binding:
 //│ ║  l.27: 	let bar (q: Person _) = q.age
 //│ ╙──      	         ^^^^^^^^^^^

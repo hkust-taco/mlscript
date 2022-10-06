@@ -24,9 +24,9 @@ eval_expr (M {})
 //│ ╟── application of type `M` does not have field 'l'
 //│ ║  l.20: 	eval_expr (M {})
 //│ ║        	           ^^^^
-//│ ╟── Note: constraint arises from field selection:
+//│ ╟── Note: constraint arises from receiver:
 //│ ║  l.9: 	    | M -> let tmp = v.l in v
-//│ ║       	                     ^^^
+//│ ║       	                     ^
 //│ ╟── from reference:
 //│ ║  l.8: 	  case v of {
 //│ ║       	       ^
@@ -56,9 +56,9 @@ eval_expr (M {})
 //│ ╟── application of type `M` does not have field 'l'
 //│ ║  l.52: 	eval_expr (M {})
 //│ ║        	           ^^^^
-//│ ╟── Note: constraint arises from field selection:
+//│ ╟── Note: constraint arises from receiver:
 //│ ║  l.41: 	    | M -> let tmp = v.l in tmp
-//│ ║        	                     ^^^
+//│ ║        	                     ^
 //│ ╟── from reference:
 //│ ║  l.40: 	  case v of {
 //│ ║        	       ^

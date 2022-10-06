@@ -56,7 +56,7 @@ ls : Cons[int, Cons[int, List[int]]]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.55: 	ls : Cons[int, Cons[int, List[int]]]
 //│ ║        	^^
-//│ ╟── expression of type `anything` does not have field 'h'
+//│ ╟── expression of type `()` is not a record (expected a record with fields: h, t)
 //│ ╟── Note: constraint arises from record type:
 //│ ║  l.26: 	type Cons[H, T] = { h: H; t: T }
 //│ ║        	                  ^^^^^^^^^^^^^^
@@ -75,7 +75,7 @@ ls : { h: int; t: { h: int; t: List[int] } }
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.74: 	ls : { h: int; t: { h: int; t: List[int] } }
 //│ ║        	^^
-//│ ╟── expression of type `anything` does not have field 'h'
+//│ ╟── expression of type `()` is not a record (expected a record with fields: h, t)
 //│ ╟── Note: constraint arises from record type:
 //│ ║  l.74: 	ls : { h: int; t: { h: int; t: List[int] } }
 //│ ╙──      	                  ^^^^^^^^^^^^^^^^^^^^^^^^

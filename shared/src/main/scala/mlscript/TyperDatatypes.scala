@@ -7,16 +7,17 @@ import scala.util.chaining._
 import scala.annotation.tailrec
 import mlscript.utils._, shorthands._
 import mlscript.Message._
+import sourcecode._
 
 abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   type TN = TypeName
   
   // The data types used for type inference:
-  case class TypeProvenance(loco: Opt[Loc], desc: Str, originName: Opt[Str] = N, isType: Bool = false) {
+  case class TypeProvenance(loco: Opt[Loc], desc: Str, originName: Opt[Str] = N, isType: Bool = false)(implicit val file: FileName, val line: Line) {
     val isOrigin: Bool = originName.isDefined
     def & (that: TypeProvenance): TypeProvenance = this // arbitrary; maybe should do better
-    override def toString: Str = (if (isOrigin) "o: " else "") + "‹"+loco.fold(desc)(desc+":"+_)+"›"
+    override def toString: Str = (if (isOrigin) "o: " else "") + "‹"+loco.fold(desc)(desc+":"+_)+s"›[${file.value}:${line.value}]"
   }
 
   case class NestingInfo(info: Str = "<nesting info here>") {

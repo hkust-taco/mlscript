@@ -27,7 +27,7 @@ Hey t
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.26: 	Hey t
 //│ ║        	^^^^^
-//│ ╟── tuple literal of type `{_1: 1, _2: 2, _3: 3}` does not have field 'x'
+//│ ╟── tuple literal of type `(1, 2, 3,)` does not have field 'x'
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	    ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{x: int}`
@@ -143,10 +143,18 @@ g tx
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.142: 	g tx
 //│ ║         	^^^^
-//│ ╟── expression of type `(1, 2, 3,) & {x: 1} & ~hey` does not have field 'y'
-//│ ╟── Note: constraint arises from field selection:
+//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1} & ~hey` does not have field 'y'
+//│ ║  l.11: 	tx = t with { x = 1 }
+//│ ║        	     ^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `{y: ?y}`
+//│ ║  l.142: 	g tx
+//│ ║         	  ^^
+//│ ╟── Note: constraint arises from receiver:
 //│ ║  l.130: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
-//│ ╙──       	                                          ^^^^^
+//│ ║         	                                          ^^^
+//│ ╟── from reference:
+//│ ║  l.130: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
+//│ ╙──       	             ^^^
 //│ res: 1 | error
 //│    = 1
 
@@ -209,16 +217,16 @@ t = (1, 2, 3) with {_1 = "oops"}
 :e
 (t: ("oops",int,int,))._1
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.210: 	(t: ("oops",int,int,))._1
+//│ ║  l.218: 	(t: ("oops",int,int,))._1
 //│ ║         	 ^
 //│ ╟── `with` extension of type `{_1: "oops", _2: 2, _3: 3}` is not a 3-element tuple
-//│ ║  l.204: 	t = (1, 2, 3) with {_1 = "oops"}
+//│ ║  l.212: 	t = (1, 2, 3) with {_1 = "oops"}
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `("oops", int, int,)`
-//│ ║  l.210: 	(t: ("oops",int,int,))._1
+//│ ║  l.218: 	(t: ("oops",int,int,))._1
 //│ ║         	 ^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.210: 	(t: ("oops",int,int,))._1
+//│ ║  l.218: 	(t: ("oops",int,int,))._1
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^
 //│ res: "oops"
 //│    = 'oops'

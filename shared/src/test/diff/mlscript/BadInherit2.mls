@@ -68,7 +68,7 @@ class A0_2: S0[int] & T0[string]
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.49: 	  method Foo0 x = 1
 //│ ║        	         ^^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `string`
+//│ ╟── integer literal of type `1` is not an instance of `string`
 //│ ║  l.49: 	  method Foo0 x = 1
 //│ ║        	                  ^
 //│ ╟── Note: constraint arises from type reference:
@@ -248,9 +248,15 @@ s0 (C0{})
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.239: 	def s0: S0[?] -> S0[?]
 //│ ║         	           ^
+//│ ╟── but it flows into application with expected type `nothing`
+//│ ║  l.244: 	s0 (C0{})
+//│ ║         	    ^^^^
 //│ ╟── Note: constraint arises from type wildcard:
 //│ ║  l.239: 	def s0: S0[?] -> S0[?]
-//│ ╙──       	           ^
+//│ ║         	           ^
+//│ ╟── from applied type reference:
+//│ ║  l.239: 	def s0: S0[?] -> S0[?]
+//│ ╙──       	        ^^^^^
 //│ res: error | S0[?]
 //│    = <no result>
 //│      s0 is not implemented

@@ -15,7 +15,7 @@ muta1[1] <- false
 //│ ╔══[ERROR] Type mismatch in assignment:
 //│ ║  l.14: 	muta1[1] <- false
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `false` is not an instance of type `int`
+//│ ╟── reference of type `false` is not an instance of `int`
 //│ ║  l.14: 	muta1[1] <- false
 //│ ║        	            ^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -77,7 +77,7 @@ rc1.x <- true
 //│ ╔══[ERROR] Type mismatch in assignment:
 //│ ║  l.76: 	rc1.x <- true
 //│ ║        	^^^^^^^^^^^^^
-//│ ╟── reference of type `true` is not an instance of type `int`
+//│ ╟── reference of type `true` is not an instance of `int`
 //│ ║  l.76: 	rc1.x <- true
 //│ ║        	         ^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -332,12 +332,12 @@ b2.x <- b1.y
 //│ ╔══[ERROR] Type mismatch in assignment:
 //│ ║  l.331: 	b2.x <- b1.y
 //│ ║         	^^^^^^^^^^^^
-//│ ╟── type `bool` is not an instance of type `int`
+//│ ╟── type `bool` is not an instance of `int`
 //│ ║  l.260: 	class B: { mut x: int; y: bool }
 //│ ║         	                          ^^^^
-//│ ╟── but it flows into field selection with expected type `int`
+//│ ╟── but it flows into reference with expected type `int`
 //│ ║  l.331: 	b2.x <- b1.y
-//│ ║         	        ^^^^
+//│ ║         	        ^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.260: 	class B: { mut x: int; y: bool }
 //│ ║         	                  ^^^
@@ -563,7 +563,7 @@ b1.x <- 1 + 2 <- 4
 //│ ╔══[ERROR] Type mismatch in assignment:
 //│ ║  l.544: 	mt1._2 <- 1
 //│ ║         	^^^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type `bool`
+//│ ╟── integer literal of type `1` is not an instance of `bool`
 //│ ║  l.544: 	mt1._2 <- 1
 //│ ║         	          ^
 //│ ╟── Note: constraint arises from type reference:
@@ -587,7 +587,7 @@ b1.x <- 1 + 2 <- 4
 //│ ╔══[ERROR] Type mismatch in assignment:
 //│ ║  l.545: 	mt1._1 <- (b1.t <- 4)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── assignment of type `unit` is not an instance of type `int`
+//│ ╟── assignment of type `unit` is not an instance of `int`
 //│ ║  l.545: 	mt1._1 <- (b1.t <- 4)
 //│ ║         	           ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -839,10 +839,7 @@ foo { mut a = 1 } 2 3
 //│ ╟── integer literal of type `3` is not a function
 //│ ║  l.835: 	foo { mut a = 1 } 2 3
 //│ ║         	                    ^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.826: 	def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
-//│ ║         	                                                   ^^^^^
-//│ ╟── from reference:
+//│ ╟── Note: constraint arises from reference:
 //│ ║  l.826: 	def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
 //│ ╙──       	                                                   ^
 //│ res: (unit, int, 0 | 1 | 2, unit, nothing,) | error
@@ -853,13 +850,13 @@ foo { mut a = 1 } 2 3
 foo { mut a = "oops" } 2
 foo { a = 1 } 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.853: 	foo { mut a = "oops" } 2
+//│ ║  l.850: 	foo { mut a = "oops" } 2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"oops"` is not an instance of type `int`
-//│ ║  l.853: 	foo { mut a = "oops" } 2
+//│ ║  l.850: 	foo { mut a = "oops" } 2
 //│ ║         	              ^^^^^^
 //│ ╟── but it flows into mutable record field with expected type `int`
-//│ ║  l.853: 	foo { mut a = "oops" } 2
+//│ ║  l.850: 	foo { mut a = "oops" } 2
 //│ ║         	          ^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.826: 	def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
@@ -867,10 +864,10 @@ foo { a = 1 } 2
 //│ res: (("oops" | 0 | 2) -> 'a) -> (unit, int, "oops" | 0 | 2, unit, 'a,) | error
 //│    = [Function (anonymous)]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.854: 	foo { a = 1 } 2
+//│ ║  l.851: 	foo { a = 1 } 2
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── record field of type `1` is not mutable
-//│ ║  l.854: 	foo { a = 1 } 2
+//│ ║  l.851: 	foo { a = 1 } 2
 //│ ╙──       	      ^^^^^
 //│ res: (1 -> 'a) -> (unit, int, 1, unit, 'a,) | error
 //│    = [Function (anonymous)]

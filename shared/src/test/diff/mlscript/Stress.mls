@@ -62,7 +62,7 @@ foo arg
 //│ foo: ((A[?] with {fA: 'fA}) | (B[?] with {fB: 'fA})) -> 'fA
 //│ arg: A[int] | B[int]
 //│ res: int
-//│ constrain calls  : 37
+//│ constrain calls  : 34
 //│ annoying  calls  : 20
 //│ subtyping calls  : 85
 
@@ -80,7 +80,7 @@ foo arg
 //│ foo: ((A[?] with {fA: 'fA}) | (B[?] with {fB: 'fA}) | (C[?] with {fC: 'fA})) -> 'fA
 //│ arg: A[int] | B[int] | C[int]
 //│ res: int
-//│ constrain calls  : 50
+//│ constrain calls  : 46
 //│ annoying  calls  : 30
 //│ subtyping calls  : 188
 
@@ -99,21 +99,21 @@ foo arg
 //│ foo: ((A[?] with {fA: 'fA}) | (B[?] with {fB: 'fA}) | (C[?] with {fC: 'fA}) | (D[?] with {fD: 'fA})) -> 'fA
 //│ arg: A[int] | B[int] | C[int] | D[int]
 //│ res: int
-//│ constrain calls  : 63
+//│ constrain calls  : 58
 //│ annoying  calls  : 40
 //│ subtyping calls  : 350
 
 :stats
 foo (arg with { x = 1} with { y = 2 })
 //│ res: int
-//│ constrain calls  : 38
+//│ constrain calls  : 33
 //│ annoying  calls  : 37
 //│ subtyping calls  : 234
 
 :stats
 foo (arg with { x = 1; y = 2; z = 3 })
 //│ res: int
-//│ constrain calls  : 38
+//│ constrain calls  : 33
 //│ annoying  calls  : 37
 //│ subtyping calls  : 198
 
@@ -133,7 +133,7 @@ foo arg
 //│ foo: ((A[?] with {fA: 'fA}) | (B[?] with {fB: 'fA}) | (C[?] with {fC: 'fA}) | (D[?] with {fD: 'fA}) | (E[?] with {fE: 'fA})) -> 'fA
 //│ arg: A[int] | B[int] | C[int] | D[int] | E[int]
 //│ res: int
-//│ constrain calls  : 76
+//│ constrain calls  : 70
 //│ annoying  calls  : 50
 //│ subtyping calls  : 585
 
@@ -154,7 +154,7 @@ foo arg
 //│ foo: ((A[?] with {fA: 'fA}) | (B[?] with {fB: 'fA}) | (C[?] with {fC: 'fA}) | (D[?] with {fD: 'fA}) | (E[?] with {fE: 'fA}) | (F[?] with {fF: 'fA})) -> 'fA
 //│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int]
 //│ res: int
-//│ constrain calls  : 89
+//│ constrain calls  : 82
 //│ annoying  calls  : 60
 //│ subtyping calls  : 907
 
@@ -176,7 +176,7 @@ foo arg
 //│ foo: ((A[?] with {fA: 'fA}) | (B[?] with {fB: 'fA}) | (C[?] with {fC: 'fA}) | (D[?] with {fD: 'fA}) | (E[?] with {fE: 'fA}) | (F[?] with {fF: 'fA}) | (G[?] with {fG: 'fA})) -> 'fA
 //│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
 //│ res: int
-//│ constrain calls  : 102
+//│ constrain calls  : 94
 //│ annoying  calls  : 70
 //│ subtyping calls  : 1330
 
@@ -199,7 +199,7 @@ foo arg
 //│ foo: ((A[?] with {fA: 'fA}) | (B[?] with {fB: 'fA}) | (C[?] with {fC: 'fA}) | (D[?] with {fD: 'fA}) | (E[?] with {fE: 'fA}) | (F[?] with {fF: 'fA}) | (G[?] with {fG: 'fA}) | (H[?] with {fH: 'fA})) -> 'fA
 //│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int] | H[int]
 //│ res: int
-//│ constrain calls  : 115
+//│ constrain calls  : 106
 //│ annoying  calls  : 80
 //│ subtyping calls  : 1868
 

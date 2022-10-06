@@ -85,7 +85,12 @@ def r4 = let tmp = selectBoolOrInt 1 in case tmp of { int -> addOne tmp | _ -> 0
 //│ ╔══[ERROR] Type mismatch in `case` expression:
 //│ ║  l.84: 	def r4 = let tmp = selectBoolOrInt 1 in case tmp of { int -> addOne tmp | _ -> 0 }
 //│ ║        	                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `1` is not an instance of type `bool`
+//│ ╟── integer literal of type `1` is not an instance of type `bool`
+//│ ║  l.15: 	def selectBoolOrInt = fun x -> if isInt x then 1 else true
+//│ ║        	                                               ^
+//│ ╟── but it flows into reference with expected type `bool`
+//│ ║  l.84: 	def r4 = let tmp = selectBoolOrInt 1 in case tmp of { int -> addOne tmp | _ -> 0 }
+//│ ║        	                                             ^^^
 //│ ╟── Note: constraint arises from argument:
 //│ ║  l.3: 	def bb = (fun a -> fun b -> toBool (if b then not a else not a)) true
 //│ ║       	                                       ^
@@ -141,16 +146,16 @@ def addOne = fun x -> if isInt x then addOneI x else addOneS x
 :e
 addOne "hello"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.142: 	addOne "hello"
+//│ ║  l.147: 	addOne "hello"
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"hello"` is not an instance of type `int`
-//│ ║  l.142: 	addOne "hello"
+//│ ║  l.147: 	addOne "hello"
 //│ ║         	       ^^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.18: 	def addOneI = fun x -> add x 1
 //│ ║        	                           ^
 //│ ╟── from reference:
-//│ ║  l.137: 	def addOne = fun x -> if isInt x then addOneI x else addOneS x
+//│ ║  l.142: 	def addOne = fun x -> if isInt x then addOneI x else addOneS x
 //│ ╙──       	                                              ^
 //│ res: error | int | string
 //│    = 'helloOne'
@@ -175,24 +180,24 @@ addOne "Two"
 (addOne 1) + 1
 concat "Three" (addOne "Two")
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.175: 	(addOne 1) + 1
+//│ ║  l.180: 	(addOne 1) + 1
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── application of type `string` is not an instance of type `int`
-//│ ║  l.112: 	def addOneS = fun x -> concat x "One"
+//│ ║  l.117: 	def addOneS = fun x -> concat x "One"
 //│ ║         	                       ^^^^^^^^^^^^^^
 //│ ╟── but it flows into application with expected type `int`
-//│ ║  l.175: 	(addOne 1) + 1
+//│ ║  l.180: 	(addOne 1) + 1
 //│ ╙──       	 ^^^^^^^^
 //│ res: error | int
 //│    = 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.176: 	concat "Three" (addOne "Two")
+//│ ║  l.181: 	concat "Three" (addOne "Two")
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `int` is not an instance of type `string`
 //│ ║  l.18: 	def addOneI = fun x -> add x 1
 //│ ║        	                       ^^^^^^^
 //│ ╟── but it flows into application with expected type `string`
-//│ ║  l.176: 	concat "Three" (addOne "Two")
+//│ ║  l.181: 	concat "Three" (addOne "Two")
 //│ ╙──       	                ^^^^^^^^^^^^
 //│ res: error | string
 //│    = 'ThreeTwoOne'

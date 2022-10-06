@@ -989,10 +989,7 @@ add
 //│ ╟── integer literal of type `0` does not have field 'u'
 //│ ║  l.+1: 	((x => x.u) 0)
 //│ ║        	            ^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.+1: 	((x => x.u) 0)
-//│ ║        	        ^^
-//│ ╟── from reference:
+//│ ╟── Note: constraint arises from receiver:
 //│ ║  l.+1: 	((x => x.u) 0)
 //│ ╙──      	       ^
 //│ res: error
@@ -1004,10 +1001,7 @@ add
 //│ ╟── reference of type `int -> int -> int` does not have field 'u'
 //│ ║  l.+1: 	((x => x.u) add)
 //│ ║        	            ^^^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.+1: 	((x => x.u) add)
-//│ ║        	        ^^
-//│ ╟── from reference:
+//│ ╟── Note: constraint arises from receiver:
 //│ ║  l.+1: 	((x => x.u) add)
 //│ ╙──      	       ^
 //│ res: error
@@ -1040,10 +1034,7 @@ add
 //│ ╟── but it flows into field selection with expected type `{u: ?u}`
 //│ ║  l.+1: 	((x => x.u) {u: 0}.u)
 //│ ║        	                  ^^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.+1: 	((x => x.u) {u: 0}.u)
-//│ ║        	        ^^
-//│ ╟── from reference:
+//│ ╟── Note: constraint arises from receiver:
 //│ ║  l.+1: 	((x => x.u) {u: 0}.u)
 //│ ╙──      	       ^
 //│ res: error
@@ -1058,10 +1049,7 @@ add
 //│ ╟── but it flows into field selection with expected type `{u: ?u}`
 //│ ║  l.+1: 	((x => x.u) {u: add}.u)
 //│ ║        	                    ^^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.+1: 	((x => x.u) {u: add}.u)
-//│ ║        	        ^^
-//│ ╟── from reference:
+//│ ╟── Note: constraint arises from receiver:
 //│ ║  l.+1: 	((x => x.u) {u: add}.u)
 //│ ╙──      	       ^
 //│ res: error

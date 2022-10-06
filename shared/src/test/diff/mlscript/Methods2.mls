@@ -73,7 +73,7 @@ l.Size
 l.Map (fun x -> mul x 2)
 //│ res: List[int]
 //│    = Cons { head: 0, tail: Cons { head: 2, tail: Nil {} } }
-//│ constrain calls  : 76
+//│ constrain calls  : 91
 //│ annoying  calls  : 6
 //│ subtyping calls  : 12
 
@@ -87,9 +87,9 @@ Cons.HeadOption l0
 //│ res: Some[0]
 //│ Runtime error:
 //│   TypeError: (intermediate value).HeadOption is not a function
-//│ constrain calls  : 39
+//│ constrain calls  : 43
 //│ annoying  calls  : 27
-//│ subtyping calls  : 70
+//│ subtyping calls  : 81
 
 
 l1 = Cons { head = 0; tail = Nil {} }
@@ -102,9 +102,9 @@ Cons.HeadOption l1
 //│ res: Some[0]
 //│ Runtime error:
 //│   TypeError: (intermediate value).HeadOption is not a function
-//│ constrain calls  : 39
+//│ constrain calls  : 43
 //│ annoying  calls  : 27
-//│ subtyping calls  : 70
+//│ subtyping calls  : 81
 
 :re
 :stats
@@ -112,17 +112,17 @@ Cons.HeadOption l
 //│ res: Some[0 | 1]
 //│ Runtime error:
 //│   TypeError: (intermediate value).HeadOption is not a function
-//│ constrain calls  : 48
+//│ constrain calls  : 56
 //│ annoying  calls  : 27
-//│ subtyping calls  : 95
+//│ subtyping calls  : 118
 
 :stats
 o = l.(Cons.HeadOption)
 //│ o: Some[0 | 1]
 //│  = undefined
-//│ constrain calls  : 46
+//│ constrain calls  : 55
 //│ annoying  calls  : 27
-//│ subtyping calls  : 95
+//│ subtyping calls  : 118
 
 o = l.(Cons.HeadOption)
 //│ o: Some[0 | 1]

@@ -79,12 +79,15 @@ evalN2 evalN2 e
 //│ ╟── application of type `Neg & {underlying: ?underlying}` does not match type `Add & ?a | Lit & ?b`
 //│ ║  l.47: 	e = Add{lhs = Lit{val = 1}; rhs = Neg{underlying = Lit{val = 2}}}
 //│ ║        	                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `Add & ?c | Lit & ?d`
+//│ ║  l.+1: 	evalN2 evalN2 e
+//│ ║        	              ^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.18: 	def eval eval x = case x of {
 //│ ║        	                       ^
-//│ ╟── from field selection:
-//│ ║  l.20: 	  | Add -> eval eval x.lhs + eval eval x.rhs
-//│ ╙──      	                                       ^^^^^
+//│ ╟── from reference:
+//│ ║  l.67: 	def evalN2 evalN2 x = case x of {
+//│ ╙──      	                           ^
 //│ res: error | int
 
 
@@ -120,16 +123,16 @@ evalN3 evalN3 e
 //│ ║  l.+1: 	evalN3 evalN3 e
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` is not an instance of type `int`
-//│ ║  l.112: 	def evalN3 evalN3 x = case x of {
+//│ ║  l.115: 	def evalN3 evalN3 x = case x of {
 //│ ║         	                  ^^^^^^^^^^^^^^^
-//│ ║  l.113: 	  Neg -> 0 - (evalN3 x.underlying)
+//│ ║  l.116: 	  Neg -> 0 - (evalN3 x.underlying)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.114: 	  | _ -> eval evalN3 x
+//│ ║  l.117: 	  | _ -> eval evalN3 x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.115: 	  }
+//│ ║  l.118: 	  }
 //│ ║         	^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.113: 	  Neg -> 0 - (evalN3 x.underlying)
+//│ ║  l.116: 	  Neg -> 0 - (evalN3 x.underlying)
 //│ ╙──       	              ^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	evalN3 evalN3 e
@@ -137,12 +140,15 @@ evalN3 evalN3 e
 //│ ╟── application of type `Lit & {val: ?val}` is not a function
 //│ ║  l.47: 	e = Add{lhs = Lit{val = 1}; rhs = Neg{underlying = Lit{val = 2}}}
 //│ ║        	                                                   ^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from application:
+//│ ╟── but it flows into reference with expected type `?a -> ?b`
+//│ ║  l.+1: 	evalN3 evalN3 e
+//│ ║        	              ^
+//│ ╟── Note: constraint arises from reference:
 //│ ║  l.20: 	  | Add -> eval eval x.lhs + eval eval x.rhs
-//│ ║        	                             ^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.113: 	  Neg -> 0 - (evalN3 x.underlying)
-//│ ╙──       	                     ^^^^^^^^^^^^
+//│ ║        	                             ^^^^
+//│ ╟── from reference:
+//│ ║  l.115: 	def evalN3 evalN3 x = case x of {
+//│ ╙──       	                           ^
 //│ res: error | int
 
 

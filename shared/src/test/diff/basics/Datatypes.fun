@@ -178,9 +178,9 @@ not (Cons 42 Nil).head
 //│ ╟── integer literal of type `42` is not an instance of type `bool`
 //│ ║  l.174: 	not (Cons 42 Nil).head
 //│ ║         	          ^^
-//│ ╟── but it flows into field selection with expected type `bool`
+//│ ╟── but it flows into application with expected type `bool`
 //│ ║  l.174: 	not (Cons 42 Nil).head
-//│ ╙──       	                 ^^^^^
+//│ ╙──       	     ^^^^^^^^^^^
 //│ res: bool | error
 
 :e

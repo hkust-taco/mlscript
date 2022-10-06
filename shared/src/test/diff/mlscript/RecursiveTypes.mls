@@ -469,9 +469,15 @@ f 1
 //│ ╟── operator application of type `int` does not have field 'a'
 //│ ║  l.434: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
-//│ ╟── Note: constraint arises from field selection:
+//│ ╟── but it flows into integer literal with expected type `{a: ?a}`
+//│ ║  l.465: 	f 1
+//│ ║         	  ^
+//│ ╟── Note: constraint arises from receiver:
 //│ ║  l.434: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
-//│ ╙──       	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── from `with` extension:
+//│ ║  l.434: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ╙──       	                                ^^^^^^^^^^^^^^^^^^^^
 //│ res: error | int | 'a\a & {a: int}
 //│   where
 //│     'a :> 1 | 'a\a & {a: int}
@@ -479,14 +485,20 @@ f 1
 :e
 f { a = 1 }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.480: 	f { a = 1 }
+//│ ║  l.486: 	f { a = 1 }
 //│ ║         	^^^^^^^^^^^
 //│ ╟── operator application of type `int` does not have field 'a'
 //│ ║  l.434: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
-//│ ╟── Note: constraint arises from field selection:
+//│ ╟── but it flows into record literal with expected type `{a: ?a}`
+//│ ║  l.486: 	f { a = 1 }
+//│ ║         	  ^^^^^^^^^
+//│ ╟── Note: constraint arises from receiver:
 //│ ║  l.434: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
-//│ ╙──       	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── from `with` extension:
+//│ ║  l.434: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ╙──       	                                ^^^^^^^^^^^^^^^^^^^^
 //│ res: error
 
 f error
@@ -502,14 +514,20 @@ f ainf
 //│   where
 //│     'ainf :> {a: 'ainf}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.500: 	f ainf
+//│ ║  l.512: 	f ainf
 //│ ║         	^^^^^^
 //│ ╟── operator application of type `int` does not have field 'a'
 //│ ║  l.434: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
-//│ ╟── Note: constraint arises from field selection:
+//│ ╟── but it flows into reference with expected type `{a: ?a}`
+//│ ║  l.512: 	f ainf
+//│ ║         	  ^^^^
+//│ ╟── Note: constraint arises from receiver:
 //│ ║  l.434: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
-//│ ╙──       	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── from `with` extension:
+//│ ║  l.434: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ╙──       	                                ^^^^^^^^^^^^^^^^^^^^
 //│ res: error
 
 :e
@@ -519,14 +537,20 @@ f infina
 //│   where
 //│     'infina :> 0 & {a: 'infina}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.517: 	f infina
+//│ ║  l.535: 	f infina
 //│ ║         	^^^^^^^^
 //│ ╟── operator application of type `int` does not have field 'a'
 //│ ║  l.434: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
-//│ ╟── Note: constraint arises from field selection:
+//│ ╟── but it flows into reference with expected type `{a: ?a}`
+//│ ║  l.535: 	f infina
+//│ ║         	  ^^^^^^
+//│ ╟── Note: constraint arises from receiver:
 //│ ║  l.434: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
-//│ ╙──       	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── from `with` extension:
+//│ ║  l.434: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ╙──       	                                ^^^^^^^^^^^^^^^^^^^^
 //│ res: error | 'infina | int | 'a\a & {a: int}
 //│   where
 //│     'a :> 'infina | 'a\a & {a: int}
@@ -542,16 +566,16 @@ def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as
 :e
 f_manual 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.543: 	f_manual 1
+//│ ║  l.567: 	f_manual 1
 //│ ║         	^^^^^^^^^^
 //│ ╟── integer literal of type `1` does not have field 'a'
-//│ ║  l.543: 	f_manual 1
+//│ ║  l.567: 	f_manual 1
 //│ ║         	         ^
 //│ ╟── Note: constraint arises from record type:
-//│ ║  l.536: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
+//│ ║  l.560: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
 //│ ║         	                ^^^^^^^^^^^^^^^^^
 //│ ╟── from intersection type:
-//│ ║  l.536: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
+//│ ║  l.560: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
 //│ ╙──       	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: 'e | error
 //│   where
@@ -560,16 +584,16 @@ f_manual 1
 :e
 f_manual { a = 1 }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.561: 	f_manual { a = 1 }
+//│ ║  l.585: 	f_manual { a = 1 }
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` does not have field 'a'
-//│ ║  l.561: 	f_manual { a = 1 }
+//│ ║  l.585: 	f_manual { a = 1 }
 //│ ║         	               ^
 //│ ╟── Note: constraint arises from record type:
-//│ ║  l.536: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
+//│ ║  l.560: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
 //│ ║         	                ^^^^^^^^^^^^^^^^^
 //│ ╟── from intersection type:
-//│ ║  l.536: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
+//│ ║  l.560: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
 //│ ╙──       	                    ^^^^^^^^^^^^
 //│ res: 'e | 1 | error
 //│   where
@@ -601,16 +625,16 @@ def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & ((
 :e
 f_manual_ns ainf
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.602: 	f_manual_ns ainf
+//│ ║  l.626: 	f_manual_ns ainf
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── type `int` does not have field 'a'
-//│ ║  l.593: 	def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
+//│ ║  l.617: 	def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
 //│ ║         	                                                              ^^^
 //│ ╟── Note: constraint arises from record type:
-//│ ║  l.593: 	def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
+//│ ║  l.617: 	def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
 //│ ║         	                              ^^^^^^^^^^^^
 //│ ╟── from intersection type:
-//│ ║  l.593: 	def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
+//│ ║  l.617: 	def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
 //│ ╙──       	                                  ^^^^^^^
 //│ res: error
 
@@ -651,13 +675,13 @@ r + 1
 :e
 r.a
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.652: 	r.a
+//│ ║  l.676: 	r.a
 //│ ║         	^^^
 //│ ╟── integer literal of type `1` does not have field 'a'
-//│ ║  l.643: 	r = f 1
+//│ ║  l.667: 	r = f 1
 //│ ║         	      ^
 //│ ╟── but it flows into reference with expected type `{a: ?a}`
-//│ ║  l.652: 	r.a
+//│ ║  l.676: 	r.a
 //│ ╙──       	^
 //│ res: error | int
 

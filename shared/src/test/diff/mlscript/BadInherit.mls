@@ -224,7 +224,7 @@ E{} + 1
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.210: 	E{}: int
 //│ ║         	^^^
-//│ ╟── application of type `E` is not an instance of type `int`
+//│ ╟── application of type `E` is not an instance of `int`
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.210: 	E{}: int
 //│ ║         	     ^^^

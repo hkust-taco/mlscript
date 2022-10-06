@@ -21,7 +21,7 @@ def eval1 eval1 e = case e of {
   }
 //│ eval1: ('a -> 'rhs -> int & 'a) -> ((Add[?] with {lhs: 'rhs, rhs: 'rhs}) | (Lit with {val: 'val})) -> (int | 'val)
 //│      = [Function: eval1]
-//│ constrain calls  : 36
+//│ constrain calls  : 31
 //│ annoying  calls  : 0
 //│ subtyping calls  : 54
 
@@ -43,7 +43,7 @@ def eval1f eval1 e = case e of {
 //│ // End of generated code
 //│ eval1f: ('rhs -> int) -> ((Add[?] with {lhs: 'rhs, rhs: 'rhs}) | (Lit with {val: 'val})) -> (int | 'val)
 //│       = [Function: eval1f]
-//│ constrain calls  : 32
+//│ constrain calls  : 29
 //│ annoying  calls  : 0
 //│ subtyping calls  : 50
 
@@ -244,9 +244,6 @@ rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
-//│ ║        	                                       ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── from application:
-//│ ║  l.+1: 	rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
 //│ ╙──      	                                       ^^^^^^^^^^^^^^^^^^^^^^^
 //│ eval1_fixed: ((Add[?] with {lhs: 'a, rhs: 'a}) | (Lit with {val: 'a -> int & 'val})) -> (int | 'val)
 
@@ -261,9 +258,9 @@ rec def eval1_fixed = eval1f eval1_fixed e1
 //│ ╟── but it flows into application with expected type `?rhs -> ?a`
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f eval1_fixed e1
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from application:
+//│ ╟── Note: constraint arises from reference:
 //│ ║  l.32: 	  | Add -> eval1 e.lhs + eval1 e.rhs
-//│ ║        	                         ^^^^^^^^^^^
+//│ ║        	                         ^^^^^
 //│ ╟── from reference:
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f eval1_fixed e1
 //│ ╙──      	                             ^^^^^^^^^^^
@@ -276,9 +273,9 @@ rec def eval1_fixed = eval1f eval1_fixed e1
 //│ ╟── but it flows into application with expected type `?lhs -> ?a`
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f eval1_fixed e1
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from application:
+//│ ╟── Note: constraint arises from reference:
 //│ ║  l.32: 	  | Add -> eval1 e.lhs + eval1 e.rhs
-//│ ║        	           ^^^^^^^^^^^
+//│ ║        	           ^^^^^
 //│ ╟── from reference:
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f eval1_fixed e1
 //│ ╙──      	                             ^^^^^^^^^^^
@@ -299,12 +296,15 @@ eval2_broken eval2_broken e2
 //│ ╟── application of type `Add[?E] & {Add#E = ?E, lhs: ?lhs, rhs: ?rhs}` is not an instance of type `int`
 //│ ║  l.8: 	def add lhs rhs = Add { lhs; rhs }
 //│ ║       	                  ^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `int`
+//│ ║  l.+1: 	eval2_broken eval2_broken e2
+//│ ║        	                          ^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.20: 	  | Add -> eval1 eval1 e.lhs + eval1 eval1 e.rhs
 //│ ║        	                               ^^^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.289: 	  | Nega -> e.arg
-//│ ╙──       	            ^^^^^
+//│ ╟── from reference:
+//│ ║  l.285: 	def eval2_broken eval2 e = case e of {
+//│ ╙──       	                                ^
 //│ res: error | int
 
 

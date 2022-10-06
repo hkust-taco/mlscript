@@ -15,7 +15,7 @@ Test1 { x = "oops" }
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.14: 	Test1 { x = "oops" }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"oops"` is not an instance of type `int`
+//│ ╟── string literal of type `"oops"` is not an instance of `int`
 //│ ║  l.14: 	Test1 { x = "oops" }
 //│ ║        	            ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -189,7 +189,7 @@ error: {x: int} -> nothing : Runaway2
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.188: 	error: {x: int} -> nothing : Runaway2
 //│ ║         	^^^^^
-//│ ╟── type `?a -> ?a` is not an instance of type `int`
+//│ ╟── type `?a -> ?a` is not an instance of `int`
 //│ ║  l.133: 	type Lol = { x: 'a -> 'a }
 //│ ║         	                ^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:

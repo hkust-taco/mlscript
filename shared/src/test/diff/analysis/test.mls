@@ -32,22 +32,31 @@ h1 f1 x1
 //│ ╟── from reference:
 //│ ║  l.14: 	h1 f x = f x
 //│ ║        	           ^
-//│ ╟── ========= Suspicious locations ranked by Ochiai: most suspect first =========
-//│ ╟── Ranking 1.0 with total and wrong count: (1,1)
+//│ ╟── ========= Additional explanations below =========
+//│ ╟── [info] flowing from type `false`
+//│ ╟── [info] flowing from reference of type `false`
 //│ ║  l.12: 	x1 = false
 //│ ║        	     ^^^^^
-//│ ╟── Ranking 0.7071067811865475 with total and wrong count: (2,1)
+//│ ╟── [info] flowing from reference of type `false`
 //│ ║  l.15: 	h1 f1 x1
 //│ ║        	      ^^
-//│ ╟── Ranking 0.7071067811865475 with total and wrong count: (2,1)
-//│ ║  l.15: 	h1 f1 x1
-//│ ║        	      ^^
-//│ ╟── Ranking 0.5773502691896258 with total and wrong count: (3,1)
+//│ ╟── [info] flowing from <nested> of type `false`
+//│ ╟── [info] flowing into variable of type `?a`
+//│ ╟── [info] flowing into reference of type `?b`
 //│ ║  l.14: 	h1 f x = f x
 //│ ║        	           ^
-//│ ╟── Ranking 0.5773502691896258 with total and wrong count: (3,1)
-//│ ║  l.14: 	h1 f x = f x
-//│ ╙──      	           ^
+//│ ╟── [info] flowing into <nested> of type `?c`
+//│ ╟── [info] flowing into variable of type `?d`
+//│ ╟── [info] flowing into reference of type `?e`
+//│ ║  l.13: 	f1 y1 = succ y1
+//│ ║        	             ^^
+//│ ╟── [info] flowing into <nested> of type `?f`
+//│ ╟── [info] flowing into variable of type `?g`
+//│ ╟── [info] flowing into reference of type `int`
+//│ ║  l.11: 	def succ x = x + 1
+//│ ║        	             ^
+//│ ╟── [info] flowing into <nested> of type `int`
+//│ ╙── [info] flowing into type `int`
 //│ res: error | int
 
 :ex
@@ -63,31 +72,47 @@ succ x3.left
 //│ x2: false
 //│ x3: Tuple & {left: false, right: 1}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.59: 	succ x3.left
+//│ ║  l.68: 	succ x3.left
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── reference of type `false` is not an instance of type `int`
-//│ ║  l.56: 	x1 = false
+//│ ║  l.65: 	x1 = false
 //│ ║        	     ^^^^^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.59: 	succ x3.left
+//│ ║  l.68: 	succ x3.left
 //│ ║        	     ^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.55: 	def succ x = x + 1
+//│ ║  l.64: 	def succ x = x + 1
 //│ ║        	             ^
-//│ ╟── ========= Suspicious locations ranked by Ochiai: most suspect first =========
-//│ ╟── Ranking 0.4082482904638631 with total and wrong count: (3,1)
-//│ ║  l.55: 	def succ x = x + 1
-//│ ║        	             ^
-//│ ╟── Ranking 0.4082482904638631 with total and wrong count: (3,1)
-//│ ║  l.55: 	def succ x = x + 1
-//│ ║        	             ^
-//│ ╟── Ranking 0.4082482904638631 with total and wrong count: (3,1)
-//│ ║  l.58: 	x3 = Tuple { left = x2; right = 1 }
-//│ ║        	                    ^^
-//│ ╟── Ranking 0.4082482904638631 with total and wrong count: (3,1)
-//│ ║  l.57: 	x2 = x1
+//│ ╟── ========= Additional explanations below =========
+//│ ╟── [info] flowing from type `false`
+//│ ╟── [info] flowing from reference of type `false`
+//│ ║  l.65: 	x1 = false
+//│ ║        	     ^^^^^
+//│ ╟── [info] flowing from reference of type `false`
+//│ ║  l.66: 	x2 = x1
 //│ ║        	     ^^
-//│ ╟── Ranking 0.4082482904638631 with total and wrong count: (3,1)
-//│ ║  l.56: 	x1 = false
-//│ ╙──      	     ^^^^^
+//│ ╟── [info] flowing from reference of type `false`
+//│ ║  l.67: 	x3 = Tuple { left = x2; right = 1 }
+//│ ║        	                    ^^
+//│ ╟── [info] flowing from <nested> of type `false`
+//│ ╟── [info] flowing from <nested> of type `false`
+//│ ╟── [info] flowing from application of type `false`
+//│ ║  l.67: 	x3 = Tuple { left = x2; right = 1 }
+//│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── [info] flowing from reference of type `false`
+//│ ║  l.68: 	succ x3.left
+//│ ║        	     ^^
+//│ ╟── [info] flowing from receiver of type `false`
+//│ ║  l.68: 	succ x3.left
+//│ ║        	     ^^
+//│ ╟── [info] flowing from field selection of type `?left`
+//│ ║  l.68: 	succ x3.left
+//│ ║        	     ^^^^^^^
+//│ ╟── [info] flowing from <nested> of type `?left0`
+//│ ╟── [info] flowing into variable of type `?a`
+//│ ╟── [info] flowing into reference of type `int`
+//│ ║  l.64: 	def succ x = x + 1
+//│ ║        	             ^
+//│ ╟── [info] flowing into <nested> of type `int`
+//│ ╙── [info] flowing into type `int`
 //│ res: error | int

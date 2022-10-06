@@ -25,7 +25,7 @@ let t = x: 1, y: 2, z: 3
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.24: 	(1, true, "hey")._4
 //│ ║        	                ^^^
-//│ ╟── tuple of type `{_1: 1, _2: true, _3: "hey"}` does not have field '_4'
+//│ ╟── tuple of type `(1, true, "hey",)` does not have field '_4'
 //│ ║  l.24: 	(1, true, "hey")._4
 //│ ║        	 ^^^^^^^^^^^^^^
 //│ ╟── but it flows into receiver with expected type `{_4: ?a}`
@@ -43,10 +43,7 @@ let t = x: 1, y: 2, z: 3
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── tuple of type `(1, true, "hey",)` is not a function
 //│ ║  l.38: 	(1, true, "hey").2
-//│ ║        	 ^^^^^^^^^^^^^^
-//│ ╟── but it flows into applied expression with expected type `0.2 -> ?a`
-//│ ║  l.38: 	(1, true, "hey").2
-//│ ╙──      	^^^^^^^^^^^^^^^^
+//│ ╙──      	 ^^^^^^^^^^^^^^
 //│ res: error
 
 :w
@@ -55,7 +52,7 @@ let not-tup = (
   2
 )
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.54: 	  1
+//│ ║  l.51: 	  1
 //│ ╙──      	  ^
 //│ not-tup: 2
 
@@ -65,7 +62,7 @@ let tup = (
   2
 )
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.65: 	  2
+//│ ║  l.62: 	  2
 //│ ╙──      	  ^
 //│ tup: 2
 
@@ -75,7 +72,7 @@ let tup =
   2,
   3
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.76: 	  3
+//│ ║  l.73: 	  3
 //│ ╙──      	  ^
 //│ tup: 3
 

@@ -12,11 +12,13 @@ test1 1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.11: 	test1 1
 //│ ║        	^^^^^^^
-//│ ╟── expression of type `1 & myTrait | 1 & ~?a` does not have field 'value'
-//│ ╟── Note: constraint arises from field selection:
+//│ ╟── integer literal of type `1 & myTrait | 1 & ~?a` does not have field 'value'
+//│ ║  l.11: 	test1 1
+//│ ║        	      ^
+//│ ╟── Note: constraint arises from receiver:
 //│ ║  l.6: 	def test1 x = case x of { MyTrait -> x.value | _ -> 0 }
-//│ ║       	                                     ^^^^^^^
-//│ ╟── from refined scrutinee:
+//│ ║       	                                     ^
+//│ ╟── from reference:
 //│ ║  l.6: 	def test1 x = case x of { MyTrait -> x.value | _ -> 0 }
 //│ ╙──     	                   ^
 //│ res: 0 | error
@@ -49,24 +51,34 @@ def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
 :e
 test2 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.50: 	test2 1
+//│ ║  l.52: 	test2 1
 //│ ║        	^^^^^^^
-//│ ╟── expression of type `1 & ~myTrait` does not have field 'default'
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.45: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
-//│ ╙──      	                                                    ^^^^^^^^^
+//│ ╟── integer literal of type `1 & ~myTrait` does not have field 'default'
+//│ ║  l.52: 	test2 1
+//│ ║        	      ^
+//│ ╟── Note: constraint arises from receiver:
+//│ ║  l.47: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
+//│ ║        	                                                    ^
+//│ ╟── from reference:
+//│ ║  l.47: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
+//│ ╙──      	                   ^
 //│ res: error
 //│    = undefined
 
 :e
 test2 { value = 1 }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.62: 	test2 { value = 1 }
+//│ ║  l.69: 	test2 { value = 1 }
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `{value: 1} & ~myTrait` does not have field 'default'
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.45: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
-//│ ╙──      	                                                    ^^^^^^^^^
+//│ ╟── record literal of type `{value: 1} & ~myTrait` does not have field 'default'
+//│ ║  l.69: 	test2 { value = 1 }
+//│ ║        	      ^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from receiver:
+//│ ║  l.47: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
+//│ ║        	                                                    ^
+//│ ╟── from reference:
+//│ ║  l.47: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
+//│ ╙──      	                   ^
 //│ res: 1 | error
 //│    = undefined
 
@@ -90,14 +102,16 @@ class C2: { default: string }
 :e
 test2 (C2 { default = "oops" })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.91: 	test2 (C2 { default = "oops" })
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `C2 & {default: ?default} & myTrait | C2 & {default: ?default} & ~?a` does not have field 'value'
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.45: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
-//│ ║        	                                     ^^^^^^^
-//│ ╟── from refined scrutinee:
-//│ ║  l.45: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
+//│ ║  l.103: 	test2 (C2 { default = "oops" })
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `C2 & {default: ?default}` does not have field 'value'
+//│ ║  l.103: 	test2 (C2 { default = "oops" })
+//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from receiver:
+//│ ║  l.47: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
+//│ ║        	                                     ^
+//│ ╟── from reference:
+//│ ║  l.47: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
 //│ ╙──      	                   ^
 //│ res: "oops" | error
 //│    = 'oops'
@@ -110,14 +124,19 @@ def c2 = C2 { value = 1; default = "oops" }
 :e
 test2 c2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.111: 	test2 c2
+//│ ║  l.125: 	test2 c2
 //│ ║         	^^^^^^^^
-//│ ╟── expression of type `C2 & {default: ?default} & myTrait | C2 & {default: ?default} & ~?a` does not have field 'value'
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.45: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
-//│ ║        	                                     ^^^^^^^
-//│ ╟── from refined scrutinee:
-//│ ║  l.45: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
+//│ ╟── application of type `C2 & {default: ?default}` does not have field 'value'
+//│ ║  l.120: 	def c2 = C2 { value = 1; default = "oops" }
+//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `{value: ?value}`
+//│ ║  l.125: 	test2 c2
+//│ ║         	      ^^
+//│ ╟── Note: constraint arises from receiver:
+//│ ║  l.47: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
+//│ ║        	                                     ^
+//│ ╟── from reference:
+//│ ║  l.47: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
 //│ ╙──      	                   ^
 //│ res: "oops" | error
 //│    = 'oops'
@@ -131,13 +150,13 @@ test2 (c2 with { value = 1 })
 :e
 class C3: { default: string } & ~myTrait
 //│ ╔══[ERROR] cannot inherit from a type negation
-//│ ║  l.132: 	class C3: { default: string } & ~myTrait
+//│ ║  l.151: 	class C3: { default: string } & ~myTrait
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 class C3: { default: string } & ~MyTrait[anything]
 //│ ╔══[ERROR] cannot inherit from a type negation
-//│ ║  l.138: 	class C3: { default: string } & ~MyTrait[anything]
+//│ ║  l.157: 	class C3: { default: string } & ~MyTrait[anything]
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 def strawman: C2 & ~MyTrait[anything]
@@ -157,16 +176,16 @@ strawman: C2
 :e
 strawman: ~{ value: anything }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.158: 	strawman: ~{ value: anything }
+//│ ║  l.177: 	strawman: ~{ value: anything }
 //│ ║         	^^^^^^^^
 //│ ╟── type `C2 & ~MyTrait[?]` does not match type `~{value: anything}`
-//│ ║  l.143: 	def strawman: C2 & ~MyTrait[anything]
+//│ ║  l.162: 	def strawman: C2 & ~MyTrait[anything]
 //│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `~{value: anything}`
-//│ ║  l.158: 	strawman: ~{ value: anything }
+//│ ║  l.177: 	strawman: ~{ value: anything }
 //│ ║         	^^^^^^^^
 //│ ╟── Note: constraint arises from type negation:
-//│ ║  l.158: 	strawman: ~{ value: anything }
+//│ ║  l.177: 	strawman: ~{ value: anything }
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^
 //│ res: nothing
 //│    = <no result>

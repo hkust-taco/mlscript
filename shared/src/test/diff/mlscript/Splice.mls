@@ -28,9 +28,9 @@ def f1 : ('a, ...Array[int]) -> 'a
 //│ | vars=Map() newDefsInfo=Map()
 //│ | CONSTRAIN Array[Int] <! Array‹α26'›
 //│ |   where 
-//│ | C Array[Int] <! Array‹α26'›    (0)
-//│ | | C Array‹Int› <! Array‹α26'›    (1)
-//│ | | | C Int <! α26'    (2)
+//│ | C Array[Int] <! Array‹α26'›    (0) where TypeRef <: ArrayType}
+//│ | | C Array‹Int› <! Array‹α26'›    (1) where ArrayType <: ArrayType}
+//│ | | | C Int <! α26'    (2) where TypeRef <: TypeVariable}
 //│ => (SpliceType(List(Right('a25'), Left(Array[Int]))) -> 'a25') | 'a25'
 //│ ⬤ Typed as: (SpliceType(List(Right('a25'), Left(Array[Int]))) -> 'a25')
 //│  where: 

@@ -58,7 +58,7 @@ ty3A = ty3A
 //│ 'a
 //│   where
 //│     'a := MyArray['a]
-//│ constrain calls  : 50
+//│ constrain calls  : 51
 //│ annoying  calls  : 44
 //│ subtyping calls  : 88
 
@@ -76,7 +76,7 @@ ty3B = ty3A
 //│ 'a
 //│   where
 //│     'a := MyArray[MyArray['a]]
-//│ constrain calls  : 116
+//│ constrain calls  : 121
 //│ annoying  calls  : 86
 //│ subtyping calls  : 165
 
@@ -89,7 +89,7 @@ ty3A = ty3B
 //│ 'a
 //│   where
 //│     'a := MyArray['a]
-//│ constrain calls  : 116
+//│ constrain calls  : 117
 //│ annoying  calls  : 86
 //│ subtyping calls  : 153
 
@@ -107,7 +107,7 @@ ty4B = ty4B
 //│ 'a
 //│   where
 //│     'a := MyArray[MyArray[MyArray['a]]]
-//│ constrain calls  : 60
+//│ constrain calls  : 61
 //│ annoying  calls  : 48
 //│ subtyping calls  : 85
 
@@ -194,7 +194,7 @@ ty2A = ty2B
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.+1: 	ty2A = ty2B
 //│ ║        	^^^^^^^^^^^
-//│ ╟── type `'a` does not have field 'MyArray#A'
+//│ ╟── type `'a` does not match type `MyArray[?a]`
 //│ ║  l.23: 	def ty2A: MyArray['a]
 //│ ║        	                  ^^
 //│ ╟── Note: constraint arises from applied type reference:
@@ -202,6 +202,6 @@ ty2A = ty2B
 //│ ╙──      	                  ^^^^^^^^^^^
 //│ constrain calls  : 12
 //│ annoying  calls  : 4
-//│ subtyping calls  : 39
+//│ subtyping calls  : 73
 
 

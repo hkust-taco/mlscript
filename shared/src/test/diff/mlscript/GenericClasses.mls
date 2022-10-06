@@ -96,9 +96,12 @@ g: Foo1['a]: Foo1[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.95: 	g: Foo1['a]: Foo1[string]
 //│ ║        	^
-//│ ╟── type `int` is not an instance of type `string`
+//│ ╟── type `int` is not an instance of `string`
 //│ ║  l.66: 	class Bar1: Foo1[int]
 //│ ║        	                 ^^^
+//│ ╟── but it flows into reference with expected type `string`
+//│ ║  l.95: 	g: Foo1['a]: Foo1[string]
+//│ ║        	^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.95: 	g: Foo1['a]: Foo1[string]
 //│ ╙──      	                  ^^^^^^
@@ -170,26 +173,35 @@ mrg = Foo2{}
 //│   <:  mrg:
 //│ Foo2[in int | string out nothing]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.168: 	mrg = Foo2{}
+//│ ║  l.171: 	mrg = Foo2{}
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type `string` is not an instance of type `int`
-//│ ║  l.158: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║  l.161: 	def mrg: Foo2[int] & Foo2[string]
 //│ ║         	                          ^^^^^^
+//│ ╟── but it flows into application with expected type `int`
+//│ ║  l.171: 	mrg = Foo2{}
+//│ ║         	      ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.158: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║  l.161: 	def mrg: Foo2[int] & Foo2[string]
 //│ ║         	              ^^^
-//│ ╟── Note: class type parameter A is defined at:
-//│ ║  l.110: 	class Foo2[A]
-//│ ╙──       	           ^
+//│ ╟── from intersection type:
+//│ ║  l.161: 	def mrg: Foo2[int] & Foo2[string]
+//│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.168: 	mrg = Foo2{}
+//│ ║  l.171: 	mrg = Foo2{}
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type `int` is not an instance of type `string`
-//│ ║  l.158: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║  l.161: 	def mrg: Foo2[int] & Foo2[string]
 //│ ║         	              ^^^
+//│ ╟── but it flows into application with expected type `string`
+//│ ║  l.171: 	mrg = Foo2{}
+//│ ║         	      ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.158: 	def mrg: Foo2[int] & Foo2[string]
-//│ ╙──       	                          ^^^^^^
+//│ ║  l.161: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║         	                          ^^^^^^
+//│ ╟── from intersection type:
+//│ ║  l.161: 	def mrg: Foo2[int] & Foo2[string]
+//│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^
 //│    = Foo2 {}
 
 def mrg: Foo2[int] | Foo2[string]
@@ -271,10 +283,10 @@ def mrg: Foo2_Co[int] | Foo2_Co[string]
 class Foo2_Bi[A]
 //│ Defined class Foo2_Bi[±A]
 //│ ╔══[WARNING] Type definition Foo2_Bi has bivariant type parameters:
-//│ ║  l.271: 	class Foo2_Bi[A]
+//│ ║  l.283: 	class Foo2_Bi[A]
 //│ ║         	      ^^^^^^^
 //│ ╟── A is irrelevant and may be removed
-//│ ║  l.271: 	class Foo2_Bi[A]
+//│ ║  l.283: 	class Foo2_Bi[A]
 //│ ╙──       	              ^
 
 Foo2_Bi

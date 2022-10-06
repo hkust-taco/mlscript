@@ -235,9 +235,9 @@ baz(0)
 //│ ╟── but it flows into argument with expected type `{_2: ?a}`
 //│ ║  l.228: 	baz(0)
 //│ ║         	   ^^^
-//│ ╟── Note: constraint arises from field selection:
+//│ ╟── Note: constraint arises from receiver:
 //│ ║  l.224: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
-//│ ║         	                                                     ^^^
+//│ ║         	                                                    ^
 //│ ╟── from binding:
 //│ ║  l.224: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	        ^^^^^^^^^^^^^
@@ -275,9 +275,9 @@ baz(0, 1)
 //│ ╟── but it flows into argument with expected type `{_2: ?a}`
 //│ ║  l.267: 	baz(0)
 //│ ║         	   ^^^
-//│ ╟── Note: constraint arises from field selection:
+//│ ╟── Note: constraint arises from receiver:
 //│ ║  l.263: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
-//│ ║         	                                                          ^^^
+//│ ║         	                                                         ^
 //│ ╟── from binding:
 //│ ║  l.263: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	        ^^^^^^^^^^^^^^^^^^

@@ -98,10 +98,7 @@ x => succ (not x)
 //│ ╟── reference of type `false` is not a function
 //│ ║  l.+1: 	(f => x => not (f x.u)) false
 //│ ║        	                        ^^^^^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.+1: 	(f => x => not (f x.u)) false
-//│ ║        	                ^^^^^
-//│ ╟── from reference:
+//│ ╟── Note: constraint arises from reference:
 //│ ║  l.+1: 	(f => x => not (f x.u)) false
 //│ ╙──      	                ^
 //│ res: {u: anything} -> bool | error
@@ -279,10 +276,7 @@ let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ ╟── integer literal of type `0` is not a function
 //│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ ║        	                                           ^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
-//│ ║        	                                    ^^^
-//│ ╟── from reference:
+//│ ╟── Note: constraint arises from reference:
 //│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ ╙──      	                                    ^
 //│ x: 0
