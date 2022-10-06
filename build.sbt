@@ -23,6 +23,7 @@ lazy val mlscript = crossProject(JSPlatform, JVMPlatform).in(file("."))
       "-unchecked",
       "-language:higherKinds",
       "-Ywarn-value-discard",
+      "-Ypatmat-exhaust-depth:160",
     ),
     scalacOptions ++= {
       if (insideCI.value) Seq("-Wconf:any:error")
@@ -33,7 +34,7 @@ lazy val mlscript = crossProject(JSPlatform, JVMPlatform).in(file("."))
       Var, MutableDataStructures, NonUnitStatements,
       DefaultArguments, ImplicitParameter, ImplicitConversion,
       StringPlusAny, Any,
-      JavaSerializable, Serializable, Product,
+      JavaSerializable, Serializable, Product, ToString,
       LeakingSealed, Overloading,
       Option2Iterable, IterableOps, ListAppend
     ),

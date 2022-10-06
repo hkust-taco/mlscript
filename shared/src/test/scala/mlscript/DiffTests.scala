@@ -429,7 +429,8 @@ class DiffTests
             def getType(ty: typer.TypeScheme): Type = {
               // val wty = ty.instantiate(0)
               // val wty = ty.uninstantiatedBody
-              val wty = ty.asInstanceOf[typer.ST]
+              // val wty = ty.asInstanceOf[typer.ST]
+              val wty = ty
               if (mode.isDebugging) output(s"⬤ Typed as: $wty")
               if (mode.isDebugging) output(s" where: ${wty.showBounds}")
               typer.dbg = mode.dbgSimplif

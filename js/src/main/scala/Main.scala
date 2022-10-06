@@ -204,7 +204,8 @@ object Main {
     
     def getType(ty: typer.TypeScheme): Type = {
       // val wty = ty.uninstantiatedBody
-      val wty = ty.asInstanceOf[ST]
+      // val wty = ty.asInstanceOf[ST]
+      val wty = ty
       object SimplifyPipeline extends typer.SimplifyPipeline {
         def debugOutput(msg: => Str): Unit = println(msg)
       }

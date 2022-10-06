@@ -227,7 +227,7 @@ abstract class TyperHelpers { Typer: Typer =>
   
   def mapPol(bt: BaseType, pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType): BaseType = bt match {
     case FunctionType(lhs, rhs) => FunctionType(f(pol.map(!_), lhs), f(pol, rhs))(bt.prov)
-    case ov @ Overload(alts) => ov.mapAlts(pol)(f)
+    case ov @ Overload(alts) => ov.mapAltsPol(pol)(f)
     case TupleType(fields) => TupleType(fields.mapValues(_.update(f(pol.map(!_), _), f(pol, _))))(bt.prov)
     case ArrayType(inner) => ArrayType(inner.update(f(pol.map(!_), _), f(pol, _)))(bt.prov)
     case sp @SpliceType(elems) => sp.updateElems(f(pol, _), f(pol.map(!_), _), f(pol, _))
@@ -304,7 +304,7 @@ abstract class TyperHelpers { Typer: Typer =>
     def map(f: SimpleType => SimpleType): SimpleType = this match {
       case TypeBounds(lb, ub) => TypeBounds(f(lb), f(ub))(prov)
       case FunctionType(lhs, rhs) => FunctionType(f(lhs), f(rhs))(prov)
-      case ov @ Overload(as) => ov.mapAlts(N)((_, x) => f(x))
+      case ov @ Overload(as) => ov.mapAltsPol(N)((_, x) => f(x))
       case RecordType(fields) => RecordType(fields.mapValues(_.update(f, f)))(prov)
       case TupleType(fields) => TupleType(fields.mapValues(_.update(f, f)))(prov)
       case sp @ SpliceType(fs) => sp.updateElems(f, f, f)

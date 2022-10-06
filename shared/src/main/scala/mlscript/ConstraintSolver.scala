@@ -73,7 +73,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     
     def consumeFuel()(implicit cctx: ConCtx, ctx: Ctx) = {
       def msgHead = msg"Subtyping constraint of the form `${lhs.expPos} <: ${rhs.expNeg}`"
-      if (stack.size > depthLimit) {
+      if (stack.sizeIs > depthLimit) {
         err(
           msg"$msgHead exceeded recursion depth limit (${depthLimit.toString})" -> prov.loco
           :: (
@@ -270,6 +270,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           (return println(s"OK  $done_rs | $f  =:=  ${TopType}")))
         case (ls, (r @ RecordType(fs)) :: rs) => annoying(ls, done_ls, r.toInter :: rs, done_rs)
           
+        case (_, (_: PolymorphicType) :: _) | ((_: PolymorphicType) :: _, _) => ??? // TODO
+        case (_, (_: ConstrainedType) :: _) | ((_: ConstrainedType) :: _, _) => ??? // TODO
+          
         case (Nil, Nil) =>
           // println(done_ls, done_rs)
           
@@ -288,6 +291,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             
             case (_, RhsBases(pts, bf, trs)) if trs.nonEmpty =>
               annoying(Nil, done_ls, trs.valuesIterator.map(_.expand).toList, RhsBases(pts, bf, SortedMap.empty))
+            
+            case (_, RhsBases(pts, S(L(ov: Overload)), trs)) =>
+              // annoying(Nil, done_ls, ov.alts, RhsBases(pts, N, trs))
+              ov.alts.foreach(alt => annoying(Nil, done_ls, Nil, RhsBases(pts, S(L(alt)), trs)))
             
             // From this point on, trs should be empty!
             case (LhsRefined(_, _, _, trs), _) if trs.nonEmpty => die
@@ -1059,7 +1066,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           // // }
           extrude(lo, lowerLvl, true, upperLvl) -> extrude(hi, lowerLvl, false, upperLvl)
         }, extrude(bod, lowerLvl, pol, upperLvl))
-      case o @ Overload(alts) => Overload(alts.map(extrude(_, lowerLvl, pol, upperLvl).asInstanceOf[FunctionType]))(o.prov)
+      case o @ Overload(alts) =>
+        // Overload(alts.map(extrude(_, lowerLvl, pol, upperLvl).asInstanceOf[FunctionType]))(o.prov)
+        // o.mapAltsPol(S(pol))((p, t) => extrude(t, lowerLvl, p, upperLvl))
+        // o.mapAltsPol(S(pol))(extrude(_, lowerLvl, _, upperLvl))
+        o.mapAlts(extrude(_, lowerLvl, !pol, upperLvl))(extrude(_, lowerLvl, pol, upperLvl))
     }
     // }(r => s"=> $r"))
   
@@ -1261,7 +1272,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         }()
         */
         ConstrainedType(cs2, freshen(bod))
-      case o @ Overload(alts) => Overload(alts.map(freshen(_).asInstanceOf[FunctionType]))(o.prov)
+      case o @ Overload(alts) =>
+        // Overload(alts.map(freshen(_).asInstanceOf[FunctionType]))(o.prov)
+        o.mapAlts(freshen)(freshen)
     }}
     // (r => s"=> $r"))
     freshenImpl(ty, below)

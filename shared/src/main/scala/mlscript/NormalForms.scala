@@ -47,7 +47,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = underlying.levelBelow(ub) // TODO avoid forcing `underlying`!
     def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx:Ctx, raise:Raise, shadows: Shadows, freshened: MutMap[TV, ST]): LhsNf = this match {
       case LhsRefined(bo, ts, r, trs) =>
-        LhsRefined(bo.map(_.freshenAbove(lim, rigidify)), ts, r.freshenAbove(lim, rigidify), trs.view.mapValues(_.freshenAbove(lim, rigidify).asInstanceOf[TR]).to(SortedMap))
+        LhsRefined(bo.map(_.freshenAbove(lim, rigidify)), ts, r.freshenAbove(lim, rigidify), trs.view.mapValues(_.freshenAbove(lim, rigidify)).to(SortedMap))
       case LhsTop => this
     }
     def hasTag(ttg: TraitTag): Bool = this match {
@@ -57,6 +57,10 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def size: Int = this match {
       case LhsRefined(bo, ts, r, trs) => bo.size + ts.size + r.fields.size + trs.size
       case LhsTop => 0
+    }
+    def & (that: TraitTag): LhsNf = this match {
+      case LhsTop => LhsRefined(N, SortedSet.single(that), RecordType.empty, smEmp)
+      case LhsRefined(b, ts, r, trs) => LhsRefined(b, ts + that, r, trs)
     }
     def & (that: BaseTypeOrTag)(implicit etf: ExpandTupleFields): Opt[LhsNf] = (this, that) match {
       case (LhsTop, that: TupleType) => S(LhsRefined(S(that), ssEmp, if (expandTupleFields) that.toRecord else RecordType.empty, smEmp))
@@ -221,6 +225,11 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         N // TODO could do some more merging here – for the possible base types
       case _ => N
     }
+    def | (that: TraitTag): RhsNf = this match {
+      case RhsBot => RhsBases(that :: Nil, N, smEmp)
+      case rf: RhsField => RhsBases(that :: Nil, S(R(rf)), smEmp)
+      case RhsBases(ps, bf, trs) => RhsBases(that :: ps, bf, trs)
+    }
     // TODO use inheritance hierarchy to better merge these
     def | (that: BaseTypeOrTag): Opt[RhsNf] = (this, that) match {
       case (RhsBot, p: ObjectTag) => S(RhsBases(p::Nil,N,smEmp))
@@ -243,6 +252,11 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case (RhsBases(ps, S(L(bt)), trs), _) if (that === bt) => S(this)
       case (RhsBases(ps, S(L(FunctionType(l0, r0))), trs), FunctionType(l1, r1)) =>
         S(RhsBases(ps, S(L(FunctionType(l0 & l1, r0 | r1)(noProv))), trs))
+      
+      // TODO: do we really still have `(A -> B) | (C -> D) =:= (A & C) -> (B | D)`?
+      case (RhsBases(_, S(L(_: Overload)), _), _) | (_, _: Overload) =>
+        N // TODO: maybe we can still merge with functions here? (see note above)
+      
       case (RhsBases(ps, bf, trs), tt: TraitTag) =>
         S(RhsBases(if (ps.contains(tt)) ps else tt :: ps, bf, trs))
       case (f @ RhsField(_, _), p: ObjectTag) => S(RhsBases(p::Nil, S(R(f)), smEmp))
@@ -283,7 +297,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       RhsBases(tags, rest.map(_ match {
         case L(v) => L(v.freshenAboveImpl(lim, rigidify))
         case R(v) => R(v.freshenAbove(lim, rigidify))
-      }), trefs.view.mapValues(_.freshenAbove(lim, rigidify).asInstanceOf[TR]/*FIXME*/).to(SortedMap))
+      }), trefs.view.mapValues(_.freshenAbove(lim, rigidify)).to(SortedMap))
     override def toString: Str =
       s"${tags.mkString("|")}${rest.fold("")("|" + _.fold(""+_, ""+_))}${trefs.valuesIterator.map("|"+_).mkString}"
   }
@@ -303,9 +317,21 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     lazy val level: Int = levelBelow(MaxLevel)(MutSet.empty)
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level =
       (vars.iterator ++ nvars).map(_.levelBelow(ub)).++(Iterator(lnf.levelBelow(ub), rnf.levelBelow(ub))).max
-    def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx:Ctx, freshened: MutMap[TV, ST], raise:Raise, shadows: Shadows): Conjunct =
-      Conjunct(lnf.freshenAbove(lim, rigidify), vars.map(_.freshenAbove(lim, rigidify).asInstanceOf[TV]/*FIXME could also be a rigid*/),
-        rnf.freshenAbove(lim, rigidify), nvars.map(_.freshenAbove(lim, rigidify).asInstanceOf[TV]/*FIXME could also be a rigid*/))
+    // def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx:Ctx, freshened: MutMap[TV, ST], raise:Raise, shadows: Shadows, etf: ExpandTupleFields): Conjunct = {
+    def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx:Ctx, freshened: MutMap[TV, ST], raise:Raise, shadows: Shadows): Conjunct = {
+      // Conjunct(lnf.freshenAbove(lim, rigidify), vars.map(_.freshenAbove(lim, rigidify).asInstanceOf[TV]/*FIXME could also be a rigid*/),
+      //   rnf.freshenAbove(lim, rigidify), nvars.map(_.freshenAbove(lim, rigidify).asInstanceOf[TV]/*FIXME could also be a rigid*/))
+      val (vars2, tags2) = vars.toBuffer[TV].partitionMap(
+        _.freshenAbove(lim, rigidify) match { case tv: TV => L(tv); case tt: TraitTag => R(tt) })
+      val (nvars2, ntags2) = nvars.toBuffer[TV].partitionMap(
+        _.freshenAbove(lim, rigidify) match { case tv: TV => L(tv); case tt: TraitTag => R(tt) })
+      // val base = Conjunct(lnf.freshenAbove(lim, rigidify), vars2.toSortedSet,
+      //   rnf.freshenAbove(lim, rigidify), nvars2.toSortedSet)
+      // tags2.foldLeft(base)(_ & _)
+      Conjunct(
+        tags2.foldLeft(lnf.freshenAbove(lim, rigidify))(_ & _), vars2.toSortedSet,
+        ntags2.foldLeft(rnf.freshenAbove(lim, rigidify))(_ | _), nvars2.toSortedSet)
+    }
     def - (fact: Factorizable): Conjunct = fact match {
       case tv: TV => Conjunct(lnf, vars - tv, rnf, nvars)
       case NegVar(tv) => Conjunct(lnf, vars, rnf, nvars - tv)

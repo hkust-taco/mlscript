@@ -102,7 +102,7 @@ def nonsense x y = if x.a == y.b then x y else fun y -> x
 def g = fun x -> fun y -> if x == y then x y else y x
 // complex types
 //│ nonsense: ('a -> 'b & {a: number} & 'c) -> ({b: number} & 'a) -> (forall 'd. 'd -> 'c | 'b)
-//│ /!!!\ Uncaught error: scala.MatchError: PolyType(List(Right(α138)),Union(Function(Tuple(List((None,Field(None,α138)))),α137),α136)) (of class mlscript.PolyType)
+//│ /!!!\ Uncaught error: mlscript.codegen.CodeGenError: Cannot yet generate type for: PolyType(List(Right(α138)),Union(Function(Tuple(List((None,Field(None,α138)))),α137),α136))
 
 :ts
 def x: int | ~string

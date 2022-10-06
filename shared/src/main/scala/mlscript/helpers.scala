@@ -148,7 +148,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case _: Union | _: Function | _: Tuple | _: Recursive
         | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
         | _: Literal | _: TypeVar | _: AppliedType | _: TypeName 
-        | _: Constrained | _ : Splice | _: TypeTag =>
+        | _: Constrained | _ : Splice | _: TypeTag | _: PolyType =>
       Nil
   }
 
@@ -161,7 +161,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case AppliedType(TypeName(name), _) => name :: Nil
     case Inter(lhs, rhs) => lhs.collectTypeNames ++ rhs.collectTypeNames
     case _: Union | _: Function | _: Record | _: Tuple | _: Recursive
-        | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
+        | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot | _: PolyType
         | _: Literal | _: TypeVar | _: Constrained | _ : Splice | _: TypeTag =>
       Nil
   }
@@ -174,7 +174,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case Record(fields) => fields.map(field => (field._1, field._2.out))
     case Inter(ty1, ty2) => ty1.collectBodyFieldsAndTypes ++ ty2.collectBodyFieldsAndTypes
     case _: Union | _: Function | _: Tuple | _: Recursive
-        | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
+        | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot | _: PolyType
         | _: Literal | _: TypeVar | _: AppliedType | _: TypeName | _: Constrained | _ : Splice | _: TypeTag =>
       Nil
   }

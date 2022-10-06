@@ -154,8 +154,10 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
       case p: ProxyType => fieldsOf(p.underlying, paramTags)
       case Without(base, ns) => fieldsOf(base, paramTags).filter(ns contains _._1)
       case TypeBounds(lb, ub) => fieldsOf(ub, paramTags)
-      case _: ObjectTag | _: FunctionType | _: ArrayBase | _: TypeVariable | _: ConstrainedType
-        | _: NegType | _: ExtrType | _: ComposedType | _: SpliceType => Map.empty
+      case _: ObjectTag | _: FunctionType | _: ArrayBase | _: TypeVariable
+        | _: NegType | _: ExtrType | _: ComposedType | _: SpliceType
+        | _: ConstrainedType | _: PolymorphicType | _: Overload
+        => Map.empty
     }
   }
   // ()
@@ -239,6 +241,9 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
             }
           }
           case PolymorphicType(_, body) => checkCycle(body)
+          case Overload(alts) => alts.forall(checkCycle)
+          case ConstrainedType(cs, bod) =>
+            cs.forall(lu => checkCycle(lu._1) && checkCycle(lu._2)) && checkCycle(bod)
           case _: ExtrType | _: ObjectTag | _: FunctionType | _: RecordType | _: ArrayBase | _: SpliceType => true
         }
         // }()
@@ -280,7 +285,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
               case tv: TypeVariable =>
                 err(msg"cannot inherit from a type variable", prov.loco)
                 false
-              case _: FunctionType =>
+              case _: FunctionType | _: Overload =>
                 err(msg"cannot inherit from a function type", prov.loco)
                 false
               case _: NegType =>
@@ -303,6 +308,9 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
                 false
               case _: PolymorphicType =>
                 err(msg"cannot inherit from a polymorphic type", prov.loco)
+                false
+              case _: ConstrainedType =>
+                err(msg"cannot inherit from a constrained type", prov.loco)
                 false
               case _: RecordType | _: ExtrType => true
               case p: ProxyType => checkParents(p.underlying)
@@ -719,6 +727,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
             updateVariance(lhs, curVariance.flip)
             updateVariance(rhs, curVariance)
           case Without(base, names) => updateVariance(base, curVariance.flip)
+          case Overload(alts) => alts.foreach(updateVariance(_, curVariance))
           case PolymorphicType(lvl, bod) => updateVariance(bod, curVariance)
           case ConstrainedType(cs, bod) =>
             // cs.foreach(_._2.foreach(pb =>

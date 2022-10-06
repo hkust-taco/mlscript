@@ -273,7 +273,7 @@ trait TypeSimplifier { self: Typer =>
                     S(FunctionType(go(l, pol.map(!_)), go(r, pol))(ft.prov)) -> nFields
                   case S(ot @ Overload(alts)) =>
                     // S(Overload(alts.map(go(_, pol).asInstanceOf[FunctionType]))(noProv)) -> nFields
-                    S(ot.mapAlts(pol)((p, t) => go(t, p))) -> nFields
+                    S(ot.mapAltsPol(pol)((p, t) => go(t, p))) -> nFields
                   case S(at @ ArrayType(inner)) =>
                     S(ArrayType(inner.update(go(_, pol.map(!_)), go(_, pol)))(at.prov)) -> nFields
                   case S(sp @ SpliceType(elems)) =>
@@ -692,7 +692,7 @@ trait TypeSimplifier { self: Typer =>
         case L(l) => L(transform(l, pol, semp)) 
         case R(r) => R(transformField(r))})(st.prov)
       case FunctionType(l, r) => FunctionType(transform(l, pol.map(!_), semp), transform(r, pol, semp))(st.prov)
-      case ot @ Overload(as) => ot.mapAlts(pol)((p, t) => transform(t, p, parents))
+      case ot @ Overload(as) => ot.mapAltsPol(pol)((p, t) => transform(t, p, parents))
       case _: ObjectTag | ExtrType(_) => st
       case tv: TypeVariable if parents.exists(_ === tv) =>
         if (pol.getOrElse(lastWords(s"parent in invariant position $tv $parents"))) BotType else TopType
