@@ -38,6 +38,7 @@ let t = x: 1, y: 2, z: 3
 (1, true, "hey").2
 //│ Parsed: '(' {1, true, "hey",} ')' 0.2;
 //│ Desugared: '(' {1, true, "hey",} ')' 0.2
+//│ AST: App(Bra(rcd = false, Blk(...)), DecLit(0.2))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.38: 	(1, true, "hey").2
 //│ ║        	^^^^^^^^^^^^^^^^^^
@@ -55,7 +56,7 @@ let not-tup = (
   2
 )
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.54: 	  1
+//│ ║  l.55: 	  1
 //│ ╙──      	  ^
 //│ not-tup: 2
 
@@ -65,7 +66,7 @@ let tup = (
   2
 )
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.65: 	  2
+//│ ║  l.66: 	  2
 //│ ╙──      	  ^
 //│ tup: 2
 
@@ -75,7 +76,7 @@ let tup =
   2,
   3
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.76: 	  3
+//│ ║  l.77: 	  3
 //│ ╙──      	  ^
 //│ tup: 3
 
