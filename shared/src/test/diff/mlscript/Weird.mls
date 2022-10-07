@@ -40,7 +40,9 @@ class C
 def n: C{}
 //│ Parsed: rec def n: [] -> C; {};
 //│ Desugared: rec def n: [] -> C
+//│ AST: Def(true, n, PolyType(List(),TypeName(C)), true)
 //│ Desugared: {}
+//│ AST: Rcd(})
 //│ n: C
 //│  = <missing implementation>
 //│ res: anything

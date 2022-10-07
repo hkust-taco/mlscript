@@ -75,7 +75,9 @@ f = fun (x, y) -> add x y
 f(1, 2)
 //│ Parsed: let f = x, y, => add (x,) (y,); f (1, 2,);
 //│ Desugared: def f: x, y, => add (x,) (y,)
+//│ AST: Def(false, f, Lam(Tup(_: Var(x), _: Var(y)), App(App(Var(add), Tup(_: Var(x))), Tup(_: Var(y)))), false)
 //│ Desugared: f (1, 2,)
+//│ AST: App(Var(f), Tup(_: IntLit(1), _: IntLit(2)))
 //│ f: (int, int,) -> int
 //│  = [Function: f]
 //│ res: int
@@ -84,10 +86,10 @@ f(1, 2)
 :e
 f((1, 2))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.85: 	f((1, 2))
+//│ ║  l.87: 	f((1, 2))
 //│ ║        	^^^^^^^^^
 //│ ╟── argument of type `((1, 2,),)` does not match type `(?a, ?b,)`
-//│ ║  l.85: 	f((1, 2))
+//│ ║  l.87: 	f((1, 2))
 //│ ║        	 ^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
 //│ ║  l.74: 	f = fun (x, y) -> add x y
@@ -101,10 +103,10 @@ f r
 //│ r: (1, 2,)
 //│  = [ 1, 2 ]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.100: 	f r
+//│ ║  l.102: 	f r
 //│ ║         	^^^
 //│ ╟── argument of type `((1, 2,),)` does not match type `(?a, ?b,)`
-//│ ║  l.100: 	f r
+//│ ║  l.102: 	f r
 //│ ║         	  ^
 //│ ╟── Note: constraint arises from tuple literal:
 //│ ║  l.74: 	f = fun (x, y) -> add x y
@@ -117,7 +119,9 @@ f = fun ((x, y)) -> add x y
 f((1, 2))
 //│ Parsed: let f = '(' x, y, ')', => add (x,) (y,); f ('(' 1, 2, ')',);
 //│ Desugared: def f: '(' x, y, ')', => add (x,) (y,)
+//│ AST: Def(false, f, Lam(Tup(_: Bra(rcd = false, Tup(_: Var(x), _: Var(y)))), App(App(Var(add), Tup(_: Var(x))), Tup(_: Var(y)))), false)
 //│ Desugared: f ('(' 1, 2, ')',)
+//│ AST: App(Var(f), Tup(_: Bra(rcd = false, Tup(_: IntLit(1), _: IntLit(2)))))
 //│ f: (int, int,) -> int
 //│  = [Function: f1]
 //│ res: int
@@ -126,10 +130,10 @@ f((1, 2))
 :e
 f(1, 2)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.127: 	f(1, 2)
+//│ ║  l.131: 	f(1, 2)
 //│ ║         	^^^^^^^
 //│ ╟── tuple literal of type `(1, 2,)` does not match type `((?a, ?b,),)`
-//│ ║  l.127: 	f(1, 2)
+//│ ║  l.131: 	f(1, 2)
 //│ ╙──       	 ^^^^^^
 //│ res: error | int
 //│ Runtime error:
