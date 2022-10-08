@@ -1,0 +1,120 @@
+:NoRecursiveTypes
+:GeneralizeCurriedFunctions
+
+
+
+def id: forall 'a. 'a -> 'a
+//│ id: 'a -> 'a
+//│   = <missing implementation>
+
+def id x = x
+//│ 'a -> 'a
+//│   <:  id:
+//│ 'a -> 'a
+//│   = [Function: id1]
+
+
+test1 f =
+  (f 0, f true)
+//│ test1: (true -> 'a & 0 -> 'b & 'c) -> ('b, 'a,)
+//│      = [Function: test1]
+
+test1 (fun value -> { value })
+//│ res: ({value: 0}, {value: true},)
+//│    = [ { value: 0 }, { value: true } ]
+
+// :ns
+// :d
+test2 f =
+  let r x = f x
+  in (r 0, r true)
+//│ test2: ((true | 'a) -> ('b & 'c) & (0 | 'd) -> ('e & 'f) & 'g) -> ('f, 'c,)
+//│      = [Function: test2]
+
+test2 (fun value -> { value })
+//│ res: ({value: 0}, {value: true},)
+//│    = [ { value: 0 }, { value: true } ]
+
+
+
+def example f = (f: forall 'a. 'a -> 'a)
+//│ example: (forall 'a. 'a -> 'a & 'b) -> (forall 'a. 'a -> 'a)
+//│        = [Function: example]
+
+:e
+example 1
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.45: 	example 1
+//│ ║        	^^^^^^^^^
+//│ ╟── integer literal of type `1` is not a function
+//│ ║  l.45: 	example 1
+//│ ║        	        ^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.40: 	def example f = (f: forall 'a. 'a -> 'a)
+//│ ║        	                               ^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.40: 	def example f = (f: forall 'a. 'a -> 'a)
+//│ ╙──      	                 ^
+//│ res: error
+//│    = 1
+
+:e
+example succ
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.62: 	example succ
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── type `‘a_136` is not an instance of type `int`
+//│ ║  l.40: 	def example f = (f: forall 'a. 'a -> 'a)
+//│ ╙──      	                           ^^
+//│ res: error
+//│    = [Function: succ]
+
+example id
+//│ res: 'a -> 'a
+//│    = [Function: id1]
+
+
+def example f = (f: forall 'a. 'a -> int -> 'b) f
+//│ example: (forall 'a. 'a -> int -> 'b & 'c & 'a0) -> (int -> 'b | 'd)
+//│        = [Function: example1]
+
+def example f = ((fun x -> x, f) : forall 'a. ('a -> 'a, 'a -> 'a))
+//│ example: (‘a_177_179 -> ‘a_177_179 & 'b) -> (forall 'a. ('a -> 'a, 'a -> 'a,))
+//│        = [Function: example2]
+
+// FIXME: Rigid variable extrusion here! We should clean extr contexts of local rigids before returning them....
+def example f = ((0, f) : forall 'a. (0, 'a))
+//│ example: (‘a_190_191 & 'b) -> (forall 'a. (0, 'a,))
+//│        = [Function: example3]
+
+def ex = example
+//│ ex: (‘a_190_191 & 'b) -> (forall 'a. (0, 'a,))
+//│   = [Function: ex]
+
+def ex x = example x
+//│ ex: (‘a_190_191 & 'b & 'c) -> (forall 'a. (0, 'a,) | 'd)
+//│   = [Function: ex1]
+
+:e
+ex 1
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.99: 	ex 1
+//│ ║        	^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `'a_190_191`
+//│ ║  l.99: 	ex 1
+//│ ║        	   ^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.86: 	def example f = ((0, f) : forall 'a. (0, 'a))
+//│ ║        	                                 ^^
+//│ ╟── from reference:
+//│ ║  l.94: 	def ex x = example x
+//│ ╙──      	                   ^
+//│ res: error
+//│    = [ 0, 1 ]
+
+// FIXME same
+def example f = ((0, f) : forall 'a. (0, 'a -> 'a))
+//│ example: (‘a_231_232 -> ‘a_231_232 & 'b) -> (forall 'a. (0, 'a -> 'a,))
+//│        = [Function: example4]
+
+

@@ -1,6 +1,4 @@
 
-// :d
-// :s
 def foo f =
   f (fun x -> x)
 //│ foo: ((forall 'a. 'a -> 'a) -> 'b) -> 'b

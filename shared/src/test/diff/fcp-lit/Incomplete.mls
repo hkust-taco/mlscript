@@ -1,3 +1,5 @@
+// * Test that exposes incompleteness of type inference with distributivity
+
 :GeneralizeCurriedFunctions
 :DistributeForalls
 :NoRecursiveTypes
@@ -69,13 +71,13 @@ ty_2 = ty_1
 //│   <:  ty_2:
 //│ nothing -> (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.67: 	ty_2 = ty_1
+//│ ║  l.69: 	ty_2 = ty_1
 //│ ║        	^^^^^^^^^^^
 //│ ╟── type `‘b_93_94` is not an instance of type `'b_93_95`
-//│ ║  l.59: 	def ty_2: nothing -> (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
+//│ ║  l.61: 	def ty_2: nothing -> (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
 //│ ║        	                                                            ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.59: 	def ty_2: nothing -> (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
+//│ ║  l.61: 	def ty_2: nothing -> (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
 //│ ╙──      	                                                            ^^
 //│     = <no result>
 //│       ty_1 is not implemented

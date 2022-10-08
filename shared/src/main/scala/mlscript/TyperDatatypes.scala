@@ -242,7 +242,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   sealed abstract class ArrayBase extends MiscBaseType {
     def inner: FieldType
   }
-
+  
   case class ArrayType(val inner: FieldType)(val prov: TypeProvenance) extends ArrayBase {
     def level: Level = inner.level
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = inner.levelBelow(ub)
@@ -250,7 +250,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       ArrayType(inner.freshenAbove(lim, rigidify))(prov)
     override def toString = s"Array‹$inner›"
   }
-
+  
   case class TupleType(fields: List[Opt[Var] -> FieldType])(val prov: TypeProvenance) extends ArrayBase {
     lazy val inner: FieldType = fields.map(_._2).reduceLeftOption(_ || _).getOrElse(BotType.toUpper(noProv))
     // lazy val inner: SimpleType = fields.map(_._2).fold(ExtrType(true)(noProv))(_ | _)

@@ -1,0 +1,733 @@
+:NoRecursiveTypes
+:GeneralizeCurriedFunctions
+:ConstrainedTypes
+:DontDistributeForalls
+
+
+
+type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ Defined type alias ChurchInt
+
+
+
+// * === Explicitly Annotated ===
+
+
+def zero: forall 'a. ('a -> 'a) -> ('a -> 'a)
+def zero f x = x
+//│ zero: ('a -> 'a) -> 'a -> 'a
+//│     = <missing implementation>
+//│ 'a -> (forall 'b. 'b -> 'b)
+//│   <:  zero:
+//│ ('a -> 'a) -> 'a -> 'a
+//│     = [Function: zero]
+
+def zero: ChurchInt
+def zero f x = x
+//│ zero: ChurchInt
+//│     = <missing implementation>
+//│ 'a -> (forall 'b. 'b -> 'b)
+//│   <:  zero:
+//│ ChurchInt
+//│     = [Function: zero1]
+
+
+def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+def succ n f x = f (n f x)
+//│ succ: (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
+//│     = <missing implementation>
+//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('c -> 'f
+//│   where
+//│     'b <: 'd -> 'f
+//│     'a <: 'b -> ('c -> 'd & 'e))))
+//│   <:  succ:
+//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
+//│     = [Function: succ1]
+
+def succ: ChurchInt -> ChurchInt
+def succ n f x = f (n f x)
+//│ succ: ChurchInt -> ChurchInt
+//│     = <missing implementation>
+//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('c -> 'f
+//│   where
+//│     'b <: 'd -> 'f
+//│     'a <: 'b -> ('c -> 'd & 'e))))
+//│   <:  succ:
+//│ ChurchInt -> ChurchInt
+//│     = [Function: succ2]
+
+
+def succD: forall 'M. ChurchInt -> ('M -> 'M) -> ('M -> 'M)
+def succD n f x = f (n f x)
+//│ succD: ChurchInt -> ('M -> 'M) -> 'M -> 'M
+//│      = <missing implementation>
+//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('c -> 'f
+//│   where
+//│     'a <: 'b -> ('c -> 'd & 'e)
+//│     'b <: 'd -> 'f)))
+//│   <:  succD:
+//│ ChurchInt -> ('M -> 'M) -> 'M -> 'M
+//│      = [Function: succD]
+
+succD = succ
+//│ ChurchInt -> ChurchInt
+//│   <:  succD:
+//│ ChurchInt -> ('M -> 'M) -> 'M -> 'M
+//│      = [Function: succ2]
+
+// * This does not hold without distrobutivity
+:e
+succ = succD
+//│ ChurchInt -> ('M -> 'M) -> 'M -> 'M
+//│   <:  succ:
+//│ ChurchInt -> ChurchInt
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.80: 	succ = succD
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── type `‘N_269_271` is not an instance of type `'N_269_270`
+//│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║       	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║       	                        ^^
+//│ ╟── from quantified type variable:
+//│ ║  l.60: 	def succD: forall 'M. ChurchInt -> ('M -> 'M) -> ('M -> 'M)
+//│ ╙──      	                  ^^
+//│     = [Function: succ2]
+
+
+
+// * === Usages ===
+
+
+n1 = succ zero
+//│ n1: ChurchInt
+//│   = [Function (anonymous)]
+
+n2 = succ (succ zero)
+//│ n2: ChurchInt
+//│   = [Function (anonymous)]
+
+n3 = succ (succ (succ zero))
+//│ n3: ChurchInt
+//│   = [Function (anonymous)]
+
+
+wrap x = { x }
+//│ wrap: 'a -> {x: 'a}
+//│     = [Function: wrap]
+
+n1w = n1 wrap
+//│ n1w: 'N -> 'N
+//│   where
+//│     'N :> {x: 'N}
+//│    = [Function (anonymous)]
+
+n1w 0
+//│ res: 'a
+//│   where
+//│     'a :> 0 | {x: 'a}
+//│    = { x: 0 }
+
+n1 wrap 0
+//│ res: 'a
+//│   where
+//│     'a :> 0 | {x: 'a}
+//│    = { x: 0 }
+
+:e
+res.x + 1
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.139: 	res.x + 1
+//│ ║         	^^^^^
+//│ ╟── integer literal of type `0` does not have field 'x'
+//│ ║  l.132: 	n1 wrap 0
+//│ ║         	        ^
+//│ ╟── but it flows into reference with expected type `{x: ?x}`
+//│ ║  l.139: 	res.x + 1
+//│ ╙──       	^^^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.139: 	res.x + 1
+//│ ║         	^^^^^^^
+//│ ╟── record literal of type `{x: ?a}` is not an instance of type `int`
+//│ ║  l.116: 	wrap x = { x }
+//│ ║         	         ^^^^^
+//│ ╟── but it flows into field selection with expected type `int`
+//│ ║  l.139: 	res.x + 1
+//│ ╙──       	^^^^^
+//│ res: error
+//│    = 1
+
+n2 wrap 0
+//│ res: 'a
+//│   where
+//│     'a :> 0 | {x: 'a}
+//│    = { x: { x: 0 } }
+
+:e
+res.x.x + 1
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.168: 	res.x.x + 1
+//│ ║         	^^^^^
+//│ ╟── integer literal of type `0` does not have field 'x'
+//│ ║  l.161: 	n2 wrap 0
+//│ ║         	        ^
+//│ ╟── but it flows into reference with expected type `{x: ?x}`
+//│ ║  l.168: 	res.x.x + 1
+//│ ╙──       	^^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.168: 	res.x.x + 1
+//│ ║         	^^^^^^^
+//│ ╟── integer literal of type `0` does not have field 'x'
+//│ ║  l.161: 	n2 wrap 0
+//│ ║         	        ^
+//│ ╟── but it flows into field selection with expected type `{x: ?x}`
+//│ ║  l.168: 	res.x.x + 1
+//│ ╙──       	^^^^^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.168: 	res.x.x + 1
+//│ ║         	^^^^^^^^^
+//│ ╟── record literal of type `{x: ?a}` is not an instance of type `int`
+//│ ║  l.116: 	wrap x = { x }
+//│ ║         	         ^^^^^
+//│ ╟── but it flows into field selection with expected type `int`
+//│ ║  l.168: 	res.x.x + 1
+//│ ╙──       	^^^^^^^
+//│ res: error
+//│    = 1
+
+
+def wrap_ty: 'a -> {x: 'a}
+//│ wrap_ty: 'a -> {x: 'a}
+//│        = <missing implementation>
+
+wrap_ty = wrap
+//│ 'a -> {x: 'a}
+//│   <:  wrap_ty:
+//│ 'a -> {x: 'a}
+//│        = [Function: wrap]
+
+n1w = n1 wrap_ty
+//│ n1w: 'N -> 'N
+//│   where
+//│     'N :> {x: 'N}
+//│    = [Function (anonymous)]
+
+n1w 0
+//│ res: 'a
+//│   where
+//│     'a :> 0 | {x: 'a}
+//│    = { x: 0 }
+
+:e
+res.x + 1
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.223: 	res.x + 1
+//│ ║         	^^^^^
+//│ ╟── integer literal of type `0` does not have field 'x'
+//│ ║  l.216: 	n1w 0
+//│ ║         	    ^
+//│ ╟── but it flows into reference with expected type `{x: ?x}`
+//│ ║  l.223: 	res.x + 1
+//│ ╙──       	^^^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.223: 	res.x + 1
+//│ ║         	^^^^^^^
+//│ ╟── type `{x: ?a}` is not an instance of type `int`
+//│ ║  l.200: 	def wrap_ty: 'a -> {x: 'a}
+//│ ║         	                   ^^^^^^^
+//│ ╟── but it flows into field selection with expected type `int`
+//│ ║  l.223: 	res.x + 1
+//│ ╙──       	^^^^^
+//│ res: error
+//│    = 1
+
+  
+
+// * === Unannotated (More Powerful) ===
+
+
+def z f x = x
+//│ z: 'a -> (forall 'b. 'b -> 'b)
+//│  = [Function: z]
+
+def s n f x = f (n f x)
+//│ s: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('c -> 'f
+//│   where
+//│     'a <: 'b -> ('c -> 'd & 'e)
+//│     'b <: 'd -> 'f)))
+//│  = [Function: s]
+
+zero = z
+//│ 'a -> (forall 'b. 'b -> 'b)
+//│   <:  zero:
+//│ ChurchInt
+//│     = [Function: z]
+
+succ = s
+//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('c -> 'f
+//│   where
+//│     'b <: 'd -> 'f
+//│     'a <: 'b -> ('c -> 'd & 'e))))
+//│   <:  succ:
+//│ ChurchInt -> ChurchInt
+//│     = [Function: s]
+
+:stats
+z: ChurchInt
+//│ res: ChurchInt
+//│    = [Function: z]
+//│ constrain calls  : 15
+//│ annoying  calls  : 0
+//│ subtyping calls  : 0
+
+:stats
+s: ChurchInt -> ChurchInt
+//│ res: ChurchInt -> ChurchInt
+//│    = [Function: s]
+//│ constrain calls  : 72
+//│ annoying  calls  : 0
+//│ subtyping calls  : 0
+
+
+
+// * === Usages ===
+
+
+n1 = s z
+//│ n1: 'a -> ('b -> 'c
+//│   where
+//│     'a <: 'd -> 'c
+//│     forall 'e. 'e -> (forall 'f. 'f -> 'f) <: 'a -> ('b -> 'd & 'g))
+//│   = [Function (anonymous)]
+
+n2 = s (s z)
+//│ n2: 'a -> ('b -> 'c
+//│   where
+//│     forall 'd. 'd -> ('e -> 'f
+//│   where
+//│     'd <: 'g -> 'f
+//│     forall 'h. 'h -> (forall 'i. 'i -> 'i) <: 'd -> ('e -> 'g & 'j)) <: 'a -> ('b -> 'k & 'l)
+//│     'a <: 'k -> 'c)
+//│   = [Function (anonymous)]
+
+n3 = s (s (s z))
+//│ n3: 'a -> ('b -> 'c
+//│   where
+//│     'a <: 'd -> 'c
+//│     forall 'e. 'e -> ('f -> 'g
+//│   where
+//│     'e <: 'h -> 'g
+//│     forall 'i. 'i -> ('j -> 'k
+//│   where
+//│     forall 'l. 'l -> (forall 'm. 'm -> 'm) <: 'i -> ('j -> 'n & 'o)
+//│     'i <: 'n -> 'k) <: 'e -> ('f -> 'h & 'p)) <: 'a -> ('b -> 'd & 'q))
+//│   = [Function (anonymous)]
+
+
+wrap x = { x }
+//│ wrap: 'a -> {x: 'a}
+//│     = [Function: wrap1]
+
+n1w = n1 wrap
+//│ n1w: 'a -> 'b
+//│   where
+//│     forall 'c. 'c -> {x: 'c} <: 'd -> 'b
+//│     forall 'e. 'e -> (forall 'f. 'f -> 'f) <: (forall 'c. 'c -> {x: 'c}) -> ('a -> 'd & 'g)
+//│    = [Function (anonymous)]
+
+n1w 0
+//│ res: {x: 0}
+//│    = { x: 0 }
+
+n1 wrap 0
+//│ res: {x: 0}
+//│    = { x: 0 }
+
+res.x + 1
+//│ res: int
+//│    = 1
+
+n2 wrap 0
+//│ res: {x: {x: 0}}
+//│    = { x: { x: 0 } }
+
+res.x.x + 1
+//│ res: int
+//│    = 1
+
+n3 wrap 0
+//│ res: {x: {x: {x: 0}}}
+//│    = { x: { x: { x: 0 } } }
+
+res.x.x.x + 1
+//│ res: int
+//│    = 1
+
+
+def wrap_ty: 'a -> {x: 'a}
+//│ wrap_ty: 'a -> {x: 'a}
+//│        = <missing implementation>
+
+wrap_ty = wrap
+//│ 'a -> {x: 'a}
+//│   <:  wrap_ty:
+//│ 'a -> {x: 'a}
+//│        = [Function: wrap1]
+
+n1w = n1 wrap_ty
+//│ n1w: 'b -> 'c
+//│   where
+//│     forall 'd. 'd -> (forall 'e. 'e -> 'e) <: (forall 'a. 'a -> {x: 'a}) -> ('b -> 'f & 'g)
+//│     forall 'a. 'a -> {x: 'a} <: 'f -> 'c
+//│    = [Function (anonymous)]
+
+n1w 0
+//│ res: {x: 0}
+//│    = { x: 0 }
+
+res.x + 1
+//│ res: int
+//│    = 1
+
+n2 wrap_ty 0
+//│ res: {x: {x: 0}}
+//│    = { x: { x: 0 } }
+
+res.x.x + 1
+//│ res: int
+//│    = 1
+
+n3 wrap_ty 0
+//│ res: {x: {x: {x: 0}}}
+//│    = { x: { x: { x: 0 } } }
+
+res.x.x.x + 1
+//│ res: int
+//│    = 1
+
+
+
+// * === Other Usages ===
+
+
+sz = s zero
+//│ sz: 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('b -> 'e
+//│   where
+//│     ChurchInt <: 'a -> ('b -> 'c & 'd)
+//│     'a <: 'c -> 'e))
+//│   = [Function (anonymous)]
+
+:ns
+sz
+//│ res: forall 'a. forall 'b, 'a. 'b
+//│   where
+//│     'b :> forall 'c. 'c -> (forall 'd, 'e, 'f, 'g. ('e -> 'g
+//│   where
+//│     'a <: 'c -> 'd
+//│     'c <: 'f -> 'g))
+//│     'd <: 'e -> 'f
+//│     'a :> ChurchInt
+//│    = [Function (anonymous)]
+
+sz: ChurchInt
+s zero : ChurchInt
+//│ res: ChurchInt
+//│    = [Function (anonymous)]
+//│ res: ChurchInt
+//│    = [Function (anonymous)]
+
+// * Error delayed by inconsistent constrained types
+// * Notice the unsatisfiable constraint `1 <: 'c -> 'b`
+sz1 = sz 1
+//│ sz1: 'a -> 'b
+//│   where
+//│     1 <: 'c -> 'b
+//│     ChurchInt <: 1 -> ('a -> 'c & 'd)
+//│    = [Function (anonymous)]
+
+:ns
+sz1
+//│ res: forall 'a, 'b. forall 'c, 'a, 'b. 'c
+//│   where
+//│     'c :> forall 'd, 'e, 'f, 'g. ('e -> 'g
+//│   where
+//│     'b <: 'f -> 'g
+//│     'a <: 'b -> 'd)
+//│     'd <: 'e -> 'f
+//│     'a :> ChurchInt
+//│     'b :> 1
+//│    = [Function (anonymous)]
+
+:e  // * Since inconsistent constrained types (delayed error from above)
+sz1 2
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.463: 	sz1 2
+//│ ║         	^^^^^
+//│ ╟── integer literal of type `1` is not a function
+//│ ║  l.442: 	sz1 = sz 1
+//│ ║         	         ^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ╙──     	                            ^^^^^^^^^^
+//│ res: error
+//│ Runtime error:
+//│   TypeError: f is not a function
+
+
+
+// * === Conversions (Using Annotated Defs) ===
+
+
+rec def to_church n =
+  if n == 0 then zero
+  else succ (to_church (n - 1))
+//│ to_church: int -> ChurchInt
+//│          = [Function: to_church]
+
+def to_church_ty: int -> ChurchInt
+//│ to_church_ty: int -> ChurchInt
+//│             = <missing implementation>
+
+to_church_ty = to_church
+//│ int -> ChurchInt
+//│   <:  to_church_ty:
+//│ int -> ChurchInt
+//│             = [Function: to_church]
+
+// * Non-recursive def emulates annotated recursive def
+def to_church_ty n =
+  if n == 0 then zero
+  else succ (to_church_ty (n - 1))
+//│ (int & 'a) -> (ChurchInt | 'b)
+//│   <:  to_church_ty:
+//│ int -> ChurchInt
+//│             = [Function: to_church_ty1]
+
+
+
+// * === Conversions (Using Unannotated Defs) ===
+
+rec def to_ch_s n =
+  if n == 0 then z
+  else s (to_ch_s (n - 1))
+//│ to_ch_s: int -> (forall 'a, 'b, 'c, 'd. (('e | 'a) -> 'b & 'c & 'd & 'e -> 'e) -> (forall 'b, 'f, 'g, 'h. ('f & 'g & 'e) -> ('b | 'f | 'h)))
+//│        = [Function: to_ch_s]
+
+rec def to_ch n =
+  if n == 0 then z
+  else s (to_ch (n - 1))
+//│ to_ch: int -> (forall 'a, 'b, 'c, 'd. (('e | 'a) -> 'b & 'c & 'd & 'e -> 'e) -> (forall 'b, 'f, 'g, 'h. ('f & 'g & 'e) -> ('b | 'f | 'h)))
+//│      = [Function: to_ch]
+
+:e // * Needs distrib (see below)
+to_church_ty = to_ch
+//│ int -> (forall 'a, 'b, 'c, 'd. (('e | 'a) -> 'b & 'c & 'd & 'e -> 'e) -> (forall 'b, 'f, 'g, 'h. ('f & 'g & 'e) -> ('b | 'f | 'h)))
+//│   <:  to_church_ty:
+//│ int -> ChurchInt
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.524: 	to_church_ty = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘N_1387_1396` is not an instance of type `'N_1387_1395`
+//│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║       	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║       	                        ^^
+//│ ╟── from application:
+//│ ║  l.254: 	def s n f x = f (n f x)
+//│ ╙──       	              ^^^^^^^^^
+//│             = [Function: to_ch]
+
+rec def to_ch_simplif n = s (to_ch_simplif n)
+//│ to_ch_simplif: anything -> (forall 'a, 'b, 'c. (('d | 'a) -> 'b & 'c & 'd -> 'd) -> (forall 'e, 'f. 'e -> ('b | 'f)))
+//│              = [Function: to_ch_simplif]
+
+:e
+to_church_ty = to_ch_simplif
+//│ anything -> (forall 'a, 'b, 'c. (('d | 'a) -> 'b & 'c & 'd -> 'd) -> (forall 'e, 'f. 'e -> ('b | 'f)))
+//│   <:  to_church_ty:
+//│ int -> ChurchInt
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.547: 	to_church_ty = to_ch_simplif
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘N_1498_1508` is not an instance of type `'N_1498_1507`
+//│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║       	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║       	                        ^^
+//│ ╟── from application:
+//│ ║  l.254: 	def s n f x = f (n f x)
+//│ ╙──       	              ^^^^^^^^^
+//│             = [Function: to_ch_simplif]
+
+
+// * This annotation here doesn't help
+:e
+rec def to_ch_A1 n =
+  if n == 0 then z
+  else s (to_ch_A1 (n - 1) : ChurchInt)
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.568: 	rec def to_ch_A1 n =
+//│ ║         	                 ^^^
+//│ ║  l.569: 	  if n == 0 then z
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.570: 	  else s (to_ch_A1 (n - 1) : ChurchInt)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘N_1537_1546` is not an instance of type `'N_1537_1545`
+//│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║       	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║       	                        ^^
+//│ ╟── from reference:
+//│ ║  l.254: 	def s n f x = f (n f x)
+//│ ╙──       	                     ^
+//│ to_ch_A1: int -> (forall 'a, 'b, 'c, 'd. ((‘N_1537_1545 | 'N | 'a) -> 'b & ('N | ‘N_1537_1545 | ‘N_1537_1546) -> (‘N_1537_1545 & 'N) & 'c & 'd) -> (forall 'b, 'e, 'f, 'g. (‘N_1537_1545 & 'e & 'N & 'f) -> ('b | 'e | 'g)))
+//│         = [Function: to_ch_A1]
+
+// * nope
+// to_church_ty = to_ch_A1
+
+// * Now this annotation works, as expected
+rec def to_ch_A2 n = (
+    if n == 0 then z
+    else s (to_ch_A2 (n - 1))
+  ) : ChurchInt
+//│ to_ch_A2: int -> ChurchInt
+//│         = [Function: to_ch_A2]
+
+to_church_ty = to_ch_A2
+//│ int -> ChurchInt
+//│   <:  to_church_ty:
+//│ int -> ChurchInt
+//│             = [Function: to_ch_A2]
+
+
+// * Uses `to_church` as the rec call
+def to_church_mix n =
+  if n == 0 then z
+  else s (to_church (n - 1))
+//│ to_church_mix: (int & 'a) -> (forall 'b, 'c. ('b & 'c) -> (forall 'c, 'd, 'e, 'f, 'g, 'h, 'i. (('i & 'e) -> ('i | 'h)
+//│   where
+//│     'c <: 'f -> 'h
+//│     ChurchInt | 'd <: 'c -> ('e -> 'f & 'g))) | 'j)
+//│              = [Function: to_church_mix]
+
+to_church_ty = to_church_mix
+//│ (int & 'a) -> (forall 'b, 'c. ('b & 'c) -> (forall 'c, 'd, 'e, 'f, 'g, 'h, 'i. (('i & 'e) -> ('i | 'h)
+//│   where
+//│     ChurchInt | 'd <: 'c -> ('e -> 'f & 'g)
+//│     'c <: 'f -> 'h)) | 'j)
+//│   <:  to_church_ty:
+//│ int -> ChurchInt
+//│             = [Function: to_church_mix]
+
+
+:e // * Needs to distribute back (in the other direction) here:
+rec def to_chD n =
+  succD (to_chD n)
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.629: 	rec def to_chD n =
+//│ ║         	               ^^^
+//│ ║  l.630: 	  succD (to_chD n)
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘N_1743_1745` is not an instance of type `'N_1743_1744`
+//│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║       	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║       	                        ^^
+//│ ╟── from quantified type variable:
+//│ ║  l.60: 	def succD: forall 'M. ChurchInt -> ('M -> 'M) -> ('M -> 'M)
+//│ ╙──      	                  ^^
+//│ to_chD: anything -> (('M | ‘N_1743_1745) -> (‘N_1743_1744 & 'M)) -> (‘N_1743_1744 & 'M) -> ('M | ‘N_1743_1745)
+//│       = [Function: to_chD]
+
+
+
+// * === With Distributivity ===
+
+
+:DistributeForalls
+
+
+// * Now everything Just Works!
+
+
+// * Still works, as before
+succ = s
+//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('c -> 'f
+//│   where
+//│     'a <: 'b -> ('c -> 'd & 'e)
+//│     'b <: 'd -> 'f)))
+//│   <:  succ:
+//│ ChurchInt -> ChurchInt
+//│     = [Function: s]
+
+// * Now works
+succ = succD
+//│ ChurchInt -> ('M -> 'M) -> 'M -> 'M
+//│   <:  succ:
+//│ ChurchInt -> ChurchInt
+//│     = [Function: succ2]
+
+// * Now works
+rec def to_chD n =
+  succD (to_chD n)
+//│ to_chD: anything -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
+//│       = [Function: to_chD1]
+
+// * Now works
+to_church_ty = to_ch
+//│ int -> (forall 'a, 'b, 'c, 'd. (('e | 'a) -> 'b & 'c & 'd & 'e -> 'e) -> (forall 'b, 'f, 'g, 'h. ('f & 'g & 'e) -> ('b | 'f | 'h)))
+//│   <:  to_church_ty:
+//│ int -> ChurchInt
+//│             = [Function: to_ch]
+
+// * Now works
+to_church_ty = to_ch_simplif
+//│ anything -> (forall 'a, 'b, 'c. (('d | 'a) -> 'b & 'c & 'd -> 'd) -> (forall 'e, 'f. 'e -> ('b | 'f)))
+//│   <:  to_church_ty:
+//│ int -> ChurchInt
+//│             = [Function: to_ch_simplif]
+
+// * Redefinition in the context of distrib, just for the record (still works)
+rec def to_ch_simplif n = s (to_ch_simplif n)
+to_church_ty = to_ch_simplif
+//│ to_ch_simplif: anything -> (forall 'a, 'b, 'c. (('d | 'a) -> 'b & 'c & 'd -> 'd) -> (forall 'e, 'f. 'e -> ('b | 'f)))
+//│              = [Function: to_ch_simplif1]
+//│ anything -> (forall 'a, 'b, 'c. (('d | 'a) -> 'b & 'c & 'd -> 'd) -> (forall 'e, 'f. 'e -> ('b | 'f)))
+//│   <:  to_church_ty:
+//│ int -> ChurchInt
+//│             = [Function: to_ch_simplif1]
+
+// * Still doesn't work (Same with the full definition)
+:e
+to_church_ty = to_ch_A1
+//│ int -> (forall 'a, 'b, 'c, 'd. ((‘N_1537_1545 | 'N | 'a) -> 'b & ('N | ‘N_1537_1545 | ‘N_1537_1546) -> (‘N_1537_1545 & 'N) & 'c & 'd) -> (forall 'b, 'e, 'f, 'g. (‘N_1537_1545 & 'e & 'N & 'f) -> ('b | 'e | 'g)))
+//│   <:  to_church_ty:
+//│ int -> ChurchInt
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.708: 	to_church_ty = to_ch_A1
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘N_1537_1545` is not an instance of type `'N_2070`
+//│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║       	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ╙──     	                        ^^
+//│             = [Function: to_ch_A1]
+
+// * Still works
+to_church_ty = to_church_mix
+//│ (int & 'a) -> (forall 'b, 'c. ('b & 'c) -> (forall 'c, 'd, 'e, 'f, 'g, 'h, 'i. (('i & 'e) -> ('i | 'h)
+//│   where
+//│     ChurchInt | 'd <: 'c -> ('e -> 'f & 'g)
+//│     'c <: 'f -> 'h)) | 'j)
+//│   <:  to_church_ty:
+//│ int -> ChurchInt
+//│             = [Function: to_church_mix]
+
+

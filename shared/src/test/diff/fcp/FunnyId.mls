@@ -1,0 +1,122 @@
+:NoRecursiveTypes
+:GeneralizeCurriedFunctions
+
+
+def id_ty: forall 'a. 'a -> 'a
+//│ id_ty: 'a -> 'a
+//│      = <missing implementation>
+
+
+rec def id x = let tmp = id x in x
+//│ id: 'a -> 'a
+//│   = [Function: id]
+
+:re
+id 1
+//│ res: 1
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
+
+id_ty = id
+//│ 'a -> 'a
+//│   <:  id_ty:
+//│ 'a -> 'a
+//│      = [Function: id]
+
+
+// * We get `'a <: 'a -> anything` because `id` is passed for `x`
+// * and we can't infer polymorphic recursion, so all `x` should have the same type
+rec def id x = let tmp = id id x in x
+//│ id: 'id
+//│   where
+//│     'id :> 'a -> 'a
+//│     'a :> 'id
+//│        <: 'a -> anything
+//│   = [Function: id1]
+
+:e
+id 1
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.38: 	id 1
+//│ ║        	^^^^
+//│ ╟── integer literal of type `1` is not a function
+//│ ║  l.38: 	id 1
+//│ ║        	   ^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.29: 	rec def id x = let tmp = id id x in x
+//│ ║        	                         ^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.29: 	rec def id x = let tmp = id id x in x
+//│ ╙──      	                                    ^
+//│ res: error
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
+
+:e
+id_ty = id
+//│ 'id
+//│   where
+//│     'id :> 'a -> 'a
+//│     'a :> 'id
+//│        <: 'a -> anything
+//│   <:  id_ty:
+//│ 'a -> 'a
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.56: 	id_ty = id
+//│ ║        	^^^^^^^^^^
+//│ ╟── type `‘a_83` is not a function
+//│ ║  l.5: 	def id_ty: forall 'a. 'a -> 'a
+//│ ║       	                  ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.29: 	rec def id x = let tmp = id id x in x
+//│ ║        	                         ^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.29: 	rec def id x = let tmp = id id x in x
+//│ ╙──      	                                    ^
+//│      = [Function: id1]
+
+
+// * Not sure why we get a cycle in this slight variation!
+:e
+rec def id x = if true then x else id id x
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
+//│ ║  l.81: 	rec def id x = if true then x else id id x
+//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  (α89' -> α95')  <:  α93'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α89' -> α95')  <:  α93'
+//│ id: 'id
+//│   where
+//│     'id :> 'a -> 'b
+//│     'a :> 'id
+//│        <: 'b
+//│     'b :> 'id
+//│        <: 'a -> 'b
+//│   = [Function: id2]
+
+:e
+id_ty = id
+//│ 'id
+//│   where
+//│     'id :> 'a -> 'b
+//│     'a :> 'id
+//│        <: 'b
+//│     'b :> 'id
+//│        <: 'a -> 'b
+//│   <:  id_ty:
+//│ 'a -> 'a
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.98: 	id_ty = id
+//│ ║        	^^^^^^^^^^
+//│ ╟── type `‘a_125` is not a function
+//│ ║  l.5: 	def id_ty: forall 'a. 'a -> 'a
+//│ ║       	                  ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.81: 	rec def id x = if true then x else id id x
+//│ ║        	                                   ^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.81: 	rec def id x = if true then x else id id x
+//│ ╙──      	                            ^
+//│      = [Function: id2]
+
+

@@ -12,7 +12,6 @@ foo f = f 42
 //│ (forall 'a. 'a -> 'a) -> int
 //│    = [Function: foo]
 
-// :d
 foo id
 //│ res: int
 //│    = 42
@@ -25,13 +24,13 @@ bar f = foo (fun x -> let tmp = f x in x)
 :e
 bar (fun x -> case x of {})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.26: 	bar (fun x -> case x of {})
+//│ ║  l.25: 	bar (fun x -> case x of {})
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a_49_51` does not match type `nothing`
 //│ ║  l.5: 	def foo: (forall 'a. 'a -> 'a) -> int
 //│ ║       	                 ^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.26: 	bar (fun x -> case x of {})
+//│ ║  l.25: 	bar (fun x -> case x of {})
 //│ ╙──      	                   ^
 //│ res: error
 //│ Runtime error:
@@ -57,13 +56,13 @@ foo id
 :e
 foo (fun a -> a + 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.58: 	foo (fun a -> a + 1)
+//│ ║  l.57: 	foo (fun a -> a + 1)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a_97` is not an instance of type `int`
-//│ ║  l.46: 	def foo: (forall 'a. 'a -> 'b) -> 'b
+//│ ║  l.45: 	def foo: (forall 'a. 'a -> 'b) -> 'b
 //│ ║        	                 ^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.58: 	foo (fun a -> a + 1)
+//│ ║  l.57: 	foo (fun a -> a + 1)
 //│ ╙──      	              ^
 //│ res: error
 //│    = <no result>
