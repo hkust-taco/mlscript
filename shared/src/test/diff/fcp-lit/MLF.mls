@@ -272,3 +272,41 @@ let f = fun x -> id in g f
 app runST argST
 //│ res: int
 
+
+// ============ Variations ported from supertype tests ============
+
+killer_app = (fun x -> x id) auto
+//│ killer_app: 'a -> 'a
+
+I x = x
+K x y = x
+//│ I: 'a -> 'a
+//│ K: 'a -> (forall 'b. 'b -> 'a)
+
+// """ In particular, we conjecture that the term ...
+monster = (fun y -> (let tmp = y I in y K)) (fun x -> x x)
+// """ ... that is typable in Fω but not in F [9] is not typable in MLF either.
+//│ monster: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> 'b))
+
+ignore x y = y
+//│ ignore: 'a -> (forall 'b. 'b -> 'b)
+
+monsterThunk() = (fun y -> (ignore (y I) (y K))) (fun x -> x x)
+//│ monsterThunk: () -> (forall 'a. 'a -> (forall 'b, 'c. 'b -> (forall 'd. 'd -> 'b) | 'c) | 'e)
+
+monster2 = (fun y -> (y I, y K)) (fun x -> x x)
+//│ monster2: (forall 'a. 'a -> 'a, forall 'b. 'b -> (forall 'c. 'c -> (forall 'd. 'd -> 'c)),)
+
+monster = (fun y -> (let tmp = y I in y K)) (fun x -> x x)
+//│ monster: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> 'b))
+
+monsterThunk() = (fun y -> ignore (y I) (y K)) (fun x -> x x)
+//│ monsterThunk: () -> (forall 'a. 'a -> (forall 'b, 'c. 'b -> (forall 'd. 'd -> 'b) | 'c) | 'e)
+
+monster2 = (fun y -> (y I, y K)) (fun x -> x x)
+//│ monster2: (forall 'a. 'a -> 'a, forall 'b. 'b -> (forall 'c. 'c -> (forall 'd. 'd -> 'c)),)
+
+K K
+//│ res: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> 'b))
+
+

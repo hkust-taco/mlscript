@@ -132,7 +132,7 @@ fun f(x: Int, y: Int) = x
 
 fun f(x: Int, y: Int): Int = x
 //│ |#fun| |f|(|x|#:| |Int|,| |y|#:| |Int|)|#:| |Int| |#=| |x|
-//│ Parsed: {fun f = x: Int, y: Int, => x : TypeName(Int)}
+//│ Parsed: {fun f = x: Int, y: Int, => x : Int}
 
 
 

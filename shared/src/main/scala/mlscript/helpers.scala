@@ -393,7 +393,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case StrLit(value) => '"'.toString + value + '"'
     case UnitLit(value) => if (value) "undefined" else "null"
     case Var(name) => name
-    case Asc(trm, ty) => s"$trm : $ty"  |> bra
+    case Asc(trm, ty) => s"$trm : ${ty.show}"  |> bra
     case Lam(name, rhs) => s"$name => $rhs" |> bra
     case App(lhs, rhs) => s"${lhs.print(!lhs.isInstanceOf[App])} ${rhs.print(true)}" |> bra
     case Rcd(fields) =>
