@@ -7,6 +7,8 @@ import mlscript.utils._
 
 class JSWriter(filename: String) {
   import JSWriter._
+  // the mode `rs+` would fail when the file does not exist, so it can not be used to generate new files or tests
+  // the mode `w+` would lead to modification of test files even though nothing has benn changed, thus the diffTests would failed too
   private val out =
     if (fs.existsSync(filename)) fs.openSync(filename, "rs+") else fs.openSync(filename, "w+")
   private var fileSize = 0 // how many bytes we've written in the file
