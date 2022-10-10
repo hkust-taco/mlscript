@@ -431,7 +431,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     })))
     case Bra(rcd, trm) => trm match {
       case _: Rcd => if (rcd) trm.toType_! else throw new NotAType(this)
-      case _ => trm.toType_!
+      case _ => if (!rcd) trm.toType_! else throw new NotAType(this)
     }
     case TyApp(lhs, targs) => lhs.toType_! match {
       case p: TypeName => AppliedType(p, targs)
