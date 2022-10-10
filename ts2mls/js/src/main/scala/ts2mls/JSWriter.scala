@@ -8,10 +8,11 @@ import mlscript.utils._
 class JSWriter(filename: String) {
   import JSWriter._
   
-  // r+: Open file for reading and writing. An exception occurs if the file does not exist.
   // Create an empty file if it does not exists.
-  // See https://nodejs.org/api/fs.html#file-system-flags to get more details.
   if (!fs.existsSync(filename)) fs.writeFileSync(filename, "")
+
+  // r+: Open file for reading and writing. An exception occurs if the file does not exist.
+  // See https://nodejs.org/api/fs.html#file-system-flags to get more details.
   private val out = fs.openSync(filename, "r+")
   
   private var fileSize = 0 // how many bytes we've written in the file
