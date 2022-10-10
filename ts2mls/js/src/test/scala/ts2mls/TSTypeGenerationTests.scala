@@ -32,6 +32,7 @@ object TSTypeGenerationTest {
     (Seq("Overload.ts"), "Overload.d.mls"),
     (Seq("Tuple.ts"), "Tuple.d.mls"),
     (Seq("TypeParameter.ts"), "TypeParameter.d.mls"),
-    (Seq("Union.ts"), "Union.d.mls")
+    (Seq("Union.ts"), "Union.d.mls"),
+    (Seq("Type.ts"), "Type.d.mls")
   )
 }

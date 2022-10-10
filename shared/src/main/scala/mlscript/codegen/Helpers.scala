@@ -7,7 +7,7 @@ object Helpers {
   /**
     * Show how a term is actually structured.
     */
-  def inspect(t: Term): Str = t match {
+  def inspect(t: Terms): Str = t match {
     case Var(name)     => s"Var($name)"
     case Lam(lhs, rhs) => s"Lam(${inspect(lhs)}, ${inspect(rhs)})"
     case App(lhs, rhs) => s"App(${inspect(lhs)}, ${inspect(rhs)})"
@@ -34,7 +34,7 @@ object Helpers {
     case CaseOf(trm, cases) =>
       def inspectCaseBranches(br: CaseBranches): Str = br match {
         case Case(clsNme, body, rest) =>
-          s"Case($clsNme, ${inspect(t)}, ${inspectCaseBranches(rest)})"
+          s"Case($clsNme, ${inspect(body)}, ${inspectCaseBranches(rest)})"
         case Wildcard(body) => s"Wildcard(${inspect(body)})"
         case NoCases        => "NoCases"
       }
@@ -51,5 +51,7 @@ object Helpers {
     case If(bod, els) => s"If($bod, ${els.map(inspect)})"
     case New(base, body) => s"New(${base}, ${body})"
     case TyApp(base, targs) => s"TyApp(${inspect(base)}, ${targs})"
+    case Def(rec, nme, rhs, isByname) =>
+      s"Def($rec, $nme, ${rhs.fold(inspect, _.toString)}, $isByname)"
   }
 }

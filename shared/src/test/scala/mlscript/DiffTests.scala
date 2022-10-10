@@ -420,7 +420,10 @@ class DiffTests
             
             if (mode.showParse) {
               typeDefs.foreach(td => output("Desugared: " + td))
-              stmts.foreach(s => output("Desugared: " + s))
+              stmts.foreach { s =>
+                output("Desugared: " + s)
+                output("AST: " + mlscript.codegen.Helpers.inspect(s))
+              }
             }
             
             val oldCtx = ctx
