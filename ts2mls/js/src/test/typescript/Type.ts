@@ -33,3 +33,6 @@ class NC {
 }
 
 type G = DEF
+
+const none: Option<never> = _.none
+const some: <A>(a: A) => Option<A> = _.some
