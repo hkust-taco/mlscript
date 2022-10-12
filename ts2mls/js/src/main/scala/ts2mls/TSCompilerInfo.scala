@@ -120,6 +120,12 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
     else modifiers.foldLeft[TSAccessModifier](Public)(
       (m, t) => if (t.isPrivate) Private else if (t.isProtected) Protected else m)
 
+  lazy val declarationList = TSNodeObject(node.declarationList)
+  lazy val declarations = TSNodeArray(node.declarations)
+  lazy val declaration =
+    if (declarations.isUndefined) TSNodeObject(g.undefined)
+    else declarations.get(0)
+
   lazy val locals = TSSymbolMap(node.locals)
   lazy val returnType = TSTypeObject(checker.getReturnTypeOfSignature(node))
   lazy val `type` = TSNodeObject(node.selectDynamic("type"))

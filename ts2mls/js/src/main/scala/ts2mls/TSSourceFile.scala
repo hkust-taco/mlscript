@@ -9,8 +9,15 @@ object TSSourceFile {
   def apply(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker) =
     TypeScript.forEachChild(sf, (node: js.Dynamic) => {
       val nodeObject = TSNodeObject(node)
-      if (!nodeObject.isToken && !nodeObject.symbol.isUndefined)
-        addNodeIntoNamespace(nodeObject, nodeObject.symbol.escapedName)(global)
+      if (!nodeObject.isToken) {
+        if (!nodeObject.symbol.isUndefined)
+          addNodeIntoNamespace(nodeObject, nodeObject.symbol.escapedName)(global)
+        else if (!nodeObject.declarationList.isUndefined) {
+          val decNode = nodeObject.declarationList.declaration
+          addNodeIntoNamespace(decNode.initializer, decNode.symbol.escapedName)(global)
+        }
+      }
+        
     })
 
   private def getSubstitutionArguments[T <: TSAny](args: TSArray[T]): List[TSType] =
