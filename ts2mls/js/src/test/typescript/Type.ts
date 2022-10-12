@@ -34,5 +34,5 @@ class NC {
 
 type G = DEF
 
-const none: Option<never> = _.none
-const some: <A>(a: A) => Option<A> = _.some
+const none: Option<never> = { _tag: 'None' }
+const some = <A>(a: A): Option<A> => ({ _tag: 'Some', value: a })
