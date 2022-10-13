@@ -284,7 +284,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 expr(0) :: parents(COMMA)
               case _ => Nil
             }
-            val ps = parents(KEYWORD(":"))
+            val ps = parents(if (kind === Als) KEYWORD("=") else KEYWORD(":"))
             val body = curlyTypingUnit
             R(NuTypeDef(kind, tn, tparams, params, ps, body))
           
