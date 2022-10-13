@@ -1,0 +1,36 @@
+:NewParser
+:NoJS
+
+class Option
+class Some(value): Option
+class None: Option
+//│ Defined class Option
+//│ Defined class Some
+//│ Defined class None
+//│ Option: () -> Option
+//│ Some: 'value -> (Some with {value: 'value})
+//│ None: () -> None
+
+class Either
+class Left(leftValue): Either
+class Right(rightValue): Either
+//│ Defined class Either
+//│ Defined class Left
+//│ Defined class Right
+//│ Either: () -> Either
+//│ Left: 'leftValue -> (Left with {leftValue: 'leftValue})
+//│ Right: 'rightValue -> (Right with {rightValue: 'rightValue})
+
+fun compute(v) =
+  if v is
+    Left(Some(x)) then x * 5
+    Left(None()) then 1
+    Right(Some(x)) then x * 3
+    Right(None()) then 0
+//│ compute: (Left & {leftValue: None | Some & {value: int}} | Right & {rightValue: None | Some & {value: int}}) -> int
+
+fun crazy(v) =
+  if v is
+    Some(Some(Some(Some(Some(Some(None())))))) then "bruh!"
+    _ then "lol"
+//│ crazy: (Some & {value: Some & {value: Some & {value: Some & {value: Some & {value: Some & {value: None}}}}}} | ~Some) -> ("bruh!" | "lol")

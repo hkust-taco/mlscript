@@ -732,7 +732,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               s"$scrutinee is Tuple#$arity"
           }.mkString("", " and ", s" => $term"))
         }
-        val trm = MutCaseOf.build(cnf).toCaseOf(fallback)
+        val caseTree = MutCaseOf.build(cnf)
+        println("The mutable CaseOf tree")
+        println(caseTree.toString)
+        val trm = caseTree.toTerm(fallback)
         println(s"Desugared term: $trm")
         typeTerm(trm)
       case New(S((nmedTy, trm)), TypingUnit(Nil)) =>
@@ -964,7 +967,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     * @return a list of simple condition with bindings
     */
   private def destructPattern
-      (scrutinee: Term, pattern: Term, ctx: Typer#Ctx): Ls[Condition] = 
+      (scrutinee: Term, pattern: Term, ctx: Typer#Ctx)
+      (implicit aliasMap: MutMap[Term, MutMap[Str, Var]]): Ls[Condition] = 
     pattern match {
       // This case handles top-level wildcard `Var`.
       // We don't make any conditions in this level.
@@ -985,7 +989,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       // x is A(r, s, t)
       case App(className @ Var(name), Tup(args)) =>
         ctx.tyDefs.get(name) match {
-          case N => ???
+          case N => throw new Exception(s"$name not found")
           case S(td) =>
             if (args.length === td.positionals.length) {
               val subPatterns = Buffer.empty[(Var, Term)]
@@ -997,7 +1001,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                 // `x is B(A(x))`: generate a temporary name
                 // use the name in the binding, and destruct sub-patterns
                 case (_ -> Fld(_, _, pattern: Term), fieldName) =>
-                  val alias = Var(freshName)
+                  // We should always use the same temporary for the same `fieldName`.
+                  // This uniqueness is decided by (scrutinee, fieldName).
+                  val alias = aliasMap
+                    .getOrElseUpdate(scrutinee, MutMap.empty)
+                    .getOrElseUpdate(fieldName, Var(freshName))
                   subPatterns += ((alias, pattern))
                   S(fieldName -> alias)
               }.toList
@@ -1006,7 +1014,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                   case (scrutinee, subPattern) => destructPattern(scrutinee, subPattern, ctx)
                 }.toList
             } else {
-              ??? // Error: mismatched length
+              throw new Exception(s"$name expects ${td.positionals.length} but meet ${args.length}")
             }
         }
       // This case handles tuple destructions.
@@ -1028,10 +1036,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             case (scrutinee, subPattern) => destructPattern(scrutinee, subPattern, ctx)
           }.toList
       // What else?
-      case _ => ???
+      case _ => throw new Exception(s"illegal pattern: $pattern")
     }
 
   def desugarIf(body: IfBody)(implicit ctx: Ctx): Ls[Ls[Condition] -> Term] = {
+    // We allocate temporary variable names for nested patterns.
+    // This prevents aliasing problems.
+    implicit val scrutineeFieldAliases: MutMap[Term, MutMap[Str, Var]] = MutMap.empty
     // A list of flattened if-branches.
     val branches = Buffer.empty[Ls[Condition] -> Term]
     /**
@@ -1109,7 +1120,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         case R(NuFunDef(S(isRec), letVar @ Var(name), _, L(rhs))) =>
           ???
         // Other cases are considered to be ill-formed.
-        case R(_) => ???
+        case R(_) => throw new Exception(s"illegal thing: $body")
       }
     def desugarIfBody(body: IfBody)(expr: PartialTerm, acc: List[Condition]): Unit = {
       body match {

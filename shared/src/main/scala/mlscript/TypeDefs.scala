@@ -181,7 +181,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
           val (bodyTy, tvars) = 
             typeType2(td.body, simplify = false)(ctx.copy(lvl = 0), raise, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
           val td1 = TypeDef(td.kind, td.nme, tparamsargs.toList, tvars, bodyTy,
-            td.mthDecls, td.mthDefs, baseClassesOf(td), td.toLoc, Nil)
+            td.mthDecls, td.mthDefs, baseClassesOf(td), td.toLoc, td.positionals.map(_.name))
           allDefs += n -> td1
           S(td1)
       }

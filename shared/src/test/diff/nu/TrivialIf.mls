@@ -1,0 +1,42 @@
+:NewParser
+:NoJS
+
+fun abs(x) = if x < 0 then 0 - x else x
+//│ abs: int -> int
+
+class Option
+class Some(value): Option
+class None: Option
+//│ Defined class Option
+//│ Defined class Some
+//│ Defined class None
+//│ Option: () -> Option
+//│ Some: 'value -> (Some with {value: 'value})
+//│ None: () -> None
+
+fun getOrElse(opt, default) =
+  if opt is
+    Some(value) then value
+    None then default
+//│ getOrElse: (None | (Some with {value: 'value}), 'value,) -> 'value
+
+getOrElse(None(), 0)
+//│ res: 0
+
+getOrElse(Some(42), 0)
+//│ res: 0 | 42
+
+fun map(v, f) =
+  if v is
+    Some(x) then Some(f(x))
+    None then None()
+//│ map: (None | (Some with {value: 'value}), 'value -> 'value0,) -> (None | (Some with {value: 'value0}))
+
+fun inc(x) = x + 5
+//│ inc: int -> int
+
+map(Some(5), x => x + 5)
+//│ res: None | Some & {value: int}
+
+map(None(), inc)
+//│ res: None | Some & {value: int}

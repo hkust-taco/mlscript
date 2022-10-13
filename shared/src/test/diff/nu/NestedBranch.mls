@@ -1,0 +1,20 @@
+:NewParser
+:NoJS
+
+class Option
+class Some(value): Option
+class None: Option
+//│ Defined class Option
+//│ Defined class Some
+//│ Defined class None
+//│ Option: () -> Option
+//│ Some: 'value -> (Some with {value: 'value})
+//│ None: () -> None
+
+fun optionApply(x, y, f) =
+  if x is
+    Some(xv) and y is
+      Some(yv) then Some(f(xv, yv))
+      None() then None()
+    None() then None()
+//│ optionApply: (None | (Some with {value: 'value}), None | (Some with {value: 'value0}), ('value, 'value0,) -> 'value1,) -> (None | (Some with {value: 'value1}))
