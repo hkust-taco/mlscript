@@ -250,7 +250,8 @@ object NewLexer {
     "trait",
     "interface",
     "new",
-    "namespace"
+    "namespace",
+    "type"
   )
   
   def printToken(tl: TokLoc): Str = tl match {

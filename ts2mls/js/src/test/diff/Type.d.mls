@@ -1,0 +1,30 @@
+:NewParser
+:ParseOnly
+trait None() {
+  let _tag: undefined
+}
+trait Some<A>() {
+  let _tag: undefined
+  let value: A
+}
+type Option<A> = (None) | (Some<A>)
+type Func = (number) => number
+type S2 = (string, string, )
+trait I1() {}
+trait I2() {}
+type I3 = (I1) & (I2)
+type StringArray = Array<string>
+type SomeInterface = {x: number,y: number,}
+class ABC() {}
+type DEF = ABC
+type TP<A, B, C> = (A, B, C, )
+namespace NA {
+  fun fb(b: string): unit
+  type B = string
+}
+class NC() {
+  let b: string
+}
+type G = ABC
+//│ |#trait| |None|(||)| |{|→|#let| |_tag|#:| |undefined|←|↵|}|↵|#trait| |Some|‹|A|›|(||)| |{|→|#let| |_tag|#:| |undefined|↵|#let| |value|#:| |A|←|↵|}|↵|#type| |Option|‹|A|›| |#=| |(|None|)| ||| |(|Some|‹|A|›|)|↵|#type| |Func| |#=| |(|number|)| |=>| |number|↵|#type| |S2| |#=| |(|string|,| |string|,| |)|↵|#trait| |I1|(||)| |{||}|↵|#trait| |I2|(||)| |{||}|↵|#type| |I3| |#=| |(|I1|)| |&| |(|I2|)|↵|#type| |StringArray| |#=| |Array|‹|string|›|↵|#type| |SomeInterface| |#=| |{|x|#:| |number|,|y|#:| |number|,|}|↵|#class| |ABC|(||)| |{||}|↵|#type| |DEF| |#=| |ABC|↵|#type| |TP|‹|A|,| |B|,| |C|›| |#=| |(|A|,| |B|,| |C|,| |)|↵|#namespace| |NA| |{|→|#fun| |fb|(|b|#:| |string|)|#:| |unit|↵|#type| |B| |#=| |string|←|↵|}|↵|#class| |NC|(||)| |{|→|#let| |b|#:| |string|←|↵|}|↵|#type| |G| |#=| |ABC|
+//│ Parsed: {trait None(): {let _tag: [] -> undefined}; trait Some[A](): {let _tag: [] -> undefined; let value: [] -> A}; type alias Option[A](): | (None,) (Some‹A›,) = {}; type alias Func(): number, => number = {}; type alias S2(): '(' string, string, ')' = {}; trait I1(): {}; trait I2(): {}; type alias I3(): & (I1,) (I2,) = {}; type alias StringArray(): Array‹string› = {}; type alias SomeInterface(): '{' {x: number, y: number} '}' = {}; class ABC() {}; type alias DEF(): ABC = {}; type alias TP[A, B, C](): '(' A, B, C, ')' = {}; namespace NA(): {fun fb: [] -> (b: string,) -> unit; type alias B(): string = {}}; class NC() {let b: [] -> string}; type alias G(): ABC = {}}
