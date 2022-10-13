@@ -1,0 +1,95 @@
+:NewParser
+
+:d
+fun f(x) = if x < 0 then x else x
+//│ 1. Typing term x, => if (< (x,) (0,)) then x else x
+//│ | 1. Typing pattern x,
+//│ | | 1. Typing pattern x
+//│ | | 1. : α22'
+//│ | 1. : (α22',)
+//│ | 1. Typing term if (< (x,) (0,)) then x else x
+//│ | | Flattened conjunctions
+//│ | | << (x,) (0,)> => x
+//│ | | Desugared term: case < (x,) (0,) of Case(true,x,Case(false,x,NoCases))
+//│ | | 1. Typing term case < (x,) (0,) of Case(true,x,Case(false,x,NoCases))
+//│ | | | 1. Typing term < (x,) (0,)
+//│ | | | | 1. Typing term < (x,)
+//│ | | | | | 1. Typing term <
+//│ | | | | | 1. : (number<> -> (number<> -> bool<>))
+//│ | | | | | 1. Typing term x,
+//│ | | | | | | 1. Typing term x
+//│ | | | | | | 1. : α22'
+//│ | | | | | 1. : (α22',)
+//│ | | | | | CONSTRAIN (number<> -> (number<> -> bool<>)) <! (α22' -> α23')
+//│ | | | | |   where 
+//│ | | | | | C (number<> -> (number<> -> bool<>)) <! (α22' -> α23')    (0)
+//│ | | | | | | C (α22',) <! (number<>,)    (1)
+//│ | | | | | | | C α22' <! number<>    (2)
+//│ | | | | | | C (number<> -> bool<>) <! α23'    (3)
+//│ | | | | 1. : α23'
+//│ | | | | 1. Typing term 0,
+//│ | | | | | 1. Typing term 0
+//│ | | | | | 1. : 0<int,number>
+//│ | | | | 1. : (0<int,number>,)
+//│ | | | | CONSTRAIN α23' <! (0<int,number> -> α24')
+//│ | | | |   where 
+//│ 		α23' :> (number<> -> bool<>)
+//│ | | | | C α23' <! (0<int,number> -> α24')    (0)
+//│ | | | | | C (number<> -> bool<>) <! (0<int,number> -> α24')    (1)
+//│ | | | | | | C (0<int,number>,) <! (number<>,)    (2)
+//│ | | | | | | | C 0<int,number> <! number<>    (3)
+//│ | | | | | | C bool<> <! α24'    (4)
+//│ | | | 1. : α24'
+//│ | | | 1. Typing term x
+//│ | | | 1. : α22'
+//│ | | | 1. Typing term x
+//│ | | | 1. : α22'
+//│ | | | CONSTRAIN α24' <! (true<bool> | (false<bool> & ~(true<bool>)))
+//│ | | |   where 
+//│ 		α24' :> bool<>
+//│ | | | C α24' <! (true<bool> | (false<bool> & ~(true<bool>)))    (0)
+//│ | | | | C bool<> <! (true<bool> | (false<bool> & ~(true<bool>)))    (1)
+//│ | | | | | ARGH  DNF(bool<>{})  <!  DNF(true<bool>{} | false<bool>{})
+//│ | | | | | | Consider bool<>{} <: DNF(true<bool>{} | false<bool>{})
+//│ | | | | | | Possible: List(true<bool>{}, false<bool>{})
+//│ | | | | | | A  bool<>{}  %  List()  <!  List(true<bool>, false<bool>)  %  ⊥
+//│ | | | | | | | A  bool<>{}  %  List()  <!  List(false<bool>)  %  true<bool>
+//│ | | | | | | | | A  bool<>{}  %  List()  <!  List()  %  false<bool>|true<bool>
+//│ | | | | | | | | | A  {}  %  List()  <!  List()  %  
+//│ | | | | | | | | | | CONSTRAINT FAILURE: bool<> <: (true<bool> | (false<bool> & ~(true<bool>)))
+//│ | | | | | | | | | | allVarPols: 
+//│ | | | | | | | | | | norm[-] (true<bool> | (false<bool> & ~(true<bool>)))
+//│ | | | | | | | | | | | DNF: DNF(true<bool>{} | false<bool>{}∧~())
+//│ | | | | | | | | | | | factorize? false<bool> | true<bool>
+//│ | | | | | | | | | | | | Factors 
+//│ | | | | | | | | | | | yes: (false<bool> | true<bool>)
+//│ | | | | | | | | | | ~> (false<bool> | true<bool>)
+//│ | | | | | | | | | | allVarPols: 
+//│ | | | | | | | | | | norm[+] bool<>
+//│ | | | | | | | | | | | DNF: DNF(bool<>{})
+//│ | | | | | | | | | | ~> bool<>
+//│ | | | | | | | | | | CONSTRAIN error<> <! α22'
+//│ | | | | | | | | | |   where 
+//│ 		α22' <: number<>
+//│ | | | | | | | | | | C error<> <! α22'    (0)
+//│ | | | | | | | | | | | C error<> <! number<>    (1)
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.4: 	fun f(x) = if x < 0 then x else x
+//│ ║       	              ^^^^^^^^^^^^^^^^^^^
+//│ ╟── operator application of type `bool` does not match type `bool`
+//│ ║  l.4: 	fun f(x) = if x < 0 then x else x
+//│ ╙──     	              ^^^^^
+//│ | | 1. : α22'
+//│ | 1. : α22'
+//│ 1. : (α22' -> α22')
+//│ CONSTRAIN (α22' -> α22') <! f21'
+//│   where 
+//│ 		α22' :> error<> <: number<>
+//│ C (α22' -> α22') <! f21'    (0)
+//│ ⬤ Typed as: f21'
+//│  where: 
+//│ 		f21' :> (α22' -> α22')
+//│ 		α22' :> error<> <: number<>
+//│ f: (number & 'a) -> (error | 'a)
+//│ Code generation encountered an error:
+//│   cannot generate code for term If((< (x,) (0,)) then x, Some(Var(x)))

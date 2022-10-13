@@ -720,8 +720,21 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case ((a_ty, tv), req) => a_ty & tv | req & a_ty.neg()
         }
         con(s_ty, req, cs_ty)
-      case If(_, _) =>
-        ??? // TODO
+      case If(body, fallback) =>
+        val cnf = desugarIf(body)(ctx)
+        println("Flattened conjunctions")
+        cnf.foreach { case (conditions, term) =>
+          println(conditions.iterator.map {
+            case IfBodyHelpers.Condition.BooleanTest(test) => s"<$test>"
+            case IfBodyHelpers.Condition.MatchClass(scrutinee, Var(className), fields) =>
+              s"$scrutinee is $className"
+            case IfBodyHelpers.Condition.MatchTuple(scrutinee, arity, fields) =>
+              s"$scrutinee is Tuple#$arity"
+          }.mkString("", " and ", s" => $term"))
+        }
+        val trm = MutCaseOf.build(cnf).toCaseOf(fallback)
+        println(s"Desugared term: $trm")
+        typeTerm(trm)
       case New(S((nmedTy, trm)), TypingUnit(Nil)) =>
         typeTerm(App(Var(nmedTy.base.name).withLocOf(nmedTy), trm))
       case New(base, args) => ???
@@ -937,5 +950,215 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     curUid += 1
     res
   }
-  
+
+  import IfBodyHelpers._
+  import mutable.Buffer
+
+  /**
+    * Destruct nested patterns to a list of simple condition with bindings.
+    * TODO: Move this method to `Typer`.
+    *
+    * @param scrutinee the scrutinee of the pattern matching
+    * @param pattern the pattern we will destruct
+    * @param tyDefs `TypeDef`s in the context
+    * @return a list of simple condition with bindings
+    */
+  private def destructPattern
+      (scrutinee: Term, pattern: Term, ctx: Typer#Ctx): Ls[Condition] = 
+    pattern match {
+      // This case handles top-level wildcard `Var`.
+      // We don't make any conditions in this level.
+      case Var("_") => Nil
+      // This case handles literals.
+      // x is true | x is false | x is 0 | x is "text" | ...
+      case literal @ (Var("true") | Var("false") | _: Lit) =>
+        val test = mkBinOp(scrutinee, Var("eq"), literal)
+        Condition.BooleanTest(test) :: Nil
+      // This case handles simple class tests.
+      // x is A
+      case className @ Var(name) =>
+        ctx.tyDefs.get(name) match {
+          case N => ??? // TypeDef not found!
+          case S(_) => Condition.MatchClass(scrutinee, className, Nil) :: Nil
+        }
+      // This case handles classes with destruction.
+      // x is A(r, s, t)
+      case App(className @ Var(name), Tup(args)) =>
+        ctx.tyDefs.get(name) match {
+          case N => ???
+          case S(td) =>
+            if (args.length === td.positionals.length) {
+              val subPatterns = Buffer.empty[(Var, Term)]
+              val bindings = args.iterator.zip(td.positionals).flatMap {
+                // `x is A(_)`: ignore this binding
+                case (_ -> Fld(_, _, Var("_")), _) => N
+                // `x is A(value)`: generate bindings directly
+                case (_ -> Fld(_, _, name: Var), fieldName) => S(fieldName -> name)
+                // `x is B(A(x))`: generate a temporary name
+                // use the name in the binding, and destruct sub-patterns
+                case (_ -> Fld(_, _, pattern: Term), fieldName) =>
+                  val alias = Var(freshName)
+                  subPatterns += ((alias, pattern))
+                  S(fieldName -> alias)
+              }.toList
+              Condition.MatchClass(scrutinee, className, bindings) ::
+                subPatterns.iterator.flatMap[Condition] {
+                  case (scrutinee, subPattern) => destructPattern(scrutinee, subPattern, ctx)
+                }.toList
+            } else {
+              ??? // Error: mismatched length
+            }
+        }
+      // This case handles tuple destructions.
+      // x is (a, b, c)
+      case Tup(elems) =>
+        // temporary binding name -> pattern
+        val subPatterns = Buffer.empty[(Var, Term)]
+        val bindings = elems.iterator.zipWithIndex.flatMap {
+          // x is (_, _, _) : ignore this binding
+          case (_ -> Fld(_, _, Var("_")), _) => N
+          case (_ -> Fld(_, _, name: Var), index) => S(index -> name)
+          case (_ -> Fld(_, _, pattern: Term), index) =>
+            val alias = Var(freshName)
+            subPatterns += ((alias, pattern))
+            S(index -> alias)
+        }.toList
+        Condition.MatchTuple(scrutinee, elems.length, bindings) ::
+          subPatterns.iterator.flatMap[Condition] {
+            case (scrutinee, subPattern) => destructPattern(scrutinee, subPattern, ctx)
+          }.toList
+      // What else?
+      case _ => ???
+    }
+
+  def desugarIf(body: IfBody)(implicit ctx: Ctx): Ls[Ls[Condition] -> Term] = {
+    // A list of flattened if-branches.
+    val branches = Buffer.empty[Ls[Condition] -> Term]
+    /**
+      * Recursively desugar a pattern matching branch.
+      *
+      * @param scrutinee the scrutinee of this pattern matching
+      * @param body one element of `lines` of the `IfBlock`
+      * @param pat the accumulated pattern, since patterns can be split
+      * @param acc the accumulated conditions so far
+      * @param ctx the typing context
+      */
+    def desugarMatchBranch
+        (scrutinee: Term, body: IfBody \/ Statement, pat: PartialTerm, acc: Ls[Condition])
+        (implicit ctx: Typer#Ctx): Unit =
+      // What can be in a 
+      body match {
+        // if x is
+        //   A(...) then ...         // Case 1: no conjunctions
+        //   B(...) and ... then ... // Case 2: more conjunctions
+        case L(IfThen(patTest, consequent)) =>
+          patTest match {
+            case App(
+              App(Var("and"),
+                  Tup((_ -> Fld(_, _, pattern)) :: Nil)),
+              Tup((_ -> Fld(_, _, test)) :: Nil)
+            ) =>
+              val branch = IfThen(test, consequent)
+              desugarIfBody(branch)(N, destructPattern(scrutinee, pattern, ctx))
+            case pattern =>
+              val acc2 = acc ::: destructPattern(scrutinee, pattern, ctx)
+              branches += (acc2 -> consequent)
+          }
+        // if x is
+        //   A(...) and t <> // => IfOpApp(A(...), "and", IfOpApp(...))
+        //     a then ...
+        //     b then ...
+        //   A(...) and y is // => IfOpApp(A(...), "and", IfOpApp(...))
+        //     B(...) then ...
+        //     B(...) then ...
+        case L(IfOpApp(pattern, Var("and"), consequent)) =>
+          val acc2 = acc ::: destructPattern(scrutinee, pattern, ctx)
+          desugarIfBody(consequent)(N, acc2)
+        case L(IfOpApp(patLhs, op, consequent)) =>
+          patLhs match {
+            // In this case, the pattern is completed.
+            // There is also a conjunction.
+            case App(
+              App(Var("and"),
+                  Tup((_ -> Fld(_, _, pattern)) :: Nil)),
+              Tup((_ -> Fld(_, _, lhs)) :: Nil)
+            ) =>
+              
+            // In this case, the pattern has not completed yet.
+            case patternPart => 
+              val partialPattern = addTermOp(pat, patternPart, op)
+              desugarMatchBranch(scrutinee, L(consequent), partialPattern, acc)
+          }
+        case L(IfOpsApp(patLhs, opsRhss)) =>
+          patLhs match {
+            case App(
+              App(Var("and"),
+                  Tup((_ -> Fld(_, _, realPat)) :: Nil)),
+              Tup((_ -> Fld(_, _, restCond)) :: Nil)
+            ) =>
+              ???
+            case pattern => ???
+          }
+        case L(IfElse(consequent)) =>
+          // Because this pattern matching is incomplete, it's not included in
+          // `acc`. This means that we discard this incomplete pattern matching.
+          branches += (acc -> consequent)
+        // Other cases are considered to be ill-formed.
+        case L(_) => ???
+        // This case handles interleaved lets.
+        case R(NuFunDef(S(isRec), letVar @ Var(name), _, L(rhs))) =>
+          ???
+        // Other cases are considered to be ill-formed.
+        case R(_) => ???
+      }
+    def desugarIfBody(body: IfBody)(expr: PartialTerm, acc: List[Condition]): Unit = {
+      body match {
+        // Let's put it aside since it's not part of Simple UCS.
+        case IfOpsApp(lhs, opsRhss) => ???
+        // The termination case.
+        case IfThen(term, consequent) =>
+          addTerm(expr, term) match {
+            case N => ???
+            case S(L(test)) =>
+              val tests = splitAnd(test)
+              tests match {
+                case init :+ last => last match {
+                  case App(
+                    App(Var("is"), 
+                        Tup((_ -> Fld(_, _, scrut)) :: Nil)),
+                    Tup((_ -> Fld(_, _, pat)) :: Nil)
+                  ) =>
+                    // The last one is a pattern matching.
+                    branches += (acc ::: destructPattern(scrut, pat, ctx)) -> consequent
+                  case _ =>
+                    // Just a list of simple boolean tests.
+                    branches += (acc ::: tests.map(Condition.BooleanTest(_))) -> consequent
+                }
+                case _ => ???
+              }
+            case S(R(_)) => ???
+          }
+        // This is the entrance of the Simple UCS.
+        case IfOpApp(scrutinee, Var("is"), IfBlock(lines)) =>
+          lines.foreach(desugarMatchBranch(scrutinee, _, N, acc))
+        // Otherwise, this is not a pattern matching.
+        // We create a partial term from `lhs` and `op` and dive deeper.
+        case IfOpApp(lhs, op, body) =>
+          desugarIfBody(body)(addTermOp(expr, lhs, op), acc)
+        // This case is rare. Let's put it aside.
+        case IfLet(isRec, name, rhs, body) => ???
+        // In this case, the accumulated partial term is discarded.
+        // We create a branch directly from accumulated conditions.
+        case IfElse(term) => branches += (acc -> term)
+        case IfBlock(lines) =>
+          lines.foreach {
+            case L(subBody) => desugarIfBody(subBody)(N, acc)
+            case R(NuFunDef(S(isRec), letVar @ Var(name), _, L(rhs))) => ???
+            case R(_) => ??? // Error: unexpected statements
+          }
+      }
+    }
+    desugarIfBody(body)(N, Nil)
+    branches.toList
+  }
 }

@@ -7,6 +7,7 @@ import scala.collection.immutable.SortedSet
 import math.Ordered.orderingToOrdered
 
 import mlscript.utils._, shorthands._
+import scala.collection.immutable
 
 
 // Auxiliary definitions for types
@@ -729,6 +730,14 @@ trait CaseBranchesImpl extends Located { self: CaseBranches =>
   
 }
 
+abstract class MatchCase
+
+object MatchCase {
+  final case class ClassPattern(name: Var, fields: Buffer[Var -> Var]) extends MatchCase
+  final case class TuplePattern(arity: Int, fields: Buffer[Int -> Var]) extends MatchCase
+  final case class BooleanTest(test: Term) extends MatchCase
+}
+
 trait IfBodyImpl extends Located { self: IfBody =>
   
   def children: List[Located] = this match {
@@ -760,4 +769,197 @@ trait IfBodyImpl extends Located { self: IfBody =>
     // case _ => ??? // TODO
   }
   
+}
+
+object IfBodyHelpers {
+  abstract class Condition
+
+  object Condition {
+    final case class MatchClass(
+      scrutinee: Term,
+      className: Var,
+      fields: List[Str -> Var]
+    ) extends Condition
+    final case class MatchTuple(
+      scrutinee: Term,
+      arity: Int,
+      fields: List[Int -> Var]
+    ) extends Condition
+    final case class BooleanTest(test: Term) extends Condition
+  }
+
+  def mkMonuple(t: Term): Tup = Tup(N -> Fld(false, false, t) :: Nil)
+
+  def mkBinOp(lhs: Term, op: Var, rhs: Term): Term =
+    App(App(op, mkMonuple(lhs)), mkMonuple(rhs))
+
+  type PartialTerm = Opt[Term \/ (Term -> Var)]
+
+  // Add a term to a partial term.
+  def addTerm(sum: PartialTerm, rhs: Term): PartialTerm = 
+    sum match {
+      case N => S(L(rhs))
+      case S(L(_)) => ???
+      case S(R(lhs -> op)) => S(L(mkBinOp(lhs, op, rhs)))
+    }
+
+  // Add an operator to a partial term.
+  def addOp(sum: PartialTerm, op: Var): PartialTerm =
+    sum match {
+      case N => ???
+      case S(L(lhs)) => S(R(lhs -> op))
+      case S(R(_)) => ???
+    }
+
+  def addTermOp(sum: PartialTerm, t: Term, op: Var): PartialTerm
+    = addOp(addTerm(sum, t), op)
+
+  // Split a term joined by `and` into a list of terms.
+  // E.g. x and y and z => x, y, z
+  def splitAnd(t: Term): Ls[Term] =
+    t match {
+      case App(
+        App(Var("and"),
+            Tup((_ -> Fld(_, _, lhs)) :: Nil)),
+        Tup((_ -> Fld(_, _, rhs)) :: Nil)
+      ) =>
+        splitAnd(lhs) :+ rhs
+      case _ => t :: Nil
+    }
+
+  private var idLength: Int = 0
+  def freshName: String = {
+    val res = s"tmp$idLength"
+    idLength += 1
+    res
+  }
+}
+
+abstract class MutCaseOf {
+  def append(branch: Ls[IfBodyHelpers.Condition] -> Term): Unit
+  def toCaseOf(implicit fallback: Opt[Term]): CaseOf
+  def toTerm(implicit fallback: Opt[Term]): Term
+}
+
+object MutCaseOf {
+  import IfBodyHelpers._
+
+  type Branch = Opt[Var -> Buffer[Str -> Var]] -> MutCaseOf
+  // A short-hand for pattern matchings with only true and false branches.
+  final case class IfThenElse(condition: Term, var whenTrue: MutCaseOf, var whenFalse: MutCaseOf) extends MutCaseOf {
+    override def append(branch: Ls[Condition] -> Term): Unit = branch match {
+      case Nil -> term => 
+        whenFalse match {
+          case Consequent(_) => ??? // duplicated branch
+          case MissingCase => whenFalse = Consequent(term)
+          case _ => whenFalse.append(branch)
+        }
+      case (Condition.BooleanTest(test) :: tail) -> term =>
+        if (test === condition) {
+          whenTrue.append(tail -> term)
+        } else {
+          whenFalse match {
+            case Consequent(_) => ??? // duplicated branch
+            case MissingCase => whenFalse = Consequent(term)
+            case _ => whenFalse.append(branch)
+          }
+        }
+      case _ =>
+        whenFalse match {
+          case Consequent(_) => ??? // duplicated branch
+          case MissingCase => whenFalse = from(branch)
+          case _ => whenFalse.append(branch)
+        }
+    }
+    override def toCaseOf(implicit fallback: Opt[Term]): CaseOf = {
+      val falseBranch = Case(Var("false"), whenFalse.toTerm, NoCases)
+      val trueBranch = Case(Var("true"), whenTrue.toTerm, falseBranch)
+      CaseOf(condition, trueBranch)
+    }
+    override def toTerm(implicit fallback: Opt[Term]): Term = toCaseOf
+  }
+  final case class Match(scrutinee: Term, val branches: Buffer[Branch]) extends MutCaseOf {
+    override def append(branch: Ls[Condition] -> Term): Unit = branch match {
+      case Nil -> _ => ??? // duplicated branch
+      case (Condition.MatchClass(scrutinee, className, fields) :: tail) -> term =>
+        val branches = Buffer.empty[Branch]
+        branches.find(_._1.map(_._1 === className).getOrElse(false)) match {
+          case N =>
+            branches += S(className -> Buffer.from(fields)) -> from(tail -> term)
+          case S(branch) =>
+            branch._1.getOrElse(???)._2 ++= fields
+            branch._2.append(tail -> term)
+        }
+      case (Condition.MatchTuple(scrutinee, arity, fields) :: tail) -> term =>
+        val branches = Buffer.empty[Branch]
+        val tupleClassName = Var(s"Tuple#$arity")
+        val indexFields = fields.map { case (index, alias) => index.toString -> alias }
+        branches.find(_._1.map(_._1 === tupleClassName).getOrElse(false)) match {
+          case N =>
+            branches += S(tupleClassName -> Buffer.from(indexFields)) -> from(tail -> term)
+          case S(branch) =>
+            branch._1.getOrElse(???)._2 ++= indexFields
+            branch._2.append(tail -> term)
+        }
+      case (Condition.BooleanTest(test) :: tail) -> term =>
+        // We should look up identical if-then-else branches in the buffer.
+        branches += N -> IfThenElse(test, from(tail -> term), MissingCase)
+    }
+    override def toCaseOf(implicit fallback: Opt[Term]): CaseOf = {
+      def rec(xs: Ls[Branch]): CaseBranches =
+        xs match {
+          case Nil => NoCases
+          case (S(className -> fields) -> cases) :: next =>
+            // TODO: expand bindings here
+            Case(className, cases.toTerm, rec(next))
+          case (N -> cases) :: next =>
+            // TODO: Warns if next is not Nil
+            Wildcard(cases.toTerm)
+        }
+      CaseOf(scrutinee, rec(branches.toList))
+    }
+    override def toTerm(implicit fallback: Opt[Term]): Term = toCaseOf
+  }
+  final case class Consequent(term: Term) extends MutCaseOf {
+    override def append(branch: Ls[Condition] -> Term): Unit = ???
+    override def toCaseOf(implicit fallback: Opt[Term]): CaseOf = ???
+    override def toTerm(implicit fallback: Opt[Term]): Term = term
+  }
+  final case object MissingCase extends MutCaseOf {
+    override def append(branch: Ls[Condition] -> Term): Unit = ???
+    override def toCaseOf(implicit fallback: Opt[Term]): CaseOf = ???
+    override def toTerm(implicit fallback: Opt[Term]): Term = fallback.getOrElse(???)
+  }
+
+  def from(branch: Ls[Condition] -> Term): MutCaseOf = {
+    val conditions -> term = branch
+    def rec(conditions: Ls[Condition]): MutCaseOf = conditions match {
+      case head :: next =>
+        head match {
+          case Condition.BooleanTest(test) => IfThenElse(test, rec(next), MissingCase)
+          case Condition.MatchClass(scrutinee, className, fields) =>
+            val branches = Buffer.empty[Branch]
+            branches += (S(className -> Buffer.from(fields)) -> rec(next))
+            Match(scrutinee, branches)
+          case Condition.MatchTuple(scrutinee, arity, fields) =>
+            val branches = Buffer.empty[Branch]
+            val tupleClassName = Var(s"Tuple#$arity")
+            val indexFields = fields.map { case (index, alias) => index.toString -> alias }
+            branches += (S(tupleClassName -> Buffer.from(indexFields)) -> rec(next))
+            Match(scrutinee, branches)
+        }
+      case Nil => Consequent(term)
+    }
+    rec(conditions)
+  }
+
+  def build(cnf: Ls[Ls[Condition] -> Term]): MutCaseOf = {
+    cnf match {
+      case Nil => ???
+      case head :: next =>
+        val root = MutCaseOf.from(head)
+        next.foreach(root.append(_))
+        root
+    }
+  }
 }

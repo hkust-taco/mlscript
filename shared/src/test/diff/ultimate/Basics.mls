@@ -3,6 +3,8 @@
 
 // TODO
 if true then 0 else 1
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ res: 0 | 1
+//│ Code generation encountered an error:
+//│   cannot generate code for term If((true) then 0, Some(IntLit(1)))
 
 
