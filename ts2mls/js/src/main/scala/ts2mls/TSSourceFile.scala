@@ -46,10 +46,13 @@ object TSSourceFile {
     else if (tn.isTupleTypeNode) TSTupleType(getTupleElements(tn.typeNode.typeArguments))
     else getObjectType(tn.typeNode)
 
+  private def getLiteralType(tp: TSNodeObject) = TSLiteralType(tp.literal.text)
+
   // get the type of a member in classes/named interfaces/anonymous interfaces
   private def getMemberType(node: TSNodeObject): TSType = {
     val res: TSType =
       if (node.isFunctionLike) getFunctionType(node)
+      else if (node.`type`.isLiteralTypeNode) getLiteralType(node.`type`)
       else getObjectType(node.`type`.typeNode)
     if (node.symbol.isOptionalMember) TSUnionType(res, TSPrimitiveType("undefined"))
     else res

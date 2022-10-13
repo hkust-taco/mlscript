@@ -33,6 +33,7 @@ object TypeScript {
   def isTupleTypeNode(node: js.Dynamic) = ts.isTupleTypeNode(node)
   def isTypeAliasDeclaration(node: js.Dynamic) = ts.isTypeAliasDeclaration(node)
   def isObjectLiteralExpression(node: js.Dynamic) = ts.isObjectLiteralExpression(node)
+  def isLiteralTypeNode(node: js.Dynamic) = ts.isLiteralTypeNode(node)
 
   def forEachChild(root: js.Dynamic, func: js.Dynamic => Unit) = ts.forEachChild(root, func)
   def createProgram(filenames: Seq[String]) =
@@ -91,6 +92,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val isFunctionLike = TypeScript.isFunctionLike(node)
   lazy val isTypeAliasDeclaration = TypeScript.isTypeAliasDeclaration(node)
   lazy val isObjectLiteral = TypeScript.isObjectLiteralExpression(node)
+  lazy val isLiteralTypeNode = TypeScript.isLiteralTypeNode(node)
 
   // `TypeScript.isModuleDeclaration` works on both namespaces and modules
   // but namespaces are more recommended, so we merely use `isNamespace` here
@@ -134,6 +136,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val `type` = TSNodeObject(node.selectDynamic("type"))
 
   lazy val symbolType = TSTypeObject(checker.getTypeOfSymbolAtLocation(node.symbol, node))
+  lazy val literal = TSTokenObject(node.literal)
 }
 
 object TSNodeObject {
@@ -148,6 +151,7 @@ class TSTokenObject(token: js.Dynamic)(implicit checker: TSTypeChecker) extends 
   lazy val isStatic = kind == TypeScript.syntaxKindStatic
 
   lazy val typeNode = TSTypeObject(checker.getTypeFromTypeNode(token))
+  lazy val text = token.text.toString()
 }
 
 object TSTokenObject {
