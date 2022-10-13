@@ -46,7 +46,8 @@ object TSSourceFile {
     else if (tn.isTupleTypeNode) TSTupleType(getTupleElements(tn.typeNode.typeArguments))
     else getObjectType(tn.typeNode)
 
-  private def getLiteralType(tp: TSNodeObject) = TSLiteralType(tp.literal.text)
+  private def getLiteralType(tp: TSNodeObject) =
+    TSLiteralType(tp.literal.text, tp.typeNode.isStringLiteral)
 
   // get the type of a member in classes/named interfaces/anonymous interfaces
   private def getMemberType(node: TSNodeObject): TSType = {
