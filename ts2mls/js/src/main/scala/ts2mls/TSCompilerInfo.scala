@@ -32,6 +32,7 @@ object TypeScript {
   def isArrayTypeNode(node: js.Dynamic) = ts.isArrayTypeNode(node)
   def isTupleTypeNode(node: js.Dynamic) = ts.isTupleTypeNode(node)
   def isTypeAliasDeclaration(node: js.Dynamic) = ts.isTypeAliasDeclaration(node)
+  def isObjectLiteralExpression(node: js.Dynamic) = ts.isObjectLiteralExpression(node)
 
   def forEachChild(root: js.Dynamic, func: js.Dynamic => Unit) = ts.forEachChild(root, func)
   def createProgram(filenames: Seq[String]) =
@@ -89,6 +90,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val isInterfaceDeclaration = TypeScript.isInterfaceDeclaration(node)
   lazy val isFunctionLike = TypeScript.isFunctionLike(node)
   lazy val isTypeAliasDeclaration = TypeScript.isTypeAliasDeclaration(node)
+  lazy val isObjectLiteral = TypeScript.isObjectLiteralExpression(node)
 
   // `TypeScript.isModuleDeclaration` works on both namespaces and modules
   // but namespaces are more recommended, so we merely use `isNamespace` here
@@ -112,6 +114,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val typeParameters = TSNodeArray(node.typeParameters)
   lazy val constraint = TSTokenObject(node.constraint)
   lazy val members = TSNodeArray(node.members)
+  lazy val properties = TSNodeArray(node.properties)
   lazy val types = TSNodeArray(node.types)
   lazy val heritageClauses = TSNodeArray(node.heritageClauses)
   lazy val initializer = TSNodeObject(node.initializer)

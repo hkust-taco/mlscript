@@ -191,6 +191,8 @@ object TSSourceFile {
       ns.put(name, parseMembers(name, node, false))
     else if (node.isTypeAliasDeclaration)
       ns.put(name, TSTypeAlias(name, getTypeAlias(node.`type`), getTypeParameters(node)))
+    // else if (node.isObjectLiteral)
+    //   ns.put(name, TSInterfaceType("", getInterfacePropertiesType(node.properties), List(), List()))
     else if (node.isNamespace)
       parseNamespace(node)
 
