@@ -17,7 +17,6 @@ object TSSourceFile {
           addNodeIntoNamespace(decNode.initializer, decNode.symbol.escapedName)(global)
         }
       }
-        
     })
 
   private def getSubstitutionArguments[T <: TSAny](args: TSArray[T]): List[TSType] =
@@ -48,6 +47,11 @@ object TSSourceFile {
 
   private def getLiteralType(tp: TSNodeObject) =
     TSLiteralType(tp.literal.text, tp.typeNode.isStringLiteral)
+
+  private def getObjectLiteralMembers(props: TSNodeArray) =
+    props.foldLeft(Map[String, TSMemberType]())((mp, p) => {
+      mp ++ Map(p.name.escapedText -> TSMemberType(TSLiteralType(p.initToken.text, p.initToken.isStringLiteral)))
+    })
 
   // get the type of a member in classes/named interfaces/anonymous interfaces
   private def getMemberType(node: TSNodeObject): TSType = {
@@ -195,8 +199,8 @@ object TSSourceFile {
       ns.put(name, parseMembers(name, node, false))
     else if (node.isTypeAliasDeclaration)
       ns.put(name, TSTypeAlias(name, getTypeAlias(node.`type`), getTypeParameters(node)))
-    // else if (node.isObjectLiteral)
-    //   ns.put(name, TSInterfaceType("", getInterfacePropertiesType(node.properties), List(), List()))
+    else if (node.isObjectLiteral)
+      ns.put(name, TSInterfaceType("", getObjectLiteralMembers(node.properties), List(), List()))
     else if (node.isNamespace)
       parseNamespace(node)
 

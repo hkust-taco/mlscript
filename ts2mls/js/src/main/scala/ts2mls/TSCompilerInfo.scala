@@ -34,6 +34,7 @@ object TypeScript {
   def isTypeAliasDeclaration(node: js.Dynamic) = ts.isTypeAliasDeclaration(node)
   def isObjectLiteralExpression(node: js.Dynamic) = ts.isObjectLiteralExpression(node)
   def isLiteralTypeNode(node: js.Dynamic) = ts.isLiteralTypeNode(node)
+  def isStringLiteral(node: js.Dynamic) = ts.isStringLiteral(node)
 
   def forEachChild(root: js.Dynamic, func: js.Dynamic => Unit) = ts.forEachChild(root, func)
   def createProgram(filenames: Seq[String]) =
@@ -120,6 +121,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val types = TSNodeArray(node.types)
   lazy val heritageClauses = TSNodeArray(node.heritageClauses)
   lazy val initializer = TSNodeObject(node.initializer)
+  lazy val initToken = TSTokenObject(node.initializer)
   lazy val modifier =
     if (modifiers.isUndefined) Public
     else modifiers.foldLeft[TSAccessModifier](Public)(
@@ -137,6 +139,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
 
   lazy val symbolType = TSTypeObject(checker.getTypeOfSymbolAtLocation(node.symbol, node))
   lazy val literal = TSTokenObject(node.literal)
+  lazy val name = TSIdentifierObject(node.name)
 }
 
 object TSNodeObject {
@@ -152,6 +155,7 @@ class TSTokenObject(token: js.Dynamic)(implicit checker: TSTypeChecker) extends 
 
   lazy val typeNode = TSTypeObject(checker.getTypeFromTypeNode(token))
   lazy val text = token.text.toString()
+  lazy val isStringLiteral = TypeScript.isStringLiteral(token)
 }
 
 object TSTokenObject {
