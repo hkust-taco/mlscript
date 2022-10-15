@@ -301,8 +301,18 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     def rec(lhs: SimpleType, rhs: SimpleType, nestedProv: Opt[NestedTypeProvenance] = N)
           (implicit raise: Raise, cctx: ConCtx): Unit = {
       constrainCalls += 1
-      val sameLhs = cctx._1.headOption.exists(_.prov is lhs.prov)
-      val sameRhs = cctx._2.headOption.exists(_.prov is rhs.prov)
+      var sameLhs = cctx._1.headOption.exists(_.prov.loco === lhs.prov.loco)
+      var sameRhs = cctx._2.headOption.exists(_.prov.loco === rhs.prov.loco)
+      
+      // check if these tuples are implicit
+      // don't add them to chain
+      (lhs, rhs) match {
+        case (lt: TupleType, rt: TupleType) =>
+          if (lt.implicitTuple || rt.implicitTuple)
+            sameLhs = true
+            sameRhs = true
+        case _ => ()
+      }
       
       val newCctx = nestedProv match {
         case N => 
@@ -355,10 +365,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       // Thread.sleep(10)  // useful for debugging constraint-solving explosions debugged on stdout
       recImpl(lhs, rhs)(raise, newCctx)
     }
-    def recImpl(lhs: SimpleType, rhs: SimpleType)
+    def recImpl(lhs: SimpleType, rhs: SimpleType, skipCache: Bool = false)
           (implicit raise: Raise, cctx: ConCtx): Unit =
     // trace(s"C $lhs <! $rhs") {
-    trace(s"C $lhs <! $rhs    (${cache.size}) where ${lhs.getClass.getSimpleName} <: ${rhs.getClass.getSimpleName}}") {
+    trace(s"C $lhs <! $rhs    (${cache.size}) where ${lhs.getClass.getSimpleName} <: ${rhs.getClass.getSimpleName}} and prov ${lhs.prov} <: ${rhs.prov}") {
     // trace(s"C $lhs <! $rhs  ${lhs.getClass.getSimpleName}  ${rhs.getClass.getSimpleName}") {
       // println(s"[[ ${cctx._1.map(_.prov).mkString(", ")}  <<  ${cctx._2.map(_.prov).mkString(", ")} ]]")
       // println(s"{{ ${cache.mkString(", ")} }}")
@@ -385,7 +395,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case _ =>
             if (cache(lhs_rhs)) return println(s"Cached!")
             cache += lhs_rhs
-        }
+      }
         lhs_rhs match {
           case (ExtrType(true), _) => ()
           case (_, ExtrType(false) | RecordType(Nil)) => ()
@@ -394,22 +404,31 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (p @ ProvType(und), _) => rec(und, rhs)
           case (_, p @ ProvType(und)) => rec(lhs, und)
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs)
-          case (FunctionType(l0, r0), FunctionType(l1, r1)) =>
-            errorSimplifer.updateCounter(cctx, (1, 0))
+          case (lf @ FunctionType(l0, r0), rf @ FunctionType(l1, r1)) =>
             errorSimplifer.reportInfo(S(cctx), 3)
+            errorSimplifer.updateCounter(cctx, (1, 0))
             rec(l1, l0, revProvChain.map(_.updateInfo("function lhs")))
             rec(r0, r1, provChain.map(_.updateInfo("function rhs")))
           case (prim: ClassTag, ot: ObjectTag)
-            if prim.parentsST.contains(ot.id) => ()
+            if prim.parentsST.contains(ot.id) =>
+              errorSimplifer.reportInfo(S(cctx), 3)
+              errorSimplifer.updateCounter(cctx, (1, 0))
+              ()
           // for constraining type variables a new bound is created
           // the `newBound`'s provenance must record the whole flow
           // of the type variable from it's producer to it's consumer
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
+            // if (rhs.isInstanceOf[ObjectTag])
+            //   errorSimplifer.updateCounter(cctx, (1, 0))
+            //   errorSimplifer.reportInfo(S(cctx), 3)
             val newBound = (cctx._1 ::: cctx._2.reverse).foldRight(rhs)((c, ty) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             lhs.upperBounds ::= newBound // update the bound
             lhs.lowerBounds.foreach(rec(_, rhs)) // propagate from the bound
           case (lhs, rhs: TypeVariable) if lhs.level <= rhs.level =>
+            // if (lhs.isInstanceOf[ObjectTag])
+            //   errorSimplifer.updateCounter(cctx, (1, 0))
+            //   errorSimplifer.reportInfo(S(cctx), 3)
             val newBound = (cctx._1 ::: cctx._2.reverse).foldLeft(lhs)((ty, c) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             rhs.lowerBounds ::= newBound // update the bound
@@ -426,9 +445,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             println(s" where ${lhs.showBounds}")
             println(s"   and ${lhs0.showBounds}")
             rec(lhs, rhs)
+          // implicit tuples are function arguments that are wrapped temporarily
+          // do not consider them as constructors call rec on their contained types
+          case (ltup @ TupleType((N -> FieldType(N, lt)) :: Nil), rtup @ TupleType((N -> FieldType(N, rt)) :: Nil))
+            if (ltup.implicitTuple || rtup.implicitTuple) =>
+              rec(lt, rt)
           case (TupleType(fs0), TupleType(fs1)) if fs0.size === fs1.size => // TODO generalize (coerce compatible tuples)
-            errorSimplifer.updateCounter(cctx, (1, 0))
-            errorSimplifer.reportInfo(S(cctx), 3)
             fs0.lazyZip(fs1).foreach { case ((ln, l), (rn, r)) =>
               ln.foreach { ln => rn.foreach { rn =>
                 if (ln =/= rn) err(
@@ -458,8 +480,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rec(err, l0, provChain)
             rec(r0, err, provChain)
           case (RecordType(fs0), RecordType(fs1)) =>
-            errorSimplifer.updateCounter(cctx, (1, 0))
-            errorSimplifer.reportInfo(S(cctx), 3)
             fs1.foreach { case (n1, t1) =>
               fs0.find(_._1 === n1).fold {
                 reportError()
@@ -820,7 +840,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }
     
     def updateCounter(cctx: ConCtx, change: (Int, Int)): Unit = {
-      (cctx._1 ::: cctx._2).foreach(updateCounter(_, change))
+      dedupChain(flattenChainToProvList(cctx)).foreach(prov => prov.loco.foreach(loc => updateCounter(loc, change)))
     }
     
     /* Stores the chain of provenances that lead to a given constraint
@@ -867,12 +887,21 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       def inner(chain: Ls[ST], level: Int = 0): Ls[TypeProvenance] = {
         chain.flatMap(st => st.prov match {
           case nested: NestedTypeProvenance => inner(nested.chain, level + 1)
-          case simple: TypeProvenance => simple.copy(desc = s"$level ${simple.desc}") :: Nil
+          case simple: TypeProvenance => simple.copy(desc = s"${simple.desc} at nesting: $level") :: Nil
         })
       }
       inner(chain._1 ::: chain._2)
     }
     
+    /**
+      * Deduplicate consecutive locations that point to the same location
+      *
+      * @param chain
+      * @return
+      */
+    def dedupChain(chain: Ls[TP]): Ls[TP] =
+      chain.sliding(2).collect { case Seq(prev, next) if !(prev.loco === next.loco) => next }.toList
+      
     /**
       * Display a chain of provenances with nested levels where
       * a provenances is wrapped into a nested provenance
@@ -1030,7 +1059,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }
 
     case class DStarStrategy() extends Strategy {
-      val exponent = 2
+      val exponent: Int = 2
       override def score(loco: Loc): Double = {
         locoCounter.get(loco) match {
           case None => 0

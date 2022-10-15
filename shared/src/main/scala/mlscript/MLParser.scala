@@ -23,7 +23,10 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   
   def toParams(t: Term): Tup = t match {
     case t: Tup => t
-    case _ => Tup((N, Fld(false, false, t)) :: Nil)
+    // set implicit tupling to true
+    // this will be used later in type constraining
+    // and counting source code locations properly
+    case _ => new ImplicitTup((N, Fld(false, false, t)) :: Nil)
   }
   def toParamsTy(t: Type): Tuple = t match {
     case t: Tuple => t

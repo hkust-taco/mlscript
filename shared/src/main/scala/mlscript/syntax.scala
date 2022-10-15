@@ -54,7 +54,10 @@ sealed abstract class Lit                                            extends Sim
 final case class Var(name: Str)                                      extends SimpleTerm with VarImpl
 final case class Lam(lhs: Term, rhs: Term)                           extends Term
 final case class App(lhs: Term, rhs: Term)                           extends Term
-final case class Tup(fields: Ls[Opt[Var] -> Fld])                    extends Term
+case class Tup(fields: Ls[Opt[Var] -> Fld]) extends Term
+// used to mark tuples that have been created implicity
+// by wrapping function arguments as parameter lists
+final class ImplicitTup(fields: Ls[Opt[Var] -> Fld]) extends Tup(fields)
 final case class Rcd(fields: Ls[Var -> Fld])                         extends Term
 final case class Sel(receiver: Term, fieldName: Var)                 extends Term
 final case class Let(isRec: Bool, name: Var, rhs: Term, body: Term)  extends Term
@@ -124,7 +127,10 @@ final case class Union(lhs: Type, rhs: Type)             extends Composed(true)
 final case class Inter(lhs: Type, rhs: Type)             extends Composed(false)
 final case class Function(lhs: Type, rhs: Type)          extends Type
 final case class Record(fields: Ls[Var -> Field])        extends Type
-final case class Tuple(fields: Ls[Opt[Var] -> Field])    extends Type
+case class Tuple(fields: Ls[Opt[Var] -> Field])    extends Type
+// used to mark tuple types that have been created implicity
+// by wrapping function arguments as parameter lists
+final class ImplicitTuple(fields: Ls[Opt[Var] -> Field]) extends Tuple(fields)
 final case class Recursive(uv: TypeVar, body: Type)      extends Type
 final case class AppliedType(base: TypeName, targs: List[Type]) extends Type with NamedType
 final case class Neg(base: Type)                         extends Type

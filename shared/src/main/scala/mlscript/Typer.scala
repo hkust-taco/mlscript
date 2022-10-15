@@ -7,6 +7,7 @@ import scala.util.chaining._
 import scala.annotation.tailrec
 import mlscript.utils._, shorthands._
 import mlscript.Message._
+import scala.collection.immutable
 
 /** A class encapsulating type inference state.
  *  It uses its own internal representation of types and type variables, using mutable data structures.
@@ -441,6 +442,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       } else N
   }
   
+  /**
+    * Pass no prov in the case of application expression. This is to ensure
+    * those locations don't get double counted when simplifying error
+    * messages.
+    *
+    * @param p
+    * @return
+    */
   def hintProv(p: TP): TP = noProv
   
   /** Infer the type of a term. */
@@ -543,6 +552,20 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         })(prov)
       case tup: Tup if funkyTuples =>
         typeTerms(tup :: Nil, false, Nil)
+      case tup: Tup if (tup.isInstanceOf[ImplicitTup]) =>
+        tup.fields match {
+          case ((N, Fld(false, false, t)) :: Nil) =>
+            val tym = typeTerm(t)
+            // Note: Do not pass extra prov here
+            // an implicit tuple is a function argument
+            // App(f, a) case already creates a proxy type
+            // to store provance of argument storing prov
+            // again leads to duplication
+            val rettype = TupleType((N, tym.toUpper(noProv)) :: Nil)(noProv)
+            rettype.implicitTuple = true
+            rettype
+          case _ => err(msg"Implicit tuple with no fields is not allowed", N)(raise)
+        }
       case Tup(fs) =>
         TupleType(fs.map { case (n, Fld(mut, _, t)) =>
           val tym = typeTerm(t)
