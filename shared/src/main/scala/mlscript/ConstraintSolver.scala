@@ -405,30 +405,26 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_, p @ ProvType(und)) => rec(lhs, und)
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs)
           case (lf @ FunctionType(l0, r0), rf @ FunctionType(l1, r1)) =>
+            errorSimplifer.updateLevelCount(cctx)
+            errorSimplifer.reportInfo(S(cctx))
             errorSimplifer.reportInfo(S(cctx), 3)
-            errorSimplifer.updateCounter(cctx, (1, 0))
             rec(l1, l0, revProvChain.map(_.updateInfo("function lhs")))
             rec(r0, r1, provChain.map(_.updateInfo("function rhs")))
           case (prim: ClassTag, ot: ObjectTag)
             if prim.parentsST.contains(ot.id) =>
+              errorSimplifer.updateLevelCount(cctx)
+              errorSimplifer.reportInfo(S(cctx))
               errorSimplifer.reportInfo(S(cctx), 3)
-              errorSimplifer.updateCounter(cctx, (1, 0))
               ()
           // for constraining type variables a new bound is created
           // the `newBound`'s provenance must record the whole flow
           // of the type variable from it's producer to it's consumer
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
-            // if (rhs.isInstanceOf[ObjectTag])
-            //   errorSimplifer.updateCounter(cctx, (1, 0))
-            //   errorSimplifer.reportInfo(S(cctx), 3)
             val newBound = (cctx._1 ::: cctx._2.reverse).foldRight(rhs)((c, ty) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             lhs.upperBounds ::= newBound // update the bound
             lhs.lowerBounds.foreach(rec(_, rhs)) // propagate from the bound
           case (lhs, rhs: TypeVariable) if lhs.level <= rhs.level =>
-            // if (lhs.isInstanceOf[ObjectTag])
-            //   errorSimplifer.updateCounter(cctx, (1, 0))
-            //   errorSimplifer.reportInfo(S(cctx), 3)
             val newBound = (cctx._1 ::: cctx._2.reverse).foldLeft(lhs)((ty, c) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             rhs.lowerBounds ::= newBound // update the bound
@@ -528,12 +524,20 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             goToWork(lhs, rhs)
           case (_: NegType | _: Without, _) | (_, _: NegType | _: Without) =>
             goToWork(lhs, rhs)
-          case _ => reportError()
+          case _ =>
+            reportError()
       }
     }}()
     
     def reportError(failureOpt: Opt[Message] = N)(implicit cctx: ConCtx): Unit = {
-      errorSimplifer.addChain(cctx)
+      // completes counting current level of chain
+      // then increments error count for all locations on the chain
+      errorSimplifer.updateLevelCount(cctx)
+      errorSimplifer.updateChainCount(cctx, (0, 1))
+      // counts nested but counts extra
+      // errorSimplifer.updateChainCount(cctx, (1, 1))
+      errorSimplifer.reportInfo(S(cctx))
+      errorSimplifer.reportInfo(S(cctx), 3)
       
       val lhsChain: List[ST] = cctx._1
       val rhsChain: List[ST] = cctx._2
@@ -839,11 +843,30 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case simple: TypeProvenance => simple.loco.foreach(updateCounter(_, change))
     }
     
-    def updateCounter(cctx: ConCtx, change: (Int, Int)): Unit = {
+    /**
+      * Updates total count for non-duplicated provenance locations at the current
+      * level of the flow
+      *
+      * @param cctx
+      * @param change
+      */
+    def updateLevelCount(cctx: ConCtx, change: (Int, Int) = (1, 0)): Unit = {
+      val provsAtLevel = levelElements(cctx, 0).map(_.prov)
+      dedupChain(provsAtLevel).foreach(prov => prov.loco.foreach(loc => updateCounter(loc, change)))
+    }
+    
+    /**
+      * Updates error count for non-duplicated provenance locations in the current
+      * flow
+      *
+      * @param cctx
+      * @param change
+      */
+    def updateChainCount(cctx: ConCtx, change: (Int, Int) = (0, 1)): Unit = {
       dedupChain(flattenChainToProvList(cctx)).foreach(prov => prov.loco.foreach(loc => updateCounter(loc, change)))
     }
     
-    /* Stores the chain of provenances that lead to a given constraint
+    /** Stores the chain of provenances that lead to a given constraint
       * for a constraint a <: b, the LHS and RHS indicate the chain of
       * provenances that leads to the type a and type b respectively.
       * 
@@ -865,9 +888,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       * store chain for later strategy based reporting
       * @param errorChain
       */
-    def addChain(chain: ConCtx): Unit = {
-      chains ::= chain
-      updateCounter(chain, (0, 1))
+    def addErrorChain(errorChain: ConCtx): Unit = {
+      chains ::= errorChain
+      // updateError(errorChain)
     }
     
     def flattenChain(chain: ConCtx): Ls[Loc] = {
@@ -899,9 +922,34 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       * @param chain
       * @return
       */
-    def dedupChain(chain: Ls[TP]): Ls[TP] =
-      chain.sliding(2).collect { case Seq(prev, next) if !(prev.loco === next.loco) => next }.toList
-      
+    def dedupChain(chain: Ls[TP]): Ls[TP] = chain match {
+      case head :: _ => head :: chain.sliding(2).collect { case Seq(prev, next) if prev.loco =/= next.loco => next }.toList
+      case Nil => Nil
+    }
+
+    /**
+      * Finds all the elements in the chain at a given level of nesting
+      *
+      * @param chain
+      * @param level
+      */
+    def levelElements(cctx: ConCtx, level: Int = 0): Ls[ST] = {
+      def inner(chain: Ls[ST], currentLevel: Int = 0, level: Int = 0): Ls[ST] = {
+        if (level > currentLevel) Nil
+        else if (level == currentLevel)
+          chain.flatMap(st => st.prov match {
+            case nested: NestedTypeProvenance => inner(nested.chain, level + 1)
+            case _ => st :: Nil
+          })
+        else
+          chain.flatMap(st => st.prov match {
+            case nested: NestedTypeProvenance => inner(nested.chain, level + 1)
+            case _ => Nil
+          })
+      }
+      inner(cctx._1 ::: cctx._2, 0, level)
+    }
+    
     /**
       * Display a chain of provenances with nested levels where
       * a provenances is wrapped into a nested provenance
@@ -969,8 +1017,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       *   * 1 - all locations ranked in descending order of suspicion
       *   * 2 - all locations and their counts in the location counter mapping
       *   * 3 - all chain locations with their counts in flow order from producer to consumer
+      *   * 4 - current level chain locations with their counts in flow order from producer to consumer
       */
-    def reportInfo(chain: Opt[ConCtx], infoLevel: Int = 0, strategy: Strategy = strategy)
+    def reportInfo(chain: Opt[ConCtx], infoLevel: Int = 4, strategy: Strategy = strategy)
       (implicit raise: Raise): Unit =
     {
       if (!simplifyError) return
@@ -1016,6 +1065,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               val counter = locoCounter.getOrElse(loco, (-1, -1))
               msg"(total, wrong): ${counter.toString()} with $desc" -> Some(loco)
           }
+        // all chain locations chain locations at the current level
+        case 4 =>
+          val flatChain = chain.map(cctx => levelElements(cctx, 0)).getOrElse(Nil)
+          msg"========= Chain locations at current level =========" -> N ::
+          flatChain.collect(st => st.prov match {
+            case t @ TypeProvenance(S(loco), desc, _, _) if !(t.isInstanceOf[NestedTypeProvenance]) =>
+              val counter = locoCounter.getOrElse(loco, (-1, -1))
+              msg"(total, wrong): ${counter.toString()} with $desc" -> Some(loco)
+          })
         case _ => Nil
       }
       
