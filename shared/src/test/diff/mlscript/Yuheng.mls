@@ -43,7 +43,7 @@ f a2
 //│ ╟── type `number` is not an instance of `int`
 //│ ║  l.34: 	a2 = A { x = 0: number }
 //│ ║        	                ^^^^^^
-//│ ╟── but it flows into reference with expected type `int`
+//│ ╟── but it flows into argument with expected type `int`
 //│ ║  l.39: 	f a2
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from type reference:
@@ -204,10 +204,10 @@ ep + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.+1: 	ep + 1
 //│ ║        	^^^^
-//│ ╟── tuple literal of type `(?a, ?b,)` is not an instance of type `int`
+//│ ╟── tuple literal of type `(?a, ?b,)` does not match type `(int,)`
 //│ ║  l.121: 	  | Pair -> (eval e.lhs, eval e.rhs)
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `int`
+//│ ╟── but it flows into argument with expected type `(int,)`
 //│ ║  l.+1: 	ep + 1
 //│ ╙──      	^^
 //│ res: error | int

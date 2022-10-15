@@ -221,13 +221,13 @@ t1 = T {mut x = 2; y = false}
 t2 = T {x = 2}
 //│ t1: T & {mut x: int, y: bool}
 //│   = <missing implementation>
-//│ {mut x: 'x, y: false} & t
+//│ {mut x: 'x, y: false} & #T
 //│   where
 //│     'x :> 2
 //│   <:  t1:
 //│ T & {mut x: int, y: bool}
 //│   = { x: 2, y: false }
-//│ t2: {x: 2} & t
+//│ t2: {x: 2} & #T
 //│   = { x: 2 }
 
 t1.x <- 4

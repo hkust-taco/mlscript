@@ -84,6 +84,16 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         val (txt, k) =
           takeWhile(j)(c => c =/= '\n')
         go(k, COMMENT(txt))
+      case '/' if bytes.lift(i + 1).contains('*') => // multiple-line comment
+        val j = i + 2
+        var prev1 = '/'; var prev2 = '*'
+        val (txt, k) =
+          takeWhile(j)(c => {
+            val res = prev1 =/= '*' || prev2 =/= '/'
+            prev1 = prev2; prev2 = c
+            res
+          })
+        go(k, COMMENT(txt.dropRight(2)))
       case BracketKind(Left(k)) => go(i + 1, OPEN_BRACKET(k))
       case BracketKind(Right(k)) => go(i + 1, CLOSE_BRACKET(k))
       case '\n' =>
@@ -164,7 +174,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
               if (k0 =/= k1)
                 raise(ErrorReport(msg"Mistmatched closing ${k1.name}" -> S(l1) ::
                   msg"does not correspond to opening ${k0.name}" -> S(l0) :: Nil, source = Parsing))
-              go(rest, false, stack, BRACKETS(k0, acc.reverse)(l0.right ++ l1.left) -> (l0 ++ l1) :: oldAcc)
+              go(rest, true, stack, BRACKETS(k0, acc.reverse)(l0.right ++ l1.left) -> (l0 ++ l1) :: oldAcc)
             case Nil =>
               raise(ErrorReport(msg"Unexpected closing ${k1.name}" -> S(l1) :: Nil, source = Parsing))
               go(rest, false, stack, acc)
@@ -180,6 +190,12 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
           case _ => false
         }) =>
           go(CLOSE_BRACKET(Angle) -> loc :: rest, false, stack, acc)
+        case (IDENT(id, true), loc) :: rest
+        if (canStartAngles && id.forall(_ == '>') && id.length > 1 && (stack match {
+          case ((Angle, _), _) :: _ => true
+          case _ => false
+        })) => // split  `>>` to `>` and `>` so that code like `A<B<C>>` can be parsed correctly
+          go((CLOSE_BRACKET(Angle) -> loc.left) :: (IDENT(id.drop(1), true) -> loc) :: rest, false, stack, acc)
         case ((tk @ IDENT(">", true), loc)) :: rest if canStartAngles =>
           raise(WarningReport(msg"This looks like an angle bracket, but it does not close any angle bracket section" -> S(loc) ::
             msg"Add spaces around it if you intended to use `<` as an operator" -> N :: Nil, source = Parsing))
@@ -234,6 +250,8 @@ object NewLexer {
     "trait",
     "interface",
     "new",
+    "namespace",
+    "type"
   )
   
   def printToken(tl: TokLoc): Str = tl match {

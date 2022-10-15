@@ -7,9 +7,18 @@ import mlscript.utils._
 
 class JSWriter(filename: String) {
   import JSWriter._
-  private val out = fs.openSync(filename, "rs+")
+  
+  // Create an empty file if it does not exists.
+  if (!fs.existsSync(filename)) fs.writeFileSync(filename, "")
+
+  // r+: Open file for reading and writing. An exception occurs if the file does not exist.
+  // See https://nodejs.org/api/fs.html#file-system-flags to get more details.
+  private val out = fs.openSync(filename, "r+")
+  
   private var fileSize = 0 // how many bytes we've written in the file
   private var needTruncate = false
+
+  writeln(":NewParser\n:ParseOnly")
 
   def writeln(str: String) = {
     val strln = str + "\n"

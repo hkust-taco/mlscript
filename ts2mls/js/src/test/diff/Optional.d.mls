@@ -1,42 +1,24 @@
-def buildName: (string) -> (((string) | (undefined)) -> (string))
-def buildName2: (string) -> (((string) | (undefined)) -> (string))
-def buildName3: (string) -> ((MutArray[string]) -> (string))
-def buildName4: (string) -> ((MutArray[anything]) -> (string))
-trait SquareConfig: { color: (string) | (undefined); width: (number) | (undefined) }
-def did: (number) -> ((((number) -> (number)) | (undefined)) -> (number))
-def getOrElse: ((MutArray[{}]) | (undefined)) -> ({})
-class ABC: {}
-def testABC: ((ABC) | (undefined)) -> (unit)
-def testSquareConfig: ((SquareConfig) | (undefined)) -> (unit)
-def err: (((number, string, )) | (undefined)) -> (unit)
-def toStr: ((((number) | (false)) | (true)) | (undefined)) -> (string)
-def boo[T, U]: (((T) & (U)) | (undefined)) -> (unit)
-class B[T]: { b: T }
-def boom: ((B[nothing]) | (undefined)) -> (anything)
-//│ Defined trait SquareConfig
-//│ Defined class ABC
-//│ Defined class B[+T]
-//│ buildName: string -> (string | undefined) -> string
-//│          = <missing implementation>
-//│ buildName2: string -> (string | undefined) -> string
-//│           = <missing implementation>
-//│ buildName3: string -> MutArray[string] -> string
-//│           = <missing implementation>
-//│ buildName4: string -> MutArray[anything] -> string
-//│           = <missing implementation>
-//│ did: number -> (number -> number | undefined) -> number
-//│    = <missing implementation>
-//│ getOrElse: (MutArray[anything] | undefined) -> anything
-//│          = <missing implementation>
-//│ testABC: (ABC | undefined) -> unit
-//│        = <missing implementation>
-//│ testSquareConfig: (undefined | SquareConfig) -> unit
-//│                 = <missing implementation>
-//│ err: ((number, string,) | undefined) -> unit
-//│    = <missing implementation>
-//│ toStr: (false | number | true | undefined) -> string
-//│      = <missing implementation>
-//│ boo: anything -> unit
-//│    = <missing implementation>
-//│ boom: (B[nothing] | undefined) -> anything
-//│     = <missing implementation>
+:NewParser
+:ParseOnly
+fun buildName(firstName: string, lastName: (string) | (undefined)): string
+fun buildName2(firstName: string, lastName: (string) | (undefined)): string
+fun buildName3(firstName: string, lastName: MutArray<string>): string
+fun buildName4(firstName: string, lastName: MutArray<anything>): string
+trait SquareConfig() {
+  let color: (string) | (undefined)
+  let width: (number) | (undefined)
+}
+fun did(x: number, f: ((number) => number) | (undefined)): number
+fun getOrElse(arr: (MutArray<object>) | (undefined)): object
+class ABC() {}
+fun testABC(abc: (ABC) | (undefined)): unit
+fun testSquareConfig(conf: (SquareConfig) | (undefined)): unit
+fun err(msg: ((number, string, )) | (undefined)): unit
+fun toStr(x: (((number) | (false)) | (true)) | (undefined)): string
+fun boo<T, U>(x: ((T) & (U)) | (undefined)): unit
+class B<T>() {
+  let b: T
+}
+fun boom(b: (B<nothing>) | (undefined)): anything
+//│ |#fun| |buildName|(|firstName|#:| |string|,| |lastName|#:| |(|string|)| ||| |(|undefined|)|)|#:| |string|↵|#fun| |buildName2|(|firstName|#:| |string|,| |lastName|#:| |(|string|)| ||| |(|undefined|)|)|#:| |string|↵|#fun| |buildName3|(|firstName|#:| |string|,| |lastName|#:| |MutArray|‹|string|›|)|#:| |string|↵|#fun| |buildName4|(|firstName|#:| |string|,| |lastName|#:| |MutArray|‹|anything|›|)|#:| |string|↵|#trait| |SquareConfig|(||)| |{|→|#let| |color|#:| |(|string|)| ||| |(|undefined|)|↵|#let| |width|#:| |(|number|)| ||| |(|undefined|)|←|↵|}|↵|#fun| |did|(|x|#:| |number|,| |f|#:| |(|(|number|)| |=>| |number|)| ||| |(|undefined|)|)|#:| |number|↵|#fun| |getOrElse|(|arr|#:| |(|MutArray|‹|object|›|)| ||| |(|undefined|)|)|#:| |object|↵|#class| |ABC|(||)| |{||}|↵|#fun| |testABC|(|abc|#:| |(|ABC|)| ||| |(|undefined|)|)|#:| |unit|↵|#fun| |testSquareConfig|(|conf|#:| |(|SquareConfig|)| ||| |(|undefined|)|)|#:| |unit|↵|#fun| |err|(|msg|#:| |(|(|number|,| |string|,| |)|)| ||| |(|undefined|)|)|#:| |unit|↵|#fun| |toStr|(|x|#:| |(|(|(|number|)| ||| |(|false|)|)| ||| |(|true|)|)| ||| |(|undefined|)|)|#:| |string|↵|#fun| |boo|‹|T|,| |U|›|(|x|#:| |(|(|T|)| |&| |(|U|)|)| ||| |(|undefined|)|)|#:| |unit|↵|#class| |B|‹|T|›|(||)| |{|→|#let| |b|#:| |T|←|↵|}|↵|#fun| |boom|(|b|#:| |(|B|‹|nothing|›|)| ||| |(|undefined|)|)|#:| |anything|
+//│ Parsed: {fun buildName: [] -> (firstName: string, lastName: (string,) | (undefined,),) -> string; fun buildName2: [] -> (firstName: string, lastName: (string,) | (undefined,),) -> string; fun buildName3: [] -> (firstName: string, lastName: MutArray[string],) -> string; fun buildName4: [] -> (firstName: string, lastName: MutArray[anything],) -> string; trait SquareConfig(): {let color: [] -> (string,) | (undefined,); let width: [] -> (number,) | (undefined,)}; fun did: [] -> (x: number, f: (number -> number,) | (undefined,),) -> number; fun getOrElse: [] -> (arr: (MutArray[object],) | (undefined,),) -> object; class ABC() {}; fun testABC: [] -> (abc: (ABC,) | (undefined,),) -> unit; fun testSquareConfig: [] -> (conf: (SquareConfig,) | (undefined,),) -> unit; fun err: [] -> (msg: ((number, string,),) | (undefined,),) -> unit; fun toStr: [] -> (x: (((number,) | (false,),) | (true,),) | (undefined,),) -> string; fun boo: [] -> (x: ((T,) & (U,),) | (undefined,),) -> unit; class B[T]() {let b: [] -> T}; fun boom: [] -> (b: (B[nothing],) | (undefined,),) -> anything}

@@ -30,17 +30,17 @@ Hey t
 //│ ╟── tuple literal of type `(1, 2, 3,)` does not have field 'x'
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	    ^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{x: int}`
+//│ ╟── but it flows into argument with expected type `{x: int}`
 //│ ║  l.26: 	Hey t
 //│ ║        	    ^
 //│ ╟── Note: constraint arises from record type:
 //│ ║  l.22: 	trait Hey: { x: int }
 //│ ╙──      	           ^^^^^^^^^^
-//│ res: (1, 2, 3,) & hey | error
+//│ res: (1, 2, 3,) & #Hey | error
 //│    = [ 1, 2, 3 ]
 
 htx = Hey tx
-//│ htx: (1, 2, 3,) & {x: 1} & hey
+//│ htx: (1, 2, 3,) & {x: 1} & #Hey
 //│    = [ 1, 2, 3, x: 1 ]
 
 htx.x
@@ -77,7 +77,7 @@ f htx
 //│ ╟── tuple literal of type `(1, 2, 3,)` does not match type `(?a, ?b,)`
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	    ^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(?c, ?d,)`
+//│ ╟── but it flows into argument with expected type `(?c, ?d,)`
 //│ ║  l.71: 	f t
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from tuple literal:
@@ -91,7 +91,7 @@ f htx
 //│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` is not a 2-element tuple
 //│ ║  l.11: 	tx = t with { x = 1 }
 //│ ║        	     ^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(?a, ?b,)`
+//│ ╟── but it flows into argument with expected type `(?a, ?b,)`
 //│ ║  l.72: 	f tx
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from tuple literal:
@@ -102,10 +102,10 @@ f htx
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.73: 	f htx
 //│ ║        	^^^^^
-//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` does not match type `(?a, ?b,) | ~hey`
+//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` does not match type `(?a, ?b,) | ~#Hey`
 //│ ║  l.11: 	tx = t with { x = 1 }
 //│ ║        	     ^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(?c, ?d,) | ~hey`
+//│ ╟── but it flows into argument with expected type `(?c, ?d,) | ~#Hey`
 //│ ║  l.73: 	f htx
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from tuple literal:
@@ -116,7 +116,7 @@ f htx
 
 
 g arg = case arg of { Hey -> arg.x | _ -> () }
-//│ g: ({x: 'x} & hey | ~hey) -> (() | 'x)
+//│ g: ({x: 'x} & #Hey | ~#Hey) -> (() | 'x)
 //│  = [Function: g]
 
 g htx
@@ -128,7 +128,7 @@ g tx
 
 // TODO: pattern match for traits in JavaScript
 g arg = case arg of { Hey -> arg.x | _ -> arg.y }
-//│ g: ({x: 'x} & hey | {y: 'x} & ~hey) -> 'x
+//│ g: ({x: 'x} & #Hey | {y: 'x} & ~#Hey) -> 'x
 //│  = [Function: g1]
 
 g htx
@@ -143,10 +143,10 @@ g tx
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.142: 	g tx
 //│ ║         	^^^^
-//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1} & ~hey` does not have field 'y'
+//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1} & ~#Hey` does not have field 'y'
 //│ ║  l.11: 	tx = t with { x = 1 }
 //│ ║        	     ^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{y: ?y}`
+//│ ╟── but it flows into argument with expected type `{y: ?y}`
 //│ ║  l.142: 	g tx
 //│ ║         	  ^^
 //│ ╟── Note: constraint arises from receiver:

@@ -18,7 +18,7 @@ example = if true then undef else 42
 //│        = Undef {}
 
 def qmrk_qmrk lhs rhs = case lhs of { Undef -> rhs | _ -> lhs }
-//│ qmrk_qmrk: (Undef | 'a & ~undef) -> 'a -> 'a
+//│ qmrk_qmrk: (Undef | 'a & ~#Undef) -> 'a -> 'a
 //│          = [Function: qmrk_qmrk]
 
 qmrk_qmrk example 0

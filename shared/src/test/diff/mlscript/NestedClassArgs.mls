@@ -272,8 +272,8 @@ def append ls elem = L { h = elem; t = S { v = ls } }
 append
 //│ res: 'a -> 'b -> 'c
 //│   where
-//│     'c :> l & {h: 'h, t: 't, L#T = 'T}
-//│     't :> s & {v: 'v, S#T = 'T0}
+//│     'c :> #L & {h: 'h, t: 't, L#T = 'T}
+//│     't :> #S & {v: 'v, S#T = 'T0}
 //│        <: O[L['T]]
 //│     'b <: 'h
 //│     'h <: 'T

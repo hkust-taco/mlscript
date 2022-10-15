@@ -1,47 +1,26 @@
-def f: ((number) -> (string)) & ((string) -> (string))
-class M: { foo: ((number) -> (string)) & ((string) -> (string)) }
-def app: (((string) -> (unit)) -> ((number) -> (unit))) & (((string) -> (unit)) -> ((string) -> (unit)))
-def create: ((number) -> (unit -> ((false) | (true)))) & (((false) | (true)) -> (unit -> ((false) | (true))))
-def g0: ((MutArray[string]) -> (string)) & ((MutArray[{}]) -> (string))
-def db: ((number) -> (MutArray[number])) & (({}) -> (MutArray[number]))
-class N: {}
-def id: ((M) -> (unit)) & ((N) -> (unit))
-def tst: (({ z: number }) -> ({ y: string })) & (({ z: (false) | (true) }) -> ({ y: string }))
-def op: ((number) -> (((number) | (undefined)) -> (unit))) & ((number) -> ((((false) | (true)) | (undefined)) -> (unit)))
-def swap: (((number, string, )) -> ((number, string, ))) & (((string, number, )) -> ((number, string, )))
-def u: ((((number) | (false)) | (true)) -> (string)) & (({}) -> (string))
-def doSome[T, U]: (anything) -> (unit) /* warning: the overload of function doSome is not supported yet. */
-def XX'f[T]: (T) -> ((anything) -> (string)) /* warning: the overload of function f is not supported yet. */
-class WWW: {}
-  method F[T]: (T) -> (anything) /* warning: the overload of function F is not supported yet. */
-def baz: unit -> (anything) /* warning: the overload of function baz is not supported yet. */
-//│ Defined class M
-//│ Defined class N
-//│ Defined class WWW
-//│ Declared WWW.F: WWW -> anything -> anything
-//│ f: (number | string) -> string
-//│  = <missing implementation>
-//│ app: (string -> unit) -> (number | string) -> unit
-//│    = <missing implementation>
-//│ create: (false | number | true) -> unit -> bool
-//│       = <missing implementation>
-//│ g0: MutArray[in string] -> string
-//│   = <missing implementation>
-//│ db: anything -> MutArray[number]
-//│   = <missing implementation>
-//│ id: (M | N) -> unit
-//│   = <missing implementation>
-//│ tst: {z: false | number | true} -> {y: string}
-//│    = <missing implementation>
-//│ op: number -> (false | number | true | undefined) -> unit
-//│   = <missing implementation>
-//│ swap: (number | string, number | string,) -> (number, string,)
-//│     = <missing implementation>
-//│ u: anything -> string
-//│  = <missing implementation>
-//│ doSome: anything -> unit
-//│       = <missing implementation>
-//│ XX'f: anything -> anything -> string
-//│     = <missing implementation>
-//│ baz: unit -> anything
-//│    = <missing implementation>
+:NewParser
+:ParseOnly
+fun f: ((number) => string) & ((string) => string)
+class M() {
+  let foo: ((number) => string) & ((string) => string)
+}
+fun app: (((string) => unit) => (number) => unit) & (((string) => unit) => (string) => unit)
+fun create: ((number) => unit => (false) | (true)) & (((false) | (true)) => unit => (false) | (true))
+fun g0: ((MutArray<string>) => string) & ((MutArray<object>) => string)
+fun db: ((number) => MutArray<number>) & ((object) => MutArray<number>)
+class N() {}
+fun id: ((M) => unit) & ((N) => unit)
+fun tst: (({z: number,}) => {y: string,}) & (({z: (false) | (true),}) => {y: string,})
+fun op: ((number) => ((number) | (undefined)) => unit) & ((number) => (((false) | (true)) | (undefined)) => unit)
+fun swap: (((number, string, )) => (number, string, )) & (((string, number, )) => (number, string, ))
+fun u: ((((number) | (false)) | (true)) => string) & ((object) => string)
+fun doSome<T, U>(x: anything): unit /* warning: the overload of function doSome is not supported yet. */
+namespace XX {
+  fun f<T>(x: T, n: anything): string /* warning: the overload of function f is not supported yet. */
+}
+class WWW() {
+  fun F<T>(x: T): anything /* warning: the overload of function F is not supported yet. */
+}
+fun baz(): anything /* warning: the overload of function baz is not supported yet. */
+//│ |#fun| |f|#:| |(|(|number|)| |=>| |string|)| |&| |(|(|string|)| |=>| |string|)|↵|#class| |M|(||)| |{|→|#let| |foo|#:| |(|(|number|)| |=>| |string|)| |&| |(|(|string|)| |=>| |string|)|←|↵|}|↵|#fun| |app|#:| |(|(|(|string|)| |=>| |unit|)| |=>| |(|number|)| |=>| |unit|)| |&| |(|(|(|string|)| |=>| |unit|)| |=>| |(|string|)| |=>| |unit|)|↵|#fun| |create|#:| |(|(|number|)| |=>| |unit| |=>| |(|false|)| ||| |(|true|)|)| |&| |(|(|(|false|)| ||| |(|true|)|)| |=>| |unit| |=>| |(|false|)| ||| |(|true|)|)|↵|#fun| |g0|#:| |(|(|MutArray|‹|string|›|)| |=>| |string|)| |&| |(|(|MutArray|‹|object|›|)| |=>| |string|)|↵|#fun| |db|#:| |(|(|number|)| |=>| |MutArray|‹|number|›|)| |&| |(|(|object|)| |=>| |MutArray|‹|number|›|)|↵|#class| |N|(||)| |{||}|↵|#fun| |id|#:| |(|(|M|)| |=>| |unit|)| |&| |(|(|N|)| |=>| |unit|)|↵|#fun| |tst|#:| |(|(|{|z|#:| |number|,|}|)| |=>| |{|y|#:| |string|,|}|)| |&| |(|(|{|z|#:| |(|false|)| ||| |(|true|)|,|}|)| |=>| |{|y|#:| |string|,|}|)|↵|#fun| |op|#:| |(|(|number|)| |=>| |(|(|number|)| ||| |(|undefined|)|)| |=>| |unit|)| |&| |(|(|number|)| |=>| |(|(|(|false|)| ||| |(|true|)|)| ||| |(|undefined|)|)| |=>| |unit|)|↵|#fun| |swap|#:| |(|(|(|number|,| |string|,| |)|)| |=>| |(|number|,| |string|,| |)|)| |&| |(|(|(|string|,| |number|,| |)|)| |=>| |(|number|,| |string|,| |)|)|↵|#fun| |u|#:| |(|(|(|(|number|)| ||| |(|false|)|)| ||| |(|true|)|)| |=>| |string|)| |&| |(|(|object|)| |=>| |string|)|↵|#fun| |doSome|‹|T|,| |U|›|(|x|#:| |anything|)|#:| |unit| |/* warning: the overload of function doSome is not supported yet. */|↵|#namespace| |XX| |{|→|#fun| |f|‹|T|›|(|x|#:| |T|,| |n|#:| |anything|)|#:| |string| |/* warning: the overload of function f is not supported yet. */|←|↵|}|↵|#class| |WWW|(||)| |{|→|#fun| |F|‹|T|›|(|x|#:| |T|)|#:| |anything| |/* warning: the overload of function F is not supported yet. */|←|↵|}|↵|#fun| |baz|(||)|#:| |anything| |/* warning: the overload of function baz is not supported yet. */|
+//│ Parsed: {fun f: [] -> (number -> string,) & (string -> string,); class M() {let foo: [] -> (number -> string,) & (string -> string,)}; fun app: [] -> ((string -> unit) -> number -> unit,) & ((string -> unit) -> string -> unit,); fun create: [] -> (number -> unit -> ((false,) | (true,)),) & (((false,) | (true,)) -> unit -> ((false,) | (true,)),); fun g0: [] -> (MutArray[string] -> string,) & (MutArray[object] -> string,); fun db: [] -> (number -> MutArray[number],) & (object -> MutArray[number],); class N() {}; fun id: [] -> (M -> unit,) & (N -> unit,); fun tst: [] -> ({z: number} -> {y: string},) & ({z: (false,) | (true,)} -> {y: string},); fun op: [] -> (number -> ((number,) | (undefined,)) -> unit,) & (number -> (((false,) | (true,),) | (undefined,)) -> unit,); fun swap: [] -> ((number, string,) -> (number, string,),) & ((string, number,) -> (number, string,),); fun u: [] -> ((((number,) | (false,),) | (true,)) -> string,) & (object -> string,); fun doSome: [] -> (x: anything,) -> unit; namespace XX(): {fun f: [] -> (x: T, n: anything,) -> string}; class WWW() {fun F: [] -> (x: T,) -> anything}; fun baz: [] -> () -> anything}

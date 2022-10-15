@@ -7,7 +7,13 @@ import js.JSConverters._
 import ts2mls.types._
 
 object TypeScript {
-  private val ts = g.require("typescript")
+  private val ts: js.Dynamic = try g.require("typescript") catch {
+    case _ : Throwable => {
+      System.err.println("Cannot find typescript in the current directory. Please install by running \"npm install\".")
+      val process = g.require("process")
+      process.exit(-1)
+    }
+  }
 
   val typeFlagsEnumLike = ts.TypeFlags.EnumLike
   val typeFlagsObject = ts.TypeFlags.Object
@@ -25,6 +31,7 @@ object TypeScript {
   def isModuleDeclaration(node: js.Dynamic) = ts.isModuleDeclaration(node)
   def isArrayTypeNode(node: js.Dynamic) = ts.isArrayTypeNode(node)
   def isTupleTypeNode(node: js.Dynamic) = ts.isTupleTypeNode(node)
+  def isTypeAliasDeclaration(node: js.Dynamic) = ts.isTypeAliasDeclaration(node)
 
   def forEachChild(root: js.Dynamic, func: js.Dynamic => Unit) = ts.forEachChild(root, func)
   def createProgram(filenames: Seq[String]) =
@@ -81,6 +88,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val isClassDeclaration = TypeScript.isClassDeclaration(node)
   lazy val isInterfaceDeclaration = TypeScript.isInterfaceDeclaration(node)
   lazy val isFunctionLike = TypeScript.isFunctionLike(node)
+  lazy val isTypeAliasDeclaration = TypeScript.isTypeAliasDeclaration(node)
 
   // `TypeScript.isModuleDeclaration` works on both namespaces and modules
   // but namespaces are more recommended, so we merely use `isNamespace` here

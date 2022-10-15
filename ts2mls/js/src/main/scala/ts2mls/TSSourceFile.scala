@@ -33,6 +33,12 @@ object TSSourceFile {
     else if (obj.isTypeParameter) TSTypeParameter(obj.symbol.escapedName)
     else TSPrimitiveType(obj.intrinsicName)
 
+  // the function `getMemberType` can't process function/tuple type alias correctly
+  private def getTypeAlias(tn: TSNodeObject): TSType =
+    if (tn.isFunctionLike) getFunctionType(tn)
+    else if (tn.isTupleTypeNode) TSTupleType(getTupleElements(tn.typeNode.typeArguments))
+    else getObjectType(tn.typeNode)
+
   // get the type of a member in classes/named interfaces/anonymous interfaces
   private def getMemberType(node: TSNodeObject): TSType = {
     val res: TSType =
@@ -42,21 +48,22 @@ object TSSourceFile {
     else res
   }
 
-  private def getTypeParametes(node: TSNodeObject): List[TSTypeParameter] =
+  private def getTypeParameters(node: TSNodeObject): List[TSTypeParameter] =
     node.typeParameters.foldLeft(List[TSTypeParameter]())((lst, tp) =>
       if (tp.constraint.isUndefined) lst :+ TSTypeParameter(tp.symbol.escapedName, None)
       else lst :+ TSTypeParameter(tp.symbol.escapedName, Some(getObjectType(tp.constraint.typeNode)))
     )
 
   private def getFunctionType(node: TSNodeObject): TSFunctionType = {
-    val pList = node.parameters.foldLeft(List[TSType]())((lst, p) => lst :+ (
+    val pList = node.parameters.foldLeft(List[TSParameterType]())((lst, p) => (
       // in typescript, you can use `this` to explicitly specifies the callee
       // but it never appears in the final javascript file
-      if (p.symbol.escapedName === "this") TSPrimitiveType("void")
-      else if (p.isOptionalParameter) TSUnionType(getObjectType(p.symbolType), TSPrimitiveType("undefined"))
-      else getObjectType(p.symbolType))
+      if (p.symbol.escapedName === "this") lst
+      else if (p.isOptionalParameter)
+        lst :+ TSParameterType(p.symbol.escapedName, TSUnionType(getObjectType(p.symbolType), TSPrimitiveType("undefined")))
+      else lst :+ TSParameterType(p.symbol.escapedName, getObjectType(p.symbolType)))
     )
-    TSFunctionType(pList, getObjectType(node.returnType), getTypeParametes(node))
+    TSFunctionType(pList, getObjectType(node.returnType), getTypeParameters(node))
   }
 
   private def getStructuralType(types: TSTypeArray, isUnion: Boolean): TSType =
@@ -78,7 +85,6 @@ object TSSourceFile {
     list.foldLeft(Map[String, TSMemberType]())((mp, p) => {
       val name = p.symbol.escapedName
 
-      // TODO: support `__constructor`
       if (name =/= "__constructor" && p.isStatic == requireStatic) {
         val mem =
           if (!p.isStatic) getMemberType(p)
@@ -111,6 +117,15 @@ object TSSourceFile {
       else mp
     })
 
+  private def getConstructorList(members: TSNodeArray): List[TSParameterType] =
+    members.foldLeft(List[TSParameterType]())((lst, mem) => {
+      val name = mem.symbol.escapedName
+
+      if (name =/= "__constructor") lst
+      else mem.parameters.foldLeft(List[TSParameterType]())((res, p) =>
+        res :+ TSParameterType(p.symbol.escapedName, getMemberType(p)))
+    })
+
   private def getInterfacePropertiesType(list: TSNodeArray): Map[String, TSMemberType] =
     list.foldLeft(Map[String, TSMemberType]())((mp, p) => mp ++ Map(p.symbol.escapedName -> TSMemberType(getMemberType(p))))
 
@@ -120,8 +135,9 @@ object TSSourceFile {
 
   private def parseMembers(name: String, node: TSNodeObject, isClass: Boolean): TSType =
     if (isClass)
-      TSClassType(name, getClassMembersType(node.members, false), getClassMembersType(node.members, true), getTypeParametes(node), getHeritageList(node))
-    else TSInterfaceType(name, getInterfacePropertiesType(node.members), getTypeParametes(node), getHeritageList(node))
+      TSClassType(name, getClassMembersType(node.members, false), getClassMembersType(node.members, true),
+        getTypeParameters(node), getHeritageList(node), getConstructorList(node.members))
+    else TSInterfaceType(name, getInterfacePropertiesType(node.members), getTypeParameters(node), getHeritageList(node))
 
   private def parseNamespaceLocals(map: TSSymbolMap)(implicit ns: TSNamespace) =
     map.foreach((sym) => {
@@ -163,9 +179,11 @@ object TSSourceFile {
       }
     }
     else if (node.isClassDeclaration)
-      ns.put(name, parseMembers(ns.getFullPath(name), node, true))
+      ns.put(name, parseMembers(name, node, true))
     else if (node.isInterfaceDeclaration)
-      ns.put(name, parseMembers(ns.getFullPath(name), node, false))
+      ns.put(name, parseMembers(name, node, false))
+    else if (node.isTypeAliasDeclaration)
+      ns.put(name, TSTypeAlias(name, getTypeAlias(node.`type`), getTypeParameters(node)))
     else if (node.isNamespace)
       parseNamespace(node)
 

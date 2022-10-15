@@ -106,7 +106,7 @@ class BadSelf[A]: { x: A }
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.105: 	    method F = this.x 42
 //│ ║         	               ^^^^^^^^^
-//│ ╟── reference of type `A` is not a function
+//│ ╟── receiver of type `A` is not a function
 //│ ║  l.105: 	    method F = this.x 42
 //│ ║         	               ^^^^
 //│ ╟── but it flows into field selection with expected type `42 -> ?a`
@@ -591,14 +591,14 @@ t : Dup[int, bool]
 :stats
 t.MthDup (fun x -> mul 2 x)
 //│ res: int
-//│ constrain calls  : 89
+//│ constrain calls  : 85
 //│ annoying  calls  : 21
 //│ subtyping calls  : 36
 
 :stats
 t.MthDup id
 //│ res: 42
-//│ constrain calls  : 88
+//│ constrain calls  : 83
 //│ annoying  calls  : 19
 //│ subtyping calls  : 30
 
@@ -859,7 +859,7 @@ class Test9B: Test9A[int]
 //│ ╟── type `int` is not a function
 //│ ║  l.832: 	class Test9B: Test9A[int]
 //│ ║         	                     ^^^
-//│ ╟── but it flows into reference with expected type `Test9A[int] -> int`
+//│ ╟── but it flows into receiver with expected type `Test9A[int] -> int`
 //│ ║  l.834: 	    method Mth9A = this.x
 //│ ║         	                   ^^^^
 //│ ╟── Note: constraint arises from function type:

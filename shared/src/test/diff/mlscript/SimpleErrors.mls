@@ -4,7 +4,7 @@ succ false
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.3: 	succ false
 //│ ║       	^^^^^^^^^^
-//│ ╟── reference of type `false` is not an instance of type `int`
+//│ ╟── argument of type `false` is not a 1-element tuple
 //│ ║  l.3: 	succ false
 //│ ╙──     	     ^^^^^
 //│ res: error | int
@@ -23,10 +23,10 @@ f x
 //│ ╟── string literal of type `"oops"` is not an instance of type `int`
 //│ ║  l.12: 	x = "oops"
 //│ ║        	    ^^^^^^
-//│ ╟── but it flows into reference with expected type `int`
+//│ ╟── but it flows into argument with expected type `int`
 //│ ║  l.19: 	f x
 //│ ║        	  ^
-//│ ╟── Note: constraint arises from reference:
+//│ ╟── Note: constraint arises from argument:
 //│ ║  l.15: 	f y = succ y
 //│ ╙──      	           ^
 //│ res: error | int
@@ -37,14 +37,14 @@ trait MyTrait: { value: anything }
 //│ Defined trait MyTrait
 
 def test1 x = case x of { MyTrait -> x.value | _ -> 0 }
-//│ test1: ({value: 'value} & myTrait | ~myTrait) -> (0 | 'value)
+//│ test1: ({value: 'value} & #MyTrait | ~#MyTrait) -> (0 | 'value)
 
 :e
 test1 1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.43: 	test1 1
 //│ ║        	^^^^^^^
-//│ ╟── integer literal of type `1 & myTrait | 1 & ~?a` does not have field 'value'
+//│ ╟── argument of type `1 & #MyTrait | 1 & ~?a` does not have field 'value'
 //│ ║  l.43: 	test1 1
 //│ ║        	      ^
 //│ ╟── Note: constraint arises from receiver:
@@ -99,10 +99,10 @@ add boom 1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.98: 	add boom 1
 //│ ║        	^^^^^^^^
-//│ ╟── type `anything` is not an instance of type `int`
+//│ ╟── type `anything` is not a 1-element tuple
 //│ ║  l.93: 	def boom: anything
 //│ ║        	          ^^^^^^^^
-//│ ╟── but it flows into reference with expected type `int`
+//│ ╟── but it flows into argument with expected type `(int,)`
 //│ ║  l.98: 	add boom 1
 //│ ╙──      	    ^^^^
 //│ res: error | int
