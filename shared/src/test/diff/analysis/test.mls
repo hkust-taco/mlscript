@@ -2,117 +2,42 @@
 :AllowTypeErrors
 
 :ex
-// def succ x = x + 1
+// add 1
+
+:ex
+:d
+:simplifyError
+// def succ x = add x 1
 // x1 = false
 // x2 = x1
 // succ x2
+// succ 1
+// succ 2
+// succ false
+
+
+:d
+:ex
+:simplifyError
+// def succ x = add x 1
+// h1 f x = f x
+// h1 succ false
+
+:d
+:ex
+:simplifyError
+// x1 = false
+// f1 y1 = succ y1
+// def succ x = add x 1
+// h1 f x = f x
+// h1 succ false
 
 :ex
-def succ x = x + 1
-x1 = false
-f1 y1 = succ y1
-h1 f x = f x
-h1 f1 x1
-//│ succ: int -> int
-//│ x1: false
-//│ f1: int -> int
-//│ h1: ('a -> 'b) -> 'a -> 'b
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.15: 	h1 f1 x1
-//│ ║        	^^^^^^^^
-//│ ╟── reference of type `false` is not an instance of type `int`
-//│ ║  l.12: 	x1 = false
-//│ ║        	     ^^^^^
-//│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.15: 	h1 f1 x1
-//│ ║        	      ^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.11: 	def succ x = x + 1
-//│ ║        	             ^
-//│ ╟── from reference:
-//│ ║  l.14: 	h1 f x = f x
-//│ ║        	           ^
-//│ ╟── ========= Additional explanations below =========
-//│ ╟── [info] flowing from type `false`
-//│ ╟── [info] flowing from reference of type `false`
-//│ ║  l.12: 	x1 = false
-//│ ║        	     ^^^^^
-//│ ╟── [info] flowing from reference of type `false`
-//│ ║  l.15: 	h1 f1 x1
-//│ ║        	      ^^
-//│ ╟── [info] flowing from <nested> of type `false`
-//│ ╟── [info] flowing into variable of type `?a`
-//│ ╟── [info] flowing into reference of type `?b`
-//│ ║  l.14: 	h1 f x = f x
-//│ ║        	           ^
-//│ ╟── [info] flowing into <nested> of type `?c`
-//│ ╟── [info] flowing into variable of type `?d`
-//│ ╟── [info] flowing into reference of type `?e`
-//│ ║  l.13: 	f1 y1 = succ y1
-//│ ║        	             ^^
-//│ ╟── [info] flowing into <nested> of type `?f`
-//│ ╟── [info] flowing into variable of type `?g`
-//│ ╟── [info] flowing into reference of type `int`
-//│ ║  l.11: 	def succ x = x + 1
-//│ ║        	             ^
-//│ ╟── [info] flowing into <nested> of type `int`
-//│ ╙── [info] flowing into type `int`
-//│ res: error | int
-
-:ex
-class Tuple: { left: bool; right: int }
-def succ x = x + 1
-x1 = false
-x2 = x1
-x3 = Tuple { left = x2; right = 1 }
-succ x3.left
-//│ Defined class Tuple
-//│ succ: int -> int
-//│ x1: false
-//│ x2: false
-//│ x3: Tuple & {left: false, right: 1}
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.68: 	succ x3.left
-//│ ║        	^^^^^^^^^^^^
-//│ ╟── reference of type `false` is not an instance of type `int`
-//│ ║  l.65: 	x1 = false
-//│ ║        	     ^^^^^
-//│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.68: 	succ x3.left
-//│ ║        	     ^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.64: 	def succ x = x + 1
-//│ ║        	             ^
-//│ ╟── ========= Additional explanations below =========
-//│ ╟── [info] flowing from type `false`
-//│ ╟── [info] flowing from reference of type `false`
-//│ ║  l.65: 	x1 = false
-//│ ║        	     ^^^^^
-//│ ╟── [info] flowing from reference of type `false`
-//│ ║  l.66: 	x2 = x1
-//│ ║        	     ^^
-//│ ╟── [info] flowing from reference of type `false`
-//│ ║  l.67: 	x3 = Tuple { left = x2; right = 1 }
-//│ ║        	                    ^^
-//│ ╟── [info] flowing from <nested> of type `false`
-//│ ╟── [info] flowing from <nested> of type `false`
-//│ ╟── [info] flowing from application of type `false`
-//│ ║  l.67: 	x3 = Tuple { left = x2; right = 1 }
-//│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── [info] flowing from reference of type `false`
-//│ ║  l.68: 	succ x3.left
-//│ ║        	     ^^
-//│ ╟── [info] flowing from receiver of type `false`
-//│ ║  l.68: 	succ x3.left
-//│ ║        	     ^^
-//│ ╟── [info] flowing from field selection of type `?left`
-//│ ║  l.68: 	succ x3.left
-//│ ║        	     ^^^^^^^
-//│ ╟── [info] flowing from <nested> of type `?left0`
-//│ ╟── [info] flowing into variable of type `?a`
-//│ ╟── [info] flowing into reference of type `int`
-//│ ║  l.64: 	def succ x = x + 1
-//│ ║        	             ^
-//│ ╟── [info] flowing into <nested> of type `int`
-//│ ╙── [info] flowing into type `int`
-//│ res: error | int
+:simplifyError
+// class Tuple: { left: bool; right: int }
+// def succ x = add x 1
+// x1 = false
+// x2 = x1
+// x3 = Tuple { left = x2; right = 1 }
+// succ x3.right
+// succ x3.left
