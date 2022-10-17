@@ -14,7 +14,10 @@ object TSSourceFile {
           addNodeIntoNamespace(nodeObject, nodeObject.symbol.escapedName)(global)
         else if (!nodeObject.declarationList.isUndefined) { // for variables
           val decNode = nodeObject.declarationList.declaration
-          addNodeIntoNamespace(decNode.initializer, decNode.symbol.escapedName)(global)
+          if (decNode.initializer.isToken)
+            addNodeIntoNamespace(decNode, decNode.symbol.escapedName)(global)
+          else
+            addNodeIntoNamespace(decNode.initializer, decNode.symbol.escapedName)(global)
         }
       }
     })
@@ -203,6 +206,8 @@ object TSSourceFile {
       ns.put(name, TSTypeAlias(name, getTypeAlias(node.`type`), getTypeParameters(node)))
     else if (node.isObjectLiteral)
       ns.put(name, TSInterfaceType("", getObjectLiteralMembers(node.properties), List(), List()))
+    else if (node.isVariableDeclaration)
+      ns.put(name, getMemberType(node))
     else if (node.isNamespace)
       parseNamespace(node)
 

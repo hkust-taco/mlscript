@@ -35,6 +35,7 @@ object TypeScript {
   def isObjectLiteralExpression(node: js.Dynamic) = ts.isObjectLiteralExpression(node)
   def isLiteralTypeNode(node: js.Dynamic) = ts.isLiteralTypeNode(node)
   def isStringLiteral(node: js.Dynamic) = ts.isStringLiteral(node)
+  def isVariableDeclaration(node: js.Dynamic) = ts.isVariableDeclaration(node)
 
   def forEachChild(root: js.Dynamic, func: js.Dynamic => Unit) = ts.forEachChild(root, func)
   def createProgram(filenames: Seq[String]) =
@@ -94,6 +95,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val isTypeAliasDeclaration = TypeScript.isTypeAliasDeclaration(node)
   lazy val isObjectLiteral = TypeScript.isObjectLiteralExpression(node)
   lazy val isLiteralTypeNode = TypeScript.isLiteralTypeNode(node)
+  lazy val isVariableDeclaration = TypeScript.isVariableDeclaration(node)
 
   // `TypeScript.isModuleDeclaration` works on both namespaces and modules
   // but namespaces are more recommended, so we merely use `isNamespace` here
