@@ -10,9 +10,9 @@ object TSSourceFile {
     TypeScript.forEachChild(sf, (node: js.Dynamic) => {
       val nodeObject = TSNodeObject(node)
       if (!nodeObject.isToken) {
-        if (!nodeObject.symbol.isUndefined)
+        if (!nodeObject.symbol.isUndefined) // for functions/classes/interfaces
           addNodeIntoNamespace(nodeObject, nodeObject.symbol.escapedName)(global)
-        else if (!nodeObject.declarationList.isUndefined) {
+        else if (!nodeObject.declarationList.isUndefined) { // for variables
           val decNode = nodeObject.declarationList.declaration
           addNodeIntoNamespace(decNode.initializer, decNode.symbol.escapedName)(global)
         }
