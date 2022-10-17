@@ -46,7 +46,7 @@ object TSSourceFile {
     else getObjectType(tn.typeNode)
 
   private def getLiteralType(tp: TSNodeObject) =
-    TSLiteralType(tp.literal.text, tp.typeNode.isStringLiteral)
+    TSLiteralType(tp.literal.text, tp.literal.isStringLiteral)
 
   private def getObjectLiteralMembers(props: TSNodeArray) =
     props.foldLeft(Map[String, TSMemberType]())((mp, p) => {
