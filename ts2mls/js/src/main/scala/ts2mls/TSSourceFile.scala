@@ -45,9 +45,11 @@ object TSSourceFile {
     else if (tn.isTupleTypeNode) TSTupleType(getTupleElements(tn.typeNode.typeArguments))
     else getObjectType(tn.typeNode)
 
+  // parse string/numeric literal types. we need to add quotes if it is a string literal
   private def getLiteralType(tp: TSNodeObject) =
     TSLiteralType(tp.literal.text, tp.literal.isStringLiteral)
 
+  // parse object literal types
   private def getObjectLiteralMembers(props: TSNodeArray) =
     props.foldLeft(Map[String, TSMemberType]())((mp, p) => {
       mp ++ Map(p.name.escapedText -> TSMemberType(TSLiteralType(p.initToken.text, p.initToken.isStringLiteral)))
