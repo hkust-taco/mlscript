@@ -416,7 +416,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_, p @ ProvType(und)) => rec(lhs, und)
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs)
           case (lf @ FunctionType(l0, r0), rf @ FunctionType(l1, r1)) =>
-            errorSimplifer.updateLevelCount(cctx)
+            errorSimplifer.updateLevelCount(cctx, N)
             errorSimplifer.reportInfo(S(cctx))
             errorSimplifer.reportInfo(S(cctx), 3)
             // errorSimplifer.reportInfo(S(cctx), 5)
@@ -425,11 +425,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rec(r0, r1, provChain.map(_.updateInfo("function rhs")))
           case (prim: ClassTag, ot: ObjectTag)
             if prim.parentsST.contains(ot.id) =>
-              errorSimplifer.updateLevelCount(cctx)
+              errorSimplifer.updateLevelCount(cctx, N)
+              errorSimplifer.updateChainCount(cctx, S(1, 0))
               errorSimplifer.reportInfo(S(cctx))
               errorSimplifer.reportInfo(S(cctx), 3)
-              // errorSimplifer.reportInfo(S(cctx), 5)
-              // errorSimplifer.reportInfo(S(cctx), 6)
               ()
           // for constraining type variables a new bound is created
           // the `newBound`'s provenance must record the whole flow
@@ -555,8 +554,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     def reportError(failureOpt: Opt[Message] = N)(implicit cctx: ConCtx): Unit = {
       // completes counting current level of chain
       // then increments error count for all locations on the chain
-      errorSimplifer.updateLevelCount(cctx)
-      errorSimplifer.updateChainCount(cctx, (0, 1))
+      errorSimplifer.updateChainCount(cctx, N)
+      errorSimplifer.updateChainCount(cctx, S(0, 1))
       // counts nested but counts extra
       // errorSimplifer.updateChainCount(cctx, (1, 1))
       errorSimplifer.reportInfo(S(cctx))
@@ -849,19 +848,42 @@ class ConstraintSolver extends NormalForms { self: Typer =>
      * the number of the times the location has been visited, and the
      * number of visits that have led to constraining failures.
     */
-    type LocoCounter = MutMap[Loc, (Int, Int)]
+    type LocoCounter = MutMap[Loc, Opt[(Int, Int)]]
     val locoCounter: LocoCounter = MutMap();
     val strategy: Strategy = OchiaiStrategy();
     
-    def updateCounter(loco: Loc, change: (Int, Int)): Unit = {
-      locoCounter.updateWith(loco) {
-        case Some((total, wrong)) => Some((total + change._1, wrong + change._2))
-        case None => Some(change)
+    def updateCounter(loco: Loc, change: Opt[(Int, Int)]): Unit = {
+      // initialize counter if there is no change
+      change match {
+        case Some(change) =>
+          locoCounter.updateWith(loco) {
+            case Some(Some((total, wrong))) => Some(Some((total + change._1, wrong + change._2)))
+            // an interior location typically intialized by the flow of a higher order
+            // constructor like function, tuple, record is now being counted
+            // update with value with the changed amount
+            case Some(None) => Some(Some(change))
+            // a location that has never been visited
+            case None => throw new Exception("Cannot update counter for uninitialized location")
+          }
+        // initialize location if it doesn't already exist
+        case N =>
+          locoCounter.getOrElseUpdate(loco, None)
       }
       ()
     }
     
-    def updateCounter(st: ST, change: (Int, Int)): Unit = st.prov match {
+    /** Get counter for location. If counter does not exist return (-1, -1)
+      * to indicate invalid location. If it exists but has only been initialized
+      * consider it counted only once.
+      *
+      * @param loco
+      * @return
+      */
+    def getCounter(loco: Loc): (Int, Int) = {
+      locoCounter.getOrElse(loco, S(-1, -1)).getOrElse((1, 0))
+    }
+    
+    def updateCounter(st: ST, change: Opt[(Int, Int)]): Unit = st.prov match {
       case nested: NestedTypeProvenance => nested.chain.foreach(updateCounter(_, change))
       case simple: TypeProvenance => simple.loco.foreach(updateCounter(_, change))
     }
@@ -873,9 +895,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       * @param cctx
       * @param change
       */
-    def updateLevelCount(cctx: ConCtx, change: (Int, Int) = (1, 0)): Unit = {
+    def updateLevelCount(cctx: ConCtx, change: Opt[(Int, Int)] = S(1, 0)): Unit = {
       dedupChain(flattenChainWithLevel(cctx))
-        .foreach{case (prov, level) => if (level === 0) prov.loco.foreach(loc => updateCounter(loc, change))}
+        .foreach{case (prov, level) =>
+          if (level === 0) prov.loco.foreach(loc => updateCounter(loc, change))
+        }
     }
     
     /**
@@ -885,8 +909,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       * @param cctx
       * @param change
       */
-    def updateChainCount(cctx: ConCtx, change: (Int, Int) = (0, 1)): Unit = {
-      dedupChain(flattenChainToProvList(cctx)).foreach(prov => prov.loco.foreach(loc => updateCounter(loc, change)))
+    def updateChainCount(cctx: ConCtx, change: Opt[(Int, Int)] = S(0, 1)): Unit = {
+      dedupChain(flattenChainToProvList(cctx))
+        .foreach(prov => prov.loco.foreach(loc => updateCounter(loc, change)))
     }
     
     /** Stores the chain of provenances that lead to a given constraint
@@ -1076,7 +1101,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           ranking.iterator
           .filter { case (_, 0.0) => false; case _ => true}
           .map { case (loc, ranking) =>
-            val counter = locoCounter.getOrElse(loc, (-1, -1))
+            val counter = getCounter(loc)
             msg"Ranking ${ranking.toString()} with total and wrong count: ${counter.toString()}" -> Some(loc)
           }.toList
         // all chain locations in descending order of suspicion
@@ -1087,15 +1112,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           msg"========= All suspicious locations ($name) =========" -> N ::
           ranking.iterator
           .map { case (loc, ranking) =>
-            val counter = locoCounter.getOrElse(loc, (-1, -1))
+            val counter = getCounter(loc)
             msg"Ranking ${ranking.toString()} with total and wrong count: ${counter.toString()}" -> Some(loc)
           }.toList
         // all locations in the mapping in descending order of counter
         case 2 =>
           msg"========= All locations and counts =========" -> N ::
-          locoCounter
-          .toSortedSet.iterator
-          .map { case (loc, counter) =>
+          locoCounter.keys.toSortedSet.iterator
+          .map { loc =>
+            val counter = getCounter(loc)
             msg"(total, wrong): ${counter.toString()}" -> Some(loc)
           }.toList
         // all chain locations with their counts in flow order from producer to consumer
@@ -1104,7 +1129,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           flattenChainToProvList(chain.getOrElse(Nil -> Nil))
           .collect {
             case TypeProvenance(S(loco), desc, _, _) =>
-              val counter = locoCounter.getOrElse(loco, (-1, -1))
+              val counter = getCounter(loco)
               msg"(total, wrong): ${counter.toString()} with $desc" -> Some(loco)
           }
         // all chain locations chain locations at the current level
@@ -1113,7 +1138,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           msg"========= Chain locations at current level =========" -> N ::
           flatChain.collect(st => st.prov match {
             case t @ TypeProvenance(S(loco), desc, _, _) if !(t.isInstanceOf[NestedTypeProvenance]) =>
-              val counter = locoCounter.getOrElse(loco, (-1, -1))
+              val counter = getCounter(loco)
               msg"(total, wrong): ${counter.toString()} with $desc" -> Some(loco)
           })
         // all chain locations on the lhs side
@@ -1122,7 +1147,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           flattenChainToProvList(chain.getOrElse(Nil -> Nil)._1 -> Nil)
           .collect {
             case TypeProvenance(S(loco), desc, _, _) =>
-              val counter = locoCounter.getOrElse(loco, (-1, -1))
+              val counter = getCounter(loco)
               msg"(total, wrong): ${counter.toString()} with $desc" -> Some(loco)
           }
         // all chain locations on the rhs
@@ -1131,7 +1156,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           flattenChainToProvList(chain.getOrElse(Nil -> Nil)._2 -> Nil)
           .collect {
             case TypeProvenance(S(loco), desc, _, _) =>
-              val counter = locoCounter.getOrElse(loco, (-1, -1))
+              val counter = getCounter(loco)
               msg"(total, wrong): ${counter.toString()} with $desc" -> Some(loco)
           }
         case _ => Nil
@@ -1159,9 +1184,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     
     case class OchiaiStrategy() extends Strategy {
       override def score(loco: Loc): Double = {
-        locoCounter.get(loco) match {
-          case None => 0
-          case Some((total, wrong)) =>
+        getCounter(loco) match {
+          case (-1, -1) => 0
+          case (total, wrong) =>
             val totalWrong = chains.length
             val denom = math.sqrt(totalWrong * (wrong + (total - wrong)))
             
@@ -1179,9 +1204,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     case class DStarStrategy() extends Strategy {
       val exponent: Int = 2
       override def score(loco: Loc): Double = {
-        locoCounter.get(loco) match {
-          case None => 0
-          case Some((total, wrong)) =>
+        getCounter(loco) match {
+          case (-1, -1) => 0
+          case (total, wrong) =>
             val totalWrong = chains.length
             val denom = math.sqrt(totalWrong * (wrong + (total - wrong)))
             
