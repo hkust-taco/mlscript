@@ -552,13 +552,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }}()
     
     def reportError(failureOpt: Opt[Message] = N)(implicit cctx: ConCtx): Unit = {
+      errorSimplifer.addErrorChain(cctx)
       // completes counting current level of chain
       // then increments error count for all locations on the chain
       errorSimplifer.updateChainCount(cctx, N)
-      errorSimplifer.updateChainCount(cctx, S(0, 1))
+      errorSimplifer.updateChainCount(cctx, S(1, 1))
       // counts nested but counts extra
       // errorSimplifer.updateChainCount(cctx, (1, 1))
-      errorSimplifer.reportInfo(S(cctx))
+      // errorSimplifer.reportInfo(S(cctx))
+      errorSimplifer.reportInfo(S(cctx), 1)
       errorSimplifer.reportInfo(S(cctx), 3)
       
       val lhsChain: List[ST] = cctx._1
@@ -850,7 +852,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     */
     type LocoCounter = MutMap[Loc, Opt[(Int, Int)]]
     val locoCounter: LocoCounter = MutMap();
-    val strategy: Strategy = OchiaiStrategy();
+    val strategy: Strategy = DStarStrategy();
     
     def updateCounter(loco: Loc, change: Opt[(Int, Int)]): Unit = {
       // initialize counter if there is no change
@@ -959,7 +961,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         val provIter = if (reverse) chain.reverseIterator else chain.iterator
         provIter.flatMap(st => st.prov match {
           case nested: NestedTypeProvenance => inner(nested.chain, level + 1, nested.nestingInfo.reversed ^ reverse)
-          case simple: TypeProvenance => (simple, level) :: Nil
+          case simple: TypeProvenance => if (simple.loco.isDefined) (simple, level) :: Nil else Nil
         }).toList
       }
       inner(chain._1 ::: chain._2)
@@ -970,7 +972,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         val provIter = if (reverse) chain.reverseIterator else chain.iterator
         provIter.flatMap(st => st.prov match {
           case nested: NestedTypeProvenance => inner(nested.chain, level + 1, nested.nestingInfo.reversed ^ reverse)
-          case simple: TypeProvenance => simple.copy(desc = s"${simple.desc} at nesting: $level, rev: $reverse") :: Nil
+          case simple: TypeProvenance => if (simple.loco.isDefined) simple.copy(desc = s"${simple.desc} at nesting: $level, rev: $reverse") :: Nil else Nil
           // case simple: TypeProvenance => simple.copy(desc = s"${simple.desc} at nesting: $level") :: Nil
         }).toList
       }
@@ -1125,7 +1127,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           }.toList
         // all chain locations with their counts in flow order from producer to consumer
         case 3 =>
-          msg"========= All chain locations and count =========" -> N ::
+          msg"========= All chain provenances with location and count =========" -> N ::
           flattenChainToProvList(chain.getOrElse(Nil -> Nil))
           .collect {
             case TypeProvenance(S(loco), desc, _, _) =>
@@ -1135,7 +1137,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         // all chain locations chain locations at the current level
         case 4 =>
           val flatChain = chain.map(cctx => levelElements(cctx, 0)).getOrElse(Nil)
-          msg"========= Chain locations at current level =========" -> N ::
+          msg"========= All 0 level chain provenances with location and count =========" -> N ::
           flatChain.collect(st => st.prov match {
             case t @ TypeProvenance(S(loco), desc, _, _) if !(t.isInstanceOf[NestedTypeProvenance]) =>
               val counter = getCounter(loco)
@@ -1143,7 +1145,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           })
         // all chain locations on the lhs side
         case 5 =>
-          msg"========= All chain locations on the lhs =========" -> N ::
+          msg"========= All location provenances on the lhs =========" -> N ::
           flattenChainToProvList(chain.getOrElse(Nil -> Nil)._1 -> Nil)
           .collect {
             case TypeProvenance(S(loco), desc, _, _) =>
@@ -1152,12 +1154,20 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           }
         // all chain locations on the rhs
         case 6 =>
-          msg"========= All chain locations on the rhs =========" -> N ::
+          msg"========= All chain provenance on the rhs =========" -> N ::
           flattenChainToProvList(chain.getOrElse(Nil -> Nil)._2 -> Nil)
           .collect {
             case TypeProvenance(S(loco), desc, _, _) =>
               val counter = getCounter(loco)
               msg"(total, wrong): ${counter.toString()} with $desc" -> Some(loco)
+          }
+        case 7 =>
+          msg"========= Unique locations on chain =========" -> N ::
+          dedupChain(flattenChainToProvList(chain.getOrElse(Nil -> Nil)))
+          .collect {
+            case TypeProvenance(S(loco), desc, _, _) =>
+              val counter = getCounter(loco)
+              msg"(total, wrong): ${counter.toString()} with $desc and ${loco.toString}" -> Some(loco)
           }
         case _ => Nil
       }
@@ -1210,7 +1220,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val totalWrong = chains.length
             val denom = math.sqrt(totalWrong * (wrong + (total - wrong)))
             
-            if (denom =/= 0) (wrong ^ exponent) / denom else 0
+            if (denom =/= 0) scala.math.pow(wrong, exponent) / denom else 0
         }
       }
 
@@ -1218,7 +1228,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         override def compare(x: Loc, y: Loc): Int = score(x).compare(score(y))
       }
       
-      val name: Str = s"DStart $exponent"
+      val name: Str = s"DStar $exponent"
     }
   }
 }
