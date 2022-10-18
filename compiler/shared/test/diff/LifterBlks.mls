@@ -150,3 +150,20 @@ fun f(x,y,z) =
 //│   }
 //│   fun f = x, y, z, => {}
 //│ }
+
+// FIXME: `g` is extruded
+fun f(x) =
+  let g(x) = x + 1
+  class Foo(x) {
+    fun h = g(x)
+  }
+  Foo(x).h
+//│ |#fun| |f|(|x|)| |#=|→|#let| |g|(|x|)| |#=| |x| |+| |1|↵|#class| |Foo|(|x|)| |{|→|#fun| |h| |#=| |g|(|x|)|←|↵|}|↵|Foo|(|x|)|.h|←|
+//│ Parsed: {fun f = x, => {let g = x, => + (x,) (1,); class Foo(x,) {fun h = g (x,)}; (Foo (x,)).h}}
+//│ Parsed:
+//│ TypingUnit(NuFunDef(None, f, [], Lam(Tup(_: Var(x)), Blk(...))))
+//│ Lifted:
+//│ TypingUnit {
+//│   class Foo(x,) {fun h = g ((this).x,)}
+//│   fun f = x, => {let g = x, => + (x,) (1,); (Foo (x,)).h}
+//│ }
