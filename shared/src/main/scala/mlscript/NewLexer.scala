@@ -38,6 +38,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     ":",
     ";",
     "#",
+    // ".",
     // "<",
     // ">",
   )
@@ -251,7 +252,10 @@ object NewLexer {
     "interface",
     "new",
     "namespace",
-    "type"
+    "type",
+    "where",
+    "forall",
+    "exists",
   )
   
   def printToken(tl: TokLoc): Str = tl match {

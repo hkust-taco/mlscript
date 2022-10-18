@@ -378,6 +378,8 @@ trait TermImpl extends StatementImpl { self: Term =>
     case New(h, b) => "object instantiation"
     case If(_, _) => "if-else block"
     case TyApp(_, _) => "type application"
+    case Where(_, _) => s"constraint clause"
+    case Forall(_, _) => s"forall clause"
   }
   
   override def toString: Str = print(false)
@@ -394,7 +396,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case UnitLit(value) => if (value) "undefined" else "null"
     case Var(name) => name
     case Asc(trm, ty) => s"$trm : ${ty.show}"  |> bra
-    case Lam(name, rhs) => s"$name => $rhs" |> bra
+    case Lam(pat, rhs) => s"($pat) => $rhs" |> bra
     case App(lhs, rhs) => s"${lhs.print(!lhs.isInstanceOf[App])} ${rhs.print(true)}" |> bra
     case Rcd(fields) =>
       fields.iterator.map(nv =>
@@ -421,6 +423,8 @@ trait TermImpl extends StatementImpl { self: Term =>
     case New(N, bod) => s"new ${bod.show}" |> bra
     case If(body, els) => s"if $body" + els.fold("")(" else " + _) |> bra
     case TyApp(lhs, targs) => s"$lhs‹${targs.map(_.show).mkString(", ")}›"
+    case Where(bod, wh) => s"${bod} where {${wh.mkString("; ")}}"
+    case Forall(ps, bod) => s"forall ${ps.mkString(", ")}. ${bod}"
   }}
   
   def toType: Diagnostic \/ Type =
@@ -430,6 +434,7 @@ trait TermImpl extends StatementImpl { self: Term =>
         L(ErrorReport(msg"not a recognized type: ${e.trm.toString}"->e.trm.toLoc::Nil)) }
   protected def toType_! : Type = (this match {
     case Var(name) if name.startsWith("`") => TypeVar(R(name.tail), N)
+    case Var(name) if name.startsWith("'") => TypeVar(R(name), N)
     case Var(name) => TypeName(name)
     case lit: Lit => Literal(lit)
     case App(App(Var("|"), lhs), rhs) => Union(lhs.toType_!, rhs.toType_!)
@@ -454,6 +459,15 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Rcd(fields) => Record(fields.map(fld => (fld._1, fld._2 match {
       case Fld(m, s, v) => val ty = v.toType_!; Field(Option.when(m)(ty), ty)
     })))
+    case Where(body, where) =>
+      Constrained(body.toType_!, Nil, where.map {
+        case Asc(l, r) => Bounds(l.toType_!, r)
+        case s => throw new NotAType(s)
+      })
+    case Forall(ps, bod) =>
+      // PolyType(ps.map(v => L(TypeName(v.name).withLocOf(v))), bod.toType_!)
+      PolyType(ps.map(v => R(TypeVar(R(v.name), N).withLocOf(v))), bod.toType_!)
+    // 
     // TODO:
     // case Sel(receiver, fieldName) => ???
     // case Let(isRec, name, rhs, body) => ???
@@ -470,7 +484,7 @@ trait TermImpl extends StatementImpl { self: Term =>
   }).withLocOf(this)
   
 }
-private class NotAType(val trm: Term) extends Throwable
+private class NotAType(val trm: Statement) extends Throwable
 
 trait LitImpl { self: Lit =>
   def baseClasses: Set[TypeName] = this match {
@@ -714,6 +728,8 @@ trait StatementImpl extends Located { self: Statement =>
     case TyApp(lhs, targs) => lhs :: targs
     case New(base, bod) => base.toList.flatMap(ab => ab._1 :: ab._2 :: Nil) ::: bod :: Nil
     case NuTypeDef(_, _, _, _, _, _) => ???
+    case Where(bod, wh) => bod :: wh
+    case Forall(ps, bod) => ps ::: bod :: Nil
   }
   
   

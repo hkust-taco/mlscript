@@ -1,0 +1,44 @@
+
+1 + 1 where 1
+//│ |1| |+| |1| |#where| |1|
+//│ Parsed: {+ (1,) (1,) where {1}}
+
+a => a + 1 where foo
+//│ |a| |=>| |a| |+| |1| |#where| |foo|
+//│ Parsed: {(a,) => + (a,) (1,) where {foo}}
+
+a + 1 where let a = 1
+//│ |a| |+| |1| |#where| |#let| |a| |#=| |1|
+//│ Parsed: {+ (a,) (1,) where {let a = 1}}
+
+fun foo: 'a => 'a => 'a where 'a : int
+//│ |#fun| |foo|#:| |'a| |=>| |'a| |=>| |'a| |#where| |'a| |#:| |int|
+//│ Parsed: {fun foo: 'a -> 'a -> 'a
+//│   where
+//│     'a <: int}
+
+fun foo: 'a + 'a + 'a where 'a : int
+//│ |#fun| |foo|#:| |'a| |+| |'a| |+| |'a| |#where| |'a| |#:| |int|
+//│ Parsed: {fun foo: +[(+[('a,), ('a,)],), ('a,)]
+//│   where
+//│     'a <: int}
+
+:pe
+:w
+:e
+fun foo: 'a -> 'a -> 'a where 'a : int
+//│ |#fun| |foo|#:| |'a| |#->| |'a| |#->| |'a| |#where| |'a| |#:| |int|
+//│ ╔══[PARSE ERROR] Unexpected '->' keyword in expression position
+//│ ║  l.29: 	fun foo: 'a -> 'a -> 'a where 'a : int
+//│ ╙──      	            ^^
+//│ ╔══[PARSE ERROR] Unexpected '->' keyword in expression position
+//│ ║  l.29: 	fun foo: 'a -> 'a -> 'a where 'a : int
+//│ ╙──      	                  ^^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.29: 	fun foo: 'a -> 'a -> 'a where 'a : int
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not a recognized type: 'a ('a ('a where {'a : int},),)
+//│ ║  l.29: 	fun foo: 'a -> 'a -> 'a where 'a : int
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^
+//│ Parsed: {fun foo: anything}
+

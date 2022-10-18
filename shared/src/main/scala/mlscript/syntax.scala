@@ -72,6 +72,8 @@ final case class Splc(fields: Ls[Either[Term, Fld]])                 extends Ter
 final case class New(head: Opt[(NamedType, Term)], body: TypingUnit) extends Term // `new C(...)` or `new C(){...}` or `new{...}`
 final case class If(body: IfBody, els: Opt[Term])                    extends Term
 final case class TyApp(lhs: Term, targs: Ls[Type])                   extends Term
+final case class Where(body: Term, where: Ls[Statement])             extends Term
+final case class Forall(params: Ls[Var], body: Term)                 extends Term
 
 sealed abstract class IfBody extends IfBodyImpl
 // final case class IfTerm(expr: Term) extends IfBody // rm?

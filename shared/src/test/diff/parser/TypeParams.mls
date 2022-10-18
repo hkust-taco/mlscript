@@ -121,7 +121,7 @@ class Foo<T> {}
 
 fun foo<T>(x: T): string = "rua"
 //│ |#fun| |foo|‹|T|›|(|x|#:| |T|)|#:| |string| |#=| |"rua"|
-//│ Parsed: {fun foo = x: T, => "rua" : string}
+//│ Parsed: {fun foo = (x: T,) => "rua" : string}
 
 foo<int>(42)
 //│ |foo|‹|int|›|(|42|)|

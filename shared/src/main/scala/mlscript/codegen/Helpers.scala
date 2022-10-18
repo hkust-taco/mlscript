@@ -53,5 +53,7 @@ object Helpers {
     case TyApp(base, targs) => s"TyApp(${inspect(base)}, ${targs})"
     case Def(rec, nme, rhs, isByname) =>
       s"Def($rec, $nme, ${rhs.fold(inspect, _.toString)}, $isByname)"
+    case Where(bod, sts) => s"Where(${inspect(bod)}, ...)"
+    case Forall(ps, bod) => s"Forall($ps, ${inspect(bod)})"
   }
 }

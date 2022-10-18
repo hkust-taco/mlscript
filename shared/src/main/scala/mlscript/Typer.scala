@@ -469,7 +469,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               newVars += tv -> nv
               nv
           }
-          println(vars, recVars)
+          // println(vars, recVars)
           // val newVars = tvs.map()
           // PolymorphicType(oldLvl, rec(ty)(ctx, newVars))
           rec(ty)(ctx, newVars)
@@ -1068,6 +1068,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         typeTerm(App(Var(nmedTy.base.name).withLocOf(nmedTy), trm))
       case New(base, args) => ???
       case TyApp(_, _) => ??? // TODO
+      case Where(bod, sts) =>
+        typeTerms(sts :+ bod, false, Nil, allowPure = true)
+      case Forall(_, _) =>
+        ??? // TODO
     }
   }(r => s"$lvl. : ${r}")
   
@@ -1122,7 +1126,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       (req_ty :: tys) -> (bod_ty | rest_ty)
   }
   
-  def typeTerms(term: Ls[Statement], rcd: Bool, fields: List[Opt[Var] -> SimpleType])
+  def typeTerms(term: Ls[Statement], rcd: Bool, fields: List[Opt[Var] -> SimpleType], allowPure: Bool = false)
         (implicit ctx: Ctx, raise: Raise, prov: TypeProvenance): SimpleType
       = term match {
     case (trm @ Var(nme)) :: sts if rcd => // field punning
@@ -1179,7 +1183,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     case s :: sts =>
       val (diags, desug) = s.desugared
       diags.foreach(raise)
-      val newBindings = desug.flatMap(typeStatement(_, allowPure = false).toOption)
+      val newBindings = desug.flatMap(typeStatement(_, allowPure).toOption)
       ctx ++= newBindings.flatten
       typeTerms(sts, rcd, fields)
     case Nil =>
