@@ -7,7 +7,7 @@ fun foo =
 //│ |#fun| |foo| |#=|→|print|(|"ok"|)|↵|print|(|"ko"|)|←|
 //│ Parsed: {fun foo = {print ("ok",); print ("ko",)}}
 //│ Parsed:
-//│ TypingUnit(NuFunDef(None, foo, [], Blk@TypingUnit(App(Var(print), Tup(_: StrLit(ok))), App(Var(print), Tup(_: StrLit(ko))))))
+//│ TypingUnit(NuFunDef(None, foo, [], Blk(...)))
 //│ Lifted:
 //│ TypingUnit {fun foo = {print ("ok",); print ("ko",)}}
 
@@ -39,7 +39,7 @@ fun foo =
 //│ |#fun| |foo| |#=|→|#fun| |local|(|x|)| |#=|→|#class| |Foo| |{|→|#fun| |bar| |#=| |x| |+| |1|←|↵|}|↵|Foo|(||)|.bar|←|↵|print| |#of| |local|(|0|)| |+| |local|(|1|)|↵|print| |#of| |(|local| |#of| |0|)| |+| |local| |#of| |1|↵|#fun| |tmp| |#=| |1|↵|print| |#of| |local| |#of| |0| |+| |local| |#of| |1|↵|#fun| |tmp| |#=| |2|←|
 //│ Parsed: {fun foo = {fun local = x, => {class Foo() {fun bar = + (x,) (1,)}; (Foo ()).bar}; print (+ (local (0,),) (local (1,),),); print (+ (local (0,),) (local (1,),),); fun tmp = 1; print (local (+ (0,) (local (1,),),),); fun tmp = 2}}
 //│ Parsed:
-//│ TypingUnit(NuFunDef(None, foo, [], Blk@TypingUnit(NuFunDef(None, local, [], Lam(Tup(_: Var(x)), Blk@TypingUnit(NuTypeDef(class, Foo, (), Tup(), (), TypingUnit(NuFunDef(None, bar, [], App(App(Var(+), Tup(_: Var(x))), Tup(_: IntLit(1)))))), Sel(App(Var(Foo), Tup()), bar)))), App(Var(print), Tup(_: App(App(Var(+), Tup(_: App(Var(local), Tup(_: IntLit(0))))), Tup(_: App(Var(local), Tup(_: IntLit(1))))))), App(Var(print), Tup(_: App(App(Var(+), Tup(_: App(Var(local), Tup(_: IntLit(0))))), Tup(_: App(Var(local), Tup(_: IntLit(1))))))), NuFunDef(None, tmp, [], IntLit(1)), App(Var(print), Tup(_: App(Var(local), Tup(_: App(App(Var(+), Tup(_: IntLit(0))), Tup(_: App(Var(local), Tup(_: IntLit(1))))))))), NuFunDef(None, tmp, [], IntLit(2)))))
+//│ TypingUnit(NuFunDef(None, foo, [], Blk(...)))
 //│ Lifted:
 //│ TypingUnit {
 //│   class Foo(x,) {fun bar = + ((this).x,) (1,)}
@@ -74,7 +74,7 @@ class A(x){
 //│ |#class| |A|(|x|)|{|→|#fun| |w| |#=| |x|↵|#fun| |foo|(|y|)| |#=| |→|#class| |B|(|z|)|{|→|#fun| |bar| |#=| |x|+|y|+|z|←|↵|}|↵|#new| |B|(|0|)|{|→|#fun| |bar| |#=| |w|+|y|+|z|←|↵|}|←|←|↵|}|
 //│ Parsed: {class A(x,) {fun w = x; fun foo = y, => {class B(z,) {fun bar = + (+ (x,) (y,),) (z,)}; new B(0,) {fun bar = + (+ (w,) (y,),) (z,)}}}}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, A, (), Tup(_: Var(x)), (), TypingUnit(NuFunDef(None, w, [], Var(x)), NuFunDef(None, foo, [], Lam(Tup(_: Var(y)), Blk@TypingUnit(NuTypeDef(class, B, (), Tup(_: Var(z)), (), TypingUnit(NuFunDef(None, bar, [], App(App(Var(+), Tup(_: App(App(Var(+), Tup(_: Var(x))), Tup(_: Var(y))))), Tup(_: Var(z)))))), New(Some((TypeName(B),0,)), TypingUnit(List(fun bar = + (+ (w,) (y,),) (z,))))))))))
+//│ TypingUnit(NuTypeDef(class, A, (), Tup(_: Var(x)), (), TypingUnit(NuFunDef(None, w, [], Var(x)), NuFunDef(None, foo, [], Lam(Tup(_: Var(y)), Blk(...))))))
 //│ Lifted:
 //│ TypingUnit {
 //│   class A_B$1(par$A, z, y,) {
@@ -104,7 +104,7 @@ fun f(x,y,z) =
 //│ |#fun| |f|(|x|,|y|,|z|)| |#=| |→|#class| |A|{|→|#fun| |foo| |#=| |#new| |B|↵|#fun| |bar1| |#=| |x|←|↵|}|↵|#class| |B|{|→|#fun| |foo| |#=| |#new| |A|↵|#fun| |bar2| |#=| |y|←|↵|}|↵|#class| |C|#:| |A|,|B|{|→|#fun| |bar| |#=| |bar1| |+| |bar2|←|↵|}|←|
 //│ Parsed: {fun f = x, y, z, => {class A() {fun foo = new B() {}; fun bar1 = x}; class B() {fun foo = new A() {}; fun bar2 = y}; class C(): A, B {fun bar = + (bar1,) (bar2,)}}}
 //│ Parsed:
-//│ TypingUnit(NuFunDef(None, f, [], Lam(Tup(_: Var(x), _: Var(y), _: Var(z)), Blk@TypingUnit(NuTypeDef(class, A, (), Tup(), (), TypingUnit(NuFunDef(None, foo, [], New(Some((TypeName(B),)), TypingUnit(List()))), NuFunDef(None, bar1, [], Var(x)))), NuTypeDef(class, B, (), Tup(), (), TypingUnit(NuFunDef(None, foo, [], New(Some((TypeName(A),)), TypingUnit(List()))), NuFunDef(None, bar2, [], Var(y)))), NuTypeDef(class, C, (), Tup(), (Var(A), Var(B)), TypingUnit(NuFunDef(None, bar, [], App(App(Var(+), Tup(_: Var(bar1))), Tup(_: Var(bar2))))))))))
+//│ TypingUnit(NuFunDef(None, f, [], Lam(Tup(_: Var(x), _: Var(y), _: Var(z)), Blk(...))))
 //│ Lifted:
 //│ TypingUnit {
 //│   class A(x, y,) {
@@ -134,7 +134,7 @@ fun f(x,y,z) =
 //│ |#fun| |f|(|x|,|y|,|z|)| |#=| |→|#class| |C|{|→|#class| |A|{|→|#fun| |foo| |#=| |#new| |B|↵|#fun| |bar1| |#=| |x|←|↵|}|↵|#class| |B|{|→|#fun| |foo| |#=| |#new| |A|↵|#fun| |bar2| |#=| |y|←|↵|}|↵|#fun| |boo| |#=| |(|#new| |A|)|.bar1| |+| |B|(||)|.bar2| |+| |z|←|↵|}|←|
 //│ Parsed: {fun f = x, y, z, => {class C() {class A() {fun foo = new B() {}; fun bar1 = x}; class B() {fun foo = new A() {}; fun bar2 = y}; fun boo = + (('(' new A() {}, ')').bar1,) (+ ((B ()).bar2,) (z,),)}}}
 //│ Parsed:
-//│ TypingUnit(NuFunDef(None, f, [], Lam(Tup(_: Var(x), _: Var(y), _: Var(z)), Blk@TypingUnit(NuTypeDef(class, C, (), Tup(), (), TypingUnit(NuTypeDef(class, A, (), Tup(), (), TypingUnit(NuFunDef(None, foo, [], New(Some((TypeName(B),)), TypingUnit(List()))), NuFunDef(None, bar1, [], Var(x)))), NuTypeDef(class, B, (), Tup(), (), TypingUnit(NuFunDef(None, foo, [], New(Some((TypeName(A),)), TypingUnit(List()))), NuFunDef(None, bar2, [], Var(y)))), NuFunDef(None, boo, [], App(App(Var(+), Tup(_: Sel(Bra(rcd = false, Tup(_: New(Some((TypeName(A),)), TypingUnit(List())))), bar1))), Tup(_: App(App(Var(+), Tup(_: Sel(App(Var(B), Tup()), bar2))), Tup(_: Var(z))))))))))))
+//│ TypingUnit(NuFunDef(None, f, [], Lam(Tup(_: Var(x), _: Var(y), _: Var(z)), Blk(...))))
 //│ Lifted:
 //│ TypingUnit {
 //│   class C_A$1(par$C,) {
