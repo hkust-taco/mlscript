@@ -207,7 +207,7 @@ fun foo<T, U>(x: T): string =
 //│ Lifted:
 //│ TypingUnit {
 //│   class A[T,U](y,): B‹T›, C ((this).y,) {fun bar = this}
-//│   fun foo[T, U] = x, => {"rua"}
+//│   fun foo[T, U] = x, => {"rua"} : TypeName(string)
 //│ }
 
 class A<T>{
@@ -222,6 +222,25 @@ class A<T>{
 //│ TypingUnit(NuTypeDef(class, A, (TypeName(T)), Tup(), (), TypingUnit(NuTypeDef(class, B, (), Tup(), (), TypingUnit(NuFunDef(None, f, [], Asc(Lam(Tup(_: Var(x)), Lam(Tup(_: Var(y)), Var(x))), Function(Tuple(List((None,Field(None,TypeName(T))))),Function(Tuple(List((None,Field(None,TypeName(B))))),TypeName(T))))))))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class A_B$1[T](par$A,) {fun f = x, => y, => x}
+//│   class A_B$1[T](par$A,) {
+//│     fun f = x, => y, => x : Function(Tuple(List((None,Field(None,TypeName(T))))),Function(Tuple(List((None,Field(None,TypeName(B))))),TypeName(T)))
+//│   }
 //│   class A[T]() {}
+//│ }
+
+class Foo<T>{
+  class RectangleBox: Box<T> & { breadth: T }
+  class StackedRectangleBoxes<N> : RectangleBox<T> & { size: N }
+  class Bar: {any: RectangleBox => StackedRectangleBoxes}
+}
+//│ |#class| |Foo|‹|T|›|{|→|#class| |RectangleBox|#:| |Box|‹|T|›| |&| |{| |breadth|#:| |T| |}|↵|#class| |StackedRectangleBoxes|‹|N|›| |#:| |RectangleBox|‹|T|›| |&| |{| |size|#:| |N| |}|↵|#class| |Bar|#:| |{|any|#:| |RectangleBox| |=>| |StackedRectangleBoxes|}|←|↵|}|
+//│ Parsed: {class Foo[T]() {class RectangleBox(): & (Box‹T›,) ('{' {breadth: T} '}',) {}; class StackedRectangleBoxes[N](): & (RectangleBox‹T›,) ('{' {size: N} '}',) {}; class Bar(): '{' {any: RectangleBox, => StackedRectangleBoxes} '}' {}}}
+//│ Parsed:
+//│ TypingUnit(NuTypeDef(class, Foo, (TypeName(T)), Tup(), (), TypingUnit(NuTypeDef(class, RectangleBox, (), Tup(), (App(App(Var(&), Tup(_: TyApp(Var(Box), List(TypeName(T))))), Tup(_: Bra(rcd = true, Rcd(Var(breadth) = Var(T)))))), TypingUnit()), NuTypeDef(class, StackedRectangleBoxes, (TypeName(N)), Tup(), (App(App(Var(&), Tup(_: TyApp(Var(RectangleBox), List(TypeName(T))))), Tup(_: Bra(rcd = true, Rcd(Var(size) = Var(N)))))), TypingUnit()), NuTypeDef(class, Bar, (), Tup(), (Bra(rcd = true, Rcd(Var(any) = Lam(Tup(_: Var(RectangleBox)), Var(StackedRectangleBoxes))))), TypingUnit()))))
+//│ Lifted:
+//│ TypingUnit {
+//│   class Foo_RectangleBox$1[T](par$Foo,): & (Box‹T›,) ('{' {breadth: T} '}',) {}
+//│   class Foo_StackedRectangleBoxes$2[N,T](par$Foo,): & (Foo_RectangleBox$1 ((this).par$Foo,)‹T›,) ('{' {size: N} '}',) {}
+//│   class Foo_Bar$3(par$Foo,): '{' {any: RectangleBox, => Foo_StackedRectangleBoxes$2 ((this).par$Foo,)} '}' {}
+//│   class Foo[T]() {}
 //│ }

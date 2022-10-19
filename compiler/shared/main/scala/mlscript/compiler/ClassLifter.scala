@@ -62,7 +62,7 @@ class ClassLifter {
 
   private def log(str: String): Unit = {
     logOutput.append(str)
-    // println(str)
+    println(str)
   }
   def getLog: String = logOutput.toString()
 
@@ -123,14 +123,21 @@ class ClassLifter {
   }
   private def toFldsEle(trm: Term): (Option[Var], Fld) = (None, Fld(false, false, trm))
 
-  def getSupClsNameByTerm(parentTerm: Term): List[TypeName] = parentTerm match{
-      case Var(nm) => List(TypeName(nm))
-      case App(Var(nm), _: Tup) => List(TypeName(nm))
-      case App(App(Var("&"), t1), t2) => getSupClsNameByTerm(t1) ++ getSupClsNameByTerm(t2)
-      case TyApp(trm, targs) => getSupClsNameByTerm(trm)
+  def getSupClsInfoByTerm(parentTerm: Term): (List[TypeName], List[(Var, Fld)]) = parentTerm match{
+      case Var(nm) => List(TypeName(nm)) -> Nil
+      case App(Var(nm), _: Tup) => List(TypeName(nm)) -> Nil
+      case App(App(Var("&"), t1), t2) => 
+        val ret1 = getSupClsInfoByTerm(t1)
+        val ret2 = getSupClsInfoByTerm(t2)
+        (ret1._1 ++ ret2._1) -> (ret1._2 ++ ret2._2)
+      case TyApp(trm, targs) => getSupClsInfoByTerm(trm)
       //SPECIAL CARE: Tup related issue
-      case Tup(flds) => flds.filter(_._1.isEmpty).flatMap(fld => getSupClsNameByTerm(fld._2.value))
-      case _ => Nil
+      case Tup(flds) => 
+        val ret = flds.filter(_._1.isEmpty).map(fld => getSupClsInfoByTerm(fld._2.value)).unzip
+        ret._1.flatten -> ret._2.fold(Nil)(_ ++ _)
+      case Bra(rcd, trm) => getSupClsInfoByTerm(trm)
+      case Rcd(fields) => (Nil, fields)
+      case _ => (Nil, Nil)
     }
   
   private def splitEntities(etts: List[Statement]) = {
@@ -170,12 +177,16 @@ class ClassLifter {
         case (Some(v), Fld(_, _, trm)) => getFreeVars(trm).vSet2tSet.addV(v)
         case (_, Fld(_, _, rhs)) => getFreeVars(rhs)
       }.fold(emptyCtx)(_ ++ _)
+    case Rcd(fields) => 
+      fields.map{
+        case (v, Fld(_, _, trm)) => getFreeVars(trm).vSet2tSet
+      }.fold(emptyCtx)(_ ++ _)
     case TyApp(trm, tpLst) =>
       getFreeVars(trm).addT(tpLst.flatMap(_.collectTypeNames.map(TypeName(_))))
     case NuTypeDef(_, nm, tps, param, pars, body) =>
       val prmVs = getFreeVars(param)(using emptyCtx, Map(), None)
       val newVs = prmVs.vSet ++ getFields(body.entities) + Var(nm.name)
-      val nCtx = ctx.addV(newVs).addT(nm)
+      val nCtx = ctx.addV(newVs).addT(nm).addT(tps)
       val parVs = pars.map(getFreeVars(_)(using nCtx)).fold(emptyCtx)(_ ++ _)
       val bodyVs = body.entities.map(getFreeVars(_)(using nCtx)).fold(emptyCtx)(_ ++ _)
       (bodyVs ++ parVs -+ prmVs).extT(tps)
@@ -194,13 +205,21 @@ class ClassLifter {
     val NuTypeDef(_, nm, tps, param, pars, body) = cls
     log(s"grep context of ${cls.nme.name} under {\n$ctx\n$cache\n$outer\n}\n")
     val (clses, funcs, trms) = splitEntities(cls.body.entities)
-    val supClses = pars.flatMap(getSupClsNameByTerm).toSet
-    val fields = (param.fields.flatMap(tupleEntityToVar) ++ funcs.map(_.nme) ++ clses.map(x => Var(x.nme.name)) ++ trms.flatMap(grepFieldsInTrm)).toSet
-    val nCtx = ctx.addV(fields).extT(tps)
-    val tmpCtx = (body.entities.map(getFreeVars(_)(using nCtx)) ++ pars.map(getFreeVars(_)(using nCtx))).fold(emptyCtx)(_ ++ _).moveT2V(preClss)
+    val (supNms, rcdFlds) = pars.map(getSupClsInfoByTerm).unzip
+    val flds = rcdFlds.flatten.map{
+      case (v, Fld(_, _, trm)) => 
+        val tmp = getFreeVars(trm)(using emptyCtx)
+        val ret = tmp.tSet ++ tmp.vSet.map(x => TypeName(x.name))
+        (v, ret)
+    }.unzip
+    log(s"par record: ${flds._2.flatten}")
+    val fields = (param.fields.flatMap(tupleEntityToVar) ++ funcs.map(_.nme) ++ clses.map(x => Var(x.nme.name)) ++ trms.flatMap(grepFieldsInTrm) ++ flds._1).toSet
+    val nCtx = ctx.addV(fields).addV(flds._1).extT(tps)
+    val tmpCtx = ((body.entities.map(getFreeVars(_)(using nCtx)) ++ pars.map(getFreeVars(_)(using nCtx))).fold(emptyCtx)(_ ++ _).moveT2V(preClss)
+                  ).addT(flds._2.flatten.toSet).extV(supNms.flatten.map(x => Var(x.name)))
 
     log(s"ret ctx for ${cls.nme.name}: $tmpCtx")
-    val ret = ClassInfoCache(nm, genClassNm(nm.name), tmpCtx, MSet(fields.toSeq: _*), MMap(), supClses, outer, cls, outer.map(_.depth).getOrElse(0)+1)
+    val ret = ClassInfoCache(nm, genClassNm(nm.name), tmpCtx, MSet(fields.toSeq: _*), MMap(), supNms.flatten.toSet, outer, cls, outer.map(_.depth).getOrElse(0)+1)
     ret
   }
 
@@ -307,7 +326,7 @@ class ClassLifter {
       (Rcd(ret._1), ret._2.fold(emptyCtx)(_ ++ _))
     case Asc(trm, ty) => 
       val ret = liftTermNew(trm)
-      (ret._1, ret._2.addT(ty.collectTypeNames.map(TypeName(_))))
+      (Asc(ret._1, ty), ret._2.addT(ty.collectTypeNames.map(TypeName(_))))
     case App(v: Var, prm: Tup) if cache.contains(TypeName(v.name)) => 
       val ret = liftConstr(TypeName(v.name), prm)
       (App(Var(ret._1.name), ret._2), ret._3)
@@ -420,7 +439,10 @@ class ClassLifter {
         val newInners = supClsNmList.foreach(c2 => inners.addAll(
           nameInfoMap.get(c2).map(_.innerClses).getOrElse(cache.get(c2).map(_.innerClses).getOrElse(Nil))
           ))
-        infoOfCls.capturedParams = newCtxForCls
+        val newCtxFromSup = supClsNmList.map(c2 => 
+          nameInfoMap.get(c2).map(_.capturedParams).getOrElse(cache.get(c2).map(_.capturedParams).getOrElse(emptyCtx))
+          ).fold(emptyCtx)(_ ++ _)
+        infoOfCls.capturedParams = newCtxForCls ++ newCtxFromSup
       }}
     }
     nameInfoMap.foreach((x1, x2) => x2.capturedParams = (x2.capturedParams extV newClsNms).extT(x2.innerClses.keySet))

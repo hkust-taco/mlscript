@@ -138,7 +138,7 @@ class Parent<T, U, V>(x) {
 //│     fun bar = z, => ((this).par$Parent).foo ((this).y,)
 //│     fun boo = z, => z
 //│   }
-//│   class Parent[T,U,V](x,) {fun foo = x, => + (x,) (1,)}
+//│   class Parent[T,U,V](x,) {fun foo = x, => + (x,) (1,) : TypeName(T)}
 //│ }
 
 
@@ -198,10 +198,10 @@ class Child<T, U>(x): { age: T } & { name: String} {
 //│ TypingUnit(NuTypeDef(class, Child, (TypeName(T), TypeName(U)), Tup(_: Var(x)), (App(App(Var(&), Tup(_: Bra(rcd = true, Rcd(Var(age) = Var(T))))), Tup(_: Bra(rcd = true, Rcd(Var(name) = Var(String)))))), TypingUnit(NuTypeDef(class, Inner, (), Tup(), (), TypingUnit(NuFunDef(None, foo, [], Var(age)))), NuFunDef(None, bar, [], Var(age)), NuFunDef(None, boo, [], New(Some((TypeName(Inner),)), TypingUnit(List()))))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class Child_Inner$1(par$Child, age,) {fun foo = (this).age}
+//│   class Child_Inner$1(par$Child,) {fun foo = ((this).par$Child).age}
 //│   class Child[T,U](x,): & ('{' {age: T} '}',) ('{' {name: String} '}',) {
-//│     fun bar = age
-//│     fun boo = new Child_Inner$1(this, age,) {}
+//│     fun bar = (this).age
+//│     fun boo = new Child_Inner$1(this,) {}
 //│   }
 //│ }
 
@@ -220,7 +220,7 @@ new A(0) {
 //│ TypingUnit(NuTypeDef(class, A, (), Tup(x: Var(Int)), (), TypingUnit(NuFunDef(None, getA, [], Asc(IntLit(0), TypeName(Int))), NuFunDef(None, getA1, [], IntLit(1)))), New(Some((TypeName(A),0,)), TypingUnit(List(fun getA = 3, fun getA2 = 2))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class A(x: Int,) {fun getA = 0; fun getA1 = 1}
+//│   class A(x: Int,) {fun getA = 0 : TypeName(Int); fun getA1 = 1}
 //│   class A$1(x: Int,): A ((this).x,) {fun getA = 3; fun getA2 = 2}
 //│   Code(List({new A$1(0,) {}}))
 //│ }
