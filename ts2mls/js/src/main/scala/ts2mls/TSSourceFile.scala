@@ -14,7 +14,7 @@ object TSSourceFile {
           addNodeIntoNamespace(nodeObject, nodeObject.symbol.escapedName)(global)
         else if (!nodeObject.declarationList.isUndefined) { // for variables
           val decNode = nodeObject.declarationList.declaration
-          if (decNode.initializer.isToken)
+          if (decNode.initializer.isUndefined || decNode.initializer.isToken)
             addNodeIntoNamespace(decNode, decNode.symbol.escapedName)(global)
           else
             addNodeIntoNamespace(decNode.initializer, decNode.symbol.escapedName)(global)
