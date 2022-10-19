@@ -12,7 +12,6 @@ rec def x = {u = x}
 //│   where
 //│     'x := {u: 'x}
 
-// > FIXME: foralls?
 {u = x; v = x}
 //│ res: {u: forall 'x. 'x, v: forall 'x. 'x}
 //│   where
@@ -91,10 +90,10 @@ arg.X
 :e
 arg: C[nothing]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.92: 	arg: C[nothing]
+//│ ║  l.91: 	arg: C[nothing]
 //│ ║        	^^^
 //│ ╟── integer literal of type `42` does not match type `nothing`
-//│ ║  l.49: 	def arg = if true then C{x = 42} else C{x = 1}
+//│ ║  l.48: 	def arg = if true then C{x = 42} else C{x = 1}
 //│ ╙──      	                             ^^
 //│ res: C[nothing]
 
