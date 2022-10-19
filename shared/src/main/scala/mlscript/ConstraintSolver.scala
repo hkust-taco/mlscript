@@ -115,6 +115,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       
       val lhsCs = lhs.instantiate
       
+      // * Same remark as in the `rec` method [note:1]
+      // assert(lvl >= rhs.level)
+      
       lhsCs.foreach { case Conjunct(lnf, vars, rnf, nvars) =>
         
         def local(): Unit = { // * Used to return early in simple cases
@@ -754,8 +757,24 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           // case (poly: PolymorphicType, _) if poly.body.level <= poly.polymLevel => rec(poly.body, rhs, true)
           case (poly: PolymorphicType, _) =>
             // TODO Here it might actually be better to try and put poly into a TV if the RHS contains one
-            //    Note: similar remark applies inside constrainDNF
+            //    ^ Note: similar remark applies inside constrainDNF
+            
+            // * [note:1] This assertion seems to hold most of the time,
+            // *  with a notable exception when destroying constrained types in rec defs.
+            // *    (I wonder if it's completely sound/safe to constrain things
+            // *    that live at higher levels like that.)
+            // assert(lvl >= rhs.level)
+            
             rec(poly.instantiate, rhs, true)
+            // * ^ Note: it may not be necessary to instantiate `poly` at the current ctx's polym level...
+            // *    Indeed, it should be sufficient to instantiate it to the rhs's level,
+            // *    which could result in fewer extrusions later on.
+            // *    I tried it below, but it didn't really seem to have much effect:
+            /* 
+            val inst = ctx.copy(lvl = ctx.lvl min rhs.level) |> { // * or `lvl = rhs.level`?
+              implicit ctx => poly.instantiate }
+            rec(inst, rhs, true)
+            */
           case (ConstrainedType(cs, bod), _) =>
             trace(s"DISCHARGE CONSTRAINTS") {
               cs.foreach { case (lb, ub) => 
