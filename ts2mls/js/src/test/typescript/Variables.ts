@@ -5,3 +5,9 @@ const bar = false
 
 class FooBar {}
 const fb = new FooBar
+
+namespace ABC {
+  export class DEF {}
+}
+
+const d = new ABC.DEF
