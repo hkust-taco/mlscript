@@ -53,6 +53,7 @@ class TSTypeChecker(checker: js.Dynamic) {
   def getTypeArguments(tp: js.Dynamic) = checker.getTypeArguments(tp)
   def getElementTypeOfArrayType(tp: js.Dynamic) = checker.getElementTypeOfArrayType(tp)
   def isOptionalParameter(node: js.Dynamic) = checker.isOptionalParameter(node)
+  def getTypeAtLocation(node: js.Dynamic) = checker.getTypeAtLocation(node)
 }
 
 object TSTypeChecker {
@@ -114,6 +115,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
                      else modifiers.foldLeft(false)((s, t) => t.isStatic)
 
   lazy val typeNode = TSTypeObject(checker.getTypeFromTypeNode(node))
+  lazy val typeAtLocation = TSTypeObject(checker.getTypeAtLocation(node))
   lazy val symbol = TSSymbolObject(node.symbol)
   lazy val parameters = TSNodeArray(node.parameters)
   lazy val typeParameters = TSNodeArray(node.typeParameters)

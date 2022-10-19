@@ -3,5 +3,6 @@
 let URI: string
 let URI2: string
 let foo: number
-//│ |#let| |URI|#:| |string|↵|#let| |URI2|#:| |string|↵|#let| |foo|#:| |number|
-//│ Parsed: {let URI: [] -> string; let URI2: [] -> string; let foo: [] -> number}
+let bar: false
+//│ |#let| |URI|#:| |string|↵|#let| |URI2|#:| |string|↵|#let| |foo|#:| |number|↵|#let| |bar|#:| |false|
+//│ Parsed: {let URI: [] -> string; let URI2: [] -> string; let foo: [] -> number; let bar: [] -> false}
