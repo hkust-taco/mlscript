@@ -9,6 +9,6 @@ let fb: FooBar
 namespace ABC {
   class DEF() {}
 }
-let d: ABC'DEF
-//│ |#let| |URI|#:| |string|↵|#let| |URI2|#:| |string|↵|#let| |foo|#:| |number|↵|#let| |bar|#:| |false|↵|#class| |FooBar|(||)| |{||}|↵|#let| |fb|#:| |FooBar|↵|#namespace| |ABC| |{|→|#class| |DEF|(||)| |{||}|←|↵|}|↵|#let| |d|#:| |ABC'DEF|
-//│ Parsed: {let URI: [] -> string; let URI2: [] -> string; let foo: [] -> number; let bar: [] -> false; class FooBar() {}; let fb: [] -> FooBar; namespace ABC(): {class DEF() {}}; let d: [] -> ABC'DEF}
+let d: ABC.DEF
+//│ |#let| |URI|#:| |string|↵|#let| |URI2|#:| |string|↵|#let| |foo|#:| |number|↵|#let| |bar|#:| |false|↵|#class| |FooBar|(||)| |{||}|↵|#let| |fb|#:| |FooBar|↵|#namespace| |ABC| |{|→|#class| |DEF|(||)| |{||}|←|↵|}|↵|#let| |d|#:| |ABC|.DEF|
+//│ Parsed: {let URI: [] -> string; let URI2: [] -> string; let foo: [] -> number; let bar: [] -> false; class FooBar() {}; let fb: [] -> FooBar; namespace ABC(): {class DEF() {}}; let d: [] -> ABC.DEF}

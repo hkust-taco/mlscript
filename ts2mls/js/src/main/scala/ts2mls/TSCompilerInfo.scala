@@ -79,7 +79,7 @@ class TSSymbolObject(sym: js.Dynamic)(implicit checker: TSTypeChecker) extends T
   // e.g. class A extends B => class A extends SomeNamespace'B
   lazy val fullName: String =
     if (parent.isUndefined || !parent.declaration.isNamespace) escapedName
-    else s"${parent.fullName}'$escapedName"
+    else s"${parent.fullName}.$escapedName"
 }
 
 object TSSymbolObject {
