@@ -1,5 +1,7 @@
 :NewParser
 :ParseOnly
 let URI: string
-//│ |#let| |URI|#:| |string|
-//│ Parsed: {let URI: [] -> string}
+let URI2: string
+let foo: number
+//│ |#let| |URI|#:| |string|↵|#let| |URI2|#:| |string|↵|#let| |foo|#:| |number|
+//│ Parsed: {let URI: [] -> string; let URI2: [] -> string; let foo: [] -> number}
