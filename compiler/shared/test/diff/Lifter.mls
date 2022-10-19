@@ -138,7 +138,7 @@ class Parent<T, U, V>(x) {
 //│     fun bar = z, => ((this).par$Parent).foo ((this).y,)
 //│     fun boo = z, => z
 //│   }
-//│   class Parent[T,U,V](x,) {fun foo = x, => + (x,) (1,) : TypeName(T)}
+//│   class Parent[T,U,V](x,) {fun foo = x, => + (x,) (1,)}
 //│ }
 
 
@@ -220,7 +220,7 @@ new A(0) {
 //│ TypingUnit(NuTypeDef(class, A, (), Tup(x: Var(Int)), (), TypingUnit(NuFunDef(None, getA, [], Asc(IntLit(0), TypeName(Int))), NuFunDef(None, getA1, [], IntLit(1)))), New(Some((TypeName(A),0,)), TypingUnit(List(fun getA = 3, fun getA2 = 2))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class A(x: Int,) {fun getA = 0 : TypeName(Int); fun getA1 = 1}
+//│   class A(x: Int,) {fun getA = 0; fun getA1 = 1}
 //│   class A$1(x: Int,): A ((this).x,) {fun getA = 3; fun getA2 = 2}
 //│   Code(List({new A$1(0,) {}}))
 //│ }
