@@ -70,7 +70,7 @@ iter2_ty = iter2
 //│         = [Function: iter2]
 
 iter4() = iter2 iter2
-//│ iter4: () -> (forall 'a. (('b | 'c) -> ('d & 'e & 'f & 'g & 'h) & 'g -> 'b & 'a & 'i & 'j) -> (forall 'k, 'l, 'm. ('g & 'k & 'n & 'o) -> ('l | 'h) | 'm | 'p) | 'q)
+//│ iter4: () -> (forall 'a. (('b | 'c) -> ('d & 'e & 'f & 'g & 'h) & 'g -> 'b & 'a & 'i & 'j) -> (forall 'k, 'l, 'm. ('g & 'l & 'n & 'o) -> ('m | 'h) | 'k | 'p) | 'q)
 //│      = [Function: iter4]
 
 def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
@@ -94,7 +94,7 @@ iter4_ty = iter4
 //│ ║  l.76: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│ ╙──      	                            ^^
 //│         = [Function: iter4_ty]
-//│ () -> (forall 'a. (('b | 'c) -> ('d & 'e & 'f & 'g & 'h) & 'g -> 'b & 'a & 'i & 'j) -> (forall 'k, 'l, 'm. ('g & 'k & 'n & 'o) -> ('l | 'h) | 'm | 'p) | 'q)
+//│ () -> (forall 'a. (('b | 'c) -> ('d & 'e & 'f & 'g & 'h) & 'g -> 'b & 'a & 'i & 'j) -> (forall 'k, 'l, 'm. ('g & 'l & 'n & 'o) -> ('m | 'h) | 'k | 'p) | 'q)
 //│   <:  iter4_ty:
 //│ () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -174,7 +174,7 @@ S_ty = S
 //│  = [Function: S]
 //│ S_ty: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X0. ('X0 -> 'X0) -> 'X0 -> 'X0)
 //│     = <missing implementation>
-//│ ('a -> ('b -> 'c & 'd) & 'e) -> (forall 'f, 'g, 'h. (('c | 'f) -> 'g & 'a & 'h) -> (forall 'i, 'j. ('b & 'i) -> ('j | 'g)))
+//│ ('a -> ('b -> 'c & 'd) & 'e) -> (forall 'f, 'g, 'h. (('c | 'f) -> 'g & 'a & 'h) -> (forall 'i, 'j. ('b & 'j) -> ('i | 'g)))
 //│   <:  S_ty:
 //│ (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X0. ('X0 -> 'X0) -> 'X0 -> 'X0)
 //│     = [Function: S]
@@ -407,12 +407,12 @@ E q = q id
 // shallow (not (not true))        -- Shallow encoding.
 // λid.id(λb t f.b f t)(id(λb t f.b f t)(λx y.x))
 sh id = (id not) ((id not) tru)
-//│ sh: ((forall 'a, 'b, 'c, 'd, 'e. ('a -> ('b -> 'c & 'd) & 'e) -> (forall 'f. ('b & 'f) -> (forall 'g, 'h. ('a & 'g) -> ('h | 'c)))) -> ((forall 'i. 'i -> (forall 'j. 'j -> 'i)) -> 'k & 'l) & (forall 'a, 'b, 'c, 'd, 'e. ('a -> ('b -> 'c & 'd) & 'e) -> (forall 'f. ('b & 'f) -> (forall 'g, 'h. ('a & 'g) -> ('h | 'c)))) -> ('k -> 'm & 'n) & 'o) -> 'm
+//│ sh: ((forall 'a, 'b, 'c, 'd, 'e. ('a -> ('b -> 'c & 'e) & 'd) -> (forall 'f. ('b & 'f) -> (forall 'g, 'h. ('a & 'g) -> ('h | 'c)))) -> ((forall 'i. 'i -> (forall 'j. 'j -> 'i)) -> 'k & 'l) & (forall 'a, 'b, 'c, 'd, 'e. ('a -> ('b -> 'c & 'e) & 'd) -> (forall 'f. ('b & 'f) -> (forall 'g, 'h. ('a & 'g) -> ('h | 'c)))) -> ('k -> 'm & 'n) & 'o) -> 'm
 //│   = [Function: sh]
 
 // E[forall X.X->X->X](shallow (not( not true)))
 E sh
-//│ res: ('a & 'b) -> (forall 'c, 'd. 'c -> ('d | 'b))
+//│ res: ('a & 'b) -> (forall 'c, 'd. 'd -> ('c | 'b))
 //│    = [Function (anonymous)]
 
 u = E
@@ -422,7 +422,7 @@ sh_pu id x y = id (id u x) x
 //│  = [Function: E]
 //│ pu: ((forall 'a. 'a -> 'a) -> ('b -> 'c & 'd) & 'b) -> (forall 'e, 'f. 'e -> ('f | 'c))
 //│   = [Function: pu]
-//│ sh_pu: (('a | 'b) -> ('c -> 'd & 'e) & (((forall 'f. 'f -> 'f) -> 'g & 'h) -> 'g) -> ('i -> 'a & 'j) & 'k) -> (forall 'l. ('c & 'i & 'l) -> (forall 'm, 'n. 'm -> ('n | 'd)))
+//│ sh_pu: (('a | 'b) -> ('c -> 'd & 'e) & (forall 'f, 'g. ((forall 'h. 'h -> 'h) -> 'f & 'g) -> 'f) -> ('i -> 'a & 'j) & 'k) -> (forall 'l. ('c & 'i & 'l) -> (forall 'm, 'n. 'n -> ('m | 'd)))
 //│      = [Function: sh_pu]
 
 :e

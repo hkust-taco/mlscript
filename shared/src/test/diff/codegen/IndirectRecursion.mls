@@ -11,17 +11,17 @@ def z: (('a -> 'b) -> (('a -> 'b) & 'c)) -> 'c
 :e // No longer signature-checks after fix to freshening levels
 def z =
   (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
-//│ (('a -> 'b
+//│ ((forall 'a, 'b, 'c. ('a -> 'b
 //│   where
-//│     forall 'c. ('d -> 'e
+//│     forall 'd, 'e, 'f. ('e -> 'f
 //│   where
-//│     'c <: (forall 'd, 'f, 'g, 'h. ('f -> 'g
+//│     'd <: (forall 'e, 'g, 'h, 'i. ('g -> 'h
 //│   where
-//│     'd <: 'd -> ('f -> 'g & 'h))) -> 'e) <: (forall 'c. ('d -> 'e
+//│     'e <: 'e -> ('g -> 'h & 'i))) -> 'f) <: (forall 'd, 'e, 'f. ('e -> 'f
 //│   where
-//│     'c <: (forall 'd, 'f, 'g, 'h. ('f -> 'g
+//│     'd <: (forall 'e, 'g, 'h, 'i. ('g -> 'h
 //│   where
-//│     'd <: 'd -> ('f -> 'g & 'h))) -> 'e)) -> ('a -> 'b & 'i)) -> 'j & 'c) -> 'j
+//│     'e <: 'e -> ('g -> 'h & 'i))) -> 'f)) -> ('a -> 'b & 'c))) -> 'j & 'd) -> 'j
 //│   <:  z:
 //│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
@@ -135,17 +135,17 @@ oops 1
 :e
 def z =
   (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
-//│ (('a -> 'b
+//│ ((forall 'a, 'b, 'c. ('a -> 'b
 //│   where
-//│     forall 'c. ('d -> 'e
+//│     forall 'd, 'e, 'f. ('e -> 'f
 //│   where
-//│     'c <: (forall 'd, 'f, 'g, 'h. ('f -> 'g
+//│     'd <: (forall 'e, 'g, 'h, 'i. ('g -> 'h
 //│   where
-//│     'd <: 'd -> ('f -> 'g & 'h))) -> 'e) <: (forall 'c. ('d -> 'e
+//│     'e <: 'e -> ('g -> 'h & 'i))) -> 'f) <: (forall 'd, 'e, 'f. ('e -> 'f
 //│   where
-//│     'c <: (forall 'd, 'f, 'g, 'h. ('f -> 'g
+//│     'd <: (forall 'e, 'g, 'h, 'i. ('g -> 'h
 //│   where
-//│     'd <: 'd -> ('f -> 'g & 'h))) -> 'e)) -> ('a -> 'b & 'i)) -> 'j & 'c) -> 'j
+//│     'e <: 'e -> ('g -> 'h & 'i))) -> 'f)) -> ('a -> 'b & 'c))) -> 'j & 'd) -> 'j
 //│   <:  z:
 //│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
@@ -165,20 +165,20 @@ def z =
 // FIXME should be caught by cycle checker!
 def z =
   (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
-//│ (('a -> 'b
+//│ ((forall 'a, 'b, 'c. ('a -> 'b
 //│   where
-//│     forall 'c. ('d -> 'e
+//│     forall 'd, 'e, 'f. ('e -> 'f
 //│   where
-//│     'c <: (forall 'd, 'f, 'g, 'h. ('f -> 'g
+//│     'd <: (forall 'e, 'g, 'h, 'i. ('g -> 'h
 //│   where
-//│     'd <: 'd -> ('f -> 'g & 'h))) -> 'e) <: (forall 'c. ('d -> 'e
+//│     'e <: 'e -> ('g -> 'h & 'i))) -> 'f) <: (forall 'd, 'e, 'f. ('e -> 'f
 //│   where
-//│     'c <: (forall 'd, 'f, 'g, 'h. ('f -> 'g
+//│     'd <: (forall 'e, 'g, 'h, 'i. ('g -> 'h
 //│   where
-//│     'd <: 'd -> ('f -> 'g & 'h))) -> 'e)) -> ('a -> 'b & 'i)) -> 'j & 'c) -> 'j
+//│     'e <: 'e -> ('g -> 'h & 'i))) -> 'f)) -> ('a -> 'b & 'c))) -> 'j & 'd) -> 'j
 //│   <:  z:
 //│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?d, ?e, ?f, ?g. ?e -> ?d <: forall ?a, ?b, ?c. ((?a -> ?b) -> (?a -> ?b & ?c)) -> ?c` exceeded recursion depth limit (300)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?d, ?e, ?f, ?g. ?d -> ?f <: forall ?a, ?b, ?c. ((?a -> ?b) -> (?a -> ?b & ?c)) -> ?c` exceeded recursion depth limit (300)
 //│ ║  l.166: 	def z =
 //│ ║         	^^^^^^^
 //│ ║  l.167: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))

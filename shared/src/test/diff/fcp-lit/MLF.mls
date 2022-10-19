@@ -73,7 +73,7 @@ choose id
 //│ res: ('a & 'b & 'c) -> (forall 'c, 'd. 'd -> 'd | 'c)
 
 fun (g: forall 'a. ('a -> 'a) -> ('a -> 'a)) -> fun (x: forall 'a. 'a -> 'a) -> fun a -> g a (x a)
-//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'a1, 'b, 'c, 'a2, 'd. ('a1 -> ('a1 & 'b) & 'c & 'a2 & 'd & 'a1 & 'b) -> 'b)
+//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'b, 'c, 'd, 'a1, 'a2. ('a2 -> ('a2 & 'c) & 'b & 'a1 & 'd & 'a2 & 'c) -> 'c)
 
 choose id succ
 //│ res: (int & 'a) -> (int | 'a)
@@ -182,7 +182,7 @@ let tmp = I I in K K
 //│ res: (42, "foo",)
 
 (fun f -> (f succ, choose f auto)) (choose id)
-//│ res: (forall 'b. (int & 'b) -> (int | 'b), (forall 'a, 'c, 'd, 'e. 'a -> 'a & 'c & 'd & 'e) -> (forall 'b, 'a, 'e, 'f. ('b & 'a) -> ('a | 'b) | 'e | 'f),)
+//│ res: (forall 'b. (int & 'b) -> (int | 'b), (forall 'c, 'd, 'e, 'a. 'a -> 'a & 'c & 'd & 'e) -> (forall 'e, 'f, 'b, 'a. ('b & 'a) -> ('a | 'b) | 'e | 'f),)
 
 // ------------ Sec 2.3.1 ------------
 
@@ -199,7 +199,7 @@ let tmp = I I in K K
 fun z -> (z omegad)
 fun z -> (z omega)
 //│ res: ((forall 'b. (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a | 'b)) -> 'c) -> 'c
-//│ res: ((forall 'a, 'b. ('a -> 'b & 'a) -> 'b) -> 'c) -> 'c
+//│ res: ((forall 'a, 'b. ('b -> 'a & 'b) -> 'a) -> 'c) -> 'c
 
 (fun y -> fun z -> z y) omegad
 (fun y -> fun z -> z y) omega
@@ -292,7 +292,7 @@ ignore x y = y
 //│ ignore: 'a -> (forall 'b. 'b -> 'b)
 
 monsterThunk() = (fun y -> (ignore (y I) (y K))) (fun x -> x x)
-//│ monsterThunk: () -> (forall 'a. 'a -> (forall 'b, 'c. 'b -> (forall 'd. 'd -> 'b) | 'c) | 'e)
+//│ monsterThunk: () -> (forall 'a. 'a -> (forall 'b, 'c. 'c -> (forall 'd. 'd -> 'c) | 'b) | 'e)
 
 monster2 = (fun y -> (y I, y K)) (fun x -> x x)
 //│ monster2: (forall 'a. 'a -> 'a, forall 'b. 'b -> (forall 'c. 'c -> (forall 'd. 'd -> 'c)),)

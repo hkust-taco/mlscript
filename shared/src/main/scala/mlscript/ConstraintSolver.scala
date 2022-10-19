@@ -419,7 +419,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           (if (cctx._2.headOption.exists(_ is rhs)) cctx._2 else rhs :: cctx._2)
         else (lhs :: Nil) -> (rhs :: Nil),
         ctx,
-        if (sameLevel) shadows else Shadows(Set.empty, shadows.previous)
+        if (sameLevel) shadows else shadows.copy(current = Set.empty)
       )
       stack.pop()
       ()
@@ -1222,7 +1222,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rv
           }
         case None =>
-          val v = freshVar(tv.prov, S(tv), tv.nameHint)(if (tv.level > below) tv.level else lvl)
+          val v = freshVar(tv.prov, S(tv), tv.nameHint)(if (tv.level > below) tv.level else {
+            assert(lvl <= below, "not yet implemented this tricky corner case")
+            lvl
+          })
           // val v = freshVar(tv.prov, S(tv), tv.nameHint)(tv.level)
           // val v = freshVar(tv.prov, S(tv), tv.nameHint)(tv.level max lvl)
           freshened += tv -> v
@@ -1299,6 +1302,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     freshenImpl(ty, below)
   }
   
+  // TODO rm
   /* 
   def freshenExtrCtx(above: Int, ec: ExtrCtx, rigidify: Bool = false, below: Int = MaxLevel)
       (implicit ctx:Ctx, //freshened: MutMap[TV, ST],

@@ -411,19 +411,19 @@ f 1
 
 :ns
 rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
-//│ f: forall 'f, 'b, 'c, 'd, 'e, 'a, 'g. 'f
+//│ f: forall 'b, 'f, 'c, 'd, 'e, 'g, 'a. 'f
 //│   where
-//│     'f := 'b -> 'g
-//│     'b :> 'b\a & {a: 'd}
-//│        <: ({a: 'a} | ~{a: 'd} | ~{})\a & ({a: 'a} | ~{a: 'd})\a & (number | ~{a: 'd} | ~{})\a & (number | ~{a: 'd})\a & (int | ~{a: 'd} | ~{})\a & (int | ~{a: 'd})\a & 'c & int & number
-//│     'a <: 'c
-//│     'c :> 'b\a & {a: 'd}
-//│        <: 'g
-//│     'g :> 'b\a & {a: 'd}
-//│        <: 'e
-//│     'e :> 'b\a & {a: 'd}
+//│     'f := 'e -> 'd
+//│     'e :> 'e\a & {a: 'c}
+//│        <: ({a: 'a} | ~{a: 'c} | ~{})\a & ({a: 'a} | ~{a: 'c})\a & (number | ~{a: 'c} | ~{})\a & (number | ~{a: 'c})\a & (int | ~{a: 'c} | ~{})\a & (int | ~{a: 'c})\a & 'g & int & number
+//│     'a <: 'g
+//│     'g :> 'e\a & {a: 'c}
+//│        <: 'd
+//│     'd :> 'e\a & {a: 'c}
+//│        <: 'b
+//│     'b :> 'e\a & {a: 'c}
 //│        <: {a: 'a}
-//│     'd :> int
+//│     'c :> int
 
 f
 //│ res: 'a -> 'b
@@ -555,7 +555,7 @@ f_manual error
 f_manual ainf
 //│ res: 'e | 'ainf
 //│   where
-//│     'e :> 'e\a & {a: int} | 'ainf
+//│     'e :> forall 'ainf. 'e\a & {a: int} | 'ainf
 //│     'ainf :> {a: 'ainf}
 
 // Notice the simplified type is NOT the same as that of `f`...
@@ -598,7 +598,7 @@ f_manual_2 // [test:T2]
 f_manual_2 ainf
 //│ res: 'c
 //│   where
-//│     'c :> 'c\a & {a: int} | 'ainf
+//│     'c :> forall 'ainf. 'c\a & {a: int} | 'ainf
 //│     'ainf :> {a: 'ainf}
 
 

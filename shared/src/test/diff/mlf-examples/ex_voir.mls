@@ -20,7 +20,7 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'a, 'c, 'tail, 'head, 'd. (List['a] & 'c & 'tail) -> ((Cons['a | 'b] with {head: 'head | 'b, tail: 'tail}) | 'd))
+//│ 'b -> (forall 'c, 'a, 'd, 'head, 'tail. (List['a] & 'c & 'tail) -> ((Cons['a | 'b] with {head: 'head | 'b, tail: 'tail}) | 'd))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -57,7 +57,7 @@ def id_ = fun x -> x
 def succ n = n + 1
 //│ choose: 'a -> (forall 'b, 'c, 'd. ('b & 'c & 'd) -> ('a | 'd))
 //│       = [Function: choose]
-//│ choose3: 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'e, 'f, 'g. ('c & 'd & 'e & 'f & 'g) -> ('a | 'b | 'g)))
+//│ choose3: 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'e, 'f, 'g. ('e & 'g & 'd & 'c & 'f) -> ('a | 'b | 'f)))
 //│        = [Function: choose3]
 //│ id: Sid
 //│   = [Function: id]
@@ -72,13 +72,13 @@ def test = choose3 id
 def test_ = choose3 id_
 def test2 = test succ
 def test2_ = test_ succ
-//│ test: 'a -> (forall 'b, 'c, 'd, 'e, 'f. ('b & 'c & 'd & 'e & 'f) -> (Sid | 'a | 'f))
+//│ test: 'a -> (forall 'b, 'c, 'd, 'e, 'f. ('c & 'd & 'e & 'f & 'b) -> (Sid | 'a | 'b))
 //│     = [Function: test]
-//│ test_: 'a -> (forall 'b, 'c, 'd, 'e, 'f. ('b & 'c & 'd & 'e & 'f) -> (forall 'a, 'f, 'g. 'g -> 'g | 'a | 'f))
+//│ test_: 'a -> (forall 'b, 'c, 'd, 'e, 'f. ('c & 'b & 'd & 'e & 'f) -> (forall 'a, 'f, 'g. 'g -> 'g | 'a | 'f))
 //│      = [Function: test_]
 //│ test2: ('a & 'b & 'c & 'd & 'e) -> (forall 'e, 'f, 'g. (int & 'f) -> (int | 'g) | Sid | 'e)
 //│      = [Function: test2]
-//│ test2_: ('a & 'b & 'c & 'd & 'e) -> (forall 'e, 'f, 'g, 'h. (int & 'f & 'g) -> (int | 'f | 'h) | 'e)
+//│ test2_: ('a & 'b & 'c & 'd & 'e) -> (forall 'f, 'g, 'e, 'h. (int & 'h & 'f) -> (int | 'h | 'g) | 'e)
 //│       = [Function: test2_]
 
 // (* Messages d'erreur foireux : *)
@@ -92,9 +92,9 @@ fun x -> fun y -> ((x : S1), (y : S2), if true then x else y)
 fun x -> fun y -> ((x : S1), (y : S2), x x)
 //│ Defined type alias S1
 //│ Defined type alias S2
-//│ res: (S1 & 'a) -> (forall 'b, 'c, 'd. (S2 & 'b & 'c & 'd) -> (S1, S2, 'a | 'd,))
+//│ res: (S1 & 'a) -> (forall 'b, 'c, 'd. (S2 & 'c & 'd & 'b) -> (S1, S2, 'a | 'b,))
 //│    = [Function: res]
-//│ res: (S1 & 'a) -> (forall 'a, 'b, 'c. ((S2 & 'c) -> (S1, S2, 'b,)
+//│ res: (S1 & 'a) -> (forall 'b, 'c, 'a. ((S2 & 'c) -> (S1, S2, 'b,)
 //│   where
 //│     'a <: 'a -> 'b))
 //│    = [Function: res]

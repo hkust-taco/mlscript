@@ -18,7 +18,7 @@ def Nil = Nil {}
 //│ Nil: Nil
 
 def Cons head tail = Cons { head; tail }
-//│ Cons: 'b -> (forall 'a, 'c, 'tail, 'head, 'd. (List['a] & 'c & 'tail) -> ((Cons['a | 'b] with {head: 'head | 'b, tail: 'tail}) | 'd))
+//│ Cons: 'b -> (forall 'c, 'a, 'tail, 'head, 'd. (List['a] & 'c & 'tail) -> ((Cons['a | 'b] with {head: 'head | 'b, tail: 'tail}) | 'd))
 
 // ------------ Type signatures for functions used in the examples ------------
 // (I guess)
@@ -47,13 +47,13 @@ class Collection[a]: { l: List[a] }
   method Mem x = mem x this.l
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
-//│ Defined Collection.Mem: Collection['a] -> (forall 'a, 'b, 'c, 'd, 'e. ('b & 'c & 'a) -> (false | true | 'd | 'e))
-//│ Defined Collection.Fold: Collection['a] -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'head, 'd, 'e, 'f, 'g, 'h. (('c & 'f) -> ('g | 'h | 'c)
+//│ Defined Collection.Mem: Collection['a] -> (forall 'b, 'c, 'a, 'd, 'e. ('c & 'b & 'a) -> (false | true | 'e | 'd))
+//│ Defined Collection.Fold: Collection['a] -> (forall 'b. 'b -> (forall 'c, 'a, 'd, 'b, 'e, 'f, 'head, 'g, 'h. (('f & 'c) -> ('g | 'e | 'f)
 //│   where
-//│     'b <: 'c -> (('a | 'head) -> ('c & 'd) & 'e))))
+//│     'b <: 'f -> (('a | 'head) -> ('f & 'h) & 'd))))
 
 def coll_mem c x = c.Mem x
-//│ coll_mem: 'b -> (forall 'b, 'a, 'c, 'd, 'e, 'f, 'g, 'h. (('c & 'd & 'e & 'f) -> (false | true | 'g | 'h)
+//│ coll_mem: 'b -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'a, 'h. (('f & 'd & 'c & 'h) -> (false | true | 'g | 'e)
 //│   where
 //│     'b <: Collection['a]))
 
@@ -62,7 +62,7 @@ def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
   let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
   (l1, l2)
-//│ simple_and_double: (Collection['a & 'b & 'c & 'a0 | 'a1 & 'd] & 'e) -> (forall 'f, 'g, 'a2, 'h, 'head, 'i, 'j. 'f | 'g | 'i | 'j, forall 'k, 'l, 'm, 'a3, 'n, 'head0, 'o, 'p. 'k | 'l | 'o | 'p,)
+//│ simple_and_double: (Collection['a & 'b & 'c & 'a0 | 'a1 & 'd] & 'e) -> (forall 'f, 'g, 'a2, 'h, 'i, 'head, 'j. 'j | 'f | 'h | 'g, forall 'a3, 'k, 'l, 'm, 'n, 'head0, 'o, 'p. 'o | 'n | 'm | 'k,)
 //│   where
-//│     'l :> (Cons[('m | 'd, 'm | 'd,) | 'a3 | 'n] with {head: ('m | 'd, 'm | 'd,) | 'head0 | 'n, tail: 'l}) | Nil
-//│     'g :> (Cons['a2 | 'a0 | 'h | 'c] with {head: 'head | 'h | 'c, tail: 'g}) | Nil
+//│     'n :> (Cons[('l | 'd, 'l | 'd,) | 'a3 | 'p] with {head: ('l | 'd, 'l | 'd,) | 'head0 | 'p, tail: 'n}) | Nil
+//│     'f :> (Cons['a2 | 'a0 | 'i | 'c] with {head: 'head | 'i | 'c, tail: 'f}) | Nil

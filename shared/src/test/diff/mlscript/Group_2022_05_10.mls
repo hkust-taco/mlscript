@@ -34,9 +34,9 @@ def g x = x (fun x -> x)
 
 
 def g x y = x (fun x -> y x)
-//│ g: ((forall 'a, 'b, 'c. ('b -> 'c
+//│ g: ((forall 'a, 'b, 'c. ('c -> 'a
 //│   where
-//│     'a <: 'b -> 'c)) -> 'd) -> 'a -> 'd
+//│     'b <: 'c -> 'a)) -> 'd) -> 'b -> 'd
 //│  = [Function: g1]
 
 

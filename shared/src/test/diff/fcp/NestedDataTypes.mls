@@ -13,9 +13,9 @@ type Two[A] = (A, A)
 //│ Defined type alias Two[+A]
 
 def mapTwo f ((a, b)) = (f a, f b)
-//│ mapTwo: 'a -> (forall 'a, 'b, 'c, 'd, 'e. (('b, 'd,) -> ('c, 'e,)
+//│ mapTwo: 'a -> (forall 'b, 'c, 'a, 'd, 'e. (('d, 'b,) -> ('e, 'c,)
 //│   where
-//│     'a <: 'b -> 'c & 'd -> 'e))
+//│     'a <: 'd -> 'e & 'b -> 'c))
 //│       = [Function: mapTwo]
 
 class Leaf[A]: { value: A }
@@ -95,9 +95,9 @@ def map f tree = case tree of {
   | Leaf -> Leaf { value = f tree.value }
   | Node -> Node { subTree = map (mapTwo f) tree.subTree }
   }
-//│ 'c -> (forall 'c, 'value, 'd, 'value0, 'A, 'e, 'f, 'A0, 'g, 'h, 'i, 'a, 'j, 'subTree, 'k, 'subTree0, 'b, 'l, 'm. (('i & ((Leaf['a] with {value: 'value}) & 'j | (Node['a] with {subTree: PerfectTree[('e, 'g,) & 'a] & 'subTree}) & 'k)) -> ((Leaf['A] with {value: 'value0}) | (Node['A0] with {subTree: 'subTree0 | PerfectTree['b | ('f, 'h,)]}) | 'l | 'm)
+//│ 'c -> (forall 'd, 'subTree, 'c, 'e, 'A, 'f, 'g, 'h, 'i, 'j, 'a, 'A0, 'k, 'value, 'l, 'm, 'subTree0, 'value0, 'b. (('g & ((Leaf['a] with {value: 'value0}) & 'k | (Node['a] with {subTree: PerfectTree[('h, 'd,) & 'a] & 'subTree0}) & 'l)) -> ((Leaf['A] with {value: 'value}) | (Node['A0] with {subTree: 'subTree | PerfectTree['b | ('m, 'e,)]}) | 'i | 'f)
 //│   where
-//│     'c <: 'value -> ('d & 'value0 & 'A) & 'e -> ('f & 'A0) & 'g -> ('A0 & 'h)))
+//│     'c <: 'value0 -> ('j & 'value & 'A) & 'h -> ('m & 'A0) & 'd -> ('A0 & 'e)))
 //│   <:  map:
 //│ ('a -> 'b) -> PerfectTree['a] -> PerfectTree['b]
 //│    = <no result>

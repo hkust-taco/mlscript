@@ -291,7 +291,7 @@ abstract class TyperHelpers { Typer: Typer =>
     private var shadowRun = initialRun - 1
     private var _shadow: ST = this
     private def computeShadow: ST = this match {
-      case tv: TV => tv.original
+      case tv: TV => tv.original // * Q: no special tratment for assigned TVs?
       case _ => map(_.shadow)
     }
     def shadow: ST =
@@ -705,27 +705,34 @@ abstract class TyperHelpers { Typer: Typer =>
       SortedSet.from(res)(Ordering.by(_.uid))
     }
     
+    /** (exclusive, inclusive) */
     def varsBetween(lb: Level, ub: Level): Set[TV] = {
       val res = MutSet.empty[TypeVariable]
       val traversed = MutSet.empty[TypeVariable]
-      @tailrec def rec(lb: Level, ub: Level, queue: List[SimpleType]): Unit =
-      // trace(s"varsBetween($lb, $ub, $queue)") {
-      queue match {
-        case (tv: TypeVariable) :: tys =>
-          if (traversed(tv)) rec(lb, ub, tys)
-          else {
-            traversed += tv
-            if (tv.level > lb && tv.level <= ub) res += tv
-            rec(lb, ub, tv.children(includeBounds = true) ::: tys)
-          }
-        case (pt: PolymorphicType) :: tys =>
-          rec(lb, pt.polymLevel, pt.body :: tys)
-        case ty :: tys => rec(lb, ub, ty.children(includeBounds = true) ::: tys)
-        case Nil => ()
+      def go(ty: ST, lb: Level, ub: Level): Unit = if (lb < ub) {
+        // trace(s"varsBetween($ty, $lb, $ub)") {
+        ty match {
+          case tv: TypeVariable =>
+            if (traversed(tv)) ()
+            else {
+              traversed += tv
+              if (tv.level > lb && tv.level <= ub) {
+                // println(s"ADD $tv")
+                res += tv
+              }
+              tv.children(includeBounds = true) // * Note: `children` deals with `assignedTo`
+                .foreach(go(_, lb, ub))
+            }
+          case pt: PolymorphicType =>
+            go(pt.body, lb, pt.polymLevel min ub)
+          case ty =>
+            ty.children(includeBounds = true) // * Q: is `includeBounds` useful here?
+              .foreach(go(_, lb, ub))
+        }
+        // }()
       }
-      // }()
-      rec(lb, ub, this :: Nil)
-      SortedSet.from(res)(Ordering.by(_.uid))
+      go(this, lb, ub)
+      res.toSet
     }
     
     def showBounds: String =

@@ -201,13 +201,13 @@ def sstep = fun xx -> xx (fun (xinit, xsub) ->
   fun f -> f (init, sub))
 //│ sstep: ExSmall -> ExSmall
 //│      = <missing implementation>
-//│ ((forall 'a, 'b. ('a, 'b,) -> ((forall 'a, 'c, 'd, 'e. ('c -> ('d, 'e,)
+//│ ((forall 'a, 'b. ('b, 'a,) -> (forall 'c, 'd. ((forall 'e, 'f, 'g, 'b. ('e -> ('f, 'g,)
 //│   where
-//│     'a <: 'c -> 'd & 'c -> 'e), forall 'f, 'g. ('f, 'g,) -> (forall 'b, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm, 'n, 'o, 'p, 'q, 'r, 's. ((int & 'p & 'q & 'r & 's) -> 'l
+//│     'b <: 'e -> 'f & 'e -> 'g), forall 'h, 'i. ('h, 'i,) -> (forall 'j, 'k, 'l, 'm, 'a, 'n, 'o, 'p, 'q, 'r, 'h, 's, 'i, 't, 'u. ((int & 't & 'j & 'q & 'm) -> 'l
 //│   where
-//│     'b <: 'f -> ((int | 'h | 'i) -> ('j & 'k & 'l) & 'm) & 'g -> ((int | 'i) -> ('k & 'l & 'n) & 'o))),) -> 't & 'u) -> 't) -> 'v & 'w) -> 'v
+//│     'a <: 'h -> ((int | 'k | 'u) -> ('p & 'n & 'l) & 's) & 'i -> ((int | 'u) -> ('n & 'l & 'r) & 'o))),) -> 'c & 'd) -> 'c)) -> 'v & 'w) -> 'v
 //│   where
-//│     'r <: number & 's
+//│     'q <: number & 'm
 //│   <:  sstep:
 //│ ExSmall -> ExSmall
 //│      = [Function: sstep]
@@ -220,10 +220,10 @@ def sstep = fun xx -> xx (fun (xinit, xsub) ->
     then xsub r1 (div i 2)
     else xsub r2 (div i 2) in
   fun (f : forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) -> f (init, sub))
-//│ ((forall 'b, 'c, 'y, 'd. ('b, 'c,) -> (forall 'b, 'c, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm, 'n, 'a, 'o, 'p, 'q, 'y, 'd. ((forall 'r. (('e & 'a) -> 'r, 'r -> int -> 'a,) -> ('y & 'd)) -> 'd
+//│ ((forall 'b, 'c. ('b, 'c,) -> (forall 'd, 'e, 'f, 'g, 'y, 'h, 'i, 'c, 'j, 'k, 'b, 'l, 'm, 'n, 'a, 'o, 'p, 'q. ((forall 'r. (('g & 'a) -> 'r, 'r -> int -> 'a,) -> ('y & 'p)) -> 'p
 //│   where
-//│     'b <: 'e -> ('f & 'g) & 'e -> ('h & 'i)
-//│     'c <: 'g -> ((int | 'j | 'k) -> ('e & 'l & 'm & 'n & 'a) & 'o) & 'i -> ((int | 'k) -> ('e & 'm & 'n & 'a & 'p) & 'q)))) -> 's & 't) -> 's
+//│     'b <: 'g -> ('o & 'l) & 'g -> ('f & 'i)
+//│     'c <: 'l -> ((int | 'm | 'q) -> ('g & 'e & 'h & 'j & 'a) & 'd) & 'i -> ((int | 'q) -> ('g & 'h & 'j & 'a & 'n) & 'k)))) -> 's & 't) -> 's
 //│   <:  sstep:
 //│ ExSmall -> ExSmall
 //│      = [Function: sstep1]
@@ -347,9 +347,9 @@ def base : ExSig
 def base f = f ((((fun a -> a, fun r -> fun (i : int) -> r), fun r -> fun (i : int) -> fun a -> a), fun f -> fun b -> fun r -> f r b),)
 //│ base: ExSig
 //│     = <missing implementation>
-//│ ((((forall 'a. 'a -> 'a, forall 'b. 'b -> int -> 'b,), forall 'c. 'c -> int -> (forall 'd. 'd -> 'd),), forall 'e. 'e -> (forall 'f. 'f -> (forall 'e, 'f, 'g, 'h, 'i. ('g -> 'h
+//│ ((((forall 'a. 'a -> 'a, forall 'b. 'b -> int -> 'b,), forall 'c. 'c -> int -> (forall 'd. 'd -> 'd),), forall 'e. 'e -> (forall 'f. 'f -> (forall 'g, 'h, 'e, 'f, 'i. ('h -> 'i
 //│   where
-//│     'e <: 'g -> ('f -> 'h & 'i)))),) -> 'j & 'k) -> 'j
+//│     'e <: 'h -> ('f -> 'i & 'g)))),) -> 'j & 'k) -> 'j
 //│   <:  base:
 //│ ExSig
 //│     = [Function: base]
@@ -374,19 +374,19 @@ def step = fun xx -> xx (fun ((((xinit, xsub), xupdate), xfold),) ->
     else (fst r, xupdate (snd r) (div i 2) a) in
   let fold f b r = xfold f (xfold f b (fst r)) (snd r) in
     fun f -> f ((((init, sub), update), fold),) )
-//│ ((forall 'c, 'd, 'e, 'f. ((('c, 'd,), 'e,), 'f,) -> ((((forall 'c, 'g, 'h, 'i. ('g -> ('h, 'i,)
+//│ ((forall 'c, 'd, 'e, 'f. ((('c, 'd,), 'e,), 'f,) -> (forall 'g, 'h. ((((forall 'i, 'c, 'j, 'k. ('j -> ('k, 'i,)
 //│   where
-//│     'c <: 'g -> 'h & 'g -> 'i), forall 'j. 'j -> (forall 'd, 'j, 'k, 'l, 'm, 'n, 'o, 'p, 'q, 'r, 's, 't, 'u, 'a, 'b, 'a0, 'b0, 'v, 'w, 'x, 'y. ((int & 'v & 'w & 'x & 'y) -> 'p
+//│     'c <: 'j -> 'k & 'j -> 'i), forall 'l. 'l -> (forall 'm, 'b, 'n, 'o, 'l, 'p, 'q, 'r, 's, 't, 'a, 'u, 'a0, 'v, 'w, 'x, 'b0, 'y, 'z, 'a1, 'd. ((int & 't & 'q & 'n & 'w) -> 'p
 //│   where
-//│     'j <: ('k & 'a & 'a0, 'b & 'r & 'b0,)
-//│     'd <: 'k -> ((int | 'l | 'm) -> ('n & 'o & 'p) & 'q) & 'r -> ((int | 's | 'm) -> ('o & 'p & 't) & 'u))),), forall 'z. 'z -> (forall 'y, 'a1. (int & 'y & 'a1) -> (forall 'e, 'm, 'z, 'a1, 'b1, 'b1, 'a2, 'b2, 'c1, 'a3, 'd1, 'b3, 'a4, 'b4, 'e1, 'f1, 'g1, 'h1, 'i1, 'j1, 'k1, 'l1, 'm1, 'n1. ('g1 -> (('h1 | 'd1, 'c1 | 'k1,) | 'n1)
+//│     'l <: ('z & 'a & 'a0, 'b0 & 'r & 'b,)
+//│     'd <: 'z -> ((int | 'x | 'y) -> ('v & 's & 'p) & 'o) & 'r -> ((int | 'u | 'y) -> ('s & 'p & 'm) & 'a1))),), forall 'b1. 'b1 -> (forall 'w, 'c1. (int & 'w & 'c1) -> (forall 'd1, 'e1, 'f1, 'a1, 'g1, 'h1, 'i1, 'b1, 'a2, 'b2, 'y, 'j1, 'b3, 'b1, 'b4, 'e, 'k1, 'a3, 'l1, 'm1, 'n1, 'o1, 'p1, 'a4. ('o1 -> (('i1 | 'e1, 'p1 | 'k1,) | 'g1)
 //│   where
-//│     'z <: ('a1 & 'b1 & 'a2 & 'a3 & 'd1 & 'a4, 'b1 & 'b2 & 'c1 & 'b3 & 'b4 & 'e1,)
-//│     'e <: 'b1 -> ((int | 'f1 | 'm) -> ('g1 -> 'h1 & 'i1) & 'j1) & 'e1 -> ((int | 'm) -> ('g1 -> 'k1 & 'l1) & 'm1)))),), forall 'o1. 'o1 -> (forall 'p1. 'p1 -> (forall 'f, 'o1, 'p1, 'q1, 'r1, 's1, 't1, 'u1, 'v1, 'w1, 'x1, 'a5, 'a6, 'b5, 'b6, 'y1. ((('v1 & 'a5 & 'a6, 'r1 & 'b5 & 'b6,) & 'y1) -> 's1
+//│     'b1 <: ('a4 & 'l1 & 'a1 & 'a3 & 'e1 & 'a2, 'b1 & 'b4 & 'p1 & 'b3 & 'b2 & 'n1,)
+//│     'e <: 'l1 -> ((int | 'd1 | 'y) -> ('o1 -> 'i1 & 'h1) & 'f1) & 'n1 -> ((int | 'y) -> ('o1 -> 'k1 & 'm1) & 'j1)))),), forall 'q1. 'q1 -> (forall 'r1. 'r1 -> (forall 's1, 't1, 'b5, 'a5, 'u1, 'v1, 'w1, 'q1, 'x1, 'r1, 'y1, 'f, 'z1, 'a2, 'a6, 'b6. ((('y1 & 'a5 & 'a6, 'v1 & 'b6 & 'b5,) & 'w1) -> 'a2
 //│   where
-//│     'f <: 'o1 -> ('q1 -> ('r1 -> 's1 & 't1) & 'u1) & 'o1 -> ('p1 -> ('v1 -> 'q1 & 'w1) & 'x1)))),) -> 'z1 & 'a2) -> 'z1) -> 'b2 & 'c2) -> 'b2
+//│     'f <: 'q1 -> ('t1 -> ('v1 -> 'a2 & 'u1) & 's1) & 'q1 -> ('r1 -> ('y1 -> 't1 & 'x1) & 'z1)))),) -> 'g & 'h) -> 'g)) -> 'b2 & 'c2) -> 'b2
 //│   where
-//│     'x <: number & 'y
+//│     'n <: number & 'w
 //│   <:  step:
 //│ ExSig -> ExSig
 //│ ╔══[ERROR] Type mismatch in def definition:

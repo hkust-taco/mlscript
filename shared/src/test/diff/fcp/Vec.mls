@@ -29,7 +29,7 @@ type AnyVec[A] = forall 'r. (forall 'p. Nil | Cons[A, S['p]] -> 'r) -> 'r
 def Nil = Nil { size = Z{} }
 def Cons head tail = Cons { head; tail; size = S{} }
 //│ Nil: Nil
-//│ Cons: 'a -> (forall 'A, 'N, 'P, 'b, 'tail, 'head, 'size, 'c. (Vec['A, 'N] & 'b & 'tail) -> ((Cons['A | 'a, 'N] with {head: 'head | 'a, size: S['P] | 'size, tail: 'tail}) | 'c))
+//│ Cons: 'a -> (forall 'N, 'b, 'tail, 'head, 'size, 'A, 'P, 'c. (Vec['A, 'N] & 'b & 'tail) -> ((Cons['A | 'a, 'N] with {head: 'head | 'a, size: S['P] | 'size, tail: 'tail}) | 'c))
 //│   where
 //│     'N <: 'P
 //│     'P <: 'N
@@ -38,9 +38,9 @@ def Cons head tail = Cons { head; tail; size = S{} }
 def nil k = k Nil
 def cons h t k = k (Cons h t)
 //│ nil: (Nil -> 'a & 'b) -> 'a
-//│ cons: 'a -> (forall 'b. 'b -> ((forall 'a, 'b, 'A, 'N, 'P, 'c, 'head, 'size, 'tail, 'd. ((Cons['A | 'a | 'c, 'N] with {head: 'head | 'a | 'c, size: S['P] | 'size, tail: 'tail | 'b}) | 'd
+//│ cons: 'a -> (forall 'b. 'b -> (forall 'c, 'd. ((forall 'A, 'size, 'a, 'e, 'P, 'f, 'b, 'tail, 'N, 'head. ((Cons['A | 'a | 'f, 'N] with {head: 'head | 'a | 'f, size: S['P] | 'size, tail: 'tail | 'b}) | 'e
 //│   where
-//│     'b <: Vec['A, 'N])) -> 'e & 'f) -> 'e)
+//│     'b <: Vec['A, 'N])) -> 'c & 'd) -> 'c))
 //│   where
 //│     'N <: 'P
 //│     'P <: 'N
@@ -118,7 +118,7 @@ cons_ty3 = cons : Cons_ty
 //│ cons_ty3: Cons_ty
 
 def cons h (t: Vec['a, 'n]) k = k (Cons h t)
-//│ cons: 'b -> (forall 'a, 'n, 'c, 'd. Vec['a, 'n] -> (forall 'c, 'd. ((forall 'A, 'e, 'N, 'P, 'head, 'size, 'tail, 'f. (Cons['a | 'A | 'b | 'e, 'N] with {head: 'head | 'b | 'e, size: S['P] | 'size, tail: 'tail | Vec['a, 'n]}) | 'f) -> 'c & 'd) -> 'c))
+//│ cons: 'b -> (forall 'a, 'n. Vec['a, 'n] -> (forall 'c, 'd. ((forall 'N, 'tail, 'e, 'size, 'A, 'f, 'head, 'P. (Cons['a | 'A | 'b | 'e, 'N] with {head: 'head | 'b | 'e, size: S['P] | 'size, tail: 'tail | Vec['a, 'n]}) | 'f) -> 'c & 'd) -> 'c))
 //│   where
 //│     'N :> 'n
 //│        <: 'n & 'P
@@ -139,7 +139,7 @@ cons : Cons_ty
 //│ res: Cons_ty
 
 def cons h (t: Vec['a, 'n]) k = k (Cons h t)
-//│ cons: 'b -> (forall 'a, 'n, 'c, 'd. Vec['a, 'n] -> (forall 'c, 'd. ((forall 'A, 'e, 'N, 'P, 'head, 'size, 'tail, 'f. (Cons['a | 'A | 'b | 'e, 'N] with {head: 'head | 'b | 'e, size: S['P] | 'size, tail: 'tail | Vec['a, 'n]}) | 'f) -> 'c & 'd) -> 'c))
+//│ cons: 'b -> (forall 'a, 'n. Vec['a, 'n] -> (forall 'c, 'd. ((forall 'P, 'e, 'tail, 'N, 'A, 'size, 'f, 'head. (Cons['a | 'A | 'b | 'f, 'N] with {head: 'head | 'b | 'f, size: S['P] | 'size, tail: 'tail | Vec['a, 'n]}) | 'e) -> 'c & 'd) -> 'c))
 //│   where
 //│     'N :> 'n
 //│        <: 'n & 'P
@@ -173,7 +173,7 @@ v1_ty = v1_ : Cons[int, Z]
 //│ v1_ty: Cons[int, Z]
 
 v1_0 = cons 1 nil
-//│ v1_0: ((forall 'A, 'a, 'N, 'P, 'head, 'size, 'tail, 'b. (Cons[1 | 'A | 'a, 'N] with {head: 1 | 'head | 'a, size: S['P] | 'size, tail: 'tail | Vec['A, 'n]}) | 'b) -> 'c & 'd) -> 'c
+//│ v1_0: ((forall 'head, 'N, 'size, 'a, 'A, 'tail, 'b, 'P. (Cons[1 | 'A | 'a, 'N] with {head: 1 | 'head | 'a, size: S['P] | 'size, tail: 'tail | Vec['A, 'n]}) | 'b) -> 'c & 'd) -> 'c
 //│   where
 //│     'N :> 'n
 //│        <: 'P & 'n
@@ -260,12 +260,12 @@ def head1 vec = vec (fun v -> case v of {
   | Nil -> impossible v.size
   | Cons -> v.head
   })
-//│ head1: ((forall 'a, 'b, 'head, 'c, 'd. ('a & ((Cons['b, ?]\size\tail with {head: 'head}) & 'b | Nil & {size: nothing} & 'c)) -> ('head | 'd)) -> 'e & 'f) -> 'e
+//│ head1: ((forall 'a, 'head, 'b, 'c, 'd. ('c & ((Cons['a, ?]\size\tail with {head: 'head}) & 'a | Nil & {size: nothing} & 'd)) -> ('head | 'b)) -> 'e & 'f) -> 'e
 
 def head1_ty : Vec['a, S['p]] -> 'a
 head1_ty = head1
 //│ head1_ty: Vec['a, S['p]] -> 'a
-//│ ((forall 'a, 'b, 'head, 'c, 'd. ('a & ((Cons['b, ?]\size\tail with {head: 'head}) & 'b | Nil & {size: nothing} & 'c)) -> ('head | 'd)) -> 'e & 'f) -> 'e
+//│ ((forall 'a, 'b, 'c, 'd, 'head. ('a & ((Cons['b, ?]\size\tail with {head: 'head}) & 'b | Nil & {size: nothing} & 'd)) -> ('head | 'c)) -> 'e & 'f) -> 'e
 //│   <:  head1_ty:
 //│ Vec['a, S['p]] -> 'a
 
@@ -322,7 +322,7 @@ sum_ty = sum
 //│     'a <: (((Cons[?, ?]\size with {head: int, tail: 'a}) | Nil) -> int) -> (int & 'b)
 //│   <:  sum_ty:
 //│ Vec[int, 'n] -> int
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?sum, ?b, ?c, ?d, ?tail, ?head, ?e, ?f, ?g. ?sum <: forall ?n. Vec[int, ?n] -> int` exceeded recursion depth limit (300)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d, ?e, ?f, ?head, ?g, ?tail, ?sum. ?sum <: forall ?n. Vec[int, ?n] -> int` exceeded recursion depth limit (300)
 //│ ║  l.319: 	sum_ty = sum
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── while constraining:  (‹∀ 3. (((Nil & {size: (‘n_1242' | S[((((((((((‘p_1255_1256' & ‘p_1259_1260') & ‘p_1263_1264') & ‘p_1267_1268') & ‘p_1271_1272') & ‘p_1275_1276') & ‘p_1279_1280') & ‘p_1283_1284') & ‘p_1287_1288') & ‘p_1291_1292') & ‘p_1295_1296')])}) | (Cons[int<number>,S['p45_1297'''']] & Cons[int<number>,(‘n_1242' | S[((((((((((‘p_1255_1256' & ‘p_1259_1260') & ‘p_1263_1264') & ‘p_1267_1268') & ‘p_1271_1272') & ‘p_1275_1276') & ‘p_1279_1280') & ‘p_1283_1284') & ‘p_1287_1288') & ‘p_1291_1292') & ‘p_1295_1296')])])) -> 'r44_1298')› -> 'r44_1298')  <!<  (((α1197_1245' -> (0<int,number> | α1204_1250')),) -> α1205_1251')
@@ -363,7 +363,7 @@ sum nil
 //│ res: int
 
 sum v1_0
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?b, ?sum, ?c, ?d, ?e, ?tail, ?head, ?f, ?g, ?h. ?sum <: (forall ?a, ?i, ?j, ?n, ?k. ?j) -> ?l` exceeded recursion depth limit (300)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?b, ?c, ?d, ?tail, ?e, ?f, ?head, ?sum, ?g, ?h. ?sum <: (forall ?i, ?n, ?a, ?j. ?i) -> ?k` exceeded recursion depth limit (300)
 //│ ║  l.365: 	sum v1_0
 //│ ║         	^^^^^^^^
 //│ ╟── while constraining:  ((Nil & {size: ('n522_1341 | S[((((((((‘p_1362_1363 & ‘p_1366_1367) & ‘p_1370_1371) & ‘p_1374_1375) & ‘p_1378_1379) & ‘p_1382_1383) & ‘p_1386_1387) & ‘p_1390_1391) & ‘p_1394_1395)])}) | (Cons['a521_1347,S[‘p_1398']] & Cons['a521_1347,('n522_1341 | S[((((((((‘p_1362_1363 & ‘p_1366_1367) & ‘p_1370_1371) & ‘p_1374_1375) & ‘p_1378_1379) & ‘p_1382_1383) & ‘p_1386_1387) & ‘p_1390_1391) & ‘p_1394_1395)])]))  <!<  α1197_1328

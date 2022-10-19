@@ -286,16 +286,16 @@ def append ls elem = L { h = elem; t = S { v = ls } }
 
 :ns
 append
-//│ res: forall 'a, 'b, 'v, 'T, 'c, 'h, 'T0, 't. 'a -> 'b -> 'c
+//│ res: forall 'h, 'T, 'v, 't, 'a, 'b, 'c, 'T0. 'b -> 'a -> 'c
 //│   where
-//│     'c :> #L & {h: 'h, t: 't, L#T = 'T0}
-//│     't :> #S & {v: 'v, S#T = 'T}
-//│        <: O[L['T0]]
-//│     'b <: 'h
-//│     'h <: 'T0
-//│     'a <: 'v
-//│     'v <: L['T0] & 'T
-//│     'T := L['T0]
+//│     'c :> #L & {h: 'h, t: 't, L#T = 'T}
+//│     't :> #S & {v: 'v, S#T = 'T0}
+//│        <: O[L['T]]
+//│     'a <: 'h
+//│     'h <: 'T
+//│     'b <: 'v
+//│     'v <: L['T] & 'T0
+//│     'T0 := L['T]
 
 append error
 //│ res: ('h & 'T) -> (L['T] with {h: 'h, t: S[L['T]] & {v: nothing}})

@@ -81,7 +81,7 @@ def cons: 'a -> List['a] -> List['a]
 def cons head tail = Cons { head; tail }
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'a, 'c, 'tail, 'head, 'd. (List['a] & 'c & 'tail) -> ((Cons['a | 'b] with {head: 'head | 'b, tail: 'tail}) | 'd))
+//│ 'b -> (forall 'c, 'tail, 'd, 'a, 'head. (List['a] & 'c & 'tail) -> ((Cons['a | 'b] with {head: 'head | 'b, tail: 'tail}) | 'd))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -867,7 +867,7 @@ cons (single id) (single ids)
 
 // ,("([id] :: [forall a. a -> a]) : [[\\x -> x]]", ok "[[forall a. a -> a]]")
 cons (single id : List[forall 'a. 'a -> 'a]) (single (single (fun x -> x)))
-//│ res: List[List[forall 'a, 'b, 'a0. 'a | ('b & 'a0) -> ('a0 | 'b)] | 'c]
+//│ res: List[forall 'b. List[forall 'c, 'a, 'a0. 'a0 | ('c & 'a) -> ('a | 'c)] | 'b]
 //│    = Cons {
 //│        head: Cons { head: [Function: id1], tail: Nil {} },
 //│        tail: Cons {

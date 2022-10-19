@@ -198,7 +198,7 @@ build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 
 
 def build_ = fun g -> g (fun x -> fun xs -> cons (x, xs)) nil
-//│ build_: ((forall 'b. 'b -> (forall 'a, 'c, 'd. (Ls['a] & 'c) -> (Ls['a | 'b] | 'd))) -> (Ls['d] -> 'e & 'f) & 'g) -> 'e
+//│ build_: ((forall 'b. 'b -> (forall 'c, 'd, 'a. (Ls['a] & 'c) -> (Ls['a | 'b] | 'd))) -> (Ls['d] -> 'e & 'f) & 'g) -> 'e
 //│       = [Function: build_]
 
 build_ (fun c -> fun n -> n)
@@ -257,9 +257,9 @@ b g = build_ (fun x -> g x)
 
 :e
 b g x = build_ g x
-//│ 'b -> (forall 'b, 'c, 'd, 'e, 'f, 'g. ('c -> 'd
+//│ 'b -> (forall 'b, 'c, 'd, 'e, 'f, 'g. ('c -> 'g
 //│   where
-//│     'b <: (forall 'h. 'h -> (forall 'a, 'i, 'j. (Ls['a] & 'i) -> (Ls['a | 'h] | 'j))) -> (Ls['j] -> ('c -> 'd & 'e & 'f) & 'g)))
+//│     'b <: (forall 'h. 'h -> (forall 'a, 'i, 'j. (Ls['a] & 'i) -> (Ls['a | 'h] | 'j))) -> (Ls['j] -> ('c -> 'g & 'f & 'e) & 'd)))
 //│   <:  b:
 //│ (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 //│ ╔══[ERROR] Type mismatch in def definition:

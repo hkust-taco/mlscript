@@ -18,11 +18,11 @@ def succ: ChurchInt -> ChurchInt
 def succ n f x = f (n f x)
 //│ succ: ChurchInt -> ChurchInt
 //│     = <missing implementation>
-//│ 'a -> (forall 'b. 'b -> (forall 'b. ('c -> 'd
+//│ 'a -> (forall 'b. 'b -> (forall 'b, 'c, 'd. ('c -> 'd
 //│   where
-//│     'b <: (forall 'a, 'b, 'c, 'e, 'f. ('e
+//│     'b <: (forall 'c, 'b, 'e, 'a, 'f. ('f
 //│   where
-//│     'a <: 'b -> ('c -> 'e & 'f))) -> 'd)))
+//│     'a <: 'b -> ('c -> 'f & 'e))) -> 'd)))
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│     = [Function: succ1]
@@ -51,11 +51,11 @@ add: ChurchInt -> ChurchInt -> ChurchInt
 
 // def mul: ChurchInt -> ChurchInt -> ChurchInt
 def mul n m = n (add m) zero
-//│ mul: 'a -> (forall 'a. ('b -> 'c
+//│ mul: 'a -> (forall 'b, 'c, 'd, 'a. ('b -> 'c
 //│   where
-//│     'a <: (forall 'd, 'b, 'e, 'f, 'g, 'h. ('e -> 'f | 'h
+//│     'a <: (forall 'e, 'b, 'f, 'g, 'h, 'i. ('f -> 'g | 'h
 //│   where
-//│     'd | 'b <: (ChurchInt -> ChurchInt) -> ('e -> 'f & 'g))) -> ((forall 'i. 'i -> (forall 'j. 'j -> 'j)) -> 'c & 'k)))
+//│     'i | 'b <: (ChurchInt -> ChurchInt) -> ('f -> 'g & 'e))) -> ((forall 'j. 'j -> (forall 'k. 'k -> 'k)) -> 'c & 'd)))
 //│    = [Function: mul]
 
 :e // fails since the fix to spurious-TV-cycles
@@ -71,13 +71,13 @@ mul: ChurchInt -> ChurchInt -> ChurchInt
 
 // def pow: ChurchInt -> ChurchInt -> ChurchInt
 def pow n m = n (mul m) (succ zero)
-//│ pow: 'a -> (forall 'a, 'b, 'c. ('d -> 'b
+//│ pow: 'a -> (forall 'b, 'a, 'c, 'd. ('d -> 'b
 //│   where
-//│     'a <: (forall 'e, 'd. ('f -> 'g | 'h
+//│     'a <: (forall 'e, 'f, 'g, 'h, 'd, 'i. ('e -> 'i | 'f
 //│   where
-//│     'e | 'd <: (forall 'i, 'f, 'j, 'k, 'l, 'm, 'n. ('k -> 'l | 'n
+//│     'g | 'd <: (forall 'e, 'j, 'k, 'l, 'm, 'n, 'o. ('m -> 'k | 'j
 //│   where
-//│     'i | 'f <: (ChurchInt -> (ChurchInt | 'j)) -> ('k -> 'l & 'm))) -> ((forall 'o. 'o -> (forall 'p. 'p -> 'p)) -> 'g & 'q))) -> ((forall 'j. ChurchInt | 'j) -> 'b & 'c)))
+//│     'n | 'e <: (ChurchInt -> (ChurchInt | 'l)) -> ('m -> 'k & 'o))) -> ((forall 'p. 'p -> (forall 'q. 'q -> 'q)) -> 'i & 'h))) -> ((forall 'l. ChurchInt | 'l) -> 'b & 'c)))
 //│    = [Function: pow]
 
 :e
@@ -102,13 +102,13 @@ unit : Unit_t
 //│    = [Function: id]
 
 def tru x _ = x unit
-//│ tru: 'a -> (forall 'a. ('b -> 'c
+//│ tru: 'a -> (forall 'a, 'b, 'c. ('c -> 'b
 //│   where
-//│     'a <: (forall 'd. 'd -> 'd) -> 'c))
+//│     'a <: (forall 'd. 'd -> 'd) -> 'b))
 //│    = [Function: tru]
 
 def fls _ x = x unit
-//│ fls: 'a -> ((forall 'b. 'b -> 'b) -> 'c & 'd) -> 'c
+//│ fls: 'a -> (forall 'b, 'c. ((forall 'd. 'd -> 'd) -> 'b & 'c) -> 'b)
 //│    = [Function: fls]
 
 type If_t = (Unit_t -> 'a) -> (Unit_t -> 'a) -> 'a
@@ -121,9 +121,9 @@ fls : If_t
 //│    = [Function: fls]
 
 def iszero n = n (fun _ -> fls) tru
-//│ iszero: ((forall 'a. 'a -> (forall 'b. 'b -> ((forall 'c. 'c -> 'c) -> 'd & 'e) -> 'd)) -> ((forall 'f. 'f -> (forall 'f. ('g -> 'h
+//│ iszero: ((forall 'a. 'a -> (forall 'b. 'b -> (forall 'c, 'd. ((forall 'e. 'e -> 'e) -> 'c & 'd) -> 'c))) -> ((forall 'f. 'f -> (forall 'g, 'f, 'h. ('g -> 'h
 //│   where
-//│     'f <: (forall 'c. 'c -> 'c) -> 'h))) -> 'i & 'j) & 'k) -> 'i
+//│     'f <: (forall 'e. 'e -> 'e) -> 'h))) -> 'i & 'j) & 'k) -> 'i
 //│       = [Function: iszero]
 
 iszero : ChurchInt -> If_t
@@ -146,9 +146,9 @@ def pred n =
   let s p = pair (snd p) (succ (snd p)) in
   let z = pair zero zero in
   fst (n s z)
-//│ pred: ((forall 'a, 'b, 'c, 'd, 'e, 'f. ((forall 'g. 'g -> (forall 'h. 'h -> 'h)) -> ((‘a_681_686 -> ‘a_681_686) -> ‘a_681_686 -> ‘a_681_686 & 'a & 'b) & 'c) -> (((forall 'c, 'd. ('d | 'i
+//│ pred: ((forall 'a, 'b, 'c, 'd, 'e. ((forall 'f. 'f -> (forall 'g. 'g -> 'g)) -> ((‘a_681_686 -> ‘a_681_686) -> ‘a_681_686 -> ‘a_681_686 & 'e & 'a) & 'c) -> (forall 'h, 'i, 'j. ((forall 'k, 'l, 'c, 'm. ('l | 'k
 //│   where
-//│     'c <: (forall 'g. 'g -> (forall 'h. 'h -> 'h)) -> ('j & 'i))) -> ((forall 'k. ChurchInt | 'e | 'k) -> 'l & 'm) & 'n) -> 'l | 'f)) -> ((((forall 'o. 'o -> (forall 'p. 'p -> 'p) | 'q | 'r) -> ((forall 'o. 'o -> (forall 'p. 'p -> 'p) | 'r) -> 's & 't) & 'u) -> 's | 'v) -> ((forall 'w. 'w -> (forall 'x. 'x -> 'w)) -> ('y & 'z) & 'a1) & 'b1) & 'c1) -> 'z
+//│     'c <: (forall 'f. 'f -> (forall 'g. 'g -> 'g)) -> ('m & 'k))) -> ((forall 'n. ChurchInt | 'b | 'n) -> 'h & 'i) & 'j) -> 'h | 'd)) -> ((forall 'o, 'p, 'q, 'r. ((forall 's, 't, 'u. 's -> (forall 'v. 'v -> 'v) | 't | 'u) -> ((forall 's, 'u. 's -> (forall 'v. 'v -> 'v) | 'u) -> 'o & 'p) & 'q) -> 'o | 'r) -> ((forall 'w. 'w -> (forall 'x. 'x -> 'w)) -> ('y & 'z) & 'a1) & 'b1) & 'c1) -> 'z
 //│     = [Function: pred]
 
 pred : ChurchInt -> ChurchInt

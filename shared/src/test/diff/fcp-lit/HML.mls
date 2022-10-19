@@ -20,7 +20,7 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'a, 'c, 'tail, 'head, 'd. (List['a] & 'c & 'tail) -> ((Cons['a | 'b] with {head: 'head | 'b, tail: 'tail}) | 'd))
+//│ 'b -> (forall 'c, 'a, 'd, 'head, 'tail. (List['a] & 'c & 'tail) -> ((Cons['a | 'b] with {head: 'head | 'b, tail: 'tail}) | 'd))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]

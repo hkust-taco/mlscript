@@ -17,16 +17,16 @@ type Arrays = (forall 'Rep. ArraysRep['Rep] -> 'r) -> 'r
 
 // :d
 def stepImpl arrImpl = { fold = fun f -> fun r0 -> arrImpl.fold f r0 }
-//│ stepImpl: 'a -> {fold: forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'fold. ('c -> 'd
+//│ stepImpl: 'a -> {fold: forall 'b. 'b -> (forall 'c, 'd, 'fold, 'a, 'b, 'e. ('e -> 'c
 //│   where
-//│     'a <: {fold: 'b -> ('c -> 'd & 'e) & 'fold}))}
+//│     'a <: {fold: 'b -> ('e -> 'c & 'd) & 'fold}))}
 //│         = [Function: stepImpl]
 
 // :d
 def stepImpl2 arr = arr stepImpl
-//│ stepImpl2: ((forall 'a. 'a -> {fold: forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'fold. ('c -> 'd
+//│ stepImpl2: ((forall 'a. 'a -> {fold: forall 'b. 'b -> (forall 'b, 'c, 'd, 'e, 'a, 'fold. ('e -> 'd
 //│   where
-//│     'a <: {fold: 'b -> ('c -> 'd & 'e) & 'fold}))}) -> 'f & 'g) -> 'f
+//│     'a <: {fold: 'b -> ('e -> 'd & 'c) & 'fold}))}) -> 'f & 'g) -> 'f
 //│          = [Function: stepImpl2]
 
 def step: Arrays -> Arrays
@@ -35,11 +35,11 @@ def step: Arrays -> Arrays
 
 // :d
 def step arr g = g (stepImpl2 arr)
-//│ 'a -> (forall 'a. (('b -> 'c & 'd) -> 'c
+//│ 'a -> (forall 'b, 'a, 'c, 'd, 'e. (('d -> 'e & 'b) -> 'e
 //│   where
-//│     'a <: (forall 'e. 'e -> {fold: forall 'f. 'f -> (forall 'e, 'f, 'g, 'h, 'i, 'fold. ('g -> 'h
+//│     'a <: (forall 'f. 'f -> {fold: forall 'g. 'g -> (forall 'f, 'h, 'i, 'j, 'fold, 'g. ('j -> 'i
 //│   where
-//│     'e <: {fold: 'f -> ('g -> 'h & 'i) & 'fold}))}) -> ('j & 'b)))
+//│     'f <: {fold: 'g -> ('j -> 'i & 'h) & 'fold}))}) -> ('c & 'd)))
 //│   <:  step:
 //│ Arrays -> Arrays
 //│     = [Function: step]
