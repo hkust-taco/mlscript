@@ -14,10 +14,7 @@ object TSSourceFile {
           addNodeIntoNamespace(nodeObject, nodeObject.symbol.escapedName)(global)
         else if (!nodeObject.declarationList.isUndefined) { // for variables
           val decNode = nodeObject.declarationList.declaration
-          if (decNode.initializer.isUndefined || decNode.initializer.isToken)
-            addNodeIntoNamespace(decNode, decNode.symbol.escapedName)(global)
-          else
-            addNodeIntoNamespace(decNode.initializer, decNode.symbol.escapedName)(global)
+          addNodeIntoNamespace(decNode, decNode.symbol.escapedName)(global)
         }
       }
     })
@@ -58,7 +55,7 @@ object TSSourceFile {
       mp ++ Map(p.name.escapedText -> TSMemberType(TSLiteralType(p.initToken.text, p.initToken.isStringLiteral)))
     })
 
-  // get the type of a member in classes/named interfaces/anonymous interfaces
+  // get the type of variables in classes/named interfaces/anonymous interfaces
   private def getMemberType(node: TSNodeObject): TSType = {
     val res: TSType =
       if (node.isFunctionLike) getFunctionType(node)
@@ -206,7 +203,7 @@ object TSSourceFile {
     else if (node.isTypeAliasDeclaration)
       ns.put(name, TSTypeAlias(name, getTypeAlias(node.`type`), getTypeParameters(node)))
     else if (node.isObjectLiteral)
-      ns.put(name, TSInterfaceType("", getObjectLiteralMembers(node.properties), List(), List()))
+      ns.put(name, TSInterfaceType("", getObjectLiteralMembers(node.initializer.properties), List(), List()))
     else if (node.isVariableDeclaration)
       ns.put(name, getMemberType(node))
     else if (node.isNamespace)

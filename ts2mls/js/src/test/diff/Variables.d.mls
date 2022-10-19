@@ -4,5 +4,7 @@ let URI: string
 let URI2: string
 let foo: number
 let bar: false
-//│ |#let| |URI|#:| |string|↵|#let| |URI2|#:| |string|↵|#let| |foo|#:| |number|↵|#let| |bar|#:| |false|
-//│ Parsed: {let URI: [] -> string; let URI2: [] -> string; let foo: [] -> number; let bar: [] -> false}
+class FooBar() {}
+let fb: FooBar
+//│ |#let| |URI|#:| |string|↵|#let| |URI2|#:| |string|↵|#let| |foo|#:| |number|↵|#let| |bar|#:| |false|↵|#class| |FooBar|(||)| |{||}|↵|#let| |fb|#:| |FooBar|
+//│ Parsed: {let URI: [] -> string; let URI2: [] -> string; let foo: [] -> number; let bar: [] -> false; class FooBar() {}; let fb: [] -> FooBar}

@@ -94,9 +94,10 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val isInterfaceDeclaration = TypeScript.isInterfaceDeclaration(node)
   lazy val isFunctionLike = TypeScript.isFunctionLike(node)
   lazy val isTypeAliasDeclaration = TypeScript.isTypeAliasDeclaration(node)
-  lazy val isObjectLiteral = TypeScript.isObjectLiteralExpression(node)
   lazy val isLiteralTypeNode = TypeScript.isLiteralTypeNode(node)
   lazy val isVariableDeclaration = TypeScript.isVariableDeclaration(node)
+  lazy val isObjectLiteral = !initializer.isUndefined && !initializer.isToken &&
+                             TypeScript.isObjectLiteralExpression(node.initializer)
 
   // `TypeScript.isModuleDeclaration` works on both namespaces and modules
   // but namespaces are more recommended, so we merely use `isNamespace` here
