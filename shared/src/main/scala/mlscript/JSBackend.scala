@@ -240,7 +240,13 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case N => throw CodeGenError(s"if expression has not been not desugared")
         case S(term) => translateTerm(term)
       }
-    case _: Bind | _: Test | If(_, _) | New(_, _) | TyApp(_, _) | _: Splc =>
+    case New(N, TypingUnit(Nil)) => JSRecord(Nil)
+    case New(S(TypeName(className) -> Tup(args)), TypingUnit(Nil)) =>
+      val callee = translateVar(className, true)
+      callee(args.map { case (_, Fld(_, _, arg)) => translateTerm(arg) }: _*)
+    case New(_, TypingUnit(_)) =>
+      throw CodeGenError("custom class body is not supported yet")
+    case _: Bind | _: Test | If(_, _) | TyApp(_, _) | _: Splc =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
 
