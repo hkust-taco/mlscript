@@ -119,9 +119,6 @@ ty4B = ty4B
 :e
 :stats
 ty1A = ty1B
-//│ MyArray[0 | 1]
-//│   <:  ty1A:
-//│ MyArray[int]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.+1: 	ty1A = ty1B
 //│ ║        	^^^^^^^^^^^
@@ -131,16 +128,19 @@ ty1A = ty1B
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.18: 	def ty1B: MyArray[0 | 1]
 //│ ╙──      	                  ^^^^^
+//│ MyArray[0 | 1]
+//│   <:  ty1A:
+//│ MyArray[int]
 //│ constrain calls  : 9
 //│ annoying  calls  : 5
 //│ subtyping calls  : 25
 
+
+
+
 :e
 :stats
 ty1B = ty1A
-//│ MyArray[int]
-//│   <:  ty1B:
-//│ MyArray[0 | 1]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.+1: 	ty1B = ty1A
 //│ ║        	^^^^^^^^^^^
@@ -150,17 +150,20 @@ ty1B = ty1A
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.18: 	def ty1B: MyArray[0 | 1]
 //│ ╙──      	                  ^^^^^
+//│ MyArray[int]
+//│   <:  ty1B:
+//│ MyArray[0 | 1]
 //│ constrain calls  : 9
 //│ annoying  calls  : 5
 //│ subtyping calls  : 25
 
 
+
+
+
 :e
 :stats
 ty2A = ty2B
-//│ MyArray[MyArray['a]]
-//│   <:  ty2A:
-//│ MyArray['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.+1: 	ty2A = ty2B
 //│ ║        	^^^^^^^^^^^
@@ -200,8 +203,24 @@ ty2A = ty2B
 //│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.35: 	def ty2B: MyArray[MyArray['a]]
 //│ ╙──      	                  ^^^^^^^^^^^
+//│ MyArray[MyArray['a]]
+//│   <:  ty2A:
+//│ MyArray['a]
 //│ constrain calls  : 12
 //│ annoying  calls  : 4
 //│ subtyping calls  : 39
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

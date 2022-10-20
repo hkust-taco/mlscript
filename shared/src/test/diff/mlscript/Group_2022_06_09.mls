@@ -55,6 +55,10 @@ eval e2
 //│   Error: non-exhaustive case expression
 
 
+
+
+
+
 def eval eval e = case e of {
   | Lit -> e.n
   | Add -> eval eval e.lhs + eval eval e.rhs

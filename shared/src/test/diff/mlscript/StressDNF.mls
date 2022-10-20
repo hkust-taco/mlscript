@@ -38,9 +38,6 @@ ty0 = ty1
 :stats
 :e
 ty1 = ty0
-//│ (E & 'e & 'f | 'd & (C & 'c | D & 'e) | 'b & (A & 'a | B & 'c)) -> ('a, 'b, 'c, 'd, 'e, 'f,)
-//│   <:  ty1:
-//│ (A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, nothing,)
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.40: 	ty1 = ty0
 //│ ║        	^^^^^^^^^
@@ -86,8 +83,26 @@ ty1 = ty0
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ╙──      	                                                                              ^^
+//│ (E & 'e & 'f | 'd & (C & 'c | D & 'e) | 'b & (A & 'a | B & 'c)) -> ('a, 'b, 'c, 'd, 'e, 'f,)
+//│   <:  ty1:
+//│ (A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, nothing,)
 //│ constrain calls  : 99
 //│ annoying  calls  : 60
 //│ subtyping calls  : 450
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

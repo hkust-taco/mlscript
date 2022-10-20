@@ -50,11 +50,6 @@ fun a -> a a
 // :ds
 :e
 rec def f a = a a
-//│ ('a -> 'b & 'a) -> 'b
-//│   <:  f:
-//│ 'a
-//│   where
-//│     'a :> {x: 'a}
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.52: 	rec def f a = a a
 //│ ║        	^^^^^^^^^^^^^^^^^
@@ -64,6 +59,14 @@ rec def f a = a a
 //│ ╟── Note: constraint arises from local type binding:
 //│ ║  l.8: 	def f: { x: 'a } as 'a
 //│ ╙──     	       ^^^^^^^^^
+//│ ('a -> 'b & 'a) -> 'b
+//│   <:  f:
+//│ 'a
+//│   where
+//│     'a :> {x: 'a}
+
+
+
 
 
 // :stdout

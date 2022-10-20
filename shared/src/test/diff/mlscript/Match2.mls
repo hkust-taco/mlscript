@@ -51,13 +51,17 @@ bar Test
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
 
+
+
+
+
 :e
 bar "ops"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.55: 	bar "ops"
+//│ ║  l.59: 	bar "ops"
 //│ ║        	^^^^^^^^^
 //│ ╟── string literal of type `"ops"` does not match type `Test & ?a | Toast & ?b`
-//│ ║  l.55: 	bar "ops"
+//│ ║  l.59: 	bar "ops"
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.29: 	def bar x = case x of
@@ -65,6 +69,9 @@ bar "ops"
 //│ res: error
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
+
+
+
 
 
 def baz x = case x of
@@ -77,16 +84,19 @@ def baz x = case x of
 :e
 baz "oops"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.78: 	baz "oops"
+//│ ║  l.85: 	baz "oops"
 //│ ║        	^^^^^^^^^^
 //│ ╟── string literal of type `"oops"` does not match type `Test & ?a | Toast & ?b`
-//│ ║  l.78: 	baz "oops"
+//│ ║  l.85: 	baz "oops"
 //│ ║        	    ^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.70: 	def baz x = case x of
+//│ ║  l.77: 	def baz x = case x of
 //│ ╙──      	                 ^
 //│ res: error
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
+
+
+
 
 

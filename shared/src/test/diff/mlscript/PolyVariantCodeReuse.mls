@@ -301,14 +301,6 @@ rec def eval3 subst = eval_lexpr eval3 subst
 // ************************** Tests *******************************
 
 eval3 Nil (Var { name = "s" })
-//│ res: 'result
-//│   where
-//│     'result :> Abs['result] | (App['a] with {lhs: 'lhs, rhs: 'result}) | Num | Var | 'b
-//│     'a :> (App['a] with {lhs: 'lhs, rhs: 'result}) | Num | 'result | Var | 'b
-//│     'lhs :> (App['a] with {lhs: 'lhs, rhs: 'result}) | Num | Var | 'b
-//│     'b :> Mul['result] | Add['result]
-//│    = <no result>
-//│      eval3, eval_lexpr, eval_lambda, eval_var, list_assoc and eq are not implemented
 // ------------- OCaml's type -------------
 // - : [ `Abs of string * 'a
 //     | `Add of 'a * 'a
@@ -317,6 +309,14 @@ eval3 Nil (Var { name = "s" })
 //     | `Num of int
 //     | `Var of string ] as 'a
 // = `Var "s"
+//│ res: 'result
+//│   where
+//│     'result :> Abs['result] | (App['a] with {lhs: 'lhs, rhs: 'result}) | Num | Var | 'b
+//│     'a :> (App['a] with {lhs: 'lhs, rhs: 'result}) | Num | 'result | Var | 'b
+//│     'lhs :> (App['a] with {lhs: 'lhs, rhs: 'result}) | Num | Var | 'b
+//│     'b :> Mul['result] | Add['result]
+//│    = <no result>
+//│      eval3, eval_lexpr, eval_lambda, eval_var, list_assoc and eq are not implemented
 
 
 eval3 Nil (Abs { name = "s"; body = Var { name = "s" } })

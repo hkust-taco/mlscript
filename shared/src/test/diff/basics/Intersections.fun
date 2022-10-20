@@ -56,13 +56,19 @@ foo as Nothing
 //│ ╙──      	       ^^^^^^^
 //│ res: nothing
 
+
+
+
+
 :e
 let oops = (&)
 //│ ╔══[ERROR] Illegal use of operator: &
-//│ ║  l.60: 	let oops = (&)
+//│ ║  l.64: 	let oops = (&)
 //│ ╙──      	           ^^^
 //│ ╔══[ERROR] identifier not found: &
-//│ ║  l.60: 	let oops = (&)
+//│ ║  l.64: 	let oops = (&)
 //│ ╙──      	           ^^^
 //│ oops: error
+
+
 

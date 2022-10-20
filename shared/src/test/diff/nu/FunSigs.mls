@@ -26,6 +26,9 @@ fun log: string -> unit
 //│ log: string
 //│    = <missing implementation>
 
+
+
+
 fun log: string => unit
 //│ log: string -> unit
 //│    = <missing implementation>

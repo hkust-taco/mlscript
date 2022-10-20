@@ -41,6 +41,10 @@ def r: {b: string; c: int}\b
 //│    = 'oops'
 
 
+
+
+
+
 def r: int \ _1
 //│ r: int
 //│  = <missing implementation>
@@ -75,16 +79,19 @@ fr : Array[int] & {b: int}
 :e
 arr._1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.76: 	arr._1
+//│ ║  l.80: 	arr._1
 //│ ║        	^^^^^^
 //│ ╟── type `Array[int]` does not have field '_1'
-//│ ║  l.57: 	def arr: Array[int]
+//│ ║  l.61: 	def arr: Array[int]
 //│ ║        	         ^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?a}`
-//│ ║  l.76: 	arr._1
+//│ ║  l.80: 	arr._1
 //│ ╙──      	^^^
 //│ res: error
 //│    = undefined
+
+
+
 
 rr = arr with { x = 1 }
 //│ rr: Array[int] & {x: 1}
@@ -136,34 +143,41 @@ def test: {x: 1} & (1, 2, 3)
 :e
 f(1,2,3) : 1 | 2 | 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.137: 	f(1,2,3) : 1 | 2 | 3
+//│ ║  l.144: 	f(1,2,3) : 1 | 2 | 3
 //│ ║         	^^^^^^^^
 //│ ╟── tuple literal of type `(1, 2, 3,)` does not match type `(?a,)`
-//│ ║  l.137: 	f(1,2,3) : 1 | 2 | 3
+//│ ║  l.144: 	f(1,2,3) : 1 | 2 | 3
 //│ ╙──       	 ^^^^^^^
 //│ res: 1 | 2 | 3
 //│    = [Number: 1] { b: 2 }
 
+
+
 :e
 (arr[0])[1][2]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.148: 	(arr[0])[1][2]
+//│ ║  l.157: 	(arr[0])[1][2]
 //│ ║         	^^^^^^^^^^^
 //│ ╟── type `int` does not match type `Array[?a]`
-//│ ║  l.57: 	def arr: Array[int]
+//│ ║  l.61: 	def arr: Array[int]
 //│ ║        	               ^^^
 //│ ╟── but it flows into array access with expected type `Array[?b]`
-//│ ║  l.148: 	(arr[0])[1][2]
+//│ ║  l.157: 	(arr[0])[1][2]
 //│ ╙──       	 ^^^^^^
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.148: 	(arr[0])[1][2]
+//│ ║  l.157: 	(arr[0])[1][2]
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── possibly-undefined array access of type `undefined` does not match type `Array[?a]`
-//│ ║  l.148: 	(arr[0])[1][2]
+//│ ║  l.157: 	(arr[0])[1][2]
 //│ ╙──       	^^^^^^^^^^^
 //│ res: error | undefined
 //│ Runtime error:
 //│   TypeError: Cannot read properties of undefined (reading '2')
+
+
+
+
+
 
 
 class A: { x: int }
@@ -311,16 +325,19 @@ a2.x
 :e
 a2._1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.312: 	a2._1
+//│ ║  l.326: 	a2._1
 //│ ║         	^^^^^
 //│ ╟── type `Array[?a]` does not match type `{_1: ?b} | ~{_2: true, x: "haha"}`
-//│ ║  l.289: 	def rep5: 'a -> Array['a]
+//│ ║  l.303: 	def rep5: 'a -> Array['a]
 //│ ║         	                ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?b} | ~{_2: true, x: "haha"}`
-//│ ║  l.312: 	a2._1
+//│ ║  l.326: 	a2._1
 //│ ╙──       	^^
 //│ res: error
 //│    = undefined
+
+
+
 
 (1,2,3,true) with {_a = 1; _b1 = false}
 //│ res: (1, 2, 3, true,) & {_a: 1, _b1: false}

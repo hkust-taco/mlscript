@@ -31,6 +31,12 @@ class A00: S00[int] & T00[string]
 //│ Defined trait T00[+B]
 //│ Defined class A00
 
+
+
+
+
+
+
 // Note: the definition above becomes valid if we split it into two definition groups
 //    so that the variance analysis has a chance of running in between...
 
@@ -47,37 +53,45 @@ class A0: S0[int] & T0[string]
 :e
 (A0{}).Foo0
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.48: 	(A0{}).Foo0
+//│ ║  l.54: 	(A0{}).Foo0
 //│ ║        	 ^^
 //│ ╟── Note that class A0 is abstract:
-//│ ║  l.44: 	class A0: S0[int] & T0[string]
+//│ ║  l.50: 	class A0: S0[int] & T0[string]
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Hint: method Foo0 is abstract
-//│ ║  l.44: 	class A0: S0[int] & T0[string]
+//│ ║  l.50: 	class A0: S0[int] & T0[string]
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error
 //│    = undefined
+
+
+
 
 :e
 class A0_2: S0[int] & T0[string]
   method Foo0 = 1
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.63: 	  method Foo0 = 1
+//│ ║  l.72: 	  method Foo0 = 1
 //│ ║        	         ^^^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `string`
-//│ ║  l.63: 	  method Foo0 = 1
+//│ ║  l.72: 	  method Foo0 = 1
 //│ ║        	                ^
 //│ ╟── but it flows into method definition with expected type `string`
-//│ ║  l.63: 	  method Foo0 = 1
+//│ ║  l.72: 	  method Foo0 = 1
 //│ ║        	         ^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.62: 	class A0_2: S0[int] & T0[string]
+//│ ║  l.71: 	class A0_2: S0[int] & T0[string]
 //│ ║        	                         ^^^^^^
 //│ ╟── from inherited method declaration:
-//│ ║  l.38: 	  method Foo0: A
+//│ ║  l.44: 	  method Foo0: A
 //│ ╙──      	         ^^^^^^^
 //│ Defined class A0_2
 //│ Defined A0_2.Foo0: A0_2 -> 1
+
+
+
+
+
 
 (A0_2{}).Foo0
 //│ res: nothing
@@ -104,16 +118,19 @@ trait T1: R1[string]
 :e
 class A1: S1 & T1
 //│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
-//│ ║  l.105: 	class A1: S1 & T1
+//│ ║  l.119: 	class A1: S1 & T1
 //│ ║         	      ^^
 //│ ╟── Definitions of method Foo1 inherited from:
 //│ ╟── • S1
-//│ ║  l.96: 	  method Foo1 = 1
-//│ ║        	         ^^^^^^^^
+//│ ║  l.110: 	  method Foo1 = 1
+//│ ║         	         ^^^^^^^^
 //│ ╟── • T1
-//│ ║  l.98: 	  method Foo1 = "a"
-//│ ╙──      	         ^^^^^^^^^^
+//│ ║  l.112: 	  method Foo1 = "a"
+//│ ╙──       	         ^^^^^^^^^^
 //│ Defined class A1
+
+
+
 
 a1 = A1{}
 //│ a1: A1

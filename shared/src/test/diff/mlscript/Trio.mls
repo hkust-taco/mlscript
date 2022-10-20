@@ -1,10 +1,32 @@
-
+:ShowRepl
 class A: { fA: int }
 class B: { fB: string }
 class C: { fC: bool }
 //│ Defined class A
 //│ Defined class B
 //│ Defined class C
+//│ ┌ Block at Trio.mls:2
+//│ ├─┬ Prelude
+//│ │ ├── Code
+//│ │ │   let res;
+//│ │ │   class A {
+//│ │ │     constructor(fields) {
+//│ │ │       this.fA = fields.fA;
+//│ │ │     }
+//│ │ │   }
+//│ │ │   class B {
+//│ │ │     constructor(fields) {
+//│ │ │       this.fB = fields.fB;
+//│ │ │     }
+//│ │ │   }
+//│ │ │   class C {
+//│ │ │     constructor(fields) {
+//│ │ │       this.fC = fields.fC;
+//│ │ │     }
+//│ │ │   }
+//│ │ └── Reply
+//│ │     undefined
+//│ └── No queries
 
 def foo x = case x of {
   | A -> x.fA
@@ -14,8 +36,16 @@ def foo x = case x of {
 //│ foo: ((A with {fA: 'fA}) | (B with {fB: 'fA}) | (C with {fC: 'fA})) -> 'fA
 //│    = [Function: foo]
 
-
+:ShowRepl
 b = B { fB = "test" }
+//│ ┌ Block at Trio.mls:40
+//│ ├── No prelude
+//│ └─┬ Query 1/1
+//│   ├── Prelude: <empty>
+//│   ├── Code:
+//│   ├──   globalThis.b = new B({ fB: "test" });
+//│   ├── Intermediate: B { fB: 'test' }
+//│   └── Reply: [success] B { fB: 'test' }
 //│ b: B & {fB: "test"}
 //│  = B { fB: 'test' }
 
@@ -62,19 +92,19 @@ def foo x = case x of {
 :stats
 foo arg
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.63: 	foo arg
+//│ ║  l.93: 	foo arg
 //│ ║        	^^^^^^^
 //│ ╟── type `A` does not have field 'payload'
-//│ ║  l.31: 	def arg: A | B | C
+//│ ║  l.61: 	def arg: A | B | C
 //│ ║        	         ^
 //│ ╟── but it flows into reference with expected type `{payload: ?payload}`
-//│ ║  l.63: 	foo arg
+//│ ║  l.93: 	foo arg
 //│ ║        	    ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.54: 	  | A -> add x.fA x.payload
+//│ ║  l.84: 	  | A -> add x.fA x.payload
 //│ ║        	                  ^^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.53: 	def foo x = case x of {
+//│ ║  l.83: 	def foo x = case x of {
 //│ ╙──      	                 ^
 //│ res: error | int | string | {l: bool, r: nothing}
 //│    = <no result>
@@ -82,6 +112,11 @@ foo arg
 //│ constrain calls  : 51
 //│ annoying  calls  : 40
 //│ subtyping calls  : 123
+
+
+
+
+
 
 :stats
 foo (arg with { payload = 1 })

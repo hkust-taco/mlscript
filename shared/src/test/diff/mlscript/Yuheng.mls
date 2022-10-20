@@ -52,6 +52,10 @@ f a2
 //│ res: error | int
 //│    = 0
 
+
+
+
+
 def f2: (A & {x: int} | anything) -> int
 //│ f2: anything -> int
 //│   = <missing implementation>
@@ -81,11 +85,13 @@ a = (0, 1)
 class Expr[A]
 //│ Defined class Expr[±A]
 //│ ╔══[WARNING] Type definition Expr has bivariant type parameters:
-//│ ║  l.81: 	class Expr[A]
+//│ ║  l.85: 	class Expr[A]
 //│ ║        	      ^^^^
 //│ ╟── A is irrelevant and may be removed
-//│ ║  l.81: 	class Expr[A]
+//│ ║  l.85: 	class Expr[A]
 //│ ╙──      	           ^
+
+
 
 class IntLit: Expr[int] & { value: int }
 //│ Defined class IntLit
@@ -94,14 +100,17 @@ class IntLit: Expr[int] & { value: int }
 class Pair[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[B] }
 //│ Defined class Pair[±A, ±B]
 //│ ╔══[WARNING] Type definition Pair has bivariant type parameters:
-//│ ║  l.94: 	class Pair[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[B] }
-//│ ║        	      ^^^^
+//│ ║  l.100: 	class Pair[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[B] }
+//│ ║         	      ^^^^
 //│ ╟── A is irrelevant and may be removed
-//│ ║  l.94: 	class Pair[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[B] }
-//│ ║        	           ^
+//│ ║  l.100: 	class Pair[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[B] }
+//│ ║         	           ^
 //│ ╟── B is irrelevant and may be removed
-//│ ║  l.94: 	class Pair[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[B] }
-//│ ╙──      	              ^
+//│ ║  l.100: 	class Pair[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[B] }
+//│ ╙──       	              ^
+
+
+
 
 rec def eval(e) = case e of
   { IntLit -> e.value
@@ -181,14 +190,17 @@ ep = eval p
 class Pair2[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[A] }
 //│ Defined class Pair2[±A, ±B]
 //│ ╔══[WARNING] Type definition Pair2 has bivariant type parameters:
-//│ ║  l.181: 	class Pair2[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[A] }
+//│ ║  l.190: 	class Pair2[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[A] }
 //│ ║         	      ^^^^^
 //│ ╟── A is irrelevant and may be removed
-//│ ║  l.181: 	class Pair2[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[A] }
+//│ ║  l.190: 	class Pair2[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[A] }
 //│ ║         	            ^
 //│ ╟── B is irrelevant and may be removed
-//│ ║  l.181: 	class Pair2[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[A] }
+//│ ║  l.190: 	class Pair2[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[A] }
 //│ ╙──       	               ^
+
+
+
 
 
 
@@ -202,19 +214,22 @@ ep + 1
 //│ ║  l.+1: 	ep + 1
 //│ ║        	^^^^
 //│ ╟── tuple literal of type `(?a, ?b,)` is not an instance of type `int`
-//│ ║  l.118: 	  | Pair -> (eval e.lhs, eval e.rhs)
+//│ ║  l.127: 	  | Pair -> (eval e.lhs, eval e.rhs)
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
 //│ ║  l.+1: 	ep + 1
 //│ ╙──      	^^
 //│ res: error | int
 
+
+
+
 ep[0]
 //│ ╔══[ERROR] Type mismatch in array access:
 //│ ║  l.+1: 	ep[0]
 //│ ║        	^^^^^
 //│ ╟── integer literal of type `1` does not match type `Array[?a]`
-//│ ║  l.142: 	  lhs = IntLit { value = 1 };
+//│ ║  l.151: 	  lhs = IntLit { value = 1 };
 //│ ║         	                         ^
 //│ ╟── but it flows into reference with expected type `Array[?b]`
 //│ ║  l.+1: 	ep[0]
@@ -222,6 +237,9 @@ ep[0]
 //│ res: error | undefined | 'a
 //│   where
 //│     'a :> ('a, 'a,) | 1 | 2 | 3
+
+
+
 
 
 eval (Pair {
@@ -244,11 +262,18 @@ eval (Pair {
 //│ ║  l.+5: 	    rhs = IntLit { value = 3 } } } })
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.90: 	class IntLit: Expr[int] & { value: int }
+//│ ║  l.96: 	class IntLit: Expr[int] & { value: int }
 //│ ╙──      	                                   ^^^
 //│ res: 'a
 //│   where
 //│     'a :> ('a, 'a,) | 1 | (Pair[?, ?] with {lhs: IntLit & {value: 2}, rhs: IntLit & {value: 3}})
+
+
+
+
+
+
+
 
 
 p = Pair2 {
@@ -267,12 +292,6 @@ rec def eval(e) = case e of
   { IntLit -> e.value
   | Pair -> (eval e.lhs, eval e.rhs)
   }
-//│ 'a -> 'value
-//│   where
-//│     'a <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a})
-//│     'value :> ('value, 'value,)
-//│   <:  eval:
-//│ Expr[?] -> nothing
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.+1: 	rec def eval(e) = case e of
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -283,7 +302,7 @@ rec def eval(e) = case e of
 //│ ║  l.+4: 	  }
 //│ ║        	^^^
 //│ ╟── type `Expr[?]` does not match type `IntLit & ?a | Pair[?, ?] & ?b`
-//│ ║  l.263: 	def eval: Expr['a] -> 'a
+//│ ║  l.288: 	def eval: Expr['a] -> 'a
 //│ ║         	          ^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.+1: 	rec def eval(e) = case e of
@@ -349,20 +368,50 @@ rec def eval(e) = case e of
 //│ ║  l.+3: 	  | Pair -> (eval e.lhs, eval e.rhs)
 //│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.263: 	def eval: Expr['a] -> 'a
+//│ ║  l.288: 	def eval: Expr['a] -> 'a
 //│ ╙──       	                      ^^
+//│ 'a -> 'value
+//│   where
+//│     'a <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a})
+//│     'value :> ('value, 'value,)
+//│   <:  eval:
+//│ Expr[?] -> nothing
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 rec def eval(e) = case e of
   { IntLit -> e.value
   | Pair -> (eval e.lhs, eval e.rhs)
   | _ -> error
   }
-//│ 'a -> 'value
-//│   where
-//│     'a <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a}) | ~IntLit & ~Pair[?, ?]
-//│     'value :> ('value, 'value,)
-//│   <:  eval:
-//│ Expr[?] -> nothing
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.+1: 	rec def eval(e) = case e of
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -432,5 +481,39 @@ rec def eval(e) = case e of
 //│ ║  l.+3: 	  | Pair -> (eval e.lhs, eval e.rhs)
 //│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.263: 	def eval: Expr['a] -> 'a
+//│ ║  l.288: 	def eval: Expr['a] -> 'a
 //│ ╙──       	                      ^^
+//│ 'a -> 'value
+//│   where
+//│     'a <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a}) | ~IntLit & ~Pair[?, ?]
+//│     'value :> ('value, 'value,)
+//│   <:  eval:
+//│ Expr[?] -> nothing
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

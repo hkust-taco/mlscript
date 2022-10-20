@@ -72,6 +72,7 @@ z ** 4 * z / (x + 5)
 //│ res: number
 //│    = 6.4
 
+
 // App(App(App(Var("if"), test), consequent), alternative)
 :js
 if true then 1 else 2
@@ -343,37 +344,11 @@ case A { a = 0 } of
 
 // With
 {} with {}
-//│ res: anything
-//│    = {}
 :js
 rcd1 = { x = "a"; y = "b" }
 rcd2 = rcd1 with { x = 1; z = 2 }
 (rcd1.x, rcd1.y, rcd2.x, rcd2.y, rcd2.z)
-//│ // Query 1
-//│ globalThis.rcd1 = {
-//│   x: "a",
-//│   y: "b"
-//│ };
-//│ // Query 2
-//│ globalThis.rcd2 = withConstruct(rcd1, {
-//│   x: 1,
-//│   z: 2
-//│ });
-//│ // Query 3
-//│ res = [
-//│   rcd1.x,
-//│   rcd1.y,
-//│   rcd2.x,
-//│   rcd2.y,
-//│   rcd2.z
-//│ ];
-//│ // End of generated code
-//│ rcd1: {x: "a", y: "b"}
-//│     = { x: 'a', y: 'b' }
-//│ rcd2: {x: 1, y: "b", z: 2}
-//│     = { x: 1, y: 'b', z: 2 }
-//│ res: ("a", "b", 1, "b", 2,)
-//│    = [ 'a', 'b', 1, 'b', 2 ]
+//│ /!\ Parse error: Expected end-of-input:1:12, found ":js;rcd1 =" at l.347:1: :js
 
 class M: {mut x : int}
 //│ Defined class M

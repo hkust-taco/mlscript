@@ -107,6 +107,10 @@ cmi = ComplexMonoid { base = IntMonoid }
 
 
 
+
+
+
+
 class ComplexMonoid_bad_0[A]: Monoid[Complex[A]] & { base: Monoid[A] }
   method Empty = Complex { real = this.base }
   method Add this that = error
@@ -158,6 +162,21 @@ class ComplexMonoid_bad_0[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ Defined class ComplexMonoid_bad_0[=A]
 //│ Defined ComplexMonoid_bad_0.Empty: ComplexMonoid_bad_0['A] -> 'imaginary -> (Complex['imaginary | {real: Monoid['A]}] with {imaginary: 'imaginary, real: {real: Monoid['A]}})
 //│ Defined ComplexMonoid_bad_0.Add: ComplexMonoid_bad_0['A] -> anything -> anything -> nothing
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
@@ -219,6 +238,23 @@ class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ Defined ComplexMonoid_bad_1.Add: ComplexMonoid_bad_1['A] -> anything -> anything -> nothing
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class ComplexMonoid_bad_2[A]: Monoid[Complex[A]] & { base: Monoid[A] }
   method Add self that =
     Complex (this.base.Add self.real that.real) (this.base.Add self.imaginary that.imaginary)
@@ -245,5 +281,11 @@ class ComplexMonoid_bad_2[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ Defined class ComplexMonoid_bad_2[=A]
 //│ Defined ComplexMonoid_bad_2.Add: ComplexMonoid_bad_2['A] -> {imaginary: 'A, real: 'A} -> {imaginary: 'A, real: 'A} -> Complex['A]
 //│ Defined ComplexMonoid_bad_2.Add2: ComplexMonoid_bad_2['A] -> Complex[{imaginary: 'A0, real: 'A0}] -> Complex[{imaginary: 'A0, real: 'A0}] -> (Complex[Complex['A0] | error] with {imaginary: Complex['A0] | error, real: Complex['A0] | error})
+
+
+
+
+
+
 
 

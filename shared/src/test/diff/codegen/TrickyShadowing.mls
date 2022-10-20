@@ -31,6 +31,7 @@ class add
 //│ class add1 {}
 //│ // End of generated code
 
+
 add
 //│ res: int -> int -> int
 //│    = [Function: res]
@@ -90,10 +91,11 @@ type B = Test2
 :js
 class C: B
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.91: 	class C: B
+//│ ║  l.92: 	class C: B
 //│ ╙──      	      ^^^^
 //│ Code generation encountered an error:
 //│   cannot inherit from type alias B
+
 
 :js
 B = 1
@@ -225,10 +227,11 @@ type Lol = 1
 :js
 Lol
 //│ ╔══[ERROR] identifier not found: Lol
-//│ ║  l.226: 	Lol
+//│ ║  l.228: 	Lol
 //│ ╙──       	^^^
 //│ res: error
 //│ Code generation encountered an error:
 //│   type alias Lol is not a valid expression
+
 
 

@@ -84,6 +84,10 @@ res.tail.head
 
 
 
+
+
+
+
 // This used to yield a more precise Cons constructor, but it's no longer necessary in the new class semantics
 def Cons head tail = originalCons { head; tail } with { head; tail }
 //│ Cons: ('A & 'head) -> (List['A] & 'tail) -> (Cons['A] & {head: 'head, tail: 'tail})
@@ -105,22 +109,27 @@ res.head
 :e
 Cons 1 res
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.106: 	Cons 1 res
+//│ ║  l.110: 	Cons 1 res
 //│ ║         	^^^^^^^^^^
 //│ ╟── integer literal of type `2` does not match type `Cons[?A] | Nil`
-//│ ║  l.97: 	Cons 2 Nil
-//│ ║        	     ^
+//│ ║  l.101: 	Cons 2 Nil
+//│ ║         	     ^
 //│ ╟── but it flows into reference with expected type `Cons[?A0] | Nil`
-//│ ║  l.106: 	Cons 1 res
+//│ ║  l.110: 	Cons 1 res
 //│ ║         	       ^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.4: 	type List[A] = Nil | Cons[A]
 //│ ║       	               ^^^^^^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.88: 	def Cons head tail = originalCons { head; tail } with { head; tail }
+//│ ║  l.92: 	def Cons head tail = originalCons { head; tail } with { head; tail }
 //│ ╙──      	                                          ^^^^
 //│ res: (Cons[1] with {tail: 2}) | error
 //│    = Cons { head: 1, tail: 2 }
+
+
+
+
+
 
 // Here there used to be a loss of precision in the older with-field approach.
 //    The problem occured when constraining `α8 w/ {head: α5, tail: [α6]}  <!  nil | {head: α2}`

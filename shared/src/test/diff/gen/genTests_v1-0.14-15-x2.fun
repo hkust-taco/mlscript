@@ -19,6 +19,8 @@ add
 //│ ╙──      	 ^
 //│ res: error
 
+
+
 (0 add)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(0 add)
@@ -27,6 +29,8 @@ add
 //│ ║  l.+1: 	(0 add)
 //│ ╙──      	 ^
 //│ res: error
+
+
 
 (0 {u: 0})
 //│ ╔══[ERROR] Type mismatch in application:
@@ -37,6 +41,8 @@ add
 //│ ╙──      	 ^
 //│ res: error
 
+
+
 (0 {u: add})
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(0 {u: add})
@@ -45,6 +51,8 @@ add
 //│ ║  l.+1: 	(0 {u: add})
 //│ ╙──      	 ^
 //│ res: error
+
+
 
 (add 0)
 //│ res: int -> int
@@ -58,6 +66,8 @@ add
 //│ ╙──      	     ^^^
 //│ res: int -> int | error
 
+
+
 (add 0.u)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(add 0.u)
@@ -66,6 +76,8 @@ add
 //│ ║  l.+1: 	(add 0.u)
 //│ ╙──      	     ^
 //│ res: int -> int
+
+
 
 (add add.u)
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -76,6 +88,8 @@ add
 //│ ╙──      	     ^^^
 //│ res: int -> int
 
+
+
 (add 0.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(add 0.v)
@@ -84,6 +98,8 @@ add
 //│ ║  l.+1: 	(add 0.v)
 //│ ╙──      	     ^
 //│ res: int -> int
+
+
 
 (add add.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -94,6 +110,8 @@ add
 //│ ╙──      	     ^^^
 //│ res: int -> int
 
+
+
 (add {v: 0})
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(add {v: 0})
@@ -103,6 +121,8 @@ add
 //│ ╙──      	     ^^^^^^
 //│ res: int -> int | error
 
+
+
 (add {v: add})
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(add {v: add})
@@ -111,6 +131,8 @@ add
 //│ ║  l.+1: 	(add {v: add})
 //│ ╙──      	     ^^^^^^^^
 //│ res: int -> int | error
+
+
 
 (add {v: 0.v})
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -127,6 +149,10 @@ add
 //│ ╙──      	     ^^^^^^^^
 //│ res: int -> int | error
 
+
+
+
+
 (add {v: add.v})
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(add {v: add.v})
@@ -141,6 +167,10 @@ add
 //│ ║  l.+1: 	(add {v: add.v})
 //│ ╙──      	     ^^^^^^^^^^
 //│ res: int -> int | error
+
+
+
+
 
 ((x => 0) 0)
 //│ res: 0
@@ -175,6 +205,8 @@ add
 //│ ╙──      	            ^
 //│ res: int -> int -> int
 
+
+
 ((x => add) add.u)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	((x => add) add.u)
@@ -183,6 +215,8 @@ add
 //│ ║  l.+1: 	((x => add) add.u)
 //│ ╙──      	            ^^^
 //│ res: int -> int -> int
+
+
 
 ((x => add) {u: 0})
 //│ res: int -> int -> int
@@ -205,6 +239,8 @@ add
 //│ ╙──      	                ^
 //│ res: int -> int -> int
 
+
+
 ((x => add) {u: add.u})
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	((x => add) {u: add.u})
@@ -213,6 +249,8 @@ add
 //│ ║  l.+1: 	((x => add) {u: add.u})
 //│ ╙──      	                ^^^
 //│ res: int -> int -> int
+
+
 
 ((x => add) 0.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -223,6 +261,8 @@ add
 //│ ╙──      	            ^
 //│ res: int -> int -> int
 
+
+
 ((x => add) add.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	((x => add) add.v)
@@ -231,6 +271,8 @@ add
 //│ ║  l.+1: 	((x => add) add.v)
 //│ ╙──      	            ^^^
 //│ res: int -> int -> int
+
+
 
 ((let x = 0; add) 0)
 //│ res: int -> int
@@ -244,6 +286,8 @@ add
 //│ ╙──      	                  ^^^
 //│ res: int -> int | error
 
+
+
 ((let x = 0; add) (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = 0; add) (0 0))
@@ -253,6 +297,8 @@ add
 //│ ╙──      	                   ^
 //│ res: int -> int
 
+
+
 ((let x = 0; add) (0 add))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = 0; add) (0 add))
@@ -261,6 +307,8 @@ add
 //│ ║  l.+1: 	((let x = 0; add) (0 add))
 //│ ╙──      	                   ^
 //│ res: int -> int
+
+
 
 ((let x = 0; add) (x => 0))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -273,6 +321,9 @@ add
 //│ ║  l.+1: 	((let x = 0; add) (x => 0))
 //│ ╙──      	                  ^^^^^^^^
 //│ res: int -> int | error
+
+
+
 
 ((let x = 0; add) (let x = 0; 0))
 //│ res: int -> int
@@ -292,6 +343,8 @@ add
 //│ ╙──      	                           ^
 //│ res: int -> int
 
+
+
 ((let x = 0; add) (let x = add.u; 0))
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	((let x = 0; add) (let x = add.u; 0))
@@ -300,6 +353,8 @@ add
 //│ ║  l.+1: 	((let x = 0; add) (let x = add.u; 0))
 //│ ╙──      	                           ^^^
 //│ res: int -> int
+
+
 
 ((let x = 0; add) (let rec x = x.u; 0))
 //│ res: int -> int
@@ -316,6 +371,9 @@ add
 //│ ╙──      	                  ^^^^^^^^^^
 //│ res: int -> int | error
 
+
+
+
 ((let x = 0; add) (x => x))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = 0; add) (x => x))
@@ -327,6 +385,9 @@ add
 //│ ║  l.+1: 	((let x = 0; add) (x => x))
 //│ ╙──      	                  ^^^^^^^^
 //│ res: int -> int | error
+
+
+
 
 ((let x = 0; add) (let x = 0; x))
 //│ res: int -> int
@@ -343,6 +404,9 @@ add
 //│ ╙──      	                                ^
 //│ res: int -> int | error
 
+
+
+
 ((let x = 0; add) (let rec x = x; x))
 //│ res: int -> int
 
@@ -355,6 +419,8 @@ add
 //│ ╙──      	                  ^
 //│ res: int -> int
 
+
+
 ((let x = 0; add) add.u)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	((let x = 0; add) add.u)
@@ -363,6 +429,8 @@ add
 //│ ║  l.+1: 	((let x = 0; add) add.u)
 //│ ╙──      	                  ^^^
 //│ res: int -> int
+
+
 
 ((let x = 0; add) {u: 0})
 //│ ╔══[ERROR] Type mismatch in application:
@@ -373,6 +441,8 @@ add
 //│ ╙──      	                  ^^^^^^
 //│ res: int -> int | error
 
+
+
 ((let x = 0; add) {u: add})
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = 0; add) {u: add})
@@ -381,6 +451,8 @@ add
 //│ ║  l.+1: 	((let x = 0; add) {u: add})
 //│ ╙──      	                  ^^^^^^^^
 //│ res: int -> int | error
+
+
 
 ((let x = 0; add) {v: 0})
 //│ ╔══[ERROR] Type mismatch in application:
@@ -391,6 +463,8 @@ add
 //│ ╙──      	                  ^^^^^^
 //│ res: int -> int | error
 
+
+
 ((let x = 0; add) {v: add})
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = 0; add) {v: add})
@@ -399,6 +473,8 @@ add
 //│ ║  l.+1: 	((let x = 0; add) {v: add})
 //│ ╙──      	                  ^^^^^^^^
 //│ res: int -> int | error
+
+
 
 ((let x = add; add) 0)
 //│ res: int -> int
@@ -412,6 +488,8 @@ add
 //│ ╙──      	                    ^^^
 //│ res: int -> int | error
 
+
+
 ((let x = add; add) (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) (0 0))
@@ -420,6 +498,8 @@ add
 //│ ║  l.+1: 	((let x = add; add) (0 0))
 //│ ╙──      	                     ^
 //│ res: int -> int
+
+
 
 ((let x = add; add) (0 add))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -430,6 +510,8 @@ add
 //│ ╙──      	                     ^
 //│ res: int -> int
 
+
+
 ((let x = add; add) (0 {u: 0}))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) (0 {u: 0}))
@@ -438,6 +520,8 @@ add
 //│ ║  l.+1: 	((let x = add; add) (0 {u: 0}))
 //│ ╙──      	                     ^
 //│ res: int -> int
+
+
 
 ((let x = add; add) (0 {u: add}))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -448,6 +532,8 @@ add
 //│ ╙──      	                     ^
 //│ res: int -> int
 
+
+
 ((let x = add; add) ((0 add) 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) ((0 add) 0))
@@ -457,6 +543,8 @@ add
 //│ ╙──      	                      ^
 //│ res: int -> int
 
+
+
 ((let x = add; add) ((0 add) add))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) ((0 add) add))
@@ -465,6 +553,8 @@ add
 //│ ║  l.+1: 	((let x = add; add) ((0 add) add))
 //│ ╙──      	                      ^
 //│ res: int -> int
+
+
 
 ((let x = add; add) (x => 0))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -477,6 +567,9 @@ add
 //│ ║  l.+1: 	((let x = add; add) (x => 0))
 //│ ╙──      	                    ^^^^^^^^
 //│ res: int -> int | error
+
+
+
 
 ((let x = add; add) (let x = 0; 0))
 //│ res: int -> int
@@ -499,6 +592,9 @@ add
 //│ ╙──      	                    ^^^^^^^^^^
 //│ res: int -> int | error
 
+
+
+
 ((let x = add; add) (let x = 0; add))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) (let x = 0; add))
@@ -510,6 +606,9 @@ add
 //│ ║  l.+1: 	((let x = add; add) (let x = 0; add))
 //│ ╙──      	                    ^^^^^^^^^^^^^^^^
 //│ res: int -> int | error
+
+
+
 
 ((let x = add; add) (let x = add; add))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -523,6 +622,9 @@ add
 //│ ╙──      	                    ^^^^^^^^^^^^^^^^^^
 //│ res: int -> int | error
 
+
+
+
 ((let x = add; add) (let rec x = x; add))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) (let rec x = x; add))
@@ -534,6 +636,9 @@ add
 //│ ║  l.+1: 	((let x = add; add) (let rec x = x; add))
 //│ ╙──      	                    ^^^^^^^^^^^^^^^^^^^^
 //│ res: int -> int | error
+
+
+
 
 ((let x = add; add) (x => x))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -547,6 +652,9 @@ add
 //│ ╙──      	                    ^^^^^^^^
 //│ res: int -> int | error
 
+
+
+
 ((let rec x = x; add) 0)
 //│ res: int -> int
 
@@ -559,6 +667,8 @@ add
 //│ ╙──      	                      ^^^
 //│ res: int -> int | error
 
+
+
 ((let rec x = x; add) 0.u)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	((let rec x = x; add) 0.u)
@@ -568,6 +678,8 @@ add
 //│ ╙──      	                      ^
 //│ res: int -> int
 
+
+
 ((let rec x = x; add) add.u)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	((let rec x = x; add) add.u)
@@ -576,6 +688,8 @@ add
 //│ ║  l.+1: 	((let rec x = x; add) add.u)
 //│ ╙──      	                      ^^^
 //│ res: int -> int
+
+
 
 ((let rec x = x; add) {u: 0}.u)
 //│ res: int -> int
@@ -592,6 +706,9 @@ add
 //│ ╙──      	                              ^^
 //│ res: int -> int | error
 
+
+
+
 ((let rec x = x; add) {v: 0})
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let rec x = x; add) {v: 0})
@@ -601,6 +718,8 @@ add
 //│ ╙──      	                      ^^^^^^
 //│ res: int -> int | error
 
+
+
 ((let rec x = x; add) {v: add})
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let rec x = x; add) {v: add})
@@ -609,6 +728,8 @@ add
 //│ ║  l.+1: 	((let rec x = x; add) {v: add})
 //│ ╙──      	                      ^^^^^^^^
 //│ res: int -> int | error
+
+
 
 ((let rec x = x; add) {v: 0.u})
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -625,6 +746,10 @@ add
 //│ ╙──      	                      ^^^^^^^^
 //│ res: int -> int | error
 
+
+
+
+
 ((let rec x = x; add) {v: add.u})
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	((let rec x = x; add) {v: add.u})
@@ -640,6 +765,10 @@ add
 //│ ╙──      	                      ^^^^^^^^^^
 //│ res: int -> int | error
 
+
+
+
+
 ((let x = {v: 0}; add) 0)
 //│ res: int -> int
 
@@ -652,6 +781,8 @@ add
 //│ ╙──      	                       ^^^
 //│ res: int -> int | error
 
+
+
 ((let x = {v: 0}; add) (add 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: 0}; add) (add 0))
@@ -663,6 +794,9 @@ add
 //│ ║  l.+1: 	((let x = {v: 0}; add) (add 0))
 //│ ╙──      	                       ^^^^^^^
 //│ res: int -> int | error
+
+
+
 
 ((let x = {v: 0}; add) (add add))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -682,6 +816,11 @@ add
 //│ ╙──      	                       ^^^^^^^^^
 //│ res: int -> int | error
 
+
+
+
+
+
 ((let x = {v: 0}; add) (x => 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => 0))
@@ -693,6 +832,9 @@ add
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => 0))
 //│ ╙──      	                       ^^^^^^^^
 //│ res: int -> int | error
+
+
+
 
 ((let x = {v: 0}; add) (let x = 0; 0))
 //│ res: int -> int
@@ -715,6 +857,9 @@ add
 //│ ╙──      	                       ^^^^^^^^^^
 //│ res: int -> int | error
 
+
+
+
 ((let x = {v: 0}; add) (let x = 0; add))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: 0}; add) (let x = 0; add))
@@ -726,6 +871,9 @@ add
 //│ ║  l.+1: 	((let x = {v: 0}; add) (let x = 0; add))
 //│ ╙──      	                       ^^^^^^^^^^^^^^^^
 //│ res: int -> int | error
+
+
+
 
 ((let x = {v: 0}; add) (let x = add; add))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -739,6 +887,9 @@ add
 //│ ╙──      	                       ^^^^^^^^^^^^^^^^^^
 //│ res: int -> int | error
 
+
+
+
 ((let x = {v: 0}; add) (let rec x = x; add))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: 0}; add) (let rec x = x; add))
@@ -750,6 +901,9 @@ add
 //│ ║  l.+1: 	((let x = {v: 0}; add) (let rec x = x; add))
 //│ ╙──      	                       ^^^^^^^^^^^^^^^^^^^^
 //│ res: int -> int | error
+
+
+
 
 ((let x = {v: 0}; add) (x => x))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -763,6 +917,9 @@ add
 //│ ╙──      	                       ^^^^^^^^
 //│ res: int -> int | error
 
+
+
+
 ((let x = {v: 0}; add) 0.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	((let x = {v: 0}; add) 0.v)
@@ -772,6 +929,8 @@ add
 //│ ╙──      	                       ^
 //│ res: int -> int
 
+
+
 ((let x = {v: 0}; add) add.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	((let x = {v: 0}; add) add.v)
@@ -780,6 +939,8 @@ add
 //│ ║  l.+1: 	((let x = {v: 0}; add) add.v)
 //│ ╙──      	                       ^^^
 //│ res: int -> int
+
+
 
 ((let x = {v: 0}; add) (x => 0).v)
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -793,6 +954,9 @@ add
 //│ ╙──      	                       ^^^^^^^^
 //│ res: int -> int
 
+
+
+
 ((let x = {v: 0}; add) (x => add).v)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => add).v)
@@ -804,6 +968,9 @@ add
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => add).v)
 //│ ╙──      	                       ^^^^^^^^^^
 //│ res: int -> int
+
+
+
 
 ((let x = {v: 0}; add) (x => x).v)
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -817,6 +984,9 @@ add
 //│ ╙──      	                       ^^^^^^^^
 //│ res: int -> int
 
+
+
+
 ((let x = {v: add}; add) 0)
 //│ res: int -> int
 
@@ -829,6 +999,8 @@ add
 //│ ╙──      	                         ^^^
 //│ res: int -> int | error
 
+
+
 ((let x = {v: add}; add) {v: 0})
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: add}; add) {v: 0})
@@ -838,6 +1010,8 @@ add
 //│ ╙──      	                         ^^^^^^
 //│ res: int -> int | error
 
+
+
 ((let x = {v: add}; add) {v: add})
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: add}; add) {v: add})
@@ -846,6 +1020,8 @@ add
 //│ ║  l.+1: 	((let x = {v: add}; add) {v: add})
 //│ ╙──      	                         ^^^^^^^^
 //│ res: int -> int | error
+
+
 
 ((let rec x = {v: x}; add) 0)
 //│ res: int -> int
@@ -858,6 +1034,8 @@ add
 //│ ║  l.+1: 	((let rec x = {v: x}; add) add)
 //│ ╙──      	                           ^^^
 //│ res: int -> int | error
+
+
 
 ((x => x) 0)
 //│ res: 0
@@ -874,6 +1052,8 @@ add
 //│ ╙──      	           ^
 //│ res: error
 
+
+
 ((x => x) (0 add))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((x => x) (0 add))
@@ -882,6 +1062,8 @@ add
 //│ ║  l.+1: 	((x => x) (0 add))
 //│ ╙──      	           ^
 //│ res: error
+
+
 
 ((x => x) (0 (x => 0)))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -892,6 +1074,8 @@ add
 //│ ╙──      	           ^
 //│ res: error
 
+
+
 ((x => x) (0 (x => add)))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((x => x) (0 (x => add)))
@@ -901,6 +1085,8 @@ add
 //│ ╙──      	           ^
 //│ res: error
 
+
+
 ((x => x) (0 (x => x)))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((x => x) (0 (x => x)))
@@ -909,6 +1095,8 @@ add
 //│ ║  l.+1: 	((x => x) (0 (x => x)))
 //│ ╙──      	           ^
 //│ res: error
+
+
 
 ((x => x) {v: 0})
 //│ res: {v: 0}
@@ -925,6 +1113,8 @@ add
 //│ ╙──      	       ^
 //│ res: error
 
+
+
 ((x => 0.u) add)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	((x => 0.u) add)
@@ -933,6 +1123,8 @@ add
 //│ ║  l.+1: 	((x => 0.u) add)
 //│ ╙──      	       ^
 //│ res: error
+
+
 
 ((x => add.u) 0)
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -943,6 +1135,8 @@ add
 //│ ╙──      	       ^^^
 //│ res: error
 
+
+
 ((x => add.u) add)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	((x => add.u) add)
@@ -951,6 +1145,8 @@ add
 //│ ║  l.+1: 	((x => add.u) add)
 //│ ╙──      	       ^^^
 //│ res: error
+
+
 
 ((x => add.u) 0.u)
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -967,6 +1163,10 @@ add
 //│ ╙──      	              ^
 //│ res: error
 
+
+
+
+
 ((x => add.u) add.u)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	((x => add.u) add.u)
@@ -981,6 +1181,10 @@ add
 //│ ║  l.+1: 	((x => add.u) add.u)
 //│ ╙──      	              ^^^
 //│ res: error
+
+
+
+
 
 ((x => x.u) 0)
 //│ ╔══[ERROR] Type mismatch in application:
@@ -997,6 +1201,10 @@ add
 //│ ╙──      	       ^
 //│ res: error
 
+
+
+
+
 ((x => x.u) add)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((x => x.u) add)
@@ -1012,6 +1220,10 @@ add
 //│ ╙──      	       ^
 //│ res: error
 
+
+
+
+
 ((x => x.u) 0.u)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	((x => x.u) 0.u)
@@ -1021,6 +1233,8 @@ add
 //│ ╙──      	            ^
 //│ res: error
 
+
+
 ((x => x.u) add.u)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	((x => x.u) add.u)
@@ -1029,6 +1243,8 @@ add
 //│ ║  l.+1: 	((x => x.u) add.u)
 //│ ╙──      	            ^^^
 //│ res: error
+
+
 
 ((x => x.u) {u: 0}.u)
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1048,6 +1264,11 @@ add
 //│ ╙──      	       ^
 //│ res: error
 
+
+
+
+
+
 ((x => x.u) {u: add}.u)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((x => x.u) {u: add}.u)
@@ -1065,6 +1286,11 @@ add
 //│ ║  l.+1: 	((x => x.u) {u: add}.u)
 //│ ╙──      	       ^
 //│ res: error
+
+
+
+
+
 
 (x => 0)
 //│ res: anything -> 0
@@ -1087,6 +1313,8 @@ add
 //│ ╙──      	         ^
 //│ res: 0
 
+
+
 (let x = add.u; 0)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = add.u; 0)
@@ -1095,6 +1323,8 @@ add
 //│ ║  l.+1: 	(let x = add.u; 0)
 //│ ╙──      	         ^^^
 //│ res: 0
+
+
 
 (let rec x = x.u; 0)
 //│ res: 0
@@ -1120,6 +1350,8 @@ add
 //│ ╙──      	         ^
 //│ res: int -> int -> int
 
+
+
 (let x = add.v; add)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = add.v; add)
@@ -1128,6 +1360,8 @@ add
 //│ ║  l.+1: 	(let x = add.v; add)
 //│ ╙──      	         ^^^
 //│ res: int -> int -> int
+
+
 
 (let rec x = x.v; add)
 //│ res: int -> int -> int
@@ -1153,6 +1387,8 @@ add
 //│ ╙──      	          ^
 //│ res: error
 
+
+
 (let x = (0 add); x)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (0 add); x)
@@ -1161,6 +1397,8 @@ add
 //│ ║  l.+1: 	(let x = (0 add); x)
 //│ ╙──      	          ^
 //│ res: error
+
+
 
 (let rec x = (0 x); x)
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1171,6 +1409,8 @@ add
 //│ ╙──      	              ^
 //│ res: error
 
+
+
 (let x = 0.u; x)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = 0.u; x)
@@ -1180,6 +1420,8 @@ add
 //│ ╙──      	         ^
 //│ res: error
 
+
+
 (let x = add.u; x)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = add.u; x)
@@ -1188,6 +1430,8 @@ add
 //│ ║  l.+1: 	(let x = add.u; x)
 //│ ╙──      	         ^^^
 //│ res: error
+
+
 
 (let rec x = x.u; x)
 //│ res: nothing
@@ -1201,6 +1445,8 @@ add
 //│ ╙──      	         ^^^^^^
 //│ res: error
 
+
+
 (let x = {v: add}.u; x)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = {v: add}.u; x)
@@ -1210,6 +1456,8 @@ add
 //│ ╙──      	         ^^^^^^^^
 //│ res: error
 
+
+
 (let rec x = {v: x}.u; x)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let rec x = {v: x}.u; x)
@@ -1218,6 +1466,8 @@ add
 //│ ║  l.+1: 	(let rec x = {v: x}.u; x)
 //│ ╙──      	             ^^^^^^
 //│ res: error
+
+
 
 (let x = {u: 0}; x)
 //│ res: {u: 0}
@@ -1242,6 +1492,8 @@ add
 //│ ╙──      	                   ^
 //│ res: {u: 0, v: error}
 
+
+
 (let x = {u: 0, v: add.v}; x)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = {u: 0, v: add.v}; x)
@@ -1250,6 +1502,8 @@ add
 //│ ║  l.+1: 	(let x = {u: 0, v: add.v}; x)
 //│ ╙──      	                   ^^^
 //│ res: {u: 0, v: error}
+
+
 
 (let rec x = {u: 0, v: x.v}; x)
 //│ res: {u: 0, v: nothing}
@@ -1271,6 +1525,8 @@ add
 //│ ╙──      	       ^
 //│ res: anything -> error
 
+
+
 (let x = 0; (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = 0; (0 0))
@@ -1279,6 +1535,8 @@ add
 //│ ║  l.+1: 	(let x = 0; (0 0))
 //│ ╙──      	             ^
 //│ res: error
+
+
 
 (let x = add; (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1289,6 +1547,8 @@ add
 //│ ╙──      	               ^
 //│ res: error
 
+
+
 (let rec x = x; (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = x; (0 0))
@@ -1297,6 +1557,8 @@ add
 //│ ║  l.+1: 	(let rec x = x; (0 0))
 //│ ╙──      	                 ^
 //│ res: error
+
+
 
 (let x = (0 0); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1313,6 +1575,10 @@ add
 //│ ╙──      	                 ^
 //│ res: error
 
+
+
+
+
 (let x = (0 add); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (0 add); (0 0))
@@ -1327,6 +1593,10 @@ add
 //│ ║  l.+1: 	(let x = (0 add); (0 0))
 //│ ╙──      	                   ^
 //│ res: error
+
+
+
+
 
 (let rec x = (0 x); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1343,6 +1613,10 @@ add
 //│ ╙──      	                     ^
 //│ res: error
 
+
+
+
+
 (let x = (y => 0); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (y => 0); (0 0))
@@ -1351,6 +1625,8 @@ add
 //│ ║  l.+1: 	(let x = (y => 0); (0 0))
 //│ ╙──      	                    ^
 //│ res: error
+
+
 
 (let x = (y => add); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1361,6 +1637,8 @@ add
 //│ ╙──      	                      ^
 //│ res: error
 
+
+
 (let x = (y => y); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (y => y); (0 0))
@@ -1369,6 +1647,8 @@ add
 //│ ║  l.+1: 	(let x = (y => y); (0 0))
 //│ ╙──      	                    ^
 //│ res: error
+
+
 
 (let x = (let y = 0; y); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1379,6 +1659,8 @@ add
 //│ ╙──      	                          ^
 //│ res: error
 
+
+
 (let x = (let y = add; y); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (let y = add; y); (0 0))
@@ -1387,6 +1669,8 @@ add
 //│ ║  l.+1: 	(let x = (let y = add; y); (0 0))
 //│ ╙──      	                            ^
 //│ res: error
+
+
 
 (let x = (let rec y = y; y); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1397,6 +1681,8 @@ add
 //│ ╙──      	                              ^
 //│ res: error
 
+
+
 (let rec x = (let y = x; y); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (let y = x; y); (0 0))
@@ -1405,6 +1691,8 @@ add
 //│ ║  l.+1: 	(let rec x = (let y = x; y); (0 0))
 //│ ╙──      	                              ^
 //│ res: error
+
+
 
 (let rec x = (y => x); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1415,6 +1703,8 @@ add
 //│ ╙──      	                        ^
 //│ res: error
 
+
+
 (let rec x = (let y = 0; x); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (let y = 0; x); (0 0))
@@ -1423,6 +1713,8 @@ add
 //│ ║  l.+1: 	(let rec x = (let y = 0; x); (0 0))
 //│ ╙──      	                              ^
 //│ res: error
+
+
 
 (let rec x = (let y = add; x); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1433,6 +1725,8 @@ add
 //│ ╙──      	                                ^
 //│ res: error
 
+
+
 (let rec x = (let rec y = y; x); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (let rec y = y; x); (0 0))
@@ -1441,6 +1735,8 @@ add
 //│ ║  l.+1: 	(let rec x = (let rec y = y; x); (0 0))
 //│ ╙──      	                                  ^
 //│ res: error
+
+
 
 (let rec x = (let y = x; x); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1451,6 +1747,8 @@ add
 //│ ╙──      	                              ^
 //│ res: error
 
+
+
 (let x = (y => (z => 0)); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (y => (z => 0)); (0 0))
@@ -1459,6 +1757,8 @@ add
 //│ ║  l.+1: 	(let x = (y => (z => 0)); (0 0))
 //│ ╙──      	                           ^
 //│ res: error
+
+
 
 (let x = (y => (z => add)); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1469,6 +1769,8 @@ add
 //│ ╙──      	                             ^
 //│ res: error
 
+
+
 (let x = (y => (z => z)); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (y => (z => z)); (0 0))
@@ -1477,6 +1779,8 @@ add
 //│ ║  l.+1: 	(let x = (y => (z => z)); (0 0))
 //│ ╙──      	                           ^
 //│ res: error
+
+
 
 (let x = (y => (z => y)); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1487,6 +1791,8 @@ add
 //│ ╙──      	                           ^
 //│ res: error
 
+
+
 (let x = (let y = 0; (z => y)); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (let y = 0; (z => y)); (0 0))
@@ -1495,6 +1801,8 @@ add
 //│ ║  l.+1: 	(let x = (let y = 0; (z => y)); (0 0))
 //│ ╙──      	                                 ^
 //│ res: error
+
+
 
 (let x = (let y = add; (z => y)); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1505,6 +1813,8 @@ add
 //│ ╙──      	                                   ^
 //│ res: error
 
+
+
 (let x = (let rec y = y; (z => y)); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (let rec y = y; (z => y)); (0 0))
@@ -1513,6 +1823,8 @@ add
 //│ ║  l.+1: 	(let x = (let rec y = y; (z => y)); (0 0))
 //│ ╙──      	                                     ^
 //│ res: error
+
+
 
 (let rec x = (let y = x; (z => y)); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1523,6 +1835,8 @@ add
 //│ ╙──      	                                     ^
 //│ res: error
 
+
+
 (let rec x = (y => (z => x)); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (y => (z => x)); (0 0))
@@ -1531,6 +1845,8 @@ add
 //│ ║  l.+1: 	(let rec x = (y => (z => x)); (0 0))
 //│ ╙──      	                               ^
 //│ res: error
+
+
 
 (let rec x = (let y = 0; (z => x)); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1541,6 +1857,8 @@ add
 //│ ╙──      	                                     ^
 //│ res: error
 
+
+
 (let rec x = (let y = add; (z => x)); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (let y = add; (z => x)); (0 0))
@@ -1549,6 +1867,8 @@ add
 //│ ║  l.+1: 	(let rec x = (let y = add; (z => x)); (0 0))
 //│ ╙──      	                                       ^
 //│ res: error
+
+
 
 (let rec x = (let rec y = y; (z => x)); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1559,6 +1879,8 @@ add
 //│ ╙──      	                                         ^
 //│ res: error
 
+
+
 (let rec x = (let y = x; (z => x)); (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (let y = x; (z => x)); (0 0))
@@ -1567,6 +1889,8 @@ add
 //│ ║  l.+1: 	(let rec x = (let y = x; (z => x)); (0 0))
 //│ ╙──      	                                     ^
 //│ res: error
+
+
 
 (let x = {u: 0}; (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1577,6 +1901,8 @@ add
 //│ ╙──      	                  ^
 //│ res: error
 
+
+
 (let x = {u: add}; (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = {u: add}; (0 0))
@@ -1585,6 +1911,8 @@ add
 //│ ║  l.+1: 	(let x = {u: add}; (0 0))
 //│ ╙──      	                    ^
 //│ res: error
+
+
 
 (let rec x = {u: x}; (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1595,6 +1923,8 @@ add
 //│ ╙──      	                      ^
 //│ res: error
 
+
+
 (x => (0 add))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(x => (0 add))
@@ -1603,6 +1933,8 @@ add
 //│ ║  l.+1: 	(x => (0 add))
 //│ ╙──      	       ^
 //│ res: anything -> error
+
+
 
 (let x = 0; (0 add))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1613,6 +1945,8 @@ add
 //│ ╙──      	             ^
 //│ res: error
 
+
+
 (let x = add; (0 add))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = add; (0 add))
@@ -1622,6 +1956,8 @@ add
 //│ ╙──      	               ^
 //│ res: error
 
+
+
 (let rec x = x; (0 add))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = x; (0 add))
@@ -1630,6 +1966,8 @@ add
 //│ ║  l.+1: 	(let rec x = x; (0 add))
 //│ ╙──      	                 ^
 //│ res: error
+
+
 
 (let x = 0.v; (0 add))
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -1646,6 +1984,10 @@ add
 //│ ╙──      	               ^
 //│ res: error
 
+
+
+
+
 (let x = add.v; (0 add))
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = add.v; (0 add))
@@ -1661,6 +2003,10 @@ add
 //│ ╙──      	                 ^
 //│ res: error
 
+
+
+
+
 (let rec x = x.v; (0 add))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = x.v; (0 add))
@@ -1669,6 +2015,8 @@ add
 //│ ║  l.+1: 	(let rec x = x.v; (0 add))
 //│ ╙──      	                   ^
 //│ res: error
+
+
 
 (x => (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1679,6 +2027,8 @@ add
 //│ ╙──      	       ^
 //│ res: anything -> error
 
+
+
 (let x = 0; (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = 0; (0 x))
@@ -1687,6 +2037,8 @@ add
 //│ ║  l.+1: 	(let x = 0; (0 x))
 //│ ╙──      	             ^
 //│ res: error
+
+
 
 (let x = add; (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1697,6 +2049,8 @@ add
 //│ ╙──      	               ^
 //│ res: error
 
+
+
 (let rec x = x; (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = x; (0 x))
@@ -1705,6 +2059,8 @@ add
 //│ ║  l.+1: 	(let rec x = x; (0 x))
 //│ ╙──      	                 ^
 //│ res: error
+
+
 
 (let x = (0 0); (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1721,6 +2077,10 @@ add
 //│ ╙──      	                 ^
 //│ res: error
 
+
+
+
+
 (let x = (0 add); (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (0 add); (0 x))
@@ -1735,6 +2095,10 @@ add
 //│ ║  l.+1: 	(let x = (0 add); (0 x))
 //│ ╙──      	                   ^
 //│ res: error
+
+
+
+
 
 (let rec x = (0 x); (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1751,6 +2115,10 @@ add
 //│ ╙──      	                     ^
 //│ res: error
 
+
+
+
+
 (let x = (add 0); (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (add 0); (0 x))
@@ -1759,6 +2127,8 @@ add
 //│ ║  l.+1: 	(let x = (add 0); (0 x))
 //│ ╙──      	                   ^
 //│ res: error
+
+
 
 (let x = (add add); (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1774,6 +2144,10 @@ add
 //│ ║  l.+1: 	(let x = (add add); (0 x))
 //│ ╙──      	                     ^
 //│ res: error
+
+
+
+
 
 (let rec x = (add x); (0 x))
 //│ ╔══[ERROR] Type mismatch in binding of application:
@@ -1793,6 +2167,11 @@ add
 //│ ╙──      	                       ^
 //│ res: error
 
+
+
+
+
+
 (let rec x = (x 0); (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (x 0); (0 x))
@@ -1801,6 +2180,8 @@ add
 //│ ║  l.+1: 	(let rec x = (x 0); (0 x))
 //│ ╙──      	                     ^
 //│ res: error
+
+
 
 (let rec x = (x add); (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1811,6 +2192,8 @@ add
 //│ ╙──      	                       ^
 //│ res: error
 
+
+
 (let rec x = (x x); (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (x x); (0 x))
@@ -1819,6 +2202,8 @@ add
 //│ ║  l.+1: 	(let rec x = (x x); (0 x))
 //│ ╙──      	                     ^
 //│ res: error
+
+
 
 (let x = (y => 0); (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1829,6 +2214,8 @@ add
 //│ ╙──      	                    ^
 //│ res: error
 
+
+
 (let x = (y => add); (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (y => add); (0 x))
@@ -1837,6 +2224,8 @@ add
 //│ ║  l.+1: 	(let x = (y => add); (0 x))
 //│ ╙──      	                      ^
 //│ res: error
+
+
 
 (let x = (y => y); (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1847,6 +2236,8 @@ add
 //│ ╙──      	                    ^
 //│ res: error
 
+
+
 (let rec x = (y => x); (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (y => x); (0 x))
@@ -1855,6 +2246,8 @@ add
 //│ ║  l.+1: 	(let rec x = (y => x); (0 x))
 //│ ╙──      	                        ^
 //│ res: error
+
+
 
 (let rec x = (let y = 0; x); (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1865,6 +2258,8 @@ add
 //│ ╙──      	                              ^
 //│ res: error
 
+
+
 (let rec x = (let y = add; x); (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (let y = add; x); (0 x))
@@ -1873,6 +2268,8 @@ add
 //│ ║  l.+1: 	(let rec x = (let y = add; x); (0 x))
 //│ ╙──      	                                ^
 //│ res: error
+
+
 
 (let rec x = (let rec y = y; x); (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1883,6 +2280,8 @@ add
 //│ ╙──      	                                  ^
 //│ res: error
 
+
+
 (let rec x = (let y = x; x); (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (let y = x; x); (0 x))
@@ -1891,6 +2290,8 @@ add
 //│ ║  l.+1: 	(let rec x = (let y = x; x); (0 x))
 //│ ╙──      	                              ^
 //│ res: error
+
+
 
 (let x = {u: 0}; (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1901,6 +2302,8 @@ add
 //│ ╙──      	                  ^
 //│ res: error
 
+
+
 (let x = {u: add}; (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = {u: add}; (0 x))
@@ -1909,6 +2312,8 @@ add
 //│ ║  l.+1: 	(let x = {u: add}; (0 x))
 //│ ╙──      	                    ^
 //│ res: error
+
+
 
 (let x = {u: add, v: 0}; (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1919,6 +2324,8 @@ add
 //│ ╙──      	                          ^
 //│ res: error
 
+
+
 (let x = {u: add, v: add}; (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = {u: add, v: add}; (0 x))
@@ -1927,6 +2334,8 @@ add
 //│ ║  l.+1: 	(let x = {u: add, v: add}; (0 x))
 //│ ╙──      	                            ^
 //│ res: error
+
+
 
 (let rec x = {u: add, v: x}; (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1937,6 +2346,8 @@ add
 //│ ╙──      	                              ^
 //│ res: error
 
+
+
 (let rec x = {u: x}; (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = {u: x}; (0 x))
@@ -1945,6 +2356,8 @@ add
 //│ ║  l.+1: 	(let rec x = {u: x}; (0 x))
 //│ ╙──      	                      ^
 //│ res: error
+
+
 
 (let x = 0.v; (0 x))
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -1961,6 +2374,10 @@ add
 //│ ╙──      	               ^
 //│ res: error
 
+
+
+
+
 (let x = add.v; (0 x))
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = add.v; (0 x))
@@ -1976,6 +2393,10 @@ add
 //│ ╙──      	                 ^
 //│ res: error
 
+
+
+
+
 (let rec x = x.v; (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = x.v; (0 x))
@@ -1984,6 +2405,8 @@ add
 //│ ║  l.+1: 	(let rec x = x.v; (0 x))
 //│ ╙──      	                   ^
 //│ res: error
+
+
 
 (let x = {v: 0}; (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1994,6 +2417,8 @@ add
 //│ ╙──      	                  ^
 //│ res: error
 
+
+
 (let x = {v: add}; (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = {v: add}; (0 x))
@@ -2003,6 +2428,8 @@ add
 //│ ╙──      	                    ^
 //│ res: error
 
+
+
 (let rec x = {v: x}; (0 x))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = {v: x}; (0 x))
@@ -2011,6 +2438,8 @@ add
 //│ ║  l.+1: 	(let rec x = {v: x}; (0 x))
 //│ ╙──      	                      ^
 //│ res: error
+
+
 
 (x => {u: 0})
 //│ res: anything -> {u: 0}
@@ -2033,6 +2462,8 @@ add
 //│ ╙──      	          ^
 //│ res: {u: 0}
 
+
+
 (let x = (0 add); {u: 0})
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (0 add); {u: 0})
@@ -2041,6 +2472,8 @@ add
 //│ ║  l.+1: 	(let x = (0 add); {u: 0})
 //│ ╙──      	          ^
 //│ res: {u: 0}
+
+
 
 (let rec x = (0 x); {u: 0})
 //│ ╔══[ERROR] Type mismatch in application:
@@ -2051,6 +2484,8 @@ add
 //│ ╙──      	              ^
 //│ res: {u: 0}
 
+
+
 (let x = (0 {v: 0}); {u: 0})
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (0 {v: 0}); {u: 0})
@@ -2059,6 +2494,8 @@ add
 //│ ║  l.+1: 	(let x = (0 {v: 0}); {u: 0})
 //│ ╙──      	          ^
 //│ res: {u: 0}
+
+
 
 (let x = (0 {v: add}); {u: 0})
 //│ ╔══[ERROR] Type mismatch in application:
@@ -2069,6 +2506,8 @@ add
 //│ ╙──      	          ^
 //│ res: {u: 0}
 
+
+
 (let rec x = (0 {v: x}); {u: 0})
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (0 {v: x}); {u: 0})
@@ -2077,6 +2516,8 @@ add
 //│ ║  l.+1: 	(let rec x = (0 {v: x}); {u: 0})
 //│ ╙──      	              ^
 //│ res: {u: 0}
+
+
 
 (let x = 0.u; {u: 0})
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2087,6 +2528,8 @@ add
 //│ ╙──      	         ^
 //│ res: {u: 0}
 
+
+
 (let x = add.u; {u: 0})
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = add.u; {u: 0})
@@ -2095,6 +2538,8 @@ add
 //│ ║  l.+1: 	(let x = add.u; {u: 0})
 //│ ╙──      	         ^^^
 //│ res: {u: 0}
+
+
 
 (let rec x = x.u; {u: 0})
 //│ res: {u: 0}
@@ -2108,6 +2553,8 @@ add
 //│ ╙──      	         ^
 //│ res: {u: 0}
 
+
+
 (let x = add.u.u; {u: 0})
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = add.u.u; {u: 0})
@@ -2116,6 +2563,8 @@ add
 //│ ║  l.+1: 	(let x = add.u.u; {u: 0})
 //│ ╙──      	         ^^^
 //│ res: {u: 0}
+
+
 
 (let rec x = x.u.u; {u: 0})
 //│ res: {u: 0}
@@ -2144,6 +2593,8 @@ add
 //│ ╙──      	              ^^^
 //│ res: {u: 0, v: 0}
 
+
+
 (let rec x = (add x); {u: 0, v: 0})
 //│ ╔══[ERROR] Type mismatch in binding of application:
 //│ ║  l.+1: 	(let rec x = (add x); {u: 0, v: 0})
@@ -2156,6 +2607,9 @@ add
 //│ ╙──      	                  ^
 //│ res: {u: 0, v: 0}
 
+
+
+
 (let x = 0.u; {u: 0, v: 0})
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = 0.u; {u: 0, v: 0})
@@ -2165,6 +2619,8 @@ add
 //│ ╙──      	         ^
 //│ res: {u: 0, v: 0}
 
+
+
 (let x = add.u; {u: 0, v: 0})
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = add.u; {u: 0, v: 0})
@@ -2173,6 +2629,8 @@ add
 //│ ║  l.+1: 	(let x = add.u; {u: 0, v: 0})
 //│ ╙──      	         ^^^
 //│ res: {u: 0, v: 0}
+
+
 
 (let rec x = x.u; {u: 0, v: 0})
 //│ res: {u: 0, v: 0}
@@ -2256,6 +2714,8 @@ add
 //│ ╙──      	         ^
 //│ res: {u: int -> int -> int}
 
+
+
 (let x = add.v; {u: add})
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = add.v; {u: add})
@@ -2264,6 +2724,8 @@ add
 //│ ║  l.+1: 	(let x = add.v; {u: add})
 //│ ╙──      	         ^^^
 //│ res: {u: int -> int -> int}
+
+
 
 (let rec x = x.v; {u: add})
 //│ res: {u: int -> int -> int}
@@ -2321,6 +2783,8 @@ add
 //│ ╙──      	         ^
 //│ res: {u: error, v: 0}
 
+
+
 (let x = add.v; {u: x, v: 0})
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = add.v; {u: x, v: 0})
@@ -2329,6 +2793,8 @@ add
 //│ ║  l.+1: 	(let x = add.v; {u: x, v: 0})
 //│ ╙──      	         ^^^
 //│ res: {u: error, v: 0}
+
+
 
 (let rec x = x.v; {u: x, v: 0})
 //│ res: {u: nothing, v: 0}
@@ -2354,6 +2820,8 @@ add
 //│ ╙──      	         ^
 //│ res: {u: error, v: int -> int -> int}
 
+
+
 (let x = add.u; {u: x, v: add})
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = add.u; {u: x, v: add})
@@ -2362,6 +2830,8 @@ add
 //│ ║  l.+1: 	(let x = add.u; {u: x, v: add})
 //│ ╙──      	         ^^^
 //│ res: {u: error, v: int -> int -> int}
+
+
 
 (let rec x = x.u; {u: x, v: add})
 //│ res: {u: nothing, v: int -> int -> int}
@@ -2375,6 +2845,8 @@ add
 //│ ╙──      	         ^
 //│ res: {u: error, v: int -> int -> int}
 
+
+
 (let x = add.v; {u: x, v: add})
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = add.v; {u: x, v: add})
@@ -2383,6 +2855,8 @@ add
 //│ ║  l.+1: 	(let x = add.v; {u: x, v: add})
 //│ ╙──      	         ^^^
 //│ res: {u: error, v: int -> int -> int}
+
+
 
 (let rec x = x.v; {u: x, v: add})
 //│ res: {u: nothing, v: int -> int -> int}
@@ -2445,6 +2919,8 @@ add
 //│ ╙──      	          ^
 //│ res: anything -> {u: error}
 
+
+
 (let x = 0; {u: 0.v})
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = 0; {u: 0.v})
@@ -2453,6 +2929,8 @@ add
 //│ ║  l.+1: 	(let x = 0; {u: 0.v})
 //│ ╙──      	                ^
 //│ res: {u: error}
+
+
 
 (let x = add; {u: 0.v})
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2463,6 +2941,8 @@ add
 //│ ╙──      	                  ^
 //│ res: {u: error}
 
+
+
 (let rec x = x; {u: 0.v})
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let rec x = x; {u: 0.v})
@@ -2471,6 +2951,8 @@ add
 //│ ║  l.+1: 	(let rec x = x; {u: 0.v})
 //│ ╙──      	                    ^
 //│ res: {u: error}
+
+
 
 (x => {u: add.v})
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2481,6 +2963,8 @@ add
 //│ ╙──      	          ^^^
 //│ res: anything -> {u: error}
 
+
+
 (let x = 0; {u: add.v})
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = 0; {u: add.v})
@@ -2489,6 +2973,8 @@ add
 //│ ║  l.+1: 	(let x = 0; {u: add.v})
 //│ ╙──      	                ^^^
 //│ res: {u: error}
+
+
 
 (let x = add; {u: add.v})
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2499,6 +2985,8 @@ add
 //│ ╙──      	                  ^^^
 //│ res: {u: error}
 
+
+
 (let rec x = x; {u: add.v})
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let rec x = x; {u: add.v})
@@ -2507,6 +2995,8 @@ add
 //│ ║  l.+1: 	(let rec x = x; {u: add.v})
 //│ ╙──      	                    ^^^
 //│ res: {u: error}
+
+
 
 (x => {u: x.v})
 //│ res: {v: 'v} -> {u: 'v}
@@ -2523,6 +3013,9 @@ add
 //│ ╙──      	                ^
 //│ res: {u: error}
 
+
+
+
 (let x = add; {u: x.v})
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = add; {u: x.v})
@@ -2534,6 +3027,9 @@ add
 //│ ║  l.+1: 	(let x = add; {u: x.v})
 //│ ╙──      	                  ^
 //│ res: {u: error}
+
+
+
 
 (let rec x = x; {u: x.v})
 //│ res: {u: nothing}
@@ -2547,6 +3043,8 @@ add
 //│ ╙──      	         ^
 //│ res: {u: error}
 
+
+
 (let x = add.v; {u: x.v})
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = add.v; {u: x.v})
@@ -2555,6 +3053,8 @@ add
 //│ ║  l.+1: 	(let x = add.v; {u: x.v})
 //│ ╙──      	         ^^^
 //│ res: {u: error}
+
+
 
 (let rec x = x.v; {u: x.v})
 //│ res: {u: nothing}
@@ -2593,6 +3093,8 @@ add
 //│ ╙──      	      ^
 //│ res: anything -> error
 
+
+
 (let x = 0; 0.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = 0; 0.v)
@@ -2601,6 +3103,8 @@ add
 //│ ║  l.+1: 	(let x = 0; 0.v)
 //│ ╙──      	            ^
 //│ res: error
+
+
 
 (let x = add; 0.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2611,6 +3115,8 @@ add
 //│ ╙──      	              ^
 //│ res: error
 
+
+
 (let rec x = x; 0.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let rec x = x; 0.v)
@@ -2619,6 +3125,8 @@ add
 //│ ║  l.+1: 	(let rec x = x; 0.v)
 //│ ╙──      	                ^
 //│ res: error
+
+
 
 (let x = 0.u; 0.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2635,6 +3143,10 @@ add
 //│ ╙──      	              ^
 //│ res: error
 
+
+
+
+
 (let x = add.u; 0.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = add.u; 0.v)
@@ -2650,6 +3162,10 @@ add
 //│ ╙──      	                ^
 //│ res: error
 
+
+
+
+
 (let rec x = x.u; 0.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let rec x = x.u; 0.v)
@@ -2658,6 +3174,8 @@ add
 //│ ║  l.+1: 	(let rec x = x.u; 0.v)
 //│ ╙──      	                  ^
 //│ res: error
+
+
 
 (let x = 0.v; 0.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2674,6 +3192,10 @@ add
 //│ ╙──      	              ^
 //│ res: error
 
+
+
+
+
 (let x = add.v; 0.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = add.v; 0.v)
@@ -2689,6 +3211,10 @@ add
 //│ ╙──      	                ^
 //│ res: error
 
+
+
+
+
 (let rec x = x.v; 0.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let rec x = x.v; 0.v)
@@ -2697,6 +3223,8 @@ add
 //│ ║  l.+1: 	(let rec x = x.v; 0.v)
 //│ ╙──      	                  ^
 //│ res: error
+
+
 
 (let x = {v: 0}; 0.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2707,6 +3235,8 @@ add
 //│ ╙──      	                 ^
 //│ res: error
 
+
+
 (let x = {v: add}; 0.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = {v: add}; 0.v)
@@ -2716,6 +3246,8 @@ add
 //│ ╙──      	                   ^
 //│ res: error
 
+
+
 (let rec x = {v: x}; 0.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let rec x = {v: x}; 0.v)
@@ -2724,6 +3256,8 @@ add
 //│ ║  l.+1: 	(let rec x = {v: x}; 0.v)
 //│ ╙──      	                     ^
 //│ res: error
+
+
 
 (let x = {v: 0.v}; 0.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2740,6 +3274,10 @@ add
 //│ ╙──      	                   ^
 //│ res: error
 
+
+
+
+
 (let x = {v: add.v}; 0.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = {v: add.v}; 0.v)
@@ -2755,6 +3293,10 @@ add
 //│ ╙──      	                     ^
 //│ res: error
 
+
+
+
+
 (let rec x = {v: x.v}; 0.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let rec x = {v: x.v}; 0.v)
@@ -2763,6 +3305,8 @@ add
 //│ ║  l.+1: 	(let rec x = {v: x.v}; 0.v)
 //│ ╙──      	                       ^
 //│ res: error
+
+
 
 (x => add.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2773,6 +3317,8 @@ add
 //│ ╙──      	      ^^^
 //│ res: anything -> error
 
+
+
 (let x = 0; add.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = 0; add.v)
@@ -2781,6 +3327,8 @@ add
 //│ ║  l.+1: 	(let x = 0; add.v)
 //│ ╙──      	            ^^^
 //│ res: error
+
+
 
 (let x = add; add.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2791,6 +3339,8 @@ add
 //│ ╙──      	              ^^^
 //│ res: error
 
+
+
 (let rec x = x; add.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let rec x = x; add.v)
@@ -2799,6 +3349,8 @@ add
 //│ ║  l.+1: 	(let rec x = x; add.v)
 //│ ╙──      	                ^^^
 //│ res: error
+
+
 
 (let x = {u: 0}; add.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2809,6 +3361,8 @@ add
 //│ ╙──      	                 ^^^
 //│ res: error
 
+
+
 (let x = {u: add}; add.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = {u: add}; add.v)
@@ -2817,6 +3371,8 @@ add
 //│ ║  l.+1: 	(let x = {u: add}; add.v)
 //│ ╙──      	                   ^^^
 //│ res: error
+
+
 
 (let rec x = {u: x}; add.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2827,6 +3383,8 @@ add
 //│ ╙──      	                     ^^^
 //│ res: error
 
+
+
 (let x = {u: {v: 0}}; add.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = {u: {v: 0}}; add.v)
@@ -2835,6 +3393,8 @@ add
 //│ ║  l.+1: 	(let x = {u: {v: 0}}; add.v)
 //│ ╙──      	                      ^^^
 //│ res: error
+
+
 
 (let x = {u: {v: add}}; add.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2845,6 +3405,8 @@ add
 //│ ╙──      	                        ^^^
 //│ res: error
 
+
+
 (let rec x = {u: {v: x}}; add.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let rec x = {u: {v: x}}; add.v)
@@ -2853,6 +3415,8 @@ add
 //│ ║  l.+1: 	(let rec x = {u: {v: x}}; add.v)
 //│ ╙──      	                          ^^^
 //│ res: error
+
+
 
 (let x = 0.v; add.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2869,6 +3433,10 @@ add
 //│ ╙──      	              ^^^
 //│ res: error
 
+
+
+
+
 (let x = add.v; add.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = add.v; add.v)
@@ -2884,6 +3452,10 @@ add
 //│ ╙──      	                ^^^
 //│ res: error
 
+
+
+
+
 (let rec x = x.v; add.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let rec x = x.v; add.v)
@@ -2892,6 +3464,8 @@ add
 //│ ║  l.+1: 	(let rec x = x.v; add.v)
 //│ ╙──      	                  ^^^
 //│ res: error
+
+
 
 (x => x.v)
 //│ res: {v: 'v} -> 'v
@@ -2908,6 +3482,9 @@ add
 //│ ╙──      	            ^
 //│ res: error
 
+
+
+
 (let x = add; x.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let x = add; x.v)
@@ -2919,6 +3496,9 @@ add
 //│ ║  l.+1: 	(let x = add; x.v)
 //│ ╙──      	              ^
 //│ res: error
+
+
+
 
 (let rec x = x; x.v)
 //│ res: nothing
@@ -2954,6 +3534,8 @@ add
 //│ ╙──      	^
 //│ res: error
 
+
+
 add.u
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	add.u
@@ -2962,6 +3544,8 @@ add.u
 //│ ║  l.+1: 	add.u
 //│ ╙──      	^^^
 //│ res: error
+
+
 
 0.v.u
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2972,6 +3556,8 @@ add.u
 //│ ╙──      	^
 //│ res: error
 
+
+
 add.v.u
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	add.v.u
@@ -2980,6 +3566,8 @@ add.v.u
 //│ ║  l.+1: 	add.v.u
 //│ ╙──      	^^^
 //│ res: error
+
+
 
 {v: 0}.u
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2990,6 +3578,8 @@ add.v.u
 //│ ╙──      	^^^^^^
 //│ res: error
 
+
+
 {v: add}.u
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	{v: add}.u
@@ -2998,6 +3588,8 @@ add.v.u
 //│ ║  l.+1: 	{v: add}.u
 //│ ╙──      	^^^^^^^^
 //│ res: error
+
+
 
 {u: 0}
 //│ res: {u: 0}
@@ -3029,6 +3621,8 @@ add.v.u
 //│ ╙──      	                   ^
 //│ res: {u: 0, v: 0}
 
+
+
 {u: 0, v: (let x = add.u; 0)}
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	{u: 0, v: (let x = add.u; 0)}
@@ -3037,6 +3631,8 @@ add.v.u
 //│ ║  l.+1: 	{u: 0, v: (let x = add.u; 0)}
 //│ ╙──      	                   ^^^
 //│ res: {u: 0, v: 0}
+
+
 
 {u: 0, v: (let rec x = x.u; 0)}
 //│ res: {u: 0, v: 0}
@@ -3116,6 +3712,8 @@ add.v.u
 //│ ╙──      	            ^
 //│ res: {u: int -> int -> int, v: error}
 
+
+
 {u: add, v: add.v}
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	{u: add, v: add.v}
@@ -3124,6 +3722,8 @@ add.v.u
 //│ ║  l.+1: 	{u: add, v: add.v}
 //│ ╙──      	            ^^^
 //│ res: {u: int -> int -> int, v: error}
+
+
 
 {u: add, v: (x => 0).v}
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -3137,6 +3737,9 @@ add.v.u
 //│ ╙──      	            ^^^^^^^^
 //│ res: {u: int -> int -> int, v: error}
 
+
+
+
 {u: add, v: (x => add).v}
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	{u: add, v: (x => add).v}
@@ -3148,6 +3751,9 @@ add.v.u
 //│ ║  l.+1: 	{u: add, v: (x => add).v}
 //│ ╙──      	            ^^^^^^^^^^
 //│ res: {u: int -> int -> int, v: error}
+
+
+
 
 {u: add, v: (x => x).v}
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -3161,6 +3767,9 @@ add.v.u
 //│ ╙──      	            ^^^^^^^^
 //│ res: {u: int -> int -> int, v: error}
 
+
+
+
 {u: add, v: {u: 0}.v}
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	{u: add, v: {u: 0}.v}
@@ -3170,6 +3779,8 @@ add.v.u
 //│ ╙──      	            ^^^^^^
 //│ res: {u: int -> int -> int, v: error}
 
+
+
 {u: add, v: {u: add}.v}
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	{u: add, v: {u: add}.v}
@@ -3178,6 +3789,8 @@ add.v.u
 //│ ║  l.+1: 	{u: add, v: {u: add}.v}
 //│ ╙──      	            ^^^^^^^^
 //│ res: {u: int -> int -> int, v: error}
+
+
 
 {u: add, v: {v: 0}}
 //│ res: {u: int -> int -> int, v: {v: 0}}
@@ -3206,6 +3819,8 @@ add.v.u
 //│ ╙──      	                    ^^^
 //│ res: {u: {u: 0}, v: int -> int | error}
 
+
+
 {u: {u: 0}, v: (add {v: 0})}
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	{u: {u: 0}, v: (add {v: 0})}
@@ -3215,6 +3830,8 @@ add.v.u
 //│ ╙──      	                    ^^^^^^
 //│ res: {u: {u: 0}, v: int -> int | error}
 
+
+
 {u: {u: 0}, v: (add {v: add})}
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	{u: {u: 0}, v: (add {v: add})}
@@ -3223,6 +3840,8 @@ add.v.u
 //│ ║  l.+1: 	{u: {u: 0}, v: (add {v: add})}
 //│ ╙──      	                    ^^^^^^^^
 //│ res: {u: {u: 0}, v: int -> int | error}
+
+
 
 {u: {u: 0}, v: (x => 0)}
 //│ res: {u: {u: 0}, v: anything -> 0}
@@ -3242,6 +3861,8 @@ add.v.u
 //│ ╙──      	                     ^
 //│ res: {u: {u: 0}, v: anything -> error}
 
+
+
 {u: {u: 0}, v: (let x = 0; 0.u)}
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	{u: {u: 0}, v: (let x = 0; 0.u)}
@@ -3250,6 +3871,8 @@ add.v.u
 //│ ║  l.+1: 	{u: {u: 0}, v: (let x = 0; 0.u)}
 //│ ╙──      	                           ^
 //│ res: {u: {u: 0}, v: error}
+
+
 
 {u: {u: 0}, v: (let x = add; 0.u)}
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -3260,6 +3883,8 @@ add.v.u
 //│ ╙──      	                             ^
 //│ res: {u: {u: 0}, v: error}
 
+
+
 {u: {u: 0}, v: (let rec x = x; 0.u)}
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	{u: {u: 0}, v: (let rec x = x; 0.u)}
@@ -3269,6 +3894,8 @@ add.v.u
 //│ ╙──      	                               ^
 //│ res: {u: {u: 0}, v: error}
 
+
+
 {u: {u: 0}, v: (x => add.u)}
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	{u: {u: 0}, v: (x => add.u)}
@@ -3277,6 +3904,8 @@ add.v.u
 //│ ║  l.+1: 	{u: {u: 0}, v: (x => add.u)}
 //│ ╙──      	                     ^^^
 //│ res: {u: {u: 0}, v: anything -> error}
+
+
 
 {u: {u: 0}, v: (x => x.u)}
 //│ res: {u: {u: 0}, v: {u: 'u} -> 'u}
@@ -3290,6 +3919,8 @@ add.v.u
 //│ ╙──      	               ^
 //│ res: {u: {u: 0}, v: error}
 
+
+
 {u: {u: 0}, v: add.v}
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	{u: {u: 0}, v: add.v}
@@ -3298,6 +3929,8 @@ add.v.u
 //│ ║  l.+1: 	{u: {u: 0}, v: add.v}
 //│ ╙──      	               ^^^
 //│ res: {u: {u: 0}, v: error}
+
+
 
 {u: {u: add}}
 //│ res: {u: {u: int -> int -> int}}
@@ -3344,6 +3977,8 @@ add.v.u
 //│ ╙──      	                ^
 //│ res: {u: {v: 0}, v: error}
 
+
+
 {u: {v: 0}, v: (0 add)}
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	{u: {v: 0}, v: (0 add)}
@@ -3352,6 +3987,8 @@ add.v.u
 //│ ║  l.+1: 	{u: {v: 0}, v: (0 add)}
 //│ ╙──      	                ^
 //│ res: {u: {v: 0}, v: error}
+
+
 
 {u: {v: 0}, v: (x => 0)}
 //│ res: {u: {v: 0}, v: anything -> 0}
@@ -3398,6 +4035,8 @@ add.v.u
 //│ ╙──      	                 ^
 //│ res: {u: {v: int -> int -> int}, v: error}
 
+
+
 {u: {v: add}, v: add.u}
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	{u: {v: add}, v: add.u}
@@ -3406,6 +4045,8 @@ add.v.u
 //│ ║  l.+1: 	{u: {v: add}, v: add.u}
 //│ ╙──      	                 ^^^
 //│ res: {u: {v: int -> int -> int}, v: error}
+
+
 
 {u: {v: add}, v: 0.v}
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -3416,6 +4057,8 @@ add.v.u
 //│ ╙──      	                 ^
 //│ res: {u: {v: int -> int -> int}, v: error}
 
+
+
 {u: {v: add}, v: add.v}
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	{u: {v: add}, v: add.v}
@@ -3424,6 +4067,8 @@ add.v.u
 //│ ║  l.+1: 	{u: {v: add}, v: add.v}
 //│ ╙──      	                 ^^^
 //│ res: {u: {v: int -> int -> int}, v: error}
+
+
 
 {u: {v: add}, v: {v: 0}}
 //│ res: {u: {v: int -> int -> int}, v: {v: 0}}
@@ -3440,6 +4085,8 @@ add.v.u
 //│ ╙──      	^
 //│ res: error
 
+
+
 add.v
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	add.v
@@ -3448,6 +4095,8 @@ add.v
 //│ ║  l.+1: 	add.v
 //│ ╙──      	^^^
 //│ res: error
+
+
 
 {v: 0}
 //│ res: {v: 0}
@@ -3464,6 +4113,8 @@ add.v
 //│ ╙──      	    ^
 //│ res: {v: error}
 
+
+
 {v: add.u}
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	{v: add.u}
@@ -3472,6 +4123,8 @@ add.v
 //│ ║  l.+1: 	{v: add.u}
 //│ ╙──      	    ^^^
 //│ res: {v: error}
+
+
 
 {v: 0.v}
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -3482,6 +4135,8 @@ add.v
 //│ ╙──      	    ^
 //│ res: {v: error}
 
+
+
 {v: add.v}
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	{v: add.v}
@@ -3490,6 +4145,8 @@ add.v
 //│ ║  l.+1: 	{v: add.v}
 //│ ╙──      	    ^^^
 //│ res: {v: error}
+
+
 
 {v: {v: 0}}
 //│ res: {v: {v: 0}}

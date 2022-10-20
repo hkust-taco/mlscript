@@ -720,7 +720,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case ((a_ty, tv), req) => a_ty & tv | req & a_ty.neg()
         }
         con(s_ty, req, cs_ty)
-      case If(body, fallback) =>
+      case iff @ If(body, fallback) =>
         val cnf = desugarIf(body)(ctx)
         println("Flattened conjunctions")
         cnf.foreach { case (conditions, term) =>
@@ -737,6 +737,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         println(caseTree.toString)
         val trm = caseTree.toTerm(fallback)
         println(s"Desugared term: $trm")
+        iff.desugaredIf = S(trm)
         typeTerm(trm)
       case New(S((nmedTy, trm)), TypingUnit(Nil)) =>
         typeTerm(App(Var(nmedTy.base.name).withLocOf(nmedTy), trm))

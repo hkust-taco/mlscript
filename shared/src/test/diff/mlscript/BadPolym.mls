@@ -32,6 +32,9 @@ foo id
 //│ res: () | error
 //│    = 1
 
+
+
+
 fooImpl id
 //│ res: 1
 //│    = 1
@@ -44,16 +47,19 @@ fooImpl2 (f: int -> int & string -> string) = f 1
 :e
 fooImpl2 id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.45: 	fooImpl2 id
+//│ ║  l.48: 	fooImpl2 id
 //│ ║        	^^^^^^^^^^^
 //│ ╟── type `int` is not an instance of `string`
-//│ ║  l.40: 	fooImpl2 (f: int -> int & string -> string) = f 1
+//│ ║  l.43: 	fooImpl2 (f: int -> int & string -> string) = f 1
 //│ ║        	             ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.40: 	fooImpl2 (f: int -> int & string -> string) = f 1
+//│ ║  l.43: 	fooImpl2 (f: int -> int & string -> string) = f 1
 //│ ╙──      	                                    ^^^^^^
 //│ res: error
 //│    = 1
+
+
+
 
 :re
 res "oops"

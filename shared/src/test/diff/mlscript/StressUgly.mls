@@ -28,11 +28,6 @@ def eval1_ty: Add[int] // ~500
 :stats
 :e
 eval1_ty = eval1_ty_ugly
-//│ 'b
-//│   where
-//│     'b := 'a & ~Lit | Add['b]
-//│   <:  eval1_ty:
-//│ Add[int]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.30: 	eval1_ty = eval1_ty_ugly
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
@@ -162,9 +157,57 @@ eval1_ty = eval1_ty_ugly
 //│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.20: 	def eval1_ty: Add[int] // ~500
 //│ ╙──      	              ^^^^^^^^
+//│ 'b
+//│   where
+//│     'b := 'a & ~Lit | Add['b]
+//│   <:  eval1_ty:
+//│ Add[int]
 //│         = <no result>
 //│           eval1_ty_ugly is not implemented
 //│ constrain calls  : 160
 //│ annoying  calls  : 81
 //│ subtyping calls  : 456
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

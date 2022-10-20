@@ -106,6 +106,9 @@ res 1
 //│   Error: non-exhaustive case expression
 
 
+
+
+
 def funny = fun f -> case f of { Some -> f f }
 //│ funny: nothing -> nothing
 //│      = [Function: funny]

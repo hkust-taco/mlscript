@@ -771,6 +771,10 @@ trait IfBodyImpl extends Located { self: IfBody =>
   
 }
 
+trait IfImpl { self: If =>
+  var desugaredIf: Opt[Term] = N  
+}
+
 object IfBodyHelpers {
   abstract class Condition
 

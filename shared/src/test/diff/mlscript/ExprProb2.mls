@@ -217,6 +217,12 @@ def eval1_fixed = eval1f (fun x -> eval1f eval1f x)
 //│ ╙──      	                         ^^^^^^^^^^^
 //│ eval1_fixed: (Add[?] & {lhs: Add[?] & {lhs: nothing -> int, rhs: nothing -> int} | Lit, rhs: Add[?] & {lhs: nothing -> int, rhs: nothing -> int} | Lit} | (Lit with {val: 'val})) -> (int | 'val)
 
+
+
+
+
+
+
 rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
 //│ ╔══[ERROR] Type mismatch in binding of application:
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
@@ -249,6 +255,17 @@ rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
 //│ ╙──      	                                       ^^^^^^^^^^^^^^^^^^^^^^^
 //│ eval1_fixed: ((Add[?] with {lhs: 'a, rhs: 'a}) | (Lit with {val: 'a -> int & 'val})) -> (int | 'val)
+
+
+
+
+
+
+
+
+
+
+
 
 :e
 rec def eval1_fixed = eval1f eval1_fixed e1
@@ -285,6 +302,16 @@ rec def eval1_fixed = eval1f eval1_fixed e1
 //│ eval1_fixed: int
 
 
+
+
+
+
+
+
+
+
+
+
 def eval2_broken eval2 e = case e of {
   | Nega -> e.arg
   | _ -> eval1 eval2 e
@@ -303,9 +330,13 @@ eval2_broken eval2_broken e2
 //│ ║  l.20: 	  | Add -> eval1 eval1 e.lhs + eval1 eval1 e.rhs
 //│ ║        	                               ^^^^^^^^^^^^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.289: 	  | Nega -> e.arg
+//│ ║  l.316: 	  | Nega -> e.arg
 //│ ╙──       	            ^^^^^
 //│ res: error | int
+
+
+
+
 
 
 def eval2f_oops eval2 e = case e of {
@@ -326,8 +357,12 @@ fix eval2f_oops e2
 //│ ║  l.18: 	def eval1 eval1 e = case e of {
 //│ ║        	                         ^
 //│ ╟── from reference:
-//│ ║  l.311: 	def eval2f_oops eval2 e = case e of {
+//│ ║  l.342: 	def eval2f_oops eval2 e = case e of {
 //│ ╙──       	                               ^
 //│ res: error | int
+
+
+
+
 
 

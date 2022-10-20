@@ -8,15 +8,19 @@ class Seq[A]: { size: int }
 //│ ║  l.2: 	class Seq[A]: { size: int }
 //│ ╙──     	          ^
 
+
+
 :w
 class ListBase[A]: Seq[A]
 //│ Defined class ListBase[±A]
 //│ ╔══[WARNING] Type definition ListBase has bivariant type parameters:
-//│ ║  l.12: 	class ListBase[A]: Seq[A]
+//│ ║  l.14: 	class ListBase[A]: Seq[A]
 //│ ║        	      ^^^^^^^^
 //│ ╟── A is irrelevant and may be removed
-//│ ║  l.12: 	class ListBase[A]: Seq[A]
+//│ ║  l.14: 	class ListBase[A]: Seq[A]
 //│ ╙──      	               ^
+
+
 
 class Nil: ListBase[nothing] & {}
 class Cons[A]: ListBase[A] & { head: A; tail: List[A] }
@@ -28,13 +32,15 @@ type List[A] = Nil | Cons[A]
 :e
 Nil{}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.29: 	Nil{}
+//│ ║  l.33: 	Nil{}
 //│ ║        	^^^^^
 //│ ╟── record literal of type `anything` does not have field 'size'
-//│ ║  l.29: 	Nil{}
+//│ ║  l.33: 	Nil{}
 //│ ╙──      	   ^^
 //│ res: error | Nil & {size: nothing}
 //│    = Nil { size: undefined }
+
+
 
 def Nil = Nil { size = 0 }
 //│ Nil: Nil & {size: 0}
@@ -44,20 +50,24 @@ def Nil = Nil { size = 0 }
 :re
 Cons 1 Nil
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.45: 	Cons 1 Nil
+//│ ║  l.51: 	Cons 1 Nil
 //│ ║        	^^^^^^
 //│ ╟── integer literal of type `1` is not a record (expected a record with fields: size, tail, head)
-//│ ║  l.45: 	Cons 1 Nil
+//│ ║  l.51: 	Cons 1 Nil
 //│ ╙──      	     ^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.45: 	Cons 1 Nil
+//│ ║  l.51: 	Cons 1 Nil
 //│ ║        	^^^^^^^^^^
 //│ ╟── application of type `Cons[?A] with {Cons#A = ?A, head: ?head, size: ?size, tail: ?tail}` is not a function
-//│ ║  l.45: 	Cons 1 Nil
+//│ ║  l.51: 	Cons 1 Nil
 //│ ╙──      	^^^^^^
 //│ res: error
 //│ Runtime error:
 //│   TypeError: (intermediate value) is not a function
+
+
+
+
 
 Cons
 //│ res: {head: 'A & 'head, size: int & 'size, tail: List['A] & 'tail} -> (Cons['A] with {head: 'head, size: 'size, tail: 'tail})

@@ -10,6 +10,8 @@ class G[A]: { a: G[A] }
 //│ ║  l.4: 	class G[A]: { a: G[A] }
 //│ ╙──     	        ^
 
+
+
 def g: G['a] & {a: 'a} as 'a
 //│ g: 'a
 //│   where
@@ -23,23 +25,27 @@ rec def g2 a = G { a }
 
 :e
 g = g2
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.27: 	g = g2
+//│ ║        	^^^^^^
+//│ ╟── function of type `?b -> ?c` does not match type `(G[?] with {a: ?a}) | 'a`
+//│ ║  l.23: 	rec def g2 a = G { a }
+//│ ║        	           ^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `(G[?] with {a: ?a0}) | 'a`
+//│ ║  l.27: 	g = g2
+//│ ║        	    ^^
+//│ ╟── Note: constraint arises from local type binding:
+//│ ║  l.15: 	def g: G['a] & {a: 'a} as 'a
+//│ ╙──      	       ^^^^^^^^^^^^^^^
 //│ (G[?] & 'a) -> (G[?] with {a: 'a})
 //│   <:  g:
 //│ 'a
 //│   where
 //│     'a :> G[?] with {a: 'a}
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.25: 	g = g2
-//│ ║        	^^^^^^
-//│ ╟── function of type `?b -> ?c` does not match type `(G[?] with {a: ?a}) | 'a`
-//│ ║  l.21: 	rec def g2 a = G { a }
-//│ ║        	           ^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(G[?] with {a: ?a0}) | 'a`
-//│ ║  l.25: 	g = g2
-//│ ║        	    ^^
-//│ ╟── Note: constraint arises from local type binding:
-//│ ║  l.13: 	def g: G['a] & {a: 'a} as 'a
-//│ ╙──      	       ^^^^^^^^^^^^^^^
+
+
+
+
 
 rec def g2 = G { a = g2 }
 //│ g2: 'a
@@ -73,19 +79,22 @@ def manual: 'a -> nothing as 'a
 :e
 manual id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.74: 	manual id
+//│ ║  l.80: 	manual id
 //│ ║        	^^^^^^^^^
 //│ ╟── type `?a -> nothing` does not match type `nothing`
-//│ ║  l.68: 	def manual: 'a -> nothing as 'a
+//│ ║  l.74: 	def manual: 'a -> nothing as 'a
 //│ ║        	            ^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.68: 	def manual: 'a -> nothing as 'a
+//│ ║  l.74: 	def manual: 'a -> nothing as 'a
 //│ ╙──      	                  ^^^^^^^
 //│ res: ('a & 'b) -> 'b | error
 //│   where
 //│     'a <: ('b -> 'b) -> nothing & 'b
 //│     'b :> ('a & 'b) -> 'b
 //│        <: nothing
+
+
+
 
 def manual: 'a -> anything as 'a
 //│ manual: 'a

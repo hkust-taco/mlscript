@@ -4,7 +4,6 @@
 // TODO
 if true then 0 else 1
 //│ res: 0 | 1
-//│ Code generation encountered an error:
-//│   cannot generate code for term If((true) then 0, Some(IntLit(1)))
+//│    = 0
 
 

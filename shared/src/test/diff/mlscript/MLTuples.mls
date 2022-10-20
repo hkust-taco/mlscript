@@ -39,6 +39,10 @@ Hey t
 //│ res: (1, 2, 3,) & #Hey | error
 //│    = [ 1, 2, 3 ]
 
+
+
+
+
 htx = Hey tx
 //│ htx: (1, 2, 3,) & {x: 1} & #Hey
 //│    = [ 1, 2, 3, x: 1 ]
@@ -72,47 +76,59 @@ f t
 f tx
 f htx
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.71: 	f t
+//│ ║  l.75: 	f t
 //│ ║        	^^^
 //│ ╟── tuple literal of type `(1, 2, 3,)` does not match type `(?a, ?b,)`
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	    ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
-//│ ║  l.71: 	f t
+//│ ║  l.75: 	f t
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.66: 	f ((a, b)) = add a b
+//│ ║  l.70: 	f ((a, b)) = add a b
 //│ ╙──      	   ^^^^^^
 //│ res: error | int
 //│    = 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.72: 	f tx
+//│ ║  l.76: 	f tx
 //│ ║        	^^^^
 //│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` is not a 2-element tuple
 //│ ║  l.11: 	tx = t with { x = 1 }
 //│ ║        	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?a, ?b,)`
-//│ ║  l.72: 	f tx
+//│ ║  l.76: 	f tx
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.66: 	f ((a, b)) = add a b
+//│ ║  l.70: 	f ((a, b)) = add a b
 //│ ╙──      	   ^^^^^^
 //│ res: error | int
 //│    = 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.73: 	f htx
+//│ ║  l.77: 	f htx
 //│ ║        	^^^^^
 //│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` does not match type `(?a, ?b,) | ~#Hey`
 //│ ║  l.11: 	tx = t with { x = 1 }
 //│ ║        	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,) | ~#Hey`
-//│ ║  l.73: 	f htx
+//│ ║  l.77: 	f htx
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.66: 	f ((a, b)) = add a b
+//│ ║  l.70: 	f ((a, b)) = add a b
 //│ ╙──      	   ^^^^^^
 //│ res: error | int
 //│    = 3
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 g arg = case arg of { Hey -> arg.x | _ -> () }
@@ -141,14 +157,16 @@ g (tx with { y = 2 })
 :e
 g tx
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.142: 	g tx
+//│ ║  l.158: 	g tx
 //│ ║         	^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1} & ~#Hey` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.130: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
+//│ ║  l.146: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ╙──       	                                          ^^^^^
 //│ res: 1 | error
 //│    = 1
+
+
 
 :ge
 if bool then (1,) else (2,)
@@ -209,19 +227,23 @@ t = (1, 2, 3) with {_1 = "oops"}
 :e
 (t: ("oops",int,int,))._1
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.210: 	(t: ("oops",int,int,))._1
+//│ ║  l.228: 	(t: ("oops",int,int,))._1
 //│ ║         	 ^
 //│ ╟── `with` extension of type `{_1: "oops", _2: 2, _3: 3}` is not a 3-element tuple
-//│ ║  l.204: 	t = (1, 2, 3) with {_1 = "oops"}
+//│ ║  l.222: 	t = (1, 2, 3) with {_1 = "oops"}
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `("oops", int, int,)`
-//│ ║  l.210: 	(t: ("oops",int,int,))._1
+//│ ║  l.228: 	(t: ("oops",int,int,))._1
 //│ ║         	 ^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.210: 	(t: ("oops",int,int,))._1
+//│ ║  l.228: 	(t: ("oops",int,int,))._1
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^
 //│ res: "oops"
 //│    = 'oops'
+
+
+
+
 
 
 def f: (1, 2, 3) & (2, 2 | 3, 3 | 4)

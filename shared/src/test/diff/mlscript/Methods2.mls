@@ -146,6 +146,9 @@ case o of {None -> 0 | Some -> o.payload}
 //│ res: 0
 //│    = 0
 
+
+
+
 v = o.Destruct
 case v of {None -> 0 | Some -> v.payload}
 //│ v: None[0 | 1] | Some[0 | 1]
@@ -180,18 +183,22 @@ case res of {None -> 0 | Some -> res.payload}
 case o of {
     Some -> o.Get | None -> 0 }
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.180: 	case o of {
+//│ ║  l.183: 	case o of {
 //│ ║         	^^^^^^^^^^^
-//│ ║  l.181: 	    Some -> o.Get | None -> 0 }
+//│ ║  l.184: 	    Some -> o.Get | None -> 0 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Option[?A]` does not match type `None[?] & ?a | Some[?] & ?b`
 //│ ║  l.24: 	    method HeadOption: Option[A]
 //│ ║        	                       ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `None[?] & ?a | Some[?] & ?c`
-//│ ║  l.180: 	case o of {
+//│ ║  l.183: 	case o of {
 //│ ╙──       	     ^
 //│ res: 0 | 1
 //│    = 0
+
+
+
+
 
 case o of {
     Some -> o.Get | None -> 0 | Option -> error }

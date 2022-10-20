@@ -14,6 +14,7 @@ class Child: Parent1 & Parent2
 //│ Code generation encountered an error:
 //│   cannot have 2 base classes: Parent1, Parent2
 
+
 type Child = Parent1 & Parent2
 def Child: (Parent1 & Parent2) -> Child
 //│ Defined type alias Child
@@ -30,56 +31,63 @@ def f(x:Child) = x: nothing
 
 :pe
 def c = Child(Parent1{name="A"} with Parent2{name="B"})
-//│ /!\ Parse error: Expected ")":1:33, found "with Paren" at l.32:33: def c = Child(Parent1{name="A"} with Parent2{name="B"})
+//│ /!\ Parse error: Expected ")":1:33, found "with Paren" at l.33:33: def c = Child(Parent1{name="A"} with Parent2{name="B"})
 
 :e
 def c = Child(Parent1{name="A"})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.36: 	def c = Child(Parent1{name="A"})
+//│ ║  l.37: 	def c = Child(Parent1{name="A"})
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Parent1 & {name: ?name}` is not an instance of type `Parent2`
-//│ ║  l.36: 	def c = Child(Parent1{name="A"})
+//│ ║  l.37: 	def c = Child(Parent1{name="A"})
 //│ ║        	              ^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.18: 	def Child: (Parent1 & Parent2) -> Child
+//│ ║  l.19: 	def Child: (Parent1 & Parent2) -> Child
 //│ ║        	                      ^^^^^^^
 //│ ╟── from intersection type:
-//│ ║  l.18: 	def Child: (Parent1 & Parent2) -> Child
+//│ ║  l.19: 	def Child: (Parent1 & Parent2) -> Child
 //│ ╙──      	           ^^^^^^^^^^^^^^^^^^^
 //│ c: error | Child
 //│  = <no result>
 //│    Child is not implemented
+
+
+
+
 
 :e
 :ge
 type Sly1 = Parent2
 class Child2: Parent1 & Sly1
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.56: 	class Child2: Parent1 & Sly1
+//│ ║  l.61: 	class Child2: Parent1 & Sly1
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined type alias Sly1
 //│ Code generation encountered an error:
 //│   cannot inherit from type alias Sly1
+
 
 :e
 :ge
 type Sly2[A] = A
 class Child2: Sly2[Parent1] & Parent2
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.67: 	class Child2: Sly2[Parent1] & Parent2
+//│ ║  l.73: 	class Child2: Sly2[Parent1] & Parent2
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined type alias Sly2[+A]
 //│ Code generation encountered an error:
 //│   cannot inherit from type alias Sly2
 
+
 :e
 :ge
 class Crazy[A]: A & { name: A }
 //│ ╔══[ERROR] cannot inherit from a type variable
-//│ ║  l.77: 	class Crazy[A]: A & { name: A }
+//│ ║  l.84: 	class Crazy[A]: A & { name: A }
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Code generation encountered an error:
 //│   undeclared type name A when resolving base classes
+
 
 class Crazy[A]: { name: A }
 def Crazy: 'a -> (Crazy['a] & 'a)
@@ -100,20 +108,24 @@ def c = Crazy({ name = "Bob"; age = 42 })
 :e
 c: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.101: 	c: nothing
+//│ ║  l.109: 	c: nothing
 //│ ║         	^
 //│ ╟── record literal of type `{age: 42, name: "Bob"}` does not match type `~Crazy[?a]`
-//│ ║  l.95: 	def c = Crazy({ name = "Bob"; age = 42 })
-//│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.103: 	def c = Crazy({ name = "Bob"; age = 42 })
+//│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `~Crazy[?a0]`
-//│ ║  l.101: 	c: nothing
+//│ ║  l.109: 	c: nothing
 //│ ║         	^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.101: 	c: nothing
+//│ ║  l.109: 	c: nothing
 //│ ╙──       	   ^^^^^^^
 //│ res: nothing
 //│    = <no result>
 //│      c and Crazy are not implemented
+
+
+
+
 
 def d = Crazy(Parent1{name = "Bob"})
 //│ d: nothing
@@ -129,18 +141,21 @@ d: nothing
 :e
 class Stupid: Parent1 | Parent2
 //│ ╔══[ERROR] cannot inherit from a type union
-//│ ║  l.130: 	class Stupid: Parent1 | Parent2
+//│ ║  l.142: 	class Stupid: Parent1 | Parent2
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^
+
 :e
 class Stupid: Parent1 -> Parent2
 //│ ╔══[ERROR] cannot inherit from a function type
-//│ ║  l.135: 	class Stupid: Parent1 -> Parent2
+//│ ║  l.148: 	class Stupid: Parent1 -> Parent2
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 :e
 class Stupid: ~Parent1
 //│ ╔══[ERROR] cannot inherit from a type negation
-//│ ║  l.140: 	class Stupid: ~Parent1
+//│ ║  l.154: 	class Stupid: ~Parent1
 //│ ╙──       	      ^^^^^^^^^^^^^^^^
+
 
 :e // TODO don't report several times
 :ge
@@ -148,31 +163,36 @@ class Cycle1: Cycle2
 class Cycle2: Cycle1
 type Stutter = Cycle1
 //│ ╔══[ERROR] illegal cycle involving type Cycle1
-//│ ║  l.147: 	class Cycle1: Cycle2
+//│ ║  l.162: 	class Cycle1: Cycle2
 //│ ╙──       	      ^^^^^^^^^^^^^^
 //│ ╔══[ERROR] illegal cycle involving type Cycle2
-//│ ║  l.148: 	class Cycle2: Cycle1
+//│ ║  l.163: 	class Cycle2: Cycle1
 //│ ╙──       	      ^^^^^^^^^^^^^^
 //│ ╔══[ERROR] illegal cycle involving type Cycle1
-//│ ║  l.149: 	type Stutter = Cycle1
+//│ ║  l.164: 	type Stutter = Cycle1
 //│ ╙──       	     ^^^^^^^^^^^^^^^^
 //│ Code generation encountered an error:
 //│   cyclic inheritance detected
+
+
+
 
 :e
 def c = Cycle1 error
 c: Cycle1
 //│ ╔══[ERROR] identifier not found: Cycle1
-//│ ║  l.163: 	def c = Cycle1 error
+//│ ║  l.181: 	def c = Cycle1 error
 //│ ╙──       	        ^^^^^^
 //│ c: error
 //│  = [Function: c1]
 //│ ╔══[ERROR] type identifier not found: Cycle1
-//│ ║  l.164: 	c: Cycle1
+//│ ║  l.182: 	c: Cycle1
 //│ ╙──       	   ^^^^^^
 //│ res: error
 //│ Runtime error:
 //│   ReferenceError: Cycle1 is not defined
+
+
 
 
 type N[A] = ~A
@@ -182,10 +202,11 @@ type N[A] = ~A
 :ge
 class Cycle: N[Cycle]
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.183: 	class Cycle: N[Cycle]
+//│ ║  l.203: 	class Cycle: N[Cycle]
 //│ ╙──       	      ^^^^^^^^^^^^^^^
 //│ Code generation encountered an error:
 //│   cannot inherit from type alias N
+
 
 
 
@@ -210,67 +231,80 @@ E{}: 1
 E{}: int
 E{} + 1
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.209: 	E{}: 1
+//│ ║  l.230: 	E{}: 1
 //│ ║         	^^^
 //│ ╟── application of type `E` does not match type `1`
 //│ ╟── Note: constraint arises from literal type:
-//│ ║  l.209: 	E{}: 1
+//│ ║  l.230: 	E{}: 1
 //│ ║         	     ^
 //│ ╟── Note: class E is defined at:
-//│ ║  l.205: 	class E: 1
+//│ ║  l.226: 	class E: 1
 //│ ╙──       	      ^
 //│ res: 1
 //│    = E {}
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.210: 	E{}: int
+//│ ║  l.231: 	E{}: int
 //│ ║         	^^^
 //│ ╟── application of type `E` is not an instance of type `int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.210: 	E{}: int
+//│ ║  l.231: 	E{}: int
 //│ ║         	     ^^^
 //│ ╟── Note: class E is defined at:
-//│ ║  l.205: 	class E: 1
+//│ ║  l.226: 	class E: 1
 //│ ╙──       	      ^
 //│ res: int
 //│    = E {}
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.211: 	E{} + 1
+//│ ║  l.232: 	E{} + 1
 //│ ║         	^^^^^
 //│ ╟── application of type `E` is not an instance of type `int`
-//│ ║  l.211: 	E{} + 1
+//│ ║  l.232: 	E{} + 1
 //│ ║         	^^^
 //│ ╟── Note: class E is defined at:
-//│ ║  l.205: 	class E: 1
+//│ ║  l.226: 	class E: 1
 //│ ╙──       	      ^
 //│ res: error | int
 //│    = '[object Object]1'
+
+
+
+
+
+
+
+
+
 
 :e
 :ge
 class F: nothing
 F{}
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.250: 	class F: nothing
+//│ ║  l.280: 	class F: nothing
 //│ ╙──       	      ^^^^^^^^^^
 //│ ╔══[ERROR] identifier not found: F
-//│ ║  l.251: 	F{}
+//│ ║  l.281: 	F{}
 //│ ╙──       	^
 //│ res: error
 //│ Code generation encountered an error:
 //│   cannot inherit from type alias nothing
 
 
+
+
 :e
 class String
 class Bool
 //│ ╔══[ERROR] Type name 'String' is reserved.
-//│ ║  l.264: 	class String
+//│ ║  l.296: 	class String
 //│ ╙──       	      ^^^^^^
 //│ ╔══[ERROR] Type name 'Bool' is reserved.
-//│ ║  l.265: 	class Bool
+//│ ║  l.297: 	class Bool
 //│ ╙──       	      ^^^^
 //│ Defined class String
 //│ Defined class Bool
+
+
 
 "1" : String
 true : Bool
@@ -283,8 +317,9 @@ true : Bool
 :e
 class Weird: {} | {}
 //│ ╔══[ERROR] cannot inherit from a type union
-//│ ║  l.284: 	class Weird: {} | {}
+//│ ║  l.318: 	class Weird: {} | {}
 //│ ╙──       	      ^^^^^^^^^^^^^^
+
 
 
 :e
@@ -293,7 +328,7 @@ class A
 type Id[T] = T
 class B: Id[A]
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.294: 	class B: Id[A]
+//│ ║  l.329: 	class B: Id[A]
 //│ ╙──       	      ^^^^^^^^
 //│ Defined class A
 //│ Defined type alias Id[+T]
@@ -301,11 +336,13 @@ class B: Id[A]
 //│   cannot inherit from type alias Id
 
 
+
 :e // TODO improve prov of the TV
 class Class3A
 class Class3B: Class3A & 'a
 //│ ╔══[ERROR] cannot inherit from a type variable
-//│ ║  l.306: 	class Class3B: Class3A & 'a
+//│ ║  l.342: 	class Class3B: Class3A & 'a
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^
 //│ Defined class Class3A
+
 

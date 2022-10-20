@@ -103,11 +103,6 @@ eval1 = evalImpl
 
 :e
 evalBad = eval
-//│ ('b -> int) -> Expr['b] -> int
-//│   <:  evalBad:
-//│ ('b -> 'c) -> 'a -> ('c | int)
-//│   where
-//│     'a <: 'b & ~Add & ~Lit | Add & {lhs: 'a, rhs: 'a} | Lit & {val: int}
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.105: 	evalBad = eval
 //│ ║         	^^^^^^^^^^^^^^
@@ -117,21 +112,32 @@ evalBad = eval
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.38: 	def eval: ('b -> int) -> Expr['b] -> int
 //│ ╙──      	                 ^^^
+//│ ('b -> int) -> Expr['b] -> int
+//│   <:  evalBad:
+//│ ('b -> 'c) -> 'a -> ('c | int)
+//│   where
+//│     'a <: 'b & ~Add & ~Lit | Add & {lhs: 'a, rhs: 'a} | Lit & {val: int}
 //│        = [Function: evalImpl]
+
+
+
 
 :e
 eval {} (Lit{} with { val = 1 })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.123: 	eval {} (Lit{} with { val = 1 })
+//│ ║  l.126: 	eval {} (Lit{} with { val = 1 })
 //│ ║         	^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.123: 	eval {} (Lit{} with { val = 1 })
+//│ ║  l.126: 	eval {} (Lit{} with { val = 1 })
 //│ ║         	     ^^
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.38: 	def eval: ('b -> int) -> Expr['b] -> int
 //│ ╙──      	          ^^^^^^^^^^^
 //│ res: error | int
 //│    = 1
+
+
+
 
 eval (fun x -> x) (Lit{} with { val = 1 })
 //│ res: int
@@ -148,10 +154,10 @@ eval (fun x -> x.hello) (Const{} with {hello=1})
 :e
 eval (fun x -> x.hello) {hello=1}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.149: 	eval (fun x -> x.hello) {hello=1}
+//│ ║  l.155: 	eval (fun x -> x.hello) {hello=1}
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{hello: 1}` does not match type `?b & ~Add & ~Lit | Add & {lhs: Expr[?b], rhs: Expr[?b]} | Lit & {val: int}`
-//│ ║  l.149: 	eval (fun x -> x.hello) {hello=1}
+//│ ║  l.155: 	eval (fun x -> x.hello) {hello=1}
 //│ ║         	                        ^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.31: 	type Expr[A] = Lit & {val: int} | Add & {lhs: Expr[A]; rhs: Expr[A]} | ~Lit & ~Add & A
@@ -161,6 +167,10 @@ eval (fun x -> x.hello) {hello=1}
 //│ ╙──      	                         ^^^^^^^^
 //│ res: error | int
 //│    = 1
+
+
+
+
 
 l = Lit{} with {hello=1}
 //│ l: Lit & {hello: 1}

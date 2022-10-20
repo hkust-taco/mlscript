@@ -29,27 +29,42 @@ id
 //│ res: error
 
 
+
+
+
+
+
+
+
+
+
 1: 1 & int: { x: int; y: string }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.32: 	1: 1 & int: { x: int; y: string }
+//│ ║  l.41: 	1: 1 & int: { x: int; y: string }
 //│ ║        	^
 //│ ╟── type `1` is not a record (expected a record with fields: x, y)
-//│ ║  l.32: 	1: 1 & int: { x: int; y: string }
+//│ ║  l.41: 	1: 1 & int: { x: int; y: string }
 //│ ║        	   ^^^^^^^
 //│ ╟── Note: constraint arises from record type:
-//│ ║  l.32: 	1: 1 & int: { x: int; y: string }
+//│ ║  l.41: 	1: 1 & int: { x: int; y: string }
 //│ ╙──      	            ^^^^^^^^^^^^^^^^^^^^^
 //│ res: {x: int, y: string}
 
+
+
+
 1: 1 & int: { x: int; y: string } | string
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.44: 	1: 1 & int: { x: int; y: string } | string
+//│ ║  l.56: 	1: 1 & int: { x: int; y: string } | string
 //│ ║        	^
 //│ ╟── type `1` does not match type `string | {x: int, y: string}`
-//│ ║  l.44: 	1: 1 & int: { x: int; y: string } | string
+//│ ║  l.56: 	1: 1 & int: { x: int; y: string } | string
 //│ ║        	   ^^^^^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.44: 	1: 1 & int: { x: int; y: string } | string
+//│ ║  l.56: 	1: 1 & int: { x: int; y: string } | string
 //│ ╙──      	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: string | {x: int, y: string}
+
+
+
 

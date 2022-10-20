@@ -235,6 +235,11 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case _ =>
           throw CodeGenError(s"illegal assignemnt left-hand side: ${inspect(lhs)}")
       }
+    case iff: If =>
+      iff.desugaredIf match {
+        case N => throw CodeGenError(s"if expression has not been not desugared")
+        case S(term) => translateTerm(term)
+      }
     case _: Bind | _: Test | If(_, _) | New(_, _) | TyApp(_, _) | _: Splc =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
@@ -736,7 +741,9 @@ object JSTestBackend {
   /**
     * Represents the result of code generation.
     */
-  abstract class Result
+  abstract class Result {
+    def showFirstResult(prefixLength: Int): Unit = ()
+  }
 
   /**
     * Emitted code.

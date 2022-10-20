@@ -24,6 +24,8 @@ def c = Child(Parent { name = "Bob" })
 //│ c: Child & {age: nothing, name: "Bob"} | error
 //│  = [Function: c]
 
+
+
 def c = Child(Parent { name = "Bob" } with { age = 123 })
 //│ c: Child & {age: 123, name: "Bob"}
 //│  = [Function: c1]
@@ -73,19 +75,23 @@ f c
 :e
 f (c: Parent)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.74: 	f (c: Parent)
+//│ ║  l.76: 	f (c: Parent)
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── type `Parent` is not an instance of type `Child`
-//│ ║  l.74: 	f (c: Parent)
+//│ ║  l.76: 	f (c: Parent)
 //│ ║        	      ^^^^^^
 //│ ╟── Note: constraint arises from class pattern:
-//│ ║  l.64: 	  | Child -> x.name
+//│ ║  l.66: 	  | Child -> x.name
 //│ ║        	    ^^^^^
 //│ ╟── from reference:
-//│ ║  l.63: 	def f x = case x of {
+//│ ║  l.65: 	def f x = case x of {
 //│ ╙──      	               ^
 //│ res: error | string
 //│    = 'Bob'
+
+
+
+
 
 
 def f x = case x of {

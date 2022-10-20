@@ -20,6 +20,9 @@ class Hidden[A]
 //│ Defined Hidden.Foo: Hidden[?] -> ((Class1 with {payload: 'payload}) | ~Class1) -> (123 | 'payload)
 //│ Defined Hidden.Main: Hidden['A] -> 'A -> (123 | error)
 
+
+
+
 class Hidden2[A]
   method Foo s = case s of { Class1 -> s.payload | _ -> 123 }
   method Main (a: A) = this.Foo (a with { payload = 1 })
@@ -39,20 +42,24 @@ arg = if true then "B" else if false then "C" else "D"
 :e
 foo arg
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.40: 	foo arg
+//│ ║  l.43: 	foo arg
 //│ ║        	^^^^^^^
 //│ ╟── string literal of type `"C"` does not match type `"A" | "B" | "D" | "E" | "F" | "G" | "H" | "I" | "J"`
-//│ ║  l.35: 	arg = if true then "B" else if false then "C" else "D"
+//│ ║  l.38: 	arg = if true then "B" else if false then "C" else "D"
 //│ ║        	                                          ^^^
 //│ ╟── but it flows into reference with expected type `"A" | "B" | "D" | "E" | "F" | "G" | "H" | "I" | "J"`
-//│ ║  l.40: 	foo arg
+//│ ║  l.43: 	foo arg
 //│ ║        	    ^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.31: 	def foo: ("A" | "B" | "D" | "E" | "F" | "G" | "H" | "I" | "J") -> int
+//│ ║  l.34: 	def foo: ("A" | "B" | "D" | "E" | "F" | "G" | "H" | "I" | "J") -> int
 //│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error | int
 //│    = <no result>
 //│      foo is not implemented
+
+
+
+
 
 foo2 x = case x of {
   | "A" -> 1
@@ -71,17 +78,21 @@ foo2 x = case x of {
 :e
 foo2 arg
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.72: 	foo2 arg
+//│ ║  l.79: 	foo2 arg
 //│ ║        	^^^^^^^^
 //│ ╟── string literal of type `"C"` does not match type `"A" & ?a | "B" & ?b | "D" & ?c | "E" & ?d | "F" & ?e | "G" & ?f | "H" & ?g | "I" & ?h | "J" & ?i`
-//│ ║  l.35: 	arg = if true then "B" else if false then "C" else "D"
+//│ ║  l.38: 	arg = if true then "B" else if false then "C" else "D"
 //│ ║        	                                          ^^^
 //│ ╟── but it flows into reference with expected type `"A" & ?a | "B" & ?j | "D" & ?c | "E" & ?d | "F" & ?e | "G" & ?f | "H" & ?g | "I" & ?h | "J" & ?i`
-//│ ║  l.72: 	foo2 arg
+//│ ║  l.79: 	foo2 arg
 //│ ║        	     ^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.57: 	foo2 x = case x of {
+//│ ║  l.64: 	foo2 x = case x of {
 //│ ╙──      	              ^
 //│ res: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | error
 //│    = 2
+
+
+
+
 

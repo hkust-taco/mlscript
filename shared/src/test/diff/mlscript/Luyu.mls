@@ -58,6 +58,10 @@ mib0.Map (fun _ -> "str")
 //│ res: error | (MappableIntBox with {value: "str"})
 //│    = MappableIntBox { value: 'str' }
 
+
+
+
+
 class BetterIntBox: { value: int }
   method Get = this.value
   method Map f = BetterIntBox { value = f this.value }

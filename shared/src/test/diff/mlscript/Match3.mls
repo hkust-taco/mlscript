@@ -36,6 +36,11 @@ eval_expr (M {})
 //│ res: error | M
 //│    = M {}
 
+
+
+
+
+
 def eval_expr v =
   case v of {
     | M -> let tmp = v.l in tmp
@@ -51,20 +56,25 @@ eval_expr (N {})
 :e
 eval_expr (M {})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.52: 	eval_expr (M {})
+//│ ║  l.57: 	eval_expr (M {})
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── application of type `M` does not have field 'l'
-//│ ║  l.52: 	eval_expr (M {})
+//│ ║  l.57: 	eval_expr (M {})
 //│ ║        	           ^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.41: 	    | M -> let tmp = v.l in tmp
+//│ ║  l.46: 	    | M -> let tmp = v.l in tmp
 //│ ║        	                     ^^^
 //│ ╟── from reference:
-//│ ║  l.40: 	  case v of {
+//│ ║  l.45: 	  case v of {
 //│ ║        	       ^
 //│ ╟── Note: class M is defined at:
 //│ ║  l.3: 	class M
 //│ ╙──     	      ^
 //│ res: error
 //│    = undefined
+
+
+
+
+
 

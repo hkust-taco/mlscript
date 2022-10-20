@@ -136,6 +136,10 @@ foo 42
 //│ res: error | {l: 42, r: nothing, s: 42}
 //│    = { l: 42, r: undefined, s: 42 }
 
+
+
+
+
 def r = foo (42 with { f = 1 })
 //│ r: {l: 42, r: 1, s: 42 & {f: 1}}
 //│  = [Function: r]
@@ -156,16 +160,19 @@ add r.s 1
 :e
 res.z
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.157: 	res.z
+//│ ║  l.161: 	res.z
 //│ ║         	^^^^^
 //│ ╟── `with` extension of type `{x: 1, y: 2}` does not have field 'z'
-//│ ║  l.152: 	{} with { x = 1 } with { y = 2 }
+//│ ║  l.156: 	{} with { x = 1 } with { y = 2 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{z: ?z}`
-//│ ║  l.157: 	res.z
+//│ ║  l.161: 	res.z
 //│ ╙──       	^^^
 //│ res: error
 //│    = undefined
+
+
+
 
 
 

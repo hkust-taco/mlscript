@@ -113,6 +113,10 @@ eval exp
 //│ ╙──      	                      ^
 //│ res: error | int
 
+
+
+
+
 :e
 eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ╔══[ERROR] Type mismatch in type ascription:
@@ -137,5 +141,12 @@ eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║  l.35: 	  | Nega -> 0 - (eval e.arg)
 //│ ╙──      	                      ^^^^^
 //│ res: error | int
+
+
+
+
+
+
+
 
 

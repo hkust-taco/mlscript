@@ -44,10 +44,15 @@ foo / foo / x => succ / succ / x
 //│ ╙──     	               ^
 //│ res: error
 
+
+
+
+
+
 :e
 foo / foo
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.48: 	foo / foo
+//│ ║  l.53: 	foo / foo
 //│ ║        	^^^^^^^^^
 //│ ╟── integer literal of type `1` is not a function
 //│ ║  l.7: 	let foo = f => f 1
@@ -59,3 +64,7 @@ foo / foo
 //│ ║  l.7: 	let foo = f => f 1
 //│ ╙──     	               ^
 //│ res: error
+
+
+
+

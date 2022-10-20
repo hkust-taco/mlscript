@@ -86,6 +86,11 @@ g (x: int) = div 100 x
 //│ g: int -> (error | number)
 //│  = [Function: g]
 
+
+
+
+
+
 div_opt n m = case m of 0 -> None{}, _ -> Some{value = div n m}
 //│ div_opt: number -> (0 | number & ~0) -> (None | Some[number])
 //│        = [Function: div_opt]

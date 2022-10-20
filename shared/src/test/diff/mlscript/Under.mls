@@ -11,6 +11,7 @@ _
 //│ res: error
 //│    = 1
 
+
 def foo _ = 1
 //│ foo: anything -> 1
 //│    = [Function: foo]
@@ -18,10 +19,11 @@ def foo _ = 1
 :e
 def foo _ = _
 //│ ╔══[ERROR] Widlcard in expression position.
-//│ ║  l.19: 	def foo _ = _
+//│ ║  l.20: 	def foo _ = _
 //│ ╙──      	            ^
 //│ foo: anything -> error
 //│    = [Function: foo1]
+
 
 // :js
 def foo(_, _) = 1
@@ -35,10 +37,11 @@ def foo { _ } = 1
 :e
 def foo { _ } = { _ }
 //│ ╔══[ERROR] Widlcard in expression position.
-//│ ║  l.36: 	def foo { _ } = { _ }
+//│ ║  l.38: 	def foo { _ } = { _ }
 //│ ╙──      	                  ^
 //│ foo: {_: anything} -> {_: error}
 //│    = [Function: foo4]
+
 
 { _ = 1 }._
 //│ res: 1
@@ -47,16 +50,19 @@ def foo { _ } = { _ }
 :e
 def foo { _ ; _ } = 1
 //│ ╔══[ERROR] Multiple declarations of field name _ in record literal
-//│ ║  l.48: 	def foo { _ ; _ } = 1
+//│ ║  l.51: 	def foo { _ ; _ } = 1
 //│ ║        	        ^^^^^^^^^
 //│ ╟── Declared at
-//│ ║  l.48: 	def foo { _ ; _ } = 1
+//│ ║  l.51: 	def foo { _ ; _ } = 1
 //│ ║        	          ^
 //│ ╟── Declared at
-//│ ║  l.48: 	def foo { _ ; _ } = 1
+//│ ║  l.51: 	def foo { _ ; _ } = 1
 //│ ╙──      	              ^
 //│ foo: {_: anything, _: anything} -> 1
 //│    = [Function: foo5]
+
+
+
 
 // :js
 def foo { _ = _ ; __ = _ } = 1

@@ -568,6 +568,10 @@ eval1 done e2
 //│   Error: non-exhaustive case expression
 
 
+
+
+
+
 :e
 prettier2 done eval1 e1
 //│ ╔══[ERROR] Type mismatch in application:
@@ -603,6 +607,17 @@ prettier2 done eval1 e1
 //│    = '123'
 
 
+
+
+
+
+
+
+
+
+
+
+
 :e
 :stats
 prettier2 done (eval1 done) e2
@@ -624,6 +639,10 @@ prettier2 done (eval1 done) e2
 //│ constrain calls  : 674
 //│ annoying  calls  : 228
 //│ subtyping calls  : 5451
+
+
+
+
 
 :e
 :stats
@@ -652,6 +671,13 @@ prettier2 done eval2
 //│ constrain calls  : 70
 //│ annoying  calls  : 0
 //│ subtyping calls  : 217
+
+
+
+
+
+
+
 
 :e
 :stats
@@ -691,6 +717,17 @@ prettier2 done eval2 e1
 //│ annoying  calls  : 108
 //│ subtyping calls  : 1932
 
+
+
+
+
+
+
+
+
+
+
+
 :e
 :stats
 prettier2 done eval2 e2
@@ -728,6 +765,17 @@ prettier2 done eval2 e2
 //│ constrain calls  : 427
 //│ annoying  calls  : 131
 //│ subtyping calls  : 2644
+
+
+
+
+
+
+
+
+
+
+
 
 :e
 :stats
@@ -767,6 +815,17 @@ prettier2 done eval2 d2
 //│ annoying  calls  : 95
 //│ subtyping calls  : 1506
 
+
+
+
+
+
+
+
+
+
+
+
 :e
 :stats
 prettier2 done eval1 e2
@@ -804,4 +863,15 @@ prettier2 done eval1 e2
 //│ constrain calls  : 421
 //│ annoying  calls  : 131
 //│ subtyping calls  : 2629
+
+
+
+
+
+
+
+
+
+
+
 

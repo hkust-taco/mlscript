@@ -18,7 +18,8 @@ let f = new Foo(1)
 
 // TODO
 if f is Foo(a) then a else 0
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ res: 1
+//│    = 1
 
 // case f of
 //   { Foo ->
