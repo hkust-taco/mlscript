@@ -417,16 +417,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs)
           case (lf @ FunctionType(l0, r0), rf @ FunctionType(l1, r1)) =>
             errorSimplifer.updateLevelCount(cctx, N)
-            // errorSimplifer.reportInfo(S(cctx))
-            // errorSimplifer.reportInfo(S(cctx), 3)
+            errorSimplifer.reportInfo(S(cctx))
+            errorSimplifer.reportInfo(S(cctx), 3)
             rec(l1, l0, revProvChain.map(_.updateInfo("function lhs")))
             rec(r0, r1, provChain.map(_.updateInfo("function rhs")))
           case (prim: ClassTag, ot: ObjectTag)
             if prim.parentsST.contains(ot.id) =>
               errorSimplifer.updateLevelCount(cctx, N)
               errorSimplifer.updateChainCount(cctx, S(1, 0))
-              // errorSimplifer.reportInfo(S(cctx))
-              // errorSimplifer.reportInfo(S(cctx), 3)
+              errorSimplifer.reportInfo(S(cctx))
+              errorSimplifer.reportInfo(S(cctx), 3)
               ()
           // for constraining type variables a new bound is created
           // the `newBound`'s provenance must record the whole flow
