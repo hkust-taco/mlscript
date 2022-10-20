@@ -22,7 +22,7 @@ class A{
 //│ Lifted:
 //│ TypingUnit {
 //│   class A_B$1(par$A,) {}
-//│   class A() {fun foo = x: B, => '(' x: B, ')'}
+//│   class A() {fun foo = x: A_B$1, => '(' x: A_B$1, ')'}
 //│ }
 
 fun foo =

@@ -295,9 +295,9 @@ class ClassLifter {
         }
       }
     case Lam(lhs, rhs) => 
-      val lctx = getFreeVars(lhs)(using emptyCtx, Map(), None)
-      val (ltrm, _) = liftTermNew(lhs)(using lctx ++ ctx)
-      val (rtrm, rctx) = liftTermNew(rhs)(using lctx ++ ctx)
+      val lctx = getFreeVars(lhs)(using emptyCtx, cache, None)
+      val (ltrm, _) = liftTermNew(lhs)(using ctx.addV(lctx.vSet))
+      val (rtrm, rctx) = liftTermNew(rhs)(using ctx.addV(lctx.vSet))
       (Lam(ltrm, rtrm), rctx -+ lctx)
     case t: Tup => 
       liftTuple(t)
@@ -392,7 +392,9 @@ class ClassLifter {
   }
 
   //serves for lifting Tup(Some(_), Fld(_, _, trm)), where trm refers to a type
-  private def liftTermAsType(target: Term)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (Term, LocalContext) = target match{
+  private def liftTermAsType(target: Term)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (Term, LocalContext) = 
+    log(s"liftTermAsType $target in $ctx, $cache")
+    target match{
     case v: Var => 
       if (!ctx.contains(v) && !primiTypes.contains(v.name))
         cache.get(TypeName(v.name)).map(x => Var(x.liftedNm.name) -> emptyCtx).getOrElse(v -> asContext(TypeName(v.name)))
@@ -412,6 +414,16 @@ class ClassLifter {
           (oV, Fld(b1, b2, tmp._1)) -> tmp._2
       }.unzip
       Tup(ret._1) -> ret._2.fold(emptyCtx)(_ ++ _)
+    case Bra(rcd, trm) => 
+      val ret = liftTermAsType(trm)
+      Bra(rcd, ret._1) -> ret._2
+    case Rcd(fields) => 
+      val ret = fields.map{
+        case (v, Fld(b1, b2, trm)) => 
+          val tmp = liftTermAsType(trm)
+          ((v, Fld(b1, b2, tmp._1)), tmp._2)
+      }.unzip
+      (Rcd(ret._1), ret._2.fold(emptyCtx)(_ ++ _))
     case _ => ???
   }
 
@@ -500,6 +512,7 @@ class ClassLifter {
   
 
   private def liftFunc(func: NuFunDef)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (NuFunDef, LocalContext) = {
+    log(s"liftFunc $func under $ctx # $cache # $outer")
     val NuFunDef(rec, nm, tpVs, body) = func
     body match{
       case Left(value) => 
@@ -598,8 +611,6 @@ class ClassLifter {
     val nPars = pars.map(liftTermNew(_)(using emptyCtx, nCache, nOuter)).unzip
     val nFuncs = funcList.map(liftFunc(_)(using emptyCtx, nCache, nOuter)).unzip
     val nTerms = termList.map(liftTermNew(_)(using emptyCtx, nCache, nOuter)).unzip
-    // val refinedInners = inners.filter(x => innerNmsSet contains x._1).toMap
-    // val mixedInners = mixClsInfos(refinedInners, innerNmsSet.map(x => Var(x.name)), funcList.map(_.nme))(using emptyCtx)
     clsList.foreach(x => liftTypeDefNew(x)(using nCache, nOuter))
     retSeq = retSeq.appended(NuTypeDef(kind, nName, nTps, Tup(nParams), nPars._1, TypingUnit(nFuncs._1 ++ nTerms._1)))
   }

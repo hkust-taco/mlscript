@@ -16,10 +16,10 @@ class DiffTestCompiler extends DiffTests {
     outputBuilder ++= showStructure(unit)
 
     outputBuilder ++= "\nLifted:\n"
-    var monoUnit = unit;
+    var rstUnit = unit;
     try{
-      monoUnit = ClassLifter().liftTypingUnit(unit)
-      outputBuilder ++= PrettyPrinter.showTypingUnit(monoUnit)
+      rstUnit = ClassLifter().liftTypingUnit(unit)
+      outputBuilder ++= PrettyPrinter.showTypingUnit(rstUnit)
     }catch{
       case any: Throwable => outputBuilder ++= "Lifting failed: " ++ any.toString() ++ "\n" ++ any.getStackTrace().map(_.toString()).mkString("\n")
     }
