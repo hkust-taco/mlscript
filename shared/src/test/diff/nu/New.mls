@@ -16,7 +16,6 @@ let f = new Foo(1)
 //│ Code generation encountered an error:
 //│   cannot generate code for term New(Some((TypeName(Foo),1,)), TypingUnit(List()))
 
-// TODO
 if f is Foo(a) then a else 0
 //│ res: 1
 //│    = 1
@@ -31,4 +30,11 @@ if f is Foo(a) then a else 0
 // Foo(A) =:= Foo & { x: A }
 
 
+fun test(x) = if x is Foo(a) then a
+//│ test: (Foo with {x: 'x}) -> 'x
+//│     = [Function: test]
+
+test(f)
+//│ res: 1
+//│    = 1
 

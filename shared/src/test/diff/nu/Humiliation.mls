@@ -1,0 +1,189 @@
+:NewParser
+
+
+class Foo(x)
+//│ Defined class Foo
+//│ Foo: 'x -> (Foo with {x: 'x})
+//│    = [Function: Foo1]
+
+
+:d
+if 1 is 1 then 1
+//│ 0. Typing term if (is (1,) (1,)) then 1
+//│ | Flattened conjunctions
+//│ | <eq (1,) (1,)> => 1
+//│ | The mutable CaseOf tree
+//│ | IfThenElse(eq (1,) (1,),Consequent(1),MissingCase)
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.MutCaseOf$MissingCase$.$anonfun$toTerm$1(helpers.scala:958)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.MutCaseOf$MissingCase$.toTerm(helpers.scala:958)
+//│ 	at: mlscript.MutCaseOf$IfThenElse.toTerm(helpers.scala:901)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:738)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:747)
+//│ 	at: mlscript.Typer.typeStatement(Typer.scala:376)
+//│ 	at: mlscript.DiffTests.$anonfun$new$55(DiffTests.scala:558)
+
+
+if f is
+  Foo(a) then a
+//│ ╔══[ERROR] identifier not found: f
+//│ ║  l.30: 	if f is
+//│ ╙──      	   ^
+//│ res: error
+//│ Code generation encountered an error:
+//│   unresolved symbol f
+
+if f is
+  Foo(a) then a
+  Foo(a) then a
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.MutCaseOf$Consequent.append(helpers.scala:953)
+//│ 	at: mlscript.MutCaseOf$Match.append(helpers.scala:916)
+//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1(helpers.scala:987)
+//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1$adapted(helpers.scala:987)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.MutCaseOf$.build(helpers.scala:987)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:735)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:747)
+
+
+class Bar(y, z)
+//│ Defined class Bar
+//│ Bar: ('y, 'z,) -> (Bar with {y: 'y, z: 'z})
+//│    = [Function: Bar1]
+
+fun test(f) = if f is
+  Foo(a) then a
+  Bar(b, c) then b + c
+//│ test: (Bar & {y: int, z: int} | (Foo with {x: 'x})) -> (int | 'x)
+//│     = [Function: test]
+
+
+class Pair(fst, snd)
+//│ Defined class Pair
+//│ Pair: ('fst, 'snd,) -> (Pair with {fst: 'fst, snd: 'snd})
+//│     = [Function: Pair1]
+
+if x is
+  Pair(0, 0) then "zeros"
+  Pair(1, 1) then "ones"
+  Pair(y, 1) then x
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.MutCaseOf$IfThenElse.append(helpers.scala:888)
+//│ 	at: mlscript.MutCaseOf$Match.append(helpers.scala:916)
+//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1(helpers.scala:987)
+//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1$adapted(helpers.scala:987)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.MutCaseOf$.build(helpers.scala:987)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:735)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:747)
+
+class Z()
+class O()
+//│ Defined class Z
+//│ Defined class O
+//│ Z: () -> Z
+//│  = [Function: Z1]
+//│ O: () -> O
+//│  = [Function: O1]
+
+fun foo(x) = if x is
+  Pair(Z(), Z()) then "zeros"
+  Pair(O(), O()) then "ones"
+//│ foo: (Pair & {fst: O | Z, snd: nothing}) -> ("ones" | "zeros")
+//│    = [Function: foo]
+
+fun foo(x) = if x is
+  Pair(a, b) then if a is
+    Z() then if b is
+      Z() then "zeros"
+    O() then if b is
+      O() then "zeros"
+//│ foo: (Pair & {fst: O | Z, snd: nothing}) -> "zeros"
+//│    = [Function: foo1]
+
+fun foo(x) = if x is
+  Pair(a, b) then if a is
+    Z() then if b is
+      Z() then "zeros"
+      else "???"
+    O() then if b is
+      O() then "zeros"
+//│ foo: (Pair & {fst: O | Z, snd: O}) -> ("???" | "zeros")
+//│    = [Function: foo2]
+
+fun foo(x) = if x is
+  Pair(a, b) then if a is
+    Z() then if b is
+      Z() then "zeros"
+      else "???"
+    O() then if b is
+      O() then "zeros"
+      else "???"
+//│ foo: (Pair & {fst: O | Z}) -> ("???" | "zeros")
+//│    = [Function: foo3]
+
+class S(pred)
+//│ Defined class S
+//│ S: 'pred -> (S with {pred: 'pred})
+//│  = [Function: S1]
+
+fun foo(x) = if x is
+  Pair(a, b) then if a is
+    Z() then if b is
+      S(x) then x
+      else "???"
+    O() then if b is
+      O() then "zeros"
+      else "???"
+//│ foo: (Pair & {fst: O | Z, snd: (S with {pred: 'pred}) | ~S}) -> ("???" | "zeros" | 'pred)
+//│    = [Function: foo4]
+
+foo(Pair(Z(), Z()))
+//│ res: "???" | "zeros"
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
+
+fun foo(x) = if x is
+  Pair(Z(), Z()) then "zeros"
+  Pair(O(), O()) then "ones"
+  Pair(y, O()) then x
+//│ foo: (Pair & {snd: nothing} & 'a) -> ("ones" | "zeros" | 'a)
+//│    = [Function: foo5]
+
+
+fun foo(x, y) = if x is Z() and y is O() then 0 else 1
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:626)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:747)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:714)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:747)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:741)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:747)
+
+fun foo(x, y) = if x is
+  Z() and y is O() then 0 else 1
+//│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
+//│ ║  l.176: 	  Z() and y is O() then 0 else 1
+//│ ╙──       	                          ^^^^
+//│ foo: (Z, O,) -> 0
+//│    = [Function: foo6]
+
+fun foo(x, y) =
+  if x is
+    Z() and y is O() then 0
+    else 1
+//│ foo: (anything, O,) -> (0 | 1)
+//│    = [Function: foo7]
+

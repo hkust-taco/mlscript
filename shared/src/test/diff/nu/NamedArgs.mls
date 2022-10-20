@@ -1,0 +1,48 @@
+:NewParser
+
+
+:w
+class Foo(x: int)
+//│ Defined class Foo
+//│ ╔══[WARNING] Variable name 'int' already names a symbol in scope. If you want to refer to that symbol, you can use `scope.int`; if not, give your future readers a break and use another name :^)
+//│ ║  l.5: 	class Foo(x: int)
+//│ ╙──     	             ^^^
+//│ Foo: (x: int & 'x,) -> (Foo with {x: 'x})
+//│    = [Function: Foo1]
+
+Foo(1)
+//│ res: Foo & {x: 1}
+//│    = Foo { x: 1 }
+
+Foo(x: 1)
+//│ res: Foo & {x: 1}
+//│    = Foo { x: 1 }
+
+:e
+Foo(y: 1)
+//│ ╔══[ERROR] Wrong tuple field name: found 'y' instead of 'x'
+//│ ║  l.22: 	Foo(y: 1)
+//│ ╙──      	   ^^^^^^
+//│ res: error | Foo & {x: 1}
+//│    = Foo { x: 1 }
+
+
+// TODO: Here `x` is not currently treated as a field name
+class Bar(x)
+//│ Defined class Bar
+//│ Bar: 'x -> (Bar with {x: 'x})
+//│    = [Function: Bar1]
+
+Bar(1)
+//│ res: Bar & {x: 1}
+//│    = Bar { x: 1 }
+
+Bar(x: 1)
+//│ res: Bar & {x: 1}
+//│    = Bar { x: 1 }
+
+// :e
+Bar(y: 1)
+//│ res: Bar & {x: 1}
+//│    = Bar { x: 1 }
+
