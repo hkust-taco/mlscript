@@ -31,29 +31,29 @@ class A(x) {
 //│ TypingUnit(NuTypeDef(class, A, (), Tup(_: Var(x)), (), TypingUnit(NuTypeDef(class, B, (), Tup(_: Var(y)), (), TypingUnit(NuFunDef(None, getX, [], Var(x)), NuFunDef(None, getB1, [], App(Var(B1), Tup(_: Var(y)))), NuTypeDef(class, C, (), Tup(_: Var(z)), (), TypingUnit(NuFunDef(None, inc, [], Lam(Tup(), App(App(Var(+), Tup(_: Var(x))), Tup(_: IntLit(1))))), NuFunDef(None, getY, [], Var(y)), NuFunDef(None, getA, [], App(Var(A), Tup(_: Var(z)))), NuFunDef(None, getB, [], Lam(Tup(_: Var(w)), App(Var(B), Tup(_: Var(w))))), NuFunDef(None, getC, [], New(Some((TypeName(C),inc (),)), TypingUnit(List()))), NuFunDef(None, getSelf, [], Var(this)))))), NuTypeDef(class, B1, (), Tup(_: Var(y)), (), TypingUnit(NuFunDef(None, getX, [], Var(x)), NuFunDef(None, getY, [], Var(y)), NuFunDef(None, getB, [], New(Some((TypeName(B),y,)), TypingUnit(List()))), NuFunDef(None, getB1, [], New(Some((TypeName(B1),y,)), TypingUnit(List()))))), NuFunDef(None, getB, [], New(Some((TypeName(B),x,)), TypingUnit(List()))), NuFunDef(None, getB2, [], Lam(Tup(_: Var(y)), App(Var(B1), Tup(_: Var(y))))), NuFunDef(None, getB3, [], Lam(Tup(_: Var(z)), App(Var(getB2), Tup(_: Var(z))))), NuFunDef(None, getA, [], App(Var(A), Tup(_: Var(x)))))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class A_B$1_C$3(par$A_B$1, z,) {
-//│     fun inc =  => + ((((this).par$A_B$1).par$A).x,) (1,)
-//│     fun getY = ((this).par$A_B$1).y
-//│     fun getA = A ((this).z,)
-//│     fun getB = w, => A_B$1 (((this).par$A_B$1).par$A, w,)
-//│     fun getC = new A_B$1_C$3((this).par$A_B$1, (this).inc (),) {}
+//│   class A$1_B$2_C$4(par$A$1_B$2, z,) {
+//│     fun inc =  => + ((((this).par$A$1_B$2).par$A$1).x,) (1,)
+//│     fun getY = ((this).par$A$1_B$2).y
+//│     fun getA = A$1 ((this).z,)
+//│     fun getB = w, => A$1_B$2 (((this).par$A$1_B$2).par$A$1, w,)
+//│     fun getC = new A$1_B$2_C$4((this).par$A$1_B$2, (this).inc (),) {}
 //│     fun getSelf = this
 //│   }
-//│   class A_B$1(par$A, y,) {
-//│     fun getX = ((this).par$A).x
-//│     fun getB1 = A_B1$2 ((this).par$A, (this).y,)
+//│   class A$1_B$2(par$A$1, y,) {
+//│     fun getX = ((this).par$A$1).x
+//│     fun getB1 = A$1_B1$3 ((this).par$A$1, (this).y,)
 //│   }
-//│   class A_B1$2(par$A, y,) {
-//│     fun getX = ((this).par$A).x
+//│   class A$1_B1$3(par$A$1, y,) {
+//│     fun getX = ((this).par$A$1).x
 //│     fun getY = (this).y
-//│     fun getB = new A_B$1((this).par$A, (this).y,) {}
-//│     fun getB1 = new A_B1$2((this).par$A, (this).y,) {}
+//│     fun getB = new A$1_B$2((this).par$A$1, (this).y,) {}
+//│     fun getB1 = new A$1_B1$3((this).par$A$1, (this).y,) {}
 //│   }
-//│   class A(x,) {
-//│     fun getB = new A_B$1(this, (this).x,) {}
-//│     fun getB2 = y, => A_B1$2 (this, y,)
+//│   class A$1(x,) {
+//│     fun getB = new A$1_B$2(this, (this).x,) {}
+//│     fun getB2 = y, => A$1_B1$3 (this, y,)
 //│     fun getB3 = z, => (this).getB2 (z,)
-//│     fun getA = A ((this).x,)
+//│     fun getA = A$1 ((this).x,)
 //│   }
 //│ }
 
@@ -70,11 +70,11 @@ class A(x) {
 //│ TypingUnit(NuTypeDef(class, A, (), Tup(_: Var(x)), (), TypingUnit(NuTypeDef(class, B, (), Tup(_: Var(y)), (), TypingUnit(NuTypeDef(class, C, (), Tup(_: Var(z)), (), TypingUnit(NuFunDef(None, sum, [], App(App(Var(+), Tup(_: App(App(Var(+), Tup(_: Var(x))), Tup(_: Var(y))))), Tup(_: Var(z)))))))))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class A_B$1_C$2(par$A_B$1, z,) {
-//│     fun sum = + (+ ((((this).par$A_B$1).par$A).x,) (((this).par$A_B$1).y,),) ((this).z,)
+//│   class A$1_B$2_C$3(par$A$1_B$2, z,) {
+//│     fun sum = + (+ ((((this).par$A$1_B$2).par$A$1).x,) (((this).par$A$1_B$2).y,),) ((this).z,)
 //│   }
-//│   class A_B$1(par$A, y,) {}
-//│   class A(x,) {}
+//│   class A$1_B$2(par$A$1, y,) {}
+//│   class A$1(x,) {}
 //│ }
 
 
@@ -109,14 +109,14 @@ new C{
 //│ TypingUnit(NuTypeDef(class, A, (), Tup(_: Var(x)), (), TypingUnit(NuTypeDef(class, B, (), Tup(), (), TypingUnit(NuFunDef(None, foo, [], IntLit(1)), NuFunDef(None, bar, [], IntLit(11)))), NuFunDef(None, getB, [], New(Some((TypeName(B),)), TypingUnit(List(fun foo = 2, fun bar = 12)))), NuFunDef(None, bar, [], IntLit(13)))), NuTypeDef(class, C, (), Tup(), (Var(A)), TypingUnit(NuFunDef(None, getB, [], New(Some((TypeName(B),)), TypingUnit(List(fun foo = 3, fun bar = 14)))), NuFunDef(None, bar, [], IntLit(15)))), New(Some((TypeName(C),)), TypingUnit(List(fun getB = new B() {fun foo = 4; fun bar = 16}, fun bar = 17))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class A_B$1$2(par$A,): A_B$1 ((this).par$A,) {fun foo = 2; fun bar = 12}
-//│   class A_B$1(par$A,) {fun foo = 1; fun bar = 11}
-//│   class A(x,) {fun getB = {new A_B$1$2(this,) {}}; fun bar = 13}
-//│   class C_B$2$3(par$C,): A_B$1 ((this).par$C,) {fun foo = 3; fun bar = 14}
-//│   class C(): A () {fun getB = {new C_B$2$3(this,) {}}; fun bar = 15}
-//│   class C$3_B$4$4(par$C$3,): A_B$1 ((this).par$C$3,) {fun foo = 4; fun bar = 16}
-//│   class C$3(): C () {fun getB = {new C$3_B$4$4(this,) {}}; fun bar = 17}
-//│   Code(List({new C$3() {}}))
+//│   class A$1_B$1$4(par$A$1,): A$1_B$3 ((this).par$A$1,) {fun foo = 2; fun bar = 12}
+//│   class A$1_B$3(par$A$1,) {fun foo = 1; fun bar = 11}
+//│   class A$1(x,) {fun getB = {new A$1_B$1$4(this,) {}}; fun bar = 13}
+//│   class C$2_B$2$5(par$C$2,): A$1_B$3 ((this).par$C$2,) {fun foo = 3; fun bar = 14}
+//│   class C$2(): A$1 () {fun getB = {new C$2_B$2$5(this,) {}}; fun bar = 15}
+//│   class C$3$6_B$4$7(par$C$3$6,): A$1_B$3 ((this).par$C$3$6,) {fun foo = 4; fun bar = 16}
+//│   class C$3$6(): C$2 () {fun getB = {new C$3$6_B$4$7(this,) {}}; fun bar = 17}
+//│   Code(List({new C$3$6() {}}))
 //│ }
 
 
@@ -134,11 +134,11 @@ class Parent<T, U, V>(x) {
 //│ TypingUnit(NuTypeDef(class, Parent, (TypeName(T), TypeName(U), TypeName(V)), Tup(_: Var(x)), (), TypingUnit(NuFunDef(None, foo, [], Lam(Tup(x: Var(Int)), Asc(App(App(Var(+), Tup(_: Var(x))), Tup(_: IntLit(1))), TypeName(T)))), NuTypeDef(class, Inner, (TypeName(W)), Tup(y: Var(Int)), (), TypingUnit(NuFunDef(None, bar, [], Lam(Tup(z: Var(U)), App(Var(foo), Tup(_: Var(y))))), NuFunDef(None, boo, [], Lam(Tup(z: Var(W)), Var(z))))))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class Parent_Inner$1[W,U](par$Parent, y: Int,) {
-//│     fun bar = z: U, => ((this).par$Parent).foo ((this).y,)
+//│   class Parent$1_Inner$2[W,U](par$Parent$1, y: Int,) {
+//│     fun bar = z: U, => ((this).par$Parent$1).foo ((this).y,)
 //│     fun boo = z: W, => z
 //│   }
-//│   class Parent[T,U,V](x,) {fun foo = x: Int, => + (x,) (1,) : TypeName(T)}
+//│   class Parent$1[T,U,V](x,) {fun foo = x: Int, => + (x,) (1,) : TypeName(T)}
 //│ }
 
 
@@ -156,11 +156,11 @@ class A<T, U>(x: Int): {a1: Int} & B<T> & D(x){
 //│ TypingUnit(NuTypeDef(class, B, (TypeName(T)), Tup(), (), TypingUnit()), NuTypeDef(class, C, (), Tup(), (), TypingUnit()), NuTypeDef(class, D, (), Tup(y: Var(Int)), (), TypingUnit()), NuTypeDef(class, A, (TypeName(T), TypeName(U)), Tup(x: Var(Int)), (App(App(Var(&), Tup(_: Bra(rcd = true, Rcd(Var(a1) = Var(Int))))), Tup(_: App(App(Var(&), Tup(_: TyApp(Var(B), List(TypeName(T))))), Tup(_: App(Var(D), Tup(_: Var(x)))))))), TypingUnit(NuFunDef(None, getA, [], Lam(Tup(), New(Some((TypeName(C),)), TypingUnit(List(fun foo = x: T, => x))))))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class B[T]() {}
-//│   class C() {}
-//│   class D(y: Int,) {}
-//│   class A_C$1$1[T](par$A,): C () {fun foo = x: T, => x}
-//│   class A[T,U](x: Int,): & ('{' {a1: Int} '}',) (& (B ()‹T›,) (D ((this).x,),),) {fun getA =  => {new A_C$1$1(this,) {}}}
+//│   class B$1[T]() {}
+//│   class C$2() {}
+//│   class D$3(y: Int,) {}
+//│   class A$4_C$1$5[T](par$A$4,): C$2 () {fun foo = x: T, => x}
+//│   class A$4[T,U](x: Int,): & ('{' {a1: Int} '}',) (& (B$1 ()‹T›,) (D$3 ((this).x,),),) {fun getA =  => {new A$4_C$1$5(this,) {}}}
 //│ }
 // │ TypingUnit(NuTypeDef(class, B, (TypeName(T)), Tup(), (), TypingUnit()), NuTypeDef(class, C, (), Tup(), (), TypingUnit()), NuTypeDef(class, A, (TypeName(T), TypeName(U)), Tup(x: Var(Int)), (App(App(Var(&), Tup(_: Bra(rcd = true, Rcd(Var(a1) = Var(Int)})))), Tup(_: TyApp(Var(B), List(TypeName(T)))))), TypingUnit(NuFunDef(None, getA, [], Lam(Tup(), New(Some((TypeName(C),)), TypingUnit(List(fun foo = x: T, => x))))))))
 
@@ -178,11 +178,11 @@ class A<T, U>(x: Int): {a1: Int}, B<T>, D(x){
 //│ TypingUnit(NuTypeDef(class, B, (TypeName(T)), Tup(), (), TypingUnit()), NuTypeDef(class, C, (), Tup(), (), TypingUnit()), NuTypeDef(class, D, (), Tup(y: Var(Int)), (), TypingUnit()), NuTypeDef(class, A, (TypeName(T), TypeName(U)), Tup(x: Var(Int)), (Bra(rcd = true, Rcd(Var(a1) = Var(Int))), TyApp(Var(B), List(TypeName(T))), App(Var(D), Tup(_: Var(x)))), TypingUnit(NuFunDef(None, getA, [], Lam(Tup(), New(Some((TypeName(C),)), TypingUnit(List(fun foo = x, => x))))))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class B[T]() {}
-//│   class C() {}
-//│   class D(y: Int,) {}
-//│   class A_C$1$1(par$A,): C () {fun foo = x, => x}
-//│   class A[T,U](x: Int,): '{' {a1: Int} '}', B ()‹T›, D ((this).x,) {fun getA =  => {new A_C$1$1(this,) {}}}
+//│   class B$1[T]() {}
+//│   class C$2() {}
+//│   class D$3(y: Int,) {}
+//│   class A$4_C$1$5(par$A$4,): C$2 () {fun foo = x, => x}
+//│   class A$4[T,U](x: Int,): '{' {a1: Int} '}', B$1 ()‹T›, D$3 ((this).x,) {fun getA =  => {new A$4_C$1$5(this,) {}}}
 //│ }
 
 class Child<T, U>(x): { age: T } & { name: String} {
@@ -198,10 +198,10 @@ class Child<T, U>(x): { age: T } & { name: String} {
 //│ TypingUnit(NuTypeDef(class, Child, (TypeName(T), TypeName(U)), Tup(_: Var(x)), (App(App(Var(&), Tup(_: Bra(rcd = true, Rcd(Var(age) = Var(T))))), Tup(_: Bra(rcd = true, Rcd(Var(name) = Var(String)))))), TypingUnit(NuTypeDef(class, Inner, (), Tup(), (), TypingUnit(NuFunDef(None, foo, [], Var(age)))), NuFunDef(None, bar, [], Var(age)), NuFunDef(None, boo, [], New(Some((TypeName(Inner),)), TypingUnit(List()))))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class Child_Inner$1(par$Child,) {fun foo = ((this).par$Child).age}
-//│   class Child[T,U](x,): & ('{' {age: T} '}',) ('{' {name: String} '}',) {
+//│   class Child$1_Inner$2(par$Child$1,) {fun foo = ((this).par$Child$1).age}
+//│   class Child$1[T,U](x,): & ('{' {age: T} '}',) ('{' {name: String} '}',) {
 //│     fun bar = (this).age
-//│     fun boo = new Child_Inner$1(this,) {}
+//│     fun boo = new Child$1_Inner$2(this,) {}
 //│   }
 //│ }
 
@@ -220,9 +220,9 @@ new A(0) {
 //│ TypingUnit(NuTypeDef(class, A, (), Tup(x: Var(Int)), (), TypingUnit(NuFunDef(None, getA, [], Asc(IntLit(0), TypeName(Int))), NuFunDef(None, getA1, [], IntLit(1)))), New(Some((TypeName(A),0,)), TypingUnit(List(fun getA = 3, fun getA2 = 2))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class A(x: Int,) {fun getA = 0 : TypeName(Int); fun getA1 = 1}
-//│   class A$1(x: Int,): A ((this).x,) {fun getA = 3; fun getA2 = 2}
-//│   Code(List({new A$1(0,) {}}))
+//│   class A$1(x: Int,) {fun getA = 0 : TypeName(Int); fun getA1 = 1}
+//│   class A$1$2(x: Int,): A$1 ((this).x,) {fun getA = 3; fun getA2 = 2}
+//│   Code(List({new A$1$2(0,) {}}))
 //│ }
 
 
@@ -240,11 +240,11 @@ new A(1) {
 //│ TypingUnit(NuTypeDef(class, A, (), Tup(_: Var(x)), (), TypingUnit(NuTypeDef(class, B, (), Tup(_: Var(y)), (), TypingUnit()))), New(Some((TypeName(A),1,)), TypingUnit(List(fun getB = new B(2,) {fun getB = new B(3,) {}}))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class A_B$1(par$A, y,) {}
-//│   class A(x,) {}
-//│   class A$1_B$2$2(par$A$1, y,): A_B$1 ((this).par$A$1, (this).y,) {fun getB = new A_B$1((this).par$A$1, 3,) {}}
-//│   class A$1(x,): A ((this).x,) {fun getB = {new A$1_B$2$2(this, 2,) {}}}
-//│   Code(List({new A$1(1,) {}}))
+//│   class A$1_B$2(par$A$1, y,) {}
+//│   class A$1(x,) {}
+//│   class A$1$3_B$2$4(par$A$1$3, y,): A$1_B$2 ((this).par$A$1$3, (this).y,) {fun getB = new A$1_B$2((this).par$A$1$3, 3,) {}}
+//│   class A$1$3(x,): A$1 ((this).x,) {fun getB = {new A$1$3_B$2$4(this, 2,) {}}}
+//│   Code(List({new A$1$3(1,) {}}))
 //│ }
 
 
@@ -272,15 +272,15 @@ new B{
 //│ TypingUnit(NuTypeDef(class, A, (), Tup(), (), TypingUnit(NuFunDef(None, getA, [], IntLit(0)), NuFunDef(None, funcA, [], IntLit(10)))), NuTypeDef(class, B, (), Tup(), (Var(A)), TypingUnit(NuFunDef(None, getA, [], IntLit(1)), NuFunDef(None, funcB, [], IntLit(11)))), New(Some((TypeName(A),)), TypingUnit(List())), New(Some((TypeName(B),)), TypingUnit(List())), NuFunDef(None, f, [], Lam(Tup(_: Var(x)), If((is (x,) (A,)) then 0, Some(IntLit(1))))), App(Var(f), Tup(_: New(Some((TypeName(A),)), TypingUnit(List(fun getA = 2))))), New(Some((TypeName(B),)), TypingUnit(List(fun getA = funcB))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class A() {fun getA = 0; fun funcA = 10}
-//│   class B(): A () {fun getA = 1; fun funcB = 11}
-//│   class A$1(): A () {fun getA = 2}
-//│   class B$2(): B () {fun getA = (this).funcB}
-//│   fun f = x, => if (is (x,) (A (),)) then 0 else 1
-//│   Code(List(new A() {}))
-//│   Code(List(new B() {}))
-//│   Code(List(f ({new A$1() {}},)))
-//│   Code(List({new B$2() {}}))
+//│   class A$1() {fun getA = 0; fun funcA = 10}
+//│   class B$2(): A$1 () {fun getA = 1; fun funcB = 11}
+//│   class A$1$3(): A$1 () {fun getA = 2}
+//│   class B$2$4(): B$2 () {fun getA = (this).funcB}
+//│   fun f = x, => if (is (x,) (A$1 (),)) then 0 else 1
+//│   Code(List(new A$1() {}))
+//│   Code(List(new B$2() {}))
+//│   Code(List(f ({new A$1$3() {}},)))
+//│   Code(List({new B$2$4() {}}))
 //│ }
 
 
@@ -312,12 +312,12 @@ class A{
 //│ TypingUnit(NuTypeDef(class, A, (), Tup(), (), TypingUnit(NuTypeDef(class, B, (), Tup(), (), TypingUnit(NuFunDef(None, funB, [], IntLit(1)), NuFunDef(None, foo, [], IntLit(100)))), NuTypeDef(class, C, (), Tup(), (Var(B)), TypingUnit(NuFunDef(None, funC, [], IntLit(2)), NuFunDef(None, foo, [], IntLit(1000)))), NuTypeDef(class, D, (), Tup(), (), TypingUnit(NuFunDef(None, funD, [], IntLit(3)), NuFunDef(None, foo, [], IntLit(10000)), NuTypeDef(class, E, (), Tup(), (Var(C)), TypingUnit(NuFunDef(None, funE, [], IntLit(4)), NuFunDef(None, foo, [], IntLit(100000)))), NuTypeDef(class, F, (), Tup(), (Var(E)), TypingUnit(NuFunDef(None, funF, [], IntLit(5)), NuFunDef(None, foo, [], IntLit(1000000)))))))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class A_B$1(par$A,) {fun funB = 1; fun foo = 100}
-//│   class A_C$2(par$A,): A_B$1 ((this).par$A,) {fun funC = 2; fun foo = 1000}
-//│   class A_D$3_E$4(par$A_D$3,): A_C$2 (((this).par$A_D$3).par$A,) {fun funE = 4; fun foo = 100000}
-//│   class A_D$3_F$5(par$A_D$3,): A_D$3_E$4 ((this).par$A_D$3,) {fun funF = 5; fun foo = 1000000}
-//│   class A_D$3(par$A,) {fun funD = 3; fun foo = 10000}
-//│   class A() {}
+//│   class A$1_B$2(par$A$1,) {fun funB = 1; fun foo = 100}
+//│   class A$1_C$3(par$A$1,): A$1_B$2 ((this).par$A$1,) {fun funC = 2; fun foo = 1000}
+//│   class A$1_D$4_E$5(par$A$1_D$4,): A$1_C$3 (((this).par$A$1_D$4).par$A$1,) {fun funE = 4; fun foo = 100000}
+//│   class A$1_D$4_F$6(par$A$1_D$4,): A$1_D$4_E$5 ((this).par$A$1_D$4,) {fun funF = 5; fun foo = 1000000}
+//│   class A$1_D$4(par$A$1,) {fun funD = 3; fun foo = 10000}
+//│   class A$1() {}
 //│ }
 
 
@@ -354,25 +354,25 @@ class A{
 //│ TypingUnit(NuTypeDef(class, A, (), Tup(), (), TypingUnit(NuTypeDef(class, B, (), Tup(), (), TypingUnit(NuFunDef(None, funB, [], IntLit(1)), NuFunDef(None, foo, [], IntLit(100)))), NuTypeDef(class, C, (), Tup(), (Var(B)), TypingUnit(NuFunDef(None, funC, [], IntLit(2)), NuFunDef(None, foo, [], IntLit(1000)), NuFunDef(None, getB, [], New(Some((TypeName(B),)), TypingUnit(List()))))), NuTypeDef(class, D, (), Tup(), (), TypingUnit(NuFunDef(None, funD, [], IntLit(3)), NuFunDef(None, foo, [], IntLit(10000)), NuTypeDef(class, E, (), Tup(), (Var(C)), TypingUnit(NuFunDef(None, funE, [], IntLit(4)), NuFunDef(None, foo, [], IntLit(100000)), NuFunDef(None, getD, [], New(Some((TypeName(D),)), TypingUnit(List()))))), NuTypeDef(class, F, (), Tup(), (Var(E)), TypingUnit(NuFunDef(None, funF, [], IntLit(5)), NuFunDef(None, foo, [], IntLit(1000000)), NuFunDef(None, getE, [], New(Some((TypeName(E),)), TypingUnit(List(fun foo = 0)))))))))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class A_B$1(par$A,) {fun funB = 1; fun foo = 100}
-//│   class A_C$2(par$A,): A_B$1 ((this).par$A,) {
+//│   class A$1_B$2(par$A$1,) {fun funB = 1; fun foo = 100}
+//│   class A$1_C$3(par$A$1,): A$1_B$2 ((this).par$A$1,) {
 //│     fun funC = 2
 //│     fun foo = 1000
-//│     fun getB = new A_B$1((this).par$A,) {}
+//│     fun getB = new A$1_B$2((this).par$A$1,) {}
 //│   }
-//│   class A_D$3_E$4(par$A_D$3,): A_C$2 (((this).par$A_D$3).par$A,) {
+//│   class A$1_D$4_E$5(par$A$1_D$4,): A$1_C$3 (((this).par$A$1_D$4).par$A$1,) {
 //│     fun funE = 4
 //│     fun foo = 100000
-//│     fun getD = new A_D$3(((this).par$A_D$3).par$A,) {}
+//│     fun getD = new A$1_D$4(((this).par$A$1_D$4).par$A$1,) {}
 //│   }
-//│   class A_D$3_F$5_E$1$6(par$A_D$3_F$5,): A_D$3_E$4 (((this).par$A_D$3_F$5).par$A_D$3,) {fun foo = 0}
-//│   class A_D$3_F$5(par$A_D$3,): A_D$3_E$4 ((this).par$A_D$3,) {
+//│   class A$1_D$4_F$6_E$1$7(par$A$1_D$4_F$6,): A$1_D$4_E$5 (((this).par$A$1_D$4_F$6).par$A$1_D$4,) {fun foo = 0}
+//│   class A$1_D$4_F$6(par$A$1_D$4,): A$1_D$4_E$5 ((this).par$A$1_D$4,) {
 //│     fun funF = 5
 //│     fun foo = 1000000
-//│     fun getE = {new A_D$3_F$5_E$1$6(this,) {}}
+//│     fun getE = {new A$1_D$4_F$6_E$1$7(this,) {}}
 //│   }
-//│   class A_D$3(par$A,) {fun funD = 3; fun foo = 10000}
-//│   class A() {}
+//│   class A$1_D$4(par$A$1,) {fun funD = 3; fun foo = 10000}
+//│   class A$1() {}
 //│ }
 
 
@@ -389,9 +389,9 @@ new A
 //│ TypingUnit(NuTypeDef(class, A, (), Tup(), (), TypingUnit(NuTypeDef(class, B, (), Tup(), (), TypingUnit(NuFunDef(None, foo, [], IntLit(1)))), NuFunDef(None, bar, [], New(Some((TypeName(B),)), TypingUnit(List()))))), New(Some((TypeName(A),)), TypingUnit(List())))
 //│ Lifted:
 //│ TypingUnit {
-//│   class A_B$1(par$A,) {fun foo = 1}
-//│   class A() {fun bar = new A_B$1(this,) {}}
-//│   Code(List(new A() {}))
+//│   class A$1_B$2(par$A$1,) {fun foo = 1}
+//│   class A$1() {fun bar = new A$1_B$2(this,) {}}
+//│   Code(List(new A$1() {}))
 //│ }
 
 
@@ -413,17 +413,17 @@ let x = new A{
 //│ TypingUnit(NuTypeDef(class, A, (), Tup(_: Var(x)), (), TypingUnit(NuFunDef(None, foo, [], IntLit(0)), NuFunDef(None, bar, [], Var(x)))), NuFunDef(Some(false), x, [], New(Some((TypeName(A),)), TypingUnit(List(fun foo = 1, fun newFun = 2, fun bar = new A(foo,) {fun foo = + (bar,) (1,); fun bar2 = + (newFun,) (1,)})))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class A(x,) {fun foo = 0; fun bar = (this).x}
-//│   class A$1_A$2$1(par$A$1, x,): A ((this).x,) {
+//│   class A$1(x,) {fun foo = 0; fun bar = (this).x}
+//│   class A$1$2_A$2$3(par$A$1$2, x,): A$1 ((this).x,) {
 //│     fun foo = + ((this).bar,) (1,)
-//│     fun bar2 = + (((this).par$A$1).newFun,) (1,)
+//│     fun bar2 = + (((this).par$A$1$2).newFun,) (1,)
 //│   }
-//│   class A$1(x,): A ((this).x,) {
+//│   class A$1$2(x,): A$1 ((this).x,) {
 //│     fun foo = 1
 //│     fun newFun = 2
-//│     fun bar = {new A$1_A$2$1(this, (this).foo,) {}}
+//│     fun bar = {new A$1$2_A$2$3(this, (this).foo,) {}}
 //│   }
-//│   let x = {new A$1() {}}
+//│   let x = {new A$1$2() {}}
 //│ }
 
 class A {}
@@ -449,24 +449,24 @@ new A{
 //│ TypingUnit(NuTypeDef(class, A, (), Tup(), (), TypingUnit()), New(Some((TypeName(A),)), TypingUnit(List(fun foo = 1, fun bar = new A() {fun foo1 = foo; fun bar1 = new A() {fun foo2 = foo; fun bar2 = new A() {fun foo3 = foo; fun bar3 = new A() {fun foo4 = foo; fun bar4 = 0}}}}))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class A() {}
-//│   class A$1_A$2$1_A$3$2_A$4$3_A$5$4(par$A$1_A$2$1_A$3$2_A$4$3,): A () {
-//│     fun foo4 = (((((this).par$A$1_A$2$1_A$3$2_A$4$3).par$A$1_A$2$1_A$3$2).par$A$1_A$2$1).par$A$1).foo
+//│   class A$1() {}
+//│   class A$1$2_A$2$3_A$3$4_A$4$5_A$5$6(par$A$1$2_A$2$3_A$3$4_A$4$5,): A$1 () {
+//│     fun foo4 = (((((this).par$A$1$2_A$2$3_A$3$4_A$4$5).par$A$1$2_A$2$3_A$3$4).par$A$1$2_A$2$3).par$A$1$2).foo
 //│     fun bar4 = 0
 //│   }
-//│   class A$1_A$2$1_A$3$2_A$4$3(par$A$1_A$2$1_A$3$2,): A () {
-//│     fun foo3 = ((((this).par$A$1_A$2$1_A$3$2).par$A$1_A$2$1).par$A$1).foo
-//│     fun bar3 = {new A$1_A$2$1_A$3$2_A$4$3_A$5$4(this,) {}}
+//│   class A$1$2_A$2$3_A$3$4_A$4$5(par$A$1$2_A$2$3_A$3$4,): A$1 () {
+//│     fun foo3 = ((((this).par$A$1$2_A$2$3_A$3$4).par$A$1$2_A$2$3).par$A$1$2).foo
+//│     fun bar3 = {new A$1$2_A$2$3_A$3$4_A$4$5_A$5$6(this,) {}}
 //│   }
-//│   class A$1_A$2$1_A$3$2(par$A$1_A$2$1,): A () {
-//│     fun foo2 = (((this).par$A$1_A$2$1).par$A$1).foo
-//│     fun bar2 = {new A$1_A$2$1_A$3$2_A$4$3(this,) {}}
+//│   class A$1$2_A$2$3_A$3$4(par$A$1$2_A$2$3,): A$1 () {
+//│     fun foo2 = (((this).par$A$1$2_A$2$3).par$A$1$2).foo
+//│     fun bar2 = {new A$1$2_A$2$3_A$3$4_A$4$5(this,) {}}
 //│   }
-//│   class A$1_A$2$1(par$A$1,): A () {
-//│     fun foo1 = ((this).par$A$1).foo
-//│     fun bar1 = {new A$1_A$2$1_A$3$2(this,) {}}
+//│   class A$1$2_A$2$3(par$A$1$2,): A$1 () {
+//│     fun foo1 = ((this).par$A$1$2).foo
+//│     fun bar1 = {new A$1$2_A$2$3_A$3$4(this,) {}}
 //│   }
-//│   class A$1(): A () {fun foo = 1; fun bar = {new A$1_A$2$1(this,) {}}}
-//│   Code(List({new A$1() {}}))
+//│   class A$1$2(): A$1 () {fun foo = 1; fun bar = {new A$1$2_A$2$3(this,) {}}}
+//│   Code(List({new A$1$2() {}}))
 //│ }
 

@@ -141,7 +141,9 @@ class ClassLifter {
 
   private def genClassNm(orgNm: String)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): TypeName = {
     TypeName(outer match{
-      case None => orgNm
+      case None => 
+        clsCnt = clsCnt+1
+        orgNm ++ "$" ++ clsCnt.toString()
       case Some(value) => genInnerName(value.liftedNm, orgNm)
     })
   }

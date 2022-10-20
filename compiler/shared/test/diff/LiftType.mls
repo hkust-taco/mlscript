@@ -11,9 +11,9 @@ class CTX{
 //│ TypingUnit(NuTypeDef(class, CTX, (), Tup(), (), TypingUnit(NuTypeDef(class, A, (), Tup(), (), TypingUnit()), NuFunDef(None, foo, [], Lam(Tup(f: Lam(Tup(_: Var(A)), Var(A))), Asc(App(Var(f), Tup(_: New(Some((TypeName(A),)), TypingUnit(List())))), Function(Tuple(List((None,Field(None,Function(Tuple(List((None,Field(None,TypeName(A))))),TypeName(A)))))),TypeName(A))))))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class CTX_A$1(par$CTX,) {}
-//│   class CTX() {
-//│     fun foo = f: CTX_A$1, => CTX_A$1, => f (new CTX_A$1(this,) {},) : Function(Tuple(List((None,Field(None,Function(Tuple(List((None,Field(None,TypeName(CTX_A$1))))),TypeName(CTX_A$1)))))),TypeName(CTX_A$1))
+//│   class CTX$1_A$2(par$CTX$1,) {}
+//│   class CTX$1() {
+//│     fun foo = f: CTX$1_A$2, => CTX$1_A$2, => f (new CTX$1_A$2(this,) {},) : Function(Tuple(List((None,Field(None,Function(Tuple(List((None,Field(None,TypeName(CTX$1_A$2))))),TypeName(CTX$1_A$2)))))),TypeName(CTX$1_A$2))
 //│   }
 //│ }
 
@@ -28,10 +28,10 @@ class CTX(x, y){
 //│ TypingUnit(NuTypeDef(class, CTX, (), Tup(_: Var(x), _: Var(y)), (), TypingUnit(NuTypeDef(class, A, (), Tup(), (), TypingUnit(NuFunDef(None, foo, [], Var(x)))), NuTypeDef(class, B, (), Tup(), (Var(A)), TypingUnit(NuFunDef(None, foo, [], Var(y)))), NuFunDef(None, foo, [], Lam(Tup(any: Bra(rcd = false, Tup(_: Var(A), _: Var(B)))), Asc(Bra(rcd = false, Tup(_: Sel(Var(any), _2), _: Sel(Var(any), _1))), Tuple(List((None,Field(None,TypeName(B))), (None,Field(None,TypeName(A)))))))))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class CTX_A$1(par$CTX,) {fun foo = ((this).par$CTX).x}
-//│   class CTX_B$2(par$CTX,): CTX_A$1 ((this).par$CTX,) {fun foo = ((this).par$CTX).y}
-//│   class CTX(x, y,) {
-//│     fun foo = any: '(' CTX_A$1, CTX_B$2, ')', => '(' (any)._2, (any)._1, ')' : Tuple(List((None,Field(None,TypeName(CTX_B$2))), (None,Field(None,TypeName(CTX_A$1)))))
+//│   class CTX$1_A$2(par$CTX$1,) {fun foo = ((this).par$CTX$1).x}
+//│   class CTX$1_B$3(par$CTX$1,): CTX$1_A$2 ((this).par$CTX$1,) {fun foo = ((this).par$CTX$1).y}
+//│   class CTX$1(x, y,) {
+//│     fun foo = any: '(' CTX$1_A$2, CTX$1_B$3, ')', => '(' (any)._2, (any)._1, ')' : Tuple(List((None,Field(None,TypeName(CTX$1_B$3))), (None,Field(None,TypeName(CTX$1_A$2)))))
 //│   }
 //│ }
 
@@ -46,10 +46,10 @@ class CTX(x, y){
 //│ TypingUnit(NuTypeDef(class, CTX, (), Tup(_: Var(x), _: Var(y)), (), TypingUnit(NuTypeDef(class, A, (), Tup(), (), TypingUnit(NuFunDef(None, foo, [], Var(x)))), NuTypeDef(class, B, (), Tup(), (Var(A)), TypingUnit(NuFunDef(None, foo, [], Var(y)))), NuFunDef(None, foo, [], Lam(Tup(any: Bra(rcd = true, Rcd(Var(p1) = Var(A), Var(p2) = Var(B)))), Asc(Bra(rcd = false, Tup(_: Sel(Var(any), p2), _: Sel(Var(any), p1))), Tuple(List((None,Field(None,TypeName(B))), (None,Field(None,TypeName(A)))))))))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class CTX_A$1(par$CTX,) {fun foo = ((this).par$CTX).x}
-//│   class CTX_B$2(par$CTX,): CTX_A$1 ((this).par$CTX,) {fun foo = ((this).par$CTX).y}
-//│   class CTX(x, y,) {
-//│     fun foo = any: '{' {p1: CTX_A$1, p2: CTX_B$2} '}', => '(' (any).p2, (any).p1, ')' : Tuple(List((None,Field(None,TypeName(CTX_B$2))), (None,Field(None,TypeName(CTX_A$1)))))
+//│   class CTX$1_A$2(par$CTX$1,) {fun foo = ((this).par$CTX$1).x}
+//│   class CTX$1_B$3(par$CTX$1,): CTX$1_A$2 ((this).par$CTX$1,) {fun foo = ((this).par$CTX$1).y}
+//│   class CTX$1(x, y,) {
+//│     fun foo = any: '{' {p1: CTX$1_A$2, p2: CTX$1_B$3} '}', => '(' (any).p2, (any).p1, ')' : Tuple(List((None,Field(None,TypeName(CTX$1_B$3))), (None,Field(None,TypeName(CTX$1_A$2)))))
 //│   }
 //│ }
 
@@ -64,9 +64,9 @@ class CTX(x, y){
 //│ TypingUnit(NuTypeDef(class, CTX, (), Tup(_: Var(x), _: Var(y)), (), TypingUnit(NuTypeDef(class, A, (), Tup(), (), TypingUnit(NuFunDef(None, foo, [], Var(x)))), NuTypeDef(class, B, (TypeName(T)), Tup(), (), TypingUnit(NuFunDef(None, foo, [], Var(y)))), NuFunDef(None, foo, [], Lam(Tup(any: Bra(rcd = false, Tup(_: Var(A), _: TyApp(Var(B), List(TypeName(A)))))), Asc(Bra(rcd = false, Tup(_: Var(any), _: Sel(Var(any), _1))), Tuple(List((None,Field(None,Tuple(List((None,Field(None,AppliedType(TypeName(B),List(TypeName(A))))), (None,Field(None,TypeName(A))))))), (None,Field(None,TypeName(A)))))))))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class CTX_A$1(par$CTX,) {fun foo = ((this).par$CTX).x}
-//│   class CTX_B$2[T](par$CTX,) {fun foo = ((this).par$CTX).y}
-//│   class CTX(x, y,) {
-//│     fun foo = any: '(' CTX_A$1, CTX_B$2‹CTX_A$1›, ')', => '(' any, (any)._1, ')' : Tuple(List((None,Field(None,Tuple(List((None,Field(None,AppliedType(TypeName(CTX_B$2),List(TypeName(CTX_A$1))))), (None,Field(None,TypeName(CTX_A$1))))))), (None,Field(None,TypeName(CTX_A$1)))))
+//│   class CTX$1_A$2(par$CTX$1,) {fun foo = ((this).par$CTX$1).x}
+//│   class CTX$1_B$3[T](par$CTX$1,) {fun foo = ((this).par$CTX$1).y}
+//│   class CTX$1(x, y,) {
+//│     fun foo = any: '(' CTX$1_A$2, CTX$1_B$3‹CTX$1_A$2›, ')', => '(' any, (any)._1, ')' : Tuple(List((None,Field(None,Tuple(List((None,Field(None,AppliedType(TypeName(CTX$1_B$3),List(TypeName(CTX$1_A$2))))), (None,Field(None,TypeName(CTX$1_A$2))))))), (None,Field(None,TypeName(CTX$1_A$2)))))
 //│   }
 //│ }
