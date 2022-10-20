@@ -462,9 +462,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               rec(lt, rt)
           case (TupleType(fs0), TupleType(fs1)) if fs0.size === fs1.size => // TODO generalize (coerce compatible tuples)
             // TODO: handle error
-            // errorSimplifer.updateLevelCount(cctx)
-            // errorSimplifer.reportInfo(S(cctx))
-            // errorSimplifer.reportInfo(S(cctx), 3)
+            errorSimplifer.updateLevelCount(cctx, N)
+            errorSimplifer.reportInfo(S(cctx))
+            errorSimplifer.reportInfo(S(cctx), 3)
             fs0.lazyZip(fs1).foreach { case ((ln, l), (rn, r)) =>
               ln.foreach { ln => rn.foreach { rn =>
                 if (ln =/= rn) err(
@@ -494,10 +494,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rec(err, l0, provChain)
             rec(r0, err, provChain)
           case (RecordType(fs0), RecordType(fs1)) =>
-            // TODO: handle error
-            // errorSimplifer.updateLevelCount(cctx)
-            // errorSimplifer.reportInfo(S(cctx))
-            // errorSimplifer.reportInfo(S(cctx), 3)
+            errorSimplifer.updateLevelCount(cctx, N)
+            errorSimplifer.reportInfo(S(cctx))
+            errorSimplifer.reportInfo(S(cctx), 3)
             fs1.foreach { case (n1, t1) =>
               fs0.find(_._1 === n1).fold {
                 reportError()
@@ -560,7 +559,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       // counts nested but counts extra
       // errorSimplifer.updateChainCount(cctx, (1, 1))
       // errorSimplifer.reportInfo(S(cctx))
-      errorSimplifer.reportInfo(S(cctx), 1)
+      errorSimplifer.reportInfo(S(cctx))
+      errorSimplifer.reportInfo(S(cctx), 0)
       errorSimplifer.reportInfo(S(cctx), 3)
       
       val lhsChain: List[ST] = cctx._1
@@ -898,7 +898,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       * @param change
       */
     def updateLevelCount(cctx: ConCtx, change: Opt[(Int, Int)] = S(1, 0)): Unit = {
-      dedupChain(flattenChainWithLevel(cctx))
+      flattenChainWithLevel(cctx)
+        .distinctBy(_._1.loco)
         .foreach{case (prov, level) =>
           if (level === 0) prov.loco.foreach(loc => updateCounter(loc, change))
         }
@@ -912,7 +913,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       * @param change
       */
     def updateChainCount(cctx: ConCtx, change: Opt[(Int, Int)] = S(0, 1)): Unit = {
-      dedupChain(flattenChainToProvList(cctx))
+      flattenChainToProvList(cctx)
+        .distinctBy(_.loco)
         .foreach(prov => prov.loco.foreach(loc => updateCounter(loc, change)))
     }
     

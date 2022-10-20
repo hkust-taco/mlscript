@@ -30,14 +30,17 @@
 // f1 y1 = succ y1
 // def succ x = add x 1
 // h1 f x = f x
+// h1 succ 1
+// h1 add 1
+// h1 add 3
 // h1 succ false
 
 :ex
 :d
 :simplifyError
-// class Tuple: { left: bool; right: int }
+// class Helper: { left: bool; right: int }
 // def succ x = add x 1
 // x1 = false
 // x2 = x1
-// x3 = Tuple { left = x2; right = 1 }
+// x3 = Helper { left = x2; right = 1 }
 // succ x3.left
