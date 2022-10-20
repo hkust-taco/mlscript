@@ -11,3 +11,8 @@ namespace ABC {
 }
 
 const d = new ABC.DEF
+
+namespace DD {
+  export const foo: number = 42
+  const bar = 42
+}

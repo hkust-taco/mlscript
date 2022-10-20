@@ -54,6 +54,7 @@ class TSTypeChecker(checker: js.Dynamic) {
   def getElementTypeOfArrayType(tp: js.Dynamic) = checker.getElementTypeOfArrayType(tp)
   def isOptionalParameter(node: js.Dynamic) = checker.isOptionalParameter(node)
   def getTypeAtLocation(node: js.Dynamic) = checker.getTypeAtLocation(node)
+  def getBaseType(tp: js.Dynamic) = checker.getBaseTypeOfLiteralType(tp)
 }
 
 object TSTypeChecker {
@@ -170,10 +171,14 @@ object TSTokenObject {
 class TSTypeObject(obj: js.Dynamic)(implicit checker: TSTypeChecker) extends TSAny(obj) {
   private lazy val flags = obj.flags
   private lazy val objectFlags = if (IsUndefined(obj.objectFlags)) 0 else obj.objectFlags
+  private lazy val baseType = TSTypeObject(checker.getBaseType(obj))
 
   lazy val symbol = TSSymbolObject(obj.symbol)
   lazy val typeArguments = TSTypeArray(checker.getTypeArguments(obj))
-  lazy val intrinsicName = obj.intrinsicName.toString
+  lazy val intrinsicName: String =
+    if (!IsUndefined(obj.intrinsicName)) obj.intrinsicName.toString
+    else baseType.intrinsicName
+
   lazy val types = TSTypeArray(obj.types)
   lazy val properties = TSSymbolArray(checker.getPropertiesOfType(obj))
   lazy val node = TSNodeObject(checker.typeToTypeNode(obj))
