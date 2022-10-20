@@ -417,18 +417,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs)
           case (lf @ FunctionType(l0, r0), rf @ FunctionType(l1, r1)) =>
             errorSimplifer.updateLevelCount(cctx, N)
-            errorSimplifer.reportInfo(S(cctx))
-            errorSimplifer.reportInfo(S(cctx), 3)
-            // errorSimplifer.reportInfo(S(cctx), 5)
-            // errorSimplifer.reportInfo(S(cctx), 6)
+            // errorSimplifer.reportInfo(S(cctx))
+            // errorSimplifer.reportInfo(S(cctx), 3)
             rec(l1, l0, revProvChain.map(_.updateInfo("function lhs")))
             rec(r0, r1, provChain.map(_.updateInfo("function rhs")))
           case (prim: ClassTag, ot: ObjectTag)
             if prim.parentsST.contains(ot.id) =>
               errorSimplifer.updateLevelCount(cctx, N)
               errorSimplifer.updateChainCount(cctx, S(1, 0))
-              errorSimplifer.reportInfo(S(cctx))
-              errorSimplifer.reportInfo(S(cctx), 3)
+              // errorSimplifer.reportInfo(S(cctx))
+              // errorSimplifer.reportInfo(S(cctx), 3)
               ()
           // for constraining type variables a new bound is created
           // the `newBound`'s provenance must record the whole flow
@@ -560,7 +558,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       // errorSimplifer.updateChainCount(cctx, (1, 1))
       // errorSimplifer.reportInfo(S(cctx))
       errorSimplifer.reportInfo(S(cctx))
-      errorSimplifer.reportInfo(S(cctx), 0)
       errorSimplifer.reportInfo(S(cctx), 3)
       
       val lhsChain: List[ST] = cctx._1
@@ -1093,7 +1090,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     def reportInfo(chain: Opt[ConCtx], infoLevel: Int = 4, strategy: Strategy = strategy)
       (implicit raise: Raise): Unit =
     {
-      if (!simplifyError) return
+      if (!simplifyError && infoLevel =/= 8) return
       
       val messages: Ls[Message -> Opt[Loc]] = infoLevel match {
         // most suspect locations in a given chain
@@ -1171,6 +1168,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               val counter = getCounter(loco)
               msg"(total, wrong): ${counter.toString()} with $desc and ${loco.toString}" -> Some(loco)
           }
+        case 8 =>
+          val locChain = locoCounter.keys.toSortedSet.toList
+          val ranking = strategy.debugLocationRanking(strategy.rankLocations(locChain))
+          val name = strategy.name
+          msg"========= All suspicious locations ($name) and value =========" -> N ::
+          ranking.filter(_._2 =/= 0.0).sortBy(_._2).reverseIterator
+          .map { case (loc, ranking) =>
+            val counter = getCounter(loc)
+            msg"Suspicion score ${ranking.toString()} with total and wrong: ${counter.toString()}" -> Some(loc)
+          }.toList
         case _ => Nil
       }
       
@@ -1192,6 +1199,23 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         chain.sorted(ordering).reverse
       def debugLocationRanking(chain: Ls[Loc]): Ls[Loc -> Double] =
         chain.map(loc => (loc, score(loc)))
+    }
+    
+    case class SimpleStrategy() extends Strategy {
+      override def score(loco: Loc): Double = {
+        getCounter(loco) match {
+          case (-1, -1) => 0
+          case (total, wrong) =>
+            if (total =/= 0) wrong.toDouble / total else 0
+        }
+      }
+
+      override val ordering: Ordering[Loc] = new Ordering[Loc] {
+        override def compare(x: Loc, y: Loc): Int = score(x).compare(score(y))
+      }
+      
+      val name: Str = "Simple"
+
     }
     
     case class OchiaiStrategy() extends Strategy {

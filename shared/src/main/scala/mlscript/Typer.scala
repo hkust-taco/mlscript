@@ -21,6 +21,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   def doFactorize: Bool = false
   def setErrorSimplification(simplifyError: Bool): Unit =
     errorSimplifer.simplifyError = simplifyError
+    
+  def showSuspiciousLocations()(implicit raise: Raise): Unit =
+    errorSimplifer.reportInfo(N, 8)
   
   var recordProvenances: Boolean = true
   

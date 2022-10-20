@@ -129,6 +129,8 @@ class DiffTests
       allowEscape: Bool = false,
       // capture nested prov, apply hueristics and find faulty locations
       simplifyError: Bool = false,
+      // print suspicious location after block
+      suspiciousLocation: Bool = false,
       // noProvs: Bool = false,
     ) {
       def isDebugging: Bool = dbg || dbgSimplif
@@ -183,6 +185,7 @@ class DiffTests
           case "ShowRepl" => mode.copy(showRepl = true)
           case "escape" => mode.copy(allowEscape = true)
           case "simplifyError" => mode.copy(simplifyError = true)
+          case "sus" => mode.copy(suspiciousLocation = true)
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)
@@ -743,6 +746,8 @@ class DiffTests
             }
             // generate typescript typegen block
             if (mode.generateTsDeclarations) outputSourceCode(tsTypegenCodeBuilder.toSourceCode())
+            // show a list of suspicious locations found in above block
+            if (mode.suspiciousLocation) typer.showSuspiciousLocations()(raise)
             
             if (mode.stats) {
               val (co, an, su, ty) = typer.stats
