@@ -22,7 +22,7 @@ class A{
 //│ Lifted:
 //│ TypingUnit {
 //│   class A_B$1(par$A,) {}
-//│   class A() {fun foo = x, => '(' x, ')'}
+//│   class A() {fun foo = x: B, => '(' x: B, ')'}
 //│ }
 
 fun foo =
@@ -206,8 +206,8 @@ fun foo<T, U>(x: T): string =
 //│ TypingUnit(NuFunDef(None, foo, [TypeName(T), TypeName(U)], Lam(Tup(x: Var(T)), Asc(Blk(...), TypeName(string)))))
 //│ Lifted:
 //│ TypingUnit {
-//│   class A[T,U](y,): B‹T›, C ((this).y,) {fun bar = this}
-//│   fun foo[T, U] = x, => {"rua"} : TypeName(string)
+//│   class A[T,U](y,): B‹T›, C (y: U,) {fun bar = this}
+//│   fun foo[T, U] = x: T, => {"rua"} : TypeName(string)
 //│ }
 
 class A<T>{
@@ -223,7 +223,7 @@ class A<T>{
 //│ Lifted:
 //│ TypingUnit {
 //│   class A_B$1[T](par$A,) {
-//│     fun f = x, => y, => x : Function(Tuple(List((None,Field(None,TypeName(T))))),Function(Tuple(List((None,Field(None,TypeName(B))))),TypeName(T)))
+//│     fun f = x, => y, => x : Function(Tuple(List((None,Field(None,TypeName(T))))),Function(Tuple(List((None,Field(None,TypeName(A_B$1))))),TypeName(T)))
 //│   }
 //│   class A[T]() {}
 //│ }
@@ -241,6 +241,6 @@ class Foo<T>{
 //│ TypingUnit {
 //│   class Foo_RectangleBox$1[T](par$Foo,): & (Box‹T›,) ('{' {breadth: T} '}',) {}
 //│   class Foo_StackedRectangleBoxes$2[N,T](par$Foo,): & (Foo_RectangleBox$1 ((this).par$Foo,)‹T›,) ('{' {size: N} '}',) {}
-//│   class Foo_Bar$3(par$Foo,): '{' {any: RectangleBox, => Foo_StackedRectangleBoxes$2 ((this).par$Foo,)} '}' {}
+//│   class Foo_Bar$3(par$Foo,): '{' {any: Foo_RectangleBox$1, => Foo_StackedRectangleBoxes$2} '}' {}
 //│   class Foo[T]() {}
 //│ }

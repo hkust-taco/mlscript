@@ -135,10 +135,10 @@ class Parent<T, U, V>(x) {
 //│ Lifted:
 //│ TypingUnit {
 //│   class Parent_Inner$1[W,U](par$Parent, y: Int,) {
-//│     fun bar = z, => ((this).par$Parent).foo ((this).y,)
-//│     fun boo = z, => z
+//│     fun bar = z: U, => ((this).par$Parent).foo ((this).y,)
+//│     fun boo = z: W, => z
 //│   }
-//│   class Parent[T,U,V](x,) {fun foo = x, => + (x,) (1,) : TypeName(T)}
+//│   class Parent[T,U,V](x,) {fun foo = x: Int, => + (x,) (1,) : TypeName(T)}
 //│ }
 
 
@@ -159,7 +159,7 @@ class A<T, U>(x: Int): {a1: Int} & B<T> & D(x){
 //│   class B[T]() {}
 //│   class C() {}
 //│   class D(y: Int,) {}
-//│   class A_C$1$1[T](par$A,): C () {fun foo = x, => x}
+//│   class A_C$1$1[T](par$A,): C () {fun foo = x: T, => x}
 //│   class A[T,U](x: Int,): & ('{' {a1: Int} '}',) (& (B ()‹T›,) (D ((this).x,),),) {fun getA =  => {new A_C$1$1(this,) {}}}
 //│ }
 // │ TypingUnit(NuTypeDef(class, B, (TypeName(T)), Tup(), (), TypingUnit()), NuTypeDef(class, C, (), Tup(), (), TypingUnit()), NuTypeDef(class, A, (TypeName(T), TypeName(U)), Tup(x: Var(Int)), (App(App(Var(&), Tup(_: Bra(rcd = true, Rcd(Var(a1) = Var(Int)})))), Tup(_: TyApp(Var(B), List(TypeName(T)))))), TypingUnit(NuFunDef(None, getA, [], Lam(Tup(), New(Some((TypeName(C),)), TypingUnit(List(fun foo = x: T, => x))))))))
