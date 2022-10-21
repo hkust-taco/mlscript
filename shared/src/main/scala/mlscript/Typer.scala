@@ -721,24 +721,30 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         }
         con(s_ty, req, cs_ty)
       case iff @ If(body, fallback) =>
-        val cnf = desugarIf(body)(ctx)
-        println("Flattened conjunctions")
-        cnf.foreach { case (conditions, term) =>
-          println(conditions.iterator.map {
-            case IfBodyHelpers.Condition.BooleanTest(test) => s"<$test>"
-            case IfBodyHelpers.Condition.MatchClass(scrutinee, Var(className), fields) =>
-              s"$scrutinee is $className"
-            case IfBodyHelpers.Condition.MatchTuple(scrutinee, arity, fields) =>
-              s"$scrutinee is Tuple#$arity"
-          }.mkString("", " and ", s" => $term"))
+        try {
+          val cnf = desugarIf(body)(ctx)
+          println("Flattened conjunctions")
+          cnf.foreach { case (conditions, term) =>
+            println(conditions.iterator.map {
+              case IfBodyHelpers.Condition.BooleanTest(test) => s"<$test>"
+              case IfBodyHelpers.Condition.MatchClass(scrutinee, Var(className), fields) =>
+                s"$scrutinee is $className"
+              case IfBodyHelpers.Condition.MatchTuple(scrutinee, arity, fields) =>
+                s"$scrutinee is Tuple#$arity"
+            }.mkString("", " and ", s" => $term"))
+          }
+          val caseTree = MutCaseOf.build(cnf)
+          println("The mutable CaseOf tree")
+          println(caseTree.toString)
+          val trm = caseTree.toTerm(fallback)
+          println(s"Desugared term: $trm")
+          iff.desugaredIf = S(trm)
+          typeTerm(trm)
+        } catch {
+          case IfDesugaringException(message) =>
+            err(message, iff.toLoc)
+          case e: Throwable => throw e
         }
-        val caseTree = MutCaseOf.build(cnf)
-        println("The mutable CaseOf tree")
-        println(caseTree.toString)
-        val trm = caseTree.toTerm(fallback)
-        println(s"Desugared term: $trm")
-        iff.desugaredIf = S(trm)
-        typeTerm(trm)
       case New(S((nmedTy, trm)), TypingUnit(Nil)) =>
         typeTerm(App(Var(nmedTy.base.name).withLocOf(nmedTy), trm))
       case New(base, args) => ???
@@ -977,7 +983,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       // This case handles literals.
       // x is true | x is false | x is 0 | x is "text" | ...
       case literal @ (Var("true") | Var("false") | _: Lit) =>
-        val test = mkBinOp(scrutinee, Var("eq"), literal)
+        val test = mkBinOp(scrutinee, Var("=="), literal)
         Condition.BooleanTest(test) :: Nil
       // This case handles simple class tests.
       // x is A

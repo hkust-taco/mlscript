@@ -775,6 +775,8 @@ trait IfImpl { self: If =>
   var desugaredIf: Opt[Term] = N  
 }
 
+final case class IfDesugaringException(message: Str) extends Exception(message)
+
 object IfBodyHelpers {
   abstract class Condition
 
@@ -955,7 +957,8 @@ object MutCaseOf {
   }
   final case object MissingCase extends MutCaseOf {
     override def append(branch: Ls[Condition] -> Term): Unit = ???
-    override def toTerm(implicit fallback: Opt[Term]): Term = fallback.getOrElse(???)
+    override def toTerm(implicit fallback: Opt[Term]): Term =
+      fallback.getOrElse(throw new IfDesugaringException("missing a default branch"))
   }
 
   private def buildBranch(conditions: Ls[Condition], term: Term): MutCaseOf = {
