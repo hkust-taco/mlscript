@@ -7,7 +7,7 @@ import scala.collection.mutable.Map as MMap
 import scala.collection.mutable.Set as MSet
 import mlscript.codegen.Helpers.inspect as showStructure
 
-class ClassLifter { 
+class ClassLifter(logDebugMsg: Boolean = false) { 
   type ClassName = String
   type FieldName = String
   case class LocalContext(vSet: Set[Var], tSet: Set[TypeName]){
@@ -60,7 +60,9 @@ class ClassLifter {
 
   private def log(str: String): Unit = {
     logOutput.append(str)
-    // println(str)
+    if(logDebugMsg){
+      println(str)
+    }
   }
   def getLog: String = logOutput.toString()
 
@@ -261,26 +263,32 @@ class ClassLifter {
       }
     }
     log(s"lift constr for $tp$prm under $ctx, $cache, $outer")
-    if(!cache.contains(tp)){
+    if(!cache.contains(tp) && !ctx.tSet.contains(tp)){
       throw new Exception("Creating Unknown Object!")
     }
-    val cls@ClassInfoCache(_, nm, capParams, _, _, _, out, _, _) = cache.get(tp).get
-    val nParams = liftTuple(Tup(prm.fields ++ capParams.vSet.toList.map(toFldsEle(_))))
-    if(outer.isDefined){
-      log("find ancestor " + outer.get + " & " + cls)
-      findAncestor(outer.get, out) match{
-        case None => 
-          log("case 1")
-          (nm, nParams._1, nParams._2)
-        case Some((selPt, Some(varNm))) =>
-          log("case 2")
-          (nm, Tup(toFldsEle(selPath2Term(selPt.map(genParName).updated(0, "this").reverse, Var(varNm))) :: nParams._1.fields), nParams._2) 
-        case Some((_, None)) =>
-          log("case 3")
-          (nm, Tup(toFldsEle(Var("this")) :: nParams._1.fields), nParams._2) 
-      }
+    if(ctx.tSet.contains(tp)){
+      val nParams = liftTuple(prm)
+      (tp, nParams._1, nParams._2)
     }
-    else (nm, nParams._1, nParams._2)
+    else {
+      val cls@ClassInfoCache(_, nm, capParams, _, _, _, out, _, _) = cache.get(tp).get
+      val nParams = liftTuple(Tup(prm.fields ++ capParams.vSet.toList.map(toFldsEle(_))))
+      if(outer.isDefined){
+        log("find ancestor " + outer.get + " & " + cls)
+        findAncestor(outer.get, out) match{
+          case None => 
+            log("case 1")
+            (nm, nParams._1, nParams._2)
+          case Some((selPt, Some(varNm))) =>
+            log("case 2")
+            (nm, Tup(toFldsEle(selPath2Term(selPt.map(genParName).updated(0, "this").reverse, Var(varNm))) :: nParams._1.fields), nParams._2) 
+          case Some((_, None)) =>
+            log("case 3")
+            (nm, Tup(toFldsEle(Var("this")) :: nParams._1.fields), nParams._2) 
+        }
+      }
+      else (nm, nParams._1, nParams._2)
+    }
   }
 
   private def liftTermNew(target: Term)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (Term, LocalContext) = target match{
@@ -520,8 +528,10 @@ class ClassLifter {
       case Left(value) => 
         val ret = liftTermNew(value)(using ctx.addV(nm).addT(tpVs))
         (func.copy(rhs = Left(ret._1)), ret._2)
-      case Right(pltp) => 
-        (func, emptyCtx)
+      case Right(PolyType(targs, body)) => 
+        val nBody = liftType(body)(using ctx.addT(tpVs))
+        val nTargs = targs.map(liftTypeName(_)(using ctx.addT(tpVs))).unzip
+        (func.copy(rhs = Right(PolyType(nTargs._1, nBody._1))), nTargs._2.fold(nBody._2)(_ ++ _))
     }
   }
   
