@@ -866,14 +866,14 @@ object IfBodyHelpers {
           s"$scrutinee is $className"
         case IfBodyHelpers.Condition.MatchTuple(scrutinee, arity, fields) =>
           s"$scrutinee is Tuple#$arity"
-      }.mkString("", " and ", s" => $term"))
+      }.mkString("«", "» and «", s"» => $term"))
     }
   }
 }
 
 abstract class MutCaseOf {
-  def append(branch: Ls[IfBodyHelpers.Condition] -> Term): Unit
-  def toTerm(implicit fallback: Opt[Term]): Term
+  def merge(branch: Ls[IfBodyHelpers.Condition] -> Term)(implicit raise: Diagnostic => Unit): Unit
+  def toTerm: Term
 }
 
 object MutCaseOf {
@@ -933,38 +933,39 @@ object MutCaseOf {
 
   // A short-hand for pattern matchings with only true and false branches.
   final case class IfThenElse(condition: Term, var whenTrue: MutCaseOf, var whenFalse: MutCaseOf) extends MutCaseOf {
-    override def append(branch: Ls[Condition] -> Term): Unit = branch match {
-      case Nil -> term => 
-        whenFalse match {
-          case Consequent(_) => ??? // duplicated branch
-          case MissingCase => whenFalse = Consequent(term)
-          case _ => whenFalse.append(branch)
-        }
-      case (Condition.BooleanTest(test) :: tail) -> term =>
-        if (test === condition) {
-          whenTrue.append(tail -> term)
-        } else {
+    override def merge(branch: Ls[Condition] -> Term)(implicit raise: Diagnostic => Unit): Unit =
+      branch match {
+        case Nil -> term => 
           whenFalse match {
             case Consequent(_) => ??? // duplicated branch
             case MissingCase => whenFalse = Consequent(term)
-            case _ => whenFalse.append(branch)
+            case _ => whenFalse.merge(branch)
           }
-        }
-      case _ =>
-        whenFalse match {
-          case Consequent(_) => ??? // duplicated branch
-          case MissingCase => whenFalse = buildBranch(branch._1, branch._2)
-          case _ => whenFalse.append(branch)
-        }
-    }
-    override def toTerm(implicit fallback: Opt[Term]): Term = {
+        case (Condition.BooleanTest(test) :: tail) -> term =>
+          if (test === condition) {
+            whenTrue.merge(tail -> term)
+          } else {
+            whenFalse match {
+              case Consequent(_) => ??? // duplicated branch
+              case MissingCase => whenFalse = Consequent(term)
+              case _ => whenFalse.merge(branch)
+            }
+          }
+        case _ =>
+          whenFalse match {
+            case Consequent(_) => ??? // duplicated branch
+            case MissingCase => whenFalse = buildBranch(branch._1, branch._2)
+            case _ => whenFalse.merge(branch)
+          }
+      }
+    override def toTerm: Term = {
       val falseBranch = Wildcard(whenFalse.toTerm)
       val trueBranch = Case(Var("true"), whenTrue.toTerm, falseBranch)
       CaseOf(condition, trueBranch)
     }
   }
   final case class Match(scrutinee: Term, val branches: Buffer[Branch]) extends MutCaseOf {
-    override def append(branch: Ls[Condition] -> Term): Unit = {
+    override def merge(branch: Ls[Condition] -> Term)(implicit raise: Diagnostic => Unit): Unit = {
       branch match {
         case (Condition.MatchClass(scrutinee2, className, fields) :: tail) -> term if scrutinee2 === scrutinee =>
           branches.find(_.matches(className)) match {
@@ -973,7 +974,7 @@ object MutCaseOf {
               branches += Branch(S(className -> Buffer.from(fields)), buildBranch(tail, term))
             case S(branch) =>
               branch.addFields(fields)
-              branch.consequent.append(tail -> term)
+              branch.consequent.merge(tail -> term)
           }
         case (Condition.MatchTuple(scrutinee2, arity, fields) :: tail) -> term if scrutinee2 === scrutinee =>
           val tupleClassName = Var(s"Tuple#$arity")
@@ -983,19 +984,29 @@ object MutCaseOf {
               branches += Branch(S(tupleClassName -> Buffer.from(indexFields)), buildBranch(tail, term))
             case S(branch) =>
               branch.addFields(indexFields)
-              branch.consequent.append(tail -> term)
+              branch.consequent.merge(tail -> term)
           }
+        // A wild card case. We should propagate wildcard to every default positions.
+        case Nil -> term =>
+          var hasWildcard = false
+          branches.foreach {
+            case Branch(_, _: Consequent | MissingCase) => ()
+            case Branch(patternFields, consequent) =>
+              consequent.merge(branch)
+              hasWildcard &&= patternFields.isEmpty
+          }
+          if (!hasWildcard) branches += Branch(N, Consequent(term))
         case conditions -> term =>
           // Locate the wildcard case.
           branches.find(_.isWildcard) match {
             // No wildcard. We will create a new one.
             case N => branches += Branch(N, buildBranch(conditions, term))
-            case S(Branch(N, consequent)) => consequent.append(conditions -> term)
+            case S(Branch(N, consequent)) => consequent.merge(conditions -> term)
             case S(_) => ??? // Impossible case. What we find should be N.
           }
       }
     }
-    override def toTerm(implicit fallback: Opt[Term]): Term = {
+    override def toTerm: Term = {
       def rec(xs: Ls[Branch]): CaseBranches =
         xs match {
           case Nil => NoCases
@@ -1010,13 +1021,14 @@ object MutCaseOf {
     }
   }
   final case class Consequent(term: Term) extends MutCaseOf {
-    override def append(branch: Ls[Condition] -> Term): Unit = ???
-    override def toTerm(implicit fallback: Opt[Term]): Term = term
+    override def merge(branch: Ls[Condition] -> Term)(implicit raise: Diagnostic => Unit): Unit =
+      raise(WarningReport(Message.fromStr("duplicated branch") -> N :: Nil))
+    override def toTerm: Term = term
   }
   final case object MissingCase extends MutCaseOf {
-    override def append(branch: Ls[Condition] -> Term): Unit = ???
-    override def toTerm(implicit fallback: Opt[Term]): Term =
-      fallback.getOrElse(throw new IfDesugaringException("missing a default branch"))
+    override def merge(branch: Ls[Condition] -> Term)(implicit raise: Diagnostic => Unit): Unit = ???
+    override def toTerm: Term =
+      throw new IfDesugaringException("missing a default branch")
   }
 
   private def buildBranch(conditions: Ls[Condition], term: Term): MutCaseOf = {
@@ -1040,12 +1052,12 @@ object MutCaseOf {
     rec(conditions)
   }
 
-  def build(cnf: Ls[Ls[Condition] -> Term]): MutCaseOf = {
+  def build(cnf: Ls[Ls[Condition] -> Term])(implicit raise: Diagnostic => Unit): MutCaseOf = {
     cnf match {
       case Nil => ???
       case (conditions -> term) :: next =>
         val root = MutCaseOf.buildBranch(conditions, term)
-        next.foreach(root.append(_))
+        next.foreach(root.merge(_))
         root
     }
   }

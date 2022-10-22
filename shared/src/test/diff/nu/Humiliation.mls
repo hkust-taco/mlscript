@@ -19,20 +19,13 @@ fun test(x) = if x is 1 then 0 else 1
 //│ test: number -> (0 | 1)
 //│     = [Function: test]
 
-if f is
+fun testF(x) = if x is
   Foo(a) then a
   Foo(a) then a
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.MutCaseOf$Consequent.append(helpers.scala:1013)
-//│ 	at: mlscript.MutCaseOf$Match.append(helpers.scala:976)
-//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1(helpers.scala:1048)
-//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1$adapted(helpers.scala:1048)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.MutCaseOf$.build(helpers.scala:1048)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:727)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ ╔══[WARNING] duplicated branch
+//│ ╙──
+//│ testF: (Foo with {x: 'x}) -> 'x
+//│      = [Function: testF]
 
 
 class Bar(y, z)
@@ -58,12 +51,12 @@ if x is
   Pair(y, 1) then x
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.MutCaseOf$IfThenElse.append(helpers.scala:948)
-//│ 	at: mlscript.MutCaseOf$Match.append(helpers.scala:976)
-//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1(helpers.scala:1048)
-//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1$adapted(helpers.scala:1048)
+//│ 	at: mlscript.MutCaseOf$IfThenElse.merge(helpers.scala:949)
+//│ 	at: mlscript.MutCaseOf$Match.merge(helpers.scala:977)
+//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1(helpers.scala:1060)
+//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1$adapted(helpers.scala:1060)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.MutCaseOf$.build(helpers.scala:1048)
+//│ 	at: mlscript.MutCaseOf$.build(helpers.scala:1060)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:727)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
@@ -141,7 +134,7 @@ fun foo(x) = if x is
 //│ foo: (Pair & {snd: nothing} & 'a) -> ("ones" | "zeros" | 'a)
 //│    = [Function: foo5]
 
-
+// Note: the parser produces a wrong syntax tree.
 fun foo(x, y) = if x is Z() and y is O() then 0 else 1
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
@@ -158,7 +151,7 @@ fun foo(x, y) = if x is Z() and y is O() then 0 else 1
 fun foo(x, y) = if x is
   Z() and y is O() then 0 else 1
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.159: 	  Z() and y is O() then 0 else 1
+//│ ║  l.152: 	  Z() and y is O() then 0 else 1
 //│ ╙──       	                          ^^^^
 //│ foo: (Z, O,) -> 0
 //│    = [Function: foo6]
@@ -167,6 +160,6 @@ fun foo(x, y) =
   if x is
     Z() and y is O() then 0
     else 1
-//│ foo: (anything, O,) -> (0 | 1)
+//│ foo: (anything, anything,) -> (0 | 1)
 //│    = [Function: foo7]
 

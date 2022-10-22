@@ -722,12 +722,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         con(s_ty, req, cs_ty)
       case iff @ If(body, fallback) =>
         try {
-          val cnf = desugarIf(body)(ctx)
+          val cnf = desugarIf(body, fallback)(ctx)
           IfBodyHelpers.showConjunctions(println, cnf)
           val caseTree = MutCaseOf.build(cnf)
           println("The mutable CaseOf tree")
           MutCaseOf.show(caseTree).foreach(println(_))
-          val trm = caseTree.toTerm(fallback)
+          val trm = caseTree.toTerm
           println(s"Desugared term: ${trm.print(false)}")
           iff.desugaredIf = S(trm)
           typeTerm(trm)
@@ -1037,7 +1037,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case _ => throw new Exception(s"illegal pattern: $pattern")
     }
 
-  def desugarIf(body: IfBody)(implicit ctx: Ctx): Ls[Ls[Condition] -> Term] = {
+  def desugarIf(body: IfBody, fallback: Opt[Term])(implicit ctx: Ctx): Ls[Ls[Condition] -> Term] = {
     // We allocate temporary variable names for nested patterns.
     // This prevents aliasing problems.
     implicit val scrutineeFieldAliases: MutMap[Term, MutMap[Str, Var]] = MutMap.empty
@@ -1168,6 +1168,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       }
     }
     desugarIfBody(body)(N, Nil)
+    // Add the fallback case to conjunctions if there is any.
+    fallback.foreach { branches += Nil -> _ }
     branches.toList
   }
 }
