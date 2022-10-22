@@ -86,11 +86,11 @@ class ClassLifter(logDebugMsg: Boolean = false) {
 
   private def getFields(etts: List[Statement]): Set[Var] = {
     etts.flatMap{
-        case NuFunDef(_, nm, _, _) => Some(nm)
-        case NuTypeDef(_, TypeName(nm), _, _, _, _) => Some(Var(nm))
-        case Let(_, name, _, _) => Some(name)
-        case _ => None 
-      }.toSet
+      case NuFunDef(_, nm, _, _) => Some(nm)
+      case NuTypeDef(_, TypeName(nm), _, _, _, _) => Some(Var(nm))
+      case Let(_, name, _, _) => Some(name)
+      case _ => None 
+    }.toSet
   }
 
   private def selPath2Term(path: List[String], varNm: Var): Term = path match {
@@ -116,21 +116,21 @@ class ClassLifter(logDebugMsg: Boolean = false) {
   private def toFldsEle(trm: Term): (Option[Var], Fld) = (None, Fld(false, false, trm))
 
   def getSupClsInfoByTerm(parentTerm: Term): (List[TypeName], List[(Var, Fld)]) = parentTerm match{
-      case Var(nm) => List(TypeName(nm)) -> Nil
-      case App(Var(nm), _: Tup) => List(TypeName(nm)) -> Nil
-      case App(App(Var("&"), t1), t2) => 
-        val ret1 = getSupClsInfoByTerm(t1)
-        val ret2 = getSupClsInfoByTerm(t2)
-        (ret1._1 ++ ret2._1) -> (ret1._2 ++ ret2._2)
-      case TyApp(trm, targs) => getSupClsInfoByTerm(trm)
-      //SPECIAL CARE: Tup related issue
-      case Tup(flds) => 
-        val ret = flds.filter(_._1.isEmpty).map(fld => getSupClsInfoByTerm(fld._2.value)).unzip
-        ret._1.flatten -> ret._2.fold(Nil)(_ ++ _)
-      case Bra(rcd, trm) => getSupClsInfoByTerm(trm)
-      case Rcd(fields) => (Nil, fields)
-      case _ => (Nil, Nil)
-    }
+    case Var(nm) => List(TypeName(nm)) -> Nil
+    case App(Var(nm), _: Tup) => List(TypeName(nm)) -> Nil
+    case App(App(Var("&"), t1), t2) => 
+      val ret1 = getSupClsInfoByTerm(t1)
+      val ret2 = getSupClsInfoByTerm(t2)
+      (ret1._1 ++ ret2._1) -> (ret1._2 ++ ret2._2)
+    case TyApp(trm, targs) => getSupClsInfoByTerm(trm)
+    //SPECIAL CARE: Tup related issue
+    case Tup(flds) => 
+      val ret = flds.filter(_._1.isEmpty).map(fld => getSupClsInfoByTerm(fld._2.value)).unzip
+      ret._1.flatten -> ret._2.fold(Nil)(_ ++ _)
+    case Bra(rcd, trm) => getSupClsInfoByTerm(trm)
+    case Rcd(fields) => (Nil, fields)
+    case _ => (Nil, Nil)
+  }
   
   private def splitEntities(etts: List[Statement]) = {
     val tmp = etts.map{
