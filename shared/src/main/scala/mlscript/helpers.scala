@@ -401,7 +401,8 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Bind(l, r) => s"$l as $r" |> bra
     case Test(l, r) => s"$l is $r" |> bra
     case With(t, fs) =>  s"$t with $fs" |> bra
-    case CaseOf(s, c) => s"case $s of $c" |> bra
+    case CaseOf(s, c) =>
+      s"case $s of { ${c.print(true)} }" |> bra
     case Subs(a, i) => s"($a)[$i]"
     case Assign(lhs, rhs) => s" $lhs <- $rhs" |> bra
     case New(S((at, ar)), bod) => s"new ${at.show}($ar) ${bod.show}" |> bra
@@ -727,7 +728,16 @@ trait CaseBranchesImpl extends Located { self: CaseBranches =>
     case c: Case => c :: c.rest.toList
     case _ => Nil
   }
-  
+
+  def print(isFirst: Bool): Str = this match {
+    case Case(pat, body, rest) =>
+      (if (isFirst) { "" } else { "; " }) +
+      pat.print(false) + " => " + body.print(false) + rest.print(false)
+    case Wildcard(body) => 
+      (if (isFirst) { "" } else { "; " }) +
+      "_ => " + body.print(false)
+    case NoCases => ""
+  }
 }
 
 abstract class MatchCase
@@ -846,6 +856,19 @@ object IfBodyHelpers {
       case (field -> alias) :: tail =>
         Let(false, alias, Sel(scrutinee, Var(field)), mkLetFromFields(scrutinee, tail, body))
     }
+
+  def showConjunctions(println: (=> Any) => Unit, cnf: Ls[Ls[IfBodyHelpers.Condition] -> Term]): Unit = {
+    println("Flattened conjunctions")
+    cnf.foreach { case (conditions, term) =>
+      println("+ " + conditions.iterator.map {
+        case IfBodyHelpers.Condition.BooleanTest(test) => s"<$test>"
+        case IfBodyHelpers.Condition.MatchClass(scrutinee, Var(className), fields) =>
+          s"$scrutinee is $className"
+        case IfBodyHelpers.Condition.MatchTuple(scrutinee, arity, fields) =>
+          s"$scrutinee is Tuple#$arity"
+      }.mkString("", " and ", s" => $term"))
+    }
+  }
 }
 
 abstract class MutCaseOf {
@@ -855,6 +878,41 @@ abstract class MutCaseOf {
 
 object MutCaseOf {
   import IfBodyHelpers._
+
+  def show(t: MutCaseOf): Ls[Str] = {
+    val lines = Buffer.empty[String]
+    def rec(t: MutCaseOf, indent: Int, leading: String): Unit = {
+      val baseIndent = "  " * indent
+      t match {
+        case IfThenElse(condition, whenTrue, whenFalse) =>
+          // Output the `whenTrue` with the prefix "if".
+          lines += baseIndent + leading + s"if «$condition"
+          rec(whenTrue, indent + 1, "")
+          // Output the `whenFalse` case with the prefix "else".
+          lines += s"$baseIndent${leading}else"
+          rec(whenFalse, indent + 1, "")
+        case Match(scrutinee, branches) =>
+          lines += baseIndent + leading + s"«$scrutinee» match"
+          branches.foreach {
+            case Branch(N, consequent) =>
+              lines += s"$baseIndent  default"
+              rec(consequent, indent + 2, "")
+            case Branch(S(Var(className) -> fields), consequent) =>
+              lines += s"$baseIndent  case $className =>"
+              fields.foreach { case (field, Var(alias)) =>
+                lines += s"$baseIndent    let $alias = .$field"
+              }
+              rec(consequent, indent + 2, "")
+          }
+        case Consequent(term) =>
+          lines += s"$baseIndent$leading«$term»"
+        case MissingCase =>
+          lines += s"$baseIndent$leading<missing case>"
+      }
+    }
+    rec(t, 0, "")
+    lines.toList
+  }
 
   final case class Branch(
     val patternFields: Opt[Var -> Buffer[Str -> Var]],

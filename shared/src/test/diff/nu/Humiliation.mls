@@ -24,15 +24,15 @@ if f is
   Foo(a) then a
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.MutCaseOf$Consequent.append(helpers.scala:955)
-//│ 	at: mlscript.MutCaseOf$Match.append(helpers.scala:918)
-//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1(helpers.scala:990)
-//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1$adapted(helpers.scala:990)
+//│ 	at: mlscript.MutCaseOf$Consequent.append(helpers.scala:1013)
+//│ 	at: mlscript.MutCaseOf$Match.append(helpers.scala:976)
+//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1(helpers.scala:1048)
+//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1$adapted(helpers.scala:1048)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.MutCaseOf$.build(helpers.scala:990)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:736)
+//│ 	at: mlscript.MutCaseOf$.build(helpers.scala:1048)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:727)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:753)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
 
 
 class Bar(y, z)
@@ -58,15 +58,15 @@ if x is
   Pair(y, 1) then x
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.MutCaseOf$IfThenElse.append(helpers.scala:890)
-//│ 	at: mlscript.MutCaseOf$Match.append(helpers.scala:918)
-//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1(helpers.scala:990)
-//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1$adapted(helpers.scala:990)
+//│ 	at: mlscript.MutCaseOf$IfThenElse.append(helpers.scala:948)
+//│ 	at: mlscript.MutCaseOf$Match.append(helpers.scala:976)
+//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1(helpers.scala:1048)
+//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1$adapted(helpers.scala:1048)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.MutCaseOf$.build(helpers.scala:990)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:736)
+//│ 	at: mlscript.MutCaseOf$.build(helpers.scala:1048)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:727)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:753)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
 
 class Z()
 class O()
@@ -147,13 +147,13 @@ fun foo(x, y) = if x is Z() and y is O() then 0 else 1
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:626)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:753)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:714)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:753)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:742)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:733)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:753)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
 
 fun foo(x, y) = if x is
   Z() and y is O() then 0 else 1

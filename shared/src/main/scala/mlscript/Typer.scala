@@ -723,21 +723,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case iff @ If(body, fallback) =>
         try {
           val cnf = desugarIf(body)(ctx)
-          println("Flattened conjunctions")
-          cnf.foreach { case (conditions, term) =>
-            println(conditions.iterator.map {
-              case IfBodyHelpers.Condition.BooleanTest(test) => s"<$test>"
-              case IfBodyHelpers.Condition.MatchClass(scrutinee, Var(className), fields) =>
-                s"$scrutinee is $className"
-              case IfBodyHelpers.Condition.MatchTuple(scrutinee, arity, fields) =>
-                s"$scrutinee is Tuple#$arity"
-            }.mkString("", " and ", s" => $term"))
-          }
+          IfBodyHelpers.showConjunctions(println, cnf)
           val caseTree = MutCaseOf.build(cnf)
           println("The mutable CaseOf tree")
-          println(caseTree.toString)
+          MutCaseOf.show(caseTree).foreach(println(_))
           val trm = caseTree.toTerm(fallback)
-          println(s"Desugared term: $trm")
+          println(s"Desugared term: ${trm.print(false)}")
           iff.desugaredIf = S(trm)
           typeTerm(trm)
         } catch {

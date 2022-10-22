@@ -14,10 +14,72 @@ class None: Option
 //│ Some: 'value -> (Some with {value: 'value})
 //│ None: () -> None
 
+:d
 fun getOrElse(opt, default) =
   if opt is
     Some(value) then value
     None then default
+//│ 1. Typing term opt, default, => {if opt is ‹(Some (value,)) then value; (None) then default›}
+//│ | 1. Typing pattern opt, default,
+//│ | | 1. Typing pattern opt
+//│ | | 1. : α48'
+//│ | | 1. Typing pattern default
+//│ | | 1. : α49'
+//│ | 1. : (α48', α49',)
+//│ | 1. Typing term {if opt is ‹(Some (value,)) then value; (None) then default›}
+//│ | | 1. Typing term if opt is ‹(Some (value,)) then value; (None) then default›
+//│ | | | Flattened conjunctions
+//│ | | | + opt is Some => value
+//│ | | | + opt is None => default
+//│ | | | The mutable CaseOf tree
+//│ | | | «opt» match
+//│ | | |   case Some =>
+//│ | | |     let value = .value
+//│ | | |     «value»
+//│ | | |   case None =>
+//│ | | |     «default»
+//│ | | | Desugared term: case opt of { Some => let value = (opt).value in value; None => default }
+//│ | | | 1. Typing term case opt of { Some => let value = (opt).value in value; None => default }
+//│ | | | | 1. Typing term opt
+//│ | | | | 1. : α48'
+//│ | | | | 1. Typing term let value = (opt).value in value
+//│ | | | | | 2. Typing term (opt).value
+//│ | | | | | | 2. Typing term opt
+//│ | | | | | | 2. : α50'
+//│ | | | | | | CONSTRAIN α50' <! {value: value51''}
+//│ | | | | | |   where 
+//│ | | | | | | C α50' <! {value: value51''}    (0)
+//│ | | | | | | | EXTR RHS  {value: value51''}  ~>  {value: value52'}  to 1
+//│ | | | | | | |  where 
+//│ | | | | | | |    and 
+//│ 		value51'' :> value52'
+//│ | | | | | | | C α50' <! {value: value52'}    (1)
+//│ | | | | | 2. : value51''
+//│ | | | | | 1. Typing term value
+//│ | | | | | 1. : value53'
+//│ | | | | 1. : value53'
+//│ | | | | 1. Typing term default
+//│ | | | | 1. : α49'
+//│ | | | | CONSTRAIN α48' <! ((some<option> & α50') | ((none<option> & α54') & ~(some<option>)))
+//│ | | | |   where 
+//│ 		α50' <: {value: value52'}
+//│ | | | | C α48' <! ((some<option> & α50') | ((none<option> & α54') & ~(some<option>)))    (0)
+//│ | | | 1. : (value53' | α49')
+//│ | | 1. : (value53' | α49')
+//│ | 1. : (value53' | α49')
+//│ 1. : ((α48', α49',) -> (value53' | α49'))
+//│ CONSTRAIN ((α48', α49',) -> (value53' | α49')) <! getOrElse47'
+//│   where 
+//│ 		α48' <: ((some<option> & α50') | ((none<option> & α54') & ~(some<option>)))
+//│ 		α50' <: {value: value52'}
+//│ 		value53' :> value52'
+//│ C ((α48', α49',) -> (value53' | α49')) <! getOrElse47'    (0)
+//│ ⬤ Typed as: getOrElse47'
+//│  where: 
+//│ 		getOrElse47' :> ((α48', α49',) -> (value53' | α49'))
+//│ 		α48' <: ((some<option> & α50') | ((none<option> & α54') & ~(some<option>)))
+//│ 		α50' <: {value: value52'}
+//│ 		value53' :> value52'
 //│ getOrElse: (None | (Some with {value: 'value}), 'value,) -> 'value
 
 getOrElse(None(), 0)
