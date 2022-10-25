@@ -39,13 +39,13 @@ if x is
   (0, 0) then "zeros"
   (1, 1) then "ones"
 //│ /!!!\ Uncaught error: java.lang.Exception: illegal pattern: '(' 0, 0, ')'
-//│ 	at: mlscript.Typer.destructPattern(Typer.scala:1037)
-//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1073)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
+//│ 	at: mlscript.Typer.destructPattern(Typer.scala:1075)
+//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1139)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$7(Typer.scala:1227)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$7$adapted(Typer.scala:1227)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1227)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1254)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
@@ -55,13 +55,13 @@ if x is
   (1, 1) then "ones"
   (y, 1) then x
 //│ /!!!\ Uncaught error: java.lang.Exception: illegal pattern: '(' 0, 0, ')'
-//│ 	at: mlscript.Typer.destructPattern(Typer.scala:1037)
-//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1073)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
+//│ 	at: mlscript.Typer.destructPattern(Typer.scala:1075)
+//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1139)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$7(Typer.scala:1227)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$7$adapted(Typer.scala:1227)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1227)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1254)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)

@@ -7,38 +7,46 @@ if a is
     Right(0) then y
     Right(x) then x + y
   else 0
-//│ /!!!\ Uncaught error: java.lang.Exception: Some not found
-//│ 	at: mlscript.Typer.destructPattern(Typer.scala:990)
-//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1084)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ ╔══[ERROR] class Some not found
+//│ ║  l.3: 	if a is
+//│ ║       	   ^^^^
+//│ ║  l.4: 	  Some(v) and v is
+//│ ║       	^^^^^^^^^^^^^^^^^^
+//│ ║  l.5: 	    Left(x) then x
+//│ ║       	^^^^^^^^^^^^^^^^^^
+//│ ║  l.6: 	    let y = v + 1
+//│ ║       	^^^^^^^^^^^^^^^^^
+//│ ║  l.7: 	    Right(0) then y
+//│ ║       	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.8: 	    Right(x) then x + y
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.9: 	  else 0
+//│ ╙──     	^^^^^^^^
+//│ res: error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared
 
 if a is
   Left(x) then x
   let y = a + 1
   then y
 //│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
-//│ ║  l.24: 	  let y = a + 1
+//│ ║  l.31: 	  let y = a + 1
 //│ ║        	          ^^^^^
-//│ ║  l.25: 	  then y
+//│ ║  l.32: 	  then y
 //│ ╙──      	^^^^^^^^
-//│ /!!!\ Uncaught error: java.lang.Exception: Left not found
-//│ 	at: mlscript.Typer.destructPattern(Typer.scala:990)
-//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1073)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ ╔══[ERROR] class Left not found
+//│ ║  l.29: 	if a is
+//│ ║        	   ^^^^
+//│ ║  l.30: 	  Left(x) then x
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.31: 	  let y = a + 1
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ║  l.32: 	  then y
+//│ ╙──      	^^^^^^^^
+//│ res: error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared
 
 if
   A then "A"
@@ -46,11 +54,11 @@ if
   B then "B"
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$3(Typer.scala:1165)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$3$adapted(Typer.scala:1163)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$8(Typer.scala:1248)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$8$adapted(Typer.scala:1246)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1163)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1246)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1254)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
@@ -60,17 +68,18 @@ if x is
   A() then "A"
   let y = 0
   B() then "B"
-//│ /!!!\ Uncaught error: java.lang.Exception: A not found
-//│ 	at: mlscript.Typer.destructPattern(Typer.scala:990)
-//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1073)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ ╔══[ERROR] class A not found
+//│ ║  l.67: 	if x is
+//│ ║        	   ^^^^
+//│ ║  l.68: 	  A() then "A"
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.69: 	  let y = 0
+//│ ║        	^^^^^^^^^^^
+//│ ║  l.70: 	  B() then "B"
+//│ ╙──      	^^^^^^^^^^^^^^
+//│ res: error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared
 
 if x
   is A() then "A"
@@ -93,11 +102,11 @@ if x ==
   y * y then 0
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$3(Typer.scala:1165)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$3$adapted(Typer.scala:1163)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$8(Typer.scala:1248)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$8$adapted(Typer.scala:1246)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1163)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1246)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1254)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
@@ -108,11 +117,11 @@ if
   let y = 0
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$3(Typer.scala:1165)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$3$adapted(Typer.scala:1163)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$8(Typer.scala:1248)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$8$adapted(Typer.scala:1246)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1163)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1246)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1254)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
@@ -126,11 +135,11 @@ if
   z == 2 then 2
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$3(Typer.scala:1165)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$3$adapted(Typer.scala:1163)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$8(Typer.scala:1248)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$8$adapted(Typer.scala:1246)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1163)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1246)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1254)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
@@ -158,11 +167,11 @@ if q(y) and
   y == z * z then "bruh"
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$3(Typer.scala:1165)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$3$adapted(Typer.scala:1163)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$8(Typer.scala:1248)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$8$adapted(Typer.scala:1246)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1163)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1246)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1254)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
@@ -172,17 +181,18 @@ if x is
   Some(v) then v
   let tmp = 1
   None then tmp
-//│ /!!!\ Uncaught error: java.lang.Exception: Some not found
-//│ 	at: mlscript.Typer.destructPattern(Typer.scala:990)
-//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1073)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ ╔══[ERROR] class Some not found
+//│ ║  l.180: 	if x is
+//│ ║         	   ^^^^
+//│ ║  l.181: 	  Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.182: 	  let tmp = 1
+//│ ║         	^^^^^^^^^^^^^
+//│ ║  l.183: 	  None then tmp
+//│ ╙──       	^^^^^^^^^^^^^^^
+//│ res: error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared
 
 if xs is
   Nil then Nil
@@ -190,17 +200,22 @@ if xs is
     let Pair(l, r) = mapPartition(f, xs)
     Left(v)  then (v :: l, r)
     Right(v) then (l, v :: r)
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.Typer.destructPattern(Typer.scala:983)
-//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1073)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ ╔══[ERROR] constructor Nil not found
+//│ ║  l.197: 	if xs is
+//│ ║         	   ^^^^^
+//│ ║  l.198: 	  Nil then Nil
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.199: 	  Cons(x, xs) and f(x) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.200: 	    let Pair(l, r) = mapPartition(f, xs)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.201: 	    Left(v)  then (v :: l, r)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.202: 	    Right(v) then (l, v :: r)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ res: error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared
 
 if a is
   Some(x) and x is
@@ -208,14 +223,19 @@ if a is
     let y = x + 1
     Right(b) then "right-defined"
   None       then "undefined"
-//│ /!!!\ Uncaught error: java.lang.Exception: Some not found
-//│ 	at: mlscript.Typer.destructPattern(Typer.scala:990)
-//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1084)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ ╔══[ERROR] class Some not found
+//│ ║  l.220: 	if a is
+//│ ║         	   ^^^^
+//│ ║  l.221: 	  Some(x) and x is
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.222: 	    Left(a)  then "left-defined"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.223: 	    let y = x + 1
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.224: 	    Right(b) then "right-defined"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.225: 	  None       then "undefined"
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ res: error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared

@@ -5,33 +5,33 @@ fun f(x) =
     is
       A then 0
       B then 1
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1126)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:612)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:620)
+//│ ╔══[ERROR] constructor A not found
+//│ ║  l.4: 	  if x
+//│ ║       	     ^
+//│ ║  l.5: 	    is
+//│ ║       	^^^^^^
+//│ ║  l.6: 	      A then 0
+//│ ║       	^^^^^^^^^^^^^^
+//│ ║  l.7: 	      B then 1
+//│ ╙──     	^^^^^^^^^^^^^^
+//│ f: anything -> error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared
 
 fun f(x) =
   if x ==
     1
       + 2 then 0
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1126)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$3(Typer.scala:1164)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$3$adapted(Typer.scala:1163)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1163)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ ╔══[ERROR] missing a default branch
+//│ ║  l.22: 	  if x ==
+//│ ║        	     ^^^^
+//│ ║  l.23: 	    1
+//│ ║        	^^^^^^
+//│ ║  l.24: 	      + 2 then 0
+//│ ╙──      	^^^^^^^^^^^^^^^^
+//│ f: anything -> error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared
 
 class A()
 //│ Defined class A
@@ -43,14 +43,9 @@ fun f(x) =
     is A()
       and t then 0
       and s then 0
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1126)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:612)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:620)
+//│ ╔══[ERROR] identifier not found: t
+//│ ║  l.44: 	      and t then 0
+//│ ╙──      	          ^
+//│ f: A -> 0
+//│ Code generation encountered an error:
+//│   unresolved symbol t

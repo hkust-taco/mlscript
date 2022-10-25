@@ -12,17 +12,18 @@ fun f(x) =
     is Some(x) and isValid(x) then "good"
     is None() and allowNone then "okay"
     is _ then "bad"
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1126)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:612)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:620)
+//│ ╔══[ERROR] class Some not found
+//│ ║  l.11: 	  if x
+//│ ║        	     ^
+//│ ║  l.12: 	    is Some(x) and isValid(x) then "good"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.13: 	    is None() and allowNone then "okay"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.14: 	    is _ then "bad"
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
+//│ f: anything -> error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared
 
 fun f(x, y) =
   if

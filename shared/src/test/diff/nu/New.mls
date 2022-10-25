@@ -15,7 +15,7 @@ let f = new Foo(1)
 //│  = Foo { x: 1 }
 
 if f is Foo(a) then a else 0
-//│ res: 1
+//│ res: 0 | 1
 //│    = 1
 
 // case f of

@@ -2,46 +2,45 @@
 
 if x
   == 0 then 0
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1126)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
-//│ 	at: mlscript.Typer.typeStatement(Typer.scala:376)
-//│ 	at: mlscript.DiffTests.$anonfun$new$55(DiffTests.scala:558)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:515)
+//│ ╔══[ERROR] missing a default branch
+//│ ║  l.3: 	if x
+//│ ║       	   ^
+//│ ║  l.4: 	  == 0 then 0
+//│ ╙──     	^^^^^^^^^^^^^
+//│ res: error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared
 
 if x
   is A and
     y then 0
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1126)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
-//│ 	at: mlscript.Typer.typeStatement(Typer.scala:376)
-//│ 	at: mlscript.DiffTests.$anonfun$new$55(DiffTests.scala:558)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:515)
+//│ ╔══[ERROR] constructor A not found
+//│ ║  l.14: 	if x
+//│ ║        	   ^
+//│ ║  l.15: 	  is A and
+//│ ║        	^^^^^^^^^^
+//│ ║  l.16: 	    y then 0
+//│ ╙──      	^^^^^^^^^^^^
+//│ res: error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared
 
 if x
   == 0 then 0
   is
     A() then "A"
     B() then "B"
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1126)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
-//│ 	at: mlscript.Typer.typeStatement(Typer.scala:376)
-//│ 	at: mlscript.DiffTests.$anonfun$new$55(DiffTests.scala:558)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:515)
+//│ ╔══[ERROR] class A not found
+//│ ║  l.28: 	if x
+//│ ║        	   ^
+//│ ║  l.29: 	  == 0 then 0
+//│ ║        	^^^^^^^^^^^^^
+//│ ║  l.30: 	  is
+//│ ║        	^^^^
+//│ ║  l.31: 	    A() then "A"
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.32: 	    B() then "B"
+//│ ╙──      	^^^^^^^^^^^^^^^^
+//│ res: error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared
