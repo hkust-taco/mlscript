@@ -1,0 +1,130 @@
+:NewParser
+
+fun f(x) =
+  if x
+    is Left(v) then 0
+    is Right(v) then 1
+    <> undefined then 2
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1126)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:612)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:620)
+
+fun f(x) =
+  if x
+    is Some(xv) and y is Some(yv) then xv + yv
+    is None() and y is None() then 0
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1126)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:612)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:620)
+
+class A()
+class B()
+//│ Defined class A
+//│ Defined class B
+//│ A: () -> A
+//│  = [Function: A1]
+//│ B: () -> B
+//│  = [Function: B1]
+
+fun f(a) =
+  if a
+    is A() and b is B() then 0
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1126)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:612)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:620)
+
+class C()
+//│ Defined class C
+//│ C: () -> C
+//│  = [Function: C1]
+
+fun f(a, b, c) =
+  if a
+    == 0 and b is B() and c is C() then 0
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1126)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:612)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:620)
+
+fun f(x) =
+  if x
+    is A() then "A"
+    is B() then "B"
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1126)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:612)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:620)
+
+fun sumOpt(x, y) =
+  if x
+    is Some(xv) and y is
+      Some(yv) then xv + yvand
+      None() then xv
+    is None() and y is
+      Some(yv) then yv
+      None() then 0
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1126)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:612)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:620)
+
+fun f(x, y) =
+  if x is A() and y
+    == z then 1
+    is B() then 0
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1126)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:612)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:620)

@@ -1,0 +1,56 @@
+:NewParser
+
+fun f(x) =
+  if x
+    is
+      A then 0
+      B then 1
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1126)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:612)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:620)
+
+fun f(x) =
+  if x ==
+    1
+      + 2 then 0
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1126)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$3(Typer.scala:1164)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$3$adapted(Typer.scala:1163)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1163)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+
+class A()
+//│ Defined class A
+//│ A: () -> A
+//│  = [Function: A1]
+
+fun f(x) =
+  if x
+    is A()
+      and t then 0
+      and s then 0
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1126)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:612)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:620)

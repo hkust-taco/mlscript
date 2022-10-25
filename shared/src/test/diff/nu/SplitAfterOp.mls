@@ -1,0 +1,43 @@
+:NewParser
+
+fun f(x, b) =
+  if x == 
+    0 and b then 0
+//│ ╔══[ERROR] missing a default branch
+//│ ║  l.4: 	  if x == 
+//│ ║       	     ^^^^^
+//│ ║  l.5: 	    0 and b then 0
+//│ ╙──     	^^^^^^^^^^^^^^^^^^
+//│ f: (anything, anything,) -> error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared
+
+if x == y +
+  5 then 0
+  7 then 0
+//│ res: 0
+//│    = 0
+
+if x == y *
+  5 then 0
+  6 + 7 then 0
+//│ res: 0
+//│    = 0
+
+if x ==
+  y +
+    5 then 0
+    7 then 0
+//│ res: 0
+//│    = 0
+
+if x ==
+  1 and b then 0
+//│ ╔══[ERROR] missing a default branch
+//│ ║  l.34: 	if x ==
+//│ ║        	   ^^^^
+//│ ║  l.35: 	  1 and b then 0
+//│ ╙──      	^^^^^^^^^^^^^^^^
+//│ res: error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared

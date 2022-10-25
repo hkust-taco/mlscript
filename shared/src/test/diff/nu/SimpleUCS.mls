@@ -1,0 +1,394 @@
+:NewParser
+
+if x is
+  Left(xv) and y is Left(yv) then xv + yv
+  Right(xv) and y is Right(yv) then xv * yv
+  None() and y is None() then 0
+//│ /!!!\ Uncaught error: java.lang.Exception: Left not found
+//│ 	at: mlscript.Typer.destructPattern(Typer.scala:990)
+//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1084)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+
+if x is
+  true then "yah"
+  false then "nah"
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.19: 	if x is
+//│ ╙──      	   ^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.19: 	if x is
+//│ ║        	   ^^^^
+//│ ║  l.20: 	  true then "yah"
+//│ ║        	^^^^^^
+//│ ╟── reference of type `true` is not an instance of type `number`
+//│ ║  l.20: 	  true then "yah"
+//│ ╙──      	  ^^^^
+//│ res: "nah" | "yah"
+//│ Code generation encountered an error:
+//│   unresolved symbol x
+
+if x is
+  Left(xv) and y is Left(yv) then xv + yv
+  None() then 0
+//│ /!!!\ Uncaught error: java.lang.Exception: Left not found
+//│ 	at: mlscript.Typer.destructPattern(Typer.scala:990)
+//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1084)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+
+if x is
+  Left(xv) and y is
+    Left(yv) then xv + yv
+    Right(yv) then xv * yv
+  None() then 0
+//│ /!!!\ Uncaught error: java.lang.Exception: Left not found
+//│ 	at: mlscript.Typer.destructPattern(Typer.scala:990)
+//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1084)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+
+if x is
+  Some(v) and
+    v < 0 then "negative"
+    v > 0 then "positive"
+    _     then "zero"
+//│ /!!!\ Uncaught error: java.lang.Exception: Some not found
+//│ 	at: mlscript.Typer.destructPattern(Typer.scala:990)
+//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1084)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+
+if x is
+  Some(x) and y is
+    Some(y) then 0
+//│ /!!!\ Uncaught error: java.lang.Exception: Some not found
+//│ 	at: mlscript.Typer.destructPattern(Typer.scala:990)
+//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1084)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+
+if x is
+  A(a) and y <>
+    u then 0
+    v then 1
+  A(a) and y is
+    B(0) then 0
+    B(1) then 1
+//│ /!!!\ Uncaught error: java.lang.Exception: A not found
+//│ 	at: mlscript.Typer.destructPattern(Typer.scala:990)
+//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1084)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+
+if x is
+  A() then "A"
+  B() then "B"
+//│ /!!!\ Uncaught error: java.lang.Exception: A not found
+//│ 	at: mlscript.Typer.destructPattern(Typer.scala:990)
+//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1073)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+
+if x is
+  Some(xv) and y is Some(yv) then xv + yv
+  None() and y is None() then 0
+//│ /!!!\ Uncaught error: java.lang.Exception: Some not found
+//│ 	at: mlscript.Typer.destructPattern(Typer.scala:990)
+//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1084)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+
+if x is
+  Some(xv) and y is
+    Some(yv) then xv + yv
+    None() then xv * 2
+  None() and y is
+    Some(yv) then yv * 3
+//│ /!!!\ Uncaught error: java.lang.Exception: Some not found
+//│ 	at: mlscript.Typer.destructPattern(Typer.scala:990)
+//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1084)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+
+if x is
+  A and y is
+    B then "bruh"
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.Typer.destructPattern(Typer.scala:983)
+//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1084)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+
+if x is
+  A and z == 0 and y == 0 and y is
+    B then "bruh"
+//│ /!!!\ Uncaught error: java.lang.Exception: illegal pattern: and (and (A,) (== (z,) (0,),),) (== (y,) (0,),)
+//│ 	at: mlscript.Typer.destructPattern(Typer.scala:1037)
+//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1084)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+
+if x is
+  Some(x) and y
+    == 0 then "bruh"
+    > 0 then "bruh"
+//│ /!!!\ Uncaught error: java.lang.Exception: Some not found
+//│ 	at: mlscript.Typer.destructPattern(Typer.scala:990)
+//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1084)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+
+if x is
+  Some(x) and isValid(x) then "good"
+  None() and allowNone then "okay"
+  else "bad"
+//│ /!!!\ Uncaught error: java.lang.Exception: Some not found
+//│ 	at: mlscript.Typer.destructPattern(Typer.scala:990)
+//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1084)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+
+fun f(x) =
+  if x is
+    None then "bruh"
+    Some(x) then "roll"
+    _ and x == 0 then 0
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.Typer.destructPattern(Typer.scala:983)
+//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1073)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+
+class A()
+class B()
+//│ Defined class A
+//│ Defined class B
+//│ A: () -> A
+//│  = [Function: A1]
+//│ B: () -> B
+//│  = [Function: B1]
+
+fun f(x) =
+  if x is
+    A() and a then aa
+    B() and b then bb
+//│ ╔══[ERROR] missing a default branch
+//│ ║  l.257: 	  if x is
+//│ ║         	     ^^^^
+//│ ║  l.258: 	    A() and a then aa
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.259: 	    B() and b then bb
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
+//│ f: anything -> error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared
+
+fun f(x) =
+  if x is
+    Some(xv) and y
+      is Some(yv) then "bruh"
+      is None() then "bruh"
+    Some(xv) and b then xb + b
+//│ /!!!\ Uncaught error: java.lang.Exception: Some not found
+//│ 	at: mlscript.Typer.destructPattern(Typer.scala:990)
+//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1084)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+
+fun foo(x, y, z) = x + y + z
+//│ foo: (int, int, int,) -> int
+//│    = [Function: foo]
+
+fun f(u, v, w) =
+  if foo(u, v, w) is
+    Some(x) and x is
+      Left(_) then "left-defined"
+      Right(_) then "right-defined"
+    None then "undefined"
+//│ /!!!\ Uncaught error: java.lang.Exception: Some not found
+//│ 	at: mlscript.Typer.destructPattern(Typer.scala:990)
+//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1084)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+
+class Var(name)
+class ValBase
+class IntVal(value): ValBase
+class BoolVal(value): ValBase
+class Lit(val)
+//│ Defined class Var
+//│ Defined class ValBase
+//│ Defined class IntVal
+//│ Defined class BoolVal
+//│ Defined class Lit
+//│ Var: 'name -> (Var with {name: 'name})
+//│    = [Function: Var1]
+//│ ValBase: () -> ValBase
+//│        = [Function: ValBase1]
+//│ IntVal: 'value -> (IntVal with {value: 'value})
+//│       = [Function: IntVal1]
+//│ BoolVal: 'value -> (BoolVal with {value: 'value})
+//│        = [Function: BoolVal1]
+//│ Lit: 'val -> (Lit with {val: 'val})
+//│    = [Function: Lit1]
+
+fun p(e, context) =
+  if e is
+    Var(x) and context.get(x) is
+      Some(IntVal(v)) then Left(v)
+      Some(BoolVal(v)) then Right(v)
+    Lit(IntVal(v)) then Left(v)
+    Lit(BoolVal(v)) then Right(v)
+//│ /!!!\ Uncaught error: java.lang.Exception: Some not found
+//│ 	at: mlscript.Typer.destructPattern(Typer.scala:990)
+//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1073)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
+//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1085)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+
+
+fun f(x) =
+  if x is
+    0 ::
+      Nil then "oh"
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1116)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+
+fun f(x) =
+  if x == 0 and x is
+    A() then "A"
+    B() then "B"
+    else "bruh"
+//│ f: anything -> ("A" | "B" | "bruh")
+//│  = [Function: f1]
+
+fun f(x, y) =
+  if x == 0 and f(x) is
+    Some(a) and f(y) is
+      Some(b) then a + b
+      None() then a + 1
+    None() and f(y) is
+      Some(b) then 2 + b
+      None() then 1
+//│ /!!!\ Uncaught error: java.lang.Exception: Some not found
+//│ 	at: mlscript.Typer.destructPattern(Typer.scala:990)
+//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1084)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2(Typer.scala:1152)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$2$adapted(Typer.scala:1152)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1152)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)

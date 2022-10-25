@@ -1,0 +1,47 @@
+:NewParser
+
+if x
+  == 0 then 0
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1126)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.typeStatement(Typer.scala:376)
+//│ 	at: mlscript.DiffTests.$anonfun$new$55(DiffTests.scala:558)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:515)
+
+if x
+  is A and
+    y then 0
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1126)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.typeStatement(Typer.scala:376)
+//│ 	at: mlscript.DiffTests.$anonfun$new$55(DiffTests.scala:558)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:515)
+
+if x
+  == 0 then 0
+  is
+    A() then "A"
+    B() then "B"
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1126)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1170)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.typeStatement(Typer.scala:376)
+//│ 	at: mlscript.DiffTests.$anonfun$new$55(DiffTests.scala:558)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:515)
