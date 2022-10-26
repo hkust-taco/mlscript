@@ -1063,22 +1063,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         }
       // This case handles tuple destructions.
       // x is (a, b, c)
-      case Tup(elems) =>
-        // temporary binding name -> pattern
-        val subPatterns = Buffer.empty[(Var, Term)]
-        val bindings = elems.iterator.zipWithIndex.flatMap {
-          // x is (_, _, _) : ignore this binding
-          case (_ -> Fld(_, _, Var("_")), _) => N
-          case (_ -> Fld(_, _, name: Var), index) => S(index -> name)
-          case (_ -> Fld(_, _, pattern: Term), index) =>
-            val alias = Var(freshName)
-            subPatterns += ((alias, pattern))
-            S(index -> alias)
-        }.toList
+      case Bra(_, Tup(elems)) =>
+        val (subPatterns, bindings) = desugarPositionals(
+          scrutinee,
+          elems.iterator.map(_._2.value),
+          1.to(elems.length).map("_" + _).toList
+        )
         Condition.MatchTuple(scrutinee, elems.length, bindings) ::
           destructSubPatterns(subPatterns, ctx)
       // What else?
-      case _ => throw new Exception(s"illegal pattern: $pattern")
+      case _ => throw new Exception(s"illegal pattern: ${mlscript.codegen.Helpers.inspect(pattern)}")
     }
 
 

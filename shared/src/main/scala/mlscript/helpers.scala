@@ -799,7 +799,7 @@ object IfBodyHelpers {
     final case class MatchTuple(
       scrutinee: Term,
       arity: Int,
-      fields: List[Int -> Var]
+      fields: List[Str -> Var]
     ) extends Condition
     final case class BooleanTest(test: Term) extends Condition
   }
@@ -904,7 +904,8 @@ object IfBodyHelpers {
 abstract class MutCaseOf {
   def merge
     (branch: Ls[IfBodyHelpers.Condition] -> Term)
-    (implicit raise: Diagnostic => Unit, allowDuplicate: Boolean = false): Unit
+    (implicit raise: Diagnostic => Unit): Unit
+  def mergeDefault(default: Term): Unit
   def toTerm: Term
 }
 
@@ -1008,11 +1009,10 @@ object MutCaseOf {
 
   // A short-hand for pattern matchings with only true and false branches.
   final case class IfThenElse(condition: Term, var whenTrue: MutCaseOf, var whenFalse: MutCaseOf) extends MutCaseOf {
-    override def merge(branch: Ls[Condition] -> Term)(implicit raise: Diagnostic => Unit, allowDuplicate: Bool): Unit =
+    override def merge(branch: Ls[Condition] -> Term)(implicit raise: Diagnostic => Unit): Unit =
       branch match {
         case Nil -> term => 
           whenFalse match {
-            case Consequent(_) if allowDuplicate => ()
             case Consequent(_) =>
               raise(WarningReport(Message.fromStr("duplicated else branch") -> N :: Nil))
             case MissingCase => whenFalse = Consequent(term)
@@ -1035,6 +1035,15 @@ object MutCaseOf {
             case _ => whenFalse.merge(branch)
           }
       }
+
+    override def mergeDefault(default: Term): Unit = {
+      whenTrue.mergeDefault(default)
+      whenFalse match {
+        case MissingCase => whenFalse = Consequent(default)
+        case _           => whenFalse.mergeDefault(default)
+      }
+    }
+
     override def toTerm: Term = {
       val falseBranch = Wildcard(whenFalse.toTerm)
       val trueBranch = Case(Var("true"), whenTrue.toTerm, falseBranch)
@@ -1042,7 +1051,7 @@ object MutCaseOf {
     }
   }
   final case class Match(scrutinee: Term, val branches: Buffer[Branch]) extends MutCaseOf {
-    override def merge(branch: Ls[Condition] -> Term)(implicit raise: Diagnostic => Unit, allowDuplicate: Bool): Unit = {
+    override def merge(branch: Ls[Condition] -> Term)(implicit raise: Diagnostic => Unit): Unit = {
       branch match {
         case (Condition.MatchClass(scrutinee2, className, fields) :: tail) -> term if scrutinee2 === scrutinee =>
           branches.find(_.matches(className)) match {
@@ -1054,25 +1063,16 @@ object MutCaseOf {
               branch.consequent.merge(tail -> term)
           }
         case (Condition.MatchTuple(scrutinee2, arity, fields) :: tail) -> term if scrutinee2 === scrutinee =>
-          val tupleClassName = Var(s"Tuple#$arity")
-          val indexFields = fields.map { case (index, alias) => index.toString -> alias }
+          val tupleClassName = Var(s"Tuple#$arity") // TODO: Find a name known by Typer.
           branches.find(_.matches(tupleClassName)) match {
             case N =>
-              branches += Branch(S(tupleClassName -> Buffer.from(indexFields)), buildBranch(tail, term))
+              branches += Branch(S(tupleClassName -> Buffer.from(fields)), buildBranch(tail, term))
             case S(branch) =>
-              branch.addFields(indexFields)
+              branch.addFields(fields)
               branch.consequent.merge(tail -> term)
           }
         // A wild card case. We should propagate wildcard to every default positions.
-        case Nil -> term =>
-          var hasWildcard = false
-          branches.foreach {
-            case Branch(_, _: Consequent | MissingCase) => ()
-            case Branch(patternFields, consequent) =>
-              consequent.merge(branch)(implicitly, true)
-              hasWildcard &&= patternFields.isEmpty
-          }
-          if (!hasWildcard) branches += Branch(N, Consequent(term))
+        case Nil -> term => mergeDefault(term)
         case conditions -> term =>
           // Locate the wildcard case.
           branches.find(_.isWildcard) match {
@@ -1083,6 +1083,19 @@ object MutCaseOf {
           }
       }
     }
+
+    override def mergeDefault(default: Term): Unit = {
+      var hasWildcard = false
+      branches.foreach {
+        case Branch(_, _: Consequent | MissingCase) => ()
+        case Branch(patternFields, consequent) =>
+          consequent.mergeDefault(default)
+          hasWildcard &&= patternFields.isEmpty
+      }
+      // If this match doesn't have a default case, we make one.
+      if (!hasWildcard) branches += Branch(N, Consequent(default))
+    }
+
     override def toTerm: Term = {
       def rec(xs: Ls[Branch]): CaseBranches =
         xs match {
@@ -1098,16 +1111,18 @@ object MutCaseOf {
     }
   }
   final case class Consequent(term: Term) extends MutCaseOf {
-    override def merge
-      (branch: Ls[Condition] -> Term)
-      (implicit raise: Diagnostic => Unit, allowDuplicate: Bool): Unit =
+    override def merge(branch: Ls[Condition] -> Term)(implicit raise: Diagnostic => Unit): Unit =
       raise(WarningReport(Message.fromStr("duplicated branch") -> N :: Nil))
+
+    override def mergeDefault(default: Term): Unit = ()
+
     override def toTerm: Term = term
   }
   final case object MissingCase extends MutCaseOf {
-    override def merge
-      (branch: Ls[Condition] -> Term)
-      (implicit raise: Diagnostic => Unit, allowDuplicate: Bool): Unit = ???
+    override def merge(branch: Ls[Condition] -> Term)(implicit raise: Diagnostic => Unit): Unit = ???
+
+    override def mergeDefault(default: Term): Unit = ()
+
     override def toTerm: Term =
       throw new IfDesugaringException("missing a default branch")
   }
