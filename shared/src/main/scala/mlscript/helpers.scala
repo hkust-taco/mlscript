@@ -816,6 +816,15 @@ object IfBodyHelpers {
     sum match {
       case N => S(L(rhs))
       case S(L(_)) => ???
+      case S(R(scrutinee -> (isVar @ Var("is")))) =>
+        // Special treatment for pattern matching.
+        val (pattern, extraTestOpt) = separatePattern(rhs)
+        val assertion = mkBinOp(scrutinee, isVar, pattern)
+        extraTestOpt match {
+          case N => S(L(assertion))
+          case S(extraTest) =>
+            S(L(mkBinOp(assertion, Var("and"), extraTest)))
+        }
       case S(R(lhs -> op)) => S(L(mkBinOp(lhs, op, rhs)))
     }
 
@@ -850,6 +859,20 @@ object IfBodyHelpers {
     res
   }
 
+  def separatePattern(term: Term): (Term, Opt[Term]) =
+    term match {
+      case App(
+        App(and @ Var("and"),
+            Tup((_ -> Fld(_, _, lhs)) :: Nil)),
+        Tup((_ -> Fld(_, _, rhs)) :: Nil)
+      ) =>
+        separatePattern(lhs) match {
+          case (pattern, N) => (pattern, S(rhs))
+          case (pattern, S(lshRhs)) => (pattern, S(mkBinOp(lshRhs, and, rhs)))
+        }
+      case _ => (term, N)
+    }
+
   def mkLetFromFields(scrutinee: Term, fields: Ls[Str -> Var], body: Term): Term = {
     val generatedFields = MutSet.empty[(Str, Str)]
     def rec(fields: Ls[Str -> Var]): Term =
@@ -879,7 +902,9 @@ object IfBodyHelpers {
 }
 
 abstract class MutCaseOf {
-  def merge(branch: Ls[IfBodyHelpers.Condition] -> Term)(implicit raise: Diagnostic => Unit): Unit
+  def merge
+    (branch: Ls[IfBodyHelpers.Condition] -> Term)
+    (implicit raise: Diagnostic => Unit, allowDuplicate: Boolean = false): Unit
   def toTerm: Term
 }
 
@@ -940,11 +965,13 @@ object MutCaseOf {
 
   // A short-hand for pattern matchings with only true and false branches.
   final case class IfThenElse(condition: Term, var whenTrue: MutCaseOf, var whenFalse: MutCaseOf) extends MutCaseOf {
-    override def merge(branch: Ls[Condition] -> Term)(implicit raise: Diagnostic => Unit): Unit =
+    override def merge(branch: Ls[Condition] -> Term)(implicit raise: Diagnostic => Unit, allowDuplicate: Bool): Unit =
       branch match {
         case Nil -> term => 
           whenFalse match {
-            case Consequent(_) => ??? // duplicated branch
+            case Consequent(_) if allowDuplicate => ()
+            case Consequent(_) =>
+              raise(WarningReport(Message.fromStr("duplicated else branch") -> N :: Nil))
             case MissingCase => whenFalse = Consequent(term)
             case _ => whenFalse.merge(branch)
           }
@@ -972,7 +999,7 @@ object MutCaseOf {
     }
   }
   final case class Match(scrutinee: Term, val branches: Buffer[Branch]) extends MutCaseOf {
-    override def merge(branch: Ls[Condition] -> Term)(implicit raise: Diagnostic => Unit): Unit = {
+    override def merge(branch: Ls[Condition] -> Term)(implicit raise: Diagnostic => Unit, allowDuplicate: Bool): Unit = {
       branch match {
         case (Condition.MatchClass(scrutinee2, className, fields) :: tail) -> term if scrutinee2 === scrutinee =>
           branches.find(_.matches(className)) match {
@@ -999,7 +1026,7 @@ object MutCaseOf {
           branches.foreach {
             case Branch(_, _: Consequent | MissingCase) => ()
             case Branch(patternFields, consequent) =>
-              consequent.merge(branch)
+              consequent.merge(branch)(implicitly, true)
               hasWildcard &&= patternFields.isEmpty
           }
           if (!hasWildcard) branches += Branch(N, Consequent(term))
@@ -1028,12 +1055,16 @@ object MutCaseOf {
     }
   }
   final case class Consequent(term: Term) extends MutCaseOf {
-    override def merge(branch: Ls[Condition] -> Term)(implicit raise: Diagnostic => Unit): Unit =
+    override def merge
+      (branch: Ls[Condition] -> Term)
+      (implicit raise: Diagnostic => Unit, allowDuplicate: Bool): Unit =
       raise(WarningReport(Message.fromStr("duplicated branch") -> N :: Nil))
     override def toTerm: Term = term
   }
   final case object MissingCase extends MutCaseOf {
-    override def merge(branch: Ls[Condition] -> Term)(implicit raise: Diagnostic => Unit): Unit = ???
+    override def merge
+      (branch: Ls[Condition] -> Term)
+      (implicit raise: Diagnostic => Unit, allowDuplicate: Bool): Unit = ???
     override def toTerm: Term =
       throw new IfDesugaringException("missing a default branch")
   }

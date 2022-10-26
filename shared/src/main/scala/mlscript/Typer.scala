@@ -1075,20 +1075,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case _ => throw new Exception(s"illegal pattern: $pattern")
     }
 
-  def separatePattern(term: Term): (Term, Opt[Term]) =
-    term match {
-      case App(
-        App(and @ Var("and"),
-            Tup((_ -> Fld(_, _, lhs)) :: Nil)),
-        Tup((_ -> Fld(_, _, rhs)) :: Nil)
-      ) =>
-        separatePattern(lhs) match {
-          case (pattern, N) => (pattern, S(rhs))
-          case (pattern, S(lshRhs)) => (pattern, S(mkBinOp(lshRhs, and, rhs)))
-        }
-      case _ => (term, N)
-    }
-
   def desugarIf(body: IfBody, fallback: Opt[Term])(implicit ctx: Ctx): Ls[Ls[Condition] -> Term] = {
     // We allocate temporary variable names for nested patterns.
     // This prevents aliasing problems.
@@ -1223,10 +1209,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           branches += (acc -> consequent)
         // The termination case.
         case IfThen(term, consequent) =>
+          println(s"desugarIfBody > case IfThen > term = $term")
           addTerm(expr, term) match {
             case N => ??? // Error: Empty expression.
             case S(R(_)) => ??? // Error: Incomplete expression.
             case S(L(test)) =>
+              println(s"desugarIfBody > case IfThen > test = $test")
               branches += ((acc ::: desugarConditions(splitAnd(test))) -> consequent)
           }
         // This is the entrance of the Simple UCS.
