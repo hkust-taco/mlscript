@@ -26,34 +26,37 @@ class Right(rightValue): Either
 //│ Right: 'rightValue -> (Right with {rightValue: 'rightValue})
 //│      = [Function: Right1]
 
+:e
+:ge
 fun f(x, y) =
   if x is
     Left(xv) and y is Left(yv) then xv + yv
     Right(xv) and y is Right(yv) then xv * yv
     None() and y is None() then 0
 //│ ╔══[ERROR] not exhaustive
-//│ ║  l.30: 	  if x is
+//│ ║  l.32: 	  if x is
 //│ ║        	     ^^^^
-//│ ║  l.31: 	    Left(xv) and y is Left(yv) then xv + yv
+//│ ║  l.33: 	    Left(xv) and y is Left(yv) then xv + yv
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.32: 	    Right(xv) and y is Right(yv) then xv * yv
+//│ ║  l.34: 	    Right(xv) and y is Right(yv) then xv * yv
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.33: 	    None() and y is None() then 0
+//│ ║  l.35: 	    None() and y is None() then 0
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ f: (anything, anything,) -> error
 //│ Code generation encountered an error:
 //│   if expression has not been not desugared
 
+// Hmmmmmm, this one is valid but how to get it work?
 fun boolToStr(x) =
   if x is
     true then "yah"
     false then "nah"
 //│ ╔══[ERROR] missing a default branch
-//│ ║  l.48: 	  if x is
+//│ ║  l.51: 	  if x is
 //│ ║        	     ^^^^
-//│ ║  l.49: 	    true then "yah"
+//│ ║  l.52: 	    true then "yah"
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.50: 	    false then "nah"
+//│ ║  l.53: 	    false then "nah"
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^
 //│ boolToStr: anything -> error
 //│ Code generation encountered an error:
@@ -101,32 +104,17 @@ class B(value)
 //│ B: 'value -> (B with {value: 'value})
 //│  = [Function: B1]
 
-fun f(x) =
+fun f(x, y, u, v) =
   if x is
-    A(a) and y <>
+    A(a) and y ==
       u then 0
       v then 1
     A(a) and y is
       B(0) then 0
       B(1) then 1
-//│ ╔══[ERROR] missing a default branch
-//│ ║  l.105: 	  if x is
-//│ ║         	     ^^^^
-//│ ║  l.106: 	    A(a) and y <>
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ║  l.107: 	      u then 0
-//│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.108: 	      v then 1
-//│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.109: 	    A(a) and y is
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ║  l.110: 	      B(0) then 0
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ║  l.111: 	      B(1) then 1
-//│ ╙──       	^^^^^^^^^^^^^^^^^
-//│ f: anything -> error
-//│ Code generation encountered an error:
-//│   if expression has not been not desugared
+    A(_) then 99
+//│ f: (A, number, number, number,) -> (0 | 1 | 99)
+//│  = [Function: f5]
 
 fun f(x) =
   if x is
@@ -135,21 +123,25 @@ fun f(x) =
 //│ f: (A | B) -> ("A" | "B")
 //│  = [Function: f6]
 
+:e
+:ge
 fun f(x, y) =
   if x is
     Some(xv) and y is Some(yv) then xv + yv
     None() and y is None() then 0
 //│ ╔══[ERROR] not exhaustive
-//│ ║  l.139: 	  if x is
+//│ ║  l.129: 	  if x is
 //│ ║         	     ^^^^
-//│ ║  l.140: 	    Some(xv) and y is Some(yv) then xv + yv
+//│ ║  l.130: 	    Some(xv) and y is Some(yv) then xv + yv
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.141: 	    None() and y is None() then 0
+//│ ║  l.131: 	    None() and y is None() then 0
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ f: (anything, anything,) -> error
 //│ Code generation encountered an error:
 //│   if expression has not been not desugared
 
+:e
+:ge
 fun f(x, y) =
   if x is
     Some(xv) and y is
@@ -158,17 +150,17 @@ fun f(x, y) =
     None() and y is
       Some(yv) then yv * 3
 //│ ╔══[ERROR] not exhaustive
-//│ ║  l.154: 	  if x is
+//│ ║  l.146: 	  if x is
 //│ ║         	     ^^^^
-//│ ║  l.155: 	    Some(xv) and y is
+//│ ║  l.147: 	    Some(xv) and y is
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.156: 	      Some(yv) then xv + yv
+//│ ║  l.148: 	      Some(yv) then xv + yv
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.157: 	      None() then xv * 2
+//│ ║  l.149: 	      None() then xv * 2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.158: 	    None() and y is
+//│ ║  l.150: 	    None() and y is
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.159: 	      Some(yv) then yv * 3
+//│ ║  l.151: 	      Some(yv) then yv * 3
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ f: (anything, anything,) -> error
 //│ Code generation encountered an error:
@@ -185,31 +177,30 @@ fun f(x, y, z) =
   if x is
     A and z == 0 and y == 0 and y is
       B then "bruh"
-//│ ╔══[ERROR] missing a default branch
-//│ ║  l.185: 	  if x is
-//│ ║         	     ^^^^
-//│ ║  l.186: 	    A and z == 0 and y == 0 and y is
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.187: 	      B then "bruh"
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^
-//│ f: (anything, anything, anything,) -> error
-//│ Code generation encountered an error:
-//│   if expression has not been not desugared
+    A then "oui"
+//│ f: (A, number, number,) -> ("bruh" | "oui")
+//│  = [Function: f10]
 
+// We do need a syntax to specify default branch in IfOpsApp...
+:e
+:ge
 fun f(x, y) =
   if x is
     Some(x) and y
-      == 0 then "bruh"
-      > 0 then "bruh"
+      >  0 then "gt"
+      <  0 then "le"
+      == 0 then "eq"
 //│ ╔══[ERROR] missing a default branch
-//│ ║  l.200: 	  if x is
+//│ ║  l.188: 	  if x is
 //│ ║         	     ^^^^
-//│ ║  l.201: 	    Some(x) and y
+//│ ║  l.189: 	    Some(x) and y
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ║  l.202: 	      == 0 then "bruh"
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.203: 	      > 0 then "bruh"
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.190: 	      >  0 then "gt"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.191: 	      <  0 then "le"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.192: 	      == 0 then "eq"
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^
 //│ f: (anything, anything,) -> error
 //│ Code generation encountered an error:
 //│   if expression has not been not desugared
@@ -231,72 +222,41 @@ fun f(x) =
     None then "bruh"
     Some(x) then "roll"
     _ and x == 0 then 0
-//│ ╔══[ERROR] missing a default branch
-//│ ║  l.230: 	  if x is
-//│ ║         	     ^^^^
-//│ ║  l.231: 	    None then "bruh"
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.232: 	    Some(x) then "roll"
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.233: 	    _ and x == 0 then 0
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^
-//│ f: anything -> error
-//│ Code generation encountered an error:
-//│   if expression has not been not desugared
+    _ then "rock"
+//│ f: (None | number | Some) -> ("bruh" | "rock" | "roll" | 0)
+//│  = [Function: f13]
 
-class A()
-class B()
-//│ ╔══[ERROR] Type 'A' is already defined.
-//│ ║  l.247: 	class A()
-//│ ╙──       	      ^
-//│ ╔══[ERROR] Type 'B' is already defined.
-//│ ║  l.248: 	class B()
-//│ ╙──       	      ^
-//│ A: () -> A
-//│  = [Function: A3]
-//│ B: () -> B
-//│  = [Function: B3]
-
-fun f(x) =
+fun f(x, a, b) =
   if x is
-    A(_) and a then aa
-    B(_) and b then bb
-//│ ╔══[ERROR] missing a default branch
-//│ ║  l.261: 	  if x is
-//│ ║         	     ^^^^
-//│ ║  l.262: 	    A(_) and a then aa
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.263: 	    B(_) and b then bb
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
-//│ f: anything -> error
-//│ Code generation encountered an error:
-//│   if expression has not been not desugared
+    A(aa) and a then aa
+    B(bb) and b then bb
+    _           then 0
+//│ f: ((A with {value: 'value}) | (B with {value: 'value}) | ~A & ~B, anything, anything,) -> (0 | 'value)
+//│  = [Function: f14]
 
-fun f(x) =
+fun f(x, y) =
   if x is
     Some(xv) and y
       is Some(yv) then "bruh"
       is None() then "bruh"
     Some(xv) and b then xb + b
-//│ ╔══[ERROR] missing a default branch
-//│ ║  l.276: 	  if x is
-//│ ║         	     ^^^^
-//│ ║  l.277: 	    Some(xv) and y
-//│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.278: 	      is Some(yv) then "bruh"
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.279: 	      is None() then "bruh"
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.280: 	    Some(xv) and b then xb + b
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ f: anything -> error
+    _ then "roll"
+//│ ╔══[ERROR] identifier not found: b
+//│ ║  l.242: 	    Some(xv) and b then xb + b
+//│ ╙──       	                 ^
+//│ ╔══[ERROR] identifier not found: xb
+//│ ║  l.242: 	    Some(xv) and b then xb + b
+//│ ╙──       	                        ^^
+//│ f: (anything, anything,) -> ("bruh" | "roll" | int)
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   unresolved symbol b
 
-fun foo(x, y, z) = x + y + z
-//│ foo: (int, int, int,) -> int
+fun foo(x, y, z) =
+  if x - y > 0 then Some(x + y + z) else None()
+//│ foo: (int, int, int,) -> (None | Some & {value: int})
 //│    = [Function: foo]
 
+// TODO: Cache the scrutinee.
 fun f(u, v, w) =
   if foo(u, v, w) is
     Some(x) and x is
@@ -304,31 +264,27 @@ fun f(u, v, w) =
       Right(_) then "right-defined"
     None then "undefined"
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.301: 	  if foo(u, v, w) is
+//│ ║  l.261: 	  if foo(u, v, w) is
 //│ ║         	     ^^^^^^^^^^^^
-//│ ╟── operator application of type `int` does not have field 'value'
-//│ ║  l.296: 	fun foo(x, y, z) = x + y + z
-//│ ║         	                   ^^^^^^^^^
+//│ ╟── application of type `None` does not have field 'value'
+//│ ║  l.5: 	class None: Option
+//│ ║       	      ^^^^
 //│ ╟── but it flows into application with expected type `{value: ?value}`
-//│ ║  l.301: 	  if foo(u, v, w) is
+//│ ║  l.261: 	  if foo(u, v, w) is
 //│ ╙──       	     ^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.301: 	  if foo(u, v, w) is
-//│ ║         	     ^^^^^^^^^^^^^^^
-//│ ║  l.302: 	    Some(x) and x is
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.303: 	      Left(_) then "left-defined"
+//│ ║  l.262: 	    Some(x) and x is
+//│ ║         	                ^^^^
+//│ ║  l.263: 	      Left(_) then "left-defined"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.304: 	      Right(_) then "right-defined"
+//│ ║  l.264: 	      Right(_) then "right-defined"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.305: 	    None then "undefined"
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `int` does not match type `None | Some`
-//│ ║  l.296: 	fun foo(x, y, z) = x + y + z
-//│ ║         	                   ^^^^^^^^^
-//│ ╟── but it flows into application with expected type `None | Some`
-//│ ║  l.301: 	  if foo(u, v, w) is
-//│ ╙──       	     ^^^^^^^^^^^^
+//│ ╟── operator application of type `int` does not match type `Left & ?a | Right & ?b`
+//│ ║  l.255: 	  if x - y > 0 then Some(x + y + z) else None()
+//│ ║         	                         ^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `Left & ?a | Right & ?b`
+//│ ║  l.262: 	    Some(x) and x is
+//│ ╙──       	                ^
 //│ f: (int, int, int,) -> ("left-defined" | "right-defined" | "undefined")
 //│  = [Function: f16]
 
@@ -368,17 +324,19 @@ class Nil()
 //│ Nil: () -> Nil
 //│    = [Function: Nil1]
 
+// Support operator constructor like ::
 :e
+:ge
 fun f(x) =
   if x is
     0 ::
       Nil() then "oh"
 //│ ╔══[ERROR] operator :: not found
-//│ ║  l.373: 	  if x is
+//│ ║  l.331: 	  if x is
 //│ ║         	     ^^^^
-//│ ║  l.374: 	    0 ::
+//│ ║  l.332: 	    0 ::
 //│ ║         	^^^^^^^^
-//│ ║  l.375: 	      Nil() then "oh"
+//│ ║  l.333: 	      Nil() then "oh"
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
 //│ f: anything -> error
 //│ Code generation encountered an error:
@@ -388,19 +346,9 @@ fun f(x) =
   if x == 0 and x is
     A(_) then "A"
     B(_) then "B"
-    else "bruh"
-//│ ╔══[ERROR] missing a default branch
-//│ ║  l.388: 	  if x == 0 and x is
-//│ ║         	     ^^^^^^^^^^^^^^^
-//│ ║  l.389: 	    A(_) then "A"
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ║  l.390: 	    B(_) then "B"
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ║  l.391: 	    else "bruh"
-//│ ╙──       	^^^^^^^^^^^^^^^
-//│ f: anything -> error
-//│ Code generation encountered an error:
-//│   if expression has not been not desugared
+  else "bruh"
+//│ f: number -> ("A" | "B" | "bruh")
+//│  = [Function: f18]
 
 fun helper(x) =
   if x == 0 then None() else Some(x)
@@ -418,31 +366,31 @@ fun g(x, y) =
   else
     0
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.411: 	  if x == 0 and helper(x) is
+//│ ║  l.359: 	  if x == 0 and helper(x) is
 //│ ║         	                ^^^^^^^^^
 //│ ╟── application of type `None` does not have field 'value'
 //│ ║  l.5: 	class None: Option
 //│ ║       	      ^^^^
 //│ ╟── but it flows into application with expected type `{value: ?value}`
-//│ ║  l.411: 	  if x == 0 and helper(x) is
+//│ ║  l.359: 	  if x == 0 and helper(x) is
 //│ ╙──       	                ^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.412: 	    Some(a) and helper(y) is
+//│ ║  l.360: 	    Some(a) and helper(y) is
 //│ ║         	                ^^^^^^^^^
 //│ ╟── application of type `None` does not have field 'value'
 //│ ║  l.5: 	class None: Option
 //│ ║       	      ^^^^
 //│ ╟── but it flows into application with expected type `{value: ?value}`
-//│ ║  l.412: 	    Some(a) and helper(y) is
+//│ ║  l.360: 	    Some(a) and helper(y) is
 //│ ╙──       	                ^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.415: 	    None() and helper(y) is
+//│ ║  l.363: 	    None() and helper(y) is
 //│ ║         	               ^^^^^^^^^
 //│ ╟── application of type `None` does not have field 'value'
 //│ ║  l.5: 	class None: Option
 //│ ║       	      ^^^^
 //│ ╟── but it flows into application with expected type `{value: ?value}`
-//│ ║  l.415: 	    None() and helper(y) is
+//│ ║  l.363: 	    None() and helper(y) is
 //│ ╙──       	               ^^^^^^^^^
 //│ g: (int, int,) -> int
 //│  = [Function: g]

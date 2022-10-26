@@ -41,16 +41,18 @@ map(Some(5), x => x + 5)
 map(None(), inc)
 //│ res: None | Some & {value: int}
 
+:e
 fun f(a, b) = if a and b then 0
 //│ ╔══[ERROR] missing a default branch
-//│ ║  l.44: 	fun f(a, b) = if a and b then 0
+//│ ║  l.45: 	fun f(a, b) = if a and b then 0
 //│ ╙──      	                 ^^^^^^^^^^^^^^
 //│ f: (anything, anything,) -> error
 
+:e
 fun f(x, y) =
   if x == y + 5 then 0
   else if x == y + 7 then 0
 //│ ╔══[ERROR] missing a default branch
-//│ ║  l.52: 	  else if x == y + 7 then 0
+//│ ║  l.54: 	  else if x == y + 7 then 0
 //│ ╙──      	          ^^^^^^^^^^^^^^^^^
 //│ f: (number, int,) -> (0 | error)

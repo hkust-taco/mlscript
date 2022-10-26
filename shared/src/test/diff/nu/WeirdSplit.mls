@@ -1,57 +1,49 @@
 :NewParser
 
+class A()
+class B()
+//│ Defined class A
+//│ Defined class B
+//│ A: () -> A
+//│  = [Function: A1]
+//│ B: () -> B
+//│  = [Function: B1]
+
 fun f(x) =
   if x
     is
       A then 0
       B then 1
-//│ ╔══[ERROR] constructor A not found
-//│ ║  l.4: 	  if x
-//│ ║       	     ^
-//│ ║  l.5: 	    is
-//│ ║       	^^^^^^
-//│ ║  l.6: 	      A then 0
-//│ ║       	^^^^^^^^^^^^^^
-//│ ║  l.7: 	      B then 1
-//│ ╙──     	^^^^^^^^^^^^^^
-//│ f: anything -> error
-//│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│ f: (A | B) -> (0 | 1)
+//│  = [Function: f]
 
+// Precedence problem: should we restruct terms when push them to the stack?
+:e
 fun f(x) =
   if x ==
     1
       + 2 then 0
-//│ ╔══[ERROR] missing a default branch
-//│ ║  l.22: 	  if x ==
+      + _ then 1
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.23: 	  if x ==
 //│ ║        	     ^^^^
-//│ ║  l.23: 	    1
+//│ ║  l.24: 	    1
 //│ ║        	^^^^^^
-//│ ║  l.24: 	      + 2 then 0
-//│ ╙──      	^^^^^^^^^^^^^^^^
-//│ f: anything -> error
-//│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│ ║  l.25: 	      + 2 then 0
+//│ ║        	^^^^^^^
+//│ ╟── operator application of type `bool` is not an instance of type `int`
+//│ ║  l.23: 	  if x ==
+//│ ║        	     ^^^^
+//│ ║  l.24: 	    1
+//│ ╙──      	^^^^^^
+//│ f: number -> (0 | 1)
+//│  = [Function: f1]
 
-class A()
-//│ Defined class A
-//│ A: () -> A
-//│  = [Function: A1]
-
-fun f(x) =
+fun f(x, s, t) =
   if x
     is A()
       and t then 0
       and s then 0
-//│ ╔══[ERROR] missing a default branch
-//│ ║  l.42: 	  if x
-//│ ║        	     ^
-//│ ║  l.43: 	    is A()
-//│ ║        	^^^^^^^^^^
-//│ ║  l.44: 	      and t then 0
-//│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.45: 	      and s then 0
-//│ ╙──      	^^^^^^^^^^^^^^^^^^
-//│ f: anything -> error
-//│ Code generation encountered an error:
-//│   if expression has not been not desugared
+    is _ then 1
+//│ f: (anything, anything, anything,) -> (0 | 1)
+//│  = [Function: f2]

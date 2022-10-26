@@ -6,20 +6,15 @@ class Foo(x)
 //│ Foo: 'x -> (Foo with {x: 'x})
 //│    = [Function: Foo1]
 
-:e
-:ge
-if 1 is 1 then 1
-//│ ╔══[ERROR] missing a default branch
-//│ ║  l.11: 	if 1 is 1 then 1
-//│ ╙──      	   ^^^^^^^^^^^^^
-//│ res: error
-//│ Code generation encountered an error:
-//│   if expression has not been not desugared
+if 1 is 1 then 1 else 0
+//│ res: 0 | 1
+//│    = 1
 
 fun test(x) = if x is 1 then 0 else 1
 //│ test: number -> (0 | 1)
 //│     = [Function: test]
 
+// It should report duplicated branches.
 :w
 fun testF(x) = if x is
   Foo(a) then a
@@ -28,7 +23,6 @@ fun testF(x) = if x is
 //│ ╙──
 //│ testF: (Foo with {x: 'x}) -> 'x
 //│      = [Function: testF]
-
 
 class Bar(y, z)
 //│ Defined class Bar
@@ -47,19 +41,14 @@ class Pair(fst, snd)
 //│ Pair: ('fst, 'snd,) -> (Pair with {fst: 'fst, snd: 'snd})
 //│     = [Function: Pair1]
 
-:e
-:ge
-if x is
-  Pair(0, 0) then "zeros"
-  Pair(1, 1) then "ones"
-  Pair(y, 1) then x
-  _          then "nah"
-//│ ╔══[ERROR] identifier not found: x
-//│ ║  l.52: 	if x is
-//│ ╙──      	   ^
-//│ res: "nah" | "ones" | "zeros"
-//│ Code generation encountered an error:
-//│   unresolved symbol x
+fun f(x) =
+  if x is
+    Pair(0, 0) then "zeros"
+    Pair(1, 1) then "ones"
+    Pair(y, 1) then x
+    _          then "nah"
+//│ f: (Pair & {fst: number, snd: number} & 'a | ~Pair) -> ("nah" | "ones" | "zeros" | 'a)
+//│  = [Function: f]
 
 class Z()
 class O()
@@ -70,17 +59,36 @@ class O()
 //│ O: () -> O
 //│  = [Function: O1]
 
+// This is not exhaustive.
 :e
+:ge
 fun foo(x) = if x is
   Pair(Z(), Z()) then "zeros"
   Pair(O(), O()) then "ones"
 //│ ╔══[ERROR] not exhaustive
-//│ ║  l.74: 	fun foo(x) = if x is
+//│ ║  l.65: 	fun foo(x) = if x is
 //│ ║        	                ^^^^
-//│ ║  l.75: 	  Pair(Z(), Z()) then "zeros"
+//│ ║  l.66: 	  Pair(Z(), Z()) then "zeros"
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.76: 	  Pair(O(), O()) then "ones"
+//│ ║  l.67: 	  Pair(O(), O()) then "ones"
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ foo: anything -> error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared
+
+// Change `Pair` to a real pair.
+:e
+:ge
+fun foo(x) = if x is
+  (Z(), Z()) then "zeros"
+  (O(), O()) then "ones"
+//│ ╔══[ERROR] not exhaustive
+//│ ║  l.82: 	fun foo(x) = if x is
+//│ ║        	                ^^^^
+//│ ║  l.83: 	  (Z(), Z()) then "zeros"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.84: 	  (O(), O()) then "ones"
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
 //│   if expression has not been not desugared
@@ -90,9 +98,9 @@ fun foo(x) = if x is
     Z() then if b is
       Z() then "zeros"
     O() then if b is
-      O() then "zeros"
-//│ foo: (Pair & {fst: O | Z, snd: nothing}) -> "zeros"
-//│    = [Function: foo1]
+      O() then "ones"
+//│ foo: (Pair & {fst: O | Z, snd: nothing}) -> ("ones" | "zeros")
+//│    = [Function: foo2]
 
 fun foo(x) = if x is
   Pair(a, b) then if a is
@@ -100,9 +108,9 @@ fun foo(x) = if x is
       Z() then "zeros"
       else "???"
     O() then if b is
-      O() then "zeros"
-//│ foo: (Pair & {fst: O | Z, snd: O}) -> ("???" | "zeros")
-//│    = [Function: foo2]
+      O() then "ones"
+//│ foo: (Pair & {fst: O | Z, snd: O}) -> ("???" | "ones" | "zeros")
+//│    = [Function: foo3]
 
 fun foo(x) = if x is
   Pair(a, b) then if a is
@@ -113,13 +121,14 @@ fun foo(x) = if x is
       O() then "zeros"
       else "???"
 //│ foo: (Pair & {fst: O | Z}) -> ("???" | "zeros")
-//│    = [Function: foo3]
+//│    = [Function: foo4]
 
 class S(pred)
 //│ Defined class S
 //│ S: 'pred -> (S with {pred: 'pred})
 //│  = [Function: S1]
 
+// TODO: Cannot check exhaustiveness of nested UCS yet.
 fun foo(x) = if x is
   Pair(a, b) then if a is
     Z() then if b is
@@ -129,7 +138,7 @@ fun foo(x) = if x is
       O() then "zeros"
       else "???"
 //│ foo: (Pair & {fst: O | Z, snd: (S with {pred: 'pred}) | ~S}) -> ("???" | "zeros" | 'pred)
-//│    = [Function: foo4]
+//│    = [Function: foo5]
 
 :re
 foo(Pair(Z(), Z()))
@@ -137,18 +146,20 @@ foo(Pair(Z(), Z()))
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
 
+:e
+:ge
 fun foo(x) = if x is
   Pair(Z(), Z()) then "zeros"
   Pair(O(), O()) then "ones"
   Pair(y, O()) then x
 //│ ╔══[ERROR] not exhaustive
-//│ ║  l.140: 	fun foo(x) = if x is
+//│ ║  l.151: 	fun foo(x) = if x is
 //│ ║         	                ^^^^
-//│ ║  l.141: 	  Pair(Z(), Z()) then "zeros"
+//│ ║  l.152: 	  Pair(Z(), Z()) then "zeros"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.142: 	  Pair(O(), O()) then "ones"
+//│ ║  l.153: 	  Pair(O(), O()) then "ones"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.143: 	  Pair(y, O()) then x
+//│ ║  l.154: 	  Pair(y, O()) then x
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
@@ -156,21 +167,20 @@ fun foo(x) = if x is
 
 fun foo(x, y) = if x is Z() and y is O() then 0 else 1
 //│ foo: (anything, anything,) -> (0 | 1)
-//│    = [Function: foo6]
+//│    = [Function: foo7]
 
 :pe
 fun foo(x, y) = if x is
   Z() and y is O() then 0 else 1
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.163: 	  Z() and y is O() then 0 else 1
+//│ ║  l.174: 	  Z() and y is O() then 0 else 1
 //│ ╙──       	                          ^^^^
 //│ foo: (Z, O,) -> 0
-//│    = [Function: foo7]
+//│    = [Function: foo8]
 
 fun foo(x, y) =
   if x is
     Z() and y is O() then 0
     else 1
 //│ foo: (anything, anything,) -> (0 | 1)
-//│    = [Function: foo8]
-
+//│    = [Function: foo9]
