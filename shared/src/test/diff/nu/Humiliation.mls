@@ -134,36 +134,22 @@ fun foo(x) = if x is
 //│ foo: (Pair & {snd: nothing} & 'a) -> ("ones" | "zeros" | 'a)
 //│    = [Function: foo5]
 
-// Note: the parser produces a wrong syntax tree.
-:p
 fun foo(x, y) = if x is Z() and y is O() then 0 else 1
-//│ |#fun| |foo|(|x|,| |y|)| |#=| |#if| |x| |is| |Z|(||)| |and| |y| |is| |O|(||)| |#then| |0| |#else| |1|
-//│ Parsed: fun foo = x, y, => if x is Z () and y is (O ()) then 0 else 1;
-//│ Desugared: rec def foo: x, y, => if x is Z () and y is (O ()) then 0 else 1
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:626)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:714)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:733)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ foo: (anything, anything,) -> (0 | 1)
+//│    = [Function: foo6]
 
 fun foo(x, y) = if x is
   Z() and y is O() then 0 else 1
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.156: 	  Z() and y is O() then 0 else 1
+//│ ║  l.196: 	  Z() and y is O() then 0 else 1
 //│ ╙──       	                          ^^^^
 //│ foo: (Z, O,) -> 0
-//│    = [Function: foo6]
+//│    = [Function: foo7]
 
 fun foo(x, y) =
   if x is
     Z() and y is O() then 0
     else 1
 //│ foo: (anything, anything,) -> (0 | 1)
-//│    = [Function: foo7]
+//│    = [Function: foo8]
 
