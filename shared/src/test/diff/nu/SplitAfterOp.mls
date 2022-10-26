@@ -10,7 +10,7 @@ fun f(x, b) =
 //│ ╙──     	^^^^^^^^^^^^^^^^^^
 //│ f: (anything, anything,) -> error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared
 
 if x == y +
   5 then 0
@@ -24,7 +24,7 @@ if x == y +
 //│ ╙──      	^^^^^^^^^^
 //│ res: error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared
 
 if x == y *
   5 then 0
@@ -38,7 +38,7 @@ if x == y *
 //│ ╙──      	^^^^^^^^^^^^^^
 //│ res: error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared
 
 if x ==
   y +
@@ -55,7 +55,7 @@ if x ==
 //│ ╙──      	^^^^^^^^^^^^
 //│ res: error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared
 
 if x ==
   1 and b then 0
@@ -66,4 +66,4 @@ if x ==
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ res: error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared

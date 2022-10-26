@@ -237,7 +237,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       }
     case iff: If =>
       iff.desugaredIf match {
-        case N => throw CodeGenError(s"if expression has not been not desugared")
+        case N => throw CodeGenError(s"if expression has not been desugared")
         case S(term) => translateTerm(term)
       }
     case New(N, TypingUnit(Nil)) => JSRecord(Nil)

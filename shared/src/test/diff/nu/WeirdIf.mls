@@ -42,7 +42,7 @@ if true
 //│ ╙──      	^^^^^^^^
 //│ res: error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared
 
 // This cannot be parsed. But the next one works.
 :pe
@@ -72,7 +72,7 @@ fun f(x) =
 //│ ╙──      	^^^^
 //│ f: anything -> error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared
 
 // But this works.
 fun f(x) =

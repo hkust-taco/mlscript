@@ -24,7 +24,7 @@ if a is
 //│ ╙──     	^^^^^^^^
 //│ res: error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared
 
 if a is
   Left(x) then x
@@ -46,7 +46,7 @@ if a is
 //│ ╙──      	^^^^^^^^
 //│ res: error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared
 
 if
   A then "A"
@@ -79,7 +79,7 @@ if x is
 //│ ╙──      	^^^^^^^^^^^^^^
 //│ res: error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared
 
 if x
   is A() then "A"
@@ -192,7 +192,7 @@ if x is
 //│ ╙──       	^^^^^^^^^^^^^^^
 //│ res: error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared
 
 if xs is
   Nil then Nil
@@ -215,7 +215,7 @@ if xs is
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared
 
 if a is
   Some(x) and x is
@@ -238,4 +238,4 @@ if a is
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared

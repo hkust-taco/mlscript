@@ -44,7 +44,7 @@ fun f(x, y) =
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ f: (anything, anything,) -> error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared
 
 // Hmmmmmm, this one is valid but how to get it work?
 fun boolToStr(x) =
@@ -60,7 +60,7 @@ fun boolToStr(x) =
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^
 //│ boolToStr: anything -> error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared
 
 fun f(x, y) =
   if x is
@@ -138,7 +138,7 @@ fun f(x, y) =
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ f: (anything, anything,) -> error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared
 
 :e
 :ge
@@ -164,7 +164,7 @@ fun f(x, y) =
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ f: (anything, anything,) -> error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared
 
 fun f(x, y) =
   if x is
@@ -203,7 +203,7 @@ fun f(x, y) =
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^
 //│ f: (anything, anything,) -> error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared
 
 fun isValid(x) = if x then false else true
 //│ isValid: anything -> bool
@@ -340,7 +340,7 @@ fun f(x) =
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
 //│ f: anything -> error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared
 
 fun f(x) =
   if x == 0 and x is

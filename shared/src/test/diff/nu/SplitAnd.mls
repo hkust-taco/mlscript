@@ -13,7 +13,7 @@ fun f(x, y) =
 //│ ╙──     	^^^^^^^^^^^^^^^^^^^^^
 //│ f: (anything, anything,) -> error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared
 
 class A()
 class B()
@@ -46,7 +46,7 @@ fun f(x) =
 //│ ╙──      	^^^^^^^^^^^^^^^
 //│ f: anything -> error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared
 
 fun f(x, y) =
   if
@@ -62,4 +62,4 @@ fun f(x, y) =
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ f: (anything, anything,) -> error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared

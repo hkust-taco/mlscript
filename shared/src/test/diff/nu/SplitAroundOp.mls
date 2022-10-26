@@ -124,4 +124,4 @@ if x is
 //│ ╙──       	^^^^^^^^^^^^^^
 //│ res: error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared

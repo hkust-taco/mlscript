@@ -9,7 +9,7 @@ if x
 //│ ╙──     	^^^^^^^^^^^^^
 //│ res: error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared
 
 if x
   is A and
@@ -23,7 +23,7 @@ if x
 //│ ╙──      	^^^^^^^^^^^^
 //│ res: error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared
 
 if x
   == 0 then 0
@@ -43,4 +43,4 @@ if x
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ res: error
 //│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│   if expression has not been desugared
