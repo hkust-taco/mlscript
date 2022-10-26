@@ -6,10 +6,11 @@ class Foo(x)
 //│ Foo: 'x -> (Foo with {x: 'x})
 //│    = [Function: Foo1]
 
-
+:e
+:ge
 if 1 is 1 then 1
 //│ ╔══[ERROR] missing a default branch
-//│ ║  l.10: 	if 1 is 1 then 1
+//│ ║  l.11: 	if 1 is 1 then 1
 //│ ╙──      	   ^^^^^^^^^^^^^
 //│ res: error
 //│ Code generation encountered an error:
@@ -19,6 +20,7 @@ fun test(x) = if x is 1 then 0 else 1
 //│ test: number -> (0 | 1)
 //│     = [Function: test]
 
+:w
 fun testF(x) = if x is
   Foo(a) then a
   Foo(a) then a
@@ -45,18 +47,20 @@ class Pair(fst, snd)
 //│ Pair: ('fst, 'snd,) -> (Pair with {fst: 'fst, snd: 'snd})
 //│     = [Function: Pair1]
 
+:e
+:ge
 if x is
   Pair(0, 0) then "zeros"
   Pair(1, 1) then "ones"
   Pair(y, 1) then x
 //│ ╔══[ERROR] missing a default branch
-//│ ║  l.48: 	if x is
+//│ ║  l.52: 	if x is
 //│ ║        	   ^^^^
-//│ ║  l.49: 	  Pair(0, 0) then "zeros"
+//│ ║  l.53: 	  Pair(0, 0) then "zeros"
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.50: 	  Pair(1, 1) then "ones"
+//│ ║  l.54: 	  Pair(1, 1) then "ones"
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.51: 	  Pair(y, 1) then x
+//│ ║  l.55: 	  Pair(y, 1) then x
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ res: error
 //│ Code generation encountered an error:
@@ -123,6 +127,7 @@ fun foo(x) = if x is
 //│ foo: (Pair & {fst: O | Z, snd: (S with {pred: 'pred}) | ~S}) -> ("???" | "zeros" | 'pred)
 //│    = [Function: foo4]
 
+:re
 foo(Pair(Z(), Z()))
 //│ res: "???" | "zeros"
 //│ Runtime error:
@@ -139,10 +144,11 @@ fun foo(x, y) = if x is Z() and y is O() then 0 else 1
 //│ foo: (anything, anything,) -> (0 | 1)
 //│    = [Function: foo6]
 
+:pe
 fun foo(x, y) = if x is
   Z() and y is O() then 0 else 1
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.143: 	  Z() and y is O() then 0 else 1
+//│ ║  l.149: 	  Z() and y is O() then 0 else 1
 //│ ╙──       	                          ^^^^
 //│ foo: (Z, O,) -> 0
 //│    = [Function: foo7]
