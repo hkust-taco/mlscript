@@ -911,6 +911,49 @@ abstract class MutCaseOf {
 object MutCaseOf {
   import IfBodyHelpers._
 
+  def checkExhaustive(t: MutCaseOf)(implicit scrutineePatternMap: MutMap[Term, MutSet[Str]]): Unit =
+    t match {
+      case Consequent(term) => ()
+      case MissingCase => ()
+      case IfThenElse(condition, whenTrue, whenFalse) =>
+        checkExhaustive(whenTrue)
+        checkExhaustive(whenFalse)
+      case Match(scrutinee, branches) =>
+        scrutineePatternMap.get(scrutinee) match {
+          case N => ???
+          case S(patterns) =>
+            if (!patterns.forall { expectedClassName =>
+              branches.exists {
+                case Branch(S(Var(className) -> _), _) =>
+                  className === expectedClassName
+                case Branch(_, _) => false
+              }
+            }) throw IfDesugaringException("not exhaustive")
+        }
+        branches.foreach(_.consequent |> checkExhaustive)
+    }
+
+  def summarizePatterns(t: MutCaseOf): MutMap[Term, MutSet[Str]] = {
+    val scrutineePatternMap = MutMap.empty[Term, MutSet[Str]]
+    def rec(t: MutCaseOf): Unit =
+      t match {
+        case Consequent(term) => ()
+        case MissingCase => ()
+        case IfThenElse(_, whenTrue, whenFalse) =>
+          rec(whenTrue)
+          rec(whenFalse)
+        case Match(scrutinee, branches) =>
+          branches.foreach {
+            case Branch(N, consequent) => rec(consequent)
+            case Branch(S(Var(className) -> _), consequent) =>
+              scrutineePatternMap.getOrElseUpdate(scrutinee, MutSet.empty) += className
+              rec(consequent)
+          }
+      }
+    rec(t)
+    scrutineePatternMap
+  }
+
   def show(t: MutCaseOf): Ls[Str] = {
     val lines = Buffer.empty[String]
     def rec(t: MutCaseOf, indent: Int, leading: String): Unit = {

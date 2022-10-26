@@ -54,14 +54,14 @@ if
   B then "B"
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$10(Typer.scala:1243)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$10$adapted(Typer.scala:1241)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$10(Typer.scala:1250)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$10$adapted(Typer.scala:1248)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1241)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1249)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1248)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1256)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:750)
 //│ 	at: mlscript.Typer.typeStatement(Typer.scala:376)
 
 if x is
@@ -102,14 +102,14 @@ if x ==
   y * y then 0
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$10(Typer.scala:1243)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$10$adapted(Typer.scala:1241)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$10(Typer.scala:1250)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$10$adapted(Typer.scala:1248)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1241)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1249)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1248)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1256)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:750)
 //│ 	at: mlscript.Typer.typeStatement(Typer.scala:376)
 
 if
@@ -117,14 +117,14 @@ if
   let y = 0
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$10(Typer.scala:1243)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$10$adapted(Typer.scala:1241)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$10(Typer.scala:1250)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$10$adapted(Typer.scala:1248)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1241)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1249)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1248)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1256)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:750)
 //│ 	at: mlscript.Typer.typeStatement(Typer.scala:376)
 
 if
@@ -135,14 +135,14 @@ if
   z == 2 then 2
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$10(Typer.scala:1243)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$10$adapted(Typer.scala:1241)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$10(Typer.scala:1250)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$10$adapted(Typer.scala:1248)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1241)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1249)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1248)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1256)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:750)
 //│ 	at: mlscript.Typer.typeStatement(Typer.scala:376)
 
 :pe
@@ -167,14 +167,14 @@ if q(y) and
   y == z * z then "bruh"
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$10(Typer.scala:1243)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$10$adapted(Typer.scala:1241)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$10(Typer.scala:1250)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$10$adapted(Typer.scala:1248)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1241)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1249)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1248)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1256)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:750)
 //│ 	at: mlscript.Typer.typeStatement(Typer.scala:376)
 
 if x is

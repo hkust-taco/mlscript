@@ -727,6 +727,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           val caseTree = MutCaseOf.build(cnf)
           println("The mutable CaseOf tree")
           MutCaseOf.show(caseTree).foreach(println(_))
+          val scrutineePatternMap = MutCaseOf.summarizePatterns(caseTree)
+          println("Exhaustiveness map")
+          scrutineePatternMap.foreach { case (scrutinee, classNames) =>
+            println(s"- $scrutinee => " + classNames.mkString(", "))
+          }
+          MutCaseOf.checkExhaustive(caseTree)(scrutineePatternMap)
           val trm = caseTree.toTerm
           println(s"Desugared term: ${trm.print(false)}")
           iff.desugaredIf = S(trm)
@@ -1074,6 +1080,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       // What else?
       case _ => throw new Exception(s"illegal pattern: $pattern")
     }
+
 
   def desugarIf(body: IfBody, fallback: Opt[Term])(implicit ctx: Ctx): Ls[Ls[Condition] -> Term] = {
     // We allocate temporary variable names for nested patterns.

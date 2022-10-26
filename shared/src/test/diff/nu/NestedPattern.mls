@@ -39,29 +39,29 @@ if x is
   (0, 0) then "zeros"
   (1, 1) then "ones"
 //│ /!!!\ Uncaught error: java.lang.Exception: illegal pattern: '(' 0, 0, ')'
-//│ 	at: mlscript.Typer.destructPattern(Typer.scala:1075)
-//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1130)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$9(Typer.scala:1222)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$9$adapted(Typer.scala:1222)
+//│ 	at: mlscript.Typer.destructPattern(Typer.scala:1081)
+//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1137)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$9(Typer.scala:1229)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$9$adapted(Typer.scala:1229)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1222)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1249)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1229)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1256)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:750)
 
 if x is
   (0, 0) then "zeros"
   (1, 1) then "ones"
   (y, 1) then x
 //│ /!!!\ Uncaught error: java.lang.Exception: illegal pattern: '(' 0, 0, ')'
-//│ 	at: mlscript.Typer.destructPattern(Typer.scala:1075)
-//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1130)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$9(Typer.scala:1222)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$9$adapted(Typer.scala:1222)
+//│ 	at: mlscript.Typer.destructPattern(Typer.scala:1081)
+//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1137)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$9(Typer.scala:1229)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$9$adapted(Typer.scala:1229)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1222)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1249)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1229)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1256)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:750)
