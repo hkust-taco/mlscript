@@ -6,6 +6,7 @@ import scala.collection.mutable.StringBuilder as StringBuilder
 import scala.collection.mutable.Map as MMap
 import scala.collection.mutable.Set as MSet
 import mlscript.codegen.Helpers.inspect as showStructure
+import mlscript.codegen.CodeGenError
 
 class ClassLifter(logDebugMsg: Boolean = false) { 
   type ClassName = String
@@ -263,12 +264,8 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       }
     }
     log(s"lift constr for $tp$prm under $ctx, $cache, $outer")
-    if(!cache.contains(tp) && !ctx.tSet.contains(tp)){
-      throw new Exception("Creating Unknown Object!")
-    }
-    if(ctx.tSet.contains(tp)){
-      val nParams = liftTuple(prm)
-      (tp, nParams._1, nParams._2)
+    if(!cache.contains(tp)){
+      throw new CodeGenError(s"Cannot find type ${tp.name}. Class values are not supported for lifter. ")
     }
     else {
       val cls@ClassInfoCache(_, nm, capParams, _, _, _, out, _, _) = cache.get(tp).get
@@ -331,12 +328,8 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       (App(ltrm, rtrm), lctx ++ rctx)
     case Assign(lhs, rhs) => 
       val (ltrm, lctx) = liftTermNew(lhs)
-      if(!lctx.vSet.isEmpty)
-        throw new Exception("should not have captured variable at left")
-      else{
-        val (rtrm, rctx) = liftTermNew(rhs)
-        (Assign(ltrm, rtrm), lctx ++ rctx)
-      }
+      val (rtrm, rctx) = liftTermNew(rhs)
+      (Assign(ltrm, rtrm), lctx ++ rctx)
     case Bind(lhs, rhs) => 
       val (ltrm, lctx) = liftTermNew(lhs)
       val (rtrm, rctx) = liftTermAsType(rhs)

@@ -84,10 +84,5 @@ class CTX{
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, CTX, (), Tup(), (), TypingUnit(NuFunDef(None, ctx, [], Lam(Tup(_: Var(x), _: Var(y)), Blk(...))))))
 //│ Lifted:
-//│ TypingUnit {
-//│   class CTX$1_A$2(par$CTX$1, x,) {fun foo = (this).x}
-//│   class CTX$1() {
-//│     fun ctx = x, y, => {fun bar = any: T, => {let x = new T() {}; new CTX$1_A$2(this, x,) {}} : TypeName(CTX$1_A$2); ('(' new CTX$1() {}, ')').bar‹CTX$1›}
-//│   }
-//│ }
+//│ Lifting failed: mlscript.codegen.CodeGenError: Cannot find type T. Class values are not supported for lifter. 
 

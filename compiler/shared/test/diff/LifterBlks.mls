@@ -276,5 +276,4 @@ f(MyClass)
 //│ Parsed:
 //│ TypingUnit(NuFunDef(None, f, [], Lam(Tup(_: Var(T)), Blk(...))), App(Var(f), Tup(_: Var(MyClass))))
 //│ Lifted:
-//│ Lifting failed: java.lang.Exception: Creating Unknown Object!
-
+//│ Lifting failed: mlscript.codegen.CodeGenError: Cannot find type T. Class values are not supported for lifter. 
