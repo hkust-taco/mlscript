@@ -31,7 +31,7 @@ class UltimateConditions extends TypeDefs { self: Typer =>
   }
 
   private def destructSubPatterns
-    (subPatterns: Iterable[Var -> Term], ctx: Typer#Ctx)
+    (subPatterns: Iterable[Var -> Term], ctx: Ctx)
     (implicit aliasMap: MutMap[Term, MutMap[Str, Var]]): Ls[Condition] = {
       subPatterns.iterator.flatMap[Condition] {
         case (scrutinee, subPattern) => destructPattern(scrutinee, subPattern, ctx)
@@ -48,7 +48,7 @@ class UltimateConditions extends TypeDefs { self: Typer =>
     * @return a list of simple condition with bindings
     */
   private def destructPattern
-      (scrutinee: Term, pattern: Term, ctx: Typer#Ctx)
+      (scrutinee: Term, pattern: Term, ctx: Ctx)
       (implicit aliasMap: MutMap[Term, MutMap[Str, Var]]): Ls[Condition] = 
     pattern match {
       // This case handles top-level wildcard `Var`.
@@ -157,7 +157,7 @@ class UltimateConditions extends TypeDefs { self: Typer =>
       */
     def desugarMatchBranch
         (scrutinee: Term, body: IfBody \/ Statement, pat: PartialTerm, acc: Ls[Condition])
-        (implicit ctx: Typer#Ctx): Unit =
+        (implicit ctx: Ctx): Unit =
       body match {
         // if x is
         //   A(...) then ...
