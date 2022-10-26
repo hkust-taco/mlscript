@@ -9,47 +9,61 @@ if x
     "0" then "s0"
     "1" then "s1"
     "2" then "s2"
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.MutCaseOf$IfThenElse.merge(helpers.scala:949)
-//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1(helpers.scala:1060)
-//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1$adapted(helpers.scala:1060)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.MutCaseOf$.build(helpers.scala:1060)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:727)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
-//│ 	at: mlscript.Typer.typeStatement(Typer.scala:376)
+//│ ╔══[ERROR] missing a default branch
+//│ ║  l.3: 	if x
+//│ ║       	   ^
+//│ ║  l.4: 	  ==
+//│ ║       	^^^^
+//│ ║  l.5: 	    0 and b then "n0"
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.6: 	    1 and b then "n1"
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.7: 	    2 then "n2"
+//│ ║       	^^^^^^^^^^^^^^^
+//│ ║  l.8: 	  ==
+//│ ║       	^^^^
+//│ ║  l.9: 	    "0" then "s0"
+//│ ║       	^^^^^^^^^^^^^^^^^
+//│ ║  l.10: 	    "1" then "s1"
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ║  l.11: 	    "2" then "s2"
+//│ ╙──      	^^^^^^^^^^^^^^^^^
+//│ res: error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared
 
 if x == 0
   and
     y == 0 then "x, y"
     a == 0 then "x, a"
     b == 0 then "x, b"
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.MutCaseOf$IfThenElse.merge(helpers.scala:949)
-//│ 	at: mlscript.MutCaseOf$IfThenElse.merge(helpers.scala:946)
-//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1(helpers.scala:1060)
-//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1$adapted(helpers.scala:1060)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.MutCaseOf$.build(helpers.scala:1060)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:727)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ ╔══[ERROR] missing a default branch
+//│ ║  l.35: 	if x == 0
+//│ ║        	   ^^^^^^
+//│ ║  l.36: 	  and
+//│ ║        	^^^^^
+//│ ║  l.37: 	    y == 0 then "x, y"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.38: 	    a == 0 then "x, a"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.39: 	    b == 0 then "x, b"
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
+//│ res: error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared
 
 if x
   is
     A() then 0
     B() then 1
 //│ ╔══[ERROR] class A not found
-//│ ║  l.41: 	if x
+//│ ║  l.55: 	if x
 //│ ║        	   ^
-//│ ║  l.42: 	  is
+//│ ║  l.56: 	  is
 //│ ║        	^^^^
-//│ ║  l.43: 	    A() then 0
+//│ ║  l.57: 	    A() then 0
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.44: 	    B() then 1
+//│ ║  l.58: 	    B() then 1
 //│ ╙──      	^^^^^^^^^^^^^^
 //│ res: error
 //│ Code generation encountered an error:
@@ -62,12 +76,12 @@ if x is
     < 0 then 2
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1188)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$7(Typer.scala:1227)
-//│ 	at: mlscript.Typer.$anonfun$desugarIf$7$adapted(Typer.scala:1227)
+//│ 	at: mlscript.Typer.desugarMatchBranch$1(Typer.scala:1193)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$7(Typer.scala:1234)
+//│ 	at: mlscript.Typer.$anonfun$desugarIf$7$adapted(Typer.scala:1234)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1227)
-//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1254)
+//│ 	at: mlscript.Typer.desugarIfBody$1(Typer.scala:1234)
+//│ 	at: mlscript.Typer.desugarIf(Typer.scala:1261)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:725)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)

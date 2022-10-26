@@ -1127,6 +1127,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         (implicit ctx: Typer#Ctx): Unit =
       body match {
         // if x is
+        //   A(...) then ...
+        //   _      then ...
+        case L(IfThen(Var("_"), consequent)) =>
+          branches += (acc -> consequent)
+        // if x is
         //   A(...) then ...         // Case 1: no conjunctions
         //   B(...) and ... then ... // Case 2: more conjunctions
         case L(IfThen(patTest, consequent)) =>
@@ -1214,6 +1219,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                 desugarIfBody(contBody)(addOp(exprStart, opVar), acc)
               }
           }
+        case IfThen(Var("_"), consequent) =>
+          branches += (acc -> consequent)
         // The termination case.
         case IfThen(term, consequent) =>
           addTerm(expr, term) match {

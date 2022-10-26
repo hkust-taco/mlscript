@@ -49,17 +49,18 @@ if x is
   Pair(0, 0) then "zeros"
   Pair(1, 1) then "ones"
   Pair(y, 1) then x
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.MutCaseOf$IfThenElse.merge(helpers.scala:949)
-//│ 	at: mlscript.MutCaseOf$Match.merge(helpers.scala:977)
-//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1(helpers.scala:1060)
-//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1$adapted(helpers.scala:1060)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.MutCaseOf$.build(helpers.scala:1060)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:727)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
+//│ ╔══[ERROR] missing a default branch
+//│ ║  l.48: 	if x is
+//│ ║        	   ^^^^
+//│ ║  l.49: 	  Pair(0, 0) then "zeros"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.50: 	  Pair(1, 1) then "ones"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.51: 	  Pair(y, 1) then x
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
+//│ res: error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared
 
 class Z()
 class O()
@@ -141,7 +142,7 @@ fun foo(x, y) = if x is Z() and y is O() then 0 else 1
 fun foo(x, y) = if x is
   Z() and y is O() then 0 else 1
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.196: 	  Z() and y is O() then 0 else 1
+//│ ║  l.143: 	  Z() and y is O() then 0 else 1
 //│ ╙──       	                          ^^^^
 //│ foo: (Z, O,) -> 0
 //│    = [Function: foo7]

@@ -15,28 +15,54 @@ fun f(x, b) =
 if x == y +
   5 then 0
   7 then 0
-//│ res: 0
-//│    = 0
+//│ ╔══[ERROR] missing a default branch
+//│ ║  l.15: 	if x == y +
+//│ ║        	   ^^^^^^^^
+//│ ║  l.16: 	  5 then 0
+//│ ║        	^^^^^^^^^^
+//│ ║  l.17: 	  7 then 0
+//│ ╙──      	^^^^^^^^^^
+//│ res: error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared
 
 if x == y *
   5 then 0
   6 + 7 then 0
-//│ res: 0
-//│    = 0
+//│ ╔══[ERROR] missing a default branch
+//│ ║  l.29: 	if x == y *
+//│ ║        	   ^^^^^^^^
+//│ ║  l.30: 	  5 then 0
+//│ ║        	^^^^^^^^^^
+//│ ║  l.31: 	  6 + 7 then 0
+//│ ╙──      	^^^^^^^^^^^^^^
+//│ res: error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared
 
 if x ==
   y +
     5 then 0
     7 then 0
-//│ res: 0
-//│    = 0
+//│ ╔══[ERROR] missing a default branch
+//│ ║  l.43: 	if x ==
+//│ ║        	   ^^^^
+//│ ║  l.44: 	  y +
+//│ ║        	^^^^^
+//│ ║  l.45: 	    5 then 0
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.46: 	    7 then 0
+//│ ╙──      	^^^^^^^^^^^^
+//│ res: error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared
 
 if x ==
   1 and b then 0
 //│ ╔══[ERROR] missing a default branch
-//│ ║  l.34: 	if x ==
+//│ ║  l.60: 	if x ==
 //│ ║        	   ^^^^
-//│ ║  l.35: 	  1 and b then 0
+//│ ║  l.61: 	  1 and b then 0
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ res: error
 //│ Code generation encountered an error:

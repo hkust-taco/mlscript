@@ -4,8 +4,14 @@ fun f(x, y) =
   if
     x == 0 then "x"
     y == 0 then "y"
-//│ f: (number, anything,) -> ("x" | "y")
-//│  = [Function: f]
+//│ ╔══[ERROR] missing a default branch
+//│ ║  l.5: 	    x == 0 then "x"
+//│ ║       	    ^^^^^^^^^^^^^^^
+//│ ║  l.6: 	    y == 0 then "y"
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^
+//│ f: (anything, anything,) -> error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared
 
 fun f(x) =
   if x
@@ -13,13 +19,13 @@ fun f(x) =
     is None() and allowNone then "okay"
     is _ then "bad"
 //│ ╔══[ERROR] class Some not found
-//│ ║  l.11: 	  if x
+//│ ║  l.17: 	  if x
 //│ ║        	     ^
-//│ ║  l.12: 	    is Some(x) and isValid(x) then "good"
+//│ ║  l.18: 	    is Some(x) and isValid(x) then "good"
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.13: 	    is None() and allowNone then "okay"
+//│ ║  l.19: 	    is None() and allowNone then "okay"
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.14: 	    is _ then "bad"
+//│ ║  l.20: 	    is _ then "bad"
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ f: anything -> error
 //│ Code generation encountered an error:
@@ -34,17 +40,24 @@ fun f(x, y) =
         0 then "z = 0"
         9 then "z = 9"
       3 then "y = 3"
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.MutCaseOf$IfThenElse.merge(helpers.scala:949)
-//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1(helpers.scala:1060)
-//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1$adapted(helpers.scala:1060)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.MutCaseOf$.build(helpers.scala:1060)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:727)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:612)
+//│ ╔══[ERROR] missing a default branch
+//│ ║  l.36: 	    x == 0 then "x"
+//│ ║        	    ^^^^^^^^^^^^^^^
+//│ ║  l.37: 	    y ==
+//│ ║        	^^^^^^^^
+//│ ║  l.38: 	      1 then "y = 1"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.39: 	      2 and z ==
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.40: 	        0 then "z = 0"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.41: 	        9 then "z = 9"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.42: 	      3 then "y = 3"
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
+//│ f: (anything, anything,) -> error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared
 
 fun f(a, b) =
   if
@@ -56,12 +69,12 @@ fun f(a, b) =
     else 3
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.MutCaseOf$IfThenElse.merge(helpers.scala:947)
 //│ 	at: mlscript.MutCaseOf$IfThenElse.merge(helpers.scala:949)
-//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1(helpers.scala:1060)
-//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1$adapted(helpers.scala:1060)
+//│ 	at: mlscript.MutCaseOf$IfThenElse.merge(helpers.scala:949)
+//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1(helpers.scala:1067)
+//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1$adapted(helpers.scala:1067)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.MutCaseOf$.build(helpers.scala:1060)
+//│ 	at: mlscript.MutCaseOf$.build(helpers.scala:1067)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:727)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:612)

@@ -850,12 +850,19 @@ object IfBodyHelpers {
     res
   }
 
-  def mkLetFromFields(scrutinee: Term, fields: Ls[Str -> Var], body: Term): Term =
-    fields match {
-      case Nil => body
-      case (field -> alias) :: tail =>
-        Let(false, alias, Sel(scrutinee, Var(field)), mkLetFromFields(scrutinee, tail, body))
-    }
+  def mkLetFromFields(scrutinee: Term, fields: Ls[Str -> Var], body: Term): Term = {
+    val generatedFields = MutSet.empty[(Str, Str)]
+    def rec(fields: Ls[Str -> Var]): Term =
+      fields match {
+        case Nil => body
+        case (field -> (aliasVar @ Var(alias))) :: tail
+            if !generatedFields.contains((field, alias)) =>
+          generatedFields += ((field, alias))
+          Let(false, aliasVar, Sel(scrutinee, Var(field)), rec(tail))
+        case _ :: tail => rec(tail)
+      }
+    rec(fields)
+  }
 
   def showConjunctions(println: (=> Any) => Unit, cnf: Ls[Ls[IfBodyHelpers.Condition] -> Term]): Unit = {
     println("Flattened conjunctions")
@@ -947,7 +954,7 @@ object MutCaseOf {
           } else {
             whenFalse match {
               case Consequent(_) => ??? // duplicated branch
-              case MissingCase => whenFalse = Consequent(term)
+              case MissingCase => whenFalse =  buildBranch(branch._1, branch._2)
               case _ => whenFalse.merge(branch)
             }
           }

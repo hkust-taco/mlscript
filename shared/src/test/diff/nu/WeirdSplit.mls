@@ -43,9 +43,15 @@ fun f(x) =
     is A()
       and t then 0
       and s then 0
-//│ ╔══[ERROR] identifier not found: t
+//│ ╔══[ERROR] missing a default branch
+//│ ║  l.42: 	  if x
+//│ ║        	     ^
+//│ ║  l.43: 	    is A()
+//│ ║        	^^^^^^^^^^
 //│ ║  l.44: 	      and t then 0
-//│ ╙──      	          ^
-//│ f: A -> 0
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.45: 	      and s then 0
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
+//│ f: anything -> error
 //│ Code generation encountered an error:
-//│   unresolved symbol t
+//│   if expression has not been not desugared

@@ -4,8 +4,16 @@ fun f(x, y) =
   if x == 0 and
     y == 0 then "bruh"
     y == 1 then "lol"
-//│ f: (anything, number,) -> ("bruh" | "lol")
-//│  = [Function: f]
+//│ ╔══[ERROR] missing a default branch
+//│ ║  l.4: 	  if x == 0 and
+//│ ║       	     ^^^^^^^^^^
+//│ ║  l.5: 	    y == 0 then "bruh"
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.6: 	    y == 1 then "lol"
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^
+//│ f: (anything, anything,) -> error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared
 
 class A()
 class B()
@@ -23,13 +31,35 @@ fun f(x) =
       B() then "B"
     x == 0 then "lol"
     else "bruh"
-//│ f: (A | B | number) -> ("A" | "B" | "bruh" | "lol")
-//│  = [Function: f1]
+//│ ╔══[ERROR] missing a default branch
+//│ ║  l.28: 	  if x == 0 and
+//│ ║        	     ^^^^^^^^^^
+//│ ║  l.29: 	    x is
+//│ ║        	^^^^^^^^
+//│ ║  l.30: 	      A() then "A"
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.31: 	      B() then "B"
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.32: 	    x == 0 then "lol"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.33: 	    else "bruh"
+//│ ╙──      	^^^^^^^^^^^^^^^
+//│ f: anything -> error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared
 
 fun f(x, y) =
   if
     x == 0 and
       y == 0 then "bruh"
       else "lol"
-//│ f: (anything, number,) -> ("bruh" | "lol")
-//│  = [Function: f2]
+//│ ╔══[ERROR] missing a default branch
+//│ ║  l.53: 	    x == 0 and
+//│ ║        	    ^^^^^^^^^^
+//│ ║  l.54: 	      y == 0 then "bruh"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.55: 	      else "lol"
+//│ ╙──      	^^^^^^^^^^^^^^^^
+//│ f: (anything, anything,) -> error
+//│ Code generation encountered an error:
+//│   if expression has not been not desugared

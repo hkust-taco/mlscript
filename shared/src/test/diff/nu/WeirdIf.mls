@@ -4,24 +4,19 @@ if
   _ then 0
   else 0
 else 1
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.MutCaseOf$IfThenElse.merge(helpers.scala:940)
-//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1(helpers.scala:1060)
-//│ 	at: mlscript.MutCaseOf$.$anonfun$build$1$adapted(helpers.scala:1060)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.MutCaseOf$.build(helpers.scala:1060)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:727)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:744)
-//│ 	at: mlscript.Typer.typeStatement(Typer.scala:376)
+//│ ╔══[WARNING] duplicated branch
+//│ ╙──
+//│ ╔══[WARNING] duplicated branch
+//│ ╙──
+//│ res: 0
+//│    = 0
 
 if true
   then 0
 //│ ╔══[ERROR] missing a default branch
-//│ ║  l.19: 	if true
+//│ ║  l.14: 	if true
 //│ ║        	   ^^^^
-//│ ║  l.20: 	  then 0
+//│ ║  l.15: 	  then 0
 //│ ╙──      	^^^^^^^^
 //│ res: error
 //│ Code generation encountered an error:
@@ -48,23 +43,23 @@ fun f(x) =
   if x ==
     else "bruh"
 //│ ╔══[PARSE ERROR] Unexpected indented block in expression position
-//│ ║  l.49: 	    else "bruh"
+//│ ║  l.44: 	    else "bruh"
 //│ ╙──      	^^^^
 //│ ╔══[PARSE ERROR] Unexpected end of indented block; an expression was expected here
-//│ ║  l.49: 	    else "bruh"
+//│ ║  l.44: 	    else "bruh"
 //│ ╙──      	    ^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found operator application instead
-//│ ║  l.48: 	  if x ==
+//│ ║  l.43: 	  if x ==
 //│ ║        	     ^^^^
-//│ ║  l.49: 	    else "bruh"
+//│ ║  l.44: 	    else "bruh"
 //│ ║        	^^^^
 //│ ╟── Note: 'if' expression started here:
-//│ ║  l.48: 	  if x ==
+//│ ║  l.43: 	  if x ==
 //│ ╙──      	  ^^
 //│ ╔══[ERROR] missing a default branch
-//│ ║  l.48: 	  if x ==
+//│ ║  l.43: 	  if x ==
 //│ ║        	     ^^^^
-//│ ║  l.49: 	    else "bruh"
+//│ ║  l.44: 	    else "bruh"
 //│ ╙──      	^^^^
 //│ f: anything -> error
 //│ Code generation encountered an error:
@@ -73,37 +68,31 @@ fun f(x) =
 fun f(x) =
   if x ==
     _ then "bruh"
-//│ ╔══[ERROR] missing a default branch
-//│ ║  l.74: 	  if x ==
-//│ ║        	     ^^^^
-//│ ║  l.75: 	    _ then "bruh"
-//│ ╙──      	^^^^^^^^^^^^^^^^^
-//│ f: anything -> error
-//│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│ f: anything -> "bruh"
+//│  = [Function: f3]
 
 :pe
 fun f(x) =
   if x ==
     else "bruh"
 //│ ╔══[PARSE ERROR] Unexpected indented block in expression position
-//│ ║  l.88: 	    else "bruh"
+//│ ║  l.77: 	    else "bruh"
 //│ ╙──      	^^^^
 //│ ╔══[PARSE ERROR] Unexpected end of indented block; an expression was expected here
-//│ ║  l.88: 	    else "bruh"
+//│ ║  l.77: 	    else "bruh"
 //│ ╙──      	    ^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found operator application instead
-//│ ║  l.87: 	  if x ==
+//│ ║  l.76: 	  if x ==
 //│ ║        	     ^^^^
-//│ ║  l.88: 	    else "bruh"
+//│ ║  l.77: 	    else "bruh"
 //│ ║        	^^^^
 //│ ╟── Note: 'if' expression started here:
-//│ ║  l.87: 	  if x ==
+//│ ║  l.76: 	  if x ==
 //│ ╙──      	  ^^
 //│ ╔══[ERROR] missing a default branch
-//│ ║  l.87: 	  if x ==
+//│ ║  l.76: 	  if x ==
 //│ ║        	     ^^^^
-//│ ║  l.88: 	    else "bruh"
+//│ ║  l.77: 	    else "bruh"
 //│ ╙──      	^^^^
 //│ f: anything -> error
 //│ Code generation encountered an error:
@@ -112,11 +101,5 @@ fun f(x) =
 fun f(x) =
   if x ==
     _ then "bruh"
-//│ ╔══[ERROR] missing a default branch
-//│ ║  l.113: 	  if x ==
-//│ ║         	     ^^^^
-//│ ║  l.114: 	    _ then "bruh"
-//│ ╙──       	^^^^^^^^^^^^^^^^^
-//│ f: anything -> error
-//│ Code generation encountered an error:
-//│   if expression has not been not desugared
+//│ f: anything -> "bruh"
+//│  = [Function: f5]
