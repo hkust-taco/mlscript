@@ -4,16 +4,15 @@
 :ex
 // add 1
 
-:ex
-:d
-:simplifyError
+:sus
 // def succ x = add x 1
 // x1 = false
 // x2 = x1
-// succ x2
 // succ 1
 // succ 2
+// succ 2
 // succ false
+// succ x2
 
 
 :d
@@ -23,11 +22,8 @@
 // h1 f x = f x
 // h1 succ false
 
-:d
-:ex
-:simplifyError
+:sus
 // x1 = false
-// f1 y1 = succ y1
 // def succ x = add x 1
 // h1 f x = f x
 // h1 succ 1
@@ -35,12 +31,18 @@
 // h1 add 3
 // h1 succ false
 
-:ex
+:sus
 :d
-:simplifyError
 // class Helper: { left: bool; right: int }
 // def succ x = add x 1
 // x1 = false
 // x2 = x1
-// x3 = Helper { left = x2; right = 1 }
-// succ x3.left
+// x3 = { left = x2; right = 1 }
+// x3.left
+
+
+:sus
+:d
+:simplifyError
+// r = { a = true }
+// add r.a 1
