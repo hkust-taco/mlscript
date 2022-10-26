@@ -1170,14 +1170,26 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               desugarMatchBranch(scrutinee, L(consequent), partialPattern, acc)
           }
         case L(IfOpsApp(patLhs, opsRhss)) =>
-          patLhs match {
-            case App(
-              App(Var("and"),
-                  Tup((_ -> Fld(_, _, realPat)) :: Nil)),
-              Tup((_ -> Fld(_, _, restCond)) :: Nil)
-            ) =>
-              ???
-            case pattern => ???
+          separatePattern(patLhs) match {
+            case (patternPart, N) =>
+              val partialPattern = addTerm(pat, patternPart)
+              opsRhss.foreach { case op -> consequent =>
+                desugarMatchBranch(scrutinee, L(consequent), addOp(partialPattern, op), acc)
+              }
+            case (patternPart, S(extraTests)) =>
+              addTerm(pat, patternPart) match {
+                case N => ??? // Error: cannot be empty
+                case S(R(_)) => ??? // Error: cannot be incomplete
+                case S(L(pattern)) =>
+                  val patternConditions = destructPattern(scrutinee, pattern, ctx)
+                  val testTerms = splitAnd(extraTests)
+                  val middleConditions = desugarConditions(testTerms.init)
+                  val accumulatedConditions = acc ::: patternConditions ::: middleConditions
+                  opsRhss.foreach { case op -> consequent =>
+                    // TODO: Use lastOption
+                    desugarIfBody(consequent)(S(L(testTerms.last)), accumulatedConditions)
+                  }
+              }
           }
         case L(IfElse(consequent)) =>
           // Because this pattern matching is incomplete, it's not included in

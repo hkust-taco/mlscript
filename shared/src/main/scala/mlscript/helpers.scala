@@ -825,7 +825,10 @@ object IfBodyHelpers {
           case S(extraTest) =>
             S(L(mkBinOp(assertion, Var("and"), extraTest)))
         }
-      case S(R(lhs -> op)) => S(L(mkBinOp(lhs, op, rhs)))
+      case S(R(lhs -> op)) =>
+        val (realRhs, extraExprOpt) = separatePattern(rhs)
+        val leftmost = mkBinOp(lhs, op, realRhs)
+        S(L(extraExprOpt.fold(leftmost){ mkBinOp(leftmost, Var("and"), _) }))
     }
 
   // Add an operator to a partial term.
@@ -905,7 +908,9 @@ abstract class MutCaseOf {
   def merge
     (branch: Ls[IfBodyHelpers.Condition] -> Term)
     (implicit raise: Diagnostic => Unit): Unit
-  def mergeDefault(default: Term): Unit
+  def mergeDefault
+    (default: Term)
+    (implicit raise: Diagnostic => Unit): Unit
   def toTerm: Term
 }
 
@@ -1011,13 +1016,7 @@ object MutCaseOf {
   final case class IfThenElse(condition: Term, var whenTrue: MutCaseOf, var whenFalse: MutCaseOf) extends MutCaseOf {
     override def merge(branch: Ls[Condition] -> Term)(implicit raise: Diagnostic => Unit): Unit =
       branch match {
-        case Nil -> term => 
-          whenFalse match {
-            case Consequent(_) =>
-              raise(WarningReport(Message.fromStr("duplicated else branch") -> N :: Nil))
-            case MissingCase => whenFalse = Consequent(term)
-            case _ => whenFalse.merge(branch)
-          }
+        case Nil -> term => this.mergeDefault(term)
         case (Condition.BooleanTest(test) :: tail) -> term =>
           if (test === condition) {
             whenTrue.merge(tail -> term)
@@ -1036,11 +1035,13 @@ object MutCaseOf {
           }
       }
 
-    override def mergeDefault(default: Term): Unit = {
+    override def mergeDefault(default: Term)(implicit raise: Diagnostic => Unit): Unit = {
       whenTrue.mergeDefault(default)
       whenFalse match {
+        case Consequent(_) =>
+          raise(WarningReport(Message.fromStr("duplicated else branch") -> N :: Nil))
         case MissingCase => whenFalse = Consequent(default)
-        case _           => whenFalse.mergeDefault(default)
+        case _: IfThenElse | _: Match => whenFalse.mergeDefault(default)
       }
     }
 
@@ -1084,7 +1085,7 @@ object MutCaseOf {
       }
     }
 
-    override def mergeDefault(default: Term): Unit = {
+    override def mergeDefault(default: Term)(implicit raise: Diagnostic => Unit): Unit = {
       var hasWildcard = false
       branches.foreach {
         case Branch(_, _: Consequent | MissingCase) => ()
@@ -1114,14 +1115,14 @@ object MutCaseOf {
     override def merge(branch: Ls[Condition] -> Term)(implicit raise: Diagnostic => Unit): Unit =
       raise(WarningReport(Message.fromStr("duplicated branch") -> N :: Nil))
 
-    override def mergeDefault(default: Term): Unit = ()
+    override def mergeDefault(default: Term)(implicit raise: Diagnostic => Unit): Unit = ()
 
     override def toTerm: Term = term
   }
   final case object MissingCase extends MutCaseOf {
     override def merge(branch: Ls[Condition] -> Term)(implicit raise: Diagnostic => Unit): Unit = ???
 
-    override def mergeDefault(default: Term): Unit = ()
+    override def mergeDefault(default: Term)(implicit raise: Diagnostic => Unit): Unit = ()
 
     override def toTerm: Term =
       throw new IfDesugaringException("missing a default branch")
@@ -1139,8 +1140,7 @@ object MutCaseOf {
           case Condition.MatchTuple(scrutinee, arity, fields) =>
             val branches = Buffer.empty[Branch]
             val tupleClassName = Var(s"Tuple#$arity")
-            val indexFields = fields.map { case (index, alias) => index.toString -> alias }
-            branches += Branch(S(tupleClassName -> Buffer.from(indexFields)), rec(next))
+            branches += Branch(S(tupleClassName -> Buffer.from(fields)), rec(next))
             Match(scrutinee, branches)
         }
       case Nil => Consequent(term)

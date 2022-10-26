@@ -44,6 +44,8 @@ fun f(x, y, z) =
         _ then "bruh"
       3 then "y = 3"
       _ then "bruh"
+//│ ╔══[WARNING] duplicated else branch
+//│ ╙──
 //│ f: (number, number, number,) -> ("bruh" | "x" | "y = 1" | "y = 3" | "z = 0" | "z = 9")
 //│  = [Function: f2]
 
