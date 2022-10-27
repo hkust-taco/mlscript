@@ -47,6 +47,14 @@ class UltimateConditions extends TypeDefs { self: Typer =>
     }.toList
   }
 
+  private val localizedScrutineeMap = MutMap.empty[Term, Var]
+
+  def localizeScrutinee(scrutinee: Term): Opt[Var] -> Term =
+    scrutinee match {
+      case _: Var => N -> scrutinee
+      case _ => S(localizedScrutineeMap.getOrElseUpdate(scrutinee, Var(freshName))) -> scrutinee
+    }
+
   /**
     * Destruct nested patterns to a list of simple condition with bindings.
 
@@ -73,7 +81,7 @@ class UltimateConditions extends TypeDefs { self: Typer =>
       case className @ Var(name) =>
         ctx.tyDefs.get(name) match {
           case N => throw IfDesugaringException(s"constructor $name not found")
-          case S(_) => ConditionClause.MatchClass(scrutinee, className, Nil) :: Nil
+          case S(_) => ConditionClause.MatchClass(localizeScrutinee(scrutinee), className, Nil) :: Nil
         }
       // This case handles classes with destruction.
       // x is A(r, s, t)
@@ -87,7 +95,7 @@ class UltimateConditions extends TypeDefs { self: Typer =>
                 args.iterator.map(_._2.value),
                 td.positionals
               )
-              ConditionClause.MatchClass(scrutinee, className, bindings) ::
+              ConditionClause.MatchClass(localizeScrutinee(scrutinee), className, bindings) ::
                 destructSubPatterns(subPatterns)
             } else {
               throw new Exception(s"$name expects ${td.positionals.length} but meet ${args.length}")
@@ -110,7 +118,7 @@ class UltimateConditions extends TypeDefs { self: Typer =>
               lhs :: rhs :: Nil,
               td.positionals
             )
-            ConditionClause.MatchClass(scrutinee, opVar, bindings) ::
+            ConditionClause.MatchClass(localizeScrutinee(scrutinee), opVar, bindings) ::
               destructSubPatterns(subPatterns)
           case S(td) =>
             val num = td.positionals.length
@@ -124,7 +132,7 @@ class UltimateConditions extends TypeDefs { self: Typer =>
           elems.iterator.map(_._2.value),
           1.to(elems.length).map("_" + _).toList
         )
-        ConditionClause.MatchTuple(scrutinee, elems.length, bindings) ::
+        ConditionClause.MatchTuple(localizeScrutinee(scrutinee), elems.length, bindings) ::
           destructSubPatterns(subPatterns)
       // What else?
       case _ => throw new Exception(s"illegal pattern: ${mlscript.codegen.Helpers.inspect(pattern)}")
@@ -306,13 +314,13 @@ abstract class ConditionClause
 
 object ConditionClause {
   final case class MatchClass(
-    scrutinee: Term,
+    scrutinee: Opt[Var] -> Term,
     className: Var,
     fields: List[Str -> Var]
   ) extends ConditionClause
 
   final case class MatchTuple(
-    scrutinee: Term,
+    scrutinee: Opt[Var] -> Term,
     arity: Int,
     fields: List[Str -> Var]
   ) extends ConditionClause
@@ -320,14 +328,19 @@ object ConditionClause {
   final case class BooleanTest(test: Term) extends ConditionClause
 
   def print(println: (=> Any) => Unit, cnf: Ls[Ls[ConditionClause] -> Term]): Unit = {
+    def showScrutinee(scrutinee: Opt[Var] -> Term): Str =
+      (scrutinee._1 match {
+        case N => ""
+        case S(Var(alias)) => s"$alias @ "
+      }) + s"${scrutinee._2}"
     println("Flattened conjunctions")
     cnf.foreach { case (conditions, term) =>
       println("+ " + conditions.iterator.map {
         case ConditionClause.BooleanTest(test) => s"<$test>"
         case ConditionClause.MatchClass(scrutinee, Var(className), fields) =>
-          s"$scrutinee is $className"
+          s"${showScrutinee(scrutinee)} is $className"
         case ConditionClause.MatchTuple(scrutinee, arity, fields) =>
-          s"$scrutinee is Tuple#$arity"
+          s"${showScrutinee(scrutinee)} is Tuple#$arity"
       }.mkString("«", "» and «", s"» => $term"))
     }
   }
@@ -378,6 +391,12 @@ object PartialTerm {
 
 object UltimateConditions {
   final case class IfDesugaringException(message: Str) extends Exception(message)
+
+  def showScrutinee(scrutinee: Opt[Var] -> Term): Str =
+    s"«${scrutinee._2}»" + (scrutinee._1 match {
+      case N => ""
+      case S(Var(alias)) => s" as $alias"
+    })
 
   def mkMonuple(t: Term): Tup = Tup(N -> Fld(false, false, t) :: Nil)
 
@@ -456,7 +475,7 @@ object MutCaseOf {
         checkExhaustive(whenTrue)
         checkExhaustive(whenFalse)
       case Match(scrutinee, branches) =>
-        scrutineePatternMap.get(scrutinee) match {
+        scrutineePatternMap.get(scrutinee._2) match {
           case N => ???
           case S(patterns) =>
             if (!patterns.forall { expectedClassName =>
@@ -483,7 +502,7 @@ object MutCaseOf {
           branches.foreach {
             case Branch(N, consequent) => rec(consequent)
             case Branch(S(Var(className) -> _), consequent) =>
-              scrutineePatternMap.getOrElseUpdate(scrutinee, MutSet.empty) += className
+              scrutineePatternMap.getOrElseUpdate(scrutinee._2, MutSet.empty) += className
               rec(consequent)
           }
       }
@@ -504,7 +523,7 @@ object MutCaseOf {
           lines += s"$baseIndent${leading}else"
           rec(whenFalse, indent + 1, "")
         case Match(scrutinee, branches) =>
-          lines += baseIndent + leading + s"«$scrutinee» match"
+          lines += baseIndent + leading + showScrutinee(scrutinee) + " match"
           branches.foreach {
             case Branch(N, consequent) =>
               lines += s"$baseIndent  default"
@@ -582,7 +601,7 @@ object MutCaseOf {
       CaseOf(condition, trueBranch)
     }
   }
-  final case class Match(scrutinee: Term, val branches: Buffer[Branch]) extends MutCaseOf {
+  final case class Match(scrutinee: Opt[Var] -> Term, val branches: Buffer[Branch]) extends MutCaseOf {
     override def merge(branch: Ls[ConditionClause] -> Term)(implicit raise: Diagnostic => Unit): Unit = {
       branch match {
         case (ConditionClause.MatchClass(scrutinee2, className, fields) :: tail) -> term if scrutinee2 === scrutinee =>
@@ -634,12 +653,16 @@ object MutCaseOf {
           case Nil => NoCases
           case Branch(S(className -> fields), cases) :: next =>
             // TODO: expand bindings here
-            Case(className, mkLetFromFields(scrutinee, fields.toList, cases.toTerm), rec(next))
+            Case(className, mkLetFromFields(scrutinee._1.getOrElse(scrutinee._2), fields.toList, cases.toTerm), rec(next))
           case Branch(N, cases) :: next =>
             // TODO: Warns if next is not Nil
             Wildcard(cases.toTerm)
         }
-      CaseOf(scrutinee, rec(branches.toList))
+      val cases = rec(branches.toList)
+      scrutinee._1 match {
+        case N => CaseOf(scrutinee._2, cases)
+        case S(aliasVar) => Let(false, aliasVar, scrutinee._2, CaseOf(aliasVar, cases))
+      }
     }
   }
   final case class Consequent(term: Term) extends MutCaseOf {
