@@ -320,11 +320,12 @@ class DiffTests
             
             val origin = Origin(testName, globalStartLineNum, fph)
             val lexer = new NewLexer(origin, raise, dbg = mode.dbgParsing)
+            lexer.setPrinter(output)
             
             val tokens = lexer.bracketedTokens
             
-            if (mode.showParse || mode.dbgParsing || parseOnly)
-              output(NewLexer.printTokens(tokens))
+            // if (mode.showParse || mode.dbgParsing || parseOnly)
+            output(NewLexer.printTokens(tokens))
             
             val p = new NewParser(origin, tokens, raise, dbg = mode.dbgParsing, N) {
               def doPrintDbg(msg: => Str): Unit = if (dbg) output(msg)
@@ -334,6 +335,8 @@ class DiffTests
             if (parseOnly)
               output("Parsed: " + res.show)
             
+
+            output("testing")
             postProcess(basePath, testName, res).foreach(output)
             
             if (parseOnly)
@@ -834,6 +837,7 @@ object DiffTests {
   
   // Allow overriding which specific tests to run, sometimes easier for development:
   private val focused = Set[Str](
+    "shared/src/test/diff/mlscript/quasiquote.mls",
     // "LetRec"
     // "Ascribe",
     // "Repro",

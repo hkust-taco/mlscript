@@ -1,0 +1,29 @@
+:NewParser
+:ParseOnly
+:dp
+code"1"
+//│ printer set up
+//│ lexing2
+//│ lexing
+//│ lexing
+//│ |#code|"1"|
+//│ ? block		inspects |#code|"1"|    [at l.236]
+//│ @ exprOrIf(0,false)    [at l.356]
+//│ │ ? exprOrIf		inspects |#code|"1"|    [at l.401]
+//│ ╔══[PARSE ERROR] Unexpected 'code' keyword in expression position
+//│ ║  l.4: 	code"1"
+//│ ╙──     	^^^^
+//│ │ ! exprOrIf		consumes |#code|    [at l.534]
+//│ │ @ exprOrIf(0,true)    [at l.535]
+//│ │ │ ? exprOrIf		inspects |"1"|    [at l.401]
+//│ │ │ ! exprOrIf		consumes |"1"|    [at l.414]
+//│ │ │ @ exprCont(0,`"1"`,false)    [at l.415]
+//│ │ │ │ ? exprCont		inspects ||    [at l.543]
+//│ │ │ = Right("1")
+//│ │ = Right("1")
+//│ = Right("1")
+//│ ? block		inspects ||    [at l.358]
+//│ ? parseAll		inspects ||    [at l.60]
+//│ Parsed: {"1"}
+//│ testing
+//│ Parsed: 

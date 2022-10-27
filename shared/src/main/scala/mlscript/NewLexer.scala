@@ -13,6 +13,14 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   val bytes: Array[Char] = origin.fph.blockStr.toArray
   private val length = bytes.length
   type State = Int
+
+  type Printer = (String) => Unit
+
+  var print: Printer = println
+
+  def setPrinter(p: Printer): Unit = {
+    print = p
+  }
   
   private val isOpChar = Set(
     '!', '#', '%', '&', '*', '+', '-', '/', ':', '<', '=', '>', '?', '@', '\\', '^', '|', '~' , '.',
@@ -58,6 +66,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   
   // @tailrec final
   def lex(i: Int, ind: Ls[Int], acc: Ls[TokLoc]): Ls[TokLoc] = if (i >= length) acc.reverse else {
+    print("lexing")
     val c = bytes(i)
     def pe(msg: Message): Unit =
       // raise(ParseError(false, msg -> S(loc(i, i + 1)) :: Nil))
@@ -158,6 +167,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   /** Converts the lexed tokens into structured tokens. */
   lazy val bracketedTokens: Ls[Stroken -> Loc] = {
     import BracketKind._
+    print("lexing2")
     def go(toks: Ls[Token -> Loc], canStartAngles: Bool, stack: Ls[BracketKind -> Loc -> Ls[Stroken -> Loc]], acc: Ls[Stroken -> Loc]): Ls[Stroken -> Loc] =
       toks match {
         case (OPEN_BRACKET(k), l0) :: rest =>
@@ -251,7 +261,8 @@ object NewLexer {
     "interface",
     "new",
     "namespace",
-    "type"
+    "type",
+    "code"
   )
   
   def printToken(tl: TokLoc): Str = tl match {
