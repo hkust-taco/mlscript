@@ -180,19 +180,14 @@ class UltimateConditions extends TypeDefs { self: Typer =>
         case L(IfThen(patTest, consequent)) =>
           val (patternPart, extraTestOpt) = separatePattern(patTest)
           // TODO: Find a way to extract this boilerplate.
-          addTerm(pat, patternPart) match {
-            case N => ??? // Error: it cannot be empty
-            case S(R(_)) => ??? // Error: it cannot be R since we added a term.
-            case S(L(pattern)) =>
-              val patternConditions = destructPattern(scrutinee, pattern)
-              extraTestOpt match {
-                // Case 1. Just a pattern. Easy!
-                case N => 
-                  branches += ((acc ::: patternConditions) -> consequent)
-                // Case 2. A pattern and an extra test
-                case S(extraTest) =>
-                  desugarIfBody(IfThen(extraTest, consequent))(N, acc :::patternConditions)
-              }
+          val patternConditions = destructPattern(scrutinee, pat.addTerm(patternPart).term)
+          extraTestOpt match {
+            // Case 1. Just a pattern. Easy!
+            case N => 
+              branches += ((acc ::: patternConditions) -> consequent)
+            // Case 2. A pattern and an extra test
+            case S(extraTest) =>
+              desugarIfBody(IfThen(extraTest, consequent))(PartialTerm.Empty, acc :::patternConditions)
           }
         // if x is
         //   A(...) and t <> // => IfOpApp(A(...), "and", IfOpApp(...))
@@ -205,7 +200,7 @@ class UltimateConditions extends TypeDefs { self: Typer =>
           val (pattern, optTests) = separatePattern(patLhs)
           val patternConditions = destructPattern(scrutinee, pattern)
           val tailTestConditions = optTests.fold(Nil: Ls[ConditionClause])(x => desugarConditions(splitAnd(x)))
-          desugarIfBody(consequent)(N, acc ::: patternConditions ::: tailTestConditions)
+          desugarIfBody(consequent)(PartialTerm.Empty, acc ::: patternConditions ::: tailTestConditions)
         case L(IfOpApp(patLhs, op, consequent)) =>
           separatePattern(patLhs) match {
             // Case 1.
@@ -214,7 +209,7 @@ class UltimateConditions extends TypeDefs { self: Typer =>
             case (pattern, S(extraTests)) =>
               val patternConditions = destructPattern(scrutinee, pattern)
               val extraConditions = desugarConditions(splitAnd(extraTests))
-              desugarIfBody(consequent)(N, acc ::: patternConditions ::: extraConditions)
+              desugarIfBody(consequent)(PartialTerm.Empty, acc ::: patternConditions ::: extraConditions)
             // Case 2.
             // The pattern is incomplete. Remaining parts are at next lines.
             // if x is
@@ -222,29 +217,24 @@ class UltimateConditions extends TypeDefs { self: Typer =>
             //     Nil then ...  // do something with head
             //     tail then ... // do something with head and tail
             case (patternPart, N) =>
-              val partialPattern = addTermOp(pat, patternPart, op)
+              val partialPattern = pat.addTermOp(patternPart, op)
               desugarMatchBranch(scrutinee, L(consequent), partialPattern, acc)
           }
         case L(IfOpsApp(patLhs, opsRhss)) =>
           separatePattern(patLhs) match {
             case (patternPart, N) =>
-              val partialPattern = addTerm(pat, patternPart)
+              val partialPattern = pat.addTerm(patternPart)
               opsRhss.foreach { case op -> consequent =>
-                desugarMatchBranch(scrutinee, L(consequent), addOp(partialPattern, op), acc)
+                desugarMatchBranch(scrutinee, L(consequent), partialPattern.addOp(op), acc)
               }
             case (patternPart, S(extraTests)) =>
-              addTerm(pat, patternPart) match {
-                case N => ??? // Error: cannot be empty
-                case S(R(_)) => ??? // Error: cannot be incomplete
-                case S(L(pattern)) =>
-                  val patternConditions = destructPattern(scrutinee, pattern)
-                  val testTerms = splitAnd(extraTests)
-                  val middleConditions = desugarConditions(testTerms.init)
-                  val accumulatedConditions = acc ::: patternConditions ::: middleConditions
-                  opsRhss.foreach { case op -> consequent =>
-                    // TODO: Use lastOption
-                    desugarIfBody(consequent)(S(L(testTerms.last)), accumulatedConditions)
-                  }
+              val patternConditions = destructPattern(scrutinee, pat.addTerm(patternPart).term)
+              val testTerms = splitAnd(extraTests)
+              val middleConditions = desugarConditions(testTerms.init)
+              val accumulatedConditions = acc ::: patternConditions ::: middleConditions
+              opsRhss.foreach { case op -> consequent =>
+                // TODO: Use lastOption
+                desugarIfBody(consequent)(PartialTerm.Total(testTerms.last), accumulatedConditions)
               }
           }
         case L(IfElse(consequent)) =>
@@ -267,38 +257,25 @@ class UltimateConditions extends TypeDefs { self: Typer =>
     def desugarIfBody(body: IfBody)(expr: PartialTerm, acc: List[ConditionClause]): Unit = {
       body match {
         case IfOpsApp(exprPart, opsRhss) =>
-          addTerm(expr, exprPart) match {
-            case N => ??? // Error: The expression cannot be empty.
-            case exprStart =>
-              opsRhss.foreach { case opVar -> contBody =>
-                desugarIfBody(contBody)(addOp(exprStart, opVar), acc)
-              }
+          val exprStart = expr.addTerm(exprPart)
+          opsRhss.foreach { case opVar -> contBody =>
+            desugarIfBody(contBody)(exprStart.addOp(opVar), acc)
           }
         case IfThen(Var("_"), consequent) =>
           branches += (acc -> consequent)
         // The termination case.
         case IfThen(term, consequent) =>
-          addTerm(expr, term) match {
-            case N => ??? // Error: Empty expression.
-            case S(R(_)) => ??? // Error: Incomplete expression.
-            case S(L(test)) =>
-              branches += ((acc ::: desugarConditions(splitAnd(test))) -> consequent)
-          }
+          branches += ((acc ::: desugarConditions(splitAnd(expr.addTerm(term).term))) -> consequent)
         // This is the entrance of the Simple UCS.
         case IfOpApp(scrutinee, Var("is"), IfBlock(lines)) =>
-          lines.foreach(desugarMatchBranch(scrutinee, _, N, acc))
+          lines.foreach(desugarMatchBranch(scrutinee, _, PartialTerm.Empty, acc))
         // For example: "if x == 0 and y is \n ..."
         case IfOpApp(testPart, Var("and"), consequent) =>
-          addTerm(expr, testPart) match {
-            case N => ??? // Error: Empty expression.
-            case S(R(_)) => ??? // Error: Incomplete expression.
-            case S(L(test)) =>
-              desugarIfBody(consequent)(N, acc ::: desugarConditions(test :: Nil))
-          }
+          desugarIfBody(consequent)(PartialTerm.Empty, acc ::: desugarConditions(expr.addTerm(testPart).term :: Nil))
         // Otherwise, this is not a pattern matching.
         // We create a partial term from `lhs` and `op` and dive deeper.
         case IfOpApp(lhs, op, body) =>
-          desugarIfBody(body)(addTermOp(expr, lhs, op), acc)
+          desugarIfBody(body)(expr.addTermOp(lhs, op), acc)
         // This case is rare. Let's put it aside.
         case IfLet(isRec, name, rhs, body) => ???
         // In this case, the accumulated partial term is discarded.
@@ -313,7 +290,7 @@ class UltimateConditions extends TypeDefs { self: Typer =>
           }
       }
     }
-    desugarIfBody(body)(N, Nil)
+    desugarIfBody(body)(PartialTerm.Empty, Nil)
     // Add the fallback case to conjunctions if there is any.
     fallback.foreach { branches += Nil -> _ }
     branches.toList
@@ -351,6 +328,49 @@ object ConditionClause {
   }
 }
 
+abstract class PartialTerm {
+  def addTerm(term: Term): PartialTerm.Total
+  def addOp(op: Var): PartialTerm.Half
+  def addTermOp(term: Term, op: Var): PartialTerm.Half =
+    this.addTerm(term).addOp(op)
+}
+
+object PartialTerm {
+  import UltimateConditions._
+
+  final case object Empty extends PartialTerm {
+    override def addTerm(term: Term): Total = Total(term)
+    override def addOp(op: Var): Half =
+      throw IfDesugaringException("expect a term")
+  }
+
+  final case class Total(val term: Term) extends PartialTerm {
+    override def addTerm(term: Term): Total =
+      throw IfDesugaringException("expect an operator")
+    override def addOp(op: Var): Half = Half(term, op)
+  }
+
+  final case class Half(lhs: Term, op: Var) extends PartialTerm {
+    override def addTerm(rhs: Term): Total = op match {
+      case isVar @ Var("is") =>
+        // Special treatment for pattern matching.
+        val (pattern, extraTestOpt) = separatePattern(rhs)
+        val assertion = mkBinOp(lhs, isVar, pattern)
+        extraTestOpt match {
+          case N => Total(assertion)
+          case S(extraTest) =>
+            Total(mkBinOp(assertion, Var("and"), extraTest))
+        }
+      case _ =>
+        val (realRhs, extraExprOpt) = separatePattern(rhs)
+        val leftmost = mkBinOp(lhs, op, realRhs)
+        Total(extraExprOpt.fold(leftmost){ mkBinOp(leftmost, Var("and"), _) })
+    }
+    override def addOp(op: Var): Half =
+      throw IfDesugaringException("expect a term")
+  }
+}
+
 object UltimateConditions {
   final case class IfDesugaringException(message: Str) extends Exception(message)
 
@@ -358,39 +378,6 @@ object UltimateConditions {
 
   def mkBinOp(lhs: Term, op: Var, rhs: Term): Term =
     App(App(op, mkMonuple(lhs)), mkMonuple(rhs))
-
-  type PartialTerm = Opt[Term \/ (Term -> Var)]
-
-  // Add a term to a partial term.
-  def addTerm(sum: PartialTerm, rhs: Term): PartialTerm = 
-    sum match {
-      case N => S(L(rhs))
-      case S(L(_)) => ???
-      case S(R(scrutinee -> (isVar @ Var("is")))) =>
-        // Special treatment for pattern matching.
-        val (pattern, extraTestOpt) = separatePattern(rhs)
-        val assertion = mkBinOp(scrutinee, isVar, pattern)
-        extraTestOpt match {
-          case N => S(L(assertion))
-          case S(extraTest) =>
-            S(L(mkBinOp(assertion, Var("and"), extraTest)))
-        }
-      case S(R(lhs -> op)) =>
-        val (realRhs, extraExprOpt) = separatePattern(rhs)
-        val leftmost = mkBinOp(lhs, op, realRhs)
-        S(L(extraExprOpt.fold(leftmost){ mkBinOp(leftmost, Var("and"), _) }))
-    }
-
-  // Add an operator to a partial term.
-  def addOp(sum: PartialTerm, op: Var): PartialTerm =
-    sum match {
-      case N => ???
-      case S(L(lhs)) => S(R(lhs -> op))
-      case S(R(_)) => ???
-    }
-
-  def addTermOp(sum: PartialTerm, t: Term, op: Var): PartialTerm
-    = addOp(addTerm(sum, t), op)
 
   // Split a term joined by `and` into a list of terms.
   // E.g. x and y and z => x, y, z
