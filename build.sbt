@@ -66,7 +66,6 @@ lazy val ts2mls = crossProject(JSPlatform, JVMPlatform).in(file("ts2mls"))
   )
   .jvmSettings()
   .jsSettings(
-    scalaJSUseMainModuleInitializer := true,
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.12" % "test"
   )
   .dependsOn(mlscript % "compile->compile;test->test")
