@@ -167,27 +167,40 @@ class UltimateConditions extends TypeDefs { self: Typer =>
       * @param acc the accumulated conditions so far
       * @param ctx the typing context
       */
-    def desugarMatchBranch(scrutinee: Term, body: IfBody \/ Statement, pat: PartialTerm, acc: Ls[ConditionClause]): Unit =
+    def desugarMatchBranch(
+      scrutinee: Term,
+      body: IfBody \/ Statement,
+      partialPattern: PartialTerm,
+      collectedConditions: Ls[ConditionClause]
+    ): Unit =
       body match {
+        // This case handles default branches. For example,
+        // if x is
+        //   A(...) then ...
+        //   else ...
+        case L(IfElse(consequent)) =>
+          // Because this pattern matching is incomplete, it's not included in
+          // `acc`. This means that we discard this incomplete pattern matching.
+          branches += (collectedConditions -> consequent)
+        // This case handles default branches indicated by wildcards.
         // if x is
         //   A(...) then ...
         //   _      then ...
         case L(IfThen(Var("_"), consequent)) =>
-          branches += (acc -> consequent)
+          branches += (collectedConditions -> consequent)
         // if x is
         //   A(...) then ...         // Case 1: no conjunctions
         //   B(...) and ... then ... // Case 2: more conjunctions
         case L(IfThen(patTest, consequent)) =>
           val (patternPart, extraTestOpt) = separatePattern(patTest)
-          // TODO: Find a way to extract this boilerplate.
-          val patternConditions = destructPattern(scrutinee, pat.addTerm(patternPart).term)
+          val patternConditions = destructPattern(scrutinee, partialPattern.addTerm(patternPart).term)
           extraTestOpt match {
             // Case 1. Just a pattern. Easy!
             case N => 
-              branches += ((acc ::: patternConditions) -> consequent)
+              branches += ((collectedConditions ::: patternConditions) -> consequent)
             // Case 2. A pattern and an extra test
             case S(extraTest) =>
-              desugarIfBody(IfThen(extraTest, consequent))(PartialTerm.Empty, acc :::patternConditions)
+              desugarIfBody(IfThen(extraTest, consequent))(PartialTerm.Empty, collectedConditions :::patternConditions)
           }
         // if x is
         //   A(...) and t <> // => IfOpApp(A(...), "and", IfOpApp(...))
@@ -200,7 +213,7 @@ class UltimateConditions extends TypeDefs { self: Typer =>
           val (pattern, optTests) = separatePattern(patLhs)
           val patternConditions = destructPattern(scrutinee, pattern)
           val tailTestConditions = optTests.fold(Nil: Ls[ConditionClause])(x => desugarConditions(splitAnd(x)))
-          desugarIfBody(consequent)(PartialTerm.Empty, acc ::: patternConditions ::: tailTestConditions)
+          desugarIfBody(consequent)(PartialTerm.Empty, collectedConditions ::: patternConditions ::: tailTestConditions)
         case L(IfOpApp(patLhs, op, consequent)) =>
           separatePattern(patLhs) match {
             // Case 1.
@@ -209,7 +222,7 @@ class UltimateConditions extends TypeDefs { self: Typer =>
             case (pattern, S(extraTests)) =>
               val patternConditions = destructPattern(scrutinee, pattern)
               val extraConditions = desugarConditions(splitAnd(extraTests))
-              desugarIfBody(consequent)(PartialTerm.Empty, acc ::: patternConditions ::: extraConditions)
+              desugarIfBody(consequent)(PartialTerm.Empty, collectedConditions ::: patternConditions ::: extraConditions)
             // Case 2.
             // The pattern is incomplete. Remaining parts are at next lines.
             // if x is
@@ -217,42 +230,34 @@ class UltimateConditions extends TypeDefs { self: Typer =>
             //     Nil then ...  // do something with head
             //     tail then ... // do something with head and tail
             case (patternPart, N) =>
-              val partialPattern = pat.addTermOp(patternPart, op)
-              desugarMatchBranch(scrutinee, L(consequent), partialPattern, acc)
+              desugarMatchBranch(scrutinee, L(consequent), partialPattern.addTermOp(patternPart, op), collectedConditions)
           }
         case L(IfOpsApp(patLhs, opsRhss)) =>
           separatePattern(patLhs) match {
             case (patternPart, N) =>
-              val partialPattern = pat.addTerm(patternPart)
+              val partialPattern2 = partialPattern.addTerm(patternPart)
               opsRhss.foreach { case op -> consequent =>
-                desugarMatchBranch(scrutinee, L(consequent), partialPattern.addOp(op), acc)
+                desugarMatchBranch(scrutinee, L(consequent), partialPattern2.addOp(op), collectedConditions)
               }
             case (patternPart, S(extraTests)) =>
-              val patternConditions = destructPattern(scrutinee, pat.addTerm(patternPart).term)
+              val patternConditions = destructPattern(scrutinee, partialPattern.addTerm(patternPart).term)
               val testTerms = splitAnd(extraTests)
               val middleConditions = desugarConditions(testTerms.init)
-              val accumulatedConditions = acc ::: patternConditions ::: middleConditions
+              val conditions = collectedConditions ::: patternConditions ::: middleConditions
               opsRhss.foreach { case op -> consequent =>
                 // TODO: Use lastOption
-                desugarIfBody(consequent)(PartialTerm.Total(testTerms.last), accumulatedConditions)
+                desugarIfBody(consequent)(PartialTerm.Total(testTerms.last), conditions)
               }
           }
-        case L(IfElse(consequent)) =>
-          // Because this pattern matching is incomplete, it's not included in
-          // `acc`. This means that we discard this incomplete pattern matching.
-          branches += (acc -> consequent)
         // This case usually happens with pattern split by linefeed.
         case L(IfBlock(lines)) =>
-          lines.foreach { desugarMatchBranch(scrutinee, _, pat, acc) }
-        // Other cases are considered to be ill-formed.
-        case L(_) =>
-          println(s"Unexpected pattern match case: $body")
-          ???
+          lines.foreach { desugarMatchBranch(scrutinee, _, partialPattern, collectedConditions) }
+        // This case is rare. Let's put it aside.
+        case L(IfLet(_, _, _, _)) => ???
         // This case handles interleaved lets.
-        case R(NuFunDef(S(isRec), letVar @ Var(name), _, L(rhs))) =>
-          ???
-        // Other cases are considered to be ill-formed.
-        case R(_) => throw new Exception(s"illegal thing: $body")
+        case R(NuFunDef(S(isRec), letVar @ Var(name), _, L(rhs))) => ???
+        // Other statements are considered to be ill-formed.
+        case R(statement) => throw new IfDesugaringException(s"illegal statement: $statement")
       }
     def desugarIfBody(body: IfBody)(expr: PartialTerm, acc: List[ConditionClause]): Unit = {
       body match {
