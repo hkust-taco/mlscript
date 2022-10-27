@@ -722,8 +722,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         con(s_ty, req, cs_ty)
       case iff @ If(body, fallback) =>
         try {
-          val cnf = desugarIf(body, fallback)(ctx)
-          UltimateConditions.showConjunctions(println, cnf)
+          val cnf = desugarIf(body, fallback)
+          ConditionClause.print(println, cnf)
           val caseTree = MutCaseOf.build(cnf)
           println("The mutable CaseOf tree")
           MutCaseOf.show(caseTree).foreach(println(_))
