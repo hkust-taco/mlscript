@@ -84,5 +84,5 @@ class CTX{
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, CTX, (), Tup(), (), TypingUnit(NuFunDef(None, ctx, [], Lam(Tup(_: Var(x), _: Var(y)), Blk(...))))))
 //│ Lifted:
-//│ Lifting failed: mlscript.codegen.CodeGenError: Cannot find type T. Class values are not supported for lifter. 
+//│ Lifting failed: mlscript.codegen.CodeGenError: Cannot find type T. Class values are not supported in lifter. 
 

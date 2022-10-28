@@ -52,7 +52,7 @@ object Helpers {
     case New(base, body) => s"New(${base}, ${body})"
     case TyApp(base, targs) => s"TyApp(${inspect(base)}, ${targs})"
     case Def(rec, nme, rhs, isByname) =>
-      s"Def($rec, $nme, ${rhs.fold(inspect, _.toString)}, $isByname)"
+      s"Def($rec, $nme, ${rhs.fold(inspect, "" + _)}, $isByname)"
   }
 
   def inspect(t: TypingUnit): Str = t.entities.iterator

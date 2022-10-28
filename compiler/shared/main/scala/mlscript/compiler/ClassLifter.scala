@@ -32,9 +32,9 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     override def toString(): String = "(" ++ vSet.mkString(", ") ++ "; " ++ tSet.mkString(", ") ++ ")"
   }
   private def asContext(v: Var) = LocalContext(Set(v), Set())
-  private def asContextV(vS: IterableOnce[Var]) = LocalContext(vS.toSet, Set())
+  private def asContextV(vS: IterableOnce[Var]) = LocalContext(vS.iterator.toSet, Set())
   private def asContext(t: TypeName) = LocalContext(Set(), Set(t))
-  private def asContextT(tS: IterableOnce[TypeName]) = LocalContext(Set(), tS.toSet)
+  private def asContextT(tS: IterableOnce[TypeName]) = LocalContext(Set(), tS.iterator.toSet)
   private def emptyCtx = LocalContext(Set(), Set())
 
   case class ClassInfoCache(
@@ -138,6 +138,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       case cls: NuTypeDef => (Some(cls), None, None)
       case func: NuFunDef => (None, Some(func), None)
       case trm: Term => (None, None, Some(trm))
+      case others => throw CodeGenError(s"Not supported entity type: $others")
     }.unzip3
     (tmp._1.flatten, tmp._2.flatten, tmp._3.flatten)
   }
@@ -265,7 +266,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     }
     log(s"lift constr for $tp$prm under $ctx, $cache, $outer")
     if(!cache.contains(tp)){
-      throw new CodeGenError(s"Cannot find type ${tp.name}. Class values are not supported for lifter. ")
+      throw new CodeGenError(s"Cannot find type ${tp.name}. Class values are not supported in lifter. ")
     }
     else {
       val cls@ClassInfoCache(_, nm, capParams, _, _, _, out, _, _) = cache.get(tp).get

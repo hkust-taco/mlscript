@@ -16,6 +16,7 @@ object PrettyPrinter:
       case term: Term => show(term)
       case tyDef: NuTypeDef => showTypeDef(tyDef)
       case funDef: NuFunDef => showFunDef(funDef)
+      case others => others.toString()
     }.mkString("{", "; ", "}")
     if (singleLine.length < 60)
       singleLine
@@ -25,6 +26,7 @@ object PrettyPrinter:
         case term: Term => show(term)
         case tyDef: NuTypeDef => showTypeDef(tyDef)
         case funDef: NuFunDef => showFunDef(funDef)
+        case others => others.toString()
       }.map(indentStr + "  " + _).mkString("{\n", "\n", s"\n$indentStr}")
   
   def showFunDef(funDef: NuFunDef): String =
