@@ -53,6 +53,7 @@ object Converter {
     case TSTypeAlias(name, ori, tp) =>
       if (tp.isEmpty) s"${indent}type $name = ${convert(ori)}"
       else s"${indent}type $name<${tp.map(t => convert(t)).reduceLeft((s, t) => s"$s, $t")}> = ${convert(ori)}"
+    case TSLiteralType(value, isString) => if (isString) s"\"$value\"" else value
   }
 
   private def convertRecord(typeName: String, members: Map[String, TSMemberType], typeVars: List[TSTypeParameter],
