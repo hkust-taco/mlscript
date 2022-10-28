@@ -55,7 +55,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
           case TSInterfaceType(name, _, _, _) if (name =/= "") =>
             writer.writeln(Converter.convert(mem)(indent))
           case _: TSTypeAlias => writer.writeln(Converter.convert(mem)(indent))
-          case _ => throw new AssertionError("only functions, classes, interfaces and type alias can be exported.")
+          case _ => writer.writeln(s"${indent}let $name: ${Converter.convert(mem)("")}")
         }
       }
     })
