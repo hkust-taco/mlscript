@@ -446,6 +446,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           case ((v, r), R(acc)) => R(Let(false, v, r, acc))
           case ((v, r), L(acc)) => L(IfLet(false, v, r, acc))
         }
+      case (KEYWORD("code"), l0) :: c => 
+        consume
+        exprOrIf(prec, allowSpace)
       case (KEYWORD("new"), l0) :: c =>
         consume
         val body = expr(0)
