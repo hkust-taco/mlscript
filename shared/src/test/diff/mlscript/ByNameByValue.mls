@@ -16,7 +16,7 @@ def incr x = x.a <- x.a + 1
 def gensym = let n = { mut a = 0 } in fun () -> (incr n, n)
 //│ Parsed: def gensym: let n = {mut a: 0} in  => incr (n,), n,;
 //│ Desugared: def gensym: let n = {mut a: 0} in  => incr (n,), n,
-//│ AST: Def(false, gensym, Let(false, n, Rcd(Var(a) = IntLit(0)}), Lam(Tup(), Tup(_: App(Var(incr), Tup(_: Var(n))), _: Var(n)))), true)
+//│ AST: Def(false, gensym, Let(false, n, Rcd(Var(a) = IntLit(0)), Lam(Tup(), Tup(_: App(Var(incr), Tup(_: Var(n))), _: Var(n)))), true)
 //│ // Query 1
 //│ globalThis.gensym = function gensym() {
 //│   return (((n) => () => [
@@ -35,7 +35,7 @@ def gensym = let n = { mut a = 0 } in fun () -> (incr n, n)
 gensym1 = let n = { mut a = 0 } in fun () -> (incr n, n)
 //│ Parsed: let gensym1 = let n = {mut a: 0} in  => incr (n,), n,;
 //│ Desugared: def gensym1: let n = {mut a: 0} in  => incr (n,), n,
-//│ AST: Def(false, gensym1, Let(false, n, Rcd(Var(a) = IntLit(0)}), Lam(Tup(), Tup(_: App(Var(incr), Tup(_: Var(n))), _: Var(n)))), false)
+//│ AST: Def(false, gensym1, Let(false, n, Rcd(Var(a) = IntLit(0)), Lam(Tup(), Tup(_: App(Var(incr), Tup(_: Var(n))), _: Var(n)))), false)
 //│ // Query 1
 //│ globalThis.gensym1 = ((n) => () => [
 //│   incr(n),

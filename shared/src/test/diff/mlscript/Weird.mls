@@ -42,7 +42,7 @@ def n: C{}
 //│ Desugared: rec def n: [] -> C
 //│ AST: Def(true, n, PolyType(List(),TypeName(C)), true)
 //│ Desugared: {}
-//│ AST: Rcd(})
+//│ AST: Rcd()
 //│ n: C
 //│  = <missing implementation>
 //│ res: anything

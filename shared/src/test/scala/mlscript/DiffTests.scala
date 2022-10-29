@@ -18,6 +18,32 @@ import org.scalatest.time._
 import org.scalatest.concurrent.{TimeLimitedTests, Signaler}
 
 
+abstract class ModeType {
+  def expectTypeErrors: Bool
+  def expectWarnings: Bool
+  def expectParseErrors: Bool
+  def fixme: Bool
+  def showParse: Bool
+  def verbose: Bool
+  def noSimplification: Bool
+  def explainErrors: Bool
+  def dbg: Bool
+  def dbgParsing: Bool
+  def dbgSimplif: Bool
+  def fullExceptionStack: Bool
+  def stats: Bool
+  def stdout: Bool
+  def noExecution: Bool
+  def noGeneration: Bool
+  def showGeneratedJS: Bool
+  def generateTsDeclarations: Bool
+  def debugVariance: Bool
+  def expectRuntimeErrors: Bool
+  def expectCodeGenErrors: Bool
+  def showRepl: Bool
+  def allowEscape: Bool
+}
+
 class DiffTests
   extends funsuite.AnyFunSuite
   with ParallelTestExecution
@@ -26,7 +52,7 @@ class DiffTests
   
   
   /**  Hook for dependent projects, like the monomorphizer. */
-  def postProcess(basePath: Ls[Str], testName: Str, unit: TypingUnit): Ls[Str] = Nil
+  def postProcess(mode: ModeType, basePath: Ls[Str], testName: Str, unit: TypingUnit): Ls[Str] = Nil
   
   
   private val inParallel = isInstanceOf[ParallelTestExecution]
@@ -128,19 +154,19 @@ class DiffTests
       showRepl: Bool = false,
       allowEscape: Bool = false,
       // noProvs: Bool = false,
-    ) {
+    ) extends ModeType {
       def isDebugging: Bool = dbg || dbgSimplif
     }
     val defaultMode = Mode()
     
-    var parseOnly = basePath.headOption.contains("parser") || basePath.headOption.contains("mono")
+    var parseOnly = basePath.headOption.contains("parser") || basePath.headOption.contains("compiler")
     var allowTypeErrors = false
     var allowParseErrors = false // TODO use
     var showRelativeLineNums = false
     var noJavaScript = false
     var noProvs = false
     var allowRuntimeErrors = false
-    var newParser = basePath.headOption.contains("parser") || basePath.headOption.contains("mono")
+    var newParser = basePath.headOption.contains("parser") || basePath.headOption.contains("compiler")
 
     val backend = new JSTestBackend()
     val host = ReplHost()
@@ -316,7 +342,7 @@ class DiffTests
         
         // try to parse block of text into mlscript ast
         val ans = try {
-          if (newParser || basePath.headOption.contains("mono")) {
+          if (newParser || basePath.headOption.contains("compiler")) {
             
             val origin = Origin(testName, globalStartLineNum, fph)
             val lexer = new NewLexer(origin, raise, dbg = mode.dbgParsing)
@@ -334,7 +360,7 @@ class DiffTests
             if (parseOnly)
               output("Parsed: " + res.show)
             
-            postProcess(basePath, testName, res).foreach(output)
+            postProcess(mode, basePath, testName, res).foreach(output)
             
             if (parseOnly)
               Success(Pgrm(Nil), 0)
@@ -855,7 +881,7 @@ object DiffTests {
     // "Methods",
   ).map(os.RelPath(_))
   // private def filter(name: Str): Bool =
-  private def filter(file: os.RelPath): Bool = {
+  def filter(file: os.RelPath): Bool = {
     if (focused.nonEmpty) focused(file) else modified(file) || modified.isEmpty &&
       true
       // name.startsWith("new/")
