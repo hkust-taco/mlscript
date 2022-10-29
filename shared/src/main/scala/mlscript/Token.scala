@@ -42,6 +42,8 @@ final case class OPEN_BRACKET(k: BracketKind) extends Token
 final case class CLOSE_BRACKET(k: BracketKind) extends Token
 final case class BRACKETS(k: BracketKind, contents: Ls[Stroken -> Loc])(val innerLoc: Loc) extends Token with Stroken
 final case class COMMENT(text: String) extends Token with Stroken
+final case class OPEN_QUASIQUOTE_BRACKET(k: BracketKind) extends Token
+final case class CLOSE_QUASIQUOTE_BRACKET(k: BracketKind) extends Token
 
 
 sealed abstract class BracketKind {
@@ -52,6 +54,7 @@ sealed abstract class BracketKind {
     case Square => '[' -> ']'
     case Angle => '‹' -> '›'
     case Indent => '→' -> '←'
+    case Quasiquote => "code#" -> '#'
   }
   def name: Str = this match {
     case Round => "parenthesis"
@@ -59,6 +62,7 @@ sealed abstract class BracketKind {
     case Square => "square bracket"
     case Angle => "angle bracket"
     case Indent => "indentation"
+    case Quasiquote => "quasiquote"
   }
 }
 
@@ -68,6 +72,7 @@ object BracketKind {
   case object Square extends BracketKind
   case object Angle extends BracketKind
   case object Indent extends BracketKind
+  case object Quasiquote extends BracketKind
   
   def unapply(c: Char): Opt[Either[BracketKind, BracketKind]] = c |>? {
     case '(' => Left(Round)
@@ -78,6 +83,10 @@ object BracketKind {
     case ']' => Right(Square)
     case '‹' => Left(Angle)
     case '›' => Right(Angle)
+    case '#' => Right(Quasiquote)
+  }
+  def unapply(str: String): Opt[Either[BracketKind, BracketKind]] = str |>? {
+    case "code#" => Left(Quasiquote)
   }
 }
 

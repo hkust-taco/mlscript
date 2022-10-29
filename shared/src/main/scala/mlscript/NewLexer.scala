@@ -66,7 +66,6 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   
   // @tailrec final
   def lex(i: Int, ind: Ls[Int], acc: Ls[TokLoc]): Ls[TokLoc] = if (i >= length) acc.reverse else {
-    print("lexing")
     val c = bytes(i)
     def pe(msg: Message): Unit =
       // raise(ParseError(false, msg -> S(loc(i, i + 1)) :: Nil))
@@ -131,7 +130,11 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         }
       case _ if isIdentFirstChar(c) =>
         val (n, j) = takeWhile(i)(isIdentChar)
-        go(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n)))
+        if (n === "code") {
+          go(j + 1, OPEN_BRACKET(BracketKind.Quasiquote))
+        } else {
+          go(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n)))
+        }
       case _ if isOpChar(c) =>
         val (n, j) = takeWhile(i)(isOpChar)
         if (n === "." && j < length && isIdentFirstChar(bytes(j))) {
@@ -167,7 +170,6 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   /** Converts the lexed tokens into structured tokens. */
   lazy val bracketedTokens: Ls[Stroken -> Loc] = {
     import BracketKind._
-    print("lexing2")
     def go(toks: Ls[Token -> Loc], canStartAngles: Bool, stack: Ls[BracketKind -> Loc -> Ls[Stroken -> Loc]], acc: Ls[Stroken -> Loc]): Ls[Stroken -> Loc] =
       toks match {
         case (OPEN_BRACKET(k), l0) :: rest =>

@@ -1,22 +1,24 @@
 :NewParser
 :ParseOnly
 :dp
-code"1"
-//│ |#code|"1"|
-//│ ? block		inspects |#code|"1"|    [at l.236]
+code#1#
+//│ |code#|1|#|
+//│ ? block		inspects |code#|1|#|    [at l.236]
 //│ @ exprOrIf(0,false)    [at l.356]
-//│ │ ? exprOrIf		inspects |#code|"1"|    [at l.401]
-//│ │ ! exprOrIf		consumes |#code|    [at l.450]
-//│ │ @ exprOrIf(0,false)    [at l.451]
-//│ │ │ ? exprOrIf		inspects |"1"|    [at l.401]
-//│ │ │ ! exprOrIf		consumes |"1"|    [at l.414]
-//│ │ │ @ exprCont(0,`"1"`,false)    [at l.415]
-//│ │ │ │ ? exprCont		inspects ||    [at l.546]
-//│ │ │ = Right("1")
-//│ │ = Right("1")
-//│ = Right("1")
+//│ │ ? exprOrIf		inspects |code#|1|#|    [at l.401]
+//│ ╔══[PARSE ERROR] Unexpected quasiquote section in expression position
+//│ ║  l.4: 	code#1#
+//│ ╙──     	^^^^^^^
+//│ │ ! exprOrIf		consumes |code#|1|#|    [at l.537]
+//│ │ @ exprOrIf(0,true)    [at l.538]
+//│ │ │ ? exprOrIf		inspects ||    [at l.401]
+//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.4: 	code#1#
+//│ ╙──     	       ^
+//│ │ = Right(undefined)
+//│ = Right(undefined)
 //│ ? block		inspects ||    [at l.358]
 //│ ? parseAll		inspects ||    [at l.60]
-//│ Parsed: {"1"}
+//│ Parsed: {undefined}
 //│ testing
 //│ Parsed: 
