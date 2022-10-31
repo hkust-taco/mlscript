@@ -58,20 +58,28 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   )
   
   @tailrec final
+  /**
+   * @param i intialial position on where you start getting the character
+   * @param cur return value, in array
+   * @param pred continue condition for takeWhile
+  */
   def takeWhile(i: Int, cur: Ls[Char] = Nil)(pred: Char => Bool): (Str, Int) =
     if (i < length && pred(bytes(i))) takeWhile(i + 1, bytes(i) :: cur)(pred)
     else (cur.reverseIterator.mkString, i)
   
   def loc(start: Int, end: Int): Loc = Loc(start, end, origin)
+
+
   
   // @tailrec final
-  def lex(i: Int, ind: Ls[Int], acc: Ls[TokLoc]): Ls[TokLoc] = if (i >= length) acc.reverse else {
+  def lex(i: Int, ind: Ls[Int], acc: Ls[TokLoc], obq: Boolean = false): Ls[TokLoc] = if (i >= length) acc.reverse else {
     val c = bytes(i)
     def pe(msg: Message): Unit =
       // raise(ParseError(false, msg -> S(loc(i, i + 1)) :: Nil))
       raise(ErrorReport(msg -> S(loc(i, i + 1)) :: Nil, source = Lexing)) // TODO parse error
-    // @inline 
-    def go(j: Int, tok: Token) = lex(j, ind, (tok, loc(i, j)) :: acc)
+      // @inline
+    def isQuasiquoteKeyword(i: Int): Boolean = bytes(i) === 'c' && bytes(i + 1) === 'o' && bytes(i + 2) === 'd' && bytes(i + 3) === 'e' && bytes(i + 4) === '"'
+    def go(j: Int, tok: Token, obq: Boolean = obq) = lex(j, ind, (tok, loc(i, j)) :: acc, obq)
     c match {
       case ' ' =>
         val (_, j) = takeWhile(i)(_ === ' ')
@@ -79,14 +87,20 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
       case ',' =>
         val j = i + 1
         go(j, COMMA)
+      case 'c' if isQuasiquoteKeyword(i) => 
+        go(i + 5, OPEN_BRACKET(BracketKind.Quasiquote), obq = true) // TODO: throw error if the double quote doesn't align
       case '"' =>
-        val j = i + 1
-        val (chars, k) = takeWhile(j)(c => c =/= '"' && c =/= '\n')
-        val k2 = if (bytes.lift(k) === Some('"')) k + 1 else {
-          pe(msg"unclosed quotation mark")
-          k
+        if (obq)
+          go(i + 1, CLOSE_BRACKET(BracketKind.Quasiquote))
+        else {
+          val j = i + 1
+          val (chars, k) = takeWhile(j)(c => c =/= '"' && c =/= '\n')
+          val k2 = if (bytes.lift(k) === Some('"')) k + 1 else {
+            pe(msg"unclosed quotation mark")
+            k
+          }
+          go(k2, LITVAL(StrLit(chars)))
         }
-        go(k2, LITVAL(StrLit(chars)))
       case '/' if bytes.lift(i + 1).contains('/') =>
         val j = i + 2
         val (txt, k) =
@@ -130,11 +144,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         }
       case _ if isIdentFirstChar(c) =>
         val (n, j) = takeWhile(i)(isIdentChar)
-        if (n === "code") {
-          go(j + 1, OPEN_BRACKET(BracketKind.Quasiquote))
-        } else {
-          go(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n)))
-        }
+        go(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n)))
       case _ if isOpChar(c) =>
         val (n, j) = takeWhile(i)(isOpChar)
         if (n === "." && j < length && isIdentFirstChar(bytes(j))) {

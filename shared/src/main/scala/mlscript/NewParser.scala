@@ -416,7 +416,22 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case (IDENT(nme, false), l0) :: _ =>
         consume
         exprCont(Var(nme).withLoc(S(l0)), prec, allowNewlines = false)
-      case (br @ BRACKETS(bk @ (Round | Square | Curly), toks), loc) :: _ =>
+
+      // case (br @ BRACKETS(bk @ Quasiquote, toks), loc) :: _ =>
+      //   consume
+      //   printDbg("Start Parsing Open QQ")
+      //   val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) // TODO
+      //   val bra = if (bk === Curly) Bra(true, Rcd(res.map {
+      //     case S(n) -> fld => n -> fld
+      //     case N -> (fld @ Fld(_, _, v: Var)) => v -> fld
+      //     case N -> fld =>
+      //       err((
+      //         msg"Record field should have a name" -> fld.value.toLoc :: Nil))
+      //       Var("<error>") -> fld
+      //   }))
+      //   else Bra(false, Tup(res))
+      //   exprCont(bra.withLoc(S(loc)), prec, allowNewlines = false)
+      case (br @ BRACKETS(bk @ (Round | Square | Curly | Quasiquote), toks), loc) :: _ =>
         consume
         val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) // TODO
         val bra = if (bk === Curly) Bra(true, Rcd(res.map {
@@ -446,9 +461,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           case ((v, r), R(acc)) => R(Let(false, v, r, acc))
           case ((v, r), L(acc)) => L(IfLet(false, v, r, acc))
         }
-      case (KEYWORD("code"), l0) :: c => 
-        consume
-        exprOrIf(prec, allowSpace)
       case (KEYWORD("new"), l0) :: c =>
         consume
         val body = expr(0)
