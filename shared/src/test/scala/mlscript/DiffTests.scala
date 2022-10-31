@@ -324,8 +324,8 @@ class DiffTests
             
             val tokens = lexer.bracketedTokens
             
-            // if (mode.showParse || mode.dbgParsing || parseOnly)
-            output(NewLexer.printTokens(tokens))
+            if (mode.showParse || mode.dbgParsing || parseOnly)
+              output(NewLexer.printTokens(tokens))
             
             val p = new NewParser(origin, tokens, raise, dbg = mode.dbgParsing, N) {
               def doPrintDbg(msg: => Str): Unit = if (dbg) output(msg)
@@ -334,9 +334,7 @@ class DiffTests
             
             if (parseOnly)
               output("Parsed: " + res.show)
-            
 
-            output("testing")
             postProcess(basePath, testName, res).foreach(output)
             
             if (parseOnly)
