@@ -1,0 +1,123 @@
+:NoRecursiveTypes
+:NoConstrainedTypes
+:DontDistributeForalls
+
+
+:e
+class Test[A, B]
+  method Foo (a: A) = a: B
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.8: 	  method Foo (a: A) = a: B
+//│ ║       	                      ^
+//│ ╟── reference of type `A_24` is not an instance of type `B_25`
+//│ ╟── Note: constraint arises from class type parameter:
+//│ ║  l.7: 	class Test[A, B]
+//│ ║       	              ^
+//│ ╟── Note: class type parameter A is defined at:
+//│ ║  l.7: 	class Test[A, B]
+//│ ╙──     	           ^
+//│ Defined class Test[-A, +B]
+//│ Defined Test.Foo: Test['A, 'B] -> 'A -> 'B
+
+fun x -> fun y -> x.Foo y
+//│ res: Test['A, 'a] -> 'A -> 'a
+//│    = [Function: res]
+
+
+:GeneralizeCurriedFunctions
+
+:e
+class Test2[A, B]
+  method Foo2 (a: A) = a: B
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.31: 	  method Foo2 (a: A) = a: B
+//│ ║        	                       ^
+//│ ╟── reference of type `A_55` is not an instance of type `B_56`
+//│ ╟── Note: constraint arises from class type parameter:
+//│ ║  l.30: 	class Test2[A, B]
+//│ ║        	               ^
+//│ ╟── Note: class type parameter A is defined at:
+//│ ║  l.30: 	class Test2[A, B]
+//│ ╙──      	            ^
+//│ Defined class Test2[-A, +B]
+//│ Defined Test2.Foo2: Test2['A, 'B] -> 'A -> 'B
+
+fun x -> fun y -> x.Foo2 y
+//│ res: Test2['A, 'B] -> (forall 'a, 'A0, 'b. ('A & 'a & 'A0) -> ('B | 'b))
+//│    = [Function: res]
+
+
+:ConstrainedTypes
+
+:e
+class Test3[A, B]
+  method Foo3 (a: A) = a: B
+  method Bar3 (a: A) = ((fun x -> x) a): B
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.54: 	  method Foo3 (a: A) = a: B
+//│ ║        	                       ^
+//│ ╟── reference of type `A_103` is not an instance of type `B_104`
+//│ ╟── Note: constraint arises from class type parameter:
+//│ ║  l.53: 	class Test3[A, B]
+//│ ║        	               ^
+//│ ╟── Note: class type parameter A is defined at:
+//│ ║  l.53: 	class Test3[A, B]
+//│ ╙──      	            ^
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.55: 	  method Bar3 (a: A) = ((fun x -> x) a): B
+//│ ║        	                       ^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `A_103` is not an instance of type `B_104`
+//│ ║  l.55: 	  method Bar3 (a: A) = ((fun x -> x) a): B
+//│ ║        	                                     ^
+//│ ╟── but it flows into reference with expected type `B_104`
+//│ ║  l.55: 	  method Bar3 (a: A) = ((fun x -> x) a): B
+//│ ║        	                                  ^
+//│ ╟── Note: constraint arises from class type parameter:
+//│ ║  l.53: 	class Test3[A, B]
+//│ ║        	               ^
+//│ ╟── Note: class type parameter A is defined at:
+//│ ║  l.53: 	class Test3[A, B]
+//│ ╙──      	            ^
+//│ Defined class Test3[-A, +B]
+//│ Defined Test3.Foo3: Test3['A, 'B] -> 'A -> 'B
+//│ Defined Test3.Bar3: Test3['A, 'B] -> 'A -> 'B
+
+fun x -> fun y -> x.Foo3 y
+//│ res: 'a -> (forall 'a, 'A, 'B, 'b, 'c. (('A & 'c) -> 'b
+//│   where
+//│     'a <: Test3['A, 'B & 'b]))
+//│    = [Function: res]
+
+
+// * `Baz4` is equivalent to `Foo3`, and yet it is accepted when the other isn't!
+
+class Test4[A, B]
+  method Bar4 i (a: A) = i a : B
+  method Baz4 = this.Bar4 id
+//│ Defined class Test4[=A, =B]
+//│ Defined Test4.Bar4: Test4['A, 'B] -> (forall 'a. 'a -> (forall 'A, 'B, 'a, 'b. ('A -> 'B
+//│   where
+//│     'a <: 'A -> ('B & 'b))))
+//│ Defined Test4.Baz4: Test4['A, 'B] -> ('A -> 'B
+//│   where
+//│     forall 'a. 'a -> 'a <: 'A -> ('B & 'b))
+
+fun x -> fun y -> x.Bar4 y id
+//│ res: 'a -> (forall 'a, 'A. (('A -> ('B & 'b) & 'c & 'd) -> 'e
+//│   where
+//│     'a <: Test4['A, 'B]))
+//│   where
+//│     'B <: 'e
+//│     'A :> forall 'f. 'f -> 'f
+//│    = [Function: res]
+
+fun x -> fun y -> x.Baz4 y
+//│ res: 'a -> (forall 'a, 'A, 'b, 'c, 'B, 'd, 'B0, 'e, 'A0. (('A & 'b & 'c & 'B & 'd & 'B0 & 'e & 'A0) -> 'd
+//│   where
+//│     'a <: Test4['A, 'B0]))
+//│   where
+//│     'A <: 'b & 'c & 'B & 'd & 'B0
+//│     'B0 <: 'd
+//│    = [Function: res]
+
+
