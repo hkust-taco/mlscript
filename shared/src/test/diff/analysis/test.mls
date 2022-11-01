@@ -44,5 +44,5 @@
 :sus
 :d
 :simplifyError
-// r = { a = true }
+// r = { a = true; b = 2 }
 // add r.a 1

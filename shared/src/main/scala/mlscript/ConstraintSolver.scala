@@ -499,9 +499,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               fs0.find(_._1 === n1).fold {
                 reportError()
               } { case (n0, t0) =>
-                // recLb(t1, t0, revProvChain)
-                recLb(t1, t0)
-                rec(t0.ub, t1.ub, provChain)
+                recLb(t1, t0, revProvChain.map(_.updateInfo("record field lower bound")))
+                rec(t0.ub, t1.ub, provChain.map(_.updateInfo("record field upper bound")))
               }
             }
           case (tup: TupleType, _: RecordType) =>

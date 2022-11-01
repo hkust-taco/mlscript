@@ -25,6 +25,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   def showSuspiciousLocations()(implicit raise: Raise): Unit =
     errorSimplifer.reportInfo(N, 8)
   
+  /** If flag is set proxy types are created during constraint resolution. This
+    * is needed for debugging, showing verbose error messages traces and
+    * creating simplified error messages.
+    * 
+    * It should be set wherever such features are needed
+    */
   var recordProvenances: Boolean = true
   
   type Raise = Diagnostic => Unit

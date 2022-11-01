@@ -372,7 +372,7 @@ class DiffTests
             if (mode.stats) typer.resetStats()
             typer.dbg = mode.dbg
             // typer.recordProvenances = !noProvs
-            typer.recordProvenances = !noProvs && !mode.dbg && !mode.dbgSimplif || mode.explainErrors
+            typer.recordProvenances = !noProvs && !mode.dbg && !mode.dbgSimplif || mode.explainErrors || mode.simplifyError
             typer.verbose = mode.verbose
             typer.explainErrors = mode.explainErrors
             typer.setErrorSimplification(mode.simplifyError)
