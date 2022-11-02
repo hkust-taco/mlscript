@@ -416,7 +416,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case (IDENT(nme, false), l0) :: _ =>
         consume
         exprCont(Var(nme).withLoc(S(l0)), prec, allowNewlines = false)
-
       // case (br @ BRACKETS(bk @ Quasiquote, toks), loc) :: _ =>
       //   consume
       //   printDbg("Start Parsing Open QQ")
@@ -431,7 +430,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       //   }))
       //   else Bra(false, Tup(res))
       //   exprCont(bra.withLoc(S(loc)), prec, allowNewlines = false)
-      case (br @ BRACKETS(bk @ (Round | Square | Curly | Quasiquote), toks), loc) :: _ =>
+      case (br @ BRACKETS(Quasiquote, toks), loc) :: _ =>
+        consume 
+        val body = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.expr(0))
+        R(Quoted(body).withLoc(S(loc)))
+      case (br @ BRACKETS(bk @ (Round | Square | Curly), toks), loc) :: _ =>
         consume
         val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) // TODO
         val bra = if (bk === Curly) Bra(true, Rcd(res.map {

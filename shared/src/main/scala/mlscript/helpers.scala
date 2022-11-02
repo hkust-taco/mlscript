@@ -407,6 +407,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case New(N, bod) => s"new ${bod.show}" |> bra
     case If(body, els) => s"if $body" + els.fold("")(" else " + _) |> bra
     case TyApp(lhs, targs) => s"$lhs‹${targs.map(_.show).mkString(", ")}›"
+    case Quoted(b) => s"code' $b '"
   }}
   
   def toType: Diagnostic \/ Type =
