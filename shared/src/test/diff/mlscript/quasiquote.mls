@@ -37,12 +37,56 @@ code"1 + 3"
 //│ │ > = + (1,) (3,)
 //│ │ > ? concludeWith		inspects ||    [at l.71]
 //│ │ > Concluded with + (1,) (3,)
-//│ = Right(code' + (1,) (3,) ')
+//│ = Right(Quoted' + (1,) (3,) ')
 //│ ? block		inspects ||    [at l.358]
 //│ ? parseAll		inspects ||    [at l.60]
-//│ Parsed: {code' + (1,) (3,) '}
+//│ Parsed: {Quoted' + (1,) (3,) '}
 //│ Parsed: 
 
+:dp
 type A = Code[int]
 //│ |#type| |A| |#=| |Code|[|int|]|
+//│ ? block		inspects |#type| |A| |#=|...    [at l.236]
+//│ ! t		consumes |#type|    [at l.243]
+//│ ? yeetSpaces		inspects | |A| |#=| |...    [at l.365]
+//│ ! yeetSpaces		consumes | |    [at l.365]
+//│ ! x$16		consumes |A|    [at l.253]
+//│ ? yeetSpaces		inspects | |#=| |Code|[|int|]|    [at l.365]
+//│ ! yeetSpaces		consumes | |    [at l.365]
+//│ ? yeetSpaces		inspects |#=| |Code|[|int|]|    [at l.365]
+//│ ? yeetSpaces		inspects |#=| |Code|[|int|]|    [at l.365]
+//│ ! parents		consumes |#=|    [at l.283]
+//│ @ expr(0,true)    [at l.284]
+//│ │ @ exprOrIf(0,true)    [at l.389]
+//│ │ │ ? exprOrIf		inspects | |Code|[|int|]|    [at l.401]
+//│ │ │ ! exprOrIf		consumes | |    [at l.403]
+//│ │ │ @ exprOrIf(0,true)    [at l.404]
+//│ │ │ │ ? exprOrIf		inspects |Code|[|int|]|    [at l.401]
+//│ │ │ │ ! exprOrIf		consumes |Code|    [at l.417]
+//│ │ │ │ @ exprCont(0,`Code`,false)    [at l.418]
+//│ │ │ │ │ ? exprCont		inspects |[|int|]|    [at l.561]
+//│ │ │ │ │ ! exprCont		consumes |[|int|]|    [at l.672]
+//│ │ │ │ │ > @ expr(0,true)    [at l.673]
+//│ │ │ │ │ > │ @ exprOrIf(0,true)    [at l.389]
+//│ │ │ │ │ > │ │ ? exprOrIf		inspects |int|    [at l.401]
+//│ │ │ │ │ > │ │ ! exprOrIf		consumes |int|    [at l.417]
+//│ │ │ │ │ > │ │ @ exprCont(0,`int`,false)    [at l.418]
+//│ │ │ │ │ > │ │ │ ? exprCont		inspects ||    [at l.561]
+//│ │ │ │ │ > │ │ = Right(int)
+//│ │ │ │ │ > │ = Right(int)
+//│ │ │ │ │ > = int
+//│ │ │ │ │ > ? concludeWith		inspects ||    [at l.71]
+//│ │ │ │ │ > Concluded with int
+//│ │ │ │ │ @ exprCont(0,`(Code)[int]`,false)    [at l.675]
+//│ │ │ │ │ │ ? exprCont		inspects ||    [at l.561]
+//│ │ │ │ │ = Right((Code)[int])
+//│ │ │ │ = Right((Code)[int])
+//│ │ │ = Right((Code)[int])
+//│ │ = Right((Code)[int])
+//│ = (Code)[int]
+//│ ? yeetSpaces		inspects ||    [at l.365]
+//│ ? yeetSpaces		inspects ||    [at l.365]
+//│ ? block		inspects ||    [at l.358]
+//│ ? parseAll		inspects ||    [at l.60]
 //│ Parsed: {type alias A(): (Code)[int] = {}}
+//│ Parsed: 

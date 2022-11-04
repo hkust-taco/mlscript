@@ -145,6 +145,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       tyDef.tvarVariances = S(MutMap(tv -> VarianceInfo.in))
       tyDef
     } ::
+    {
+      val tv = freshVar(noProv)(0)
+      val td = TypeDef(Cls, TypeName("Code"), (TypeName("T"), tv) :: Nil, Nil, TopType, Nil, Nil, Set.empty, N, Nil)
+      td.tvarVariances = S(MutMap(tv -> VarianceInfo.co))
+      td
+    } ::
     Nil
   val primitiveTypes: Set[Str] =
     builtinTypes.iterator.map(_.nme.name).flatMap(n => n.decapitalize :: n.capitalize :: Nil).toSet
