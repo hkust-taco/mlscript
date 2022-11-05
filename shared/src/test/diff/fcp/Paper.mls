@@ -1,0 +1,22 @@
+:NoJS
+:GeneralizeCurriedFunctions
+:NoRecursiveTypes
+:NoConstrainedTypes
+
+
+I x = x
+K x y = x
+auto x = x x
+monster = (fun y -> (let tmp = y I in y K)) auto
+//│ I: 'a -> 'a
+//│ K: 'a -> (forall 'b. 'b -> 'a)
+//│ auto: ('a -> 'b & 'a) -> 'b
+//│ monster: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> 'b))
+
+monster{}
+//│ res: 'a -> (forall 'b. 'b -> 'a)
+
+fun y -> (let tmp = y I in y K)
+//│ res: ((forall 'a. 'a -> (forall 'b. 'b -> 'a)) -> 'c & (forall 'd. 'd -> 'd) -> 'b) -> 'c
+
+
