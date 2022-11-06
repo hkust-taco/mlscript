@@ -79,7 +79,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
       raise(ErrorReport(msg -> S(loc(i, i + 1)) :: Nil, source = Lexing)) // TODO parse error
       // @inline
     def isQuasiquoteKeyword(i: Int): Boolean = bytes(i) === 'c' && bytes(i + 1) === 'o' && bytes(i + 2) === 'd' && bytes(i + 3) === 'e' && bytes(i + 4) === '"'
-    def go(j: Int, tok: Token, obq: Boolean = obq, obunq: Boolean = obunq) = lex(j, ind, (tok, loc(i, j)) :: acc, obq)
+    def go(j: Int, tok: Token, obq: Boolean = obq, obunq: Boolean = obunq) = lex(j, ind, (tok, loc(i, j)) :: acc, obq, obunq)
     def isUnquoteKey(i: Int): Boolean = bytes(i) === '$' && bytes(i + 1) === '{'
     c match {
       case ' ' =>
