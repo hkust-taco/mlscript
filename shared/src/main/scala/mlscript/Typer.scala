@@ -727,6 +727,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         typeTerm(App(Var(nmedTy.base.name).withLocOf(nmedTy), trm))
       case New(base, args) => ???
       case TyApp(_, _) => ??? // TODO
+      // case Quoted(body) =>
+      //   AppliedType(TypeName("Code"), typeTerm(body) :: Nil)
     }
   }(r => s"$lvl. : ${r}")
   

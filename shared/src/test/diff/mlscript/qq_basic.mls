@@ -1,0 +1,20 @@
+:NewParser
+:ParseOnly
+:dp
+code""
+
+
+:NewParser
+:ParseOnly
+:dp
+code"1"
+
+:NewParser
+:ParseOnly
+:dp
+code"1 + 1"
+
+:NewParser
+:ParseOnly
+:dp
+type A = Code[int]
