@@ -72,14 +72,15 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
 
   
   // @tailrec final
-  def lex(i: Int, ind: Ls[Int], acc: Ls[TokLoc], obq: Boolean = false): Ls[TokLoc] = if (i >= length) acc.reverse else {
+  def lex(i: Int, ind: Ls[Int], acc: Ls[TokLoc], obq: Boolean = false, obunq: Boolean = false): Ls[TokLoc] = if (i >= length) acc.reverse else {
     val c = bytes(i)
     def pe(msg: Message): Unit =
       // raise(ParseError(false, msg -> S(loc(i, i + 1)) :: Nil))
       raise(ErrorReport(msg -> S(loc(i, i + 1)) :: Nil, source = Lexing)) // TODO parse error
       // @inline
     def isQuasiquoteKeyword(i: Int): Boolean = bytes(i) === 'c' && bytes(i + 1) === 'o' && bytes(i + 2) === 'd' && bytes(i + 3) === 'e' && bytes(i + 4) === '"'
-    def go(j: Int, tok: Token, obq: Boolean = obq) = lex(j, ind, (tok, loc(i, j)) :: acc, obq)
+    def go(j: Int, tok: Token, obq: Boolean = obq, obunq: Boolean = obunq) = lex(j, ind, (tok, loc(i, j)) :: acc, obq)
+    def isUnquoteKey(i: Int): Boolean = bytes(i) === '$' && bytes(i + 1) === '{'
     c match {
       case ' ' =>
         val (_, j) = takeWhile(i)(_ === ' ')
@@ -89,6 +90,10 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         go(j, COMMA)
       case 'c' if isQuasiquoteKeyword(i) => 
         go(i + 5, OPEN_BRACKET(BracketKind.Quasiquote), obq = true) // TODO: throw error if the double quote doesn't align
+      case '$' if (isUnquoteKey(i) && obq) =>
+        go(i + 2, OPEN_BRACKET(BracketKind.Unquote), obunq = true)
+      case '}' if(obunq) =>
+          go(i + 1, CLOSE_BRACKET(BracketKind.Unquote), obunq = false)
       case '"' =>
         if (obq)
           go(i + 1, CLOSE_BRACKET(BracketKind.Quasiquote))
