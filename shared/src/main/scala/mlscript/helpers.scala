@@ -364,6 +364,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case New(h, b) => "object instantiation"
     case If(_, _) => "if-else block"
     case TyApp(_, _) => "type application"
+    case Quoted(_) => "quasiquote"
   }
   
   override def toString: Str = print(false)
@@ -407,7 +408,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case New(N, bod) => s"new ${bod.show}" |> bra
     case If(body, els) => s"if $body" + els.fold("")(" else " + _) |> bra
     case TyApp(lhs, targs) => s"$lhs‹${targs.map(_.show).mkString(", ")}›"
-    case Quoted(b) => s"code' $b '"
+    case Quoted(b) => s"Quoted' $b '"
   }}
   
   def toType: Diagnostic \/ Type =
