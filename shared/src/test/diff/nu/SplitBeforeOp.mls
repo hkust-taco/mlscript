@@ -3,10 +3,7 @@
 if x
   == 0 then 0
 //│ ╔══[ERROR] missing a default branch
-//│ ║  l.3: 	if x
-//│ ║       	   ^
-//│ ║  l.4: 	  == 0 then 0
-//│ ╙──     	^^^^^^^^^^^^^
+//│ ╙──
 //│ res: error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -15,12 +12,7 @@ if x
   is A and
     y then 0
 //│ ╔══[ERROR] constructor A not found
-//│ ║  l.14: 	if x
-//│ ║        	   ^
-//│ ║  l.15: 	  is A and
-//│ ║        	^^^^^^^^^^
-//│ ║  l.16: 	    y then 0
-//│ ╙──      	^^^^^^^^^^^^
+//│ ╙──
 //│ res: error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -31,16 +23,7 @@ if x
     A() then "A"
     B() then "B"
 //│ ╔══[ERROR] class A not found
-//│ ║  l.28: 	if x
-//│ ║        	   ^
-//│ ║  l.29: 	  == 0 then 0
-//│ ║        	^^^^^^^^^^^^^
-//│ ║  l.30: 	  is
-//│ ║        	^^^^
-//│ ║  l.31: 	    A() then "A"
-//│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.32: 	    B() then "B"
-//│ ╙──      	^^^^^^^^^^^^^^^^
+//│ ╙──
 //│ res: error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared

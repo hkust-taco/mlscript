@@ -6,14 +6,7 @@ fun f(x) =
     is Right(v) then 1
     <> undefined then 2
 //│ ╔══[ERROR] class Left not found
-//│ ║  l.4: 	  if x
-//│ ║       	     ^
-//│ ║  l.5: 	    is Left(v) then 0
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.6: 	    is Right(v) then 1
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.7: 	    <> undefined then 2
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──
 //│ f: anything -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -23,12 +16,7 @@ fun f(x) =
     is Some(xv) and y is Some(yv) then xv + yv
     is None() and y is None() then 0
 //│ ╔══[ERROR] class Some not found
-//│ ║  l.22: 	  if x
-//│ ║        	     ^
-//│ ║  l.23: 	    is Some(xv) and y is Some(yv) then xv + yv
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.24: 	    is None() and y is None() then 0
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──
 //│ f: anything -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -46,7 +34,7 @@ fun f(a) =
   if a
     is A() and b is B() then 0
 //│ ╔══[ERROR] identifier not found: b
-//│ ║  l.47: 	    is A() and b is B() then 0
+//│ ║  l.35: 	    is A() and b is B() then 0
 //│ ╙──      	               ^
 //│ f: A -> 0
 //│ Code generation encountered an error:
@@ -61,10 +49,7 @@ fun f(a, b, c) =
   if a
     == 0 and b is B() and c is C() then 0
 //│ ╔══[ERROR] missing a default branch
-//│ ║  l.61: 	  if a
-//│ ║        	     ^
-//│ ║  l.62: 	    == 0 and b is B() and c is C() then 0
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──
 //│ f: (anything, anything, anything,) -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -85,20 +70,7 @@ fun sumOpt(x, y) =
       Some(yv) then yv
       None() then 0
 //│ ╔══[ERROR] class Some not found
-//│ ║  l.80: 	  if x
-//│ ║        	     ^
-//│ ║  l.81: 	    is Some(xv) and y is
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.82: 	      Some(yv) then xv + yvand
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.83: 	      None() then xv
-//│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.84: 	    is None() and y is
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.85: 	      Some(yv) then yv
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.86: 	      None() then 0
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^
+//│ ╙──
 //│ sumOpt: (anything, anything,) -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -108,8 +80,8 @@ fun f(x, y) =
     == z then 1
     is B() then 0
 //│ ╔══[ERROR] identifier not found: z
-//│ ║  l.108: 	    == z then 1
-//│ ╙──       	       ^
+//│ ║  l.80: 	    == z then 1
+//│ ╙──      	       ^
 //│ f: (A, nothing,) -> (0 | 1)
 //│ Code generation encountered an error:
 //│   unresolved symbol z

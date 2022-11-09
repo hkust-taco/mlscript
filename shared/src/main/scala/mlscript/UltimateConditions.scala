@@ -84,14 +84,14 @@ class UltimateConditions extends TypeDefs { self: Typer =>
       // x is A
       case className @ Var(name) =>
         ctx.tyDefs.get(name) match {
-          case N => throw IfDesugaringException(s"constructor $name not found")
+          case N => throw IfDesugaringException.fromPlainText(s"constructor $name not found")
           case S(_) => ConditionClause.MatchClass(localizeScrutinee(scrutinee), className, Nil) :: Nil
         }
       // This case handles classes with destruction.
       // x is A(r, s, t)
       case App(className @ Var(name), Tup(args)) =>
         ctx.tyDefs.get(name) match {
-          case N => throw IfDesugaringException(s"class $name not found")
+          case N => throw IfDesugaringException.fromPlainText(s"class $name not found")
           case S(td) =>
             if (args.length === td.positionals.length) {
               val (subPatterns, bindings) = desugarPositionals(
@@ -115,7 +115,7 @@ class UltimateConditions extends TypeDefs { self: Typer =>
         Tup((_ -> Fld(_, _, rhs)) :: Nil)
       ) =>
         ctx.tyDefs.get(op) match {
-          case N => throw IfDesugaringException(s"operator $op not found")
+          case N => throw IfDesugaringException.fromPlainText(s"operator $op not found")
           case S(td) if td.positionals.length === 2 =>
             val (subPatterns, bindings) = desugarPositionals(
               scrutinee,
@@ -126,7 +126,7 @@ class UltimateConditions extends TypeDefs { self: Typer =>
               destructSubPatterns(subPatterns)
           case S(td) =>
             val num = td.positionals.length
-            throw new IfDesugaringException(s"$op has $num parameters but found two")
+            throw IfDesugaringException.fromPlainText(s"$op has $num parameters but found two")
         }
       // This case handles tuple destructions.
       // x is (a, b, c)
@@ -288,7 +288,7 @@ class UltimateConditions extends TypeDefs { self: Typer =>
         case R(NuFunDef(S(isRec), nameVar, _, L(term))) =>
           interleavedLets += ((isRec, nameVar, term))
         // Other statements are considered to be ill-formed.
-        case R(statement) => throw new IfDesugaringException(s"illegal statement: $statement")
+        case R(statement) => throw IfDesugaringException.fromPlainText(s"illegal statement: $statement")
       }
     def desugarIfBody
       (body: IfBody, expr: PartialTerm, acc: ConjunctedConditions)
@@ -472,12 +472,12 @@ object PartialTerm {
   final case object Empty extends PartialTerm {
     override def addTerm(term: Term): Total = Total(term)
     override def addOp(op: Var): Half =
-      throw IfDesugaringException("expect a term")
+      throw IfDesugaringException.fromPlainText("expect a term")
   }
 
   final case class Total(val term: Term) extends PartialTerm {
     override def addTerm(term: Term): Total =
-      throw IfDesugaringException("expect an operator")
+      throw IfDesugaringException.fromPlainText("expect an operator")
     override def addOp(op: Var): Half = Half(term, op)
   }
 
@@ -498,13 +498,34 @@ object PartialTerm {
         Total(extraExprOpt.fold(leftmost){ mkBinOp(leftmost, Var("and"), _) })
     }
     override def addOp(op: Var): Half =
-      throw IfDesugaringException("expect a term")
+      throw IfDesugaringException.fromPlainText("expect a term")
+  }
+}
+
+abstract class IfDesugaringException extends Throwable {
+  def report(typer: Typer)(implicit raise: Diagnostic => Unit): typer.SimpleType
+}
+
+object IfDesugaringException {
+  final case class Single(message: Message, location: Opt[Loc]) extends IfDesugaringException {
+    override def report(typer: Typer)(implicit raise: Diagnostic => Unit): typer.SimpleType = {
+      typer.err(message, location)
+    }
+  }
+  final case class Multiple(messages: Ls[Message -> Opt[Loc]]) extends IfDesugaringException {
+    override def report(typer: Typer)(implicit raise: Diagnostic => Unit): typer.SimpleType = {
+      typer.err(messages)
+    }
+  }
+
+  @deprecated("TODO: This method does not include locations. Rewrite every usages and remove this method.")
+  def fromPlainText(message: Str): IfDesugaringException = {
+    import mlscript.Message.MessageContext
+    Single(msg"$message", N)
   }
 }
 
 object UltimateConditions {
-  final case class IfDesugaringException(message: Str) extends Exception(message)
-
   def showScrutinee(scrutinee: Opt[Var] -> Term): Str =
     s"«${scrutinee._2}»" + (scrutinee._1 match {
       case N => ""
@@ -628,14 +649,16 @@ object MutCaseOf {
         checkExhaustive(whenFalse)
       case Match(scrutinee, branches, default) =>
         scrutineePatternMap.get(scrutinee._2) match {
-          case N => ???
+          case N => throw new Error(s"unreachable case: unknown scrutinee ${scrutinee._2}")
           case S(patterns) =>
-            if (!patterns.forall { expectedClassName =>
-              branches.exists {
-                case Branch(Var(className) -> _, _) =>
-                  className === expectedClassName
-              }
-            }) throw IfDesugaringException("not exhaustive")
+            val missingCases = patterns.subtractAll(branches.iterator.map {
+              case Branch(Var(className) -> _, _) => className
+            })
+            if (!missingCases.isEmpty) {
+              throw IfDesugaringException.fromPlainText(s"not exhaustive: missing cases of ${
+                missingCases.iterator.mkString(", ")
+              }")
+            }
         }
         default.foreach(checkExhaustive(_))
         branches.foreach(_.consequent |> checkExhaustive)
@@ -869,7 +892,7 @@ object MutCaseOf {
     override def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Unit = ()
 
     override def toTerm: Term =
-      throw new IfDesugaringException("missing a default branch")
+      throw IfDesugaringException.fromPlainText("missing a default branch")
   }
 
   private def buildFirst(conditions: ConjunctedConditions, term: Term): MutCaseOf = {

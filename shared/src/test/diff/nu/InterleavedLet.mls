@@ -208,18 +208,7 @@ fun qp(xs) =
       Left(v)  then (v :: l, r)
       Right(v) then (l, v :: r)
 //│ ╔══[ERROR] constructor Nil not found
-//│ ║  l.204: 	  if xs is
-//│ ║         	     ^^^^^
-//│ ║  l.205: 	    Nil then Nil
-//│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.206: 	    Cons(x, xs) and f(x) is
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.207: 	      let Pair(l, r) = mapPartition(f, xs)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.208: 	      Left(v)  then (v :: l, r)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.209: 	      Right(v) then (l, v :: r)
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──
 //│ qp: anything -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared

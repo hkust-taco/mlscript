@@ -65,13 +65,8 @@ class O()
 fun foo(x) = if x is
   Pair(Z(), Z()) then "zeros"
   Pair(O(), O()) then "ones"
-//│ ╔══[ERROR] not exhaustive
-//│ ║  l.65: 	fun foo(x) = if x is
-//│ ║        	                ^^^^
-//│ ║  l.66: 	  Pair(Z(), Z()) then "zeros"
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.67: 	  Pair(O(), O()) then "ones"
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not exhaustive: missing cases of O
+//│ ╙──
 //│ foo: anything -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -82,13 +77,8 @@ fun foo(x) = if x is
 fun foo(x) = if x is
   (Z(), Z()) then "zeros"
   (O(), O()) then "ones"
-//│ ╔══[ERROR] not exhaustive
-//│ ║  l.82: 	fun foo(x) = if x is
-//│ ║        	                ^^^^
-//│ ║  l.83: 	  (Z(), Z()) then "zeros"
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.84: 	  (O(), O()) then "ones"
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not exhaustive: missing cases of O
+//│ ╙──
 //│ foo: anything -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -152,15 +142,8 @@ fun foo(x) = if x is
   Pair(Z(), Z()) then "zeros"
   Pair(O(), O()) then "ones"
   Pair(y, O()) then x
-//│ ╔══[ERROR] not exhaustive
-//│ ║  l.151: 	fun foo(x) = if x is
-//│ ║         	                ^^^^
-//│ ║  l.152: 	  Pair(Z(), Z()) then "zeros"
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.153: 	  Pair(O(), O()) then "ones"
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.154: 	  Pair(y, O()) then x
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] not exhaustive: missing cases of Z
+//│ ╙──
 //│ foo: anything -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -173,7 +156,7 @@ fun foo(x, y) = if x is Z() and y is O() then 0 else 1
 fun foo(x, y) = if x is
   Z() and y is O() then 0 else 1
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.174: 	  Z() and y is O() then 0 else 1
+//│ ║  l.157: 	  Z() and y is O() then 0 else 1
 //│ ╙──       	                          ^^^^
 //│ foo: (Z, O,) -> 0
 //│    = [Function: foo8]

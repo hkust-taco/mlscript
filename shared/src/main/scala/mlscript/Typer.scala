@@ -738,8 +738,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           iff.desugaredIf = S(trm)
           typeTerm(trm)
         } catch {
-          case UltimateConditions.IfDesugaringException(message) =>
-            err(message, iff.toLoc)
+          case e: IfDesugaringException => e.report(this)
           case e: Throwable => throw e
         }
       case New(S((nmedTy, trm)), TypingUnit(Nil)) =>

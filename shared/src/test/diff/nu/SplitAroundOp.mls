@@ -112,16 +112,7 @@ if x is
     > 0 then 1
     < 0 then 2
 //│ ╔══[ERROR] operator == not found
-//│ ║  l.109: 	if x is
-//│ ║         	   ^^^^
-//│ ║  l.110: 	  A()
-//│ ║         	^^^^^
-//│ ║  l.111: 	    == 0 then 0
-//│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.112: 	    > 0 then 1
-//│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.113: 	    < 0 then 2
-//│ ╙──       	^^^^^^^^^^^^^^
+//│ ╙──
 //│ res: error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
