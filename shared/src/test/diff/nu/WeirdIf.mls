@@ -78,3 +78,21 @@ fun f(x) =
     _ then "bruh"
 //│ f: anything -> "bruh"
 //│  = [Function: f3]
+
+:e
+:ge
+// Hmmmmmm, this one is valid but how to get it work?
+fun boolToStr(x) =
+  if x is
+    true then "yah"
+    false then "nah"
+//│ ╔══[ERROR] Missing the otherwise case of test == (x,) (false,)
+//│ ║  l.86: 	  if x is
+//│ ║        	     ^^^^
+//│ ║  l.87: 	    true then "yah"
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.88: 	    false then "nah"
+//│ ╙──      	^^^^^^^^^
+//│ boolToStr: anything -> error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared

@@ -49,22 +49,6 @@ fun f(x, y) =
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
 
-// Hmmmmmm, this one is valid but how to get it work?
-fun boolToStr(x) =
-  if x is
-    true then "yah"
-    false then "nah"
-//│ ╔══[ERROR] Missing the otherwise case of test == (x,) (false,)
-//│ ║  l.54: 	  if x is
-//│ ║        	     ^^^^
-//│ ║  l.55: 	    true then "yah"
-//│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.56: 	    false then "nah"
-//│ ╙──      	^^^^^^^^^
-//│ boolToStr: anything -> error
-//│ Code generation encountered an error:
-//│   if expression has not been desugared
-
 fun f(x, y) =
   if x is
     Left(xv) and y is Left(yv) then xv + yv
@@ -133,18 +117,19 @@ fun f(x, y) =
     Some(xv) and y is Some(yv) then xv + yv
     None() and y is None() then 0
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.133: 	    Some(xv) and y is Some(yv) then xv + yv
+//│ ║  l.117: 	    Some(xv) and y is Some(yv) then xv + yv
 //│ ║         	                 ^^^^^^^^^^^^^
 //│ ╟── The pattern at this position misses 1 case.
-//│ ║  l.133: 	    Some(xv) and y is Some(yv) then xv + yv
+//│ ║  l.117: 	    Some(xv) and y is Some(yv) then xv + yv
 //│ ║         	                 ^
 //│ ╟── [Missing Case 1/1] The case `None` is missing, which first appears here.
-//│ ║  l.134: 	    None() and y is None() then 0
+//│ ║  l.118: 	    None() and y is None() then 0
 //│ ╙──       	                    ^^^^
 //│ f: (anything, anything,) -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
 
+// FIXME
 :e
 :ge
 fun f(x, y) =
@@ -182,13 +167,13 @@ fun f(x, y) =
       <  0 then "le"
       == 0 then "eq"
 //│ ╔══[ERROR] Missing the otherwise case of test == (y,) (0,)
-//│ ║  l.180: 	    Some(x) and y
+//│ ║  l.165: 	    Some(x) and y
 //│ ║         	                ^
-//│ ║  l.181: 	      >  0 then "gt"
+//│ ║  l.166: 	      >  0 then "gt"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.182: 	      <  0 then "le"
+//│ ║  l.167: 	      <  0 then "le"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.183: 	      == 0 then "eq"
+//│ ║  l.168: 	      == 0 then "eq"
 //│ ╙──       	^^^^^^^^^^
 //│ f: (anything, anything,) -> error
 //│ Code generation encountered an error:
@@ -223,28 +208,22 @@ fun f(x, a, b) =
 //│ f: ((A with {value: 'value}) | (B with {value: 'value}) | ~A & ~B, anything, anything,) -> (0 | 'value)
 //│  = [Function: f14]
 
-fun f(x, y) =
+fun f(x, y, b) =
   if x is
     Some(xv) and y
       is Some(yv) then "bruh"
       is None() then "bruh"
-    Some(xv) and b then xb + b
+    Some(xv) and b then xv + b
     _ then "roll"
-//│ ╔══[ERROR] identifier not found: b
-//│ ║  l.231: 	    Some(xv) and b then xb + b
-//│ ╙──       	                 ^
-//│ ╔══[ERROR] identifier not found: xb
-//│ ║  l.231: 	    Some(xv) and b then xb + b
-//│ ╙──       	                        ^^
-//│ f: (anything, anything,) -> ("bruh" | "roll" | int)
-//│ Code generation encountered an error:
-//│   unresolved symbol b
+//│ f: (Some & {value: int} | ~Some, anything, ~true,) -> ("bruh" | "roll" | int)
+//│  = [Function: f15]
 
 fun foo(x, y, z) =
   if x - y > 0 then Some(x + y + z) else None()
 //│ foo: (int, int, int,) -> (None | Some & {value: int})
 //│    = [Function: foo]
 
+:e
 fun f(u, v, w) =
   if foo(u, v, w) is
     Some(x) and x is
@@ -252,24 +231,24 @@ fun f(u, v, w) =
       Right(_) then "right-defined"
     None then "undefined"
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.249: 	  if foo(u, v, w) is
+//│ ║  l.228: 	  if foo(u, v, w) is
 //│ ║         	     ^^^^^^^^^^^^^^^
-//│ ║  l.250: 	    Some(x) and x is
+//│ ║  l.229: 	    Some(x) and x is
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.251: 	      Left(_) then "left-defined"
+//│ ║  l.230: 	      Left(_) then "left-defined"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.252: 	      Right(_) then "right-defined"
+//│ ║  l.231: 	      Right(_) then "right-defined"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.253: 	    None then "undefined"
+//│ ║  l.232: 	    None then "undefined"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` does not match type `Left & ?a | Right & ?b`
-//│ ║  l.244: 	  if x - y > 0 then Some(x + y + z) else None()
+//│ ║  l.222: 	  if x - y > 0 then Some(x + y + z) else None()
 //│ ║         	                         ^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.250: 	    Some(x) and x is
+//│ ║  l.229: 	    Some(x) and x is
 //│ ║         	                ^
 //│ ╟── from field selection:
-//│ ║  l.249: 	  if foo(u, v, w) is
+//│ ║  l.228: 	  if foo(u, v, w) is
 //│ ╙──       	     ^^^^^^^^^^^^
 //│ f: (int, int, int,) -> ("left-defined" | "right-defined" | "undefined")
 //│  = [Function: f16]
@@ -347,7 +326,7 @@ fun f(x) =
     0 ::
       Nil() then "oh"
 //│ ╔══[ERROR] Cannot find operator `::` in the context
-//│ ║  l.347: 	    0 ::
+//│ ║  l.326: 	    0 ::
 //│ ╙──       	      ^^
 //│ f: anything -> error
 //│ Code generation encountered an error:

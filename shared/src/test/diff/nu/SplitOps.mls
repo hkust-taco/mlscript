@@ -1,24 +1,66 @@
 :NewParser
 
+class Option
+class Some(value): Option
+class None: Option
+//│ Defined class Option
+//│ Defined class Some
+//│ Defined class None
+//│ Option: () -> Option
+//│       = [Function: Option1]
+//│ Some: 'value -> (Some with {value: 'value})
+//│     = [Function: Some1]
+//│ None: () -> None
+//│     = [Function: None1]
+
+class Either
+class Left(leftValue): Either
+class Right(rightValue): Either
+//│ Defined class Either
+//│ Defined class Left
+//│ Defined class Right
+//│ Either: () -> Either
+//│       = [Function: Either1]
+//│ Left: 'leftValue -> (Left with {leftValue: 'leftValue})
+//│     = [Function: Left1]
+//│ Right: 'rightValue -> (Right with {rightValue: 'rightValue})
+//│      = [Function: Right1]
+
+:e
+:ge
 fun f(x) =
   if x
     is Left(v) then 0
     is Right(v) then 1
     <> undefined then 2
-//│ ╔══[ERROR] Cannot find the class `Left` in the context
-//│ ║  l.5: 	    is Left(v) then 0
-//│ ╙──     	       ^^^^
+//│ ╔══[ERROR] Missing the otherwise case of test <> (x,) (undefined,)
+//│ ║  l.32: 	  if x
+//│ ║        	     ^
+//│ ║  l.33: 	    is Left(v) then 0
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.34: 	    is Right(v) then 1
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.35: 	    <> undefined then 2
+//│ ╙──      	^^^^^^^^^^^^^^^^
 //│ f: anything -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
 
+:e
+:ge
 fun f(x) =
   if x
     is Some(xv) and y is Some(yv) then xv + yv
     is None() and y is None() then 0
-//│ ╔══[ERROR] Cannot find the class `Some` in the context
-//│ ║  l.17: 	    is Some(xv) and y is Some(yv) then xv + yv
-//│ ╙──      	       ^^^^
+//│ ╔══[ERROR] The match is not exhaustive.
+//│ ║  l.53: 	    is Some(xv) and y is Some(yv) then xv + yv
+//│ ║        	                    ^^^^^^^^^^^^^
+//│ ╟── The pattern at this position misses 1 case.
+//│ ║  l.53: 	    is Some(xv) and y is Some(yv) then xv + yv
+//│ ║        	                    ^
+//│ ╟── [Missing Case 1/1] The case `None` is missing, which first appears here.
+//│ ║  l.54: 	    is None() and y is None() then 0
+//│ ╙──      	                       ^^^^
 //│ f: anything -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -43,13 +85,15 @@ class C()
 //│ C: () -> C
 //│  = [Function: C1]
 
+:e
+:ge
 fun f(a, b, c) =
   if a
     == 0 and b is B() and c is C() then 0
 //│ ╔══[ERROR] Missing the otherwise case of test == (a,) (0,)
-//│ ║  l.47: 	  if a
+//│ ║  l.91: 	  if a
 //│ ║        	     ^
-//│ ║  l.48: 	    == 0 and b is B() and c is C() then 0
+//│ ║  l.92: 	    == 0 and b is B() and c is C() then 0
 //│ ╙──      	^^^^^^^^
 //│ f: (anything, anything, anything,) -> error
 //│ Code generation encountered an error:
@@ -65,17 +109,13 @@ fun f(x) =
 fun sumOpt(x, y) =
   if x
     is Some(xv) and y is
-      Some(yv) then xv + yvand
+      Some(yv) then xv + yv
       None() then xv
     is None() and y is
       Some(yv) then yv
       None() then 0
-//│ ╔══[ERROR] Cannot find the class `Some` in the context
-//│ ║  l.67: 	    is Some(xv) and y is
-//│ ╙──      	       ^^^^
-//│ sumOpt: (anything, anything,) -> error
-//│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│ sumOpt: (None | Some & {value: int}, None | Some & {value: int},) -> int
+//│       = [Function: sumOpt]
 
 // FIXME
 fun f(x, y, z) =

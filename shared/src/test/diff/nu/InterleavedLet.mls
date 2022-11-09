@@ -39,6 +39,8 @@ fun q(x) =
 //│ q: Some -> 0
 //│  = [Function: q]
 
+// FIXME
+:w
 fun p(x, y) =
   if
     x is Some and y is None then 0
@@ -86,9 +88,9 @@ fun q(a) =
     let y = a + 1
     then y
 //│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
-//│ ║  l.86: 	    let y = a + 1
+//│ ║  l.88: 	    let y = a + 1
 //│ ║        	            ^^^^^
-//│ ║  l.87: 	    then y
+//│ ║  l.89: 	    then y
 //│ ╙──      	^^^^^^^^^^
 //│ q: (Left with {leftValue: 'leftValue}) -> 'leftValue
 //│  = [Function: q1]
@@ -123,30 +125,16 @@ fun i(x) =
 //│ i: (A | B) -> ("A" | "B")
 //│  = [Function: i]
 
+fun inc(x) = x + 1
+//│ inc: int -> int
+//│    = [Function: inc]
+
 fun qq(x, z) =
   if x ==
-    let y = f(z)
+    let y = inc(z)
     y * y then 0
     else 0
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.128: 	    let y = f(z)
-//│ ║         	            ^^^^
-//│ ╟── argument of type `(?a,)` does not match type `(?b, ?c,)`
-//│ ║  l.128: 	    let y = f(z)
-//│ ║         	             ^^^
-//│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.72: 	fun f(a, y) =
-//│ ╙──      	     ^^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.128: 	    let y = f(z)
-//│ ║         	            ^^^^
-//│ ╟── argument of type `(?a,)` does not match type `(?b, ?c,)`
-//│ ║  l.128: 	    let y = f(z)
-//│ ║         	             ^^^
-//│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.72: 	fun f(a, y) =
-//│ ╙──      	     ^^^^^^
-//│ qq: (number, anything,) -> 0
+//│ qq: (number, int,) -> 0
 //│   = [Function: qq]
 
 fun bruh(x) =
@@ -177,18 +165,9 @@ fun ff(x) =
 
 fun ip(y) =
   if q(y) and
-    let z = f(y)
+    let z = inc(y)
     y == z * z then "bruh"
   else "rocks"
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.180: 	    let z = f(y)
-//│ ║         	            ^^^^
-//│ ╟── argument of type `(?a,)` does not match type `(?b, ?c,)`
-//│ ║  l.180: 	    let z = f(y)
-//│ ║         	             ^^^
-//│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.72: 	fun f(a, y) =
-//│ ╙──      	     ^^^^^^
 //│ ip: nothing -> ("bruh" | "rocks")
 //│   = [Function: ip]
 
@@ -200,19 +179,163 @@ fun tr(x) =
 //│ tr: (None | (Some with {value: 'value})) -> (1 | 'value)
 //│   = [Function: tr]
 
-fun qp(xs) =
+class Pair(fst, snd)
+class List
+class Nil: List
+class Cons(head, tail): List
+//│ Defined class Pair
+//│ Defined class List
+//│ Defined class Nil
+//│ Defined class Cons
+//│ Pair: ('fst, 'snd,) -> (Pair with {fst: 'fst, snd: 'snd})
+//│     = [Function: Pair1]
+//│ List: () -> List
+//│     = [Function: List1]
+//│ Nil: () -> Nil
+//│    = [Function: Nil1]
+//│ Cons: ('head, 'tail,) -> (Cons with {head: 'head, tail: 'tail})
+//│     = [Function: Cons1]
+
+// FIXME: Take a look...
+fun mapPartition(f, xs) =
   if xs is
     Nil then Nil
     Cons(x, xs) and f(x) is
-      let Pair(l, r) = mapPartition(f, xs)
-      Left(v)  then (v :: l, r)
-      Right(v) then (l, v :: r)
-//│ ╔══[ERROR] Cannot find the constructor `Nil` in the context
-//│ ║  l.205: 	    Nil then Nil
-//│ ╙──       	    ^^^
-//│ qp: anything -> error
-//│ Code generation encountered an error:
-//│   if expression has not been desugared
+      let res = mapPartition(f, xs)
+      let l = res.fst
+      let r = res.snd
+      Left(v)  then Pair(Cons(v, l), r)
+      Right(v) then Pair(l, Cons(v, r))
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.200: 	fun mapPartition(f, xs) =
+//│ ║         	                ^^^^^^^^^
+//│ ║  l.201: 	  if xs is
+//│ ║         	^^^^^^^^^^
+//│ ║  l.202: 	    Nil then Nil
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.203: 	    Cons(x, xs) and f(x) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.204: 	      let res = mapPartition(f, xs)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.205: 	      let l = res.fst
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.206: 	      let r = res.snd
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.207: 	      Left(v)  then Pair(Cons(v, l), r)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.208: 	      Right(v) then Pair(l, Cons(v, r))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `() -> ?a` does not have field 'snd'
+//│ ║  l.184: 	class Nil: List
+//│ ║         	      ^^^
+//│ ╟── but it flows into reference with expected type `{snd: ?snd}`
+//│ ║  l.202: 	    Nil then Nil
+//│ ║         	             ^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.206: 	      let r = res.snd
+//│ ║         	              ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.204: 	      let res = mapPartition(f, xs)
+//│ ╙──       	                ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.200: 	fun mapPartition(f, xs) =
+//│ ║         	                ^^^^^^^^^
+//│ ║  l.201: 	  if xs is
+//│ ║         	^^^^^^^^^^
+//│ ║  l.202: 	    Nil then Nil
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.203: 	    Cons(x, xs) and f(x) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.204: 	      let res = mapPartition(f, xs)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.205: 	      let l = res.fst
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.206: 	      let r = res.snd
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.207: 	      Left(v)  then Pair(Cons(v, l), r)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.208: 	      Right(v) then Pair(l, Cons(v, r))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `() -> ?a` does not have field 'fst'
+//│ ║  l.184: 	class Nil: List
+//│ ║         	      ^^^
+//│ ╟── but it flows into reference with expected type `{fst: ?fst}`
+//│ ║  l.202: 	    Nil then Nil
+//│ ║         	             ^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.205: 	      let l = res.fst
+//│ ║         	              ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.204: 	      let res = mapPartition(f, xs)
+//│ ╙──       	                ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.200: 	fun mapPartition(f, xs) =
+//│ ║         	                ^^^^^^^^^
+//│ ║  l.201: 	  if xs is
+//│ ║         	^^^^^^^^^^
+//│ ║  l.202: 	    Nil then Nil
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.203: 	    Cons(x, xs) and f(x) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.204: 	      let res = mapPartition(f, xs)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.205: 	      let l = res.fst
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.206: 	      let r = res.snd
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.207: 	      Left(v)  then Pair(Cons(v, l), r)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.208: 	      Right(v) then Pair(l, Cons(v, r))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `() -> ?a` does not have field 'snd'
+//│ ║  l.184: 	class Nil: List
+//│ ║         	      ^^^
+//│ ╟── but it flows into reference with expected type `{snd: ?snd}`
+//│ ║  l.202: 	    Nil then Nil
+//│ ║         	             ^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.206: 	      let r = res.snd
+//│ ║         	              ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.204: 	      let res = mapPartition(f, xs)
+//│ ╙──       	                ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.200: 	fun mapPartition(f, xs) =
+//│ ║         	                ^^^^^^^^^
+//│ ║  l.201: 	  if xs is
+//│ ║         	^^^^^^^^^^
+//│ ║  l.202: 	    Nil then Nil
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.203: 	    Cons(x, xs) and f(x) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.204: 	      let res = mapPartition(f, xs)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.205: 	      let l = res.fst
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.206: 	      let r = res.snd
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.207: 	      Left(v)  then Pair(Cons(v, l), r)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.208: 	      Right(v) then Pair(l, Cons(v, r))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `() -> ?a` does not have field 'fst'
+//│ ║  l.184: 	class Nil: List
+//│ ║         	      ^^^
+//│ ╟── but it flows into reference with expected type `{fst: ?fst}`
+//│ ║  l.202: 	    Nil then Nil
+//│ ║         	             ^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.205: 	      let l = res.fst
+//│ ║         	              ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.204: 	      let res = mapPartition(f, xs)
+//│ ╙──       	                ^^^^^^^^^^^^^^^^^^^
+//│ mapPartition: ('head -> ((Left with {leftValue: 'head0}) | (Right with {rightValue: 'head1})), 'a,) -> (() -> Nil | (Pair with {fst: 'fst, snd: 'snd}))
+//│   where
+//│     'snd :> Cons with {head: 'head1, tail: 'snd}
+//│     'fst :> Cons with {head: 'head0, tail: 'fst}
+//│     'a <: (Cons with {head: 'head, tail: 'a}) | Nil
+//│             = [Function: mapPartition]
 
 fun mn(a) =
   if a is
