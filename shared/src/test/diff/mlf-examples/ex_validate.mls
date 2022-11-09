@@ -20,7 +20,7 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'a, 'c, 'tail, 'head, 'd. (List['a] & 'c & 'tail) -> ((Cons['a | 'b] with {head: 'head | 'b, tail: 'tail}) | 'd))
+//│ 'b -> (forall 'c, 'a, 'd, 'head, 'tail. (List['a] & 'c & 'tail) -> ((Cons['a | 'b] with {head: 'head | 'b, tail: 'tail}) | 'd))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -277,11 +277,11 @@ fun x -> fun y ->
 fun x -> fun y ->
   let isnil = x y in
     (isnil (cons 1 (cons 2 (cons 3 nil))), isnil nil, isnil (cons "ok" nil), isnil (cons true nil)) 
-//│ res: Id -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k. ((List[1 | 2 | 3 | 'a] | 'b) -> 'c & List['a] -> 'd & (List[true | 'e] | 'f) -> 'g & (List["ok" | 'h] | 'i) -> 'j & 'k) -> ('c, 'd, 'j, 'g,))
+//│ res: Id -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k. ((List[1 | 2 | 3 | 'k] | 'b) -> 'i & List['k] -> 'g & (List[true | 'd] | 'j) -> 'e & (List["ok" | 'f] | 'h) -> 'a & 'c) -> ('i, 'g, 'a, 'e,))
 //│    = [Function: res]
-//│ res: ('a -> 'b) -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm. (('a & 'm) -> ('e, 'g, 'j, 'l,)
+//│ res: ('a -> 'b) -> (forall 'c, 'd, 'b, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'a, 'm. (('a & 'c) -> ('e, 'd, 'f, 'g,)
 //│   where
-//│     'b <: (List[1 | 2 | 3 | 'c] | 'd) -> 'e & List['f] -> 'g & (List["ok" | 'h] | 'i) -> 'j & (List[true | 'f] | 'k) -> 'l))
+//│     'b <: (List[1 | 2 | 3 | 'i] | 'k) -> 'e & List['h] -> 'd & (List["ok" | 'j] | 'l) -> 'f & (List[true | 'h] | 'm) -> 'g))
 //│    = [Function: res]
 
 // (*let t1 = f delta	
@@ -463,15 +463,15 @@ def intfa f = f 15
 
 // FIXME SOF
 def polyann (a: 'x) (b: int) f (g: int -> 'x -> 'y) = g (f 10) a b
-//│ polyann: 'x -> (int & 'a) -> (forall 'b. 'b -> (forall 'x, 'a, 'b, 'x0, 'c, 'y, 'd. ((int -> ('x | 'x0) -> (int -> 'c & 'y & 'd)) -> 'c
+//│ polyann: 'x -> (int & 'a) -> (forall 'b. 'b -> (forall 'y, 'c, 'a, 'x, 'b, 'd, 'x0. ((int -> ('x | 'x0) -> (int -> 'd & 'y & 'c)) -> 'd
 //│   where
 //│     'b <: 10 -> (int & 'a))))
 //│        = [Function: polyann]
 
 def polyann_ a b f g = g (f 10) a b
-//│ polyann_: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h. (('d -> ('a -> ('b -> 'e & 'f) & 'g) & 'h) -> 'e
+//│ polyann_: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'd, 'a, 'e, 'f, 'g, 'h, 'c, 'b. (('g -> ('a -> ('b -> 'e & 'd) & 'f) & 'h) -> 'e
 //│   where
-//│     'c <: 10 -> 'd))))
+//│     'c <: 10 -> 'g))))
 //│         = [Function: polyann_]
 
 // let voyage (f:'p -> 'q) x y = (y, f x)
@@ -788,17 +788,17 @@ def a = fun f -> f id
 //│            = [Function: church_zero]
 //│ church_un: 'a -> 'a
 //│          = [Function: church_un]
-//│ church_succ: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('c -> 'f
+//│ church_succ: 'a -> (forall 'b. 'b -> (forall 'c, 'a, 'd, 'e, 'f, 'b. ('e -> 'f
 //│   where
-//│     'a <: 'b -> ('c -> 'd & 'e)
+//│     'a <: 'b -> ('e -> 'd & 'c)
 //│     'b <: 'd -> 'f)))
 //│            = [Function: church_succ]
 //│ f: Sa -> (Sid | 'a)
 //│  = [Function: f]
-//│ f_: ((forall 'a, 'b. ('a & 'b) -> (forall 'b. ('c -> 'd | 'e
+//│ f_: ((forall 'a, 'b. ('a & 'b) -> (forall 'c, 'd, 'b, 'e, 'f, 'g. ('f -> 'e | 'd
 //│   where
-//│     forall 'f. 'f -> (forall 'g. 'g -> 'g) | 'h <: 'i -> 'd
-//│     'b <: (forall 'f. 'f -> (forall 'g. 'g -> 'g) | 'h) -> ('c -> 'i & 'j))) | 'k) -> 'l & (forall 'm, 'n. ('m -> 'n & 'm) -> 'n) -> ('o & 'p & 'q) & 'r) -> 'q
+//│     forall 'h, 'i. 'h -> (forall 'j. 'j -> 'j) | 'i <: 'g -> 'e
+//│     'b <: (forall 'h, 'i. 'h -> (forall 'j. 'j -> 'j) | 'i) -> ('f -> 'g & 'c))) | 'k) -> 'l & (forall 'm, 'n. ('m -> 'n & 'm) -> 'n) -> ('o & 'p & 'q) & 'r) -> 'q
 //│   = [Function: f_]
 //│ a: ((forall 'a. 'a -> 'a) -> 'b & 'c) -> 'b
 //│  = [Function: a]
@@ -809,9 +809,9 @@ def a = fun f -> f id
 def app x y = x y
 def test1 = f a
 def test2 = app f a
-//│ app: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ app: 'a -> (forall 'b, 'a, 'c. ('c -> 'b
 //│   where
-//│     'a <: 'b -> 'c))
+//│     'a <: 'c -> 'b))
 //│    = [Function: app]
 //│ test1: Sid
 //│      = [Function: test11]

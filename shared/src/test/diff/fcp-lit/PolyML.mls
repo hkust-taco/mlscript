@@ -31,7 +31,7 @@ g' = fun f -> f f
 
 fun f -> f (g f)
 fun f -> f (g' f)
-//│ res: ((forall 'a. 'a -> 'a) -> 'b & 'a -> 'a) -> 'b
+//│ res: (forall 'a. (forall 'a. 'a -> 'a) -> 'b & 'a -> 'a) -> 'b
 //│    = [Function: res]
 //│ res: ('a -> 'b & 'c -> 'a & 'c) -> 'b
 //│    = [Function: res]
@@ -93,7 +93,7 @@ rec def fl f x l = match_list l x (fun head -> fun tail -> fl f (f x head) tail)
 //│ fl: ('b -> 'a -> 'b) -> 'b -> List['a] -> 'b
 
 rec def fl2 f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
-//│ fl2: ('c -> ('d -> ('e & 'a & 'a0 & 'f & 'b & 'g) & 'h) & 'a0 -> 'b0 -> ('a0 & 'a1 & 'i & 'b1 & 'j) & 'k) -> (forall 'l. ('c & 'l) -> (forall 'a2, 'b2, 'm, 'n, 'o. (List['d & 'b0 & 'a2 & 'b2 & 'm] & 'n) -> ('l | 'o | 'j | 'g)))
+//│ fl2: ('c -> ('d -> ('e & 'a & 'a0 & 'f & 'b & 'g) & 'h) & 'a0 -> 'b0 -> ('a0 & 'a1 & 'i & 'b1 & 'j) & 'k) -> (forall 'l. ('c & 'l) -> (forall 'a2, 'm, 'n, 'o, 'b2. (List['d & 'b0 & 'a2 & 'b2 & 'o] & 'm) -> ('l | 'n | 'j | 'g)))
 
 :RecursiveTypes // needed for this recursive def
 def fold_left = fl
@@ -104,7 +104,7 @@ def fold_left = fl
 
 // :e // FIXME? refreshing-extr
 def fold_left = fl2
-//│ ('c -> ('d -> ('e & 'a & 'a0 & 'f & 'b & 'g) & 'h) & 'a0 -> 'b0 -> ('a0 & 'a1 & 'i & 'b1 & 'j) & 'k) -> (forall 'l. ('c & 'l) -> (forall 'a2, 'b2, 'm, 'n, 'o. (List['d & 'b0 & 'a2 & 'b2 & 'm] & 'n) -> ('l | 'o | 'j | 'g)))
+//│ ('c -> ('d -> ('e & 'a & 'a0 & 'f & 'b & 'g) & 'h) & 'a0 -> 'b0 -> ('a0 & 'a1 & 'i & 'b1 & 'j) & 'k) -> (forall 'l. ('c & 'l) -> (forall 'm, 'n, 'a2, 'b2, 'o. (List['d & 'b0 & 'a2 & 'b2 & 'o] & 'n) -> ('l | 'm | 'j | 'g)))
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 
@@ -118,12 +118,12 @@ class Collection[a]: { l: List[a] }
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
 //│ Defined Collection.Mem: Collection['a] -> (forall 'a, 'b, 'c. ('b & 'a) -> (bool | 'c))
-//│ Defined Collection.Fold: Collection['a] -> (forall 'c. 'c -> (forall 'a, 'c, 'a0, 'b, 'd, 'e. (('a0 & 'd & 'e) -> 'd
+//│ Defined Collection.Fold: Collection['a] -> (forall 'c. 'c -> (forall 'd, 'a, 'c, 'a0, 'e, 'b. (('a0 & 'e & 'd) -> 'e
 //│   where
-//│     'c <: 'a0 -> ('b | 'a) -> ('a0 & 'd))))
+//│     'c <: 'a0 -> ('b | 'a) -> ('a0 & 'e))))
 
 def coll_mem c x = c.Mem x
-//│ coll_mem: 'b -> (forall 'b, 'a, 'c, 'd, 'e, 'f. (('c & 'd & 'e) -> (bool | 'f)
+//│ coll_mem: 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'd & 'e) -> (bool | 'c)
 //│   where
 //│     'b <: Collection['a]))
 

@@ -144,10 +144,10 @@ def mkIntegerPrecise value = Integer { value; addOne = addOne1 }
 //│                 = [Function: mkIntegerPrecise]
 
 def mkIntegerPrecise value = Integer { value; addOne = fun n -> mkInteger (n.value + 1) }
-//│ mkIntegerPrecise: (int & 'value) -> (Integer with {addOne: forall 'value0, 'value1, 'a, 'b, 'addOne, 'c, 'd. ({value: int & 'value0 & 'value1} & 'a) -> ('b | 'd), value: 'value})
+//│ mkIntegerPrecise: (int & 'value) -> (Integer with {addOne: forall 'value0, 'a, 'value1, 'b, 'c, 'addOne, 'd. ({value: int & 'value0 & 'value1} & 'c) -> ('d | 'a), value: 'value})
 //│   where
-//│     'b :> Integer with {addOne: 'addOne}
-//│     'addOne :> ({value: int & 'value1} & 'c) -> 'b
+//│     'd :> Integer with {addOne: 'addOne}
+//│     'addOne :> ({value: int & 'value1} & 'b) -> 'd
 //│                 = [Function: mkIntegerPrecise1]
 
 def mkIntegerPrecise value = Integer { value; addOne = fun (n: Integer) -> mkInteger2 (n.value + 1) }

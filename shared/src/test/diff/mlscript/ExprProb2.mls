@@ -168,9 +168,9 @@ eval2_fixed_1 e2
 // FIXME strange type
 // :e
 def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
-//│ fix: ((forall 'a, 'b. ('c -> 'd
+//│ fix: ((forall 'a, 'b, 'c, 'd, 'e. ('a -> 'e
 //│   where
-//│     forall 'e, 'f. ('a & 'e) -> ('f | 'b) | 'a <: (forall 'e, 'f. ('a & 'e) -> ('f | 'b) | 'a) -> ('c -> 'd & 'g))) -> 'b) -> 'b
+//│     forall 'f, 'g. ('c & 'f) -> ('g | 'b) | 'c <: (forall 'f, 'g. ('c & 'f) -> ('g | 'b) | 'c) -> ('a -> 'e & 'd))) -> 'b) -> 'b
 //│    = [Function: fix]
 
 //:e // due to tapping

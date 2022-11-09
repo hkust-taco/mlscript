@@ -50,13 +50,13 @@ rec def eval1_stub e = case e of {
   | Add -> eval1_stub e.lhs
   | _ -> 0
   }
-//│ eval1_stub: forall 'eval1_stub, 'a, 'b, 'c, 'lhs, 'd, 'e. 'eval1_stub
+//│ eval1_stub: forall 'a, 'b, 'lhs, 'c, 'eval1_stub, 'd, 'e. 'eval1_stub
 //│   where
-//│     'eval1_stub := 'a -> (1 | 'd | 0)
-//│     'd :> 1 | 'd | 0
-//│     'a <: #Lit & 'b | (#Add & 'c | 'e & ~#Add) & ~#Lit
-//│     'c <: {lhs: 'lhs}
-//│     'lhs <: 'a
+//│     'eval1_stub := 'd -> (1 | 'c | 0)
+//│     'c :> 1 | 'c | 0
+//│     'd <: #Lit & 'a | (#Add & 'b | 'e & ~#Add) & ~#Lit
+//│     'b <: {lhs: 'lhs}
+//│     'lhs <: 'd
 //│           = [Function: eval1_stub2]
 
 eval1_stub
@@ -82,18 +82,18 @@ rec def eval1 k e = case e of {
 
 :ns
 eval1
-//│ res: forall 'eval1, 'a, 'b, 'c, 'val, 'd, 'lhs, 'rhs, 'e, 'f, 'g. 'eval1
+//│ res: forall 'a, 'eval1, 'b, 'c, 'rhs, 'd, 'e, 'lhs, 'f, 'g, 'val. 'eval1
 //│   where
-//│     'eval1 := 'a -> 'b -> ('val | 'e | 'g)
-//│     'e := int
-//│     'b <: #Lit & 'c | (#Add & 'd | 'f & ~#Add) & ~#Lit
-//│     'd <: {rhs: 'rhs} & {lhs: 'lhs}
-//│     'lhs <: 'b
-//│     'rhs <: 'b
-//│     'c <: {val: 'val}
+//│     'eval1 := 'd -> 'f -> ('val | 'a | 'c)
+//│     'a := int
+//│     'f <: #Lit & 'g | (#Add & 'b | 'e & ~#Add) & ~#Lit
+//│     'b <: {rhs: 'rhs} & {lhs: 'lhs}
+//│     'lhs <: 'f
+//│     'rhs <: 'f
+//│     'g <: {val: 'val}
 //│     'val <: int
-//│     'a <: 'f -> 'g
-//│     'g <: int
+//│     'd <: 'e -> 'c
+//│     'c <: int
 //│    = [Function: eval1]
 
 :re
@@ -279,7 +279,7 @@ rec def prettier11 k ev e = case e of {
       in if ev e.rhs == 0 then tmp else concat tmp (prettier11 k ev e.rhs)
   | _ -> k e
   }
-//│ prettier11: ('a -> string & 'b -> string) -> ('rhs -> number) -> 'c -> (forall 'd, 'e, 'f, 'g. string | 'd | 'e | 'f | 'g)
+//│ prettier11: ('a -> string & 'b -> string) -> ('rhs -> number) -> 'c -> (forall 'd, 'e, 'f, 'g. string | 'f | 'g | 'd | 'e)
 //│   where
 //│     'c <: Add[?] & {lhs: 'h, rhs: 'rhs & 'c} | Lit | 'a & ~#Add & ~#Lit
 //│     'h <: Add[?] & {lhs: 'h, rhs: 'h} | Lit | 'b & ~#Add & ~#Lit
@@ -504,7 +504,7 @@ prettier2 done (eval2 done) d2
 prettier22 done (eval2 done)
 prettier22 done (eval2 done) e2
 prettier22 done (eval2 done) d2
-//│ res: 'a -> (forall 'b, 'c, 'd, 'e. string | 'b | 'c | 'd | 'e)
+//│ res: 'a -> (forall 'b, 'c, 'd, 'e. string | 'd | 'e | 'b | 'c)
 //│   where
 //│     'a <: Add[?] & {lhs: 'f, rhs: 'f} & 'g | Lit | 'h & ~#Add & ~#Lit
 //│     'g <: Add[?] & {lhs: 'g, rhs: 'g} | Lit | Nega[?] & {arg: 'g}

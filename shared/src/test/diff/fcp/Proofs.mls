@@ -53,7 +53,7 @@ EM_to_DNE: EM -> DNE
 // * Proof that EN implies DNE, annotated
 def EM_to_DNE_A0 (em: EM) nna =
   case em of Left -> em.v, Right -> nna em.v
-//│ EM_to_DNE_A0: EM -> (forall 'v, 'a, 'v0, 'b, 'c. (('v | Not['a & 'v0]) -> 'b & 'c) -> ('v0 | 'b))
+//│ EM_to_DNE_A0: EM -> (forall 'v, 'b, 'c, 'v0, 'a. (('v0 | Not['a & 'v]) -> 'b & 'c) -> ('v | 'b))
 //│             = [Function: EM_to_DNE_A0]
 
 EM_to_DNE_A0: EM -> DNE
@@ -66,7 +66,7 @@ EM_to_DNE_A0: EM -> DNE
 def EM_to_DNE_A1 em =
   let poly (nna: Not[Not['A]]) = case em of Left -> em.v, Right -> nna em.v
   in poly
-//│ EM_to_DNE_A1: ('a & ((Left with {v: 'v}) & 'b | Right & {v: Not['A] & 'v0} & 'c)) -> (forall 'A0, 'v1, 'd. Not[Not['A & 'A0]] -> ('v1 | 'v | 'd))
+//│ EM_to_DNE_A1: ('a & ((Left with {v: 'v}) & 'b | Right & {v: Not['A] & 'v0} & 'c)) -> (forall 'v1, 'd, 'A0. Not[Not['A & 'A0]] -> ('v1 | 'v | 'd))
 //│             = [Function: EM_to_DNE_A1]
 
 :e
@@ -92,7 +92,7 @@ EM_to_DNE_A1: EM -> DNE
 // *      )
 def DNE_to_EM dne =
   dne (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
-//│ DNE_to_EM: ((forall 'v, 'a, 'v0, 'b, 'c, 'd, 'e. ((Right & {v: forall 'f, 'v1, 'g. ('f & 'v1 & 'v) -> ('g | 'a) | 'v0} | 'b) -> 'c & ((Left with {v: 'v}) | 'd) -> 'a & 'e) -> 'c) -> 'h & 'i) -> 'h
+//│ DNE_to_EM: ((forall 'a, 'b, 'c, 'v, 'd, 'v0, 'e. ((Right & {v: forall 'f, 'v1, 'g. ('f & 'v1 & 'v) -> ('g | 'c) | 'v0} | 'e) -> 'a & ((Left with {v: 'v}) | 'b) -> 'c & 'd) -> 'a) -> 'h & 'i) -> 'h
 //│          = [Function: DNE_to_EM]
 
 // * Requires distributivity because we currently don't generalize function bodies
@@ -113,7 +113,7 @@ DNE_to_EM: DNE -> EM
 def DNE_to_EM_let dne =
   let poly = dne (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
   in poly
-//│ DNE_to_EM_let: ((forall 'v, 'a, 'v0, 'b, 'c, 'd, 'e. ((Right & {v: forall 'f, 'v1, 'g. ('f & 'v1 & 'v) -> ('g | 'a) | 'v0} | 'b) -> 'c & ((Left with {v: 'v}) | 'd) -> 'a & 'e) -> 'c) -> 'h & 'i) -> (forall 'j. 'j | 'h)
+//│ DNE_to_EM_let: ((forall 'v, 'a, 'b, 'v0, 'c, 'd, 'e. ((Right & {v: forall 'f, 'g, 'v1. ('g & 'v1 & 'v) -> ('f | 'e) | 'v0} | 'b) -> 'a & ((Left with {v: 'v}) | 'd) -> 'e & 'c) -> 'a) -> 'h & 'i) -> (forall 'j. 'j | 'h)
 //│              = [Function: DNE_to_EM_let]
 
 // * This one works because we used let polymorphism
@@ -304,7 +304,7 @@ EM_to_DNE: EM -> DNE
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.303: 	EM_to_DNE: EM -> DNE
 //│ ║         	^^^^^^^^^
-//│ ╟── type `‘a_1010_1016` is not an instance of type `'a_1010_1015`
+//│ ╟── type `‘a_1018_1024` is not an instance of type `'a_1018_1023`
 //│ ║  l.24: 	type DNE = forall 'a. Not[Not['a]] -> 'a
 //│ ║        	                  ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -320,7 +320,7 @@ EM_to_DNE: EM -> DNE
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.319: 	EM_to_DNE: EM -> DNE
 //│ ║         	^^^^^^^^^
-//│ ╟── type `‘a_1027_1033` is not an instance of type `'a_1027_1032`
+//│ ╟── type `‘a_1035_1041` is not an instance of type `'a_1035_1040`
 //│ ║  l.24: 	type DNE = forall 'a. Not[Not['a]] -> 'a
 //│ ║        	                  ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -336,18 +336,18 @@ EM_to_DNE: EM -> DNE
 
 def EM_to_DNE em nna =
   case em of Left -> em.v, Right -> nna em.v
-//│ EM_to_DNE: 'a -> (forall 'a, 'v, 'b, 'v0, 'c, 'd, 'e. (('v0 -> 'd & 'e) -> ('v | 'd)
+//│ EM_to_DNE: 'a -> (forall 'b, 'v, 'c, 'd, 'v0, 'a, 'e. (('v -> 'e & 'c) -> ('v0 | 'e)
 //│   where
-//│     'a <: (Left with {v: 'v}) & 'b | (Right with {v: 'v0}) & 'c))
+//│     'a <: (Left with {v: 'v0}) & 'b | (Right with {v: 'v}) & 'd))
 
 EM_to_DNE: EM -> DNE
 //│ res: EM -> DNE
 
 def DNE_to_EM dne =
   dne (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
-//│ DNE_to_EM: ((((Right & {v: forall 'a, 'v, 'b, 'c, 'd, 'v0. (('v & 'd) -> 'c | 'v0
+//│ DNE_to_EM: ((forall 'a, 'b, 'c. ((Right & {v: forall 'c, 'd, 'e, 'f, 'v, 'v0. (('v & 'd) -> 'e | 'v0
 //│   where
-//│     'a <: ((Left with {v: 'v}) | 'b) -> 'c)} | 'e) -> 'f & 'a) -> 'f) -> 'g & 'h) -> 'g
+//│     'c <: ((Left with {v: 'v}) | 'f) -> 'e)} | 'a) -> 'b & 'c) -> 'b) -> 'g & 'h) -> 'g
 
 EM_to_DNE: EM -> DNE
 //│ res: EM -> DNE

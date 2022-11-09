@@ -16,9 +16,9 @@ type Two[A] = (A, A)
 //│ Defined type alias Two[+A]
 
 def mapTwo f ((a, b)) = (f a, f b)
-//│ mapTwo: 'a -> (forall 'a, 'b, 'c, 'd, 'e. (('b, 'd,) -> ('c, 'e,)
+//│ mapTwo: 'a -> (forall 'b, 'c, 'a, 'd, 'e. (('d, 'b,) -> ('e, 'c,)
 //│   where
-//│     'a <: 'b -> 'c & 'd -> 'e))
+//│     'a <: 'd -> 'e & 'b -> 'c))
 //│       = [Function: mapTwo]
 
 // class Z
@@ -66,7 +66,7 @@ d1_ : HTree[Z, int]
 //│    = [Function: d1_]
 
 d2 = DNode { subTree = (d1_, d1_); n = S{} }
-//│ d2: DNode['P, 1] with {subTree: (forall 'a, 'b. (DLeaf[1] -> 'a & 'b) -> 'a, forall 'a, 'b. (DLeaf[1] -> 'a & 'b) -> 'a,)}
+//│ d2: DNode['P, 1] with {subTree: (forall 'a, 'b. (DLeaf[1] -> 'b & 'a) -> 'b, forall 'a, 'b. (DLeaf[1] -> 'b & 'a) -> 'b,)}
 //│   = DNode { n: S {}, subTree: [ [Function: d1_], [Function: d1_] ] }
 
 def d1_ty: HTree[Z, int]

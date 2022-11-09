@@ -28,7 +28,7 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'a, 'c, 'tail, 'head, 'd. (List['a] & 'c & 'tail) -> ((Cons['a | 'b] with {head: 'head | 'b, tail: 'tail}) | 'd))
+//│ 'b -> (forall 'c, 'a, 'head, 'd, 'tail. (List['a] & 'd & 'tail) -> ((Cons['a | 'b] with {head: 'head | 'b, tail: 'tail}) | 'c))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -262,18 +262,18 @@ id1 id
 // ^ FIXME type pp – id1 is not shown to have an upper bound!
 :ns
 id1
-//│ res: forall 'id1, 'a, 'b, 'c, 'd, 'e. 'id1
+//│ res: forall 'a, 'b, 'c, 'd, 'id1, 'e. 'id1
 //│   where
-//│     'id1 := 'a -> 'e
-//│     'a :> 'a -> 'e
-//│        <: 'b
-//│     'e :> 'a -> 'e
-//│        <: 'd & 'c
-//│     'c :> 'a -> 'e
-//│        <: 'a -> 'd
-//│     'd :> 'a -> 'e
-//│        <: 'b
-//│     'b :> 'a -> 'e
+//│     'id1 := 'b -> 'e
+//│     'b :> 'b -> 'e
+//│        <: 'd
+//│     'e :> 'b -> 'e
+//│        <: 'a & 'c
+//│     'c :> 'b -> 'e
+//│        <: 'b -> 'a
+//│     'a :> 'b -> 'e
+//│        <: 'd
+//│     'd :> 'b -> 'e
 //│        <: 'e
 //│    = [Function: id1]
 
@@ -354,7 +354,7 @@ def id2 x = if true then x else id2 id2 x
 
 // let make_ex1 x (f:['a] ('a * ('a -> 'c)) -> 'b) = f x
 def make_ex1 x (f: forall 'a. (('a, 'a -> 'c),) -> 'b) = f x
-//│ make_ex1: 'd -> (forall 'd, 'a, 'c, 'b, 'e. ((forall 'a0. ('a0, 'a0 -> 'c,) -> ('b & 'e)) -> 'e
+//│ make_ex1: 'd -> (forall 'd, 'e, 'a, 'c, 'b. ((forall 'a0. ('a0, 'a0 -> 'c,) -> ('b & 'e)) -> 'e
 //│   where
 //│     'd <: ('a, 'a -> 'c,)))
 //│         = [Function: make_ex1]
@@ -386,7 +386,7 @@ ex1_2 (fun ((x, f)) -> f x)
 // let make_ex2 x (f:['a] ('a * 'a * ('a -> 'a -> 'c)) -> 'b) = f x
 // ;;
 def make_ex2 x (f: forall 'a. (('a, 'a, 'a -> 'a -> 'c),) -> 'b) = f x
-//│ make_ex2: 'd -> (forall 'd, 'a, 'c, 'b, 'e. ((forall 'a0. ('a0, 'a0, 'a0 -> 'a0 -> 'c,) -> ('b & 'e)) -> 'e
+//│ make_ex2: 'd -> (forall 'd, 'e, 'a, 'c, 'b. ((forall 'a0. ('a0, 'a0, 'a0 -> 'a0 -> 'c,) -> ('b & 'e)) -> 'e
 //│   where
 //│     'd <: ('a, 'a, 'a -> 'a -> 'c,)))
 //│         = [Function: make_ex2]
@@ -398,11 +398,11 @@ def make_ex2 x (f: forall 'a. (('a, 'a, 'a -> 'a -> 'c),) -> 'b) = f x
 ex_list1 = cons (make_ex1 (("A String", print_string)))
   (cons (make_ex1 ((8250, print_int)))
   (cons (make_ex1 ((true, print_bool))) nil))
-//│ ex_list1: List[forall 'a, 'c, 'a0, 'c0, 'a1, 'c1, 'b, 'd, 'b0, 'e, 'b1, 'f. ((forall 'a2, 'a3, 'a4. ('a2, 'a2 -> 'c1,) -> ('b & 'd) & ('a3, 'a3 -> 'c,) -> ('b0 & 'e) & ('a4, 'a4 -> 'c0,) -> ('b1 & 'f)) -> ('e | 'f | 'd)
+//│ ex_list1: List[forall 'd, 'b, 'c, 'a, 'e, 'f, 'a0, 'b0, 'a1, 'c0, 'b1, 'c1. ((forall 'a2, 'a3, 'a4. ('a3, 'a3 -> 'c0,) -> ('b & 'e) & ('a4, 'a4 -> 'c1,) -> ('b1 & 'd) & ('a2, 'a2 -> 'c,) -> ('b0 & 'f)) -> ('d | 'f | 'e)
 //│   where
-//│     (true, bool -> unit,) <: ('a0, 'a0 -> 'c0,)
-//│     ("A String", string -> unit,) <: ('a1, 'a1 -> 'c1,)
-//│     (8250, int -> unit,) <: ('a, 'a -> 'c,))]
+//│     (true, bool -> unit,) <: ('a1, 'a1 -> 'c,)
+//│     ("A String", string -> unit,) <: ('a0, 'a0 -> 'c0,)
+//│     (8250, int -> unit,) <: ('a, 'a -> 'c1,))]
 //│         = Cons {
 //│             head: [Function (anonymous)],
 //│             tail: Cons {
@@ -418,11 +418,11 @@ ex_list1 = cons (make_ex1 (("A String", print_string)))
 ex_list2 = cons (make_ex2 (("String", "String", eqstring)))
   (cons (make_ex2 ((1250, 4890, eqint)))
   (cons (make_ex2 ((true, false, eqbool))) nil))
-//│ ex_list2: List[forall 'b, 'd, 'b0, 'e, 'b1, 'f. ((forall 'a, 'a0, 'a1. ('a, 'a, 'a -> 'a -> 'c,) -> ('b & 'd) & ('a0, 'a0, 'a0 -> 'a0 -> 'c0,) -> ('b0 & 'e) & ('a1, 'a1, 'a1 -> 'a1 -> 'c1,) -> ('b1 & 'f)) -> ('e | 'f | 'd)
+//│ ex_list2: List[forall 'c, 'c0, 'a, 'a0, 'b, 'c1, 'd, 'a1, 'e, 'f, 'b0, 'b1. ((forall 'a2, 'a3, 'a4. ('a3, 'a3, 'a3 -> 'a3 -> 'c,) -> ('b0 & 'e) & ('a4, 'a4, 'a4 -> 'a4 -> 'c0,) -> ('b1 & 'd) & ('a2, 'a2, 'a2 -> 'a2 -> 'c1,) -> ('b & 'f)) -> ('d | 'f | 'e)
 //│   where
-//│     ("String", "String", forall 'g, 'h. (string & 'g & 'h) -> (forall 'i, 'h. (string & 'h) -> (bool | 'i)),) <: ('a2, 'a2, 'a2 -> 'a2 -> 'c,)
-//│     (1250, 4890, forall 'j, 'k. (int & 'j & 'k) -> (forall 'k, 'i, 'l. (int & 'k) -> (bool | 'i | 'l)),) <: ('a3, 'a3, 'a3 -> 'a3 -> 'c0,)
-//│     (true, false, forall 'm. (bool & 'm) -> (forall 'i, 'n, 'o, 'p. (bool & 'm & 'n & 'o & 'p) -> (bool | 'i | 'p)),) <: ('a4, 'a4, 'a4 -> 'a4 -> 'c1,))]
+//│     ("String", "String", forall 'g, 'h. (string & 'g & 'h) -> (forall 'h, 'i. (string & 'h) -> (bool | 'i)),) <: ('a1, 'a1, 'a1 -> 'a1 -> 'c,)
+//│     (1250, 4890, forall 'j, 'k. (int & 'j & 'k) -> (forall 'k, 'i, 'l. (int & 'k) -> (bool | 'i | 'l)),) <: ('a0, 'a0, 'a0 -> 'a0 -> 'c0,)
+//│     (true, false, forall 'm. (bool & 'm) -> (forall 'n, 'o, 'p, 'i. (bool & 'm & 'n & 'o & 'p) -> (bool | 'i | 'p)),) <: ('a, 'a, 'a -> 'a -> 'c1,))]
 //│         = Cons {
 //│             head: [Function (anonymous)],
 //│             tail: Cons {
@@ -518,7 +518,7 @@ test2_ = listiter (fun ex -> ex (fun ((t1, t2, t3)) ->
   let eqf = t3 in
   let areequal = eqf arg1 arg2 in
   print_bool areequal ))
-//│ test2_: List[(forall 'a, 'b, 'c, 'd, 'e, 'f. ('a, 'b, 'a -> ('b -> (bool & 'c) & 'd) & 'e,) -> (unit | 'f)) -> 'c] -> unit
+//│ test2_: List[(forall 'a, 'b, 'c, 'd, 'e, 'f. ('f, 'd, 'f -> ('d -> (bool & 'b) & 'a) & 'c,) -> (unit | 'e)) -> 'b] -> unit
 //│       = [Function (anonymous)]
 
 // * Also fails:
@@ -576,7 +576,7 @@ make_ex2 (x, y, f) k = k (x, y, f)
 ex_list1 = cons (make_ex1 ("A String", print_string))
   (cons (make_ex1 (8250, print_int))
   (cons (make_ex1 (true, print_bool)) nil))
-//│ ex_list1: List[forall 'b, 'b0, 'b1. (forall 'a, 'a0, 'a1. ('a, 'a -> unit,) -> 'b & ('a0, 'a0 -> unit,) -> 'b0 & ('a1, 'a1 -> unit,) -> 'b1) -> ('b0 | 'b1 | 'b)]
+//│ ex_list1: List[forall 'b, 'b0, 'b1. (forall 'a, 'a0, 'a1. ('a1, 'a1 -> unit,) -> 'b1 & ('a, 'a -> unit,) -> 'b & ('a0, 'a0 -> unit,) -> 'b0) -> ('b | 'b0 | 'b1)]
 //│         = Cons {
 //│             head: [Function (anonymous)],
 //│             tail: Cons {
@@ -592,7 +592,7 @@ ex_list1 = cons (make_ex1 ("A String", print_string))
 ex_list2 = cons (make_ex2 ("String", "String", eqstring))
   (cons (make_ex2 (1250, 4890, eqint))
   (cons (make_ex2 (true, false, eqbool)) nil))
-//│ ex_list2: List[forall 'b, 'b0, 'b1. (forall 'a. ('a, 'a, 'a -> (forall 'c, 'd. (string & 'c) -> (bool | 'd)),) -> 'b & ('a0, 'a0, 'a0 -> (forall 'd, 'e, 'f. (int & 'e) -> (bool | 'd | 'f)),) -> 'b0 & ('a1, 'a1, 'a1 -> (forall 'd, 'g, 'h, 'i. (bool & 'g & 'h & 'i) -> (bool | 'd | 'i)),) -> 'b1) -> ('b0 | 'b1 | 'b)]
+//│ ex_list2: List[forall 'b, 'b0, 'b1. (forall 'a, 'a0, 'a1. ('a, 'a, 'a -> (forall 'c, 'd. (string & 'c) -> (bool | 'd)),) -> 'b & ('a0, 'a0, 'a0 -> (forall 'd, 'e, 'f. (int & 'e) -> (bool | 'd | 'f)),) -> 'b0 & ('a1, 'a1, 'a1 -> (forall 'd, 'g, 'h, 'i. (bool & 'g & 'h & 'i) -> (bool | 'd | 'i)),) -> 'b1) -> ('b0 | 'b1 | 'b)]
 //│         = Cons {
 //│             head: [Function (anonymous)],
 //│             tail: Cons {
@@ -663,14 +663,14 @@ def c_unit = fun x -> x
 // (* BOOLEANS, IFS, AND, OR, NOT. *)
 // let c_true  = fun a b -> a c_unit
 def c_true = fun a -> fun b -> a c_unit
-//│ c_true: 'a -> (forall 'a. ('b -> 'c
+//│ c_true: 'a -> (forall 'a, 'b, 'c. ('c -> 'b
 //│   where
-//│     'a <: (forall 'd. 'd -> 'd) -> 'c))
+//│     'a <: (forall 'd. 'd -> 'd) -> 'b))
 //│       = [Function: c_true]
 
 // let c_false = fun a b -> b c_unit
 def c_false = fun a -> fun b -> b c_unit
-//│ c_false: 'a -> ((forall 'b. 'b -> 'b) -> 'c & 'd) -> 'c
+//│ c_false: 'a -> (forall 'b, 'c. ((forall 'd. 'd -> 'd) -> 'b & 'c) -> 'b)
 //│        = [Function: c_false]
 
 // let c_if (cond:Bool) c_then c_else = cond c_then c_else 
@@ -680,41 +680,41 @@ def c_if_ cond c_then c_else = cond c_then c_else
 //│   where
 //│     'b <: Funit -> ('a & 'c) & 'd)))
 //│     = [Function: c_if]
-//│ c_if_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'd
+//│ c_if_: 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'b, 'a, 'e. ('c -> 'e
 //│   where
-//│     'a <: 'b -> ('c -> 'd & 'e))))
+//│     'a <: 'b -> ('c -> 'e & 'd))))
 //│      = [Function: c_if_]
 
 // let c_and (a:Bool) (b:Bool) = c_if a (fun z -> b) (fun z -> c_false)
 def c_and (a: Fbool) (b: Fbool) = c_if a (fun z -> b) (fun z -> c_false)
 def c_and_ a b = c_if a (fun z -> b) (fun z -> c_false)
-//│ c_and: Fbool -> Fbool -> (forall 'a. 'a -> ((forall 'b. 'b -> 'b) -> 'c & 'd) -> 'c | Fbool | 'e)
+//│ c_and: Fbool -> Fbool -> (forall 'a, 'b. 'a -> (forall 'c, 'd. ((forall 'e. 'e -> 'e) -> 'c & 'd) -> 'c) | Fbool | 'b)
 //│      = [Function: c_and]
-//│ c_and_: (Fbool & 'b) -> (forall 'c, 'a, 'd, 'e. ('c & 'a & 'd & 'e) -> (forall 'f. 'f -> ((forall 'g. 'g -> 'g) -> 'h & 'i) -> 'h | 'e))
+//│ c_and_: (Fbool & 'b) -> (forall 'c, 'a, 'd, 'e. ('c & 'a & 'd & 'e) -> (forall 'e, 'f. 'f -> (forall 'g, 'h. ((forall 'i. 'i -> 'i) -> 'g & 'h) -> 'g) | 'e))
 //│       = [Function: c_and_]
 
 // let c_or  (a:Bool) (b:Bool) = c_if a (fun z -> c_true) (fun z -> b)
 def c_or (a: Fbool) (b: Fbool) = c_if a (fun z -> c_true) (fun z -> b)
 def c_or_ a b = c_if a (fun z -> c_true) (fun z -> b)
-//│ c_or: Fbool -> Fbool -> (forall 'a. 'a -> (forall 'a. ('b -> 'c
+//│ c_or: Fbool -> Fbool -> (forall 'a, 'b. 'a -> (forall 'a, 'c, 'd. ('d -> 'c
 //│   where
-//│     'a <: (forall 'd. 'd -> 'd) -> 'c)) | Fbool | 'e)
+//│     'a <: (forall 'e. 'e -> 'e) -> 'c)) | Fbool | 'b)
 //│     = [Function: c_or]
-//│ c_or_: (Fbool & 'b) -> (forall 'c, 'a, 'd, 'e. ('c & 'a & 'd & 'e) -> (forall 'f. 'f -> (forall 'f. ('g -> 'h
+//│ c_or_: (Fbool & 'b) -> (forall 'c, 'a, 'd, 'e. ('c & 'a & 'd & 'e) -> (forall 'e, 'f. 'f -> (forall 'f, 'g, 'h. ('h -> 'g
 //│   where
-//│     'f <: (forall 'i. 'i -> 'i) -> 'h)) | 'e))
+//│     'f <: (forall 'i. 'i -> 'i) -> 'g)) | 'e))
 //│      = [Function: c_or_]
 
 // let c_not (a:Bool) = c_if a (fun z -> c_false) (fun z -> c_true)
 def c_not (a: Fbool) = c_if a (fun z -> c_false) (fun z -> c_true)
 def c_not_ a = c_if a (fun z -> c_false) (fun z -> c_true)
-//│ c_not: Fbool -> (forall 'a, 'b. ('a & 'b) -> (forall 'b. (((forall 'c. 'c -> 'c) -> 'd & 'e & 'f) -> ('g | 'd)
+//│ c_not: Fbool -> (forall 'a, 'b, 'c. ('b & 'c) -> (forall 'd, 'e, 'f, 'c, 'g. (((forall 'h. 'h -> 'h) -> 'd & 'g & 'e) -> ('f | 'd)
 //│   where
-//│     'b <: (forall 'c. 'c -> 'c) -> 'g)) | 'h)
+//│     'c <: (forall 'h. 'h -> 'h) -> 'f)) | 'a)
 //│      = [Function: c_not]
-//│ c_not_: (Fbool & 'a) -> (forall 'b, 'c. ('b & 'c) -> (forall 'c. (((forall 'd. 'd -> 'd) -> 'e & 'f & 'g) -> ('h | 'e)
+//│ c_not_: (Fbool & 'a) -> (forall 'b, 'c, 'd. ('c & 'd) -> (forall 'd, 'e, 'f, 'g, 'h. (((forall 'i. 'i -> 'i) -> 'f & 'e & 'h) -> ('g | 'f)
 //│   where
-//│     'c <: (forall 'd. 'd -> 'd) -> 'h)) | 'i)
+//│     'd <: (forall 'i. 'i -> 'i) -> 'g)) | 'b)
 //│       = [Function: c_not_]
 
 // let c_or = (c_or : Bool -> Bool -> Bool)
@@ -806,7 +806,7 @@ def c_case_ s g d = s g d
 //│   where
 //│     'b <: Fint -> ('a & 'c) & 'd)))
 //│       = [Function: c_case]
-//│ c_case_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'd
+//│ c_case_: 'a -> (forall 'b. 'b -> (forall 'b, 'a, 'c, 'd, 'e. ('c -> 'd
 //│   where
 //│     'a <: 'b -> ('c -> 'd & 'e))))
 //│        = [Function: c_case_]
@@ -835,90 +835,90 @@ def c_i2 = fun f -> fun x -> f (f x)
 // let c_succ (n:Int) = fun f x -> n f (f x)
 def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
 def c_succ_ n = fun f -> fun x -> n f (f x)
-//│ c_succ: Fint -> (forall 'b. 'b -> (forall 'b, 'a, 'c, 'd, 'e. ('d -> 'c
+//│ c_succ: Fint -> (forall 'b. 'b -> (forall 'c, 'a, 'd, 'e, 'b. ('e -> 'd
 //│   where
-//│     'b <: 'a -> ('a & 'c) & 'd -> ('a & 'c & 'e))))
+//│     'b <: 'a -> ('a & 'd) & 'e -> ('a & 'd & 'c))))
 //│       = [Function: c_succ]
-//│ c_succ_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f -> 'd
+//│ c_succ_: 'a -> (forall 'b. 'b -> (forall 'b, 'c, 'd, 'e, 'f, 'a. ('c -> 'e
 //│   where
-//│     'a <: 'b -> ('c -> 'd & 'e)
-//│     'b <: 'f -> 'c)))
+//│     'a <: 'b -> ('f -> 'e & 'd)
+//│     'b <: 'c -> 'f)))
 //│        = [Function: c_succ_]
 
 // let c_iszero (n:Int) = n (fun x -> c_false) c_true
 def c_iszero (n: Fint) = n (fun x -> c_false) c_true
 def c_iszero_ n = n (fun x -> c_false) c_true
-//│ c_iszero: Fint -> (forall 'a, 'b. ('a & 'b) -> (forall 'b. (((forall 'c. 'c -> 'c) -> 'd & 'e & 'f) -> ('g | 'd)
+//│ c_iszero: Fint -> (forall 'a, 'b, 'c. ('a & 'b) -> (forall 'b, 'd, 'e, 'f, 'g. (((forall 'h. 'h -> 'h) -> 'd & 'f & 'g) -> ('e | 'd)
 //│   where
-//│     'b <: (forall 'c. 'c -> 'c) -> 'g)) | 'h)
+//│     'b <: (forall 'h. 'h -> 'h) -> 'e)) | 'c)
 //│         = [Function: c_iszero]
-//│ c_iszero_: ((forall 'a. 'a -> (forall 'b. 'b -> ((forall 'c. 'c -> 'c) -> 'd & 'e) -> 'd)) -> ((forall 'f. 'f -> (forall 'f. ('g -> 'h
+//│ c_iszero_: ((forall 'a. 'a -> (forall 'b. 'b -> (forall 'c, 'd. ((forall 'e. 'e -> 'e) -> 'c & 'd) -> 'c))) -> ((forall 'f. 'f -> (forall 'g, 'f, 'h. ('g -> 'h
 //│   where
-//│     'f <: (forall 'c. 'c -> 'c) -> 'h))) -> 'i & 'j) & 'k) -> 'i
+//│     'f <: (forall 'e. 'e -> 'e) -> 'h))) -> 'i & 'j) & 'k) -> 'i
 //│          = [Function: c_iszero_]
 
 // let c_add n (m:Int) = m c_succ n
 
 //:e // due to tapping
 def c_add n (m: Fint) = m c_succ n
-//│ c_add: (Fint & 'b) -> Fint -> (forall 'c. 'c -> (forall 'c, 'a, 'd, 'e, 'f. ('e -> 'd
+//│ c_add: (Fint & 'b) -> Fint -> (forall 'c, 'd. 'c -> (forall 'a, 'e, 'c, 'f, 'g. ('f -> 'e
 //│   where
-//│     'c <: 'a -> ('a & 'd) & 'e -> ('a & 'd & 'f))) | 'b | 'g)
+//│     'c <: 'a -> ('a & 'e) & 'f -> ('a & 'e & 'g))) | 'b | 'd)
 //│      = [Function: c_add]
 
 def c_add_ n m = m c_succ_ n
-//│ c_add_: 'a -> ((forall 'b. 'b -> (forall 'c. 'c -> (forall 'b, 'c, 'd, 'e, 'f, 'g. ('g -> 'e
+//│ c_add_: 'a -> (forall 'b, 'c, 'd. ((forall 'e. 'e -> (forall 'f. 'f -> (forall 'g, 'e, 'h, 'i, 'f, 'j. ('g -> 'j
 //│   where
-//│     'c <: 'g -> 'd
-//│     'b <: 'c -> ('d -> 'e & 'f))))) -> ('a -> 'h & 'i) & 'j) -> 'h
+//│     'f <: 'g -> 'i
+//│     'e <: 'f -> ('i -> 'j & 'h))))) -> ('a -> 'b & 'c) & 'd) -> 'b)
 //│       = [Function: c_add_]
 
 // let c_mul n (m:Int) = m (c_add n) c_i0
 
 //:e // due to tapping
 def c_mul m (n: Fint) = m (c_add n) c_i0
-//│ c_mul: 'b -> (forall 'b. (Fint -> 'c
+//│ c_mul: 'b -> (forall 'b, 'c, 'd, 'e. (Fint -> 'd
 //│   where
-//│     'b <: (Fint -> (forall 'd. 'd -> (forall 'd, 'a, 'e, 'f, 'g. ('f -> 'e
+//│     'b <: (Fint -> (forall 'f, 'g, 'h. 'f -> (forall 'a, 'i, 'f, 'j, 'k. ('k -> 'i
 //│   where
-//│     'd <: 'a -> ('a & 'e) & 'f -> ('a & 'e & 'g))) | Fint | 'h | 'i) | 'j) -> ((forall 'k. 'k -> (forall 'l. 'l -> 'l)) -> 'c & 'm)))
+//│     'f <: 'a -> ('a & 'i) & 'k -> ('a & 'i & 'j))) | Fint | 'g | 'h) | 'c) -> ((forall 'l. 'l -> (forall 'm. 'm -> 'm)) -> 'd & 'e)))
 //│      = [Function: c_mul]
 
 def c_mul_ m n = m (c_add_ n) c_i0
-//│ c_mul_: 'a -> (forall 'a. (('b & 'c) -> 'd
+//│ c_mul_: 'a -> (forall 'b, 'c, 'a, 'd, 'e, 'f. (('e & 'f) -> 'b
 //│   where
-//│     'a <: (((forall 'e. 'e -> (forall 'f. 'f -> (forall 'e, 'f, 'g, 'h, 'i, 'j. ('j -> 'h
+//│     'a <: (forall 'g, 'h, 'i. ((forall 'j. 'j -> (forall 'k. 'k -> (forall 'l, 'm, 'n, 'k, 'j, 'o. ('o -> 'm
 //│   where
-//│     'f <: 'j -> 'g
-//│     'e <: 'f -> ('g -> 'h & 'i))))) -> ('b -> 'k & 'l) & 'm) -> 'k | 'n) -> ((forall 'o. 'o -> (forall 'p. 'p -> 'p)) -> 'd & 'q)))
+//│     'k <: 'o -> 'n
+//│     'j <: 'k -> ('n -> 'm & 'l))))) -> ('e -> 'g & 'h) & 'i) -> 'g | 'c) -> ((forall 'p. 'p -> (forall 'q. 'q -> 'q)) -> 'b & 'd)))
 //│       = [Function: c_mul_]
 
 // let c_pow n (m:Int) = m (c_mul n) c_i1
 
 // :e // due to tapping
 def c_pow m (n: Fint) = m (c_mul n) c_i1
-//│ c_pow: 'b -> (forall 'b. (Fint -> 'c
+//│ c_pow: 'b -> (forall 'b, 'c, 'd. (Fint -> 'c
 //│   where
-//│     'b <: (forall 'd, 'e. (Fint -> 'f | 'g
+//│     'b <: (forall 'e, 'f, 'g, 'h, 'i, 'j. (Fint -> 'h | 'f
 //│   where
-//│     Fint | 'd | 'e <: (Fint -> (forall 'h. 'h -> (forall 'h, 'a, 'i, 'j, 'k. ('j -> 'i
+//│     Fint | 'g | 'j <: (Fint -> (forall 'k, 'g, 'l. 'l -> (forall 'a, 'm, 'l, 'n, 'o. ('o -> 'n
 //│   where
-//│     'h <: 'a -> ('a & 'i) & 'j -> ('a & 'i & 'k))) | Fint | 'd | 'l) | 'm) -> ((forall 'n. 'n -> (forall 'o. 'o -> 'o)) -> 'f & 'p))) -> ((forall 'q. 'q -> (forall 'q, 'r, 's. ('r -> 's
+//│     'l <: 'a -> ('a & 'n) & 'o -> ('a & 'n & 'm))) | Fint | 'g | 'k) | 'i) -> ((forall 'p. 'p -> (forall 'q. 'q -> 'q)) -> 'h & 'e))) -> ((forall 'r. 'r -> (forall 'r, 's, 't. ('s -> 't
 //│   where
-//│     'q <: 'r -> 's))) -> 'c & 't)))
+//│     'r <: 's -> 't))) -> 'c & 'd)))
 //│      = [Function: c_pow]
 
 def c_pow_ m n = m (c_mul_ n) c_i1
-//│ c_pow_: 'a -> (forall 'a. (('b & 'c) -> 'd
+//│ c_pow_: 'a -> (forall 'b, 'c, 'a, 'd, 'e. (('b & 'e) -> 'c
 //│   where
-//│     'a <: (forall 'b. (('e & 'f) -> 'g | 'h
+//│     'a <: (forall 'b, 'f, 'g, 'h, 'i, 'j, 'k. (('j & 'h) -> 'k | 'i
 //│   where
-//│     'b <: (((forall 'i. 'i -> (forall 'j. 'j -> (forall 'i, 'j, 'k, 'l, 'm, 'n. ('n -> 'l
+//│     'b <: (forall 'l, 'm, 'n. ((forall 'o. 'o -> (forall 'p. 'p -> (forall 'q, 'o, 'r, 'p, 's, 't. ('t -> 'r
 //│   where
-//│     'i <: 'j -> ('k -> 'l & 'm)
-//│     'j <: 'n -> 'k)))) -> ('e -> 'o & 'p) & 'q) -> 'o | 'r) -> ((forall 's. 's -> (forall 't. 't -> 't)) -> 'g & 'u))) -> ((forall 'v. 'v -> (forall 'v, 'w, 'x. ('w -> 'x
+//│     'o <: 'p -> ('s -> 'r & 'q)
+//│     'p <: 't -> 's)))) -> ('j -> 'm & 'n) & 'l) -> 'm | 'g) -> ((forall 'u. 'u -> (forall 'v. 'v -> 'v)) -> 'k & 'f))) -> ((forall 'w. 'w -> (forall 'w, 'x, 'y. ('x -> 'y
 //│   where
-//│     'v <: 'w -> 'x))) -> 'd & 'y)))
+//│     'w <: 'x -> 'y))) -> 'c & 'd)))
 //│       = [Function: c_pow_]
 
 
@@ -938,10 +938,10 @@ def c_pred_ n =
   let s = fun p -> c_pair (c_2_2_ p) (c_succ_ (c_2_2_ p)) in
   let z = c_pair c_i0 c_i0 in
   c_1_2_ (n s z)
-//│ c_pred_: ((((forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> ('c & 'd & 'e) & (forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> ('f & 'g & 'h) & 'i & 'j & 'k) -> (('h -> ((forall 'l. 'l -> (forall 'e, 'l, 'm, 'n, 'o, 'p. ('p -> 'n
+//│ c_pred_: ((forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k. ((forall 'l. 'l -> (forall 'm. 'm -> 'm)) -> ('d & 'b & 'h) & (forall 'l. 'l -> (forall 'm. 'm -> 'm)) -> ('g & 'f & 'c) & 'i & 'k & 'e) -> (forall 'n, 'o, 'p. ('c -> ((forall 'q. 'q -> (forall 'r, 's, 't, 'q, 'u, 'h. ('t -> 'r
 //│   where
-//│     'e <: 'l -> ('m -> 'n & 'o)
-//│     'l <: 'p -> 'm)) | 'q) -> 'r & 's) & 't) -> 'r | 'u)) -> ((((forall 'v. 'v -> (forall 'w. 'w -> 'w) | 'x | 'y) -> ((forall 'v. 'v -> (forall 'w. 'w -> 'w) | 'y) -> 'z & 'a1) & 'b1) -> 'z | 'c1) -> ((forall 'd1. 'd1 -> (forall 'e1. 'e1 -> 'd1)) -> ('f1 & 'g1) & 'h1 & 'i1) & 'j1) & 'k1) -> 'g1
+//│     'h <: 'q -> ('u -> 'r & 's)
+//│     'q <: 't -> 'u)) | 'a) -> 'n & 'o) & 'p) -> 'n | 'j)) -> ((forall 'v, 'w, 'x, 'y. ((forall 'z, 'a1, 'b1. 'b1 -> (forall 'c1. 'c1 -> 'c1) | 'z | 'a1) -> ((forall 'a1, 'b1. 'b1 -> (forall 'c1. 'c1 -> 'c1) | 'a1) -> 'v & 'w) & 'x) -> 'v | 'y) -> ((forall 'd1. 'd1 -> (forall 'e1. 'e1 -> 'd1)) -> ('f1 & 'g1) & 'h1 & 'i1) & 'j1) & 'k1) -> 'g1
 //│        = [Function: c_pred_]
 
 
@@ -967,46 +967,46 @@ def c_printint2_ n = toString (n (fun x -> x + 1) 0)
 // let c_i2 = c_succ c_i1
 def c_i2 = c_succ c_i1
 def c_i2_ = c_succ_ c_i1
-//│ c_i2: 'b -> (forall 'b, 'a, 'c, 'd, 'e. ('d -> 'c
+//│ c_i2: 'b -> (forall 'c, 'd, 'a, 'b, 'e. ('c -> 'e
 //│   where
-//│     'b <: 'a -> ('a & 'c) & 'd -> ('a & 'c & 'e)))
+//│     'b <: 'a -> ('a & 'e) & 'c -> ('a & 'e & 'd)))
 //│     = [Function: c_i21]
-//│ c_i2_: 'a -> ('b -> 'c
+//│ c_i2_: 'a -> (forall 'b, 'a, 'c, 'd, 'e. ('d -> 'b
 //│   where
-//│     'a <: 'b -> 'd
-//│     forall 'e. 'e -> (forall 'e, 'f, 'g. ('f -> 'g
+//│     'a <: 'd -> 'e
+//│     forall 'f. 'f -> (forall 'g, 'h, 'f. ('g -> 'h
 //│   where
-//│     'e <: 'f -> 'g)) <: 'a -> ('d -> 'c & 'h))
+//│     'f <: 'g -> 'h)) <: 'a -> ('e -> 'b & 'c)))
 //│      = [Function: c_i2_]
 
 // let c_i3 = c_succ c_i2
 def c_i3 = c_succ c_i2
 def c_i3_ = c_succ_ c_i2
-//│ c_i3: 'b -> (forall 'b, 'a, 'c, 'd, 'e. ('d -> 'c
+//│ c_i3: 'b -> (forall 'c, 'b, 'd, 'a, 'e. ('c -> 'e
 //│   where
-//│     'b <: 'a -> ('a & 'c) & 'd -> ('a & 'c & 'e)))
+//│     'b <: 'a -> ('a & 'e) & 'c -> ('a & 'e & 'd)))
 //│     = [Function: c_i3]
-//│ c_i3_: 'b -> ('c -> 'd
+//│ c_i3_: 'b -> (forall 'c, 'b, 'd, 'e, 'f. ('f -> 'd
 //│   where
-//│     forall 'e. 'e -> (forall 'e, 'a, 'f, 'g, 'h. ('g -> 'f
+//│     forall 'g. 'g -> (forall 'h, 'a, 'g, 'i, 'j. ('j -> 'h
 //│   where
-//│     'e <: 'a -> ('a & 'f) & 'g -> ('a & 'f & 'h))) <: 'b -> ('i -> 'd & 'j)
-//│     'b <: 'c -> 'i)
+//│     'g <: 'a -> ('a & 'h) & 'j -> ('a & 'h & 'i))) <: 'b -> ('e -> 'd & 'c)
+//│     'b <: 'f -> 'e))
 //│      = [Function: c_i3_]
 
 // let c_i4 = c_succ c_i3
 def c_i4 = c_succ c_i3
 def c_i4_ = c_succ_ c_i3
-//│ c_i4: 'b -> (forall 'b, 'a, 'c, 'd, 'e. ('d -> 'c
+//│ c_i4: 'b -> (forall 'c, 'a, 'b, 'd, 'e. ('e -> 'c
 //│   where
-//│     'b <: 'a -> ('a & 'c) & 'd -> ('a & 'c & 'e)))
+//│     'b <: 'a -> ('a & 'c) & 'e -> ('a & 'c & 'd)))
 //│     = [Function: c_i4]
-//│ c_i4_: 'b -> ('c -> 'd
+//│ c_i4_: 'b -> (forall 'c, 'd, 'e, 'b, 'f. ('e -> 'c
 //│   where
-//│     forall 'e. 'e -> (forall 'e, 'a, 'f, 'g, 'h. ('g -> 'f
+//│     forall 'g. 'g -> (forall 'h, 'a, 'i, 'g, 'j. ('j -> 'h
 //│   where
-//│     'e <: 'a -> ('a & 'f) & 'g -> ('a & 'f & 'h))) <: 'b -> ('i -> 'd & 'j)
-//│     'b <: 'c -> 'i)
+//│     'g <: 'a -> ('a & 'h) & 'j -> ('a & 'h & 'i))) <: 'b -> ('f -> 'c & 'd)
+//│     'b <: 'e -> 'f))
 //│      = [Function: c_i4_]
 
 
@@ -1090,7 +1090,7 @@ def to_church_ = to_church
 rec def c_fact (n: Fint) =
   c_if (c_iszero n) (fun (u: Funit) -> c_i1)
     (fun (u: Funit) -> c_mul n (c_fact (c_pred n)))
-//│ c_fact: Fint -> (forall 'b, 'c, 'd, 'e, 'a, 'a0, 'f, 'a1, 'g, 'h, 'i, 'j. ('b -> 'c & 'd -> ('e & 'a & 'a0 & 'f) & 'a0 -> ('a0 & 'a1 & 'g) & 'h & 'i & 'j) -> (forall 'd, 'f, 'g, 'k, 'l, 'm, 'n, 'o. ('b & 'k & 'l & 'd & 'm) -> ('l | 'n | 'o | 'c | 'g | 'f)) | Fint)
+//│ c_fact: Fint -> (forall 'b, 'c, 'd, 'e, 'a, 'f, 'g, 'a0, 'h, 'a1, 'i, 'j. ('d -> 'j & 'h -> ('b & 'a0 & 'a & 'c) & 'a -> ('a & 'a1 & 'i) & 'g & 'e & 'f) -> (forall 'c, 'k, 'l, 'm, 'i, 'n, 'h, 'o. ('d & 'n & 'o & 'h & 'k) -> ('o | 'l | 'm | 'j | 'i | 'c)) | Fint)
 //│       = [Function: c_fact]
 
 // def c_fact: Fint -> (forall 'a 'b. ('a & 'b) -> (forall 'c 'd 'e 'f 'g 'h. (('c & 'h) -> ('d | 'g | 'c))))
@@ -1107,11 +1107,11 @@ def c_fact_A: Fint -> Fint
 def c_fact_A n =
   c_if (c_iszero n) (fun u -> c_i1)
     (fun u -> c_mul n (c_fact_A (c_pred n)))
-//│ (Fint & (Fint -> (forall 'b, 'c, 'a, 'a0, 'd, 'a1, 'e, 'f. ('b -> ('c & 'a & 'a0 & 'd) & 'a0 -> ('a0 & 'a1 & 'e) & 'f) -> (forall 'b, 'a, 'a0, 'd, 'a1, 'e, 'f, 'a2, 'g, 'h, 'i. (('b & 'h) -> ('g | 'e | 'd)
+//│ (Fint & (Fint -> (forall 'b, 'a, 'c, 'd, 'e, 'a0, 'a1, 'f, 'g. ('c -> ('g & 'a1 & 'a & 'd) & 'a -> ('a & 'a0 & 'f) & 'b) -> (forall 'h, 'f, 'i, 'b, 'a, 'c, 'a2, 'd, 'a0, 'j, 'a1. (('c & 'h) -> ('j | 'f | 'd)
 //│   where
-//│     'f <: ('a2 | 'a1 | 'a) -> ('a0 & 'a2 & 'g) & 'h -> ('a0 & 'a2 & 'g & 'i))) | Fint | 'j | 'k) | 'l) -> ((forall 'm. 'm -> (forall 'n. 'n -> 'n)) -> ('o & 'p & 'a3 & 'q & 'r) & 's) & 't) -> (forall 'u, 'v, 'w. ('u -> 'v & 'w) -> (forall 'u, 'v, 'w, 'x, 'y. (('u & 'x) -> ('y | 'v)
+//│     'b <: ('a2 | 'a0 | 'a1) -> ('a & 'a2 & 'j) & 'h -> ('a & 'a2 & 'j & 'i))) | Fint | 'k | 'e) | 'l) -> ((forall 'm. 'm -> (forall 'n. 'n -> 'n)) -> ('o & 'p & 'a3 & 'q & 'r) & 's) & 't) -> (forall 'r, 'u, 'v, 'w. ('u -> 'v & 'w) -> (forall 'v, 'x, 'w, 'u, 'y. (('u & 'y) -> ('x | 'v)
 //│   where
-//│     'w <: 'x -> 'y)) | 'r)
+//│     'w <: 'y -> 'x)) | 'r)
 //│   <:  c_fact_A:
 //│ Fint -> Fint
 //│         = <no result>
@@ -1123,7 +1123,7 @@ rec def c_fact_ n =
     (fun _ -> c_mul_ n (c_fact_ (c_pred_ n)))
 //│ c_fact_: 'a -> 'b
 //│   where
-//│     'a <: (forall 'c. 'c -> (forall 'd. 'd -> ((forall 'e. 'e -> 'e) -> 'f & 'g) -> 'f)) -> (((forall 'e. 'e -> 'e) -> 'h & 'i) -> (forall 'j, 'k. 'j -> ('k | 'h))) -> (forall 'l. 'l -> (forall 'm, 'n, 'o, 'p, 'q. ('m -> 'n & 'o -> 'p & 'q) -> (forall 'r, 's. ('m & 'o & 'r) -> ('s | 'p | 'n)))) -> ('r -> 't) -> 'b & (forall 'u, 'v. ((forall 'w. 'w -> (forall 'x. 'x -> 'x)) -> ('y -> ('z -> 'a1 & 'b1) & 'c1 & 'd1 & 'e1) & (forall 'w. 'w -> (forall 'x. 'x -> 'x)) -> ('f1 & 'g1 & 'h1) & 'i1 & 'j1 & 'k1) -> (('h1 -> ((forall 'l1, 'm1, 'n1. ('l1 -> ('z & 'm1) & 'y & 'n1) -> (forall 'o1, 'p1. ('l1 & 'o1) -> ('p1 | 'a1)) | 'u) -> 'q1 & 'r1) & 's1) -> 'q1 | 'v)) -> (((forall 't1. 't1 -> (forall 'u1. 'u1 -> 'u1) | 'v1 | 'w1) -> ((forall 't1. 't1 -> (forall 'u1. 'u1 -> 'u1) | 'w1) -> 'x1 & 'y1) & 'z1) -> 'x1 | 'a2) -> (forall 'b2. 'b2 -> (forall 'c2. 'c2 -> 'b2)) -> 'a & (((forall 'd2, 'e2, 'f2, 'g2, 'h2. ('d2 -> ('e2 -> 'f2 & 'g2) & 'h2) -> (forall 'i2, 'j2, 'k2. ('i2 -> ('e2 & 'j2) & 'd2 & 'k2) -> (forall 'l2, 'm2. ('i2 & 'l2) -> ('m2 | 'f2)))) -> ('b -> 'n2 & 'o2) & 'p2) -> 'n2) -> (forall 't1. 't1 -> (forall 'u1. 'u1 -> 'u1) | 'w1) -> 't
+//│     'a <: (forall 'c. 'c -> (forall 'd. 'd -> (forall 'e, 'f. ((forall 'g. 'g -> 'g) -> 'e & 'f) -> 'e))) -> (forall 'h, 'i. ((forall 'g. 'g -> 'g) -> 'h & 'i) -> (forall 'j, 'k. 'j -> ('k | 'h))) -> (forall 'l. 'l -> (forall 'm, 'n, 'o, 'p, 'q. ('o -> 'n & 'm -> 'q & 'p) -> (forall 'r, 's. ('o & 'm & 'r) -> ('s | 'q | 'n)))) -> ('r -> 't) -> 'b & (forall 'u, 'v, 'w, 'x, 'y, 'z, 'a1, 'b1, 'c1, 'd1, 'e1, 'f1, 'g1, 'h1, 'i1. ((forall 'j1. 'j1 -> (forall 'k1. 'k1 -> 'k1)) -> ('g1 -> ('e1 -> 'a1 & 'x) & 'u & 'y & 'b1) & (forall 'j1. 'j1 -> (forall 'k1. 'k1 -> 'k1)) -> ('d1 & 'i1 & 'v) & 'z & 'c1 & 'h1) -> (forall 'l1, 'm1, 'n1. ('v -> ((forall 'o1, 'p1, 'q1. ('o1 -> ('e1 & 'p1) & 'g1 & 'q1) -> (forall 'r1, 's1. ('o1 & 'r1) -> ('s1 | 'a1)) | 'w) -> 'n1 & 'l1) & 'm1) -> 'n1 | 'f1)) -> (forall 't1, 'u1, 'v1, 'w1. ((forall 'x1, 'y1, 'z1. 'x1 -> (forall 'a2. 'a2 -> 'a2) | 'y1 | 'z1) -> ((forall 'x1, 'z1. 'x1 -> (forall 'a2. 'a2 -> 'a2) | 'z1) -> 't1 & 'u1) & 'v1) -> 't1 | 'w1) -> (forall 'b2. 'b2 -> (forall 'c2. 'c2 -> 'b2)) -> 'a & (forall 'd2, 'e2, 'f2. ((forall 'g2, 'h2, 'i2, 'j2, 'k2. ('k2 -> ('j2 -> 'i2 & 'g2) & 'h2) -> (forall 'l2, 'm2, 'n2. ('l2 -> ('j2 & 'm2) & 'k2 & 'n2) -> (forall 'o2, 'p2. ('l2 & 'o2) -> ('p2 | 'i2)))) -> ('b -> 'd2 & 'e2) & 'f2) -> 'd2) -> (forall 'x1, 'z1. 'x1 -> (forall 'a2. 'a2 -> 'a2) | 'z1) -> 't
 //│        = [Function: c_fact_]
 
 

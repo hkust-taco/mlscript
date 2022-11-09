@@ -38,13 +38,13 @@ def s n f x = (n f x)
 
 :ns
 s
-//│ res: forall 'a, 'b, 'c, 'd, 'e. 'a -> (forall 'f. 'f -> (forall 'g, 'h. 'g -> 'h))
+//│ res: forall 'a, 'b, 'c, 'd, 'e. 'e -> (forall 'f. 'f -> (forall 'g, 'h. 'g -> 'h))
 //│   where
-//│     'h :> 'e
-//│     'g <: 'd
-//│     'f <: 'b
-//│     'a <: 'b -> 'c
-//│     'c <: 'd -> 'e
+//│     'h :> 'd
+//│     'g <: 'c
+//│     'f <: 'a
+//│     'e <: 'a -> 'b
+//│     'b <: 'c -> 'd
 //│    = [Function: s]
 
 :e // * Works with CT
@@ -144,7 +144,7 @@ to_church = to_ch
 rec def to_ch n =
   if true then zero
   else s (to_ch n)
-//│ to_ch: 'a -> (forall 'b. ('b & 'N -> 'N) -> (forall 'a, 'c. ('a & 'N) -> ('N | 'c)) | ChurchInt)
+//│ to_ch: 'a -> (forall 'b. ('b & 'N -> 'N) -> (forall 'c, 'a. ('a & 'N) -> ('N | 'c)) | ChurchInt)
 //│      = <no result>
 //│        zero is not implemented
 
@@ -200,13 +200,13 @@ to_church = to_ch
 def to_ch n =
   if true then z
   else s (to_church n)
-//│ to_ch: (int & 'a) -> (forall 'M, 'b, 'c, 'd, 'e, 'f, 'g. ('M -> ('M & 'b) & 'c & 'd & 'e) -> (forall 'h, 'i, 'j. ('h & 'M & 'b & 'i & 'f) -> ('h | 'j | 'b)) | 'g)
+//│ to_ch: (int & 'a) -> (forall 'b, 'c, 'd, 'M, 'e, 'f, 'g. ('M -> ('M & 'c) & 'b & 'f & 'e) -> (forall 'h, 'i, 'j. ('i & 'M & 'c & 'j & 'g) -> ('i | 'h | 'c)) | 'd)
 //│      = <no result>
 //│        to_church, to_ch and zero are not implemented
 
 :e // * Works with CT
 to_church = to_ch
-//│ (int & 'a) -> (forall 'M, 'b, 'c, 'd, 'e, 'f, 'g. ('M -> ('M & 'b) & 'c & 'd & 'e) -> (forall 'h, 'i, 'j. ('h & 'M & 'b & 'i & 'f) -> ('h | 'j | 'b)) | 'g)
+//│ (int & 'a) -> (forall 'b, 'c, 'd, 'M, 'e, 'f, 'g. ('M -> ('M & 'b) & 'g & 'e & 'd) -> (forall 'h, 'i, 'j. ('j & 'M & 'b & 'h & 'c) -> ('j | 'i | 'b)) | 'f)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -431,7 +431,7 @@ rec def to_ch n =
 //│      = [Function: to_ch7]
 
 to_church = to_ch
-//│ int -> (forall 'a, 'b. ('a & 'b) -> (forall 'c, 'd, 'e. ('c & 'd) -> ('c | 'e)))
+//│ int -> (forall 'a, 'b. ('a & 'b) -> (forall 'c, 'd, 'e. ('d & 'e) -> ('d | 'c)))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│          = [Function: to_ch7]

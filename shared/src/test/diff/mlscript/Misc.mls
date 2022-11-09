@@ -12,7 +12,6 @@ rec def x = {u = x}
 //│   where
 //│     'x := {u: 'x}
 
-// > FIXME: foralls?
 {u = x; v = x}
 //│ res: {u: forall 'x. 'x, v: forall 'x. 'x}
 //│   where
@@ -47,26 +46,26 @@ def arg = if true then c else 0
 
 :ns
 def arg = if true then C{x = 42} else C{x = 1}
-//│ arg: forall 'x, 'A, 'x0, 'A0, 'a. 'a
+//│ arg: forall 'A, 'x, 'a, 'x0, 'A0. 'a
 //│   where
-//│     'a :> #C & {x: 'x, C#A = 'A} | #C & {x: 'x0, C#A = 'A0}
-//│     'x0 :> 1
-//│         <: 'A0
+//│     'a :> #C & {x: 'x0, C#A = 'A} | #C & {x: 'x, C#A = 'A0}
+//│     'x :> 1
+//│        <: 'A0
 //│     'A0 :> 1
-//│     'x :> 42
-//│        <: 'A
+//│     'x0 :> 42
+//│         <: 'A
 //│     'A :> 42
 
 :ns
 arg
-//│ res: forall 'x, 'A, 'x0, 'A0, 'a. 'a
+//│ res: forall 'A, 'x, 'a, 'x0, 'A0. 'a
 //│   where
-//│     'a :> #C & {x: 'x, C#A = 'A} | #C & {x: 'x0, C#A = 'A0}
-//│     'x0 :> 1
-//│         <: 'A0
+//│     'a :> #C & {x: 'x0, C#A = 'A} | #C & {x: 'x, C#A = 'A0}
+//│     'x :> 1
+//│        <: 'A0
 //│     'A0 :> 1
-//│     'x :> 42
-//│        <: 'A
+//│     'x0 :> 42
+//│         <: 'A
 //│     'A :> 42
 
 arg
@@ -91,10 +90,10 @@ arg.X
 :e
 arg: C[nothing]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.92: 	arg: C[nothing]
+//│ ║  l.91: 	arg: C[nothing]
 //│ ║        	^^^
 //│ ╟── integer literal of type `42` does not match type `nothing`
-//│ ║  l.49: 	def arg = if true then C{x = 42} else C{x = 1}
+//│ ║  l.48: 	def arg = if true then C{x = 42} else C{x = 1}
 //│ ╙──      	                             ^^
 //│ res: C[nothing]
 

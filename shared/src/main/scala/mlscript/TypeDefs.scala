@@ -728,7 +728,12 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
             updateVariance(rhs, curVariance)
           case Without(base, names) => updateVariance(base, curVariance.flip)
           case Overload(alts) => alts.foreach(updateVariance(_, curVariance))
-          case PolymorphicType(lvl, bod) => updateVariance(bod, curVariance)
+          case PolymorphicType(lvl, bod) =>
+            // * [FIXME:1](LP): here we should actually ignore from the analysis
+            // *  those type vars that are being quantified...
+            // *  When the same variable occurs both as quantified and not quantified
+            // *  in a type, this can make a difference (like currently in `analysis/Weird.mls`)
+            updateVariance(bod, curVariance)
           case ConstrainedType(cs, bod) =>
             // cs.foreach(_._2.foreach(pb =>
             //   // if (pb._1) updateVariance(pb._2, curVariance)
