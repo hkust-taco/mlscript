@@ -33,8 +33,18 @@ fun f(x, y) =
     Left(xv) and y is Left(yv) then xv + yv
     Right(xv) and y is Right(yv) then xv * yv
     None() and y is None() then 0
-//│ ╔══[ERROR] not exhaustive: missing cases of Right, None
-//│ ╙──
+//│ ╔══[ERROR] The match is not exhaustive.
+//│ ║  l.33: 	    Left(xv) and y is Left(yv) then xv + yv
+//│ ║        	                 ^^^^^^^^^^^^^
+//│ ╟── The pattern at this position misses 2 cases.
+//│ ║  l.33: 	    Left(xv) and y is Left(yv) then xv + yv
+//│ ║        	                 ^
+//│ ╟── [Missing Case 1/2] The case `None` is missing, which first appears here.
+//│ ║  l.35: 	    None() and y is None() then 0
+//│ ║        	                    ^^^^
+//│ ╟── [Missing Case 2/2] The case `Right` is missing, which first appears here.
+//│ ║  l.34: 	    Right(xv) and y is Right(yv) then xv * yv
+//│ ╙──      	                       ^^^^^
 //│ f: (anything, anything,) -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -44,8 +54,13 @@ fun boolToStr(x) =
   if x is
     true then "yah"
     false then "nah"
-//│ ╔══[ERROR] missing a default branch
-//│ ╙──
+//│ ╔══[ERROR] Missing the otherwise case of test == (x,) (false,)
+//│ ║  l.54: 	  if x is
+//│ ║        	     ^^^^
+//│ ║  l.55: 	    true then "yah"
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.56: 	    false then "nah"
+//│ ╙──      	^^^^^^^^^
 //│ boolToStr: anything -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -117,8 +132,15 @@ fun f(x, y) =
   if x is
     Some(xv) and y is Some(yv) then xv + yv
     None() and y is None() then 0
-//│ ╔══[ERROR] not exhaustive: missing cases of None
-//│ ╙──
+//│ ╔══[ERROR] The match is not exhaustive.
+//│ ║  l.133: 	    Some(xv) and y is Some(yv) then xv + yv
+//│ ║         	                 ^^^^^^^^^^^^^
+//│ ╟── The pattern at this position misses 1 case.
+//│ ║  l.133: 	    Some(xv) and y is Some(yv) then xv + yv
+//│ ║         	                 ^
+//│ ╟── [Missing Case 1/1] The case `None` is missing, which first appears here.
+//│ ║  l.134: 	    None() and y is None() then 0
+//│ ╙──       	                    ^^^^
 //│ f: (anything, anything,) -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -159,8 +181,15 @@ fun f(x, y) =
       >  0 then "gt"
       <  0 then "le"
       == 0 then "eq"
-//│ ╔══[ERROR] missing a default branch
-//│ ╙──
+//│ ╔══[ERROR] Missing the otherwise case of test == (y,) (0,)
+//│ ║  l.180: 	    Some(x) and y
+//│ ║         	                ^
+//│ ║  l.181: 	      >  0 then "gt"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.182: 	      <  0 then "le"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.183: 	      == 0 then "eq"
+//│ ╙──       	^^^^^^^^^^
 //│ f: (anything, anything,) -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -202,10 +231,10 @@ fun f(x, y) =
     Some(xv) and b then xb + b
     _ then "roll"
 //│ ╔══[ERROR] identifier not found: b
-//│ ║  l.202: 	    Some(xv) and b then xb + b
+//│ ║  l.231: 	    Some(xv) and b then xb + b
 //│ ╙──       	                 ^
 //│ ╔══[ERROR] identifier not found: xb
-//│ ║  l.202: 	    Some(xv) and b then xb + b
+//│ ║  l.231: 	    Some(xv) and b then xb + b
 //│ ╙──       	                        ^^
 //│ f: (anything, anything,) -> ("bruh" | "roll" | int)
 //│ Code generation encountered an error:
@@ -223,20 +252,25 @@ fun f(u, v, w) =
       Right(_) then "right-defined"
     None then "undefined"
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.221: 	    Some(x) and x is
-//│ ║         	    ^^^^^^^^^^^^^^^^
-//│ ║  l.222: 	      Left(_) then "left-defined"
+//│ ║  l.249: 	  if foo(u, v, w) is
+//│ ║         	     ^^^^^^^^^^^^^^^
+//│ ║  l.250: 	    Some(x) and x is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.251: 	      Left(_) then "left-defined"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.223: 	      Right(_) then "right-defined"
+//│ ║  l.252: 	      Right(_) then "right-defined"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.224: 	    None then "undefined"
+//│ ║  l.253: 	    None then "undefined"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` does not match type `Left & ?a | Right & ?b`
-//│ ║  l.215: 	  if x - y > 0 then Some(x + y + z) else None()
+//│ ║  l.244: 	  if x - y > 0 then Some(x + y + z) else None()
 //│ ║         	                         ^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.221: 	    Some(x) and x is
-//│ ╙──       	                ^
+//│ ║  l.250: 	    Some(x) and x is
+//│ ║         	                ^
+//│ ╟── from field selection:
+//│ ║  l.249: 	  if foo(u, v, w) is
+//│ ╙──       	     ^^^^^^^^^^^^
 //│ f: (int, int, int,) -> ("left-defined" | "right-defined" | "undefined")
 //│  = [Function: f16]
 
@@ -312,8 +346,9 @@ fun f(x) =
   if x is
     0 ::
       Nil() then "oh"
-//│ ╔══[ERROR] operator :: not found
-//│ ╙──
+//│ ╔══[ERROR] Cannot find operator `::` in the context
+//│ ║  l.347: 	    0 ::
+//│ ╙──       	      ^^
 //│ f: anything -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared

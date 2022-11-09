@@ -13,7 +13,7 @@ class UltimateConditions extends TypeDefs { self: Typer =>
 
   private def desugarPositionals
     (scrutinee: Term, params: IterableOnce[Term], positionals: Ls[Str])
-    (implicit aliasMap: FieldAliasMap): (Buffer[Var -> Term], Ls[Str -> Var]) = {
+    (implicit aliasMap: FieldAliasMap, matchRootLoc: Opt[Loc]): (Buffer[Var -> Term], Ls[Str -> Var]) = {
     val subPatterns = Buffer.empty[(Var, Term)]
     val bindings = params.iterator.zip(positionals).flatMap {
       // `x is A(_)`: ignore this binding
@@ -27,7 +27,7 @@ class UltimateConditions extends TypeDefs { self: Typer =>
         // This uniqueness is decided by (scrutinee, fieldName).
         val alias = aliasMap
           .getOrElseUpdate(scrutinee, MutMap.empty)
-          .getOrElseUpdate(fieldName, Var(freshName))
+          .getOrElseUpdate(fieldName, Var(freshName).withLoc(pattern.toLoc))
         subPatterns += ((alias, pattern))
         S(fieldName -> alias)
     }.toList
@@ -43,7 +43,7 @@ class UltimateConditions extends TypeDefs { self: Typer =>
     * @return desugared conditions representing the sub-patterns
     */
   private def destructSubPatterns(subPatterns: Iterable[Var -> Term])
-      (implicit ctx: Ctx, raise: Raise, aliasMap: FieldAliasMap): Ls[ConditionClause] = {
+      (implicit ctx: Ctx, raise: Raise, aliasMap: FieldAliasMap, matchRootLoc: Opt[Loc]): Ls[ConditionClause] = {
     subPatterns.iterator.flatMap[ConditionClause] {
       case (scrutinee, subPattern) => destructPattern(scrutinee, subPattern)
     }.toList
@@ -51,11 +51,26 @@ class UltimateConditions extends TypeDefs { self: Typer =>
 
   private val localizedScrutineeMap = MutMap.empty[Term, Var]
 
-  def localizeScrutinee(scrutinee: Term): Opt[Var] -> Term =
-    scrutinee match {
-      case _: Var => N -> scrutinee
-      case _ => S(localizedScrutineeMap.getOrElseUpdate(scrutinee, Var(freshName))) -> scrutinee
+  /**
+    * Create a `Scrutinee`. If the `term` is a simple expression (e.g. `Var` or
+    * `Lit`), we do not create a local alias. Otherwise, we create a local alias
+    * to avoid unnecessary computations.
+    *
+    * @param term the term in the local scrutinee position
+    * @param matchRootLoc the caller is expect to be in a match environment,
+    * this parameter indicates the location of the match root
+    */
+  def makeScrutinee(term: Term)(implicit matchRootLoc: Opt[Loc]): Scrutinee = {
+    val res = term match {
+      case _: Var => Scrutinee(N, term)
+      case _ =>
+        Scrutinee(S(localizedScrutineeMap.getOrElseUpdate(term, {
+          Var(freshName).withLoc(term.toLoc)
+        })), term)
     }
+    res.matchRootLoc = matchRootLoc
+    res
+  }
 
   /**
     * Destruct nested patterns to a list of simple condition with bindings.
@@ -70,7 +85,7 @@ class UltimateConditions extends TypeDefs { self: Typer =>
     */
   private def destructPattern
       (scrutinee: Term, pattern: Term)
-      (implicit ctx: Ctx, raise: Raise, aliasMap: FieldAliasMap): Ls[ConditionClause] = 
+      (implicit ctx: Ctx, raise: Raise, aliasMap: FieldAliasMap, matchRootLoc: Opt[Loc]): Ls[ConditionClause] = 
     pattern match {
       // This case handles top-level wildcard `Var`.
       // We don't make any conditions in this level.
@@ -82,16 +97,23 @@ class UltimateConditions extends TypeDefs { self: Typer =>
         ConditionClause.BooleanTest(test) :: Nil
       // This case handles simple class tests.
       // x is A
-      case className @ Var(name) =>
-        ctx.tyDefs.get(name) match {
-          case N => throw IfDesugaringException.fromPlainText(s"constructor $name not found")
-          case S(_) => ConditionClause.MatchClass(localizeScrutinee(scrutinee), className, Nil) :: Nil
+      case classNameVar @ Var(className) =>
+        ctx.tyDefs.get(className) match {
+          case N => throw IfDesugaringException.Single({
+            import Message.MessageContext
+            msg"Cannot find the constructor `$className` in the context"
+          }, classNameVar.toLoc)
+          case S(_) => ConditionClause.MatchClass(makeScrutinee(scrutinee), classNameVar, Nil) :: Nil
         }
       // This case handles classes with destruction.
       // x is A(r, s, t)
-      case App(className @ Var(name), Tup(args)) =>
-        ctx.tyDefs.get(name) match {
-          case N => throw IfDesugaringException.fromPlainText(s"class $name not found")
+      case app @ App(classNameVar @ Var(className), Tup(args)) =>
+        ctx.tyDefs.get(className) match {
+          case N =>
+            throw IfDesugaringException.Single({
+              import Message.MessageContext
+              msg"Cannot find the class `$className` in the context"
+            }, classNameVar.toLoc)
           case S(td) =>
             if (args.length === td.positionals.length) {
               val (subPatterns, bindings) = desugarPositionals(
@@ -99,15 +121,24 @@ class UltimateConditions extends TypeDefs { self: Typer =>
                 args.iterator.map(_._2.value),
                 td.positionals
               )
-              ConditionClause.MatchClass(localizeScrutinee(scrutinee), className, bindings) ::
+              ConditionClause.MatchClass(makeScrutinee(scrutinee), classNameVar, bindings) ::
                 destructSubPatterns(subPatterns)
             } else {
-              throw new Exception(s"$name expects ${td.positionals.length} but meet ${args.length}")
+              throw IfDesugaringException.Single({
+                import Message.MessageContext
+                val expected = td.positionals.length
+                val actual = args.length
+                msg"${td.kind.str} $className expects ${expected.toString} ${
+                  "parameter".pluralize(expected)
+                } but found ${args.length.toString} ${
+                  "parameter".pluralize(expected)
+                }"
+              }, app.toLoc)
             }
         }
       // This case handles operator-like constructors.
       // x is head :: Nil
-      case App(
+      case app @ App(
         App(
           opVar @ Var(op),
           Tup((_ -> Fld(_, _, lhs)) :: Nil)
@@ -115,18 +146,28 @@ class UltimateConditions extends TypeDefs { self: Typer =>
         Tup((_ -> Fld(_, _, rhs)) :: Nil)
       ) =>
         ctx.tyDefs.get(op) match {
-          case N => throw IfDesugaringException.fromPlainText(s"operator $op not found")
+          case N =>
+            throw IfDesugaringException.Single({
+              import Message.MessageContext
+              msg"Cannot find operator `$op` in the context"
+            }, opVar.toLoc)
           case S(td) if td.positionals.length === 2 =>
             val (subPatterns, bindings) = desugarPositionals(
               scrutinee,
               lhs :: rhs :: Nil,
               td.positionals
             )
-            ConditionClause.MatchClass(localizeScrutinee(scrutinee), opVar, bindings) ::
+            ConditionClause.MatchClass(makeScrutinee(scrutinee), opVar, bindings) ::
               destructSubPatterns(subPatterns)
           case S(td) =>
             val num = td.positionals.length
-            throw IfDesugaringException.fromPlainText(s"$op has $num parameters but found two")
+            throw IfDesugaringException.Single({
+              import Message.MessageContext
+              val expected = td.positionals.length
+              msg"${td.kind.str} `$op` expects ${expected.toString} ${
+                "parameter".pluralize(expected)
+              } but found two parameters"
+            }, app.toLoc)
         }
       // This case handles tuple destructions.
       // x is (a, b, c)
@@ -136,7 +177,7 @@ class UltimateConditions extends TypeDefs { self: Typer =>
           elems.iterator.map(_._2.value),
           1.to(elems.length).map("_" + _).toList
         )
-        ConditionClause.MatchTuple(localizeScrutinee(scrutinee), elems.length, bindings) ::
+        ConditionClause.MatchTuple(makeScrutinee(scrutinee), elems.length, bindings) ::
           destructSubPatterns(subPatterns)
       // What else?
       case _ => throw new Exception(s"illegal pattern: ${mlscript.codegen.Helpers.inspect(pattern)}")
@@ -162,11 +203,11 @@ class UltimateConditions extends TypeDefs { self: Typer =>
       */
     def desugarConditions(ts: Ls[Term]): Ls[ConditionClause] =
       ts.flatMap {
-        case App(
+        case isApp @ App(
           App(Var("is"),
               Tup((_ -> Fld(_, _, scrutinee)) :: Nil)),
           Tup((_ -> Fld(_, _, pattern)) :: Nil)
-        ) => destructPattern(scrutinee, pattern)
+        ) => destructPattern(scrutinee, pattern)(ctx, raise, implicitly, isApp.toLoc)
         case test => Iterable.single(ConditionClause.BooleanTest(test))
       }
 
@@ -181,13 +222,14 @@ class UltimateConditions extends TypeDefs { self: Typer =>
       * @param acc the accumulated conditions so far
       * @param ctx the typing context
       * @param interleavedLets interleaved let bindings before this branch
+      * @param rootLoc the location of the `IfOpApp`
       */
     def desugarMatchBranch(
       scrutinee: Term,
       body: IfBody \/ Statement,
       partialPattern: PartialTerm,
       collectedConditions: ConjunctedConditions,
-    )(implicit interleavedLets: Buffer[(Bool, Var, Term)]): Unit =
+    )(implicit interleavedLets: Buffer[(Bool, Var, Term)], rootLoc: Opt[Loc]): Unit =
       body match {
         // This case handles default branches. For example,
         // if x is
@@ -276,7 +318,8 @@ class UltimateConditions extends TypeDefs { self: Typer =>
               )
               opsRhss.foreach { case op -> consequent =>
                 // TODO: Use lastOption
-                desugarIfBody(consequent, PartialTerm.Total(testTerms.last), conditions)
+                val partialTerm = PartialTerm.Total(testTerms.last, testTerms.last.toLoc.toList)
+                desugarIfBody(consequent, partialTerm, conditions)
               }
           }
         // This case usually happens with pattern split by linefeed.
@@ -288,7 +331,10 @@ class UltimateConditions extends TypeDefs { self: Typer =>
         case R(NuFunDef(S(isRec), nameVar, _, L(term))) =>
           interleavedLets += ((isRec, nameVar, term))
         // Other statements are considered to be ill-formed.
-        case R(statement) => throw IfDesugaringException.fromPlainText(s"illegal statement: $statement")
+        case R(statement) => throw IfDesugaringException.Single({
+          import Message.MessageContext
+          msg"Illegal interleaved statement ${statement.toString}"
+        }, statement.toLoc)
       }
     def desugarIfBody
       (body: IfBody, expr: PartialTerm, acc: ConjunctedConditions)
@@ -310,9 +356,15 @@ class UltimateConditions extends TypeDefs { self: Typer =>
           )
           branches += (withBindings(conditions) -> consequent)
         // This is the entrance of the Simple UCS.
-        case IfOpApp(scrutinee, Var("is"), IfBlock(lines)) =>
+        case IfOpApp(scrutinee, isVar @ Var("is"), IfBlock(lines)) =>
           val interleavedLets = Buffer.empty[(Bool, Var, Term)]
-          lines.foreach(desugarMatchBranch(scrutinee, _, PartialTerm.Empty, acc)(interleavedLets))
+          // We don't need to include the entire `IfOpApp` because it might be
+          // very long... Indicating the beginning of the match is enough.
+          val matchRootLoc = (scrutinee.toLoc, isVar.toLoc) match {
+            case (S(first), S(second)) => S(Loc(first.spanStart, second.spanEnd, first.origin))
+            case (_, _) => N
+          }
+          lines.foreach(desugarMatchBranch(scrutinee, _, PartialTerm.Empty, acc)(interleavedLets, matchRootLoc))
         // For example: "if x == 0 and y is \n ..."
         case IfOpApp(testPart, Var("and"), consequent) =>
           val conditions = ConditionClause.concat(
@@ -348,6 +400,73 @@ class UltimateConditions extends TypeDefs { self: Typer =>
   }
 }
 
+/**
+  * Why we need a dedicated class for this?
+  * Because the scrutinee might comes from different structures.
+  * 1. Terms. E.g. `if x is A and y is B then ...`
+  * 2. `IfOpApp`. In this case, the scrutinee is indicate by the `IfOpApp`.
+  *    ```
+  *    if x is
+  *      A then ...
+  *      B then ...
+  *    ```
+  * 3. `IfOpsApp`. In this case, the scrutinee may span multiple lines.
+  *    ```
+  *    if x
+  *      is A then ...
+  *    ```
+  * 4. Nested pattern.
+  *    ```
+  *    if x is
+  *      Left(Some(y)) then ...
+  *    ```
+  */
+abstract class ScrutineeSource {
+  protected def computeLoc: Opt[Loc]
+  
+  lazy val toLoc: Opt[Loc] = computeLoc
+}
+
+object ScrutineeSource {
+  /**
+    * The scrutinee is from a term.
+    *
+    * @param app the double applications
+    */
+  final case class Term(app: App) extends ScrutineeSource {
+    override protected def computeLoc: Opt[Loc] = app.toLoc // TODO
+  }
+
+  final case class OpApp(body: IfOpApp) extends ScrutineeSource {
+    override protected def computeLoc: Opt[Loc] =
+      (body.lhs.toLoc, body.op.toLoc) match {
+        case (S(lhs), S(rhs)) => S(lhs ++ rhs)
+        case (_, _)           => N
+      }
+  }
+
+  final case class OpsApp(body: IfOpsApp, line: Var -> IfBody) extends ScrutineeSource {
+    override protected def computeLoc: Opt[Loc] = ???
+  }
+
+  final case class Nested(app: App) extends ScrutineeSource {
+    override protected def computeLoc: Opt[Loc] = ???
+  }
+}
+
+// The point is to remember where does the scrutinee come from.
+// Is it from nested patterns? Or is it from a `IfBody`?
+final case class Scrutinee(local: Opt[Var], term: Term) {
+  var matchRootLoc: Opt[Loc] = N
+  var localPatternLoc: Opt[Loc] = N
+
+  override def toString: String =
+    (local match {
+      case N => ""
+      case S(Var(alias)) => s"$alias @ "
+    }) + s"$term"
+}
+
 abstract class ConditionClause {
   // Local interleaved let bindings declared before this condition.
   var bindings: List[(Bool, Var, Term)] = Nil
@@ -368,7 +487,7 @@ object ConditionClause {
     }
   }
 
-  def separate(conditions: ConjunctedConditions, expectedScrutinee: Opt[Var] -> Term): Opt[(MatchClass, ConjunctedConditions)] = {
+  def separate(conditions: ConjunctedConditions, expectedScrutinee: Scrutinee): Opt[(MatchClass, ConjunctedConditions)] = {
     def rec(past: Ls[ConditionClause], upcoming: Ls[ConditionClause])
         : Opt[(Ls[ConditionClause], MatchClass, Ls[ConditionClause])] = {
       upcoming match {
@@ -385,21 +504,21 @@ object ConditionClause {
       }
     }
 
-    println(s"Searching $expectedScrutinee in $conditions")
+    // println(s"Searching $expectedScrutinee in $conditions")
     rec(Nil, conditions._1).map { case (past, wanted, remaining) =>
-      println("Found!")
+      // println("Found!")
       (wanted, (past ::: remaining, conditions._2))
     }
   }
 
   final case class MatchClass(
-    scrutinee: Opt[Var] -> Term,
+    scrutinee: Scrutinee,
     className: Var,
     fields: List[Str -> Var]
   ) extends ConditionClause
 
   final case class MatchTuple(
-    scrutinee: Opt[Var] -> Term,
+    scrutinee: Scrutinee,
     arity: Int,
     fields: List[Str -> Var]
   ) extends ConditionClause
@@ -407,12 +526,6 @@ object ConditionClause {
   final case class BooleanTest(test: Term) extends ConditionClause
 
   def print(println: (=> Any) => Unit, cnf: Ls[ConjunctedConditions -> Term]): Unit = {
-    def showScrutinee(scrutinee: Opt[Var] -> Term): Str =
-      (scrutinee._1 match {
-        case N => ""
-        case S(Var(alias)) => s"$alias @ "
-      }) + s"${scrutinee._2}"
-
     def showBindings(bindings: Ls[(Bool, Var, Term)]): Str =
       bindings match {
         case Nil => ""
@@ -427,9 +540,9 @@ object ConditionClause {
         (condition match {
           case ConditionClause.BooleanTest(test) => s"«$test»"
           case ConditionClause.MatchClass(scrutinee, Var(className), fields) =>
-            s"«${showScrutinee(scrutinee)} is $className»"
+            s"«$scrutinee is $className»"
           case ConditionClause.MatchTuple(scrutinee, arity, fields) =>
-            s"«${showScrutinee(scrutinee)} is Tuple#$arity»"
+            s"«$scrutinee is Tuple#$arity»"
         }) + (if (condition.bindings.isEmpty) "" else " with " + showBindings(condition.bindings))
       }.mkString("", " and ", {
         (if (tailBindings.isEmpty) "" else " ") +
@@ -459,46 +572,62 @@ object ConditionClause {
   }
 }
 
-abstract class PartialTerm {
+// FIXME: It seems the `locations` here does not really work.
+// It's not used right now.
+// Becuase we will split the term by `and`.
+// We'd better precisely track detailed locations of each parts.
+sealed abstract class PartialTerm(val locations: Ls[Loc]) {
   def addTerm(term: Term): PartialTerm.Total
   def addOp(op: Var): PartialTerm.Half
   def addTermOp(term: Term, op: Var): PartialTerm.Half =
     this.addTerm(term).addOp(op)
+
+  protected final def prependLocation(loc: Opt[Loc]): Ls[Loc] =
+    loc.fold(locations)(_ :: locations)
+  protected final def prependLocations(locs: Opt[Loc]*): Ls[Loc] =
+    locs.iterator.flatten.toList ::: locations
 }
+
+class PartialTermError(term: PartialTerm, message: Str) extends Error(message)
 
 object PartialTerm {
   import UltimateConditions._
 
-  final case object Empty extends PartialTerm {
-    override def addTerm(term: Term): Total = Total(term)
+  final case object Empty extends PartialTerm(Nil) {
+    override def addTerm(term: Term): Total = Total(term, prependLocation(term.toLoc))
     override def addOp(op: Var): Half =
-      throw IfDesugaringException.fromPlainText("expect a term")
+      throw new PartialTermError(this, s"expect a term but operator $op was given")
   }
 
-  final case class Total(val term: Term) extends PartialTerm {
+  final case class Total(val term: Term, override val locations: Ls[Loc]) extends PartialTerm(locations) {
     override def addTerm(term: Term): Total =
-      throw IfDesugaringException.fromPlainText("expect an operator")
-    override def addOp(op: Var): Half = Half(term, op)
+      throw new PartialTermError(this, s"expect an operator but term $term was given")
+    override def addOp(op: Var): Half = Half(term, op, prependLocation(op.toLoc))
   }
 
-  final case class Half(lhs: Term, op: Var) extends PartialTerm {
+  final case class Half(lhs: Term, op: Var, override val locations: Ls[Loc]) extends PartialTerm(locations) {
     override def addTerm(rhs: Term): Total = op match {
       case isVar @ Var("is") =>
         // Special treatment for pattern matching.
         val (pattern, extraTestOpt) = separatePattern(rhs)
         val assertion = mkBinOp(lhs, isVar, pattern)
         extraTestOpt match {
-          case N => Total(assertion)
-          case S(extraTest) =>
-            Total(mkBinOp(assertion, Var("and"), extraTest))
+          case N => Total(assertion, prependLocation(pattern.toLoc))
+          case S(extraTest) => Total(
+            mkBinOp(assertion, Var("and"), extraTest),
+            prependLocation(extraTest.toLoc)
+          )
         }
       case _ =>
         val (realRhs, extraExprOpt) = separatePattern(rhs)
         val leftmost = mkBinOp(lhs, op, realRhs)
-        Total(extraExprOpt.fold(leftmost){ mkBinOp(leftmost, Var("and"), _) })
+        Total(
+          extraExprOpt.fold(leftmost){ mkBinOp(leftmost, Var("and"), _) },
+          prependLocations(realRhs.toLoc, extraExprOpt.flatMap(_.toLoc))
+        )
     }
     override def addOp(op: Var): Half =
-      throw IfDesugaringException.fromPlainText("expect a term")
+      throw new PartialTermError(this, s"expect a term but operator $op was given")
   }
 }
 
@@ -517,17 +646,11 @@ object IfDesugaringException {
       typer.err(messages)
     }
   }
-
-  @deprecated("TODO: This method does not include locations. Rewrite every usages and remove this method.")
-  def fromPlainText(message: Str): IfDesugaringException = {
-    import mlscript.Message.MessageContext
-    Single(msg"$message", N)
-  }
 }
 
 object UltimateConditions {
-  def showScrutinee(scrutinee: Opt[Var] -> Term): Str =
-    s"«${scrutinee._2}»" + (scrutinee._1 match {
+  def showScrutinee(scrutinee: Scrutinee): Str =
+    s"«${scrutinee.term}»" + (scrutinee.local match {
       case N => ""
       case S(Var(alias)) => s" as $alias"
     })
@@ -619,7 +742,7 @@ trait WithBindings { this: MutCaseOf =>
   }
 }
 
-abstract class MutCaseOf extends WithBindings {
+sealed abstract class MutCaseOf extends WithBindings {
   import UltimateConditions._
   import ConditionClause.ConjunctedConditions
 
@@ -640,32 +763,53 @@ object MutCaseOf {
     mkBindings(t.getBindings.toList, term)
   }
 
-  def checkExhaustive(t: MutCaseOf)(implicit scrutineePatternMap: MutMap[Term, MutSet[Str]]): Unit =
+  def checkExhaustive(t: MutCaseOf, parentOpt: Opt[MutCaseOf])(implicit scrutineePatternMap: MutMap[Term, MutSet[Var]]): Unit = {
     t match {
-      case Consequent(term) => ()
-      case MissingCase => ()
+      case _: Consequent => ()
+      case MissingCase =>
+        import Message.MessageContext
+        parentOpt match {
+          case S(IfThenElse(test, whenTrue, whenFalse)) =>
+            if (whenFalse === t) {
+              throw IfDesugaringException.Single(msg"Missing the otherwise case of test ${test.toString}", test.toLoc)
+            } else {
+              ???
+            }
+          case S(Match(_, _, _)) => ???
+          case S(Consequent(_)) | S(MissingCase) | N => die
+        }
       case IfThenElse(condition, whenTrue, whenFalse) =>
-        checkExhaustive(whenTrue)
-        checkExhaustive(whenFalse)
+        checkExhaustive(whenTrue, S(t))
+        checkExhaustive(whenFalse, S(t))
       case Match(scrutinee, branches, default) =>
-        scrutineePatternMap.get(scrutinee._2) match {
-          case N => throw new Error(s"unreachable case: unknown scrutinee ${scrutinee._2}")
+        scrutineePatternMap.get(scrutinee.term) match {
+          case N => throw new Error(s"unreachable case: unknown scrutinee ${scrutinee.term}")
           case S(patterns) =>
             val missingCases = patterns.subtractAll(branches.iterator.map {
-              case Branch(Var(className) -> _, _) => className
+              case Branch(classNameVar -> _, _) => classNameVar
             })
             if (!missingCases.isEmpty) {
-              throw IfDesugaringException.fromPlainText(s"not exhaustive: missing cases of ${
-                missingCases.iterator.mkString(", ")
-              }")
+              throw IfDesugaringException.Multiple({
+                import Message.MessageContext
+                val numMissingCases = missingCases.size
+                (msg"The match is not exhaustive." -> scrutinee.matchRootLoc) ::
+                  (msg"The pattern at this position misses ${numMissingCases.toString} ${"case".pluralize(numMissingCases)}." -> scrutinee.term.toLoc) ::
+                  missingCases.iterator.zipWithIndex.map { case (classNameVar, index) =>
+                    val progress = s"[Missing Case ${index + 1}/$numMissingCases]"
+                    msg"$progress The case `${classNameVar.name}` is missing, which first appears here." -> classNameVar.toLoc  
+                  }.toList
+              })
             }
         }
-        default.foreach(checkExhaustive(_))
-        branches.foreach(_.consequent |> checkExhaustive)
+        default.foreach(checkExhaustive(_, S(t)))
+        branches.foreach { case Branch(_, consequent) =>
+          checkExhaustive(consequent, S(t))
+        }
     }
+  }
 
-  def summarizePatterns(t: MutCaseOf): MutMap[Term, MutSet[Str]] = {
-    val scrutineePatternMap = MutMap.empty[Term, MutSet[Str]]
+  def summarizePatterns(t: MutCaseOf): MutMap[Term, MutSet[Var]] = {
+    val scrutineePatternMap = MutMap.empty[Term, MutSet[Var]]
     def rec(t: MutCaseOf): Unit =
       t match {
         case Consequent(term) => ()
@@ -675,8 +819,8 @@ object MutCaseOf {
           rec(whenFalse)
         case Match(scrutinee, branches, _) =>
           branches.foreach {
-            case Branch(Var(className) -> _, consequent) =>
-              scrutineePatternMap.getOrElseUpdate(scrutinee._2, MutSet.empty) += className
+            case Branch((classNameVar: Var) -> _, consequent) =>
+              scrutineePatternMap.getOrElseUpdate(scrutinee.term, MutSet.empty) += classNameVar
               rec(consequent)
           }
       }
@@ -789,7 +933,7 @@ object MutCaseOf {
     }
   }
   final case class Match(
-    scrutinee: Opt[Var] -> Term,
+    scrutinee: Scrutinee,
     val branches: Buffer[Branch],
     var wildcard: Opt[MutCaseOf]
   ) extends MutCaseOf {
@@ -861,7 +1005,7 @@ object MutCaseOf {
         xs match {
           case Branch(className -> fields, cases) :: next =>
             // TODO: expand bindings here
-            Case(className, mkLetFromFields(scrutinee._1.getOrElse(scrutinee._2), fields.toList, cases.toTerm), rec(next))
+            Case(className, mkLetFromFields(scrutinee.local.getOrElse(scrutinee.term), fields.toList, cases.toTerm), rec(next))
           case Nil =>
             wildcard match {
               case N => NoCases
@@ -869,9 +1013,9 @@ object MutCaseOf {
             }
         }
       val cases = rec(branches.toList)
-      val resultTerm = scrutinee._1 match {
-        case N => CaseOf(scrutinee._2, cases)
-        case S(aliasVar) => Let(false, aliasVar, scrutinee._2, CaseOf(aliasVar, cases))
+      val resultTerm = scrutinee.local match {
+        case N => CaseOf(scrutinee.term, cases)
+        case S(aliasVar) => Let(false, aliasVar, scrutinee.term, CaseOf(aliasVar, cases))
       }
       // Collect let bindings from case branches.
       val bindings = branches.iterator.flatMap(_.consequent.getBindings).toList
@@ -891,8 +1035,10 @@ object MutCaseOf {
 
     override def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Unit = ()
 
-    override def toTerm: Term =
-      throw IfDesugaringException.fromPlainText("missing a default branch")
+    override def toTerm: Term = {
+      import Message.MessageContext
+      throw IfDesugaringException.Single(msg"missing a default branch", N)
+    }
   }
 
   private def buildFirst(conditions: ConjunctedConditions, term: Term): MutCaseOf = {

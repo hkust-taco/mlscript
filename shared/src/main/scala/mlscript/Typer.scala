@@ -732,7 +732,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           scrutineePatternMap.foreach { case (scrutinee, classNames) =>
             println(s"- $scrutinee => " + classNames.mkString(", "))
           }
-          MutCaseOf.checkExhaustive(caseTree)(scrutineePatternMap)
+          MutCaseOf.checkExhaustive(caseTree, N)(scrutineePatternMap)
           val trm = MutCaseOf.toTerm(caseTree)
           println(s"Desugared term: ${trm.print(false)}")
           iff.desugaredIf = S(trm)

@@ -5,8 +5,9 @@ fun f(x) =
     is Left(v) then 0
     is Right(v) then 1
     <> undefined then 2
-//│ ╔══[ERROR] class Left not found
-//│ ╙──
+//│ ╔══[ERROR] Cannot find the class `Left` in the context
+//│ ║  l.5: 	    is Left(v) then 0
+//│ ╙──     	       ^^^^
 //│ f: anything -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -15,8 +16,9 @@ fun f(x) =
   if x
     is Some(xv) and y is Some(yv) then xv + yv
     is None() and y is None() then 0
-//│ ╔══[ERROR] class Some not found
-//│ ╙──
+//│ ╔══[ERROR] Cannot find the class `Some` in the context
+//│ ║  l.17: 	    is Some(xv) and y is Some(yv) then xv + yv
+//│ ╙──      	       ^^^^
 //│ f: anything -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -30,15 +32,11 @@ class B()
 //│ B: () -> B
 //│  = [Function: B1]
 
-fun f(a) =
+fun f(a, b) =
   if a
     is A() and b is B() then 0
-//│ ╔══[ERROR] identifier not found: b
-//│ ║  l.35: 	    is A() and b is B() then 0
-//│ ╙──      	               ^
-//│ f: A -> 0
-//│ Code generation encountered an error:
-//│   unresolved symbol b
+//│ f: (A, B,) -> 0
+//│  = [Function: f2]
 
 class C()
 //│ Defined class C
@@ -48,8 +46,11 @@ class C()
 fun f(a, b, c) =
   if a
     == 0 and b is B() and c is C() then 0
-//│ ╔══[ERROR] missing a default branch
-//│ ╙──
+//│ ╔══[ERROR] Missing the otherwise case of test == (a,) (0,)
+//│ ║  l.47: 	  if a
+//│ ║        	     ^
+//│ ║  l.48: 	    == 0 and b is B() and c is C() then 0
+//│ ╙──      	^^^^^^^^
 //│ f: (anything, anything, anything,) -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -69,19 +70,17 @@ fun sumOpt(x, y) =
     is None() and y is
       Some(yv) then yv
       None() then 0
-//│ ╔══[ERROR] class Some not found
-//│ ╙──
+//│ ╔══[ERROR] Cannot find the class `Some` in the context
+//│ ║  l.67: 	    is Some(xv) and y is
+//│ ╙──      	       ^^^^
 //│ sumOpt: (anything, anything,) -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
 
-fun f(x, y) =
+// FIXME
+fun f(x, y, z) =
   if x is A() and y
     == z then 1
     is B() then 0
-//│ ╔══[ERROR] identifier not found: z
-//│ ║  l.80: 	    == z then 1
-//│ ╙──      	       ^
-//│ f: (A, nothing,) -> (0 | 1)
-//│ Code generation encountered an error:
-//│   unresolved symbol z
+//│ f: (A, nothing, number,) -> (0 | 1)
+//│  = [Function: f5]

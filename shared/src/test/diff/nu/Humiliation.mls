@@ -65,8 +65,15 @@ class O()
 fun foo(x) = if x is
   Pair(Z(), Z()) then "zeros"
   Pair(O(), O()) then "ones"
-//│ ╔══[ERROR] not exhaustive: missing cases of O
-//│ ╙──
+//│ ╔══[ERROR] The match is not exhaustive.
+//│ ║  l.65: 	fun foo(x) = if x is
+//│ ║        	                ^^^^
+//│ ╟── The pattern at this position misses 1 case.
+//│ ║  l.66: 	  Pair(Z(), Z()) then "zeros"
+//│ ║        	            ^^^
+//│ ╟── [Missing Case 1/1] The case `O` is missing, which first appears here.
+//│ ║  l.67: 	  Pair(O(), O()) then "ones"
+//│ ╙──      	            ^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -77,8 +84,15 @@ fun foo(x) = if x is
 fun foo(x) = if x is
   (Z(), Z()) then "zeros"
   (O(), O()) then "ones"
-//│ ╔══[ERROR] not exhaustive: missing cases of O
-//│ ╙──
+//│ ╔══[ERROR] The match is not exhaustive.
+//│ ║  l.84: 	fun foo(x) = if x is
+//│ ║        	                ^^^^
+//│ ╟── The pattern at this position misses 1 case.
+//│ ║  l.85: 	  (Z(), Z()) then "zeros"
+//│ ║        	        ^^^
+//│ ╟── [Missing Case 1/1] The case `O` is missing, which first appears here.
+//│ ║  l.86: 	  (O(), O()) then "ones"
+//│ ╙──      	        ^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -142,8 +156,15 @@ fun foo(x) = if x is
   Pair(Z(), Z()) then "zeros"
   Pair(O(), O()) then "ones"
   Pair(y, O()) then x
-//│ ╔══[ERROR] not exhaustive: missing cases of Z
-//│ ╙──
+//│ ╔══[ERROR] The match is not exhaustive.
+//│ ║  l.155: 	fun foo(x) = if x is
+//│ ║         	                ^^^^
+//│ ╟── The pattern at this position misses 1 case.
+//│ ║  l.156: 	  Pair(Z(), Z()) then "zeros"
+//│ ║         	            ^^^
+//│ ╟── [Missing Case 1/1] The case `Z` is missing, which first appears here.
+//│ ║  l.156: 	  Pair(Z(), Z()) then "zeros"
+//│ ╙──       	            ^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -156,7 +177,7 @@ fun foo(x, y) = if x is Z() and y is O() then 0 else 1
 fun foo(x, y) = if x is
   Z() and y is O() then 0 else 1
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.157: 	  Z() and y is O() then 0 else 1
+//│ ║  l.178: 	  Z() and y is O() then 0 else 1
 //│ ╙──       	                          ^^^^
 //│ foo: (Z, O,) -> 0
 //│    = [Function: foo8]

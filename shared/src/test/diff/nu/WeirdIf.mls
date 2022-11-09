@@ -35,8 +35,9 @@ fun f(x) = if x is else 0
 :ge
 if true
   then 0
-//│ ╔══[ERROR] missing a default branch
-//│ ╙──
+//│ ╔══[ERROR] Missing the otherwise case of test true
+//│ ║  l.36: 	if true
+//│ ╙──      	   ^^^^
 //│ res: error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -49,21 +50,24 @@ fun f(x) =
   if x ==
     else "bruh"
 //│ ╔══[PARSE ERROR] Unexpected indented block in expression position
-//│ ║  l.50: 	    else "bruh"
+//│ ║  l.51: 	    else "bruh"
 //│ ╙──      	^^^^
 //│ ╔══[PARSE ERROR] Unexpected end of indented block; an expression was expected here
-//│ ║  l.50: 	    else "bruh"
+//│ ║  l.51: 	    else "bruh"
 //│ ╙──      	    ^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found operator application instead
-//│ ║  l.49: 	  if x ==
+//│ ║  l.50: 	  if x ==
 //│ ║        	     ^^^^
-//│ ║  l.50: 	    else "bruh"
+//│ ║  l.51: 	    else "bruh"
 //│ ║        	^^^^
 //│ ╟── Note: 'if' expression started here:
-//│ ║  l.49: 	  if x ==
+//│ ║  l.50: 	  if x ==
 //│ ╙──      	  ^^
-//│ ╔══[ERROR] missing a default branch
-//│ ╙──
+//│ ╔══[ERROR] Missing the otherwise case of test == (x,) (undefined,)
+//│ ║  l.50: 	  if x ==
+//│ ║        	     ^^^^
+//│ ║  l.51: 	    else "bruh"
+//│ ╙──      	^^^^
 //│ f: anything -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared

@@ -39,6 +39,8 @@ package object utils {
     def decapitalize: String =
       if (self.length === 0 || !self.charAt(0).isUpper) self
       else self.updated(0, self.charAt(0).toLower)
+    def pluralize(quantity: Int, es: Boolean = false): String =
+      if (quantity > 1) self + (if (es) "es" else "s") else self
   }
   
   implicit class IterableOps[A](private val self: IterableOnce[A]) extends AnyVal {

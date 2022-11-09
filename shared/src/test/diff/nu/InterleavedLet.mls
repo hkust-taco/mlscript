@@ -207,8 +207,9 @@ fun qp(xs) =
       let Pair(l, r) = mapPartition(f, xs)
       Left(v)  then (v :: l, r)
       Right(v) then (l, v :: r)
-//│ ╔══[ERROR] constructor Nil not found
-//│ ╙──
+//│ ╔══[ERROR] Cannot find the constructor `Nil` in the context
+//│ ║  l.205: 	    Nil then Nil
+//│ ╙──       	    ^^^
 //│ qp: anything -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
