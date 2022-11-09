@@ -1,0 +1,185 @@
+:NoRecursiveTypes
+:NoConstrainedTypes
+:DontDistributeForalls
+// :GeneralizeCurriedFunctions
+
+
+
+// * This asks for a polymorphic function and leverages that polymorphism
+def oops (i: forall 'c. ('c -> 'c, 0)) =
+  let _ = log "Hi!"
+  in let _ = (fun ((f, 0)) ->
+    let _ = log f
+    in let r = (f id) "hello"
+    in log r) i
+  in (fun ((f, 0)) -> f) i
+//│ oops: (forall 'c. ('c -> 'c, 0,)) -> 'c0 -> 'c0
+//│     = [Function: oops]
+
+// * FIXME This should be an error
+// * Notice the skolem extrusion/leakage here
+def extrude f = oops((f, 0))
+//│ extrude: (‘c_51_52 -> ‘c_51_52) -> 'c -> 'c
+//│        = [Function: extrude]
+
+extrude(id)
+//│ res: 'c -> 'c
+//│    = [Function: id]
+//│ // Output
+//│ Hi!
+//│ [Function: id]
+//│ hello
+
+extrude(id)(42)
+//│ res: 42
+//│    = 42
+//│ // Output
+//│ Hi!
+//│ [Function: id]
+//│ hello
+
+extrude(id)(id)(42)
+//│ res: 42
+//│    = 42
+//│ // Output
+//│ Hi!
+//│ [Function: id]
+//│ hello
+
+// * This clearly shouldn't be possible – it passes one skolem as the other
+f = extrude (fun x -> extrude (fun y -> x) x)
+//│ f: 'c -> 'c
+//│  = [Function (anonymous)]
+//│ // Output
+//│ Hi!
+//│ [Function (anonymous)]
+//│ Hi!
+//│ [Function (anonymous)]
+//│ hello
+//│ hello
+
+// * Boom!
+:re
+f 42
+//│ res: 42
+//│ Runtime error:
+//│   TypeError: f(...) is not a function
+//│ // Output
+//│ Hi!
+//│ [Function (anonymous)]
+
+// * Note: parser parses this the same as `oops((f, 0)._1)`
+def extrude f = oops((f, 0))._1
+//│ extrude: (forall 'c. ('c -> 'c, 0,)) -> 'c0 -> 'c0
+//│        = [Function: extrude1]
+
+
+
+// *** Other random tests ***
+
+
+
+def oops (i: forall 'c. ('c -> 'c, 0)) =
+  let _ = (i._1 id) "hello"
+  in i._1
+//│ oops: (forall 'c. ('c -> 'c, 0,)) -> 'c0 -> 'c0
+//│     = [Function: oops1]
+
+def oops (i: forall 'c. ('c -> 'c, 0)) =
+  let _ = log "Hi!"
+  in (fun ((f, 0)) ->
+    let _ = log f
+    in let r = (f id) "hello"
+    in let _ = log r
+    in f) i
+//│ oops: (forall 'c. ('c -> 'c, 0,)) -> ("hello" -> anything & 'c0) -> (forall 'c0, 'a. 'c0 | 'a -> 'a)
+//│     = [Function: oops2]
+
+
+
+def foo(a, b) = (a, b) : forall 'c. ('c, 'c)
+//│ foo: (‘c_172_173, ‘c_172_174,) -> (forall 'c. ('c, 'c,))
+//│    = [Function: foo]
+
+:re
+foo(error, error)
+//│ res: ('c, 'c,)
+//│ Runtime error:
+//│   Error: unexpected runtime error
+
+def foo(a, b) = (a, b) : forall 'c. ('c, 'c -> 'c)
+//│ foo: (‘c_191_192, ‘c_191_193 -> ‘c_191_193,) -> (forall 'c. ('c, 'c -> 'c,))
+//│    = [Function: foo1]
+
+def foo(a, b) = (a, b) : forall 'c. ('c -> 'c, 'c -> 'c)
+//│ foo: (‘c_203_204 -> ‘c_203_204, ‘c_203_205 -> ‘c_203_205,) -> (forall 'c. ('c -> 'c, 'c -> 'c,))
+//│    = [Function: foo2]
+
+foo(id, id)
+//│ res: ('c -> 'c, 'c -> 'c,)
+//│    = [ [Function: id], [Function: id] ]
+
+
+def foo(f) = (fun a -> f a) : forall 'c. 'c -> 'c
+//│ foo: (‘c_225_226 -> ‘c_225_227) -> (forall 'c. 'c -> 'c)
+//│    = [Function: foo3]
+
+:e
+foo(id)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.128: 	foo(id)
+//│ ║         	^^^^^^^
+//│ ╟── type `‘c_225_226` is not an instance of type `'c_225_227`
+//│ ║  l.123: 	def foo(f) = (fun a -> f a) : forall 'c. 'c -> 'c
+//│ ║         	                                     ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.123: 	def foo(f) = (fun a -> f a) : forall 'c. 'c -> 'c
+//│ ║         	                                     ^^
+//│ ╟── from application:
+//│ ║  l.123: 	def foo(f) = (fun a -> f a) : forall 'c. 'c -> 'c
+//│ ╙──       	                       ^^^
+//│ res: error
+//│    = [Function (anonymous)]
+
+
+def foo(a, b) = let tmp = (a, b) : forall 'c. ('c -> 'c, 0) in a
+//│ foo: (‘c_244_245 -> ‘c_244_245 & 'a, 0,) -> 'a
+//│    = [Function: foo4]
+
+foo(id, 0)
+//│ res: 'a -> 'a
+//│    = [Function: id]
+
+foo(fun x -> foo(fun y -> x, 0) x, 0)
+//│ res: (‘c_244_245 & 'a) -> 'a
+//│    = [Function (anonymous)]
+
+
+def foo((a, b) : forall 'c. ('c -> 'c, 0)) = ()
+//│ foo: (forall 'c. ('c -> 'c, 0,)) -> ()
+//│    = [Function: foo5]
+
+foo((id, 0))
+//│ res: ()
+//│    = []
+
+:e
+foo((fun x -> foo((fun y -> x, 0)), 0))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.167: 	foo((fun x -> foo((fun y -> x, 0)), 0))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘c_306` is not an instance of type `'c_300_302`
+//│ ║  l.158: 	def foo((a, b) : forall 'c. ('c -> 'c, 0)) = ()
+//│ ║         	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.158: 	def foo((a, b) : forall 'c. ('c -> 'c, 0)) = ()
+//│ ║         	                        ^^
+//│ ╟── from reference:
+//│ ║  l.167: 	foo((fun x -> foo((fun y -> x, 0)), 0))
+//│ ╙──       	                            ^
+//│ res: error
+//│    = []
+
+
+
+
