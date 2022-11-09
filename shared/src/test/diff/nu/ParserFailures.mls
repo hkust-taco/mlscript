@@ -1,0 +1,38 @@
+:NewParser
+:NoJS
+
+:pe
+if x
+  == 0 then "bad"
+  let y = f(z)
+  == y * y then 0
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NewParser.$anonfun$opIfBlock$1(NewParser.scala:735)
+//│ 	at: mlscript.NewParser.wrap(NewParser.scala:52)
+//│ 	at: mlscript.NewParser.opIfBlock(NewParser.scala:719)
+//│ 	at: mlscript.NewParser.$anonfun$opBlock$1(NewParser.scala:716)
+//│ 	at: mlscript.NewParser.wrap(NewParser.scala:52)
+//│ 	at: mlscript.NewParser.opBlock(NewParser.scala:691)
+//│ 	at: mlscript.NewParser.$anonfun$exprCont$3(NewParser.scala:580)
+//│ 	at: mlscript.NewParser.concludeWith(NewParser.scala:70)
+//│ 	at: mlscript.NewParser.$anonfun$exprCont$1(NewParser.scala:580)
+
+// Interleaved let bindings are not implemented in `IfOpsApp`.
+:pe
+fun tt(x) =
+  if x
+    is A() then "A"
+    let y = 0
+    is B() then "B"
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NewParser.$anonfun$opIfBlock$1(NewParser.scala:735)
+//│ 	at: mlscript.NewParser.wrap(NewParser.scala:52)
+//│ 	at: mlscript.NewParser.opIfBlock(NewParser.scala:719)
+//│ 	at: mlscript.NewParser.$anonfun$opBlock$1(NewParser.scala:716)
+//│ 	at: mlscript.NewParser.wrap(NewParser.scala:52)
+//│ 	at: mlscript.NewParser.opBlock(NewParser.scala:691)
+//│ 	at: mlscript.NewParser.$anonfun$exprCont$3(NewParser.scala:580)
+//│ 	at: mlscript.NewParser.concludeWith(NewParser.scala:70)
+//│ 	at: mlscript.NewParser.$anonfun$exprCont$1(NewParser.scala:580)

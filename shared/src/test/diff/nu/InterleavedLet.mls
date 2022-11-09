@@ -123,43 +123,25 @@ fun i(x) =
 //│ i: (A | B) -> ("A" | "B")
 //│  = [Function: i]
 
-// Interleaved let bindings are not implemented in `IfOpsApp`.
-fun tt(x) =
-  if x
-    is A() then "A"
-    let y = 0
-    is B() then "B"
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.NewParser.$anonfun$opIfBlock$1(NewParser.scala:735)
-//│ 	at: mlscript.NewParser.wrap(NewParser.scala:52)
-//│ 	at: mlscript.NewParser.opIfBlock(NewParser.scala:719)
-//│ 	at: mlscript.NewParser.$anonfun$opBlock$1(NewParser.scala:716)
-//│ 	at: mlscript.NewParser.wrap(NewParser.scala:52)
-//│ 	at: mlscript.NewParser.opBlock(NewParser.scala:691)
-//│ 	at: mlscript.NewParser.$anonfun$exprCont$3(NewParser.scala:580)
-//│ 	at: mlscript.NewParser.concludeWith(NewParser.scala:70)
-//│ 	at: mlscript.NewParser.$anonfun$exprCont$1(NewParser.scala:580)
-
 fun qq(x, z) =
   if x ==
     let y = f(z)
     y * y then 0
     else 0
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.146: 	    let y = f(z)
+//│ ║  l.128: 	    let y = f(z)
 //│ ║         	            ^^^^
 //│ ╟── argument of type `(?a,)` does not match type `(?b, ?c,)`
-//│ ║  l.146: 	    let y = f(z)
+//│ ║  l.128: 	    let y = f(z)
 //│ ║         	             ^^^
 //│ ╟── Note: constraint arises from tuple literal:
 //│ ║  l.72: 	fun f(a, y) =
 //│ ╙──      	     ^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.146: 	    let y = f(z)
+//│ ║  l.128: 	    let y = f(z)
 //│ ║         	            ^^^^
 //│ ╟── argument of type `(?a,)` does not match type `(?b, ?c,)`
-//│ ║  l.146: 	    let y = f(z)
+//│ ║  l.128: 	    let y = f(z)
 //│ ║         	             ^^^
 //│ ╟── Note: constraint arises from tuple literal:
 //│ ║  l.72: 	fun f(a, y) =
@@ -193,33 +175,16 @@ fun ff(x) =
 //│ ff: int -> (0 | 1 | 2)
 //│   = [Function: ff]
 
-:pe
-if x
-  == 0 then "bad"
-  let y = f(z)
-  == y * y then 0
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.NewParser.$anonfun$opIfBlock$1(NewParser.scala:735)
-//│ 	at: mlscript.NewParser.wrap(NewParser.scala:52)
-//│ 	at: mlscript.NewParser.opIfBlock(NewParser.scala:719)
-//│ 	at: mlscript.NewParser.$anonfun$opBlock$1(NewParser.scala:716)
-//│ 	at: mlscript.NewParser.wrap(NewParser.scala:52)
-//│ 	at: mlscript.NewParser.opBlock(NewParser.scala:691)
-//│ 	at: mlscript.NewParser.$anonfun$exprCont$3(NewParser.scala:580)
-//│ 	at: mlscript.NewParser.concludeWith(NewParser.scala:70)
-//│ 	at: mlscript.NewParser.$anonfun$exprCont$1(NewParser.scala:580)
-
 fun ip(y) =
   if q(y) and
     let z = f(y)
     y == z * z then "bruh"
   else "rocks"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.215: 	    let z = f(y)
+//│ ║  l.180: 	    let z = f(y)
 //│ ║         	            ^^^^
 //│ ╟── argument of type `(?a,)` does not match type `(?b, ?c,)`
-//│ ║  l.215: 	    let z = f(y)
+//│ ║  l.180: 	    let z = f(y)
 //│ ║         	             ^^^
 //│ ╟── Note: constraint arises from tuple literal:
 //│ ║  l.72: 	fun f(a, y) =
@@ -243,17 +208,17 @@ fun qp(xs) =
       Left(v)  then (v :: l, r)
       Right(v) then (l, v :: r)
 //│ ╔══[ERROR] constructor Nil not found
-//│ ║  l.239: 	  if xs is
+//│ ║  l.204: 	  if xs is
 //│ ║         	     ^^^^^
-//│ ║  l.240: 	    Nil then Nil
+//│ ║  l.205: 	    Nil then Nil
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.241: 	    Cons(x, xs) and f(x) is
+//│ ║  l.206: 	    Cons(x, xs) and f(x) is
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.242: 	      let Pair(l, r) = mapPartition(f, xs)
+//│ ║  l.207: 	      let Pair(l, r) = mapPartition(f, xs)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.243: 	      Left(v)  then (v :: l, r)
+//│ ║  l.208: 	      Left(v)  then (v :: l, r)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.244: 	      Right(v) then (l, v :: r)
+//│ ║  l.209: 	      Right(v) then (l, v :: r)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ qp: anything -> error
 //│ Code generation encountered an error:
