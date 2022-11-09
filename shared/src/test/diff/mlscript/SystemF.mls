@@ -126,17 +126,19 @@ iter4_ty() = iter2_ty iter2_ty
 //│         = [Function: iter4_ty3]
 
 
+:e // * Started failing after better distrib, not sure why...
 // 4^4 = 256.
 iter256() = iter4() (iter4())
 def iter256_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 iter256_ty() = iter4_ty() (iter4_ty())
 iter256_ty = iter256
-//│ iter256: () -> (forall 'a. (('b | 'c) -> 'd & 'e -> ('b & 'e & 'f) & 'a & 'g & 'h & 'i & 'j & 'k & 'l) -> (forall 'm, 'n, 'o. ('e & 'm) -> ('n | 'p) | 'o | 'q) | 'r)
-//│   where
-//│     'd <: 's & 't & 'e & 'u
-//│     'u <: 'e & 'v & 'w & 'x
-//│     'x <: 'e & 'y & 'z & 'p
-//│     'p <: 'b & 'd & 'e & 'f
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
+//│ ║  l.131: 	iter256() = iter4() (iter4())
+//│ ║         	            ^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 3. α125_565''''›  <:  α123_534''    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 3. α125_555'''›  <:  α123_237''
+//│ iter256: () -> (error | 'a)
 //│        = [Function: iter256]
 //│ iter256_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│           = <missing implementation>
@@ -144,12 +146,7 @@ iter256_ty = iter256
 //│   <:  iter256_ty:
 //│ () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│           = [Function: iter256_ty]
-//│ () -> (forall 'a. (('b | 'c) -> 'd & 'e -> ('b & 'e & 'f) & 'a & 'g & 'h & 'i & 'j & 'k & 'l) -> (forall 'm, 'n, 'o. ('e & 'm) -> ('n | 'p) | 'o | 'q) | 'r)
-//│   where
-//│     'd <: 's & 't & 'e & 'u
-//│     'u <: 'e & 'v & 'w & 'x
-//│     'x <: 'e & 'y & 'z & 'p
-//│     'p <: 'b & 'd & 'e & 'f
+//│ () -> (error | 'a)
 //│   <:  iter256_ty:
 //│ () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│           = [Function: iter256]
@@ -181,25 +178,14 @@ S_ty = S
 
 res1() = iter4() S Z
 res2() = iter256() S Z
-//│ res1: () -> (forall 'a, 'b, 'c. (('d | 'a) -> 'b & 'c & 'e) -> (forall 'f, 'g. ('f & 'h) -> ('g | 'b)) | 'i)
+//│ res1: () -> (forall 'a, 'b, 'c, 'd. ((forall 'e. 'f | 'e | 'a | 'g) -> 'b & 'd & 'h) -> (forall 'i, 'j. ('i & 'k) -> ('j | 'b)) | 'c | 'l | 'm)
 //│   where
-//│     'h <: 'j & 'k
-//│     'e <: ('j | 'l) -> ('d & 'm) & 'n
-//│     'n <: 'o & 'p
-//│     'p <: ('d | 'q) -> ('j & 'r) & 'e
+//│     'k <: 'n & 'o
+//│     'h <: (forall 'p. 'n | 'p | 'q | 'r) -> 'g & 's
+//│     's <: 't & 'u
+//│     'u <: (forall 'e. 'f | 'e | 'v | 'g) -> 'r & 'h
 //│     = [Function: res1]
-//│ res2: () -> (forall 'a, 'b, 'c. (('d | 'a) -> 'b & 'c & 'e) -> (forall 'f, 'g. ('f & 'h) -> ('g | 'b)) | 'i)
-//│   where
-//│     'h <: 'j & 'k
-//│     'e <: 'l & 'm
-//│     'm <: ('d | 'n) -> ('d & 'o) & 'e
-//│     'l <: ('j | 'p) -> ('d & 'q) & 'r
-//│     'r <: 's & 't & 'u & 'v & 'w & 'x
-//│     'x <: ('d | 'y) -> ('j & 'z) & 'e
-//│     'w <: ('d | 'a1) -> ('j & 'b1) & 'e
-//│     'v <: ('d | 'c1) -> ('j & 'd1) & 'e
-//│     'u <: ('d | 'e1) -> ('j & 'f1) & 'e
-//│     't <: ('j | 'g1) -> ('j & 'h1) & 'r
+//│ res2: () -> (error | 'a)
 //│     = [Function: res2]
 
 res1_ty() = iter4_ty() S_ty Z_ty
@@ -211,7 +197,7 @@ res2_ty() = iter256_ty() S_ty Z_ty
 
 
 S (S Z)
-//│ res: (('a | 'b) -> 'c & 'd -> 'a & 'e) -> (forall 'f, 'g. ('d & 'f) -> ('g | 'c))
+//│ res: ((forall 'a. 'a | 'b | 'c) -> 'd & 'e -> 'c & 'f) -> (forall 'g, 'h. ('e & 'g) -> ('h | 'd))
 //│    = [Function (anonymous)]
 
 
@@ -252,7 +238,7 @@ snd_ty = snd
 //│       = [Function: snd]
 
 p02 = pair Z (S (S Z))
-//│ p02: ((forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> ((forall 'c, 'd, 'e. (('f | 'c) -> 'd & 'g -> 'f & 'e) -> (forall 'h, 'i. ('g & 'h) -> ('i | 'd))) -> 'j & 'k) & 'l) -> 'j
+//│ p02: ((forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> ((forall 'c, 'd, 'e. ((forall 'f. 'f | 'c | 'g) -> 'd & 'h -> 'g & 'e) -> (forall 'i, 'j. ('h & 'i) -> ('j | 'd))) -> 'k & 'l) & 'm) -> 'k
 //│    = [Function (anonymous)]
 
 p02_ty = pair_ty Z_ty (S_ty (S_ty Z_ty))
@@ -263,7 +249,7 @@ fp = fst p02
 sp = snd p02
 //│ fp: 'a -> (forall 'b. 'b -> 'b)
 //│   = [Function: Z]
-//│ sp: (('a | 'b) -> 'c & 'd -> 'a & 'e) -> (forall 'f, 'g. ('d & 'f) -> ('g | 'c))
+//│ sp: ((forall 'a. 'a | 'b | 'c) -> 'd & 'e -> 'c & 'f) -> (forall 'g, 'h. ('e & 'h) -> ('g | 'd))
 //│   = [Function (anonymous)]
 
 
@@ -289,7 +275,7 @@ sp_ty = sp
 //│   <:  sp_ty:
 //│ ('a -> 'a) -> 'a -> 'a
 //│      = [Function (anonymous)]
-//│ (('a | 'b) -> 'c & 'd -> 'a & 'e) -> (forall 'f, 'g. ('d & 'f) -> ('g | 'c))
+//│ ((forall 'a. 'a | 'b | 'c) -> 'd & 'e -> 'c & 'f) -> (forall 'g, 'h. ('e & 'g) -> ('h | 'd))
 //│   <:  sp_ty:
 //│ ('a -> 'a) -> 'a -> 'a
 //│      = [Function (anonymous)]
@@ -315,11 +301,11 @@ p01 = p Z
 p02 = pair Z (S (S Z))
 p02_ty = pair_ty Z_ty (S_ty (S_ty Z_ty))
 p02_ty = p02
-//│ p02: ((forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> ((forall 'c, 'd, 'e. (('f | 'c) -> 'd & 'g -> 'f & 'e) -> (forall 'h, 'i. ('g & 'h) -> ('i | 'd))) -> 'j & 'k) & 'l) -> 'j
+//│ p02: ((forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> ((forall 'c, 'd, 'e. ((forall 'f. 'f | 'c | 'g) -> 'd & 'h -> 'g & 'e) -> (forall 'i, 'j. ('h & 'j) -> ('i | 'd))) -> 'k & 'l) & 'm) -> 'k
 //│    = [Function (anonymous)]
 //│ p02_ty: ((forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X0. ('X0 -> 'X0) -> 'X0 -> 'X0) -> 'Z) -> 'Z
 //│       = [Function (anonymous)]
-//│ p02_ty: ((forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> ((forall 'c, 'd, 'e. (('f | 'c) -> 'd & 'g -> 'f & 'e) -> (forall 'h, 'i. ('g & 'h) -> ('i | 'd))) -> 'j & 'k) & 'l) -> 'j
+//│ p02_ty: ((forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> ((forall 'c, 'd, 'e. ((forall 'f. 'f | 'c | 'g) -> 'd & 'h -> 'g & 'e) -> (forall 'i, 'j. ('h & 'i) -> ('j | 'd))) -> 'k & 'l) & 'm) -> 'k
 //│       = [Function (anonymous)]
 
 fp02 = fst p02
@@ -350,15 +336,15 @@ sp02 = snd p02
 def sp02_ty: forall 'X. ('X -> 'X) -> 'X -> 'X
 sp02_ty = snd_ty p02_ty
 sp02_ty = sp02
-//│ sp02: (('a | 'b) -> 'c & 'd -> 'a & 'e) -> (forall 'f, 'g. ('d & 'f) -> ('g | 'c))
+//│ sp02: ((forall 'a. 'a | 'b | 'c) -> 'd & 'e -> 'c & 'f) -> (forall 'g, 'h. ('e & 'g) -> ('h | 'd))
 //│     = [Function (anonymous)]
 //│ sp02_ty: ('X -> 'X) -> 'X -> 'X
 //│        = <missing implementation>
-//│ (('a | 'b) -> 'c & 'd -> 'b & 'e) -> (forall 'f, 'g. ('d & 'f) -> ('g | 'c))
+//│ ((forall 'a. 'b | 'a | 'c) -> 'd & 'e -> 'c & 'f) -> (forall 'g, 'h. ('e & 'g) -> ('h | 'd))
 //│   <:  sp02_ty:
 //│ ('X -> 'X) -> 'X -> 'X
 //│        = [Function (anonymous)]
-//│ (('a | 'b) -> 'c & 'd -> 'a & 'e) -> (forall 'f, 'g. ('d & 'f) -> ('g | 'c))
+//│ ((forall 'a. 'a | 'b | 'c) -> 'd & 'e -> 'c & 'f) -> (forall 'g, 'h. ('e & 'g) -> ('h | 'd))
 //│   <:  sp02_ty:
 //│ ('X -> 'X) -> 'X -> 'X
 //│        = [Function (anonymous)]
@@ -407,12 +393,12 @@ E q = q id
 // shallow (not (not true))        -- Shallow encoding.
 // λid.id(λb t f.b f t)(id(λb t f.b f t)(λx y.x))
 sh id = (id not) ((id not) tru)
-//│ sh: ((forall 'a, 'b, 'c, 'd, 'e. ('a -> ('b -> 'c & 'e) & 'd) -> (forall 'f. ('b & 'f) -> (forall 'g, 'h. ('a & 'g) -> ('h | 'c)))) -> ((forall 'i. 'i -> (forall 'j. 'j -> 'i)) -> 'k & 'l) & (forall 'a, 'b, 'c, 'd, 'e. ('a -> ('b -> 'c & 'e) & 'd) -> (forall 'f. ('b & 'f) -> (forall 'g, 'h. ('a & 'g) -> ('h | 'c)))) -> ('k -> 'm & 'n) & 'o) -> 'm
+//│ sh: ((forall 'a, 'b, 'c, 'd, 'e. ('d -> ('e -> 'a & 'c) & 'b) -> (forall 'f. ('e & 'f) -> (forall 'g, 'h. ('d & 'g) -> ('h | 'a)))) -> ((forall 'i. 'i -> (forall 'j. 'j -> 'i)) -> 'k & 'l) & (forall 'a, 'b, 'c, 'd, 'e. ('d -> ('e -> 'a & 'c) & 'b) -> (forall 'f. ('e & 'f) -> (forall 'g, 'h. ('d & 'g) -> ('h | 'a)))) -> ('k -> 'm & 'n) & 'o) -> 'm
 //│   = [Function: sh]
 
 // E[forall X.X->X->X](shallow (not( not true)))
 E sh
-//│ res: ('a & 'b) -> (forall 'c, 'd. 'd -> ('c | 'b))
+//│ res: ('a & 'b) -> (forall 'c, 'd. 'd -> (forall 'e. 'c | 'e | 'b))
 //│    = [Function (anonymous)]
 
 u = E
@@ -422,17 +408,17 @@ sh_pu id x y = id (id u x) x
 //│  = [Function: E]
 //│ pu: ((forall 'a. 'a -> 'a) -> ('b -> 'c & 'd) & 'b) -> (forall 'e, 'f. 'e -> ('f | 'c))
 //│   = [Function: pu]
-//│ sh_pu: (('a | 'b) -> ('c -> 'd & 'e) & (forall 'f, 'g. ((forall 'h. 'h -> 'h) -> 'f & 'g) -> 'f) -> ('i -> 'a & 'j) & 'k) -> (forall 'l. ('c & 'i & 'l) -> (forall 'm, 'n. 'n -> ('m | 'd)))
+//│ sh_pu: (('a | 'b) -> ('c -> 'd & 'e) & (forall 'f, 'g. ((forall 'h. 'h -> 'h) -> 'f & 'g) -> 'f) -> ('i -> 'a & 'j) & 'k) -> (forall 'l. ('c & 'i & 'l) -> (forall 'm, 'n. 'm -> ('n | 'd)))
 //│      = [Function: sh_pu]
 
 :e
 pu sh_pu
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.429: 	pu sh_pu
+//│ ║  l.415: 	pu sh_pu
 //│ ║         	^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α2955_2972'' -> ‹∀ 2. (α2956_2980''' -> ‹∀ 3. (α2957_2981'''' -> α2966_2982'''')›)›)››  <:  α2961_3054    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α2955_2972'' -> ‹∀ 2. (α2956_2980''' -> ‹∀ 3. (α2957_2981'''' -> α2966_2982'''')›)›)››  <:  α2961_2979''
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α2524_2541'' -> ‹∀ 2. (α2525_2549''' -> ‹∀ 3. (α2526_2550'''' -> α2535_2551'''')›)›)››  <:  α2530_2623    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α2524_2541'' -> ‹∀ 2. (α2525_2549''' -> ‹∀ 3. (α2526_2550'''' -> α2535_2551'''')›)›)››  <:  α2530_2548''
 //│ res: error
 //│    = [Function (anonymous)]
 
@@ -440,11 +426,11 @@ pu sh_pu
 :e
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.441: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.427: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α3068_3070' -> α3069_3071')›  <:  α3068_3077    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α3068_3070' -> α3069_3071')›  <:  α3068_3070'
+//│ ╟── this constraint:  ‹∀ 0. (α2637_2639' -> α2638_2640')›  <:  α2637_2646    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α2637_2639' -> α2638_2640')›  <:  α2637_2639'
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded

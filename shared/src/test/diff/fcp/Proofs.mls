@@ -304,7 +304,7 @@ EM_to_DNE: EM -> DNE
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.303: 	EM_to_DNE: EM -> DNE
 //│ ║         	^^^^^^^^^
-//│ ╟── type `‘a_1010_1016` is not an instance of type `'a_1010_1015`
+//│ ╟── type `‘a_1018_1024` is not an instance of type `'a_1018_1023`
 //│ ║  l.24: 	type DNE = forall 'a. Not[Not['a]] -> 'a
 //│ ║        	                  ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -320,7 +320,7 @@ EM_to_DNE: EM -> DNE
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.319: 	EM_to_DNE: EM -> DNE
 //│ ║         	^^^^^^^^^
-//│ ╟── type `‘a_1027_1033` is not an instance of type `'a_1027_1032`
+//│ ╟── type `‘a_1035_1041` is not an instance of type `'a_1035_1040`
 //│ ║  l.24: 	type DNE = forall 'a. Not[Not['a]] -> 'a
 //│ ║        	                  ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -336,18 +336,18 @@ EM_to_DNE: EM -> DNE
 
 def EM_to_DNE em nna =
   case em of Left -> em.v, Right -> nna em.v
-//│ EM_to_DNE: 'a -> (forall 'b, 'c, 'v, 'd, 'v0, 'a, 'e. (('v -> 'e & 'c) -> ('v0 | 'e)
+//│ EM_to_DNE: 'a -> (forall 'b, 'v, 'c, 'd, 'v0, 'a, 'e. (('v -> 'e & 'c) -> ('v0 | 'e)
 //│   where
-//│     'a <: (Left with {v: 'v0}) & 'd | (Right with {v: 'v}) & 'b))
+//│     'a <: (Left with {v: 'v0}) & 'b | (Right with {v: 'v}) & 'd))
 
 EM_to_DNE: EM -> DNE
 //│ res: EM -> DNE
 
 def DNE_to_EM dne =
   dne (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
-//│ DNE_to_EM: ((forall 'a, 'b, 'c. ((Right & {v: forall 'd, 'e, 'a, 'v, 'f, 'v0. (('v0 & 'e) -> 'd | 'v
+//│ DNE_to_EM: ((forall 'a, 'b, 'c. ((Right & {v: forall 'c, 'd, 'e, 'f, 'v, 'v0. (('v & 'd) -> 'e | 'v0
 //│   where
-//│     'a <: ((Left with {v: 'v0}) | 'f) -> 'd)} | 'b) -> 'c & 'a) -> 'c) -> 'g & 'h) -> 'g
+//│     'c <: ((Left with {v: 'v}) | 'f) -> 'e)} | 'a) -> 'b & 'c) -> 'b) -> 'g & 'h) -> 'g
 
 EM_to_DNE: EM -> DNE
 //│ res: EM -> DNE

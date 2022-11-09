@@ -819,10 +819,15 @@ abstract class TyperHelpers { Typer: Typer =>
   
   
   object AliasOf {
-    def unapply(ty: ST)(implicit ctx: Ctx): S[ST] = ty match {
-      case tr: TypeRef => unapply(tr.expand)
-      case proxy: ProxyType => unapply(proxy.underlying)
-      case _ => S(ty)
+    def unapply(ty: ST)(implicit ctx: Ctx): S[ST] = {
+      def go(ty: ST, traversedVars: Set[TV]): S[ST] = ty match {
+        case tr: TypeRef => go(tr.expand, traversedVars)
+        case proxy: ProxyType => go(proxy.underlying, traversedVars)
+        case tv @ AssignedVariable(ty) if !traversedVars.contains(tv) =>
+          go(ty, traversedVars + tv)
+        case _ => S(ty)
+      }
+      go(ty, Set.empty)
     }
   }
   

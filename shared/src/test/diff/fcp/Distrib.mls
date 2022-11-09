@@ -34,20 +34,10 @@ def test: (forall 'b. 'b -> (int, 'b)) -> (int, bool)
 test (f1 42)
 //│ res: (int, bool,)
 
-// TODO this is currently not handled because we don't yet try to split
+// This used not to be handled because we didn't yet try to split
 //    type parameters in order to distribute only *part* of the quantification
-:e
 test (f2 42)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.40: 	test (f2 42)
-//│ ║        	^^^^^^^^^^^^
-//│ ╟── type `‘b_92_93` is not an instance of type `'b_92_94`
-//│ ║  l.31: 	def test: (forall 'b. 'b -> (int, 'b)) -> (int, bool)
-//│ ║        	                  ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.31: 	def test: (forall 'b. 'b -> (int, 'b)) -> (int, bool)
-//│ ╙──      	                  ^^
-//│ res: error
+//│ res: (int, bool,)
 
 
 // * Though these work!
@@ -80,40 +70,12 @@ def f2_3: forall 'a 'b. 'a -> 'b -> ('a, 'b)
 test (f1_1 42)
 //│ res: (int, bool,)
 
-// TODO
 test (f2_1 42)
 test (f2_2 42)
 test (f2_3 42)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.84: 	test (f2_1 42)
-//│ ║        	^^^^^^^^^^^^^^
-//│ ╟── type `‘b_185_186` is not an instance of type `'b_185_187`
-//│ ║  l.67: 	def test: forall 'a. (forall 'b. 'b -> (int, 'b)) -> (int, bool)
-//│ ║        	                             ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.67: 	def test: forall 'a. (forall 'b. 'b -> (int, 'b)) -> (int, bool)
-//│ ╙──      	                             ^^
-//│ res: error
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.85: 	test (f2_2 42)
-//│ ║        	^^^^^^^^^^^^^^
-//│ ╟── type `‘b_193_194` is not an instance of type `'b_193_195`
-//│ ║  l.67: 	def test: forall 'a. (forall 'b. 'b -> (int, 'b)) -> (int, bool)
-//│ ║        	                             ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.67: 	def test: forall 'a. (forall 'b. 'b -> (int, 'b)) -> (int, bool)
-//│ ╙──      	                             ^^
-//│ res: error
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.86: 	test (f2_3 42)
-//│ ║        	^^^^^^^^^^^^^^
-//│ ╟── type `‘b_201_202` is not an instance of type `'b_201_203`
-//│ ║  l.67: 	def test: forall 'a. (forall 'b. 'b -> (int, 'b)) -> (int, bool)
-//│ ║        	                             ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.67: 	def test: forall 'a. (forall 'b. 'b -> (int, 'b)) -> (int, bool)
-//│ ╙──      	                             ^^
-//│ res: error
+//│ res: (int, bool,)
+//│ res: (int, bool,)
+//│ res: (int, bool,)
 
 
 f1_1_42 = f1_1 42
@@ -146,9 +108,9 @@ f1 = f2
 //│   <:  f1:
 //│ 'a -> (forall 'b. 'b -> ('a, 'b,))
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.144: 	f1 = f2
+//│ ║  l.106: 	f1 = f2
 //│ ║         	^^^^^^^
-//│ ╟── type `‘b_278_279` is not an instance of type `'b_278_280`
+//│ ╟── type `‘b_289_290` is not an instance of type `'b_289_291`
 //│ ║  l.10: 	def f1: 'a -> (forall 'b. 'b -> ('a, 'b))
 //│ ║        	                      ^^
 //│ ╟── Note: constraint arises from quantified type variable:

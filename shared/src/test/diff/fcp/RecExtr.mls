@@ -1,5 +1,6 @@
 :NoRecursiveTypes
 :GeneralizeCurriedFunctions
+:DontDistributeForalls
 
 
 rec def foo x y =
@@ -16,19 +17,19 @@ def foo_ty: 'a -> (forall 'b. 'b -> ('a, 'b,))
 //│       = <missing implementation>
 
 
-:e // skolem extrusion?
+:e // * Needs distributivity (see at the end)
 foo_ty = foo
 //│ 'a -> 'b -> ('a, 'b,)
 //│   <:  foo_ty:
 //│ 'a -> (forall 'b. 'b -> ('a, 'b,))
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.20: 	foo_ty = foo
+//│ ║  l.21: 	foo_ty = foo
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── type `‘b_71_72` is not an instance of type `'b_71_73`
-//│ ║  l.14: 	def foo_ty: 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│ ║  l.15: 	def foo_ty: 'a -> (forall 'b. 'b -> ('a, 'b,))
 //│ ║        	                          ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.14: 	def foo_ty: 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│ ║  l.15: 	def foo_ty: 'a -> (forall 'b. 'b -> ('a, 'b,))
 //│ ╙──      	                          ^^
 //│       = [Function: foo]
 
@@ -54,13 +55,13 @@ foo2_ty = foo2
 //│   <:  foo2_ty:
 //│ 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.52: 	foo2_ty = foo2
+//│ ║  l.53: 	foo2_ty = foo2
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── type `‘c_163_164` is not an instance of type `'c_163_165`
-//│ ║  l.47: 	def foo2_ty: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
+//│ ║  l.48: 	def foo2_ty: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
 //│ ║        	                                             ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.47: 	def foo2_ty: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
+//│ ║  l.48: 	def foo2_ty: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
 //│ ╙──      	                                             ^^
 //│        = [Function: foo2]
 
@@ -91,5 +92,24 @@ rec def lr1 = { head = 0; tail = lr1 }
 //│   where
 //│     'lr1 :> {head: 0, tail: 'lr1}
 //│    = [Function: lr11]
+
+
+
+// * With distributivity:
+:DistributeForalls
+
+
+foo_ty = foo
+//│ 'a -> 'b -> ('a, 'b,)
+//│   <:  foo_ty:
+//│ 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│       = [Function: foo]
+
+
+foo2_ty = foo2
+//│ 'a -> 'b -> 'c -> ('a, 'b, 'c,)
+//│   <:  foo2_ty:
+//│ 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
+//│        = [Function: foo2]
 
 

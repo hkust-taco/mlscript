@@ -1,5 +1,7 @@
 :NoRecursiveTypes
 :GeneralizeCurriedFunctions
+:DontDistributeForalls
+
 
 // (* Use option -pa *)
 
@@ -55,3 +57,21 @@ def delta = (fun x -> x x) : Sid -> 'b
 let delta = (fun x -> x x) : 'a -> Sid in delta
 //│ res: ('a -> Sid & 'a) -> Sid
 //│    = [Function (anonymous)]
+
+
+
+// ———————————— Distribtivity ————————————
+
+:DistributeForalls
+
+// * Interestingly, these ones change from the ones above
+
+fun x -> ((fun y -> y y) : 'a -> Sid)
+//│ res: anything -> ('a -> ‘a_137_142 -> ‘a_137_142 & 'a) -> Sid
+//│    = [Function: res]
+
+let delta = (fun x -> x x) : 'a -> Sid in delta
+//│ res: ('a -> ‘a_158_163 -> ‘a_158_163 & 'a) -> Sid
+//│    = [Function (anonymous)]
+
+

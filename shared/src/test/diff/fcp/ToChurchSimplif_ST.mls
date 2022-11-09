@@ -431,7 +431,7 @@ rec def to_ch n =
 //│      = [Function: to_ch7]
 
 to_church = to_ch
-//│ int -> (forall 'a, 'b. ('a & 'b) -> (forall 'c, 'd, 'e. ('c & 'd) -> ('c | 'e)))
+//│ int -> (forall 'a, 'b. ('a & 'b) -> (forall 'c, 'd, 'e. ('d & 'e) -> ('d | 'c)))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│          = [Function: to_ch7]

@@ -738,22 +738,33 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               //   rec(lhs, rigid, true)
               // }
             }
+            
           case (AliasOf(PolymorphicType(plvl, bod)), _) if bod.level <= plvl =>
             // println(s"Useless poly? ${plvl} ${bod.level}")
             rec(bod, rhs, true)
-          case (_, FunctionType(param, AliasOf(PolymorphicType(plvl, bod)))) if distributeForalls =>
-            val newRhs = if (param.level > plvl) ??? // TODO
-            else PolymorphicType(plvl, FunctionType(param, bod)(rhs.prov))
+            
+          case (_, FunctionType(param, AliasOf(poly @ PolymorphicType(plvl, bod)))) if distributeForalls =>
+            val newRhs = if (param.level > plvl) {
+                val poly2 = poly.raiseLevelTo(param.level)
+                PolymorphicType(poly2.polymLevel, FunctionType(param, poly2.body)(rhs.prov))
+              } else PolymorphicType(plvl, FunctionType(param, bod)(rhs.prov))
             // println(s"DISTRIB-R ${rhs} ~> $newRhs")
             println(s"DISTRIB-R  ~>  $newRhs")
             rec(lhs, newRhs, true)
-          case (AliasOf(PolymorphicType(plvl, FunctionType(param, bod))), _)
+            
+          case (AliasOf(PolymorphicType(plvl, AliasOf(FunctionType(param, bod)))), _)
           if distributeForalls
-          && param.level <= plvl => // TODO actually split type parameters that are quantified in body and NOT in param
+          && param.level <= plvl => // * Simple case when the parameter type vars don't need to be split
             val newLhs = FunctionType(param, PolymorphicType(plvl, bod))(rhs.prov)
             // println(s"DISTRIB-L ${lhs} ~> $newLhs")
             println(s"DISTRIB-L  ~>  $newLhs")
             rec(newLhs, rhs, true)
+            
+          // * Difficult case: split off type parameters that are quantified in body but NOT in param
+          case (SplittablePolyFun(newLhs), _) if distributeForalls =>
+            println(s"DISTRIB-L'  ~>  $newLhs")
+            rec(newLhs, rhs, true)
+            
           // case (poly: PolymorphicType, _) if poly.body.level <= poly.polymLevel => rec(poly.body, rhs, true)
           case (poly: PolymorphicType, _) =>
             // TODO Here it might actually be better to try and put poly into a TV if the RHS contains one
@@ -1146,7 +1157,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   /** Freshens all the type variables whose level is comprised in `(above, below]`
     *   or which have bounds and whose level is greater than `above`. */
-  def freshenAbove(above: Level, ty: SimpleType, rigidify: Bool = false, below: Level = MaxLevel)
+  def freshenAbove(above: Level, ty: SimpleType,
+          rigidify: Bool = false, below: Level = MaxLevel, leaveAlone: Set[TV] = Set.empty)
         (implicit ctx:Ctx, freshened: MutMap[TV, ST],
         // ctx:Ctx=Ctx.empty,//FIXME
         // raise:Raise=throw _,
@@ -1168,6 +1180,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         && */ ty.level <= above 
           // && false
           ) ty else ty match {
+      
+      case tv: TypeVariable if leaveAlone(tv) => tv
       
       // case _: TypeVariable | _: TraitTag if ty.level <= above => ty
       
@@ -1255,15 +1269,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case _: ClassTag | _: TraitTag => ty
       case w @ Without(b, ns) => Without(freshen(b), ns)(w.prov)
       case tr @ TypeRef(d, ts) => TypeRef(d, ts.map(freshen(_)))(tr.prov)
-      case pt @ PolymorphicType(lvl, bod) if pt.level <= above => pt // is this really useful?
-      case pt @ PolymorphicType(lvl, bod) if lvl < ctx.lvl =>
+      case pt @ PolymorphicType(polyLvl, bod) if pt.level <= above => pt // is this really useful?
+      case pt @ PolymorphicType(polyLvl, bod) if polyLvl < ctx.lvl =>
         implicit val tp: TP = NoProv // TODO?
-        freshen(PolymorphicType(ctx.lvl, ctx.nextLevel { implicit ctx => bod.freshenAbove(lvl, false) }))
-      case pt @ PolymorphicType(lvl, bod) => PolymorphicType(lvl,
+        freshen(PolymorphicType(ctx.lvl, ctx.nextLevel { implicit ctx => bod.freshenAbove(polyLvl, false) }))
+      case pt @ PolymorphicType(polyLvl, bod) => PolymorphicType(polyLvl,
         // Setting `below` here is essentially just an optimization,
         //  to avoid having to copy some type variables needlessly
-        // freshenImpl(bod, below = lvl))
-        freshenImpl(bod, below = below min lvl))
+        // * ^ probably no longer true (or never was?)
+        // freshenImpl(bod, below = polyLvl))
+        freshenImpl(bod, below = below min polyLvl))
       case ct @ ConstrainedType(cs, bod) =>
         // val cs2 = cs.mapKeys(freshen(_).asInstanceOf[TV]).mapValues(_.mapValues(freshen))
         val cs2 = cs.map(lu => freshen(lu._1) -> freshen(lu._2))

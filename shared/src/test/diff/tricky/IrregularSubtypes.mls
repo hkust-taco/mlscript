@@ -1,0 +1,31 @@
+:IrregularTypes
+
+
+type Foo[A] = A -> Foo[Foo[A]]
+//│ Defined type alias Foo[=A]
+
+type Bar[A] = A -> Bar[Bar[A]]
+//│ Defined type alias Bar[=A]
+
+
+// FIXME should be a depth excess — what's happening here?
+error: Foo[int]: Bar[int]
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+
+
+// * Interestingly, this is caught by the cycle checker when rectypes are disabled:
+:NoRecursiveTypes
+
+:e
+error: Foo[int]: Bar[int]
+//│ ╔══[ERROR] Cyclic-looking constraint while typing type ascription; a type annotation may be required
+//│ ║  l.20: 	error: Foo[int]: Bar[int]
+//│ ║        	^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  Foo[Int]  <:  Bar[Int]    TypeRef  TypeRef
+//│ ╙──  ... looks like:  Foo[Int]  <:  Bar[Int]
+//│ res: Bar[int]
+//│ Runtime error:
+//│   Error: unexpected runtime error
+
+

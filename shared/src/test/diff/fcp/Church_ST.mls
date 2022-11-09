@@ -730,7 +730,7 @@ zero = z
 
 // * Now works
 succ = s
-//│ ('a -> ('b -> 'c & 'd) & 'e) -> (forall 'f, 'g, 'h. (('c | 'f) -> 'g & 'a & 'h) -> (forall 'i, 'j. ('b & 'i) -> ('j | 'g)))
+//│ ('a -> ('b -> 'c & 'd) & 'e) -> (forall 'f, 'g, 'h. (('c | 'g) -> 'h & 'a & 'f) -> (forall 'i, 'j. ('b & 'i) -> ('j | 'h)))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: s]
@@ -767,20 +767,20 @@ z: ChurchInt
 s: ChurchInt -> ChurchInt
 //│ res: ChurchInt -> ChurchInt
 //│    = [Function: s]
-//│ constrain calls  : 77
+//│ constrain calls  : 79
 //│ annoying  calls  : 0
 //│ subtyping calls  : 0
 
 // * Now works
 to_church_ty = to_ch
-//│ int -> (forall 'a, 'b, 'c, 'd. (('e | 'a) -> 'b & 'c & 'd & 'e -> 'e) -> (forall 'f, 'g, 'h, 'b. ('f & 'g & 'e) -> ('f | 'h | 'b)))
+//│ int -> (forall 'a, 'b, 'c, 'd. (('e | 'a) -> 'b & 'c & 'd & 'e -> 'e) -> (forall 'b, 'f, 'g, 'h. ('f & 'g & 'e) -> ('f | 'h | 'b)))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_ch]
 
 // * Still works
 to_church_ty = to_ch_s_A1
-//│ int -> (forall 'N, 'a, 'b, 'N0, 'c, 'd. (('N0 | 'c) -> 'd & 'N -> ('N0 & 'N) & 'a & 'b) -> (forall 'N, 'e, 'f, 'g, 'c, 'N1, 'd, 'h. ('e & 'c & 'N & 'h & 'N1 & 'f) -> ('e | 'g | 'd)))
+//│ int -> (forall 'N, 'a, 'b, 'c, 'd, 'N0. (('N | 'a) -> 'c & 'N0 -> ('N & 'N0) & 'd & 'b) -> (forall 'e, 'f, 'g, 'a, 'c, 'N1, 'h, 'N0. ('f & 'a & 'N0 & 'h & 'N1 & 'g) -> ('f | 'e | 'c)))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_ch_s_A1]
@@ -795,9 +795,9 @@ to_church_ty = to_ch_simplif
 // * Redefinition in the context of distrib, just for the record (still works)
 rec def to_ch_simplif n = s (to_ch_simplif n)
 to_church_ty = to_ch_simplif
-//│ to_ch_simplif: anything -> (forall 'a, 'b, 'c. (('d | 'a) -> 'b & 'c & 'd -> 'd) -> (forall 'e, 'f. 'e -> ('f | 'b)))
+//│ to_ch_simplif: anything -> (forall 'a, 'b, 'c. ((forall 'd. 'd | 'c | 'e) -> 'a & 'b & (forall 'd. 'd | 'e) -> 'e) -> (forall 'f, 'g. 'f -> ('g | 'a)))
 //│              = [Function: to_ch_simplif1]
-//│ anything -> (forall 'a, 'b, 'c. (('d | 'b) -> 'c & 'a & 'd -> 'd) -> (forall 'e, 'f. 'e -> ('f | 'c)))
+//│ anything -> (forall 'a, 'b, 'c. ((forall 'd. 'd | 'c | 'e) -> 'a & 'b & (forall 'd. 'd | 'e) -> 'e) -> (forall 'f, 'g. 'f -> ('g | 'a)))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_ch_simplif1]
@@ -805,13 +805,13 @@ to_church_ty = to_ch_simplif
 // * Still doesn't work (Same with the full definition)
 :e
 to_church_ty = to_ch_A1
-//│ int -> (forall 'a, 'b, 'c, 'd. ((‘N_1961_1968 | 'N | 'a) -> 'b & (‘N_1961_1968 | 'N) -> (‘N_1961_1967 & ‘N_1961_1968 & 'N) & 'c & 'd) -> (forall 'b, 'e, 'f, 'g. ('e & ‘N_1961_1967 & ‘N_1961_1968 & 'N & 'f) -> ('e | 'g | 'b)))
+//│ int -> (forall 'a, 'b, 'c, 'd. ((‘N_1961_1968 | 'N | 'c) -> 'd & (‘N_1961_1968 | 'N) -> (‘N_1961_1967 & ‘N_1961_1968 & 'N) & 'a & 'b) -> (forall 'e, 'f, 'g, 'd. ('e & ‘N_1961_1967 & ‘N_1961_1968 & 'N & 'f) -> ('e | 'g | 'd)))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.807: 	to_church_ty = to_ch_A1
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘N_1961_1968` is not an instance of type `'N_2781`
+//│ ╟── type `‘N_1961_1968` is not an instance of type `'N_2853`
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -828,7 +828,7 @@ to_church_ty = to_ch_A2
 
 // * Now works
 to_church_ty = to_church_mix
-//│ (int & 'a) -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'N, 'M, 'h, 'i. (('b | 'h) -> 'e & 'N -> ('b & 'N) & 'M -> ('b & 'M) & 'f & 'i & 'c) -> (forall 'j, 'e, 'k, 'l. ('k & 'b & 'N & 'M & 'l & 'g) -> ('k | 'j | 'e)) | 'd)
+//│ (int & 'a) -> (forall 'b, 'c, 'd, 'N, 'e, 'M, 'f, 'g, 'h, 'i. (('i | 'g) -> 'b & 'N -> ('i & 'N) & 'M -> ('i & 'M) & 'h & 'd & 'e) -> (forall 'j, 'k, 'b, 'l. ('l & 'i & 'N & 'M & 'j & 'c) -> ('l | 'k | 'b)) | 'f)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_church_mix]
@@ -839,11 +839,11 @@ to_church_ty = to_church_mix
 
 
 n3 = s (s (s z))
-//│ n3: (('a | 'b) -> 'c & 'd -> 'a & 'e -> 'd & 'f) -> (forall 'g, 'h. ('e & 'g) -> ('h | 'c))
+//│ n3: ((forall 'a. 'a | 'b | 'c) -> 'd & (forall 'e. 'e | 'f) -> 'c & 'g -> 'f & 'h) -> (forall 'i, 'j. ('g & 'i) -> ('j | 'd))
 //│   = [Function (anonymous)]
 
 n3 wrap_ty 0
-//│ res: {x: {x: {x: 0}}}
+//│ res: {x: forall 'a. {x: forall 'b. {x: 0} | 'b} | 'a} | 'c
 //│    = { x: { x: { x: 0 } } }
 
 res.x.x.x + 1
