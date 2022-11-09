@@ -110,7 +110,7 @@ f1 = f2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.106: 	f1 = f2
 //│ ║         	^^^^^^^
-//│ ╟── type `‘b_289_290` is not an instance of type `'b_289_291`
+//│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.10: 	def f1: 'a -> (forall 'b. 'b -> ('a, 'b))
 //│ ║        	                      ^^
 //│ ╟── Note: constraint arises from quantified type variable:

@@ -224,6 +224,15 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 // * Note: this one requires `:DistributeForalls`
 // :e // due to tapping
 zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.226: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.157: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.157: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                        ^^
 //│ zog: string | 'a
 //│    = '0'
 
@@ -233,26 +242,31 @@ zog = printInt (add (nfind table "one") (nfind table "two"))
 //:e // due to tapping
 // :e // FIXME? refreshing-extr
 a = add (nfind table "one")
-//│ a: ChurchInt -> (forall 'b, 'c. 'c -> (forall 'd, 'e, 'f, 'c, 'a. (('a & 'd & 'f) -> 'e
-//│   where
-//│     'c <: 'a -> ('a & 'd) & 'd -> 'e)) | ChurchInt | 'b)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.244: 	a = add (nfind table "one")
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.157: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.157: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                        ^^
+//│ a: error
 //│  = [Function (anonymous)]
 
 // :e // FIXME? refreshing-extr
 b = (nfind table "two")
-//│ b: ('a & 'b & 'c) -> (forall 'd, 'b, 'e, 'f, 'g, 'h, 'c, 'i. (('e & 'g & 'i) -> ('h | 'd | 'e)
+//│ b: ('a & 'b & 'c) -> (forall 'd, 'b, 'e, 'f, 'g, 'h, 'c, 'i. (('d & 'g & 'h) -> ('i | 'f | 'd)
 //│   where
-//│     'b <: 'g -> 'f & 'f -> 'd
-//│     'c <: 'i -> 'h)) | 'val
+//│     'b <: 'g -> 'e & 'e -> 'f
+//│     'c <: 'h -> 'i)) | 'val
 //│  = [Function (anonymous)]
 
 // * Note: this one requires `:DistributeForalls`
 // :d
 //:e // due to tapping
 a b
-//│ res: 'b -> (forall 'b, 'c, 'a, 'd, 'e. (('a & 'd & 'c) -> 'e
-//│   where
-//│     'b <: 'a -> ('a & 'd) & 'd -> 'e)) | ChurchInt | 'f
+//│ res: error
 //│    = [Function (anonymous)]
 
 // :e // FIXME? refreshing-extr

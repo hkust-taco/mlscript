@@ -42,5 +42,17 @@ def step arr g = g (stepImpl2 arr)
 //│     'f <: {fold: 'g -> ('j -> 'i & 'h) & 'fold}))}) -> ('c & 'd)))
 //│   <:  step:
 //│ Arrays -> Arrays
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	def step arr g = g (stepImpl2 arr)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.12: 	type ArraysRep[Rep] = { fold: forall 'b. 'b -> Rep -> 'b }
+//│ ║        	                                     ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.12: 	type ArraysRep[Rep] = { fold: forall 'b. 'b -> Rep -> 'b }
+//│ ║        	                                     ^^
+//│ ╟── from application:
+//│ ║  l.19: 	def stepImpl arrImpl = { fold = fun f -> fun r0 -> arrImpl.fold f r0 }
+//│ ╙──      	                                                   ^^^^^^^^^^^^^^^^^
 //│     = [Function: step]
 

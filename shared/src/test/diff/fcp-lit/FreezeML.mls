@@ -510,7 +510,7 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.509: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ║         	                                  ^^^^^^^
-//│ ╟── type `‘a_1230_1231` is not an instance of type `'a_1230_1232`
+//│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -518,15 +518,15 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ╙──       	                    ^^
 //│ res: 'b
 //│   where
-//│     'b :> (forall 'a. 'a -> 'a) | (forall 'a0, 'c. ('a0 -> 'a0) -> 'c)
+//│     'b :> (forall 'a. 'a -> 'a) | (forall 'c, 'a0. ('a0 -> 'a0) -> 'c)
 //│     'c :> error
-//│     'a0 :> ‘a_1230_1231
-//│         <: ‘a_1230_1232
+//│     'a0 :> anything
+//│         <: nothing
 //│    = [Function: id1]
 
 // * The skolem used to (unsafely) leak into this type – see also `Skolems.mls`:
 res
-//│ res: (('a | ‘a_1230_1231) -> (‘a_1230_1232 & 'a) & 'a0) -> ('a0 | error)
+//│ res: (anything -> nothing & 'a) -> ('a | error)
 //│    = [Function: id1]
 
 :e // skolem extrusion
@@ -534,7 +534,7 @@ res id
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.533: 	res id
 //│ ║         	^^^^^^
-//│ ╟── type `‘a_1230_1231` is not an instance of type `'a_1230_1232`
+//│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -552,7 +552,7 @@ a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.551: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a_1259`
+//│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a_1256`
 //│ ║  l.551: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:

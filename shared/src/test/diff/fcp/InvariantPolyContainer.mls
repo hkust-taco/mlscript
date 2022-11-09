@@ -38,7 +38,7 @@ ty1 = ty2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.34: 	ty1 = ty2
 //│ ║        	^^^^^^^^^
-//│ ╟── type `‘A_81_82` is not an instance of type `'A_81_83`
+//│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.15: 	def ty1: MutArray[forall 'A. 'A -> 'A]
 //│ ║        	                         ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -53,7 +53,7 @@ ty2 = ty1
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.49: 	ty2 = ty1
 //│ ║        	^^^^^^^^^
-//│ ╟── type `‘A_91` is not an instance of type `'A_90`
+//│ ╟── type `‘A_89` is not an instance of type `'A_88`
 //│ ║  l.15: 	def ty1: MutArray[forall 'A. 'A -> 'A]
 //│ ║        	                         ^^
 //│ ╟── Note: constraint arises from quantified type variable:

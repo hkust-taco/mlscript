@@ -1030,7 +1030,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           } else {
             
             // * When a rigid type variable is extruded, we need to widen it to Top or Bot
-            // ExtrType(!pol)(ty.prov/*TODO wrap/explain prov*/)
+            ExtrType(!pol)(ty.prov/*TODO wrap/explain prov*/)
             
             // val c = cache2
             // {
@@ -1039,13 +1039,14 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             //     )
             // }
             
-            cache2.getOrElseUpdate(tt,
-              TraitTag(
-                lowerLvl,
-                // level,
-                Var.apply(freshVar(noProv, N, S(id.idStr+"_"))(0).mkStr)
-              )(tt.prov)
-            )
+            // cache2.getOrElseUpdate(tt,
+            //   TraitTag(
+            //     lowerLvl,
+            //     // level,
+            //     Var.apply(freshVar(noProv, N, S(id.idStr+"_"))(0).mkStr)
+            //   )(tt.prov)
+            // )
+            
             /* 
             val mk = Var.apply(
                 freshVar(noProv,N,S(id.idStr))(0).toString
