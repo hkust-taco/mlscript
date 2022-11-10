@@ -436,7 +436,7 @@ r (fun x -> fun y -> y)
 //│ res: int
 
 
-// ============ F. FreezeML Programs ============
+// ============ F. FreezeML Additions ============
 
 // F5
 auto id
@@ -472,6 +472,65 @@ choose id (fun x -> auto_ x)
 //│    = [Function: id1]
 
 
+// ============ G. SuperF Additions ============
+
+// G1
+:e
+auto auto
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.479: 	auto auto
+//│ ║         	^^^^^^^^^
+//│ ╟── type `‘a_1090` is not a function
+//│ ║  l.164: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
+//│ ║         	                   ^^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.164: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
+//│ ╙──       	                       ^^^^^^^^
+//│ res: error
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
+
+// G2
+:e
+(fun x -> x x) (fun x -> x x)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b. ?a -> ?b <: (forall ?c, ?d. ?c -> ?d) -> ?e` exceeded recursion depth limit (300)
+//│ ║  l.495: 	(fun x -> x x) (fun x -> x x)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  ‹∀ 0. (α1097_1099' -> α1098_1100')›  <!<  α1097_1122
+//│ ╟── while constraining:  α1097_1120  <!<  α1097_1122
+//│ ╟── while constraining:  (α1097_1120,)  <!<  (α1097_1122,)
+//│ ╟── while constraining:  (α1097_1122 -> α1098_1123)  <!<  ((α1097_1120,) -> α1098_1121)
+//│ ╟── while constraining:  ‹∀ 0. (α1097_1099' -> α1098_1100')›  <!<  ((α1097_1120,) -> α1098_1121)
+//│ ╟── while constraining:  ‹∀ 0. (α1097_1099' -> α1098_1100')›  <!<  α1097_1120
+//│ ╟── while constraining:  α1097_1118  <!<  α1097_1120
+//│ ╟── while constraining:  (α1097_1118,)  <!<  (α1097_1120,)
+//│ ╟── while constraining:  (α1097_1120 -> α1098_1121)  <!<  ((α1097_1118,) -> α1098_1119)
+//│ ╟── while constraining:  ‹∀ 0. (α1097_1099' -> α1098_1100')›  <!<  ((α1097_1118,) -> α1098_1119)
+//│ ╟── while constraining:  ‹∀ 0. (α1097_1099' -> α1098_1100')›  <!<  α1097_1118
+//│ ╟── while constraining:  α1097_1116  <!<  α1097_1118
+//│ ╟── while constraining:  (α1097_1116,)  <!<  (α1097_1118,)
+//│ ╟── while constraining:  (α1097_1118 -> α1098_1119)  <!<  ((α1097_1116,) -> α1098_1117)
+//│ ╟── while constraining:  ‹∀ 0. (α1097_1099' -> α1098_1100')›  <!<  ((α1097_1116,) -> α1098_1117)
+//│ ╟── ......
+//│ ╟── ......
+//│ ╟── while constraining:  ‹∀ 0. (α1097_1099' -> α1098_1100')›  <!<  ((α1097_1106,) -> α1098_1107)
+//│ ╟── while constraining:  ‹∀ 0. (α1097_1099' -> α1098_1100')›  <!<  α1097_1106
+//│ ╟── while constraining:  α1097_1104  <!<  α1097_1106
+//│ ╟── while constraining:  (α1097_1104,)  <!<  (α1097_1106,)
+//│ ╟── while constraining:  (α1097_1106 -> α1098_1107)  <!<  ((α1097_1104,) -> α1098_1105)
+//│ ╟── while constraining:  ‹∀ 0. (α1097_1099' -> α1098_1100')›  <!<  ((α1097_1104,) -> α1098_1105)
+//│ ╟── while constraining:  ‹∀ 0. (α1097_1099' -> α1098_1100')›  <!<  α1097_1104
+//│ ╟── while constraining:  α1093_1102  <!<  α1097_1104
+//│ ╟── while constraining:  (α1093_1102,)  <!<  (α1097_1104,)
+//│ ╟── while constraining:  (α1097_1104 -> α1098_1105)  <!<  ((α1093_1102,) -> α1094_1103)
+//│ ╟── while constraining:  ‹∀ 0. (α1097_1099' -> α1098_1100')›  <!<  ((α1093_1102,) -> α1094_1103)
+//│ ╟── while constraining:  ‹∀ 0. (α1097_1099' -> α1098_1100')›  <!<  α1093_1102
+//│ ╟── while constraining:  (‹∀ 0. (α1097_1099' -> α1098_1100')›,)  <!<  (α1093_1102,)
+//│ ╟── while constraining:  (α1093_1102 -> α1094_1103)  <!<  ((‹∀ 0. (α1097_1099' -> α1098_1100')›,) -> α1101)
+//│ ╙── while constraining:  ‹∀ 0. (α1093_1095' -> α1094_1096')›  <!<  ((‹∀ 0. (α1097_1099' -> α1098_1100')›,) -> α1101)
+//│ res: error
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 
 
@@ -669,7 +728,7 @@ r (fun x -> fun y -> y)
 //│ res: int
 
 
-// ============ F. FreezeML Programs ============
+// ============ F. FreezeML Additions ============
 
 // F5
 auto id
@@ -705,6 +764,65 @@ choose id (fun x -> auto_ x)
 //│    = [Function: id1]
 
 
+// ============ G. SuperF Additions ============
+
+// G1
+:e
+auto auto
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.771: 	auto auto
+//│ ║         	^^^^^^^^^
+//│ ╟── type `‘a_1488` is not a function
+//│ ║  l.164: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
+//│ ║         	                   ^^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.164: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
+//│ ╙──       	                       ^^^^^^^^
+//│ res: error
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
+
+// G2
+:e
+(fun x -> x x) (fun x -> x x)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b. ?a -> ?b <: (forall ?c, ?d. ?c -> ?d) -> ?e` exceeded recursion depth limit (300)
+//│ ║  l.787: 	(fun x -> x x) (fun x -> x x)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  ‹∀ 0. (α1495_1497' -> α1496_1498')›  <!<  α1495_1520
+//│ ╟── while constraining:  α1495_1518  <!<  α1495_1520
+//│ ╟── while constraining:  (α1495_1518,)  <!<  (α1495_1520,)
+//│ ╟── while constraining:  (α1495_1520 -> α1496_1521)  <!<  ((α1495_1518,) -> α1496_1519)
+//│ ╟── while constraining:  ‹∀ 0. (α1495_1497' -> α1496_1498')›  <!<  ((α1495_1518,) -> α1496_1519)
+//│ ╟── while constraining:  ‹∀ 0. (α1495_1497' -> α1496_1498')›  <!<  α1495_1518
+//│ ╟── while constraining:  α1495_1516  <!<  α1495_1518
+//│ ╟── while constraining:  (α1495_1516,)  <!<  (α1495_1518,)
+//│ ╟── while constraining:  (α1495_1518 -> α1496_1519)  <!<  ((α1495_1516,) -> α1496_1517)
+//│ ╟── while constraining:  ‹∀ 0. (α1495_1497' -> α1496_1498')›  <!<  ((α1495_1516,) -> α1496_1517)
+//│ ╟── while constraining:  ‹∀ 0. (α1495_1497' -> α1496_1498')›  <!<  α1495_1516
+//│ ╟── while constraining:  α1495_1514  <!<  α1495_1516
+//│ ╟── while constraining:  (α1495_1514,)  <!<  (α1495_1516,)
+//│ ╟── while constraining:  (α1495_1516 -> α1496_1517)  <!<  ((α1495_1514,) -> α1496_1515)
+//│ ╟── while constraining:  ‹∀ 0. (α1495_1497' -> α1496_1498')›  <!<  ((α1495_1514,) -> α1496_1515)
+//│ ╟── ......
+//│ ╟── ......
+//│ ╟── while constraining:  ‹∀ 0. (α1495_1497' -> α1496_1498')›  <!<  ((α1495_1504,) -> α1496_1505)
+//│ ╟── while constraining:  ‹∀ 0. (α1495_1497' -> α1496_1498')›  <!<  α1495_1504
+//│ ╟── while constraining:  α1495_1502  <!<  α1495_1504
+//│ ╟── while constraining:  (α1495_1502,)  <!<  (α1495_1504,)
+//│ ╟── while constraining:  (α1495_1504 -> α1496_1505)  <!<  ((α1495_1502,) -> α1496_1503)
+//│ ╟── while constraining:  ‹∀ 0. (α1495_1497' -> α1496_1498')›  <!<  ((α1495_1502,) -> α1496_1503)
+//│ ╟── while constraining:  ‹∀ 0. (α1495_1497' -> α1496_1498')›  <!<  α1495_1502
+//│ ╟── while constraining:  α1491_1500  <!<  α1495_1502
+//│ ╟── while constraining:  (α1491_1500,)  <!<  (α1495_1502,)
+//│ ╟── while constraining:  (α1495_1502 -> α1496_1503)  <!<  ((α1491_1500,) -> α1492_1501)
+//│ ╟── while constraining:  ‹∀ 0. (α1495_1497' -> α1496_1498')›  <!<  ((α1491_1500,) -> α1492_1501)
+//│ ╟── while constraining:  ‹∀ 0. (α1495_1497' -> α1496_1498')›  <!<  α1491_1500
+//│ ╟── while constraining:  (‹∀ 0. (α1495_1497' -> α1496_1498')›,)  <!<  (α1491_1500,)
+//│ ╟── while constraining:  (α1491_1500 -> α1492_1501)  <!<  ((‹∀ 0. (α1495_1497' -> α1496_1498')›,) -> α1499)
+//│ ╙── while constraining:  ‹∀ 0. (α1491_1493' -> α1492_1494')›  <!<  ((‹∀ 0. (α1495_1497' -> α1496_1498')›,) -> α1499)
+//│ res: error
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 
 
@@ -902,7 +1020,7 @@ r (fun x -> fun y -> y)
 //│ res: int
 
 
-// ============ F. FreezeML Programs ============
+// ============ F. FreezeML Additions ============
 
 // F5
 auto id
@@ -934,10 +1052,40 @@ let f = revapp id in f poly
 
 // F10
 choose id (fun x -> auto_ x)
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> (forall 'b, 'a0. 'a0 | 'b -> 'b)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> (forall 'a0, 'b. 'a0 | 'b -> 'b)
 //│    = [Function: id1]
 
 
+// ============ G. SuperF Additions ============
+
+// G1
+:e
+auto auto
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.1063: 	auto auto
+//│ ║          	^^^^^^^^^
+//│ ╟── type `‘a_1886` is not a function
+//│ ║  l.164: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
+//│ ║         	                   ^^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.164: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
+//│ ╙──       	                       ^^^^^^^^
+//│ res: error
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
+
+// G2
+:e
+(fun x -> x x) (fun x -> x x)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
+//│ ║  l.1079: 	(fun x -> x x) (fun x -> x x)
+//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. (α1893_1895' -> α1894_1896')›  <:  α1893_1902    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α1893_1895' -> α1894_1896')›  <:  α1893_1895'
+//│ res: error
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 
 
@@ -1135,7 +1283,7 @@ r (fun x -> fun y -> y)
 //│ res: int
 
 
-// ============ F. FreezeML Programs ============
+// ============ F. FreezeML Additions ============
 
 // F5
 auto id
@@ -1169,3 +1317,37 @@ let f = revapp id in f poly
 choose id (fun x -> auto_ x)
 //│ res: (forall 'a. 'a -> 'a & 'a0) -> (forall 'a0, 'b. 'a0 | 'b -> 'b)
 //│    = [Function: id1]
+
+
+// ============ G. SuperF Additions ============
+
+// G1
+:e
+auto auto
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.1326: 	auto auto
+//│ ║          	^^^^^^^^^
+//│ ╟── type `‘a_2266` is not a function
+//│ ║  l.164: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
+//│ ║         	                   ^^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.164: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
+//│ ╙──       	                       ^^^^^^^^
+//│ res: error
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
+
+// G2
+:e
+(fun x -> x x) (fun x -> x x)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
+//│ ║  l.1342: 	(fun x -> x x) (fun x -> x x)
+//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. (α2273_2275' -> α2274_2276')›  <:  α2273_2282    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α2273_2275' -> α2274_2276')›  <:  α2273_2275'
+//│ res: error
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
+
+
