@@ -14,7 +14,7 @@ import mlscript.Message._
  *  In order to turn the resulting CompactType into a mlscript.Type, we use `expandCompactType`.
  */
 class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
-    extends UltimateConditions with TypeSimplifier {
+    extends ucs.Desugarer with TypeSimplifier {
   
   def funkyTuples: Bool = false
   def doFactorize: Bool = false
@@ -722,9 +722,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         }
         con(s_ty, req, cs_ty)
       case iff @ If(body, fallback) =>
+        import mlscript.ucs._
         try {
           val cnf = desugarIf(body, fallback)
-          ConditionClause.print(println, cnf)
+          Clause.print(println, cnf)
           val caseTree = MutCaseOf.build(cnf)
           println("The mutable CaseOf tree")
           MutCaseOf.show(caseTree).foreach(println(_))
@@ -739,7 +740,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           iff.desugaredIf = S(trm)
           typeTerm(trm)
         } catch {
-          case e: IfDesugaringException => e.report(this)
+          case e: DesugaringException => e.report(this)
           case e: Throwable => throw e
         }
       case New(S((nmedTy, trm)), TypingUnit(Nil)) =>
