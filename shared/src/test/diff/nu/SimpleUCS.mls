@@ -218,6 +218,16 @@ fun f(x, y, b) =
 //│ f: (Some & {value: int} | ~Some, anything, ~true,) -> ("bruh" | "roll" | int)
 //│  = [Function: f15]
 
+fun g(x, y, b) =
+  if x is
+    Some(xv) and y
+      is Some(yv) then yv
+      is None() then "bruh"
+    Some(xv) and b then xv + b
+    _ then "roll"
+//│ g: (Some & {value: int} | ~Some, (Some with {value: 'value}) | ~Some, ~true,) -> ("bruh" | "roll" | int | 'value)
+//│  = [Function: g]
+
 fun foo(x, y, z) =
   if x - y > 0 then Some(x + y + z) else None()
 //│ foo: (int, int, int,) -> (None | Some & {value: int})
@@ -231,24 +241,24 @@ fun f(u, v, w) =
       Right(_) then "right-defined"
     None then "undefined"
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.228: 	  if foo(u, v, w) is
+//│ ║  l.238: 	  if foo(u, v, w) is
 //│ ║         	     ^^^^^^^^^^^^^^^
-//│ ║  l.229: 	    Some(x) and x is
+//│ ║  l.239: 	    Some(x) and x is
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.230: 	      Left(_) then "left-defined"
+//│ ║  l.240: 	      Left(_) then "left-defined"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.231: 	      Right(_) then "right-defined"
+//│ ║  l.241: 	      Right(_) then "right-defined"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.232: 	    None then "undefined"
+//│ ║  l.242: 	    None then "undefined"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` does not match type `Left & ?a | Right & ?b`
-//│ ║  l.222: 	  if x - y > 0 then Some(x + y + z) else None()
+//│ ║  l.232: 	  if x - y > 0 then Some(x + y + z) else None()
 //│ ║         	                         ^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.229: 	    Some(x) and x is
+//│ ║  l.239: 	    Some(x) and x is
 //│ ║         	                ^
 //│ ╟── from field selection:
-//│ ║  l.228: 	  if foo(u, v, w) is
+//│ ║  l.238: 	  if foo(u, v, w) is
 //│ ╙──       	     ^^^^^^^^^^^^
 //│ f: (int, int, int,) -> ("left-defined" | "right-defined" | "undefined")
 //│  = [Function: f16]
@@ -266,7 +276,7 @@ fun g(a, b) =
       Some(y) then x * y
       None    then x
 //│ g: (int, None | Some & {value: int},) -> int
-//│  = [Function: g]
+//│  = [Function: g1]
 
 // TODO: Fix this code generation problems.
 g(5, None())
@@ -326,7 +336,7 @@ fun f(x) =
     0 ::
       Nil() then "oh"
 //│ ╔══[ERROR] Cannot find operator `::` in the context
-//│ ║  l.326: 	    0 ::
+//│ ║  l.336: 	    0 ::
 //│ ╙──       	      ^^
 //│ f: anything -> error
 //│ Code generation encountered an error:
@@ -356,4 +366,4 @@ fun g(x, y) =
   else
     0
 //│ g: (int, int,) -> int
-//│  = [Function: g1]
+//│  = [Function: g2]
