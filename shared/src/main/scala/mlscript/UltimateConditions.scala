@@ -457,6 +457,8 @@ object ScrutineeSource {
 // The point is to remember where does the scrutinee come from.
 // Is it from nested patterns? Or is it from a `IfBody`?
 final case class Scrutinee(local: Opt[Var], term: Term) {
+  def reference: Term = local.getOrElse(term)
+
   var matchRootLoc: Opt[Loc] = N
   var localPatternLoc: Opt[Loc] = N
 
@@ -710,12 +712,12 @@ object UltimateConditions {
     rec(bindings)
   }
 
-  def mkLetFromFields(scrutinee: Term, fields: Ls[Str -> Var], body: Term): Term = {
+  def mkLetFromFields(scrutinee: Scrutinee, fields: Ls[Str -> Var], body: Term): Term = {
     def rec(fields: Ls[Str -> Var]): Term =
       fields match {
         case Nil => body
         case (field -> (aliasVar @ Var(alias))) :: tail =>
-          Let(false, aliasVar, Sel(scrutinee, Var(field)), rec(tail))
+          Let(false, aliasVar, Sel(scrutinee.reference, Var(field)).desugaredFrom(scrutinee.term), rec(tail))
       }
     rec(fields)
   }
@@ -1005,7 +1007,7 @@ object MutCaseOf {
         xs match {
           case Branch(className -> fields, cases) :: next =>
             // TODO: expand bindings here
-            Case(className, mkLetFromFields(scrutinee.local.getOrElse(scrutinee.term), fields.toList, cases.toTerm), rec(next))
+            Case(className, mkLetFromFields(scrutinee, fields.toList, cases.toTerm), rec(next))
           case Nil =>
             wildcard match {
               case N => NoCases

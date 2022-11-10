@@ -233,6 +233,12 @@ fun foo(x, y, z) =
 //│ foo: (int, int, int,) -> (None | Some & {value: int})
 //│    = [Function: foo]
 
+// Uncomment this block to make the following block work.
+// fun foo(x, y, z) =
+//   if x - y > 0 then Some(
+//     if x % 2 == 0 then Left(x) else Right(x)
+//   ) else None()
+
 :e
 fun f(u, v, w) =
   if foo(u, v, w) is
@@ -241,24 +247,24 @@ fun f(u, v, w) =
       Right(_) then "right-defined"
     None then "undefined"
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.238: 	  if foo(u, v, w) is
+//│ ║  l.244: 	  if foo(u, v, w) is
 //│ ║         	     ^^^^^^^^^^^^^^^
-//│ ║  l.239: 	    Some(x) and x is
+//│ ║  l.245: 	    Some(x) and x is
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.240: 	      Left(_) then "left-defined"
+//│ ║  l.246: 	      Left(_) then "left-defined"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.241: 	      Right(_) then "right-defined"
+//│ ║  l.247: 	      Right(_) then "right-defined"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.242: 	    None then "undefined"
+//│ ║  l.248: 	    None then "undefined"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` does not match type `Left & ?a | Right & ?b`
 //│ ║  l.232: 	  if x - y > 0 then Some(x + y + z) else None()
 //│ ║         	                         ^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.239: 	    Some(x) and x is
+//│ ║  l.245: 	    Some(x) and x is
 //│ ║         	                ^
-//│ ╟── from field selection:
-//│ ║  l.238: 	  if foo(u, v, w) is
+//│ ╟── from application:
+//│ ║  l.244: 	  if foo(u, v, w) is
 //│ ╙──       	     ^^^^^^^^^^^^
 //│ f: (int, int, int,) -> ("left-defined" | "right-defined" | "undefined")
 //│  = [Function: f16]
@@ -336,7 +342,7 @@ fun f(x) =
     0 ::
       Nil() then "oh"
 //│ ╔══[ERROR] Cannot find operator `::` in the context
-//│ ║  l.336: 	    0 ::
+//│ ║  l.342: 	    0 ::
 //│ ╙──       	      ^^
 //│ f: anything -> error
 //│ Code generation encountered an error:

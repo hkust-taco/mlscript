@@ -331,40 +331,50 @@ trait TypeNameImpl extends Ordered[TypeName] { self: TypeName =>
 
 trait TermImpl extends StatementImpl { self: Term =>
   val original: this.type = this
+
+  private var sugaredTerm: Opt[Term] = N
+
+  def desugaredFrom(term: Term): this.type = {
+    sugaredTerm = S(term)
+    this
+  }
   
-  def describe: Str = this match {
-    case Bra(true, Tup(_ :: _ :: _) | Tup((S(_), _) :: _) | Blk(_)) => "record"
-    case Bra(_, trm) => trm.describe
-    case Blk((trm: Term) :: Nil) => trm.describe
-    case Blk(_) => "block of statements"
-    case IntLit(value) => "integer literal"
-    case DecLit(value) => "decimal literal"
-    case StrLit(value) => "string literal"
-    case UnitLit(value) => if (value) "undefined literal" else "null literal"
-    case Var(name) => "reference" // "variable reference"
-    case Asc(trm, ty) => "type ascription"
-    case Lam(name, rhs) => "lambda expression"
-    case App(OpApp(Var("|"), lhs), rhs) => "type union"
-    case App(OpApp(Var("&"), lhs), rhs) => "type intersection"
-    case App(OpApp(op, lhs), rhs) => "operator application"
-    case OpApp(op, lhs) => "operator application"
-    case App(lhs, rhs) => "application"
-    case Rcd(fields) => "record"
-    case Sel(receiver, fieldName) => "field selection"
-    case Let(isRec, name, rhs, body) => "let binding"
-    case Tup((N, Fld(_, _, x)) :: Nil) => x.describe
-    case Tup((S(_), x) :: Nil) => "binding"
-    case Tup(xs) => "tuple"
-    case Bind(l, r) => "'as' binding"
-    case Test(l, r) => "'is' test"
-    case With(t, fs) =>  "`with` extension"
-    case CaseOf(scrut, cases) =>  "`case` expression" 
-    case Subs(arr, idx) => "array access"
-    case Assign(lhs, rhs) => "assignment"
-    case Splc(fs) => "splice"
-    case New(h, b) => "object instantiation"
-    case If(_, _) => "if-else block"
-    case TyApp(_, _) => "type application"
+  def describe: Str = sugaredTerm match {
+    case S(t) => t.describe
+    case N => this match {
+      case Bra(true, Tup(_ :: _ :: _) | Tup((S(_), _) :: _) | Blk(_)) => "record"
+      case Bra(_, trm) => trm.describe
+      case Blk((trm: Term) :: Nil) => trm.describe
+      case Blk(_) => "block of statements"
+      case IntLit(value) => "integer literal"
+      case DecLit(value) => "decimal literal"
+      case StrLit(value) => "string literal"
+      case UnitLit(value) => if (value) "undefined literal" else "null literal"
+      case Var(name) => "reference" // "variable reference"
+      case Asc(trm, ty) => "type ascription"
+      case Lam(name, rhs) => "lambda expression"
+      case App(OpApp(Var("|"), lhs), rhs) => "type union"
+      case App(OpApp(Var("&"), lhs), rhs) => "type intersection"
+      case App(OpApp(op, lhs), rhs) => "operator application"
+      case OpApp(op, lhs) => "operator application"
+      case App(lhs, rhs) => "application"
+      case Rcd(fields) => "record"
+      case Sel(receiver, fieldName) => "field selection"
+      case Let(isRec, name, rhs, body) => "let binding"
+      case Tup((N, Fld(_, _, x)) :: Nil) => x.describe
+      case Tup((S(_), x) :: Nil) => "binding"
+      case Tup(xs) => "tuple"
+      case Bind(l, r) => "'as' binding"
+      case Test(l, r) => "'is' test"
+      case With(t, fs) =>  "`with` extension"
+      case CaseOf(scrut, cases) =>  "`case` expression" 
+      case Subs(arr, idx) => "array access"
+      case Assign(lhs, rhs) => "assignment"
+      case Splc(fs) => "splice"
+      case New(h, b) => "object instantiation"
+      case If(_, _) => "if-else block"
+      case TyApp(_, _) => "type application"
+    }
   }
   
   override def toString: Str = print(false)
