@@ -189,6 +189,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       "+" -> intBinOpTy,
       "-" -> intBinOpTy,
       "*" -> intBinOpTy,
+      "%" -> intBinOpTy,
       "/" -> numberBinOpTy,
       "<" -> numberBinPred,
       ">" -> numberBinPred,
