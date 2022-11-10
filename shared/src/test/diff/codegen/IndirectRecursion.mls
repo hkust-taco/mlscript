@@ -1,5 +1,5 @@
-
-// * Strangely, why Y does not work (cycle check error),
+// * [OBSOLETE:]
+// * Strangely, while Y does not work (cycle check error),
 // * Z type checks find thanks to recursive types...
 
 

@@ -237,6 +237,60 @@ listiterA = listiter
 // (* Polymorphic recursion. *)
 // untype let rec id x = if true then x else id id x in id
 
+def idy_ty: forall 'a. 'a -> 'a
+def id1 x = if true then x else idy_ty idy_ty x
+//│ idy_ty: 'a -> 'a
+//│       = <missing implementation>
+//│ id1: ('b & 'a & 'c & 'd & 'e) -> 'e
+//│    = <no result>
+//│      idy_ty is not implemented
+
+:e
+rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.249: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘a_611` is not a function
+//│ ║  l.249: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ║         	                       ^^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.249: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ╙──       	                           ^^^^^^^^
+//│ id1: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│    = [Function: id1]
+
+rec def id1 x = if true then x else id1 id1 x
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
+//│ ║  l.262: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  (α619' -> α625')  <:  α623'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α619' -> α625')  <:  α623'
+//│ id1: 'id1
+//│   where
+//│     'id1 :> 'a -> 'b
+//│     'a :> 'id1
+//│        <: 'b
+//│     'b :> 'id1
+//│        <: 'a -> 'b
+//│    = [Function: id11]
+
+rec def id1 x = if true then x else id1 id1 x
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
+//│ ║  l.278: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  (α640' -> α646')  <:  α644'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α640' -> α646')  <:  α644'
+//│ id1: 'id1
+//│   where
+//│     'id1 :> 'a -> 'b
+//│     'a :> 'id1
+//│        <: 'b
+//│     'b :> 'id1
+//│        <: 'a -> 'b
+//│    = [Function: id12]
+
 // * This does not actually seem to require general polymorphic recursion,
 // *  but it does need recursive types:
 :RecursiveTypes
@@ -248,7 +302,7 @@ rec def id1 x = if true then x else id1 id1 x
 //│        <: 'b
 //│     'b :> 'id1
 //│        <: 'a -> 'b
-//│    = [Function: id1]
+//│    = [Function: id13]
 id1 id
 //│ res: ('a & 'b) -> ('a | 'c) | 'd
 //│   where
@@ -262,7 +316,7 @@ id1 id
 // ^ FIXME type pp – id1 is not shown to have an upper bound!
 :ns
 id1
-//│ res: forall 'a, 'b, 'c, 'd, 'id1, 'e. 'id1
+//│ res: forall 'a, 'id1, 'b, 'c, 'd, 'e. 'id1
 //│   where
 //│     'id1 := 'b -> 'e
 //│     'b :> 'b -> 'e
@@ -275,33 +329,33 @@ id1
 //│        <: 'd
 //│     'd :> 'b -> 'e
 //│        <: 'e
-//│    = [Function: id1]
+//│    = [Function: id13]
 
 :e
 id1: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.281: 	id1: nothing
+//│ ║  l.335: 	id1: nothing
 //│ ║         	^^^
 //│ ╟── function of type `?a -> ?b` does not match type `nothing`
-//│ ║  l.243: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.297: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.281: 	id1: nothing
+//│ ║  l.335: 	id1: nothing
 //│ ║         	^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.281: 	id1: nothing
+//│ ║  l.335: 	id1: nothing
 //│ ╙──       	     ^^^^^^^
 //│ res: nothing
-//│    = [Function: id1]
+//│    = [Function: id13]
 
 :e // * Works with `:RecursiveTypes`
 id1 id
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.298: 	id1 id
+//│ ║  l.352: 	id1 id
 //│ ║         	^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α569_627 -> α575_628)  <:  α574_629    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α569' -> α575')  <:  α574'
+//│ ╟── this constraint:  (α661_719 -> α667_720)  <:  α666_721    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α661' -> α667')  <:  α666'
 //│ res: error
 //│    = [Function: id]
 
@@ -316,13 +370,13 @@ res id
 :e // FIXME?
 id1 id1
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.317: 	id1 id1
+//│ ║  l.371: 	id1 id1
 //│ ║         	^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. id1568'#›  <:  α569_646    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. id1568'#›  <:  α569'
+//│ ╟── this constraint:  ‹∀ 0. id1660'#›  <:  α661_738    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. id1660'#›  <:  α661'
 //│ res: error
-//│    = [Function: id1]
+//│    = [Function: id13]
 
 rec def id1_ x = id1_ id1_ x
 //│ id1_: anything -> nothing
@@ -354,7 +408,7 @@ def id2 x = if true then x else id2 id2 x
 
 // let make_ex1 x (f:['a] ('a * ('a -> 'c)) -> 'b) = f x
 def make_ex1 x (f: forall 'a. (('a, 'a -> 'c),) -> 'b) = f x
-//│ make_ex1: 'd -> (forall 'd, 'e, 'a, 'c, 'b. ((forall 'a0. ('a0, 'a0 -> 'c,) -> ('b & 'e)) -> 'e
+//│ make_ex1: 'd -> (forall 'a, 'e, 'b, 'd, 'c. ((forall 'a0. ('a0, 'a0 -> 'c,) -> ('b & 'e)) -> 'e
 //│   where
 //│     'd <: ('a, 'a -> 'c,)))
 //│         = [Function: make_ex1]
@@ -371,7 +425,7 @@ ex1_1 (fun ((x, f)) -> f x)
 //│ A String
 
 ex1_2 = if true then make_ex1 ((42, print_int)) else ex1_1
-//│ ex1_2: (forall 'a, 'a0. ('a, 'a -> 'c,) -> ('b & 'd) & ('a0, 'a0 -> 'c0,) -> ('b0 & 'e)) -> ('d | 'e)
+//│ ex1_2: (forall 'a, 'a0. ('a0, 'a0 -> 'c,) -> ('b & 'd) & ('a, 'a -> 'c0,) -> ('b0 & 'e)) -> ('d | 'e)
 //│   where
 //│     ("A String", string -> unit,) <: ('a1, 'a1 -> 'c0,)
 //│     (42, int -> unit,) <: ('a2, 'a2 -> 'c,)
@@ -386,7 +440,7 @@ ex1_2 (fun ((x, f)) -> f x)
 // let make_ex2 x (f:['a] ('a * 'a * ('a -> 'a -> 'c)) -> 'b) = f x
 // ;;
 def make_ex2 x (f: forall 'a. (('a, 'a, 'a -> 'a -> 'c),) -> 'b) = f x
-//│ make_ex2: 'd -> (forall 'd, 'e, 'a, 'c, 'b. ((forall 'a0. ('a0, 'a0, 'a0 -> 'a0 -> 'c,) -> ('b & 'e)) -> 'e
+//│ make_ex2: 'd -> (forall 'b, 'd, 'e, 'a, 'c. ((forall 'a0. ('a0, 'a0, 'a0 -> 'a0 -> 'c,) -> ('b & 'e)) -> 'e
 //│   where
 //│     'd <: ('a, 'a, 'a -> 'a -> 'c,)))
 //│         = [Function: make_ex2]
@@ -398,11 +452,11 @@ def make_ex2 x (f: forall 'a. (('a, 'a, 'a -> 'a -> 'c),) -> 'b) = f x
 ex_list1 = cons (make_ex1 (("A String", print_string)))
   (cons (make_ex1 ((8250, print_int)))
   (cons (make_ex1 ((true, print_bool))) nil))
-//│ ex_list1: List[forall 'd, 'b, 'c, 'a, 'e, 'f, 'a0, 'b0, 'a1, 'c0, 'b1, 'c1. ((forall 'a2, 'a3, 'a4. ('a3, 'a3 -> 'c0,) -> ('b & 'e) & ('a4, 'a4 -> 'c1,) -> ('b1 & 'd) & ('a2, 'a2 -> 'c,) -> ('b0 & 'f)) -> ('d | 'f | 'e)
+//│ ex_list1: List[forall 'b, 'c, 'c0, 'd, 'a, 'b0, 'a0, 'c1, 'e, 'a1, 'b1, 'f. ((forall 'a2, 'a3, 'a4. ('a2, 'a2 -> 'c,) -> ('b1 & 'e) & ('a3, 'a3 -> 'c0,) -> ('b & 'f) & ('a4, 'a4 -> 'c1,) -> ('b0 & 'd)) -> ('f | 'd | 'e)
 //│   where
-//│     (true, bool -> unit,) <: ('a1, 'a1 -> 'c,)
-//│     ("A String", string -> unit,) <: ('a0, 'a0 -> 'c0,)
-//│     (8250, int -> unit,) <: ('a, 'a -> 'c1,))]
+//│     ("A String", string -> unit,) <: ('a1, 'a1 -> 'c,)
+//│     (true, bool -> unit,) <: ('a, 'a -> 'c1,)
+//│     (8250, int -> unit,) <: ('a0, 'a0 -> 'c0,))]
 //│         = Cons {
 //│             head: [Function (anonymous)],
 //│             tail: Cons {
@@ -418,11 +472,11 @@ ex_list1 = cons (make_ex1 (("A String", print_string)))
 ex_list2 = cons (make_ex2 (("String", "String", eqstring)))
   (cons (make_ex2 ((1250, 4890, eqint)))
   (cons (make_ex2 ((true, false, eqbool))) nil))
-//│ ex_list2: List[forall 'c, 'c0, 'a, 'a0, 'b, 'c1, 'd, 'a1, 'e, 'f, 'b0, 'b1. ((forall 'a2, 'a3, 'a4. ('a3, 'a3, 'a3 -> 'a3 -> 'c,) -> ('b0 & 'e) & ('a4, 'a4, 'a4 -> 'a4 -> 'c0,) -> ('b1 & 'd) & ('a2, 'a2, 'a2 -> 'a2 -> 'c1,) -> ('b & 'f)) -> ('d | 'f | 'e)
+//│ ex_list2: List[forall 'a, 'b, 'a0, 'd, 'a1, 'c, 'b0, 'c0, 'e, 'b1, 'c1, 'f. ((forall 'a2, 'a3, 'a4. ('a2, 'a2, 'a2 -> 'a2 -> 'c,) -> ('b0 & 'd) & ('a3, 'a3, 'a3 -> 'a3 -> 'c1,) -> ('b1 & 'e) & ('a4, 'a4, 'a4 -> 'a4 -> 'c0,) -> ('b & 'f)) -> ('e | 'f | 'd)
 //│   where
-//│     ("String", "String", forall 'g, 'h. (string & 'g & 'h) -> (forall 'h, 'i. (string & 'h) -> (bool | 'i)),) <: ('a1, 'a1, 'a1 -> 'a1 -> 'c,)
-//│     (1250, 4890, forall 'j, 'k. (int & 'j & 'k) -> (forall 'k, 'i, 'l. (int & 'k) -> (bool | 'i | 'l)),) <: ('a0, 'a0, 'a0 -> 'a0 -> 'c0,)
-//│     (true, false, forall 'm. (bool & 'm) -> (forall 'n, 'o, 'p, 'i. (bool & 'm & 'n & 'o & 'p) -> (bool | 'i | 'p)),) <: ('a, 'a, 'a -> 'a -> 'c1,))]
+//│     (true, false, forall 'g. (bool & 'g) -> (forall 'h, 'i, 'j, 'k. (bool & 'g & 'k & 'h & 'i) -> (bool | 'j | 'i)),) <: ('a1, 'a1, 'a1 -> 'a1 -> 'c0,)
+//│     ("String", "String", forall 'l, 'm. (string & 'l & 'm) -> (forall 'm, 'j. (string & 'm) -> (bool | 'j)),) <: ('a0, 'a0, 'a0 -> 'a0 -> 'c,)
+//│     (1250, 4890, forall 'n, 'o. (int & 'n & 'o) -> (forall 'o, 'j, 'p. (int & 'o) -> (bool | 'j | 'p)),) <: ('a, 'a, 'a -> 'a -> 'c1,))]
 //│         = Cons {
 //│             head: [Function (anonymous)],
 //│             tail: Cons {
@@ -435,8 +489,8 @@ ex_list2 = cons (make_ex2 (("String", "String", eqstring)))
 h = head ex_list1
 //│ h: (forall 'a, 'a0, 'a1. ('a, 'a -> 'c,) -> ('b & 'd) & ('a0, 'a0 -> 'c0,) -> ('b0 & 'e) & ('a1, 'a1 -> 'c1,) -> ('b1 & 'f)) -> ('e | 'f | 'd)
 //│   where
-//│     (true, bool -> unit,) <: ('a2, 'a2 -> 'c1,)
-//│     ("A String", string -> unit,) <: ('a3, 'a3 -> 'c,)
+//│     ("A String", string -> unit,) <: ('a2, 'a2 -> 'c,)
+//│     (true, bool -> unit,) <: ('a3, 'a3 -> 'c1,)
 //│     (8250, int -> unit,) <: ('a4, 'a4 -> 'c0,)
 //│  = [Function (anonymous)]
 
@@ -518,7 +572,7 @@ test2_ = listiter (fun ex -> ex (fun ((t1, t2, t3)) ->
   let eqf = t3 in
   let areequal = eqf arg1 arg2 in
   print_bool areequal ))
-//│ test2_: List[(forall 'a, 'b, 'c, 'd, 'e, 'f. ('f, 'd, 'f -> ('d -> (bool & 'b) & 'a) & 'c,) -> (unit | 'e)) -> 'b] -> unit
+//│ test2_: List[(forall 'a, 'b, 'c, 'd, 'e, 'f. ('b, 'f, 'b -> ('f -> (bool & 'd) & 'a) & 'e,) -> (unit | 'c)) -> 'd] -> unit
 //│       = [Function (anonymous)]
 
 // * Also fails:
@@ -576,7 +630,7 @@ make_ex2 (x, y, f) k = k (x, y, f)
 ex_list1 = cons (make_ex1 ("A String", print_string))
   (cons (make_ex1 (8250, print_int))
   (cons (make_ex1 (true, print_bool)) nil))
-//│ ex_list1: List[forall 'b, 'b0, 'b1. (forall 'a, 'a0, 'a1. ('a1, 'a1 -> unit,) -> 'b1 & ('a, 'a -> unit,) -> 'b & ('a0, 'a0 -> unit,) -> 'b0) -> ('b | 'b0 | 'b1)]
+//│ ex_list1: List[forall 'b, 'b0, 'b1. (forall 'a, 'a0, 'a1. ('a, 'a -> unit,) -> 'b & ('a0, 'a0 -> unit,) -> 'b0 & ('a1, 'a1 -> unit,) -> 'b1) -> ('b0 | 'b1 | 'b)]
 //│         = Cons {
 //│             head: [Function (anonymous)],
 //│             tail: Cons {
@@ -592,7 +646,7 @@ ex_list1 = cons (make_ex1 ("A String", print_string))
 ex_list2 = cons (make_ex2 ("String", "String", eqstring))
   (cons (make_ex2 (1250, 4890, eqint))
   (cons (make_ex2 (true, false, eqbool)) nil))
-//│ ex_list2: List[forall 'b, 'b0, 'b1. (forall 'a, 'a0, 'a1. ('a, 'a, 'a -> (forall 'c, 'd. (string & 'c) -> (bool | 'd)),) -> 'b & ('a0, 'a0, 'a0 -> (forall 'd, 'e, 'f. (int & 'e) -> (bool | 'd | 'f)),) -> 'b0 & ('a1, 'a1, 'a1 -> (forall 'd, 'g, 'h, 'i. (bool & 'g & 'h & 'i) -> (bool | 'd | 'i)),) -> 'b1) -> ('b0 | 'b1 | 'b)]
+//│ ex_list2: List[forall 'b, 'b0, 'b1. (forall 'a, 'a0, 'a1. ('a1, 'a1, 'a1 -> (forall 'c, 'd. (string & 'c) -> (bool | 'd)),) -> 'b1 & ('a, 'a, 'a -> (forall 'e, 'f, 'd. (int & 'e) -> (bool | 'd | 'f)),) -> 'b & ('a0, 'a0, 'a0 -> (forall 'g, 'h, 'i, 'd. (bool & 'g & 'h & 'i) -> (bool | 'd | 'i)),) -> 'b0) -> ('b | 'b0 | 'b1)]
 //│         = Cons {
 //│             head: [Function (anonymous)],
 //│             tail: Cons {
@@ -676,45 +730,45 @@ def c_false = fun a -> fun b -> b c_unit
 // let c_if (cond:Bool) c_then c_else = cond c_then c_else 
 def c_if (cond: Fbool) c_then c_else = cond c_then c_else
 def c_if_ cond c_then c_else = cond c_then c_else
-//│ c_if: Fbool -> (forall 'b. 'b -> (forall 'b, 'a, 'c, 'd. ((Funit -> ('a & 'c) & 'd) -> 'c
+//│ c_if: Fbool -> (forall 'b. 'b -> (forall 'c, 'd, 'b, 'a. ((Funit -> ('a & 'c) & 'd) -> 'c
 //│   where
 //│     'b <: Funit -> ('a & 'c) & 'd)))
 //│     = [Function: c_if]
-//│ c_if_: 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'b, 'a, 'e. ('c -> 'e
+//│ c_if_: 'a -> (forall 'b. 'b -> (forall 'b, 'a, 'c, 'd, 'e. ('e -> 'c
 //│   where
-//│     'a <: 'b -> ('c -> 'e & 'd))))
+//│     'a <: 'b -> ('e -> 'c & 'd))))
 //│      = [Function: c_if_]
 
 // let c_and (a:Bool) (b:Bool) = c_if a (fun z -> b) (fun z -> c_false)
 def c_and (a: Fbool) (b: Fbool) = c_if a (fun z -> b) (fun z -> c_false)
 def c_and_ a b = c_if a (fun z -> b) (fun z -> c_false)
-//│ c_and: Fbool -> Fbool -> (forall 'a, 'b. 'a -> (forall 'c, 'd. ((forall 'e. 'e -> 'e) -> 'c & 'd) -> 'c) | Fbool | 'b)
+//│ c_and: Fbool -> Fbool -> (forall 'a, 'b. 'b -> (forall 'c, 'd. ((forall 'e. 'e -> 'e) -> 'd & 'c) -> 'd) | Fbool | 'a)
 //│      = [Function: c_and]
-//│ c_and_: (Fbool & 'b) -> (forall 'c, 'a, 'd, 'e. ('c & 'a & 'd & 'e) -> (forall 'e, 'f. 'f -> (forall 'g, 'h. ((forall 'i. 'i -> 'i) -> 'g & 'h) -> 'g) | 'e))
+//│ c_and_: (Fbool & 'b) -> (forall 'c, 'a, 'd, 'e. ('c & 'a & 'd & 'e) -> (forall 'f, 'e. 'f -> (forall 'g, 'h. ((forall 'i. 'i -> 'i) -> 'g & 'h) -> 'g) | 'e))
 //│       = [Function: c_and_]
 
 // let c_or  (a:Bool) (b:Bool) = c_if a (fun z -> c_true) (fun z -> b)
 def c_or (a: Fbool) (b: Fbool) = c_if a (fun z -> c_true) (fun z -> b)
 def c_or_ a b = c_if a (fun z -> c_true) (fun z -> b)
-//│ c_or: Fbool -> Fbool -> (forall 'a, 'b. 'a -> (forall 'a, 'c, 'd. ('d -> 'c
+//│ c_or: Fbool -> Fbool -> (forall 'a, 'b. 'b -> (forall 'c, 'd, 'b. ('d -> 'c
 //│   where
-//│     'a <: (forall 'e. 'e -> 'e) -> 'c)) | Fbool | 'b)
+//│     'b <: (forall 'e. 'e -> 'e) -> 'c)) | Fbool | 'a)
 //│     = [Function: c_or]
-//│ c_or_: (Fbool & 'b) -> (forall 'c, 'a, 'd, 'e. ('c & 'a & 'd & 'e) -> (forall 'e, 'f. 'f -> (forall 'f, 'g, 'h. ('h -> 'g
+//│ c_or_: (Fbool & 'b) -> (forall 'c, 'd, 'e, 'a. ('e & 'a & 'c & 'd) -> (forall 'd, 'f. 'f -> (forall 'f, 'g, 'h. ('h -> 'g
 //│   where
-//│     'f <: (forall 'i. 'i -> 'i) -> 'g)) | 'e))
+//│     'f <: (forall 'i. 'i -> 'i) -> 'g)) | 'd))
 //│      = [Function: c_or_]
 
 // let c_not (a:Bool) = c_if a (fun z -> c_false) (fun z -> c_true)
 def c_not (a: Fbool) = c_if a (fun z -> c_false) (fun z -> c_true)
 def c_not_ a = c_if a (fun z -> c_false) (fun z -> c_true)
-//│ c_not: Fbool -> (forall 'a, 'b, 'c. ('b & 'c) -> (forall 'd, 'e, 'f, 'c, 'g. (((forall 'h. 'h -> 'h) -> 'd & 'g & 'e) -> ('f | 'd)
+//│ c_not: Fbool -> (forall 'a, 'b, 'c. ('a & 'b) -> (forall 'd, 'e, 'f, 'b, 'g. (((forall 'h. 'h -> 'h) -> 'f & 'g & 'd) -> ('e | 'f)
 //│   where
-//│     'c <: (forall 'h. 'h -> 'h) -> 'f)) | 'a)
+//│     'b <: (forall 'h. 'h -> 'h) -> 'e)) | 'c)
 //│      = [Function: c_not]
-//│ c_not_: (Fbool & 'a) -> (forall 'b, 'c, 'd. ('c & 'd) -> (forall 'd, 'e, 'f, 'g, 'h. (((forall 'i. 'i -> 'i) -> 'f & 'e & 'h) -> ('g | 'f)
+//│ c_not_: (Fbool & 'a) -> (forall 'b, 'c, 'd. ('b & 'c) -> (forall 'e, 'f, 'g, 'h, 'c. (((forall 'i. 'i -> 'i) -> 'f & 'e & 'h) -> ('g | 'f)
 //│   where
-//│     'd <: (forall 'i. 'i -> 'i) -> 'g)) | 'b)
+//│     'c <: (forall 'i. 'i -> 'i) -> 'g)) | 'd)
 //│       = [Function: c_not_]
 
 // let c_or = (c_or : Bool -> Bool -> Bool)
@@ -787,7 +841,7 @@ def c_3_3_ t = t (fun x -> fun y -> fun z -> z)
 // (* CONSTRUCTOR FOR A BINARY SUM. *)
 // let c_sumg = fun x fg fd -> fg x
 def c_sumg = fun x -> fun fg -> fun fd -> fg x
-//│ c_sumg: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('d -> 'c
+//│ c_sumg: 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'a, 'b. ('d -> 'c
 //│   where
 //│     'b <: 'a -> 'c)))
 //│       = [Function: c_sumg]
@@ -802,13 +856,13 @@ def c_sumd = fun x -> fun fg -> fun fd -> fd x
 // let c_case (s:Sum) g d = s g d
 def c_case (s: Sum) g d = s g d
 def c_case_ s g d = s g d
-//│ c_case: Sum -> (forall 'b. 'b -> (forall 'b, 'a, 'c, 'd. ((Fint -> ('a & 'c) & 'd) -> 'c
+//│ c_case: Sum -> (forall 'b. 'b -> (forall 'c, 'b, 'a, 'd. ((Fint -> ('a & 'd) & 'c) -> 'd
 //│   where
-//│     'b <: Fint -> ('a & 'c) & 'd)))
+//│     'b <: Fint -> ('a & 'd) & 'c)))
 //│       = [Function: c_case]
-//│ c_case_: 'a -> (forall 'b. 'b -> (forall 'b, 'a, 'c, 'd, 'e. ('c -> 'd
+//│ c_case_: 'a -> (forall 'b. 'b -> (forall 'a, 'c, 'd, 'e, 'b. ('e -> 'd
 //│   where
-//│     'a <: 'b -> ('c -> 'd & 'e))))
+//│     'a <: 'b -> ('e -> 'd & 'c))))
 //│        = [Function: c_case_]
 
 
@@ -827,7 +881,7 @@ def c_i1 = fun f -> fun x -> f x
 
 // let c_i2 = fun f x -> f (f x)
 def c_i2 = fun f -> fun x -> f (f x)
-//│ c_i2: 'a -> (forall 'a, 'b, 'c, 'd. ('b -> 'd
+//│ c_i2: 'a -> (forall 'b, 'c, 'd, 'a. ('b -> 'd
 //│   where
 //│     'a <: 'b -> 'c & 'c -> 'd))
 //│     = [Function: c_i2]
@@ -835,62 +889,62 @@ def c_i2 = fun f -> fun x -> f (f x)
 // let c_succ (n:Int) = fun f x -> n f (f x)
 def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
 def c_succ_ n = fun f -> fun x -> n f (f x)
-//│ c_succ: Fint -> (forall 'b. 'b -> (forall 'c, 'a, 'd, 'e, 'b. ('e -> 'd
+//│ c_succ: Fint -> (forall 'b. 'b -> (forall 'a, 'c, 'd, 'b, 'e. ('d -> 'c
 //│   where
-//│     'b <: 'a -> ('a & 'd) & 'e -> ('a & 'd & 'c))))
+//│     'b <: 'a -> ('a & 'c) & 'd -> ('a & 'c & 'e))))
 //│       = [Function: c_succ]
-//│ c_succ_: 'a -> (forall 'b. 'b -> (forall 'b, 'c, 'd, 'e, 'f, 'a. ('c -> 'e
+//│ c_succ_: 'a -> (forall 'b. 'b -> (forall 'c, 'b, 'd, 'a, 'e, 'f. ('e -> 'f
 //│   where
-//│     'a <: 'b -> ('f -> 'e & 'd)
-//│     'b <: 'c -> 'f)))
+//│     'a <: 'b -> ('c -> 'f & 'd)
+//│     'b <: 'e -> 'c)))
 //│        = [Function: c_succ_]
 
 // let c_iszero (n:Int) = n (fun x -> c_false) c_true
 def c_iszero (n: Fint) = n (fun x -> c_false) c_true
 def c_iszero_ n = n (fun x -> c_false) c_true
-//│ c_iszero: Fint -> (forall 'a, 'b, 'c. ('a & 'b) -> (forall 'b, 'd, 'e, 'f, 'g. (((forall 'h. 'h -> 'h) -> 'd & 'f & 'g) -> ('e | 'd)
+//│ c_iszero: Fint -> (forall 'a, 'b, 'c. ('c & 'a) -> (forall 'd, 'e, 'f, 'g, 'a. (((forall 'h. 'h -> 'h) -> 'f & 'e & 'd) -> ('g | 'f)
 //│   where
-//│     'b <: (forall 'h. 'h -> 'h) -> 'e)) | 'c)
+//│     'a <: (forall 'h. 'h -> 'h) -> 'g)) | 'b)
 //│         = [Function: c_iszero]
-//│ c_iszero_: ((forall 'a. 'a -> (forall 'b. 'b -> (forall 'c, 'd. ((forall 'e. 'e -> 'e) -> 'c & 'd) -> 'c))) -> ((forall 'f. 'f -> (forall 'g, 'f, 'h. ('g -> 'h
+//│ c_iszero_: ((forall 'a. 'a -> (forall 'b. 'b -> (forall 'c, 'd. ((forall 'e. 'e -> 'e) -> 'c & 'd) -> 'c))) -> ((forall 'f. 'f -> (forall 'f, 'g, 'h. ('h -> 'g
 //│   where
-//│     'f <: (forall 'e. 'e -> 'e) -> 'h))) -> 'i & 'j) & 'k) -> 'i
+//│     'f <: (forall 'e. 'e -> 'e) -> 'g))) -> 'i & 'j) & 'k) -> 'i
 //│          = [Function: c_iszero_]
 
 // let c_add n (m:Int) = m c_succ n
 
 //:e // due to tapping
 def c_add n (m: Fint) = m c_succ n
-//│ c_add: (Fint & 'b) -> Fint -> (forall 'c, 'd. 'c -> (forall 'a, 'e, 'c, 'f, 'g. ('f -> 'e
+//│ c_add: (Fint & 'b) -> Fint -> (forall 'c, 'd. 'c -> (forall 'a, 'e, 'c, 'f, 'g. ('g -> 'e
 //│   where
-//│     'c <: 'a -> ('a & 'e) & 'f -> ('a & 'e & 'g))) | 'b | 'd)
+//│     'c <: 'a -> ('a & 'e) & 'g -> ('a & 'e & 'f))) | 'b | 'd)
 //│      = [Function: c_add]
 
 def c_add_ n m = m c_succ_ n
-//│ c_add_: 'a -> (forall 'b, 'c, 'd. ((forall 'e. 'e -> (forall 'f. 'f -> (forall 'g, 'e, 'h, 'i, 'f, 'j. ('g -> 'j
+//│ c_add_: 'a -> (forall 'b, 'c, 'd. ((forall 'e. 'e -> (forall 'f. 'f -> (forall 'g, 'h, 'e, 'f, 'i, 'j. ('i -> 'g
 //│   where
-//│     'f <: 'g -> 'i
-//│     'e <: 'f -> ('i -> 'j & 'h))))) -> ('a -> 'b & 'c) & 'd) -> 'b)
+//│     'e <: 'f -> ('j -> 'g & 'h)
+//│     'f <: 'i -> 'j)))) -> ('a -> 'b & 'c) & 'd) -> 'b)
 //│       = [Function: c_add_]
 
 // let c_mul n (m:Int) = m (c_add n) c_i0
 
 //:e // due to tapping
 def c_mul m (n: Fint) = m (c_add n) c_i0
-//│ c_mul: 'b -> (forall 'b, 'c, 'd, 'e. (Fint -> 'd
+//│ c_mul: 'b -> (forall 'c, 'd, 'e, 'b. (Fint -> 'd
 //│   where
-//│     'b <: (Fint -> (forall 'f, 'g, 'h. 'f -> (forall 'a, 'i, 'f, 'j, 'k. ('k -> 'i
+//│     'b <: (Fint -> (forall 'f, 'g, 'h. 'f -> (forall 'i, 'j, 'f, 'k, 'a. ('j -> 'i
 //│   where
-//│     'f <: 'a -> ('a & 'i) & 'k -> ('a & 'i & 'j))) | Fint | 'g | 'h) | 'c) -> ((forall 'l. 'l -> (forall 'm. 'm -> 'm)) -> 'd & 'e)))
+//│     'f <: 'a -> ('a & 'i) & 'j -> ('a & 'i & 'k))) | Fint | 'g | 'h) | 'c) -> ((forall 'l. 'l -> (forall 'm. 'm -> 'm)) -> 'd & 'e)))
 //│      = [Function: c_mul]
 
 def c_mul_ m n = m (c_add_ n) c_i0
-//│ c_mul_: 'a -> (forall 'b, 'c, 'a, 'd, 'e, 'f. (('e & 'f) -> 'b
+//│ c_mul_: 'a -> (forall 'b, 'c, 'a, 'd, 'e, 'f. (('c & 'e) -> 'b
 //│   where
-//│     'a <: (forall 'g, 'h, 'i. ((forall 'j. 'j -> (forall 'k. 'k -> (forall 'l, 'm, 'n, 'k, 'j, 'o. ('o -> 'm
+//│     'a <: (forall 'g, 'h, 'i. ((forall 'j. 'j -> (forall 'k. 'k -> (forall 'j, 'l, 'm, 'k, 'n, 'o. ('o -> 'l
 //│   where
-//│     'k <: 'o -> 'n
-//│     'j <: 'k -> ('n -> 'm & 'l))))) -> ('e -> 'g & 'h) & 'i) -> 'g | 'c) -> ((forall 'p. 'p -> (forall 'q. 'q -> 'q)) -> 'b & 'd)))
+//│     'j <: 'k -> ('m -> 'l & 'n)
+//│     'k <: 'o -> 'm)))) -> ('c -> 'g & 'h) & 'i) -> 'g | 'd) -> ((forall 'p. 'p -> (forall 'q. 'q -> 'q)) -> 'b & 'f)))
 //│       = [Function: c_mul_]
 
 // let c_pow n (m:Int) = m (c_mul n) c_i1
@@ -899,26 +953,26 @@ def c_mul_ m n = m (c_add_ n) c_i0
 def c_pow m (n: Fint) = m (c_mul n) c_i1
 //│ c_pow: 'b -> (forall 'b, 'c, 'd. (Fint -> 'c
 //│   where
-//│     'b <: (forall 'e, 'f, 'g, 'h, 'i, 'j. (Fint -> 'h | 'f
+//│     'b <: (forall 'e, 'f, 'g, 'h, 'i, 'j. (Fint -> 'h | 'e
 //│   where
-//│     Fint | 'g | 'j <: (Fint -> (forall 'k, 'g, 'l. 'l -> (forall 'a, 'm, 'l, 'n, 'o. ('o -> 'n
+//│     Fint | 'g | 'i <: (Fint -> (forall 'g, 'k, 'l. 'k -> (forall 'a, 'k, 'm, 'n, 'o. ('m -> 'o
 //│   where
-//│     'l <: 'a -> ('a & 'n) & 'o -> ('a & 'n & 'm))) | Fint | 'g | 'k) | 'i) -> ((forall 'p. 'p -> (forall 'q. 'q -> 'q)) -> 'h & 'e))) -> ((forall 'r. 'r -> (forall 'r, 's, 't. ('s -> 't
+//│     'k <: 'a -> ('a & 'o) & 'm -> ('a & 'o & 'n))) | Fint | 'g | 'l) | 'f) -> ((forall 'p. 'p -> (forall 'q. 'q -> 'q)) -> 'h & 'j))) -> ((forall 'r. 'r -> (forall 'r, 's, 't. ('s -> 't
 //│   where
 //│     'r <: 's -> 't))) -> 'c & 'd)))
 //│      = [Function: c_pow]
 
 def c_pow_ m n = m (c_mul_ n) c_i1
-//│ c_pow_: 'a -> (forall 'b, 'c, 'a, 'd, 'e. (('b & 'e) -> 'c
+//│ c_pow_: 'a -> (forall 'b, 'a, 'c, 'd, 'e. (('c & 'd) -> 'e
 //│   where
-//│     'a <: (forall 'b, 'f, 'g, 'h, 'i, 'j, 'k. (('j & 'h) -> 'k | 'i
+//│     'a <: (forall 'f, 'g, 'c, 'h, 'i, 'j, 'k. (('j & 'g) -> 'h | 'i
 //│   where
-//│     'b <: (forall 'l, 'm, 'n. ((forall 'o. 'o -> (forall 'p. 'p -> (forall 'q, 'o, 'r, 'p, 's, 't. ('t -> 'r
+//│     'c <: (forall 'l, 'm, 'n. ((forall 'o. 'o -> (forall 'p. 'p -> (forall 'q, 'o, 'r, 's, 't, 'p. ('t -> 'r
 //│   where
 //│     'o <: 'p -> ('s -> 'r & 'q)
-//│     'p <: 't -> 's)))) -> ('j -> 'm & 'n) & 'l) -> 'm | 'g) -> ((forall 'u. 'u -> (forall 'v. 'v -> 'v)) -> 'k & 'f))) -> ((forall 'w. 'w -> (forall 'w, 'x, 'y. ('x -> 'y
+//│     'p <: 't -> 's)))) -> ('j -> 'l & 'm) & 'n) -> 'l | 'k) -> ((forall 'u. 'u -> (forall 'v. 'v -> 'v)) -> 'h & 'f))) -> ((forall 'w. 'w -> (forall 'w, 'x, 'y. ('x -> 'y
 //│   where
-//│     'w <: 'x -> 'y))) -> 'c & 'd)))
+//│     'w <: 'x -> 'y))) -> 'e & 'b)))
 //│       = [Function: c_pow_]
 
 
@@ -938,10 +992,10 @@ def c_pred_ n =
   let s = fun p -> c_pair (c_2_2_ p) (c_succ_ (c_2_2_ p)) in
   let z = c_pair c_i0 c_i0 in
   c_1_2_ (n s z)
-//│ c_pred_: ((forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k. ((forall 'l. 'l -> (forall 'm. 'm -> 'm)) -> ('d & 'b & 'h) & (forall 'l. 'l -> (forall 'm. 'm -> 'm)) -> ('g & 'f & 'c) & 'i & 'k & 'e) -> (forall 'n, 'o, 'p. ('c -> ((forall 'q. 'q -> (forall 'r, 's, 't, 'q, 'u, 'h. ('t -> 'r
+//│ c_pred_: ((forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k. ((forall 'l. 'l -> (forall 'm. 'm -> 'm)) -> ('a & 'd & 'b) & (forall 'l. 'l -> (forall 'm. 'm -> 'm)) -> ('j & 'e & 'c) & 'i & 'g & 'f) -> (forall 'n, 'o, 'p. ('c -> ((forall 'q. 'q -> (forall 'b, 'r, 's, 'q, 't, 'u. ('t -> 'r
 //│   where
-//│     'h <: 'q -> ('u -> 'r & 's)
-//│     'q <: 't -> 'u)) | 'a) -> 'n & 'o) & 'p) -> 'n | 'j)) -> ((forall 'v, 'w, 'x, 'y. ((forall 'z, 'a1, 'b1. 'b1 -> (forall 'c1. 'c1 -> 'c1) | 'z | 'a1) -> ((forall 'a1, 'b1. 'b1 -> (forall 'c1. 'c1 -> 'c1) | 'a1) -> 'v & 'w) & 'x) -> 'v | 'y) -> ((forall 'd1. 'd1 -> (forall 'e1. 'e1 -> 'd1)) -> ('f1 & 'g1) & 'h1 & 'i1) & 'j1) & 'k1) -> 'g1
+//│     'q <: 't -> 'u
+//│     'b <: 'q -> ('u -> 'r & 's))) | 'k) -> 'n & 'o) & 'p) -> 'n | 'h)) -> ((forall 'v, 'w, 'x, 'y. ((forall 'z, 'a1, 'b1. 'z -> (forall 'c1. 'c1 -> 'c1) | 'a1 | 'b1) -> ((forall 'z, 'b1. 'z -> (forall 'c1. 'c1 -> 'c1) | 'b1) -> 'x & 'y) & 'v) -> 'x | 'w) -> ((forall 'd1. 'd1 -> (forall 'e1. 'e1 -> 'd1)) -> ('f1 & 'g1) & 'h1 & 'i1) & 'j1) & 'k1) -> 'g1
 //│        = [Function: c_pred_]
 
 
@@ -967,46 +1021,46 @@ def c_printint2_ n = toString (n (fun x -> x + 1) 0)
 // let c_i2 = c_succ c_i1
 def c_i2 = c_succ c_i1
 def c_i2_ = c_succ_ c_i1
-//│ c_i2: 'b -> (forall 'c, 'd, 'a, 'b, 'e. ('c -> 'e
+//│ c_i2: 'b -> (forall 'c, 'b, 'a, 'd, 'e. ('e -> 'd
 //│   where
-//│     'b <: 'a -> ('a & 'e) & 'c -> ('a & 'e & 'd)))
+//│     'b <: 'a -> ('a & 'd) & 'e -> ('a & 'd & 'c)))
 //│     = [Function: c_i21]
-//│ c_i2_: 'a -> (forall 'b, 'a, 'c, 'd, 'e. ('d -> 'b
+//│ c_i2_: 'a -> (forall 'b, 'c, 'd, 'a, 'e. ('c -> 'e
 //│   where
-//│     'a <: 'd -> 'e
-//│     forall 'f. 'f -> (forall 'g, 'h, 'f. ('g -> 'h
+//│     forall 'f. 'f -> (forall 'f, 'g, 'h. ('g -> 'h
 //│   where
-//│     'f <: 'g -> 'h)) <: 'a -> ('e -> 'b & 'c)))
+//│     'f <: 'g -> 'h)) <: 'a -> ('d -> 'e & 'b)
+//│     'a <: 'c -> 'd))
 //│      = [Function: c_i2_]
 
 // let c_i3 = c_succ c_i2
 def c_i3 = c_succ c_i2
 def c_i3_ = c_succ_ c_i2
-//│ c_i3: 'b -> (forall 'c, 'b, 'd, 'a, 'e. ('c -> 'e
+//│ c_i3: 'b -> (forall 'c, 'd, 'b, 'a, 'e. ('c -> 'e
 //│   where
 //│     'b <: 'a -> ('a & 'e) & 'c -> ('a & 'e & 'd)))
 //│     = [Function: c_i3]
 //│ c_i3_: 'b -> (forall 'c, 'b, 'd, 'e, 'f. ('f -> 'd
 //│   where
-//│     forall 'g. 'g -> (forall 'h, 'a, 'g, 'i, 'j. ('j -> 'h
+//│     'b <: 'f -> 'e
+//│     forall 'g. 'g -> (forall 'h, 'g, 'a, 'i, 'j. ('h -> 'j
 //│   where
-//│     'g <: 'a -> ('a & 'h) & 'j -> ('a & 'h & 'i))) <: 'b -> ('e -> 'd & 'c)
-//│     'b <: 'f -> 'e))
+//│     'g <: 'a -> ('a & 'j) & 'h -> ('a & 'j & 'i))) <: 'b -> ('e -> 'd & 'c)))
 //│      = [Function: c_i3_]
 
 // let c_i4 = c_succ c_i3
 def c_i4 = c_succ c_i3
 def c_i4_ = c_succ_ c_i3
-//│ c_i4: 'b -> (forall 'c, 'a, 'b, 'd, 'e. ('e -> 'c
+//│ c_i4: 'b -> (forall 'c, 'b, 'a, 'd, 'e. ('c -> 'e
 //│   where
-//│     'b <: 'a -> ('a & 'c) & 'e -> ('a & 'c & 'd)))
+//│     'b <: 'a -> ('a & 'e) & 'c -> ('a & 'e & 'd)))
 //│     = [Function: c_i4]
-//│ c_i4_: 'b -> (forall 'c, 'd, 'e, 'b, 'f. ('e -> 'c
+//│ c_i4_: 'b -> (forall 'b, 'c, 'd, 'e, 'f. ('e -> 'd
 //│   where
-//│     forall 'g. 'g -> (forall 'h, 'a, 'i, 'g, 'j. ('j -> 'h
+//│     'b <: 'e -> 'f
+//│     forall 'g. 'g -> (forall 'h, 'i, 'a, 'g, 'j. ('h -> 'i
 //│   where
-//│     'g <: 'a -> ('a & 'h) & 'j -> ('a & 'h & 'i))) <: 'b -> ('f -> 'c & 'd)
-//│     'b <: 'e -> 'f))
+//│     'g <: 'a -> ('a & 'i) & 'h -> ('a & 'i & 'j))) <: 'b -> ('f -> 'd & 'c)))
 //│      = [Function: c_i4_]
 
 
@@ -1033,40 +1087,34 @@ rec def to_church n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.1032: 	rec def to_church n =
+//│ ║  l.1086: 	rec def to_church n =
 //│ ║          	                  ^^^
-//│ ║  l.1033: 	  if n == 0 then fun f -> fun x -> x
+//│ ║  l.1087: 	  if n == 0 then fun f -> fun x -> x
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1034: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
+//│ ║  l.1088: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.639: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.693: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.639: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                    ^^
-//│ ╟── from application:
-//│ ║  l.1034: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
-//│ ╙──        	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ int -> (forall 'b. ('a -> nothing & 'b) -> nothing -> anything)
+//│ ║  l.693: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                    ^^
+//│ int -> (forall 'a. (nothing -> anything & anything -> nothing & 'a) -> (forall 'b. 'b -> anything))
 //│   <:  to_church:
 //│ int -> Fint
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.1032: 	rec def to_church n =
+//│ ║  l.1086: 	rec def to_church n =
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1033: 	  if n == 0 then fun f -> fun x -> x
+//│ ║  l.1087: 	  if n == 0 then fun f -> fun x -> x
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1034: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
+//│ ║  l.1088: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.639: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.693: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.639: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                    ^^
-//│ ╟── from application:
-//│ ║  l.1034: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
-//│ ╙──        	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.693: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                    ^^
 //│          = [Function: to_church]
 
 
@@ -1090,7 +1138,7 @@ def to_church_ = to_church
 rec def c_fact (n: Fint) =
   c_if (c_iszero n) (fun (u: Funit) -> c_i1)
     (fun (u: Funit) -> c_mul n (c_fact (c_pred n)))
-//│ c_fact: Fint -> (forall 'a, 'b, 'c, 'd, 'a0, 'e, 'f, 'g, 'a1, 'h, 'i, 'j. ('f -> 'h & 'b -> ('c & 'a0 & 'a1 & 'i) & 'a1 -> ('a1 & 'a & 'g) & 'e & 'd & 'j) -> (forall 'i, 'b, 'k, 'l, 'm, 'g, 'n, 'o. ('f & 'n & 'm & 'b & 'k) -> ('m | 'l | 'o | 'h | 'g | 'i)) | Fint)
+//│ c_fact: Fint -> (forall 'b, 'a, 'c, 'a0, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'a1. ('j -> 'e & 'c -> ('i & 'a0 & 'a1 & 'h) & 'a1 -> ('a1 & 'a & 'd) & 'f & 'g & 'b) -> (forall 'k, 'l, 'c, 'd, 'm, 'n, 'o, 'h. ('j & 'l & 'k & 'c & 'o) -> ('k | 'n | 'm | 'e | 'd | 'h)) | Fint)
 //│       = [Function: c_fact]
 
 // def c_fact: Fint -> (forall 'a 'b. ('a & 'b) -> (forall 'c 'd 'e 'f 'g 'h. (('c & 'h) -> ('d | 'g | 'c))))
@@ -1107,9 +1155,9 @@ def c_fact_A: Fint -> Fint
 def c_fact_A n =
   c_if (c_iszero n) (fun u -> c_i1)
     (fun u -> c_mul n (c_fact_A (c_pred n)))
-//│ (Fint & (Fint -> (forall 'b, 'c, 'd, 'a, 'e, 'a0, 'a1, 'f, 'g. ('e -> ('g & 'a1 & 'a0 & 'c) & 'a0 -> ('a0 & 'a & 'f) & 'b) -> (forall 'h, 'b, 'c, 'a2, 'i, 'f, 'j, 'a, 'e, 'a0, 'a1. (('e & 'j) -> ('i | 'f | 'c)
+//│ (Fint & (Fint -> (forall 'a, 'a0, 'b, 'a1, 'c, 'd, 'e, 'f, 'g. ('g -> ('b & 'a0 & 'a & 'd) & 'a -> ('a & 'a1 & 'f) & 'e) -> (forall 'a0, 'h, 'a1, 'i, 'd, 'j, 'e, 'a2, 'a, 'f, 'g. (('g & 'i) -> ('h | 'f | 'd)
 //│   where
-//│     'b <: ('a2 | 'a | 'a1) -> ('a0 & 'a2 & 'i) & 'j -> ('a0 & 'a2 & 'i & 'h))) | Fint | 'k | 'd) | 'l) -> ((forall 'm. 'm -> (forall 'n. 'n -> 'n)) -> ('o & 'p & 'a3 & 'q & 'r) & 's) & 't) -> (forall 'u, 'v, 'w, 'r. ('u -> 'v & 'w) -> (forall 'v, 'w, 'x, 'y, 'u. (('u & 'x) -> ('y | 'v)
+//│     'e <: ('a2 | 'a1 | 'a0) -> ('a & 'a2 & 'h) & 'i -> ('a & 'a2 & 'h & 'j))) | Fint | 'k | 'c) | 'l) -> ((forall 'm. 'm -> (forall 'n. 'n -> 'n)) -> ('o & 'p & 'a3 & 'q & 'r) & 's) & 't) -> (forall 'r, 'u, 'v, 'w. ('u -> 'v & 'w) -> (forall 'x, 'u, 'v, 'y, 'w. (('u & 'x) -> ('y | 'v)
 //│   where
 //│     'w <: 'x -> 'y)) | 'r)
 //│   <:  c_fact_A:
@@ -1123,7 +1171,7 @@ rec def c_fact_ n =
     (fun _ -> c_mul_ n (c_fact_ (c_pred_ n)))
 //│ c_fact_: 'a -> 'b
 //│   where
-//│     'a <: (forall 'c. 'c -> (forall 'd. 'd -> (forall 'e, 'f. ((forall 'g. 'g -> 'g) -> 'e & 'f) -> 'e))) -> (forall 'h, 'i. ((forall 'g. 'g -> 'g) -> 'h & 'i) -> (forall 'j, 'k. 'j -> ('k | 'h))) -> (forall 'l. 'l -> (forall 'm, 'n, 'o, 'p, 'q. ('n -> 'p & 'q -> 'm & 'o) -> (forall 'r, 's. ('n & 'q & 'r) -> ('s | 'm | 'p)))) -> ('r -> 't) -> 'b & (forall 'u, 'v, 'w, 'x, 'y, 'z, 'a1, 'b1, 'c1, 'd1, 'e1, 'f1, 'g1, 'h1, 'i1. ((forall 'j1. 'j1 -> (forall 'k1. 'k1 -> 'k1)) -> ('c1 -> ('d1 -> 'i1 & 'g1) & 'b1 & 'a1 & 'x) & (forall 'j1. 'j1 -> (forall 'k1. 'k1 -> 'k1)) -> ('v & 'f1 & 'w) & 'y & 'z & 'e1) -> (forall 'l1, 'm1, 'n1. ('w -> ((forall 'o1, 'p1, 'q1. ('o1 -> ('d1 & 'p1) & 'c1 & 'q1) -> (forall 'r1, 's1. ('o1 & 'r1) -> ('s1 | 'i1)) | 'u) -> 'l1 & 'm1) & 'n1) -> 'l1 | 'h1)) -> (forall 't1, 'u1, 'v1, 'w1. ((forall 'x1, 'y1, 'z1. 'z1 -> (forall 'a2. 'a2 -> 'a2) | 'x1 | 'y1) -> ((forall 'y1, 'z1. 'z1 -> (forall 'a2. 'a2 -> 'a2) | 'y1) -> 't1 & 'u1) & 'v1) -> 't1 | 'w1) -> (forall 'b2. 'b2 -> (forall 'c2. 'c2 -> 'b2)) -> 'a & (forall 'd2, 'e2, 'f2. ((forall 'g2, 'h2, 'i2, 'j2, 'k2. ('i2 -> ('k2 -> 'h2 & 'j2) & 'g2) -> (forall 'l2, 'm2, 'n2. ('m2 -> ('k2 & 'n2) & 'i2 & 'l2) -> (forall 'o2, 'p2. ('m2 & 'o2) -> ('p2 | 'h2)))) -> ('b -> 'd2 & 'e2) & 'f2) -> 'd2) -> (forall 'y1, 'z1. 'z1 -> (forall 'a2. 'a2 -> 'a2) | 'y1) -> 't
+//│     'a <: (forall 'c. 'c -> (forall 'd. 'd -> (forall 'e, 'f. ((forall 'g. 'g -> 'g) -> 'e & 'f) -> 'e))) -> (forall 'h, 'i. ((forall 'g. 'g -> 'g) -> 'h & 'i) -> (forall 'j, 'k. 'j -> ('k | 'h))) -> (forall 'l. 'l -> (forall 'm, 'n, 'o, 'p, 'q. ('p -> 'n & 'm -> 'q & 'o) -> (forall 'r, 's. ('p & 'm & 'r) -> ('s | 'q | 'n)))) -> ('r -> 't) -> 'b & (forall 'u, 'v, 'w, 'x, 'y, 'z, 'a1, 'b1, 'c1, 'd1, 'e1, 'f1, 'g1, 'h1, 'i1. ((forall 'j1. 'j1 -> (forall 'k1. 'k1 -> 'k1)) -> ('b1 -> ('w -> 'x & 'y) & 'h1 & 'd1 & 'c1) & (forall 'j1. 'j1 -> (forall 'k1. 'k1 -> 'k1)) -> ('i1 & 'u & 'a1) & 'z & 'f1 & 'v) -> (forall 'l1, 'm1, 'n1. ('a1 -> ((forall 'o1, 'p1, 'q1. ('o1 -> ('w & 'p1) & 'b1 & 'q1) -> (forall 'r1, 's1. ('o1 & 'r1) -> ('s1 | 'x)) | 'e1) -> 'l1 & 'm1) & 'n1) -> 'l1 | 'g1)) -> (forall 't1, 'u1, 'v1, 'w1. ((forall 'x1, 'y1, 'z1. 'x1 -> (forall 'a2. 'a2 -> 'a2) | 'y1 | 'z1) -> ((forall 'x1, 'z1. 'x1 -> (forall 'a2. 'a2 -> 'a2) | 'z1) -> 'v1 & 'w1) & 't1) -> 'v1 | 'u1) -> (forall 'b2. 'b2 -> (forall 'c2. 'c2 -> 'b2)) -> 'a & (forall 'd2, 'e2, 'f2. ((forall 'g2, 'h2, 'i2, 'j2, 'k2. ('g2 -> ('i2 -> 'j2 & 'k2) & 'h2) -> (forall 'l2, 'm2, 'n2. ('l2 -> ('i2 & 'm2) & 'g2 & 'n2) -> (forall 'o2, 'p2. ('l2 & 'o2) -> ('p2 | 'j2)))) -> ('b -> 'e2 & 'f2) & 'd2) -> 'e2) -> (forall 'x1, 'z1. 'x1 -> (forall 'a2. 'a2 -> 'a2) | 'z1) -> 't
 //│        = [Function: c_fact_]
 
 
@@ -1151,11 +1199,11 @@ def print_fact_ n =
   let _ = c_printint_ (c_fact_ (to_church_ n)) in
           print_string "\n"
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1151: 	  let _ = c_printint_ (c_fact_ (to_church_ n)) in
+//│ ║  l.1199: 	  let _ = c_printint_ (c_fact_ (to_church_ n)) in
 //│ ║          	                       ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 2. ‹∀ 3. (α3990_4031'''' -> α4026_4040'''')››  <:  α3270_5290'''    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 2. ‹∀ 3. (α3990_4031'''' -> α4026_4040'''')››  <:  α3270_5279'''''
+//│ ╟── this constraint:  ‹∀ 2. ‹∀ 3. (α4082_4123'''' -> α4118_4132'''')››  <:  α3362_5381'''    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 2. ‹∀ 3. (α4082_4123'''' -> α4118_4132'''')››  <:  α3362_5370'''''
 //│ print_fact_: (int & 'a) -> (unit | 'b)
 //│            = [Function: print_fact_]
 
@@ -1174,11 +1222,11 @@ def print_fact2_ n =
   concat " = "
          (c_printint2_ (c_fact_ (to_church_ n))) ))
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1175: 	         (c_printint2_ (c_fact_ (to_church_ n))) ))
+//│ ║  l.1223: 	         (c_printint2_ (c_fact_ (to_church_ n))) ))
 //│ ║          	                        ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 2. ‹∀ 3. (α3990_4031'''' -> α4026_4040'''')››  <:  α3270_5519''    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 2. ‹∀ 3. (α3990_4031'''' -> α4026_4040'''')››  <:  α3270_5508'''''
+//│ ╟── this constraint:  ‹∀ 2. ‹∀ 3. (α4082_4123'''' -> α4118_4132'''')››  <:  α3362_5610''    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 2. ‹∀ 3. (α4082_4123'''' -> α4118_4132'''')››  <:  α3362_5599'''''
 //│ print_fact2_: (int & 'a) -> (string | 'b)
 //│             = [Function: print_fact2_]
 
@@ -1215,11 +1263,11 @@ this_should_be_98_ =
   let c_98_ = c_pred_ c_99_ in
   c_printint2_ c_98_
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1212: 	  let c_i10_ = c_mul_ c_i5_ c_i2_ in
+//│ ║  l.1260: 	  let c_i10_ = c_mul_ c_i5_ c_i2_ in
 //│ ║          	               ^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α3269_3284'' -> ‹∀ 2. (α3270_3285''' -> ‹∀ 3. {(α3271_3289'''' -> α3274_3288'''') where: α3269_3284'' :> ((α3270_3285''',) -> α3272_3286''''), α3270_3285''' :> ((α3271_3289'''',) -> α3273_3287'''')}›)›)››  <:  α4936_6727''    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α3269_3284'' -> ‹∀ 2. (α3270_3285''' -> ‹∀ 3. {(α3271_3289'''' -> α3274_3288'''') where: α3269_3284'' :> ((α3270_3285''',) -> α3272_3286''''), α3270_3285''' :> ((α3271_3289'''',) -> α3273_3287'''')}›)›)››  <:  α4936''
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α3361_3376'' -> ‹∀ 2. (α3362_3377''' -> ‹∀ 3. {(α3363_3381'''' -> α3366_3380'''') where: α3361_3376'' :> ((α3362_3377''',) -> α3364_3378''''), α3362_3377''' :> ((α3363_3381'''',) -> α3365_3379'''')}›)›)››  <:  α5027_6818''    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α3361_3376'' -> ‹∀ 2. (α3362_3377''' -> ‹∀ 3. {(α3363_3381'''' -> α3366_3380'''') where: α3361_3376'' :> ((α3362_3377''',) -> α3364_3378''''), α3362_3377''' :> ((α3363_3381'''',) -> α3365_3379'''')}›)›)››  <:  α5027''
 //│ this_should_be_98_: string
 //│                   = '98'
 
@@ -1229,40 +1277,40 @@ this_should_be_98_ =
 :e // FIXME? refreshing-extr
 c_i5_ = c_add_ c_i3_ c_i2
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b. ?b) -> ?c` exceeded recursion depth limit (300)
-//│ ║  l.1230: 	c_i5_ = c_add_ c_i3_ c_i2
+//│ ║  l.1278: 	c_i5_ = c_add_ c_i3_ c_i2
 //│ ║          	        ^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  {(α3271_7500' -> α3274_7499') where: α3269_7280' :> ((α3270_7490',) -> α3272_7497'), α3270_7490' :> ((α3271_7500',) -> α3273_7498')}  <!<  ((α3273_7487',) -> α3274_7488')
-//│ ╟── while constraining:  ‹∀ 3. {(α3271_7496'''' -> α3274_7495'''') where: α3269_7280' :> ((α3270_7490',) -> α3272_7493''''), α3270_7490' :> ((α3271_7496'''',) -> α3273_7494'''')}›  <!<  ((α3273_7487',) -> α3274_7488')
-//│ ╟── while constraining:  ‹∀ 3. {(α3271_7496'''' -> α3274_7495'''') where: α3269_7280' :> ((α3270_7490',) -> α3272_7493''''), α3270_7490' :> ((α3271_7496'''',) -> α3273_7494'''')}›  <!<  α3272_7486'
-//│ ╟── while constraining:  (α3270_7490' -> ‹∀ 3. {(α3271_7496'''' -> α3274_7495'''') where: α3269_7280' :> ((α3270_7490',) -> α3272_7493''''), α3270_7490' :> ((α3271_7496'''',) -> α3273_7494'''')}›)  <!<  ((α3270_7479',) -> α3272_7486')
-//│ ╟── while constraining:  ‹∀ 2. (α3270_7285''' -> ‹∀ 3. {(α3271_7291'''' -> α3274_7290'''') where: α3269_7280' :> ((α3270_7285''',) -> α3272_7288''''), α3270_7285''' :> ((α3271_7291'''',) -> α3273_7289'''')}›)›  <!<  ((α3270_7479',) -> α3272_7486')
-//│ ╟── while constraining:  α3269_7280'  <!<  ((α3270_7479',) -> α3272_7486')
-//│ ╟── while constraining:  {(α3271_7489' -> α3274_7488') where: α3269_7280' :> ((α3270_7479',) -> α3272_7486'), α3270_7479' :> ((α3271_7489',) -> α3273_7487')}  <!<  ((α3273_7476',) -> α3274_7477')
-//│ ╟── while constraining:  ‹∀ 3. {(α3271_7485'''' -> α3274_7484'''') where: α3269_7280' :> ((α3270_7479',) -> α3272_7482''''), α3270_7479' :> ((α3271_7485'''',) -> α3273_7483'''')}›  <!<  ((α3273_7476',) -> α3274_7477')
-//│ ╟── while constraining:  ‹∀ 3. {(α3271_7485'''' -> α3274_7484'''') where: α3269_7280' :> ((α3270_7479',) -> α3272_7482''''), α3270_7479' :> ((α3271_7485'''',) -> α3273_7483'''')}›  <!<  α3272_7475'
-//│ ╟── while constraining:  (α3270_7479' -> ‹∀ 3. {(α3271_7485'''' -> α3274_7484'''') where: α3269_7280' :> ((α3270_7479',) -> α3272_7482''''), α3270_7479' :> ((α3271_7485'''',) -> α3273_7483'''')}›)  <!<  ((α3270_7468',) -> α3272_7475')
-//│ ╟── while constraining:  ‹∀ 2. (α3270_7285''' -> ‹∀ 3. {(α3271_7291'''' -> α3274_7290'''') where: α3269_7280' :> ((α3270_7285''',) -> α3272_7288''''), α3270_7285''' :> ((α3271_7291'''',) -> α3273_7289'''')}›)›  <!<  ((α3270_7468',) -> α3272_7475')
-//│ ╟── while constraining:  α3269_7280'  <!<  ((α3270_7468',) -> α3272_7475')
-//│ ╟── while constraining:  {(α3271_7478' -> α3274_7477') where: α3269_7280' :> ((α3270_7468',) -> α3272_7475'), α3270_7468' :> ((α3271_7478',) -> α3273_7476')}  <!<  ((α3273_7465',) -> α3274_7466')
-//│ ╟── while constraining:  ‹∀ 3. {(α3271_7474'''' -> α3274_7473'''') where: α3269_7280' :> ((α3270_7468',) -> α3272_7471''''), α3270_7468' :> ((α3271_7474'''',) -> α3273_7472'''')}›  <!<  ((α3273_7465',) -> α3274_7466')
-//│ ╟── while constraining:  ‹∀ 3. {(α3271_7474'''' -> α3274_7473'''') where: α3269_7280' :> ((α3270_7468',) -> α3272_7471''''), α3270_7468' :> ((α3271_7474'''',) -> α3273_7472'''')}›  <!<  α3272_7464'
+//│ ╟── while constraining:  {(α3363_7591' -> α3366_7590') where: α3361_7371' :> ((α3362_7581',) -> α3364_7588'), α3362_7581' :> ((α3363_7591',) -> α3365_7589')}  <!<  ((α3365_7578',) -> α3366_7579')
+//│ ╟── while constraining:  ‹∀ 3. {(α3363_7587'''' -> α3366_7586'''') where: α3361_7371' :> ((α3362_7581',) -> α3364_7584''''), α3362_7581' :> ((α3363_7587'''',) -> α3365_7585'''')}›  <!<  ((α3365_7578',) -> α3366_7579')
+//│ ╟── while constraining:  ‹∀ 3. {(α3363_7587'''' -> α3366_7586'''') where: α3361_7371' :> ((α3362_7581',) -> α3364_7584''''), α3362_7581' :> ((α3363_7587'''',) -> α3365_7585'''')}›  <!<  α3364_7577'
+//│ ╟── while constraining:  (α3362_7581' -> ‹∀ 3. {(α3363_7587'''' -> α3366_7586'''') where: α3361_7371' :> ((α3362_7581',) -> α3364_7584''''), α3362_7581' :> ((α3363_7587'''',) -> α3365_7585'''')}›)  <!<  ((α3362_7570',) -> α3364_7577')
+//│ ╟── while constraining:  ‹∀ 2. (α3362_7376''' -> ‹∀ 3. {(α3363_7382'''' -> α3366_7381'''') where: α3361_7371' :> ((α3362_7376''',) -> α3364_7379''''), α3362_7376''' :> ((α3363_7382'''',) -> α3365_7380'''')}›)›  <!<  ((α3362_7570',) -> α3364_7577')
+//│ ╟── while constraining:  α3361_7371'  <!<  ((α3362_7570',) -> α3364_7577')
+//│ ╟── while constraining:  {(α3363_7580' -> α3366_7579') where: α3361_7371' :> ((α3362_7570',) -> α3364_7577'), α3362_7570' :> ((α3363_7580',) -> α3365_7578')}  <!<  ((α3365_7567',) -> α3366_7568')
+//│ ╟── while constraining:  ‹∀ 3. {(α3363_7576'''' -> α3366_7575'''') where: α3361_7371' :> ((α3362_7570',) -> α3364_7573''''), α3362_7570' :> ((α3363_7576'''',) -> α3365_7574'''')}›  <!<  ((α3365_7567',) -> α3366_7568')
+//│ ╟── while constraining:  ‹∀ 3. {(α3363_7576'''' -> α3366_7575'''') where: α3361_7371' :> ((α3362_7570',) -> α3364_7573''''), α3362_7570' :> ((α3363_7576'''',) -> α3365_7574'''')}›  <!<  α3364_7566'
+//│ ╟── while constraining:  (α3362_7570' -> ‹∀ 3. {(α3363_7576'''' -> α3366_7575'''') where: α3361_7371' :> ((α3362_7570',) -> α3364_7573''''), α3362_7570' :> ((α3363_7576'''',) -> α3365_7574'''')}›)  <!<  ((α3362_7559',) -> α3364_7566')
+//│ ╟── while constraining:  ‹∀ 2. (α3362_7376''' -> ‹∀ 3. {(α3363_7382'''' -> α3366_7381'''') where: α3361_7371' :> ((α3362_7376''',) -> α3364_7379''''), α3362_7376''' :> ((α3363_7382'''',) -> α3365_7380'''')}›)›  <!<  ((α3362_7559',) -> α3364_7566')
+//│ ╟── while constraining:  α3361_7371'  <!<  ((α3362_7559',) -> α3364_7566')
+//│ ╟── while constraining:  {(α3363_7569' -> α3366_7568') where: α3361_7371' :> ((α3362_7559',) -> α3364_7566'), α3362_7559' :> ((α3363_7569',) -> α3365_7567')}  <!<  ((α3365_7556',) -> α3366_7557')
+//│ ╟── while constraining:  ‹∀ 3. {(α3363_7565'''' -> α3366_7564'''') where: α3361_7371' :> ((α3362_7559',) -> α3364_7562''''), α3362_7559' :> ((α3363_7565'''',) -> α3365_7563'''')}›  <!<  ((α3365_7556',) -> α3366_7557')
+//│ ╟── while constraining:  ‹∀ 3. {(α3363_7565'''' -> α3366_7564'''') where: α3361_7371' :> ((α3362_7559',) -> α3364_7562''''), α3362_7559' :> ((α3363_7565'''',) -> α3365_7563'''')}›  <!<  α3364_7555'
 //│ ╟── ......
 //│ ╟── ......
-//│ ╟── while constraining:  ‹∀ 2. (α3270_7285''' -> ‹∀ 3. {(α3271_7291'''' -> α3274_7290'''') where: α3269_7280' :> ((α3270_7285''',) -> α3272_7288''''), α3270_7285''' :> ((α3271_7291'''',) -> α3273_7289'''')}›)›  <!<  'a4592_7262'
-//│ ╟── while constraining:  (α3269_7280' -> ‹∀ 2. (α3270_7285''' -> ‹∀ 3. {(α3271_7291'''' -> α3274_7290'''') where: α3269_7280' :> ((α3270_7285''',) -> α3272_7288''''), α3270_7285''' :> ((α3271_7291'''',) -> α3273_7289'''')}›)›)  <!<  ('a4591_7260' -> 'a4592_7262')
-//│ ╟── while constraining:  ‹∀ 1. (α3269_3284'' -> ‹∀ 2. (α3270_3285''' -> ‹∀ 3. {(α3271_3289'''' -> α3274_3288'''') where: α3269_3284'' :> ((α3270_3285''',) -> α3272_3286''''), α3270_3285''' :> ((α3271_3289'''',) -> α3273_3287'''')}›)›)›  <!<  ('a4591_7260' -> 'a4592_7262')
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 1. (α3269_3284'' -> ‹∀ 2. (α3270_3285''' -> ‹∀ 3. {(α3271_3289'''' -> α3274_3288'''') where: α3269_3284'' :> ((α3270_3285''',) -> α3272_3286''''), α3270_3285''' :> ((α3271_3289'''',) -> α3273_3287'''')}›)›)››  <!<  ('a4591_7260' -> 'a4592_7262')
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 1. (α3269_3284'' -> ‹∀ 2. (α3270_3285''' -> ‹∀ 3. {(α3271_3289'''' -> α3274_3288'''') where: α3269_3284'' :> ((α3270_3285''',) -> α3272_3286''''), α3270_3285''' :> ((α3271_3289'''',) -> α3273_3287'''')}›)›)››  <!<  α3239_7256'
-//│ ╟── while constraining:  (‹∀ 0. ‹∀ 1. (α3269_3284'' -> ‹∀ 2. (α3270_3285''' -> ‹∀ 3. {(α3271_3289'''' -> α3274_3288'''') where: α3269_3284'' :> ((α3270_3285''',) -> α3272_3286''''), α3270_3285''' :> ((α3271_3289'''',) -> α3273_3287'''')}›)›)››,)  <!<  (α3239_7256',)
-//│ ╟── while constraining:  (α3239_7256' -> ‹∀ 3. {(α3240_7266'''' -> α3244_7265'''') where: α3239_7256' :> ('a2420_7264'''' -> 'a2420_7264''''), α3239_7256' :> ((α3240_7266'''',) -> α3243_7267'''')}›)  <!<  ((‹∀ 0. ‹∀ 1. (α3269_3284'' -> ‹∀ 2. (α3270_3285''' -> ‹∀ 3. {(α3271_3289'''' -> α3274_3288'''') where: α3269_3284'' :> ((α3270_3285''',) -> α3272_3286''''), α3270_3285''' :> ((α3271_3289'''',) -> α3273_3287'''')}›)›)››,) -> α3424_7253')
-//│ ╟── while constraining:  ‹∀ 2. (α3239_3249''' -> ‹∀ 3. {(α3240_3252'''' -> α3244_3251'''') where: α3239_3249''' :> ('a2420_3250'''' -> 'a2420_3250''''), α3239_3249''' :> ((α3240_3252'''',) -> α3243_3253'''')}›)›  <!<  ((‹∀ 0. ‹∀ 1. (α3269_3284'' -> ‹∀ 2. (α3270_3285''' -> ‹∀ 3. {(α3271_3289'''' -> α3274_3288'''') where: α3269_3284'' :> ((α3270_3285''',) -> α3272_3286''''), α3270_3285''' :> ((α3271_3289'''',) -> α3273_3287'''')}›)›)››,) -> α3424_7253')
-//│ ╟── while constraining:  α4286_7255'  <!<  ((‹∀ 0. ‹∀ 1. (α3269_3284'' -> ‹∀ 2. (α3270_3285''' -> ‹∀ 3. {(α3271_3289'''' -> α3274_3288'''') where: α3269_3284'' :> ((α3270_3285''',) -> α3272_3286''''), α3270_3285''' :> ((α3271_3289'''',) -> α3273_3287'''')}›)›)››,) -> α3424_7253')
-//│ ╟── while constraining:  ‹∀ 0. α4286'›  <!<  ((‹∀ 0. ‹∀ 1. (α3269_3284'' -> ‹∀ 2. (α3270_3285''' -> ‹∀ 3. {(α3271_3289'''' -> α3274_3288'''') where: α3269_3284'' :> ((α3270_3285''',) -> α3272_3286''''), α3270_3285''' :> ((α3271_3289'''',) -> α3273_3287'''')}›)›)››,) -> α3424_7253')
-//│ ╟── while constraining:  ‹∀ 0. α4286'›  <!<  α3423_7252'
-//│ ╟── while constraining:  (‹∀ 0. α4286'›,)  <!<  (α3423_7252',)
-//│ ╟── while constraining:  (α3423_7252' -> α3425_7254')  <!<  ((‹∀ 0. α4286'›,) -> α7251')
-//│ ╟── while constraining:  ‹∀ 2. (α3423_7248''' -> α3425_7250''')›  <!<  ((‹∀ 0. α4286'›,) -> α7251')
-//│ ╙── while constraining:  α7246'  <!<  ((‹∀ 0. α4286'›,) -> α7251')
+//│ ╟── while constraining:  ‹∀ 2. (α3362_7376''' -> ‹∀ 3. {(α3363_7382'''' -> α3366_7381'''') where: α3361_7371' :> ((α3362_7376''',) -> α3364_7379''''), α3362_7376''' :> ((α3363_7382'''',) -> α3365_7380'''')}›)›  <!<  'a4683_7353'
+//│ ╟── while constraining:  (α3361_7371' -> ‹∀ 2. (α3362_7376''' -> ‹∀ 3. {(α3363_7382'''' -> α3366_7381'''') where: α3361_7371' :> ((α3362_7376''',) -> α3364_7379''''), α3362_7376''' :> ((α3363_7382'''',) -> α3365_7380'''')}›)›)  <!<  ('a4682_7351' -> 'a4683_7353')
+//│ ╟── while constraining:  ‹∀ 1. (α3361_3376'' -> ‹∀ 2. (α3362_3377''' -> ‹∀ 3. {(α3363_3381'''' -> α3366_3380'''') where: α3361_3376'' :> ((α3362_3377''',) -> α3364_3378''''), α3362_3377''' :> ((α3363_3381'''',) -> α3365_3379'''')}›)›)›  <!<  ('a4682_7351' -> 'a4683_7353')
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 1. (α3361_3376'' -> ‹∀ 2. (α3362_3377''' -> ‹∀ 3. {(α3363_3381'''' -> α3366_3380'''') where: α3361_3376'' :> ((α3362_3377''',) -> α3364_3378''''), α3362_3377''' :> ((α3363_3381'''',) -> α3365_3379'''')}›)›)››  <!<  ('a4682_7351' -> 'a4683_7353')
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 1. (α3361_3376'' -> ‹∀ 2. (α3362_3377''' -> ‹∀ 3. {(α3363_3381'''' -> α3366_3380'''') where: α3361_3376'' :> ((α3362_3377''',) -> α3364_3378''''), α3362_3377''' :> ((α3363_3381'''',) -> α3365_3379'''')}›)›)››  <!<  α3331_7347'
+//│ ╟── while constraining:  (‹∀ 0. ‹∀ 1. (α3361_3376'' -> ‹∀ 2. (α3362_3377''' -> ‹∀ 3. {(α3363_3381'''' -> α3366_3380'''') where: α3361_3376'' :> ((α3362_3377''',) -> α3364_3378''''), α3362_3377''' :> ((α3363_3381'''',) -> α3365_3379'''')}›)›)››,)  <!<  (α3331_7347',)
+//│ ╟── while constraining:  (α3331_7347' -> ‹∀ 3. {(α3332_7357'''' -> α3336_7356'''') where: α3331_7347' :> ('a2512_7355'''' -> 'a2512_7355''''), α3331_7347' :> ((α3332_7357'''',) -> α3335_7358'''')}›)  <!<  ((‹∀ 0. ‹∀ 1. (α3361_3376'' -> ‹∀ 2. (α3362_3377''' -> ‹∀ 3. {(α3363_3381'''' -> α3366_3380'''') where: α3361_3376'' :> ((α3362_3377''',) -> α3364_3378''''), α3362_3377''' :> ((α3363_3381'''',) -> α3365_3379'''')}›)›)››,) -> α3516_7344')
+//│ ╟── while constraining:  ‹∀ 2. (α3331_3341''' -> ‹∀ 3. {(α3332_3344'''' -> α3336_3343'''') where: α3331_3341''' :> ('a2512_3342'''' -> 'a2512_3342''''), α3331_3341''' :> ((α3332_3344'''',) -> α3335_3345'''')}›)›  <!<  ((‹∀ 0. ‹∀ 1. (α3361_3376'' -> ‹∀ 2. (α3362_3377''' -> ‹∀ 3. {(α3363_3381'''' -> α3366_3380'''') where: α3361_3376'' :> ((α3362_3377''',) -> α3364_3378''''), α3362_3377''' :> ((α3363_3381'''',) -> α3365_3379'''')}›)›)››,) -> α3516_7344')
+//│ ╟── while constraining:  α4378_7346'  <!<  ((‹∀ 0. ‹∀ 1. (α3361_3376'' -> ‹∀ 2. (α3362_3377''' -> ‹∀ 3. {(α3363_3381'''' -> α3366_3380'''') where: α3361_3376'' :> ((α3362_3377''',) -> α3364_3378''''), α3362_3377''' :> ((α3363_3381'''',) -> α3365_3379'''')}›)›)››,) -> α3516_7344')
+//│ ╟── while constraining:  ‹∀ 0. α4378'›  <!<  ((‹∀ 0. ‹∀ 1. (α3361_3376'' -> ‹∀ 2. (α3362_3377''' -> ‹∀ 3. {(α3363_3381'''' -> α3366_3380'''') where: α3361_3376'' :> ((α3362_3377''',) -> α3364_3378''''), α3362_3377''' :> ((α3363_3381'''',) -> α3365_3379'''')}›)›)››,) -> α3516_7344')
+//│ ╟── while constraining:  ‹∀ 0. α4378'›  <!<  α3515_7343'
+//│ ╟── while constraining:  (‹∀ 0. α4378'›,)  <!<  (α3515_7343',)
+//│ ╟── while constraining:  (α3515_7343' -> α3517_7345')  <!<  ((‹∀ 0. α4378'›,) -> α7342')
+//│ ╟── while constraining:  ‹∀ 2. (α3515_7339''' -> α3517_7341''')›  <!<  ((‹∀ 0. α4378'›,) -> α7342')
+//│ ╙── while constraining:  α7337'  <!<  ((‹∀ 0. α4378'›,) -> α7342')
 //│ c_i5_: error
 //│      = [Function (anonymous)]
 
