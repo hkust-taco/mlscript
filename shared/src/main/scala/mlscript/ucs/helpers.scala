@@ -65,3 +65,10 @@ object helpers {
     rec(fields)
   }
 }
+
+/**
+  * Classes with multiple `Loc`s should derive from this.
+  * The utilities below keep record of the original locations.
+  * TODO: Rename this class.
+  */
+abstract class WithLocations(val terms: Set[(Term, Loc)])

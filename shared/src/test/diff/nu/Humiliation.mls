@@ -62,18 +62,73 @@ class O()
 // This is not exhaustive.
 :e
 :ge
+:d
 fun foo(x) = if x is
   Pair(Z(), Z()) then "zeros"
   Pair(O(), O()) then "ones"
+//│ 1. Typing term x, => if x is ‹(Pair (Z (), Z (),)) then "zeros"; (Pair (O (), O (),)) then "ones"›
+//│ | 1. Typing pattern x,
+//│ | | 1. Typing pattern x
+//│ | | 1. : α160'
+//│ | 1. : (α160',)
+//│ | 1. Typing term if x is ‹(Pair (Z (), Z (),)) then "zeros"; (Pair (O (), O (),)) then "ones"›
+//│ | | Build a Clause.MatchClass from x where pattern is Pair (Z (), Z (),)
+//│ | | Fragments: List()
+//│ | | The locations of the clause: List(Loc(23,37,nu/Humiliation:+66))
+//│ | | Build a Clause.MatchClass from tmp2 where pattern is Z ()
+//│ | | Fragments: List()
+//│ | | The locations of the clause: List(Loc(28,31,nu/Humiliation:+66))
+//│ | | Build a Clause.MatchClass from tmp3 where pattern is Z ()
+//│ | | Fragments: List()
+//│ | | The locations of the clause: List(Loc(33,36,nu/Humiliation:+66))
+//│ | | Build a Clause.MatchClass from x where pattern is Pair (O (), O (),)
+//│ | | Fragments: List()
+//│ | | The locations of the clause: List(Loc(53,67,nu/Humiliation:+66))
+//│ | | Build a Clause.MatchClass from tmp2 where pattern is O ()
+//│ | | Fragments: List()
+//│ | | The locations of the clause: List(Loc(58,61,nu/Humiliation:+66))
+//│ | | Build a Clause.MatchClass from tmp3 where pattern is O ()
+//│ | | Fragments: List()
+//│ | | The locations of the clause: List(Loc(63,66,nu/Humiliation:+66))
+//│ | | Flattened conjunctions
+//│ | | + «x is Pair» and «tmp2 is Z» and «tmp3 is Z» => "zeros"
+//│ | | + «x is Pair» and «tmp2 is O» and «tmp3 is O» => "ones"
+//│ | | The mutable CaseOf tree
+//│ | | «x» match
+//│ | |   case Pair =>
+//│ | |     let tmp2 = .fst
+//│ | |     let tmp3 = .snd
+//│ | |     «tmp2» match
+//│ | |       case Z =>
+//│ | |         «tmp3» match
+//│ | |           case Z =>
+//│ | |             «"zeros"»
+//│ | |       case O =>
+//│ | |         «tmp3» match
+//│ | |           case O =>
+//│ | |             «"ones"»
+//│ | | Exhaustiveness map
+//│ | | - tmp3 => Z, O
+//│ | | - tmp2 => Z, O
+//│ | | - x => Pair
+//│ | 1. : error<>
+//│ 1. : (α160' -> error<>)
+//│ CONSTRAIN (α160' -> error<>) <! foo159'
+//│   where 
+//│ C (α160' -> error<>) <! foo159'    (0)
+//│ ⬤ Typed as: foo159'
+//│  where: 
+//│ 		foo159' :> (α160' -> error<>)
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.65: 	fun foo(x) = if x is
+//│ ║  l.66: 	fun foo(x) = if x is
 //│ ║        	                ^^^^
 //│ ╟── The pattern at this position misses 1 case.
-//│ ║  l.66: 	  Pair(Z(), Z()) then "zeros"
+//│ ║  l.67: 	  Pair(Z(), Z()) then "zeros"
 //│ ║        	            ^^^
-//│ ╟── [Missing Case 1/1] The case `O` is missing, which first appears here.
-//│ ║  l.67: 	  Pair(O(), O()) then "ones"
-//│ ╙──      	            ^
+//│ ╟── [Missing Case 1/1] `O`
+//│ ╟── It first appears here.
+//│ ║  l.68: 	  Pair(O(), O()) then "ones"
+//│ ╙──      	            ^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -85,14 +140,15 @@ fun foo(x) = if x is
   (Z(), Z()) then "zeros"
   (O(), O()) then "ones"
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.84: 	fun foo(x) = if x is
-//│ ║        	                ^^^^
+//│ ║  l.139: 	fun foo(x) = if x is
+//│ ║         	                ^^^^
 //│ ╟── The pattern at this position misses 1 case.
-//│ ║  l.85: 	  (Z(), Z()) then "zeros"
-//│ ║        	        ^^^
-//│ ╟── [Missing Case 1/1] The case `O` is missing, which first appears here.
-//│ ║  l.86: 	  (O(), O()) then "ones"
-//│ ╙──      	        ^
+//│ ║  l.140: 	  (Z(), Z()) then "zeros"
+//│ ║         	        ^^^
+//│ ╟── [Missing Case 1/1] `O`
+//│ ╟── It first appears here.
+//│ ║  l.141: 	  (O(), O()) then "ones"
+//│ ╙──       	        ^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -157,14 +213,15 @@ fun foo(x) = if x is
   Pair(O(), O()) then "ones"
   Pair(y, O()) then x
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.155: 	fun foo(x) = if x is
+//│ ║  l.211: 	fun foo(x) = if x is
 //│ ║         	                ^^^^
 //│ ╟── The pattern at this position misses 1 case.
-//│ ║  l.156: 	  Pair(Z(), Z()) then "zeros"
+//│ ║  l.212: 	  Pair(Z(), Z()) then "zeros"
 //│ ║         	            ^^^
-//│ ╟── [Missing Case 1/1] The case `Z` is missing, which first appears here.
-//│ ║  l.156: 	  Pair(Z(), Z()) then "zeros"
-//│ ╙──       	            ^
+//│ ╟── [Missing Case 1/1] `Z`
+//│ ╟── It first appears here.
+//│ ║  l.212: 	  Pair(Z(), Z()) then "zeros"
+//│ ╙──       	            ^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -177,7 +234,7 @@ fun foo(x, y) = if x is Z() and y is O() then 0 else 1
 fun foo(x, y) = if x is
   Z() and y is O() then 0 else 1
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.178: 	  Z() and y is O() then 0 else 1
+//│ ║  l.235: 	  Z() and y is O() then 0 else 1
 //│ ╙──       	                          ^^^^
 //│ foo: (Z, O,) -> 0
 //│    = [Function: foo8]

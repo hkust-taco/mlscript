@@ -96,7 +96,7 @@ class Desugarer extends TypeDefs { self: Typer =>
     */
   private def destructPattern
       (scrutinee: Term, pattern: Term)
-      (implicit ctx: Ctx, raise: Raise, aliasMap: FieldAliasMap, matchRootLoc: Opt[Loc]): Ls[Clause] = 
+      (implicit ctx: Ctx, raise: Raise, aliasMap: FieldAliasMap, matchRootLoc: Opt[Loc], fragments: Ls[Term] = Nil): Ls[Clause] = 
     pattern match {
       // This case handles top-level wildcard `Var`.
       // We don't make any conditions in this level.
@@ -114,7 +114,11 @@ class Desugarer extends TypeDefs { self: Typer =>
             import Message.MessageContext
             msg"Cannot find the constructor `$className` in the context"
           }, classNameVar.toLoc)
-          case S(_) => Clause.MatchClass(makeScrutinee(scrutinee), classNameVar, Nil) :: Nil
+          case S(_) => 
+            val clause = Clause.MatchClass(makeScrutinee(scrutinee), classNameVar, Nil)
+            println(s"Build a Clause.MatchClass from $scrutinee where pattern is $classNameVar")
+            clause.locations = collectLocations(scrutinee)
+            clause :: Nil
         }
       // This case handles classes with destruction.
       // x is A(r, s, t)
@@ -132,8 +136,12 @@ class Desugarer extends TypeDefs { self: Typer =>
                 args.iterator.map(_._2.value),
                 td.positionals
               )
-              Clause.MatchClass(makeScrutinee(scrutinee), classNameVar, bindings) ::
-                destructSubPatterns(subPatterns)
+              val clause = Clause.MatchClass(makeScrutinee(scrutinee), classNameVar, bindings)
+              println(s"Build a Clause.MatchClass from $scrutinee where pattern is $pattern")
+              println(s"Fragments: $fragments")
+              clause.locations = pattern.toLoc.toList ::: collectLocations(scrutinee)
+              println(s"The locations of the clause: ${clause.locations}")
+              clause :: destructSubPatterns(subPatterns)
             } else {
               throw DesugaringException.Single({
                 import Message.MessageContext
@@ -168,8 +176,10 @@ class Desugarer extends TypeDefs { self: Typer =>
               lhs :: rhs :: Nil,
               td.positionals
             )
-            Clause.MatchClass(makeScrutinee(scrutinee), opVar, bindings) ::
-              destructSubPatterns(subPatterns)
+            val clause = Clause.MatchClass(makeScrutinee(scrutinee), opVar, bindings)
+            println(s"Build a Clause.MatchClass from $scrutinee where operator is $opVar")
+            clause.locations = collectLocations(scrutinee)
+            clause :: destructSubPatterns(subPatterns)
           case S(td) =>
             val num = td.positionals.length
             throw DesugaringException.Single({
@@ -188,11 +198,27 @@ class Desugarer extends TypeDefs { self: Typer =>
           elems.iterator.map(_._2.value),
           1.to(elems.length).map("_" + _).toList
         )
-        Clause.MatchTuple(makeScrutinee(scrutinee), elems.length, bindings) ::
-          destructSubPatterns(subPatterns)
+        val clause = Clause.MatchTuple(makeScrutinee(scrutinee), elems.length, bindings)
+        clause.locations = collectLocations(scrutinee)
+        clause :: destructSubPatterns(subPatterns)
       // What else?
       case _ => throw new Exception(s"illegal pattern: ${mlscript.codegen.Helpers.inspect(pattern)}")
     }
+
+  /**
+    * Collect `Loc`s from a synthetic term.
+    *
+    * @param term the root of the synthetic term
+    * @param fragments the fragment terms
+    * @return all original locations
+    */
+  def collectLocations(term: Term)(implicit fragments: Ls[Term]): Ls[Loc] = {
+    val locations = Buffer.empty[Loc]
+    def rec(term: Term): Unit = term.children.foreach { located =>
+      if (fragments.contains(located)) locations ++= located.toLoc
+    }
+    locations.toList
+  }
 
 
   def desugarIf
@@ -212,14 +238,17 @@ class Desugarer extends TypeDefs { self: Typer =>
       * @param ts a list of atomic UCS conditions
       * @return a list of `Condition`
       */
-    def desugarConditions(ts: Ls[Term]): Ls[Clause] =
+    def desugarConditions(ts: Ls[Term])(implicit fragments: Ls[Term] = Nil): Ls[Clause] =
       ts.flatMap {
         case isApp @ App(
           App(Var("is"),
               Tup((_ -> Fld(_, _, scrutinee)) :: Nil)),
           Tup((_ -> Fld(_, _, pattern)) :: Nil)
         ) => destructPattern(scrutinee, pattern)(ctx, raise, implicitly, isApp.toLoc)
-        case test => Iterable.single(Clause.BooleanTest(test))
+        case test =>
+          val clause = Clause.BooleanTest(test)
+          clause.locations = collectLocations(test)
+          Iterable.single(clause)
       }
 
     import Clause.withBindings
@@ -329,7 +358,8 @@ class Desugarer extends TypeDefs { self: Typer =>
               )
               opsRhss.foreach { case op -> consequent =>
                 // TODO: Use lastOption
-                val partialTerm = PartialTerm.Total(testTerms.last, testTerms.last.toLoc.toList)
+                val last = testTerms.last
+                val partialTerm = PartialTerm.Total(last, last :: Nil)
                 desugarIfBody(consequent, partialTerm, conditions)
               }
           }
@@ -361,11 +391,13 @@ class Desugarer extends TypeDefs { self: Typer =>
           branches += (acc -> consequent)
         // The termination case.
         case IfThen(term, consequent) =>
-          val conditions = Conjunction.concat(
-            acc,
-            (desugarConditions(splitAnd(expr.addTerm(term).term)), Nil)
-          )
-          branches += (withBindings(conditions) -> consequent)
+          val totalTerm = expr.addTerm(term)
+          // “Atomic” means terms that do not contain `and`.
+          val atomicTerms = splitAnd(totalTerm.term)
+          val fragments = atomicTerms ::: totalTerm.fragments
+          val newClauses = desugarConditions(atomicTerms)(fragments)
+          val conjunction = Conjunction.concat(acc, (newClauses, Nil))
+          branches += (withBindings(conjunction) -> consequent)
         // This is the entrance of the Simple UCS.
         case IfOpApp(scrutinee, isVar @ Var("is"), IfBlock(lines)) =>
           val interleavedLets = Buffer.empty[(Bool, Var, Term)]

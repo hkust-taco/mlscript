@@ -1,0 +1,107 @@
+:NewParser
+:NoJS
+
+class A()
+class B()
+class C()
+//│ Defined class A
+//│ Defined class B
+//│ Defined class C
+//│ A: () -> A
+//│ B: () -> B
+//│ C: () -> C
+
+// FIXME!
+:d
+fun f(x, y) =
+  if
+    y is A and
+      x is
+        A then 0
+        B then 1
+        C then 2
+    y is B and
+      x is
+        A then 4
+//│ 1. Typing term x, y, => {if ‹is (y,) (A,) and ‹x is ‹(A) then 0; (B) then 1; (C) then 2››; is (y,) (B,) and ‹x is ‹(A) then 4›››}
+//│ | 1. Typing pattern x, y,
+//│ | | 1. Typing pattern x
+//│ | | 1. : α31'
+//│ | | 1. Typing pattern y
+//│ | | 1. : α32'
+//│ | 1. : (α31', α32',)
+//│ | 1. Typing term {if ‹is (y,) (A,) and ‹x is ‹(A) then 0; (B) then 1; (C) then 2››; is (y,) (B,) and ‹x is ‹(A) then 4›››}
+//│ | | 1. Typing term if ‹is (y,) (A,) and ‹x is ‹(A) then 0; (B) then 1; (C) then 2››; is (y,) (B,) and ‹x is ‹(A) then 4›››
+//│ | | | Build a Clause.MatchClass from y where pattern is A
+//│ | | | Build a Clause.MatchClass from x where pattern is A
+//│ | | | Build a Clause.MatchClass from x where pattern is B
+//│ | | | Build a Clause.MatchClass from x where pattern is C
+//│ | | | Build a Clause.MatchClass from y where pattern is B
+//│ | | | Build a Clause.MatchClass from x where pattern is A
+//│ | | | Flattened conjunctions
+//│ | | | + «y is A» and «x is A» => 0
+//│ | | | + «y is A» and «x is B» => 1
+//│ | | | + «y is A» and «x is C» => 2
+//│ | | | + «y is B» and «x is A» => 4
+//│ | | | The mutable CaseOf tree
+//│ | | | «y» match
+//│ | | |   case A =>
+//│ | | |     «x» match
+//│ | | |       case A =>
+//│ | | |         «0»
+//│ | | |       case B =>
+//│ | | |         «1»
+//│ | | |       case C =>
+//│ | | |         «2»
+//│ | | |   case B =>
+//│ | | |     «x» match
+//│ | | |       case A =>
+//│ | | |         «4»
+//│ | | | Exhaustiveness map
+//│ | | | - y => B, A
+//│ | | | - x => B, C, A
+//│ | | | Desugared term: case y of { A => case x of { A => 0; B => 1; C => 2 }; B => case x of { A => 4 } }
+//│ | | | 1. Typing term case y of { A => case x of { A => 0; B => 1; C => 2 }; B => case x of { A => 4 } }
+//│ | | | | 1. Typing term y
+//│ | | | | 1. : α32'
+//│ | | | | 1. Typing term case x of { A => 0; B => 1; C => 2 }
+//│ | | | | | 1. Typing term x
+//│ | | | | | 1. : α31'
+//│ | | | | | 1. Typing term 0
+//│ | | | | | 1. : 0<int,number>
+//│ | | | | | 1. Typing term 1
+//│ | | | | | 1. : 1<int,number>
+//│ | | | | | 1. Typing term 2
+//│ | | | | | 1. : 2<int,number>
+//│ | | | | | CONSTRAIN α31' <! ((a<> & α34') | (((b<> & α35') | ((c<> & α36') & ~(b<>))) & ~(a<>)))
+//│ | | | | |   where 
+//│ | | | | | C α31' <! ((a<> & α34') | (((b<> & α35') | ((c<> & α36') & ~(b<>))) & ~(a<>)))    (0)
+//│ | | | | 1. : (0<int,number> | (1<int,number> | 2<int,number>))
+//│ | | | | 1. Typing term case x of { A => 4 }
+//│ | | | | | 1. Typing term x
+//│ | | | | | 1. : α31'
+//│ | | | | | 1. Typing term 4
+//│ | | | | | 1. : 4<int,number>
+//│ | | | | | CONSTRAIN α31' <! (a<> & α38')
+//│ | | | | |   where 
+//│ 		α31' <: ((a<> & α34') | (((b<> & α35') | ((c<> & α36') & ~(b<>))) & ~(a<>)))
+//│ | | | | | C α31' <! (a<> & α38')    (0)
+//│ | | | | 1. : 4<int,number>
+//│ | | | | CONSTRAIN α32' <! ((a<> & α33') | ((b<> & α37') & ~(a<>)))
+//│ | | | |   where 
+//│ | | | | C α32' <! ((a<> & α33') | ((b<> & α37') & ~(a<>)))    (0)
+//│ | | | 1. : ((0<int,number> | (1<int,number> | 2<int,number>)) | 4<int,number>)
+//│ | | 1. : ((0<int,number> | (1<int,number> | 2<int,number>)) | 4<int,number>)
+//│ | 1. : ((0<int,number> | (1<int,number> | 2<int,number>)) | 4<int,number>)
+//│ 1. : ((α31', α32',) -> ((0<int,number> | (1<int,number> | 2<int,number>)) | 4<int,number>))
+//│ CONSTRAIN ((α31', α32',) -> ((0<int,number> | (1<int,number> | 2<int,number>)) | 4<int,number>)) <! f30'
+//│   where 
+//│ 		α31' <: (a<> & α38') & ((a<> & α34') | (((b<> & α35') | ((c<> & α36') & ~(b<>))) & ~(a<>)))
+//│ 		α32' <: ((a<> & α33') | ((b<> & α37') & ~(a<>)))
+//│ C ((α31', α32',) -> ((0<int,number> | (1<int,number> | 2<int,number>)) | 4<int,number>)) <! f30'    (0)
+//│ ⬤ Typed as: f30'
+//│  where: 
+//│ 		f30' :> ((α31', α32',) -> ((0<int,number> | (1<int,number> | 2<int,number>)) | 4<int,number>))
+//│ 		α31' <: (a<> & α38') & ((a<> & α34') | (((b<> & α35') | ((c<> & α36') & ~(b<>))) & ~(a<>)))
+//│ 		α32' <: ((a<> & α33') | ((b<> & α37') & ~(a<>)))
+//│ f: (A, A | B,) -> (0 | 1 | 2 | 4)

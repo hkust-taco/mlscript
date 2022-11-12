@@ -39,12 +39,14 @@ fun f(x, y) =
 //│ ╟── The pattern at this position misses 2 cases.
 //│ ║  l.33: 	    Left(xv) and y is Left(yv) then xv + yv
 //│ ║        	                 ^
-//│ ╟── [Missing Case 1/2] The case `None` is missing, which first appears here.
+//│ ╟── [Missing Case 1/2] `None`
+//│ ╟── It first appears here.
 //│ ║  l.35: 	    None() and y is None() then 0
-//│ ║        	                    ^^^^
-//│ ╟── [Missing Case 2/2] The case `Right` is missing, which first appears here.
+//│ ║        	                    ^^^^^^
+//│ ╟── [Missing Case 2/2] `Right`
+//│ ╟── It first appears here.
 //│ ║  l.34: 	    Right(xv) and y is Right(yv) then xv * yv
-//│ ╙──      	                       ^^^^^
+//│ ╙──      	                       ^^^^^^^^^
 //│ f: (anything, anything,) -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -117,14 +119,15 @@ fun f(x, y) =
     Some(xv) and y is Some(yv) then xv + yv
     None() and y is None() then 0
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.117: 	    Some(xv) and y is Some(yv) then xv + yv
+//│ ║  l.119: 	    Some(xv) and y is Some(yv) then xv + yv
 //│ ║         	                 ^^^^^^^^^^^^^
 //│ ╟── The pattern at this position misses 1 case.
-//│ ║  l.117: 	    Some(xv) and y is Some(yv) then xv + yv
+//│ ║  l.119: 	    Some(xv) and y is Some(yv) then xv + yv
 //│ ║         	                 ^
-//│ ╟── [Missing Case 1/1] The case `None` is missing, which first appears here.
-//│ ║  l.118: 	    None() and y is None() then 0
-//│ ╙──       	                    ^^^^
+//│ ╟── [Missing Case 1/1] `None`
+//│ ╟── It first appears here.
+//│ ║  l.120: 	    None() and y is None() then 0
+//│ ╙──       	                    ^^^^^^
 //│ f: (anything, anything,) -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -167,13 +170,13 @@ fun f(x, y) =
       <  0 then "le"
       == 0 then "eq"
 //│ ╔══[ERROR] Missing the otherwise case of test == (y,) (0,)
-//│ ║  l.165: 	    Some(x) and y
+//│ ║  l.168: 	    Some(x) and y
 //│ ║         	                ^
-//│ ║  l.166: 	      >  0 then "gt"
+//│ ║  l.169: 	      >  0 then "gt"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.167: 	      <  0 then "le"
+//│ ║  l.170: 	      <  0 then "le"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.168: 	      == 0 then "eq"
+//│ ║  l.171: 	      == 0 then "eq"
 //│ ╙──       	^^^^^^^^^^
 //│ f: (anything, anything,) -> error
 //│ Code generation encountered an error:
@@ -247,24 +250,24 @@ fun f(u, v, w) =
       Right(_) then "right-defined"
     None then "undefined"
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.244: 	  if foo(u, v, w) is
+//│ ║  l.247: 	  if foo(u, v, w) is
 //│ ║         	     ^^^^^^^^^^^^^^^
-//│ ║  l.245: 	    Some(x) and x is
+//│ ║  l.248: 	    Some(x) and x is
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.246: 	      Left(_) then "left-defined"
+//│ ║  l.249: 	      Left(_) then "left-defined"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.247: 	      Right(_) then "right-defined"
+//│ ║  l.250: 	      Right(_) then "right-defined"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.248: 	    None then "undefined"
+//│ ║  l.251: 	    None then "undefined"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` does not match type `Left & ?a | Right & ?b`
-//│ ║  l.232: 	  if x - y > 0 then Some(x + y + z) else None()
+//│ ║  l.235: 	  if x - y > 0 then Some(x + y + z) else None()
 //│ ║         	                         ^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.245: 	    Some(x) and x is
+//│ ║  l.248: 	    Some(x) and x is
 //│ ║         	                ^
 //│ ╟── from application:
-//│ ║  l.244: 	  if foo(u, v, w) is
+//│ ║  l.247: 	  if foo(u, v, w) is
 //│ ╙──       	     ^^^^^^^^^^^^
 //│ f: (int, int, int,) -> ("left-defined" | "right-defined" | "undefined")
 //│  = [Function: f16]
@@ -342,7 +345,7 @@ fun f(x) =
     0 ::
       Nil() then "oh"
 //│ ╔══[ERROR] Cannot find operator `::` in the context
-//│ ║  l.342: 	    0 ::
+//│ ║  l.345: 	    0 ::
 //│ ╙──       	      ^^
 //│ f: anything -> error
 //│ Code generation encountered an error:

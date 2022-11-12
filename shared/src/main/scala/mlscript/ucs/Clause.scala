@@ -13,20 +13,27 @@ abstract class Clause {
   /**
     * Local interleaved let bindings declared before this condition.
     */
-  var bindings: List[(Bool, Var, Term)] = Nil
+  var bindings: Ls[(Bool, Var, Term)] = Nil
+
+  /**
+    * Locations of terms that build this `Clause`.
+    *
+    * @return
+    */
+  var locations: Ls[Loc] = Nil
 }
 
 object Clause {
   final case class MatchClass(
     scrutinee: Scrutinee,
     className: Var,
-    fields: List[Str -> Var]
+    fields: Ls[Str -> Var]
   ) extends Clause
 
   final case class MatchTuple(
     scrutinee: Scrutinee,
     arity: Int,
-    fields: List[Str -> Var]
+    fields: Ls[Str -> Var]
   ) extends Clause
 
   final case class BooleanTest(test: Term) extends Clause

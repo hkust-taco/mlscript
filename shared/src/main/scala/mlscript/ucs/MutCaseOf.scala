@@ -39,6 +39,9 @@ sealed abstract class MutCaseOf extends WithBindings {
     (bindings: Ls[(Bool, Var, Term)], default: Term)
     (implicit raise: Diagnostic => Unit): Unit
   def toTerm: Term
+
+  // TODO: Make it immutable.
+  var locations: Ls[Loc] = Nil
 }
 
 object MutCaseOf {
@@ -47,7 +50,12 @@ object MutCaseOf {
     mkBindings(t.getBindings.toList, term)
   }
 
-  def checkExhaustive(t: MutCaseOf, parentOpt: Opt[MutCaseOf])(implicit scrutineePatternMap: MutMap[Term, MutSet[Var]]): Unit = {
+  /**
+    * A map from each scrutinee term to all its cases and the first `MutCase`.
+    */
+  type ExhaustivenessMap = MutMap[Term, MutMap[Var, MutCase]]
+
+  def checkExhaustive(t: MutCaseOf, parentOpt: Opt[MutCaseOf])(implicit scrutineePatternMap: ExhaustivenessMap): Unit = {
     t match {
       case _: Consequent => ()
       case MissingCase =>
@@ -67,33 +75,40 @@ object MutCaseOf {
         checkExhaustive(whenFalse, S(t))
       case Match(scrutinee, branches, default) =>
         scrutineePatternMap.get(scrutinee.term) match {
+          // Should I call `die` here?
           case N => throw new Error(s"unreachable case: unknown scrutinee ${scrutinee.term}")
-          case S(patterns) =>
-            val missingCases = patterns.subtractAll(branches.iterator.map {
-              case Branch(classNameVar -> _, _) => classNameVar
+          case S(patternMap) =>
+            // Filter out missing cases in `branches`.
+            val missingCases = patternMap.subtractAll(branches.iterator.map {
+              case MutCase(classNameVar -> _, _) => classNameVar
             })
             if (!missingCases.isEmpty) {
               throw DesugaringException.Multiple({
                 import Message.MessageContext
                 val numMissingCases = missingCases.size
                 (msg"The match is not exhaustive." -> scrutinee.matchRootLoc) ::
-                  (msg"The pattern at this position misses ${numMissingCases.toString} ${"case".pluralize(numMissingCases)}." -> scrutinee.term.toLoc) ::
-                  missingCases.iterator.zipWithIndex.map { case (classNameVar, index) =>
+                  (msg"The pattern at this position misses ${numMissingCases.toString} ${
+                    "case".pluralize(numMissingCases)
+                  }." -> scrutinee.term.toLoc) ::
+                  missingCases.iterator.zipWithIndex.flatMap { case ((classNameVar, firstMutCase), index) =>
                     val progress = s"[Missing Case ${index + 1}/$numMissingCases]"
-                    msg"$progress The case `${classNameVar.name}` is missing, which first appears here." -> classNameVar.toLoc  
+                    (msg"$progress `${classNameVar.name}`" -> N) ::
+                      firstMutCase.locations.iterator.zipWithIndex.map { case (loc, index) =>
+                        (if (index === 0) msg"It first appears here." else msg"continued at") -> S(loc)
+                      }.toList
                   }.toList
               })
             }
         }
         default.foreach(checkExhaustive(_, S(t)))
-        branches.foreach { case Branch(_, consequent) =>
+        branches.foreach { case MutCase(_, consequent) =>
           checkExhaustive(consequent, S(t))
         }
     }
   }
 
-  def summarizePatterns(t: MutCaseOf): MutMap[Term, MutSet[Var]] = {
-    val scrutineePatternMap = MutMap.empty[Term, MutSet[Var]]
+  def summarizePatterns(t: MutCaseOf): ExhaustivenessMap = {
+    val m = MutMap.empty[Term, MutMap[Var, MutCase]]
     def rec(t: MutCaseOf): Unit =
       t match {
         case Consequent(term) => ()
@@ -102,14 +117,16 @@ object MutCaseOf {
           rec(whenTrue)
           rec(whenFalse)
         case Match(scrutinee, branches, _) =>
-          branches.foreach {
-            case Branch((classNameVar: Var) -> _, consequent) =>
-              scrutineePatternMap.getOrElseUpdate(scrutinee.term, MutSet.empty) += classNameVar
-              rec(consequent)
+          branches.foreach { mutCase =>
+            val patternMap = m.getOrElseUpdate(scrutinee.term, MutMap.empty)
+            if (!patternMap.contains(mutCase.patternFields._1)) {
+              patternMap += ((mutCase.patternFields._1, mutCase))
+            }
+            rec(mutCase.consequent)
           }
       }
     rec(t)
-    scrutineePatternMap
+    m
   }
 
   def showScrutinee(scrutinee: Scrutinee): Str =
@@ -136,7 +153,7 @@ object MutCaseOf {
           rec(whenFalse, indent + 1, "")
         case Match(scrutinee, branches, default) =>
           lines += baseIndent + leading + bindingNames + showScrutinee(scrutinee) + " match"
-          branches.foreach { case Branch(Var(className) -> fields, consequent) =>
+          branches.foreach { case MutCase(Var(className) -> fields, consequent) =>
             lines += s"$baseIndent  case $className =>"
             fields.foreach { case (field, Var(alias)) =>
               lines += s"$baseIndent    let $alias = .$field"
@@ -157,14 +174,46 @@ object MutCaseOf {
     lines.toList
   }
 
-  final case class Branch(
+  /**
+    * MutCase is a _mutable_ representation of a case in `MutCaseOf.Match`.
+    *
+    * @param patternFields the alias to the fields
+    * @param consequent the consequential `MutCaseOf`
+    */
+  final case class MutCase(
     val patternFields: Var -> Buffer[Str -> Var],
-    var consequent: MutCaseOf
+    var consequent: MutCaseOf,
   ) {
     def matches(expected: Var): Bool = matches(expected.name)
     def matches(expected: Str): Bool = patternFields._1.name === expected
     def addFields(fields: Iterable[Str -> Var]): Unit =
       patternFields._2 ++= fields.iterator.filter(!patternFields._2.contains(_))
+
+    // Note 1
+    // ======
+    // A `MutCase` may come from one of two origins.
+    // Direct patterns.
+    // E.g. if x is Y then "aha" else "meh"
+    //         ^^^^^^
+    // Nested patterns.
+    // E.g. if x is Right(Some(x)) then ...
+    //                    ^^^^^^^
+    // The goal is to accurately indicate where the pattern is declared.
+    //
+    // Note 2
+    // ======
+    // A `MutCase` may come from multiple locations.
+    // That is why I'm using a `Set`.
+    //
+    val locations: MutSet[Loc] = MutSet.empty[Loc]
+    def withLocation(locOpt: Opt[Loc]): MutCase = {
+      locations ++= locOpt
+      this
+    }
+    def withLocations(locs: Ls[Loc]): MutCase = {
+      locations ++= locs
+      this
+    }
   }
 
   import Clause.{Conjunction, MatchClass, MatchTuple, BooleanTest}
@@ -224,7 +273,7 @@ object MutCaseOf {
   }
   final case class Match(
     scrutinee: Scrutinee,
-    val branches: Buffer[Branch],
+    val branches: Buffer[MutCase],
     var wildcard: Opt[MutCaseOf]
   ) extends MutCaseOf {
     override def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit = {
@@ -240,7 +289,8 @@ object MutCaseOf {
                 case N =>
                   val newBranch = buildFirst((tail, trailingBindings), term)
                   newBranch.addBindings(head.bindings)
-                  branches += Branch(tupleClassName -> Buffer.from(fields), newBranch)
+                  branches += MutCase(tupleClassName -> Buffer.from(fields), newBranch)
+                    .withLocations(head.locations)
                 // Found existing pattern.
                 case S(branch) =>
                   branch.consequent.addBindings(head.bindings)
@@ -269,7 +319,8 @@ object MutCaseOf {
               // println(s"Just build branch: $newBranch")
               // println(s"It has bindings: ${newBranch.getBindings}")
               newBranch.addBindings(head.bindings)
-              branches += Branch(className -> Buffer.from(fields), newBranch)
+              branches += MutCase(className -> Buffer.from(fields), newBranch)
+                .withLocations(head.locations)
             // Found existing pattern.
             case S(matchCase) =>
               // Merge interleaved bindings.
@@ -282,7 +333,7 @@ object MutCaseOf {
 
     override def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Unit = {
       branches.foreach {
-        case Branch(_, consequent) => consequent.mergeDefault(bindings, default)
+        case MutCase(_, consequent) => consequent.mergeDefault(bindings, default)
       }
       wildcard match {
         case N => wildcard = S(Consequent(default).withBindings(bindings))
@@ -291,9 +342,9 @@ object MutCaseOf {
     }
 
     override def toTerm: Term = {
-      def rec(xs: Ls[Branch]): CaseBranches =
+      def rec(xs: Ls[MutCase]): CaseBranches =
         xs match {
-          case Branch(className -> fields, cases) :: next =>
+          case MutCase(className -> fields, cases) :: next =>
             // TODO: expand bindings here
             Case(className, mkLetFromFields(scrutinee, fields.toList, cases.toTerm), rec(next))
           case Nil =>
@@ -338,12 +389,16 @@ object MutCaseOf {
         val res = head match {
           case BooleanTest(test) => IfThenElse(test, rec(realTail), MissingCase)
           case MatchClass(scrutinee, className, fields) =>
-            val branches = Buffer(Branch(className -> Buffer.from(fields), rec(realTail)))
+            val branches = Buffer(
+              MutCase(className -> Buffer.from(fields), rec(realTail))
+                .withLocations(head.locations)
+            )
             Match(scrutinee, branches, N)
           case MatchTuple(scrutinee, arity, fields) =>
-            val branches = Buffer.empty[Branch]
-            val tupleClassName = Var(s"Tuple#$arity")
-            branches += Branch(tupleClassName -> Buffer.from(fields), rec(realTail))
+            val branches = Buffer(
+              MutCase(Var(s"Tuple#$arity") -> Buffer.from(fields), rec(realTail))
+                .withLocations(head.locations)
+            )
             Match(scrutinee, branches, N)
         }
         res.addBindings(head.bindings)

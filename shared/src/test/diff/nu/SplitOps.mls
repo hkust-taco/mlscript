@@ -58,9 +58,10 @@ fun f(x) =
 //│ ╟── The pattern at this position misses 1 case.
 //│ ║  l.53: 	    is Some(xv) and y is Some(yv) then xv + yv
 //│ ║        	                    ^
-//│ ╟── [Missing Case 1/1] The case `None` is missing, which first appears here.
+//│ ╟── [Missing Case 1/1] `None`
+//│ ╟── It first appears here.
 //│ ║  l.54: 	    is None() and y is None() then 0
-//│ ╙──      	                       ^^^^
+//│ ╙──      	                       ^^^^^^
 //│ f: anything -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
@@ -91,9 +92,9 @@ fun f(a, b, c) =
   if a
     == 0 and b is B() and c is C() then 0
 //│ ╔══[ERROR] Missing the otherwise case of test == (a,) (0,)
-//│ ║  l.91: 	  if a
+//│ ║  l.92: 	  if a
 //│ ║        	     ^
-//│ ║  l.92: 	    == 0 and b is B() and c is C() then 0
+//│ ║  l.93: 	    == 0 and b is B() and c is C() then 0
 //│ ╙──      	^^^^^^^^
 //│ f: (anything, anything, anything,) -> error
 //│ Code generation encountered an error:
