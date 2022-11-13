@@ -72,6 +72,7 @@ fun foo(x) = if x is
 //│ | | 1. : α160'
 //│ | 1. : (α160',)
 //│ | 1. Typing term if x is ‹(Pair (Z (), Z (),)) then "zeros"; (Pair (O (), O (),)) then "ones"›
+//│ | | If(IfOpApp(Var(x), Var(is), IfBlock(IfThen(App(Var(Pair), Tup(_: App(Var(Z), Tup()), _: App(Var(Z), Tup()))), StrLit(zeros);IfThen(App(Var(Pair), Tup(_: App(Var(O), Tup()), _: App(Var(O), Tup()))), StrLit(ones)), None)
 //│ | | Build a Clause.MatchClass from x where pattern is Pair (Z (), Z (),)
 //│ | | Fragments: List()
 //│ | | The locations of the clause: List(Loc(23,37,nu/Humiliation:+66))
@@ -140,14 +141,14 @@ fun foo(x) = if x is
   (Z(), Z()) then "zeros"
   (O(), O()) then "ones"
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.139: 	fun foo(x) = if x is
+//│ ║  l.140: 	fun foo(x) = if x is
 //│ ║         	                ^^^^
 //│ ╟── The pattern at this position misses 1 case.
-//│ ║  l.140: 	  (Z(), Z()) then "zeros"
+//│ ║  l.141: 	  (Z(), Z()) then "zeros"
 //│ ║         	        ^^^
 //│ ╟── [Missing Case 1/1] `O`
 //│ ╟── It first appears here.
-//│ ║  l.141: 	  (O(), O()) then "ones"
+//│ ║  l.142: 	  (O(), O()) then "ones"
 //│ ╙──       	        ^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
@@ -213,14 +214,14 @@ fun foo(x) = if x is
   Pair(O(), O()) then "ones"
   Pair(y, O()) then x
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.211: 	fun foo(x) = if x is
+//│ ║  l.212: 	fun foo(x) = if x is
 //│ ║         	                ^^^^
 //│ ╟── The pattern at this position misses 1 case.
-//│ ║  l.212: 	  Pair(Z(), Z()) then "zeros"
+//│ ║  l.213: 	  Pair(Z(), Z()) then "zeros"
 //│ ║         	            ^^^
 //│ ╟── [Missing Case 1/1] `Z`
 //│ ╟── It first appears here.
-//│ ║  l.212: 	  Pair(Z(), Z()) then "zeros"
+//│ ║  l.213: 	  Pair(Z(), Z()) then "zeros"
 //│ ╙──       	            ^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
@@ -234,7 +235,7 @@ fun foo(x, y) = if x is Z() and y is O() then 0 else 1
 fun foo(x, y) = if x is
   Z() and y is O() then 0 else 1
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.235: 	  Z() and y is O() then 0 else 1
+//│ ║  l.236: 	  Z() and y is O() then 0 else 1
 //│ ╙──       	                          ^^^^
 //│ foo: (Z, O,) -> 0
 //│    = [Function: foo8]

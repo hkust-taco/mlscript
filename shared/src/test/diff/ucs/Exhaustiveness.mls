@@ -32,6 +32,7 @@ fun f(x, y) =
 //│ | 1. : (α31', α32',)
 //│ | 1. Typing term {if ‹is (y,) (A,) and ‹x is ‹(A) then 0; (B) then 1; (C) then 2››; is (y,) (B,) and ‹x is ‹(A) then 4›››}
 //│ | | 1. Typing term if ‹is (y,) (A,) and ‹x is ‹(A) then 0; (B) then 1; (C) then 2››; is (y,) (B,) and ‹x is ‹(A) then 4›››
+//│ | | | If(IfBlock(IfOpApp(App(App(Var(is), Tup(_: Var(y))), Tup(_: Var(A))), Var(and), IfBlock(IfOpApp(Var(x), Var(is), IfBlock(IfThen(Var(A), IntLit(0);IfThen(Var(B), IntLit(1);IfThen(Var(C), IntLit(2)));IfOpApp(App(App(Var(is), Tup(_: Var(y))), Tup(_: Var(B))), Var(and), IfBlock(IfOpApp(Var(x), Var(is), IfBlock(IfThen(Var(A), IntLit(4)))), None)
 //│ | | | Build a Clause.MatchClass from y where pattern is A
 //│ | | | Build a Clause.MatchClass from x where pattern is A
 //│ | | | Build a Clause.MatchClass from x where pattern is B
