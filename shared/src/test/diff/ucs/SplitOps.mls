@@ -118,7 +118,6 @@ fun sumOpt(x, y) =
 //│ sumOpt: (None | Some & {value: int}, None | Some & {value: int},) -> int
 //│       = [Function: sumOpt]
 
-// FIXME
 fun f(x, y, z) =
   if x is A() and y
     == z then 1

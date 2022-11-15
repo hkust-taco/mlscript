@@ -71,32 +71,52 @@ class Desugarer extends TypeDefs { self: Typer =>
     * @param matchRootLoc the caller is expect to be in a match environment,
     * this parameter indicates the location of the match root
     */
-  def makeScrutinee(term: Term)(implicit matchRootLoc: Opt[Loc]): Scrutinee = {
-    val res = term match {
-      case _: Var => Scrutinee(N, term)
-      case _ =>
-        Scrutinee(S(localizedScrutineeMap.getOrElseUpdate(term, {
-          Var(freshName).withLoc(term.toLoc)
-        })), term)
-    }
-    res.matchRootLoc = matchRootLoc
-    res
-  }
+  def makeScrutinee(term: Term, isMultiLineMatch: Bool)(implicit matchRootLoc: Opt[Loc]): Scrutinee =
+    trace(s"Making a scrutinee for $term") {
+      val res = term match {
+        case _: Var => Scrutinee(N, term)
+        case _ =>
+          Scrutinee(
+            S(localizedScrutineeMap.getOrElseUpdate(term, {
+              Var(freshName).withLoc(term.toLoc)
+            })),
+            term,
+          )
+      }
+      res.isMultiLineMatch = isMultiLineMatch
+      res.matchRootLoc = matchRootLoc
+      res
+    }()
 
   /**
     * Destruct nested patterns to a list of simple condition with bindings.
-
     *
     * @param scrutinee the scrutinee of the pattern matching
     * @param pattern the pattern we will destruct
-    * @param tyDefs `TypeDef`s in the context
+    * @param raise the `Raise` function
+    * @param aliasMap the field alias map
+    * @param matchRootLoc the location of the root of the pattern matching
+    * @param fragments fragment term that used to construct the given pattern.
+    *   It is used to tracking locations.
+    * @param isMultiLineMatch whether the scrutinee is in multi-line pattern match.
+    *   For example,
+    *   ```
+    *   if x is
+    *     A then "x is A!"
+    *     B then "x is B"
+    *   ```
+    *   is multi-line pattern match. Whereas `if x is Foo then 1 else 0` is not.
     * @return a list of simple condition with bindings. This method does not
     * return `ConjunctedCondition` because conditions built from nested patterns
     * do not contain interleaved let bindings.
     */
   private def destructPattern
-      (scrutinee: Term, pattern: Term)
-      (implicit ctx: Ctx, raise: Raise, aliasMap: FieldAliasMap, matchRootLoc: Opt[Loc], fragments: Ls[Term] = Nil): Ls[Clause] = 
+      (scrutinee: Term, pattern: Term, isMultiLineMatch: Bool = false)
+      (implicit ctx: Ctx,
+                raise: Raise,
+                aliasMap: FieldAliasMap,
+                matchRootLoc: Opt[Loc],
+                fragments: Ls[Term] = Nil): Ls[Clause] = 
     pattern match {
       // This case handles top-level wildcard `Var`.
       // We don't make any conditions in this level.
@@ -115,7 +135,7 @@ class Desugarer extends TypeDefs { self: Typer =>
             msg"Cannot find the constructor `$className` in the context"
           }, classNameVar.toLoc)
           case S(_) => 
-            val clause = Clause.MatchClass(makeScrutinee(scrutinee), classNameVar, Nil)
+            val clause = Clause.MatchClass(makeScrutinee(scrutinee, isMultiLineMatch), classNameVar, Nil)
             println(s"Build a Clause.MatchClass from $scrutinee where pattern is $classNameVar")
             clause.locations = collectLocations(scrutinee)
             clause :: Nil
@@ -136,7 +156,7 @@ class Desugarer extends TypeDefs { self: Typer =>
                 args.iterator.map(_._2.value),
                 td.positionals
               )
-              val clause = Clause.MatchClass(makeScrutinee(scrutinee), classNameVar, bindings)
+              val clause = Clause.MatchClass(makeScrutinee(scrutinee, isMultiLineMatch), classNameVar, bindings)
               println(s"Build a Clause.MatchClass from $scrutinee where pattern is $pattern")
               println(s"Fragments: $fragments")
               clause.locations = pattern.toLoc.toList ::: collectLocations(scrutinee)
@@ -176,7 +196,7 @@ class Desugarer extends TypeDefs { self: Typer =>
               lhs :: rhs :: Nil,
               td.positionals
             )
-            val clause = Clause.MatchClass(makeScrutinee(scrutinee), opVar, bindings)
+            val clause = Clause.MatchClass(makeScrutinee(scrutinee, isMultiLineMatch), opVar, bindings)
             println(s"Build a Clause.MatchClass from $scrutinee where operator is $opVar")
             clause.locations = collectLocations(scrutinee)
             clause :: destructSubPatterns(subPatterns)
@@ -198,7 +218,7 @@ class Desugarer extends TypeDefs { self: Typer =>
           elems.iterator.map(_._2.value),
           1.to(elems.length).map("_" + _).toList
         )
-        val clause = Clause.MatchTuple(makeScrutinee(scrutinee), elems.length, bindings)
+        val clause = Clause.MatchTuple(makeScrutinee(scrutinee, isMultiLineMatch), elems.length, bindings)
         clause.locations = collectLocations(scrutinee)
         clause :: destructSubPatterns(subPatterns)
       // What else?
@@ -290,7 +310,7 @@ class Desugarer extends TypeDefs { self: Typer =>
         //   B(...) and ... then ... // Case 2: more conjunctions
         case L(IfThen(patTest, consequent)) =>
           val (patternPart, extraTestOpt) = separatePattern(patTest)
-          val patternConditions = destructPattern(scrutinee, partialPattern.addTerm(patternPart).term)
+          val patternConditions = destructPattern(scrutinee, partialPattern.addTerm(patternPart).term, true)
           val conditions = Conjunction.concat(
             collectedConditions,
             withBindings((patternConditions, Nil))
@@ -533,6 +553,12 @@ class Desugarer extends TypeDefs { self: Typer =>
               })
             }
         }
+        // if (branches.length === 1 && scrutinee.isMultiLineMatch && default.isEmpty) {
+        //   import Message.MessageContext
+        //   raise(WarningReport({
+        //     msg"This scrutinee has only one case." -> scrutinee.matchRootLoc
+        //   } :: Nil))
+        // }
         default.foreach(checkExhaustive(_, S(t)))
         branches.foreach { case MutCase(_, consequent) =>
           checkExhaustive(consequent, S(t))
