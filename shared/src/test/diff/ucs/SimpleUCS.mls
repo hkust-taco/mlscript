@@ -297,19 +297,19 @@ fun g(a, b) =
 //│ g: (int, None | Some & {value: int},) -> int
 //│  = [Function: g1]
 
-// TODO: Fix this code generation problems.
+// TODO: Fix the NaN.
 g(5, None())
 g(5, Some(7))
 g(0 - 5, None())
 g(0 - 5, Some(9))
 //│ res: int
-//│    = undefined
+//│    = 5
 //│ res: int
-//│    = undefined
+//│    = 35
 //│ res: int
-//│    = undefined
+//│    = NaN
 //│ res: int
-//│    = undefined
+//│    = 4
 
 class Var(name)
 class ValBase
@@ -355,7 +355,7 @@ fun f(x) =
     0 ::
       Nil() then "oh"
 //│ ╔══[ERROR] Cannot find operator `::` in the context
-//│ ║  l.353: 	    0 ::
+//│ ║  l.355: 	    0 ::
 //│ ╙──       	      ^^
 //│ f: anything -> error
 //│ Code generation encountered an error:

@@ -61,7 +61,7 @@ fun h(x, y) =
 
 h(Some(5), 6)
 //│ res: int
-//│    = undefined
+//│    = 41
 
 fun h(x, y) =
   if x is
@@ -115,7 +115,7 @@ fun w() =
 
 w()
 //│ res: "?" | "A" | "B"
-//│    = undefined
+//│    = '?'
 
 fun i(x) =
   if x is
@@ -203,10 +203,26 @@ fun cat3(a, b, c) = cat2(cat2(a, b), c)
 //│ cat3: (string, string, string,) -> string
 //│     = [Function: cat3]
 
+:js
 fun showList(xs) =
   if xs is
-    Cons(head, tail) then cat3(toString(head), ", ", showList(tail))
     Nil              then ""
+    Cons(head, Nil())  then toString(head)
+    Cons(head, tail) then cat3(toString(head), ", ", showList(tail))
+//│ // Prelude
+//│ function toString(x) {
+//│   return String(x);
+//│ }
+//│ // Query 1
+//│ globalThis.showList = function showList(xs) {
+//│   return ((() => {
+//│     let a;
+//│     return (a = xs, a instanceof Nil ? "" : a instanceof Cons ? ((head) => ((tmp0) => ((tail) => tmp0 instanceof Nil ? toString(head) : cat3(toString(head), ", ", showList(tail)))(xs.tail))(xs.tail))(xs.head) : (() => {
+//│       throw new Error("non-exhaustive case expression");
+//│     })());
+//│   })());
+//│ };
+//│ // End of generated code
 //│ showList: 'a -> string
 //│   where
 //│     'a <: Cons & {tail: 'a} | Nil
@@ -219,11 +235,11 @@ let zeroToThree = Cons(0, Cons(1, Cons(2, Cons(3, Nil()))))
 //│                tail: Cons { head: 1, tail: Cons { head: 2, tail: [Cons] } }
 //│              }
 
-// FIXME: Something wrong with code generation.
 showList(zeroToThree)
 //│ res: string
-//│    = undefined
+//│    = '0, 1, 2, 3'
 
+// FIXME: This needs lifting functions.
 fun mapPartition(f, xs) =
   if xs is
     Nil then Pair(Nil(), Nil())
