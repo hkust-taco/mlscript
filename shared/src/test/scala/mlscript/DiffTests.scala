@@ -835,7 +835,6 @@ object DiffTests {
   
   // Allow overriding which specific tests to run, sometimes easier for development:
   private val focused = Set[Str](
-    "shared/src/test/diff/mlscript/quasiquote.mls",
     // "LetRec"
     // "Ascribe",
     // "Repro",
