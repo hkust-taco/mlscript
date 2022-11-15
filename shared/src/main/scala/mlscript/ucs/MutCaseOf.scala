@@ -7,6 +7,7 @@ import scala.collection.mutable.Buffer
 import scala.collection.mutable.{Map => MutMap, Set => MutSet, Buffer}
 
 import helpers._
+import mlscript.ucs.MutCaseOf.Consequent
 
 trait WithBindings { this: MutCaseOf =>
   private val bindingsSet: MutSet[(Bool, Var, Term)] = MutSet.empty
@@ -32,6 +33,18 @@ trait WithBindings { this: MutCaseOf =>
 sealed abstract class MutCaseOf extends WithBindings {
   import Clause.Conjunction
 
+  def kind: Str = {
+    import MutCaseOf._
+    this match {
+      case Consequent(_) => "Consequent"
+      case MissingCase => "MissingCase"
+      case IfThenElse(_, _, _) => "IfThenElse"
+      case Match(_, _, _) => "Match"
+    }
+  }
+
+  def describe: Str
+
   def merge
     (branch: Conjunction -> Term)
     (implicit raise: Diagnostic => Unit): Unit
@@ -48,85 +61,6 @@ object MutCaseOf {
   def toTerm(t: MutCaseOf): Term = {
     val term = t.toTerm
     mkBindings(t.getBindings.toList, term)
-  }
-
-  /**
-    * A map from each scrutinee term to all its cases and the first `MutCase`.
-    */
-  type ExhaustivenessMap = MutMap[Term, MutMap[Var, MutCase]]
-
-  def checkExhaustive(t: MutCaseOf, parentOpt: Opt[MutCaseOf])(implicit scrutineePatternMap: ExhaustivenessMap): Unit = {
-    t match {
-      case _: Consequent => ()
-      case MissingCase =>
-        import Message.MessageContext
-        parentOpt match {
-          case S(IfThenElse(test, whenTrue, whenFalse)) =>
-            if (whenFalse === t) {
-              throw DesugaringException.Single(msg"Missing the otherwise case of test ${test.toString}", test.toLoc)
-            } else {
-              ???
-            }
-          case S(Match(_, _, _)) => ???
-          case S(Consequent(_)) | S(MissingCase) | N => die
-        }
-      case IfThenElse(condition, whenTrue, whenFalse) =>
-        checkExhaustive(whenTrue, S(t))
-        checkExhaustive(whenFalse, S(t))
-      case Match(scrutinee, branches, default) =>
-        scrutineePatternMap.get(scrutinee.term) match {
-          // Should I call `die` here?
-          case N => throw new Error(s"unreachable case: unknown scrutinee ${scrutinee.term}")
-          case S(patternMap) =>
-            // Filter out missing cases in `branches`.
-            val missingCases = patternMap.subtractAll(branches.iterator.map {
-              case MutCase(classNameVar -> _, _) => classNameVar
-            })
-            if (!missingCases.isEmpty) {
-              throw DesugaringException.Multiple({
-                import Message.MessageContext
-                val numMissingCases = missingCases.size
-                (msg"The match is not exhaustive." -> scrutinee.matchRootLoc) ::
-                  (msg"The pattern at this position misses ${numMissingCases.toString} ${
-                    "case".pluralize(numMissingCases)
-                  }." -> scrutinee.term.toLoc) ::
-                  missingCases.iterator.zipWithIndex.flatMap { case ((classNameVar, firstMutCase), index) =>
-                    val progress = s"[Missing Case ${index + 1}/$numMissingCases]"
-                    (msg"$progress `${classNameVar.name}`" -> N) ::
-                      firstMutCase.locations.iterator.zipWithIndex.map { case (loc, index) =>
-                        (if (index === 0) msg"It first appears here." else msg"continued at") -> S(loc)
-                      }.toList
-                  }.toList
-              })
-            }
-        }
-        default.foreach(checkExhaustive(_, S(t)))
-        branches.foreach { case MutCase(_, consequent) =>
-          checkExhaustive(consequent, S(t))
-        }
-    }
-  }
-
-  def summarizePatterns(t: MutCaseOf): ExhaustivenessMap = {
-    val m = MutMap.empty[Term, MutMap[Var, MutCase]]
-    def rec(t: MutCaseOf): Unit =
-      t match {
-        case Consequent(term) => ()
-        case MissingCase => ()
-        case IfThenElse(_, whenTrue, whenFalse) =>
-          rec(whenTrue)
-          rec(whenFalse)
-        case Match(scrutinee, branches, _) =>
-          branches.foreach { mutCase =>
-            val patternMap = m.getOrElseUpdate(scrutinee.term, MutMap.empty)
-            if (!patternMap.contains(mutCase.patternFields._1)) {
-              patternMap += ((mutCase.patternFields._1, mutCase))
-            }
-            rec(mutCase.consequent)
-          }
-      }
-    rec(t)
-    m
   }
 
   def showScrutinee(scrutinee: Scrutinee): Str =
@@ -220,6 +154,9 @@ object MutCaseOf {
 
   // A short-hand for pattern matchings with only true and false branches.
   final case class IfThenElse(condition: Term, var whenTrue: MutCaseOf, var whenFalse: MutCaseOf) extends MutCaseOf {
+    override def describe: Str =
+      s"IfThenElse($condition, whenTrue = ${whenTrue.kind}, whenFalse = ${whenFalse.kind})"
+
     override def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit =
       branch match {
         // The CC is a wildcard. So, we call `mergeDefault`.
@@ -276,6 +213,13 @@ object MutCaseOf {
     val branches: Buffer[MutCase],
     var wildcard: Opt[MutCaseOf]
   ) extends MutCaseOf {
+    override def describe: Str = {
+      val n = branches.length
+      s"Match($scrutinee, $n ${"branch".pluralize(n, true)}, ${
+        wildcard.fold("no wildcard")(n => s"wildcard = ${n.kind}")
+      })"
+    }
+
     override def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit = {
       Conjunction.separate(branch._1, scrutinee) match {
         // No conditions against the same scrutinee.
@@ -364,6 +308,8 @@ object MutCaseOf {
     }
   }
   final case class Consequent(term: Term) extends MutCaseOf {
+    override def describe: Str = s"Consequent($term)"
+
     override def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit =
       raise(WarningReport(Message.fromStr("duplicated branch") -> N :: Nil))
 
@@ -372,6 +318,8 @@ object MutCaseOf {
     override def toTerm: Term = term
   }
   final case object MissingCase extends MutCaseOf {
+    override def describe: Str = "MissingCase"
+
     override def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit = ???
 
     override def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Unit = ()

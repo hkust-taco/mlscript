@@ -75,22 +75,22 @@ fun foo(x) = if x is
 //│ | | If(IfOpApp(Var(x), Var(is), IfBlock(IfThen(App(Var(Pair), Tup(_: App(Var(Z), Tup()), _: App(Var(Z), Tup()))), StrLit(zeros);IfThen(App(Var(Pair), Tup(_: App(Var(O), Tup()), _: App(Var(O), Tup()))), StrLit(ones)), None)
 //│ | | Build a Clause.MatchClass from x where pattern is Pair (Z (), Z (),)
 //│ | | Fragments: List()
-//│ | | The locations of the clause: List(Loc(23,37,nu/Humiliation:+66))
+//│ | | The locations of the clause: List(Loc(23,37,ucs/Humiliation:+66))
 //│ | | Build a Clause.MatchClass from tmp2 where pattern is Z ()
 //│ | | Fragments: List()
-//│ | | The locations of the clause: List(Loc(28,31,nu/Humiliation:+66))
+//│ | | The locations of the clause: List(Loc(28,31,ucs/Humiliation:+66))
 //│ | | Build a Clause.MatchClass from tmp3 where pattern is Z ()
 //│ | | Fragments: List()
-//│ | | The locations of the clause: List(Loc(33,36,nu/Humiliation:+66))
+//│ | | The locations of the clause: List(Loc(33,36,ucs/Humiliation:+66))
 //│ | | Build a Clause.MatchClass from x where pattern is Pair (O (), O (),)
 //│ | | Fragments: List()
-//│ | | The locations of the clause: List(Loc(53,67,nu/Humiliation:+66))
+//│ | | The locations of the clause: List(Loc(53,67,ucs/Humiliation:+66))
 //│ | | Build a Clause.MatchClass from tmp2 where pattern is O ()
 //│ | | Fragments: List()
-//│ | | The locations of the clause: List(Loc(58,61,nu/Humiliation:+66))
+//│ | | The locations of the clause: List(Loc(58,61,ucs/Humiliation:+66))
 //│ | | Build a Clause.MatchClass from tmp3 where pattern is O ()
 //│ | | Fragments: List()
-//│ | | The locations of the clause: List(Loc(63,66,nu/Humiliation:+66))
+//│ | | The locations of the clause: List(Loc(63,66,ucs/Humiliation:+66))
 //│ | | Flattened conjunctions
 //│ | | + «x is Pair» and «tmp2 is Z» and «tmp3 is Z» => "zeros"
 //│ | | + «x is Pair» and «tmp2 is O» and «tmp3 is O» => "ones"
@@ -108,10 +108,36 @@ fun foo(x) = if x is
 //│ | |         «tmp3» match
 //│ | |           case O =>
 //│ | |             «"ones"»
+//│ | | Summarize pattern of Match(x, 1 branch, no wildcard)
+//│ | | | Summarize pattern of Match(tmp2, 2 branches, no wildcard)
+//│ | | | | Summarize pattern of Match(tmp3, 1 branch, no wildcard)
+//│ | | | | | Summarize pattern of Consequent("zeros")
+//│ | | | | Summarize pattern of Match(tmp3, 1 branch, no wildcard)
+//│ | | | | | Summarize pattern of Consequent("ones")
 //│ | | Exhaustiveness map
-//│ | | - tmp3 => Z, O
-//│ | | - tmp2 => Z, O
-//│ | | - x => Pair
+//│ | | - Left(tmp3) => Z, O
+//│ | | - Left(tmp2) => Z, O
+//│ | | - Right(9) => Pair
+//│ | | Check exhaustiveness of Match(x, 1 branch, no wildcard)
+//│ | | | The exhaustiveness map is Map(Left(tmp3) -> Map(Z -> MutCase((Z,ArrayBuffer()),Consequent("zeros")), O -> MutCase((O,ArrayBuffer()),Consequent("ones"))), Left(tmp2) -> Map(Z -> MutCase((Z,ArrayBuffer()),Match(tmp3,ArrayBuffer(MutCase((Z,ArrayBuffer()),Consequent("zeros"))),None)), O -> MutCase((O,ArrayBuffer()),Match(tmp3,ArrayBuffer(MutCase((O,ArrayBuffer()),Consequent("ones"))),None))), Right(9) -> Map(Pair -> MutCase((Pair,ArrayBuffer((fst,tmp2), (snd,tmp3))),Match(tmp2,ArrayBuffer(MutCase((Z,ArrayBuffer()),Match(tmp3,ArrayBuffer(MutCase((Z,ArrayBuffer()),Consequent("zeros"))),None)), MutCase((O,ArrayBuffer()),Match(tmp3,ArrayBuffer(MutCase((O,ArrayBuffer()),Consequent("ones"))),None))),None))))
+//│ | | | The scrutinee key is Right(9)
+//│ | | | Pattern map of the scrutinee:
+//│ | | | - Pair => MutCase((Pair,ArrayBuffer((fst,tmp2), (snd,tmp3))),Match(tmp2,ArrayBuffer(MutCase((Z,ArrayBuffer()),Match(tmp3,ArrayBuffer(MutCase((Z,ArrayBuffer()),Consequent("zeros"))),None)), MutCase((O,ArrayBuffer()),Match(tmp3,ArrayBuffer(MutCase((O,ArrayBuffer()),Consequent("ones"))),None))),None))
+//│ | | | Number of missing cases: 0
+//│ | | | Check exhaustiveness of Match(tmp2, 2 branches, no wildcard)
+//│ | | | | The exhaustiveness map is Map(Left(tmp3) -> Map(Z -> MutCase((Z,ArrayBuffer()),Consequent("zeros")), O -> MutCase((O,ArrayBuffer()),Consequent("ones"))), Left(tmp2) -> Map(Z -> MutCase((Z,ArrayBuffer()),Match(tmp3,ArrayBuffer(MutCase((Z,ArrayBuffer()),Consequent("zeros"))),None)), O -> MutCase((O,ArrayBuffer()),Match(tmp3,ArrayBuffer(MutCase((O,ArrayBuffer()),Consequent("ones"))),None))), Right(9) -> Map(Pair -> MutCase((Pair,ArrayBuffer((fst,tmp2), (snd,tmp3))),Match(tmp2,ArrayBuffer(MutCase((Z,ArrayBuffer()),Match(tmp3,ArrayBuffer(MutCase((Z,ArrayBuffer()),Consequent("zeros"))),None)), MutCase((O,ArrayBuffer()),Match(tmp3,ArrayBuffer(MutCase((O,ArrayBuffer()),Consequent("ones"))),None))),None))))
+//│ | | | | The scrutinee key is Left(tmp2)
+//│ | | | | Pattern map of the scrutinee:
+//│ | | | | - Z => MutCase((Z,ArrayBuffer()),Match(tmp3,ArrayBuffer(MutCase((Z,ArrayBuffer()),Consequent("zeros"))),None))
+//│ | | | | - O => MutCase((O,ArrayBuffer()),Match(tmp3,ArrayBuffer(MutCase((O,ArrayBuffer()),Consequent("ones"))),None))
+//│ | | | | Number of missing cases: 0
+//│ | | | | Check exhaustiveness of Match(tmp3, 1 branch, no wildcard)
+//│ | | | | | The exhaustiveness map is Map(Left(tmp3) -> Map(Z -> MutCase((Z,ArrayBuffer()),Consequent("zeros")), O -> MutCase((O,ArrayBuffer()),Consequent("ones"))), Left(tmp2) -> Map(Z -> MutCase((Z,ArrayBuffer()),Match(tmp3,ArrayBuffer(MutCase((Z,ArrayBuffer()),Consequent("zeros"))),None)), O -> MutCase((O,ArrayBuffer()),Match(tmp3,ArrayBuffer(MutCase((O,ArrayBuffer()),Consequent("ones"))),None))), Right(9) -> Map(Pair -> MutCase((Pair,ArrayBuffer((fst,tmp2), (snd,tmp3))),Match(tmp2,ArrayBuffer(MutCase((Z,ArrayBuffer()),Match(tmp3,ArrayBuffer(MutCase((Z,ArrayBuffer()),Consequent("zeros"))),None)), MutCase((O,ArrayBuffer()),Match(tmp3,ArrayBuffer(MutCase((O,ArrayBuffer()),Consequent("ones"))),None))),None))))
+//│ | | | | | The scrutinee key is Left(tmp3)
+//│ | | | | | Pattern map of the scrutinee:
+//│ | | | | | - Z => MutCase((Z,ArrayBuffer()),Consequent("zeros"))
+//│ | | | | | - O => MutCase((O,ArrayBuffer()),Consequent("ones"))
+//│ | | | | | Number of missing cases: 1
 //│ | 1. : error<>
 //│ 1. : (α160' -> error<>)
 //│ CONSTRAIN (α160' -> error<>) <! foo159'
@@ -123,7 +149,7 @@ fun foo(x) = if x is
 //│ ╔══[ERROR] The match is not exhaustive.
 //│ ║  l.66: 	fun foo(x) = if x is
 //│ ║        	                ^^^^
-//│ ╟── The pattern at this position misses 1 case.
+//│ ╟── The scrutinee at this position misses 1 case.
 //│ ║  l.67: 	  Pair(Z(), Z()) then "zeros"
 //│ ║        	            ^^^
 //│ ╟── [Missing Case 1/1] `O`
@@ -141,14 +167,14 @@ fun foo(x) = if x is
   (Z(), Z()) then "zeros"
   (O(), O()) then "ones"
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.140: 	fun foo(x) = if x is
+//│ ║  l.166: 	fun foo(x) = if x is
 //│ ║         	                ^^^^
-//│ ╟── The pattern at this position misses 1 case.
-//│ ║  l.141: 	  (Z(), Z()) then "zeros"
+//│ ╟── The scrutinee at this position misses 1 case.
+//│ ║  l.167: 	  (Z(), Z()) then "zeros"
 //│ ║         	        ^^^
 //│ ╟── [Missing Case 1/1] `O`
 //│ ╟── It first appears here.
-//│ ║  l.142: 	  (O(), O()) then "ones"
+//│ ║  l.168: 	  (O(), O()) then "ones"
 //│ ╙──       	        ^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
@@ -214,14 +240,14 @@ fun foo(x) = if x is
   Pair(O(), O()) then "ones"
   Pair(y, O()) then x
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.212: 	fun foo(x) = if x is
+//│ ║  l.238: 	fun foo(x) = if x is
 //│ ║         	                ^^^^
-//│ ╟── The pattern at this position misses 1 case.
-//│ ║  l.213: 	  Pair(Z(), Z()) then "zeros"
+//│ ╟── The scrutinee at this position misses 1 case.
+//│ ║  l.239: 	  Pair(Z(), Z()) then "zeros"
 //│ ║         	            ^^^
 //│ ╟── [Missing Case 1/1] `Z`
 //│ ╟── It first appears here.
-//│ ║  l.213: 	  Pair(Z(), Z()) then "zeros"
+//│ ║  l.239: 	  Pair(Z(), Z()) then "zeros"
 //│ ╙──       	            ^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
@@ -235,7 +261,7 @@ fun foo(x, y) = if x is Z() and y is O() then 0 else 1
 fun foo(x, y) = if x is
   Z() and y is O() then 0 else 1
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.236: 	  Z() and y is O() then 0 else 1
+//│ ║  l.262: 	  Z() and y is O() then 0 else 1
 //│ ╙──       	                          ^^^^
 //│ foo: (Z, O,) -> 0
 //│    = [Function: foo8]

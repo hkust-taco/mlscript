@@ -6,7 +6,10 @@ import mlscript.utils.shorthands._
 // The point is to remember where does the scrutinee come from.
 // Is it from nested patterns? Or is it from a `IfBody`?
 final case class Scrutinee(local: Opt[Var], term: Term) {
-  def reference: Term = local.getOrElse(term)
+  def reference: Var = local.getOrElse(term match {
+    case v: Var => v
+    case _      => ???
+  })
 
   var matchRootLoc: Opt[Loc] = N
   var localPatternLoc: Opt[Loc] = N
