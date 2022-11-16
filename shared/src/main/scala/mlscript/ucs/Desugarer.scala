@@ -116,7 +116,22 @@ class Desugarer extends TypeDefs { self: Typer =>
                 raise: Raise,
                 aliasMap: FieldAliasMap,
                 matchRootLoc: Opt[Loc],
-                fragments: Ls[Term] = Nil): Ls[Clause] = 
+                fragments: Ls[Term] = Nil): Ls[Clause] = {
+    // This piece of code is use in two match cases.
+    def desugarTuplePattern(tuple: Tup): Ls[Clause] = {
+      val (subPatterns, bindings) = desugarPositionals(
+        scrutinee,
+        tuple.fields.iterator.map(_._2.value),
+        1.to(tuple.fields.length).map("_" + _).toList
+      )
+      val clause = Clause.MatchTuple(
+        makeScrutinee(scrutinee, isMultiLineMatch),
+        tuple.fields.length,
+        bindings
+      )
+      clause.locations = collectLocations(scrutinee)
+      clause :: destructSubPatterns(subPatterns)
+    }
     pattern match {
       // This case handles top-level wildcard `Var`.
       // We don't make any conditions in this level.
@@ -210,20 +225,16 @@ class Desugarer extends TypeDefs { self: Typer =>
               } but found two parameters"
             }, app.toLoc)
         }
-      // This case handles tuple destructions.
+      // This case handles **direct** tuple destructions.
       // x is (a, b, c)
-      case Bra(_, Tup(elems)) =>
-        val (subPatterns, bindings) = desugarPositionals(
-          scrutinee,
-          elems.iterator.map(_._2.value),
-          1.to(elems.length).map("_" + _).toList
-        )
-        val clause = Clause.MatchTuple(makeScrutinee(scrutinee, isMultiLineMatch), elems.length, bindings)
-        clause.locations = collectLocations(scrutinee)
-        clause :: destructSubPatterns(subPatterns)
+      case Bra(_, tuple: Tup) => desugarTuplePattern(tuple)
+      // This case handles **nested** tuple destructions.
+      // x is Cons((x, y), Nil)
+      case tuple: Tup => desugarTuplePattern(tuple)
       // What else?
       case _ => throw new Exception(s"illegal pattern: ${mlscript.codegen.Helpers.inspect(pattern)}")
     }
+  }
 
   /**
     * Collect `Loc`s from a synthetic term.

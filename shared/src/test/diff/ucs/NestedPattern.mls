@@ -55,3 +55,116 @@ fun f(x) =
 //│ ╔══[ERROR] type identifier not found: Tuple#2
 //│ ╙──
 //│ f: error -> error
+
+:e
+:d
+fun f(p) =
+  if p is
+    Some((x, y)) then x + y
+    None()       then 0
+//│ 1. Typing term p, => {if p is ‹(Some ('(' x, y, ')',)) then + (x,) (y,); (None ()) then 0›}
+//│ | 1. Typing pattern p,
+//│ | | 1. Typing pattern p
+//│ | | 1. : α163'
+//│ | 1. : (α163',)
+//│ | 1. Typing term {if p is ‹(Some ('(' x, y, ')',)) then + (x,) (y,); (None ()) then 0›}
+//│ | | 1. Typing term if p is ‹(Some ('(' x, y, ')',)) then + (x,) (y,); (None ()) then 0›
+//│ | | | If(IfOpApp(Var(p), Var(is), IfBlock(IfThen(App(Var(Some), Tup(_: Bra(rcd = false, Tup(_: Var(x), _: Var(y))))), App(App(Var(+), Tup(_: Var(x))), Tup(_: Var(y)));IfThen(App(Var(None), Tup()), IntLit(0)), None)
+//│ | | | Making a scrutinee for p
+//│ | | | Build a Clause.MatchClass from p where pattern is Some ('(' x, y, ')',)
+//│ | | | Fragments: List()
+//│ | | | The locations of the clause: List(Loc(25,37,ucs/NestedPattern:+61))
+//│ | | | Making a scrutinee for tmp12
+//│ | | | Making a scrutinee for p
+//│ | | | Build a Clause.MatchClass from p where pattern is None ()
+//│ | | | Fragments: List()
+//│ | | | The locations of the clause: List(Loc(53,59,ucs/NestedPattern:+61))
+//│ | | | Flattened conjunctions
+//│ | | | + «p is Some» and «tmp12 is Tuple#2» => + (x,) (y,)
+//│ | | | + «p is None» => 0
+//│ | | | The mutable CaseOf tree
+//│ | | | «p» match
+//│ | | |   case Some =>
+//│ | | |     let tmp12 = .value
+//│ | | |     «tmp12» match
+//│ | | |       case Tuple#2 =>
+//│ | | |         let x = ._1
+//│ | | |         let y = ._2
+//│ | | |         «+ (x,) (y,)»
+//│ | | |   case None =>
+//│ | | |     «0»
+//│ | | | Summarize pattern of Match(p, 2 branches, no wildcard)
+//│ | | | | Summarize pattern of Match(tmp12, 1 branch, no wildcard)
+//│ | | | | | Summarize pattern of Consequent(+ (x,) (y,))
+//│ | | | | Summarize pattern of Consequent(0)
+//│ | | | Exhaustiveness map
+//│ | | | - Left(tmp12) => Tuple#2
+//│ | | | - Right(7) => None, Some
+//│ | | | Check exhaustiveness of Match(p, 2 branches, no wildcard)
+//│ | | | | The exhaustiveness map is Map(Left(tmp12) -> Map(Tuple#2 -> MutCase((Tuple#2,ArrayBuffer((_1,x), (_2,y))),Consequent(+ (x,) (y,)))), Right(7) -> Map(None -> MutCase((None,ArrayBuffer()),Consequent(0)), Some -> MutCase((Some,ArrayBuffer((value,tmp12))),Match(tmp12,ArrayBuffer(MutCase((Tuple#2,ArrayBuffer((_1,x), (_2,y))),Consequent(+ (x,) (y,)))),None))))
+//│ | | | | The scrutinee key is Right(7)
+//│ | | | | Pattern map of the scrutinee:
+//│ | | | | - None => MutCase((None,ArrayBuffer()),Consequent(0))
+//│ | | | | - Some => MutCase((Some,ArrayBuffer((value,tmp12))),Match(tmp12,ArrayBuffer(MutCase((Tuple#2,ArrayBuffer((_1,x), (_2,y))),Consequent(+ (x,) (y,)))),None))
+//│ | | | | Number of missing cases: 0
+//│ | | | | Check exhaustiveness of Match(tmp12, 1 branch, no wildcard)
+//│ | | | | | The exhaustiveness map is Map(Left(tmp12) -> Map(Tuple#2 -> MutCase((Tuple#2,ArrayBuffer((_1,x), (_2,y))),Consequent(+ (x,) (y,)))), Right(7) -> Map(None -> MutCase((None,ArrayBuffer()),Consequent(0)), Some -> MutCase((Some,ArrayBuffer((value,tmp12))),Match(tmp12,ArrayBuffer(MutCase((Tuple#2,ArrayBuffer((_1,x), (_2,y))),Consequent(+ (x,) (y,)))),None))))
+//│ | | | | | The scrutinee key is Left(tmp12)
+//│ | | | | | Pattern map of the scrutinee:
+//│ | | | | | - Tuple#2 => MutCase((Tuple#2,ArrayBuffer((_1,x), (_2,y))),Consequent(+ (x,) (y,)))
+//│ | | | | | Number of missing cases: 0
+//│ | | | | | Check exhaustiveness of Consequent(+ (x,) (y,))
+//│ | | | | Check exhaustiveness of Consequent(0)
+//│ | | | Desugared term: case p of { Some => let tmp12 = (p).value in case tmp12 of { Tuple#2 => let x = (tmp12)._1 in let y = (tmp12)._2 in + (x,) (y,) }; None => 0 }
+//│ | | | 1. Typing term case p of { Some => let tmp12 = (p).value in case tmp12 of { Tuple#2 => let x = (tmp12)._1 in let y = (tmp12)._2 in + (x,) (y,) }; None => 0 }
+//│ | | | | 1. Typing term p
+//│ | | | | 1. : α163'
+//│ | | | | 1. Typing term let tmp12 = (p).value in case tmp12 of { Tuple#2 => let x = (tmp12)._1 in let y = (tmp12)._2 in + (x,) (y,) }
+//│ | | | | | 2. Typing term (p).value
+//│ | | | | | | 2. Typing term p
+//│ | | | | | | 2. : α164'
+//│ | | | | | | CONSTRAIN α164' <! {value: value165''}
+//│ | | | | | |   where 
+//│ | | | | | | C α164' <! {value: value165''}    (0)
+//│ | | | | | | | EXTR RHS  {value: value165''}  ~>  {value: value166'}  to 1
+//│ | | | | | | |  where 
+//│ | | | | | | |    and 
+//│ 		value165'' :> value166'
+//│ | | | | | | | C α164' <! {value: value166'}    (1)
+//│ | | | | | 2. : value165''
+//│ | | | | | 1. Typing term case tmp12 of { Tuple#2 => let x = (tmp12)._1 in let y = (tmp12)._2 in + (x,) (y,) }
+//│ | | | | | | 1. Typing term tmp12
+//│ | | | | | | 1. : value167'
+//│ | | | | | | CONSTRAIN value167' <! error<>
+//│ | | | | | |   where 
+//│ 		value167' :> value166'
+//│ | | | | | | C value167' <! error<>    (0)
+//│ | | | | | | | C value166' <! error<>    (1)
+//│ | | | | | 1. : error<>
+//│ | | | | 1. : error<>
+//│ | | | | 1. Typing term 0
+//│ | | | | 1. : 0<int,number>
+//│ | | | | CONSTRAIN α163' <! ((some<option> & α164') | ((none<option> & α168') & ~(some<option>)))
+//│ | | | |   where 
+//│ 		α164' <: {value: value166'}
+//│ 		value166' <: error<>
+//│ | | | | C α163' <! ((some<option> & α164') | ((none<option> & α168') & ~(some<option>)))    (0)
+//│ | | | 1. : (error<> | 0<int,number>)
+//│ | | 1. : (error<> | 0<int,number>)
+//│ | 1. : (error<> | 0<int,number>)
+//│ 1. : (α163' -> (error<> | 0<int,number>))
+//│ CONSTRAIN (α163' -> (error<> | 0<int,number>)) <! f162'
+//│   where 
+//│ 		α163' <: ((some<option> & α164') | ((none<option> & α168') & ~(some<option>)))
+//│ 		α164' <: {value: value166'}
+//│ 		value166' <: error<>
+//│ C (α163' -> (error<> | 0<int,number>)) <! f162'    (0)
+//│ ⬤ Typed as: f162'
+//│  where: 
+//│ 		f162' :> (α163' -> (error<> | 0<int,number>))
+//│ 		α163' <: ((some<option> & α164') | ((none<option> & α168') & ~(some<option>)))
+//│ 		α164' <: {value: value166'}
+//│ 		value166' <: error<>
+//│ ╔══[ERROR] type identifier not found: Tuple#2
+//│ ╙──
+//│ f: (None | Some & {value: error}) -> (0 | error)
