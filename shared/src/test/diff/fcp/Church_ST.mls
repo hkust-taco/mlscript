@@ -538,6 +538,8 @@ rec def to_ch_s n =
 //│ to_ch_s: int -> (forall 'a, 'b, 'c, 'd. (('e | 'd) -> 'a & 'b & 'c & 'e -> 'e) -> (forall 'a, 'f, 'g, 'h. ('f & 'g & 'e) -> ('f | 'h | 'a)))
 //│        = [Function: to_ch_s]
 
+
+// Q: what's the difference with to_ch_s?!
 rec def to_ch n =
   if n == 0 then z
   else s (to_ch (n - 1))
@@ -550,7 +552,7 @@ to_church_ty = to_ch
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.548: 	to_church_ty = to_ch
+//│ ║  l.550: 	to_church_ty = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -587,7 +589,7 @@ to_church_ty = to_ch_simplif
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.585: 	to_church_ty = to_ch_simplif
+//│ ║  l.587: 	to_church_ty = to_ch_simplif
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -607,11 +609,11 @@ rec def to_ch_A1 n =
   if n == 0 then z
   else s (to_ch_A1 (n - 1) : ChurchInt)
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.606: 	rec def to_ch_A1 n =
+//│ ║  l.608: 	rec def to_ch_A1 n =
 //│ ║         	                 ^^^
-//│ ║  l.607: 	  if n == 0 then z
+//│ ║  l.609: 	  if n == 0 then z
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.608: 	  else s (to_ch_A1 (n - 1) : ChurchInt)
+//│ ║  l.610: 	  else s (to_ch_A1 (n - 1) : ChurchInt)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -632,13 +634,13 @@ rec def to_ch_A2 n = (
     else s (to_ch_A2 (n - 1))
   ) : ChurchInt
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.630: 	rec def to_ch_A2 n = (
+//│ ║  l.632: 	rec def to_ch_A2 n = (
 //│ ║         	                 ^^^^^
-//│ ║  l.631: 	    if n == 0 then z
+//│ ║  l.633: 	    if n == 0 then z
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.632: 	    else s (to_ch_A2 (n - 1))
+//│ ║  l.634: 	    else s (to_ch_A2 (n - 1))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.633: 	  ) : ChurchInt
+//│ ║  l.635: 	  ) : ChurchInt
 //│ ║         	^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -670,7 +672,7 @@ to_church_ty = to_church_mix
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.668: 	to_church_ty = to_church_mix
+//│ ║  l.670: 	to_church_ty = to_church_mix
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -685,9 +687,9 @@ to_church_ty = to_church_mix
 rec def to_chD n =
   succD (to_chD n)
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.685: 	rec def to_chD n =
+//│ ║  l.687: 	rec def to_chD n =
 //│ ║         	               ^^^
-//│ ║  l.686: 	  succD (to_chD n)
+//│ ║  l.688: 	  succD (to_chD n)
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -809,7 +811,7 @@ to_church_ty = to_ch_A1
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.807: 	to_church_ty = to_ch_A1
+//│ ║  l.809: 	to_church_ty = to_ch_A1
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` is not an instance of type `'N_2827`
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)

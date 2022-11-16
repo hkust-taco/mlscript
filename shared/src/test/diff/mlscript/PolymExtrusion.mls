@@ -1,4 +1,7 @@
-
+:NoConstrainedTypes
+:DontDistributeForalls
+:NoCycleCheck
+:NoRecursiveTypes
 
 
 
@@ -24,13 +27,13 @@ bar f = foo (fun x -> let tmp = f x in x)
 :e
 bar (fun x -> case x of {})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.25: 	bar (fun x -> case x of {})
+//│ ║  l.28: 	bar (fun x -> case x of {})
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.5: 	def foo: (forall 'a. 'a -> 'a) -> int
+//│ ║  l.8: 	def foo: (forall 'a. 'a -> 'a) -> int
 //│ ║       	                 ^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.25: 	bar (fun x -> case x of {})
+//│ ║  l.28: 	bar (fun x -> case x of {})
 //│ ╙──      	                   ^
 //│ res: error
 //│ Runtime error:
@@ -56,13 +59,13 @@ foo id
 :e
 foo (fun a -> a + 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.57: 	foo (fun a -> a + 1)
+//│ ║  l.60: 	foo (fun a -> a + 1)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a_95` is not an instance of type `int`
-//│ ║  l.45: 	def foo: (forall 'a. 'a -> 'b) -> 'b
+//│ ║  l.48: 	def foo: (forall 'a. 'a -> 'b) -> 'b
 //│ ║        	                 ^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.57: 	foo (fun a -> a + 1)
+//│ ║  l.60: 	foo (fun a -> a + 1)
 //│ ╙──      	              ^
 //│ res: error
 //│    = <no result>

@@ -597,24 +597,24 @@ rec def id1 x = if true then x else id1 id1 x
 :e
 // G9
 id1 id1
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?id1, ?b, ?c, ?d, ?e. ?id1 <: (forall ?f, ?g, ?id10, ?h, ?i, ?j. ?id10) -> ?k` exceeded recursion depth limit (300)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?id1, ?d, ?e. ?id1 <: (forall ?f, ?id10, ?g, ?h, ?i, ?j. ?id10) -> ?k` exceeded recursion depth limit (250)
 //│ ║  l.599: 	id1 id1
 //│ ║         	^^^^^^^
-//│ ╟── while constraining:  ‹∀ 0. id11729'#›  <!<  α1730_1806
-//│ ╟── while constraining:  α1730_1800  <!<  α1730_1806
-//│ ╟── while constraining:  (α1730_1800,)  <!<  (α1730_1806,)
-//│ ╟── while constraining:  (α1730_1806 -> α1736_1807)  <!<  ((α1730_1800,) -> α1735_1802)
-//│ ╟── while constraining:  id11729_1805#  <!<  ((α1730_1800,) -> α1735_1802)
-//│ ╟── while constraining:  ‹∀ 0. id11729'#›  <!<  ((α1730_1800,) -> α1735_1802)
-//│ ╟── while constraining:  ‹∀ 0. id11729'#›  <!<  α1734_1804
-//│ ╟── while constraining:  ‹∀ 0. id11729'#›  <!<  α1736_1801
-//│ ╟── while constraining:  ‹∀ 0. id11729'#›  <!<  α20_1803
 //│ ╟── while constraining:  ‹∀ 0. id11729'#›  <!<  α1730_1800
 //│ ╟── while constraining:  α1730_1794  <!<  α1730_1800
 //│ ╟── while constraining:  (α1730_1794,)  <!<  (α1730_1800,)
 //│ ╟── while constraining:  (α1730_1800 -> α1736_1801)  <!<  ((α1730_1794,) -> α1735_1796)
 //│ ╟── while constraining:  id11729_1799#  <!<  ((α1730_1794,) -> α1735_1796)
 //│ ╟── while constraining:  ‹∀ 0. id11729'#›  <!<  ((α1730_1794,) -> α1735_1796)
+//│ ╟── while constraining:  ‹∀ 0. id11729'#›  <!<  α1734_1798
+//│ ╟── while constraining:  ‹∀ 0. id11729'#›  <!<  α1736_1795
+//│ ╟── while constraining:  ‹∀ 0. id11729'#›  <!<  α20_1797
+//│ ╟── while constraining:  ‹∀ 0. id11729'#›  <!<  α1730_1794
+//│ ╟── while constraining:  α1730_1788  <!<  α1730_1794
+//│ ╟── while constraining:  (α1730_1788,)  <!<  (α1730_1794,)
+//│ ╟── while constraining:  (α1730_1794 -> α1736_1795)  <!<  ((α1730_1788,) -> α1735_1790)
+//│ ╟── while constraining:  id11729_1793#  <!<  ((α1730_1788,) -> α1735_1790)
+//│ ╟── while constraining:  ‹∀ 0. id11729'#›  <!<  ((α1730_1788,) -> α1735_1790)
 //│ ╟── ......
 //│ ╟── ......
 //│ ╟── while constraining:  ‹∀ 0. id11729'#›  <!<  α20_1761
@@ -641,7 +641,7 @@ auto auto
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.640: 	auto auto
 //│ ║         	^^^^^^^^^
-//│ ╟── type `‘a_1825` is not a function
+//│ ╟── type `‘a_1819` is not a function
 //│ ║  l.164: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
 //│ ║         	                   ^^
 //│ ╟── Note: constraint arises from function type:
@@ -654,41 +654,41 @@ auto auto
 // Gn+1
 :e
 (fun x -> x x) (fun x -> x x)
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b. ?a -> ?b <: (forall ?c, ?d. ?c -> ?d) -> ?e` exceeded recursion depth limit (300)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b. ?b -> ?a <: (forall ?c, ?d. ?d -> ?c) -> ?e` exceeded recursion depth limit (250)
 //│ ║  l.656: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ‹∀ 0. (α1832_1834' -> α1833_1835')›  <!<  α1832_1857
-//│ ╟── while constraining:  α1832_1855  <!<  α1832_1857
-//│ ╟── while constraining:  (α1832_1855,)  <!<  (α1832_1857,)
-//│ ╟── while constraining:  (α1832_1857 -> α1833_1858)  <!<  ((α1832_1855,) -> α1833_1856)
-//│ ╟── while constraining:  ‹∀ 0. (α1832_1834' -> α1833_1835')›  <!<  ((α1832_1855,) -> α1833_1856)
-//│ ╟── while constraining:  ‹∀ 0. (α1832_1834' -> α1833_1835')›  <!<  α1832_1855
-//│ ╟── while constraining:  α1832_1853  <!<  α1832_1855
-//│ ╟── while constraining:  (α1832_1853,)  <!<  (α1832_1855,)
-//│ ╟── while constraining:  (α1832_1855 -> α1833_1856)  <!<  ((α1832_1853,) -> α1833_1854)
-//│ ╟── while constraining:  ‹∀ 0. (α1832_1834' -> α1833_1835')›  <!<  ((α1832_1853,) -> α1833_1854)
-//│ ╟── while constraining:  ‹∀ 0. (α1832_1834' -> α1833_1835')›  <!<  α1832_1853
-//│ ╟── while constraining:  α1832_1851  <!<  α1832_1853
-//│ ╟── while constraining:  (α1832_1851,)  <!<  (α1832_1853,)
-//│ ╟── while constraining:  (α1832_1853 -> α1833_1854)  <!<  ((α1832_1851,) -> α1833_1852)
-//│ ╟── while constraining:  ‹∀ 0. (α1832_1834' -> α1833_1835')›  <!<  ((α1832_1851,) -> α1833_1852)
+//│ ╟── while constraining:  ‹∀ 0. (α1826_1828' -> α1827_1829')›  <!<  α1826_1849
+//│ ╟── while constraining:  α1826_1847  <!<  α1826_1849
+//│ ╟── while constraining:  (α1826_1847,)  <!<  (α1826_1849,)
+//│ ╟── while constraining:  (α1826_1849 -> α1827_1850)  <!<  ((α1826_1847,) -> α1827_1848)
+//│ ╟── while constraining:  ‹∀ 0. (α1826_1828' -> α1827_1829')›  <!<  ((α1826_1847,) -> α1827_1848)
+//│ ╟── while constraining:  ‹∀ 0. (α1826_1828' -> α1827_1829')›  <!<  α1826_1847
+//│ ╟── while constraining:  α1826_1845  <!<  α1826_1847
+//│ ╟── while constraining:  (α1826_1845,)  <!<  (α1826_1847,)
+//│ ╟── while constraining:  (α1826_1847 -> α1827_1848)  <!<  ((α1826_1845,) -> α1827_1846)
+//│ ╟── while constraining:  ‹∀ 0. (α1826_1828' -> α1827_1829')›  <!<  ((α1826_1845,) -> α1827_1846)
+//│ ╟── while constraining:  ‹∀ 0. (α1826_1828' -> α1827_1829')›  <!<  α1826_1845
+//│ ╟── while constraining:  α1826_1843  <!<  α1826_1845
+//│ ╟── while constraining:  (α1826_1843,)  <!<  (α1826_1845,)
+//│ ╟── while constraining:  (α1826_1845 -> α1827_1846)  <!<  ((α1826_1843,) -> α1827_1844)
+//│ ╟── while constraining:  ‹∀ 0. (α1826_1828' -> α1827_1829')›  <!<  ((α1826_1843,) -> α1827_1844)
 //│ ╟── ......
 //│ ╟── ......
-//│ ╟── while constraining:  ‹∀ 0. (α1832_1834' -> α1833_1835')›  <!<  ((α1832_1841,) -> α1833_1842)
-//│ ╟── while constraining:  ‹∀ 0. (α1832_1834' -> α1833_1835')›  <!<  α1832_1841
-//│ ╟── while constraining:  α1832_1839  <!<  α1832_1841
-//│ ╟── while constraining:  (α1832_1839,)  <!<  (α1832_1841,)
-//│ ╟── while constraining:  (α1832_1841 -> α1833_1842)  <!<  ((α1832_1839,) -> α1833_1840)
-//│ ╟── while constraining:  ‹∀ 0. (α1832_1834' -> α1833_1835')›  <!<  ((α1832_1839,) -> α1833_1840)
-//│ ╟── while constraining:  ‹∀ 0. (α1832_1834' -> α1833_1835')›  <!<  α1832_1839
-//│ ╟── while constraining:  α1828_1837  <!<  α1832_1839
-//│ ╟── while constraining:  (α1828_1837,)  <!<  (α1832_1839,)
-//│ ╟── while constraining:  (α1832_1839 -> α1833_1840)  <!<  ((α1828_1837,) -> α1829_1838)
-//│ ╟── while constraining:  ‹∀ 0. (α1832_1834' -> α1833_1835')›  <!<  ((α1828_1837,) -> α1829_1838)
-//│ ╟── while constraining:  ‹∀ 0. (α1832_1834' -> α1833_1835')›  <!<  α1828_1837
-//│ ╟── while constraining:  (‹∀ 0. (α1832_1834' -> α1833_1835')›,)  <!<  (α1828_1837,)
-//│ ╟── while constraining:  (α1828_1837 -> α1829_1838)  <!<  ((‹∀ 0. (α1832_1834' -> α1833_1835')›,) -> α1836)
-//│ ╙── while constraining:  ‹∀ 0. (α1828_1830' -> α1829_1831')›  <!<  ((‹∀ 0. (α1832_1834' -> α1833_1835')›,) -> α1836)
+//│ ╟── while constraining:  ‹∀ 0. (α1826_1828' -> α1827_1829')›  <!<  ((α1826_1835,) -> α1827_1836)
+//│ ╟── while constraining:  ‹∀ 0. (α1826_1828' -> α1827_1829')›  <!<  α1826_1835
+//│ ╟── while constraining:  α1826_1833  <!<  α1826_1835
+//│ ╟── while constraining:  (α1826_1833,)  <!<  (α1826_1835,)
+//│ ╟── while constraining:  (α1826_1835 -> α1827_1836)  <!<  ((α1826_1833,) -> α1827_1834)
+//│ ╟── while constraining:  ‹∀ 0. (α1826_1828' -> α1827_1829')›  <!<  ((α1826_1833,) -> α1827_1834)
+//│ ╟── while constraining:  ‹∀ 0. (α1826_1828' -> α1827_1829')›  <!<  α1826_1833
+//│ ╟── while constraining:  α1822_1831  <!<  α1826_1833
+//│ ╟── while constraining:  (α1822_1831,)  <!<  (α1826_1833,)
+//│ ╟── while constraining:  (α1826_1833 -> α1827_1834)  <!<  ((α1822_1831,) -> α1823_1832)
+//│ ╟── while constraining:  ‹∀ 0. (α1826_1828' -> α1827_1829')›  <!<  ((α1822_1831,) -> α1823_1832)
+//│ ╟── while constraining:  ‹∀ 0. (α1826_1828' -> α1827_1829')›  <!<  α1822_1831
+//│ ╟── while constraining:  (‹∀ 0. (α1826_1828' -> α1827_1829')›,)  <!<  (α1822_1831,)
+//│ ╟── while constraining:  (α1822_1831 -> α1823_1832)  <!<  ((‹∀ 0. (α1826_1828' -> α1827_1829')›,) -> α1830)
+//│ ╙── while constraining:  ‹∀ 0. (α1822_1824' -> α1823_1825')›  <!<  ((‹∀ 0. (α1826_1828' -> α1827_1829')›,) -> α1830)
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
@@ -934,7 +934,7 @@ def z f x = x
 
 // G2
 def s n f x = f (n f x)
-//│ s: ('a -> ('b -> 'c & 'd) & 'e) -> (forall 'f, 'g, 'h. (('c | 'g) -> 'h & 'a & 'f) -> (forall 'i, 'j. ('b & 'i) -> ('j | 'h)))
+//│ s: ('a -> ('b -> 'c & 'd) & 'e) -> (forall 'f, 'g, 'h. (('c | 'f) -> 'g & 'a & 'h) -> (forall 'i, 'j. ('b & 'i) -> ('j | 'g)))
 //│  = [Function: s1]
 
 // G3
@@ -967,14 +967,14 @@ fst (fst (fst (n3 (fun x -> (x, 0)) 1)))
 //│    = [Function (anonymous)]
 
 (s (s z)) (s (s z))
-//│ res: ((forall 'a, 'b. 'a | 'b | 'c | 'd) -> 'd & 'e -> 'c & 'f) -> (forall 'g, 'h, 'i. ('e & 'i) -> (forall 'j. 'g | 'j | 'd) | 'h)
+//│ res: ((forall 'a, 'b. 'a | 'b | 'c | 'd) -> 'd & 'e -> 'c & 'f) -> (forall 'g, 'h, 'i. ('e & 'g) -> (forall 'j. 'h | 'j | 'd) | 'i)
 //│   where
 //│     'e :> forall 'a, 'b. 'a | 'b | 'c | 'd
 //│    = [Function (anonymous)]
 
 // G7
 rec def to_ch n = if n == 0 then z else s (to_ch (n - 1))
-//│ to_ch: int -> (forall 'a, 'b, 'c, 'd. ((forall 'e. 'f | 'e | 'a) -> 'b & 'c & 'd & (forall 'e. 'f | 'e) -> 'f) -> (forall 'b, 'g, 'h, 'i. ('g & 'h & 'f) -> ('g | 'i | 'b)))
+//│ to_ch: int -> (forall 'a, 'b, 'c, 'd. ((forall 'e. 'f | 'e | 'a) -> 'b & 'c & 'd & (forall 'e. 'f | 'e) -> 'f) -> (forall 'g, 'h, 'i, 'b. ('g & 'h & 'f) -> ('g | 'i | 'b)))
 //│      = [Function: to_ch1]
 
 // G7A
@@ -996,41 +996,41 @@ rec def id1 x = if true then x else id1 id1 x
 :e
 // G9
 id1 id1
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?id1, ?a, ?b, ?c, ?d, ?e. ?id1 <: (forall ?f, ?g, ?h, ?i, ?id10, ?j. ?id10) -> ?k` exceeded recursion depth limit (300)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d, ?e, ?id1. ?id1 <: (forall ?id10, ?f, ?g, ?h, ?i, ?j. ?id10) -> ?k` exceeded recursion depth limit (250)
 //│ ║  l.998: 	id1 id1
 //│ ║         	^^^^^^^
-//│ ╟── while constraining:  ‹∀ 0. id12787'#›  <!<  α2788_2864
-//│ ╟── while constraining:  α2788_2858  <!<  α2788_2864
-//│ ╟── while constraining:  (α2788_2858,)  <!<  (α2788_2864,)
-//│ ╟── while constraining:  (α2788_2864 -> α2794_2865)  <!<  ((α2788_2858,) -> α2793_2860)
-//│ ╟── while constraining:  id12787_2863#  <!<  ((α2788_2858,) -> α2793_2860)
-//│ ╟── while constraining:  ‹∀ 0. id12787'#›  <!<  ((α2788_2858,) -> α2793_2860)
-//│ ╟── while constraining:  ‹∀ 0. id12787'#›  <!<  α2792_2862
-//│ ╟── while constraining:  ‹∀ 0. id12787'#›  <!<  α2794_2859
-//│ ╟── while constraining:  ‹∀ 0. id12787'#›  <!<  α20_2861
-//│ ╟── while constraining:  ‹∀ 0. id12787'#›  <!<  α2788_2858
-//│ ╟── while constraining:  α2788_2852  <!<  α2788_2858
-//│ ╟── while constraining:  (α2788_2852,)  <!<  (α2788_2858,)
-//│ ╟── while constraining:  (α2788_2858 -> α2794_2859)  <!<  ((α2788_2852,) -> α2793_2854)
-//│ ╟── while constraining:  id12787_2857#  <!<  ((α2788_2852,) -> α2793_2854)
-//│ ╟── while constraining:  ‹∀ 0. id12787'#›  <!<  ((α2788_2852,) -> α2793_2854)
+//│ ╟── while constraining:  ‹∀ 0. id12779'#›  <!<  α2780_2850
+//│ ╟── while constraining:  α2780_2844  <!<  α2780_2850
+//│ ╟── while constraining:  (α2780_2844,)  <!<  (α2780_2850,)
+//│ ╟── while constraining:  (α2780_2850 -> α2786_2851)  <!<  ((α2780_2844,) -> α2785_2846)
+//│ ╟── while constraining:  id12779_2849#  <!<  ((α2780_2844,) -> α2785_2846)
+//│ ╟── while constraining:  ‹∀ 0. id12779'#›  <!<  ((α2780_2844,) -> α2785_2846)
+//│ ╟── while constraining:  ‹∀ 0. id12779'#›  <!<  α2784_2848
+//│ ╟── while constraining:  ‹∀ 0. id12779'#›  <!<  α2786_2845
+//│ ╟── while constraining:  ‹∀ 0. id12779'#›  <!<  α20_2847
+//│ ╟── while constraining:  ‹∀ 0. id12779'#›  <!<  α2780_2844
+//│ ╟── while constraining:  α2780_2838  <!<  α2780_2844
+//│ ╟── while constraining:  (α2780_2838,)  <!<  (α2780_2844,)
+//│ ╟── while constraining:  (α2780_2844 -> α2786_2845)  <!<  ((α2780_2838,) -> α2785_2840)
+//│ ╟── while constraining:  id12779_2843#  <!<  ((α2780_2838,) -> α2785_2840)
+//│ ╟── while constraining:  ‹∀ 0. id12779'#›  <!<  ((α2780_2838,) -> α2785_2840)
 //│ ╟── ......
 //│ ╟── ......
-//│ ╟── while constraining:  ‹∀ 0. id12787'#›  <!<  α20_2819
-//│ ╟── while constraining:  ‹∀ 0. id12787'#›  <!<  α2788_2816
-//│ ╟── while constraining:  α2788_2810  <!<  α2788_2816
-//│ ╟── while constraining:  (α2788_2810,)  <!<  (α2788_2816,)
-//│ ╟── while constraining:  (α2788_2816 -> α2794_2817)  <!<  ((α2788_2810,) -> α2793_2812)
-//│ ╟── while constraining:  id12787_2815#  <!<  ((α2788_2810,) -> α2793_2812)
-//│ ╟── while constraining:  ‹∀ 0. id12787'#›  <!<  ((α2788_2810,) -> α2793_2812)
-//│ ╟── while constraining:  ‹∀ 0. id12787'#›  <!<  α2792_2814
-//│ ╟── while constraining:  ‹∀ 0. id12787'#›  <!<  α2794_2811
-//│ ╟── while constraining:  ‹∀ 0. id12787'#›  <!<  α20_2813
-//│ ╟── while constraining:  ‹∀ 0. id12787'#›  <!<  α2788_2810
-//│ ╟── while constraining:  (‹∀ 0. id12787'#›,)  <!<  (α2788_2810,)
-//│ ╟── while constraining:  (α2788_2810 -> α2794_2811)  <!<  ((‹∀ 0. id12787'#›,) -> α2808)
-//│ ╟── while constraining:  id12787_2809#  <!<  ((‹∀ 0. id12787'#›,) -> α2808)
-//│ ╙── while constraining:  ‹∀ 0. id12787'#›  <!<  ((‹∀ 0. id12787'#›,) -> α2808)
+//│ ╟── while constraining:  ‹∀ 0. id12779'#›  <!<  α20_2811
+//│ ╟── while constraining:  ‹∀ 0. id12779'#›  <!<  α2780_2808
+//│ ╟── while constraining:  α2780_2802  <!<  α2780_2808
+//│ ╟── while constraining:  (α2780_2802,)  <!<  (α2780_2808,)
+//│ ╟── while constraining:  (α2780_2808 -> α2786_2809)  <!<  ((α2780_2802,) -> α2785_2804)
+//│ ╟── while constraining:  id12779_2807#  <!<  ((α2780_2802,) -> α2785_2804)
+//│ ╟── while constraining:  ‹∀ 0. id12779'#›  <!<  ((α2780_2802,) -> α2785_2804)
+//│ ╟── while constraining:  ‹∀ 0. id12779'#›  <!<  α2784_2806
+//│ ╟── while constraining:  ‹∀ 0. id12779'#›  <!<  α2786_2803
+//│ ╟── while constraining:  ‹∀ 0. id12779'#›  <!<  α20_2805
+//│ ╟── while constraining:  ‹∀ 0. id12779'#›  <!<  α2780_2802
+//│ ╟── while constraining:  (‹∀ 0. id12779'#›,)  <!<  (α2780_2802,)
+//│ ╟── while constraining:  (α2780_2802 -> α2786_2803)  <!<  ((‹∀ 0. id12779'#›,) -> α2800)
+//│ ╟── while constraining:  id12779_2801#  <!<  ((‹∀ 0. id12779'#›,) -> α2800)
+//│ ╙── while constraining:  ‹∀ 0. id12779'#›  <!<  ((‹∀ 0. id12779'#›,) -> α2800)
 //│ res: error
 //│    = [Function: id12]
 
@@ -1040,7 +1040,7 @@ auto auto
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.1039: 	auto auto
 //│ ║          	^^^^^^^^^
-//│ ╟── type `‘a_2883` is not a function
+//│ ╟── type `‘a_2869` is not a function
 //│ ║  l.164: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
 //│ ║         	                   ^^
 //│ ╟── Note: constraint arises from function type:
@@ -1053,41 +1053,41 @@ auto auto
 // Gn+1
 :e
 (fun x -> x x) (fun x -> x x)
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b. ?a -> ?b <: (forall ?c, ?d. ?c -> ?d) -> ?e` exceeded recursion depth limit (300)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b. ?a -> ?b <: (forall ?c, ?d. ?c -> ?d) -> ?e` exceeded recursion depth limit (250)
 //│ ║  l.1055: 	(fun x -> x x) (fun x -> x x)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ‹∀ 0. (α2890_2892' -> α2891_2893')›  <!<  α2890_2915
-//│ ╟── while constraining:  α2890_2913  <!<  α2890_2915
-//│ ╟── while constraining:  (α2890_2913,)  <!<  (α2890_2915,)
-//│ ╟── while constraining:  (α2890_2915 -> α2891_2916)  <!<  ((α2890_2913,) -> α2891_2914)
-//│ ╟── while constraining:  ‹∀ 0. (α2890_2892' -> α2891_2893')›  <!<  ((α2890_2913,) -> α2891_2914)
-//│ ╟── while constraining:  ‹∀ 0. (α2890_2892' -> α2891_2893')›  <!<  α2890_2913
-//│ ╟── while constraining:  α2890_2911  <!<  α2890_2913
-//│ ╟── while constraining:  (α2890_2911,)  <!<  (α2890_2913,)
-//│ ╟── while constraining:  (α2890_2913 -> α2891_2914)  <!<  ((α2890_2911,) -> α2891_2912)
-//│ ╟── while constraining:  ‹∀ 0. (α2890_2892' -> α2891_2893')›  <!<  ((α2890_2911,) -> α2891_2912)
-//│ ╟── while constraining:  ‹∀ 0. (α2890_2892' -> α2891_2893')›  <!<  α2890_2911
-//│ ╟── while constraining:  α2890_2909  <!<  α2890_2911
-//│ ╟── while constraining:  (α2890_2909,)  <!<  (α2890_2911,)
-//│ ╟── while constraining:  (α2890_2911 -> α2891_2912)  <!<  ((α2890_2909,) -> α2891_2910)
-//│ ╟── while constraining:  ‹∀ 0. (α2890_2892' -> α2891_2893')›  <!<  ((α2890_2909,) -> α2891_2910)
+//│ ╟── while constraining:  ‹∀ 0. (α2876_2878' -> α2877_2879')›  <!<  α2876_2899
+//│ ╟── while constraining:  α2876_2897  <!<  α2876_2899
+//│ ╟── while constraining:  (α2876_2897,)  <!<  (α2876_2899,)
+//│ ╟── while constraining:  (α2876_2899 -> α2877_2900)  <!<  ((α2876_2897,) -> α2877_2898)
+//│ ╟── while constraining:  ‹∀ 0. (α2876_2878' -> α2877_2879')›  <!<  ((α2876_2897,) -> α2877_2898)
+//│ ╟── while constraining:  ‹∀ 0. (α2876_2878' -> α2877_2879')›  <!<  α2876_2897
+//│ ╟── while constraining:  α2876_2895  <!<  α2876_2897
+//│ ╟── while constraining:  (α2876_2895,)  <!<  (α2876_2897,)
+//│ ╟── while constraining:  (α2876_2897 -> α2877_2898)  <!<  ((α2876_2895,) -> α2877_2896)
+//│ ╟── while constraining:  ‹∀ 0. (α2876_2878' -> α2877_2879')›  <!<  ((α2876_2895,) -> α2877_2896)
+//│ ╟── while constraining:  ‹∀ 0. (α2876_2878' -> α2877_2879')›  <!<  α2876_2895
+//│ ╟── while constraining:  α2876_2893  <!<  α2876_2895
+//│ ╟── while constraining:  (α2876_2893,)  <!<  (α2876_2895,)
+//│ ╟── while constraining:  (α2876_2895 -> α2877_2896)  <!<  ((α2876_2893,) -> α2877_2894)
+//│ ╟── while constraining:  ‹∀ 0. (α2876_2878' -> α2877_2879')›  <!<  ((α2876_2893,) -> α2877_2894)
 //│ ╟── ......
 //│ ╟── ......
-//│ ╟── while constraining:  ‹∀ 0. (α2890_2892' -> α2891_2893')›  <!<  ((α2890_2899,) -> α2891_2900)
-//│ ╟── while constraining:  ‹∀ 0. (α2890_2892' -> α2891_2893')›  <!<  α2890_2899
-//│ ╟── while constraining:  α2890_2897  <!<  α2890_2899
-//│ ╟── while constraining:  (α2890_2897,)  <!<  (α2890_2899,)
-//│ ╟── while constraining:  (α2890_2899 -> α2891_2900)  <!<  ((α2890_2897,) -> α2891_2898)
-//│ ╟── while constraining:  ‹∀ 0. (α2890_2892' -> α2891_2893')›  <!<  ((α2890_2897,) -> α2891_2898)
-//│ ╟── while constraining:  ‹∀ 0. (α2890_2892' -> α2891_2893')›  <!<  α2890_2897
-//│ ╟── while constraining:  α2886_2895  <!<  α2890_2897
-//│ ╟── while constraining:  (α2886_2895,)  <!<  (α2890_2897,)
-//│ ╟── while constraining:  (α2890_2897 -> α2891_2898)  <!<  ((α2886_2895,) -> α2887_2896)
-//│ ╟── while constraining:  ‹∀ 0. (α2890_2892' -> α2891_2893')›  <!<  ((α2886_2895,) -> α2887_2896)
-//│ ╟── while constraining:  ‹∀ 0. (α2890_2892' -> α2891_2893')›  <!<  α2886_2895
-//│ ╟── while constraining:  (‹∀ 0. (α2890_2892' -> α2891_2893')›,)  <!<  (α2886_2895,)
-//│ ╟── while constraining:  (α2886_2895 -> α2887_2896)  <!<  ((‹∀ 0. (α2890_2892' -> α2891_2893')›,) -> α2894)
-//│ ╙── while constraining:  ‹∀ 0. (α2886_2888' -> α2887_2889')›  <!<  ((‹∀ 0. (α2890_2892' -> α2891_2893')›,) -> α2894)
+//│ ╟── while constraining:  ‹∀ 0. (α2876_2878' -> α2877_2879')›  <!<  ((α2876_2885,) -> α2877_2886)
+//│ ╟── while constraining:  ‹∀ 0. (α2876_2878' -> α2877_2879')›  <!<  α2876_2885
+//│ ╟── while constraining:  α2876_2883  <!<  α2876_2885
+//│ ╟── while constraining:  (α2876_2883,)  <!<  (α2876_2885,)
+//│ ╟── while constraining:  (α2876_2885 -> α2877_2886)  <!<  ((α2876_2883,) -> α2877_2884)
+//│ ╟── while constraining:  ‹∀ 0. (α2876_2878' -> α2877_2879')›  <!<  ((α2876_2883,) -> α2877_2884)
+//│ ╟── while constraining:  ‹∀ 0. (α2876_2878' -> α2877_2879')›  <!<  α2876_2883
+//│ ╟── while constraining:  α2872_2881  <!<  α2876_2883
+//│ ╟── while constraining:  (α2872_2881,)  <!<  (α2876_2883,)
+//│ ╟── while constraining:  (α2876_2883 -> α2877_2884)  <!<  ((α2872_2881,) -> α2873_2882)
+//│ ╟── while constraining:  ‹∀ 0. (α2876_2878' -> α2877_2879')›  <!<  ((α2872_2881,) -> α2873_2882)
+//│ ╟── while constraining:  ‹∀ 0. (α2876_2878' -> α2877_2879')›  <!<  α2872_2881
+//│ ╟── while constraining:  (‹∀ 0. (α2876_2878' -> α2877_2879')›,)  <!<  (α2872_2881,)
+//│ ╟── while constraining:  (α2872_2881 -> α2873_2882)  <!<  ((‹∀ 0. (α2876_2878' -> α2877_2879')›,) -> α2880)
+//│ ╙── while constraining:  ‹∀ 0. (α2872_2874' -> α2873_2875')›  <!<  ((‹∀ 0. (α2876_2878' -> α2877_2879')›,) -> α2880)
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
@@ -1371,8 +1371,8 @@ fst (fst (fst (n3 (fun x -> (x, 0)) 1)))
 //│ ║  l.1369: 	(s (s z)) (s (s z))
 //│ ║          	^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 4. α3299_3640'''''›  <:  α3292_3661    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 4. α3299_3640'''''›  <:  α3292_3658''''
+//│ ╟── this constraint:  ‹∀ 4. α3283_3624'''''›  <:  α3276_3645    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 4. α3283_3624'''''›  <:  α3276_3642''''
 //│ res: error
 //│    = [Function (anonymous)]
 
@@ -1393,8 +1393,8 @@ rec def id1 x = if true then x else id1 id1 x
 //│ ║  l.1391: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║          	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α3794' -> α3800')  <:  α3798'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α3794' -> α3800')  <:  α3798'
+//│ ╟── this constraint:  (α3778' -> α3784')  <:  α3782'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α3778' -> α3784')  <:  α3782'
 //│ id1: 'id1
 //│   where
 //│     'id1 :> 'a -> 'b
@@ -1411,8 +1411,8 @@ id1 id1
 //│ ║  l.1409: 	id1 id1
 //│ ║          	^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. id13793'#›  <:  α3794_3822    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. id13793'#›  <:  α3794'
+//│ ╟── this constraint:  ‹∀ 0. id13777'#›  <:  α3778_3806    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. id13777'#›  <:  α3778'
 //│ res: error
 //│    = [Function: id13]
 
@@ -1422,7 +1422,7 @@ auto auto
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.1421: 	auto auto
 //│ ║          	^^^^^^^^^
-//│ ╟── type `‘a_3829` is not a function
+//│ ╟── type `‘a_3813` is not a function
 //│ ║  l.164: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
 //│ ║         	                   ^^
 //│ ╟── Note: constraint arises from function type:
@@ -1439,8 +1439,8 @@ auto auto
 //│ ║  l.1437: 	(fun x -> x x) (fun x -> x x)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α3836_3838' -> α3837_3839')›  <:  α3836_3845    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α3836_3838' -> α3837_3839')›  <:  α3836_3838'
+//│ ╟── this constraint:  ‹∀ 0. (α3820_3822' -> α3821_3823')›  <:  α3820_3829    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α3820_3822' -> α3821_3823')›  <:  α3820_3822'
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
@@ -1724,8 +1724,8 @@ fst (fst (fst (n3 (fun x -> (x, 0)) 1)))
 //│ ║  l.1722: 	(s (s z)) (s (s z))
 //│ ║          	^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 4. α4227_4568'''''›  <:  α4220_4589    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 4. α4227_4568'''''›  <:  α4220_4586''''
+//│ ╟── this constraint:  ‹∀ 4. α4211_4552'''''›  <:  α4204_4573    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 4. α4211_4552'''''›  <:  α4204_4570''''
 //│ res: error
 //│    = [Function (anonymous)]
 
@@ -1757,8 +1757,8 @@ id1 id1
 //│ ║  l.1755: 	id1 id1
 //│ ║          	^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. id14720'#›  <:  α4721_4749    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. id14720'#›  <:  α4721'
+//│ ╟── this constraint:  ‹∀ 0. id14704'#›  <:  α4705_4733    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. id14704'#›  <:  α4705'
 //│ res: error
 //│    = [Function: id14]
 
@@ -1768,7 +1768,7 @@ auto auto
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.1767: 	auto auto
 //│ ║          	^^^^^^^^^
-//│ ╟── type `‘a_4756` is not a function
+//│ ╟── type `‘a_4740` is not a function
 //│ ║  l.164: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
 //│ ║         	                   ^^
 //│ ╟── Note: constraint arises from function type:
@@ -1785,8 +1785,8 @@ auto auto
 //│ ║  l.1783: 	(fun x -> x x) (fun x -> x x)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α4763_4765' -> α4764_4766')›  <:  α4763_4772    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α4763_4765' -> α4764_4766')›  <:  α4763_4765'
+//│ ╟── this constraint:  ‹∀ 0. (α4747_4749' -> α4748_4750')›  <:  α4747_4756    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α4747_4749' -> α4748_4750')›  <:  α4747_4749'
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded

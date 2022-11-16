@@ -11,7 +11,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   def verboseConstraintProvenanceHints: Bool = verbose
   def defaultStartingFuel: Int = 5000
   var startingFuel: Int = defaultStartingFuel
-  def depthLimit: Int = 300
+  def depthLimit: Int = 250
   
   def unifyInsteadOfExtrude: Bool = false
   
