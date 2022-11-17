@@ -1,4 +1,5 @@
 :NewParser
+
 :d
 :ne
 :NoJS
@@ -29,11 +30,11 @@ let int_tuple = (3, 2)
 
 type IntCode = Code[int]
 //│ ╔══[ERROR] not a recognized type: (Code)[int]
-//│ ║  l.30: 	type IntCode = Code[int]
+//│ ║  l.31: 	type IntCode = Code[int]
 //│ ╙──      	               ^^^^^^^^^
 //│ Defined type alias IntCode
 //│ ╔══[ERROR] identifier not found: IntCode
-//│ ║  l.30: 	type IntCode = Code[int]
+//│ ║  l.31: 	type IntCode = Code[int]
 //│ ╙──      	     ^^^^^^^
 //│ IntCode: () -> error
 
