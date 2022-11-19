@@ -129,7 +129,7 @@ class Parent<T, U, V>(x) {
   }
 }
 //│ |#class| |Parent|‹|T|,| |U|,| |V|›|(|x|)| |{| |→|#fun| |foo|(|x|#:| |Int|)|#:| |T| |#=| |x|+|1|↵|#class| |Inner|‹|W|›|(|y|#:| |Int|)|{|→|#fun| |bar|(|z|#:| |U|)| |#=| |foo|(|y|)|↵|#fun| |boo|(|z|#:| |W|)| |#=| |z|←|↵|}|←|↵|}|
-//│ Parsed: {class Parent[T, U, V](x,) {fun foo = x: Int, => + (x,) (1,) : TypeName(T); class Inner[W](y: Int,) {fun bar = z: U, => foo (y,); fun boo = z: W, => z}}}
+//│ Parsed: {class Parent‹T, U, V›(x,) {fun foo = x: Int, => + (x,) (1,) : TypeName(T); class Inner‹W›(y: Int,) {fun bar = z: U, => foo (y,); fun boo = z: W, => z}}}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, Parent, (TypeName(T), TypeName(U), TypeName(V)), Tup(_: Var(x)), (), TypingUnit(NuFunDef(None, foo, [], Lam(Tup(x: Var(Int)), Asc(App(App(Var(+), Tup(_: Var(x))), Tup(_: IntLit(1))), TypeName(T)))), NuTypeDef(class, Inner, (TypeName(W)), Tup(y: Var(Int)), (), TypingUnit(NuFunDef(None, bar, [], Lam(Tup(z: Var(U)), App(Var(foo), Tup(_: Var(y))))), NuFunDef(None, boo, [], Lam(Tup(z: Var(W)), Var(z))))))))
 //│ Lifted:
@@ -151,7 +151,7 @@ class A<T, U>(x: Int): {a1: Int} & B<T> & D(x){
   }
 }
 //│ |#class| |B|‹|T|›| |{||}|↵|#class| |C| |{||}|↵|#class| |D|(|y|#:| |Int|)| |{||}|↵|#class| |A|‹|T|,| |U|›|(|x|#:| |Int|)|#:| |{|a1|#:| |Int|}| |&| |B|‹|T|›| |&| |D|(|x|)|{|→|#fun| |getA|(||)| |#=| |#new| |C|{|→|#fun| |foo|(|x|#:| |T|)| |#=| |x|←|↵|}|←|↵|}|
-//│ Parsed: {class B[T]() {}; class C() {}; class D(y: Int,) {}; class A[T, U](x: Int,): & ('{' {a1: Int} '}',) (& (B‹T›,) (D (x,),),) {fun getA =  => new C() {fun foo = x: T, => x}}}
+//│ Parsed: {class B‹T›() {}; class C() {}; class D(y: Int,) {}; class A‹T, U›(x: Int,): & ('{' {a1: Int} '}',) (& (B‹T›,) (D (x,),),) {fun getA =  => new C() {fun foo = x: T, => x}}}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, B, (TypeName(T)), Tup(), (), TypingUnit()), NuTypeDef(class, C, (), Tup(), (), TypingUnit()), NuTypeDef(class, D, (), Tup(y: Var(Int)), (), TypingUnit()), NuTypeDef(class, A, (TypeName(T), TypeName(U)), Tup(x: Var(Int)), (App(App(Var(&), Tup(_: Bra(rcd = true, Rcd(Var(a1) = Var(Int))))), Tup(_: App(App(Var(&), Tup(_: TyApp(Var(B), List(TypeName(T))))), Tup(_: App(Var(D), Tup(_: Var(x)))))))), TypingUnit(NuFunDef(None, getA, [], Lam(Tup(), New(Some((TypeName(C),)), TypingUnit(List(fun foo = x: T, => x))))))))
 //│ Lifted:
@@ -173,7 +173,7 @@ class A<T, U>(x: Int): {a1: Int}, B<T>, D(x){
   }
 }
 //│ |#class| |B|‹|T|›| |{||}|↵|#class| |C| |{||}|↵|#class| |D|(|y|#:| |Int|)| |{||}|↵|#class| |A|‹|T|,| |U|›|(|x|#:| |Int|)|#:| |{|a1|#:| |Int|}|,| |B|‹|T|›|,| |D|(|x|)|{|→|#fun| |getA|(||)| |#=| |#new| |C|{|→|#fun| |foo|(|x|)| |#=| |x|←|↵|}|←|↵|}|
-//│ Parsed: {class B[T]() {}; class C() {}; class D(y: Int,) {}; class A[T, U](x: Int,): '{' {a1: Int} '}', B‹T›, D (x,) {fun getA =  => new C() {fun foo = x, => x}}}
+//│ Parsed: {class B‹T›() {}; class C() {}; class D(y: Int,) {}; class A‹T, U›(x: Int,): '{' {a1: Int} '}', B‹T›, D (x,) {fun getA =  => new C() {fun foo = x, => x}}}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, B, (TypeName(T)), Tup(), (), TypingUnit()), NuTypeDef(class, C, (), Tup(), (), TypingUnit()), NuTypeDef(class, D, (), Tup(y: Var(Int)), (), TypingUnit()), NuTypeDef(class, A, (TypeName(T), TypeName(U)), Tup(x: Var(Int)), (Bra(rcd = true, Rcd(Var(a1) = Var(Int))), TyApp(Var(B), List(TypeName(T))), App(Var(D), Tup(_: Var(x)))), TypingUnit(NuFunDef(None, getA, [], Lam(Tup(), New(Some((TypeName(C),)), TypingUnit(List(fun foo = x, => x))))))))
 //│ Lifted:
@@ -193,7 +193,7 @@ class Child<T, U>(x): { age: T } & { name: String} {
   fun boo = new Inner
 }
 //│ |#class| |Child|‹|T|,| |U|›|(|x|)|#:| |{| |age|#:| |T| |}| |&| |{| |name|#:| |String|}| |{|→|#class| |Inner|{|→|#fun| |foo| |#=| |age|←|↵|}|↵|#fun| |bar| |#=| |age|↵|#fun| |boo| |#=| |#new| |Inner|←|↵|}|
-//│ Parsed: {class Child[T, U](x,): & ('{' {age: T} '}',) ('{' {name: String} '}',) {class Inner() {fun foo = age}; fun bar = age; fun boo = new Inner() {}}}
+//│ Parsed: {class Child‹T, U›(x,): & ('{' {age: T} '}',) ('{' {name: String} '}',) {class Inner() {fun foo = age}; fun bar = age; fun boo = new Inner() {}}}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, Child, (TypeName(T), TypeName(U)), Tup(_: Var(x)), (App(App(Var(&), Tup(_: Bra(rcd = true, Rcd(Var(age) = Var(T))))), Tup(_: Bra(rcd = true, Rcd(Var(name) = Var(String)))))), TypingUnit(NuTypeDef(class, Inner, (), Tup(), (), TypingUnit(NuFunDef(None, foo, [], Var(age)))), NuFunDef(None, bar, [], Var(age)), NuFunDef(None, boo, [], New(Some((TypeName(Inner),)), TypingUnit(List()))))))
 //│ Lifted:

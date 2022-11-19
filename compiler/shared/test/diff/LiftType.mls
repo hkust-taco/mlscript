@@ -59,7 +59,7 @@ class CTX(x, y){
   fun foo(any: (A, B<A>)): ((B<A>, A), A) = (any, any._1)
 }
 //│ |#class| |CTX|(|x|,| |y|)|{|→|#class| |A|{| |#fun| |foo| |#=| |x|}|↵|#class| |B|‹|T|›| |{| |#fun| |foo| |#=| |y|}|↵|#fun| |foo|(|any|#:| |(|A|,| |B|‹|A|›|)|)|#:| |(|(|B|‹|A|›|,| |A|)|,| |A|)| |#=| |(|any|,| |any|._1|)|←|↵|}|
-//│ Parsed: {class CTX(x, y,) {class A() {fun foo = x}; class B[T]() {fun foo = y}; fun foo = any: '(' A, B‹A›, ')', => '(' any, (any)._1, ')' : Tuple(List((None,Field(None,Tuple(List((None,Field(None,AppliedType(TypeName(B),List(TypeName(A))))), (None,Field(None,TypeName(A))))))), (None,Field(None,TypeName(A)))))}}
+//│ Parsed: {class CTX(x, y,) {class A() {fun foo = x}; class B‹T›() {fun foo = y}; fun foo = any: '(' A, B‹A›, ')', => '(' any, (any)._1, ')' : Tuple(List((None,Field(None,Tuple(List((None,Field(None,AppliedType(TypeName(B),List(TypeName(A))))), (None,Field(None,TypeName(A))))))), (None,Field(None,TypeName(A)))))}}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, CTX, (), Tup(_: Var(x), _: Var(y)), (), TypingUnit(NuTypeDef(class, A, (), Tup(), (), TypingUnit(NuFunDef(None, foo, [], Var(x)))), NuTypeDef(class, B, (TypeName(T)), Tup(), (), TypingUnit(NuFunDef(None, foo, [], Var(y)))), NuFunDef(None, foo, [], Lam(Tup(any: Bra(rcd = false, Tup(_: Var(A), _: TyApp(Var(B), List(TypeName(A)))))), Asc(Bra(rcd = false, Tup(_: Var(any), _: Sel(Var(any), _1))), Tuple(List((None,Field(None,Tuple(List((None,Field(None,AppliedType(TypeName(B),List(TypeName(A))))), (None,Field(None,TypeName(A))))))), (None,Field(None,TypeName(A)))))))))))
 //│ Lifted:
