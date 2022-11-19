@@ -1,7 +1,6 @@
 // * This is a minimization of the error that happens in `QML_exist_Records`
 
 
-
 :NoRecursiveTypes
 :GeneralizeCurriedFunctions
 // :DistributeForalls
@@ -33,7 +32,7 @@ def step: Arrays -> Arrays
 //│ step: Arrays -> Arrays
 //│     = <missing implementation>
 
-// :d
+:e // * Since "sound extrusion"
 def step arr g = g (stepImpl2 arr)
 //│ 'a -> (forall 'b, 'a, 'c, 'd, 'e. (('d -> 'e & 'b) -> 'e
 //│   where
@@ -43,16 +42,16 @@ def step arr g = g (stepImpl2 arr)
 //│   <:  step:
 //│ Arrays -> Arrays
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.37: 	def step arr g = g (stepImpl2 arr)
+//│ ║  l.36: 	def step arr g = g (stepImpl2 arr)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.12: 	type ArraysRep[Rep] = { fold: forall 'b. 'b -> Rep -> 'b }
+//│ ║  l.11: 	type ArraysRep[Rep] = { fold: forall 'b. 'b -> Rep -> 'b }
 //│ ║        	                                     ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.12: 	type ArraysRep[Rep] = { fold: forall 'b. 'b -> Rep -> 'b }
+//│ ║  l.11: 	type ArraysRep[Rep] = { fold: forall 'b. 'b -> Rep -> 'b }
 //│ ║        	                                     ^^
 //│ ╟── from application:
-//│ ║  l.19: 	def stepImpl arrImpl = { fold = fun f -> fun r0 -> arrImpl.fold f r0 }
+//│ ║  l.18: 	def stepImpl arrImpl = { fold = fun f -> fun r0 -> arrImpl.fold f r0 }
 //│ ╙──      	                                                   ^^^^^^^^^^^^^^^^^
 //│     = [Function: step]
 

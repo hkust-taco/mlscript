@@ -116,10 +116,12 @@ def DNE_to_EM_let dne =
 //│ DNE_to_EM_let: ((forall 'a, 'v, 'b, 'c, 'v0, 'd, 'e. ((Right & {v: forall 'f, 'v1, 'g. ('f & 'v1 & 'v0) -> ('g | 'd) | 'v} | 'b) -> 'c & ((Left with {v: 'v0}) | 'a) -> 'd & 'e) -> 'c) -> 'h & 'i) -> (forall 'j. 'j | 'h)
 //│              = [Function: DNE_to_EM_let]
 
-// * This one works because we used let polymorphism
+// * This one used to work because we used let polymorphism
+// * Stopped working after "sound extrusion", but works with distrib (see below)
+:e
 DNE_to_EM_let: DNE -> EM
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.120: 	DNE_to_EM_let: DNE -> EM
+//│ ║  l.122: 	DNE_to_EM_let: DNE -> EM
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── reference of type `anything` does not match type `nothing`
 //│ ║  l.114: 	  let poly = dne (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
@@ -138,7 +140,7 @@ def DNE_to_EM_A0 (dne: DNE) =
 :e
 DNE_to_EM_A0: DNE -> EM
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.139: 	DNE_to_EM_A0: DNE -> EM
+//│ ║  l.141: 	DNE_to_EM_A0: DNE -> EM
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.20: 	type EM = forall 'a. Either['a, Not['a]]
@@ -163,7 +165,7 @@ def DNE_to_EM_A1 dne =
 :e
 DNE_to_EM_A1: DNE -> EM
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.164: 	DNE_to_EM_A1: DNE -> EM
+//│ ║  l.166: 	DNE_to_EM_A1: DNE -> EM
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.20: 	type EM = forall 'a. Either['a, Not['a]]
@@ -172,7 +174,7 @@ DNE_to_EM_A1: DNE -> EM
 //│ ║  l.20: 	type EM = forall 'a. Either['a, Not['a]]
 //│ ║        	                 ^^
 //│ ╟── from type variable:
-//│ ║  l.159: 	  (dne: Not[Not[EM_of['a]]] -> EM_of['a]) (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
+//│ ║  l.161: 	  (dne: Not[Not[EM_of['a]]] -> EM_of['a]) (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
 //│ ╙──       	                                     ^^
 //│ res: DNE -> EM
 //│    = [Function: DNE_to_EM_A1]
@@ -199,7 +201,7 @@ def DNE_to_EM_A2 (dne: DNE) =
 :e
 DNE_to_EM_A2: DNE -> EM
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.200: 	DNE_to_EM_A2: DNE -> EM
+//│ ║  l.202: 	DNE_to_EM_A2: DNE -> EM
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.20: 	type EM = forall 'a. Either['a, Not['a]]
@@ -208,7 +210,7 @@ DNE_to_EM_A2: DNE -> EM
 //│ ║  l.20: 	type EM = forall 'a. Either['a, Not['a]]
 //│ ║        	                 ^^
 //│ ╟── from type variable:
-//│ ║  l.193: 	  dne (fun (not_em: Not[Either['A, Not['A]]]) -> not_em (Right { v = helper not_em }))
+//│ ║  l.195: 	  dne (fun (not_em: Not[Either['A, Not['A]]]) -> not_em (Right { v = helper not_em }))
 //│ ╙──       	                                       ^^
 //│ res: DNE -> EM
 //│    = [Function: DNE_to_EM_A2]
@@ -273,7 +275,9 @@ to_EM = dne (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) 
 
 EM_to_DNE: EM -> DNE
 DNE_to_EM: DNE -> EM
+DNE_to_EM_let: DNE -> EM
 //│ res: EM -> DNE
+//│ res: DNE -> EM
 //│ res: DNE -> EM
 
 EM_to_DNE_A0: EM -> DNE
@@ -308,7 +312,7 @@ DNE_to_EM dne
 :e
 EM_to_DNE: EM -> DNE
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.309: 	EM_to_DNE: EM -> DNE
+//│ ║  l.313: 	EM_to_DNE: EM -> DNE
 //│ ║         	^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.24: 	type DNE = forall 'a. Not[Not['a]] -> 'a
@@ -324,7 +328,7 @@ EM_to_DNE: EM -> DNE
 :e
 EM_to_DNE: EM -> DNE
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.325: 	EM_to_DNE: EM -> DNE
+//│ ║  l.329: 	EM_to_DNE: EM -> DNE
 //│ ║         	^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.24: 	type DNE = forall 'a. Not[Not['a]] -> 'a
@@ -342,13 +346,14 @@ EM_to_DNE: EM -> DNE
 
 def EM_to_DNE em nna =
   case em of Left -> em.v, Right -> nna em.v
-//│ EM_to_DNE: 'a -> (forall 'b, 'a, 'c, 'v, 'd, 'v0, 'e. (('v0 -> 'c & 'e) -> ('v | 'c)
+//│ EM_to_DNE: 'a -> (forall 'b, 'a, 'v, 'v0, 'c, 'd, 'e. (('v -> 'e & 'd) -> ('v0 | 'e)
 //│   where
-//│     'a <: (Left with {v: 'v}) & 'd | (Right with {v: 'v0}) & 'b))
+//│     'a <: (Left with {v: 'v0}) & 'c | (Right with {v: 'v}) & 'b))
 
+:e // * Still needs distrib! (after "sound extrusion")
 EM_to_DNE: EM -> DNE
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.349: 	EM_to_DNE: EM -> DNE
+//│ ║  l.354: 	EM_to_DNE: EM -> DNE
 //│ ║         	^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.24: 	type DNE = forall 'a. Not[Not['a]] -> 'a
@@ -363,24 +368,33 @@ EM_to_DNE: EM -> DNE
 
 def DNE_to_EM dne =
   dne (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
-//│ DNE_to_EM: ((forall 'a, 'b, 'c. ((Right & {v: forall 'd, 'e, 'v, 'v0, 'f, 'b. (('v0 & 'f) -> 'd | 'v
+//│ DNE_to_EM: ((forall 'a, 'b, 'c. ((Right & {v: forall 'd, 'e, 'v, 'v0, 'c, 'f. (('v & 'e) -> 'f | 'v0
 //│   where
-//│     'b <: ((Left with {v: 'v0}) | 'e) -> 'd)} | 'c) -> 'a & 'b) -> 'a) -> 'g & 'h) -> 'g
+//│     'c <: ((Left with {v: 'v}) | 'd) -> 'f)} | 'a) -> 'b & 'c) -> 'b) -> 'g & 'h) -> 'g
 
-EM_to_DNE: EM -> DNE
+:e // * Still needs distrib! (after "sound extrusion")
+DNE_to_EM: DNE -> EM
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.370: 	EM_to_DNE: EM -> DNE
+//│ ║  l.376: 	DNE_to_EM: DNE -> EM
 //│ ║         	^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.24: 	type DNE = forall 'a. Not[Not['a]] -> 'a
-//│ ║        	                  ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.24: 	type DNE = forall 'a. Not[Not['a]] -> 'a
-//│ ║        	                  ^^
-//│ ╟── from quantified type variable:
 //│ ║  l.20: 	type EM = forall 'a. Either['a, Not['a]]
-//│ ╙──      	                 ^^
+//│ ║        	                 ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type EM = forall 'a. Either['a, Not['a]]
+//│ ║        	                 ^^
+//│ ╟── from reference:
+//│ ║  l.370: 	  dne (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
+//│ ╙──       	                                                                     ^
+//│ res: DNE -> EM
+
+// * They work with distrib:
+:DistributeForalls
+EM_to_DNE: EM -> DNE
+DNE_to_EM: DNE -> EM
 //│ res: EM -> DNE
+//│ res: DNE -> EM
+:DontDistributeForalls
 
 
 

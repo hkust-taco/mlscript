@@ -223,9 +223,10 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 // :e // FIXME? failed with genLamBodies but works with quantif extrus
 // * Note: this one requires `:DistributeForalls`
 // :e // due to tapping
+:e // * Since "sound extrusion"
 zog = printInt (add (nfind table "one") (nfind table "two"))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.226: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║  l.227: 	zog = printInt (add (nfind table "one") (nfind table "two"))
 //│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.157: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -241,9 +242,10 @@ zog = printInt (add (nfind table "one") (nfind table "two"))
 // :e // FIXME? failed with genLamBodies but works with quantif extrus
 //:e // due to tapping
 // :e // FIXME? refreshing-extr
+:e // * Since "sound extrusion"
 a = add (nfind table "one")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.244: 	a = add (nfind table "one")
+//│ ║  l.246: 	a = add (nfind table "one")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.157: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)

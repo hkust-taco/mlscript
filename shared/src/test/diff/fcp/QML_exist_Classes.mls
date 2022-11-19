@@ -191,6 +191,7 @@ def simpleStep: Arrays['a] -> Arrays['a]
 //│ simpleStep: Arrays['a] -> Arrays['a]
 //│           = <missing implementation>
 
+:e // * Since "sound extrusion"
 def simpleStep arr f = f (simpleStepImpl2 arr)
 //│ 'a -> (forall 'c, 'd, 'e, 'a, 'f. (('d -> 'e & 'f) -> 'e
 //│   where
@@ -216,7 +217,7 @@ def simpleStep arr f = f (simpleStepImpl2 arr)
 //│   <:  simpleStep:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.194: 	def simpleStep arr f = f (simpleStepImpl2 arr)
+//│ ║  l.195: 	def simpleStep arr f = f (simpleStepImpl2 arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.42: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -237,7 +238,7 @@ def simpleStep arr f = f (simpleStepImpl2_ty arr)
 //│   <:  simpleStep:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.233: 	def simpleStep arr f = f (simpleStepImpl2_ty arr)
+//│ ║  l.234: 	def simpleStep arr f = f (simpleStepImpl2_ty arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.42: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -262,7 +263,7 @@ sb (fun arr -> arr.Sub (arr.Init true) 1)
 :e // * Expected – argument order confusion
 sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.263: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
+//│ ║  l.264: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘Rep_2202` is not an instance of type `int`
 //│ ║  l.42: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -271,7 +272,7 @@ sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ║  l.17: 	  method Sub: Rep -> int -> A
 //│ ║        	                     ^^^
 //│ ╟── from application:
-//│ ║  l.263: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
+//│ ║  l.264: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ║         	                          ^^^^^^^^^^^^^
 //│ ╟── Note: class type parameter Rep is defined at:
 //│ ║  l.15: 	class ArraysRep[A, Rep]
@@ -287,7 +288,7 @@ sb (fun arr -> arr.Update (arr.Init true) 1 false)
 :e // * Rightly prevent skolem confusion
 sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.288: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
+//│ ║  l.289: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘Rep_2309` does not match type `nothing`
 //│ ║  l.42: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -296,7 +297,7 @@ sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ║  l.42: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                         ^^^^
 //│ ╟── from application:
-//│ ║  l.288: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
+//│ ║  l.289: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ╙──       	                                             ^^^^^^^^^^^^^^
 //│ res: error
 //│    = [Function (anonymous)]
@@ -436,6 +437,7 @@ def step: Arrays['a] -> Arrays['a]
 //│ step: Arrays['a] -> Arrays['a]
 //│     = <missing implementation>
 
+:e // * Since "sound extrusion"
 def step arr f = f (stepImpl2 arr)
 //│ 'a -> (forall 'c, 'a, 'd, 'e, 'f. (('c -> 'd & 'e) -> 'd
 //│   where
@@ -466,7 +468,7 @@ def step arr f = f (stepImpl2 arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.439: 	def step arr f = f (stepImpl2 arr)
+//│ ║  l.441: 	def step arr f = f (stepImpl2 arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.42: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -475,11 +477,12 @@ def step arr f = f (stepImpl2 arr)
 //│ ║  l.42: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                         ^^^^
 //│ ╟── from reference:
-//│ ║  l.340: 	      then arrImpl.Sub r0 (div i 2)
+//│ ║  l.341: 	      then arrImpl.Sub r0 (div i 2)
 //│ ╙──       	                       ^^
 //│     = [Function: step]
 
-// * Now the annotation is okay because the result no longer extrudes it...
+// * Now the annotation was okay [until "sound extrusion"] because the result no longer extruded it...
+:e // * Since "sound extrusion"
 def step (arr: Arrays['a]) f = f (stepImpl2 arr)
 //│ Arrays['a] -> (forall 'A, 'c, 'A0, 'A1, 'd, 'e, 'Rep, 'A2, 'Rep0, 'A3, 'A4, 'update, 'a0, 'sub, 'fold, 'f, 'g. (((ArraysImpl[in 'a0 & 'A1 & 'd & 'A2 & 'A4 & 'c & 'A0 & 'A out 'a0 | 'A1 | 'A3, in (nothing, nothing,) & 'Rep0 out (anything, anything,) | 'Rep0 | 'Rep] with {fold: forall 'h. 'h -> (forall 'i. 'i -> (forall 'b, 'A5, 'j, 'Rep1, 'A6, 'b0, 'k, 'Rep2, 'l, 'i, 'm, 'h, 'n, 'a0. (('Rep1 & 'n, 'Rep2 & 'm,) -> ('i | 'l)
 //│   where
@@ -494,7 +497,7 @@ def step (arr: Arrays['a]) f = f (stepImpl2 arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.483: 	def step (arr: Arrays['a]) f = f (stepImpl2 arr)
+//│ ║  l.486: 	def step (arr: Arrays['a]) f = f (stepImpl2 arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.42: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -503,7 +506,7 @@ def step (arr: Arrays['a]) f = f (stepImpl2 arr)
 //│ ║  l.42: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                         ^^^^
 //│ ╟── from reference:
-//│ ║  l.340: 	      then arrImpl.Sub r0 (div i 2)
+//│ ║  l.341: 	      then arrImpl.Sub r0 (div i 2)
 //│ ╙──       	                       ^^
 //│     = [Function: step1]
 
@@ -516,7 +519,7 @@ def step arr f = f (stepImpl2_ty arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.512: 	def step arr f = f (stepImpl2_ty arr)
+//│ ║  l.515: 	def step arr f = f (stepImpl2_ty arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.42: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -528,7 +531,7 @@ def step arr f = f (stepImpl2_ty arr)
 :e
 def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.529: 	def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
+//│ ║  l.532: 	def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
 //│ ║         	                                  ^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.42: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r

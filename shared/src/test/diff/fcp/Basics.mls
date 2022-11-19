@@ -97,7 +97,6 @@ def example f = ((fun x -> x, f) : forall 'a. ('a -> 'a, 'a -> 'a))
 //│ example: (anything -> nothing & 'b) -> (forall 'a. ('a -> 'a, 'a -> 'a,))
 //│        = [Function: example2]
 
-// FIXME: Rigid variable extrusion here! We should clean extr contexts of local rigids before returning them....
 def example f = ((0, f) : forall 'a. (0, 'a))
 //│ example: nothing -> (forall 'a. (0, 'a,))
 //│        = [Function: example3]
@@ -113,21 +112,20 @@ def ex x = example x
 :e
 ex 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.114: 	ex 1
+//│ ║  l.113: 	ex 1
 //│ ║         	^^^^
 //│ ╟── integer literal of type `1` does not match type `nothing`
-//│ ║  l.114: 	ex 1
+//│ ║  l.113: 	ex 1
 //│ ║         	   ^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.101: 	def example f = ((0, f) : forall 'a. (0, 'a))
+//│ ║  l.100: 	def example f = ((0, f) : forall 'a. (0, 'a))
 //│ ║         	                                 ^^
 //│ ╟── from reference:
-//│ ║  l.109: 	def ex x = example x
+//│ ║  l.108: 	def ex x = example x
 //│ ╙──       	                   ^
 //│ res: error
 //│    = [ 0, 1 ]
 
-// FIXME same
 def example f = ((0, f) : forall 'a. (0, 'a -> 'a))
 //│ example: (anything -> nothing & 'b) -> (forall 'a. (0, 'a -> 'a,))
 //│        = [Function: example4]

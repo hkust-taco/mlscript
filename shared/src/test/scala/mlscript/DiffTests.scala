@@ -154,7 +154,7 @@ class DiffTests
     var irregularTypes = false
     var noArgGen = true
     var newParser = basePath.headOption.contains("parser") || basePath.headOption.contains("mono")
-
+    
     val backend = new JSTestBackend()
     val host = ReplHost()
     

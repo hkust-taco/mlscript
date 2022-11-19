@@ -145,7 +145,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     //   }).mkString(", ")} => $body)"
     override def toString: Str =
       s"{$body where: ${constraints.map {
-        case (lb, ub) => s"$lb :> $ub"
+        case (lb, ub) => s"$lb <: $ub"
       }.mkString(", ")}}"
   }
   object ConstrainedType {

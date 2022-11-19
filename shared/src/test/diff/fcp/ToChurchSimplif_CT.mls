@@ -47,6 +47,7 @@ s
 //│     'c <: 'd -> 'e
 //│    = [Function: s]
 
+:e // * Since "sound extrusion"
 succ = s
 //│ 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'a, 'b, 'e. ('e -> 'c
 //│   where
@@ -54,7 +55,7 @@ succ = s
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.50: 	succ = s
+//│ ║  l.51: 	succ = s
 //│ ║        	^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.11: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -64,6 +65,7 @@ succ = s
 //│ ╙──      	                        ^^
 //│     = [Function: s]
 
+:e // * Since "sound extrusion"
 succ n f = n f
 //│ 'a -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
@@ -71,7 +73,7 @@ succ n f = n f
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.67: 	succ n f = n f
+//│ ║  l.69: 	succ n f = n f
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.11: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -91,6 +93,7 @@ def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
 //│ succ_min: (forall 'N. 'N -> 'N) -> (forall 'M. 'M -> 'M)
 //│         = <missing implementation>
 
+:e // * Since "sound extrusion"
 succ_min n f = n f
 //│ 'a -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
@@ -98,19 +101,19 @@ succ_min n f = n f
 //│   <:  succ_min:
 //│ (forall 'N. 'N -> 'N) -> (forall 'M. 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.94: 	succ_min n f = n f
+//│ ║  l.97: 	succ_min n f = n f
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.90: 	def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
+//│ ║  l.92: 	def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
 //│ ║        	                                                  ^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.94: 	succ_min n f = n f
+//│ ║  l.97: 	succ_min n f = n f
 //│ ║        	                 ^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.90: 	def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
+//│ ║  l.92: 	def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
 //│ ║        	                                                  ^^
 //│ ╟── from application:
-//│ ║  l.94: 	succ_min n f = n f
+//│ ║  l.97: 	succ_min n f = n f
 //│ ╙──      	               ^^^
 //│         = [Function: succ_min]
 
@@ -129,7 +132,7 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.127: 	to_church = to_ch
+//│ ║  l.130: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -154,7 +157,7 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.152: 	to_church = to_ch
+//│ ║  l.155: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -182,7 +185,7 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.180: 	to_church = to_ch
+//│ ║  l.183: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -203,6 +206,7 @@ def to_ch n =
 //│      = <no result>
 //│        to_church, to_ch and zero are not implemented
 
+:e // * Since "sound extrusion"
 to_church = to_ch
 //│ (int & 'a) -> (forall 'b, 'c, 'd. ('c & 'd) -> (forall 'e, 'd, 'f, 'g, 'h. (('h & 'g) -> ('h | 'f)
 //│   where
@@ -210,7 +214,7 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.206: 	to_church = to_ch
+//│ ║  l.210: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -231,6 +235,7 @@ def to_ch n =
 //│      = <no result>
 //│        zero is not implemented
 
+:e // * Since "sound extrusion"
 to_church = to_ch
 //│ (int & 'a) -> (forall 'b. 'b -> (forall 'b, 'c, 'd, 'e. ('c -> 'd
 //│   where
@@ -238,7 +243,7 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.234: 	to_church = to_ch
+//│ ║  l.239: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -258,6 +263,7 @@ def to_ch n =
 //│      = <no result>
 //│        to_church, to_ch and zero are not implemented
 
+:e // * Since "sound extrusion"
 to_church = to_ch
 //│ (int & 'a) -> (forall 'b. 'b -> (forall 'c, 'd, 'e, 'b. ('c -> 'd
 //│   where
@@ -265,7 +271,7 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.261: 	to_church = to_ch
+//│ ║  l.267: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -289,7 +295,7 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.287: 	to_church = to_ch
+//│ ║  l.293: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -309,6 +315,7 @@ def to_ch (n:int) =
 //│      = <no result>
 //│        to_church, to_ch, to_church, to_ch, to_church, to_ch and zero are not implemented
 
+:e // * Since "sound extrusion"
 to_church = to_ch
 //│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd. ('b -> 'c
 //│   where
@@ -316,7 +323,7 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.312: 	to_church = to_ch
+//│ ║  l.319: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -343,7 +350,7 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.341: 	to_church = to_ch
+//│ ║  l.348: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -371,7 +378,7 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.367: 	to_church = to_ch
+//│ ║  l.374: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `int` is not a function
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))

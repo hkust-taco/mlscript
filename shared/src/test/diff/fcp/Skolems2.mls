@@ -16,12 +16,12 @@ def oops (i: forall 'c. ('c -> 'c, 0)) =
 //│ oops: (forall 'c. ('c -> 'c, 0,)) -> 'c0 -> 'c0
 //│     = [Function: oops]
 
-// * FIXME This should be an error
-// * Notice the skolem extrusion/leakage here
+// * Notice the skolem extrusion/leakage which extrudes into `anything -> nothing`
 def extrude f = oops((f, 0))
 //│ extrude: (anything -> nothing) -> 'c -> 'c
 //│        = [Function: extrude]
 
+:e
 extrude(id)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.25: 	extrude(id)
@@ -39,9 +39,10 @@ extrude(id)
 //│ [Function: id]
 //│ hello
 
+:e
 extrude(id)(42)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.42: 	extrude(id)(42)
+//│ ║  l.43: 	extrude(id)(42)
 //│ ║        	^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.9: 	def oops (i: forall 'c. ('c -> 'c, 0)) =
@@ -56,9 +57,10 @@ extrude(id)(42)
 //│ [Function: id]
 //│ hello
 
+:e
 extrude(id)(id)(42)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.59: 	extrude(id)(id)(42)
+//│ ║  l.61: 	extrude(id)(id)(42)
 //│ ║        	^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.9: 	def oops (i: forall 'c. ('c -> 'c, 0)) =
@@ -74,9 +76,10 @@ extrude(id)(id)(42)
 //│ hello
 
 // * This clearly shouldn't be possible – it passes one skolem as the other
+:e
 f = extrude (fun x -> extrude (fun y -> x) x)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.77: 	f = extrude (fun x -> extrude (fun y -> x) x)
+//│ ║  l.80: 	f = extrude (fun x -> extrude (fun y -> x) x)
 //│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.9: 	def oops (i: forall 'c. ('c -> 'c, 0)) =
@@ -85,7 +88,7 @@ f = extrude (fun x -> extrude (fun y -> x) x)
 //│ ║  l.9: 	def oops (i: forall 'c. ('c -> 'c, 0)) =
 //│ ║       	                    ^^
 //│ ╟── from reference:
-//│ ║  l.77: 	f = extrude (fun x -> extrude (fun y -> x) x)
+//│ ║  l.80: 	f = extrude (fun x -> extrude (fun y -> x) x)
 //│ ╙──      	                                        ^
 //│ f: error
 //│  = [Function (anonymous)]
@@ -97,7 +100,7 @@ f = extrude (fun x -> extrude (fun y -> x) x)
 //│ hello
 //│ hello
 
-// * Boom!
+// * Boom! (exhibits crash using ill-typed `f` above)
 :re
 f 42
 //│ res: error
@@ -154,15 +157,16 @@ def foo(a, b) = (a, b) : forall 'c. ('c -> 'c, 'c -> 'c)
 //│ foo: (anything -> nothing, anything -> nothing,) -> (forall 'c. ('c -> 'c, 'c -> 'c,))
 //│    = [Function: foo2]
 
+:e
 foo(id, id)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.157: 	foo(id, id)
+//│ ║  l.161: 	foo(id, id)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.153: 	def foo(a, b) = (a, b) : forall 'c. ('c -> 'c, 'c -> 'c)
+//│ ║  l.156: 	def foo(a, b) = (a, b) : forall 'c. ('c -> 'c, 'c -> 'c)
 //│ ║         	                                ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.153: 	def foo(a, b) = (a, b) : forall 'c. ('c -> 'c, 'c -> 'c)
+//│ ║  l.156: 	def foo(a, b) = (a, b) : forall 'c. ('c -> 'c, 'c -> 'c)
 //│ ╙──       	                                ^^
 //│ res: error
 //│    = [ [Function: id], [Function: id] ]
@@ -175,16 +179,16 @@ def foo(f) = (fun a -> f a) : forall 'c. 'c -> 'c
 :e
 foo(id)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.176: 	foo(id)
+//│ ║  l.180: 	foo(id)
 //│ ║         	^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.171: 	def foo(f) = (fun a -> f a) : forall 'c. 'c -> 'c
+//│ ║  l.175: 	def foo(f) = (fun a -> f a) : forall 'c. 'c -> 'c
 //│ ║         	                                     ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.171: 	def foo(f) = (fun a -> f a) : forall 'c. 'c -> 'c
+//│ ║  l.175: 	def foo(f) = (fun a -> f a) : forall 'c. 'c -> 'c
 //│ ║         	                                     ^^
 //│ ╟── from application:
-//│ ║  l.171: 	def foo(f) = (fun a -> f a) : forall 'c. 'c -> 'c
+//│ ║  l.175: 	def foo(f) = (fun a -> f a) : forall 'c. 'c -> 'c
 //│ ╙──       	                       ^^^
 //│ res: error
 //│    = [Function (anonymous)]
@@ -194,45 +198,48 @@ def foo(a, b) = let tmp = (a, b) : forall 'c. ('c -> 'c, 0) in a
 //│ foo: (anything -> nothing & 'a, 0,) -> 'a
 //│    = [Function: foo4]
 
+:e
 foo(id, 0)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.197: 	foo(id, 0)
+//│ ║  l.202: 	foo(id, 0)
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.193: 	def foo(a, b) = let tmp = (a, b) : forall 'c. ('c -> 'c, 0) in a
+//│ ║  l.197: 	def foo(a, b) = let tmp = (a, b) : forall 'c. ('c -> 'c, 0) in a
 //│ ║         	                                          ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.193: 	def foo(a, b) = let tmp = (a, b) : forall 'c. ('c -> 'c, 0) in a
+//│ ║  l.197: 	def foo(a, b) = let tmp = (a, b) : forall 'c. ('c -> 'c, 0) in a
 //│ ╙──       	                                          ^^
 //│ res: error
 //│    = [Function: id]
 
+:e
 foo(fun x -> foo(fun y -> x, 0) x, 0)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.210: 	foo(fun x -> foo(fun y -> x, 0) x, 0)
+//│ ║  l.216: 	foo(fun x -> foo(fun y -> x, 0) x, 0)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.193: 	def foo(a, b) = let tmp = (a, b) : forall 'c. ('c -> 'c, 0) in a
+//│ ║  l.197: 	def foo(a, b) = let tmp = (a, b) : forall 'c. ('c -> 'c, 0) in a
 //│ ║         	                                          ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.193: 	def foo(a, b) = let tmp = (a, b) : forall 'c. ('c -> 'c, 0) in a
+//│ ║  l.197: 	def foo(a, b) = let tmp = (a, b) : forall 'c. ('c -> 'c, 0) in a
 //│ ║         	                                          ^^
 //│ ╟── from reference:
-//│ ║  l.210: 	foo(fun x -> foo(fun y -> x, 0) x, 0)
+//│ ║  l.216: 	foo(fun x -> foo(fun y -> x, 0) x, 0)
 //│ ╙──       	                          ^
 //│ res: error
 //│    = [Function (anonymous)]
 
 
+:e
 def foo((a, b) : forall 'c. ('c -> 'c, 0)) = ()
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.227: 	def foo((a, b) : forall 'c. ('c -> 'c, 0)) = ()
+//│ ║  l.234: 	def foo((a, b) : forall 'c. ('c -> 'c, 0)) = ()
 //│ ║         	        ^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.227: 	def foo((a, b) : forall 'c. ('c -> 'c, 0)) = ()
+//│ ║  l.234: 	def foo((a, b) : forall 'c. ('c -> 'c, 0)) = ()
 //│ ║         	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.227: 	def foo((a, b) : forall 'c. ('c -> 'c, 0)) = ()
+//│ ║  l.234: 	def foo((a, b) : forall 'c. ('c -> 'c, 0)) = ()
 //│ ╙──       	                        ^^
 //│ foo: (forall 'c. ('c -> 'c, 0,)) -> ()
 //│    = [Function: foo5]
@@ -244,13 +251,13 @@ foo((id, 0))
 :e
 foo((fun x -> foo((fun y -> x, 0)), 0))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.245: 	foo((fun x -> foo((fun y -> x, 0)), 0))
+//│ ║  l.252: 	foo((fun x -> foo((fun y -> x, 0)), 0))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘c_274` does not match type `nothing`
-//│ ║  l.227: 	def foo((a, b) : forall 'c. ('c -> 'c, 0)) = ()
+//│ ║  l.234: 	def foo((a, b) : forall 'c. ('c -> 'c, 0)) = ()
 //│ ║         	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.227: 	def foo((a, b) : forall 'c. ('c -> 'c, 0)) = ()
+//│ ║  l.234: 	def foo((a, b) : forall 'c. ('c -> 'c, 0)) = ()
 //│ ╙──       	                        ^^
 //│ res: error
 //│    = []

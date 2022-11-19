@@ -405,7 +405,7 @@ def tc n = to_church_3 n
 // *  which is notably dependent on variable names.
 // *  This happens because we now stop at the first constraint failure
 // *  (otherwise some failing test cases like in NestedDataTypes take too long).
-:e
+// :e
 tc 1 id
 //│ res: nothing -> anything
 //│    = [Function (anonymous)]
