@@ -1,0 +1,198 @@
+:NewParser
+:ParseOnly
+:mono
+fun f(x) = if x then 42 else 1337
+//│ |#fun| |f|(|x|)| |#=| |#if| |x| |#then| |42| |#else| |1337|
+//│ Parsed: {fun f = x, => if (x) then 42 else 1337}
+//│ Parsed:
+//│ TypingUnit(NuFunDef(None, f, [], Lam(Tup(_: Var(x)), If((x) then 42, Some(IntLit(1337))))))
+//│ Lifted:
+//│ TypingUnit {fun f = x, => if (x) then 42 else 1337}
+//│ Mono:
+//│ fun f(x) =
+//│   if x then 42 else 1337
+
+:mono
+fun foo() = 42
+//│ |#fun| |foo|(||)| |#=| |42|
+//│ Parsed: {fun foo =  => 42}
+//│ Parsed:
+//│ TypingUnit(NuFunDef(None, foo, [], Lam(Tup(), IntLit(42))))
+//│ Lifted:
+//│ TypingUnit {fun foo =  => 42}
+//│ Mono:
+//│ fun foo() =
+//│   42
+
+:mono
+fun foo(x, #b) = if b then x else 1337
+let a = foo(42, true)
+let b = foo(23, false)
+//│ |#fun| |foo|(|x|,| |##|b|)| |#=| |#if| |b| |#then| |x| |#else| |1337|↵|#let| |a| |#=| |foo|(|42|,| |true|)|↵|#let| |b| |#=| |foo|(|23|,| |false|)|
+//│ Parsed: {fun foo = x, #b, => if (b) then x else 1337; let a = foo (42, true,); let b = foo (23, false,)}
+//│ Parsed:
+//│ TypingUnit(NuFunDef(None, foo, [], Lam(Tup(_: Var(x), _: Var(b)), If((b) then x, Some(IntLit(1337))))), NuFunDef(Some(false), a, [], App(Var(foo), Tup(_: IntLit(42), _: Var(true)))), NuFunDef(Some(false), b, [], App(Var(foo), Tup(_: IntLit(23), _: Var(false)))))
+//│ Lifted:
+//│ TypingUnit {
+//│   fun foo = x, #b, => if (b) then x else 1337
+//│   let a = foo (42, true,)
+//│   let b = foo (23, false,)
+//│ }
+//│ Mono:
+//│ fun foo(x, #b) =
+//│   if b then x else 1337
+//│ fun a() =
+//│   foo__unknown(42)
+//│ fun b() =
+//│   foo__unknown(23)
+//│ fun foo__unknown(x) =
+//│   1337
+
+:mono
+let x = 42 + 1337
+//│ |#let| |x| |#=| |42| |+| |1337|
+//│ Parsed: {let x = + (42,) (1337,)}
+//│ Parsed:
+//│ TypingUnit(NuFunDef(Some(false), x, [], App(App(Var(+), Tup(_: IntLit(42))), Tup(_: IntLit(1337)))))
+//│ Lifted:
+//│ TypingUnit {let x = + (42,) (1337,)}
+//│ Mono:
+//│ fun x() =
+//│   (42 + 1337)
+
+:mono
+class Bar(#x)
+fun foo(#b) = b
+let a = foo(Bar(1))
+let b = foo(Bar(2))
+//│ |#class| |Bar|(|##|x|)|↵|#fun| |foo|(|##|b|)| |#=| |b|↵|#let| |a| |#=| |foo|(|Bar|(|1|)|)|↵|#let| |b| |#=| |foo|(|Bar|(|2|)|)|
+//│ Parsed: {class Bar(#x,) {}; fun foo = #b, => b; let a = foo (Bar (1,),); let b = foo (Bar (2,),)}
+//│ Parsed:
+//│ TypingUnit(NuTypeDef(class, Bar, (), Tup(_: Var(x)), (), TypingUnit()), NuFunDef(None, foo, [], Lam(Tup(_: Var(b)), Var(b))), NuFunDef(Some(false), a, [], App(Var(foo), Tup(_: App(Var(Bar), Tup(_: IntLit(1)))))), NuFunDef(Some(false), b, [], App(Var(foo), Tup(_: App(Var(Bar), Tup(_: IntLit(2)))))))
+//│ Lifted:
+//│ TypingUnit {
+//│   class Bar$1(#x,) {}
+//│   fun foo = #b, => b
+//│   let a = foo (Bar$1 (1,),)
+//│   let b = foo (Bar$1 (2,),)
+//│ }
+//│ Mono:
+//│ fun foo(#b) =
+//│   b
+//│ fun a() =
+//│   foo__class Bar$1__1()
+//│ fun b() =
+//│   foo__class Bar$1__2()
+//│ fun foo__class Bar$1__2() =
+//│   Bar$1__2()
+//│ fun foo__class Bar$1__1() =
+//│   Bar$1__1()
+//│ class Bar$1() {
+//│ }
+//│ class Bar$1__1(): Bar$1() {
+//│ }
+//│ class Bar$1__2(): Bar$1() {
+//│ }
+
+:mono
+fun fac(#n) = 
+  if (n > 1) then fac(n - 1) * n else 1
+fac(10)
+//│ |#fun| |fac|(|##|n|)| |#=| |→|#if| |(|n| |>| |1|)| |#then| |fac|(|n| |-| |1|)| |*| |n| |#else| |1|←|↵|fac|(|10|)|
+//│ Parsed: {fun fac = #n, => {if ('(' > (n,) (1,), ')') then * (fac (- (n,) (1,),),) (n,) else 1}; fac (10,)}
+//│ Parsed:
+//│ TypingUnit(NuFunDef(None, fac, [], Lam(Tup(_: Var(n)), Blk(...))), App(Var(fac), Tup(_: IntLit(10))))
+//│ Lifted:
+//│ TypingUnit {
+//│   fun fac = #n, => {if ('(' > (n,) (1,), ')') then * (fac (- (n,) (1,),),) (n,) else 1}
+//│   Code(List(fac (10,)))
+//│ }
+//│ Mono:
+//│ fun fac(#n) =
+//│   if ((n > 1), ) then (fac((n - 1)) * n) else 1
+//│ fac__10()
+//│ fun fac__10() =
+//│   1
+
+:mono
+trait AnyFoo {
+  fun bar(b: int): int
+}
+class FooPlus(#a: int): AnyFoo {
+  fun bar(b: int) = a + b
+}
+class FooMinus(#a: int): AnyFoo {
+  fun Bar(b: int) = a - b
+}
+fun f(x: AnyFoo) = x.bar(42)
+f(FooPlus(1))
+f(FooMinus(2))
+//│ |#trait| |AnyFoo| |{|→|#fun| |bar|(|b|#:| |int|)|#:| |int|←|↵|}|↵|#class| |FooPlus|(|##|a|#:| |int|)|#:| |AnyFoo| |{|→|#fun| |bar|(|b|#:| |int|)| |#=| |a| |+| |b|←|↵|}|↵|#class| |FooMinus|(|##|a|#:| |int|)|#:| |AnyFoo| |{|→|#fun| |Bar|(|b|#:| |int|)| |#=| |a| |-| |b|←|↵|}|↵|#fun| |f|(|x|#:| |AnyFoo|)| |#=| |x|.bar|(|42|)|↵|f|(|FooPlus|(|1|)|)|↵|f|(|FooMinus|(|2|)|)|
+//│ Parsed: {trait AnyFoo(): {fun bar: [] -> (b: int,) -> int}; class FooPlus(#a: int,): AnyFoo {fun bar = b: int, => + (a,) (b,)}; class FooMinus(#a: int,): AnyFoo {fun Bar = b: int, => - (a,) (b,)}; fun f = x: AnyFoo, => (x).bar (42,); f (FooPlus (1,),); f (FooMinus (2,),)}
+//│ Parsed:
+//│ TypingUnit(NuTypeDef(trait, AnyFoo, (), Tup(), (), TypingUnit(NuFunDef(None, bar, [], PolyType(List(),Function(Tuple(List((Some(b),Field(None,TypeName(int))))),TypeName(int)))))), NuTypeDef(class, FooPlus, (), Tup(a: Var(int)), (Var(AnyFoo)), TypingUnit(NuFunDef(None, bar, [], Lam(Tup(b: Var(int)), App(App(Var(+), Tup(_: Var(a))), Tup(_: Var(b))))))), NuTypeDef(class, FooMinus, (), Tup(a: Var(int)), (Var(AnyFoo)), TypingUnit(NuFunDef(None, Bar, [], Lam(Tup(b: Var(int)), App(App(Var(-), Tup(_: Var(a))), Tup(_: Var(b))))))), NuFunDef(None, f, [], Lam(Tup(x: Var(AnyFoo)), App(Sel(Var(x), bar), Tup(_: IntLit(42))))), App(Var(f), Tup(_: App(Var(FooPlus), Tup(_: IntLit(1))))), App(Var(f), Tup(_: App(Var(FooMinus), Tup(_: IntLit(2))))))
+//│ Lifted:
+//│ TypingUnit {
+//│   trait AnyFoo$1() {fun bar = (b: int,) -> int}
+//│   class FooPlus$2(#a: int,): AnyFoo$1 () {fun bar = b: int, => + ((this).a,) (b,)}
+//│   class FooMinus$3(#a: int,): AnyFoo$1 () {fun Bar = b: int, => - ((this).a,) (b,)}
+//│   fun f = x: AnyFoo$1, => (x).bar (42,)
+//│   Code(List(f (FooPlus$2 (1,),)))
+//│   Code(List(f (FooMinus$3 (2,),)))
+//│ }
+//│ Mono:
+//│ fun f(AnyFoo$1) =
+//│   x.bar(42)
+//│ f(FooPlus$2__1())
+//│ f(FooMinus$3__2())
+//│ class FooPlus$2() {
+//│ }
+//│ class FooPlus$2__1(): FooPlus$2() {
+//│   fun bar(int) =
+//│     (this.a + b)
+//│ }
+//│ class FooMinus$3() {
+//│ }
+//│ class FooMinus$3__2(): FooMinus$3() {
+//│   fun Bar(int) =
+//│     (this.a - b)
+//│ }
+
+:mono
+class Bar(x: int) {
+  fun FooMinus(y: int) = x + y
+  fun car = foo(2)
+}
+class Car {
+  fun da(b: Bar) = b.foo(2)
+}
+fun baz(b: Bar) = b.foo(2)
+let bar = Bar(42)
+baz(bar)
+Car().da(Bar(1337))
+bar.car
+//│ |#class| |Bar|(|x|#:| |int|)| |{|→|#fun| |FooMinus|(|y|#:| |int|)| |#=| |x| |+| |y|↵|#fun| |car| |#=| |foo|(|2|)|←|↵|}|↵|#class| |Car| |{|→|#fun| |da|(|b|#:| |Bar|)| |#=| |b|.foo|(|2|)|←|↵|}|↵|#fun| |baz|(|b|#:| |Bar|)| |#=| |b|.foo|(|2|)|↵|#let| |bar| |#=| |Bar|(|42|)|↵|baz|(|bar|)|↵|Car|(||)|.da|(|Bar|(|1337|)|)|↵|bar|.car|
+//│ Parsed: {class Bar(x: int,) {fun FooMinus = y: int, => + (x,) (y,); fun car = foo (2,)}; class Car() {fun da = b: Bar, => (b).foo (2,)}; fun baz = b: Bar, => (b).foo (2,); let bar = Bar (42,); baz (bar,); (Car ()).da (Bar (1337,),); (bar).car}
+//│ Parsed:
+//│ TypingUnit(NuTypeDef(class, Bar, (), Tup(x: Var(int)), (), TypingUnit(NuFunDef(None, FooMinus, [], Lam(Tup(y: Var(int)), App(App(Var(+), Tup(_: Var(x))), Tup(_: Var(y))))), NuFunDef(None, car, [], App(Var(foo), Tup(_: IntLit(2)))))), NuTypeDef(class, Car, (), Tup(), (), TypingUnit(NuFunDef(None, da, [], Lam(Tup(b: Var(Bar)), App(Sel(Var(b), foo), Tup(_: IntLit(2))))))), NuFunDef(None, baz, [], Lam(Tup(b: Var(Bar)), App(Sel(Var(b), foo), Tup(_: IntLit(2))))), NuFunDef(Some(false), bar, [], App(Var(Bar), Tup(_: IntLit(42)))), App(Var(baz), Tup(_: Var(bar))), App(Sel(App(Var(Car), Tup()), da), Tup(_: App(Var(Bar), Tup(_: IntLit(1337))))), Sel(Var(bar), car))
+//│ Lifted:
+//│ TypingUnit {
+//│   class Bar$1(x: int,) {
+//│     fun FooMinus = y: int, => + ((this).x,) (y,)
+//│     fun car = foo (2,)
+//│   }
+//│   class Car$2() {fun da = b: Bar$1, => (b).foo (2,)}
+//│   fun baz = b: Bar$1, => (b).foo (2,)
+//│   let bar = Bar$1 (42,)
+//│   Code(List(baz (bar,)))
+//│   Code(List((Car$2 ()).da (Bar$1 (1337,),)))
+//│   Code(List((bar).car))
+//│ }
+//│ Mono:
+//│ fun baz(Bar$1) =
+//│   b.foo(2)
+//│ fun bar() =
+//│   Bar$1(42)
+//│ baz(bar)
+//│ Car$2().da(Bar$1(1337))
+//│ bar.car

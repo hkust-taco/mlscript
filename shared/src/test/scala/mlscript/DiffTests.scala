@@ -42,6 +42,7 @@ abstract class ModeType {
   def expectCodeGenErrors: Bool
   def showRepl: Bool
   def allowEscape: Bool
+  def mono: Bool
 }
 
 class DiffTests
@@ -153,20 +154,21 @@ class DiffTests
       expectCodeGenErrors: Bool = false,
       showRepl: Bool = false,
       allowEscape: Bool = false,
+      mono: Bool = false,
       // noProvs: Bool = false,
     ) extends ModeType {
       def isDebugging: Bool = dbg || dbgSimplif
     }
     val defaultMode = Mode()
     
-    var parseOnly = basePath.headOption.contains("parser") || basePath.headOption.contains("compiler")
+    var parseOnly = basePath.headOption.contains("parser")
     var allowTypeErrors = false
     var allowParseErrors = false // TODO use
     var showRelativeLineNums = false
     var noJavaScript = false
     var noProvs = false
     var allowRuntimeErrors = false
-    var newParser = basePath.headOption.contains("parser") || basePath.headOption.contains("compiler")
+    var newParser = basePath.headOption.contains("parser")
 
     val backend = new JSTestBackend()
     val host = ReplHost()
@@ -206,6 +208,7 @@ class DiffTests
           case "re" => mode.copy(expectRuntimeErrors = true)
           case "ShowRepl" => mode.copy(showRepl = true)
           case "escape" => mode.copy(allowEscape = true)
+          case "mono" => {println("mono set"); mode.copy(mono = true)}
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)
@@ -342,7 +345,7 @@ class DiffTests
         
         // try to parse block of text into mlscript ast
         val ans = try {
-          if (newParser || basePath.headOption.contains("compiler")) {
+          if (newParser) {
             
             val origin = Origin(testName, globalStartLineNum, fph)
             val lexer = new NewLexer(origin, raise, dbg = mode.dbgParsing)

@@ -1,10 +1,14 @@
-package mlscript
-package compiler
+package mlscript.compiler
 
 import mlscript.utils.shorthands.*
 import scala.util.control.NonFatal
 import scala.collection.mutable.StringBuilder
 import mlscript.codegen.Helpers.inspect as showStructure
+import mlscript.{DiffTests, ModeType, TypingUnit}
+import mlscript.compiler.debug.TreeDebug
+import mlscript.compiler.mono.Monomorph
+import mlscript.compiler.printer.ExprPrinter
+import mlscript.compiler.mono.MonomorphError
 
 class DiffTestCompiler extends DiffTests {
   import DiffTestCompiler.*
@@ -23,6 +27,17 @@ class DiffTestCompiler extends DiffTests {
         outputBuilder ++= "Lifting failed: " ++ err.toString()
         if mode.fullExceptionStack then outputBuilder ++=
           "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
+    if(mode.mono){
+      outputBuilder ++= "\nMono:\n"
+      val treeDebug = new TreeDebug()
+      try{
+        val monomorph = new Monomorph(treeDebug)
+        val monomorphized = monomorph.monomorphize(rstUnit)
+        outputBuilder ++= ExprPrinter.print(monomorphized)
+      }catch{
+        case error: MonomorphError => outputBuilder ++= (error.getMessage() :: error.getStackTrace().map(_.toString()).toList ++ treeDebug.getLines).mkString("\n")
+      }
+    }
     outputBuilder.toString().linesIterator.toList
   
   override protected lazy val files = allFiles.filter { file =>
