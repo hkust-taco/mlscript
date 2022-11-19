@@ -1,0 +1,16 @@
+:NewParser
+
+type I = int
+//│ Defined type alias I
+
+type AI = Array[int]
+//│ Defined type alias AI
+
+let r = 123: I
+//│ r: I
+//│  = 123
+
+[r, r, r] : AI
+//│ res: AI
+//│    = [ 123, 123, 123 ]
+

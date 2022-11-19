@@ -567,7 +567,19 @@ trait StatementImpl extends Located { self: Statement =>
       (diags ::: diags2 ::: diags3) -> (TypeDef(Als, TypeName(v.name).withLocOf(v), targs,
           dataDefs.map(td => AppliedType(td.nme, td.tparams)).reduceOption(Union).getOrElse(Bot), Nil, Nil, Nil
         ).withLocOf(hd) :: cs)
-      case NuTypeDef(k, nme, tps, tup @ Tup(fs), pars, unit) =>
+      case NuTypeDef(Nms, nme, tps, tup @ Tup(fs), pars, unit) =>
+        ??? // TODO
+      case NuTypeDef(k @ Als, nme, tps, tup @ Tup(fs), pars, unit) =>
+        // TODO properly check:
+        require(fs.isEmpty)
+        require(pars.sizeIs == 1)
+        require(unit.entities.isEmpty)
+        val (diags, rhs) = pars.head.toType match {
+          case L(ds) => ds -> Top
+          case R(ty) => Nil -> ty
+        }
+        Nil -> (TypeDef(k, nme, tps, rhs, Nil, Nil, Nil) :: Nil)
+      case NuTypeDef(k @ (Cls | Trt), nme, tps, tup @ Tup(fs), pars, unit) =>
         val diags = Buffer.empty[Diagnostic]
         def tt(trm: Term): Type = trm.toType match {
           case L(ds) => diags += ds; Top
