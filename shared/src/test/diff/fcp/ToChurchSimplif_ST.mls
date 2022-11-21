@@ -113,13 +113,13 @@ succ_min n f = n f
 rec def to_ch n =
   if n == 0 then zero
   else s (to_ch n)
-//│ to_ch: number -> (forall 'a. ('a & 'N -> 'N) -> (forall 'b, 'c. ('b & 'N) -> ('N | 'c)) | ChurchInt)
+//│ to_ch: ('a & number) -> (forall 'b. ('b & 'c & 'N -> 'N) -> (forall 'd, 'e. ('d & 'f & 'N) -> ('N | 'e | 'g)) | ChurchInt | 'h)
 //│      = <no result>
 //│        zero is not implemented
 
 :e
 to_church = to_ch
-//│ number -> (forall 'a. ('a & 'N -> 'N) -> (forall 'b, 'c. ('b & 'N) -> ('N | 'c)) | ChurchInt)
+//│ ('a & number) -> (forall 'b. ('b & 'c & 'N -> 'N) -> (forall 'd, 'e. ('d & 'f & 'N) -> ('N | 'e | 'g)) | ChurchInt | 'h)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -141,13 +141,13 @@ to_church = to_ch
 rec def to_ch n =
   if true then zero
   else s (to_ch n)
-//│ to_ch: 'a -> (forall 'b. ('b & 'N -> 'N) -> (forall 'a, 'c. ('a & 'N) -> ('N | 'c)) | ChurchInt)
+//│ to_ch: 'a -> (forall 'b. ('b & 'c & 'N -> 'N) -> (forall 'd, 'e. ('e & 'f & 'N) -> ('N | 'd | 'g)) | ChurchInt | 'h)
 //│      = <no result>
 //│        zero is not implemented
 
 :e
 to_church = to_ch
-//│ 'a -> (forall 'b. ('b & 'N -> 'N) -> (forall 'a, 'c. ('a & 'N) -> ('N | 'c)) | ChurchInt)
+//│ 'a -> (forall 'b. ('b & 'c & 'N -> 'N) -> (forall 'd, 'e. ('d & 'f & 'N) -> ('N | 'e | 'g)) | ChurchInt | 'h)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -194,13 +194,13 @@ to_church = to_ch
 def to_ch n =
   if true then z
   else s (to_church n)
-//│ to_ch: (int & 'a) -> (forall 'M, 'b, 'c, 'd, 'e, 'f, 'g. ('M -> ('M & 'c) & 'f & 'g & 'd) -> (forall 'h, 'i, 'j. ('h & 'M & 'c & 'i & 'e) -> ('h | 'j | 'c)) | 'b)
+//│ to_ch: (int & 'a) -> (forall 'b, 'c, 'd, 'M, 'e, 'f, 'g. ('M -> ('M & 'd) & 'f & 'e & 'b) -> (forall 'h, 'i, 'j. ('h & 'M & 'd & 'i & 'g) -> ('h | 'j | 'd)) | 'c)
 //│      = <no result>
 //│        to_church, to_ch and zero are not implemented
 
 :e // * Works with CT
 to_church = to_ch
-//│ (int & 'a) -> (forall 'b, 'M, 'c, 'd, 'e, 'f, 'g. ('M -> ('M & 'e) & 'f & 'c & 'b) -> (forall 'h, 'i, 'j. ('h & 'M & 'e & 'i & 'd) -> ('h | 'j | 'e)) | 'g)
+//│ (int & 'a) -> (forall 'b, 'c, 'd, 'M, 'e, 'f, 'g. ('M -> ('M & 'f) & 'g & 'c & 'd) -> (forall 'h, 'i, 'j. ('h & 'M & 'f & 'i & 'e) -> ('h | 'j | 'f)) | 'b)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -273,7 +273,7 @@ rec def to_ch n =
 
 :e
 to_church = to_ch
-//│ (int & 'a) -> (forall 'b. ('M -> ('M & 'c) & 'b & 'd) -> (forall 'e, 'f. ('M & 'c & 'e & 'g) -> ('f | 'c)) | 'h)
+//│ (int & 'a) -> (forall 'b. ('M -> ('M & 'c) & 'b & 'd) -> (forall 'e, 'f. ('M & 'c & 'f & 'g) -> ('e | 'c)) | 'h)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -388,12 +388,12 @@ to_church = to_ch
 rec def to_ch n =
   if n == 0 then zero
   else succ (to_ch (n - 1))
-//│ to_ch: int -> ChurchInt
+//│ to_ch: (int & 'a) -> (ChurchInt | 'b)
 //│      = <no result>
 //│        zero is not implemented
 
 to_church = to_ch
-//│ int -> ChurchInt
+//│ (int & 'a) -> (ChurchInt | 'b)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│          = <no result>
@@ -403,11 +403,11 @@ to_church = to_ch
 rec def to_ch n =
   if n == 0 then z
   else s (to_ch (n - 1))
-//│ to_ch: int -> (forall 'a, 'b. ('a & 'b) -> (forall 'c, 'd, 'e. ('c & 'd) -> ('c | 'e)))
+//│ to_ch: (int & 'a) -> (forall 'b, 'c, 'd, 'e, 'f, 'g. ('e & 'c & 'd) -> (forall 'h, 'i, 'j. ('i & 'j & 'b & 'k) -> ('k | 'i | 'h | 'g)) | 'f)
 //│      = [Function: to_ch7]
 
 to_church = to_ch
-//│ int -> (forall 'a, 'b. ('a & 'b) -> (forall 'c, 'd, 'e. ('c & 'd) -> ('c | 'e)))
+//│ (int & 'a) -> (forall 'b, 'c, 'd, 'e, 'f, 'g. ('b & 'f & 'd) -> (forall 'h, 'i, 'j. ('i & 'j & 'c & 'k) -> ('k | 'i | 'h | 'e)) | 'g)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│          = [Function: to_ch7]
@@ -415,11 +415,11 @@ to_church = to_ch
 
 rec def to_ch_weird n =
   s (to_ch_weird n)
-//│ to_ch_weird: anything -> (forall 'a. 'a -> (forall 'b, 'c. 'b -> 'c))
+//│ to_ch_weird: 'a -> (forall 'b. ('b & 'c) -> (forall 'd, 'e. ('d & 'f) -> ('g | 'e | 'h)) | 'i)
 //│            = [Function: to_ch_weird]
 
 to_church = to_ch
-//│ int -> (forall 'a, 'b. ('a & 'b) -> (forall 'c, 'd, 'e. ('e & 'c) -> ('e | 'd)))
+//│ (int & 'a) -> (forall 'b, 'c, 'd, 'e, 'f, 'g. ('c & 'g & 'b) -> (forall 'h, 'i, 'j. ('h & 'i & 'e & 'k) -> ('k | 'h | 'j | 'f)) | 'd)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│          = [Function: to_ch7]

@@ -65,6 +65,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       nuTyDefs: Map[Str, TypedNuTypeDef],
       // extrCtx: Opt[ExtrCtx],
       extrCtx: ExtrCtx,
+      // inRecDefn: Bool,
   ) {
     def +=(b: Str -> TypeInfo): Unit = env += b
     def ++=(bs: IterableOnce[Str -> TypeInfo]): Unit = bs.iterator.foreach(+=)
@@ -160,6 +161,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       nuTyDefs = Map.empty,
       // N,
       MutMap.empty,
+      // inRecDefn = false,
     )
     val empty: Ctx = init
   }
@@ -576,8 +578,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case _ => ty.map(destroyConstrainedTypes)
         }
         val ty = trace(s"Destroying constrained types...") {
-          // rhs_ty
-          destroyConstrainedTypes(rhs_ty)
+          rhs_ty
+          // destroyConstrainedTypes(rhs_ty)
         }(r => s"=> $r")
         
         // val ty_sch = PolymorphicType(lvl, ty)
@@ -856,7 +858,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         err(msg"Unsupported pattern shape${
           if (dbg) " ("+pat.getClass.toString+")" else ""}:", pat.toLoc)(raise)
       case Lam(pat, body)
-      if genLambdas && ctx.inRecursiveDef.forall(rd => !body.freeVars.contains(rd)) =>
+      if genLambdas /* && ctx.inRecursiveDef.forall(rd => !body.freeVars.contains(rd)) */ =>
       // if genLambdas && ctx.inRecursiveDef.isEmpty => // this simplif does not seem to bring much benefit
       // if genLambdas =>
         println(s"TYPING POLY LAM")

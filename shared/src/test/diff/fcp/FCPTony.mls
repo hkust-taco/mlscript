@@ -1,6 +1,8 @@
 :GeneralizeCurriedFunctions
 :NoRecursiveTypes
 :NoProvs
+:ConstrainedTypes
+
 
 
 def app n f = n f
@@ -18,13 +20,13 @@ def g x y = app x y
 :e
 g {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.19: 	g {} {}
+//│ ║  l.21: 	g {} {}
 //│ ║        	^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.19: 	g {} {}
+//│ ║  l.21: 	g {} {}
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.6: 	def app n f = n f
+//│ ║  l.8: 	def app n f = n f
 //│ ╙──     	              ^^^
 //│ res: error
 //│ Runtime error:
@@ -52,13 +54,13 @@ def mul r s = r (app s) id
 :e
 mul id {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.53: 	mul id {}
+//│ ║  l.55: 	mul id {}
 //│ ║        	^^^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.53: 	mul id {}
+//│ ║  l.55: 	mul id {}
 //│ ║        	       ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.38: 	def app p q = p q
+//│ ║  l.40: 	def app p q = p q
 //│ ╙──      	              ^^^
 //│ res: error
 //│ Runtime error:
@@ -73,13 +75,13 @@ def fact t = mul t {}
 :e
 fact id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.74: 	fact id
+//│ ║  l.76: 	fact id
 //│ ║        	^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.67: 	def fact t = mul t {}
+//│ ║  l.69: 	def fact t = mul t {}
 //│ ║        	                   ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.38: 	def app p q = p q
+//│ ║  l.40: 	def app p q = p q
 //│ ╙──      	              ^^^
 //│ res: error
 //│ Runtime error:
@@ -136,13 +138,13 @@ def f x y = add x y
 :e
 f {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.137: 	f {} {}
+//│ ║  l.139: 	f {} {}
 //│ ║         	^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.137: 	f {} {}
+//│ ║  l.139: 	f {} {}
 //│ ║         	  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.125: 	def add n m = n succ m
+//│ ║  l.127: 	def add n m = n succ m
 //│ ╙──       	              ^^^^^^
 //│ res: error
 //│ Runtime error:

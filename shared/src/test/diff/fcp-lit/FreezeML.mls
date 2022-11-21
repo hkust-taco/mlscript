@@ -100,7 +100,7 @@ rec def append l1 l2 =
   else cons (head l1) (append (tail l1) l2)
 //│ append: List['a] -> List['a] -> List['a]
 //│       = <missing implementation>
-//│ List[?] -> List['a] -> List['a]
+//│ (List['a | 'a0 | 'a1 & 'a2] & 'b) -> (forall 'c, 'd, 'e, 'a3. ('c & List['a2] & 'd & 'e) -> (List['a3 | 'a0 | 'a2] | 'e))
 //│   <:  append:
 //│ List['a] -> List['a] -> List['a]
 //│       = [Function: append]
@@ -111,7 +111,7 @@ rec def length l =
   else succ (length (tail l))
 //│ length: List[?] -> int
 //│       = <missing implementation>
-//│ List[?] -> int
+//│ (List['a | 'a0] & 'b) -> (int | 'c)
 //│   <:  length:
 //│ List[?] -> int
 //│       = [Function: length]
@@ -185,7 +185,7 @@ rec def map f l =
   else cons (f (head l)) (map f (tail l))
 //│ map: ('a -> 'b) -> List['a] -> List['b]
 //│    = <missing implementation>
-//│ (nothing -> 'a) -> List[?] -> List['a]
+//│ ('b -> 'c & 'd & 'a -> 'a0) -> (forall 'a1, 'a2, 'e, 'a3, 'f, 'a4, 'g. (List['a1 | 'a & 'a4 | 'b & 'a3 & 'f] & 'g) -> (List['a2 | 'a0 | 'c] | 'e))
 //│   <:  map:
 //│ ('a -> 'b) -> List['a] -> List['b]
 //│    = [Function: map]
@@ -194,9 +194,7 @@ def app: ('a -> 'b) -> 'a -> 'b
 def app f x = f x
 //│ app: ('a -> 'b) -> 'a -> 'b
 //│    = <missing implementation>
-//│ 'a -> (forall 'a, 'b, 'c. ('b -> 'c
-//│   where
-//│     'a <: 'b -> 'c))
+//│ ('a -> 'b & 'c) -> (forall 'd, 'e. ('a & 'd) -> ('e | 'b))
 //│   <:  app:
 //│ ('a -> 'b) -> 'a -> 'b
 //│    = [Function: app]
@@ -214,9 +212,7 @@ def flip: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 def flip f = fun x -> fun y -> f y x
 //│ flip: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 //│     = <missing implementation>
-//│ 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'b, 'a, 'e. ('d -> 'c
-//│   where
-//│     'a <: 'd -> ('b -> 'c & 'e))))
+//│ ('a -> ('b -> 'c & 'd) & 'e) -> (forall 'f. ('b & 'f) -> (forall 'g, 'h. ('a & 'g) -> ('h | 'c)))
 //│   <:  flip:
 //│ ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 //│     = [Function: flip]
@@ -508,7 +504,7 @@ a id
 :e // * Skolem extrusion; rightly rejected
 choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.509: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
+//│ ║  l.505: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ║         	                                  ^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
@@ -518,7 +514,7 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ╙──       	                    ^^
 //│ res: 'b
 //│   where
-//│     'b :> (forall 'a. 'a -> 'a) | (forall 'c, 'a0. ('a0 -> 'a0) -> 'c)
+//│     'b :> (forall 'a. 'a -> 'a) | (forall 'a0, 'c. ('a0 -> 'a0) -> 'c)
 //│     'c :> error
 //│     'a0 :> anything
 //│         <: nothing
@@ -532,7 +528,7 @@ res
 :e // skolem extrusion
 res id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.533: 	res id
+//│ ║  l.529: 	res id
 //│ ║         	^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
@@ -541,7 +537,7 @@ res id
 //│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║         	                    ^^
 //│ ╟── from type variable:
-//│ ║  l.509: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
+//│ ║  l.505: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ╙──       	                          ^^
 //│ res: 'a -> 'a | error
 //│    = [Function: id1]
@@ -550,10 +546,10 @@ res id
 :e
 a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.551: 	a (fun x -> { u = x })
+//│ ║  l.547: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a_1256`
-//│ ║  l.551: 	a (fun x -> { u = x })
+//│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a_1491`
+//│ ║  l.547: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b

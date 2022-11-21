@@ -1,4 +1,4 @@
-
+:ConstrainedTypes
 
 
 // :d
@@ -39,7 +39,7 @@ foo x =
 //│ foo: 'a -> 'a
 //│    = [Function: foo2]
 
-// :e // Error swallowed by inconsistent constrained types... but it seems this can't lead to unsoundness
+// :e // * Error swallowed by inconsistent constrained types... but it seems this can't lead to unsoundness
 foo false
 //│ res: false
 //│    = false

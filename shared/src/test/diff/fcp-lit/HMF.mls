@@ -91,7 +91,7 @@ rec def length l =
   else succ (length (tail l))
 //│ length: List['a] -> int
 //│       = <missing implementation>
-//│ List[?] -> int
+//│ (List['a | 'a0] & 'b) -> (int | 'c)
 //│   <:  length:
 //│ List['a] -> int
 //│       = [Function: length]
@@ -111,7 +111,7 @@ rec def map f l =
   else cons (f (head l)) (map f (tail l))
 //│ map: ('a -> 'b) -> List['a] -> List['b]
 //│    = <missing implementation>
-//│ (nothing -> 'a) -> List[?] -> List['a]
+//│ ('b -> 'c & 'd & 'a -> 'e) -> (forall 'f, 'a0, 'g, 'a1, 'h, 'a2, 'i. (List['a2 | 'a & 'a1 | 'b & 'a0 & 'f] & 'i) -> (List['c | 'e | 'h] | 'g))
 //│   <:  map:
 //│ ('a -> 'b) -> List['a] -> List['b]
 //│    = [Function: map]
@@ -143,9 +143,7 @@ poly id
 //│    = [ 1, true ]
 
 def app f x = f x
-//│ app: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
-//│   where
-//│     'a <: 'b -> 'c))
+//│ app: ('a -> 'b & 'c) -> (forall 'd, 'e. ('a & 'd) -> ('e | 'b))
 //│    = [Function: app]
 
 // FreezeML D1

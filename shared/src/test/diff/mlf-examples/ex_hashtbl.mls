@@ -95,9 +95,7 @@ def create_hashtbl _ = nil
 
 // let hashtbl_add table key element = (key, element) :: table
 def hashtbl_add table key element = cons ((key, element)) table
-//│ hashtbl_add: 'a -> (forall 'b. 'b -> (forall 'a, 'c, 'd, 'e, 'b. ('d -> (List[('b, 'd,) | 'e] | 'c)
-//│   where
-//│     'a <: List['e])))
+//│ hashtbl_add: (List['a] & 'b) -> (forall 'c. 'c -> (forall 'd, 'e, 'f. 'd -> (List[('c, 'd,) | 'a | 'e] | 'f)))
 //│            = [Function: hashtbl_add]
 
 // let rec find table key = 
@@ -110,7 +108,10 @@ rec def find table key =
   if is_empty table then None
   else if eq (head table)._1 key then Some (head table)._2
   else find (tail table) key
-//│ find: List[?] -> anything -> (forall 'a. None | Some[nothing] | 'a)
+//│ find: (List['a | 'a0 & {_1: 'b, _2: 'c} | {_1: 'd} & 'a1 | {_2: 'e} & 'a2] & 'f) -> (forall 'g, 'h, 'b, 'a3, 'val. ('h & 'b) -> (forall 'i. None | (Some['a3 | 'e] with {val: 'val | 'e}) | 'i | 'j | 'g))
+//│   where
+//│     'j :> forall 'k, 'a4, 'val0. 'k
+//│     'k :> forall 'l. None | (Some['a4 | 'c] with {val: 'val0 | 'c}) | 'l | 'j
 //│     = [Function: find]
 :NoRecursiveTypes
 
@@ -120,7 +121,10 @@ rec def find table key =
 
 :ng
 find(error:List[(int, string)])(unit)
-//│ res: None | Some[string] | 'a | 'b
+//│ res: None | (Some['a | string] with {val: string | 'val}) | 'b | 'c | 'd
+//│   where
+//│     'c :> forall 'e, 'a0, 'val0. 'e
+//│     'e :> forall 'f. None | (Some['a0 | string] with {val: string | 'val0}) | 'f | 'c
 
 def find_A: forall 'a 'b. List[('a, 'b)] -> 'a -> (None | Some['b])
 //│ find_A: List[('a, 'b,)] -> 'a -> (None | Some['b])
@@ -131,9 +135,7 @@ def find_A table key =
   if is_empty table then None
   else if eq (head table)._1 key then Some (head table)._2
   else find_A (tail table) key
-//│ 'c -> (forall 'd, 'c, 'a, 'b, 'val, 'a0, 'e, 'a1, 'a2, 'f, 'a3, 'g, 'h, 'i, 'j, 'a4, 'k. (('k & 'a1 & 'd) -> (forall 'l. None | (Some['a2] with {val: 'val}) | Some['b] | 'l | 'e)
-//│   where
-//│     'c <: List['a3] & List[{_1: 'i & 'k} & 'a0 & 'f] & List[{_2: 'g & 'j & 'val & 'a2} & 'a & 'h] & List[('a1, 'b,) & 'a4]))
+//│ (List['a | ('a0, 'b,) & 'a1 | {_1: 'c} & 'a2 | {_2: 'd} & 'a3] & 'e) -> (forall 'f, 'a4, 'g, 'val, 'a5, 'h, 'b0. ('h & 'a5 & 'f) -> (forall 'i. None | (Some['a4 | 'd] with {val: 'val | 'd}) | Some['b0 | 'b] | 'i | 'g))
 //│   <:  find_A:
 //│ List[('a, 'b,)] -> 'a -> (None | Some['b])
 //│       = <no result>
@@ -150,7 +152,7 @@ def nfind table key =
   { None -> fun f -> fun x -> x
   | Some -> opt.val
   }
-//│ nfind: (List['a | {_1: 'b & 'c} & 'a0 & 'd | {_1: 'e & 'f, _2: 'g & 'h & 'val & 'a1} & 'a2 & 'a3 & 'a4 & 'i & 'a5 & 'j | {_2: 'k & 'l & 'val0 & 'a6} & 'a7 & 'm] & 'n) -> (forall 'o, 'val1. 'o -> (forall 'p. 'p -> (forall 'q. 'q -> 'q) | 'val | 'val0 | 'val1))
+//│ nfind: (List['a & {_1: 'b, _2: 'c} & 'a0 & 'a1 & 'a2 & 'a3 | 'a4 | {_1: 'd} & 'a5 | {_2: 'e} & 'a6] & 'f) -> (forall 'g, 'val. 'g -> (forall 'h. 'h -> (forall 'i. 'i -> 'i) | 'val | 'c | 'e))
 //│      = [Function: nfind]
 
 // type Int = ['a] ('a -> 'a) -> ('a -> 'a)
@@ -160,32 +162,20 @@ type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 // let succ (n:Int) = fun f x -> f (n f x)
 def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 def succ_ n = fun f -> fun x -> f (n f x)
-//│ succ: ChurchInt -> (forall 'b. 'b -> (forall 'c, 'd, 'e, 'a, 'b. (('a & 'd & 'e) -> 'c
-//│   where
-//│     'b <: 'a -> ('a & 'd) & 'd -> 'c)))
+//│ succ: ChurchInt -> (forall 'b, 'c, 'a, 'a0, 'd. (('a0 | 'b) -> 'd & 'a -> ('a0 & 'a) & 'c) -> (forall 'e, 'a1, 'f, 'g. ('b & 'a & 'e & 'a1 & 'f) -> ('g | 'd)))
 //│     = [Function: succ]
-//│ succ_: 'a -> (forall 'b. 'b -> (forall 'b, 'c, 'd, 'e, 'f, 'a. ('c -> 'f
-//│   where
-//│     'a <: 'b -> ('c -> 'd & 'e)
-//│     'b <: 'd -> 'f)))
+//│ succ_: ('a -> ('b -> 'c & 'd) & 'e) -> (forall 'f, 'g, 'h. (('c | 'f) -> 'g & 'a & 'h) -> (forall 'i, 'j. ('b & 'i) -> ('j | 'g)))
 //│      = [Function: succ_]
 
 // let add (n:Int) (m:Int) = n succ m
 
 //:e // due to tapping
 def add (n: ChurchInt) (m: ChurchInt) = n succ m
-//│ add: ChurchInt -> ChurchInt -> (forall 'b, 'c. 'b -> (forall 'd, 'e, 'b, 'f, 'a. (('a & 'd & 'e) -> 'f
-//│   where
-//│     'b <: 'a -> ('a & 'd) & 'd -> 'f)) | ChurchInt | 'c)
+//│ add: ChurchInt -> ChurchInt -> (forall 'b, 'a, 'c, 'a0, 'd, 'e. (('a | 'b) -> 'c & 'a0 -> ('a & 'a0) & 'd) -> (forall 'f, 'a1, 'g, 'h. ('b & 'a0 & 'f & 'a1 & 'g) -> ('h | 'c)) | ChurchInt | 'e)
 //│    = [Function: add]
 
 def add_ n m = n succ_ m
-//│ add_: 'a -> (forall 'a, 'b, 'c, 'd. ('b -> 'c
-//│   where
-//│     'a <: (forall 'e. 'e -> (forall 'f. 'f -> (forall 'e, 'g, 'h, 'i, 'j, 'f. ('i -> 'j
-//│   where
-//│     'f <: 'g -> 'j
-//│     'e <: 'f -> ('i -> 'g & 'h))))) -> ('b -> 'c & 'd)))
+//│ add_: ((forall 'a, 'b, 'c, 'd, 'e. ('e -> ('c -> 'b & 'a) & 'd) -> (forall 'f, 'g, 'h. (('b | 'g) -> 'h & 'e & 'f) -> (forall 'i, 'j. ('c & 'i) -> ('j | 'h)))) -> ('k -> 'l & 'm) & 'n) -> (forall 'o, 'p. ('k & 'o) -> ('p | 'l))
 //│     = [Function: add_]
 
 // let printInt (n:Int) = print (n (fun x -> x+1) 0)
@@ -204,14 +194,9 @@ table = hashtbl_add table "one" (fun f -> fun x -> f x)
 table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│ table: List[nothing]
 //│      = Nil {}
-//│ table: List[("one", forall 'a. 'a -> (forall 'a, 'b, 'c. ('b -> 'c
-//│   where
-//│     'a <: 'b -> 'c)),)]
+//│ table: List[("one", forall 'a, 'b, 'c. ('a -> 'b & 'c) -> (forall 'd, 'e. ('a & 'd) -> ('e | 'b)),) | 'f] | 'g
 //│      = Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
-//│ table: List[("one" | "two", forall 'a, 'b. ('a & 'b) -> (forall 'c, 'b, 'd, 'e, 'a, 'f, 'g. (('g & 'f) -> ('c | 'd)
-//│   where
-//│     'b <: 'f -> 'e & 'e -> 'd
-//│     'a <: 'g -> 'c)),)]
+//│ table: List[("one" | "two", forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h. ('f -> 'g & ('a | 'd) -> 'e & 'c -> 'a & 'h & 'b) -> (forall 'i, 'j, 'k, 'l. ('f & 'i & 'c & 'j) -> ('k | 'g | 'l | 'e)),) | 'm] | 'n
 //│      = Cons {
 //│          head: [ 'two', [Function (anonymous)] ],
 //│          tail: Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
@@ -226,14 +211,17 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 :e // * Since "sound extrusion"
 zog = printInt (add (nfind table "one") (nfind table "two"))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.227: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║  l.212: 	zog = printInt (add (nfind table "one") (nfind table "two"))
 //│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.157: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.159: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.157: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──       	                        ^^
+//│ ║  l.159: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                        ^^
+//│ ╟── from application:
+//│ ║  l.194: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
+//│ ╙──       	                                                      ^^^
 //│ zog: string | 'a
 //│    = '0'
 
@@ -245,23 +233,23 @@ zog = printInt (add (nfind table "one") (nfind table "two"))
 :e // * Since "sound extrusion"
 a = add (nfind table "one")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.246: 	a = add (nfind table "one")
+//│ ║  l.234: 	a = add (nfind table "one")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.157: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.159: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.157: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──       	                        ^^
+//│ ║  l.159: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                        ^^
+//│ ╟── from application:
+//│ ║  l.194: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
+//│ ╙──       	                                                      ^^^
 //│ a: error
 //│  = [Function (anonymous)]
 
 // :e // FIXME? refreshing-extr
 b = (nfind table "two")
-//│ b: ('a & 'b & 'c) -> (forall 'd, 'b, 'e, 'f, 'g, 'h, 'c, 'i. (('d & 'g & 'h) -> ('i | 'f | 'd)
-//│   where
-//│     'b <: 'g -> 'e & 'e -> 'f
-//│     'c <: 'h -> 'i)) | 'val
+//│ b: ('a -> 'b & ('c | 'd) -> 'e & 'f -> 'c & 'g & 'h & 'i) -> (forall 'j, 'k, 'l, 'm, 'n. ('n & 'f & 'j & 'a & 'm) -> ('l | 'b | 'k | 'e | 'n)) | 'val
 //│  = [Function (anonymous)]
 
 // * Note: this one requires `:DistributeForalls`

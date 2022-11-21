@@ -1,0 +1,431 @@
+// * Adaptation of QML's original existentials example; using encoded existentials and classes
+
+
+:NoRecursiveTypes
+:GeneralizeCurriedFunctions
+:NoConstrainedTypes
+// :DistributeForalls
+// :ArgGen
+
+// TODO try without some signatures
+
+
+
+class ArraysRep[A, Rep]
+  method Init: A -> Rep
+  method Sub: Rep -> int -> A
+  method Update: Rep -> int -> A -> Rep
+  method Fold: (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ Defined class ArraysRep[=A, =Rep]
+//│ Declared ArraysRep.Init: ArraysRep['A, 'Rep] -> 'A -> 'Rep
+//│ Declared ArraysRep.Sub: ArraysRep['A, 'Rep] -> 'Rep -> int -> 'A
+//│ Declared ArraysRep.Update: ArraysRep['A, 'Rep] -> 'Rep -> int -> 'A -> 'Rep
+//│ Declared ArraysRep.Fold: ArraysRep['A, 'Rep] -> ('A -> 'b -> 'b) -> 'b -> 'Rep -> 'b
+
+class ArraysImpl[A, Rep]: ArraysRep[A, Rep] & {
+    init: A -> Rep;
+    sub: Rep -> int -> A;
+    update: Rep -> int -> A -> Rep;
+    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+  }
+  method Init = this.init
+  method Sub = this.sub
+  method Update = this.update
+  method Fold = this.fold
+//│ Defined class ArraysImpl[=A, =Rep]
+//│ Defined ArraysImpl.Init: ArraysImpl['A, 'Rep] -> 'A -> 'Rep
+//│ Defined ArraysImpl.Sub: ArraysImpl['A, 'Rep] -> 'Rep -> int -> 'A
+//│ Defined ArraysImpl.Update: ArraysImpl['A, 'Rep] -> 'Rep -> int -> 'A -> 'Rep
+//│ Defined ArraysImpl.Fold: ArraysImpl['A, 'Rep] -> (forall 'b. ('A -> 'b -> 'b) -> 'b -> 'Rep -> 'b)
+
+type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ Defined type alias Arrays[=A]
+
+
+
+baseImpl = ArraysImpl {
+    init   = fun a -> a;
+    sub    = fun r -> fun (i : int) -> r;
+    update = fun r -> fun (i : int) -> fun a -> a;
+    fold   = fun f -> fun b -> fun r -> f r b
+  }
+//│ baseImpl: ArraysImpl['Rep, 'Rep] with {fold: forall 'a, 'b, 'c, 'd, 'e. ('c -> ('d -> 'e & 'a) & 'b) -> (forall 'f. ('d & 'f) -> (forall 'g, 'h. ('c & 'g) -> ('h | 'e))), init: forall 'i. 'i -> 'i, sub: forall 'j. 'j -> int -> 'j, update: forall 'k. 'k -> int -> (forall 'l. 'l -> 'l)}
+//│         = ArraysImpl {
+//│             init: [Function: init],
+//│             sub: [Function: sub],
+//│             update: [Function: update],
+//│             fold: [Function: fold]
+//│           }
+
+def base: Arrays['a]
+def base f = f baseImpl
+//│ base: Arrays['a]
+//│     = <missing implementation>
+//│ ((forall 'Rep. ArraysImpl['Rep, 'Rep] with {fold: forall 'a, 'b, 'c, 'd, 'e. ('e -> ('a -> 'b & 'd) & 'c) -> (forall 'f. ('a & 'f) -> (forall 'g, 'h. ('e & 'g) -> ('h | 'b))), init: forall 'i. 'i -> 'i, sub: forall 'j. 'j -> int -> 'j, update: forall 'k. 'k -> int -> (forall 'l. 'l -> 'l)}) -> 'm & 'n) -> 'm
+//│   <:  base:
+//│ Arrays['a]
+//│     = [Function: base]
+
+
+
+def simpleStepImpl arrImpl = ArraysImpl {
+    init   = fun a -> (arrImpl.Init a, "initialized");
+    sub    = fun ((r0, r1)) -> fun i -> arrImpl.Sub r0 i;
+    update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.Update r0 i a, "updated");
+    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.Fold f b r0
+  }
+//│ simpleStepImpl: (ArraysRep[in 'A | 'A0 | 'A1 & ('A2 | 'A3) out 'A4 & ('A5 & ('A0 & ('A6 | 'A) | 'A7 & ('A6 | 'A)) | 'A3 & ('A0 & ('A6 | 'A) | 'A7 & ('A6 | 'A))) | 'A2 & ('A5 & ('A0 & ('A6 | 'A) | 'A7 & ('A6 | 'A)) | 'A3 & ('A0 & ('A6 | 'A) | 'A7 & ('A6 | 'A))), in 'Rep | 'Rep0 | 'Rep1 & 'a & 'Rep2 & 'c & 'Rep3 & 'Rep4 & 'd & ('Rep5 | 'Rep6) out 'Rep & ('Rep5 & ('Rep7 & ('Rep0 | 'Rep4) | 'Rep6 & ('Rep0 | 'Rep4)) | 'Rep3 & ('Rep7 & ('Rep0 | 'Rep4) | 'Rep6 & ('Rep0 | 'Rep4))) | 'Rep1 & ('Rep5 & ('Rep7 & ('Rep0 | 'Rep4) | 'Rep6 & ('Rep0 | 'Rep4)) | 'Rep3 & ('Rep7 & ('Rep0 | 'Rep4) | 'Rep6 & ('Rep0 | 'Rep4)))] & 'e) -> ((ArraysImpl['A1, 'Rep8] with {fold: forall 'A8, 'b, 'b0, 'f. (('A2 | 'A8) -> 'b -> ('b & 'b0) & 'f) -> (forall 'g. ('b & 'g) -> (forall 'h, 'Rep9, 'i, 'j. ('Rep4 & 'h & 'Rep9, 'i,) -> ('b0 | 'g | 'j))) | 'fold, init: forall 'k, 'A9, 'l. ('A6 & 'k & 'A9) -> ('Rep6 | 'l, "initialized",) | 'init, sub: forall 'm, 'n. ('Rep1 & 'm, 'n,) -> (forall 'o, 'p. (int & 'o) -> ('A3 | 'p)) | 'sub, update: forall 'q, 'r. ('Rep3 & 'r, 'q,) -> (forall 's, 'o. (int & 's & 'o) -> (forall 't, 'A10, 'u. ('A7 & 't & 'A10) -> ('Rep5 | 'r | 'u, "updated",))) | 'update}) | 'v)
+//│   where
+//│     'Rep8 :> ('Rep6 | 'Rep5 | 'w | 'c | 'x, "initialized" | "updated",)
+//│           <: ('Rep4 & 'd & 'Rep1 & 'a & 'Rep2 & 'c & 'Rep3, 'y & 'z & 'a1,)
+//│     'A1 <: 'b1 & 'A11 & 'A7 & 'c1 & 'A12 & 'A6
+//│               = [Function: simpleStepImpl]
+
+simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
+//│ res: ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string,)]
+//│    = [Function: simpleStepImpl]
+
+// def simpleStepImpl2_ty: Arrays['a] -> ArraysImpl['a, ('_, string)]
+// def simpleStepImpl2_ty: Arrays['a] -> ArraysImpl['a, '_]
+// def simpleStepImpl2 arr = arr simpleStepImpl
+
+def simpleStepImpl2_ty: (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> ArraysImpl['A, ('Rep, string)]
+//│ simpleStepImpl2_ty: (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> ArraysImpl['A, ('Rep, string,)]
+//│                   = <missing implementation>
+
+
+def simpleStepImpl2 arr = arr simpleStepImpl
+//│ simpleStepImpl2: ((forall 'Rep, 'a, 'update, 'c, 'd, 'Rep0, 'e, 'A, 'init, 'Rep1, 'Rep2, 'A0, 'Rep3, 'f, 'g, 'A1, 'A2, 'A3, 'h, 'sub, 'fold, 'Rep4, 'i, 'A4, 'A5, 'j, 'A6, 'Rep5, 'Rep6, 'A7, 'Rep7, 'k, 'A8, 'A9, 'l, 'Rep8, 'm. (ArraysRep[in 'A3 | 'A6 | 'A8 & ('A0 | 'A) out 'A5 & ('A6 & ('A7 & ('A2 | 'A0) | 'A3 & ('A0 | 'A2)) | 'A4 & ('A7 & ('A2 | 'A0) | 'A3 & ('A2 | 'A0))) | 'A & ('A6 & ('A7 & ('A2 | 'A0) | 'A3 & ('A0 | 'A2)) | 'A4 & ('A7 & ('A2 | 'A0) | 'A3 & ('A2 | 'A0))), in 'Rep3 | 'Rep1 | 'Rep5 & 'Rep & 'h & 'Rep6 & 'l & 'Rep2 & 'g & ('Rep0 | 'Rep7) out 'Rep0 & ('Rep6 & ('Rep8 & ('Rep1 | 'Rep) | 'Rep7 & ('Rep1 | 'Rep)) | 'Rep3 & ('Rep8 & ('Rep1 | 'Rep) | 'Rep7 & ('Rep1 | 'Rep))) | 'Rep5 & ('Rep6 & ('Rep8 & ('Rep1 | 'Rep) | 'Rep7 & ('Rep1 | 'Rep)) | 'Rep3 & ('Rep8 & ('Rep1 | 'Rep) | 'Rep7 & ('Rep1 | 'Rep)))] & 'e) -> ((ArraysImpl['A8, 'Rep4] with {fold: forall 'A10, 'b, 'b0, 'n. (('A0 | 'A10) -> 'b -> ('b & 'b0) & 'n) -> (forall 'o. ('b & 'o) -> (forall 'p, 'q, 'r, 'Rep9. ('Rep & 'r & 'Rep9, 'p,) -> ('b0 | 'o | 'q))) | 'fold, init: forall 's, 'A11, 't. ('A7 & 's & 'A11) -> ('Rep7 | 't, "initialized",) | 'init, sub: forall 'u, 'v. ('Rep6 & 'u, 'v,) -> (forall 'w, 'x. (int & 'w) -> ('A | 'x)) | 'sub, update: forall 'y, 'z. ('Rep5 & 'y, 'z,) -> (forall 'w, 'a1. (int & 'a1 & 'w) -> (forall 'A12, 'b1, 'c1. ('A4 & 'c1 & 'A12) -> ('Rep0 | 'y | 'b1, "updated",))) | 'update}) | 'i)) -> 'd1 & 'e1) -> 'd1
+//│   where
+//│     'Rep4 :> ('Rep7 | 'Rep0 | 'c | 'g | 'a, "initialized" | "updated",)
+//│           <: ('Rep & 'h & 'Rep6 & 'l & 'Rep2 & 'g & 'Rep5, 'm & 'j & 'd,)
+//│     'A8 <: 'f & 'A1 & 'A4 & 'k & 'A9 & 'A7
+//│                = [Function: simpleStepImpl2]
+
+simpleStepImpl2_ty = simpleStepImpl2
+//│ ((forall 'A, 'a, 'Rep, 'c, 'A0, 'd, 'e, 'Rep0, 'Rep1, 'f, 'A1, 'Rep2, 'update, 'g, 'Rep3, 'Rep4, 'A2, 'A3, 'A4, 'h, 'A5, 'i, 'j, 'Rep5, 'fold, 'A6, 'k, 'l, 'init, 'A7, 'sub, 'Rep6, 'Rep7, 'A8, 'Rep8, 'A9, 'm. (ArraysRep[in 'A2 | 'A0 | 'A5 & ('A1 | 'A4) out 'A & ('A3 & ('A8 & ('A7 | 'A2) | 'A4 & ('A7 | 'A2)) | 'A1 & ('A8 & ('A7 | 'A2) | 'A4 & ('A7 | 'A2))) | 'A0 & ('A3 & ('A8 & ('A7 | 'A2) | 'A4 & ('A7 | 'A2)) | 'A1 & ('A8 & ('A7 | 'A2) | 'A4 & ('A7 | 'A2))), in 'Rep2 | 'Rep0 | 'c & 'Rep3 & 'j & 'Rep7 & 'i & 'Rep6 & 'Rep8 & ('Rep4 | 'Rep) out 'Rep6 & ('Rep2 & ('Rep1 & ('Rep0 | 'Rep8) | 'Rep & ('Rep0 | 'Rep8)) | 'Rep3 & ('Rep1 & ('Rep0 | 'Rep8) | 'Rep & ('Rep0 | 'Rep8))) | 'Rep4 & ('Rep2 & ('Rep1 & ('Rep0 | 'Rep8) | 'Rep & ('Rep0 | 'Rep8)) | 'Rep3 & ('Rep1 & ('Rep0 | 'Rep8) | 'Rep & ('Rep0 | 'Rep8)))] & 'g) -> ((ArraysImpl['A5, 'Rep5] with {fold: forall 'A10, 'b, 'b0, 'n. (('A1 | 'A10) -> 'b -> ('b & 'b0) & 'n) -> (forall 'o. ('b & 'o) -> (forall 'p, 'Rep9, 'q, 'r. ('Rep8 & 'p & 'Rep9, 'q,) -> ('b0 | 'o | 'r))) | 'fold, init: forall 's, 'A11, 't. ('A7 & 's & 'A11) -> ('Rep | 't, "initialized",) | 'init, sub: forall 'u, 'v. ('Rep3 & 'u, 'v,) -> (forall 'w, 'x. (int & 'w) -> ('A4 | 'x)) | 'sub, update: forall 'y, 'z. ('Rep6 & 'y, 'z,) -> (forall 'w, 'a1. (int & 'a1 & 'w) -> (forall 'b1, 'A12, 'c1. ('A & 'b1 & 'A12) -> ('Rep4 | 'y | 'c1, "updated",))) | 'update}) | 'f)) -> 'd1 & 'e1) -> 'd1
+//│   where
+//│     'Rep5 :> ('Rep | 'Rep4 | 'h | 'i | 'a, "initialized" | "updated",)
+//│           <: ('Rep8 & 'c & 'Rep3 & 'j & 'Rep7 & 'i & 'Rep6, 'm & 'l & 'd,)
+//│     'A5 <: 'k & 'A9 & 'A & 'e & 'A6 & 'A7
+//│   <:  simpleStepImpl2_ty:
+//│ (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> ArraysImpl['A, ('Rep, string,)]
+//│                   = [Function: simpleStepImpl2]
+
+:e // * Annotation is actually counter-productive... probably because the rigid universal in Arrays gets extruded!
+def simpleStepImpl2_ty (arr: Arrays['a]) = arr simpleStepImpl
+//│ Arrays['a] -> ((ArraysImpl[in 'A & 'a0 & 'A0 & 'A1 & 'c & 'A2 & 'd & 'A3 out 'a0 | 'A1 | 'A4, in (nothing, 'e & 'f & 'g,) & 'Rep out (anything, "initialized" | "updated",) | 'Rep | 'Rep0] with {fold: forall 'A5, 'b, 'b0, 'h. (('a0 | 'A5 | 'A6) -> 'b -> ('b & 'b0) & 'h) -> (forall 'i. ('b & 'i) -> (forall 'j, 'k. (nothing, 'j,) -> ('b0 | 'i | 'k))) | 'fold, init: forall 'l, 'A7. ('l & 'A7 & 'A & 'a0) -> (anything, "initialized",) | 'init, sub: forall 'm. (nothing, 'm,) -> (forall 'n, 'o. (int & 'n) -> ('a0 | 'A8 | 'o)) | 'sub, update: forall 'n, 'p. (nothing, 'p,) -> (forall 'q. (int & 'q & 'n) -> (forall 'r, 'A9. ('a0 & 'r & 'A9 & 'A0) -> (anything, "updated",))) | 'update}) | 's)
+//│   <:  simpleStepImpl2_ty:
+//│ (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> ArraysImpl['A, ('Rep, string,)]
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.116: 	def simpleStepImpl2_ty (arr: Arrays['a]) = arr simpleStepImpl
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘Rep_1708` does not match type `nothing`
+//│ ║  l.92: 	def simpleStepImpl2_ty: (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> ArraysImpl['A, ('Rep, string)]
+//│ ║        	                                                                                          ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.73: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.Sub r0 i;
+//│ ╙──      	                                                    ^^
+//│                   = [Function: simpleStepImpl2_ty1]
+
+def simpleStep: Arrays['a] -> Arrays['a]
+//│ simpleStep: Arrays['a] -> Arrays['a]
+//│           = <missing implementation>
+
+:e // * Since "sound extrusion"
+def simpleStep arr f = f (simpleStepImpl2 arr)
+//│ ((forall 'a, 'c, 'd, 'A, 'A0, 'e, 'A1, 'f, 'Rep, 'Rep0, 'g, 'Rep1, 'sub, 'Rep2, 'A2, 'A3, 'A4, 'h, 'update, 'A5, 'Rep3, 'i, 'j, 'Rep4, 'Rep5, 'A6, 'Rep6, 'k, 'l, 'init, 'm, 'A7, 'A8, 'A9, 'Rep7, 'fold, 'Rep8. (ArraysRep[in 'A2 | 'A3 | 'A8 & ('A7 | 'A4) out 'A6 & ('A0 & ('A3 & ('A | 'A2) | 'A1 & ('A | 'A2)) | 'A4 & ('A3 & ('A | 'A2) | 'A1 & ('A | 'A2))) | 'A7 & ('A0 & ('A3 & ('A | 'A2) | 'A1 & ('A | 'A2)) | 'A4 & ('A3 & ('A | 'A2) | 'A1 & ('A | 'A2))), in 'Rep0 | 'Rep2 | 'c & 'Rep5 & 'i & 'Rep1 & 'l & 'Rep & 'Rep4 & ('Rep3 | 'Rep7) out 'Rep0 & ('Rep3 & ('Rep8 & ('Rep2 | 'Rep4) | 'Rep7 & ('Rep2 | 'Rep4)) | 'Rep & ('Rep8 & ('Rep2 | 'Rep4) | 'Rep7 & ('Rep2 | 'Rep4))) | 'Rep5 & ('Rep3 & ('Rep8 & ('Rep2 | 'Rep4) | 'Rep7 & ('Rep2 | 'Rep4)) | 'Rep & ('Rep8 & ('Rep2 | 'Rep4) | 'Rep7 & ('Rep2 | 'Rep4)))] & 'h) -> ((ArraysImpl['A8, 'Rep6] with {fold: forall 'A10, 'b, 'b0, 'n. (('A7 | 'A10) -> 'b -> ('b & 'b0) & 'n) -> (forall 'o. ('b & 'o) -> (forall 'p, 'Rep9, 'q, 'r. ('Rep4 & 'p & 'Rep9, 'q,) -> ('b0 | 'o | 'r))) | 'fold, init: forall 's, 'A11, 't. ('A & 's & 'A11) -> ('Rep7 | 't, "initialized",) | 'init, sub: forall 'u, 'v. ('Rep5 & 'v, 'u,) -> (forall 'w, 'x. (int & 'w) -> ('A4 | 'x)) | 'sub, update: forall 'y, 'z. ('Rep & 'y, 'z,) -> (forall 'w, 'a1. (int & 'a1 & 'w) -> (forall 'b1, 'A12, 'c1. ('A1 & 'b1 & 'A12) -> ('Rep3 | 'y | 'c1, "updated",))) | 'update}) | 'k)) -> 'd1 & 'e1) -> (forall 'f1, 'g1, 'h1. (('g1 | 'd1) -> 'h1 & 'f1) -> 'h1)
+//│   where
+//│     'Rep6 :> ('Rep7 | 'Rep3 | 'f | 'l | 'm, "initialized" | "updated",)
+//│           <: ('Rep4 & 'c & 'Rep5 & 'i & 'Rep1 & 'l & 'Rep, 'a & 'j & 'e,)
+//│     'A8 <: 'g & 'A9 & 'A1 & 'd & 'A5 & 'A
+//│   <:  simpleStep:
+//│ Arrays['a] -> Arrays['a]
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.139: 	def simpleStep arr f = f (simpleStepImpl2 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.73: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.Sub r0 i;
+//│ ╙──      	                                                    ^^
+//│           = [Function: simpleStep]
+
+:e // TODO update: seems like the given type for `simpleStepImpl2_ty` is not precise enough
+def simpleStep arr f = f (simpleStepImpl2_ty arr)
+//│ (forall 'r. (ArraysRep[in 'A out 'A | 'A0, in 'Rep out 'Rep | 'Rep0] -> 'r) -> 'r & 'a) -> (forall 'A1, 'b, 'c, 'Rep1, 'd. ((ArraysImpl['A1, ('Rep1, string,)] | 'c) -> 'b & 'd) -> 'b)
+//│   where
+//│     'Rep1 :> 'Rep
+//│           <: 'Rep0
+//│     'A1 :> 'A
+//│         <: 'A0
+//│   <:  simpleStep:
+//│ Arrays['a] -> Arrays['a]
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.162: 	def simpleStep arr f = f (simpleStepImpl2_ty arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ╙──      	                         ^^^^
+//│           = [Function: simpleStep1]
+
+sb = simpleStep base
+//│ sb: Arrays['a]
+//│   = [Function (anonymous)]
+
+sb (fun arr -> arr.Init true)
+//│ res: anything
+//│    = [ true, 'initialized' ]
+
+sb (fun arr -> arr.Sub (arr.Init true) 1)
+//│ res: true
+//│    = true
+
+:e // * Expected – argument order confusion
+sb (fun arr -> arr.Sub 0 (arr.Init true))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.195: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘Rep_2297` is not an instance of type `int`
+//│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.16: 	  method Sub: Rep -> int -> A
+//│ ║        	                     ^^^
+//│ ╟── from application:
+//│ ║  l.195: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
+//│ ║         	                          ^^^^^^^^^^^^^
+//│ ╟── Note: class type parameter Rep is defined at:
+//│ ║  l.14: 	class ArraysRep[A, Rep]
+//│ ╙──      	                   ^^^
+//│ res: error
+//│ Runtime error:
+//│   TypeError: number 0 is not iterable (cannot read property Symbol(Symbol.iterator))
+
+sb (fun arr -> arr.Update (arr.Init true) 1 false)
+//│ res: anything
+//│    = [ false, 'updated' ]
+
+:e // * Rightly prevent skolem confusion
+sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.220: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘Rep_2394` does not match type `nothing`
+//│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from application:
+//│ ║  l.220: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
+//│ ╙──       	                                             ^^^^^^^^^^^^^^
+//│ res: error
+//│    = [Function (anonymous)]
+
+sb (fun arr ->
+    let r2 = arr.Update (arr.Init true) 1 false
+    in (arr.Sub r2 0, arr.Sub r2 1)
+  )
+//│ res: (bool, bool,)
+//│    = [ false, false ]
+
+
+
+:escape
+def Math: nothing
+//│ Math: nothing
+//│     = <missing implementation>
+
+def div: int -> int -> int
+def div a b = Math.trunc(a/b)
+//│ div: int -> int -> int
+//│    = <missing implementation>
+//│ (number & 'a & 'b) -> (forall 'b, 'c. (number & 'b) -> 'c)
+//│   <:  div:
+//│ int -> int -> int
+//│    = [Function: div1]
+
+def mod: int -> int -> int
+rec def mod a b = if a < b then a else mod (a - b) b
+//│ mod: int -> int -> int
+//│    = <missing implementation>
+//│ (int & 'a) -> (forall 'b, 'c. ('b & int) -> (int | 'a | 'c))
+//│   <:  mod:
+//│ int -> int -> int
+//│    = [Function: mod]
+
+def stepImpl arrImpl = ArraysImpl {
+    init = fun a -> (arrImpl.Init a, arrImpl.Init a);
+    sub = fun ((r0, r1)) -> fun i ->
+      if mod i 2 == 0
+      then arrImpl.Sub r0 (div i 2)
+      else arrImpl.Sub r1 (div i 2);
+    update = fun ((r0, r1)) -> fun i -> fun a ->
+      if mod i 2 == 0
+      then (arrImpl.Update r0 (div i 2) a, r1)
+      else (r0, arrImpl.Update r1 (div i 2) a);
+    fold = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.Fold f (arrImpl.Fold f b r0) r1
+  }
+//│ stepImpl: (ArraysRep[in 'A | 'A0 | 'A1 | 'A2 | 'A3 & ('A4 | 'A5 | 'A6 | 'A7) out 'A8 & ('A9 & ('A2 & ('A10 & ('A11 & ('A1 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13)) | 'A14 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13))) | 'A7 & ('A1 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13)) | 'A14 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13)))) | 'A & ('A11 & ('A1 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0)) | 'A14 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0))) | 'A7 & ('A1 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0)) | 'A14 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0))))) | 'A15 & ('A10 & ('A11 & ('A1 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13)) | 'A14 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13))) | 'A7 & ('A1 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13)) | 'A14 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13)))) | 'A & ('A11 & ('A1 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0)) | 'A14 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0))) | 'A7 & ('A1 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0)) | 'A14 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0)))))) | 'A6 & ('A2 & ('A10 & ('A11 & ('A1 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13)) | 'A14 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13))) | 'A7 & ('A1 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13)) | 'A14 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13)))) | 'A & ('A11 & ('A1 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0)) | 'A14 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0))) | 'A7 & ('A1 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0)) | 'A14 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0))))) | 'A15 & ('A10 & ('A11 & ('A1 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13)) | 'A14 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13))) | 'A7 & ('A1 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13)) | 'A14 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13)))) | 'A & ('A11 & ('A1 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0)) | 'A14 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0))) | 'A7 & ('A1 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0)) | 'A14 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0))))))) | 'A4 & ('A9 & ('A2 & ('A10 & ('A11 & ('A1 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13)) | 'A14 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13))) | 'A7 & ('A1 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13)) | 'A14 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13)))) | 'A & ('A11 & ('A1 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0)) | 'A14 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0))) | 'A7 & ('A1 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0)) | 'A14 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0))))) | 'A15 & ('A10 & ('A11 & ('A1 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13)) | 'A14 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13))) | 'A7 & ('A1 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13)) | 'A14 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13)))) | 'A & ('A11 & ('A1 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0)) | 'A14 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0))) | 'A7 & ('A1 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0)) | 'A14 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0)))))) | 'A6 & ('A2 & ('A10 & ('A11 & ('A1 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13)) | 'A14 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13))) | 'A7 & ('A1 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13)) | 'A14 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13)))) | 'A & ('A11 & ('A1 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0)) | 'A14 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0))) | 'A7 & ('A1 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0)) | 'A14 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0))))) | 'A15 & ('A10 & ('A11 & ('A1 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13)) | 'A14 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13))) | 'A7 & ('A1 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13)) | 'A14 & ('A12 & ('A0 | 'A13) | 'A5 & ('A0 | 'A13)))) | 'A & ('A11 & ('A1 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0)) | 'A14 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0))) | 'A7 & ('A1 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0)) | 'A14 & ('A12 & ('A13 | 'A0) | 'A5 & ('A13 | 'A0))))))), in 'Rep | 'Rep0 | 'Rep1 | 'Rep2 | 'Rep3 & 'a & 'Rep4 & 'c & 'Rep5 & 'd & 'Rep6 & ('Rep7 | 'Rep8) | 'e & 'Rep9 & 'Rep10 & 'f & 'Rep11 & 'g & 'Rep12 & ('Rep13 | 'Rep14) out 'Rep12 & ('Rep & ('Rep4 & ('Rep9 & ('Rep15 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16))) | 'Rep14 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)))) | 'Rep2 & ('Rep15 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16))) | 'Rep14 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16))))) | 'Rep0 & ('Rep9 & ('Rep15 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16))) | 'Rep14 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)))) | 'Rep2 & ('Rep15 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16))) | 'Rep14 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)))))) | 'Rep10 & ('Rep4 & ('Rep9 & ('Rep15 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16))) | 'Rep14 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)))) | 'Rep2 & ('Rep15 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16))) | 'Rep14 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16))))) | 'Rep0 & ('Rep9 & ('Rep15 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16))) | 'Rep14 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)))) | 'Rep2 & ('Rep15 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16))) | 'Rep14 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16))))))) | 'Rep13 & ('Rep & ('Rep4 & ('Rep9 & ('Rep15 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16))) | 'Rep14 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)))) | 'Rep2 & ('Rep15 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16))) | 'Rep14 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16))))) | 'Rep0 & ('Rep9 & ('Rep15 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16))) | 'Rep14 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)))) | 'Rep2 & ('Rep15 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16))) | 'Rep14 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)))))) | 'Rep10 & ('Rep4 & ('Rep9 & ('Rep15 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16))) | 'Rep14 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)))) | 'Rep2 & ('Rep15 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16))) | 'Rep14 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16))))) | 'Rep0 & ('Rep9 & ('Rep15 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16))) | 'Rep14 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)))) | 'Rep2 & ('Rep15 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16))) | 'Rep14 & ('Rep3 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)) | 'Rep1 & ('Rep6 & ('Rep8 | 'Rep16) | 'Rep7 & ('Rep8 | 'Rep16)))))))] & 'h) -> ((ArraysImpl['A3, 'Rep17] with {fold: forall 'A16, 'A17, 'b, 'b0, 'b1, 'i, 'b2. (('A4 | 'A16) -> 'b -> ('b & 'b1 & 'b2) & ('A7 | 'A17) -> 'b2 -> ('b2 & 'b0) & 'i) -> (forall 'j. ('b & 'b2 & 'j) -> (forall 'k, 'Rep18, 'l, 'm, 'Rep19. ('Rep9 & 'm & 'Rep18, 'Rep3 & 'k & 'Rep19,) -> ('b0 | 'b1 | 'j | 'l))) | 'fold, init: forall 'n, 'A18, 'o, 'p, 'A19. ('A13 & 'A10 & 'n & 'A19 & 'A18) -> ('Rep14 | 'o, 'Rep8 | 'p,) | 'init, sub: forall 'q, 'r. ('Rep10 & 'q, 'Rep4 & 'r,) -> (forall 's, 't. (int & 's) -> ('A5 | 'A6 | 't)) | 'sub, update: forall 'u, 'v. ('Rep12 & 'u, 'Rep6 & 'v,) -> (forall 's, 'w. (int & 'w & 's) -> (forall 'x, 'y, 'A20, 'z, 'A21, 'a1. ('A15 & 'A14 & 'a1 & 'A21 & 'A20) -> (('Rep13 | 'u | 'y, 'Rep7 | 'v | 'x,) | 'z))) | 'update}) | 'b1)
+//│   where
+//│     'Rep17 :> ('Rep14 | 'Rep13 | 'c1 | 'g | 'd1, 'Rep8 | 'Rep7 | 'e1 | 'd | 'f1,)
+//│            <: ('Rep9 & 'e & 'Rep10 & 'f & 'Rep11 & 'g & 'Rep12, 'Rep3 & 'a & 'Rep4 & 'c & 'Rep5 & 'd & 'Rep6,)
+//│     'A3 <: 'g1 & 'A22 & 'A15 & 'A23 & 'A14 & 'h1 & 'A24 & 'A13 & 'A25 & 'A10
+//│         = [Function: stepImpl]
+
+def stepImpl2_ty: (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> ArraysImpl['A, ('Rep, 'Rep)]
+//│ stepImpl2_ty: (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> ArraysImpl['A, ('Rep, 'Rep,)]
+//│             = <missing implementation>
+
+def stepImpl2 arr = arr stepImpl
+//│ stepImpl2: ((forall 'A, 'A0, 'Rep, 'sub, 'Rep0, 'Rep1, 'A1, 'Rep2, 'a, 'c, 'A2, 'Rep3, 'Rep4, 'A3, 'A4, 'update, 'fold, 'd, 'A5, 'Rep5, 'init, 'Rep6, 'e, 'A6, 'f, 'A7, 'Rep7, 'g, 'A8, 'h, 'Rep8, 'i, 'j, 'A9, 'Rep9, 'A10, 'Rep10, 'Rep11, 'A11, 'A12, 'k, 'A13, 'Rep12, 'A14, 'Rep13, 'Rep14, 'l, 'm, 'Rep15, 'n, 'A15, 'A16, 'A17, 'A18, 'o, 'A19, 'Rep16, 'Rep17. (ArraysRep[in 'A1 | 'A19 | 'A6 | 'A18 | 'A11 & ('A5 | 'A9 | 'A13 | 'A2) out 'A15 & ('A7 & ('A16 & ('A1 & ('A12 & ('A14 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19)) | 'A18 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19))) | 'A2 & ('A14 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19)) | 'A18 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19)))) | 'A17 & ('A12 & ('A14 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0)) | 'A18 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0))) | 'A2 & ('A14 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0)) | 'A18 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0))))) | 'A13 & ('A1 & ('A12 & ('A14 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19)) | 'A18 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19))) | 'A2 & ('A14 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19)) | 'A18 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19)))) | 'A17 & ('A12 & ('A14 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0)) | 'A18 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0))) | 'A2 & ('A14 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0)) | 'A18 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0)))))) | 'A5 & ('A16 & ('A1 & ('A12 & ('A14 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19)) | 'A18 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19))) | 'A2 & ('A14 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19)) | 'A18 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19)))) | 'A17 & ('A12 & ('A14 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0)) | 'A18 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0))) | 'A2 & ('A14 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0)) | 'A18 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0))))) | 'A13 & ('A1 & ('A12 & ('A14 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19)) | 'A18 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19))) | 'A2 & ('A14 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19)) | 'A18 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19)))) | 'A17 & ('A12 & ('A14 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0)) | 'A18 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0))) | 'A2 & ('A14 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0)) | 'A18 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0))))))) | 'A6 & ('A7 & ('A16 & ('A1 & ('A12 & ('A14 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19)) | 'A18 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19))) | 'A2 & ('A14 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19)) | 'A18 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19)))) | 'A17 & ('A12 & ('A14 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0)) | 'A18 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0))) | 'A2 & ('A14 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0)) | 'A18 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0))))) | 'A13 & ('A1 & ('A12 & ('A14 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19)) | 'A18 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19))) | 'A2 & ('A14 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19)) | 'A18 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19)))) | 'A17 & ('A12 & ('A14 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0)) | 'A18 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0))) | 'A2 & ('A14 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0)) | 'A18 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0)))))) | 'A5 & ('A16 & ('A1 & ('A12 & ('A14 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19)) | 'A18 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19))) | 'A2 & ('A14 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19)) | 'A18 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19)))) | 'A17 & ('A12 & ('A14 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0)) | 'A18 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0))) | 'A2 & ('A14 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0)) | 'A18 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0))))) | 'A13 & ('A1 & ('A12 & ('A14 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19)) | 'A18 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19))) | 'A2 & ('A14 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19)) | 'A18 & ('A8 & ('A0 | 'A19) | 'A9 & ('A0 | 'A19)))) | 'A17 & ('A12 & ('A14 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0)) | 'A18 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0))) | 'A2 & ('A14 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0)) | 'A18 & ('A8 & ('A19 | 'A0) | 'A9 & ('A19 | 'A0))))))), in 'Rep4 | 'Rep15 | 'Rep0 | 'Rep5 | 'h & 'Rep10 & 'Rep12 & 'e & 'Rep8 & 'k & 'Rep16 & ('Rep6 | 'Rep17) | 'Rep1 & 'Rep9 & 'c & 'Rep13 & 'a & 'Rep14 & 'l & ('Rep3 | 'Rep7) out 'Rep3 & ('Rep16 & ('Rep4 & ('Rep11 & ('Rep10 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15))) | 'Rep5 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)))) | 'Rep7 & ('Rep10 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15))) | 'Rep5 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15))))) | 'Rep12 & ('Rep11 & ('Rep10 & ('Rep2 & ('Rep9 & ('Rep15 | 'Rep13) | 'Rep0 & ('Rep15 | 'Rep13)) | 'Rep17 & ('Rep9 & ('Rep15 | 'Rep13) | 'Rep0 & ('Rep15 | 'Rep13))) | 'Rep5 & ('Rep2 & ('Rep9 & ('Rep15 | 'Rep13) | 'Rep0 & ('Rep15 | 'Rep13)) | 'Rep17 & ('Rep9 & ('Rep15 | 'Rep13) | 'Rep0 & ('Rep15 | 'Rep13)))) | 'Rep7 & ('Rep10 & ('Rep2 & ('Rep9 & ('Rep15 | 'Rep13) | 'Rep0 & ('Rep15 | 'Rep13)) | 'Rep17 & ('Rep9 & ('Rep15 | 'Rep13) | 'Rep0 & ('Rep15 | 'Rep13))) | 'Rep5 & ('Rep2 & ('Rep9 & ('Rep15 | 'Rep13) | 'Rep0 & ('Rep15 | 'Rep13)) | 'Rep17 & ('Rep9 & ('Rep15 | 'Rep13) | 'Rep0 & ('Rep15 | 'Rep13)))))) | 'Rep6 & ('Rep4 & ('Rep11 & ('Rep10 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15))) | 'Rep5 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)))) | 'Rep7 & ('Rep10 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15))) | 'Rep5 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15))))) | 'Rep12 & ('Rep11 & ('Rep10 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15))) | 'Rep5 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)))) | 'Rep7 & ('Rep10 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15))) | 'Rep5 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15))))))) | 'Rep1 & ('Rep16 & ('Rep4 & ('Rep11 & ('Rep10 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15))) | 'Rep5 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)))) | 'Rep7 & ('Rep10 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15))) | 'Rep5 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15))))) | 'Rep12 & ('Rep11 & ('Rep10 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15))) | 'Rep5 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)))) | 'Rep7 & ('Rep10 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15))) | 'Rep5 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)))))) | 'Rep6 & ('Rep4 & ('Rep11 & ('Rep10 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15))) | 'Rep5 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)))) | 'Rep7 & ('Rep10 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15))) | 'Rep5 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15))))) | 'Rep12 & ('Rep11 & ('Rep10 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15))) | 'Rep5 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)))) | 'Rep7 & ('Rep10 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15))) | 'Rep5 & ('Rep2 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)) | 'Rep17 & ('Rep9 & ('Rep13 | 'Rep15) | 'Rep0 & ('Rep13 | 'Rep15)))))))] & 'f) -> ((ArraysImpl['A11, 'Rep] with {fold: forall 'b, 'b0, 'p, 'b1, 'A20, 'A21, 'b2. (('A5 | 'A21) -> 'b1 -> ('b1 & 'b0 & 'b2) & ('A2 | 'A20) -> 'b2 -> ('b2 & 'b) & 'p) -> (forall 'q. ('b1 & 'b2 & 'q) -> (forall 'Rep18, 'r, 'Rep19, 's, 't. ('Rep10 & 's & 'Rep18, 'Rep9 & 'r & 'Rep19,) -> ('b | 'b0 | 'q | 't))) | 'fold, init: forall 'u, 'A22, 'A23, 'v, 'w. ('A0 & 'A17 & 'w & 'A23 & 'A22) -> ('Rep17 | 'u, 'Rep7 | 'v,) | 'init, sub: forall 'x, 'y. ('Rep12 & 'x, 'Rep13 & 'y,) -> (forall 'z, 'a1. (int & 'z) -> ('A9 | 'A13 | 'a1)) | 'sub, update: forall 'b1, 'c1. ('Rep16 & 'b1, 'Rep1 & 'c1,) -> (forall 'z, 'd1. (int & 'd1 & 'z) -> (forall 'A24, 'e1, 'f1, 'A25, 'g1, 'h1. ('A14 & 'A15 & 'f1 & 'A25 & 'A24) -> (('Rep6 | 'b1 | 'h1, 'Rep3 | 'c1 | 'g1,) | 'e1))) | 'update}) | 'm)) -> 'i1 & 'j1) -> 'i1
+//│   where
+//│     'Rep :> ('Rep17 | 'Rep6 | 'g | 'k | 'i, 'Rep7 | 'Rep3 | 'd | 'l | 'o,)
+//│          <: ('Rep10 & 'h & 'Rep12 & 'e & 'Rep8 & 'k & 'Rep16, 'Rep9 & 'c & 'Rep13 & 'a & 'Rep14 & 'l & 'Rep1,)
+//│     'A11 <: 'j & 'A4 & 'A14 & 'A3 & 'A15 & 'n & 'A & 'A0 & 'A10 & 'A17
+//│          = [Function: stepImpl2]
+
+stepImpl2_ty = stepImpl2
+//│ ((forall 'A, 'Rep, 'Rep0, 'a, 'A0, 'Rep1, 'Rep2, 'Rep3, 'Rep4, 'Rep5, 'Rep6, 'Rep7, 'fold, 'Rep8, 'c, 'A1, 'A2, 'A3, 'A4, 'A5, 'Rep9, 'd, 'A6, 'e, 'f, 'g, 'Rep10, 'A7, 'init, 'A8, 'A9, 'h, 'A10, 'Rep11, 'A11, 'A12, 'Rep12, 'A13, 'A14, 'Rep13, 'A15, 'update, 'Rep14, 'i, 'A16, 'Rep15, 'j, 'Rep16, 'A17, 'k, 'sub, 'l, 'Rep17, 'A18, 'A19, 'm, 'n, 'o. (ArraysRep[in 'A8 | 'A19 | 'A | 'A6 | 'A0 & ('A7 | 'A1 | 'A2 | 'A9) out 'A19 & ('A8 & ('A7 & ('A15 & ('A14 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4))) | 'A9 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)))) | 'A & ('A14 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4))) | 'A9 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4))))) | 'A11 & ('A15 & ('A14 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4))) | 'A9 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)))) | 'A & ('A14 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4))) | 'A9 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)))))) | 'A13 & ('A7 & ('A15 & ('A14 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4))) | 'A9 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)))) | 'A & ('A14 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4))) | 'A9 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4))))) | 'A11 & ('A15 & ('A14 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4))) | 'A9 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)))) | 'A & ('A14 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4))) | 'A9 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4))))))) | 'A3 & ('A8 & ('A7 & ('A15 & ('A14 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4))) | 'A9 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)))) | 'A & ('A14 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4))) | 'A9 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4))))) | 'A11 & ('A15 & ('A14 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4))) | 'A9 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)))) | 'A & ('A14 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4))) | 'A9 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)))))) | 'A13 & ('A7 & ('A15 & ('A14 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4))) | 'A9 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)))) | 'A & ('A14 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4))) | 'A9 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4))))) | 'A11 & ('A15 & ('A14 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4))) | 'A9 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)))) | 'A & ('A14 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4))) | 'A9 & ('A12 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4)) | 'A6 & ('A17 & ('A1 | 'A4) | 'A2 & ('A1 | 'A4))))))), in 'Rep16 | 'Rep11 | 'Rep9 | 'Rep5 | 'Rep15 & 'a & 'Rep6 & 'l & 'Rep13 & 'f & 'Rep4 & ('Rep7 | 'Rep10) | 'Rep1 & 'o & 'Rep & 'h & 'Rep3 & 'm & 'Rep2 & ('Rep12 | 'Rep0) out 'Rep17 & ('Rep1 & ('Rep14 & ('Rep7 & ('Rep2 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep11 | 'Rep13) | 'Rep9 & ('Rep11 | 'Rep13))) | 'Rep12 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)))) | 'Rep6 & ('Rep2 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11))) | 'Rep12 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11))))) | 'Rep0 & ('Rep7 & ('Rep2 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep11 | 'Rep13) | 'Rep9 & ('Rep11 | 'Rep13))) | 'Rep12 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)))) | 'Rep6 & ('Rep2 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11))) | 'Rep12 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)))))) | 'Rep5 & ('Rep14 & ('Rep7 & ('Rep2 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep11 | 'Rep13) | 'Rep9 & ('Rep11 | 'Rep13))) | 'Rep12 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)))) | 'Rep6 & ('Rep2 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11))) | 'Rep12 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11))))) | 'Rep0 & ('Rep7 & ('Rep2 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep11 | 'Rep13) | 'Rep9 & ('Rep11 | 'Rep13))) | 'Rep12 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)))) | 'Rep6 & ('Rep2 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11))) | 'Rep12 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11))))))) | 'Rep10 & ('Rep1 & ('Rep14 & ('Rep7 & ('Rep2 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep11 | 'Rep13) | 'Rep9 & ('Rep11 | 'Rep13))) | 'Rep12 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)))) | 'Rep6 & ('Rep2 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11))) | 'Rep12 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11))))) | 'Rep0 & ('Rep7 & ('Rep2 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep11 | 'Rep13) | 'Rep9 & ('Rep11 | 'Rep13))) | 'Rep12 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)))) | 'Rep6 & ('Rep2 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11))) | 'Rep12 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)))))) | 'Rep5 & ('Rep14 & ('Rep7 & ('Rep2 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep11 | 'Rep13) | 'Rep9 & ('Rep11 | 'Rep13))) | 'Rep12 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)))) | 'Rep6 & ('Rep2 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11))) | 'Rep12 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11))))) | 'Rep0 & ('Rep7 & ('Rep2 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep11 | 'Rep13) | 'Rep9 & ('Rep11 | 'Rep13))) | 'Rep12 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)))) | 'Rep6 & ('Rep2 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11))) | 'Rep12 & ('Rep16 & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)) | 'Rep & ('Rep15 & ('Rep13 | 'Rep11) | 'Rep9 & ('Rep13 | 'Rep11)))))))] & 'e) -> ((ArraysImpl['A0, 'Rep8] with {fold: forall 'b, 'A20, 'A21, 'b0, 'b1, 'p, 'b2. (('A7 | 'A21) -> 'b0 -> ('b0 & 'b1 & 'b) & ('A9 | 'A20) -> 'b -> ('b & 'b2) & 'p) -> (forall 'q. ('b0 & 'b & 'q) -> (forall 'r, 'Rep18, 's, 't, 'Rep19. ('Rep1 & 'r & 'Rep19, 'Rep15 & 's & 'Rep18,) -> ('b2 | 'b1 | 'q | 't))) | 'fold, init: forall 'u, 'v, 'w, 'A22, 'A23. ('A3 & 'A13 & 'v & 'A22 & 'A23) -> ('Rep0 | 'u, 'Rep10 | 'w,) | 'init, sub: forall 'x, 'y. ('Rep & 'x, 'Rep13 & 'y,) -> (forall 'z, 'a1. (int & 'z) -> ('A1 | 'A2 | 'a1)) | 'sub, update: forall 'b1, 'c1. ('Rep2 & 'b1, 'Rep6 & 'c1,) -> (forall 'd1, 'z. (int & 'd1 & 'z) -> (forall 'e1, 'f1, 'g1, 'A24, 'A25, 'h1. ('A12 & 'A15 & 'f1 & 'A24 & 'A25) -> (('Rep12 | 'b1 | 'h1, 'Rep7 | 'c1 | 'e1,) | 'g1))) | 'update}) | 'd)) -> 'i1 & 'j1) -> 'i1
+//│   where
+//│     'Rep8 :> ('Rep0 | 'Rep12 | 'c | 'm | 'g, 'Rep10 | 'Rep7 | 'i | 'a | 'k,)
+//│           <: ('Rep1 & 'o & 'Rep & 'h & 'Rep3 & 'm & 'Rep2, 'Rep15 & 'l & 'Rep13 & 'f & 'Rep4 & 'a & 'Rep6,)
+//│     'A0 <: 'n & 'A5 & 'A12 & 'A16 & 'A15 & 'j & 'A10 & 'A3 & 'A18 & 'A13
+//│   <:  stepImpl2_ty:
+//│ (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> ArraysImpl['A, ('Rep, 'Rep,)]
+//│             = [Function: stepImpl2]
+
+
+def step: Arrays['a] -> Arrays['a]
+//│ step: Arrays['a] -> Arrays['a]
+//│     = <missing implementation>
+
+:e // * Since "sound extrusion"
+def step arr f = f (stepImpl2 arr)
+//│ ((forall 'A, 'Rep, 'a, 'A0, 'A1, 'A2, 'sub, 'Rep0, 'A3, 'A4, 'init, 'A5, 'c, 'A6, 'A7, 'A8, 'A9, 'Rep1, 'Rep2, 'd, 'update, 'Rep3, 'e, 'f, 'Rep4, 'g, 'A10, 'A11, 'Rep5, 'Rep6, 'h, 'fold, 'A12, 'Rep7, 'Rep8, 'i, 'j, 'Rep9, 'A13, 'k, 'Rep10, 'A14, 'Rep11, 'l, 'm, 'A15, 'A16, 'Rep12, 'n, 'A17, 'Rep13, 'A18, 'Rep14, 'o, 'Rep15, 'Rep16, 'Rep17, 'A19. (ArraysRep[in 'A12 | 'A0 | 'A19 | 'A18 | 'A8 & ('A7 | 'A17 | 'A4 | 'A2) out 'A19 & ('A & ('A0 & ('A12 & ('A7 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3))) | 'A10 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)))) | 'A1 & ('A7 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3))) | 'A10 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3))))) | 'A5 & ('A12 & ('A7 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3))) | 'A10 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)))) | 'A1 & ('A7 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3))) | 'A10 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)))))) | 'A17 & ('A0 & ('A12 & ('A7 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3))) | 'A10 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)))) | 'A1 & ('A7 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3))) | 'A10 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3))))) | 'A5 & ('A12 & ('A7 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3))) | 'A10 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)))) | 'A1 & ('A7 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3))) | 'A10 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3))))))) | 'A11 & ('A & ('A0 & ('A12 & ('A7 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3))) | 'A10 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)))) | 'A1 & ('A7 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3))) | 'A10 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3))))) | 'A5 & ('A12 & ('A7 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3))) | 'A10 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)))) | 'A1 & ('A7 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3))) | 'A10 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)))))) | 'A17 & ('A0 & ('A12 & ('A7 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3))) | 'A10 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)))) | 'A1 & ('A7 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3))) | 'A10 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3))))) | 'A5 & ('A12 & ('A7 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3))) | 'A10 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)))) | 'A1 & ('A7 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3))) | 'A10 & ('A15 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3)) | 'A2 & ('A16 & ('A4 | 'A3) | 'A18 & ('A4 | 'A3))))))), in 'Rep5 | 'Rep1 | 'Rep12 | 'Rep9 | 'Rep10 & 'Rep15 & 'e & 'Rep8 & 'l & 'Rep17 & 'a & ('Rep6 | 'Rep13) | 'Rep0 & 'g & 'Rep2 & 'o & 'Rep14 & 'i & 'Rep4 & ('Rep16 | 'Rep) out 'Rep2 & ('Rep7 & ('Rep0 & ('Rep1 & ('Rep6 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10))) | 'Rep17 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)))) | 'Rep15 & ('Rep6 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10))) | 'Rep17 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10))))) | 'Rep9 & ('Rep1 & ('Rep6 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10))) | 'Rep17 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)))) | 'Rep15 & ('Rep6 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10))) | 'Rep17 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)))))) | 'Rep13 & ('Rep0 & ('Rep1 & ('Rep6 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10))) | 'Rep17 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)))) | 'Rep15 & ('Rep6 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10))) | 'Rep17 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10))))) | 'Rep9 & ('Rep1 & ('Rep6 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10))) | 'Rep17 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)))) | 'Rep15 & ('Rep6 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10))) | 'Rep17 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10))))))) | 'Rep5 & ('Rep7 & ('Rep0 & ('Rep1 & ('Rep6 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10))) | 'Rep17 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)))) | 'Rep15 & ('Rep6 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10))) | 'Rep17 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10))))) | 'Rep9 & ('Rep1 & ('Rep6 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10))) | 'Rep17 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)))) | 'Rep15 & ('Rep6 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10))) | 'Rep17 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)))))) | 'Rep13 & ('Rep0 & ('Rep1 & ('Rep6 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10))) | 'Rep17 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)))) | 'Rep15 & ('Rep6 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10))) | 'Rep17 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10))))) | 'Rep9 & ('Rep1 & ('Rep6 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10))) | 'Rep17 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)))) | 'Rep15 & ('Rep6 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10))) | 'Rep17 & ('Rep4 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)) | 'Rep16 & ('Rep11 & ('Rep12 | 'Rep10) | 'Rep & ('Rep12 | 'Rep10)))))))] & 'm) -> ((ArraysImpl['A8, 'Rep3] with {fold: forall 'b, 'b0, 'b1, 'b2, 'A20, 'p, 'A21. (('A7 | 'A20) -> 'b1 -> ('b1 & 'b0 & 'b) & ('A2 | 'A21) -> 'b -> ('b & 'b2) & 'p) -> (forall 'q. ('b1 & 'b & 'q) -> (forall 'r, 's, 'Rep18, 't, 'Rep19. ('Rep0 & 's & 'Rep18, 'Rep10 & 't & 'Rep19,) -> ('b2 | 'b0 | 'q | 'r))) | 'fold, init: forall 'u, 'A22, 'A23, 'v, 'w. ('A5 & 'A1 & 'v & 'A23 & 'A22) -> ('Rep | 'u, 'Rep13 | 'w,) | 'init, sub: forall 'x, 'y. ('Rep2 & 'y, 'Rep15 & 'x,) -> (forall 'z, 'a1. (int & 'z) -> ('A17 | 'A4 | 'a1)) | 'sub, update: forall 'b1, 'c1. ('Rep4 & 'b1, 'Rep17 & 'c1,) -> (forall 'z, 'd1. (int & 'd1 & 'z) -> (forall 'A24, 'e1, 'f1, 'g1, 'A25, 'h1. ('A16 & 'A11 & 'f1 & 'A25 & 'A24) -> (('Rep16 | 'b1 | 'h1, 'Rep6 | 'c1 | 'g1,) | 'e1))) | 'update}) | 'c)) -> 'i1 & 'j1) -> (forall 'k1, 'l1, 'm1. (('k1 | 'i1) -> 'l1 & 'm1) -> 'l1)
+//│   where
+//│     'Rep3 :> ('Rep | 'Rep16 | 'h | 'i | 'k, 'Rep13 | 'Rep6 | 'd | 'l | 'n,)
+//│           <: ('Rep0 & 'g & 'Rep2 & 'o & 'Rep14 & 'i & 'Rep4, 'Rep10 & 'a & 'Rep15 & 'e & 'Rep8 & 'l & 'Rep17,)
+//│     'A8 <: 'f & 'A14 & 'A16 & 'A6 & 'A11 & 'j & 'A9 & 'A5 & 'A13 & 'A1
+//│   <:  step:
+//│ Arrays['a] -> Arrays['a]
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.315: 	def step arr f = f (stepImpl2 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.272: 	      then arrImpl.Sub r0 (div i 2)
+//│ ╙──       	                       ^^
+//│     = [Function: step]
+
+// * Now the annotation was okay [until "sound extrusion"] because the result no longer extruded it...
+:e // * Since "sound extrusion"
+def step (arr: Arrays['a]) f = f (stepImpl2 arr)
+//│ Arrays['a] -> (forall 'A, 'c, 'a0, 'A0, 'd, 'A1, 'A2, 'A3, 'e, 'Rep, 'f, 'g, 'A4, 'Rep0, 'A5, 'A6, 'A7, 'A8, 'fold, 'update, 'A9, 'init, 'A10, 'sub, 'A11, 'A12. (((ArraysImpl[in 'A5 & 'a0 & 'A12 & 'A10 & 'A6 & 'A7 & 'c & 'A11 & 'A3 & 'f & 'A & 'A8 out 'a0 | 'A7 | 'A9, in (nothing, nothing,) & 'Rep out (anything, anything,) | 'Rep | 'Rep0] with {fold: forall 'A13, 'b, 'b0, 'h, 'b1, 'b2, 'A14. (('a0 | 'A13 | 'A2) -> 'b2 -> ('b2 & 'b0 & 'b1) & ('a0 | 'A14 | 'A4) -> 'b1 -> ('b1 & 'b) & 'h) -> (forall 'i. ('b2 & 'b1 & 'i) -> (forall 'j. (nothing, nothing,) -> ('b0 | 'b | 'i | 'j))) | 'fold, init: forall 'k, 'A15, 'A16. ('k & 'A15 & 'A5 & 'a0 & 'A16 & 'A12) -> (anything, anything,) | 'init, sub: (nothing, nothing,) -> (forall 'l, 'm. (int & 'l) -> ('a0 | 'A0 | 'A1 | 'm)) | 'sub, update: forall 'l. (nothing, nothing,) -> (forall 'n. (int & 'n & 'l) -> (forall 'o, 'p, 'A17, 'A18. ('a0 & 'p & 'A17 & 'A10 & 'A18 & 'A6) -> ((anything, anything,) | 'o))) | 'update}) | 'd) -> 'g & 'e) -> 'g)
+//│   <:  step:
+//│ Arrays['a] -> Arrays['a]
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.339: 	def step (arr: Arrays['a]) f = f (stepImpl2 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.272: 	      then arrImpl.Sub r0 (div i 2)
+//│ ╙──       	                       ^^
+//│     = [Function: step1]
+
+// * Don't know why these don't work:
+:e
+def step arr f = f (stepImpl2_ty arr)
+//│ (forall 'r. (ArraysRep[in 'A out 'A | 'A0, in 'Rep out 'Rep | 'Rep0] -> 'r) -> 'r & 'a) -> (forall 'b, 'A1, 'Rep1, 'c, 'd. ((ArraysImpl['A1, ('Rep1, 'Rep1,)] | 'c) -> 'd & 'b) -> 'd)
+//│   where
+//│     'Rep1 :> 'Rep
+//│           <: 'Rep0
+//│     'A1 :> 'A
+//│         <: 'A0
+//│   <:  step:
+//│ Arrays['a] -> Arrays['a]
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.359: 	def step arr f = f (stepImpl2_ty arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ╙──      	                         ^^^^
+//│     = [Function: step2]
+:e
+def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.379: 	def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
+//│ ║         	                                  ^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ╙──      	                         ^^^^
+//│ Arrays['a] -> (forall 'b, 'c, 'd. ((error | 'd) -> 'b & 'c) -> 'b)
+//│   <:  step:
+//│ Arrays['a] -> Arrays['a]
+//│     = [Function: step3]
+
+
+ssb = step (step base)
+//│ ssb: Arrays['a]
+//│    = [Function (anonymous)]
+
+ssb (fun arr ->
+    let r2 = arr.Update (arr.Init true) 1 false
+    in (arr.Sub r2 0, arr.Sub r2 1)
+  )
+//│ res: (bool, bool,)
+//│    = [ true, false ]
+
+
+
+rec def mkMonoArray n =
+  if n == 0 then base else step (mkMonoArray(n - 1))
+//│ mkMonoArray: (int & 'b) -> (forall 'c, 'a. Arrays['a] | 'c)
+//│            = [Function: mkMonoArray]
+
+snb = mkMonoArray 5
+//│ snb: Arrays['a]
+//│    = [Function (anonymous)]
+
+snb (fun arr -> arr.Init true)
+//│ res: anything
+//│    = [
+//│        [ [ [Array], [Array] ], [ [Array], [Array] ] ],
+//│        [ [ [Array], [Array] ], [ [Array], [Array] ] ]
+//│      ]
+
+
+// * From the paper:
+// let mkPolyArray n = {∀α(∃ρ.∀β.sig(α,ρ,β))} (mkMonoArray n)
+
+
+
+
+

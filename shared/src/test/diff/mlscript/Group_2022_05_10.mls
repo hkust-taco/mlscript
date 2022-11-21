@@ -34,9 +34,7 @@ def g x = x (fun x -> x)
 
 
 def g x y = x (fun x -> y x)
-//│ g: ((forall 'a, 'b, 'c. ('c -> 'a
-//│   where
-//│     'b <: 'c -> 'a)) -> 'd) -> 'b -> 'd
+//│ g: ((forall 'a, 'b. ('a & 'c) -> ('b | 'd)) -> 'e) -> ('c -> 'd) -> 'e
 //│  = [Function: g1]
 
 
@@ -47,11 +45,11 @@ self x = x x
 :e
 self self
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.48: 	self self
+//│ ║  l.46: 	self self
 //│ ║        	^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α98' -> α99')›  <:  α98_109    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α98' -> α99')›  <:  α98'
+//│ ╟── this constraint:  ‹∀ 0. (α104' -> α105')›  <:  α104_115    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α104' -> α105')›  <:  α104'
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded

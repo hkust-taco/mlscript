@@ -16,9 +16,7 @@ type Two[A] = (A, A)
 //│ Defined type alias Two[+A]
 
 def mapTwo f ((a, b)) = (f a, f b)
-//│ mapTwo: 'a -> (forall 'b, 'c, 'a, 'd, 'e. (('d, 'b,) -> ('e, 'c,)
-//│   where
-//│     'a <: 'd -> 'e & 'b -> 'c))
+//│ mapTwo: ('a -> 'b & 'c -> 'd & 'e) -> (forall 'f, 'g, 'h, 'i. ('c & 'f, 'a & 'g,) -> ('h | 'd, 'i | 'b,))
 //│       = [Function: mapTwo]
 
 // class Z
@@ -43,10 +41,10 @@ type HTree[N, A] = forall 'r. (forall 'p. (DLeaf[A] | DNode[S['p], A] & DNode[N,
 //│ Defined class DNode[=N, +A]
 //│ Defined type alias HTree[=N, +A]
 //│ ╔══[WARNING] Type definition HTreeBase has bivariant type parameters:
-//│ ║  l.37: 	class HTreeBase[N, A]: { n: N }
+//│ ║  l.35: 	class HTreeBase[N, A]: { n: N }
 //│ ║        	      ^^^^^^^^^
 //│ ╟── A is irrelevant and may be removed
-//│ ║  l.37: 	class HTreeBase[N, A]: { n: N }
+//│ ║  l.35: 	class HTreeBase[N, A]: { n: N }
 //│ ╙──      	                   ^
 
 
@@ -66,7 +64,7 @@ d1_ : HTree[Z, int]
 //│    = [Function: d1_]
 
 d2 = DNode { subTree = (d1_, d1_); n = S{} }
-//│ d2: DNode['P, 1] with {subTree: (forall 'a, 'b. (DLeaf[1] -> 'b & 'a) -> 'b, forall 'a, 'b. (DLeaf[1] -> 'b & 'a) -> 'b,)}
+//│ d2: DNode['P, 1] with {subTree: (forall 'a, 'b. (DLeaf[1] -> 'a & 'b) -> 'a, forall 'a, 'b. (DLeaf[1] -> 'a & 'b) -> 'a,)}
 //│   = DNode { n: S {}, subTree: [ [Function: d1_], [Function: d1_] ] }
 
 def d1_ty: HTree[Z, int]
@@ -94,14 +92,14 @@ d2_ k = k d2
 :e // FIXME
 d2_ : HTree[S[Z], int]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.95: 	d2_ : HTree[S[Z], int]
+//│ ║  l.93: 	d2_ : HTree[S[Z], int]
 //│ ║        	^^^
 //│ ╟── expression of type `S[Z & ?p]` is not an instance of `Z`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.72: 	def d1_ty: HTree[Z, int]
+//│ ║  l.70: 	def d1_ty: HTree[Z, int]
 //│ ║        	                 ^
 //│ ╟── Note: class type parameter N is defined at:
-//│ ║  l.39: 	class DNode[N, A]: HTreeBase[S[N], A] & { subTree: Two[HTree[N, A]] }
+//│ ║  l.37: 	class DNode[N, A]: HTreeBase[S[N], A] & { subTree: Two[HTree[N, A]] }
 //│ ╙──      	            ^
 //│ res: HTree[S[Z], int]
 //│    = <no result>
@@ -114,13 +112,13 @@ d2_ : HTree[S[Z], int]
 //│    = <no result>
 //│      d2 and d1_ty are not implemented
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.112: 	d2_ : HTree[S[Z], int]
+//│ ║  l.110: 	d2_ : HTree[S[Z], int]
 //│ ║         	^^^
 //│ ╟── type `HTreeBase[S[Z], ?]` does not match type `DLeaf[int] | DNode[in S[in Z & ?p out ?p | Z] out S[in ?p | Z out Z & ?p], int]`
-//│ ║  l.111: 	d2_ k = k (d2:HTreeBase[S[Z], int])
+//│ ║  l.109: 	d2_ k = k (d2:HTreeBase[S[Z], int])
 //│ ║         	              ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.40: 	type HTree[N, A] = forall 'r. (forall 'p. (DLeaf[A] | DNode[S['p], A] & DNode[N, A]) -> 'r) -> 'r
+//│ ║  l.38: 	type HTree[N, A] = forall 'r. (forall 'p. (DLeaf[A] | DNode[S['p], A] & DNode[N, A]) -> 'r) -> 'r
 //│ ╙──      	                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: HTree[S[Z], int]
 //│    = <no result>

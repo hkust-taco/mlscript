@@ -149,8 +149,8 @@ class DiffTests
     var distributeForalls = false
     var noCycleCheck = false
     var noRecursiveTypes = false
-    // var noConstrainedTypes = true
-    var noConstrainedTypes = false
+    var noConstrainedTypes = true
+    // var noConstrainedTypes = false
     var irregularTypes = false
     var noArgGen = true
     var newParser = basePath.headOption.contains("parser") || basePath.headOption.contains("mono")

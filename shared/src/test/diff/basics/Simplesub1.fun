@@ -196,62 +196,42 @@ x => {l: x x, r: x }
 //│ res: ('a -> 'b & 'a) -> {l: 'b, r: 'a}
 
 
-// From https://github.com/stedolan/mlsub
-// Y combinator:
+// * From https://github.com/stedolan/mlsub
+// * Y combinator:
 :e // similarly to Omega
 (f => (x => f (x x)) (x => f (x x)))
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
 //│ ║  l.+1: 	(f => (x => f (x x)) (x => f (x x)))
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. {(α243_248' -> α245_247') where: α239 <: (α244_246' -> α245_247')}›  <:  α243_255    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. {(α243_248' -> α245_247') where: α239 <: (α244_246' -> α245_247')}›  <:  α243_248'
+//│ ╟── this constraint:  ‹∀ 0. (α243_248' -> α245_250')›  <:  α243_255    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α243_248' -> α245_250')›  <:  α243_248'
 //│ res: (nothing -> anything) -> error
 
-// Z combinator:
-// * FIXME simplified type
-// :e // Works thanks to inconsistent constrained types...
+// * Z combinator:
+:e
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
-//│ res: ((forall 'a, 'b. ('a -> 'b
-//│   where
-//│     forall 'c, 'd. ('c -> 'd
-//│   where
-//│     'e <: (forall 'c, 'f, 'g, 'h. ('f -> 'g
-//│   where
-//│     'c <: 'c -> ('f -> 'g & 'h))) -> 'd) <: (forall 'c, 'd. ('c -> 'd
-//│   where
-//│     'e <: (forall 'c, 'f, 'g, 'h. ('f -> 'g
-//│   where
-//│     'c <: 'c -> ('f -> 'g & 'h))) -> 'd)) -> 'a -> 'b)) -> 'i & 'e) -> 'i
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
+//│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
+//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. (α275_290' -> α284_294')›  <:  α275_301    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α275_290' -> α284_294')›  <:  α275_290'
+//│ res: ((forall 'a, 'b. 'a -> 'b) -> 'a & ('a -> 'b) -> 'a) -> error
 
 // * Function that takes arbitrarily many arguments:
-// * FIXME type of result shouldn't be `nothing`
-// :e // Works thanks to inconsistent constrained types...
+:e
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
-//│ res: 'a -> (forall 'b, 'c. ('b -> 'c
-//│   where
-//│     forall 'd, 'e. ('d -> 'e
-//│   where
-//│     forall 'a, 'f. 'f -> 'a -> 'f <: (forall 'a, 'd, 'g, 'h. ('g -> 'h
-//│   where
-//│     'd <: 'd -> ('g -> 'h & 'a))) -> 'e) <: (forall 'd, 'e. ('d -> 'e
-//│   where
-//│     forall 'a, 'f. 'f -> 'a -> 'f <: (forall 'a, 'd, 'g, 'h. ('g -> 'h
-//│   where
-//│     'd <: 'd -> ('g -> 'h & 'a))) -> 'e)) -> 'b -> 'c))
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
+//│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
+//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. (α333_348' -> α342_352')›  <:  α333_359    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α333_348' -> α342_352')›  <:  α333_348'
+//│ res: error
 
 res 1 2
-//│ res: 'a -> 'b
-//│   where
-//│     forall 'c, 'd. ('d -> 'c
-//│   where
-//│     forall 'e, 'f. 'e -> 'f -> 'e <: (forall 'g, 'h, 'd, 'i. ('i -> 'g
-//│   where
-//│     'd <: 'd -> ('i -> 'g & 'h))) -> 'c) <: (forall 'c, 'd. ('d -> 'c
-//│   where
-//│     forall 'e, 'f. 'e -> 'f -> 'e <: (forall 'g, 'h, 'd, 'i. ('i -> 'g
-//│   where
-//│     'd <: 'd -> ('i -> 'g & 'h))) -> 'c)) -> ('a -> 'b & 'f)
+//│ res: error
 
 
 let rec trutru = g => trutru (g true)
@@ -328,7 +308,10 @@ let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ ║        	                                           ^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
-//│ ╙──      	                                    ^^^
+//│ ║        	                                    ^^^
+//│ ╟── from reference:
+//│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
+//│ ╙──      	                                    ^
 //│ x: 0
 //│ res: 0
 
@@ -403,12 +386,12 @@ let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
 
 :ns
 let rec x = (let y = (x x); (z => z))
-//│ x: forall 'x, 'a, 'b. 'x
+//│ x: forall 'a, 'x, 'b. 'x
 //│   where
-//│     'x := 'b -> 'b
-//│     'b :> 'b -> 'b
-//│        <: 'a
-//│     'a :> 'b -> 'b
+//│     'x := 'a -> 'a
+//│     'a :> 'a -> 'a
+//│        <: 'b
+//│     'b :> 'a -> 'a
 
 
 
@@ -420,9 +403,50 @@ let rec x = (let y = (x x); (z => z))
 //│ ║  l.+1: 	(w => x => x) ((y => y y) (y => y y))
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α739_741' -> α740_742')›  <:  α739_748    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α739_741' -> α740_742')›  <:  α739_741'
+//│ ╟── this constraint:  ‹∀ 0. (α695_697' -> α696_698')›  <:  α695_704    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α695_697' -> α696_698')›  <:  α695_697'
 //│ res: 'a -> 'a
+
+
+
+// * === With Constrained Types ===
+
+:DontDistributeForalls
+:ConstrainedTypes
+
+
+// * Z combinator:
+// :e // Works thanks to inconsistent constrained types...
+(f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
+//│ res: ((forall 'a, 'b. ('a -> 'b
+//│   where
+//│     forall 'c, 'd. ('c -> 'd
+//│   where
+//│     'e <: (forall 'c, 'f, 'g, 'h. ('f -> 'g
+//│   where
+//│     'c <: 'c -> ('f -> 'g & 'h))) -> 'd) <: (forall 'c, 'd. ('c -> 'd
+//│   where
+//│     'e <: (forall 'c, 'f, 'g, 'h. ('f -> 'g
+//│   where
+//│     'c <: 'c -> ('f -> 'g & 'h))) -> 'd)) -> 'a -> 'b)) -> 'i & 'e) -> 'i
+
+// * Function that takes arbitrarily many arguments:
+// :e // Works thanks to inconsistent constrained types...
+(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
+//│ res: 'a -> (forall 'b, 'c. ('b -> 'c
+//│   where
+//│     forall 'd, 'e. ('d -> 'e
+//│   where
+//│     forall 'a, 'f. 'f -> 'a -> 'f <: (forall 'a, 'd, 'g, 'h. ('g -> 'h
+//│   where
+//│     'd <: 'd -> ('g -> 'h & 'a))) -> 'e) <: (forall 'd, 'e. ('d -> 'e
+//│   where
+//│     forall 'a, 'f. 'f -> 'a -> 'f <: (forall 'a, 'd, 'g, 'h. ('g -> 'h
+//│   where
+//│     'd <: 'd -> ('g -> 'h & 'a))) -> 'e)) -> 'b -> 'c))
+
+
+
 
 :NoCycleCheck
 

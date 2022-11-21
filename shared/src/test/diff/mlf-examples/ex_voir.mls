@@ -94,9 +94,7 @@ fun x -> fun y -> ((x : S1), (y : S2), x x)
 //│ Defined type alias S2
 //│ res: (S1 & 'a) -> (forall 'b, 'c, 'd. (S2 & 'c & 'd & 'b) -> (S1, S2, 'a | 'b,))
 //│    = [Function: res]
-//│ res: (S1 & 'a) -> (forall 'b, 'c, 'a. ((S2 & 'c) -> (S1, S2, 'b,)
-//│   where
-//│     'a <: 'a -> 'b))
+//│ res: (S1 & 'a -> 'b & 'a) -> (forall 'c, 'd. (S2 & 'c) -> (S1, S2, 'd | 'b,))
 //│    = [Function: res]
 
 // (* please onlyweak ['b = sid] 'b -> 'b : sid -> sid *)
@@ -127,9 +125,7 @@ example_ mkpair
 
 // let make_ex3 x (f:['a > sid] 'a -> 'b ) = f x 
 def make_ex3 x (f: forall 'a. ('a | Sid) -> 'b) = f x
-//│ make_ex3: 'c -> (forall 'c, 'a, 'b, 'd. ((forall 'a0. ('a0 | Sid) -> ('b & 'd)) -> 'd
-//│   where
-//│     'c <: 'a | Sid))
+//│ make_ex3: ('c & (Sid | 'a)) -> (forall 'd, 'b. (forall 'a0. ('a0 | Sid) -> ('b & 'd)) -> 'd)
 //│         = [Function: make_ex3]
 
 // let ex_list3 = [ make_ex3 succ ;

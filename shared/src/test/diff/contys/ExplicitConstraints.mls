@@ -1,7 +1,7 @@
 :NewParser
 :NoJS
+:ConstrainedTypes
 
-// :ConstrainedTypes
 
 
 fun f: int => int

@@ -31,9 +31,7 @@ def auto (x: forall 'a. 'a -> 'a) = x x
 //│ auto: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a | 'b)
 
 def app f x = f x
-//│ app: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
-//│   where
-//│     'a <: 'b -> 'c))
+//│ app: ('a -> 'b & 'c) -> (forall 'd, 'e. ('a & 'd) -> ('e | 'b))
 
 def inc: int -> int
 //│ inc: int -> int
@@ -73,7 +71,7 @@ choose id
 //│ res: ('a & 'b & 'c) -> (forall 'c, 'd. 'd -> 'd | 'c)
 
 fun (g: forall 'a. ('a -> 'a) -> ('a -> 'a)) -> fun (x: forall 'a. 'a -> 'a) -> fun a -> g a (x a)
-//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'b, 'c, 'd, 'a1, 'a2. ('a2 -> ('a2 & 'c) & 'b & 'a1 & 'd & 'a2 & 'c) -> 'c)
+//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'b, 'c, 'a1, 'd, 'a2. ('a2 -> ('a2 & 'b) & 'c & 'a1 & 'd & 'a2 & 'b) -> 'b)
 
 choose id succ
 //│ res: (int & 'a) -> (int | 'a)
@@ -111,9 +109,9 @@ app auto id
 :e
 let f = choose id in (f auto) (f succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.112: 	let f = choose id in (f auto) (f succ)
+//│ ║  l.110: 	let f = choose id in (f auto) (f succ)
 //│ ║         	                     ^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_332` is not an instance of type `int`
+//│ ╟── type `‘a_344` is not an instance of type `int`
 //│ ║  l.30: 	def auto (x: forall 'a. 'a -> 'a) = x x
 //│ ╙──      	                    ^^
 //│ res: (int & 'a) -> (int | 'a) | error
@@ -129,13 +127,13 @@ choose id auto2
 :e // This is a legit error
 res (choose id succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.130: 	res (choose id succ)
+//│ ║  l.128: 	res (choose id succ)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `int -> int` is not an instance of type `int`
-//│ ║  l.130: 	res (choose id succ)
+//│ ║  l.128: 	res (choose id succ)
 //│ ║         	               ^^^^
 //│ ╟── but it flows into application with expected type `int`
-//│ ║  l.130: 	res (choose id succ)
+//│ ║  l.128: 	res (choose id succ)
 //│ ╙──       	     ^^^^^^^^^^^^^^
 //│ res: (int & 'a) -> (int | 'a) | error
 
@@ -182,7 +180,7 @@ let tmp = I I in K K
 //│ res: (42, "foo",)
 
 (fun f -> (f succ, choose f auto)) (choose id)
-//│ res: (forall 'b. (int & 'b) -> (int | 'b), (forall 'c, 'd, 'e, 'a. 'a -> 'a & 'c & 'd & 'e) -> (forall 'e, 'f, 'b, 'a. ('b & 'a) -> ('a | 'b) | 'e | 'f),)
+//│ res: (forall 'b. (int & 'b) -> (int | 'b), (forall 'a, 'c, 'd, 'e. 'a -> 'a & 'c & 'd & 'e) -> (forall 'b, 'a, 'e, 'f. ('b & 'a) -> ('a | 'b) | 'e | 'f),)
 
 // ------------ Sec 2.3.1 ------------
 
@@ -199,7 +197,7 @@ let tmp = I I in K K
 fun z -> (z omegad)
 fun z -> (z omega)
 //│ res: ((forall 'b. (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a | 'b)) -> 'c) -> 'c
-//│ res: ((forall 'a, 'b. ('b -> 'a & 'b) -> 'a) -> 'c) -> 'c
+//│ res: ((forall 'a, 'b. ('a -> 'b & 'a) -> 'b) -> 'c) -> 'c
 
 (fun y -> fun z -> z y) omegad
 (fun y -> fun z -> z y) omega
@@ -213,12 +211,8 @@ fun z -> omega z
 
 (fun x -> fun y -> x y) omegad
 (fun x -> fun y -> x y) omega
-//│ res: 'b -> 'c
-//│   where
-//│     forall 'd. (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a | 'd) <: 'b -> 'c
-//│ res: 'a -> 'b
-//│   where
-//│     forall 'c, 'd. ('c -> 'd & 'c) -> 'd <: 'a -> 'b
+//│ res: (forall 'a. 'a -> 'a & 'b) -> (forall 'a. 'a -> 'a | 'c)
+//│ res: ('a -> 'b & 'c & 'a) -> ('d | 'b)
 
 // ------------ Sec 4.3 ------------
 // affects the order of bindings in the result type in MLF, not very interesting otherwise
@@ -292,7 +286,7 @@ ignore x y = y
 //│ ignore: 'a -> (forall 'b. 'b -> 'b)
 
 monsterThunk() = (fun y -> (ignore (y I) (y K))) (fun x -> x x)
-//│ monsterThunk: () -> (forall 'a. 'a -> (forall 'b, 'c. 'c -> (forall 'd. 'd -> 'c) | 'b) | 'e)
+//│ monsterThunk: () -> (forall 'a. 'a -> (forall 'b, 'c. 'b -> (forall 'd. 'd -> 'b) | 'c) | 'e)
 
 monster2 = (fun y -> (y I, y K)) (fun x -> x x)
 //│ monster2: (forall 'a. 'a -> 'a, forall 'b. 'b -> (forall 'c. 'c -> (forall 'd. 'd -> 'c)),)

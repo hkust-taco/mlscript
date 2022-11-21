@@ -3,9 +3,9 @@
 
 :NoRecursiveTypes
 :GeneralizeCurriedFunctions
+:ConstrainedTypes
 // :DistributeForalls
 // :ArgGen
-// :NoConstrainedTypes
 
 
 type ArraysRep[Rep] = { fold: forall 'b. 'b -> Rep -> 'b }

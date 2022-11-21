@@ -75,7 +75,7 @@ rec def concat l1 l2 =
   else cons (head l1) (concat (tail l1) l2)
 //│ concat: List['a] -> List['a] -> List['a]
 //│       = <missing implementation>
-//│ List[?] -> List['a] -> List['a]
+//│ (List['a | 'a0 | 'a1 & 'b] & 'c) -> (forall 'd, 'e, 'f, 'g. ('d & List['b] & 'e & 'f) -> (List['a0 | 'b | 'g] | 'f))
 //│   <:  concat:
 //│ List['a] -> List['a] -> List['a]
 //│       = [Function: concat1]
@@ -180,7 +180,7 @@ delta_ succ
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.178: 	delta succ
 //│ ║         	^^^^^^^^^^
-//│ ╟── type `‘a_489` is not an instance of type `int`
+//│ ╟── type `‘a_570` is not an instance of type `int`
 //│ ║  l.119: 	type Id = forall 'a. 'a -> 'a
 //│ ║         	                 ^^
 //│ ╟── Note: constraint arises from reference:
@@ -277,11 +277,9 @@ fun x -> fun y ->
 fun x -> fun y ->
   let isnil = x y in
     (isnil (cons 1 (cons 2 (cons 3 nil))), isnil nil, isnil (cons "ok" nil), isnil (cons true nil)) 
-//│ res: Id -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k. ((List[1 | 2 | 3 | 'k] | 'b) -> 'i & List['k] -> 'g & (List[true | 'd] | 'j) -> 'e & (List["ok" | 'f] | 'h) -> 'a & 'c) -> ('i, 'g, 'a, 'e,))
+//│ res: Id -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k. ((List[1 | 2 | 3 | 'e] | 'b) -> 'j & List['e] -> 'h & (List[true | 'c] | 'g) -> 'i & (List["ok" | 'k] | 'a) -> 'd & 'f) -> ('j, 'h, 'd, 'i,))
 //│    = [Function: res]
-//│ res: ('a -> 'b) -> (forall 'c, 'd, 'b, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'a, 'm. (('a & 'c) -> ('e, 'd, 'f, 'g,)
-//│   where
-//│     'b <: (List[1 | 2 | 3 | 'i] | 'k) -> 'e & List['h] -> 'd & (List["ok" | 'j] | 'l) -> 'f & (List[true | 'h] | 'm) -> 'g))
+//│ res: ('a -> (List[1 | 2 | 3] -> 'b & List['c] -> 'd & List[true] -> 'e & List["ok"] -> 'f)) -> (forall 'g, 'h, 'i, 'c, 'j. ('a & 'j) -> ('i | 'b, 'h | 'd, 'g | 'f, 'c | 'e,))
 //│    = [Function: res]
 
 // (*let t1 = f delta	
@@ -293,7 +291,7 @@ def partage x = choose id x
 def departage x = choose id (x : Id)
 //│ partage: ('a & 'b & 'c & 'd & 'e) -> (forall 'e, 'f. 'f -> 'f | 'e)
 //│        = [Function: partage]
-//│ departage: (Id & 'a) -> (forall 'b, 'c. 'b -> 'b | Id | 'c)
+//│ departage: (Id & 'a) -> (forall 'b, 'c. 'c -> 'c | Id | 'b)
 //│          = [Function: departage]
 
 // let delta' = fun x -> (departage x) x
@@ -361,7 +359,7 @@ def ff_ = fun g ->
 //│   = [Function: aa]
 //│ ff: (forall 'a, 'b. (('a | Id) -> 'b) -> 'b) -> (int | 'c)
 //│   = [Function: ff]
-//│ ff_: ((forall 'a, 'b, 'c, 'd. (8 -> (int & 'a & 'b) & 'c) -> (int | 'd | 'e) | 'f) -> ('g & 'h) & (forall 'i. Id -> (Id | 'i)) -> ('j & 'k) & 'l) -> (int | 'e)
+//│ ff_: ((forall 'a, 'b, 'c, 'd. (8 -> (int & 'a & 'b) & 'c) -> (int | 'd | 'e) | 'f) -> 'g & (forall 'h. Id -> (Id | 'h)) -> 'i & 'j) -> (int | 'e)
 //│    = [Function: ff_]
 
 // let bigtest = ff aa
@@ -437,7 +435,7 @@ def myNil l = eq l nil
 rec def append x l =
   if eq l nil then cons x nil
   else cons (head l) (append x (tail l))
-//│ append: 'a -> List['a] -> List['a]
+//│ append: ('b & 'c) -> (forall 'd, 'e, 'f, 'a, 'a0, 'g, 'h, 'i. (List['a & 'h & 'f | 'a0 & 'c] & 'i & 'g) -> (List['b | 'c | 'f | 'd] | 'e))
 //│       = [Function: append]
 
 // let rec map l f =
@@ -446,7 +444,7 @@ rec def append x l =
 rec def map l f =
   if eq l nil then nil
   else cons (f (head l)) (map (tail l) f)
-//│ map: List['a] -> ('a -> 'b) -> List['b]
+//│ map: (List['a | 'a0 & 'a1] & 'b) -> (forall 'c, 'd, 'e, 'f, 'g. (('a | 'e) -> ('g & 'c) & 'd & 'a1 -> 'h) -> (List['h | 'c] | 'f))
 //│    = [Function: map]
 
 // let message () = print "** MESSAGE **"
@@ -463,15 +461,11 @@ def intfa f = f 15
 
 // FIXME SOF
 def polyann (a: 'x) (b: int) f (g: int -> 'x -> 'y) = g (f 10) a b
-//│ polyann: 'x -> (int & 'a) -> (forall 'b. 'b -> (forall 'c, 'b, 'x, 'a, 'x0, 'y, 'd. ((int -> ('x | 'x0) -> (int -> 'd & 'y & 'c)) -> 'd
-//│   where
-//│     'b <: 10 -> (int & 'a))))
+//│ polyann: 'x -> (int & 'a) -> (forall 'a, 'b. (10 -> (int & 'a) & 'b) -> (forall 'x0, 'c, 'y, 'd. (int -> ('x | 'x0) -> (int -> 'c & 'y & 'd)) -> 'c))
 //│        = [Function: polyann]
 
 def polyann_ a b f g = g (f 10) a b
-//│ polyann_: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'd, 'b, 'e, 'f, 'a, 'g, 'h, 'c. (('h -> ('a -> ('b -> 'g & 'e) & 'd) & 'f) -> 'g
-//│   where
-//│     'c <: 10 -> 'h))))
+//│ polyann_: 'a -> (forall 'b. 'b -> (forall 'c, 'd. (10 -> 'c & 'd) -> (forall 'e, 'f, 'g, 'h, 'i. (('i | 'c) -> ('a -> ('b -> 'h & 'f) & 'e) & 'g) -> 'h)))
 //│         = [Function: polyann_]
 
 // let voyage (f:'p -> 'q) x y = (y, f x)
@@ -480,9 +474,7 @@ def voyage (f: 'p -> 'q) x y = (y, f x)
 //│       = [Function: voyage]
 
 def voyage_ f x y = (y, f x)
-//│ voyage_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('d -> ('d, 'c,)
-//│   where
-//│     'a <: 'b -> 'c)))
+//│ voyage_: ('a -> 'b & 'c) -> (forall 'd. ('a & 'd) -> (forall 'e, 'f. 'e -> ('e, 'f | 'b,)))
 //│        = [Function: voyage_]
 
 // let main =
@@ -743,7 +735,7 @@ def test2 = fun (x : 'a) -> (x : Sid, if true then x else succ)
 //│   = [Function: id1]
 //│ succ: (int & 'a) -> (int | 'b)
 //│     = [Function: succ1]
-//│ test: (Sid & 'a & 'b & 'c) -> (Sid, forall 'd, 'c. 'd -> 'd | 'c,)
+//│ test: (Sid & 'a & 'b & 'c) -> (Sid, forall 'c, 'd. 'd -> 'd | 'c,)
 //│     = [Function: test]
 //│ test2: (Sid & 'a & 'b & 'c) -> (Sid, forall 'c, 'd, 'e. (int & 'd) -> (int | 'e) | 'c,)
 //│      = [Function: test21]
@@ -788,17 +780,11 @@ def a = fun f -> f id
 //│            = [Function: church_zero]
 //│ church_un: 'a -> 'a
 //│          = [Function: church_un]
-//│ church_succ: 'a -> (forall 'b. 'b -> (forall 'c, 'b, 'd, 'a, 'e, 'f. ('f -> 'c
-//│   where
-//│     'a <: 'b -> ('f -> 'e & 'd)
-//│     'b <: 'e -> 'c)))
+//│ church_succ: ('a -> ('b -> 'c & 'd) & 'e) -> (forall 'f, 'g, 'h. (('c | 'h) -> 'f & 'a & 'g) -> (forall 'i, 'j. ('b & 'i) -> ('j | 'f)))
 //│            = [Function: church_succ]
 //│ f: Sa -> (Sid | 'a)
 //│  = [Function: f]
-//│ f_: ((forall 'a, 'b. ('a & 'b) -> (forall 'c, 'd, 'e, 'f, 'g, 'b. ('e -> 'c | 'd
-//│   where
-//│     'b <: (forall 'h, 'i. 'h -> (forall 'j. 'j -> 'j) | 'i) -> ('e -> 'f & 'g)
-//│     forall 'h, 'i. 'h -> (forall 'j. 'j -> 'j) | 'i <: 'f -> 'c)) | 'k) -> 'l & (forall 'm, 'n. ('m -> 'n & 'm) -> 'n) -> ('o & 'p & 'q) & 'r) -> 'q
+//│ f_: ((forall 'a, 'b, 'c, 'd, 'e, 'f, 'g. ((forall 'h, 'i. 'h -> (forall 'j, 'k. 'j -> 'j | 'k) | 'i) -> ('g -> ('a & 'c) & 'b) & 'f & 'd) -> (forall 'l. ('g & 'l) -> (forall 'j, 'k, 'm. 'j -> 'j | 'm | 'k) | 'e) | 'n) -> 'o & (forall 'p, 'q. ('p -> 'q & 'p) -> 'q) -> ('r & 's & 't) & 'u) -> 't
 //│   = [Function: f_]
 //│ a: ((forall 'a. 'a -> 'a) -> 'b & 'c) -> 'b
 //│  = [Function: a]
@@ -809,9 +795,7 @@ def a = fun f -> f id
 def app x y = x y
 def test1 = f a
 def test2 = app f a
-//│ app: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
-//│   where
-//│     'a <: 'b -> 'c))
+//│ app: ('a -> 'b & 'c) -> (forall 'd, 'e. ('a & 'd) -> ('e | 'b))
 //│    = [Function: app]
 //│ test1: Sid
 //│      = [Function: test11]
@@ -885,18 +869,20 @@ fun x -> ( (((x : 'a) : Sid) : 'a), x : 'a)
 :e
 rec def id_ x = if true then x else id_ id_ x
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.886: 	rec def id_ x = if true then x else id_ id_ x
+//│ ║  l.870: 	rec def id_ x = if true then x else id_ id_ x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α2472' -> α2478')  <:  α2476'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α2472' -> α2478')  <:  α2476'
+//│ ╟── this constraint:  ‹∀ 1. (α2826_2836'' -> α2835_2838'')›  <:  α2826_2842'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α2826_2836'' -> α2835_2838'')›  <:  α2826_2836''
 //│ id_: 'id_
 //│   where
-//│     'id_ :> 'a -> 'b
-//│     'a :> 'id_
-//│        <: 'b
-//│     'b :> 'id_
-//│        <: 'a -> 'b
+//│     'id_ :> forall 'a, 'b, 'c. 'a -> 'c
+//│     'a <: 'd & 'b & 'c
+//│     'c :> 'e
+//│     'd :> 'id_
+//│        <: 'e
+//│     'e :> 'id_
+//│        <: 'd -> 'e
 //│    = [Function: id_]
 
 // let rec (id:sid) x = if true then x else id id x
@@ -908,32 +894,34 @@ def id: Sid
 // FIXME
 rec def id x = if true then x else id id x
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.909: 	rec def id x = if true then x else id id x
+//│ ║  l.895: 	rec def id x = if true then x else id id x
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α2493' -> α2499')  <:  α2497'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α2493' -> α2499')  <:  α2497'
+//│ ╟── this constraint:  ‹∀ 1. (α2874_2884'' -> α2883_2886'')›  <:  α2874_2890'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α2874_2884'' -> α2883_2886'')›  <:  α2874_2884''
 //│ 'id
 //│   where
-//│     'id :> 'a -> 'b
-//│     'a :> 'id
-//│        <: 'b
-//│     'b :> 'id
-//│        <: 'a -> 'b
+//│     'id :> forall 'a, 'b, 'c. 'a -> 'c
+//│     'a <: 'd & 'b & 'c
+//│     'c :> 'e
+//│     'd :> 'id
+//│        <: 'e
+//│     'e :> 'id
+//│        <: 'd -> 'e
 //│   <:  id:
 //│ Sid
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.909: 	rec def id x = if true then x else id id x
+//│ ║  l.895: 	rec def id x = if true then x else id id x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_2513` is not a function
-//│ ║  l.736: 	type Sid = forall 'a. 'a -> 'a
+//│ ╟── type `‘a_2921` is not a function
+//│ ║  l.728: 	type Sid = forall 'a. 'a -> 'a
 //│ ║         	                  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.909: 	rec def id x = if true then x else id id x
+//│ ║  l.895: 	rec def id x = if true then x else id id x
 //│ ║         	                                   ^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.909: 	rec def id x = if true then x else id id x
-//│ ╙──       	                            ^
+//│ ║  l.895: 	rec def id x = if true then x else id id x
+//│ ╙──       	                                         ^
 //│   = [Function: id3]
 
 

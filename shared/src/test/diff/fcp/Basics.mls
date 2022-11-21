@@ -28,11 +28,11 @@ test1 (fun value -> { value })
 test2 f =
   let r x = f x
   in (r 0, r true)
-//│ test2: ((true | 'a) -> ('b & 'c) & (0 | 'd) -> ('e & 'f) & 'g) -> ('f, 'c,)
+//│ test2: ((0 | true | 'a) -> ('b & 'c & 'd) & 'e) -> ('d, 'c,)
 //│      = [Function: test2]
 
 test2 (fun value -> { value })
-//│ res: ({value: 0}, {value: true},)
+//│ res: ({value: 0 | true}, {value: 0 | true},)
 //│    = [ { value: 0 }, { value: true } ]
 
 
@@ -78,7 +78,7 @@ example succ
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.77: 	example succ
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── type `‘a_223` is not an instance of type `int`
+//│ ╟── type `‘a_213` is not an instance of type `int`
 //│ ║  l.55: 	def example f = (f: forall 'a. 'a -> 'a)
 //│ ╙──      	                           ^^
 //│ res: error

@@ -55,10 +55,10 @@ rec def lefts() =
 //│ ╟── from application:
 //│ ║  l.+2: 	  let res = Left {v = lefts()}
 //│ ╙──      	                      ^^^^^^^
-//│ lefts: () -> 'v
+//│ lefts: () -> 'a
 //│   where
-//│     'v :> forall 'a. 'a
-//│     'a :> Left with {v: 'v}
+//│     'a :> forall 'b. 'b
+//│     'b :> Left with {v: 'a}
 
 
 

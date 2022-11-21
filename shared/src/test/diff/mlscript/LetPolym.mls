@@ -354,7 +354,7 @@ foo (fun x -> (0, x + 1))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.353: 	foo (fun x -> (0, x + 1))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_672` is not an instance of type `int`
+//│ ╟── type `‘a_670` is not an instance of type `int`
 //│ ║  l.342: 	def foo (f: forall 'a. 'a -> ('a, 'a)) =
 //│ ║         	                   ^^
 //│ ╟── Note: constraint arises from reference:

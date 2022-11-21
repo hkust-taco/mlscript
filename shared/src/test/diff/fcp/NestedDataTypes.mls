@@ -1,6 +1,6 @@
 :NoRecursiveTypes
 :GeneralizeCurriedFunctions
-
+:ConstrainedTypes // * The test takes too much time without this
 
 // * Perfect Trees (https://www.cis.upenn.edu/~plclub/blog/2020-12-04-nested-datatypes/)
 
@@ -61,29 +61,59 @@ n4: PerfectTree[int]
 //│    = Node1 { subTree: Node1 { subTree: Leaf { value: [Array] } } }
 
 
-:e
+// * Works since the removal of "recursive definition hacks"
 rec def map f tree = case tree of {
   | Leaf -> Leaf { value = f tree.value }
   | Node -> Node { subTree = map (mapTwo f) tree.subTree }
   }
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.65: 	rec def map f tree = case tree of {
-//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.66: 	  | Leaf -> Leaf { value = f tree.value }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.67: 	  | Node -> Node { subTree = map (mapTwo f) tree.subTree }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.68: 	  }
-//│ ║        	^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α25_132'  <:  ((α26_147',) -> α28_148')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α25_132'  <:  ((α26_133''',) -> α28_134''')
-//│ map: (nothing -> anything & 'value -> 'value0) -> ((Leaf[?] with {value: 'value}) | Node[?]) -> (Leaf['value0] | Node[nothing] & {subTree: nothing})
+//│ map: 'map
+//│   where
+//│     'map :> forall 'a. 'a -> (forall 'b, 'value, 'c, 'subTree, 'A, 'd, 'e, 'value0, 'A0, 'f, 'g, 'h, 'map, 'subTree0, 'i. (('b & ((Leaf['f] with {value: 'value0}) & 'i | (Node['f] with {subTree: 'subTree0}) & 'f)) -> ((Leaf['A] with {value: 'value}) | (Node['A0] with {subTree: 'subTree}) | 'd | 'c)
+//│   where
+//│     'map <: (forall 'j, 'k, 'a, 'l, 'm, 'n, 'o. (('n, 'l,) -> ('m, 'k,) | 'o
+//│   where
+//│     'a | 'j <: 'n -> 'm & 'l -> 'k)) -> ('subTree0 -> (PerfectTree[Two['A0]] & 'h & 'subTree) & 'e)
+//│     'a <: 'value0 -> ('g & 'value & 'A)))
 //│    = [Function: map]
 
-// :e // fails after new-refreshing-extrusion // Works since inconsistent constrained types...
+:e
 map succ n4
-//│ res: Leaf[int] | Node[nothing] & {subTree: nothing}
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?subTree, ?A, ?subTree0, ?A0, ?A1, ?b, ?value. ?b) -> ?c` exceeded recursion depth limit (250)
+//│ ║  l.80: 	map succ n4
+//│ ║        	^^^^^^^^^^^
+//│ ╟── while constraining:  ‹∀ 1. (α122_256'' -> ‹∀ 2. {(α123_272''' -> (α127_275''' | α144_276''')) where: map121_255# <: ((α131_257''',) -> α141_263'''), α122_256'' <: ((value125_268''',) -> α126_269''')}›)›  <!<  ((α131_1406,) -> α141_1412)
+//│ ╟── while constraining:  map121_255#  <!<  ((α131_1406,) -> α141_1412)
+//│ ╟── while constraining:  {(α123_1421 -> (α127_1424 | α144_1425)) where: map121_255# <: ((α131_1406,) -> α141_1412), α122_1385 <: ((value125_1417,) -> α126_1418)}  <!<  ((subTree142_1372,) -> α143_1373)
+//│ ╟── while constraining:  ‹∀ 2. {(α123_1401''' -> (α127_1404''' | α144_1405''')) where: map121_255# <: ((α131_1386''',) -> α141_1392'''), α122_1385 <: ((value125_1397''',) -> α126_1398''')}›  <!<  ((subTree142_1372,) -> α143_1373)
+//│ ╟── while constraining:  ‹∀ 2. {(α123_1401''' -> (α127_1404''' | α144_1405''')) where: map121_255# <: ((α131_1386''',) -> α141_1392'''), α122_1385 <: ((value125_1397''',) -> α126_1398''')}›  <!<  α141_1371
+//│ ╟── while constraining:  (α122_1385 -> ‹∀ 2. {(α123_1401''' -> (α127_1404''' | α144_1405''')) where: map121_255# <: ((α131_1386''',) -> α141_1392'''), α122_1385 <: ((value125_1397''',) -> α126_1398''')}›)  <!<  ((α131_1365,) -> α141_1371)
+//│ ╟── while constraining:  ‹∀ 1. (α122_256'' -> ‹∀ 2. {(α123_272''' -> (α127_275''' | α144_276''')) where: map121_255# <: ((α131_257''',) -> α141_263'''), α122_256'' <: ((value125_268''',) -> α126_269''')}›)›  <!<  ((α131_1365,) -> α141_1371)
+//│ ╟── while constraining:  map121_255#  <!<  ((α131_1365,) -> α141_1371)
+//│ ╟── while constraining:  {(α123_1380 -> (α127_1383 | α144_1384)) where: map121_255# <: ((α131_1365,) -> α141_1371), α122_1344 <: ((value125_1376,) -> α126_1377)}  <!<  ((subTree142_1331,) -> α143_1332)
+//│ ╟── while constraining:  ‹∀ 2. {(α123_1360''' -> (α127_1363''' | α144_1364''')) where: map121_255# <: ((α131_1345''',) -> α141_1351'''), α122_1344 <: ((value125_1356''',) -> α126_1357''')}›  <!<  ((subTree142_1331,) -> α143_1332)
+//│ ╟── while constraining:  ‹∀ 2. {(α123_1360''' -> (α127_1363''' | α144_1364''')) where: map121_255# <: ((α131_1345''',) -> α141_1351'''), α122_1344 <: ((value125_1356''',) -> α126_1357''')}›  <!<  α141_1330
+//│ ╟── while constraining:  (α122_1344 -> ‹∀ 2. {(α123_1360''' -> (α127_1363''' | α144_1364''')) where: map121_255# <: ((α131_1345''',) -> α141_1351'''), α122_1344 <: ((value125_1356''',) -> α126_1357''')}›)  <!<  ((α131_1324,) -> α141_1330)
+//│ ╟── while constraining:  ‹∀ 1. (α122_256'' -> ‹∀ 2. {(α123_272''' -> (α127_275''' | α144_276''')) where: map121_255# <: ((α131_257''',) -> α141_263'''), α122_256'' <: ((value125_268''',) -> α126_269''')}›)›  <!<  ((α131_1324,) -> α141_1330)
+//│ ╟── while constraining:  map121_255#  <!<  ((α131_1324,) -> α141_1330)
+//│ ╟── while constraining:  {(α123_1339 -> (α127_1342 | α144_1343)) where: map121_255# <: ((α131_1324,) -> α141_1330), α122_1303 <: ((value125_1335,) -> α126_1336)}  <!<  ((subTree142_1290,) -> α143_1291)
+//│ ╟── ......
+//│ ╟── ......
+//│ ╟── while constraining:  {(α123_396 -> (α127_399 | α144_400)) where: map121_255# <: ((α131_381,) -> α141_387), α122_360 <: ((value125_392,) -> α126_393)}  <!<  ((subTree142_347,) -> α143_348)
+//│ ╟── while constraining:  ‹∀ 2. {(α123_376''' -> (α127_379''' | α144_380''')) where: map121_255# <: ((α131_361''',) -> α141_367'''), α122_360 <: ((value125_372''',) -> α126_373''')}›  <!<  ((subTree142_347,) -> α143_348)
+//│ ╟── while constraining:  ‹∀ 2. {(α123_376''' -> (α127_379''' | α144_380''')) where: map121_255# <: ((α131_361''',) -> α141_367'''), α122_360 <: ((value125_372''',) -> α126_373''')}›  <!<  α141_346
+//│ ╟── while constraining:  (α122_360 -> ‹∀ 2. {(α123_376''' -> (α127_379''' | α144_380''')) where: map121_255# <: ((α131_361''',) -> α141_367'''), α122_360 <: ((value125_372''',) -> α126_373''')}›)  <!<  ((α131_340,) -> α141_346)
+//│ ╟── while constraining:  ‹∀ 1. (α122_256'' -> ‹∀ 2. {(α123_272''' -> (α127_275''' | α144_276''')) where: map121_255# <: ((α131_257''',) -> α141_263'''), α122_256'' <: ((value125_268''',) -> α126_269''')}›)›  <!<  ((α131_340,) -> α141_346)
+//│ ╟── while constraining:  map121_255#  <!<  ((α131_340,) -> α141_346)
+//│ ╟── while constraining:  {(α123_355 -> (α127_358 | α144_359)) where: map121_255# <: ((α131_340,) -> α141_346), α122_319 <: ((value125_351,) -> α126_352)}  <!<  ((subTree142_306,) -> α143_307)
+//│ ╟── while constraining:  ‹∀ 2. {(α123_335''' -> (α127_338''' | α144_339''')) where: map121_255# <: ((α131_320''',) -> α141_326'''), α122_319 <: ((value125_331''',) -> α126_332''')}›  <!<  ((subTree142_306,) -> α143_307)
+//│ ╟── while constraining:  ‹∀ 2. {(α123_335''' -> (α127_338''' | α144_339''')) where: map121_255# <: ((α131_320''',) -> α141_326'''), α122_319 <: ((value125_331''',) -> α126_332''')}›  <!<  α141_305
+//│ ╟── while constraining:  (α122_319 -> ‹∀ 2. {(α123_335''' -> (α127_338''' | α144_339''')) where: map121_255# <: ((α131_320''',) -> α141_326'''), α122_319 <: ((value125_331''',) -> α126_332''')}›)  <!<  ((α131_299,) -> α141_305)
+//│ ╟── while constraining:  ‹∀ 1. (α122_256'' -> ‹∀ 2. {(α123_272''' -> (α127_275''' | α144_276''')) where: map121_255# <: ((α131_257''',) -> α141_263'''), α122_256'' <: ((value125_268''',) -> α126_269''')}›)›  <!<  ((α131_299,) -> α141_305)
+//│ ╟── while constraining:  map121_255#  <!<  ((α131_299,) -> α141_305)
+//│ ╟── while constraining:  {(α123_314 -> (α127_317 | α144_318)) where: map121_255# <: ((α131_299,) -> α141_305), α122_277 <: ((value125_310,) -> α126_311)}  <!<  ((‹∀ 0. α104'›,) -> α298)
+//│ ╟── while constraining:  ‹∀ 2. {(α123_293''' -> (α127_296''' | α144_297''')) where: map121_255# <: ((α131_278''',) -> α141_284'''), α122_277 <: ((value125_289''',) -> α126_290''')}›  <!<  ((‹∀ 0. α104'›,) -> α298)
+//│ ╙── while constraining:  α254  <!<  ((‹∀ 0. α104'›,) -> α298)
+//│ res: error
 //│    = Node1 { subTree: Node1 { subTree: Leaf { value: [Array] } } }
 
 
@@ -95,9 +125,9 @@ def map f tree = case tree of {
   | Leaf -> Leaf { value = f tree.value }
   | Node -> Node { subTree = map (mapTwo f) tree.subTree }
   }
-//│ 'c -> (forall 'd, 'subTree, 'c, 'e, 'A, 'f, 'g, 'h, 'i, 'j, 'a, 'A0, 'k, 'value, 'l, 'm, 'subTree0, 'value0, 'b. (('g & ((Leaf['a] with {value: 'value0}) & 'k | (Node['a] with {subTree: PerfectTree[('h, 'd,) & 'a] & 'subTree0}) & 'l)) -> ((Leaf['A] with {value: 'value}) | (Node['A0] with {subTree: 'subTree | PerfectTree['b | ('m, 'e,)]}) | 'i | 'f)
+//│ 'c -> (forall 'd, 'e, 'b, 'f, 'c, 'a, 'g, 'h, 'i, 'value, 'j, 'k, 'subTree, 'l, 'A, 'm, 'value0, 'A0, 'subTree0. (('h & ((Leaf['a] with {value: 'value}) & 'l | (Node['a] with {subTree: PerfectTree[('g, 'm,) & 'a] & 'subTree}) & 'i)) -> ((Leaf['A0] with {value: 'value0}) | (Node['A] with {subTree: 'subTree0 | PerfectTree['b | ('j, 'k,)]}) | 'e | 'f)
 //│   where
-//│     'c <: 'value0 -> ('j & 'value & 'A) & 'h -> ('m & 'A0) & 'd -> ('A0 & 'e)))
+//│     'c <: 'value -> ('d & 'value0 & 'A0) & 'g -> ('j & 'A) & 'm -> ('A & 'k)))
 //│   <:  map:
 //│ ('a -> 'b) -> PerfectTree['a] -> PerfectTree['b]
 //│    = <no result>
