@@ -40,7 +40,7 @@ EM_to_DNE: EM -> DNE
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.39: 	EM_to_DNE: EM -> DNE
 //│ ║        	^^^^^^^^^
-//│ ╟── type `‘a_103_108` is not an instance of type `'a_103_109`
+//│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.24: 	type DNE = forall 'a. Not[Not['a]] -> 'a
 //│ ║        	                  ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -53,7 +53,7 @@ EM_to_DNE: EM -> DNE
 // * Proof that EN implies DNE, annotated
 def EM_to_DNE_A0 (em: EM) nna =
   case em of Left -> em.v, Right -> nna em.v
-//│ EM_to_DNE_A0: EM -> (forall 'v, 'b, 'c, 'v0, 'a. (('v0 | Not['a & 'v]) -> 'b & 'c) -> ('v | 'b))
+//│ EM_to_DNE_A0: EM -> (forall 'b, 'v, 'a, 'v0, 'c. (('v | Not['a & 'v0]) -> 'c & 'b) -> ('v0 | 'c))
 //│             = [Function: EM_to_DNE_A0]
 
 EM_to_DNE_A0: EM -> DNE
@@ -66,7 +66,7 @@ EM_to_DNE_A0: EM -> DNE
 def EM_to_DNE_A1 em =
   let poly (nna: Not[Not['A]]) = case em of Left -> em.v, Right -> nna em.v
   in poly
-//│ EM_to_DNE_A1: ('a & ((Left with {v: 'v}) & 'b | Right & {v: Not['A] & 'v0} & 'c)) -> (forall 'v1, 'd, 'A0. Not[Not['A & 'A0]] -> ('v1 | 'v | 'd))
+//│ EM_to_DNE_A1: ('a & ((Left with {v: 'v}) & 'b | Right & {v: Not['A] & 'v0} & 'c)) -> (forall 'A0, 'v1, 'd. Not[Not['A & 'A0]] -> ('v1 | 'v | 'd))
 //│             = [Function: EM_to_DNE_A1]
 
 :e
@@ -74,7 +74,7 @@ EM_to_DNE_A1: EM -> DNE
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.73: 	EM_to_DNE_A1: EM -> DNE
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── type `‘a_204_208` is not an instance of type `'a_204_209`
+//│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.24: 	type DNE = forall 'a. Not[Not['a]] -> 'a
 //│ ║        	                  ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -92,7 +92,7 @@ EM_to_DNE_A1: EM -> DNE
 // *      )
 def DNE_to_EM dne =
   dne (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
-//│ DNE_to_EM: ((forall 'a, 'b, 'c, 'v, 'd, 'v0, 'e. ((Right & {v: forall 'f, 'v1, 'g. ('f & 'v1 & 'v) -> ('g | 'c) | 'v0} | 'e) -> 'a & ((Left with {v: 'v}) | 'b) -> 'c & 'd) -> 'a) -> 'h & 'i) -> 'h
+//│ DNE_to_EM: ((forall 'a, 'v, 'b, 'c, 'd, 'v0, 'e. ((Right & {v: forall 'f, 'v1, 'g. ('f & 'v1 & 'v) -> ('g | 'e) | 'v0} | 'c) -> 'a & ((Left with {v: 'v}) | 'b) -> 'e & 'd) -> 'a) -> 'h & 'i) -> 'h
 //│          = [Function: DNE_to_EM]
 
 // * Requires distributivity because we currently don't generalize function bodies
@@ -101,7 +101,7 @@ DNE_to_EM: DNE -> EM
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.100: 	DNE_to_EM: DNE -> EM
 //│ ║         	^^^^^^^^^
-//│ ╟── type `‘a_287_288` is not an instance of type `'a_292_293`
+//│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.20: 	type EM = forall 'a. Either['a, Not['a]]
 //│ ║        	                 ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -113,11 +113,19 @@ DNE_to_EM: DNE -> EM
 def DNE_to_EM_let dne =
   let poly = dne (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
   in poly
-//│ DNE_to_EM_let: ((forall 'v, 'a, 'b, 'v0, 'c, 'd, 'e. ((Right & {v: forall 'f, 'g, 'v1. ('g & 'v1 & 'v) -> ('f | 'e) | 'v0} | 'b) -> 'a & ((Left with {v: 'v}) | 'd) -> 'e & 'c) -> 'a) -> 'h & 'i) -> (forall 'j. 'j | 'h)
+//│ DNE_to_EM_let: ((forall 'a, 'v, 'b, 'c, 'v0, 'd, 'e. ((Right & {v: forall 'f, 'v1, 'g. ('f & 'v1 & 'v0) -> ('g | 'd) | 'v} | 'b) -> 'c & ((Left with {v: 'v0}) | 'a) -> 'd & 'e) -> 'c) -> 'h & 'i) -> (forall 'j. 'j | 'h)
 //│              = [Function: DNE_to_EM_let]
 
-// * This one works because we used let polymorphism
+// * This one used to work because we used let polymorphism
+// * Stopped working after "sound extrusion", but works with distrib (see below)
+:e
 DNE_to_EM_let: DNE -> EM
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.122: 	DNE_to_EM_let: DNE -> EM
+//│ ║         	^^^^^^^^^^^^^
+//│ ╟── reference of type `anything` does not match type `nothing`
+//│ ║  l.114: 	  let poly = dne (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
+//│ ╙──       	                                                                                ^
 //│ res: DNE -> EM
 //│    = [Function: DNE_to_EM_let]
 
@@ -132,9 +140,9 @@ def DNE_to_EM_A0 (dne: DNE) =
 :e
 DNE_to_EM_A0: DNE -> EM
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.133: 	DNE_to_EM_A0: DNE -> EM
+//│ ║  l.141: 	DNE_to_EM_A0: DNE -> EM
 //│ ║         	^^^^^^^^^^^^
-//│ ╟── type `‘a_454_455` is not an instance of type `'a_459_460`
+//│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.20: 	type EM = forall 'a. Either['a, Not['a]]
 //│ ║        	                 ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -157,16 +165,16 @@ def DNE_to_EM_A1 dne =
 :e
 DNE_to_EM_A1: DNE -> EM
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.158: 	DNE_to_EM_A1: DNE -> EM
+//│ ║  l.166: 	DNE_to_EM_A1: DNE -> EM
 //│ ║         	^^^^^^^^^^^^
-//│ ╟── type `‘a_536_537` is not an instance of type `'a_534_535`
+//│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.20: 	type EM = forall 'a. Either['a, Not['a]]
 //│ ║        	                 ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.20: 	type EM = forall 'a. Either['a, Not['a]]
 //│ ║        	                 ^^
 //│ ╟── from type variable:
-//│ ║  l.153: 	  (dne: Not[Not[EM_of['a]]] -> EM_of['a]) (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
+//│ ║  l.161: 	  (dne: Not[Not[EM_of['a]]] -> EM_of['a]) (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
 //│ ╙──       	                                     ^^
 //│ res: DNE -> EM
 //│    = [Function: DNE_to_EM_A1]
@@ -193,16 +201,16 @@ def DNE_to_EM_A2 (dne: DNE) =
 :e
 DNE_to_EM_A2: DNE -> EM
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.194: 	DNE_to_EM_A2: DNE -> EM
+//│ ║  l.202: 	DNE_to_EM_A2: DNE -> EM
 //│ ║         	^^^^^^^^^^^^
-//│ ╟── type `‘a_626_627` is not an instance of type `'a_624_625`
+//│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.20: 	type EM = forall 'a. Either['a, Not['a]]
 //│ ║        	                 ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.20: 	type EM = forall 'a. Either['a, Not['a]]
 //│ ║        	                 ^^
 //│ ╟── from type variable:
-//│ ║  l.187: 	  dne (fun (not_em: Not[Either['A, Not['A]]]) -> not_em (Right { v = helper not_em }))
+//│ ║  l.195: 	  dne (fun (not_em: Not[Either['A, Not['A]]]) -> not_em (Right { v = helper not_em }))
 //│ ╙──       	                                       ^^
 //│ res: DNE -> EM
 //│    = [Function: DNE_to_EM_A2]
@@ -224,7 +232,7 @@ EM_to_DNE em
 //│ res: (('v | Not['v0]) -> 'a & 'b) -> ('v1 | 'v0 | 'a)
 
 DNE_to_EM dne
-//│ res: (Left with {v: 'v}) | Right & {v: forall 'a, 'v0, 'b. ('v & 'a & 'v0) -> 'b}
+//│ res: (Left with {v: 'v}) | Right & {v: forall 'a, 'b, 'v0. ('v & 'b & 'v0) -> 'a}
 
 
 EM_to_DNE_A0 em
@@ -267,7 +275,9 @@ to_EM = dne (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) 
 
 EM_to_DNE: EM -> DNE
 DNE_to_EM: DNE -> EM
+DNE_to_EM_let: DNE -> EM
 //│ res: EM -> DNE
+//│ res: DNE -> EM
 //│ res: DNE -> EM
 
 EM_to_DNE_A0: EM -> DNE
@@ -302,9 +312,9 @@ DNE_to_EM dne
 :e
 EM_to_DNE: EM -> DNE
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.303: 	EM_to_DNE: EM -> DNE
+//│ ║  l.313: 	EM_to_DNE: EM -> DNE
 //│ ║         	^^^^^^^^^
-//│ ╟── type `‘a_1018_1024` is not an instance of type `'a_1018_1023`
+//│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.24: 	type DNE = forall 'a. Not[Not['a]] -> 'a
 //│ ║        	                  ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -318,9 +328,9 @@ EM_to_DNE: EM -> DNE
 :e
 EM_to_DNE: EM -> DNE
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.319: 	EM_to_DNE: EM -> DNE
+//│ ║  l.329: 	EM_to_DNE: EM -> DNE
 //│ ║         	^^^^^^^^^
-//│ ╟── type `‘a_1035_1041` is not an instance of type `'a_1035_1040`
+//│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.24: 	type DNE = forall 'a. Not[Not['a]] -> 'a
 //│ ║        	                  ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -336,21 +346,55 @@ EM_to_DNE: EM -> DNE
 
 def EM_to_DNE em nna =
   case em of Left -> em.v, Right -> nna em.v
-//│ EM_to_DNE: 'a -> (forall 'b, 'v, 'c, 'd, 'v0, 'a, 'e. (('v -> 'e & 'c) -> ('v0 | 'e)
+//│ EM_to_DNE: 'a -> (forall 'b, 'a, 'v, 'v0, 'c, 'd, 'e. (('v -> 'e & 'd) -> ('v0 | 'e)
 //│   where
-//│     'a <: (Left with {v: 'v0}) & 'b | (Right with {v: 'v}) & 'd))
+//│     'a <: (Left with {v: 'v0}) & 'c | (Right with {v: 'v}) & 'b))
 
+:e // * Still needs distrib! (after "sound extrusion")
 EM_to_DNE: EM -> DNE
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.354: 	EM_to_DNE: EM -> DNE
+//│ ║         	^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.24: 	type DNE = forall 'a. Not[Not['a]] -> 'a
+//│ ║        	                  ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.24: 	type DNE = forall 'a. Not[Not['a]] -> 'a
+//│ ║        	                  ^^
+//│ ╟── from quantified type variable:
+//│ ║  l.20: 	type EM = forall 'a. Either['a, Not['a]]
+//│ ╙──      	                 ^^
 //│ res: EM -> DNE
 
 def DNE_to_EM dne =
   dne (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
-//│ DNE_to_EM: ((forall 'a, 'b, 'c. ((Right & {v: forall 'c, 'd, 'e, 'f, 'v, 'v0. (('v & 'd) -> 'e | 'v0
+//│ DNE_to_EM: ((forall 'a, 'b, 'c. ((Right & {v: forall 'd, 'e, 'v, 'v0, 'c, 'f. (('v & 'e) -> 'f | 'v0
 //│   where
-//│     'c <: ((Left with {v: 'v}) | 'f) -> 'e)} | 'a) -> 'b & 'c) -> 'b) -> 'g & 'h) -> 'g
+//│     'c <: ((Left with {v: 'v}) | 'd) -> 'f)} | 'a) -> 'b & 'c) -> 'b) -> 'g & 'h) -> 'g
 
+:e // * Still needs distrib! (after "sound extrusion")
+DNE_to_EM: DNE -> EM
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.376: 	DNE_to_EM: DNE -> EM
+//│ ║         	^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type EM = forall 'a. Either['a, Not['a]]
+//│ ║        	                 ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type EM = forall 'a. Either['a, Not['a]]
+//│ ║        	                 ^^
+//│ ╟── from reference:
+//│ ║  l.370: 	  dne (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
+//│ ╙──       	                                                                     ^
+//│ res: DNE -> EM
+
+// * They work with distrib:
+:DistributeForalls
 EM_to_DNE: EM -> DNE
+DNE_to_EM: DNE -> EM
 //│ res: EM -> DNE
+//│ res: DNE -> EM
+:DontDistributeForalls
 
 
 

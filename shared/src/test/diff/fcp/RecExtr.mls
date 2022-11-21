@@ -25,7 +25,7 @@ foo_ty = foo
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.21: 	foo_ty = foo
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── type `‘b_71_72` is not an instance of type `'b_71_73`
+//│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.15: 	def foo_ty: 'a -> (forall 'b. 'b -> ('a, 'b,))
 //│ ║        	                          ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -57,7 +57,7 @@ foo2_ty = foo2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.53: 	foo2_ty = foo2
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── type `‘c_163_164` is not an instance of type `'c_163_165`
+//│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.48: 	def foo2_ty: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
 //│ ║        	                                             ^^
 //│ ╟── Note: constraint arises from quantified type variable:

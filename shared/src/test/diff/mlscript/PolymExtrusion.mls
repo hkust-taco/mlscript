@@ -1,4 +1,7 @@
-
+:NoConstrainedTypes
+:DontDistributeForalls
+:NoCycleCheck
+:NoRecursiveTypes
 
 
 
@@ -18,19 +21,19 @@ foo id
 
 // Notice `f` is passed an arg of locally-quantified type 'a, which is extruded to `anything`:
 bar f = foo (fun x -> let tmp = f x in x)
-//│ bar: (‘a_49_51 -> anything) -> int
+//│ bar: (anything -> anything) -> int
 //│    = [Function: bar]
 
 :e
 bar (fun x -> case x of {})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.25: 	bar (fun x -> case x of {})
+//│ ║  l.28: 	bar (fun x -> case x of {})
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_49_51` does not match type `nothing`
-//│ ║  l.5: 	def foo: (forall 'a. 'a -> 'a) -> int
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.8: 	def foo: (forall 'a. 'a -> 'a) -> int
 //│ ║       	                 ^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.25: 	bar (fun x -> case x of {})
+//│ ║  l.28: 	bar (fun x -> case x of {})
 //│ ╙──      	                   ^
 //│ res: error
 //│ Runtime error:
@@ -49,20 +52,20 @@ def foo: (forall 'a. 'a -> 'b) -> 'b
 
 // Notice `id` returns its arg of locally-quantified type 'a, which is extruded to `anything`:
 foo id
-//│ res: ‘a_85_87
+//│ res: anything
 //│    = <no result>
 //│      foo is not implemented
 
 :e
 foo (fun a -> a + 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.57: 	foo (fun a -> a + 1)
+//│ ║  l.60: 	foo (fun a -> a + 1)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_97` is not an instance of type `int`
-//│ ║  l.45: 	def foo: (forall 'a. 'a -> 'b) -> 'b
+//│ ╟── type `‘a_95` is not an instance of type `int`
+//│ ║  l.48: 	def foo: (forall 'a. 'a -> 'b) -> 'b
 //│ ║        	                 ^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.57: 	foo (fun a -> a + 1)
+//│ ║  l.60: 	foo (fun a -> a + 1)
 //│ ╙──      	              ^
 //│ res: error
 //│    = <no result>

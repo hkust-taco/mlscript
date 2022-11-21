@@ -38,7 +38,7 @@ def step arr f = f (stepImpl2 arr)
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.34: 	def step arr f = f (stepImpl2 arr)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘b_153_156` is not an instance of type `'b_153_157`
+//│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.12: 	type ArraysRep = { fold: forall 'b. 'b -> 'b }
 //│ ║        	                                ^^
 //│ ╟── Note: constraint arises from quantified type variable:

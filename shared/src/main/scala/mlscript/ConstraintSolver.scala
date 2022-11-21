@@ -11,9 +11,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   def verboseConstraintProvenanceHints: Bool = verbose
   def defaultStartingFuel: Int = 5000
   var startingFuel: Int = defaultStartingFuel
-  def depthLimit: Int = 300
-  
-  def unifyInsteadOfExtrude: Bool = false
+  def depthLimit: Int = 250
   
   type ExtrCtx = MutMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound
   // type ExtrCtx = Level -> MutMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound
@@ -533,10 +531,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               cache -= lhs -> rhs
               ()
             } else {
-              val rhs2 = {
-                implicit val flexifyRigids: Bool = false
-                extrude(rhs, lhs.level, false, MaxLevel)
-              }
+              val rhs2 = extrude(rhs, lhs.level, false, MaxLevel)
               // println(s"EXTR RHS  $rhs0  ~>  $rhs2  to ${lhs.level}")
               println(s"EXTR RHS  ~>  $rhs2  to ${lhs.level}")
               println(s" where ${rhs2.showBounds}")
@@ -554,10 +549,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               cache -= lhs -> rhs
               ()
             } else {
-              val lhs2 = {
-                implicit val flexifyRigids: Bool = false
-                extrude(lhs, rhs.level, true, MaxLevel)
-              }
+              val lhs2 = extrude(lhs, rhs.level, true, MaxLevel)
               // println(s"EXTR LHS  $lhs0  ~>  $lhs2  to ${rhs.level}")
               println(s"EXTR LHS  ~>  $lhs2  to ${rhs.level}")
               println(s" where ${lhs2.showBounds}")
@@ -956,7 +948,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     * `upperLvl` tracks the lowest such current quantification level. */
   def extrude(ty: SimpleType, lowerLvl: Int, pol: Boolean, upperLvl: Level)
       // (implicit ctx: Ctx, flexifyRigids: Bool, cache: MutMap[PolarVariable, TV] = MutMap.empty, cache2: MutMap[TraitTag, TV] = MutMap.empty): SimpleType =
-      (implicit ctx: Ctx, flexifyRigids: Bool, cache: MutMap[PolarVariable, TV] = MutMap.empty, cache2: MutSortMap[TraitTag, TraitTag] = MutSortMap.empty): SimpleType =
+      (implicit ctx: Ctx, cache: MutMap[PolarVariable, TV] = MutMap.empty, cache2: MutSortMap[TraitTag, TraitTag] = MutSortMap.empty): SimpleType =
         // (trace(s"EXTR[${printPol(S(pol))}] $ty || $lowerLvl .. $upperLvl  ${ty.level} ${ty.level <= lowerLvl}"){
     if (ty.level <= lowerLvl) ty else ty match {
       case t @ TypeBounds(lb, ub) => if (pol) extrude(ub, lowerLvl, true, upperLvl) else extrude(lb, lowerLvl, false, upperLvl)
@@ -1025,48 +1017,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         // println(lowerLvl, upperLvl)
         // if (lowerLvl > upperLvl)
         if (level > lowerLvl) {
-          if (flexifyRigids) { // FIXME should this have a shadow?
-            freshVar(ty.prov, N, S(id.idStr))(lowerLvl + 1)
-          } else {
-            
             // * When a rigid type variable is extruded, we need to widen it to Top or Bot
-            // ExtrType(!pol)(ty.prov/*TODO wrap/explain prov*/)
-            
-            // val c = cache2
-            // {
-            //   val cache2 = ()
-            //   c.getOrElseUpdate(tt,
-            //     )
-            // }
-            
-            cache2.getOrElseUpdate(tt,
-              TraitTag(
-                lowerLvl,
-                // level,
-                Var.apply(freshVar(noProv, N, S(id.idStr+"_"))(0).mkStr)
-              )(tt.prov)
-            )
-            /* 
-            val mk = Var.apply(
-                freshVar(noProv,N,S(id.idStr))(0).toString
-                )
-            val mk2 = TraitTag(level, mk)(tt.prov)
-            println(cache2)
-            // println(cache2.getOrElse(tt, mk2))
-            println(tt===tt,tt.hashCode)
-            // println(cache2.getOrElseUpdate(tt, mk2))
-            // cache2.getOrElseUpdate(tt, mk2)
-            collection.mutable.HashMap.empty
-            if (cache2.contains(tt)) cache2(tt)
-            else {
-              println(tt.hashCode)
-              cache2 += tt -> mk2
-              mk2
-            }
-            */
-            
-            // nope: // ExtrType(pol)(ty.prov/*TODO wrap/explain prov*/)
-          }
+            ExtrType(!pol)(ty.prov/*TODO wrap/explain prov*/)
+            // * Creating a new skolem instead, as was done below, is actually unsound:
+            // cache2.getOrElseUpdate(tt,
+            //   TraitTag(
+            //     lowerLvl,
+            //     Var.apply(freshVar(noProv, N, S(id.idStr+"_"))(0).mkStr)
+            //   )(tt.prov)
+            // )
         } else ty
       case _: ClassTag => ty
       case tr @ TypeRef(d, ts) =>

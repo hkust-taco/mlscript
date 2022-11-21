@@ -204,8 +204,8 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (x x)) (x => f (x x)))
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. {(α243_248' -> α245_247') where: α239 :> (α244_246' -> α245_247')}›  <:  α243_255    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. {(α243_248' -> α245_247') where: α239 :> (α244_246' -> α245_247')}›  <:  α243_248'
+//│ ╟── this constraint:  ‹∀ 0. {(α243_248' -> α245_247') where: α239 <: (α244_246' -> α245_247')}›  <:  α243_255    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. {(α243_248' -> α245_247') where: α239 <: (α244_246' -> α245_247')}›  <:  α243_248'
 //│ res: (nothing -> anything) -> error
 
 // Z combinator:
