@@ -32,19 +32,19 @@ data type Bool2 of True2 & False2
 //│ Desugared: def &: [True2, False2] -> True2 -> False2 -> &[True2, False2]
 //│ AST: Def(false, &, PolyType(List(TypeName(True2), TypeName(False2)),Function(TypeName(True2),Function(TypeName(False2),AppliedType(TypeName(&),List(TypeName(True2), TypeName(False2)))))), true)
 //│ ╔══[ERROR] type identifier not found: True2
-//│ ║  l.26: 	data type Bool2 of True2 & False2
+//│ ║  l.28: 	data type Bool2 of True2 & False2
 //│ ╙──      	                   ^^^^^
 //│ ╔══[ERROR] type identifier not found: False2
-//│ ║  l.26: 	data type Bool2 of True2 & False2
+//│ ║  l.28: 	data type Bool2 of True2 & False2
 //│ ╙──      	                           ^^^^^^
 //│ ╔══[ERROR] Type names must start with a capital letter
-//│ ║  l.26: 	data type Bool2 of True2 & False2
+//│ ║  l.28: 	data type Bool2 of True2 & False2
 //│ ╙──      	                         ^
 //│ ╔══[ERROR] Field identifiers must start with a small letter
-//│ ║  l.26: 	data type Bool2 of True2 & False2
+//│ ║  l.28: 	data type Bool2 of True2 & False2
 //│ ╙──      	                           ^^^^^^
 //│ ╔══[ERROR] Field identifiers must start with a small letter
-//│ ║  l.26: 	data type Bool2 of True2 & False2
+//│ ║  l.28: 	data type Bool2 of True2 & False2
 //│ ╙──      	                   ^^^^^
 //│ Defined type alias Bool2
 //│ Defined class &[+True2, +False2]
@@ -75,7 +75,7 @@ data type Bool4 of
 :e
 Boolean
 //│ ╔══[ERROR] identifier not found: Boolean
-//│ ║  l.73: 	Boolean
+//│ ║  l.76: 	Boolean
 //│ ╙──      	^^^^^^^
 //│ res: error
 
@@ -87,11 +87,11 @@ Tru
 Tru as Boolean
 Tru : Boolean
 //│ ╔══[ERROR] identifier not found: Boolean
-//│ ║  l.84: 	Tru as Boolean
+//│ ║  l.87: 	Tru as Boolean
 //│ ╙──      	       ^^^^^^^
 //│ res: error
 //│ ╔══[ERROR] identifier not found: Boolean
-//│ ║  l.85: 	Tru : Boolean
+//│ ║  l.88: 	Tru : Boolean
 //│ ╙──      	      ^^^^^^^
 //│ res: (Tru: error,)
 
@@ -100,14 +100,14 @@ Tru : Boolean
 :e // Maybe we shouldn't interpret capitalized identifiers as field names...
 Tru : Boolean
 //│ ╔══[ERROR] identifier not found: Boolean
-//│ ║  l.98: 	Tru : Boolean
-//│ ╙──      	      ^^^^^^^
+//│ ║  l.101: 	Tru : Boolean
+//│ ╙──       	      ^^^^^^^
 //│ res: (Tru: error,)
 
 
 :pe
 (Tru) : Boolean
-//│ /!\ Parse error: Expected end-of-input:1:7, found ": Boolean\n" at l.106:7: (Tru) : Boolean
+//│ /!\ Parse error: Expected end-of-input:1:7, found ": Boolean\n" at l.109:7: (Tru) : Boolean
 
 
 // TODO treat the ending curly-blocks as bodies (not params)?
@@ -135,10 +135,10 @@ data type List a of
 //│ Defined class Nil[±a]
 //│ Defined class Cons[+a]
 //│ ╔══[WARNING] Type definition Nil has bivariant type parameters:
-//│ ║  l.121: 	  Nil
+//│ ║  l.124: 	  Nil
 //│ ║         	  ^^^
 //│ ╟── a is irrelevant and may be removed
-//│ ║  l.120: 	data type List a of
+//│ ║  l.123: 	data type List a of
 //│ ╙──       	               ^
 //│ Nil: Nil[?]
 //│ Cons: (head: 'a,) -> (tail: List['a],) -> Cons['a]
@@ -154,7 +154,7 @@ data type Ls of LsA a
 //│ Desugared: def LsA: [a] -> a -> LsA[a]
 //│ AST: Def(false, LsA, PolyType(List(TypeName(a)),Function(TypeName(a),AppliedType(TypeName(LsA),List(TypeName(a))))), true)
 //│ ╔══[ERROR] type identifier not found: a
-//│ ║  l.145: 	data type Ls of LsA a
+//│ ║  l.150: 	data type Ls of LsA a
 //│ ╙──       	                    ^
 //│ Defined type alias Ls
 //│ Defined class LsA[+a]
@@ -193,13 +193,13 @@ not (Cons false Nil).head
 :e
 not (Cons 42 Nil).head
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.187: 	not (Cons 42 Nil).head
+//│ ║  l.194: 	not (Cons 42 Nil).head
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `42` is not an instance of type `bool`
-//│ ║  l.187: 	not (Cons 42 Nil).head
+//│ ║  l.194: 	not (Cons 42 Nil).head
 //│ ║         	          ^^
 //│ ╟── but it flows into field selection with expected type `bool`
-//│ ║  l.187: 	not (Cons 42 Nil).head
+//│ ║  l.194: 	not (Cons 42 Nil).head
 //│ ╙──       	                 ^^^^^
 //│ res: bool | error
 
@@ -209,17 +209,17 @@ not (Cons 42 Nil).head
 :e
 (Cons 4).head
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.203: 	(Cons 4).head
+//│ ║  l.210: 	(Cons 4).head
 //│ ║         	        ^^^^^
 //│ ╟── type `(tail: List[?a],) -> Cons[?a]` does not have field 'head'
-//│ ║  l.120: 	data type List a of
+//│ ║  l.123: 	data type List a of
 //│ ║         	               ^^^^
-//│ ║  l.121: 	  Nil
+//│ ║  l.124: 	  Nil
 //│ ║         	^^^^^
-//│ ║  l.122: 	  Cons (head: a) (tail: List a)
+//│ ║  l.125: 	  Cons (head: a) (tail: List a)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into receiver with expected type `{head: ?head}`
-//│ ║  l.203: 	(Cons 4).head
+//│ ║  l.210: 	(Cons 4).head
 //│ ╙──       	^^^^^^^^
 //│ res: error
 
@@ -231,16 +231,16 @@ not (Cons 42 Nil).head
 :e
 Cons 1 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.225: 	Cons 1 2
+//│ ║  l.232: 	Cons 1 2
 //│ ║         	^^^^^^^^
 //│ ╟── integer literal of type `2` does not match type `Cons[?a] | Nil[?]`
-//│ ║  l.225: 	Cons 1 2
+//│ ║  l.232: 	Cons 1 2
 //│ ║         	       ^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.120: 	data type List a of
+//│ ║  l.123: 	data type List a of
 //│ ║         	               ^
 //│ ╟── from tuple type:
-//│ ║  l.122: 	  Cons (head: a) (tail: List a)
+//│ ║  l.125: 	  Cons (head: a) (tail: List a)
 //│ ╙──       	                        ^^^^^^
 //│ res: Cons[1] | error
 
@@ -252,7 +252,7 @@ Cons 1 2
 :e
 let List.head = () // ...
 //│ ╔══[ERROR] Unsupported pattern shape
-//│ ║  l.246: 	let List.head = () // ...
+//│ ║  l.253: 	let List.head = () // ...
 //│ ╙──       	        ^^^^^
 //│ <error>: ()
 

@@ -62,7 +62,7 @@ let not-tup = (
   2
 )
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.60: 	  1
+//│ ║  l.61: 	  1
 //│ ╙──      	  ^
 //│ not-tup: 2
 
@@ -73,7 +73,7 @@ let tup = (
   2
 )
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.72: 	  2
+//│ ║  l.73: 	  2
 //│ ╙──      	  ^
 //│ tup: 2
 
@@ -84,7 +84,7 @@ let tup =
   2,
   3
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.84: 	  3
+//│ ║  l.85: 	  3
 //│ ╙──      	  ^
 //│ tup: 3
 

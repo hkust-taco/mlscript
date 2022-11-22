@@ -100,14 +100,14 @@ let nested x =
   data Foo a // Note: we get one error for the synthetic class, and one for the synthetic def...
   Foo x
 //│ ╔══[ERROR] Illegal position for this type declaration statement.
-//│ ║  l.98: 	  data Foo a // Note: we get one error for the synthetic class, and one for the synthetic def...
-//│ ╙──      	       ^^^^^
+//│ ║  l.100: 	  data Foo a // Note: we get one error for the synthetic class, and one for the synthetic def...
+//│ ╙──       	       ^^^^^
 //│ ╔══[ERROR] Illegal position for this definition statement.
-//│ ║  l.98: 	  data Foo a // Note: we get one error for the synthetic class, and one for the synthetic def...
-//│ ╙──      	       ^^^^^
+//│ ║  l.100: 	  data Foo a // Note: we get one error for the synthetic class, and one for the synthetic def...
+//│ ╙──       	       ^^^^^
 //│ ╔══[ERROR] identifier not found: Foo
-//│ ║  l.99: 	  Foo x
-//│ ╙──      	  ^^^
+//│ ║  l.101: 	  Foo x
+//│ ╙──       	  ^^^
 //│ nested: error -> error
 
 

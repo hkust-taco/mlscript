@@ -69,13 +69,13 @@ foo
 //│ ╔══[WARNING] Expression in statement position should have type `unit`.
 //│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
 //│ ╟── Type mismatch in application:
-//│ ║  l.66: 	  foo 1
+//│ ║  l.67: 	  foo 1
 //│ ║        	  ^^^^^
 //│ ╟── operator application of type `int` is not an instance of type `unit`
 //│ ║  l.19: 	  u + 1
 //│ ║        	  ^^^^^
 //│ ╟── but it flows into application with expected type `unit`
-//│ ║  l.66: 	  foo 1
+//│ ║  l.67: 	  foo 1
 //│ ╙──      	  ^^^^^
 //│ res: int
 
@@ -166,7 +166,7 @@ succ (
   1
 )
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.160: 	  succ
+//│ ║  l.165: 	  succ
 //│ ╙──       	  ^^^^
 //│ res: int
 
@@ -174,18 +174,18 @@ succ (
 :pe
 succ (succ
 1)
-//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\n1)\n" at l.170:6: succ (succ
+//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\n1)\n" at l.175:6: succ (succ
 
 :pe
 succ (succ
 succ 1)
-//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.175:6: succ (succ
+//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.180:6: succ (succ
 
 :pe
 succ (succ
 succ
   1)
-//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.180:6: succ (succ
+//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.185:6: succ (succ
 
 (let x = 1)
 (let x = 1; x)
@@ -229,7 +229,7 @@ let test =
     bbb
   bbb
 //│ ╔══[ERROR] identifier not found: bbb
-//│ ║  l.225: 	  bbb
+//│ ║  l.230: 	  bbb
 //│ ╙──       	  ^^^
 //│ test: error
 
@@ -244,7 +244,7 @@ let test =
 :e
 aaa
 //│ ╔══[ERROR] identifier not found: aaa
-//│ ║  l.240: 	aaa
+//│ ║  l.245: 	aaa
 //│ ╙──       	^^^
 //│ res: error
 
@@ -256,16 +256,16 @@ succ
     let x = 1
     x
 )
-//│ /!\ Parse error: Expected expression:1:1, found "succ\n  (\n " at l.249:1: succ
+//│ /!\ Parse error: Expected expression:1:1, found "succ\n  (\n " at l.254:1: succ
 
 :pe
 let a =
     succ
   1
   "?"
-//│ /!\ Parse error: Expected end-of-input:3:3, found "1\n  \"?\"\n" at l.259:3:   1
+//│ /!\ Parse error: Expected end-of-input:3:3, found "1\n  \"?\"\n" at l.264:3:   1
 
 :pe
   1
-//│ /!\ Parse error: Expected (data type definition | data definition | let binding | expression):1:1, found "  1\n" at l.264:1:   1
+//│ /!\ Parse error: Expected (data type definition | data definition | let binding | expression):1:1, found "  1\n" at l.269:1:   1
 

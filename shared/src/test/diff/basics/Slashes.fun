@@ -53,7 +53,7 @@ foo / foo / x => succ / succ / x
 :e
 foo / foo
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.53: 	foo / foo
+//│ ║  l.54: 	foo / foo
 //│ ║        	^^^^^^^^^
 //│ ╟── integer literal of type `1` is not a function
 //│ ║  l.7: 	let foo = f => f 1

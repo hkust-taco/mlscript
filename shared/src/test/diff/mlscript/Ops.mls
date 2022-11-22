@@ -40,13 +40,13 @@
 //│ Desugared: || (|> (1,) (2,),) (3,)
 //│ AST: App(App(Var(||), Tup(_: App(App(Var(|>), Tup(_: IntLit(1))), Tup(_: IntLit(2))))), Tup(_: IntLit(3)))
 //│ ╔══[ERROR] identifier not found: |>
-//│ ║  l.35: 	1 |> 2 || 3
+//│ ║  l.38: 	1 |> 2 || 3
 //│ ╙──      	  ^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.35: 	1 |> 2 || 3
+//│ ║  l.38: 	1 |> 2 || 3
 //│ ║        	^^^^^^^^^^^
 //│ ╟── integer literal of type `3` is not an instance of type `bool`
-//│ ║  l.35: 	1 |> 2 || 3
+//│ ║  l.38: 	1 |> 2 || 3
 //│ ╙──      	          ^
 //│ res: bool | error
 //│ Code generation encountered an error:
@@ -68,8 +68,8 @@ true || false && true || false
 
 :pe
 -1
-//│ /!\ Parse error: Expected end-of-input:1:1, found "-1;" at l.65:1: -1
+//│ /!\ Parse error: Expected end-of-input:1:1, found "-1;" at l.70:1: -1
 
 :pe
 - 1
-//│ /!\ Parse error: Expected end-of-input:1:1, found "- 1;" at l.69:1: - 1
+//│ /!\ Parse error: Expected end-of-input:1:1, found "- 1;" at l.74:1: - 1
