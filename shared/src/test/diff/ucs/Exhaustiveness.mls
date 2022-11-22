@@ -11,6 +11,7 @@ class C()
 //│ B: () -> B
 //│ C: () -> C
 
+:e
 fun f(x, y) =
   if
     y is A and
@@ -22,10 +23,10 @@ fun f(x, y) =
       x is
         A then 4
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.22: 	      x is
+//│ ║  l.23: 	      x is
 //│ ║        	      ^^^^
 //│ ╟── The scrutinee at this position misses 2 cases.
-//│ ║  l.22: 	      x is
+//│ ║  l.23: 	      x is
 //│ ║        	      ^
 //│ ╟── [Missing Case 1/2] `B`
 //│ ╙── [Missing Case 2/2] `C`
