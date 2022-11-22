@@ -787,7 +787,8 @@ object DiffTests {
       println(" [git] " + gitStr)
       val prefix = gitStr.take(2)
       val filePath = os.RelPath(gitStr.drop(3))
-      if (prefix =:= "A " || prefix =:= "M ") N else S(filePath) // disregard modified files that are staged
+      if (prefix =:= "A " || prefix =:= "M " || prefix =:= "R " || prefix =:= "D ") N // disregard modified files that are staged
+      else S(filePath)
     }.toSet catch {
       case err: Throwable => System.err.println("/!\\ git command failed with: " + err)
       Set.empty

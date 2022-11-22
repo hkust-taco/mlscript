@@ -162,7 +162,7 @@ class Desugarer extends TypeDefs { self: Typer =>
           case N =>
             throw DesugaringException.Single({
               import Message.MessageContext
-              msg"Cannot find the class `$className` in the context"
+              msg"Cannot find class `$className` in the context"
             }, classNameVar.toLoc)
           case S(td) =>
             if (args.length === td.positionals.length) {

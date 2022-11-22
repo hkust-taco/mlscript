@@ -32,7 +32,7 @@ if x
   is
     A() then "A"
     B() then "B"
-//│ ╔══[ERROR] Cannot find the class `A` in the context
+//│ ╔══[ERROR] Cannot find class `A` in the context
 //│ ║  l.33: 	    A() then "A"
 //│ ╙──      	    ^
 //│ res: error
