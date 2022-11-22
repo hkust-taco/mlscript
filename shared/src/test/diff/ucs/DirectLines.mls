@@ -33,7 +33,6 @@ fun f(x, allowNone) =
 //│ f: (anything, anything,) -> ("bad" | "good" | "okay")
 //│  = [Function: f1]
 
-// FIXME: Improve warning messages.
 :w
 fun f(x, y, z) =
   if
@@ -46,8 +45,12 @@ fun f(x, y, z) =
         _ then "bruh"
       3 then "y = 3"
       _ then "bruh"
-//│ ╔══[WARNING] duplicated else branch
-//│ ╙──
+//│ ╔══[WARNING] Found a duplicated else branch
+//│ ║  l.47: 	      _ then "bruh"
+//│ ║        	             ^^^^^^
+//│ ╟── The first else branch was declared here.
+//│ ║  l.45: 	        _ then "bruh"
+//│ ╙──      	               ^^^^^^
 //│ f: (number, number, number,) -> ("bruh" | "x" | "y = 1" | "y = 3" | "z = 0" | "z = 9")
 //│  = [Function: f2]
 
@@ -60,7 +63,11 @@ fun f(a, b) =
       2 then 2
       _ then 7
     else 3
-//│ ╔══[WARNING] duplicated else branch
-//│ ╙──
+//│ ╔══[WARNING] Found a duplicated else branch
+//│ ║  l.65: 	    else 3
+//│ ║        	         ^
+//│ ╟── The first else branch was declared here.
+//│ ║  l.64: 	      _ then 7
+//│ ╙──      	             ^
 //│ f: (number, number,) -> (0 | 1 | 2 | 7)
 //│  = [Function: f3]

@@ -192,8 +192,12 @@ object MutCaseOf {
     override def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Unit = {
       whenTrue.mergeDefault(bindings, default)
       whenFalse match {
-        case Consequent(_) =>
-          raise(WarningReport(Message.fromStr("duplicated else branch") -> N :: Nil))
+        case Consequent(term) =>
+          import Message.MessageContext
+          raise(WarningReport(
+            msg"Found a duplicated else branch" -> default.toLoc ::
+            (msg"The first else branch was declared here." -> term.toLoc) ::
+              Nil))
         case MissingCase =>
           whenFalse = Consequent(default).withBindings(bindings)
         case _: IfThenElse | _: Match => whenFalse.mergeDefault(bindings, default)
