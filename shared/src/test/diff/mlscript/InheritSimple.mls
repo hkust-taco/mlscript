@@ -43,14 +43,14 @@ c: Parent
 //│    = Child {}
 
 c: Parent & Child
-//│ res: Child
+//│ res: Child & Parent
 //│    = Child {}
 
 c: Parent & Child & {}
-//│ res: Child
+//│ res: Child & Parent
 //│    = Child {}
 
 c: Parent & anything & Child & {}
-//│ res: Child
+//│ res: Child & Parent
 //│    = Child {}
 

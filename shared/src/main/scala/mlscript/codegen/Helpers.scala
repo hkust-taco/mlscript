@@ -7,7 +7,7 @@ object Helpers {
   /**
     * Show how a term is actually structured.
     */
-  def inspect(t: Term): Str = t match {
+  def inspect(t: Terms): Str = t match {
     case Var(name)     => s"Var($name)"
     case Lam(lhs, rhs) => s"Lam(${inspect(lhs)}, ${inspect(rhs)})"
     case App(lhs, rhs) => s"App(${inspect(lhs)}, ${inspect(rhs)})"
@@ -21,7 +21,7 @@ object Helpers {
       val entries = fields.iterator
         .map { case k -> Fld(_, _, v) => s"${inspect(k)} = ${inspect(v)}" }
         .mkString(", ")
-      s"Rcd($entries})"
+      s"Rcd($entries)"
     case Sel(receiver, fieldName)    => s"Sel(${inspect(receiver)}, $fieldName)"
     case Let(isRec, name, rhs, body) => s"Let($isRec, $name, ${inspect(rhs)}, ${inspect(body)})"
     case Blk(stmts)                  => s"Blk(...)"
@@ -34,7 +34,7 @@ object Helpers {
     case CaseOf(trm, cases) =>
       def inspectCaseBranches(br: CaseBranches): Str = br match {
         case Case(clsNme, body, rest) =>
-          s"Case($clsNme, ${inspect(t)}, ${inspectCaseBranches(rest)})"
+          s"Case($clsNme, ${inspect(body)}, ${inspectCaseBranches(rest)})"
         case Wildcard(body) => s"Wildcard(${inspect(body)})"
         case NoCases        => "NoCases"
       }
@@ -51,6 +51,8 @@ object Helpers {
     case If(bod, els) => s"If(${inspect(bod)}, ${els.map(inspect)})"
     case New(base, body) => s"New(${base}, ${body})"
     case TyApp(base, targs) => s"TyApp(${inspect(base)}, ${targs})"
+    case Def(rec, nme, rhs, isByname) =>
+      s"Def($rec, $nme, ${rhs.fold(inspect, "" + _)}, $isByname)"
   }
 
   def inspect(body: IfBody): Str = body match {
@@ -73,4 +75,17 @@ object Helpers {
     case IfOpApp(lhs, op, rhs) =>
       s"IfOpApp(${inspect(lhs)}, ${inspect(op)}, ${inspect(rhs)}"
   }
+  def inspect(t: TypingUnit): Str = t.entities.iterator
+    .map {
+      case term: Term => inspect(term)
+      case NuFunDef(lt, nme, targs, L(term)) =>
+        s"NuFunDef(${lt}, ${nme.name}, ${targs.mkString("[", ", ", "]")}, ${inspect(term)})"
+      case NuFunDef(lt, nme, targs, R(ty)) =>
+        s"NuFunDef(${lt}, ${nme.name}, ${targs.mkString("[", ", ", "]")}, $ty)"
+      case NuTypeDef(kind, nme, tparams, params, parents, body) =>
+        s"NuTypeDef(${kind.str}, ${nme.name}, ${tparams.mkString("(", ", ", ")")}, ${
+          inspect(params)}, ${parents.map(inspect).mkString("(", ", ", ")")}, ${inspect(body)})"
+      case others => others.toString()
+    }
+    .mkString("TypingUnit(", ", ", ")")
 }

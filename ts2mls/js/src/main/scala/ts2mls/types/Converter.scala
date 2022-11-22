@@ -50,6 +50,10 @@ object Converter {
     case TSSubstitutionType(base, applied) => s"${base}<${applied.map((app) => convert(app)).reduceLeft((res, s) => s"$res, $s")}>"
     case overload @ TSIgnoredOverload(base, _) => s"${convert(base)} ${overload.warning}"
     case TSParameterType(name, tp) => s"${name}: ${convert(tp)}"
+    case TSTypeAlias(name, ori, tp) =>
+      if (tp.isEmpty) s"${indent}type $name = ${convert(ori)}"
+      else s"${indent}type $name<${tp.map(t => convert(t)).reduceLeft((s, t) => s"$s, $t")}> = ${convert(ori)}"
+    case TSLiteralType(value, isString) => if (isString) s"\"$value\"" else value
   }
 
   private def convertRecord(typeName: String, members: Map[String, TSMemberType], typeVars: List[TSTypeParameter],
@@ -75,7 +79,7 @@ object Converter {
     val body = { // members without independent type parameters, translate them directly
       val lst = allRecs.filter((s) => !s.isEmpty())
       if (lst.isEmpty) "{}"
-      else if (typeName === "trait ") s"(${lst.reduceLeft((bd, m) => s"$bd$m")})"
+      else if (typeName === "trait ") s"{${lst.reduceLeft((bd, m) => s"$bd$m")}}"
       else s"{\n${lst.reduceLeft((bd, m) => s"$bd$m")}$indent}"
     }
     

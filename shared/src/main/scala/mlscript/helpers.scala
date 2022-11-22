@@ -302,17 +302,18 @@ trait NuDeclImpl extends Located { self: NuDecl =>
     case _: NuTypeDef => "type declaration"
   }
   def show: Str = showHead + (this match {
-    case NuTypeDef(Als, _, _, _, _, _) | NuFunDef(_, _, _, L(_)) => " = "
-    case NuTypeDef(Cls, _, _, _, _, _) => " "
-    case _ => ": " }) + showBody
+    case NuFunDef(_, _, _, L(_)) => " = "
+    case NuFunDef(_, _, _, R(_)) => ": "
+    case NuTypeDef(_, _, _, _, _, _) => " "
+  }) + showBody
   def showHead: Str = this match {
     case NuFunDef(N, n, _, b) => s"fun $n"
     case NuFunDef(S(false), n, _, b) => s"let $n"
     case NuFunDef(S(true), n, _, b) => s"let rec $n"
     case NuTypeDef(k, n, tps, sps, parents, bod) =>
-      s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_.name).mkString("[", ", ", "]")}(${
+      s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_.name).mkString("‹", ", ", "›")}(${
         // sps.mkString("(",",",")")
-        sps})${if (parents.isEmpty) "" else ": "}${parents.mkString(", ")}"
+        sps})${if (parents.isEmpty) "" else if (k === Als) " = " else ": "}${parents.mkString(", ")}"
   }
 }
 trait TypingUnitImpl extends Located { self: TypingUnit =>
@@ -441,17 +442,24 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Tup(fields) => Tuple(fields.map(fld => (fld._1, fld._2 match {
       case Fld(m, s, v) => val ty = v.toType_!; Field(Option.when(m)(ty), ty)
     })))
-    case Bra(rcd, trm) if (!rcd) => trm.toType_!
+    case Bra(rcd, trm) => trm match {
+      case _: Rcd => if (rcd) trm.toType_! else throw new NotAType(this)
+      case _ => if (!rcd) trm.toType_! else throw new NotAType(this)
+    }
     case TyApp(lhs, targs) => lhs.toType_! match {
       case p: TypeName => AppliedType(p, targs)
       case _ => throw new NotAType(this)
     }
+    case Rcd(fields) => Record(fields.map(fld => (fld._1, fld._2 match {
+      case Fld(m, s, v) => val ty = v.toType_!; Field(Option.when(m)(ty), ty)
+    })))
+    case Sel(receiver, fieldName) => receiver match {
+      case Var(name) if !name.startsWith("`") => TypeName(s"$name.$fieldName")
+      case _ => throw new NotAType(this)
+    }
     // TODO:
-    // case Rcd(fields) => ???
-    // case Sel(receiver, fieldName) => ???
     // case Let(isRec, name, rhs, body) => ???
     // case Blk(stmts) => ???
-    // case Bra(rcd, trm) => ???
     // case Asc(trm, ty) => ???
     // case Bind(lhs, rhs) => ???
     // case Test(trm, ty) => ???
@@ -573,7 +581,19 @@ trait StatementImpl extends Located { self: Statement =>
       (diags ::: diags2 ::: diags3) -> (TypeDef(Als, TypeName(v.name).withLocOf(v), targs,
           dataDefs.map(td => AppliedType(td.nme, td.tparams)).reduceOption(Union).getOrElse(Bot), Nil, Nil, Nil
         ).withLocOf(hd) :: cs)
-      case NuTypeDef(k, nme, tps, tup @ Tup(fs), pars, unit) =>
+      case NuTypeDef(Nms, nme, tps, tup @ Tup(fs), pars, unit) =>
+        ??? // TODO
+      case NuTypeDef(k @ Als, nme, tps, tup @ Tup(fs), pars, unit) =>
+        // TODO properly check:
+        require(fs.isEmpty, fs)
+        require(pars.size === 1, pars)
+        require(unit.entities.isEmpty, unit)
+        val (diags, rhs) = pars.head.toType match {
+          case L(ds) => (ds :: Nil) -> Top
+          case R(ty) => Nil -> ty
+        }
+        diags -> (TypeDef(k, nme, tps, rhs, Nil, Nil, Nil) :: Nil)
+      case NuTypeDef(k @ (Cls | Trt), nme, tps, tup @ Tup(fs), pars, unit) =>
         val diags = Buffer.empty[Diagnostic]
         def tt(trm: Term): Type = trm.toType match {
           case L(ds) => diags += ds; Top
@@ -727,7 +747,7 @@ trait BlkImpl { self: Blk =>
 }
 
 trait CaseBranchesImpl extends Located { self: CaseBranches =>
-  
+
   def children: List[Located] = this match {
     case Case(pat, body, rest) => pat :: body :: rest :: Nil
     case Wildcard(body) => body :: Nil
@@ -759,7 +779,7 @@ object MatchCase {
 }
 
 trait IfBodyImpl extends Located { self: IfBody =>
-  
+
   def children: List[Located] = this match {
     // case Case(pat, body, rest) => pat :: body :: rest :: Nil
     // case Wildcard(body) => body :: Nil

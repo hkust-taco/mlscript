@@ -41,6 +41,7 @@ let t = x: 1, y: 2, z: 3
 (1, true, "hey").2
 //│ Parsed: '(' {1, true, "hey",} ')' 0.2;
 //│ Desugared: '(' {1, true, "hey",} ')' 0.2
+//│ AST: App(Bra(rcd = false, Blk(...)), DecLit(0.2))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.41: 	(1, true, "hey").2
 //│ ║        	^^^^^^^^^^^^^^^^^^

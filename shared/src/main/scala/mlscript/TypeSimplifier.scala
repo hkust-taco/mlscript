@@ -210,8 +210,12 @@ trait TypeSimplifier { self: Typer =>
                 val withType = if (needsWith) if (cleanedRcd.fields.isEmpty) withoutType
                   else WithType(withoutType, cleanedRcd.sorted)(noProv) else typeRef & cleanedRcd.sorted
                 
-                tts.toArray.sorted // TODO also filter out tts that are inherited by the class
+                val withTraits = tts.toArray.sorted // TODO also filter out tts that are inherited by the class
                   .foldLeft(withType: ST)(_ & _)
+                
+                val trs3 = trs2 - td.nme // TODO also filter out class refs that are inherited by the class
+                
+                trs3.valuesIterator.foldLeft(withTraits)(_ & _)
                 
               case _ =>
                 lazy val nFields = rcd.fields

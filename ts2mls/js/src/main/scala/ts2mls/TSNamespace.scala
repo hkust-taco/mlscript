@@ -54,7 +54,8 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
           case _: TSClassType => writer.writeln(Converter.convert(mem)(indent))
           case TSInterfaceType(name, _, _, _) if (name =/= "") =>
             writer.writeln(Converter.convert(mem)(indent))
-          case _ => writer.writeln(Converter.convert(mem))
+          case _: TSTypeAlias => writer.writeln(Converter.convert(mem)(indent))
+          case _ => writer.writeln(s"${indent}let $name: ${Converter.convert(mem)("")}")
         }
       }
     })

@@ -44,17 +44,18 @@ discard / foo
     1
 //│ Parsed: discard (foo {1});
 //│ Desugared: discard (foo {1})
+//│ AST: App(Var(discard), App(Var(foo), Blk(...)))
 
 :e
 discard foo
   1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.49: 	discard foo
+//│ ║  l.50: 	discard foo
 //│ ║        	^^^^^^^^^^^
-//│ ║  l.50: 	  1
+//│ ║  l.51: 	  1
 //│ ║        	^^^
 //│ ╟── application of type `unit` is not a function
-//│ ║  l.49: 	discard foo
+//│ ║  l.50: 	discard foo
 //│ ╙──      	^^^^^^^^^^^
 //│ res: error
 
@@ -86,6 +87,7 @@ id id
   id
 //│ Parsed: id id {id};
 //│ Desugared: id id {id}
+//│ AST: App(App(Var(id), Var(id)), Blk(...))
 //│ res: 'a -> 'a
 
 :p
@@ -95,6 +97,7 @@ id id id
       id id id
 //│ Parsed: id id id {id id id {id id id {id id id}}};
 //│ Desugared: id id id {id id id {id id id {id id id}}}
+//│ AST: App(App(App(Var(id), Var(id)), Var(id)), Blk(...))
 //│ res: 'a -> 'a
 
 :p
@@ -103,6 +106,7 @@ id id /
     id id
 //│ Parsed: id id {id id {id id}};
 //│ Desugared: id id {id id {id id}}
+//│ AST: App(App(Var(id), Var(id)), Blk(...))
 //│ res: 'a -> 'a
 
 :p
@@ -111,6 +115,7 @@ id id
   id id
 //│ Parsed: id id {id id} {id id};
 //│ Desugared: id id {id id} {id id}
+//│ AST: App(App(App(Var(id), Var(id)), Blk(...)), Blk(...))
 //│ res: 'a -> 'a
 
 let foo =

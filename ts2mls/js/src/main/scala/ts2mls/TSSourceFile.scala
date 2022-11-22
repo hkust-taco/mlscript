@@ -9,8 +9,14 @@ object TSSourceFile {
   def apply(sf: js.Dynamic, global: TSNamespace)(implicit checker: TSTypeChecker) =
     TypeScript.forEachChild(sf, (node: js.Dynamic) => {
       val nodeObject = TSNodeObject(node)
-      if (!nodeObject.isToken && !nodeObject.symbol.isUndefined)
-        addNodeIntoNamespace(nodeObject, nodeObject.symbol.escapedName)(global)
+      if (!nodeObject.isToken) {
+        if (!nodeObject.symbol.isUndefined) // for functions/classes/interfaces
+          addNodeIntoNamespace(nodeObject, nodeObject.symbol.escapedName)(global)
+        else if (!nodeObject.declarationList.isUndefined) { // for variables
+          val decNode = nodeObject.declarationList.declaration
+          addNodeIntoNamespace(decNode, decNode.symbol.escapedName)(global)
+        }
+      }
     })
 
   private def getSubstitutionArguments[T <: TSAny](args: TSArray[T]): List[TSType] =
@@ -33,16 +39,34 @@ object TSSourceFile {
     else if (obj.isTypeParameter) TSTypeParameter(obj.symbol.escapedName)
     else TSPrimitiveType(obj.intrinsicName)
 
-  // get the type of a member in classes/named interfaces/anonymous interfaces
+  // the function `getMemberType` can't process function/tuple type alias correctly
+  private def getTypeAlias(tn: TSNodeObject): TSType =
+    if (tn.isFunctionLike) getFunctionType(tn)
+    else if (tn.isTupleTypeNode) TSTupleType(getTupleElements(tn.typeNode.typeArguments))
+    else getObjectType(tn.typeNode)
+
+  // parse string/numeric literal types. we need to add quotes if it is a string literal
+  private def getLiteralType(tp: TSNodeObject) =
+    TSLiteralType(tp.literal.text, tp.literal.isStringLiteral)
+
+  // parse object literal types
+  private def getObjectLiteralMembers(props: TSNodeArray) =
+    props.foldLeft(Map[String, TSMemberType]())((mp, p) => {
+      mp ++ Map(p.name.escapedText -> TSMemberType(TSLiteralType(p.initToken.text, p.initToken.isStringLiteral)))
+    })
+
+  // get the type of variables in classes/named interfaces/anonymous interfaces
   private def getMemberType(node: TSNodeObject): TSType = {
     val res: TSType =
       if (node.isFunctionLike) getFunctionType(node)
+      else if (node.`type`.isUndefined) getObjectType(node.typeAtLocation)
+      else if (node.`type`.isLiteralTypeNode) getLiteralType(node.`type`)
       else getObjectType(node.`type`.typeNode)
     if (node.symbol.isOptionalMember) TSUnionType(res, TSPrimitiveType("undefined"))
     else res
   }
 
-  private def getTypeParametes(node: TSNodeObject): List[TSTypeParameter] =
+  private def getTypeParameters(node: TSNodeObject): List[TSTypeParameter] =
     node.typeParameters.foldLeft(List[TSTypeParameter]())((lst, tp) =>
       if (tp.constraint.isUndefined) lst :+ TSTypeParameter(tp.symbol.escapedName, None)
       else lst :+ TSTypeParameter(tp.symbol.escapedName, Some(getObjectType(tp.constraint.typeNode)))
@@ -57,7 +81,7 @@ object TSSourceFile {
         lst :+ TSParameterType(p.symbol.escapedName, TSUnionType(getObjectType(p.symbolType), TSPrimitiveType("undefined")))
       else lst :+ TSParameterType(p.symbol.escapedName, getObjectType(p.symbolType)))
     )
-    TSFunctionType(pList, getObjectType(node.returnType), getTypeParametes(node))
+    TSFunctionType(pList, getObjectType(node.returnType), getTypeParameters(node))
   }
 
   private def getStructuralType(types: TSTypeArray, isUnion: Boolean): TSType =
@@ -130,8 +154,8 @@ object TSSourceFile {
   private def parseMembers(name: String, node: TSNodeObject, isClass: Boolean): TSType =
     if (isClass)
       TSClassType(name, getClassMembersType(node.members, false), getClassMembersType(node.members, true),
-        getTypeParametes(node), getHeritageList(node), getConstructorList(node.members))
-    else TSInterfaceType(name, getInterfacePropertiesType(node.members), getTypeParametes(node), getHeritageList(node))
+        getTypeParameters(node), getHeritageList(node), getConstructorList(node.members))
+    else TSInterfaceType(name, getInterfacePropertiesType(node.members), getTypeParameters(node), getHeritageList(node))
 
   private def parseNamespaceLocals(map: TSSymbolMap)(implicit ns: TSNamespace) =
     map.foreach((sym) => {
@@ -176,6 +200,12 @@ object TSSourceFile {
       ns.put(name, parseMembers(name, node, true))
     else if (node.isInterfaceDeclaration)
       ns.put(name, parseMembers(name, node, false))
+    else if (node.isTypeAliasDeclaration)
+      ns.put(name, TSTypeAlias(name, getTypeAlias(node.`type`), getTypeParameters(node)))
+    else if (node.isObjectLiteral)
+      ns.put(name, TSInterfaceType("", getObjectLiteralMembers(node.initializer.properties), List(), List()))
+    else if (node.isVariableDeclaration)
+      ns.put(name, getMemberType(node))
     else if (node.isNamespace)
       parseNamespace(node)
 

@@ -43,3 +43,6 @@ case class TSIntersectionType(lhs: TSType, rhs: TSType) extends TSStructuralType
 case class TSIgnoredOverload(base: TSFunctionType, name: String) extends TSType {
   val warning = s"/* warning: the overload of function $name is not supported yet. */"
 }
+
+case class TSTypeAlias(name: String, original: TSType, tp: List[TSType]) extends TSType
+case class TSLiteralType(value: String, isString: Boolean) extends TSType
