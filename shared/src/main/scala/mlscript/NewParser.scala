@@ -434,7 +434,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         consume 
         val body = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.expr(0))
         R(Quoted(body).withLoc(S(loc)))
-      case (br @ BRACKETS(bk @ (Round | Square | Curly | Unquote), toks), loc) :: _ =>
+      case (br @ BRACKETS(Unquote, toks), loc) :: _ =>
+        consume 
+        val body = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.expr(0))
+        exprCont(body.withLoc(S(loc)), prec, allowNewlines = false)
+        // R(Quoted(body).withLoc(S(loc)))      
+      case (br @ BRACKETS(bk @ (Round | Square | Curly), toks), loc) :: _ =>
         consume
         val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) // TODO
         val bra = if (bk === Curly) Bra(true, Rcd(res.map {

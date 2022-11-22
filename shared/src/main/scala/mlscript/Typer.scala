@@ -729,6 +729,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case Quoted(body) =>
         val body_type = typeTerm(body)
         TypeRef(TypeName("Code"), body_type :: Nil)(noProv)
+      // case Unquoted(body) =>
+      //   val body_type = typeTerm(body)
+      //   TypeRef(TypeName("$"), body_type :: Nil)(noProv)
     }
   }(r => s"$lvl. : ${r}")
   

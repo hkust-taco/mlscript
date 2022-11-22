@@ -33,7 +33,7 @@ code"foo(123) + 1"
 code"10 + ${qq_int}"
 //│ ╔══[ERROR] identifier not found: qq_int
 //│ ║  l.33: 	code"10 + ${qq_int}"
-//│ ╙──      	            ^^^^^^
+//│ ╙──      	          ^^^^^^^^^
 //│ res: code & {Code#T <: int}
 //│ Code generation crashed:
 //│   scala.MatchError: Quoted' + (10,) (qq_int,) ' (of class mlscript.Quoted)
@@ -43,25 +43,25 @@ code"10 + ${qq_int}"
 //│    = 'x'
 
 // The inner code should have type Code<int, "x" | "y">
-code"x => y => 10 + ${   code"x + y"   }"
+code"x => y => 15 + ${   code"x + y"   }"
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.46: 	code"x => y => 10 + ${   code"x + y"   }"
-//│ ║        	               ^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.50: 	code"x => y => 15 + ${   code"x + y"   }"
+//│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `code & {Code#T <: ?a}` is not an instance of type `int`
 //│ res: code & {Code#T <: int -> int -> (error | int)}
 //│ Code generation crashed:
-//│   scala.MatchError: Quoted' x, => y, => + (10,) (Quoted' + (x,) (y,) ',) ' (of class mlscript.Quoted)
+//│   scala.MatchError: Quoted' x, => y, => + (15,) (Quoted' + (x,) (y,) ',) ' (of class mlscript.Quoted)
 
 // FIXME
 qq_int : Code<int>
 //│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.56: 	qq_int : Code<int>
+//│ ║  l.60: 	qq_int : Code<int>
 //│ ╙──      	       ^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.56: 	qq_int : Code<int>
+//│ ║  l.60: 	qq_int : Code<int>
 //│ ╙──      	^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] identifier not found: qq_int
-//│ ║  l.56: 	qq_int : Code<int>
+//│ ║  l.60: 	qq_int : Code<int>
 //│ ╙──      	^^^^^^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
