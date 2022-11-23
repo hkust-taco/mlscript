@@ -38,7 +38,7 @@ object Clause {
 
   final case class BooleanTest(test: Term)(override val locations: Ls[Loc]) extends Clause
 
-  def print(println: (=> Any) => Unit, cnf: Ls[Conjunction -> Term]): Unit = {
+  def print(println: (=> Any) => Unit, conjunctions: Iterable[Conjunction -> Term]): Unit = {
     def showBindings(bindings: Ls[(Bool, Var, Term)]): Str =
       bindings match {
         case Nil => ""
@@ -48,7 +48,7 @@ object Clause {
       }
 
     println("Flattened conjunctions")
-    cnf.foreach { case Conjunction(clauses, trailingBindings) -> term =>
+    conjunctions.foreach { case Conjunction(clauses, trailingBindings) -> term =>
       println("+ " + clauses.iterator.map { condition =>
         (condition match {
           case Clause.BooleanTest(test) => s"«$test»"

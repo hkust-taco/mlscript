@@ -260,10 +260,6 @@ object MutCaseOf {
             // No such pattern. We should create a new one.
             case N =>
               val newBranch = buildFirst(remainingConditions, branch._2)
-              // println(s"The original CNF is $branch")
-              // println(s"It has bindings: ${head.bindings}")
-              // println(s"Just build branch: $newBranch")
-              // println(s"It has bindings: ${newBranch.getBindings}")
               newBranch.addBindings(head.bindings)
               branches += MutCase(className -> Buffer.from(fields), newBranch)
                 .withLocations(head.locations)

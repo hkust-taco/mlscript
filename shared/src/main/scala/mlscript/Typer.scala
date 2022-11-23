@@ -724,22 +724,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case iff @ If(body, fallback) =>
         import mlscript.ucs._
         try {
-          println(mlscript.codegen.Helpers.inspect(iff))
-          val cnf = desugarIf(body, fallback)
-          Clause.print(println, cnf)
-          val caseTree = MutCaseOf.build(cnf)
+          val caseTree = MutCaseOf.build(desugarIf(body, fallback))
           println("The mutable CaseOf tree")
           MutCaseOf.show(caseTree).foreach(println(_))
-          val scrutineePatternMap = summarizePatterns(caseTree)
-          println("Exhaustiveness map")
-          scrutineePatternMap.foreach { case (scrutinee, patterns) =>
-            println(s"- $scrutinee => " + patterns.keys.mkString(", "))
-          }
-          checkExhaustive(caseTree, N)(scrutineePatternMap, ctx, raise)
-          val trm = MutCaseOf.toTerm(caseTree)
-          println(s"Desugared term: ${trm.print(false)}")
-          iff.desugaredIf = S(trm)
-          typeTerm(trm)
+          checkExhaustive(caseTree, N)(summarizePatterns(caseTree), ctx, raise)
+          val desugared = MutCaseOf.toTerm(caseTree)
+          println(s"Desugared term: ${desugared.print(false)}")
+          iff.desugaredIf = S(desugared)
+          typeTerm(desugared)
         } catch {
           case e: DesugaringException => e.report(this)
         }

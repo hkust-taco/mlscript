@@ -30,6 +30,7 @@ abstract class ModeType {
   def dbg: Bool
   def dbgParsing: Bool
   def dbgSimplif: Bool
+  def dbgUCS: Bool
   def fullExceptionStack: Bool
   def stats: Bool
   def stdout: Bool
@@ -141,6 +142,7 @@ class DiffTests
       dbg: Bool = false,
       dbgParsing: Bool = false,
       dbgSimplif: Bool = false,
+      dbgUCS: Bool = false,
       fullExceptionStack: Bool = false,
       stats: Bool = false,
       stdout: Bool = false,
@@ -184,6 +186,7 @@ class DiffTests
           case "d" => mode.copy(dbg = true)
           case "dp" => mode.copy(dbgParsing = true)
           case "ds" => mode.copy(dbgSimplif = true)
+          case "ducs" => mode.copy(dbgUCS = true)
           case "s" => mode.copy(fullExceptionStack = true)
           case "v" | "verbose" => mode.copy(verbose = true)
           case "ex" | "explain" => mode.copy(expectTypeErrors = true, explainErrors = true)
@@ -393,6 +396,7 @@ class DiffTests
             // if (mode.isDebugging) typer.resetState()
             if (mode.stats) typer.resetStats()
             typer.dbg = mode.dbg
+            typer.dbgUCS = mode.dbgUCS
             // typer.recordProvenances = !noProvs
             typer.recordProvenances = !noProvs && !mode.dbg && !mode.dbgSimplif || mode.explainErrors
             typer.verbose = mode.verbose
