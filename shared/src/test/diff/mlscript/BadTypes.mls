@@ -216,6 +216,10 @@ type SigR[a] = a
 type ExSigR = SigR[int]
 //│ Defined type alias ExSigR
 
+1: ExSigR
+//│ res: ExSigR
+//│    = 1
+
 :e
 type SigR[a, b] = a
 //│ ╔══[ERROR] Type 'SigR' is already defined.
@@ -232,4 +236,21 @@ type ExSigR3 = SigR[int, string]
 //│ ╙──      	               ^^^^^^^^^^^^^^^^^
 //│ Defined type alias ExSigR3
 
+type ExSigR4 = SigR['a]
+//│ Defined type alias ExSigR4
+
+:e
+1: ExSigR4
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.+1: 	1: ExSigR4
+//│ ║        	^
+//│ ╟── integer literal of type `1` is not an instance of type `'a_67`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.239: 	type ExSigR4 = SigR['a]
+//│ ║         	                    ^^
+//│ ╟── from type reference:
+//│ ║  l.+1: 	1: ExSigR4
+//│ ╙──      	   ^^^^^^^
+//│ res: ExSigR4
+//│    = 1
 
