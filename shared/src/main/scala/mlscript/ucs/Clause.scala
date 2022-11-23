@@ -75,10 +75,8 @@ object Clause {
     * @param interleavedLets the interleaved let buffer
     * @return idential to `conditions`
     */
-  def withBindings
-    (conditions: Conjunction)
-    (implicit interleavedLets: Buffer[(Bool, Var, Term)])
-  : Conjunction = {
+  def withBindings(conditions: Conjunction)(implicit interleavedLets: Buffer[(Bool, Var, Term)])
+        : Conjunction = {
     conditions._1 match {
       case Nil => (Nil, interleavedLets.toList ::: conditions._2)
       case head :: _ =>
