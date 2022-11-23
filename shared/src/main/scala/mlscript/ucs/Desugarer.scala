@@ -375,7 +375,8 @@ class Desugarer extends TypeDefs { self: Typer =>
         case L(IfBlock(lines)) =>
           lines.foreach { desugarMatchBranch(scrutinee, _, partialPattern, collectedConditions) }
         // This case is rare. Let's put it aside.
-        case L(IfLet(_, _, _, _)) => ???
+        case L(IfLet(_, _, _, _)) =>
+          lastWords("please add this rare case to test files")
         // This case handles interleaved lets.
         case R(NuFunDef(S(isRec), nameVar, _, L(term))) =>
           interleavedLets += ((isRec, nameVar, term))
@@ -424,7 +425,8 @@ class Desugarer extends TypeDefs { self: Typer =>
         case IfOpApp(lhs, op, body) =>
           desugarIfBody(body, expr.addTermOp(lhs, op), acc)
         // This case is rare. Let's put it aside.
-        case IfLet(isRec, name, rhs, body) => ???
+        case IfLet(isRec, name, rhs, body) =>
+          lastWords("please add this rare case to test files")
         // In this case, the accumulated partial term is discarded.
         // We create a branch directly from accumulated conditions.
         case IfElse(term) => branches += (acc.withBindings -> term)
@@ -477,8 +479,8 @@ class Desugarer extends TypeDefs { self: Typer =>
     * Check the exhaustiveness of the given `MutCaseOf`.
     *
     * @param t the mutable `CaseOf` of 
-    * @param parentOpt
-    * @param scrutineePatternMap
+    * @param parentOpt the parent `MutCaseOf`
+    * @param scrutineePatternMap the exhaustiveness map
     */
   def checkExhaustive
     (t: MutCaseOf, parentOpt: Opt[MutCaseOf])
@@ -495,10 +497,11 @@ class Desugarer extends TypeDefs { self: Typer =>
             if (whenFalse === t) {
               throw DesugaringException.Single(msg"Missing the otherwise case of test ${test.toString}", test.toLoc)
             } else {
-              ???
+              lastWords("`MissingCase` are not supposed to be the true branch of `IfThenElse`")
             }
-          case S(Match(_, _, _)) => ???
-          case S(Consequent(_)) | S(MissingCase) | N => die
+          case S(Match(_, _, _)) =>
+            lastWords("`MissingCase` are not supposed to be a case of `Match`")
+          case S(Consequent(_)) | S(MissingCase) | N => die // unreachable
         }
       case IfThenElse(condition, whenTrue, whenFalse) =>
         checkExhaustive(whenTrue, S(t))

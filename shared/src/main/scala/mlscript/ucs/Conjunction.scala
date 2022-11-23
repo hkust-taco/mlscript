@@ -29,6 +29,12 @@ final case class Conjunction(clauses: Ls[Clause], trailingBindings: Ls[(Bool, Va
     }
   }
 
+  /**
+    * This is a shorthand if you only have clauses.
+    *
+    * @param suffix the list of clauses to append to this conjunction
+    * @return a new conjunction with clauses from `this` and `suffix`
+    */
   def +(suffix: Ls[Clause]): Conjunction = {
     suffix match {
       case Nil => this
@@ -60,10 +66,9 @@ final case class Conjunction(clauses: Ls[Clause], trailingBindings: Ls[(Bool, Va
   }
 
   /**
-    * Attach bindings to the first condition of a CNF.
+    * Prepend bindings to the first condition of this conjunction.
     *
-    * @param conditions the conditions
-    * @param interleavedLets the interleaved let buffer
+    * @param interleavedLets the buffer of let bindings in the current context
     * @return idential to `conditions`
     */
   def withBindings(implicit interleavedLets: Buffer[(Bool, Var, Term)]): Conjunction = {

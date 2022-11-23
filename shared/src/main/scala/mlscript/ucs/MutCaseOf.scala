@@ -318,7 +318,8 @@ object MutCaseOf {
   final case object MissingCase extends MutCaseOf {
     override def describe: Str = "MissingCase"
 
-    override def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit = ???
+    override def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit =
+      lastWords("`MissingCase` is a placeholder and cannot be merged")
 
     override def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Unit = ()
 
@@ -332,7 +333,7 @@ object MutCaseOf {
     def rec(conjunction: Conjunction): MutCaseOf = conjunction match {
       case Conjunction(head :: tail, trailingBindings) =>
         val realTail = Conjunction(tail, trailingBindings)
-        val res = head match {
+        (head match {
           case BooleanTest(test) => IfThenElse(test, rec(realTail), MissingCase)
           case MatchClass(scrutinee, className, fields) =>
             val branches = Buffer(
@@ -346,13 +347,9 @@ object MutCaseOf {
                 .withLocations(head.locations)
             )
             Match(scrutinee, branches, N)
-        }
-        res.addBindings(head.bindings)
-        res
+        }).withBindings(head.bindings)
       case Conjunction(Nil, trailingBindings) =>
-        val res = Consequent(term)
-        res.addBindings(trailingBindings)
-        res
+        Consequent(term).withBindings(trailingBindings)
     }
 
     rec(conjunction)
@@ -363,7 +360,7 @@ object MutCaseOf {
     (implicit raise: Diagnostic => Unit)
   : MutCaseOf = {
     cnf match {
-      case Nil => ???
+      case Nil => MissingCase
       case (conditions -> term) :: next =>
         val root = MutCaseOf.buildFirst(conditions, term)
         next.foreach(root.merge(_))
