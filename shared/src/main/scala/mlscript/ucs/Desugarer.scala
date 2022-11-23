@@ -74,7 +74,7 @@ class Desugarer extends TypeDefs { self: Typer =>
   def makeScrutinee(term: Term, isMultiLineMatch: Bool)(implicit matchRootLoc: Opt[Loc]): Scrutinee =
     trace(s"Making a scrutinee for $term") {
       val res = term match {
-        case _: Var => Scrutinee(N, term)
+        case _: Var | _: Lit => Scrutinee(N, term)
         case _ =>
           Scrutinee(
             S(localizedScrutineeMap.getOrElseUpdate(term, {
