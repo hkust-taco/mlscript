@@ -60,7 +60,7 @@ class Desugarer extends TypeDefs { self: Typer =>
     }.toList
   }
 
-  private val localizedScrutineeMap = MutMap.empty[Term, Var]
+  private val localizedScrutineeMap = MutMap.empty[(Opt[Loc], Term), Var]
 
   /**
     * Create a `Scrutinee`. If the `term` is a simple expression (e.g. `Var` or
@@ -77,7 +77,7 @@ class Desugarer extends TypeDefs { self: Typer =>
         case _: Var | _: Lit => Scrutinee(N, term)
         case _ =>
           Scrutinee(
-            S(localizedScrutineeMap.getOrElseUpdate(term, {
+            S(localizedScrutineeMap.getOrElseUpdate((term.toLoc, term), {
               Var(freshName).withLoc(term.toLoc)
             })),
             term,
