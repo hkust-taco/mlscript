@@ -65,7 +65,8 @@ class Desugarer extends TypeDefs { self: Typer =>
     }.toList
   }
 
-  private val localizedScrutineeMap = MutMap.empty[(Opt[Loc], Term), Var]
+  // `IdentityHashMap` is a workaround.
+  private val localizedScrutineeMap = new java.util.IdentityHashMap[Term, Var]
 
   /**
     * Create a `Scrutinee`. If the `term` is a simple expression (e.g. `Var` or
@@ -77,16 +78,18 @@ class Desugarer extends TypeDefs { self: Typer =>
     * this parameter indicates the location of the match root
     */
   def makeScrutinee(term: Term)(implicit matchRootLoc: Opt[Loc]): Scrutinee =
-    traceUCS(s"Making a scrutinee for $term") {
+    traceUCS(s"Making a scrutinee for `$term`") {
       term match {
         case _: Var | _: Lit => Scrutinee(N, term)
         case _ =>
-          Scrutinee(
-            S(localizedScrutineeMap.getOrElseUpdate((term.toLoc, term), {
-              Var(freshName).withLoc(term.toLoc)
-            })),
-            term
-          )
+          val localName = if (localizedScrutineeMap.containsKey(term)) {
+            localizedScrutineeMap.get(term)
+          } else {
+            val v = Var(freshName).withLoc(term.toLoc)
+            localizedScrutineeMap.put(term, v)
+            v
+          }
+          Scrutinee(S(localName), term)
       }
     }()
 
@@ -450,8 +453,8 @@ class Desugarer extends TypeDefs { self: Typer =>
   import MutCaseOf.{MutCase, IfThenElse, Match, MissingCase, Consequent}
 
   /**
-  * A map from each scrutinee term to all its cases and the first `MutCase`.
-  */
+    * A map from each scrutinee term to all its cases and the first `MutCase`.
+    */
   type ExhaustivenessMap = Map[Str \/ Int, Map[Var, MutCase]]
 
   type MutExhaustivenessMap = MutMap[Str \/ Int, MutMap[Var, MutCase]]
