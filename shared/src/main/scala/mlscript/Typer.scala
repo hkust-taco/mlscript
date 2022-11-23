@@ -742,7 +742,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           typeTerm(trm)
         } catch {
           case e: DesugaringException => e.report(this)
-          case e: Throwable => throw e
         }
       case New(S((nmedTy, trm)), TypingUnit(Nil)) =>
         typeTerm(App(Var(nmedTy.base.name).withLocOf(nmedTy), trm))
