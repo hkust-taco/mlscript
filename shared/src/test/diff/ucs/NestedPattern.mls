@@ -57,79 +57,10 @@ fun f(x) =
 //│ f: error -> error
 
 :e
-:d
 fun f(p) =
   if p is
     Some((x, y)) then x + y
     None()       then 0
-//│ 1. Typing term p, => {if p is ‹(Some ('(' x, y, ')',)) then + (x,) (y,); (None ()) then 0›}
-//│ | 1. Typing pattern p,
-//│ | | 1. Typing pattern p
-//│ | | 1. : α163'
-//│ | 1. : (α163',)
-//│ | 1. Typing term {if p is ‹(Some ('(' x, y, ')',)) then + (x,) (y,); (None ()) then 0›}
-//│ | | 1. Typing term if p is ‹(Some ('(' x, y, ')',)) then + (x,) (y,); (None ()) then 0›
-//│ | | | The mutable CaseOf tree
-//│ | | | «p» match
-//│ | | |   case Some =>
-//│ | | |     let tmp12 = .value
-//│ | | |     «tmp12» match
-//│ | | |       case Tuple#2 =>
-//│ | | |         let x = ._1
-//│ | | |         let y = ._2
-//│ | | |         «+ (x,) (y,)»
-//│ | | |   case None =>
-//│ | | |     «0»
-//│ | | | Desugared term: case p of { Some => let tmp12 = (p).value in case tmp12 of { Tuple#2 => let x = (tmp12)._1 in let y = (tmp12)._2 in + (x,) (y,) }; None => 0 }
-//│ | | | 1. Typing term case p of { Some => let tmp12 = (p).value in case tmp12 of { Tuple#2 => let x = (tmp12)._1 in let y = (tmp12)._2 in + (x,) (y,) }; None => 0 }
-//│ | | | | 1. Typing term p
-//│ | | | | 1. : α163'
-//│ | | | | 1. Typing term let tmp12 = (p).value in case tmp12 of { Tuple#2 => let x = (tmp12)._1 in let y = (tmp12)._2 in + (x,) (y,) }
-//│ | | | | | 2. Typing term (p).value
-//│ | | | | | | 2. Typing term p
-//│ | | | | | | 2. : α164'
-//│ | | | | | | CONSTRAIN α164' <! {value: value165''}
-//│ | | | | | |   where 
-//│ | | | | | | C α164' <! {value: value165''}    (0)
-//│ | | | | | | | EXTR RHS  {value: value165''}  ~>  {value: value166'}  to 1
-//│ | | | | | | |  where 
-//│ | | | | | | |    and 
-//│ 		value165'' :> value166'
-//│ | | | | | | | C α164' <! {value: value166'}    (1)
-//│ | | | | | 2. : value165''
-//│ | | | | | 1. Typing term case tmp12 of { Tuple#2 => let x = (tmp12)._1 in let y = (tmp12)._2 in + (x,) (y,) }
-//│ | | | | | | 1. Typing term tmp12
-//│ | | | | | | 1. : value167'
-//│ | | | | | | CONSTRAIN value167' <! error<>
-//│ | | | | | |   where 
-//│ 		value167' :> value166'
-//│ | | | | | | C value167' <! error<>    (0)
-//│ | | | | | | | C value166' <! error<>    (1)
-//│ | | | | | 1. : error<>
-//│ | | | | 1. : error<>
-//│ | | | | 1. Typing term 0
-//│ | | | | 1. : 0<int,number>
-//│ | | | | CONSTRAIN α163' <! ((some<option> & α164') | ((none<option> & α168') & ~(some<option>)))
-//│ | | | |   where 
-//│ 		α164' <: {value: value166'}
-//│ 		value166' <: error<>
-//│ | | | | C α163' <! ((some<option> & α164') | ((none<option> & α168') & ~(some<option>)))    (0)
-//│ | | | 1. : (error<> | 0<int,number>)
-//│ | | 1. : (error<> | 0<int,number>)
-//│ | 1. : (error<> | 0<int,number>)
-//│ 1. : (α163' -> (error<> | 0<int,number>))
-//│ CONSTRAIN (α163' -> (error<> | 0<int,number>)) <! f162'
-//│   where 
-//│ 		α163' <: ((some<option> & α164') | ((none<option> & α168') & ~(some<option>)))
-//│ 		α164' <: {value: value166'}
-//│ 		value166' <: error<>
-//│ C (α163' -> (error<> | 0<int,number>)) <! f162'    (0)
-//│ ⬤ Typed as: f162'
-//│  where: 
-//│ 		f162' :> (α163' -> (error<> | 0<int,number>))
-//│ 		α163' <: ((some<option> & α164') | ((none<option> & α168') & ~(some<option>)))
-//│ 		α164' <: {value: value166'}
-//│ 		value166' <: error<>
 //│ ╔══[ERROR] type identifier not found: Tuple#2
 //│ ╙──
 //│ f: (None | Some & {value: error}) -> (0 | error)
