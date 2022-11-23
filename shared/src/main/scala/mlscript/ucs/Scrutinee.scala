@@ -30,7 +30,7 @@ object Scrutinee {
     * Why we need a dedicated class for this?
     * Because the scrutinee might comes from different structures.
     * 1. Terms. E.g. `if x is A and y is B then ...`
-    * 2. `IfOpApp`. In this case, the scrutinee is indicate by the `IfOpApp`.
+    * 2. `IfOpApp`. In this case, the scrutinee is indicated by the `IfOpApp`.
     *    ```
     *    if x is
     *      A then ...
