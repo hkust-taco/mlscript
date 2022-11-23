@@ -2,16 +2,16 @@
 :NoJS
 
 // FIXME: Interleaved let bindings are not implemented in `IfOpsApp`.
-// :pe
-// if x
-//   == 0 then "bad"
-//   let y = f(z)
-//   == y * y then 0
+if x
+  == 0 then "bad"
+  let y = f(z)
+  == y * y then 0
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 // FIXME: Interleaved let bindings are not implemented in `IfOpsApp`.
-// :pe
-// fun tt(x) =
-//   if x
-//     is A() then "A"
-//     let y = 0
-//     is B() then "B"
+fun tt(x) =
+  if x
+    is A() then "A"
+    let y = 0
+    is B() then "B"
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
