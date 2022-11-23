@@ -3,7 +3,7 @@ package mlscript.ucs
 import mlscript.{Loc, Term, Var}
 import mlscript.utils.shorthands._
 
-// The point is to remember where does the scrutinee come from.
+// The point is to remember where the scrutinee comes from.
 // Is it from nested patterns? Or is it from a `IfBody`?
 // TODO: Replace `isMultiLineMatch` with `Scrutinee.Source`.
 final case class Scrutinee(local: Opt[Var], term: Term) {
