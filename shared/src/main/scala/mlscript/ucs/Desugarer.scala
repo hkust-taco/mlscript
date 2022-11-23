@@ -113,13 +113,11 @@ class Desugarer extends TypeDefs { self: Typer =>
         tuple.fields.iterator.map(_._2.value),
         1.to(tuple.fields.length).map("_" + _).toList
       )
-      val clause = Clause.MatchTuple(
+      Clause.MatchTuple(
         makeScrutinee(scrutinee),
         tuple.fields.length,
         bindings
-      )
-      clause.locations = collectLocations(scrutinee)
-      clause :: destructSubPatterns(subPatterns)
+      )(collectLocations(scrutinee)) :: destructSubPatterns(subPatterns)
     }
     pattern match {
       // This case handles top-level wildcard `Var`.
@@ -129,7 +127,7 @@ class Desugarer extends TypeDefs { self: Typer =>
       // x is true | x is false | x is 0 | x is "text" | ...
       case literal @ (Var("true") | Var("false") | _: Lit) =>
         val test = mkBinOp(scrutinee, Var("=="), literal)
-        Clause.BooleanTest(test) :: Nil
+        Clause.BooleanTest(test)(scrutinee.toLoc.toList ::: literal.toLoc.toList) :: Nil
       // This case handles simple class tests.
       // x is A
       case classNameVar @ Var(className) =>
@@ -139,10 +137,8 @@ class Desugarer extends TypeDefs { self: Typer =>
             msg"Cannot find the constructor `$className` in the context"
           }, classNameVar.toLoc)
           case S(_) => 
-            val clause = Clause.MatchClass(makeScrutinee(scrutinee), classNameVar, Nil)
             println(s"Build a Clause.MatchClass from $scrutinee where pattern is $classNameVar")
-            clause.locations = collectLocations(scrutinee)
-            clause :: Nil
+            Clause.MatchClass(makeScrutinee(scrutinee), classNameVar, Nil)(collectLocations(scrutinee)) :: Nil
         }
       // This case handles classes with destruction.
       // x is A(r, s, t)
@@ -160,10 +156,9 @@ class Desugarer extends TypeDefs { self: Typer =>
                 args.iterator.map(_._2.value),
                 td.positionals
               )
-              val clause = Clause.MatchClass(makeScrutinee(scrutinee), classNameVar, bindings)
+              val clause = Clause.MatchClass(makeScrutinee(scrutinee), classNameVar, bindings)(pattern.toLoc.toList ::: collectLocations(scrutinee))
               println(s"Build a Clause.MatchClass from $scrutinee where pattern is $pattern")
               println(s"Fragments: $fragments")
-              clause.locations = pattern.toLoc.toList ::: collectLocations(scrutinee)
               println(s"The locations of the clause: ${clause.locations}")
               clause :: destructSubPatterns(subPatterns)
             } else {
@@ -200,9 +195,8 @@ class Desugarer extends TypeDefs { self: Typer =>
               lhs :: rhs :: Nil,
               td.positionals
             )
-            val clause = Clause.MatchClass(makeScrutinee(scrutinee), opVar, bindings)
+            val clause = Clause.MatchClass(makeScrutinee(scrutinee), opVar, bindings)(collectLocations(scrutinee))
             println(s"Build a Clause.MatchClass from $scrutinee where operator is $opVar")
-            clause.locations = collectLocations(scrutinee)
             clause :: destructSubPatterns(subPatterns)
           case S(td) =>
             val num = td.positionals.length
@@ -266,8 +260,7 @@ class Desugarer extends TypeDefs { self: Typer =>
           Tup((_ -> Fld(_, _, pattern)) :: Nil)
         ) => destructPattern(scrutinee, pattern)(ctx, raise, implicitly, isApp.toLoc)
         case test =>
-          val clause = Clause.BooleanTest(test)
-          clause.locations = collectLocations(test)
+          val clause = Clause.BooleanTest(test)(collectLocations(test))
           Iterable.single(clause)
       }
 

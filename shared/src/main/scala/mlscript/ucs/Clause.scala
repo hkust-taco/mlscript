@@ -20,7 +20,7 @@ abstract class Clause {
     *
     * @return
     */
-  var locations: Ls[Loc] = Nil
+  val locations: Ls[Loc]
 }
 
 object Clause {
@@ -28,15 +28,15 @@ object Clause {
     scrutinee: Scrutinee,
     className: Var,
     fields: Ls[Str -> Var]
-  ) extends Clause
+  )(override val locations: Ls[Loc]) extends Clause
 
   final case class MatchTuple(
     scrutinee: Scrutinee,
     arity: Int,
     fields: Ls[Str -> Var]
-  ) extends Clause
+  )(override val locations: Ls[Loc]) extends Clause
 
-  final case class BooleanTest(test: Term) extends Clause
+  final case class BooleanTest(test: Term)(override val locations: Ls[Loc]) extends Clause
 
   def print(println: (=> Any) => Unit, cnf: Ls[Conjunction -> Term]): Unit = {
     def showBindings(bindings: Ls[(Bool, Var, Term)]): Str =
