@@ -1,13 +1,14 @@
 :NewParser
 :NoJS
 
+// FIXME: Interleaved let bindings are not implemented in `IfOpsApp`.
 // :pe
 // if x
 //   == 0 then "bad"
 //   let y = f(z)
 //   == y * y then 0
 
-// Interleaved let bindings are not implemented in `IfOpsApp`.
+// FIXME: Interleaved let bindings are not implemented in `IfOpsApp`.
 // :pe
 // fun tt(x) =
 //   if x
