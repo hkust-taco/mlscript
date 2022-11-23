@@ -531,8 +531,7 @@ class Desugarer extends TypeDefs { self: Typer =>
         checkExhaustive(whenFalse, S(t))
       case Match(scrutinee, branches, default) =>
         scrutineePatternMap.get(getScurtineeKey(scrutinee)) match {
-          // Should I call `die` here?
-          case N => throw new Error(s"unreachable case: unknown scrutinee ${scrutinee.term}")
+          case N => lastWords(s"unreachable case: unknown scrutinee ${scrutinee.term}")
           case S(patternMap) =>
             println(s"The exhaustiveness map is ${scrutineePatternMap}")
             println(s"The scrutinee key is ${getScurtineeKey(scrutinee)}")

@@ -1,6 +1,7 @@
 package mlscript.ucs
 
 import mlscript.{Loc, Term, Var}
+import mlscript.utils.lastWords
 import mlscript.utils.shorthands._
 
 // The point is to remember where the scrutinee comes from.
@@ -9,7 +10,7 @@ import mlscript.utils.shorthands._
 final case class Scrutinee(local: Opt[Var], term: Term) {
   def reference: Var = local.getOrElse(term match {
     case v: Var => v
-    case _      => ???
+    case _      => lastWords("`term` must be a `Var` when `local` is empty")
   })
 
   var isMultiLineMatch: Bool = false
