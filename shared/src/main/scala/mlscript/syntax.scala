@@ -73,6 +73,7 @@ final case class New(head: Opt[(NamedType, Term)], body: TypingUnit) extends Ter
 final case class If(body: IfBody, els: Opt[Term])                    extends Term
 final case class TyApp(lhs: Term, targs: Ls[Type])                   extends Term
 final case class Quoted(body: Term)                                  extends Term 
+final case class Unquoted(body: Term)                                extends Term 
 
 sealed abstract class IfBody extends IfBodyImpl
 // final case class IfTerm(expr: Term) extends IfBody // rm?

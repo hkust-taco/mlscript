@@ -104,7 +104,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   val IntType: ClassTag = ClassTag(Var("int"), Set.single(TypeName("number")))(noTyProv)
   val DecType: ClassTag = ClassTag(Var("number"), Set.empty)(noTyProv)
   val StrType: ClassTag = ClassTag(Var("string"), Set.empty)(noTyProv)
-  
   val ErrTypeId: SimpleTerm = Var("error")
   
   // TODO rm this obsolete definition (was there for the old frontend)
@@ -727,8 +726,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         typeTerm(App(Var(nmedTy.base.name).withLocOf(nmedTy), trm))
       case New(base, args) => ???
       case TyApp(_, _) => ??? // TODO
-      // case Quoted(body) =>
-      //   AppliedType(TypeName("Code"), typeTerm(body) :: Nil)
+      case Quoted(body) =>
+        val body_type = typeTerm(body)
+        TypeRef(TypeName("Code"), body_type :: Nil)(noProv)
+      // case Unquoted(body) =>
+      //   val body_type = typeTerm(body)
+      //   TypeRef(TypeName("$"), body_type :: Nil)(noProv)
     }
   }(r => s"$lvl. : ${r}")
   

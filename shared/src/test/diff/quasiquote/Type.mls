@@ -1,0 +1,63 @@
+:NewParser
+
+:d
+:ne
+:NoJS
+let qq_int = code"10"
+//│ 1. Typing term Quoted' 10 '
+//│ | 1. Typing term 10
+//│ | 1. : 10<int,number>
+//│ 1. : Code[10<int,number>]
+//│ ⬤ Typed as: Code[10<int,number>]
+//│  where: 
+//│ qq_int: code & {Code#T <: 10}
+
+:d 
+:ne
+:NoJS
+let qq_bool : Code<int> = code"10+2"
+//│ 1. Typing term Quoted' + (10,) (2,) ' : AppliedType(TypeName(Code),List(TypeName(int)))
+//│ | 1. Typing term Quoted' + (10,) (2,) '
+//│ | | 1. Typing term + (10,) (2,)
+//│ | | | 1. Typing term + (10,)
+//│ | | | | 1. Typing term +
+//│ | | | | 1. : (int<number> -> (int<number> -> int<number>))
+//│ | | | | 1. Typing term 10,
+//│ | | | | | 1. Typing term 10
+//│ | | | | | 1. : 10<int,number>
+//│ | | | | 1. : (10<int,number>,)
+//│ | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (10<int,number> -> α23')
+//│ | | | |   where 
+//│ | | | | C (int<number> -> (int<number> -> int<number>)) <! (10<int,number> -> α23')    (0)
+//│ | | | | | C (10<int,number>,) <! (int<number>,)    (1)
+//│ | | | | | | C 10<int,number> <! int<number>    (2)
+//│ | | | | | C (int<number> -> int<number>) <! α23'    (3)
+//│ | | | 1. : α23'
+//│ | | | 1. Typing term 2,
+//│ | | | | 1. Typing term 2
+//│ | | | | 1. : 2<int,number>
+//│ | | | 1. : (2<int,number>,)
+//│ | | | CONSTRAIN α23' <! (2<int,number> -> α24')
+//│ | | |   where 
+//│ 		α23' :> (int<number> -> int<number>)
+//│ | | | C α23' <! (2<int,number> -> α24')    (0)
+//│ | | | | C (int<number> -> int<number>) <! (2<int,number> -> α24')    (1)
+//│ | | | | | C (2<int,number>,) <! (int<number>,)    (2)
+//│ | | | | | | C 2<int,number> <! int<number>    (3)
+//│ | | | | | C int<number> <! α24'    (4)
+//│ | | 1. : α24'
+//│ | 1. : Code[α24']
+//│ | 1. Typing type AppliedType(TypeName(Code),List(TypeName(int)))
+//│ | | vars=Map() newDefsInfo=Map()
+//│ | => Code[Int] | 
+//│ | CONSTRAIN Code[α24'] <! Code[Int]
+//│ |   where 
+//│ 		α24' :> int<number>
+//│ | C Code[α24'] <! Code[Int]    (0)
+//│ | | C α24' <! Int    (1)
+//│ | | | C int<number> <! Int    (2)
+//│ | | | | C int<number> <! int<number>    (3)
+//│ 1. : Code[Int]
+//│ ⬤ Typed as: Code[Int]
+//│  where: 
+//│ qq_bool: code & {Code#T <: int}

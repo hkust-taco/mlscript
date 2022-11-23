@@ -1,0 +1,67 @@
+:NewParser
+
+code"2 + 2"
+// in JS: ["+", 2, 2]
+//│ res: code & {Code#T <: int}
+//│ Code generation crashed:
+//│   scala.MatchError: Quoted' + (2,) (2,) ' (of class mlscript.Quoted)
+
+code"x => x + 2"
+// in JS (bad): ["lambda", ["x"], ["+", ["ref", "x"]], 2]]
+// in JS (hygienic): const x_sym = Symbol("x"); ["lambda", [x_sym], ["+", x_sym], 2]]
+//│ res: code & {Code#T <: int -> int}
+//│ Code generation crashed:
+//│   scala.MatchError: Quoted' x, => + (x,) (2,) ' (of class mlscript.Quoted)
+
+fun foo(x) =
+  code"10 + x"
+//│ foo: int -> (code & {Code#T <: int})
+//│ Code generation crashed:
+//│   scala.MatchError: Quoted' + (10,) (x,) ' (of class mlscript.Quoted)
+
+code"foo(123) + 1"
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.22: 	code"foo(123) + 1"
+//│ ║        	     ^^^^^^^^^^
+//│ ╟── application of type `code & {Code#T <: ?a}` is not an instance of type `int`
+//│ ║  l.22: 	code"foo(123) + 1"
+//│ ╙──      	     ^^^^^^^^
+//│ res: code & {Code#T <: error | int}
+//│ Code generation crashed:
+//│   scala.MatchError: Quoted' + (foo (123,),) (1,) ' (of class mlscript.Quoted)
+
+code"10 + ${qq_int}"
+//│ ╔══[ERROR] identifier not found: qq_int
+//│ ║  l.33: 	code"10 + ${qq_int}"
+//│ ╙──      	          ^^^^^^^^^
+//│ res: code & {Code#T <: int}
+//│ Code generation crashed:
+//│   scala.MatchError: Quoted' + (10,) (qq_int,) ' (of class mlscript.Quoted)
+
+"x"
+//│ res: "x"
+//│    = 'x'
+
+// The inner code should have type Code<int, "x" | "y">
+code"x => y => 15 + ${   code"x + y"   }"
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.50: 	code"x => y => 15 + ${   code"x + y"   }"
+//│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── expression of type `code & {Code#T <: ?a}` is not an instance of type `int`
+//│ res: code & {Code#T <: int -> int -> (error | int)}
+//│ Code generation crashed:
+//│   scala.MatchError: Quoted' x, => y, => + (15,) (Quoted' + (x,) (y,) ',) ' (of class mlscript.Quoted)
+
+// FIXME
+qq_int : Code<int>
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.60: 	qq_int : Code<int>
+//│ ╙──      	       ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.60: 	qq_int : Code<int>
+//│ ╙──      	^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] identifier not found: qq_int
+//│ ║  l.60: 	qq_int : Code<int>
+//│ ╙──      	^^^^^^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+

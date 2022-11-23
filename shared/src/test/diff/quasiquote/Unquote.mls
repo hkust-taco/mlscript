@@ -1,5 +1,6 @@
 :NewParser
 :ParseOnly
+
 :dp
 code"${a + b} + 1"
 //│ |code"|${|a| |+| |b|}| |+| |1|"|
@@ -11,61 +12,55 @@ code"${a + b} + 1"
 //│ │ > │ @ exprOrIf(0,true)    [at l.389]
 //│ │ > │ │ ? exprOrIf		inspects |${|a| |+| |b|}| |+| |1|    [at l.401]
 //│ │ > │ │ ! exprOrIf		consumes |${|a| |+| |b|}|    [at l.438]
-//│ │ > │ │ > ? argsMaybeIndented		inspects |a| |+| |b|    [at l.767]
-//│ │ > │ │ > @ argsOrIf(List(),List())    [at l.797]
-//│ │ > │ │ > │ ? argsOrIf		inspects |a| |+| |b|    [at l.799]
-//│ │ > │ │ > │ ? argMut		inspects |a| |+| |b|    [at l.817]
-//│ │ > │ │ > │ ? argSpec		inspects |a| |+| |b|    [at l.823]
-//│ │ > │ │ > │ ? argName		inspects |a| |+| |b|    [at l.829]
-//│ │ > │ │ > │ @ exprOrIf(1,true)    [at l.837]
+//│ │ > │ │ > @ expr(0,true)    [at l.439]
+//│ │ > │ │ > │ @ exprOrIf(0,true)    [at l.389]
 //│ │ > │ │ > │ │ ? exprOrIf		inspects |a| |+| |b|    [at l.401]
 //│ │ > │ │ > │ │ ! exprOrIf		consumes |a|    [at l.417]
-//│ │ > │ │ > │ │ @ exprCont(1,`a`,false)    [at l.418]
-//│ │ > │ │ > │ │ │ ? exprCont		inspects | |+| |b|    [at l.561]
-//│ │ > │ │ > │ │ │ ! exprCont		consumes | |    [at l.582]
-//│ │ > │ │ > │ │ │ @ exprCont(1,`a`,false)    [at l.583]
-//│ │ > │ │ > │ │ │ │ ? exprCont		inspects |+| |b|    [at l.561]
-//│ │ > │ │ > │ │ │ │ ! exprCont		consumes |+|    [at l.563]
-//│ │ > │ │ > │ │ │ │ @ exprOrIf(17,true)    [at l.566]
+//│ │ > │ │ > │ │ @ exprCont(0,`a`,false)    [at l.418]
+//│ │ > │ │ > │ │ │ ? exprCont		inspects | |+| |b|    [at l.566]
+//│ │ > │ │ > │ │ │ ! exprCont		consumes | |    [at l.587]
+//│ │ > │ │ > │ │ │ @ exprCont(0,`a`,false)    [at l.588]
+//│ │ > │ │ > │ │ │ │ ? exprCont		inspects |+| |b|    [at l.566]
+//│ │ > │ │ > │ │ │ │ ! exprCont		consumes |+|    [at l.568]
+//│ │ > │ │ > │ │ │ │ @ exprOrIf(17,true)    [at l.571]
 //│ │ > │ │ > │ │ │ │ │ ? exprOrIf		inspects | |b|    [at l.401]
 //│ │ > │ │ > │ │ │ │ │ ! exprOrIf		consumes | |    [at l.403]
 //│ │ > │ │ > │ │ │ │ │ @ exprOrIf(17,true)    [at l.404]
 //│ │ > │ │ > │ │ │ │ │ │ ? exprOrIf		inspects |b|    [at l.401]
 //│ │ > │ │ > │ │ │ │ │ │ ! exprOrIf		consumes |b|    [at l.417]
 //│ │ > │ │ > │ │ │ │ │ │ @ exprCont(17,`b`,false)    [at l.418]
-//│ │ > │ │ > │ │ │ │ │ │ │ ? exprCont		inspects ||    [at l.561]
+//│ │ > │ │ > │ │ │ │ │ │ │ ? exprCont		inspects ||    [at l.566]
 //│ │ > │ │ > │ │ │ │ │ │ = Right(b)
 //│ │ > │ │ > │ │ │ │ │ = Right(b)
 //│ │ > │ │ > │ │ │ │ = Right(b)
-//│ │ > │ │ > │ │ │ │ @ exprCont(1,`+ (a,) (b,)`,false)    [at l.578]
-//│ │ > │ │ > │ │ │ │ │ ? exprCont		inspects ||    [at l.561]
+//│ │ > │ │ > │ │ │ │ @ exprCont(0,`+ (a,) (b,)`,false)    [at l.583]
+//│ │ > │ │ > │ │ │ │ │ ? exprCont		inspects ||    [at l.566]
 //│ │ > │ │ > │ │ │ │ = Right(+ (a,) (b,))
 //│ │ > │ │ > │ │ │ = Right(+ (a,) (b,))
 //│ │ > │ │ > │ │ = Right(+ (a,) (b,))
 //│ │ > │ │ > │ = Right(+ (a,) (b,))
-//│ │ > │ │ > │ ? argsOrIf		inspects ||    [at l.845]
-//│ │ > │ │ > = List((None,Right(Fld(false,false,+ (a,) (b,)))))
+//│ │ > │ │ > = + (a,) (b,)
 //│ │ > │ │ > ? concludeWith		inspects ||    [at l.71]
-//│ │ > │ │ > Concluded with List((None,Fld(false,false,+ (a,) (b,))))
-//│ │ > │ │ @ exprCont(0,`'(' + (a,) (b,), ')'`,false)    [at l.449]
-//│ │ > │ │ │ ? exprCont		inspects | |+| |1|    [at l.561]
-//│ │ > │ │ │ ! exprCont		consumes | |    [at l.582]
-//│ │ > │ │ │ @ exprCont(0,`'(' + (a,) (b,), ')'`,false)    [at l.583]
-//│ │ > │ │ │ │ ? exprCont		inspects |+| |1|    [at l.561]
-//│ │ > │ │ │ │ ! exprCont		consumes |+|    [at l.563]
-//│ │ > │ │ │ │ @ exprOrIf(17,true)    [at l.566]
+//│ │ > │ │ > Concluded with + (a,) (b,)
+//│ │ > │ │ @ exprCont(0,`+ (a,) (b,)`,false)    [at l.440]
+//│ │ > │ │ │ ? exprCont		inspects | |+| |1|    [at l.566]
+//│ │ > │ │ │ ! exprCont		consumes | |    [at l.587]
+//│ │ > │ │ │ @ exprCont(0,`+ (a,) (b,)`,false)    [at l.588]
+//│ │ > │ │ │ │ ? exprCont		inspects |+| |1|    [at l.566]
+//│ │ > │ │ │ │ ! exprCont		consumes |+|    [at l.568]
+//│ │ > │ │ │ │ @ exprOrIf(17,true)    [at l.571]
 //│ │ > │ │ │ │ │ ? exprOrIf		inspects | |1|    [at l.401]
 //│ │ > │ │ │ │ │ ! exprOrIf		consumes | |    [at l.403]
 //│ │ > │ │ │ │ │ @ exprOrIf(17,true)    [at l.404]
 //│ │ > │ │ │ │ │ │ ? exprOrIf		inspects |1|    [at l.401]
 //│ │ > │ │ │ │ │ │ ! exprOrIf		consumes |1|    [at l.414]
 //│ │ > │ │ │ │ │ │ @ exprCont(17,`1`,false)    [at l.415]
-//│ │ > │ │ │ │ │ │ │ ? exprCont		inspects ||    [at l.561]
+//│ │ > │ │ │ │ │ │ │ ? exprCont		inspects ||    [at l.566]
 //│ │ > │ │ │ │ │ │ = Right(1)
 //│ │ > │ │ │ │ │ = Right(1)
 //│ │ > │ │ │ │ = Right(1)
-//│ │ > │ │ │ │ @ exprCont(0,`+ (+ (a,) (b,),) (1,)`,false)    [at l.578]
-//│ │ > │ │ │ │ │ ? exprCont		inspects ||    [at l.561]
+//│ │ > │ │ │ │ @ exprCont(0,`+ (+ (a,) (b,),) (1,)`,false)    [at l.583]
+//│ │ > │ │ │ │ │ ? exprCont		inspects ||    [at l.566]
 //│ │ > │ │ │ │ = Right(+ (+ (a,) (b,),) (1,))
 //│ │ > │ │ │ = Right(+ (+ (a,) (b,),) (1,))
 //│ │ > │ │ = Right(+ (+ (a,) (b,),) (1,))
@@ -100,21 +95,21 @@ type A = Code[int]
 //│ │ │ │ ? exprOrIf		inspects |Code|[|int|]|    [at l.401]
 //│ │ │ │ ! exprOrIf		consumes |Code|    [at l.417]
 //│ │ │ │ @ exprCont(0,`Code`,false)    [at l.418]
-//│ │ │ │ │ ? exprCont		inspects |[|int|]|    [at l.561]
-//│ │ │ │ │ ! exprCont		consumes |[|int|]|    [at l.672]
-//│ │ │ │ │ > @ expr(0,true)    [at l.673]
+//│ │ │ │ │ ? exprCont		inspects |[|int|]|    [at l.566]
+//│ │ │ │ │ ! exprCont		consumes |[|int|]|    [at l.677]
+//│ │ │ │ │ > @ expr(0,true)    [at l.678]
 //│ │ │ │ │ > │ @ exprOrIf(0,true)    [at l.389]
 //│ │ │ │ │ > │ │ ? exprOrIf		inspects |int|    [at l.401]
 //│ │ │ │ │ > │ │ ! exprOrIf		consumes |int|    [at l.417]
 //│ │ │ │ │ > │ │ @ exprCont(0,`int`,false)    [at l.418]
-//│ │ │ │ │ > │ │ │ ? exprCont		inspects ||    [at l.561]
+//│ │ │ │ │ > │ │ │ ? exprCont		inspects ||    [at l.566]
 //│ │ │ │ │ > │ │ = Right(int)
 //│ │ │ │ │ > │ = Right(int)
 //│ │ │ │ │ > = int
 //│ │ │ │ │ > ? concludeWith		inspects ||    [at l.71]
 //│ │ │ │ │ > Concluded with int
-//│ │ │ │ │ @ exprCont(0,`(Code)[int]`,false)    [at l.675]
-//│ │ │ │ │ │ ? exprCont		inspects ||    [at l.561]
+//│ │ │ │ │ @ exprCont(0,`(Code)[int]`,false)    [at l.680]
+//│ │ │ │ │ │ ? exprCont		inspects ||    [at l.566]
 //│ │ │ │ │ = Right((Code)[int])
 //│ │ │ │ = Right((Code)[int])
 //│ │ │ = Right((Code)[int])
