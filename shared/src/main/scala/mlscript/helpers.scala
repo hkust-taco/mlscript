@@ -7,7 +7,6 @@ import scala.collection.immutable.SortedSet
 import math.Ordered.orderingToOrdered
 
 import mlscript.utils._, shorthands._
-import scala.collection.immutable
 
 
 // Auxiliary definitions for types
