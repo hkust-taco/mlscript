@@ -6,16 +6,11 @@ import mlscript.utils.shorthands._
 
 // The point is to remember where the scrutinee comes from.
 // Is it from nested patterns? Or is it from a `IfBody`?
-// TODO: Replace `isMultiLineMatch` with `Scrutinee.Source`.
-final case class Scrutinee(local: Opt[Var], term: Term) {
+final case class Scrutinee(local: Opt[Var], term: Term)(implicit val matchRootLoc: Opt[Loc]) {
   def reference: Var = local.getOrElse(term match {
     case v: Var => v
     case _      => lastWords("`term` must be a `Var` when `local` is empty")
   })
-
-  var isMultiLineMatch: Bool = false
-  var matchRootLoc: Opt[Loc] = N
-  var localPatternLoc: Opt[Loc] = N
 
   override def toString: String =
     (local match {

@@ -71,21 +71,18 @@ class Desugarer extends TypeDefs { self: Typer =>
     * @param matchRootLoc the caller is expect to be in a match environment,
     * this parameter indicates the location of the match root
     */
-  def makeScrutinee(term: Term, isMultiLineMatch: Bool)(implicit matchRootLoc: Opt[Loc]): Scrutinee =
+  def makeScrutinee(term: Term)(implicit matchRootLoc: Opt[Loc]): Scrutinee =
     trace(s"Making a scrutinee for $term") {
-      val res = term match {
+      term match {
         case _: Var | _: Lit => Scrutinee(N, term)
         case _ =>
           Scrutinee(
             S(localizedScrutineeMap.getOrElseUpdate((term.toLoc, term), {
               Var(freshName).withLoc(term.toLoc)
             })),
-            term,
+            term
           )
       }
-      res.isMultiLineMatch = isMultiLineMatch
-      res.matchRootLoc = matchRootLoc
-      res
     }()
 
   /**
@@ -98,20 +95,12 @@ class Desugarer extends TypeDefs { self: Typer =>
     * @param matchRootLoc the location of the root of the pattern matching
     * @param fragments fragment term that used to construct the given pattern.
     *   It is used to tracking locations.
-    * @param isMultiLineMatch whether the scrutinee is in multi-line pattern match.
-    *   For example,
-    *   ```
-    *   if x is
-    *     A then "x is A!"
-    *     B then "x is B"
-    *   ```
-    *   is multi-line pattern match. Whereas `if x is Foo then 1 else 0` is not.
     * @return a list of simple condition with bindings. This method does not
     * return `ConjunctedCondition` because conditions built from nested patterns
     * do not contain interleaved let bindings.
     */
   private def destructPattern
-      (scrutinee: Term, pattern: Term, isMultiLineMatch: Bool = false)
+      (scrutinee: Term, pattern: Term)
       (implicit ctx: Ctx,
                 raise: Raise,
                 aliasMap: FieldAliasMap,
@@ -125,7 +114,7 @@ class Desugarer extends TypeDefs { self: Typer =>
         1.to(tuple.fields.length).map("_" + _).toList
       )
       val clause = Clause.MatchTuple(
-        makeScrutinee(scrutinee, isMultiLineMatch),
+        makeScrutinee(scrutinee),
         tuple.fields.length,
         bindings
       )
@@ -150,7 +139,7 @@ class Desugarer extends TypeDefs { self: Typer =>
             msg"Cannot find the constructor `$className` in the context"
           }, classNameVar.toLoc)
           case S(_) => 
-            val clause = Clause.MatchClass(makeScrutinee(scrutinee, isMultiLineMatch), classNameVar, Nil)
+            val clause = Clause.MatchClass(makeScrutinee(scrutinee), classNameVar, Nil)
             println(s"Build a Clause.MatchClass from $scrutinee where pattern is $classNameVar")
             clause.locations = collectLocations(scrutinee)
             clause :: Nil
@@ -171,7 +160,7 @@ class Desugarer extends TypeDefs { self: Typer =>
                 args.iterator.map(_._2.value),
                 td.positionals
               )
-              val clause = Clause.MatchClass(makeScrutinee(scrutinee, isMultiLineMatch), classNameVar, bindings)
+              val clause = Clause.MatchClass(makeScrutinee(scrutinee), classNameVar, bindings)
               println(s"Build a Clause.MatchClass from $scrutinee where pattern is $pattern")
               println(s"Fragments: $fragments")
               clause.locations = pattern.toLoc.toList ::: collectLocations(scrutinee)
@@ -211,7 +200,7 @@ class Desugarer extends TypeDefs { self: Typer =>
               lhs :: rhs :: Nil,
               td.positionals
             )
-            val clause = Clause.MatchClass(makeScrutinee(scrutinee, isMultiLineMatch), opVar, bindings)
+            val clause = Clause.MatchClass(makeScrutinee(scrutinee), opVar, bindings)
             println(s"Build a Clause.MatchClass from $scrutinee where operator is $opVar")
             clause.locations = collectLocations(scrutinee)
             clause :: destructSubPatterns(subPatterns)
@@ -319,7 +308,7 @@ class Desugarer extends TypeDefs { self: Typer =>
         //   B(...) and ... then ... // Case 2: more conjunctions
         case L(IfThen(patTest, consequent)) =>
           val (patternPart, extraTestOpt) = separatePattern(patTest)
-          val patternConditions = destructPattern(scrutinee, partialPattern.addTerm(patternPart).term, true)
+          val patternConditions = destructPattern(scrutinee, partialPattern.addTerm(patternPart).term)
           val conditions =
             collectedConditions + Conjunction(patternConditions, Nil).withBindings
           extraTestOpt match {
