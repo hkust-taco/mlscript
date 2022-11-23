@@ -39,7 +39,6 @@ object Conjunction {
           } else {
             rec(past :+ head, tail)
           }
-        // TODO: Support tuples after merging `MatchClass` and `MatchTuple`.
         case head :: tail =>
           rec(past :+ head, tail)
       }
