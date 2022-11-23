@@ -31,8 +31,6 @@ trait WithBindings { this: MutCaseOf =>
 }
 
 sealed abstract class MutCaseOf extends WithBindings {
-  import Clause.Conjunction
-
   def kind: Str = {
     import MutCaseOf._
     this match {
@@ -150,7 +148,7 @@ object MutCaseOf {
     }
   }
 
-  import Clause.{Conjunction, MatchClass, MatchTuple, BooleanTest}
+  import Clause.{MatchClass, MatchTuple, BooleanTest}
 
   // A short-hand for pattern matchings with only true and false branches.
   final case class IfThenElse(condition: Term, var whenTrue: MutCaseOf, var whenFalse: MutCaseOf) extends MutCaseOf {
@@ -160,14 +158,14 @@ object MutCaseOf {
     override def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit =
       branch match {
         // The CC is a wildcard. So, we call `mergeDefault`.
-        case (Nil, trailingBindings) -> term =>
+        case Conjunction(Nil, trailingBindings) -> term =>
           this.mergeDefault(trailingBindings, term)
         // The CC is an if-then-else. We create a pattern match of true/false.
-        case ((head @ BooleanTest(test)) :: tail, trailingBindings) -> term =>
+        case Conjunction((head @ BooleanTest(test)) :: tail, trailingBindings) -> term =>
           // If the test is the same. So, we merge.
           if (test === condition) {
             whenTrue.addBindings(head.bindings)
-            whenTrue.merge((tail, trailingBindings) -> term)
+            whenTrue.merge(Conjunction(tail, trailingBindings) -> term)
           } else {
             whenFalse match {
               case Consequent(_) =>
@@ -178,7 +176,7 @@ object MutCaseOf {
               case _ => whenFalse.merge(branch)
             }
           }
-        case (head :: _, _) -> _ =>
+        case Conjunction(head :: _, _) -> _ =>
           whenFalse match {
             case Consequent(_) =>
               raise(WarningReport(Message.fromStr("duplicated else in the if-then-else") -> N :: Nil))
@@ -225,17 +223,17 @@ object MutCaseOf {
     }
 
     override def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit = {
-      Conjunction.separate(branch._1, scrutinee) match {
+      branch._1.separate(scrutinee) match {
         // No conditions against the same scrutinee.
         case N =>
           branch match {
-            case ((head @ MatchTuple(scrutinee2, arity, fields)) :: tail, trailingBindings) -> term
+            case Conjunction((head @ MatchTuple(scrutinee2, arity, fields)) :: tail, trailingBindings) -> term
                 if scrutinee2 === scrutinee => // Same scrutinee!
               val tupleClassName = Var(s"Tuple#$arity") // TODO: Find a name known by Typer.
               branches.find(_.matches(tupleClassName)) match {
                 // No such pattern. We should create a new one.
                 case N =>
-                  val newBranch = buildFirst((tail, trailingBindings), term)
+                  val newBranch = buildFirst(Conjunction(tail, trailingBindings), term)
                   newBranch.addBindings(head.bindings)
                   branches += MutCase(tupleClassName -> Buffer.from(fields), newBranch)
                     .withLocations(head.locations)
@@ -243,17 +241,17 @@ object MutCaseOf {
                 case S(branch) =>
                   branch.consequent.addBindings(head.bindings)
                   branch.addFields(fields)
-                  branch.consequent.merge((tail, trailingBindings) -> term)
+                  branch.consequent.merge(Conjunction(tail, trailingBindings) -> term)
               }
             // A wild card case. We should propagate wildcard to every default positions.
-            case (Nil, trailingBindings) -> term => mergeDefault(trailingBindings, term)
+            case Conjunction(Nil, trailingBindings) -> term => mergeDefault(trailingBindings, term)
             // The conditions to be inserted does not overlap with me.
-            case conditions -> term =>
+            case conjunction -> term =>
               wildcard match {
                 // No wildcard. We will create a new one.
-                case N => wildcard = S(buildFirst(conditions, term))
+                case N => wildcard = S(buildFirst(conjunction, term))
                 // There is a wildcard case. Just merge!
-                case S(consequent) => consequent.merge(conditions -> term)
+                case S(consequent) => consequent.merge(conjunction -> term)
               }
           }
         // Found a match condition against the same scrutinee
@@ -334,10 +332,10 @@ object MutCaseOf {
     }
   }
 
-  private def buildFirst(conditions: Conjunction, term: Term): MutCaseOf = {
-    def rec(conditions: Conjunction): MutCaseOf = conditions match {
-      case (head :: tail, trailingBindings) =>
-        val realTail = (tail, trailingBindings)
+  private def buildFirst(conjunction: Conjunction, term: Term): MutCaseOf = {
+    def rec(conjunction: Conjunction): MutCaseOf = conjunction match {
+      case Conjunction(head :: tail, trailingBindings) =>
+        val realTail = Conjunction(tail, trailingBindings)
         val res = head match {
           case BooleanTest(test) => IfThenElse(test, rec(realTail), MissingCase)
           case MatchClass(scrutinee, className, fields) =>
@@ -355,13 +353,13 @@ object MutCaseOf {
         }
         res.addBindings(head.bindings)
         res
-      case (Nil, trailingBindings) =>
+      case Conjunction(Nil, trailingBindings) =>
         val res = Consequent(term)
         res.addBindings(trailingBindings)
         res
     }
 
-    rec(conditions)
+    rec(conjunction)
   }
 
   def build

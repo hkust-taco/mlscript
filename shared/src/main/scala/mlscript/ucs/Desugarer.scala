@@ -10,7 +10,7 @@ import helpers._
   * This class contains main desugaring methods.
   */
 class Desugarer extends TypeDefs { self: Typer =>
-  import Clause.{Conjunction, MatchClass, MatchTuple, BooleanTest}
+  import Clause.{MatchClass, MatchTuple, BooleanTest}
 
   type FieldAliasMap = MutMap[Term, MutMap[Str, Var]]
 
@@ -282,8 +282,6 @@ class Desugarer extends TypeDefs { self: Typer =>
           Iterable.single(clause)
       }
 
-    import Clause.withBindings
-
     /**
       * Recursively desugar a pattern matching branch.
       *
@@ -322,10 +320,8 @@ class Desugarer extends TypeDefs { self: Typer =>
         case L(IfThen(patTest, consequent)) =>
           val (patternPart, extraTestOpt) = separatePattern(patTest)
           val patternConditions = destructPattern(scrutinee, partialPattern.addTerm(patternPart).term, true)
-          val conditions = Conjunction.concat(
-            collectedConditions,
-            withBindings((patternConditions, Nil))
-          )
+          val conditions =
+            collectedConditions + Conjunction(patternConditions, Nil).withBindings
           extraTestOpt match {
             // Case 1. Just a pattern. Easy!
             case N => 
@@ -345,10 +341,8 @@ class Desugarer extends TypeDefs { self: Typer =>
           val (pattern, optTests) = separatePattern(patLhs)
           val patternConditions = destructPattern(scrutinee, pattern)
           val tailTestConditions = optTests.fold(Nil: Ls[Clause])(x => desugarConditions(splitAnd(x)))
-          val conditions = Conjunction.concat(
-            collectedConditions,
-            withBindings((patternConditions ::: tailTestConditions, Nil))
-          )
+          val conditions =
+            collectedConditions + Conjunction(patternConditions ::: tailTestConditions, Nil).withBindings
           desugarIfBody(consequent, PartialTerm.Empty, conditions)
         case L(IfOpApp(patLhs, op, consequent)) =>
           separatePattern(patLhs) match {
@@ -358,10 +352,8 @@ class Desugarer extends TypeDefs { self: Typer =>
             case (pattern, S(extraTests)) =>
               val patternConditions = destructPattern(scrutinee, pattern)
               val extraConditions = desugarConditions(splitAnd(extraTests))
-              val conditions = Conjunction.concat(
-                collectedConditions,
-                withBindings((patternConditions ::: extraConditions, Nil))
-              )
+              val conditions = 
+                collectedConditions + Conjunction(patternConditions ::: extraConditions, Nil).withBindings
               desugarIfBody(consequent, PartialTerm.Empty, conditions)
             // Case 2.
             // The pattern is incomplete. Remaining parts are at next lines.
@@ -383,10 +375,8 @@ class Desugarer extends TypeDefs { self: Typer =>
               val patternConditions = destructPattern(scrutinee, partialPattern.addTerm(patternPart).term)
               val testTerms = splitAnd(extraTests)
               val middleConditions = desugarConditions(testTerms.init)
-              val conditions = Conjunction.concat(
-                collectedConditions,
-                withBindings((patternConditions ::: middleConditions, Nil))
-              )
+              val conditions =
+                collectedConditions + Conjunction(patternConditions ::: middleConditions, Nil).withBindings
               opsRhss.foreach { case op -> consequent =>
                 // TODO: Use lastOption
                 val last = testTerms.last
@@ -427,8 +417,7 @@ class Desugarer extends TypeDefs { self: Typer =>
           val atomicTerms = splitAnd(totalTerm.term)
           val fragments = atomicTerms ::: totalTerm.fragments
           val newClauses = desugarConditions(atomicTerms)(fragments)
-          val conjunction = Conjunction.concat(acc, (newClauses, Nil))
-          branches += (withBindings(conjunction) -> consequent)
+          branches += ((acc + newClauses).withBindings -> consequent)
         // This is the entrance of the Simple UCS.
         case IfOpApp(scrutinee, isVar @ Var("is"), IfBlock(lines)) =>
           val interleavedLets = Buffer.empty[(Bool, Var, Term)]
@@ -441,10 +430,7 @@ class Desugarer extends TypeDefs { self: Typer =>
           lines.foreach(desugarMatchBranch(scrutinee, _, PartialTerm.Empty, acc)(interleavedLets, matchRootLoc))
         // For example: "if x == 0 and y is \n ..."
         case IfOpApp(testPart, Var("and"), consequent) =>
-          val conditions = Conjunction.concat(
-            acc,
-            (desugarConditions(expr.addTerm(testPart).term :: Nil), Nil)
-          )
+          val conditions = acc + (desugarConditions(expr.addTerm(testPart).term :: Nil))
           desugarIfBody(consequent, PartialTerm.Empty, conditions)
         // Otherwise, this is not a pattern matching.
         // We create a partial term from `lhs` and `op` and dive deeper.
@@ -454,7 +440,7 @@ class Desugarer extends TypeDefs { self: Typer =>
         case IfLet(isRec, name, rhs, body) => ???
         // In this case, the accumulated partial term is discarded.
         // We create a branch directly from accumulated conditions.
-        case IfElse(term) => branches += (withBindings(acc) -> term)
+        case IfElse(term) => branches += (acc.withBindings -> term)
         case IfBlock(lines) =>
           lines.foreach {
             case L(subBody) => desugarIfBody(subBody, expr, acc)
@@ -467,9 +453,9 @@ class Desugarer extends TypeDefs { self: Typer =>
     }
     // Top-level interleaved let bindings.
     val interleavedLets = Buffer.empty[(Bool, Var, Term)]
-    desugarIfBody(body, PartialTerm.Empty, (Nil, Nil))(interleavedLets)
+    desugarIfBody(body, PartialTerm.Empty, Conjunction.empty)(interleavedLets)
     // Add the fallback case to conjunctions if there is any.
-    fallback.foreach { branches += (Nil, Nil) -> _ }
+    fallback.foreach { branches += Conjunction.empty -> _ }
     branches.toList
   }
 

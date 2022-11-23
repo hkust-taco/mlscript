@@ -2,11 +2,12 @@ package mlscript.ucs
 
 import mlscript._, utils._, shorthands._
 import Clause._, helpers._
+import scala.collection.mutable.Buffer
 
 /**
   * A `Conjunction` represents a list of `Clause`s.
   */
-object Conjunction {
+final case class Conjunction(clauses: Ls[Clause], trailingBindings: Ls[(Bool, Var, Term)]) {
   /**
     * Concatenate two `Conjunction` together.
     * 
@@ -17,18 +18,27 @@ object Conjunction {
     * @param rhs the right hand side value
     * @return the sititched `Conjunction`
     */
-  def concat(lhs: Conjunction, rhs: Conjunction): Conjunction = {
-    val (lhsConditions, lhsTailBindings) = lhs
-    val (rhsConditions, rhsTailBindings) = rhs
-    rhsConditions match {
-      case Nil => (lhsConditions, lhsTailBindings ::: rhsTailBindings)
+  def +(rhs: Conjunction): Conjunction = {
+    val Conjunction(lhsClauses, lhsTailBindings) = this
+    val Conjunction(rhsClauses, rhsTailBindings) = rhs
+    rhsClauses match {
+      case Nil => Conjunction(lhsClauses, lhsTailBindings ::: rhsTailBindings)
       case head :: _ =>
         head.bindings = lhsTailBindings ::: head.bindings
-        (lhsConditions ::: rhsConditions, rhsTailBindings)
+        Conjunction(lhsClauses ::: rhsClauses, rhsTailBindings)
     }
   }
 
-  def separate(conditions: Conjunction, expectedScrutinee: Scrutinee): Opt[(MatchClass, Conjunction)] = {
+  def +(suffix: Ls[Clause]): Conjunction = {
+    suffix match {
+      case Nil => this
+      case head :: _ =>
+        head.bindings = trailingBindings ::: head.bindings
+        Conjunction(clauses ::: suffix, Nil)
+    }
+  }
+
+  def separate(expectedScrutinee: Scrutinee): Opt[(MatchClass, Conjunction)] = {
     def rec(past: Ls[Clause], upcoming: Ls[Clause])
         : Opt[(Ls[Clause], MatchClass, Ls[Clause])] = {
       upcoming match {
@@ -44,10 +54,28 @@ object Conjunction {
       }
     }
 
-    // println(s"Searching $expectedScrutinee in $conditions")
-    rec(Nil, conditions._1).map { case (past, wanted, remaining) =>
-      // println("Found!")
-      (wanted, (past ::: remaining, conditions._2))
+    rec(Nil, clauses).map { case (past, wanted, remaining) =>
+      (wanted, Conjunction(past ::: remaining, trailingBindings))
     }
   }
+
+  /**
+    * Attach bindings to the first condition of a CNF.
+    *
+    * @param conditions the conditions
+    * @param interleavedLets the interleaved let buffer
+    * @return idential to `conditions`
+    */
+  def withBindings(implicit interleavedLets: Buffer[(Bool, Var, Term)]): Conjunction = {
+    clauses match {
+      case Nil => Conjunction(Nil, interleavedLets.toList ::: trailingBindings)
+      case head :: _ =>
+        head.bindings = interleavedLets.toList
+        this
+    }
+  }
+}
+
+object Conjunction {
+  def empty: Conjunction = Conjunction(Nil, Nil)
 }

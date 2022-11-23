@@ -38,9 +38,6 @@ object Clause {
 
   final case class BooleanTest(test: Term) extends Clause
 
-  // Make it a class, and then include methods in `Conjunction`?
-  type Conjunction = (Ls[Clause], Ls[(Bool, Var, Term)])
-
   def print(println: (=> Any) => Unit, cnf: Ls[Conjunction -> Term]): Unit = {
     def showBindings(bindings: Ls[(Bool, Var, Term)]): Str =
       bindings match {
@@ -51,8 +48,8 @@ object Clause {
       }
 
     println("Flattened conjunctions")
-    cnf.foreach { case ((conditions, tailBindings), term) =>
-      println("+ " + conditions.iterator.map { condition =>
+    cnf.foreach { case Conjunction(clauses, trailingBindings) -> term =>
+      println("+ " + clauses.iterator.map { condition =>
         (condition match {
           case Clause.BooleanTest(test) => s"«$test»"
           case Clause.MatchClass(scrutinee, Var(className), fields) =>
@@ -61,27 +58,10 @@ object Clause {
             s"«$scrutinee is Tuple#$arity»"
         }) + (if (condition.bindings.isEmpty) "" else " with " + showBindings(condition.bindings))
       }.mkString("", " and ", {
-        (if (tailBindings.isEmpty) "" else " ") +
-          showBindings(tailBindings) +
+        (if (trailingBindings.isEmpty) "" else " ") +
+          showBindings(trailingBindings) +
           s" => $term"
       }))
-    }
-  }
-
-  /**
-    * Attach bindings to the first condition of a CNF.
-    *
-    * @param conditions the conditions
-    * @param interleavedLets the interleaved let buffer
-    * @return idential to `conditions`
-    */
-  def withBindings(conditions: Conjunction)(implicit interleavedLets: Buffer[(Bool, Var, Term)])
-        : Conjunction = {
-    conditions._1 match {
-      case Nil => (Nil, interleavedLets.toList ::: conditions._2)
-      case head :: _ =>
-        head.bindings = interleavedLets.toList
-        conditions
     }
   }
 }
