@@ -563,12 +563,6 @@ class Desugarer extends TypeDefs { self: Typer =>
               })
             }
         }
-        // if (branches.length === 1 && scrutinee.isMultiLineMatch && default.isEmpty) {
-        //   import Message.MessageContext
-        //   raise(WarningReport({
-        //     msg"This scrutinee has only one case." -> scrutinee.matchRootLoc
-        //   } :: Nil))
-        // }
         default.foreach(checkExhaustive(_, S(t)))
         branches.foreach { case MutCase(_, consequent) =>
           checkExhaustive(consequent, S(t))
