@@ -8,6 +8,8 @@ import mlscript.utils._, shorthands._
 /** Inessential methods used to help debugging. */
 abstract class TyperHelpers { Typer: Typer =>
   
+  type CompareRecTypes >: Bool
+  
   protected var constrainCalls = 0
   protected var annoyingCalls = 0
   protected var subtypingCalls = 0
@@ -369,13 +371,14 @@ abstract class TyperHelpers { Typer: Typer =>
       case _ => NegType(this)(prov)
     }
     
-    def >:< (that: SimpleType)(implicit ctx: Ctx): Bool =
-      (this is that) || this <:< that && that <:< this
+    def >:< (that: SimpleType)(implicit ctx: Ctx, crt: CompareRecTypes = true): Bool =
+      this <:< that && that <:< this
     
     // TODO for composed types and negs, should better first normalize the inequation
-    def <:< (that: SimpleType)(implicit ctx: Ctx, cache: MutMap[ST -> ST, Bool] = MutMap.empty): Bool =
+    def <:< (that: SimpleType)
+      (implicit ctx: Ctx, crt: CompareRecTypes = true, cache: MutMap[ST -> ST, Bool] = MutMap.empty): Bool =
     {
-    trace(s"? $this <: $that") {
+    // trace(s"? $this <: $that") {
     // trace(s"? $this <: $that   assuming:  ${
     //     cache.iterator.map(kv => "" + kv._1._1 + (if (kv._2) " <: " else " <? ") + kv._1._2).mkString(" ; ")}") {
       subtypingCalls += 1
@@ -411,6 +414,7 @@ abstract class TyperHelpers { Typer: Typer =>
           ns1.forall(ns2) && bs1 <:< that
         case (_, Without(bs, ns)) =>
           this <:< bs
+        case (_: TypeVariable, _) | (_, _: TypeVariable) if crt === false => false
         case (_: TypeVariable, _) | (_, _: TypeVariable)
           if cache.contains(this -> that)
           => cache(this -> that)
@@ -463,7 +467,7 @@ abstract class TyperHelpers { Typer: Typer =>
         case (_: RecordType, _: ObjectTag) | (_: ObjectTag, _: RecordType) => false
         // case _ => lastWords(s"TODO $this $that ${getClass} ${that.getClass()}")
       }
-    }(r => s"! $r")
+    // }(r => s"! $r")
     }
     
     def isTop: Bool = (TopType <:< this)(Ctx.empty)

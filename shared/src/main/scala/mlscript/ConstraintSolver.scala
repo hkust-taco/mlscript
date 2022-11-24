@@ -300,7 +300,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       // println(s"{{ ${cache.mkString(", ")} }}")
       
       // if (lhs === rhs) return ()
-      if (false) return ()
+      implicit val ctr: CompareRecTypes = false
+      if (lhs <:< rhs) return ()
+      // if (false) return ()
       
       // if (lhs <:< rhs) return () // * It's not clear that doing this here is worth it
       

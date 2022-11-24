@@ -14,7 +14,7 @@ def foo(fa: ((~'a) -> 'a, 'a)) =
 foo
 //│ res: (~'a -> 'a, 'a,) -> 'b
 //│   where
-//│     'a <: 'b & 'c & 'a
+//│     'a <: 'b & 'c
 //│     'c <: ~'a
 //│    = [Function: foo1]
 

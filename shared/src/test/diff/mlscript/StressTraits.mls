@@ -31,7 +31,7 @@ def foo x = case x of {
 //│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | ~#C & ({fD: 'fA} & #D | ~#D & ({fE: 'fA} & #E | ~#E & ({fF: 'fA} & #F | ~#F & ({fG: 'fA} & #G | {fH: 'fA} & #H & ~#G))))))) -> 'fA
 //│ constrain calls  : 26
 //│ annoying  calls  : 0
-//│ subtyping calls  : 550
+//│ subtyping calls  : 659
 
 
 // ====== 1 & all ====== //
@@ -43,7 +43,7 @@ foo arg
 //│ res: int
 //│ constrain calls  : 19
 //│ annoying  calls  : 9
-//│ subtyping calls  : 640
+//│ subtyping calls  : 900
 
 :stats
 :e
@@ -61,9 +61,9 @@ foo arg
 //│ ║  l.21: 	def foo x = case x of {
 //│ ╙──      	                 ^
 //│ res: error | int
-//│ constrain calls  : 42
-//│ annoying  calls  : 32
-//│ subtyping calls  : 1448
+//│ constrain calls  : 38
+//│ annoying  calls  : 31
+//│ subtyping calls  : 2019
 
 :stats
 :e
@@ -81,9 +81,9 @@ foo arg
 //│ ║  l.21: 	def foo x = case x of {
 //│ ╙──      	                 ^
 //│ res: error | int
-//│ constrain calls  : 94
-//│ annoying  calls  : 96
-//│ subtyping calls  : 4696
+//│ constrain calls  : 70
+//│ annoying  calls  : 90
+//│ subtyping calls  : 5804
 
 :stats
 :e
@@ -101,9 +101,9 @@ foo arg
 //│ ║  l.21: 	def foo x = case x of {
 //│ ╙──      	                 ^
 //│ res: error
-//│ constrain calls  : 141
-//│ annoying  calls  : 228
-//│ subtyping calls  : 27113
+//│ constrain calls  : 93
+//│ annoying  calls  : 216
+//│ subtyping calls  : 28645
 
 
 // ====== 2 ====== //
@@ -129,9 +129,9 @@ foo arg
 //│ ║  l.113: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error | int
-//│ constrain calls  : 50
-//│ annoying  calls  : 32
-//│ subtyping calls  : 232
+//│ constrain calls  : 46
+//│ annoying  calls  : 31
+//│ subtyping calls  : 564
 
 
 // ====== 3 ====== //
@@ -158,9 +158,9 @@ foo arg
 //│ ║  l.141: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error | int
-//│ constrain calls  : 105
-//│ annoying  calls  : 96
-//│ subtyping calls  : 2956
+//│ constrain calls  : 81
+//│ annoying  calls  : 90
+//│ subtyping calls  : 3783
 
 
 // ====== 4 ====== //
@@ -188,9 +188,9 @@ foo arg
 //│ ║  l.170: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 129
-//│ annoying  calls  : 138
-//│ subtyping calls  : 3725
+//│ constrain calls  : 101
+//│ annoying  calls  : 131
+//│ subtyping calls  : 4972
 
 :stats
 :e
@@ -206,9 +206,9 @@ foo (arg with { x = 1} with { y = 2 })
 //│ ║  l.170: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 104
-//│ annoying  calls  : 135
-//│ subtyping calls  : 4379
+//│ constrain calls  : 76
+//│ annoying  calls  : 128
+//│ subtyping calls  : 5326
 
 :stats
 :e
@@ -224,9 +224,9 @@ foo (arg with { x = 1; y = 2; z = 3 })
 //│ ║  l.170: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 104
-//│ annoying  calls  : 135
-//│ subtyping calls  : 4889
+//│ constrain calls  : 76
+//│ annoying  calls  : 128
+//│ subtyping calls  : 5836
 
 
 // ====== 5 ====== //
@@ -255,9 +255,9 @@ foo arg
 //│ ║  l.236: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 133
-//│ annoying  calls  : 138
-//│ subtyping calls  : 4161
+//│ constrain calls  : 105
+//│ annoying  calls  : 131
+//│ subtyping calls  : 5537
 
 
 // ====== 6 ====== //
@@ -287,9 +287,9 @@ foo arg
 //│ ║  l.267: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 137
-//│ annoying  calls  : 138
-//│ subtyping calls  : 4790
+//│ constrain calls  : 109
+//│ annoying  calls  : 131
+//│ subtyping calls  : 6304
 
 
 // ====== 7 ====== //
@@ -320,9 +320,9 @@ foo arg
 //│ ║  l.299: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 141
-//│ annoying  calls  : 138
-//│ subtyping calls  : 5645
+//│ constrain calls  : 113
+//│ annoying  calls  : 131
+//│ subtyping calls  : 7306
 
 def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│ foo_manual: ({fA: 'a} & #A | ~#A & ({fB: 'a} & #B | ~#B & ({fC: 'a} & #C | ~#C & ({fD: 'a} & #D | ~#D & ({fE: 'a} & #E | ~#E & ({fF: 'a} & #F | {fG: 'a} & #G & ~#F)))))) -> 'a
@@ -345,16 +345,16 @@ foo_manual arg
 //│ res: error
 //│ constrain calls  : 23
 //│ annoying  calls  : 67
-//│ subtyping calls  : 4984
+//│ subtyping calls  : 6083
 
 :stats
 foo_manual = foo
 //│ ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | ~#C & ({fD: 'fA} & #D | ~#D & ({fE: 'fA} & #E | ~#E & ({fF: 'fA} & #F | {fG: 'fA} & #G & ~#F)))))) -> 'fA
 //│   <:  foo_manual:
 //│ ({fA: 'a} & #A | ~#A & ({fB: 'a} & #B | ~#B & ({fC: 'a} & #C | ~#C & ({fD: 'a} & #D | ~#D & ({fE: 'a} & #E | ~#E & ({fF: 'a} & #F | {fG: 'a} & #G & ~#F)))))) -> 'a
-//│ constrain calls  : 110
+//│ constrain calls  : 96
 //│ annoying  calls  : 183
-//│ subtyping calls  : 4341
+//│ subtyping calls  : 7130
 
 
 // ====== 8 ====== //
@@ -386,8 +386,8 @@ foo arg
 //│ ║  l.364: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 145
-//│ annoying  calls  : 138
-//│ subtyping calls  : 6759
+//│ constrain calls  : 117
+//│ annoying  calls  : 131
+//│ subtyping calls  : 8576
 
 
