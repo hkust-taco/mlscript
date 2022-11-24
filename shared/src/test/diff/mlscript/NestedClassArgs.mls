@@ -180,7 +180,7 @@ c = c6
 //│ 'a -> C6['a]
 //│ constrain calls  : 86
 //│ annoying  calls  : 20
-//│ subtyping calls  : 765
+//│ subtyping calls  : 679
 
 
 // Reproduction of an issue found while trying out TypeRef ctor typing:

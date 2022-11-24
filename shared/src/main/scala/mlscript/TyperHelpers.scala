@@ -371,6 +371,11 @@ abstract class TyperHelpers { Typer: Typer =>
       case _ => NegType(this)(prov)
     }
     
+    lazy val mentionsTypeBounds: Bool = this match {
+      case _: TypeBounds => true
+      case _ => children(includeBounds = false).exists(_.mentionsTypeBounds)
+    }
+    
     def >:< (that: SimpleType)(implicit ctx: Ctx, crt: CompareRecTypes = true): Bool =
       this <:< that && that <:< this
     
@@ -384,6 +389,7 @@ abstract class TyperHelpers { Typer: Typer =>
       subtypingCalls += 1
       def assume[R](k: MutMap[ST -> ST, Bool] => R): R = k(cache.map(kv => kv._1 -> true))
       // (this === that) || ((this, that) match {
+      if (!mentionsTypeBounds && this === that) return true
       (this, that) match {
         case (ProxyType(und), _) => und <:< that
         case (_, ProxyType(und)) => this <:< und
