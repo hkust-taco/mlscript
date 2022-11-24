@@ -42,7 +42,7 @@ object Converter {
     case TSTupleType(lst) => s"(${lst.foldLeft("")((p, t) => s"$p${convert(t)}, ")})"
     case TSArrayType(element) => s"MutArray<${convert(element)}>"
     case TSEnumType => "int"
-    case TSMemberType(base, _) => convert(base) // TODO: support private/protected members
+    case TSMemberType(base, _, _) => convert(base) // TODO: support private/protected members
     case TSInterfaceType(name, members, typeVars, parents) =>
       convertRecord(s"trait $name", members, typeVars, parents, Map(), List())(indent)
     case TSClassType(name, members, statics, typeVars, parents, cons) =>
