@@ -145,3 +145,32 @@ q q
 //│ Runtime error:
 //│   TypeError: q is not a function
 
+
+:NoJS
+
+class Expr[A]
+  method Inv: A -> A
+//│ Defined class Expr[=A]
+//│ Declared Expr.Inv: Expr['A] -> 'A -> 'A
+
+def e: Expr[?]
+def f: Expr[?] -> Expr[?]
+//│ e: Expr[?]
+//│ f: Expr[?] -> Expr[?]
+
+// * `Expr[?] <: Expr[?]` is false
+// * because each `?` stands for an unknown type ranging from Bot to Top
+:e
+f e
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.164: 	f e
+//│ ║         	^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.156: 	def e: Expr[?]
+//│ ║         	            ^
+//│ ╟── Note: constraint arises from type wildcard:
+//│ ║  l.157: 	def f: Expr[?] -> Expr[?]
+//│ ╙──       	            ^
+//│ res: error | Expr[?]
+
+

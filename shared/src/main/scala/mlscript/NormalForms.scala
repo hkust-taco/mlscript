@@ -128,11 +128,10 @@ class NormalForms extends TyperDatatypes { self: Typer =>
           trs.valuesIterator.foldLeft((bo.fold(some(this & rt))(this & rt & _)))(_.getOrElse(return N) & _)
         )(_.getOrElse(return N) & _)
     }
-    def <:< (that: LhsNf): Bool = (this, that) match {
+    def <:< (that: LhsNf)(implicit ctx: Ctx): Bool = (this, that) match {
       case (_, LhsTop) => true
       case (LhsTop, _) => false
       case (LhsRefined(b1, ts1, rt1, trs1), LhsRefined(b2, ts2, rt2, trs2)) =>
-        implicit val ctx: Ctx = Ctx.empty
         b2.forall(b2 => b1.exists(_ <:< b2)) &&
           ts2.forall(ts1) && rt1 <:< rt2 &&
           trs2.valuesIterator.forall(tr2 => trs1.valuesIterator.exists(_ <:< tr2))
@@ -249,7 +248,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         S(RhsBases(p, S(R(RhsField(n1, t1 || that._2))), trs))
       case _: RhsField | _: RhsBases => N
     }
-    def <:< (that: RhsNf): Bool = (this.toType() <:< that.toType())(Ctx.empty) // TODO less inefficient! (uncached calls to toType)
+    def <:< (that: RhsNf)(implicit ctx: Ctx): Bool = (this.toType() <:< that.toType()) // TODO less inefficient! (uncached calls to toType)
     def isBot: Bool = isInstanceOf[RhsBot.type]
   }
   case class RhsField(name: Var, ty: FieldType) extends RhsNf {
@@ -286,7 +285,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         case RhsBot | _: RhsField => this
       }
     }
-    def <:< (that: Conjunct): Bool =
+    def <:< (that: Conjunct)(implicit ctx: Ctx): Bool =
       // trace(s"?? $this <:< $that") {
       that.vars.forall(vars) &&
         lnf <:< that.lnf &&
@@ -295,7 +294,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       // }(r => s"!! $r")
     def & (that: Conjunct)(implicit ctx: Ctx, etf: ExpandTupleFields): Opt[Conjunct] =
       // trace(s"?? $this & $that ${lnf & that.lnf} ${rnf | that.rnf}") {
-      if ((lnf.toType() <:< that.rnf.toType())(Ctx.empty)) N // TODO support <:< on any Nf? // TODO less inefficient! (uncached calls to toType)
+      if ((lnf.toType() <:< that.rnf.toType())) N // TODO support <:< on any Nf? // TODO less inefficient! (uncached calls to toType)
       else S(Conjunct.mk(lnf & that.lnf getOrElse (return N), vars | that.vars
         , rnf | that.rnf getOrElse (return N)
         , nvars | that.nvars))

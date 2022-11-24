@@ -145,9 +145,6 @@ f: (Foo2[?] & 'a) -> 'a
 :ns
 f: (Foo2[?] & 'a) -> 'a
 //│ res: (Foo2[?] & 'a) -> 'a
-//│   where
-//│     'a :> Foo2[?] & 'a
-//│        <: (#Foo2 | ~{Foo2#A} | ~#Foo2 | ~(#Foo2 & {Foo2#A})) & (#Foo2 | ~(#Foo2 & {Foo2#A}))
 //│    = [Function: f]
 
 f
@@ -170,25 +167,25 @@ mrg = Foo2{}
 //│   <:  mrg:
 //│ Foo2[in int | string out nothing]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.168: 	mrg = Foo2{}
+//│ ║  l.165: 	mrg = Foo2{}
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type `string` is not an instance of type `int`
-//│ ║  l.158: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║  l.155: 	def mrg: Foo2[int] & Foo2[string]
 //│ ║         	                          ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.158: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║  l.155: 	def mrg: Foo2[int] & Foo2[string]
 //│ ║         	              ^^^
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.110: 	class Foo2[A]
 //│ ╙──       	           ^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.168: 	mrg = Foo2{}
+//│ ║  l.165: 	mrg = Foo2{}
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type `int` is not an instance of type `string`
-//│ ║  l.158: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║  l.155: 	def mrg: Foo2[int] & Foo2[string]
 //│ ║         	              ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.158: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║  l.155: 	def mrg: Foo2[int] & Foo2[string]
 //│ ╙──       	                          ^^^^^^
 //│    = Foo2 {}
 
@@ -236,9 +233,6 @@ f: (Foo2_Co[?] & 'a) -> 'a
 :ns
 f: (Foo2_Co[?] & 'a) -> 'a
 //│ res: (Foo2_Co[?] & 'a) -> 'a
-//│   where
-//│     'a :> Foo2_Co[?] & 'a
-//│        <: (#Foo2_Co | ~{Foo2_Co#A} | ~#Foo2_Co | ~(#Foo2_Co & {Foo2_Co#A})) & (#Foo2_Co | ~(#Foo2_Co & {Foo2_Co#A}))
 //│    = [Function: f1]
 
 f
@@ -271,10 +265,10 @@ def mrg: Foo2_Co[int] | Foo2_Co[string]
 class Foo2_Bi[A]
 //│ Defined class Foo2_Bi[±A]
 //│ ╔══[WARNING] Type definition Foo2_Bi has bivariant type parameters:
-//│ ║  l.271: 	class Foo2_Bi[A]
+//│ ║  l.265: 	class Foo2_Bi[A]
 //│ ║         	      ^^^^^^^
 //│ ╟── A is irrelevant and may be removed
-//│ ║  l.271: 	class Foo2_Bi[A]
+//│ ║  l.265: 	class Foo2_Bi[A]
 //│ ╙──       	              ^
 
 Foo2_Bi
@@ -308,9 +302,6 @@ f: (Foo2_Bi[?] & 'a) -> 'a
 :ns
 f: (Foo2_Bi[?] & 'a) -> 'a
 //│ res: (Foo2_Bi[?] & 'a) -> 'a
-//│   where
-//│     'a :> Foo2_Bi[?] & 'a
-//│        <: (#Foo2_Bi | ~{Foo2_Bi#A} | ~#Foo2_Bi | ~(#Foo2_Bi & {Foo2_Bi#A})) & (#Foo2_Bi | ~(#Foo2_Bi & {Foo2_Bi#A}))
 //│    = [Function: f2]
 
 f

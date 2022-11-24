@@ -19,9 +19,9 @@ ty0 = ty0
 //│ (A & 'a & 'b | 'e & (D & 'd | E & 'f) | 'c & (B & 'b | C & 'd)) -> ('a, 'b, 'c, 'd, 'e, 'f,)
 //│   <:  ty0:
 //│ (E & 'e & 'f | 'd & (C & 'c | D & 'e) | 'b & (A & 'a | B & 'c)) -> ('a, 'b, 'c, 'd, 'e, 'f,)
-//│ constrain calls  : 99
-//│ annoying  calls  : 45
-//│ subtyping calls  : 590
+//│ constrain calls  : 51
+//│ annoying  calls  : 35
+//│ subtyping calls  : 1617
 
 def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ty1: (A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, nothing,)
@@ -31,9 +31,9 @@ ty0 = ty1
 //│ (A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, nothing,)
 //│   <:  ty0:
 //│ (E & 'e & 'f | 'd & (C & 'c | D & 'e) | 'b & (A & 'a | B & 'c)) -> ('a, 'b, 'c, 'd, 'e, 'f,)
-//│ constrain calls  : 65
-//│ annoying  calls  : 30
-//│ subtyping calls  : 360
+//│ constrain calls  : 41
+//│ annoying  calls  : 25
+//│ subtyping calls  : 1183
 
 :stats
 :e
@@ -86,8 +86,8 @@ ty1 = ty0
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ╙──      	                                                                              ^^
-//│ constrain calls  : 99
-//│ annoying  calls  : 60
-//│ subtyping calls  : 450
+//│ constrain calls  : 75
+//│ annoying  calls  : 55
+//│ subtyping calls  : 1336
 
 
