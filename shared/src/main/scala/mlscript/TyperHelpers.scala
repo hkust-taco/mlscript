@@ -378,7 +378,12 @@ abstract class TyperHelpers { Typer: Typer =>
       * which IN POSITIVE POSITION is equivalent to `bot -> top`
       * and IN NEGATIVE POSITION is equivalent to `top -> bot`.
       * Therefore, while syntactically `Foo[bot..top] === Foo[bot..top]`,
-      * we DO NOT have that `Foo[bot..top] <: Foo[bot..top]`. */
+      * we DO NOT have that `Foo[bot..top] <: Foo[bot..top]`.
+      * This check is still a little wrong in that we don't look into type definitions,
+      * someone may register type definitions whose bodies involve `TypeBound`s... Though
+      * it seems the typer should desugar these bounds when psosible and reject them otherwise.
+      * OTOH, note that we truly don't have to look into type variable bounds because these
+      * bounds are maintained consistent. */
     lazy val mentionsTypeBounds: Bool = this match {
       case _: TypeBounds => true
       case _ => children(includeBounds = false).exists(_.mentionsTypeBounds)
