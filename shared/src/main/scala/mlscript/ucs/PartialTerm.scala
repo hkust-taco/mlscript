@@ -22,19 +22,19 @@ sealed abstract class PartialTerm(val fragments: Ls[Term]) {
 
 object PartialTerm {
   final case object Empty extends PartialTerm(Nil) {
-    override def addTerm(term: Term): Total = Total(term, term :: Nil)
-    override def addOp(op: Var): Half =
+    def addTerm(term: Term): Total = Total(term, term :: Nil)
+    def addOp(op: Var): Half =
       throw new PartialTermError(this, s"expect a term but operator $op was given")
   }
 
   final case class Total(val term: Term, override val fragments: Ls[Term]) extends PartialTerm(fragments) {
-    override def addTerm(term: Term): Total =
+    def addTerm(term: Term): Total =
       throw new PartialTermError(this, s"expect an operator but term $term was given")
-    override def addOp(op: Var): Half = Half(term, op, op :: fragments)
+    def addOp(op: Var): Half = Half(term, op, op :: fragments)
   }
 
   final case class Half(lhs: Term, op: Var, override val fragments: Ls[Term]) extends PartialTerm(fragments) {
-    override def addTerm(rhs: Term): Total = {
+    def addTerm(rhs: Term): Total = {
       val (realRhs, extraExprOpt) = separatePattern(rhs)
       val leftmost = mkBinOp(lhs, op, realRhs)
       extraExprOpt match {
@@ -42,7 +42,7 @@ object PartialTerm {
         case S(extraExpr) => Total(mkBinOp(leftmost, Var("and"), extraExpr), extraExpr :: fragments)
       }
     }
-    override def addOp(op: Var): Half =
+    def addOp(op: Var): Half =
       throw new PartialTermError(this, s"expect a term but operator $op was given")
   }
 }
