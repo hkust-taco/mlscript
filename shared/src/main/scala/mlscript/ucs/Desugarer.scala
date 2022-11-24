@@ -459,8 +459,6 @@ class Desugarer extends TypeDefs { self: Typer =>
     */
   type ExhaustivenessMap = Map[Str \/ Int, Map[Var, MutCase]]
 
-  type MutExhaustivenessMap = MutMap[Str \/ Int, MutMap[Var, MutCase]]
-
   def getScurtineeKey(scrutinee: Scrutinee)(implicit ctx: Ctx, raise: Raise): Str \/ Int = {
     scrutinee.term match {
       // The original scrutinee is an reference.
