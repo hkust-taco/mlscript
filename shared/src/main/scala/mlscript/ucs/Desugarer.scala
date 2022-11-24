@@ -140,7 +140,7 @@ class Desugarer extends TypeDefs { self: Typer =>
       // x is A
       case classNameVar @ Var(className) =>
         ctx.tyDefs.get(className) match {
-          case N => throw DesugaringException.Single({
+          case N => throw new DesugaringException({
             import Message.MessageContext
             msg"Cannot find the constructor `$className` in the context"
           }, classNameVar.toLoc)
@@ -153,7 +153,7 @@ class Desugarer extends TypeDefs { self: Typer =>
       case app @ App(classNameVar @ Var(className), Tup(args)) =>
         ctx.tyDefs.get(className) match {
           case N =>
-            throw DesugaringException.Single({
+            throw new DesugaringException({
               import Message.MessageContext
               msg"Cannot find class `$className` in the context"
             }, classNameVar.toLoc)
@@ -170,7 +170,7 @@ class Desugarer extends TypeDefs { self: Typer =>
               printlnUCS(s"The locations of the clause: ${clause.locations}")
               clause :: destructSubPatterns(subPatterns)
             } else {
-              throw DesugaringException.Single({
+              throw new DesugaringException({
                 import Message.MessageContext
                 val expected = td.positionals.length
                 val actual = args.length
@@ -193,7 +193,7 @@ class Desugarer extends TypeDefs { self: Typer =>
       ) =>
         ctx.tyDefs.get(op) match {
           case N =>
-            throw DesugaringException.Single({
+            throw new DesugaringException({
               import Message.MessageContext
               msg"Cannot find operator `$op` in the context"
             }, opVar.toLoc)
@@ -208,7 +208,7 @@ class Desugarer extends TypeDefs { self: Typer =>
             clause :: destructSubPatterns(subPatterns)
           case S(td) =>
             val num = td.positionals.length
-            throw DesugaringException.Single({
+            throw new DesugaringException({
               import Message.MessageContext
               val expected = td.positionals.length
               msg"${td.kind.str} `$op` expects ${expected.toString} ${
@@ -384,7 +384,7 @@ class Desugarer extends TypeDefs { self: Typer =>
         case R(NuFunDef(S(isRec), nameVar, _, L(term))) =>
           interleavedLets += ((isRec, nameVar, term))
         // Other statements are considered to be ill-formed.
-        case R(statement) => throw DesugaringException.Single({
+        case R(statement) => throw new DesugaringException({
           import Message.MessageContext
           msg"Illegal interleaved statement ${statement.toString}"
         }, statement.toLoc)
@@ -496,7 +496,7 @@ class Desugarer extends TypeDefs { self: Typer =>
         parentOpt match {
           case S(IfThenElse(test, whenTrue, whenFalse)) =>
             if (whenFalse === t) {
-              throw DesugaringException.Single(msg"Missing the otherwise case of test ${test.toString}", test.toLoc)
+              throw new DesugaringException(msg"Missing the otherwise case of test ${test.toString}", test.toLoc)
             } else {
               lastWords("`MissingCase` are not supposed to be the true branch of `IfThenElse`")
             }
@@ -524,7 +524,7 @@ class Desugarer extends TypeDefs { self: Typer =>
             })
             printlnUCS(s"Number of missing cases: ${missingCases.size}")
             if (!missingCases.isEmpty) {
-              throw DesugaringException.Multiple({
+              throw new DesugaringException({
                 import Message.MessageContext
                 val numMissingCases = missingCases.size
                 (msg"The match is not exhaustive." -> scrutinee.matchRootLoc) ::

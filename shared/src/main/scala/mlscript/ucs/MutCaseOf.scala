@@ -325,7 +325,7 @@ object MutCaseOf {
 
     override def toTerm: Term = {
       import Message.MessageContext
-      throw DesugaringException.Single(msg"missing a default branch", N)
+      throw new DesugaringException(msg"missing a default branch", N)
     }
   }
 
