@@ -17,7 +17,7 @@ class Desugarer extends TypeDefs { self: Typer =>
 
   import Clause.{MatchClass, MatchTuple, BooleanTest}
 
-  type FieldAliasMap = MutMap[Term, MutMap[Str, Var]]
+  type FieldAliasMap = MutMap[SimpleTerm, MutMap[Str, Var]]
 
   private var idLength: Int = 0
 
@@ -27,9 +27,19 @@ class Desugarer extends TypeDefs { self: Typer =>
     res
   }
 
+  /**
+    * 
+    *
+    * @param scrutinee the scrutinee of the pattern matching
+    * @param params parameters provided by the 
+    * @param positionals the corresponding field names of each parameter
+    * @param aliasMap a map used to cache each the alias of each field
+    * @param matchRootLoc the location to the root of the match
+    * @return a mapping from each field to their var
+    */
   private def desugarPositionals
-    (scrutinee: Term, params: IterableOnce[Term], positionals: Ls[Str])
-    (implicit aliasMap: FieldAliasMap, matchRootLoc: Opt[Loc]): (Buffer[Var -> Term], Ls[Str -> Var]) = {
+    (scrutinee: Scrutinee, params: IterableOnce[Term], positionals: Ls[Str])
+    (implicit aliasMap: FieldAliasMap): (Ls[Var -> Term], Ls[Str -> Var]) = {
     val subPatterns = Buffer.empty[(Var, Term)]
     val bindings = params.iterator.zip(positionals).flatMap {
       // `x is A(_)`: ignore this binding
@@ -42,12 +52,12 @@ class Desugarer extends TypeDefs { self: Typer =>
         // We should always use the same temporary for the same `fieldName`.
         // This uniqueness is decided by (scrutinee, fieldName).
         val alias = aliasMap
-          .getOrElseUpdate(scrutinee, MutMap.empty)
+          .getOrElseUpdate(scrutinee.reference, MutMap.empty)
           .getOrElseUpdate(fieldName, Var(freshName).desugaredFrom(pattern))
         subPatterns += ((alias, pattern))
         S(fieldName -> alias)
     }.toList
-    subPatterns -> bindings
+    subPatterns.toList -> bindings
   }
 
   /**
@@ -58,10 +68,10 @@ class Desugarer extends TypeDefs { self: Typer =>
     * @param aliasMap the field alias map
     * @return desugared conditions representing the sub-patterns
     */
-  private def destructSubPatterns(subPatterns: Iterable[Var -> Term])
-      (implicit ctx: Ctx, raise: Raise, aliasMap: FieldAliasMap, matchRootLoc: Opt[Loc]): Ls[Clause] = {
-    subPatterns.iterator.flatMap[Clause] {
-      case (scrutinee, subPattern) => destructPattern(scrutinee, subPattern)
+  private def destructSubPatterns(scrutinee: Scrutinee, subPatterns: Iterable[Var -> Term])
+      (implicit ctx: Ctx, raise: Raise, aliasMap: FieldAliasMap): Ls[Clause] = {
+    subPatterns.iterator.flatMap[Clause] { case (subScrutinee, subPattern) =>
+      destructPattern(makeScrutinee(subScrutinee, scrutinee.matchRootLoc), subPattern)
     }.toList
   }
 
@@ -77,10 +87,10 @@ class Desugarer extends TypeDefs { self: Typer =>
     * @param matchRootLoc the caller is expect to be in a match environment,
     * this parameter indicates the location of the match root
     */
-  def makeScrutinee(term: Term)(implicit matchRootLoc: Opt[Loc]): Scrutinee =
+  def makeScrutinee(term: Term, matchRootLoc: Opt[Loc]): Scrutinee =
     traceUCS(s"Making a scrutinee for `$term`") {
       term match {
-        case _: Var | _: Lit => Scrutinee(N, term)(matchRootLoc)
+        case _: SimpleTerm => Scrutinee(N, term)(matchRootLoc)
         case _ =>
           val localName = if (localizedScrutineeMap.containsKey(term)) {
             localizedScrutineeMap.get(term)
@@ -108,11 +118,10 @@ class Desugarer extends TypeDefs { self: Typer =>
     * do not contain interleaved let bindings.
     */
   private def destructPattern
-      (scrutinee: Term, pattern: Term)
+      (scrutinee: Scrutinee, pattern: Term)
       (implicit ctx: Ctx,
                 raise: Raise,
                 aliasMap: FieldAliasMap,
-                matchRootLoc: Opt[Loc],
                 fragments: Ls[Term] = Nil): Ls[Clause] = {
     // This piece of code is use in two match cases.
     def desugarTuplePattern(tuple: Tup): Ls[Clause] = {
@@ -122,10 +131,10 @@ class Desugarer extends TypeDefs { self: Typer =>
         1.to(tuple.fields.length).map("_" + _).toList
       )
       Clause.MatchTuple(
-        makeScrutinee(scrutinee),
+        scrutinee,
         tuple.fields.length,
         bindings
-      )(collectLocations(scrutinee)) :: destructSubPatterns(subPatterns)
+      )(collectLocations(scrutinee.term)) :: destructSubPatterns(scrutinee, subPatterns)
     }
     pattern match {
       // This case handles top-level wildcard `Var`.
@@ -134,8 +143,8 @@ class Desugarer extends TypeDefs { self: Typer =>
       // This case handles literals.
       // x is true | x is false | x is 0 | x is "text" | ...
       case literal @ (Var("true") | Var("false") | _: Lit) =>
-        val test = mkBinOp(scrutinee, Var("=="), literal)
-        Clause.BooleanTest(test)(scrutinee.toLoc.toList ::: literal.toLoc.toList) :: Nil
+        val test = mkBinOp(scrutinee.reference, Var("=="), literal)
+        Clause.BooleanTest(test)(scrutinee.term.toLoc.toList ::: literal.toLoc.toList) :: Nil
       // This case handles simple class tests.
       // x is A
       case classNameVar @ Var(className) =>
@@ -146,7 +155,7 @@ class Desugarer extends TypeDefs { self: Typer =>
           }, classNameVar.toLoc)
           case S(_) => 
             printlnUCS(s"Build a Clause.MatchClass from $scrutinee where pattern is $classNameVar")
-            Clause.MatchClass(makeScrutinee(scrutinee), classNameVar, Nil)(collectLocations(scrutinee)) :: Nil
+            Clause.MatchClass(scrutinee, classNameVar, Nil)(collectLocations(scrutinee.term)) :: Nil
         }
       // This case handles classes with destruction.
       // x is A(r, s, t)
@@ -164,11 +173,11 @@ class Desugarer extends TypeDefs { self: Typer =>
                 args.iterator.map(_._2.value),
                 td.positionals
               )
-              val clause = Clause.MatchClass(makeScrutinee(scrutinee), classNameVar, bindings)(pattern.toLoc.toList ::: collectLocations(scrutinee))
+              val clause = Clause.MatchClass(scrutinee, classNameVar, bindings)(pattern.toLoc.toList ::: collectLocations(scrutinee.term))
               printlnUCS(s"Build a Clause.MatchClass from $scrutinee where pattern is $pattern")
               printlnUCS(s"Fragments: $fragments")
               printlnUCS(s"The locations of the clause: ${clause.locations}")
-              clause :: destructSubPatterns(subPatterns)
+              clause :: destructSubPatterns(scrutinee, subPatterns)
             } else {
               throw new DesugaringException({
                 import Message.MessageContext
@@ -203,9 +212,9 @@ class Desugarer extends TypeDefs { self: Typer =>
               lhs :: rhs :: Nil,
               td.positionals
             )
-            val clause = Clause.MatchClass(makeScrutinee(scrutinee), opVar, bindings)(collectLocations(scrutinee))
+            val clause = Clause.MatchClass(scrutinee, opVar, bindings)(collectLocations(scrutinee.term))
             printlnUCS(s"Build a Clause.MatchClass from $scrutinee where operator is $opVar")
-            clause :: destructSubPatterns(subPatterns)
+            clause :: destructSubPatterns(scrutinee, subPatterns)
           case S(td) =>
             val num = td.positionals.length
             throw new DesugaringException({
@@ -266,7 +275,11 @@ class Desugarer extends TypeDefs { self: Typer =>
           App(Var("is"),
               Tup((_ -> Fld(_, _, scrutinee)) :: Nil)),
           Tup((_ -> Fld(_, _, pattern)) :: Nil)
-        ) => destructPattern(scrutinee, pattern)(ctx, raise, implicitly, isApp.toLoc)
+        ) =>
+          // This is an inline `x is Class` match test.
+          val inlineMatchLoc = isApp.toLoc
+          val inlineScrutinee = makeScrutinee(scrutinee, inlineMatchLoc)
+          destructPattern(inlineScrutinee, pattern)(ctx, raise, scrutineeFieldAliasMap)
         case test =>
           val clause = Clause.BooleanTest(test)(collectLocations(test))
           Iterable.single(clause)
@@ -284,11 +297,11 @@ class Desugarer extends TypeDefs { self: Typer =>
       * @param rootLoc the location of the `IfOpApp`
       */
     def desugarMatchBranch(
-      scrutinee: Term,
+      scrutinee: Scrutinee,
       body: IfBody \/ Statement,
       partialPattern: PartialTerm,
       collectedConditions: Conjunction,
-    )(implicit interleavedLets: Buffer[(Bool, Var, Term)], rootLoc: Opt[Loc]): Unit =
+    )(implicit interleavedLets: Buffer[(Bool, Var, Term)]): Unit =
       body match {
         // This case handles default branches. For example,
         // if x is
@@ -410,15 +423,16 @@ class Desugarer extends TypeDefs { self: Typer =>
           val newClauses = desugarConditions(atomicTerms)(fragments)
           branches += ((acc + newClauses).withBindings -> consequent)
         // This is the entrance of the Simple UCS.
-        case IfOpApp(scrutinee, isVar @ Var("is"), IfBlock(lines)) =>
+        case IfOpApp(scrutineeTerm, isVar @ Var("is"), IfBlock(lines)) =>
           val interleavedLets = Buffer.empty[(Bool, Var, Term)]
           // We don't need to include the entire `IfOpApp` because it might be
           // very long... Indicating the beginning of the match is enough.
-          val matchRootLoc = (scrutinee.toLoc, isVar.toLoc) match {
-            case (S(first), S(second)) => S(Loc(first.spanStart, second.spanEnd, first.origin))
+          val matchRootLoc = (scrutineeTerm.toLoc, isVar.toLoc) match {
+            case (S(first), S(second)) => S(first ++ second)
             case (_, _) => N
           }
-          lines.foreach(desugarMatchBranch(scrutinee, _, PartialTerm.Empty, acc)(interleavedLets, matchRootLoc))
+          val scrutinee = makeScrutinee(scrutineeTerm, matchRootLoc)
+          lines.foreach(desugarMatchBranch(scrutinee, _, PartialTerm.Empty, acc)(interleavedLets))
         // For example: "if x == 0 and y is \n ..."
         case IfOpApp(testPart, Var("and"), consequent) =>
           val conditions = acc + (desugarConditions(expr.addTerm(testPart).term :: Nil))
