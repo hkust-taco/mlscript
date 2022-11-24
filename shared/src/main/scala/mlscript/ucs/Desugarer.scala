@@ -43,7 +43,7 @@ class Desugarer extends TypeDefs { self: Typer =>
         // This uniqueness is decided by (scrutinee, fieldName).
         val alias = aliasMap
           .getOrElseUpdate(scrutinee, MutMap.empty)
-          .getOrElseUpdate(fieldName, Var(freshName).withLoc(pattern.toLoc))
+          .getOrElseUpdate(fieldName, Var(freshName).desugaredFrom(pattern))
         subPatterns += ((alias, pattern))
         S(fieldName -> alias)
     }.toList
@@ -85,7 +85,7 @@ class Desugarer extends TypeDefs { self: Typer =>
           val localName = if (localizedScrutineeMap.containsKey(term)) {
             localizedScrutineeMap.get(term)
           } else {
-            val v = Var(freshName).withLoc(term.toLoc)
+            val v = Var(freshName).desugaredFrom(term)
             localizedScrutineeMap.put(term, v)
             v
           }
