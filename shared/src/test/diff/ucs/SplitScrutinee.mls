@@ -1,0 +1,10 @@
+:NewParser
+:NoJS
+
+fun f(x) =
+  if x +
+    1 is
+      2 then 0
+      3 then 0
+      _ then 0
+//│ f: anything -> 0
