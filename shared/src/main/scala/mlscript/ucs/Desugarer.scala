@@ -80,7 +80,7 @@ class Desugarer extends TypeDefs { self: Typer =>
   def makeScrutinee(term: Term)(implicit matchRootLoc: Opt[Loc]): Scrutinee =
     traceUCS(s"Making a scrutinee for `$term`") {
       term match {
-        case _: Var | _: Lit => Scrutinee(N, term)
+        case _: Var | _: Lit => Scrutinee(N, term)(matchRootLoc)
         case _ =>
           val localName = if (localizedScrutineeMap.containsKey(term)) {
             localizedScrutineeMap.get(term)
@@ -89,7 +89,7 @@ class Desugarer extends TypeDefs { self: Typer =>
             localizedScrutineeMap.put(term, v)
             v
           }
-          Scrutinee(S(localName), term)
+          Scrutinee(S(localName), term)(matchRootLoc)
       }
     }()
 
