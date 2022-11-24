@@ -352,7 +352,7 @@ foo_manual = foo
 //│ ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | ~#C & ({fD: 'fA} & #D | ~#D & ({fE: 'fA} & #E | ~#E & ({fF: 'fA} & #F | {fG: 'fA} & #G & ~#F)))))) -> 'fA
 //│   <:  foo_manual:
 //│ ({fA: 'a} & #A | ~#A & ({fB: 'a} & #B | ~#B & ({fC: 'a} & #C | ~#C & ({fD: 'a} & #D | ~#D & ({fE: 'a} & #E | ~#E & ({fF: 'a} & #F | {fG: 'a} & #G & ~#F)))))) -> 'a
-//│ constrain calls  : 96
+//│ constrain calls  : 110
 //│ annoying  calls  : 183
 //│ subtyping calls  : 4292
 

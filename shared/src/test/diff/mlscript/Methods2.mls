@@ -89,7 +89,7 @@ Cons.HeadOption l0
 //│   TypeError: (intermediate value).HeadOption is not a function
 //│ constrain calls  : 39
 //│ annoying  calls  : 27
-//│ subtyping calls  : 70
+//│ subtyping calls  : 71
 
 
 l1 = Cons { head = 0; tail = Nil {} }
@@ -104,7 +104,7 @@ Cons.HeadOption l1
 //│   TypeError: (intermediate value).HeadOption is not a function
 //│ constrain calls  : 39
 //│ annoying  calls  : 27
-//│ subtyping calls  : 70
+//│ subtyping calls  : 71
 
 :re
 :stats
@@ -114,7 +114,7 @@ Cons.HeadOption l
 //│   TypeError: (intermediate value).HeadOption is not a function
 //│ constrain calls  : 48
 //│ annoying  calls  : 27
-//│ subtyping calls  : 95
+//│ subtyping calls  : 96
 
 :stats
 o = l.(Cons.HeadOption)
@@ -122,7 +122,7 @@ o = l.(Cons.HeadOption)
 //│  = undefined
 //│ constrain calls  : 46
 //│ annoying  calls  : 27
-//│ subtyping calls  : 95
+//│ subtyping calls  : 96
 
 o = l.(Cons.HeadOption)
 //│ o: Some[0 | 1]
