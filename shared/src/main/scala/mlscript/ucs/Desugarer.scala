@@ -21,9 +21,17 @@ class Desugarer extends TypeDefs { self: Typer =>
 
   private var idLength: Int = 0
 
-  def freshName: String = {
-    val res = s"tmp$idLength"
+  private def makeName: String = {
+    val name = s"tmp$idLength"
     idLength += 1
+    name
+  }
+
+  private def freshName(implicit ctx: Ctx): String = {
+    var res = makeName
+    while (ctx.env.contains(res)) {
+      res = makeName
+    }
     res
   }
 
@@ -39,7 +47,7 @@ class Desugarer extends TypeDefs { self: Typer =>
     */
   private def desugarPositionals
     (scrutinee: Scrutinee, params: IterableOnce[Term], positionals: Ls[Str])
-    (implicit aliasMap: FieldAliasMap): (Ls[Var -> Term], Ls[Str -> Var]) = {
+    (implicit ctx: Ctx, aliasMap: FieldAliasMap): (Ls[Var -> Term], Ls[Str -> Var]) = {
     val subPatterns = Buffer.empty[(Var, Term)]
     val bindings = params.iterator.zip(positionals).flatMap {
       // `x is A(_)`: ignore this binding
@@ -87,7 +95,7 @@ class Desugarer extends TypeDefs { self: Typer =>
     * @param matchRootLoc the caller is expect to be in a match environment,
     * this parameter indicates the location of the match root
     */
-  def makeScrutinee(term: Term, matchRootLoc: Opt[Loc]): Scrutinee =
+  def makeScrutinee(term: Term, matchRootLoc: Opt[Loc])(implicit ctx: Ctx): Scrutinee =
     traceUCS(s"Making a scrutinee for `$term`") {
       term match {
         case _: SimpleTerm => Scrutinee(N, term)(matchRootLoc)
