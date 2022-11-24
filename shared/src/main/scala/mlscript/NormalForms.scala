@@ -132,7 +132,6 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case (_, LhsTop) => true
       case (LhsTop, _) => false
       case (LhsRefined(b1, ts1, rt1, trs1), LhsRefined(b2, ts2, rt2, trs2)) =>
-        // implicit val ctx: Ctx = Ctx.empty
         b2.forall(b2 => b1.exists(_ <:< b2)) &&
           ts2.forall(ts1) && rt1 <:< rt2 &&
           trs2.valuesIterator.forall(tr2 => trs1.valuesIterator.exists(_ <:< tr2))

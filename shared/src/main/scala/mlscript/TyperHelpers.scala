@@ -397,7 +397,6 @@ abstract class TyperHelpers { Typer: Typer =>
       subtypingCalls += 1
       def assume[R](k: MutMap[ST -> ST, Bool] => R): R =
         if (crt === false) k(cache) else k(cache.map(kv => kv._1 -> true))
-      // (this === that) || ((this, that) match {
       if (!mentionsTypeBounds && ((this is that) || this === that)) return true
       (this, that) match {
         case (ProxyType(und), _) => und <:< that
@@ -456,25 +455,18 @@ abstract class TyperHelpers { Typer: Typer =>
           val td1 = ctx.tyDefs(tr1.defn.name)
           that match {
             case tr2: TypeRef if tr2.defn === tr1.defn =>
-              // ctx.tyDefs.get(tr1.defn).flatMap(_)
-              // println(ctx.tyDefs.get(tr1.defn.name), ctx.tyDefs)
               val tvv = td1.getVariancesOrDefault
               td1.tparamsargs.unzip._2.lazyZip(tr1.targs).lazyZip(tr2.targs).forall { (tv, targ1, targ2) =>
                 val v = tvv(tv)
                 (v.isContravariant || targ1 <:< targ2) && (v.isCovariant || targ2 <:< targ1)
               }
             case _ =>
-              // ctx.tyDefs.get(tr1.defn.name) match { // TODO updt
-              //   case S(td1) if td1.kind is Cls => clsNameToNomTag(td1)(noProv, ctx) <:< that
-              //   case _ => false
-              // }
               (td1.kind is Cls) && clsNameToNomTag(td1)(noProv, ctx) <:< that
           }
         case (_, _: TypeRef) =>
           false // TODO try to expand them (this requires populating the cache because of recursive types)
         case 
           (_: Without, _)
-          // (_: Without, _) | (_, _: Without)
           | (_: ArrayBase, _) | (_, _: ArrayBase)
           | (_: TraitTag, _) | (_, _: TraitTag)
           => false // don't even try

@@ -308,13 +308,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       // *    In any case, we make it more lightweight by not traversing type variables
       // *    and not using a subtyping cache (cf. `CompareRecTypes = false`).
       implicit val ctr: CompareRecTypes = false
-      if (lhs <:< rhs) return ()
-      
-      // if (lhs <:< rhs) return () // * It's not clear that doing this here is worth it
+      if (lhs <:< rhs) ()
       
       // println(s"  where ${FunctionType(lhs, rhs)(primProv).showBounds}")
       else {
-        // if (lhs is rhs) return
         val lhs_rhs = lhs -> rhs
         lhs_rhs match {
           case (_: ProvType, _) | (_, _: ProvType) => ()
