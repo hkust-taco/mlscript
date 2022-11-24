@@ -74,7 +74,7 @@ l1 = Cons { head = 1; tail = Cons { head = 2; tail = Cons { head = 3; tail = Nil
 //│ l1: Cons[1] with {tail: Cons[2] with {tail: Cons[3] with {tail: Nil[?]}}}
 //│ constrain calls  : 55
 //│ annoying  calls  : 6
-//│ subtyping calls  : 124
+//│ subtyping calls  : 126
 
 :stats
 Cons.HeadOption l1
@@ -88,7 +88,7 @@ l2 = Cons { head = 0; tail = l1 }
 //│ l2: Cons[0] with {tail: Cons[1] with {tail: Cons[2] with {tail: Cons[3] with {tail: Nil[?]}}}}
 //│ constrain calls  : 17
 //│ annoying  calls  : 2
-//│ subtyping calls  : 136
+//│ subtyping calls  : 139
 
 :stats
 Cons.HeadOption l2
@@ -102,7 +102,7 @@ l3 = Cons { head = 0-1; tail = l2 }
 //│ l3: Cons[int] with {tail: Cons[0] with {tail: Cons[1] with {tail: Cons[2] with {tail: Cons[3] with {tail: Nil[?]}}}}}
 //│ constrain calls  : 35
 //│ annoying  calls  : 2
-//│ subtyping calls  : 168
+//│ subtyping calls  : 172
 
 :stats
 Cons.HeadOption l3
@@ -135,7 +135,7 @@ rec def lr2 = Cons { head = 0; tail = Cons { head = 1; tail = Cons { head = 3; t
 //│     'tail :> Cons[0] with {tail: Cons[1] with {tail: Cons[3] with {tail: 'tail}}}
 //│ constrain calls  : 52
 //│ annoying  calls  : 6
-//│ subtyping calls  : 129
+//│ subtyping calls  : 131
 
 :stats
 Cons.HeadOption lr2

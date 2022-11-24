@@ -139,7 +139,7 @@ error: (Foo2[?] & 'a) -> 'a
 //│   Error: unexpected runtime error
 
 f: (Foo2[?] & 'a) -> 'a
-//│ res: (Foo2[?] & 'a) -> 'a
+//│ res: ('a & (Foo2[?] | Foo2[?] & ~{Foo2#A})) -> 'a
 //│    = [Function: f]
 
 :ns

@@ -375,12 +375,23 @@ abstract class TyperHelpers { Typer: Typer =>
     // TODO for composed types and negs, should better first normalize the inequation
     def <:< (that: SimpleType)(implicit ctx: Ctx, cache: MutMap[ST -> ST, Bool] = MutMap.empty): Bool =
     {
-    // trace(s"? $this <: $that") {
+    trace(s"? $this <: $that") {
     // trace(s"? $this <: $that   assuming:  ${
     //     cache.iterator.map(kv => "" + kv._1._1 + (if (kv._2) " <: " else " <? ") + kv._1._2).mkString(" ; ")}") {
       subtypingCalls += 1
       def assume[R](k: MutMap[ST -> ST, Bool] => R): R = k(cache.map(kv => kv._1 -> true))
-      (this === that) || ((this, that) match {
+      // (this === that) || ((this, that) match {
+      (this, that) match {
+        case (ProxyType(und), _) => und <:< that
+        case (_, ProxyType(und)) => this <:< und
+        // * Leads to too much simplification in printed types:
+        // case (ClassTag(ErrTypeId, _), _) | (_, ClassTag(ErrTypeId, _)) => true
+        case (_: ObjectTag, _: ObjectTag) | (_: TV, _: TV) if this === that => true
+        case (ab: ArrayBase, at: ArrayType) => ab.inner <:< at.inner
+        case (TupleType(fs1), TupleType(fs2)) =>
+          fs1.sizeCompare(fs2) === 0 && fs1.lazyZip(fs2).forall {
+            case ((_, ty1), (_, ty2)) => ty1 <:< ty2
+          }
         case (RecordType(Nil), _) => TopType <:< that
         case (_, RecordType(Nil)) => this <:< TopType
         case (pt1 @ ClassTag(id1, ps1), pt2 @ ClassTag(id2, ps2)) => (id1 === id2) || pt1.parentsST(id2)
@@ -396,6 +407,10 @@ abstract class TyperHelpers { Typer: Typer =>
         case (RecordType(fs1), RecordType(fs2)) => assume { implicit cache =>
           fs2.forall(f => fs1.find(_._1 === f._1).exists(_._2 <:< f._2))
         }
+        case (Without(bs1, ns1), Without(bs2, ns2)) =>
+          ns1.forall(ns2) && bs1 <:< that
+        case (_, Without(bs, ns)) =>
+          this <:< bs
         case (_: TypeVariable, _) | (_, _: TypeVariable)
           if cache.contains(this -> that)
           => cache(this -> that)
@@ -409,8 +424,6 @@ abstract class TyperHelpers { Typer: Typer =>
           val tmp = tv.lowerBounds.exists(this <:< _)
           if (tmp) cache(this -> that) = true
           tmp
-        case (ProxyType(und), _) => und <:< that
-        case (_, ProxyType(und)) => this <:< und
         case (_, NegType(und)) => (this & und) <:< BotType
         case (NegType(und), _) => TopType <:< (that | und)
         case (_, ExtrType(false)) => true
@@ -420,22 +433,37 @@ abstract class TyperHelpers { Typer: Typer =>
           if (primitiveTypes contains tr.defn.name) && !tr.defn.name.isCapitalized => tr.expand <:< that
         case (_, tr: TypeRef)
           if (primitiveTypes contains tr.defn.name) && !tr.defn.name.isCapitalized => this <:< tr.expand
-        case (tr: TypeRef, _) =>
-          ctx.tyDefs.get(tr.defn.name) match {
-            case S(td) if td.kind is Cls => clsNameToNomTag(td)(noProv, ctx) <:< that
-            case _ => false
+        case (tr1: TypeRef, _) =>
+          val td1 = ctx.tyDefs(tr1.defn.name)
+          that match {
+            case tr2: TypeRef if tr2.defn === tr1.defn =>
+              // ctx.tyDefs.get(tr1.defn).flatMap(_)
+              // println(ctx.tyDefs.get(tr1.defn.name), ctx.tyDefs)
+              val tvv = td1.getVariancesOrDefault
+              td1.tparamsargs.unzip._2.lazyZip(tr1.targs).lazyZip(tr2.targs).forall { (tv, targ1, targ2) =>
+                val v = tvv(tv)
+                (v.isContravariant || targ1 <:< targ2) && (v.isCovariant || targ2 <:< targ1)
+              }
+            case _ =>
+              // ctx.tyDefs.get(tr1.defn.name) match { // TODO updt
+              //   case S(td1) if td1.kind is Cls => clsNameToNomTag(td1)(noProv, ctx) <:< that
+              //   case _ => false
+              // }
+              (td1.kind is Cls) && clsNameToNomTag(td1)(noProv, ctx) <:< that
           }
         case (_, _: TypeRef) =>
           false // TODO try to expand them (this requires populating the cache because of recursive types)
-        case (_: Without, _) | (_, _: Without)
+        case 
+          (_: Without, _)
+          // (_: Without, _) | (_, _: Without)
           | (_: ArrayBase, _) | (_, _: ArrayBase)
           | (_: TraitTag, _) | (_, _: TraitTag)
           => false // don't even try
         case (_: FunctionType, _) | (_, _: FunctionType) => false
         case (_: RecordType, _: ObjectTag) | (_: ObjectTag, _: RecordType) => false
         // case _ => lastWords(s"TODO $this $that ${getClass} ${that.getClass()}")
-      })
-    // }(r => s"! $r")
+      }
+    }(r => s"! $r")
     }
     
     def isTop: Bool = (TopType <:< this)(Ctx.empty)

@@ -81,10 +81,9 @@ manual id
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.68: 	def manual: 'a -> nothing as 'a
 //│ ╙──      	                  ^^^^^^^
-//│ res: ('a & 'b) -> 'b | error
+//│ res: 'a -> 'a | error
 //│   where
-//│     'a <: ('b -> 'b) -> nothing & 'b
-//│     'b :> ('a & 'b) -> 'b
+//│     'a :> 'a -> 'a
 //│        <: nothing
 
 def manual: 'a -> anything as 'a
