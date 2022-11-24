@@ -378,7 +378,8 @@ class Desugarer extends TypeDefs { self: Typer =>
         case L(IfBlock(lines)) =>
           lines.foreach { desugarMatchBranch(scrutinee, _, partialPattern, collectedConditions) }
         // This case is rare. Let's put it aside.
-        case L(IfLet(_, _, _, _)) => ???
+        case L(IfLet(_, _, _, _)) =>
+          TODO("please add this rare case to test files")
         // This case handles interleaved lets.
         case R(NuFunDef(S(isRec), nameVar, _, L(term))) =>
           interleavedLets += ((isRec, nameVar, term))
@@ -427,7 +428,8 @@ class Desugarer extends TypeDefs { self: Typer =>
         case IfOpApp(lhs, op, body) =>
           desugarIfBody(body, expr.addTermOp(lhs, op), acc)
         // This case is rare. Let's put it aside.
-        case IfLet(isRec, name, rhs, body) => ???
+        case IfLet(isRec, name, rhs, body) =>
+          TODO("please add this rare case to test files")
         // In this case, the accumulated partial term is discarded.
         // We create a branch directly from accumulated conditions.
         case IfElse(term) => branches += (acc.withBindings -> term)

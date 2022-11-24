@@ -181,6 +181,7 @@ package object utils {
     def single[A: Ordering, B](ab: A -> B): SortedMap[A, B] = (SortedMap.newBuilder[A, B] += ab).result()
   }
   
+  def TODO(msg: String): Nothing = throw new NotImplementedError(msg)
   def die: Nothing = lastWords("Program reached and unexpected state.")
   def lastWords(msg: String): Nothing = throw new Exception(s"Internal Error: $msg")
   
