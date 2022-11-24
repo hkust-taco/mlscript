@@ -45,8 +45,7 @@ final case class Conjunction(clauses: Ls[Clause], trailingBindings: Ls[(Bool, Va
   }
 
   def separate(expectedScrutinee: Scrutinee): Opt[(MatchClass, Conjunction)] = {
-    def rec(past: Ls[Clause], upcoming: Ls[Clause])
-        : Opt[(Ls[Clause], MatchClass, Ls[Clause])] = {
+    def rec(past: Ls[Clause], upcoming: Ls[Clause]): Opt[(Ls[Clause], MatchClass, Ls[Clause])] = {
       upcoming match {
         case Nil => N
         case (head @ MatchClass(scrutinee, _, _)) :: tail =>
