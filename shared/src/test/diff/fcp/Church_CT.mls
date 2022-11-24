@@ -314,7 +314,7 @@ z: ChurchInt
 //│    = [Function: z]
 //│ constrain calls  : 15
 //│ annoying  calls  : 0
-//│ subtyping calls  : 0
+//│ subtyping calls  : 27
 
 :e // * Since "sound extrusion"
 :stats
@@ -332,7 +332,7 @@ s: ChurchInt -> ChurchInt
 //│    = [Function: s]
 //│ constrain calls  : 52
 //│ annoying  calls  : 0
-//│ subtyping calls  : 0
+//│ subtyping calls  : 121
 
 
 

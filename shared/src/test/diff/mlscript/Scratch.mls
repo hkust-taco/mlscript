@@ -1,0 +1,27 @@
+
+// class Add[E]: { lhs: E }
+// //│ Defined class Add[+E]
+
+// def add lhs = Add { lhs }
+// //│ add: 'lhs -> Add['lhs]
+// //│    = [Function: add]
+
+class Addable[A]
+  method Add: A -> A
+//│ Defined class Addable[=A]
+//│ Declared Addable.Add: Addable['A] -> 'A -> 'A
+
+class Num: Addable[Num]
+  method Add = id
+//│ Defined class Num
+//│ Defined Num.Add: Num -> (forall 'a. 'a -> 'a)
+
+// method Add that = Num { val = this.val + that.val }
+
+// add this that = Num { val = this.val + that.val }
+
+add = Num { val = 1 }
+//│ add: Num
+//│    = Num {}
+
+

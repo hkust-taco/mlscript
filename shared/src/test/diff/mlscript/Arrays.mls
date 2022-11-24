@@ -28,9 +28,9 @@ ty2A = ty2A
 //│ MyArray['a]
 //│   <:  ty2A:
 //│ MyArray['a]
-//│ constrain calls  : 40
-//│ annoying  calls  : 24
-//│ subtyping calls  : 28
+//│ constrain calls  : 39
+//│ annoying  calls  : 23
+//│ subtyping calls  : 125
 
 def ty2B: MyArray[MyArray['a]]
 //│ ty2B: MyArray[MyArray['a]]
@@ -40,9 +40,9 @@ ty2B = ty2A
 //│ MyArray['a]
 //│   <:  ty2B:
 //│ MyArray[MyArray['a]]
-//│ constrain calls  : 36
-//│ annoying  calls  : 24
-//│ subtyping calls  : 27
+//│ constrain calls  : 35
+//│ annoying  calls  : 23
+//│ subtyping calls  : 106
 
 
 
@@ -67,9 +67,9 @@ ty3A = ty3A
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  'a110_123'#  <:  'a110_121'#    TypeVariable  TypeVariable
 //│ ╙──  ... looks like:  'a110_111'#  <:  'a110_111'#
-//│ constrain calls  : 26
-//│ annoying  calls  : 15
-//│ subtyping calls  : 19
+//│ constrain calls  : 25
+//│ annoying  calls  : 14
+//│ subtyping calls  : 82
 
 def ty3B: MyArray[MyArray['a]] as 'a
 //│ ty3B: 'a
@@ -86,9 +86,9 @@ ty3B = ty3A
 //│ 'a
 //│   where
 //│     'a := MyArray[MyArray['a]]
-//│ constrain calls  : 62
-//│ annoying  calls  : 24
-//│ subtyping calls  : 27
+//│ constrain calls  : 61
+//│ annoying  calls  : 23
+//│ subtyping calls  : 159
 
 // :e // FIXME (probably the issue reproduced in `ADRsRepro.mls`)
 :stats
@@ -100,9 +100,9 @@ ty3A = ty3B
 //│ 'a
 //│   where
 //│     'a := MyArray['a]
-//│ constrain calls  : 62
-//│ annoying  calls  : 24
-//│ subtyping calls  : 27
+//│ constrain calls  : 61
+//│ annoying  calls  : 23
+//│ subtyping calls  : 159
 
 def ty4B: MyArray[MyArray[MyArray['a]]] as 'a
 //│ ty4B: 'a
@@ -125,9 +125,9 @@ ty4B = ty4B
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  MyArray[MyArray['a149_162'#]]  <:  MyArray[MyArray['a149_160'#]]    TypeRef  TypeRef
 //│ ╙──  ... looks like:  MyArray[MyArray['a149_150'#]]  <:  MyArray[MyArray['a149_150'#]]
-//│ constrain calls  : 28
-//│ annoying  calls  : 15
-//│ subtyping calls  : 19
+//│ constrain calls  : 27
+//│ annoying  calls  : 14
+//│ subtyping calls  : 109
 
 
 
@@ -146,9 +146,9 @@ ty1A = ty1B
 //│ ╟── type `int` does not match type `0 | 1`
 //│ ║  l.17: 	def ty1A: MyArray[int]
 //│ ╙──      	                  ^^^
-//│ constrain calls  : 16
-//│ annoying  calls  : 20
-//│ subtyping calls  : 76
+//│ constrain calls  : 14
+//│ annoying  calls  : 19
+//│ subtyping calls  : 112
 
 :e
 :stats
@@ -162,9 +162,9 @@ ty1B = ty1A
 //│ ╟── type `int` does not match type `0 | 1`
 //│ ║  l.17: 	def ty1A: MyArray[int]
 //│ ╙──      	                  ^^^
-//│ constrain calls  : 22
-//│ annoying  calls  : 24
-//│ subtyping calls  : 52
+//│ constrain calls  : 14
+//│ annoying  calls  : 23
+//│ subtyping calls  : 119
 
 
 :e
@@ -182,8 +182,8 @@ ty2A = ty2B
 //│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.35: 	def ty2B: MyArray[MyArray['a]]
 //│ ╙──      	                  ^^^^^^^^^^^
-//│ constrain calls  : 23
-//│ annoying  calls  : 15
-//│ subtyping calls  : 19
+//│ constrain calls  : 22
+//│ annoying  calls  : 14
+//│ subtyping calls  : 74
 
 

@@ -179,8 +179,8 @@ c = c6
 //│   <:  c:
 //│ 'a -> C6['a]
 //│ constrain calls  : 88
-//│ annoying  calls  : 25
-//│ subtyping calls  : 177
+//│ annoying  calls  : 20
+//│ subtyping calls  : 676
 
 
 // Reproduction of an issue found while trying out TypeRef ctor typing:
@@ -286,7 +286,7 @@ def append ls elem = L { h = elem; t = S { v = ls } }
 
 :ns
 append
-//│ res: forall 'h, 'T, 'v, 't, 'a, 'b, 'c, 'T0. 'b -> 'a -> 'c
+//│ res: forall 'h, 'a, 'T, 'b, 'c, 'T0, 't, 'v. 'b -> 'a -> 'c
 //│   where
 //│     'c :> #L & {h: 'h, t: 't, L#T = 'T}
 //│     't :> #S & {v: 'v, S#T = 'T0}
@@ -329,7 +329,7 @@ append_ty_2 = append
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.325: 	append_ty_2 = append
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘T0_777` is not an instance of type `L`
+//│ ╟── type `‘T0_773` is not an instance of type `L`
 //│ ║  l.318: 	def append_ty_2: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] & {h: 'h; t: S['T0] & {v: 'v}})
 //│ ║         	                                                                          ^^^
 //│ ╟── Note: constraint arises from applied type reference:
@@ -352,7 +352,7 @@ append_ty_2 = append_ty
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.348: 	append_ty_2 = append_ty
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘T0_838` is not an instance of type `L`
+//│ ╟── type `‘T0_834` is not an instance of type `L`
 //│ ║  l.318: 	def append_ty_2: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] & {h: 'h; t: S['T0] & {v: 'v}})
 //│ ║         	                                                                          ^^^
 //│ ╟── Note: constraint arises from applied type reference:

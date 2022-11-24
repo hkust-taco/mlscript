@@ -74,20 +74,11 @@ def bar1: int -> int & string -> string
 //│ bar1: int -> int & string -> string
 //│     = <missing implementation>
 
-:e
+// :e // * Did not work before when added subtype checking to constraining...
 bar1 = bar1
 //│ int -> int & string -> string
 //│   <:  bar1:
 //│ int -> int & string -> string
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.78: 	bar1 = bar1
-//│ ║        	^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of type `string`
-//│ ║  l.73: 	def bar1: int -> int & string -> string
-//│ ║        	          ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.73: 	def bar1: int -> int & string -> string
-//│ ╙──      	                       ^^^^^^
 //│     = <no result>
 //│       bar1 is not implemented
 
@@ -98,19 +89,37 @@ error: int -> int & string -> string : (int & string) -> (int | string)
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
-:e
+// :e // * Did not work before when added subtype checking to constraining...
+:re
 error: int -> int & string -> string : int -> int
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.102: 	error: int -> int & string -> string : int -> int
-//│ ║         	^^^^^
-//│ ╟── type `int` is not an instance of type `string`
-//│ ║  l.102: 	error: int -> int & string -> string : int -> int
-//│ ║         	                                       ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.102: 	error: int -> int & string -> string : int -> int
-//│ ╙──       	                    ^^^^^^
 //│ res: int -> int
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
+:re
+error: number -> int & string -> string : int -> number
+//│ res: int -> number
+//│ Runtime error:
+//│   Error: unexpected runtime error
+
+type Als = number -> int
+//│ Defined type alias Als
+
+// * The tricky thing in these tests is that we currently lossily merge function types
+// * in constraint solving, so the best-effort subtyping check may actually accept things
+// * that fail to constrain. But in this case we make the check fail by using a type alias.
+:e
+error: Als & string -> string : int -> number
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.112: 	error: Als & string -> string : int -> number
+//│ ║         	^^^^^
+//│ ╟── type `int` is not an instance of type `string`
+//│ ║  l.112: 	error: Als & string -> string : int -> number
+//│ ║         	                                ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.112: 	error: Als & string -> string : int -> number
+//│ ╙──       	             ^^^^^^
+//│ res: int -> number
+//│ Runtime error:
+//│   Error: unexpected runtime error
 

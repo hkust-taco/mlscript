@@ -229,8 +229,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     case t: Tuple => t
     case _ => Tuple((N, Field(None, t)) :: Nil)
   }
-  def typ(implicit fe: FoundErr, l: Line): Type =
-    expr(0).toType match {
+  def typ(prec: Int = 0)(implicit fe: FoundErr, l: Line): Type =
+    expr(prec).toType match {
       case L(d) => raise(d); Top // TODO better
       case R(ty) => ty
     }
@@ -329,7 +329,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
               val asc = yeetSpaces match {
                 case (KEYWORD(":"), _) :: _ =>
                   consume
-                  S(typ)
+                  S(typ(0))
+                  // S(typ(2))
                 case _ => N
               }
               yeetSpaces match {
@@ -575,6 +576,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case (KEYWORD(":"), l0) :: _ =>
         consume
         R(Asc(acc, mkType(expr(0))))
+      // case (KEYWORD(":"), _) :: _ if prec <= 1 =>
+      //   consume
+      //   val ty = typ(1)
+      //   R(Asc(acc, ty))
       case (KEYWORD("where"), l0) :: _ if prec <= 1 =>
         consume
         val tu = typingUnitMaybeIndented

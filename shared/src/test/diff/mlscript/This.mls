@@ -14,7 +14,7 @@ a = B{}
 //│ a: B
 
 a.Boom 1 // : B
-//│ res: B
+//│ res: B & A
 
 def b: A
 b = a
@@ -93,10 +93,10 @@ Derived.Foo
 //│ res: (Derived & 'this) -> (Base & 'this)
 
 res (Derived{})
-//│ res: Derived
+//│ res: Derived & Base
 
 (error: Derived).Foo
-//│ res: Derived
+//│ res: Derived & Base
 
 class Base2
   method Foo2: this
@@ -107,15 +107,15 @@ class DerivedDerived2: Derived2
 //│ Defined class Base2
 //│ Declared Base2.Foo2: (Base2 & 'this) -> (Base2 & 'this)
 //│ Defined class Derived2
-//│ Defined Derived2.Foo3: (Derived2 & 'this) -> (Derived2 & 'this,)
+//│ Defined Derived2.Foo3: (Derived2 & 'this) -> (Derived2 & Base2 & 'this,)
 //│ Defined class DerivedDerived2
-//│ Defined DerivedDerived2.Foo2: (DerivedDerived2 & 'this) -> (DerivedDerived2 & 'this)
+//│ Defined DerivedDerived2.Foo2: (DerivedDerived2 & 'this) -> (DerivedDerived2 & Base2 & Derived2 & 'this)
 
 Derived2.Foo3
-//│ res: (Derived2 & 'this) -> (Derived2 & 'this,)
+//│ res: (Derived2 & 'this) -> (Derived2 & Base2 & 'this,)
 
 DerivedDerived2.Foo3
-//│ res: (DerivedDerived2 & 'this) -> (Derived2 & 'this,)
+//│ res: (DerivedDerived2 & 'this) -> (Derived2 & Base2 & 'this,)
 
 
 
@@ -129,7 +129,7 @@ class NewBase
 class NewDerived: NewBase
   method NewQux = this.NewBar._1
 //│ Defined class NewDerived
-//│ Defined NewDerived.NewQux: (NewDerived & 'this) -> (NewDerived & 'this)
+//│ Defined NewDerived.NewQux: (NewDerived & 'this) -> (NewDerived & NewBase & 'this)
 
 // Test methods of NewDerived.
 NewDerived.NewFoo
@@ -137,12 +137,12 @@ NewDerived.NewBar
 NewDerived.NewQux
 //│ res: (NewDerived & 'this) -> (NewBase & 'this)
 //│ res: (NewDerived & 'this) -> (NewBase & 'this,)
-//│ res: (NewDerived & 'this) -> (NewDerived & 'this)
+//│ res: (NewDerived & 'this) -> (NewDerived & NewBase & 'this)
 
 class NewDerivedDerived: NewDerived
   method NewQuz = (this.NewQux)
 //│ Defined class NewDerivedDerived
-//│ Defined NewDerivedDerived.NewQuz: (NewDerivedDerived & 'this) -> (NewDerivedDerived & 'this)
+//│ Defined NewDerivedDerived.NewQuz: (NewDerivedDerived & 'this) -> (NewDerivedDerived & NewBase & NewDerived & 'this)
 
 NewDerivedDerived.NewFoo
 NewDerivedDerived.NewBar
@@ -150,8 +150,8 @@ NewDerivedDerived.NewQux
 NewDerivedDerived.NewQuz
 //│ res: (NewDerivedDerived & 'this) -> (NewBase & 'this)
 //│ res: (NewDerivedDerived & 'this) -> (NewBase & 'this,)
-//│ res: (NewDerivedDerived & 'this) -> (NewDerived & 'this)
-//│ res: (NewDerivedDerived & 'this) -> (NewDerivedDerived & 'this)
+//│ res: (NewDerivedDerived & 'this) -> (NewDerived & NewBase & 'this)
+//│ res: (NewDerivedDerived & 'this) -> (NewDerivedDerived & NewBase & NewDerived & 'this)
 
 :e
 class NewDerivedDerivedDerived: NewDerivedDerived
@@ -163,7 +163,7 @@ class NewDerivedDerivedDerived: NewDerivedDerived
 //│ ║  l.130: 	  method NewQux = this.NewBar._1
 //│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined class NewDerivedDerivedDerived
-//│ Defined NewDerivedDerivedDerived.NewQux: (NewDerivedDerivedDerived & 'this) -> (NewDerivedDerivedDerived & 'this)
+//│ Defined NewDerivedDerivedDerived.NewQux: (NewDerivedDerivedDerived & 'this) -> (NewDerivedDerivedDerived & NewBase & 'this)
 
 // Test methods of NewDerivedDerivedDerived
 NewDerivedDerivedDerived.NewBar
@@ -172,8 +172,8 @@ NewDerivedDerivedDerived.NewQuz
 NewDerivedDerivedDerived.NewQux
 //│ res: (NewDerivedDerivedDerived & 'this) -> (NewBase & 'this,)
 //│ res: (NewDerivedDerivedDerived & 'this) -> (NewBase & 'this)
-//│ res: (NewDerivedDerivedDerived & 'this) -> (NewDerivedDerived & 'this)
-//│ res: (NewDerivedDerivedDerived & 'this) -> (NewDerivedDerivedDerived & 'this)
+//│ res: (NewDerivedDerivedDerived & 'this) -> (NewDerivedDerived & NewBase & NewDerived & 'this)
+//│ res: (NewDerivedDerivedDerived & 'this) -> (NewDerivedDerivedDerived & NewBase & 'this)
 
 
 

@@ -114,7 +114,7 @@ d2_ : HTree[S[Z], int]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.110: 	d2_ : HTree[S[Z], int]
 //│ ║         	^^^
-//│ ╟── type `HTreeBase[S[Z], ?]` does not match type `DLeaf[int] | DNode[in S[in Z & ?p out ?p | Z] out S[in ?p | Z out Z & ?p], int]`
+//│ ╟── type `HTreeBase[S[Z], ?]` does not match type `DLeaf[int] | DNode[S[in Z & ?p out ?p | Z], int]`
 //│ ║  l.109: 	d2_ k = k (d2:HTreeBase[S[Z], int])
 //│ ║         	              ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:

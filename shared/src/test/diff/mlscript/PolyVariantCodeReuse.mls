@@ -118,7 +118,7 @@ def eval_lambda eval_rec subst v = case v of {
     Abs { name = new_name;
           body = eval_rec (Cons (Tuple v.name (Var { name = new_name })) subst) v.body }
   }
-//│ eval_lambda: ('tail -> 'lhs -> 'a & 'tail -> 'rhs -> ((Abs[?] with {body: 'body, name: 'b}) | 'lhs0 & ~#Abs) & (Cons[('c, Var with {name: forall 'd. string | 'd},) | 'A] with {head: ('c, Var with {name: forall 'd. string | 'd},), tail: 'tail}) -> 'body0 -> 'body1 & (Cons[('b, forall 'e. 'e | 'a,)] with {tail: Nil}) -> 'body -> 'result) -> ('f & List['A] & 'tail) -> ((Abs[?] with {body: 'body0, name: 'c}) | (App[?] with {lhs: 'lhs, rhs: 'rhs}) | Var & 'result) -> ((Abs['body1] with {name: forall 'd. string | 'd}) | (App[forall 'e. 'lhs0 | 'e | 'a] with {lhs: 'lhs0, rhs: forall 'e. 'e | 'a}) | 'result)
+//│ eval_lambda: ('tail -> 'lhs -> 'a & 'tail -> 'rhs -> ((Abs[?] with {body: 'body, name: 'b}) | 'lhs0 & ~#Abs) & (Cons[('c, Var with {name: forall 'd. string | 'd},) | 'A] & {head: ('c, Var with {name: forall 'd. string | 'd},), tail: 'tail}) -> 'body0 -> 'body1 & (Cons[('b, forall 'e. 'e | 'a,)] with {tail: Nil}) -> 'body -> 'result) -> ('f & List['A] & 'tail) -> ((Abs[?] with {body: 'body0, name: 'c}) | (App[?] with {lhs: 'lhs, rhs: 'rhs}) | Var & 'result) -> ((Abs['body1] with {name: forall 'd. string | 'd}) | (App[forall 'e. 'lhs0 | 'e | 'a] with {lhs: 'lhs0, rhs: forall 'e. 'e | 'a}) | 'result)
 //│   where
 //│     'f <: (Cons[?] with {head: {_1: string, _2: 'result}, tail: 'f}) | Nil
 //│            = <no result>
@@ -244,7 +244,7 @@ def eval_lexpr eval_rec subst v = case v of {
   | Lambda -> eval_lambda eval_rec subst v
   | Expr -> eval_expr eval_rec subst v
   }
-//│ eval_lexpr: ('tail -> ('rhs -> 'rhs0 & 'lhs -> 'lhs0 & 'lhs1 -> 'lhs2 & 'rhs1 -> 'rhs2) & 'tail -> 'lhs3 -> 'a & 'tail -> 'rhs3 -> ((Abs[?] with {body: 'body, name: 'b}) | 'lhs4 & ~#Abs) & (Cons[('c, Var with {name: forall 'd. string | 'd},) | 'A] with {head: ('c, Var with {name: forall 'd. string | 'd},), tail: 'tail}) -> 'body0 -> 'body1 & (Cons[('b, forall 'e. 'e | 'a,)] with {tail: Nil}) -> 'body -> 'result) -> ('f & List['A] & 'tail) -> ((Abs[?] with {body: 'body0, name: 'c}) | (Add[?] with {lhs: 'lhs1, rhs: 'rhs1}) | (App[?] with {lhs: 'lhs3, rhs: 'rhs3}) | (Mul[?] with {lhs: 'lhs, rhs: 'rhs}) | Num & 'result | Var & 'result) -> ((Abs['body1] with {name: forall 'd. string | 'd}) | Add['lhs2 | 'rhs2] & {lhs: 'lhs2, rhs: 'rhs2} | (App[forall 'e. 'lhs4 | 'e | 'a] with {lhs: 'lhs4, rhs: forall 'e. 'e | 'a}) | Mul['lhs0 | 'rhs0] & {lhs: 'lhs0, rhs: 'rhs0} | Num | 'result)
+//│ eval_lexpr: ('tail -> ('rhs -> 'rhs0 & 'lhs -> 'lhs0 & 'lhs1 -> 'lhs2 & 'rhs1 -> 'rhs2) & 'tail -> 'lhs3 -> 'a & 'tail -> 'rhs3 -> ((Abs[?] with {body: 'body, name: 'b}) | 'lhs4 & ~#Abs) & (Cons[('c, Var with {name: forall 'd. string | 'd},) | 'A] & {head: ('c, Var with {name: forall 'd. string | 'd},), tail: 'tail}) -> 'body0 -> 'body1 & (Cons[('b, forall 'e. 'e | 'a,)] with {tail: Nil}) -> 'body -> 'result) -> ('f & List['A] & 'tail) -> ((Abs[?] with {body: 'body0, name: 'c}) | (Add[?] with {lhs: 'lhs1, rhs: 'rhs1}) | (App[?] with {lhs: 'lhs3, rhs: 'rhs3}) | (Mul[?] with {lhs: 'lhs, rhs: 'rhs}) | Num & 'result | Var & 'result) -> ((Abs['body1] with {name: forall 'd. string | 'd}) | Add['lhs2 | 'rhs2] & {lhs: 'lhs2, rhs: 'rhs2} | (App[forall 'e. 'lhs4 | 'e | 'a] with {lhs: 'lhs4, rhs: forall 'e. 'e | 'a}) | Mul['lhs0 | 'rhs0] & {lhs: 'lhs0, rhs: 'rhs0} | Num | 'result)
 //│   where
 //│     'f <: (Cons[?] with {head: {_1: string, _2: 'result}, tail: 'f}) | Nil
 //│           = <no result>
