@@ -299,10 +299,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       // println(s"[[ ${cctx._1.map(_.prov).mkString(", ")}  <<  ${cctx._2.map(_.prov).mkString(", ")} ]]")
       // println(s"{{ ${cache.mkString(", ")} }}")
       
-      // if (lhs === rhs) return ()
+      // if (!lhs.mentionsTypeBounds && lhs === rhs) return ()
+      // * ^ The check above is mostly good enough but it leads to slightly worse simplified type outputs
+      // *    in corner cases.
+      // * v The check below is a bit more precise but it incurs a lot more subtyping checks,
+      // *    especially in complex comparisons like those done in the `ExprProb` test family.
+      // *    Therefore this subtyping check may not be worth it.
+      // *    In any case, we make it more lightweight by not traversing type variables
+      // *    and not using a subtyping cache (cf. `CompareRecTypes = false`).
       implicit val ctr: CompareRecTypes = false
       if (lhs <:< rhs) return ()
-      // if (false) return ()
       
       // if (lhs <:< rhs) return () // * It's not clear that doing this here is worth it
       

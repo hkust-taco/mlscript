@@ -371,6 +371,14 @@ abstract class TyperHelpers { Typer: Typer =>
       case _ => NegType(this)(prov)
     }
     
+    /** This is used to know when two types can be assumed to be mutual subtypes
+      * based on a simple equality check. This may not hold when the types involve `TypeBound`s.
+      * Indeed, say `type Foo[A] = A -> A`;
+      * then `Foo[bot..top]` is an alias for `(bot..top) -> (bot..top)`
+      * which IN POSITIVE POSITION is equivalent to `bot -> top`
+      * and IN NEGATIVE POSITION is equivalent to `top -> bot`.
+      * Therefore, while syntactically `Foo[bot..top] === Foo[bot..top]`,
+      * we DO NOT have that `Foo[bot..top] <: Foo[bot..top]`. */
     lazy val mentionsTypeBounds: Bool = this match {
       case _: TypeBounds => true
       case _ => children(includeBounds = false).exists(_.mentionsTypeBounds)
@@ -387,9 +395,10 @@ abstract class TyperHelpers { Typer: Typer =>
     // trace(s"? $this <: $that   assuming:  ${
     //     cache.iterator.map(kv => "" + kv._1._1 + (if (kv._2) " <: " else " <? ") + kv._1._2).mkString(" ; ")}") {
       subtypingCalls += 1
-      def assume[R](k: MutMap[ST -> ST, Bool] => R): R = k(cache.map(kv => kv._1 -> true))
+      def assume[R](k: MutMap[ST -> ST, Bool] => R): R =
+        if (crt === false) k(cache) else k(cache.map(kv => kv._1 -> true))
       // (this === that) || ((this, that) match {
-      if (!mentionsTypeBounds && this === that) return true
+      if (!mentionsTypeBounds && ((this is that) || this === that)) return true
       (this, that) match {
         case (ProxyType(und), _) => und <:< that
         case (_, ProxyType(und)) => this <:< und
