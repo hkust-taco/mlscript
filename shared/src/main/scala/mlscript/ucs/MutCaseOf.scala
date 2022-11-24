@@ -152,10 +152,10 @@ object MutCaseOf {
 
   // A short-hand for pattern matchings with only true and false branches.
   final case class IfThenElse(condition: Term, var whenTrue: MutCaseOf, var whenFalse: MutCaseOf) extends MutCaseOf {
-    override def describe: Str =
+    def describe: Str =
       s"IfThenElse($condition, whenTrue = ${whenTrue.kind}, whenFalse = ${whenFalse.kind})"
 
-    override def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit =
+    def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit =
       branch match {
         // The CC is a wildcard. So, we call `mergeDefault`.
         case Conjunction(Nil, trailingBindings) -> term =>
@@ -187,7 +187,7 @@ object MutCaseOf {
           }
       }
 
-    override def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Unit = {
+    def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Unit = {
       whenTrue.mergeDefault(bindings, default)
       whenFalse match {
         case Consequent(term) =>
@@ -202,7 +202,7 @@ object MutCaseOf {
       }
     }
 
-    override def toTerm: Term = {
+    def toTerm: Term = {
       val falseBody = mkBindings(whenFalse.getBindings.toList, whenFalse.toTerm)
       val trueBody = mkBindings(whenTrue.getBindings.toList, whenTrue.toTerm)
       val falseBranch = Wildcard(falseBody)
@@ -215,14 +215,14 @@ object MutCaseOf {
     val branches: Buffer[MutCase],
     var wildcard: Opt[MutCaseOf]
   ) extends MutCaseOf {
-    override def describe: Str = {
+    def describe: Str = {
       val n = branches.length
       s"Match($scrutinee, $n ${"branch".pluralize(n, true)}, ${
         wildcard.fold("no wildcard")(n => s"wildcard = ${n.kind}")
       })"
     }
 
-    override def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit = {
+    def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit = {
       branch._1.separate(scrutinee) match {
         // No conditions against the same scrutinee.
         case N =>
@@ -273,7 +273,7 @@ object MutCaseOf {
       }
     }
 
-    override def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Unit = {
+    def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Unit = {
       branches.foreach {
         case MutCase(_, consequent) => consequent.mergeDefault(bindings, default)
       }
@@ -283,7 +283,7 @@ object MutCaseOf {
       }
     }
 
-    override def toTerm: Term = {
+    def toTerm: Term = {
       def rec(xs: Ls[MutCase]): CaseBranches =
         xs match {
           case MutCase(className -> fields, cases) :: next =>
@@ -306,24 +306,24 @@ object MutCaseOf {
     }
   }
   final case class Consequent(term: Term) extends MutCaseOf {
-    override def describe: Str = s"Consequent($term)"
+    def describe: Str = s"Consequent($term)"
 
-    override def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit =
+    def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit =
       raise(WarningReport(Message.fromStr("duplicated branch") -> N :: Nil))
 
-    override def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Unit = ()
+    def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Unit = ()
 
-    override def toTerm: Term = term
+    def toTerm: Term = term
   }
   final case object MissingCase extends MutCaseOf {
-    override def describe: Str = "MissingCase"
+    def describe: Str = "MissingCase"
 
-    override def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit =
+    def merge(branch: Conjunction -> Term)(implicit raise: Diagnostic => Unit): Unit =
       lastWords("`MissingCase` is a placeholder and cannot be merged")
 
-    override def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Unit = ()
+    def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Unit = ()
 
-    override def toTerm: Term = {
+    def toTerm: Term = {
       import Message.MessageContext
       throw new DesugaringException(msg"missing a default branch", N)
     }
