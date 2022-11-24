@@ -33,7 +33,7 @@ lazy val mlscript = crossProject(JSPlatform, JVMPlatform).in(file("."))
       Recursion, Throw, Nothing, Return, While, IsInstanceOf,
       Var, MutableDataStructures, NonUnitStatements,
       DefaultArguments, ImplicitParameter, ImplicitConversion,
-      StringPlusAny, Any,
+      StringPlusAny, Any, ToString,
       JavaSerializable, Serializable, Product, ToString,
       LeakingSealed, Overloading,
       Option2Iterable, IterableOps, ListAppend
