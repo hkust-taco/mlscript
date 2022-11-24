@@ -336,7 +336,7 @@ trait TermImpl extends StatementImpl { self: Term =>
 
   def desugaredFrom(term: Term): this.type = {
     sugaredTerm = S(term)
-    withLoc(term.toLoc)
+    withLocOf(term)
   }
   
   def describe: Str = sugaredTerm match {
