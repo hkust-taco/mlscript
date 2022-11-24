@@ -4,7 +4,7 @@
 fun f(x) =
   if x +
     1 is
-      2 then 0
-      3 then 0
-      _ then 0
-//│ f: anything -> 0
+      2 then 1
+      3 then 2
+      _ then "I don't know."
+//│ f: int -> ("I don't know." | 1 | 2)

@@ -3,7 +3,7 @@ package mlscript.ucs
 import mlscript._
 import mlscript.utils._
 import mlscript.utils.shorthands._
-import scala.collection.mutable.Buffer
+import scala.collection.immutable.Set
 import scala.collection.mutable.{Map => MutMap, Set => MutSet, Buffer}
 
 import helpers._
@@ -49,7 +49,7 @@ sealed abstract class MutCaseOf extends WithBindings {
   def mergeDefault
     (bindings: Ls[(Bool, Var, Term)], default: Term)
     (implicit raise: Diagnostic => Unit): Unit
-  def toTerm: Term
+  def toTerm(defs: Set[Var]): Term
 
   // TODO: Make it immutable.
   var locations: Ls[Loc] = Nil
@@ -57,8 +57,8 @@ sealed abstract class MutCaseOf extends WithBindings {
 
 object MutCaseOf {
   def toTerm(t: MutCaseOf): Term = {
-    val term = t.toTerm
-    mkBindings(t.getBindings.toList, term)
+    val term = t.toTerm(Set.from(t.getBindings.iterator.map(_._2)))
+    mkBindings(t.getBindings.toList, term, Set.empty)
   }
 
   def showScrutinee(scrutinee: Scrutinee): Str =
@@ -202,9 +202,9 @@ object MutCaseOf {
       }
     }
 
-    def toTerm: Term = {
-      val falseBody = mkBindings(whenFalse.getBindings.toList, whenFalse.toTerm)
-      val trueBody = mkBindings(whenTrue.getBindings.toList, whenTrue.toTerm)
+    def toTerm(defs: Set[Var]): Term = {
+      val falseBody = mkBindings(whenFalse.getBindings.toList, whenFalse.toTerm(defs ++ whenFalse.getBindings.iterator.map(_._2)), defs)
+      val trueBody = mkBindings(whenTrue.getBindings.toList, whenTrue.toTerm(defs ++ whenTrue.getBindings.iterator.map(_._2)), defs)
       val falseBranch = Wildcard(falseBody)
       val trueBranch = Case(Var("true"), trueBody, falseBranch)
       CaseOf(condition, trueBranch)
@@ -283,17 +283,15 @@ object MutCaseOf {
       }
     }
 
-    def toTerm: Term = {
+    def toTerm(defs: Set[Var]): Term = {
       def rec(xs: Ls[MutCase]): CaseBranches =
         xs match {
           case MutCase(className -> fields, cases) :: next =>
             // TODO: expand bindings here
-            Case(className, mkLetFromFields(scrutinee, fields.toList, cases.toTerm), rec(next))
+            val consequent = cases.toTerm(defs ++ fields.iterator.map(_._2))
+            Case(className, mkLetFromFields(scrutinee, fields.toList, consequent), rec(next))
           case Nil =>
-            wildcard match {
-              case N => NoCases
-              case S(mutCaseOf) => Wildcard(mutCaseOf.toTerm)
-            }
+            wildcard.fold[CaseBranches](NoCases)(_.toTerm(defs) |> Wildcard)
         }
       val cases = rec(branches.toList)
       val resultTerm = scrutinee.local match {
@@ -302,7 +300,7 @@ object MutCaseOf {
       }
       // Collect let bindings from case branches.
       val bindings = branches.iterator.flatMap(_.consequent.getBindings).toList
-      mkBindings(bindings, resultTerm)
+      mkBindings(bindings, resultTerm, defs)
     }
   }
   final case class Consequent(term: Term) extends MutCaseOf {
@@ -313,7 +311,7 @@ object MutCaseOf {
 
     def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Unit = ()
 
-    def toTerm: Term = term
+    def toTerm(defs: Set[Var]): Term = term
   }
   final case object MissingCase extends MutCaseOf {
     def describe: Str = "MissingCase"
@@ -323,7 +321,7 @@ object MutCaseOf {
 
     def mergeDefault(bindings: Ls[(Bool, Var, Term)], default: Term)(implicit raise: Diagnostic => Unit): Unit = ()
 
-    def toTerm: Term = {
+    def toTerm(defs: Set[Var]): Term = {
       import Message.MessageContext
       throw new DesugaringException(msg"missing a default branch", N)
     }

@@ -84,20 +84,18 @@ object helpers {
     * @param bindings a list of bindings, 
     * @param body the final body
     */
-  def mkBindings(bindings: Ls[(Bool, Var, Term)], body: Term): Term = {
-    val generated = MutSet.empty[(Bool, Var, Term)]
-    def rec(bindings: Ls[(Bool, Var, Term)]): Term =
+  def mkBindings(bindings: Ls[(Bool, Var, Term)], body: Term, defs: Set[Var]): Term = {
+    def rec(bindings: Ls[(Bool, Var, Term)], defs: Set[Var]): Term =
       bindings match {
         case Nil => body
         case (head @ (isRec, nameVar, value)) :: tail =>
-          if (generated.contains(head)) {
-            rec(tail)
+          if (defs.contains(head._2)) {
+            rec(tail, defs)
           } else {
-            generated += head
-            Let(isRec, nameVar, value, rec(tail))
+            Let(isRec, nameVar, value, rec(tail, defs + head._2))
           }
       }
-    rec(bindings)
+    rec(bindings, defs)
   }
 
   /**

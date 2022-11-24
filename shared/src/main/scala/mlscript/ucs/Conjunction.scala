@@ -44,6 +44,15 @@ final case class Conjunction(clauses: Ls[Clause], trailingBindings: Ls[(Bool, Va
     }
   }
 
+  /**
+    * This is a shorthand if you only have the last binding.
+    *
+    * @param suffix the list of clauses to append to this conjunction
+    * @return a new conjunction with clauses from `this` and `suffix`
+    */
+  def +(lastBinding: (Bool, Var, Term)): Conjunction =
+    Conjunction(clauses, trailingBindings :+ lastBinding)
+
   def separate(expectedScrutinee: Scrutinee): Opt[(MatchClass, Conjunction)] = {
     def rec(past: Ls[Clause], upcoming: Ls[Clause]): Opt[(Ls[Clause], MatchClass, Ls[Clause])] = {
       upcoming match {
@@ -74,7 +83,7 @@ final case class Conjunction(clauses: Ls[Clause], trailingBindings: Ls[(Bool, Va
     clauses match {
       case Nil => Conjunction(Nil, interleavedLets.toList ::: trailingBindings)
       case head :: _ =>
-        head.bindings = interleavedLets.toList
+        head.bindings = head.bindings ::: interleavedLets.toList
         this
     }
   }

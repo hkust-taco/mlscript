@@ -12,6 +12,14 @@ final case class Scrutinee(local: Opt[Var], term: Term)(val matchRootLoc: Opt[Lo
     case _ => lastWords("`term` must be a `SimpleTerm` when `local` is empty")
   })
 
+  /**
+    * Create a binding for the scrutinee. If the scrutinee is a `SimpleTerm`,
+    * it returns `None`.
+    *
+    * @return `Some` if the scrutinee is localized, otherwise, `None`.
+    */
+  def asBinding: Opt[(Bool, Var, Term)] = local.map((false, _, term))
+
   override def toString: String =
     (local match {
       case N => ""

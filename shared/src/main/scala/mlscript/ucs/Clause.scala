@@ -38,30 +38,35 @@ object Clause {
 
   final case class BooleanTest(test: Term)(override val locations: Ls[Loc]) extends Clause
 
-  def print(println: (=> Any) => Unit, conjunctions: Iterable[Conjunction -> Term]): Unit = {
-    def showBindings(bindings: Ls[(Bool, Var, Term)]): Str =
-      bindings match {
-        case Nil => ""
-        case bindings => bindings.map {
-          case (_, Var(name), _) => name
-        }.mkString("(", ", ", ")")
-      }
+  def showBindings(bindings: Ls[(Bool, Var, Term)]): Str =
+    bindings match {
+      case Nil => ""
+      case bindings => bindings.map {
+        case (_, Var(name), _) => name
+      }.mkString("(", ", ", ")")
+    }
 
+
+  def showClauses(clauses: Iterable[Clause]): Str = {
+    clauses.iterator.map { clause =>
+      (clause match {
+        case Clause.BooleanTest(test) => s"«$test»"
+        case Clause.MatchClass(scrutinee, Var(className), fields) =>
+          s"«$scrutinee is $className»"
+        case Clause.MatchTuple(scrutinee, arity, fields) =>
+          s"«$scrutinee is Tuple#$arity»"
+      }) + (if (clause.bindings.isEmpty) "" else " with " + showBindings(clause.bindings))
+    }.mkString("", " and ", "")
+  }
+
+  def print(println: (=> Any) => Unit, conjunctions: Iterable[Conjunction -> Term]): Unit = {
     println("Flattened conjunctions")
     conjunctions.foreach { case Conjunction(clauses, trailingBindings) -> term =>
-      println("+ " + clauses.iterator.map { condition =>
-        (condition match {
-          case Clause.BooleanTest(test) => s"«$test»"
-          case Clause.MatchClass(scrutinee, Var(className), fields) =>
-            s"«$scrutinee is $className»"
-          case Clause.MatchTuple(scrutinee, arity, fields) =>
-            s"«$scrutinee is Tuple#$arity»"
-        }) + (if (condition.bindings.isEmpty) "" else " with " + showBindings(condition.bindings))
-      }.mkString("", " and ", {
+      println("+ " + showClauses(clauses) + {
         (if (trailingBindings.isEmpty) "" else " ") +
           showBindings(trailingBindings) +
           s" => $term"
-      }))
+      })
     }
   }
 }

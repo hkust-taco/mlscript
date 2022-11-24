@@ -130,7 +130,8 @@ class Desugarer extends TypeDefs { self: Typer =>
       (implicit ctx: Ctx,
                 raise: Raise,
                 aliasMap: FieldAliasMap,
-                fragments: Ls[Term] = Nil): Ls[Clause] = {
+                fragments: Ls[Term] = Nil): Ls[Clause] =
+  trace(s"[Desugarer.destructPattern] scrutinee = ${scrutinee.term}; pattern = $pattern") {
     // This piece of code is use in two match cases.
     def desugarTuplePattern(tuple: Tup): Ls[Clause] = {
       val (subPatterns, bindings) = desugarPositionals(
@@ -152,7 +153,10 @@ class Desugarer extends TypeDefs { self: Typer =>
       // x is true | x is false | x is 0 | x is "text" | ...
       case literal @ (Var("true") | Var("false") | _: Lit) =>
         val test = mkBinOp(scrutinee.reference, Var("=="), literal)
-        Clause.BooleanTest(test)(scrutinee.term.toLoc.toList ::: literal.toLoc.toList) :: Nil
+        val clause = Clause.BooleanTest(test)(scrutinee.term.toLoc.toList ::: literal.toLoc.toList)
+        clause.bindings = scrutinee.asBinding.toList
+        printlnUCS(s"Add bindings to the clause: ${scrutinee.asBinding}")
+        clause :: Nil
       // This case handles simple class tests.
       // x is A
       case classNameVar @ Var(className) =>
@@ -242,7 +246,7 @@ class Desugarer extends TypeDefs { self: Typer =>
       // What else?
       case _ => throw new Exception(s"illegal pattern: ${mlscript.codegen.Helpers.inspect(pattern)}")
     }
-  }
+  }("[Desugarer.destructPattern] result: " + Clause.showClauses(_))
 
   /**
     * Collect `Loc`s from a synthetic term.
@@ -330,9 +334,9 @@ class Desugarer extends TypeDefs { self: Typer =>
         //   B(...) and ... then ... // Case 2: more conjunctions
         case L(IfThen(patTest, consequent)) =>
           val (patternPart, extraTestOpt) = separatePattern(patTest)
-          val patternConditions = destructPattern(scrutinee, partialPattern.addTerm(patternPart).term)
-          val conditions =
-            collectedConditions + Conjunction(patternConditions, Nil).withBindings
+          val clauses = destructPattern(scrutinee, partialPattern.addTerm(patternPart).term)
+          val conditions = collectedConditions + Conjunction(clauses, Nil).withBindings
+          printlnUCS(s"result conditions: " + Clause.showClauses(conditions.clauses))
           extraTestOpt match {
             // Case 1. Just a pattern. Easy!
             case N => 
@@ -431,16 +435,28 @@ class Desugarer extends TypeDefs { self: Typer =>
           val newClauses = desugarConditions(atomicTerms)(fragments)
           branches += ((acc + newClauses).withBindings -> consequent)
         // This is the entrance of the Simple UCS.
-        case IfOpApp(scrutineeTerm, isVar @ Var("is"), IfBlock(lines)) =>
-          val interleavedLets = Buffer.empty[(Bool, Var, Term)]
+        case IfOpApp(scrutineePart, isVar @ Var("is"), IfBlock(lines)) =>
+          // Create a synthetic scrutinee term by combining accumulated partial
+          // term with the new part.
+          val scrutineeTerm = expr.addTerm(scrutineePart).term
           // We don't need to include the entire `IfOpApp` because it might be
           // very long... Indicating the beginning of the match is enough.
           val matchRootLoc = (scrutineeTerm.toLoc, isVar.toLoc) match {
             case (S(first), S(second)) => S(first ++ second)
-            case (_, _) => N
+            case (_, _)                => N
           }
           val scrutinee = makeScrutinee(scrutineeTerm, matchRootLoc)
-          lines.foreach(desugarMatchBranch(scrutinee, _, PartialTerm.Empty, acc)(interleavedLets))
+          // If there is an alias, we should add the let bindings to clauses.
+          val conjunction = scrutinee.local match {
+            case S(alias) => acc
+            case N        => acc
+          }
+          // Create a buffer for interleaved let bindings.
+          val interleavedLets = Buffer.empty[(Bool, Var, Term)]
+          // Iterate each match case.
+          lines.foreach {
+            desugarMatchBranch(scrutinee, _, PartialTerm.Empty, conjunction)(interleavedLets)
+          }
         // For example: "if x == 0 and y is \n ..."
         case IfOpApp(testPart, Var("and"), consequent) =>
           val conditions = acc + (desugarConditions(expr.addTerm(testPart).term :: Nil))
