@@ -186,7 +186,7 @@ class DiffTests
           case "d" => mode.copy(dbg = true)
           case "dp" => mode.copy(dbgParsing = true)
           case "ds" => mode.copy(dbgSimplif = true)
-          case "ducs" => mode.copy(dbgUCS = true)
+          case "ducs" => mode.copy(dbg = true, dbgUCS = true)
           case "s" => mode.copy(fullExceptionStack = true)
           case "v" | "verbose" => mode.copy(verbose = true)
           case "ex" | "explain" => mode.copy(expectTypeErrors = true, explainErrors = true)

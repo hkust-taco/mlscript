@@ -51,7 +51,7 @@ if x is
   Some(xv) and y is Right(yv2) then xv + yv2
   else els
 //│ |#if| |x| |is|→|Some|(|xv|)| |and| |y| |is| |Left|(|yv|)| |#then| |xv| |+| |yv|↵|Some|(|xv|)| |and| |y| |is| |Right|(|yv2|)| |#then| |xv| |+| |yv2|↵|#else| |els|←|
-//│ Parsed: {if x is ‹Some (xv,) and y is (Left (yv,)) then + (xv,) (yv,); Some (xv,) and y is (Right (yv2,)) then + (xv,) (yv2,); else els›}
+//│ Parsed: {if x is ‹(and (Some (xv,),) (is (y,) (Left (yv,),),)) then + (xv,) (yv,); (and (Some (xv,),) (is (y,) (Right (yv2,),),)) then + (xv,) (yv2,); else els›}
 
 
 

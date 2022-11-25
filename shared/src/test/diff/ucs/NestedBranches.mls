@@ -124,50 +124,20 @@ fun mapPartition(f, xs) = if xs is
   Cons(x, xs) and mapPartition(f, xs) is (l, r)
           and f(x) is Left(v)  then (Cons(v, l), r)
                       Right(v) then (l, Cons(v, r))
-//│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
+//│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
 //│ ║  l.126: 	                      Right(v) then (l, Cons(v, r))
-//│ ╙──       	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	                               ^^^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.125: 	          and f(x) is Left(v)  then (Cons(v, l), r)
 //│ ║         	                                    ^^^^^^^^^^^^^^^
 //│ ║  l.126: 	                      Right(v) then (l, Cons(v, r))
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Illegal use of keyword: and
-//│ ║  l.125: 	          and f(x) is Left(v)  then (Cons(v, l), r)
-//│ ╙──       	          ^^^
-//│ ╔══[ERROR] identifier not found: and
-//│ ║  l.125: 	          and f(x) is Left(v)  then (Cons(v, l), r)
-//│ ╙──       	          ^^^
-//│ ╔══[ERROR] identifier not found: is
-//│ ║  l.124: 	  Cons(x, xs) and mapPartition(f, xs) is (l, r)
-//│ ╙──       	                                      ^^
-//│ ╔══[ERROR] identifier not found: l
-//│ ║  l.124: 	  Cons(x, xs) and mapPartition(f, xs) is (l, r)
-//│ ╙──       	                                          ^
-//│ ╔══[ERROR] identifier not found: r
-//│ ║  l.124: 	  Cons(x, xs) and mapPartition(f, xs) is (l, r)
-//│ ╙──       	                                             ^
-//│ ╔══[ERROR] identifier not found: l
-//│ ║  l.125: 	          and f(x) is Left(v)  then (Cons(v, l), r)
-//│ ╙──       	                                             ^
-//│ ╔══[ERROR] identifier not found: r
-//│ ║  l.125: 	          and f(x) is Left(v)  then (Cons(v, l), r)
-//│ ╙──       	                                                 ^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.125: 	          and f(x) is Left(v)  then (Cons(v, l), r)
-//│ ║         	                                    ^^^^^^^^^^^^^^^
-//│ ║  l.126: 	                      Right(v) then (l, Cons(v, r))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── tuple literal of type `(?a, error,)` is not a function
-//│ ║  l.125: 	          and f(x) is Left(v)  then (Cons(v, l), r)
-//│ ║         	                                     ^^^^^^^^^^^^^
-//│ ╟── but it flows into applied expression with expected type `undefined -> ?b`
-//│ ║  l.125: 	          and f(x) is Left(v)  then (Cons(v, l), r)
-//│ ╙──       	                                    ^^^^^^^^^^^^^^^
-//│ mapPartition: ('head -> anything, 'a,) -> ((() -> Nil, () -> Nil,) | error)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] type identifier not found: Tuple#2
+//│ ╙──
+//│ mapPartition: (anything, 'a,) -> ((() -> Nil, () -> Nil,) | error)
 //│   where
-//│     'a <: (Cons with {head: 'head, tail: 'a}) | Nil
+//│     'a <: Cons & {tail: 'a} | Nil
 //│ Code generation encountered an error:
-//│   unresolved symbol l
+//│   unknown match case: Tuple#2
 
 

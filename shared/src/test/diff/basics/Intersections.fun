@@ -62,7 +62,7 @@ foo as Nothing
 
 :e
 let oops = (&)
-//│ ╔══[ERROR] Illegal use of operator: &
+//│ ╔══[ERROR] Illegal use of reserved operator: &
 //│ ║  l.64: 	let oops = (&)
 //│ ╙──      	           ^^^
 //│ ╔══[ERROR] identifier not found: &

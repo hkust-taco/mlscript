@@ -7,32 +7,37 @@ class Pair(fst, snd)
 //│     = [Function: Pair1]
 
 
-// TODO support by desugaring to `if x is Pair(a, b) then a > b else False`
+
+Pair(0, 1) is Pair(a, b)
+//│ res: bool
+//│    = true
+
+if Pair(0, 1) is Pair(a, b) then true else false
+//│ res: bool
+//│    = true
+
+
+fun foo(x) = x is Pair(a, b)
+//│ foo: anything -> bool
+//│    = [Function: foo]
+
+
+Pair(0, 1) is Pair(a, b) and a > b
+//│ res: bool
+//│    = false
+
+if Pair(0, 1) is Pair(a, b) then a > b else false
+//│ res: bool
+//│    = false
+
+
 fun foo(x) = x is Pair(a, b) and a > b
-//│ ╔══[ERROR] identifier not found: is
-//│ ║  l.11: 	fun foo(x) = x is Pair(a, b) and a > b
-//│ ╙──      	               ^^
-//│ ╔══[ERROR] Illegal use of keyword: and
-//│ ║  l.11: 	fun foo(x) = x is Pair(a, b) and a > b
-//│ ╙──      	                             ^^^
-//│ ╔══[ERROR] identifier not found: and
-//│ ║  l.11: 	fun foo(x) = x is Pair(a, b) and a > b
-//│ ╙──      	                             ^^^
-//│ ╔══[ERROR] identifier not found: a
-//│ ║  l.11: 	fun foo(x) = x is Pair(a, b) and a > b
-//│ ╙──      	                       ^
-//│ ╔══[ERROR] identifier not found: b
-//│ ║  l.11: 	fun foo(x) = x is Pair(a, b) and a > b
-//│ ╙──      	                          ^
-//│ ╔══[ERROR] identifier not found: a
-//│ ║  l.11: 	fun foo(x) = x is Pair(a, b) and a > b
-//│ ╙──      	                                 ^
-//│ ╔══[ERROR] identifier not found: b
-//│ ║  l.11: 	fun foo(x) = x is Pair(a, b) and a > b
-//│ ╙──      	                                     ^
-//│ foo: anything -> error
-//│ Code generation encountered an error:
-//│   unresolved symbol is
+//│ foo: (Pair & {fst: number, snd: number} | ~Pair) -> bool
+//│    = [Function: foo1]
+
+fun foo(x) = if x is Pair(a, b) then a > b else false
+//│ foo: (Pair & {fst: number, snd: number} | ~Pair) -> bool
+//│    = [Function: foo2]
 
 
 

@@ -331,7 +331,10 @@ trait TypeNameImpl extends Ordered[TypeName] { self: TypeName =>
 
 trait TermImpl extends StatementImpl { self: Term =>
   val original: this.type = this
-
+  
+  /** Used by code generation when the typer desugars this term into a different term. */
+  var desugaredTerm: Opt[Term] = N  
+  
   private var sugaredTerm: Opt[Term] = N
 
   def desugaredFrom(term: Term): this.type = {
@@ -810,6 +813,3 @@ trait IfBodyImpl extends Located { self: IfBody =>
   
 }
 
-trait IfImpl { self: If =>
-  var desugaredIf: Opt[Term] = N  
-}

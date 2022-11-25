@@ -420,12 +420,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   }
   
   // TODO also prevent rebinding of "not"
-  val reservedNames: Set[Str] = Set("|", "&", "~", ",", "neg", "and", "or")
+  val reservedNames: Set[Str] = Set("|", "&", "~", ",", "neg", "and", "or", "is")
   
   object ValidVar {
     def unapply(v: Var)(implicit raise: Raise): S[Str] = S {
       if (reservedNames(v.name))
-        err(s"Illegal use of ${if (v.name.head.isLetter) "keyword" else "operator"}: " + v.name,
+        err(s"Illegal use of reserved operator: " + v.name,
           v.toLoc)(raise)
       v.name
     }
@@ -620,6 +620,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val param_ty = typePattern(pat)(newCtx, raise, vars)
         val body_ty = typeTerm(body)(newCtx, raise, vars)
         FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
+      case App(App(Var("is"), _), _) =>
+        val desug = If(IfThen(term, Var("true")), S(Var("false")))
+        term.desugaredTerm = S(desug)
+        typeTerm(desug)
+      case App(App(Var("and"), Tup(_ -> Fld(_, _, lhs) :: Nil)), Tup(_ -> Fld(_, _, rhs) :: Nil)) =>
+        val desug = If(IfThen(lhs, rhs), S(Var("false")))
+        term.desugaredTerm = S(desug)
+        typeTerm(desug)
       case App(f, a) =>
         val f_ty = typeTerm(f)
         val a_ty = typeTerm(a)
@@ -725,7 +733,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           checkExhaustive(caseTree, N)(summarizePatterns(caseTree), ctx, raise)
           val desugared = MutCaseOf.toTerm(caseTree)
           println(s"Desugared term: ${desugared.print(false)}")
-          iff.desugaredIf = S(desugared)
+          iff.desugaredTerm = S(desugared)
           typeTerm(desugared)
         } catch {
           case e: DesugaringException => e.report(this)

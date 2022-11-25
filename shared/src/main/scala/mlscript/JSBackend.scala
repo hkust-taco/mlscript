@@ -137,6 +137,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     * Translate MLscript terms into JavaScript expressions.
     */
   protected def translateTerm(term: Term)(implicit scope: Scope): JSExpr = term match {
+    case _ if term.desugaredTerm.isDefined => translateTerm(term.desugaredTerm.get)
     case Var(name) => translateVar(name, false)
     case Lam(params, body) =>
       val lamScope = scope.derive("Lam")
@@ -238,10 +239,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           throw CodeGenError(s"illegal assignemnt left-hand side: ${inspect(lhs)}")
       }
     case iff: If =>
-      iff.desugaredIf match {
-        case N => throw CodeGenError(s"if expression has not been desugared")
-        case S(term) => translateTerm(term)
-      }
+      throw CodeGenError(s"if expression has not been desugared")
     case New(N, TypingUnit(Nil)) => JSRecord(Nil)
     case New(S(TypeName(className) -> Tup(args)), TypingUnit(Nil)) =>
       val callee = translateVar(className, true)

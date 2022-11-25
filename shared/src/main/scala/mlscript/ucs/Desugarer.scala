@@ -285,8 +285,8 @@ class Desugarer extends TypeDefs { self: Typer =>
       ts.flatMap {
         case isApp @ App(
           App(Var("is"),
-              Tup((_ -> Fld(_, _, scrutinee)) :: Nil)),
-          Tup((_ -> Fld(_, _, pattern)) :: Nil)
+              Tup(_ -> Fld(_, _, scrutinee) :: Nil)),
+          Tup(_ -> Fld(_, _, pattern) :: Nil)
         ) =>
           // This is an inline `x is Class` match test.
           val inlineMatchLoc = isApp.toLoc
