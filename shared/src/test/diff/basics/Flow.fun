@@ -25,8 +25,6 @@ let f x = if x is L y then y else 0
 //│ ╙──      	                           ^
 //│ f: error -> (0 | error)
 
-
-
 // TODO
 // true and false
 // :e

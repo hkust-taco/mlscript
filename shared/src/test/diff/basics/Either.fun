@@ -30,35 +30,27 @@ data type Either l r of
 //│ Left: 'a -> Left['a, ?]
 //│ Right: 'a -> Right[?, 'a]
 
-
-
-
-
 :e
 data type Either2 (l: _) (r: _) of
   Left2 l
   Right2 r
 //│ ╔══[ERROR] illegal datatype type parameter shape: '(' {l: _,} ')'
-//│ ║  l.38: 	data type Either2 (l: _) (r: _) of
+//│ ║  l.34: 	data type Either2 (l: _) (r: _) of
 //│ ╙──      	                  ^^^^^^
 //│ ╔══[ERROR] illegal datatype type parameter shape: '(' {r: _,} ')'
-//│ ║  l.38: 	data type Either2 (l: _) (r: _) of
+//│ ║  l.34: 	data type Either2 (l: _) (r: _) of
 //│ ╙──      	                         ^^^^^^
 //│ ╔══[ERROR] type identifier not found: l
-//│ ║  l.39: 	  Left2 l
+//│ ║  l.35: 	  Left2 l
 //│ ╙──      	        ^
 //│ ╔══[ERROR] type identifier not found: r
-//│ ║  l.40: 	  Right2 r
+//│ ║  l.36: 	  Right2 r
 //│ ╙──      	         ^
 //│ Defined type alias Either2
 //│ Defined class Left2[+l]
 //│ Defined class Right2[+r]
 //│ Left2: 'a -> Left2['a]
 //│ Right2: 'a -> Right2['a]
-
-
-
-
 
 let l = Left 1
 let r = Right "ok"
@@ -70,10 +62,9 @@ let e = if _ then l else r
 :e // TODO
 e as Either Int String
 //│ ╔══[ERROR] Unsupported pattern shape:
-//│ ║  l.71: 	e as Either Int String
+//│ ║  l.63: 	e as Either Int String
 //│ ╙──      	     ^^^^^^^^^^^^^^^^^
 //│ res: error
-
 
 // TODO
 // e as (_: Either Int String)
@@ -82,9 +73,8 @@ e as Either Int String
 :e
 e as Either
 //│ ╔══[ERROR] identifier not found: Either
-//│ ║  l.83: 	e as Either
+//│ ║  l.74: 	e as Either
 //│ ╙──      	     ^^^^^^
 //│ res: error
-
 
 
