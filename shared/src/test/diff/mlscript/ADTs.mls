@@ -39,9 +39,9 @@ rec def eval e = case e of {
 //│     'a <: Add[?] & {lhs: 'a, rhs: 'a} | Lit | Nega[?] & {arg: 'a}
 //│     = [Function: eval]
 
-ex = add (lit 2) (lit 2)
+def ex = add (lit 2) (lit 2)
 //│ ex: Add[Lit & {val: 2}]
-//│   = Add { lhs: Lit { val: 2 }, rhs: Lit { val: 2 } }
+//│   = [Function: ex]
 
 eval ex
 //│ res: int
@@ -65,13 +65,13 @@ def e: Lit | Add['e] | Nega['e] as 'e
 //│     'e :> Add['e] | Lit | Nega['e]
 //│  = <missing implementation>
 
-e = ex
+def e = ex
 //│ Add[Lit & {val: 2}]
 //│   <:  e:
 //│ 'e
 //│   where
 //│     'e :> Add['e] | Lit | Nega['e]
-//│  = Add { lhs: Lit { val: 2 }, rhs: Lit { val: 2 } }
+//│  = [Function: e1]
 
 eval e
 //│ res: int
@@ -113,6 +113,10 @@ eval exp
 //│ ╙──      	                      ^
 //│ res: error | int
 
+
+
+
+
 :e
 eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ╔══[ERROR] Type mismatch in type ascription:
@@ -137,5 +141,12 @@ eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║  l.35: 	  | Nega -> 0 - (eval e.arg)
 //│ ╙──      	                      ^^^^^
 //│ res: error | int
+
+
+
+
+
+
+
 
 

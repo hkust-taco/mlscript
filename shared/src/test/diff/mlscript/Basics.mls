@@ -1,7 +1,7 @@
 
-x = 1
+def x = 1
 //│ x: 1
-//│  = 1
+//│  = [Function: x]
 
 1
 //│ res: 1
@@ -14,26 +14,26 @@ x = 1
 //│ res: 2
 //│    = 2
 
-x = 1;
+def x = 1;
 2
 //│ x: 1
-//│  = 1
+//│  = [Function: x1]
 //│ res: 2
 //│    = 2
 
-x = 1;;
+def x = 1;;
 2
 //│ x: 1
-//│  = 1
+//│  = [Function: x2]
 //│ res: 2
 //│    = 2
 
-x = 1
-y = 2
+def x = 1
+def y = 2
 //│ x: 1
-//│  = 1
+//│  = [Function: x3]
 //│ y: 2
-//│  = 2
+//│  = [Function: y]
 
 1
 2
@@ -46,27 +46,27 @@ y = 2
 //│    = 3
 
 1
-x = add x 1
+def x = add x 1
 //│ res: 1
 //│    = 1
 //│ x: int
-//│  = 2
+//│  = [Function: x4]
 
-x = 1
+def x = 1
 x
-y = 2
+def y = 2
 y
-z = x + y
+def z = x + y
 //│ x: 1
-//│  = 1
+//│  = [Function: x5]
 //│ res: 1
 //│    = 1
 //│ y: 2
-//│  = 2
+//│  = [Function: y1]
 //│ res: 2
 //│    = 2
 //│ z: int
-//│  = 3
+//│  = [Function: z]
 
 :e
 1
@@ -83,6 +83,9 @@ z = x + y
 //│ Runtime error:
 //│   TypeError: 1 is not a function
 
+
+
+
 def f x y z = add x y 
 //│ f: int -> int -> anything -> int
 //│  = [Function: f]
@@ -92,11 +95,12 @@ def f x y z = add x y
 :ge
 def f (x y z) = add x y
 //│ ╔══[ERROR] Unsupported pattern shape:
-//│ ║  l.93: 	def f (x y z) = add x y
+//│ ║  l.96: 	def f (x y z) = add x y
 //│ ╙──      	       ^^^^^
 //│ f: error -> int
 //│ Code generation encountered an error:
 //│   term App(App(Var(x), Tup(_: Var(y))), Tup(_: Var(z))) is not a valid pattern
+
 
 f 1
 //│ res: int

@@ -46,22 +46,30 @@ a: B
 //│ res: B
 //│    = C {}
 
+
+
+
+
 :e
 a: C
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.50: 	a: C
+//│ ║  l.54: 	a: C
 //│ ║        	^
 //│ ╟── type `A` is not an instance of `C`
 //│ ║  l.24: 	c: A
 //│ ║        	   ^
 //│ ╟── but it flows into reference with expected type `C`
-//│ ║  l.50: 	a: C
+//│ ║  l.54: 	a: C
 //│ ║        	^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.50: 	a: C
+//│ ║  l.54: 	a: C
 //│ ╙──      	   ^
 //│ res: C
 //│    = C {}
+
+
+
+
 
 
 // Transitivity is currently broken for primitive literals:

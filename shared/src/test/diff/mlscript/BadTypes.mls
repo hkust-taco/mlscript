@@ -7,6 +7,7 @@ class oops: { x: int }
 //│ ║  l.+1: 	class oops: { x: int }
 //│ ╙──      	      ^^^^
 
+
 :e
 type oops = int
 //│ ╔══[ERROR] Type names must start with a capital letter
@@ -15,6 +16,8 @@ type oops = int
 //│ ╔══[ERROR] Type 'Oops' is already defined.
 //│ ║  l.+1: 	type oops = int
 //│ ╙──      	     ^^^^
+
+
 
 class Oops2
 //│ Defined class Oops2
@@ -27,6 +30,8 @@ class oops2
 //│ ╔══[ERROR] Type 'Oops2' is already defined.
 //│ ║  l.+1: 	class oops2
 //│ ╙──      	      ^^^^^
+
+
 
 
 type Hello = int
@@ -45,6 +50,7 @@ type Hello = int
 //│    = 42
 
 
+
 :e
 aa = { a = 1; a = "oops" }
 //│ ╔══[ERROR] Multiple declarations of field name a in record literal
@@ -58,6 +64,9 @@ aa = { a = 1; a = "oops" }
 //│ ╙──      	              ^
 //│ aa: {a: 1, a: "oops"}
 //│   = { a: 'oops' }
+
+
+
 
 :e
 aa: { a: int; a: string }
@@ -74,13 +83,19 @@ aa: { a: int; a: string }
 //│ ║  l.+1: 	aa: { a: int; a: string }
 //│ ║        	^^
 //│ ╟── integer literal of type `1` is not an instance of type `string`
-//│ ║  l.49: 	aa = { a = 1; a = "oops" }
+//│ ║  l.55: 	aa = { a = 1; a = "oops" }
 //│ ║        	           ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.+1: 	aa: { a: int; a: string }
 //│ ╙──      	                 ^^^^^^
 //│ res: {a: int, a: string}
 //│    = { a: 'oops' }
+
+
+
+
+
+
 
 aa.a
 //│ res: 1
@@ -145,13 +160,13 @@ someRec: BadRec
 //│ ║  l.+1: 	someRec: BadRec
 //│ ║        	^^^^^^^
 //│ ╟── type `{y: ?a}` does not have field 'x'
-//│ ║  l.136: 	def someRec: { y: 'a } as 'a
+//│ ║  l.151: 	def someRec: { y: 'a } as 'a
 //│ ║         	             ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{x: ?a0, y: BadRec}`
 //│ ║  l.+1: 	someRec: BadRec
 //│ ║        	^^^^^^^
 //│ ╟── Note: constraint arises from record type:
-//│ ║  l.121: 	type BadRec = { x: 'a; y: BadRec }
+//│ ║  l.136: 	type BadRec = { x: 'a; y: BadRec }
 //│ ║         	              ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from type reference:
 //│ ║  l.+1: 	someRec: BadRec
@@ -159,6 +174,11 @@ someRec: BadRec
 //│ res: BadRec
 //│    = <no result>
 //│      someRec is not implemented
+
+
+
+
+
 
 def someRec: { x: 'a; y: 'a } as 'a
 //│ someRec: 'a
@@ -182,6 +202,7 @@ type SigR[a] = a
 //│ ║  l.+1: 	type SigR[a] = a
 //│ ╙──      	     ^^^^
 
+
 type ExSigR = SigR[int]
 //│ Defined type alias ExSigR
 
@@ -190,6 +211,7 @@ type SigR[a, b] = a
 //│ ╔══[ERROR] Type 'SigR' is already defined.
 //│ ║  l.+1: 	type SigR[a, b] = a
 //│ ╙──      	     ^^^^
+
 
 type ExSigR2 = SigR[int]
 //│ Defined type alias ExSigR2
@@ -200,5 +222,6 @@ type ExSigR3 = SigR[int, string]
 //│ ║  l.+1: 	type ExSigR3 = SigR[int, string]
 //│ ╙──      	               ^^^^^^^^^^^^^^^^^
 //│ Defined type alias ExSigR3
+
 
 

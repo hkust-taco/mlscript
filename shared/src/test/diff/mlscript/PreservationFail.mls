@@ -51,6 +51,11 @@ c1 : ~C2
 //│ res: ~C2
 //│    = C1 {}
 
+
+
+
+
+
 // * The problem is resolved by saying that when instantiating a non-final class C1,
 // *  we are really instantiating a hidden final C1_Impl version of it:
 

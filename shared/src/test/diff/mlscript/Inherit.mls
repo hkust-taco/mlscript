@@ -5,28 +5,30 @@ class Parent: { name: string }
 class Child: Parent & { age: int }
 //│ Defined class Child
 
-p = Parent{ name = "Bob" }
+def p = Parent{ name = "Bob" }
 //│ p: Parent & {name: "Bob"}
-//│  = Parent { name: 'Bob' }
+//│  = [Function: p]
 
 p: Parent
 //│ res: Parent
 //│    = Parent { name: 'Bob' }
 
 :e
-c = Child(Parent { name = "Bob" })
+def c = Child(Parent { name = "Bob" })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.17: 	c = Child(Parent { name = "Bob" })
-//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.17: 	def c = Child(Parent { name = "Bob" })
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Parent & {name: ?name}` is not a record (expected a record with fields: name, age)
-//│ ║  l.17: 	c = Child(Parent { name = "Bob" })
-//│ ╙──      	          ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.17: 	def c = Child(Parent { name = "Bob" })
+//│ ╙──      	              ^^^^^^^^^^^^^^^^^^^^^^^
 //│ c: Child & {age: nothing, name: "Bob"} | error
-//│  = Child { name: 'Bob', age: undefined }
+//│  = [Function: c]
 
-c = Child(Parent { name = "Bob" } with { age = 123 })
+
+
+def c = Child(Parent { name = "Bob" } with { age = 123 })
 //│ c: Child & {age: 123, name: "Bob"}
-//│  = Child { name: 'Bob', age: 123 }
+//│  = [Function: c1]
 
 c: Parent
 //│ res: Parent
@@ -73,19 +75,23 @@ f c
 :e
 f (c: Parent)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.74: 	f (c: Parent)
+//│ ║  l.76: 	f (c: Parent)
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── type `Parent` is not an instance of type `Child`
-//│ ║  l.74: 	f (c: Parent)
+//│ ║  l.76: 	f (c: Parent)
 //│ ║        	      ^^^^^^
 //│ ╟── Note: constraint arises from class pattern:
-//│ ║  l.64: 	  | Child -> x.name
+//│ ║  l.66: 	  | Child -> x.name
 //│ ║        	    ^^^^^
 //│ ╟── from reference:
-//│ ║  l.63: 	def f x = case x of {
+//│ ║  l.65: 	def f x = case x of {
 //│ ╙──      	               ^
 //│ res: error | string
 //│    = 'Bob'
+
+
+
+
 
 
 def f x = case x of {

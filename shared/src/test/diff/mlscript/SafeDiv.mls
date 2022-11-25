@@ -13,6 +13,9 @@ def safeDiv x (y: ~0) = div x y
 //│ safeDiv: int -> ~0 -> (error | int)
 //│        = [Function: safeDiv]
 
+
+
+
 def safeDiv x (y: int & ~0) = div x y
 //│ safeDiv: int -> (int & ~0) -> int
 //│        = [Function: safeDiv1]
@@ -20,19 +23,23 @@ def safeDiv x (y: int & ~0) = div x y
 :e
 safeDiv 1 0
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.21: 	safeDiv 1 0
+//│ ║  l.24: 	safeDiv 1 0
 //│ ║        	^^^^^^^^^^^
 //│ ╟── integer literal of type `0` does not match type `~0`
-//│ ║  l.21: 	safeDiv 1 0
+//│ ║  l.24: 	safeDiv 1 0
 //│ ║        	          ^
 //│ ╟── Note: constraint arises from type negation:
-//│ ║  l.16: 	def safeDiv x (y: int & ~0) = div x y
+//│ ║  l.19: 	def safeDiv x (y: int & ~0) = div x y
 //│ ║        	                        ^^
 //│ ╟── from intersection type:
-//│ ║  l.16: 	def safeDiv x (y: int & ~0) = div x y
+//│ ║  l.19: 	def safeDiv x (y: int & ~0) = div x y
 //│ ╙──      	                  ^^^^^^^^
 //│ res: error | int
 //│    = Infinity
+
+
+
+
 
 fun x -> safeDiv 1 x
 //│ res: (int & ~0) -> int
@@ -54,22 +61,27 @@ fun x -> case x of { int -> safeDiv 1 x | _ -> None{} }
 :e // we no longer refine x's type here, as that was rather unexpected
 fun (x: int) -> safeDiv 1 x
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.55: 	fun (x: int) -> safeDiv 1 x
+//│ ║  l.62: 	fun (x: int) -> safeDiv 1 x
 //│ ║        	                ^^^^^^^^^^^
 //│ ╟── type `int` does not match type `~0`
-//│ ║  l.55: 	fun (x: int) -> safeDiv 1 x
+//│ ║  l.62: 	fun (x: int) -> safeDiv 1 x
 //│ ║        	        ^^^
 //│ ╟── but it flows into reference with expected type `~0`
-//│ ║  l.55: 	fun (x: int) -> safeDiv 1 x
+//│ ║  l.62: 	fun (x: int) -> safeDiv 1 x
 //│ ║        	                          ^
 //│ ╟── Note: constraint arises from type negation:
-//│ ║  l.16: 	def safeDiv x (y: int & ~0) = div x y
+//│ ║  l.19: 	def safeDiv x (y: int & ~0) = div x y
 //│ ║        	                        ^^
 //│ ╟── from intersection type:
-//│ ║  l.16: 	def safeDiv x (y: int & ~0) = div x y
+//│ ║  l.19: 	def safeDiv x (y: int & ~0) = div x y
 //│ ╙──      	                  ^^^^^^^^
 //│ res: int -> (error | int)
 //│    = [Function: res]
+
+
+
+
+
 
 fun (x: int & ~0) -> safeDiv 1 x
 //│ res: (int & ~0) -> int

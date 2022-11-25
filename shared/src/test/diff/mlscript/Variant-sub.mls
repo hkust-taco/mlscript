@@ -40,6 +40,9 @@ flatMap f "oops"
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
 
+
+
+
 class NoneBecause: None & { reason: string }
 flatMap f (NoneBecause { reason = "uh uh" })
 //│ Defined class NoneBecause

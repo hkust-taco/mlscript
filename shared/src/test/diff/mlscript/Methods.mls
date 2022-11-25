@@ -266,6 +266,11 @@ class Class3C: Class2C
 //│ Defined Class3C.MtdA: Class3C -> 42
 //│ Defined Class3C.MtdB: Class3C -> 42
 
+
+
+
+
+
 type Id[T] = T
 class Test1[A]: { x: A }
     method F: A
@@ -296,13 +301,15 @@ Test3B.F
 class Test4A[A]: { x: A }
     method Mth4A[A]: A
 //│ ╔══[WARNING] Method type parameter A
-//│ ║  l.296: 	class Test4A[A]: { x: A }
+//│ ║  l.301: 	class Test4A[A]: { x: A }
 //│ ║         	             ^
 //│ ╟── shadows class type parameter A
-//│ ║  l.297: 	    method Mth4A[A]: A
+//│ ║  l.302: 	    method Mth4A[A]: A
 //│ ╙──       	                 ^
 //│ Defined class Test4A[+A]
 //│ Declared Test4A.Mth4A: Test4A[?] -> nothing
+
+
 
 
 class Test[A]: { x: A }
@@ -351,16 +358,19 @@ Ber.F
 :e
 Ber
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.352: 	Ber
+//│ ║  l.359: 	Ber
 //│ ║         	^^^
 //│ ╟── Note that class Ber is abstract:
-//│ ║  l.344: 	class Ber: Fee & Fee2
+//│ ║  l.351: 	class Ber: Fee & Fee2
 //│ ║         	      ^^^^^^^^^^^^^^^
 //│ ╟── Hint: method F is abstract
-//│ ║  l.344: 	class Ber: Fee & Fee2
+//│ ║  l.351: 	class Ber: Fee & Fee2
 //│ ╙──       	      ^^^^^^^^^^^^^^^
 //│ res: error
 //│    = [Function: res]
+
+
+
 
 
 

@@ -66,6 +66,9 @@ ls : Cons[int, Cons[int, List[int]]]
 //│ res: Cons[int, Cons[int, List[int]]]
 //│    = { h: 1, t: { h: 2, t: [] } }
 
+
+
+
 ls : { h: int; t: List[int] }
 //│ res: {h: int, t: List[int]}
 //│    = { h: 1, t: { h: 2, t: [] } }
@@ -73,14 +76,16 @@ ls : { h: int; t: List[int] }
 :e
 ls : { h: int; t: { h: int; t: List[int] } }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.74: 	ls : { h: int; t: { h: int; t: List[int] } }
+//│ ║  l.77: 	ls : { h: int; t: { h: int; t: List[int] } }
 //│ ║        	^^
 //│ ╟── expression of type `anything` does not have field 'h'
 //│ ╟── Note: constraint arises from record type:
-//│ ║  l.74: 	ls : { h: int; t: { h: int; t: List[int] } }
+//│ ║  l.77: 	ls : { h: int; t: { h: int; t: List[int] } }
 //│ ╙──      	                  ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: {h: int, t: {h: int, t: List[int]}}
 //│    = { h: 1, t: { h: 2, t: [] } }
+
+
 
 
 

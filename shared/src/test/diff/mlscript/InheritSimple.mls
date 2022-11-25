@@ -5,13 +5,13 @@ class Parent: {}
 class Child: Parent
 //│ Defined class Child
 
-p = Parent{}
+def p = Parent{}
 //│ p: Parent
-//│  = Parent {}
+//│  = [Function: p]
 
-c = Child(p)
+def c = Child(p)
 //│ c: Child
-//│  = Child {}
+//│  = [Function: c]
 
 :e
 c.name
@@ -19,8 +19,8 @@ c.name
 //│ ║  l.17: 	c.name
 //│ ║        	^^^^^^
 //│ ╟── application of type `Child` does not have field 'name'
-//│ ║  l.12: 	c = Child(p)
-//│ ║        	    ^^^^^^^^
+//│ ║  l.12: 	def c = Child(p)
+//│ ║        	        ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{name: ?name}`
 //│ ║  l.17: 	c.name
 //│ ║        	^
@@ -29,6 +29,10 @@ c.name
 //│ ╙──     	      ^^^^^
 //│ res: error
 //│    = undefined
+
+
+
+
 
 c: Child
 //│ res: Child

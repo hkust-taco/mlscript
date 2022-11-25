@@ -15,6 +15,8 @@
 //│ res: 'a -> ('a | error)
 //│    = 'hello'
 
+
+
 { name = "Bob" } : { name: 'a }
 //│ res: {name: "Bob"}
 //│    = { name: 'Bob' }
@@ -47,25 +49,30 @@ def foo({ a; b }: { a: int; b: string}) = { b; a }
 :e
 def foo({ a = "hey" }: { a: string}) = 0
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.48: 	def foo({ a = "hey" }: { a: string}) = 0
+//│ ║  l.50: 	def foo({ a = "hey" }: { a: string}) = 0
 //│ ║        	        ^^^^^^^^^^^^^
 //│ ╟── type `string` does not match type `"hey"`
-//│ ║  l.48: 	def foo({ a = "hey" }: { a: string}) = 0
+//│ ║  l.50: 	def foo({ a = "hey" }: { a: string}) = 0
 //│ ║        	                            ^^^^^^
 //│ ╟── Note: constraint arises from string literal:
-//│ ║  l.48: 	def foo({ a = "hey" }: { a: string}) = 0
+//│ ║  l.50: 	def foo({ a = "hey" }: { a: string}) = 0
 //│ ╙──      	              ^^^^^
 //│ foo: {a: string} -> 0
 //│    = [Function: foo4]
 
+
+
+
 :e
 def foo({ a; b }: { a: int }) = b
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.62: 	def foo({ a; b }: { a: int }) = b
+//│ ║  l.67: 	def foo({ a; b }: { a: int }) = b
 //│ ║        	        ^^^^^^^^
 //│ ╟── type `{a: int}` does not have field 'b'
-//│ ║  l.62: 	def foo({ a; b }: { a: int }) = b
+//│ ║  l.67: 	def foo({ a; b }: { a: int }) = b
 //│ ╙──      	                  ^^^^^^^^^^
 //│ foo: {a: int} -> nothing
 //│    = [Function: foo5]
+
+
 

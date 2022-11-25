@@ -99,6 +99,9 @@ addNTimes n 12
 //│ ╙──     	                   ^^^
 //│ res: error
 
+
+
+
 rec def addNTimes a n =
   if n <= 0 then 0 else a.Add addNTimes a (n - 1)
 //│ addNTimes: 'addNTimes
@@ -114,14 +117,18 @@ addNTimes n 12
 //│ ║  l.+1: 	addNTimes n 12
 //│ ║        	^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b -> ?c` is not an instance of type `Num`
-//│ ║  l.102: 	rec def addNTimes a n =
+//│ ║  l.105: 	rec def addNTimes a n =
 //│ ║         	                  ^^^^^
-//│ ║  l.103: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
+//│ ║  l.106: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	class Num: Addable[Num] & { val: int }
 //│ ╙──     	                   ^^^
 //│ res: error
+
+
+
+
 
 addSame n n
 //│ ╔══[ERROR] Type mismatch in application:
@@ -134,6 +141,9 @@ addSame n n
 //│ ║  l.+1: 	addSame n n
 //│ ╙──      	        ^
 //│ res: error
+
+
+
 
 addTwo s n
 //│ ╔══[ERROR] Type mismatch in application:
@@ -152,6 +162,11 @@ addTwo s n
 //│ ║  l.30: 	def addTwo a0 a1 = a0.Add a1
 //│ ╙──      	                          ^^
 //│ res: error
+
+
+
+
+
 
 class Str_bad_0: Addable[Str_bad_0] & { val: string }
   method Add that = Str_bad_0 { val = this.val + that.val }
@@ -184,4 +199,13 @@ class Str_bad_0: Addable[Str_bad_0] & { val: string }
 //│ ╙──      	                                                 ^^^^^^^^
 //│ Defined class Str_bad_0
 //│ Defined Str_bad_0.Add: Str_bad_0 -> {val: int} -> (error | (Str_bad_0 with {val: error | int}))
+
+
+
+
+
+
+
+
+
 

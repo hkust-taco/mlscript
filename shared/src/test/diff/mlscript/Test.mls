@@ -23,17 +23,17 @@ test: (Person & {age: int} | Animal) -> int
 //│ res: (Animal | Person) -> int
 //│    = [Function: test]
 
-a = Animal{}
+def a = Animal{}
 //│ a: Animal
-//│  = Animal {}
+//│  = [Function: a]
 
 a: {}
 //│ res: anything
 //│    = Animal {}
 
-p = Person "Bob" 42
+def p = Person "Bob" 42
 //│ p: Person & {age: 42, name: "Bob"}
-//│  = Person { name: 'Bob', age: 42 }
+//│  = [Function: p]
 
 p: { age: int }
 //│ res: {age: int}

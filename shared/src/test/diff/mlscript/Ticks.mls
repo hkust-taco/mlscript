@@ -74,7 +74,7 @@ class A'[B'] : {x': B'}
 class M : {x': int}
   method N' = this.x'
   method P' y' = this.x' + y'
-mm = M{ x' = 2 }
+def mm = M{ x' = 2 }
 mm.N'
 mm.P' f'
 //│ Defined class M
@@ -95,14 +95,16 @@ mm.P' f'
 //│   }
 //│ }
 //│ // Query 1
-//│ globalThis.mm = new M({ "x'": 2 });
+//│ globalThis.mm = function mm() {
+//│   return new M({ "x'": 2 });
+//│ };
 //│ // Query 2
-//│ res = mm["N'"];
+//│ res = mm()["N'"];
 //│ // Query 3
-//│ res = mm["P'"](f$);
+//│ res = mm()["P'"](f$);
 //│ // End of generated code
 //│ mm: M & {x': 2}
-//│   = M { "x'": 2 }
+//│   = [Function: mm]
 //│ res: int
 //│    = 2
 //│ res: int
@@ -155,15 +157,17 @@ class TT' : { a': int }
 //│ // End of generated code
 
 :js
-tt' = TT'{a'=4}
+def tt' = TT'{a'=4}
 tt'.a'
 //│ // Query 1
-//│ globalThis.tt$ = new TT$({ "a'": 4 });
+//│ globalThis.tt$ = function tt$() {
+//│   return new TT$({ "a'": 4 });
+//│ };
 //│ // Query 2
-//│ res = tt$["a'"];
+//│ res = tt$()["a'"];
 //│ // End of generated code
 //│ tt': TT' & {a': 4}
-//│    = TT$ { "a'": 4 }
+//│    = [Function: tt$]
 //│ res: 4
 //│    = 4
 
@@ -227,15 +231,17 @@ gg' = let w' = 2 in w' + w'
 //│    = 4
 
 :js
-rcd' = { x' = 1 }
+def rcd' = { x' = 1 }
 rcd'.x'
 //│ // Query 1
-//│ globalThis.rcd$ = { "x'": 1 };
+//│ globalThis.rcd$ = function rcd$() {
+//│   return { "x'": 1 };
+//│ };
 //│ // Query 2
-//│ res = rcd$["x'"];
+//│ res = rcd$()["x'"];
 //│ // End of generated code
 //│ rcd': {x': 1}
-//│     = { "x'": 1 }
+//│     = [Function: rcd$]
 //│ res: 1
 //│    = 1
 

@@ -50,6 +50,10 @@ r: anything -> nothing
 
 
 
+
+
+
+
 def foo: ('a -> (~'a -> anything) -> anything) -> MutArray['a]
 //│ foo: ('a -> (~'a -> anything) -> anything) -> MutArray['a]
 //│    = <missing implementation>
@@ -67,28 +71,33 @@ r = foo (fun a -> fun f -> f a)
 :e
 r[0] <- "test"
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.68: 	r[0] <- "test"
+//│ ║  l.72: 	r[0] <- "test"
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"test"` does not match type `~"test"`
-//│ ║  l.68: 	r[0] <- "test"
+//│ ║  l.72: 	r[0] <- "test"
 //│ ║        	        ^^^^^^
 //│ ╟── but it flows into assigned array element with expected type `~"test"`
-//│ ║  l.68: 	r[0] <- "test"
+//│ ║  l.72: 	r[0] <- "test"
 //│ ╙──      	^^^^
 //│ = <no result>
 //│   r and foo are not implemented
 
+
+
+
 :e
 r[0] + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.82: 	r[0] + 1
+//│ ║  l.89: 	r[0] + 1
 //│ ║        	^^^^^^
 //│ ╟── possibly-undefined array access of type `undefined` is not an instance of type `int`
-//│ ║  l.82: 	r[0] + 1
+//│ ║  l.89: 	r[0] + 1
 //│ ╙──      	^^^^
 //│ res: error | int
 //│    = <no result>
 //│      r and foo are not implemented
+
+
 
 
 
