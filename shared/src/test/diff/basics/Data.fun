@@ -64,6 +64,14 @@ bar {age: 1} // TODO B/E
 //│ res: error
 //│ res: 1
 
+
+
+
+
+
+
+
+
 let fake-p = { name: "Bob", age: 42 }
 //│ fake-p: {age: 42, name: "Bob"}
 
@@ -92,13 +100,16 @@ let nested x =
   data Foo a // Note: we get one error for the synthetic class, and one for the synthetic def...
   Foo x
 //│ ╔══[ERROR] Illegal position for this type declaration statement.
-//│ ║  l.92: 	  data Foo a // Note: we get one error for the synthetic class, and one for the synthetic def...
-//│ ╙──      	       ^^^^^
+//│ ║  l.100: 	  data Foo a // Note: we get one error for the synthetic class, and one for the synthetic def...
+//│ ╙──       	       ^^^^^
 //│ ╔══[ERROR] Illegal position for this definition statement.
-//│ ║  l.92: 	  data Foo a // Note: we get one error for the synthetic class, and one for the synthetic def...
-//│ ╙──      	       ^^^^^
+//│ ║  l.100: 	  data Foo a // Note: we get one error for the synthetic class, and one for the synthetic def...
+//│ ╙──       	       ^^^^^
 //│ ╔══[ERROR] identifier not found: Foo
-//│ ║  l.93: 	  Foo x
-//│ ╙──      	  ^^^
+//│ ║  l.101: 	  Foo x
+//│ ╙──       	  ^^^
 //│ nested: error -> error
+
+
+
 

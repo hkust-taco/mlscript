@@ -28,6 +28,8 @@ true as Bool
 //│ ╙──      	           ^^^^^^
 //│ res: "hello"
 
+
+
 1 as (_: int)
 "hello" as (_: string)
 //│ res: (_: 1,)
@@ -38,35 +40,44 @@ true as Bool
 true as Int
 false as 1
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
-//│ ║  l.37: 	1 as true
+//│ ║  l.39: 	1 as true
 //│ ║        	^^^^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `true`
-//│ ║  l.37: 	1 as true
+//│ ║  l.39: 	1 as true
 //│ ║        	^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.37: 	1 as true
+//│ ║  l.39: 	1 as true
 //│ ╙──      	     ^^^^
 //│ res: true
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
-//│ ║  l.38: 	true as Int
+//│ ║  l.40: 	true as Int
 //│ ║        	^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `int`
-//│ ║  l.38: 	true as Int
+//│ ║  l.40: 	true as Int
 //│ ║        	^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.38: 	true as Int
+//│ ║  l.40: 	true as Int
 //│ ╙──      	        ^^^
 //│ res: int
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
-//│ ║  l.39: 	false as 1
+//│ ║  l.41: 	false as 1
 //│ ║        	^^^^^^^^^^
 //│ ╟── reference of type `false` does not match type `1`
-//│ ║  l.39: 	false as 1
+//│ ║  l.41: 	false as 1
 //│ ║        	^^^^^
 //│ ╟── Note: constraint arises from integer literal:
-//│ ║  l.39: 	false as 1
+//│ ║  l.41: 	false as 1
 //│ ╙──      	         ^
 //│ res: 1
+
+
+
+
+
+
+
+
+
 
 let f = b => if b then 0 else 1
 //│ f: bool -> (0 | 1)
@@ -103,15 +114,18 @@ x => if pred x then x else f x
 :e
 f false
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.104: 	f false
+//│ ║  l.115: 	f false
 //│ ║         	^^^^^^^
 //│ ╟── reference of type `false` is not an instance of type `int`
-//│ ║  l.104: 	f false
+//│ ║  l.115: 	f false
 //│ ║         	  ^^^^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.93: 	  if pred n then n else f (n + 1)
-//│ ╙──      	                           ^
+//│ ║  l.104: 	  if pred n then n else f (n + 1)
+//│ ╙──       	                           ^
 //│ res: error | false | int
+
+
+
 
 let take0 (x: 0) = 0
 let take1 (x: 1) = 1

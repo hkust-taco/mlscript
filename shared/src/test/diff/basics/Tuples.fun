@@ -33,6 +33,9 @@ let t = x: 1, y: 2, z: 3
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ res: error
 
+
+
+
 :p
 :e
 (1, true, "hey").2
@@ -40,15 +43,18 @@ let t = x: 1, y: 2, z: 3
 //│ Desugared: '(' {1, true, "hey",} ')' 0.2
 //│ AST: App(Bra(rcd = false, Blk(...)), DecLit(0.2))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.38: 	(1, true, "hey").2
+//│ ║  l.41: 	(1, true, "hey").2
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── tuple of type `(1, true, "hey",)` is not a function
-//│ ║  l.38: 	(1, true, "hey").2
+//│ ║  l.41: 	(1, true, "hey").2
 //│ ║        	 ^^^^^^^^^^^^^^
 //│ ╟── but it flows into applied expression with expected type `0.2 -> ?a`
-//│ ║  l.38: 	(1, true, "hey").2
+//│ ║  l.41: 	(1, true, "hey").2
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ res: error
+
+
+
 
 :w
 let not-tup = (
@@ -56,9 +62,10 @@ let not-tup = (
   2
 )
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.55: 	  1
+//│ ║  l.61: 	  1
 //│ ╙──      	  ^
 //│ not-tup: 2
+
 
 :w
 let tup = (
@@ -66,9 +73,10 @@ let tup = (
   2
 )
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.66: 	  2
+//│ ║  l.73: 	  2
 //│ ╙──      	  ^
 //│ tup: 2
+
 
 :w
 let tup =
@@ -76,9 +84,10 @@ let tup =
   2,
   3
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.77: 	  3
+//│ ║  l.85: 	  3
 //│ ╙──      	  ^
 //│ tup: 3
+
 
 let tup =
   1,
