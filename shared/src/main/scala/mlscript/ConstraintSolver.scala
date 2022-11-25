@@ -11,7 +11,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   def verboseConstraintProvenanceHints: Bool = verbose
   def defaultStartingFuel: Int = 5000
   var startingFuel: Int = defaultStartingFuel
-  def depthLimit: Int = 250
+  def depthLimit: Int = 200
   
   type ExtrCtx = MutMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound
   // type ExtrCtx = Level -> MutMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound
@@ -392,6 +392,25 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }
     */
     
+    /** Extrudes and also checks that avoided type variables (which are widened to top/bot)
+      * do not introduce bad bounds. To do this, we constrain the bounds.
+      * This is a bit of a sledgehammer approach that could be improved – it will duploicate TV bounds!
+      * For instance, it would be better to accumulate new TVs' future bounds first
+      * and add them by constraining later. */
+    def extrudeAndCheck(ty: SimpleType, lowerLvl: Int, pol: Boolean, upperLvl: Level)(implicit raise: Raise, cctx: ConCtx, ctx: Ctx, shadows: Shadows): SimpleType = {
+      val originalVars = ty.getVars
+      val res = extrude(ty, lowerLvl, pol, upperLvl)(ctx, MutMap.empty, MutSortMap.empty)
+      val newVars = res.getVars -- originalVars
+      if (newVars.nonEmpty) trace(s"RECONSTRAINING TVs") {
+        newVars.foreach { tv =>
+          if (tv.level > lowerLvl) tv.lowerBounds.foreach(lb =>
+            // * Q: is it fine to constrain with the current ctx's level?
+            tv.upperBounds.foreach(ub => rec(lb, ub, false)))
+        }
+      }()
+      res
+    }
+    
     def rec(lhs: SimpleType, rhs: SimpleType, sameLevel: Bool)
           // (implicit raise: Raise, cctx: ConCtx): Unit = {
           (implicit raise: Raise, cctx: ConCtx, ctx: Ctx, shadows: Shadows): Unit = {
@@ -538,7 +557,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               cache -= lhs -> rhs
               ()
             } else {
-              val rhs2 = extrude(rhs, lhs.level, false, MaxLevel)
+              val rhs2 = extrudeAndCheck(rhs, lhs.level, false, MaxLevel)
               // println(s"EXTR RHS  $rhs0  ~>  $rhs2  to ${lhs.level}")
               println(s"EXTR RHS  ~>  $rhs2  to ${lhs.level}")
               println(s" where ${rhs2.showBounds}")
@@ -556,7 +575,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               cache -= lhs -> rhs
               ()
             } else {
-              val lhs2 = extrude(lhs, rhs.level, true, MaxLevel)
+              val lhs2 = extrudeAndCheck(lhs, rhs.level, true, MaxLevel)
               // println(s"EXTR LHS  $lhs0  ~>  $lhs2  to ${rhs.level}")
               println(s"EXTR LHS  ~>  $lhs2  to ${rhs.level}")
               println(s" where ${lhs2.showBounds}")
@@ -952,10 +971,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   /** Copies a type up to its type variables of wrong level (and their extruded bounds).
     * Parameter `upperLvl` is used to track above which level we DON'T want to extrude variables,
     * as we may be traversing types that are quantified by polymorphic types in the process of being copied.
-    * `upperLvl` tracks the lowest such current quantification level. */
-  def extrude(ty: SimpleType, lowerLvl: Int, pol: Boolean, upperLvl: Level)
+    * `lowerLvl` tracks the lowest such current quantification level. */
+  private final def extrude(ty: SimpleType, lowerLvl: Int, pol: Boolean, upperLvl: Level)
       // (implicit ctx: Ctx, flexifyRigids: Bool, cache: MutMap[PolarVariable, TV] = MutMap.empty, cache2: MutMap[TraitTag, TV] = MutMap.empty): SimpleType =
-      (implicit ctx: Ctx, cache: MutMap[PolarVariable, TV] = MutMap.empty, cache2: MutSortMap[TraitTag, TraitTag] = MutSortMap.empty): SimpleType =
+      // (implicit ctx: Ctx, cache: MutMap[PolarVariable, TV] = MutMap.empty, cache2: MutSortMap[TraitTag, TraitTag] = MutSortMap.empty): SimpleType =
+      (implicit ctx: Ctx, cache: MutMap[PolarVariable, TV], cache2: MutSortMap[TraitTag, TraitTag]): SimpleType =
         // (trace(s"EXTR[${printPol(S(pol))}] $ty || $lowerLvl .. $upperLvl  ${ty.level} ${ty.level <= lowerLvl}"){
     if (ty.level <= lowerLvl) ty else ty match {
       case t @ TypeBounds(lb, ub) => if (pol) extrude(ub, lowerLvl, true, upperLvl) else extrude(lb, lowerLvl, false, upperLvl)

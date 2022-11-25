@@ -1,0 +1,95 @@
+// * TODO minimize this test
+
+
+:NoRecursiveTypes
+:GeneralizeCurriedFunctions
+:NoConstrainedTypes
+
+
+class ArraysRep[A, Rep]
+  method Init: A -> Rep
+  method Sub: Rep -> int -> A
+  method Update: Rep -> int -> A -> Rep
+  method Fold: (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ Defined class ArraysRep[=A, =Rep]
+//│ Declared ArraysRep.Init: ArraysRep['A, 'Rep] -> 'A -> 'Rep
+//│ Declared ArraysRep.Sub: ArraysRep['A, 'Rep] -> 'Rep -> int -> 'A
+//│ Declared ArraysRep.Update: ArraysRep['A, 'Rep] -> 'Rep -> int -> 'A -> 'Rep
+//│ Declared ArraysRep.Fold: ArraysRep['A, 'Rep] -> ('A -> 'b -> 'b) -> 'b -> 'Rep -> 'b
+
+class ArraysImpl[A, Rep]: ArraysRep[A, Rep] & {
+    init: A -> Rep;
+    sub: Rep -> int -> A;
+    update: Rep -> int -> A -> Rep;
+    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+  }
+  method Init = this.init
+  method Sub = this.sub
+  method Update = this.update
+  method Fold = this.fold
+//│ Defined class ArraysImpl[=A, =Rep]
+//│ Defined ArraysImpl.Init: ArraysImpl['A, 'Rep] -> 'A -> 'Rep
+//│ Defined ArraysImpl.Sub: ArraysImpl['A, 'Rep] -> 'Rep -> int -> 'A
+//│ Defined ArraysImpl.Update: ArraysImpl['A, 'Rep] -> 'Rep -> int -> 'A -> 'Rep
+//│ Defined ArraysImpl.Fold: ArraysImpl['A, 'Rep] -> (forall 'b. ('A -> 'b -> 'b) -> 'b -> 'Rep -> 'b)
+
+type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ Defined type alias Arrays[=A]
+
+
+def simpleStepImpl arrImpl = ArraysImpl {
+    init   = fun a -> (arrImpl.Init a, "initialized");
+    sub    = fun ((r0, r1)) -> fun i -> arrImpl.Sub r0 i;
+    update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.Update r0 i a, "updated");
+    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.Fold f b r0
+  }
+//│ simpleStepImpl: (ArraysRep[in 'A | 'A0 | 'A1 & ('A2 | 'A3) out 'A0 & ('A3 & ('A4 & ('A5 | 'A2) | 'A & ('A2 | 'A5)) | 'A6 & ('A4 & ('A5 | 'A2) | 'A & ('A2 | 'A5))) | 'A7 & ('A3 & ('A4 & ('A5 | 'A2) | 'A & ('A5 | 'A2)) | 'A6 & ('A4 & ('A5 | 'A2) | 'A & ('A5 | 'A2))), in 'Rep | 'Rep0 | 'Rep1 & 'a & 'Rep2 & 'c & 'Rep3 & 'd & 'Rep4 & ('Rep5 | 'Rep6) out 'Rep2 & ('Rep7 & ('Rep1 & ('Rep4 | 'Rep5) | 'Rep0 & ('Rep4 | 'Rep5)) | 'Rep6 & ('Rep1 & ('Rep4 | 'Rep5) | 'Rep0 & ('Rep4 | 'Rep5))) | 'Rep & ('Rep7 & ('Rep1 & ('Rep5 | 'Rep4) | 'Rep0 & ('Rep5 | 'Rep4)) | 'Rep6 & ('Rep1 & ('Rep5 | 'Rep4) | 'Rep0 & ('Rep5 | 'Rep4)))] & 'e) -> ((ArraysImpl['A1, 'Rep8] with {fold: forall 'A8, 'b, 'b0, 'f. (('A2 | 'A8) -> 'b -> ('b & 'b0) & 'f) -> (forall 'g. ('b & 'g) -> (forall 'h, 'Rep9, 'i, 'j. ('Rep1 & 'h & 'Rep9, 'i,) -> ('b0 | 'g | 'j))) | 'fold, init: forall 'k, 'A9, 'l. ('A4 & 'k & 'A9) -> ('Rep6 | 'l, "initialized",) | 'init, sub: forall 'm, 'n. ('Rep2 & 'm, 'n,) -> (forall 'o, 'p. (int & 'o) -> ('A3 | 'p)) | 'sub, update: forall 'q, 'r. ('Rep4 & 'q, 'r,) -> (forall 'o, 's. (int & 's & 'o) -> (forall 't, 'A10, 'u. ('A7 & 't & 'A10) -> ('Rep5 | 'q | 'u, "updated",))) | 'update}) | 'v)
+//│   where
+//│     'Rep8 :> ('Rep6 | 'Rep5 | 'w | 'd | 'x, "initialized" | "updated",)
+//│           <: ('Rep1 & 'a & 'Rep2 & 'c & 'Rep3 & 'd & 'Rep4, 'y & 'z & 'a1,)
+//│     'A1 <: 'b1 & 'A11 & 'A7 & 'c1 & 'A12 & 'A4
+//│               = [Function: simpleStepImpl]
+
+simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
+//│ res: ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string,)]
+//│    = [Function: simpleStepImpl]
+
+// def simpleStepImpl2_ty: Arrays['a] -> ArraysImpl['a, ('_, string)]
+// def simpleStepImpl2_ty: Arrays['a] -> ArraysImpl['a, '_]
+// def simpleStepImpl2 arr = arr simpleStepImpl
+
+def arr: Arrays[int]
+//│ arr: Arrays[int]
+//│    = <missing implementation>
+
+// def stepped = arr simpleStepImpl
+
+def mkArrays: ArraysImpl['a, 'r] -> Arrays['a]
+mkArrays impl k = k impl
+//│ mkArrays: ArraysImpl['a, 'r] -> Arrays['a]
+//│         = <missing implementation>
+//│ 'a -> (forall 'b, 'c. ('a -> 'b & 'c) -> 'b)
+//│   <:  mkArrays:
+//│ ArraysImpl['a, 'r] -> Arrays['a]
+//│         = [Function: mkArrays]
+
+// * Inconsistent bounds on 'Rep after type avoidance during extrusion
+:e
+def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.78: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
+//│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.36: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.36: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.42: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.Sub r0 i;
+//│ ╙──      	                                                    ^^
+//│ stepped: error
+//│        = <no result>
+//│          arr is not implemented
+
+

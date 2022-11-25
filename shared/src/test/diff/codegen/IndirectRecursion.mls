@@ -141,14 +141,9 @@ def z =
 // FIXME should be caught by cycle checker!
 def z =
   (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
-//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e, ?f, ?g. ?e -> ?f) -> ?h` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e, ?f, ?g. ?g -> ?f) -> ?h` exceeded recursion depth limit (200)
 //│ ║  l.143: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ‹∀ 1. (α417_432'' -> α426_436'')›  <!<  α417_478'
-//│ ╟── while constraining:  α417_473'  <!<  α417_478'
-//│ ╟── while constraining:  (α417_473',)  <!<  (α417_478',)
-//│ ╟── while constraining:  (α417_478' -> α426_482')  <!<  ((α417_473',) -> α420_474')
-//│ ╟── while constraining:  ‹∀ 1. (α417_432'' -> α426_436'')›  <!<  ((α417_473',) -> α420_474')
 //│ ╟── while constraining:  ‹∀ 1. (α417_432'' -> α426_436'')›  <!<  α417_473'
 //│ ╟── while constraining:  α417_468'  <!<  α417_473'
 //│ ╟── while constraining:  (α417_468',)  <!<  (α417_473',)
@@ -159,6 +154,11 @@ def z =
 //│ ╟── while constraining:  (α417_463',)  <!<  (α417_468',)
 //│ ╟── while constraining:  (α417_468' -> α426_472')  <!<  ((α417_463',) -> α420_464')
 //│ ╟── while constraining:  ‹∀ 1. (α417_432'' -> α426_436'')›  <!<  ((α417_463',) -> α420_464')
+//│ ╟── while constraining:  ‹∀ 1. (α417_432'' -> α426_436'')›  <!<  α417_463'
+//│ ╟── while constraining:  α417_458'  <!<  α417_463'
+//│ ╟── while constraining:  (α417_458',)  <!<  (α417_463',)
+//│ ╟── while constraining:  (α417_463' -> α426_467')  <!<  ((α417_458',) -> α420_459')
+//│ ╟── while constraining:  ‹∀ 1. (α417_432'' -> α426_436'')›  <!<  ((α417_458',) -> α420_459')
 //│ ╟── ......
 //│ ╟── ......
 //│ ╟── while constraining:  (α417_448' -> α426_452')  <!<  ((α417_443',) -> α420_444')
