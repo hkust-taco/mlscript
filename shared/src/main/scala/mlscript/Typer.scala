@@ -620,11 +620,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val param_ty = typePattern(pat)(newCtx, raise, vars)
         val body_ty = typeTerm(body)(newCtx, raise, vars)
         FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
-      case App(App(Var("and"), lhs), rhs) =>
-        val lhs_ty = typeTerm(lhs)
-        val newCtx = ctx.nest // TODO use
-        val rhs_ty = typeTerm(lhs)
-        ??? // TODO
       case App(f, a) =>
         val f_ty = typeTerm(f)
         val a_ty = typeTerm(a)

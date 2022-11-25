@@ -1,0 +1,38 @@
+:NewParser
+
+
+class Pair(fst, snd)
+//│ Defined class Pair
+//│ Pair: ('fst, 'snd,) -> (Pair with {fst: 'fst, snd: 'snd})
+//│     = [Function: Pair1]
+
+
+// TODO support by desugaring to `if x is Pair(a, b) then a > b else False`
+fun foo(x) = x is Pair(a, b) and a > b
+//│ ╔══[ERROR] identifier not found: is
+//│ ║  l.11: 	fun foo(x) = x is Pair(a, b) and a > b
+//│ ╙──      	               ^^
+//│ ╔══[ERROR] Illegal use of keyword: and
+//│ ║  l.11: 	fun foo(x) = x is Pair(a, b) and a > b
+//│ ╙──      	                             ^^^
+//│ ╔══[ERROR] identifier not found: and
+//│ ║  l.11: 	fun foo(x) = x is Pair(a, b) and a > b
+//│ ╙──      	                             ^^^
+//│ ╔══[ERROR] identifier not found: a
+//│ ║  l.11: 	fun foo(x) = x is Pair(a, b) and a > b
+//│ ╙──      	                       ^
+//│ ╔══[ERROR] identifier not found: b
+//│ ║  l.11: 	fun foo(x) = x is Pair(a, b) and a > b
+//│ ╙──      	                          ^
+//│ ╔══[ERROR] identifier not found: a
+//│ ║  l.11: 	fun foo(x) = x is Pair(a, b) and a > b
+//│ ╙──      	                                 ^
+//│ ╔══[ERROR] identifier not found: b
+//│ ║  l.11: 	fun foo(x) = x is Pair(a, b) and a > b
+//│ ╙──      	                                     ^
+//│ foo: anything -> error
+//│ Code generation encountered an error:
+//│   unresolved symbol is
+
+
+
