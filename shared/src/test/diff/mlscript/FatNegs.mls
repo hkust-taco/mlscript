@@ -47,11 +47,6 @@ nt = nc
 //│   = <no result>
 //│     nc and nt are not implemented
 
-
-
-
-
-
 nc = nc
 //│ ~Lit
 //│   <:  nc:

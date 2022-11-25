@@ -88,10 +88,6 @@ evalN2 evalN2 e
 //│ res: error | int
 
 
-
-
-
-
 def evalN3 evalN3 x = case x of {
   Neg -> 0 - (evalN2 x.underlying)
   | _ -> eval evalN3 x
@@ -113,12 +109,6 @@ def evalN3 evalN3 x = case x of {
 //│ ╙──      	              ^^^^^^^^^^^^^^^^^^^
 //│ evalN3: ('a -> 'rhs -> int & 'a) -> ((Add with {lhs: 'rhs, rhs: 'rhs}) | (Lit with {val: 'val}) | (Neg with {underlying: 'b -> nothing -> int & 'b})) -> (error | int | 'val)
 
-
-
-
-
-
-
 def evalN3 evalN3 x = case x of {
   Neg -> 0 - (evalN3 x.underlying)
   | _ -> eval evalN3 x
@@ -130,16 +120,16 @@ evalN3 evalN3 e
 //│ ║  l.+1: 	evalN3 evalN3 e
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` is not an instance of type `int`
-//│ ║  l.122: 	def evalN3 evalN3 x = case x of {
+//│ ║  l.112: 	def evalN3 evalN3 x = case x of {
 //│ ║         	                  ^^^^^^^^^^^^^^^
-//│ ║  l.123: 	  Neg -> 0 - (evalN3 x.underlying)
+//│ ║  l.113: 	  Neg -> 0 - (evalN3 x.underlying)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.124: 	  | _ -> eval evalN3 x
+//│ ║  l.114: 	  | _ -> eval evalN3 x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.125: 	  }
+//│ ║  l.115: 	  }
 //│ ║         	^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.123: 	  Neg -> 0 - (evalN3 x.underlying)
+//│ ║  l.113: 	  Neg -> 0 - (evalN3 x.underlying)
 //│ ╙──       	              ^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	evalN3 evalN3 e
@@ -151,18 +141,8 @@ evalN3 evalN3 e
 //│ ║  l.20: 	  | Add -> eval eval x.lhs + eval eval x.rhs
 //│ ║        	                             ^^^^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.123: 	  Neg -> 0 - (evalN3 x.underlying)
+//│ ║  l.113: 	  Neg -> 0 - (evalN3 x.underlying)
 //│ ╙──       	                     ^^^^^^^^^^^^
 //│ res: error | int
-
-
-
-
-
-
-
-
-
-
 
 

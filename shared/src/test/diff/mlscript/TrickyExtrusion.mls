@@ -1,9 +1,9 @@
 
 // From SuperType tests
 
-def True = true
+True = true
 //│ True: true
-//│     = [Function: True]
+//│     = true
 
 def inc: int -> int
 //│ inc: int -> int
