@@ -356,7 +356,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   
   
   def typeStatement(s: DesugaredStatement, allowPure: Bool)
-        (implicit ctx: Ctx, raise: Raise): PolymorphicType \/ Ls[Binding] = s match {
+        (implicit ctx: Ctx, raise: Raise): PolymorphicType \/ Opt[Binding] = s match {
     case Def(false, Var("_"), L(rhs), isByname) => typeStatement(rhs, allowPure)
     case Def(isrec, nme, L(rhs), isByname) => // TODO reject R(..)
       if (nme.name === "_")
@@ -364,7 +364,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       val ty_sch = typeLetRhs(isrec, nme.name, rhs)
       nme.uid = S(nextUid)
       ctx += nme.name -> VarSymbol(ty_sch, nme)
-      R(nme.name -> ty_sch :: Nil)
+      R(S(nme.name -> ty_sch))
     case t @ Tup(fs) if !allowPure => // Note: not sure this is still used!
       val thing = fs match {
         case (S(_), _) :: Nil => "field"
@@ -389,7 +389,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       L(PolymorphicType(0, ty))
     case _ =>
       err(msg"Illegal position for this ${s.describe} statement.", s.toLoc)(raise)
-      R(Nil)
+      R(N)
   }
   
   /** Infer the type of a let binding right-hand side. */
