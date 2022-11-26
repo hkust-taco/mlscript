@@ -38,6 +38,9 @@ def f1 : ('a, ...Array[int]) -> 'a
 
 // FIXME
 def f1 (x, ...y) = x
+//│ ('a, ...Array[anything]) -> 'a
+//│   <:  f1:
+//│ ('a, ...Array[int]) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.40: 	def f1 (x, ...y) = x
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
@@ -47,9 +50,6 @@ def f1 (x, ...y) = x
 //│ ╟── Note: constraint arises from splice:
 //│ ║  l.40: 	def f1 (x, ...y) = x
 //│ ╙──      	       ^^^^^^^^^
-//│ ('a, ...Array[anything]) -> 'a
-//│   <:  f1:
-//│ ('a, ...Array[int]) -> 'a
 
 :e
 errt = (1, ...2, 3)

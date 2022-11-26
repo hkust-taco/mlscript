@@ -333,6 +333,10 @@ a1 = (1,2,true,'hello')
 a1._2
 //│ a1: Array[int]
 //│   = <missing implementation>
+//│ (1, 2, true, "hello",)
+//│   <:  a1:
+//│ Array[int]
+//│   = [ 1, 2, true, 'hello' ]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.332: 	a1 = (1,2,true,'hello')
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
@@ -351,10 +355,6 @@ a1._2
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.331: 	def a1: Array[int]
 //│ ╙──       	              ^^^
-//│ (1, 2, true, "hello",)
-//│   <:  a1:
-//│ Array[int]
-//│   = [ 1, 2, true, 'hello' ]
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.333: 	a1._2
 //│ ║         	^^^^^

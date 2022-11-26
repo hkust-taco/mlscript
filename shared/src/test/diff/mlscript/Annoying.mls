@@ -57,6 +57,9 @@ def test: (int & { f: 'a } | { x: 'a } | { y: 'a }) -> 'a
 
 :e
 def test x = case x of { int -> x.f | _ -> x.x }
+//│ (int & {f: 'f} | {x: 'f} & ~int) -> 'f
+//│   <:  test:
+//│ anything -> nothing
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.59: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -84,9 +87,6 @@ def test x = case x of { int -> x.f | _ -> x.x }
 //│ ╟── from refined scrutinee:
 //│ ║  l.59: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ╙──      	                  ^
-//│ (int & {f: 'f} | {x: 'f} & ~int) -> 'f
-//│   <:  test:
-//│ anything -> nothing
 
 // Note: not an error, but a terminating `test` can't be implemented
 test 1
@@ -315,6 +315,9 @@ def ty2: TT & { x: int }
 
 :e
 ty = ty2
+//│ TT & {x: int}
+//│   <:  ty:
+//│ AA
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.317: 	ty = ty2
 //│ ║         	^^^^^^^^
@@ -327,8 +330,5 @@ ty = ty2
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.308: 	def ty: AA | ('a \ x)
 //│ ╙──       	        ^^^^^^^^^^^^^
-//│ TT & {x: int}
-//│   <:  ty:
-//│ AA
 
 

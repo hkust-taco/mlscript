@@ -23,6 +23,11 @@ rec def g2 a = G { a }
 
 :e
 g = g2
+//│ (G[?] & 'a) -> (G[?] with {a: 'a})
+//│   <:  g:
+//│ 'a
+//│   where
+//│     'a :> G[?] with {a: 'a}
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.25: 	g = g2
 //│ ║        	^^^^^^
@@ -35,11 +40,6 @@ g = g2
 //│ ╟── Note: constraint arises from local type binding:
 //│ ║  l.13: 	def g: G['a] & {a: 'a} as 'a
 //│ ╙──      	       ^^^^^^^^^^^^^^^
-//│ (G[?] & 'a) -> (G[?] with {a: 'a})
-//│   <:  g:
-//│ 'a
-//│   where
-//│     'a :> G[?] with {a: 'a}
 
 rec def g2 = G { a = g2 }
 //│ g2: 'a

@@ -135,6 +135,12 @@ def mkInteger_oops: (int & 'a) -> (Integer & { value: 'a })
 rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops (n.value + 1) }
 //│ mkInteger_oops: (int & 'a) -> (Integer\addOne with {value: 'a})
 //│               = <missing implementation>
+//│ int -> 'a
+//│   where
+//│     'a :> Integer with {addOne: {value: int} -> 'a}
+//│   <:  mkInteger_oops:
+//│ (int & 'a) -> (Integer\addOne with {value: 'a})
+//│               = [Function: mkInteger_oops]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.135: 	rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops (n.value + 1) }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -147,12 +153,6 @@ rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.134: 	def mkInteger_oops: (int & 'a) -> (Integer & { value: 'a })
 //│ ╙──       	                                                      ^^
-//│ int -> 'a
-//│   where
-//│     'a :> Integer with {addOne: {value: int} -> 'a}
-//│   <:  mkInteger_oops:
-//│ (int & 'a) -> (Integer\addOne with {value: 'a})
-//│               = [Function: mkInteger_oops]
 
 // * We may still want to retain the precise typing of the `value` part:
 
@@ -203,6 +203,12 @@ def mkIntegerPrecise3: (int & 'a) -> (Integer & { value: 'a })
 def mkIntegerPrecise3 = mkInteger
 //│ mkIntegerPrecise3: (int & 'a) -> (Integer\addOne with {value: 'a})
 //│                  = <missing implementation>
+//│ int -> 'a
+//│   where
+//│     'a :> Integer with {addOne: {value: int} -> 'a}
+//│   <:  mkIntegerPrecise3:
+//│ (int & 'a) -> (Integer\addOne with {value: 'a})
+//│                  = [Function: mkIntegerPrecise3]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.203: 	def mkIntegerPrecise3 = mkInteger
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -212,12 +218,6 @@ def mkIntegerPrecise3 = mkInteger
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.202: 	def mkIntegerPrecise3: (int & 'a) -> (Integer & { value: 'a })
 //│ ╙──       	                                                         ^^
-//│ int -> 'a
-//│   where
-//│     'a :> Integer with {addOne: {value: int} -> 'a}
-//│   <:  mkIntegerPrecise3:
-//│ (int & 'a) -> (Integer\addOne with {value: 'a})
-//│                  = [Function: mkIntegerPrecise3]
 
 
 :e

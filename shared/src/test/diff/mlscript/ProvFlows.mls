@@ -363,6 +363,9 @@ ty11 = ty00
 // :d
 :ex
 ty00 = ty11
+//│ ('a & (A | B)) -> ('a, 'a,)
+//│   <:  ty00:
+//│ (A & 'a | B & 'b) -> ('a, 'b,)
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.365: 	ty00 = ty11
 //│ ║         	^^^^^^^^^^^
@@ -419,7 +422,4 @@ ty00 = ty11
 //│ ║  l.352: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	                                    ^^
 //│ ╙── [info] flowing into expression of type `'b`
-//│ ('a & (A | B)) -> ('a, 'a,)
-//│   <:  ty00:
-//│ (A & 'a | B & 'b) -> ('a, 'b,)
 

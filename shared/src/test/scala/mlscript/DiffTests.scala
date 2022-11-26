@@ -533,84 +533,98 @@ class DiffTests
 
             // L(diagnostic lines) | R(binding name -> typing output lines)
             val typingOutputs = mutable.Buffer.empty[Ls[Str] \/ (Str -> Ls[Str])]
-
-            val diagLineBuffers = mutable.Buffer.empty[Str]
-            val raiseToBuffer: typer.Raise = d => {
-              report(d :: Nil, diagLineBuffers += _)
-              typingOutputs += L(diagLineBuffers.toList)
-              diagLineBuffers.clear()
-            }
             
             // process statements and output mlscript types
             // all `Def`s and `Term`s are processed here
             // generate typescript types if generateTsDeclarations flag is
             // set in the mode
-            stmts.foreach {
-              // statement only declares a new term with its type
-              // but does not give a body/definition to it
-              case Def(isrec, nme, R(PolyType(tps, rhs)), isByname) =>
-                typer.dbg = mode.dbg
-                val ty_sch = typer.PolymorphicType(0,
-                  typer.typeType(rhs)(ctx.nextLevel, raiseToBuffer,
-                    vars = tps.map(tp => tp.name -> typer.freshVar(typer.noProv/*FIXME*/)(1)).toMap))
-                ctx += nme.name -> typer.VarSymbol(ty_sch, nme)
-                declared += nme.name -> ty_sch
-                val exp = getType(ty_sch)
-                if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
-                typingOutputs += R[Ls[Str], Str -> Ls[Str]](nme.name -> (s"$nme: ${exp.show}" :: Nil))
+            stmts.foreach { stmt =>
+              // Because diagnostic lines are after the typing results,
+              // we need to cache the diagnostic blocks and add them to the
+              // `typingOutputs` buffer after the statement has been processed.
+              val diagnosticLines = mutable.Buffer.empty[Left[Ls[Str], Nothing]]
+              val raiseToBuffer: typer.Raise = d => {
+                val buffer = mutable.Buffer.empty[Str]
+                report(d :: Nil, buffer += _)
+                diagnosticLines += L(buffer.toList)
+              }
+              // Typing results are before diagnostic messages in the subsumption case.
+              // We use this flag to prevent too much changes in PR #150.
+              var typingBeforeDiagnostics = false
+              val typingLines = stmt match {
+                // statement only declares a new term with its type
+                // but does not give a body/definition to it
+                case Def(isrec, nme, R(PolyType(tps, rhs)), isByname) =>
+                  typer.dbg = mode.dbg
+                  val ty_sch = typer.PolymorphicType(0,
+                    typer.typeType(rhs)(ctx.nextLevel, raiseToBuffer,
+                      vars = tps.map(tp => tp.name -> typer.freshVar(typer.noProv/*FIXME*/)(1)).toMap))
+                  ctx += nme.name -> typer.VarSymbol(ty_sch, nme)
+                  declared += nme.name -> ty_sch
+                  val exp = getType(ty_sch)
+                  if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
+                  R[Ls[Str], Str -> Ls[Str]](nme.name -> (s"$nme: ${exp.show}" :: Nil)) :: Nil
 
-              // statement is defined and has a body/definition
-              case d @ Def(isrec, nme, L(rhs), isByname) =>
-                typer.dbg = mode.dbg
-                val ty_sch = typer.typeLetRhs(isrec, nme.name, rhs)(ctx, raiseToBuffer)
-                val exp = getType(ty_sch)
-                // statement does not have a declared type for the body
-                // the inferred type must be used and stored for lookup
-                val typingOutput = declared.get(nme.name) match {
-                  // statement has a body but it's type was not declared
-                  // infer it's type and store it for lookup and type gen
-                  case N =>
-                    ctx += nme.name -> typer.VarSymbol(ty_sch, nme)
-                    if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
-                    s"$nme: ${exp.show}" :: Nil
+                // statement is defined and has a body/definition
+                case d @ Def(isrec, nme, L(rhs), isByname) =>
+                  typer.dbg = mode.dbg
+                  val ty_sch = typer.typeLetRhs(isrec, nme.name, rhs)(ctx, raiseToBuffer)
+                  val exp = getType(ty_sch)
+                  // statement does not have a declared type for the body
+                  // the inferred type must be used and stored for lookup
+                  R[Ls[Str], Str -> Ls[Str]](nme.name -> (declared.get(nme.name) match {
+                    // statement has a body but it's type was not declared
+                    // infer it's type and store it for lookup and type gen
+                    case N =>
+                      ctx += nme.name -> typer.VarSymbol(ty_sch, nme)
+                      if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
+                      s"$nme: ${exp.show}" :: Nil
+                      
+                    // statement has a body and a declared type
+                    // both are used to compute a subsumption (What is this??)
+                    // the inferred type is used to for ts type gen
+                    case S(sign) =>
+                      ctx += nme.name -> typer.VarSymbol(sign, nme)
+                      val sign_exp = getType(sign)
+                      typer.dbg = mode.dbg
+                      typer.subsume(ty_sch, sign)(ctx, raiseToBuffer, typer.TypeProvenance(d.toLoc, "def definition"))
+                      if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
+                      typingBeforeDiagnostics = true
+                      exp.show :: s"  <:  $nme:" :: sign_exp.show :: Nil
+                  })) :: Nil
+                case desug: DesugaredStatement =>
+                  typer.dbg = mode.dbg
+                  typer.typeStatement(desug, allowPure = true)(ctx, raiseToBuffer) match {
+                    // when does this happen??
+                    case R(binds) =>
+                      binds.map { case (nme, pty) =>
+                        val ptType = getType(pty)
+                        ctx += nme -> typer.VarSymbol(pty, Var(nme))
+                        if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(ptType, Some(nme))
+                        R[Ls[Str], Str -> Ls[Str]](nme -> (s"$nme: ${ptType.show}" :: Nil))
+                      }
                     
-                  // statement has a body and a declared type
-                  // both are used to compute a subsumption (What is this??)
-                  // the inferred type is used to for ts type gen
-                  case S(sign) =>
-                    ctx += nme.name -> typer.VarSymbol(sign, nme)
-                    val sign_exp = getType(sign)
-                    typer.dbg = mode.dbg
-                    typer.subsume(ty_sch, sign)(ctx, raiseToBuffer, typer.TypeProvenance(d.toLoc, "def definition"))
-                    if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
-                    exp.show :: s"  <:  $nme:" :: sign_exp.show :: Nil
+                    // statements for terms that compute to a value
+                    // and are not bound to a variable name
+                    case L(pty) =>
+                      val exp = getType(pty)
+                      if (exp =/= TypeName("unit")) {
+                        val res = "res"
+                        ctx += res -> typer.VarSymbol(pty, Var(res))
+                        if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, None)
+                        R[Ls[Str], Str -> Ls[Str]](res, s"res: ${exp.show}" :: Nil) :: Nil
+                      } else (
+                        R[Ls[Str], Str -> Ls[Str]]("" -> Nil) :: Nil
+                      )
                 }
-                typingOutputs += R[Ls[Str], Str -> Ls[Str]](nme.name -> typingOutput)
-              case desug: DesugaredStatement =>
-                typer.dbg = mode.dbg
-                typer.typeStatement(desug, allowPure = true)(ctx, raiseToBuffer) match {
-                  // when does this happen??
-                  case R(binds) =>
-                    binds.foreach { case (nme, pty) =>
-                      val ptType = getType(pty)
-                      ctx += nme -> typer.VarSymbol(pty, Var(nme))
-                      if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(ptType, Some(nme))
-                      typingOutputs += R[Ls[Str], Str -> Ls[Str]](nme -> (s"$nme: ${ptType.show}" :: Nil))
-                    }
-                  
-                  // statements for terms that compute to a value
-                  // and are not bound to a variable name
-                  case L(pty) =>
-                    val exp = getType(pty)
-                    if (exp =/= TypeName("unit")) {
-                      val res = "res"
-                      ctx += res -> typer.VarSymbol(pty, Var(res))
-                      if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, None)
-                      typingOutputs += R[Ls[Str], Str -> Ls[Str]](res, s"res: ${exp.show}" :: Nil)
-                    } else (
-                      typingOutputs += R[Ls[Str], Str -> Ls[Str]]("" -> Nil)
-                    )
-                }
+              }
+              if (typingBeforeDiagnostics) {
+                typingOutputs ++= typingLines
+                typingOutputs ++= diagnosticLines
+              } else {
+                typingOutputs ++= diagnosticLines
+                typingOutputs ++= typingLines
+              }
             }
             
             var results: JSTestBackend.Result \/ Ls[ReplHost.Reply] = if (!allowTypeErrors &&
@@ -655,13 +669,24 @@ class DiffTests
                     replyQueue.headOption.foreach { head =>
                       head match {
                         case ReplHost.Error(isSyntaxError, content) =>
-                          if (!(mode.expectTypeErrors
-                              || mode.expectRuntimeErrors
-                              || allowRuntimeErrors
-                              || mode.fixme
-                          )) failures += blockLineNum
-                          totalRuntimeErrors += 1
-                          output((if (isSyntaxError) "Syntax" else "Runtime") + " error:")
+                          // We don't expect type errors nor FIXME.
+                          if (!mode.expectTypeErrors && !mode.fixme) {
+                            // We don't expect code generation errors and it is.
+                            if (!mode.expectCodeGenErrors && isSyntaxError)
+                              failures += blockLineNum
+                            // We don't expect runtime errors and it's a runtime error.
+                            if (!mode.expectRuntimeErrors && !allowRuntimeErrors && !isSyntaxError)
+                              failures += blockLineNum
+                          }
+                          if (isSyntaxError) {
+                            // If there is syntax error in the generated code,
+                            // it should be a code generation error.
+                            output("Syntax error:")
+                            totalCodeGenErrors += 1
+                          } else { // Otherwise, it is a runtime error.
+                            output("Runtime error:")
+                            totalRuntimeErrors += 1
+                          }
                           content.linesIterator.foreach { s => output("  " + s) }
                         case ReplHost.Unexecuted(reason) =>
                           output(" " * prefixLength + "= <no result>")

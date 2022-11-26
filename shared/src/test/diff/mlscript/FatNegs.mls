@@ -26,6 +26,11 @@ nc = nt
 // * Demonstrates that the negated tag is not a supertype of the whole negated class:
 :e
 nt = nc
+//│ ~Lit
+//│   <:  nt:
+//│ ~Lit
+//│   = <no result>
+//│     nc and nt are not implemented
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.28: 	nt = nc
 //│ ║        	^^^^^^^
@@ -41,11 +46,6 @@ nt = nc
 //│ ╟── from type negation:
 //│ ║  l.10: 	def nt: ~#Lit
 //│ ╙──      	        ^^^^^
-//│ ~Lit
-//│   <:  nt:
-//│ ~Lit
-//│   = <no result>
-//│     nc and nt are not implemented
 
 nc = nc
 //│ ~Lit

@@ -103,6 +103,12 @@ eval1 = evalImpl
 
 :e
 evalBad = eval
+//│ ('b -> int) -> Expr['b] -> int
+//│   <:  evalBad:
+//│ ('b -> 'c) -> 'a -> ('c | int)
+//│   where
+//│     'a <: 'b & ~Add & ~Lit | Add & {lhs: 'a, rhs: 'a} | Lit & {val: int}
+//│        = [Function: evalImpl]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.105: 	evalBad = eval
 //│ ║         	^^^^^^^^^^^^^^
@@ -112,12 +118,6 @@ evalBad = eval
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.38: 	def eval: ('b -> int) -> Expr['b] -> int
 //│ ╙──      	                 ^^^
-//│ ('b -> int) -> Expr['b] -> int
-//│   <:  evalBad:
-//│ ('b -> 'c) -> 'a -> ('c | int)
-//│   where
-//│     'a <: 'b & ~Add & ~Lit | Add & {lhs: 'a, rhs: 'a} | Lit & {val: int}
-//│        = [Function: evalImpl]
 
 :e
 eval {} (Lit{} with { val = 1 })

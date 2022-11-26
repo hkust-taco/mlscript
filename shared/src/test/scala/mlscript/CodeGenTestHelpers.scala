@@ -1,5 +1,7 @@
 package mlscript
 
+import mlscript.utils._
+
 class CodeGenTestHelpers(file: os.Path, output: String => Unit) {
   def showGeneratedCode(testCode: JSTestBackend.TestCode): Unit = {
     val JSTestBackend.TestCode(prelude, queries) = testCode
@@ -57,8 +59,8 @@ class CodeGenTestHelpers(file: os.Path, output: String => Unit) {
       val length = queries.length // We assume that queries.length === replies.length
       queries.iterator.zip(replies).zipWithIndex.foreach {
         case ((JSTestBackend.CodeQuery(preludeLines, codeLines, res), reply), i) =>
-          val p0 = if (i + 1 == length) "  " else "│ "
-          val p1 = if (i + 1 == length) "└─" else "├─"
+          val p0 = if (i + 1 === length) "  " else "│ "
+          val p1 = if (i + 1 === length) "└─" else "├─"
           output(s"$p1┬ Query ${i + 1}/${queries.length}")
           if (preludeLines.isEmpty) {
             output(s"$p0├── Prelude: <empty>")
@@ -74,13 +76,13 @@ class CodeGenTestHelpers(file: os.Path, output: String => Unit) {
               output(s"$p0├── Intermediate: $intermediate")
             case _ => ()
           }
-          val p2 = if (i + 1 == length) "  └──" else s"$p0└──"
+          val p2 = if (i + 1 === length) "  └──" else s"$p0└──"
           output(s"$p2 Reply: $reply")
         case ((JSTestBackend.AbortedQuery(reason), _), i) =>
-          val prefix = if (i + 1 == queries.length) "└──" else "├──"
+          val prefix = if (i + 1 === queries.length) "└──" else "├──"
           output(s"$prefix Query ${i + 1}/${queries.length}: <aborted: $reason>")
         case ((JSTestBackend.EmptyQuery, _), i) =>
-          val prefix = if (i + 1 == queries.length) "└──" else "├──"
+          val prefix = if (i + 1 === queries.length) "└──" else "├──"
           output(s"$prefix Query ${i + 1}/${queries.length}: <empty>")
       }
     }

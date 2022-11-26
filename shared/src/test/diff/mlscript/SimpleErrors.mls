@@ -57,6 +57,9 @@ test1 1
 def map: 'a -> 'a
 def map f = f map (fun x -> map)
 //│ map: 'a -> 'a
+//│ (('a -> 'a) -> (anything -> 'a0 -> 'a0) -> 'b) -> 'b
+//│   <:  map:
+//│ 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.58: 	def map f = f map (fun x -> map)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -69,9 +72,6 @@ def map f = f map (fun x -> map)
 //│ ╟── from reference:
 //│ ║  l.58: 	def map f = f map (fun x -> map)
 //│ ╙──      	            ^
-//│ (('a -> 'a) -> (anything -> 'a0 -> 'a0) -> 'b) -> 'b
-//│   <:  map:
-//│ 'a -> 'a
 
 
 class Bar

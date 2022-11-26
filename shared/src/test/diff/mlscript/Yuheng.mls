@@ -267,6 +267,12 @@ rec def eval(e) = case e of
   { IntLit -> e.value
   | Pair -> (eval e.lhs, eval e.rhs)
   }
+//│ 'a -> 'value
+//│   where
+//│     'a <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a})
+//│     'value :> ('value, 'value,)
+//│   <:  eval:
+//│ Expr[?] -> nothing
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.+1: 	rec def eval(e) = case e of
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -345,18 +351,18 @@ rec def eval(e) = case e of
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.263: 	def eval: Expr['a] -> 'a
 //│ ╙──       	                      ^^
-//│ 'a -> 'value
-//│   where
-//│     'a <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a})
-//│     'value :> ('value, 'value,)
-//│   <:  eval:
-//│ Expr[?] -> nothing
 
 rec def eval(e) = case e of
   { IntLit -> e.value
   | Pair -> (eval e.lhs, eval e.rhs)
   | _ -> error
   }
+//│ 'a -> 'value
+//│   where
+//│     'a <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a}) | ~IntLit & ~Pair[?, ?]
+//│     'value :> ('value, 'value,)
+//│   <:  eval:
+//│ Expr[?] -> nothing
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.+1: 	rec def eval(e) = case e of
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -428,9 +434,3 @@ rec def eval(e) = case e of
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.263: 	def eval: Expr['a] -> 'a
 //│ ╙──       	                      ^^
-//│ 'a -> 'value
-//│   where
-//│     'a <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a}) | ~IntLit & ~Pair[?, ?]
-//│     'value :> ('value, 'value,)
-//│   <:  eval:
-//│ Expr[?] -> nothing
