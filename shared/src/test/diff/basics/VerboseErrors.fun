@@ -27,30 +27,22 @@ h / mkArg false
 //│ ╙──     	   ^^^^^
 //│ res: error | int
 
-
-
-
-
 :v
 :e
 (x => succ x) false
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.36: 	(x => succ x) false
+//│ ║  l.32: 	(x => succ x) false
 //│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `false` is not an instance of type `int`
-//│ ║  l.36: 	(x => succ x) false
+//│ ║  l.32: 	(x => succ x) false
 //│ ║        	              ^^^^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.36: 	(x => succ x) false
+//│ ║  l.32: 	(x => succ x) false
 //│ ║        	           ^
 //│ ╟── from variable:
-//│ ║  l.36: 	(x => succ x) false
+//│ ║  l.32: 	(x => succ x) false
 //│ ╙──      	 ^
 //│ res: error | int
-
-
-
-
 
 
 let f = x =>
@@ -71,20 +63,16 @@ let test = x => y => if x.prop then i x else y
 :verbose
 test arg2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.72: 	test arg2
+//│ ║  l.64: 	test arg2
 //│ ║        	^^^^^^^^^
 //│ ╟── application of type `bool` is not an instance of type `int`
-//│ ║  l.59: 	let arg = {prop: not true}
+//│ ║  l.51: 	let arg = {prop: not true}
 //│ ║        	                 ^^^^^^^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.62: 	  succ / f y.fld
+//│ ║  l.54: 	  succ / f y.fld
 //│ ║        	         ^^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.58: 	  x.prop
+//│ ║  l.50: 	  x.prop
 //│ ╙──      	   ^^^^^
 //│ res: 'a -> (int | 'a) | error
-
-
-
-
 

@@ -87,17 +87,16 @@ f (y: 42)
 //│ ╙──      	   ^^^^^
 //│ res: error | int
 
-
 :e
 f (x: 42, y: 43)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.92: 	f (x: 42, y: 43)
+//│ ║  l.91: 	f (x: 42, y: 43)
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── tuple of type `(x: 42, y: 43,)` is not an instance of type `int`
-//│ ║  l.92: 	f (x: 42, y: 43)
+//│ ║  l.91: 	f (x: 42, y: 43)
 //│ ║        	   ^^^^^^^^^^^^
 //│ ╟── but it flows into argument with expected type `int`
-//│ ║  l.92: 	f (x: 42, y: 43)
+//│ ║  l.91: 	f (x: 42, y: 43)
 //│ ║        	  ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from argument:
 //│ ║  l.74: 	let f(x: int) = x + 1
@@ -107,13 +106,8 @@ f (x: 42, y: 43)
 //│ ╙──      	      ^^^^^^
 //│ res: error | int
 
-
-
-
-
-
 (a, b) => a + b
-res(1,2)
 //│ res: (int, int,) -> int
+res(1,2)
 //│ res: int
 

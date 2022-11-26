@@ -61,8 +61,6 @@ succ true
 //│ ╙──      	     ^^^^
 //│ res: error | int
 
-
-
 :e
 x => succ (not x)
 //│ ╔══[ERROR] Type mismatch in application:
@@ -75,9 +73,6 @@ x => succ (not x)
 //│ ║  l.+1: 	x => succ (not x)
 //│ ╙──      	          ^^^^^^^
 //│ res: bool -> (error | int)
-
-
-
 
 :e
 (x => not x.f) { f: 123 }
@@ -95,10 +90,6 @@ x => succ (not x)
 //│ ╙──      	           ^^
 //│ res: bool | error
 
-
-
-
-
 :e
 (f => x => not (f x.u)) false
 //│ ╔══[ERROR] Type mismatch in application:
@@ -114,10 +105,6 @@ x => succ (not x)
 //│ ║  l.+1: 	(f => x => not (f x.u)) false
 //│ ╙──      	                ^
 //│ res: {u: anything} -> bool | error
-
-
-
-
 
 
 
@@ -159,8 +146,6 @@ if true then { a: 1, b: true } else { b: false, c: 42 }
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ res: error
 
-
-
 :e
 x => { a: x }.b
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -170,8 +155,6 @@ x => { a: x }.b
 //│ ║  l.+1: 	x => { a: x }.b
 //│ ╙──      	     ^^^^^^^^
 //│ res: anything -> error
-
-
 
 
 
@@ -230,10 +213,10 @@ let rec trutru = g => trutru (g true)
 //│     'a <: true -> 'a
 
 i => if ((i i) true) then true else true
+//│ res: ('a -> true -> bool & 'a) -> true
 // ^ for: λi. if ((i i) true) then true else true,
 //    Dolan's thesis says MLsub infers: (α → ((bool → bool) ⊓ α)) → bool
 //    which does seem equivalent, despite being quite syntactically different
-//│ res: ('a -> true -> bool & 'a) -> true
 
 
 
@@ -304,10 +287,6 @@ let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ ╙──      	                                    ^
 //│ x: 0
 //│ res: 0
-
-
-
-
 
 (x => (let y = (x x); 0))
 //│ res: ('a -> anything & 'a) -> 0

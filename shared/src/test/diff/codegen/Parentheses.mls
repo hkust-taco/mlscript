@@ -27,8 +27,6 @@ id
 //│ res: int
 //│    = -3.5
 
-
-
 :e
 :js
 1 * (2 + 3) / 4 - 5
@@ -36,15 +34,13 @@ id
 //│ res = 1 * (2 + 3) / 4 - 5;
 //│ // End of generated code
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.34: 	1 * (2 + 3) / 4 - 5
+//│ ║  l.32: 	1 * (2 + 3) / 4 - 5
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `number` is not an instance of type `int`
-//│ ║  l.34: 	1 * (2 + 3) / 4 - 5
+//│ ║  l.32: 	1 * (2 + 3) / 4 - 5
 //│ ╙──      	^^^^^^^^^^^^^^^
 //│ res: error | int
 //│    = -3.75
-
-
 
 :js
 x = 0
