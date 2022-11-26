@@ -193,7 +193,6 @@ bypass = undefined
 //│ undefined
 //│   <:  bypass:
 //│ nothing
-//│       = undefined
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.192: 	bypass = undefined
 //│ ║         	^^^^^^^^^^^^^^^^^^
@@ -203,6 +202,7 @@ bypass = undefined
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.186: 	def bypass: nothing
 //│ ╙──       	            ^^^^^^^
+//│       = undefined
 
 :re
 bypass.x

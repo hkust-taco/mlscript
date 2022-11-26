@@ -169,7 +169,6 @@ mrg = Foo2{}
 //│ Foo2['A]
 //│   <:  mrg:
 //│ Foo2[in int | string out nothing]
-//│    = Foo2 {}
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.168: 	mrg = Foo2{}
 //│ ║         	^^^^^^^^^^^^
@@ -191,6 +190,7 @@ mrg = Foo2{}
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.158: 	def mrg: Foo2[int] & Foo2[string]
 //│ ╙──       	                          ^^^^^^
+//│    = Foo2 {}
 
 def mrg: Foo2[int] | Foo2[string]
 //│ mrg: Foo2[out int | string]

@@ -530,28 +530,25 @@ class DiffTests
               }.toList
               report(diags)
             }
-
-            // L(diagnostic lines) | R(binding name -> typing output lines)
-            val typingOutputs = mutable.Buffer.empty[Ls[Str] \/ (Str -> Ls[Str])]
             
             // process statements and output mlscript types
             // all `Def`s and `Term`s are processed here
             // generate typescript types if generateTsDeclarations flag is
             // set in the mode
-            stmts.foreach { stmt =>
+            // The tuple type means: (<stmt name>, <type>, <diagnosis>, <order>)
+            val typerResults: Ls[(Str, Ls[Str], Ls[Str], Bool)] = stmts.map { stmt =>
               // Because diagnostic lines are after the typing results,
               // we need to cache the diagnostic blocks and add them to the
-              // `typingOutputs` buffer after the statement has been processed.
-              val diagnosticLines = mutable.Buffer.empty[Left[Ls[Str], Nothing]]
+              // `typerResults` buffer after the statement has been processed.
+              val diagnosticLines = mutable.Buffer.empty[Str]
+              // We put diagnosis to the buffer in the following `Typer` routines.
               val raiseToBuffer: typer.Raise = d => {
-                val buffer = mutable.Buffer.empty[Str]
-                report(d :: Nil, buffer += _)
-                diagnosticLines += L(buffer.toList)
+                report(d :: Nil, diagnosticLines += _)
               }
               // Typing results are before diagnostic messages in the subsumption case.
               // We use this flag to prevent too much changes in PR #150.
-              var typingBeforeDiagnostics = false
-              val typingLines = stmt match {
+              var typeBeforeDiags = false
+              val typingResults: Ls[(Str, Ls[Str])] = stmt match {
                 // statement only declares a new term with its type
                 // but does not give a body/definition to it
                 case Def(isrec, nme, R(PolyType(tps, rhs)), isByname) =>
@@ -563,7 +560,7 @@ class DiffTests
                   declared += nme.name -> ty_sch
                   val exp = getType(ty_sch)
                   if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
-                  R[Ls[Str], Str -> Ls[Str]](nme.name -> (s"$nme: ${exp.show}" :: Nil)) :: Nil
+                  (nme.name -> (s"$nme: ${exp.show}" :: Nil)) :: Nil
 
                 // statement is defined and has a body/definition
                 case d @ Def(isrec, nme, L(rhs), isByname) =>
@@ -572,7 +569,7 @@ class DiffTests
                   val exp = getType(ty_sch)
                   // statement does not have a declared type for the body
                   // the inferred type must be used and stored for lookup
-                  R[Ls[Str], Str -> Ls[Str]](nme.name -> (declared.get(nme.name) match {
+                  (nme.name -> (declared.get(nme.name) match {
                     // statement has a body but it's type was not declared
                     // infer it's type and store it for lookup and type gen
                     case N =>
@@ -589,19 +586,20 @@ class DiffTests
                       typer.dbg = mode.dbg
                       typer.subsume(ty_sch, sign)(ctx, raiseToBuffer, typer.TypeProvenance(d.toLoc, "def definition"))
                       if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
-                      typingBeforeDiagnostics = true
+                      typeBeforeDiags = true
                       exp.show :: s"  <:  $nme:" :: sign_exp.show :: Nil
                   })) :: Nil
                 case desug: DesugaredStatement =>
                   typer.dbg = mode.dbg
                   typer.typeStatement(desug, allowPure = true)(ctx, raiseToBuffer) match {
                     // when does this happen??
+                    // I'm also curious.
                     case R(binds) =>
                       binds.map { case (nme, pty) =>
                         val ptType = getType(pty)
                         ctx += nme -> typer.VarSymbol(pty, Var(nme))
                         if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(ptType, Some(nme))
-                        R[Ls[Str], Str -> Ls[Str]](nme -> (s"$nme: ${ptType.show}" :: Nil))
+                        nme -> (s"$nme: ${ptType.show}" :: Nil)
                       }
                     
                     // statements for terms that compute to a value
@@ -612,22 +610,21 @@ class DiffTests
                         val res = "res"
                         ctx += res -> typer.VarSymbol(pty, Var(res))
                         if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, None)
-                        R[Ls[Str], Str -> Ls[Str]](res, s"res: ${exp.show}" :: Nil) :: Nil
+                        (res, s"res: ${exp.show}" :: Nil) :: Nil
                       } else (
-                        R[Ls[Str], Str -> Ls[Str]]("" -> Nil) :: Nil
+                        ("" -> Nil) :: Nil
                       )
                 }
               }
-              if (typingBeforeDiagnostics) {
-                typingOutputs ++= typingLines
-                typingOutputs ++= diagnosticLines
-              } else {
-                typingOutputs ++= diagnosticLines
-                typingOutputs ++= typingLines
+              // There is only one typing results most of the time.
+              typingResults match {
+                case Nil => die
+                case (name, typingLines) :: tail =>
+                  (name, typingLines, diagnosticLines.toList, typeBeforeDiags)
               }
             }
             
-            var results: JSTestBackend.Result \/ Ls[ReplHost.Reply] = if (!allowTypeErrors &&
+            val results: JSTestBackend.Result \/ Ls[ReplHost.Reply] = if (!allowTypeErrors &&
                 file.ext =:= "mls" && !mode.noGeneration && !noJavaScript) {
               import codeGenTestHelpers._
               backend(p, mode.allowEscape) match {
@@ -660,11 +657,14 @@ class DiffTests
             results match {
               case R(replies) =>
                 val replyQueue = mutable.Queue.from(replies)
-                typingOutputs.foreach {
-                  case L(diagnosticLines) =>
-                    diagnosticLines.foreach(output)
-                  case R(name -> typingResult) =>
-                    typingResult.foreach(output)
+                typerResults.foreach { case (name, typingLines, diagnosticLines, typeBeforeDiags) =>
+                    if (typeBeforeDiags) {
+                      typingLines.foreach(output)
+                      diagnosticLines.foreach(output)
+                    } else {
+                      diagnosticLines.foreach(output)
+                      typingLines.foreach(output)
+                    }
                     val prefixLength = name.length
                     replyQueue.headOption.foreach { head =>
                       head match {
@@ -704,9 +704,14 @@ class DiffTests
                 }
               case L(other) =>
                 // Print type checking results first.
-                typingOutputs.foreach {
-                  case L(diagnosticLines) => diagnosticLines.foreach(output)
-                  case R(_ -> typingResults) => typingResults.foreach(output)
+                typerResults.foreach { case (_, typingLines, diagnosticLines, typeBeforeDiags) =>
+                  if (typeBeforeDiags) {
+                    typingLines.foreach(output)
+                    diagnosticLines.foreach(output)
+                  } else {
+                    diagnosticLines.foreach(output)
+                    typingLines.foreach(output)
+                  }
                 }
                 other match {
                   case _: TestCode => () // Impossible case.

@@ -16,7 +16,6 @@ def f = 42
 //│ 42
 //│   <:  f:
 //│ int -> int
-//│  = [Function: f1]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.15: 	def f = 42
 //│ ║        	^^^^^^^^^^
@@ -26,6 +25,7 @@ def f = 42
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.3: 	def f: int -> int
 //│ ╙──     	       ^^^^^^^^^^
+//│  = [Function: f1]
 
 :re
 f 1
@@ -73,7 +73,6 @@ def boom = 1
 //│ 1
 //│   <:  boom:
 //│ nothing
-//│     = [Function: boom1]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.72: 	def boom = 1
 //│ ║        	^^^^^^^^^^^^
@@ -83,6 +82,7 @@ def boom = 1
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.67: 	def boom: nothing
 //│ ╙──      	          ^^^^^^^
+//│     = [Function: boom1]
 
 
 def boom: 'a
@@ -94,7 +94,6 @@ def boom = 1
 //│ 1
 //│   <:  boom:
 //│ nothing
-//│     = [Function: boom2]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.93: 	def boom = 1
 //│ ║        	^^^^^^^^^^^^
@@ -104,6 +103,7 @@ def boom = 1
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.88: 	def boom: 'a
 //│ ╙──      	          ^^
+//│     = [Function: boom2]
 
 
 
@@ -139,7 +139,6 @@ def id n = add n 1
 //│ int -> int
 //│   <:  id:
 //│ 'a -> 'a
-//│   = [Function: id2]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.138: 	def id n = add n 1
 //│ ║         	^^^^^^^^^^^^^^^^^^
@@ -158,13 +157,13 @@ def id n = add n 1
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.110: 	def id: 'a -> 'a
 //│ ╙──       	              ^^
+//│   = [Function: id2]
 
 :e
 def id (x: int) = x
 //│ int -> int
 //│   <:  id:
 //│ 'a -> 'a
-//│   = [Function: id3]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.163: 	def id (x: int) = x
 //│ ║         	^^^^^^^^^^^^^^^^^^^
@@ -186,6 +185,7 @@ def id (x: int) = x
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.110: 	def id: 'a -> 'a
 //│ ╙──       	              ^^
+//│   = [Function: id3]
 
 
 
@@ -202,7 +202,6 @@ def f = impl
 //│ ('a -> 'b & 'a) -> 'b
 //│   <:  f:
 //│ (int & 'a) -> 'a
-//│  = [Function: f2]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.201: 	def f = impl
 //│ ║         	^^^^^^^^^^^^
@@ -215,6 +214,7 @@ def f = impl
 //│ ╟── from reference:
 //│ ║  l.196: 	def impl a = a a
 //│ ╙──       	             ^
+//│  = [Function: f2]
 
 :re
 f 1 
@@ -241,7 +241,6 @@ def f a b = if gt a b then a else b b // mistake!
 //│ (number & 'a) -> nothing -> 'a
 //│   <:  f:
 //│ (int & 'a) -> (int & 'a) -> 'a
-//│  = [Function: f4]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.240: 	def f a b = if gt a b then a else b b // mistake!
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -254,6 +253,7 @@ def f a b = if gt a b then a else b b // mistake!
 //│ ╟── from reference:
 //│ ║  l.240: 	def f a b = if gt a b then a else b b // mistake!
 //│ ╙──       	                                  ^
+//│  = [Function: f4]
 
 f 1 
 //│ res: (int & 'a) -> ('a | 1)
@@ -274,7 +274,6 @@ def g a = add a 1
 //│ int -> int
 //│   <:  g:
 //│ (int & 'a) -> 'a
-//│  = [Function: g]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.271: 	def g a = add a 1
 //│ ║         	^^^^^^^^^^^^^^^^^
@@ -284,6 +283,7 @@ def g a = add a 1
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.270: 	def g: (int & 'a) -> 'a
 //│ ╙──       	                     ^^
+//│  = [Function: g]
 
 
 

@@ -29,8 +29,6 @@ nt = nc
 //│ ~Lit
 //│   <:  nt:
 //│ ~Lit
-//│   = <no result>
-//│     nc and nt are not implemented
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.28: 	nt = nc
 //│ ║        	^^^^^^^
@@ -46,6 +44,8 @@ nt = nc
 //│ ╟── from type negation:
 //│ ║  l.10: 	def nt: ~#Lit
 //│ ╙──      	        ^^^^^
+//│   = <no result>
+//│     nc and nt are not implemented
 
 nc = nc
 //│ ~Lit

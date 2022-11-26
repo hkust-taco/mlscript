@@ -58,7 +58,6 @@ foo = Foo
 //│ {x: 'x & 'A, y: 'A & 'y} -> (Foo['A] with {x: 'x, y: 'y})
 //│   <:  foo:
 //│ Foo[?]
-//│    = [Function: foo1]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.57: 	foo = Foo
 //│ ║        	^^^^^^^^^
@@ -68,5 +67,6 @@ foo = Foo
 //│ ╟── Note: class constructor Foo is defined at:
 //│ ║  l.3: 	class Foo[A]: { x: A; y: A }
 //│ ╙──     	      ^^^
+//│    = [Function: foo1]
 
 
