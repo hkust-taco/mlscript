@@ -803,19 +803,19 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     
     // val blck = block
     
-    val argMut = cur match {
+    val argMut = yeetSpaces match {
       case (KEYWORD("mut"), l0) :: _ =>
         consume
         S(l0)
       case _ => N
     }
-    val argSpec = cur match {
+    val argSpec = yeetSpaces match {
       case (KEYWORD("#"), l0) :: _ =>
         consume
         S(l0)
       case _ => N
     }
-    val argName = cur match {
+    val argName = yeetSpaces match {
       case (IDENT(idStr, false), l0) :: (KEYWORD(":"), _) :: _ => // TODO: | ...
         consume
         consume
