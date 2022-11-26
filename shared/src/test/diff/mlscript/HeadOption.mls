@@ -21,23 +21,17 @@ class None[A]: Option[A]
 //│ ╙──     	             ^
 
 
-
-
-
-
 :w
 class List[A]
     method HeadOption: Option[A]
 //│ Defined class List[±A]
 //│ Declared List.HeadOption: List[?] -> Option[?]
 //│ ╔══[WARNING] Type definition List has bivariant type parameters:
-//│ ║  l.29: 	class List[A]
+//│ ║  l.25: 	class List[A]
 //│ ║        	      ^^^^
 //│ ╟── A is irrelevant and may be removed
-//│ ║  l.29: 	class List[A]
+//│ ║  l.25: 	class List[A]
 //│ ╙──      	           ^
-
-
 
 :w
 class Nil[A]: List[A]
@@ -45,13 +39,11 @@ class Nil[A]: List[A]
 //│ Defined class Nil[±A]
 //│ Defined Nil.HeadOption: Nil[?] -> None[?]
 //│ ╔══[WARNING] Type definition Nil has bivariant type parameters:
-//│ ║  l.43: 	class Nil[A]: List[A]
+//│ ║  l.37: 	class Nil[A]: List[A]
 //│ ║        	      ^^^
 //│ ╟── A is irrelevant and may be removed
-//│ ║  l.43: 	class Nil[A]: List[A]
+//│ ║  l.37: 	class Nil[A]: List[A]
 //│ ╙──      	          ^
-
-
 
 class Cons[A]: List[A] & { head: A; tail: List[A] }
     method HeadOption = Some { payload = error: A }
@@ -156,29 +148,23 @@ Cons.HeadOption lr2
 :e
 l1 = Cons { tail = Cons { tail = Cons { tail = Nil {} } } }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.157: 	l1 = Cons { tail = Cons { tail = Cons { tail = Nil {} } } }
+//│ ║  l.149: 	l1 = Cons { tail = Cons { tail = Cons { tail = Nil {} } } }
 //│ ║         	                                 ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{tail: ?a}` does not have field 'head'
-//│ ║  l.157: 	l1 = Cons { tail = Cons { tail = Cons { tail = Nil {} } } }
+//│ ║  l.149: 	l1 = Cons { tail = Cons { tail = Cons { tail = Nil {} } } }
 //│ ╙──       	                                      ^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.157: 	l1 = Cons { tail = Cons { tail = Cons { tail = Nil {} } } }
+//│ ║  l.149: 	l1 = Cons { tail = Cons { tail = Cons { tail = Nil {} } } }
 //│ ║         	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{tail: ?a}` does not have field 'head'
-//│ ║  l.157: 	l1 = Cons { tail = Cons { tail = Cons { tail = Nil {} } } }
+//│ ║  l.149: 	l1 = Cons { tail = Cons { tail = Cons { tail = Nil {} } } }
 //│ ╙──       	                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.157: 	l1 = Cons { tail = Cons { tail = Cons { tail = Nil {} } } }
+//│ ║  l.149: 	l1 = Cons { tail = Cons { tail = Cons { tail = Nil {} } } }
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{tail: ?a}` does not have field 'head'
-//│ ║  l.157: 	l1 = Cons { tail = Cons { tail = Cons { tail = Nil {} } } }
+//│ ║  l.149: 	l1 = Cons { tail = Cons { tail = Cons { tail = Nil {} } } }
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ l1: (Cons[nothing] with {tail: (Cons[nothing] with {tail: (Cons[nothing] with {tail: Nil[?]}) | error}) | error}) | error
-
-
-
-
-
-
 
 

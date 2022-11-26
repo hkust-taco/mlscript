@@ -30,10 +30,6 @@ c.name
 //│ res: error
 //│    = undefined
 
-
-
-
-
 c: Child
 //│ res: Child
 //│    = Child {}

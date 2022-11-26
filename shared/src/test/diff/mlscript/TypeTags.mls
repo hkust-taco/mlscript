@@ -52,18 +52,14 @@ test2 foo
 //│ res: error
 //│    = 1
 
-
-
-
-
 // * Mistakenly passing the constructor
 :e
 foo = Foo
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.61: 	foo = Foo
+//│ ║  l.57: 	foo = Foo
 //│ ║        	^^^^^^^^^
 //│ ╟── reference of type `{x: ?x, y: ?y} -> (Foo[?A] with {Foo#A = ?A, x: ?x, y: ?y})` is not an instance of type `Foo`
-//│ ║  l.61: 	foo = Foo
+//│ ║  l.57: 	foo = Foo
 //│ ║        	      ^^^
 //│ ╟── Note: class constructor Foo is defined at:
 //│ ║  l.3: 	class Foo[A]: { x: A; y: A }
@@ -72,8 +68,5 @@ foo = Foo
 //│   <:  foo:
 //│ Foo[?]
 //│    = [Function: foo1]
-
-
-
 
 

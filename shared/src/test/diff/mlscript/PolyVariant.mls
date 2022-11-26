@@ -155,10 +155,6 @@ f ({ _1 = A{}; _2 = C{} })
 //│ res: 1 | 2 | 3 | 4 | error
 //│    = 1
 
-
-
-
-
 // x actually has equivalent type {_1: anything; _2: anything}
 
 def t1: {_1: A | B; _2: anything} | {_1: anything; _2: A | B}
@@ -175,28 +171,22 @@ def f = fun (x: {_1: A | B; _2: anything} | {_1: anything; _2: A | B}) -> case x
     }
   }
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.172: 	  | _ -> case x._2 of {
+//│ ║  l.168: 	  | _ -> case x._2 of {
 //│ ║         	         ^^^^^^^^^^^^^^
-//│ ║  l.173: 	    | A -> 3
+//│ ║  l.169: 	    | A -> 3
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.174: 	    | B -> 4
+//│ ║  l.170: 	    | B -> 4
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.175: 	    }
+//│ ║  l.171: 	    }
 //│ ║         	^^^^^
 //│ ╟── type `anything` does not match type `A | B`
-//│ ║  l.169: 	def f = fun (x: {_1: A | B; _2: anything} | {_1: anything; _2: A | B}) -> case x._1 of {
+//│ ║  l.165: 	def f = fun (x: {_1: A | B; _2: anything} | {_1: anything; _2: A | B}) -> case x._1 of {
 //│ ║         	                                ^^^^^^^^
 //│ ╟── but it flows into field selection with expected type `A | B`
-//│ ║  l.172: 	  | _ -> case x._2 of {
+//│ ║  l.168: 	  | _ -> case x._2 of {
 //│ ╙──       	              ^^^^
 //│ f: {_1: anything, _2: anything} -> (1 | 2 | 3 | 4)
 //│  = [Function: f3]
-
-
-
-
-
-
 
 // not useful
 class Tuple[a, b]: { _1: a; _2: b }
@@ -237,24 +227,19 @@ def f = fun (x: L | R) -> case x._1 of {
     }
   }
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.234: 	  | _ -> case x._2 of {
+//│ ║  l.224: 	  | _ -> case x._2 of {
 //│ ║         	         ^^^^^^^^^^^^^^
-//│ ║  l.235: 	    | A -> 3
+//│ ║  l.225: 	    | A -> 3
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.236: 	    | B -> 4
+//│ ║  l.226: 	    | B -> 4
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.237: 	    }
+//│ ║  l.227: 	    }
 //│ ║         	^^^^^
 //│ ╟── field selection of type `anything` does not match type `A | B`
-//│ ║  l.234: 	  | _ -> case x._2 of {
+//│ ║  l.224: 	  | _ -> case x._2 of {
 //│ ╙──       	              ^^^^
 //│ f: (L | R) -> (1 | 2 | 3 | 4)
 //│  = [Function: f4]
-
-
-
-
-
 
 f (L { _1 = A{}; _2 = C{} })
 //│ res: 1 | 2 | 3 | 4

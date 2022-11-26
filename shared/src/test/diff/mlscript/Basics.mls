@@ -83,9 +83,6 @@ def z = x + y
 //│ Runtime error:
 //│   TypeError: 1 is not a function
 
-
-
-
 def f x y z = add x y 
 //│ f: int -> int -> anything -> int
 //│  = [Function: f]
@@ -95,12 +92,11 @@ def f x y z = add x y
 :ge
 def f (x y z) = add x y
 //│ ╔══[ERROR] Unsupported pattern shape:
-//│ ║  l.96: 	def f (x y z) = add x y
+//│ ║  l.93: 	def f (x y z) = add x y
 //│ ╙──      	       ^^^^^
 //│ f: error -> int
 //│ Code generation encountered an error:
 //│   term App(App(Var(x), Tup(_: Var(y))), Tup(_: Var(z))) is not a valid pattern
-
 
 f 1
 //│ res: int

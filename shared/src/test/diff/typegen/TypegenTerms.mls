@@ -93,10 +93,6 @@ def f: ('c -> 'a as 'a) -> 'c -> int
 //│ export declare const res: {readonly a: string, readonly b: int}
 //│ // end ts
 
-
-
-
-
 :ts
 def nonsense x y = if x.a == y.b then x y else fun y -> x
 def g = fun x -> fun y -> if x == y then x y else y x

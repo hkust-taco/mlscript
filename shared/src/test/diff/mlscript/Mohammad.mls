@@ -112,9 +112,6 @@ useTrt c
 //│ res: 1 | error
 //│    = 1
 
-
-
-
 useTrt (c with { y = 1 })
 //│ res: 1
 //│    = 1
@@ -122,7 +119,7 @@ useTrt (c with { y = 1 })
 :e
 useTrt c
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.123: 	useTrt c
+//│ ║  l.120: 	useTrt c
 //│ ║         	^^^^^^^^
 //│ ╟── expression of type `Class & {x: ?x} & #T | Class & {x: ?x} & ~?a` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
@@ -133,9 +130,6 @@ useTrt c
 //│ ╙──      	                    ^
 //│ res: 1 | error
 //│    = 1
-
-
-
 
 d = D{z = 1213}
 //│ d: D & {z: 1213}
