@@ -116,7 +116,7 @@ r
 //│     'd :> int
 //│     'c :> 'a & int & ~'a
 //│        <: 'c -> 'f & bool & int
-//│     'a <: (int | ~(int & ~'a)) & (bool | ~(int & ~'a)) & ('c -> 'f | ~(int & ~'a))
+//│     'a <: (bool | ~(int & ~'a)) & ('c -> 'f | ~(int & ~'a))
 //│    = <no result>
 //│      r and bar are not implemented
 

@@ -299,13 +299,19 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       // println(s"[[ ${cctx._1.map(_.prov).mkString(", ")}  <<  ${cctx._2.map(_.prov).mkString(", ")} ]]")
       // println(s"{{ ${cache.mkString(", ")} }}")
       
-      if (lhs === rhs) return ()
-      
-      // if (lhs <:< rhs) return () // * It's not clear that doing this here is worth it
+      // if (!lhs.mentionsTypeBounds && lhs === rhs) return ()
+      // * ^ The check above is mostly good enough but it leads to slightly worse simplified type outputs
+      // *    in corner cases.
+      // * v The check below is a bit more precise but it incurs a lot more subtyping checks,
+      // *    especially in complex comparisons like those done in the `ExprProb` test family.
+      // *    Therefore this subtyping check may not be worth it.
+      // *    In any case, we make it more lightweight by not traversing type variables
+      // *    and not using a subtyping cache (cf. `CompareRecTypes = false`).
+      implicit val ctr: CompareRecTypes = false
+      if (lhs <:< rhs) ()
       
       // println(s"  where ${FunctionType(lhs, rhs)(primProv).showBounds}")
       else {
-        if (lhs is rhs) return
         val lhs_rhs = lhs -> rhs
         lhs_rhs match {
           case (_: ProvType, _) | (_, _: ProvType) => ()
@@ -325,6 +331,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_, TypeBounds(lb, ub)) => rec(lhs, lb, true)
           case (p @ ProvType(und), _) => rec(und, rhs, true)
           case (_, p @ ProvType(und)) => rec(lhs, und, true)
+          case (_: ObjectTag, _: ObjectTag) if lhs === rhs => ()
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs, true)
           case (FunctionType(l0, r0), FunctionType(l1, r1)) =>
             rec(l1, l0, false)

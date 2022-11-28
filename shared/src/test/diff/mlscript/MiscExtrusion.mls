@@ -1,0 +1,32 @@
+:NoJS
+
+class Expr[A]
+  method Inv: A -> A
+//│ Defined class Expr[=A]
+//│ Declared Expr.Inv: Expr['A] -> 'A -> 'A
+
+def asExpr: Expr['a] -> Expr['a]
+//│ asExpr: Expr['a] -> Expr['a]
+
+def alsoPrintSizeSimple f =
+  let rec nested expr =
+    f (asExpr expr)
+  in nested
+//│ alsoPrintSizeSimple: (Expr['a] -> 'b) -> Expr['a] -> 'b
+
+def alsoPrintSizeSimple f =
+  let rec nested expr =
+    asExpr (f (asExpr expr))
+  in nested
+//│ alsoPrintSizeSimple: (Expr['a] -> Expr['a0]) -> Expr['a] -> Expr['a0]
+
+def alsoPrintSizeSimple f =
+  let rec nested expr =
+    f (asExpr expr) nested
+  in nested
+//│ alsoPrintSizeSimple: (Expr[in 'a out 'a | 'a0] -> (Expr[in 'a0 & 'a1 out 'a2] -> 'b) -> 'b) -> Expr['a2] -> 'b
+//│   where
+//│     'a2 :> 'a | 'a1
+//│         <: 'a0
+
+
