@@ -375,6 +375,9 @@ trait TypeSimplifier { self: Typer =>
                   analyzed1.setAndIfUnset(tv -> true) { apply(S(true))(ty) }
                 if (pol =/= S(true))
                   analyzed1.setAndIfUnset(tv -> false) { apply(S(false))(ty) }
+                // * Note: in principle this should also do it,
+                // *  but it currently leads to a couple worse-looking simplified types:
+                // analyzed1.setAndIfUnset(tv -> true) { apply(pol)(ty) }
               case N =>
                 if (pol =/= S(false))
                   analyzed1.setAndIfUnset(tv -> true) { tv.lowerBounds.foreach(apply(S(true))) }
