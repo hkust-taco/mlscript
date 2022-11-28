@@ -1,7 +1,10 @@
 class Student {
   name: string
+  readonly something: string
 
-  constructor(s: string, age: number) {}
+  constructor(s: string, age: number) {
+    this.something = "abc"
+  }
 
   
   getID() { return 114514; }

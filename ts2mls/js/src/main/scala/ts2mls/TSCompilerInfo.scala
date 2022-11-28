@@ -135,8 +135,8 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
     if (modifiers.isUndefined) Public
     else modifiers.foldLeft[TSAccessModifier](Public)(
       (m, t) => if (t.isPrivate) Private else if (t.isProtected) Protected else m)
-  lazy val readonly =
-    if (modifiers.isUndefined) flags & TypeScript.nodeFlagsConst > 0
+  lazy val readonly: Boolean =
+    if (modifiers.isUndefined) (flags & TypeScript.nodeFlagsConst > 0)
     else modifiers.foldLeft[Boolean](false)((m, t) => m || t.isReadonly)
 
   lazy val declarationList = TSNodeObject(node.declarationList)

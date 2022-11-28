@@ -110,7 +110,7 @@ object TSSourceFile {
 
         mem match {
           case func: TSFunctionType => {
-            if (!mp.contains(name)) mp ++ Map(name -> TSMemberType(func, p.modifier))
+            if (!mp.contains(name)) mp ++ Map(name -> TSMemberType(func, p.modifier, !p.readonly))
             else { // deal with functions overloading
               val old = mp(name)
               val res = old.base match {
@@ -126,10 +126,10 @@ object TSSourceFile {
                 case _ => old.base
               }
 
-              mp.removed(name) ++ Map(name -> TSMemberType(res, p.modifier))
+              mp.removed(name) ++ Map(name -> TSMemberType(res, p.modifier, !p.readonly))
             }
           }
-          case _ => mp ++ Map(name -> TSMemberType(mem, p.modifier))
+          case _ => mp ++ Map(name -> TSMemberType(mem, p.modifier, !p.readonly))
         }
       }
       else mp
@@ -145,11 +145,16 @@ object TSSourceFile {
     })
 
   private def getInterfacePropertiesType(list: TSNodeArray): Map[String, TSMemberType] =
-    list.foldLeft(Map[String, TSMemberType]())((mp, p) => mp ++ Map(p.symbol.escapedName -> TSMemberType(getMemberType(p))))
+    list.foldLeft(Map[String, TSMemberType]())((mp, p) =>
+      mp ++ Map(p.symbol.escapedName -> TSMemberType(getMemberType(p), Public, !p.readonly)))
 
   private def getAnonymousPropertiesType(list: TSSymbolArray): Map[String, TSMemberType] =
     list.foldLeft(Map[String, TSMemberType]())((mp, p) =>
-      mp ++ Map(p.escapedName -> TSMemberType(if (p.`type`.isUndefined) getMemberType(p.declaration) else getObjectType(p.`type`))))
+      mp ++ Map(p.escapedName -> TSMemberType(
+        (if (p.`type`.isUndefined) getMemberType(p.declaration) else getObjectType(p.`type`)),
+        Public, !p.declaration.readonly
+      )
+    ))
 
   private def parseMembers(name: String, node: TSNodeObject, isClass: Boolean): TSType =
     if (isClass)

@@ -3,6 +3,7 @@ interface IFoo {
   b: (x: number) => number
   c: () => boolean
   d: (x: string) => void
+  readonly x: number
 }
 
 interface II<T extends number> {
