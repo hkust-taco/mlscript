@@ -21,7 +21,8 @@ object TypeScript {
   val syntaxKindPrivate = ts.SyntaxKind.PrivateKeyword
   val syntaxKindProtected = ts.SyntaxKind.ProtectedKeyword
   val syntaxKindStatic = ts.SyntaxKind.StaticKeyword
-  val syntaxKindReadonly = ts.SyntaxKind.ReadonlyKeyword
+  val syntaxKindReadonly = ts.SyntaxKind.ReadonlyKeyword // this flag is only for readonly members
+  val nodeFlagsConst = ts.NodeFlags.Const // this flag is for const variables
   val objectFlagsAnonymous = ts.ObjectFlags.Anonymous
   val symbolFlagsOptional = ts.SymbolFlags.Optional // this flag is only for checking optional members of interfaces
 
@@ -90,6 +91,7 @@ object TSSymbolObject {
 
 class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TSAny(node) {
   private lazy val modifiers = TSTokenArray(node.modifiers)
+  private lazy val flags = node.flags
 
   lazy val isToken = TypeScript.isToken(node)
   lazy val isClassDeclaration = TypeScript.isClassDeclaration(node)
@@ -133,9 +135,9 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
     if (modifiers.isUndefined) Public
     else modifiers.foldLeft[TSAccessModifier](Public)(
       (m, t) => if (t.isPrivate) Private else if (t.isProtected) Protected else m)
-  lazy val mutable =
-    if (modifiers.isUndefined) true
-    else modifiers.foldLeft[Boolean](true)((m, t) => m && t.isReadonly)
+  lazy val readonly =
+    if (modifiers.isUndefined) flags & TypeScript.nodeFlagsConst > 0
+    else modifiers.foldLeft[Boolean](false)((m, t) => m || t.isReadonly)
 
   lazy val declarationList = TSNodeObject(node.declarationList)
   lazy val declarations = TSNodeArray(node.declarations)
