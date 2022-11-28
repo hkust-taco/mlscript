@@ -10,22 +10,22 @@ class C<T>() {
 }
 class D(): C<number> {}
 trait Wu() {
-  let x: (mut ((false) | (true)))
+  let x: mut ((false) | (true))
 }
 class WuWu(): Wu {
-  let y: (mut ((false) | (true)))
+  let y: mut ((false) | (true))
 }
 trait WuWuWu(): WuWu {
-  let z: (mut ((false) | (true)))
+  let z: mut ((false) | (true))
 }
 trait Never(): WuWuWu {
   fun w(): nothing
 }
 class VG<T>() {
-  let x: (mut (T))
+  let x: mut (T)
 }
 class Home<T>(): VG<string> {
-  let y: (mut (T))
+  let y: mut (T)
 }
 trait O<I>() {
   fun xx(x: I): I
@@ -35,10 +35,10 @@ class OR<R>(): O<R> {
 }
 namespace Five {
   class ROTK() {
-    let wu: (mut (string))
+    let wu: mut (string)
   }
   class Y(): Five.ROTK {}
 }
 class Y(): Five.ROTK {}
-//│ |#class| |A|(||)| |{|→|#fun| |foo|(||)|#:| |unit|←|↵|}|↵|#class| |B|(||)|#:| |A| |{||}|↵|#class| |C|‹|T|›|(||)| |{|→|#fun| |set|(|x|#:| |T|)|#:| |unit|↵|#fun| |get|(||)|#:| |T|←|↵|}|↵|#class| |D|(||)|#:| |C|‹|number|›| |{||}|↵|#trait| |Wu|(||)| |{|→|#let| |x|#:| |(|#mut| |(|(|false|)| ||| |(|true|)|)|)|←|↵|}|↵|#class| |WuWu|(||)|#:| |Wu| |{|→|#let| |y|#:| |(|#mut| |(|(|false|)| ||| |(|true|)|)|)|←|↵|}|↵|#trait| |WuWuWu|(||)|#:| |WuWu| |{|→|#let| |z|#:| |(|#mut| |(|(|false|)| ||| |(|true|)|)|)|←|↵|}|↵|#trait| |Never|(||)|#:| |WuWuWu| |{|→|#fun| |w|(||)|#:| |nothing|←|↵|}|↵|#class| |VG|‹|T|›|(||)| |{|→|#let| |x|#:| |(|#mut| |(|T|)|)|←|↵|}|↵|#class| |Home|‹|T|›|(||)|#:| |VG|‹|string|›| |{|→|#let| |y|#:| |(|#mut| |(|T|)|)|←|↵|}|↵|#trait| |O|‹|I|›|(||)| |{|→|#fun| |xx|(|x|#:| |I|)|#:| |I|←|↵|}|↵|#class| |OR|‹|R|›|(||)|#:| |O|‹|R|›| |{|→|#fun| |xx|(|x|#:| |R|)|#:| |R|←|↵|}|↵|#namespace| |Five| |{|→|#class| |ROTK|(||)| |{|→|#let| |wu|#:| |(|#mut| |(|string|)|)|←|↵|}|↵|#class| |Y|(||)|#:| |Five|.ROTK| |{||}|←|↵|}|↵|#class| |Y|(||)|#:| |Five|.ROTK| |{||}|
-//│ Parsed: {class A() {fun foo: [] -> () -> unit}; class B(): A {}; class C‹T›() {fun set: [] -> (x: T,) -> unit; fun get: [] -> () -> T}; class D(): C‹number› {}; trait Wu() {let x: [] -> (mut ((false,) | (true,),),)}; class WuWu(): Wu {let y: [] -> (mut ((false,) | (true,),),)}; trait WuWuWu(): WuWu {let z: [] -> (mut ((false,) | (true,),),)}; trait Never(): WuWuWu {fun w: [] -> () -> nothing}; class VG‹T›() {let x: [] -> (mut (T,),)}; class Home‹T›(): VG‹string› {let y: [] -> (mut (T,),)}; trait O‹I›() {fun xx: [] -> (x: I,) -> I}; class OR‹R›(): O‹R› {fun xx: [] -> (x: R,) -> R}; namespace Five() {class ROTK() {let wu: [] -> (mut (string,),)}; class Y(): (Five).ROTK {}}; class Y(): (Five).ROTK {}}
+//│ |#class| |A|(||)| |{|→|#fun| |foo|(||)|#:| |unit|←|↵|}|↵|#class| |B|(||)|#:| |A| |{||}|↵|#class| |C|‹|T|›|(||)| |{|→|#fun| |set|(|x|#:| |T|)|#:| |unit|↵|#fun| |get|(||)|#:| |T|←|↵|}|↵|#class| |D|(||)|#:| |C|‹|number|›| |{||}|↵|#trait| |Wu|(||)| |{|→|#let| |x|#:| |#mut| |(|(|false|)| ||| |(|true|)|)|←|↵|}|↵|#class| |WuWu|(||)|#:| |Wu| |{|→|#let| |y|#:| |#mut| |(|(|false|)| ||| |(|true|)|)|←|↵|}|↵|#trait| |WuWuWu|(||)|#:| |WuWu| |{|→|#let| |z|#:| |#mut| |(|(|false|)| ||| |(|true|)|)|←|↵|}|↵|#trait| |Never|(||)|#:| |WuWuWu| |{|→|#fun| |w|(||)|#:| |nothing|←|↵|}|↵|#class| |VG|‹|T|›|(||)| |{|→|#let| |x|#:| |#mut| |(|T|)|←|↵|}|↵|#class| |Home|‹|T|›|(||)|#:| |VG|‹|string|›| |{|→|#let| |y|#:| |#mut| |(|T|)|←|↵|}|↵|#trait| |O|‹|I|›|(||)| |{|→|#fun| |xx|(|x|#:| |I|)|#:| |I|←|↵|}|↵|#class| |OR|‹|R|›|(||)|#:| |O|‹|R|›| |{|→|#fun| |xx|(|x|#:| |R|)|#:| |R|←|↵|}|↵|#namespace| |Five| |{|→|#class| |ROTK|(||)| |{|→|#let| |wu|#:| |#mut| |(|string|)|←|↵|}|↵|#class| |Y|(||)|#:| |Five|.ROTK| |{||}|←|↵|}|↵|#class| |Y|(||)|#:| |Five|.ROTK| |{||}|
+//│ Parsed: {class A() {fun foo: [] -> () -> unit}; class B(): A {}; class C‹T›() {fun set: [] -> (x: T,) -> unit; fun get: [] -> () -> T}; class D(): C‹number› {}; trait Wu() {let x: [] -> ((false,) | (true,),)}; class WuWu(): Wu {let y: [] -> ((false,) | (true,),)}; trait WuWuWu(): WuWu {let z: [] -> ((false,) | (true,),)}; trait Never(): WuWuWu {fun w: [] -> () -> nothing}; class VG‹T›() {let x: [] -> (T,)}; class Home‹T›(): VG‹string› {let y: [] -> (T,)}; trait O‹I›() {fun xx: [] -> (x: I,) -> I}; class OR‹R›(): O‹R› {fun xx: [] -> (x: R,) -> R}; namespace Five() {class ROTK() {let wu: [] -> (string,)}; class Y(): (Five).ROTK {}}; class Y(): (Five).ROTK {}}

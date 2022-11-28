@@ -326,6 +326,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
               val asc = yeetSpaces match {
                 case (KEYWORD(":"), _) :: _ =>
                   consume
+                  val mut = yeetSpaces match {
+                    case (KEYWORD("mut"), l0) :: _ =>
+                      consume
+                      S(l0)
+                    case _ => N
+                  }
                   S(typ(2))
                 case _ => N
               }
