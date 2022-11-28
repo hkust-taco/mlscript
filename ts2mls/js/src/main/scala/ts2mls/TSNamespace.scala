@@ -6,7 +6,7 @@ import mlscript.utils._
 
 class TSNamespace(name: String, parent: Option[TSNamespace]) {
   private val subSpace = HashMap[String, TSNamespace]()
-  private val members = HashMap[String, TSType]()
+  private val members = HashMap[String, (TSType, Boolean)]() // readonly: Boolean
 
   // write down the order of members
   // easier to check the output one by one
@@ -21,15 +21,15 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
       sub
     }
 
-  def put(name: String, tp: TSType): Unit =
+  def put(name: String, tp: TSType, readonly: Boolean): Unit =
     if (!members.contains(name)) {
       order += Right(name)
-      members.put(name, tp)
+      members.put(name, (tp, readonly))
     }
-    else members.update(name, tp)
+    else members.update(name, (tp, readonly))
 
-  def get(name: String): TSType =
-    members.getOrElse(name,
+  def get(name: String): (TSType, Boolean) =
+    members.getOrElse[(TSType, Boolean)](name,
       if (!parent.isEmpty) parent.get.get(name) else throw new Exception(s"member $name not found."))
 
   def containsMember(name: String, searchParent: Boolean = true): Boolean =
@@ -44,18 +44,20 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
       }
       case Right(name) => {
         val mem = members(name)
-        mem match {
+        mem._1 match {
           case inter: TSIntersectionType => // overloaded functions
             writer.writeln(Converter.generateFunDeclaration(inter, name)(indent))
           case f: TSFunctionType =>
             writer.writeln(Converter.generateFunDeclaration(f, name)(indent))
           case overload: TSIgnoredOverload =>
             writer.writeln(Converter.generateFunDeclaration(overload, name)(indent))
-          case _: TSClassType => writer.writeln(Converter.convert(mem)(indent))
+          case _: TSClassType => writer.writeln(Converter.convert(mem._1)(indent))
           case TSInterfaceType(name, _, _, _) if (name =/= "") =>
-            writer.writeln(Converter.convert(mem)(indent))
-          case _: TSTypeAlias => writer.writeln(Converter.convert(mem)(indent))
-          case _ => writer.writeln(s"${indent}let $name: ${Converter.convert(mem)("")}")
+            writer.writeln(Converter.convert(mem._1)(indent))
+          case _: TSTypeAlias => writer.writeln(Converter.convert(mem._1)(indent))
+          case _ =>
+            if (mem._2) writer.writeln(s"${indent}let $name: ${Converter.convert(mem._1)("")}")
+            else writer.writeln(s"${indent}let $name: mut (${Converter.convert(mem._1)("")})")
         }
       }
     })

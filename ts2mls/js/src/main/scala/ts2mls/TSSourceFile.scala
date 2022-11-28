@@ -170,9 +170,9 @@ object TSSourceFile {
     })
 
   private def addFunctionIntoNamespace(fun: TSFunctionType, node: TSNodeObject, name: String)(implicit ns: TSNamespace) =
-    if (!ns.containsMember(name, false)) ns.put(name, fun)
+    if (!ns.containsMember(name, false)) ns.put(name, fun, true)
     else {
-      val old = ns.get(name)
+      val old = ns.get(name)._1
       val res = old match {
         case f @ TSFunctionType(_, _, tv) =>
           if (!tv.isEmpty || !fun.typeVars.isEmpty) TSIgnoredOverload(fun, name)
@@ -186,7 +186,7 @@ object TSSourceFile {
         case _ => old
       }
       
-      ns.put(name, res)
+      ns.put(name, res, true)
     } 
 
   // overload functions in a sub-namespace need to provide an overload array
@@ -202,15 +202,15 @@ object TSSourceFile {
       }
     }
     else if (node.isClassDeclaration)
-      ns.put(name, parseMembers(name, node, true))
+      ns.put(name, parseMembers(name, node, true), true)
     else if (node.isInterfaceDeclaration)
-      ns.put(name, parseMembers(name, node, false))
+      ns.put(name, parseMembers(name, node, false), true)
     else if (node.isTypeAliasDeclaration)
-      ns.put(name, TSTypeAlias(name, getTypeAlias(node.`type`), getTypeParameters(node)))
+      ns.put(name, TSTypeAlias(name, getTypeAlias(node.`type`), getTypeParameters(node)), true)
     else if (node.isObjectLiteral)
-      ns.put(name, TSInterfaceType("", getObjectLiteralMembers(node.initializer.properties), List(), List()))
+      ns.put(name, TSInterfaceType("", getObjectLiteralMembers(node.initializer.properties), List(), List()), true)
     else if (node.isVariableDeclaration)
-      ns.put(name, getMemberType(node))
+      ns.put(name, getMemberType(node), node.parent.readonly)
     else if (node.isNamespace)
       parseNamespace(node)
 

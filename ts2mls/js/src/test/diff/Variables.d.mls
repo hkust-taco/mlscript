@@ -1,18 +1,18 @@
 :NewParser
 :ParseOnly
-let URI: string
+let URI: mut (string)
 let URI2: string
 let foo: number
-let bar: false
+let bar: mut (false)
 class FooBar() {}
-let fb: FooBar
+let fb: mut (FooBar)
 namespace ABC {
   class DEF() {}
 }
-let d: ABC.DEF
+let d: mut (ABC.DEF)
 namespace DD {
-  let foo: number
-  let bar: number
+  let foo: mut (number)
+  let bar: mut (number)
 }
-//│ |#let| |URI|#:| |string|↵|#let| |URI2|#:| |string|↵|#let| |foo|#:| |number|↵|#let| |bar|#:| |false|↵|#class| |FooBar|(||)| |{||}|↵|#let| |fb|#:| |FooBar|↵|#namespace| |ABC| |{|→|#class| |DEF|(||)| |{||}|←|↵|}|↵|#let| |d|#:| |ABC|.DEF|↵|#namespace| |DD| |{|→|#let| |foo|#:| |number|↵|#let| |bar|#:| |number|←|↵|}|
-//│ Parsed: {let URI: [] -> string; let URI2: [] -> string; let foo: [] -> number; let bar: [] -> false; class FooBar() {}; let fb: [] -> FooBar; namespace ABC() {class DEF() {}}; let d: [] -> ABC.DEF; namespace DD() {let foo: [] -> number; let bar: [] -> number}}
+//│ |#let| |URI|#:| |#mut| |(|string|)|↵|#let| |URI2|#:| |string|↵|#let| |foo|#:| |number|↵|#let| |bar|#:| |#mut| |(|false|)|↵|#class| |FooBar|(||)| |{||}|↵|#let| |fb|#:| |#mut| |(|FooBar|)|↵|#namespace| |ABC| |{|→|#class| |DEF|(||)| |{||}|←|↵|}|↵|#let| |d|#:| |#mut| |(|ABC|.DEF|)|↵|#namespace| |DD| |{|→|#let| |foo|#:| |#mut| |(|number|)|↵|#let| |bar|#:| |#mut| |(|number|)|←|↵|}|
+//│ Parsed: {let URI: [] -> (string,); let URI2: [] -> string; let foo: [] -> number; let bar: [] -> (false,); class FooBar() {}; let fb: [] -> (FooBar,); namespace ABC() {class DEF() {}}; let d: [] -> (ABC.DEF,); namespace DD() {let foo: [] -> (number,); let bar: [] -> (number,)}}

@@ -152,6 +152,7 @@ class TSNodeObject(node: js.Dynamic)(implicit checker: TSTypeChecker) extends TS
   lazy val symbolType = TSTypeObject(checker.getTypeOfSymbolAtLocation(node.symbol, node))
   lazy val literal = TSTokenObject(node.literal)
   lazy val name = TSIdentifierObject(node.name)
+  lazy val parent = TSNodeObject(node.parent)
 }
 
 object TSNodeObject {
