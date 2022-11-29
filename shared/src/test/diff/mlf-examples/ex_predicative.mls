@@ -206,31 +206,31 @@ def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) 
 // * Works with CT:
 :ConstrainedTypes
 def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
-//│ t2: 'a -> (forall 'b. 'b -> (forall 'c, 'b, 'd, 'e, 'f. ('d -> 'f
+//│ t2: 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'e, 'f. ('e -> 'f
 //│   where
-//│     forall 'g, 'h, 'i. ('g -> 'h & 'i -> 'g) -> 'i -> 'h <: (forall 'j. 'j -> (forall 'j, 'k, 'l. (('k -> (forall 'm. 'm -> (forall 'j, 'n, 'o, 'm, 'p. ('o -> 'p
+//│     forall 'g, 'h, 'i. ('g -> 'h & 'i -> 'g) -> 'i -> 'h <: (forall 'j. 'j -> (forall 'k, 'l. (('k -> (forall 'm. 'm -> (forall 'n, 'o, 'p. ('n -> 'p
 //│   where
-//│     'm <: 'n -> 'p
-//│     'j <: (anything -> (forall 'q. 'q -> 'q)) -> 'm -> 'o -> 'n))) -> 'l) -> 'l
+//│     'm <: 'o -> 'p
+//│     'j <: (anything -> (forall 'q. 'q -> 'q)) -> 'm -> 'n -> 'o))) -> 'l) -> 'l
 //│   where
-//│     'j <: (anything -> (forall 'q. 'q -> 'q)) -> 'k))) -> (forall 'r. ((anything -> (forall 'q. 'q -> 'q)) -> (anything -> (forall 'q. 'q -> 'q)) -> 'r) -> 'r) -> (forall 's. 's -> anything -> 's) -> 'c & 'e -> 'd -> 'f
-//│     forall 't, 'u. ((anything -> anything -> (forall 'q. 'q -> 'q)) -> (forall 's. 's -> anything -> 's) -> (forall 'v, 'w. ('v -> 'w) -> 'v -> 'w) -> (forall 'x. 'x -> (forall 'y, 'z, 'a1, 't, 'b1, 'x. ('a1 -> 'y
+//│     'j <: (anything -> (forall 'q. 'q -> 'q)) -> 'k))) -> (forall 'r. ((anything -> (forall 'q. 'q -> 'q)) -> (anything -> (forall 'q. 'q -> 'q)) -> 'r) -> 'r) -> (forall 's. 's -> anything -> 's) -> 'c & 'd -> 'e -> 'f
+//│     forall 't, 'u. ((anything -> anything -> (forall 'q. 'q -> 'q)) -> (forall 's. 's -> anything -> 's) -> (forall 'v, 'w. ('v -> 'w) -> 'v -> 'w) -> (forall 'x. 'x -> (forall 'y, 'z, 'a1, 'b1. ('z -> 'a1
 //│   where
-//│     't <: (forall 'j. 'j -> (forall 'j, 'k, 'l. (('k -> (forall 'm. 'm -> (forall 'j, 'n, 'o, 'm, 'p. ('o -> 'p
+//│     't <: (forall 'j. 'j -> (forall 'k, 'l. (('k -> (forall 'm. 'm -> (forall 'n, 'o, 'p. ('n -> 'p
 //│   where
-//│     'm <: 'n -> 'p
-//│     'j <: (anything -> (forall 'q. 'q -> 'q)) -> 'm -> 'o -> 'n))) -> 'l) -> 'l
+//│     'm <: 'o -> 'p
+//│     'j <: (anything -> (forall 'q. 'q -> 'q)) -> 'm -> 'n -> 'o))) -> 'l) -> 'l
 //│   where
-//│     'j <: (anything -> (forall 'q. 'q -> 'q)) -> 'k))) -> (forall 'r. ((anything -> (forall 'q. 'q -> 'q)) -> (anything -> (forall 'q. 'q -> 'q)) -> 'r) -> 'r) -> (forall 's. 's -> anything -> 's) -> 'z & 'b1 -> 'a1 -> 'y
-//│     forall 'c1, 'd1. ((anything -> anything -> (forall 'q. 'q -> 'q)) -> (forall 's. 's -> anything -> 's) -> (forall 'v, 'w. ('v -> 'w) -> 'v -> 'w) -> (forall 'e1. 'e1 -> (forall 'f1, 'g1, 'h1, 'i1, 'e1, 'c1, 'a. ('h1 -> 'i1
+//│     'j <: (anything -> (forall 'q. 'q -> 'q)) -> 'k))) -> (forall 'r. ((anything -> (forall 'q. 'q -> 'q)) -> (anything -> (forall 'q. 'q -> 'q)) -> 'r) -> 'r) -> (forall 's. 's -> anything -> 's) -> 'b1 & 'y -> 'z -> 'a1
+//│     forall 'c1, 'd1. ((anything -> anything -> (forall 'q. 'q -> 'q)) -> (forall 's. 's -> anything -> 's) -> (forall 'v, 'w. ('v -> 'w) -> 'v -> 'w) -> (forall 'e1. 'e1 -> (forall 'f1, 'g1, 'h1, 'i1. ('h1 -> 'i1
 //│   where
-//│     'c1 <: (forall 'j. 'j -> (forall 'j, 'k, 'l. (('k -> (forall 'm. 'm -> (forall 'j, 'n, 'o, 'm, 'p. ('o -> 'p
+//│     'c1 <: (forall 'j. 'j -> (forall 'k, 'l. (('k -> (forall 'm. 'm -> (forall 'n, 'o, 'p. ('n -> 'p
 //│   where
-//│     'm <: 'n -> 'p
-//│     'j <: (anything -> (forall 'q. 'q -> 'q)) -> 'm -> 'o -> 'n))) -> 'l) -> 'l
+//│     'm <: 'o -> 'p
+//│     'j <: (anything -> (forall 'q. 'q -> 'q)) -> 'm -> 'n -> 'o))) -> 'l) -> 'l
 //│   where
-//│     'j <: (anything -> (forall 'q. 'q -> 'q)) -> 'k))) -> (forall 'r. ((anything -> (forall 'q. 'q -> 'q)) -> (anything -> (forall 'q. 'q -> 'q)) -> 'r) -> 'r) -> (forall 's. 's -> anything -> 's) -> 'g1 & 'f1 -> 'h1 -> 'i1
-//│     anything -> 'a <: 'g1 -> 'e1 -> 'f1))) -> 'd1 & 'c1) -> 'd1 <: 'z -> 'x -> 'b1))) -> 'u & 't) -> 'u <: 'c -> 'b -> 'e)))
+//│     'j <: (anything -> (forall 'q. 'q -> 'q)) -> 'k))) -> (forall 'r. ((anything -> (forall 'q. 'q -> 'q)) -> (anything -> (forall 'q. 'q -> 'q)) -> 'r) -> 'r) -> (forall 's. 's -> anything -> 's) -> 'f1 & 'g1 -> 'h1 -> 'i1
+//│     anything -> 'a <: 'f1 -> 'e1 -> 'g1))) -> 'd1 & 'c1) -> 'd1 <: 'b1 -> 'x -> 'y))) -> 'u & 't) -> 'u <: 'c -> 'b -> 'd)))
 //│   = [Function: t22]
 :NoConstrainedTypes
 

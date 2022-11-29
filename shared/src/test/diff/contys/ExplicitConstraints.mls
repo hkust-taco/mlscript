@@ -97,7 +97,7 @@ fun f: 'a => forall 'b; 'a where
 fun f: 'a => forall 'b; 'a where
   'a : 'b => 'b
   int : 'a
-//│ f: 'a -> (forall 'a, 'b. ('a | int
+//│ f: 'a -> (forall 'b. ('a | int
 //│   where
 //│     'a | int <: 'b -> 'b))
 
@@ -153,7 +153,7 @@ r + 1
 fun f: 'a => forall 'b; 'b where
   'a : 'b => 'b
   int : 'a
-//│ f: 'a -> (forall 'a, 'b. ('b
+//│ f: 'a -> (forall 'b. ('b
 //│   where
 //│     'a | int <: 'b -> 'b))
 

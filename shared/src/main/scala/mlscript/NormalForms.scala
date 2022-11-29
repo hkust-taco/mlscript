@@ -540,10 +540,10 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         cons, // FIXME?!
         go(cs, Nil, that))
     }
-    override def toString: Str = s"DNF${
+    override def toString: Str = s"DNF($polymLevel, ${cs.mkString(" | ")})${
       if (cons.isEmpty) ""
       else s"{${cons.mkString(", ")}}"
-    }($polymLevel, ${cs.mkString(" | ")})"
+    }"
   }
   
   object DNF {
@@ -579,7 +579,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     }
     
     def mk(polymLvl: Level, cons: Constrs, ty: SimpleType, pol: Bool)(implicit ctx: Ctx, ptr: PreserveTypeRefs = false, etf: ExpandTupleFields = true): DNF =
-        // trace(s"DNF[$pol,$ptr,$etf](${ty})") {
+        // trace(s"DNF[$pol,$ptr,$etf,$polymLvl](${ty})") {
         (if (pol) ty.pushPosWithout else ty) match {
       // case bt: BaseType => of(bt)
       // case bt: TraitTag => of(bt)
@@ -600,7 +600,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         } else mk(polymLvl, cons, tr.expand, pol)
       case TypeBounds(lb, ub) => mk(polymLvl, cons, if (pol) ub else lb, pol)
       case PolymorphicType(lvl, bod) => mk(lvl, cons, bod, pol)
-      case ConstrainedType(cs, bod) => mk(lvl, cs ::: cons, bod, pol)
+      case ConstrainedType(cs, bod) => mk(polymLvl, cs ::: cons, bod, pol)
     }
     // }(r => s"= $r")
   }

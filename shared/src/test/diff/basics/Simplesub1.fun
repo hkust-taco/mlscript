@@ -422,11 +422,11 @@ let rec x = (let y = (x x); (z => z))
 //│   where
 //│     forall 'c, 'd. ('d -> 'c
 //│   where
-//│     'e <: (forall 'f, 'g, 'd. ('f -> 'g
+//│     'e <: (forall 'f, 'g. ('f -> 'g
 //│   where
 //│     'd <: 'd -> 'f -> 'g)) -> 'c) <: (forall 'c, 'd. ('d -> 'c
 //│   where
-//│     'e <: (forall 'f, 'g, 'd. ('f -> 'g
+//│     'e <: (forall 'f, 'g. ('f -> 'g
 //│   where
 //│     'd <: 'd -> 'f -> 'g)) -> 'c)) -> 'a -> 'b)) -> 'h & 'e) -> 'h
 
@@ -437,11 +437,11 @@ let rec x = (let y = (x x); (z => z))
 //│   where
 //│     forall 'c, 'd. ('c -> 'd
 //│   where
-//│     forall 'e. 'e -> anything -> 'e <: (forall 'c, 'f, 'g. ('f -> 'g
+//│     forall 'e. 'e -> anything -> 'e <: (forall 'f, 'g. ('f -> 'g
 //│   where
 //│     'c <: 'c -> 'f -> 'g)) -> 'd) <: (forall 'c, 'd. ('c -> 'd
 //│   where
-//│     forall 'e. 'e -> anything -> 'e <: (forall 'c, 'f, 'g. ('f -> 'g
+//│     forall 'e. 'e -> anything -> 'e <: (forall 'f, 'g. ('f -> 'g
 //│   where
 //│     'c <: 'c -> 'f -> 'g)) -> 'd)) -> 'b -> 'a))
 

@@ -286,7 +286,7 @@ def a0 = a2 a1
 def a0_ = a2_ a1
 //│ a1: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
 //│   = [Function: a11]
-//│ a3: 'a -> (forall 'b, 'a. (anything -> 'b
+//│ a3: 'a -> (forall 'b. (anything -> 'b
 //│   where
 //│     'a <: (forall 'c, 'd, 'e. ('c -> 'd & 'e -> 'c) -> 'e -> 'd) -> 'b))
 //│   = [Function: a31]
@@ -308,9 +308,9 @@ def a0_ = a2_ a1
 //│    = [Function: a0_1]
 
 def a1' = fun f -> fun x -> f (f (either id x))
-//│ a1': 'a -> (forall 'b, 'c, 'a. ('d -> 'c
+//│ a1': 'a -> (forall 'b, 'c, 'd. ('b -> 'd
 //│   where
-//│     'a <: (forall 'd, 'e. 'e -> 'e | 'd) -> 'b & 'b -> 'c))
+//│     'a <: (forall 'b, 'e. 'e -> 'e | 'b) -> 'c & 'c -> 'd))
 //│    = [Function: a1$1]
 
 // * Strangely, constrained types make this one FAIL!
@@ -344,7 +344,7 @@ def a2'_ x =
     let _ = x y church_two in
     y church_succ
   ) a3
-//│ a2'_: ((forall 'a. 'a -> (forall 'a, 'b. (anything -> 'b
+//│ a2'_: ((forall 'a. 'a -> (forall 'b. (anything -> 'b
 //│   where
 //│     'a <: (forall 'c, 'd, 'e. ('c -> 'd & 'e -> 'c) -> 'e -> 'd) -> 'b))) -> (forall 'c, 'd, 'e. ('c -> 'd & 'e -> 'c) -> 'e -> 'd) -> anything & (forall 'f, 'g. ('f -> 'g & 'f) -> 'g) -> (forall 'h. 'h -> 'h) -> anything) -> (forall 'i. (anything -> 'i
 //│   where

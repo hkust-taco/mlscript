@@ -742,7 +742,7 @@ abstract class TyperHelpers { Typer: Typer =>
       // val traversed = MutSet.empty[TV]
       def go(pol: PolMap)(ty: ST): Unit = {
         // trace(s"getVarsPol[${printPol(pol.base)}] $ty ${pol(1)}") {
-        trace(s"getVarsPol[${printPol(pol.base)}] $ty ${pol}") {
+        // trace(s"getVarsPol[${printPol(pol.base)}] $ty ${pol}") {
         ty match {
           case tv: TypeVariable =>
             /* 
@@ -812,7 +812,7 @@ abstract class TyperHelpers { Typer: Typer =>
             //   .foreach(go(_, lb, ub))
             ty.childrenPol(pol).foreach(cp => go(cp._1)(cp._2))
         }
-        }()
+        // }()
       }
       go(pol)(this)
       res.toSortedMap

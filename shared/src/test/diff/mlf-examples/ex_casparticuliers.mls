@@ -436,20 +436,20 @@ def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 def succ' n = fun f -> fun x -> f (n f x)
 //│ succ_ty: ChurchInt -> ChurchInt
 //│        = <missing implementation>
-//│ succ: ChurchInt -> (forall 'b. 'b -> (forall 'b, 'a, 'c. ('a -> 'c
+//│ succ: ChurchInt -> (forall 'b. 'b -> (forall 'a, 'c. ('a -> 'c
 //│   where
 //│     'b <: 'a -> 'a & 'a -> 'c)))
 //│     = [Function: succ1]
-//│ succ': 'a -> (forall 'b. 'b -> (forall 'a, 'c, 'd, 'e, 'b. ('e -> 'c
+//│ succ': 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'e. ('c -> 'e
 //│   where
-//│     'b <: 'd -> 'c
-//│     'a <: 'b -> 'e -> 'd)))
+//│     'b <: 'd -> 'e
+//│     'a <: 'b -> 'c -> 'd)))
 //│      = [Function: succ$1]
 
 // * Note: without constrained types we wouldn't get the principal type of succ'
 
 succ_ty = succ
-//│ ChurchInt -> (forall 'b. 'b -> (forall 'b, 'a, 'c. ('a -> 'c
+//│ ChurchInt -> (forall 'b. 'b -> (forall 'a, 'c. ('a -> 'c
 //│   where
 //│     'b <: 'a -> 'a & 'a -> 'c)))
 //│   <:  succ_ty:
@@ -459,10 +459,10 @@ succ_ty = succ
 // * Still requires distributivity even with CT
 :e
 succ_ty = succ'
-//│ 'a -> (forall 'b. 'b -> (forall 'b, 'c, 'a, 'd, 'e. ('e -> 'c
+//│ 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'e. ('c -> 'e
 //│   where
-//│     'b <: 'd -> 'c
-//│     'a <: 'b -> 'e -> 'd)))
+//│     'b <: 'd -> 'e
+//│     'a <: 'b -> 'c -> 'd)))
 //│   <:  succ_ty:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -477,25 +477,25 @@ succ_ty = succ'
 //│        = [Function: succ$1]
 :DistributeForalls
 succ_ty = succ'
-//│ 'a -> (forall 'b. 'b -> (forall 'a, 'c, 'd, 'e, 'b. ('d -> 'e
+//│ 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'e. ('c -> 'e
 //│   where
-//│     'b <: 'c -> 'e
-//│     'a <: 'b -> 'd -> 'c)))
+//│     'b <: 'd -> 'e
+//│     'a <: 'b -> 'c -> 'd)))
 //│   <:  succ_ty:
 //│ ChurchInt -> ChurchInt
 //│        = [Function: succ$1]
 :DontDistributeForalls
 
 succ'
-//│ res: 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'b, 'e, 'a. ('d -> 'c
+//│ res: 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'e. ('c -> 'e
 //│   where
-//│     'a <: 'b -> 'd -> 'e
-//│     'b <: 'e -> 'c)))
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e)))
 //│    = [Function: succ$1]
 
 // :e // * Error delayed by inconsistent constrained types
 succ' {}
-//│ res: 'a -> (forall 'a, 'b, 'c, 'd. ('b -> 'd
+//│ res: 'a -> (forall 'b, 'c, 'd. ('b -> 'd
 //│   where
 //│     'a <: 'c -> 'd
 //│     anything <: 'a -> 'b -> 'c))

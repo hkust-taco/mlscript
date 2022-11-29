@@ -346,7 +346,7 @@ EM_to_DNE: EM -> DNE
 
 def EM_to_DNE em nna =
   case em of Left -> em.v, Right -> nna em.v
-//│ EM_to_DNE: 'a -> (forall 'a, 'v, 'v0. (('v0 -> 'v) -> 'v
+//│ EM_to_DNE: 'a -> (forall 'v, 'v0. (('v0 -> 'v) -> 'v
 //│   where
 //│     'a <: (Left with {v: 'v}) | (Right with {v: 'v0})))
 
@@ -368,7 +368,7 @@ EM_to_DNE: EM -> DNE
 
 def DNE_to_EM dne =
   dne (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
-//│ DNE_to_EM: ((forall 'a, 'b. ((Right & {v: forall 'a, 'v, 'c. ('v -> 'c
+//│ DNE_to_EM: ((forall 'a, 'b. ((Right & {v: forall 'v, 'c. ('v -> 'c
 //│   where
 //│     'a <: (Left with {v: 'v}) -> 'c)}) -> 'b & 'a) -> 'b) -> 'd) -> 'd
 

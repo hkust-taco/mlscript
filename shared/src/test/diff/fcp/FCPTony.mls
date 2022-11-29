@@ -6,13 +6,13 @@
 
 
 def app n f = n f
-//│ app: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ app: 'a -> (forall 'b, 'c. ('b -> 'c
 //│   where
 //│     'a <: 'b -> 'c))
 //│    = [Function: app]
 
 def g x y = app x y
-//│ g: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ g: 'a -> (forall 'b, 'c. ('b -> 'c
 //│   where
 //│     'a <: 'b -> 'c))
 //│  = [Function: g]
@@ -38,15 +38,15 @@ g {} {}
 
 
 def app p q = p q
-//│ app: 'a -> (forall 'b, 'c, 'a. ('b -> 'c
+//│ app: 'a -> (forall 'b, 'c. ('b -> 'c
 //│   where
 //│     'a <: 'b -> 'c))
 //│    = [Function: app1]
 
 def mul r s = r (app s) id
-//│ mul: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ mul: 'a -> (forall 'b, 'c. ('b -> 'c
 //│   where
-//│     'a <: (forall 'b, 'd, 'e. ('d -> 'e
+//│     'a <: (forall 'd, 'e. ('d -> 'e
 //│   where
 //│     'b <: 'd -> 'e)) -> (forall 'f. 'f -> 'f) -> 'c))
 //│    = [Function: mul]
@@ -88,9 +88,9 @@ fact id
 //│   TypeError: p is not a function
 
 def mul r s = r (app s)
-//│ mul: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ mul: 'a -> (forall 'b, 'c. ('b -> 'c
 //│   where
-//│     'a <: (forall 'b, 'd, 'e. ('d -> 'e
+//│     'a <: (forall 'd, 'e. ('d -> 'e
 //│   where
 //│     'b <: 'd -> 'e)) -> 'c))
 //│    = [Function: mul1]
@@ -115,9 +115,9 @@ def succ: ChurchInt -> ChurchInt
 def succ n f x = f (n f x)
 //│ succ: ChurchInt -> ChurchInt
 //│     = <missing implementation>
-//│ 'a -> (forall 'b. 'b -> (forall 'b, 'c, 'd. ('c -> 'd
+//│ 'a -> (forall 'b. 'b -> (forall 'c, 'd. ('c -> 'd
 //│   where
-//│     'b <: (forall 'a, 'b, 'c, 'e. ('e
+//│     'b <: (forall 'e. ('e
 //│   where
 //│     'a <: 'b -> 'c -> 'e)) -> 'd)))
 //│   <:  succ:
@@ -133,10 +133,8 @@ def add n m = n succ m
 //│     'b <: 'c -> 'd
 //│    = [Function: add]
 
-// FIXME quantif of 'a
-// :ds
 add
-//│ res: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ res: 'a -> (forall 'b, 'c. ('b -> 'c
 //│   where
 //│     'a <: (ChurchInt -> ChurchInt) -> 'b -> 'c))
 //│    = [Function: add]
@@ -154,7 +152,7 @@ def f x y = add x y
 
 // :ds
 f
-//│ res: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ res: 'a -> (forall 'b, 'c. ('b -> 'c
 //│   where
 //│     'a <: (ChurchInt -> ChurchInt) -> 'b -> 'c))
 //│    = [Function: f]
@@ -162,10 +160,10 @@ f
 :e
 f {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.163: 	f {} {}
+//│ ║  l.161: 	f {} {}
 //│ ║         	^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.163: 	f {} {}
+//│ ║  l.161: 	f {} {}
 //│ ║         	  ^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.128: 	def add n m = n succ m
