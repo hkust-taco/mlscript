@@ -36,7 +36,7 @@ let rec f() =
 //│ // Query 1
 //│ globalThis.f2 = function f2() {
 //│   return ((() => {
-//│     f2();
+//│     return f2();
 //│   })());
 //│ };
 //│ // End of generated code
@@ -77,19 +77,7 @@ let rec f = 1
 //│ f: 1
 //│  = 1
 
-// TODO FIX undefined: should `return 1`;
-:p
-:js
 let rec f =
   1
-//│ |#let| |#rec| |f| |#=|→|1|←|
-//│ Parsed: let rec f = {1};
-//│ Desugared: rec def f: {1}
-//│ AST: Def(true, f, Blk(...), false)
-//│ // Query 1
-//│ globalThis.f5 = (() => {
-//│   1;
-//│ })();
-//│ // End of generated code
 //│ f: 1
-//│  = undefined
+//│  = 1

@@ -1,0 +1,143 @@
+:NewParser
+
+
+class Option
+class Some(value): Option
+class None: Option
+class Either
+class Left(leftValue): Either
+class Right(rightValue): Either
+class List
+class Nil: List
+class Cons(head, tail): List
+class Pair(fst, snd)
+//│ Defined class Option
+//│ Defined class Some
+//│ Defined class None
+//│ Defined class Either
+//│ Defined class Left
+//│ Defined class Right
+//│ Defined class List
+//│ Defined class Nil
+//│ Defined class Cons
+//│ Defined class Pair
+//│ Option: () -> Option
+//│       = [Function: Option1]
+//│ Some: 'value -> (Some with {value: 'value})
+//│     = [Function: Some1]
+//│ None: () -> None
+//│     = [Function: None1]
+//│ Either: () -> Either
+//│       = [Function: Either1]
+//│ Left: 'leftValue -> (Left with {leftValue: 'leftValue})
+//│     = [Function: Left1]
+//│ Right: 'rightValue -> (Right with {rightValue: 'rightValue})
+//│      = [Function: Right1]
+//│ List: () -> List
+//│     = [Function: List1]
+//│ Nil: () -> Nil
+//│    = [Function: Nil1]
+//│ Cons: ('head, 'tail,) -> (Cons with {head: 'head, tail: 'tail})
+//│     = [Function: Cons1]
+//│ Pair: ('fst, 'snd,) -> (Pair with {fst: 'fst, snd: 'snd})
+//│     = [Function: Pair1]
+
+
+
+fun optionApply(x, y, f) =
+  if x is
+    Some(xv) and y is
+      Some(yv) then Some(f(xv, yv))
+      None() then None()
+    None() then None()
+//│ optionApply: (None | (Some with {value: 'value}), None | (Some with {value: 'value0}), ('value, 'value0,) -> 'value1,) -> (None | (Some with {value: 'value1}))
+//│            = [Function: optionApply]
+
+
+
+fun mapPartition(f, xs) = if xs is
+  Nil then Pair(Nil, Nil)
+  Cons(x, xs) and mapPartition(f, xs) is Pair(l, r) and f(x) is
+    Left(v)  then Pair(Cons(v, l), r)
+    Right(v) then Pair(l, Cons(v, r))
+//│ mapPartition: ('head -> ((Left with {leftValue: 'head0}) | (Right with {rightValue: 'head1})), 'a,) -> (Pair with {fst: 'fst, snd: 'tail})
+//│   where
+//│     'tail :> (Cons with {head: 'head1, tail: 'tail}) | () -> Nil
+//│     'fst :> () -> Nil | (Cons with {head: 'head0, tail: 'fst})
+//│     'a <: (Cons with {head: 'head, tail: 'a}) | Nil
+//│             = [Function: mapPartition]
+
+fun mapPartition(f, xs) = if xs is
+  Nil then Pair(Nil, Nil)
+  Cons(x, xs) and
+    mapPartition(f, xs) is Pair(l, r) and f(x) is
+      Left(v)  then Pair(Cons(v, l), r)
+      Right(v) then Pair(l, Cons(v, r))
+//│ mapPartition: ('head -> ((Left with {leftValue: 'head0}) | (Right with {rightValue: 'head1})), 'a,) -> (Pair with {fst: 'fst, snd: 'tail})
+//│   where
+//│     'tail :> (Cons with {head: 'head1, tail: 'tail}) | () -> Nil
+//│     'fst :> () -> Nil | (Cons with {head: 'head0, tail: 'fst})
+//│     'a <: (Cons with {head: 'head, tail: 'a}) | Nil
+//│             = [Function: mapPartition1]
+
+fun mapPartition(f, xs) = if xs is
+  Nil then
+    Pair(Nil, Nil)
+  Cons(x, xs) and
+    mapPartition(f, xs) is
+      Pair(l, r) and
+        f(x) is
+          Left(v)  then
+            Pair(Cons(v, l), r)
+          Right(v) then
+            Pair(l, Cons(v, r))
+//│ mapPartition: ('head -> ((Left with {leftValue: 'head0}) | (Right with {rightValue: 'head1})), 'a,) -> (Pair with {fst: 'fst, snd: 'tail})
+//│   where
+//│     'tail :> (Cons with {head: 'head1, tail: 'tail}) | () -> Nil
+//│     'fst :> () -> Nil | (Cons with {head: 'head0, tail: 'fst})
+//│     'a <: (Cons with {head: 'head, tail: 'a}) | Nil
+//│             = [Function: mapPartition2]
+
+
+// TODO make this one work (needs tuple support)
+fun mapPartition(f, xs) = if xs is
+  Nil then (Nil, Nil)
+  Cons(x, xs) and mapPartition(f, xs) is (l, r) and f(x) is
+    Left(v)  then (Cons(v, l), r)
+    Right(v) then (l, Cons(v, r))
+//│ ╔══[ERROR] The case when this is false is not handled: is (mapPartition (f, xs,),) (l, r,)
+//│ ║  l.105: 	  Cons(x, xs) and mapPartition(f, xs) is (l, r) and f(x) is
+//│ ╙──       	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ mapPartition: (anything, anything,) -> error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared
+
+
+
+// * Vertical alignment is not allowed! (good)
+:pe
+:w
+:e
+:ge
+fun mapPartition(f, xs) = if xs is
+  Nil then (Nil, Nil)
+  Cons(x, xs) and mapPartition(f, xs) is (l, r)
+          and f(x) is Left(v)  then (Cons(v, l), r)
+                      Right(v) then (l, Cons(v, r))
+//│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
+//│ ║  l.126: 	                      Right(v) then (l, Cons(v, r))
+//│ ╙──       	                               ^^^^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.125: 	          and f(x) is Left(v)  then (Cons(v, l), r)
+//│ ║         	                                    ^^^^^^^^^^^^^^^
+//│ ║  l.126: 	                      Right(v) then (l, Cons(v, r))
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] type identifier not found: Tuple#2
+//│ ╙──
+//│ mapPartition: (anything, 'a,) -> ((() -> Nil, () -> Nil,) | error)
+//│   where
+//│     'a <: Cons & {tail: 'a} | Nil
+//│ Code generation encountered an error:
+//│   unknown match case: Tuple#2
+
+

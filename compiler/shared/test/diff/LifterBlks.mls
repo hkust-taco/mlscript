@@ -132,7 +132,7 @@ fun f(x,y,z) =
     fun boo = (new A).bar1 + B().bar2 + z
   }
 //│ |#fun| |f|(|x|,|y|,|z|)| |#=| |→|#class| |C|{|→|#class| |A|{|→|#fun| |foo| |#=| |#new| |B|↵|#fun| |bar1| |#=| |x|←|↵|}|↵|#class| |B|{|→|#fun| |foo| |#=| |#new| |A|↵|#fun| |bar2| |#=| |y|←|↵|}|↵|#fun| |boo| |#=| |(|#new| |A|)|.bar1| |+| |B|(||)|.bar2| |+| |z|←|↵|}|←|
-//│ Parsed: {fun f = x, y, z, => {class C() {class A() {fun foo = new B() {}; fun bar1 = x}; class B() {fun foo = new A() {}; fun bar2 = y}; fun boo = + (('(' new A() {}, ')').bar1,) (+ ((B ()).bar2,) (z,),)}}}
+//│ Parsed: {fun f = x, y, z, => {class C() {class A() {fun foo = new B() {}; fun bar1 = x}; class B() {fun foo = new A() {}; fun bar2 = y}; fun boo = + (+ (('(' new A() {}, ')').bar1,) ((B ()).bar2,),) (z,)}}}
 //│ Parsed:
 //│ TypingUnit(NuFunDef(None, f, [], Lam(Tup(_: Var(x), _: Var(y), _: Var(z)), Blk(...))))
 //│ Lifted:
@@ -146,7 +146,7 @@ fun f(x,y,z) =
 //│     fun bar2 = ((this).par$C$1).y
 //│   }
 //│   class C$1(x, y, z,) {
-//│     fun boo = + (('(' new C$1_A$2(this,) {}, ')').bar1,) (+ ((C$1_B$3 (this,)).bar2,) ((this).z,),)
+//│     fun boo = + (+ (('(' new C$1_A$2(this,) {}, ')').bar1,) ((C$1_B$3 (this,)).bar2,),) ((this).z,)
 //│   }
 //│   fun f = x, y, z, => {}
 //│ }

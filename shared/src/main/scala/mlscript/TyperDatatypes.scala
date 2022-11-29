@@ -21,16 +21,18 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString: Str = (if (isOrigin) "o: " else "") + "‹"+loco.fold(desc)(desc+":"+_)+"›"
   }
   type TP = TypeProvenance
-
+  
   sealed abstract class TypeInfo
 
   /** A type for abstract classes that is used to check and throw
    * errors if the abstract class is being instantiated */
   case class AbstractConstructor(absMths: Set[Var], isTraitWithMethods: Bool) extends TypeInfo
   
+  case class VarSymbol(ty: TypeScheme, definingVar: Var) extends TypeInfo
+  
   /** A type that potentially contains universally quantified type variables,
     * and which can be isntantiated to a given level. */
-  sealed abstract class TypeScheme extends TypeInfo {
+  sealed abstract class TypeScheme {
     def uninstantiatedBody: SimpleType
     def instantiate(implicit lvl: Int): SimpleType
   }

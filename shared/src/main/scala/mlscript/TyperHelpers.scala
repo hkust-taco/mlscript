@@ -23,7 +23,7 @@ abstract class TyperHelpers { Typer: Typer =>
     constructedTypes = 0
   }
   
-  private val noPostTrace: Any => String = _ => ""
+  protected val noPostTrace: Any => String = _ => ""
   
   protected var indent = 0
   def trace[T](pre: => String)(thunk: => T)(post: T => String = noPostTrace): T = {
