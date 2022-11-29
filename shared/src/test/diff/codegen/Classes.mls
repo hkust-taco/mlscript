@@ -158,7 +158,7 @@ mb2.Get
 //│ res: int
 //│    = 6
 
-// FIXME
+// TODO support this syntax
 :js
 mb.(MyBox.Map) (fun x -> x * 3)
 MyBox.Map mb (fun x -> x * 3)

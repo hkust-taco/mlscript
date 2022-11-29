@@ -324,15 +324,13 @@ fun a -> a a
 //│ res: ('a -> 'b & 'a) -> 'b
 //│    = [Function: res]
 
-// :e // Interestingly, unbound results are currently *not* generalized (despite the pretty-printing)
-// :e // FIXME? refreshing-extr
 :e // TODO investigate why a skolem extrusion here?
 self1 = res
 //│ ('a -> 'b & 'a) -> 'b
 //│   <:  self1:
 //│ ('a -> 'b & 'a) -> 'b
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.330: 	self1 = res
+//│ ║  l.328: 	self1 = res
 //│ ║         	^^^^^^^^^^^
 //│ ╟── type `nothing -> anything` does not match type `nothing`
 //│ ║  l.313: 	def self1: ('a -> 'b & 'a) -> 'b

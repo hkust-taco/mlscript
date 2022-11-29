@@ -76,7 +76,6 @@ def ty3B: MyArray[MyArray['a]] as 'a
 //│   where
 //│     'a := MyArray[MyArray['a]]
 
-// :e // FIXME (probably the issue reproduced in `ADRsRepro.mls`)
 :stats
 ty3B = ty3A
 //│ 'a
@@ -90,7 +89,6 @@ ty3B = ty3A
 //│ annoying  calls  : 23
 //│ subtyping calls  : 159
 
-// :e // FIXME (probably the issue reproduced in `ADRsRepro.mls`)
 :stats
 ty3A = ty3B
 //│ 'a

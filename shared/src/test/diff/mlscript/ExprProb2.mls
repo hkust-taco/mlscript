@@ -165,11 +165,10 @@ eval2_fixed_1 e2
 //│ res: error
 //│    = -5
 
-// FIXME strange type
-// :e
+:e
 def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.170: 	def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
+//│ ║  l.169: 	def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
 //│ ║         	                                                         ^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‹∀ 1. (α652'' -> α661'')›  <:  α652_673'    PolymorphicType  TypeVariable
@@ -177,8 +176,6 @@ def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
 //│ fix: ((anything -> nothing) -> anything) -> error
 //│    = [Function: fix]
 
-//:e // due to tapping
-// :e // Works since inconsistent constrained types...
 def eval2_fixed_2 = fix eval2f
 //│ eval2_fixed_2: error
 //│              = [Function: eval2_fixed_2]

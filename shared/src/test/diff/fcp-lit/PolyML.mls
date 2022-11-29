@@ -102,7 +102,6 @@ def fold_left = fl
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 :NoRecursiveTypes
 
-// :e // FIXME? refreshing-extr
 def fold_left = fl2
 //│ ('c -> 'b -> 'a & 'a -> 'b -> 'a) -> (forall 'd. ('c & 'd) -> List['b] -> ('a | 'd))
 //│   <:  fold_left:
@@ -123,9 +122,6 @@ class Collection[a]: { l: List[a] }
 def coll_mem c x = c.Mem x
 //│ coll_mem: Collection[?] -> anything -> bool
 
-// :e // FIXME — works with :RecursiveTypes
-// :e // Works since inconsistent constrained types...
-// 
 // * Typo in the paper? it was `fun x -> fun y -> ...`
 def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> cons x y) nil in

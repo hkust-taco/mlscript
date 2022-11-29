@@ -124,7 +124,6 @@ def find_A: forall 'a 'b. List[('a, 'b)] -> 'a -> (None | Some['b])
 //│ find_A: List[(anything, 'b,)] -> anything -> (None | Some['b])
 //│       = <missing implementation>
 
-// :e // FIXME?
 def find_A table key =
   if is_empty table then None
   else if eq (head table)._1 key then Some (head table)._2
@@ -205,16 +204,16 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 :e // * Since "sound extrusion"
 zog = printInt (add (nfind table "one") (nfind table "two"))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.206: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║  l.205: 	zog = printInt (add (nfind table "one") (nfind table "two"))
 //│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.153: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.152: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.153: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.152: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                        ^^
 //│ ╟── from application:
-//│ ║  l.188: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
+//│ ║  l.187: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│ ╙──       	                                                      ^^^
 //│ zog: string
 //│    = '0'
@@ -227,35 +226,29 @@ zog = printInt (add (nfind table "one") (nfind table "two"))
 :e // * Since "sound extrusion"
 a = add (nfind table "one")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.228: 	a = add (nfind table "one")
+//│ ║  l.227: 	a = add (nfind table "one")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.153: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.152: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.153: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.152: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                        ^^
 //│ ╟── from application:
-//│ ║  l.188: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
+//│ ║  l.187: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│ ╙──       	                                                      ^^^
 //│ a: error
 //│  = [Function (anonymous)]
 
-// :e // FIXME? refreshing-extr
 b = (nfind table "two")
 //│ b: ('a -> 'b & 'c -> 'b & 'a -> 'c) -> (forall 'd. ('d & 'a) -> ('b | 'd))
 //│  = [Function (anonymous)]
 
-// * Note: this one requires `:DistributeForalls`
-// :d
-//:e // due to tapping
+// * Note: this one required `:DistributeForalls`
 a b
 //│ res: error
 //│    = [Function (anonymous)]
 
-// :e // FIXME? refreshing-extr
-//:e // due to tapping
-// :e // Works since inconsistent constrained types...
 zog_ = printInt_ (add_ (nfind table "one") (nfind table "two"))
 //│ zog_: string
 //│     = '0'

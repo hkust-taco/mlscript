@@ -730,7 +730,7 @@ trait TypeSimplifier { self: Typer =>
       case FunctionType(l, r) => FunctionType(transform(l, pol.contravar, semp), transform(r, pol, semp))(st.prov)
       case ot @ Overload(as) =>
         // ot.mapAltsPol(pol.base)((p, t) => transform(t, PolMap(p), parents)) // * Q: PolMap(p) correct?
-        ot.mapAltsPol(pol)((p, t) => transform(t, p, parents)) // * Q: PolMap(p) correct?
+        ot.mapAltsPol(pol)((p, t) => transform(t, p, parents))
       case _: ObjectTag | ExtrType(_) => st
       case tv: TypeVariable if parents.exists(_ === tv) =>
         if (pol(tv).getOrElse(lastWords(s"parent in invariant position $tv $parents"))) BotType else TopType

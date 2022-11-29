@@ -205,14 +205,11 @@ rec def to_church_2 n =
 //│ to_church_2: int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'a. ('a & 'b) -> 'a))
 //│            = [Function: to_church_2]
 
-// Requires :RecursiveTypes
-:ng // FIXME codegen: `ReferenceError: to_church_2 is not defined`
-// :e // due to tapping
-// :e // FIXME? refreshing-extr
 to_church_ty = to_church_2
 //│ int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'a. ('a & 'b) -> 'a))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
+//│             = [Function: to_church_2]
 
 // (* Marche *)
 // let rec to_church n =
@@ -294,7 +291,7 @@ to_church_ty = to_church_4
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.292: 	to_church_ty = to_church_4
+//│ ║  l.289: 	to_church_ty = to_church_4
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `(?a -> ?a) -> ?a -> ?a` is not an instance of type `'a_1437`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -329,7 +326,7 @@ rec def to_church_ty n =
 //│ int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'c. ('c & 'b) -> ('c | 'a)))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
-//│             = [Function: to_church_ty6]
+//│             = [Function: to_church_ty7]
 
 // * ... since we can fix it by using the annotation for rec calls:
 def to_church_ty n =
@@ -338,7 +335,7 @@ def to_church_ty n =
 //│ int -> (forall 'b, 'a, 'a0. ('a0 -> 'b & 'a -> ('a0 & 'a)) -> (forall 'c. ('c & 'a0 & 'a) -> ('c | 'b)))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
-//│             = [Function: to_church_ty7]
+//│             = [Function: to_church_ty8]
 
 
 // (* �a coince. *)
@@ -355,7 +352,7 @@ def tc n = to_church_ty n : ChurchInt
 :e
 def tc n = to_church_2 n : ChurchInt // Requires :RecursiveTypes
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.356: 	def tc n = to_church_2 n : ChurchInt // Requires :RecursiveTypes
+//│ ║  l.353: 	def tc n = to_church_2 n : ChurchInt // Requires :RecursiveTypes
 //│ ║         	           ^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -466,7 +463,7 @@ succ_ty = succ'
 //│   <:  succ_ty:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.461: 	succ_ty = succ'
+//│ ║  l.458: 	succ_ty = succ'
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -511,13 +508,13 @@ succ' {} {}
 :e
 succ' {} {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.512: 	succ' {} {} {}
+//│ ║  l.509: 	succ' {} {} {}
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.512: 	succ' {} {} {}
+//│ ║  l.509: 	succ' {} {} {}
 //│ ║         	      ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.436: 	def succ' n = fun f -> fun x -> f (n f x)
+//│ ║  l.433: 	def succ' n = fun f -> fun x -> f (n f x)
 //│ ╙──       	                                   ^^^
 //│ res: error
 //│ Runtime error:

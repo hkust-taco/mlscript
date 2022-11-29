@@ -590,7 +590,6 @@ single (id : forall 'a. 'a -> 'a)
 //│    = 1
 
 // ,("(id :: some a. a -> a) 1", ok "Int")
-// FIXME
 (id : 'a -> 'a) 1
 //│ res: 1
 //│    = 1
@@ -817,13 +816,13 @@ single id : List[forall 'a. 'a -> 'a]
 :ng
 returnST 1 : forall 's. ST['s, int]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.818: 	returnST 1 : forall 's. ST['s, int]
+//│ ║  l.817: 	returnST 1 : forall 's. ST['s, int]
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.818: 	returnST 1 : forall 's. ST['s, int]
+//│ ║  l.817: 	returnST 1 : forall 's. ST['s, int]
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.818: 	returnST 1 : forall 's. ST['s, int]
+//│ ║  l.817: 	returnST 1 : forall 's. ST['s, int]
 //│ ╙──       	                    ^^
 //│ res: ST['s, int]
 
@@ -947,31 +946,37 @@ runST4 (newRef4 1)
 //│ res: (Ref[?, 1], Ref[?, 1],)
 
 // ("(\\(x :: forall a. a -> a) -> xauto x) :: (forall a. a -> a) -> (forall a. a -> a)", ok "(forall a. a -> a) -> (forall a. a -> a)")
-// FIXME
+
+// * This doesn't work because we don't currently generalize non-functions:
+:e
 (fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.951: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.952: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.951: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.952: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║         	                                                      ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.951: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.952: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ╙──       	                                                      ^^
+//│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0)
+//│    = [Function: res]
+// * But we can trivially fix it by forcing generalization through a polymorphic let binding:
+(fun x -> let poly = xauto x in poly) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0)
 //│    = [Function: res]
 
 // ("xauto :: (forall a. a -> a) -> (forall a. a -> a)"", Wrong)
-// FIXME
+:e
 xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.966: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.971: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║         	^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.966: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.971: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║         	                                         ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.966: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.971: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ╙──       	                                         ^^
 //│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0)
 //│    = [Function: xauto]
@@ -1017,13 +1022,13 @@ test2 = test1
 //│   <:  test2:
 //│ List[forall 'a. 'a -> 'a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.1015: 	test2 = test1
+//│ ║  l.1020: 	test2 = test1
 //│ ║          	^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.1001: 	def test2: List[forall 'a. 'a -> 'a]
+//│ ║  l.1006: 	def test2: List[forall 'a. 'a -> 'a]
 //│ ║          	                       ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.1001: 	def test2: List[forall 'a. 'a -> 'a]
+//│ ║  l.1006: 	def test2: List[forall 'a. 'a -> 'a]
 //│ ╙──        	                       ^^
 //│      = <no result>
 //│        test1 and test2 are not implemented

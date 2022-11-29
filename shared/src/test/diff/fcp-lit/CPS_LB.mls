@@ -49,28 +49,23 @@ def print t = t () nil (fun () -> fun r -> log (concat "," r))
 //│ print: (() -> List[nothing] -> (() -> List[string] -> unit) -> 'a) -> 'a
 
 // Added by me:
-// :e // FIXME? refreshing-extr
 s x x (s x x e)
 //│ res: (() -> List[string] -> 'a) -> 'a
 
 
-// :e // FIXME? refreshing-extr
 def test8  = (s x x (s x x e) x (s x x x e) e)
 //│ test8: () -> (forall 'a. List['a] -> (forall 'b. (() -> List['a | string] -> 'b) -> 'b))
 
 print test8
 
 
-// :e // FIXME — works with :RecursiveTypes // Works since inconsistent constrained types...
 def test14 = (s x x x x x x x x x x x x x x e)
 //│ test14: () -> (forall 'a. List['a] -> (forall 'b. (() -> List['a | string] -> 'b) -> 'b))
 
-// :e // FIXME — works with :RecursiveTypes // Works since inconsistent constrained types...
 def test16 = (s x x x x x x x x x x x x x x x x e)
 //│ test16: () -> (forall 'a. List['a] -> (forall 'b. (() -> List['a | string] -> 'b) -> 'b))
 
 // (* This is too much for the type-checker. *)
-// :e // FIXME — works with :RecursiveTypes // Works since inconsistent constrained types...
 def test18 = (s x x x x x x x x x x x x x x x x x x e)
 //│ test18: () -> (forall 'a. List['a] -> (forall 'b. (() -> List['a | string] -> 'b) -> 'b))
 

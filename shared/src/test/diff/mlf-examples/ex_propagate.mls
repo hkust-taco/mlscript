@@ -42,7 +42,6 @@ fun x_ -> (fun y -> y y)
 //│ res: anything -> (forall 'a, 'b. ('a -> 'b & 'a) -> 'b)
 //│    = [Function: res]
 
-// :e // FIXME? failed with genLamBodies but works with quantif extrus
 // let (delta:sid -> sid) = fun x -> x x
 def delta = (fun x -> x x) : Sid -> Sid
 //│ delta: Sid -> Sid

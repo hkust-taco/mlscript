@@ -421,7 +421,6 @@ e2 = add (lit 1) (nega e1)
 //│       rhs: Nega { arg: Add { lhs: [Lit], rhs: [Add] } }
 //│     }
 
-// :e // FIXME (reproduced in `ADRsRepro.mls`)
 :stats
 eval2 done e2
 //│ res: int
@@ -434,7 +433,6 @@ d2 = nega (add (lit 1) (nega (lit 1)))
 //│ d2: Nega[Add[Lit & {val: 1} | Nega[Lit & {val: 1}]] with {lhs: Lit & {val: 1}, rhs: Nega[Lit & {val: 1}]}]
 //│   = Nega { arg: Add { lhs: Lit { val: 1 }, rhs: Nega { arg: [Lit] } } }
 
-// :e // FIXME (reproduced in `ADRsRepro.mls`)
 :stats
 eval2 done d2
 //│ res: int
@@ -479,8 +477,7 @@ prettier22 done (eval1 done)
 //│     'b <: Add[?] & {lhs: 'b, rhs: 'b} | Lit | Nega[?] & {arg: 'a}
 //│    = [Function (anonymous)]
 
-// :e // FIXME (reproduced in `ADRsRepro.mls`)
-// TODO could probably merge `a` and `b` here!
+// * TODO could probably merge `a` and `b` here!
 :stats
 prettier2 done (eval2 done)
 //│ res: 'a -> string

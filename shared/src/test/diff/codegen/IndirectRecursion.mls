@@ -137,12 +137,11 @@ def z =
 :NoCycleCheck
 
 // Exceeds recursion depth limit:
-// :e
-// FIXME should be caught by cycle checker!
+:e
 def z =
   (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e, ?f, ?g. ?g -> ?e) -> ?h` exceeded recursion depth limit (200)
-//│ ║  l.143: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
+//│ ║  l.142: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── while constraining:  ‹∀ 1. (α401_416'' -> α410_420'')›  <!<  α401_457'
 //│ ╟── while constraining:  α401_452'  <!<  α401_457'

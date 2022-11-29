@@ -132,13 +132,15 @@ def make_ex3 x (f: forall 'a. ('a | Sid) -> 'b) = f x
 // 		 make_ex3 id ;
 // 		 make_ex3 not ]
 
-// FIXME
-// :e
-// def ex_list3 = cons (make_ex3 succ) (
-//       cons (make_ex3 id) (
-//       cons (make_ex3 not) nil))
+def ex_list3 = cons (make_ex3 succ) (
+      cons (make_ex3 id) (
+      cons (make_ex3 not) nil))
+//│ ex_list3: List[forall 'a. (anything -> 'a) -> 'a]
+//│         = [Function: ex_list3]
 
-// FIXME: what is `open`?
+
+// * TODO: what is `open`?
+
 // (*let test3 = listiter (open (fun v -> choose v id)) ex_list3  *)
 // (* Meme message d'erreur je crois. *)
 

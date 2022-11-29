@@ -2198,7 +2198,6 @@ add
 (let rec x = (x add); {u: 0, v: x})
 //│ res: {u: 0, v: nothing}
 
-// FIXME
 (let rec x = (x x); {u: 0, v: x})
 //│ res: {u: 0, v: nothing}
 
