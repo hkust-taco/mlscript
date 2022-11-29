@@ -105,7 +105,7 @@ fun mapPartition(f, xs) = if xs is
   Cons(x, xs) and mapPartition(f, xs) is (l, r) and f(x) is
     Left(v)  then (Cons(v, l), r)
     Right(v) then (l, Cons(v, r))
-//│ ╔══[ERROR] Missing the otherwise case of test is (mapPartition (f, xs,),) (l, r,)
+//│ ╔══[ERROR] The case when this is false is not handled: is (mapPartition (f, xs,),) (l, r,)
 //│ ║  l.105: 	  Cons(x, xs) and mapPartition(f, xs) is (l, r) and f(x) is
 //│ ╙──       	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ mapPartition: (anything, anything,) -> error

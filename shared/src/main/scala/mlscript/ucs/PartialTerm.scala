@@ -13,7 +13,8 @@ class PartialTermError(term: PartialTerm, message: Str) extends Error(message)
   * 
   * @param fragments fragment terms that used to build this `PartialTerm`.
   */
-sealed abstract class PartialTerm(val fragments: Ls[Term]) {
+sealed abstract class PartialTerm {
+  val fragments: Ls[Term]
   def addTerm(term: Term): PartialTerm.Total
   def addOp(op: Var): PartialTerm.Half
   def addTermOp(term: Term, op: Var): PartialTerm.Half =
@@ -21,19 +22,20 @@ sealed abstract class PartialTerm(val fragments: Ls[Term]) {
 }
 
 object PartialTerm {
-  final case object Empty extends PartialTerm(Nil) {
+  final case object Empty extends PartialTerm {
+    val fragments: Ls[Term] = Nil
     def addTerm(term: Term): Total = Total(term, term :: Nil)
     def addOp(op: Var): Half =
       throw new PartialTermError(this, s"expect a term but operator $op was given")
   }
 
-  final case class Total(val term: Term, override val fragments: Ls[Term]) extends PartialTerm(fragments) {
+  final case class Total(term: Term, fragments: Ls[Term]) extends PartialTerm {
     def addTerm(term: Term): Total =
       throw new PartialTermError(this, s"expect an operator but term $term was given")
     def addOp(op: Var): Half = Half(term, op, op :: fragments)
   }
 
-  final case class Half(lhs: Term, op: Var, override val fragments: Ls[Term]) extends PartialTerm(fragments) {
+  final case class Half(lhs: Term, op: Var, fragments: Ls[Term]) extends PartialTerm {
     def addTerm(rhs: Term): Total = {
       val (realRhs, extraExprOpt) = separatePattern(rhs)
       val leftmost = mkBinOp(lhs, op, realRhs)

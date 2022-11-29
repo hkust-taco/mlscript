@@ -5,7 +5,7 @@
 fun f(x, b) =
   if x == 
     0 and b then 0
-//│ ╔══[ERROR] Missing the otherwise case of test b
+//│ ╔══[ERROR] The case when this is false is not handled: b
 //│ ║  l.7: 	    0 and b then 0
 //│ ╙──     	          ^
 //│ f: (anything, anything,) -> error
@@ -17,7 +17,7 @@ fun f(x, b) =
 if x == y +
   5 then 0
   7 then 0
-//│ ╔══[ERROR] Missing the otherwise case of test + (== (x,) (y,),) (7,)
+//│ ╔══[ERROR] The case when this is false is not handled: + (== (x,) (y,),) (7,)
 //│ ║  l.17: 	if x == y +
 //│ ║        	   ^^^^^^^^
 //│ ║  l.18: 	  5 then 0
@@ -33,7 +33,7 @@ if x == y +
 if x == y *
   5 then 0
   6 + 7 then 0
-//│ ╔══[ERROR] Missing the otherwise case of test * (== (x,) (y,),) (+ (6,) (7,),)
+//│ ╔══[ERROR] The case when this is false is not handled: * (== (x,) (y,),) (+ (6,) (7,),)
 //│ ║  l.33: 	if x == y *
 //│ ║        	   ^^^^^^^^
 //│ ║  l.34: 	  5 then 0
@@ -50,7 +50,7 @@ if x ==
   y +
     5 then 0
     7 then 0
-//│ ╔══[ERROR] Missing the otherwise case of test + (== (x,) (y,),) (7,)
+//│ ╔══[ERROR] The case when this is false is not handled: + (== (x,) (y,),) (7,)
 //│ ║  l.49: 	if x ==
 //│ ║        	   ^^^^
 //│ ║  l.50: 	  y +
@@ -67,7 +67,7 @@ if x ==
 :ge
 if x ==
   1 and b then 0
-//│ ╔══[ERROR] Missing the otherwise case of test b
+//│ ╔══[ERROR] The case when this is false is not handled: b
 //│ ║  l.69: 	  1 and b then 0
 //│ ╙──      	        ^
 //│ res: error
@@ -81,7 +81,7 @@ fun toEnglish(x) =
   if x ==
     true then "t"
     0 then "z"
-//│ ╔══[ERROR] Missing the otherwise case of test == (x,) (0,)
+//│ ╔══[ERROR] The case when this is false is not handled: == (x,) (0,)
 //│ ║  l.81: 	  if x ==
 //│ ║        	     ^^^^
 //│ ║  l.82: 	    true then "t"
@@ -98,7 +98,7 @@ fun toEnglish(x) =
   if x ==
     0 then "z"
     true then "t"
-//│ ╔══[ERROR] Missing the otherwise case of test == (x,) (true,)
+//│ ╔══[ERROR] The case when this is false is not handled: == (x,) (true,)
 //│ ║  l.98: 	  if x ==
 //│ ║        	     ^^^^
 //│ ║  l.99: 	    0 then "z"
@@ -115,7 +115,7 @@ fun toEnglish(x) =
   if x ==
     1 then "o"
     0 then "z"
-//│ ╔══[ERROR] Missing the otherwise case of test == (x,) (0,)
+//│ ╔══[ERROR] The case when this is false is not handled: == (x,) (0,)
 //│ ║  l.115: 	  if x ==
 //│ ║         	     ^^^^
 //│ ║  l.116: 	    1 then "o"
@@ -153,7 +153,7 @@ fun toEnglish(x) =
 //│ ╟── Note: 'if' expression started here:
 //│ ║  l.140: 	  if x ==
 //│ ╙──       	  ^^
-//│ ╔══[ERROR] Missing the otherwise case of test == (x,) (undefined,)
+//│ ╔══[ERROR] The case when this is false is not handled: == (x,) (undefined,)
 //│ ║  l.140: 	  if x ==
 //│ ║         	     ^^^^
 //│ ║  l.141: 	    else 1

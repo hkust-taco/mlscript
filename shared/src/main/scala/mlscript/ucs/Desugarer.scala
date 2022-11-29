@@ -533,11 +533,10 @@ class Desugarer extends TypeDefs { self: Typer =>
         import Message.MessageContext
         parentOpt match {
           case S(IfThenElse(test, whenTrue, whenFalse)) =>
-            if (whenFalse === t) {
-              throw new DesugaringException(msg"Missing the otherwise case of test ${test.toString}", test.toLoc)
-            } else {
+            if (whenFalse === t)
+              throw new DesugaringException(msg"The case when this is false is not handled: ${test.toString}", test.toLoc)
+            else
               lastWords("`MissingCase` are not supposed to be the true branch of `IfThenElse`")
-            }
           case S(Match(_, _, _)) =>
             lastWords("`MissingCase` are not supposed to be a case of `Match`")
           case S(Consequent(_)) | S(MissingCase) | N => die // unreachable

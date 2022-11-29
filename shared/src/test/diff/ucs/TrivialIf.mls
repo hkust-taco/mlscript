@@ -43,7 +43,7 @@ map(None(), inc)
 
 :e
 fun f(a, b) = if a and b then 0
-//│ ╔══[ERROR] Missing the otherwise case of test b
+//│ ╔══[ERROR] The case when this is false is not handled: b
 //│ ║  l.45: 	fun f(a, b) = if a and b then 0
 //│ ╙──      	                       ^
 //│ f: (anything, anything,) -> error
@@ -52,7 +52,7 @@ fun f(a, b) = if a and b then 0
 fun f(x, y) =
   if x == y + 5 then 0
   else if x == y + 7 then 0
-//│ ╔══[ERROR] Missing the otherwise case of test == (x,) (+ (y,) (7,),)
+//│ ╔══[ERROR] The case when this is false is not handled: == (x,) (+ (y,) (7,),)
 //│ ║  l.54: 	  else if x == y + 7 then 0
 //│ ╙──      	          ^^^^^^^^^^
 //│ f: (number, int,) -> (0 | error)

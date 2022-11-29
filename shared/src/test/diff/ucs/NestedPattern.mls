@@ -35,6 +35,9 @@ fun crazy(v) =
     _ then "lol"
 //│ crazy: anything -> ("bruh!" | "lol")
 
+
+// * TODO(@chengluyu) fix these missing locations
+
 :e
 fun f(x) =
   if x is
@@ -64,3 +67,4 @@ fun f(p) =
 //│ ╔══[ERROR] type identifier not found: Tuple#2
 //│ ╙──
 //│ f: (None | Some & {value: error}) -> (0 | error)
+

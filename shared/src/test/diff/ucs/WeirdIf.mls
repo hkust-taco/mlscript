@@ -35,7 +35,7 @@ fun f(x) = if x is else 0
 :ge
 if true
   then 0
-//│ ╔══[ERROR] Missing the otherwise case of test true
+//│ ╔══[ERROR] The case when this is false is not handled: true
 //│ ║  l.36: 	if true
 //│ ╙──      	   ^^^^
 //│ res: error
@@ -63,7 +63,7 @@ fun f(x) =
 //│ ╟── Note: 'if' expression started here:
 //│ ║  l.50: 	  if x ==
 //│ ╙──      	  ^^
-//│ ╔══[ERROR] Missing the otherwise case of test == (x,) (undefined,)
+//│ ╔══[ERROR] The case when this is false is not handled: == (x,) (undefined,)
 //│ ║  l.50: 	  if x ==
 //│ ║        	     ^^^^
 //│ ║  l.51: 	    else "bruh"
@@ -86,7 +86,7 @@ fun boolToStr(x) =
   if x is
     true then "yah"
     false then "nah"
-//│ ╔══[ERROR] Missing the otherwise case of test == (x,) (false,)
+//│ ╔══[ERROR] The case when this is false is not handled: == (x,) (false,)
 //│ ║  l.86: 	  if x is
 //│ ║        	     ^^^^
 //│ ║  l.87: 	    true then "yah"
