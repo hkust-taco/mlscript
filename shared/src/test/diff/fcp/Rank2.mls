@@ -14,12 +14,12 @@ def test (f: forall 'a. 'a -> 'a) =
 
 test(f: forall 'a. 'a -> 'a) =
   f 1
-//│ test: (forall 'a. 'a -> 'a) -> (1 | 'b)
+//│ test: (forall 'a. 'a -> 'a) -> 1
 //│     = [Function: test1]
 
 test(f: forall 'a. 'a -> 'a) =
   (f 1, f true)
-//│ test: (forall 'a. 'a -> 'a) -> (1 | 'b, true | 'c,)
+//│ test: (forall 'a. 'a -> 'a) -> (1, true,)
 //│     = [Function: test2]
 
 
@@ -45,7 +45,7 @@ test(fun x -> x + 1)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.44: 	test(fun x -> x + 1)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_92` is not an instance of type `int`
+//│ ╟── type `‘a_86` is not an instance of type `int`
 //│ ║  l.20: 	test(f: forall 'a. 'a -> 'a) =
 //│ ║        	               ^^
 //│ ╟── Note: constraint arises from reference:
@@ -59,7 +59,7 @@ test succ
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.58: 	test succ
 //│ ║        	^^^^^^^^^
-//│ ╟── type `‘a_99` is not an instance of type `int`
+//│ ╟── type `‘a_93` is not an instance of type `int`
 //│ ║  l.20: 	test(f: forall 'a. 'a -> 'a) =
 //│ ╙──      	               ^^
 //│ res: error
@@ -71,21 +71,21 @@ test succ
 
 test f =
   ((f: forall 'a. 'a -> 'a) 1, f 2)
-//│ test: (forall 'a. 2 -> 'b & 'a -> 'a & 'c) -> (1 | 'd, 'b,)
+//│ test: (forall 'a. 2 -> 'b & 'a -> 'a) -> (1, 'b,)
 //│     = [Function: test3]
 
 def pair x y = test id
-//│ pair: 'a -> (forall 'b, 'c, 'd, 'e. 'b -> ((1 | 'c, 2 | 'd,) | 'e))
+//│ pair: anything -> anything -> (1, 2,)
 //│     = [Function: pair]
 
 def pair x y = test (fun x -> (let tmp = log x in x))
-//│ pair: 'a -> (forall 'b, 'c, 'd, 'e. 'b -> ((1 | 'c, 2 | 'd,) | 'e))
+//│ pair: anything -> anything -> (1, 2,)
 //│     = [Function: pair1]
 
 
 def test f =
   pair (f 1) (f true)
-//│ test: (true -> ('a & 'b) & (1 | 'c) -> ('d & 'e) & 'f) -> ((1 | 'c, 2 | 'g,) | 'h)
+//│ test: (true -> anything & 1 -> anything) -> (1, 2,)
 //│     = [Function: test4]
 
 test id

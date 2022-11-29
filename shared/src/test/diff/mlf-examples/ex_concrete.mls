@@ -13,7 +13,7 @@ Cons (head, tail) = Cons { head; tail }
 //│ Defined type alias List[+a]
 //│ Nil: Nil
 //│    = Nil {}
-//│ Cons: ('b & 'head & 'a, List['a] & 'c & 'tail,) -> ((Cons['a] with {head: 'head, tail: 'tail}) | 'd)
+//│ Cons: ('head & 'a, List['a] & 'tail,) -> (Cons['a] with {head: 'head, tail: 'tail})
 //│     = [Function: Cons1]
 
 // let un = Nil ;;
@@ -52,10 +52,10 @@ rec def map f l = case l of
   { Nil -> Nil
   | Cons -> Cons (f l.head, map f l.tail)
   }
-//│ map: ('head -> 'b & 'c & 'head0 -> 'a) -> (forall 'd, 'tail, 'a0, 'tail0, 'e, 'f, 'head1, 'head2, 'g. ('f & ((Cons['tail] with {head: 'head & 'head2, tail: 'tail & 'tail1}) & 'e | Nil & 'g)) -> ((Cons['a | 'a0 | 'b] with {head: 'head1 | 'b, tail: 'tail0 | 'h}) | Nil | 'd))
+//│ map: ('head -> 'b & 'head0 -> 'a) -> ((Cons[?] with {head: 'head, tail: 'tail}) | Nil) -> ((Cons['a | 'b] with {head: 'b, tail: 'c}) | Nil)
 //│   where
-//│     'h :> (Cons['a] with {tail: 'h}) | Nil
-//│     'tail1 <: (Cons['tail] with {head: 'head0, tail: 'tail1}) | Nil
+//│     'c :> (Cons['a] with {tail: 'c}) | Nil
+//│     'tail <: (Cons[?] with {head: 'head0, tail: 'tail}) | Nil
 //│    = [Function: map]
 :NoRecursiveTypes
 

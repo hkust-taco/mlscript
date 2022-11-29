@@ -43,7 +43,7 @@ def head: List['a] -> 'a
 def head l = l.Head
 //│ head: List['a] -> 'a
 //│     = <missing implementation>
-//│ (List['a & 'b] & 'c & 'this) -> 'b
+//│ List['a] -> 'a
 //│   <:  head:
 //│ List['a] -> 'a
 //│     = [Function: head]
@@ -52,7 +52,7 @@ def tail: List['a] -> List['a]
 def tail l = l.Tail
 //│ tail: List['a] -> List['a]
 //│     = <missing implementation>
-//│ (List['a] & 'b & 'this) -> (List['a] | 'c)
+//│ List['a] -> List['a]
 //│   <:  tail:
 //│ List['a] -> List['a]
 //│     = [Function: tail]
@@ -71,25 +71,25 @@ def cons: 'a -> List['a] -> List['a]
 def cons head tail = Cons { head; tail }
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'tail, 'c, 'a, 'd, 'head. (List['a] & 'c & 'tail) -> ((Cons['a | 'b] with {head: 'head | 'b, tail: 'tail}) | 'd))
+//│ 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
 
 def is_empty: forall 'a. List['a] -> bool
 def is_empty l = eq l nil
-//│ is_empty: List['a] -> bool
+//│ is_empty: List[?] -> bool
 //│         = <missing implementation>
-//│ ('a & 'b) -> (bool | 'c)
+//│ anything -> bool
 //│   <:  is_empty:
-//│ List['a] -> bool
+//│ List[?] -> bool
 //│         = [Function: is_empty]
 
 def single: 'a -> List['a]
 def single x = cons x nil
 //│ single: 'a -> List['a]
 //│       = <missing implementation>
-//│ ('b & 'a) -> (List['a] | 'c)
+//│ 'a -> List['a]
 //│   <:  single:
 //│ 'a -> List['a]
 //│       = [Function: single]
@@ -100,7 +100,7 @@ rec def append l1 l2 =
   else cons (head l1) (append (tail l1) l2)
 //│ append: List['a] -> List['a] -> List['a]
 //│       = <missing implementation>
-//│ (List['a | 'a0 | 'a1 & 'a2] & 'b) -> (forall 'c, 'd, 'e, 'a3. ('c & List['a2] & 'd & 'e) -> (List['a3 | 'a0 | 'a2] | 'e))
+//│ List[?] -> (forall 'b. (List['a] & 'b) -> (List['a] | 'b))
 //│   <:  append:
 //│ List['a] -> List['a] -> List['a]
 //│       = [Function: append]
@@ -111,7 +111,7 @@ rec def length l =
   else succ (length (tail l))
 //│ length: List[?] -> int
 //│       = <missing implementation>
-//│ (List['a | 'a0] & 'b) -> (int | 'c)
+//│ List[?] -> int
 //│   <:  length:
 //│ List[?] -> int
 //│       = [Function: length]
@@ -147,7 +147,7 @@ def choose: 'a -> 'a -> 'a
 def choose x y = if true then x else y
 //│ choose: 'a -> 'a -> 'a
 //│       = <missing implementation>
-//│ 'a -> (forall 'b, 'c, 'd. ('b & 'c & 'd) -> ('a | 'd))
+//│ 'a -> (forall 'b. 'b -> ('a | 'b))
 //│   <:  choose:
 //│ 'a -> 'a -> 'a
 //│       = [Function: choose]
@@ -156,7 +156,7 @@ def poly: (forall 'a. 'a -> 'a) -> (int, bool)
 def poly f = (f 1, f true)
 //│ poly: (forall 'a. 'a -> 'a) -> (int, bool,)
 //│     = <missing implementation>
-//│ (true -> 'a & 1 -> 'b & 'c) -> ('b, 'a,)
+//│ (true -> 'a & 1 -> 'b) -> ('b, 'a,)
 //│   <:  poly:
 //│ (forall 'a. 'a -> 'a) -> (int, bool,)
 //│     = [Function: poly]
@@ -185,7 +185,7 @@ rec def map f l =
   else cons (f (head l)) (map f (tail l))
 //│ map: ('a -> 'b) -> List['a] -> List['b]
 //│    = <missing implementation>
-//│ ('b -> 'c & 'd & 'a -> 'a0) -> (forall 'a1, 'a2, 'e, 'a3, 'f, 'a4, 'g. (List['a1 | 'a & 'a4 | 'b & 'a3 & 'f] & 'g) -> (List['a2 | 'a0 | 'c] | 'e))
+//│ (nothing -> 'b & nothing -> 'a) -> List[?] -> List['a | 'b]
 //│   <:  map:
 //│ ('a -> 'b) -> List['a] -> List['b]
 //│    = [Function: map]
@@ -194,7 +194,7 @@ def app: ('a -> 'b) -> 'a -> 'b
 def app f x = f x
 //│ app: ('a -> 'b) -> 'a -> 'b
 //│    = <missing implementation>
-//│ ('a -> 'b & 'c) -> (forall 'd, 'e. ('a & 'd) -> ('e | 'b))
+//│ ('a -> 'b) -> 'a -> 'b
 //│   <:  app:
 //│ ('a -> 'b) -> 'a -> 'b
 //│    = [Function: app]
@@ -203,7 +203,7 @@ def revapp: 'a -> ('a -> 'b) -> 'b
 def revapp x f = f x
 //│ revapp: 'a -> ('a -> 'b) -> 'b
 //│       = <missing implementation>
-//│ 'a -> (forall 'b, 'c. ('a -> 'b & 'c) -> 'b)
+//│ 'a -> (forall 'b. ('a -> 'b) -> 'b)
 //│   <:  revapp:
 //│ 'a -> ('a -> 'b) -> 'b
 //│       = [Function: revapp]
@@ -212,7 +212,7 @@ def flip: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 def flip f = fun x -> fun y -> f y x
 //│ flip: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 //│     = <missing implementation>
-//│ ('a -> ('b -> 'c & 'd) & 'e) -> (forall 'f. ('b & 'f) -> (forall 'g, 'h. ('a & 'g) -> ('h | 'c)))
+//│ ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 //│   <:  flip:
 //│ ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 //│     = [Function: flip]
@@ -230,7 +230,7 @@ def argST: ST['s, int]
 
 // A1
 const2 x y = y
-//│ const2: 'a -> (forall 'b. 'b -> 'b)
+//│ const2: anything -> (forall 'a. 'a -> 'a)
 //│       = [Function: const2]
 
 // A2
@@ -420,17 +420,17 @@ def lst: List[forall 'a. int -> 'a -> 'a]
 // E1
 :ng
 k h lst
-//│ res: int -> (forall 'a, 'a0. ('a & 'a0) -> ('a | 'a0))
+//│ res: int -> (forall 'a. 'a -> 'a)
 
 // E2
 :ng
 k (fun x -> h x) lst
-//│ res: int -> (forall 'a, 'a0. ('a & 'a0) -> ('a | 'a0))
+//│ res: int -> (forall 'a. 'a -> 'a)
 
 // E3
 :ng
 def r: (forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> int
-//│ r: (forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> int
+//│ r: (anything -> (forall 'b. 'b -> 'b)) -> int
 :ng
 r (fun x -> fun y -> y)
 //│ res: int
@@ -473,7 +473,7 @@ let f = revapp id in f poly
 
 // F10
 a = choose id (fun (x: (forall 'a. 'a -> 'a)) -> auto_ x)
-//│ a: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b | 'c)
+//│ a: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
 //│  = [Function: id1]
 
 a id
@@ -548,7 +548,7 @@ a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.547: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a_1491`
+//│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a_1388`
 //│ ║  l.547: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:

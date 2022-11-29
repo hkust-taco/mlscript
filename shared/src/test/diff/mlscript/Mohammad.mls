@@ -1,6 +1,6 @@
 
 def test f = f (fun b -> if b then 1 else 2)
-//│ test: ((forall 'a, 'b. (bool & 'a) -> (1 | 2 | 'b)) -> 'c) -> 'c
+//│ test: ((bool -> (1 | 2)) -> 'a) -> 'a
 //│     = [Function: test]
 
 test (fun k -> (k true, k false))

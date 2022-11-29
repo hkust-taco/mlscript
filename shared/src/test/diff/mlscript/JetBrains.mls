@@ -6,6 +6,7 @@ class Add: Expr & { lhs: Expr; rhs: Expr }
 //│ Defined class Lit
 //│ Defined class Add
 
+// :ds
 rec def eval x = case x of {
   Lit -> x.val
   | Add -> eval x.lhs + eval x.rhs
@@ -25,7 +26,7 @@ def eval eval x = case x of {
 :e
 eval eval
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.26: 	eval eval
+//│ ║  l.27: 	eval eval
 //│ ║        	^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‹∀ 0. (α48' -> (α49' -> (val51' | α60')))›  <:  α48_94    PolymorphicType  TypeVariable
@@ -46,7 +47,7 @@ def evalN evalN x = case x of {
 :e
 evalN evalN
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.47: 	evalN evalN
+//│ ║  l.48: 	evalN evalN
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‹∀ 0. (α109' -> (α110' -> (α116' | α131')))›  <:  α109_185    PolymorphicType  TypeVariable
@@ -61,7 +62,7 @@ e = Add{lhs = Lit{val = 1}; rhs = Neg{underlying = Lit{val = 2}}}
 :e
 evalN evalN e
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.62: 	evalN evalN e
+//│ ║  l.63: 	evalN evalN e
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‹∀ 0. (α109' -> (α110' -> (α116' | α131')))›  <:  α109_244    PolymorphicType  TypeVariable
@@ -113,13 +114,13 @@ def evalN3 evalN3 x = case x of {
 //│ ║  l.+2: 	  Neg -> 0 - (evalN2 x.underlying)
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> (?b | ?c)` is not an instance of type `int`
-//│ ║  l.85: 	def evalN2 evalN2 x = case x of {
+//│ ║  l.86: 	def evalN2 evalN2 x = case x of {
 //│ ║        	                  ^^^^^^^^^^^^^^^
-//│ ║  l.86: 	  Neg -> 0 - (evalN2 evalN2 x.underlying)
+//│ ║  l.87: 	  Neg -> 0 - (evalN2 evalN2 x.underlying)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.87: 	  | _ -> eval eval x
+//│ ║  l.88: 	  | _ -> eval eval x
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.88: 	  }
+//│ ║  l.89: 	  }
 //│ ║        	^^^
 //│ ╟── but it flows into application with expected type `int`
 //│ ║  l.+2: 	  Neg -> 0 - (evalN2 x.underlying)
@@ -141,5 +142,6 @@ evalN3 evalN3 e
 //│ ╟── this constraint:  ‹∀ 0. (α404' -> (α405' -> (α410' | α425')))›  <:  α404_477    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. (α404' -> (α405' -> (α410' | α425')))›  <:  α404'
 //│ res: error
+
 
 

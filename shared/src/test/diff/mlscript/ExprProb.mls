@@ -279,14 +279,14 @@ rec def prettier11 k ev e = case e of {
       in if ev e.rhs == 0 then tmp else concat tmp (prettier11 k ev e.rhs)
   | _ -> k e
   }
-//│ prettier11: ('a -> string & 'b -> string) -> ('rhs -> number) -> 'c -> (forall 'd, 'e, 'f, 'g. string | 'f | 'g | 'd | 'e)
+//│ prettier11: ('a -> string & 'b -> string) -> ('rhs -> number) -> 'c -> string
 //│   where
-//│     'c <: Add[?] & {lhs: 'h, rhs: 'rhs & 'c} | Lit | 'a & ~#Add & ~#Lit
-//│     'h <: Add[?] & {lhs: 'h, rhs: 'h} | Lit | 'b & ~#Add & ~#Lit
+//│     'c <: Add[?] & {lhs: 'd, rhs: 'rhs & 'c} | Lit | 'a & ~#Add & ~#Lit
+//│     'd <: Add[?] & {lhs: 'd, rhs: 'd} | Lit | 'b & ~#Add & ~#Lit
 //│           = [Function: prettier11]
 //│ constrain calls  : 186
 //│ annoying  calls  : 0
-//│ subtyping calls  : 775
+//│ subtyping calls  : 763
 
 // Doesn't make much sense, but generates very ugly type unless aggressively simplified:
 :stats
@@ -297,14 +297,14 @@ rec def prettier12 k ev e = case e of {
       in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
   | _ -> k e
   }
-//│ prettier12: ('a -> string & 'b -> 'c & 'd -> string) -> ('e -> number) -> (Add[?] & {lhs: 'f, rhs: 'g} & 'e | Lit | 'b & ~#Add & ~#Lit) -> (forall 'h, 'i, 'j, 'k. string | 'h | 'i | 'j | 'k | 'c)
+//│ prettier12: ('a -> string & 'b -> 'c & 'd -> string) -> ('e -> number) -> (Add[?] & {lhs: 'f, rhs: 'g} & 'e | Lit | 'b & ~#Add & ~#Lit) -> (string | 'c)
 //│   where
 //│     'g <: Add[?] & {lhs: 'g, rhs: 'g} | Lit | 'd & ~#Add & ~#Lit
 //│     'f <: Add[?] & {lhs: 'f, rhs: 'f} | Lit | 'a & ~#Add & ~#Lit
 //│           = [Function: prettier12]
 //│ constrain calls  : 159
 //│ annoying  calls  : 0
-//│ subtyping calls  : 812
+//│ subtyping calls  : 796
 
 
 :stats
@@ -325,13 +325,13 @@ prettier12 done (eval1 done) e1
 //│    = '123'
 //│ res: string
 //│    = '123'
-//│ res: string | 'a | 'b | 'c | 'd
+//│ res: string
 //│    = '123'
-//│ res: string | 'a | 'b | 'c | 'd
+//│ res: string
 //│    = '123'
 //│ constrain calls  : 1268
 //│ annoying  calls  : 490
-//│ subtyping calls  : 13290
+//│ subtyping calls  : 13266
 
 
 e1 = add (lit 1) (add (lit 2) (lit 3))
@@ -351,9 +351,9 @@ prettier12 done (eval1 done) e1
 //│    = '123'
 //│ res: string
 //│    = '123'
-//│ res: string | 'a | 'b | 'c | 'd
+//│ res: string
 //│    = '123'
-//│ res: string | 'a | 'b | 'c | 'd
+//│ res: string
 //│    = '123'
 
 
@@ -394,15 +394,15 @@ rec def prettier22 k ev = prettier12 (fun x -> case x of {
   | Nega -> concat "-" (prettier22 k ev x.arg)
   | _ -> k x
   }) ev
-//│ prettier22: ('a -> string) -> ('b -> number) -> 'c -> (forall 'd, 'e, 'f, 'g. string | 'd | 'e | 'f | 'g)
+//│ prettier22: ('a -> string) -> ('b -> number) -> 'c -> string
 //│   where
-//│     'b <: {lhs: 'h, rhs: 'h}
-//│     'h <: Add[?] & {lhs: 'h, rhs: 'h} | Lit | Nega[?] & {arg: 'c} | 'a & ~#Add & ~#Lit & ~#Nega
+//│     'b <: {lhs: 'd, rhs: 'd}
+//│     'd <: Add[?] & {lhs: 'd, rhs: 'd} | Lit | Nega[?] & {arg: 'c} | 'a & ~#Add & ~#Lit & ~#Nega
 //│     'c <: Add[?] & 'b | Lit | Nega[?] & {arg: 'c} | 'a & ~#Add & ~#Lit & ~#Nega
 //│           = [Function: prettier22]
 //│ constrain calls  : 195
 //│ annoying  calls  : 0
-//│ subtyping calls  : 1122
+//│ subtyping calls  : 1108
 
 
 
@@ -451,10 +451,10 @@ prettier2 done
 //│    = [Function (anonymous)]
 
 prettier22 done
-//│ res: ('a -> number) -> 'b -> (forall 'c, 'd, 'e, 'f. string | 'c | 'd | 'e | 'f)
+//│ res: ('a -> number) -> 'b -> string
 //│   where
-//│     'a <: {lhs: 'g, rhs: 'g}
-//│     'g <: Add[?] & {lhs: 'g, rhs: 'g} | Lit | Nega[?] & {arg: 'b}
+//│     'a <: {lhs: 'c, rhs: 'c}
+//│     'c <: Add[?] & {lhs: 'c, rhs: 'c} | Lit | Nega[?] & {arg: 'b}
 //│     'b <: Add[?] & 'a | Lit | Nega[?] & {arg: 'b}
 //│    = [Function (anonymous)]
 
@@ -472,11 +472,11 @@ prettier2 done (eval1 done)
 
 
 prettier22 done (eval1 done)
-//│ res: 'a -> (forall 'b, 'c, 'd, 'e. string | 'b | 'c | 'd | 'e)
+//│ res: 'a -> string
 //│   where
-//│     'a <: Add[?] & {lhs: 'f, rhs: 'f} & 'g | Lit | Nega[?] & {arg: 'a}
-//│     'g <: Add[?] & {lhs: 'g, rhs: 'g} | Lit
-//│     'f <: Add[?] & {lhs: 'f, rhs: 'f} | Lit | Nega[?] & {arg: 'a}
+//│     'a <: Add[?] & {lhs: 'b, rhs: 'b} & 'c | Lit | Nega[?] & {arg: 'a}
+//│     'c <: Add[?] & {lhs: 'c, rhs: 'c} | Lit
+//│     'b <: Add[?] & {lhs: 'b, rhs: 'b} | Lit | Nega[?] & {arg: 'a}
 //│    = [Function (anonymous)]
 
 // :e // FIXME (reproduced in `ADRsRepro.mls`)
@@ -503,19 +503,19 @@ prettier2 done (eval2 done) d2
 prettier22 done (eval2 done)
 prettier22 done (eval2 done) e2
 prettier22 done (eval2 done) d2
-//│ res: 'a -> (forall 'b, 'c, 'd, 'e. string | 'e | 'b | 'c | 'd)
+//│ res: 'a -> string
 //│   where
-//│     'a <: Add[?] & {lhs: 'f, rhs: 'f} & 'g | Lit | Nega[?] & {arg: 'a}
-//│     'g <: Add[?] & {lhs: 'g, rhs: 'g} | Lit | Nega[?] & {arg: 'g}
-//│     'f <: Add[?] & {lhs: 'f, rhs: 'f} | Lit | Nega[?] & {arg: 'a}
+//│     'a <: Add[?] & {lhs: 'b, rhs: 'b} & 'c | Lit | Nega[?] & {arg: 'a}
+//│     'c <: Add[?] & {lhs: 'c, rhs: 'c} | Lit | Nega[?] & {arg: 'c}
+//│     'b <: Add[?] & {lhs: 'b, rhs: 'b} | Lit | Nega[?] & {arg: 'a}
 //│    = [Function (anonymous)]
-//│ res: string | 'a | 'b | 'c | 'd
+//│ res: string
 //│    = '1-123'
-//│ res: string | 'a | 'b | 'c | 'd
+//│ res: string
 //│    = '-1'
 //│ constrain calls  : 1108
 //│ annoying  calls  : 390
-//│ subtyping calls  : 12189
+//│ subtyping calls  : 12147
 
 
 

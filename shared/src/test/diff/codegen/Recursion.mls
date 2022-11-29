@@ -29,7 +29,7 @@ def pow1 x =
 //│   }));
 //│ };
 //│ // End of generated code
-//│ pow1: int -> (forall 'a, 'b, 'go. (int & 'a) -> (int | 'b) | 'go)
+//│ pow1: int -> int -> int
 //│     = [Function: pow1]
 
 pow1 3 4

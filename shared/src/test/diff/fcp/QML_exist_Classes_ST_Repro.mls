@@ -43,11 +43,11 @@ def simpleStepImpl arrImpl = ArraysImpl {
     update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.Update r0 i a, "updated");
     fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.Fold f b r0
   }
-//│ simpleStepImpl: (ArraysRep[in 'A | 'A0 | 'A1 & ('A2 | 'A3) out 'A0 & ('A3 & ('A4 & ('A5 | 'A2) | 'A & ('A2 | 'A5)) | 'A6 & ('A4 & ('A5 | 'A2) | 'A & ('A2 | 'A5))) | 'A7 & ('A3 & ('A4 & ('A5 | 'A2) | 'A & ('A5 | 'A2)) | 'A6 & ('A4 & ('A5 | 'A2) | 'A & ('A5 | 'A2))), in 'Rep | 'Rep0 | 'Rep1 & 'a & 'Rep2 & 'c & 'Rep3 & 'd & 'Rep4 & ('Rep5 | 'Rep6) out 'Rep2 & ('Rep7 & ('Rep1 & ('Rep4 | 'Rep5) | 'Rep0 & ('Rep4 | 'Rep5)) | 'Rep6 & ('Rep1 & ('Rep4 | 'Rep5) | 'Rep0 & ('Rep4 | 'Rep5))) | 'Rep & ('Rep7 & ('Rep1 & ('Rep5 | 'Rep4) | 'Rep0 & ('Rep5 | 'Rep4)) | 'Rep6 & ('Rep1 & ('Rep5 | 'Rep4) | 'Rep0 & ('Rep5 | 'Rep4)))] & 'e) -> ((ArraysImpl['A1, 'Rep8] with {fold: forall 'A8, 'b, 'b0, 'f. (('A2 | 'A8) -> 'b -> ('b & 'b0) & 'f) -> (forall 'g. ('b & 'g) -> (forall 'h, 'Rep9, 'i, 'j. ('Rep1 & 'h & 'Rep9, 'i,) -> ('b0 | 'g | 'j))) | 'fold, init: forall 'k, 'A9, 'l. ('A4 & 'k & 'A9) -> ('Rep6 | 'l, "initialized",) | 'init, sub: forall 'm, 'n. ('Rep2 & 'm, 'n,) -> (forall 'o, 'p. (int & 'o) -> ('A3 | 'p)) | 'sub, update: forall 'q, 'r. ('Rep4 & 'q, 'r,) -> (forall 'o, 's. (int & 's & 'o) -> (forall 't, 'A10, 'u. ('A7 & 't & 'A10) -> ('Rep5 | 'q | 'u, "updated",))) | 'update}) | 'v)
+//│ simpleStepImpl: ArraysRep[in 'A | 'A0 | 'A1 & ('A2 | 'A3) out 'A2 & 'A3, in 'Rep | 'Rep0 out nothing] -> (ArraysImpl['A1, 'Rep1] with {fold: forall 'b, 'b0. ('A2 -> 'b -> ('b & 'b0)) -> (forall 'a. ('b & 'a) -> ('Rep0, anything,) -> ('b0 | 'a)), init: 'A -> (nothing, "initialized",), sub: ('Rep, anything,) -> int -> 'A3, update: forall 'c. ('Rep2 & 'c, anything,) -> int -> 'A0 -> ('c, "updated",)})
 //│   where
-//│     'Rep8 :> ('Rep6 | 'Rep5 | 'w | 'd | 'x, "initialized" | "updated",)
-//│           <: ('Rep1 & 'a & 'Rep2 & 'c & 'Rep3 & 'd & 'Rep4, 'y & 'z & 'a1,)
-//│     'A1 <: 'b1 & 'A11 & 'A7 & 'c1 & 'A12 & 'A4
+//│     'Rep1 :> ('d, "initialized" | "updated",)
+//│           <: (nothing, anything,)
+//│     'A1 <: nothing
 //│               = [Function: simpleStepImpl]
 
 simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
@@ -68,7 +68,7 @@ def mkArrays: ArraysImpl['a, 'r] -> Arrays['a]
 mkArrays impl k = k impl
 //│ mkArrays: ArraysImpl['a, 'r] -> Arrays['a]
 //│         = <missing implementation>
-//│ 'a -> (forall 'b, 'c. ('a -> 'b & 'c) -> 'b)
+//│ 'a -> (forall 'b. ('a -> 'b) -> 'b)
 //│   <:  mkArrays:
 //│ ArraysImpl['a, 'r] -> Arrays['a]
 //│         = [Function: mkArrays]

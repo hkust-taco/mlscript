@@ -174,7 +174,7 @@ def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‹∀ 1. (α652'' -> α661'')›  <:  α652_673'    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 1. (α652'' -> α661'')›  <:  α652''
-//│ fix: ((forall 'a, 'b. 'b -> 'a) -> 'b) -> error
+//│ fix: ((anything -> nothing) -> anything) -> error
 //│    = [Function: fix]
 
 //:e // due to tapping
@@ -311,8 +311,8 @@ eval2_broken eval2_broken e2
 //│ ║  l.+1: 	eval2_broken eval2_broken e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α1078' -> (α1079' -> (arg1081' | α1096')))›  <:  α1078_1142    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α1078' -> (α1079' -> (arg1081' | α1096')))›  <:  α1078'
+//│ ╟── this constraint:  ‹∀ 0. (α1074' -> (α1075' -> (arg1077' | α1092')))›  <:  α1074_1138    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α1074' -> (α1075' -> (arg1077' | α1092')))›  <:  α1074'
 //│ res: error
 
 

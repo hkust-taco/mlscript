@@ -16,7 +16,7 @@ def id x = x
 
 test1 f =
   (f 0, f true)
-//│ test1: (true -> 'a & 0 -> 'b & 'c) -> ('b, 'a,)
+//│ test1: (true -> 'a & 0 -> 'b) -> ('b, 'a,)
 //│      = [Function: test1]
 
 test1 (fun value -> { value })
@@ -28,7 +28,7 @@ test1 (fun value -> { value })
 test2 f =
   let r x = f x
   in (r 0, r true)
-//│ test2: ((0 | true | 'a) -> ('b & 'c & 'd) & 'e) -> ('d, 'c,)
+//│ test2: ((0 | true) -> 'a) -> ('a, 'a,)
 //│      = [Function: test2]
 
 test2 (fun value -> { value })
@@ -40,20 +40,20 @@ test2 (fun value -> { value })
 // * From supertype's `freeze-ml.sup`
 
 def poly f = (f 42, f true)
-//│ poly: (true -> 'a & 42 -> 'b & 'c) -> ('b, 'a,)
+//│ poly: (true -> 'a & 42 -> 'b) -> ('b, 'a,)
 //│     = [Function: poly]
 
 def bad1 f = (poly f, f 42 + 1)
 def bad2 f = (f 42 + 1, poly f)
-//│ bad1: (42 -> (int & 'a) & true -> 'b & 42 -> 'c & 'd & 'e) -> (('c, 'b,) | 'f, int | 'g,)
+//│ bad1: (42 -> int & true -> 'a & 42 -> 'b) -> (('b, 'a,), int,)
 //│     = [Function: bad1]
-//│ bad2: (42 -> (int & 'a) & true -> 'b & 42 -> 'c & 'd & 'e) -> (int | 'f, ('c, 'b,) | 'g,)
+//│ bad2: (42 -> int & true -> 'a & 42 -> 'b) -> (int, ('b, 'a,),)
 //│     = [Function: bad2]
 
 
 
 def example f = (f: forall 'a. 'a -> 'a)
-//│ example: (forall 'a. 'a -> 'a & 'b) -> (forall 'a. 'a -> 'a)
+//│ example: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│        = [Function: example]
 
 :e
@@ -78,7 +78,7 @@ example succ
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.77: 	example succ
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── type `‘a_213` is not an instance of type `int`
+//│ ╟── type `‘a_179` is not an instance of type `int`
 //│ ║  l.55: 	def example f = (f: forall 'a. 'a -> 'a)
 //│ ╙──      	                           ^^
 //│ res: error
@@ -90,23 +90,23 @@ example id
 
 
 def example f = (f: forall 'a. 'a -> int -> 'b) f
-//│ example: (forall 'a. 'a -> int -> 'b & 'c & 'a0) -> (int -> 'b | 'd)
+//│ example: (anything -> int -> 'b) -> int -> 'b
 //│        = [Function: example1]
 
 def example f = ((fun x -> x, f) : forall 'a. ('a -> 'a, 'a -> 'a))
-//│ example: (anything -> nothing & 'b) -> (forall 'a. ('a -> 'a, 'a -> 'a,))
+//│ example: (anything -> nothing) -> (forall 'a. ('a -> 'a, 'a -> 'a,))
 //│        = [Function: example2]
 
 def example f = ((0, f) : forall 'a. (0, 'a))
-//│ example: nothing -> (forall 'a. (0, 'a,))
+//│ example: nothing -> (0, nothing,)
 //│        = [Function: example3]
 
 def ex = example
-//│ ex: nothing -> (forall 'a. (0, 'a,))
+//│ ex: nothing -> (0, nothing,)
 //│   = [Function: ex]
 
 def ex x = example x
-//│ ex: nothing -> (forall 'a. (0, 'a,) | 'b)
+//│ ex: nothing -> (0, nothing,)
 //│   = [Function: ex1]
 
 :e
@@ -127,7 +127,7 @@ ex 1
 //│    = [ 0, 1 ]
 
 def example f = ((0, f) : forall 'a. (0, 'a -> 'a))
-//│ example: (anything -> nothing & 'b) -> (forall 'a. (0, 'a -> 'a,))
+//│ example: (anything -> nothing) -> (forall 'a. (0, 'a -> 'a,))
 //│        = [Function: example4]
 
 

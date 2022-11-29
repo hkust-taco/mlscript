@@ -56,11 +56,17 @@ abstract class TyperHelpers { Typer: Typer =>
   // def dbg_assert(assertion: Boolean): Unit = scala.Predef.assert(assertion)
   
   
-  def printPol(pol: Opt[Bool]): Str = pol match {
-    case S(true) => "+"
-    case S(false) => "-"
+  final def printPol(pol: Bool): Str = pol match {
+    case true => "+"
+    case false => "-"
+  }
+  final def printPol(pol: Opt[Bool]): Str = pol match {
+    // case S(true) => "+"
+    // case S(false) => "-"
+    case S(p) => printPol(p)
     case N => "="
   }
+  def printPol(pol: PolMap): Str = printPol(pol.base)
   
   def recordIntersection(fs1: Ls[Var -> FieldType], fs2: Ls[Var -> FieldType]): Ls[Var -> FieldType] =
     mergeMap(fs1, fs2)(_ && _).toList
@@ -646,6 +652,53 @@ abstract class TyperHelpers { Typer: Typer =>
       case _ => this :: Nil
     }
     
+    def childrenPol(pol: PolMap)(implicit ctx: Ctx): List[PolMap -> SimpleType] = {
+      def childrenPolField(fld: FieldType): List[PolMap -> SimpleType] =
+        fld.lb.map(pol.contravar -> _).toList ::: pol.covar -> fld.ub :: Nil
+      this match {
+        case tv @ AssignedVariable(ty) =>
+          pol -> ty :: Nil
+        case tv: TypeVariable =>
+          // (if (pol(tv.level) =/= S(false)) tv.lowerBounds.map(PolMap.pos -> _) else Nil) :::
+          // (if (pol(tv.level) =/= S(true)) tv.upperBounds.map(PolMap.neg -> _) else Nil)
+          (if (pol(tv) =/= S(false)) tv.lowerBounds.map(pol.at(tv.level, true) -> _) else Nil) :::
+          (if (pol(tv) =/= S(true)) tv.upperBounds.map(pol.at(tv.level, false) -> _) else Nil)
+        case FunctionType(l, r) => pol.contravar -> l :: pol.covar -> r :: Nil
+        case Overload(as) => as.map(pol -> _)
+        case ComposedType(_, l, r) => pol -> l :: pol -> r :: Nil
+        case RecordType(fs) => fs.unzip._2.flatMap(childrenPolField)
+        case TupleType(fs) => fs.unzip._2.flatMap(childrenPolField)
+        case ArrayType(fld) => childrenPolField(fld)
+        case SpliceType(elems) => elems flatMap {case L(l) => pol -> l :: Nil case R(r) => childrenPolField(r)}
+        case NegType(n) => pol.contravar -> n :: Nil
+        case ExtrType(_) => Nil
+        case ProxyType(und) => pol -> und :: Nil
+        case _: ObjectTag => Nil
+        case tr: TypeRef => tr.mapTargs(pol)(_ -> _)
+        case Without(b, ns) => pol -> b :: Nil
+        case TypeBounds(lb, ub) =>
+          // PolMap.neg -> lb :: PolMap.pos -> ub :: Nil
+          val res = collection.mutable.Buffer.empty[PolMap -> ST]
+          // pol.traverseBounds(lb, ub)(_ -> _ |> (res +=  _))
+          pol.traverseBounds(lb, ub)(res +=  _ -> _)
+          res.toList
+        case PolymorphicType(_, und) => pol -> und :: Nil
+        case ConstrainedType(cs, bod) =>
+          // cs.flatMap(_._2.unzip._2) ::: bod :: Nil
+          // cs.flatMap(vbs => vbs._2.map {
+          //   case (true, b) => 
+          // }) ::: bod :: Nil
+          
+          // cs.map(_._1) ::: 
+          // cs.flatMap(vbs => vbs._2.mapKeys(some)) ::: pol -> bod :: Nil
+          
+          // cs.flatMap(vbs => PolMap.pos -> vbs._1 :: PolMap.neg -> vbs._2 :: Nil) ::: pol -> bod :: Nil
+          cs.flatMap(vbs => PolMap.pos -> vbs._1 :: PolMap.posAtNeg -> vbs._2 :: Nil) ::: pol -> bod :: Nil
+          // cs.flatMap(vbs => pol.invar -> vbs._1 :: pol.invar -> vbs._2 :: Nil) ::: pol -> bod :: Nil
+          
+          // ???
+    }}
+    
     def childrenPol(pol: Opt[Bool])(implicit ctx: Ctx): List[Opt[Bool] -> SimpleType] = {
       def childrenPolField(fld: FieldType): List[Opt[Bool] -> SimpleType] =
         fld.lb.map(pol.map(!_) -> _).toList ::: pol -> fld.ub :: Nil
@@ -683,33 +736,156 @@ abstract class TyperHelpers { Typer: Typer =>
           // ???
     }}
     
-    def getVarsPol(pol: Opt[Bool])(implicit ctx: Ctx): SortedMap[TypeVariable, Opt[Bool]] = {
-      val res = MutMap.empty[TypeVariable, Opt[Bool]]
-      @tailrec
-      def rec(queue: List[Opt[Bool] -> SimpleType]): Unit =
-          // trace(s"getVarsPol ${queue.iterator.map(e => s"${printPol(e._1)}${e._2}").mkString(", ")}") {
-          queue match {
-        case (tvp, tv: TypeVariable) :: tys =>
-          res.get(tv) match {
-            case S(N) => rec(tys)
-            case S(p) if p === tvp => rec(tys)
-            case S(S(p)) =>
-              assert(!tvp.contains(p))
-              // println(s"$tv -> =")
-              res += tv -> N
-              rec(tv.childrenPol(tvp) ::: tys)
-            case N =>
-              res += tv -> tvp
-              // println(s"$tv -> ${printPol(tvp)}")
-              rec(tv.childrenPol(tvp) ::: tys)
-          }
-        case (typ, ty) :: tys => rec(ty.childrenPol(typ) ::: tys)
-        case Nil => ()
+    def getVarsPol(pol: PolMap)(implicit ctx: Ctx): SortedMap[TypeVariable, Opt[Bool]] = {
+      val res = MutMap.empty[TV, Pol]
+      val traversed = MutSet.empty[TV -> Bool]
+      // val traversed = MutSet.empty[TV]
+      def go(pol: PolMap)(ty: ST): Unit = {
+        // trace(s"getVarsPol[${printPol(pol.base)}] $ty ${pol(1)}") {
+        trace(s"getVarsPol[${printPol(pol.base)}] $ty ${pol}") {
+        ty match {
+          case tv: TypeVariable =>
+            /* 
+            // if (traversed(tv)) ()
+            if (traversed(tv)) ()
+            // if (traversed(tv -> pol)) ()
+            else {
+              /* 
+              traversed += tv
+              // if (tv.level > lb && tv.level <= ub) {
+              //   // println(s"ADD $tv")
+              //   res.updateWith(tv) {
+              //     case S(p) if p =/= pol => S(N)
+              //     case _ => S(pol)
+              //   }
+              //   // res += tv -> pol
+              // }
+              val tvpol = pol(tv.level)
+              res.updateWith(tv) {
+                case S(p) if p =/= tvpol => S(N)
+                case _ => S(tvpol)
+              }
+              tv.childrenPol(pol) // * Note: `childrenPol` deals with `assignedTo`
+                .foreach(cp => go(cp._1)(cp._2))
+              */
+              pol(tv) match {
+                case S(p) =>
+                  traversed += tv -> p
+                case N =>
+                  traversed += tv -> true
+                  traversed += tv -> false
+              }
+              tv.childrenPol(pol) // * Note: `childrenPol` deals with `assignedTo`
+                .foreach(cp => go(cp._1)(cp._2))
+            }
+            */
+            val tvpol = pol(tv.level)
+            res.updateWith(tv) {
+              case S(p) if p =/= tvpol => S(N)
+              case _ => S(tvpol)
+            }
+            val needsTraversing = tvpol match {
+              case S(p) =>
+                !traversed(tv -> p) && {
+                  traversed += tv -> p
+                  true
+                }
+              case N =>
+                !(traversed(tv -> true) && traversed(tv -> false)) && {
+                  traversed += tv -> true
+                  traversed += tv -> false
+                  true
+                }
+            }
+            println(s"$tv ${printPol(tvpol)} $needsTraversing")
+            if (needsTraversing)
+              tv.childrenPol(pol) // * Note: `childrenPol` deals with `assignedTo`
+                .foreach(cp => go(cp._1)(cp._2))
+          case pt: PolymorphicType =>
+            // val quantified = go(S(true))(pt.body, lb, pt.polymLevel min ub)
+            // val unquantified = go(pol)(pt.body, MinLevel-1, MaxLevel)
+            // unquantified ++ 
+            // go(S(true))(pt.body, lb, pt.polymLevel min ub)
+            go(pol.enter(pt.polymLevel))(pt.body)
+          case ty =>
+            // ty.children(includeBounds = true) // * Q: is `includeBounds` useful here?
+            //   .foreach(go(_, lb, ub))
+            ty.childrenPol(pol).foreach(cp => go(cp._1)(cp._2))
+        }
+        }()
       }
-      // }()
-      rec(pol -> this :: Nil)
-      SortedMap.from(res)(Ordering.by(_.uid))
+      go(pol)(this)
+      res.toSortedMap
     }
+    
+    // def getVarsPol(pol: Opt[Bool])(implicit ctx: Ctx): SortedMap[TypeVariable, Opt[Bool]] =
+    //   varsPolBetween(pol)(MinLevel-1, MaxLevel)
+    // def getVarsPol(pol: Opt[Bool])(implicit ctx: Ctx): SortedMap[TypeVariable, Opt[Bool]] = {
+    //   val res = MutMap.empty[TypeVariable, Opt[Bool]]
+    //   @tailrec
+    //   def rec(queue: List[Opt[Bool] -> SimpleType]): Unit =
+    //       // trace(s"getVarsPol ${queue.iterator.map(e => s"${printPol(e._1)}${e._2}").mkString(", ")}") {
+    //       queue match {
+    //     case (tvp, tv: TypeVariable) :: tys =>
+    //       res.get(tv) match {
+    //         case S(N) => rec(tys)
+    //         case S(p) if p === tvp => rec(tys)
+    //         case S(S(p)) =>
+    //           assert(!tvp.contains(p))
+    //           // println(s"$tv -> =")
+    //           res += tv -> N
+    //           rec(tv.childrenPol(tvp) ::: tys)
+    //         case N =>
+    //           res += tv -> tvp
+    //           // println(s"$tv -> ${printPol(tvp)}")
+    //           rec(tv.childrenPol(tvp) ::: tys)
+    //       }
+    //     case (typ, ty) :: tys => rec(ty.childrenPol(typ) ::: tys)
+    //     case Nil => ()
+    //   }
+    //   // }()
+    //   rec(pol -> this :: Nil)
+    //   SortedMap.from(res)(Ordering.by(_.uid))
+    // }
+    // def getVarsPol(pol: Opt[Bool])(implicit ctx: Ctx): SortedMap[TypeVariable, Opt[Bool]] = {
+    //   val res = MutMap.empty[TV, Pol]
+    //   // val traversed = MutSet.empty[TV -> Pol]
+    //   val traversed = MutSet.empty[TV]
+    //   def go(pol: Pol)(ty: ST): Unit = {
+    //     // trace(s"varsBetween($ty, $lb, $ub)") {
+    //     ty match {
+    //       // case tv: TypeVariable =>
+    //       //   if (traversed(tv)) ()
+    //       //   // if (traversed(tv -> pol)) ()
+    //       //   else {
+    //       //     traversed += tv
+    //       //     if (tv.level > lb && tv.level <= ub) {
+    //       //       // println(s"ADD $tv")
+    //       //       res.updateWith(tv) {
+    //       //         case S(p) if p =/= pol => S(N)
+    //       //         case _ => S(pol)
+    //       //       }
+    //       //       // res += tv -> pol
+    //       //     }
+    //       //     tv.childrenPol(pol) // * Note: `childrenPol` deals with `assignedTo`
+    //       //       .foreach(cp => go(cp._1)(cp._2, lb, ub))
+    //       //   }
+    //       case pt: PolymorphicType =>
+    //         // val quantified = go(S(true))(pt.body, lb, pt.polymLevel min ub)
+    //         // val unquantified = go(pol)(pt.body, MinLevel-1, MaxLevel)
+    //         // unquantified ++ 
+    //         // go(S(true))(pt.body, lb, pt.polymLevel min ub)
+    //         go(pol)(pt.body, lb, pt.polymLevel min ub)
+    //       case ty =>
+    //         // ty.children(includeBounds = true) // * Q: is `includeBounds` useful here?
+    //         //   .foreach(go(_, lb, ub))
+    //         ty.childrenPol(pol).foreach(cp => go(cp._1)(cp._2, lb, ub))
+    //     }
+    //     // }()
+    //   }
+    //   go(pol)(this, lb, ub)
+    //   res.toSortedMap
+    // }
     
     def children(includeBounds: Bool): List[SimpleType] = this match {
       case tv @ AssignedVariable(ty) => if (includeBounds) ty :: Nil else Nil
@@ -777,6 +953,49 @@ abstract class TyperHelpers { Typer: Typer =>
       go(this, lb, ub)
       res.toSet
     }
+    
+    /* 
+    /** (exclusive, inclusive) */
+    def varsPolBetween(pol: Opt[Bool])(lb: Level, ub: Level)(implicit ctx: Ctx): SortedMap[TypeVariable, Pol] = {
+      val res = MutMap.empty[TV, Pol]
+      // val traversed = MutSet.empty[TV -> Pol]
+      val traversed = MutSet.empty[TV]
+      def go(pol: Pol)(ty: ST, lb: Level, ub: Level): Unit = if (lb < ub) {
+        // trace(s"varsBetween($ty, $lb, $ub)") {
+        ty match {
+          case tv: TypeVariable =>
+            if (traversed(tv)) ()
+            // if (traversed(tv -> pol)) ()
+            else {
+              traversed += tv
+              if (tv.level > lb && tv.level <= ub) {
+                // println(s"ADD $tv")
+                res.updateWith(tv) {
+                  case S(p) if p =/= pol => S(N)
+                  case _ => S(pol)
+                }
+                // res += tv -> pol
+              }
+              tv.childrenPol(pol) // * Note: `childrenPol` deals with `assignedTo`
+                .foreach(cp => go(cp._1)(cp._2, lb, ub))
+            }
+          case pt: PolymorphicType =>
+            // val quantified = go(S(true))(pt.body, lb, pt.polymLevel min ub)
+            // val unquantified = go(pol)(pt.body, MinLevel-1, MaxLevel)
+            // unquantified ++ 
+            // go(S(true))(pt.body, lb, pt.polymLevel min ub)
+            go(pol)(pt.body, lb, pt.polymLevel min ub)
+          case ty =>
+            // ty.children(includeBounds = true) // * Q: is `includeBounds` useful here?
+            //   .foreach(go(_, lb, ub))
+            ty.childrenPol(pol).foreach(cp => go(cp._1)(cp._2, lb, ub))
+        }
+        // }()
+      }
+      go(pol)(this, lb, ub)
+      res.toSortedMap
+    }
+    */
     
     def showBounds: String =
       getVars.iterator.filter(tv => tv.assignedTo.nonEmpty || (tv.upperBounds ++ tv.lowerBounds).nonEmpty).map {
@@ -859,6 +1078,69 @@ abstract class TyperHelpers { Typer: Typer =>
         else super.applyField(pol)(fld)
     }
   }
+  class Traverser2(implicit ctx: Ctx) {
+    def apply(pol: PolMap)(st: ST): Unit = st match {
+      case tv @ AssignedVariable(ty) => apply(pol)(ty)
+      case tv: TypeVariable =>
+        // // FIXME
+        // if (pol(tv) =/= S(false)) tv.lowerBounds.foreach(apply(PolMap.pos))
+        // if (pol(tv) =/= S(true)) tv.upperBounds.foreach(apply(PolMap.neg))
+        if (pol(tv) =/= S(false)) tv.lowerBounds.foreach(apply(pol.at(tv.level, true)))
+        if (pol(tv) =/= S(true)) tv.upperBounds.foreach(apply(pol.at(tv.level, false)))
+      case FunctionType(l, r) => apply(pol.contravar)(l); apply(pol)(r)
+      case Overload(as) => as.foreach(apply(pol))
+      case ComposedType(_, l, r) => apply(pol)(l); apply(pol)(r)
+      case RecordType(fs) => fs.unzip._2.foreach(applyField(pol))
+      case TupleType(fs) => fs.unzip._2.foreach(applyField(pol))
+      case ArrayType(fld) => applyField(pol)(fld)
+      case SpliceType(elems) => elems foreach {case L(l) => apply(pol)(l) case R(r) => applyField(pol)(r)}
+      case NegType(n) => apply(pol.contravar)(n)
+      case ExtrType(_) => ()
+      case ProxyType(und) => apply(pol)(und)
+      case _: ObjectTag => ()
+      case tr: TypeRef => tr.mapTargs(pol)(apply(_)(_)); ()
+      case Without(b, ns) => apply(pol)(b)
+      // case TypeBounds(lb, ub) => apply(S(false))(lb); apply(S(true))(ub)
+      case TypeBounds(lb, ub) =>
+        // if (pol.base =/= S(true)) apply(PolMap.neg)(lb)
+        // if (pol.base =/= S(false)) apply(PolMap.pos)(ub)
+        // if (pol.base =/= S(true)) apply(pol.neg)(lb)
+        // if (pol.base =/= S(false)) apply(pol.pos)(ub)
+        // pol.base match {
+        //   case S(true) => apply(pol)(ub)
+        //   case S(false) => apply(pol)(lb)
+        //   case N => ???
+        // }
+        // pol.bounds(lb, ub)(pol => apply(pol))
+        pol.traverseBounds(lb, ub)(apply(_)(_))
+      case PolymorphicType(plvl, und) =>
+        apply(pol.enter(plvl))(und)
+      case ConstrainedType(cs, bod) =>
+        // cs.foreach(_._2.foreach{
+        //   case (pol, b) => apply(S(pol))(b)
+        // })
+        cs.foreach {
+          case (lo, hi) =>
+            apply(PolMap.pos)(lo)
+            // apply(PolMap.neg)(hi)
+            apply(PolMap.posAtNeg)(hi)
+            // apply(pol.invar)(lo)
+            // apply(pol.invar)(hi)
+        }
+        apply(pol)(bod)
+    }
+    def applyField(pol: PolMap)(fld: FieldType): Unit = {
+      fld.lb.foreach(apply(pol.contravar))
+      apply(pol)(fld.ub)
+    }
+  }
+  object Traverser2 {
+    trait InvariantFields extends Traverser2 {
+      override def applyField(pol: PolMap)(fld: FieldType): Unit =
+        if (fld.lb.exists(_ === fld.ub)) apply(PolMap.neu)(fld.ub)
+        else super.applyField(pol)(fld)
+    }
+  }
   
   
   object AliasOf {
@@ -877,5 +1159,154 @@ abstract class TyperHelpers { Typer: Typer =>
   
   protected def showLevel(level: Level): Str =
     (if (level === MaxLevel) "^" else if (level > 5 ) "^" + level else "'" * level)
+  
+  
+  
+  abstract class PolMap(val base: Pol) { outer =>
+    private val ctx = 0
+    private val lvl = 0
+    def apply(lvl: Level): Pol
+    def quantifPolarity(lvl: Level): PolMap
+    final def apply(tv: TV): Pol = apply(tv.level)
+    def enter(polymLvl: Level): PolMap =
+      new PolMap(base) {
+        def apply(lvl: Level): Pol =
+          if (lvl > polymLvl) S(true) else outer(lvl)
+        def quantifPolarity(lvl: Level): PolMap =
+          // if (lvl > polymLvl) base else outer.quantifPolarity(lvl)
+          if (lvl > polymLvl) this else outer.quantifPolarity(lvl)
+        def show: Str = s"$outer;Q($lvl)"
+      }
+    def invar: PolMap =
+      new PolMap(N) {
+        def apply(lvl: Level): Pol = N
+        def quantifPolarity(lvl: Level): PolMap =
+          outer.quantifPolarity(lvl)
+        def show: Str = s"$outer;="
+      }
+    def covar: PolMap = this
+    def contravar: PolMap =
+      new PolMap(base.map(!_)) {
+        def apply(lvl: Level): Pol =
+          outer(lvl).map(!_)
+        def quantifPolarity(lvl: Level): PolMap =
+          outer.quantifPolarity(lvl)
+        def show: Str = s"$outer;-"
+      }
+    // def pos: PolMap =
+    //   new PolMap(S(true)) {
+    //     def apply(lvl: Level): Pol = outer(lvl)
+    //   }
+    // def neg: PolMap =
+    //   new PolMap(S(false)) {
+    //     def apply(lvl: Level): Pol = outer(lvl)
+    //   }
+    // def posAt(lvl: Level): PolMap =
+    //   new PolMap(base) {
+    //     def apply(lvl: Level): Pol =
+    //       outer.quantifPolarity(lvl) match {
+    //         case S(true) => outer.apply(lvl)
+    //         case S(false) => outer.apply(lvl).map(!_)
+    //         case N => N
+    //       }
+    //     def quantifPolarity(lvl: Level): Pol =
+    //       outer.quantifPolarity(lvl)
+    //   }
+    def at(atLvl: Level, pol: Bool): PolMap =
+      new PolMap(base) {
+        val pm = quantifPolarity(atLvl)
+        def apply(lvl: Level): Pol =
+          // outer.quantifPolarity(lvl) match {
+          //   case S(true) => S(pol)
+          //   case S(false) => S(!pol)
+          //   case N => N
+          // }
+          {
+          // assert(lvl <= atLvl) // ?
+          pm(lvl) match {
+            case S(true) => S(pol)
+            case S(false) => S(!pol)
+            case N => N
+          }
+        }
+        def quantifPolarity(lvl: Level): PolMap =
+          outer.quantifPolarity(lvl)
+        def show: Str = s"$outer;@[${printPol(S(pol))}]($lvl)"
+      }
+    // def bounds[A](lb: ST, ub: ST)(k: (PolMap, ST) => A): A = base match {
+    // def traverseBounds(lb: ST, ub: ST)(k: (PolMap, ST) => Unit): Unit = base match {
+    //   case S(p) =>
+    //     k(new PolMap(base) {
+    //       def apply(lvl: Level): Pol =
+    //         outer.quantifPolarity(lvl) match {
+    //           case N => N
+    //           case S(true) => S(p)
+    //           case S(false) => S(!p)
+    //         }
+    //       def quantifPolarity(lvl: Level): Pol =
+    //         outer.quantifPolarity(lvl)
+    //     }, if (p) ub else lb)
+    //   case N =>
+    //     def polma(p: Bool) = new PolMap(S(p)) {
+    //       def apply(lvl: Level): Pol =
+    //         outer.quantifPolarity(lvl) match {
+    //           case N => N
+    //           case S(true) => S(p)
+    //           case S(false) => S(!p)
+    //         }
+    //       def quantifPolarity(lvl: Level): Pol =
+    //         outer.quantifPolarity(lvl)
+    //     }
+    //     k(polma(false), lb)
+    //     k(polma(true), ub)
+    // }
+    def traverseBounds(lb: ST, ub: ST)(k: (PolMap, ST) => Unit): Unit = {
+      def polma(p: Bool) = new PolMap(S(p)) {
+        def apply(lvl: Level): Pol =
+          outer.quantifPolarity(lvl).base match {
+            case N => N
+            case S(true) => S(p)
+            case S(false) => S(!p)
+          }
+        def quantifPolarity(lvl: Level): PolMap =
+          outer.quantifPolarity(lvl)
+        def show: Str = s"$outer;B${printPol(S(p))}"
+      }
+      if (base =/= S(true)) k(polma(false), lb)
+      if (base =/= S(false)) k(polma(true), ub)
+    }
+    protected def show: Str
+    override def toString: String = show
+  }
+  object PolMap {
+    // def apply(pol: Pol)
+    private def mk(init: Pol): PolMap = new PolMap(init) {
+      def apply(lvl: Level): Pol = init
+      def quantifPolarity(lvl: Level): PolMap = this
+      def show: Str = s"${printPol(init)}"
+    }
+    val pos: PolMap = mk(S(true))
+    val neg: PolMap = mk(S(false))
+    val posAtNeg: PolMap = pos.at(MinLevel, false)
+    val neu: PolMap = mk(N)
+    def apply(init: Pol = S(true)): PolMap = init match {
+      case S(true) => pos
+      case S(false) => neg
+      case N => neu
+    }
+  }
+  // val PolMap: PolMap = new PolMap
+  
+  // class PolMap(f: Level => Pol) {
+    
+  //   def enter(polymLvl: Level): PolMap =
+  //     new PolMap(lvl => if (lvl > polymLvl) S(true) else f(lvl) )
+    
+  //   def covar =
+  //     new PolMap(lvl => if (lvl > polymLvl))
+    
+  // }
+  
+  
   
 }

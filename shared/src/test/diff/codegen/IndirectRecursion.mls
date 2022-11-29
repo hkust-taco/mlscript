@@ -17,7 +17,7 @@ def z =
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‹∀ 1. (α47_62'' -> α56_66'')›  <:  α47_73'    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 1. (α47_62'' -> α56_66'')›  <:  α47_62''
-//│ ((forall 'a, 'b. 'a -> 'b) -> 'c & (forall 'c, 'd. 'c -> 'd) -> 'c) -> error
+//│ ((anything -> nothing) -> anything) -> error
 //│   <:  z:
 //│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
 //│  = [Function: z]
@@ -127,9 +127,9 @@ def z =
 //│ ║  l.125: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α327_342'' -> α336_346'')›  <:  α327_353'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α327_342'' -> α336_346'')›  <:  α327_342''
-//│ ((forall 'a, 'b. 'a -> 'b) -> 'c & (forall 'c, 'd. 'c -> 'd) -> 'c) -> error
+//│ ╟── this constraint:  ‹∀ 1. (α319_334'' -> α328_338'')›  <:  α319_345'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α319_334'' -> α328_338'')›  <:  α319_334''
+//│ ((anything -> nothing) -> anything) -> error
 //│   <:  z:
 //│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
 //│  = [Function: z1]
@@ -141,42 +141,42 @@ def z =
 // FIXME should be caught by cycle checker!
 def z =
   (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
-//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e, ?f, ?g. ?g -> ?f) -> ?h` exceeded recursion depth limit (200)
+//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e, ?f, ?g. ?g -> ?e) -> ?h` exceeded recursion depth limit (200)
 //│ ║  l.143: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ‹∀ 1. (α417_432'' -> α426_436'')›  <!<  α417_473'
-//│ ╟── while constraining:  α417_468'  <!<  α417_473'
-//│ ╟── while constraining:  (α417_468',)  <!<  (α417_473',)
-//│ ╟── while constraining:  (α417_473' -> α426_477')  <!<  ((α417_468',) -> α420_469')
-//│ ╟── while constraining:  ‹∀ 1. (α417_432'' -> α426_436'')›  <!<  ((α417_468',) -> α420_469')
-//│ ╟── while constraining:  ‹∀ 1. (α417_432'' -> α426_436'')›  <!<  α417_468'
-//│ ╟── while constraining:  α417_463'  <!<  α417_468'
-//│ ╟── while constraining:  (α417_463',)  <!<  (α417_468',)
-//│ ╟── while constraining:  (α417_468' -> α426_472')  <!<  ((α417_463',) -> α420_464')
-//│ ╟── while constraining:  ‹∀ 1. (α417_432'' -> α426_436'')›  <!<  ((α417_463',) -> α420_464')
-//│ ╟── while constraining:  ‹∀ 1. (α417_432'' -> α426_436'')›  <!<  α417_463'
-//│ ╟── while constraining:  α417_458'  <!<  α417_463'
-//│ ╟── while constraining:  (α417_458',)  <!<  (α417_463',)
-//│ ╟── while constraining:  (α417_463' -> α426_467')  <!<  ((α417_458',) -> α420_459')
-//│ ╟── while constraining:  ‹∀ 1. (α417_432'' -> α426_436'')›  <!<  ((α417_458',) -> α420_459')
+//│ ╟── while constraining:  ‹∀ 1. (α401_416'' -> α410_420'')›  <!<  α401_457'
+//│ ╟── while constraining:  α401_452'  <!<  α401_457'
+//│ ╟── while constraining:  (α401_452',)  <!<  (α401_457',)
+//│ ╟── while constraining:  (α401_457' -> α410_461')  <!<  ((α401_452',) -> α404_453')
+//│ ╟── while constraining:  ‹∀ 1. (α401_416'' -> α410_420'')›  <!<  ((α401_452',) -> α404_453')
+//│ ╟── while constraining:  ‹∀ 1. (α401_416'' -> α410_420'')›  <!<  α401_452'
+//│ ╟── while constraining:  α401_447'  <!<  α401_452'
+//│ ╟── while constraining:  (α401_447',)  <!<  (α401_452',)
+//│ ╟── while constraining:  (α401_452' -> α410_456')  <!<  ((α401_447',) -> α404_448')
+//│ ╟── while constraining:  ‹∀ 1. (α401_416'' -> α410_420'')›  <!<  ((α401_447',) -> α404_448')
+//│ ╟── while constraining:  ‹∀ 1. (α401_416'' -> α410_420'')›  <!<  α401_447'
+//│ ╟── while constraining:  α401_442'  <!<  α401_447'
+//│ ╟── while constraining:  (α401_442',)  <!<  (α401_447',)
+//│ ╟── while constraining:  (α401_447' -> α410_451')  <!<  ((α401_442',) -> α404_443')
+//│ ╟── while constraining:  ‹∀ 1. (α401_416'' -> α410_420'')›  <!<  ((α401_442',) -> α404_443')
 //│ ╟── ......
 //│ ╟── ......
-//│ ╟── while constraining:  (α417_448' -> α426_452')  <!<  ((α417_443',) -> α420_444')
-//│ ╟── while constraining:  ‹∀ 1. (α417_432'' -> α426_436'')›  <!<  ((α417_443',) -> α420_444')
-//│ ╟── while constraining:  ‹∀ 1. (α417_432'' -> α426_436'')›  <!<  α417_443'
-//│ ╟── while constraining:  α417_438'  <!<  α417_443'
-//│ ╟── while constraining:  (α417_438',)  <!<  (α417_443',)
-//│ ╟── while constraining:  (α417_443' -> α426_447')  <!<  ((α417_438',) -> α420_439')
-//│ ╟── while constraining:  ‹∀ 1. (α417_432'' -> α426_436'')›  <!<  ((α417_438',) -> α420_439')
-//│ ╟── while constraining:  ‹∀ 1. (α417_432'' -> α426_436'')›  <!<  α417_438'
-//│ ╟── while constraining:  α407'  <!<  α417_438'
-//│ ╟── while constraining:  (α407',)  <!<  (α417_438',)
-//│ ╟── while constraining:  (α417_438' -> α426_442')  <!<  ((α407',) -> α410')
-//│ ╟── while constraining:  ‹∀ 1. (α417_432'' -> α426_436'')›  <!<  ((α407',) -> α410')
-//│ ╟── while constraining:  ‹∀ 1. (α417_432'' -> α426_436'')›  <!<  α407'
-//│ ╟── while constraining:  (‹∀ 1. (α417_432'' -> α426_436'')›,)  <!<  (α407',)
-//│ ╙── while constraining:  (α407' -> α416')  <!<  ((‹∀ 1. (α417_432'' -> α426_436'')›,) -> α437')
-//│ ((forall 'a, 'b. 'a -> 'b) -> 'c & (forall 'c, 'd. 'c -> 'd) -> 'c) -> error
+//│ ╟── while constraining:  (α401_432' -> α410_436')  <!<  ((α401_427',) -> α404_428')
+//│ ╟── while constraining:  ‹∀ 1. (α401_416'' -> α410_420'')›  <!<  ((α401_427',) -> α404_428')
+//│ ╟── while constraining:  ‹∀ 1. (α401_416'' -> α410_420'')›  <!<  α401_427'
+//│ ╟── while constraining:  α401_422'  <!<  α401_427'
+//│ ╟── while constraining:  (α401_422',)  <!<  (α401_427',)
+//│ ╟── while constraining:  (α401_427' -> α410_431')  <!<  ((α401_422',) -> α404_423')
+//│ ╟── while constraining:  ‹∀ 1. (α401_416'' -> α410_420'')›  <!<  ((α401_422',) -> α404_423')
+//│ ╟── while constraining:  ‹∀ 1. (α401_416'' -> α410_420'')›  <!<  α401_422'
+//│ ╟── while constraining:  α391'  <!<  α401_422'
+//│ ╟── while constraining:  (α391',)  <!<  (α401_422',)
+//│ ╟── while constraining:  (α401_422' -> α410_426')  <!<  ((α391',) -> α394')
+//│ ╟── while constraining:  ‹∀ 1. (α401_416'' -> α410_420'')›  <!<  ((α391',) -> α394')
+//│ ╟── while constraining:  ‹∀ 1. (α401_416'' -> α410_420'')›  <!<  α391'
+//│ ╟── while constraining:  (‹∀ 1. (α401_416'' -> α410_420'')›,)  <!<  (α391',)
+//│ ╙── while constraining:  (α391' -> α400')  <!<  ((‹∀ 1. (α401_416'' -> α410_420'')›,) -> α421')
+//│ ((anything -> nothing) -> anything) -> error
 //│   <:  z:
 //│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
 //│  = [Function: z2]

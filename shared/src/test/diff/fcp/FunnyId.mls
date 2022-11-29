@@ -55,32 +55,30 @@ rec def id x = if true then x else id id x
 //│ ╙──  ... looks like:  ‹∀ 1. (α112_122'' -> α121_124'')›  <:  α112_122''
 //│ id: 'id
 //│   where
-//│     'id :> forall 'a, 'b, 'c. 'a -> 'c
-//│     'a <: 'd & 'b & 'c
-//│     'c :> 'e
-//│     'd :> 'id
-//│        <: 'e
-//│     'e :> 'id
-//│        <: 'd -> 'e
+//│     'id :> forall 'a. ('b & 'a) -> 'a
+//│     'a :> 'c
+//│     'b :> 'id
+//│        <: 'c
+//│     'c :> 'id
+//│        <: 'b -> 'c
 //│   = [Function: id2]
 
 :e
 id_ty = id
 //│ 'id
 //│   where
-//│     'id :> forall 'a, 'b, 'c. 'a -> 'c
-//│     'a <: 'd & 'b & 'c
-//│     'c :> 'e
-//│     'd :> 'id
-//│        <: 'e
-//│     'e :> 'id
-//│        <: 'd -> 'e
+//│     'id :> forall 'a. ('b & 'a) -> 'a
+//│     'a :> 'c
+//│     'b :> 'id
+//│        <: 'c
+//│     'c :> 'id
+//│        <: 'b -> 'c
 //│   <:  id_ty:
 //│ 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.68: 	id_ty = id
+//│ ║  l.67: 	id_ty = id
 //│ ║        	^^^^^^^^^^
-//│ ╟── type `‘a_187` is not a function
+//│ ╟── type `‘a_179` is not a function
 //│ ║  l.5: 	def id_ty: forall 'a. 'a -> 'a
 //│ ║       	                  ^^
 //│ ╟── Note: constraint arises from application:

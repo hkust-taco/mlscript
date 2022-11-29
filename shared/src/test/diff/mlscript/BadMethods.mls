@@ -21,9 +21,9 @@ class Bar[A]: Foo[A]
 //│ Declared Foo.Map: Foo['A] -> ('A -> anything) -> 'A
 //│ Defined class Bar[+A]
 //│ Declared Bar.Map: Bar['A] -> anything -> 'A
-//│ Defined Bar.Map: Bar['a] -> 'Map
+//│ Defined Bar.Map: Bar[?] -> 'Map
 //│   where
-//│     'Map :> ('Map -> (forall 'a. 'a -> 'Map) -> 'b) -> 'b
+//│     'Map :> ('Map -> (anything -> 'Map) -> 'a) -> 'a
 
 Foo.Map
 Bar.Map
@@ -109,7 +109,7 @@ class BadSelf[A]: { x: A }
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.108: 	    method F = this.x 42
 //│ ║         	               ^^^^^^^^^
-//│ ╟── field selection of type `A_159` is not a function
+//│ ╟── field selection of type `A_157` is not a function
 //│ ║  l.108: 	    method F = this.x 42
 //│ ║         	               ^^^^^^
 //│ ╟── Note: class type parameter A is defined at:
@@ -136,7 +136,7 @@ class Simple3[A, B]: Simple2[A]
 //│ ╔══[ERROR] Type mismatch in method declaration:
 //│ ║  l.135: 	    method Get: B
 //│ ║         	           ^^^^^^
-//│ ╟── type `B_206` is not an instance of type `A_205`
+//│ ╟── type `B_204` is not an instance of type `A_203`
 //│ ║  l.134: 	class Simple3[A, B]: Simple2[A]
 //│ ║         	                 ^
 //│ ╟── Note: constraint arises from class type parameter:
@@ -161,7 +161,7 @@ class BadPair[A, B]: AbstractPair[A, B]
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.159: 	    method Test f = f this.x this.x
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── field selection of type `A_278` is not an instance of type `B_279`
+//│ ╟── field selection of type `A_276` is not an instance of type `B_277`
 //│ ║  l.159: 	    method Test f = f this.x this.x
 //│ ║         	                             ^^^^^^
 //│ ╟── Note: constraint arises from class type parameter:
@@ -173,7 +173,7 @@ class BadPair[A, B]: AbstractPair[A, B]
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.160: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `C_308` is not an instance of type `D_309`
+//│ ╟── application of type `C_306` is not an instance of type `D_307`
 //│ ║  l.160: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
 //│ ║         	                                                    ^^^^^^^^^
 //│ ╟── Note: constraint arises from method type parameter:
@@ -823,10 +823,10 @@ class Test9B: Test9A[int]
 //│ ╔══[ERROR] Type mismatch in method declaration:
 //│ ║  l.815: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `Test9A[int] -> int` is not an instance of type `X_791`
+//│ ╟── type `Test9A[int] -> int` is not an instance of type `X_789`
 //│ ║  l.815: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	                   ^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into method declaration with expected type `#X_791`
+//│ ╟── but it flows into method declaration with expected type `#X_789`
 //│ ║  l.815: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:

@@ -140,12 +140,12 @@ def oops (i: forall 'c. ('c -> 'c, 0)) =
 
 
 def foo(a, b) = (a, b) : forall 'c. ('c, 'c)
-//│ foo: (nothing, nothing,) -> (forall 'c. ('c, 'c,))
+//│ foo: (nothing, nothing,) -> (nothing, nothing,)
 //│    = [Function: foo]
 
 :re
 foo(error, error)
-//│ res: ('c, 'c,)
+//│ res: (nothing, nothing,)
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
@@ -253,7 +253,7 @@ foo((fun x -> foo((fun y -> x, 0)), 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.252: 	foo((fun x -> foo((fun y -> x, 0)), 0))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘c_274` does not match type `nothing`
+//│ ╟── type `‘c_270` does not match type `nothing`
 //│ ║  l.234: 	def foo((a, b) : forall 'c. ('c -> 'c, 0)) = ()
 //│ ║         	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:

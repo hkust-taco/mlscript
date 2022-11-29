@@ -41,11 +41,11 @@ def eval_expr v =
     | M -> let tmp = v.l in tmp
     | N -> v
     }
-//│ eval_expr: (M & {l: 'l} | N & 'l) -> (forall 'l0. 'l0 | 'l)
+//│ eval_expr: (M & {l: 'l} | N & 'l) -> 'l
 //│          = [Function: eval_expr1]
 
 eval_expr (N {})
-//│ res: 'l | N
+//│ res: N
 //│    = N {}
 
 :e

@@ -20,7 +20,7 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'c, 'a, 'd, 'head, 'tail. (List['a] & 'c & 'tail) -> ((Cons['a | 'b] with {head: 'head | 'b, tail: 'tail}) | 'd))
+//│ 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -46,7 +46,7 @@ def head: forall 'a. List['a] -> 'a
 def head l = l.Head
 //│ head: List['a] -> 'a
 //│     = <missing implementation>
-//│ (List['a & 'b] & 'c & 'this) -> 'b
+//│ List['a] -> 'a
 //│   <:  head:
 //│ List['a] -> 'a
 //│     = [Function: head]
@@ -55,25 +55,25 @@ def tail: forall 'a. List['a] -> List['a]
 def tail l = l.Tail
 //│ tail: List['a] -> List['a]
 //│     = <missing implementation>
-//│ (List['a] & 'b & 'this) -> (List['a] | 'c)
+//│ List['a] -> List['a]
 //│   <:  tail:
 //│ List['a] -> List['a]
 //│     = [Function: tail]
 
 def is_empty: forall 'a. List['a] -> bool
 def is_empty l = eq l nil
-//│ is_empty: List['a] -> bool
+//│ is_empty: List[?] -> bool
 //│         = <missing implementation>
-//│ ('a & 'b) -> (bool | 'c)
+//│ anything -> bool
 //│   <:  is_empty:
-//│ List['a] -> bool
+//│ List[?] -> bool
 //│         = [Function: is_empty]
 
 def single: forall 'a. 'a -> List['a]
 def single x = cons x nil
 //│ single: 'a -> List['a]
 //│       = <missing implementation>
-//│ ('a & 'b) -> (List['b] | 'c)
+//│ 'a -> List['a]
 //│   <:  single:
 //│ 'a -> List['a]
 //│       = [Function: single]
@@ -84,7 +84,7 @@ rec def append l1 l2 =
   else cons (head l1) (append (tail l1) l2)
 //│ append: List['a] -> List['a] -> List['a]
 //│       = <missing implementation>
-//│ (List['a | 'a0 | 'a1 & 'b] & 'c) -> (forall 'd, 'e, 'f, 'g. ('d & List['b] & 'e & 'f) -> (List['a0 | 'b | 'g] | 'f))
+//│ List[?] -> (forall 'a. (List['b] & 'a) -> (List['b] | 'a))
 //│   <:  append:
 //│ List['a] -> List['a] -> List['a]
 //│       = [Function: append]
@@ -93,11 +93,11 @@ def length: forall 'a. List['a] -> int
 rec def length l =
   if is_empty l then 0
   else succ (length (tail l))
-//│ length: List['a] -> int
+//│ length: List[?] -> int
 //│       = <missing implementation>
-//│ (List['a | 'a0] & 'b) -> (int | 'c)
+//│ List[?] -> int
 //│   <:  length:
-//│ List['a] -> int
+//│ List[?] -> int
 //│       = [Function: length]
 
 def id: forall 'a. 'a -> 'a
@@ -122,7 +122,7 @@ def choose: forall 'a. 'a -> 'a -> 'a
 def choose x y = if true then x else y
 //│ choose: 'a -> 'a -> 'a
 //│       = <missing implementation>
-//│ 'a -> (forall 'b, 'c, 'd. ('b & 'c & 'd) -> ('a | 'd))
+//│ 'a -> (forall 'b. 'b -> ('a | 'b))
 //│   <:  choose:
 //│ 'a -> 'a -> 'a
 //│       = [Function: choose]
@@ -133,7 +133,7 @@ rec def map f l =
   else cons (f (head l)) (map f (tail l))
 //│ map: ('a -> 'b) -> List['a] -> List['b]
 //│    = <missing implementation>
-//│ ('b -> 'c & 'd & 'a -> 'e) -> (forall 'f, 'a0, 'a1, 'g, 'h, 'i, 'a2. (List['a0 | 'a & 'a2 | 'b & 'a1 & 'h] & 'g) -> (List['c | 'e | 'f] | 'i))
+//│ (nothing -> 'a & nothing -> 'b) -> List[?] -> List['a | 'b]
 //│   <:  map:
 //│ ('a -> 'b) -> List['a] -> List['b]
 //│    = [Function: map]
@@ -142,7 +142,7 @@ def app: forall 'a 'b. ('a -> 'b) -> 'a -> 'b
 def app f x = f x
 //│ app: ('a -> 'b) -> 'a -> 'b
 //│    = <missing implementation>
-//│ ('a -> 'b & 'c) -> (forall 'd, 'e. ('a & 'd) -> ('e | 'b))
+//│ ('a -> 'b) -> 'a -> 'b
 //│   <:  app:
 //│ ('a -> 'b) -> 'a -> 'b
 //│    = [Function: app]
@@ -151,7 +151,7 @@ def revapp: forall 'a 'b. 'a -> ('a -> 'b) -> 'b
 def revapp x f = f x
 //│ revapp: 'a -> ('a -> 'b) -> 'b
 //│       = <missing implementation>
-//│ 'a -> (forall 'b, 'c. ('a -> 'b & 'c) -> 'b)
+//│ 'a -> (forall 'b. ('a -> 'b) -> 'b)
 //│   <:  revapp:
 //│ 'a -> ('a -> 'b) -> 'b
 //│       = [Function: revapp]
@@ -163,9 +163,9 @@ def revapp x f = f x
 // FreezeML B1
 def poly (f: forall 'a. 'a -> 'a) = (f 1, f true)
 def poly_ f = (f 1, f true)
-//│ poly: (forall 'a. 'a -> 'a) -> (1 | 'b, true | 'c,)
+//│ poly: (forall 'a. 'a -> 'a) -> (1, true,)
 //│     = [Function: poly]
-//│ poly_: (true -> 'a & 1 -> 'b & 'c) -> ('b, 'a,)
+//│ poly_: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
 //│      = [Function: poly_]
 
 // FreezeML A10
@@ -210,7 +210,7 @@ map poly_ (single id)
 
 // FreezeML C7
 append (single inc) (single id)
-//│ res: List[forall 'a. (int & 'a) -> ('a | int)]
+//│ res: List[int -> int]
 //│    = Cons {
 //│        head: [Function: succ],
 //│        tail: Cons { head: [Function: id1], tail: Nil {} }
@@ -218,7 +218,7 @@ append (single inc) (single id)
 
 let ids = single id in
   (map poly ids, append (single inc) ids)
-//│ res: (List[(1, true,)], List[forall 'a. (int & 'a) -> ('a | int)],)
+//│ res: (List[(1, true,)], List[int -> int],)
 //│    = [
 //│        Cons { head: [ 1, true ], tail: Nil {} },
 //│        Cons {

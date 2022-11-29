@@ -8,7 +8,7 @@
 // callcc = callcc’
 
 def callcc' : ((forall 'b. 'a -> 'b) -> 'a) -> 'a
-//│ callcc': ((forall 'b. 'a -> 'b) -> 'a) -> 'a
+//│ callcc': (('a -> nothing) -> 'a) -> 'a
 //│        = <missing implementation>
 
 def callcc : (('a -> 'b) -> 'a) -> 'a
@@ -16,7 +16,7 @@ def callcc : (('a -> 'b) -> 'a) -> 'a
 //│       = <missing implementation>
 
 callcc = callcc'
-//│ ((forall 'b. 'a -> 'b) -> 'a) -> 'a
+//│ (('a -> nothing) -> 'a) -> 'a
 //│   <:  callcc:
 //│ (('a -> nothing) -> 'a) -> 'a
 //│       = <no result>

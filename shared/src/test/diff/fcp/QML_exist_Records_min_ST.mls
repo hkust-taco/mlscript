@@ -17,12 +17,12 @@ type Arrays = (ArraysRep -> 'r) -> 'r
 
 // :d
 def stepImpl arrImpl = { fold = fun f ->  arrImpl.fold f }
-//│ stepImpl: ({fold: 'a -> 'b & 'fold} & 'c) -> {fold: forall 'd, 'e. ('a & 'd) -> ('e | 'b)}
+//│ stepImpl: {fold: 'a -> 'b} -> {fold: 'a -> 'b}
 //│         = [Function: stepImpl]
 
 // :d
 def stepImpl2 arr = arr stepImpl
-//│ stepImpl2: ((forall 'a, 'b, 'fold, 'c. ({fold: 'a -> 'b & 'fold} & 'c) -> {fold: forall 'd, 'e. ('a & 'd) -> ('e | 'b)}) -> 'f & 'g) -> 'f
+//│ stepImpl2: ((forall 'a, 'b. {fold: 'a -> 'b} -> {fold: 'a -> 'b}) -> 'c) -> 'c
 //│          = [Function: stepImpl2]
 
 def step: Arrays -> Arrays
@@ -32,7 +32,7 @@ def step: Arrays -> Arrays
 // :d
 :e
 def step arr f = f (stepImpl2 arr)
-//│ ((forall 'a, 'b, 'c, 'fold. ({fold: 'b -> 'c & 'fold} & 'a) -> {fold: forall 'd, 'e. ('b & 'd) -> ('e | 'c)}) -> 'f & 'g) -> (forall 'h, 'i, 'j. (('h | 'f) -> 'i & 'j) -> 'i)
+//│ ((forall 'a, 'b. {fold: 'a -> 'b} -> {fold: 'a -> 'b}) -> 'c) -> (forall 'd. ('c -> 'd) -> 'd)
 //│   <:  step:
 //│ Arrays -> Arrays
 //│ ╔══[ERROR] Type mismatch in def definition:

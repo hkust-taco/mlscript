@@ -9,7 +9,7 @@ dummy = MyArray {
     set = fun (i, a) -> ();
     get = fun i -> error
   }
-//│ dummy: MyArray['A] with {get: forall 'a. 'a -> nothing, set: forall 'b, 'c. ('b, 'c,) -> (), size: 0}
+//│ dummy: MyArray['A] with {get: anything -> nothing, set: (anything, anything,) -> (), size: 0}
 
 dummy: MyArray[int]
 //│ res: MyArray[int]
@@ -65,8 +65,8 @@ ty3A = ty3A
 //│ ║  l.+1: 	ty3A = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a110_123'#  <:  'a110_121'#    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a110_111'#  <:  'a110_111'#
+//│ ╟── this constraint:  'a104_117'#  <:  'a104_115'#    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a104_105'#  <:  'a104_105'#
 //│ constrain calls  : 25
 //│ annoying  calls  : 14
 //│ subtyping calls  : 82
@@ -123,8 +123,8 @@ ty4B = ty4B
 //│ ║  l.+1: 	ty4B = ty4B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a149_162'#]]  <:  MyArray[MyArray['a149_160'#]]    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray[MyArray['a149_150'#]]  <:  MyArray[MyArray['a149_150'#]]
+//│ ╟── this constraint:  MyArray[MyArray['a143_156'#]]  <:  MyArray[MyArray['a143_154'#]]    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray[MyArray['a143_144'#]]  <:  MyArray[MyArray['a143_144'#]]
 //│ constrain calls  : 27
 //│ annoying  calls  : 14
 //│ subtyping calls  : 109
@@ -176,7 +176,7 @@ ty2A = ty2B
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.+1: 	ty2A = ty2B
 //│ ║        	^^^^^^^^^^^
-//│ ╟── type `‘a_169` is not an instance of type `MyArray`
+//│ ╟── type `‘a_163` is not an instance of type `MyArray`
 //│ ║  l.23: 	def ty2A: MyArray['a]
 //│ ║        	                  ^^
 //│ ╟── Note: constraint arises from applied type reference:

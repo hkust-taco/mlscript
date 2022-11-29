@@ -44,6 +44,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   val MinLevel: Int = 0
   val MaxLevel: Int = 1024
   
+  type Pol = Opt[Bool]
+  
   /**  `env`: maps the names of all global and local bindings to their types
     *  Keys of `mthEnv`:
     * `L` represents the inferred types of method definitions. The first value is the parent name,

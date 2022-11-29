@@ -3,7 +3,7 @@
 
 
 def f n = n 0
-//│ f: (0 -> 'a & 'b) -> 'a
+//│ f: (0 -> 'a) -> 'a
 //│  = [Function: f]
 
 :e
@@ -45,16 +45,16 @@ f {} {}
 
 
 def f n m = n 0
-//│ f: 'a -> (forall 'a, 'b, 'c. ('c -> 'b
+//│ f: 'a -> (forall 'a, 'b. (anything -> 'b
 //│   where
 //│     'a <: 0 -> 'b))
 //│  = [Function: f1]
 
 // :e // Error delayed by inconsistent constrained types
 f {}
-//│ res: 'a -> 'b
+//│ res: anything -> 'a
 //│   where
-//│     anything <: 0 -> 'b
+//│     anything <: 0 -> 'a
 //│    = [Function (anonymous)]
 
 :e
@@ -78,11 +78,11 @@ def test extr =
   let f n m = n 0
   in let _ = extr f
   in f 0
-//│ test: ((forall 'a. 'a -> (forall 'a, 'b, 'c, 'd. ('d -> 'c
+//│ test: ((forall 'a. 'a -> (forall 'a, 'b. (anything -> 'b
 //│   where
-//│     'a <: (0 | 'b) -> 'c))) -> 'e & 'f) -> (forall 'b, 'g, 'h, 'i. ('h -> 'g | 'i
+//│     'a <: 0 -> 'b))) -> anything) -> (forall 'c. (anything -> 'c
 //│   where
-//│     0 | 'b <: (0 | 'b) -> 'g))
+//│     0 <: 0 -> 'c))
 //│     = [Function: test]
 
 :e
@@ -105,13 +105,13 @@ def test extr x =
   let f n m = x (n 0)
   in let _ = extr f
   in f 0
-//│ test: ((forall 'a. 'a -> (forall 'b, 'c, 'd, 'a, 'e, 'f. ('d -> 'b
+//│ test: ((forall 'a. 'a -> (forall 'b, 'c, 'd, 'a. (anything -> 'd
 //│   where
-//│     'f <: 'c -> 'b
-//│     'a <: (0 | 'e) -> 'c))) -> 'g & 'h) -> (forall 'i. ('f & 'i) -> (forall 'j, 'k, 'l, 'e, 'i, 'm. ('m -> 'l | 'j
+//│     'a <: 0 -> 'c
+//│     'b <: 'c -> 'd))) -> anything) -> (forall 'e. ('b & 'e) -> (forall 'e, 'f, 'g. (anything -> 'g
 //│   where
-//│     'i <: 'k -> 'l
-//│     0 | 'e <: (0 | 'e) -> 'k)))
+//│     0 <: 0 -> 'f
+//│     'e <: 'f -> 'g)))
 //│     = [Function: test1]
 
 :e
@@ -131,18 +131,18 @@ test 0
 def test extr x =
   let f n m = x (n 0)
   in f 0
-//│ test: 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'e, 'b, 'f, 'g. ('e -> 'c | 'f
+//│ test: anything -> (forall 'a. 'a -> (forall 'a, 'b, 'c. (anything -> 'c
 //│   where
-//│     'b <: 'g -> 'c
-//│     0 | 'd <: (0 | 'd) -> 'g)))
+//│     'a <: 'b -> 'c
+//│     0 <: 0 -> 'b)))
 //│     = [Function: test2]
 
 // Error delayed by inconsistent constrained types
 test 0 1
-//│ res: 'a -> 'b
+//│ res: anything -> 'a
 //│   where
-//│     1 <: 'c -> 'b
-//│     0 <: 0 -> 'c
+//│     0 <: 0 -> 'b
+//│     1 <: 'b -> 'a
 //│    = [Function (anonymous)]
 
 :e
@@ -163,16 +163,16 @@ test 0 1 2
 def test extr x =
   let f n m = (n x 0)
   in f 0
-//│ test: 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'e, 'f, 'b, 'g. ('c -> 'e | 'g
+//│ test: anything -> (forall 'a. 'a -> (forall 'a, 'b. (anything -> 'b
 //│   where
-//│     0 | 'd <: 'b -> ((0 | 'd) -> 'e & 'f))))
+//│     0 <: 'a -> 0 -> 'b)))
 //│     = [Function: test3]
 
 // Error delayed by inconsistent constrained types
 test 0 1
-//│ res: 'a -> 'b
+//│ res: anything -> 'a
 //│   where
-//│     0 <: 1 -> (0 -> 'b & 'c)
+//│     0 <: 1 -> 0 -> 'a
 //│    = [Function (anonymous)]
 
 :e

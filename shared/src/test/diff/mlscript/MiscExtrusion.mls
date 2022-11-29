@@ -12,13 +12,13 @@ def alsoPrintSizeSimple f =
   let rec nested expr =
     f expr
   in nested
-//│ alsoPrintSizeSimple: ('a -> 'b) -> (forall 'c, 'd, 'nested. ('a & 'c) -> ('d | 'b) | 'nested)
+//│ alsoPrintSizeSimple: ('a -> 'b) -> 'a -> 'b
 
 def alsoPrintSizeSimple f =
   let rec nested expr =
     f (asExpr expr)
   in nested
-//│ alsoPrintSizeSimple: (Expr[in 'a out 'a | 'a0] -> 'b) -> (forall 'a1, 'c, 'd, 'nested. (Expr['a1] & 'c) -> ('d | 'b) | 'nested)
+//│ alsoPrintSizeSimple: (Expr[in 'a out 'a | 'a0] -> 'b) -> (forall 'a1. Expr['a1] -> 'b)
 //│   where
 //│     'a1 :> 'a
 //│         <: 'a0
@@ -27,7 +27,7 @@ def alsoPrintSizeSimple f =
   let rec nested expr =
     asExpr (f (asExpr expr))
   in nested
-//│ alsoPrintSizeSimple: (Expr[in 'a out 'a | 'a0] -> Expr[in 'a1 out 'a1 | 'a2]) -> (forall 'nested, 'b, 'a3, 'a4, 'c. (Expr['a3] & 'b) -> (Expr['a4] | 'c) | 'nested)
+//│ alsoPrintSizeSimple: (Expr[in 'a out 'a | 'a0] -> Expr[in 'a1 out 'a1 | 'a2]) -> (forall 'a3, 'a4. Expr['a3] -> Expr['a4])
 //│   where
 //│     'a4 :> 'a1
 //│         <: 'a2
@@ -38,7 +38,7 @@ def alsoPrintSizeSimple f =
   let rec nested expr =
     f (asExpr expr) nested
   in nested
-//│ alsoPrintSizeSimple: (Expr[in 'a out 'a | 'a0] -> (Expr[in 'a0 & 'a1 out 'a | 'a1 | 'a2] -> 'b) -> 'b) -> (forall 'a3, 'c, 'd, 'nested. (Expr['a3] & 'c) -> ('d | 'b) | 'nested)
+//│ alsoPrintSizeSimple: (Expr[in 'a out 'a | 'a0] -> (Expr[in 'a1 & ('a | 'a0) out 'a | 'a1 | 'a2] -> 'b) -> 'b) -> (forall 'a3. Expr['a3] -> 'b)
 //│   where
 //│     'a3 :> 'a | 'a1
 //│         <: 'a0 & 'a2

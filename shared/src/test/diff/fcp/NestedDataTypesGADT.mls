@@ -16,7 +16,7 @@ type Two[A] = (A, A)
 //│ Defined type alias Two[+A]
 
 def mapTwo f ((a, b)) = (f a, f b)
-//│ mapTwo: ('a -> 'b & 'c -> 'd & 'e) -> (forall 'f, 'g, 'h, 'i. ('c & 'f, 'a & 'g,) -> ('h | 'd, 'i | 'b,))
+//│ mapTwo: ('a -> 'b & 'c -> 'd) -> ('c, 'a,) -> ('d, 'b,)
 //│       = [Function: mapTwo]
 
 // class Z
@@ -56,7 +56,7 @@ d1: HTreeBase[Z, int]
 //│    = DLeaf { n: Z {}, value: 1 }
 
 d1_ k = k d1
-//│ d1_: (DLeaf[1] -> 'a & 'b) -> 'a
+//│ d1_: (DLeaf[1] -> 'a) -> 'a
 //│    = [Function: d1_]
 
 d1_ : HTree[Z, int]
@@ -64,7 +64,7 @@ d1_ : HTree[Z, int]
 //│    = [Function: d1_]
 
 d2 = DNode { subTree = (d1_, d1_); n = S{} }
-//│ d2: DNode['P, 1] with {subTree: (forall 'a, 'b. (DLeaf[1] -> 'a & 'b) -> 'a, forall 'a, 'b. (DLeaf[1] -> 'a & 'b) -> 'a,)}
+//│ d2: DNode['P, 1] with {subTree: (forall 'a. (DLeaf[1] -> 'a) -> 'a, forall 'a. (DLeaf[1] -> 'a) -> 'a,)}
 //│   = DNode { n: S {}, subTree: [ [Function: d1_], [Function: d1_] ] }
 
 def d1_ty: HTree[Z, int]
@@ -85,7 +85,7 @@ d2: HTreeBase[S[Z], int]
 //│      d2 and d1_ty are not implemented
 
 d2_ k = k d2
-//│ d2_: ((DNode[Z, int] with {subTree: (HTree[Z, int], HTree[Z, int],)}) -> 'a & 'b) -> 'a
+//│ d2_: ((DNode[Z, int] with {subTree: (HTree[Z, int], HTree[Z, int],)}) -> 'a) -> 'a
 //│    = <no result>
 //│      d2 and d1_ty are not implemented
 
@@ -108,7 +108,7 @@ d2_ : HTree[S[Z], int]
 :e // FIXME
 d2_ k = k (d2:HTreeBase[S[Z], int])
 d2_ : HTree[S[Z], int]
-//│ d2_: (HTreeBase[S[Z], ?] -> 'a & 'b) -> 'a
+//│ d2_: (HTreeBase[S[Z], ?] -> 'a) -> 'a
 //│    = <no result>
 //│      d2 and d1_ty are not implemented
 //│ ╔══[ERROR] Type mismatch in type ascription:

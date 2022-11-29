@@ -7,7 +7,7 @@ type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ Defined type alias ChurchInt
 
 def zero f x = x
-//│ zero: 'a -> (forall 'b. 'b -> 'b)
+//│ zero: anything -> (forall 'a. 'a -> 'a)
 //│     = [Function: zero]
 
 zero: ChurchInt
@@ -18,7 +18,7 @@ def succ: ChurchInt -> ChurchInt
 def succ n f x = f (n f x)
 //│ succ: ChurchInt -> ChurchInt
 //│     = <missing implementation>
-//│ ('a -> ('b -> 'c & 'd) & 'e) -> (forall 'f, 'g. ((forall 'h. 'h | 'c) -> 'f & 'a & 'g) -> (forall 'i, 'j. ('b & 'i) -> ('j | 'f)))
+//│ ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│     = [Function: succ1]
@@ -27,7 +27,7 @@ def succ n f x = f (n f x)
 rec def to_church n =
   if n == 0 then zero
   else succ (to_church (n - 1))
-//│ to_church: (int & 'a) -> (forall 'b, 'c. 'b -> (forall 'd. 'd -> 'd) | ChurchInt | 'c)
+//│ to_church: int -> (anything -> (forall 'a. 'a -> 'a) | ChurchInt)
 //│          = [Function: to_church]
 
 to_church: int -> ChurchInt
@@ -36,7 +36,7 @@ to_church: int -> ChurchInt
 
 // def add: ChurchInt -> ChurchInt -> ChurchInt
 def add n m = n succ m
-//│ add: ((ChurchInt -> ChurchInt) -> ('a -> 'b & 'c) & 'd) -> (forall 'e, 'f. ('a & 'e) -> ('f | 'b))
+//│ add: ((ChurchInt -> ChurchInt) -> 'a -> 'b) -> 'a -> 'b
 //│    = [Function: add]
 
 :e // * Since "sound extrusion"
@@ -55,7 +55,7 @@ add: ChurchInt -> ChurchInt -> ChurchInt
 
 // def mul: ChurchInt -> ChurchInt -> ChurchInt
 def mul n m = n (add m) zero
-//│ mul: ((forall 'a, 'b, 'c, 'd, 'e. ('a & 'b & 'f) -> ('d | 'c | 'g) | 'e) -> ((forall 'h. 'h -> (forall 'i. 'i -> 'i)) -> 'j & 'k) & 'l) -> (forall 'm, 'n, 'o, 'p, 'q. ((ChurchInt -> ChurchInt) -> (('q | 'f) -> ('g & 'm) & 'n) & 'o) -> ('p | 'j))
+//│ mul: (('a -> 'b) -> (anything -> (forall 'c. 'c -> 'c)) -> 'd) -> ((ChurchInt -> ChurchInt) -> 'a -> 'b) -> 'd
 //│    = [Function: mul]
 
 :e // fails since the fix to spurious-TV-cycles
@@ -74,7 +74,7 @@ mul: ChurchInt -> ChurchInt -> ChurchInt
 
 // def pow: ChurchInt -> ChurchInt -> ChurchInt
 def pow n m = n (mul m) (succ zero)
-//│ pow: ((forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j. ((ChurchInt -> (ChurchInt | 'j)) -> (('d | 'f | 'k) -> ('i & 'b & 'l) & 'g) & 'c) -> ('e | 'h | 'm) | 'a) -> ((forall 'j. ChurchInt | 'j) -> 'n & 'o) & 'p) -> (forall 'q, 'r, 's, 't, 'u, 'v. ((forall 'w, 'x, 'y, 'z, 'a1. ('k & 'x & 'w & 'u) -> ('z | 'y | 'r | 'l) | 'a1) -> ((forall 'b1. 'b1 -> (forall 'c1. 'c1 -> 'c1)) -> ('m & 't) & 'v) & 'q) -> ('s | 'n))
+//│ pow: ((((ChurchInt -> ChurchInt) -> 'a -> 'b) -> 'c) -> ChurchInt -> 'd) -> (('a -> 'b) -> (anything -> (forall 'e. 'e -> 'e)) -> 'c) -> 'd
 //│    = [Function: pow]
 
 :e
@@ -102,11 +102,11 @@ unit : Unit_t
 //│    = [Function: id]
 
 def tru x _ = x unit
-//│ tru: ((forall 'a. 'a -> 'a) -> 'b & 'c) -> (forall 'd, 'e. 'd -> ('e | 'b))
+//│ tru: ((forall 'a. 'a -> 'a) -> 'b) -> anything -> 'b
 //│    = [Function: tru]
 
 def fls _ x = x unit
-//│ fls: 'a -> (forall 'b, 'c. ((forall 'd. 'd -> 'd) -> 'c & 'b) -> 'c)
+//│ fls: anything -> (forall 'a. ((forall 'b. 'b -> 'b) -> 'a) -> 'a)
 //│    = [Function: fls]
 
 type If_t = (Unit_t -> 'a) -> (Unit_t -> 'a) -> 'a
@@ -119,7 +119,7 @@ fls : If_t
 //│    = [Function: fls]
 
 def iszero n = n (fun _ -> fls) tru
-//│ iszero: ((forall 'a. 'a -> (forall 'b. 'b -> (forall 'c, 'd. ((forall 'e. 'e -> 'e) -> 'c & 'd) -> 'c))) -> ((forall 'f, 'g. ((forall 'e. 'e -> 'e) -> 'f & 'g) -> (forall 'h, 'i. 'h -> ('i | 'f))) -> 'j & 'k) & 'l) -> 'j
+//│ iszero: ((anything -> anything -> (forall 'a. ((forall 'b. 'b -> 'b) -> 'a) -> 'a)) -> (forall 'c. ((forall 'b. 'b -> 'b) -> 'c) -> anything -> 'c) -> 'd) -> 'd
 //│       = [Function: iszero]
 
 iszero : ChurchInt -> If_t
@@ -127,22 +127,22 @@ iszero : ChurchInt -> If_t
 //│    = [Function: iszero]
 
 def pair x y f = f x y
-//│ pair: 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'e. ('a -> ('b -> 'c & 'd) & 'e) -> 'c))
+//│ pair: 'a -> (forall 'b. 'b -> (forall 'c. ('a -> 'b -> 'c) -> 'c))
 //│     = [Function: pair]
 
 def fst p = p (fun x -> fun _ -> x)
-//│ fst: ((forall 'a. 'a -> (forall 'b. 'b -> 'a)) -> 'c & 'd) -> 'c
+//│ fst: ((forall 'a. 'a -> anything -> 'a) -> 'b) -> 'b
 //│    = [Function: fst]
 
 def snd p = p (fun _ -> fun x -> x)
-//│ snd: ((forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> 'c & 'd) -> 'c
+//│ snd: ((anything -> (forall 'a. 'a -> 'a)) -> 'b) -> 'b
 //│    = [Function: snd]
 
 def pred n =
   let s p = pair (snd p) (succ (snd p)) in
   let z = pair zero zero in
   fst (n s z)
-//│ pred: ((forall 'a, 'b, 'c, 'd, 'e, 'f. ((forall 'g. 'g -> (forall 'h. 'h -> 'h)) -> ((nothing -> anything) -> anything -> nothing & 'c) & (forall 'g. 'g -> (forall 'h. 'h -> 'h)) -> 'b & 'a) -> (forall 'i, 'j, 'k. ((forall 'l. 'd | 'l | 'b) -> ((forall 'm. ChurchInt | 'f | 'm) -> 'i & 'j) & 'k) -> 'i | 'e)) -> ((forall 'n, 'o, 'p, 'q. ((forall 'r, 's, 't. 't -> (forall 'u. 'u -> 'u) | 'r | 's) -> ((forall 's, 't. 't -> (forall 'u. 'u -> 'u) | 's) -> 'n & 'o) & 'p) -> 'n | 'q) -> ((forall 'v. 'v -> (forall 'w. 'w -> 'v)) -> ('x & 'y) & 'z) & 'a1) & 'b1) -> 'y
+//│ pred: ((forall 'a. ((anything -> (forall 'b. 'b -> 'b)) -> (nothing -> anything) -> anything -> nothing & (anything -> (forall 'b. 'b -> 'b)) -> 'a) -> (forall 'c. ('a -> ChurchInt -> 'c) -> 'c)) -> (forall 'd. ((anything -> (forall 'e. 'e -> 'e)) -> (anything -> (forall 'e. 'e -> 'e)) -> 'd) -> 'd) -> (forall 'f. 'f -> anything -> 'f) -> 'g) -> 'g
 //│     = [Function: pred]
 
 :e // * Since "sound extrusion"
@@ -179,18 +179,16 @@ rec def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n (f
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.6: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──     	                        ^^
-//│ fact: ChurchInt -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k. 'k -> (forall 'l. 'l -> 'l) | ChurchInt | 'j | 'g | 'm | 'b | 'd | 'h | 'e | 'c | 'a | 'i | 'f)
-//│   where
-//│     'm :> forall 'k. 'k -> (forall 'l. 'l -> 'l)
+//│ fact: ChurchInt -> (ChurchInt | anything -> (forall 'a. 'a -> 'a))
 //│     = [Function: fact]
 
 :e
 def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n {})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.188: 	def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n {})
+//│ ║  l.186: 	def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n {})
 //│ ║         	                                                                    ^^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.188: 	def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n {})
+//│ ║  l.186: 	def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n {})
 //│ ║         	                                                                          ^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.38: 	def add n m = n succ m
@@ -198,7 +196,7 @@ def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n {})
 //│ ╟── from reference:
 //│ ║  l.57: 	def mul n m = n (add m) zero
 //│ ╙──      	                     ^
-//│ fact: ChurchInt -> (forall 'a, 'b, 'c. error | ChurchInt | 'a | 'b | 'd | 'c | 'e)
+//│ fact: ChurchInt -> (error | ChurchInt)
 //│     = [Function: fact1]
 
 fact : ChurchInt -> ChurchInt
@@ -207,7 +205,7 @@ fact : ChurchInt -> ChurchInt
 
 :re
 (fact (to_church 1)) (fun x -> x + 1) 0
-//│ res: error | int | 'a
+//│ res: error | int
 //│ Runtime error:
 //│   TypeError: n is not a function
 

@@ -32,7 +32,7 @@ fun (x: ('a -> 'a)) -> auto_ x
 //│    = [Function: res]
 
 foo(x: ('a -> 'b)) = auto_ x
-//│ foo: (anything -> nothing) -> ('b -> 'b | 'a)
+//│ foo: (anything -> nothing) -> 'b -> 'b
 //│    = [Function: foo]
 
 :e
@@ -122,7 +122,7 @@ def oops (i: forall 'a. 'a -> 'a) =
 
 // If we were not careful this would lead to unsound skolem extrusion:
 def extrude (f: 'a -> 'b) = oops f
-//│ extrude: (anything -> nothing) -> (forall 'a. 'a -> 'a | 'b)
+//│ extrude: (anything -> nothing) -> (forall 'a. 'a -> 'a)
 //│        = [Function: extrude]
 
 :e
@@ -155,7 +155,7 @@ def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
 //│         = <missing implementation>
 
 def swapWith f (a, b) = f ((a, b))
-//│ (('a, 'b,) -> 'c & 'd) -> (forall 'e, 'f, 'g. ('a & 'e, 'b & 'f,) -> ('g | 'c))
+//│ (('a, 'b,) -> 'c) -> ('a, 'b,) -> 'c
 //│   <:  swapWith:
 //│ (forall 'x, 'y. ('x, 'y,) -> ('y, 'x,)) -> ('a, 'b,) -> ('b, 'a,)
 //│         = [Function: swapWith]
@@ -177,11 +177,11 @@ fun (x: ('a -> 'a)) -> swapWith x
 //│    = [Function: res]
 
 foo = fun (x: ('a -> 'b)) -> swapWith x
-//│ foo: (('a | (anything, anything,)) -> ((nothing, nothing,) & 'b)) -> (('a0, 'b0,) -> ('b0, 'a0,) | 'c)
+//│ foo: ((anything, anything,) -> (nothing, nothing,)) -> ('a, 'b,) -> ('b, 'a,)
 //│    = [Function: foo1]
 
 bar = fun f -> foo f (1, 2)
-//│ bar: (('a | (anything, anything,)) -> ((nothing, nothing,) & 'b) & 'c) -> (('b0 | 2, 'a0 | 1,) | 'd)
+//│ bar: ((anything, anything,) -> (nothing, nothing,)) -> (2, 1,)
 //│    = [Function: bar]
 
 :e

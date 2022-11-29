@@ -4,18 +4,18 @@ def f: 'a -> int
 //│ f: anything -> int
 
 def f: forall 'a. 'a -> int
-//│ f: 'a -> int
+//│ f: anything -> int
 
 def f: forall 'a. int -> 'a
-//│ f: int -> 'a
+//│ f: int -> nothing
 
 def f: (forall 'a. 'a -> 'b) -> 'b
-//│ f: (forall 'a. 'a -> 'b) -> 'b
+//│ f: (anything -> 'b) -> 'b
 
 def f: (forall 'a. 'b -> 'a) -> 'b
-//│ f: (forall 'a. nothing -> 'a) -> nothing
+//│ f: (nothing -> nothing) -> nothing
 
 def f: (forall 'a. 'b -> 'a) -> 'b -> 'b
-//│ f: (forall 'a. 'b -> 'a) -> 'b -> 'b
+//│ f: ('b -> nothing) -> 'b -> 'b
 
 

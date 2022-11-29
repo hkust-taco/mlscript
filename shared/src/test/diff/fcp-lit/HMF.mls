@@ -20,7 +20,7 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'c, 'a, 'd, 'head, 'tail. (List['a] & 'c & 'tail) -> ((Cons['a | 'b] with {head: 'head | 'b, tail: 'tail}) | 'd))
+//│ 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -53,7 +53,7 @@ def head: forall 'a. List['a] -> 'a
 def head l = l.Head
 //│ head: List['a] -> 'a
 //│     = <missing implementation>
-//│ (List['a & 'b] & 'c & 'this) -> 'b
+//│ List['a] -> 'a
 //│   <:  head:
 //│ List['a] -> 'a
 //│     = [Function: head]
@@ -62,25 +62,25 @@ def tail: forall 'a. List['a] -> List['a]
 def tail l = l.Tail
 //│ tail: List['a] -> List['a]
 //│     = <missing implementation>
-//│ (List['a] & 'b & 'this) -> (List['a] | 'c)
+//│ List['a] -> List['a]
 //│   <:  tail:
 //│ List['a] -> List['a]
 //│     = [Function: tail]
 
 def is_empty: forall 'a. List['a] -> bool
 def is_empty l = eq l nil
-//│ is_empty: List['a] -> bool
+//│ is_empty: List[?] -> bool
 //│         = <missing implementation>
-//│ ('a & 'b) -> (bool | 'c)
+//│ anything -> bool
 //│   <:  is_empty:
-//│ List['a] -> bool
+//│ List[?] -> bool
 //│         = [Function: is_empty]
 
 def single: forall 'a. 'a -> List['a]
 def single x = cons x nil
 //│ single: 'a -> List['a]
 //│       = <missing implementation>
-//│ ('a & 'b) -> (List['b] | 'c)
+//│ 'a -> List['a]
 //│   <:  single:
 //│ 'a -> List['a]
 //│       = [Function: single]
@@ -89,18 +89,18 @@ def length: forall 'a. List['a] -> int
 rec def length l =
   if is_empty l then 0
   else succ (length (tail l))
-//│ length: List['a] -> int
+//│ length: List[?] -> int
 //│       = <missing implementation>
-//│ (List['a | 'a0] & 'b) -> (int | 'c)
+//│ List[?] -> int
 //│   <:  length:
-//│ List['a] -> int
+//│ List[?] -> int
 //│       = [Function: length]
 
 def choose: forall 'a. 'a -> 'a -> 'a
 def choose x y = if true then x else y
 //│ choose: 'a -> 'a -> 'a
 //│       = <missing implementation>
-//│ 'a -> (forall 'b, 'c, 'd. ('b & 'c & 'd) -> ('a | 'd))
+//│ 'a -> (forall 'b. 'b -> ('a | 'b))
 //│   <:  choose:
 //│ 'a -> 'a -> 'a
 //│       = [Function: choose]
@@ -111,7 +111,7 @@ rec def map f l =
   else cons (f (head l)) (map f (tail l))
 //│ map: ('a -> 'b) -> List['a] -> List['b]
 //│    = <missing implementation>
-//│ ('b -> 'c & 'd & 'a -> 'e) -> (forall 'f, 'a0, 'g, 'a1, 'h, 'a2, 'i. (List['a2 | 'a & 'a1 | 'b & 'a0 & 'f] & 'i) -> (List['c | 'e | 'h] | 'g))
+//│ (nothing -> 'a & nothing -> 'b) -> List[?] -> List['a | 'b]
 //│   <:  map:
 //│ ('a -> 'b) -> List['a] -> List['b]
 //│    = [Function: map]
@@ -134,7 +134,7 @@ def id x = x
 
 // FreezeML B1
 def poly f = (f 1, f true)
-//│ poly: (true -> 'a & 1 -> 'b & 'c) -> ('b, 'a,)
+//│ poly: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
 //│     = [Function: poly]
 
 // FreezeML A10
@@ -143,7 +143,7 @@ poly id
 //│    = [ 1, true ]
 
 def app f x = f x
-//│ app: ('a -> 'b & 'c) -> (forall 'd, 'e. ('a & 'd) -> ('e | 'b))
+//│ app: ('a -> 'b) -> 'a -> 'b
 //│    = [Function: app]
 
 // FreezeML D1
@@ -164,7 +164,7 @@ idss = single ids
 //│       }
 
 def revapp x f = f x
-//│ revapp: 'a -> (forall 'b, 'c. ('a -> 'b & 'c) -> 'b)
+//│ revapp: 'a -> (forall 'b. ('a -> 'b) -> 'b)
 //│       = [Function: revapp]
 
 // FreezeML D2
@@ -246,7 +246,7 @@ app runST argST
 
 // c.f. FreezeML A1
 fun x -> fun y -> x
-//│ res: 'a -> (forall 'b. 'b -> 'a)
+//│ res: 'a -> anything -> 'a
 //│    = [Function: res]
 
 // FreezeML C4
@@ -269,13 +269,13 @@ def poly: (forall 'a. 'a -> 'a) -> (int, bool)
 def poly f = (f 1, f true)
 //│ poly: (forall 'a. 'a -> 'a) -> (int, bool,)
 //│     = <missing implementation>
-//│ (true -> 'a & 1 -> 'b & 'c) -> ('b, 'a,)
+//│ (true -> 'a & 1 -> 'b) -> ('b, 'a,)
 //│   <:  poly:
 //│ (forall 'a. 'a -> 'a) -> (int, bool,)
 //│     = [Function: poly1]
 
 const x y = x
-//│ const: 'a -> (forall 'b. 'b -> 'a)
+//│ const: 'a -> anything -> 'a
 //│      = [Function: const1]
 
 // ============ Sec 6 ============

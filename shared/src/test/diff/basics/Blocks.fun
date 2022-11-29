@@ -3,7 +3,7 @@
 let foo = x =>
   let a = x + 1
   a
-//│ foo: int -> (forall 'a. int | 'a)
+//│ foo: int -> int
 
 let foo = x =>
   log x

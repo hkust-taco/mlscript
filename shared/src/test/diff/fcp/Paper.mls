@@ -9,14 +9,14 @@ K x y = x
 auto x = x x
 monster = (fun y -> (let tmp = y I in y K)) auto
 //│ I: 'a -> 'a
-//│ K: 'a -> (forall 'b. 'b -> 'a)
+//│ K: 'a -> anything -> 'a
 //│ auto: ('a -> 'b & 'a) -> 'b
-//│ monster: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> 'b))
+//│ monster: anything -> (forall 'a. 'a -> anything -> 'a)
 
 monster{}
-//│ res: 'a -> (forall 'b. 'b -> 'a)
+//│ res: 'a -> anything -> 'a
 
 fun y -> (let tmp = y I in y K)
-//│ res: ((forall 'a. 'a -> (forall 'b. 'b -> 'a)) -> 'c & (forall 'd. 'd -> 'd) -> 'b) -> 'c
+//│ res: ((forall 'a. 'a -> anything -> 'a) -> 'b & (forall 'c. 'c -> 'c) -> anything) -> 'b
 
 

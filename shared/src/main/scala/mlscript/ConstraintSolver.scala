@@ -11,7 +11,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   def verboseConstraintProvenanceHints: Bool = verbose
   def defaultStartingFuel: Int = 5000
   var startingFuel: Int = defaultStartingFuel
-  def depthLimit: Int = 200
+  def depthLimit: Int =
+    // 150
+    200
   
   type ExtrCtx = MutMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound
   // type ExtrCtx = Level -> MutMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound

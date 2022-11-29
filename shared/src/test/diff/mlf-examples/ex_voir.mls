@@ -20,7 +20,7 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'c, 'a, 'd, 'head, 'tail. (List['a] & 'c & 'tail) -> ((Cons['a | 'b] with {head: 'head | 'b, tail: 'tail}) | 'd))
+//│ 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -55,15 +55,15 @@ def choose3 x y z = choose (choose x y) z
 def id = (fun x -> x) : Sid
 def id_ = fun x -> x
 def succ n = n + 1
-//│ choose: 'a -> (forall 'b, 'c, 'd. ('b & 'c & 'd) -> ('a | 'd))
+//│ choose: 'a -> (forall 'b. 'b -> ('a | 'b))
 //│       = [Function: choose]
-//│ choose3: 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'e, 'f, 'g. ('e & 'g & 'd & 'c & 'f) -> ('a | 'b | 'f)))
+//│ choose3: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a | 'b | 'c)))
 //│        = [Function: choose3]
 //│ id: Sid
 //│   = [Function: id]
 //│ id_: 'a -> 'a
 //│    = [Function: id_]
-//│ succ: (int & 'a) -> (int | 'b)
+//│ succ: int -> int
 //│     = [Function: succ]
 
 // let test = choose3 id
@@ -72,13 +72,13 @@ def test = choose3 id
 def test_ = choose3 id_
 def test2 = test succ
 def test2_ = test_ succ
-//│ test: 'a -> (forall 'b, 'c, 'd, 'e, 'f. ('c & 'd & 'e & 'f & 'b) -> (Sid | 'a | 'b))
+//│ test: 'a -> (forall 'b. 'b -> (Sid | 'a | 'b))
 //│     = [Function: test]
-//│ test_: 'a -> (forall 'b, 'c, 'd, 'e, 'f. ('c & 'b & 'd & 'e & 'f) -> (forall 'a, 'f, 'g. 'g -> 'g | 'a | 'f))
+//│ test_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. 'c -> 'c | 'a | 'b))
 //│      = [Function: test_]
-//│ test2: ('a & 'b & 'c & 'd & 'e) -> (forall 'e, 'f, 'g. (int & 'f) -> (int | 'g) | Sid | 'e)
+//│ test2: 'a -> (int -> int | Sid | 'a)
 //│      = [Function: test2]
-//│ test2_: ('a & 'b & 'c & 'd & 'e) -> (forall 'f, 'g, 'e, 'h. (int & 'h & 'f) -> (int | 'h | 'g) | 'e)
+//│ test2_: 'a -> (forall 'a. int -> int | 'a)
 //│       = [Function: test2_]
 
 // (* Messages d'erreur foireux : *)
@@ -92,9 +92,9 @@ fun x -> fun y -> ((x : S1), (y : S2), if true then x else y)
 fun x -> fun y -> ((x : S1), (y : S2), x x)
 //│ Defined type alias S1
 //│ Defined type alias S2
-//│ res: (S1 & 'a) -> (forall 'b, 'c, 'd. (S2 & 'c & 'd & 'b) -> (S1, S2, 'a | 'b,))
+//│ res: (S1 & 'a) -> (forall 'b. (S2 & 'b) -> (S1, S2, 'a | 'b,))
 //│    = [Function: res]
-//│ res: (S1 & 'a -> 'b & 'a) -> (forall 'c, 'd. (S2 & 'c) -> (S1, S2, 'd | 'b,))
+//│ res: (S1 & 'a -> 'b & 'a) -> S2 -> (S1, S2, 'b,)
 //│    = [Function: res]
 
 // (* please onlyweak ['b = sid] 'b -> 'b : sid -> sid *)
@@ -105,7 +105,7 @@ fun x -> fun y -> ((x : S1), (y : S2), x x)
 def example f = (f: forall 'a. 'a -> int -> 'b) f
 def example_ f = f f
 def mkpair x y = (x, y)
-//│ example: (forall 'a. 'a -> int -> 'b & 'c & 'a0) -> (int -> 'b | 'd)
+//│ example: (anything -> int -> 'b) -> int -> 'b
 //│        = [Function: example]
 //│ example_: ('a -> 'b & 'a) -> 'b
 //│         = [Function: example_]
@@ -125,7 +125,7 @@ example_ mkpair
 
 // let make_ex3 x (f:['a > sid] 'a -> 'b ) = f x 
 def make_ex3 x (f: forall 'a. ('a | Sid) -> 'b) = f x
-//│ make_ex3: ('c & (Sid | 'a)) -> (forall 'd, 'b. (forall 'a0. ('a0 | Sid) -> ('b & 'd)) -> 'd)
+//│ make_ex3: anything -> (forall 'a. (anything -> 'a) -> 'a)
 //│         = [Function: make_ex3]
 
 // let ex_list3 = [ make_ex3 succ ;

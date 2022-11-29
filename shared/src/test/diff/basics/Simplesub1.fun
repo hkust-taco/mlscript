@@ -217,7 +217,7 @@ x => {l: x x, r: x }
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‹∀ 0. (α275_290' -> α284_294')›  <:  α275_301    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. (α275_290' -> α284_294')›  <:  α275_290'
-//│ res: ((forall 'a, 'b. 'a -> 'b) -> 'a & ('a -> 'b) -> 'a) -> error
+//│ res: ((anything -> nothing) -> anything) -> error
 
 // * Function that takes arbitrarily many arguments:
 :e
@@ -226,8 +226,8 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α333_348' -> α342_352')›  <:  α333_359    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α333_348' -> α342_352')›  <:  α333_348'
+//│ ╟── this constraint:  ‹∀ 0. (α329_344' -> α338_348')›  <:  α329_355    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α329_344' -> α338_348')›  <:  α329_344'
 //│ res: error
 
 res 1 2
@@ -386,12 +386,12 @@ let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
 
 :ns
 let rec x = (let y = (x x); (z => z))
-//│ x: forall 'a, 'x, 'b. 'x
+//│ x: forall 'x, 'a, 'b. 'x
 //│   where
-//│     'x := 'a -> 'a
-//│     'a :> 'a -> 'a
-//│        <: 'b
-//│     'b :> 'a -> 'a
+//│     'x := 'b -> 'b
+//│     'b :> 'b -> 'b
+//│        <: 'a
+//│     'a :> 'b -> 'b
 
 
 
@@ -403,8 +403,8 @@ let rec x = (let y = (x x); (z => z))
 //│ ║  l.+1: 	(w => x => x) ((y => y y) (y => y y))
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α695_697' -> α696_698')›  <:  α695_704    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α695_697' -> α696_698')›  <:  α695_697'
+//│ ╟── this constraint:  ‹∀ 0. (α691_693' -> α692_694')›  <:  α691_700    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α691_693' -> α692_694')›  <:  α691_693'
 //│ res: 'a -> 'a
 
 
@@ -420,30 +420,30 @@ let rec x = (let y = (x x); (z => z))
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
 //│ res: ((forall 'a, 'b. ('a -> 'b
 //│   where
-//│     forall 'c, 'd. ('c -> 'd
+//│     forall 'c, 'd. ('d -> 'c
 //│   where
-//│     'e <: (forall 'c, 'f, 'g, 'h. ('f -> 'g
+//│     'e <: (forall 'f, 'g, 'd. ('f -> 'g
 //│   where
-//│     'c <: 'c -> ('f -> 'g & 'h))) -> 'd) <: (forall 'c, 'd. ('c -> 'd
+//│     'd <: 'd -> 'f -> 'g)) -> 'c) <: (forall 'c, 'd. ('d -> 'c
 //│   where
-//│     'e <: (forall 'c, 'f, 'g, 'h. ('f -> 'g
+//│     'e <: (forall 'f, 'g, 'd. ('f -> 'g
 //│   where
-//│     'c <: 'c -> ('f -> 'g & 'h))) -> 'd)) -> 'a -> 'b)) -> 'i & 'e) -> 'i
+//│     'd <: 'd -> 'f -> 'g)) -> 'c)) -> 'a -> 'b)) -> 'h & 'e) -> 'h
 
 // * Function that takes arbitrarily many arguments:
 // :e // Works thanks to inconsistent constrained types...
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
-//│ res: 'a -> (forall 'b, 'c. ('b -> 'c
+//│ res: anything -> (forall 'a, 'b. ('b -> 'a
 //│   where
-//│     forall 'd, 'e. ('d -> 'e
+//│     forall 'c, 'd. ('c -> 'd
 //│   where
-//│     forall 'a, 'f. 'f -> 'a -> 'f <: (forall 'a, 'd, 'g, 'h. ('g -> 'h
+//│     forall 'e. 'e -> anything -> 'e <: (forall 'c, 'f, 'g. ('f -> 'g
 //│   where
-//│     'd <: 'd -> ('g -> 'h & 'a))) -> 'e) <: (forall 'd, 'e. ('d -> 'e
+//│     'c <: 'c -> 'f -> 'g)) -> 'd) <: (forall 'c, 'd. ('c -> 'd
 //│   where
-//│     forall 'a, 'f. 'f -> 'a -> 'f <: (forall 'a, 'd, 'g, 'h. ('g -> 'h
+//│     forall 'e. 'e -> anything -> 'e <: (forall 'c, 'f, 'g. ('f -> 'g
 //│   where
-//│     'd <: 'd -> ('g -> 'h & 'a))) -> 'e)) -> 'b -> 'c))
+//│     'c <: 'c -> 'f -> 'g)) -> 'd)) -> 'b -> 'a))
 
 
 

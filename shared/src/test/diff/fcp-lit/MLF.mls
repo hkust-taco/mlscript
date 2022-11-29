@@ -22,16 +22,16 @@ class ST[S, A]
 // ============ Type signatures for functions used in the examples ============
 
 def choose x y = if true then x else y
-//│ choose: 'a -> (forall 'b, 'c, 'd. ('b & 'c & 'd) -> ('a | 'd))
+//│ choose: 'a -> (forall 'b. 'b -> ('a | 'b))
 
 def id x = x
 //│ id: 'a -> 'a
 
 def auto (x: forall 'a. 'a -> 'a) = x x
-//│ auto: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a | 'b)
+//│ auto: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 
 def app f x = f x
-//│ app: ('a -> 'b & 'c) -> (forall 'd, 'e. ('a & 'd) -> ('e | 'b))
+//│ app: ('a -> 'b) -> 'a -> 'b
 
 def inc: int -> int
 //│ inc: int -> int
@@ -68,17 +68,17 @@ def argST: ST['s, int]
 // This used to be `'a -> (forall 'b. 'b -> 'b | 'a)`, now it's wrong!
 // FreezeML A2
 choose id
-//│ res: ('a & 'b & 'c) -> (forall 'c, 'd. 'd -> 'd | 'c)
+//│ res: 'a -> (forall 'a, 'b. 'b -> 'b | 'a)
 
 fun (g: forall 'a. ('a -> 'a) -> ('a -> 'a)) -> fun (x: forall 'a. 'a -> 'a) -> fun a -> g a (x a)
-//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'b, 'c, 'a1, 'd, 'a2. ('a2 -> ('a2 & 'b) & 'c & 'a1 & 'd & 'a2 & 'b) -> 'b)
+//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'a1. ('a1 -> 'a1 & 'a1) -> 'a1)
 
 choose id succ
-//│ res: (int & 'a) -> (int | 'a)
+//│ res: int -> int
 
 // FreezeML A7
 choose id auto
-//│ res: (forall 'a. 'a -> 'a & 'b) -> (forall 'a. 'a -> 'a | 'b | 'c)
+//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 
 // nope, along with anything with it as a subterm
 // i.e. unannotated auto
@@ -86,15 +86,15 @@ omega = fun x -> x x
 //│ omega: ('a -> 'b & 'a) -> 'b
 
 fun (x: forall 'a. 'a) -> x x
-//│ res: (forall 'a. 'a) -> nothing
+//│ res: nothing -> nothing
 
 // i.e. auto
 omegad = fun (x: forall 'a. 'a -> 'a) -> x x
-//│ omegad: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a | 'b)
+//│ omegad: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 
 // FreezeML A5
 id auto
-//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a | 'b)
+//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 
 // ~ auto id (FreezeML F5, PolyML 1.1)
 (fun x -> x id) auto
@@ -111,10 +111,10 @@ let f = choose id in (f auto) (f succ)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.110: 	let f = choose id in (f auto) (f succ)
 //│ ║         	                     ^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_344` is not an instance of type `int`
+//│ ╟── type `‘a_310` is not an instance of type `int`
 //│ ║  l.30: 	def auto (x: forall 'a. 'a -> 'a) = x x
 //│ ╙──      	                    ^^
-//│ res: (int & 'a) -> (int | 'a) | error
+//│ res: int -> int | error
 
 // Reproduced with an unnanotated auto:
 
@@ -122,7 +122,7 @@ def auto2 x = x x
 //│ auto2: ('a -> 'b & 'a) -> 'b
 
 choose id auto2
-//│ res: ('a -> 'b & 'c & 'a) -> ('b | 'c)
+//│ res: ('a -> 'b & 'b & 'a) -> 'b
 
 :e // This is a legit error
 res (choose id succ)
@@ -135,12 +135,12 @@ res (choose id succ)
 //│ ╟── but it flows into application with expected type `int`
 //│ ║  l.128: 	res (choose id succ)
 //│ ╙──       	     ^^^^^^^^^^^^^^
-//│ res: (int & 'a) -> (int | 'a) | error
+//│ res: int -> int | error
 
 // Didier Le Botlan suggested this fix by email:
 
 let f = choose id in (f auto, f succ)
-//│ res: (forall 'b, 'c. (forall 'a. 'a -> 'a & 'b) -> (forall 'a. 'a -> 'a | 'b | 'c), forall 'b. (int & 'b) -> (int | 'b),)
+//│ res: (forall 'b. (forall 'a. 'a -> 'a & 'b) -> (forall 'a. 'a -> 'a | 'b), forall 'b. (int & 'b) -> (int | 'b),)
 
 let f = choose id in (f auto2, f succ)
 //│ res: (forall 'a, 'b, 'c. ('a -> 'b & 'c & 'a) -> ('b | 'c), forall 'c. (int & 'c) -> (int | 'c),)
@@ -157,18 +157,18 @@ I x = x
 
 // K := λx.λy.x
 K x y = x
-//│ K: 'a -> (forall 'b. 'b -> 'a)
+//│ K: 'a -> anything -> 'a
 
 (fun y -> let tmp = y I in y K) (fun x -> x x)
-//│ res: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> 'b))
+//│ res: anything -> (forall 'a. 'a -> anything -> 'a)
 
 // Note: reduces to
 let tmp = (fun x -> x x) I in (fun x -> x x) K
-//│ res: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> 'b))
+//│ res: anything -> (forall 'a. 'a -> anything -> 'a)
 
 // to
 let tmp = I I in K K
-//│ res: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> 'b))
+//│ res: anything -> (forall 'a. 'a -> anything -> 'a)
 
 
 // ============ Recasting MLF (2009) ============
@@ -180,14 +180,14 @@ let tmp = I I in K K
 //│ res: (42, "foo",)
 
 (fun f -> (f succ, choose f auto)) (choose id)
-//│ res: (forall 'b. (int & 'b) -> (int | 'b), (forall 'a, 'c, 'd, 'e. 'a -> 'a & 'c & 'd & 'e) -> (forall 'b, 'a, 'e, 'f. ('b & 'a) -> ('a | 'b) | 'e | 'f),)
+//│ res: (forall 'b. (int & 'b) -> (int | 'b), (forall 'a, 'c. 'a -> 'a & 'c) -> (forall 'b, 'a, 'c. ('b & 'a) -> ('a | 'b) | 'c),)
 
 // ------------ Sec 2.3.1 ------------
 
 // i.e. id auto (FreezeML A5)
 (fun z -> z) omegad
 (fun z -> z) omega
-//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a | 'b)
+//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ res: ('a -> 'b & 'a) -> 'b
 
 // i.e. auto id (FreezeML F5)
@@ -196,13 +196,13 @@ let tmp = I I in K K
 
 fun z -> (z omegad)
 fun z -> (z omega)
-//│ res: ((forall 'b. (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a | 'b)) -> 'c) -> 'c
+//│ res: (((forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)) -> 'b) -> 'b
 //│ res: ((forall 'a, 'b. ('a -> 'b & 'a) -> 'b) -> 'c) -> 'c
 
 (fun y -> fun z -> z y) omegad
 (fun y -> fun z -> z y) omega
-//│ res: ((forall 'b. (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a | 'b)) -> 'c & 'd) -> 'c
-//│ res: ((forall 'a, 'b. ('a -> 'b & 'a) -> 'b) -> 'c & 'd) -> 'c
+//│ res: (((forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)) -> 'b) -> 'b
+//│ res: ((forall 'a, 'b. ('a -> 'b & 'a) -> 'b) -> 'c) -> 'c
 
 fun z -> omegad z
 fun z -> omega z
@@ -211,8 +211,8 @@ fun z -> omega z
 
 (fun x -> fun y -> x y) omegad
 (fun x -> fun y -> x y) omega
-//│ res: (forall 'a. 'a -> 'a & 'b) -> (forall 'a. 'a -> 'a | 'c)
-//│ res: ('a -> 'b & 'c & 'a) -> ('d | 'b)
+//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ res: ('a -> 'b & 'a) -> 'b
 
 // ------------ Sec 4.3 ------------
 // affects the order of bindings in the result type in MLF, not very interesting otherwise
@@ -230,14 +230,14 @@ fun (x: forall 'b 'a. 'a -> 'b -> 'a) -> x
 // FreezeML B1
 // nope
 poly = fun f -> (f 1, f true)
-//│ poly: (true -> 'a & 1 -> 'b & 'c) -> ('b, 'a,)
+//│ poly: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
 
 // FreezeML B2
 polyL = fun xs -> poly (head xs)
-//│ polyL: (List[true -> 'b & 1 -> 'c & 'a & 'd & 'e] & 'f) -> (('c, 'b,) | 'g)
+//│ polyL: List[true -> 'a & 1 -> 'b] -> ('b, 'a,)
 
 let ids = single id in (polyL ids, append ids (single inc))
-//│ res: ((1, true,), List[forall 'a. (int & 'a) -> (int | 'a)],)
+//│ res: ((1, true,), List[int -> int],)
 
 // ------------ Sec 5 ------------
 
@@ -275,32 +275,32 @@ killer_app = (fun x -> x id) auto
 I x = x
 K x y = x
 //│ I: 'a -> 'a
-//│ K: 'a -> (forall 'b. 'b -> 'a)
+//│ K: 'a -> anything -> 'a
 
 // """ In particular, we conjecture that the term ...
 monster = (fun y -> (let tmp = y I in y K)) (fun x -> x x)
 // """ ... that is typable in Fω but not in F [9] is not typable in MLF either.
-//│ monster: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> 'b))
+//│ monster: anything -> (forall 'a. 'a -> anything -> 'a)
 
 ignore x y = y
-//│ ignore: 'a -> (forall 'b. 'b -> 'b)
+//│ ignore: anything -> (forall 'a. 'a -> 'a)
 
 monsterThunk() = (fun y -> (ignore (y I) (y K))) (fun x -> x x)
-//│ monsterThunk: () -> (forall 'a. 'a -> (forall 'b, 'c. 'b -> (forall 'd. 'd -> 'b) | 'c) | 'e)
+//│ monsterThunk: () -> anything -> (forall 'a. 'a -> anything -> 'a)
 
 monster2 = (fun y -> (y I, y K)) (fun x -> x x)
-//│ monster2: (forall 'a. 'a -> 'a, forall 'b. 'b -> (forall 'c. 'c -> (forall 'd. 'd -> 'c)),)
+//│ monster2: (forall 'a. 'a -> 'a, anything -> (forall 'b. 'b -> anything -> 'b),)
 
 monster = (fun y -> (let tmp = y I in y K)) (fun x -> x x)
-//│ monster: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> 'b))
+//│ monster: anything -> (forall 'a. 'a -> anything -> 'a)
 
 monsterThunk() = (fun y -> ignore (y I) (y K)) (fun x -> x x)
-//│ monsterThunk: () -> (forall 'a. 'a -> (forall 'b, 'c. 'b -> (forall 'd. 'd -> 'b) | 'c) | 'e)
+//│ monsterThunk: () -> anything -> (forall 'a. 'a -> anything -> 'a)
 
 monster2 = (fun y -> (y I, y K)) (fun x -> x x)
-//│ monster2: (forall 'a. 'a -> 'a, forall 'b. 'b -> (forall 'c. 'c -> (forall 'd. 'd -> 'c)),)
+//│ monster2: (forall 'a. 'a -> 'a, anything -> (forall 'b. 'b -> anything -> 'b),)
 
 K K
-//│ res: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> 'b))
+//│ res: anything -> (forall 'a. 'a -> anything -> 'a)
 
 

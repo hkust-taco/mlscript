@@ -18,11 +18,11 @@
 // we may exhibit terms than are typable in F but not in the predicative fragment F(≤^F_p)
 // One such term (λz. z y z) (λz. z y z) is due to Pawel Urzyczyn, according to Leivant [Lei91].
 pawel y = (fun z -> z y z) (fun z -> z y z)
-//│ pawel: ('a -> ('b -> ((forall 'c, 'd, 'e. ('a -> ('c -> 'd & 'e) & 'c) -> 'd | 'f) -> ('g & 'h) & 'i & 'j) & 'k) & 'a & 'b) -> 'h
+//│ pawel: ('a -> 'a -> (forall 'b, 'c. ('a -> 'b -> 'c & 'b) -> 'c) -> 'd & 'a) -> 'd
 //│      = [Function: pawel]
 
 def f = (fun z -> z z : (forall 'X. 'X -> 'X) -> (forall 'X. 'X -> 'X))
-//│ f: ('a -> ((forall 'X. 'X -> 'X) -> (forall 'X0. 'X0 -> 'X0) & 'b) & 'a) -> (forall 'X. 'X -> 'X) -> (forall 'X0. 'X0 -> 'X0)
+//│ f: ('a -> (forall 'X. 'X -> 'X) -> (forall 'X0. 'X0 -> 'X0) & 'a) -> (forall 'X. 'X -> 'X) -> (forall 'X0. 'X0 -> 'X0)
 //│  = [Function: f]
 
 f ((fun y -> y) : forall 'X. 'X -> 'X)
@@ -45,17 +45,17 @@ def f = (fun z -> z z); f (fun y -> y)
 // callcc = callcc’
 
 def callcc' : forall 'A. ((forall 'B. 'A -> 'B) -> 'A) -> 'A
-//│ callcc': ((forall 'B. 'A -> 'B) -> 'A) -> 'A
+//│ callcc': (('A -> nothing) -> 'A) -> 'A
 //│        = <missing implementation>
 
 def callcc : forall 'A. forall 'B. (('A -> 'B) -> 'A) -> 'A
-//│ callcc: (('A -> 'B) -> 'A) -> 'A
+//│ callcc: (('A -> nothing) -> 'A) -> 'A
 //│       = <missing implementation>
 
 def callcc = callcc'
-//│ ((forall 'B. 'A -> 'B) -> 'A) -> 'A
+//│ (('A -> nothing) -> 'A) -> 'A
 //│   <:  callcc:
-//│ (('A -> 'B) -> 'A) -> 'A
+//│ (('A -> nothing) -> 'A) -> 'A
 //│       = <no result>
 //│         callcc' is not implemented
 

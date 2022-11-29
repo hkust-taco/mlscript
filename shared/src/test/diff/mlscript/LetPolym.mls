@@ -8,7 +8,7 @@ def test f =
 def test f =
   let local x = f x
   in (local (fun z -> z), local (fun z -> true))
-//│ test: ((forall 'a, 'b. ('a & 'b) -> (true | 'b)) -> 'c) -> ('c, 'c,)
+//│ test: ((forall 'a. 'a -> (true | 'a)) -> 'b) -> ('b, 'b,)
 //│     = [Function: test1]
 
 def test f =
@@ -173,7 +173,7 @@ def test =
     let local g x = f (g x)
     in local
   ) add
-//│ test: ('a -> (int & 'b) & 'c) -> 'a -> (int -> int | 'd)
+//│ test: ('a -> int) -> 'a -> int -> int
 //│     = [Function: test13]
 
 def test =
@@ -181,7 +181,7 @@ def test =
     let local g = f (g x)
     in local
   ) add "1"
-//│ test: ("1" -> (int & 'a) & 'b) -> (int -> int | 'c)
+//│ test: ("1" -> int) -> int -> int
 //│     = [Function: test14]
 
 def test =
@@ -354,7 +354,7 @@ foo (fun x -> (0, x + 1))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.353: 	foo (fun x -> (0, x + 1))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_670` is not an instance of type `int`
+//│ ╟── type `‘a_656` is not an instance of type `int`
 //│ ║  l.342: 	def foo (f: forall 'a. 'a -> ('a, 'a)) =
 //│ ║         	                   ^^
 //│ ╟── Note: constraint arises from reference:

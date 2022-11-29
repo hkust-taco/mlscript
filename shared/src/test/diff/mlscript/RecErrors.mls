@@ -57,8 +57,7 @@ rec def lefts() =
 //│ ╙──      	                      ^^^^^^^
 //│ lefts: () -> 'a
 //│   where
-//│     'a :> forall 'b. 'b
-//│     'b :> Left with {v: 'a}
+//│     'a :> Left with {v: 'a}
 
 
 

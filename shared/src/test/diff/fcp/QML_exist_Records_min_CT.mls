@@ -16,16 +16,16 @@ type Arrays = (forall 'Rep. ArraysRep['Rep] -> 'r) -> 'r
 
 // :d
 def stepImpl arrImpl = { fold = fun f -> fun r0 -> arrImpl.fold f r0 }
-//│ stepImpl: 'a -> {fold: forall 'b. 'b -> (forall 'c, 'd, 'fold, 'a, 'b, 'e. ('e -> 'c
+//│ stepImpl: 'a -> {fold: forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('c -> 'd
 //│   where
-//│     'a <: {fold: 'b -> ('e -> 'c & 'd) & 'fold}))}
+//│     'a <: {fold: 'b -> 'c -> 'd}))}
 //│         = [Function: stepImpl]
 
 // :d
 def stepImpl2 arr = arr stepImpl
-//│ stepImpl2: ((forall 'a. 'a -> {fold: forall 'b. 'b -> (forall 'b, 'c, 'd, 'e, 'a, 'fold. ('e -> 'd
+//│ stepImpl2: ((forall 'a. 'a -> {fold: forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('c -> 'd
 //│   where
-//│     'a <: {fold: 'b -> ('e -> 'd & 'c) & 'fold}))}) -> 'f & 'g) -> 'f
+//│     'a <: {fold: 'b -> 'c -> 'd}))}) -> 'e) -> 'e
 //│          = [Function: stepImpl2]
 
 def step: Arrays -> Arrays
@@ -34,11 +34,11 @@ def step: Arrays -> Arrays
 
 :e // * Since "sound extrusion"
 def step arr g = g (stepImpl2 arr)
-//│ 'a -> (forall 'b, 'a, 'c, 'd, 'e. (('d -> 'e & 'b) -> 'e
+//│ 'a -> (forall 'b, 'c, 'a. (('b -> 'c) -> 'c
 //│   where
-//│     'a <: (forall 'f. 'f -> {fold: forall 'g. 'g -> (forall 'f, 'h, 'i, 'j, 'fold, 'g. ('j -> 'i
+//│     'a <: (forall 'd. 'd -> {fold: forall 'e. 'e -> (forall 'd, 'e, 'f, 'g. ('f -> 'g
 //│   where
-//│     'f <: {fold: 'g -> ('j -> 'i & 'h) & 'fold}))}) -> ('c & 'd)))
+//│     'd <: {fold: 'e -> 'f -> 'g}))}) -> 'b))
 //│   <:  step:
 //│ Arrays -> Arrays
 //│ ╔══[ERROR] Type mismatch in def definition:

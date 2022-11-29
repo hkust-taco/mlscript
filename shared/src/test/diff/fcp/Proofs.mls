@@ -31,7 +31,7 @@ type DNE = forall 'a. Not[Not['a]] -> 'a
 // *      forall[A]. fun (nna: Not[Not[A]]) -> (em[A] match Left a -> a; Right na -> nna na)
 def EM_to_DNE em nna =
   case em of Left -> em.v, Right -> nna em.v
-//│ EM_to_DNE: ('a & ((Left with {v: 'v}) & 'b | (Right with {v: 'v0}) & 'c)) -> (forall 'v1, 'd, 'e, 'v2. (('v1 | 'v0) -> 'd & 'e) -> ('v2 | 'v | 'd))
+//│ EM_to_DNE: ((Left with {v: 'v}) | (Right with {v: 'v0})) -> (forall 'a. ('v0 -> 'a) -> ('v | 'a))
 //│          = [Function: EM_to_DNE]
 
 // * This requires distributivity or retyping with constrained types
@@ -53,7 +53,7 @@ EM_to_DNE: EM -> DNE
 // * Proof that EN implies DNE, annotated
 def EM_to_DNE_A0 (em: EM) nna =
   case em of Left -> em.v, Right -> nna em.v
-//│ EM_to_DNE_A0: EM -> (forall 'b, 'v, 'a, 'v0, 'c. (('v | Not['a & 'v0]) -> 'c & 'b) -> ('v0 | 'c))
+//│ EM_to_DNE_A0: EM -> (forall 'v. (Not['v] -> 'v) -> 'v)
 //│             = [Function: EM_to_DNE_A0]
 
 EM_to_DNE_A0: EM -> DNE
@@ -66,7 +66,7 @@ EM_to_DNE_A0: EM -> DNE
 def EM_to_DNE_A1 em =
   let poly (nna: Not[Not['A]]) = case em of Left -> em.v, Right -> nna em.v
   in poly
-//│ EM_to_DNE_A1: ('a & ((Left with {v: 'v}) & 'b | Right & {v: Not['A] & 'v0} & 'c)) -> (forall 'A0, 'v1, 'd. Not[Not['A & 'A0]] -> ('v1 | 'v | 'd))
+//│ EM_to_DNE_A1: ((Left with {v: 'v}) | Right & {v: Not['A]}) -> Not[Not['A]] -> 'v
 //│             = [Function: EM_to_DNE_A1]
 
 :e
@@ -92,7 +92,7 @@ EM_to_DNE_A1: EM -> DNE
 // *      )
 def DNE_to_EM dne =
   dne (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
-//│ DNE_to_EM: ((forall 'a, 'v, 'b, 'c, 'd, 'v0, 'e. ((Right & {v: forall 'f, 'v1, 'g. ('f & 'v1 & 'v) -> ('g | 'e) | 'v0} | 'c) -> 'a & ((Left with {v: 'v}) | 'b) -> 'e & 'd) -> 'a) -> 'h & 'i) -> 'h
+//│ DNE_to_EM: ((forall 'v, 'a, 'b. ((Right & {v: 'v -> 'a}) -> 'b & (Left with {v: 'v}) -> 'a) -> 'b) -> 'c) -> 'c
 //│          = [Function: DNE_to_EM]
 
 // * Requires distributivity because we currently don't generalize function bodies
@@ -113,7 +113,7 @@ DNE_to_EM: DNE -> EM
 def DNE_to_EM_let dne =
   let poly = dne (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
   in poly
-//│ DNE_to_EM_let: ((forall 'a, 'v, 'b, 'c, 'v0, 'd, 'e. ((Right & {v: forall 'f, 'v1, 'g. ('f & 'v1 & 'v0) -> ('g | 'd) | 'v} | 'b) -> 'c & ((Left with {v: 'v0}) | 'a) -> 'd & 'e) -> 'c) -> 'h & 'i) -> (forall 'j. 'j | 'h)
+//│ DNE_to_EM_let: ((forall 'v, 'a, 'b. ((Right & {v: 'v -> 'a}) -> 'b & (Left with {v: 'v}) -> 'a) -> 'b) -> 'c) -> 'c
 //│              = [Function: DNE_to_EM_let]
 
 // * This one used to work because we used let polymorphism
@@ -134,7 +134,7 @@ DNE_to_EM_let: DNE -> EM
 
 def DNE_to_EM_A0 (dne: DNE) =
   dne (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
-//│ DNE_to_EM_A0: DNE -> ((Left with {v: 'v}) | Right & {v: forall 'a, 'v0, 'b. ('a & 'v0 & 'v) -> ('b | 'c) | 'v1} | 'd)
+//│ DNE_to_EM_A0: DNE -> ((Left with {v: 'v}) | Right & {v: 'v -> nothing})
 //│             = [Function: DNE_to_EM_A0]
 
 :e
@@ -159,7 +159,7 @@ type EM_of[A] = Either[A, Not[A]]
 
 def DNE_to_EM_A1 dne =
   (dne: Not[Not[EM_of['a]]] -> EM_of['a]) (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
-//│ DNE_to_EM_A1: (Not[Not[EM_of['a] | 'b]] -> EM_of['a] & 'c) -> (EM_of['a] | 'b)
+//│ DNE_to_EM_A1: (Not[Not[EM_of['a]]] -> EM_of['a]) -> EM_of['a]
 //│             = [Function: DNE_to_EM_A1]
 
 :e
@@ -186,14 +186,14 @@ def helper: Not[Either['A, Not['A]]] -> 'A -> nothing
 def helper not_em = fun a -> not_em (Left { v = a })
 //│ helper: Not[Either['A, Not['A]]] -> 'A -> nothing
 //│       = <missing implementation>
-//│ (((Left with {v: 'v}) | 'a) -> 'b & 'c) -> (forall 'd, 'v0, 'e. ('v & 'd & 'v0) -> ('e | 'b))
+//│ ((Left with {v: 'v}) -> 'a) -> 'v -> 'a
 //│   <:  helper:
 //│ Not[Either['A, Not['A]]] -> 'A -> nothing
 //│       = [Function: helper]
 
 def DNE_to_EM_A2 (dne: DNE) =
   dne (fun (not_em: Not[Either['A, Not['A]]]) -> not_em (Right { v = helper not_em }))
-//│ DNE_to_EM_A2: DNE -> (Either['A, Not['A]] | 'a)
+//│ DNE_to_EM_A2: DNE -> Either['A, Not['A]]
 //│             = [Function: DNE_to_EM_A2]
 
 // * ^ Note how this is not `DNE -> forall 'A. (Either['A, Not['A]] | 'a)`?
@@ -229,21 +229,21 @@ def em: EM
 
 
 EM_to_DNE em
-//│ res: (('v | Not['v0]) -> 'a & 'b) -> ('v1 | 'v0 | 'a)
+//│ res: (Not['v] -> 'a) -> ('v | 'a)
 
 DNE_to_EM dne
-//│ res: (Left with {v: 'v}) | Right & {v: forall 'a, 'b, 'v0. ('v & 'b & 'v0) -> 'a}
+//│ res: (Left with {v: 'v}) | Right & {v: 'v -> nothing}
 
 
 EM_to_DNE_A0 em
-//│ res: (('v | Not['a & 'v0]) -> 'b & 'c) -> ('v0 | 'b)
+//│ res: (Not['v] -> 'v) -> 'v
 
 EM_to_DNE_A1 em
-//│ res: Not[Not['A & 'v]] -> ('v0 | 'v | 'a)
+//│ res: Not[Not['v]] -> 'v
 
 
 DNE_to_EM_A0 dne
-//│ res: (Left with {v: 'v}) | Right & {v: forall 'a, 'v0, 'b. ('v & 'a & 'v0) -> 'b}
+//│ res: (Left with {v: 'v}) | Right & {v: 'v -> nothing}
 
 DNE_to_EM_A1 dne
 //│ res: EM_of['a]
@@ -255,14 +255,14 @@ DNE_to_EM_A2 dne
 def to_DNE: DNE
 to_DNE nna = case em of Left -> em.v, Right -> nna em.v
 //│ to_DNE: DNE
-//│ (('v | Not['a & 'v0]) -> 'b & 'c) -> ('v0 | 'b)
+//│ (Not['v] -> 'v) -> 'v
 //│   <:  to_DNE:
 //│ DNE
 
 def to_EM: EM
 to_EM = dne (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
 //│ to_EM: EM
-//│ (Left with {v: 'v}) | Right & {v: forall 'a, 'v0, 'b. ('a & 'v0 & 'v) -> 'b}
+//│ (Left with {v: 'v}) | Right & {v: 'v -> nothing}
 //│   <:  to_EM:
 //│ EM
 
@@ -293,10 +293,10 @@ DNE_to_EM_A1: DNE -> EM
 
 
 EM_to_DNE em
-//│ res: (('v | Not['v0]) -> 'a & 'b) -> ('v1 | 'v0 | 'a)
+//│ res: (Not['v] -> 'a) -> ('v | 'a)
 
 DNE_to_EM dne
-//│ res: (Left with {v: 'v}) | Right & {v: forall 'a, 'v0, 'b. ('v & 'a & 'v0) -> 'b}
+//│ res: (Left with {v: 'v}) | Right & {v: 'v -> nothing}
 
 
 
@@ -346,9 +346,9 @@ EM_to_DNE: EM -> DNE
 
 def EM_to_DNE em nna =
   case em of Left -> em.v, Right -> nna em.v
-//│ EM_to_DNE: 'a -> (forall 'b, 'a, 'v, 'v0, 'c, 'd, 'e. (('v -> 'e & 'd) -> ('v0 | 'e)
+//│ EM_to_DNE: 'a -> (forall 'a, 'v, 'v0. (('v0 -> 'v) -> 'v
 //│   where
-//│     'a <: (Left with {v: 'v0}) & 'c | (Right with {v: 'v}) & 'b))
+//│     'a <: (Left with {v: 'v}) | (Right with {v: 'v0})))
 
 :e // * Still needs distrib! (after "sound extrusion")
 EM_to_DNE: EM -> DNE
@@ -368,9 +368,9 @@ EM_to_DNE: EM -> DNE
 
 def DNE_to_EM dne =
   dne (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
-//│ DNE_to_EM: ((forall 'a, 'b, 'c. ((Right & {v: forall 'd, 'e, 'v, 'v0, 'c, 'f. (('v & 'e) -> 'f | 'v0
+//│ DNE_to_EM: ((forall 'a, 'b. ((Right & {v: forall 'a, 'v, 'c. ('v -> 'c
 //│   where
-//│     'c <: ((Left with {v: 'v}) | 'd) -> 'f)} | 'a) -> 'b & 'c) -> 'b) -> 'g & 'h) -> 'g
+//│     'a <: (Left with {v: 'v}) -> 'c)}) -> 'b & 'a) -> 'b) -> 'd) -> 'd
 
 :e // * Still needs distrib! (after "sound extrusion")
 DNE_to_EM: DNE -> EM

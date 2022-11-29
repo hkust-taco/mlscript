@@ -18,7 +18,7 @@ def Nil = Nil {}
 //│ Nil: Nil
 
 def Cons head tail = Cons { head; tail }
-//│ Cons: 'b -> (forall 'c, 'a, 'tail, 'head, 'd. (List['a] & 'c & 'tail) -> ((Cons['a | 'b] with {head: 'head | 'b, tail: 'tail}) | 'd))
+//│ Cons: 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
 
 // ------------ Type signatures for functions used in the examples ------------
 // (I guess)
@@ -27,17 +27,17 @@ rec def mem x l = case l of
   { Nil -> false
   | Cons -> if eq l.head x then true else mem x l.tail
   }
-//│ mem: 'a -> (forall 'head, 'b, 'tail, 'c, 'd, 'e, 'f. ('f & ((Cons['tail] with {head: 'head & 'd, tail: 'tail & 'tail0}) & 'c | Nil & 'b)) -> ('e | false | true))
+//│ mem: anything -> 'tail -> bool
 //│   where
-//│     'tail0 <: (Cons['tail] with {tail: 'tail0}) | Nil
+//│     'tail <: (Cons[?] with {tail: 'tail}) | Nil
 
 rec def fold_left f x l = case l of
   { Nil -> x
   | Cons -> fold_left f (f x l.head) l.tail
   }
-//│ fold_left: ('a -> ('head -> ('b & 'c) & 'd) & 'e & 'c -> 'head0 -> 'c) -> (forall 'f. ('a & 'f) -> (forall 'tail, 'head1, 'g, 'h, 'i, 'j. ('j & ((Cons['tail] with {head: 'head & 'head1, tail: 'tail & 'tail0}) & 'i | Nil & 'h)) -> ('f | 'g | 'c)))
+//│ fold_left: ('a -> 'head -> 'b & 'b -> 'head0 -> 'b) -> (forall 'c. ('a & 'c) -> ((Cons[?] with {head: 'head, tail: 'tail}) | Nil) -> ('c | 'b))
 //│   where
-//│     'tail0 <: (Cons['tail] with {head: 'head0, tail: 'tail0}) | Nil
+//│     'tail <: (Cons[?] with {head: 'head0, tail: 'tail}) | Nil
 
 // ------------ polymorphic methods ------------
 
@@ -47,20 +47,18 @@ class Collection[a]: { l: List[a] }
   method Mem x = mem x this.l
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
-//│ Defined Collection.Mem: Collection['a] -> (forall 'b, 'c, 'a, 'd, 'e, 'f. ('b & 'f & 'a) -> (false | 'e | 'd | 'c))
-//│ Defined Collection.Fold: Collection['a] -> (forall 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'head, 'l, 'm, 'head0, 'n. (('d | 'm) -> (('a | 'head0) -> ('m & 'g & 'c & 'k & 'l) & 'f) & 'b -> (('a | 'head) -> ('d & 'j & 'i & 'e) & 'h) & 'n) -> (forall 'o, 'p, 'q, 'r, 's, 't, 'u. ('b & 'u & 'o & 'q) -> ('o | 's | 'r | 'e | 'k | 't | 'p)))
+//│ Defined Collection.Mem: Collection[?] -> anything -> bool
+//│ Defined Collection.Fold: Collection['a] -> (forall 'b, 'c, 'd. ('b -> 'a -> ('b & 'c) & 'd -> 'a -> ('b & 'c)) -> (forall 'e. ('d & 'e) -> ('e | 'c)))
 
 def coll_mem c x = c.Mem x
-//│ coll_mem: (Collection['a] & 'b) -> (forall 'c, 'd, 'e, 'f, 'g, 'h, 'i. ('d & 'i & 'f & 'h) -> (false | 'e | 'g | 'c))
+//│ coll_mem: Collection[?] -> anything -> bool
 
 // typo in the paper? it was `fun x -> fun y -> ...`
 def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
   let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
   (l1, l2)
-//│ simple_and_double: (Collection['a | 'a0] & 'b) -> (forall 'head, 'head0, 'c, 'd, 'tail, 'e, 'f, 'a1, 'a2, 'g, 'h, 'a3, 'i, 'j, 'k, 'l, 'a4, 'm, 'n. Nil | 'i | 'j | (Cons['a4 | 'a | 'a2 | 'g] with {head: 'a | 'head0 | 'g, tail: Nil | 'tail | 'l | 'h}) | 'f | 'k | 'c | 'e | 'm | 'h, forall 'tail0, 'o, 'p, 'q, 'head1, 'r, 'a5, 's, 't, 'h, 'u, 'a6, 'head2, 'a7, 'v, 'a8, 'w, 'x, 'y, 'z. Nil | 'v | 'u | (Cons[('a0 | 'q, 'a0 | 'q,) | 'a5 | 'a8 | 's] with {head: ('a0 | 'q, 'a0 | 'q,) | 'head1 | 's, tail: Nil | 'tail0 | 'h}) | 'y | 't | 'r | 'o | 'h | 'z,)
+//│ simple_and_double: Collection['a | 'a0] -> (forall 'b. Nil | 'b, forall 'c. Nil | 'c,)
 //│   where
-//│     'r :> Cons[('a0 | 'p | 'q, 'a0 | 'p | 'q,) | 'a6 | 'a7 | 'x] with {head: ('a0 | 'p, 'a0 | 'p,) | 'head2 | 'x, tail: 'w}
-//│     'w :> (Cons[('a0 | 'q, 'a0 | 'q,) | 'a5 | 'a8 | 's] with {head: ('a0 | 'q, 'a0 | 'q,) | 'head1 | 's, tail: Nil | 'tail0 | 'h}) | 't | 'r
-//│     'c :> Cons['a3 | 'a | 'a1 | 'n] with {head: 'a | 'head | 'n, tail: 'd}
-//│     'd :> (Cons['a4 | 'a | 'a2 | 'g] with {head: 'a | 'head0 | 'g, tail: Nil | 'tail | 'l | 'h}) | 'k | 'c
+//│     'c :> (Cons[('a0, 'a0,)] with {tail: Nil}) | (Cons[('a0, 'a0,)] with {tail: 'c})
+//│     'b :> (Cons['a] with {tail: Nil}) | (Cons['a] with {tail: 'b})

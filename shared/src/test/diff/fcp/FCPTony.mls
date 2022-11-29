@@ -12,9 +12,9 @@ def app n f = n f
 //│    = [Function: app]
 
 def g x y = app x y
-//│ g: 'a -> (forall 'b, 'c, 'd, 'e, 'a. (('b & 'e) -> 'd
+//│ g: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
-//│     'a <: 'b -> ('c & 'd)))
+//│     'a <: 'b -> 'c))
 //│  = [Function: g]
 
 :e
@@ -38,17 +38,17 @@ g {} {}
 
 
 def app p q = p q
-//│ app: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ app: 'a -> (forall 'b, 'c, 'a. ('b -> 'c
 //│   where
 //│     'a <: 'b -> 'c))
 //│    = [Function: app1]
 
 def mul r s = r (app s) id
-//│ mul: 'a -> (forall 'b, 'c, 'a, 'd, 'e. (('e & 'b) -> 'd
+//│ mul: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
-//│     'a <: (forall 'e, 'f, 'g, 'h. ('f -> 'g | 'h
+//│     'a <: (forall 'b, 'd, 'e. ('d -> 'e
 //│   where
-//│     'e <: 'f -> 'g)) -> ((forall 'i. 'i -> 'i) -> 'd & 'c)))
+//│     'b <: 'd -> 'e)) -> (forall 'f. 'f -> 'f) -> 'c))
 //│    = [Function: mul]
 
 :e
@@ -67,9 +67,9 @@ mul id {}
 //│   TypeError: p is not a function
 
 def fact t = mul t {}
-//│ fact: ((forall 'a, 'b, 'c. ('b -> 'c | 'a
+//│ fact: ((forall 'a, 'b. ('a -> 'b
 //│   where
-//│     anything <: 'b -> 'c)) -> ((forall 'd. 'd -> 'd) -> ('e & 'f) & 'g) & 'h & 'i) -> 'f
+//│     anything <: 'a -> 'b)) -> (forall 'c. 'c -> 'c) -> 'd) -> 'd
 //│     = [Function: fact]
 
 :e
@@ -88,11 +88,11 @@ fact id
 //│   TypeError: p is not a function
 
 def mul r s = r (app s)
-//│ mul: 'a -> (forall 'a, 'b, 'c, 'd. (('b & 'd) -> 'c
+//│ mul: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
-//│     'a <: (forall 'b, 'e, 'f, 'g. ('e -> 'f | 'g
+//│     'a <: (forall 'b, 'd, 'e. ('d -> 'e
 //│   where
-//│     'b <: 'e -> 'f)) -> 'c))
+//│     'b <: 'd -> 'e)) -> 'c))
 //│    = [Function: mul1]
 
 mul id id {}
@@ -115,40 +115,66 @@ def succ: ChurchInt -> ChurchInt
 def succ n f x = f (n f x)
 //│ succ: ChurchInt -> ChurchInt
 //│     = <missing implementation>
-//│ 'a -> (forall 'b. 'b -> (forall 'c, 'b, 'd. ('d -> 'c
+//│ 'a -> (forall 'b. 'b -> (forall 'b, 'c, 'd. ('c -> 'd
 //│   where
-//│     'b <: (forall 'a, 'b, 'd, 'e, 'f. ('e
+//│     'b <: (forall 'a, 'b, 'c, 'e. ('e
 //│   where
-//│     'a <: 'b -> ('d -> 'e & 'f))) -> 'c)))
+//│     'a <: 'b -> 'c -> 'e)) -> 'd)))
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│     = [Function: succ1]
 
+:ns
 def add n m = n succ m
-def f x y = add x y
-//│ add: 'a -> (forall 'a, 'b, 'c, 'd. ('b -> 'c
+//│ add: forall 'a. 'a -> (forall 'b, 'c, 'd. ('c -> 'd
 //│   where
-//│     'a <: (ChurchInt -> ChurchInt) -> ('b -> 'c & 'd)))
+//│     'a <: (ChurchInt -> ChurchInt) -> 'b))
+//│   where
+//│     'b <: 'c -> 'd
 //│    = [Function: add]
-//│ f: 'a -> (forall 'b, 'c, 'd, 'e, 'a, 'f. (('e & 'f) -> 'c
+
+// FIXME quantif of 'a
+// :ds
+add
+//│ res: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
-//│     'a <: (ChurchInt -> ChurchInt) -> ('e -> ('d & 'c) & 'b)))
+//│     'a <: (ChurchInt -> ChurchInt) -> 'b -> 'c))
+//│    = [Function: add]
+
+:ns
+def f x y = add x y
+//│ f: forall 'a. 'a -> (forall 'b, 'c, 'd, 'e, 'f. ('f -> 'b
+//│   where
+//│     'a <: (ChurchInt -> ChurchInt) -> 'e))
+//│   where
+//│     'f <: 'd
+//│     'e <: 'd -> 'c
+//│     'c <: 'b
 //│  = [Function: f]
+
+// :ds
+f
+//│ res: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│   where
+//│     'a <: (ChurchInt -> ChurchInt) -> 'b -> 'c))
+//│    = [Function: f]
 
 :e
 f {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.139: 	f {} {}
+//│ ║  l.163: 	f {} {}
 //│ ║         	^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.139: 	f {} {}
+//│ ║  l.163: 	f {} {}
 //│ ║         	  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.127: 	def add n m = n succ m
+//│ ║  l.128: 	def add n m = n succ m
 //│ ╙──       	              ^^^^^^
 //│ res: error
 //│ Runtime error:
 //│   TypeError: n is not a function
+
+
 
 
 

@@ -6,7 +6,7 @@
 // i.e. auto
 g = fun (f: forall 'a. 'a -> 'a) -> f f
 g' = fun f -> f f
-//│ g: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a | 'b)
+//│ g: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│  = [Function: g]
 //│ g': ('a -> 'b & 'a) -> 'b
 //│   = [Function: g$]
@@ -77,7 +77,7 @@ def mem[a]: a -> List[a] -> bool
 
 :RecursiveTypes // needed for this recursive def
 rec def mem x l = match_list l false (fun head -> fun tail -> if eq head x then true else mem x tail)
-//│ 'b -> (forall 'a, 'c, 'd, 'e. (List['a & 'c] & 'd) -> (false | true | 'e))
+//│ anything -> List[?] -> bool
 //│   <:  mem:
 //│ anything -> List[?] -> bool
 :NoRecursiveTypes
@@ -90,21 +90,21 @@ def fold_left: forall 'a 'b. ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 //│ fold_left: ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 
 rec def fl f x l = match_list l x (fun head -> fun tail -> fl f (f x head) tail)
-//│ fl: ('b -> ('c -> ('d & 'e) & 'f) & 'g & 'e -> 'a -> 'e) -> (forall 'h. ('b & 'h) -> (forall 'a0, 'i, 'j, 'k. (List['c & 'a & 'a0 & 'i] & 'j) -> ('h | 'e | 'k)))
+//│ fl: ('b -> 'c -> 'd & 'd -> 'a -> 'd) -> (forall 'e. ('b & 'e) -> List['c & 'a] -> ('e | 'd))
 
 rec def fl2 f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
-//│ fl2: ('c -> ('d -> ('e & 'a) & 'f) & 'a -> 'b -> ('a & 'a0) & 'g) -> (forall 'h. ('c & 'h) -> (forall 'a1, 'i, 'j, 'k, 'b0. (List['d & 'b & 'a1 & 'b0 & 'k] & 'j) -> ('a0 | 'h | 'e | 'i)))
+//│ fl2: ('c -> 'b -> 'a & 'a -> 'b -> 'a) -> (forall 'd. ('c & 'd) -> List['b] -> ('a | 'd))
 
 :RecursiveTypes // needed for this recursive def
 def fold_left = fl
-//│ ('b -> ('c -> ('d & 'e) & 'f) & 'g & 'e -> 'a -> 'e) -> (forall 'h. ('b & 'h) -> (forall 'a0, 'i, 'j, 'k. (List['c & 'a & 'a0 & 'i] & 'j) -> ('h | 'e | 'k)))
+//│ ('b -> 'c -> 'd & 'd -> 'a -> 'd) -> (forall 'e. ('b & 'e) -> List['c & 'a] -> ('e | 'd))
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 :NoRecursiveTypes
 
 // :e // FIXME? refreshing-extr
 def fold_left = fl2
-//│ ('c -> ('d -> ('e & 'a) & 'f) & 'a -> 'b -> ('a & 'a0) & 'g) -> (forall 'h. ('c & 'h) -> (forall 'i, 'b0, 'a1, 'j, 'k. (List['d & 'b & 'a1 & 'b0 & 'j] & 'k) -> ('a0 | 'h | 'e | 'i)))
+//│ ('c -> 'b -> 'a & 'a -> 'b -> 'a) -> (forall 'd. ('c & 'd) -> List['b] -> ('a | 'd))
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 
@@ -117,11 +117,11 @@ class Collection[a]: { l: List[a] }
   method Mem x = mem x this.l
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
-//│ Defined Collection.Mem: Collection['a] -> (forall 'a, 'b, 'c. ('b & 'a) -> (bool | 'c))
-//│ Defined Collection.Fold: Collection['a] -> (forall 'a0, 'b, 'a1, 'c. ('a0 -> ('b | 'a) -> ('a0 & 'a1) & 'c) -> (forall 'd, 'a2, 'e. ('a0 & 'd & 'a2 & 'e) -> ('a1 | 'e)))
+//│ Defined Collection.Mem: Collection[?] -> anything -> bool
+//│ Defined Collection.Fold: Collection['a] -> (forall 'a0, 'a1. ('a0 -> 'a -> ('a0 & 'a1)) -> (forall 'b. ('a0 & 'b) -> ('a1 | 'b)))
 
 def coll_mem c x = c.Mem x
-//│ coll_mem: (Collection['a] & 'b) -> (forall 'c, 'd, 'e, 'f. ('c & 'd & 'e) -> (bool | 'f))
+//│ coll_mem: Collection[?] -> anything -> bool
 
 // :e // FIXME — works with :RecursiveTypes
 // :e // Works since inconsistent constrained types...
@@ -131,10 +131,10 @@ def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> cons x y) nil in
   let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
   (l1, l2)
-//│ simple_and_double: (Collection['a | 'a0] & 'b) -> (forall 'c, 'd, 'e. List['a | 'c | 'd] | 'e, forall 'f, 'g, 'h, 'i. List[('a0 | 'g, 'a0 | 'g,) | 'h | 'i] | 'f,)
+//│ simple_and_double: Collection['a | 'a0] -> (List['a], List[('a0, 'a0,)],)
 
 simple_and_double (Collection{l = cons 1 nil})
-//│ res: (forall 'a, 'b, 'c. List[1 | 'a | 'b] | 'c, forall 'd, 'e, 'f, 'g. List[(1 | 'd, 1 | 'd,) | 'e | 'f] | 'g,)
+//│ res: (List[1], List[(1, 1,)],)
 
 // ------------ subtyping & methods ------------
 
