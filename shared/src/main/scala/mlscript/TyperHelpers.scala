@@ -279,7 +279,7 @@ abstract class TyperHelpers { Typer: Typer =>
     // }(r => s"= $r")
     
     def map(f: SimpleType => SimpleType): SimpleType = this match {
-      case TypeBounds(lb, ub) => TypeBounds(f(lb), f(ub))(prov)
+      case TypeBounds(lb, ub) => TypeBounds.mkSimple(f(lb), f(ub))
       case FunctionType(lhs, rhs) => FunctionType(f(lhs), f(rhs))(prov)
       case RecordType(fields) => RecordType(fields.mapValues(_.update(f, f)))(prov)
       case TupleType(fields) => TupleType(fields.mapValues(_.update(f, f)))(prov)
@@ -298,7 +298,7 @@ abstract class TyperHelpers { Typer: Typer =>
           (implicit ctx: Ctx): SimpleType = this match {
       case TypeBounds(lb, ub) if smart && pol.isDefined =>
         if (pol.getOrElse(die)) f(S(true), ub) else f(S(false), lb)
-      case TypeBounds(lb, ub) => TypeBounds(f(S(false), lb), f(S(true), ub))(prov)
+      case TypeBounds(lb, ub) => TypeBounds.mkSimple(f(S(false), lb), f(S(true), ub))
       case rt: RecordType => Typer.mapPol(rt, pol, smart)(f)
       case Without(base, names) if smart => f(pol, base).without(names)
       case bt: BaseType => Typer.mapPol(bt, pol, smart)(f)

@@ -207,6 +207,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         // PolymorphicType(0, fun(singleTup(BoolType), fun(singleTup(v), fun(singleTup(v), v)(noProv))(noProv))(noProv))
         PolymorphicType(0, fun(BoolType, fun(v, fun(v, v)(noProv))(noProv))(noProv))
       },
+      "emptyArray" -> {
+        val v = freshVar(noProv)(1)
+        PolymorphicType(0, ArrayType(FieldType(S(v), v)(noProv))(noProv))
+      },
     ) ++ primTypes ++ primTypes.map(p => "" + p._1.capitalize -> p._2) // TODO settle on naming convention...
   }
   
@@ -241,7 +245,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case Bounds(Bot, Top) =>
         val p = tyTp(ty.toLoc, "type wildcard")
         TypeBounds(ExtrType(true)(p), ExtrType(false)(p))(p)
-      case Bounds(lb, ub) => TypeBounds(rec(lb), rec(ub))(tyTp(ty.toLoc, "type bounds"))
+      case Bounds(lb, ub) =>
+        val lb_ty = rec(lb)
+        val ub_ty = rec(ub)
+        implicit val prov: TP = tyTp(ty.toLoc, "type bounds")
+        constrain(lb_ty, ub_ty)
+        TypeBounds(lb_ty, ub_ty)(prov)
       case Tuple(fields) =>
         TupleType(fields.mapValues(f =>
             FieldType(f.in.map(rec), rec(f.out))(tp(f.toLoc, "tuple field"))

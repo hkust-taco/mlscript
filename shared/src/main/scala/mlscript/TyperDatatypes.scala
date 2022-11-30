@@ -305,11 +305,14 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = s"$lb..$ub"
   }
   object TypeBounds {
+    final def mkSimple(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv): SimpleType = (lb, ub) match {
+      case (TypeBounds(lb, _), ub) => mkSimple(lb, ub, prov)
+      case (lb, TypeBounds(_, ub)) => mkSimple(lb, ub, prov)
+      case _ => TypeBounds(lb, ub)(prov)
+    }
     final def mk(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv)(implicit ctx: Ctx): SimpleType =
       if ((lb is ub) || lb === ub || lb <:< ub && ub <:< lb) lb else (lb, ub) match {
-        case (TypeBounds(lb, _), ub) => mk(lb, ub, prov)
-        case (lb, TypeBounds(_, ub)) => mk(lb, ub, prov)
-        case _ => TypeBounds(lb, ub)(prov)
+        case _ => mkSimple(lb, ub, prov)
       }
   }
   

@@ -482,10 +482,10 @@ trait TypeSimplifier { self: Typer =>
           && coOccurrences.get(false -> v).exists(_(atom))
         =>
           println(s"  [..] $v ${atom}")
-          val bundle = TypeBounds(
+          val bundle = TypeBounds.mk(
               v.upperBounds.foldLeft(atom)(_ & _),
               v.lowerBounds.foldLeft(atom)(_ | _),
-            )(noProv)
+            )
           varSubst += v -> S(bundle)
         
         case w: TV if !(w is v) && !varSubst.contains(w) && !varSubst.contains(v) && !recVars(v)
@@ -502,10 +502,10 @@ trait TypeSimplifier { self: Typer =>
           // } else {
           
           println(s"  [..] $v ${w}")
-          val bundle = TypeBounds(
+          val bundle = TypeBounds.mk(
               v.upperBounds.foldLeft(w: ST)(_ & _),
               v.lowerBounds.foldLeft(w: ST)(_ | _),
-            )(noProv)
+            )
           varSubst += v -> S(bundle)
           
           // }

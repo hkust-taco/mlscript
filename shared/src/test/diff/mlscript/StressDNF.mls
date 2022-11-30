@@ -16,7 +16,7 @@ def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -
 
 :stats
 ty0 = ty0
-//│ (A & 'a & 'b | 'e & (D & 'd | E & 'f) | 'c & (B & 'b | C & 'd)) -> ('a, 'b, 'c, 'd, 'e, 'f,)
+//│ (E & 'e & 'f | 'd & (C & 'c | D & 'e) | 'b & (A & 'a | B & 'c)) -> ('a, 'b, 'c, 'd, 'e, 'f,)
 //│   <:  ty0:
 //│ (E & 'e & 'f | 'd & (C & 'c | D & 'e) | 'b & (A & 'a | B & 'c)) -> ('a, 'b, 'c, 'd, 'e, 'f,)
 //│ constrain calls  : 51
