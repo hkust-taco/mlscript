@@ -137,7 +137,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     * Translate MLscript terms into JavaScript expressions.
     */
   protected def translateTerm(term: Term)(implicit scope: Scope): JSExpr = term match {
-    case _ if term.desugaredTerm.isDefined => translateTerm(term.desugaredTerm.get)
+    case _ if term.desugaredTerm.isDefined => translateTerm(term.desugaredTerm.getOrElse(die))
     case Var(name) => translateVar(name, false)
     case Lam(params, body) =>
       val lamScope = scope.derive("Lam")
