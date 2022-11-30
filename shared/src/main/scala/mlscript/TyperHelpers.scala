@@ -720,7 +720,9 @@ abstract class TyperHelpers { Typer: Typer =>
       case _: ObjectTag => ()
       case tr: TypeRef => tr.mapTargs(pol)(apply(_)(_)); ()
       case Without(b, ns) => apply(pol)(b)
-      case TypeBounds(lb, ub) => apply(S(false))(lb); apply(S(true))(ub)
+      case TypeBounds(lb, ub) =>
+        if (pol =/= S(true)) apply(S(false))(lb)
+        if (pol =/= S(false)) apply(S(true))(ub)
     }
     def applyField(pol: Opt[Bool])(fld: FieldType): Unit = {
       fld.lb.foreach(apply(pol.map(!_)))
