@@ -1,0 +1,30 @@
+:NewParser
+
+class Point(x, y)
+//│ Defined class Point
+//│ Point: ('x, 'y,) -> (Point with {x: 'x, y: 'y})
+//│      = [Function: Point1]
+
+:e
+:ge
+fun f(p) =
+  if p is
+    Point(x, y, z) then x + y + z
+//│ ╔══[ERROR] class Point expects 2 parameters but found 3 parameters
+//│ ║  l.12: 	    Point(x, y, z) then x + y + z
+//│ ╙──      	    ^^^^^^^^^^^^^^
+//│ f: anything -> error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared
+
+:e
+:ge
+fun g(xs) =
+  if xs is
+    head :: _ then head
+//│ ╔══[ERROR] Cannot find operator `::` in the context
+//│ ║  l.24: 	    head :: _ then head
+//│ ╙──      	         ^^
+//│ g: anything -> error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared

@@ -458,7 +458,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
           case S(pol) => mkDeepST(st, pol)(ctx, ptr = true, etf = false)
           case N => TypeBounds.mk(
             mkDeepST(st, false)(ctx, ptr = true, etf = false),
-            mkDeepST(st, false)(ctx, ptr = true, etf = false))
+            mkDeepST(st, true)(ctx, ptr = true, etf = false))
         }
         dnf.toType().mapPol(S(pol))(go)
     }

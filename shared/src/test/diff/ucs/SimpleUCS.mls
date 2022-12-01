@@ -1,0 +1,388 @@
+:NewParser
+
+class Option
+class Some(value): Option
+class None: Option
+//│ Defined class Option
+//│ Defined class Some
+//│ Defined class None
+//│ Option: () -> Option
+//│       = [Function: Option1]
+//│ Some: 'value -> (Some with {value: 'value})
+//│     = [Function: Some1]
+//│ None: () -> None
+//│     = [Function: None1]
+
+class Either
+class Left(leftValue): Either
+class Right(rightValue): Either
+//│ Defined class Either
+//│ Defined class Left
+//│ Defined class Right
+//│ Either: () -> Either
+//│       = [Function: Either1]
+//│ Left: 'leftValue -> (Left with {leftValue: 'leftValue})
+//│     = [Function: Left1]
+//│ Right: 'rightValue -> (Right with {rightValue: 'rightValue})
+//│      = [Function: Right1]
+
+:e
+:ge
+fun f(x, y) =
+  if x is
+    Left(xv) and y is Left(yv) then xv + yv
+    Right(xv) and y is Right(yv) then xv * yv
+    None() and y is None() then 0
+//│ ╔══[ERROR] The match is not exhaustive.
+//│ ║  l.33: 	    Left(xv) and y is Left(yv) then xv + yv
+//│ ║        	                 ^^^^^^^^^^^^^
+//│ ╟── The scrutinee at this position misses 2 cases.
+//│ ║  l.33: 	    Left(xv) and y is Left(yv) then xv + yv
+//│ ║        	                 ^
+//│ ╟── [Missing Case 1/2] `None`
+//│ ╟── It first appears here.
+//│ ║  l.35: 	    None() and y is None() then 0
+//│ ║        	                    ^^^^^^
+//│ ╟── [Missing Case 2/2] `Right`
+//│ ╟── It first appears here.
+//│ ║  l.34: 	    Right(xv) and y is Right(yv) then xv * yv
+//│ ╙──      	                       ^^^^^^^^^
+//│ f: (anything, anything,) -> error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared
+
+fun f(x, y) =
+  if x is
+    Left(xv) and y is Left(yv) then xv + yv
+    None() then 0
+//│ f: (Left & {leftValue: int} | None, Left & {leftValue: int},) -> int
+//│  = [Function: f1]
+
+fun f(x, y) =
+  if x is
+    Left(xv) and y is
+      Left(yv) then xv + yv
+      Right(yv) then xv * yv
+    None() then 0
+//│ f: (Left & {leftValue: int} | None, Left & {leftValue: int} | Right & {rightValue: int},) -> int
+//│  = [Function: f2]
+
+fun f(x) =
+  if x is
+    Some(v) and
+      v < 0 then "negative"
+      v > 0 then "positive"
+      _     then "zero"
+    None() then "nothing"
+//│ f: (None | Some & {value: number}) -> ("negative" | "nothing" | "positive" | "zero")
+//│  = [Function: f3]
+
+fun f(x, y) =
+  if x is
+    Some(x) and y is
+      Some(y) then 0
+//│ f: (Some, Some,) -> 0
+//│  = [Function: f4]
+
+class A(value)
+class B(value)
+//│ Defined class A
+//│ Defined class B
+//│ A: 'value -> (A with {value: 'value})
+//│  = [Function: A1]
+//│ B: 'value -> (B with {value: 'value})
+//│  = [Function: B1]
+
+fun f(x, y, u, v) =
+  if x is
+    A(a) and y ==
+      u then 0
+      v then 1
+    A(a) and y is
+      B(0) then 0
+      B(1) then 1
+    A(_) then 99
+//│ f: (A, number, number, number,) -> (0 | 1 | 99)
+//│  = [Function: f5]
+
+fun f(x) =
+  if x is
+    A(_) then "A"
+    B(_) then "B"
+//│ f: (A | B) -> ("A" | "B")
+//│  = [Function: f6]
+
+:e
+:ge
+fun f(x, y) =
+  if x is
+    Some(xv) and y is Some(yv) then xv + yv
+    None() and y is None() then 0
+//│ ╔══[ERROR] The match is not exhaustive.
+//│ ║  l.119: 	    Some(xv) and y is Some(yv) then xv + yv
+//│ ║         	                 ^^^^^^^^^^^^^
+//│ ╟── The scrutinee at this position misses 1 case.
+//│ ║  l.119: 	    Some(xv) and y is Some(yv) then xv + yv
+//│ ║         	                 ^
+//│ ╟── [Missing Case 1/1] `None`
+//│ ╟── It first appears here.
+//│ ║  l.120: 	    None() and y is None() then 0
+//│ ╙──       	                    ^^^^^^
+//│ f: (anything, anything,) -> error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared
+
+:e
+:ge
+fun f(x, y) =
+  if x is
+    Some(xv) and y is
+      Some(yv) then xv + yv
+      None() then xv * 2
+    None() and y is
+      Some(yv) then yv * 3
+//│ ╔══[ERROR] The match is not exhaustive.
+//│ ║  l.142: 	    None() and y is
+//│ ║         	               ^^^^
+//│ ╟── The scrutinee at this position misses 1 case.
+//│ ║  l.142: 	    None() and y is
+//│ ║         	               ^
+//│ ╟── [Missing Case 1/1] `None`
+//│ ╟── It first appears here.
+//│ ║  l.141: 	      None() then xv * 2
+//│ ╙──       	      ^^^^^^
+//│ f: (anything, anything,) -> error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared
+
+fun f(x, y) =
+  if x is
+    A and y is
+      B then "bruh"
+//│ f: (A, B,) -> "bruh"
+//│  = [Function: f9]
+
+fun f(x, y, z) =
+  if x is
+    A and z == 0 and y == 0 and y is
+      B then "bruh"
+    A then "oui"
+//│ f: (A, number, number,) -> ("bruh" | "oui")
+//│  = [Function: f10]
+
+// We do need a syntax to specify default branch in IfOpsApp...
+:e
+:ge
+fun f(x, y) =
+  if x is
+    Some(x) and y
+      >  0 then "gt"
+      <  0 then "le"
+      == 0 then "eq"
+//│ ╔══[ERROR] The case when this is false is not handled: == (y,) (0,)
+//│ ║  l.178: 	    Some(x) and y
+//│ ║         	                ^
+//│ ║  l.179: 	      >  0 then "gt"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.180: 	      <  0 then "le"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.181: 	      == 0 then "eq"
+//│ ╙──       	^^^^^^^^^^
+//│ f: (anything, anything,) -> error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared
+
+fun isValid(x) = if x then false else true
+//│ isValid: anything -> bool
+//│        = [Function: isValid]
+
+fun f(x, allowNone) =
+  if x is
+    Some(x) and isValid(x) then "good"
+    None() and allowNone then "okay"
+    else "bad"
+//│ f: (anything, anything,) -> ("bad" | "good" | "okay")
+//│  = [Function: f12]
+
+fun f(x) =
+  if x is
+    None then "bruh"
+    Some(x) then "roll"
+    _ and x == 0 then 0
+    _ then "rock"
+//│ f: (None | number | Some) -> ("bruh" | "rock" | "roll" | 0)
+//│  = [Function: f13]
+
+fun f(x, a, b) =
+  if x is
+    A(aa) and a then aa
+    B(bb) and b then bb
+    _           then 0
+//│ f: ((A with {value: 'value}) | (B with {value: 'value}) | ~A & ~B, anything, anything,) -> (0 | 'value)
+//│  = [Function: f14]
+
+fun f(x, y, b) =
+  if x is
+    Some(xv) and y
+      is Some(yv) then "bruh"
+      is None() then "bruh"
+    Some(xv) and b then xv + b
+    _ then "roll"
+//│ f: (Some & {value: int} | ~Some, anything, ~true,) -> ("bruh" | "roll" | int)
+//│  = [Function: f15]
+
+fun g(x, y, b) =
+  if x is
+    Some(xv) and y
+      is Some(yv) then yv
+      is None() then "bruh"
+    Some(xv) and b then xv + b
+    _ then "roll"
+//│ g: (Some & {value: int} | ~Some, (Some with {value: 'value}) | ~Some, ~true,) -> ("bruh" | "roll" | int | 'value)
+//│  = [Function: g]
+
+fun foo(x, y, z) =
+  if x - y > 0 then Some(x + y + z) else None()
+//│ foo: (int, int, int,) -> (None | Some & {value: int})
+//│    = [Function: foo]
+
+// Uncomment this block to make the following block work.
+// fun foo(x, y, z) =
+//   if x - y > 0 then Some(
+//     if x % 2 == 0 then Left(x) else Right(x)
+//   ) else None()
+
+:e
+fun f(u, v, w) =
+  if foo(u, v, w) is
+    Some(x) and x is
+      Left(_) then "left-defined"
+      Right(_) then "right-defined"
+    None then "undefined"
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.257: 	  if foo(u, v, w) is
+//│ ║         	     ^^^^^^^^^^^^^^^
+//│ ║  l.258: 	    Some(x) and x is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.259: 	      Left(_) then "left-defined"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.260: 	      Right(_) then "right-defined"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.261: 	    None then "undefined"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── operator application of type `int` does not match type `Left & ?a | Right & ?b`
+//│ ║  l.245: 	  if x - y > 0 then Some(x + y + z) else None()
+//│ ║         	                         ^^^^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.258: 	    Some(x) and x is
+//│ ║         	                ^
+//│ ╟── from application:
+//│ ║  l.257: 	  if foo(u, v, w) is
+//│ ╙──       	     ^^^^^^^^^^^^
+//│ f: (int, int, int,) -> ("left-defined" | "right-defined" | "undefined")
+//│  = [Function: f16]
+
+fun p(x) = if x >= 0 then Right(x) else Left(x)
+//│ p: (number & 'leftValue) -> ((Left with {leftValue: 'leftValue}) | (Right with {rightValue: 'leftValue}))
+//│  = [Function: p]
+
+fun g(a, b) =
+  if p(a) is
+    Left(x) and b is
+      Some(y) then x + y
+      None    then x * a
+    Right(x) and b is
+      Some(y) then x * y
+      None    then x
+//│ g: (int, None | Some & {value: int},) -> int
+//│  = [Function: g1]
+
+// TODO: Fix the NaN.
+g(5, None())
+g(5, Some(7))
+g(0 - 5, None())
+g(0 - 5, Some(9))
+//│ res: int
+//│    = 5
+//│ res: int
+//│    = 35
+//│ res: int
+//│    = NaN
+//│ res: int
+//│    = 4
+
+class Var(name)
+class ValBase
+class IntVal(value): ValBase
+class BoolVal(value): ValBase
+class Lit(val)
+//│ Defined class Var
+//│ Defined class ValBase
+//│ Defined class IntVal
+//│ Defined class BoolVal
+//│ Defined class Lit
+//│ Var: 'name -> (Var with {name: 'name})
+//│    = [Function: Var1]
+//│ ValBase: () -> ValBase
+//│        = [Function: ValBase1]
+//│ IntVal: 'value -> (IntVal with {value: 'value})
+//│       = [Function: IntVal1]
+//│ BoolVal: 'value -> (BoolVal with {value: 'value})
+//│        = [Function: BoolVal1]
+//│ Lit: 'val -> (Lit with {val: 'val})
+//│    = [Function: Lit1]
+
+fun p(e, context) =
+  if e is
+    Var(x) and context.get(x) is
+      Some(IntVal(v)) then Left(v)
+      Some(BoolVal(v)) then Right(v)
+    Lit(IntVal(v)) then Left(v)
+    Lit(BoolVal(v)) then Right(v)
+//│ p: (Lit & {val: (BoolVal with {value: 'rightValue}) | (IntVal with {value: 'leftValue})} | (Var with {name: 'name}), {get: 'name -> (Some & {value: (BoolVal with {value: 'rightValue}) | (IntVal with {value: 'leftValue})})},) -> ((Left with {leftValue: 'leftValue}) | (Right with {rightValue: 'rightValue}))
+//│  = [Function: p1]
+
+class Nil()
+//│ Defined class Nil
+//│ Nil: () -> Nil
+//│    = [Function: Nil1]
+
+// Support operator constructor like ::
+:e
+:ge
+fun f(x) =
+  if x is
+    0 ::
+      Nil() then "oh"
+//│ ╔══[ERROR] Cannot find operator `::` in the context
+//│ ║  l.355: 	    0 ::
+//│ ╙──       	      ^^
+//│ f: anything -> error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared
+
+fun f(x) =
+  if x == 0 and x is
+    A(_) then "A"
+    B(_) then "B"
+  else "bruh"
+//│ f: number -> ("A" | "B" | "bruh")
+//│  = [Function: f18]
+
+fun helper(x) =
+  if x == 0 then None() else Some(x)
+//│ helper: (number & 'value) -> (None | (Some with {value: 'value}))
+//│       = [Function: helper]
+
+fun g(x, y) =
+  if x == 0 and helper(x) is
+    Some(a) and helper(y) is
+      Some(b) then a + b
+      None() then a + 1
+    None() and helper(y) is
+      Some(b) then 2 + b
+      None() then 1
+  else
+    0
+//│ g: (int, int,) -> int
+//│  = [Function: g2]

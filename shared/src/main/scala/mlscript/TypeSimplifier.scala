@@ -437,7 +437,7 @@ trait TypeSimplifier { self: Typer =>
     // *  (We may unfy a non-rec TV with a rec one, makingthe non-rec TV recursive.)
     
     // * This will be filled during the processing phase, to guide the transformation phase:
-    val varSubst = MutMap.empty[TypeVariable, Option[TypeVariable]]
+    val varSubst = MutMap.empty[TypeVariable, Option[ST]]
     
     // val allVars = st.getVars
     val allVars = analyzed1.iterator.map(_._1).toSortedSet
@@ -482,7 +482,11 @@ trait TypeSimplifier { self: Typer =>
           && coOccurrences.get(false -> v).exists(_(atom))
         =>
           println(s"  [..] $v ${atom}")
-          varSubst += v -> None; ()
+          val bundle = TypeBounds.mk(
+              v.upperBounds.foldLeft(atom)(_ & _),
+              v.lowerBounds.foldLeft(atom)(_ | _),
+            )
+          varSubst += v -> S(bundle)
         
         case w: TV if !(w is v) && !varSubst.contains(w) && !varSubst.contains(v) && !recVars(v)
           && coOccurrences.get(false -> v).exists(_(w))
@@ -498,7 +502,11 @@ trait TypeSimplifier { self: Typer =>
           // } else {
           
           println(s"  [..] $v ${w}")
-          varSubst += v -> N
+          val bundle = TypeBounds.mk(
+              v.upperBounds.foldLeft(w: ST)(_ & _),
+              v.lowerBounds.foldLeft(w: ST)(_ | _),
+            )
+          varSubst += v -> S(bundle)
           
           // }
           
@@ -626,7 +634,7 @@ trait TypeSimplifier { self: Typer =>
           case S(N) =>
             println(s"-> bound")
             pol.fold(
-              TypeBounds.mk(mergeTransform(true, tv, parent), mergeTransform(false, tv, parent))
+              lastWords("Should not be replacing an invariant type variable by its bound...")
             )(mergeTransform(_, tv, parent))
           case N =>
             var wasDefined = true

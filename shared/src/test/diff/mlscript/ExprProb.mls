@@ -279,7 +279,7 @@ rec def prettier1 k ev e = case e of {
 //│          = [Function: prettier1]
 //│ constrain calls  : 290
 //│ annoying  calls  : 0
-//│ subtyping calls  : 1029
+//│ subtyping calls  : 1035
 
 :stats
 rec def prettier11 k ev e = case e of {
@@ -296,7 +296,7 @@ rec def prettier11 k ev e = case e of {
 //│           = [Function: prettier11]
 //│ constrain calls  : 184
 //│ annoying  calls  : 0
-//│ subtyping calls  : 773
+//│ subtyping calls  : 776
 
 // Doesn't make much sense, but generates very ugly type unless aggressively simplified:
 :stats
@@ -313,7 +313,7 @@ rec def prettier12 k ev e = case e of {
 //│           = [Function: prettier12]
 //│ constrain calls  : 159
 //│ annoying  calls  : 0
-//│ subtyping calls  : 821
+//│ subtyping calls  : 826
 
 
 :stats

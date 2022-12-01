@@ -48,13 +48,33 @@ object Helpers {
     case Splc(fs)       => 
       val elems = fs.map{case L(l) => s"...${inspect(l)}" case R(Fld(_, _, r)) => inspect(r)}.mkString(", ")
       s"Splc($elems)"
-    case If(bod, els) => s"If($bod, ${els.map(inspect)})"
+    case If(bod, els) => s"If(${inspect(bod)}, ${els.map(inspect)})"
     case New(base, body) => s"New(${base}, ${body})"
     case TyApp(base, targs) => s"TyApp(${inspect(base)}, ${targs})"
     case Def(rec, nme, rhs, isByname) =>
       s"Def($rec, $nme, ${rhs.fold(inspect, "" + _)}, $isByname)"
   }
 
+  def inspect(body: IfBody): Str = body match {
+    case IfElse(expr) => s"IfElse(${inspect(expr)}"
+    case IfThen(expr, rhs) => s"IfThen(${inspect(expr)}, ${inspect(rhs)}"
+    case IfBlock(lines) => s"IfBlock(${
+      lines.iterator.map {
+        case L(body) => inspect(body)
+        case R(NuFunDef(S(isRec), nme, _, L(rhs))) =>
+          s"Let($isRec, ${nme.name}, ${inspect(rhs)})"
+        case R(_) => ???
+      }.mkString(";")
+    })"
+    case IfOpsApp(lhs, opsRhss) => s"IfOpsApp(${inspect(lhs)}, ${
+      opsRhss.iterator.map { case (op, body) =>
+        s"$op -> ${inspect(body)}"
+      }
+    }".mkString("; ")
+    case IfLet(isRec, name, rhs, body) => ???
+    case IfOpApp(lhs, op, rhs) =>
+      s"IfOpApp(${inspect(lhs)}, ${inspect(op)}, ${inspect(rhs)}"
+  }
   def inspect(t: TypingUnit): Str = t.entities.iterator
     .map {
       case term: Term => inspect(term)
