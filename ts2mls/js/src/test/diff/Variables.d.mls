@@ -1,18 +1,18 @@
 :NewParser
 :ParseOnly
-let URI: mut (string)
+let URI: {mut contents: string}
 let URI2: string
 let foo: number
-let bar: mut (false)
+let bar: {mut contents: false}
 class FooBar() {}
-let fb: mut (FooBar)
+let fb: {mut contents: FooBar}
 namespace ABC {
   class DEF() {}
 }
-let d: mut (ABC.DEF)
+let d: {mut contents: ABC.DEF}
 namespace DD {
-  let foo: mut (number)
-  let bar: mut (number)
+  let foo: {mut contents: number}
+  let bar: {mut contents: number}
 }
-//│ |#let| |URI|#:| |#mut| |(|string|)|↵|#let| |URI2|#:| |string|↵|#let| |foo|#:| |number|↵|#let| |bar|#:| |#mut| |(|false|)|↵|#class| |FooBar|(||)| |{||}|↵|#let| |fb|#:| |#mut| |(|FooBar|)|↵|#namespace| |ABC| |{|→|#class| |DEF|(||)| |{||}|←|↵|}|↵|#let| |d|#:| |#mut| |(|ABC|.DEF|)|↵|#namespace| |DD| |{|→|#let| |foo|#:| |#mut| |(|number|)|↵|#let| |bar|#:| |#mut| |(|number|)|←|↵|}|
-//│ Parsed: {let URI: [] -> (string,); let URI2: [] -> string; let foo: [] -> number; let bar: [] -> (false,); class FooBar() {}; let fb: [] -> (FooBar,); namespace ABC() {class DEF() {}}; let d: [] -> (ABC.DEF,); namespace DD() {let foo: [] -> (number,); let bar: [] -> (number,)}}
+//│ |#let| |URI|#:| |{|#mut| |contents|#:| |string|}|↵|#let| |URI2|#:| |string|↵|#let| |foo|#:| |number|↵|#let| |bar|#:| |{|#mut| |contents|#:| |false|}|↵|#class| |FooBar|(||)| |{||}|↵|#let| |fb|#:| |{|#mut| |contents|#:| |FooBar|}|↵|#namespace| |ABC| |{|→|#class| |DEF|(||)| |{||}|←|↵|}|↵|#let| |d|#:| |{|#mut| |contents|#:| |ABC|.DEF|}|↵|#namespace| |DD| |{|→|#let| |foo|#:| |{|#mut| |contents|#:| |number|}|↵|#let| |bar|#:| |{|#mut| |contents|#:| |number|}|←|↵|}|
+//│ Parsed: {let URI: [] -> {mut contents: string}; let URI2: [] -> string; let foo: [] -> number; let bar: [] -> {mut contents: false}; class FooBar() {}; let fb: [] -> {mut contents: FooBar}; namespace ABC() {class DEF() {}}; let d: [] -> {mut contents: ABC.DEF}; namespace DD() {let foo: [] -> {mut contents: number}; let bar: [] -> {mut contents: number}}}

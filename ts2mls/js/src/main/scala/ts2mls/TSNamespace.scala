@@ -57,7 +57,7 @@ class TSNamespace(name: String, parent: Option[TSNamespace]) {
           case _: TSTypeAlias => writer.writeln(Converter.convert(mem._1)(indent))
           case _ =>
             if (mem._2) writer.writeln(s"${indent}let $name: ${Converter.convert(mem._1)("")}")
-            else writer.writeln(s"${indent}let $name: mut (${Converter.convert(mem._1)("")})")
+            else writer.writeln(s"${indent}let $name: {mut contents: ${Converter.convert(mem._1)("")}}")
         }
       }
     })
