@@ -65,8 +65,8 @@ object Converter {
           case _: TSFunctionType => s"${generateFunDeclaration(m._2.base, m._1)(indent + "  ")}\n"
           case _: TSIgnoredOverload => s"${generateFunDeclaration(m._2.base, m._1)(indent + "  ")}\n"
           case _ =>
-            if (m._2.mutable) s"${indent}  let ${m._1}: {mut contents: ${convert(m._2)}}\n"
-            else s"${indent}  let ${m._1}: ${convert(m._2)}\n"
+            if (m._2.mutable) s"${indent}  ${m._1}: {mut contents: ${convert(m._2)}}\n"
+            else s"${indent}  ${m._1}: ${convert(m._2)}\n"
         }
       case _ => "" // TODO: deal with private/protected members
     }) :::

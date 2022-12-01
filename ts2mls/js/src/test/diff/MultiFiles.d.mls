@@ -4,7 +4,7 @@ fun multi1(x: number): number
 fun multi3(): unit
 class Foo(): Base {}
 trait AnotherBase() {
-  let y: {mut contents: string}
+  y: {mut contents: string}
 }
 namespace N {
   fun f(): unit
@@ -14,9 +14,9 @@ namespace N {
 fun multi2(x: string): string
 fun multi4(): unit
 trait Base() {
-  let a: {mut contents: number}
+  a: {mut contents: number}
 }
 class AnotherFoo(): AnotherBase {}
 fun multi5(): unit
-//│ |#fun| |multi1|(|x|#:| |number|)|#:| |number|↵|#fun| |multi3|(||)|#:| |unit|↵|#class| |Foo|(||)|#:| |Base| |{||}|↵|#trait| |AnotherBase|(||)| |{|→|#let| |y|#:| |{|#mut| |contents|#:| |string|}|←|↵|}|↵|#namespace| |N| |{|→|#fun| |f|(||)|#:| |unit|↵|#fun| |g|(||)|#:| |unit|↵|#fun| |h|(||)|#:| |unit|←|↵|}|↵|#fun| |multi2|(|x|#:| |string|)|#:| |string|↵|#fun| |multi4|(||)|#:| |unit|↵|#trait| |Base|(||)| |{|→|#let| |a|#:| |{|#mut| |contents|#:| |number|}|←|↵|}|↵|#class| |AnotherFoo|(||)|#:| |AnotherBase| |{||}|↵|#fun| |multi5|(||)|#:| |unit|
-//│ Parsed: {fun multi1: [] -> (x: number,) -> number; fun multi3: [] -> () -> unit; class Foo(): Base {}; trait AnotherBase() {let y: [] -> {mut contents: string}}; namespace N() {fun f: [] -> () -> unit; fun g: [] -> () -> unit; fun h: [] -> () -> unit}; fun multi2: [] -> (x: string,) -> string; fun multi4: [] -> () -> unit; trait Base() {let a: [] -> {mut contents: number}}; class AnotherFoo(): AnotherBase {}; fun multi5: [] -> () -> unit}
+//│ |#fun| |multi1|(|x|#:| |number|)|#:| |number|↵|#fun| |multi3|(||)|#:| |unit|↵|#class| |Foo|(||)|#:| |Base| |{||}|↵|#trait| |AnotherBase|(||)| |{|→|y|#:| |{|#mut| |contents|#:| |string|}|←|↵|}|↵|#namespace| |N| |{|→|#fun| |f|(||)|#:| |unit|↵|#fun| |g|(||)|#:| |unit|↵|#fun| |h|(||)|#:| |unit|←|↵|}|↵|#fun| |multi2|(|x|#:| |string|)|#:| |string|↵|#fun| |multi4|(||)|#:| |unit|↵|#trait| |Base|(||)| |{|→|a|#:| |{|#mut| |contents|#:| |number|}|←|↵|}|↵|#class| |AnotherFoo|(||)|#:| |AnotherBase| |{||}|↵|#fun| |multi5|(||)|#:| |unit|
+//│ Parsed: {fun multi1: [] -> (x: number,) -> number; fun multi3: [] -> () -> unit; class Foo(): Base {}; trait AnotherBase() {y : Record(List((contents,Field(Some(TypeName(string)),TypeName(string)))))}; namespace N() {fun f: [] -> () -> unit; fun g: [] -> () -> unit; fun h: [] -> () -> unit}; fun multi2: [] -> (x: string,) -> string; fun multi4: [] -> () -> unit; trait Base() {a : Record(List((contents,Field(Some(TypeName(number)),TypeName(number)))))}; class AnotherFoo(): AnotherBase {}; fun multi5: [] -> () -> unit}
