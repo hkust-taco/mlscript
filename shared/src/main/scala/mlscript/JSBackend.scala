@@ -235,6 +235,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case _ =>
           throw CodeGenError(s"illegal assignemnt left-hand side: ${inspect(lhs)}")
       }
+    case Quoted(body) =>
+      translateQuoted(body)
     case _: Bind | _: Test | If(_, _) | New(_, _) | TyApp(_, _) | _: Splc =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
@@ -445,6 +447,42 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       case S(memberParams) => JSClassMethod(name, memberParams, bodyStmts)
       case N => JSClassGetter(name, bodyStmts)
     }
+  }
+
+  /**
+   * Translate body of quasiquotes (Quoted) to S-expression in JSArray
+   */
+  private def translateQuoted(body: Term)(implicit scope: Scope): JSExpr = body match {
+    case variable @ Var(name) => JSExpr(name) //(s"VARIABLE with name: ${name}")
+    // ^ should handle hygiene here
+    case Lam(lhs, rhs) => throw CodeGenError(s"LAMBDA lhs: ${lhs} rhs: ${rhs}")
+    // Applications
+    // Implementation from Term - duplicated tests from translateApp
+    case App(App(Var(op), Tup((N -> Fld(_, _, lhs)) :: Nil)), Tup((N -> Fld(_, _, rhs)) :: Nil))
+      if JSBinary.operators contains op =>
+        JSArray(Ls(JSExpr(op), translateQuoted(lhs), translateQuoted(rhs)))
+    case App(App(App(Var("if"), tst), con), alt) =>
+      throw CodeGenError(s"IF con: ${con}, tst: ${tst}, alt: ${alt}")
+    case Tup(fields) => throw CodeGenError(s"TUPLE with fields: ${fields}")
+    case Rcd(fields) => throw CodeGenError(s"this is a RECORD")
+    case Sel(receiver, fieldName) => throw CodeGenError(s"SELECTOR receiver: ${receiver} fieldName: ${fieldName}")
+    case Let(isRec, name, rhs, body) => throw CodeGenError(s"LET isRec: ${isRec}, name: ${name}, rhs: ${rhs}, body: ${body} \n BODY: ${translateQuoted(body)}}")
+    case Blk(stmts) => throw CodeGenError("**BLOCKs/multiline code are not supported in quasiquotes... yet")
+    case Bra(rcd, trm) => throw CodeGenError(s"BRACKET with rcd ${rcd}, trm: ${trm}")
+    case Asc(_,_) => throw CodeGenError("**ASCRIPTIONs are not supported in quasiquotes")
+    case Bind(_,_) => throw CodeGenError("**BINDINGs are not supported in quasiquotes")
+    case Test(_,_) => throw CodeGenError("**TESTs are not supported in quasiquotes")
+    case With(trm, fields) => throw CodeGenError("**WITH is not supported in quasiquotes")
+    case CaseOf(_,_) => throw CodeGenError("**CASEOFs are not supported in quasiquotes")
+    case Subs(arr, idx) => throw CodeGenError(s"SUBSCRIPTION from array: ${arr} at index ${idx}")
+    case Assign(lhs, rhs) => throw CodeGenError("**ASSIGNMENTs not supported yet")
+    case Splc(fields) => throw CodeGenError("**SPLICE not used in NewParser")
+    case New(head, body) => throw CodeGenError("**New is not supported in NewParser")
+    case If(body, els) => throw CodeGenError("**If-s were skipped (as Typer didn't support yet)")
+    case TyApp(lhs, targs) => throw CodeGenError("type applications")
+    case Quoted(body) => throw CodeGenError("saw another one of myself")
+    case Unquoted(body) => throw CodeGenError("well here is an unquote")
+    case IntLit(value) => JSExpr(value.toString)
   }
 
   /**

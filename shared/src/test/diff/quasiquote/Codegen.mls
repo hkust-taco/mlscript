@@ -1,0 +1,209 @@
+:NewParser
+:ge
+
+// Var 
+let code_var : Code<int> = code"let c = 2; c"
+//│ code_var: code & {Code#T <: int}
+//│ Code generation encountered an error:
+//│   LET isRec: false, name: c, rhs: 2, body: c 
+//│  BODY: JSLit("c")}
+
+// Lam 
+let code_lam = code"x => x + 2"
+//│ code_lam: code & {Code#T <: int -> int}
+//│ Code generation encountered an error:
+//│   LAMBDA lhs: x, rhs: + (x,) (2,)
+
+// App
+let code_app_binary = code"73 + 4 + 5"
+//│ code_app_binary: code & {Code#T <: int}
+//│                = [ '+', [ '+', '73', '4' ], '5' ]
+
+
+// let code_app_ternary
+
+// let code_app_fcn_invoke
+
+// Tup 
+(1,2,3)
+//│ res: (1, 2, 3,)
+//│    = [ 1, 2, 3 ]
+
+let code_tup = code"(1,2,3)"
+//│ code_tup: code & {Code#T <: (1, 2, 3,)}
+//│ Code generation encountered an error:
+//│   BRACKET with rcd false, trm: 1, 2, 3,
+
+// Rcd 
+let record = {x: 1}
+//│ record: {x: 1}
+//│       = { x: 1 }
+
+let code_res = code"{x: 1}"
+//│ code_res: code & {Code#T <: {x: 1}}
+//│ Code generation encountered an error:
+//│   BRACKET with rcd true, trm: {x: 1}
+
+// Sel
+{ x: 0, y: 10 }.y
+//│ res: 10
+//│    = 10
+
+let code_sel = code"{ x: 0, y: 0 }.x"
+//│ code_sel: code & {Code#T <: 0}
+//│ Code generation encountered an error:
+//│   SELECTOR receiver: '{' {x: 0, y: 0} '}' fieldName: x
+
+// Let 
+let x = 2
+//│ x: 2
+//│  = 2
+
+let code_let1 = code"let x = 2; x"
+//│ code_let1: code & {Code#T <: 2}
+//│ Code generation encountered an error:
+//│   LET isRec: false, name: x, rhs: 2, body: x 
+//│  BODY: JSLit("x")}
+
+let code_let2 = code"let x = 100; x + 3 * 4"
+//│ code_let2: code & {Code#T <: int}
+//│ Code generation encountered an error:
+//│   LET isRec: false, name: x, rhs: 100, body: + (x,) (* (3,) (4,),) 
+//│  BODY: JSArray(List(JSLit("+"), JSLit("x"), JSArray(List(JSLit("*"), JSLit("3"), JSLit("4")))))}
+
+let code_let3 = code"let x = 1; let y = 2; x / y"
+//│ code_let3: code & {Code#T <: number}
+//│ Code generation encountered an error:
+//│   LET isRec: false, name: y, rhs: 2, body: / (x,) (y,) 
+//│  BODY: JSArray(List(JSLit("/"), JSLit("x"), JSLit("y")))}
+
+// Blk 
+
+// Bra 
+let code_bra1 = code"(1,1)"
+//│ code_bra1: code & {Code#T <: (1, 1,)}
+//│ Code generation encountered an error:
+//│   BRACKET with rcd false, trm: 1, 1,
+
+let code_bra2 = code"{x: 1}"
+//│ code_bra2: code & {Code#T <: {x: 1}}
+//│ Code generation encountered an error:
+//│   BRACKET with rcd true, trm: {x: 1}
+
+// With 
+:ge
+fun f(x) = x
+//│ f: 'a -> 'a
+//│  = [Function: f]
+f with x = 2
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.98: 	f with x = 2
+//│ ╙──      	  ^^^^^^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.98: 	f with x = 2
+//│ ╙──      	^^^^^^^^
+//│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
+//│ ║  l.98: 	f with x = 2
+//│ ╙──      	         ^
+//│ ╔══[ERROR] identifier not found: with
+//│ ║  l.98: 	f with x = 2
+//│ ╙──      	  ^^^^
+//│ res: error
+//│ Code generation encountered an error:
+//│   unresolved symbol with
+
+// Subs 
+let a = (1,2,3)
+a[0]
+//│ a: (1, 2, 3,)
+//│  = [ 1, 2, 3 ]
+//│ res: 1 | 2 | 3 | undefined
+//│    = 1
+
+let code_subs = code"${a[1]}"
+//│ code_subs: code & {Code#T <: 1 | 2 | 3 | undefined}
+//│ Code generation encountered an error:
+//│   SUBSCRIPTION from array: a at index 1
+
+// Assign - ref Mut.mls 
+
+
+// Splc 
+let array1 = (1,2,3,4,5)
+array1[2:3]
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.133: 	array1[2:3]
+//│ ╙──       	        ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.133: 	array1[2:3]
+//│ ╙──       	       ^^^
+//│ array1: (1, 2, 3, 4, 5,)
+//│       = [ 1, 2, 3, 4, 5 ]
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.133: 	array1[2:3]
+//│ ║         	       ^^^
+//│ ╟── integer literal of type `2` is not a function
+//│ ║  l.133: 	array1[2:3]
+//│ ╙──       	       ^
+//│ res: 1 | 2 | 3 | 4 | 5 | undefined
+//│ Runtime error:
+//│   TypeError: 2 is not a function
+
+// New 
+class Foo(x) 
+let f = new Foo(1)
+//│ Defined class Foo
+//│ Foo: 'x -> (Foo with {x: 'x})
+//│ f: Foo & {x: 1}
+//│ Code generation encountered an error:
+//│   cannot generate code for term New(Some((TypeName(Foo),1,)), TypingUnit(List()))
+
+// If 
+if true then 1 else 2
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:724)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:736)
+//│ 	at: mlscript.Typer.typeStatement(Typer.scala:380)
+//│ 	at: mlscript.DiffTests.$anonfun$new$61(DiffTests.scala:697)
+//│ 	at: mlscript.DiffTests.$anonfun$new$61$adapted(DiffTests.scala:650)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:650)
+//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:782)
+
+// TyApp 
+qq_int: Code<int>
+//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
+//│ ║  l.176: 	qq_int: Code<int>
+//│ ╙──       	      ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.176: 	qq_int: Code<int>
+//│ ╙──       	^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] identifier not found: qq_int
+//│ ║  l.176: 	qq_int: Code<int>
+//│ ╙──       	^^^^^^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:728)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:736)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$15(Typer.scala:543)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:542)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:736)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:629)
+
+// Quoted 
+let d = code"code"3""
+//│ d: code & {Code#T <: code & {Code#T <: 3}}
+//│ Code generation encountered an error:
+//│   saw another one of myself
+
+// Unquoted 
+
+// Literals?
+let b = code"10"
+//│ b: code & {Code#T <: 10}
+//│  = '10'
