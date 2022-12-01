@@ -4,7 +4,7 @@ fun multi1(x: number): number
 fun multi3(): unit
 class Foo(): Base {}
 trait AnotherBase() {
-  y: {mut contents: string}
+  mut y: string
 }
 namespace N {
   fun f(): unit
@@ -14,9 +14,15 @@ namespace N {
 fun multi2(x: string): string
 fun multi4(): unit
 trait Base() {
-  a: {mut contents: number}
+  mut a: number
 }
 class AnotherFoo(): AnotherBase {}
 fun multi5(): unit
-//│ |#fun| |multi1|(|x|#:| |number|)|#:| |number|↵|#fun| |multi3|(||)|#:| |unit|↵|#class| |Foo|(||)|#:| |Base| |{||}|↵|#trait| |AnotherBase|(||)| |{|→|y|#:| |{|#mut| |contents|#:| |string|}|←|↵|}|↵|#namespace| |N| |{|→|#fun| |f|(||)|#:| |unit|↵|#fun| |g|(||)|#:| |unit|↵|#fun| |h|(||)|#:| |unit|←|↵|}|↵|#fun| |multi2|(|x|#:| |string|)|#:| |string|↵|#fun| |multi4|(||)|#:| |unit|↵|#trait| |Base|(||)| |{|→|a|#:| |{|#mut| |contents|#:| |number|}|←|↵|}|↵|#class| |AnotherFoo|(||)|#:| |AnotherBase| |{||}|↵|#fun| |multi5|(||)|#:| |unit|
-//│ Parsed: {fun multi1: [] -> (x: number,) -> number; fun multi3: [] -> () -> unit; class Foo(): Base {}; trait AnotherBase() {y : Record(List((contents,Field(Some(TypeName(string)),TypeName(string)))))}; namespace N() {fun f: [] -> () -> unit; fun g: [] -> () -> unit; fun h: [] -> () -> unit}; fun multi2: [] -> (x: string,) -> string; fun multi4: [] -> () -> unit; trait Base() {a : Record(List((contents,Field(Some(TypeName(number)),TypeName(number)))))}; class AnotherFoo(): AnotherBase {}; fun multi5: [] -> () -> unit}
+//│ |#fun| |multi1|(|x|#:| |number|)|#:| |number|↵|#fun| |multi3|(||)|#:| |unit|↵|#class| |Foo|(||)|#:| |Base| |{||}|↵|#trait| |AnotherBase|(||)| |{|→|#mut| |y|#:| |string|←|↵|}|↵|#namespace| |N| |{|→|#fun| |f|(||)|#:| |unit|↵|#fun| |g|(||)|#:| |unit|↵|#fun| |h|(||)|#:| |unit|←|↵|}|↵|#fun| |multi2|(|x|#:| |string|)|#:| |string|↵|#fun| |multi4|(||)|#:| |unit|↵|#trait| |Base|(||)| |{|→|#mut| |a|#:| |number|←|↵|}|↵|#class| |AnotherFoo|(||)|#:| |AnotherBase| |{||}|↵|#fun| |multi5|(||)|#:| |unit|
+//│ ╔══[PARSE ERROR] Unexpected 'mut' keyword in expression position
+//│ ║  l.7: 	  mut y: string
+//│ ╙──     	  ^^^
+//│ ╔══[PARSE ERROR] Unexpected 'mut' keyword in expression position
+//│ ║  l.17: 	  mut a: number
+//│ ╙──      	  ^^^
+//│ Parsed: {fun multi1: [] -> (x: number,) -> number; fun multi3: [] -> () -> unit; class Foo(): Base {}; trait AnotherBase() {y : TypeName(string)}; namespace N() {fun f: [] -> () -> unit; fun g: [] -> () -> unit; fun h: [] -> () -> unit}; fun multi2: [] -> (x: string,) -> string; fun multi4: [] -> () -> unit; trait Base() {a : TypeName(number)}; class AnotherFoo(): AnotherBase {}; fun multi5: [] -> () -> unit}

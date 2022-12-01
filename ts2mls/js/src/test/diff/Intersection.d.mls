@@ -4,10 +4,10 @@ fun extend<T, U>(first: T, second: U): (T) & (U)
 fun foo<T, U>(x: (T) & (U)): unit
 fun over(f: ((number) => string) & ((object) => string)): string
 trait IA() {
-  x: {mut contents: number}
+  mut x: number
 }
 trait IB() {
-  y: {mut contents: number}
+  mut y: number
 }
 fun iii(x: (IA) & (IB)): (IA) & (IB)
 fun uu<U, V, T, P>(x: ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))): ((((U) & (T)) | ((U) & (P))) | ((V) & (T))) | ((V) & (P))
@@ -17,5 +17,11 @@ fun tt<U, T, V>(x: ((U, T, )) & ((V, V, ))): ((U, T, )) & ((V, V, ))
 class A() {}
 class B() {}
 fun inter(c: (A) & (B)): (A) & (B)
-//│ |#fun| |extend|‹|T|,| |U|›|(|first|#:| |T|,| |second|#:| |U|)|#:| |(|T|)| |&| |(|U|)|↵|#fun| |foo|‹|T|,| |U|›|(|x|#:| |(|T|)| |&| |(|U|)|)|#:| |unit|↵|#fun| |over|(|f|#:| |(|(|number|)| |=>| |string|)| |&| |(|(|object|)| |=>| |string|)|)|#:| |string|↵|#trait| |IA|(||)| |{|→|x|#:| |{|#mut| |contents|#:| |number|}|←|↵|}|↵|#trait| |IB|(||)| |{|→|y|#:| |{|#mut| |contents|#:| |number|}|←|↵|}|↵|#fun| |iii|(|x|#:| |(|IA|)| |&| |(|IB|)|)|#:| |(|IA|)| |&| |(|IB|)|↵|#fun| |uu|‹|U|,| |V|,| |T|,| |P|›|(|x|#:| |(|(|(|(|U|)| |&| |(|T|)|)| ||| |(|(|U|)| |&| |(|P|)|)|)| ||| |(|(|V|)| |&| |(|T|)|)|)| ||| |(|(|V|)| |&| |(|P|)|)|)|#:| |(|(|(|(|U|)| |&| |(|T|)|)| ||| |(|(|U|)| |&| |(|P|)|)|)| ||| |(|(|V|)| |&| |(|T|)|)|)| ||| |(|(|V|)| |&| |(|P|)|)|↵|#fun| |iiii|‹|U|,| |T|,| |V|›|(|x|#:| |(|(|U|)| |&| |(|T|)|)| |&| |(|V|)|)|#:| |(|(|U|)| |&| |(|T|)|)| |&| |(|V|)|↵|#fun| |arr|‹|U|,| |T|›|(|a|#:| |(|MutArray|‹|U|›|)| |&| |(|MutArray|‹|T|›|)|)|#:| |(|MutArray|‹|U|›|)| |&| |(|MutArray|‹|T|›|)|↵|#fun| |tt|‹|U|,| |T|,| |V|›|(|x|#:| |(|(|U|,| |T|,| |)|)| |&| |(|(|V|,| |V|,| |)|)|)|#:| |(|(|U|,| |T|,| |)|)| |&| |(|(|V|,| |V|,| |)|)|↵|#class| |A|(||)| |{||}|↵|#class| |B|(||)| |{||}|↵|#fun| |inter|(|c|#:| |(|A|)| |&| |(|B|)|)|#:| |(|A|)| |&| |(|B|)|
-//│ Parsed: {fun extend: [] -> (first: T, second: U,) -> ((T,) & (U,)); fun foo: [] -> (x: (T,) & (U,),) -> unit; fun over: [] -> (f: (number -> string,) & (object -> string,),) -> string; trait IA() {x : Record(List((contents,Field(Some(TypeName(number)),TypeName(number)))))}; trait IB() {y : Record(List((contents,Field(Some(TypeName(number)),TypeName(number)))))}; fun iii: [] -> (x: (IA,) & (IB,),) -> ((IA,) & (IB,)); fun uu: [] -> (x: ((((U,) & (T,),) | ((U,) & (P,),),) | ((V,) & (T,),),) | ((V,) & (P,),),) -> (((((U,) & (T,),) | ((U,) & (P,),),) | ((V,) & (T,),),) | ((V,) & (P,),)); fun iiii: [] -> (x: ((U,) & (T,),) & (V,),) -> (((U,) & (T,),) & (V,)); fun arr: [] -> (a: (MutArray[U],) & (MutArray[T],),) -> ((MutArray[U],) & (MutArray[T],)); fun tt: [] -> (x: ((U, T,),) & ((V, V,),),) -> (((U, T,),) & ((V, V,),)); class A() {}; class B() {}; fun inter: [] -> (c: (A,) & (B,),) -> ((A,) & (B,))}
+//│ |#fun| |extend|‹|T|,| |U|›|(|first|#:| |T|,| |second|#:| |U|)|#:| |(|T|)| |&| |(|U|)|↵|#fun| |foo|‹|T|,| |U|›|(|x|#:| |(|T|)| |&| |(|U|)|)|#:| |unit|↵|#fun| |over|(|f|#:| |(|(|number|)| |=>| |string|)| |&| |(|(|object|)| |=>| |string|)|)|#:| |string|↵|#trait| |IA|(||)| |{|→|#mut| |x|#:| |number|←|↵|}|↵|#trait| |IB|(||)| |{|→|#mut| |y|#:| |number|←|↵|}|↵|#fun| |iii|(|x|#:| |(|IA|)| |&| |(|IB|)|)|#:| |(|IA|)| |&| |(|IB|)|↵|#fun| |uu|‹|U|,| |V|,| |T|,| |P|›|(|x|#:| |(|(|(|(|U|)| |&| |(|T|)|)| ||| |(|(|U|)| |&| |(|P|)|)|)| ||| |(|(|V|)| |&| |(|T|)|)|)| ||| |(|(|V|)| |&| |(|P|)|)|)|#:| |(|(|(|(|U|)| |&| |(|T|)|)| ||| |(|(|U|)| |&| |(|P|)|)|)| ||| |(|(|V|)| |&| |(|T|)|)|)| ||| |(|(|V|)| |&| |(|P|)|)|↵|#fun| |iiii|‹|U|,| |T|,| |V|›|(|x|#:| |(|(|U|)| |&| |(|T|)|)| |&| |(|V|)|)|#:| |(|(|U|)| |&| |(|T|)|)| |&| |(|V|)|↵|#fun| |arr|‹|U|,| |T|›|(|a|#:| |(|MutArray|‹|U|›|)| |&| |(|MutArray|‹|T|›|)|)|#:| |(|MutArray|‹|U|›|)| |&| |(|MutArray|‹|T|›|)|↵|#fun| |tt|‹|U|,| |T|,| |V|›|(|x|#:| |(|(|U|,| |T|,| |)|)| |&| |(|(|V|,| |V|,| |)|)|)|#:| |(|(|U|,| |T|,| |)|)| |&| |(|(|V|,| |V|,| |)|)|↵|#class| |A|(||)| |{||}|↵|#class| |B|(||)| |{||}|↵|#fun| |inter|(|c|#:| |(|A|)| |&| |(|B|)|)|#:| |(|A|)| |&| |(|B|)|
+//│ ╔══[PARSE ERROR] Unexpected 'mut' keyword in expression position
+//│ ║  l.7: 	  mut x: number
+//│ ╙──     	  ^^^
+//│ ╔══[PARSE ERROR] Unexpected 'mut' keyword in expression position
+//│ ║  l.10: 	  mut y: number
+//│ ╙──      	  ^^^
+//│ Parsed: {fun extend: [] -> (first: T, second: U,) -> ((T,) & (U,)); fun foo: [] -> (x: (T,) & (U,),) -> unit; fun over: [] -> (f: (number -> string,) & (object -> string,),) -> string; trait IA() {x : TypeName(number)}; trait IB() {y : TypeName(number)}; fun iii: [] -> (x: (IA,) & (IB,),) -> ((IA,) & (IB,)); fun uu: [] -> (x: ((((U,) & (T,),) | ((U,) & (P,),),) | ((V,) & (T,),),) | ((V,) & (P,),),) -> (((((U,) & (T,),) | ((U,) & (P,),),) | ((V,) & (T,),),) | ((V,) & (P,),)); fun iiii: [] -> (x: ((U,) & (T,),) & (V,),) -> (((U,) & (T,),) & (V,)); fun arr: [] -> (a: (MutArray[U],) & (MutArray[T],),) -> ((MutArray[U],) & (MutArray[T],)); fun tt: [] -> (x: ((U, T,),) & ((V, V,),),) -> (((U, T,),) & ((V, V,),)); class A() {}; class B() {}; fun inter: [] -> (c: (A,) & (B,),) -> ((A,) & (B,))}

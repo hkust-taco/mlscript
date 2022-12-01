@@ -1,7 +1,7 @@
 :NewParser
 :ParseOnly
 class Student(s: string, age: number) {
-  name: {mut contents: string}
+  mut name: string
   fun isFriend(other: Student): (false) | (true)
   fun addScore(sub: string, score: number): unit
   something: string
@@ -15,12 +15,18 @@ class EZ() {
 }
 class Outer() {
   class Inner() {
-    a: {mut contents: number}
+    mut a: number
   }
 }
 class TTT<T>() {
   fun ttt(x: T): T
   fun ttt2(x: T): T
 }
-//│ |#class| |Student|(|s|#:| |string|,| |age|#:| |number|)| |{|→|name|#:| |{|#mut| |contents|#:| |string|}|↵|#fun| |isFriend|(|other|#:| |Student|)|#:| |(|false|)| ||| |(|true|)|↵|#fun| |addScore|(|sub|#:| |string|,| |score|#:| |number|)|#:| |unit|↵|something|#:| |string|↵|#fun| |getID|(||)|#:| |number|←|↵|}|↵|#class| |Foo|‹|T|›|(||)| |{|→|#fun| |bar|(|x|#:| |T|)|#:| |unit|←|↵|}|↵|#class| |EZ|(||)| |{|→|#fun| |inc|(|x|#:| |number|)|#:| |number|←|↵|}|↵|#class| |Outer|(||)| |{|→|#class| |Inner|(||)| |{|→|a|#:| |{|#mut| |contents|#:| |number|}|←|↵|}|←|↵|}|↵|#class| |TTT|‹|T|›|(||)| |{|→|#fun| |ttt|(|x|#:| |T|)|#:| |T|↵|#fun| |ttt2|(|x|#:| |T|)|#:| |T|←|↵|}|
-//│ Parsed: {class Student(s: string, age: number,) {name : Record(List((contents,Field(Some(TypeName(string)),TypeName(string))))); fun isFriend: [] -> (other: Student,) -> ((false,) | (true,)); fun addScore: [] -> (sub: string, score: number,) -> unit; something : TypeName(string); fun getID: [] -> () -> number}; class Foo‹T›() {fun bar: [] -> (x: T,) -> unit}; class EZ() {fun inc: [] -> (x: number,) -> number}; class Outer() {class Inner() {a : Record(List((contents,Field(Some(TypeName(number)),TypeName(number)))))}}; class TTT‹T›() {fun ttt: [] -> (x: T,) -> T; fun ttt2: [] -> (x: T,) -> T}}
+//│ |#class| |Student|(|s|#:| |string|,| |age|#:| |number|)| |{|→|#mut| |name|#:| |string|↵|#fun| |isFriend|(|other|#:| |Student|)|#:| |(|false|)| ||| |(|true|)|↵|#fun| |addScore|(|sub|#:| |string|,| |score|#:| |number|)|#:| |unit|↵|something|#:| |string|↵|#fun| |getID|(||)|#:| |number|←|↵|}|↵|#class| |Foo|‹|T|›|(||)| |{|→|#fun| |bar|(|x|#:| |T|)|#:| |unit|←|↵|}|↵|#class| |EZ|(||)| |{|→|#fun| |inc|(|x|#:| |number|)|#:| |number|←|↵|}|↵|#class| |Outer|(||)| |{|→|#class| |Inner|(||)| |{|→|#mut| |a|#:| |number|←|↵|}|←|↵|}|↵|#class| |TTT|‹|T|›|(||)| |{|→|#fun| |ttt|(|x|#:| |T|)|#:| |T|↵|#fun| |ttt2|(|x|#:| |T|)|#:| |T|←|↵|}|
+//│ ╔══[PARSE ERROR] Unexpected 'mut' keyword in expression position
+//│ ║  l.4: 	  mut name: string
+//│ ╙──     	  ^^^
+//│ ╔══[PARSE ERROR] Unexpected 'mut' keyword in expression position
+//│ ║  l.18: 	    mut a: number
+//│ ╙──      	    ^^^
+//│ Parsed: {class Student(s: string, age: number,) {name : TypeName(string); fun isFriend: [] -> (other: Student,) -> ((false,) | (true,)); fun addScore: [] -> (sub: string, score: number,) -> unit; something : TypeName(string); fun getID: [] -> () -> number}; class Foo‹T›() {fun bar: [] -> (x: T,) -> unit}; class EZ() {fun inc: [] -> (x: number,) -> number}; class Outer() {class Inner() {a : TypeName(number)}}; class TTT‹T›() {fun ttt: [] -> (x: T,) -> T; fun ttt2: [] -> (x: T,) -> T}}

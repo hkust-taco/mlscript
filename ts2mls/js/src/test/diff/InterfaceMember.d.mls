@@ -2,7 +2,7 @@
 :ParseOnly
 trait IFoo() {
   x: number
-  a: {mut contents: string}
+  mut a: string
   fun b(x: number): number
   fun c(): (false) | (true)
   fun d(x: string): unit
@@ -23,19 +23,31 @@ trait StringArray() {
 }
 trait Counter() {
   fun __call(start: number): string
-  interval: {mut contents: number}
+  mut interval: number
   fun reset(): unit
 }
 trait Simple() {
-  a: {mut contents: number}
+  mut a: number
   fun b(x: (false) | (true)): string
 }
 trait Simple2<T>() {
-  abc: {mut contents: T}
+  mut abc: T
 }
 trait Next(): Simple {}
 trait TTT<T>() {
   fun ttt(x: T): T
 }
-//│ |#trait| |IFoo|(||)| |{|→|x|#:| |number|↵|a|#:| |{|#mut| |contents|#:| |string|}|↵|#fun| |b|(|x|#:| |number|)|#:| |number|↵|#fun| |c|(||)|#:| |(|false|)| ||| |(|true|)|↵|#fun| |d|(|x|#:| |string|)|#:| |unit|←|↵|}|↵|#trait| |II|‹|T|›|(||)| |{|→|#fun| |test|(|x|#:| |T|)|#:| |number|←|↵|}|↵|#fun| |create|(||)|#:| |{|v|#:| |number|,|}|↵|#fun| |get|(|x|#:| |{|t|#:| |string|,|}|)|#:| |string|↵|#trait| |IEvent|(||)| |{|→|#fun| |callback|(||)|#:| |(|number|)| |=>| |unit|←|↵|}|↵|#trait| |SearchFunc|(||)| |{|→|#fun| |__call|(|source|#:| |string|,| |subString|#:| |string|)|#:| |(|false|)| ||| |(|true|)|←|↵|}|↵|#trait| |StringArray|(||)| |{|→|#fun| |__index|(|index|#:| |number|)|#:| |string|←|↵|}|↵|#trait| |Counter|(||)| |{|→|#fun| |__call|(|start|#:| |number|)|#:| |string|↵|interval|#:| |{|#mut| |contents|#:| |number|}|↵|#fun| |reset|(||)|#:| |unit|←|↵|}|↵|#trait| |Simple|(||)| |{|→|a|#:| |{|#mut| |contents|#:| |number|}|↵|#fun| |b|(|x|#:| |(|false|)| ||| |(|true|)|)|#:| |string|←|↵|}|↵|#trait| |Simple2|‹|T|›|(||)| |{|→|abc|#:| |{|#mut| |contents|#:| |T|}|←|↵|}|↵|#trait| |Next|(||)|#:| |Simple| |{||}|↵|#trait| |TTT|‹|T|›|(||)| |{|→|#fun| |ttt|(|x|#:| |T|)|#:| |T|←|↵|}|
-//│ Parsed: {trait IFoo() {x : TypeName(number); a : Record(List((contents,Field(Some(TypeName(string)),TypeName(string))))); fun b: [] -> (x: number,) -> number; fun c: [] -> () -> ((false,) | (true,)); fun d: [] -> (x: string,) -> unit}; trait II‹T›() {fun test: [] -> (x: T,) -> number}; fun create: [] -> () -> {v: number}; fun get: [] -> (x: {t: string},) -> string; trait IEvent() {fun callback: [] -> () -> number -> unit}; trait SearchFunc() {fun __call: [] -> (source: string, subString: string,) -> ((false,) | (true,))}; trait StringArray() {fun __index: [] -> (index: number,) -> string}; trait Counter() {fun __call: [] -> (start: number,) -> string; interval : Record(List((contents,Field(Some(TypeName(number)),TypeName(number))))); fun reset: [] -> () -> unit}; trait Simple() {a : Record(List((contents,Field(Some(TypeName(number)),TypeName(number))))); fun b: [] -> (x: (false,) | (true,),) -> string}; trait Simple2‹T›() {abc : Record(List((contents,Field(Some(TypeName(T)),TypeName(T)))))}; trait Next(): Simple {}; trait TTT‹T›() {fun ttt: [] -> (x: T,) -> T}}
+//│ |#trait| |IFoo|(||)| |{|→|x|#:| |number|↵|#mut| |a|#:| |string|↵|#fun| |b|(|x|#:| |number|)|#:| |number|↵|#fun| |c|(||)|#:| |(|false|)| ||| |(|true|)|↵|#fun| |d|(|x|#:| |string|)|#:| |unit|←|↵|}|↵|#trait| |II|‹|T|›|(||)| |{|→|#fun| |test|(|x|#:| |T|)|#:| |number|←|↵|}|↵|#fun| |create|(||)|#:| |{|v|#:| |number|,|}|↵|#fun| |get|(|x|#:| |{|t|#:| |string|,|}|)|#:| |string|↵|#trait| |IEvent|(||)| |{|→|#fun| |callback|(||)|#:| |(|number|)| |=>| |unit|←|↵|}|↵|#trait| |SearchFunc|(||)| |{|→|#fun| |__call|(|source|#:| |string|,| |subString|#:| |string|)|#:| |(|false|)| ||| |(|true|)|←|↵|}|↵|#trait| |StringArray|(||)| |{|→|#fun| |__index|(|index|#:| |number|)|#:| |string|←|↵|}|↵|#trait| |Counter|(||)| |{|→|#fun| |__call|(|start|#:| |number|)|#:| |string|↵|#mut| |interval|#:| |number|↵|#fun| |reset|(||)|#:| |unit|←|↵|}|↵|#trait| |Simple|(||)| |{|→|#mut| |a|#:| |number|↵|#fun| |b|(|x|#:| |(|false|)| ||| |(|true|)|)|#:| |string|←|↵|}|↵|#trait| |Simple2|‹|T|›|(||)| |{|→|#mut| |abc|#:| |T|←|↵|}|↵|#trait| |Next|(||)|#:| |Simple| |{||}|↵|#trait| |TTT|‹|T|›|(||)| |{|→|#fun| |ttt|(|x|#:| |T|)|#:| |T|←|↵|}|
+//│ ╔══[PARSE ERROR] Unexpected 'mut' keyword in expression position
+//│ ║  l.5: 	  mut a: string
+//│ ╙──     	  ^^^
+//│ ╔══[PARSE ERROR] Unexpected 'mut' keyword in expression position
+//│ ║  l.26: 	  mut interval: number
+//│ ╙──      	  ^^^
+//│ ╔══[PARSE ERROR] Unexpected 'mut' keyword in expression position
+//│ ║  l.30: 	  mut a: number
+//│ ╙──      	  ^^^
+//│ ╔══[PARSE ERROR] Unexpected 'mut' keyword in expression position
+//│ ║  l.34: 	  mut abc: T
+//│ ╙──      	  ^^^
+//│ Parsed: {trait IFoo() {x : TypeName(number); a : TypeName(string); fun b: [] -> (x: number,) -> number; fun c: [] -> () -> ((false,) | (true,)); fun d: [] -> (x: string,) -> unit}; trait II‹T›() {fun test: [] -> (x: T,) -> number}; fun create: [] -> () -> {v: number}; fun get: [] -> (x: {t: string},) -> string; trait IEvent() {fun callback: [] -> () -> number -> unit}; trait SearchFunc() {fun __call: [] -> (source: string, subString: string,) -> ((false,) | (true,))}; trait StringArray() {fun __index: [] -> (index: number,) -> string}; trait Counter() {fun __call: [] -> (start: number,) -> string; interval : TypeName(number); fun reset: [] -> () -> unit}; trait Simple() {a : TypeName(number); fun b: [] -> (x: (false,) | (true,),) -> string}; trait Simple2‹T›() {abc : TypeName(T)}; trait Next(): Simple {}; trait TTT‹T›() {fun ttt: [] -> (x: T,) -> T}}
