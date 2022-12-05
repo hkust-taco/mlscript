@@ -1,0 +1,130 @@
+:NewParser
+
+class Option
+class Some(value): Option
+class None: Option
+//│ Defined class Option
+//│ Defined class Some
+//│ Defined class None
+//│ Option: () -> Option
+//│       = [Function: Option1]
+//│ Some: 'value -> (Some with {value: 'value})
+//│     = [Function: Some1]
+//│ None: () -> None
+//│     = [Function: None1]
+
+class Either
+class Left(leftValue): Either
+class Right(rightValue): Either
+//│ Defined class Either
+//│ Defined class Left
+//│ Defined class Right
+//│ Either: () -> Either
+//│       = [Function: Either1]
+//│ Left: 'leftValue -> (Left with {leftValue: 'leftValue})
+//│     = [Function: Left1]
+//│ Right: 'rightValue -> (Right with {rightValue: 'rightValue})
+//│      = [Function: Right1]
+
+:e
+:ge
+fun f(x) =
+  if x
+    is Left(v) then 0
+    is Right(v) then 1
+    <> undefined then 2
+//│ ╔══[ERROR] The case when this is false is not handled: <> (x,) (undefined,)
+//│ ║  l.32: 	  if x
+//│ ║        	     ^
+//│ ║  l.33: 	    is Left(v) then 0
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.34: 	    is Right(v) then 1
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.35: 	    <> undefined then 2
+//│ ╙──      	^^^^^^^^^^^^^^^^
+//│ f: anything -> error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared
+
+:e
+:ge
+fun f(x) =
+  if x
+    is Some(xv) and y is Some(yv) then xv + yv
+    is None() and y is None() then 0
+//│ ╔══[ERROR] The match is not exhaustive.
+//│ ║  l.53: 	    is Some(xv) and y is Some(yv) then xv + yv
+//│ ║        	                    ^^^^^^^^^^^^^
+//│ ╟── The scrutinee at this position misses 1 case.
+//│ ║  l.53: 	    is Some(xv) and y is Some(yv) then xv + yv
+//│ ║        	                    ^
+//│ ╟── [Missing Case 1/1] `None`
+//│ ╟── It first appears here.
+//│ ║  l.54: 	    is None() and y is None() then 0
+//│ ╙──      	                       ^^^^^^
+//│ f: anything -> error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared
+
+class A()
+class B()
+//│ Defined class A
+//│ Defined class B
+//│ A: () -> A
+//│  = [Function: A1]
+//│ B: () -> B
+//│  = [Function: B1]
+
+fun f(a, b) =
+  if a
+    is A() and b is B() then 0
+//│ f: (A, B,) -> 0
+//│  = [Function: f2]
+
+class C()
+//│ Defined class C
+//│ C: () -> C
+//│  = [Function: C1]
+
+// * FIXME: the missing otherwise is for `a == 0`
+:p
+:e
+:ge
+fun f(a, b, c) =
+  if a
+    == 0 and b is B() and c is C() then 0
+//│ |#fun| |f|(|a|,| |b|,| |c|)| |#=|→|#if| |a|→|==| |0| |and| |b| |is| |B|(||)| |and| |c| |is| |C|(||)| |#then| |0|←|←|
+//│ Parsed: fun f = a, b, c, => {if a ‹· == (and (and (0,) (is (b,) (B (),),),) (is (c,) (C (),),)) then 0›};
+//│ Desugared: rec def f: a, b, c, => {if a ‹· == (and (and (0,) (is (b,) (B (),),),) (is (c,) (C (),),)) then 0›}
+//│ AST: Def(true, f, Lam(Tup(_: Var(a), _: Var(b), _: Var(c)), Blk(...)), true)
+//│ ╔══[ERROR] The case when this is false is not handled: and (is (b,) (B (),),) (is (c,) (C (),),)
+//│ ║  l.95: 	    == 0 and b is B() and c is C() then 0
+//│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^
+//│ f: (anything, anything, anything,) -> error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared
+
+fun f(x) =
+  if x
+    is A() then "A"
+    is B() then "B"
+//│ f: (A | B) -> ("A" | "B")
+//│  = [Function: f4]
+
+fun sumOpt(x, y) =
+  if x
+    is Some(xv) and y is
+      Some(yv) then xv + yv
+      None() then xv
+    is None() and y is
+      Some(yv) then yv
+      None() then 0
+//│ sumOpt: (None | Some & {value: int}, None | Some & {value: int},) -> int
+//│       = [Function: sumOpt]
+
+fun f(x, y, z) =
+  if x is A() and y
+    == z then 1
+    is B() then 0
+//│ f: (A, nothing, number,) -> (0 | 1)
+//│  = [Function: f5]

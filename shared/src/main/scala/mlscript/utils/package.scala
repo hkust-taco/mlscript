@@ -39,6 +39,8 @@ package object utils {
     def decapitalize: String =
       if (self.length === 0 || !self.charAt(0).isUpper) self
       else self.updated(0, self.charAt(0).toLower)
+    def pluralize(quantity: Int, es: Boolean = false): String =
+      if (quantity > 1) self + (if (es) "es" else "s") else self
     @SuppressWarnings(Array("org.wartremover.warts.Equals"))
     def ===(other: String): Bool = self.equals(other)
   }
@@ -179,6 +181,7 @@ package object utils {
     def single[A: Ordering, B](ab: A -> B): SortedMap[A, B] = (SortedMap.newBuilder[A, B] += ab).result()
   }
   
+  def TODO(msg: String): Nothing = throw new NotImplementedError(msg)
   def die: Nothing = lastWords("Program reached and unexpected state.")
   def lastWords(msg: String): Nothing = throw new Exception(s"Internal Error: $msg")
   

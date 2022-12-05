@@ -10,6 +10,6 @@ let f =
 //│ ╙──     	      ^^^^^^^^^^
 //│ f: 123
 //│ Code generation encountered an error:
-//│   unexpected definitions in blocks
+//│   unsupported definitions in blocks
 
 

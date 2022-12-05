@@ -30,7 +30,7 @@ ty2A = ty2A
 //│ MyArray['a]
 //│ constrain calls  : 9
 //│ annoying  calls  : 0
-//│ subtyping calls  : 0
+//│ subtyping calls  : 22
 
 def ty2B: MyArray[MyArray['a]]
 //│ ty2B: MyArray[MyArray['a]]
@@ -42,7 +42,7 @@ ty2B = ty2A
 //│ MyArray[MyArray['a]]
 //│ constrain calls  : 7
 //│ annoying  calls  : 0
-//│ subtyping calls  : 0
+//│ subtyping calls  : 14
 
 def ty3A: MyArray['a] as 'a
 //│ ty3A: 'a
@@ -58,9 +58,9 @@ ty3A = ty3A
 //│ 'a
 //│   where
 //│     'a := MyArray['a]
-//│ constrain calls  : 50
-//│ annoying  calls  : 44
-//│ subtyping calls  : 88
+//│ constrain calls  : 41
+//│ annoying  calls  : 25
+//│ subtyping calls  : 220
 
 def ty3B: MyArray[MyArray['a]] as 'a
 //│ ty3B: 'a
@@ -76,9 +76,9 @@ ty3B = ty3A
 //│ 'a
 //│   where
 //│     'a := MyArray[MyArray['a]]
-//│ constrain calls  : 116
-//│ annoying  calls  : 86
-//│ subtyping calls  : 165
+//│ constrain calls  : 94
+//│ annoying  calls  : 50
+//│ subtyping calls  : 592
 
 :stats
 ty3A = ty3B
@@ -89,9 +89,9 @@ ty3A = ty3B
 //│ 'a
 //│   where
 //│     'a := MyArray['a]
-//│ constrain calls  : 116
-//│ annoying  calls  : 86
-//│ subtyping calls  : 153
+//│ constrain calls  : 41
+//│ annoying  calls  : 26
+//│ subtyping calls  : 261
 
 def ty4B: MyArray[MyArray[MyArray['a]]] as 'a
 //│ ty4B: 'a
@@ -107,9 +107,9 @@ ty4B = ty4B
 //│ 'a
 //│   where
 //│     'a := MyArray[MyArray[MyArray['a]]]
-//│ constrain calls  : 60
-//│ annoying  calls  : 48
-//│ subtyping calls  : 85
+//│ constrain calls  : 49
+//│ annoying  calls  : 25
+//│ subtyping calls  : 278
 
 
 
@@ -131,9 +131,9 @@ ty1A = ty1B
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.18: 	def ty1B: MyArray[0 | 1]
 //│ ╙──      	                  ^^^^^
-//│ constrain calls  : 9
+//│ constrain calls  : 5
 //│ annoying  calls  : 5
-//│ subtyping calls  : 25
+//│ subtyping calls  : 61
 
 :e
 :stats
@@ -150,9 +150,9 @@ ty1B = ty1A
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.18: 	def ty1B: MyArray[0 | 1]
 //│ ╙──      	                  ^^^^^
-//│ constrain calls  : 9
+//│ constrain calls  : 5
 //│ annoying  calls  : 5
-//│ subtyping calls  : 25
+//│ subtyping calls  : 51
 
 
 :e
@@ -202,6 +202,6 @@ ty2A = ty2B
 //│ ╙──      	                  ^^^^^^^^^^^
 //│ constrain calls  : 12
 //│ annoying  calls  : 4
-//│ subtyping calls  : 39
+//│ subtyping calls  : 81
 
 
