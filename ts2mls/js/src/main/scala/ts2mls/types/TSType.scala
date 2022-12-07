@@ -1,9 +1,15 @@
 package ts2mls.types
 
 sealed abstract class TSAccessModifier
-case object Public extends TSAccessModifier
-case object Private extends TSAccessModifier
-case object Protected extends TSAccessModifier
+case object Public extends TSAccessModifier {
+  override def toString() = ""
+}
+case object Private extends TSAccessModifier {
+  override def toString() = "private " // add a space after the keyword so we can generate `private let...`
+}
+case object Protected extends TSAccessModifier {
+  override def toString() = "protected "
+}
 
 sealed abstract class TSType
 case class TSParameterType(name: String, val tp: TSType) extends TSType // record both parameter's name and parameter's type
