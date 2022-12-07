@@ -291,13 +291,26 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
             R(NuTypeDef(kind, tn, tparams, params, ps, body))
           
           // TODO make `fun` by-name and `let` by-value
-          case (KEYWORD(kwStr @ ("fun" | "let")), l0) :: c => // TODO support rec?
+          case (KEYWORD(kwStr @ ("public" | "private" | "protected" | "fun" | "let")), l0) :: c => // TODO support rec?
             consume
+            // TODO: apply access flags in OOP.
+            val flag = if (kwStr === "private") PrivateFlag
+                       else if (kwStr === "protected") ProtectedFlag
+                       else PublicFlag // if there is no access flag keyword, we consider it as public
+
+            val (decKw, wrongKw) = if (kwStr === "fun" || kwStr === "let") (kwStr, false) else yeetSpaces match {
+              case (KEYWORD(decStr @ ("fun" | "let")), _) :: _ => consume; System.out.println(s"fuck: ${kwStr}, ${decStr}"); (decStr, false)
+              case _ =>
+                val (tkstr, loc) = c.headOption.fold(("end of input", lastLoc))(_.mapFirst(_.describe).mapSecond(some))
+                err(msg"Expected keyword let or fun" -> loc :: Nil)
+                ("<error>", true)
+            }
+
             val isLetRec = yeetSpaces match {
-              case (KEYWORD("rec"), l1) :: _ if kwStr === "let" =>
+              case (KEYWORD("rec"), l1) :: _ if decKw === "let" =>
                 consume
                 S(true)
-              case c => if (kwStr === "fun") N else S(false)
+              case c => if (decKw === "fun") N else S(false)
             }
             val (v, success) = yeetSpaces match {
               case (IDENT(idStr, false), l1) :: _ =>
@@ -312,8 +325,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 // R(errExpr)
                 (Var("<error>").withLoc(curLoc.map(_.left)), false)
             }
-            foundErr || !success pipe { implicit fe =>
-              val tparams = if (kwStr === "let") Ls[TypeName]() else yeetSpaces match {
+            foundErr || wrongKw || !success pipe { implicit fe =>
+              val tparams = if (decKw === "let") Ls[TypeName]() else yeetSpaces match {
                 case (br @ BRACKETS(Angle, toks), loc) :: _ =>
                   consume
                   val ts = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()).map {

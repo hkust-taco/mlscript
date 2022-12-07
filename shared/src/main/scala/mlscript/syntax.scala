@@ -151,6 +151,11 @@ final case class TypeVar(val identifier: Int \/ Str, nameHint: Opt[Str]) extends
 
 final case class PolyType(targs: Ls[TypeName], body: Type) extends PolyTypeImpl
 
+// Access flags in OOP.
+sealed trait AccessFlag
+final case object PublicFlag extends AccessFlag
+final case object PrivateFlag extends AccessFlag
+final case object ProtectedFlag extends AccessFlag
 
 // New Definitions AST
 

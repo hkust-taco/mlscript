@@ -119,4 +119,21 @@ class Foo(x, y): Bar(y, x), Baz(x + y)
 //│ |#class| |Foo|(|x|,| |y|)|#:| |Bar|(|y|,| |x|)|,| |Baz|(|x| |+| |y|)|
 //│ Parsed: {class Foo(x, y,): Bar (y, x,), Baz (+ (x,) (y,),) {}}
 
+class Foo() {
+  public let a = 42
+  private fun b = 42
+  protected let c = 42
+}
+//│ |#class| |Foo|(||)| |{|→|#public| |#let| |a| |#=| |42|↵|#private| |#fun| |b| |#=| |42|↵|#protected| |#let| |c| |#=| |42|←|↵|}|
+//│ Parsed: {class Foo() {let a = 42; fun b = 42; let c = 42}}
+
+
+class Bar() {
+  private a = 0
+}
+//│ |#class| |Bar|(||)| |{|→|#private| |a| |#=| |0|←|↵|}|
+//│ ╔══[PARSE ERROR] Expected keyword let or fun
+//│ ║  l.132: 	  private a = 0
+//│ ╙──       	         ^
+//│ Parsed: {class Bar() {let a = 0}}
 

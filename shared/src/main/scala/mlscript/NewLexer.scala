@@ -251,7 +251,10 @@ object NewLexer {
     "interface",
     "new",
     "namespace",
-    "type"
+    "type",
+    "public",
+    "private",
+    "protected"
   )
   
   def printToken(tl: TokLoc): Str = tl match {
