@@ -24,9 +24,9 @@ T {}
 //│ res: error | #T
 //│    = {}
 
-def a = A{}
+a = A{}
 //│ a: A
-//│  = [Function: a]
+//│  = A {}
 
 :e
 T a
@@ -34,8 +34,8 @@ T a
 //│ ║  l.32: 	T a
 //│ ║        	^^^
 //│ ╟── application of type `A` is not an instance of type `B`
-//│ ║  l.27: 	def a = A{}
-//│ ║        	        ^^^
+//│ ║  l.27: 	a = A{}
+//│ ║        	    ^^^
 //│ ╟── but it flows into reference with expected type `B`
 //│ ║  l.32: 	T a
 //│ ║        	  ^
@@ -95,15 +95,17 @@ T (B {})
 //│ res: B & #T | error
 //│    = B {}
 
-def t = T error
+:re
+t = T error
 //│ t: nothing
-//│  = [Function: t]
+//│ Runtime error:
+//│   Error: unexpected runtime error
 
 :re
 t: nothing
 //│ res: nothing
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   ReferenceError: t is not defined
 
 type Als = A & B
 //│ Defined type alias Als
@@ -112,19 +114,19 @@ type Als = A & B
 t: Als
 //│ res: Als
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   ReferenceError: t is not defined
 
 
 :e
 class D0: T
 //│ ╔══[ERROR] class D0 cannot inherit from class B as it already inherits from class A
-//│ ║  l.119: 	class D0: T
+//│ ║  l.121: 	class D0: T
 //│ ╙──       	      ^^^^^
 
 :e
 class D1: B & T
 //│ ╔══[ERROR] class D1 cannot inherit from class A as it already inherits from class B
-//│ ║  l.125: 	class D1: B & T
+//│ ║  l.127: 	class D1: B & T
 //│ ╙──       	      ^^^^^^^^^
 
 
@@ -142,13 +144,13 @@ t = s: s
 :e
 t.x
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.143: 	t.x
+//│ ║  l.145: 	t.x
 //│ ║         	^^^
 //│ ╟── type `#S` does not have field 'x'
-//│ ║  l.138: 	t = s: s
+//│ ║  l.140: 	t = s: s
 //│ ║         	       ^
 //│ ╟── but it flows into reference with expected type `{x: ?x}`
-//│ ║  l.143: 	t.x
+//│ ║  l.145: 	t.x
 //│ ╙──       	^
 //│ res: error
 //│    = 1
@@ -174,14 +176,14 @@ class Hey
 :e
 class H: Lol & Hey
 //│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
-//│ ║  l.175: 	class H: Lol & Hey
+//│ ║  l.177: 	class H: Lol & Hey
 //│ ║         	      ^
 //│ ╟── Definitions of method Foo inherited from:
 //│ ╟── • Lol
-//│ ║  l.166: 	  method Foo = 1
+//│ ║  l.168: 	  method Foo = 1
 //│ ║         	         ^^^^^^^
 //│ ╟── • Hey
-//│ ║  l.168: 	  method Foo = "oops"
+//│ ║  l.170: 	  method Foo = "oops"
 //│ ╙──       	         ^^^^^^^^^^^^
 //│ Defined class H
 
@@ -195,10 +197,10 @@ h = Hey{}
 :e
 l = Lol h
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.196: 	l = Lol h
+//│ ║  l.198: 	l = Lol h
 //│ ║         	    ^^^
 //│ ╟── Note that traits with methods are always considered abstract
-//│ ║  l.165: 	trait Lol
+//│ ║  l.167: 	trait Lol
 //│ ╙──       	      ^^^
 //│ l: error
 //│  = Hey {}
@@ -207,10 +209,10 @@ l = Lol h
 e = Lol
 e
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.207: 	e = Lol
+//│ ║  l.209: 	e = Lol
 //│ ║         	    ^^^
 //│ ╟── Note that traits with methods are always considered abstract
-//│ ║  l.165: 	trait Lol
+//│ ║  l.167: 	trait Lol
 //│ ╙──       	      ^^^
 //│ e: error
 //│  = [Function: build]
@@ -232,10 +234,10 @@ trait Lol2: Lol
 :e
 Lol2
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.233: 	Lol2
+//│ ║  l.235: 	Lol2
 //│ ║         	^^^^
 //│ ╟── Note that traits with methods are always considered abstract
-//│ ║  l.229: 	trait Lol2: Lol
+//│ ║  l.231: 	trait Lol2: Lol
 //│ ╙──       	      ^^^^^^^^^
 //│ res: error
 //│    = [Function: build]

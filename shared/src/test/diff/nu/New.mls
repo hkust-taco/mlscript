@@ -10,15 +10,17 @@ let f = Foo(1)
 //│ f: Foo & {x: 1}
 //│  = Foo { x: 1 }
 
-:ge
 let f = new Foo(1)
 //│ f: Foo & {x: 1}
-//│ Code generation encountered an error:
-//│   cannot generate code for term New(Some((TypeName(Foo),1,)), TypingUnit(List()))
+//│  = Foo { x: 1 }
 
-// TODO
+if f is Foo then 1 else 0
+//│ res: 0 | 1
+//│    = 1
+
 if f is Foo(a) then a else 0
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ res: 0 | 1
+//│    = 1
 
 // case f of
 //   { Foo ->
@@ -30,4 +32,19 @@ if f is Foo(a) then a else 0
 // Foo(A) =:= Foo & { x: A }
 
 
+fun test(x) = if x is Foo(a) then a
+//│ test: (Foo with {x: 'x}) -> 'x
+//│     = [Function: test]
 
+test(f)
+//│ res: 1
+//│    = 1
+
+class Point(x, y)
+//│ Defined class Point
+//│ Point: ('x, 'y,) -> (Point with {x: 'x, y: 'y})
+//│      = [Function: Point1]
+
+let origin = new Point(0, 0)
+//│ origin: Point & {x: 0, y: 0}
+//│       = Point { x: 0, y: 0 }

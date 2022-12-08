@@ -1,0 +1,58 @@
+:NewParser
+:NoJS
+
+fun abs(x) = if x < 0 then 0 - x else x
+//│ abs: int -> int
+
+class Option
+class Some(value): Option
+class None: Option
+//│ Defined class Option
+//│ Defined class Some
+//│ Defined class None
+//│ Option: () -> Option
+//│ Some: 'value -> (Some with {value: 'value})
+//│ None: () -> None
+
+fun getOrElse(opt, default) =
+  if opt is
+    Some(value) then value
+    None then default
+//│ getOrElse: (None | (Some with {value: 'value}), 'value,) -> 'value
+
+getOrElse(None(), 0)
+//│ res: 0
+
+getOrElse(Some(42), 0)
+//│ res: 0 | 42
+
+fun map(v, f) =
+  if v is
+    Some(x) then Some(f(x))
+    None then None()
+//│ map: (None | (Some with {value: 'value}), 'value -> 'value0,) -> (None | (Some with {value: 'value0}))
+
+fun inc(x) = x + 5
+//│ inc: int -> int
+
+map(Some(5), x => x + 5)
+//│ res: None | Some & {value: int}
+
+map(None(), inc)
+//│ res: None | Some & {value: int}
+
+:e
+fun f(a, b) = if a and b then 0
+//│ ╔══[ERROR] The case when this is false is not handled: b
+//│ ║  l.45: 	fun f(a, b) = if a and b then 0
+//│ ╙──      	                       ^
+//│ f: (anything, anything,) -> error
+
+:e
+fun f(x, y) =
+  if x == y + 5 then 0
+  else if x == y + 7 then 0
+//│ ╔══[ERROR] The case when this is false is not handled: == (x,) (+ (y,) (7,),)
+//│ ║  l.54: 	  else if x == y + 7 then 0
+//│ ╙──      	          ^^^^^^^^^^
+//│ f: (number, int,) -> (0 | error)

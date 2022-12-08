@@ -1,0 +1,43 @@
+:NewParser
+
+
+class Pair(fst, snd)
+//│ Defined class Pair
+//│ Pair: ('fst, 'snd,) -> (Pair with {fst: 'fst, snd: 'snd})
+//│     = [Function: Pair1]
+
+
+
+Pair(0, 1) is Pair(a, b)
+//│ res: bool
+//│    = true
+
+if Pair(0, 1) is Pair(a, b) then true else false
+//│ res: bool
+//│    = true
+
+
+fun foo(x) = x is Pair(a, b)
+//│ foo: anything -> bool
+//│    = [Function: foo]
+
+
+Pair(0, 1) is Pair(a, b) and a > b
+//│ res: bool
+//│    = false
+
+if Pair(0, 1) is Pair(a, b) then a > b else false
+//│ res: bool
+//│    = false
+
+
+fun foo(x) = x is Pair(a, b) and a > b
+//│ foo: (Pair & {fst: number, snd: number} | ~Pair) -> bool
+//│    = [Function: foo1]
+
+fun foo(x) = if x is Pair(a, b) then a > b else false
+//│ foo: (Pair & {fst: number, snd: number} | ~Pair) -> bool
+//│    = [Function: foo2]
+
+
+

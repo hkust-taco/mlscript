@@ -111,10 +111,10 @@ C{}
 //│ res: C[nothing]
 
 def c4 a = C4{ a = C{} }
-//│ c4: anything -> (C4[nothing] with {a: C[nothing]})
+//│ c4: anything -> (C4[nothing] & {a: C[nothing]})
 
 def c = c4
-//│ anything -> (C4[nothing] with {a: C[nothing]})
+//│ anything -> (C4[nothing] & {a: C[nothing]})
 //│   <:  c:
 //│ 'a -> C4['a]
 

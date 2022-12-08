@@ -2,13 +2,13 @@
 
 class Foo<A>
 //│ |#class| |Foo|‹|A|›|
-//│ Parsed: {class Foo[A]() {}}
+//│ Parsed: {class Foo‹A›() {}}
 
 
 
 class Foo‹A›
 //│ |#class| |Foo|‹|A|›|
-//│ Parsed: {class Foo[A]() {}}
+//│ Parsed: {class Foo‹A›() {}}
 
 
 (1)
@@ -117,7 +117,7 @@ foo[S, T](1, 2, 3) & Bar[U]("ok")
 
 class Foo<T> {}
 //│ |#class| |Foo|‹|T|›| |{||}|
-//│ Parsed: {class Foo[T]() {}}
+//│ Parsed: {class Foo‹T›() {}}
 
 fun foo<T>(x: T): string = "rua"
 //│ |#fun| |foo|‹|T|›|(|x|#:| |T|)|#:| |string| |#=| |"rua"|

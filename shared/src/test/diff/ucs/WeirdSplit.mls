@@ -1,0 +1,49 @@
+:NewParser
+
+class A()
+class B()
+//│ Defined class A
+//│ Defined class B
+//│ A: () -> A
+//│  = [Function: A1]
+//│ B: () -> B
+//│  = [Function: B1]
+
+fun f(x) =
+  if x
+    is
+      A then 0
+      B then 1
+//│ f: (A | B) -> (0 | 1)
+//│  = [Function: f]
+
+// Precedence problem: should we restruct terms when push them to the stack?
+:e
+fun f(x) =
+  if x ==
+    1
+      + 2 then 0
+      + _ then 1
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.23: 	  if x ==
+//│ ║        	     ^^^^
+//│ ║  l.24: 	    1
+//│ ║        	^^^^^^
+//│ ║  l.25: 	      + 2 then 0
+//│ ║        	^^^^^^^
+//│ ╟── operator application of type `bool` is not an instance of type `int`
+//│ ║  l.23: 	  if x ==
+//│ ║        	     ^^^^
+//│ ║  l.24: 	    1
+//│ ╙──      	^^^^^^
+//│ f: number -> (0 | 1)
+//│  = [Function: f1]
+
+fun f(x, s, t) =
+  if x
+    is A()
+      and t then 0
+      and s then 0
+    is _ then 1
+//│ f: (anything, anything, anything,) -> (0 | 1)
+//│  = [Function: f2]

@@ -210,8 +210,12 @@ trait TypeSimplifier { self: Typer =>
                 val withType = if (needsWith) if (cleanedRcd.fields.isEmpty) withoutType
                   else WithType(withoutType, cleanedRcd.sorted)(noProv) else typeRef & cleanedRcd.sorted
                 
-                tts.toArray.sorted // TODO also filter out tts that are inherited by the class
+                val withTraits = tts.toArray.sorted // TODO also filter out tts that are inherited by the class
                   .foldLeft(withType: ST)(_ & _)
+                
+                val trs3 = trs2 - td.nme // TODO also filter out class refs that are inherited by the class
+                
+                trs3.valuesIterator.foldLeft(withTraits)(_ & _)
                 
               case _ =>
                 lazy val nFields = rcd.fields
@@ -433,7 +437,7 @@ trait TypeSimplifier { self: Typer =>
     // *  (We may unfy a non-rec TV with a rec one, makingthe non-rec TV recursive.)
     
     // * This will be filled during the processing phase, to guide the transformation phase:
-    val varSubst = MutMap.empty[TypeVariable, Option[TypeVariable]]
+    val varSubst = MutMap.empty[TypeVariable, Option[ST]]
     
     // val allVars = st.getVars
     val allVars = analyzed1.iterator.map(_._1).toSortedSet
@@ -478,7 +482,11 @@ trait TypeSimplifier { self: Typer =>
           && coOccurrences.get(false -> v).exists(_(atom))
         =>
           println(s"  [..] $v ${atom}")
-          varSubst += v -> None; ()
+          val bundle = TypeBounds.mk(
+              v.upperBounds.foldLeft(atom)(_ & _),
+              v.lowerBounds.foldLeft(atom)(_ | _),
+            )
+          varSubst += v -> S(bundle)
         
         case w: TV if !(w is v) && !varSubst.contains(w) && !varSubst.contains(v) && !recVars(v)
           && coOccurrences.get(false -> v).exists(_(w))
@@ -494,7 +502,11 @@ trait TypeSimplifier { self: Typer =>
           // } else {
           
           println(s"  [..] $v ${w}")
-          varSubst += v -> N
+          val bundle = TypeBounds.mk(
+              v.upperBounds.foldLeft(w: ST)(_ & _),
+              v.lowerBounds.foldLeft(w: ST)(_ | _),
+            )
+          varSubst += v -> S(bundle)
           
           // }
           
@@ -622,7 +634,7 @@ trait TypeSimplifier { self: Typer =>
           case S(N) =>
             println(s"-> bound")
             pol.fold(
-              TypeBounds.mk(mergeTransform(true, tv, parent), mergeTransform(false, tv, parent))
+              lastWords("Should not be replacing an invariant type variable by its bound...")
             )(mergeTransform(_, tv, parent))
           case N =>
             var wasDefined = true

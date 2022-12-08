@@ -23,7 +23,7 @@ def eval1 eval1 e = case e of {
 //│      = [Function: eval1]
 //│ constrain calls  : 36
 //│ annoying  calls  : 0
-//│ subtyping calls  : 54
+//│ subtyping calls  : 152
 
 :stats
 :js
@@ -45,7 +45,7 @@ def eval1f eval1 e = case e of {
 //│       = [Function: eval1f]
 //│ constrain calls  : 32
 //│ annoying  calls  : 0
-//│ subtyping calls  : 50
+//│ subtyping calls  : 142
 
 
 e1 = add (lit 1) (add (lit 2) (lit 3))
@@ -167,7 +167,12 @@ eval2_fixed_2 e2
 
 
 
-// FIXME should be a code-gen error
+:ge
+let rec eval1_fixed = eval1f (eval1f eval1_fixed) in eval1_fixed e1
+//│ res: int
+//│ Code generation encountered an error:
+//│   recursive non-function definition eval1_fixed is not supported
+
 :js
 rec def eval1_fixed = eval1f (eval1f eval1_fixed)
 //│ // Query 1
@@ -179,6 +184,12 @@ rec def eval1_fixed = eval1f (eval1f eval1_fixed)
 //│   where
 //│     'a <: Add[?] & {lhs: 'a, rhs: 'a} | Lit
 //│            = [Function: eval1_fixed]
+
+:re
+eval1_fixed e1
+//│ res: int
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 rec def eval1_fixed() = eval1f (eval1f (eval1_fixed()))
 //│ eval1_fixed: () -> 'a -> int
@@ -303,7 +314,7 @@ eval2_broken eval2_broken e2
 //│ ║  l.20: 	  | Add -> eval1 eval1 e.lhs + eval1 eval1 e.rhs
 //│ ║        	                               ^^^^^^^^^^^^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.289: 	  | Nega -> e.arg
+//│ ║  l.300: 	  | Nega -> e.arg
 //│ ╙──       	            ^^^^^
 //│ res: error | int
 
@@ -326,7 +337,7 @@ fix eval2f_oops e2
 //│ ║  l.18: 	def eval1 eval1 e = case e of {
 //│ ║        	                         ^
 //│ ╟── from reference:
-//│ ║  l.311: 	def eval2f_oops eval2 e = case e of {
+//│ ║  l.322: 	def eval2f_oops eval2 e = case e of {
 //│ ╙──       	                               ^
 //│ res: error | int
 

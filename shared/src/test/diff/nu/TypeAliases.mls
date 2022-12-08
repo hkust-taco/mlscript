@@ -1,0 +1,68 @@
+:NewParser
+
+type I = int
+//│ Defined type alias I
+
+class CI1
+//│ Defined class CI1
+//│ CI1: () -> CI1
+//│    = [Function: CI11]
+
+:e
+type AI1 = Array[int]
+//│ ╔══[ERROR] not a recognized type: (Array)[int]
+//│ ║  l.12: 	type AI1 = Array[int]
+//│ ╙──      	           ^^^^^^^^^^
+//│ Defined type alias AI1
+
+type AI2 = Array<int>
+//│ Defined type alias AI2
+
+// TODO fail gracefully
+:e
+type AI3(n) = Array[int]
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed: List((None,Fld(false,false,n)))
+
+// TODO fail gracefully
+:e
+type AI3[A] = Array<A>
+//│ ╔══[PARSE ERROR] Expected end of input; found square bracket section instead
+//│ ║  l.28: 	type AI3[A] = Array<A>
+//│ ╙──      	        ^^^
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed: List()
+
+type AI4<A> = Array<A>
+//│ Defined type alias AI4[+A]
+
+let r = 123
+//│ r: 123
+//│  = 123
+
+r: I
+//│ res: I
+//│    = 123
+
+let a = [r, r, r]
+//│ a: (123, 123, 123,)
+//│  = [ 123, 123, 123 ]
+
+a : AI1
+//│ res: AI1
+//│    = [ 123, 123, 123 ]
+
+a : AI2
+//│ res: AI2
+//│    = [ 123, 123, 123 ]
+
+:e
+a : AI3[int]
+//│ ╔══[ERROR] not a recognized type: (AI3)[int]
+//│ ║  l.58: 	a : AI3[int]
+//│ ╙──      	    ^^^^^^^^
+//│ res: anything
+//│    = [ 123, 123, 123 ]
+
+a : AI4<int>
+//│ res: AI4[int]
+//│    = [ 123, 123, 123 ]
+

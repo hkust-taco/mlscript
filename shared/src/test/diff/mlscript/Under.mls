@@ -63,8 +63,16 @@ def foo { _ = _ ; __ = _ } = 1
 //│ foo: {_: anything, __: anything} -> 1
 //│    = [Function: foo6]
 
+_ = 1
+//│ _: 1
+//│  = 1
+
+def _ = 1
+//│ _: 1
+//│  = [Function: _2]
+
 rec def _ = 1
 //│ _: 1
-//│  = [Function: _1]
+//│  = [Function: _3]
 
 

@@ -26,9 +26,9 @@ test1 { value = 1 }
 //│ res: 0 | 1
 //│    = 0
 
-def mt = MyTrait { value = 1 }
+mt = MyTrait { value = 1 }
 //│ mt: {value: 1} & #MyTrait
-//│   = [Function: mt]
+//│   = { value: 1 }
 
 test1 mt
 //│ res: 0 | 1
@@ -103,9 +103,9 @@ test2 (C2 { default = "oops" })
 //│    = 'oops'
 
 // Note: `value` is unused here; would deserve a warning
-def c2 = C2 { value = 1; default = "oops" }
+c2 = C2 { value = 1; default = "oops" }
 //│ c2: C2 & {default: "oops"}
-//│   = [Function: c2]
+//│   = C2 { default: 'oops' }
 
 :e
 test2 c2

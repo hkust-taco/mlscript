@@ -10,32 +10,32 @@ def flatMap3 = fun f -> fun opt -> case opt of { Some -> f opt | _ -> opt }
 //│         = [Function: flatMap3]
 
 
-def arg = if true then Some{value = 42} with {payload = 23} else None {}
+arg = if true then Some{value = 42} with {payload = 23} else None {}
 //│ arg: None | Some[42] & {payload: 23}
-//│    = [Function: arg]
+//│    = Some { value: 42, payload: 23 }
 
 // > TODO don't distribute neg inters + handle better at constraint top level
 :stats
 flatMap3 (fun x -> add x.value x.payload) arg
 //│ res: int | None
 //│    = 65
-//│ constrain calls  : 100
+//│ constrain calls  : 96
 //│ annoying  calls  : 23
-//│ subtyping calls  : 63
+//│ subtyping calls  : 565
 
 
-def arg = if true then Some{value = 42} else None {}
+arg = if true then Some{value = 42} else None {}
 //│ arg: None | Some[42]
-//│    = [Function: arg1]
+//│    = Some { value: 42 }
 
 flatMap3 (fun x -> x.value) arg
 //│ res: 42 | None
 //│    = 42
 
 
-def foo = flatMap3 (fun x -> x.value)
+foo = flatMap3 (fun x -> x.value)
 //│ foo: ((Some[?] with {value: 'a}) | 'a & ~#Some) -> 'a
-//│    = [Function: foo]
+//│    = [Function (anonymous)]
 
 foo arg
 //│ res: 42 | None
@@ -45,9 +45,9 @@ foo 1
 //│ res: 1
 //│    = 1
 
-def fn = foo None
+fn = foo None
 //│ fn: anything -> None
-//│   = [Function: fn]
+//│   = [Function (anonymous)]
 
 // :d
 fn{} // foo None {}
@@ -67,9 +67,9 @@ fun f -> flatMap3 f arg
 
 
 
-def foo = flatMap3 (fun x -> x)
+foo = flatMap3 (fun x -> x)
 //│ foo: ('a & (Some[?] | ~#Some)) -> 'a
-//│    = [Function: foo1]
+//│    = [Function (anonymous)]
 
 foo 1
 //│ res: 1

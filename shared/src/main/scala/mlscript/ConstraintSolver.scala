@@ -299,13 +299,19 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       // println(s"[[ ${cctx._1.map(_.prov).mkString(", ")}  <<  ${cctx._2.map(_.prov).mkString(", ")} ]]")
       // println(s"{{ ${cache.mkString(", ")} }}")
       
-      if (lhs === rhs) return ()
-      
-      // if (lhs <:< rhs) return () // * It's not clear that doing this here is worth it
+      // if (!lhs.mentionsTypeBounds && lhs === rhs) return ()
+      // * ^ The check above is mostly good enough but it leads to slightly worse simplified type outputs
+      // *    in corner cases.
+      // * v The check below is a bit more precise but it incurs a lot more subtyping checks,
+      // *    especially in complex comparisons like those done in the `ExprProb` test family.
+      // *    Therefore this subtyping check may not be worth it.
+      // *    In any case, we make it more lightweight by not traversing type variables
+      // *    and not using a subtyping cache (cf. `CompareRecTypes = false`).
+      implicit val ctr: CompareRecTypes = false
+      if (lhs <:< rhs) ()
       
       // println(s"  where ${FunctionType(lhs, rhs)(primProv).showBounds}")
       else {
-        if (lhs is rhs) return
         val lhs_rhs = lhs -> rhs
         lhs_rhs match {
           case (_: ProvType, _) | (_, _: ProvType) => ()
@@ -325,6 +331,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_, TypeBounds(lb, ub)) => rec(lhs, lb, true)
           case (p @ ProvType(und), _) => rec(und, rhs, true)
           case (_, p @ ProvType(und)) => rec(lhs, und, true)
+          case (_: ObjectTag, _: ObjectTag) if lhs === rhs => ()
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs, true)
           case (FunctionType(l0, r0), FunctionType(l1, r1)) =>
             rec(l1, l0, false)
@@ -612,7 +619,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case tr @ TypeRef(d, ts) =>
         TypeRef(d, tr.mapTargs(S(pol)) {
           case (N, targ) =>
-            TypeBounds(extrude(targ, lvl, false), extrude(targ, lvl, true))(noProv)
+            TypeBounds.mk(extrude(targ, lvl, false), extrude(targ, lvl, true)) // Q: ? subtypes?
+            // * A sanity-checking version, making sure the type range is correct ((LB subtype of UB):
+            /* 
+            val a = extrude(targ, lvl, false)
+            val b = extrude(targ, lvl, true)
+            implicit val r: Raise = throw _
+            implicit val p: TP = noProv
+            constrain(a, b)
+            TypeBounds.mk(a, b)
+            */
           case (S(pol), targ) => extrude(targ, lvl, pol)
         })(tr.prov)
     }
