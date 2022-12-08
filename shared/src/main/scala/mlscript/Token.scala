@@ -52,6 +52,8 @@ sealed abstract class BracketKind {
     case Square => '[' -> ']'
     case Angle => '‹' -> '›'
     case Indent => '→' -> '←'
+    case Quasiquote => "code\"" -> '"'
+    case Unquote => "${" -> '}'
   }
   def name: Str = this match {
     case Round => "parenthesis"
@@ -59,6 +61,8 @@ sealed abstract class BracketKind {
     case Square => "square bracket"
     case Angle => "angle bracket"
     case Indent => "indentation"
+    case Quasiquote => "quasiquote"
+    case Unquote => "unquote"
   }
 }
 
@@ -68,6 +72,8 @@ object BracketKind {
   case object Square extends BracketKind
   case object Angle extends BracketKind
   case object Indent extends BracketKind
+  case object Quasiquote extends BracketKind
+  case object Unquote extends BracketKind
   
   def unapply(c: Char): Opt[Either[BracketKind, BracketKind]] = c |>? {
     case '(' => Left(Round)
@@ -78,6 +84,12 @@ object BracketKind {
     case ']' => Right(Square)
     case '‹' => Left(Angle)
     case '›' => Right(Angle)
+    case '"' => Right(Quasiquote)
+    // case '#' => Right(Unquote)
+  }
+  def unapply(str: String): Opt[Either[BracketKind, BracketKind]] = str |>? {
+    case "code#" => Left(Quasiquote)
+    case "${" => Left(Unquote)
   }
 }
 

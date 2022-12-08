@@ -13,6 +13,14 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   val bytes: Array[Char] = origin.fph.blockStr.toArray
   private val length = bytes.length
   type State = Int
+
+  type Printer = (String) => Unit
+
+  var print: Printer = println
+
+  def setPrinter(p: Printer): Unit = {
+    print = p
+  }
   
   private val isOpChar = Set(
     '!', '#', '%', '&', '*', '+', '-', '/', ':', '<', '=', '>', '?', '@', '\\', '^', '|', '~' , '.',
@@ -50,20 +58,29 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   )
   
   @tailrec final
+  /**
+   * @param i intialial position on where you start getting the character
+   * @param cur return value, in array
+   * @param pred continue condition for takeWhile
+  */
   def takeWhile(i: Int, cur: Ls[Char] = Nil)(pred: Char => Bool): (Str, Int) =
     if (i < length && pred(bytes(i))) takeWhile(i + 1, bytes(i) :: cur)(pred)
     else (cur.reverseIterator.mkString, i)
   
   def loc(start: Int, end: Int): Loc = Loc(start, end, origin)
+
+
   
   // @tailrec final
-  def lex(i: Int, ind: Ls[Int], acc: Ls[TokLoc]): Ls[TokLoc] = if (i >= length) acc.reverse else {
+  def lex(i: Int, ind: Ls[Int], acc: Ls[TokLoc], obq: Boolean = false, obunq: Boolean = false): Ls[TokLoc] = if (i >= length) acc.reverse else {
     val c = bytes(i)
     def pe(msg: Message): Unit =
       // raise(ParseError(false, msg -> S(loc(i, i + 1)) :: Nil))
       raise(ErrorReport(msg -> S(loc(i, i + 1)) :: Nil, source = Lexing)) // TODO parse error
-    // @inline 
-    def go(j: Int, tok: Token) = lex(j, ind, (tok, loc(i, j)) :: acc)
+      // @inline
+    def isQuasiquoteKeyword(i: Int): Boolean = bytes(i) === 'c' && bytes(i + 1) === 'o' && bytes(i + 2) === 'd' && bytes(i + 3) === 'e' && bytes(i + 4) === '"'
+    def go(j: Int, tok: Token, obq: Boolean = obq, obunq: Boolean = obunq) = lex(j, ind, (tok, loc(i, j)) :: acc, obq, obunq)
+    def isUnquoteKey(i: Int): Boolean = bytes(i) === '$' && bytes(i + 1) === '{'
     c match {
       case ' ' =>
         val (_, j) = takeWhile(i)(_ === ' ')
@@ -71,14 +88,24 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
       case ',' =>
         val j = i + 1
         go(j, COMMA)
+      case 'c' if isQuasiquoteKeyword(i) => 
+        go(i + 5, OPEN_BRACKET(BracketKind.Quasiquote), obq = true) // TODO: throw error if the double quote doesn't align
+      case '$' if (isUnquoteKey(i) && obq) =>
+        go(i + 2, OPEN_BRACKET(BracketKind.Unquote), obunq = true)
+      case '}' if(obunq) =>
+          go(i + 1, CLOSE_BRACKET(BracketKind.Unquote), obunq = false)
       case '"' =>
-        val j = i + 1
-        val (chars, k) = takeWhile(j)(c => c =/= '"' && c =/= '\n')
-        val k2 = if (bytes.lift(k) === Some('"')) k + 1 else {
-          pe(msg"unclosed quotation mark")
-          k
+        if (obq)
+          go(i + 1, CLOSE_BRACKET(BracketKind.Quasiquote))
+        else {
+          val j = i + 1
+          val (chars, k) = takeWhile(j)(c => c =/= '"' && c =/= '\n')
+          val k2 = if (bytes.lift(k) === Some('"')) k + 1 else {
+            pe(msg"unclosed quotation mark")
+            k
+          }
+          go(k2, LITVAL(StrLit(chars)))
         }
-        go(k2, LITVAL(StrLit(chars)))
       case '/' if bytes.lift(i + 1).contains('/') =>
         val j = i + 2
         val (txt, k) =
@@ -251,7 +278,8 @@ object NewLexer {
     "interface",
     "new",
     "namespace",
-    "type"
+    "type",
+    "code"
   )
   
   def printToken(tl: TokLoc): Str = tl match {
