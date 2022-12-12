@@ -299,7 +299,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                        else PublicFlag // if there is no access flag keyword, we consider it as public
 
             val (decKw, wrongKw) = if (kwStr === "fun" || kwStr === "let") (kwStr, false) else yeetSpaces match {
-              case (KEYWORD(decStr @ ("fun" | "let")), _) :: _ => consume; System.out.println(s"fuck: ${kwStr}, ${decStr}"); (decStr, false)
+              case (KEYWORD(decStr @ ("fun" | "let")), _) :: _ => consume; (decStr, false)
               case _ =>
                 val (tkstr, loc) = c.headOption.fold(("end of input", lastLoc))(_.mapFirst(_.describe).mapSecond(some))
                 err(msg"Expected keyword let or fun" -> loc :: Nil)
