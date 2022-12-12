@@ -8,7 +8,7 @@ ThisBuild / organization     := "io.lptk"
 ThisBuild / organizationName := "LPTK"
 
 lazy val root = project.in(file("."))
-  .aggregate(mlscriptJS, mlscriptJVM, ts2mlsJS, compilerJVM)
+  .aggregate(mlscriptJS, mlscriptJVM, ts2mlsTest, compilerJVM)
   .settings(
     publish := {},
     publishLocal := {},
@@ -73,11 +73,11 @@ lazy val ts2mls = crossProject(JSPlatform, JVMPlatform).in(file("ts2mls"))
 lazy val ts2mlsJS = ts2mls.js
 lazy val ts2mlsJVM = ts2mls.jvm
 
-val tsTypeDiffTests = taskKey[Unit]("")
-
-tsTypeDiffTests := (Def.task{
-  (ts2mlsJVM / Test / test).value
-} triggeredBy (ts2mlsJS / Test / test)).value
+lazy val ts2mlsTest = project.in(file("ts2mls"))
+  .settings(
+    scalaVersion := "2.13.8",
+    Test / test := ((ts2mlsJVM / Test / test) dependsOn (ts2mlsJS / Test / test)).value
+  )
 
 lazy val compiler = crossProject(JSPlatform, JVMPlatform).in(file("compiler"))
   .settings(
