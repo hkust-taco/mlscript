@@ -1,0 +1,358 @@
+:GeneralizeCurriedFunctions
+:DistributeForalls
+:NoRecursiveTypes
+// :ArgGen // * This actually causes extrusions in pred, failing its type checking
+
+
+
+type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ Defined type alias ChurchInt
+
+
+
+def zero_ty: ChurchInt
+//│ zero_ty: ChurchInt
+//│        = <missing implementation>
+
+def zero f x = x
+//│ zero: anything -> (forall 'a. 'a -> 'a)
+//│     = [Function: zero]
+
+zero_ty = zero
+//│ anything -> (forall 'a. 'a -> 'a)
+//│   <:  zero_ty:
+//│ ChurchInt
+//│        = [Function: zero]
+
+
+def succ_ty: ChurchInt -> ChurchInt
+//│ succ_ty: ChurchInt -> ChurchInt
+//│        = <missing implementation>
+
+def succ n f x = f (n f x)
+//│ succ: ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│     = [Function: succ]
+
+succ_ty = succ
+//│ ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│   <:  succ_ty:
+//│ ChurchInt -> ChurchInt
+//│        = [Function: succ]
+
+
+
+def to_church_ty: int -> ChurchInt
+//│ to_church_ty: int -> ChurchInt
+//│             = <missing implementation>
+
+rec def to_church n =
+  if n == 0 then zero
+  else succ (to_church (n - 1))
+//│ to_church: int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'a. ('a & 'b) -> 'a))
+//│          = [Function: to_church]
+
+to_church_ty = to_church
+//│ int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'a. ('a & 'b) -> 'a))
+//│   <:  to_church_ty:
+//│ int -> ChurchInt
+//│             = [Function: to_church]
+
+
+
+def add_ty: ChurchInt -> ChurchInt -> ChurchInt
+//│ add_ty: ChurchInt -> ChurchInt -> ChurchInt
+//│       = <missing implementation>
+
+def add n m = n succ m
+//│ add: ((forall 'a, 'b, 'c. ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)) -> 'e -> 'f) -> 'e -> 'f
+//│    = [Function: add]
+
+:e // * Since "sound extrusion"
+add_ty = add
+//│ ((forall 'a, 'b, 'c. ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)) -> 'e -> 'f) -> 'e -> 'f
+//│   <:  add_ty:
+//│ ChurchInt -> ChurchInt -> ChurchInt
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.71: 	add_ty = add
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.8: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║       	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.8: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──     	                        ^^
+//│       = [Function: add]
+
+def add (n: ChurchInt) m = n succ m
+// def add (n: ChurchInt) m = n succ_ty m
+//│ add: ChurchInt -> (forall 'a, 'b, 'c, 'd. ('a -> 'b -> 'c & 'd) -> (forall 'e. ('c -> 'e & 'c -> 'c & 'a) -> 'b -> 'e | 'd))
+//│    = [Function: add1]
+
+add_ty = add
+//│ ChurchInt -> (forall 'a, 'b, 'c, 'd. ('a -> 'b -> 'c & 'd) -> (forall 'e. ('c -> 'e & 'c -> 'c & 'a) -> 'b -> 'e | 'd))
+//│   <:  add_ty:
+//│ ChurchInt -> ChurchInt -> ChurchInt
+//│       = [Function: add1]
+
+
+def mul_ty: ChurchInt -> ChurchInt -> ChurchInt
+//│ mul_ty: ChurchInt -> ChurchInt -> ChurchInt
+//│       = <missing implementation>
+
+def mul n m = n (add m) zero
+//│ mul: ((forall 'a, 'b, 'c, 'd. ('c -> 'd -> 'a & 'b) -> (forall 'e. ('a -> 'e & 'a -> 'a & 'c) -> 'd -> 'e | 'b)) -> (anything -> (forall 'f. 'f -> 'f)) -> 'g) -> ChurchInt -> 'g
+//│    = [Function: mul]
+
+:e // fails since the fix to spurious-TV-cycles
+mul_ty = mul
+//│ ((forall 'a, 'b, 'c, 'd. ('a -> 'b -> 'c & 'd) -> (forall 'e. ('c -> 'e & 'c -> 'c & 'a) -> 'b -> 'e | 'd)) -> (anything -> (forall 'f. 'f -> 'f)) -> 'g) -> ChurchInt -> 'g
+//│   <:  mul_ty:
+//│ ChurchInt -> ChurchInt -> ChurchInt
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
+//│ ║  l.107: 	mul_ty = mul
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  (⊥ -> ⊤)  <:  α40_697    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (⊥ -> ⊤)  <:  α40_679''''
+//│       = [Function: mul]
+
+def mul (n: ChurchInt) m = n (add m) zero
+//│ mul: ChurchInt -> (forall 'a. ChurchInt -> (forall 'b. ('a -> 'b & 'a -> 'a) -> (forall 'a, 'b, 'c. ('a & 'c) -> ('c | 'b))))
+//│    = [Function: mul1]
+
+mul_ty = mul
+//│ ChurchInt -> (forall 'a. ChurchInt -> (forall 'b. ('a -> 'b & 'a -> 'a) -> (forall 'a, 'b, 'c. ('a & 'c) -> ('c | 'b))))
+//│   <:  mul_ty:
+//│ ChurchInt -> ChurchInt -> ChurchInt
+//│       = [Function: mul1]
+
+
+
+def pow_ty: ChurchInt -> ChurchInt -> ChurchInt
+//│ pow_ty: ChurchInt -> ChurchInt -> ChurchInt
+//│       = <missing implementation>
+
+:e
+def pow (n: ChurchInt) (m: ChurchInt) = n (mul m) (succ zero)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.136: 	def pow (n: ChurchInt) (m: ChurchInt) = n (mul m) (succ zero)
+//│ ║         	                                        ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.8: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║       	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.8: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║       	                        ^^
+//│ ╟── from reference:
+//│ ║  l.32: 	def succ n f x = f (n f x)
+//│ ╙──      	                        ^
+//│ pow: ChurchInt -> ChurchInt -> error
+//│    = [Function: pow]
+
+def pow (n: ChurchInt) (m: ChurchInt) = n (mul_ty m) (succ_ty zero_ty)
+//│ pow: ChurchInt -> ChurchInt -> ChurchInt
+//│    = [Function: pow1]
+pow_ty = pow
+//│ ChurchInt -> ChurchInt -> ChurchInt
+//│   <:  pow_ty:
+//│ ChurchInt -> ChurchInt -> ChurchInt
+//│       = [Function: pow1]
+
+def pow (n: ChurchInt) m = n (mul m) (succ_ty zero)
+//│ pow: ChurchInt -> ChurchInt -> (forall 'a, 'b. ('a -> 'b & 'a -> 'a) -> (forall 'a, 'b, 'c. ('a & 'c) -> ('c | 'b)) | ChurchInt)
+//│    = [Function: pow2]
+pow_ty = pow
+//│ ChurchInt -> ChurchInt -> (forall 'a, 'b. ('a -> 'b & 'a -> 'a) -> (forall 'c, 'a, 'b. ('a & 'c) -> ('c | 'b)) | ChurchInt)
+//│   <:  pow_ty:
+//│ ChurchInt -> ChurchInt -> ChurchInt
+//│       = [Function: pow2]
+
+
+
+def unit = id
+//│ unit: 'a -> 'a
+//│     = [Function: unit]
+
+type Unit_t = 'a -> 'a
+unit : Unit_t
+//│ Defined type alias Unit_t
+//│ res: Unit_t
+//│    = [Function: id]
+
+def tru x _ = x unit
+//│ tru: ((forall 'a. 'a -> 'a) -> 'b) -> anything -> 'b
+//│    = [Function: tru]
+
+def fls _ x = x unit
+//│ fls: anything -> (forall 'a. ((forall 'b. 'b -> 'b) -> 'a) -> 'a)
+//│    = [Function: fls]
+
+type If_t = (Unit_t -> 'a) -> (Unit_t -> 'a) -> 'a
+tru : If_t
+fls : If_t
+//│ Defined type alias If_t
+//│ res: If_t
+//│    = [Function: tru]
+//│ res: If_t
+//│    = [Function: fls]
+
+def iszero n = n (fun _ -> fls) tru
+//│ iszero: ((anything -> anything -> (forall 'a. ((forall 'b. 'b -> 'b) -> 'a) -> 'a)) -> (forall 'c. ((forall 'b. 'b -> 'b) -> 'c) -> anything -> 'c) -> 'd) -> 'd
+//│       = [Function: iszero]
+
+iszero : ChurchInt -> If_t
+//│ res: ChurchInt -> If_t
+//│    = [Function: iszero]
+
+def pair x y f = f x y
+//│ pair: 'a -> (forall 'b. 'b -> (forall 'c. ('a -> 'b -> 'c) -> 'c))
+//│     = [Function: pair]
+
+def fst p = p (fun x -> fun _ -> x)
+//│ fst: ((forall 'a. 'a -> anything -> 'a) -> 'b) -> 'b
+//│    = [Function: fst]
+
+def snd p = p (fun _ -> fun x -> x)
+//│ snd: ((anything -> (forall 'a. 'a -> 'a)) -> 'b) -> 'b
+//│    = [Function: snd]
+
+
+
+def pred_ty: ChurchInt -> ChurchInt
+//│ pred_ty: ChurchInt -> ChurchInt
+//│        = <missing implementation>
+
+def s p = pair (snd p) (succ (snd p))
+//│ s: ((anything -> (forall 'a. 'a -> 'a)) -> 'b -> 'c -> 'd & (anything -> (forall 'a. 'a -> 'a)) -> 'e) -> (forall 'f. ('e -> (forall 'g. ('d -> 'g & 'b) -> 'c -> 'g) -> 'f) -> 'f)
+//│  = [Function: s]
+
+def z = pair zero zero
+//│ z: ((anything -> (forall 'a. 'a -> 'a)) -> (anything -> (forall 'a. 'a -> 'a)) -> 'b) -> 'b
+//│  = [Function: z]
+
+def pred (n: ChurchInt) = fst (n s z)
+//│ pred: ChurchInt -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'a, 'c. ('c & 'b) -> ('c | 'a)))
+//│     = [Function: pred]
+
+pred_ty = pred
+//│ ChurchInt -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'a, 'c. ('c & 'b) -> ('c | 'a)))
+//│   <:  pred_ty:
+//│ ChurchInt -> ChurchInt
+//│        = [Function: pred]
+
+
+
+def pred n =
+  let s p = pair (snd p) (succ (snd p)) in
+  let z = pair zero zero in
+  fst (n s z)
+//│ pred: ((forall 'a, 'b, 'c, 'd. ((anything -> (forall 'e. 'e -> 'e)) -> 'a -> 'b -> 'c & (anything -> (forall 'e. 'e -> 'e)) -> 'd) -> (forall 'f. ('d -> (forall 'g. ('c -> 'g & 'a) -> 'b -> 'g) -> 'f) -> 'f)) -> (forall 'h. ((anything -> (forall 'i. 'i -> 'i)) -> (anything -> (forall 'i. 'i -> 'i)) -> 'h) -> 'h) -> (forall 'j. 'j -> anything -> 'j) -> 'k) -> 'k
+//│     = [Function: pred1]
+:e
+pred_ty = pred
+//│ ((forall 'a, 'b, 'c, 'd. ((anything -> (forall 'e. 'e -> 'e)) -> 'a -> 'b -> 'c & (anything -> (forall 'e. 'e -> 'e)) -> 'd) -> (forall 'f. ('d -> (forall 'g. ('c -> 'g & 'a) -> 'b -> 'g) -> 'f) -> 'f)) -> (forall 'h. ((anything -> (forall 'i. 'i -> 'i)) -> (anything -> (forall 'i. 'i -> 'i)) -> 'h) -> 'h) -> (forall 'j. 'j -> anything -> 'j) -> 'k) -> 'k
+//│   <:  pred_ty:
+//│ ChurchInt -> ChurchInt
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
+//│ ║  l.252: 	pred_ty = pred
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  (‘a_1937' -> ‘a_1937')  <:  α40_1995'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (‘a_1937' -> ‘a_1937')  <:  α40_1979^6
+//│        = [Function: pred1]
+
+// * Only difference: use `succ_ty`
+def pred n =
+  let s p = pair (snd p) (succ_ty (snd p)) in
+  let z = pair zero zero in
+  fst (n s z)
+//│ pred: ((forall 'a. ((anything -> (forall 'b. 'b -> 'b)) -> ChurchInt & (anything -> (forall 'b. 'b -> 'b)) -> 'a) -> (forall 'c. ('a -> ChurchInt -> 'c) -> 'c)) -> (forall 'd. ((anything -> (forall 'e. 'e -> 'e)) -> (anything -> (forall 'e. 'e -> 'e)) -> 'd) -> 'd) -> (forall 'f. 'f -> anything -> 'f) -> 'g) -> 'g
+//│     = [Function: pred2]
+pred_ty = pred
+//│ ((forall 'a. ((anything -> (forall 'b. 'b -> 'b)) -> ChurchInt & (anything -> (forall 'b. 'b -> 'b)) -> 'a) -> (forall 'c. ('a -> ChurchInt -> 'c) -> 'c)) -> (forall 'd. ((anything -> (forall 'e. 'e -> 'e)) -> (anything -> (forall 'e. 'e -> 'e)) -> 'd) -> 'd) -> (forall 'f. 'f -> anything -> 'f) -> 'g) -> 'g
+//│   <:  pred_ty:
+//│ ChurchInt -> ChurchInt
+//│        = [Function: pred2]
+
+
+
+def fact_ty: ChurchInt -> ChurchInt
+//│ fact_ty: ChurchInt -> ChurchInt
+//│        = <missing implementation>
+
+rec def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n (fact (pred n)))
+//│ fact: ChurchInt -> (forall 'a, 'b, 'c. ('a -> 'b & ('a | 'c) -> 'b & ('a | 'c) -> 'c) -> (forall 'a, 'b, 'd. ('a & 'd) -> ('d | 'b)))
+//│     = [Function: fact]
+
+fact_ty = fact
+//│ ChurchInt -> (forall 'a, 'b, 'c. ('a -> 'b & ('a | 'c) -> 'b & ('a | 'c) -> 'c) -> (forall 'a, 'b, 'd. ('a & 'd) -> ('d | 'b)))
+//│   <:  fact_ty:
+//│ ChurchInt -> ChurchInt
+//│        = [Function: fact]
+
+// * A dummy mistake:
+:e
+def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n {})
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.295: 	def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n {})
+//│ ║         	                                                                    ^^^^^^^^
+//│ ╟── record literal of type `anything` is not a function
+//│ ║  l.295: 	def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n {})
+//│ ║         	                                                                          ^^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.8: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║       	                            ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.119: 	def mul (n: ChurchInt) m = n (add m) zero
+//│ ╙──       	                                  ^
+//│ fact: ChurchInt -> (forall 'a, 'b. ('a -> 'b) -> 'a -> 'b | error)
+//│     = [Function: fact1]
+
+// * We can drop all intermediate annotations if the recursive call is annotated:
+def fact n = (iszero n) (fun _ -> succ zero) (fun _ -> mul n (fact_ty (pred n)))
+//│ fact: (ChurchInt & (forall 'a. ((anything -> (forall 'b. 'b -> 'b)) -> ChurchInt & (anything -> (forall 'b. 'b -> 'b)) -> 'a) -> (forall 'c. ('a -> ChurchInt -> 'c) -> 'c)) -> (forall 'd. ((anything -> (forall 'e. 'e -> 'e)) -> (anything -> (forall 'e. 'e -> 'e)) -> 'd) -> 'd) -> (forall 'f. 'f -> anything -> 'f) -> ChurchInt & (anything -> anything -> (forall 'g. ((forall 'h. 'h -> 'h) -> 'g) -> 'g)) -> (forall 'i. ((forall 'h. 'h -> 'h) -> 'i) -> anything -> 'i) -> (forall 'j. anything -> (forall 'k. ('j -> 'k) -> 'j -> 'k)) -> (anything -> (forall 'l, 'm. ('l -> 'm & 'l -> 'l) -> (forall 'e, 'l, 'm. ('e & 'l) -> ('e | 'm)))) -> 'n) -> 'n
+//│     = [Function: fact2]
+
+fact_ty = fact
+//│ (ChurchInt & (forall 'a. ((anything -> (forall 'b. 'b -> 'b)) -> ChurchInt & (anything -> (forall 'b. 'b -> 'b)) -> 'a) -> (forall 'c. ('a -> ChurchInt -> 'c) -> 'c)) -> (forall 'd. ((anything -> (forall 'e. 'e -> 'e)) -> (anything -> (forall 'e. 'e -> 'e)) -> 'd) -> 'd) -> (forall 'f. 'f -> anything -> 'f) -> ChurchInt & (anything -> anything -> (forall 'g. ((forall 'h. 'h -> 'h) -> 'g) -> 'g)) -> (forall 'i. ((forall 'h. 'h -> 'h) -> 'i) -> anything -> 'i) -> (forall 'j. anything -> (forall 'k. ('j -> 'k) -> 'j -> 'k)) -> (anything -> (forall 'l, 'm. ('l -> 'm & 'l -> 'l) -> (forall 'e, 'l, 'm. ('e & 'l) -> ('e | 'm)))) -> 'n) -> 'n
+//│   <:  fact_ty:
+//│ ChurchInt -> ChurchInt
+//│        = [Function: fact2]
+
+
+:e
+fact (to_church 4) (fun x -> x + 1) 0
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.324: 	fact (to_church 4) (fun x -> x + 1) 0
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> ?b` does not match type `nothing`
+//│ ║  l.207: 	def pair x y f = f x y
+//│ ║         	             ^^^^^^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.8: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──     	                        ^^
+//│ res: error
+//│    = 24
+
+:e
+fact_ty (to_church 4) (fun x -> x + 1) 0
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.338: 	fact_ty (to_church 4) (fun x -> x + 1) 0
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.8: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║       	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.8: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║       	                        ^^
+//│ ╟── from application:
+//│ ║  l.32: 	def succ n f x = f (n f x)
+//│ ╙──      	                 ^^^^^^^^^
+//│ res: error
+//│    = 24
+
+fact (to_church_ty 4) (fun x -> x + 1) 0
+//│ res: int
+//│    = 24
+
+

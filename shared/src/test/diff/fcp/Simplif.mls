@@ -22,24 +22,18 @@ def f: (forall 'a. 'b -> 'a) -> 'b -> 'b
 
 def bar: forall 'a. 'a -> int
 //│ bar: anything -> int
-//│    = <missing implementation>
 
 def foo: (forall 'a. 'a -> 'b) -> 'b
 //│ foo: (anything -> 'b) -> 'b
-//│    = <missing implementation>
 
 foo bar
 //│ res: int
-//│    = <no result>
-//│      foo is not implemented
 
 def foo: MutArray[forall 'a. 'a -> 'b] -> 'b
 //│ foo: MutArray[anything -> 'b] -> 'b
-//│    = <missing implementation>
 
 def foo: (forall 'a. MutArray['a -> 'b]) -> 'b
 //│ foo: (forall 'a. MutArray['a -> 'b]) -> 'b
-//│    = <missing implementation>
 
 // def foo: MutArray[forall 'b. forall 'a {'a <: 'b}. ('a .. 'b) -> 'b] -> 'b
 
