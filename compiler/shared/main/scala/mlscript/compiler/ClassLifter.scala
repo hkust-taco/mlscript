@@ -1,10 +1,11 @@
-package mlscript.compiler
+package mlscript
+package compiler
 
-import mlscript.*
-import mlscript.utils.StringOps
+import mlscript.utils.*
+import mlscript.utils.shorthands.*
 import scala.collection.mutable.StringBuilder as StringBuilder
-import scala.collection.mutable.Map as MMap
-import scala.collection.mutable.Set as MSet
+import scala.collection.mutable.Map as MutMap
+import scala.collection.mutable.Set as MutSet
 import mlscript.codegen.Helpers.inspect as showStructure
 import mlscript.codegen.CodeGenError
 
@@ -41,8 +42,8 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     originNm: TypeName, 
     liftedNm: TypeName, 
     var capturedParams: LocalContext, 
-    fields: MSet[Var], 
-    innerClses: MMap[TypeName, ClassInfoCache], 
+    fields: MutSet[Var], 
+    innerClses: MutMap[TypeName, ClassInfoCache], 
     supClses: Set[TypeName],
     outerCls: Option[ClassInfoCache],
     body: NuTypeDef, 
@@ -213,7 +214,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
                   ).addT(flds._2.flatten.toSet).extV(supNms.flatten.map(x => Var(x.name)))
 
     log(s"ret ctx for ${cls.nme.name}: $tmpCtx")
-    val ret = ClassInfoCache(nm, genClassNm(nm.name), tmpCtx, MSet(fields.toSeq: _*), MMap(), supNms.flatten.toSet, outer, cls, outer.map(_.depth).getOrElse(0)+1)
+    val ret = ClassInfoCache(nm, genClassNm(nm.name), tmpCtx, MutSet(fields.toSeq: _*), MutMap(), supNms.flatten.toSet, outer, cls, outer.map(_.depth).getOrElse(0)+1)
     ret
   }
 
@@ -289,7 +290,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     }
   }
 
-  private def liftTermNew(target: Term)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (Term, LocalContext) = target match{
+  private def liftTermNew(target: Term)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (Term, LocalContext) = target match {
     case v: Var => 
       if(ctx.contains(v) || v.name.equals("this") || primiTypes.contains(v.name))   (v, emptyCtx)
       else if(cache.contains(TypeName(v.name))){
@@ -393,6 +394,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val ret = liftEntitiesNew(stmts)
       (Blk(ret._1), ret._2)
     case lit: Lit => (lit, emptyCtx)
+    case Forall(_, _) | Where(_) => ??? // TODO
   }
 
   //serves for lifting Tup(Some(_), Fld(_, _, trm)), where trm refers to a type
@@ -453,13 +455,13 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val nlhs = liftType(lb)
       val nrhs = liftType(ub)
       Bounds(nlhs._1, nrhs._1) -> (nlhs._2 ++ nrhs._2)
-    case Constrained(base, where) =>
+    case Constrained(base, where, _TODO) =>
       val (nTargs, nCtx) = where.map(x => {
         val tmp = liftType(x._2)
         (x._1, tmp._1.asInstanceOf[Bounds]) -> tmp._2
       }).unzip
       val (nBase, bCtx) = liftType(base)
-      Constrained(nBase, nTargs) -> (nCtx.fold(emptyCtx)(_ ++ _) ++ bCtx)
+      Constrained(nBase, nTargs, _TODO) -> (nCtx.fold(emptyCtx)(_ ++ _) ++ bCtx)
     case Function(lhs, rhs) =>
       val nlhs = liftType(lhs)
       val nrhs = liftType(rhs)
@@ -524,8 +526,12 @@ class ClassLifter(logDebugMsg: Boolean = false) {
         (func.copy(rhs = Left(ret._1)), ret._2)
       case Right(PolyType(targs, body)) => 
         val nBody = liftType(body)(using ctx.addT(tpVs))
-        val nTargs = targs.map(liftTypeName(_)(using ctx.addT(tpVs))).unzip
-        (func.copy(rhs = Right(PolyType(nTargs._1, nBody._1))), nTargs._2.fold(nBody._2)(_ ++ _))
+        val targs2 = targs.map {
+          case L(tp) => tp
+          case R(tp) => ??? // TODO
+        }
+        val nTargs = targs2.map(liftTypeName(_)(using ctx.addT(tpVs))).unzip
+        (func.copy(rhs = Right(PolyType(nTargs._1.map(Left.apply), nBody._1))), nTargs._2.fold(nBody._2)(_ ++ _))
     }
   }
   
@@ -536,7 +542,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
   }
 
   private def mixClsInfos(clsInfos: Map[TypeName, ClassInfoCache], newClsNms: Set[Var])(using cache: ClassCache): Map[TypeName, ClassInfoCache] = {
-    val nameInfoMap: MMap[TypeName, ClassInfoCache] = MMap(clsInfos.toSeq: _*)
+    val nameInfoMap: MutMap[TypeName, ClassInfoCache] = MutMap(clsInfos.toSeq: _*)
     log(s"mix cls infos $nameInfoMap")
     // val fullMp = cache ++ nameInfoMap
     val clsNmsAsTypeNm = newClsNms.map(x => TypeName(x.name))
