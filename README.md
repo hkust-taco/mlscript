@@ -50,7 +50,7 @@ Running the main MLscript tests only requires the Scala Build Tool installed.
 In the terminal, run `sbt mlscriptJVM/test`.
 
 Running the ts2mls MLscript tests requires NodeJS, and TypeScript in addition.
-In the terminal, run `sbt ts2mlsJS/test`.
+In the terminal, run `sbt ts2mlsTest/test`.
 
 You can also run all tests simultaneously.
 In the terminal, run `sbt test`.
