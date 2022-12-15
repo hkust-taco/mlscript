@@ -47,6 +47,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                   nuTyDefs: Map[Str, TypedNuTypeDef],
                   allowFreeVariable: Boolean,
                   freeVars: MutSet[Str],
+                  inQuasiquote: Boolean,
+                  inUnquoted: Boolean,
+                  outerQuoteEnvironments: List[Ctx],
                 ) {
     def +=(b: Str -> TypeInfo): Unit = env += b
 
@@ -91,7 +94,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       tyDefs = Map.from(builtinTypes.map(t => t.nme.name -> t)),
       nuTyDefs = Map.empty,
       allowFreeVariable = false,
-      freeVars = mutable.Set.empty
+      freeVars = mutable.Set.empty,
+      inQuasiquote = false,
+      inUnquoted = false,
+      outerQuoteEnvironments = List[Ctx](),
     )
 
     val empty: Ctx = init
@@ -808,18 +814,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case New(base, args) => ???
       case TyApp(_, _) => ??? // TODO
       case Quoted(body) =>
-        val copiedCtx = ctx.copy(allowFreeVariable = true)
-        val body_type = typeTerm(body)(copiedCtx, raise, vars)
-        if (!copiedCtx.freeVars.isEmpty) {
-          val immutable_set = Set.from(copiedCtx.freeVars.map(TypeName))
-          println("Free variable:")
-          println(immutable_set)
-          ClassTag(Var("Code"), immutable_set)(prov)
-        } else
+        val nestedCtx = ctx.nest
+        val body_type = typeTerm(body)(nestedCtx.copy(
+          inQuasiquote = true,
+          outerQuoteEnvironments = nestedCtx :: nestedCtx.outerQuoteEnvironments),
+          raise, vars)
+//          ClassTag(Var("Code"), immutable_set)(prov)
         TypeRef(TypeName("Code"), body_type :: Nil)(noProv)
-      // case Unquoted(body) =>
-      //   val body_type = typeTerm(body)
-      //   TypeRef(TypeName("$"), body_type :: Nil)(noProv)
     }
   }(r => s"$lvl. : ${r}")
 
