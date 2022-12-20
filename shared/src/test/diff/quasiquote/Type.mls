@@ -26,37 +26,34 @@ let qq_bool : Code<int> = code"10+2"
 //│ | | | | | 1. Typing term 10
 //│ | | | | | 1. : 10<int,number>
 //│ | | | | 1. : (10<int,number>,)
-//│ | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (10<int,number> -> α23')
+//│ | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (10<int,number> -> α24')
 //│ | | | |   where 
-//│ | | | | C (int<number> -> (int<number> -> int<number>)) <! (10<int,number> -> α23')    (0)
+//│ | | | | C (int<number> -> (int<number> -> int<number>)) <! (10<int,number> -> α24')    (0)
 //│ | | | | | C (10<int,number>,) <! (int<number>,)    (1)
-//│ | | | | | | C 10<int,number> <! int<number>    (2)
-//│ | | | | | C (int<number> -> int<number>) <! α23'    (3)
-//│ | | | 1. : α23'
+//│ | | | | | C (int<number> -> int<number>) <! α24'    (1)
+//│ | | | 1. : α24'
 //│ | | | 1. Typing term 2,
 //│ | | | | 1. Typing term 2
 //│ | | | | 1. : 2<int,number>
 //│ | | | 1. : (2<int,number>,)
-//│ | | | CONSTRAIN α23' <! (2<int,number> -> α24')
+//│ | | | CONSTRAIN α24' <! (2<int,number> -> α25')
 //│ | | |   where 
-//│ 		α23' :> (int<number> -> int<number>)
-//│ | | | C α23' <! (2<int,number> -> α24')    (0)
-//│ | | | | C (int<number> -> int<number>) <! (2<int,number> -> α24')    (1)
+//│ 		α24' :> (int<number> -> int<number>)
+//│ | | | C α24' <! (2<int,number> -> α25')    (0)
+//│ | | | | C (int<number> -> int<number>) <! (2<int,number> -> α25')    (1)
 //│ | | | | | C (2<int,number>,) <! (int<number>,)    (2)
-//│ | | | | | | C 2<int,number> <! int<number>    (3)
-//│ | | | | | C int<number> <! α24'    (4)
-//│ | | 1. : α24'
-//│ | 1. : Code[α24']
+//│ | | | | | C int<number> <! α25'    (2)
+//│ | | 1. : α25'
+//│ | 1. : Code[α25']
 //│ | 1. Typing type AppliedType(TypeName(Code),List(TypeName(int)))
 //│ | | vars=Map() newDefsInfo=Map()
 //│ | => Code[Int] | 
-//│ | CONSTRAIN Code[α24'] <! Code[Int]
+//│ | CONSTRAIN Code[α25'] <! Code[Int]
 //│ |   where 
-//│ 		α24' :> int<number>
-//│ | C Code[α24'] <! Code[Int]    (0)
-//│ | | C α24' <! Int    (1)
+//│ 		α25' :> int<number>
+//│ | C Code[α25'] <! Code[Int]    (0)
+//│ | | C α25' <! Int    (1)
 //│ | | | C int<number> <! Int    (2)
-//│ | | | | C int<number> <! int<number>    (3)
 //│ 1. : Code[Int]
 //│ ⬤ Typed as: Code[Int]
 //│  where: 
