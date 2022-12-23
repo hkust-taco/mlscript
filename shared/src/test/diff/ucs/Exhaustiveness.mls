@@ -1,0 +1,33 @@
+:NewParser
+:NoJS
+
+class A()
+class B()
+class C()
+//│ Defined class A
+//│ Defined class B
+//│ Defined class C
+//│ A: () -> A
+//│ B: () -> B
+//│ C: () -> C
+
+:e
+fun f(x, y) =
+  if
+    y is A and
+      x is
+        A then 0
+        B then 1
+        C then 2
+    y is B and
+      x is
+        A then 4
+//│ ╔══[ERROR] The match is not exhaustive.
+//│ ║  l.23: 	      x is
+//│ ║        	      ^^^^
+//│ ╟── The scrutinee at this position misses 2 cases.
+//│ ║  l.23: 	      x is
+//│ ║        	      ^
+//│ ╟── [Missing Case 1/2] `B`
+//│ ╙── [Missing Case 2/2] `C`
+//│ f: (anything, anything,) -> error

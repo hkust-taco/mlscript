@@ -1,0 +1,164 @@
+:NewParser
+
+:e
+:ge
+fun f(x, b) =
+  if x == 
+    0 and b then 0
+//│ ╔══[ERROR] The case when this is false is not handled: b
+//│ ║  l.7: 	    0 and b then 0
+//│ ╙──     	          ^
+//│ f: (anything, anything,) -> error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared
+
+:e
+:ge
+if x == y +
+  5 then 0
+  7 then 0
+//│ ╔══[ERROR] The case when this is false is not handled: + (== (x,) (y,),) (7,)
+//│ ║  l.17: 	if x == y +
+//│ ║        	   ^^^^^^^^
+//│ ║  l.18: 	  5 then 0
+//│ ║        	^^^^^^^^^^
+//│ ║  l.19: 	  7 then 0
+//│ ╙──      	^^^^
+//│ res: error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared
+
+:e
+:ge
+if x == y *
+  5 then 0
+  6 + 7 then 0
+//│ ╔══[ERROR] The case when this is false is not handled: * (== (x,) (y,),) (+ (6,) (7,),)
+//│ ║  l.33: 	if x == y *
+//│ ║        	   ^^^^^^^^
+//│ ║  l.34: 	  5 then 0
+//│ ║        	^^^^^^^^^^
+//│ ║  l.35: 	  6 + 7 then 0
+//│ ╙──      	^^^^^^^
+//│ res: error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared
+
+:e
+:ge
+if x ==
+  y +
+    5 then 0
+    7 then 0
+//│ ╔══[ERROR] The case when this is false is not handled: + (== (x,) (y,),) (7,)
+//│ ║  l.49: 	if x ==
+//│ ║        	   ^^^^
+//│ ║  l.50: 	  y +
+//│ ║        	^^^^^
+//│ ║  l.51: 	    5 then 0
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.52: 	    7 then 0
+//│ ╙──      	^^^^^
+//│ res: error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared
+
+:e
+:ge
+if x ==
+  1 and b then 0
+//│ ╔══[ERROR] The case when this is false is not handled: b
+//│ ║  l.69: 	  1 and b then 0
+//│ ╙──      	        ^
+//│ res: error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared
+
+
+:e
+:ge
+fun toEnglish(x) =
+  if x ==
+    true then "t"
+    0 then "z"
+//│ ╔══[ERROR] The case when this is false is not handled: == (x,) (0,)
+//│ ║  l.81: 	  if x ==
+//│ ║        	     ^^^^
+//│ ║  l.82: 	    true then "t"
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ║  l.83: 	    0 then "z"
+//│ ╙──      	^^^^^^
+//│ toEnglish: anything -> error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared
+
+:e
+:ge
+fun toEnglish(x) =
+  if x ==
+    0 then "z"
+    true then "t"
+//│ ╔══[ERROR] The case when this is false is not handled: == (x,) (true,)
+//│ ║  l.98: 	  if x ==
+//│ ║        	     ^^^^
+//│ ║  l.99: 	    0 then "z"
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.100: 	    true then "t"
+//│ ╙──       	^^^^^^^^
+//│ toEnglish: anything -> error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared
+
+:e
+:ge
+fun toEnglish(x) =
+  if x ==
+    1 then "o"
+    0 then "z"
+//│ ╔══[ERROR] The case when this is false is not handled: == (x,) (0,)
+//│ ║  l.115: 	  if x ==
+//│ ║         	     ^^^^
+//│ ║  l.116: 	    1 then "o"
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.117: 	    0 then "z"
+//│ ╙──       	^^^^^^
+//│ toEnglish: anything -> error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared
+
+fun toEnglish(x) =
+  if x ==
+    0 then 1
+    else 1
+//│ toEnglish: number -> 1
+//│          = [Function: toEnglish3]
+
+:pe
+:e
+:ge
+fun toEnglish(x) =
+  if x ==
+    else 1
+//│ ╔══[PARSE ERROR] Unexpected indented block in expression position
+//│ ║  l.141: 	    else 1
+//│ ╙──       	^^^^
+//│ ╔══[PARSE ERROR] Unexpected end of indented block; an expression was expected here
+//│ ║  l.141: 	    else 1
+//│ ╙──       	    ^
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found operator application instead
+//│ ║  l.140: 	  if x ==
+//│ ║         	     ^^^^
+//│ ║  l.141: 	    else 1
+//│ ║         	^^^^
+//│ ╟── Note: 'if' expression started here:
+//│ ║  l.140: 	  if x ==
+//│ ╙──       	  ^^
+//│ ╔══[ERROR] The case when this is false is not handled: == (x,) (undefined,)
+//│ ║  l.140: 	  if x ==
+//│ ║         	     ^^^^
+//│ ║  l.141: 	    else 1
+//│ ╙──       	^^^^
+//│ toEnglish: anything -> error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared
+

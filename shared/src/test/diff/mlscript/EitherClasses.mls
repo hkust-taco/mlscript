@@ -15,20 +15,20 @@ def Right value = Right{ value }
 //│ Right: 'value -> Right['value]
 //│      = [Function: Right1]
 
-def testVal = if true then Left 1 else Right 2
+testVal = if true then Left 1 else Right 2
 //│ testVal: Left[1] | Right[2]
-//│        = [Function: testVal]
+//│        = Left { value: 1 }
 
 testVal.value
 //│ res: 1 | 2
 //│    = 1
 
-def res = case testVal of
+res = case testVal of
   { Left -> testVal.value
   | Right -> 1
   }
 //│ res: 1
-//│    = [Function: res1]
+//│    = 1
 
 res: 1
 //│ res: 1
@@ -38,10 +38,10 @@ case res of { 1 -> "ok" }
 //│ res: "ok"
 //│    = 'ok'
 
-def res = case testVal of
+res = case testVal of
   { Left -> testVal
   | Right -> 1
   }
 //│ res: 1 | Left[1]
-//│    = [Function: res2]
+//│    = Left { value: 1 }
 

@@ -104,10 +104,10 @@ rec def map f l = case l of {
   | Nil -> l
   | Cons -> Cons (f l.head) (map f l.tail)
   }
-//│ map: ('head -> 'head0) -> 'a -> 'tail
+//│ map: ('head -> ('head0 & 'A)) -> 'a -> 'tail
 //│   where
-//│     'a <: (Cons[?] with {head: 'head, tail: 'a}) | Nil & 'tail
-//│     'tail :> Cons['head0] with {head: 'head0, tail: 'tail}
+//│     'a <: (Cons[?] with {head: 'head, tail: 'a}) | Nil & List['A] & 'tail
+//│     'tail :> Cons['A] with {head: 'head0, tail: 'tail}
 //│    = [Function: map]
 
 map (fun x -> "lol") (Cons 2 (Cons 3 Nil))

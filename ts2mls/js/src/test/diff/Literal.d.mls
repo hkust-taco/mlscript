@@ -1,0 +1,7 @@
+:NewParser
+:ParseOnly
+let a: {a: "A",b: "B",}
+let num: {y: 114,}
+fun foo(x: {xx: "X",}): {yy: "Y",}
+//│ |#let| |a|#:| |{|a|#:| |"A"|,|b|#:| |"B"|,|}|↵|#let| |num|#:| |{|y|#:| |114|,|}|↵|#fun| |foo|(|x|#:| |{|xx|#:| |"X"|,|}|)|#:| |{|yy|#:| |"Y"|,|}|
+//│ Parsed: {let a: [] -> {a: "A", b: "B"}; let num: [] -> {y: 114}; fun foo: [] -> (x: {xx: "X"},) -> {yy: "Y"}}

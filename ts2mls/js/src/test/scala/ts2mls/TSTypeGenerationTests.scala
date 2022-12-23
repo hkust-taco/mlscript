@@ -21,18 +21,21 @@ object TSTypeGenerationTest {
     (Seq("Array.ts"), "Array.d.mls"),
     (Seq("BasicFunctions.ts"), "BasicFunctions.d.mls"),
     (Seq("ClassMember.ts"), "ClassMember.d.mls"),
+    (Seq("Dec.d.ts"), "Dec.d.mls"),
     (Seq("Enum.ts"), "Enum.d.mls"),
     (Seq("Heritage.ts"), "Heritage.d.mls"),
     (Seq("HighOrderFunc.ts"), "HighOrderFunc.d.mls"),
     (Seq("InterfaceMember.ts"), "InterfaceMember.d.mls"),
     (Seq("Intersection.ts"), "Intersection.d.mls"),
+    (Seq("Literal.ts"), "Literal.d.mls"),
     (Seq("Multi1.ts", "Multi2.ts", "Multi3.ts"), "MultiFiles.d.mls"),
     (Seq("Namespace.ts"), "Namespace.d.mls"),
     (Seq("Optional.ts"), "Optional.d.mls"),
     (Seq("Overload.ts"), "Overload.d.mls"),
     (Seq("Tuple.ts"), "Tuple.d.mls"),
+    (Seq("Type.ts"), "Type.d.mls"),
     (Seq("TypeParameter.ts"), "TypeParameter.d.mls"),
     (Seq("Union.ts"), "Union.d.mls"),
-    (Seq("Type.ts"), "Type.d.mls")
+    (Seq("Variables.ts"), "Variables.d.mls"),
   )
 }

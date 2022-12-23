@@ -12,26 +12,26 @@ def f x = x
 //│  = [Function: f]
 
 :e
-def f = 42
+f = 42
 //│ 42
 //│   <:  f:
 //│ int -> int
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.15: 	def f = 42
-//│ ║        	^^^^^^^^^^
+//│ ║  l.15: 	f = 42
+//│ ║        	^^^^^^
 //│ ╟── integer literal of type `42` is not a function
-//│ ║  l.15: 	def f = 42
-//│ ║        	        ^^
+//│ ║  l.15: 	f = 42
+//│ ║        	    ^^
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.3: 	def f: int -> int
 //│ ╙──     	       ^^^^^^^^^^
-//│  = [Function: f1]
+//│  = 42
 
 :re
 f 1
 //│ res: int
 //│ Runtime error:
-//│   TypeError: f1(...) is not a function
+//│   TypeError: f1 is not a function
 
 fun x -> f x
 //│ res: int -> int
@@ -43,11 +43,11 @@ def boom: anything
 //│ boom: anything
 //│     = <missing implementation>
 
-def boom = 1
+boom = 1
 //│ 1
 //│   <:  boom:
 //│ anything
-//│     = [Function: boom]
+//│     = 1
 
 :e
 add boom 1
@@ -90,20 +90,20 @@ def boom: 'a
 //│     = <missing implementation>
 
 :e
-def boom = 1
+boom = 1
 //│ 1
 //│   <:  boom:
 //│ nothing
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.93: 	def boom = 1
-//│ ║        	^^^^^^^^^^^^
+//│ ║  l.93: 	boom = 1
+//│ ║        	^^^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `'a`
-//│ ║  l.93: 	def boom = 1
-//│ ║        	           ^
+//│ ║  l.93: 	boom = 1
+//│ ║        	       ^
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.88: 	def boom: 'a
 //│ ╙──      	          ^^
-//│     = [Function: boom2]
+//│     = 1
 
 
 

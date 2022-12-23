@@ -23,13 +23,13 @@ Cons 2
 //│ res: (List['A] & 'tail) -> (Cons[2 | 'A] with {head: 2, tail: 'tail})
 //│    = [Function (anonymous)]
 
-def c = Cons 2 Nil
+c = Cons 2 Nil
 //│ c: Cons[2] with {tail: Nil}
-//│  = [Function: c]
+//│  = Cons { head: 2, tail: Nil {} }
 
-def d = Cons 1 c
+d = Cons 1 c
 //│ d: Cons[1 | 2] with {head: 1, tail: Cons[2] with {tail: Nil}}
-//│  = [Function: d]
+//│  = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 d.head
 //│ res: 1
@@ -91,7 +91,7 @@ def Cons head tail = originalCons { head; tail } with { head; tail }
 
 
 Cons 2
-//│ res: (List['A] & 'tail) -> (Cons[2 | 'A] with {head: 2, tail: 'tail})
+//│ res: (List['A] & 'tail) -> (Cons[2 | 'A] & {head: 2, tail: 'tail})
 //│    = [Function (anonymous)]
 
 Cons 2 Nil
@@ -178,9 +178,9 @@ res.head
 //│ res: 1
 //│    = 1
 
-def c = Cons 1
+c = Cons 1
 //│ c: Cons[0] with {head: 1, tail: Nil}
-//│  = [Function: c1]
+//│  = Cons { head: 1, tail: Nil {} }
 
 c.head
 //│ res: 1

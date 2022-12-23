@@ -218,7 +218,11 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
         L(MethodDef(rec, prt, id, ts, L(ps.foldRight(bod)((i, acc) => Lam(toParams(i), acc)))))
     })
   
-  def ty[p: P]: P[Type] = P( tyNoAs ~ ("as" ~ tyVar).rep ).map {
+  def ty[p: P]: P[Type] = P( tyNoRange ~ (".." ~ tyNoRange).? ).map {
+    case (res, N) => res
+    case (lb, S(ub)) => Bounds(lb, ub)
+  }
+  def tyNoRange[p: P]: P[Type] = P( tyNoAs ~ ("as" ~ tyVar).rep ).map {
     case (ty, ass) => ass.foldLeft(ty)((a, b) => Recursive(b, a))
   }
   def tyNoAs[p: P]: P[Type] = P( tyNoUnion.rep(1, "|") ).map(_.reduce(Union))

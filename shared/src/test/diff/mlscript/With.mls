@@ -1,7 +1,7 @@
 
-def rcd = { x = 1 }
+rcd = { x = 1 }
 //│ rcd: {x: 1}
-//│    = [Function: rcd]
+//│    = { x: 1 }
 
 rcd.x
 //│ res: 1
@@ -32,9 +32,9 @@ res.x
 //│    = 'oops'
 
 
-def rcd = { }
+rcd = { }
 //│ rcd: anything
-//│    = [Function: rcd1]
+//│    = {}
 
 id rcd with { x = "oops" }
 //│ res: {x: "oops"}
@@ -136,9 +136,9 @@ foo 42
 //│ res: error | {l: 42, r: nothing, s: 42}
 //│    = { l: 42, r: undefined, s: 42 }
 
-def r = foo (42 with { f = 1 })
+r = foo (42 with { f = 1 })
 //│ r: {l: 42, r: 1, s: 42 & {f: 1}}
-//│  = [Function: r]
+//│  = { l: 42, r: 1, s: [Number: 42] { f: 1 } }
 
 r.s.f
 //│ res: 1

@@ -1,0 +1,276 @@
+:NewParser
+
+fun f(x) =
+  if x ==
+    let v = 0
+    v then v
+    else 0
+//│ f: number -> 0
+//│  = [Function: f]
+
+class Option
+class Some(value): Option
+class None: Option
+class Either
+class Left(leftValue): Either
+class Right(rightValue): Either
+//│ Defined class Option
+//│ Defined class Some
+//│ Defined class None
+//│ Defined class Either
+//│ Defined class Left
+//│ Defined class Right
+//│ Option: () -> Option
+//│       = [Function: Option1]
+//│ Some: 'value -> (Some with {value: 'value})
+//│     = [Function: Some1]
+//│ None: () -> None
+//│     = [Function: None1]
+//│ Either: () -> Either
+//│       = [Function: Either1]
+//│ Left: 'leftValue -> (Left with {leftValue: 'leftValue})
+//│     = [Function: Left1]
+//│ Right: 'rightValue -> (Right with {rightValue: 'rightValue})
+//│      = [Function: Right1]
+
+fun q(x) =
+  if
+    x is Some and x is Some and x is Some then 0
+//│ q: Some -> 0
+//│  = [Function: q]
+
+// FIXME
+:w
+fun p(x, y) =
+  if
+    x is Some and y is None then 0
+    y is Some and x is Some then 1
+    x is Some and y is Some then 0
+//│ ╔══[WARNING] duplicated branch
+//│ ╙──
+//│ p: (Some, None | Some,) -> (0 | 1)
+//│  = [Function: p]
+
+fun h(x, y) =
+  if x is
+    None then y
+    let y_square = y * y
+    Some(z) then z + y_square
+//│ h: (None | Some & {value: int}, int,) -> int
+//│  = [Function: h]
+
+h(Some(5), 6)
+//│ res: int
+//│    = 41
+
+fun h(x, y) =
+  if x is
+    None then y
+    let y_square = y * y
+    Some(y_square) then 0
+//│ h: (None | Some, int & 'a,) -> (0 | 'a)
+//│  = [Function: h1]
+
+fun f(a, y) =
+  if a is
+    Some(v) and v is
+      Left(x) then x
+      let y = v + 1
+      Right(x) then x + y
+    else 0
+//│ f: (Some & {value: int} | ~Some, anything,) -> int
+//│  = [Function: f1]
+
+:pe
+fun q(a) =
+  if a is
+    Left(x) then x
+    let y = a + 1
+    then y
+//│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
+//│ ║  l.88: 	    let y = a + 1
+//│ ║        	            ^^^^^
+//│ ║  l.89: 	    then y
+//│ ╙──      	^^^^^^^^^^
+//│ q: (Left with {leftValue: 'leftValue}) -> 'leftValue
+//│  = [Function: q1]
+
+class A()
+class B()
+//│ Defined class A
+//│ Defined class B
+//│ A: () -> A
+//│  = [Function: A1]
+//│ B: () -> B
+//│  = [Function: B1]
+
+fun w() =
+  if
+    A then "A"
+    let y = 0
+    B then "B"
+    else "?"
+//│ w: () -> ("?" | "A" | "B")
+//│  = [Function: w]
+
+w()
+//│ res: "?" | "A" | "B"
+//│    = '?'
+
+fun i(x) =
+  if x is
+    A() then "A"
+    let y = 0
+    B() then "B"
+//│ i: (A | B) -> ("A" | "B")
+//│  = [Function: i]
+
+fun inc(x) = x + 1
+//│ inc: int -> int
+//│    = [Function: inc]
+
+fun qq(x, z) =
+  if x ==
+    let y = inc(z)
+    y * y then 0
+    else 0
+//│ qq: (number, int,) -> 0
+//│   = [Function: qq]
+
+fun bruh(x) =
+  if
+    x == 0 then 0
+    let y = 1
+    else y
+//│ bruh: number -> (0 | 1)
+//│     = [Function: bruh]
+
+fun f1(x) = x + 1
+fun f2(x, y) = x + y
+//│ f1: int -> int
+//│   = [Function: f11]
+//│ f2: (int, int,) -> int
+//│   = [Function: f2]
+
+fun ff(x) =
+  if
+    x == 0 then 0
+    let y = f1(x)
+    let z = f2(x, y)
+    z == 1 then 1
+    z == 2 then 2
+    else 0
+//│ ff: int -> (0 | 1 | 2)
+//│   = [Function: ff]
+
+fun ip(y) =
+  if q(y) and
+    let z = inc(y)
+    y == z * z then "bruh"
+  else "rocks"
+//│ ip: nothing -> ("bruh" | "rocks")
+//│   = [Function: ip]
+
+fun tr(x) =
+  if x is
+    Some(v) then v
+    let tmp = 1
+    None then tmp
+//│ tr: (None | (Some with {value: 'value})) -> (1 | 'value)
+//│   = [Function: tr]
+
+class Pair(fst, snd)
+class List
+class Nil: List
+class Cons(head, tail): List
+//│ Defined class Pair
+//│ Defined class List
+//│ Defined class Nil
+//│ Defined class Cons
+//│ Pair: ('fst, 'snd,) -> (Pair with {fst: 'fst, snd: 'snd})
+//│     = [Function: Pair1]
+//│ List: () -> List
+//│     = [Function: List1]
+//│ Nil: () -> Nil
+//│    = [Function: Nil1]
+//│ Cons: ('head, 'tail,) -> (Cons with {head: 'head, tail: 'tail})
+//│     = [Function: Cons1]
+
+fun cat2(s, t) = concat(s)(t)
+fun cat3(a, b, c) = cat2(cat2(a, b), c)
+//│ cat2: (string, string,) -> string
+//│     = [Function: cat2]
+//│ cat3: (string, string, string,) -> string
+//│     = [Function: cat3]
+
+:js
+fun showList(xs) =
+  if xs is
+    Nil              then ""
+    Cons(head, Nil())  then toString(head)
+    Cons(head, tail) then cat3(toString(head), ", ", showList(tail))
+//│ // Prelude
+//│ function toString(x) {
+//│   return String(x);
+//│ }
+//│ // Query 1
+//│ globalThis.showList = function showList(xs) {
+//│   return ((() => {
+//│     let a;
+//│     return (a = xs, a instanceof Nil ? "" : a instanceof Cons ? ((head) => ((tmp0) => ((tail) => tmp0 instanceof Nil ? toString(head) : cat3(toString(head), ", ", showList(tail)))(xs.tail))(xs.tail))(xs.head) : (() => {
+//│       throw new Error("non-exhaustive case expression");
+//│     })());
+//│   })());
+//│ };
+//│ // End of generated code
+//│ showList: 'a -> string
+//│   where
+//│     'a <: Cons & {tail: 'a} | Nil
+//│         = [Function: showList]
+
+let zeroToThree = Cons(0, Cons(1, Cons(2, Cons(3, Nil()))))
+//│ zeroToThree: Cons & {head: 0, tail: Cons & {head: 1, tail: Cons & {head: 2, tail: Cons & {head: 3, tail: Nil}}}}
+//│            = Cons {
+//│                head: 0,
+//│                tail: Cons { head: 1, tail: Cons { head: 2, tail: [Cons] } }
+//│              }
+
+showList(zeroToThree)
+//│ res: string
+//│    = '0, 1, 2, 3'
+
+// FIXME: This needs lifting functions.
+fun mapPartition(f, xs) =
+  if xs is
+    Nil then Pair(Nil(), Nil())
+    Cons(x, xs) and f(x) is
+      let res = mapPartition(f, xs)
+      let l = res.fst
+      let r = res.snd
+      Left(v)  then Pair(Cons(v, l), r)
+      Right(v) then Pair(l, Cons(v, r))
+//│ mapPartition: ('head -> ((Left with {leftValue: 'head0}) | (Right with {rightValue: 'head1})), 'a,) -> (Pair with {fst: 'fst, snd: 'tail})
+//│   where
+//│     'tail :> (Cons with {head: 'head1, tail: 'tail}) | Nil
+//│     'fst :> Nil | (Cons with {head: 'head0, tail: 'fst})
+//│     'a <: (Cons with {head: 'head, tail: 'a}) | Nil
+//│             = [Function: mapPartition]
+
+// FIXME: Something wrong with code generation.
+mapPartition(x => if x % 2 == 0 then Left(x) else Right(x), zeroToThree)
+//│ res: Pair with {fst: 'fst, snd: 'tail}
+//│   where
+//│     'tail :> (Cons with {head: 0 | 1 | 2 | 3, tail: 'tail}) | Nil
+//│     'fst :> Nil | (Cons with {head: 0 | 1 | 2 | 3, tail: 'fst})
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
+
+fun mn(a) =
+  if a is
+    Some(x) and x is
+      Left(a)  then "left-defined"
+      let y = x + 1
+      Right(b) then "right-defined"
+    None       then "undefined"
+//│ mn: (None | Some & {value: nothing}) -> ("left-defined" | "right-defined" | "undefined")
+//│   = [Function: mn]
