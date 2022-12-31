@@ -222,8 +222,12 @@ class A<T>{
 //│ TypingUnit(NuTypeDef(class, A, (TypeName(T)), Tup(), (), TypingUnit(NuTypeDef(class, B, (), Tup(), (), TypingUnit(NuFunDef(None, f, [], Asc(Lam(Tup(_: Var(x)), Lam(Tup(_: Var(y)), Var(x))), Function(Tuple(List((None,Field(None,TypeName(T))))),Function(Tuple(List((None,Field(None,TypeName(B))))),TypeName(T))))), NuFunDef(None, g, [], PolyType(List(),Function(Tuple(List((None,Field(None,TypeName(T))))),Function(Tuple(List((None,Field(None,TypeName(B))))),TypeName(T))))))))))
 //│ Lifted:
 //│ TypingUnit {
+//│   class A$1_B$2_Lambda1$1$3_Lambda1$2$4(par$A$1_B$2_Lambda1$1$3, x,) {fun apply = y, => (this).x}
+//│   class A$1_B$2_Lambda1$1$3(par$A$1_B$2,) {
+//│     fun apply = x, => {new A$1_B$2_Lambda1$1$3_Lambda1$2$4(this, x,) {}}
+//│   }
 //│   class A$1_B$2[T](par$A$1,) {
-//│     fun f = x, => y, => x : Function(Tuple(List((None,Field(None,TypeName(T))))),Function(Tuple(List((None,Field(None,TypeName(A$1_B$2))))),TypeName(T)))
+//│     fun f = {new A$1_B$2_Lambda1$1$3(this,) {}} : Function(Tuple(List((None,Field(None,TypeName(T))))),Function(Tuple(List((None,Field(None,TypeName(A$1_B$2))))),TypeName(T)))
 //│     fun g = T -> A$1_B$2 -> T
 //│   }
 //│   class A$1[T]() {}

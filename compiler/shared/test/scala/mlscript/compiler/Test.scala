@@ -25,8 +25,8 @@ class DiffTestCompiler extends DiffTests {
     catch
       case NonFatal(err) =>
         outputBuilder ++= "Lifting failed: " ++ err.toString()
-        if mode.fullExceptionStack then outputBuilder ++=
-          "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
+        if mode.fullExceptionStack then 
+          outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
     if(mode.mono){
       outputBuilder ++= "\nMono:\n"
       val treeDebug = new TreeDebug()

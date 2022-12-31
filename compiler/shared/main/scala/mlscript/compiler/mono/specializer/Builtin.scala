@@ -4,7 +4,7 @@ import mlscript.compiler.Expr
 import mlscript.compiler.mono.MonomorphError
 
 object Builtin:
-  val builtinRefs = Set(">", "-", "+", "*", "true", "false")
+  val builtinRefs = Set(">", "-", "+", "*", "&&", "||", "==", "true", "false")
 
   private val builtinBinaryOperations = Map[String, (Expr, Expr) => Option[Expr]](
     (">", {
@@ -64,6 +64,23 @@ object Builtin:
         Some(LiteralValue(lhs * rhs))
       case (LiteralValue(lhs: BigDecimal), LiteralValue(rhs: BigDecimal)) =>
         Some(LiteralValue(lhs * rhs))
+      case (_, _) => None
+    }),
+    ("&&", {
+      case (LiteralValue(lhs: Boolean), LiteralValue(rhs: Boolean)) =>
+        Some(LiteralValue(lhs && rhs))
+      case (_, _) => None
+    }),
+    ("||", {
+      case (LiteralValue(lhs: Boolean), LiteralValue(rhs: Boolean)) =>
+        Some(LiteralValue(lhs || rhs))
+      case (_, _) => None
+    }),
+    ("==", {
+      case (LiteralValue(lhs: BigInt), LiteralValue(rhs: BigInt)) =>
+        Some(LiteralValue(lhs == rhs))
+      case (LiteralValue(lhs: Boolean), LiteralValue(rhs: Boolean)) =>
+        Some(LiteralValue(lhs == rhs))
       case (_, _) => None
     })
   )

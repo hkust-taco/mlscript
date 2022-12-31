@@ -5,6 +5,7 @@ import mlscript.utils.StringOps
 import scala.collection.mutable.StringBuilder as StringBuilder
 import scala.collection.mutable.Map as MMap
 import scala.collection.mutable.Set as MSet
+import scala.collection.mutable.ArrayBuffer as ArrayBuffer
 import mlscript.codegen.Helpers.inspect as showStructure
 import mlscript.codegen.CodeGenError
 
@@ -54,6 +55,8 @@ class ClassLifter(logDebugMsg: Boolean = false) {
   type NamePath = List[String]
 
   var retSeq: List[NuTypeDef] = Nil
+  val globalFunctions: ArrayBuffer[NuFunDef] = ArrayBuffer()
+  def globalNames: List[Var] = globalFunctions.toList.map(_.nme)
   var anonymCnt: Int = 0
   var clsCnt: Int = 0
   val logOutput: StringBuilder = new StringBuilder
@@ -289,6 +292,9 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     }
   }
 
+  private def newLambObj(lhs: Term, rhs: Term) = 
+    New(None, TypingUnit(List(NuFunDef(None, Var("apply"), Nil, Left(Lam(lhs, rhs))))))
+
   private def liftTermNew(target: Term)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (Term, LocalContext) = target match{
     case v: Var => 
       if(ctx.contains(v) || v.name.equals("this") || primiTypes.contains(v.name))   (v, emptyCtx)
@@ -303,10 +309,17 @@ class ClassLifter(logDebugMsg: Boolean = false) {
         }
       }
     case Lam(lhs, rhs) => 
-      val lctx = getFreeVars(lhs)(using emptyCtx, cache, None)
-      val (ltrm, _) = liftTermNew(lhs)(using ctx.addV(lctx.vSet))
-      val (rtrm, rctx) = liftTermNew(rhs)(using ctx.addV(lctx.vSet))
-      (Lam(ltrm, rtrm), rctx -+ lctx)
+      val prmCnt = getFreeVars(lhs)(using emptyCtx, cache, None).vSet.size
+      val nTpNm = TypeName(genAnoName("Lambda"+prmCnt))
+      val anoCls = NuTypeDef(Cls, nTpNm, Nil, Tup(Nil), Nil, TypingUnit(List(NuFunDef(None, Var("apply"), Nil, Left(Lam(lhs, rhs))))))
+      val nSta = New(Some((nTpNm, Tup(Nil))), TypingUnit(Nil))
+      val ret = liftEntitiesNew(List(anoCls, nSta))
+      (Blk(ret._1), ret._2)
+      // liftTermNew(newLambObj(lhs, rhs))
+      // val lctx = getFreeVars(lhs)(using emptyCtx, cache, None)
+      // val (ltrm, _) = liftTermNew(lhs)(using ctx.addV(lctx.vSet))
+      // val (rtrm, rctx) = liftTermNew(rhs)(using ctx.addV(lctx.vSet))
+      // (Lam(ltrm, rtrm), rctx -+ lctx)
     case t: Tup => 
       liftTuple(t)
     case Rcd(fields) => 
@@ -519,6 +532,11 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     log(s"liftFunc $func under $ctx # $cache # $outer")
     val NuFunDef(rec, nm, tpVs, body) = func
     body match{
+      case Left(Lam(lhs, rhs)) =>
+        val lctx = getFreeVars(lhs)(using emptyCtx, cache, None)
+        val lret = liftTermNew(lhs)(using ctx.addV(lctx.vSet + nm))
+        val ret = liftTermNew(rhs)(using ctx.addV(lctx.vSet + nm).addT(tpVs))
+        (func.copy(rhs = Left(Lam(lret._1, ret._1))), ret._2 -+ lret._2)
       case Left(value) => 
         val ret = liftTermNew(value)(using ctx.addV(nm).addT(tpVs))
         (func.copy(rhs = Left(ret._1)), ret._2)
@@ -541,7 +559,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     // val fullMp = cache ++ nameInfoMap
     val clsNmsAsTypeNm = newClsNms.map(x => TypeName(x.name))
     val len = clsInfos.size
-    for(_ <- 1 to len){
+    for(_ <- 0 to len){
       val tmp = nameInfoMap.toList
       tmp.foreach{case (nmOfCls, infoOfCls@ClassInfoCache(_, _, ctx, flds, inners, sups, _, _, _)) => {
         val usedClsNmList = ctx.vSet.map(x => TypeName(x.name)).intersect(clsNmsAsTypeNm)
@@ -563,6 +581,55 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     nameInfoMap.toMap
   }
 
+  private def mixFuncFreeVs(funcVs: Map[Var, Set[Var]]): Map[Var, List[Var]] = {
+    val nameVsMap: Map[Var, MSet[Var]] = funcVs.map(entry => entry._1 -> MSet(entry._2.toSeq: _*))
+    val concernedFs = funcVs.keySet
+    for(_ <- 0 to funcVs.size){
+      val tmp = nameVsMap.toList
+      tmp.foreach((v, vset) => {
+        val recVs = concernedFs.intersect(vset.toSet)
+        recVs.foreach(x => nameVsMap.get(v).get.addAll(nameVsMap.get(x).get))
+      })
+    }
+    nameVsMap.map((k, v) => k -> (v--concernedFs).toList)
+  }
+
+  private def updateFuncSigStmt(targetTrm: Statement)(using extFuncArgs: Map[Var, (Var, List[Var], Tup)]): Statement = targetTrm match{
+    case NuFunDef(isLetRec, nme, targs, Left(body)) => NuFunDef(isLetRec, nme, targs, Left(updateFuncSignatures(body)(using extFuncArgs-nme)))
+    case NuTypeDef(kind, nme, tparams, params, parents, body) => 
+      NuTypeDef(kind, nme, tparams, params, parents.map(updateFuncSignatures), TypingUnit(body.entities.map(updateFuncSigStmt)))
+    case x: Term => updateFuncSignatures(x)
+    case others => others
+  }
+  
+
+  private def updateFuncSignatures(targetTrm: Term)(using extFuncArgs: Map[Var, (Var, List[Var], Tup)]): Term = targetTrm match{
+    case x: Var if extFuncArgs.contains(x) =>
+      val infos = extFuncArgs.get(x).get
+      val concatedPrm = Tup(infos._2.map(toFldsEle) ++ infos._3.fields)
+      newLambObj(infos._3, App(infos._1, concatedPrm))
+    case App(x: Var, Tup(flds)) if extFuncArgs.contains(x) =>
+      val infos = extFuncArgs.get(x).get
+      val nArgs = Tup(infos._2.map(toFldsEle) ++ flds.map{case (o, Fld(b1, b2, t)) => (o, Fld(b1, b2, updateFuncSignatures(t)))})
+      App(infos._1, nArgs)
+    case App(lhs, rhs) => 
+      App(updateFuncSignatures(lhs), updateFuncSignatures(rhs))
+    case Lam(lhs, rhs) => 
+      val absVs = getFreeVars(lhs)(using emptyCtx, Map(), None).vSet
+      Lam(lhs, updateFuncSignatures(rhs)(using extFuncArgs -- absVs))
+    case If(IfThen(cond, tru), els) => 
+      If(IfThen(updateFuncSignatures(cond), updateFuncSignatures(tru)), els.map(updateFuncSignatures))
+    case Let(isRec, name, rhs, body) => 
+      Let(isRec, name, updateFuncSignatures(rhs)(using extFuncArgs-name), updateFuncSignatures(body)(using extFuncArgs-name))
+    case Blk(stmts) => 
+      Blk(stmts.map(updateFuncSigStmt))
+    case New(head, body) => 
+      New(head.map((x, y) => x -> updateFuncSignatures(y)), TypingUnit(body.entities.map(updateFuncSigStmt)))
+    case Sel(receiver, fieldName) => 
+      Sel(updateFuncSignatures(receiver), fieldName)
+    case others => others
+  }
+
   private def liftEntitiesNew(etts: List[Statement])(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (List[Statement], LocalContext) = {
     log("liftEntities: " ++ etts.headOption.map(_.toString()).getOrElse(""))
     val (newCls, newFuncs, rstTrms) = splitEntities(etts)
@@ -571,13 +638,60 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     val nmsInTrm = rstTrms.flatMap(grepFieldsInTrm)
     val clsInfos = newCls.map(x => {
       val infos = collectClassInfo(x, newCls.map(_.nme).toSet)(using emptyCtx)
-      infos.capturedParams = infos.capturedParams.copy(vSet = infos.capturedParams.vSet.intersect(ctx.vSet ++ newClsNms ++ newFuncNms ++ nmsInTrm))
+      infos.capturedParams = infos.capturedParams.copy(vSet = infos.capturedParams.vSet.intersect(ctx.vSet ++ newClsNms ++ newFuncNms ++ nmsInTrm -- globalNames))
       x.nme -> infos}).toMap
     log("captured cls infos: \n" ++ clsInfos.toString())
     val refinedInfo = mixClsInfos(clsInfos, newClsNms)
     val newCache = cache ++ refinedInfo
     refinedInfo.foreach((_, clsi) => completeClsInfo(clsi)(using newCache))
 
+// // transform local functions to global ones
+//     val seperatedRstTerms = rstTrms.map{
+//       case l@Let(isRec, name, rhs, Blk(Nil)) => (Some(NuFunDef(Some(isRec), name, Nil, Left(rhs))), None)
+//       case other => (None, Some(other))
+//     }.unzip
+//     val letFuncs = seperatedRstTerms._1.flatten
+//     val nonLetRstTerms = seperatedRstTerms._2.flatten
+
+//     val funcCapVars = (newFuncs ++ letFuncs).flatMap{
+//       case NuFunDef(_, nme, _, Left(body)) => Some(nme -> getFreeVars(body)(using emptyCtx, Map(), None).vSet.intersect(ctx.vSet ++ newFuncNms ++ nmsInTrm))
+//       case _ => None
+//     }.toMap
+//     val mixedFuncCapVs = mixFuncFreeVs(funcCapVars)
+//     val nFuncSig = (newFuncs ++ letFuncs).flatMap{
+//       case NuFunDef(_, nme, _, Left(Lam(x: Tup, _))) => Some(nme -> (Var(genAnoName(nme.name)), mixedFuncCapVs.get(nme).get, x))
+//       case NuFunDef(_, nme, _, Left(_)) => Some(nme -> (Var(genAnoName(nme.name)), mixedFuncCapVs.get(nme).get, Tup(Nil)))
+//       case _ => None
+//     }.toMap
+//       // mixedFuncCapVs.map(x => x._1 -> (genAnoName(x._1.name), x._2))
+//     (newFuncs ++ letFuncs).foreach{
+//       case NuFunDef(isLetRec, nme, targs, Left(Lam(lhs, rhs))) => 
+//         lhs match{
+//           case Tup(fields) => 
+//             val nPrm = Tup(nFuncSig.get(nme).get._2.map(toFldsEle) ++ fields)
+//             val nBody = updateFuncSignatures(rhs)(using nFuncSig)
+//             val liftedFuncBody = liftTermNew(nBody)(using getFreeVars(nPrm)(using emptyCtx, cache, None), newCache, None)
+//             globalFunctions.addOne(NuFunDef(isLetRec, nFuncSig.get(nme).get._1, targs, Left(Lam(nPrm, liftedFuncBody._1))))
+//           // case v@Var(name) => 
+//           //   val nFields = nFuncSig.get(nme).get._2.map(toFldsEle) ++ List(toFldsEle(v))
+//           //   val nBody = updateFuncSignatures(rhs)(using nFuncSig)
+//           //   val liftedFuncBody = liftTermNew(nBody)(using getFreeVars(nPrm)(using emptyCtx, cache, None), cache, None)
+//           //   globalFunctions.addOne(NuFunDef(isLetRec, nFuncSig.get(nme).get._1, targs, Left(Lam(nPrm, liftedFuncBody._1))))
+//           case _ => ???
+//         }
+//       case NuFunDef(isLetRec, nme, targs, Left(term)) => 
+//         val nPrm = Tup(nFuncSig.get(nme).get._2.map(toFldsEle))
+//         val nBody = updateFuncSignatures(term)(using nFuncSig)
+//         val liftedFuncBody = liftTermNew(nBody)(using getFreeVars(nPrm)(using emptyCtx, cache, None), newCache, None)
+//         globalFunctions.addOne(NuFunDef(isLetRec, nFuncSig.get(nme).get._1, targs, Left(Lam(nPrm, liftedFuncBody._1))))
+//       // case _ => ???
+//     }
+
+//     newCls.map(updateFuncSigStmt(_)(using nFuncSig)).foreach{case x: NuTypeDef => liftTypeDefNew(x)(using newCache)}
+
+//     // val (liftedFuns, funVs) = newFuncs.map(liftFunc(_)(using ctx.addV(newFuncNms), newCache)).unzip
+//     val (liftedTerms, termVs) = nonLetRstTerms.map(updateFuncSignatures(_)(using nFuncSig)).map(liftTermNew(_)(using ctx, newCache)).unzip
+//     (liftedTerms, termVs.fold(emptyCtx)(_ ++ _))
     newCls.foreach(x => liftTypeDefNew(x)(using newCache))
     val (liftedFuns, funVs) = newFuncs.map(liftFunc(_)(using ctx.addV(newFuncNms), newCache)).unzip
     val (liftedTerms, termVs) = rstTrms.map(liftTermNew(_)(using ctx.addV(newFuncNms), newCache)).unzip
@@ -625,9 +739,16 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     log("=========================\n")
     log(s"lifting: \n${showStructure(rawUnit)}\n")
     retSeq = Nil
+    val (_, newFuncs, rstTrms) = splitEntities(rawUnit.entities)
+    globalFunctions.addAll(newFuncs)
+    globalFunctions.addAll(rstTrms.flatMap{
+      case Let(isRec, name, rhs, Blk(Nil)) => 
+        Some(NuFunDef(Some(isRec), name, Nil, Left(rhs)))
+      case _ => None
+    })
     val re = liftEntitiesNew(rawUnit.entities)(using emptyCtx, Map(), None)
     log(s"freeVars: ${re._2}")
     // println(logOutput.toString())
-    TypingUnit(retSeq.toList++re._1)
+    TypingUnit(retSeq.toList ++ re._1)
   }
 }

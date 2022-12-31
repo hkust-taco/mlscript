@@ -11,6 +11,7 @@ class Context(private val entries: Map[String, BoundedExpr]) extends Printable:
   inline def ++(other: Context): Context = Context(entries ++ other.entries)
   inline def ++(other: IterableOnce[(String, BoundedExpr)]) = Context(entries ++ other)
   inline def isEmpty: Boolean = entries.isEmpty
+  inline def contains(name: String): Boolean = entries.contains(name)
   def getDebugOutput: DebugOutput =
     DebugOutput.Map(entries.iterator.map {
       (key, value) => (key, value.toString)

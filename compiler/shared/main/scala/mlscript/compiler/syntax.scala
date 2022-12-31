@@ -186,6 +186,7 @@ enum TypeDeclKind:
     case Alias => "alias"
     case Class => "class"
     case Trait => "trait"
+  
 
 /**
  * Function parameters: `(specializable, name)`.

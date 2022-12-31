@@ -208,7 +208,7 @@ class DiffTests
           case "re" => mode.copy(expectRuntimeErrors = true)
           case "ShowRepl" => mode.copy(showRepl = true)
           case "escape" => mode.copy(allowEscape = true)
-          case "mono" => {println("mono set"); mode.copy(mono = true)}
+          case "mono" => {mode.copy(mono = true)}
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)

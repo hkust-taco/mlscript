@@ -1,0 +1,72 @@
+:NewParser
+:ParseOnly
+
+fun foo() =
+  fun local(x) =
+    class Foo {
+      fun bar = x + foo(x)
+    }
+    Foo().bar
+  local(1)
+foo()
+//│ |#fun| |foo|(||)| |#=|→|#fun| |local|(|x|)| |#=|→|#class| |Foo| |{|→|#fun| |bar| |#=| |x| |+| |foo|(|x|)|←|↵|}|↵|Foo|(||)|.bar|←|↵|local|(|1|)|←|↵|foo|(||)|
+//│ Parsed: {fun foo =  => {fun local = x, => {class Foo() {fun bar = + (x,) (foo (x,),)}; (Foo ()).bar}; local (1,)}; foo ()}
+//│ Parsed:
+//│ TypingUnit(NuFunDef(None, foo, [], Lam(Tup(), Blk(...))), App(Var(foo), Tup()))
+//│ Lifted:
+//│ TypingUnit {
+//│   class Foo$1(x,) {fun bar = + ((this).x,) (foo ((this).x,),)}
+//│   fun foo =  => {fun local = x, => {(Foo$1 (x,)).bar}; local (1,)}
+//│   Code(List(foo ()))
+//│ }
+
+fun foo(f) = 
+  f(1)
+foo(x => x+1)
+//│ |#fun| |foo|(|f|)| |#=| |→|f|(|1|)|←|↵|foo|(|x| |=>| |x|+|1|)|
+//│ Parsed: {fun foo = f, => {f (1,)}; foo (x, => + (x,) (1,),)}
+//│ Parsed:
+//│ TypingUnit(NuFunDef(None, foo, [], Lam(Tup(_: Var(f)), Blk(...))), App(Var(foo), Tup(_: Lam(Tup(_: Var(x)), App(App(Var(+), Tup(_: Var(x))), Tup(_: IntLit(1)))))))
+//│ Lifted:
+//│ TypingUnit {
+//│   class Lambda1$1$1() {fun apply = x, => + (x,) (1,)}
+//│   fun foo = f, => {f (1,)}
+//│   Code(List(foo ({new Lambda1$1$1() {}},)))
+//│ }
+
+fun foo(x) = 
+  fun bar(f) = 
+    f(x)
+  bar(y => y+x)
+foo(1)
+//│ |#fun| |foo|(|x|)| |#=| |→|#fun| |bar|(|f|)| |#=| |→|f|(|x|)|←|↵|bar|(|y| |=>| |y|+|x|)|←|↵|foo|(|1|)|
+//│ Parsed: {fun foo = x, => {fun bar = f, => {f (x,)}; bar (y, => + (y,) (x,),)}; foo (1,)}
+//│ Parsed:
+//│ TypingUnit(NuFunDef(None, foo, [], Lam(Tup(_: Var(x)), Blk(...))), App(Var(foo), Tup(_: IntLit(1))))
+//│ Lifted:
+//│ TypingUnit {
+//│   class Lambda1$1$1(x,) {fun apply = y, => + (y,) ((this).x,)}
+//│   fun foo = x, => {fun bar = f, => {f (x,)}; bar ({new Lambda1$1$1(x,) {}},)}
+//│   Code(List(foo (1,)))
+//│ }
+
+fun foo(f) = 
+    f(1)
+class A(y){
+  fun bar(z) = y+z
+}
+fun app(a) = 
+  foo(z => a.bar(z))
+app(new A(1))
+//│ |#fun| |foo|(|f|)| |#=| |→|f|(|1|)|←|↵|#class| |A|(|y|)|{|→|#fun| |bar|(|z|)| |#=| |y|+|z|←|↵|}|↵|#fun| |app|(|a|)| |#=| |→|foo|(|z| |=>| |a|.bar|(|z|)|)|←|↵|app|(|#new| |A|(|1|)|)|
+//│ Parsed: {fun foo = f, => {f (1,)}; class A(y,) {fun bar = z, => + (y,) (z,)}; fun app = a, => {foo (z, => (a).bar (z,),)}; app (new A(1,) {},)}
+//│ Parsed:
+//│ TypingUnit(NuFunDef(None, foo, [], Lam(Tup(_: Var(f)), Blk(...))), NuTypeDef(class, A, (), Tup(_: Var(y)), (), TypingUnit(NuFunDef(None, bar, [], Lam(Tup(_: Var(z)), App(App(Var(+), Tup(_: Var(y))), Tup(_: Var(z))))))), NuFunDef(None, app, [], Lam(Tup(_: Var(a)), Blk(...))), App(Var(app), Tup(_: New(Some((TypeName(A),1,)), TypingUnit(List())))))
+//│ Lifted:
+//│ TypingUnit {
+//│   class A$1(y,) {fun bar = z, => + ((this).y,) (z,)}
+//│   class Lambda1$1$2(a,) {fun apply = z, => ((this).a).bar (z,)}
+//│   fun foo = f, => {f (1,)}
+//│   fun app = a, => {foo ({new Lambda1$1$2(a,) {}},)}
+//│   Code(List(app (new A$1(1,) {},)))
+//│ }

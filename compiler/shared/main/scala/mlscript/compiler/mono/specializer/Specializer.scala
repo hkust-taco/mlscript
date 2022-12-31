@@ -52,10 +52,11 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
   // }
 
   def evaluate(rawExpr: Expr)(using evalCtx: Context, callingStack: List[String]): Expr = 
-    // debug.trace[Expr]("EVAL ", rawExpr.toString()) {
+    debug.trace[Expr]("EVAL ", rawExpr.toString()) {
     rawExpr match{
       case Expr.Ref(name) => 
-        rawExpr.expValue = evalCtx.get(name)
+        rawExpr.expValue = 
+          if evalCtx.contains(name) then evalCtx.get(name) else BoundedExpr(monoer.findVar(name))
         rawExpr
       case Expr.Apply(Expr.Apply(opE@Expr.Ref(op), a1), a2) if Builtin.isBinaryOperator(op) =>
         if(a1.length == 1 && a2.length == 1)
@@ -76,31 +77,54 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
         }
         else ???
       
-      case Expr.Apply(nm@Expr.Ref(name), arguments) =>
-        val nArgs = arguments.map(evaluate(_))
-        val args = nArgs.map(_.expValue)
-        val retVal = monoer.monomorphizeCall(name, args)
-        val retExp = Expr.Apply(nm, nArgs)
-        retExp.expValue = retVal
-        retExp
+      // case Expr.Apply(nm@Expr.Ref(name), arguments) =>
+      //   val nArgs = arguments.map(evaluate(_))
+      //   val args = nArgs.map(_.expValue)
+      //   val retVal = monoer.monomorphizeCall(name, args)
+      //   val retExp = Expr.Apply(nm, nArgs)
+      //   retExp.expValue = retVal
+      //   retExp
 
       case other@Expr.Apply(callee, arguments) => 
+        // def rec(x: MonoValue): MonoValue = {
+        //   x match
+        //     case f: FunctionValue => f
+        //     case o: ObjectValue => rec(monoer.specializeSelect(o, "apply"))
+        //     case _ => UnknownValue()
+        // }
         val calE = evaluate(callee)
+        val cal = calE.expValue
         val nArgs = arguments.map(evaluate)
         val args = nArgs.map(_.expValue)
-        val cal = calE.expValue
-        val retV = cal.values.map{
+        val retV = cal.getValue.map{
           case FunctionValue(name, prm, ctxArg) => 
-            monoer.monomorphizeCall(name, ctxArg.unzip._2 ++ args)
+            val callResult = monoer.monomorphizeCall(name, ctxArg.unzip._2 ++ args)
+            debug.log(s"call result: $callResult")
+            callResult
+          case o: ObjectValue => 
+            val sel = monoer.specializeSelect(o, "apply")
+            sel match
+              case FunctionValue(name, prm, ctx) => 
+                val callResult = monoer.monomorphizeCall(name, ctx.unzip._2 ++ args)
+                debug.log(s"call result: $callResult")
+                callResult
+              case _ => BoundedExpr(UnknownValue())
           case _ => BoundedExpr(UnknownValue())
-        }.fold(BoundedExpr())(_ ++ _)
+        }.fold(BoundedExpr())((x, y) => {
+          x.unfoldVars
+          y.unfoldVars
+          debug.log(s"merging $x with $y")
+          val xy = x ++ y
+          debug.log(s"result $xy")
+          xy
+        })
         val retExp = Expr.Apply(calE, nArgs)
         retExp.expValue = retV
         retExp
 
       case Expr.Select(receiver, field) => 
         val rec = evaluate(receiver)
-        val retV = rec.expValue.values.map{
+        val retV = rec.expValue.getValue.map{
           case ObjectValue(_, flds) if flds.contains(field.name) =>
             flds.get(field.name).get 
           case obj: ObjectValue => 
@@ -197,7 +221,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
       case Expr.Subscript(receiver, index) => ???
       case Expr.Match(scrutinee, branches) => ???
     }
-  // }(_.expValue)
+  }(_.expValue)
 
   def defunctionalize(rawExpr: Expr): Expr = {
     val ret: Expr = rawExpr match {
@@ -206,13 +230,17 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
         val nRec = defunctionalize(receiver)
         val nArgs = args.map(defunctionalize)
         val branches = ArrayBuffer[CaseBranch]()
-        receiver.expValue.values.foreach{
+        receiver.expValue.getValue.foreach{
           case ObjectValue(name, _) => 
             branches.addOne(CaseBranch.Instance(Expr.Ref(name), Expr.Ref("obj"), Expr.Apply(Expr.Ref(s"$field$$$name"), Expr.Ref("obj") :: nArgs)))
           case _ => ()
         }
         Expr.Match(nRec, branches)
-      case Expr.Apply(callee, arguments) => Expr.Apply(defunctionalize(callee), arguments.map(defunctionalize))
+      case Expr.Apply(callee, arguments) => 
+        if(callee.expValue.getValue.find(_.isInstanceOf[ObjectValue]).isDefined)
+          defunctionalize(Expr.Apply(Expr.Select(callee, Expr.Ref("apply")), arguments))
+        else
+          Expr.Apply(defunctionalize(callee), arguments.map(defunctionalize))
       case Expr.New(typeName, args) => Expr.New(typeName, args.map(defunctionalize))
       case Expr.Tuple(fields) => Expr.Tuple(fields.map(defunctionalize))
       case Expr.LetIn(isRec, name, rhs, body) => Expr.LetIn(isRec, name, defunctionalize(rhs), defunctionalize(body))

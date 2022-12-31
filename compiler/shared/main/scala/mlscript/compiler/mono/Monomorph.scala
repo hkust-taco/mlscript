@@ -20,7 +20,7 @@ import mlscript.compiler.*
 
 import mlscript.compiler.printer.ExprPrinter
 import mlscript.compiler.mono.specializer.BoundedExpr
-import mlscript.compiler.mono.specializer.{MonoValue, ObjectValue, UnknownValue, FunctionValue}
+import mlscript.compiler.mono.specializer.{MonoValue, ObjectValue, UnknownValue, FunctionValue, VariableValue}
 
 class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
   import Helpers._
@@ -29,7 +29,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
   /**
    * Specialized implementations of function declarations.
    */
-  private val funImpls = MutMap[String, (Item.FuncDecl, MutMap[String, Item.FuncDecl], List[(BoundedExpr, Int)], BoundedExpr)]()
+  private val funImpls = MutMap[String, (Item.FuncDecl, MutMap[String, Item.FuncDecl], List[(BoundedExpr, Int)], VariableValue)]()
 
   private def getfunInfo(nm: String): String = 
     val info = funImpls.get(nm).get
@@ -76,9 +76,15 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
   val specializer = mono.specializer.Specializer(this)(using debug)
 
   def addNewFunction(func: Item.FuncDecl): Unit = {
-    funImpls.addOne(func.name.name, (func, MutMap(), func.params.map(_ => BoundedExpr()->0), BoundedExpr()))
+    funImpls.addOne(func.name.name, (func, MutMap(), func.params.map(_ => BoundedExpr()->0), VariableValue.refresh()))
     funDependence.addOne(func.name.name, Set())
   }
+
+  def getResult(exps: List[Expr]) = mlscript.compiler.Module(exps.concat[Expr | Item](funImpls.map(x => x._2._1))
+       .concat(allTypeImpls.values.map(x => x.copy(body = Isolation(Nil))))
+       .concat(lamTyDefs.values)
+       .concat(anonymTyDefs.values)
+       .toList)
 
   /**
    * This function monomorphizes the top-level `TypingUnit` into a `Module`.
@@ -94,16 +100,18 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
           evalQueue.addOne(funcName)
           Some(Expr.Apply(Expr.Ref(funcName), Nil))
         case (tyDef: NuTypeDef, _) => 
-          monomorphizeTypeDef(tyDef)
+          val ret = type2Item(tyDef)
+          addPrototypeTypeDecl(ret)
           None
         case (funDef: NuFunDef, _) =>
-          val funcItem = monomorphizeFunDef(funDef)
+          val funcItem = func2Item(funDef)
           funcItem match
             case funcDecl: Item.FuncDecl =>
               addNewFunction(funcDecl)
             case _ => ()
           None
       };
+      debug.log(getResult(exps).getDebugOutput.toLines(using false).mkString("\n"))
       while(!evalQueue.isEmpty){
         val crt = evalQueue.head
         evalQueue.remove(crt)
@@ -113,14 +121,10 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
         case (_, (Item.FuncDecl(nm, as, body), mp, la, lr)) =>
           (Item.FuncDecl(nm, as, specializer.defunctionalize(body)), mp, la, lr)
       }
-      val ret = mlscript.compiler.Module(exps.concat[Expr | Item](funImpls.map(x => x._2._1))
-       .concat(allTypeDecls)
-       .concat(lamTyDefs.values)
-       .concat(anonymTyDefs.values)
-       .toList)
-       debug.log("")
-       debug.log("==============final function signatures==================")
-       funImpls.foreach(
+      val ret = getResult(exps)
+      debug.log("")
+      debug.log("==============final function signatures==================")
+      funImpls.foreach(
         (nm, info) => {
           debug.log(s"$nm: (${info._3.map(_._1).mkString(" X ")}) -> ${info._4}")
           // updateFunc(nm)
@@ -134,7 +138,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
   def updateFunction(crt: String): Unit = {
     debug.log(s"evaluating $crt, rests: ${evalQueue}")
     val cnt = evalCnt.get(crt).getOrElse(0)
-    if(cnt <= 20){
+    if(cnt <= 4){
       evalCnt.update(crt, cnt+1)
       debug.log("=" * 10 + s" updating $crt " + "=" * 10)
       debug.log(getfunInfo(crt))
@@ -155,10 +159,11 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
         case term: Term =>
           Some(term2Expr(term))
         case tyDef: NuTypeDef => 
-          monomorphizeTypeDef(tyDef)
+          val ret = type2Item(tyDef)
+          addPrototypeTypeDecl(ret)
           None
         case funDef: NuFunDef =>
-          Some(monomorphizeFunDef(funDef))
+          Some(func2Item(funDef))
       })
     }(identity)
 
@@ -166,58 +171,58 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
    * This function flattens a top-level type definition and returns the root
    * type definition. There is a simple class lifting here.
    */
-  private def monomorphizeTypeDef(tyDef: NuTypeDef): Item.TypeDecl =
+  // private def monomorphizeTypeDef(tyDef: NuTypeDef): Item.TypeDecl =
     // debug.trace("MONO TDEF", PrettyPrinter.show(tyDef)) {
       /**
        * The recursive function doing the real work.
        * @param tyDef the type definition
        * @param namePath enclosing class names and this class name
        */
-      def rec(tyDef: NuTypeDef, namePath: List[String]): Item.TypeDecl =
-        // debug.trace[Item.TypeDecl]("LIFT", PrettyPrinter.show(tyDef)) {
-          val NuTypeDef(kind, _, tparams, params, parents, body) = tyDef
-          val isolation = Isolation(body.entities.flatMap {
-            // Question: Will there be pure terms in class body?
-            case term: Term =>
-              Some(term2Expr(term))
-            case subTypeDef: NuTypeDef =>
-              rec(subTypeDef, subTypeDef.nme.name :: namePath)
-              None
-            case subFunDef: NuFunDef =>
-              Some(monomorphizeFunDef(subFunDef))
-          })
-          val className = namePath.reverseIterator.mkString("_")
-          val typeDecl: Item.TypeDecl = Item.TypeDecl(
-            className, // name
-            kind, // kind
-            tparams, // typeParams
-            toFuncParams(params).toList, // params
-            parents.map {
-              case Var(name) => (TypeName(name), Nil)
-              case App(Var(name), _) => (TypeName(name), Nil)
-              case _ => throw MonomorphError("unsupported parent term")
-            }, // parents
-            isolation // body
-          )
-          addPrototypeTypeDecl(typeDecl)
-          typeDecl
-        // }()
+      // def rec(tyDef: NuTypeDef, namePath: List[String]): Item.TypeDecl =
+      //   // debug.trace[Item.TypeDecl]("LIFT", PrettyPrinter.show(tyDef)) {
+      //     val NuTypeDef(kind, _, tparams, params, parents, body) = tyDef
+      //     val isolation = Isolation(body.entities.flatMap {
+      //       // Question: Will there be pure terms in class body?
+      //       case term: Term =>
+      //         Some(term2Expr(term))
+      //       case subTypeDef: NuTypeDef =>
+      //         rec(subTypeDef, subTypeDef.nme.name :: namePath)
+      //         None
+      //       case subFunDef: NuFunDef =>
+      //         Some(monomorphizeFunDef(subFunDef))
+      //     })
+      //     val className = namePath.reverseIterator.mkString("_")
+      //     val typeDecl: Item.TypeDecl = Item.TypeDecl(
+      //       className, // name
+      //       kind, // kind
+      //       tparams, // typeParams
+      //       toFuncParams(params).toList, // params
+      //       parents.map {
+      //         case Var(name) => (TypeName(name), Nil)
+      //         case App(Var(name), _) => (TypeName(name), Nil)
+      //         case _ => throw MonomorphError("unsupported parent term")
+      //       }, // parents
+      //       isolation // body
+      //     )
+      //     addPrototypeTypeDecl(typeDecl)
+      //     typeDecl
+      //   // }()
 
-      rec(tyDef, tyDef.nme.name :: Nil)
+      // rec(tyDef, tyDef.nme.name :: Nil)
     // }(identity)
     
   /**
    * This function monomorphizes a function definition in smoe typing units.
    * @param tyDecls the destination of nested type declarations
    */
-  private def monomorphizeFunDef(funDef: NuFunDef): Item.FuncDecl | Item.FuncDefn =
-    // debug.trace[Item.FuncDecl | Item.FuncDefn]("MONO FUNC", PrettyPrinter.show(funDef)) {
-      val NuFunDef(_, nme, targs, rhs) = funDef
-      rhs match
-        case Left(Lam(params, body)) =>
-          Item.FuncDecl(nme, toFuncParams(params).toList, term2Expr(body))
-        case Left(body: Term) => Item.FuncDecl(nme, Nil, term2Expr(body))
-        case Right(polyType) => Item.FuncDefn(nme, targs, polyType)
+  // private def monomorphizeFunDef(funDef: NuFunDef): Item.FuncDecl | Item.FuncDefn =
+  //   // debug.trace[Item.FuncDecl | Item.FuncDefn]("MONO FUNC", PrettyPrinter.show(funDef)) {
+  //     val NuFunDef(_, nme, targs, rhs) = funDef
+  //     rhs match
+  //       case Left(Lam(params, body)) =>
+  //         Item.FuncDecl(nme, toFuncParams(params).toList, term2Expr(body))
+  //       case Left(body: Term) => Item.FuncDecl(nme, Nil, term2Expr(body))
+  //       case Right(polyType) => Item.FuncDefn(nme, targs, polyType)
     // }(identity)
 
   /**
@@ -383,7 +388,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
             }
           }
         }
-        funImpls.get(name).get._4
+        BoundedExpr(funImpls.get(name).get._4)
       }
       else {
         debug.log("!!!!!!!")
@@ -399,7 +404,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
     val ctx = (funcdecl.params.map(_._2.name) zip args.unzip._1).toMap
     val nBody = specializer.evaluate(funcdecl.body)(using Context()++ctx, List(funcdecl.name.name))
     val nVs = nBody.expValue
-    val oldVs = funImpls.get(name).get._4
+    val oldVs = VariableValue.get(funImpls.get(name).get._4)
     debug.log(s"comparing ${oldVs} with ${nVs}")
     if(oldVs.compare(nVs)){
       debug.log(s"adding these funcs to queue: ${funDependence.get(name).get}")
@@ -407,11 +412,24 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
     }
     funImpls.updateWith(name)(_.map(x => {
       val nFuncDecl: Item.FuncDecl = x._1.copy(body = nBody)
-      x._4 += nVs
+      // debug.log(s"merging ${nVs.hashCode()%1000000} into ${x._4.hashCode()%1000000}")
+      VariableValue.update(x._4, nVs)
+      // debug.log(s"merged: ${x._4.hashCode()%1000000}")
       (nFuncDecl, x._2, x._3, x._4)
     }))
     // funImpls.get(name).get._4 += nVs
     // funImpls.update(name, funImpls.get(name).get.copy(_4 = nVs))
+  }
+
+  def findVar(name: String)(using evalCtx: Context, callingStack: List[String]): MonoValue = {
+    if(funImpls.contains(name)){
+      val funcBody = funImpls.get(name).get
+      funDependence.update(name, funDependence.get(name).get ++ callingStack.headOption)
+      FunctionValue(name, funcBody._1.params.map(_._2.name), Nil)
+    }
+    else{
+      UnknownValue()
+    }
   }
 
   private def partitationArguments(name: String, params: List[Parameter], args: List[Expr]): (List[Expr], List[Expr]) =
@@ -655,21 +673,21 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
 
   // Shorthand implicit conversions.
 
-  private given Conversion[String, Expr.Ref] with
-    def apply(name: String): Expr.Ref = Expr.Ref(name)
+  // private given Conversion[String, Expr.Ref] with
+  //   def apply(name: String): Expr.Ref = Expr.Ref(name)
 
-  private given Conversion[Var, Expr.Ref] with
-    def apply(nme: Var): Expr.Ref = Expr.Ref(nme.name)
+  // private given Conversion[Var, Expr.Ref] with
+  //   def apply(nme: Var): Expr.Ref = Expr.Ref(nme.name)
 
-  private given Conversion[TypeName, Expr.Ref] with
-    def apply(nme: TypeName): Expr.Ref = Expr.Ref(nme.name)
+  // private given Conversion[TypeName, Expr.Ref] with
+  //   def apply(nme: TypeName): Expr.Ref = Expr.Ref(nme.name)
 
-  private given Conversion[TypeDefKind, TypeDeclKind] with
-    import mlscript.{Als, Cls, Trt}
-    def apply(kind: TypeDefKind): TypeDeclKind = kind match
-      case Als => TypeDeclKind.Alias
-      case Cls => TypeDeclKind.Class
-      case Trt => TypeDeclKind.Trait
+  // private given Conversion[TypeDefKind, TypeDeclKind] with
+  //   import mlscript.{Als, Cls, Trt}
+  //   def apply(kind: TypeDefKind): TypeDeclKind = kind match
+  //     case Als => TypeDeclKind.Alias
+  //     case Cls => TypeDeclKind.Class
+  //     case Trt => TypeDeclKind.Trait
 
 object Monomorph:
   class SpecializationMap[T <: Item](val prototype: T):

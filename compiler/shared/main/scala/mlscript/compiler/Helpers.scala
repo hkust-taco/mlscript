@@ -18,6 +18,7 @@ import mlscript.IntLit
 import mlscript.StrLit
 import mlscript.AppliedType
 import mlscript.TypeName
+import mlscript.TypeDefKind
 
 object Helpers:
   /**
@@ -145,3 +146,42 @@ object Helpers:
                        then UnitValue.Undefined
                        else UnitValue.Null)
     }
+  
+  def func2Item(funDef: NuFunDef): Item.FuncDecl | Item.FuncDefn =
+      val NuFunDef(_, nme, targs, rhs) = funDef
+      rhs match
+        case Left(Lam(params, body)) =>
+          Item.FuncDecl(Expr.Ref(nme.name), toFuncParams(params).toList, term2Expr(body))
+        case Left(body: Term) => Item.FuncDecl(Expr.Ref(nme.name), Nil, term2Expr(body))
+        case Right(polyType) => Item.FuncDefn(Expr.Ref(nme.name), targs, polyType)
+  
+  def type2Item(tyDef: NuTypeDef): Item.TypeDecl =
+    val NuTypeDef(kind, className, tparams, params, parents, body) = tyDef
+    val isolation = Isolation(body.entities.flatMap {
+      // Question: Will there be pure terms in class body?
+      case term: Term =>
+        Some(term2Expr(term))
+      case subTypeDef: NuTypeDef => ???
+      case subFunDef: NuFunDef =>
+        Some(func2Item(subFunDef))
+    })
+    val typeDecl: Item.TypeDecl = Item.TypeDecl(
+      Expr.Ref(className.name), // name
+      kind, // kind
+      tparams, // typeParams
+      toFuncParams(params).toList, // params
+      parents.map {
+        case Var(name) => (TypeName(name), Nil)
+        case App(Var(name), _) => (TypeName(name), Nil)
+        case _ => throw MonomorphError("unsupported parent term")
+      }, // parents
+      isolation // body
+    )
+    typeDecl
+  
+  private given Conversion[TypeDefKind, TypeDeclKind] with
+    import mlscript.{Als, Cls, Trt}
+    def apply(kind: TypeDefKind): TypeDeclKind = kind match
+      case Als => TypeDeclKind.Alias
+      case Cls => TypeDeclKind.Class
+      case Trt => TypeDeclKind.Trait
