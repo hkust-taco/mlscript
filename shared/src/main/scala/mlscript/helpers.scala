@@ -378,6 +378,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       case If(_, _) => "if-else block"
       case TyApp(_, _) => "type application"
       case Quoted(_) => "quasiquote"
+      case Unquoted(_) => "unquote"
     }
   }
   
@@ -424,6 +425,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case If(body, els) => s"if $body" + els.fold("")(" else " + _) |> bra
     case TyApp(lhs, targs) => s"$lhs‹${targs.map(_.show).mkString(", ")}›"
     case Quoted(b) => s"Quoted' $b '"
+    case Unquoted(b) => s"Unquoted' $b '"
   }}
   
   def toType: Diagnostic \/ Type =

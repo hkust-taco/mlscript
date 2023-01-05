@@ -53,8 +53,7 @@ code"a + b"
 //│ ║  l.3: 	code"a + b"
 //│ ╙──     	         ^
 //│ res: Code
-//│ Code generation crashed:
-//│   scala.MatchError: Quoted' + (a,) (b,) ' (of class mlscript.Quoted)
+//│    = [ '@', '+', [ '&', 'a', 'Symbol(a)' ], [ '&', 'b', 'Symbol(b)' ] ]
 
 :NewParser
 :d
@@ -115,16 +114,16 @@ code"a + b"
 //│ ⬤ Typed as: Code<a,b>
 //│  where: 
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.63: 	code"a + b"
+//│ ║  l.62: 	code"a + b"
 //│ ║        	     ^^^
 //│ ╟── reference of type `anything` is not an instance of type `int`
-//│ ║  l.63: 	code"a + b"
+//│ ║  l.62: 	code"a + b"
 //│ ╙──      	     ^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.63: 	code"a + b"
+//│ ║  l.62: 	code"a + b"
 //│ ║        	     ^^^^^
 //│ ╟── reference of type `anything` is not an instance of type `int`
-//│ ║  l.63: 	code"a + b"
+//│ ║  l.62: 	code"a + b"
 //│ ╙──      	         ^
 //│ res: Code
 

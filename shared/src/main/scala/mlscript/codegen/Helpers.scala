@@ -53,6 +53,10 @@ object Helpers {
     case TyApp(base, targs) => s"TyApp(${inspect(base)}, ${targs})"
     case Def(rec, nme, rhs, isByname) =>
       s"Def($rec, $nme, ${rhs.fold(inspect, "" + _)}, $isByname)"
+    case Quoted(body) =>
+      s"Quoted(${inspect(body)})"
+    case Unquoted(body) =>
+      s"Unquoted(${inspect(body)})"
   }
 
   def inspect(body: IfBody): Str = body match {

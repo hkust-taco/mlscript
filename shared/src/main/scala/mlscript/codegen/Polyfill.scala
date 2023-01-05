@@ -162,6 +162,7 @@ object Polyfill {
     buffer += BuiltinFunc("gt", makeBinaryFunc(">"))
     buffer += BuiltinFunc("not", makeUnaryFunc("!"))
     buffer += BuiltinFunc("negate", makeUnaryFunc("-"))
+    buffer += BuiltinFunc("run", makeRunFunc("run"))
     buffer.toList
   }
 
@@ -193,4 +194,11 @@ object Polyfill {
 
   private def makeUnaryFunc(op: Str)(name: Str): JSFuncDecl =
     fn(name, param("x")) { `return`(id("x").unary(op)) }
+  
+  private def makeRunFunc(op: Str): JSFuncDecl = 
+    JSFuncDecl(
+      name, 
+      JSNamePattern("s_expr"), // receives output of JSBackend.translateQuoted
+      JSExprStmt(JSExpr("the run function in JavaScript")) :: Nil // wip in quasiquote_run.js
+    )
 }

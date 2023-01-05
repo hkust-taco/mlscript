@@ -1,36 +1,52 @@
 :NewParser
 :ge
 
-// Var 
-let code_var : Code<int> = code"let c = 2; c"
-//│ code_var: code & {Code#T <: int}
-//│ Code generation encountered an error:
-//│   LET isRec: false, name: c, rhs: 2, body: c 
-//│  BODY: JSLit("c")}
+let code_var2 = code"x"
+//│ code_var2: Code
+//│          = [ '&', 'x', 'Symbol(x)' ]
 
 // Lam 
-let code_lam = code"x => x + 2"
-//│ code_lam: code & {Code#T <: int -> int}
-//│ Code generation encountered an error:
-//│   LAMBDA lhs: x, rhs: + (x,) (2,)
+let code_lam = code"(x, y) => x + 3"
+//│ code_lam: Code
+//│         = [
+//│             '=>',
+//│             [ '#', [ '&', 'x', 'Symbol(x)' ], [ '&', 'y', 'Symbol(y)' ] ],
+//│             [ '@', '+', [ '&', 'x', 'Symbol(x)' ], [ '3' ] ]
+//│           ]
 
 // App
-let code_app_binary = code"73 + 4 + 5"
-//│ code_app_binary: code & {Code#T <: int}
-//│                = [ '+', [ '+', '73', '4' ], '5' ]
+let code_app_binary = code"1 + 2 * 3"
+//│ code_app_binary: Code
+//│                = [ '@', '+', [ '1' ], [ '@', '*', [ '2' ], [ '3' ] ] ]
 
+let code_app_binary2 = code"y + 1"
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.25: 	let code_app_binary2 = code"y + 1"
+//│ ║        	                            ^^^
+//│ ╟── reference of type `anything` is not an instance of type `int`
+//│ ║  l.25: 	let code_app_binary2 = code"y + 1"
+//│ ╙──      	                            ^
+//│ code_app_binary2: Code
+//│                 = [ '@', '+', [ '&', 'y', 'Symbol(y)' ], [ '1' ] ]
 
-// let code_app_ternary
+// App with if?
+if true then 1 else 2
+//│ res: 1 | 2
+//│    = 1
 
-// let code_app_fcn_invoke
+let code_app_if1 = code"if true then 1 else 2"
+//│ code_app_if1: Code
+//│ Code generation encountered an error:
+//│   **If-s were skipped (as Typer didn't support yet)
+
 
 // Tup 
-(1,2,3)
-//│ res: (1, 2, 3,)
-//│    = [ 1, 2, 3 ]
+("1",2,3)
+//│ res: ("1", 2, 3,)
+//│    = [ '1', 2, 3 ]
 
 let code_tup = code"(1,2,3)"
-//│ code_tup: code & {Code#T <: (1, 2, 3,)}
+//│ code_tup: Code
 //│ Code generation encountered an error:
 //│   BRACKET with rcd false, trm: 1, 2, 3,
 
@@ -40,7 +56,7 @@ let record = {x: 1}
 //│       = { x: 1 }
 
 let code_res = code"{x: 1}"
-//│ code_res: code & {Code#T <: {x: 1}}
+//│ code_res: Code
 //│ Code generation encountered an error:
 //│   BRACKET with rcd true, trm: {x: 1}
 
@@ -50,7 +66,7 @@ let code_res = code"{x: 1}"
 //│    = 10
 
 let code_sel = code"{ x: 0, y: 0 }.x"
-//│ code_sel: code & {Code#T <: 0}
+//│ code_sel: Code
 //│ Code generation encountered an error:
 //│   SELECTOR receiver: '{' {x: 0, y: 0} '}' fieldName: x
 
@@ -60,33 +76,19 @@ let x = 2
 //│  = 2
 
 let code_let1 = code"let x = 2; x"
-//│ code_let1: code & {Code#T <: 2}
+//│ code_let1: Code
 //│ Code generation encountered an error:
 //│   LET isRec: false, name: x, rhs: 2, body: x 
-//│  BODY: JSLit("x")}
-
-let code_let2 = code"let x = 100; x + 3 * 4"
-//│ code_let2: code & {Code#T <: int}
-//│ Code generation encountered an error:
-//│   LET isRec: false, name: x, rhs: 100, body: + (x,) (* (3,) (4,),) 
-//│  BODY: JSArray(List(JSLit("+"), JSLit("x"), JSArray(List(JSLit("*"), JSLit("3"), JSLit("4")))))}
-
-let code_let3 = code"let x = 1; let y = 2; x / y"
-//│ code_let3: code & {Code#T <: number}
-//│ Code generation encountered an error:
-//│   LET isRec: false, name: y, rhs: 2, body: / (x,) (y,) 
-//│  BODY: JSArray(List(JSLit("/"), JSLit("x"), JSLit("y")))}
-
-// Blk 
+//│  BODY: JSArray(List(JSLit("&"), JSLit("x"), JSLit("Symbol(x)")))}
 
 // Bra 
 let code_bra1 = code"(1,1)"
-//│ code_bra1: code & {Code#T <: (1, 1,)}
+//│ code_bra1: Code
 //│ Code generation encountered an error:
 //│   BRACKET with rcd false, trm: 1, 1,
 
 let code_bra2 = code"{x: 1}"
-//│ code_bra2: code & {Code#T <: {x: 1}}
+//│ code_bra2: Code
 //│ Code generation encountered an error:
 //│   BRACKET with rcd true, trm: {x: 1}
 
@@ -97,17 +99,17 @@ fun f(x) = x
 //│  = [Function: f]
 f with x = 2
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.98: 	f with x = 2
-//│ ╙──      	  ^^^^^^
+//│ ║  l.117: 	f with x = 2
+//│ ╙──       	  ^^^^^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.98: 	f with x = 2
-//│ ╙──      	^^^^^^^^
+//│ ║  l.117: 	f with x = 2
+//│ ╙──       	^^^^^^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.98: 	f with x = 2
-//│ ╙──      	         ^
+//│ ║  l.117: 	f with x = 2
+//│ ╙──       	         ^
 //│ ╔══[ERROR] identifier not found: with
-//│ ║  l.98: 	f with x = 2
-//│ ╙──      	  ^^^^
+//│ ║  l.117: 	f with x = 2
+//│ ╙──       	  ^^^^
 //│ res: error
 //│ Code generation encountered an error:
 //│   unresolved symbol with
@@ -121,7 +123,7 @@ a[0]
 //│    = 1
 
 let code_subs = code"${a[1]}"
-//│ code_subs: code & {Code#T <: 1 | 2 | 3 | undefined}
+//│ code_subs: Code
 //│ Code generation encountered an error:
 //│   SUBSCRIPTION from array: a at index 1
 
@@ -131,73 +133,46 @@ let code_subs = code"${a[1]}"
 // Splc 
 let array1 = (1,2,3,4,5)
 array1[2:3]
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.133: 	array1[2:3]
-//│ ╙──       	        ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.133: 	array1[2:3]
-//│ ╙──       	       ^^^
 //│ array1: (1, 2, 3, 4, 5,)
 //│       = [ 1, 2, 3, 4, 5 ]
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.133: 	array1[2:3]
-//│ ║         	       ^^^
-//│ ╟── integer literal of type `2` is not a function
-//│ ║  l.133: 	array1[2:3]
-//│ ╙──       	       ^
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.152: 	array1[2:3]
+//│ ║         	      ^^^^^
+//│ ╟── integer literal of type `2` does not match type `3`
+//│ ║  l.152: 	array1[2:3]
+//│ ║         	       ^
+//│ ╟── Note: constraint arises from literal type:
+//│ ║  l.152: 	array1[2:3]
+//│ ╙──       	         ^
 //│ res: 1 | 2 | 3 | 4 | 5 | undefined
-//│ Runtime error:
-//│   TypeError: 2 is not a function
+//│    = 3
 
 // New 
 class Foo(x) 
 let f = new Foo(1)
 //│ Defined class Foo
 //│ Foo: 'x -> (Foo with {x: 'x})
+//│    = [Function: Foo1]
 //│ f: Foo & {x: 1}
-//│ Code generation encountered an error:
-//│   cannot generate code for term New(Some((TypeName(Foo),1,)), TypingUnit(List()))
+//│  = Foo { x: 1 }
 
 // If 
 if true then 1 else 2
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:724)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:736)
-//│ 	at: mlscript.Typer.typeStatement(Typer.scala:380)
-//│ 	at: mlscript.DiffTests.$anonfun$new$61(DiffTests.scala:697)
-//│ 	at: mlscript.DiffTests.$anonfun$new$61$adapted(DiffTests.scala:650)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:650)
-//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:782)
+//│ res: 1 | 2
+//│    = 1
 
 // TyApp 
 qq_int: Code<int>
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.176: 	qq_int: Code<int>
-//│ ╙──       	      ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.176: 	qq_int: Code<int>
-//│ ╙──       	^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] identifier not found: qq_int
-//│ ║  l.176: 	qq_int: Code<int>
+//│ ║  l.182: 	qq_int: Code<int>
 //│ ╙──       	^^^^^^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:728)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:736)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$15(Typer.scala:543)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:542)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:736)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:629)
+//│ res: code & {Code#T <: int}
+//│ Code generation encountered an error:
+//│   unresolved symbol qq_int
 
 // Quoted 
 let d = code"code"3""
-//│ d: code & {Code#T <: code & {Code#T <: 3}}
+//│ d: Code
 //│ Code generation encountered an error:
 //│   saw another one of myself
 
@@ -205,5 +180,9 @@ let d = code"code"3""
 
 // Literals?
 let b = code"10"
-//│ b: code & {Code#T <: 10}
-//│  = '10'
+//│ b: Code
+//│  = [ '10' ]
+
+let c = code"true"
+//│ c: Code
+//│  = [ '&', 'true', 'Symbol(true)' ]

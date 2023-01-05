@@ -3,40 +3,43 @@
 code"2 + 2"
 // in JS: ["+", 2, 2]
 //│ res: code & {Code#T <: int}
-//│ Code generation crashed:
-//│   scala.MatchError: Quoted' + (2,) (2,) ' (of class mlscript.Quoted)
+//│    = [ '@', '+', [ '2' ], [ '2' ] ]
 
 code"x => x + 2"
 // in JS (bad): ["lambda", ["x"], ["+", ["ref", "x"]], 2]]
 // in JS (hygienic): const x_sym = Symbol("x"); ["lambda", [x_sym], ["+", x_sym], 2]]
 //│ res: code & {Code#T <: int -> int}
-//│ Code generation crashed:
-//│   scala.MatchError: Quoted' x, => + (x,) (2,) ' (of class mlscript.Quoted)
+//│    = [
+//│        '=>',
+//│        [ '#', [ '&', 'x', 'Symbol(x)' ] ],
+//│        [ '@', '+', [ '&', 'x', 'Symbol(x)' ], [ '2' ] ]
+//│      ]
 
 fun foo(x) =
   code"10 + x"
 //│ foo: int -> (code & {Code#T <: int})
-//│ Code generation crashed:
-//│   scala.MatchError: Quoted' + (10,) (x,) ' (of class mlscript.Quoted)
+//│    = [Function: foo]
 
 code"foo(123) + 1"
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.22: 	code"foo(123) + 1"
+//│ ║  l.23: 	code"foo(123) + 1"
 //│ ║        	     ^^^^^^^^^^
 //│ ╟── application of type `code & {Code#T <: ?a}` is not an instance of type `int`
-//│ ║  l.22: 	code"foo(123) + 1"
+//│ ║  l.23: 	code"foo(123) + 1"
 //│ ╙──      	     ^^^^^^^^
 //│ res: code & {Code#T <: error | int}
-//│ Code generation crashed:
-//│   scala.MatchError: Quoted' + (foo (123,),) (1,) ' (of class mlscript.Quoted)
+//│ Code generation encountered an error:
+//│   not supported
 
 code"10 + ${qq_int}"
-//│ ╔══[ERROR] identifier not found: qq_int
-//│ ║  l.33: 	code"10 + ${qq_int}"
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.34: 	code"10 + ${qq_int}"
+//│ ║        	     ^^^^^^^^^^^^^^
+//│ ╟── reference of type `anything` is not an instance of type `int`
+//│ ║  l.34: 	code"10 + ${qq_int}"
 //│ ╙──      	          ^^^^^^^^^
-//│ res: code & {Code#T <: int}
-//│ Code generation crashed:
-//│   scala.MatchError: Quoted' + (10,) (qq_int,) ' (of class mlscript.Quoted)
+//│ res: Code
+//│    = [ '@', '+', [ '10' ], [ '&', 'qq_int', 'Symbol(qq_int)' ] ]
 
 "x"
 //│ res: "x"
@@ -45,23 +48,20 @@ code"10 + ${qq_int}"
 // The inner code should have type Code<int, "x" | "y">
 code"x => y => 15 + ${   code"x + y"   }"
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.50: 	code"x => y => 15 + ${   code"x + y"   }"
+//│ ║  l.49: 	code"x => y => 15 + ${   code"x + y"   }"
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `code & {Code#T <: ?a}` is not an instance of type `int`
-//│ res: code & {Code#T <: int -> int -> (error | int)}
-//│ Code generation crashed:
-//│   scala.MatchError: Quoted' x, => y, => + (15,) (Quoted' + (x,) (y,) ',) ' (of class mlscript.Quoted)
+//│ ╟── quasiquote of type `Code` is not an instance of type `int`
+//│ ║  l.49: 	code"x => y => 15 + ${   code"x + y"   }"
+//│ ╙──      	                    ^^^^^^^^^^^^^^^^^^^^
+//│ res: Code
+//│ Code generation encountered an error:
+//│   saw another one of myself
 
 // FIXME
 qq_int : Code<int>
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.60: 	qq_int : Code<int>
-//│ ╙──      	       ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.60: 	qq_int : Code<int>
-//│ ╙──      	^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] identifier not found: qq_int
-//│ ║  l.60: 	qq_int : Code<int>
+//│ ║  l.61: 	qq_int : Code<int>
 //│ ╙──      	^^^^^^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-
+//│ res: code & {Code#T <: int}
+//│ Code generation encountered an error:
+//│   unresolved symbol qq_int
