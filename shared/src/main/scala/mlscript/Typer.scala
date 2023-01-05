@@ -97,7 +97,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       freeVars = mutable.Set.empty,
       inQuasiquote = false,
       inUnquoted = false,
-      outerQuoteEnvironments = List[Ctx](),
+      outerQuoteEnvironments = List.empty[Ctx],
     )
 
     val empty: Ctx = init
@@ -553,9 +553,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           }
       case v@ValidVar(name) =>
         val ty = ctx.get(name).fold(
-          if (ctx.allowFreeVariable) {
-            ctx.freeVars.add(name)
-            Nil
+          if (ctx.inQuasiquote) {
+            if (!ctx.outerQuoteEnvironments.head.contains(name)) { // if variable is not found at the outer level
+              val res = new TypeVariable(lvl, Nil, Nil)(prov)
+              ctx += name -> VarSymbol(res, v)
+              res
+            } else {
+              ??? // TODO: handle if the variable is found at outer level
+            }
           } else {
             err("identifier not found: " + name, term.toLoc): TypeScheme
           }) {
@@ -819,8 +824,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           inQuasiquote = true,
           outerQuoteEnvironments = nestedCtx :: nestedCtx.outerQuoteEnvironments),
           raise, vars)
-//          ClassTag(Var("Code"), immutable_set)(prov)
         TypeRef(TypeName("Code"), body_type :: Nil)(noProv)
+      case Unquoted(body) =>
+        val nestedCtx = ctx.nest
+        val body_type = typeTerm(body)(nestedCtx.copy(inUnquoted = true))(noProv)
+        body_type
+//        TypeRef(TypeName("Code"), body_type :: Nil)(noProv)
     }
   }(r => s"$lvl. : ${r}")
 
