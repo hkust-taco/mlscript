@@ -49,7 +49,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                   freeVars: MutSet[Str],
                   inQuasiquote: Boolean,
                   inUnquoted: Boolean,
-                  outerQuoteEnvironments: List[Ctx],
+                  outerQuoteEnvironments: List[Opt[Ctx]],
                 ) {
     def +=(b: Str -> TypeInfo): Unit = env += b
 
@@ -58,6 +58,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     def get(name: Str): Opt[TypeInfo] = env.get(name) orElse parent.dlof(_.get(name))(N)
 
     def contains(name: Str): Bool = env.contains(name) || parent.exists(_.contains(name))
+
+    def containsFreeVar(name: Str): Bool = freeVars.contains(name) || outerQuoteEnvironments.head.exists(_.containsFreeVar((name)))
 
     def addMth(parent: Opt[Str], nme: Str, ty: MethodType): Unit = mthEnv += R(parent, nme) -> ty
 
@@ -97,7 +99,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       freeVars = mutable.Set.empty,
       inQuasiquote = false,
       inUnquoted = false,
-      outerQuoteEnvironments = List.empty[Ctx],
+      outerQuoteEnvironments = List.empty[Opt[Ctx]],
     )
 
     val empty: Ctx = init
@@ -554,12 +556,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case v@ValidVar(name) =>
         val ty = ctx.get(name).fold(
           if (ctx.inQuasiquote) {
-            if (!ctx.outerQuoteEnvironments.head.contains(name)) { // if variable is not found at the outer level
+            if (!ctx.containsFreeVar(name)) {
               val res = new TypeVariable(lvl, Nil, Nil)(prov)
               ctx += name -> VarSymbol(res, v)
               res
             } else {
-              ??? // TODO: handle if the variable is found at outer level
+              ???
             }
           } else {
             err("identifier not found: " + name, term.toLoc): TypeScheme
