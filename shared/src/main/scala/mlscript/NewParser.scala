@@ -388,7 +388,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   }
   
   def expr(prec: Int, allowSpace: Bool = true)(implicit fe: FoundErr, l: Line): Term = wrap(prec,allowSpace) { l =>
-    exprOrIf(prec, allowSpace)(et = false, fe = fe, l = implicitly) match {
+    exprOrIf(prec, allowSpace)(et = false, fe = fe, l = implicitly) match { 
       case R(e) => e
       case L(e) =>
         err(msg"Expected an expression; found a 'then'/'else' clause instead" -> e.toLoc :: Nil)
@@ -438,9 +438,20 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         R(Quoted(body).withLoc(S(loc)))
       case (br @ BRACKETS(Unquote, toks), loc) :: _ =>
         consume 
-        val body = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.expr(0))
-        exprCont(body.withLoc(S(loc)), prec, allowNewlines = false)
-        // R(Quoted(body).withLoc(S(loc)))      
+        val body = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.expr(0)) // this is the problem line which I have to fix
+        // val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) // TODO
+        // val bra = if (bk === Curly) Bra(true, Rcd(res.map {
+        //   case S(n) -> fld => n -> fld
+        //   case N -> (fld @ Fld(_, _, v: Var)) => v -> fld
+        //   case N -> fld =>
+        //     err((
+        //       msg"Record field should have a name" -> fld.value.toLoc :: Nil))
+        //     Var("<error>") -> fld
+        // }))
+        // else Bra(false, Tup(res))
+        // exprCont(bra.withLoc(S(loc)), prec, allowNewlines = false)
+        // exprCont(body.withLoc(S(loc)), prec, allowNewlines = false)
+        R(Unquoted(body).withLoc(S(loc)))      
       case (br @ BRACKETS(bk @ (Round | Square | Curly), toks), loc) :: _ =>
         consume
         val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) // TODO
