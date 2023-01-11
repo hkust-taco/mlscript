@@ -41,12 +41,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                   parent: Opt[Ctx],
                   env: MutMap[Str, TypeInfo],
                   mthEnv: MutMap[(Str, Str) \/ (Opt[Str], Str), MethodType],
+                  freeVarsEnv: MutMap[Str, TypeInfo],
                   lvl: Int,
                   inPattern: Bool,
                   tyDefs: Map[Str, TypeDef],
                   nuTyDefs: Map[Str, TypedNuTypeDef],
-                  allowFreeVariable: Boolean,
-                  freeVars: MutSet[Str],
                   inQuasiquote: Boolean,
                   inUnquoted: Boolean,
                   outerQuoteEnvironments: List[Opt[Ctx]],
@@ -55,12 +54,28 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
 
     def ++=(bs: IterableOnce[Str -> TypeInfo]): Unit = bs.iterator.foreach(+=)
 
-    def get(name: Str): Opt[TypeInfo] = env.get(name) orElse parent.dlof(_.get(name))(N)
+    def getFreeVar(name: Str): Option[TypeInfo] = freeVarsEnv.get(name) orElse outerQuoteEnvironments.head.dlof(_.getFreeVar(name))(N)
 
-    def contains(name: Str): Bool = env.contains(name) || parent.exists(_.contains(name))
+    def get(name: Str): Opt[TypeInfo] = if (inQuasiquote) {
+      getFreeVar(name) match {
+        case typeInfo @ Some(value) =>
+          print("found free variable type info: " + name)
+          typeInfo
+        case None =>
+          print("Unable to found the type info via free variable env")
+          env.get(name) orElse parent.dlof(_.get(name))(N)
+      }
+    } else {
+      env.get(name) orElse parent.dlof(_.get(name))(N)
+    }
 
-    def containsFreeVar(name: Str): Bool = freeVars.contains(name) || outerQuoteEnvironments.head.exists(_.containsFreeVar((name)))
+    def contains(name: Str): Bool = if (inQuasiquote) {
+      (env.contains(name) || parent.exists(_.contains(name))) || containsFreeVar(name)
+    } else {
+      env.contains(name) || parent.exists(_.contains(name))
+    }
 
+    def containsFreeVar(name: Str): Bool = freeVarsEnv.contains(name) || outerQuoteEnvironments.head.exists(_.containsFreeVar(name))
     def addMth(parent: Opt[Str], nme: Str, ty: MethodType): Unit = mthEnv += R(parent, nme) -> ty
 
     def addMthDefn(parent: Str, nme: Str, ty: MethodType): Unit = mthEnv += L(parent, nme) -> ty
@@ -76,7 +91,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
 
     def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
 
-    def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty)
+    def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, MutMap.empty)
 
     def nextLevel: Ctx = copy(lvl = lvl + 1)
 
@@ -91,15 +106,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       parent = N,
       env = MutMap.from(builtinBindings.iterator.map(nt => nt._1 -> VarSymbol(nt._2, Var(nt._1)))),
       mthEnv = MutMap.empty,
+      freeVarsEnv = MutMap.empty,
       lvl = 0,
       inPattern = false,
       tyDefs = Map.from(builtinTypes.map(t => t.nme.name -> t)),
       nuTyDefs = Map.empty,
-      allowFreeVariable = false,
-      freeVars = mutable.Set.empty,
       inQuasiquote = false,
       inUnquoted = false,
-      outerQuoteEnvironments = List.empty[Opt[Ctx]],
+      outerQuoteEnvironments = List(None)
     )
 
     val empty: Ctx = init
@@ -556,13 +570,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case v@ValidVar(name) =>
         val ty = ctx.get(name).fold(
           if (ctx.inQuasiquote) {
-            if (!ctx.containsFreeVar(name)) {
-              val res = new TypeVariable(lvl, Nil, Nil)(prov)
-              ctx += name -> VarSymbol(res, v)
-              res
-            } else {
-              ???
-            }
+            println("free: " + name)
+            val res = new TypeVariable(lvl, Nil, Nil, nameHint = Some(name + ".type"))(prov)
+            ctx.freeVarsEnv += name -> VarSymbol(res, v)
+            res
           } else {
             err("identifier not found: " + name, term.toLoc): TypeScheme
           }) {

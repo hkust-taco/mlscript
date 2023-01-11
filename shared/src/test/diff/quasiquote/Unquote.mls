@@ -40,19 +40,7 @@ code"a + b"
 //│ ? block		inspects ||    [at l.360]
 //│ ? parseAll		inspects ||    [at l.60]
 //│ Parsed: Quoted' + (a,) (b,) ';
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.3: 	code"a + b"
-//│ ║       	     ^^^
-//│ ╟── reference of type `anything` is not an instance of type `int`
-//│ ║  l.3: 	code"a + b"
-//│ ╙──     	     ^
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.3: 	code"a + b"
-//│ ║       	     ^^^^^
-//│ ╟── reference of type `anything` is not an instance of type `int`
-//│ ║  l.3: 	code"a + b"
-//│ ╙──     	         ^
-//│ res: Code
+//│ res: code & {Code#T <: int}
 //│ Code generation crashed:
 //│   scala.MatchError: Quoted' + (a,) (b,) ' (of class mlscript.Quoted)
 
@@ -60,138 +48,117 @@ code"a + b"
 :d
 :ne
 :NoJS
-code"${a}"
-//│ 0. Typing term Quoted' a '
-//│ | 0. Typing term a
-//│ | 0. : error<>
-//│ 0. : Code[error<>]
-//│ ⬤ Typed as: Code[error<>]
+code"let a = 1; ${a}"
+//│ 0. Typing term Quoted' let a = 1 in Unquote' a ' '
+//│ | 0. Typing term let a = 1 in Unquote' a '
+//│ | | 1. Typing term 1
+//│ | | 1. : 1<int,number>
+//│ | | 0. Typing term Unquote' a '
+//│ | | | 0. Typing term a
+//│ | | | 0. : 1<int,number>
+//│ | | 0. : $[1<int,number>]
+//│ | 0. : $[1<int,number>]
+//│ 0. : Code[$[1<int,number>]]
+//│ ⬤ Typed as: Code[$[1<int,number>]]
 //│  where: 
-//│ ╔══[ERROR] identifier not found: a
-//│ ║  l.5: 	code"${a}"
-//│ ╙──     	     ^^^^
-//│ res: code & {Code#T <: error}
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: $
+//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
+//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mapTargs(TyperDatatypes.scala:254)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.childrenPol(TyperHelpers.scala:611)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.childrenPol$(TyperHelpers.scala:594)
+//│ 	at: mlscript.TyperDatatypes$SimpleType.childrenPol(TyperDatatypes.scala:81)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.rec$1(TyperHelpers.scala:636)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.getVarsPol(TyperHelpers.scala:640)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.getVarsPol$(TyperHelpers.scala:616)
+//│ 	at: mlscript.TyperDatatypes$SimpleType.getVarsPol(TyperDatatypes.scala:81)
 
 
 :NewParser
-:ParseOnly
-:dp
-code"${a + b} + 10"
-//│ |code"|${|a| |+| |b|}| |+| |10|"|
-//│ ? block		inspects |code"|${|a| |+| |b|}| |+| |10|"|    [at l.238]
-//│ @ exprOrIf(0,false)    [at l.358]
-//│ │ ? exprOrIf		inspects |code"|${|a| |+| |b|}| |+| |10|"|    [at l.403]
-//│ │ ! exprOrIf		consumes |code"|${|a| |+| |b|}| |+| |10|"|    [at l.436]
-//│ │ > @ expr(0,true)    [at l.437]
-//│ │ > │ @ exprOrIf(0,true)    [at l.391]
-//│ │ > │ │ ? exprOrIf		inspects |${|a| |+| |b|}| |+| |10|    [at l.403]
-//│ │ > │ │ ! exprOrIf		consumes |${|a| |+| |b|}|    [at l.440]
-//│ │ > │ │ > @ expr(0,true)    [at l.441]
-//│ │ > │ │ > │ @ exprOrIf(0,true)    [at l.391]
-//│ │ > │ │ > │ │ ? exprOrIf		inspects |a| |+| |b|    [at l.403]
-//│ │ > │ │ > │ │ ! exprOrIf		consumes |a|    [at l.419]
-//│ │ > │ │ > │ │ @ exprCont(0,`a`,false)    [at l.420]
-//│ │ > │ │ > │ │ │ ? exprCont		inspects | |+| |b|    [at l.571]
-//│ │ > │ │ > │ │ │ ! exprCont		consumes | |    [at l.596]
-//│ │ > │ │ > │ │ │ @ exprCont(0,`a`,false)    [at l.597]
-//│ │ > │ │ > │ │ │ │ ? exprCont		inspects |+| |b|    [at l.571]
-//│ │ > │ │ > │ │ │ │ ! exprCont		consumes |+|    [at l.573]
-//│ │ > │ │ > │ │ │ │ @ exprOrIf(18,true)    [at l.576]
-//│ │ > │ │ > │ │ │ │ │ ? exprOrIf		inspects | |b|    [at l.403]
-//│ │ > │ │ > │ │ │ │ │ ! exprOrIf		consumes | |    [at l.405]
-//│ │ > │ │ > │ │ │ │ │ @ exprOrIf(18,true)    [at l.406]
-//│ │ > │ │ > │ │ │ │ │ │ ? exprOrIf		inspects |b|    [at l.403]
-//│ │ > │ │ > │ │ │ │ │ │ ! exprOrIf		consumes |b|    [at l.419]
-//│ │ > │ │ > │ │ │ │ │ │ @ exprCont(18,`b`,false)    [at l.420]
-//│ │ > │ │ > │ │ │ │ │ │ │ ? exprCont		inspects ||    [at l.571]
-//│ │ > │ │ > │ │ │ │ │ │ = Right(b)
-//│ │ > │ │ > │ │ │ │ │ = Right(b)
-//│ │ > │ │ > │ │ │ │ = Right(b)
-//│ │ > │ │ > │ │ │ │ @ exprCont(0,`+ (a,) (b,)`,false)    [at l.588]
-//│ │ > │ │ > │ │ │ │ │ ? exprCont		inspects ||    [at l.571]
-//│ │ > │ │ > │ │ │ │ = Right(+ (a,) (b,))
-//│ │ > │ │ > │ │ │ = Right(+ (a,) (b,))
-//│ │ > │ │ > │ │ = Right(+ (a,) (b,))
-//│ │ > │ │ > │ = Right(+ (a,) (b,))
-//│ │ > │ │ > = + (a,) (b,)
-//│ │ > │ │ > ? concludeWith		inspects ||    [at l.71]
-//│ │ > │ │ > Concluded with + (a,) (b,)
-//│ │ > │ │ @ exprCont(0,`Unquote' + (a,) (b,) '`,false)    [at l.446]
-//│ │ > │ │ │ ? exprCont		inspects | |+| |10|    [at l.571]
-//│ │ > │ │ │ ! exprCont		consumes | |    [at l.596]
-//│ │ > │ │ │ @ exprCont(0,`Unquote' + (a,) (b,) '`,false)    [at l.597]
-//│ │ > │ │ │ │ ? exprCont		inspects |+| |10|    [at l.571]
-//│ │ > │ │ │ │ ! exprCont		consumes |+|    [at l.573]
-//│ │ > │ │ │ │ @ exprOrIf(18,true)    [at l.576]
-//│ │ > │ │ │ │ │ ? exprOrIf		inspects | |10|    [at l.403]
-//│ │ > │ │ │ │ │ ! exprOrIf		consumes | |    [at l.405]
-//│ │ > │ │ │ │ │ @ exprOrIf(18,true)    [at l.406]
-//│ │ > │ │ │ │ │ │ ? exprOrIf		inspects |10|    [at l.403]
-//│ │ > │ │ │ │ │ │ ! exprOrIf		consumes |10|    [at l.416]
-//│ │ > │ │ │ │ │ │ @ exprCont(18,`10`,false)    [at l.417]
-//│ │ > │ │ │ │ │ │ │ ? exprCont		inspects ||    [at l.571]
-//│ │ > │ │ │ │ │ │ = Right(10)
-//│ │ > │ │ │ │ │ = Right(10)
-//│ │ > │ │ │ │ = Right(10)
-//│ │ > │ │ │ │ @ exprCont(0,`+ (Unquote' + (a,) (b,) ',) (10,)`,false)    [at l.588]
-//│ │ > │ │ │ │ │ ? exprCont		inspects ||    [at l.571]
-//│ │ > │ │ │ │ = Right(+ (Unquote' + (a,) (b,) ',) (10,))
-//│ │ > │ │ │ = Right(+ (Unquote' + (a,) (b,) ',) (10,))
-//│ │ > │ │ = Right(+ (Unquote' + (a,) (b,) ',) (10,))
-//│ │ > │ = Right(+ (Unquote' + (a,) (b,) ',) (10,))
-//│ │ > = + (Unquote' + (a,) (b,) ',) (10,)
-//│ │ > ? concludeWith		inspects ||    [at l.71]
-//│ │ > Concluded with + (Unquote' + (a,) (b,) ',) (10,)
-//│ = Right(Quoted' + (Unquote' + (a,) (b,) ',) (10,) ')
-//│ ? block		inspects ||    [at l.360]
-//│ ? parseAll		inspects ||    [at l.60]
-//│ Parsed: {Quoted' + (Unquote' + (a,) (b,) ',) (10,) '}
-//│ Parsed: 
-
-:dp
-type A = Code[int]
-//│ |#type| |A| |#=| |Code|[|int|]|
-//│ ? block		inspects |#type| |A| |#=|...    [at l.238]
-//│ ! t		consumes |#type|    [at l.245]
-//│ ? yeetSpaces		inspects | |A| |#=| |...    [at l.367]
-//│ ! yeetSpaces		consumes | |    [at l.367]
-//│ ! x$16		consumes |A|    [at l.255]
-//│ ? yeetSpaces		inspects | |#=| |Code|[|int|]|    [at l.367]
-//│ ! yeetSpaces		consumes | |    [at l.367]
-//│ ? yeetSpaces		inspects |#=| |Code|[|int|]|    [at l.367]
-//│ ? yeetSpaces		inspects |#=| |Code|[|int|]|    [at l.367]
-//│ ! parents		consumes |#=|    [at l.285]
-//│ @ expr(0,true)    [at l.286]
-//│ │ @ exprOrIf(0,true)    [at l.391]
-//│ │ │ ? exprOrIf		inspects | |Code|[|int|]|    [at l.403]
-//│ │ │ ! exprOrIf		consumes | |    [at l.405]
-//│ │ │ @ exprOrIf(0,true)    [at l.406]
-//│ │ │ │ ? exprOrIf		inspects |Code|[|int|]|    [at l.403]
-//│ │ │ │ ! exprOrIf		consumes |Code|    [at l.419]
-//│ │ │ │ @ exprCont(0,`Code`,false)    [at l.420]
-//│ │ │ │ │ ? exprCont		inspects |[|int|]|    [at l.571]
-//│ │ │ │ │ ! exprCont		consumes |[|int|]|    [at l.686]
-//│ │ │ │ │ > @ expr(0,true)    [at l.687]
-//│ │ │ │ │ > │ @ exprOrIf(0,true)    [at l.391]
-//│ │ │ │ │ > │ │ ? exprOrIf		inspects |int|    [at l.403]
-//│ │ │ │ │ > │ │ ! exprOrIf		consumes |int|    [at l.419]
-//│ │ │ │ │ > │ │ @ exprCont(0,`int`,false)    [at l.420]
-//│ │ │ │ │ > │ │ │ ? exprCont		inspects ||    [at l.571]
-//│ │ │ │ │ > │ │ = Right(int)
-//│ │ │ │ │ > │ = Right(int)
-//│ │ │ │ │ > = int
-//│ │ │ │ │ > ? concludeWith		inspects ||    [at l.71]
-//│ │ │ │ │ > Concluded with int
-//│ │ │ │ │ @ exprCont(0,`(Code)[int]`,false)    [at l.689]
-//│ │ │ │ │ │ ? exprCont		inspects ||    [at l.571]
-//│ │ │ │ │ = Right((Code)[int])
-//│ │ │ │ = Right((Code)[int])
-//│ │ │ = Right((Code)[int])
-//│ │ = Right((Code)[int])
-//│ = (Code)[int]
-//│ ? yeetSpaces		inspects ||    [at l.367]
-//│ ? yeetSpaces		inspects ||    [at l.367]
-//│ ? block		inspects ||    [at l.360]
-//│ ? parseAll		inspects ||    [at l.60]
-//│ Parsed: {type alias A() = (Code)[int] {}}
-//│ Parsed: 
+:d
+:ne
+:NoJS
+code"let a = 1; ${a + b + b} + 10"
+//│ 0. Typing term Quoted' let a = 1 in + (Unquote' + (+ (a,) (b,),) (b,) ',) (10,) '
+//│ | 0. Typing term let a = 1 in + (Unquote' + (+ (a,) (b,),) (b,) ',) (10,)
+//│ | | 1. Typing term 1
+//│ | | 1. : 1<int,number>
+//│ | | 0. Typing term + (Unquote' + (+ (a,) (b,),) (b,) ',) (10,)
+//│ | | | 0. Typing term + (Unquote' + (+ (a,) (b,),) (b,) ',)
+//│ | | | | 0. Typing term +
+//│ | | | | 0. : (int<number> -> (int<number> -> int<number>))
+//│ | | | | 0. Typing term Unquote' + (+ (a,) (b,),) (b,) ',
+//│ | | | | | 0. Typing term Unquote' + (+ (a,) (b,),) (b,) '
+//│ | | | | | | 0. Typing term + (+ (a,) (b,),) (b,)
+//│ | | | | | | | 0. Typing term + (+ (a,) (b,),)
+//│ | | | | | | | | 0. Typing term +
+//│ | | | | | | | | 0. : (int<number> -> (int<number> -> int<number>))
+//│ | | | | | | | | 0. Typing term + (a,) (b,),
+//│ | | | | | | | | | 0. Typing term + (a,) (b,)
+//│ | | | | | | | | | | 0. Typing term + (a,)
+//│ | | | | | | | | | | | 0. Typing term +
+//│ | | | | | | | | | | | 0. : (int<number> -> (int<number> -> int<number>))
+//│ | | | | | | | | | | | 0. Typing term a,
+//│ | | | | | | | | | | | | 0. Typing term a
+//│ | | | | | | | | | | | | 0. : 1<int,number>
+//│ | | | | | | | | | | | 0. : (1<int,number>,)
+//│ | | | | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (1<int,number> -> α29)
+//│ | | | | | | | | | | |   where 
+//│ | | | | | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (1<int,number> -> α29)    (0)
+//│ | | | | | | | | | | | | C (1<int,number>,) <! (int<number>,)    (1)
+//│ | | | | | | | | | | | | C (int<number> -> int<number>) <! α29    (1)
+//│ | | | | | | | | | | 0. : α29
+//│ | | | | | | | | | | 0. Typing term b,
+//│ | | | | | | | | | | | 0. Typing term b
+//│ | | | | | | | | | | | | free: b
+//│ | | | | | | | | | | | 0. : b.type30
+//│ | | | | | | | | | | 0. : (b.type30,)
+//│ | | | | | | | | | | CONSTRAIN α29 <! (b.type30 -> α31)
+//│ | | | | | | | | | |   where 
+//│ 		α29 :> (int<number> -> int<number>)
+//│ | | | | | | | | | | C α29 <! (b.type30 -> α31)    (0)
+//│ | | | | | | | | | | | C (int<number> -> int<number>) <! (b.type30 -> α31)    (1)
+//│ | | | | | | | | | | | | C (b.type30,) <! (int<number>,)    (2)
+//│ | | | | | | | | | | | | | C b.type30 <! int<number>    (3)
+//│ | | | | | | | | | | | | C int<number> <! α31    (4)
+//│ | | | | | | | | | 0. : α31
+//│ | | | | | | | | 0. : (α31,)
+//│ | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α31 -> α32)
+//│ | | | | | | | |   where 
+//│ 		α31 :> int<number>
+//│ | | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (α31 -> α32)    (0)
+//│ | | | | | | | | | C (α31,) <! (int<number>,)    (1)
+//│ | | | | | | | | | | C α31 <! int<number>    (2)
+//│ | | | | | | | | | | | C int<number> <! int<number>    (3)
+//│ | | | | | | | | | C (int<number> -> int<number>) <! α32    (3)
+//│ | | | | | | | 0. : α32
+//│ | | | | | | | 0. Typing term b,
+//│ | | | | | | | | 0. Typing term b
+//│ | | | | | | | | 0. : b.type30
+//│ | | | | | | | 0. : (b.type30,)
+//│ | | | | | | | CONSTRAIN α32 <! (b.type30 -> α33)
+//│ | | | | | | |   where 
+//│ 		b.type30 <: int<number>
+//│ 		α32 :> (int<number> -> int<number>)
+//│ | | | | | | | C α32 <! (b.type30 -> α33)    (0)
+//│ | | | | | | | | C (int<number> -> int<number>) <! (b.type30 -> α33)    (1)
+//│ | | | | | | | | | C (b.type30,) <! (int<number>,)    (2)
+//│ | | | | | | | | | C int<number> <! α33    (2)
+//│ | | | | | | 0. : α33
+//│ | | | | | 0. : $[α33]
+//│ | | | | 0. : ($[α33],)
+//│ | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! ($[α33] -> α34)
+//│ | | | |   where 
+//│ 		α33 :> int<number>
+//│ | | | | C (int<number> -> (int<number> -> int<number>)) <! ($[α33] -> α34)    (0)
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: $
+//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
+//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$less$colon$less(TyperHelpers.scala:460)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$less$colon$less$(TyperHelpers.scala:396)
+//│ 	at: mlscript.TyperDatatypes$SimpleType.$less$colon$less(TyperDatatypes.scala:81)
+//│ 	at: mlscript.TyperDatatypes$FieldType.$less$colon$less(TyperDatatypes.scala:322)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$anonfun$$less$colon$less$2(TyperHelpers.scala:415)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$anonfun$$less$colon$less$2$adapted(TyperHelpers.scala:414)
+//│ 	at: scala.collection.LazyZip2.forall(LazyZipOps.scala:106)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$less$colon$less(TyperHelpers.scala:414)
