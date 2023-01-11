@@ -1,5 +1,63 @@
 :NewParser
-:d 
+:dp
+code"a + b"
+//│ |code"|a| |+| |b|"|
+//│ ? block		inspects |code"|a| |+| |b|"|    [at l.238]
+//│ @ exprOrIf(0,false)    [at l.358]
+//│ │ ? exprOrIf		inspects |code"|a| |+| |b|"|    [at l.403]
+//│ │ ! exprOrIf		consumes |code"|a| |+| |b|"|    [at l.436]
+//│ │ > @ expr(0,true)    [at l.437]
+//│ │ > │ @ exprOrIf(0,true)    [at l.391]
+//│ │ > │ │ ? exprOrIf		inspects |a| |+| |b|    [at l.403]
+//│ │ > │ │ ! exprOrIf		consumes |a|    [at l.419]
+//│ │ > │ │ @ exprCont(0,`a`,false)    [at l.420]
+//│ │ > │ │ │ ? exprCont		inspects | |+| |b|    [at l.571]
+//│ │ > │ │ │ ! exprCont		consumes | |    [at l.596]
+//│ │ > │ │ │ @ exprCont(0,`a`,false)    [at l.597]
+//│ │ > │ │ │ │ ? exprCont		inspects |+| |b|    [at l.571]
+//│ │ > │ │ │ │ ! exprCont		consumes |+|    [at l.573]
+//│ │ > │ │ │ │ @ exprOrIf(18,true)    [at l.576]
+//│ │ > │ │ │ │ │ ? exprOrIf		inspects | |b|    [at l.403]
+//│ │ > │ │ │ │ │ ! exprOrIf		consumes | |    [at l.405]
+//│ │ > │ │ │ │ │ @ exprOrIf(18,true)    [at l.406]
+//│ │ > │ │ │ │ │ │ ? exprOrIf		inspects |b|    [at l.403]
+//│ │ > │ │ │ │ │ │ ! exprOrIf		consumes |b|    [at l.419]
+//│ │ > │ │ │ │ │ │ @ exprCont(18,`b`,false)    [at l.420]
+//│ │ > │ │ │ │ │ │ │ ? exprCont		inspects ||    [at l.571]
+//│ │ > │ │ │ │ │ │ = Right(b)
+//│ │ > │ │ │ │ │ = Right(b)
+//│ │ > │ │ │ │ = Right(b)
+//│ │ > │ │ │ │ @ exprCont(0,`+ (a,) (b,)`,false)    [at l.588]
+//│ │ > │ │ │ │ │ ? exprCont		inspects ||    [at l.571]
+//│ │ > │ │ │ │ = Right(+ (a,) (b,))
+//│ │ > │ │ │ = Right(+ (a,) (b,))
+//│ │ > │ │ = Right(+ (a,) (b,))
+//│ │ > │ = Right(+ (a,) (b,))
+//│ │ > = + (a,) (b,)
+//│ │ > ? concludeWith		inspects ||    [at l.71]
+//│ │ > Concluded with + (a,) (b,)
+//│ = Right(Quoted' + (a,) (b,) ')
+//│ ? block		inspects ||    [at l.360]
+//│ ? parseAll		inspects ||    [at l.60]
+//│ Parsed: Quoted' + (a,) (b,) ';
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.3: 	code"a + b"
+//│ ║       	     ^^^
+//│ ╟── reference of type `anything` is not an instance of type `int`
+//│ ║  l.3: 	code"a + b"
+//│ ╙──     	     ^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.3: 	code"a + b"
+//│ ║       	     ^^^^^
+//│ ╟── reference of type `anything` is not an instance of type `int`
+//│ ║  l.3: 	code"a + b"
+//│ ╙──     	         ^
+//│ res: Code
+//│ Code generation crashed:
+//│   scala.MatchError: Quoted' + (a,) (b,) ' (of class mlscript.Quoted)
+
+:NewParser
+:d
 :ne
 :NoJS
 code"${a}"
@@ -15,58 +73,125 @@ code"${a}"
 //│ res: code & {Code#T <: error}
 
 
-// Test case: unquoted syntax
-// 
-// Description: parsing unquoted syntax
+:NewParser
+:ParseOnly
+:dp
+code"${a + b} + 10"
+//│ |code"|${|a| |+| |b|}| |+| |10|"|
+//│ ? block		inspects |code"|${|a| |+| |b|}| |+| |10|"|    [at l.238]
+//│ @ exprOrIf(0,false)    [at l.358]
+//│ │ ? exprOrIf		inspects |code"|${|a| |+| |b|}| |+| |10|"|    [at l.403]
+//│ │ ! exprOrIf		consumes |code"|${|a| |+| |b|}| |+| |10|"|    [at l.436]
+//│ │ > @ expr(0,true)    [at l.437]
+//│ │ > │ @ exprOrIf(0,true)    [at l.391]
+//│ │ > │ │ ? exprOrIf		inspects |${|a| |+| |b|}| |+| |10|    [at l.403]
+//│ │ > │ │ ! exprOrIf		consumes |${|a| |+| |b|}|    [at l.440]
+//│ │ > │ │ > @ expr(0,true)    [at l.441]
+//│ │ > │ │ > │ @ exprOrIf(0,true)    [at l.391]
+//│ │ > │ │ > │ │ ? exprOrIf		inspects |a| |+| |b|    [at l.403]
+//│ │ > │ │ > │ │ ! exprOrIf		consumes |a|    [at l.419]
+//│ │ > │ │ > │ │ @ exprCont(0,`a`,false)    [at l.420]
+//│ │ > │ │ > │ │ │ ? exprCont		inspects | |+| |b|    [at l.571]
+//│ │ > │ │ > │ │ │ ! exprCont		consumes | |    [at l.596]
+//│ │ > │ │ > │ │ │ @ exprCont(0,`a`,false)    [at l.597]
+//│ │ > │ │ > │ │ │ │ ? exprCont		inspects |+| |b|    [at l.571]
+//│ │ > │ │ > │ │ │ │ ! exprCont		consumes |+|    [at l.573]
+//│ │ > │ │ > │ │ │ │ @ exprOrIf(18,true)    [at l.576]
+//│ │ > │ │ > │ │ │ │ │ ? exprOrIf		inspects | |b|    [at l.403]
+//│ │ > │ │ > │ │ │ │ │ ! exprOrIf		consumes | |    [at l.405]
+//│ │ > │ │ > │ │ │ │ │ @ exprOrIf(18,true)    [at l.406]
+//│ │ > │ │ > │ │ │ │ │ │ ? exprOrIf		inspects |b|    [at l.403]
+//│ │ > │ │ > │ │ │ │ │ │ ! exprOrIf		consumes |b|    [at l.419]
+//│ │ > │ │ > │ │ │ │ │ │ @ exprCont(18,`b`,false)    [at l.420]
+//│ │ > │ │ > │ │ │ │ │ │ │ ? exprCont		inspects ||    [at l.571]
+//│ │ > │ │ > │ │ │ │ │ │ = Right(b)
+//│ │ > │ │ > │ │ │ │ │ = Right(b)
+//│ │ > │ │ > │ │ │ │ = Right(b)
+//│ │ > │ │ > │ │ │ │ @ exprCont(0,`+ (a,) (b,)`,false)    [at l.588]
+//│ │ > │ │ > │ │ │ │ │ ? exprCont		inspects ||    [at l.571]
+//│ │ > │ │ > │ │ │ │ = Right(+ (a,) (b,))
+//│ │ > │ │ > │ │ │ = Right(+ (a,) (b,))
+//│ │ > │ │ > │ │ = Right(+ (a,) (b,))
+//│ │ > │ │ > │ = Right(+ (a,) (b,))
+//│ │ > │ │ > = + (a,) (b,)
+//│ │ > │ │ > ? concludeWith		inspects ||    [at l.71]
+//│ │ > │ │ > Concluded with + (a,) (b,)
+//│ │ > │ │ @ exprCont(0,`Unquote' + (a,) (b,) '`,false)    [at l.446]
+//│ │ > │ │ │ ? exprCont		inspects | |+| |10|    [at l.571]
+//│ │ > │ │ │ ! exprCont		consumes | |    [at l.596]
+//│ │ > │ │ │ @ exprCont(0,`Unquote' + (a,) (b,) '`,false)    [at l.597]
+//│ │ > │ │ │ │ ? exprCont		inspects |+| |10|    [at l.571]
+//│ │ > │ │ │ │ ! exprCont		consumes |+|    [at l.573]
+//│ │ > │ │ │ │ @ exprOrIf(18,true)    [at l.576]
+//│ │ > │ │ │ │ │ ? exprOrIf		inspects | |10|    [at l.403]
+//│ │ > │ │ │ │ │ ! exprOrIf		consumes | |    [at l.405]
+//│ │ > │ │ │ │ │ @ exprOrIf(18,true)    [at l.406]
+//│ │ > │ │ │ │ │ │ ? exprOrIf		inspects |10|    [at l.403]
+//│ │ > │ │ │ │ │ │ ! exprOrIf		consumes |10|    [at l.416]
+//│ │ > │ │ │ │ │ │ @ exprCont(18,`10`,false)    [at l.417]
+//│ │ > │ │ │ │ │ │ │ ? exprCont		inspects ||    [at l.571]
+//│ │ > │ │ │ │ │ │ = Right(10)
+//│ │ > │ │ │ │ │ = Right(10)
+//│ │ > │ │ │ │ = Right(10)
+//│ │ > │ │ │ │ @ exprCont(0,`+ (Unquote' + (a,) (b,) ',) (10,)`,false)    [at l.588]
+//│ │ > │ │ │ │ │ ? exprCont		inspects ||    [at l.571]
+//│ │ > │ │ │ │ = Right(+ (Unquote' + (a,) (b,) ',) (10,))
+//│ │ > │ │ │ = Right(+ (Unquote' + (a,) (b,) ',) (10,))
+//│ │ > │ │ = Right(+ (Unquote' + (a,) (b,) ',) (10,))
+//│ │ > │ = Right(+ (Unquote' + (a,) (b,) ',) (10,))
+//│ │ > = + (Unquote' + (a,) (b,) ',) (10,)
+//│ │ > ? concludeWith		inspects ||    [at l.71]
+//│ │ > Concluded with + (Unquote' + (a,) (b,) ',) (10,)
+//│ = Right(Quoted' + (Unquote' + (a,) (b,) ',) (10,) ')
+//│ ? block		inspects ||    [at l.360]
+//│ ? parseAll		inspects ||    [at l.60]
+//│ Parsed: {Quoted' + (Unquote' + (a,) (b,) ',) (10,) '}
+//│ Parsed: 
 
-
-// Test case: track function free variable
-// 
-// Description: track free variable x
-
-
-
-:d 
-:ne
-:NoJS
-code"(x) => x + 1"
-//│ 0. Typing term Quoted' x, => + (x,) (1,) '
-//│ | 0. Typing term x, => + (x,) (1,)
-//│ | | 0. Typing pattern x,
-//│ | | | 0. Typing pattern x
-//│ | | | 0. : α24
-//│ | | 0. : (α24,)
-//│ | | 0. Typing term + (x,) (1,)
-//│ | | | 0. Typing term + (x,)
-//│ | | | | 0. Typing term +
-//│ | | | | 0. : (int<number> -> (int<number> -> int<number>))
-//│ | | | | 0. Typing term x,
-//│ | | | | | 0. Typing term x
-//│ | | | | | 0. : α24
-//│ | | | | 0. : (α24,)
-//│ | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α24 -> α25)
-//│ | | | |   where 
-//│ | | | | C (int<number> -> (int<number> -> int<number>)) <! (α24 -> α25)    (0)
-//│ | | | | | C (α24,) <! (int<number>,)    (1)
-//│ | | | | | | C α24 <! int<number>    (2)
-//│ | | | | | C (int<number> -> int<number>) <! α25    (3)
-//│ | | | 0. : α25
-//│ | | | 0. Typing term 1,
-//│ | | | | 0. Typing term 1
-//│ | | | | 0. : 1<int,number>
-//│ | | | 0. : (1<int,number>,)
-//│ | | | CONSTRAIN α25 <! (1<int,number> -> α26)
-//│ | | |   where 
-//│ 		α25 :> (int<number> -> int<number>)
-//│ | | | C α25 <! (1<int,number> -> α26)    (0)
-//│ | | | | C (int<number> -> int<number>) <! (1<int,number> -> α26)    (1)
-//│ | | | | | C (1<int,number>,) <! (int<number>,)    (2)
-//│ | | | | | C int<number> <! α26    (2)
-//│ | | 0. : α26
-//│ | 0. : (α24 -> α26)
-//│ 0. : Code[(α24 -> α26)]
-//│ ⬤ Typed as: Code[(α24 -> α26)]
-//│  where: 
-//│ 		α24 <: int<number>
-//│ 		α26 :> int<number>
-//│ res: code & {Code#T <: int -> int}
+:dp
+type A = Code[int]
+//│ |#type| |A| |#=| |Code|[|int|]|
+//│ ? block		inspects |#type| |A| |#=|...    [at l.238]
+//│ ! t		consumes |#type|    [at l.245]
+//│ ? yeetSpaces		inspects | |A| |#=| |...    [at l.367]
+//│ ! yeetSpaces		consumes | |    [at l.367]
+//│ ! x$16		consumes |A|    [at l.255]
+//│ ? yeetSpaces		inspects | |#=| |Code|[|int|]|    [at l.367]
+//│ ! yeetSpaces		consumes | |    [at l.367]
+//│ ? yeetSpaces		inspects |#=| |Code|[|int|]|    [at l.367]
+//│ ? yeetSpaces		inspects |#=| |Code|[|int|]|    [at l.367]
+//│ ! parents		consumes |#=|    [at l.285]
+//│ @ expr(0,true)    [at l.286]
+//│ │ @ exprOrIf(0,true)    [at l.391]
+//│ │ │ ? exprOrIf		inspects | |Code|[|int|]|    [at l.403]
+//│ │ │ ! exprOrIf		consumes | |    [at l.405]
+//│ │ │ @ exprOrIf(0,true)    [at l.406]
+//│ │ │ │ ? exprOrIf		inspects |Code|[|int|]|    [at l.403]
+//│ │ │ │ ! exprOrIf		consumes |Code|    [at l.419]
+//│ │ │ │ @ exprCont(0,`Code`,false)    [at l.420]
+//│ │ │ │ │ ? exprCont		inspects |[|int|]|    [at l.571]
+//│ │ │ │ │ ! exprCont		consumes |[|int|]|    [at l.686]
+//│ │ │ │ │ > @ expr(0,true)    [at l.687]
+//│ │ │ │ │ > │ @ exprOrIf(0,true)    [at l.391]
+//│ │ │ │ │ > │ │ ? exprOrIf		inspects |int|    [at l.403]
+//│ │ │ │ │ > │ │ ! exprOrIf		consumes |int|    [at l.419]
+//│ │ │ │ │ > │ │ @ exprCont(0,`int`,false)    [at l.420]
+//│ │ │ │ │ > │ │ │ ? exprCont		inspects ||    [at l.571]
+//│ │ │ │ │ > │ │ = Right(int)
+//│ │ │ │ │ > │ = Right(int)
+//│ │ │ │ │ > = int
+//│ │ │ │ │ > ? concludeWith		inspects ||    [at l.71]
+//│ │ │ │ │ > Concluded with int
+//│ │ │ │ │ @ exprCont(0,`(Code)[int]`,false)    [at l.689]
+//│ │ │ │ │ │ ? exprCont		inspects ||    [at l.571]
+//│ │ │ │ │ = Right((Code)[int])
+//│ │ │ │ = Right((Code)[int])
+//│ │ │ = Right((Code)[int])
+//│ │ = Right((Code)[int])
+//│ = (Code)[int]
+//│ ? yeetSpaces		inspects ||    [at l.367]
+//│ ? yeetSpaces		inspects ||    [at l.367]
+//│ ? block		inspects ||    [at l.360]
+//│ ? parseAll		inspects ||    [at l.60]
+//│ Parsed: {type alias A() = (Code)[int] {}}
+//│ Parsed: 

@@ -31,12 +31,17 @@ code"foo(123) + 1"
 //│   scala.MatchError: Quoted' + (foo (123,),) (1,) ' (of class mlscript.Quoted)
 
 code"10 + ${qq_int}"
-//│ ╔══[ERROR] identifier not found: qq_int
-//│ ║  l.33: 	code"10 + ${qq_int}"
-//│ ╙──      	          ^^^^^^^^^
-//│ res: code & {Code#T <: int}
-//│ Code generation crashed:
-//│   scala.MatchError: Quoted' + (10,) (qq_int,) ' (of class mlscript.Quoted)
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: $
+//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
+//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$less$colon$less(TyperHelpers.scala:460)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$less$colon$less$(TyperHelpers.scala:396)
+//│ 	at: mlscript.TyperDatatypes$SimpleType.$less$colon$less(TyperDatatypes.scala:81)
+//│ 	at: mlscript.TyperDatatypes$FieldType.$less$colon$less(TyperDatatypes.scala:322)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$anonfun$$less$colon$less$2(TyperHelpers.scala:415)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$anonfun$$less$colon$less$2$adapted(TyperHelpers.scala:414)
+//│ 	at: scala.collection.LazyZip2.forall(LazyZipOps.scala:106)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$less$colon$less(TyperHelpers.scala:414)
 
 "x"
 //│ res: "x"
@@ -44,24 +49,24 @@ code"10 + ${qq_int}"
 
 // The inner code should have type Code<int, "x" | "y">
 code"x => y => 15 + ${   code"x + y"   }"
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.50: 	code"x => y => 15 + ${   code"x + y"   }"
-//│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `code & {Code#T <: ?a}` is not an instance of type `int`
-//│ res: code & {Code#T <: int -> int -> (error | int)}
-//│ Code generation crashed:
-//│   scala.MatchError: Quoted' x, => y, => + (15,) (Quoted' + (x,) (y,) ',) ' (of class mlscript.Quoted)
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: $
+//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
+//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$less$colon$less(TyperHelpers.scala:460)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$less$colon$less$(TyperHelpers.scala:396)
+//│ 	at: mlscript.TyperDatatypes$SimpleType.$less$colon$less(TyperDatatypes.scala:81)
+//│ 	at: mlscript.TyperDatatypes$FieldType.$less$colon$less(TyperDatatypes.scala:322)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$anonfun$$less$colon$less$2(TyperHelpers.scala:415)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$anonfun$$less$colon$less$2$adapted(TyperHelpers.scala:414)
+//│ 	at: scala.collection.LazyZip2.forall(LazyZipOps.scala:106)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$less$colon$less(TyperHelpers.scala:414)
 
 // FIXME
 qq_int : Code<int>
-//│ ╔══[PARSE ERROR] Unexpected ':' keyword in expression position
-//│ ║  l.60: 	qq_int : Code<int>
-//│ ╙──      	       ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.60: 	qq_int : Code<int>
-//│ ╙──      	^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] identifier not found: qq_int
-//│ ║  l.60: 	qq_int : Code<int>
+//│ ║  l.65: 	qq_int : Code<int>
 //│ ╙──      	^^^^^^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ res: code & {Code#T <: int}
+//│ Code generation encountered an error:
+//│   unresolved symbol qq_int
 

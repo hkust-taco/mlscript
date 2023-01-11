@@ -118,7 +118,7 @@ def eval_lambda eval_rec subst v = case v of {
     Abs { name = new_name;
           body = eval_rec (Cons (Tuple v.name (Var { name = new_name })) subst) v.body }
   }
-//│ eval_lambda: (((Cons[('a, 'rhs | Var,) | 'A] with {head: ('a, 'rhs | Var,), tail: Nil | 'tail}) | 'tail) -> 'body -> ('rhs & 'result & ((Abs[?] with {body: 'body, name: 'a}) | 'lhs & ~#Abs))) -> ('b & List['A] & 'tail) -> ((Abs[?] with {body: 'body, name: 'a}) | (App[?] with {lhs: 'body, rhs: 'body}) | Var & 'result) -> (Abs['rhs] | (App['rhs] with {lhs: 'lhs, rhs: 'rhs}) | 'result)
+//│ eval_lambda: (((Cons[('a, 'rhs | Var,) | 'A] with {head: ('a, 'rhs | Var,), tail: Nil | 'tail}) | 'tail) -> 'body -> ('result & 'rhs & ((Abs[?] with {body: 'body, name: 'a}) | 'lhs & ~#Abs))) -> ('b & List['A] & 'tail) -> ((Abs[?] with {body: 'body, name: 'a}) | (App[?] with {lhs: 'body, rhs: 'body}) | Var & 'result) -> (Abs['rhs] | (App['rhs] with {lhs: 'lhs, rhs: 'rhs}) | 'result)
 //│   where
 //│     'b <: (Cons[?] with {head: {_1: string, _2: 'result}, tail: 'b}) | Nil
 //│            = <no result>
