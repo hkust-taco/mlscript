@@ -1,0 +1,18 @@
+:NewParser
+:ge
+
+let x = code"1 + 1"
+//│ x: code & {Code#T <: int}
+//│  = [ 'App', '+', [ '1' ], [ '1' ] ]
+
+run(x)
+//│ res: string
+//│    = 'program_str'
+
+let y = code"1"
+//│ y: code & {Code#T <: 1}
+//│  = [ '1' ]
+
+run(y)
+//│ res: string
+//│    = 'program_str'
