@@ -4,6 +4,7 @@ import mlscript.utils._, shorthands._, algorithms._
 import mlscript.codegen.Helpers._
 import mlscript.codegen._
 import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.HashMap 
 import mlscript.{JSField, JSLit}
 import scala.collection.mutable.{Set => MutSet}
 import scala.Symbol
@@ -248,7 +249,10 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case New(_, TypingUnit(_)) =>
       throw CodeGenError("custom class body is not supported yet")
     case Quoted(body) =>
-      translateQuoted(body)
+      val variable_mapping = HashMap("true" -> "true", "false" -> "false")
+      translateQuoted(body, variable_mapping)
+    case Unquoted(body) =>
+      throw CodeGenError("unquotes should only be in quasiquotes")
     case _: Bind | _: Test | If(_, _) | TyApp(_, _) | _: Splc =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
@@ -464,57 +468,79 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   /**
    * Translate body of quasiquotes (Quoted) to S-expression in JSArray
    */
-  private def translateaQuoted(body: Term)(implicit scope: Scope): JSExpr = body match {
-    // Var
-    case Var(name) => // symbol for Var, lexical(?) name, runtime name like JSExpr(name + name.hashCode + "q") (?)
-      JSArray(Ls(JSExpr("&"), JSExpr(name)))
-
-    // App
+  private def translateQuoted(body: Term, var_map: HashMap[Str, Str])(implicit scope: Scope): JSExpr = body match { // TODO: remove implicit argument for scope
+    case Var(name) =>
+     /**
+      if (var_map contains name) {
+        JSArray(Ls(JSExpr("Var"), JSExpr(var_map(name)))) 
+      } else {
+          val symbol_name = s"${name}_${var_map.size}"
+          var_map += (name -> symbol_name)
+          JSArray(Ls(JSExpr("New_Var"), JSExpr(s"const ${symbol_name} = Symbol('${name}')"), JSExpr(name), JSExpr(symbol_name)))
+      }
+    **/
+      JSArray(Ls(JSExpr("Var"), JSExpr(name)))
     case App(App(Var(op), Tup((N -> Fld(_, _, lhs)) :: Nil)), Tup((N -> Fld(_, _, rhs)) :: Nil))
       if JSBinary.operators contains op =>
-        JSArray(Ls(JSExpr("@"), JSExpr(op), translateQuoted(lhs), translateQuoted(rhs)))
+        JSArray(Ls(JSExpr("App"), JSExpr(op), translateQuoted(lhs, var_map), translateQuoted(rhs, var_map)))
+    case App(trm, parameters @ Tup(args)) =>
+      val callee = trm match {
+        case Var(nme) => JSExpr(nme)
+        case _ => translateQuoted(trm, var_map)
+      }
+      JSArray(Ls(JSExpr("Fun"), callee, translateQuoted(parameters, var_map)))
 
-    // Lit
+      /**
+      val callee = trm match {
+        case Var(nme) => translateVar(nme, true)
+        case _ => translateTerm(trm)
+      }
+      callee(args map { case (_, Fld(_, _, arg)) => translateTerm(arg) }: _*)
+      **/
     case IntLit(value) => 
       JSArray(Ls(JSExpr(value.toString)))
     case StrLit(value) =>
-      JSArray(Ls(JSExpr("s"), JSExpr(value)))
+      JSArray(Ls(JSExpr("StrLit"), JSExpr(value)))
     case DecLit(value) =>
       JSArray(Ls(JSExpr(value.toString)))
-
+    case UnitLit(value) => 
+      JSArray(Ls(JSExpr(if (value) "undefined" else "null")))
     case Lam(params, body) =>
-      JSArray(Ls(JSExpr("=>"), translateQuoted(params), translateQuoted(body)))
-      
-    case Tup(fields) => //throw CodeGenError(s"TUPLE with fields: ${fields}")
-      var fields_array = fields map { case (_, Fld(_, _, term)) => translateQuoted(term) }
-      JSArray(JSExpr("#")::fields_array)
-    
-    // Unquoted: TODO consider jumping btw contexts 
-    case Unquoted(body) => 
+      JSArray(Ls(JSExpr("Lam"), translateQuoted(params, var_map), translateQuoted(body, var_map)))
+    case Tup(fields) =>
+      var fields_array = fields map { case (_, Fld(_, _, term)) => translateQuoted(term, var_map) }
+      JSArray(JSExpr("Tup")::fields_array)
+    // Unquoted: TODO: check if this returns proper executed code, need to include context
+    case Unquoted(body) =>
       JSArray(Ls(translateTerm(body)))
-    
-    // If
-    case If(body, els) => throw CodeGenError("WIP: If")
-
-    case Bra(rcd, trm) => throw CodeGenError(s"WIP: Bra with rcd ${rcd}, trm: ${trm}")
-    case Rcd(fields) => throw CodeGenError(s"WIP: Rcd")
-    case Sel(receiver, fieldName) => throw CodeGenError(s"WIP: Sel receiver: ${receiver} fieldName: ${fieldName}")
-    case Let(isRec, name, rhs, body) => throw CodeGenError(s"WIP: Let isRec: ${isRec}, name: ${name}, rhs: ${rhs}, body: ${body} \n BODY: ${translateQuoted(body)}}")
-    case Subs(arr, idx) => throw CodeGenError("WIP: Subs")
-    case Assign(lhs, rhs) => throw CodeGenError("WIP: Assign")
-    case Splc(fields) => throw CodeGenError("WIP: Splc")
-    case New(head, body) => throw CodeGenError("WIP: New")
-    
+    case If(IfThen(condition, branch1), S(branch2)) => // error if no ELSE branch in normal code
+      JSArray(Ls(JSExpr("If"), translateQuoted(condition, var_map), translateQuoted(branch1, var_map), translateQuoted(branch2, var_map)))
+    case Bra(rcd, trm) => 
+      translateQuoted(trm, var_map)
+    case Rcd(fields) => 
+      var fields_array = fields map {case (key @ Var(_), Fld(_, _, term)) => JSArray(Ls(translateQuoted(key, var_map), translateQuoted(term, var_map)))}
+      JSArray(JSExpr("Rcd") :: fields_array)
+    case Sel(receiver, fieldName) => 
+      JSArray(Ls(JSExpr("Sel"), translateQuoted(receiver, var_map), translateQuoted(fieldName, var_map)))
+    case Let(isRec, name, rhs, body) => 
+      JSArray(Ls(JSExpr("Let"), translateQuoted(name, var_map), translateQuoted(rhs, var_map), translateQuoted(body, var_map)))
+    case Subs(arr, idx) => 
+      JSArray(Ls(JSExpr("Subs"), translateQuoted(arr, var_map), translateQuoted(idx, var_map)))
+    case Assign(lhs, rhs) => // TODO: generate test case
+      lhs match {
+        case _: Subs | _: Sel | _: Var =>
+          JSArray(Ls(JSExpr("Assign"), translateQuoted(lhs, var_map), translateQuoted(rhs, var_map)))
+        case _ =>
+          throw CodeGenError(s"illegal assignemnt left-hand side: ${inspect(lhs)}")
+      }
+    // TODO: check Squid
     case Quoted(body) => throw CodeGenError("Quoted directly in quasiquote is not correct syntax (?)")
+    // TODO: Blk, New
     case Blk(stmts) => throw CodeGenError("Blk not supported in quasiquotes... yet")
-    case Asc(_,_) => throw CodeGenError("Asc not supported in quasiquotes")
-    case Bind(_,_) => throw CodeGenError("Bind not supported in quasiquotes")
-    case Test(_,_) => throw CodeGenError("Test not supported in quasiquotes")
-    case With(trm, fields) => throw CodeGenError("With not supported in quasiquotes")
-    case CaseOf(_,_) => throw CodeGenError("CaseOf not supported in quasiquotes")
-    case TyApp(lhs, targs) => throw CodeGenError("TyApp not supported in quasiquotes")
-
-    case _ => throw CodeGenError(s"not supported: ${inspect(body)}")
+    case New(S(head), body) => throw CodeGenError(s"New HEAD ${head} BODY ${body}\n\tNew not supported in quasiquotes... yet")
+    case Asc(_,_) | Bind(_,_) | Test(_,_) | With(_,_) | CaseOf(_,_) | TyApp(_,_) | Splc(_) => 
+      throw CodeGenError(s"${inspect(body)} not supported in quasiquotes")
+    case _ => throw CodeGenError(s"missing implementation: ${inspect(body)}")
   }
 
   /**
