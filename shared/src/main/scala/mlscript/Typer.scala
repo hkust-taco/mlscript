@@ -824,12 +824,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val nestedCtx = ctx.nest
         val body_type = typeTerm(body)(nestedCtx.copy(
           inQuasiquote = true,
-          outerQuoteEnvironments = nestedCtx :: nestedCtx.outerQuoteEnvironments),
+          outerQuoteEnvironments = Some(nestedCtx) :: nestedCtx.outerQuoteEnvironments),
           raise, vars)
         TypeRef(TypeName("Code"), body_type :: Nil)(noProv)
       case Unquoted(body) =>
         val nestedCtx = ctx.nest
-        val body_type = typeTerm(body)(nestedCtx.copy(inUnquoted = true))(noProv)
+        val body_type = typeTerm(body)(nestedCtx.copy(inUnquoted = true), raise)
         body_type
 //        TypeRef(TypeName("Code"), body_type :: Nil)(noProv)
     }
