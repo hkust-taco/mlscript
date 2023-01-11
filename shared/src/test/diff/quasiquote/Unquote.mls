@@ -1,5 +1,6 @@
 :NewParser
 :dp
+:ng
 code"a + b"
 //│ |code"|a| |+| |b|"|
 //│ ? block		inspects |code"|a| |+| |b|"|    [at l.238]
@@ -41,8 +42,6 @@ code"a + b"
 //│ ? parseAll		inspects ||    [at l.60]
 //│ Parsed: Quoted' + (a,) (b,) ';
 //│ res: code & {Code#T <: int}
-//│ Code generation crashed:
-//│   scala.MatchError: Quoted' + (a,) (b,) ' (of class mlscript.Quoted)
 
 :NewParser
 :d
@@ -56,22 +55,12 @@ code"let a = 1; ${a}"
 //│ | | 0. Typing term Unquote' a '
 //│ | | | 0. Typing term a
 //│ | | | 0. : 1<int,number>
-//│ | | 0. : $[1<int,number>]
-//│ | 0. : $[1<int,number>]
-//│ 0. : Code[$[1<int,number>]]
-//│ ⬤ Typed as: Code[$[1<int,number>]]
+//│ | | 0. : 1<int,number>
+//│ | 0. : 1<int,number>
+//│ 0. : Code[1<int,number>]
+//│ ⬤ Typed as: Code[1<int,number>]
 //│  where: 
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: $
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.mapTargs(TyperDatatypes.scala:254)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.childrenPol(TyperHelpers.scala:611)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.childrenPol$(TyperHelpers.scala:594)
-//│ 	at: mlscript.TyperDatatypes$SimpleType.childrenPol(TyperDatatypes.scala:81)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.rec$1(TyperHelpers.scala:636)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.getVarsPol(TyperHelpers.scala:640)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.getVarsPol$(TyperHelpers.scala:616)
-//│ 	at: mlscript.TyperDatatypes$SimpleType.getVarsPol(TyperDatatypes.scala:81)
+//│ res: code & {Code#T <: 1}
 
 
 :NewParser
@@ -145,20 +134,32 @@ code"let a = 1; ${a + b + b} + 10"
 //│ | | | | | | | | | C (b.type30,) <! (int<number>,)    (2)
 //│ | | | | | | | | | C int<number> <! α33    (2)
 //│ | | | | | | 0. : α33
-//│ | | | | | 0. : $[α33]
-//│ | | | | 0. : ($[α33],)
-//│ | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! ($[α33] -> α34)
+//│ | | | | | 0. : α33
+//│ | | | | 0. : (α33,)
+//│ | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α33 -> α34)
 //│ | | | |   where 
 //│ 		α33 :> int<number>
-//│ | | | | C (int<number> -> (int<number> -> int<number>)) <! ($[α33] -> α34)    (0)
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: $
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$less$colon$less(TyperHelpers.scala:460)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$less$colon$less$(TyperHelpers.scala:396)
-//│ 	at: mlscript.TyperDatatypes$SimpleType.$less$colon$less(TyperDatatypes.scala:81)
-//│ 	at: mlscript.TyperDatatypes$FieldType.$less$colon$less(TyperDatatypes.scala:322)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$anonfun$$less$colon$less$2(TyperHelpers.scala:415)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$anonfun$$less$colon$less$2$adapted(TyperHelpers.scala:414)
-//│ 	at: scala.collection.LazyZip2.forall(LazyZipOps.scala:106)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$less$colon$less(TyperHelpers.scala:414)
+//│ | | | | C (int<number> -> (int<number> -> int<number>)) <! (α33 -> α34)    (0)
+//│ | | | | | C (α33,) <! (int<number>,)    (1)
+//│ | | | | | | C α33 <! int<number>    (2)
+//│ | | | | | | | C int<number> <! int<number>    (3)
+//│ | | | | | C (int<number> -> int<number>) <! α34    (3)
+//│ | | | 0. : α34
+//│ | | | 0. Typing term 10,
+//│ | | | | 0. Typing term 10
+//│ | | | | 0. : 10<int,number>
+//│ | | | 0. : (10<int,number>,)
+//│ | | | CONSTRAIN α34 <! (10<int,number> -> α35)
+//│ | | |   where 
+//│ 		α34 :> (int<number> -> int<number>)
+//│ | | | C α34 <! (10<int,number> -> α35)    (0)
+//│ | | | | C (int<number> -> int<number>) <! (10<int,number> -> α35)    (1)
+//│ | | | | | C (10<int,number>,) <! (int<number>,)    (2)
+//│ | | | | | C int<number> <! α35    (2)
+//│ | | 0. : α35
+//│ | 0. : α35
+//│ 0. : Code[α35]
+//│ ⬤ Typed as: Code[α35]
+//│  where: 
+//│ 		α35 :> int<number>
+//│ res: code & {Code#T <: int}

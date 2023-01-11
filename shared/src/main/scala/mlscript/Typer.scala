@@ -195,8 +195,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       val td = TypeDef(Cls, TypeName("Code"), (TypeName("T"), tv) :: Nil, Nil, TopType, Nil, Nil, Set.empty, N, Nil)
       td.tvarVariances = S(MutMap(tv -> VarianceInfo.co))
       td
-    } ::
-      Nil
+    } :: Nil
   val primitiveTypes: Set[Str] =
     builtinTypes.iterator.map(_.nme.name).flatMap(n => n.decapitalize :: n.capitalize :: Nil).toSet
 
@@ -839,8 +838,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           raise, vars)
         TypeRef(TypeName("Code"), body_type :: Nil)(noProv)
       case Unquoted(body) =>
-        val body_type = typeTerm(body)
-        TypeRef(TypeName("$"), body_type :: Nil)(noProv)
+        typeTerm(body)
     }
   }(r => s"$lvl. : ${r}")
 
