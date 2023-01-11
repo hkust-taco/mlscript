@@ -41,7 +41,17 @@ code"a + b"
 //│ ? block		inspects ||    [at l.360]
 //│ ? parseAll		inspects ||    [at l.60]
 //│ Parsed: Quoted' + (a,) (b,) ';
-//│ res: code & {Code#T <: int}
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
+//│ 	at: scala.Predef$.assert(Predef.scala:264)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.$anonfun$mapTargs$3(TyperDatatypes.scala:256)
+//│ 	at: scala.Option.fold(Option.scala:263)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mapTargs(TyperDatatypes.scala:255)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.childrenPol(TyperHelpers.scala:611)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.childrenPol$(TyperHelpers.scala:594)
+//│ 	at: mlscript.TyperDatatypes$SimpleType.childrenPol(TyperDatatypes.scala:81)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.rec$1(TyperHelpers.scala:636)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.getVarsPol(TyperHelpers.scala:640)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.getVarsPol$(TyperHelpers.scala:616)
 
 :NewParser
 :d
@@ -91,75 +101,86 @@ code"let a = 1; ${a + b + b} + 10"
 //│ | | | | | | | | | | | | 0. Typing term a
 //│ | | | | | | | | | | | | 0. : 1<int,number>
 //│ | | | | | | | | | | | 0. : (1<int,number>,)
-//│ | | | | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (1<int,number> -> α29)
+//│ | | | | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (1<int,number> -> α28)
 //│ | | | | | | | | | | |   where 
-//│ | | | | | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (1<int,number> -> α29)    (0)
+//│ | | | | | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (1<int,number> -> α28)    (0)
 //│ | | | | | | | | | | | | C (1<int,number>,) <! (int<number>,)    (1)
-//│ | | | | | | | | | | | | C (int<number> -> int<number>) <! α29    (1)
-//│ | | | | | | | | | | 0. : α29
+//│ | | | | | | | | | | | | C (int<number> -> int<number>) <! α28    (1)
+//│ | | | | | | | | | | 0. : α28
 //│ | | | | | | | | | | 0. Typing term b,
 //│ | | | | | | | | | | | 0. Typing term b
 //│ | | | | | | | | | | | | free: b
-//│ | | | | | | | | | | | 0. : b.type30
-//│ | | | | | | | | | | 0. : (b.type30,)
-//│ | | | | | | | | | | CONSTRAIN α29 <! (b.type30 -> α31)
+//│ | | | | | | | | | | | 0. : b.type29
+//│ | | | | | | | | | | 0. : (b.type29,)
+//│ | | | | | | | | | | CONSTRAIN α28 <! (b.type29 -> α30)
 //│ | | | | | | | | | |   where 
-//│ 		α29 :> (int<number> -> int<number>)
-//│ | | | | | | | | | | C α29 <! (b.type30 -> α31)    (0)
-//│ | | | | | | | | | | | C (int<number> -> int<number>) <! (b.type30 -> α31)    (1)
-//│ | | | | | | | | | | | | C (b.type30,) <! (int<number>,)    (2)
-//│ | | | | | | | | | | | | | C b.type30 <! int<number>    (3)
-//│ | | | | | | | | | | | | C int<number> <! α31    (4)
-//│ | | | | | | | | | 0. : α31
-//│ | | | | | | | | 0. : (α31,)
-//│ | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α31 -> α32)
+//│ 		α28 :> (int<number> -> int<number>)
+//│ | | | | | | | | | | C α28 <! (b.type29 -> α30)    (0)
+//│ | | | | | | | | | | | C (int<number> -> int<number>) <! (b.type29 -> α30)    (1)
+//│ | | | | | | | | | | | | C (b.type29,) <! (int<number>,)    (2)
+//│ | | | | | | | | | | | | | C b.type29 <! int<number>    (3)
+//│ | | | | | | | | | | | | C int<number> <! α30    (4)
+//│ | | | | | | | | | 0. : α30
+//│ | | | | | | | | 0. : (α30,)
+//│ | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α30 -> α31)
 //│ | | | | | | | |   where 
-//│ 		α31 :> int<number>
-//│ | | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (α31 -> α32)    (0)
-//│ | | | | | | | | | C (α31,) <! (int<number>,)    (1)
-//│ | | | | | | | | | | C α31 <! int<number>    (2)
+//│ 		α30 :> int<number>
+//│ | | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (α30 -> α31)    (0)
+//│ | | | | | | | | | C (α30,) <! (int<number>,)    (1)
+//│ | | | | | | | | | | C α30 <! int<number>    (2)
 //│ | | | | | | | | | | | C int<number> <! int<number>    (3)
-//│ | | | | | | | | | C (int<number> -> int<number>) <! α32    (3)
-//│ | | | | | | | 0. : α32
+//│ | | | | | | | | | C (int<number> -> int<number>) <! α31    (3)
+//│ | | | | | | | 0. : α31
 //│ | | | | | | | 0. Typing term b,
 //│ | | | | | | | | 0. Typing term b
-//│ | | | | | | | | 0. : b.type30
-//│ | | | | | | | 0. : (b.type30,)
-//│ | | | | | | | CONSTRAIN α32 <! (b.type30 -> α33)
+//│ | | | | | | | | 0. : b.type29
+//│ | | | | | | | 0. : (b.type29,)
+//│ | | | | | | | CONSTRAIN α31 <! (b.type29 -> α32)
 //│ | | | | | | |   where 
-//│ 		b.type30 <: int<number>
-//│ 		α32 :> (int<number> -> int<number>)
-//│ | | | | | | | C α32 <! (b.type30 -> α33)    (0)
-//│ | | | | | | | | C (int<number> -> int<number>) <! (b.type30 -> α33)    (1)
-//│ | | | | | | | | | C (b.type30,) <! (int<number>,)    (2)
-//│ | | | | | | | | | C int<number> <! α33    (2)
-//│ | | | | | | 0. : α33
-//│ | | | | | 0. : α33
-//│ | | | | 0. : (α33,)
-//│ | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α33 -> α34)
+//│ 		b.type29 <: int<number>
+//│ 		α31 :> (int<number> -> int<number>)
+//│ | | | | | | | C α31 <! (b.type29 -> α32)    (0)
+//│ | | | | | | | | C (int<number> -> int<number>) <! (b.type29 -> α32)    (1)
+//│ | | | | | | | | | C (b.type29,) <! (int<number>,)    (2)
+//│ | | | | | | | | | C int<number> <! α32    (2)
+//│ | | | | | | 0. : α32
+//│ | | | | | 0. : α32
+//│ | | | | 0. : (α32,)
+//│ | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α32 -> α33)
 //│ | | | |   where 
-//│ 		α33 :> int<number>
-//│ | | | | C (int<number> -> (int<number> -> int<number>)) <! (α33 -> α34)    (0)
-//│ | | | | | C (α33,) <! (int<number>,)    (1)
-//│ | | | | | | C α33 <! int<number>    (2)
+//│ 		α32 :> int<number>
+//│ | | | | C (int<number> -> (int<number> -> int<number>)) <! (α32 -> α33)    (0)
+//│ | | | | | C (α32,) <! (int<number>,)    (1)
+//│ | | | | | | C α32 <! int<number>    (2)
 //│ | | | | | | | C int<number> <! int<number>    (3)
-//│ | | | | | C (int<number> -> int<number>) <! α34    (3)
-//│ | | | 0. : α34
+//│ | | | | | C (int<number> -> int<number>) <! α33    (3)
+//│ | | | 0. : α33
 //│ | | | 0. Typing term 10,
 //│ | | | | 0. Typing term 10
 //│ | | | | 0. : 10<int,number>
 //│ | | | 0. : (10<int,number>,)
-//│ | | | CONSTRAIN α34 <! (10<int,number> -> α35)
+//│ | | | CONSTRAIN α33 <! (10<int,number> -> α34)
 //│ | | |   where 
-//│ 		α34 :> (int<number> -> int<number>)
-//│ | | | C α34 <! (10<int,number> -> α35)    (0)
-//│ | | | | C (int<number> -> int<number>) <! (10<int,number> -> α35)    (1)
+//│ 		α33 :> (int<number> -> int<number>)
+//│ | | | C α33 <! (10<int,number> -> α34)    (0)
+//│ | | | | C (int<number> -> int<number>) <! (10<int,number> -> α34)    (1)
 //│ | | | | | C (10<int,number>,) <! (int<number>,)    (2)
-//│ | | | | | C int<number> <! α35    (2)
-//│ | | 0. : α35
-//│ | 0. : α35
-//│ 0. : Code[α35]
-//│ ⬤ Typed as: Code[α35]
+//│ | | | | | C int<number> <! α34    (2)
+//│ | | 0. : α34
+//│ | 0. : α34
+//│ 0. : Code[α34,b.type29]
+//│ ⬤ Typed as: Code[α34,b.type29]
 //│  where: 
-//│ 		α35 :> int<number>
-//│ res: code & {Code#T <: int}
+//│ 		b.type29 <: int<number>
+//│ 		α34 :> int<number>
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
+//│ 	at: scala.Predef$.assert(Predef.scala:264)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.$anonfun$mapTargs$3(TyperDatatypes.scala:256)
+//│ 	at: scala.Option.fold(Option.scala:263)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mapTargs(TyperDatatypes.scala:255)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.childrenPol(TyperHelpers.scala:611)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.childrenPol$(TyperHelpers.scala:594)
+//│ 	at: mlscript.TyperDatatypes$SimpleType.childrenPol(TyperDatatypes.scala:81)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.rec$1(TyperHelpers.scala:636)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.getVarsPol(TyperHelpers.scala:640)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.getVarsPol$(TyperHelpers.scala:616)

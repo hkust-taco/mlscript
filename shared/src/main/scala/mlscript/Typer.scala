@@ -47,8 +47,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                   tyDefs: Map[Str, TypeDef],
                   nuTyDefs: Map[Str, TypedNuTypeDef],
                   inQuasiquote: Boolean,
-                  inUnquoted: Boolean,
                   outerQuoteEnvironments: List[Opt[Ctx]],
+                  var outermostCtx: Opt[Ctx],
+                  outermostFreeVarType: MutSet[SimpleType]
                 ) {
     def +=(b: Str -> TypeInfo): Unit = env += b
 
@@ -91,7 +92,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
 
     def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
 
-    def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, MutMap.empty)
+    def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, MutMap.empty, inQuasiquote = inQuasiquote, outermostFreeVarType = MutSet.empty)
 
     def nextLevel: Ctx = copy(lvl = lvl + 1)
 
@@ -112,8 +113,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       tyDefs = Map.from(builtinTypes.map(t => t.nme.name -> t)),
       nuTyDefs = Map.empty,
       inQuasiquote = false,
-      inUnquoted = false,
-      outerQuoteEnvironments = List(None)
+      outermostCtx = None,
+      outerQuoteEnvironments = List(None),
+      outermostFreeVarType = MutSet.empty
     )
 
     val empty: Ctx = init
@@ -572,6 +574,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             println("free: " + name)
             val res = new TypeVariable(lvl, Nil, Nil, nameHint = Some(name + ".type"))(prov)
             ctx.freeVarsEnv += name -> VarSymbol(res, v)
+            ctx.outermostCtx match {
+              case Some(outermost) =>
+                outermost.freeVarsEnv += name -> VarSymbol(res, v)
+                outermost.outermostFreeVarType += res
+              case None => ???
+            }
             res
           } else {
             err("identifier not found: " + name, term.toLoc): TypeScheme
@@ -832,11 +840,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case TyApp(_, _) => ??? // TODO
       case Quoted(body) =>
         val nestedCtx = ctx.nest
-        val body_type = typeTerm(body)(nestedCtx.copy(
+        nestedCtx.outermostCtx = Some(nestedCtx)
+        val copied = nestedCtx.copy(
           inQuasiquote = true,
-          outerQuoteEnvironments = Some(nestedCtx) :: nestedCtx.outerQuoteEnvironments),
-          raise, vars)
-        TypeRef(TypeName("Code"), body_type :: Nil)(noProv)
+          outerQuoteEnvironments = Some(nestedCtx) :: nestedCtx.outerQuoteEnvironments)
+        val body_type = typeTerm(body)(copied, raise, vars)
+
+        TypeRef(TypeName("Code"), body_type :: copied.outermostFreeVarType.toList)(noProv)
       case Unquoted(body) =>
         typeTerm(body)
     }
