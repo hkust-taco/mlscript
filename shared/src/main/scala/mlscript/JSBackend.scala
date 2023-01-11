@@ -470,33 +470,27 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
    */
   private def translateQuoted(body: Term, var_map: HashMap[Str, Str])(implicit scope: Scope): JSExpr = body match { // TODO: remove implicit argument for scope
     case Var(name) =>
-     /**
       if (var_map contains name) {
         JSArray(Ls(JSExpr("Var"), JSExpr(var_map(name)))) 
       } else {
-          val symbol_name = s"${name}_${var_map.size}"
+          val symbol_name = s"${name}_sym"
           var_map += (name -> symbol_name)
           JSArray(Ls(JSExpr("New_Var"), JSExpr(s"const ${symbol_name} = Symbol('${name}')"), JSExpr(name), JSExpr(symbol_name)))
       }
-    **/
-      JSArray(Ls(JSExpr("Var"), JSExpr(name)))
     case App(App(Var(op), Tup((N -> Fld(_, _, lhs)) :: Nil)), Tup((N -> Fld(_, _, rhs)) :: Nil))
       if JSBinary.operators contains op =>
         JSArray(Ls(JSExpr("App"), JSExpr(op), translateQuoted(lhs, var_map), translateQuoted(rhs, var_map)))
     case App(trm, parameters @ Tup(args)) =>
-      val callee = trm match {
-        case Var(nme) => JSExpr(nme)
-        case _ => translateQuoted(trm, var_map)
+      val result = trm match {
+        case Var(nme) => 
+          if (var_map contains nme) {
+            JSArray(Ls(JSExpr("Fun"), JSExpr(nme), translateQuoted(parameters, var_map)))
+          } else {
+            JSArray(Ls(JSExpr("external"), JSExpr(nme), translateQuoted(parameters, var_map)))
+          }
+        case _ => JSArray(Ls(JSExpr("Fun"), translateQuoted(trm, var_map), translateQuoted(parameters, var_map)))
       }
-      JSArray(Ls(JSExpr("Fun"), callee, translateQuoted(parameters, var_map)))
-
-      /**
-      val callee = trm match {
-        case Var(nme) => translateVar(nme, true)
-        case _ => translateTerm(trm)
-      }
-      callee(args map { case (_, Fld(_, _, arg)) => translateTerm(arg) }: _*)
-      **/
+      result
     case IntLit(value) => 
       JSArray(Ls(JSExpr(value.toString)))
     case StrLit(value) =>

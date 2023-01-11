@@ -5,31 +5,54 @@
 // TODO: need to handle all keywords
 let code_var2 = code"x"
 //│ code_var2: Code
-//│          = [ 'Var', 'x' ]
+//│          = [ 'New_Var', "const x_sym = Symbol('x')", 'x', 'x_sym' ]
 
 // Lam 
 let code_lam = code"(x, y) => x + 1"
 //│ code_lam: Code
 //│         = [
 //│             'Lam',
-//│             [ 'Tup', [ 'Var', 'x' ], [ 'Var', 'y' ] ],
-//│             [ 'App', '+', [ 'Var', 'x' ], [ '1' ] ]
+//│             [
+//│               'Tup',
+//│               [ 'New_Var', "const x_sym = Symbol('x')", 'x', 'x_sym' ],
+//│               [ 'New_Var', "const y_sym = Symbol('y')", 'y', 'y_sym' ]
+//│             ],
+//│             [ 'App', '+', [ 'Var', 'x_sym' ], [ '1' ] ]
 //│           ]
 
 // App
-let code_app_binary = code"1 + 2 * 3"
-//│ code_app_binary: Code
-//│                = [ 'App', '+', [ '1' ], [ 'App', '*', [ '2' ], [ '3' ] ] ]
+let code_app = code"1 + 2 * 3"
+//│ code_app: Code
+//│         = [ 'App', '+', [ '1' ], [ 'App', '*', [ '2' ], [ '3' ] ] ]
 
-let code_app_binary2 = code"y + 1"
+let code_app2 = code"y + 1"
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.24: 	let code_app_binary2 = code"y + 1"
-//│ ║        	                            ^^^
+//│ ║  l.28: 	let code_app2 = code"y + 1"
+//│ ║        	                     ^^^
 //│ ╟── reference of type `anything` is not an instance of type `int`
-//│ ║  l.24: 	let code_app_binary2 = code"y + 1"
-//│ ╙──      	                            ^
-//│ code_app_binary2: Code
-//│                 = [ 'App', '+', [ 'Var', 'y' ], [ '1' ] ]
+//│ ║  l.28: 	let code_app2 = code"y + 1"
+//│ ╙──      	                     ^
+//│ code_app2: Code
+//│          = [
+//│              'App',
+//│              '+',
+//│              [ 'New_Var', "const y_sym = Symbol('y')", 'y', 'y_sym' ],
+//│              [ '1' ]
+//│            ]
+
+let code_app3 = code"test(x)"
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.43: 	let code_app3 = code"test(x)"
+//│ ║        	                     ^^^^^^^
+//│ ╟── reference of type `anything` is not a function
+//│ ║  l.43: 	let code_app3 = code"test(x)"
+//│ ╙──      	                     ^^^^
+//│ code_app3: Code
+//│          = [
+//│              'external',
+//│              'test',
+//│              [ 'Tup', [ 'New_Var', "const x_sym = Symbol('x')", 'x', 'x_sym' ] ]
+//│            ]
 
 // If
 let code_if = code"if true then 1 else 2"
@@ -48,17 +71,26 @@ let code_tup = code"(1,2,3)"
 
 let code_tup2 = code"(x, y, z)"
 //│ code_tup2: Code
-//│          = [ 'Tup', [ 'Var', 'x' ], [ 'Var', 'y' ], [ 'Var', 'z' ] ]
+//│          = [
+//│              'Tup',
+//│              [ 'New_Var', "const x_sym = Symbol('x')", 'x', 'x_sym' ],
+//│              [ 'New_Var', "const y_sym = Symbol('y')", 'y', 'y_sym' ],
+//│              [ 'New_Var', "const z_sym = Symbol('z')", 'z', 'z_sym' ]
+//│            ]
 
 // Rcd 
 let code_res = code"{y: 1, x: 2}"
 //│ code_res: Code
-//│         = [ 'Rcd', [ [ 'Var', 'y' ], [ '1' ] ], [ [ 'Var', 'x' ], [ '2' ] ] ]
+//│         = [
+//│             'Rcd',
+//│             [ [ 'New_Var', "const y_sym = Symbol('y')", 'y', 'y_sym' ], [ '1' ] ],
+//│             [ [ 'New_Var', "const x_sym = Symbol('x')", 'x', 'x_sym' ], [ '2' ] ]
+//│           ]
 
 // Sel
 let code_sel = code"{ x: 1 }.x"
 //│ code_sel: Code
-//│         = [ 'Sel', [ 'Rcd', [ [Array], [Array] ] ], [ 'Var', 'x' ] ]
+//│         = [ 'Sel', [ 'Rcd', [ [Array], [Array] ] ], [ 'Var', 'x_sym' ] ]
 
 // let code_sel2 = code"let a = {x : 1}; a.x" <- this has errors in normal code
 
@@ -67,20 +99,25 @@ let code_let1 = code"let x = 2; let y = 3; y"
 //│ code_let1: Code
 //│          = [
 //│              'Let',
-//│              [ 'Var', 'x' ],
+//│              [ 'New_Var', "const x_sym = Symbol('x')", 'x', 'x_sym' ],
 //│              [ '2' ],
-//│              [ 'Let', [ 'Var', 'y' ], [ '3' ], [ 'Var', 'y' ] ]
+//│              [
+//│                'Let',
+//│                [ 'New_Var', "const y_sym = Symbol('y')", 'y', 'y_sym' ],
+//│                [ '3' ],
+//│                [ 'Var', 'y_sym' ]
+//│              ]
 //│            ]
 
 let code_let2 = code"let x = (y) => y; let y = (z) => z + 2; x(2)"
 //│ code_let2: Code
 //│          = [
 //│              'Let',
-//│              [ 'Var', 'x' ],
-//│              [ 'Lam', [ 'Tup', [Array] ], [ 'Var', 'y' ] ],
+//│              [ 'New_Var', "const x_sym = Symbol('x')", 'x', 'x_sym' ],
+//│              [ 'Lam', [ 'Tup', [Array] ], [ 'Var', 'y_sym' ] ],
 //│              [
 //│                'Let',
-//│                [ 'Var', 'y' ],
+//│                [ 'Var', 'y_sym' ],
 //│                [ 'Lam', [Array], [Array] ],
 //│                [ 'Fun', 'x', [Array] ]
 //│              ]
@@ -90,9 +127,9 @@ let code_let3 = code"let x = 3; let x = 4; x"
 //│ code_let3: Code
 //│          = [
 //│              'Let',
-//│              [ 'Var', 'x' ],
+//│              [ 'New_Var', "const x_sym = Symbol('x')", 'x', 'x_sym' ],
 //│              [ '3' ],
-//│              [ 'Let', [ 'Var', 'x' ], [ '4' ], [ 'Var', 'x' ] ]
+//│              [ 'Let', [ 'Var', 'x_sym' ], [ '4' ], [ 'Var', 'x_sym' ] ]
 //│            ]
 
 // Subs 
@@ -100,7 +137,7 @@ let code_subs = code"let a = (1, 2)[1]"
 //│ code_subs: Code
 //│          = [
 //│              'Let',
-//│              [ 'Var', 'a' ],
+//│              [ 'New_Var', "const a_sym = Symbol('a')", 'a', 'a_sym' ],
 //│              [ 'Subs', [ 'Tup', [Array], [Array] ], [ '1' ] ],
 //│              [ 'undefined' ]
 //│            ]
@@ -109,9 +146,9 @@ let code_subs2 = code"let a = (1, 2, 3); a[0]"
 //│ code_subs2: Code
 //│           = [
 //│               'Let',
-//│               [ 'Var', 'a' ],
+//│               [ 'New_Var', "const a_sym = Symbol('a')", 'a', 'a_sym' ],
 //│               [ 'Tup', [ '1' ], [ '2' ], [ '3' ] ],
-//│               [ 'Subs', [ 'Var', 'a' ], [ '0' ] ]
+//│               [ 'Subs', [ 'Var', 'a_sym' ], [ '0' ] ]
 //│             ]
 
 let code_subs3 = code"(1,2,3)[1]"
@@ -145,4 +182,3 @@ let d = code"code"3""
 //│ d: Code
 //│ Code generation encountered an error:
 //│   Quoted directly in quasiquote is not correct syntax (?)
-
