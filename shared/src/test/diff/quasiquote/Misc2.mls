@@ -1,0 +1,55 @@
+:NewParser
+
+:e // Should be an error
+code"let x = 1 in ${ 1 }"
+//│ res: code & {Code#T <: 1}
+//│ Code generation crashed:
+//│   scala.MatchError: Quoted' let x = 1 in Unquote' 1 ' ' (of class mlscript.Quoted)
+
+:e // Should be two errors
+code"let x = 1 in ${ x }"
+//│ res: code & {Code#T <: 1}
+//│ Code generation crashed:
+//│   scala.MatchError: Quoted' let x = 1 in Unquote' x ' ' (of class mlscript.Quoted)
+
+// The type is wrong
+code"let x = 1 in ${ code"x + 1" }"
+//│ res: code & {Code#T <: code & {Code#T <: int}}
+//│ Code generation crashed:
+//│   scala.MatchError: Quoted' let x = 1 in Unquote' Quoted' + (x,) (1,) ' ' ' (of class mlscript.Quoted)
+
+:e
+1 + code"2"
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.22: 	1 + code"2"
+//│ ║        	^^^^^^^^^^^
+//│ ╙── expression of type `code & {Code#T <: 2}` is not an instance of type `int`
+//│ res: error | int
+//│ Code generation crashed:
+//│   scala.MatchError: Quoted' 2 ' (of class mlscript.Quoted)
+
+:e // Should be an error
+code"let x = 1 in ${ code"x + ${ x }" }"
+//│ res: code & {Code#T <: code & {Code#T <: int}}
+//│ Code generation crashed:
+//│   scala.MatchError: Quoted' let x = 1 in Unquote' Quoted' + (x,) (Unquote' x ',) ' ' ' (of class mlscript.Quoted)
+
+
+fun x: Code‹int›
+//│ x: code & {Code#T <: int}
+//│  = <missing implementation>
+
+code"1 + ${x}"
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.42: 	code"1 + ${x}"
+//│ ║        	     ^^^^^^^^
+//│ ╟── type `code & {Code#T <: int}` is not an instance of type `int`
+//│ ║  l.38: 	fun x: Code‹int›
+//│ ║        	       ^^^^^^^^
+//│ ╟── but it flows into reference with expected type `int`
+//│ ║  l.42: 	code"1 + ${x}"
+//│ ╙──      	           ^
+//│ res: code & {Code#T <: error | int}
+//│ Code generation crashed:
+//│   scala.MatchError: Quoted' + (1,) (Unquote' x ',) ' (of class mlscript.Quoted)
+

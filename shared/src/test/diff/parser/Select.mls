@@ -175,11 +175,11 @@ a
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
 //│ 	at: mlscript.NewLexer.lex(NewLexer.scala:87)
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:152)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:142)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:140)
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:157)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:132)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:155)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:130)
 
 a
   .b + 1
@@ -190,10 +190,10 @@ a
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
 //│ 	at: mlscript.NewLexer.lex(NewLexer.scala:87)
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:152)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:142)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:140)
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:162)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:160)
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
 
 a
@@ -205,10 +205,10 @@ a
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
 //│ 	at: mlscript.NewLexer.lex(NewLexer.scala:87)
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:152)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:132)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:130)
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:162)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:160)
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
 
 :pe
@@ -222,11 +222,11 @@ a
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
 //│ 	at: mlscript.NewLexer.lex(NewLexer.scala:87)
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:152)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:142)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:140)
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:162)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:132)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:160)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:130)
 
 a
   .b +
@@ -238,11 +238,11 @@ a
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
 //│ 	at: mlscript.NewLexer.lex(NewLexer.scala:87)
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:152)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:132)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:130)
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:162)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:132)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:160)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:130)
 
 a
   .b

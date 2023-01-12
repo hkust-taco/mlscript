@@ -31,17 +31,17 @@ code"foo(123) + 1"
 //│   scala.MatchError: Quoted' + (foo (123,),) (1,) ' (of class mlscript.Quoted)
 
 code"10 + ${qq_int}"
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: $
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$less$colon$less(TyperHelpers.scala:460)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$less$colon$less$(TyperHelpers.scala:396)
-//│ 	at: mlscript.TyperDatatypes$SimpleType.$less$colon$less(TyperDatatypes.scala:81)
-//│ 	at: mlscript.TyperDatatypes$FieldType.$less$colon$less(TyperDatatypes.scala:322)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$anonfun$$less$colon$less$2(TyperHelpers.scala:415)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$anonfun$$less$colon$less$2$adapted(TyperHelpers.scala:414)
-//│ 	at: scala.collection.LazyZip2.forall(LazyZipOps.scala:106)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$less$colon$less(TyperHelpers.scala:414)
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
+//│ 	at: scala.Predef$.assert(Predef.scala:264)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.$anonfun$mapTargs$3(TyperDatatypes.scala:256)
+//│ 	at: scala.Option.fold(Option.scala:263)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mapTargs(TyperDatatypes.scala:255)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.childrenPol(TyperHelpers.scala:611)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.childrenPol$(TyperHelpers.scala:594)
+//│ 	at: mlscript.TyperDatatypes$SimpleType.childrenPol(TyperDatatypes.scala:81)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.rec$1(TyperHelpers.scala:636)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.getVarsPol(TyperHelpers.scala:640)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.getVarsPol$(TyperHelpers.scala:616)
 
 "x"
 //│ res: "x"
@@ -49,22 +49,18 @@ code"10 + ${qq_int}"
 
 // The inner code should have type Code<int, "x" | "y">
 code"x => y => 15 + ${   code"x + y"   }"
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: $
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:635)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$less$colon$less(TyperHelpers.scala:460)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$less$colon$less$(TyperHelpers.scala:396)
-//│ 	at: mlscript.TyperDatatypes$SimpleType.$less$colon$less(TyperDatatypes.scala:81)
-//│ 	at: mlscript.TyperDatatypes$FieldType.$less$colon$less(TyperDatatypes.scala:322)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$anonfun$$less$colon$less$2(TyperHelpers.scala:415)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$anonfun$$less$colon$less$2$adapted(TyperHelpers.scala:414)
-//│ 	at: scala.collection.LazyZip2.forall(LazyZipOps.scala:106)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$less$colon$less(TyperHelpers.scala:414)
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.51: 	code"x => y => 15 + ${   code"x + y"   }"
+//│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── expression of type `code & {Code#T <: ?a}` is not an instance of type `int`
+//│ res: code & {Code#T <: int -> int -> (error | int)}
+//│ Code generation crashed:
+//│   scala.MatchError: Quoted' x, => y, => + (15,) (Unquote' Quoted' + (x,) (y,) ' ',) ' (of class mlscript.Quoted)
 
 // FIXME
 qq_int : Code<int>
 //│ ╔══[ERROR] identifier not found: qq_int
-//│ ║  l.65: 	qq_int : Code<int>
+//│ ║  l.61: 	qq_int : Code<int>
 //│ ╙──      	^^^^^^
 //│ res: code & {Code#T <: int}
 //│ Code generation encountered an error:

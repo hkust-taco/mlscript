@@ -76,14 +76,14 @@ a+
 //│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: 10
 //│ 	at: mlscript.NewLexer.isQuasiquoteKeyword$1(NewLexer.scala:81)
 //│ 	at: mlscript.NewLexer.lex(NewLexer.scala:91)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:142)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:140)
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:152)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:132)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:130)
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:159)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:157)
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:152)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
 
 a+
   b
@@ -91,14 +91,14 @@ c
 //│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: 8
 //│ 	at: mlscript.NewLexer.isQuasiquoteKeyword$1(NewLexer.scala:81)
 //│ 	at: mlscript.NewLexer.lex(NewLexer.scala:91)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:142)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:140)
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:152)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:132)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:130)
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:159)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:157)
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:152)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
 
 a
   +b
@@ -106,14 +106,14 @@ c
 //│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: 8
 //│ 	at: mlscript.NewLexer.isQuasiquoteKeyword$1(NewLexer.scala:81)
 //│ 	at: mlscript.NewLexer.lex(NewLexer.scala:91)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:142)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:140)
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:152)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:159)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:132)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:157)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:130)
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:152)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
 
 
 a + b

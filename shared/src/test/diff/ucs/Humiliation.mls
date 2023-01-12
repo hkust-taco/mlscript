@@ -38,11 +38,11 @@ fun test(f) = if f is
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
 //│ 	at: mlscript.NewLexer.lex(NewLexer.scala:87)
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:159)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:157)
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
 //│ 	at: mlscript.NewLexer.lex(NewLexer.scala:87)
 //│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
-//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:152)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
 
 
 class Pair(fst, snd)

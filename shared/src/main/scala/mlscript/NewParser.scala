@@ -388,7 +388,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   }
   
   def expr(prec: Int, allowSpace: Bool = true)(implicit fe: FoundErr, l: Line): Term = wrap(prec,allowSpace) { l =>
-    exprOrIf(prec, allowSpace)(et = false, fe = fe, l = implicitly) match { 
+    exprOrIf(prec, allowSpace)(et = false, fe = fe, l = implicitly) match {
       case R(e) => e
       case L(e) =>
         err(msg"Expected an expression; found a 'then'/'else' clause instead" -> e.toLoc :: Nil)
