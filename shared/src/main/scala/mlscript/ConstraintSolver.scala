@@ -1258,12 +1258,20 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           v
       }
       case t @ TypeBounds(lb, ub) =>
+        
+        // * This was done to make `?` behave similarly to an existential.
+        // * But this niche treatment just needlessly complicates things;
+        // * better implement proper existentials later on!
+        /*
         if (rigidify) {
           val tv = freshVar(t.prov, N) // FIXME coudl N here result in divergence? cf. absence of shadow
           tv.lowerBounds ::= freshen(lb)
           tv.upperBounds ::= freshen(ub)
           tv
         } else TypeBounds(freshen(lb), freshen(ub))(t.prov)
+        */
+        
+        TypeBounds(freshen(lb), freshen(ub))(t.prov)
       case t @ FunctionType(l, r) => FunctionType(freshen(l), freshen(r))(t.prov)
       case t @ ComposedType(p, l, r) => ComposedType(p, freshen(l), freshen(r))(t.prov)
       case t @ RecordType(fs) => RecordType(fs.mapValues(_.update(freshen, freshen)))(t.prov)

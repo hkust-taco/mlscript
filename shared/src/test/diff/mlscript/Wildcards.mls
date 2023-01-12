@@ -235,12 +235,13 @@ class Foo[A]
 def foo: Foo[?]
 //│ foo: Foo[?]
 
+:e // * Works with existential wildcards
 foo = Foo{}
 //│ Foo['A]
 //│   <:  foo:
 //│ Foo[?]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.238: 	foo = Foo{}
+//│ ║  l.239: 	foo = Foo{}
 //│ ║         	^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.235: 	def foo: Foo[?]
@@ -255,7 +256,7 @@ foo
 :e
 foo : Foo['a]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.256: 	foo : Foo['a]
+//│ ║  l.257: 	foo : Foo['a]
 //│ ║         	^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.235: 	def foo: Foo[?]
@@ -271,7 +272,7 @@ foo : Foo['a]
 :e
 foo.Foo1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.272: 	foo.Foo1
+//│ ║  l.273: 	foo.Foo1
 //│ ║         	^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.235: 	def foo: Foo[?]
@@ -287,7 +288,7 @@ foo1 = Foo.Foo1
 :e
 foo1 foo
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.288: 	foo1 foo
+//│ ║  l.289: 	foo1 foo
 //│ ║         	^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.235: 	def foo: Foo[?]
@@ -301,7 +302,7 @@ foo1 foo
 :e
 foo2 = foo : Foo['a .. 'b]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.302: 	foo2 = foo : Foo['a .. 'b]
+//│ ║  l.303: 	foo2 = foo : Foo['a .. 'b]
 //│ ║         	       ^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.235: 	def foo: Foo[?]
@@ -314,7 +315,7 @@ foo2 = foo : Foo['a .. 'b]
 :e
 foo2.Id
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.315: 	foo2.Id
+//│ ║  l.316: 	foo2.Id
 //│ ║         	^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.235: 	def foo: Foo[?]
@@ -323,7 +324,7 @@ foo2.Id
 //│ ║  l.235: 	def foo: Foo[?]
 //│ ║         	             ^
 //│ ╟── from type bounds:
-//│ ║  l.302: 	foo2 = foo : Foo['a .. 'b]
+//│ ║  l.303: 	foo2 = foo : Foo['a .. 'b]
 //│ ║         	                 ^^^^^^^^
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.224: 	class Foo[A]
@@ -333,7 +334,7 @@ foo2.Id
 :e
 foo3 = foo2 : Foo['a]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.334: 	foo3 = foo2 : Foo['a]
+//│ ║  l.335: 	foo3 = foo2 : Foo['a]
 //│ ║         	       ^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.235: 	def foo: Foo[?]
@@ -342,7 +343,7 @@ foo3 = foo2 : Foo['a]
 //│ ║  l.235: 	def foo: Foo[?]
 //│ ║         	             ^
 //│ ╟── from type variable:
-//│ ║  l.334: 	foo3 = foo2 : Foo['a]
+//│ ║  l.335: 	foo3 = foo2 : Foo['a]
 //│ ╙──       	                  ^^
 //│ foo3: Foo['a]
 //│   where
@@ -352,7 +353,7 @@ foo3 = foo2 : Foo['a]
 :e
 foo3.Id
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.353: 	foo3.Id
+//│ ║  l.354: 	foo3.Id
 //│ ║         	^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.235: 	def foo: Foo[?]
@@ -361,7 +362,7 @@ foo3.Id
 //│ ║  l.235: 	def foo: Foo[?]
 //│ ║         	             ^
 //│ ╟── from type variable:
-//│ ║  l.334: 	foo3 = foo2 : Foo['a]
+//│ ║  l.335: 	foo3 = foo2 : Foo['a]
 //│ ║         	                  ^^
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.224: 	class Foo[A]
@@ -372,13 +373,13 @@ foo3.Id
 :e
 foo2 = foo : Foo[anything .. nothing]
 //│ ╔══[ERROR] Type mismatch in type bounds:
-//│ ║  l.373: 	foo2 = foo : Foo[anything .. nothing]
+//│ ║  l.374: 	foo2 = foo : Foo[anything .. nothing]
 //│ ║         	                 ^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.373: 	foo2 = foo : Foo[anything .. nothing]
+//│ ║  l.374: 	foo2 = foo : Foo[anything .. nothing]
 //│ ║         	                 ^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.373: 	foo2 = foo : Foo[anything .. nothing]
+//│ ║  l.374: 	foo2 = foo : Foo[anything .. nothing]
 //│ ╙──       	                             ^^^^^^^
 //│ foo2: Foo[in anything out nothing]
 
@@ -399,9 +400,7 @@ fid foo2
 //│ res: 'A -> 'A
 
 fid (f: Foo['a..'b]) = Foo.Id f
-//│ fid: Foo['a] -> 'a -> 'a
-//│   where
-//│     'a <: nothing
+//│ fid: Foo['b] -> ('b & 'A) -> 'A
 
 
 class Bar[A]: { value: A; id: A -> A }
@@ -414,6 +413,7 @@ class Bar[A]: { value: A; id: A -> A }
 def bar: Bar[?]
 //│ bar: Bar[?]
 
+:e
 rec def bar = Bar{value = bar; id}
 //│ 'value
 //│   where
@@ -431,7 +431,7 @@ rec def bar = Bar{value = bar; id}
 //│ ║  l.417: 	rec def bar = Bar{value = bar; id}
 //│ ║         	                          ^^^
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.414: 	def bar: Bar[?]
+//│ ║  l.413: 	def bar: Bar[?]
 //│ ╙──       	             ^
 
 :e
@@ -440,10 +440,10 @@ bar.Bid
 //│ ║  l.438: 	bar.Bid
 //│ ║         	^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.414: 	def bar: Bar[?]
+//│ ║  l.413: 	def bar: Bar[?]
 //│ ║         	             ^
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.414: 	def bar: Bar[?]
+//│ ║  l.413: 	def bar: Bar[?]
 //│ ╙──       	             ^
 //│ res: error
 
@@ -453,10 +453,10 @@ bar: Bar['a..'b]
 //│ ║  l.451: 	bar: Bar['a..'b]
 //│ ║         	^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.414: 	def bar: Bar[?]
+//│ ║  l.413: 	def bar: Bar[?]
 //│ ║         	             ^
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.414: 	def bar: Bar[?]
+//│ ║  l.413: 	def bar: Bar[?]
 //│ ╙──       	             ^
 //│ res: Bar[anything]
 
@@ -474,12 +474,13 @@ type Baz[A] = { id: A -> A; bid: Baz[A] -> Baz[A] }
 def baz: Baz[?]
 //│ baz: Baz[?]
 
+:e
 baz = { id; bid = id }
 //│ {bid: forall 'a. 'a -> 'a, id: forall 'a. 'a -> 'a}
 //│   <:  baz:
 //│ Baz[?]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.477: 	baz = { id; bid = id }
+//│ ║  l.478: 	baz = { id; bid = id }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.474: 	def baz: Baz[?]
@@ -497,7 +498,7 @@ baz.bid
 :e
 baz.bid baz
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.498: 	baz.bid baz
+//│ ║  l.499: 	baz.bid baz
 //│ ║         	^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.474: 	def baz: Baz[?]
@@ -510,7 +511,7 @@ baz.bid baz
 :e
 baz.bid (baz: Baz['a..'b])
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.511: 	baz.bid (baz: Baz['a..'b])
+//│ ║  l.512: 	baz.bid (baz: Baz['a..'b])
 //│ ║         	         ^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.474: 	def baz: Baz[?]

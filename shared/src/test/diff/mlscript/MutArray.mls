@@ -91,7 +91,9 @@ def foo: MutArray[int] & MutArray[string]
 //│ foo: MutArray[in int | string out nothing]
 //│    = <missing implementation>
 
-:e
+// * Note that this now signature-checks because it instantiates the inferred polymorphic type
+// * later (once for each intersection component)
+// :e
 foo = emptyArray
 //│ MutArray['a]
 //│   <:  foo:
@@ -101,16 +103,16 @@ foo = emptyArray
 :e
 def bar x = (mut x,) : MutArray[int] & MutArray[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.102: 	def bar x = (mut x,) : MutArray[int] & MutArray[string]
+//│ ║  l.104: 	def bar x = (mut x,) : MutArray[int] & MutArray[string]
 //│ ║         	            ^^^^^^^^
 //│ ╟── type `string` is not an instance of `int`
-//│ ║  l.102: 	def bar x = (mut x,) : MutArray[int] & MutArray[string]
+//│ ║  l.104: 	def bar x = (mut x,) : MutArray[int] & MutArray[string]
 //│ ║         	                                                ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.102: 	def bar x = (mut x,) : MutArray[int] & MutArray[string]
+//│ ║  l.104: 	def bar x = (mut x,) : MutArray[int] & MutArray[string]
 //│ ║         	                                ^^^
 //│ ╟── from mutable tuple field:
-//│ ║  l.102: 	def bar x = (mut x,) : MutArray[int] & MutArray[string]
+//│ ║  l.104: 	def bar x = (mut x,) : MutArray[int] & MutArray[string]
 //│ ╙──       	                 ^
 //│ bar: int -> MutArray[in int | string out nothing]
 //│    = [Function: bar]

@@ -677,11 +677,11 @@ abstract class TyperHelpers { Typer: Typer =>
         case tr: TypeRef => tr.mapTargs(pol)(_ -> _)
         case Without(b, ns) => pol -> b :: Nil
         case TypeBounds(lb, ub) =>
-          // PolMap.neg -> lb :: PolMap.pos -> ub :: Nil
-          val res = collection.mutable.Buffer.empty[PolMap -> ST]
-          // pol.traverseBounds(lb, ub)(_ -> _ |> (res +=  _))
-          pol.traverseBounds(lb, ub)(res +=  _ -> _)
-          res.toList
+          PolMap.neg -> lb :: PolMap.pos -> ub :: Nil
+          // val res = collection.mutable.Buffer.empty[PolMap -> ST]
+          // // pol.traverseBounds(lb, ub)(_ -> _ |> (res +=  _))
+          // pol.traverseBounds(lb, ub)(res +=  _ -> _)
+          // res.toList
         case PolymorphicType(_, und) => pol -> und :: Nil
         case ConstrainedType(cs, bod) =>
           // cs.flatMap(_._2.unzip._2) ::: bod :: Nil

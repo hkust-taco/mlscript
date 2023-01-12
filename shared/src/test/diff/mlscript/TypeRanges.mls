@@ -70,6 +70,7 @@ foo = foo
 //│ ║  l.50: 	def foo: MutArray[int..number]
 //│ ╙──      	                  ^^^^^^^^^^^
 
+:e
 foo = (mut 0,)
 //│ (mut 'a,)
 //│   where
@@ -77,13 +78,13 @@ foo = (mut 0,)
 //│   <:  foo:
 //│ MutArray[in int out number]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.73: 	foo = (mut 0,)
+//│ ║  l.74: 	foo = (mut 0,)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── type `number` is not an instance of `int`
 //│ ║  l.50: 	def foo: MutArray[int..number]
 //│ ║        	                       ^^^^^^
 //│ ╟── but it flows into mutable tuple field with expected type `int`
-//│ ║  l.73: 	foo = (mut 0,)
+//│ ║  l.74: 	foo = (mut 0,)
 //│ ║        	           ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.50: 	def foo: MutArray[int..number]
@@ -96,7 +97,7 @@ foo = (mut 0,)
 :e
 set0 foo
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.97: 	set0 foo
+//│ ║  l.98: 	set0 foo
 //│ ║        	^^^^^^^^
 //│ ╟── type `number` is not an instance of `int`
 //│ ║  l.50: 	def foo: MutArray[int..number]
@@ -114,7 +115,7 @@ set0 foo
 :e
 set2 foo
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.115: 	set2 foo
+//│ ║  l.116: 	set2 foo
 //│ ║         	^^^^^^^^
 //│ ╟── type `number` is not an instance of `int`
 //│ ║  l.50: 	def foo: MutArray[int..number]
@@ -132,7 +133,7 @@ set2 foo
 :e
 foo : MutArray['a]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.133: 	foo : MutArray['a]
+//│ ║  l.134: 	foo : MutArray['a]
 //│ ║         	^^^
 //│ ╟── type `number` is not an instance of `int`
 //│ ║  l.50: 	def foo: MutArray[int..number]
@@ -156,7 +157,7 @@ foo : Array['a]
 :e
 foo[0] <- 1
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.157: 	foo[0] <- 1
+//│ ║  l.158: 	foo[0] <- 1
 //│ ║         	^^^^^^^^^^^
 //│ ╟── type `number` is not an instance of `int`
 //│ ║  l.50: 	def foo: MutArray[int..number]
@@ -165,7 +166,7 @@ foo[0] <- 1
 //│ ║  l.50: 	def foo: MutArray[int..number]
 //│ ║        	                  ^^^
 //│ ╟── from assigned array element:
-//│ ║  l.157: 	foo[0] <- 1
+//│ ║  l.158: 	foo[0] <- 1
 //│ ╙──       	^^^^^^
 //│ = []
 
@@ -184,16 +185,16 @@ foo[0]
 :e
 res : int | undefined
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.185: 	res : int | undefined
+//│ ║  l.186: 	res : int | undefined
 //│ ║         	^^^
 //│ ╟── type `number` does not match type `int | undefined`
 //│ ║  l.50: 	def foo: MutArray[int..number]
 //│ ║        	                       ^^^^^^
 //│ ╟── but it flows into reference with expected type `int | undefined`
-//│ ║  l.185: 	res : int | undefined
+//│ ║  l.186: 	res : int | undefined
 //│ ║         	^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.185: 	res : int | undefined
+//│ ║  l.186: 	res : int | undefined
 //│ ╙──       	      ^^^^^^^^^^^^^^^
 //│ res: int | undefined
 //│    = 1
@@ -202,7 +203,7 @@ res : int | undefined
 :e
 foo2 = foo : MutArray['a..'b]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.203: 	foo2 = foo : MutArray['a..'b]
+//│ ║  l.204: 	foo2 = foo : MutArray['a..'b]
 //│ ║         	       ^^^
 //│ ╟── type `number` is not an instance of `int`
 //│ ║  l.50: 	def foo: MutArray[int..number]
@@ -223,16 +224,16 @@ foo2[0]
 :e
 res : undefined
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.224: 	res : undefined
+//│ ║  l.225: 	res : undefined
 //│ ║         	^^^
 //│ ╟── type `number` does not match type `undefined`
 //│ ║  l.50: 	def foo: MutArray[int..number]
 //│ ║        	                       ^^^^^^
 //│ ╟── but it flows into reference with expected type `undefined`
-//│ ║  l.224: 	res : undefined
+//│ ║  l.225: 	res : undefined
 //│ ║         	^^^
 //│ ╟── Note: constraint arises from literal type:
-//│ ║  l.224: 	res : undefined
+//│ ║  l.225: 	res : undefined
 //│ ╙──       	      ^^^^^^^^^
 //│ res: undefined
 //│    = 1
@@ -241,18 +242,17 @@ res : undefined
 :e
 def foo: MutArray[number..int]
 //│ ╔══[ERROR] Type mismatch in type bounds:
-//│ ║  l.242: 	def foo: MutArray[number..int]
+//│ ║  l.243: 	def foo: MutArray[number..int]
 //│ ║         	                  ^^^^^^^^^^^
 //│ ╟── type `number` is not an instance of `int`
-//│ ║  l.242: 	def foo: MutArray[number..int]
+//│ ║  l.243: 	def foo: MutArray[number..int]
 //│ ║         	                  ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.242: 	def foo: MutArray[number..int]
+//│ ║  l.243: 	def foo: MutArray[number..int]
 //│ ╙──       	                          ^^^
 //│ foo: MutArray[in number out int]
 //│    = <missing implementation>
 
-:e
 foo = (mut 0,)
 //│ (mut 'a,)
 //│   where
@@ -558,17 +558,8 @@ foo2: S['a..'b]
 
 
 { a = 0 } : { a: 'a..'b }
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: 'a198
-//│ 	at: scala.collection.MapOps.default(Map.scala:274)
-//│ 	at: scala.collection.MapOps.default$(Map.scala:273)
-//│ 	at: scala.collection.AbstractMap.default(Map.scala:405)
-//│ 	at: scala.collection.MapOps.apply(Map.scala:176)
-//│ 	at: scala.collection.MapOps.apply$(Map.scala:175)
-//│ 	at: scala.collection.AbstractMap.apply(Map.scala:405)
-//│ 	at: mlscript.TypeSimplifier.process$1(TypeSimplifier.scala:61)
-//│ 	at: mlscript.TypeSimplifier.process$1(TypeSimplifier.scala:76)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$removeIrrelevantBounds$29(TypeSimplifier.scala:114)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.mapPol(TyperHelpers.scala:338)
+//│ res: {a: 0}
+//│    = { a: 0 }
 
 
 def maf: { get: int..number; set: (int..number) -> () } -> { get: int..number; set: (int..number) -> () }
