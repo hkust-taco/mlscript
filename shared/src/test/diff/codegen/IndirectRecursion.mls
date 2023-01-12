@@ -1,19 +1,15 @@
-// * [OBSOLETE:]
-// * Strangely, while Y does not work (cycle check error),
-// * Z type checks find thanks to recursive types...
 
 
 def z: (('a -> 'b) -> (('a -> 'b) & 'c)) -> 'c
 //│ z: (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
 //│  = <missing implementation>
 
-// :e // Works since inconsistent constrained types...
-:e // No longer signature-checks after fix to freshening levels
+:e
 def z =
   (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.13: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
-//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.9: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
+//│ ║       	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‹∀ 1. (α47_62'' -> α56_66'')›  <:  α47_73'    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 1. (α47_62'' -> α56_66'')›  <:  α47_62''
@@ -21,6 +17,13 @@ def z =
 //│   <:  z:
 //│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
 //│  = [Function: z]
+
+def z =
+  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v))!)
+//│ (('a -> 'b) -> ('c -> 'd & 'a -> 'b) & ('c -> 'd) -> 'e) -> 'e
+//│   <:  z:
+//│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
+//│  = [Function: z1]
 
 
 def pow1 = z (fun pow0 -> fun n -> fun x ->
@@ -38,16 +41,16 @@ pow1 3 4
 :e
 z (fun self -> 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.39: 	z (fun self -> 1)
+//│ ║  l.42: 	z (fun self -> 1)
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` is not a function
-//│ ║  l.39: 	z (fun self -> 1)
+//│ ║  l.42: 	z (fun self -> 1)
 //│ ║        	               ^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.6: 	def z: (('a -> 'b) -> (('a -> 'b) & 'c)) -> 'c
+//│ ║  l.3: 	def z: (('a -> 'b) -> (('a -> 'b) & 'c)) -> 'c
 //│ ║       	                       ^^^^^^^^^^
 //│ ╟── from intersection type:
-//│ ║  l.6: 	def z: (('a -> 'b) -> (('a -> 'b) & 'c)) -> 'c
+//│ ║  l.3: 	def z: (('a -> 'b) -> (('a -> 'b) & 'c)) -> 'c
 //│ ╙──     	                      ^^^^^^^^^^^^^^^^^
 //│ res: error
 //│    = 1
@@ -124,15 +127,22 @@ oops 1
 def z =
   (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.125: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
+//│ ║  l.128: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α319_334'' -> α328_338'')›  <:  α319_345'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α319_334'' -> α328_338'')›  <:  α319_334''
+//│ ╟── this constraint:  ‹∀ 1. (α414_429'' -> α423_433'')›  <:  α414_440'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α414_429'' -> α423_433'')›  <:  α414_429''
 //│ ((anything -> nothing) -> anything) -> error
 //│   <:  z:
 //│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
-//│  = [Function: z1]
+//│  = [Function: z2]
+
+def z =
+  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v))!)
+//│ (('a -> 'b) -> ('c -> 'd & 'a -> 'b) & ('c -> 'd) -> 'e) -> 'e
+//│   <:  z:
+//│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
+//│  = [Function: z3]
 
 :NoCycleCheck
 
@@ -140,43 +150,50 @@ def z =
 :e
 def z =
   (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
-//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e, ?f, ?g. ?g -> ?e) -> ?h` exceeded recursion depth limit (200)
-//│ ║  l.142: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
+//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e, ?f, ?g. ?g -> ?f) -> ?h` exceeded recursion depth limit (200)
+//│ ║  l.152: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ‹∀ 1. (α401_416'' -> α410_420'')›  <!<  α401_457'
-//│ ╟── while constraining:  α401_452'  <!<  α401_457'
-//│ ╟── while constraining:  (α401_452',)  <!<  (α401_457',)
-//│ ╟── while constraining:  (α401_457' -> α410_461')  <!<  ((α401_452',) -> α404_453')
-//│ ╟── while constraining:  ‹∀ 1. (α401_416'' -> α410_420'')›  <!<  ((α401_452',) -> α404_453')
-//│ ╟── while constraining:  ‹∀ 1. (α401_416'' -> α410_420'')›  <!<  α401_452'
-//│ ╟── while constraining:  α401_447'  <!<  α401_452'
-//│ ╟── while constraining:  (α401_447',)  <!<  (α401_452',)
-//│ ╟── while constraining:  (α401_452' -> α410_456')  <!<  ((α401_447',) -> α404_448')
-//│ ╟── while constraining:  ‹∀ 1. (α401_416'' -> α410_420'')›  <!<  ((α401_447',) -> α404_448')
-//│ ╟── while constraining:  ‹∀ 1. (α401_416'' -> α410_420'')›  <!<  α401_447'
-//│ ╟── while constraining:  α401_442'  <!<  α401_447'
-//│ ╟── while constraining:  (α401_442',)  <!<  (α401_447',)
-//│ ╟── while constraining:  (α401_447' -> α410_451')  <!<  ((α401_442',) -> α404_443')
-//│ ╟── while constraining:  ‹∀ 1. (α401_416'' -> α410_420'')›  <!<  ((α401_442',) -> α404_443')
+//│ ╟── while constraining:  ‹∀ 1. (α591_606'' -> α600_610'')›  <!<  α591_647'
+//│ ╟── while constraining:  α591_642'  <!<  α591_647'
+//│ ╟── while constraining:  (α591_642',)  <!<  (α591_647',)
+//│ ╟── while constraining:  (α591_647' -> α600_651')  <!<  ((α591_642',) -> α594_643')
+//│ ╟── while constraining:  ‹∀ 1. (α591_606'' -> α600_610'')›  <!<  ((α591_642',) -> α594_643')
+//│ ╟── while constraining:  ‹∀ 1. (α591_606'' -> α600_610'')›  <!<  α591_642'
+//│ ╟── while constraining:  α591_637'  <!<  α591_642'
+//│ ╟── while constraining:  (α591_637',)  <!<  (α591_642',)
+//│ ╟── while constraining:  (α591_642' -> α600_646')  <!<  ((α591_637',) -> α594_638')
+//│ ╟── while constraining:  ‹∀ 1. (α591_606'' -> α600_610'')›  <!<  ((α591_637',) -> α594_638')
+//│ ╟── while constraining:  ‹∀ 1. (α591_606'' -> α600_610'')›  <!<  α591_637'
+//│ ╟── while constraining:  α591_632'  <!<  α591_637'
+//│ ╟── while constraining:  (α591_632',)  <!<  (α591_637',)
+//│ ╟── while constraining:  (α591_637' -> α600_641')  <!<  ((α591_632',) -> α594_633')
+//│ ╟── while constraining:  ‹∀ 1. (α591_606'' -> α600_610'')›  <!<  ((α591_632',) -> α594_633')
 //│ ╟── ......
 //│ ╟── ......
-//│ ╟── while constraining:  (α401_432' -> α410_436')  <!<  ((α401_427',) -> α404_428')
-//│ ╟── while constraining:  ‹∀ 1. (α401_416'' -> α410_420'')›  <!<  ((α401_427',) -> α404_428')
-//│ ╟── while constraining:  ‹∀ 1. (α401_416'' -> α410_420'')›  <!<  α401_427'
-//│ ╟── while constraining:  α401_422'  <!<  α401_427'
-//│ ╟── while constraining:  (α401_422',)  <!<  (α401_427',)
-//│ ╟── while constraining:  (α401_427' -> α410_431')  <!<  ((α401_422',) -> α404_423')
-//│ ╟── while constraining:  ‹∀ 1. (α401_416'' -> α410_420'')›  <!<  ((α401_422',) -> α404_423')
-//│ ╟── while constraining:  ‹∀ 1. (α401_416'' -> α410_420'')›  <!<  α401_422'
-//│ ╟── while constraining:  α391'  <!<  α401_422'
-//│ ╟── while constraining:  (α391',)  <!<  (α401_422',)
-//│ ╟── while constraining:  (α401_422' -> α410_426')  <!<  ((α391',) -> α394')
-//│ ╟── while constraining:  ‹∀ 1. (α401_416'' -> α410_420'')›  <!<  ((α391',) -> α394')
-//│ ╟── while constraining:  ‹∀ 1. (α401_416'' -> α410_420'')›  <!<  α391'
-//│ ╟── while constraining:  (‹∀ 1. (α401_416'' -> α410_420'')›,)  <!<  (α391',)
-//│ ╙── while constraining:  (α391' -> α400')  <!<  ((‹∀ 1. (α401_416'' -> α410_420'')›,) -> α421')
+//│ ╟── while constraining:  (α591_622' -> α600_626')  <!<  ((α591_617',) -> α594_618')
+//│ ╟── while constraining:  ‹∀ 1. (α591_606'' -> α600_610'')›  <!<  ((α591_617',) -> α594_618')
+//│ ╟── while constraining:  ‹∀ 1. (α591_606'' -> α600_610'')›  <!<  α591_617'
+//│ ╟── while constraining:  α591_612'  <!<  α591_617'
+//│ ╟── while constraining:  (α591_612',)  <!<  (α591_617',)
+//│ ╟── while constraining:  (α591_617' -> α600_621')  <!<  ((α591_612',) -> α594_613')
+//│ ╟── while constraining:  ‹∀ 1. (α591_606'' -> α600_610'')›  <!<  ((α591_612',) -> α594_613')
+//│ ╟── while constraining:  ‹∀ 1. (α591_606'' -> α600_610'')›  <!<  α591_612'
+//│ ╟── while constraining:  α581'  <!<  α591_612'
+//│ ╟── while constraining:  (α581',)  <!<  (α591_612',)
+//│ ╟── while constraining:  (α591_612' -> α600_616')  <!<  ((α581',) -> α584')
+//│ ╟── while constraining:  ‹∀ 1. (α591_606'' -> α600_610'')›  <!<  ((α581',) -> α584')
+//│ ╟── while constraining:  ‹∀ 1. (α591_606'' -> α600_610'')›  <!<  α581'
+//│ ╟── while constraining:  (‹∀ 1. (α591_606'' -> α600_610'')›,)  <!<  (α581',)
+//│ ╙── while constraining:  (α581' -> α590')  <!<  ((‹∀ 1. (α591_606'' -> α600_610'')›,) -> α611')
 //│ ((anything -> nothing) -> anything) -> error
 //│   <:  z:
 //│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
-//│  = [Function: z2]
+//│  = [Function: z4]
+
+def z =
+  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v))!)
+//│ (('a -> 'b) -> ('c -> 'd & 'a -> 'b) & ('c -> 'd) -> 'e) -> 'e
+//│   <:  z:
+//│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
+//│  = [Function: z5]
 

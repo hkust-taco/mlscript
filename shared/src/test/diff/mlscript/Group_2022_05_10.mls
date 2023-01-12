@@ -42,15 +42,9 @@ self x = x x
 //│ self: ('a -> 'b & 'a) -> 'b
 //│     = [Function: self]
 
-:e
-self self
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.46: 	self self
-//│ ║        	^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α100' -> α101')›  <:  α100_111    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α100' -> α101')›  <:  α100'
-//│ res: error
+:re
+self self!
+//│ res: nothing
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 

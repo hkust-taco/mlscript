@@ -8,6 +8,7 @@ class A: { f: anything }
 //│ Defined class A
 
 
+
 def eval eval x = case x of
   L -> 0,
   A -> eval eval x.f
@@ -16,14 +17,98 @@ def eval eval x = case x of
 
 
 :e
-eval eval
+e = eval eval
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.19: 	eval eval
-//│ ║        	^^^^^^^^^
+//│ ║  l.20: 	e = eval eval
+//│ ║        	    ^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α24_39'' -> ‹∀ 2. (α25_43''' -> (0<int,number> | α31_47'''))›)››  <:  α24_73    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α24_39'' -> ‹∀ 2. (α25_43''' -> (0<int,number> | α31_47'''))›)››  <:  α24_73'    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α24_39'' -> ‹∀ 2. (α25_43''' -> (0<int,number> | α31_47'''))›)››  <:  α24_39''
-//│ res: error
-//│    = [Function (anonymous)]
+//│ e: error
+//│  = [Function (anonymous)]
 
+e (A{f = L{}})
+//│ res: error
+//│    = 0
+
+
+e = eval eval!
+//│ e: 'f -> 0
+//│   where
+//│     'f <: A & {f: 'f} | L
+//│  = [Function (anonymous)]
+
+e (A{f = L{}})
+//│ res: 0
+//│    = 0
+
+// * Note: this computation will diverge
+rec def v = A{f = v}
+//│ v: 'f
+//│   where
+//│     'f :> A with {f: 'f}
+//│  = [Function: v]
+
+:e
+e v
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
+//│ ║  l.53: 	e v
+//│ ║        	^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  (a<> & {f: f23_213})  <:  f32_196    ComposedType  TypeVariable
+//│ ╙──  ... looks like:  (a<> & {f: f23_179'})  <:  f32_91'
+//│ res: error
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
+
+:RecursiveTypes
+
+// * Note: Expected divergence
+:re
+e v
+//│ res: 0
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
+
+
+
+def eval eval x = case x of
+  L -> 0,
+  A -> { x = eval eval x.f }
+//│ eval: ('a -> 'f -> 'b & 'a) -> ((A with {f: 'f}) | L) -> (0 | {x: 'b})
+//│     = [Function: eval1]
+
+
+:e
+e = eval eval
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
+//│ ║  l.83: 	e = eval eval
+//│ ║        	    ^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α251_266'' -> ‹∀ 2. (α252_270''' -> (0<int,number> | {x: α258_274'''}))›)››  <:  α251_300'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α251_266'' -> ‹∀ 2. (α252_270''' -> (0<int,number> | {x: α258_274'''}))›)››  <:  α251_266''
+//│ e: error
+//│  = [Function (anonymous)]
+
+:re
+e v
+//│ res: error
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
+
+
+e = eval eval!
+//│ e: 'f -> 'a
+//│   where
+//│     'a :> 0 | {x: 'a}
+//│     'f <: A & {f: 'f} | L
+//│  = [Function (anonymous)]
+
+:re
+e v
+//│ res: 'a
+//│   where
+//│     'a :> 0 | {x: 'a}
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 

@@ -1,8 +1,11 @@
+:GeneralizeCurriedFunctions
+:NoRecursiveTypes
+
 
 // On the Power of Coercion Abstraction
 
 S x y z = x z (y z)
-//│ S: ('a -> 'b -> 'c) -> ('a -> 'b) -> 'a -> 'c
+//│ S: ('a -> 'b -> 'c) -> (forall 'd. ('d -> 'b) -> ('a & 'd) -> 'c)
 //│  = [Function: S]
 
 type S1 = ('a -> 'b -> 'c) -> ('a -> 'b) -> 'a -> 'c
@@ -26,14 +29,14 @@ s2 = S: S2
 :e // * S2 is less genetral than S1
 s2: S1
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.27: 	s2: S1
+//│ ║  l.30: 	s2: S1
 //│ ║        	^^
-//│ ╟── type `‘a_86` is not an instance of type `'a_83`
-//│ ║  l.11: 	type S2 = (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ╟── type `‘a_142` is not an instance of type `'a_139`
+//│ ║  l.14: 	type S2 = (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║        	                  ^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.8: 	type S1 = ('a -> 'b -> 'c) -> ('a -> 'b) -> 'a -> 'c
-//│ ╙──     	           ^^
+//│ ║  l.11: 	type S1 = ('a -> 'b -> 'c) -> ('a -> 'b) -> 'a -> 'c
+//│ ╙──      	           ^^
 //│ res: S1
 //│    = [Function: S]
 
@@ -44,11 +47,11 @@ type Id = forall 'a. 'a -> 'a
 :e // TODO: could probably use different type var shadows from different type alias occurrences
 S: Id -> Id -> Id -> Id
 //│ ╔══[ERROR] Cyclic-looking constraint while typing type ascription; a type annotation may be required
-//│ ║  l.45: 	S: Id -> Id -> Id -> Id
+//│ ║  l.48: 	S: Id -> Id -> Id -> Id
 //│ ║        	^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  Id  <:  'a87_98    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  Id  <:  'a87_88''
+//│ ╟── this constraint:  Id  <:  'a143_166    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  Id  <:  'a143_144''
 //│ res: Id -> Id -> Id -> Id
 //│    = [Function: S]
 

@@ -84,12 +84,14 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     // Array subscripts:
     ("[" ~ term ~/ "]" ~~ Index).map {Right(_)}
     // Assignment:
-    ).rep ~ ("<-" ~ term).?).map {
-      case (i0, st, sels, a) =>
-        val base = sels.foldLeft(st)((acc, t) => t match {
+    ).rep ~ "!".!.? ~ ("<-" ~ term).?).map {
+      case (i0, st, sels, bang, a) =>
+        val base0 = sels.foldLeft(st)((acc, t) => t match {
           case Left(se) => Sel(acc, se)
           case Right((su, i1)) => Subs(acc, su).withLoc(i0, i1, origin)
         })
+        val base = if (bang.isEmpty) base0 else
+          Inst(base0)
         a.fold(base)(Assign(base, _))
     }
 

@@ -1076,6 +1076,20 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         typeTerms(sts :+ bod, false, Nil, allowPure = true)
       case Forall(_, _) =>
         ??? // TODO
+      case Inst(bod) =>
+        val bod_ty = typeTerm(bod)
+        var founPoly = false
+        def go(ty: ST): ST = ty.unwrapAll match {
+          case pt: PolymorphicType =>
+            founPoly = true
+            implicit val shadows: Shadows = Shadows.empty
+            go(pt.instantiate)
+          case _ => ty
+        }
+        val res = go(bod_ty)
+        if (!founPoly) warn(msg"Inferred type `${bod_ty.expPos}` of this ${
+          bod_ty.prov.desc} cannot be instantiated", prov.loco)
+        res
     }
   }(r => s"$lvl. : ${r}")
   

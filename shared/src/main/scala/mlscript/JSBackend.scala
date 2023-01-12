@@ -65,6 +65,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     // Others are not supported yet.
     case TyApp(base, _) =>
       translatePattern(base)
+    case Inst(bod) => translatePattern(bod)
     case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf | _: Subs | _: Assign
         | If(_, _) | New(_, _) | _: Splc | _: Forall | _: Where =>
       throw CodeGenError(s"term ${inspect(t)} is not a valid pattern")
@@ -237,6 +238,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case _ =>
           throw CodeGenError(s"illegal assignemnt left-hand side: ${inspect(lhs)}")
       }
+    case Inst(bod) => translateTerm(bod)
     case _: Bind | _: Test | If(_, _) | New(_, _) | TyApp(_, _) | _: Splc
         | _: Where | _: Forall =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")

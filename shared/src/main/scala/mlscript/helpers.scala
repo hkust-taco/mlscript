@@ -381,6 +381,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case TyApp(_, _) => "type application"
     case Where(_, _) => s"constraint clause"
     case Forall(_, _) => s"forall clause"
+    case Inst(bod) => "explicit instantiation"
   }
   
   override def toString: Str = print(false)
@@ -426,6 +427,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case TyApp(lhs, targs) => s"$lhs‹${targs.map(_.show).mkString(", ")}›"
     case Where(bod, wh) => s"${bod} where {${wh.mkString("; ")}}"
     case Forall(ps, bod) => s"forall ${ps.mkString(", ")}. ${bod}"
+    case Inst(bod) => s"${bod.print(true)}!"
   }}
   
   def toType: Diagnostic \/ Type =
@@ -746,6 +748,7 @@ trait StatementImpl extends Located { self: Statement =>
     case NuTypeDef(_, _, _, _, _, _) => ???
     case Where(bod, wh) => bod :: wh
     case Forall(ps, bod) => ps ::: bod :: Nil
+    case Inst(bod) => bod :: Nil
   }
   
   
