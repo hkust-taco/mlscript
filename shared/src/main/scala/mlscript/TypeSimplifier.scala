@@ -318,7 +318,7 @@ trait TypeSimplifier { self: Typer =>
       val cons = dnf.cons.map { case (lo,hi) => (go(lo,S(true)), go(hi,S(false))) }
       PolymorphicType.mk(dnf.polymLevel, ConstrainedType.mk(cons, res))
     }
-        
+    
     def go(ty: ST, pol: Opt[Bool]): ST = trace(s"norm[${printPol(pol)}] $ty") {
       pol match {
         case S(p) => helper(DNF.mk(MaxLevel, Nil, ty, p)(ctx, ptr = true, etf = false), pol)
