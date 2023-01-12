@@ -286,7 +286,7 @@ inc true
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.148: 	def inc: int -> int
 //│ ╙──       	         ^^^
-//│ res: error
+//│ res: error | int
 //│    = 2
 
 // ,("let i = \\x -> x in i i", ok "forall a. a -> a")
@@ -390,7 +390,7 @@ map xauto (map xauto ids)
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.175: 	def xauto : forall 'a. (forall 'b. 'b -> 'b) -> 'a -> 'a
 //│ ╙──       	                               ^^
-//│ res: error
+//│ res: error | List['a -> 'a]
 //│    = Cons { head: [Function: id1], tail: Nil {} }
 
 // ,("map auto ids", ok "[forall a. a -> a]")
@@ -442,13 +442,13 @@ app (map head) (single ids)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.441: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘d_1326` is not an instance of type `int`
+//│ ╟── type `‘d_1330` is not an instance of type `int`
 //│ ║  l.441: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
 //│ ║         	                                                      ^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.441: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
 //│ ╙──       	                                                                        ^^^
-//│ res: error
+//│ res: error | int
 
 // ,("(undefined :: some a. [a -> (forall b. b -> b)] -> Int) (undefined :: some c. [(forall d. d -> d) -> c])", ok "Int")
 :ng
@@ -522,7 +522,7 @@ ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.521: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ║         	^^^
-//│ ╟── type `‘a_1483` is not an instance of type `'b_1482`
+//│ ╟── type `‘a_1487` is not an instance of type `'b_1486`
 //│ ║  l.521: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ║         	                             ^^
 //│ ╟── Note: constraint arises from quantified type variable:

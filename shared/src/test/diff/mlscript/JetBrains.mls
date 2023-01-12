@@ -91,7 +91,7 @@ evalN2 evalN2! e
 //│ ╟── from field selection:
 //│ ║  l.20: 	  | Add -> eval eval x.lhs + eval eval x.rhs
 //│ ╙──      	                                       ^^^^^
-//│ res: error
+//│ res: error | int
 
 
 def evalN3 evalN3 x = case x of {
@@ -137,7 +137,19 @@ evalN3 evalN3! e
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.119: 	  Neg -> 0 - (evalN3 x.underlying)
 //│ ╙──       	              ^^^^^^^^^^^^^^^^^^^
-//│ res: error
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	evalN3 evalN3! e
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Lit & {val: ?val}` is not a function
+//│ ║  l.53: 	e = Add{lhs = Lit{val = 1}; rhs = Neg{underlying = Lit{val = 2}}}
+//│ ║        	                                                   ^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.20: 	  | Add -> eval eval x.lhs + eval eval x.rhs
+//│ ║        	                             ^^^^^^^^^
+//│ ╟── from field selection:
+//│ ║  l.119: 	  Neg -> 0 - (evalN3 x.underlying)
+//│ ╙──       	                     ^^^^^^^^^^^^
+//│ res: error | int
 
 
 

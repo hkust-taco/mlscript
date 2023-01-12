@@ -42,9 +42,30 @@ eval1_ty = eval1_ty_ugly
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.20: 	def eval1_ty: Add[int] // ~500
 //│ ╙──      	                  ^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.30: 	eval1_ty = eval1_ty_ugly
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Add[?b]` is not an instance of type `int`
+//│ ║  l.13: 	def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
+//│ ║        	                   ^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.20: 	def eval1_ty: Add[int] // ~500
+//│ ╙──      	                  ^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.30: 	eval1_ty = eval1_ty_ugly
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `int & {val: int}` does not match type `Lit | {Add#E = int}`
+//│ ║  l.20: 	def eval1_ty: Add[int] // ~500
+//│ ║        	                  ^^^
+//│ ╟── but it flows into reference with expected type `Lit | {Add#E = int}`
+//│ ║  l.30: 	eval1_ty = eval1_ty_ugly
+//│ ║        	           ^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.20: 	def eval1_ty: Add[int] // ~500
+//│ ╙──      	              ^^^^^^^^
 //│         = <no result>
 //│           eval1_ty_ugly is not implemented
-//│ constrain calls  : 22
-//│ annoying  calls  : 12
-//│ subtyping calls  : 128
+//│ constrain calls  : 63
+//│ annoying  calls  : 44
+//│ subtyping calls  : 542
 

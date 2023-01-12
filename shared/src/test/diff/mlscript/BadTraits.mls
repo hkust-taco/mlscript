@@ -21,7 +21,7 @@ T {}
 //│ ╟── from intersection type:
 //│ ║  l.7: 	trait T: A & B
 //│ ╙──     	         ^^^^^
-//│ res: error
+//│ res: error | #T
 //│    = {}
 
 a = A{}
@@ -48,7 +48,7 @@ T a
 //│ ╟── Note: class A is defined at:
 //│ ║  l.1: 	class A
 //│ ╙──     	      ^
-//│ res: error
+//│ res: A & #T | error
 //│    = A {}
 
 :e
@@ -72,7 +72,7 @@ T A
 //│ ╟── Note: class constructor A is defined at:
 //│ ║  l.1: 	class A
 //│ ╙──     	      ^
-//│ res: error
+//│ res: anything -> A & #T | error
 //│    = [Function (anonymous)]
 
 :e
@@ -92,7 +92,7 @@ T (B {})
 //│ ╟── Note: class B is defined at:
 //│ ║  l.2: 	class B
 //│ ╙──     	      ^
-//│ res: error
+//│ res: B & #T | error
 //│    = B {}
 
 :re

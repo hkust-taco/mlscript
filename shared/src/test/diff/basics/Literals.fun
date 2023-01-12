@@ -111,7 +111,7 @@ f false
 //│ ╟── Note: constraint arises from argument:
 //│ ║  l.93: 	  if pred n then n else f (n + 1)
 //│ ╙──      	                           ^
-//│ res: error
+//│ res: error | false | int
 
 let take0 (x: 0) = 0
 let take1 (x: 1) = 1

@@ -172,7 +172,7 @@ move ri rn
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.3: 	class Ref[A]
 //│ ╙──     	          ^
-//│ res: error
+//│ res: error | unit
 //│    = []
 
 
@@ -209,7 +209,7 @@ swap ri rn
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.86: 	ri = r : Ref[int]
 //│ ╙──      	             ^^^
-//│ res: error
+//│ res: (unit, unit,) | error
 //│    = [ [], [] ]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.202: 	swap ri rn
@@ -226,7 +226,7 @@ swap ri rn
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.3: 	class Ref[A]
 //│ ╙──     	          ^
-//│ res: error
+//│ res: (unit, unit,) | error
 //│    = [ [], [] ]
 
 
@@ -300,7 +300,7 @@ refun.Swap
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.3: 	class Ref[A]
 //│ ╙──     	          ^
-//│ res: error
+//│ res: error | int | string
 //│    = <no result>
 //│      refun is not implemented
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -315,7 +315,7 @@ refun.Swap
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.3: 	class Ref[A]
 //│ ╙──     	          ^
-//│ res: anything -> error
+//│ res: nothing -> (error | unit)
 //│    = <no result>
 //│      refun is not implemented
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -330,7 +330,7 @@ refun.Swap
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.3: 	class Ref[A]
 //│ ╙──     	          ^
-//│ res: error
+//│ res: nothing -> (int | string) | error
 //│    = <no result>
 //│      refun is not implemented
 
@@ -350,7 +350,7 @@ def bar x = RefImpl { mut value = x } : Ref[int] & Ref[string]
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.12: 	class RefImpl[A]: Ref[A] & { mut value: A }
 //│ ╙──      	              ^
-//│ bar: int -> Ref[in int | string out nothing]
+//│ bar: nothing -> Ref[in int | string out nothing]
 //│    = [Function: bar]
 
 // * Note that this now signature-checks because it instantiates the inferred polymorphic type

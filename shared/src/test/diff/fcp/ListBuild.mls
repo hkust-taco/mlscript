@@ -271,6 +271,36 @@ b g x = build_ g x
 //│ ╟── from application:
 //│ ║  l.199: 	def build_ = fun g -> g (fun x -> fun xs -> cons (x, xs)) nil
 //│ ╙──       	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.258: 	b g x = build_ g x
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Ls[?a]` is not a function
+//│ ║  l.24: 	def cons: ('a, Ls['a]) -> Ls['a]
+//│ ║        	                          ^^^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.258: 	b g x = build_ g x
+//│ ║         	        ^^^^^^^^^^
+//│ ╟── from application:
+//│ ║  l.199: 	def build_ = fun g -> g (fun x -> fun xs -> cons (x, xs)) nil
+//│ ╙──       	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.258: 	b g x = build_ g x
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> ?b` is not an instance of type `Ls`
+//│ ║  l.258: 	b g x = build_ g x
+//│ ║         	    ^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.235: 	def b: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
+//│ ╙──       	                                                    ^^^^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.258: 	b g x = build_ g x
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> ?b` does not have field 'Ls#A'
+//│ ║  l.258: 	b g x = build_ g x
+//│ ║         	    ^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.235: 	def b: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
+//│ ╙──       	                                                    ^^^^^^
 //│  = [Function: b3]
 
 

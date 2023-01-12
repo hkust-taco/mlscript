@@ -28,7 +28,7 @@ fun (x: ('a -> 'a)) -> auto_ x
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.6: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──     	                    ^^
-//│ res: (anything -> nothing) -> error
+//│ res: (anything -> nothing) -> ('b -> 'b | error)
 //│    = [Function: res]
 
 foo(x: ('a -> 'b)) = auto_ x
@@ -52,7 +52,7 @@ foo (fun x -> x)
 //│ ╟── from type variable:
 //│ ║  l.34: 	foo(x: ('a -> 'b)) = auto_ x
 //│ ╙──      	              ^^
-//│ res: error
+//│ res: 'b -> 'b | error
 //│    = [Function (anonymous)]
 
 :e
@@ -69,7 +69,7 @@ foo (fun x -> 0)
 //│ ╟── from type variable:
 //│ ║  l.34: 	foo(x: ('a -> 'b)) = auto_ x
 //│ ╙──      	              ^^
-//│ res: error
+//│ res: 'b -> 'b | error
 //│    = 0
 
 :e
@@ -89,15 +89,30 @@ foo (fun x -> foo (fun y -> y) x)
 //│ ╟── from type variable:
 //│ ║  l.34: 	foo(x: ('a -> 'b)) = auto_ x
 //│ ╙──      	              ^^
-//│ res: 'b -> 'b
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.76: 	foo (fun x -> foo (fun y -> y) x)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.6: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║       	                    ^^
+//│ ╟── but it flows into reference with expected type `nothing`
+//│ ║  l.76: 	foo (fun x -> foo (fun y -> y) x)
+//│ ║        	                               ^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.6: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║       	                    ^^
+//│ ╟── from type variable:
+//│ ║  l.34: 	foo(x: ('a -> 'b)) = auto_ x
+//│ ╙──      	              ^^
+//│ res: 'b -> 'b | error
 //│    = [Function (anonymous)]
 
 // * This would be unsound; `fun y -> x` does not have type `forall 'a. 'a -> 'a` but it is eventually passed to auto_
 :e
 foo (fun x -> foo (fun y -> x) x)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.97: 	foo (fun x -> foo (fun y -> x) x)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.112: 	foo (fun x -> foo (fun y -> x) x)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.6: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║       	                    ^^
@@ -105,9 +120,9 @@ foo (fun x -> foo (fun y -> x) x)
 //│ ║  l.6: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║       	                    ^^
 //│ ╟── from reference:
-//│ ║  l.97: 	foo (fun x -> foo (fun y -> x) x)
-//│ ╙──      	                            ^
-//│ res: error
+//│ ║  l.112: 	foo (fun x -> foo (fun y -> x) x)
+//│ ╙──       	                            ^
+//│ res: 'b -> 'b | error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 
@@ -128,23 +143,23 @@ def extrude (f: 'a -> 'b) = oops f
 :e
 f = extrude (fun x -> extrude (fun y -> x) x)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.129: 	f = extrude (fun x -> extrude (fun y -> x) x)
+//│ ║  l.144: 	f = extrude (fun x -> extrude (fun y -> x) x)
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.117: 	def oops (i: forall 'a. 'a -> 'a) =
+//│ ║  l.132: 	def oops (i: forall 'a. 'a -> 'a) =
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.117: 	def oops (i: forall 'a. 'a -> 'a) =
+//│ ║  l.132: 	def oops (i: forall 'a. 'a -> 'a) =
 //│ ║         	                    ^^
 //│ ╟── from reference:
-//│ ║  l.129: 	f = extrude (fun x -> extrude (fun y -> x) x)
+//│ ║  l.144: 	f = extrude (fun x -> extrude (fun y -> x) x)
 //│ ╙──       	                                        ^
-//│ f: error
+//│ f: 'a -> 'a | error
 //│  = [Function (anonymous)]
 
 :re
 f 42 // Boom!
-//│ res: error
+//│ res: 42 | error
 //│ Runtime error:
 //│   TypeError: i(...) is not a function
 
@@ -165,15 +180,15 @@ def swapWith f (a, b) = f ((a, b))
 :e
 fun (x: ('a -> 'a)) -> swapWith x
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.166: 	fun (x: ('a -> 'a)) -> swapWith x
+//│ ║  l.181: 	fun (x: ('a -> 'a)) -> swapWith x
 //│ ║         	                       ^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.153: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
+//│ ║  l.168: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
 //│ ║         	                      ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.153: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
+//│ ║  l.168: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
 //│ ╙──       	                         ^^
-//│ res: (('a | (anything, anything,)) -> ((nothing, nothing,) & 'a)) -> error
+//│ res: (('a | (anything, anything,)) -> ((nothing, nothing,) & 'a)) -> (('a0, 'b,) -> ('b, 'a0,) | error)
 //│    = [Function: res]
 
 foo = fun (x: ('a -> 'b)) -> swapWith x
@@ -187,79 +202,79 @@ bar = fun f -> foo f (1, 2)
 :e
 bar (fun ((u, v),) -> (v, u))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.188: 	bar (fun ((u, v),) -> (v, u))
+//│ ║  l.203: 	bar (fun ((u, v),) -> (v, u))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.153: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
+//│ ║  l.168: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
 //│ ║         	                         ^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.188: 	bar (fun ((u, v),) -> (v, u))
+//│ ║  l.203: 	bar (fun ((u, v),) -> (v, u))
 //│ ║         	                       ^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.153: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
+//│ ║  l.168: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
 //│ ╙──       	                         ^^
-//│ res: error
+//│ res: (2, 1,) | error
 //│    = [ 2, 1 ]
 
 :e
 bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v2, u2)) in (v1, u1))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.205: 	bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v2, u2)) in (v1, u1))
+//│ ║  l.220: 	bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v2, u2)) in (v1, u1))
 //│ ║         	                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.153: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
+//│ ║  l.168: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
 //│ ║         	                         ^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.205: 	bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v2, u2)) in (v1, u1))
+//│ ║  l.220: 	bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v2, u2)) in (v1, u1))
 //│ ║         	                                                           ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.153: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
+//│ ║  l.168: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
 //│ ╙──       	                         ^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.205: 	bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v2, u2)) in (v1, u1))
+//│ ║  l.220: 	bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v2, u2)) in (v1, u1))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.153: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
+//│ ║  l.168: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
 //│ ║         	                         ^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.205: 	bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v2, u2)) in (v1, u1))
+//│ ║  l.220: 	bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v2, u2)) in (v1, u1))
 //│ ║         	                                                                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.153: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
+//│ ║  l.168: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
 //│ ╙──       	                         ^^
-//│ res: error
+//│ res: (2, 1,) | error
 //│    = [ 2, 1 ]
 
 :e // * Not sure why this one is rejected (but the `extrude` version above is accepted.)
 bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v1, u1)) in (v1, u1))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.234: 	bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v1, u1)) in (v1, u1))
+//│ ║  l.249: 	bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v1, u1)) in (v1, u1))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.153: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
+//│ ║  l.168: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
 //│ ║         	                      ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.153: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
+//│ ║  l.168: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
 //│ ║         	                      ^^
 //│ ╟── from reference:
-//│ ║  l.234: 	bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v1, u1)) in (v1, u1))
+//│ ║  l.249: 	bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v1, u1)) in (v1, u1))
 //│ ╙──       	                                                               ^^
-//│ res: error
+//│ res: (2, 1,) | error
 //│    = [ 2, 1 ]
 
 
 :e
 fun (x: ((('a, 'b),) -> ('b, 'a))) -> swapWith x
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.252: 	fun (x: ((('a, 'b),) -> ('b, 'a))) -> swapWith x
+//│ ║  l.267: 	fun (x: ((('a, 'b),) -> ('b, 'a))) -> swapWith x
 //│ ║         	                                      ^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.153: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
+//│ ║  l.168: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
 //│ ║         	                         ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.153: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
+//│ ║  l.168: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
 //│ ╙──       	                         ^^
-//│ res: ((anything, anything,) -> (nothing, anything,)) -> error
+//│ res: ((anything, anything,) -> (nothing, nothing,)) -> (('a, 'b,) -> ('b, 'a,) | error)
 //│    = [Function: res]
 
 fun (x: ((('a, 'b),) -> ('c, 'd))) -> swapWith x

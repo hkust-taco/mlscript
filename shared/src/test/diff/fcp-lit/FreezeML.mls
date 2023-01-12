@@ -512,17 +512,17 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──       	                    ^^
-//│ res: 'b
+//│ res: 'c
 //│   where
-//│     'b :> (forall 'a. 'a -> 'a) | (forall 'a0, 'c. ('a0 -> 'a0) -> 'c)
-//│     'c :> error
+//│     'c :> (forall 'a. 'a -> 'a) | (forall 'a0, 'd, 'b. ('a0 -> 'a0) -> 'd)
+//│     'd :> 'b -> 'b | error
 //│     'a0 :> anything
 //│         <: nothing
 //│    = [Function: id1]
 
 // * The skolem used to (unsafely) leak into this type – see also `Skolems.mls`:
 res
-//│ res: (anything -> nothing & 'a) -> ('a | error)
+//│ res: (anything -> nothing & 'a) -> ('a | 'b -> 'b | error)
 //│    = [Function: id1]
 
 :e // skolem extrusion
@@ -548,13 +548,13 @@ a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.547: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a_1389`
+//│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a_1396`
 //│ ║  l.547: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──       	                    ^^
-//│ res: 'a -> {u: 'a} | error
+//│ res: ('b & 'a) -> ('b | {u: 'a}) | error
 //│    = [Function (anonymous)]
 
 

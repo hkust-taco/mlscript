@@ -59,7 +59,7 @@ succ true
 //│ ╟── reference of type `true` is not an instance of type `int`
 //│ ║  l.+1: 	succ true
 //│ ╙──      	     ^^^^
-//│ res: error
+//│ res: error | int
 
 :e
 x => succ (not x)
@@ -72,7 +72,7 @@ x => succ (not x)
 //│ ╟── but it flows into argument with expected type `int`
 //│ ║  l.+1: 	x => succ (not x)
 //│ ╙──      	          ^^^^^^^
-//│ res: bool -> error
+//│ res: bool -> (error | int)
 
 :e
 (x => not x.f) { f: 123 }
@@ -88,7 +88,7 @@ x => succ (not x)
 //│ ╟── from field selection:
 //│ ║  l.+1: 	(x => not x.f) { f: 123 }
 //│ ╙──      	           ^^
-//│ res: error
+//│ res: bool | error
 
 :e
 (f => x => not (f x.u)) false
@@ -104,7 +104,7 @@ x => succ (not x)
 //│ ╟── from reference:
 //│ ║  l.+1: 	(f => x => not (f x.u)) false
 //│ ╙──      	                ^
-//│ res: error
+//│ res: {u: anything} -> bool | error
 
 
 
@@ -187,8 +187,8 @@ x => y => x x y
 //│ ║  l.+1: 	(x => x x) (x => x x)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α222_224' -> α223_225')›  <:  α222_229    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α222_224' -> α223_225')›  <:  α222_224'
+//│ ╟── this constraint:  ‹∀ 0. (α225_227' -> α226_228')›  <:  α225_232    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α225_227' -> α226_228')›  <:  α225_227'
 //│ res: error
 
 
@@ -204,9 +204,9 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (x x)) (x => f (x x)))
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α244_249' -> α246_251')›  <:  α244_256    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α244_249' -> α246_251')›  <:  α244_249'
-//│ res: (nothing -> anything) -> error
+//│ ╟── this constraint:  ‹∀ 0. (α247_252' -> α249_254')›  <:  α247_259    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α247_252' -> α249_254')›  <:  α247_252'
+//│ res: ('a -> 'a & 'a -> 'b) -> (error | 'b)
 
 // * Z combinator:
 :e
@@ -215,9 +215,9 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α276_291' -> α285_295')›  <:  α276_302    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α276_291' -> α285_295')›  <:  α276_291'
-//│ res: ((anything -> nothing) -> anything) -> error
+//│ ╟── this constraint:  ‹∀ 0. (α284_299' -> α293_303')›  <:  α284_310    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α284_299' -> α293_303')›  <:  α284_299'
+//│ res: (('a -> 'b) -> ('c -> 'd & 'a -> 'b) & ('c -> 'd) -> 'e) -> (error | 'e)
 
 // * Function that takes arbitrarily many arguments:
 :e
@@ -226,12 +226,16 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α330_345' -> α339_349')›  <:  α330_356    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α330_345' -> α339_349')›  <:  α330_345'
-//│ res: error
+//│ ╟── this constraint:  ‹∀ 0. (α352_367' -> α361_371')›  <:  α352_378    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α352_367' -> α361_371')›  <:  α352_367'
+//│ res: 'a | error
+//│   where
+//│     'a :> anything -> 'a
 
 res 1 2
-//│ res: error
+//│ res: error | 'a
+//│   where
+//│     'a :> anything -> 'a
 
 
 let rec trutru = g => trutru (g true)
@@ -403,8 +407,8 @@ let rec x = (let y = (x x); (z => z))
 //│ ║  l.+1: 	(w => x => x) ((y => y y) (y => y y))
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α692_694' -> α693_695')›  <:  α692_701    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α692_694' -> α693_695')›  <:  α692_694'
+//│ ╟── this constraint:  ‹∀ 0. (α736_738' -> α737_739')›  <:  α736_745    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α736_738' -> α737_739')›  <:  α736_738'
 //│ res: 'a -> 'a
 
 

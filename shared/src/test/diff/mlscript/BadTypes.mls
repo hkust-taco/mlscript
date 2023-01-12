@@ -192,7 +192,7 @@ someRec: BadRec
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.+1: 	someRec: BadRec
 //│ ║        	^^^^^^^
-//│ ╟── type `{x: ?a, y: ?a}` is not an instance of type `'a_55`
+//│ ╟── type `{x: ?a, y: ?a}` is not an instance of type `'a_57`
 //│ ║  l.184: 	def someRec: { x: 'a; y: 'a } as 'a
 //│ ║         	             ^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
@@ -244,7 +244,7 @@ type ExSigR4 = SigR['a]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.+1: 	1: ExSigR4
 //│ ║        	^
-//│ ╟── integer literal of type `1` is not an instance of type `'a_68`
+//│ ╟── integer literal of type `1` is not an instance of type `'a_72`
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.239: 	type ExSigR4 = SigR['a]
 //│ ║         	                    ^^

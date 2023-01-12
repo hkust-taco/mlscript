@@ -214,7 +214,7 @@ case o of {
 //│ ╟── but it flows into reference with expected type `None[?] & ?a | Some[?] & ?c`
 //│ ║  l.204: 	case o of {
 //│ ╙──       	     ^
-//│ res: 0
+//│ res: 0 | 1
 //│    = 0
 
 case o of {

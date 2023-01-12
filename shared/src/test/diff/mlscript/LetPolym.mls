@@ -44,7 +44,7 @@ test "hi"
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.27: 	  let local g = g x
 //│ ╙──      	                  ^
-//│ res: error
+//│ res: error | int
 //│    = 'hi1'
 
 def test f =
@@ -71,7 +71,7 @@ test (fun x -> false)
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.51: 	  let local() = succ (f 1)
 //│ ╙──      	                      ^^^
-//│ res: error
+//│ res: error | int
 //│    = 1
 
 :e
@@ -82,7 +82,7 @@ test concat
 //│ ╟── integer literal of type `1` is not an instance of type `string`
 //│ ║  l.51: 	  let local() = succ (f 1)
 //│ ╙──      	                        ^
-//│ res: error
+//│ res: error | int
 //│    = '(y) => x + y1'
 
 def test f =
@@ -108,7 +108,7 @@ test (fun x -> "oops")
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.95: 	  let local g = g (f 1)
 //│ ╙──      	                   ^^^
-//│ res: error
+//│ res: error | int
 //│    = 'oops1'
 
 
@@ -164,7 +164,7 @@ test succ
 //│ ╟── string literal of type `"ok"` is not an instance of type `int`
 //│ ║  l.155: 	  in (local add 1, local concat "ok")
 //│ ╙──       	                                ^^^^
-//│ res: error
+//│ res: (int -> int, string -> string,) | error
 //│    = [ [Function (anonymous)], [Function (anonymous)] ]
 
 
@@ -215,7 +215,7 @@ res add "1"
 //│ ╟── from reference:
 //│ ║  l.199: 	  let local = (fun y -> f y) x
 //│ ╙──       	                             ^
-//│ res: error
+//│ res: () | error
 //│    = []
 
 fun f -> fun x ->
@@ -238,7 +238,7 @@ res add "1"
 //│ ╟── from reference:
 //│ ║  l.222: 	  let local = f ((fun y -> y) x)
 //│ ╙──       	                              ^
-//│ res: error
+//│ res: () | error
 //│    = []
 
 def id: 'a -> 'a
@@ -269,7 +269,7 @@ fun f -> fun x ->
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.257: 	    let tmp = add x 1 in x
 //│ ╙──       	                  ^
-//│ res: error
+//│ res: error | true
 //│    = true
 
 :e
@@ -295,7 +295,7 @@ fun f -> fun x ->
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.278: 	      let tmp = add x 1 in x
 //│ ╙──       	                    ^
-//│ res: error
+//│ res: error | true
 //│    = true
 
 
@@ -354,13 +354,13 @@ foo (fun x -> (0, x + 1))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.353: 	foo (fun x -> (0, x + 1))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_657` is not an instance of type `int`
+//│ ╟── type `‘a_661` is not an instance of type `int`
 //│ ║  l.342: 	def foo (f: forall 'a. 'a -> ('a, 'a)) =
 //│ ║         	                   ^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.353: 	foo (fun x -> (0, x + 1))
 //│ ╙──       	                  ^
-//│ res: error
+//│ res: error | int
 //│    = 43
 
 

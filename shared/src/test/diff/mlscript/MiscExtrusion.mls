@@ -68,7 +68,7 @@ alsoPrintSize id
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.51: 	def mapExpr: (forall 'a. Expr['a] -> Expr['a]) -> Program -> Program
 //│ ╙──      	                     ^^
-//│ res: error
+//│ res: Program -> Program | error
 
 def alsoPrintSize (f: forall 'a. Expr['a] -> Expr['a]) =
   mapExpr(fun e -> let tmp = print e in f e)
@@ -103,7 +103,7 @@ alsoPrintSizeCo id
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.86: 	def mapExprCo: (forall 'a. ExprCo['a] -> ExprCo['a]) -> Program -> Program
 //│ ╙──      	                       ^^
-//│ res: error
+//│ res: Program -> Program | error
 
 def alsoPrintSizeCo (f: forall 'a. Expr['a] -> Expr['a]) =
   mapExpr(fun e -> let tmp = print e in f e)

@@ -130,7 +130,7 @@ eval {} (Lit{} with { val = 1 })
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.38: 	def eval: ('b -> int) -> Expr['b] -> int
 //│ ╙──      	          ^^^^^^^^^^^
-//│ res: error
+//│ res: error | int
 //│    = 1
 
 eval (fun x -> x) (Lit{} with { val = 1 })
@@ -159,7 +159,7 @@ eval (fun x -> x.hello) {hello=1}
 //│ ╟── from applied type reference:
 //│ ║  l.38: 	def eval: ('b -> int) -> Expr['b] -> int
 //│ ╙──      	                         ^^^^^^^^
-//│ res: error
+//│ res: error | int
 //│    = 1
 
 l = Lit{} with {hello=1}

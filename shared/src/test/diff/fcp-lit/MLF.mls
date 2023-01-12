@@ -135,7 +135,7 @@ res (choose id succ)
 //│ ╟── but it flows into application with expected type `int`
 //│ ║  l.128: 	res (choose id succ)
 //│ ╙──       	     ^^^^^^^^^^^^^^
-//│ res: int -> int | error
+//│ res: int -> int | error | int
 
 // Didier Le Botlan suggested this fix by email:
 

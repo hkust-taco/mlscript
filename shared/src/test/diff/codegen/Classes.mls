@@ -206,7 +206,7 @@ f(Box{})
 //│ ╟── Note: constraint arises from type wildcard:
 //│ ║  l.194: 	def f: Box[?] -> int
 //│ ╙──       	           ^
-//│ res: error
+//│ res: error | int
 //│    = <no result>
 //│      f is not implemented
 

@@ -119,7 +119,7 @@ Cons 1 res
 //│ ╟── from reference:
 //│ ║  l.88: 	def Cons head tail = originalCons { head; tail } with { head; tail }
 //│ ╙──      	                                          ^^^^
-//│ res: error
+//│ res: (Cons[1] with {tail: 2}) | error
 //│    = Cons { head: 1, tail: 2 }
 
 // Here there used to be a loss of precision in the older with-field approach.

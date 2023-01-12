@@ -112,7 +112,7 @@ def baz x =
 //│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.105: 	  (x: MutArray['s] -> 't): forall 'a. 'a -> 'a
 //│ ╙──       	      ^^^^^^^^^^^^
-//│ baz: (MutArray['s] -> anything) -> (forall 'a. 'a -> 'a)
+//│ baz: (MutArray['s] -> nothing) -> (forall 'a. 'a -> 'a)
 //│    = [Function: baz2]
 :e
 def baz x =
@@ -129,7 +129,7 @@ def baz x =
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.119: 	  (x: MutArray['s] -> 't): forall 'a. MutArray['a] -> 'a
 //│ ╙──       	                                  ^^
-//│ baz: (MutArray['s] -> anything) -> (forall 'a. MutArray['a] -> 'a)
+//│ baz: (MutArray['s] -> nothing) -> (forall 'a. MutArray['a] -> 'a)
 //│   where
 //│     's :> anything
 //│        <: nothing
@@ -176,7 +176,7 @@ def bar y =
 //│ ╟── from reference:
 //│ ║  l.166: 	  (fun x -> y (id2 x, x)) : forall 'a. 'a -> 'a
 //│ ╙──       	                   ^
-//│ bar: ((forall 't. 't -> 't, anything,) -> anything) -> (forall 'a. 'a -> 'a)
+//│ bar: ((forall 't. 't -> 't, anything,) -> nothing) -> (forall 'a. 'a -> 'a)
 //│    = [Function: bar10]
 
 :e // * Legit (rigid var function can't be used as polymorphic function)
@@ -191,7 +191,7 @@ def bar y =
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.184: 	  (fun x -> y (id2 x, x)) : forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                                   ^^
-//│ bar: ((forall 't. 't -> 't, nothing -> anything,) -> anything) -> (forall 'a. ('a -> 'a) -> 'a -> 'a)
+//│ bar: ((forall 't. 't -> 't, nothing -> anything,) -> anything -> nothing) -> (forall 'a. ('a -> 'a) -> 'a -> 'a)
 //│    = [Function: bar11]
 
 def id3: ('s -> 's) -> ('s -> 's)
@@ -275,7 +275,7 @@ def boo x =
 //│ ╟── from type variable:
 //│ ║  l.264: 	  let tmp = (x: ('s -> 's) -> 't): forall 'a. ('a -> 'a) -> 0
 //│ ╙──       	                       ^^
-//│ boo: ((nothing -> nothing) -> anything) -> 0
+//│ boo: ((nothing -> anything) -> 0) -> 0
 //│    = [Function: boo3]
 
 

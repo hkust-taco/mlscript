@@ -24,11 +24,11 @@ e = eval eval
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α25_40'' -> ‹∀ 2. (α26_44''' -> (0<int,number> | α32_48'''))›)››  <:  α25_74'    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α25_40'' -> ‹∀ 2. (α26_44''' -> (0<int,number> | α32_48'''))›)››  <:  α25_40''
-//│ e: error
+//│ e: (A & {f: A | L} | L) -> 0 | error
 //│  = [Function (anonymous)]
 
 e (A{f = L{}})
-//│ res: error
+//│ res: 0 | error
 //│    = 0
 
 
@@ -55,9 +55,9 @@ e v
 //│ ║  l.53: 	e v
 //│ ║        	^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (a<> & {f: f24_214})  <:  f33_197    ComposedType  TypeVariable
-//│ ╙──  ... looks like:  (a<> & {f: f24_180'})  <:  f33_92'
-//│ res: error
+//│ ╟── this constraint:  (a<> & {f: f24_256})  <:  f33_239    ComposedType  TypeVariable
+//│ ╙──  ... looks like:  (a<> & {f: f24_222'})  <:  f33_134'
+//│ res: error | 0
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 
@@ -85,14 +85,14 @@ e = eval eval
 //│ ║  l.83: 	e = eval eval
 //│ ║        	    ^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α252_267'' -> ‹∀ 2. (α253_271''' -> (0<int,number> | {x: α259_275'''}))›)››  <:  α252_301'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α252_267'' -> ‹∀ 2. (α253_271''' -> (0<int,number> | {x: α259_275'''}))›)››  <:  α252_267''
-//│ e: error
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α300_315'' -> ‹∀ 2. (α301_319''' -> (0<int,number> | {x: α307_323'''}))›)››  <:  α300_349'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α300_315'' -> ‹∀ 2. (α301_319''' -> (0<int,number> | {x: α307_323'''}))›)››  <:  α300_315''
+//│ e: (A & {f: A | L} | L) -> (0 | {x: 0 | {x: nothing}}) | error
 //│  = [Function (anonymous)]
 
 :re
 e v
-//│ res: error
+//│ res: 0 | error | {x: 0 | {x: nothing}}
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 

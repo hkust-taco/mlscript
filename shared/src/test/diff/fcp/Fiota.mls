@@ -50,8 +50,8 @@ S: Id -> Id -> Id -> Id
 //│ ║  l.48: 	S: Id -> Id -> Id -> Id
 //│ ║        	^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  Id  <:  'a144_167    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  Id  <:  'a144_145''
+//│ ╟── this constraint:  Id  <:  'a145_168    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  Id  <:  'a145_146''
 //│ res: Id -> Id -> Id -> Id
 //│    = [Function: S]
 

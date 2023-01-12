@@ -8,6 +8,8 @@ import mlscript.utils._, shorthands._
 import mlscript.Message._
 
 class ConstraintSolver extends NormalForms { self: Typer =>
+  
+  def stopConstrainingOnFirstFailure: Bool = false
   def verboseConstraintProvenanceHints: Bool = verbose
   def defaultStartingFuel: Int = 5000
   var startingFuel: Int = defaultStartingFuel
@@ -32,11 +34,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           shadows: Shadows = Shadows.empty
         ): Unit = {
     currentConstrainingRun += 1
-    // constrainImpl(lhs, rhs)
-    constrainImpl(lhs, rhs)(err => {
-      raise(err)
-      return()
-    }, prov, ctx, shadows)
+    if (stopConstrainingOnFirstFailure)
+      constrainImpl(lhs, rhs)(err => {
+        raise(err)
+        return()
+      }, prov, ctx, shadows)
+    else constrainImpl(lhs, rhs)
   }
   def constrainImpl(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx, 
           shadows: Shadows

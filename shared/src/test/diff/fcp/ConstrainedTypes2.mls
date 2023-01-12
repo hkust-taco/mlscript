@@ -96,7 +96,9 @@ test 1
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.79: 	  in let _ = extr f
 //│ ╙──      	             ^^^^^^
-//│ res: error
+//│ res: anything -> 'a | error
+//│   where
+//│     0 <: 0 -> 'a
 //│ Runtime error:
 //│   TypeError: extr is not a function
 
@@ -107,8 +109,8 @@ def test extr x =
   in f 0
 //│ test: ((forall 'a. 'a -> (forall 'b, 'c. (anything -> 'c
 //│   where
-//│     'a <: 0 -> 'b
-//│     'd <: 'b -> 'c))) -> anything) -> (forall 'e. ('d & 'e) -> (forall 'f, 'g. (anything -> 'g
+//│     'd <: 'b -> 'c
+//│     'a <: 0 -> 'b))) -> anything) -> (forall 'e. ('d & 'e) -> (forall 'f, 'g. (anything -> 'g
 //│   where
 //│     'e <: 'f -> 'g
 //│     0 <: 0 -> 'f)))
@@ -117,15 +119,18 @@ def test extr x =
 :e
 test 0
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.118: 	test 0
+//│ ║  l.120: 	test 0
 //│ ║         	^^^^^^
 //│ ╟── integer literal of type `0` is not a function
-//│ ║  l.118: 	test 0
+//│ ║  l.120: 	test 0
 //│ ║         	     ^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.106: 	  in let _ = extr f
+//│ ║  l.108: 	  in let _ = extr f
 //│ ╙──       	             ^^^^^^
-//│ res: error
+//│ res: 'a -> (forall 'b, 'c. (anything -> 'c
+//│   where
+//│     'a <: 'b -> 'c
+//│     0 <: 0 -> 'b)) | error
 //│    = [Function (anonymous)]
 
 def test extr x =
@@ -141,20 +146,20 @@ def test extr x =
 test 0 1
 //│ res: anything -> 'a
 //│   where
-//│     0 <: 0 -> 'b
 //│     1 <: 'b -> 'a
+//│     0 <: 0 -> 'b
 //│    = [Function (anonymous)]
 
 :e
 test 0 1 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.149: 	test 0 1 2
+//│ ║  l.154: 	test 0 1 2
 //│ ║         	^^^^^^^^^^
 //│ ╟── integer literal of type `1` is not a function
-//│ ║  l.149: 	test 0 1 2
+//│ ║  l.154: 	test 0 1 2
 //│ ║         	       ^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.132: 	  let f n m = x (n 0)
+//│ ║  l.137: 	  let f n m = x (n 0)
 //│ ╙──       	              ^^^^^^^
 //│ res: error
 //│ Runtime error:
@@ -178,13 +183,13 @@ test 0 1
 :e
 test 0 1 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.179: 	test 0 1 2
+//│ ║  l.184: 	test 0 1 2
 //│ ║         	^^^^^^^^^^
 //│ ╟── integer literal of type `0` is not a function
-//│ ║  l.165: 	  in f 0
+//│ ║  l.170: 	  in f 0
 //│ ║         	       ^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.164: 	  let f n m = (n x 0)
+//│ ║  l.169: 	  let f n m = (n x 0)
 //│ ╙──       	               ^^^
 //│ res: error
 //│ Runtime error:

@@ -185,7 +185,7 @@ delta_ succ
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.126: 	def succ n = n + 1
 //│ ╙──       	             ^
-//│ res: error
+//│ res: error | Id
 //│    = 'function succ(n) {  return n + 1;}1'
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.178: 	delta_ succ
@@ -199,7 +199,7 @@ delta_ succ
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.126: 	def succ n = n + 1
 //│ ╙──       	             ^
-//│ res: error
+//│ res: error | int
 //│    = 'function succ(n) {  return n + 1;}1'
 
 // let z = delta (choose id id)
@@ -870,6 +870,24 @@ rec def id_ x = if true then x else id_ id_ x
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‹∀ 1. (α2479_2489'' -> α2488_2491'')›  <:  α2479_2495'    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 1. (α2479_2489'' -> α2488_2491'')›  <:  α2479_2489''
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
+//│ ║  l.866: 	rec def id_ x = if true then x else id_ id_ x
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 1. (α2479_2489'' -> α2488_2491'')›  <:  α2479_2495'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α2479_2489'' -> α2488_2491'')›  <:  α2479_2489''
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
+//│ ║  l.866: 	rec def id_ x = if true then x else id_ id_ x
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 1. (α2479_2489'' -> α2488_2491'')›  <:  α2484'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α2479_2489'' -> α2488_2491'')›  <:  α2484'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
+//│ ║  l.866: 	rec def id_ x = if true then x else id_ id_ x
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 1. (α2479_2489'' -> α2488_2491'')›  <:  α2484'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α2479_2489'' -> α2488_2491'')›  <:  α2484'
 //│ id_: 'id_
 //│   where
 //│     'id_ :> forall 'a. ('b & 'a) -> 'a
@@ -900,23 +918,89 @@ rec def id x = if true then x else id id x
 //│   <:  id:
 //│ Sid
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.891: 	rec def id x = if true then x else id id x
+//│ ║  l.909: 	rec def id x = if true then x else id id x
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‹∀ 1. (α2523_2533'' -> α2532_2535'')›  <:  α2523_2539'    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 1. (α2523_2533'' -> α2532_2535'')›  <:  α2523_2533''
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
+//│ ║  l.909: 	rec def id x = if true then x else id id x
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 1. (α2523_2533'' -> α2532_2535'')›  <:  α2523_2539'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α2523_2533'' -> α2532_2535'')›  <:  α2523_2533''
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
+//│ ║  l.909: 	rec def id x = if true then x else id id x
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 1. (α2523_2533'' -> α2532_2535'')›  <:  α2528'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α2523_2533'' -> α2532_2535'')›  <:  α2528'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
+//│ ║  l.909: 	rec def id x = if true then x else id id x
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 1. (α2523_2533'' -> α2532_2535'')›  <:  α2528'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α2523_2533'' -> α2532_2535'')›  <:  α2528'
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.891: 	rec def id x = if true then x else id id x
+//│ ║  l.909: 	rec def id x = if true then x else id id x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a_2566` is not a function
 //│ ║  l.725: 	type Sid = forall 'a. 'a -> 'a
 //│ ║         	                  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.891: 	rec def id x = if true then x else id id x
+//│ ║  l.909: 	rec def id x = if true then x else id id x
 //│ ║         	                                   ^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.891: 	rec def id x = if true then x else id id x
+//│ ║  l.909: 	rec def id x = if true then x else id id x
 //│ ╙──       	                                         ^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.909: 	rec def id x = if true then x else id id x
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘a_2566` is not a function
+//│ ║  l.725: 	type Sid = forall 'a. 'a -> 'a
+//│ ║         	                  ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.909: 	rec def id x = if true then x else id id x
+//│ ║         	                                   ^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.909: 	rec def id x = if true then x else id id x
+//│ ╙──       	                                         ^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.909: 	rec def id x = if true then x else id id x
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> ?b` is not an instance of type `'a_2566`
+//│ ║  l.909: 	rec def id x = if true then x else id id x
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `‘a_2566`
+//│ ║  l.909: 	rec def id x = if true then x else id id x
+//│ ║         	                                      ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.725: 	type Sid = forall 'a. 'a -> 'a
+//│ ╙──       	                  ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.909: 	rec def id x = if true then x else id id x
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> ?b` is not an instance of type `'a_2566`
+//│ ║  l.909: 	rec def id x = if true then x else id id x
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `‘a_2566`
+//│ ║  l.909: 	rec def id x = if true then x else id id x
+//│ ║         	                                      ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.725: 	type Sid = forall 'a. 'a -> 'a
+//│ ╙──       	                  ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.909: 	rec def id x = if true then x else id id x
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> ?b` is not an instance of type `'a_2566`
+//│ ║  l.909: 	rec def id x = if true then x else id id x
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `‘a_2566`
+//│ ║  l.909: 	rec def id x = if true then x else id id x
+//│ ║         	                                      ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.725: 	type Sid = forall 'a. 'a -> 'a
+//│ ╙──       	                  ^^
 //│   = [Function: id3]
 
 

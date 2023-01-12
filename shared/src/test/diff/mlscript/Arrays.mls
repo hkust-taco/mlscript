@@ -67,9 +67,15 @@ ty3A = ty3A
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  'a105_118'#  <:  'a105_116'#    TypeVariable  TypeVariable
 //│ ╙──  ... looks like:  'a105_106'#  <:  'a105_106'#
-//│ constrain calls  : 25
-//│ annoying  calls  : 14
-//│ subtyping calls  : 82
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
+//│ ║  l.+1: 	ty3A = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a105_119'#  <:  'a105_116'#    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a105_106'#  <:  'a105_106'#
+//│ constrain calls  : 49
+//│ annoying  calls  : 23
+//│ subtyping calls  : 131
 
 def ty3B: MyArray[MyArray['a]] as 'a
 //│ ty3B: 'a
@@ -121,11 +127,29 @@ ty4B = ty4B
 //│ ║  l.+1: 	ty4B = ty4B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a144_157'#]]  <:  MyArray[MyArray['a144_155'#]]    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray[MyArray['a144_145'#]]  <:  MyArray[MyArray['a144_145'#]]
-//│ constrain calls  : 27
-//│ annoying  calls  : 14
-//│ subtyping calls  : 109
+//│ ╟── this constraint:  MyArray[MyArray['a145_158'#]]  <:  MyArray[MyArray['a145_156'#]]    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray[MyArray['a145_146'#]]  <:  MyArray[MyArray['a145_146'#]]
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
+//│ ║  l.+1: 	ty4B = ty4B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a145_158'#]]  <:  MyArray[MyArray['a145_156'#]]    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray[MyArray['a145_146'#]]  <:  MyArray[MyArray['a145_146'#]]
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
+//│ ║  l.+1: 	ty4B = ty4B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a145_159'#]]  <:  MyArray[MyArray['a145_156'#]]    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray[MyArray['a145_146'#]]  <:  MyArray[MyArray['a145_146'#]]
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
+//│ ║  l.+1: 	ty4B = ty4B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a145_159'#]]  <:  MyArray[MyArray['a145_156'#]]    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray[MyArray['a145_146'#]]  <:  MyArray[MyArray['a145_146'#]]
+//│ constrain calls  : 65
+//│ annoying  calls  : 23
+//│ subtyping calls  : 213
 
 
 
@@ -144,9 +168,9 @@ ty1A = ty1B
 //│ ╟── type `int` does not match type `0 | 1`
 //│ ║  l.17: 	def ty1A: MyArray[int]
 //│ ╙──      	                  ^^^
-//│ constrain calls  : 14
-//│ annoying  calls  : 19
-//│ subtyping calls  : 112
+//│ constrain calls  : 22
+//│ annoying  calls  : 28
+//│ subtyping calls  : 165
 
 :e
 :stats
@@ -160,9 +184,9 @@ ty1B = ty1A
 //│ ╟── type `int` does not match type `0 | 1`
 //│ ║  l.17: 	def ty1A: MyArray[int]
 //│ ╙──      	                  ^^^
-//│ constrain calls  : 14
-//│ annoying  calls  : 23
-//│ subtyping calls  : 119
+//│ constrain calls  : 20
+//│ annoying  calls  : 28
+//│ subtyping calls  : 166
 
 
 :e
@@ -174,14 +198,74 @@ ty2A = ty2B
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.+1: 	ty2A = ty2B
 //│ ║        	^^^^^^^^^^^
-//│ ╟── type `‘a_164` is not an instance of type `MyArray`
+//│ ╟── type `‘a_166` is not an instance of type `MyArray`
 //│ ║  l.23: 	def ty2A: MyArray['a]
 //│ ║        	                  ^^
 //│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.35: 	def ty2B: MyArray[MyArray['a]]
 //│ ╙──      	                  ^^^^^^^^^^^
-//│ constrain calls  : 22
-//│ annoying  calls  : 14
-//│ subtyping calls  : 74
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.+1: 	ty2A = ty2B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── type `‘a_166` is not a record (expected a record with fields: size, set, get)
+//│ ║  l.23: 	def ty2A: MyArray['a]
+//│ ║        	                  ^^
+//│ ╟── Note: constraint arises from record type:
+//│ ║  l.4: 	class MyArray[A]: { size: int; set: (int, A) -> (); get: int -> A }
+//│ ║       	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── from applied type reference:
+//│ ║  l.35: 	def ty2B: MyArray[MyArray['a]]
+//│ ╙──      	                  ^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.+1: 	ty2A = ty2B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── type `‘a_166` does not have field 'MyArray#A'
+//│ ║  l.23: 	def ty2A: MyArray['a]
+//│ ║        	                  ^^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.35: 	def ty2B: MyArray[MyArray['a]]
+//│ ╙──      	                  ^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.+1: 	ty2A = ty2B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── type `MyArray[?a]` is not an instance of type `'a_166`
+//│ ║  l.35: 	def ty2B: MyArray[MyArray['a]]
+//│ ║        	                  ^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.23: 	def ty2A: MyArray['a]
+//│ ╙──      	                  ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.+1: 	ty2A = ty2B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── type `‘a_166` is not a record (expected a record with fields: size, set, get)
+//│ ║  l.23: 	def ty2A: MyArray['a]
+//│ ║        	                  ^^
+//│ ╟── Note: constraint arises from record type:
+//│ ║  l.4: 	class MyArray[A]: { size: int; set: (int, A) -> (); get: int -> A }
+//│ ║       	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── from applied type reference:
+//│ ║  l.35: 	def ty2B: MyArray[MyArray['a]]
+//│ ╙──      	                  ^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.+1: 	ty2A = ty2B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── type `‘a_166` does not have field 'MyArray#A'
+//│ ║  l.23: 	def ty2A: MyArray['a]
+//│ ║        	                  ^^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.35: 	def ty2B: MyArray[MyArray['a]]
+//│ ╙──      	                  ^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.+1: 	ty2A = ty2B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── type `MyArray[?a]` is not an instance of type `'a_166`
+//│ ║  l.35: 	def ty2B: MyArray[MyArray['a]]
+//│ ║        	                  ^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.23: 	def ty2A: MyArray['a]
+//│ ╙──      	                  ^^
+//│ constrain calls  : 45
+//│ annoying  calls  : 31
+//│ subtyping calls  : 237
 
 

@@ -50,7 +50,7 @@ eval e2
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.10: 	rec def eval e = case e of {
 //│ ╙──      	                      ^
-//│ res: error
+//│ res: error | int
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
 

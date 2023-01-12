@@ -21,7 +21,7 @@ c = Child(Parent { name = "Bob" })
 //│ ╟── application of type `Parent & {name: ?name}` is not a record (expected a record with fields: name, age)
 //│ ║  l.17: 	c = Child(Parent { name = "Bob" })
 //│ ╙──      	          ^^^^^^^^^^^^^^^^^^^^^^^
-//│ c: error
+//│ c: Child & {age: nothing, name: "Bob"} | error
 //│  = Child { name: 'Bob', age: undefined }
 
 c = Child(Parent { name = "Bob" } with { age = 123 })
@@ -84,7 +84,7 @@ f (c: Parent)
 //│ ╟── from reference:
 //│ ║  l.63: 	def f x = case x of {
 //│ ╙──      	               ^
-//│ res: error
+//│ res: error | string
 //│    = 'Bob'
 
 

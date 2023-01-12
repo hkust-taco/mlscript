@@ -29,7 +29,7 @@ set0((1,))
 //│ ╟── tuple field of type `1` is not mutable
 //│ ║  l.25: 	set0((1,))
 //│ ╙──      	      ^
-//│ res: error
+//│ res: anything -> unit | error
 //│    = [Function (anonymous)]
 
 
@@ -70,7 +70,7 @@ update0 0 ((mut 1,))
 //│ ╟── from mutable tuple field:
 //│ ║  l.60: 	update0 0 ((mut 1,))
 //│ ╙──      	                ^
-//│ res: error
+//│ res: error | unit
 //│    = []
 
 update1 0 ((mut 1,))
@@ -114,7 +114,7 @@ def bar x = (mut x,) : MutArray[int] & MutArray[string]
 //│ ╟── from mutable tuple field:
 //│ ║  l.104: 	def bar x = (mut x,) : MutArray[int] & MutArray[string]
 //│ ╙──       	                 ^
-//│ bar: int -> MutArray[in int | string out nothing]
+//│ bar: nothing -> MutArray[in int | string out nothing]
 //│    = [Function: bar]
 
 foo[0]

@@ -36,7 +36,7 @@ flatMap f "oops"
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.14: 	  case opt of { Some -> f opt.v | None -> opt }
 //│ ╙──      	       ^^^
-//│ res: error
+//│ res: error | Some[nothing]
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
 

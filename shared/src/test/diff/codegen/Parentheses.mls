@@ -39,7 +39,7 @@ id
 //│ ╟── operator application of type `number` is not an instance of type `int`
 //│ ║  l.32: 	1 * (2 + 3) / 4 - 5
 //│ ╙──      	^^^^^^^^^^^^^^^
-//│ res: error
+//│ res: error | int
 //│    = -3.75
 
 :js

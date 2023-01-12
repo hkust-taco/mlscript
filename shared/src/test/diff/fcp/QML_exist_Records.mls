@@ -78,6 +78,36 @@ stepImpl_ty = stepImpl
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
 //│ ╙──      	                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.68: 	stepImpl_ty = stepImpl
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║        	                 ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║        	                 ^^
+//│ ╟── from reference:
+//│ ║  l.62: 	    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
+//│ ╙──      	                                                                ^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.68: 	stepImpl_ty = stepImpl
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║        	                 ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ╙──      	                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.68: 	stepImpl_ty = stepImpl
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║        	                 ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ╙──      	                 ^^
 //│            = [Function: stepImpl]
 
 type Fold[A, Rep] = (A -> 'b -> 'b) -> 'b -> Rep -> 'b
@@ -126,14 +156,71 @@ stepImpl_ty = stepImpl_Ann_3
 //│   <:  stepImpl_ty:
 //│ ArraysRep['a, 'r] -> ArraysRep['a, ('r, string,)]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.124: 	stepImpl_ty = stepImpl_Ann_3
+//│ ║  l.154: 	stepImpl_ty = stepImpl_Ann_3
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_1054` does not match type `nothing`
+//│ ╟── type `‘a_1058` does not match type `nothing`
 //│ ║  l.53: 	def stepImpl_ty: ArraysRep['a, 'r] -> ArraysRep['a, ('r, string)]
 //│ ║        	                           ^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.118: 	    fold   = (fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0) : Fold['a, ('rep, string)]
+//│ ║  l.148: 	    fold   = (fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0) : Fold['a, ('rep, string)]
 //│ ╙──       	                                                                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.154: 	stepImpl_ty = stepImpl_Ann_3
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.113: 	type Fold[A, Rep] = (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║         	                                ^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.113: 	type Fold[A, Rep] = (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║         	                          ^^
+//│ ╟── from quantified type variable:
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ╙──      	                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.154: 	stepImpl_ty = stepImpl_Ann_3
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.113: 	type Fold[A, Rep] = (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║         	                                       ^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.113: 	type Fold[A, Rep] = (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║         	                          ^^
+//│ ╟── from quantified type variable:
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ╙──      	                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.154: 	stepImpl_ty = stepImpl_Ann_3
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` is not an instance of type `'r_1059`
+//│ ║  l.148: 	    fold   = (fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0) : Fold['a, ('rep, string)]
+//│ ║         	                                                                                   ^^^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.53: 	def stepImpl_ty: ArraysRep['a, 'r] -> ArraysRep['a, ('r, string)]
+//│ ╙──      	                               ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.154: 	stepImpl_ty = stepImpl_Ann_3
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.113: 	type Fold[A, Rep] = (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║         	                                       ^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.113: 	type Fold[A, Rep] = (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║         	                                                    ^^
+//│ ╟── from application:
+//│ ║  l.148: 	    fold   = (fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0) : Fold['a, ('rep, string)]
+//│ ╙──       	                                                  ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.154: 	stepImpl_ty = stepImpl_Ann_3
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.113: 	type Fold[A, Rep] = (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║         	                                ^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.113: 	type Fold[A, Rep] = (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║         	                                                    ^^
+//│ ╟── from application:
+//│ ║  l.148: 	    fold   = (fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0) : Fold['a, ('rep, string)]
+//│ ╙──       	                                                  ^^^^^^^^^^^^^^^^^^^
 //│            = [Function: stepImpl_Ann_3]
 
 // * This one finally works! The annotation needs to be on the result!
@@ -153,7 +240,7 @@ def stepImpl_Ann_4 arrImpl = {
 :e // * Since "sound extrusion"
 test = stepImpl_Ann_4 baseImpl
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.154: 	test = stepImpl_Ann_4 baseImpl
+//│ ║  l.241: 	test = stepImpl_Ann_4 baseImpl
 //│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
@@ -178,7 +265,7 @@ stepImpl_ty = stepImpl_Ann_4
 //│   <:  stepImpl_ty:
 //│ ArraysRep['a, 'r] -> ArraysRep['a, ('r, string,)]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.173: 	stepImpl_ty = stepImpl_Ann_4
+//│ ║  l.260: 	stepImpl_ty = stepImpl_Ann_4
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
@@ -186,13 +273,46 @@ stepImpl_ty = stepImpl_Ann_4
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
 //│ ╙──      	                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.260: 	stepImpl_ty = stepImpl_Ann_4
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║        	                 ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ╙──      	                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.260: 	stepImpl_ty = stepImpl_Ann_4
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║        	                 ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║        	                 ^^
+//│ ╟── from application:
+//│ ║  l.232: 	    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
+//│ ╙──       	                                                 ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.260: 	stepImpl_ty = stepImpl_Ann_4
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║        	                 ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║        	                 ^^
+//│ ╟── from application:
+//│ ║  l.232: 	    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
+//│ ╙──       	                                                 ^^^^^^^^^^^^^^^^^^^
 //│            = [Function: stepImpl_Ann_4]
 
 // * Note: this one expectedly doesn't work, as in `QML_exist_Classes.mls`
 // def stepImpl2 (arr: Arrays['a]) = arr stepImpl
 
 def stepImpl2 arr = arr stepImpl
-//│ stepImpl2: ((forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm. {fold: 'b -> 'j -> 'h -> 'f, init: 'e -> 'l, sub: 'k -> 'd -> 'g, update: 'i -> 'm -> 'a -> 'c} -> {fold: 'b -> 'j -> ('h, anything,) -> 'f, init: 'e -> ('l, "hi",), sub: ('k, anything,) -> 'd -> 'g, update: ('i, anything,) -> 'm -> 'a -> ('c, "hey",)}) -> 'n) -> 'n
+//│ stepImpl2: ((forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm. {fold: 'i -> 'e -> 'b -> 'l, init: 'g -> 'c, sub: 'f -> 'j -> 'm, update: 'a -> 'd -> 'h -> 'k} -> {fold: 'i -> 'e -> ('b, anything,) -> 'l, init: 'g -> ('c, "hi",), sub: ('f, anything,) -> 'j -> 'm, update: ('a, anything,) -> 'd -> 'h -> ('k, "hey",)}) -> 'n) -> 'n
 //│          = [Function: stepImpl2]
 
 def stepImpl2_ arr = arr stepImpl_ty
@@ -203,11 +323,11 @@ def stepImpl2_ arr = arr stepImpl_ty
 // def stepImpl2_Ann_1 arr = arr stepImpl_Ann_1
 
 def stepImpl2_Ann_2 arr = arr stepImpl_Ann_2
-//│ stepImpl2_Ann_2: ((forall 'r, 'a. ArraysRep['a, 'r] -> {fold: forall 'b, 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'c. ('b & 'c) -> ('r, anything,) -> ('b0 | 'c)), init: 'a -> ('r, "hi",), sub: ('r, anything,) -> int -> 'a, update: ('r, anything,) -> int -> 'a -> ('r, "hey",)}) -> 'd) -> 'd
+//│ stepImpl2_Ann_2: ((forall 'a, 'r. ArraysRep['a, 'r] -> {fold: forall 'b, 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'c. ('b & 'c) -> ('r, anything,) -> ('b0 | 'c)), init: 'a -> ('r, "hi",), sub: ('r, anything,) -> int -> 'a, update: ('r, anything,) -> int -> 'a -> ('r, "hey",)}) -> 'd) -> 'd
 //│                = [Function: stepImpl2_Ann_2]
 
 def stepImpl2_Ann_3 arr = arr stepImpl_Ann_3
-//│ stepImpl2_Ann_3: ((forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i. {fold: (nothing -> nothing -> anything) -> anything -> anything -> nothing, init: 'h -> 'f, sub: 'e -> 'c -> 'i, update: 'g -> 'd -> 'b -> 'a} -> {fold: Fold[nothing, (anything, string,)], init: 'h -> ('f, "hi",), sub: ('e, anything,) -> 'c -> 'i, update: ('g, anything,) -> 'd -> 'b -> ('a, "hey",)}) -> 'j) -> 'j
+//│ stepImpl2_Ann_3: ((forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i. {fold: (nothing -> nothing -> anything) -> anything -> anything -> nothing, init: 'h -> 'f, sub: 'c -> 'b -> 'i, update: 'e -> 'd -> 'g -> 'a} -> {fold: Fold[nothing, (anything, string,)], init: 'h -> ('f, "hi",), sub: ('c, anything,) -> 'b -> 'i, update: ('e, anything,) -> 'd -> 'g -> ('a, "hey",)}) -> 'j) -> 'j
 //│                = [Function: stepImpl2_Ann_3]
 
 def stepImpl2_Ann_4 arr = arr stepImpl_Ann_4
@@ -234,11 +354,11 @@ def step: Arrays['a] -> Arrays['a]
 // * But this problem actually disappeared after fixing a subtle bug in type freshening...!
 :e // * Since "sound extrusion"
 def step arr f = f (stepImpl2 arr)
-//│ ((forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm. {fold: 'h -> 'm -> 'b -> 'l, init: 'f -> 'c, sub: 'i -> 'd -> 'g, update: 'a -> 'k -> 'j -> 'e} -> {fold: 'h -> 'm -> ('b, anything,) -> 'l, init: 'f -> ('c, "hi",), sub: ('i, anything,) -> 'd -> 'g, update: ('a, anything,) -> 'k -> 'j -> ('e, "hey",)}) -> 'n) -> (forall 'o. ('n -> 'o) -> 'o)
+//│ ((forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm. {fold: 'd -> 'k -> 'i -> 'g, init: 'c -> 'm, sub: 'j -> 'a -> 'e, update: 'f -> 'h -> 'l -> 'b} -> {fold: 'd -> 'k -> ('i, anything,) -> 'g, init: 'c -> ('m, "hi",), sub: ('j, anything,) -> 'a -> 'e, update: ('f, anything,) -> 'h -> 'l -> ('b, "hey",)}) -> 'n) -> (forall 'o. ('n -> 'o) -> 'o)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.236: 	def step arr f = f (stepImpl2 arr)
+//│ ║  l.356: 	def step arr f = f (stepImpl2 arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -249,6 +369,105 @@ def step arr f = f (stepImpl2 arr)
 //│ ╟── from reference:
 //│ ║  l.60: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.sub r0 i;
 //│ ╙──      	                                                    ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.356: 	def step arr f = f (stepImpl2 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.61: 	    update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
+//│ ╙──      	                                                                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.356: 	def step arr f = f (stepImpl2 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.61: 	    update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
+//│ ╙──      	                                                                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.356: 	def step arr f = f (stepImpl2 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.60: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.sub r0 i;
+//│ ╙──      	                                                    ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.356: 	def step arr f = f (stepImpl2 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║        	                 ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ╙──      	                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.356: 	def step arr f = f (stepImpl2 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║        	                 ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║        	                 ^^
+//│ ╟── from reference:
+//│ ║  l.62: 	    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
+//│ ╙──      	                                                                ^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.356: 	def step arr f = f (stepImpl2 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.62: 	    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
+//│ ╙──      	                                                                  ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.356: 	def step arr f = f (stepImpl2 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.62: 	    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
+//│ ╙──      	                                                                  ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.356: 	def step arr f = f (stepImpl2 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║        	                 ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ╙──      	                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.356: 	def step arr f = f (stepImpl2 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║        	                 ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ╙──      	                 ^^
 //│     = [Function: step]
 
 // * Expectedly doesn't work (see comment on `stepImpl_Ann_1`)
@@ -260,7 +479,7 @@ def step arr f = f (stepImpl2_Ann_2 arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.258: 	def step arr f = f (stepImpl2_Ann_2 arr)
+//│ ║  l.477: 	def step arr f = f (stepImpl2_Ann_2 arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -269,24 +488,201 @@ def step arr f = f (stepImpl2_Ann_2 arr)
 //│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                         ^^^^
 //│ ╟── from reference:
-//│ ║  l.100: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.sub r0 i;
+//│ ║  l.130: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.sub r0 i;
 //│ ╙──       	                                                    ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.477: 	def step arr f = f (stepImpl2_Ann_2 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.131: 	    update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
+//│ ╙──       	                                                                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.477: 	def step arr f = f (stepImpl2_Ann_2 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.131: 	    update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
+//│ ╙──       	                                                                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.477: 	def step arr f = f (stepImpl2_Ann_2 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.132: 	    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
+//│ ╙──       	                                                                  ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.477: 	def step arr f = f (stepImpl2_Ann_2 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.132: 	    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
+//│ ╙──       	                                                                  ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.477: 	def step arr f = f (stepImpl2_Ann_2 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.132: 	    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
+//│ ╙──       	                                                                  ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.477: 	def step arr f = f (stepImpl2_Ann_2 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.132: 	    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
+//│ ╙──       	                                                                  ^^
 //│     = [Function: step1]
 
 :e
 def step arr f = f (stepImpl2_Ann_3 arr)
-//│ ((forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i. {fold: (nothing -> nothing -> anything) -> anything -> anything -> nothing, init: 'h -> 'e, sub: 'c -> 'b -> 'i, update: 'f -> 'd -> 'g -> 'a} -> {fold: Fold[nothing, (anything, string,)], init: 'h -> ('e, "hi",), sub: ('c, anything,) -> 'b -> 'i, update: ('f, anything,) -> 'd -> 'g -> ('a, "hey",)}) -> 'j) -> (forall 'k. ('j -> 'k) -> 'k)
+//│ ((forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i. {fold: (nothing -> nothing -> anything) -> anything -> anything -> nothing, init: 'a -> 'h, sub: 'g -> 'd -> 'c, update: 'b -> 'i -> 'f -> 'e} -> {fold: Fold[nothing, (anything, string,)], init: 'a -> ('h, "hi",), sub: ('g, anything,) -> 'd -> 'c, update: ('b, anything,) -> 'i -> 'f -> ('e, "hey",)}) -> 'j) -> (forall 'k. ('j -> 'k) -> 'k)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.277: 	def step arr f = f (stepImpl2_Ann_3 arr)
+//│ ║  l.568: 	def step arr f = f (stepImpl2_Ann_3 arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_2137` does not match type `nothing`
-//│ ║  l.228: 	def step: Arrays['a] -> Arrays['a]
+//│ ╟── type `‘a_2199` does not match type `nothing`
+//│ ║  l.348: 	def step: Arrays['a] -> Arrays['a]
 //│ ║         	                 ^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.118: 	    fold   = (fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0) : Fold['a, ('rep, string)]
+//│ ║  l.148: 	    fold   = (fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0) : Fold['a, ('rep, string)]
 //│ ╙──       	                                                                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.568: 	def step arr f = f (stepImpl2_Ann_3 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.113: 	type Fold[A, Rep] = (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║         	                                ^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.113: 	type Fold[A, Rep] = (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║         	                          ^^
+//│ ╟── from quantified type variable:
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ╙──      	                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.568: 	def step arr f = f (stepImpl2_Ann_3 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.113: 	type Fold[A, Rep] = (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║         	                                       ^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.113: 	type Fold[A, Rep] = (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║         	                          ^^
+//│ ╟── from quantified type variable:
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ╙──      	                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.568: 	def step arr f = f (stepImpl2_Ann_3 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` is not an instance of type `'Rep_2207`
+//│ ║  l.148: 	    fold   = (fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0) : Fold['a, ('rep, string)]
+//│ ║         	                                                                                   ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ╙──      	                         ^^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.568: 	def step arr f = f (stepImpl2_Ann_3 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.113: 	type Fold[A, Rep] = (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║         	                                       ^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.113: 	type Fold[A, Rep] = (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║         	                                                    ^^
+//│ ╟── from application:
+//│ ║  l.148: 	    fold   = (fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0) : Fold['a, ('rep, string)]
+//│ ╙──       	                                                  ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.568: 	def step arr f = f (stepImpl2_Ann_3 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.113: 	type Fold[A, Rep] = (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║         	                                ^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.113: 	type Fold[A, Rep] = (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║         	                                                    ^^
+//│ ╟── from application:
+//│ ║  l.148: 	    fold   = (fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0) : Fold['a, ('rep, string)]
+//│ ╙──       	                                                  ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.568: 	def step arr f = f (stepImpl2_Ann_3 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.146: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.sub r0 i;
+//│ ╙──       	                                                    ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.568: 	def step arr f = f (stepImpl2_Ann_3 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.147: 	    update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
+//│ ╙──       	                                                                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.568: 	def step arr f = f (stepImpl2_Ann_3 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.147: 	    update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
+//│ ╙──       	                                                                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.568: 	def step arr f = f (stepImpl2_Ann_3 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.146: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.sub r0 i;
+//│ ╙──       	                                                    ^^
 //│     = [Function: step2]
 
 // * This used to be the only working one based on an internal annotation
@@ -299,7 +695,7 @@ def step arr f = f (stepImpl2_Ann_4 arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.294: 	def step arr f = f (stepImpl2_Ann_4 arr)
+//│ ║  l.690: 	def step arr f = f (stepImpl2_Ann_4 arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
@@ -307,6 +703,111 @@ def step arr f = f (stepImpl2_Ann_4 arr)
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
 //│ ╙──      	                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.690: 	def step arr f = f (stepImpl2_Ann_4 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║        	                 ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ╙──      	                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.690: 	def step arr f = f (stepImpl2_Ann_4 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║        	                 ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║        	                 ^^
+//│ ╟── from application:
+//│ ║  l.232: 	    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
+//│ ╙──       	                                                 ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.690: 	def step arr f = f (stepImpl2_Ann_4 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║        	                 ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.16: 	    fold: forall 'b. (A -> 'b -> 'b) -> 'b -> Rep -> 'b
+//│ ║        	                 ^^
+//│ ╟── from application:
+//│ ║  l.232: 	    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
+//│ ╙──       	                                                 ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.690: 	def step arr f = f (stepImpl2_Ann_4 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.232: 	    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
+//│ ╙──       	                                                                  ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.690: 	def step arr f = f (stepImpl2_Ann_4 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.231: 	    update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
+//│ ╙──       	                                                                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.690: 	def step arr f = f (stepImpl2_Ann_4 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.230: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.sub r0 i;
+//│ ╙──       	                                                    ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.690: 	def step arr f = f (stepImpl2_Ann_4 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.232: 	    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
+//│ ╙──       	                                                                  ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.690: 	def step arr f = f (stepImpl2_Ann_4 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.231: 	    update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
+//│ ╙──       	                                                                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.690: 	def step arr f = f (stepImpl2_Ann_4 arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.230: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.sub r0 i;
+//│ ╙──       	                                                    ^^
 //│     = [Function: step3]
 
 :e // * Since "sound extrusion"
@@ -315,7 +816,7 @@ def step arr f = f (stepImpl2_Ann_2_Ann arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.313: 	def step arr f = f (stepImpl2_Ann_2_Ann arr)
+//│ ║  l.814: 	def step arr f = f (stepImpl2_Ann_2_Ann arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -324,8 +825,80 @@ def step arr f = f (stepImpl2_Ann_2_Ann arr)
 //│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                         ^^^^
 //│ ╟── from reference:
-//│ ║  l.100: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.sub r0 i;
+//│ ║  l.130: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.sub r0 i;
 //│ ╙──       	                                                    ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.814: 	def step arr f = f (stepImpl2_Ann_2_Ann arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.131: 	    update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
+//│ ╙──       	                                                                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.814: 	def step arr f = f (stepImpl2_Ann_2_Ann arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.131: 	    update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
+//│ ╙──       	                                                                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.814: 	def step arr f = f (stepImpl2_Ann_2_Ann arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.132: 	    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
+//│ ╙──       	                                                                  ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.814: 	def step arr f = f (stepImpl2_Ann_2_Ann arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.132: 	    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
+//│ ╙──       	                                                                  ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.814: 	def step arr f = f (stepImpl2_Ann_2_Ann arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.132: 	    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
+//│ ╙──       	                                                                  ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.814: 	def step arr f = f (stepImpl2_Ann_2_Ann arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.132: 	    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
+//│ ╙──       	                                                                  ^^
 //│     = [Function: step4]
 
 :e // * Since "sound extrusion"
@@ -334,7 +907,7 @@ def step (arr: Arrays['a]) f = f (stepImpl2_Ann_2_Ann arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.332: 	def step (arr: Arrays['a]) f = f (stepImpl2_Ann_2_Ann arr)
+//│ ║  l.905: 	def step (arr: Arrays['a]) f = f (stepImpl2_Ann_2_Ann arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -343,8 +916,80 @@ def step (arr: Arrays['a]) f = f (stepImpl2_Ann_2_Ann arr)
 //│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                         ^^^^
 //│ ╟── from reference:
-//│ ║  l.100: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.sub r0 i;
+//│ ║  l.130: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.sub r0 i;
 //│ ╙──       	                                                    ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.905: 	def step (arr: Arrays['a]) f = f (stepImpl2_Ann_2_Ann arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.131: 	    update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
+//│ ╙──       	                                                                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.905: 	def step (arr: Arrays['a]) f = f (stepImpl2_Ann_2_Ann arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.131: 	    update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
+//│ ╙──       	                                                                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.905: 	def step (arr: Arrays['a]) f = f (stepImpl2_Ann_2_Ann arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.132: 	    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
+//│ ╙──       	                                                                  ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.905: 	def step (arr: Arrays['a]) f = f (stepImpl2_Ann_2_Ann arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.132: 	    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
+//│ ╙──       	                                                                  ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.905: 	def step (arr: Arrays['a]) f = f (stepImpl2_Ann_2_Ann arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.132: 	    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
+//│ ╙──       	                                                                  ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.905: 	def step (arr: Arrays['a]) f = f (stepImpl2_Ann_2_Ann arr)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟── from reference:
+//│ ║  l.132: 	    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
+//│ ╙──       	                                                                  ^^
 //│     = [Function: step5]
 
 // * Also worked, but this one is easier as it internally uses the fully-annotated `stepImpl_ty`
@@ -354,7 +999,7 @@ def step arr f = f (stepImpl2_ arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.352: 	def step arr f = f (stepImpl2_ arr)
+//│ ║  l.997: 	def step arr f = f (stepImpl2_ arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.20: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r

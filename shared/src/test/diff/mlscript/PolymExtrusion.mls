@@ -35,7 +35,7 @@ bar (fun x -> case x of {})
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.28: 	bar (fun x -> case x of {})
 //│ ╙──      	                   ^
-//│ res: error
+//│ res: error | int
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
 
@@ -66,7 +66,7 @@ foo (fun a -> a + 1)
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.59: 	foo (fun a -> a + 1)
 //│ ╙──      	              ^
-//│ res: error
+//│ res: error | int
 //│    = <no result>
 //│      foo is not implemented
 

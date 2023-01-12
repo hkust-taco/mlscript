@@ -152,7 +152,7 @@ f ({ _1 = A{}; _2 = C{} })
 //│ ╟── Note: class C is defined at:
 //│ ║  l.22: 	class C
 //│ ╙──      	      ^
-//│ res: error
+//│ res: 1 | 2 | 3 | 4 | error
 //│    = 1
 
 // x actually has equivalent type {_1: anything; _2: anything}

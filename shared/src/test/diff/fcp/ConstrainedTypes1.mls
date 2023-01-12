@@ -28,7 +28,7 @@ foo false
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.12: 	  let _ = log (succ x.prop)
 //│ ╙──      	                    ^^^^^^
-//│ res: error
+//│ res: error | false
 //│    = false
 //│ // Output
 //│ NaN
@@ -63,7 +63,7 @@ foo false
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.50: 	  let _ = log ((fun y -> x.prop y) 0)
 //│ ╙──      	                         ^^^^^^
-//│ res: error
+//│ res: error | false
 //│ Runtime error:
 //│   TypeError: x.prop is not a function
 
@@ -88,7 +88,7 @@ foo false
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.76: 	  let _ = app (fun y -> x.prop y)
 //│ ╙──      	                        ^^^^^^
-//│ res: error
+//│ res: error | false
 //│ Runtime error:
 //│   TypeError: x.prop is not a function
 

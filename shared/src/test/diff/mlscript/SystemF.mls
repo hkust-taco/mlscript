@@ -96,10 +96,70 @@ iter4_ty = iter4
 //│ ╟── from quantified type variable:
 //│ ║  l.58: 	def iter2_ty: forall 'X. ('X -> 'X) -> 'X -> 'X
 //│ ╙──      	                     ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.82: 	iter4_ty() = iter2_ty iter2_ty
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.76: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
+//│ ║        	                            ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.76: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
+//│ ╙──      	                            ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.82: 	iter4_ty() = iter2_ty iter2_ty
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.76: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
+//│ ║        	                            ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.76: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
+//│ ╙──      	                            ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.82: 	iter4_ty() = iter2_ty iter2_ty
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.76: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
+//│ ║        	                            ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.76: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
+//│ ╙──      	                            ^^
 //│         = [Function: iter4_ty]
 //│ () -> ('a -> ('b & 'c) & 'b -> 'a) -> 'b -> 'c
 //│   <:  iter4_ty:
 //│ () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.83: 	iter4_ty = iter4
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.76: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
+//│ ║        	                            ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.76: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
+//│ ╙──      	                            ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.83: 	iter4_ty = iter4
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.76: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
+//│ ║        	                            ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.76: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
+//│ ║        	                            ^^
+//│ ╟── from application:
+//│ ║  l.57: 	iter2 f x = f(f x)
+//│ ╙──      	              ^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.83: 	iter4_ty = iter4
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.76: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
+//│ ║        	                            ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.76: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
+//│ ║        	                            ^^
+//│ ╟── from reference:
+//│ ║  l.57: 	iter2 f x = f(f x)
+//│ ╙──      	                ^
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.83: 	iter4_ty = iter4
 //│ ║        	^^^^^^^^^^^^^^^^
@@ -133,12 +193,14 @@ def iter256_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 iter256_ty() = iter4_ty() (iter4_ty())
 iter256_ty = iter256
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.131: 	iter256() = iter4() (iter4())
+//│ ║  l.191: 	iter256() = iter4() (iter4())
 //│ ║         	            ^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 3. α126_452''''›  <:  α124_421''    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 3. α126_442'''›  <:  α124_222''
-//│ iter256: () -> error
+//│ ╟── this constraint:  ‹∀ 3. α126_454''''›  <:  α124_423''    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 3. α126_444'''›  <:  α124_222''
+//│ iter256: () -> ((('a | 'b) -> ('b & 'c) & 'c -> ('a & 'c)) -> 'c -> 'b | error)
+//│   where
+//│     'c :> 'b
 //│        = [Function: iter256]
 //│ iter256_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│           = <missing implementation>
@@ -146,7 +208,9 @@ iter256_ty = iter256
 //│   <:  iter256_ty:
 //│ () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│           = [Function: iter256_ty]
-//│ () -> error
+//│ () -> ((('a | 'b) -> ('b & 'c) & 'c -> ('a & 'c)) -> 'c -> 'b | error)
+//│   where
+//│     'c :> 'b
 //│   <:  iter256_ty:
 //│ () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│           = [Function: iter256]
@@ -180,7 +244,7 @@ res1() = iter4() S Z
 res2() = iter256() S Z
 //│ res1: () -> (forall 'a. ('b -> 'a & 'c -> 'b & 'b -> 'c) -> 'c -> 'a)
 //│     = [Function: res1]
-//│ res2: () -> error
+//│ res2: () -> (error | (forall 'a. ('b -> 'a & 'b -> 'c & 'c -> 'c & 'c -> 'b & 'b -> 'b) -> 'c -> 'a))
 //│     = [Function: res2]
 
 res1_ty() = iter4_ty() S_ty Z_ty
@@ -409,23 +473,23 @@ sh_pu id x y = id (id u x) x
 :e
 pu sh_pu
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.410: 	pu sh_pu
+//│ ║  l.474: 	pu sh_pu
 //│ ║         	^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α2111_2128'' -> ‹∀ 2. (α2112_2136''' -> ‹∀ 3. (α2113_2137'''' -> α2122_2138'''')›)›)››  <:  α2117_2192    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α2111_2128'' -> ‹∀ 2. (α2112_2136''' -> ‹∀ 3. (α2113_2137'''' -> α2122_2138'''')›)›)››  <:  α2117_2135''
-//│ res: error
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α2603_2620'' -> ‹∀ 2. (α2604_2628''' -> ‹∀ 3. (α2605_2629'''' -> α2614_2630'''')›)›)››  <:  α2609_2684    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α2603_2620'' -> ‹∀ 2. (α2604_2628''' -> ‹∀ 3. (α2605_2629'''' -> α2614_2630'''')›)›)››  <:  α2609_2627''
+//│ res: anything -> anything -> anything -> nothing | error
 //│    = [Function (anonymous)]
 
 // * "Of course, self-application of self-application ((\x.x x)(\x.x x)) remains untypable, because it has no normal form."
 :e
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.422: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.486: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α2206_2208' -> α2207_2209')›  <:  α2206_2215    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α2206_2208' -> α2207_2209')›  <:  α2206_2208'
+//│ ╟── this constraint:  ‹∀ 0. (α2707_2709' -> α2708_2710')›  <:  α2707_2716    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α2707_2709' -> α2708_2710')›  <:  α2707_2709'
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded

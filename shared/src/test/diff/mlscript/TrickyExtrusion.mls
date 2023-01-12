@@ -63,7 +63,7 @@ test f =
 //│ ╟── but it flows into field selection with expected type `int`
 //│ ║  l.56: 	(test id)._1 + 1
 //│ ╙──      	^^^^^^^^^^^^
-//│ res: error
+//│ res: error | int
 //│    = NaN
 
 :e // * Due to lack of precision
@@ -77,7 +77,7 @@ not (test id)._2
 //│ ╟── but it flows into field selection with expected type `bool`
 //│ ║  l.70: 	not (test id)._2
 //│ ╙──      	    ^^^^^^^^^^^^
-//│ res: error
+//│ res: bool | error
 //│    = true
 
 :e // * Legit
@@ -91,7 +91,7 @@ not (test id)._1
 //│ ╟── but it flows into field selection with expected type `bool`
 //│ ║  l.84: 	not (test id)._1
 //│ ╙──      	    ^^^^^^^^^^^^
-//│ res: error
+//│ res: bool | error
 //│    = true
 
 
@@ -145,7 +145,7 @@ not (test id)._1
 //│ ╟── but it flows into field selection with expected type `bool`
 //│ ║  l.138: 	not (test id)._1
 //│ ╙──       	    ^^^^^^^^^^^^
-//│ res: error
+//│ res: bool | error
 //│    = true
 
 

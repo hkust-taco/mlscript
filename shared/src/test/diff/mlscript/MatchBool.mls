@@ -22,7 +22,7 @@ def abs x =
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.3: 	  case lt of
 //│ ╙──     	       ^^
-//│ abs: number -> error
+//│ abs: int -> (error | int)
 //│    = [Function: abs]
 
 

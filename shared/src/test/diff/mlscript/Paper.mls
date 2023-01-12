@@ -83,7 +83,7 @@ g (x: int) = div 100 x
 //│ ╟── from reference:
 //│ ║  l.61: 	def div n m = n / (m: ~0 & number)
 //│ ╙──      	                   ^
-//│ g: int -> error
+//│ g: int -> (error | number)
 //│  = [Function: g]
 
 div_opt n m = case m of 0 -> None{}, _ -> Some{value = div n m}

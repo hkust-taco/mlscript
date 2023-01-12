@@ -195,7 +195,7 @@ not (Cons 42 Nil).head
 //│ ╟── but it flows into field selection with expected type `bool`
 //│ ║  l.188: 	not (Cons 42 Nil).head
 //│ ╙──       	                 ^^^^^
-//│ res: error
+//│ res: bool | error
 
 :e
 (Cons 4).head
@@ -228,7 +228,7 @@ Cons 1 2
 //│ ╟── from tuple type:
 //│ ║  l.115: 	  Cons (head: a) (tail: List a)
 //│ ╙──       	                        ^^^^^^
-//│ res: error
+//│ res: Cons[1] | error
 
 // TODO Allow method/field defintions in the same file (lose the let?):
 :e

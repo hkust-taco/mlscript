@@ -61,6 +61,36 @@ succ = s
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.11: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ╙──      	                        ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.51: 	succ = s
+//│ ║        	^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.11: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.11: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║        	                        ^^
+//│ ╟── from reference:
+//│ ║  l.34: 	def s n f x = (n f x)
+//│ ╙──      	                   ^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.51: 	succ = s
+//│ ║        	^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.11: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.11: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ╙──      	                        ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.51: 	succ = s
+//│ ║        	^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.11: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.11: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ╙──      	                        ^^
 //│     = [Function: s]
 
 :e // * Works with CT
@@ -69,7 +99,16 @@ succ n f = n f
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.67: 	succ n f = n f
+//│ ║  l.97: 	succ n f = n f
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.11: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.11: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ╙──      	                        ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.97: 	succ n f = n f
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.11: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -95,17 +134,17 @@ succ_min n f = n f
 //│   <:  succ_min:
 //│ (forall 'N. 'N -> 'N) -> (forall 'M. 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.93: 	succ_min n f = n f
-//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.132: 	succ_min n f = n f
+//│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.88: 	def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
-//│ ║        	                                                  ^^
+//│ ║  l.127: 	def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
+//│ ║         	                                                  ^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.93: 	succ_min n f = n f
-//│ ║        	                 ^
+//│ ║  l.132: 	succ_min n f = n f
+//│ ║         	                 ^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.88: 	def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
-//│ ╙──      	                                                  ^^
+//│ ║  l.127: 	def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
+//│ ╙──       	                                                  ^^
 //│         = [Function: succ_min]
 
 
@@ -123,7 +162,7 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.121: 	to_church = to_ch
+//│ ║  l.160: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -134,6 +173,36 @@ to_church = to_ch
 //│ ╟── from quantified type variable:
 //│ ║  l.11: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ╙──      	                        ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.160: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── from reference:
+//│ ║  l.34: 	def s n f x = (n f x)
+//│ ╙──      	                   ^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.160: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.160: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                              ^^
 //│          = <no result>
 //│            to_ch and zero are not implemented
 
@@ -151,7 +220,7 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.149: 	to_church = to_ch
+//│ ║  l.218: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -162,6 +231,36 @@ to_church = to_ch
 //│ ╟── from quantified type variable:
 //│ ║  l.11: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ╙──      	                        ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.218: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── from reference:
+//│ ║  l.34: 	def s n f x = (n f x)
+//│ ╙──      	                   ^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.218: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.218: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                              ^^
 //│          = <no result>
 //│            to_ch and zero are not implemented
 
@@ -179,7 +278,37 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.177: 	to_church = to_ch
+//│ ║  l.276: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.276: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── from reference:
+//│ ║  l.34: 	def s n f x = (n f x)
+//│ ╙──      	                   ^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.276: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.276: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -204,7 +333,37 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.202: 	to_church = to_ch
+//│ ║  l.331: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.331: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── from reference:
+//│ ║  l.34: 	def s n f x = (n f x)
+//│ ╙──      	                   ^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.331: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.331: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -229,7 +388,37 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.227: 	to_church = to_ch
+//│ ║  l.386: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.386: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── from reference:
+//│ ║  l.34: 	def s n f x = (n f x)
+//│ ╙──      	                   ^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.386: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.386: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -253,7 +442,37 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.251: 	to_church = to_ch
+//│ ║  l.440: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.440: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── from reference:
+//│ ║  l.34: 	def s n f x = (n f x)
+//│ ╙──      	                   ^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.440: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.440: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -277,7 +496,37 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.275: 	to_church = to_ch
+//│ ║  l.494: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.494: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── from reference:
+//│ ║  l.34: 	def s n f x = (n f x)
+//│ ╙──      	                   ^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.494: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.494: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -301,7 +550,37 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.299: 	to_church = to_ch
+//│ ║  l.548: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.548: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── from reference:
+//│ ║  l.34: 	def s n f x = (n f x)
+//│ ╙──      	                   ^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.548: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.548: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -328,7 +607,37 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.326: 	to_church = to_ch
+//│ ║  l.605: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.605: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── from reference:
+//│ ║  l.34: 	def s n f x = (n f x)
+//│ ╙──      	                   ^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.605: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.605: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -352,7 +661,7 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.350: 	to_church = to_ch
+//│ ║  l.659: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `int` is not a function
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -363,6 +672,24 @@ to_church = to_ch
 //│ ╟── from reference:
 //│ ║  l.34: 	def s n f x = (n f x)
 //│ ╙──      	                 ^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.659: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.659: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                              ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                              ^^
 //│          = <no result>
 //│            to_ch, to_church, to_ch, to_church, to_ch, to_church, to_ch, to_church, to_ch, to_church, to_ch and zero are not implemented
 

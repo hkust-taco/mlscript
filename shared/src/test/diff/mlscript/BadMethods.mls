@@ -198,7 +198,7 @@ bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.190: 	bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
 //│ ╙──       	                                         ^
-//│ res: error
+//│ res: 42 | error
 
 BadPair = BadPair { x = 42; y = 0 }
 BadPair.Map
@@ -566,9 +566,9 @@ t : Dup[int, bool]
 //│ ║  l.558: 	t : Dup[int, bool]
 //│ ╙──       	             ^^^^
 //│ res: Dup[?, bool]
-//│ constrain calls  : 24
-//│ annoying  calls  : 5
-//│ subtyping calls  : 62
+//│ constrain calls  : 37
+//│ annoying  calls  : 22
+//│ subtyping calls  : 130
 
 :stats
 t.MthDup (fun x -> mul 2 x)
@@ -823,10 +823,10 @@ class Test9B: Test9A[int]
 //│ ╔══[ERROR] Type mismatch in method declaration:
 //│ ║  l.815: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `Test9A[int] -> int` is not an instance of type `X_790`
+//│ ╟── type `Test9A[int] -> int` is not an instance of type `X_794`
 //│ ║  l.815: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	                   ^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into method declaration with expected type `#X_790`
+//│ ╟── but it flows into method declaration with expected type `#X_794`
 //│ ║  l.815: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:

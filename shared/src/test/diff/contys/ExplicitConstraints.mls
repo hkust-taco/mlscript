@@ -147,7 +147,7 @@ r + 1
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.98: 	  'a : 'b => 'b
 //│ ╙──      	       ^^^^^^^^
-//│ res: error
+//│ res: error | int
 
 
 fun f: 'a => forall 'b; 'b where
@@ -194,5 +194,5 @@ r + 1
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.154: 	  'a : 'b => 'b
 //│ ╙──       	       ^^^^^^^^
-//│ res: error
+//│ res: error | int
 

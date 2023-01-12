@@ -108,7 +108,7 @@ set0 foo
 //│ ╟── from type bounds:
 //│ ║  l.50: 	def foo: MutArray[int..number]
 //│ ╙──      	                  ^^^^^^^^^^^
-//│ res: error
+//│ res: int -> () | error
 //│    = <no result>
 //│      set0 is not implemented
 
@@ -126,7 +126,7 @@ set2 foo
 //│ ╟── from type bounds:
 //│ ║  l.11: 	def set2: MutArray[int..number] -> int -> ()
 //│ ╙──      	                   ^^^^^^^^^^^
-//│ res: error
+//│ res: int -> () | error
 //│    = <no result>
 //│      set2 is not implemented
 
@@ -325,7 +325,7 @@ maf ((mut error,))
 //│ ╟── from type bounds:
 //│ ║  l.295: 	def maf: MutArray[int..number] -> MutArray[int..number]
 //│ ╙──       	                  ^^^^^^^^^^^
-//│ res: error
+//│ res: MutArray[in int out number] | error
 //│    = <no result>
 //│      maf is not implemented
 
@@ -346,7 +346,7 @@ fun x -> maf ((mut x,))
 //│ ╟── from type bounds:
 //│ ║  l.295: 	def maf: MutArray[int..number] -> MutArray[int..number]
 //│ ╙──       	                  ^^^^^^^^^^^
-//│ res: int -> error
+//│ res: int -> (MutArray[in int out number] | error)
 //│    = <no result>
 //│      maf is not implemented
 

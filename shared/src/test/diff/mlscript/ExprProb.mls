@@ -537,7 +537,7 @@ eval1 done e2
 //│ ╟── from field selection:
 //│ ║  l.72: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
 //│ ╙──      	                                   ^^^^^
-//│ res: error
+//│ res: error | int
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
 
@@ -561,6 +561,18 @@ prettier2 done eval1 e1
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.262: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
 //│ ╙──       	              ^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	prettier2 done eval1 e1
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Lit & {val: ?val}` is not a function
+//│ ║  l.18: 	def lit val = Lit { val }
+//│ ║        	              ^^^^^^^^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.73: 	  | _ -> k e
+//│ ║        	         ^^^
+//│ ╟── from field selection:
+//│ ║  l.262: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+//│ ╙──       	                 ^^^^^
 //│ res: error
 //│    = '123'
 
@@ -580,12 +592,12 @@ prettier2 done (eval1 done) e2
 //│ ╟── from field selection:
 //│ ║  l.262: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
 //│ ╙──       	                 ^^^^^
-//│ res: error
+//│ res: error | string
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
-//│ constrain calls  : 590
-//│ annoying  calls  : 203
-//│ subtyping calls  : 10056
+//│ constrain calls  : 640
+//│ annoying  calls  : 228
+//│ subtyping calls  : 11567
 
 :e
 :stats
@@ -607,11 +619,13 @@ prettier2 done eval2
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.262: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
 //│ ╙──       	              ^^^^^^^^
-//│ res: error
+//│ res: 'a -> string | error
+//│   where
+//│     'a <: Add[?] & {lhs: nothing -> int & 'a, rhs: nothing -> int & 'a} | Lit | Nega[?] & {arg: 'a}
 //│    = [Function (anonymous)]
-//│ constrain calls  : 53
+//│ constrain calls  : 74
 //│ annoying  calls  : 0
-//│ subtyping calls  : 200
+//│ subtyping calls  : 448
 
 :e
 :stats
@@ -633,11 +647,23 @@ prettier2 done eval2 e1
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.262: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
 //│ ╙──       	              ^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	prettier2 done eval2 e1
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Lit & {val: ?val}` is not a function
+//│ ║  l.18: 	def lit val = Lit { val }
+//│ ║        	              ^^^^^^^^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.371: 	  | _ -> k x
+//│ ║         	         ^^^
+//│ ╟── from field selection:
+//│ ║  l.262: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+//│ ╙──       	                 ^^^^^
 //│ res: error
 //│    = '123'
-//│ constrain calls  : 60
-//│ annoying  calls  : 0
-//│ subtyping calls  : 210
+//│ constrain calls  : 376
+//│ annoying  calls  : 108
+//│ subtyping calls  : 5587
 
 :e
 :stats
@@ -659,11 +685,23 @@ prettier2 done eval2 e2
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.262: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
 //│ ╙──       	              ^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	prettier2 done eval2 e2
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Lit & {val: ?val}` is not a function
+//│ ║  l.18: 	def lit val = Lit { val }
+//│ ║        	              ^^^^^^^^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.371: 	  | _ -> k x
+//│ ║         	         ^^^
+//│ ╟── from field selection:
+//│ ║  l.262: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+//│ ╙──       	                 ^^^^^
 //│ res: error
 //│    = '1-123'
-//│ constrain calls  : 60
-//│ annoying  calls  : 0
-//│ subtyping calls  : 210
+//│ constrain calls  : 430
+//│ annoying  calls  : 131
+//│ subtyping calls  : 6430
 
 :e
 :stats
@@ -685,11 +723,23 @@ prettier2 done eval2 d2
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.262: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
 //│ ╙──       	              ^^^^^^^^
-//│ res: error
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	prettier2 done eval2 d2
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Nega[?E] & {Nega#E = ?E, arg: ?arg}` is not a function
+//│ ║  l.362: 	def nega arg = Nega { arg }
+//│ ║         	               ^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.371: 	  | _ -> k x
+//│ ║         	         ^^^
+//│ ╟── from field selection:
+//│ ║  l.262: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+//│ ╙──       	                 ^^^^^
+//│ res: error | string
 //│    = '-1-1'
-//│ constrain calls  : 60
-//│ annoying  calls  : 0
-//│ subtyping calls  : 210
+//│ constrain calls  : 307
+//│ annoying  calls  : 95
+//│ subtyping calls  : 4032
 
 :e
 :stats
@@ -711,9 +761,21 @@ prettier2 done eval1 e2
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.262: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
 //│ ╙──       	              ^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	prettier2 done eval1 e2
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Lit & {val: ?val}` is not a function
+//│ ║  l.18: 	def lit val = Lit { val }
+//│ ║        	              ^^^^^^^^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.73: 	  | _ -> k e
+//│ ║        	         ^^^
+//│ ╟── from field selection:
+//│ ║  l.262: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+//│ ╙──       	                 ^^^^^
 //│ res: error
 //│    = '1-123'
-//│ constrain calls  : 57
-//│ annoying  calls  : 0
-//│ subtyping calls  : 188
+//│ constrain calls  : 420
+//│ annoying  calls  : 131
+//│ subtyping calls  : 6340
 
