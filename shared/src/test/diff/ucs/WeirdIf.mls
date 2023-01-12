@@ -1,0 +1,98 @@
+:NewParser
+
+// Should report duplicated else branches.
+:w
+if
+  _ then 0
+  else 0
+else 1
+//│ ╔══[WARNING] duplicated branch
+//│ ╙──
+//│ ╔══[WARNING] duplicated branch
+//│ ╙──
+//│ res: 0
+//│    = 0
+
+:w
+if else 0 else 1
+//│ ╔══[WARNING] duplicated branch
+//│ ╙──
+//│ res: 0
+//│    = 0
+
+:w
+fun f(x) = if x is else 0 else 1
+//│ ╔══[WARNING] duplicated branch
+//│ ╙──
+//│ f: anything -> 0
+//│  = [Function: f]
+
+fun f(x) = if x is else 0 
+//│ f: anything -> 0
+//│  = [Function: f1]
+
+:e
+:ge
+if true
+  then 0
+//│ ╔══[ERROR] The case when this is false is not handled: true
+//│ ║  l.36: 	if true
+//│ ╙──      	   ^^^^
+//│ res: error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared
+
+// This cannot be parsed. But the next one works.
+:pe
+:e
+:ge
+fun f(x) =
+  if x ==
+    else "bruh"
+//│ ╔══[PARSE ERROR] Unexpected indented block in expression position
+//│ ║  l.51: 	    else "bruh"
+//│ ╙──      	^^^^
+//│ ╔══[PARSE ERROR] Unexpected end of indented block; an expression was expected here
+//│ ║  l.51: 	    else "bruh"
+//│ ╙──      	    ^
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found operator application instead
+//│ ║  l.50: 	  if x ==
+//│ ║        	     ^^^^
+//│ ║  l.51: 	    else "bruh"
+//│ ║        	^^^^
+//│ ╟── Note: 'if' expression started here:
+//│ ║  l.50: 	  if x ==
+//│ ╙──      	  ^^
+//│ ╔══[ERROR] The case when this is false is not handled: == (x,) (undefined,)
+//│ ║  l.50: 	  if x ==
+//│ ║        	     ^^^^
+//│ ║  l.51: 	    else "bruh"
+//│ ╙──      	^^^^
+//│ f: anything -> error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared
+
+// But this works.
+fun f(x) =
+  if x ==
+    _ then "bruh"
+//│ f: anything -> "bruh"
+//│  = [Function: f3]
+
+:e
+:ge
+// Hmmmmmm, this one is valid but how to get it work?
+fun boolToStr(x) =
+  if x is
+    true then "yah"
+    false then "nah"
+//│ ╔══[ERROR] The case when this is false is not handled: == (x,) (false,)
+//│ ║  l.86: 	  if x is
+//│ ║        	     ^^^^
+//│ ║  l.87: 	    true then "yah"
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.88: 	    false then "nah"
+//│ ╙──      	^^^^^^^^^
+//│ boolToStr: anything -> error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared

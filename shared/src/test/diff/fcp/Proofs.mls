@@ -113,7 +113,7 @@ DNE_to_EM: DNE -> EM
 def DNE_to_EM_let dne =
   let poly = dne (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
   in poly
-//│ DNE_to_EM_let: ((forall 'v, 'a, 'b. ((Right & {v: 'v -> 'a}) -> 'b & (Left with {v: 'v}) -> 'a) -> 'b) -> 'c) -> 'c
+//│ DNE_to_EM_let: ((forall 'a, 'v, 'b. ((Right & {v: 'v -> 'b}) -> 'a & (Left with {v: 'v}) -> 'b) -> 'a) -> 'c) -> 'c
 //│              = [Function: DNE_to_EM_let]
 
 // * This one used to work because we used let polymorphism

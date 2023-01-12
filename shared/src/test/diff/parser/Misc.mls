@@ -131,19 +131,9 @@ if f of x is Some then 1 else 0
 //│ |#if| |f| |#of| |x| |is| |Some| |#then| |1| |#else| |0|
 //│ Parsed: {if (f (is (x,) (Some,),)) then 1 else 0}
 
-// :dp
 if f of 0 and g of 1 then "ok"
 //│ |#if| |f| |#of| |0| |and| |g| |#of| |1| |#then| |"ok"|
-//│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
-//│ ║  l.135: 	if f of 0 and g of 1 then "ok"
-//│ ╙──       	        ^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found application instead
-//│ ║  l.135: 	if f of 0 and g of 1 then "ok"
-//│ ║         	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: 'if' expression started here:
-//│ ║  l.135: 	if f of 0 and g of 1 then "ok"
-//│ ╙──       	^^
-//│ Parsed: {if (f (undefined,)) then undefined}
+//│ Parsed: {if (f (and (0,) (g (1,),),)) then "ok"}
 
 A and B or C and D
 //│ |A| |and| |B| |or| |C| |and| |D|

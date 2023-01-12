@@ -52,13 +52,13 @@ rec def eval1_stub e = case e of {
   | Add -> eval1_stub e.lhs
   | _ -> 0
   }
-//│ eval1_stub: forall 'a, 'lhs, 'eval1_stub, 'b, 'c, 'd, 'e. 'eval1_stub
+//│ eval1_stub: forall 'a, 'b, 'c, 'eval1_stub, 'd, 'e, 'lhs. 'eval1_stub
 //│   where
-//│     'eval1_stub := 'b -> (1 | 'e | 0)
-//│     'e :> 1 | 'e | 0
-//│     'b <: #Lit & 'd | (#Add & 'a | 'c & ~#Add) & ~#Lit
-//│     'a <: {lhs: 'lhs}
-//│     'lhs <: 'b
+//│     'eval1_stub := 'e -> (1 | 'd | 0)
+//│     'd :> 1 | 'd | 0
+//│     'e <: #Lit & 'a | (#Add & 'b | 'c & ~#Add) & ~#Lit
+//│     'b <: {lhs: 'lhs}
+//│     'lhs <: 'e
 //│           = [Function: eval1_stub2]
 
 eval1_stub
@@ -84,18 +84,18 @@ rec def eval1 k e = case e of {
 
 :ns
 eval1
-//│ res: forall 'a, 'val, 'b, 'c, 'rhs, 'lhs, 'd, 'e, 'f, 'g, 'eval1. 'eval1
+//│ res: forall 'val, 'a, 'b, 'lhs, 'eval1, 'c, 'rhs, 'd, 'e, 'f, 'g. 'eval1
 //│   where
-//│     'eval1 := 'b -> 'd -> ('val | 'e | 'c)
-//│     'e := int
-//│     'd <: #Lit & 'f | (#Add & 'a | 'g & ~#Add) & ~#Lit
-//│     'a <: {rhs: 'rhs} & {lhs: 'lhs}
-//│     'lhs <: 'd
-//│     'rhs <: 'd
-//│     'f <: {val: 'val}
+//│     'eval1 := 'c -> 'e -> ('val | 'a | 'g)
+//│     'a := int
+//│     'e <: #Lit & 'b | (#Add & 'd | 'f & ~#Add) & ~#Lit
+//│     'd <: {rhs: 'rhs} & {lhs: 'lhs}
+//│     'lhs <: 'e
+//│     'rhs <: 'e
+//│     'b <: {val: 'val}
 //│     'val <: int
-//│     'b <: 'g -> 'c
-//│     'c <: int
+//│     'c <: 'f -> 'g
+//│     'g <: int
 //│    = [Function: eval1]
 
 :re
@@ -272,7 +272,7 @@ rec def prettier1 k ev e = case e of {
 //│          = [Function: prettier1]
 //│ constrain calls  : 291
 //│ annoying  calls  : 0
-//│ subtyping calls  : 1027
+//│ subtyping calls  : 1033
 
 :stats
 rec def prettier11 k ev e = case e of {
@@ -289,7 +289,7 @@ rec def prettier11 k ev e = case e of {
 //│           = [Function: prettier11]
 //│ constrain calls  : 186
 //│ annoying  calls  : 0
-//│ subtyping calls  : 764
+//│ subtyping calls  : 767
 
 // Doesn't make much sense, but generates very ugly type unless aggressively simplified:
 :stats
@@ -307,7 +307,7 @@ rec def prettier12 k ev e = case e of {
 //│           = [Function: prettier12]
 //│ constrain calls  : 159
 //│ annoying  calls  : 0
-//│ subtyping calls  : 797
+//│ subtyping calls  : 802
 
 
 :stats

@@ -49,9 +49,9 @@ s
 
 :e // * Since "sound extrusion"
 succ = s
-//│ 'a -> (forall 'b. 'b -> (forall 'c, 'd. ('c -> 'd
+//│ 'a -> (forall 'b. 'b -> (forall 'c, 'd. ('d -> 'c
 //│   where
-//│     'a <: 'b -> 'c -> 'd)))
+//│     'a <: 'b -> 'd -> 'c)))
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -147,8 +147,8 @@ to_church = to_ch
 //│ ║  l.136: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch172_240#  <:  ((α173_257,) -> α179_258)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch172'#  <:  ((α173_241'',) -> α179_242'')
+//│ ╟── this constraint:  to_ch173_241#  <:  ((α174_258,) -> α180_259)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  to_ch173'#  <:  ((α174_242'',) -> α180_243'')
 //│          = <no result>
 //│            to_ch and zero are not implemented
 
@@ -158,11 +158,11 @@ rec def to_ch n =
   else s (to_ch n)
 //│ to_ch: 'to_ch
 //│   where
-//│     'to_ch :> forall 'a, 'b. ('a -> (forall 'c. 'c -> (forall 'd, 'e. ('d -> 'e
+//│     'to_ch :> forall 'a, 'b. ('b -> (forall 'c. 'c -> (forall 'd, 'e. ('d -> 'e
 //│   where
-//│     'b <: 'c -> 'd -> 'e)) | ChurchInt)
+//│     'a <: 'c -> 'd -> 'e)) | ChurchInt)
 //│   where
-//│     'to_ch <: 'a -> 'b)
+//│     'to_ch <: 'b -> 'a)
 //│      = <no result>
 //│        zero is not implemented
 
@@ -181,8 +181,8 @@ to_church = to_ch
 //│ ║  l.170: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch265_331#  <:  ((α266_348,) -> α270_349)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch265'#  <:  ((α266_332'',) -> α270_333'')
+//│ ╟── this constraint:  to_ch266_332#  <:  ((α267_349,) -> α271_350)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  to_ch266'#  <:  ((α267_333'',) -> α271_334'')
 //│          = <no result>
 //│            to_ch and zero are not implemented
 
@@ -332,17 +332,17 @@ to_church = to_ch
 
 def to_ch (n:int) =
   s (to_church n)
-//│ to_ch: int -> (forall 'a. 'a -> (forall 'b, 'c. ('c -> 'b
+//│ to_ch: int -> (forall 'a. 'a -> (forall 'b, 'c. ('b -> 'c
 //│   where
-//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'c -> 'b)))
+//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c)))
 //│      = <no result>
 //│        to_church, to_ch, to_church, to_ch, to_church, to_ch and zero are not implemented
 
 :e // * Since "sound extrusion"
 to_church = to_ch
-//│ int -> (forall 'a. 'a -> (forall 'b, 'c. ('b -> 'c
+//│ int -> (forall 'a. 'a -> (forall 'b, 'c. ('c -> 'b
 //│   where
-//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c)))
+//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'c -> 'b)))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -463,8 +463,8 @@ to_church = to_ch
 //│ ║  l.454: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch1021_1055'#  <:  ((α1029_1064',) -> α1030_1065')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch1021'#  <:  ((α1029_1056'',) -> α1030_1057'')
+//│ ╟── this constraint:  to_ch1022_1056'#  <:  ((α1030_1065',) -> α1031_1066')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  to_ch1022'#  <:  ((α1030_1057'',) -> α1031_1058'')
 //│          = <no result>
 //│            to_ch and zero are not implemented
 
@@ -496,8 +496,8 @@ to_church = to_ch
 //│ ║  l.485: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch1068_1146'#  <:  ((α1076_1165',) -> α1077_1166')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch1068'#  <:  ((α1076_1147'',) -> α1077_1148'')
+//│ ╟── this constraint:  to_ch1069_1147'#  <:  ((α1077_1166',) -> α1078_1167')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  to_ch1069'#  <:  ((α1077_1148'',) -> α1078_1149'')
 //│          = [Function: to_ch7]
 
 
@@ -527,8 +527,8 @@ to_church = to_ch
 //│ ║  l.516: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch1068_1240'#  <:  ((α1076_1259',) -> α1077_1260')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch1068'#  <:  ((α1076_1241'',) -> α1077_1242'')
+//│ ╟── this constraint:  to_ch1069_1241'#  <:  ((α1077_1260',) -> α1078_1261')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  to_ch1069'#  <:  ((α1077_1242'',) -> α1078_1243'')
 //│          = [Function: to_ch7]
 
 

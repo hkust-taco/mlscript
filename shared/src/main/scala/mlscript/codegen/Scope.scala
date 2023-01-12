@@ -28,6 +28,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       "true",
       "false",
       "id",
+      "emptyArray",
       "succ",
       "error",
       "concat",

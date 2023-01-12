@@ -51,8 +51,8 @@ rec def id x = if true then x else id id x
 //│ ║  l.49: 	rec def id x = if true then x else id id x
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α112_122'' -> α121_124'')›  <:  α112_128'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α112_122'' -> α121_124'')›  <:  α112_122''
+//│ ╟── this constraint:  ‹∀ 1. (α113_123'' -> α122_125'')›  <:  α113_129'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α113_123'' -> α122_125'')›  <:  α113_123''
 //│ id: 'id
 //│   where
 //│     'id :> forall 'a. ('b & 'a) -> 'a
@@ -78,7 +78,7 @@ id_ty = id
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.67: 	id_ty = id
 //│ ║        	^^^^^^^^^^
-//│ ╟── type `‘a_179` is not a function
+//│ ╟── type `‘a_180` is not a function
 //│ ║  l.5: 	def id_ty: forall 'a. 'a -> 'a
 //│ ║       	                  ^^
 //│ ╟── Note: constraint arises from application:

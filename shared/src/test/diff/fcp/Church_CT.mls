@@ -40,8 +40,8 @@ def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M
 def succ n f x = f (n f x)
 //│ 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'e. ('c -> 'e
 //│   where
-//│     'b <: 'd -> 'e
-//│     'a <: 'b -> 'c -> 'd)))
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e)))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -66,8 +66,8 @@ def succ: ChurchInt -> ChurchInt
 def succ n f x = f (n f x)
 //│ 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'e. ('c -> 'e
 //│   where
-//│     'b <: 'd -> 'e
-//│     'a <: 'b -> 'c -> 'd)))
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e)))
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -86,10 +86,10 @@ def succD: forall 'M. ChurchInt -> ('M -> 'M) -> ('M -> 'M)
 def succD n f x = f (n f x)
 //│ succD: ChurchInt -> ('M -> 'M) -> 'M -> 'M
 //│      = <missing implementation>
-//│ 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'e. ('e -> 'd
+//│ 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'e. ('c -> 'e
 //│   where
-//│     'b <: 'c -> 'd
-//│     'a <: 'b -> 'e -> 'c)))
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e)))
 //│   <:  succD:
 //│ ChurchInt -> ('M -> 'M) -> 'M -> 'M
 //│      = [Function: succD]
@@ -291,10 +291,10 @@ zero = z
 
 :e // * Since "sound extrusion"
 succ = s
-//│ 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'e. ('e -> 'd
+//│ 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'e. ('c -> 'e
 //│   where
-//│     'b <: 'c -> 'd
-//│     'a <: 'b -> 'e -> 'c)))
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e)))
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -342,8 +342,8 @@ s: ChurchInt -> ChurchInt
 n1 = s z
 //│ n1: 'a -> (forall 'b, 'c, 'd. ('b -> 'd
 //│   where
-//│     anything -> (forall 'e. 'e -> 'e) <: 'a -> 'b -> 'c
-//│     'a <: 'c -> 'd))
+//│     'a <: 'c -> 'd
+//│     anything -> (forall 'e. 'e -> 'e) <: 'a -> 'b -> 'c))
 //│   = [Function (anonymous)]
 
 n2 = s (s z)
@@ -352,21 +352,21 @@ n2 = s (s z)
 //│     'a <: 'c -> 'd
 //│     forall 'e. 'e -> (forall 'f, 'g, 'h. ('f -> 'h
 //│   where
-//│     'e <: 'g -> 'h
-//│     anything -> (forall 'i. 'i -> 'i) <: 'e -> 'f -> 'g)) <: 'a -> 'b -> 'c))
+//│     anything -> (forall 'i. 'i -> 'i) <: 'e -> 'f -> 'g
+//│     'e <: 'g -> 'h)) <: 'a -> 'b -> 'c))
 //│   = [Function (anonymous)]
 
 n3 = s (s (s z))
 //│ n3: 'a -> (forall 'b, 'c, 'd. ('b -> 'd
 //│   where
-//│     'a <: 'c -> 'd
 //│     forall 'e. 'e -> (forall 'f, 'g, 'h. ('f -> 'h
 //│   where
 //│     forall 'i. 'i -> (forall 'j, 'k, 'l. ('j -> 'l
 //│   where
-//│     'i <: 'k -> 'l
-//│     anything -> (forall 'm. 'm -> 'm) <: 'i -> 'j -> 'k)) <: 'e -> 'f -> 'g
-//│     'e <: 'g -> 'h)) <: 'a -> 'b -> 'c))
+//│     anything -> (forall 'm. 'm -> 'm) <: 'i -> 'j -> 'k
+//│     'i <: 'k -> 'l)) <: 'e -> 'f -> 'g
+//│     'e <: 'g -> 'h)) <: 'a -> 'b -> 'c
+//│     'a <: 'c -> 'd))
 //│   = [Function (anonymous)]
 
 
@@ -423,8 +423,8 @@ wrap_ty = wrap
 n1w = n1 wrap_ty
 //│ n1w: 'b -> 'c
 //│   where
-//│     forall 'a. 'a -> {x: 'a} <: 'd -> 'c
-//│     anything -> (forall 'e. 'e -> 'e) <: (forall 'a. 'a -> {x: 'a}) -> 'b -> 'd
+//│     anything -> (forall 'd. 'd -> 'd) <: (forall 'a. 'a -> {x: 'a}) -> 'b -> 'e
+//│     forall 'a. 'a -> {x: 'a} <: 'e -> 'c
 //│    = [Function (anonymous)]
 
 n1w 0
@@ -459,19 +459,19 @@ res.x.x.x + 1
 sz = s zero
 //│ sz: 'a -> (forall 'b, 'c, 'd. ('b -> 'd
 //│   where
-//│     ChurchInt <: 'a -> 'b -> 'c
-//│     'a <: 'c -> 'd))
+//│     'a <: 'c -> 'd
+//│     ChurchInt <: 'a -> 'b -> 'c))
 //│   = [Function (anonymous)]
 
 :ns
 sz
 //│ res: forall 'a, 'b. 'a
 //│   where
-//│     'a :> forall 'c. 'c -> (forall 'd, 'e, 'f, 'g. ('e -> 'g
+//│     'a :> forall 'c. 'c -> (forall 'd, 'e, 'f, 'g. ('f -> 'd
 //│   where
-//│     'c <: 'f -> 'g
-//│     'b <: 'c -> 'd))
-//│     'd <: 'e -> 'f
+//│     'c <: 'g -> 'd
+//│     'b <: 'c -> 'e))
+//│     'e <: 'f -> 'g
 //│     'b :> ChurchInt
 //│    = [Function (anonymous)]
 
@@ -504,15 +504,15 @@ sz1 = sz 1
 
 :ns
 sz1
-//│ res: forall 'a, 'b, 'c. 'a
+//│ res: forall 'a, 'b, 'c. 'b
 //│   where
-//│     'a :> forall 'd, 'e, 'f, 'g. ('e -> 'g
+//│     'b :> forall 'd, 'e, 'f, 'g. ('e -> 'g
 //│   where
-//│     'c <: 'f -> 'g
-//│     'b <: 'c -> 'd)
+//│     'a <: 'f -> 'g
+//│     'c <: 'a -> 'd)
 //│     'd <: 'e -> 'f
-//│     'b :> ChurchInt
-//│     'c :> 1
+//│     'c :> ChurchInt
+//│     'a :> 1
 //│    = [Function (anonymous)]
 
 :e  // * Since inconsistent constrained types (delayed error from above)
@@ -562,8 +562,8 @@ to_church_ty = to_church
 //│ ║  l.553: 	to_church_ty = to_church
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_church1087_1117#  <:  ((α1095_1126,) -> α1096_1127)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_church1087'#  <:  ((α1095_1118'',) -> α1096_1119'')
+//│ ╟── this constraint:  to_church1088_1118#  <:  ((α1096_1127,) -> α1097_1128)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  to_church1088'#  <:  ((α1096_1119'',) -> α1097_1120'')
 //│             = [Function: to_church]
 
 // * Non-recursive def emulates annotated recursive def
@@ -584,10 +584,10 @@ rec def to_ch_s n =
   else s (to_ch_s (n - 1))
 //│ to_ch_s: 'to_ch_s
 //│   where
-//│     'to_ch_s :> forall 'a. (int -> (forall 'b. 'b -> (forall 'c, 'd, 'e, 'f, 'b. (('d & 'f) -> ('d | 'c)
+//│     'to_ch_s :> forall 'a. (int -> (forall 'b. 'b -> (forall 'c, 'd, 'e, 'f, 'b. (('f & 'e) -> ('f | 'd)
 //│   where
-//│     'a <: 'b -> 'f -> 'e
-//│     'b <: 'e -> 'c)))
+//│     'b <: 'c -> 'd
+//│     'a <: 'b -> 'e -> 'c)))
 //│   where
 //│     'to_ch_s <: int -> 'a)
 //│        = [Function: to_ch_s]
@@ -597,10 +597,10 @@ rec def to_ch n =
   else s (to_ch (n - 1))
 //│ to_ch: 'to_ch
 //│   where
-//│     'to_ch :> forall 'a. (int -> (forall 'b. 'b -> (forall 'c, 'd, 'e, 'b, 'f. (('e & 'f) -> ('e | 'd)
+//│     'to_ch :> forall 'a. (int -> (forall 'b. 'b -> (forall 'c, 'd, 'e, 'f, 'b. (('f & 'c) -> ('f | 'e)
 //│   where
-//│     'b <: 'c -> 'd
-//│     'a <: 'b -> 'f -> 'c)))
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e)))
 //│   where
 //│     'to_ch <: int -> 'a)
 //│      = [Function: to_ch]
@@ -609,10 +609,10 @@ rec def to_ch n =
 to_church_ty = to_ch
 //│ 'to_ch
 //│   where
-//│     'to_ch :> forall 'a. (int -> (forall 'b. 'b -> (forall 'b, 'c, 'd, 'e, 'f. (('c & 'f) -> ('c | 'e)
+//│     'to_ch :> forall 'a. (int -> (forall 'b. 'b -> (forall 'c, 'd, 'e, 'f, 'b. (('f & 'd) -> ('f | 'c)
 //│   where
-//│     'a <: 'b -> 'f -> 'd
-//│     'b <: 'd -> 'e)))
+//│     'b <: 'e -> 'c
+//│     'a <: 'b -> 'd -> 'e)))
 //│   where
 //│     'to_ch <: int -> 'a)
 //│   <:  to_church_ty:
@@ -621,8 +621,8 @@ to_church_ty = to_ch
 //│ ║  l.609: 	to_church_ty = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch1202_1284#  <:  ((α1210_1305,) -> α1211_1306)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch1202'#  <:  ((α1210_1285'',) -> α1211_1286'')
+//│ ╟── this constraint:  to_ch1203_1285#  <:  ((α1211_1306,) -> α1212_1307)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  to_ch1203'#  <:  ((α1211_1286'',) -> α1212_1287'')
 //│             = [Function: to_ch]
 
 rec def to_ch_simplif n = s (to_ch_simplif n)
@@ -630,8 +630,8 @@ rec def to_ch_simplif n = s (to_ch_simplif n)
 //│   where
 //│     'to_ch_simplif :> forall 'a, 'b. ('a -> (forall 'c. 'c -> (forall 'd, 'e, 'f. ('d -> 'f
 //│   where
-//│     'b <: 'c -> 'd -> 'e
-//│     'c <: 'e -> 'f)))
+//│     'c <: 'e -> 'f
+//│     'b <: 'c -> 'd -> 'e)))
 //│   where
 //│     'to_ch_simplif <: 'a -> 'b)
 //│              = [Function: to_ch_simplif]
@@ -652,8 +652,8 @@ to_church_ty = to_ch_simplif
 //│ ║  l.640: 	to_church_ty = to_ch_simplif
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch_simplif1315_1382#  <:  ((α1316_1401,) -> α1317_1402)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch_simplif1315'#  <:  ((α1316_1383'',) -> α1317_1384'')
+//│ ╟── this constraint:  to_ch_simplif1316_1383#  <:  ((α1317_1402,) -> α1318_1403)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  to_ch_simplif1316'#  <:  ((α1317_1384'',) -> α1318_1385'')
 //│             = [Function: to_ch_simplif]
 
 
@@ -663,10 +663,10 @@ rec def to_ch_A1 n =
   else s (to_ch_A1 (n - 1) : ChurchInt)
 //│ to_ch_A1: 'to_ch_A1
 //│   where
-//│     'to_ch_A1 :> int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e. (('b & 'e) -> ('b | 'c)
+//│     'to_ch_A1 :> int -> (forall 'a. 'a -> (forall 'b, 'c, 'd, 'a, 'e. (('e & 'd) -> ('e | 'b)
 //│   where
-//│     'a <: 'd -> 'c
-//│     ChurchInt <: 'a -> 'e -> 'd)))
+//│     'a <: 'c -> 'b
+//│     ChurchInt <: 'a -> 'd -> 'c)))
 //│   where
 //│     'to_ch_A1 <: int -> ChurchInt
 //│         = [Function: to_ch_A1]
@@ -676,10 +676,10 @@ rec def to_ch_A1 n =
 to_church_ty = to_ch_A1
 //│ 'to_ch_A1
 //│   where
-//│     'to_ch_A1 :> int -> (forall 'a. 'a -> (forall 'b, 'c, 'a, 'd, 'e. (('c & 'd) -> ('c | 'b)
+//│     'to_ch_A1 :> int -> (forall 'a. 'a -> (forall 'b, 'c, 'd, 'a, 'e. (('d & 'e) -> ('d | 'c)
 //│   where
-//│     ChurchInt <: 'a -> 'd -> 'e
-//│     'a <: 'e -> 'b)))
+//│     ChurchInt <: 'a -> 'e -> 'b
+//│     'a <: 'b -> 'c)))
 //│   where
 //│     'to_ch_A1 <: int -> ChurchInt
 //│   <:  to_church_ty:
@@ -688,8 +688,8 @@ to_church_ty = to_ch_A1
 //│ ║  l.676: 	to_church_ty = to_ch_A1
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch_A11410_1488#  <:  ((α1418_1509,) -> α1419_1510)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch_A11410'#  <:  ((α1418_1489'',) -> α1419_1490'')
+//│ ╟── this constraint:  to_ch_A11411_1489#  <:  ((α1419_1510,) -> α1420_1511)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  to_ch_A11411'#  <:  ((α1419_1490'',) -> α1420_1491'')
 //│             = [Function: to_ch_A1]
 
 // * This annotation now helps too (since "recursive definition hacks" removal)
@@ -717,8 +717,8 @@ to_church_ty = to_ch_A2
 //│ ║  l.708: 	to_church_ty = to_ch_A2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch_A21519_1584#  <:  ((α1527_1601,) -> α1528_1602)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch_A21519'#  <:  ((α1527_1585'',) -> α1528_1586'')
+//│ ╟── this constraint:  to_ch_A21520_1585#  <:  ((α1528_1602,) -> α1529_1603)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  to_ch_A21520'#  <:  ((α1528_1586'',) -> α1529_1587'')
 //│             = [Function: to_ch_A2]
 
 
@@ -731,19 +731,19 @@ def to_church_mix n =
 //│ ║  l.729: 	  else s (to_church (n - 1))
 //│ ║         	          ^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_church1087_1618''#  <:  ((α1095_1631'',) -> α1096_1632'')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_church1087'#  <:  ((α1095_1623''',) -> α1096_1624''')
-//│ to_church_mix: int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e. (('e & 'd) -> ('e | 'c)
+//│ ╟── this constraint:  to_church1088_1619''#  <:  ((α1096_1632'',) -> α1097_1633'')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  to_church1088'#  <:  ((α1096_1624''',) -> α1097_1625''')
+//│ to_church_mix: int -> (forall 'a. 'a -> (forall 'b, 'c, 'd, 'a, 'e. (('b & 'c) -> ('b | 'e)
 //│   where
-//│     error <: 'a -> 'd -> 'b
-//│     'a <: 'b -> 'c)))
+//│     'a <: 'd -> 'e
+//│     error <: 'a -> 'c -> 'd)))
 //│              = [Function: to_church_mix]
 
 to_church_ty = to_church_mix
-//│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e. (('c & 'b) -> ('c | 'e)
+//│ int -> (forall 'a. 'a -> (forall 'b, 'a, 'c, 'd, 'e. (('b & 'd) -> ('b | 'c)
 //│   where
-//│     error <: 'a -> 'b -> 'd
-//│     'a <: 'd -> 'e)))
+//│     error <: 'a -> 'd -> 'e
+//│     'a <: 'e -> 'c)))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_church_mix]
@@ -801,10 +801,10 @@ rec def to_chD n =
 to_church_ty = to_ch
 //│ 'to_ch
 //│   where
-//│     'to_ch :> forall 'a. (int -> (forall 'b. 'b -> (forall 'c, 'd, 'b, 'e, 'f. (('c & 'd) -> ('c | 'e)
+//│     'to_ch :> forall 'a. (int -> (forall 'b. 'b -> (forall 'c, 'b, 'd, 'e, 'f. (('d & 'f) -> ('d | 'c)
 //│   where
-//│     'a <: 'b -> 'd -> 'f
-//│     'b <: 'f -> 'e)))
+//│     'b <: 'e -> 'c
+//│     'a <: 'b -> 'f -> 'e)))
 //│   where
 //│     'to_ch <: int -> 'a)
 //│   <:  to_church_ty:
@@ -813,8 +813,8 @@ to_church_ty = to_ch
 //│ ║  l.801: 	to_church_ty = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch1202_1820'#  <:  ((α1210_1841',) -> α1211_1842')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch1202'#  <:  ((α1210_1821'',) -> α1211_1822'')
+//│ ╟── this constraint:  to_ch1203_1821'#  <:  ((α1211_1842',) -> α1212_1843')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  to_ch1203'#  <:  ((α1211_1822'',) -> α1212_1823'')
 //│             = [Function: to_ch]
 
 :e // * Since the removal of "recursive definition hacks"
@@ -823,8 +823,8 @@ to_church_ty = to_ch_simplif
 //│   where
 //│     'to_ch_simplif :> forall 'a, 'b. ('a -> (forall 'c. 'c -> (forall 'd, 'e, 'f. ('d -> 'f
 //│   where
-//│     'c <: 'e -> 'f
-//│     'b <: 'c -> 'd -> 'e)))
+//│     'b <: 'c -> 'd -> 'e
+//│     'c <: 'e -> 'f)))
 //│   where
 //│     'to_ch_simplif <: 'a -> 'b)
 //│   <:  to_church_ty:
@@ -833,8 +833,8 @@ to_church_ty = to_ch_simplif
 //│ ║  l.821: 	to_church_ty = to_ch_simplif
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch_simplif1315_1876'#  <:  ((α1316_1895',) -> α1317_1896')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch_simplif1315'#  <:  ((α1316_1877'',) -> α1317_1878'')
+//│ ╟── this constraint:  to_ch_simplif1316_1877'#  <:  ((α1317_1896',) -> α1318_1897')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  to_ch_simplif1316'#  <:  ((α1317_1878'',) -> α1318_1879'')
 //│             = [Function: to_ch_simplif]
 
 // * Redefinition in the context of distrib, just for the record (still infers but doesn't check)
@@ -855,8 +855,8 @@ to_church_ty = to_ch_simplif
 //│   where
 //│     'to_ch_simplif :> forall 'a, 'b. ('a -> (forall 'c. 'c -> (forall 'd, 'e, 'f. ('d -> 'f
 //│   where
-//│     'c <: 'e -> 'f
-//│     'b <: 'c -> 'd -> 'e)))
+//│     'b <: 'c -> 'd -> 'e
+//│     'c <: 'e -> 'f)))
 //│   where
 //│     'to_ch_simplif <: 'a -> 'b)
 //│   <:  to_church_ty:
@@ -865,8 +865,8 @@ to_church_ty = to_ch_simplif
 //│ ║  l.853: 	to_church_ty = to_ch_simplif
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch_simplif1904_1972'#  <:  ((α1905_1991',) -> α1906_1992')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch_simplif1904'#  <:  ((α1905_1973'',) -> α1906_1974'')
+//│ ╟── this constraint:  to_ch_simplif1905_1973'#  <:  ((α1906_1992',) -> α1907_1993')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  to_ch_simplif1905'#  <:  ((α1906_1974'',) -> α1907_1975'')
 //│             = [Function: to_ch_simplif1]
 
 // * Still doesn't work (Same with the full definition)
@@ -874,10 +874,10 @@ to_church_ty = to_ch_simplif
 to_church_ty = to_ch_A1
 //│ 'to_ch_A1
 //│   where
-//│     'to_ch_A1 :> int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e. (('b & 'e) -> ('b | 'c)
+//│     'to_ch_A1 :> int -> (forall 'a. 'a -> (forall 'b, 'c, 'd, 'e, 'a. (('d & 'e) -> ('d | 'b)
 //│   where
-//│     ChurchInt <: 'a -> 'e -> 'd
-//│     'a <: 'd -> 'c)))
+//│     'a <: 'c -> 'b
+//│     ChurchInt <: 'a -> 'e -> 'c)))
 //│   where
 //│     'to_ch_A1 <: int -> ChurchInt
 //│   <:  to_church_ty:
@@ -886,16 +886,16 @@ to_church_ty = to_ch_A1
 //│ ║  l.874: 	to_church_ty = to_ch_A1
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch_A11410_2026'#  <:  ((α1418_2047',) -> α1419_2048')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch_A11410'#  <:  ((α1418_2027'',) -> α1419_2028'')
+//│ ╟── this constraint:  to_ch_A11411_2027'#  <:  ((α1419_2048',) -> α1420_2049')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  to_ch_A11411'#  <:  ((α1419_2028'',) -> α1420_2029'')
 //│             = [Function: to_ch_A1]
 
 // * Now works
 to_church_ty = to_church_mix
-//│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e. (('c & 'b) -> ('c | 'd)
+//│ int -> (forall 'a. 'a -> (forall 'b, 'a, 'c, 'd, 'e. (('b & 'e) -> ('b | 'c)
 //│   where
-//│     'a <: 'e -> 'd
-//│     error <: 'a -> 'b -> 'e)))
+//│     error <: 'a -> 'e -> 'd
+//│     'a <: 'd -> 'c)))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_church_mix]

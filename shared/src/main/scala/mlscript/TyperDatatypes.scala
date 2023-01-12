@@ -21,12 +21,15 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString: Str = (if (isOrigin) "o: " else "") + "‹"+loco.fold(desc)(desc+":"+_)+"›"
   }
   type TP = TypeProvenance
-
+  
   sealed abstract class TypeInfo
 
   /** A type for abstract classes that is used to check and throw
    * errors if the abstract class is being instantiated */
   case class AbstractConstructor(absMths: Set[Var], isTraitWithMethods: Bool) extends TypeInfo
+  
+  // case class VarSymbol(ty: TypeScheme, definingVar: Var) extends TypeInfo
+  case class VarSymbol(ty: ST, definingVar: Var) extends TypeInfo
   
   /** A type that potentially contains universally quantified type variables,
     * and which can be isntantiated to a given level. */
@@ -186,7 +189,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   
   /** A general type form (TODO: rename to AnyType). */
-  sealed abstract class SimpleType extends TypeInfo with SimpleTypeImpl {
+  // sealed abstract class SimpleType extends TypeInfo with SimpleTypeImpl {
+  sealed abstract class SimpleType extends SimpleTypeImpl {
     val prov: TypeProvenance
     def level: Level
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level
@@ -515,11 +519,14 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = s"$lb..$ub"
   }
   object TypeBounds {
+    final def mkSimple(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv): SimpleType = (lb, ub) match {
+      case (TypeBounds(lb, _), ub) => mkSimple(lb, ub, prov)
+      case (lb, TypeBounds(_, ub)) => mkSimple(lb, ub, prov)
+      case _ => TypeBounds(lb, ub)(prov)
+    }
     final def mk(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv)(implicit ctx: Ctx): SimpleType =
       if ((lb is ub) || lb === ub || lb <:< ub && ub <:< lb) lb else (lb, ub) match {
-        case (TypeBounds(lb, _), ub) => mk(lb, ub, prov)
-        case (lb, TypeBounds(_, ub)) => mk(lb, ub, prov)
-        case _ => TypeBounds(lb, ub)(prov)
+        case _ => mkSimple(lb, ub, prov)
       }
   }
   

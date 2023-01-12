@@ -22,7 +22,6 @@ def t4 : (int, ...int, bool)
 //│ ╙── type `int` does not match type `Array[?a]`
 //│ t4: (int, ...int, bool)
 
-// :d
 def f1 : ('a, ...Array[int]) -> 'a
 //│ f1: ('a, ...Array[int]) -> 'a
 
@@ -32,32 +31,32 @@ def f1 (x, ...y) = x
 //│   <:  f1:
 //│ ('a, ...Array[int]) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.30: 	def f1 (x, ...y) = x
+//│ ║  l.29: 	def f1 (x, ...y) = x
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `(‘a_42, ...Array[int])` does not match type `(?a, ...?b)`
-//│ ║  l.26: 	def f1 : ('a, ...Array[int]) -> 'a
+//│ ╟── type `(‘a_43, ...Array[int])` does not match type `(?a, ...?b)`
+//│ ║  l.25: 	def f1 : ('a, ...Array[int]) -> 'a
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from splice:
-//│ ║  l.30: 	def f1 (x, ...y) = x
+//│ ║  l.29: 	def f1 (x, ...y) = x
 //│ ╙──      	       ^^^^^^^^^
 
 :e
 errt = (1, ...2, 3)
 //│ ╔══[ERROR] Type mismatch in splice:
-//│ ║  l.45: 	errt = (1, ...2, 3)
+//│ ║  l.44: 	errt = (1, ...2, 3)
 //│ ║        	       ^^^^^^^^^^^^
 //│ ╟── integer literal of type `2` does not match type `Array[?a]`
-//│ ║  l.45: 	errt = (1, ...2, 3)
+//│ ║  l.44: 	errt = (1, ...2, 3)
 //│ ╙──      	              ^
 //│ errt: (1, ...2, 3)
 
 :e
 wrerr = (1, ...true, mut 3)
 //│ ╔══[ERROR] Type mismatch in splice:
-//│ ║  l.55: 	wrerr = (1, ...true, mut 3)
+//│ ║  l.54: 	wrerr = (1, ...true, mut 3)
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `true` does not match type `Array[?a]`
-//│ ║  l.55: 	wrerr = (1, ...true, mut 3)
+//│ ║  l.54: 	wrerr = (1, ...true, mut 3)
 //│ ╙──      	               ^^^^
 //│ wrerr: (1, ...true, 3)
 
@@ -76,13 +75,13 @@ gt2 = (...arr1)
 :e
 (1, ...(true, false), "hi") : Array[int | bool]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.77: 	(1, ...(true, false), "hi") : Array[int | bool]
+//│ ║  l.76: 	(1, ...(true, false), "hi") : Array[int | bool]
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"hi"` does not match type `bool | int`
-//│ ║  l.77: 	(1, ...(true, false), "hi") : Array[int | bool]
+//│ ║  l.76: 	(1, ...(true, false), "hi") : Array[int | bool]
 //│ ║        	                      ^^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.77: 	(1, ...(true, false), "hi") : Array[int | bool]
+//│ ║  l.76: 	(1, ...(true, false), "hi") : Array[int | bool]
 //│ ╙──      	                                    ^^^^^^^^^^
 //│ res: Array[bool | int]
 

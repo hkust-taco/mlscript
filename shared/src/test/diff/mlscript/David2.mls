@@ -126,10 +126,10 @@ rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.118: 	rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops (n.value + 1) }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `int` is not an instance of type `'a_387`
+//│ ╟── operator application of type `int` is not an instance of type `'a_388`
 //│ ║  l.118: 	rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops (n.value + 1) }
 //│ ║         	                                                                                  ^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `‘a_387`
+//│ ╟── but it flows into reference with expected type `‘a_388`
 //│ ║  l.118: 	rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops (n.value + 1) }
 //│ ║         	                                         ^^^^^
 //│ ╟── Note: constraint arises from type variable:
@@ -194,7 +194,7 @@ def mkIntegerPrecise3 = mkInteger
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.186: 	def mkIntegerPrecise3 = mkInteger
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `int` is not an instance of type `'a_580`
+//│ ╟── operator application of type `int` is not an instance of type `'a_581`
 //│ ║  l.72: 	rec def mkInteger value = Integer { value; addOne = fun n -> mkInteger (n.value + 1) }
 //│ ║        	                                                                        ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type variable:

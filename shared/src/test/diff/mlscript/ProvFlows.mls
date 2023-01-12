@@ -396,29 +396,29 @@ ty00 = ty11
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.392: 	ty00 = ty11
 //│ ║         	^^^^^^^^^^^
-//│ ╟── type `B & ‘b_270` is not an instance of type `'a_269`
+//│ ╟── type `B & ‘b_271` is not an instance of type `'a_270`
 //│ ║  l.379: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	                    ^^^^^^
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.379: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	                                ^^
 //│ ╟── ========= Additional explanations below =========
-//│ ╟── [info] flowing from expression of type `B & ‘b_270`
-//│ ╟── [info] flowing from type `B & ‘b_270`
+//│ ╟── [info] flowing from expression of type `B & ‘b_271`
+//│ ╟── [info] flowing from type `B & ‘b_271`
 //│ ║  l.379: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	                    ^^^^^^
-//│ ╟── [info] flowing from type `B & ‘b_270`
+//│ ╟── [info] flowing from type `B & ‘b_271`
 //│ ║  l.379: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	          ^^^^^^^^^^^^^^^^^
-//│ ╟── [info] flowing from type `B & ‘b_270`
+//│ ╟── [info] flowing from type `B & ‘b_271`
 //│ ║  l.382: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)
 //│ ║         	          ^^^^^^^^^^^^^^^^^
 //│ ╟── [info] flowing from expression of type `?a`
 //│ ╟── [info] flowing from type `?a0`
 //│ ║  l.382: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)
 //│ ║         	                                ^^
-//│ ╟── [info] flowing into type `‘a_269`
+//│ ╟── [info] flowing into type `‘a_270`
 //│ ║  l.379: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	                                ^^
-//│ ╙── [info] flowing into expression of type `‘a_269`
+//│ ╙── [info] flowing into expression of type `‘a_270`
 

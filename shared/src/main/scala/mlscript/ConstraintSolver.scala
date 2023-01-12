@@ -1066,7 +1066,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case tr @ TypeRef(d, ts) =>
         TypeRef(d, tr.mapTargs(S(pol)) {
           case (N, targ) =>
-            TypeBounds(extrude(targ, lowerLvl, false, upperLvl), extrude(targ, lowerLvl, true, upperLvl))(noProv)
+            TypeBounds.mk(extrude(targ, lowerLvl, false, upperLvl), extrude(targ, lowerLvl, true, upperLvl)) // Q: ? subtypes?
+            // * A sanity-checking version, making sure the type range is correct ((LB subtype of UB):
+            /* 
+            val a = extrude(targ, lowerLvl, false, upperLvl)
+            val b = extrude(targ, lowerLvl, true, upperLvl)
+            implicit val r: Raise = throw _
+            implicit val p: TP = noProv
+            constrain(a, b)
+            TypeBounds.mk(a, b)
+            */
           case (S(pol), targ) => extrude(targ, lowerLvl, pol, upperLvl)
         })(tr.prov)
       case PolymorphicType(polymLevel, body) =>

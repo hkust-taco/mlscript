@@ -15,12 +15,12 @@ rec def id1 x = choose x (id1 id1 x)
 //│      choose is not implemented
 
 id1 id
-//│ res: 'a -> 'b | 'c
+//│ res: ('a & 'b) -> 'a | 'c
 //│   where
-//│     'a :> 'a -> 'b
-//│        <: 'b
-//│     'b :> 'a -> 'b
-//│        <: 'a -> 'b & 'c
+//│     'a :> ('a & 'b) -> 'a
+//│        <: 'b -> 'a & 'c
+//│     'b :> ('a & 'b) -> 'a
+//│        <: 'a
 //│    = <no result>
 //│      id1 and choose are not implemented
 

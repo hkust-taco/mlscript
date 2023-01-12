@@ -59,7 +59,7 @@ def succ n f x = f (n f x)
 
 // * This explicit annotation makes it type check; like in MLF:
 def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
-//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'a, 'N0, 'N1. ('N1 -> 'a & 'N0 -> ('N1 & 'N0)) -> ('N1 & 'N0) -> 'a)
+//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'N0, 'a, 'N1. ('N0 -> 'a & 'N1 -> ('N0 & 'N1)) -> ('N0 & 'N1) -> 'a)
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: succ2]
@@ -472,16 +472,16 @@ sz = s zero
 
 :ns
 sz
-//│ res: forall 'a, 'b, 'c, 'd, 'N. 'c
+//│ res: forall 'N, 'a, 'b, 'c, 'd. 'c
 //│   where
-//│     'c :> forall 'e, 'f, 'g. 'g -> (forall 'h, 'i. 'h -> 'i)
-//│     'i :> 'f
+//│     'c :> forall 'e, 'f, 'g. 'e -> (forall 'h, 'i. 'h -> 'i)
+//│     'i :> 'g
 //│     'h <: 'd
 //│     'd <: 'N
-//│     'g <: 'e -> 'f & 'a
+//│     'e <: 'f -> 'g & 'a
 //│     'a <: 'N -> 'N
 //│     'N <: 'b
-//│     'e :> 'b
+//│     'f :> 'b
 //│    = [Function (anonymous)]
 
 sz: ChurchInt
@@ -569,7 +569,7 @@ to_church_ty = to_ch
 rec def to_ch_s_A1 n =
   if n == 0 then z
   else s_A1 (to_ch_s_A1 (n - 1))
-//│ to_ch_s_A1: int -> (forall 'N, 'a, 'N0. ('N -> 'a & 'N0 -> ('N & 'N0)) -> (forall 'N, 'a, 'N0. ('a & 'N & 'N0) -> 'a))
+//│ to_ch_s_A1: int -> (forall 'N, 'N0, 'a. ('N0 -> 'a & 'N -> ('N0 & 'N)) -> (forall 'N, 'N0, 'a. ('a & 'N0 & 'N) -> 'a))
 //│           = [Function: to_ch_s_A1]
 
 to_church_ty = to_ch_s_A1

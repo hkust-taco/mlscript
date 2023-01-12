@@ -1,0 +1,122 @@
+:NewParser
+
+
+:pe
+let v1: {mut 1}
+//│ ╔══[PARSE ERROR] Record field should have a name
+//│ ║  l.5: 	let v1: {mut 1}
+//│ ╙──     	             ^
+//│ v1: {mut <error>: 1}
+//│   = <missing implementation>
+
+let v1: {mut int}
+//│ v1: {mut int: int}
+//│   = <missing implementation>
+
+let v1 = {mut int: 0}
+//│ {mut int: 'int}
+//│   where
+//│     'int :> 0
+//│   <:  v1:
+//│ {mut int: int}
+//│   = { int: 0 }
+
+
+let v1: {mut x: int}
+//│ v1: {mut x: int}
+//│   = <missing implementation>
+
+:pe
+:e
+let v1 = {mut 1}
+//│ ╔══[PARSE ERROR] Record field should have a name
+//│ ║  l.31: 	let v1 = {mut 1}
+//│ ╙──      	              ^
+//│ {mut <error>: '<error>}
+//│   where
+//│     '<error> :> 1
+//│   <:  v1:
+//│ {mut x: int}
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.31: 	let v1 = {mut 1}
+//│ ║        	    ^^^^^^^^^^^^
+//│ ╟── record literal of type `{mut <error>: ?<error>}` does not have field 'x'
+//│ ║  l.31: 	let v1 = {mut 1}
+//│ ║        	              ^
+//│ ╟── Note: constraint arises from record type:
+//│ ║  l.25: 	let v1: {mut x: int}
+//│ ╙──      	        ^^^^^^^^^^^^
+//│   = { '<error>': 1 }
+
+let v1 = {mut x: 1}
+//│ {mut x: 'x}
+//│   where
+//│     'x :> 1
+//│   <:  v1:
+//│ {mut x: int}
+//│   = { x: 1 }
+
+// * TODO: support this syntax?
+:pe
+v1.x = 1
+//│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
+//│ ║  l.61: 	v1.x = 1
+//│ ╙──      	     ^
+//│ res: int
+//│    = 1
+
+// * TODO: support this syntax?
+:e
+:ng
+v1.x <- 1
+//│ ╔══[ERROR] identifier not found: <-
+//│ ║  l.71: 	v1.x <- 1
+//│ ╙──      	     ^^
+//│ res: error
+
+
+let v2: (mut int)
+//│ v2: (mut int,)
+//│   = <missing implementation>
+
+let v2 = (mut 1)
+//│ (mut 'a,)
+//│   where
+//│     'a :> 1
+//│   <:  v2:
+//│ (mut int,)
+//│   = [ 1 ]
+
+let v2: (mut x: int)
+//│ v2: (mut x: int,)
+//│   = <missing implementation>
+
+let v2 = (mut 1)
+//│ (mut 'a,)
+//│   where
+//│     'a :> 1
+//│   <:  v2:
+//│ (mut x: int,)
+//│   = [ 1 ]
+
+let v2 = (mut x: 1)
+//│ (mut x: 'x,)
+//│   where
+//│     'x :> 1
+//│   <:  v2:
+//│ (mut x: int,)
+//│   = [ 1 ]
+
+:e
+let v2 = (mut y: 1)
+//│ (mut y: 'y,)
+//│   where
+//│     'y :> 1
+//│   <:  v2:
+//│ (mut x: int,)
+//│ ╔══[ERROR] Wrong tuple field name: found 'y' instead of 'x'
+//│ ║  l.111: 	let v2 = (mut y: 1)
+//│ ╙──       	                 ^
+//│   = [ 1 ]
+
+

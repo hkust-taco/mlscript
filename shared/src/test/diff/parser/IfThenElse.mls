@@ -441,7 +441,7 @@ if let Some(x) = v and cond then 123
 // MLscript:
 if v is Some(x) and x is Left(y) then 123
 //│ |#if| |v| |is| |Some|(|x|)| |and| |x| |is| |Left|(|y|)| |#then| |123|
-//│ Parsed: {if v is Some (x,) and x is (Left (y,)) then 123}
+//│ Parsed: {if (and (is (v,) (Some (x,),),) (is (x,) (Left (y,),),)) then 123}
 
 // ML:
 let Some(x) = v

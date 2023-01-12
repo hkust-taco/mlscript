@@ -144,6 +144,9 @@ object Polyfill {
       "id", fn(_, param("x")) { `return`(id("x")) }
     )
     buffer += BuiltinFunc(
+      "emptyArray", fn(_) { `return`(JSArray(Nil)) }
+    )
+    buffer += BuiltinFunc(
       "succ", fn(_, param("x")) { `return` { id("x") + lit(1) } }
     )
     buffer += BuiltinFunc(

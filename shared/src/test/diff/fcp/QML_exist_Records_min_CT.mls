@@ -36,9 +36,9 @@ def step: Arrays -> Arrays
 def step arr g = g (stepImpl2 arr)
 //│ 'a -> (forall 'b, 'c. (('b -> 'c) -> 'c
 //│   where
-//│     'a <: (forall 'd. 'd -> {fold: forall 'e. 'e -> (forall 'f, 'g. ('f -> 'g
+//│     'a <: (forall 'd. 'd -> {fold: forall 'e. 'e -> (forall 'f, 'g. ('g -> 'f
 //│   where
-//│     'd <: {fold: 'e -> 'f -> 'g}))}) -> 'b))
+//│     'd <: {fold: 'e -> 'g -> 'f}))}) -> 'b))
 //│   <:  step:
 //│ Arrays -> Arrays
 //│ ╔══[ERROR] Type mismatch in def definition:

@@ -110,8 +110,8 @@ def test extr x =
 //│     'a <: 0 -> 'b
 //│     'd <: 'b -> 'c))) -> anything) -> (forall 'e. ('d & 'e) -> (forall 'f, 'g. (anything -> 'g
 //│   where
-//│     0 <: 0 -> 'f
-//│     'e <: 'f -> 'g)))
+//│     'e <: 'f -> 'g
+//│     0 <: 0 -> 'f)))
 //│     = [Function: test1]
 
 :e
@@ -133,8 +133,8 @@ def test extr x =
   in f 0
 //│ test: anything -> (forall 'a. 'a -> (forall 'b, 'c. (anything -> 'c
 //│   where
-//│     'a <: 'b -> 'c
-//│     0 <: 0 -> 'b)))
+//│     0 <: 0 -> 'b
+//│     'a <: 'b -> 'c)))
 //│     = [Function: test2]
 
 // Error delayed by inconsistent constrained types

@@ -1,8 +1,0 @@
-:NewParser
-
-
-// TODO
-if true then 0 else 1
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-
-

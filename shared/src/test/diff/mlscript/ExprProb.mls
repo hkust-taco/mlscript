@@ -50,7 +50,7 @@ rec def eval1_stub e = case e of {
   | Add -> eval1_stub e.lhs
   | _ -> 0
   }
-//│ eval1_stub: forall 'a, 'b, 'lhs, 'c, 'eval1_stub, 'd, 'e. 'eval1_stub
+//│ eval1_stub: forall 'a, 'b, 'lhs, 'eval1_stub, 'c, 'd, 'e. 'eval1_stub
 //│   where
 //│     'eval1_stub := 'd -> (1 | 'c | 0)
 //│     'c :> 1 | 'c | 0
@@ -82,18 +82,18 @@ rec def eval1 k e = case e of {
 
 :ns
 eval1
-//│ res: forall 'a, 'eval1, 'b, 'c, 'rhs, 'd, 'e, 'lhs, 'f, 'g, 'val. 'eval1
+//│ res: forall 'lhs, 'rhs, 'val, 'a, 'b, 'c, 'd, 'e, 'f, 'eval1, 'g. 'eval1
 //│   where
-//│     'eval1 := 'd -> 'f -> ('val | 'a | 'c)
-//│     'a := int
-//│     'f <: #Lit & 'g | (#Add & 'b | 'e & ~#Add) & ~#Lit
-//│     'b <: {rhs: 'rhs} & {lhs: 'lhs}
-//│     'lhs <: 'f
-//│     'rhs <: 'f
-//│     'g <: {val: 'val}
+//│     'eval1 := 'd -> 'e -> ('val | 'c | 'b)
+//│     'c := int
+//│     'e <: #Lit & 'f | (#Add & 'g | 'a & ~#Add) & ~#Lit
+//│     'g <: {rhs: 'rhs} & {lhs: 'lhs}
+//│     'lhs <: 'e
+//│     'rhs <: 'e
+//│     'f <: {val: 'val}
 //│     'val <: int
-//│     'd <: 'e -> 'c
-//│     'c <: int
+//│     'd <: 'a -> 'b
+//│     'b <: int
 //│    = [Function: eval1]
 
 :re
@@ -269,7 +269,7 @@ rec def prettier1 k ev e = case e of {
 //│          = [Function: prettier1]
 //│ constrain calls  : 291
 //│ annoying  calls  : 0
-//│ subtyping calls  : 1028
+//│ subtyping calls  : 1034
 
 :stats
 rec def prettier11 k ev e = case e of {
@@ -286,7 +286,7 @@ rec def prettier11 k ev e = case e of {
 //│           = [Function: prettier11]
 //│ constrain calls  : 186
 //│ annoying  calls  : 0
-//│ subtyping calls  : 763
+//│ subtyping calls  : 766
 
 // Doesn't make much sense, but generates very ugly type unless aggressively simplified:
 :stats
@@ -304,7 +304,7 @@ rec def prettier12 k ev e = case e of {
 //│           = [Function: prettier12]
 //│ constrain calls  : 159
 //│ annoying  calls  : 0
-//│ subtyping calls  : 796
+//│ subtyping calls  : 801
 
 
 :stats

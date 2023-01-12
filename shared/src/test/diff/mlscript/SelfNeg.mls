@@ -109,14 +109,14 @@ r = bar (fun x -> (x, x + 1, not x, x x))
 
 :ns
 r
-//│ res: forall 'b, 'c, 'a, 'd, 'e, 'f. 'e
+//│ res: forall 'b, 'a, 'c, 'd, 'e, 'f. 'd
 //│   where
-//│     'e :> ('f, 'c, 'b, 'd,)
-//│     'b :> bool
-//│     'c :> int
-//│     'f :> 'a & int & ~'a
-//│        <: 'f -> 'd & bool & int
-//│     'a <: (bool | ~(int & ~'a)) & ('f -> 'd | ~(int & ~'a))
+//│     'd :> ('e, 'b, 'f, 'c,)
+//│     'f :> bool
+//│     'b :> int
+//│     'e :> 'a & int & ~'a
+//│        <: 'e -> 'c & bool & int
+//│     'a <: (bool | ~(int & ~'a)) & ('e -> 'c | ~(int & ~'a))
 //│    = <no result>
 //│      r and bar are not implemented
 

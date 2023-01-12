@@ -31,7 +31,7 @@ s2: S1
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.30: 	s2: S1
 //│ ║        	^^
-//│ ╟── type `‘a_142` is not an instance of type `'a_139`
+//│ ╟── type `‘a_143` is not an instance of type `'a_140`
 //│ ║  l.14: 	type S2 = (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║        	                  ^^
 //│ ╟── Note: constraint arises from type variable:
@@ -50,8 +50,8 @@ S: Id -> Id -> Id -> Id
 //│ ║  l.48: 	S: Id -> Id -> Id -> Id
 //│ ║        	^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  Id  <:  'a143_166    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  Id  <:  'a143_144''
+//│ ╟── this constraint:  Id  <:  'a144_167    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  Id  <:  'a144_145''
 //│ res: Id -> Id -> Id -> Id
 //│    = [Function: S]
 

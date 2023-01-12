@@ -187,8 +187,8 @@ x => y => x x y
 //│ ║  l.+1: 	(x => x x) (x => x x)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α221_223' -> α222_224')›  <:  α221_228    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α221_223' -> α222_224')›  <:  α221_223'
+//│ ╟── this constraint:  ‹∀ 0. (α222_224' -> α223_225')›  <:  α222_229    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α222_224' -> α223_225')›  <:  α222_224'
 //│ res: error
 
 
@@ -204,8 +204,8 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (x x)) (x => f (x x)))
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α243_248' -> α245_250')›  <:  α243_255    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α243_248' -> α245_250')›  <:  α243_248'
+//│ ╟── this constraint:  ‹∀ 0. (α244_249' -> α246_251')›  <:  α244_256    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α244_249' -> α246_251')›  <:  α244_249'
 //│ res: (nothing -> anything) -> error
 
 // * Z combinator:
@@ -215,8 +215,8 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α275_290' -> α284_294')›  <:  α275_301    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α275_290' -> α284_294')›  <:  α275_290'
+//│ ╟── this constraint:  ‹∀ 0. (α276_291' -> α285_295')›  <:  α276_302    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α276_291' -> α285_295')›  <:  α276_291'
 //│ res: ((anything -> nothing) -> anything) -> error
 
 // * Function that takes arbitrarily many arguments:
@@ -226,8 +226,8 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α329_344' -> α338_348')›  <:  α329_355    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α329_344' -> α338_348')›  <:  α329_344'
+//│ ╟── this constraint:  ‹∀ 0. (α330_345' -> α339_349')›  <:  α330_356    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α330_345' -> α339_349')›  <:  α330_345'
 //│ res: error
 
 res 1 2
@@ -403,8 +403,8 @@ let rec x = (let y = (x x); (z => z))
 //│ ║  l.+1: 	(w => x => x) ((y => y y) (y => y y))
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α691_693' -> α692_694')›  <:  α691_700    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α691_693' -> α692_694')›  <:  α691_693'
+//│ ╟── this constraint:  ‹∀ 0. (α692_694' -> α693_695')›  <:  α692_701    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α692_694' -> α693_695')›  <:  α692_694'
 //│ res: 'a -> 'a
 
 
@@ -420,20 +420,20 @@ let rec x = (let y = (x x); (z => z))
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
 //│ res: ((forall 'a, 'b. ('a -> 'b
 //│   where
-//│     forall 'c, 'd. ('d -> 'c
+//│     forall 'c, 'd. ('c -> 'd
 //│   where
 //│     'e <: (forall 'f, 'g. ('f -> 'g
 //│   where
-//│     'd <: 'd -> 'f -> 'g)) -> 'c) <: (forall 'c, 'd. ('d -> 'c
+//│     'c <: 'c -> 'f -> 'g)) -> 'd) <: (forall 'c, 'd. ('c -> 'd
 //│   where
 //│     'e <: (forall 'f, 'g. ('f -> 'g
 //│   where
-//│     'd <: 'd -> 'f -> 'g)) -> 'c)) -> 'a -> 'b)) -> 'h & 'e) -> 'h
+//│     'c <: 'c -> 'f -> 'g)) -> 'd)) -> 'a -> 'b)) -> 'h & 'e) -> 'h
 
 // * Function that takes arbitrarily many arguments:
 // :e // Works thanks to inconsistent constrained types...
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
-//│ res: anything -> (forall 'a, 'b. ('b -> 'a
+//│ res: anything -> (forall 'a, 'b. ('a -> 'b
 //│   where
 //│     forall 'c, 'd. ('c -> 'd
 //│   where
@@ -443,7 +443,7 @@ let rec x = (let y = (x x); (z => z))
 //│   where
 //│     forall 'e. 'e -> anything -> 'e <: (forall 'f, 'g. ('f -> 'g
 //│   where
-//│     'c <: 'c -> 'f -> 'g)) -> 'd)) -> 'b -> 'a))
+//│     'c <: 'c -> 'f -> 'g)) -> 'd)) -> 'a -> 'b))
 
 
 

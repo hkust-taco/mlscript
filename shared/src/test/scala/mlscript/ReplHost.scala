@@ -93,7 +93,7 @@ final case class ReplHost() {
     * @param res the result identifier name
     * @return
     */
-  def query(prelude: Str, code: Str, res: Str): (ReplHost.Reply, String) = {
+  def query(prelude: Str, code: Str, res: Str): (ReplHost.Reply, Str) = {
     // For empty queries, returns empty.
     if (prelude.isEmpty && code.isEmpty)
       (ReplHost.Empty, "")

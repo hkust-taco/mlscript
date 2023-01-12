@@ -1,0 +1,119 @@
+:NewParser
+
+// Why? Can the type of `x` be `number | string`?
+:e
+fun f(x, b) =
+  if x
+    ==
+      0 and b then "n0"
+      1 and b then "n1"
+      2 then "n2"
+    ==
+      "0" then "s0"
+      "1" then "s1"
+      "2" then "s2"
+  else ":p"  
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.6: 	  if x
+//│ ║       	     ^
+//│ ║  l.7: 	    ==
+//│ ║       	^^^^^^
+//│ ║  l.8: 	      0 and b then "n0"
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.9: 	      1 and b then "n1"
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.10: 	      2 then "n2"
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ║  l.11: 	    ==
+//│ ║        	^^^^^^
+//│ ║  l.12: 	      "0" then "s0"
+//│ ║        	^^^^^^^^^
+//│ ╟── string literal of type `"0"` is not an instance of type `number`
+//│ ║  l.12: 	      "0" then "s0"
+//│ ╙──      	      ^^^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.6: 	  if x
+//│ ║       	     ^
+//│ ║  l.7: 	    ==
+//│ ║       	^^^^^^
+//│ ║  l.8: 	      0 and b then "n0"
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.9: 	      1 and b then "n1"
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.10: 	      2 then "n2"
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ║  l.11: 	    ==
+//│ ║        	^^^^^^
+//│ ║  l.12: 	      "0" then "s0"
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.13: 	      "1" then "s1"
+//│ ║        	^^^^^^^^^
+//│ ╟── string literal of type `"1"` is not an instance of type `number`
+//│ ║  l.13: 	      "1" then "s1"
+//│ ╙──      	      ^^^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.6: 	  if x
+//│ ║       	     ^
+//│ ║  l.7: 	    ==
+//│ ║       	^^^^^^
+//│ ║  l.8: 	      0 and b then "n0"
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.9: 	      1 and b then "n1"
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.10: 	      2 then "n2"
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ║  l.11: 	    ==
+//│ ║        	^^^^^^
+//│ ║  l.12: 	      "0" then "s0"
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.13: 	      "1" then "s1"
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.14: 	      "2" then "s2"
+//│ ║        	^^^^^^^^^
+//│ ╟── string literal of type `"2"` is not an instance of type `number`
+//│ ║  l.14: 	      "2" then "s2"
+//│ ╙──      	      ^^^
+//│ f: (number, anything,) -> (":p" | "n0" | "n1" | "n2" | "s0" | "s1" | "s2")
+//│  = [Function: f]
+
+fun f(x, y, a, b) =
+  if x == 0
+    and
+      y == 0 then "x, y"
+      a == 0 then "x, a"
+      b == 0 then "x, b"
+  else "nah"
+//│ f: (number, number, number, number,) -> ("nah" | "x, a" | "x, b" | "x, y")
+//│  = [Function: f1]
+
+class A()
+class B()
+//│ Defined class A
+//│ Defined class B
+//│ A: () -> A
+//│  = [Function: A1]
+//│ B: () -> B
+//│  = [Function: B1]
+
+fun f(x) =
+  if x
+    is
+      A() then 0
+      B() then 1
+//│ f: (A | B) -> (0 | 1)
+//│  = [Function: f2]
+
+// It fails because we interpret == as a constructor.
+:e
+:ge
+if x is
+  A()
+    == 0 then 0
+    > 0 then 1
+    < 0 then 2
+//│ ╔══[ERROR] Cannot find operator `==` in the context
+//│ ║  l.111: 	    == 0 then 0
+//│ ╙──       	    ^^
+//│ res: error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared

@@ -106,7 +106,7 @@ def baz x =
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.105: 	  (x: MutArray['s] -> 't): forall 'a. 'a -> 'a
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_275` does not match type `MutArray[?s]`
+//│ ╟── type `‘a_276` does not match type `MutArray[?s]`
 //│ ║  l.105: 	  (x: MutArray['s] -> 't): forall 'a. 'a -> 'a
 //│ ║         	                                  ^^
 //│ ╟── Note: constraint arises from applied type reference:
@@ -167,7 +167,7 @@ def bar y =
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.166: 	  (fun x -> y (id2 x, x)) : forall 'a. 'a -> 'a
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_381` is not a function
+//│ ╟── type `‘a_382` is not a function
 //│ ║  l.166: 	  (fun x -> y (id2 x, x)) : forall 'a. 'a -> 'a
 //│ ║         	                                   ^^
 //│ ╟── Note: constraint arises from function type:
@@ -185,7 +185,7 @@ def bar y =
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.184: 	  (fun x -> y (id2 x, x)) : forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘s_413` is not an instance of type `'a_410`
+//│ ╟── type `‘s_414` is not an instance of type `'a_411`
 //│ ║  l.155: 	def id2: (forall 's. 's -> 's) -> (forall 't. 't -> 't)
 //│ ║         	                 ^^
 //│ ╟── Note: constraint arises from quantified type variable:

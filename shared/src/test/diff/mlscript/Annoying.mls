@@ -63,7 +63,7 @@ def test x = case x of { int -> x.f | _ -> x.x }
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.59: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `int & {x: ‘a_57} | {x: ‘a_57} & ~?a` does not have field 'f'
+//│ ╟── expression of type `int & {x: ‘a_58} | {x: ‘a_58} & ~?a` does not have field 'f'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.59: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	                                ^^^
@@ -304,10 +304,10 @@ ty = ty2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.300: 	ty = ty2
 //│ ║         	^^^^^^^^
-//│ ╟── type `TT & {x: int}` does not match type `AA | ‘a_250\x`
+//│ ╟── type `TT & {x: int}` does not match type `AA | ‘a_251\x`
 //│ ║  l.292: 	def ty2: TT & { x: int }
 //│ ║         	         ^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `AA | ‘a_250\x`
+//│ ╟── but it flows into reference with expected type `AA | ‘a_251\x`
 //│ ║  l.300: 	ty = ty2
 //│ ║         	     ^^^
 //│ ╟── Note: constraint arises from union type:

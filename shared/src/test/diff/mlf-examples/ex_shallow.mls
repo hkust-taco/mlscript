@@ -224,8 +224,8 @@ def a0'_ = a2'_ a1'
 //│ ║  l.222: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 2. (α83_1518''' -> α87_1519''')›  <:  α178_1496'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 2. (α83_97''' -> α87_98''')›  <:  α178_182''
+//│ ╟── this constraint:  ‹∀ 2. (α84_1519''' -> α88_1520''')›  <:  α179_1497'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 2. (α84_98''' -> α88_99''')›  <:  α179_183''
 //│ a0'_: error
 //│     = [Function: a0$_]
 
@@ -238,8 +238,8 @@ def a0'_ = a2'_ a1'
 //│ ║  l.236: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 2. (α83_1599''' -> α87_1600''')›  <:  α178_1577'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 2. (α83_97''' -> α87_98''')›  <:  α178_182''
+//│ ╟── this constraint:  ‹∀ 2. (α84_1600''' -> α88_1601''')›  <:  α179_1578'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 2. (α84_98''' -> α88_99''')›  <:  α179_183''
 //│ a0'_: error
 //│     = [Function: a0$_1]
 :NoRecursiveTypes
@@ -286,11 +286,11 @@ def a0_ = a2_ a1
 //│   = [Function: a11]
 //│ a3: 'a -> (forall 'b. (anything -> 'b
 //│   where
-//│     'a <: (forall 'c, 'd, 'e. ('c -> 'd & 'e -> 'c) -> 'e -> 'd) -> 'b))
+//│     'a <: (forall 'c, 'd, 'e. ('d -> 'e & 'c -> 'd) -> 'c -> 'e) -> 'b))
 //│   = [Function: a31]
 //│ a2: A1 -> (forall 'a. (anything -> 'a
 //│   where
-//│     forall 'b, 'c, 'd. ('d -> 'b -> 'c) -> (forall 'e. ('c -> 'e & 'd) -> 'b -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a))
+//│     forall 'b, 'c, 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a))
 //│   = [Function: a21]
 //│ a2_: A1 -> (forall 'a. (anything -> 'a
 //│   where
@@ -308,7 +308,7 @@ def a0_ = a2_ a1
 def a1' = fun f -> fun x -> f (f (either id x))
 //│ a1': 'a -> (forall 'b, 'c, 'd. ('b -> 'd
 //│   where
-//│     'a <: (forall 'b, 'e. 'e -> 'e | 'b) -> 'c & 'c -> 'd))
+//│     'a <: (forall 'e, 'b. 'e -> 'e | 'b) -> 'c & 'c -> 'd))
 //│    = [Function: a1$1]
 
 // * Strangely, constrained types make this one FAIL!
@@ -322,7 +322,7 @@ def a2' (x: A1') =
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.319: 	    let _ = x y church_two in
 //│ ║         	            ^^^^^^^^^^^^^^
-//│ ╟── type `‘a_1977` is not a function
+//│ ╟── type `‘a_1978` is not a function
 //│ ║  l.6: 	type Sid = forall 'a. 'a -> 'a
 //│ ║       	                  ^^
 //│ ╟── Note: constraint arises from application:
@@ -352,7 +352,7 @@ def a2'_ x =
 def a0' = a2' a1'
 //│ a0': anything -> 'a
 //│   where
-//│     forall 'b, 'c, 'd. ('c -> 'd -> 'b) -> (forall 'e. ('b -> 'e & 'c) -> 'd -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a
+//│     forall 'b, 'c, 'd. ('d -> 'b -> 'c) -> (forall 'e. ('c -> 'e & 'd) -> 'b -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a
 //│    = [Function: a0$1]
 
 :e
@@ -361,8 +361,8 @@ def a0'_ = a2'_ a1'
 //│ ║  l.359: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α41_42'' -> α41_42'')››  <:  α31_2252'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α41_42'' -> α41_42'')››  <:  α31_33''
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››  <:  α32_2253'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››  <:  α32_34''
 //│ a0'_: error
 //│     = [Function: a0$_2]
 
