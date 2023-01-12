@@ -1,5 +1,6 @@
 :NoJS
 
+
 class Expr[A]
   method Inv: A -> A
 //│ Defined class Expr[=A]
@@ -42,5 +43,73 @@ def alsoPrintSizeSimple f =
 //│   where
 //│     'a3 :> 'a | 'a1
 //│         <: 'a0 & 'a2
+
+
+class Program
+//│ Defined class Program
+
+def mapExpr: (forall 'a. Expr['a] -> Expr['a]) -> Program -> Program
+def print: Expr['a] -> unit
+//│ mapExpr: (forall 'a. Expr['a] -> Expr['a]) -> Program -> Program
+//│ print: Expr['a] -> unit
+
+def alsoPrintSize f =
+  mapExpr(fun e -> let tmp = print e in f e)
+//│ alsoPrintSize: (Expr[?] -> Expr[?]) -> Program -> Program
+
+:e
+alsoPrintSize id
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.61: 	alsoPrintSize id
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.51: 	def mapExpr: (forall 'a. Expr['a] -> Expr['a]) -> Program -> Program
+//│ ║        	                     ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.51: 	def mapExpr: (forall 'a. Expr['a] -> Expr['a]) -> Program -> Program
+//│ ╙──      	                     ^^
+//│ res: error
+
+def alsoPrintSize (f: forall 'a. Expr['a] -> Expr['a]) =
+  mapExpr(fun e -> let tmp = print e in f e)
+//│ alsoPrintSize: (forall 'a. Expr['a] -> Expr['a]) -> Program -> Program
+
+alsoPrintSize id
+//│ res: Program -> Program
+
+
+class ExprCo[A]
+  method Co: A
+//│ Defined class ExprCo[+A]
+//│ Declared ExprCo.Co: ExprCo['A] -> 'A
+
+def mapExprCo: (forall 'a. ExprCo['a] -> ExprCo['a]) -> Program -> Program
+def printCo: ExprCo['a] -> unit
+//│ mapExprCo: (forall 'a. ExprCo['a] -> ExprCo['a]) -> Program -> Program
+//│ printCo: ExprCo[?] -> unit
+
+def alsoPrintSizeCo f =
+  mapExprCo(fun e -> let tmp = printCo e in f e)
+//│ alsoPrintSizeCo: (ExprCo[?] -> ExprCo[nothing]) -> Program -> Program
+
+:e
+alsoPrintSizeCo id
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.96: 	alsoPrintSizeCo id
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.86: 	def mapExprCo: (forall 'a. ExprCo['a] -> ExprCo['a]) -> Program -> Program
+//│ ║        	                       ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.86: 	def mapExprCo: (forall 'a. ExprCo['a] -> ExprCo['a]) -> Program -> Program
+//│ ╙──      	                       ^^
+//│ res: error
+
+def alsoPrintSizeCo (f: forall 'a. Expr['a] -> Expr['a]) =
+  mapExpr(fun e -> let tmp = print e in f e)
+//│ alsoPrintSizeCo: (forall 'a. Expr['a] -> Expr['a]) -> Program -> Program
+
+alsoPrintSizeCo id
+//│ res: Program -> Program
 
 
