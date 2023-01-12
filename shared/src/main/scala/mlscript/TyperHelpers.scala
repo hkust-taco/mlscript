@@ -925,7 +925,7 @@ abstract class TyperHelpers { Typer: Typer =>
     }
     
     /** (exclusive, inclusive) */
-    def varsBetween(lb: Level, ub: Level): Set[TV] = {
+    def varsBetween(lb: Level, ub: Level): Set[TV] = { // TODO don't traverse types with lower levels?
       val res = MutSet.empty[TypeVariable]
       val traversed = MutSet.empty[TypeVariable]
       def go(ty: ST, lb: Level, ub: Level): Unit = if (lb < ub) {

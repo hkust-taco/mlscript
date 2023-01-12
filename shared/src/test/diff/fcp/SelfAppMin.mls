@@ -1,0 +1,29 @@
+:NoRecursiveTypes
+:GeneralizeCurriedFunctions
+
+
+class L
+class A: { f: anything }
+//│ Defined class L
+//│ Defined class A
+
+
+def eval eval x = case x of
+  L -> 0,
+  A -> eval eval x.f
+//│ eval: ('a -> 'f -> 'b & 'a) -> ((A with {f: 'f}) | L) -> (0 | 'b)
+//│     = [Function: eval]
+
+
+:e
+eval eval
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
+//│ ║  l.19: 	eval eval
+//│ ║        	^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α24_39'' -> ‹∀ 2. (α25_43''' -> (0<int,number> | α31_47'''))›)››  <:  α24_73    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α24_39'' -> ‹∀ 2. (α25_43''' -> (0<int,number> | α31_47'''))›)››  <:  α24_39''
+//│ res: error
+//│    = [Function (anonymous)]
+
+

@@ -404,10 +404,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       val res = extrude(ty, lowerLvl, pol, upperLvl)(ctx, MutMap.empty, MutSortMap.empty)
       val newVars = res.getVars -- originalVars
       if (newVars.nonEmpty) trace(s"RECONSTRAINING TVs") {
-        newVars.foreach { tv =>
-          if (tv.level > lowerLvl) tv.lowerBounds.foreach(lb =>
-            // * Q: is it fine to constrain with the current ctx's level?
-            tv.upperBounds.foreach(ub => rec(lb, ub, false)))
+        newVars.foreach {
+          case AssignedVariable(bnd) =>
+            // * This is unlikely to happen, but it should be fine anyway,
+            // * as all bounds of vars being assigned are checked against the assigned type.
+            ()
+          case tv =>
+            if (tv.level > lowerLvl) tv.lowerBounds.foreach(lb =>
+              // * Q: is it fine to constrain with the current ctx's level?
+              tv.upperBounds.foreach(ub => rec(lb, ub, false)))
         }
       }()
       res
@@ -970,10 +975,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   }
   
   
-  /** Copies a type up to its type variables of wrong level (and their extruded bounds).
+  /** Copies a type up to its type variables of wrong level (and their extruded bounds),
+    * meaning those non-locally-quantified type variables whose level is strictly greater than `lowerLvl`.
     * Parameter `upperLvl` is used to track above which level we DON'T want to extrude variables,
     * as we may be traversing types that are quantified by polymorphic types in the process of being copied.
-    * `lowerLvl` tracks the lowest such current quantification level. */
+    * `upperLvl` tracks the lowest such current quantification level. */
   private final def extrude(ty: SimpleType, lowerLvl: Int, pol: Boolean, upperLvl: Level)
       // (implicit ctx: Ctx, flexifyRigids: Bool, cache: MutMap[PolarVariable, TV] = MutMap.empty, cache2: MutMap[TraitTag, TV] = MutMap.empty): SimpleType =
       // (implicit ctx: Ctx, cache: MutMap[PolarVariable, TV] = MutMap.empty, cache2: MutSortMap[TraitTag, TraitTag] = MutSortMap.empty): SimpleType =
@@ -1116,16 +1122,22 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     trace(s"$lvl. U $lhs =! $rhs") {
       
       def rec(lhs: ST, rhs: ST, swapped: Bool): Unit =
+        if (!lhs.mentionsTypeBounds && lhs === rhs) () else
         (lhs, rhs) match {
           
           // TODO handle more cases
           
-          case (tv: TV, bound) =>
+          case (tv: TV, bound) if bound.level <= tv.level =>
             tv.assignedTo match {
               case S(et) =>
                 unify(et, bound)
               case N =>
+                println(s"$tv := $bound")
+                val lbs = tv.lowerBounds
+                val ubs = tv.upperBounds
                 tv.assignedTo = S(bound)
+                lbs.foreach(constrainImpl(_, bound))
+                ubs.foreach(constrainImpl(bound, _))
             }
             
           case _ =>
@@ -1169,7 +1181,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           // && false
           ) ty else ty match {
       
-      case tv: TypeVariable if leaveAlone(tv) => tv
+      case tv: TypeVariable if leaveAlone(tv)  => tv
+      // case tv: TypeVariable if leaveAlone(tv) || tv.level <= above  => tv
       
       // case _: TypeVariable | _: TraitTag if ty.level <= above => ty
       
