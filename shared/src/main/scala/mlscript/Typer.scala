@@ -93,7 +93,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
 
     def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, MutMap.empty, inQuasiquote = inQuasiquote, outermostFreeVarType = MutSet.empty)
-
+    
     def nextLevel: Ctx = copy(lvl = lvl + 1)
 
     private val abcCache: MutMap[Str, Set[TypeName]] = MutMap.empty
@@ -194,7 +194,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       tyDef
     } :: {
       val tv = freshVar(noProv)(0)
-      val td = TypeDef(Cls, TypeName("Code"), (TypeName("T"), tv) :: Nil, Nil, TopType, Nil, Nil, Set.empty, N, Nil)
+      val td = TypeDef(Cls, TypeName("Code"), (TypeName("T"), tv) :: (TypeName("C"), tv):: Nil, Nil, TopType, Nil, Nil, Set.empty, N, Nil)
       td.tvarVariances = S(MutMap(tv -> VarianceInfo.co))
       td
     } :: Nil
@@ -839,16 +839,38 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case New(base, args) => ???
       case TyApp(_, _) => ??? // TODO
       case Quoted(body) =>
-        val nestedCtx = ctx.nest
-        nestedCtx.outermostCtx = Some(nestedCtx)
-        val copied = nestedCtx.copy(
+        val nestedCtx = ctx.nest.copy(
           inQuasiquote = true,
-          outerQuoteEnvironments = Some(nestedCtx) :: nestedCtx.outerQuoteEnvironments)
-        val body_type = typeTerm(body)(copied, raise, vars)
+          outerQuoteEnvironments = Some(ctx) :: ctx.outerQuoteEnvironments)
+        nestedCtx.outermostCtx = Some(nestedCtx)
 
-        TypeRef(TypeName("Code"), body_type :: copied.outermostFreeVarType.toList)(noProv)
+        val body_type = typeTerm(body)(nestedCtx, raise, vars)
+        val freeVarList = nestedCtx.outermostFreeVarType.toList
+        val context_type = freeVarList match {
+          case Nil => TypeRef(TypeName("anything"), Nil)(NoProv)
+          case _ =>
+            new TypeVariable(lvl, Nil, Nil,
+              nameHint = Some(freeVarList.map(t => t.toString).mkString("&")))(prov)
+        }
+
+        TypeRef(TypeName("Code"), body_type :: context_type :: Nil)(noProv)
       case Unquoted(body) =>
-        typeTerm(body)
+        val nestedCtx = ctx.parent match {
+          case Some(p) => p.copy(
+            inQuasiquote = true,
+            outerQuoteEnvironments = ctx.outerQuoteEnvironments.tail)
+          case _ => ???
+        }
+
+        val body_type = typeTerm(body)(nestedCtx, raise, vars)
+        body_type match {
+          case TypeRef(TypeName("Code"), return_type :: context_type :: Nil) =>
+            context_type match {
+              case TypeRef(TypeName("anything"), Nil) => return_type // inline the return type instead of returning Code[T, C]
+              case _ => body_type // free variable found, return Code[T, C]
+            }
+          case _ => err(s"Type mismatch. Required: Code, found: $body_type", body.toLoc)
+        }
     }
   }(r => s"$lvl. : ${r}")
 
