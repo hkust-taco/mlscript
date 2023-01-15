@@ -67,7 +67,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case TyApp(base, _) =>
       translatePattern(base)
     case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf | _: Subs | _: Assign
-        | If(_, _) | New(_, _) | _: Splc =>
+        | If(_, _) | New(_, _) | _: Splc | Quoted(_) | Unquoted(_) =>
       throw CodeGenError(s"term ${inspect(t)} is not a valid pattern")
   }
 
@@ -470,12 +470,12 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
    */
   private def translateQuoted(body: Term, var_map: HashMap[Str, Str])(implicit scope: Scope): JSExpr = body match { // TODO: remove implicit argument for scope
     case Var(name) =>
-      if (var_map contains name) {
-        JSArray(Ls(JSExpr("Var"), JSExpr(var_map(name)))) 
+      val symbol_name = s"${name}_sym"
+      if (!(var_map contains name)) {
+        var_map += (name -> symbol_name) // This is wrong, we need to use the randomUUID thing
+        JSArray(Ls(JSExpr("NewVar"), JSExpr(symbol_name), JSExpr(s"const ${symbol_name} = Symbol('${name}');"))) 
       } else {
-          val symbol_name = s"${name}_sym"
-          var_map += (name -> symbol_name)
-          JSArray(Ls(JSExpr("New_Var"), JSExpr(s"const ${symbol_name} = Symbol('${name}')"), JSExpr(name), JSExpr(symbol_name)))
+        JSArray(Ls(JSExpr("Var"), JSExpr(var_map(name)))) 
       }
     case App(App(Var(op), Tup((N -> Fld(_, _, lhs)) :: Nil)), Tup((N -> Fld(_, _, rhs)) :: Nil))
       if JSBinary.operators contains op =>
@@ -492,11 +492,11 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       }
       result
     case IntLit(value) => 
-      JSArray(Ls(JSExpr(value.toString)))
+      JSArray(Ls(JSLit(value.toString)))
     case StrLit(value) =>
       JSArray(Ls(JSExpr("StrLit"), JSExpr(value)))
     case DecLit(value) =>
-      JSArray(Ls(JSExpr(value.toString)))
+      JSArray(Ls(JSLit(value.toString)))
     case UnitLit(value) => 
       JSArray(Ls(JSExpr(if (value) "undefined" else "null")))
     case Lam(params, body) =>
@@ -520,19 +520,12 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       JSArray(Ls(JSExpr("Let"), translateQuoted(name, var_map), translateQuoted(rhs, var_map), translateQuoted(body, var_map)))
     case Subs(arr, idx) => 
       JSArray(Ls(JSExpr("Subs"), translateQuoted(arr, var_map), translateQuoted(idx, var_map)))
-    case Assign(lhs, rhs) => // TODO: generate test case
-      lhs match {
-        case _: Subs | _: Sel | _: Var =>
-          JSArray(Ls(JSExpr("Assign"), translateQuoted(lhs, var_map), translateQuoted(rhs, var_map)))
-        case _ =>
-          throw CodeGenError(s"illegal assignemnt left-hand side: ${inspect(lhs)}")
-      }
     // TODO: check Squid
     case Quoted(body) => throw CodeGenError("Quoted directly in quasiquote is not correct syntax (?)")
     // TODO: Blk, New
     case Blk(stmts) => throw CodeGenError("Blk not supported in quasiquotes... yet")
     case New(S(head), body) => throw CodeGenError(s"New HEAD ${head} BODY ${body}\n\tNew not supported in quasiquotes... yet")
-    case Asc(_,_) | Bind(_,_) | Test(_,_) | With(_,_) | CaseOf(_,_) | TyApp(_,_) | Splc(_) => 
+    case Assign(_,_) | Asc(_,_) | Bind(_,_) | Test(_,_) | With(_,_) | CaseOf(_,_) | TyApp(_,_) | Splc(_) => 
       throw CodeGenError(s"${inspect(body)} not supported in quasiquotes")
     case _ => throw CodeGenError(s"missing implementation: ${inspect(body)}")
   }

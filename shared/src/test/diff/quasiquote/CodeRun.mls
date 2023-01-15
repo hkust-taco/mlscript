@@ -1,18 +1,74 @@
 :NewParser
 :ge
 
-let x = code"1 + 1"
+let x = code"3 + 2"
 //│ x: code & {Code#T <: int}
-//│  = [ 'App', '+', [ '1' ], [ '1' ] ]
+//│  = [ 'App', '+', [ 3 ], [ 2 ] ]
 
 run(x)
-//│ res: string
-//│    = 'program_str'
+//│ res: int
+//│    = 5
 
 let y = code"1"
 //│ y: code & {Code#T <: 1}
-//│  = [ '1' ]
+//│  = [ 1 ]
 
 run(y)
-//│ res: string
-//│    = 'program_str'
+//│ res: 1
+//│    = [ 1 ]
+
+let code_fun = code"(y) => y"
+//│ code_fun: code & {Code#T <: 'a -> 'a}
+//│         = [
+//│             'Lam',
+//│             [ 'Tup', [ 'NewVar', 'y_sym', "const y_sym = Symbol('y');" ] ],
+//│             [ 'Var', 'y_sym' ]
+//│           ]
+
+run(code_fun)
+//│ res: 'a -> 'a
+//│    = [Function (anonymous)]
+    
+let code_test = code"let x_0 = 1; let x_1 = 10; let x_2 = 100; x_0 + x_1 + x_2"
+//│ code_test: code & {Code#T <: int}
+//│          = [
+//│              'Let',
+//│              [ 'NewVar', 'x_0_sym', "const x_0_sym = Symbol('x_0');" ],
+//│              [ 1 ],
+//│              [
+//│                'Let',
+//│                [ 'NewVar', 'x_1_sym', "const x_1_sym = Symbol('x_1');" ],
+//│                [ 10 ],
+//│                [ 'Let', [Array], [Array], [Array] ]
+//│              ]
+//│            ]
+
+run(code_test)
+//│ res: int
+//│    = 111
+
+let x0 = 8
+//│ x0: 8
+//│   = 8
+
+run(code_test)
+//│ res: int
+//│    = 111
+
+// shadowing
+let code_test2 = code"let x = 1; let x = 10; let x = 100; x + x + x"
+//│ code_test2: code & {Code#T <: int}
+//│           = [
+//│               'Let',
+//│               [ 'NewVar', 'x_sym', "const x_sym = Symbol('x');" ],
+//│               [ 1 ],
+//│               [
+//│                 'Let',
+//│                 [ 'Var', 'x_sym' ],
+//│                 [ 10 ],
+//│                 [ 'Let', [Array], [Array], [Array] ]
+//│               ]
+//│             ]
+run(code_test2)
+//│ res: int
+//│    = 300

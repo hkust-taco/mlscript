@@ -838,3 +838,49 @@ object JSCodeHelpers {
     = JSFuncDecl(name, params.toList, stmts.toList)
   def param(name: Str): JSNamePattern = JSNamePattern(name)
 }
+
+final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
+  def toSourceCode: SourceCode = SourceCode(
+    """
+    const { randomUUID } = require("crypto");
+    var_symbol_map = {};
+    
+    function _run(s_expr) { 
+      switch(s_expr[0]) {
+        case "Var":
+          return s_expr[1];
+        case "NewVar":
+          return s_expr[1];
+        case "App":
+          return _run(s_expr[2]) + s_expr[1] + _run(s_expr[3]);
+        case "Fun":
+          return `${_run(s_expr[1])}(${_run(s_expr[2]).slice(1, -1)})`
+        case "external":
+          return `${_run(s_expr[1])}(${_run(s_expr[2]).slice(1, -1)})`;
+        case "If":
+          return `if (${_run(s_expr[1])}) { ${_run(s_expr[2])} } else { ${_run(s_expr[3])} }`;
+        case "Lam":
+          return `(${_run(s_expr[1]).slice(1, -1)}) => ${_run(s_expr[2])}`;
+        case "Tup":
+          let tup_array = s_expr.slice(1).map((value) => _run(value));
+          return `[${tup_array.toString()}]`;
+        case "Rcd":
+          let rcd_array = s_expr.slice(1).map(function([key,value]) {return `${_run(key)} : ${_run(value)}`});
+          return `{${rcd_array.toString()}}`
+        case "Sel":
+          return 0;
+        case "Let":
+          return `{const ${_run(s_expr[1])} = ${_run(s_expr[2])}; ${_run(s_expr[3])}}`;
+        case "Subs":
+          return `${_run(s_expr[1])}[${_run(s_expr[2])}]`;
+        case "StrLit":
+          return `'${s_expr[1]}'`;
+        default:
+          return s_expr;
+      }
+    } 
+    let res = _run(s_expr);
+    return eval(res);
+    """
+  )
+}
