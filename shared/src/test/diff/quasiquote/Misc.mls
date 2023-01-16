@@ -32,14 +32,17 @@ code"foo(123) + 1"
 //│   not supported
 
 code"10 + ${qq_int}"
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.34: 	code"10 + ${qq_int}"
-//│ ║        	     ^^^^^^^^^^^^^^
-//│ ╟── reference of type `anything` is not an instance of type `int`
-//│ ║  l.34: 	code"10 + ${qq_int}"
-//│ ╙──      	          ^^^^^^^^^
-//│ res: Code
-//│    = [ '@', '+', [ '10' ], [ '&', 'qq_int', 'Symbol(qq_int)' ] ]
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
+//│ 	at: scala.Predef$.assert(Predef.scala:264)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.$anonfun$mapTargs$3(TyperDatatypes.scala:256)
+//│ 	at: scala.Option.fold(Option.scala:263)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.mapTargs(TyperDatatypes.scala:255)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.childrenPol(TyperHelpers.scala:611)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.childrenPol$(TyperHelpers.scala:594)
+//│ 	at: mlscript.TyperDatatypes$SimpleType.childrenPol(TyperDatatypes.scala:81)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.rec$1(TyperHelpers.scala:636)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.getVarsPol(TyperHelpers.scala:640)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.getVarsPol$(TyperHelpers.scala:616)
 
 "x"
 //│ res: "x"
@@ -48,14 +51,12 @@ code"10 + ${qq_int}"
 // The inner code should have type Code<int, "x" | "y">
 code"x => y => 15 + ${   code"x + y"   }"
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.49: 	code"x => y => 15 + ${   code"x + y"   }"
+//│ ║  l.51: 	code"x => y => 15 + ${   code"x + y"   }"
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── quasiquote of type `Code` is not an instance of type `int`
-//│ ║  l.49: 	code"x => y => 15 + ${   code"x + y"   }"
-//│ ╙──      	                    ^^^^^^^^^^^^^^^^^^^^
-//│ res: Code
-//│ Code generation encountered an error:
-//│   saw another one of myself
+//│ ╙── expression of type `code & {Code#T <: ?a}` is not an instance of type `int`
+//│ res: code & {Code#T <: int -> int -> (error | int)}
+//│ Code generation crashed:
+//│   scala.MatchError: Quoted' x, => y, => + (15,) (Unquote' Quoted' + (x,) (y,) ' ',) ' (of class mlscript.Quoted)
 
 // FIXME
 qq_int : Code<int>
@@ -65,3 +66,4 @@ qq_int : Code<int>
 //│ res: code & {Code#T <: int}
 //│ Code generation encountered an error:
 //│   unresolved symbol qq_int
+

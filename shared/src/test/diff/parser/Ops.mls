@@ -73,20 +73,47 @@ acc +
 a+
   b
   c
-//│ |a|+|→|b|↵|c|←|
-//│ Parsed: {+ (a,) ({b; c},)}
+//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: 10
+//│ 	at: mlscript.NewLexer.isQuasiquoteKeyword$1(NewLexer.scala:81)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:91)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:140)
+//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:130)
+//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:157)
+//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
 
 a+
   b
 c
-//│ |a|+|→|b|←|↵|c|
-//│ Parsed: {+ (a,) ({b},); c}
+//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: 8
+//│ 	at: mlscript.NewLexer.isQuasiquoteKeyword$1(NewLexer.scala:81)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:91)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:140)
+//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:130)
+//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:157)
+//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
 
 a
   +b
 c
-//│ |a|→|+|b|←|↵|c|
-//│ Parsed: {+ a b; c}
+//│ /!!!\ Uncaught error: java.lang.ArrayIndexOutOfBoundsException: 8
+//│ 	at: mlscript.NewLexer.isQuasiquoteKeyword$1(NewLexer.scala:81)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:91)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:140)
+//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
+//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:157)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:130)
+//│ 	at: mlscript.NewLexer.go$1(NewLexer.scala:82)
+//│ 	at: mlscript.NewLexer.lex(NewLexer.scala:150)
 
 
 a + b
@@ -108,9 +135,9 @@ a then b
   * 2
 //│ |a| |#then| |b|→|*| |2|←|
 //│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
-//│ ║  l.107: 	a then b
+//│ ║  l.134: 	a then b
 //│ ║         	^^^^^^^^
-//│ ║  l.108: 	  * 2
+//│ ║  l.135: 	  * 2
 //│ ╙──       	^^^^^
 //│ Parsed: {undefined}
 
@@ -147,10 +174,10 @@ a +
   * 3
 //│ |a| |+|→|b|→|*| |2|←|↵|+| |1|↵|*| |3|←|
 //│ ╔══[PARSE ERROR] Unexpected operator in expression position
-//│ ║  l.146: 	  + 1
+//│ ║  l.173: 	  + 1
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Unexpected operator in expression position
-//│ ║  l.147: 	  * 3
+//│ ║  l.174: 	  * 3
 //│ ╙──       	  ^
 //│ Parsed: {+ (a,) ({* b 2; 1; 3},)}
 
@@ -161,7 +188,7 @@ a +
   * 3
 //│ |a| |+|→|b|→|*| |2|←|↵|+| |1|←|→|*| |3|←|
 //│ ╔══[PARSE ERROR] Unexpected operator in expression position
-//│ ║  l.160: 	    + 1
+//│ ║  l.187: 	    + 1
 //│ ╙──       	    ^
 //│ Parsed: {* (+ (a,) ({* b 2; 1},)) 3}
 
@@ -173,7 +200,7 @@ a +
       * 3
 //│ |a| |+|→|b|→|*| |2|←|↵|+|→|1|→|*| |3|←|←|←|
 //│ ╔══[PARSE ERROR] Unexpected operator in expression position
-//│ ║  l.171: 	  +
+//│ ║  l.198: 	  +
 //│ ╙──       	  ^
 //│ Parsed: {+ (a,) ({* b 2; {* 1 3}},)}
 
@@ -193,7 +220,7 @@ a +
     * 3
 //│ |a| |+|→|b|→|*| |2|←|↵|+| |1|→|*| |3|←|←|
 //│ ╔══[PARSE ERROR] Unexpected operator in expression position
-//│ ║  l.192: 	  + 1
+//│ ║  l.219: 	  + 1
 //│ ╙──       	  ^
 //│ Parsed: {+ (a,) ({* b 2; * 1 3},)}
 
