@@ -342,51 +342,6 @@ k = k_
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‹∀ 3. (α1246_1436'''' -> ‹∀ 4. (α1247_1441''''' -> α1263_1442''''')›)›  <:  α1245_1405    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 3. (α1246_1359'''' -> ‹∀ 4. (α1247_1364''''' -> α1263_1365''''')›)›  <:  α1245_1352'''
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.333: 	k = k_
-//│ ║         	^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α894_897'' -> ‹∀ 2. (α895_896''' -> α895_896''')›)››  <:  α1245_1405    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α894_897'' -> ‹∀ 2. (α895_896''' -> α895_896''')›)››  <:  α1245_1352'''
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.333: 	k = k_
-//│ ║         	^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (Int -> (⊥ -> ⊤))  <:  α1258_1386    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (Int -> (⊥ -> ⊤))  <:  α1258_1355'''
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.333: 	k = k_
-//│ ║         	^^^^^^
-//│ ╟── function of type `?a -> (forall ?b. ?b -> ?b)` does not match type `nothing`
-//│ ║  l.256: 	def z_ = fun c -> fun n -> n
-//│ ║         	         ^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.137: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
-//│ ╙──       	                 ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.333: 	k = k_
-//│ ║         	^^^^^^
-//│ ╟── function of type `?a -> (forall ?b, ?c. ?b -> ?c)` does not match type `nothing`
-//│ ║  l.326: 	rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k_ z_ c n)
-//│ ║         	                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.137: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
-//│ ╙──       	                 ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.333: 	k = k_
-//│ ║         	^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.137: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
-//│ ║         	                 ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.137: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
-//│ ╙──       	                 ^^
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.333: 	k = k_
-//│ ║         	^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ⊤  <:  α1261_1388    ExtrType  TypeVariable
-//│ ╙──  ... looks like:  ⊤  <:  α1261_1357'''
 //│  = [Function: k_]
 
 
@@ -417,11 +372,11 @@ def bfoo xs = build (foldr k z xs)
 :e
 def bfoo_ xs = build_ (foldr k_ z_ xs)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.418: 	def bfoo_ xs = build_ (foldr k_ z_ xs)
+//│ ║  l.373: 	def bfoo_ xs = build_ (foldr k_ z_ xs)
 //│ ║         	                       ^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 3. (α1246_1765'''' -> ‹∀ 4. (α1247_1770''''' -> α1263_1771''''')›)›  <:  ((k_1243_1694''#,) -> α1254_1735'')    PolymorphicType  FunctionType
-//│ ╙──  ... looks like:  ‹∀ 3. (α1246_1704'''' -> ‹∀ 4. (α1247_1709''''' -> α1263_1710''''')›)›  <:  ((k_1243'#,) -> α1254_1698''')
+//│ ╟── this constraint:  ‹∀ 3. (α1246_1750'''' -> ‹∀ 4. (α1247_1755''''' -> α1263_1756''''')›)›  <:  ((k_1243_1679''#,) -> α1254_1720'')    PolymorphicType  FunctionType
+//│ ╙──  ... looks like:  ‹∀ 3. (α1246_1689'''' -> ‹∀ 4. (α1247_1694''''' -> α1263_1695''''')›)›  <:  ((k_1243'#,) -> α1254_1683''')
 //│ bfoo_: anything -> error
 //│      = [Function: bfoo_]
 // * Alt:
@@ -496,10 +451,10 @@ def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│   <:  k:
 //│ int -> Baa -> Baa
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.494: 	def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║  l.449: 	def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `int` is not an instance of type `'a_2496`
-//│ ║  l.494: 	def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ╟── operator application of type `int` is not an instance of type `'a_2481`
+//│ ║  l.449: 	def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	                                                       ^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.138: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
@@ -520,7 +475,7 @@ k = k_ // nope
 //│   <:  k:
 //│ int -> Baa -> Baa
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.518: 	k = k_ // nope
+//│ ║  l.473: 	k = k_ // nope
 //│ ║         	^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.138: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
@@ -528,15 +483,6 @@ k = k_ // nope
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.138: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
 //│ ╙──       	                     ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.518: 	k = k_ // nope
-//│ ║         	^^^^^^
-//│ ╟── operator application of type `int` is not an instance of type `'a_2629`
-//│ ║  l.512: 	def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z c n)
-//│ ║         	                                                 ^^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.138: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
-//│ ╙──       	                  ^^
 //│  = <no result>
 //│    k_, k and k are not implemented
 
@@ -551,76 +497,22 @@ rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k_ z c n)
 k = k_ // nope
 //│ 'k_
 //│   where
-//│     'k_ :> int -> (forall 'a, 'b, 'c. ('k_ -> Baa -> 'c -> 'a -> 'b) -> (forall 'd. (int -> 'b -> 'd & 'c) -> 'a -> 'd))
+//│     'k_ :> int -> (forall 'a, 'b, 'c. ('k_ -> Baa -> 'a -> 'b -> 'c) -> (forall 'd. (int -> 'c -> 'd & 'a) -> 'b -> 'd))
 //│   <:  k:
 //│ int -> Baa -> Baa
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.551: 	k = k_ // nope
+//│ ║  l.497: 	k = k_ // nope
 //│ ║         	^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 3. (α2643_2826'''' -> ‹∀ 4. (α2644_2831''''' -> α2660_2832''''')›)›  <:  α2642_2795    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 3. (α2643_2748'''' -> ‹∀ 4. (α2644_2753''''' -> α2660_2754''''')›)›  <:  α2642_2741'''
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.551: 	k = k_ // nope
-//│ ║         	^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  Baa  <:  ((k_2640_2739#,) -> α2651_2774)    TypeRef  FunctionType
-//│ ╙──  ... looks like:  Baa  <:  ((k_2640'#,) -> α2651_2742''')
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.551: 	k = k_ // nope
-//│ ║         	^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (⊥ -> (⊥ -> ⊤))  <:  α2655_2776    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (⊥ -> (⊥ -> ⊤))  <:  α2655_2744'''
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.551: 	k = k_ // nope
-//│ ║         	^^^^^^
-//│ ╟── operator application of type `int` does not match type `nothing`
-//│ ║  l.544: 	rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k_ z c n)
-//│ ║         	                                                     ^^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.138: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
-//│ ╙──       	                  ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.551: 	k = k_ // nope
-//│ ║         	^^^^^^
-//│ ╟── function of type `?a -> (forall ?b, ?c. ?b -> ?c)` does not match type `nothing`
-//│ ║  l.544: 	rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k_ z c n)
-//│ ║         	                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.138: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
-//│ ╙──       	                     ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.551: 	k = k_ // nope
-//│ ║         	^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.138: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
-//│ ║         	                     ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.138: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
-//│ ╙──       	                     ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.551: 	k = k_ // nope
-//│ ║         	^^^^^^
-//│ ╟── operator application of type `int` is not an instance of type `'a_2846`
-//│ ║  l.544: 	rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k_ z c n)
-//│ ║         	                                                     ^^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.138: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
-//│ ╙──       	                  ^^
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.551: 	k = k_ // nope
-//│ ║         	^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ⊤  <:  α2658_2778    ExtrType  TypeVariable
-//│ ╙──  ... looks like:  ⊤  <:  α2658_2746'''
+//│ ╟── this constraint:  ‹∀ 3. (α2628_2811'''' -> ‹∀ 4. (α2629_2816''''' -> α2645_2817''''')›)›  <:  α2627_2780    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 3. (α2628_2733'''' -> ‹∀ 4. (α2629_2738''''' -> α2645_2739''''')›)›  <:  α2627_2726'''
 //│  = [Function: k_1]
 
 
 rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k_ z_ c n)
 //│ k_: 'k_
 //│   where
-//│     'k_ :> int -> (forall 'a, 'b, 'c. ('k_ -> (anything -> (forall 'd. 'd -> 'd)) -> 'c -> 'a -> 'b) -> (forall 'e. (int -> 'b -> 'e & 'c) -> 'a -> 'e))
+//│     'k_ :> int -> (forall 'a, 'b, 'c. ('k_ -> (anything -> (forall 'd. 'd -> 'd)) -> 'a -> 'b -> 'c) -> (forall 'e. (int -> 'c -> 'e & 'a) -> 'b -> 'e))
 //│   = [Function: k_2]
 
 // k = k_ // nope

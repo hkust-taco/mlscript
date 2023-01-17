@@ -43,51 +43,6 @@ g = g2
 //│ ╟── from local type binding:
 //│ ║  l.13: 	def g: G['a] & {a: 'a} as 'a
 //│ ╙──      	       ^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.25: 	g = g2
-//│ ║        	^^^^^^
-//│ ╟── function of type `?a -> (forall ?b. ?b)` does not have field 'a'
-//│ ║  l.21: 	rec def g2 a = G { a }
-//│ ║        	           ^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{a: G[?]}`
-//│ ║  l.25: 	g = g2
-//│ ║        	    ^^
-//│ ╟── Note: constraint arises from record type:
-//│ ║  l.4: 	class G[A]: { a: G[A] }
-//│ ║       	            ^^^^^^^^^^^
-//│ ╟── from local type binding:
-//│ ║  l.13: 	def g: G['a] & {a: 'a} as 'a
-//│ ╙──      	       ^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.25: 	g = g2
-//│ ║        	^^^^^^
-//│ ╟── function of type `?a -> (forall ?b. ?b)` does not have field 'G#A'
-//│ ║  l.21: 	rec def g2 a = G { a }
-//│ ║        	           ^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{G#A}`
-//│ ║  l.25: 	g = g2
-//│ ║        	    ^^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.13: 	def g: G['a] & {a: 'a} as 'a
-//│ ║        	       ^^^^^
-//│ ╟── from local type binding:
-//│ ║  l.13: 	def g: G['a] & {a: 'a} as 'a
-//│ ╙──      	       ^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.25: 	g = g2
-//│ ║        	^^^^^^
-//│ ╟── function of type `?b -> (forall ?c. ?c)` does not have field 'a'
-//│ ║  l.21: 	rec def g2 a = G { a }
-//│ ║        	           ^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{a: ?a}`
-//│ ║  l.25: 	g = g2
-//│ ║        	    ^^
-//│ ╟── Note: constraint arises from record type:
-//│ ║  l.13: 	def g: G['a] & {a: 'a} as 'a
-//│ ║        	               ^^^^^^^
-//│ ╟── from local type binding:
-//│ ║  l.13: 	def g: G['a] & {a: 'a} as 'a
-//│ ╙──      	       ^^^^^^^^^^^^^^^
 
 rec def g2 = G { a = g2 }
 //│ g2: 'a
@@ -121,14 +76,14 @@ def manual: 'a -> nothing as 'a
 :e
 manual id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.122: 	manual id
-//│ ║         	^^^^^^^^^
+//│ ║  l.77: 	manual id
+//│ ║        	^^^^^^^^^
 //│ ╟── type `?a -> nothing` does not match type `nothing`
-//│ ║  l.116: 	def manual: 'a -> nothing as 'a
-//│ ║         	            ^^^^^^^^^^^^^
+//│ ║  l.71: 	def manual: 'a -> nothing as 'a
+//│ ║        	            ^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.116: 	def manual: 'a -> nothing as 'a
-//│ ╙──       	                  ^^^^^^^
+//│ ║  l.71: 	def manual: 'a -> nothing as 'a
+//│ ╙──      	                  ^^^^^^^
 //│ res: error
 
 def manual: 'a -> anything as 'a

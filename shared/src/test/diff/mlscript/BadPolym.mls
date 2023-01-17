@@ -28,24 +28,6 @@ foo = fooImpl
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.9: 	def foo: (int -> int & string -> string) -> ()
 //│ ╙──     	                       ^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.18: 	foo = fooImpl
-//│ ║        	^^^^^^^^^^^^^
-//│ ╟── type `int` is not a 0-element tuple
-//│ ║  l.9: 	def foo: (int -> int & string -> string) -> ()
-//│ ║       	                 ^^^
-//│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.9: 	def foo: (int -> int & string -> string) -> ()
-//│ ╙──     	                                            ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.18: 	foo = fooImpl
-//│ ║        	^^^^^^^^^^^^^
-//│ ╟── type `string` is not a 0-element tuple
-//│ ║  l.9: 	def foo: (int -> int & string -> string) -> ()
-//│ ║       	                                 ^^^^^^
-//│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.9: 	def foo: (int -> int & string -> string) -> ()
-//│ ╙──     	                                            ^^
 //│    = [Function: fooImpl]
 
 foo id
@@ -60,13 +42,13 @@ fooImpl id
 :e
 fooImpl2 (f: int -> int & string -> string) = f 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.61: 	fooImpl2 (f: int -> int & string -> string) = f 1
+//│ ║  l.43: 	fooImpl2 (f: int -> int & string -> string) = f 1
 //│ ║        	                                              ^^^
 //│ ╟── integer literal of type `1` is not an instance of type `string`
-//│ ║  l.61: 	fooImpl2 (f: int -> int & string -> string) = f 1
+//│ ║  l.43: 	fooImpl2 (f: int -> int & string -> string) = f 1
 //│ ║        	                                                ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.61: 	fooImpl2 (f: int -> int & string -> string) = f 1
+//│ ║  l.43: 	fooImpl2 (f: int -> int & string -> string) = f 1
 //│ ╙──      	                          ^^^^^^
 //│ fooImpl2: (int -> int & string -> string) -> (error | int | string)
 //│         = [Function: fooImpl2]
@@ -79,13 +61,13 @@ fooImpl2 id
 :re
 res "oops"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.80: 	res "oops"
+//│ ║  l.62: 	res "oops"
 //│ ║        	^^^^^^^^^^
 //│ ╟── type `int` is not a function
-//│ ║  l.61: 	fooImpl2 (f: int -> int & string -> string) = f 1
+//│ ║  l.43: 	fooImpl2 (f: int -> int & string -> string) = f 1
 //│ ║        	                    ^^^
 //│ ╟── but it flows into reference with expected type `"oops" -> ?a`
-//│ ║  l.80: 	res "oops"
+//│ ║  l.62: 	res "oops"
 //│ ╙──      	^^^
 //│ res: error
 //│ Runtime error:
@@ -138,13 +120,13 @@ type Als = number -> int
 :e
 error: Als & string -> string : int -> number
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.139: 	error: Als & string -> string : int -> number
+//│ ║  l.121: 	error: Als & string -> string : int -> number
 //│ ║         	^^^^^
 //│ ╟── type `int` is not an instance of type `string`
-//│ ║  l.139: 	error: Als & string -> string : int -> number
+//│ ║  l.121: 	error: Als & string -> string : int -> number
 //│ ║         	                                ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.139: 	error: Als & string -> string : int -> number
+//│ ║  l.121: 	error: Als & string -> string : int -> number
 //│ ╙──       	             ^^^^^^
 //│ res: int -> number
 //│ Runtime error:

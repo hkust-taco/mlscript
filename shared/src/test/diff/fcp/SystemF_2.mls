@@ -233,42 +233,6 @@ succ = succ_
 //│ ╟── from quantified type variable:
 //│ ║  l.208: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│ ╙──       	                  ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.217: 	succ = succ_
-//│ ║         	^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.208: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
-//│ ║         	                                                         ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.208: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
-//│ ║         	                                                         ^^
-//│ ╟── from quantified type variable:
-//│ ║  l.208: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
-//│ ╙──       	                  ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.217: 	succ = succ_
-//│ ║         	^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.208: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
-//│ ║         	                                                         ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.208: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
-//│ ║         	                                                         ^^
-//│ ╟── from application:
-//│ ║  l.207: 	succ_ n s z = s (n s z)
-//│ ╙──       	                 ^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.217: 	succ = succ_
-//│ ║         	^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.208: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
-//│ ║         	                                                         ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.208: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
-//│ ║         	                                                         ^^
-//│ ╟── from application:
-//│ ║  l.207: 	succ_ n s z = s (n s z)
-//│ ╙──       	                 ^^^^^
 //│     = [Function: succ_1]
 
 c2 = succ (succ n0)

@@ -142,18 +142,6 @@ f_1 = f_2
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.123: 	def f_1: 'a -> (Array['a] & t)
 //│ ╙──       	                      ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.132: 	f_1 = f_2
-//│ ║         	^^^^^^^^^
-//│ ╟── type `(1,)` is not an instance of type `T`
-//│ ║  l.127: 	def f_2: 'a -> (Array['a] & t | (1,))
-//│ ║         	                                ^^^^
-//│ ╟── Note: constraint arises from trait tag:
-//│ ║  l.123: 	def f_1: 'a -> (Array['a] & t)
-//│ ║         	                            ^
-//│ ╟── from intersection type:
-//│ ║  l.123: 	def f_1: 'a -> (Array['a] & t)
-//│ ╙──       	               ^^^^^^^^^^^^^^^
 //│    = <no result>
 //│      f_2 is not implemented
 
@@ -176,13 +164,13 @@ test = ("hi", 1)
 //│   <:  test:
 //│ ("hello", 1,)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.174: 	test = ("hi", 1)
+//│ ║  l.162: 	test = ("hi", 1)
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"hi"` does not match type `"hello"`
-//│ ║  l.174: 	test = ("hi", 1)
+//│ ║  l.162: 	test = ("hi", 1)
 //│ ║         	        ^^^^
 //│ ╟── Note: constraint arises from literal type:
-//│ ║  l.169: 	def test: (string, 1) & { _1: "hello" }
+//│ ║  l.157: 	def test: (string, 1) & { _1: "hello" }
 //│ ╙──       	                              ^^^^^^^
 //│     = [ 'hi', 1 ]
 
@@ -207,7 +195,7 @@ test: ('a, 1)
 :e
 class A: (1,2)
 //│ ╔══[ERROR] cannot inherit from a tuple type
-//│ ║  l.208: 	class A: (1,2)
+//│ ║  l.196: 	class A: (1,2)
 //│ ╙──       	      ^^^^^^^^
 
 

@@ -18,6 +18,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   
   def funkyTuples: Bool = false
   def doFactorize: Bool = false
+  def showAllErrors: Bool = false // TODO enable?
+  def maxSuccessiveErrReports: Int = 3
   
   // def generalizeCurriedFunctions: Boolean = false
   var generalizeCurriedFunctions: Boolean = false
@@ -664,6 +666,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       typeTerm(term)
     }
   
+  def notifyMoreErrors(action_ing: Str, prov: TypeProvenance)(implicit raise: Raise): Unit = {
+    err(msg"Note: further errors omitted while ${action_ing} ${prov.desc}", prov.loco)
+    ()
+  }
+  
   /** Infer the type of a term. */
   // def typeTerm(term: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty, genLambdas: Bool = false): SimpleType
   def typeTerm(term: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty, genLambdas: Bool = generalizeCurriedFunctions): SimpleType
@@ -683,9 +690,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             constrain(errType, res)(_ => (), noProv, ctx)
             // ^ This is just to get error types leak into the result
             raise(err)
-          } else if (errorsCount < 3) {
-            // Silence further errors from this location.
+          } else if (errorsCount < maxSuccessiveErrReports) {
+            // * Silence further errors from this location.
+            // if (errorsCount === MaxErrCount)
+            // if (errorsCount === 1)
+            //   notifyMoreErrors("typing", prov)
+            if (showAllErrors) raise(err)
           } else {
+            if (showAllErrors) notifyMoreErrors("typing", prov)
             return res
             // ^ Stop constraining, at this point.
             //    This is to avoid rogue (explosive) constraint solving from badly-behaved error cases.

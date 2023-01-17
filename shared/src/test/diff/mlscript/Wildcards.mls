@@ -439,32 +439,11 @@ rec def bar = Bar{value = bar; id}
 //│ ╟── Note: constraint arises from type wildcard:
 //│ ║  l.419: 	def bar: Bar[?]
 //│ ╙──       	             ^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.423: 	rec def bar = Bar{value = bar; id}
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.419: 	def bar: Bar[?]
-//│ ║         	             ^
-//│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.419: 	def bar: Bar[?]
-//│ ╙──       	             ^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.423: 	rec def bar = Bar{value = bar; id}
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Bar[?A] & {id: ?id}` does not match type `nothing`
-//│ ║  l.423: 	rec def bar = Bar{value = bar; id}
-//│ ║         	              ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.423: 	rec def bar = Bar{value = bar; id}
-//│ ║         	                          ^^^
-//│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.419: 	def bar: Bar[?]
-//│ ╙──       	             ^
 
 :e
 bar.Bid
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.465: 	bar.Bid
+//│ ║  l.444: 	bar.Bid
 //│ ║         	^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.419: 	def bar: Bar[?]
@@ -477,7 +456,7 @@ bar.Bid
 :e
 bar: Bar['a..'b]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.478: 	bar: Bar['a..'b]
+//│ ║  l.457: 	bar: Bar['a..'b]
 //│ ║         	^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.419: 	def bar: Bar[?]
@@ -507,13 +486,13 @@ baz = { id; bid = id }
 //│   <:  baz:
 //│ Baz[?]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.505: 	baz = { id; bid = id }
+//│ ║  l.484: 	baz = { id; bid = id }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.501: 	def baz: Baz[?]
+//│ ║  l.480: 	def baz: Baz[?]
 //│ ║         	             ^
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.501: 	def baz: Baz[?]
+//│ ║  l.480: 	def baz: Baz[?]
 //│ ╙──       	             ^
 
 baz.id
@@ -525,26 +504,26 @@ baz.bid
 :e
 baz.bid baz
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.526: 	baz.bid baz
+//│ ║  l.505: 	baz.bid baz
 //│ ║         	^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.501: 	def baz: Baz[?]
+//│ ║  l.480: 	def baz: Baz[?]
 //│ ║         	             ^
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.501: 	def baz: Baz[?]
+//│ ║  l.480: 	def baz: Baz[?]
 //│ ╙──       	             ^
 //│ res: error | Baz[?]
 
 :e
 baz.bid (baz: Baz['a..'b])
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.539: 	baz.bid (baz: Baz['a..'b])
+//│ ║  l.518: 	baz.bid (baz: Baz['a..'b])
 //│ ║         	         ^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.501: 	def baz: Baz[?]
+//│ ║  l.480: 	def baz: Baz[?]
 //│ ║         	             ^
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.501: 	def baz: Baz[?]
+//│ ║  l.480: 	def baz: Baz[?]
 //│ ╙──       	             ^
 //│ res: Baz[?]
 

@@ -354,42 +354,6 @@ append_ty_2 = append
 //│ ╟── Note: class type parameter T is defined at:
 //│ ║  l.225: 	class S[T]: { v: T }
 //│ ╙──       	        ^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.338: 	append_ty_2 = append
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘T0_1402` is not a record (expected a record with fields: h, t)
-//│ ║  l.331: 	def append_ty_2: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] & {h: 'h; t: S['T0] & {v: 'v}})
-//│ ║         	                                                                          ^^^
-//│ ╟── Note: constraint arises from record type:
-//│ ║  l.229: 	class L[T]: { h: T; t: O[L[T]] }
-//│ ║         	            ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── from applied type reference:
-//│ ║  l.229: 	class L[T]: { h: T; t: O[L[T]] }
-//│ ║         	                         ^^^^
-//│ ╟── Note: class type parameter T is defined at:
-//│ ║  l.225: 	class S[T]: { v: T }
-//│ ╙──       	        ^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.338: 	append_ty_2 = append
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘T0_1402` does not have field 'L#T'
-//│ ║  l.331: 	def append_ty_2: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] & {h: 'h; t: S['T0] & {v: 'v}})
-//│ ║         	                                                                          ^^^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.229: 	class L[T]: { h: T; t: O[L[T]] }
-//│ ║         	                         ^^^^
-//│ ╟── Note: class type parameter T is defined at:
-//│ ║  l.225: 	class S[T]: { v: T }
-//│ ╙──       	        ^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.338: 	append_ty_2 = append
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `L[?T]` is not an instance of type `'T0_1402`
-//│ ║  l.229: 	class L[T]: { h: T; t: O[L[T]] }
-//│ ║         	                         ^^^^
-//│ ╟── Note: constraint arises from type variable:
-//│ ║  l.331: 	def append_ty_2: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] & {h: 'h; t: S['T0] & {v: 'v}})
-//│ ╙──       	                                                                          ^^^
 
 append_ty = append_ty_2
 //│ (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] with {h: 'h, t: S['T0] with {v: 'v}})
@@ -402,7 +366,7 @@ append_ty_2 = append_ty
 //│   <:  append_ty_2:
 //│ (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] with {h: 'h, t: S['T0] with {v: 'v}})
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.400: 	append_ty_2 = append_ty
+//│ ║  l.364: 	append_ty_2 = append_ty
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘T0_1497` is not an instance of type `L`
 //│ ║  l.331: 	def append_ty_2: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] & {h: 'h; t: S['T0] & {v: 'v}})
@@ -410,36 +374,6 @@ append_ty_2 = append_ty
 //│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.314: 	def append_ty: (L['T] & 'v) -> ('T & 'h) -> (L['T] & {h: 'h; t: S[L['T]] & {v: 'v}})
 //│ ╙──       	                                                                  ^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.400: 	append_ty_2 = append_ty
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘T0_1497` is not a record (expected a record with fields: h, t)
-//│ ║  l.331: 	def append_ty_2: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] & {h: 'h; t: S['T0] & {v: 'v}})
-//│ ║         	                                                                          ^^^
-//│ ╟── Note: constraint arises from record type:
-//│ ║  l.229: 	class L[T]: { h: T; t: O[L[T]] }
-//│ ║         	            ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── from applied type reference:
-//│ ║  l.314: 	def append_ty: (L['T] & 'v) -> ('T & 'h) -> (L['T] & {h: 'h; t: S[L['T]] & {v: 'v}})
-//│ ╙──       	                                                                  ^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.400: 	append_ty_2 = append_ty
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘T0_1497` does not have field 'L#T'
-//│ ║  l.331: 	def append_ty_2: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] & {h: 'h; t: S['T0] & {v: 'v}})
-//│ ║         	                                                                          ^^^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.314: 	def append_ty: (L['T] & 'v) -> ('T & 'h) -> (L['T] & {h: 'h; t: S[L['T]] & {v: 'v}})
-//│ ╙──       	                                                                  ^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.400: 	append_ty_2 = append_ty
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `L[?T]` is not an instance of type `'T0_1497`
-//│ ║  l.314: 	def append_ty: (L['T] & 'v) -> ('T & 'h) -> (L['T] & {h: 'h; t: S[L['T]] & {v: 'v}})
-//│ ║         	                                                                  ^^^^^
-//│ ╟── Note: constraint arises from type variable:
-//│ ║  l.331: 	def append_ty_2: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] & {h: 'h; t: S['T0] & {v: 'v}})
-//│ ╙──       	                                                                          ^^^
 
 
 def append0 ls = L { h = 0; t = S { v = ls } }

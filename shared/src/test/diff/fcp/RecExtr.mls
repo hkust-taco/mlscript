@@ -77,15 +77,6 @@ foo2_ty = foo2
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.62: 	def foo2_ty: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
 //│ ╙──      	                           ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.67: 	foo2_ty = foo2
-//│ ║        	^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.62: 	def foo2_ty: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
-//│ ║        	                                             ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.62: 	def foo2_ty: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
-//│ ╙──      	                                             ^^
 //│        = [Function: foo2]
 
 :e // * Needs distributivity (see at the end)
@@ -94,29 +85,17 @@ foo2_ty x y z = (x, y, z,)
 //│   <:  foo2_ty:
 //│ 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.92: 	foo2_ty x y z = (x, y, z,)
+//│ ║  l.83: 	foo2_ty x y z = (x, y, z,)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.62: 	def foo2_ty: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
 //│ ║        	                           ^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.92: 	foo2_ty x y z = (x, y, z,)
+//│ ║  l.83: 	foo2_ty x y z = (x, y, z,)
 //│ ║        	                    ^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.62: 	def foo2_ty: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
 //│ ╙──      	                           ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.92: 	foo2_ty x y z = (x, y, z,)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.62: 	def foo2_ty: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
-//│ ║        	                                             ^^
-//│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.92: 	foo2_ty x y z = (x, y, z,)
-//│ ║        	                       ^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.62: 	def foo2_ty: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
-//│ ╙──      	                                             ^^
 //│        = [Function: foo2_ty1]
 
 

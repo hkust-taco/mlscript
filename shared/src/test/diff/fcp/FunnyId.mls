@@ -105,45 +105,6 @@ id_ty = id
 //│ ╟── from reference:
 //│ ║  l.49: 	rec def id x = if true then x else id id x
 //│ ╙──      	                                         ^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.85: 	id_ty = id
-//│ ║        	^^^^^^^^^^
-//│ ╟── type `‘a_180` is not a function
-//│ ║  l.5: 	def id_ty: forall 'a. 'a -> 'a
-//│ ║       	                  ^^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.49: 	rec def id x = if true then x else id id x
-//│ ║        	                                   ^^^^^^^
-//│ ╟── from reference:
-//│ ║  l.49: 	rec def id x = if true then x else id id x
-//│ ╙──      	                                         ^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.85: 	id_ty = id
-//│ ║        	^^^^^^^^^^
-//│ ╟── function of type `?a -> ?b` is not an instance of type `'a_180`
-//│ ║  l.49: 	rec def id x = if true then x else id id x
-//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.5: 	def id_ty: forall 'a. 'a -> 'a
-//│ ╙──     	                  ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.85: 	id_ty = id
-//│ ║        	^^^^^^^^^^
-//│ ╟── function of type `?a -> ?b` is not an instance of type `'a_180`
-//│ ║  l.49: 	rec def id x = if true then x else id id x
-//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.5: 	def id_ty: forall 'a. 'a -> 'a
-//│ ╙──     	                  ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.85: 	id_ty = id
-//│ ║        	^^^^^^^^^^
-//│ ╟── function of type `?a -> ?b` is not an instance of type `'a_180`
-//│ ║  l.49: 	rec def id x = if true then x else id id x
-//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.5: 	def id_ty: forall 'a. 'a -> 'a
-//│ ╙──     	                  ^^
 //│      = [Function: id2]
 
 

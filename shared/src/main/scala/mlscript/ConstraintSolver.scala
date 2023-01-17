@@ -970,12 +970,19 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   }}
   
   
-  // def subsume(ty_sch: PolymorphicType, sign: PolymorphicType)
   def subsume(ty_sch: ST, sign: ST)
       (implicit ctx: Ctx, raise: Raise, prov: TypeProvenance): Unit = {
     println(s"CHECKING SUBSUMPTION...")
-    implicit val shadows: Shadows = Shadows.empty
-    constrain(ty_sch, sign)
+    var errCnt = 0
+    constrain(ty_sch, sign)({ err =>
+      errCnt += 1
+      if (errCnt > maxSuccessiveErrReports) {
+        // * Silence further errors
+        if (showAllErrors) notifyMoreErrors("signature-checking", prov)
+        return
+      }
+      else if (showAllErrors || errCnt === 1) raise(err)
+    }, prov, ctx, Shadows.empty)
   }
   
   

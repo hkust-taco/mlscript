@@ -323,48 +323,6 @@ to_church_ty = to_church_4
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──      	                        ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.313: 	to_church_ty = to_church_4
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_1476` is not a function
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from function type:
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                            ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── from application:
-//│ ║  l.257: 	  else fun f -> fun x -> f ((to_church_4 (n - 1)) f x) : ChurchInt
-//│ ╙──       	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.313: 	to_church_ty = to_church_4
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `(?a -> ?a) -> ?a -> ?a` is not an instance of type `'a_1476`
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                            ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──      	                        ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.313: 	to_church_ty = to_church_4
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_1476` is not a function
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from function type:
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                            ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── from application:
-//│ ║  l.257: 	  else fun f -> fun x -> f ((to_church_4 (n - 1)) f x) : ChurchInt
-//│ ╙──       	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.313: 	to_church_ty = to_church_4
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `(?a -> ?a) -> ?a -> ?a` is not an instance of type `'a_1476`
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                            ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──      	                        ^^
 //│             = [Function: to_church_4]
 
 // :e
@@ -418,7 +376,7 @@ def tc n = to_church_ty n : ChurchInt
 :e
 def tc n = to_church_2 n : ChurchInt // Requires :RecursiveTypes
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.419: 	def tc n = to_church_2 n : ChurchInt // Requires :RecursiveTypes
+//│ ║  l.377: 	def tc n = to_church_2 n : ChurchInt // Requires :RecursiveTypes
 //│ ║         	           ^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -529,7 +487,7 @@ succ_ty = succ'
 //│   <:  succ_ty:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.524: 	succ_ty = succ'
+//│ ║  l.482: 	succ_ty = succ'
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -537,64 +495,31 @@ succ_ty = succ'
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──      	                        ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.524: 	succ_ty = succ'
-//│ ║         	^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──      	                        ^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.524: 	succ_ty = succ'
-//│ ║         	^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                        ^^
-//│ ╟── from application:
-//│ ║  l.499: 	def succ' n = fun f -> fun x -> f (n f x)
-//│ ╙──       	                                   ^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.524: 	succ_ty = succ'
-//│ ║         	^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                        ^^
-//│ ╟── from application:
-//│ ║  l.499: 	def succ' n = fun f -> fun x -> f (n f x)
-//│ ╙──       	                                   ^^^^^
 //│        = [Function: succ$1]
 :DistributeForalls
 succ_ty = succ'
-//│ 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'e. ('d -> 'c
+//│ 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'e. ('c -> 'e
 //│   where
-//│     'b <: 'e -> 'c
-//│     'a <: 'b -> 'd -> 'e)))
+//│     'b <: 'd -> 'e
+//│     'a <: 'b -> 'c -> 'd)))
 //│   <:  succ_ty:
 //│ ChurchInt -> ChurchInt
 //│        = [Function: succ$1]
 :DontDistributeForalls
 
 succ'
-//│ res: 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'e. ('e -> 'd
+//│ res: 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'e. ('c -> 'e
 //│   where
-//│     'a <: 'b -> 'e -> 'c
-//│     'b <: 'c -> 'd)))
+//│     'b <: 'd -> 'e
+//│     'a <: 'b -> 'c -> 'd)))
 //│    = [Function: succ$1]
 
 // :e // * Error delayed by inconsistent constrained types
 succ' {}
 //│ res: 'a -> (forall 'b, 'c, 'd. ('b -> 'd
 //│   where
-//│     'a <: 'c -> 'd
-//│     anything <: 'a -> 'b -> 'c))
+//│     anything <: 'a -> 'b -> 'c
+//│     'a <: 'c -> 'd))
 //│    = [Function (anonymous)]
 
 // :e // * Error delayed by inconsistent constrained types
@@ -607,13 +532,13 @@ succ' {} {}
 :e
 succ' {} {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.608: 	succ' {} {} {}
+//│ ║  l.533: 	succ' {} {} {}
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.608: 	succ' {} {} {}
+//│ ║  l.533: 	succ' {} {} {}
 //│ ║         	      ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.499: 	def succ' n = fun f -> fun x -> f (n f x)
+//│ ║  l.457: 	def succ' n = fun f -> fun x -> f (n f x)
 //│ ╙──       	                                   ^^^
 //│ res: error
 //│ Runtime error:
