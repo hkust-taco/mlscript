@@ -306,7 +306,7 @@ object Main {
       try d match {
         case d @ Def(isrec, nme, L(rhs), _) =>
           val ty_sch = typeLetRhs(isrec, nme.name, rhs)(ctx, raise)
-          val inst = ty_sch.instantiate(ctx, raise, Shadows.empty)
+          val inst = ty_sch.instantiate(ctx, Shadows.empty)
           println(s"Typed `$nme` as: $inst")
           println(s" where: ${inst.showBounds}")
           val exp = getType(ty_sch)

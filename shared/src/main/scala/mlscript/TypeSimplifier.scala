@@ -107,7 +107,6 @@ trait TypeSimplifier { self: Typer =>
         canDistribForall match {
           case S(outerLvl) if distributeForalls =>
             implicit val shadows: Shadows = Shadows.empty
-            implicit val raise: Raise = _ => ??? // TODO rm from instantiate
             implicit val ctx: Ctx = _ctx.copy(lvl = outerLvl + 1)
             PolymorphicType(plvl, res).instantiate
           case _ =>
@@ -343,7 +342,6 @@ trait TypeSimplifier { self: Typer =>
       canDistribForall match {
         case S(outerLvl) if distributeForalls =>
             implicit val shadows: Shadows = Shadows.empty
-            implicit val raise: Raise = _ => ??? // TODO rm from instantiate
             implicit val ctx: Ctx = _ctx.copy(lvl = outerLvl + 1)
             PolymorphicType(dnf.polymLevel, base).instantiate
         case _ => PolymorphicType.mk(dnf.polymLevel, base)

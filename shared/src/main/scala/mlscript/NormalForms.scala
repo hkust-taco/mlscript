@@ -45,7 +45,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     }
     lazy val underlying: SimpleType = mkType(false)
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = underlying.levelBelow(ub) // TODO avoid forcing `underlying`!
-    def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx:Ctx, raise:Raise, shadows: Shadows, freshened: MutMap[TV, ST]): LhsNf = this match {
+    def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST]): LhsNf = this match {
       case LhsRefined(bo, ts, r, trs) =>
         LhsRefined(bo.map(_.freshenAbove(lim, rigidify)), ts, r.freshenAbove(lim, rigidify), trs.view.mapValues(_.freshenAbove(lim, rigidify)).to(SortedMap))
       case LhsTop => this
@@ -176,7 +176,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     }
     lazy val underlying: SimpleType = mkType(false)
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = underlying.levelBelow(ub) // TODO avoid forcing `underlying`!
-    def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx:Ctx, freshened: MutMap[TV, ST], raise:Raise, shadows: Shadows): RhsNf
+    def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, freshened: MutMap[TV, ST], shadows: Shadows): RhsNf
     // def freshenAbove(lim: Int, rigidify: Bool)(implicit lvl: Level, freshened: MutMap[TV, ST]): RhsNf = this match {
     //   case RhsBases(prims, bf) => RhsBases(prims, bf.map(_ match {
     //     case L(v) => L(v.freshenAbove(lim, rigidify))
@@ -286,13 +286,13 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   }
   case class RhsField(name: Var, ty: FieldType) extends RhsNf {
     def name_ty: Var -> FieldType = name -> ty
-    def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx:Ctx, freshened: MutMap[TV, ST], raise:Raise, shadows: Shadows): RhsField =
+    def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, freshened: MutMap[TV, ST], shadows: Shadows): RhsField =
       // RhsField(name, self.freshenAbove(lim, ty, rigidify = rigidify))
       RhsField(name, ty.update(self.freshenAbove(lim, _, rigidify = rigidify), self.freshenAbove(lim, _, rigidify = rigidify)))
     override def toString: Str = s"{$name:$ty}"
   }
   case class RhsBases(tags: Ls[ObjectTag], rest: Opt[MiscBaseType \/ RhsField], trefs: SortedMap[TypeName, TypeRef]) extends RhsNf {
-    def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx:Ctx, freshened: MutMap[TV, ST], raise:Raise, shadows: Shadows): RhsBases =
+    def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, freshened: MutMap[TV, ST], shadows: Shadows): RhsBases =
       RhsBases(tags, rest.map(_ match {
         case L(v) => L(v.freshenAboveImpl(lim, rigidify))
         case R(v) => R(v.freshenAbove(lim, rigidify))
@@ -301,7 +301,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       s"${tags.mkString("|")}${rest.fold("")("|" + _.fold(""+_, ""+_))}${trefs.valuesIterator.map("|"+_).mkString}"
   }
   case object RhsBot extends RhsNf {
-    def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx:Ctx, freshened: MutMap[TV, ST], raise:Raise, shadows: Shadows): this.type = this
+    def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, freshened: MutMap[TV, ST], shadows: Shadows): this.type = this
     override def toString: Str = "⊥"
   }
   
@@ -316,8 +316,8 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     lazy val level: Int = levelBelow(MaxLevel)(MutSet.empty)
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level =
       (vars.iterator ++ nvars).map(_.levelBelow(ub)).++(Iterator(lnf.levelBelow(ub), rnf.levelBelow(ub))).max
-    // def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx:Ctx, freshened: MutMap[TV, ST], raise:Raise, shadows: Shadows, etf: ExpandTupleFields): Conjunct = {
-    def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx:Ctx, freshened: MutMap[TV, ST], raise:Raise, shadows: Shadows): Conjunct = {
+    // def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, freshened: MutMap[TV, ST], shadows: Shadows, etf: ExpandTupleFields): Conjunct = {
+    def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, freshened: MutMap[TV, ST], shadows: Shadows): Conjunct = {
       // Conjunct(lnf.freshenAbove(lim, rigidify), vars.map(_.freshenAbove(lim, rigidify).asInstanceOf[TV]/*FIXME could also be a rigid*/),
       //   rnf.freshenAbove(lim, rigidify), nvars.map(_.freshenAbove(lim, rigidify).asInstanceOf[TV]/*FIXME could also be a rigid*/))
       val (vars2, tags2) = vars.toBuffer[TV].partitionMap(
@@ -347,7 +347,6 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def freshenAbove(lim: Int, lvl: Int)(implicit ctx: Ctx): Conjunct = {
       ctx.copy(lvl = lvl) |> { implicit ctx =>
         implicit val shadows: Shadows = Shadows.empty
-        implicit val raise: Raise = _ => ???
         implicit val freshened: MutMap[TV, ST] = MutMap.empty
         freshenAbove(lim, rigidify = false)
       }
@@ -486,12 +485,12 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       cs.maxByOption(_.level).fold(0)(_.level)
     def isPolymorphic: Bool = level > polymLevel
     lazy val effectivePolymLevel: Level = if (isPolymorphic) polymLevel else level
-    def instantiate(implicit ctx:Ctx, raise:Raise, shadows: Shadows): Ls[Conjunct] =
+    def instantiate(implicit ctx: Ctx, shadows: Shadows): Ls[Conjunct] =
       if (isPolymorphic) {
         implicit val state: MutMap[TV, ST] = MutMap.empty
         cs.map(_.freshenAbove(polymLevel, rigidify = false))
       } else cs
-    def rigidify(implicit ctx:Ctx, raise:Raise, shadows: Shadows): Ls[Conjunct] =
+    def rigidify(implicit ctx: Ctx, shadows: Shadows): Ls[Conjunct] =
       if (isPolymorphic) {
         implicit val state: MutMap[TV, ST] = MutMap.empty
         cs.map(_.freshenAbove(polymLevel, rigidify = true))

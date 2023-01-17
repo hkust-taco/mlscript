@@ -56,33 +56,33 @@ fun optionApply(x, y, f) =
 
 
 fun mapPartition(f, xs) = if xs is
-  Nil then Pair(Nil, Nil)
+  Nil then Pair(Nil(), Nil())
   Cons(x, xs) and mapPartition(f, xs) is Pair(l, r) and f(x) is
     Left(v)  then Pair(Cons(v, l), r)
     Right(v) then Pair(l, Cons(v, r))
 //│ mapPartition: ('head -> ((Left with {leftValue: 'leftValue}) | (Right with {rightValue: 'rightValue})) & 'head0 -> ((Left with {leftValue: 'leftValue0}) | (Right with {rightValue: 'rightValue0})), (Cons with {head: 'head, tail: 'tail}) | Nil,) -> (Pair with {fst: (Cons with {head: 'leftValue, tail: 'fst}) | 'fst, snd: (Cons with {head: 'rightValue, tail: 'snd}) | 'snd})
 //│   where
-//│     'snd :> Cons with {head: 'rightValue0, tail: 'snd}
-//│     'fst :> Cons with {head: 'leftValue0, tail: 'fst}
+//│     'snd :> (Cons with {head: 'rightValue0, tail: 'snd}) | Nil
+//│     'fst :> (Cons with {head: 'leftValue0, tail: 'fst}) | Nil
 //│     'tail <: (Cons with {head: 'head0, tail: 'tail}) | Nil
 //│             = [Function: mapPartition]
 
 fun mapPartition(f, xs) = if xs is
-  Nil then Pair(Nil, Nil)
+  Nil then Pair(Nil(), Nil())
   Cons(x, xs) and
     mapPartition(f, xs) is Pair(l, r) and f(x) is
       Left(v)  then Pair(Cons(v, l), r)
       Right(v) then Pair(l, Cons(v, r))
 //│ mapPartition: ('head -> ((Left with {leftValue: 'leftValue}) | (Right with {rightValue: 'rightValue})) & 'head0 -> ((Left with {leftValue: 'leftValue0}) | (Right with {rightValue: 'rightValue0})), (Cons with {head: 'head, tail: 'tail}) | Nil,) -> (Pair with {fst: (Cons with {head: 'leftValue, tail: 'fst}) | 'fst, snd: (Cons with {head: 'rightValue, tail: 'snd}) | 'snd})
 //│   where
-//│     'snd :> Cons with {head: 'rightValue0, tail: 'snd}
-//│     'fst :> Cons with {head: 'leftValue0, tail: 'fst}
+//│     'snd :> (Cons with {head: 'rightValue0, tail: 'snd}) | Nil
+//│     'fst :> (Cons with {head: 'leftValue0, tail: 'fst}) | Nil
 //│     'tail <: (Cons with {head: 'head0, tail: 'tail}) | Nil
 //│             = [Function: mapPartition1]
 
 fun mapPartition(f, xs) = if xs is
   Nil then
-    Pair(Nil, Nil)
+    Pair(Nil(), Nil())
   Cons(x, xs) and
     mapPartition(f, xs) is
       Pair(l, r) and
@@ -93,15 +93,15 @@ fun mapPartition(f, xs) = if xs is
             Pair(l, Cons(v, r))
 //│ mapPartition: ('head -> ((Left with {leftValue: 'leftValue}) | (Right with {rightValue: 'rightValue})) & 'head0 -> ((Left with {leftValue: 'leftValue0}) | (Right with {rightValue: 'rightValue0})), (Cons with {head: 'head, tail: 'tail}) | Nil,) -> (Pair with {fst: (Cons with {head: 'leftValue, tail: 'fst}) | 'fst, snd: (Cons with {head: 'rightValue, tail: 'snd}) | 'snd})
 //│   where
-//│     'snd :> Cons with {head: 'rightValue0, tail: 'snd}
-//│     'fst :> Cons with {head: 'leftValue0, tail: 'fst}
+//│     'snd :> (Cons with {head: 'rightValue0, tail: 'snd}) | Nil
+//│     'fst :> (Cons with {head: 'leftValue0, tail: 'fst}) | Nil
 //│     'tail <: (Cons with {head: 'head0, tail: 'tail}) | Nil
 //│             = [Function: mapPartition2]
 
 
 // TODO make this one work (needs tuple support)
 fun mapPartition(f, xs) = if xs is
-  Nil then (Nil, Nil)
+  Nil then (Nil(), Nil())
   Cons(x, xs) and mapPartition(f, xs) is (l, r) and f(x) is
     Left(v)  then (Cons(v, l), r)
     Right(v) then (l, Cons(v, r))
@@ -120,7 +120,7 @@ fun mapPartition(f, xs) = if xs is
 :e
 :ge
 fun mapPartition(f, xs) = if xs is
-  Nil then (Nil, Nil)
+  Nil then (Nil(), Nil())
   Cons(x, xs) and mapPartition(f, xs) is (l, r)
           and f(x) is Left(v)  then (Cons(v, l), r)
                       Right(v) then (l, Cons(v, r))
@@ -134,7 +134,7 @@ fun mapPartition(f, xs) = if xs is
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] type identifier not found: Tuple#2
 //│ ╙──
-//│ mapPartition: (anything, 'tail,) -> ((() -> Nil, () -> Nil,) | error)
+//│ mapPartition: (anything, 'tail,) -> ((Nil, Nil,) | error)
 //│   where
 //│     'tail <: Cons & {tail: 'tail} | Nil
 //│ Code generation encountered an error:

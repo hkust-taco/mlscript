@@ -755,7 +755,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               // trace(s"UNSTASHING...") {
               trace(s"UNSTASHING...") {
                 implicit val ctx: Ctx = oldCtx
-                freshenExtrCtx(ctx.lvl, ec).foreach { case (tv, bs) => 
+                ec.foreach { case (tv, bs) => 
                   println(s"where($tv) ${tv.showBounds}")
                   bs.foreach {
                   case (true, b) => println(s"UNSTASH ${b} <: $tv where ${b.showBounds}"); rec(b, tv, false)
@@ -1183,13 +1183,17 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         // ctx:Ctx=Ctx.empty,//FIXME
         // raise:Raise=throw _,
         // ctx:Ctx,
-        raise:Raise,
+        // raise:Raise,
         // shadows: Shadows=Set.empty,
         shadows: Shadows,
         ): SimpleType = {
     def freshenImpl(ty: SimpleType, below: Level): SimpleType =
     // (trace(s"${lvl}. FRESHEN $ty || $above .. $below  ${ty.level} ${ty.level <= above}")
     {
+      // * Cannot soundly freshen if the context's level is above the current polymorphism level,
+      // * as that would wrongly capture the newly-freshened variables.
+      require(below >= lvl)
+      
       def freshen(ty: SimpleType): SimpleType = freshenImpl(ty, below)
       
       if (
@@ -1299,10 +1303,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case w @ Without(b, ns) => Without(freshen(b), ns)(w.prov)
       case tr @ TypeRef(d, ts) => TypeRef(d, ts.map(freshen(_)))(tr.prov)
       case pt @ PolymorphicType(polyLvl, bod) if pt.level <= above => pt // is this really useful?
-      case pt @ PolymorphicType(polyLvl, bod) if polyLvl < ctx.lvl =>
-        implicit val tp: TP = NoProv // TODO?
-        freshen(PolymorphicType(ctx.lvl, ctx.nextLevel { implicit ctx => bod.freshenAbove(polyLvl, false) }))
       case pt @ PolymorphicType(polyLvl, bod) =>
+        // TODO assert?
         if (lvl > polyLvl) freshen(pt.raiseLevelTo(lvl))
         else PolymorphicType(polyLvl,
         // Setting `below` here is essentially just an optimization,
@@ -1348,44 +1350,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     freshenImpl(ty, below)
   }
   
-  // TODO rm
-  /* 
-  def freshenExtrCtx(above: Int, ec: ExtrCtx, rigidify: Bool = false, below: Int = MaxLevel)
-      (implicit ctx:Ctx, //freshened: MutMap[TV, ST],
-        raise:Raise,
-        shadows: Shadows,
-        ): ExtrCtx = {
-    implicit val state = MutMap.empty[TV, ST]
-    ec.map {
-      case (tv, buff) =>
-        freshenAbove(above, tv, rigidify, below)
-            .asInstanceOf[TV] -> // FIXME
-          buff.map(_.mapSecond(freshenAbove(above, _, rigidify, below)))
-    }
-  }
-  */
-  def freshenExtrCtx(above: Int, ec: ExtrCtx, rigidify: Bool = false, below: Int = MaxLevel)
-      (implicit ctx:Ctx, //freshened: MutMap[TV, ST],
-        raise:Raise,
-        shadows: Shadows,
-        ): ExtrCtx = {
-    // implicit val state = MutMap.empty[TV, ST]
-    implicit val cache: MutMap[PolarVariable, TV] = MutMap.empty
-    val init = MutSortMap.empty[TraitTag, TraitTag]
-    /* 
-    {
-    implicit val cache2: MutSortMap[TraitTag, TraitTag] = init
-    implicit val flexifyRigids: Bool = false // Q: can this lead to worse results than when extruding bounds individually?!
-    ec.map {
-      case (tv, buff) =>
-        extrude(tv, above, true, below) // FIXME true?
-            .asInstanceOf[TV] -> // FIXME
-          buff.map { case (pol, bound) => (pol, extrude(bound, above, pol, below)) }
-    }
-    }
-    */
-    ec
-  }
   
   
 }

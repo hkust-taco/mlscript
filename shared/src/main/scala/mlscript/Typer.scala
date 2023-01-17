@@ -98,7 +98,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       val ec = newCtx.extrCtx
       trace(s"UNSTASHING... (out)") {
         implicit val ctx: Ctx = this
-        freshenExtrCtx(ctx.lvl, ec).foreach { case (tv, bs) => bs.foreach {
+        ec.foreach { case (tv, bs) => bs.foreach {
           case (true, b) => constrain(b, tv)
           case (false, b) => constrain(tv, b)
         }}
