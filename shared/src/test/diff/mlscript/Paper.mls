@@ -27,7 +27,7 @@ flatMap (fun x -> None{}) (Some{value = 42})
 
 
 def flatMap2 f opt = case opt of Some -> f opt.value, _ -> opt
-//│ flatMap2: ('value -> 'a) -> ((Some[?] with {value: 'value}) | 'a & ~#Some) -> 'a
+//│ flatMap2: ('value -> 'a) -> (forall 'b. ((Some[?] with {value: 'value}) | 'b & ~#Some) -> ('a | 'b))
 //│         = [Function: flatMap2]
 
 flatMap2 (fun x -> Some{value = x}) (Some{value = 12})
@@ -44,7 +44,7 @@ flatMap2 (fun x -> x) 42
 
 
 def mapSome f opt = case opt of Some -> f opt, _ -> opt
-//│ mapSome: ('a -> 'b) -> (Some[?] & 'a | 'b & ~#Some) -> 'b
+//│ mapSome: ('a -> 'b) -> (forall 'c. (Some[?] & 'a | 'c & ~#Some) -> ('b | 'c))
 //│        = [Function: mapSome]
 
 
@@ -100,7 +100,7 @@ class Person: {name: string; age: int; isMajor: bool}
 //│ Defined class Person
 
 def Person n a = Person{name = capitalize n; age = a; isMajor = a >= 18}
-//│ Person: string -> (int & 'age) -> (Person with {age: 'age})
+//│ Person: string -> (forall 'age. (int & 'age) -> (Person with {age: 'age}))
 //│       = <no result>
 //│         capitalize is not implemented
 
@@ -114,16 +114,16 @@ type List[A] = Cons[A] | None
 rec def mapList f ls = case ls of
   Cons -> Cons{value = f ls.value; tail = mapList f ls.tail},
   None -> None{}
-//│ mapList: ('value -> 'value0) -> 'a -> 'tail
+//│ mapList: ('value -> 'a & 'value0 -> 'A) -> ((Cons[?] with {tail: 'tail, value: 'value}) | None) -> ((Cons['A | 'a] with {tail: 'b, value: 'a}) | None)
 //│   where
-//│     'tail :> (Cons['value0] with {tail: 'tail}) | None
-//│     'a <: (Cons[?] with {tail: 'a, value: 'value}) | None
+//│     'b :> (Cons['A] with {tail: 'b}) | None
+//│     'tail <: (Cons[?] with {tail: 'tail, value: 'value0}) | None
 //│        = [Function: mapList]
 
 
 
 def Cons head tail = Cons { value = head; tail = tail }
-//│ Cons: ('value & 'A) -> (List['A] & 'tail) -> (Cons['A] with {tail: 'tail, value: 'value})
+//│ Cons: 'a -> (forall 'A, 'tail. (List['A] & 'tail) -> (Cons['A | 'a] with {tail: 'tail, value: 'a}))
 //│     = [Function: Cons1]
 
 def None = None{}
@@ -134,11 +134,11 @@ rec def unzip xs = case xs of
   None -> { fst = None; snd = None },
   Some -> let tmp = unzip xs.tail in { fst = Cons xs.value.fst tmp.fst ;
                                        snd = Cons xs.value.snd tmp.snd }
-//│ unzip: 'a -> {fst: 'tail, snd: 'tail0}
+//│ unzip: (None | Some[?] & {tail: 'tail, value: {fst: 'a, snd: 'b}}) -> {fst: (Cons['A | 'a] with {tail: 'fst, value: 'a}) | None, snd: (Cons['A0 | 'b] with {tail: 'snd, value: 'b}) | None}
 //│   where
-//│     'tail0 :> (Cons['value] with {tail: 'tail0}) | None
-//│     'tail :> (Cons['value0] with {tail: 'tail}) | None
-//│     'a <: None | Some[?] & {tail: 'a, value: {fst: 'value0, snd: 'value}}
+//│     'snd :> (Cons['A0] with {tail: 'snd}) | None
+//│     'fst :> (Cons['A] with {tail: 'fst}) | None
+//│     'tail <: None | Some[?] & {tail: 'tail, value: {fst: 'A, snd: 'A0}}
 //│      = [Function: unzip]
 
 // * Declare desired types:
@@ -152,15 +152,15 @@ def unzip_ty: List[{ fst: 'a; snd: 'b }] -> { fst: List['a]; snd: List['b] }
 // * Assert the inferred types subsume them (the signatures above are checked):
 def Cons_ty = Cons
 def unzip_ty = unzip
-//│ ('value & 'A) -> (List['A] & 'tail) -> (Cons['A] with {tail: 'tail, value: 'value})
+//│ 'a -> (forall 'A, 'tail. (List['A] & 'tail) -> (Cons['A | 'a] with {tail: 'tail, value: 'a}))
 //│   <:  Cons_ty:
 //│ 'a -> (List['a] & 'b) -> (Cons['a] with {tail: 'b})
 //│        = [Function: Cons_ty]
-//│ 'a -> {fst: 'tail, snd: 'tail0}
+//│ (None | Some[?] & {tail: 'tail, value: {fst: 'a, snd: 'b}}) -> {fst: (Cons['A | 'a] with {tail: 'fst, value: 'a}) | None, snd: (Cons['A0 | 'b] with {tail: 'snd, value: 'b}) | None}
 //│   where
-//│     'tail0 :> (Cons['value] with {tail: 'tail0}) | None
-//│     'tail :> (Cons['value0] with {tail: 'tail}) | None
-//│     'a <: None | Some[?] & {tail: 'a, value: {fst: 'value0, snd: 'value}}
+//│     'snd :> (Cons['A0] with {tail: 'snd}) | None
+//│     'fst :> (Cons['A] with {tail: 'fst}) | None
+//│     'tail <: None | Some[?] & {tail: 'tail, value: {fst: 'A, snd: 'A0}}
 //│   <:  unzip_ty:
 //│ List[{fst: 'a, snd: 'b}] -> {fst: List['a], snd: List['b]}
 //│         = [Function: unzip_ty]

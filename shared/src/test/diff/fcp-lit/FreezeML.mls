@@ -473,7 +473,7 @@ let f = revapp id in f poly
 
 // F10
 a = choose id (fun (x: (forall 'a. 'a -> 'a)) -> auto_ x)
-//│ a: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
+//│ a: (forall 'a. 'a -> 'a & 'a0) -> (forall 'b. 'a0 | 'b -> 'b)
 //│  = [Function: id1]
 
 a id
@@ -481,7 +481,7 @@ a id
 //│    = [Function: id1]
 
 choose id (fun x -> auto_ x)
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> (forall 'b. 'a0 | 'b -> 'b)
 //│    = [Function: id1]
 
 a = choose id auto_
@@ -514,15 +514,15 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ╙──       	                    ^^
 //│ res: 'c
 //│   where
-//│     'c :> (forall 'a. 'a -> 'a) | (forall 'a0, 'd, 'b. ('a0 -> 'a0) -> 'd)
-//│     'd :> 'b -> 'b | error
+//│     'c :> (forall 'a. 'a -> 'a) | (forall 'd, 'a0. ('a0 -> 'a0) -> 'd)
+//│     'd :> (forall 'b. 'b -> 'b) | error
 //│     'a0 :> anything
 //│         <: nothing
 //│    = [Function: id1]
 
 // * The skolem used to (unsafely) leak into this type – see also `Skolems.mls`:
 res
-//│ res: (anything -> nothing & 'a) -> ('a | 'b -> 'b | error)
+//│ res: (anything -> nothing & 'a) -> (forall 'b. 'a | 'b -> 'b | error)
 //│    = [Function: id1]
 
 :e // skolem extrusion
@@ -548,13 +548,13 @@ a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.547: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a_1396`
+//│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a_1422`
 //│ ║  l.547: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──       	                    ^^
-//│ res: ('b & 'a) -> ('b | {u: 'a}) | error
+//│ res: 'b -> ('b | {u: 'b}) | error
 //│    = [Function (anonymous)]
 
 

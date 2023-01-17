@@ -515,7 +515,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     * as it will be replaced by a fresh bounded type variable upon subsumption checking (cf rigidification). */
   case class TypeBounds(lb: SimpleType, ub: SimpleType)(val prov: TypeProvenance) extends SimpleType {
     def level: Level = lb.level max ub.level
-    def levelBelow(ubLvl: Level)(implicit cache: MutSet[TV]): Int = lb.levelBelow(ubLvl)(MutSet.empty) max ub.levelBelow(ubLvl)(MutSet.empty)
+    def levelBelow(ubLvl: Level)(implicit cache: MutSet[TV]): Int = lb.levelBelow(ubLvl) max ub.levelBelow(ubLvl)
     override def toString = s"$lb..$ub"
   }
   object TypeBounds {
@@ -558,6 +558,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       val nameHint: Opt[Str] = N,
       val recPlaceholder: Bool = false
   )(val prov: TypeProvenance) extends SimpleType with TypeVarOrRigidVar with Ordered[TypeVariable] with Factorizable {
+    require(level <= MaxLevel)
     
     var assignedTo: Opt[ST] = N
     

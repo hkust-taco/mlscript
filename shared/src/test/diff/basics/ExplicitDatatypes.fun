@@ -7,7 +7,7 @@ data Right v
 //│ Right: 'a -> Right['a]
 
 let Either l r = Left l | Right r // TODO actual type parameters
-//│ Either: 'a -> 'b -> (Left['a] | Right['b])
+//│ Either: 'a -> (forall 'b. 'b -> (Left['a] | Right['b]))
 
 Either 1 2
 //│ res: Left[1] | Right[2]

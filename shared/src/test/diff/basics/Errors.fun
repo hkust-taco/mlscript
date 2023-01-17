@@ -627,7 +627,7 @@ i arg
 //│ res: error | int
 
 let test x y = if x.prop then i x else y
-//│ test: {fld: {prop: int}, prop: bool} -> 'a -> (int | 'a)
+//│ test: {fld: {prop: int}, prop: bool} -> (forall 'a. 'a -> (int | 'a))
 
 :e
 test arg2

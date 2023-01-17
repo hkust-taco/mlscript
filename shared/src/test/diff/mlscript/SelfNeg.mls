@@ -16,12 +16,12 @@ foo
 
 :ns
 r = foo (fun a -> fun f -> f a)
-//│ r: forall 'b, 'a, 'c, 'd. 'b
+//│ r: forall 'b, 'c, 'a, 'd. 'c
 //│   where
-//│     'b :> 'a -> 'a
-//│     'a <: 'd & 'c
-//│     'c <: ~'a
-//│     'd <: 'a
+//│     'c :> 'a -> 'a
+//│     'a <: 'b & 'd
+//│     'd <: ~'a
+//│     'b <: 'a
 //│  = <no result>
 //│    foo is not implemented
 
@@ -109,14 +109,14 @@ r = bar (fun x -> (x, x + 1, not x, x x))
 
 :ns
 r
-//│ res: forall 'b, 'a, 'c, 'd, 'e, 'f. 'd
+//│ res: forall 'b, 'a, 'c, 'd. 'b
 //│   where
-//│     'd :> ('e, 'b, 'f, 'c,)
+//│     'b :> forall 'e, 'f. ('c, 'e, 'f, 'd,)
 //│     'f :> bool
-//│     'b :> int
-//│     'e :> 'a & int & ~'a
-//│        <: 'e -> 'c & bool & int
-//│     'a <: (bool | ~(int & ~'a)) & ('e -> 'c | ~(int & ~'a))
+//│     'e :> int
+//│     'c :> 'a & int & ~'a
+//│        <: 'c -> 'd & bool & int
+//│     'a <: (bool | ~(int & ~'a)) & ('c -> 'd | ~(int & ~'a))
 //│    = <no result>
 //│      r and bar are not implemented
 

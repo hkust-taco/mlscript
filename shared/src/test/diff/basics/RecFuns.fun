@@ -7,7 +7,7 @@ let rec r a = r
 //│     'r :> anything -> 'r
 
 let join a b = if true then a else b
-//│ join: 'a -> 'a -> 'a
+//│ join: 'a -> (forall 'b. 'b -> ('a | 'b))
 
 // "Lateral" hash consing
 let s = join r r

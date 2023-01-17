@@ -2576,7 +2576,7 @@ add
 //│ res: {u: anything -> int -> int -> int}
 
 (let x = {v: (y => y)}; {u: x.v})
-//│ res: {u: 'a -> 'a}
+//│ res: {u: forall 'a. 'a -> 'a}
 
 (let rec x = {v: (y => x)}; {u: x.v})
 //│ res: {u: 'v}
@@ -3044,7 +3044,7 @@ add.v.u
 //│ res: {u: 0, v: anything -> int -> int -> int}
 
 {u: 0, v: (x => x)}
-//│ res: {u: 0, v: 'a -> 'a}
+//│ res: {u: 0, v: forall 'a. 'a -> 'a}
 
 {u: 0, v: {u: 0}}
 //│ res: {u: 0, v: {u: 0}}
@@ -3098,7 +3098,7 @@ add.v.u
 //│ res: {u: int -> int -> int, v: {u: anything -> int -> int -> int, v: int -> int -> int}}
 
 {u: add, v: {u: (x => x)}}
-//│ res: {u: int -> int -> int, v: {u: 'a -> 'a}}
+//│ res: {u: int -> int -> int, v: {u: forall 'a. 'a -> 'a}}
 
 {u: add, v: {u: {v: 0}}}
 //│ res: {u: int -> int -> int, v: {u: {v: 0}}}
@@ -3230,7 +3230,7 @@ add.v.u
 //│ res: {u: {u: 0}, v: anything -> int -> int -> int}
 
 {u: {u: 0}, v: (x => x)}
-//│ res: {u: {u: 0}, v: 'a -> 'a}
+//│ res: {u: {u: 0}, v: forall 'a. 'a -> 'a}
 
 {u: {u: 0}, v: (x => 0.u)}
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -3278,7 +3278,7 @@ add.v.u
 //│ res: {u: {u: 0}, v: anything -> error}
 
 {u: {u: 0}, v: (x => x.u)}
-//│ res: {u: {u: 0}, v: {u: 'u} -> 'u}
+//│ res: {u: {u: 0}, v: forall 'u. {u: 'u} -> 'u}
 
 {u: {u: 0}, v: 0.v}
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -3323,7 +3323,7 @@ add.v.u
 //│ res: {u: {u: int -> int -> int}, v: int -> int -> int}
 
 {u: {u: add}, v: (x => x)}
-//│ res: {u: {u: int -> int -> int}, v: 'a -> 'a}
+//│ res: {u: {u: int -> int -> int}, v: forall 'a. 'a -> 'a}
 
 {u: {v: 0}}
 //│ res: {u: {v: 0}}
@@ -3377,7 +3377,7 @@ add.v.u
 //│ res: {u: {v: 0}, v: int -> int -> int}
 
 {u: {v: 0}, v: (x => x)}
-//│ res: {u: {v: 0}, v: 'a -> 'a}
+//│ res: {u: {v: 0}, v: forall 'a. 'a -> 'a}
 
 {u: {v: add}}
 //│ res: {u: {v: int -> int -> int}}

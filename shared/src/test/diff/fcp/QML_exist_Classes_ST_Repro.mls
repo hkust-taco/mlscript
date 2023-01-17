@@ -43,16 +43,27 @@ def simpleStepImpl arrImpl = ArraysImpl {
     update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.Update r0 i a, "updated");
     fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.Fold f b r0
   }
-//│ simpleStepImpl: ArraysRep[in 'A | 'A0 | 'A1 & ('A2 | 'A3) out 'A2 & 'A3, in 'Rep | 'Rep0 out nothing] -> (ArraysImpl['A1, 'Rep1] with {fold: forall 'b, 'b0. ('A2 -> 'b -> ('b & 'b0)) -> (forall 'a. ('b & 'a) -> ('Rep0, anything,) -> ('b0 | 'a)), init: 'A -> (nothing, "initialized",), sub: ('Rep, anything,) -> int -> 'A3, update: forall 'c. ('Rep2 & 'c, anything,) -> int -> 'A0 -> ('c, "updated",)})
+//│ simpleStepImpl: ArraysRep[in 'A | 'A0 | 'A1 | 'A2 & 'A3 out 'A2 & 'A0, in 'Rep | 'Rep0 out nothing] -> (ArraysImpl['A3, 'Rep1] with {fold: forall 'b, 'b0. ('A2 -> 'b0 -> ('b0 & 'b)) -> (forall 'a. ('b0 & 'a) -> ('Rep0, anything,) -> ('b | 'a)), init: 'A -> (nothing, "initialized",), sub: ('Rep, anything,) -> int -> 'A0, update: forall 'c. ('Rep2 & 'c, anything,) -> int -> 'A1 -> ('c, "updated",)})
 //│   where
 //│     'Rep1 :> ('d, "initialized" | "updated",)
 //│           <: (nothing, anything,)
-//│     'A1 <: nothing
+//│     'A3 :> 'A0
+//│         <: nothing
 //│               = [Function: simpleStepImpl]
 
+// * Something off is going on here
+:stats
+:Fuel 50000
 simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
 //│ res: ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string,)]
+//│   where
+//│     'a := 'A
+//│     'A <: 'a
 //│    = [Function: simpleStepImpl]
+//│ constrain calls  : 46463
+//│ annoying  calls  : 101
+//│ subtyping calls  : 385967
+:ResetFuel
 
 // def simpleStepImpl2_ty: Arrays['a] -> ArraysImpl['a, ('_, string)]
 // def simpleStepImpl2_ty: Arrays['a] -> ArraysImpl['a, '_]
@@ -77,7 +88,7 @@ mkArrays impl k = k impl
 :e
 def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.78: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
+//│ ║  l.89: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
 //│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.36: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r

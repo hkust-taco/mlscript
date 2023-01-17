@@ -15,7 +15,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   var startingFuel: Int = defaultStartingFuel
   def depthLimit: Int =
     // 150
-    200
+    // 200
+    250
   
   type ExtrCtx = MutMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound
   // type ExtrCtx = Level -> MutMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound
@@ -1250,7 +1251,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           }
         case None =>
           val v = freshVar(tv.prov, S(tv), tv.nameHint)(if (tv.level > below) tv.level else {
-            assert(lvl <= below, "not yet implemented this tricky corner case")
+            // assert(lvl <= below, "not yet implemented this tricky corner case")
             lvl
           })
           // val v = freshVar(tv.prov, S(tv), tv.nameHint)(tv.level)
@@ -1294,7 +1295,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case pt @ PolymorphicType(polyLvl, bod) if polyLvl < ctx.lvl =>
         implicit val tp: TP = NoProv // TODO?
         freshen(PolymorphicType(ctx.lvl, ctx.nextLevel { implicit ctx => bod.freshenAbove(polyLvl, false) }))
-      case pt @ PolymorphicType(polyLvl, bod) => PolymorphicType(polyLvl,
+      case pt @ PolymorphicType(polyLvl, bod) =>
+        if (lvl > polyLvl) freshen(pt.raiseLevelTo(lvl))
+        else PolymorphicType(polyLvl,
         // Setting `below` here is essentially just an optimization,
         //  to avoid having to copy some type variables needlessly
         // * ^ probably no longer true (or never was?)

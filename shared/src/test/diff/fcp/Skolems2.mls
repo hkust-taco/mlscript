@@ -134,7 +134,7 @@ def oops (i: forall 'c. ('c -> 'c, 0)) =
     in let r = (f id) "hello"
     in let _ = log r
     in f) i
-//│ oops: (forall 'c. ('c -> 'c, 0,)) -> ("hello" -> anything & 'c0) -> (forall 'c0, 'a. 'c0 | 'a -> 'a)
+//│ oops: (forall 'c. ('c -> 'c, 0,)) -> ("hello" -> anything & 'c0) -> (forall 'a. 'c0 | 'a -> 'a)
 //│     = [Function: oops2]
 
 
@@ -253,7 +253,7 @@ foo((fun x -> foo((fun y -> x, 0)), 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.252: 	foo((fun x -> foo((fun y -> x, 0)), 0))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘c_292` does not match type `nothing`
+//│ ╟── type `‘c_341` does not match type `nothing`
 //│ ║  l.234: 	def foo((a, b) : forall 'c. ('c -> 'c, 0)) = ()
 //│ ║         	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:

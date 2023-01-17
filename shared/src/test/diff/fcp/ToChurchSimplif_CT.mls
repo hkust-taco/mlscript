@@ -843,9 +843,9 @@ rec def to_ch n =
   else succ (to_ch (n - 1))
 //│ to_ch: 'to_ch
 //│   where
-//│     'to_ch :> int -> ChurchInt
+//│     'to_ch :> forall 'to_ch. (int -> ChurchInt
 //│   where
-//│     'to_ch <: int -> ChurchInt
+//│     'to_ch <: int -> ChurchInt)
 //│      = <no result>
 //│        zero is not implemented
 
@@ -853,9 +853,9 @@ rec def to_ch n =
 to_church = to_ch
 //│ 'to_ch
 //│   where
-//│     'to_ch :> int -> ChurchInt
+//│     'to_ch :> forall 'to_ch. (int -> ChurchInt
 //│   where
-//│     'to_ch <: int -> ChurchInt
+//│     'to_ch <: int -> ChurchInt)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required

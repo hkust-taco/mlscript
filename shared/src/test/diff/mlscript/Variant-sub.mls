@@ -12,7 +12,7 @@ def None = None{}
 
 def flatMap = fun f -> fun opt ->
   case opt of { Some -> f opt.v | None -> opt }
-//│ flatMap: ('v -> 'a) -> (None & 'a | (Some[?] with {v: 'v})) -> 'a
+//│ flatMap: ('v -> 'a) -> (forall 'b. (None & 'b | (Some[?] with {v: 'v})) -> ('a | 'b))
 //│        = [Function: flatMap]
 
 f x = Some x
@@ -74,18 +74,18 @@ rec def evalOpt x = case x of {
         Some (l + r)
       ) (evalOpt x.rhs)) (evalOpt x.lhs)
   }
-//│ evalOpt: 'a -> (NoneBecause | Some[int])
+//│ evalOpt: ((Lit with {v: 'v}) | (Neg with {sub: 'rhs}) | (Plus with {lhs: 'rhs, rhs: 'rhs}) | Var) -> (NoneBecause | Some[int | 'v])
 //│   where
-//│     'a <: Lit & {v: int} | (Neg with {sub: 'a}) | (Plus with {lhs: 'a, rhs: 'a}) | Var
+//│     'rhs <: Lit | (Neg with {sub: 'rhs}) | (Plus with {lhs: 'rhs, rhs: 'rhs}) | Var
 //│        = [Function: evalOpt]
-//│ constrain calls  : 589
-//│ annoying  calls  : 95
-//│ subtyping calls  : 5493
+//│ constrain calls  : 1045
+//│ annoying  calls  : 135
+//│ subtyping calls  : 14164
 
 :stats
 evalOpt (Plus{lhs = Lit{v=2}; rhs = Lit{v=3}})
 //│ res: NoneBecause | Some[int]
 //│    = Some { v: 5 }
-//│ constrain calls  : 153
+//│ constrain calls  : 135
 //│ annoying  calls  : 37
-//│ subtyping calls  : 1220
+//│ subtyping calls  : 1155

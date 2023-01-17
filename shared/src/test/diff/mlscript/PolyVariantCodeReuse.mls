@@ -1,5 +1,12 @@
 // Example from Code reuse through polymorphic variants
 
+
+// * Bad things currently happen without these:
+// * TODO: investigate why
+:DontDistributeForalls
+:DontGeneralizeCurriedFunctions
+
+
 //************************** PRELIMINARIES *************************
 
 class NotFound

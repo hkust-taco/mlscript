@@ -1,3 +1,5 @@
+:DontGeneralizeCurriedFunctions
+
 
 def choose: 'a -> 'a -> 'a
 //│ choose: 'a -> 'a -> 'a
@@ -21,6 +23,50 @@ id1 id
 //│        <: 'b -> 'a & 'c
 //│     'b :> ('a & 'b) -> 'a
 //│        <: 'a
+//│    = <no result>
+//│      id1 and choose are not implemented
+
+
+:GeneralizeCurriedFunctions
+
+id1 id
+//│ res: ('a & 'b) -> 'a | 'c
+//│   where
+//│     'a :> ('a & 'b) -> 'a
+//│        <: 'b -> 'a & 'c
+//│     'b :> ('a & 'b) -> 'a
+//│        <: 'a
+//│    = <no result>
+//│      id1 and choose are not implemented
+
+rec def id1 x = choose x (id1 id1 x)
+//│ id1: 'id1
+//│   where
+//│     'id1 :> forall 'a. ('b & 'a) -> 'a
+//│     'a :> 'c
+//│     'b :> 'id1
+//│        <: 'c
+//│     'c :> 'id1
+//│        <: 'b -> 'c
+//│    = <no result>
+//│      choose is not implemented
+
+:e
+id1 id
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
+//│ ║  l.55: 	id1 id
+//│ ║        	^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. (α19' -> α19')›  <:  α96_147    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α19' -> α19')›  <:  α96_134''
+//│ res: ('a & 'b) -> 'b | error | 'c
+//│   where
+//│     'a <: 'd & 'b
+//│     'd :> forall 'a, 'b. ('a & 'b) -> 'b
+//│        <: 'e
+//│     'b :> 'e
+//│     'e :> forall 'a, 'b. ('a & 'b) -> 'b
+//│        <: 'd -> 'e & 'c
 //│    = <no result>
 //│      id1 and choose are not implemented
 

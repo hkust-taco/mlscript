@@ -182,7 +182,7 @@ build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.181: 	build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 //│ ║         	^^^^^
-//│ ╟── type `Ls[?a]` is not an instance of type `'b_649`
+//│ ╟── type `Ls[?a]` is not an instance of type `'b_748`
 //│ ║  l.181: 	build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 //│ ║         	               ^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -286,7 +286,7 @@ b g x = build_ g x
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.258: 	b g x = build_ g x
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> ?b` is not an instance of type `Ls`
+//│ ╟── function of type `?a -> (forall ?b. ?b)` is not an instance of type `Ls`
 //│ ║  l.258: 	b g x = build_ g x
 //│ ║         	    ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from applied type reference:
@@ -295,7 +295,7 @@ b g x = build_ g x
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.258: 	b g x = build_ g x
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> ?b` does not have field 'Ls#A'
+//│ ╟── function of type `?a -> (forall ?b. ?b)` does not have field 'Ls#A'
 //│ ║  l.258: 	b g x = build_ g x
 //│ ║         	    ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from applied type reference:

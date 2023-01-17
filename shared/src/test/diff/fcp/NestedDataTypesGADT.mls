@@ -64,7 +64,7 @@ d1_ : HTree[Z, int]
 //│    = [Function: d1_]
 
 d2 = DNode { subTree = (d1_, d1_); n = S{} }
-//│ d2: DNode['P, 1] with {subTree: (forall 'a. (DLeaf[1] -> 'a) -> 'a, forall 'a. (DLeaf[1] -> 'a) -> 'a,)}
+//│ d2: DNode['N, 1] with {n: forall 'P. S['P], subTree: (forall 'a. (DLeaf[1] -> 'a) -> 'a, forall 'a. (DLeaf[1] -> 'a) -> 'a,)}
 //│   = DNode { n: S {}, subTree: [ [Function: d1_], [Function: d1_] ] }
 
 def d1_ty: HTree[Z, int]
@@ -72,7 +72,7 @@ def d1_ty: HTree[Z, int]
 //│      = <missing implementation>
 
 d2 = DNode { subTree = (d1_ty, d1_ty); n = S{} }
-//│ d2: DNode[Z, int] with {subTree: (HTree[Z, int], HTree[Z, int],)}
+//│ d2: DNode[Z, int] with {n: forall 'P. S['P], subTree: (HTree[Z, int], HTree[Z, int],)}
 //│   = <no result>
 //│     d1_ty is not implemented
 d2: DNode[Z, int]
@@ -85,7 +85,7 @@ d2: HTreeBase[S[Z], int]
 //│      d2 and d1_ty are not implemented
 
 d2_ k = k d2
-//│ d2_: ((DNode[Z, int] with {subTree: (HTree[Z, int], HTree[Z, int],)}) -> 'a) -> 'a
+//│ d2_: ((DNode[Z, int] with {n: forall 'P. S['P], subTree: (HTree[Z, int], HTree[Z, int],)}) -> 'a) -> 'a
 //│    = <no result>
 //│      d2 and d1_ty are not implemented
 

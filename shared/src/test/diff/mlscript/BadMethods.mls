@@ -8,7 +8,7 @@ class Bar[A]: Foo[A]
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.7: 	    rec method Map f = f Map (fun x -> Map)
 //│ ║       	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `B_53` is not a function
+//│ ╟── type `B_56` is not a function
 //│ ║  l.6: 	    method Map[B]: B -> A
 //│ ║       	               ^
 //│ ╟── Note: constraint arises from application:
@@ -23,7 +23,7 @@ class Bar[A]: Foo[A]
 //│ Declared Bar.Map: Bar['A] -> anything -> 'A
 //│ Defined Bar.Map: Bar[?] -> 'Map
 //│   where
-//│     'Map :> ('Map -> (anything -> 'Map) -> 'a) -> 'a
+//│     'Map :> forall 'a. ('Map -> (anything -> 'Map) -> 'a) -> 'a
 
 Foo.Map
 Bar.Map
@@ -109,7 +109,7 @@ class BadSelf[A]: { x: A }
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.108: 	    method F = this.x 42
 //│ ║         	               ^^^^^^^^^
-//│ ╟── field selection of type `A_158` is not a function
+//│ ╟── field selection of type `A_168` is not a function
 //│ ║  l.108: 	    method F = this.x 42
 //│ ║         	               ^^^^^^
 //│ ╟── Note: class type parameter A is defined at:
@@ -136,7 +136,7 @@ class Simple3[A, B]: Simple2[A]
 //│ ╔══[ERROR] Type mismatch in method declaration:
 //│ ║  l.135: 	    method Get: B
 //│ ║         	           ^^^^^^
-//│ ╟── type `B_205` is not an instance of type `A_204`
+//│ ╟── type `B_215` is not an instance of type `A_214`
 //│ ║  l.134: 	class Simple3[A, B]: Simple2[A]
 //│ ║         	                 ^
 //│ ╟── Note: constraint arises from class type parameter:
@@ -161,7 +161,7 @@ class BadPair[A, B]: AbstractPair[A, B]
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.159: 	    method Test f = f this.x this.x
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── field selection of type `A_277` is not an instance of type `B_278`
+//│ ╟── field selection of type `A_313` is not an instance of type `B_314`
 //│ ║  l.159: 	    method Test f = f this.x this.x
 //│ ║         	                             ^^^^^^
 //│ ╟── Note: constraint arises from class type parameter:
@@ -173,7 +173,7 @@ class BadPair[A, B]: AbstractPair[A, B]
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.160: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `C_307` is not an instance of type `D_308`
+//│ ╟── application of type `C_332` is not an instance of type `D_333`
 //│ ║  l.160: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
 //│ ║         	                                                    ^^^^^^^^^
 //│ ╟── Note: constraint arises from method type parameter:
@@ -183,8 +183,8 @@ class BadPair[A, B]: AbstractPair[A, B]
 //│ ║  l.153: 	    method Map[C, D]: (A -> C) -> (B -> D) -> AbstractPair[C, D]
 //│ ╙──       	               ^
 //│ Defined class BadPair[+A, +B]
-//│ Defined BadPair.Test: BadPair['A, ?] -> ('A -> 'A -> 'a) -> 'a
-//│ Defined BadPair.Map: BadPair['A, ?] -> ('A -> 'y & 'A -> 'x) -> anything -> BadPair['x, 'y]
+//│ Defined BadPair.Test: BadPair['A, ?] -> (forall 'a. ('A -> 'A -> 'a) -> 'a)
+//│ Defined BadPair.Map: BadPair['A, ?] -> (forall 'a, 'b. ('A -> 'a & 'A -> 'b) -> anything -> BadPair['b, 'a])
 
 bp = BadPair { x = 42; y = true }
 bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
@@ -204,11 +204,11 @@ BadPair = BadPair { x = 42; y = 0 }
 BadPair.Map
 BadPair.(BadPair.Map)
 //│ BadPair: BadPair[42, 0]
-//│ res: BadPair['A, ?] -> ('A -> 'y & 'A -> 'x) -> anything -> BadPair['x, 'y]
+//│ res: BadPair['A, ?] -> (forall 'a, 'b. ('A -> 'b & 'A -> 'a) -> anything -> BadPair['a, 'b])
 //│ ╔══[ERROR] Class BadPair has no method BadPair.Map
 //│ ║  l.205: 	BadPair.(BadPair.Map)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
-//│ res: (42 -> 'y & 42 -> 'x) -> anything -> BadPair['x, 'y]
+//│ res: (42 -> 'a & 42 -> 'b) -> anything -> BadPair['b, 'a]
 
 
 class ClassA
@@ -536,7 +536,7 @@ class Dup[A, A]: { x: A }
 //│ ╙──       	        ^
 //│ Defined class Dup[±A, +A]
 //│ Declared Dup.MthDup: Dup[?, 'A] -> ('A -> 'B) -> 'B
-//│ Defined Dup.MthDup: Dup[?, 'A] -> ('A -> 'a) -> 'a
+//│ Defined Dup.MthDup: Dup[?, 'A] -> (forall 'a. ('A -> 'a) -> 'a)
 //│ ╔══[WARNING] Type definition Dup has bivariant type parameters:
 //│ ║  l.513: 	class Dup[A, A]: { x: A }
 //│ ║         	      ^^^
@@ -550,9 +550,9 @@ t = Dup { x = 42 }
 :stats
 t : Dup[bool, int]
 //│ res: Dup[?, int]
-//│ constrain calls  : 23
+//│ constrain calls  : 27
 //│ annoying  calls  : 19
-//│ subtyping calls  : 91
+//│ subtyping calls  : 87
 
 :stats
 t : Dup[int, bool]
@@ -566,23 +566,23 @@ t : Dup[int, bool]
 //│ ║  l.558: 	t : Dup[int, bool]
 //│ ╙──       	             ^^^^
 //│ res: Dup[?, bool]
-//│ constrain calls  : 37
+//│ constrain calls  : 41
 //│ annoying  calls  : 22
-//│ subtyping calls  : 130
+//│ subtyping calls  : 126
 
 :stats
 t.MthDup (fun x -> mul 2 x)
 //│ res: int
-//│ constrain calls  : 75
+//│ constrain calls  : 74
 //│ annoying  calls  : 19
-//│ subtyping calls  : 256
+//│ subtyping calls  : 233
 
 :stats
 t.MthDup id
 //│ res: 42
-//│ constrain calls  : 67
+//│ constrain calls  : 71
 //│ annoying  calls  : 18
-//│ subtyping calls  : 239
+//│ subtyping calls  : 235
 
 
 // We don't currently analyze forward method declarations
@@ -823,10 +823,10 @@ class Test9B: Test9A[int]
 //│ ╔══[ERROR] Type mismatch in method declaration:
 //│ ║  l.815: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `Test9A[int] -> int` is not an instance of type `X_794`
+//│ ╟── type `Test9A[int] -> int` is not an instance of type `X_879`
 //│ ║  l.815: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	                   ^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into method declaration with expected type `#X_794`
+//│ ╟── but it flows into method declaration with expected type `#X_879`
 //│ ║  l.815: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:

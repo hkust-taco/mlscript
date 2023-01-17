@@ -7,7 +7,7 @@ class Box[T]: { inner: T }
 box0 = Box { inner = 0 }
 //│ Defined class Box[+T]
 //│ Declared Box.Map: Box['T] -> ('T -> 'a) -> Box['a]
-//│ Defined Box.Map: Box['T] -> ('T -> 'inner) -> Box['inner]
+//│ Defined Box.Map: Box['T] -> (forall 'inner. ('T -> 'inner) -> Box['inner])
 //│ Defined Box.Get: Box['T] -> 'T
 //│ ┌ Block at ReplHost.mls:3
 //│ ├─┬ Prelude

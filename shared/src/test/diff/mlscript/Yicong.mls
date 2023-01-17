@@ -462,7 +462,7 @@ gett1 ta (T1 123)
 def gt: (T1 & Array[int | bool]) -> Array[int]
 gt ta
 def tg: ((T1 & Array[int]) | (T2 & Array[bool])) -> (T1 | T2)
-//│ gett1: (#T1 & 'a | ~#T1) -> 'a -> 'a
+//│ gett1: (#T1 & 'a | ~#T1) -> (forall 'b. 'b -> ('b | 'a))
 //│      = [Function: gett1]
 //│ res: #T1 & (123 | Array[int])
 //│    = [ 1, 2, 3 ]
@@ -716,7 +716,7 @@ def definedOr x els = case x of {
   }
 def defined x = definedOr x (fun () -> error)
 def ornull x = definedOr x (fun () -> null)
-//│ definedOr: (undefined | 'a & ~undefined) -> (() -> 'a) -> 'a
+//│ definedOr: (undefined | 'a & ~undefined) -> (forall 'b. (() -> 'b) -> ('b | 'a))
 //│          = [Function: definedOr]
 //│ defined: (undefined | 'a & ~undefined) -> 'a
 //│        = [Function: defined]
@@ -814,7 +814,7 @@ ge[2]
 //│ ╔══[ERROR] Type mismatch in array access:
 //│ ║  l.771: 	ge[2]
 //│ ║         	^^^^^
-//│ ╟── function of type `?a -> ?b` does not match type `Array[?c]`
+//│ ╟── function of type `?a -> (forall ?b. ?b)` does not match type `Array[?c]`
 //│ ║  l.767: 	def ge x = x + 1
 //│ ║         	       ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Array[?d]`

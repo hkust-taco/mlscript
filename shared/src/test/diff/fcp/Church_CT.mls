@@ -684,9 +684,9 @@ rec def to_church n =
   else succ (to_church (n - 1))
 //│ to_church: 'to_church
 //│   where
-//│     'to_church :> int -> ChurchInt
+//│     'to_church :> forall 'to_church. (int -> ChurchInt
 //│   where
-//│     'to_church <: int -> ChurchInt
+//│     'to_church <: int -> ChurchInt)
 //│          = [Function: to_church]
 
 def to_church_ty: int -> ChurchInt
@@ -697,9 +697,9 @@ def to_church_ty: int -> ChurchInt
 to_church_ty = to_church
 //│ 'to_church
 //│   where
-//│     'to_church :> int -> ChurchInt
+//│     'to_church :> forall 'to_church. (int -> ChurchInt
 //│   where
-//│     'to_church <: int -> ChurchInt
+//│     'to_church <: int -> ChurchInt)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
@@ -849,12 +849,12 @@ rec def to_ch_A1 n =
   else s (to_ch_A1 (n - 1) : ChurchInt)
 //│ to_ch_A1: 'to_ch_A1
 //│   where
-//│     'to_ch_A1 :> int -> (forall 'a. 'a -> (forall 'b, 'c, 'a, 'd, 'e. (('c & 'b) -> ('c | 'd)
+//│     'to_ch_A1 :> forall 'to_ch_A1. (int -> (forall 'a. 'a -> (forall 'b, 'c, 'a, 'd, 'e. (('c & 'b) -> ('c | 'd)
 //│   where
 //│     'a <: 'e -> 'd
 //│     ChurchInt <: 'a -> 'b -> 'e)))
 //│   where
-//│     'to_ch_A1 <: int -> ChurchInt
+//│     'to_ch_A1 <: int -> ChurchInt)
 //│         = [Function: to_ch_A1]
 
 // * But we can't check the corresponding type
@@ -862,12 +862,12 @@ rec def to_ch_A1 n =
 to_church_ty = to_ch_A1
 //│ 'to_ch_A1
 //│   where
-//│     'to_ch_A1 :> int -> (forall 'a. 'a -> (forall 'b, 'a, 'c, 'd, 'e. (('b & 'd) -> ('b | 'c)
+//│     'to_ch_A1 :> forall 'to_ch_A1. (int -> (forall 'a. 'a -> (forall 'b, 'a, 'c, 'd, 'e. (('b & 'd) -> ('b | 'c)
 //│   where
 //│     'a <: 'e -> 'c
 //│     ChurchInt <: 'a -> 'd -> 'e)))
 //│   where
-//│     'to_ch_A1 <: int -> ChurchInt
+//│     'to_ch_A1 <: int -> ChurchInt)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
@@ -969,18 +969,18 @@ rec def to_ch_A2 n = (
   ) : ChurchInt
 //│ to_ch_A2: 'to_ch_A2
 //│   where
-//│     'to_ch_A2 :> int -> ChurchInt
+//│     'to_ch_A2 :> forall 'to_ch_A2. (int -> ChurchInt
 //│   where
-//│     'to_ch_A2 <: int -> (nothing -> anything) -> anything -> nothing
+//│     'to_ch_A2 <: int -> (nothing -> anything) -> anything -> nothing)
 //│         = [Function: to_ch_A2]
 
 :e // * Since the removal of "recursive definition hacks"
 to_church_ty = to_ch_A2
 //│ 'to_ch_A2
 //│   where
-//│     'to_ch_A2 :> int -> ChurchInt
+//│     'to_ch_A2 :> forall 'to_ch_A2. (int -> ChurchInt
 //│   where
-//│     'to_ch_A2 <: int -> (nothing -> anything) -> anything -> nothing
+//│     'to_ch_A2 <: int -> (nothing -> anything) -> anything -> nothing)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
@@ -1262,12 +1262,12 @@ to_church_ty = to_ch_simplif
 to_church_ty = to_ch_A1
 //│ 'to_ch_A1
 //│   where
-//│     'to_ch_A1 :> int -> (forall 'a. 'a -> (forall 'b, 'a, 'c, 'd, 'e. (('b & 'e) -> ('b | 'c)
+//│     'to_ch_A1 :> forall 'to_ch_A1. (int -> (forall 'a. 'a -> (forall 'b, 'a, 'c, 'd, 'e. (('b & 'e) -> ('b | 'c)
 //│   where
 //│     ChurchInt <: 'a -> 'e -> 'd
 //│     'a <: 'd -> 'c)))
 //│   where
-//│     'to_ch_A1 <: int -> ChurchInt
+//│     'to_ch_A1 <: int -> ChurchInt)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required

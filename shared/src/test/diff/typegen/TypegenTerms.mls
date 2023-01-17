@@ -117,34 +117,20 @@ def y: "a" | "b" | ~string
 //│ export declare const y: "a" | "b" | Neg<string, a>
 //│ // end ts
 
+// FIXME
 :ts
 def cont x = x + 1
 def app y k = k (y - 1)
 app 2 cont
-//│ cont: int -> int
-//│ app: int -> (int -> 'a) -> 'a
-//│ res: int
-//│ // start ts
-//│ export declare const cont: (arg: int) => int
-//│ export declare const app<a>: (arg: int) => (arg1: (arg2: int) => a) => a
-//│ export declare const res: int
-//│ // end ts
+//│ /!!!\ Uncaught error: mlscript.codegen.CodeGenError: Cannot yet generate type for: PolyType(List(Right(α244)),Function(Tuple(List((None,Field(None,Function(Tuple(List((None,Field(None,TypeName(int))))),α244))))),α244))
 
+// FIXME
 :ts
 def g (x, y) = x + y
 def h (x, (y, z)) = y z + x
 def k (x, (y, z)) (l, (m), (n)) = (m (n + l)) (y (z + x))
 def l: ((1, 2), (3, 4)) -> 5
-//│ g: (int, int,) -> int
-//│ h: (int, ('a -> int, 'a,),) -> int
-//│ k: (int, (int -> 'a, int,),) -> (int, int -> 'a -> 'b, int,) -> 'b
-//│ l: ((1, 2,), (3, 4,),) -> 5
-//│ // start ts
-//│ export declare const g: (arg: int, arg1: int) => int
-//│ export declare const h<a>: (arg: int, arg1: readonly [(arg2: a) => int, a]) => int
-//│ export declare const k<a, b>: (arg: int, arg1: readonly [(arg2: int) => a, int]) => (arg3: int, arg4: (arg5: int) => (arg6: a) => b, arg7: int) => b
-//│ export declare const l: (arg: readonly [1, 2], arg1: readonly [3, 4]) => 5
-//│ // end ts
+//│ /!!!\ Uncaught error: mlscript.codegen.CodeGenError: Cannot yet generate type for: PolyType(List(Right(α322)),Function(Tuple(List((None,Field(None,TypeName(int))), (None,Field(None,Function(Tuple(List((None,Field(None,TypeName(int))))),Function(Tuple(List((None,Field(None,α321)))),α322)))), (None,Field(None,TypeName(int))))),α322))
 
 
 // FIXME

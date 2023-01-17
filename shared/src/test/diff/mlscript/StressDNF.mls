@@ -31,9 +31,9 @@ ty0 = ty1
 //│ (A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, nothing,)
 //│   <:  ty0:
 //│ (E & 'e & 'f | 'd & (C & 'c | D & 'e) | 'b & (A & 'a | B & 'c)) -> ('a, 'b, 'c, 'd, 'e, 'f,)
-//│ constrain calls  : 44
+//│ constrain calls  : 46
 //│ annoying  calls  : 25
-//│ subtyping calls  : 1119
+//│ subtyping calls  : 1121
 
 :stats
 :e
@@ -44,7 +44,7 @@ ty1 = ty0
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.40: 	ty1 = ty0
 //│ ║        	^^^^^^^^^
-//│ ╟── type `A & ‘a_213` is not an instance of type `'b_214`
+//│ ╟── type `A & ‘a_215` is not an instance of type `'b_216`
 //│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ║        	          ^^^^^^
 //│ ╟── Note: constraint arises from type variable:
@@ -53,7 +53,7 @@ ty1 = ty0
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.40: 	ty1 = ty0
 //│ ║        	^^^^^^^^^
-//│ ╟── type `B & ‘b_214` is not an instance of type `'c_215`
+//│ ╟── type `B & ‘b_216` is not an instance of type `'c_217`
 //│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ║        	                   ^^^^^^
 //│ ╟── Note: constraint arises from type variable:
@@ -62,7 +62,7 @@ ty1 = ty0
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.40: 	ty1 = ty0
 //│ ║        	^^^^^^^^^
-//│ ╟── type `C & ‘c_215` is not an instance of type `'d_216`
+//│ ╟── type `C & ‘c_217` is not an instance of type `'d_218`
 //│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ║        	                            ^^^^^^
 //│ ╟── Note: constraint arises from type variable:
@@ -71,7 +71,7 @@ ty1 = ty0
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.40: 	ty1 = ty0
 //│ ║        	^^^^^^^^^
-//│ ╟── type `D & ‘d_216` is not an instance of type `'e_217`
+//│ ╟── type `D & ‘d_218` is not an instance of type `'e_219`
 //│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ║        	                                     ^^^^^^
 //│ ╟── Note: constraint arises from type variable:
@@ -80,7 +80,7 @@ ty1 = ty0
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.40: 	ty1 = ty0
 //│ ║        	^^^^^^^^^
-//│ ╟── type `E & ‘e_217` is not an instance of type `'f_218`
+//│ ╟── type `E & ‘e_219` is not an instance of type `'f_220`
 //│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ║        	                                              ^^^^^^
 //│ ╟── Note: constraint arises from type variable:

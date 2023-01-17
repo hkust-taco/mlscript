@@ -2,6 +2,7 @@
 :NoRecursiveTypes
 
 
+
 // On the Power of Coercion Abstraction
 
 S x y z = x z (y z)
@@ -22,20 +23,30 @@ s1: S2
 //│ res: S2
 //│    = [Function: S]
 
+:e
 s2 = S: S2
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.27: 	s2 = S: S2
+//│ ║        	     ^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.15: 	type S2 = (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║        	                                                                                             ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.15: 	type S2 = (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ╙──      	                                                                                             ^^
 //│ s2: S2
 //│   = [Function: S]
 
 :e // * S2 is less genetral than S1
 s2: S1
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.30: 	s2: S1
+//│ ║  l.41: 	s2: S1
 //│ ║        	^^
-//│ ╟── type `‘a_143` is not an instance of type `'a_140`
-//│ ║  l.14: 	type S2 = (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ╟── type `‘a_145` is not an instance of type `'a_142`
+//│ ║  l.15: 	type S2 = (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║        	                  ^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.11: 	type S1 = ('a -> 'b -> 'c) -> ('a -> 'b) -> 'a -> 'c
+//│ ║  l.12: 	type S1 = ('a -> 'b -> 'c) -> ('a -> 'b) -> 'a -> 'c
 //│ ╙──      	           ^^
 //│ res: S1
 //│    = [Function: S]
@@ -46,12 +57,15 @@ type Id = forall 'a. 'a -> 'a
 
 :e // TODO: could probably use different type var shadows from different type alias occurrences
 S: Id -> Id -> Id -> Id
-//│ ╔══[ERROR] Cyclic-looking constraint while typing type ascription; a type annotation may be required
-//│ ║  l.48: 	S: Id -> Id -> Id -> Id
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.59: 	S: Id -> Id -> Id -> Id
 //│ ║        	^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  Id  <:  'a145_168    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  Id  <:  'a145_146''
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.55: 	type Id = forall 'a. 'a -> 'a
+//│ ║        	                 ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.55: 	type Id = forall 'a. 'a -> 'a
+//│ ╙──      	                 ^^
 //│ res: Id -> Id -> Id -> Id
 //│    = [Function: S]
 

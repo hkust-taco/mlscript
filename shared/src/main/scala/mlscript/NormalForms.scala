@@ -344,9 +344,13 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         case RhsBot | _: RhsField => this
       }
     }
-    def freshenAbove(lim: Int, lvl: Int): Conjunct = {
-      println(this, lim, lvl)
-      ??? // TODO(fcp)
+    def freshenAbove(lim: Int, lvl: Int)(implicit ctx: Ctx): Conjunct = {
+      ctx.copy(lvl = lvl) |> { implicit ctx =>
+        implicit val shadows: Shadows = Shadows.empty
+        implicit val raise: Raise = _ => ???
+        implicit val freshened: MutMap[TV, ST] = MutMap.empty
+        freshenAbove(lim, rigidify = false)
+      }
     }
     // lazy val interSize: Int = vars.size + nvars.size + lnf.size + rnf.size // TODO rm? and related .size defs
     def <:< (that: Conjunct)(implicit ctx: Ctx): Bool =
@@ -478,8 +482,10 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       PolymorphicType.mk(polymLevel, css.map(_.toType(sort)).foldLeft(BotType: ST)(_ | _))
       // css.map(_.toType(sort)).foldLeft(BotType: ST)(_ | _)
     })
-    def level: Int = cs.maxByOption(_.level).fold(0)(_.level)
+    lazy val level: Level =
+      cs.maxByOption(_.level).fold(0)(_.level)
     def isPolymorphic: Bool = level > polymLevel
+    lazy val effectivePolymLevel: Level = if (isPolymorphic) polymLevel else level
     def instantiate(implicit ctx:Ctx, raise:Raise, shadows: Shadows): Ls[Conjunct] =
       if (isPolymorphic) {
         implicit val state: MutMap[TV, ST] = MutMap.empty
@@ -494,21 +500,33 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       val (newLvl, thisCs, thatCs) = levelWith(that)
       thatCs.map(DNF(newLvl, cons ::: that.cons, thisCs) & _).foldLeft(DNF.extr(false))(_ | _)
     }
-    private def levelWith(that: DNF): (Level, Ls[Conjunct], Ls[Conjunct]) = {
+    private def levelWith(that: DNF)(implicit ctx: Ctx): (Level, Ls[Conjunct], Ls[Conjunct]) = {
+        println(s"--- $levelBelowPolym ${that.polymLevel} ${that.levelBelow(polymLevel)}")
+        
+        // * Some easy cases to avoid having to adjust levels when we can:
         if (levelBelowPolym <= that.polymLevel && that.levelBelowPolym <= polymLevel)
           (polymLevel min that.polymLevel, cs, that.cs)
-        else if (levelBelow(that.polymLevel) <= polymLevel)
+        else if (levelBelow(that.polymLevel) <= polymLevel
+            && levelBelowPolym <= that.polymLevel)
           (that.polymLevel, cs, that.cs)
-        else if (that.levelBelow(polymLevel) <= that.polymLevel)
+        else if (that.levelBelow(polymLevel) <= that.polymLevel
+            && that.levelBelowPolym <= polymLevel)
           (polymLevel, cs, that.cs)
-        else if (that.polymLevel > polymLevel)
-          (polymLevel max that.polymLevel, cs.map(_.freshenAbove(polymLevel, that.polymLevel + 1)), that.cs)
-        else if (polymLevel > that.polymLevel)
-          (polymLevel max that.polymLevel, cs, that.cs.map(_.freshenAbove(that.polymLevel, polymLevel + 1)))
+        
+        // * The two difficult cases:
+        else if (that.polymLevel > polymLevel){
+          assert((polymLevel max that.polymLevel) === that.polymLevel)
+          (polymLevel max that.polymLevel, cs.map(_.freshenAbove(polymLevel, that.polymLevel + 1)), that.cs)}
+        else if (polymLevel > that.polymLevel){
+          assert((polymLevel max that.polymLevel) === polymLevel)
+          (polymLevel max that.polymLevel, cs, that.cs.map(_.freshenAbove(that.polymLevel, polymLevel + 1)))}
+        
+        // * One more easy difficult case:
         else (polymLevel, cs, that.cs) ensuring (that.polymLevel === polymLevel)
     }
     def | (that: DNF)(implicit ctx: Ctx, etf: ExpandTupleFields): DNF = {
       val (newLvl, thisCs, thatCs) = levelWith(that)
+      println(s"-- $polymLevel ${that.polymLevel} $newLvl")
       thatCs.foldLeft(DNF(newLvl,
         cons ::: that.cons, // FIXME?!
         // ???,
@@ -552,9 +570,17 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     // def of(tt: TraitTag): DNF = DNF.of(LhsRefined(N, SortedSet.single(tt), RecordType.empty, smEmp))
     // def of(rcd: RecordType): DNF = DNF.of(LhsRefined(N, ssEmp, rcd, smEmp))
     // def of(tvs: SortedSet[TypeVariable]): DNF = DNF(Conjunct.of(tvs) :: Nil)
-    def of(polymLvl: Level, cons: Constrs, lnf: LhsNf): DNF = DNF(polymLvl, cons, Conjunct(lnf, ssEmp, RhsBot, ssEmp) :: Nil)
+    def of(polymLvl: Level, cons: Constrs, lnf: LhsNf): DNF =
+      of(polymLvl, cons, Conjunct(lnf, ssEmp, RhsBot, ssEmp) :: Nil)
+    def of(polymLvl: Level, cons: Constrs, cs: Ls[Conjunct]): DNF = {
+      val res = DNF(polymLvl, cons, cs)
+      val epl = res.effectivePolymLevel
+      if (epl < polymLvl) res.copy(polymLevel = epl)
+      else res
+    }
     // def extr(pol: Bool): DNF = if (pol) of(LhsTop) else DNF(Nil)
-    def extr(pol: Bool): DNF = if (pol) of(MaxLevel, Nil, LhsTop) else DNF(MaxLevel, Nil, Nil)
+    // def extr(pol: Bool): DNF = if (pol) of(MaxLevel, Nil, LhsTop) else DNF(MaxLevel, Nil, Nil)
+    def extr(pol: Bool): DNF = if (pol) of(MinLevel, Nil, LhsTop) else DNF(MinLevel, Nil, Nil)
     def merge(pol: Bool)(l: DNF, r: DNF)(implicit ctx: Ctx, etf: ExpandTupleFields): DNF = if (pol) l | r else l & r
     
     def mkDeep(polymLvl: Level, cons: Constrs, ty: SimpleType, pol: Bool)
@@ -589,9 +615,9 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case rcd: RecordType => DNF.of(polymLvl, cons, LhsRefined(N, ssEmp, rcd, smEmp))
       case ExtrType(pol) => extr(!pol)
       case ty @ ComposedType(p, l, r) => merge(p)(mk(polymLvl, cons, l, pol), mk(polymLvl, cons, r, pol))
-      case NegType(und) => DNF(polymLvl, cons, CNF.mk(polymLvl, Nil, und, !pol).ds.map(_.neg))
+      case NegType(und) => DNF.of(polymLvl, cons, CNF.mk(polymLvl, Nil, und, !pol).ds.map(_.neg))
       // case tv: TypeVariable => of(SortedSet.single(tv))
-      case tv: TypeVariable => DNF(polymLvl, cons, Conjunct.of(SortedSet.single(tv)) :: Nil)
+      case tv: TypeVariable => DNF.of(polymLvl, cons, Conjunct.of(SortedSet.single(tv)) :: Nil)
       case ProxyType(underlying) => mk(polymLvl, cons, underlying, pol)
       case tr @ TypeRef(defn, targs) =>
         // * TODO later: when proper TypeRef-based simplif. is implemented, can remove this special case

@@ -55,7 +55,7 @@ class Addable[A]
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.53: 	  method Oops = this.oops // disallowed if `this` is rigid
 //│ ║        	                ^^^^^^^^^
-//│ ╟── reference of type `Addable[A_76] & this` does not have field 'oops'
+//│ ╟── reference of type `Addable[A_77] & this` does not have field 'oops'
 //│ ║  l.53: 	  method Oops = this.oops // disallowed if `this` is rigid
 //│ ╙──      	                ^^^^
 //│ Defined class Addable[=A]

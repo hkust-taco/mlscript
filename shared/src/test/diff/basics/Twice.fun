@@ -11,7 +11,7 @@ twice(x => x + 1)
 //│ res: int -> int
 
 twice twice
-//│ res: ('a -> ('b & 'c) & 'b -> 'a) -> 'b -> 'c
+//│ res: ('a -> 'b & ('c | 'b) -> 'a) -> 'c -> 'b
 
 let f = x => 1, x
 //│ f: 'a -> (1, 'a,)

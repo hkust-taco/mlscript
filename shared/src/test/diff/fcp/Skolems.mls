@@ -13,7 +13,7 @@ def auto_ x = x x
 //│      = [Function: auto_]
 
 fun (x: (forall 'a. 'a -> 'a)) -> auto_ x
-//│ res: (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ res: (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
 //│    = [Function: res]
 
 // * Compares an extruded higher-level skolem; rightly rejected
@@ -28,11 +28,11 @@ fun (x: ('a -> 'a)) -> auto_ x
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.6: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──     	                    ^^
-//│ res: (anything -> nothing) -> ('b -> 'b | error)
+//│ res: (anything -> nothing) -> (forall 'b. 'b -> 'b | error)
 //│    = [Function: res]
 
 foo(x: ('a -> 'b)) = auto_ x
-//│ foo: (anything -> nothing) -> 'b -> 'b
+//│ foo: (anything -> nothing) -> (forall 'b. 'b -> 'b)
 //│    = [Function: foo]
 
 :e
@@ -166,7 +166,7 @@ f 42 // Boom!
 
 
 def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
-//│ swapWith: (forall 'x, 'y. ('x, 'y,) -> ('y, 'x,)) -> ('a, 'b,) -> ('b, 'a,)
+//│ swapWith: (forall 'y, 'x. ('x, 'y,) -> ('y, 'x,)) -> ('a, 'b,) -> ('b, 'a,)
 //│         = <missing implementation>
 
 def swapWith f (a, b) = f ((a, b))
@@ -188,11 +188,11 @@ fun (x: ('a -> 'a)) -> swapWith x
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.168: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
 //│ ╙──       	                         ^^
-//│ res: (('a | (anything, anything,)) -> ((nothing, nothing,) & 'a)) -> (('a0, 'b,) -> ('b, 'a0,) | error)
+//│ res: (('a | (anything, anything,)) -> ((nothing, nothing,) & 'a)) -> (forall 'a0, 'b. ('a0, 'b,) -> ('b, 'a0,) | error)
 //│    = [Function: res]
 
 foo = fun (x: ('a -> 'b)) -> swapWith x
-//│ foo: ((anything, anything,) -> (nothing, nothing,)) -> ('a, 'b,) -> ('b, 'a,)
+//│ foo: ((anything, anything,) -> (nothing, nothing,)) -> (forall 'a, 'b. ('a, 'b,) -> ('b, 'a,))
 //│    = [Function: foo1]
 
 bar = fun f -> foo f (1, 2)
@@ -274,11 +274,11 @@ fun (x: ((('a, 'b),) -> ('b, 'a))) -> swapWith x
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.168: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
 //│ ╙──       	                         ^^
-//│ res: ((anything, anything,) -> (nothing, nothing,)) -> (('a, 'b,) -> ('b, 'a,) | error)
+//│ res: ((anything, anything,) -> (nothing, nothing,)) -> (forall 'a, 'b. ('a, 'b,) -> ('b, 'a,) | error)
 //│    = [Function: res]
 
 fun (x: ((('a, 'b),) -> ('c, 'd))) -> swapWith x
-//│ res: ((anything, anything,) -> (nothing, nothing,)) -> ('a, 'b,) -> ('b, 'a,)
+//│ res: ((anything, anything,) -> (nothing, nothing,)) -> (forall 'a, 'b. ('a, 'b,) -> ('b, 'a,))
 //│    = [Function: res]
 
 

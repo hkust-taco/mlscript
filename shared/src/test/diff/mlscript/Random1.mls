@@ -31,7 +31,7 @@ g = g2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.25: 	g = g2
 //│ ║        	^^^^^^
-//│ ╟── function of type `?a -> ?b` is not an instance of type `G`
+//│ ╟── function of type `?a -> (forall ?b. ?b)` is not an instance of type `G`
 //│ ║  l.21: 	rec def g2 a = G { a }
 //│ ║        	           ^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `G[?]`
@@ -46,7 +46,7 @@ g = g2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.25: 	g = g2
 //│ ║        	^^^^^^
-//│ ╟── function of type `?a -> ?b` does not have field 'a'
+//│ ╟── function of type `?a -> (forall ?b. ?b)` does not have field 'a'
 //│ ║  l.21: 	rec def g2 a = G { a }
 //│ ║        	           ^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{a: G[?]}`
@@ -61,7 +61,7 @@ g = g2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.25: 	g = g2
 //│ ║        	^^^^^^
-//│ ╟── function of type `?a -> ?b` does not have field 'G#A'
+//│ ╟── function of type `?a -> (forall ?b. ?b)` does not have field 'G#A'
 //│ ║  l.21: 	rec def g2 a = G { a }
 //│ ║        	           ^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{G#A}`
@@ -76,7 +76,7 @@ g = g2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.25: 	g = g2
 //│ ║        	^^^^^^
-//│ ╟── function of type `?b -> ?c` does not have field 'a'
+//│ ╟── function of type `?b -> (forall ?c. ?c)` does not have field 'a'
 //│ ║  l.21: 	rec def g2 a = G { a }
 //│ ║        	           ^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{a: ?a}`

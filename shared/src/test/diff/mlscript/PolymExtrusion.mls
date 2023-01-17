@@ -60,7 +60,7 @@ foo (fun a -> a + 1)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.59: 	foo (fun a -> a + 1)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_94` is not an instance of type `int`
+//│ ╟── type `‘a_100` is not an instance of type `int`
 //│ ║  l.47: 	def foo: (forall 'a. 'a -> 'b) -> 'b
 //│ ║        	                 ^^
 //│ ╟── Note: constraint arises from reference:

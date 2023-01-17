@@ -29,7 +29,7 @@ def set3: MutArray[number..int] -> 'b -> ()
 
 :ns
 fun x -> set2 x 0
-//│ res: 'a -> 'b
+//│ res: forall 'a, 'b. 'a -> 'b
 //│   where
 //│     'b :> ()
 //│     'a <: MutArray[in int out number]

@@ -65,10 +65,9 @@ def argST: ST['s, int]
 
 // ============ Raising ML to the power of System F (2003) ============
 
-// This used to be `'a -> (forall 'b. 'b -> 'b | 'a)`, now it's wrong!
 // FreezeML A2
 choose id
-//│ res: 'a -> (forall 'a, 'b. 'b -> 'b | 'a)
+//│ res: 'a -> (forall 'b. 'b -> 'b | 'a)
 
 fun (g: forall 'a. ('a -> 'a) -> ('a -> 'a)) -> fun (x: forall 'a. 'a -> 'a) -> fun a -> g a (x a)
 //│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'a1. ('a1 -> 'a1 & 'a1) -> 'a1)
@@ -109,9 +108,9 @@ app auto id
 :e
 let f = choose id in (f auto) (f succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.110: 	let f = choose id in (f auto) (f succ)
+//│ ║  l.109: 	let f = choose id in (f auto) (f succ)
 //│ ║         	                     ^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_311` is not an instance of type `int`
+//│ ╟── type `‘a_313` is not an instance of type `int`
 //│ ║  l.30: 	def auto (x: forall 'a. 'a -> 'a) = x x
 //│ ╙──      	                    ^^
 //│ res: int -> int | error
@@ -127,13 +126,13 @@ choose id auto2
 :e // This is a legit error
 res (choose id succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.128: 	res (choose id succ)
+//│ ║  l.127: 	res (choose id succ)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `int -> int` is not an instance of type `int`
-//│ ║  l.128: 	res (choose id succ)
+//│ ║  l.127: 	res (choose id succ)
 //│ ║         	               ^^^^
 //│ ╟── but it flows into application with expected type `int`
-//│ ║  l.128: 	res (choose id succ)
+//│ ║  l.127: 	res (choose id succ)
 //│ ╙──       	     ^^^^^^^^^^^^^^
 //│ res: int -> int | error | int
 
@@ -180,7 +179,7 @@ let tmp = I I in K K
 //│ res: (42, "foo",)
 
 (fun f -> (f succ, choose f auto)) (choose id)
-//│ res: (forall 'b. (int & 'b) -> (int | 'b), (forall 'a, 'c. 'a -> 'a & 'c) -> (forall 'b, 'a, 'c. ('b & 'a) -> ('a | 'b) | 'c),)
+//│ res: (int -> int, forall 'b. (forall 'a. 'a -> 'a & 'b) -> (forall 'a0. 'a0 -> 'a0 | 'b),)
 
 // ------------ Sec 2.3.1 ------------
 

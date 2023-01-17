@@ -46,10 +46,10 @@ x => not x
 //│ res: bool
 
 x => y => z => if x then y else z
-//│ res: bool -> 'a -> 'a -> 'a
+//│ res: bool -> (forall 'a. 'a -> (forall 'b. 'b -> ('a | 'b)))
 
 x => y => if x then y else x
-//│ res: (bool & 'a) -> 'a -> 'a
+//│ res: (bool & 'a) -> (forall 'b. 'b -> ('a | 'b))
 
 :e
 succ true
@@ -187,8 +187,8 @@ x => y => x x y
 //│ ║  l.+1: 	(x => x x) (x => x x)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α225_227' -> α226_228')›  <:  α225_232    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α225_227' -> α226_228')›  <:  α225_227'
+//│ ╟── this constraint:  ‹∀ 0. (α368_370' -> α369_371')›  <:  α368_377    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α368_370' -> α369_371')›  <:  α368_370'
 //│ res: error
 
 
@@ -204,8 +204,8 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (x x)) (x => f (x x)))
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α247_252' -> α249_254')›  <:  α247_259    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α247_252' -> α249_254')›  <:  α247_252'
+//│ ╟── this constraint:  ‹∀ 1. (α399_404'' -> α401_406'')›  <:  α399_415'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α399_404'' -> α401_406'')›  <:  α399_404''
 //│ res: ('a -> 'a & 'a -> 'b) -> (error | 'b)
 
 // * Z combinator:
@@ -215,8 +215,8 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α284_299' -> α293_303')›  <:  α284_310    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α284_299' -> α293_303')›  <:  α284_299'
+//│ ╟── this constraint:  ‹∀ 1. (α460_475'' -> α469_479'')›  <:  α460_492'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α460_475'' -> α469_479'')›  <:  α460_475''
 //│ res: (('a -> 'b) -> ('c -> 'd & 'a -> 'b) & ('c -> 'd) -> 'e) -> (error | 'e)
 
 // * Function that takes arbitrarily many arguments:
@@ -226,8 +226,8 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α352_367' -> α361_371')›  <:  α352_378    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α352_367' -> α361_371')›  <:  α352_367'
+//│ ╟── this constraint:  ‹∀ 1. (α563_578'' -> α572_582'')›  <:  α563_595'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α563_578'' -> α572_582'')›  <:  α563_578''
 //│ res: 'a | error
 //│   where
 //│     'a :> anything -> 'a
@@ -276,16 +276,16 @@ y => (let f = x => x y; {a: f (z => z), b: f (z => succ z)})
 
 
 let rec f = x => f x.u
-//│ f: 'a -> nothing
+//│ f: 'u -> nothing
 //│   where
-//│     'a <: {u: 'a}
+//│     'u <: {u: 'u}
 
 
 // from https://www.cl.cam.ac.uk/~sd601/mlsub/
 let rec recursive_monster = x => { thing: x, self: recursive_monster x }
-//│ recursive_monster: 'a -> 'b
+//│ recursive_monster: ('a & 'b) -> {self: 'c, thing: 'a}
 //│   where
-//│     'b :> {self: 'b, thing: 'a}
+//│     'c :> {self: 'c, thing: 'b}
 
 
 
@@ -324,10 +324,10 @@ let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 
 // TODO simplify more
 (let rec x = (y => (y (x x))); x)
-//│ res: 'a -> 'b
-//│   where
-//│     'a <: 'b -> 'b
-//│     'b <: 'a
+//│ res: (nothing -> 'a) -> 'a
+
+res (z => (z, z))
+//│ res: (nothing, nothing,)
 
 next => 0
 //│ res: anything -> 0
@@ -336,66 +336,49 @@ next => 0
 //│ res: 'a -> 'a
 
 (let rec x = (y => (x (y y))); x)
-//│ res: 'a -> nothing
+//│ res: ('a -> 'b & 'a) -> nothing
 //│   where
-//│     'a <: 'a -> 'a
+//│     'b <: 'b -> 'b
 
 x => (y => (x (y y)))
-//│ res: ('a -> 'b) -> ('c -> 'a & 'c) -> 'b
+//│ res: ('a -> 'b) -> (forall 'c. ('c -> 'a & 'c) -> 'b)
 
 (let rec x = (let y = (x x); (z => z)); x)
-//│ res: 'x
-//│   where
-//│     'x :> 'a -> 'a
-//│     'a :> 'x
+//│ res: 'a -> 'a
 
 (let rec x = (y => (let z = (x x); y)); x)
-//│ res: 'x
-//│   where
-//│     'x :> 'a -> 'a
-//│     'a :> 'x
+//│ res: 'a -> 'a
 
 (let rec x = (y => {u: y, v: (x x)}); x)
-//│ res: 'x
+//│ res: 'a
 //│   where
-//│     'x :> 'a -> 'b
-//│     'b :> {u: 'a, v: 'b}
-//│     'a :> 'x
+//│     'a :> forall 'b. 'b -> {u: 'b, v: 'c}
+//│     'c :> {u: 'a, v: 'c}
 
 (let rec x = (y => {u: (x x), v: y}); x)
-//│ res: 'x
+//│ res: 'a
 //│   where
-//│     'x :> 'a -> 'b
-//│     'b :> {u: 'b, v: 'a}
-//│     'a :> 'x
+//│     'a :> forall 'b. 'b -> {u: 'c, v: 'b}
+//│     'c :> {u: 'c, v: 'a}
 
 (let rec x = (y => (let z = (y x); y)); x)
 //│ res: 'x
 //│   where
-//│     'x :> 'a -> 'a
+//│     'x :> forall 'a. 'a -> 'a
 //│     'a <: 'x -> anything
 
 (x => (let y = (x x.v); 0))
 //│ res: ('v -> anything & {v: 'v}) -> 0
 
 let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
-//│ x: 'x
-//│   where
-//│     'x :> 'a -> 'a
-//│     'a :> 'x
-//│ res: ({u: 'u} & 'a) -> ('u | 'a) | 'b
-//│   where
-//│     'a :> forall 'u. ({u: 'u} & 'a) -> ('u | 'a)
-//│        <: 'b
+//│ x: 'a -> 'a
+//│ res: {u: 'u} -> 'u
 
 :ns
 let rec x = (let y = (x x); (z => z))
-//│ x: forall 'x, 'a, 'b. 'x
+//│ x: forall 'x. 'x
 //│   where
-//│     'x := 'b -> 'b
-//│     'b :> 'b -> 'b
-//│        <: 'a
-//│     'a :> 'b -> 'b
+//│     'x := forall 'a. 'a -> 'a
 
 
 
@@ -407,8 +390,8 @@ let rec x = (let y = (x x); (z => z))
 //│ ║  l.+1: 	(w => x => x) ((y => y y) (y => y y))
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α736_738' -> α737_739')›  <:  α736_745    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α736_738' -> α737_739')›  <:  α736_738'
+//│ ╟── this constraint:  ‹∀ 0. (α1187_1189' -> α1188_1190')›  <:  α1187_1196    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α1187_1189' -> α1188_1190')›  <:  α1187_1189'
 //│ res: 'a -> 'a
 
 

@@ -1,6 +1,6 @@
 :NoRecursiveTypes
 :DontDistributeForalls
-// :GeneralizeCurriedFunctions
+:DontGeneralizeCurriedFunctions
 
 
 // * Note: funnily-recursive function

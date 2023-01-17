@@ -130,14 +130,14 @@ def c: 'a -> C5['a]
 //│ c: 'a -> C5['a]
 
 rec def c5 a = C5{ a = C2 { a = c5 a } }
-//│ c5: anything -> 'A
+//│ c5: anything -> 'a
 //│   where
-//│     'A :> C5[nothing] with {a: C2['A]}
+//│     'a :> C5[nothing] with {a: C2['a]}
 
 c = c5
-//│ anything -> 'A
+//│ anything -> 'a
 //│   where
-//│     'A :> C5[nothing] with {a: C2['A]}
+//│     'a :> C5[nothing] with {a: C2['a]}
 //│   <:  c:
 //│ 'a -> C5['a]
 
@@ -157,14 +157,14 @@ def c: 'a -> C6['a]
 // rec def c a = C6{ a = c5 (c a) }
 
 rec def c6 a = C6{ a = c5 (c6 a) }
-//│ c6: anything -> (C6[nothing] with {a: 'A})
+//│ c6: anything -> (C6[nothing] with {a: 'a})
 //│   where
-//│     'A :> C5[nothing] with {a: C2['A]}
+//│     'a :> C5[nothing] with {a: C2['a]}
 
 c = c6
-//│ anything -> (C6[nothing] with {a: 'A})
+//│ anything -> (C6[nothing] with {a: 'a})
 //│   where
-//│     'A :> C5[nothing] with {a: C2['A]}
+//│     'a :> C5[nothing] with {a: C2['a]}
 //│   <:  c:
 //│ 'a -> C6['a]
 
@@ -182,7 +182,7 @@ class L[T]: { h: T; t: O[L[T]] }
 //│ Defined type alias O[+T]
 //│ Defined class L[=T]
 //│ Declared L.Append: L['T] -> 'T -> L['T]
-//│ Defined L.Append: (L['T] & 'this) -> ('T & 'h) -> (L['T] with {h: 'h, t: S[L['T]] & {v: L['T] & 'this}})
+//│ Defined L.Append: (L['T] & 'this) -> (forall 'h. ('T & 'h) -> (L['T] with {h: 'h, t: S[L['T]] & {v: L['T] & 'this}}))
 
 // :ds
 // L.Append
@@ -195,7 +195,10 @@ L.Append
 
 
 def append ls elem = L { h = elem; t = S { v = ls } }
-//│ append: (L['T] & 'v) -> ('T & 'h) -> (L['T] with {h: 'h, t: S['v]})
+//│ append: (L[in 'T out 'T | 'T0] & 'a) -> (forall 'h, 'T1. ('h & 'T1) -> (L['T1] with {h: 'h, t: S['a]}))
+//│   where
+//│     'T1 :> 'T
+//│         <: 'T0
 
 def append0 ls = L { h = 0; t = S { v = ls } }
 //│ append0: (L['T] & 'v) -> (L['T] with {h: 0, t: S['v]})

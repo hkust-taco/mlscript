@@ -23,9 +23,9 @@ b = B { fB = "test" }
 foo b
 //│ res: "test"
 //│    = 'test'
-//│ constrain calls  : 24
+//│ constrain calls  : 25
 //│ annoying  calls  : 10
-//│ subtyping calls  : 186
+//│ subtyping calls  : 187
 
 
 def arg: A | B | C
@@ -37,18 +37,18 @@ foo arg
 //│ res: bool | int | string
 //│    = <no result>
 //│      arg is not implemented
-//│ constrain calls  : 40
+//│ constrain calls  : 41
 //│ annoying  calls  : 30
-//│ subtyping calls  : 414
+//│ subtyping calls  : 415
 
 :stats
 foo (arg with { fC = true })
 //│ res: int | string | true
 //│    = <no result>
 //│      arg is not implemented
-//│ constrain calls  : 33
+//│ constrain calls  : 34
 //│ annoying  calls  : 28
-//│ subtyping calls  : 331
+//│ subtyping calls  : 332
 
 def foo x = case x of {
   | A -> add x.fA x.payload
@@ -79,7 +79,7 @@ foo arg
 //│ res: error | int | string | {l: bool, r: nothing}
 //│    = <no result>
 //│      arg is not implemented
-//│ constrain calls  : 52
+//│ constrain calls  : 54
 //│ annoying  calls  : 40
 //│ subtyping calls  : 502
 
@@ -88,7 +88,7 @@ foo (arg with { payload = 1 })
 //│ res: int | string | {l: bool, r: 1}
 //│    = <no result>
 //│      arg is not implemented
-//│ constrain calls  : 46
+//│ constrain calls  : 48
 //│ annoying  calls  : 38
 //│ subtyping calls  : 412
 

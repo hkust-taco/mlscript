@@ -40,7 +40,7 @@ class Nil_oops[A]: List[A]
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.39: 	    method Map f = Nil_oops {}
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `A_97` is not an instance of type `B_105`
+//│ ╟── type `A_99` is not an instance of type `B_105`
 //│ ║  l.36: 	class Nil_oops[A]: List[A]
 //│ ║        	               ^
 //│ ╟── Note: constraint arises from method type parameter:
@@ -68,7 +68,7 @@ class Cons[A]: List[A] & { head: A; tail: List[A] }
 //│ Defined class Cons[+A]
 //│ Defined Cons.Size: Cons[?] -> int
 //│ Defined Cons.HeadOption: Cons['A] -> Some['A]
-//│ Defined Cons.Map: Cons['A] -> ('A -> ('B & 'A0) & 'A -> ('A0 & 'head)) -> (Cons['A0] with {head: 'head, tail: List['B]})
+//│ Defined Cons.Map: Cons['A] -> (forall 'B, 'A0, 'head. ('A -> ('B & 'A0) & 'A -> ('A0 & 'head)) -> (Cons['A0] with {head: 'head, tail: List['B]}))
 
 // Note that the useless `with {tail: List['A]}` refinement is kept
 //  because the approximate subtyping check `list & {List#A = 'A} <: List['A]` currently returns false

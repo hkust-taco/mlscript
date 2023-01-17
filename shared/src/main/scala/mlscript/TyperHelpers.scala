@@ -33,6 +33,8 @@ abstract class TyperHelpers { Typer: Typer =>
     if (post isnt noPostTrace) println(post(res))
     res
   }
+  @inline def traceNot[T](pre: => String)(thunk: => T)(post: T => String = noPostTrace): T =
+    thunk
   
   def emitDbg(str: String): Unit = scala.Predef.println(str)
   
@@ -797,7 +799,7 @@ abstract class TyperHelpers { Typer: Typer =>
                   true
                 }
             }
-            println(s"$tv ${printPol(tvpol)} $needsTraversing")
+            // println(s"$tv ${printPol(tvpol)} $needsTraversing")
             if (needsTraversing)
               tv.childrenPol(pol) // * Note: `childrenPol` deals with `assignedTo`
                 .foreach(cp => go(cp._1)(cp._2))

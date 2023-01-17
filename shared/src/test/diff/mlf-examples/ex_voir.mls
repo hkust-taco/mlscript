@@ -74,11 +74,11 @@ def test2 = test succ
 def test2_ = test_ succ
 //│ test: 'a -> (forall 'b. 'b -> (Sid | 'a | 'b))
 //│     = [Function: test]
-//│ test_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. 'c -> 'c | 'a | 'b))
+//│ test_: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> 'c | 'a | 'b))
 //│      = [Function: test_]
 //│ test2: 'a -> (int -> int | Sid | 'a)
 //│      = [Function: test2]
-//│ test2_: 'a -> (forall 'a. int -> int | 'a)
+//│ test2_: 'a -> (int -> int | 'a)
 //│       = [Function: test2_]
 
 // (* Messages d'erreur foireux : *)

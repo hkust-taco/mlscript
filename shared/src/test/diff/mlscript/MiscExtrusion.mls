@@ -39,10 +39,10 @@ def alsoPrintSizeSimple f =
   let rec nested expr =
     f (asExpr expr) nested
   in nested
-//│ alsoPrintSizeSimple: (Expr[in 'a out 'a | 'a0] -> (Expr[in 'a1 & ('a | 'a0) out 'a | 'a1 | 'a2] -> 'b) -> 'b) -> (forall 'a3. Expr['a3] -> 'b)
+//│ alsoPrintSizeSimple: (Expr[in 'a out 'a | 'a0] -> (forall 'a1. Expr['a1] -> 'b) -> 'b) -> (forall 'a1. Expr['a1] -> 'b)
 //│   where
-//│     'a3 :> 'a | 'a1
-//│         <: 'a0 & 'a2
+//│     'a1 :> 'a
+//│         <: 'a0
 
 
 class Program
@@ -55,19 +55,14 @@ def print: Expr['a] -> unit
 
 def alsoPrintSize f =
   mapExpr(fun e -> let tmp = print e in f e)
-//│ alsoPrintSize: (Expr[?] -> Expr[?]) -> Program -> Program
+//│ alsoPrintSize: (Expr[?] -> Expr[in anything out nothing]) -> Program -> Program
 
 :e
 alsoPrintSize id
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.61: 	alsoPrintSize id
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.51: 	def mapExpr: (forall 'a. Expr['a] -> Expr['a]) -> Program -> Program
-//│ ║        	                     ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.51: 	def mapExpr: (forall 'a. Expr['a] -> Expr['a]) -> Program -> Program
-//│ ╙──      	                     ^^
+//│ ╙── expression of type `anything` does not match type `nothing`
 //│ res: Program -> Program | error
 
 def alsoPrintSize (f: forall 'a. Expr['a] -> Expr['a]) =
@@ -95,14 +90,9 @@ def alsoPrintSizeCo f =
 :e
 alsoPrintSizeCo id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.96: 	alsoPrintSizeCo id
+//│ ║  l.91: 	alsoPrintSizeCo id
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.86: 	def mapExprCo: (forall 'a. ExprCo['a] -> ExprCo['a]) -> Program -> Program
-//│ ║        	                       ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.86: 	def mapExprCo: (forall 'a. ExprCo['a] -> ExprCo['a]) -> Program -> Program
-//│ ╙──      	                       ^^
+//│ ╙── expression of type `anything` does not match type `nothing`
 //│ res: Program -> Program | error
 
 def alsoPrintSizeCo (f: forall 'a. Expr['a] -> Expr['a]) =
