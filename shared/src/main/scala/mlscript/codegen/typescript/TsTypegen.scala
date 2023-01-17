@@ -572,7 +572,7 @@ final class TsTypegenCodeBuilder {
           SourceCode(taliasInfo.lexicalName) ++ SourceCode.paramList(taliasInfo.params.map(SourceCode(_)))
         }.getOrElse(SourceCode(tvarName))
       case Constrained(base, tvbs, where) =>
-        throw CodeGenError(s"Cannot generate type for `where` clause $where")
+        throw CodeGenError(s"Cannot generate type for `where` clause $tvbs $where")
       case _: Splice | _: TypeTag | _: PolyType =>
         throw CodeGenError(s"Cannot yet generate type for: $mlType")
     }

@@ -101,7 +101,7 @@ class DiffTests
     
     val diffBegMarker = "<<<<<<<"
     val diffMidMarker = "======="
-    val diff3MidMarker = "|||||||" // appears under `git config merge.conflictstyle diff3` (https://stackoverflow.com/a/18131595/1518588)
+    val diff3MidMarker = "|||||||" // * Appears under `git config merge.conflictstyle diff3` (https://stackoverflow.com/a/18131595/1518588)
     val diffEndMarker = ">>>>>>>"
     
     val exitMarker = "=" * 100
@@ -610,7 +610,6 @@ class DiffTests
               // Because diagnostic lines are after the typing results,
               // we need to cache the diagnostic blocks and add them to the
               // `typerResults` buffer after the statement has been processed.
-              var c = 0
               val diagnosticLines = mutable.Buffer.empty[Str]
               // We put diagnosis to the buffer in the following `Typer` routines.
               val raiseToBuffer: typer.Raise = d => {
@@ -624,15 +623,6 @@ class DiffTests
                 // but does not give a body/definition to it
                 case Def(isrec, nme, R(PolyType(tps, rhs)), isByname) =>
                   typer.dbg = mode.dbg
-                  
-                  // val ty_sch = typer.PolymorphicType(0,
-                  //   typer.typeType(rhs)(ctx.nextLevel, raiseToBuffer,
-                  //     vars = tps.map(tp => tp.name -> typer.freshVar(typer.noProv/*FIXME*/)(1)).toMap))
-                  
-                  // val ty_sch = typer.PolymorphicType(typer.MinLevel,
-                  //   typer.typeType(rhs)(ctx.nextLevel, raise, extrCtx, vars = tps.collect {
-                  //       case L(tp: TypeName) => tp.name -> typer.freshVar(typer.noProv/*FIXME*/, N)(1)
-                  //     }.toMap))
                   
                   implicit val prov: typer.TP = typer.NoProv // TODO
                   implicit val r: typer.Raise = raise
@@ -671,7 +661,7 @@ class DiffTests
                       ctx += nme.name -> typer.VarSymbol(sign, nme)
                       val sign_exp = getType(sign)
                       typer.dbg = mode.dbg
-                      typer.subsume(ty_sch, sign)(ctx, e => {c+=1;raiseToBuffer(e)}, typer.TypeProvenance(d.toLoc, "def definition"))
+                      typer.subsume(ty_sch, sign)(ctx, raiseToBuffer, typer.TypeProvenance(d.toLoc, "def definition"))
                       if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
                       typeBeforeDiags = true
                       exp.show :: s"  <:  $nme:" :: sign_exp.show :: Nil

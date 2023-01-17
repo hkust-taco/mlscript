@@ -187,7 +187,7 @@ def someRec: { x: 'a; y: 'a } as 'a
 //│     'a :> {x: 'a, y: 'a}
 //│        = <missing implementation>
 
-:e // TODO try without cycle check
+:e
 someRec: BadRec
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.+1: 	someRec: BadRec
