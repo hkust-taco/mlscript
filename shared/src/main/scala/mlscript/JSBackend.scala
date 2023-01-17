@@ -470,7 +470,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
    */
   private def translateQuoted(body: Term, var_map: HashMap[Str, Str])(implicit scope: Scope): JSExpr = body match { // TODO: remove implicit argument for scope
     case Var(name) =>
-      val symbol_name = s"${name}_sym"
+      //val symbol_name = s"${name}_sym"
+      val symbol_name = name
       if (!(var_map contains name)) {
         var_map += (name -> symbol_name) // This is wrong, we need to use the randomUUID thing
         JSArray(Ls(JSExpr("NewVar"), JSExpr(symbol_name), JSExpr(s"const ${symbol_name} = Symbol('${name}');"))) 
@@ -504,9 +505,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case Tup(fields) =>
       var fields_array = fields map { case (_, Fld(_, _, term)) => translateQuoted(term, var_map) }
       JSArray(JSExpr("Tup")::fields_array)
-    // Unquoted: TODO: check if this returns proper executed code, need to include context
     case Unquoted(body) =>
-      JSArray(Ls(translateTerm(body)))
+      JSArray(Ls(translateUnquoted(body)))
     case If(IfThen(condition, branch1), S(branch2)) => // error if no ELSE branch in normal code
       JSArray(Ls(JSExpr("If"), translateQuoted(condition, var_map), translateQuoted(branch1, var_map), translateQuoted(branch2, var_map)))
     case Bra(rcd, trm) => 
@@ -528,6 +528,18 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case Assign(_,_) | Asc(_,_) | Bind(_,_) | Test(_,_) | With(_,_) | CaseOf(_,_) | TyApp(_,_) | Splc(_) => 
       throw CodeGenError(s"${inspect(body)} not supported in quasiquotes")
     case _ => throw CodeGenError(s"missing implementation: ${inspect(body)}")
+  }
+
+  /**
+    * Execute Quoted nodes in Unquoted and translateTerm other nodes.
+    */
+
+  private def translateUnquoted(body: Term)(implicit scope: Scope): JSExpr = body match {
+    case Quoted(_) => 
+      val callee = translateVar("run", true) 
+      callee(translateTerm(body)) 
+      // callee(args.map { case (_, Fld(_, _, arg)) => translateTerm(arg) }: _*)
+    case _ => translateTerm(body)
   }
 
   /**

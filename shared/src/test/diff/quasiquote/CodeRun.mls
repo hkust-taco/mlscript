@@ -2,7 +2,7 @@
 :ge
 
 let x = code"3 + 2"
-//│ x: code & {Code#T <: int}
+//│ x: code & {Code#C, Code#T}
 //│  = [ 'App', '+', [ 3 ], [ 2 ] ]
 
 run(x)
@@ -10,7 +10,7 @@ run(x)
 //│    = 5
 
 let y = code"1"
-//│ y: code & {Code#T <: 1}
+//│ y: code & {Code#C, Code#T}
 //│  = [ 1 ]
 
 run(y)
@@ -18,11 +18,11 @@ run(y)
 //│    = [ 1 ]
 
 let code_fun = code"(y) => y"
-//│ code_fun: code & {Code#T <: 'a -> 'a}
+//│ code_fun: code & {Code#C, Code#T}
 //│         = [
 //│             'Lam',
-//│             [ 'Tup', [ 'NewVar', 'y_sym', "const y_sym = Symbol('y');" ] ],
-//│             [ 'Var', 'y_sym' ]
+//│             [ 'Tup', [ 'NewVar', 'y', "const y = Symbol('y');" ] ],
+//│             [ 'Var', 'y' ]
 //│           ]
 
 run(code_fun)
@@ -30,26 +30,19 @@ run(code_fun)
 //│    = [Function (anonymous)]
     
 let code_test = code"let x_0 = 1; let x_1 = 10; let x_2 = 100; x_0 + x_1 + x_2"
-//│ code_test: code & {Code#T <: int}
+//│ code_test: code & {Code#C, Code#T}
 //│          = [
 //│              'Let',
-//│              [ 'NewVar', 'x_0_sym', "const x_0_sym = Symbol('x_0');" ],
+//│              [ 'NewVar', 'x_0', "const x_0 = Symbol('x_0');" ],
 //│              [ 1 ],
 //│              [
 //│                'Let',
-//│                [ 'NewVar', 'x_1_sym', "const x_1_sym = Symbol('x_1');" ],
+//│                [ 'NewVar', 'x_1', "const x_1 = Symbol('x_1');" ],
 //│                [ 10 ],
 //│                [ 'Let', [Array], [Array], [Array] ]
 //│              ]
 //│            ]
 
-run(code_test)
-//│ res: int
-//│    = 111
-
-let x0 = 8
-//│ x0: 8
-//│   = 8
 
 run(code_test)
 //│ res: int
@@ -57,14 +50,14 @@ run(code_test)
 
 // shadowing
 let code_test2 = code"let x = 1; let x = 10; let x = 100; x + x + x"
-//│ code_test2: code & {Code#T <: int}
+//│ code_test2: code & {Code#C, Code#T}
 //│           = [
 //│               'Let',
-//│               [ 'NewVar', 'x_sym', "const x_sym = Symbol('x');" ],
+//│               [ 'NewVar', 'x', "const x = Symbol('x');" ],
 //│               [ 1 ],
 //│               [
 //│                 'Let',
-//│                 [ 'Var', 'x_sym' ],
+//│                 [ 'Var', 'x' ],
 //│                 [ 10 ],
 //│                 [ 'Let', [Array], [Array], [Array] ]
 //│               ]
@@ -72,3 +65,27 @@ let code_test2 = code"let x = 1; let x = 10; let x = 100; x + x + x"
 run(code_test2)
 //│ res: int
 //│    = 300
+
+// there is a problem below if we substitute the z below to y, it captures the quasiquote y defined above rather than the integer y defined later
+// i.e. somehow shadowing does not work?
+let z1 = 100
+//│ z1: 100
+//│   = 100
+
+let z2 = 1000
+//│ z2: 1000
+//│   = 1000
+
+
+let code_unquote = code"let x = 1; x + ${code"z1 + z2"}"
+//│ code_unquote: code & {Code#C, Code#T}
+//│             = [
+//│                 'Let',
+//│                 [ 'NewVar', 'x', "const x = Symbol('x');" ],
+//│                 [ 1 ],
+//│                 [ 'App', '+', [ 'Var', 'x' ], [ 1100 ] ]
+//│               ]
+
+run(code_unquote)
+//│ res: int
+//│    = 1101

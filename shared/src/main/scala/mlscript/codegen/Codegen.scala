@@ -842,8 +842,7 @@ object JSCodeHelpers {
 final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
   def toSourceCode: SourceCode = SourceCode(
     """
-    const { randomUUID } = require("crypto");
-    var_symbol_map = {};
+    let var_symbol_map = {};
     
     function _run(s_expr) { 
       switch(s_expr[0]) {
