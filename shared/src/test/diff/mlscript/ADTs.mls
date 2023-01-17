@@ -77,7 +77,6 @@ eval e
 //│ res: int
 //│    = 4
 
-// :e // FIXedME a curious infinite recursion, reproduced in `ADRsRepro.mls`
 eval (e : Lit | Add['e] | Nega['e] as 'e)
 //│ res: int
 //│    = 4
