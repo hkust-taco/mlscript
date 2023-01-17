@@ -1144,6 +1144,30 @@ abstract class TyperHelpers { Typer: Typer =>
   }
   
   
+  object PolyFunction {
+    def unapply(ty: ST)(implicit ctx: Ctx, raise: Raise, shadows: Shadows): Opt[PolymorphicType] = {
+      def go(ty: ST, traversed: Set[AnyRef]): Opt[PolymorphicType] = //trace(s"go $ty") {
+          if (!distributeForalls) N else ty match {
+        case poly @ PolymorphicType(plvl, bod) => S(poly)
+        case tr: TypeRef if !traversed.contains(tr.defn) => go(tr.expand, traversed + tr.defn)
+        case proxy: ProxyType => go(proxy.underlying, traversed)
+        case tv @ AssignedVariable(ty) if !traversed.contains(tv) =>
+          go(ty, traversed + tv)
+        case ft @ FunctionType(param, funbod) =>
+            for { poly @ PolymorphicType(plvl, bod) <- go(funbod, traversed) }
+            yield {
+              val newRhs = if (param.level > plvl) {
+                  val poly2 = poly.raiseLevelTo(param.level)
+                  PolymorphicType(poly2.polymLevel, FunctionType(param, poly2.body)(ft.prov))
+                } else PolymorphicType(plvl, FunctionType(param, bod)(ft.prov))
+              newRhs
+            }
+        case _ => N
+      }
+      // }(res => s"= $res")
+      go(ty, Set.empty)
+    }
+  }
   object AliasOf {
     def unapply(ty: ST)(implicit ctx: Ctx): S[ST] = {
       def go(ty: ST, traversedVars: Set[TV]): S[ST] = ty match {

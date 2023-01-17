@@ -23,24 +23,14 @@ s1: S2
 //│ res: S2
 //│    = [Function: S]
 
-:e
 s2 = S: S2
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.27: 	s2 = S: S2
-//│ ║        	     ^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.15: 	type S2 = (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ ║        	                                                                                             ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.15: 	type S2 = (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ ╙──      	                                                                                             ^^
 //│ s2: S2
 //│   = [Function: S]
 
 :e // * S2 is less genetral than S1
 s2: S1
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.41: 	s2: S1
+//│ ║  l.31: 	s2: S1
 //│ ║        	^^
 //│ ╟── type `‘a_145` is not an instance of type `'a_142`
 //│ ║  l.15: 	type S2 = (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
@@ -57,15 +47,12 @@ type Id = forall 'a. 'a -> 'a
 
 :e // TODO: could probably use different type var shadows from different type alias occurrences
 S: Id -> Id -> Id -> Id
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.59: 	S: Id -> Id -> Id -> Id
+//│ ╔══[ERROR] Cyclic-looking constraint while typing type ascription; a type annotation may be required
+//│ ║  l.49: 	S: Id -> Id -> Id -> Id
 //│ ║        	^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.55: 	type Id = forall 'a. 'a -> 'a
-//│ ║        	                 ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.55: 	type Id = forall 'a. 'a -> 'a
-//│ ╙──      	                 ^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  Id  <:  'a147_171'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  Id  <:  'a147_148''
 //│ res: Id -> Id -> Id -> Id
 //│    = [Function: S]
 

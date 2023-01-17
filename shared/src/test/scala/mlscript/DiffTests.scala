@@ -201,6 +201,7 @@ class DiffTests
           case "v" | "verbose" => mode.copy(verbose = true)
           case "ex" | "explain" => mode.copy(expectTypeErrors = true, explainErrors = true)
           case "ns" | "no-simpl" => mode.copy(noSimplification = true)
+          // case "limit-errors" => mode.copy(limitErrors = true)
           case "stats" => mode.copy(stats = true)
           case "stdout" => mode.copy(stdout = true)
           case "ParseOnly" => parseOnly = true; mode
@@ -609,6 +610,7 @@ class DiffTests
               // Because diagnostic lines are after the typing results,
               // we need to cache the diagnostic blocks and add them to the
               // `typerResults` buffer after the statement has been processed.
+              var c = 0
               val diagnosticLines = mutable.Buffer.empty[Str]
               // We put diagnosis to the buffer in the following `Typer` routines.
               val raiseToBuffer: typer.Raise = d => {
@@ -669,7 +671,7 @@ class DiffTests
                       ctx += nme.name -> typer.VarSymbol(sign, nme)
                       val sign_exp = getType(sign)
                       typer.dbg = mode.dbg
-                      typer.subsume(ty_sch, sign)(ctx, raiseToBuffer, typer.TypeProvenance(d.toLoc, "def definition"))
+                      typer.subsume(ty_sch, sign)(ctx, e => {c+=1;raiseToBuffer(e)}, typer.TypeProvenance(d.toLoc, "def definition"))
                       if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
                       typeBeforeDiags = true
                       exp.show :: s"  <:  $nme:" :: sign_exp.show :: Nil

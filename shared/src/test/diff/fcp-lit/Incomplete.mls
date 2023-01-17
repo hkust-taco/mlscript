@@ -65,20 +65,11 @@ def ty_2: nothing -> (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
 // * This fails to constrain though the subtyping do be holdin
 // * For instance taking 'a := (forall 'b. 'b -> 'b)
 // :e
-:e // skolem extrusion?
+// :e // skolem extrusion?
 ty_2 = ty_1
 //│ 'a -> (nothing -> 'a) -> 'a
 //│   <:  ty_2:
 //│ nothing -> (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.69: 	ty_2 = ty_1
-//│ ║        	^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.61: 	def ty_2: nothing -> (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
-//│ ║        	                                                            ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.61: 	def ty_2: nothing -> (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
-//│ ╙──      	                                                            ^^
 //│     = <no result>
 //│       ty_1 is not implemented
 

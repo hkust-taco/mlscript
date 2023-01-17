@@ -530,9 +530,14 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_, p @ ProvType(und)) => rec(lhs, und, true)
           case (_: ObjectTag, _: ObjectTag) if lhs === rhs => ()
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs, true)
+          
+          // * Note: at this point, it could be that a polymorphic type could be distribbed
+          // *  out of `r1`, but this would likely not result in something useful, since the
+          // *  LHS is a normal non-polymorphic function type...
           case (FunctionType(l0, r0), FunctionType(l1, r1)) =>
             rec(l1, l0, false)
             rec(r0, r1, false)
+          
           case (prim: ClassTag, ot: ObjectTag)
             if prim.parentsST.contains(ot.id) => ()
             
@@ -772,12 +777,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             // println(s"Useless poly? ${plvl} ${bod.level}")
             rec(bod, rhs, true)
             
-          case (_, FunctionType(param, AliasOf(poly @ PolymorphicType(plvl, bod)))) if distributeForalls =>
-            val newRhs = if (param.level > plvl) {
-                val poly2 = poly.raiseLevelTo(param.level)
-                PolymorphicType(poly2.polymLevel, FunctionType(param, poly2.body)(rhs.prov))
-              } else PolymorphicType(plvl, FunctionType(param, bod)(rhs.prov))
-            // println(s"DISTRIB-R ${rhs} ~> $newRhs")
+          case (_, PolyFunction(newRhs)) if distributeForalls =>
             println(s"DISTRIB-R  ~>  $newRhs")
             rec(lhs, newRhs, true)
             

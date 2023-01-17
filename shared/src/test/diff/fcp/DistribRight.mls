@@ -21,17 +21,7 @@ S x y = x
 //│ S: 'a -> anything -> 'a
 //│  = [Function: S1]
 
-:e // Fixed in next commit
 S: (forall 'a. 'a -> 'a) -> anything -> (forall 'c. 'c -> 'c)
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.25: 	S: (forall 'a. 'a -> 'a) -> anything -> (forall 'c. 'c -> 'c)
-//│ ║        	^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.25: 	S: (forall 'a. 'a -> 'a) -> anything -> (forall 'c. 'c -> 'c)
-//│ ║        	                                                ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.25: 	S: (forall 'a. 'a -> 'a) -> anything -> (forall 'c. 'c -> 'c)
-//│ ╙──      	                                                ^^
 //│ res: (forall 'a. 'a -> 'a) -> anything -> (forall 'c. 'c -> 'c)
 //│    = [Function: S1]
 
@@ -39,17 +29,7 @@ S: 'c -> 'b -> (forall 'a. 'a -> 'a)
 //│ res: (anything -> nothing) -> anything -> (forall 'a. 'a -> 'a)
 //│    = [Function: S1]
 
-:e // Fixed in next commit
 S: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.43: 	S: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ ║        	^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.43: 	S: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ ║        	                                                             ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.43: 	S: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ ╙──      	                                                             ^^
 //│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'a1. 'a1 -> 'a1)
 //│    = [Function: S1]
 
@@ -58,17 +38,7 @@ S x y = x y
 //│ S: ('a -> 'b) -> 'a -> 'b
 //│  = [Function: S2]
 
-:e // Fixed in next commit
 S: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.62: 	S: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ ║        	^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.62: 	S: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ ║        	                                                             ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.62: 	S: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ ╙──      	                                                             ^^
 //│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'a1. 'a1 -> 'a1)
 //│    = [Function: S2]
 
@@ -77,17 +47,7 @@ S x y z = x z y
 //│ S: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 //│  = [Function: S3]
 
-:e // Fixed in next commit
 S: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.81: 	S: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ ║        	^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.81: 	S: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ ║        	                                                                                      ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.81: 	S: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ ╙──      	                                                                                      ^^
 //│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'a1. 'a1 -> 'a1) -> (forall 'a2. 'a2 -> 'a2)
 //│    = [Function: S3]
 
@@ -123,14 +83,14 @@ def T: ('a, forall 'b. ('a, 'b) -> 'a)
 :e
 T: (anything, (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a))
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.124: 	T: (anything, (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a))
-//│ ║         	^
+//│ ║  l.84: 	T: (anything, (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a))
+//│ ║        	^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.124: 	T: (anything, (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a))
-//│ ║         	                                                         ^^
+//│ ║  l.84: 	T: (anything, (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a))
+//│ ║        	                                                         ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.124: 	T: (anything, (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a))
-//│ ╙──       	                                                         ^^
+//│ ║  l.84: 	T: (anything, (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a))
+//│ ╙──      	                                                         ^^
 //│ res: (anything, (forall 'a. 'a -> 'a, anything,) -> (forall 'a0. 'a0 -> 'a0),)
 
 
@@ -142,14 +102,14 @@ def T: 'a -> (forall 'b. ('a, 'b) -> 'a)
 :e
 T: anything -> (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.143: 	T: anything -> (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a)
+//│ ║  l.103: 	T: anything -> (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a)
 //│ ║         	^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.143: 	T: anything -> (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a)
-//│ ║         	                                                          ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.143: 	T: anything -> (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a)
-//│ ╙──       	                                                          ^^
+//│ ╟── type `anything` is not a function
+//│ ║  l.103: 	T: anything -> (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a)
+//│ ║         	   ^^^^^^^^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.103: 	T: anything -> (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a)
+//│ ╙──       	                                                              ^^^^^^^^
 //│ res: anything -> (forall 'a. 'a -> 'a, anything,) -> (forall 'a0. 'a0 -> 'a0)
 
 

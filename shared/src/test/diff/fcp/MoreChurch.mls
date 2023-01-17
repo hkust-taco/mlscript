@@ -72,15 +72,12 @@ add_ty = add
 //│ ((forall 'a, 'b, 'c. ('b -> 'c -> 'a) -> (forall 'd. ('a -> 'd & 'b) -> 'c -> 'd)) -> 'e -> 'f) -> 'e -> 'f
 //│   <:  add_ty:
 //│ ChurchInt -> ChurchInt -> ChurchInt
-//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
 //│ ║  l.71: 	add_ty = add
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.8: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║       	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.8: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──     	                        ^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  (‘a_404' -> ‘a_404')  <:  α41_422'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (‘a_404' -> ‘a_404')  <:  α41_417'''
 //│       = [Function: add]
 
 def add (n: ChurchInt) m = n succ m
@@ -109,11 +106,11 @@ mul_ty = mul
 //│   <:  mul_ty:
 //│ ChurchInt -> ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.107: 	mul_ty = mul
+//│ ║  l.104: 	mul_ty = mul
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (⊥ -> ⊤)  <:  α41_708    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (⊥ -> ⊤)  <:  α41_690''''
+//│ ╟── this constraint:  (‘a_680' -> ‘a_680')  <:  α41_708'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (‘a_680' -> ‘a_680')  <:  α41_690''''
 //│       = [Function: mul]
 
 def mul (n: ChurchInt) m = n (add m) zero
@@ -135,7 +132,7 @@ def pow_ty: ChurchInt -> ChurchInt -> ChurchInt
 :e
 def pow (n: ChurchInt) (m: ChurchInt) = n (mul m) (succ zero)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.136: 	def pow (n: ChurchInt) (m: ChurchInt) = n (mul m) (succ zero)
+//│ ║  l.133: 	def pow (n: ChurchInt) (m: ChurchInt) = n (mul m) (succ zero)
 //│ ║         	                                        ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.8: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -254,11 +251,11 @@ pred_ty = pred
 //│   <:  pred_ty:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.252: 	pred_ty = pred
+//│ ║  l.249: 	pred_ty = pred
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a_2015' -> ‘a_2015')  <:  α41_2073'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (‘a_2015' -> ‘a_2015')  <:  α41_2057^6
+//│ ╟── this constraint:  (‘a_2017' -> ‘a_2017')  <:  α41_2075'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (‘a_2017' -> ‘a_2017')  <:  α41_2059^6
 //│        = [Function: pred1]
 
 // * Only difference: use `succ_ty`
@@ -281,7 +278,7 @@ def fact_ty: ChurchInt -> ChurchInt
 //│        = <missing implementation>
 
 rec def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n (fact (pred n)))
-//│ fact: ChurchInt -> (forall 'a, 'b. ('a -> 'b & 'c -> 'b & 'c -> 'c) -> (forall 'd. ('c & 'a & 'd) -> ('d | 'b)))
+//│ fact: ChurchInt -> (forall 'a, 'b. ('b -> 'a & 'c -> 'a & 'c -> 'c) -> (forall 'd. ('c & 'b & 'd) -> ('d | 'a)))
 //│     = [Function: fact]
 
 fact_ty = fact
@@ -294,16 +291,16 @@ fact_ty = fact
 :e
 def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n {})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.295: 	def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n {})
+//│ ║  l.292: 	def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n {})
 //│ ║         	                                                                    ^^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.295: 	def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n {})
+//│ ║  l.292: 	def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n {})
 //│ ║         	                                                                          ^^
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.8: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║       	                            ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.119: 	def mul (n: ChurchInt) m = n (add m) zero
+//│ ║  l.116: 	def mul (n: ChurchInt) m = n (add m) zero
 //│ ╙──       	                                  ^
 //│ fact: ChurchInt -> (forall 'a, 'b. ('a -> 'b & 'c -> 'b & 'c -> 'c) -> (forall 'd. ('c & 'a & 'd) -> ('d | 'b)) | error)
 //│     = [Function: fact1]
@@ -323,10 +320,10 @@ fact_ty = fact
 :e
 fact (to_church 4) (fun x -> x + 1) 0
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.324: 	fact (to_church 4) (fun x -> x + 1) 0
+//│ ║  l.321: 	fact (to_church 4) (fun x -> x + 1) 0
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` does not match type `nothing`
-//│ ║  l.207: 	def pair x y f = f x y
+//│ ║  l.204: 	def pair x y f = f x y
 //│ ║         	             ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.8: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -337,7 +334,7 @@ fact (to_church 4) (fun x -> x + 1) 0
 :e
 fact_ty (to_church 4) (fun x -> x + 1) 0
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.338: 	fact_ty (to_church 4) (fun x -> x + 1) 0
+//│ ║  l.335: 	fact_ty (to_church 4) (fun x -> x + 1) 0
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.8: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
