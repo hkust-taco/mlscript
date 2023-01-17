@@ -15,7 +15,7 @@ def Nil = Nil {}
 //│    = [Function: Nil1]
 
 def Cons head tail = Cons { head; tail }
-//│ Cons: 'a -> (forall 'A, 'tail. (List['A] & 'tail) -> (Cons['A | 'a] with {head: 'a, tail: 'tail}))
+//│ Cons: 'a -> (List['A] & 'tail) -> (Cons['A | 'a] with {head: 'a, tail: 'tail})
 //│     = [Function: Cons1]
 
 
@@ -86,7 +86,7 @@ res.tail.head
 
 // This used to yield a more precise Cons constructor, but it's no longer necessary in the new class semantics
 def Cons head tail = originalCons { head; tail } with { head; tail }
-//│ Cons: 'a -> (forall 'tail, 'A. (List['A] & 'tail) -> (Cons['A | 'a] & {head: 'a, tail: 'tail}))
+//│ Cons: 'a -> (List['A] & 'tail) -> (Cons['A | 'a] & {head: 'a, tail: 'tail})
 //│     = [Function: Cons2]
 
 
@@ -157,10 +157,10 @@ rec def filter p ls = case ls of
   { Cons -> if p ls.head then Cons ls.head (filter p ls.tail) else filter p ls.tail
   | Nil -> Nil
   }
-//│ filter: ('head -> bool & 'head0 -> bool & 'head1 -> bool) -> (forall 'a. ((Cons[?] with {head: 'head & 'a, tail: 'tail}) | Nil) -> ((Cons['A | 'a] with {head: 'a, tail: 'b}) | 'c))
+//│ filter: ('head -> bool & 'head0 -> bool & 'head1 -> bool) -> ((Cons[?] with {head: 'head, tail: 'tail}) | Nil) -> ((Cons['A | 'head] with {head: 'head, tail: 'a}) | 'b)
 //│   where
-//│     'b :> (Cons['A | 'head0] with {head: 'head0, tail: 'b}) | 'c
-//│     'c :> (Cons['A | 'head1] with {head: 'head1, tail: 'b}) | Nil
+//│     'a :> (Cons['A | 'head0] with {head: 'head0, tail: 'a}) | 'b
+//│     'b :> (Cons['A | 'head1] with {head: 'head1, tail: 'a}) | Nil
 //│     'tail <: ((Cons[?] with {head: 'head0 & 'A, tail: 'tail}) | Nil) & ((Cons[?] with {head: 'head1 & 'A, tail: 'tail}) | Nil)
 //│       = [Function: filter]
 

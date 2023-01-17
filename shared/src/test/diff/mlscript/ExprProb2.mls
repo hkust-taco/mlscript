@@ -10,7 +10,7 @@ def add lhs rhs = Add { lhs; rhs }
 //│ Defined class Add[+E]
 //│ lit: (int & 'val) -> (Lit with {val: 'val})
 //│    = [Function: lit]
-//│ add: 'a -> (forall 'rhs. 'rhs -> (Add['rhs | 'a] with {lhs: 'a, rhs: 'rhs}))
+//│ add: 'a -> 'rhs -> (Add['rhs | 'a] with {lhs: 'a, rhs: 'rhs})
 //│    = [Function: add]
 
 
@@ -19,7 +19,7 @@ def eval1 eval1 e = case e of {
   | Lit -> e.val
   | Add -> eval1 eval1 e.lhs + eval1 eval1 e.rhs
   }
-//│ eval1: ('a -> 'rhs -> int & 'a -> 'lhs -> int & 'a) -> (forall 'val. ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val})) -> (int | 'val))
+//│ eval1: ('a -> 'rhs -> int & 'a -> 'lhs -> int & 'a) -> ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val})) -> (int | 'val)
 //│      = [Function: eval1]
 //│ constrain calls  : 44
 //│ annoying  calls  : 0
@@ -41,7 +41,7 @@ def eval1f eval1 e = case e of {
 //│   });
 //│ };
 //│ // End of generated code
-//│ eval1f: ('rhs -> int & 'lhs -> int) -> (forall 'val. ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val})) -> (int | 'val))
+//│ eval1f: ('rhs -> int & 'lhs -> int) -> ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val})) -> (int | 'val)
 //│       = [Function: eval1f]
 //│ constrain calls  : 36
 //│ annoying  calls  : 0
@@ -111,14 +111,14 @@ def eval2 eval2 e = case e of {
   | Nega -> 0 - (eval2 eval2 e.arg)
   | _ -> eval1 eval2 e
   }
-//│ eval2: ('a -> 'arg -> int & 'a -> 'lhs -> int & 'a -> 'rhs -> int & 'a) -> (forall 'val. ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val}) | (Nega[?] with {arg: 'arg})) -> (int | 'val))
+//│ eval2: ('a -> 'arg -> int & 'a -> 'lhs -> int & 'a -> 'rhs -> int & 'a) -> ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val}) | (Nega[?] with {arg: 'arg})) -> (int | 'val)
 //│      = [Function: eval2]
 
 def eval2f eval2 e = case e of {
   | Nega -> 0 - (eval2 e.arg)
   | _ -> eval1f eval2 e
   }
-//│ eval2f: ('arg -> int & 'lhs -> int & 'rhs -> int) -> (forall 'val. ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val}) | (Nega[?] with {arg: 'arg})) -> (int | 'val))
+//│ eval2f: ('arg -> int & 'lhs -> int & 'rhs -> int) -> ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val}) | (Nega[?] with {arg: 'arg})) -> (int | 'val)
 //│       = [Function: eval2f]
 
 
@@ -201,7 +201,7 @@ eval1_fixed e1
 //│   RangeError: Maximum call stack size exceeded
 
 rec def eval1_fixed() = eval1f (eval1f (eval1_fixed()))
-//│ eval1_fixed: () -> (forall 'val. (Add[?] & {lhs: Add[?] & {lhs: 'rhs, rhs: 'rhs} | Lit, rhs: Add[?] & {lhs: 'rhs, rhs: 'rhs} | Lit} | (Lit with {val: 'val})) -> (int | 'val))
+//│ eval1_fixed: () -> (Add[?] & {lhs: Add[?] & {lhs: 'rhs, rhs: 'rhs} | Lit, rhs: Add[?] & {lhs: 'rhs, rhs: 'rhs} | Lit} | Lit\val & {val: 'val}) -> (int | 'val)
 //│   where
 //│     'rhs <: Add[?] & {lhs: Add[?] & {lhs: 'rhs, rhs: 'rhs} | Lit, rhs: Add[?] & {lhs: 'rhs, rhs: 'rhs} | Lit} | Lit
 //│            = [Function: eval1_fixed1]
@@ -309,7 +309,7 @@ def eval2_broken eval2 e = case e of {
   | Nega -> e.arg
   | _ -> eval1 eval2 e
   }
-//│ eval2_broken: ('a -> 'lhs -> int & 'a -> 'rhs -> int & 'a) -> (forall 'arg. ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'arg}) | (Nega[?] with {arg: 'arg})) -> ('arg | int))
+//│ eval2_broken: ('a -> 'lhs -> int & 'a -> 'rhs -> int & 'a) -> ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'arg}) | (Nega[?] with {arg: 'arg})) -> ('arg | int)
 
 :e
 eval2_broken eval2_broken! e2
@@ -332,7 +332,7 @@ def eval2f_oops eval2 e = case e of {
   | Nega -> 0 - (eval2 e.arg)
   | _ -> eval1 eval2 e // should be: eval1f eval2 e
   }
-//│ eval2f_oops: ('arg -> int & 'a -> 'lhs -> int & 'a -> 'rhs -> int & 'a) -> (forall 'val. ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val}) | (Nega[?] with {arg: 'arg})) -> (int | 'val))
+//│ eval2f_oops: ('arg -> int & 'a -> 'lhs -> int & 'a -> 'rhs -> int & 'a) -> ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val}) | (Nega[?] with {arg: 'arg})) -> (int | 'val)
 
 // :e
 fix eval2f_oops e2

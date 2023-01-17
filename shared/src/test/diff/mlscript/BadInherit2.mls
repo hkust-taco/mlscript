@@ -225,7 +225,7 @@ f'
 class C0[A]: S0[A]
   method Foo0 = id
 //│ Defined class C0[=A]
-//│ Defined C0.Foo0: C0['A] -> (forall 'a. 'a -> 'a)
+//│ Defined C0.Foo0: C0['A] -> 'a -> 'a
 
 def s0: S0['a] -> S0['a]
 //│ s0: S0['a] -> S0['a]

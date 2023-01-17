@@ -132,7 +132,7 @@ def Nil = Nil {}
 def Cons head tail = Cons { head; tail }
 //│ Nil: Nil
 //│    = [Function: Nil1]
-//│ Cons: 'a -> (forall 'A, 'tail. (List['A] & 'tail) -> (Cons['A | 'a] with {head: 'a, tail: 'tail}))
+//│ Cons: 'a -> (List['A] & 'tail) -> (Cons['A | 'a] with {head: 'a, tail: 'tail})
 //│     = [Function: Cons1]
 
 :js

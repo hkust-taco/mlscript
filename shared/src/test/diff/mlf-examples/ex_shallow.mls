@@ -27,7 +27,7 @@ def k x y = x
 // (* church_zero is like the sequence *)
 // let church_zero = fun f -> id
 def church_zero = fun f -> id
-//│ church_zero: anything -> (forall 'a. 'a -> 'a)
+//│ church_zero: anything -> 'a -> 'a
 //│            = [Function: church_zero]
 
 // (* church_un is like apply *)
@@ -44,7 +44,7 @@ def church_two = fun f -> fun x -> f (f x)
 
 // let church_succ n = fun f x -> f (n f x)
 def church_succ n = fun f -> fun x -> f (n f x)
-//│ church_succ: ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│ church_succ: ('a -> 'b -> 'c) -> ('c -> 'd & 'a) -> 'b -> 'd
 //│            = [Function: church_succ]
 
 // (* We build the a0 of the icfp version paper *)
@@ -75,13 +75,13 @@ def a0_ = a2_ a1
 //│   = [Function: a1]
 //│ a3: ((forall 'a, 'b, 'c. ('a -> 'b & 'c -> 'a) -> 'c -> 'b) -> 'd) -> anything -> 'd
 //│   = [Function: a3]
-//│ a2: A1 -> anything -> (forall 'a. ('b -> 'a & 'c -> 'b & 'd -> 'c) -> 'd -> 'a)
+//│ a2: A1 -> anything -> ('a -> 'b & 'c -> 'a & 'd -> 'c) -> 'd -> 'b
 //│   = [Function: a2]
-//│ a2_: A1 -> anything -> (forall 'a. ('b -> 'a & 'c -> 'b & 'd -> 'c) -> 'd -> 'a)
+//│ a2_: A1 -> anything -> ('a -> 'b & 'c -> 'a & 'd -> 'c) -> 'd -> 'b
 //│    = [Function: a2_]
-//│ a0: anything -> (forall 'a. ('b -> 'a & 'c -> 'b & 'd -> 'c) -> 'd -> 'a)
+//│ a0: anything -> ('a -> 'b & 'c -> 'a & 'd -> 'c) -> 'd -> 'b
 //│   = [Function: a0]
-//│ a0_: anything -> (forall 'a. ('b -> 'a & 'c -> 'b & 'd -> 'c) -> 'd -> 'a)
+//│ a0_: anything -> ('a -> 'b & 'c -> 'a & 'd -> 'c) -> 'd -> 'b
 //│    = [Function: a0_]
 
 // let test0 = 
@@ -189,7 +189,7 @@ type A1' = forall 'a. (('a | Sid) -> ('a | Sid)) -> ('a | Sid) -> ('a | Sid)
 // let a0' = a2' a1';;
 
 def either x y = if true then x else y
-//│ either: 'a -> (forall 'b. 'b -> ('a | 'b))
+//│ either: 'a -> 'a -> 'a
 //│       = [Function: either]
 
 def a1' = fun f -> fun x -> f (f (either id x))
@@ -202,7 +202,7 @@ def a2' (x: A1') =
     let _ = x y church_two in
     y church_succ
   ) a3
-//│ a2': A1' -> anything -> (forall 'a. ('b -> 'a & 'c -> 'b & 'd -> 'c) -> 'd -> 'a)
+//│ a2': A1' -> anything -> ('a -> 'b & 'c -> 'a & 'd -> 'c) -> 'd -> 'b
 //│    = [Function: a2$]
 
 def a2'_ x =
@@ -211,11 +211,11 @@ def a2'_ x =
     let _ = x y church_two in
     y church_succ
   ) a3
-//│ a2'_: ((forall 'a. ((forall 'b, 'c, 'd. ('b -> 'c & 'd -> 'b) -> 'd -> 'c) -> 'a) -> anything -> 'a) -> (forall 'b, 'c, 'd. ('b -> 'c & 'd -> 'b) -> 'd -> 'c) -> anything & (forall 'e, 'f. ('e -> 'f & 'e) -> 'f) -> (forall 'g. 'g -> 'g) -> anything) -> anything -> (forall 'h. ('i -> 'h & 'j -> 'i & 'k -> 'j) -> 'k -> 'h)
+//│ a2'_: ((forall 'a. ((forall 'b, 'c, 'd. ('b -> 'c & 'd -> 'b) -> 'd -> 'c) -> 'a) -> anything -> 'a) -> (forall 'e, 'f, 'g. ('e -> 'f & 'g -> 'e) -> 'g -> 'f) -> anything & (forall 'h, 'i. ('h -> 'i & 'h) -> 'i) -> (forall 'j. 'j -> 'j) -> anything) -> anything -> ('k -> 'l & 'm -> 'k & 'n -> 'm) -> 'n -> 'l
 //│     = [Function: a2$_]
 
 def a0' = a2' a1'
-//│ a0': anything -> (forall 'a. ('b -> 'a & 'c -> 'b & 'd -> 'c) -> 'd -> 'a)
+//│ a0': anything -> ('a -> 'b & 'c -> 'a & 'd -> 'c) -> 'd -> 'b
 //│    = [Function: a0$]
 
 :e
@@ -224,15 +224,15 @@ def a0'_ = a2'_ a1'
 //│ ║  l.222: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››  <:  α32_1580'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››  <:  α32_34''
-//│ a0'_: anything -> (forall 'a. ('b -> 'a & 'c -> 'b & 'd -> 'c) -> 'd -> 'a) | error
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α45_46'' -> α45_46'')››  <:  α33_1821'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α45_46'' -> α45_46'')››  <:  α33_35''
+//│ a0'_: anything -> ('a -> 'b & 'c -> 'a & 'd -> 'c) -> 'd -> 'b | error
 //│     = [Function: a0$_]
 
 :RecursiveTypes
 // * Note: requires :DistributeForalls
 def a0'_ = a2'_ a1'
-//│ a0'_: anything -> (forall 'a. ('b -> 'a & 'c -> 'b & 'd -> 'c) -> 'd -> 'a)
+//│ a0'_: anything -> ('a -> 'b & 'c -> 'a & 'd -> 'c) -> 'd -> 'b
 //│     = [Function: a0$_1]
 :NoRecursiveTypes
 
@@ -286,11 +286,11 @@ def a0_ = a2_ a1
 //│   = [Function: a21]
 //│ a2_: A1 -> (forall 'a. (anything -> 'a
 //│   where
-//│     forall 'b, 'c, 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f, 'g, 'h. ('g -> 'h & 'f -> 'g) -> 'f -> 'h) -> 'a))
+//│     forall 'b, 'c, 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a))
 //│    = [Function: a2_1]
 //│ a0: anything -> 'a
 //│   where
-//│     forall 'b, 'c, 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f, 'g, 'h. ('h -> 'f & 'g -> 'h) -> 'g -> 'f) -> 'a
+//│     forall 'b, 'c, 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a
 //│   = [Function: a01]
 //│ a0_: anything -> 'a
 //│   where
@@ -323,7 +323,7 @@ def a2'_ x =
   ) a3
 //│ a2'_: ((forall 'a. 'a -> (forall 'b. (anything -> 'b
 //│   where
-//│     'a <: (forall 'c, 'd, 'e. ('c -> 'd & 'e -> 'c) -> 'e -> 'd) -> 'b))) -> (forall 'c, 'd, 'e. ('c -> 'd & 'e -> 'c) -> 'e -> 'd) -> anything & (forall 'f, 'g. ('g -> 'f & 'g) -> 'f) -> (forall 'h. 'h -> 'h) -> anything) -> (forall 'i. (anything -> 'i
+//│     'a <: (forall 'c, 'd, 'e. ('c -> 'd & 'e -> 'c) -> 'e -> 'd) -> 'b))) -> (forall 'c, 'd, 'e. ('c -> 'd & 'e -> 'c) -> 'e -> 'd) -> anything & (forall 'f, 'g. ('f -> 'g & 'f) -> 'g) -> (forall 'h. 'h -> 'h) -> anything) -> (forall 'i. (anything -> 'i
 //│   where
 //│     forall 'j, 'k, 'l. ('j -> 'k -> 'l) -> (forall 'm. ('l -> 'm & 'j) -> 'k -> 'm) <: (forall 'c, 'd, 'e. ('c -> 'd & 'e -> 'c) -> 'e -> 'd) -> 'i))
 //│     = [Function: a2$_1]
@@ -331,7 +331,7 @@ def a2'_ x =
 def a0' = a2' a1'
 //│ a0': anything -> 'a
 //│   where
-//│     forall 'b, 'c, 'd. ('c -> 'd -> 'b) -> (forall 'e. ('b -> 'e & 'c) -> 'd -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a
+//│     forall 'b, 'c, 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a
 //│    = [Function: a0$1]
 
 :e
@@ -340,11 +340,11 @@ def a0'_ = a2'_ a1'
 //│ ║  l.338: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››  <:  α32_2428'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α42_43'' -> α42_43'')››  <:  α32_34''
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α45_46'' -> α45_46'')››  <:  α33_2675'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α45_46'' -> α45_46'')››  <:  α33_35''
 //│ a0'_: anything -> 'a | error
 //│   where
-//│     forall 'b, 'c, 'd. ('d -> 'b -> 'c) -> (forall 'e. ('c -> 'e & 'd) -> 'b -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a
+//│     forall 'b, 'c, 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a
 //│     = [Function: a0$_2]
 
 // * ^ Strangely, this one works with recursive types:

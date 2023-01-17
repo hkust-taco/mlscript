@@ -112,7 +112,7 @@ class Foo2[A]
   method Foo2 = id
 //│ Defined class Foo2[=A]
 //│ Declared Foo2.Foo2: Foo2['A] -> 'A -> 'A
-//│ Defined Foo2.Foo2: Foo2['A] -> (forall 'a. 'a -> 'a)
+//│ Defined Foo2.Foo2: Foo2['A] -> 'a -> 'a
 
 Foo2
 //│ res: anything -> Foo2['A]

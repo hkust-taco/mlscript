@@ -22,7 +22,7 @@ e = eval eval
 //│ ║  l.20: 	e = eval eval
 //│ ║        	    ^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α25_40'' -> ‹∀ 2. (α26_44''' -> (0<int,number> | α32_48'''))›)››  <:  α25_74'    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α25_40'' -> ‹∀ 2. (α26_44''' -> (0<int,number> | α32_48'''))›)››  <:  α25_88'    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α25_40'' -> ‹∀ 2. (α26_44''' -> (0<int,number> | α32_48'''))›)››  <:  α25_40''
 //│ e: (A & {f: A | L} | L) -> 0 | error
 //│  = [Function (anonymous)]
@@ -55,8 +55,8 @@ e v
 //│ ║  l.53: 	e v
 //│ ║        	^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (a<> & {f: f24_256})  <:  f33_239    ComposedType  TypeVariable
-//│ ╙──  ... looks like:  (a<> & {f: f24_222'})  <:  f33_134'
+//│ ╟── this constraint:  (a<> & {f: f24_270})  <:  f33_253    ComposedType  TypeVariable
+//│ ╙──  ... looks like:  (a<> & {f: f24_236'})  <:  f33_148'
 //│ res: error | 0
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
@@ -85,8 +85,8 @@ e = eval eval
 //│ ║  l.83: 	e = eval eval
 //│ ║        	    ^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α300_315'' -> ‹∀ 2. (α301_319''' -> (0<int,number> | {x: α307_323'''}))›)››  <:  α300_349'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α300_315'' -> ‹∀ 2. (α301_319''' -> (0<int,number> | {x: α307_323'''}))›)››  <:  α300_315''
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α314_329'' -> ‹∀ 2. (α315_333''' -> (0<int,number> | {x: α321_337'''}))›)››  <:  α314_377'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α314_329'' -> ‹∀ 2. (α315_333''' -> (0<int,number> | {x: α321_337'''}))›)››  <:  α314_329''
 //│ e: (A & {f: A | L} | L) -> (0 | {x: 0 | {x: nothing}}) | error
 //│  = [Function (anonymous)]
 

@@ -109,7 +109,7 @@ class BadSelf[A]: { x: A }
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.108: 	    method F = this.x 42
 //│ ║         	               ^^^^^^^^^
-//│ ╟── field selection of type `A_168` is not a function
+//│ ╟── field selection of type `A_173` is not a function
 //│ ║  l.108: 	    method F = this.x 42
 //│ ║         	               ^^^^^^
 //│ ╟── Note: class type parameter A is defined at:
@@ -136,7 +136,7 @@ class Simple3[A, B]: Simple2[A]
 //│ ╔══[ERROR] Type mismatch in method declaration:
 //│ ║  l.135: 	    method Get: B
 //│ ║         	           ^^^^^^
-//│ ╟── type `B_215` is not an instance of type `A_214`
+//│ ╟── type `B_220` is not an instance of type `A_219`
 //│ ║  l.134: 	class Simple3[A, B]: Simple2[A]
 //│ ║         	                 ^
 //│ ╟── Note: constraint arises from class type parameter:
@@ -161,7 +161,7 @@ class BadPair[A, B]: AbstractPair[A, B]
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.159: 	    method Test f = f this.x this.x
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── field selection of type `A_313` is not an instance of type `B_314`
+//│ ╟── field selection of type `A_318` is not an instance of type `B_319`
 //│ ║  l.159: 	    method Test f = f this.x this.x
 //│ ║         	                             ^^^^^^
 //│ ╟── Note: constraint arises from class type parameter:
@@ -173,7 +173,7 @@ class BadPair[A, B]: AbstractPair[A, B]
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.160: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `C_332` is not an instance of type `D_333`
+//│ ╟── application of type `C_337` is not an instance of type `D_338`
 //│ ║  l.160: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
 //│ ║         	                                                    ^^^^^^^^^
 //│ ╟── Note: constraint arises from method type parameter:
@@ -183,8 +183,8 @@ class BadPair[A, B]: AbstractPair[A, B]
 //│ ║  l.153: 	    method Map[C, D]: (A -> C) -> (B -> D) -> AbstractPair[C, D]
 //│ ╙──       	               ^
 //│ Defined class BadPair[+A, +B]
-//│ Defined BadPair.Test: BadPair['A, ?] -> (forall 'a. ('A -> 'A -> 'a) -> 'a)
-//│ Defined BadPair.Map: BadPair['A, ?] -> (forall 'a, 'b. ('A -> 'a & 'A -> 'b) -> anything -> BadPair['b, 'a])
+//│ Defined BadPair.Test: BadPair['A, ?] -> ('A -> 'A -> 'a) -> 'a
+//│ Defined BadPair.Map: BadPair['A, ?] -> ('A -> 'a & 'A -> 'b) -> anything -> BadPair['b, 'a]
 
 bp = BadPair { x = 42; y = true }
 bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
@@ -204,7 +204,7 @@ BadPair = BadPair { x = 42; y = 0 }
 BadPair.Map
 BadPair.(BadPair.Map)
 //│ BadPair: BadPair[42, 0]
-//│ res: BadPair['A, ?] -> (forall 'a, 'b. ('A -> 'b & 'A -> 'a) -> anything -> BadPair['a, 'b])
+//│ res: BadPair['A, ?] -> ('A -> 'a & 'A -> 'b) -> anything -> BadPair['b, 'a]
 //│ ╔══[ERROR] Class BadPair has no method BadPair.Map
 //│ ║  l.205: 	BadPair.(BadPair.Map)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
@@ -536,7 +536,7 @@ class Dup[A, A]: { x: A }
 //│ ╙──       	        ^
 //│ Defined class Dup[±A, +A]
 //│ Declared Dup.MthDup: Dup[?, 'A] -> ('A -> 'B) -> 'B
-//│ Defined Dup.MthDup: Dup[?, 'A] -> (forall 'a. ('A -> 'a) -> 'a)
+//│ Defined Dup.MthDup: Dup[?, 'A] -> ('A -> 'a) -> 'a
 //│ ╔══[WARNING] Type definition Dup has bivariant type parameters:
 //│ ║  l.513: 	class Dup[A, A]: { x: A }
 //│ ║         	      ^^^
@@ -823,10 +823,10 @@ class Test9B: Test9A[int]
 //│ ╔══[ERROR] Type mismatch in method declaration:
 //│ ║  l.815: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `Test9A[int] -> int` is not an instance of type `X_879`
+//│ ╟── type `Test9A[int] -> int` is not an instance of type `X_932`
 //│ ║  l.815: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	                   ^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into method declaration with expected type `#X_879`
+//│ ╟── but it flows into method declaration with expected type `#X_932`
 //│ ║  l.815: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:

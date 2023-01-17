@@ -43,15 +43,15 @@ set0 emptyArray 42
 
 
 def update0 i arr = arr[i] <- arr[i]
-//│ update0: int -> (forall 'a. MutArray[in undefined | 'a out 'a & ~undefined] -> unit)
+//│ update0: int -> MutArray[in undefined | 'a out 'a & ~undefined] -> unit
 //│        = [Function: update0]
 
 def update1 i arr = arr[i] <- let a = arr[i] in case a of undefined -> error, _ -> a
-//│ update1: int -> (forall 'a. MutArray[in 'a out 'a & ~undefined] -> unit)
+//│ update1: int -> MutArray[in 'a out 'a & ~undefined] -> unit
 //│        = [Function: update1]
 
 def update2 i arr = let a = arr[i] in arr[i] <- case a of undefined -> error, _ -> a
-//│ update2: int -> (forall 'a. MutArray[in 'a out 'a & ~undefined] -> unit)
+//│ update2: int -> MutArray[in 'a out 'a & ~undefined] -> unit
 //│        = [Function: update2]
 
 

@@ -6,7 +6,7 @@ class None: {}
 
 
 def flatMap3 = fun f -> fun opt -> case opt of { Some -> f opt | _ -> opt }
-//│ flatMap3: ('a -> 'b) -> (forall 'c. (Some[?] & 'a | 'c & ~#Some) -> ('b | 'c))
+//│ flatMap3: ('a -> 'b) -> (Some[?] & 'a | 'b & ~#Some) -> 'b
 //│         = [Function: flatMap3]
 
 
@@ -83,7 +83,7 @@ def simpler = fun f -> case None{} of { Some -> f 1 | _ -> None{} }
 //│        = [Function: simpler]
 
 def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
-//│ simpler: ('a -> 'b) -> (forall 'c. (None & 'c | Some[?] & 'a) -> ('b | 'c))
+//│ simpler: ('a -> 'b) -> (None & 'b | Some[?] & 'a) -> 'b
 //│        = [Function: simpler1]
 
 simpler (fun x -> x.value)

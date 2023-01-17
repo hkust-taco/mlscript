@@ -10,7 +10,7 @@ def nega arg = Nega { arg }
 //│ Defined class Nega[+E]
 //│ lit: (int & 'val) -> (Lit with {val: 'val})
 //│    = [Function: lit]
-//│ add: 'a -> (forall 'rhs. 'rhs -> (Add['rhs | 'a] with {lhs: 'a, rhs: 'rhs}))
+//│ add: 'a -> 'rhs -> (Add['rhs | 'a] with {lhs: 'a, rhs: 'rhs})
 //│    = [Function: add]
 //│ nega: 'arg -> Nega['arg]
 //│     = [Function: nega]

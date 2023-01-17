@@ -182,7 +182,7 @@ class L[T]: { h: T; t: O[L[T]] }
 //│ Defined type alias O[+T]
 //│ Defined class L[=T]
 //│ Declared L.Append: L['T] -> 'T -> L['T]
-//│ Defined L.Append: (L['T] & 'this) -> (forall 'h. ('T & 'h) -> (L['T] with {h: 'h, t: S[L['T]] & {v: L['T] & 'this}}))
+//│ Defined L.Append: (L['T] & 'this) -> ('T & 'h) -> (L['T] with {h: 'h, t: S[L['T]] & {v: L['T] & 'this}})
 
 // :ds
 // L.Append
@@ -195,10 +195,9 @@ L.Append
 
 
 def append ls elem = L { h = elem; t = S { v = ls } }
-//│ append: (L[in 'T out 'T | 'T0] & 'a) -> (forall 'h, 'T1. ('h & 'T1) -> (L['T1] with {h: 'h, t: S['a]}))
+//│ append: (L['T] & 'a) -> ('T & 'h) -> (L['T] with {h: 'h, t: S['a]})
 //│   where
-//│     'T1 :> 'T
-//│         <: 'T0
+//│     'T :> anything
 
 def append0 ls = L { h = 0; t = S { v = ls } }
 //│ append0: (L['T] & 'v) -> (L['T] with {h: 0, t: S['v]})

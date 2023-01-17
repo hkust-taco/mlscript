@@ -71,7 +71,7 @@ def cons: 'a -> List['a] -> List['a]
 def cons head tail = Cons { head; tail }
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
+//│ 'b -> (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail})
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -100,7 +100,7 @@ rec def append l1 l2 =
   else cons (head l1) (append (tail l1) l2)
 //│ append: List['a] -> List['a] -> List['a]
 //│       = <missing implementation>
-//│ List[?] -> (forall 'b. (List['a] & 'b) -> (List['a] | 'b))
+//│ List[?] -> (List['a] & 'b) -> (List['a] | 'b)
 //│   <:  append:
 //│ List['a] -> List['a] -> List['a]
 //│       = [Function: append]
@@ -147,7 +147,7 @@ def choose: 'a -> 'a -> 'a
 def choose x y = if true then x else y
 //│ choose: 'a -> 'a -> 'a
 //│       = <missing implementation>
-//│ 'a -> (forall 'b. 'b -> ('a | 'b))
+//│ 'a -> 'a -> 'a
 //│   <:  choose:
 //│ 'a -> 'a -> 'a
 //│       = [Function: choose]
@@ -203,7 +203,7 @@ def revapp: 'a -> ('a -> 'b) -> 'b
 def revapp x f = f x
 //│ revapp: 'a -> ('a -> 'b) -> 'b
 //│       = <missing implementation>
-//│ 'a -> (forall 'b. ('a -> 'b) -> 'b)
+//│ 'a -> ('a -> 'b) -> 'b
 //│   <:  revapp:
 //│ 'a -> ('a -> 'b) -> 'b
 //│       = [Function: revapp]
@@ -230,7 +230,7 @@ def argST: ST['s, int]
 
 // A1
 const2 x y = y
-//│ const2: anything -> (forall 'a. 'a -> 'a)
+//│ const2: anything -> 'a -> 'a
 //│       = [Function: const2]
 
 // A2
@@ -265,7 +265,7 @@ id auto_
 
 // A7
 choose id auto
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> (forall 'b. 'a0 | 'b -> 'b)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
 //│    = [Function: id1]
 
 // A8
@@ -420,17 +420,17 @@ def lst: List[forall 'a. int -> 'a -> 'a]
 // E1
 :ng
 k h lst
-//│ res: int -> (forall 'a. 'a -> 'a)
+//│ res: int -> 'a -> 'a
 
 // E2
 :ng
 k (fun x -> h x) lst
-//│ res: int -> (forall 'a. 'a -> 'a)
+//│ res: int -> 'a -> 'a
 
 // E3
 :ng
 def r: (forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> int
-//│ r: (anything -> (forall 'b. 'b -> 'b)) -> int
+//│ r: (forall 'b. anything -> 'b -> 'b) -> int
 :ng
 r (fun x -> fun y -> y)
 //│ res: int
@@ -473,7 +473,7 @@ let f = revapp id in f poly
 
 // F10
 a = choose id (fun (x: (forall 'a. 'a -> 'a)) -> auto_ x)
-//│ a: (forall 'a. 'a -> 'a & 'a0) -> (forall 'b. 'a0 | 'b -> 'b)
+//│ a: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
 //│  = [Function: id1]
 
 a id
@@ -481,7 +481,7 @@ a id
 //│    = [Function: id1]
 
 choose id (fun x -> auto_ x)
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> (forall 'b. 'a0 | 'b -> 'b)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
 //│    = [Function: id1]
 
 a = choose id auto_
@@ -514,7 +514,7 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ╙──       	                    ^^
 //│ res: 'c
 //│   where
-//│     'c :> (forall 'a. 'a -> 'a) | (forall 'd, 'a0. ('a0 -> 'a0) -> 'd)
+//│     'c :> (forall 'a. 'a -> 'a) | (forall 'a0, 'd. ('a0 -> 'a0) -> 'd)
 //│     'd :> (forall 'b. 'b -> 'b) | error
 //│     'a0 :> anything
 //│         <: nothing
@@ -522,7 +522,7 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 
 // * The skolem used to (unsafely) leak into this type – see also `Skolems.mls`:
 res
-//│ res: (anything -> nothing & 'a) -> (forall 'b. 'a | 'b -> 'b | error)
+//│ res: (anything -> nothing & 'a) -> ('a | 'b -> 'b | error)
 //│    = [Function: id1]
 
 :e // skolem extrusion
@@ -548,7 +548,7 @@ a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.547: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a_1422`
+//│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a_1516`
 //│ ║  l.547: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:

@@ -34,7 +34,7 @@ let rec f = x => y => add (f x.tail y) (f y.tail x)
 //│     'a <: {tail: 'tail}
 
 let f = x => y => if true then { l: x; r: y } else { l: y; r: x } // 2-crown
-//│ f: 'a -> (forall 'b. 'b -> {l: 'a | 'b, r: 'a | 'b})
+//│ f: 'a -> 'a -> {l: 'a, r: 'a}
 
 
 // Inspired by [Pottier 98, chap 13.5]

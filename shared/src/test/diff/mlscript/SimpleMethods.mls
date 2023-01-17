@@ -47,12 +47,12 @@ class C3
   method F = id
 //│ Defined class C3
 //│ Declared C3.F: C3 -> 'a -> 'a
-//│ Defined C3.F: C3 -> (forall 'a. 'a -> 'a)
+//│ Defined C3.F: C3 -> 'a -> 'a
 
 class C4: C3
   method F = id
 //│ Defined class C4
-//│ Defined C4.F: C4 -> (forall 'a. 'a -> 'a)
+//│ Defined C4.F: C4 -> 'a -> 'a
 
 
 :e
@@ -61,7 +61,7 @@ class C5[A]
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.60: 	  method F(x: A) = x + 1
 //│ ║        	                   ^^^
-//│ ╟── reference of type `A_86` is not an instance of type `int`
+//│ ╟── reference of type `A_89` is not an instance of type `int`
 //│ ║  l.60: 	  method F(x: A) = x + 1
 //│ ║        	                   ^
 //│ ╟── Note: class type parameter A is defined at:

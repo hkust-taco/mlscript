@@ -53,7 +53,7 @@ ty2 = ty1
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.49: 	ty2 = ty1
 //│ ║        	^^^^^^^^^
-//│ ╟── type `‘A_90` is not an instance of type `'A_89`
+//│ ╟── type `‘A_95` is not an instance of type `'A_94`
 //│ ║  l.15: 	def ty1: MutArray[forall 'A. 'A -> 'A]
 //│ ║        	                         ^^
 //│ ╟── Note: constraint arises from quantified type variable:

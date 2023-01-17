@@ -53,7 +53,7 @@ def bad2 f = (f 42 + 1, poly f)
 
 
 def example f = (f: forall 'a. 'a -> 'a)
-//│ example: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ example: (forall 'a. 'a -> 'a) -> 'a0 -> 'a0
 //│        = [Function: example]
 
 :e
@@ -78,7 +78,7 @@ example succ
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.77: 	example succ
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── type `‘a_196` is not an instance of type `int`
+//│ ╟── type `‘a_229` is not an instance of type `int`
 //│ ║  l.55: 	def example f = (f: forall 'a. 'a -> 'a)
 //│ ╙──      	                           ^^
 //│ res: 'a -> 'a | error
@@ -94,7 +94,7 @@ def example f = (f: forall 'a. 'a -> int -> 'b) f
 //│        = [Function: example1]
 
 def example f = ((fun x -> x, f) : forall 'a. ('a -> 'a, 'a -> 'a))
-//│ example: (anything -> nothing) -> (forall 'a. ('a -> 'a, 'a -> 'a,))
+//│ example: (anything -> nothing) -> ('a -> 'a, 'a -> 'a,)
 //│        = [Function: example2]
 
 def example f = ((0, f) : forall 'a. (0, 'a))
@@ -127,7 +127,7 @@ ex 1
 //│    = [ 0, 1 ]
 
 def example f = ((0, f) : forall 'a. (0, 'a -> 'a))
-//│ example: (anything -> nothing) -> (forall 'a. (0, 'a -> 'a,))
+//│ example: (anything -> nothing) -> (0, 'a -> 'a,)
 //│        = [Function: example4]
 
 

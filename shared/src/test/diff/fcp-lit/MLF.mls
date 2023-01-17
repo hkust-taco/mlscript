@@ -22,7 +22,7 @@ class ST[S, A]
 // ============ Type signatures for functions used in the examples ============
 
 def choose x y = if true then x else y
-//│ choose: 'a -> (forall 'b. 'b -> ('a | 'b))
+//│ choose: 'a -> 'a -> 'a
 
 def id x = x
 //│ id: 'a -> 'a
@@ -67,17 +67,17 @@ def argST: ST['s, int]
 
 // FreezeML A2
 choose id
-//│ res: 'a -> (forall 'b. 'b -> 'b | 'a)
+//│ res: 'a -> ('b -> 'b | 'a)
 
 fun (g: forall 'a. ('a -> 'a) -> ('a -> 'a)) -> fun (x: forall 'a. 'a -> 'a) -> fun a -> g a (x a)
-//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'a1. ('a1 -> 'a1 & 'a1) -> 'a1)
+//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> ('a1 -> 'a1 & 'a1) -> 'a1
 
 choose id succ
 //│ res: int -> int
 
 // FreezeML A7
 choose id auto
-//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ res: (forall 'a. 'a -> 'a & 'b) -> ('a0 -> 'a0 | 'b)
 
 // nope, along with anything with it as a subterm
 // i.e. unannotated auto
@@ -110,7 +110,7 @@ let f = choose id in (f auto) (f succ)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.109: 	let f = choose id in (f auto) (f succ)
 //│ ║         	                     ^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_313` is not an instance of type `int`
+//│ ╟── type `‘a_345` is not an instance of type `int`
 //│ ║  l.30: 	def auto (x: forall 'a. 'a -> 'a) = x x
 //│ ╙──      	                    ^^
 //│ res: int -> int | error
@@ -139,10 +139,10 @@ res (choose id succ)
 // Didier Le Botlan suggested this fix by email:
 
 let f = choose id in (f auto, f succ)
-//│ res: (forall 'b. (forall 'a. 'a -> 'a & 'b) -> (forall 'a. 'a -> 'a | 'b), forall 'b. (int & 'b) -> (int | 'b),)
+//│ res: (forall 'b, 'a. (forall 'a0. 'a0 -> 'a0 & 'b) -> ('a -> 'a | 'b), int -> int,)
 
 let f = choose id in (f auto2, f succ)
-//│ res: (forall 'a, 'b, 'c. ('a -> 'b & 'c & 'a) -> ('b | 'c), forall 'c. (int & 'c) -> (int | 'c),)
+//│ res: (forall 'a, 'b. ('a -> 'b & 'b & 'a) -> 'b, int -> int,)
 
 // ------------ Sec 6 ------------
 
@@ -179,7 +179,7 @@ let tmp = I I in K K
 //│ res: (42, "foo",)
 
 (fun f -> (f succ, choose f auto)) (choose id)
-//│ res: (int -> int, forall 'b. (forall 'a. 'a -> 'a & 'b) -> (forall 'a0. 'a0 -> 'a0 | 'b),)
+//│ res: (int -> int, forall 'b, 'a. (forall 'a0. 'a0 -> 'a0 & 'b) -> ('a -> 'a | 'b),)
 
 // ------------ Sec 2.3.1 ------------
 
@@ -217,10 +217,10 @@ fun z -> omega z
 // affects the order of bindings in the result type in MLF, not very interesting otherwise
 
 fun (x: forall 'a. 'a -> 'b -> 'a) -> x
-//│ res: (forall 'a. 'a -> 'b -> 'a) -> (forall 'a. 'a -> 'b -> 'a)
+//│ res: (forall 'a. 'a -> 'b -> 'a) -> 'a0 -> 'b -> 'a0
 
 fun (x: forall 'b 'a. 'a -> 'b -> 'a) -> x
-//│ res: (forall 'a, 'b. 'a -> 'b -> 'a) -> (forall 'a, 'b. 'a -> 'b -> 'a)
+//│ res: (forall 'a. 'a -> anything -> 'a) -> 'a0 -> anything -> 'a0
 
 // ============ Leijen 2007 ============
 
@@ -282,7 +282,7 @@ monster = (fun y -> (let tmp = y I in y K)) (fun x -> x x)
 //│ monster: anything -> (forall 'a. 'a -> anything -> 'a)
 
 ignore x y = y
-//│ ignore: anything -> (forall 'a. 'a -> 'a)
+//│ ignore: anything -> 'a -> 'a
 
 monsterThunk() = (fun y -> (ignore (y I) (y K))) (fun x -> x x)
 //│ monsterThunk: () -> anything -> (forall 'a. 'a -> anything -> 'a)

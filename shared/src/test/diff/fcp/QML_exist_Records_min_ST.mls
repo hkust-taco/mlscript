@@ -32,7 +32,7 @@ def step: Arrays -> Arrays
 // :d
 :e
 def step arr f = f (stepImpl2 arr)
-//│ ((forall 'a, 'b. {fold: 'a -> 'b} -> {fold: 'a -> 'b}) -> 'c) -> (forall 'd. ('c -> 'd) -> 'd)
+//│ ((forall 'a, 'b. {fold: 'a -> 'b} -> {fold: 'a -> 'b}) -> 'c) -> ('c -> 'd) -> 'd
 //│   <:  step:
 //│ Arrays -> Arrays
 //│ ╔══[ERROR] Type mismatch in def definition:

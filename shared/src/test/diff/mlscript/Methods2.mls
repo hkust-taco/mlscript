@@ -49,7 +49,7 @@ class Nil_oops[A]: List[A]
 //│ Defined class Nil_oops[=A]
 //│ Defined Nil_oops.Size: Nil_oops['A] -> 0
 //│ Defined Nil_oops.HeadOption: Nil_oops['A] -> None[nothing]
-//│ Defined Nil_oops.Map: Nil_oops['A] -> anything -> (forall 'A. Nil_oops['A])
+//│ Defined Nil_oops.Map: Nil_oops['A] -> anything -> Nil_oops['A0]
 // * Works without distrib:
 :DontDistributeForalls
 class Nil[A]: List[A]

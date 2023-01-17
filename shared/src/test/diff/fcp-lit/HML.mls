@@ -20,7 +20,7 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
+//│ 'b -> (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail})
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -84,7 +84,7 @@ rec def append l1 l2 =
   else cons (head l1) (append (tail l1) l2)
 //│ append: List['a] -> List['a] -> List['a]
 //│       = <missing implementation>
-//│ List[?] -> (forall 'a. (List['b] & 'a) -> (List['b] | 'a))
+//│ List[?] -> (List['a] & 'b) -> (List['a] | 'b)
 //│   <:  append:
 //│ List['a] -> List['a] -> List['a]
 //│       = [Function: append]
@@ -122,7 +122,7 @@ def choose: forall 'a. 'a -> 'a -> 'a
 def choose x y = if true then x else y
 //│ choose: 'a -> 'a -> 'a
 //│       = <missing implementation>
-//│ 'a -> (forall 'b. 'b -> ('a | 'b))
+//│ 'a -> 'a -> 'a
 //│   <:  choose:
 //│ 'a -> 'a -> 'a
 //│       = [Function: choose]
@@ -151,7 +151,7 @@ def revapp: forall 'a 'b. 'a -> ('a -> 'b) -> 'b
 def revapp x f = f x
 //│ revapp: 'a -> ('a -> 'b) -> 'b
 //│       = <missing implementation>
-//│ 'a -> (forall 'b. ('a -> 'b) -> 'b)
+//│ 'a -> ('a -> 'b) -> 'b
 //│   <:  revapp:
 //│ 'a -> ('a -> 'b) -> 'b
 //│       = [Function: revapp]

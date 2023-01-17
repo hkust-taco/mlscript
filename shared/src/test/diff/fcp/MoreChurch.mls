@@ -15,11 +15,11 @@ def zero_ty: ChurchInt
 //│        = <missing implementation>
 
 def zero f x = x
-//│ zero: anything -> (forall 'a. 'a -> 'a)
+//│ zero: anything -> 'a -> 'a
 //│     = [Function: zero]
 
 zero_ty = zero
-//│ anything -> (forall 'a. 'a -> 'a)
+//│ anything -> 'a -> 'a
 //│   <:  zero_ty:
 //│ ChurchInt
 //│        = [Function: zero]
@@ -30,11 +30,11 @@ def succ_ty: ChurchInt -> ChurchInt
 //│        = <missing implementation>
 
 def succ n f x = f (n f x)
-//│ succ: ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│ succ: ('a -> 'b -> 'c) -> ('c -> 'd & 'a) -> 'b -> 'd
 //│     = [Function: succ]
 
 succ_ty = succ
-//│ ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│ ('a -> 'b -> 'c) -> ('c -> 'd & 'a) -> 'b -> 'd
 //│   <:  succ_ty:
 //│ ChurchInt -> ChurchInt
 //│        = [Function: succ]
@@ -48,11 +48,11 @@ def to_church_ty: int -> ChurchInt
 rec def to_church n =
   if n == 0 then zero
   else succ (to_church (n - 1))
-//│ to_church: int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'c. ('b & 'c) -> ('c | 'a)))
+//│ to_church: int -> ('a -> 'b & 'a -> 'a) -> ('a & 'b) -> 'b
 //│          = [Function: to_church]
 
 to_church_ty = to_church
-//│ int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'c. ('b & 'c) -> ('c | 'a)))
+//│ int -> ('a -> 'b & 'a -> 'a) -> ('a & 'b) -> 'b
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_church]
@@ -64,29 +64,29 @@ def add_ty: ChurchInt -> ChurchInt -> ChurchInt
 //│       = <missing implementation>
 
 def add n m = n succ m
-//│ add: ((forall 'a, 'b, 'c. ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)) -> 'e -> 'f) -> 'e -> 'f
+//│ add: ((forall 'a, 'b, 'c, 'd. ('a -> 'b -> 'c) -> ('c -> 'd & 'a) -> 'b -> 'd) -> 'e -> 'f) -> 'e -> 'f
 //│    = [Function: add]
 
 :e // * Since "sound extrusion"
 add_ty = add
-//│ ((forall 'a, 'b, 'c. ('b -> 'c -> 'a) -> (forall 'd. ('a -> 'd & 'b) -> 'c -> 'd)) -> 'e -> 'f) -> 'e -> 'f
+//│ ((forall 'a, 'b, 'c, 'd. ('c -> 'd -> 'a) -> ('a -> 'b & 'c) -> 'd -> 'b) -> 'e -> 'f) -> 'e -> 'f
 //│   <:  add_ty:
 //│ ChurchInt -> ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
 //│ ║  l.71: 	add_ty = add
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a_404' -> ‘a_404')  <:  α41_422'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (‘a_404' -> ‘a_404')  <:  α41_417'''
+//│ ╟── this constraint:  (‘a_548' -> ‘a_548')  <:  α49_566'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (‘a_548' -> ‘a_548')  <:  α49_561'''
 //│       = [Function: add]
 
 def add (n: ChurchInt) m = n succ m
 // def add (n: ChurchInt) m = n succ_ty m
-//│ add: ChurchInt -> (forall 'a, 'b, 'c, 'd. ('a -> 'b -> 'c & 'd) -> (forall 'e. ('c -> 'e & 'c -> 'c & 'a) -> 'b -> 'e | 'd))
+//│ add: ChurchInt -> ('a -> 'b -> 'c & 'd) -> (('c -> 'e & 'c -> 'c & 'a) -> 'b -> 'e | 'd)
 //│    = [Function: add1]
 
 add_ty = add
-//│ ChurchInt -> (forall 'a, 'b, 'c, 'd. ('a -> 'b -> 'c & 'd) -> (forall 'e. ('c -> 'e & 'c -> 'c & 'a) -> 'b -> 'e | 'd))
+//│ ChurchInt -> ('a -> 'b -> 'c & 'd) -> (('c -> 'e & 'c -> 'c & 'a) -> 'b -> 'e | 'd)
 //│   <:  add_ty:
 //│ ChurchInt -> ChurchInt -> ChurchInt
 //│       = [Function: add1]
@@ -97,28 +97,28 @@ def mul_ty: ChurchInt -> ChurchInt -> ChurchInt
 //│       = <missing implementation>
 
 def mul n m = n (add m) zero
-//│ mul: ((forall 'a, 'b, 'c, 'd. ('a -> 'b -> 'c & 'd) -> (forall 'e. ('c -> 'e & 'c -> 'c & 'a) -> 'b -> 'e | 'd)) -> (anything -> (forall 'f. 'f -> 'f)) -> 'g) -> ChurchInt -> 'g
+//│ mul: ((forall 'a, 'b, 'c, 'd, 'e. ('e -> 'c -> 'b & 'a) -> (('b -> 'd & 'b -> 'b & 'e) -> 'c -> 'd | 'a)) -> (forall 'f. anything -> 'f -> 'f) -> 'g) -> ChurchInt -> 'g
 //│    = [Function: mul]
 
 :e // fails since the fix to spurious-TV-cycles
 mul_ty = mul
-//│ ((forall 'a, 'b, 'c, 'd. ('a -> 'b -> 'c & 'd) -> (forall 'e. ('c -> 'e & 'c -> 'c & 'a) -> 'b -> 'e | 'd)) -> (anything -> (forall 'f. 'f -> 'f)) -> 'g) -> ChurchInt -> 'g
+//│ ((forall 'a, 'b, 'c, 'd, 'e. ('b -> 'd -> 'a & 'e) -> (('a -> 'c & 'a -> 'a & 'b) -> 'd -> 'c | 'e)) -> (forall 'f. anything -> 'f -> 'f) -> 'g) -> ChurchInt -> 'g
 //│   <:  mul_ty:
 //│ ChurchInt -> ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
 //│ ║  l.104: 	mul_ty = mul
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a_680' -> ‘a_680')  <:  α41_708'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (‘a_680' -> ‘a_680')  <:  α41_690''''
+//│ ╟── this constraint:  (‘a_918' -> ‘a_918')  <:  α49_946'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (‘a_918' -> ‘a_918')  <:  α49_928''''
 //│       = [Function: mul]
 
 def mul (n: ChurchInt) m = n (add m) zero
-//│ mul: ChurchInt -> (forall 'a. ChurchInt -> (forall 'b. ('a -> 'b & 'a -> 'a) -> (forall 'c. ('a & 'c) -> ('c | 'b))))
+//│ mul: ChurchInt -> ChurchInt -> ('a -> 'b & 'a -> 'a) -> ('a & 'b) -> 'b
 //│    = [Function: mul1]
 
 mul_ty = mul
-//│ ChurchInt -> (forall 'a. ChurchInt -> (forall 'b. ('a -> 'b & 'a -> 'a) -> (forall 'c. ('a & 'c) -> ('c | 'b))))
+//│ ChurchInt -> ChurchInt -> ('a -> 'b & 'a -> 'a) -> ('a & 'b) -> 'b
 //│   <:  mul_ty:
 //│ ChurchInt -> ChurchInt -> ChurchInt
 //│       = [Function: mul1]
@@ -143,7 +143,7 @@ def pow (n: ChurchInt) (m: ChurchInt) = n (mul m) (succ zero)
 //│ ╟── from reference:
 //│ ║  l.32: 	def succ n f x = f (n f x)
 //│ ╙──      	                        ^
-//│ pow: ChurchInt -> (forall 'a. ChurchInt -> (forall 'b. ('a -> 'b & nothing -> 'b & 'a -> 'a) -> (forall 'c. ('a & 'c) -> ('c | 'b)) | error))
+//│ pow: ChurchInt -> (forall 'a, 'b. ChurchInt -> (('a -> 'b & nothing -> 'b & 'a -> 'a) -> ('a & 'b) -> 'b | error))
 //│    = [Function: pow]
 
 def pow (n: ChurchInt) (m: ChurchInt) = n (mul_ty m) (succ_ty zero_ty)
@@ -156,10 +156,10 @@ pow_ty = pow
 //│       = [Function: pow1]
 
 def pow (n: ChurchInt) m = n (mul m) (succ_ty zero)
-//│ pow: ChurchInt -> (forall 'a. ChurchInt -> (forall 'b. ('a -> 'b & 'a -> 'a) -> (forall 'c. ('a & 'c) -> ('c | 'b)) | ChurchInt))
+//│ pow: ChurchInt -> (forall 'a, 'b. ChurchInt -> (('a -> 'b & 'a -> 'a) -> ('a & 'b) -> 'b | ChurchInt))
 //│    = [Function: pow2]
 pow_ty = pow
-//│ ChurchInt -> (forall 'a. ChurchInt -> (forall 'b. ('a -> 'b & 'a -> 'a) -> (forall 'c. ('a & 'c) -> ('c | 'b)) | ChurchInt))
+//│ ChurchInt -> (forall 'a, 'b. ChurchInt -> (('a -> 'b & 'a -> 'a) -> ('a & 'b) -> 'b | ChurchInt))
 //│   <:  pow_ty:
 //│ ChurchInt -> ChurchInt -> ChurchInt
 //│       = [Function: pow2]
@@ -181,7 +181,7 @@ def tru x _ = x unit
 //│    = [Function: tru]
 
 def fls _ x = x unit
-//│ fls: anything -> (forall 'a. ((forall 'b. 'b -> 'b) -> 'a) -> 'a)
+//│ fls: anything -> ((forall 'a. 'a -> 'a) -> 'b) -> 'b
 //│    = [Function: fls]
 
 type If_t = (Unit_t -> 'a) -> (Unit_t -> 'a) -> 'a
@@ -194,7 +194,7 @@ fls : If_t
 //│    = [Function: fls]
 
 def iszero n = n (fun _ -> fls) tru
-//│ iszero: ((anything -> anything -> (forall 'a. ((forall 'b. 'b -> 'b) -> 'a) -> 'a)) -> (forall 'c. ((forall 'b. 'b -> 'b) -> 'c) -> anything -> 'c) -> 'd) -> 'd
+//│ iszero: ((forall 'a. anything -> anything -> ((forall 'b. 'b -> 'b) -> 'a) -> 'a) -> (forall 'c. ((forall 'd. 'd -> 'd) -> 'c) -> anything -> 'c) -> 'e) -> 'e
 //│       = [Function: iszero]
 
 iszero : ChurchInt -> If_t
@@ -202,7 +202,7 @@ iszero : ChurchInt -> If_t
 //│    = [Function: iszero]
 
 def pair x y f = f x y
-//│ pair: 'a -> (forall 'b. 'b -> (forall 'c. ('a -> 'b -> 'c) -> 'c))
+//│ pair: 'a -> 'b -> ('a -> 'b -> 'c) -> 'c
 //│     = [Function: pair]
 
 def fst p = p (fun x -> fun _ -> x)
@@ -210,7 +210,7 @@ def fst p = p (fun x -> fun _ -> x)
 //│    = [Function: fst]
 
 def snd p = p (fun _ -> fun x -> x)
-//│ snd: ((anything -> (forall 'a. 'a -> 'a)) -> 'b) -> 'b
+//│ snd: ((forall 'a. anything -> 'a -> 'a) -> 'b) -> 'b
 //│    = [Function: snd]
 
 
@@ -220,19 +220,19 @@ def pred_ty: ChurchInt -> ChurchInt
 //│        = <missing implementation>
 
 def s p = pair (snd p) (succ (snd p))
-//│ s: ((anything -> (forall 'a. 'a -> 'a)) -> 'b -> 'c -> 'd & (anything -> (forall 'a. 'a -> 'a)) -> 'e) -> (forall 'f. ('e -> (forall 'g. ('d -> 'g & 'b) -> 'c -> 'g) -> 'f) -> 'f)
+//│ s: ((forall 'a. anything -> 'a -> 'a) -> 'b -> 'c -> 'd & (forall 'e. anything -> 'e -> 'e) -> 'f) -> ('f -> (forall 'g. ('d -> 'g & 'b) -> 'c -> 'g) -> 'h) -> 'h
 //│  = [Function: s]
 
 def z = pair zero zero
-//│ z: ((anything -> (forall 'a. 'a -> 'a)) -> (anything -> (forall 'a. 'a -> 'a)) -> 'b) -> 'b
+//│ z: ((forall 'a. anything -> 'a -> 'a) -> (forall 'b. anything -> 'b -> 'b) -> 'c) -> 'c
 //│  = [Function: z]
 
 def pred (n: ChurchInt) = fst (n s z)
-//│ pred: ChurchInt -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'c. ('b & 'c) -> ('c | 'a)))
+//│ pred: ChurchInt -> ('a -> 'b & 'a -> 'a) -> ('a & 'b) -> 'b
 //│     = [Function: pred]
 
 pred_ty = pred
-//│ ChurchInt -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'c. ('b & 'c) -> ('c | 'a)))
+//│ ChurchInt -> ('a -> 'b & 'a -> 'a) -> ('a & 'b) -> 'b
 //│   <:  pred_ty:
 //│ ChurchInt -> ChurchInt
 //│        = [Function: pred]
@@ -243,19 +243,19 @@ def pred n =
   let s p = pair (snd p) (succ (snd p)) in
   let z = pair zero zero in
   fst (n s z)
-//│ pred: ((forall 'a, 'b, 'c, 'd. ((anything -> (forall 'e. 'e -> 'e)) -> 'a -> 'b -> 'c & (anything -> (forall 'e. 'e -> 'e)) -> 'd) -> (forall 'f. ('d -> (forall 'g. ('c -> 'g & 'a) -> 'b -> 'g) -> 'f) -> 'f)) -> (forall 'h. ((anything -> (forall 'i. 'i -> 'i)) -> (anything -> (forall 'i. 'i -> 'i)) -> 'h) -> 'h) -> (forall 'j. 'j -> anything -> 'j) -> 'k) -> 'k
+//│ pred: ((forall 'a, 'b, 'c, 'd, 'e. ((forall 'f. anything -> 'f -> 'f) -> 'd -> 'e -> 'b & (forall 'g. anything -> 'g -> 'g) -> 'c) -> ('c -> (forall 'h. ('b -> 'h & 'd) -> 'e -> 'h) -> 'a) -> 'a) -> (forall 'i. ((forall 'j. anything -> 'j -> 'j) -> (forall 'k. anything -> 'k -> 'k) -> 'i) -> 'i) -> (forall 'l. 'l -> anything -> 'l) -> 'm) -> 'm
 //│     = [Function: pred1]
 :e
 pred_ty = pred
-//│ ((forall 'a, 'b, 'c, 'd. ((anything -> (forall 'e. 'e -> 'e)) -> 'a -> 'b -> 'c & (anything -> (forall 'e. 'e -> 'e)) -> 'd) -> (forall 'f. ('d -> (forall 'g. ('c -> 'g & 'a) -> 'b -> 'g) -> 'f) -> 'f)) -> (forall 'h. ((anything -> (forall 'i. 'i -> 'i)) -> (anything -> (forall 'i. 'i -> 'i)) -> 'h) -> 'h) -> (forall 'j. 'j -> anything -> 'j) -> 'k) -> 'k
+//│ ((forall 'a, 'b, 'c, 'd, 'e. ((forall 'f. anything -> 'f -> 'f) -> 'd -> 'b -> 'a & (forall 'g. anything -> 'g -> 'g) -> 'c) -> ('c -> (forall 'h. ('a -> 'h & 'd) -> 'b -> 'h) -> 'e) -> 'e) -> (forall 'i. ((forall 'j. anything -> 'j -> 'j) -> (forall 'k. anything -> 'k -> 'k) -> 'i) -> 'i) -> (forall 'l. 'l -> anything -> 'l) -> 'm) -> 'm
 //│   <:  pred_ty:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
 //│ ║  l.249: 	pred_ty = pred
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a_2017' -> ‘a_2017')  <:  α41_2075'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (‘a_2017' -> ‘a_2017')  <:  α41_2059^6
+//│ ╟── this constraint:  (‘a_2632' -> ‘a_2632')  <:  α49_2690'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (‘a_2632' -> ‘a_2632')  <:  α49_2674^6
 //│        = [Function: pred1]
 
 // * Only difference: use `succ_ty`
@@ -263,10 +263,10 @@ def pred n =
   let s p = pair (snd p) (succ_ty (snd p)) in
   let z = pair zero zero in
   fst (n s z)
-//│ pred: ((forall 'a. ((anything -> (forall 'b. 'b -> 'b)) -> ChurchInt & (anything -> (forall 'b. 'b -> 'b)) -> 'a) -> (forall 'c. ('a -> ChurchInt -> 'c) -> 'c)) -> (forall 'd. ((anything -> (forall 'e. 'e -> 'e)) -> (anything -> (forall 'e. 'e -> 'e)) -> 'd) -> 'd) -> (forall 'f. 'f -> anything -> 'f) -> 'g) -> 'g
+//│ pred: ((forall 'a, 'b. ((forall 'c. anything -> 'c -> 'c) -> ChurchInt & (forall 'd. anything -> 'd -> 'd) -> 'a) -> ('a -> ChurchInt -> 'b) -> 'b) -> (forall 'e. ((forall 'f. anything -> 'f -> 'f) -> (forall 'g. anything -> 'g -> 'g) -> 'e) -> 'e) -> (forall 'h. 'h -> anything -> 'h) -> 'i) -> 'i
 //│     = [Function: pred2]
 pred_ty = pred
-//│ ((forall 'a. ((anything -> (forall 'b. 'b -> 'b)) -> ChurchInt & (anything -> (forall 'b. 'b -> 'b)) -> 'a) -> (forall 'c. ('a -> ChurchInt -> 'c) -> 'c)) -> (forall 'd. ((anything -> (forall 'e. 'e -> 'e)) -> (anything -> (forall 'e. 'e -> 'e)) -> 'd) -> 'd) -> (forall 'f. 'f -> anything -> 'f) -> 'g) -> 'g
+//│ ((forall 'a, 'b. ((forall 'c. anything -> 'c -> 'c) -> ChurchInt & (forall 'd. anything -> 'd -> 'd) -> 'b) -> ('b -> ChurchInt -> 'a) -> 'a) -> (forall 'e. ((forall 'f. anything -> 'f -> 'f) -> (forall 'g. anything -> 'g -> 'g) -> 'e) -> 'e) -> (forall 'h. 'h -> anything -> 'h) -> 'i) -> 'i
 //│   <:  pred_ty:
 //│ ChurchInt -> ChurchInt
 //│        = [Function: pred2]
@@ -278,11 +278,11 @@ def fact_ty: ChurchInt -> ChurchInt
 //│        = <missing implementation>
 
 rec def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n (fact (pred n)))
-//│ fact: ChurchInt -> (forall 'a, 'b. ('b -> 'a & 'c -> 'a & 'c -> 'c) -> (forall 'd. ('c & 'b & 'd) -> ('d | 'a)))
+//│ fact: ChurchInt -> ('a -> 'b & 'c -> 'b & 'c -> 'c) -> ('c & 'a) -> ('a | 'b)
 //│     = [Function: fact]
 
 fact_ty = fact
-//│ ChurchInt -> (forall 'a, 'b. ('a -> 'b & 'c -> 'b & 'c -> 'c) -> (forall 'd. ('c & 'a & 'd) -> ('d | 'b)))
+//│ ChurchInt -> ('a -> 'b & 'c -> 'b & 'c -> 'c) -> ('c & 'a) -> ('a | 'b)
 //│   <:  fact_ty:
 //│ ChurchInt -> ChurchInt
 //│        = [Function: fact]
@@ -302,16 +302,16 @@ def fact (n: ChurchInt) = (iszero n) (fun _ -> succ zero) (fun _ -> mul n {})
 //│ ╟── from reference:
 //│ ║  l.116: 	def mul (n: ChurchInt) m = n (add m) zero
 //│ ╙──       	                                  ^
-//│ fact: ChurchInt -> (forall 'a, 'b. ('a -> 'b & 'c -> 'b & 'c -> 'c) -> (forall 'd. ('c & 'a & 'd) -> ('d | 'b)) | error)
+//│ fact: ChurchInt -> (('a -> 'b & 'c -> 'b & 'c -> 'c) -> ('c & 'a) -> ('a | 'b) | error)
 //│     = [Function: fact1]
 
 // * We can drop all intermediate annotations if the recursive call is annotated:
 def fact n = (iszero n) (fun _ -> succ zero) (fun _ -> mul n (fact_ty (pred n)))
-//│ fact: (ChurchInt & (forall 'a. ((anything -> (forall 'b. 'b -> 'b)) -> ChurchInt & (anything -> (forall 'b. 'b -> 'b)) -> 'a) -> (forall 'c. ('a -> ChurchInt -> 'c) -> 'c)) -> (forall 'd. ((anything -> (forall 'e. 'e -> 'e)) -> (anything -> (forall 'e. 'e -> 'e)) -> 'd) -> 'd) -> (forall 'f. 'f -> anything -> 'f) -> ChurchInt & (anything -> anything -> (forall 'g. ((forall 'h. 'h -> 'h) -> 'g) -> 'g)) -> (forall 'i. ((forall 'h. 'h -> 'h) -> 'i) -> anything -> 'i) -> (forall 'j. anything -> (forall 'k. ('j -> 'k) -> 'j -> 'k)) -> (forall 'l. anything -> (forall 'm. ('l -> 'm & 'l -> 'l) -> (forall 'n. ('l & 'n) -> ('n | 'm)))) -> 'o) -> 'o
+//│ fact: (ChurchInt & (forall 'a, 'b. ((forall 'c. anything -> 'c -> 'c) -> ChurchInt & (forall 'd. anything -> 'd -> 'd) -> 'a) -> ('a -> ChurchInt -> 'b) -> 'b) -> (forall 'e. ((forall 'f. anything -> 'f -> 'f) -> (forall 'g. anything -> 'g -> 'g) -> 'e) -> 'e) -> (forall 'h. 'h -> anything -> 'h) -> ChurchInt & (forall 'i. anything -> anything -> ((forall 'j. 'j -> 'j) -> 'i) -> 'i) -> (forall 'k. ((forall 'l. 'l -> 'l) -> 'k) -> anything -> 'k) -> (forall 'm, 'n. anything -> ('m -> 'n) -> 'm -> 'n) -> (forall 'o, 'p. anything -> ('o -> 'p & 'o -> 'o) -> ('o & 'p) -> 'p) -> 'q) -> 'q
 //│     = [Function: fact2]
 
 fact_ty = fact
-//│ (ChurchInt & (forall 'a. ((anything -> (forall 'b. 'b -> 'b)) -> ChurchInt & (anything -> (forall 'b. 'b -> 'b)) -> 'a) -> (forall 'c. ('a -> ChurchInt -> 'c) -> 'c)) -> (forall 'd. ((anything -> (forall 'e. 'e -> 'e)) -> (anything -> (forall 'e. 'e -> 'e)) -> 'd) -> 'd) -> (forall 'f. 'f -> anything -> 'f) -> ChurchInt & (anything -> anything -> (forall 'g. ((forall 'h. 'h -> 'h) -> 'g) -> 'g)) -> (forall 'i. ((forall 'h. 'h -> 'h) -> 'i) -> anything -> 'i) -> (forall 'j. anything -> (forall 'k. ('j -> 'k) -> 'j -> 'k)) -> (forall 'l. anything -> (forall 'm. ('l -> 'm & 'l -> 'l) -> (forall 'n. ('l & 'n) -> ('n | 'm)))) -> 'o) -> 'o
+//│ (ChurchInt & (forall 'a, 'b. ((forall 'c. anything -> 'c -> 'c) -> ChurchInt & (forall 'd. anything -> 'd -> 'd) -> 'a) -> ('a -> ChurchInt -> 'b) -> 'b) -> (forall 'e. ((forall 'f. anything -> 'f -> 'f) -> (forall 'g. anything -> 'g -> 'g) -> 'e) -> 'e) -> (forall 'h. 'h -> anything -> 'h) -> ChurchInt & (forall 'i. anything -> anything -> ((forall 'j. 'j -> 'j) -> 'i) -> 'i) -> (forall 'k. ((forall 'l. 'l -> 'l) -> 'k) -> anything -> 'k) -> (forall 'm, 'n. anything -> ('m -> 'n) -> 'm -> 'n) -> (forall 'o, 'p. anything -> ('o -> 'p & 'o -> 'o) -> ('o & 'p) -> 'p) -> 'q) -> 'q
 //│   <:  fact_ty:
 //│ ChurchInt -> ChurchInt
 //│        = [Function: fact2]

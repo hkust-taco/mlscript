@@ -21,7 +21,7 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
+//│ 'b -> (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail})
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -95,7 +95,7 @@ def create_hashtbl _ = nil
 
 // let hashtbl_add table key element = (key, element) :: table
 def hashtbl_add table key element = cons ((key, element)) table
-//│ hashtbl_add: List['a] -> (forall 'b. 'b -> (forall 'c. 'c -> List[('b, 'c,) | 'a]))
+//│ hashtbl_add: List['a] -> 'b -> 'c -> List[('b, 'c,) | 'a]
 //│            = [Function: hashtbl_add]
 
 // let rec find table key = 
@@ -145,7 +145,7 @@ def nfind table key =
   { None -> fun f -> fun x -> x
   | Some -> opt.val
   }
-//│ nfind: List[?] -> anything -> anything -> (forall 'a. 'a -> 'a)
+//│ nfind: List[?] -> anything -> anything -> 'a -> 'a
 //│      = [Function: nfind]
 
 // type Int = ['a] ('a -> 'a) -> ('a -> 'a)
@@ -155,9 +155,9 @@ type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 // let succ (n:Int) = fun f x -> f (n f x)
 def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 def succ_ n = fun f -> fun x -> f (n f x)
-//│ succ: ChurchInt -> (forall 'a, 'b, 'a0. ('a -> 'b & 'a0 -> ('a & 'a0)) -> ('a & 'a0) -> 'b)
+//│ succ: ChurchInt -> ('a -> 'b & 'a0 -> ('a & 'a0)) -> ('a & 'a0) -> 'b
 //│     = [Function: succ]
-//│ succ_: ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│ succ_: ('a -> 'b -> 'c) -> ('c -> 'd & 'a) -> 'b -> 'd
 //│      = [Function: succ_]
 
 // let add (n:Int) (m:Int) = n succ m
@@ -168,7 +168,7 @@ def add (n: ChurchInt) (m: ChurchInt) = n succ m
 //│    = [Function: add]
 
 def add_ n m = n succ_ m
-//│ add_: ((forall 'a, 'b, 'c. ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)) -> 'e -> 'f) -> 'e -> 'f
+//│ add_: ((forall 'a, 'b, 'c, 'd. ('a -> 'b -> 'c) -> ('c -> 'd & 'a) -> 'b -> 'd) -> 'e -> 'f) -> 'e -> 'f
 //│     = [Function: add_]
 
 // let printInt (n:Int) = print (n (fun x -> x+1) 0)
@@ -241,7 +241,7 @@ a = add (nfind table "one")
 //│  = [Function (anonymous)]
 
 b = (nfind table "two")
-//│ b: ('a -> 'b & 'c -> 'b & 'a -> 'c) -> (forall 'd. ('d & 'a) -> ('b | 'd))
+//│ b: ('a -> 'b & 'c -> 'b & 'a -> 'c) -> ('d & 'a) -> ('b | 'd)
 //│  = [Function (anonymous)]
 
 // * Note: this one required `:DistributeForalls`

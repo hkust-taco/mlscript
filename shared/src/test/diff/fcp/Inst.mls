@@ -68,7 +68,7 @@ class A: { f: Id }
 //│ ║  l.65: 	  method G2 = this.f!
 //│ ╙──      	              ^^^^^^
 //│ Defined class A
-//│ Defined A.F: A -> (forall 'a. 'a -> 'a)
+//│ Defined A.F: A -> 'a -> 'a
 //│ Defined A.G1: A -> Id
 //│ Defined A.G2: A -> Id
 //│ Defined A.G3: A -> 'a -> 'a

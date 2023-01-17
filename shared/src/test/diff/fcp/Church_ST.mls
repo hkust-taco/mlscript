@@ -790,34 +790,34 @@ rec def to_chD n =
 
 
 def zero f x = x
-//│ anything -> (forall 'a. 'a -> 'a)
+//│ anything -> 'a -> 'a
 //│   <:  zero:
 //│ ChurchInt
 //│     = [Function: zero3]
 
 // * Now it works!
 def succ n f x = f (n f x)
-//│ ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│ ('a -> 'b -> 'c) -> ('c -> 'd & 'a) -> 'b -> 'd
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: succ7]
 
 zero = z
-//│ anything -> (forall 'a. 'a -> 'a)
+//│ anything -> 'a -> 'a
 //│   <:  zero:
 //│ ChurchInt
 //│     = [Function: z]
 
 // * Now works
 succ = s
-//│ ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│ ('a -> 'b -> 'c) -> ('c -> 'd & 'a) -> 'b -> 'd
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: s]
 
 // * Still works
 succD = s
-//│ ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│ ('a -> 'b -> 'c) -> ('c -> 'd & 'a) -> 'b -> 'd
 //│   <:  succD:
 //│ ChurchInt -> ('M -> 'M) -> 'M -> 'M
 //│      = [Function: s]
@@ -832,7 +832,7 @@ succ = succD
 // * Now works
 rec def to_chD n =
   succD (to_chD n)
-//│ to_chD: anything -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
+//│ to_chD: anything -> ('M -> 'M) -> 'M -> 'M
 //│       = [Function: to_chD1]
 
 :stats
@@ -853,21 +853,21 @@ s: ChurchInt -> ChurchInt
 
 // * Now works
 to_church_ty = to_ch
-//│ int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'c. ('b & 'c) -> ('c | 'a)))
+//│ int -> ('a -> 'b & 'a -> 'a) -> ('a & 'b) -> 'b
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_ch]
 
 // * Still works
 to_church_ty = to_ch_s_A1
-//│ int -> (forall 'N, 'a, 'N0. ('N -> 'a & 'N0 -> ('N & 'N0)) -> (forall 'b. ('N & 'N0 & 'b) -> ('b | 'a)))
+//│ int -> (forall 'N, 'a, 'N0, 'b. ('N -> 'a & 'N0 -> ('N & 'N0)) -> ('b & 'N & 'N0) -> ('b | 'a))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_ch_s_A1]
 
 // * Now works
 to_church_ty = to_ch_simplif
-//│ anything -> (forall 'a. ('b -> 'a & 'b -> 'b) -> anything -> 'a)
+//│ anything -> ('a -> 'b & 'a -> 'a) -> anything -> 'b
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_ch_simplif]
@@ -875,15 +875,15 @@ to_church_ty = to_ch_simplif
 // * Redefinition in the context of distrib, just for the record (still works)
 rec def to_ch_simplif n = s (to_ch_simplif n)
 to_church_ty = to_ch_simplif
-//│ to_ch_simplif: anything -> (forall 'a. ('b -> 'a & 'b -> 'b) -> anything -> 'a)
+//│ to_ch_simplif: anything -> ('a -> 'b & 'a -> 'a) -> anything -> 'b
 //│              = [Function: to_ch_simplif1]
-//│ anything -> (forall 'a. ('b -> 'a & 'b -> 'b) -> anything -> 'a)
+//│ anything -> ('a -> 'b & 'a -> 'a) -> anything -> 'b
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_ch_simplif1]
 
 to_church_ty = to_ch_A1
-//│ int -> (forall 'a. ('N -> 'a & 'N -> 'N) -> (forall 'b. ('N & 'b) -> ('b | 'a)))
+//│ int -> ('N -> 'a & 'N -> 'N) -> ('N & 'a) -> 'a
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_ch_A1]
@@ -897,7 +897,7 @@ to_church_ty = to_ch_A2
 
 // * Now works
 to_church_ty = to_church_mix
-//│ int -> (forall 'a. ('b -> 'a & 'N -> ('b & 'N) & 'M -> ('b & 'M)) -> (forall 'c. ('b & 'N & 'M & 'c) -> ('c | 'a)))
+//│ int -> ('a -> 'b & 'N -> ('a & 'N) & 'M -> ('a & 'M)) -> ('a & 'N & 'M & 'b) -> 'b
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_church_mix]

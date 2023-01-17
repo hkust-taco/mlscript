@@ -14,7 +14,7 @@ def Nil = Nil {}
 //│    = [Function: Nil1]
 
 def Cons head tail = Cons { head; tail }
-//│ Cons: 'a -> (forall 'A, 'tail. (List['A] & 'tail) -> (Cons['A | 'a] with {head: 'a, tail: 'tail}))
+//│ Cons: 'a -> (List['A] & 'tail) -> (Cons['A | 'a] with {head: 'a, tail: 'tail})
 //│     = [Function: Cons1]
 
 class A
@@ -104,7 +104,7 @@ rec def map f l = case l of {
   | Nil -> l
   | Cons -> Cons (f l.head) (map f l.tail)
   }
-//│ map: ('head -> 'a & 'head0 -> 'A) -> (forall 'b. ((Cons[?] with {head: 'head, tail: 'tail}) | Nil & 'b) -> ((Cons['A | 'a] with {head: 'a, tail: 'c}) | 'b))
+//│ map: ('head -> 'a & 'head0 -> 'A) -> ((Cons[?] with {head: 'head, tail: 'tail}) | Nil & 'b) -> ((Cons['A | 'a] with {head: 'a, tail: 'c}) | 'b)
 //│   where
 //│     'tail <: (Cons[?] with {head: 'head0, tail: 'tail}) | Nil & 'c
 //│     'c :> Cons['A] with {head: 'A, tail: 'c}

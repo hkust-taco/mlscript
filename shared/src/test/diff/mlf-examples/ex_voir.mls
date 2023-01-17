@@ -20,7 +20,7 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
+//│ 'b -> (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail})
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -55,9 +55,9 @@ def choose3 x y z = choose (choose x y) z
 def id = (fun x -> x) : Sid
 def id_ = fun x -> x
 def succ n = n + 1
-//│ choose: 'a -> (forall 'b. 'b -> ('a | 'b))
+//│ choose: 'a -> 'a -> 'a
 //│       = [Function: choose]
-//│ choose3: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a | 'b | 'c)))
+//│ choose3: 'a -> 'a -> 'a -> 'a
 //│        = [Function: choose3]
 //│ id: Sid
 //│   = [Function: id]
@@ -72,9 +72,9 @@ def test = choose3 id
 def test_ = choose3 id_
 def test2 = test succ
 def test2_ = test_ succ
-//│ test: 'a -> (forall 'b. 'b -> (Sid | 'a | 'b))
+//│ test: 'a -> 'a -> (Sid | 'a)
 //│     = [Function: test]
-//│ test_: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> 'c | 'a | 'b))
+//│ test_: 'a -> 'a -> ((forall 'b. 'b -> 'b) | 'a)
 //│      = [Function: test_]
 //│ test2: 'a -> (int -> int | Sid | 'a)
 //│      = [Function: test2]
@@ -92,7 +92,7 @@ fun x -> fun y -> ((x : S1), (y : S2), if true then x else y)
 fun x -> fun y -> ((x : S1), (y : S2), x x)
 //│ Defined type alias S1
 //│ Defined type alias S2
-//│ res: (S1 & 'a) -> (forall 'b. (S2 & 'b) -> (S1, S2, 'a | 'b,))
+//│ res: (S1 & 'a) -> (S2 & 'a) -> (S1, S2, 'a,)
 //│    = [Function: res]
 //│ res: (S1 & 'a -> 'b & 'a) -> S2 -> (S1, S2, 'b,)
 //│    = [Function: res]
@@ -109,7 +109,7 @@ def mkpair x y = (x, y)
 //│        = [Function: example]
 //│ example_: ('a -> 'b & 'a) -> 'b
 //│         = [Function: example_]
-//│ mkpair: 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│ mkpair: 'a -> 'b -> ('a, 'b,)
 //│       = [Function: mkpair]
 
 // untype example mkpair
@@ -120,12 +120,12 @@ example mkpair
 example_ mkpair
 //│ res: int -> (anything, int,)
 //│    = [Function (anonymous)]
-//│ res: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('b, 'c,)), 'a,)
+//│ res: 'a -> (forall 'b, 'c. 'b -> 'c -> ('b, 'c,), 'a,)
 //│    = [Function (anonymous)]
 
 // let make_ex3 x (f:['a > sid] 'a -> 'b ) = f x 
 def make_ex3 x (f: forall 'a. ('a | Sid) -> 'b) = f x
-//│ make_ex3: anything -> (forall 'a. (anything -> 'a) -> 'a)
+//│ make_ex3: anything -> (anything -> 'a) -> 'a
 //│         = [Function: make_ex3]
 
 // let ex_list3 = [ make_ex3 succ ;

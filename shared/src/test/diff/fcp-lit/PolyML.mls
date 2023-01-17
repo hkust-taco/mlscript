@@ -90,20 +90,20 @@ def fold_left: forall 'a 'b. ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 //│ fold_left: ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 
 rec def fl f x l = match_list l x (fun head -> fun tail -> fl f (f x head) tail)
-//│ fl: ('b -> 'c -> 'd & 'd -> 'a -> 'd) -> (forall 'e. ('b & 'e) -> List['c & 'a] -> ('e | 'd))
+//│ fl: ('b -> 'c -> 'd & 'd -> 'a -> 'd) -> 'b -> List['c & 'a] -> ('b | 'd)
 
 rec def fl2 f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
-//│ fl2: ('c -> 'b -> 'a & 'a -> 'b -> 'a) -> (forall 'd. ('c & 'd) -> List['b] -> ('a | 'd))
+//│ fl2: ('c -> 'b -> 'a & 'a -> 'b -> 'a) -> 'c -> List['b] -> ('a | 'c)
 
 :RecursiveTypes // needed for this recursive def
 def fold_left = fl
-//│ ('b -> 'c -> 'd & 'd -> 'a -> 'd) -> (forall 'e. ('b & 'e) -> List['c & 'a] -> ('e | 'd))
+//│ ('b -> 'c -> 'd & 'd -> 'a -> 'd) -> 'b -> List['c & 'a] -> ('b | 'd)
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 :NoRecursiveTypes
 
 def fold_left = fl2
-//│ ('c -> 'b -> 'a & 'a -> 'b -> 'a) -> (forall 'd. ('c & 'd) -> List['b] -> ('a | 'd))
+//│ ('c -> 'b -> 'a & 'a -> 'b -> 'a) -> 'c -> List['b] -> ('a | 'c)
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 
@@ -117,7 +117,7 @@ class Collection[a]: { l: List[a] }
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
 //│ Defined Collection.Mem: Collection[?] -> anything -> bool
-//│ Defined Collection.Fold: Collection['a] -> (forall 'a0, 'a1. ('a0 -> 'a -> ('a0 & 'a1)) -> (forall 'b. ('a0 & 'b) -> ('a1 | 'b)))
+//│ Defined Collection.Fold: Collection['a] -> ('a0 -> 'a -> ('a0 & 'a1)) -> ('a0 & 'a1) -> 'a1
 
 def coll_mem c x = c.Mem x
 //│ coll_mem: Collection[?] -> anything -> bool

@@ -41,7 +41,7 @@ class E[A]
   method In = id
 //│ Defined class E[=A]
 //│ Declared E.In: E['A] -> 'A -> 'A
-//│ Defined E.In: E['A] -> (forall 'a. 'a -> 'a)
+//│ Defined E.In: E['A] -> 'a -> 'a
 
 :e
 E{} : E[?]
@@ -229,7 +229,7 @@ class Foo[A]
 //│ Defined class Foo[=A]
 //│ Declared Foo.Foo1: Foo['A] -> Foo['A] -> Foo['A]
 //│ Defined Foo.Get: Foo['A] -> 'A
-//│ Defined Foo.Foo1: Foo['A] -> (forall 'a. 'a -> 'a)
+//│ Defined Foo.Foo1: Foo['A] -> 'a -> 'a
 //│ Defined Foo.Id: Foo['A] -> 'A -> 'A
 
 def foo: Foo[?]
@@ -414,7 +414,7 @@ class Bar[A]: { value: A; id: A -> A }
   method Bid = id
 //│ Defined class Bar[=A]
 //│ Declared Bar.Bid: Bar['A] -> 'A -> 'A
-//│ Defined Bar.Bid: Bar['A] -> (forall 'a. 'a -> 'a)
+//│ Defined Bar.Bid: Bar['A] -> 'a -> 'a
 
 def bar: Bar[?]
 //│ bar: Bar[?]

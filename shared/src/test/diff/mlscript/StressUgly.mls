@@ -6,7 +6,7 @@ class Add[E]: { lhs: E; rhs: E }
 //│ Defined class Lit
 //│ Defined class Add[=E]
 //│ Declared Add.In: Add['E] -> 'E -> 'E
-//│ Defined Add.In: Add['E] -> (forall 'a. 'a -> 'a)
+//│ Defined Add.In: Add['E] -> 'a -> 'a
 
 
 

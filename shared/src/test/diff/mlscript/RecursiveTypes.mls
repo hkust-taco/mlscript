@@ -42,13 +42,13 @@ rec def l a a a = l
 
 
 rec def r a a = l
-//│ r: anything -> anything -> (forall 'l. 'l)
+//│ r: anything -> anything -> 'l
 //│   where
 //│     'l :> anything -> anything -> anything -> 'l
 //│  = [Function: r]
 
 rec def r a a = l
-//│ r: anything -> anything -> (forall 'l. 'l)
+//│ r: anything -> anything -> 'l
 //│   where
 //│     'l :> anything -> anything -> anything -> 'l
 //│  = [Function: r1]
@@ -148,26 +148,26 @@ rec def r (a: int) b c = if true then r else if true then b else c
 //│  = [Function: l4]
 //│ r: 'r
 //│   where
-//│     'r :> int -> (forall 'a. 'a -> (forall 'b. 'b -> 'b))
-//│     'b :> 'r | 'a
+//│     'r :> int -> (forall 'a. 'a -> 'a -> 'a)
+//│     'a :> 'r
 //│  = [Function: r5]
 
 if true then l else r
 //│ res: 'l | 'r
 //│   where
-//│     'r :> int -> (forall 'a. 'a -> (forall 'b. 'b -> 'b))
-//│     'b :> 'r | 'a
-//│     'l :> int -> (forall 'c. 'c -> 'c)
-//│     'c :> 'l
+//│     'r :> int -> (forall 'a. 'a -> 'a -> 'a)
+//│     'a :> 'r
+//│     'l :> int -> (forall 'b. 'b -> 'b)
+//│     'b :> 'l
 //│    = [Function: l4]
 
 if true then l else r
 //│ res: 'l | 'r
 //│   where
-//│     'r :> int -> (forall 'a. 'a -> (forall 'b. 'b -> 'b))
-//│     'b :> 'r | 'a
-//│     'l :> int -> (forall 'c. 'c -> 'c)
-//│     'c :> 'l
+//│     'r :> int -> (forall 'a. 'a -> 'a -> 'a)
+//│     'a :> 'r
+//│     'l :> int -> (forall 'b. 'b -> 'b)
+//│     'b :> 'l
 //│    = [Function: l4]
 
 
@@ -206,17 +206,17 @@ class C[A]: { a: A }
 
 :ns
 rec def foo (c: C['a]) = foo (c.a)
-//│ foo: forall 'a, 'a0, 'foo, 'b, 'a1. 'foo
+//│ foo: forall 'foo, 'a, 'a0, 'b, 'a1. 'foo
 //│   where
 //│     'foo := forall 'a2, 'a3, 'c. C['a2] -> 'c
 //│     'c :> 'b
 //│     'b :> forall 'd. 'd
 //│     'd :> 'b
 //│     'a2 <: 'a3
-//│     'a3 <: 'a0
-//│     'a0 <: C['a1]
-//│     'a1 <: 'a
-//│     'a <: 'a0
+//│     'a3 <: 'a1
+//│     'a1 <: C['a0]
+//│     'a0 <: 'a
+//│     'a <: 'a1
 
 foo
 //│ res: 'a -> nothing
@@ -418,7 +418,7 @@ f 1
 
 :ns
 rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
-//│ f: forall 'b, 'c, 'a, 'd, 'f. 'f
+//│ f: forall 'b, 'c, 'a, 'f, 'd. 'f
 //│   where
 //│     'f := forall 'e, 'g, 'h. 'e -> 'h
 //│     'e <: 'g & 'd & int & number

@@ -22,7 +22,7 @@ ib0.Get
 class MappableIntBox: JustIntBox
   method Map f = MappableIntBox { value = f this.value }
 //│ Defined class MappableIntBox
-//│ Defined MappableIntBox.Map: MappableIntBox -> (forall 'value. (int -> (int & 'value)) -> (MappableIntBox with {value: 'value}))
+//│ Defined MappableIntBox.Map: MappableIntBox -> (int -> (int & 'value)) -> (MappableIntBox with {value: 'value})
 
 mib0 = MappableIntBox { value = 0 }
 //│ mib0: MappableIntBox & {value: 0}
@@ -63,6 +63,6 @@ class BetterIntBox: { value: int }
   method Map f = BetterIntBox { value = f this.value }
 //│ Defined class BetterIntBox
 //│ Defined BetterIntBox.Get: BetterIntBox -> int
-//│ Defined BetterIntBox.Map: BetterIntBox -> (forall 'value. (int -> (int & 'value)) -> (BetterIntBox with {value: 'value}))
+//│ Defined BetterIntBox.Map: BetterIntBox -> (int -> (int & 'value)) -> (BetterIntBox with {value: 'value})
 
 

@@ -19,7 +19,7 @@ def alsoPrintSizeSimple f =
   let rec nested expr =
     f (asExpr expr)
   in nested
-//│ alsoPrintSizeSimple: (Expr[in 'a out 'a | 'a0] -> 'b) -> (forall 'a1. Expr['a1] -> 'b)
+//│ alsoPrintSizeSimple: (Expr[in 'a out 'a | 'a0] -> 'b) -> Expr['a1] -> 'b
 //│   where
 //│     'a1 :> 'a
 //│         <: 'a0
@@ -28,7 +28,7 @@ def alsoPrintSizeSimple f =
   let rec nested expr =
     asExpr (f (asExpr expr))
   in nested
-//│ alsoPrintSizeSimple: (Expr[in 'a out 'a | 'a0] -> Expr[in 'a1 out 'a1 | 'a2]) -> (forall 'a3, 'a4. Expr['a3] -> Expr['a4])
+//│ alsoPrintSizeSimple: (Expr[in 'a out 'a | 'a0] -> Expr[in 'a1 out 'a1 | 'a2]) -> Expr['a3] -> Expr['a4]
 //│   where
 //│     'a4 :> 'a1
 //│         <: 'a2
@@ -39,8 +39,10 @@ def alsoPrintSizeSimple f =
   let rec nested expr =
     f (asExpr expr) nested
   in nested
-//│ alsoPrintSizeSimple: (Expr[in 'a out 'a | 'a0] -> (forall 'a1. Expr['a1] -> 'b) -> 'b) -> (forall 'a1. Expr['a1] -> 'b)
+//│ alsoPrintSizeSimple: (Expr[in 'a out 'a | 'a0] -> (forall 'a1. Expr['a1] -> 'b) -> 'b) -> Expr['a2] -> 'b
 //│   where
+//│     'a2 :> 'a
+//│         <: 'a0
 //│     'a1 :> 'a
 //│         <: 'a0
 
@@ -60,7 +62,7 @@ def alsoPrintSize f =
 :e
 alsoPrintSize id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.61: 	alsoPrintSize id
+//│ ║  l.63: 	alsoPrintSize id
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `anything` does not match type `nothing`
 //│ res: Program -> Program | error
@@ -90,7 +92,7 @@ def alsoPrintSizeCo f =
 :e
 alsoPrintSizeCo id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.91: 	alsoPrintSizeCo id
+//│ ║  l.93: 	alsoPrintSizeCo id
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `anything` does not match type `nothing`
 //│ res: Program -> Program | error

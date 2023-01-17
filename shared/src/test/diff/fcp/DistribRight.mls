@@ -13,7 +13,7 @@ S x = x x
 //│  = [Function: S]
 
 S: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0)
+//│ res: (forall 'a. 'a -> 'a) -> 'a0 -> 'a0
 //│    = [Function: S]
 
 
@@ -22,15 +22,15 @@ S x y = x
 //│  = [Function: S1]
 
 S: (forall 'a. 'a -> 'a) -> anything -> (forall 'c. 'c -> 'c)
-//│ res: (forall 'a. 'a -> 'a) -> anything -> (forall 'c. 'c -> 'c)
+//│ res: (forall 'a. 'a -> 'a) -> anything -> 'c -> 'c
 //│    = [Function: S1]
 
 S: 'c -> 'b -> (forall 'a. 'a -> 'a)
-//│ res: (anything -> nothing) -> anything -> (forall 'a. 'a -> 'a)
+//│ res: (anything -> nothing) -> anything -> 'a -> 'a
 //│    = [Function: S1]
 
 S: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'a1. 'a1 -> 'a1)
+//│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> 'a1 -> 'a1
 //│    = [Function: S1]
 
 
@@ -39,7 +39,7 @@ S x y = x y
 //│  = [Function: S2]
 
 S: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'a1. 'a1 -> 'a1)
+//│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> 'a1 -> 'a1
 //│    = [Function: S2]
 
 
@@ -48,7 +48,7 @@ S x y z = x z y
 //│  = [Function: S3]
 
 S: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'a1. 'a1 -> 'a1) -> (forall 'a2. 'a2 -> 'a2)
+//│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'a1. 'a1 -> 'a1) -> 'a2 -> 'a2
 //│    = [Function: S3]
 
 
@@ -61,7 +61,7 @@ def T: 'a -> 'a -> anything -> 'a
 //│ T: 'a -> 'a -> anything -> 'a
 
 T: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'a1. 'a1 -> 'a1) -> (forall 'a2. 'a2 -> 'a2)
+//│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'a1. 'a1 -> 'a1) -> 'a2 -> 'a2
 
 
 // * This one works out because we currently DO NOT distribute out when both sides of
@@ -110,6 +110,6 @@ T: anything -> (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a)
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.103: 	T: anything -> (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a)
 //│ ╙──       	                                                              ^^^^^^^^
-//│ res: anything -> (forall 'a. 'a -> 'a, anything,) -> (forall 'a0. 'a0 -> 'a0)
+//│ res: anything -> (forall 'a. 'a -> 'a, anything,) -> 'a0 -> 'a0
 
 

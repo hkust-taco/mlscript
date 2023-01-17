@@ -182,7 +182,7 @@ build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.181: 	build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 //│ ║         	^^^^^
-//│ ╟── type `Ls[?a]` is not an instance of type `'b_748`
+//│ ╟── type `Ls[?a]` is not an instance of type `'b_808`
 //│ ║  l.181: 	build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 //│ ║         	               ^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -197,7 +197,7 @@ build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 
 
 def build_ = fun g -> g (fun x -> fun xs -> cons (x, xs)) nil
-//│ build_: ((forall 'b. 'b -> (forall 'a. Ls['a] -> Ls['a | 'b])) -> Ls[nothing] -> 'c) -> 'c
+//│ build_: ((forall 'a. 'a -> Ls['a] -> Ls['a]) -> Ls[nothing] -> 'b) -> 'b
 //│       = [Function: build_]
 
 build_ (fun c -> fun n -> n)
@@ -237,26 +237,26 @@ def b: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 //│  = <missing implementation>
 
 b = build_
-//│ ((forall 'b. 'b -> (forall 'a. Ls['a] -> Ls['a | 'b])) -> Ls[nothing] -> 'c) -> 'c
+//│ ((forall 'a. 'a -> Ls['a] -> Ls['a]) -> Ls[nothing] -> 'b) -> 'b
 //│   <:  b:
 //│ (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 //│  = [Function: build_]
 
 b g = build_ g
-//│ ((forall 'b. 'b -> (forall 'a. Ls['a] -> Ls['a | 'b])) -> Ls[nothing] -> 'c) -> 'c
+//│ ((forall 'a. 'a -> Ls['a] -> Ls['a]) -> Ls[nothing] -> 'b) -> 'b
 //│   <:  b:
 //│ (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 //│  = [Function: b1]
 
 b g = build_ (fun x -> g x)
-//│ ((forall 'b. 'b -> (forall 'a. Ls['a] -> Ls['a | 'b])) -> Ls[nothing] -> 'c) -> 'c
+//│ ((forall 'a. 'a -> Ls['a] -> Ls['a]) -> Ls[nothing] -> 'b) -> 'b
 //│   <:  b:
 //│ (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 //│  = [Function: b2]
 
 :e
 b g x = build_ g x
-//│ ((forall 'b. 'b -> (forall 'a. Ls['a] -> Ls['a | 'b])) -> Ls[nothing] -> 'c -> 'd) -> 'c -> 'd
+//│ ((forall 'a. 'a -> Ls['a] -> Ls['a]) -> Ls[nothing] -> 'b -> 'c) -> 'b -> 'c
 //│   <:  b:
 //│ (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> Ls['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -280,7 +280,7 @@ rec def fold f z xs =
   | undefined -> z
   | _ -> (fun ((h, t)) -> f h (fold f z t)) ht
   }
-//│ fold: ('a -> 'b -> 'c & 'A -> 'b -> 'b) -> (forall 'd. ('b & 'd) -> Ls['A & 'a] -> ('d | 'c))
+//│ fold: ('a -> 'b -> 'c & 'A -> 'b -> 'b) -> ('b & 'c) -> Ls['A & 'a] -> 'c
 //│     = [Function: fold]
 
 fold add 0 xs0

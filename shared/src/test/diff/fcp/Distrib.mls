@@ -9,7 +9,7 @@
 
 def f1: 'a -> (forall 'b. 'b -> ('a, 'b))
 def f2: 'a -> 'b -> ('a, 'b)
-//│ f1: 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│ f1: 'a -> 'b -> ('a, 'b,)
 //│ f2: 'a -> 'b -> ('a, 'b,)
 
 
@@ -18,10 +18,10 @@ def f2: 'a -> 'b -> ('a, 'b)
 f1 = f2
 //│ 'a -> 'b -> ('a, 'b,)
 //│   <:  f1:
-//│ 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│ 'a -> 'b -> ('a, 'b,)
 
 f2 = f1
-//│ 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│ 'a -> 'b -> ('a, 'b,)
 //│   <:  f2:
 //│ 'a -> 'b -> ('a, 'b,)
 
@@ -58,7 +58,7 @@ def test: forall 'a. (forall 'b. 'b -> (int, 'b)) -> (int, bool)
 //│ test: (forall 'b. 'b -> (int, 'b,)) -> (int, bool,)
 
 def f1_1: forall 'a. 'a -> (forall 'b. 'b -> ('a, 'b))
-//│ f1_1: 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│ f1_1: 'a -> 'b -> ('a, 'b,)
 
 def f2_1: forall 'a. forall 'b. 'a -> 'b -> ('a, 'b)
 def f2_2: forall 'b. forall 'a. 'a -> 'b -> ('a, 'b)

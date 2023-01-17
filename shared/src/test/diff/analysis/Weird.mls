@@ -11,7 +11,7 @@ class Base1[A]
 class Derived2[C]: Base1[anything]
   method M1 r = Derived2{}
 //│ Defined class Derived2[=C]
-//│ Defined Derived2.M1: Derived2['C] -> anything -> (forall 'C. Derived2['C])
+//│ Defined Derived2.M1: Derived2['C] -> anything -> Derived2['C0]
 
 Derived2.M1
 //│ res: Derived2['C] -> anything -> (forall 'C0. Derived2['C0])

@@ -20,7 +20,7 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
+//│ 'b -> (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail})
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -100,7 +100,7 @@ def choose: forall 'a. 'a -> 'a -> 'a
 def choose x y = if true then x else y
 //│ choose: 'a -> 'a -> 'a
 //│       = <missing implementation>
-//│ 'a -> (forall 'b. 'b -> ('a | 'b))
+//│ 'a -> 'a -> 'a
 //│   <:  choose:
 //│ 'a -> 'a -> 'a
 //│       = [Function: choose]
@@ -164,7 +164,7 @@ idss = single ids
 //│       }
 
 def revapp x f = f x
-//│ revapp: 'a -> (forall 'b. ('a -> 'b) -> 'b)
+//│ revapp: 'a -> ('a -> 'b) -> 'b
 //│       = [Function: revapp]
 
 // FreezeML D2

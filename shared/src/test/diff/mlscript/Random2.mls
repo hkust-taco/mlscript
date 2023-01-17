@@ -27,11 +27,11 @@ l
 
 :ns
 m y = l y
-//│ m: forall 'l, 'a, 'b, 'c. 'a -> 'c
+//│ m: forall 'a, 'l, 'b, 'c. 'b -> 'a
 //│   where
-//│     'c :> forall 'd. 'd -> 'l
+//│     'a :> forall 'd. 'd -> 'l
 //│     'l := forall 'd. 'd -> 'l
-//│     'a <: 'b
+//│     'b <: 'c
 
 m
 //│ res: 'l
@@ -75,7 +75,7 @@ rec def g a = a a
 
 // :ds
 def ite x y z = if x then y else z
-//│ ite: bool -> (forall 'a. 'a -> (forall 'b. 'b -> ('b | 'a)))
+//│ ite: bool -> 'a -> 'a -> 'a
 
 
 

@@ -836,7 +836,7 @@ def foo x y = (x.a <- 0, x.a + 1, x.a, x.a <- y)
 //│    = [Function: foo]
 
 def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
-//│ foo: {mut a: in 0 | 'a out int & 'a0} -> 'a -> (forall 'b. ('a0 -> 'b) -> (unit, int, 'a0, unit, 'b,))
+//│ foo: {mut a: in 0 | 'a out int & 'a0} -> 'a -> ('a0 -> 'b) -> (unit, int, 'a0, unit, 'b,)
 //│    = [Function: foo1]
 
 foo { mut a = 1 } 2 add

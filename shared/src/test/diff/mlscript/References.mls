@@ -19,7 +19,7 @@ class RefImpl[A]: Ref[A] & { mut value: A }
 
 
 def move a b = a.Set b.Get
-//│ move: Ref['A] -> (forall 'A0. Ref['A0] -> unit)
+//│ move: Ref['A] -> Ref['A0] -> unit
 //│   where
 //│     'A :> anything
 //│     = [Function: move]
@@ -29,7 +29,7 @@ def move_ty: Ref['a] -> Ref[('a & 'b)..'b] -> unit
 //│        = <missing implementation>
 :e // * Works with existential wildcards
 move_ty = move
-//│ Ref['A] -> (forall 'A0. Ref['A0] -> unit)
+//│ Ref['A] -> Ref['A0] -> unit
 //│   where
 //│     'A :> anything
 //│   <:  move_ty:
@@ -37,7 +37,7 @@ move_ty = move
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.31: 	move_ty = move
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── type `‘b_154` is not an instance of type `'a_153`
+//│ ╟── type `‘b_198` is not an instance of type `'a_197`
 //│ ║  l.27: 	def move_ty: Ref['a] -> Ref[('a & 'b)..'b] -> unit
 //│ ║        	                                       ^^
 //│ ╟── Note: constraint arises from type variable:
@@ -55,7 +55,7 @@ def move_approx: Ref['a] -> Ref['a] -> unit
 move_approx = move
 //│ move_approx: Ref['a] -> Ref['a] -> unit
 //│            = <missing implementation>
-//│ Ref['A] -> (forall 'A0. Ref['A0] -> unit)
+//│ Ref['A] -> Ref['A0] -> unit
 //│   where
 //│     'A :> anything
 //│   <:  move_approx:
@@ -67,7 +67,7 @@ def move_bad: Ref['a] -> Ref['a..('a & 'b)] -> unit
 //│         = <missing implementation>
 // :e // * Doesn't work with existential wildcards
 move_bad = move
-//│ Ref['A] -> (forall 'A0. Ref['A0] -> unit)
+//│ Ref['A] -> Ref['A0] -> unit
 //│   where
 //│     'A :> anything
 //│   <:  move_bad:
@@ -173,7 +173,7 @@ move ri rn
 
 
 def swap a b = let tmp = a.Get in (a.Set b.Get, b.Set tmp)
-//│ swap: Ref[in 'A | 'A0 out 'A] -> (forall 'A1, 'A2. Ref[in 'A1 | 'A2 out ('A | 'A1) & 'A2] -> (unit, unit,))
+//│ swap: Ref[in 'A | 'A0 out 'A] -> Ref[in 'A1 | 'A2 out ('A | 'A1) & 'A2] -> (unit, unit,)
 //│     = [Function: swap]
 
 swap r

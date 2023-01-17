@@ -18,6 +18,7 @@ trait TypeSimplifier { self: Typer =>
   def removeIrrelevantBounds(ty: SimpleType, pol: Opt[Bool] = S(true), inPlace: Bool = false)
         (implicit ctx: Ctx): SimpleType =
   {
+    val _ctx = ctx
     
     // val pols = ty.getVarsPol(S(true))
     val allVarPols = ty.getVarsPol(PolMap(pol))
@@ -32,8 +33,8 @@ trait TypeSimplifier { self: Typer =>
         if (inPlace) tv
         else freshVar(noProv, S(tv), tv.nameHint)(tv.level) tap { fv => println(s"Renewed $tv ~> $fv") })
     
-    def process(ty: ST, parent: Opt[Bool -> TV]): ST =
-        // trace(s"process($ty)") {
+    def process(ty: ST, parent: Opt[Bool -> TV], canDistribForall: Opt[Level] = N): ST =
+        // trace(s"process($ty) $canDistribForall") {
         ty match {
       
       case tv: TypeVariable =>
@@ -68,12 +69,17 @@ trait TypeSimplifier { self: Typer =>
         
         nv
         
-      case ComposedType(true, l, r) => process(l, parent) | process(r, parent)
-      case ComposedType(false, l, r) => process(l, parent) & process(r, parent)
+      case ComposedType(true, l, r) =>
+        process(l, parent, canDistribForall = canDistribForall) |
+          process(r, parent, canDistribForall = canDistribForall)
+      case ComposedType(false, l, r) =>
+        process(l, parent, canDistribForall = canDistribForall) &
+          process(r, parent, canDistribForall = canDistribForall)
       case NegType(ty) => process(ty, parent.map(_.mapFirst(!_))).neg(ty.prov)
 
-      case ProvType(ty) if inPlace => ProvType(process(ty, parent))(ty.prov)
-      case ProvType(ty) => process(ty, parent)
+      case ProvType(ty) if inPlace =>
+        ProvType(process(ty, parent, canDistribForall = canDistribForall))(ty.prov)
+      case ProvType(ty) => process(ty, parent, canDistribForall = canDistribForall)
       
       case tr @ TypeRef(defn, targs) if builtinTypes.contains(defn) => process(tr.expand, parent)
       
@@ -97,10 +103,22 @@ trait TypeSimplifier { self: Typer =>
       })(ty.prov)
       
       case PolymorphicType(plvl, bod) =>
-        PolymorphicType.mk(plvl, process(bod, parent))
+        val res = process(bod, parent, canDistribForall = S(plvl))
+        canDistribForall match {
+          case S(outerLvl) if distributeForalls =>
+            implicit val shadows: Shadows = Shadows.empty
+            implicit val raise: Raise = _ => ??? // TODO rm from instantiate
+            implicit val ctx: Ctx = _ctx.copy(lvl = outerLvl + 1)
+            PolymorphicType(plvl, res).instantiate
+          case _ =>
+            PolymorphicType.mk(plvl, res)
+        }
       
       // case ConstrainedType(cs, body) =>
       //   val rw 
+      
+      case ft @ FunctionType(l, r) =>
+        FunctionType(process(l, N), process(r, N, canDistribForall = canDistribForall))(ft.prov)
       
       // case _ => ty.mapPol(N)((_, ty) => process(ty, N))
       case _ =>
@@ -126,13 +144,14 @@ trait TypeSimplifier { self: Typer =>
     * from their structural components. */
   def normalizeTypes_!(st: SimpleType, pol: Opt[Bool] = S(true))(implicit ctx: Ctx): SimpleType =
   {
+    val _ctx = ctx
     
     lazy val allVarPols = st.getVarsPol(PolMap(pol))
     println(s"allVarPols: ${printPols(allVarPols)}")
     
     val processed = MutSet.empty[TV]
     
-    def helper(dnf: DNF, pol: Opt[Bool]): ST =
+    def helper(dnf: DNF, pol: Opt[Bool], canDistribForall: Opt[Level] = N): ST =
     {
       println(s"DNF: $dnf")
       
@@ -279,7 +298,11 @@ trait TypeSimplifier { self: Typer =>
                     S(TupleType(tupleComponents)(tt.prov)) -> rcdFields.mapValues(_.update(go(_, pol.map(!_)), go(_, pol)))
                   case S(ct: ClassTag) => S(ct) -> nFields
                   case S(ft @ FunctionType(l, r)) =>
-                    S(FunctionType(go(l, pol.map(!_)), go(r, pol))(ft.prov)) -> nFields
+                    S(FunctionType(
+                      go(l, pol.map(!_)),
+                      go(r, pol, canDistribForall =
+                        canDistribForall.orElse(Option.when(dnf.isPolymorphic)(dnf.polymLevel)))
+                    )(ft.prov)) -> nFields
                   case S(ot @ Overload(alts)) =>
                     // S(Overload(alts.map(go(_, pol).asInstanceOf[FunctionType]))(noProv)) -> nFields
                     S(ot.mapAltsPol(pol)((p, t) => go(t, p))) -> nFields
@@ -316,16 +339,24 @@ trait TypeSimplifier { self: Typer =>
       //   // .mapFirst(v => renew(v))
       //   )
       val cons = dnf.cons.map { case (lo,hi) => (go(lo,S(true)), go(hi,S(false))) }
-      PolymorphicType.mk(dnf.polymLevel, ConstrainedType.mk(cons, res))
+      val base = ConstrainedType.mk(cons, res)
+      canDistribForall match {
+        case S(outerLvl) if distributeForalls =>
+            implicit val shadows: Shadows = Shadows.empty
+            implicit val raise: Raise = _ => ??? // TODO rm from instantiate
+            implicit val ctx: Ctx = _ctx.copy(lvl = outerLvl + 1)
+            PolymorphicType(dnf.polymLevel, base).instantiate
+        case _ => PolymorphicType.mk(dnf.polymLevel, base)
+      }
     }
     
-    def go(ty: ST, pol: Opt[Bool]): ST = trace(s"norm[${printPol(pol)}] $ty") {
+    def go(ty: ST, pol: Opt[Bool], canDistribForall: Opt[Level] = N): ST = trace(s"norm[${printPol(pol)}] $ty") {
       pol match {
-        case S(p) => helper(DNF.mk(MaxLevel, Nil, ty, p)(ctx, ptr = true, etf = false), pol)
+        case S(p) => helper(DNF.mk(MaxLevel, Nil, ty, p)(ctx, ptr = true, etf = false), pol, canDistribForall)
         case N =>
           val dnf1 = DNF.mk(MaxLevel, Nil, ty, false)(ctx, ptr = true, etf = false)
           val dnf2 = DNF.mk(MaxLevel, Nil, ty, true)(ctx, ptr = true, etf = false)
-          TypeBounds.mk(helper(dnf1, S(false)), helper(dnf2, S(true)))
+          TypeBounds.mk(helper(dnf1, S(false), canDistribForall), helper(dnf2, S(true), canDistribForall))
       }
     }(r => s"~> $r")
     

@@ -28,7 +28,7 @@ n.Add
 
 
 def addTwo a0 a1 = a0.Add a1
-//│ addTwo: Addable[in 'A out 'A | 'A0] -> (forall 'a. ('A0 & 'a) -> ('A | 'a))
+//│ addTwo: Addable['A] -> 'A -> 'A
 //│       = [Function: addTwo]
 
 

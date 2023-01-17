@@ -46,10 +46,10 @@ x => not x
 //│ res: bool
 
 x => y => z => if x then y else z
-//│ res: bool -> (forall 'a. 'a -> (forall 'b. 'b -> ('a | 'b)))
+//│ res: bool -> 'a -> 'a -> 'a
 
 x => y => if x then y else x
-//│ res: (bool & 'a) -> (forall 'b. 'b -> ('a | 'b))
+//│ res: (bool & 'a) -> 'a -> 'a
 
 :e
 succ true
@@ -187,8 +187,8 @@ x => y => x x y
 //│ ║  l.+1: 	(x => x x) (x => x x)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α368_370' -> α369_371')›  <:  α368_377    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α368_370' -> α369_371')›  <:  α368_370'
+//│ ╟── this constraint:  ‹∀ 0. (α445_447' -> α446_448')›  <:  α445_454    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α445_447' -> α446_448')›  <:  α445_447'
 //│ res: error
 
 
@@ -204,8 +204,8 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (x x)) (x => f (x x)))
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α399_404'' -> α401_406'')›  <:  α399_415'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α399_404'' -> α401_406'')›  <:  α399_404''
+//│ ╟── this constraint:  ‹∀ 1. (α478_483'' -> α480_485'')›  <:  α478_494'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α478_483'' -> α480_485'')›  <:  α478_483''
 //│ res: ('a -> 'a & 'a -> 'b) -> (error | 'b)
 
 // * Z combinator:
@@ -215,8 +215,8 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α460_475'' -> α469_479'')›  <:  α460_492'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α460_475'' -> α469_479'')›  <:  α460_475''
+//│ ╟── this constraint:  ‹∀ 1. (α548_563'' -> α557_567'')›  <:  α548_580'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α548_563'' -> α557_567'')›  <:  α548_563''
 //│ res: (('a -> 'b) -> ('c -> 'd & 'a -> 'b) & ('c -> 'd) -> 'e) -> (error | 'e)
 
 // * Function that takes arbitrarily many arguments:
@@ -226,8 +226,8 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α563_578'' -> α572_582'')›  <:  α563_595'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α563_578'' -> α572_582'')›  <:  α563_578''
+//│ ╟── this constraint:  ‹∀ 1. (α668_683'' -> α677_687'')›  <:  α668_700'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α668_683'' -> α677_687'')›  <:  α668_683''
 //│ res: 'a | error
 //│   where
 //│     'a :> anything -> 'a
@@ -341,7 +341,7 @@ next => 0
 //│     'b <: 'b -> 'b
 
 x => (y => (x (y y)))
-//│ res: ('a -> 'b) -> (forall 'c. ('c -> 'a & 'c) -> 'b)
+//│ res: ('a -> 'b) -> ('c -> 'a & 'c) -> 'b
 
 (let rec x = (let y = (x x); (z => z)); x)
 //│ res: 'a -> 'a
@@ -390,8 +390,8 @@ let rec x = (let y = (x x); (z => z))
 //│ ║  l.+1: 	(w => x => x) ((y => y y) (y => y y))
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α1187_1189' -> α1188_1190')›  <:  α1187_1196    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α1187_1189' -> α1188_1190')›  <:  α1187_1189'
+//│ ╟── this constraint:  ‹∀ 0. (α1382_1384' -> α1383_1385')›  <:  α1382_1391    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α1382_1384' -> α1383_1385')›  <:  α1382_1384'
 //│ res: 'a -> 'a
 
 

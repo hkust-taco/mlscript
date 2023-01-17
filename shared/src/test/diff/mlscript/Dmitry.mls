@@ -17,14 +17,14 @@ class Hidden[A]
 //│ ║  l.7: 	  method Foo s = case s of { Class1 -> s.payload | _ -> 123 }
 //│ ╙──     	                      ^
 //│ Defined class Hidden[-A]
-//│ Defined Hidden.Foo: Hidden[?] -> (forall 'payload. ((Class1 with {payload: 'payload}) | ~Class1) -> (123 | 'payload))
+//│ Defined Hidden.Foo: Hidden[?] -> ((Class1 with {payload: 'payload}) | ~Class1) -> (123 | 'payload)
 //│ Defined Hidden.Main: Hidden['A] -> 'A -> (123 | error)
 
 class Hidden2[A]
   method Foo s = case s of { Class1 -> s.payload | _ -> 123 }
   method Main (a: A) = this.Foo (a with { payload = 1 })
 //│ Defined class Hidden2[-A]
-//│ Defined Hidden2.Foo: Hidden2[?] -> (forall 'payload. ((Class1 with {payload: 'payload}) | ~Class1) -> (123 | 'payload))
+//│ Defined Hidden2.Foo: Hidden2[?] -> ((Class1 with {payload: 'payload}) | ~Class1) -> (123 | 'payload)
 //│ Defined Hidden2.Main: Hidden2['A] -> 'A -> (123 | 1)
 
 

@@ -204,7 +204,7 @@ def sstep = fun xx -> xx (fun (xinit, xsub) ->
     then xsub r1 (div i 2)
     else xsub r2 (div i 2) in
   fun f -> f (init, sub))
-//│ ((forall 'a, 'b, 'c, 'd, 'e, 'f. ('d -> 'b & 'd -> 'a, 'f -> int -> 'c & 'e -> int -> 'c,) -> (forall 'g. (('d -> ('a, 'b,), ('e, 'f,) -> int -> 'c,) -> 'g) -> 'g)) -> 'h) -> 'h
+//│ ((forall 'a, 'b, 'c, 'd, 'e, 'f, 'g. ('e -> 'c & 'e -> 'a, 'f -> int -> 'b & 'd -> int -> 'b,) -> (('e -> ('a, 'c,), ('d, 'f,) -> int -> 'b,) -> 'g) -> 'g) -> 'h) -> 'h
 //│   <:  sstep:
 //│ ExSmall -> ExSmall
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -244,7 +244,7 @@ def sstep = fun xx -> xx (fun (xinit, xsub) ->
     then xsub r1 (div i 2)
     else xsub r2 (div i 2) in
   fun (f : forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) -> f (init, sub))
-//│ ((forall 'b, 'c, 'd, 'e. (('c | 'd) -> 'e & ('c | 'd) -> 'b, 'e -> int -> 'd & 'b -> int -> 'd,) -> (forall 'a, 'f. (forall 'r. (('c & 'a) -> 'r, 'r -> int -> ('a | 'd),) -> 'f) -> 'f)) -> 'g) -> 'g
+//│ ((forall 'b, 'a, 'c, 'd, 'e. (('a | 'b) -> 'e & ('a | 'b) -> 'd, 'e -> int -> 'b & 'd -> int -> 'b,) -> (forall 'r. ('a -> 'r, 'r -> int -> ('a | 'b),) -> 'c) -> 'c) -> 'f) -> 'f
 //│   <:  sstep:
 //│ ExSmall -> ExSmall
 //│      = [Function: sstep1]
@@ -325,7 +325,7 @@ ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub2 (xinit1 true) 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.324: 	ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub2 (xinit1 true) 0))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘r_1240` does not match type `nothing`
+//│ ╟── type `‘r_1263` does not match type `nothing`
 //│ ║  l.183: 	type ExSmall = (forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) -> 'y
 //│ ║         	                       ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -343,10 +343,10 @@ ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub1 (xinit2 true) 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.342: 	ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub1 (xinit2 true) 0))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` is not an instance of type `'r_1283`
+//│ ╟── type `anything` is not an instance of type `'r_1306`
 //│ ║  l.183: 	type ExSmall = (forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) -> 'y
 //│ ║         	                       ^^
-//│ ╟── but it flows into application with expected type `‘r_1283`
+//│ ╟── but it flows into application with expected type `‘r_1306`
 //│ ║  l.342: 	ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub1 (xinit2 true) 0))
 //│ ║         	                                                               ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -368,7 +368,7 @@ def base : ExSig
 def base f = f ((((fun a -> a, fun r -> fun (i : int) -> r), fun r -> fun (i : int) -> fun a -> a), fun f -> fun b -> fun r -> f r b),)
 //│ base: ExSig
 //│     = <missing implementation>
-//│ ((((forall 'a. 'a -> 'a, forall 'b. 'b -> int -> 'b,), anything -> int -> (forall 'c. 'c -> 'c),), forall 'd, 'e, 'f. ('d -> 'e -> 'f) -> 'e -> 'd -> 'f,) -> 'g) -> 'g
+//│ ((((forall 'a. 'a -> 'a, forall 'b. 'b -> int -> 'b,), forall 'c. anything -> int -> 'c -> 'c,), forall 'd, 'e, 'f. ('d -> 'e -> 'f) -> 'e -> 'd -> 'f,) -> 'g) -> 'g
 //│   <:  base:
 //│ ExSig
 //│     = [Function: base]
@@ -393,7 +393,7 @@ def step = fun xx -> xx (fun ((((xinit, xsub), xupdate), xfold),) ->
     else (fst r, xupdate (snd r) (div i 2) a) in
   let fold f b r = xfold f (xfold f b (fst r)) (snd r) in
     fun f -> f ((((init, sub), update), fold),) )
-//│ ((forall 'c, 'd, 'b, 'e, 'f, 'b0, 'g, 'h, 'i, 'j, 'k, 'a, 'l, 'a0, 'm, 'n, 'o. ((('g -> 'f & 'g -> 'i, 'b -> int -> 'm & 'a0 -> int -> 'm,), 'b0 -> int -> 'h -> 'd & 'a -> int -> 'h -> 'j,), 'o -> 'c -> 'n -> 'e & 'o -> 'e -> 'l -> 'k,) -> (forall 'p. (((('g -> ('i, 'f,), ('a0, 'b,) -> int -> 'm,), forall 'a1, 'b1. ('a & 'a1, 'b0 & 'b1,) -> int -> 'h -> ('a1 | 'j, 'b1 | 'd,),), 'o -> 'c -> ('n, 'l,) -> 'k,) -> 'p) -> 'p)) -> 'q) -> 'q
+//│ ((forall 'b, 'c, 'd, 'e, 'f, 'b0, 'g, 'h, 'a, 'i, 'j, 'k, 'l, 'm, 'n, 'a0, 'o, 'p. ((('l -> 'm & 'l -> 'o, 'b -> int -> 'p & 'a -> int -> 'p,), 'b0 -> int -> 'c -> 'g & 'a0 -> int -> 'c -> 'n,), 'f -> 'h -> 'i -> 'k & 'f -> 'k -> 'd -> 'e,) -> (((('l -> ('o, 'm,), ('a, 'b,) -> int -> 'p,), forall 'a1, 'b1. ('a0 & 'a1, 'b0 & 'b1,) -> int -> 'c -> ('a1 | 'n, 'b1 | 'g,),), 'f -> 'h -> ('i, 'd,) -> 'e,) -> 'j) -> 'j) -> 'q) -> 'q
 //│   <:  step:
 //│ ExSig -> ExSig
 //│ ╔══[ERROR] Type mismatch in def definition:

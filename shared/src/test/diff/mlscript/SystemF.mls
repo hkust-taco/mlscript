@@ -136,8 +136,8 @@ iter256_ty = iter256
 //│ ║  l.131: 	iter256() = iter4() (iter4())
 //│ ║         	            ^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 3. α126_454''''›  <:  α124_423''    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 3. α126_444'''›  <:  α124_222''
+//│ ╟── this constraint:  ‹∀ 3. α126_491''''›  <:  α124_460''    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 3. α126_481'''›  <:  α124_222''
 //│ iter256: () -> ((('a | 'b) -> ('b & 'c) & 'c -> ('a & 'c)) -> 'c -> 'b | error)
 //│   where
 //│     'c :> 'b
@@ -159,11 +159,11 @@ iter256_ty = iter256
 Z s z = z
 def Z_ty: forall 'X. ('X -> 'X) -> 'X -> 'X
 Z_ty = Z
-//│ Z: anything -> (forall 'a. 'a -> 'a)
+//│ Z: anything -> 'a -> 'a
 //│  = [Function: Z]
 //│ Z_ty: ('X -> 'X) -> 'X -> 'X
 //│     = <missing implementation>
-//│ anything -> (forall 'a. 'a -> 'a)
+//│ anything -> 'a -> 'a
 //│   <:  Z_ty:
 //│ ('X -> 'X) -> 'X -> 'X
 //│     = [Function: Z]
@@ -171,18 +171,18 @@ Z_ty = Z
 S n s z = s (n s z)
 def S_ty: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 S_ty = S
-//│ S: ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│ S: ('a -> 'b -> 'c) -> ('c -> 'd & 'a) -> 'b -> 'd
 //│  = [Function: S]
 //│ S_ty: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X0. ('X0 -> 'X0) -> 'X0 -> 'X0)
 //│     = <missing implementation>
-//│ ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│ ('a -> 'b -> 'c) -> ('c -> 'd & 'a) -> 'b -> 'd
 //│   <:  S_ty:
 //│ (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X0. ('X0 -> 'X0) -> 'X0 -> 'X0)
 //│     = [Function: S]
 
 res1() = iter4() S Z
 res2() = iter256() S Z
-//│ res1: () -> (forall 'a. ('b -> 'a & 'c -> 'b & 'b -> 'c) -> 'c -> 'a)
+//│ res1: () -> ('a -> 'b & 'c -> 'a & 'a -> 'c) -> 'c -> 'b
 //│     = [Function: res1]
 //│ res2: () -> (error | (forall 'a. ('b -> 'a & 'b -> 'c & 'c -> 'c & 'c -> 'b & 'b -> 'b) -> 'c -> 'a))
 //│     = [Function: res2]
@@ -211,13 +211,13 @@ fst_ty = fst
 snd p = p (fun x -> fun y -> y)
 def snd_ty: forall 'X. forall 'Y. (forall 'Z. ('X -> 'Y -> 'Z) -> 'Z) -> 'Y
 snd_ty = snd
-//│ pair: 'a -> (forall 'b. 'b -> (forall 'c. ('a -> 'b -> 'c) -> 'c))
+//│ pair: 'a -> 'b -> ('a -> 'b -> 'c) -> 'c
 //│     = [Function: pair]
-//│ pair_ty: 'X -> 'Y -> (forall 'Z. ('X -> 'Y -> 'Z) -> 'Z)
+//│ pair_ty: 'X -> 'Y -> ('X -> 'Y -> 'Z) -> 'Z
 //│        = <missing implementation>
-//│ 'a -> (forall 'b. 'b -> (forall 'c. ('a -> 'b -> 'c) -> 'c))
+//│ 'a -> 'b -> ('a -> 'b -> 'c) -> 'c
 //│   <:  pair_ty:
-//│ 'X -> 'Y -> (forall 'Z. ('X -> 'Y -> 'Z) -> 'Z)
+//│ 'X -> 'Y -> ('X -> 'Y -> 'Z) -> 'Z
 //│        = [Function: pair]
 //│ fst: ((forall 'a. 'a -> anything -> 'a) -> 'b) -> 'b
 //│    = [Function: fst]
@@ -227,17 +227,17 @@ snd_ty = snd
 //│   <:  fst_ty:
 //│ (forall 'Z. ('X -> anything -> 'Z) -> 'Z) -> 'X
 //│       = [Function: fst]
-//│ snd: ((anything -> (forall 'a. 'a -> 'a)) -> 'b) -> 'b
+//│ snd: ((forall 'a. anything -> 'a -> 'a) -> 'b) -> 'b
 //│    = [Function: snd]
 //│ snd_ty: (forall 'Z. (anything -> 'Y -> 'Z) -> 'Z) -> 'Y
 //│       = <missing implementation>
-//│ ((anything -> (forall 'a. 'a -> 'a)) -> 'b) -> 'b
+//│ ((forall 'a. anything -> 'a -> 'a) -> 'b) -> 'b
 //│   <:  snd_ty:
 //│ (forall 'Z. (anything -> 'Y -> 'Z) -> 'Z) -> 'Y
 //│       = [Function: snd]
 
 p02 = pair Z (S (S Z))
-//│ p02: ((anything -> (forall 'a. 'a -> 'a)) -> (forall 'b. ('c -> 'b & 'd -> 'c) -> 'd -> 'b) -> 'e) -> 'e
+//│ p02: ((forall 'a. anything -> 'a -> 'a) -> (forall 'b. ('c -> 'b & 'd -> 'c) -> 'd -> 'b) -> 'e) -> 'e
 //│    = [Function (anonymous)]
 
 p02_ty = pair_ty Z_ty (S_ty (S_ty Z_ty))
@@ -246,7 +246,7 @@ p02_ty = pair_ty Z_ty (S_ty (S_ty Z_ty))
 
 fp = fst p02
 sp = snd p02
-//│ fp: anything -> (forall 'a. 'a -> 'a)
+//│ fp: anything -> 'a -> 'a
 //│   = [Function: Z]
 //│ sp: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
 //│   = [Function (anonymous)]
@@ -264,7 +264,7 @@ sp_ty = sp
 //│   <:  fp_ty:
 //│ ('a -> 'a) -> 'a -> 'a
 //│      = [Function: Z]
-//│ anything -> (forall 'a. 'a -> 'a)
+//│ anything -> 'a -> 'a
 //│   <:  fp_ty:
 //│ ('a -> 'a) -> 'a -> 'a
 //│      = [Function: Z]
@@ -280,15 +280,15 @@ sp_ty = sp
 //│      = [Function (anonymous)]
 
 p01 = pair (()) Z
-//│ p01: (() -> (anything -> (forall 'a. 'a -> 'a)) -> 'b) -> 'b
+//│ p01: (() -> (forall 'a. anything -> 'a -> 'a) -> 'b) -> 'b
 //│    = [Function (anonymous)]
 
 p = pair (())
-//│ p: 'a -> (forall 'b. (() -> 'a -> 'b) -> 'b)
+//│ p: 'a -> (() -> 'a -> 'b) -> 'b
 //│  = [Function (anonymous)]
 
 p01 = p Z
-//│ p01: (() -> (anything -> (forall 'a. 'a -> 'a)) -> 'b) -> 'b
+//│ p01: (() -> (forall 'a. anything -> 'a -> 'a) -> 'b) -> 'b
 //│    = [Function (anonymous)]
 
 
@@ -300,26 +300,26 @@ p01 = p Z
 p02 = pair Z (S (S Z))
 p02_ty = pair_ty Z_ty (S_ty (S_ty Z_ty))
 p02_ty = p02
-//│ p02: ((anything -> (forall 'a. 'a -> 'a)) -> (forall 'b. ('c -> 'b & 'd -> 'c) -> 'd -> 'b) -> 'e) -> 'e
+//│ p02: ((forall 'a. anything -> 'a -> 'a) -> (forall 'b. ('c -> 'b & 'd -> 'c) -> 'd -> 'b) -> 'e) -> 'e
 //│    = [Function (anonymous)]
 //│ p02_ty: ((forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X0. ('X0 -> 'X0) -> 'X0 -> 'X0) -> 'Z) -> 'Z
 //│       = [Function (anonymous)]
-//│ p02_ty: ((anything -> (forall 'a. 'a -> 'a)) -> (forall 'b. ('c -> 'b & 'd -> 'c) -> 'd -> 'b) -> 'e) -> 'e
+//│ p02_ty: ((forall 'a. anything -> 'a -> 'a) -> (forall 'b. ('c -> 'b & 'd -> 'c) -> 'd -> 'b) -> 'e) -> 'e
 //│       = [Function (anonymous)]
 
 fp02 = fst p02
 def fp02_ty: forall 'X. ('X -> 'X) -> 'X -> 'X
 fp02_ty = fst_ty p02_ty
 fp02_ty = fp02
-//│ fp02: anything -> (forall 'a. 'a -> 'a)
+//│ fp02: anything -> 'a -> 'a
 //│     = [Function: Z]
 //│ fp02_ty: ('X -> 'X) -> 'X -> 'X
 //│        = <missing implementation>
-//│ anything -> (forall 'a. 'a -> 'a)
+//│ anything -> 'a -> 'a
 //│   <:  fp02_ty:
 //│ ('X -> 'X) -> 'X -> 'X
 //│        = [Function: Z]
-//│ anything -> (forall 'a. 'a -> 'a)
+//│ anything -> 'a -> 'a
 //│   <:  fp02_ty:
 //│ ('X -> 'X) -> 'X -> 'X
 //│        = [Function: Z]
@@ -379,7 +379,7 @@ fls x y = y
 not b t f = b f t
 //│ tru: 'a -> anything -> 'a
 //│    = [Function: tru]
-//│ fls: anything -> (forall 'a. 'a -> 'a)
+//│ fls: anything -> 'a -> 'a
 //│    = [Function: fls]
 //│ not: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 //│    = [Function: not]
@@ -392,7 +392,7 @@ E q = q id
 // shallow (not (not true))        -- Shallow encoding.
 // λid.id(λb t f.b f t)(id(λb t f.b f t)(λx y.x))
 sh id = (id not) ((id not) tru)
-//│ sh: ((forall 'a, 'b, 'c. ('a -> 'b -> 'c) -> 'b -> 'a -> 'c) -> (forall 'd. 'd -> anything -> 'd) -> 'e & (forall 'a, 'b, 'c. ('a -> 'b -> 'c) -> 'b -> 'a -> 'c) -> 'e -> 'f) -> 'f
+//│ sh: ((forall 'a, 'b, 'c. ('a -> 'b -> 'c) -> 'b -> 'a -> 'c) -> (forall 'd. 'd -> anything -> 'd) -> 'e & (forall 'f, 'g, 'h. ('f -> 'g -> 'h) -> 'g -> 'f -> 'h) -> 'e -> 'i) -> 'i
 //│   = [Function: sh]
 
 // E[forall X.X->X->X](shallow (not( not true)))
@@ -416,8 +416,8 @@ pu sh_pu
 //│ ║  l.414: 	pu sh_pu
 //│ ║         	^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α2603_2620'' -> ‹∀ 2. (α2604_2628''' -> ‹∀ 3. (α2605_2629'''' -> α2614_2630'''')›)›)››  <:  α2609_2684    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α2603_2620'' -> ‹∀ 2. (α2604_2628''' -> ‹∀ 3. (α2605_2629'''' -> α2614_2630'''')›)›)››  <:  α2609_2627''
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α3142_3159'' -> ‹∀ 2. (α3143_3167''' -> ‹∀ 3. (α3144_3168'''' -> α3153_3169'''')›)›)››  <:  α3148_3244    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α3142_3159'' -> ‹∀ 2. (α3143_3167''' -> ‹∀ 3. (α3144_3168'''' -> α3153_3169'''')›)›)››  <:  α3148_3166''
 //│ res: anything -> anything -> anything -> nothing | error
 //│    = [Function (anonymous)]
 
@@ -428,8 +428,8 @@ pu sh_pu
 //│ ║  l.426: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α2707_2709' -> α2708_2710')›  <:  α2707_2716    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α2707_2709' -> α2708_2710')›  <:  α2707_2709'
+//│ ╟── this constraint:  ‹∀ 0. (α3267_3269' -> α3268_3270')›  <:  α3267_3276    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α3267_3269' -> α3268_3270')›  <:  α3267_3269'
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded

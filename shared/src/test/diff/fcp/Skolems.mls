@@ -132,7 +132,7 @@ foo (fun x -> foo (fun y -> x) x)
 def oops (i: forall 'a. 'a -> 'a) =
   let _ = (i id) "hello"
   in i
-//│ oops: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ oops: (forall 'a. 'a -> 'a) -> 'a0 -> 'a0
 //│     = [Function: oops]
 
 // If we were not careful this would lead to unsound skolem extrusion:
@@ -166,7 +166,7 @@ f 42 // Boom!
 
 
 def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
-//│ swapWith: (forall 'y, 'x. ('x, 'y,) -> ('y, 'x,)) -> ('a, 'b,) -> ('b, 'a,)
+//│ swapWith: (forall 'x, 'y. ('x, 'y,) -> ('y, 'x,)) -> ('a, 'b,) -> ('b, 'a,)
 //│         = <missing implementation>
 
 def swapWith f (a, b) = f ((a, b))
@@ -188,7 +188,7 @@ fun (x: ('a -> 'a)) -> swapWith x
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.168: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
 //│ ╙──       	                         ^^
-//│ res: (('a | (anything, anything,)) -> ((nothing, nothing,) & 'a)) -> (forall 'a0, 'b. ('a0, 'b,) -> ('b, 'a0,) | error)
+//│ res: (('a | (anything, anything,)) -> ((nothing, nothing,) & 'a)) -> (('a0, 'b,) -> ('b, 'a0,) | error)
 //│    = [Function: res]
 
 foo = fun (x: ('a -> 'b)) -> swapWith x

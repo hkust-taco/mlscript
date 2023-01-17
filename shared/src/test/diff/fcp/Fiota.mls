@@ -6,7 +6,7 @@
 // On the Power of Coercion Abstraction
 
 S x y z = x z (y z)
-//│ S: ('a -> 'b -> 'c) -> (forall 'd. ('d -> 'b) -> ('a & 'd) -> 'c)
+//│ S: ('a -> 'b -> 'c) -> ('a -> 'b) -> 'a -> 'c
 //│  = [Function: S]
 
 type S1 = ('a -> 'b -> 'c) -> ('a -> 'b) -> 'a -> 'c
@@ -32,7 +32,7 @@ s2: S1
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.31: 	s2: S1
 //│ ║        	^^
-//│ ╟── type `‘a_145` is not an instance of type `'a_142`
+//│ ╟── type `‘a_161` is not an instance of type `'a_158`
 //│ ║  l.15: 	type S2 = (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║        	                  ^^
 //│ ╟── Note: constraint arises from type variable:
@@ -51,8 +51,8 @@ S: Id -> Id -> Id -> Id
 //│ ║  l.49: 	S: Id -> Id -> Id -> Id
 //│ ║        	^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  Id  <:  'a147_171'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  Id  <:  'a147_148''
+//│ ╟── this constraint:  Id  <:  'a163_187'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  Id  <:  'a163_164''
 //│ res: Id -> Id -> Id -> Id
 //│    = [Function: S]
 

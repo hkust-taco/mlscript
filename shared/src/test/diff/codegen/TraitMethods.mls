@@ -167,7 +167,7 @@ class BBB: AAA
 //│ Declared AAA.F: AAA -> int
 //│ Declared AAA.G: AAA -> 'a -> 'a
 //│ Defined AAA.F: AAA -> 1
-//│ Defined AAA.G: AAA -> (forall 'a. 'a -> 'a)
+//│ Defined AAA.G: AAA -> 'a -> 'a
 //│ Defined class BBB
 //│ Declared BBB.F: BBB -> int
 //│ Declared BBB.G: BBB -> 'a -> 'a

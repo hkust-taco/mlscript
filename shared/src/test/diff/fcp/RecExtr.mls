@@ -129,28 +129,28 @@ rec def lr1 = { head = 0; tail = lr1 }
 foo_ty = foo
 //│ 'a -> 'b -> ('a, 'b,)
 //│   <:  foo_ty:
-//│ 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│ 'a -> 'b -> ('a, 'b,)
 //│       = [Function: foo]
 
 
 foo_ty x y = (x, y,)
 //│ 'a -> 'b -> ('a, 'b,)
 //│   <:  foo_ty:
-//│ 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│ 'a -> 'b -> ('a, 'b,)
 //│       = [Function: foo_ty3]
 
 
 foo2_ty = foo2
 //│ 'a -> 'b -> 'c -> ('a, 'b, 'c,)
 //│   <:  foo2_ty:
-//│ 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
+//│ 'a -> 'b -> 'c -> ('a, 'b, 'c,)
 //│        = [Function: foo2]
 
 
 foo2_ty x y z = (x, y, z,)
 //│ 'a -> 'b -> 'c -> ('a, 'b, 'c,)
 //│   <:  foo2_ty:
-//│ 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
+//│ 'a -> 'b -> 'c -> ('a, 'b, 'c,)
 //│        = [Function: foo2_ty3]
 
 

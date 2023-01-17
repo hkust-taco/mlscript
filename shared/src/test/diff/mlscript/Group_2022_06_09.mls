@@ -59,7 +59,7 @@ def eval eval e = case e of {
   | Lit -> e.n
   | Add -> eval eval e.lhs + eval eval e.rhs
   }
-//│ eval: ('a -> 'rhs -> int & 'a -> 'lhs -> int & 'a) -> (forall 'n. ((Add with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {n: 'n})) -> (int | 'n))
+//│ eval: ('a -> 'rhs -> int & 'a -> 'lhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {n: 'n})) -> (int | 'n)
 //│     = [Function: eval1]
 
 eval eval! e
@@ -71,7 +71,7 @@ def evalN evalN e = case e of {
   | Neg -> 0 - evalN evalN e.e
   | _ -> eval evalN e
   }
-//│ evalN: ('a -> 'e -> int & 'a -> 'lhs -> int & 'a -> 'rhs -> int & 'a) -> (forall 'n. ((Add with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {n: 'n}) | (Neg with {e: 'e})) -> (int | 'n))
+//│ evalN: ('a -> 'e -> int & 'a -> 'lhs -> int & 'a -> 'rhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {n: 'n}) | (Neg with {e: 'e})) -> (int | 'n)
 //│      = [Function: evalN]
 
 evalN eval! e
@@ -108,7 +108,7 @@ def evalN evalN k e = case e of {
   | Neg -> 0 - evalN evalN k e.e
   | _ -> k e
   }
-//│ evalN: ('a -> 'b -> 'e -> int & 'a) -> (forall 'c, 'd. ('c -> 'd & 'b) -> ((Neg with {e: 'e}) | 'c & ~#Neg) -> (int | 'd))
+//│ evalN: ('a -> 'b -> 'e -> int & 'a) -> ('c -> 'd & 'b) -> ((Neg with {e: 'e}) | 'c & ~#Neg) -> (int | 'd)
 //│      = [Function: evalN1]
 
 

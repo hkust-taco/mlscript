@@ -59,15 +59,15 @@ f (rcd with { y = 2 })
 
 
 def f a b = if true then a else b
-//│ f: 'a -> (forall 'b. 'b -> ('a | 'b))
+//│ f: 'a -> 'a -> 'a
 //│  = [Function: f1]
 
 def f a b = (if true then a else b) with { x = "oops" }
-//│ f: 'a -> (forall 'b. 'b -> ('a\x & {x: "oops"} | 'b\x & {x: "oops"}))
+//│ f: 'a -> 'a -> ('a\x & {x: "oops"})
 //│  = [Function: f2]
 
 def f a b = let tmp = a.x in (if true then a else b) with { x = "oops" }
-//│ f: ({x: anything} & 'a) -> (forall 'b. 'b -> ('b\x & {x: "oops"} | 'a\x & {x: "oops"}))
+//│ f: ({x: anything} & 'a) -> 'b -> ('a\x & {x: "oops"} | 'b\x & {x: "oops"})
 //│  = [Function: f3]
 
 

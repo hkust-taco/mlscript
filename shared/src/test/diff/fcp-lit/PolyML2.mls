@@ -18,7 +18,7 @@ def Nil = Nil {}
 //│ Nil: Nil
 
 def Cons head tail = Cons { head; tail }
-//│ Cons: 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
+//│ Cons: 'b -> (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail})
 
 // ------------ Type signatures for functions used in the examples ------------
 // (I guess)
@@ -35,7 +35,7 @@ rec def fold_left f x l = case l of
   { Nil -> x
   | Cons -> fold_left f (f x l.head) l.tail
   }
-//│ fold_left: ('a -> 'head -> 'b & 'b -> 'head0 -> 'b) -> (forall 'c. ('a & 'c) -> ((Cons[?] with {head: 'head, tail: 'tail}) | Nil) -> ('c | 'b))
+//│ fold_left: ('a -> 'head -> 'b & 'b -> 'head0 -> 'b) -> 'a -> ((Cons[?] with {head: 'head, tail: 'tail}) | Nil) -> ('a | 'b)
 //│   where
 //│     'tail <: (Cons[?] with {head: 'head0, tail: 'tail}) | Nil
 
@@ -48,7 +48,7 @@ class Collection[a]: { l: List[a] }
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
 //│ Defined Collection.Mem: Collection[?] -> anything -> bool
-//│ Defined Collection.Fold: Collection['a] -> (forall 'b, 'c, 'd. ('b -> 'a -> ('b & 'c) & 'd -> 'a -> ('b & 'c)) -> (forall 'e. ('d & 'e) -> ('e | 'c)))
+//│ Defined Collection.Fold: Collection['a] -> ('b -> 'a -> ('b & 'c) & 'd -> 'a -> ('b & 'c)) -> 'd -> ('c | 'd)
 
 def coll_mem c x = c.Mem x
 //│ coll_mem: Collection[?] -> anything -> bool
