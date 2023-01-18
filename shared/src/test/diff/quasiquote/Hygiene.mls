@@ -1,0 +1,37 @@
+:NewParser
+:ge
+
+// Test 1
+let code_test = code"let x_0 = 1; let x_1 = 10; let x_2 = 100; x_0 + x_1 + x_2"
+//│ code_test: code & {Code#C = anything, Code#T <: int}
+//│          = [
+//│              'Let',
+//│              'x_0',
+//│              [ 1 ],
+//│              [ 'Let', 'x_1', [ 10 ], [ 'Let', 'x_2', [Array], [Array] ] ]
+//│            ]
+
+run(code_test)
+//│ res: int
+//│    = 111
+
+let x_2 = 8
+//│ x_2: 8
+//│    = 8
+
+run(code_test)
+//│ res: int
+//│    = 111
+
+x_2
+//│ res: 8
+//│    = 8
+
+
+
+// Test 2:
+//fun test(n, cde) = if n > 0 then 
+                        // code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" 
+                        // else cde
+//│ = undefined
+

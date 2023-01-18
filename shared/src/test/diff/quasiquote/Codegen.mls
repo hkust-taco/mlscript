@@ -3,157 +3,93 @@
 
 // Var 
 // TODO: need to handle all keywords
-let code_var2 = code"x"
-//│ code_var2: Code
-//│          = [ 'New_Var', "const x_sym = Symbol('x')", 'x', 'x_sym' ]
 
 // Lam 
 let code_lam = code"(x, y) => x + 1"
-//│ code_lam: Code
+//│ code_lam: code & {Code#C = anything, Code#T <: (int, anything,) -> int}
 //│         = [
 //│             'Lam',
-//│             [
-//│               'Tup',
-//│               [ 'New_Var', "const x_sym = Symbol('x')", 'x', 'x_sym' ],
-//│               [ 'New_Var', "const y_sym = Symbol('y')", 'y', 'y_sym' ]
-//│             ],
-//│             [ 'App', '+', [ 'Var', 'x_sym' ], [ '1' ] ]
+//│             [ 'Tup', [ 'Var', 'x' ], [ 'Var', 'y' ] ],
+//│             [ 'App', '+', [ 'Var', 'x' ], [ 1 ] ]
 //│           ]
 
 // App
 let code_app = code"1 + 2 * 3"
-//│ code_app: Code
-//│         = [ 'App', '+', [ '1' ], [ 'App', '*', [ '2' ], [ '3' ] ] ]
+//│ code_app: code & {Code#C = anything, Code#T <: int}
+//│         = [ 'App', '+', [ 1 ], [ 'App', '*', [ 2 ], [ 3 ] ] ]
 
-let code_app2 = code"y + 1"
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.28: 	let code_app2 = code"y + 1"
-//│ ║        	                     ^^^
-//│ ╟── reference of type `anything` is not an instance of type `int`
-//│ ║  l.28: 	let code_app2 = code"y + 1"
-//│ ╙──      	                     ^
-//│ code_app2: Code
-//│          = [
-//│              'App',
-//│              '+',
-//│              [ 'New_Var', "const y_sym = Symbol('y')", 'y', 'y_sym' ],
-//│              [ '1' ]
-//│            ]
 
 let code_app3 = code"test(x)"
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.43: 	let code_app3 = code"test(x)"
-//│ ║        	                     ^^^^^^^
-//│ ╟── reference of type `anything` is not a function
-//│ ║  l.43: 	let code_app3 = code"test(x)"
-//│ ╙──      	                     ^^^^
-//│ code_app3: Code
-//│          = [
-//│              'external',
-//│              'test',
-//│              [ 'Tup', [ 'New_Var', "const x_sym = Symbol('x')", 'x', 'x_sym' ] ]
-//│            ]
+//│ code_app3: code & {Code#C = anything, Code#T = nothing}
+//│          = [ 'Fun', [ 'Var', 'test' ], [ 'Tup', [ 'Var', 'x' ] ] ]
 
 // If
-let code_if = code"if true then 1 else 2"
-//│ code_if: Code
-//│        = [ 'If', [ 'Var', 'true' ], [ '1' ], [ '2' ] ]
+let code_if = code"if true then 1 else 3"
+//│ code_if: code & {Code#C = anything, Code#T <: 1 | 3}
+//│        = [ 'If', [ 'Var', 'true' ], [ 1 ], [ 3 ] ]
 
 // Unquoted 
-let code_unquoted = code"${1 + 1}"
-//│ code_unquoted: Code
-//│              = [ 'App', '+', [ '1' ], [ '1' ] ]
 
 // Tup 
 let code_tup = code"(1,2,3)"
-//│ code_tup: Code
-//│         = [ 'Tup', [ '1' ], [ '2' ], [ '3' ] ]
+//│ code_tup: code & {Code#C = anything, Code#T <: (1, 2, 3,)}
+//│         = [ 'Tup', [ 1 ], [ 2 ], [ 3 ] ]
 
 let code_tup2 = code"(x, y, z)"
-//│ code_tup2: Code
-//│          = [
-//│              'Tup',
-//│              [ 'New_Var', "const x_sym = Symbol('x')", 'x', 'x_sym' ],
-//│              [ 'New_Var', "const y_sym = Symbol('y')", 'y', 'y_sym' ],
-//│              [ 'New_Var', "const z_sym = Symbol('z')", 'z', 'z_sym' ]
-//│            ]
+//│ code_tup2: code & {Code#C = anything, Code#T <: (nothing, nothing, nothing,)}
+//│          = [ 'Tup', [ 'Var', 'x' ], [ 'Var', 'y' ], [ 'Var', 'z' ] ]
 
 // Rcd 
 let code_res = code"{y: 1, x: 2}"
-//│ code_res: Code
-//│         = [
-//│             'Rcd',
-//│             [ [ 'New_Var', "const y_sym = Symbol('y')", 'y', 'y_sym' ], [ '1' ] ],
-//│             [ [ 'New_Var', "const x_sym = Symbol('x')", 'x', 'x_sym' ], [ '2' ] ]
-//│           ]
+//│ code_res: code & {Code#C = anything, Code#T <: {x: 2, y: 1}}
+//│         = [ 'Rcd', [ [ 'Var', 'y' ], [ 1 ] ], [ [ 'Var', 'x' ], [ 2 ] ] ]
 
 // Sel
 let code_sel = code"{ x: 1 }.x"
-//│ code_sel: Code
-//│         = [ 'Sel', [ 'Rcd', [ [Array], [Array] ] ], [ 'Var', 'x_sym' ] ]
+//│ code_sel: code & {Code#C = anything, Code#T <: 1}
+//│         = [ 'Sel', [ 'Rcd', [ [Array], [Array] ] ], [ 'Var', 'x' ] ]
+
+run(code_sel)
+//│ res: 1
+//│    = 0
 
 // let code_sel2 = code"let a = {x : 1}; a.x" <- this has errors in normal code
 
 // Let 
 let code_let1 = code"let x = 2; let y = 3; y"
-//│ code_let1: Code
-//│          = [
-//│              'Let',
-//│              [ 'New_Var', "const x_sym = Symbol('x')", 'x', 'x_sym' ],
-//│              [ '2' ],
-//│              [
-//│                'Let',
-//│                [ 'New_Var', "const y_sym = Symbol('y')", 'y', 'y_sym' ],
-//│                [ '3' ],
-//│                [ 'Var', 'y_sym' ]
-//│              ]
-//│            ]
+//│ code_let1: code & {Code#C = anything, Code#T <: 3}
+//│          = [ 'Let', 'x', [ 2 ], [ 'Let', 'y', [ 3 ], [ 'Var', 'y' ] ] ]
 
-let code_let2 = code"let x = (y) => y; let y = (z) => z + 2; x(2)"
-//│ code_let2: Code
+let code_let2 = code"let x = (y) => y; let y = (z) => z + 2; x(3)"
+//│ code_let2: code & {Code#C = anything, Code#T <: 3}
 //│          = [
 //│              'Let',
-//│              [ 'New_Var', "const x_sym = Symbol('x')", 'x', 'x_sym' ],
-//│              [ 'Lam', [ 'Tup', [Array] ], [ 'Var', 'y_sym' ] ],
+//│              'x',
+//│              [ 'Lam', [ 'Tup', [Array] ], [ 'Var', 'y' ] ],
 //│              [
 //│                'Let',
-//│                [ 'Var', 'y_sym' ],
+//│                'y',
 //│                [ 'Lam', [Array], [Array] ],
-//│                [ 'Fun', 'x', [Array] ]
+//│                [ 'Fun', [Array], [Array] ]
 //│              ]
 //│            ]
 
-let code_let3 = code"let x = 3; let x = 4; x"
-//│ code_let3: Code
-//│          = [
-//│              'Let',
-//│              [ 'New_Var', "const x_sym = Symbol('x')", 'x', 'x_sym' ],
-//│              [ '3' ],
-//│              [ 'Let', [ 'Var', 'x_sym' ], [ '4' ], [ 'Var', 'x_sym' ] ]
-//│            ]
+let code_let3 = code"let x = 3; x + x"
+//│ code_let3: code & {Code#C = anything, Code#T <: int}
+//│          = [ 'Let', 'x', [ 3 ], [ 'App', '+', [ 'Var', 'x' ], [ 'Var', 'x' ] ] ]
+
+
 
 // Subs 
-let code_subs = code"let a = (1, 2)[1]"
-//│ code_subs: Code
-//│          = [
-//│              'Let',
-//│              [ 'New_Var', "const a_sym = Symbol('a')", 'a', 'a_sym' ],
-//│              [ 'Subs', [ 'Tup', [Array], [Array] ], [ '1' ] ],
-//│              [ 'undefined' ]
-//│            ]
+//let code_subs = code"let a = (1, 2); a[0]"
 
-let code_subs2 = code"let a = (1, 2, 3); a[0]"
-//│ code_subs2: Code
-//│           = [
-//│               'Let',
-//│               [ 'New_Var', "const a_sym = Symbol('a')", 'a', 'a_sym' ],
-//│               [ 'Tup', [ '1' ], [ '2' ], [ '3' ] ],
-//│               [ 'Subs', [ 'Var', 'a_sym' ], [ '0' ] ]
-//│             ]
+//run(code_subs)
 
-let code_subs3 = code"(1,2,3)[1]"
-//│ code_subs3: Code
-//│           = [ 'Subs', [ 'Tup', [ '1' ], [ '2' ], [ '3' ] ], [ '1' ] ]
+
+//let code_subs2 = code"let a = (1, 2, 3); a[0]"
+
+//let code_subs3 = code"(1,2,3)[1]"
+
 
 // Assign <-
 // TODO: find out how to generate
@@ -171,14 +107,22 @@ let f = new Foo(1)
 //│  = Foo { x: 1 }
 
 let code_new = code"new Foo(1)"
-//│ code_new: Code
+//│ code_new: code & {Code#C = anything, Code#T <: Foo & {x: 1}}
 //│ Code generation encountered an error:
 //│   New HEAD (TypeName(Foo),1,) BODY TypingUnit(List())
 //│ 	New not supported in quasiquotes... yet
 
-
 // Quoted 
 let d = code"code"3""
-//│ d: Code
+//│ d: code & {Code#C = anything, Code#T <: code & {Code#C = anything, Code#T <: 3}}
 //│ Code generation encountered an error:
-//│   Quoted directly in quasiquote is not correct syntax (?)
+//│   missing implementation: Quoted(IntLit(3))
+
+let code_fun = code"let x = (y) => y; x(3)"
+//│ code_fun: code & {Code#C = anything, Code#T <: 3}
+//│         = [
+//│             'Let',
+//│             'x',
+//│             [ 'Lam', [ 'Tup', [Array] ], [ 'Var', 'y' ] ],
+//│             [ 'Fun', [ 'Var', 'x' ], [ 'Tup', [Array] ] ]
+//│           ]

@@ -194,8 +194,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       tyDef
     } :: {
       val tv = freshVar(noProv)(0)
-      val td = TypeDef(Cls, TypeName("Code"), (TypeName("T"), tv) :: (TypeName("C"), tv):: Nil, Nil, TopType, Nil, Nil, Set.empty, N, Nil)
-      td.tvarVariances = S(MutMap(tv -> VarianceInfo.co))
+      val cv = freshVar(noProv)(0)
+      val td = TypeDef(Cls, TypeName("Code"), (TypeName("T"), tv) :: (TypeName("C"), cv):: Nil, Nil, TopType, Nil, Nil, Set.empty, N, Nil)
+      td.tvarVariances = S(MutMap(tv -> VarianceInfo.co, cv -> VarianceInfo.contra))
       td
     } :: Nil
   val primitiveTypes: Set[Str] =
@@ -269,7 +270,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val v = freshVar(noProv)(1)
         val v2 = freshVar(noProv)(1)
         PolymorphicType(0, fun(singleTup(TypeRef(TypeName("Code"), v :: v2 :: Nil)(noProv)), v)(noProv))
-      }
+      },
       
     ) ++ primTypes ++ primTypes.map(p => "" + p._1.capitalize -> p._2) // TODO settle on naming convention...
   }

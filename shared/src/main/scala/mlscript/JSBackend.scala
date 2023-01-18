@@ -188,7 +188,6 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         R(blkScope.tempVars `with` (flattened.iterator.zipWithIndex.map {
           case (t: Term, index) if index + 1 == flattened.length => translateTerm(t)(blkScope).`return`
           case (t: Term, index)                                  => JSExprStmt(translateTerm(t)(blkScope))
-          // TODO: find out if we need to support this.
           case (_: Def | _: TypeDef | _: NuFunDef /* | _: NuTypeDef */, _) =>
             throw CodeGenError("unsupported definitions in blocks")
         }.toList)),
@@ -249,8 +248,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case New(_, TypingUnit(_)) =>
       throw CodeGenError("custom class body is not supported yet")
     case Quoted(body) =>
-      val variable_mapping = HashMap("true" -> "true", "false" -> "false")
-      translateQuoted(body, variable_mapping)
+      translateQuoted(body)
     case Unquoted(body) =>
       throw CodeGenError("unquotes should only be in quasiquotes")
     case _: Bind | _: Test | If(_, _) | TyApp(_, _) | _: Splc =>
@@ -468,30 +466,14 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   /**
    * Translate body of quasiquotes (Quoted) to S-expression in JSArray
    */
-  private def translateQuoted(body: Term, var_map: HashMap[Str, Str])(implicit scope: Scope): JSExpr = body match { // TODO: remove implicit argument for scope
+  private def translateQuoted(body: Term)(implicit scope: Scope): JSExpr = body match { // TODO: remove implicit argument for scope
     case Var(name) =>
-      //val symbol_name = s"${name}_sym"
-      val symbol_name = name
-      if (!(var_map contains name)) {
-        var_map += (name -> symbol_name) // This is wrong, we need to use the randomUUID thing
-        JSArray(Ls(JSExpr("NewVar"), JSExpr(symbol_name), JSExpr(s"const ${symbol_name} = Symbol('${name}');"))) 
-      } else {
-        JSArray(Ls(JSExpr("Var"), JSExpr(var_map(name)))) 
-      }
+      JSArray(Ls(JSExpr("Var"), JSExpr(name)))
     case App(App(Var(op), Tup((N -> Fld(_, _, lhs)) :: Nil)), Tup((N -> Fld(_, _, rhs)) :: Nil))
       if JSBinary.operators contains op =>
-        JSArray(Ls(JSExpr("App"), JSExpr(op), translateQuoted(lhs, var_map), translateQuoted(rhs, var_map)))
+        JSArray(Ls(JSExpr("App"), JSExpr(op), translateQuoted(lhs), translateQuoted(rhs)))
     case App(trm, parameters @ Tup(args)) =>
-      val result = trm match {
-        case Var(nme) => 
-          if (var_map contains nme) {
-            JSArray(Ls(JSExpr("Fun"), JSExpr(nme), translateQuoted(parameters, var_map)))
-          } else {
-            JSArray(Ls(JSExpr("external"), JSExpr(nme), translateQuoted(parameters, var_map)))
-          }
-        case _ => JSArray(Ls(JSExpr("Fun"), translateQuoted(trm, var_map), translateQuoted(parameters, var_map)))
-      }
-      result
+      JSArray(Ls(JSExpr("Fun"), translateQuoted(trm), translateQuoted(parameters)))
     case IntLit(value) => 
       JSArray(Ls(JSLit(value.toString)))
     case StrLit(value) =>
@@ -501,45 +483,30 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case UnitLit(value) => 
       JSArray(Ls(JSExpr(if (value) "undefined" else "null")))
     case Lam(params, body) =>
-      JSArray(Ls(JSExpr("Lam"), translateQuoted(params, var_map), translateQuoted(body, var_map)))
+      JSArray(Ls(JSExpr("Lam"), translateQuoted(params), translateQuoted(body)))
     case Tup(fields) =>
-      var fields_array = fields map { case (_, Fld(_, _, term)) => translateQuoted(term, var_map) }
+      var fields_array = fields map { case (_, Fld(_, _, term)) => translateQuoted(term) }
       JSArray(JSExpr("Tup")::fields_array)
-    case Unquoted(body) =>
-      JSArray(Ls(translateUnquoted(body)))
+    case Unquoted(unquoted_body) => 
+      translateTerm(unquoted_body)
     case If(IfThen(condition, branch1), S(branch2)) => // error if no ELSE branch in normal code
-      JSArray(Ls(JSExpr("If"), translateQuoted(condition, var_map), translateQuoted(branch1, var_map), translateQuoted(branch2, var_map)))
+      JSArray(Ls(JSExpr("If"), translateQuoted(condition), translateQuoted(branch1), translateQuoted(branch2)))
     case Bra(rcd, trm) => 
-      translateQuoted(trm, var_map)
+      translateQuoted(trm)
     case Rcd(fields) => 
-      var fields_array = fields map {case (key @ Var(_), Fld(_, _, term)) => JSArray(Ls(translateQuoted(key, var_map), translateQuoted(term, var_map)))}
+      var fields_array = fields map {case (key @ Var(_), Fld(_, _, term)) => JSArray(Ls(translateQuoted(key), translateQuoted(term)))}
       JSArray(JSExpr("Rcd") :: fields_array)
     case Sel(receiver, fieldName) => 
-      JSArray(Ls(JSExpr("Sel"), translateQuoted(receiver, var_map), translateQuoted(fieldName, var_map)))
-    case Let(isRec, name, rhs, body) => 
-      JSArray(Ls(JSExpr("Let"), translateQuoted(name, var_map), translateQuoted(rhs, var_map), translateQuoted(body, var_map)))
+      JSArray(Ls(JSExpr("Sel"), translateQuoted(receiver), translateQuoted(fieldName)))
+    case Let(isRec, Var(name), rhs, body) => 
+      JSArray(Ls(JSExpr("Let"), JSExpr(name), translateQuoted(rhs), translateQuoted(body)))
     case Subs(arr, idx) => 
-      JSArray(Ls(JSExpr("Subs"), translateQuoted(arr, var_map), translateQuoted(idx, var_map)))
-    // TODO: check Squid
-    case Quoted(body) => throw CodeGenError("Quoted directly in quasiquote is not correct syntax (?)")
-    // TODO: Blk, New
+      JSArray(Ls(JSExpr("Subs"), translateQuoted(arr), translateQuoted(idx)))
     case Blk(stmts) => throw CodeGenError("Blk not supported in quasiquotes... yet")
     case New(S(head), body) => throw CodeGenError(s"New HEAD ${head} BODY ${body}\n\tNew not supported in quasiquotes... yet")
     case Assign(_,_) | Asc(_,_) | Bind(_,_) | Test(_,_) | With(_,_) | CaseOf(_,_) | TyApp(_,_) | Splc(_) => 
       throw CodeGenError(s"${inspect(body)} not supported in quasiquotes")
     case _ => throw CodeGenError(s"missing implementation: ${inspect(body)}")
-  }
-
-  /**
-    * Execute Quoted nodes in Unquoted and translateTerm other nodes.
-    */
-
-  private def translateUnquoted(body: Term)(implicit scope: Scope): JSExpr = body match {
-    case Quoted(_) => 
-      val callee = translateVar("run", true) 
-      callee(translateTerm(body)) 
-      // callee(args.map { case (_, Fld(_, _, arg)) => translateTerm(arg) }: _*)
-    case _ => translateTerm(body)
   }
 
   /**

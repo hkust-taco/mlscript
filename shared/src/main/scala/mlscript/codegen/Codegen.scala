@@ -842,20 +842,38 @@ object JSCodeHelpers {
 final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
   def toSourceCode: SourceCode = SourceCode(
     """
-    let var_symbol_map = {};
+    const defined_symbol_map = new Map();
+    const undefined_symbol_map = new Map()
     
+    function _randomSymbol(name) {
+      const { randomUUID } = require("crypto");
+      return `${name}_${randomUUID().slice(0, 4)}`;
+    }
+
+    function _getSymbol(name) {
+      if (defined_symbol_map.has(name)) {
+        return defined_symbol_map.get(name);
+      } else if (undefined_symbol_map.has(name)) {
+        return undefined_symbol_map.get(name); 
+      } else {
+        undefined_symbol_map.set(name, _randomSymbol(name));
+        return undefined_symbol_map.get(name);
+      }
+    }
+
+    function _checkUndefined(program_str) {
+      undefined_symbol_map.forEach((value, key) => program_str = program_str.replaceAll(value, key));
+			return program_str;
+    }
+      
     function _run(s_expr) { 
       switch(s_expr[0]) {
         case "Var":
-          return s_expr[1];
-        case "NewVar":
-          return s_expr[1];
+          return _getSymbol(s_expr[1]);
         case "App":
           return _run(s_expr[2]) + s_expr[1] + _run(s_expr[3]);
         case "Fun":
           return `${_run(s_expr[1])}(${_run(s_expr[2]).slice(1, -1)})`
-        case "external":
-          return `${_run(s_expr[1])}(${_run(s_expr[2]).slice(1, -1)})`;
         case "If":
           return `if (${_run(s_expr[1])}) { ${_run(s_expr[2])} } else { ${_run(s_expr[3])} }`;
         case "Lam":
@@ -868,17 +886,24 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
           return `{${rcd_array.toString()}}`
         case "Sel":
           return 0;
-        case "Let":
-          return `{const ${_run(s_expr[1])} = ${_run(s_expr[2])}; ${_run(s_expr[3])}}`;
+        case "Let": // second is the var 
+          let unique_name = _randomSymbol(s_expr[1]);
+          defined_symbol_map.set(s_expr[1], unique_name);
+          return `const ${unique_name} = ${_run(s_expr[2])}; ${_run(s_expr[3])}`;
         case "Subs":
           return `${_run(s_expr[1])}[${_run(s_expr[2])}]`;
         case "StrLit":
           return `'${s_expr[1]}'`;
+        case "Unquoted": 
+					let res = run(s_expr[1]);
+					return `${_run(res)}`;
         default:
-          return s_expr;
+          return s_expr[0];
       }
     } 
     let res = _run(s_expr);
+    res = _checkUndefined(res);
+		console.log(res);
     return eval(res);
     """
   )
