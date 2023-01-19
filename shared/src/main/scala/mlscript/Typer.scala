@@ -60,10 +60,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     def get(name: Str): Opt[TypeInfo] = if (inQuasiquote) {
       getFreeVar(name) match {
         case typeInfo @ Some(value) =>
-          print("found free variable type info: " + name)
           typeInfo
         case None =>
-          print("Unable to found the type info via free variable env")
           env.get(name) orElse parent.dlof(_.get(name))(N)
       }
     } else {
@@ -93,7 +91,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
 
     def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, MutMap.empty, inQuasiquote = inQuasiquote, outermostFreeVarType = MutSet.empty)
-    
+
     def nextLevel: Ctx = copy(lvl = lvl + 1)
 
     private val abcCache: MutMap[Str, Set[TypeName]] = MutMap.empty
@@ -195,7 +193,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     } :: {
       val tv = freshVar(noProv)(0)
       val td = TypeDef(Cls, TypeName("Code"), (TypeName("T"), tv) :: (TypeName("C"), tv):: Nil, Nil, TopType, Nil, Nil, Set.empty, N, Nil)
-      td.tvarVariances = S(MutMap(tv -> VarianceInfo.co))
+      td.tvarVariances = S(MutMap(tv -> VarianceInfo.bi))
       td
     } :: Nil
   val primitiveTypes: Set[Str] =
@@ -571,7 +569,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case v@ValidVar(name) =>
         val ty = ctx.get(name).fold(
           if (ctx.inQuasiquote) {
-            println("free: " + name)
             val res = new TypeVariable(lvl, Nil, Nil, nameHint = Some(name + ".type"))(prov)
             ctx.freeVarsEnv += name -> VarSymbol(res, v)
             ctx.outermostCtx match {
@@ -863,10 +860,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         }
 
         val body_type = typeTerm(body)(nestedCtx, raise, vars)
+        println("check subtype" + body_type.toString)
+        val b = TypeRef(TypeName("Code"), Nil)(noProv).<:<(body_type);
+        println(b);
+        println(body_type.<:<(TypeRef(TypeName("Code"), Nil)(noProv)))
         body_type match {
           case TypeRef(TypeName("Code"), return_type :: context_type :: Nil) =>
             context_type match {
-              case TypeRef(TypeName("anything"), Nil) => return_type // inline the return type instead of returning Code[T, C]
+              case TypeRef(TypeName("nothing"), Nil) => return_type // inline the return type instead of returning Code[T, C]
               case _ => body_type // free variable found, return Code[T, C]
             }
           case _ => err(s"Type mismatch. Required: Code, found: $body_type", body.toLoc)
