@@ -30,8 +30,84 @@ x_2
 
 
 // Test 2:
-//fun test(n, cde) = if n > 0 then 
-                        // code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" 
-                        // else cde
-//│ = undefined
+fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: α47'
+//│ ║  l.33: 	fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
+//│ ╙──      	                                                ^^^^^^^^
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: [α44']
+//│ ║  l.33: 	fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
+//│ ╙──      	                                                                                ^^^
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: α54'
+//│ ║  l.33: 	fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${cde} + x")}" else cde
+//│ ╙──      	                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ test: (int, 'a,) -> (code & {Code#C = anything, Code#T <: error | int} | 'a)
+//│     = [Function: test]
+test(2, code"0")
+//│ res: code & {Code#C = anything, Code#T <: error | int}
+//│    = [
+//│        'Let',
+//│        'x',
+//│        [ 2 ],
+//│        [ 'Let', 'x', [ 1 ], [ 'App', '+', [Array], [Array] ] ]
+//│      ]
 
+run(test(2, code"0"))
+//│ res: error | int
+//│    = 2
+
+run(test(1, code"2"))
+//│ res: error | int
+//│    = 3
+
+run(test(0, code"3"))
+//│ res: error | int
+//│    = 3
+
+fun test1(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test1(n - 1, code"x")}" else cde
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: α116'
+//│ ║  l.66: 	fun test1(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test1(n - 1, code"x")}" else cde
+//│ ╙──      	                                                 ^^^^^^^^
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: α121'
+//│ ║  l.66: 	fun test1(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test1(n - 1, code"x")}" else cde
+//│ ╙──      	                                                              ^^^^^^^^^^^^^^^^^^^^^
+//│ test1: (int, 'a,) -> (code & {Code#C = anything, Code#T <: error} | 'a)
+//│      = [Function: test1]
+
+test1(2, code"0")
+//│ res: code & {Code#C = anything, Code#T <: 0 | error}
+//│    = [ 'Let', 'x', [ 2 ], [ 'Let', 'x', [ 1 ], [ 'Var', 'x' ] ] ]
+
+
+run(test1(2, code"0"))
+//│ res: 0 | error
+//│    = 1
+
+run(test1(1, code"2"))
+//│ res: 2 | error
+//│    = 1
+
+run(test1(0, code"1"))
+//│ res: 1 | error
+//│    = 1
+
+:d
+:ne
+:NoJS
+Const(2)
+//│ 0. Typing term Const (2,)
+//│ | 0. Typing term Const
+//│ | 0. : (int<number> -> Code[int<number>,⊥])
+//│ | 0. Typing term 2,
+//│ | | 0. Typing term 2
+//│ | | 0. : 2<int,number>
+//│ | 0. : (2<int,number>,)
+//│ | CONSTRAIN (int<number> -> Code[int<number>,⊥]) <! (2<int,number> -> α178)
+//│ |   where 
+//│ | C (int<number> -> Code[int<number>,⊥]) <! (2<int,number> -> α178)    (0)
+//│ | | C (2<int,number>,) <! (int<number>,)    (1)
+//│ | | C Code[int<number>,⊥] <! α178    (1)
+//│ 0. : α178
+//│ ⬤ Typed as: α178
+//│  where: 
+//│ 		α178 :> Code[int<number>,⊥]
+//│ res: code & {Code#C, Code#T <: int}

@@ -163,6 +163,7 @@ object Polyfill {
     buffer += BuiltinFunc("not", makeUnaryFunc("!"))
     buffer += BuiltinFunc("negate", makeUnaryFunc("-"))
     buffer += BuiltinFunc("run", makeRunFunc("run"))
+    buffer += BuiltinFunc("Const", makeConstFunc())
     buffer.toList
   }
 
@@ -194,6 +195,9 @@ object Polyfill {
 
   private def makeUnaryFunc(op: Str)(name: Str): JSFuncDecl =
     fn(name, param("x")) { `return`(id("x").unary(op)) }
+
+  private def makeConstFunc()(name: Str): JSFuncDecl = 
+    fn(name, param("x")) { `return`(JSArray(Ls(id("x")))) }
   
   private def makeRunFunc(op: Str)(name: Str): JSFuncDecl = 
     //fn("run", param("s_expr")) {`return`((JSExpr("eval(1+1)")))}

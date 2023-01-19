@@ -267,11 +267,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         PolymorphicType(0, ArrayType(FieldType(S(v), v)(noProv))(noProv))
       },
       "run" -> {
-        val v = freshVar(noProv)(1)
-        val v2 = freshVar(noProv)(1)
-        PolymorphicType(0, fun(singleTup(TypeRef(TypeName("Code"), v :: v2 :: Nil)(noProv)), v)(noProv))
+        val tv = freshVar(noProv)(1)
+        val cv = freshVar(noProv)(1)
+        PolymorphicType(0, fun(singleTup(TypeRef(TypeName("Code"), tv :: cv :: Nil)(noProv)), tv)(noProv))
       },
-      
+      "Const" -> fun(singleTup(IntType), TypeRef(TypeName("Code"), IntType :: BotType :: Nil)(noProv))(noProv),
     ) ++ primTypes ++ primTypes.map(p => "" + p._1.capitalize -> p._2) // TODO settle on naming convention...
   }
 
