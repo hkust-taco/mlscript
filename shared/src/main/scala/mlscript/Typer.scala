@@ -191,13 +191,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       tyDef.tvarVariances = S(MutMap(tv -> VarianceInfo.in))
       tyDef
     } :: {
-      val tv = freshVar(noProv)(0)
-      val td = TypeDef(Cls, TypeName("Code"), (TypeName("T"), tv) :: (TypeName("C"), tv):: Nil, Nil, TopType, Nil, Nil, Set.empty, N, Nil)
-      td.tvarVariances = S(MutMap(tv -> VarianceInfo.bi))
+      val tvT, tvC = freshVar(noProv)(1)
+      val td = TypeDef(Cls, TypeName("Code"), (TypeName("T"), tvT) :: (TypeName("C"), tvC):: Nil, Nil, TopType, Nil, Nil, Set.empty, N, Nil)
+      td.tvarVariances = S(MutMap(tvT -> VarianceInfo.co, tvC -> VarianceInfo.co))
       td
     } :: Nil
   val primitiveTypes: Set[Str] =
-    builtinTypes.iterator.map(_.nme.name).flatMap(n => n.decapitalize :: n.capitalize :: Nil).toSet
+    builtinTypes.iterator.map(_.nme.name).flatMap(n => n.decapitalize :: n.capitalize :: Nil).toSet - "Code"
 
   def singleTup(ty: ST): ST =
     if (funkyTuples) ty else TupleType((N, ty.toUpper(ty.prov)) :: Nil)(noProv)

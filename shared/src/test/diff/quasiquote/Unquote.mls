@@ -1,4 +1,16 @@
 :NewParser
+
+code"1"
+//│ res: Code[1, ?]
+//│ Code generation crashed:
+//│   scala.MatchError: Quoted' 1 ' (of class mlscript.Quoted)
+
+// * Shouldn't be compilable; but has the right type
+fun Const(n) = code"n"
+//│ Const: 'a -> Code['a, ?]
+//│ Code generation crashed:
+//│   scala.MatchError: Quoted' n ' (of class mlscript.Quoted)
+
 :d
 :ne
 :NoJS
@@ -7,26 +19,26 @@ code"a + b"
 //│ 1. Typing term n, => Quoted' Unquote' Quoted' n ' ' '
 //│ | 1. Typing pattern n,
 //│ | | 1. Typing pattern n
-//│ | | 1. : α25'
-//│ | 1. : (α25',)
+//│ | | 1. : α32'
+//│ | 1. : (α32',)
 //│ | 1. Typing term Quoted' Unquote' Quoted' n ' ' '
 //│ | | 1. Typing term Unquote' Quoted' n ' '
 //│ | | | 1. Typing term Quoted' n '
 //│ | | | | 1. Typing term n
-//│ | | | | 1. : α25'
-//│ | | | 1. : Code[α25',Anything]
-//│ | | | check subtypeCode[α25',Anything]
+//│ | | | | 1. : α32'
+//│ | | | 1. : Code[α32',Anything]
+//│ | | | check subtypeCode[α32',Anything]
 //│ | | | true
 //│ | | | true
-//│ | | 1. : Code[α25',Anything]
-//│ | 1. : Code[Code[α25',Anything],Anything]
-//│ 1. : (α25' -> Code[Code[α25',Anything],Anything])
-//│ CONSTRAIN (α25' -> Code[Code[α25',Anything],Anything]) <! Const24'
+//│ | | 1. : Code[α32',Anything]
+//│ | 1. : Code[Code[α32',Anything],Anything]
+//│ 1. : (α32' -> Code[Code[α32',Anything],Anything])
+//│ CONSTRAIN (α32' -> Code[Code[α32',Anything],Anything]) <! Const31'
 //│   where 
-//│ C (α25' -> Code[Code[α25',Anything],Anything]) <! Const24'    (0)
-//│ ⬤ Typed as: Const24'
+//│ C (α32' -> Code[Code[α32',Anything],Anything]) <! Const31'    (0)
+//│ ⬤ Typed as: Const31'
 //│  where: 
-//│ 		Const24' :> (α25' -> Code[Code[α25',Anything],Anything])
+//│ 		Const31' :> (α32' -> Code[Code[α32',Anything],Anything])
 //│ 0. Typing term Quoted' + (a,) (b,) '
 //│ | 0. Typing term + (a,) (b,)
 //│ | | 0. Typing term + (a,)
@@ -34,34 +46,34 @@ code"a + b"
 //│ | | | 0. : (int<number> -> (int<number> -> int<number>))
 //│ | | | 0. Typing term a,
 //│ | | | | 0. Typing term a
-//│ | | | | 0. : a.type28
-//│ | | | 0. : (a.type28,)
-//│ | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (a.type28 -> α29)
+//│ | | | | 0. : a.type37
+//│ | | | 0. : (a.type37,)
+//│ | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (a.type37 -> α38)
 //│ | | |   where 
-//│ | | | C (int<number> -> (int<number> -> int<number>)) <! (a.type28 -> α29)    (0)
-//│ | | | | C (a.type28,) <! (int<number>,)    (1)
-//│ | | | | | C a.type28 <! int<number>    (2)
-//│ | | | | C (int<number> -> int<number>) <! α29    (3)
-//│ | | 0. : α29
+//│ | | | C (int<number> -> (int<number> -> int<number>)) <! (a.type37 -> α38)    (0)
+//│ | | | | C (a.type37,) <! (int<number>,)    (1)
+//│ | | | | | C a.type37 <! int<number>    (2)
+//│ | | | | C (int<number> -> int<number>) <! α38    (3)
+//│ | | 0. : α38
 //│ | | 0. Typing term b,
 //│ | | | 0. Typing term b
-//│ | | | 0. : b.type30
-//│ | | 0. : (b.type30,)
-//│ | | CONSTRAIN α29 <! (b.type30 -> α31)
+//│ | | | 0. : b.type39
+//│ | | 0. : (b.type39,)
+//│ | | CONSTRAIN α38 <! (b.type39 -> α40)
 //│ | |   where 
-//│ 		α29 :> (int<number> -> int<number>)
-//│ | | C α29 <! (b.type30 -> α31)    (0)
-//│ | | | C (int<number> -> int<number>) <! (b.type30 -> α31)    (1)
-//│ | | | | C (b.type30,) <! (int<number>,)    (2)
-//│ | | | | | C b.type30 <! int<number>    (3)
-//│ | | | | C int<number> <! α31    (4)
-//│ | 0. : α31
-//│ 0. : Code[α31,a.type28&b.type3032]
-//│ ⬤ Typed as: Code[α31,a.type28&b.type3032]
+//│ 		α38 :> (int<number> -> int<number>)
+//│ | | C α38 <! (b.type39 -> α40)    (0)
+//│ | | | C (int<number> -> int<number>) <! (b.type39 -> α40)    (1)
+//│ | | | | C (b.type39,) <! (int<number>,)    (2)
+//│ | | | | | C b.type39 <! int<number>    (3)
+//│ | | | | C int<number> <! α40    (4)
+//│ | 0. : α40
+//│ 0. : Code[α40,a.type37&b.type3941]
+//│ ⬤ Typed as: Code[α40,a.type37&b.type3941]
 //│  where: 
-//│ 		α31 :> int<number>
-//│ Const: anything -> code
-//│ res: code
+//│ 		α40 :> int<number>
+//│ Const: 'a -> Code[Code['a, ?], ?]
+//│ res: Code[int, nothing]
 
 :NewParser
 :d
@@ -85,15 +97,15 @@ code"let a = 1; ${code"b + ${code"1"}"} + 1"
 //│ | | | | | | | | | 0. : (int<number> -> (int<number> -> int<number>))
 //│ | | | | | | | | | 0. Typing term b,
 //│ | | | | | | | | | | 0. Typing term b
-//│ | | | | | | | | | | 0. : b.type33
-//│ | | | | | | | | | 0. : (b.type33,)
-//│ | | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (b.type33 -> α34)
+//│ | | | | | | | | | | 0. : b.type44
+//│ | | | | | | | | | 0. : (b.type44,)
+//│ | | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (b.type44 -> α45)
 //│ | | | | | | | | |   where 
-//│ | | | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (b.type33 -> α34)    (0)
-//│ | | | | | | | | | | C (b.type33,) <! (int<number>,)    (1)
-//│ | | | | | | | | | | | C b.type33 <! int<number>    (2)
-//│ | | | | | | | | | | C (int<number> -> int<number>) <! α34    (3)
-//│ | | | | | | | | 0. : α34
+//│ | | | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (b.type44 -> α45)    (0)
+//│ | | | | | | | | | | C (b.type44,) <! (int<number>,)    (1)
+//│ | | | | | | | | | | | C b.type44 <! int<number>    (2)
+//│ | | | | | | | | | | C (int<number> -> int<number>) <! α45    (3)
+//│ | | | | | | | | 0. : α45
 //│ | | | | | | | | 0. Typing term Unquote' Quoted' 1 ' ',
 //│ | | | | | | | | | 0. Typing term Unquote' Quoted' 1 ' '
 //│ | | | | | | | | | | 0. Typing term Quoted' 1 '
@@ -105,108 +117,114 @@ code"let a = 1; ${code"b + ${code"1"}"} + 1"
 //│ | | | | | | | | | | true
 //│ | | | | | | | | | 0. : Code[1<int,number>,Anything]
 //│ | | | | | | | | 0. : (Code[1<int,number>,Anything],)
-//│ | | | | | | | | CONSTRAIN α34 <! (Code[1<int,number>,Anything] -> α35)
+//│ | | | | | | | | CONSTRAIN α45 <! (Code[1<int,number>,Anything] -> α46)
 //│ | | | | | | | |   where 
-//│ 		α34 :> (int<number> -> int<number>)
-//│ | | | | | | | | C α34 <! (Code[1<int,number>,Anything] -> α35)    (0)
-//│ | | | | | | | | | C (int<number> -> int<number>) <! (Code[1<int,number>,Anything] -> α35)    (1)
+//│ 		α45 :> (int<number> -> int<number>)
+//│ | | | | | | | | C α45 <! (Code[1<int,number>,Anything] -> α46)    (0)
+//│ | | | | | | | | | C (int<number> -> int<number>) <! (Code[1<int,number>,Anything] -> α46)    (1)
 //│ | | | | | | | | | | C (Code[1<int,number>,Anything],) <! (int<number>,)    (2)
 //│ | | | | | | | | | | | C Code[1<int,number>,Anything] <! int<number>    (3)
-//│ | | | | | | | | | | | | C (code<> & {Code#T: mut ..⊤, Code#C: mut ..⊤}) <! int<number>    (4)
-//│ | | | | | | | | | | | | | ARGH  DNF(code<>{Code#T: mut ..⊤, Code#C: mut ..⊤})  <!  DNF(int<number>{})
-//│ | | | | | | | | | | | | | | Consider code<>{Code#T: mut ..⊤, Code#C: mut ..⊤} <: DNF(int<number>{})
+//│ | | | | | | | | | | | | C (code<> & {Code#T: mut ..1<int,number>, Code#C: mut ..Anything}) <! int<number>    (4)
+//│ | | | | | | | | | | | | | ARGH  DNF(code<>{Code#T: mut ..1<int,number>, Code#C: mut ..⊤})  <!  DNF(int<number>{})
+//│ | | | | | | | | | | | | | | Consider code<>{Code#T: mut ..1<int,number>, Code#C: mut ..⊤} <: DNF(int<number>{})
 //│ | | | | | | | | | | | | | | Possible: List()
-//│ | | | | | | | | | | | | | | A  code<>{Code#T: mut ..⊤, Code#C: mut ..⊤}  %  List()  <!  List()  %  ⊥
-//│ | | | | | | | | | | | | | | | CONSTRAINT FAILURE: (code<> & {Code#T: mut ..⊤, Code#C: mut ..⊤}) <: int<number>
+//│ | | | | | | | | | | | | | | A  code<>{Code#T: mut ..1<int,number>, Code#C: mut ..⊤}  %  List()  <!  List()  %  ⊥
+//│ | | | | | | | | | | | | | | | CONSTRAINT FAILURE: (code<> & {Code#T: mut ..1<int,number>, Code#C: mut ..Anything}) <: int<number>
 //│ | | | | | | | | | | | | | | | allVarPols: 
-//│ | | | | | | | | | | | | | | | norm[+] (code<> & {Code#T: mut ..⊤, Code#C: mut ..⊤})
-//│ | | | | | | | | | | | | | | | | DNF: DNF(code<>{Code#T: mut ..⊤, Code#C: mut ..⊤})
+//│ | | | | | | | | | | | | | | | norm[+] (code<> & {Code#T: mut ..1<int,number>, Code#C: mut ..Anything})
+//│ | | | | | | | | | | | | | | | | DNF: DNF(code<>{Code#T: mut ..1<int,number>, Code#C: mut ..Anything})
 //│ | | | | | | | | | | | | | | | | norm[-] ⊥
 //│ | | | | | | | | | | | | | | | | | DNF: DNF()
 //│ | | | | | | | | | | | | | | | | ~> ⊥
-//│ | | | | | | | | | | | | | | | | norm[+] ⊤
-//│ | | | | | | | | | | | | | | | | | DNF: DNF()
-//│ | | | | | | | | | | | | | | | | ~> ⊤
+//│ | | | | | | | | | | | | | | | | norm[+] 1<int,number>
+//│ | | | | | | | | | | | | | | | | | DNF: DNF(1<int,number>{})
+//│ | | | | | | | | | | | | | | | | ~> 1<int,number>
 //│ | | | | | | | | | | | | | | | | norm[-] ⊥
 //│ | | | | | | | | | | | | | | | | | DNF: DNF()
 //│ | | | | | | | | | | | | | | | | ~> ⊥
-//│ | | | | | | | | | | | | | | | | norm[+] ⊤
+//│ | | | | | | | | | | | | | | | | norm[+] Anything
 //│ | | | | | | | | | | | | | | | | | DNF: DNF()
 //│ | | | | | | | | | | | | | | | | ~> ⊤
-//│ | | | | | | | | | | | | | | | ~> (code<> & {Code#C: mut ..⊤, Code#T: mut ..⊤})
-//│ | | | | | | | | | | | | | | | CONSTRAIN error<> <! α35
+//│ | | | | | | | | | | | | | | | ~> (code<> & {Code#C: mut ..⊤, Code#T: mut ..1<int,number>})
+//│ | | | | | | | | | | | | | | | CONSTRAIN error<> <! α46
 //│ | | | | | | | | | | | | | | |   where 
-//│ | | | | | | | | | | | | | | | C error<> <! α35    (0)
-//│ | | | | | | | | | | C int<number> <! α35    (5)
-//│ | | | | | | | 0. : α35
-//│ | | | | | | 0. : Code[α35,b.type3336]
-//│ | | | | | | check subtypeCode[α35,b.type3336]
+//│ | | | | | | | | | | | | | | | C error<> <! α46    (0)
+//│ | | | | | | | | | | C int<number> <! α46    (5)
+//│ | | | | | | | 0. : α46
+//│ | | | | | | 0. : Code[α46,b.type4447]
+//│ | | | | | | check subtypeCode[α46,b.type4447]
 //│ | | | | | | true
 //│ | | | | | | true
-//│ | | | | | 0. : Code[α35,b.type3336]
-//│ | | | | 0. : (Code[α35,b.type3336],)
-//│ | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (Code[α35,b.type3336] -> α37)
+//│ | | | | | 0. : Code[α46,b.type4447]
+//│ | | | | 0. : (Code[α46,b.type4447],)
+//│ | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (Code[α46,b.type4447] -> α48)
 //│ | | | |   where 
-//│ 		α35 :> int<number> | error<>
-//│ | | | | C (int<number> -> (int<number> -> int<number>)) <! (Code[α35,b.type3336] -> α37)    (0)
-//│ | | | | | C (Code[α35,b.type3336],) <! (int<number>,)    (1)
-//│ | | | | | | C Code[α35,b.type3336] <! int<number>    (2)
-//│ | | | | | | | C (code<> & {Code#T: mut ..⊤, Code#C: mut ..⊤}) <! int<number>    (3)
-//│ | | | | | | | | ARGH  DNF(code<>{Code#T: mut ..⊤, Code#C: mut ..⊤})  <!  DNF(int<number>{})
-//│ | | | | | | | | | Consider code<>{Code#T: mut ..⊤, Code#C: mut ..⊤} <: DNF(int<number>{})
+//│ 		α46 :> int<number> | error<>
+//│ | | | | C (int<number> -> (int<number> -> int<number>)) <! (Code[α46,b.type4447] -> α48)    (0)
+//│ | | | | | C (Code[α46,b.type4447],) <! (int<number>,)    (1)
+//│ | | | | | | C Code[α46,b.type4447] <! int<number>    (2)
+//│ | | | | | | | C (code<> & {Code#T: mut ..α46, Code#C: mut ..b.type4447}) <! int<number>    (3)
+//│ | | | | | | | | ARGH  DNF(code<>{Code#T: mut ..α46, Code#C: mut ..b.type4447})  <!  DNF(int<number>{})
+//│ | | | | | | | | | Consider code<>{Code#T: mut ..α46, Code#C: mut ..b.type4447} <: DNF(int<number>{})
 //│ | | | | | | | | | Possible: List()
-//│ | | | | | | | | | A  code<>{Code#T: mut ..⊤, Code#C: mut ..⊤}  %  List()  <!  List()  %  ⊥
-//│ | | | | | | | | | | CONSTRAINT FAILURE: (code<> & {Code#T: mut ..⊤, Code#C: mut ..⊤}) <: int<number>
-//│ | | | | | | | | | | allVarPols: 
-//│ | | | | | | | | | | norm[+] (code<> & {Code#T: mut ..⊤, Code#C: mut ..⊤})
-//│ | | | | | | | | | | | DNF: DNF(code<>{Code#T: mut ..⊤, Code#C: mut ..⊤})
+//│ | | | | | | | | | A  code<>{Code#T: mut ..α46, Code#C: mut ..b.type4447}  %  List()  <!  List()  %  ⊥
+//│ | | | | | | | | | | CONSTRAINT FAILURE: (code<> & {Code#T: mut ..α46, Code#C: mut ..b.type4447}) <: int<number>
+//│ | | | | | | | | | | allVarPols: +b.type4447, +α49
+//│ | | | | | | | | | | norm[+] (code<> & {Code#T: mut ..α49, Code#C: mut ..b.type4447})
+//│ | | | | | | | | | | | DNF: DNF(code<>{Code#T: mut ..α49, Code#C: mut ..b.type4447})
 //│ | | | | | | | | | | | norm[-] ⊥
 //│ | | | | | | | | | | | | DNF: DNF()
 //│ | | | | | | | | | | | ~> ⊥
-//│ | | | | | | | | | | | norm[+] ⊤
-//│ | | | | | | | | | | | | DNF: DNF()
-//│ | | | | | | | | | | | ~> ⊤
+//│ | | | | | | | | | | | norm[+] α49
+//│ | | | | | | | | | | | | DNF: DNF(α49)
+//│ | | | | | | | | | | | | norm[+] int<number>
+//│ | | | | | | | | | | | | | DNF: DNF(int<number>{})
+//│ | | | | | | | | | | | | ~> int<number>
+//│ | | | | | | | | | | | | norm[+] error<>
+//│ | | | | | | | | | | | | | DNF: DNF(error<>{})
+//│ | | | | | | | | | | | | ~> error<>
+//│ | | | | | | | | | | | ~> α49
 //│ | | | | | | | | | | | norm[-] ⊥
 //│ | | | | | | | | | | | | DNF: DNF()
 //│ | | | | | | | | | | | ~> ⊥
-//│ | | | | | | | | | | | norm[+] ⊤
-//│ | | | | | | | | | | | | DNF: DNF()
-//│ | | | | | | | | | | | ~> ⊤
-//│ | | | | | | | | | | ~> (code<> & {Code#C: mut ..⊤, Code#T: mut ..⊤})
-//│ | | | | | | | | | | CONSTRAIN error<> <! α37
+//│ | | | | | | | | | | | norm[+] b.type4447
+//│ | | | | | | | | | | | | DNF: DNF(b.type4447)
+//│ | | | | | | | | | | | ~> b.type4447
+//│ | | | | | | | | | | ~> (code<> & {Code#C: mut ..b.type4447, Code#T: mut ..α49})
+//│ | | | | | | | | | | CONSTRAIN error<> <! α48
 //│ | | | | | | | | | |   where 
-//│ | | | | | | | | | | C error<> <! α37    (0)
-//│ | | | | | C (int<number> -> int<number>) <! α37    (4)
-//│ | | | 0. : α37
+//│ | | | | | | | | | | C error<> <! α48    (0)
+//│ | | | | | C (int<number> -> int<number>) <! α48    (4)
+//│ | | | 0. : α48
 //│ | | | 0. Typing term 1,
 //│ | | | | 0. Typing term 1
 //│ | | | | 0. : 1<int,number>
 //│ | | | 0. : (1<int,number>,)
-//│ | | | CONSTRAIN α37 <! (1<int,number> -> α38)
+//│ | | | CONSTRAIN α48 <! (1<int,number> -> α50)
 //│ | | |   where 
-//│ 		α37 :> (int<number> -> int<number>) | error<>
-//│ | | | C α37 <! (1<int,number> -> α38)    (0)
-//│ | | | | C (int<number> -> int<number>) <! (1<int,number> -> α38)    (1)
+//│ 		α48 :> (int<number> -> int<number>) | error<>
+//│ | | | C α48 <! (1<int,number> -> α50)    (0)
+//│ | | | | C (int<number> -> int<number>) <! (1<int,number> -> α50)    (1)
 //│ | | | | | C (1<int,number>,) <! (int<number>,)    (2)
-//│ | | | | | C int<number> <! α38    (2)
-//│ | | | | C error<> <! (1<int,number> -> α38)    (3)
+//│ | | | | | C int<number> <! α50    (2)
+//│ | | | | C error<> <! (1<int,number> -> α50)    (3)
 //│ | | | | | C (1<int,number>,) <! error<>    (4)
-//│ | | | | | C error<> <! α38    (5)
-//│ | | 0. : α38
-//│ | 0. : α38
-//│ 0. : Code[α38,Anything]
-//│ ⬤ Typed as: Code[α38,Anything]
+//│ | | | | | C error<> <! α50    (5)
+//│ | | 0. : α50
+//│ | 0. : α50
+//│ 0. : Code[α50,Anything]
+//│ ⬤ Typed as: Code[α50,Anything]
 //│  where: 
-//│ 		α38 :> error<> | int<number>
+//│ 		α50 :> error<> | int<number>
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.70: 	code"let a = 1; ${code"b + ${code"1"}"} + 1"
+//│ ║  l.82: 	code"let a = 1; ${code"b + ${code"1"}"} + 1"
 //│ ║        	                       ^^^^^^^^^^^^^^
-//│ ╙── expression of type `code & {Code#C, Code#T}` is not an instance of type `int`
+//│ ╙── expression of type `code & {Code#C, Code#T <: 1}` is not an instance of type `int`
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.70: 	code"let a = 1; ${code"b + ${code"1"}"} + 1"
+//│ ║  l.82: 	code"let a = 1; ${code"b + ${code"1"}"} + 1"
 //│ ║        	                ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `code & {Code#C, Code#T}` is not an instance of type `int`
-//│ res: code
+//│ ╙── expression of type `code & {Code#C <: ?b.type44, Code#T <: ?a}` is not an instance of type `int`
+//│ res: Code[error | int, ?]
 
 
 :NewParser
@@ -231,122 +249,122 @@ code"let a = 10000; a + ${code"a"} + 10"
 //│ | | | | | | | | 0. Typing term a
 //│ | | | | | | | | 0. : 10000<int,number>
 //│ | | | | | | | 0. : (10000<int,number>,)
-//│ | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (10000<int,number> -> α39)
+//│ | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (10000<int,number> -> α52)
 //│ | | | | | | |   where 
-//│ | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (10000<int,number> -> α39)    (0)
+//│ | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (10000<int,number> -> α52)    (0)
 //│ | | | | | | | | C (10000<int,number>,) <! (int<number>,)    (1)
-//│ | | | | | | | | C (int<number> -> int<number>) <! α39    (1)
-//│ | | | | | | 0. : α39
+//│ | | | | | | | | C (int<number> -> int<number>) <! α52    (1)
+//│ | | | | | | 0. : α52
 //│ | | | | | | 0. Typing term Unquote' Quoted' a ' ',
 //│ | | | | | | | 0. Typing term Unquote' Quoted' a ' '
 //│ | | | | | | | | 0. Typing term Quoted' a '
 //│ | | | | | | | | | 0. Typing term a
-//│ | | | | | | | | | 0. : a.type40
-//│ | | | | | | | | 0. : Code[a.type40,a.type4041]
-//│ | | | | | | | | check subtypeCode[a.type40,a.type4041]
+//│ | | | | | | | | | 0. : a.type53
+//│ | | | | | | | | 0. : Code[a.type53,a.type5354]
+//│ | | | | | | | | check subtypeCode[a.type53,a.type5354]
 //│ | | | | | | | | true
 //│ | | | | | | | | true
-//│ | | | | | | | 0. : Code[a.type40,a.type4041]
-//│ | | | | | | 0. : (Code[a.type40,a.type4041],)
-//│ | | | | | | CONSTRAIN α39 <! (Code[a.type40,a.type4041] -> α42)
+//│ | | | | | | | 0. : Code[a.type53,a.type5354]
+//│ | | | | | | 0. : (Code[a.type53,a.type5354],)
+//│ | | | | | | CONSTRAIN α52 <! (Code[a.type53,a.type5354] -> α55)
 //│ | | | | | |   where 
-//│ 		α39 :> (int<number> -> int<number>)
-//│ | | | | | | C α39 <! (Code[a.type40,a.type4041] -> α42)    (0)
-//│ | | | | | | | C (int<number> -> int<number>) <! (Code[a.type40,a.type4041] -> α42)    (1)
-//│ | | | | | | | | C (Code[a.type40,a.type4041],) <! (int<number>,)    (2)
-//│ | | | | | | | | | C Code[a.type40,a.type4041] <! int<number>    (3)
-//│ | | | | | | | | | | C (code<> & {Code#T: mut ..⊤, Code#C: mut ..⊤}) <! int<number>    (4)
-//│ | | | | | | | | | | | ARGH  DNF(code<>{Code#T: mut ..⊤, Code#C: mut ..⊤})  <!  DNF(int<number>{})
-//│ | | | | | | | | | | | | Consider code<>{Code#T: mut ..⊤, Code#C: mut ..⊤} <: DNF(int<number>{})
+//│ 		α52 :> (int<number> -> int<number>)
+//│ | | | | | | C α52 <! (Code[a.type53,a.type5354] -> α55)    (0)
+//│ | | | | | | | C (int<number> -> int<number>) <! (Code[a.type53,a.type5354] -> α55)    (1)
+//│ | | | | | | | | C (Code[a.type53,a.type5354],) <! (int<number>,)    (2)
+//│ | | | | | | | | | C Code[a.type53,a.type5354] <! int<number>    (3)
+//│ | | | | | | | | | | C (code<> & {Code#T: mut ..a.type53, Code#C: mut ..a.type5354}) <! int<number>    (4)
+//│ | | | | | | | | | | | ARGH  DNF(code<>{Code#T: mut ..a.type53, Code#C: mut ..a.type5354})  <!  DNF(int<number>{})
+//│ | | | | | | | | | | | | Consider code<>{Code#T: mut ..a.type53, Code#C: mut ..a.type5354} <: DNF(int<number>{})
 //│ | | | | | | | | | | | | Possible: List()
-//│ | | | | | | | | | | | | A  code<>{Code#T: mut ..⊤, Code#C: mut ..⊤}  %  List()  <!  List()  %  ⊥
-//│ | | | | | | | | | | | | | CONSTRAINT FAILURE: (code<> & {Code#T: mut ..⊤, Code#C: mut ..⊤}) <: int<number>
-//│ | | | | | | | | | | | | | allVarPols: 
-//│ | | | | | | | | | | | | | norm[+] (code<> & {Code#T: mut ..⊤, Code#C: mut ..⊤})
-//│ | | | | | | | | | | | | | | DNF: DNF(code<>{Code#T: mut ..⊤, Code#C: mut ..⊤})
+//│ | | | | | | | | | | | | A  code<>{Code#T: mut ..a.type53, Code#C: mut ..a.type5354}  %  List()  <!  List()  %  ⊥
+//│ | | | | | | | | | | | | | CONSTRAINT FAILURE: (code<> & {Code#T: mut ..a.type53, Code#C: mut ..a.type5354}) <: int<number>
+//│ | | | | | | | | | | | | | allVarPols: +a.type53, +a.type5354
+//│ | | | | | | | | | | | | | norm[+] (code<> & {Code#T: mut ..a.type53, Code#C: mut ..a.type5354})
+//│ | | | | | | | | | | | | | | DNF: DNF(code<>{Code#T: mut ..a.type53, Code#C: mut ..a.type5354})
 //│ | | | | | | | | | | | | | | norm[-] ⊥
 //│ | | | | | | | | | | | | | | | DNF: DNF()
 //│ | | | | | | | | | | | | | | ~> ⊥
-//│ | | | | | | | | | | | | | | norm[+] ⊤
-//│ | | | | | | | | | | | | | | | DNF: DNF()
-//│ | | | | | | | | | | | | | | ~> ⊤
+//│ | | | | | | | | | | | | | | norm[+] a.type53
+//│ | | | | | | | | | | | | | | | DNF: DNF(a.type53)
+//│ | | | | | | | | | | | | | | ~> a.type53
 //│ | | | | | | | | | | | | | | norm[-] ⊥
 //│ | | | | | | | | | | | | | | | DNF: DNF()
 //│ | | | | | | | | | | | | | | ~> ⊥
-//│ | | | | | | | | | | | | | | norm[+] ⊤
-//│ | | | | | | | | | | | | | | | DNF: DNF()
-//│ | | | | | | | | | | | | | | ~> ⊤
-//│ | | | | | | | | | | | | | ~> (code<> & {Code#C: mut ..⊤, Code#T: mut ..⊤})
-//│ | | | | | | | | | | | | | CONSTRAIN error<> <! α42
+//│ | | | | | | | | | | | | | | norm[+] a.type5354
+//│ | | | | | | | | | | | | | | | DNF: DNF(a.type5354)
+//│ | | | | | | | | | | | | | | ~> a.type5354
+//│ | | | | | | | | | | | | | ~> (code<> & {Code#C: mut ..a.type5354, Code#T: mut ..a.type53})
+//│ | | | | | | | | | | | | | CONSTRAIN error<> <! α55
 //│ | | | | | | | | | | | | |   where 
-//│ | | | | | | | | | | | | | C error<> <! α42    (0)
-//│ | | | | | | | | C int<number> <! α42    (5)
-//│ | | | | | 0. : α42
-//│ | | | | 0. : (α42,)
-//│ | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α42 -> α43)
+//│ | | | | | | | | | | | | | C error<> <! α55    (0)
+//│ | | | | | | | | C int<number> <! α55    (5)
+//│ | | | | | 0. : α55
+//│ | | | | 0. : (α55,)
+//│ | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α55 -> α56)
 //│ | | | |   where 
-//│ 		α42 :> int<number> | error<>
-//│ | | | | C (int<number> -> (int<number> -> int<number>)) <! (α42 -> α43)    (0)
-//│ | | | | | C (α42,) <! (int<number>,)    (1)
-//│ | | | | | | C α42 <! int<number>    (2)
+//│ 		α55 :> int<number> | error<>
+//│ | | | | C (int<number> -> (int<number> -> int<number>)) <! (α55 -> α56)    (0)
+//│ | | | | | C (α55,) <! (int<number>,)    (1)
+//│ | | | | | | C α55 <! int<number>    (2)
 //│ | | | | | | | C int<number> <! int<number>    (3)
 //│ | | | | | | | C error<> <! int<number>    (3)
-//│ | | | | | C (int<number> -> int<number>) <! α43    (4)
-//│ | | | 0. : α43
+//│ | | | | | C (int<number> -> int<number>) <! α56    (4)
+//│ | | | 0. : α56
 //│ | | | 0. Typing term 10,
 //│ | | | | 0. Typing term 10
 //│ | | | | 0. : 10<int,number>
 //│ | | | 0. : (10<int,number>,)
-//│ | | | CONSTRAIN α43 <! (10<int,number> -> α44)
+//│ | | | CONSTRAIN α56 <! (10<int,number> -> α57)
 //│ | | |   where 
-//│ 		α43 :> (int<number> -> int<number>)
-//│ | | | C α43 <! (10<int,number> -> α44)    (0)
-//│ | | | | C (int<number> -> int<number>) <! (10<int,number> -> α44)    (1)
+//│ 		α56 :> (int<number> -> int<number>)
+//│ | | | C α56 <! (10<int,number> -> α57)    (0)
+//│ | | | | C (int<number> -> int<number>) <! (10<int,number> -> α57)    (1)
 //│ | | | | | C (10<int,number>,) <! (int<number>,)    (2)
-//│ | | | | | C int<number> <! α44    (2)
-//│ | | 0. : α44
-//│ | 0. : α44
-//│ 0. : Code[α44,Anything]
-//│ ⬤ Typed as: Code[α44,Anything]
+//│ | | | | | C int<number> <! α57    (2)
+//│ | | 0. : α57
+//│ | 0. : α57
+//│ 0. : Code[α57,Anything]
+//│ ⬤ Typed as: Code[α57,Anything]
 //│  where: 
-//│ 		α44 :> int<number>
+//│ 		α57 :> int<number>
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.216: 	code"let a = 10000; a + ${code"a"} + 10"
+//│ ║  l.234: 	code"let a = 10000; a + ${code"a"} + 10"
 //│ ║         	                    ^^^^^^^^^^^^^^
-//│ ╙── expression of type `code & {Code#C, Code#T}` is not an instance of type `int`
-//│ res: code
+//│ ╙── expression of type `code & {Code#C <: ?a.type53, Code#T <: ?a.type}` is not an instance of type `int`
+//│ res: Code[int, ?]
 
 let z = code"3"
-//│ z: code
+//│ z: Code[3, ?]
 
 fun Const(n) = code"n"
-//│ Const: anything -> code
+//│ Const: 'a -> Code['a, ?]
 
 :d
 :ne
 Const(42)
 //│ 0. Typing term Const (42,)
 //│ | 0. Typing term Const
-//│ | 0. : Const49
+//│ | 0. : Const65
 //│ | 0. Typing term 42,
 //│ | | 0. Typing term 42
 //│ | | 0. : 42<int,number>
 //│ | 0. : (42<int,number>,)
-//│ | CONSTRAIN Const49 <! (42<int,number> -> α51)
+//│ | CONSTRAIN Const65 <! (42<int,number> -> α67)
 //│ |   where 
-//│ 		Const49 :> [(α50 -> Code[[α50],Anything])]
-//│ | C Const49 <! (42<int,number> -> α51)    (0)
-//│ | | C [(α50 -> Code[[α50],Anything])] <! (42<int,number> -> α51)    (1)
-//│ | | | C (α50 -> Code[[α50],Anything]) <! (42<int,number> -> α51)    (1)
-//│ | | | | C (42<int,number>,) <! (α50,)    (2)
-//│ | | | | | C 42<int,number> <! α50    (3)
-//│ | | | | C Code[[α50],Anything] <! α51    (4)
-//│ 0. : α51
-//│ ⬤ Typed as: α51
+//│ 		Const65 :> [(α66 -> Code[[α66],Anything])]
+//│ | C Const65 <! (42<int,number> -> α67)    (0)
+//│ | | C [(α66 -> Code[[α66],Anything])] <! (42<int,number> -> α67)    (1)
+//│ | | | C (α66 -> Code[[α66],Anything]) <! (42<int,number> -> α67)    (1)
+//│ | | | | C (42<int,number>,) <! (α66,)    (2)
+//│ | | | | | C 42<int,number> <! α66    (3)
+//│ | | | | C Code[[α66],Anything] <! α67    (4)
+//│ 0. : α67
+//│ ⬤ Typed as: α67
 //│  where: 
-//│ 		α50 :> 42<int,number>
-//│ 		α51 :> Code[[α50],Anything]
-//│ res: code
+//│ 		α66 :> 42<int,number>
+//│ 		α67 :> Code[[α66],Anything]
+//│ res: Code[42, ?]
 
 :d
 :ne
@@ -376,38 +394,38 @@ code"let a = code"2"; code"(${a} + ${a}) * 2""
 //│ | | | | | | | | | | true
 //│ | | | | | | | | | 0. : Code[2<int,number>,Anything]
 //│ | | | | | | | | 0. : (Code[2<int,number>,Anything],)
-//│ | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (Code[2<int,number>,Anything] -> α53)
+//│ | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (Code[2<int,number>,Anything] -> α70)
 //│ | | | | | | | |   where 
-//│ | | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (Code[2<int,number>,Anything] -> α53)    (0)
+//│ | | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (Code[2<int,number>,Anything] -> α70)    (0)
 //│ | | | | | | | | | C (Code[2<int,number>,Anything],) <! (int<number>,)    (1)
 //│ | | | | | | | | | | C Code[2<int,number>,Anything] <! int<number>    (2)
-//│ | | | | | | | | | | | C (code<> & {Code#T: mut ..⊤, Code#C: mut ..⊤}) <! int<number>    (3)
-//│ | | | | | | | | | | | | ARGH  DNF(code<>{Code#T: mut ..⊤, Code#C: mut ..⊤})  <!  DNF(int<number>{})
-//│ | | | | | | | | | | | | | Consider code<>{Code#T: mut ..⊤, Code#C: mut ..⊤} <: DNF(int<number>{})
+//│ | | | | | | | | | | | C (code<> & {Code#T: mut ..2<int,number>, Code#C: mut ..Anything}) <! int<number>    (3)
+//│ | | | | | | | | | | | | ARGH  DNF(code<>{Code#T: mut ..2<int,number>, Code#C: mut ..⊤})  <!  DNF(int<number>{})
+//│ | | | | | | | | | | | | | Consider code<>{Code#T: mut ..2<int,number>, Code#C: mut ..⊤} <: DNF(int<number>{})
 //│ | | | | | | | | | | | | | Possible: List()
-//│ | | | | | | | | | | | | | A  code<>{Code#T: mut ..⊤, Code#C: mut ..⊤}  %  List()  <!  List()  %  ⊥
-//│ | | | | | | | | | | | | | | CONSTRAINT FAILURE: (code<> & {Code#T: mut ..⊤, Code#C: mut ..⊤}) <: int<number>
+//│ | | | | | | | | | | | | | A  code<>{Code#T: mut ..2<int,number>, Code#C: mut ..⊤}  %  List()  <!  List()  %  ⊥
+//│ | | | | | | | | | | | | | | CONSTRAINT FAILURE: (code<> & {Code#T: mut ..2<int,number>, Code#C: mut ..Anything}) <: int<number>
 //│ | | | | | | | | | | | | | | allVarPols: 
-//│ | | | | | | | | | | | | | | norm[+] (code<> & {Code#T: mut ..⊤, Code#C: mut ..⊤})
-//│ | | | | | | | | | | | | | | | DNF: DNF(code<>{Code#T: mut ..⊤, Code#C: mut ..⊤})
+//│ | | | | | | | | | | | | | | norm[+] (code<> & {Code#T: mut ..2<int,number>, Code#C: mut ..Anything})
+//│ | | | | | | | | | | | | | | | DNF: DNF(code<>{Code#T: mut ..2<int,number>, Code#C: mut ..Anything})
 //│ | | | | | | | | | | | | | | | norm[-] ⊥
 //│ | | | | | | | | | | | | | | | | DNF: DNF()
 //│ | | | | | | | | | | | | | | | ~> ⊥
-//│ | | | | | | | | | | | | | | | norm[+] ⊤
-//│ | | | | | | | | | | | | | | | | DNF: DNF()
-//│ | | | | | | | | | | | | | | | ~> ⊤
+//│ | | | | | | | | | | | | | | | norm[+] 2<int,number>
+//│ | | | | | | | | | | | | | | | | DNF: DNF(2<int,number>{})
+//│ | | | | | | | | | | | | | | | ~> 2<int,number>
 //│ | | | | | | | | | | | | | | | norm[-] ⊥
 //│ | | | | | | | | | | | | | | | | DNF: DNF()
 //│ | | | | | | | | | | | | | | | ~> ⊥
-//│ | | | | | | | | | | | | | | | norm[+] ⊤
+//│ | | | | | | | | | | | | | | | norm[+] Anything
 //│ | | | | | | | | | | | | | | | | DNF: DNF()
 //│ | | | | | | | | | | | | | | | ~> ⊤
-//│ | | | | | | | | | | | | | | ~> (code<> & {Code#C: mut ..⊤, Code#T: mut ..⊤})
-//│ | | | | | | | | | | | | | | CONSTRAIN error<> <! α53
+//│ | | | | | | | | | | | | | | ~> (code<> & {Code#C: mut ..⊤, Code#T: mut ..2<int,number>})
+//│ | | | | | | | | | | | | | | CONSTRAIN error<> <! α70
 //│ | | | | | | | | | | | | | |   where 
-//│ | | | | | | | | | | | | | | C error<> <! α53    (0)
-//│ | | | | | | | | | C (int<number> -> int<number>) <! α53    (4)
-//│ | | | | | | | 0. : α53
+//│ | | | | | | | | | | | | | | C error<> <! α70    (0)
+//│ | | | | | | | | | C (int<number> -> int<number>) <! α70    (4)
+//│ | | | | | | | 0. : α70
 //│ | | | | | | | 0. Typing term Unquote' a ',
 //│ | | | | | | | | 0. Typing term Unquote' a '
 //│ | | | | | | | | | 0. Typing term a
@@ -417,83 +435,83 @@ code"let a = code"2"; code"(${a} + ${a}) * 2""
 //│ | | | | | | | | | true
 //│ | | | | | | | | 0. : Code[2<int,number>,Anything]
 //│ | | | | | | | 0. : (Code[2<int,number>,Anything],)
-//│ | | | | | | | CONSTRAIN α53 <! (Code[2<int,number>,Anything] -> α54)
+//│ | | | | | | | CONSTRAIN α70 <! (Code[2<int,number>,Anything] -> α71)
 //│ | | | | | | |   where 
-//│ 		α53 :> (int<number> -> int<number>) | error<>
-//│ | | | | | | | C α53 <! (Code[2<int,number>,Anything] -> α54)    (0)
-//│ | | | | | | | | C (int<number> -> int<number>) <! (Code[2<int,number>,Anything] -> α54)    (1)
+//│ 		α70 :> (int<number> -> int<number>) | error<>
+//│ | | | | | | | C α70 <! (Code[2<int,number>,Anything] -> α71)    (0)
+//│ | | | | | | | | C (int<number> -> int<number>) <! (Code[2<int,number>,Anything] -> α71)    (1)
 //│ | | | | | | | | | C (Code[2<int,number>,Anything],) <! (int<number>,)    (2)
 //│ | | | | | | | | | | C Code[2<int,number>,Anything] <! int<number>    (3)
-//│ | | | | | | | | | | | C (code<> & {Code#T: mut ..⊤, Code#C: mut ..⊤}) <! int<number>    (4)
-//│ | | | | | | | | | | | | ARGH  DNF(code<>{Code#T: mut ..⊤, Code#C: mut ..⊤})  <!  DNF(int<number>{})
-//│ | | | | | | | | | | | | | Consider code<>{Code#T: mut ..⊤, Code#C: mut ..⊤} <: DNF(int<number>{})
+//│ | | | | | | | | | | | C (code<> & {Code#T: mut ..2<int,number>, Code#C: mut ..Anything}) <! int<number>    (4)
+//│ | | | | | | | | | | | | ARGH  DNF(code<>{Code#T: mut ..2<int,number>, Code#C: mut ..⊤})  <!  DNF(int<number>{})
+//│ | | | | | | | | | | | | | Consider code<>{Code#T: mut ..2<int,number>, Code#C: mut ..⊤} <: DNF(int<number>{})
 //│ | | | | | | | | | | | | | Possible: List()
-//│ | | | | | | | | | | | | | A  code<>{Code#T: mut ..⊤, Code#C: mut ..⊤}  %  List()  <!  List()  %  ⊥
-//│ | | | | | | | | | | | | | | CONSTRAINT FAILURE: (code<> & {Code#T: mut ..⊤, Code#C: mut ..⊤}) <: int<number>
+//│ | | | | | | | | | | | | | A  code<>{Code#T: mut ..2<int,number>, Code#C: mut ..⊤}  %  List()  <!  List()  %  ⊥
+//│ | | | | | | | | | | | | | | CONSTRAINT FAILURE: (code<> & {Code#T: mut ..2<int,number>, Code#C: mut ..Anything}) <: int<number>
 //│ | | | | | | | | | | | | | | allVarPols: 
-//│ | | | | | | | | | | | | | | norm[+] (code<> & {Code#T: mut ..⊤, Code#C: mut ..⊤})
-//│ | | | | | | | | | | | | | | | DNF: DNF(code<>{Code#T: mut ..⊤, Code#C: mut ..⊤})
+//│ | | | | | | | | | | | | | | norm[+] (code<> & {Code#T: mut ..2<int,number>, Code#C: mut ..Anything})
+//│ | | | | | | | | | | | | | | | DNF: DNF(code<>{Code#T: mut ..2<int,number>, Code#C: mut ..Anything})
 //│ | | | | | | | | | | | | | | | norm[-] ⊥
 //│ | | | | | | | | | | | | | | | | DNF: DNF()
 //│ | | | | | | | | | | | | | | | ~> ⊥
-//│ | | | | | | | | | | | | | | | norm[+] ⊤
-//│ | | | | | | | | | | | | | | | | DNF: DNF()
-//│ | | | | | | | | | | | | | | | ~> ⊤
+//│ | | | | | | | | | | | | | | | norm[+] 2<int,number>
+//│ | | | | | | | | | | | | | | | | DNF: DNF(2<int,number>{})
+//│ | | | | | | | | | | | | | | | ~> 2<int,number>
 //│ | | | | | | | | | | | | | | | norm[-] ⊥
 //│ | | | | | | | | | | | | | | | | DNF: DNF()
 //│ | | | | | | | | | | | | | | | ~> ⊥
-//│ | | | | | | | | | | | | | | | norm[+] ⊤
+//│ | | | | | | | | | | | | | | | norm[+] Anything
 //│ | | | | | | | | | | | | | | | | DNF: DNF()
 //│ | | | | | | | | | | | | | | | ~> ⊤
-//│ | | | | | | | | | | | | | | ~> (code<> & {Code#C: mut ..⊤, Code#T: mut ..⊤})
-//│ | | | | | | | | | | | | | | CONSTRAIN error<> <! α54
+//│ | | | | | | | | | | | | | | ~> (code<> & {Code#C: mut ..⊤, Code#T: mut ..2<int,number>})
+//│ | | | | | | | | | | | | | | CONSTRAIN error<> <! α71
 //│ | | | | | | | | | | | | | |   where 
-//│ | | | | | | | | | | | | | | C error<> <! α54    (0)
-//│ | | | | | | | | | C int<number> <! α54    (5)
-//│ | | | | | | | | C error<> <! (Code[2<int,number>,Anything] -> α54)    (6)
+//│ | | | | | | | | | | | | | | C error<> <! α71    (0)
+//│ | | | | | | | | | C int<number> <! α71    (5)
+//│ | | | | | | | | C error<> <! (Code[2<int,number>,Anything] -> α71)    (6)
 //│ | | | | | | | | | C (Code[2<int,number>,Anything],) <! error<>    (7)
-//│ | | | | | | | | | C error<> <! α54    (8)
-//│ | | | | | | 0. : α54
-//│ | | | | | 0. : (α54,)
-//│ | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α54 -> α55)
+//│ | | | | | | | | | C error<> <! α71    (8)
+//│ | | | | | | 0. : α71
+//│ | | | | | 0. : (α71,)
+//│ | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α71 -> α72)
 //│ | | | | |   where 
-//│ 		α54 :> error<> | int<number> | error<>
-//│ | | | | | C (int<number> -> (int<number> -> int<number>)) <! (α54 -> α55)    (0)
-//│ | | | | | | C (α54,) <! (int<number>,)    (1)
-//│ | | | | | | | C α54 <! int<number>    (2)
+//│ 		α71 :> error<> | int<number> | error<>
+//│ | | | | | C (int<number> -> (int<number> -> int<number>)) <! (α71 -> α72)    (0)
+//│ | | | | | | C (α71,) <! (int<number>,)    (1)
+//│ | | | | | | | C α71 <! int<number>    (2)
 //│ | | | | | | | | C error<> <! int<number>    (3)
 //│ | | | | | | | | C int<number> <! int<number>    (4)
 //│ | | | | | | | | C error<> <! int<number>    (4)
 //│ | | | | | | | | | Cached!
-//│ | | | | | | C (int<number> -> int<number>) <! α55    (4)
-//│ | | | | 0. : α55
+//│ | | | | | | C (int<number> -> int<number>) <! α72    (4)
+//│ | | | | 0. : α72
 //│ | | | | 0. Typing term 2,
 //│ | | | | | 0. Typing term 2
 //│ | | | | | 0. : 2<int,number>
 //│ | | | | 0. : (2<int,number>,)
-//│ | | | | CONSTRAIN α55 <! (2<int,number> -> α56)
+//│ | | | | CONSTRAIN α72 <! (2<int,number> -> α73)
 //│ | | | |   where 
-//│ 		α55 :> (int<number> -> int<number>)
-//│ | | | | C α55 <! (2<int,number> -> α56)    (0)
-//│ | | | | | C (int<number> -> int<number>) <! (2<int,number> -> α56)    (1)
+//│ 		α72 :> (int<number> -> int<number>)
+//│ | | | | C α72 <! (2<int,number> -> α73)    (0)
+//│ | | | | | C (int<number> -> int<number>) <! (2<int,number> -> α73)    (1)
 //│ | | | | | | C (2<int,number>,) <! (int<number>,)    (2)
-//│ | | | | | | C int<number> <! α56    (2)
-//│ | | | 0. : α56
-//│ | | 0. : Code[α56,Anything]
-//│ | 0. : Code[α56,Anything]
-//│ 0. : Code[Code[α56,Anything],Anything]
-//│ ⬤ Typed as: Code[Code[α56,Anything],Anything]
+//│ | | | | | | C int<number> <! α73    (2)
+//│ | | | 0. : α73
+//│ | | 0. : Code[α73,Anything]
+//│ | 0. : Code[α73,Anything]
+//│ 0. : Code[Code[α73,Anything],Anything]
+//│ ⬤ Typed as: Code[Code[α73,Anything],Anything]
 //│  where: 
-//│ 		α56 :> int<number>
+//│ 		α73 :> int<number>
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.353: 	code"let a = code"2"; code"(${a} + ${a}) * 2""
+//│ ║  l.371: 	code"let a = code"2"; code"(${a} + ${a}) * 2""
 //│ ║         	                            ^^^^^^
-//│ ╙── expression of type `code & {Code#C, Code#T}` is not an instance of type `int`
+//│ ╙── expression of type `code & {Code#C, Code#T <: 2}` is not an instance of type `int`
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.353: 	code"let a = code"2"; code"(${a} + ${a}) * 2""
+//│ ║  l.371: 	code"let a = code"2"; code"(${a} + ${a}) * 2""
 //│ ║         	                            ^^^^^^^^^^^
-//│ ╙── expression of type `code & {Code#C, Code#T}` is not an instance of type `int`
-//│ res: code
+//│ ╙── expression of type `code & {Code#C, Code#T <: 2}` is not an instance of type `int`
+//│ res: Code[Code[int, ?], ?]
 
 
 :d
@@ -503,10 +521,10 @@ fun pow(n, cde) = if (n > 0) then code"${pow(n - 1, cde)} * ${cde}" else code"1"
 //│ 1. Typing term n, cde, => if ('(' > (n,) (0,), ')') then Quoted' * (Unquote' pow (- (n,) (1,), cde,) ',) (Unquote' cde ',) ' else Quoted' 1 '
 //│ | 1. Typing pattern n, cde,
 //│ | | 1. Typing pattern n
-//│ | | 1. : α58'
+//│ | | 1. : α76'
 //│ | | 1. Typing pattern cde
-//│ | | 1. : α59'
-//│ | 1. : (α58', α59',)
+//│ | | 1. : α77'
+//│ | 1. : (α76', α77',)
 //│ | 1. Typing term if ('(' > (n,) (0,), ')') then Quoted' * (Unquote' pow (- (n,) (1,), cde,) ',) (Unquote' cde ',) ' else Quoted' 1 '
 //│ | | The mutable CaseOf tree
 //│ | | if «'(' > (n,) (0,), ')'»
@@ -523,29 +541,29 @@ fun pow(n, cde) = if (n > 0) then code"${pow(n - 1, cde)} * ${cde}" else code"1"
 //│ | | | | | | | 1. : (number<> -> (number<> -> bool<>))
 //│ | | | | | | | 1. Typing term n,
 //│ | | | | | | | | 1. Typing term n
-//│ | | | | | | | | 1. : α58'
-//│ | | | | | | | 1. : (α58',)
-//│ | | | | | | | CONSTRAIN (number<> -> (number<> -> bool<>)) <! (α58' -> α60')
+//│ | | | | | | | | 1. : α76'
+//│ | | | | | | | 1. : (α76',)
+//│ | | | | | | | CONSTRAIN (number<> -> (number<> -> bool<>)) <! (α76' -> α78')
 //│ | | | | | | |   where 
-//│ | | | | | | | C (number<> -> (number<> -> bool<>)) <! (α58' -> α60')    (0)
-//│ | | | | | | | | C (α58',) <! (number<>,)    (1)
-//│ | | | | | | | | | C α58' <! number<>    (2)
-//│ | | | | | | | | C (number<> -> bool<>) <! α60'    (3)
-//│ | | | | | | 1. : α60'
+//│ | | | | | | | C (number<> -> (number<> -> bool<>)) <! (α76' -> α78')    (0)
+//│ | | | | | | | | C (α76',) <! (number<>,)    (1)
+//│ | | | | | | | | | C α76' <! number<>    (2)
+//│ | | | | | | | | C (number<> -> bool<>) <! α78'    (3)
+//│ | | | | | | 1. : α78'
 //│ | | | | | | 1. Typing term 0,
 //│ | | | | | | | 1. Typing term 0
 //│ | | | | | | | 1. : 0<int,number>
 //│ | | | | | | 1. : (0<int,number>,)
-//│ | | | | | | CONSTRAIN α60' <! (0<int,number> -> α61')
+//│ | | | | | | CONSTRAIN α78' <! (0<int,number> -> α79')
 //│ | | | | | |   where 
-//│ 		α60' :> (number<> -> bool<>)
-//│ | | | | | | C α60' <! (0<int,number> -> α61')    (0)
-//│ | | | | | | | C (number<> -> bool<>) <! (0<int,number> -> α61')    (1)
+//│ 		α78' :> (number<> -> bool<>)
+//│ | | | | | | C α78' <! (0<int,number> -> α79')    (0)
+//│ | | | | | | | C (number<> -> bool<>) <! (0<int,number> -> α79')    (1)
 //│ | | | | | | | | C (0<int,number>,) <! (number<>,)    (2)
-//│ | | | | | | | | C bool<> <! α61'    (2)
-//│ | | | | | 1. : α61'
-//│ | | | | 1. : (α61',)
-//│ | | | 1. : (α61',)
+//│ | | | | | | | | C bool<> <! α79'    (2)
+//│ | | | | | 1. : α79'
+//│ | | | | 1. : (α79',)
+//│ | | | 1. : (α79',)
 //│ | | | 1. Typing term Quoted' * (Unquote' pow (- (n,) (1,), cde,) ',) (Unquote' cde ',) '
 //│ | | | | 1. Typing term * (Unquote' pow (- (n,) (1,), cde,) ',) (Unquote' cde ',)
 //│ | | | | | 1. Typing term * (Unquote' pow (- (n,) (1,), cde,) ',)
@@ -555,7 +573,7 @@ fun pow(n, cde) = if (n > 0) then code"${pow(n - 1, cde)} * ${cde}" else code"1"
 //│ | | | | | | | 1. Typing term Unquote' pow (- (n,) (1,), cde,) '
 //│ | | | | | | | | 1. Typing term pow (- (n,) (1,), cde,)
 //│ | | | | | | | | | 1. Typing term pow
-//│ | | | | | | | | | 1. : pow57'
+//│ | | | | | | | | | 1. : pow75'
 //│ | | | | | | | | | 1. Typing term - (n,) (1,), cde,
 //│ | | | | | | | | | | 1. Typing term - (n,) (1,)
 //│ | | | | | | | | | | | 1. Typing term - (n,)
@@ -563,118 +581,118 @@ fun pow(n, cde) = if (n > 0) then code"${pow(n - 1, cde)} * ${cde}" else code"1"
 //│ | | | | | | | | | | | | 1. : (int<number> -> (int<number> -> int<number>))
 //│ | | | | | | | | | | | | 1. Typing term n,
 //│ | | | | | | | | | | | | | 1. Typing term n
-//│ | | | | | | | | | | | | | 1. : α58'
-//│ | | | | | | | | | | | | 1. : (α58',)
-//│ | | | | | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α58' -> α62')
+//│ | | | | | | | | | | | | | 1. : α76'
+//│ | | | | | | | | | | | | 1. : (α76',)
+//│ | | | | | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α76' -> α80')
 //│ | | | | | | | | | | | |   where 
-//│ 		α58' <: number<>
-//│ | | | | | | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (α58' -> α62')    (0)
-//│ | | | | | | | | | | | | | C (α58',) <! (int<number>,)    (1)
-//│ | | | | | | | | | | | | | | C α58' <! int<number>    (2)
-//│ | | | | | | | | | | | | | C (int<number> -> int<number>) <! α62'    (3)
-//│ | | | | | | | | | | | 1. : α62'
+//│ 		α76' <: number<>
+//│ | | | | | | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (α76' -> α80')    (0)
+//│ | | | | | | | | | | | | | C (α76',) <! (int<number>,)    (1)
+//│ | | | | | | | | | | | | | | C α76' <! int<number>    (2)
+//│ | | | | | | | | | | | | | C (int<number> -> int<number>) <! α80'    (3)
+//│ | | | | | | | | | | | 1. : α80'
 //│ | | | | | | | | | | | 1. Typing term 1,
 //│ | | | | | | | | | | | | 1. Typing term 1
 //│ | | | | | | | | | | | | 1. : 1<int,number>
 //│ | | | | | | | | | | | 1. : (1<int,number>,)
-//│ | | | | | | | | | | | CONSTRAIN α62' <! (1<int,number> -> α63')
+//│ | | | | | | | | | | | CONSTRAIN α80' <! (1<int,number> -> α81')
 //│ | | | | | | | | | | |   where 
-//│ 		α62' :> (int<number> -> int<number>)
-//│ | | | | | | | | | | | C α62' <! (1<int,number> -> α63')    (0)
-//│ | | | | | | | | | | | | C (int<number> -> int<number>) <! (1<int,number> -> α63')    (1)
+//│ 		α80' :> (int<number> -> int<number>)
+//│ | | | | | | | | | | | C α80' <! (1<int,number> -> α81')    (0)
+//│ | | | | | | | | | | | | C (int<number> -> int<number>) <! (1<int,number> -> α81')    (1)
 //│ | | | | | | | | | | | | | C (1<int,number>,) <! (int<number>,)    (2)
-//│ | | | | | | | | | | | | | C int<number> <! α63'    (2)
-//│ | | | | | | | | | | 1. : α63'
+//│ | | | | | | | | | | | | | C int<number> <! α81'    (2)
+//│ | | | | | | | | | | 1. : α81'
 //│ | | | | | | | | | | 1. Typing term cde
-//│ | | | | | | | | | | 1. : α59'
-//│ | | | | | | | | | 1. : (α63', α59',)
-//│ | | | | | | | | | CONSTRAIN pow57' <! ((α63', α59',) -> α64')
+//│ | | | | | | | | | | 1. : α77'
+//│ | | | | | | | | | 1. : (α81', α77',)
+//│ | | | | | | | | | CONSTRAIN pow75' <! ((α81', α77',) -> α82')
 //│ | | | | | | | | |   where 
-//│ 		α63' :> int<number>
-//│ | | | | | | | | | C pow57' <! ((α63', α59',) -> α64')    (0)
-//│ | | | | | | | | 1. : α64'
-//│ | | | | | | | | check subtypeα64'
+//│ 		α81' :> int<number>
+//│ | | | | | | | | | C pow75' <! ((α81', α77',) -> α82')    (0)
+//│ | | | | | | | | 1. : α82'
+//│ | | | | | | | | check subtypeα82'
 //│ | | | | | | | | false
 //│ | | | | | | | | false
 //│ | | | | | | | 1. : error<>
 //│ | | | | | | 1. : (error<>,)
-//│ | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (error<> -> α65')
+//│ | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (error<> -> α83')
 //│ | | | | | |   where 
-//│ | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (error<> -> α65')    (0)
+//│ | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (error<> -> α83')    (0)
 //│ | | | | | | | C (error<>,) <! (int<number>,)    (1)
 //│ | | | | | | | | C error<> <! int<number>    (2)
-//│ | | | | | | | C (int<number> -> int<number>) <! α65'    (3)
-//│ | | | | | 1. : α65'
+//│ | | | | | | | C (int<number> -> int<number>) <! α83'    (3)
+//│ | | | | | 1. : α83'
 //│ | | | | | 1. Typing term Unquote' cde ',
 //│ | | | | | | 1. Typing term Unquote' cde '
 //│ | | | | | | | 1. Typing term cde
-//│ | | | | | | | 1. : α59'
-//│ | | | | | | | check subtypeα59'
+//│ | | | | | | | 1. : α77'
+//│ | | | | | | | check subtypeα77'
 //│ | | | | | | | false
 //│ | | | | | | | false
 //│ | | | | | | 1. : error<>
 //│ | | | | | 1. : (error<>,)
-//│ | | | | | CONSTRAIN α65' <! (error<> -> α66')
+//│ | | | | | CONSTRAIN α83' <! (error<> -> α84')
 //│ | | | | |   where 
-//│ 		α65' :> (int<number> -> int<number>)
-//│ | | | | | C α65' <! (error<> -> α66')    (0)
-//│ | | | | | | C (int<number> -> int<number>) <! (error<> -> α66')    (1)
+//│ 		α83' :> (int<number> -> int<number>)
+//│ | | | | | C α83' <! (error<> -> α84')    (0)
+//│ | | | | | | C (int<number> -> int<number>) <! (error<> -> α84')    (1)
 //│ | | | | | | | C (error<>,) <! (int<number>,)    (2)
 //│ | | | | | | | | C error<> <! int<number>    (3)
-//│ | | | | | | | C int<number> <! α66'    (4)
-//│ | | | | 1. : α66'
-//│ | | | 1. : Code[α66',Anything]
+//│ | | | | | | | C int<number> <! α84'    (4)
+//│ | | | | 1. : α84'
+//│ | | | 1. : Code[α84',Anything]
 //│ | | | 1. Typing term Quoted' 1 '
 //│ | | | | 1. Typing term 1
 //│ | | | | 1. : 1<int,number>
 //│ | | | 1. : Code[1<int,number>,Anything]
-//│ | | | CONSTRAIN (α61',) <! (true<bool> | (α67' & ~(true<bool>)))
+//│ | | | CONSTRAIN (α79',) <! (true<bool> | (α85' & ~(true<bool>)))
 //│ | | |   where 
-//│ 		α61' :> bool<>
-//│ | | | C (α61',) <! (true<bool> | (α67' & ~(true<bool>)))    (0)
-//│ | | | | ARGH  DNF((α61',){_1: α61'})  <!  DNF(true<bool>{} | α67'∧~(true<bool>))
-//│ | | | | | Consider (α61',){_1: α61'} <: DNF(true<bool>{} | α67'∧~(true<bool>))
-//│ | | | | | Possible: List(α67'∧~(true<bool>))
-//│ | | | | | A  (α61',){_1: α61'}  %  List()  <!  List((α67' & ~(true<bool>)))  %  ⊥
+//│ 		α79' :> bool<>
+//│ | | | C (α79',) <! (true<bool> | (α85' & ~(true<bool>)))    (0)
+//│ | | | | ARGH  DNF((α79',){_1: α79'})  <!  DNF(true<bool>{} | α85'∧~(true<bool>))
+//│ | | | | | Consider (α79',){_1: α79'} <: DNF(true<bool>{} | α85'∧~(true<bool>))
+//│ | | | | | Possible: List(α85'∧~(true<bool>))
+//│ | | | | | A  (α79',){_1: α79'}  %  List()  <!  List((α85' & ~(true<bool>)))  %  ⊥
 //│ | | | | | | Case.1
-//│ | | | | | | A  (α61',){_1: α61'}  %  List()  <!  List(α67')  %  ⊥
-//│ | | | | | | | C ((α61',) & {_1: α61'}) <! α67'    (1)
+//│ | | | | | | A  (α79',){_1: α79'}  %  List()  <!  List(α85')  %  ⊥
+//│ | | | | | | | C ((α79',) & {_1: α79'}) <! α85'    (1)
 //│ | | | | | | Case.2
-//│ | | | | | | A  (α61',){_1: α61'}  %  List()  <!  List(~(true<bool>))  %  ⊥
-//│ | | | | | | | A  (α61',){_1: α61'}  %  List(true<bool>)  <!  List()  %  ⊥
-//│ | | | | | | | | OK  (α61',){_1: α61'} & true<bool>  =:=  ⊥
-//│ | | 1. : (Code[α66',Anything] | Code[1<int,number>,Anything])
-//│ | 1. : (Code[α66',Anything] | Code[1<int,number>,Anything])
-//│ 1. : ((α58', α59',) -> (Code[α66',Anything] | Code[1<int,number>,Anything]))
-//│ CONSTRAIN ((α58', α59',) -> (Code[α66',Anything] | Code[1<int,number>,Anything])) <! pow57'
+//│ | | | | | | A  (α79',){_1: α79'}  %  List()  <!  List(~(true<bool>))  %  ⊥
+//│ | | | | | | | A  (α79',){_1: α79'}  %  List(true<bool>)  <!  List()  %  ⊥
+//│ | | | | | | | | OK  (α79',){_1: α79'} & true<bool>  =:=  ⊥
+//│ | | 1. : (Code[α84',Anything] | Code[1<int,number>,Anything])
+//│ | 1. : (Code[α84',Anything] | Code[1<int,number>,Anything])
+//│ 1. : ((α76', α77',) -> (Code[α84',Anything] | Code[1<int,number>,Anything]))
+//│ CONSTRAIN ((α76', α77',) -> (Code[α84',Anything] | Code[1<int,number>,Anything])) <! pow75'
 //│   where 
-//│ 		pow57' <: ((α63', α59',) -> α64')
-//│ 		α58' <: int<number> & number<>
-//│ 		α63' :> int<number>
-//│ 		α66' :> int<number>
-//│ C ((α58', α59',) -> (Code[α66',Anything] | Code[1<int,number>,Anything])) <! pow57'    (0)
-//│ | C ((α58', α59',) -> (Code[α66',Anything] | Code[1<int,number>,Anything])) <! ((α63', α59',) -> α64')    (1)
-//│ | | C (α63', α59',) <! (α58', α59',)    (2)
-//│ | | | C α63' <! α58'    (3)
-//│ | | | | C int<number> <! α58'    (4)
+//│ 		pow75' <: ((α81', α77',) -> α82')
+//│ 		α76' <: int<number> & number<>
+//│ 		α81' :> int<number>
+//│ 		α84' :> int<number>
+//│ C ((α76', α77',) -> (Code[α84',Anything] | Code[1<int,number>,Anything])) <! pow75'    (0)
+//│ | C ((α76', α77',) -> (Code[α84',Anything] | Code[1<int,number>,Anything])) <! ((α81', α77',) -> α82')    (1)
+//│ | | C (α81', α77',) <! (α76', α77',)    (2)
+//│ | | | C α81' <! α76'    (3)
+//│ | | | | C int<number> <! α76'    (4)
 //│ | | | | | C int<number> <! int<number>    (5)
 //│ | | | | | C int<number> <! number<>    (5)
-//│ | | | C α59' <! α59'    (5)
-//│ | | C (Code[α66',Anything] | Code[1<int,number>,Anything]) <! α64'    (5)
-//│ ⬤ Typed as: pow57'
+//│ | | | C α77' <! α77'    (5)
+//│ | | C (Code[α84',Anything] | Code[1<int,number>,Anything]) <! α82'    (5)
+//│ ⬤ Typed as: pow75'
 //│  where: 
-//│ 		pow57' :> ((α58', α59',) -> (Code[α66',Anything] | Code[1<int,number>,Anything])) <: ((α63', α59',) -> α64')
-//│ 		α58' :> int<number> <: int<number> & number<>
-//│ 		α63' :> int<number> <: α58'
-//│ 		α64' :> (Code[α66',Anything] | Code[1<int,number>,Anything])
-//│ 		α66' :> int<number>
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: α64'
-//│ ║  l.502: 	fun pow(n, cde) = if (n > 0) then code"${pow(n - 1, cde)} * ${cde}" else code"1"
+//│ 		pow75' :> ((α76', α77',) -> (Code[α84',Anything] | Code[1<int,number>,Anything])) <: ((α81', α77',) -> α82')
+//│ 		α76' :> int<number> <: int<number> & number<>
+//│ 		α81' :> int<number> <: α76'
+//│ 		α82' :> (Code[α84',Anything] | Code[1<int,number>,Anything])
+//│ 		α84' :> int<number>
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: α82'
+//│ ║  l.520: 	fun pow(n, cde) = if (n > 0) then code"${pow(n - 1, cde)} * ${cde}" else code"1"
 //│ ╙──       	                                         ^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: α59'
-//│ ║  l.502: 	fun pow(n, cde) = if (n > 0) then code"${pow(n - 1, cde)} * ${cde}" else code"1"
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: α77'
+//│ ║  l.520: 	fun pow(n, cde) = if (n > 0) then code"${pow(n - 1, cde)} * ${cde}" else code"1"
 //│ ╙──       	                                                              ^^^
-//│ pow: (int, anything,) -> code
+//│ pow: (int, anything,) -> Code[int, ?]
 
 :d
 :ne
@@ -683,10 +701,10 @@ fun test(n, cde) = if n > 0 then code"let x = n - 1; ${test(n - 1, code"${cde} +
 //│ 1. Typing term n, cde, => if (> (n,) (0,)) then Quoted' let x = - (n,) (1,) in Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) ' ' else cde
 //│ | 1. Typing pattern n, cde,
 //│ | | 1. Typing pattern n
-//│ | | 1. : α72'
+//│ | | 1. : α91'
 //│ | | 1. Typing pattern cde
-//│ | | 1. : α73'
-//│ | 1. : (α72', α73',)
+//│ | | 1. : α92'
+//│ | 1. : (α91', α92',)
 //│ | 1. Typing term if (> (n,) (0,)) then Quoted' let x = - (n,) (1,) in Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) ' ' else cde
 //│ | | The mutable CaseOf tree
 //│ | | if «> (n,) (0,)»
@@ -701,27 +719,27 @@ fun test(n, cde) = if n > 0 then code"let x = n - 1; ${test(n - 1, code"${cde} +
 //│ | | | | | 1. : (number<> -> (number<> -> bool<>))
 //│ | | | | | 1. Typing term n,
 //│ | | | | | | 1. Typing term n
-//│ | | | | | | 1. : α72'
-//│ | | | | | 1. : (α72',)
-//│ | | | | | CONSTRAIN (number<> -> (number<> -> bool<>)) <! (α72' -> α74')
+//│ | | | | | | 1. : α91'
+//│ | | | | | 1. : (α91',)
+//│ | | | | | CONSTRAIN (number<> -> (number<> -> bool<>)) <! (α91' -> α93')
 //│ | | | | |   where 
-//│ | | | | | C (number<> -> (number<> -> bool<>)) <! (α72' -> α74')    (0)
-//│ | | | | | | C (α72',) <! (number<>,)    (1)
-//│ | | | | | | | C α72' <! number<>    (2)
-//│ | | | | | | C (number<> -> bool<>) <! α74'    (3)
-//│ | | | | 1. : α74'
+//│ | | | | | C (number<> -> (number<> -> bool<>)) <! (α91' -> α93')    (0)
+//│ | | | | | | C (α91',) <! (number<>,)    (1)
+//│ | | | | | | | C α91' <! number<>    (2)
+//│ | | | | | | C (number<> -> bool<>) <! α93'    (3)
+//│ | | | | 1. : α93'
 //│ | | | | 1. Typing term 0,
 //│ | | | | | 1. Typing term 0
 //│ | | | | | 1. : 0<int,number>
 //│ | | | | 1. : (0<int,number>,)
-//│ | | | | CONSTRAIN α74' <! (0<int,number> -> α75')
+//│ | | | | CONSTRAIN α93' <! (0<int,number> -> α94')
 //│ | | | |   where 
-//│ 		α74' :> (number<> -> bool<>)
-//│ | | | | C α74' <! (0<int,number> -> α75')    (0)
-//│ | | | | | C (number<> -> bool<>) <! (0<int,number> -> α75')    (1)
+//│ 		α93' :> (number<> -> bool<>)
+//│ | | | | C α93' <! (0<int,number> -> α94')    (0)
+//│ | | | | | C (number<> -> bool<>) <! (0<int,number> -> α94')    (1)
 //│ | | | | | | C (0<int,number>,) <! (number<>,)    (2)
-//│ | | | | | | C bool<> <! α75'    (2)
-//│ | | | 1. : α75'
+//│ | | | | | | C bool<> <! α94'    (2)
+//│ | | | 1. : α94'
 //│ | | | 1. Typing term Quoted' let x = - (n,) (1,) in Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) ' '
 //│ | | | | 1. Typing term let x = - (n,) (1,) in Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) '
 //│ | | | | | 2. Typing term - (n,) (1,)
@@ -730,32 +748,32 @@ fun test(n, cde) = if n > 0 then code"let x = n - 1; ${test(n - 1, code"${cde} +
 //│ | | | | | | | 2. : (int<number> -> (int<number> -> int<number>))
 //│ | | | | | | | 2. Typing term n,
 //│ | | | | | | | | 2. Typing term n
-//│ | | | | | | | | 2. : α72'
-//│ | | | | | | | 2. : (α72',)
-//│ | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α72' -> α76'')
+//│ | | | | | | | | 2. : α91'
+//│ | | | | | | | 2. : (α91',)
+//│ | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α91' -> α95'')
 //│ | | | | | | |   where 
-//│ 		α72' <: number<>
-//│ | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (α72' -> α76'')    (0)
-//│ | | | | | | | | C (α72',) <! (int<number>,)    (1)
-//│ | | | | | | | | | C α72' <! int<number>    (2)
-//│ | | | | | | | | C (int<number> -> int<number>) <! α76''    (3)
-//│ | | | | | | 2. : α76''
+//│ 		α91' <: number<>
+//│ | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (α91' -> α95'')    (0)
+//│ | | | | | | | | C (α91',) <! (int<number>,)    (1)
+//│ | | | | | | | | | C α91' <! int<number>    (2)
+//│ | | | | | | | | C (int<number> -> int<number>) <! α95''    (3)
+//│ | | | | | | 2. : α95''
 //│ | | | | | | 2. Typing term 1,
 //│ | | | | | | | 2. Typing term 1
 //│ | | | | | | | 2. : 1<int,number>
 //│ | | | | | | 2. : (1<int,number>,)
-//│ | | | | | | CONSTRAIN α76'' <! (1<int,number> -> α77'')
+//│ | | | | | | CONSTRAIN α95'' <! (1<int,number> -> α96'')
 //│ | | | | | |   where 
-//│ 		α76'' :> (int<number> -> int<number>)
-//│ | | | | | | C α76'' <! (1<int,number> -> α77'')    (0)
-//│ | | | | | | | C (int<number> -> int<number>) <! (1<int,number> -> α77'')    (1)
+//│ 		α95'' :> (int<number> -> int<number>)
+//│ | | | | | | C α95'' <! (1<int,number> -> α96'')    (0)
+//│ | | | | | | | C (int<number> -> int<number>) <! (1<int,number> -> α96'')    (1)
 //│ | | | | | | | | C (1<int,number>,) <! (int<number>,)    (2)
-//│ | | | | | | | | C int<number> <! α77''    (2)
-//│ | | | | | 2. : α77''
+//│ | | | | | | | | C int<number> <! α96''    (2)
+//│ | | | | | 2. : α96''
 //│ | | | | | 1. Typing term Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) '
 //│ | | | | | | 1. Typing term test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',)
 //│ | | | | | | | 1. Typing term test
-//│ | | | | | | | 1. : test71'
+//│ | | | | | | | 1. : test90'
 //│ | | | | | | | 1. Typing term - (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',
 //│ | | | | | | | | 1. Typing term - (n,) (1,)
 //│ | | | | | | | | | 1. Typing term - (n,)
@@ -763,27 +781,27 @@ fun test(n, cde) = if n > 0 then code"let x = n - 1; ${test(n - 1, code"${cde} +
 //│ | | | | | | | | | | 1. : (int<number> -> (int<number> -> int<number>))
 //│ | | | | | | | | | | 1. Typing term n,
 //│ | | | | | | | | | | | 1. Typing term n
-//│ | | | | | | | | | | | 1. : α72'
-//│ | | | | | | | | | | 1. : (α72',)
-//│ | | | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α72' -> α78')
+//│ | | | | | | | | | | | 1. : α91'
+//│ | | | | | | | | | | 1. : (α91',)
+//│ | | | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α91' -> α97')
 //│ | | | | | | | | | |   where 
-//│ 		α72' <: int<number> & number<>
-//│ | | | | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (α72' -> α78')    (0)
-//│ | | | | | | | | | | | C (α72',) <! (int<number>,)    (1)
-//│ | | | | | | | | | | | C (int<number> -> int<number>) <! α78'    (1)
-//│ | | | | | | | | | 1. : α78'
+//│ 		α91' <: int<number> & number<>
+//│ | | | | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (α91' -> α97')    (0)
+//│ | | | | | | | | | | | C (α91',) <! (int<number>,)    (1)
+//│ | | | | | | | | | | | C (int<number> -> int<number>) <! α97'    (1)
+//│ | | | | | | | | | 1. : α97'
 //│ | | | | | | | | | 1. Typing term 1,
 //│ | | | | | | | | | | 1. Typing term 1
 //│ | | | | | | | | | | 1. : 1<int,number>
 //│ | | | | | | | | | 1. : (1<int,number>,)
-//│ | | | | | | | | | CONSTRAIN α78' <! (1<int,number> -> α79')
+//│ | | | | | | | | | CONSTRAIN α97' <! (1<int,number> -> α98')
 //│ | | | | | | | | |   where 
-//│ 		α78' :> (int<number> -> int<number>)
-//│ | | | | | | | | | C α78' <! (1<int,number> -> α79')    (0)
-//│ | | | | | | | | | | C (int<number> -> int<number>) <! (1<int,number> -> α79')    (1)
+//│ 		α97' :> (int<number> -> int<number>)
+//│ | | | | | | | | | C α97' <! (1<int,number> -> α98')    (0)
+//│ | | | | | | | | | | C (int<number> -> int<number>) <! (1<int,number> -> α98')    (1)
 //│ | | | | | | | | | | | C (1<int,number>,) <! (int<number>,)    (2)
-//│ | | | | | | | | | | | C int<number> <! α79'    (2)
-//│ | | | | | | | | 1. : α79'
+//│ | | | | | | | | | | | C int<number> <! α98'    (2)
+//│ | | | | | | | | 1. : α98'
 //│ | | | | | | | | 1. Typing term Quoted' + (Unquote' cde ',) (x,) '
 //│ | | | | | | | | | 1. Typing term + (Unquote' cde ',) (x,)
 //│ | | | | | | | | | | 1. Typing term + (Unquote' cde ',)
@@ -792,97 +810,123 @@ fun test(n, cde) = if n > 0 then code"let x = n - 1; ${test(n - 1, code"${cde} +
 //│ | | | | | | | | | | | 1. Typing term Unquote' cde ',
 //│ | | | | | | | | | | | | 1. Typing term Unquote' cde '
 //│ | | | | | | | | | | | | | 1. Typing term cde
-//│ | | | | | | | | | | | | | 1. : α73'
-//│ | | | | | | | | | | | | | check subtypeα73'
+//│ | | | | | | | | | | | | | 1. : α92'
+//│ | | | | | | | | | | | | | check subtypeα92'
 //│ | | | | | | | | | | | | | false
 //│ | | | | | | | | | | | | | false
 //│ | | | | | | | | | | | | 1. : error<>
 //│ | | | | | | | | | | | 1. : (error<>,)
-//│ | | | | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (error<> -> α80')
+//│ | | | | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (error<> -> α99')
 //│ | | | | | | | | | | |   where 
-//│ | | | | | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (error<> -> α80')    (0)
+//│ | | | | | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (error<> -> α99')    (0)
 //│ | | | | | | | | | | | | C (error<>,) <! (int<number>,)    (1)
 //│ | | | | | | | | | | | | | C error<> <! int<number>    (2)
-//│ | | | | | | | | | | | | C (int<number> -> int<number>) <! α80'    (3)
-//│ | | | | | | | | | | 1. : α80'
+//│ | | | | | | | | | | | | C (int<number> -> int<number>) <! α99'    (3)
+//│ | | | | | | | | | | 1. : α99'
 //│ | | | | | | | | | | 1. Typing term x,
 //│ | | | | | | | | | | | 1. Typing term x
-//│ | | | | | | | | | | | 1. : x.type81'
-//│ | | | | | | | | | | 1. : (x.type81',)
-//│ | | | | | | | | | | CONSTRAIN α80' <! (x.type81' -> α82')
+//│ | | | | | | | | | | | 1. : x.type100'
+//│ | | | | | | | | | | 1. : (x.type100',)
+//│ | | | | | | | | | | CONSTRAIN α99' <! (x.type100' -> α101')
 //│ | | | | | | | | | |   where 
-//│ 		α80' :> (int<number> -> int<number>)
-//│ | | | | | | | | | | C α80' <! (x.type81' -> α82')    (0)
-//│ | | | | | | | | | | | C (int<number> -> int<number>) <! (x.type81' -> α82')    (1)
-//│ | | | | | | | | | | | | C (x.type81',) <! (int<number>,)    (2)
-//│ | | | | | | | | | | | | | C x.type81' <! int<number>    (3)
-//│ | | | | | | | | | | | | C int<number> <! α82'    (4)
-//│ | | | | | | | | | 1. : α82'
-//│ | | | | | | | | 1. : Code[α82',x.type81'83']
-//│ | | | | | | | 1. : (α79', Code[α82',x.type81'83'],)
-//│ | | | | | | | CONSTRAIN test71' <! ((α79', Code[α82',x.type81'83'],) -> α84')
+//│ 		α99' :> (int<number> -> int<number>)
+//│ | | | | | | | | | | C α99' <! (x.type100' -> α101')    (0)
+//│ | | | | | | | | | | | C (int<number> -> int<number>) <! (x.type100' -> α101')    (1)
+//│ | | | | | | | | | | | | C (x.type100',) <! (int<number>,)    (2)
+//│ | | | | | | | | | | | | | C x.type100' <! int<number>    (3)
+//│ | | | | | | | | | | | | C int<number> <! α101'    (4)
+//│ | | | | | | | | | 1. : α101'
+//│ | | | | | | | | 1. : Code[α101',x.type100'102']
+//│ | | | | | | | 1. : (α98', Code[α101',x.type100'102'],)
+//│ | | | | | | | CONSTRAIN test90' <! ((α98', Code[α101',x.type100'102'],) -> α103')
 //│ | | | | | | |   where 
-//│ 		α79' :> int<number>
-//│ 		α82' :> int<number>
-//│ | | | | | | | C test71' <! ((α79', Code[α82',x.type81'83'],) -> α84')    (0)
-//│ | | | | | | 1. : α84'
-//│ | | | | | | check subtypeα84'
+//│ 		α98' :> int<number>
+//│ 		α101' :> int<number>
+//│ | | | | | | | C test90' <! ((α98', Code[α101',x.type100'102'],) -> α103')    (0)
+//│ | | | | | | 1. : α103'
+//│ | | | | | | check subtypeα103'
 //│ | | | | | | false
 //│ | | | | | | false
 //│ | | | | | 1. : error<>
 //│ | | | | 1. : error<>
 //│ | | | 1. : Code[error<>,Anything]
 //│ | | | 1. Typing term cde
-//│ | | | 1. : α73'
-//│ | | | CONSTRAIN α75' <! (true<bool> | (α85' & ~(true<bool>)))
+//│ | | | 1. : α92'
+//│ | | | CONSTRAIN α94' <! (true<bool> | (α104' & ~(true<bool>)))
 //│ | | |   where 
-//│ 		α75' :> bool<>
-//│ | | | C α75' <! (true<bool> | (α85' & ~(true<bool>)))    (0)
-//│ | | | | C bool<> <! (true<bool> | (α85' & ~(true<bool>)))    (1)
-//│ | | | | | ARGH  DNF(bool<>{})  <!  DNF(true<bool>{} | α85'∧~(true<bool>))
-//│ | | | | | | Consider bool<>{} <: DNF(true<bool>{} | α85'∧~(true<bool>))
-//│ | | | | | | Possible: List(true<bool>{}, α85'∧~(true<bool>))
-//│ | | | | | | A  bool<>{}  %  List()  <!  List(true<bool>, (α85' & ~(true<bool>)))  %  ⊥
-//│ | | | | | | | A  bool<>{}  %  List()  <!  List((α85' & ~(true<bool>)))  %  true<bool>
+//│ 		α94' :> bool<>
+//│ | | | C α94' <! (true<bool> | (α104' & ~(true<bool>)))    (0)
+//│ | | | | C bool<> <! (true<bool> | (α104' & ~(true<bool>)))    (1)
+//│ | | | | | ARGH  DNF(bool<>{})  <!  DNF(true<bool>{} | α104'∧~(true<bool>))
+//│ | | | | | | Consider bool<>{} <: DNF(true<bool>{} | α104'∧~(true<bool>))
+//│ | | | | | | Possible: List(true<bool>{}, α104'∧~(true<bool>))
+//│ | | | | | | A  bool<>{}  %  List()  <!  List(true<bool>, (α104' & ~(true<bool>)))  %  ⊥
+//│ | | | | | | | A  bool<>{}  %  List()  <!  List((α104' & ~(true<bool>)))  %  true<bool>
 //│ | | | | | | | | Case.1
-//│ | | | | | | | | A  bool<>{}  %  List()  <!  List(α85')  %  true<bool>
-//│ | | | | | | | | | C (bool<> & ~(true<bool>)) <! α85'    (2)
+//│ | | | | | | | | A  bool<>{}  %  List()  <!  List(α104')  %  true<bool>
+//│ | | | | | | | | | C (bool<> & ~(true<bool>)) <! α104'    (2)
 //│ | | | | | | | | Case.2
 //│ | | | | | | | | A  bool<>{}  %  List()  <!  List(~(true<bool>))  %  true<bool>
 //│ | | | | | | | | | A  bool<>{}  %  List(true<bool>)  <!  List()  %  true<bool>
 //│ | | | | | | | | | | A  true<bool>{}  %  List()  <!  List()  %  true<bool>
 //│ | | | | | | | | | | | OK  true<bool>  <:  true<bool>
-//│ | | 1. : (Code[error<>,Anything] | α73')
-//│ | 1. : (Code[error<>,Anything] | α73')
-//│ 1. : ((α72', α73',) -> (Code[error<>,Anything] | α73'))
-//│ CONSTRAIN ((α72', α73',) -> (Code[error<>,Anything] | α73')) <! test71'
+//│ | | 1. : (Code[error<>,Anything] | α92')
+//│ | 1. : (Code[error<>,Anything] | α92')
+//│ 1. : ((α91', α92',) -> (Code[error<>,Anything] | α92'))
+//│ CONSTRAIN ((α91', α92',) -> (Code[error<>,Anything] | α92')) <! test90'
 //│   where 
-//│ 		test71' <: ((α79', Code[α82',x.type81'83'],) -> α84')
-//│ 		α72' <: int<number> & number<>
-//│ 		α79' :> int<number>
-//│ 		α82' :> int<number>
-//│ C ((α72', α73',) -> (Code[error<>,Anything] | α73')) <! test71'    (0)
-//│ | C ((α72', α73',) -> (Code[error<>,Anything] | α73')) <! ((α79', Code[α82',x.type81'83'],) -> α84')    (1)
-//│ | | C (α79', Code[α82',x.type81'83'],) <! (α72', α73',)    (2)
-//│ | | | C α79' <! α72'    (3)
-//│ | | | | C int<number> <! α72'    (4)
+//│ 		test90' <: ((α98', Code[α101',x.type100'102'],) -> α103')
+//│ 		α91' <: int<number> & number<>
+//│ 		α98' :> int<number>
+//│ 		α101' :> int<number>
+//│ C ((α91', α92',) -> (Code[error<>,Anything] | α92')) <! test90'    (0)
+//│ | C ((α91', α92',) -> (Code[error<>,Anything] | α92')) <! ((α98', Code[α101',x.type100'102'],) -> α103')    (1)
+//│ | | C (α98', Code[α101',x.type100'102'],) <! (α91', α92',)    (2)
+//│ | | | C α98' <! α91'    (3)
+//│ | | | | C int<number> <! α91'    (4)
 //│ | | | | | C int<number> <! int<number>    (5)
 //│ | | | | | C int<number> <! number<>    (5)
-//│ | | | C Code[α82',x.type81'83'] <! α73'    (5)
-//│ | | C (Code[error<>,Anything] | α73') <! α84'    (6)
-//│ ⬤ Typed as: test71'
+//│ | | | C Code[α101',x.type100'102'] <! α92'    (5)
+//│ | | C (Code[error<>,Anything] | α92') <! α103'    (6)
+//│ ⬤ Typed as: test90'
 //│  where: 
-//│ 		test71' :> ((α72', α73',) -> (Code[error<>,Anything] | α73')) <: ((α79', Code[α82',x.type81'83'],) -> α84')
-//│ 		α72' :> int<number> <: int<number> & number<>
-//│ 		α73' :> Code[α82',x.type81'83']
-//│ 		α79' :> int<number> <: α72'
-//│ 		α82' :> int<number>
-//│ 		α84' :> (Code[error<>,Anything] | α73')
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: α73'
-//│ ║  l.682: 	fun test(n, cde) = if n > 0 then code"let x = n - 1; ${test(n - 1, code"${cde} + x")}" else cde
+//│ 		test90' :> ((α91', α92',) -> (Code[error<>,Anything] | α92')) <: ((α98', Code[α101',x.type100'102'],) -> α103')
+//│ 		α91' :> int<number> <: int<number> & number<>
+//│ 		α92' :> Code[α101',x.type100'102']
+//│ 		α98' :> int<number> <: α91'
+//│ 		α101' :> int<number>
+//│ 		α103' :> (Code[error<>,Anything] | α92')
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: α92'
+//│ ║  l.700: 	fun test(n, cde) = if n > 0 then code"let x = n - 1; ${test(n - 1, code"${cde} + x")}" else cde
 //│ ╙──       	                                                                          ^^^
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: α84'
-//│ ║  l.682: 	fun test(n, cde) = if n > 0 then code"let x = n - 1; ${test(n - 1, code"${cde} + x")}" else cde
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: α103'
+//│ ║  l.700: 	fun test(n, cde) = if n > 0 then code"let x = n - 1; ${test(n - 1, code"${cde} + x")}" else cde
 //│ ╙──       	                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ test: (int, 'a,) -> (code | 'a)
+//│ test: (int, 'a,) -> (Code[error | int, ?] | 'a)
+
+
+:d
+Const(2)
+//│ 0. Typing term Const (2,)
+//│ | 0. Typing term Const
+//│ | 0. : Const112
+//│ | 0. Typing term 2,
+//│ | | 0. Typing term 2
+//│ | | 0. : 2<int,number>
+//│ | 0. : (2<int,number>,)
+//│ | CONSTRAIN Const112 <! (2<int,number> -> α114)
+//│ |   where 
+//│ 		Const112 :> [(α113 -> Code[[α113],Anything])]
+//│ | C Const112 <! (2<int,number> -> α114)    (0)
+//│ | | C [(α113 -> Code[[α113],Anything])] <! (2<int,number> -> α114)    (1)
+//│ | | | C (α113 -> Code[[α113],Anything]) <! (2<int,number> -> α114)    (1)
+//│ | | | | C (2<int,number>,) <! (α113,)    (2)
+//│ | | | | | C 2<int,number> <! α113    (3)
+//│ | | | | C Code[[α113],Anything] <! α114    (4)
+//│ 0. : α114
+//│ ⬤ Typed as: α114
+//│  where: 
+//│ 		α113 :> 2<int,number>
+//│ 		α114 :> Code[[α113],Anything]
+//│ res: Code[2, ?]
 
