@@ -1,6 +1,62 @@
 :NewParser
 :ge
 
+
+code"let f = x => x; f(if true then 11 else 22)"
+//│ res: code & {Code#C = anything, Code#T <: 11 | 22}
+//│    = [
+//│        'Let',
+//│        'f',
+//│        [ 'Lam', [ 'Tup', [Array] ], [ 'Var', 'x' ] ],
+//│        [ 'Fun', [ 'Var', 'f' ], [ 'Tup', [Array] ] ]
+//│      ]
+
+run(res)
+//│ res: 11 | 22
+//│ Runtime error:
+//│   SyntaxError: Unexpected token 'if'
+
+// The JS for creating symbols should appear here:
+:js
+code"x => x + 1"
+//│ // Query 1
+//│ res = [
+//│   "Lam",
+//│   [
+//│     "Tup",
+//│     [
+//│       "Var",
+//│       "x"
+//│     ]
+//│   ],
+//│   [
+//│     "App",
+//│     "+",
+//│     [
+//│       "Var",
+//│       "x"
+//│     ],
+//│     [1]
+//│   ]
+//│ ];
+//│ // End of generated code
+//│ res: code & {Code#C = anything, Code#T <: int -> int}
+//│    = [
+//│        'Lam',
+//│        [ 'Tup', [ 'Var', 'x' ] ],
+//│        [ 'App', '+', [ 'Var', 'x' ], [ 1 ] ]
+//│      ]
+
+// Bad way: Source quote ->(codegen) JS to construct the S-Expr ->(node) JS objects ->(run(*)) JS-string ->(eval) result
+// Good way: Source quote ->(codegen) JS to construct the S-Expr ->(node(*)) JS objects ->(run) result
+// (*) : symbols created here
+
+// To create symbols, logically do:
+//    res = { const x = Symbol("x"); [ ... ] }
+// Encoded in real JS:
+//    (x => [ ... ])(Symbol("x"))
+
+
 let x = code"3 + 2"
 //│ x: code & {Code#C = anything, Code#T <: int}
 //│  = [ 'App', '+', [ 3 ], [ 2 ] ]
@@ -19,15 +75,15 @@ run(y)
 
 
 code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: α44
-//│ ║  l.21: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: α59
+//│ ║  l.77: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
 //│ ╙──      	                                            ^^^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.21: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
+//│ ║  l.77: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
 //│ ║        	                             ^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `code & {Code#C :> ?b.type40, Code#T <: ?a}` is not an instance of type `int`
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: α47
-//│ ║  l.21: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
+//│ ╙── expression of type `code & {Code#C :> ?b.type55, Code#T <: ?a}` is not an instance of type `int`
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: α62
+//│ ║  l.77: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
 //│ ╙──      	                             ^^^^^^^^^^^^^^^^^^^^^^
 //│ res: code & {Code#C = anything, Code#T <: error}
 //│ Code generation encountered an error:
@@ -85,9 +141,9 @@ let code_unquote = code"let x = 1; x + ${test(3)}"
 run(code_unquote)
 //│ x: 1
 //│  = 1
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: α83'
-//│ ║  l.84: 	let code_unquote = code"let x = 1; x + ${test(3)}"
-//│ ╙──      	                                         ^^^^^^^
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: α98'
+//│ ║  l.140: 	let code_unquote = code"let x = 1; x + ${test(3)}"
+//│ ╙──       	                                         ^^^^^^^
 //│ code_unquote: code & {Code#C = anything, Code#T <: int}
 //│             = [ 'Let', 'x', [ 1 ], [ 'App', '+', [ 'Var', 'x' ], [ 1000 ] ] ]
 //│ res: int
@@ -101,10 +157,27 @@ run(code_unquote)
 //│    = 1001
 
 // Free variable
+:js
 let code_free = code"x_free + 1"
-run(code_free)
+//│ // Query 1
+//│ globalThis["code_free"] = [
+//│   "App",
+//│   "+",
+//│   [
+//│     "Var",
+//│     "x_free"
+//│   ],
+//│   [1]
+//│ ];
+//│ // End of generated code
 //│ code_free: code & {Code#C = anything, Code#T <: int}
 //│          = [ 'App', '+', [ 'Var', 'x_free' ], [ 1 ] ]
+
+// Type we want:
+//    code_free: Code[int, { x_free: int }]
+
+
+run(code_free)
 //│ res: int
 //│ Runtime error:
 //│   ReferenceError: x_free is not defined
@@ -135,3 +208,4 @@ let code_nested = code"let a = 1; let b = 2; ${code"a + b"}"
 run(code_nested)
 //│ res: code & {Code#C = anything, Code#T <: int}
 //│    = 3
+
