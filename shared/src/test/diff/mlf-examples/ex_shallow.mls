@@ -211,7 +211,7 @@ def a2'_ x =
     let _ = x y church_two in
     y church_succ
   ) a3
-//│ a2'_: ((forall 'a. ((forall 'b, 'c, 'd. ('b -> 'c & 'd -> 'b) -> 'd -> 'c) -> 'a) -> anything -> 'a) -> (forall 'e, 'f, 'g. ('e -> 'f & 'g -> 'e) -> 'g -> 'f) -> anything & (forall 'h, 'i. ('h -> 'i & 'h) -> 'i) -> (forall 'j. 'j -> 'j) -> anything) -> anything -> ('k -> 'l & 'm -> 'k & 'n -> 'm) -> 'n -> 'l
+//│ a2'_: ((forall 'a. ((forall 'b, 'c, 'd. ('b -> 'c & 'd -> 'b) -> 'd -> 'c) -> 'a) -> anything -> 'a) -> (forall 'e, 'f, 'g. ('e -> 'f & 'g -> 'e) -> 'g -> 'f) -> anything & (forall 'h, 'i. ('i -> 'h & 'i) -> 'h) -> (forall 'j. 'j -> 'j) -> anything) -> anything -> ('k -> 'l & 'm -> 'k & 'n -> 'm) -> 'n -> 'l
 //│     = [Function: a2$_]
 
 def a0' = a2' a1'
@@ -280,7 +280,7 @@ def a0_ = a2_ a1
 //│   = [Function: a31]
 //│ a2: A1 -> (forall 'a. (anything -> 'a
 //│   where
-//│     forall 'b, 'c, 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a))
+//│     forall 'b, 'c, 'd. ('c -> 'd -> 'b) -> (forall 'e. ('b -> 'e & 'c) -> 'd -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a))
 //│   = [Function: a21]
 //│ a2_: A1 -> (forall 'a. (anything -> 'a
 //│   where
@@ -288,11 +288,11 @@ def a0_ = a2_ a1
 //│    = [Function: a2_1]
 //│ a0: anything -> 'a
 //│   where
-//│     forall 'b, 'c, 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a
+//│     forall 'b, 'c, 'd. ('c -> 'd -> 'b) -> (forall 'e. ('b -> 'e & 'c) -> 'd -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a
 //│   = [Function: a01]
 //│ a0_: anything -> 'a
 //│   where
-//│     forall 'b, 'c, 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a
+//│     forall 'b, 'c, 'd. ('d -> 'b -> 'c) -> (forall 'e. ('c -> 'e & 'd) -> 'b -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a
 //│    = [Function: a0_1]
 
 def a1' = fun f -> fun x -> f (f (either id x))
@@ -321,9 +321,9 @@ def a2'_ x =
   ) a3
 //│ a2'_: ((forall 'a. 'a -> (forall 'b. (anything -> 'b
 //│   where
-//│     'a <: (forall 'c, 'd, 'e. ('c -> 'd & 'e -> 'c) -> 'e -> 'd) -> 'b))) -> (forall 'c, 'd, 'e. ('c -> 'd & 'e -> 'c) -> 'e -> 'd) -> anything & (forall 'f, 'g. ('f -> 'g & 'f) -> 'g) -> (forall 'h. 'h -> 'h) -> anything) -> (forall 'i. (anything -> 'i
+//│     'a <: (forall 'c, 'd, 'e. ('e -> 'c & 'd -> 'e) -> 'd -> 'c) -> 'b))) -> (forall 'c, 'd, 'e. ('e -> 'c & 'd -> 'e) -> 'd -> 'c) -> anything & (forall 'f, 'g. ('f -> 'g & 'f) -> 'g) -> (forall 'h. 'h -> 'h) -> anything) -> (forall 'i. (anything -> 'i
 //│   where
-//│     forall 'j, 'k, 'l. ('j -> 'k -> 'l) -> (forall 'm. ('l -> 'm & 'j) -> 'k -> 'm) <: (forall 'c, 'd, 'e. ('c -> 'd & 'e -> 'c) -> 'e -> 'd) -> 'i))
+//│     forall 'j, 'k, 'l. ('j -> 'k -> 'l) -> (forall 'm. ('l -> 'm & 'j) -> 'k -> 'm) <: (forall 'c, 'd, 'e. ('e -> 'c & 'd -> 'e) -> 'd -> 'c) -> 'i))
 //│     = [Function: a2$_1]
 
 def a0' = a2' a1'

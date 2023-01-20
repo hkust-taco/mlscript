@@ -51,18 +51,18 @@ rec def eval1_stub e = case e of {
   | Add -> eval1_stub e.lhs
   | _ -> 0
   }
-//│ eval1_stub: forall 'a, 'b, 'c, 'eval1_stub, 'd, 'e, 'lhs, 'lhs0. 'eval1_stub
+//│ eval1_stub: forall 'a, 'lhs, 'b, 'eval1_stub, 'c, 'lhs0, 'd, 'e. 'eval1_stub
 //│   where
-//│     'eval1_stub := forall 'lhs1, 'f, 'g, 'h, 'i, 'j. 'j -> (1 | 'h | 0)
-//│     'h :> 'b
-//│     'b :> forall 'k. 1 | 'k | 0
-//│     'k :> 'b
-//│     'j <: #Lit & 'g | (#Add & 'f | 'i & ~#Add) & ~#Lit
-//│     'f <: {lhs: 'lhs1}
+//│     'eval1_stub := forall 'f, 'g, 'h, 'i, 'j, 'lhs1. 'g -> (1 | 'f | 0)
+//│     'f :> 'e
+//│     'e :> forall 'k. 1 | 'k | 0
+//│     'k :> 'e
+//│     'g <: #Lit & 'h | (#Add & 'i | 'j & ~#Add) & ~#Lit
+//│     'i <: {lhs: 'lhs1}
 //│     'lhs1 <: 'lhs
-//│     'lhs <: 'c
-//│     'c <: #Lit & 'd | (#Add & 'e | 'a & ~#Add) & ~#Lit
-//│     'e <: {lhs: 'lhs0}
+//│     'lhs <: 'd
+//│     'd <: #Lit & 'b | (#Add & 'a | 'c & ~#Add) & ~#Lit
+//│     'a <: {lhs: 'lhs0}
 //│     'lhs0 <: 'lhs
 //│           = [Function: eval1_stub2]
 
@@ -90,40 +90,40 @@ rec def eval1 k e = case e of {
 
 :ns
 eval1
-//│ res: forall 'a, 'b, 'c, 'd, 'e, 'rhs, 'val, 'f, 'g, 'eval1, 'h, 'i, 'rhs0, 'rhs1, 'j, 'k, 'l, 'm, 'n, 'val0, 'o, 'p, 'lhs, 'lhs0, 'lhs1. 'eval1
+//│ res: forall 'val, 'a, 'lhs, 'b, 'eval1, 'rhs, 'c, 'lhs0, 'd, 'lhs1, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'rhs0, 'rhs1, 'm, 'n, 'o, 'val0, 'p. 'eval1
 //│   where
-//│     'eval1 := forall 'q, 'r, 's. 'q -> (forall 't, 'u, 'val1, 'v, 'w, 'x, 'rhs2, 'lhs2, 'y. 'y -> ('val1 | 'v | 'w))
-//│     'w :> 's
-//│     'v :> int
-//│     'y <: #Lit & 'x | (#Add & 't | 'u & ~#Add) & ~#Lit
-//│     'u <: 'r
-//│     't <: {rhs: 'rhs2} & {lhs: 'lhs2}
-//│     'lhs2 <: 'lhs0
-//│     'rhs2 <: 'rhs0
-//│     'rhs0 <: 'n
-//│     'n <: #Lit & 'd | (#Add & 'o | 'g & ~#Add) & ~#Lit
-//│     'g <: 'j
-//│     'o <: {rhs: 'rhs1} & {lhs: 'lhs1}
-//│     'lhs1 <: 'lhs0
-//│     'lhs0 <: 'm
-//│     'm <: #Lit & 'l | (#Add & 'e | 'k & ~#Add) & ~#Lit
-//│     'k <: 'a
+//│     'eval1 := forall 'q, 'r, 's. 's -> (forall 't, 'val1, 'lhs2, 'u, 'rhs2, 'v, 'w, 'x, 'y. 'x -> ('val1 | 't | 'w))
+//│     'w :> 'r
+//│     't :> int
+//│     'x <: #Lit & 'y | (#Add & 'v | 'u & ~#Add) & ~#Lit
+//│     'u <: 'q
+//│     'v <: {rhs: 'rhs2} & {lhs: 'lhs2}
+//│     'lhs2 <: 'lhs1
+//│     'rhs2 <: 'rhs1
+//│     'rhs1 <: 'k
+//│     'k <: #Lit & 'b | (#Add & 'e | 'i & ~#Add) & ~#Lit
+//│     'i <: 'c
 //│     'e <: {rhs: 'rhs} & {lhs: 'lhs}
-//│     'lhs <: 'lhs0
-//│     'rhs <: 'rhs0
-//│     'l <: {val: 'val0}
-//│     'val0 <: int
-//│     'rhs1 <: 'rhs0
-//│     'd <: {val: 'val}
+//│     'lhs <: 'lhs1
+//│     'lhs1 <: 'd
+//│     'd <: #Lit & 'n | (#Add & 'l | 'o & ~#Add) & ~#Lit
+//│     'o <: 'p
+//│     'l <: {rhs: 'rhs0} & {lhs: 'lhs0}
+//│     'lhs0 <: 'lhs1
+//│     'rhs0 <: 'rhs1
+//│     'n <: {val: 'val}
 //│     'val <: int
-//│     'x <: {val: 'val1}
-//│     'q <: 'r -> 's & 'f & 'p
-//│     'f <: 'h
-//│     'h <: 'j -> 'b & 'f & 'p
-//│     'p <: 'c
-//│     'c <: 'a -> 'i & 'f & 'p
-//│     'i <: int
-//│     'b <: int
+//│     'rhs <: 'rhs1
+//│     'b <: {val: 'val0}
+//│     'val0 <: int
+//│     'y <: {val: 'val1}
+//│     's <: 'q -> 'r & 'f & 'h
+//│     'f <: 'm
+//│     'm <: 'c -> 'a & 'f & 'h
+//│     'h <: 'g
+//│     'g <: 'p -> 'j & 'f & 'h
+//│     'j <: int
+//│     'a <: int
 //│    = [Function: eval1]
 
 :re
@@ -424,8 +424,8 @@ rec def prettier2 k ev = prettier1 (fun x -> case x of {
   }) ev
 //│ prettier2: ('a -> string & 'b -> string) -> ('rhs -> number & 'lhs -> number & 'rhs0 -> number & 'lhs0 -> number & 'rhs1 -> number & 'lhs1 -> number & 'rhs2 -> number & 'lhs2 -> number & 'rhs3 -> number & 'lhs3 -> number & 'rhs4 -> number & 'lhs4 -> number & 'rhs5 -> number & 'lhs5 -> number & 'rhs6 -> number & 'lhs6 -> number & 'rhs7 -> number & 'lhs7 -> number & 'rhs8 -> number & 'lhs8 -> number) -> (Add[?] & {lhs: 'lhs & 'lhs9, rhs: 'rhs & 'rhs9} | Lit | Nega[?] & {arg: 'arg} | 'a & ~#Add & ~#Lit & ~#Nega) -> string
 //│   where
-//│     'lhs9 <: (Add[?] & {lhs: 'lhs0 & 'lhs9, rhs: 'rhs0 & 'rhs9} | Lit | Nega[?] & {arg: 'arg} | 'a & ~#Add & ~#Lit & ~#Nega) & (Add[?] & {lhs: 'lhs1 & 'lhs9, rhs: 'rhs1 & 'rhs9} | Lit | Nega[?] & {arg: 'arg} | 'a & ~#Add & ~#Lit & ~#Nega)
-//│     'rhs9 <: (Add[?] & {lhs: 'lhs2 & 'lhs9, rhs: 'rhs2 & 'rhs9} | Lit | Nega[?] & {arg: 'arg} | 'a & ~#Add & ~#Lit & ~#Nega) & (Add[?] & {lhs: 'lhs3 & 'lhs9, rhs: 'rhs3 & 'rhs9} | Lit | Nega[?] & {arg: 'arg} | 'a & ~#Add & ~#Lit & ~#Nega)
+//│     'lhs9 <: (Add[?] & {lhs: 'lhs1 & 'lhs9, rhs: 'rhs1 & 'rhs9} | Lit | Nega[?] & {arg: 'arg} | 'a & ~#Add & ~#Lit & ~#Nega) & (Add[?] & {lhs: 'lhs2 & 'lhs9, rhs: 'rhs2 & 'rhs9} | Lit | Nega[?] & {arg: 'arg} | 'a & ~#Add & ~#Lit & ~#Nega)
+//│     'rhs9 <: (Add[?] & {lhs: 'lhs0 & 'lhs9, rhs: 'rhs0 & 'rhs9} | Lit | Nega[?] & {arg: 'arg} | 'a & ~#Add & ~#Lit & ~#Nega) & (Add[?] & {lhs: 'lhs3 & 'lhs9, rhs: 'rhs3 & 'rhs9} | Lit | Nega[?] & {arg: 'arg} | 'a & ~#Add & ~#Lit & ~#Nega)
 //│     'arg <: Add[?] & {lhs: 'lhs8 & 'lhs10, rhs: 'rhs8 & 'rhs10} | Lit | Nega[?] & {arg: 'arg} | 'b & ~#Add & ~#Lit & ~#Nega
 //│     'lhs10 <: (Add[?] & {lhs: 'lhs5 & 'lhs10, rhs: 'rhs5 & 'rhs10} | Lit | Nega[?] & {arg: 'arg} | 'b & ~#Add & ~#Lit & ~#Nega) & (Add[?] & {lhs: 'lhs6 & 'lhs10, rhs: 'rhs6 & 'rhs10} | Lit | Nega[?] & {arg: 'arg} | 'b & ~#Add & ~#Lit & ~#Nega)
 //│     'rhs10 <: (Add[?] & {lhs: 'lhs4 & 'lhs10, rhs: 'rhs4 & 'rhs10} | Lit | Nega[?] & {arg: 'arg} | 'b & ~#Add & ~#Lit & ~#Nega) & (Add[?] & {lhs: 'lhs7 & 'lhs10, rhs: 'rhs7 & 'rhs10} | Lit | Nega[?] & {arg: 'arg} | 'b & ~#Add & ~#Lit & ~#Nega)
@@ -749,7 +749,7 @@ prettier2 done eval1 e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> (forall ?b, ?c. ?val | ?b | ?c)` is not an instance of type `number`
+//│ ╟── function of type `?a -> (forall ?b, ?c. ?val | ?c | ?b)` is not an instance of type `number`
 //│ ║  l.77: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
 //│ ║  l.78: 	  | Lit -> e.val

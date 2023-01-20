@@ -22,8 +22,6 @@ let f = x => 1, x
 twice f
 //│ res: 'a -> (1, (1, 'a,),)
 
-// TODO simplify more
-// :ds
 twice / x => x, x
 //│ res: 'a -> (('a, 'a,), ('a, 'a,),)
 

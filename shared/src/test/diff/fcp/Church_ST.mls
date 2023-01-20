@@ -65,7 +65,7 @@ def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x
 //│     = [Function: succ2]
 
 def succ (n: ChurchInt) f x = f (n f x)
-//│ ChurchInt -> (forall 'a, 'N, 'N0. ('N0 -> 'a & 'N -> ('N0 & 'N)) -> ('N0 & 'N) -> 'a)
+//│ ChurchInt -> (forall 'N, 'a, 'N0. ('N -> 'a & 'N0 -> ('N & 'N0)) -> ('N & 'N0) -> 'a)
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: succ3]
@@ -472,16 +472,16 @@ sz = s zero
 
 :ns
 sz
-//│ res: forall 'a, 'N, 'b, 'c, 'd. 'b
+//│ res: forall 'a, 'b, 'c, 'd, 'N. 'c
 //│   where
-//│     'b :> forall 'e, 'f, 'g. 'e -> (forall 'h, 'i. 'h -> 'i)
+//│     'c :> forall 'e, 'f, 'g. 'e -> (forall 'h, 'i. 'h -> 'i)
 //│     'i :> 'g
-//│     'h <: 'd
-//│     'd <: 'N
-//│     'e <: 'f -> 'g & 'c
-//│     'c <: 'N -> 'N
-//│     'N <: 'a
-//│     'f :> 'a
+//│     'h <: 'a
+//│     'a <: 'N
+//│     'e <: 'f -> 'g & 'd
+//│     'd <: 'N -> 'N
+//│     'N <: 'b
+//│     'f :> 'b
 //│    = [Function (anonymous)]
 
 sz: ChurchInt

@@ -657,11 +657,11 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       * Note that if we have something like 'a :> Bot <: 'a -> Top, 'a is not truly recursive
       *   and its bounds can actually be inlined. */
     private final def lbRecOccs_$(implicit ctx: Ctx): Opt[Opt[Bool]] = {
-      println("+", this, lowerBounds)
+      // println("+", this, lowerBounds)
       assignedTo.getOrElse(TupleType(lowerBounds.map(N -> _.toUpper(noProv)))(noProv)).getVarsPol(PolMap.pos).get(this)
       }
     private final def ubRecOccs_$(implicit ctx: Ctx): Opt[Opt[Bool]] ={
-      println("-", this, upperBounds)
+      // println("-", this, upperBounds)
       assignedTo.getOrElse(TupleType(upperBounds.map(N -> _.toUpper(noProv)))(noProv)).getVarsPol(PolMap.posAtNeg).get(this)
     }
   }

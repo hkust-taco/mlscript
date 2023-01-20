@@ -68,17 +68,17 @@ rec def map f tree = case tree of {
   }
 //│ map: 'map
 //│   where
-//│     'map :> forall 'subTree, 'value, 'value0, 'a, 'subTree0, 'A. 'a -> (((Leaf[?] with {value: 'value0}) | (Node[?] with {subTree: 'subTree})) -> (Leaf['value] | (Node['A] with {subTree: 'subTree0}))
+//│     'map :> forall 'a, 'value, 'A, 'subTree, 'subTree0, 'value0. 'a -> (((Leaf[?] with {value: 'value0}) | (Node[?] with {subTree: 'subTree0})) -> (Leaf['value] | (Node['A] with {subTree: 'subTree}))
 //│   where
-//│     'a <: 'value0 -> 'value
-//│     'map <: (forall 'b, 'c, 'd, 'e. (('c, 'e,) -> ('d, 'b,)
+//│     'map <: (forall 'b, 'c, 'd, 'e. (('b, 'd,) -> ('c, 'e,)
 //│   where
-//│     'a <: 'c -> 'd & 'e -> 'b)) -> 'subTree -> (PerfectTree[Two['A]] & 'subTree0))
+//│     'a <: 'b -> 'c & 'd -> 'e)) -> 'subTree0 -> (PerfectTree[Two['A]] & 'subTree)
+//│     'a <: 'value0 -> 'value)
 //│    = [Function: map]
 
 :e
 map succ n4
-//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?value, ?A, ?subTree, ?subTree0, ?b, ?A0, ?A1. ?b) -> ?c` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b, ?A, ?value, ?A0, ?subTree, ?subTree0, ?A1. ?b) -> ?c` exceeded recursion depth limit (250)
 //│ ║  l.80: 	map succ n4
 //│ ║        	^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.

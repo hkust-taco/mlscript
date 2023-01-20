@@ -40,11 +40,11 @@ def s n f x = (n f x)
 s
 //│ res: forall 'a, 'b, 'c, 'd, 'e. 'd -> (forall 'f. 'f -> (forall 'g, 'h. 'g -> 'h))
 //│   where
-//│     'h :> 'c
-//│     'g <: 'b
-//│     'f <: 'e
-//│     'd <: 'e -> 'a
-//│     'a <: 'b -> 'c
+//│     'h :> 'a
+//│     'g <: 'c
+//│     'f <: 'b
+//│     'd <: 'b -> 'e
+//│     'e <: 'c -> 'a
 //│    = [Function: s]
 
 :e // * Works with CT

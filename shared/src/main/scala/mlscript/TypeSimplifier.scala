@@ -341,9 +341,9 @@ trait TypeSimplifier { self: Typer =>
       val base = ConstrainedType.mk(cons, res)
       canDistribForall match {
         case S(outerLvl) if distributeForalls =>
-            implicit val shadows: Shadows = Shadows.empty
-            implicit val ctx: Ctx = _ctx.copy(lvl = outerLvl + 1)
-            PolymorphicType(dnf.polymLevel, base).instantiate
+          implicit val shadows: Shadows = Shadows.empty
+          implicit val ctx: Ctx = _ctx.copy(lvl = outerLvl + 1)
+          PolymorphicType(dnf.polymLevel, base).instantiate
         case _ => PolymorphicType.mk(dnf.polymLevel, base)
       }
     }

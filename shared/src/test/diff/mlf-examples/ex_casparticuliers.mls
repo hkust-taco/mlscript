@@ -211,7 +211,7 @@ rec def wat_2 n =
 
 def to_church_1_repro n =
   succ (to_church_ty n)
-//│ to_church_1_repro: int -> (forall 'b, 'a, 'a0. ('a0 -> 'b & 'a -> ('a0 & 'a)) -> ('a0 & 'a) -> 'b)
+//│ to_church_1_repro: int -> (forall 'a, 'b, 'a0. ('a -> 'b & 'a0 -> ('a & 'a0)) -> ('a & 'a0) -> 'b)
 //│                  = <no result>
 //│                    to_church_ty is not implemented
 
@@ -272,7 +272,7 @@ rec def to_church_5 n =
 //│            = [Function: to_church_5]
 
 to_church_ty = to_church_1
-//│ int -> (forall 'a, 'b, 'a0, 'c. ('a -> 'b & 'a0 -> ('a & 'a0)) -> ('c & 'a & 'a0) -> ('c | 'b))
+//│ int -> (forall 'b, 'a, 'c, 'a0. ('a0 -> 'b & 'a -> ('a0 & 'a)) -> ('c & 'a0 & 'a) -> ('c | 'b))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_church_1]
@@ -356,7 +356,7 @@ rec def to_church_ty n =
 def to_church_ty n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church_ty (n - 1)) f x)
-//│ int -> (forall 'a, 'a0, 'b. ('a0 -> 'b & 'a -> ('a0 & 'a)) -> ('b & 'a0 & 'a) -> 'b)
+//│ int -> (forall 'b, 'a, 'a0. ('a0 -> 'b & 'a -> ('a0 & 'a)) -> ('b & 'a0 & 'a) -> 'b)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_church_ty8]
@@ -518,8 +518,8 @@ succ'
 succ' {}
 //│ res: 'a -> (forall 'b, 'c, 'd. ('b -> 'd
 //│   where
-//│     'a <: 'c -> 'd
-//│     anything <: 'a -> 'b -> 'c))
+//│     anything <: 'a -> 'b -> 'c
+//│     'a <: 'c -> 'd))
 //│    = [Function (anonymous)]
 
 // :e // * Error delayed by inconsistent constrained types

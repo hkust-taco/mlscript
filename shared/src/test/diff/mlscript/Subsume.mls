@@ -374,11 +374,11 @@ fun p -> fun q -> p q p
 
 :ns
 fun p -> fun q -> p q p
-//│ res: forall 'a, 'b, 'c, 'd. 'b -> (forall 'e, 'f. 'e -> 'f)
+//│ res: forall 'a, 'b, 'c, 'd. 'a -> (forall 'e, 'f. 'e -> 'f)
 //│   where
-//│     'f :> 'a
-//│     'e <: 'c
-//│     'b <: 'c -> 'd
-//│     'd <: 'b -> 'a
+//│     'f :> 'd
+//│     'e <: 'b
+//│     'a <: 'b -> 'c
+//│     'c <: 'a -> 'd
 //│    = [Function: res]
 

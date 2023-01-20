@@ -269,7 +269,7 @@ def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M
 def succ (n: ChurchInt) f x = f (n f x)
 //│ succ: (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = <missing implementation>
-//│ ChurchInt -> (forall 'N, 'a, 'N0. ('N -> 'a & 'N0 -> ('N & 'N0)) -> ('N & 'N0) -> 'a)
+//│ ChurchInt -> (forall 'N, 'N0, 'a. ('N0 -> 'a & 'N -> ('N0 & 'N)) -> ('N0 & 'N) -> 'a)
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: succ1]
@@ -603,7 +603,7 @@ rec def id1 x = if true then x else id1 id1 x
 :e
 // G9
 id1 id1
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j, ?id1, ?k, ?l, ?m, ?n, ?o, ?p, ?q, ?r, ?s, ?t, ?u. ?id1 <: (forall ?v, ?w, ?x, ?y, ?z, ?a1, ?b1, ?c1, ?d1, ?e1, ?f1, ?g1, ?h1, ?i1, ?j1, ?k1, ?l1, ?m1, ?id10, ?n1, ?o1, ?p1. ?id10) -> ?q1` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?id1, ?d, ?e, ?f, ?g, ?h, ?i, ?j, ?k, ?l, ?m, ?n, ?o, ?p, ?q, ?r, ?s, ?t, ?u. ?id1 <: (forall ?v, ?w, ?x, ?y, ?z, ?id10, ?a1, ?b1, ?c1, ?d1, ?e1, ?f1, ?g1, ?h1, ?i1, ?j1, ?k1, ?l1, ?m1, ?n1, ?o1, ?p1. ?id10) -> ?q1` exceeded recursion depth limit (250)
 //│ ║  l.605: 	id1 id1
 //│ ║         	^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
@@ -629,7 +629,7 @@ auto auto
 // Gn+1
 :e
 (fun x -> x x) (fun x -> x x)
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b. ?a -> ?b <: (forall ?c, ?d. ?c -> ?d) -> ?e` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b. ?b -> ?a <: (forall ?c, ?d. ?d -> ?c) -> ?e` exceeded recursion depth limit (250)
 //│ ║  l.631: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
@@ -953,7 +953,7 @@ rec def id1 x = if true then x else id1 id1 x
 :e
 // G9
 id1 id1
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j, ?k, ?l, ?m, ?n, ?o, ?p, ?id1, ?q, ?r, ?s, ?t, ?u. ?id1 <: (forall ?id10, ?v, ?w, ?x, ?y, ?z, ?a1, ?b1, ?c1, ?d1, ?e1, ?f1, ?g1, ?h1, ?i1, ?j1, ?k1, ?l1, ?m1, ?n1, ?o1, ?p1. ?id10) -> ?q1` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j, ?k, ?l, ?m, ?n, ?id1, ?o, ?p, ?q, ?r, ?s, ?t, ?u. ?id1 <: (forall ?v, ?w, ?x, ?y, ?z, ?a1, ?b1, ?c1, ?d1, ?e1, ?f1, ?g1, ?h1, ?i1, ?id10, ?j1, ?k1, ?l1, ?m1, ?n1, ?o1, ?p1. ?id10) -> ?q1` exceeded recursion depth limit (250)
 //│ ║  l.955: 	id1 id1
 //│ ║         	^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.

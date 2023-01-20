@@ -126,8 +126,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         println(s"Inferred poly constr: $cty  —— where ${cty.showBounds}")
         
         val cty_fresh =
-          // * In principle this should change nothing.... TODO why does it somehow makes the Vec test much slower?!
-          cty.freshenAbove(lvl, false)
+          // * In principle this should change nothing.... TODOne why does it somehow makes the Vec test much slower?!
+          // cty.freshenAbove(lvl, false)
+          cty
         
         if (dbg) if (cty_fresh =/= cty) println(s"Refreshed:            $cty_fresh  —— where ${cty_fresh.showBounds}")
         
@@ -568,33 +569,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         implicit val extrCtx: Opt[ExtrCtx] = N
         val rhs_ty = typeTerm(rhs)
         
-        implicit val prov: TP = noProv // TODO
-        val processed = MutSet.empty[TV]
-        def destroyConstrainedTypes(ty: ST): ST = ty match {
-          case ConstrainedType(cs, body) =>
-            // cs.foreach { case (tv, bs) => bs.foreach {
-            //   case (true, b) => constrain(b, tv)
-            //   case (false, b) => constrain(tv, b)
-            // }}
-            cs.foreach { case (lo, hi) => constrain(lo, hi) }
-            body
-          case tv: TV =>
-            processed.setAndIfUnset(tv) {
-              tv.assignedTo match {
-                case S(ty) =>
-                  tv.assignedTo = S(destroyConstrainedTypes(ty))
-                case N =>
-                  tv.lowerBounds = tv.lowerBounds.map(destroyConstrainedTypes)
-                  tv.upperBounds = tv.upperBounds.map(destroyConstrainedTypes)
-              }
-            }
-            tv
-          case _ => ty.map(destroyConstrainedTypes)
-        }
-        val ty = trace(s"Destroying constrained types...") {
-          rhs_ty
-          // destroyConstrainedTypes(rhs_ty)
-        }(r => s"=> $r")
+        val ty = rhs_ty
         
         // val ty_sch = PolymorphicType(lvl, ty)
         val ty_sch = ty

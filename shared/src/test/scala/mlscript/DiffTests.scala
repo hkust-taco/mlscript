@@ -125,7 +125,6 @@ class DiffTests
       override def emitDbg(str: String): Unit = output(str)
     }
     var ctx: typer.Ctx = typer.Ctx.init
-    // var declared: Map[Str, typer.PolymorphicType] = Map.empty
     var declared: Map[Str, typer.ST] = Map.empty
     val failures = mutable.Buffer.empty[Int]
     val unmergedChanges = mutable.Buffer.empty[Int]
@@ -175,7 +174,6 @@ class DiffTests
     var noCycleCheck = false
     var noRecursiveTypes = false
     var noConstrainedTypes = true
-    // var noConstrainedTypes = false
     var irregularTypes = false
     var noArgGen = true
     var newParser = basePath.headOption.contains("parser") || basePath.headOption.contains("compiler")
@@ -464,39 +462,25 @@ class DiffTests
               typer.processTypeDefs(typeDefs)(ctx, raise)
             
             def getType(ty: typer.TypeScheme): Type = {
-              // val wty = ty.instantiate(0)
-              // val wty = ty.uninstantiatedBody
-              // val wty = ty.asInstanceOf[typer.ST]
-              val wty = ty
-              if (mode.isDebugging) output(s"⬤ Typed as: $wty")
-              if (mode.isDebugging) output(s" where: ${wty.showBounds}")
+              if (mode.isDebugging) output(s"⬤ Typed as: $ty")
+              if (mode.isDebugging) output(s" where: ${ty.showBounds}")
               typer.dbg = mode.dbgSimplif
-              if (mode.noSimplification) typer.expandType(wty)(ctx)
+              if (mode.noSimplification) typer.expandType(ty)(ctx)
               else {
                 object SimplifyPipeline extends typer.SimplifyPipeline {
                   def debugOutput(msg: => Str): Unit =
                     if (mode.dbgSimplif) output(msg)
                 }
-                val sim = SimplifyPipeline(wty)(ctx)
+                val sim = SimplifyPipeline(ty)(ctx)
                 val exp = typer.expandType(sim)(ctx)
                 if (mode.dbgSimplif) output(s"⬤ Expanded: ${exp}")
-                // exp
-                // exp match {
-                //   case PolyType(tps, body) =>
-                //     // Strip top-level implicitly-quantified type variables
-                //     tps.filterNot(_.isRight) match {
-                //       case Nil => body
-                //       case tps => PolyType(tps, body)
-                //     }
-                //   case ty => ty
-                // }
-                def stripPoly(pt: PolyType): Type = 
+                def stripPoly(pt: PolyType): Type =
                   pt.targs.filterNot(_.isRight) match {
                     case Nil => pt.body
                     case tps => PolyType(tps, pt.body)
                   }
                 exp match {
-                  // Strip top-level implicitly-quantified type variables
+                  // * Strip top-level implicitly-quantified type variables
                   case pt: PolyType => stripPoly(pt)
                   case Constrained(pt: PolyType, bs, cs) => Constrained(stripPoly(pt), bs, cs)
                   case ty => ty
@@ -552,10 +536,6 @@ class DiffTests
                   else
                     SourceCode("")
                 output(s"Defined " + td.kind.str + " " + tn + params)
-                // output(s"Defined " + td.kind.str + " " + tn + params + (td.kind match {
-                //   case Als => " = " + getType(ttd.bodyTy).show
-                //   case _ => ""
-                // }))
 
                 // calculate types for all method definitions and declarations
                 // only once and reuse for pretty printing and type generation

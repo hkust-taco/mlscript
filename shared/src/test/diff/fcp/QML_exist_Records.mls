@@ -173,12 +173,12 @@ test = stepImpl_Ann_4 baseImpl
 
 :e // * Since "sound extrusion"
 stepImpl_ty = stepImpl_Ann_4
-//│ {fold: ('a -> nothing -> anything) -> anything -> 'b -> nothing, init: 'a -> ('b & 'c), sub: 'b -> int -> 'd, update: 'b -> int -> ('d | 'e) -> ('b & 'c)} -> ArraysRep['a, 'r]
+//│ {fold: ('a -> nothing -> anything) -> anything -> 'b -> nothing, init: ('c | 'd) -> ('b & 'e), sub: 'b -> int -> 'd, update: 'b -> int -> 'a -> ('b & 'e)} -> ArraysRep['a, 'r]
 //│   where
-//│     'r :> ('c, "hey" | "hi",)
+//│     'r :> ('e, "hey" | "hi",)
 //│        <: ('b, anything,)
 //│     'a :> 'd
-//│        <: 'e
+//│        <: 'c
 //│   <:  stepImpl_ty:
 //│ ArraysRep['a, 'r] -> ArraysRep['a, ('r, string,)]
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -196,11 +196,11 @@ stepImpl_ty = stepImpl_Ann_4
 // def stepImpl2 (arr: Arrays['a]) = arr stepImpl
 
 def stepImpl2 arr = arr stepImpl
-//│ stepImpl2: ((forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm. {fold: 'a -> 'm -> 'j -> 'h, init: 'f -> 'b, sub: 'c -> 'k -> 'i, update: 'e -> 'g -> 'l -> 'd} -> {fold: 'a -> 'm -> ('j, anything,) -> 'h, init: 'f -> ('b, "hi",), sub: ('c, anything,) -> 'k -> 'i, update: ('e, anything,) -> 'g -> 'l -> ('d, "hey",)}) -> 'n) -> 'n
+//│ stepImpl2: ((forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm. {fold: 'c -> 'e -> 'i -> 'm, init: 'j -> 'f, sub: 'b -> 'k -> 'l, update: 'h -> 'd -> 'a -> 'g} -> {fold: 'c -> 'e -> ('i, anything,) -> 'm, init: 'j -> ('f, "hi",), sub: ('b, anything,) -> 'k -> 'l, update: ('h, anything,) -> 'd -> 'a -> ('g, "hey",)}) -> 'n) -> 'n
 //│          = [Function: stepImpl2]
 
 def stepImpl2_ arr = arr stepImpl_ty
-//│ stepImpl2_: ((forall 'a, 'r. ArraysRep['a, 'r] -> ArraysRep['a, ('r, string,)]) -> 'b) -> 'b
+//│ stepImpl2_: ((forall 'r, 'a. ArraysRep['a, 'r] -> ArraysRep['a, ('r, string,)]) -> 'b) -> 'b
 //│           = [Function: stepImpl2_]
 
 // * Expectedly doesn't work (see comment on `stepImpl_Ann_1`)
@@ -211,16 +211,16 @@ def stepImpl2_Ann_2 arr = arr stepImpl_Ann_2
 //│                = [Function: stepImpl2_Ann_2]
 
 def stepImpl2_Ann_3 arr = arr stepImpl_Ann_3
-//│ stepImpl2_Ann_3: ((forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i. {fold: (nothing -> nothing -> anything) -> anything -> anything -> nothing, init: 'e -> 'g, sub: 'd -> 'f -> 'h, update: 'a -> 'c -> 'b -> 'i} -> {fold: Fold[nothing, (anything, string,)], init: 'e -> ('g, "hi",), sub: ('d, anything,) -> 'f -> 'h, update: ('a, anything,) -> 'c -> 'b -> ('i, "hey",)}) -> 'j) -> 'j
+//│ stepImpl2_Ann_3: ((forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i. {fold: (nothing -> nothing -> anything) -> anything -> anything -> nothing, init: 'f -> 'c, sub: 'i -> 'h -> 'b, update: 'g -> 'd -> 'e -> 'a} -> {fold: Fold[nothing, (anything, string,)], init: 'f -> ('c, "hi",), sub: ('i, anything,) -> 'h -> 'b, update: ('g, anything,) -> 'd -> 'e -> ('a, "hey",)}) -> 'j) -> 'j
 //│                = [Function: stepImpl2_Ann_3]
 
 def stepImpl2_Ann_4 arr = arr stepImpl_Ann_4
-//│ stepImpl2_Ann_4: ((forall 'a, 'b, 'c, 'r, 'd, 'e. {fold: ('a -> nothing -> anything) -> anything -> 'c -> nothing, init: ('d | 'e) -> ('c & 'b), sub: 'c -> int -> 'e, update: 'c -> int -> 'a -> ('c & 'b)} -> ArraysRep['a, 'r]) -> 'f) -> 'f
+//│ stepImpl2_Ann_4: ((forall 'b, 'c, 'r, 'd, 'a, 'e. {fold: ('a -> nothing -> anything) -> anything -> 'c -> nothing, init: 'a -> ('c & 'e), sub: 'c -> int -> 'd, update: 'c -> int -> ('d | 'b) -> ('c & 'e)} -> ArraysRep['a, 'r]) -> 'f) -> 'f
 //│   where
-//│     'r :> ('b, "hey" | "hi",)
+//│     'r :> ('e, "hey" | "hi",)
 //│        <: ('c, anything,)
-//│     'a :> 'e
-//│        <: 'd
+//│     'a :> 'd
+//│        <: 'b
 //│                = [Function: stepImpl2_Ann_4]
 
 def stepImpl2_Ann_2_Ann (arr: Arrays['a]) = arr stepImpl_Ann_2
@@ -240,7 +240,7 @@ def step: Arrays['a] -> Arrays['a]
 // * But this problem actually disappeared after fixing a subtle bug in type freshening...!
 :e // * Since "sound extrusion"
 def step arr f = f (stepImpl2 arr)
-//│ ((forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm. {fold: 'h -> 'd -> 'b -> 'i, init: 'e -> 'l, sub: 'a -> 'j -> 'g, update: 'f -> 'k -> 'c -> 'm} -> {fold: 'h -> 'd -> ('b, anything,) -> 'i, init: 'e -> ('l, "hi",), sub: ('a, anything,) -> 'j -> 'g, update: ('f, anything,) -> 'k -> 'c -> ('m, "hey",)}) -> 'n) -> ('n -> 'o) -> 'o
+//│ ((forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'l, 'm. {fold: 'e -> 'k -> 'j -> 'd, init: 'm -> 'a, sub: 'b -> 'f -> 'i, update: 'l -> 'h -> 'g -> 'c} -> {fold: 'e -> 'k -> ('j, anything,) -> 'd, init: 'm -> ('a, "hi",), sub: ('b, anything,) -> 'f -> 'i, update: ('l, anything,) -> 'h -> 'g -> ('c, "hey",)}) -> 'n) -> ('n -> 'o) -> 'o
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -281,7 +281,7 @@ def step arr f = f (stepImpl2_Ann_2 arr)
 
 :e
 def step arr f = f (stepImpl2_Ann_3 arr)
-//│ ((forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i. {fold: (nothing -> nothing -> anything) -> anything -> anything -> nothing, init: 'c -> 'g, sub: 'i -> 'f -> 'd, update: 'a -> 'h -> 'e -> 'b} -> {fold: Fold[nothing, (anything, string,)], init: 'c -> ('g, "hi",), sub: ('i, anything,) -> 'f -> 'd, update: ('a, anything,) -> 'h -> 'e -> ('b, "hey",)}) -> 'j) -> ('j -> 'k) -> 'k
+//│ ((forall 'a, 'b, 'c, 'd, 'e, 'f, 'g, 'h, 'i. {fold: (nothing -> nothing -> anything) -> anything -> anything -> nothing, init: 'd -> 'f, sub: 'h -> 'b -> 'c, update: 'a -> 'i -> 'g -> 'e} -> {fold: Fold[nothing, (anything, string,)], init: 'd -> ('f, "hi",), sub: ('h, anything,) -> 'b -> 'c, update: ('a, anything,) -> 'i -> 'g -> ('e, "hey",)}) -> 'j) -> ('j -> 'k) -> 'k
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -298,12 +298,12 @@ def step arr f = f (stepImpl2_Ann_3 arr)
 // * This used to be the only working one based on an internal annotation
 :e // * Since "sound extrusion"
 def step arr f = f (stepImpl2_Ann_4 arr)
-//│ ((forall 'b, 'a, 'c, 'd, 'e, 'r. {fold: ('a -> nothing -> anything) -> anything -> 'c -> nothing, init: ('e | 'd) -> ('c & 'b), sub: 'c -> int -> 'd, update: 'c -> int -> 'a -> ('c & 'b)} -> ArraysRep['a, 'r]) -> 'f) -> ('f -> 'g) -> 'g
+//│ ((forall 'a, 'b, 'c, 'r, 'd, 'e. {fold: ('a -> nothing -> anything) -> anything -> 'd -> nothing, init: ('c | 'b) -> ('d & 'e), sub: 'd -> int -> 'b, update: 'd -> int -> 'a -> ('d & 'e)} -> ArraysRep['a, 'r]) -> 'f) -> ('f -> 'g) -> 'g
 //│   where
-//│     'r :> ('b, "hey" | "hi",)
-//│        <: ('c, anything,)
-//│     'a :> 'd
-//│        <: 'e
+//│     'r :> ('e, "hey" | "hi",)
+//│        <: ('d, anything,)
+//│     'a :> 'b
+//│        <: 'c
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:

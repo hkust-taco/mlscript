@@ -268,7 +268,7 @@ def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 
 // * [FCP-IMPROV] annotation in `z` was not needed
 def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
-//│ int -> Ba -> (forall 'b, 'b0, 'a. (int -> 'b -> ('b & 'b0) & int -> 'b0 -> 'a) -> ('b & 'b0) -> 'a)
+//│ int -> Ba -> (forall 'a, 'b, 'b0. (int -> 'b -> ('b & 'b0) & int -> 'b0 -> 'a) -> ('b & 'b0) -> 'a)
 //│   <:  k:
 //│ int -> Ba -> Ba
 //│  = <no result>
@@ -457,7 +457,7 @@ def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z c n)
 
 :e
 k = k_ // nope
-//│ int -> (forall 'a, 'b, 'c. ((int -> Baa -> Baa) -> Baa -> 'a -> 'b -> 'c) -> (forall 'd. (int -> 'c -> 'd & 'a) -> 'b -> 'd))
+//│ int -> (forall 'a, 'b, 'c. ((int -> Baa -> Baa) -> Baa -> 'b -> 'c -> 'a) -> (forall 'd. (int -> 'a -> 'd & 'b) -> 'c -> 'd))
 //│   <:  k:
 //│ int -> Baa -> Baa
 //│ ╔══[ERROR] Type mismatch in def definition:

@@ -388,7 +388,7 @@ example mkpair
 example_ mkpair
 //│ res: int -> (anything, int,)
 //│    = [Function (anonymous)]
-//│ res: 'a -> (forall 'b, 'c. 'c -> 'b -> ('c, 'b,), 'a,)
+//│ res: 'a -> (forall 'b, 'c. 'b -> 'c -> ('b, 'c,), 'a,)
 //│    = [Function (anonymous)]
 
 
@@ -781,7 +781,7 @@ def a = fun f -> f id
 //│            = [Function: church_succ]
 //│ f: Sa -> Sid
 //│  = [Function: f]
-//│ f_: ((forall 'a, 'b. ((forall 'c. anything -> 'c -> 'c) -> 'a -> anything) -> 'a -> 'b -> 'b) -> anything & (forall 'd, 'e. ('d -> 'e & 'd) -> 'e) -> 'f) -> 'f
+//│ f_: ((forall 'a, 'b. ((forall 'c. anything -> 'c -> 'c) -> 'b -> anything) -> 'b -> 'a -> 'a) -> anything & (forall 'd, 'e. ('d -> 'e & 'd) -> 'e) -> 'f) -> 'f
 //│   = [Function: f_]
 //│ a: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
 //│  = [Function: a]

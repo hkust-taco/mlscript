@@ -805,9 +805,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             //    ^ Note: similar remark applies inside constrainDNF
             
             // * [note:1] This assertion seems to hold most of the time,
-            // *  with a notable exception when destroying constrained types in rec defs.
-            // *    (I wonder if it's completely sound/safe to constrain things
-            // *    that live at higher levels like that.)
+            // *  with notable exceptions occurring in QML existential encoding tests
             // assert(lvl >= rhs.level)
             
             rec(poly.instantiate, rhs, true)

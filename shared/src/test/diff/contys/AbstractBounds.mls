@@ -111,7 +111,7 @@ fun x -> fun y -> x.Bar4 y id
 //│    = [Function: res]
 
 fun x -> fun y -> x.Baz4 y
-//│ res: 'a -> (forall 'A, 'B. (('A & 'B) -> 'B
+//│ res: 'a -> (forall 'B, 'A. (('A & 'B) -> 'B
 //│   where
 //│     'a <: Test4['A, 'B]))
 //│   where
