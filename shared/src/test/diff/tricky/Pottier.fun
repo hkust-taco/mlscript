@@ -12,9 +12,9 @@ let rec f = x => y => add (f x.tail y) (f y.tail x)
 //│ f: 'tail -> anything -> int
 //│   where
 //│     'tail <: {tail: 'tail}
-//│ f: 'tail -> 'tail -> int
+//│ f: 'a -> 'a -> int
 //│   where
-//│     'tail <: {tail: 'tail}
+//│     'a <: {tail: 'a}
 //│ f: 'tail -> 'tail -> int
 //│   where
 //│     'tail <: {tail: 'tail}

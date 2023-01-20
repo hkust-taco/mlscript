@@ -6,7 +6,7 @@
 // i.e. auto
 g = fun (f: forall 'a. 'a -> 'a) -> f f
 g' = fun f -> f f
-//│ g: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ g: (forall 'a. 'a -> 'a) -> 'a0 -> 'a0
 //│  = [Function: g]
 //│ g': ('a -> 'b & 'a) -> 'b
 //│   = [Function: g$]
@@ -31,7 +31,7 @@ g' = fun f -> f f
 
 fun f -> f (g f)
 fun f -> f (g' f)
-//│ res: ((forall 'a. 'a -> 'a) -> 'b & 'a -> 'a) -> 'b
+//│ res: (forall 'a. (forall 'a0. 'a0 -> 'a0) -> 'b & 'a -> 'a) -> 'b
 //│    = [Function: res]
 //│ res: ('a -> 'b & 'c -> 'a & 'c) -> 'b
 //│    = [Function: res]
@@ -90,14 +90,14 @@ def fold_left: forall 'a 'b. ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 //│ fold_left: ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 
 rec def fl f x l = match_list l x (fun head -> fun tail -> fl f (f x head) tail)
-//│ fl: ('b -> 'c -> 'd & 'd -> 'a -> 'd) -> 'b -> List['c & 'a] -> ('b | 'd)
+//│ fl: ('b -> 'a -> 'c & 'c -> 'a -> 'c) -> 'b -> List['a] -> ('b | 'c)
 
 rec def fl2 f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
 //│ fl2: ('c -> 'b -> 'a & 'a -> 'b -> 'a) -> 'c -> List['b] -> ('a | 'c)
 
 :RecursiveTypes // needed for this recursive def
 def fold_left = fl
-//│ ('b -> 'c -> 'd & 'd -> 'a -> 'd) -> 'b -> List['c & 'a] -> ('b | 'd)
+//│ ('b -> 'a -> 'c & 'c -> 'a -> 'c) -> 'b -> List['a] -> ('b | 'c)
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 :NoRecursiveTypes

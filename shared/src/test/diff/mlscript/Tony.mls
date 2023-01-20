@@ -34,7 +34,7 @@ flatMap3 (fun x -> x.value) arg
 
 
 foo = flatMap3 (fun x -> x.value)
-//│ foo: ((Some[?] with {value: 'a}) | 'b & ~#Some) -> ('a | 'b)
+//│ foo: ((Some[?] with {value: 'a}) | 'a & ~#Some) -> 'a
 //│    = [Function (anonymous)]
 
 foo arg
@@ -68,7 +68,7 @@ fun f -> flatMap3 f arg
 
 
 foo = flatMap3 (fun x -> x)
-//│ foo: (Some[?] & 'a | 'b & ~#Some) -> ('a | 'b)
+//│ foo: (Some[?] & 'a | 'a & ~#Some) -> 'a
 //│    = [Function (anonymous)]
 
 foo 1

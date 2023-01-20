@@ -275,9 +275,9 @@ let rec f = x => f x.u
 
 // from https://www.cl.cam.ac.uk/~sd601/mlsub/
 let rec recursive_monster = x => { thing: x, self: recursive_monster x }
-//│ recursive_monster: ('a & 'b) -> {self: 'c, thing: 'a}
+//│ recursive_monster: 'a -> {self: 'b, thing: 'a}
 //│   where
-//│     'c :> {self: 'c, thing: 'b}
+//│     'b :> {self: 'b, thing: 'a}
 
 
 
@@ -396,30 +396,30 @@ let rec x = (let y = (x x); (z => z))
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
 //│ res: ((forall 'a, 'b. ('a -> 'b
 //│   where
-//│     forall 'c, 'd. ('d -> 'c
+//│     forall 'c, 'd. ('c -> 'd
 //│   where
 //│     'e <: (forall 'f, 'g. ('f -> 'g
 //│   where
-//│     'd <: 'd -> 'f -> 'g)) -> 'c) <: (forall 'c, 'd. ('d -> 'c
+//│     'c <: 'c -> 'f -> 'g)) -> 'd) <: (forall 'c, 'd. ('c -> 'd
 //│   where
 //│     'e <: (forall 'f, 'g. ('f -> 'g
 //│   where
-//│     'd <: 'd -> 'f -> 'g)) -> 'c)) -> 'a -> 'b)) -> 'h & 'e) -> 'h
+//│     'c <: 'c -> 'f -> 'g)) -> 'd)) -> 'a -> 'b)) -> 'h & 'e) -> 'h
 
 // * Function that takes arbitrarily many arguments:
 // :e // Works thanks to inconsistent constrained types...
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
 //│ res: anything -> (forall 'a, 'b. ('a -> 'b
 //│   where
-//│     forall 'c, 'd. ('d -> 'c
+//│     forall 'c, 'd. ('c -> 'd
 //│   where
 //│     forall 'e. 'e -> anything -> 'e <: (forall 'f, 'g. ('f -> 'g
 //│   where
-//│     'd <: 'd -> 'f -> 'g)) -> 'c) <: (forall 'c, 'd. ('d -> 'c
+//│     'c <: 'c -> 'f -> 'g)) -> 'd) <: (forall 'c, 'd. ('c -> 'd
 //│   where
 //│     forall 'e. 'e -> anything -> 'e <: (forall 'f, 'g. ('f -> 'g
 //│   where
-//│     'd <: 'd -> 'f -> 'g)) -> 'c)) -> 'a -> 'b))
+//│     'c <: 'c -> 'f -> 'g)) -> 'd)) -> 'a -> 'b))
 
 
 

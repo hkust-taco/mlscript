@@ -164,7 +164,7 @@ def succ_ n = fun f -> fun x -> f (n f x)
 
 //:e // due to tapping
 def add (n: ChurchInt) (m: ChurchInt) = n succ m
-//│ add: ChurchInt -> ChurchInt -> (forall 'a, 'b, 'a0. ('a -> 'b & 'a0 -> ('a & 'a0)) -> ('a & 'a0) -> 'b | ChurchInt)
+//│ add: ChurchInt -> ChurchInt -> (('a -> 'b & 'a0 -> ('a & 'a0)) -> ('a & 'a0) -> 'b | ChurchInt)
 //│    = [Function: add]
 
 def add_ n m = n succ_ m
@@ -241,7 +241,7 @@ a = add (nfind table "one")
 //│  = [Function (anonymous)]
 
 b = (nfind table "two")
-//│ b: ('a -> 'b & 'c -> 'b & 'a -> 'c) -> ('d & 'a) -> ('b | 'd)
+//│ b: nothing -> 'a -> 'a
 //│  = [Function (anonymous)]
 
 // * Note: this one required `:DistributeForalls`

@@ -289,7 +289,7 @@ def partage x = choose id x
 def departage x = choose id (x : Id)
 //│ partage: 'a -> ('b -> 'b | 'a)
 //│        = [Function: partage]
-//│ departage: Id -> (forall 'a. 'a -> 'a | Id)
+//│ departage: Id -> ('a -> 'a | Id)
 //│          = [Function: departage]
 
 // let delta' = fun x -> (departage x) x
@@ -433,7 +433,7 @@ def myNil l = eq l nil
 rec def append x l =
   if eq l nil then cons x nil
   else cons (head l) (append x (tail l))
-//│ append: 'a -> List['a | 'b] -> List['a | 'b]
+//│ append: 'a -> List['a] -> List['a]
 //│       = [Function: append]
 
 // let rec map l f =
@@ -442,7 +442,7 @@ rec def append x l =
 rec def map l f =
   if eq l nil then nil
   else cons (f (head l)) (map (tail l) f)
-//│ map: List['a | 'a0] -> ('a -> 'b & 'a0 -> 'c) -> List['c | 'b]
+//│ map: List['a | 'a0] -> ('a -> 'b & 'a0 -> 'b) -> List['b]
 //│    = [Function: map]
 
 // let message () = print "** MESSAGE **"
@@ -781,7 +781,7 @@ def a = fun f -> f id
 //│            = [Function: church_succ]
 //│ f: Sa -> Sid
 //│  = [Function: f]
-//│ f_: ((forall 'a, 'b. ((forall 'c. anything -> 'c -> 'c) -> 'b -> anything) -> 'b -> 'a -> 'a) -> anything & (forall 'd, 'e. ('d -> 'e & 'd) -> 'e) -> 'f) -> 'f
+//│ f_: ((forall 'a, 'b. ((forall 'c. anything -> 'c -> 'c) -> 'a -> anything) -> 'a -> 'b -> 'b) -> anything & (forall 'd, 'e. ('d -> 'e & 'd) -> 'e) -> 'f) -> 'f
 //│   = [Function: f_]
 //│ a: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
 //│  = [Function: a]

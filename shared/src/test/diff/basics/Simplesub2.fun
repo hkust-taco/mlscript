@@ -23,9 +23,9 @@ let pick_an_object = b =>
 
 let rec recursive_monster = x =>
   { thing: x, self: recursive_monster x }
-//│ recursive_monster: ('a & 'b) -> {self: 'c, thing: 'a}
+//│ recursive_monster: 'a -> {self: 'b, thing: 'a}
 //│   where
-//│     'c :> {self: 'c, thing: 'b}
+//│     'b :> {self: 'b, thing: 'a}
 
 
 

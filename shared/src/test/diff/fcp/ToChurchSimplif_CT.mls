@@ -419,16 +419,16 @@ to_church = to_ch
 
 rec def to_ch n =
   s (to_church n)
-//│ to_ch: int -> (forall 'a, 'b, 'c. 'a -> ('b -> 'c
+//│ to_ch: int -> 'a -> ('b -> 'c
 //│   where
-//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c))
+//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c)
 //│      = <no result>
 //│        to_church, to_ch, to_church, to_ch, to_church, to_ch, to_church, to_ch, to_church, to_ch, to_church, to_ch and zero are not implemented
 
 to_church = to_ch
-//│ int -> (forall 'a, 'b, 'c. 'a -> ('b -> 'c
+//│ int -> 'a -> ('b -> 'c
 //│   where
-//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c))
+//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│          = <no result>
@@ -468,11 +468,11 @@ rec def to_ch n =
   else s (to_ch (n - 1))
 //│ to_ch: 'to_ch
 //│   where
-//│     'to_ch :> forall 'a, 'b, 'c, 'd. (int -> 'd -> ('a -> ('a | 'b)
+//│     'to_ch :> forall 'a, 'b, 'c, 'd. (int -> 'b -> ('c -> ('c | 'd)
 //│   where
-//│     'c <: 'd -> 'a -> 'b)
+//│     'a <: 'b -> 'c -> 'd)
 //│   where
-//│     'to_ch <: int -> 'c)
+//│     'to_ch <: int -> 'a)
 //│      = [Function: to_ch7]
 
 :e // * Since the removal of "recursive definition hacks"
@@ -497,11 +497,11 @@ rec def to_ch_weird n =
   s (to_ch_weird n)
 //│ to_ch_weird: 'to_ch_weird
 //│   where
-//│     'to_ch_weird :> forall 'a, 'b, 'c, 'd, 'e. ('c -> 'b -> ('d -> 'e
+//│     'to_ch_weird :> forall 'a, 'b, 'c, 'd, 'e. ('a -> 'd -> ('c -> 'b
 //│   where
-//│     'a <: 'b -> 'd -> 'e)
+//│     'e <: 'd -> 'c -> 'b)
 //│   where
-//│     'to_ch_weird <: 'c -> 'a)
+//│     'to_ch_weird <: 'a -> 'e)
 //│            = [Function: to_ch_weird]
 
 :e // * Since the removal of "recursive definition hacks"

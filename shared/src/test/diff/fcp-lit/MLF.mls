@@ -28,7 +28,7 @@ def id x = x
 //│ id: 'a -> 'a
 
 def auto (x: forall 'a. 'a -> 'a) = x x
-//│ auto: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ auto: (forall 'a. 'a -> 'a) -> 'a0 -> 'a0
 
 def app f x = f x
 //│ app: ('a -> 'b) -> 'a -> 'b
@@ -89,11 +89,11 @@ fun (x: forall 'a. 'a) -> x x
 
 // i.e. auto
 omegad = fun (x: forall 'a. 'a -> 'a) -> x x
-//│ omegad: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ omegad: (forall 'a. 'a -> 'a) -> 'a0 -> 'a0
 
 // FreezeML A5
 id auto
-//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ res: (forall 'a. 'a -> 'a) -> 'a0 -> 'a0
 
 // ~ auto id (FreezeML F5, PolyML 1.1)
 (fun x -> x id) auto
@@ -139,7 +139,7 @@ res (choose id succ)
 // Didier Le Botlan suggested this fix by email:
 
 let f = choose id in (f auto, f succ)
-//│ res: (forall 'a, 'b. (forall 'a0. 'a0 -> 'a0 & 'b) -> ('a -> 'a | 'b), int -> int,)
+//│ res: (forall 'b, 'a. (forall 'a0. 'a0 -> 'a0 & 'b) -> ('a -> 'a | 'b), int -> int,)
 
 let f = choose id in (f auto2, f succ)
 //│ res: (forall 'a, 'b. ('a -> 'b & 'b & 'a) -> 'b, int -> int,)
@@ -159,15 +159,15 @@ K x y = x
 //│ K: 'a -> anything -> 'a
 
 (fun y -> let tmp = y I in y K) (fun x -> x x)
-//│ res: anything -> (forall 'a. 'a -> anything -> 'a)
+//│ res: anything -> 'a -> anything -> 'a
 
 // Note: reduces to
 let tmp = (fun x -> x x) I in (fun x -> x x) K
-//│ res: anything -> (forall 'a. 'a -> anything -> 'a)
+//│ res: anything -> 'a -> anything -> 'a
 
 // to
 let tmp = I I in K K
-//│ res: anything -> (forall 'a. 'a -> anything -> 'a)
+//│ res: anything -> 'a -> anything -> 'a
 
 
 // ============ Recasting MLF (2009) ============
@@ -186,7 +186,7 @@ let tmp = I I in K K
 // i.e. id auto (FreezeML A5)
 (fun z -> z) omegad
 (fun z -> z) omega
-//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ res: (forall 'a. 'a -> 'a) -> 'a0 -> 'a0
 //│ res: ('a -> 'b & 'a) -> 'b
 
 // i.e. auto id (FreezeML F5)
@@ -195,22 +195,22 @@ let tmp = I I in K K
 
 fun z -> (z omegad)
 fun z -> (z omega)
-//│ res: (((forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)) -> 'b) -> 'b
+//│ res: ((forall 'a. (forall 'a0. 'a0 -> 'a0) -> 'a -> 'a) -> 'b) -> 'b
 //│ res: ((forall 'a, 'b. ('a -> 'b & 'a) -> 'b) -> 'c) -> 'c
 
 (fun y -> fun z -> z y) omegad
 (fun y -> fun z -> z y) omega
-//│ res: (((forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)) -> 'b) -> 'b
+//│ res: ((forall 'a. (forall 'a0. 'a0 -> 'a0) -> 'a -> 'a) -> 'b) -> 'b
 //│ res: ((forall 'a, 'b. ('a -> 'b & 'a) -> 'b) -> 'c) -> 'c
 
 fun z -> omegad z
 fun z -> omega z
-//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ res: (forall 'a. 'a -> 'a) -> 'a0 -> 'a0
 //│ res: ('a -> 'b & 'a) -> 'b
 
 (fun x -> fun y -> x y) omegad
 (fun x -> fun y -> x y) omega
-//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ res: (forall 'a. 'a -> 'a) -> 'a0 -> 'a0
 //│ res: ('a -> 'b & 'a) -> 'b
 
 // ------------ Sec 4.3 ------------
@@ -279,27 +279,27 @@ K x y = x
 // """ In particular, we conjecture that the term ...
 monster = (fun y -> (let tmp = y I in y K)) (fun x -> x x)
 // """ ... that is typable in Fω but not in F [9] is not typable in MLF either.
-//│ monster: anything -> (forall 'a. 'a -> anything -> 'a)
+//│ monster: anything -> 'a -> anything -> 'a
 
 ignore x y = y
 //│ ignore: anything -> 'a -> 'a
 
 monsterThunk() = (fun y -> (ignore (y I) (y K))) (fun x -> x x)
-//│ monsterThunk: () -> anything -> (forall 'a. 'a -> anything -> 'a)
+//│ monsterThunk: () -> anything -> 'a -> anything -> 'a
 
 monster2 = (fun y -> (y I, y K)) (fun x -> x x)
-//│ monster2: (forall 'a. 'a -> 'a, anything -> (forall 'b. 'b -> anything -> 'b),)
+//│ monster2: (forall 'a. 'a -> 'a, forall 'b. anything -> 'b -> anything -> 'b,)
 
 monster = (fun y -> (let tmp = y I in y K)) (fun x -> x x)
-//│ monster: anything -> (forall 'a. 'a -> anything -> 'a)
+//│ monster: anything -> 'a -> anything -> 'a
 
 monsterThunk() = (fun y -> ignore (y I) (y K)) (fun x -> x x)
-//│ monsterThunk: () -> anything -> (forall 'a. 'a -> anything -> 'a)
+//│ monsterThunk: () -> anything -> 'a -> anything -> 'a
 
 monster2 = (fun y -> (y I, y K)) (fun x -> x x)
-//│ monster2: (forall 'a. 'a -> 'a, anything -> (forall 'b. 'b -> anything -> 'b),)
+//│ monster2: (forall 'a. 'a -> 'a, forall 'b. anything -> 'b -> anything -> 'b,)
 
 K K
-//│ res: anything -> (forall 'a. 'a -> anything -> 'a)
+//│ res: anything -> 'a -> anything -> 'a
 
 

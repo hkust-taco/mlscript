@@ -185,7 +185,7 @@ rec def map f l =
   else cons (f (head l)) (map f (tail l))
 //│ map: ('a -> 'b) -> List['a] -> List['b]
 //│    = <missing implementation>
-//│ (nothing -> 'b & nothing -> 'a) -> List[?] -> List['a | 'b]
+//│ (nothing -> 'a) -> List[?] -> List['a]
 //│   <:  map:
 //│ ('a -> 'b) -> List['a] -> List['b]
 //│    = [Function: map]
@@ -245,7 +245,7 @@ choose nil ids
 
 // A4
 fun (x: forall 'a. 'a -> 'a) -> x x
-//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ res: (forall 'a. 'a -> 'a) -> 'a0 -> 'a0
 //│    = [Function: res]
 
 // A4'

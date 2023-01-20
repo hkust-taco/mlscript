@@ -416,7 +416,7 @@ sum v1_ty
 //│ ╟── type `Cons[int, Z]` is not a function
 //│ ║  l.210: 	v1_ty = v1_ : Cons[int, Z]
 //│ ║         	              ^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(forall ?tail, ?a, ?b, ?head, ?c, ?d. ?c -> ?a) -> ?e`
+//│ ╟── but it flows into reference with expected type `(forall ?a, ?head, ?tail, ?b, ?c, ?d. ?a -> ?c) -> ?e`
 //│ ║  l.+1: 	sum v1_ty
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from application:

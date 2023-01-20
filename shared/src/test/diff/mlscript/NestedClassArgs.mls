@@ -98,7 +98,7 @@ rec def c a = C3 { a = c a }
 //│ 'a -> C3['a]
 
 rec def c (a: 'X) = C3 { a = c a: 'X }: C3['X]
-//│ anything -> C3['A]
+//│ anything -> C3['X]
 //│   <:  c:
 //│ 'a -> C3['a]
 
@@ -290,18 +290,18 @@ def append ls elem = L { h = elem; t = S { v = ls } }
 
 :ns
 append
-//│ res: forall 'a, 'T, 'T0. 'a -> (forall 'h, 'b, 'c, 'T1, 'v, 't, 'T2. 'b -> 'c)
+//│ res: forall 'a, 'T, 'T0. 'a -> (forall 'h, 'T1, 't, 'T2, 'b, 'v, 'c. 'c -> 'b)
 //│   where
-//│     'c :> #L & {h: 'h, t: 't, L#T = 'T2}
-//│     't :> #S & {v: 'v, S#T = 'T1}
-//│        <: O[L['T2]]
+//│     'b :> #L & {h: 'h, t: 't, L#T = 'T1}
+//│     't :> #S & {v: 'v, S#T = 'T2}
+//│        <: O[L['T1]]
 //│     'v :> 'a
-//│        <: L['T2] & 'T1
-//│     'T1 :> L['T2] | 'a
-//│         <: L['T2]
-//│     'b <: 'h
-//│     'h <: 'T2
-//│     'T2 :> 'T
+//│        <: L['T1] & 'T2
+//│     'T2 :> L['T1] | 'a
+//│         <: L['T1]
+//│     'c <: 'h
+//│     'h <: 'T1
+//│     'T1 :> 'T
 //│         <: 'T0
 //│     'a <: L[in 'T out 'T0]
 //│     'T0 :> 'T

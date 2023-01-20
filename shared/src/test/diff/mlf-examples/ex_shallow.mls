@@ -280,7 +280,7 @@ def a0_ = a2_ a1
 //│   = [Function: a31]
 //│ a2: A1 -> (forall 'a. (anything -> 'a
 //│   where
-//│     forall 'b, 'c, 'd. ('c -> 'd -> 'b) -> (forall 'e. ('b -> 'e & 'c) -> 'd -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a))
+//│     forall 'b, 'c, 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a))
 //│   = [Function: a21]
 //│ a2_: A1 -> (forall 'a. (anything -> 'a
 //│   where
@@ -288,11 +288,11 @@ def a0_ = a2_ a1
 //│    = [Function: a2_1]
 //│ a0: anything -> 'a
 //│   where
-//│     forall 'b, 'c, 'd. ('c -> 'd -> 'b) -> (forall 'e. ('b -> 'e & 'c) -> 'd -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a
+//│     forall 'b, 'c, 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a
 //│   = [Function: a01]
 //│ a0_: anything -> 'a
 //│   where
-//│     forall 'b, 'c, 'd. ('d -> 'b -> 'c) -> (forall 'e. ('c -> 'e & 'd) -> 'b -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a
+//│     forall 'b, 'c, 'd. ('c -> 'd -> 'b) -> (forall 'e. ('b -> 'e & 'c) -> 'd -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a
 //│    = [Function: a0_1]
 
 def a1' = fun f -> fun x -> f (f (either id x))
@@ -321,9 +321,9 @@ def a2'_ x =
   ) a3
 //│ a2'_: ((forall 'a. 'a -> (forall 'b. (anything -> 'b
 //│   where
-//│     'a <: (forall 'c, 'd, 'e. ('e -> 'c & 'd -> 'e) -> 'd -> 'c) -> 'b))) -> (forall 'c, 'd, 'e. ('e -> 'c & 'd -> 'e) -> 'd -> 'c) -> anything & (forall 'f, 'g. ('f -> 'g & 'f) -> 'g) -> (forall 'h. 'h -> 'h) -> anything) -> (forall 'i. (anything -> 'i
+//│     'a <: (forall 'c, 'd, 'e. ('d -> 'e & 'c -> 'd) -> 'c -> 'e) -> 'b))) -> (forall 'c, 'd, 'e. ('d -> 'e & 'c -> 'd) -> 'c -> 'e) -> anything & (forall 'f, 'g. ('f -> 'g & 'f) -> 'g) -> (forall 'h. 'h -> 'h) -> anything) -> (forall 'i. (anything -> 'i
 //│   where
-//│     forall 'j, 'k, 'l. ('j -> 'k -> 'l) -> (forall 'm. ('l -> 'm & 'j) -> 'k -> 'm) <: (forall 'c, 'd, 'e. ('e -> 'c & 'd -> 'e) -> 'd -> 'c) -> 'i))
+//│     forall 'j, 'k, 'l. ('j -> 'k -> 'l) -> (forall 'm. ('l -> 'm & 'j) -> 'k -> 'm) <: (forall 'c, 'd, 'e. ('d -> 'e & 'c -> 'd) -> 'c -> 'e) -> 'i))
 //│     = [Function: a2$_1]
 
 def a0' = a2' a1'

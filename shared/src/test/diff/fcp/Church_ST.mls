@@ -860,7 +860,7 @@ to_church_ty = to_ch
 
 // * Still works
 to_church_ty = to_ch_s_A1
-//│ int -> (forall 'N, 'a, 'N0, 'b. ('N -> 'a & 'N0 -> ('N & 'N0)) -> ('b & 'N & 'N0) -> ('b | 'a))
+//│ int -> ('N -> 'a & 'N0 -> ('N & 'N0)) -> ('a & 'N & 'N0) -> 'a
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_ch_s_A1]
@@ -883,7 +883,7 @@ to_church_ty = to_ch_simplif
 //│             = [Function: to_ch_simplif1]
 
 to_church_ty = to_ch_A1
-//│ int -> ('N -> 'a & 'N -> 'N) -> ('N & 'a) -> 'a
+//│ int -> ('N -> 'a & 'N -> 'N) -> ('a & 'N) -> 'a
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_ch_A1]
@@ -897,7 +897,7 @@ to_church_ty = to_ch_A2
 
 // * Now works
 to_church_ty = to_church_mix
-//│ int -> ('a -> 'b & 'N -> ('a & 'N) & 'M -> ('a & 'M)) -> ('a & 'N & 'M & 'b) -> 'b
+//│ int -> ('a -> 'b & 'N -> ('a & 'N) & 'M -> ('a & 'M)) -> ('b & 'a & 'N & 'M) -> 'b
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_church_mix]

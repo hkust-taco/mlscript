@@ -740,16 +740,16 @@ trait TypeSimplifier { self: Typer =>
     
     val semp = Set.empty[TV]
     
-    def mergeTransform(pol: Bool, polmap: PolMap, tv: TV, parent: Set[TV]): ST =
+    def mergeTransform(pol: Bool, polmap: PolMap, tv: TV, parent: Set[TV], canDistribForall: Opt[Level]): ST =
       // transform(merge(pol, if (pol) tv.lowerBounds else tv.upperBounds), S(pol), parent)
       transform(tv.assignedTo match {
         case S(ty) => ty
         case N => merge(pol,if (pol) tv.lowerBounds else tv.upperBounds)
       // }, PolMap(S(pol)), parent)
-      }, polmap.at(tv.level, pol), parent)
+      }, polmap.at(tv.level, pol), parent, canDistribForall)
     
-    def transform(st: SimpleType, pol: PolMap, parents: Set[TV]): SimpleType =
-          trace(s"transform[${printPol(pol)}] $st   (${parents.mkString(", ")})  $pol") {
+    def transform(st: SimpleType, pol: PolMap, parents: Set[TV], canDistribForall: Opt[Level] = N): SimpleType =
+          trace(s"transform[${printPol(pol)}] $st   (${parents.mkString(", ")})  $pol  $canDistribForall") {
         def transformField(f: FieldType): FieldType = f match {
           case FieldType(S(lb), ub) if lb === ub =>
             // val b = transform(ub, PolMap.neu, semp)
@@ -764,10 +764,12 @@ trait TypeSimplifier { self: Typer =>
       case sp @ SpliceType(elems) => SpliceType(elems map {
         case L(l) => L(transform(l, pol, semp)) 
         case R(r) => R(transformField(r))})(st.prov)
-      case FunctionType(l, r) => FunctionType(transform(l, pol.contravar, semp), transform(r, pol, semp))(st.prov)
+      case FunctionType(l, r) =>
+        FunctionType(transform(l, pol.contravar, semp),
+          transform(r, pol, semp, canDistribForall))(st.prov)
       case ot @ Overload(as) =>
         // ot.mapAltsPol(pol.base)((p, t) => transform(t, PolMap(p), parents)) // * Q: PolMap(p) correct?
-        ot.mapAltsPol(pol)((p, t) => transform(t, p, parents))
+        ot.mapAltsPol(pol)((p, t) => transform(t, p, parents, canDistribForall))
       case _: TypeTag | ExtrType(_) => st
       case tv: TypeVariable if parents.exists(_ === tv) =>
         if (pol(tv).getOrElse(lastWords(s"parent in invariant position $tv $parents"))) BotType else TopType
@@ -775,7 +777,7 @@ trait TypeSimplifier { self: Typer =>
         varSubst.get(tv) match {
           case S(S(tv2)) =>
             println(s"-> $tv2")
-            transform(tv2, pol, parents + tv)
+            transform(tv2, pol, parents + tv, canDistribForall)
           case S(N) =>
             // println(s"-> bound")
             // println(s"-> bound ${pol}")
@@ -785,13 +787,15 @@ trait TypeSimplifier { self: Typer =>
               lastWords("Should not be replacing an invariant type variable by its bound...") // ?
               pol.quantifPolarity(tv.level).base match {
                 case S(true) =>
-                  TypeBounds.mk(mergeTransform(false, pol, tv, parents + tv), mergeTransform(true, pol, tv, parents + tv))
+                  TypeBounds.mk(mergeTransform(false, pol, tv, parents + tv, canDistribForall),
+                    mergeTransform(true, pol, tv, parents + tv, canDistribForall))
                 case S(false) =>
-                  TypeBounds.mk(mergeTransform(true, pol, tv, parents + tv), mergeTransform(false, pol, tv, parents + tv))
+                  TypeBounds.mk(mergeTransform(true, pol, tv, parents + tv, canDistribForall),
+                    mergeTransform(false, pol, tv, parents + tv, canDistribForall))
                 case N => ???
               }
               // ???
-            }(mergeTransform(_, pol, tv, parents + tv))
+            }(mergeTransform(_, pol, tv, parents + tv, canDistribForall))
             // ){p => println(p); mergeTransform(p, pol, tv, parents + tv)}
           case N =>
             var wasDefined = true
@@ -805,14 +809,14 @@ trait TypeSimplifier { self: Typer =>
               case S(p) if inlineBounds && !occursInvariantly(tv) && !recVars.contains(tv) =>
                 // * Inline the bounds of non-rec non-invar-occ type variables
                 println(s"Inlining bounds of $tv (~> $res)")
-                if (p) mergeTransform(true, pol, tv, Set.single(tv)) | res
-                else mergeTransform(false, pol.contravar, tv, Set.single(tv)) & res
+                if (p) mergeTransform(true, pol, tv, Set.single(tv), canDistribForall) | res
+                else mergeTransform(false, pol.contravar, tv, Set.single(tv), canDistribForall) & res
               case _ if (!wasDefined) =>
                 def setBounds = {
                   trace(s"Setting bounds of $res...") {
                     tv.assignedTo match {
                       case S(ty) =>
-                        res.assignedTo = S(transform(ty, PolMap.neu, semp))
+                        res.assignedTo = S(transform(ty, PolMap.neu, semp, canDistribForall))
                       case N =>
                         // res.lowerBounds = tv.lowerBounds.map(transform(_, PolMap.pos, Set.single(tv)))
                         // res.upperBounds = tv.upperBounds.map(transform(_, PolMap.neg, Set.single(tv)))
@@ -841,7 +845,7 @@ trait TypeSimplifier { self: Typer =>
                       println(s"NEW SUBS $tv -> N")
                       varSubst += tv -> N
                       // transform(merge(p, bounds), PolMap(polo), parents)
-                      transform(merge(p, bounds), pol, parents)
+                      transform(merge(p, bounds), pol, parents, canDistribForall)
                     }
                     else setBounds
                   case _ => setBounds
@@ -849,23 +853,41 @@ trait TypeSimplifier { self: Typer =>
               case _ => res
             }
         }
-      case ty @ ComposedType(true, l, r) => transform(l, pol, parents) | transform(r, pol, parents)
-      case ty @ ComposedType(false, l, r) => transform(l, pol, parents) & transform(r, pol, parents)
+      case ty @ ComposedType(true, l, r) =>
+        transform(l, pol, parents, canDistribForall) | transform(r, pol, parents, canDistribForall)
+      case ty @ ComposedType(false, l, r) =>
+        transform(l, pol, parents, canDistribForall) & transform(r, pol, parents, canDistribForall)
       case NegType(und) => transform(und, pol.contravar, semp).neg()
-      case WithType(base, RecordType(fs)) => WithType(transform(base, pol, semp), 
+      case WithType(base, RecordType(fs)) => WithType(transform(base, pol, semp, canDistribForall), 
         RecordType(fs.mapValues(_.update(transform(_, pol.contravar, semp), transform(_, pol, semp))))(noProv))(noProv)
-      case ProxyType(underlying) => transform(underlying, pol, parents)
+      case ProxyType(underlying) => transform(underlying, pol, parents, canDistribForall)
       case tr @ TypeRef(defn, targs) =>
         TypeRef(defn, tr.mapTargs(pol)((pol, ty) => transform(ty, pol, semp)))(tr.prov)
       case wo @ Without(base, names) =>
-        if (names.isEmpty) transform(base, pol, semp)
-        else if (pol.base === S(true)) transform(base, pol, semp).withoutPos(names)
-        else transform(base, pol, semp).without(names)
+        if (names.isEmpty) transform(base, pol, semp, canDistribForall)
+        else if (pol.base === S(true)) transform(base, pol, semp, canDistribForall).withoutPos(names)
+        else transform(base, pol, semp, canDistribForall).without(names)
       case tb @ TypeBounds(lb, ub) =>
-        pol.base.fold[ST](TypeBounds.mk(transform(lb, PolMap.neg, parents), transform(ub, PolMap.pos, parents), noProv))(pol =>
+        pol.base.fold[ST](TypeBounds.mk(
+          transform(lb, PolMap.neg, parents, canDistribForall),
+          transform(ub, PolMap.pos, parents, canDistribForall),
+          noProv
+        ))(pol =>
           if (pol) transform(ub, PolMap.pos, parents) else transform(lb, PolMap.neg, parents))
-      case PolymorphicType(lvl, bod) =>
-        PolymorphicType.mk(lvl, transform(bod, pol.enter(lvl), parents)) // FIXME? parent or None?
+      case PolymorphicType(plvl, bod) =>
+        // PolymorphicType.mk(plvl, transform(bod, pol.enter(plvl), parents)) // FIXME? parent or None?
+        
+        val res = transform(bod, pol.enter(plvl), parents, canDistribForall = S(plvl))
+        canDistribForall match {
+          case S(outerLvl) if distributeForalls =>
+            implicit val shadows: Shadows = Shadows.empty
+            ctx.copy(lvl = outerLvl + 1) |> { implicit ctx =>
+              PolymorphicType(plvl, res).instantiate
+            }
+          case _ =>
+            PolymorphicType.mk(plvl, res)
+        }
+        
       case ConstrainedType(cs, bod) =>
         ConstrainedType(
           // cs.map { case (tv, bs) =>

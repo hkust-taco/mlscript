@@ -14,7 +14,7 @@ class Derived2[C]: Base1[anything]
 //│ Defined Derived2.M1: Derived2['C] -> anything -> Derived2['C0]
 
 Derived2.M1
-//│ res: Derived2['C] -> anything -> (forall 'C0. Derived2['C0])
+//│ res: Derived2['C] -> anything -> Derived2['C0]
 //│    = undefined
 
 

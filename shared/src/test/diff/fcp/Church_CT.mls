@@ -882,10 +882,10 @@ to_church_ty = to_ch_A1
 
 // * Now works
 to_church_ty = to_church_mix
-//│ int -> (forall 'a, 'b, 'c, 'd, 'e. 'a -> (('c & 'b) -> ('c | 'd)
+//│ int -> 'a -> (('b & 'c) -> 'b
 //│   where
-//│     'a <: 'e -> 'd
-//│     error | ChurchInt <: 'a -> 'b -> 'e))
+//│     'a <: 'd -> 'b
+//│     error | ChurchInt <: 'a -> 'c -> 'd)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_church_mix]

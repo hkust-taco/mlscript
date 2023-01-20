@@ -74,7 +74,7 @@ def test2 = test succ
 def test2_ = test_ succ
 //│ test: 'a -> 'a -> (Sid | 'a)
 //│     = [Function: test]
-//│ test_: 'a -> 'a -> ((forall 'b. 'b -> 'b) | 'a)
+//│ test_: 'a -> 'a -> ('b -> 'b | 'a)
 //│      = [Function: test_]
 //│ test2: 'a -> (int -> int | Sid | 'a)
 //│      = [Function: test2]

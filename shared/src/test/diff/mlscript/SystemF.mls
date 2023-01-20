@@ -182,14 +182,14 @@ res1() = iter4() S Z
 res2() = iter256() S Z
 //│ res1: () -> ('a -> 'b & 'c -> 'a & 'a -> 'c) -> 'c -> 'b
 //│     = [Function: res1]
-//│ res2: () -> (error | (forall 'a. ('b -> 'a & 'b -> 'c & 'c -> 'c & 'c -> 'b & 'b -> 'b) -> 'c -> 'a))
+//│ res2: () -> (error | ('a -> 'b & 'a -> 'c & 'c -> 'c & 'c -> 'a & 'a -> 'a) -> 'c -> 'b)
 //│     = [Function: res2]
 
 res1_ty() = iter4_ty() S_ty Z_ty
 res2_ty() = iter256_ty() S_ty Z_ty
-//│ res1_ty: () -> (forall 'X, 'X0. ('X -> 'X & 'X0 -> 'X0) -> ('X & 'X0) -> ('X0 | 'X))
+//│ res1_ty: () -> ('X -> 'X & 'X0 -> 'X0) -> ('X & 'X0) -> ('X0 | 'X)
 //│        = [Function: res1_ty]
-//│ res2_ty: () -> (forall 'X, 'X0. ('X -> 'X & 'X0 -> 'X0) -> ('X & 'X0) -> ('X0 | 'X))
+//│ res2_ty: () -> ('X -> 'X & 'X0 -> 'X0) -> ('X & 'X0) -> ('X0 | 'X)
 //│        = [Function: res2_ty]
 
 
@@ -390,7 +390,7 @@ E q = q id
 // shallow (not (not true))        -- Shallow encoding.
 // λid.id(λb t f.b f t)(id(λb t f.b f t)(λx y.x))
 sh id = (id not) ((id not) tru)
-//│ sh: ((forall 'a, 'b, 'c. ('b -> 'c -> 'a) -> 'c -> 'b -> 'a) -> (forall 'd. 'd -> anything -> 'd) -> 'e & (forall 'f, 'g, 'h. ('f -> 'g -> 'h) -> 'g -> 'f -> 'h) -> 'e -> 'i) -> 'i
+//│ sh: ((forall 'a, 'b, 'c. ('a -> 'b -> 'c) -> 'b -> 'a -> 'c) -> (forall 'd. 'd -> anything -> 'd) -> 'e & (forall 'f, 'g, 'h. ('h -> 'f -> 'g) -> 'f -> 'h -> 'g) -> 'e -> 'i) -> 'i
 //│   = [Function: sh]
 
 // E[forall X.X->X->X](shallow (not( not true)))
