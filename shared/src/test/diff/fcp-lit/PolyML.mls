@@ -127,7 +127,7 @@ def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> cons x y) nil in
   let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
   (l1, l2)
-//│ simple_and_double: Collection['a | 'a0] -> (List['a], List[('a0, 'a0,)],)
+//│ simple_and_double: Collection['a] -> (List['a], List[('a, 'a,)],)
 
 simple_and_double (Collection{l = cons 1 nil})
 //│ res: (List[1], List[(1, 1,)],)

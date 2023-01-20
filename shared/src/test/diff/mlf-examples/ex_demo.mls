@@ -221,12 +221,12 @@ rec def listiter f ll =
   else
     let _ = ignore (f (head ll)) in 
     listiter f (tail ll)
-//│ listiter: ('a -> anything & 'a0 -> anything) -> List['a0 | 'a] -> unit
+//│ listiter: ('a -> anything & 'a0 -> anything) -> List['a0 & 'a] -> unit
 //│         = [Function: listiter]
 :NoRecursiveTypes
 
 listiterA = listiter
-//│ ('a -> anything & 'a0 -> anything) -> List['a0 | 'a] -> unit
+//│ ('a -> anything & 'a0 -> anything) -> List['a0 & 'a] -> unit
 //│   <:  listiterA:
 //│ ('a -> unit) -> List['a] -> unit
 //│          = [Function: listiter]

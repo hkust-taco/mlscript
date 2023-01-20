@@ -108,7 +108,7 @@ rec def find table key =
   if is_empty table then None
   else if eq (head table)._1 key then Some (head table)._2
   else find (tail table) key
-//│ find: List[?] -> anything -> (Some[nothing] | None)
+//│ find: List[{_1: anything, _2: 'a & 'b}] -> anything -> (Some['a] | None | Some['b])
 //│     = [Function: find]
 :NoRecursiveTypes
 
@@ -128,7 +128,7 @@ def find_A table key =
   if is_empty table then None
   else if eq (head table)._1 key then Some (head table)._2
   else find_A (tail table) key
-//│ List[?] -> anything -> (None | Some[nothing])
+//│ List[(anything, 'b,)] -> anything -> (None | Some['b])
 //│   <:  find_A:
 //│ List[(anything, 'b,)] -> anything -> (None | Some['b])
 //│       = <no result>
@@ -145,7 +145,7 @@ def nfind table key =
   { None -> fun f -> fun x -> x
   | Some -> opt.val
   }
-//│ nfind: List[?] -> anything -> anything -> 'a -> 'a
+//│ nfind: List[{_1: anything, _2: 'a}] -> anything -> (anything -> 'b -> 'b | 'a)
 //│      = [Function: nfind]
 
 // type Int = ['a] ('a -> 'a) -> ('a -> 'a)

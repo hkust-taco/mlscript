@@ -100,7 +100,7 @@ rec def append l1 l2 =
   else cons (head l1) (append (tail l1) l2)
 //│ append: List['a] -> List['a] -> List['a]
 //│       = <missing implementation>
-//│ List[?] -> (List['a] & 'b) -> (List['a] | 'b)
+//│ List['a] -> (List['a] & 'b) -> (List['a] | 'b)
 //│   <:  append:
 //│ List['a] -> List['a] -> List['a]
 //│       = [Function: append]
@@ -185,7 +185,7 @@ rec def map f l =
   else cons (f (head l)) (map f (tail l))
 //│ map: ('a -> 'b) -> List['a] -> List['b]
 //│    = <missing implementation>
-//│ (nothing -> 'a) -> List[?] -> List['a]
+//│ ('a -> 'a0) -> List['a] -> List['a0]
 //│   <:  map:
 //│ ('a -> 'b) -> List['a] -> List['b]
 //│    = [Function: map]

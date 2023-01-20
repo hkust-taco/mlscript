@@ -75,7 +75,7 @@ rec def concat l1 l2 =
   else cons (head l1) (concat (tail l1) l2)
 //│ concat: List['a] -> List['a] -> List['a]
 //│       = <missing implementation>
-//│ List[?] -> (List['a] & 'b) -> (List['a] | 'b)
+//│ List['a] -> (List['a] & 'b) -> (List['a] | 'b)
 //│   <:  concat:
 //│ List['a] -> List['a] -> List['a]
 //│       = [Function: concat1]
@@ -442,7 +442,7 @@ rec def append x l =
 rec def map l f =
   if eq l nil then nil
   else cons (f (head l)) (map (tail l) f)
-//│ map: List['a | 'a0] -> ('a -> 'b & 'a0 -> 'b) -> List['b]
+//│ map: List['a] -> ('a -> 'b) -> List['b]
 //│    = [Function: map]
 
 // let message () = print "** MESSAGE **"

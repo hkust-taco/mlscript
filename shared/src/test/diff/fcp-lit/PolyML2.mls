@@ -58,7 +58,7 @@ def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
   let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
   (l1, l2)
-//│ simple_and_double: Collection['a | 'a0] -> (forall 'b. Nil | 'b, forall 'c. Nil | 'c,)
+//│ simple_and_double: Collection['a] -> (forall 'b. Nil | 'b, forall 'c. Nil | 'c,)
 //│   where
-//│     'c :> (Cons[('a0, 'a0,)] with {tail: Nil}) | (Cons[('a0, 'a0,)] with {tail: 'c})
+//│     'c :> (Cons[('a, 'a,)] with {tail: Nil}) | (Cons[('a, 'a,)] with {tail: 'c})
 //│     'b :> (Cons['a] with {tail: Nil}) | (Cons['a] with {tail: 'b})

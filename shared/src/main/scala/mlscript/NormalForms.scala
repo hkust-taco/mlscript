@@ -126,10 +126,20 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case LhsTop => S(LhsRefined(N, ssEmp, RecordType.empty, SortedMap.single(that.defn -> that)))
       case LhsRefined(b, ts, rt, trs) =>
         val trs2 = trs + (that.defn -> trs.get(that.defn).fold(that) { other =>
-          assert(that.targs.sizeCompare(other.targs) === 0)
-          TypeRef(that.defn, that.targs.lazyZip(other.targs).map{
-            case (ta1, ta2) => TypeBounds.mk(ta1 | ta2, ta1 & ta2)
-          })(that.prov)
+          var thatTargs = that.targs
+          assert(thatTargs.sizeCompare(other.targs) === 0)
+          val newTargs = other.mapTargs(S(true)) { (vce, otherTarg) =>
+            val thatTarg = thatTargs.head
+            thatTargs = thatTargs.tail
+            vce match {
+              case S(true) => otherTarg & thatTarg
+              case S(false) => otherTarg | thatTarg
+              case N =>
+                // * FIXME(type-ranges): actually incorrect use of type bounds
+                TypeBounds.mk(otherTarg | thatTarg, otherTarg & thatTarg)
+            }
+          }
+          TypeRef(that.defn, newTargs)(that.prov)
         })
         val res = LhsRefined(b, ts, rt, trs2)
         that.mkTag.fold(S(res): Opt[LhsNf])(res & _)
@@ -194,10 +204,20 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case RhsField(name, ty) => this | name -> ty
       case RhsBases(prims, bf, trs) =>
         val trs2 = trs + (that.defn -> trs.get(that.defn).fold(that) { other =>
-          assert(that.targs.sizeCompare(other.targs) === 0)
-          TypeRef(that.defn, that.targs.lazyZip(other.targs).map{
-            case (ta1, ta2) => TypeBounds.mk(ta1 & ta2, ta1 | ta2)
-          })(that.prov)
+          var thatTargs = that.targs
+          assert(thatTargs.sizeCompare(other.targs) === 0)
+          val newTargs = other.mapTargs(S(true)) { (vce, otherTarg) =>
+            val thatTarg = thatTargs.head
+            thatTargs = thatTargs.tail
+            vce match {
+              case S(true) => otherTarg | thatTarg
+              case S(false) => otherTarg & thatTarg
+              case N =>
+                // * FIXME(type-ranges): actually incorrect use of type bounds
+                TypeBounds.mk(otherTarg & thatTarg, otherTarg | thatTarg)
+            }
+          }
+          TypeRef(that.defn, newTargs)(that.prov)
         })
         S(RhsBases(prims, bf, trs2))
     }

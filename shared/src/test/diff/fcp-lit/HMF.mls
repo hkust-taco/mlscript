@@ -111,7 +111,7 @@ rec def map f l =
   else cons (f (head l)) (map f (tail l))
 //│ map: ('a -> 'b) -> List['a] -> List['b]
 //│    = <missing implementation>
-//│ (nothing -> 'a) -> List[?] -> List['a]
+//│ ('a -> 'b) -> List['a] -> List['b]
 //│   <:  map:
 //│ ('a -> 'b) -> List['a] -> List['b]
 //│    = [Function: map]
