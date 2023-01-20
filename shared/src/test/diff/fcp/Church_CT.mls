@@ -561,9 +561,7 @@ to_church_ty = to_church
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
 //│ ║  l.553: 	to_church_ty = to_church
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_church1088_1118#  <:  ((α1096_1127,) -> α1097_1128)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_church1088'#  <:  ((α1096_1119'',) -> α1097_1120'')
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_church]
 
 // * Non-recursive def emulates annotated recursive def
@@ -618,11 +616,9 @@ to_church_ty = to_ch
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.609: 	to_church_ty = to_ch
+//│ ║  l.607: 	to_church_ty = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch1203_1285#  <:  ((α1211_1306,) -> α1212_1307)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch1203'#  <:  ((α1211_1286'',) -> α1212_1287'')
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch]
 
 rec def to_ch_simplif n = s (to_ch_simplif n)
@@ -649,11 +645,9 @@ to_church_ty = to_ch_simplif
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.640: 	to_church_ty = to_ch_simplif
+//│ ║  l.636: 	to_church_ty = to_ch_simplif
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch_simplif1344_1411#  <:  ((α1345_1430,) -> α1346_1431)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch_simplif1344'#  <:  ((α1345_1412'',) -> α1346_1413'')
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch_simplif]
 
 
@@ -685,11 +679,9 @@ to_church_ty = to_ch_A1
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.676: 	to_church_ty = to_ch_A1
+//│ ║  l.670: 	to_church_ty = to_ch_A1
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch_A11462_1540#  <:  ((α1470_1561,) -> α1471_1562)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch_A11462'#  <:  ((α1470_1541'',) -> α1471_1542'')
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch_A1]
 
 // * This annotation now helps too (since "recursive definition hacks" removal)
@@ -714,11 +706,9 @@ to_church_ty = to_ch_A2
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.708: 	to_church_ty = to_ch_A2
+//│ ║  l.700: 	to_church_ty = to_ch_A2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch_A21589_1654#  <:  ((α1597_1671,) -> α1598_1672)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch_A21589'#  <:  ((α1597_1655'',) -> α1598_1656'')
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch_A2]
 
 
@@ -728,11 +718,9 @@ def to_church_mix n =
   if n == 0 then z
   else s (to_church (n - 1))
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.729: 	  else s (to_church (n - 1))
+//│ ║  l.719: 	  else s (to_church (n - 1))
 //│ ║         	          ^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_church1088_1689''#  <:  ((α1096_1702'',) -> α1097_1703'')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_church1088'#  <:  ((α1096_1694''',) -> α1097_1695''')
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ to_church_mix: int -> (forall 'a. 'a -> (forall 'b, 'c, 'd, 'e, 'a. (('b & 'e) -> ('b | 'c)
 //│   where
 //│     error | ChurchInt <: 'a -> 'e -> 'd
@@ -748,7 +736,7 @@ to_church_ty = to_church_mix
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.743: 	to_church_ty = to_church_mix
+//│ ║  l.731: 	to_church_ty = to_church_mix
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -820,11 +808,9 @@ to_church_ty = to_ch
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.811: 	to_church_ty = to_ch
+//│ ║  l.799: 	to_church_ty = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch1203_1938'#  <:  ((α1211_1959',) -> α1212_1960')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch1203'#  <:  ((α1211_1939'',) -> α1212_1940'')
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch]
 
 :e // * Since the removal of "recursive definition hacks"
@@ -840,11 +826,9 @@ to_church_ty = to_ch_simplif
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.831: 	to_church_ty = to_ch_simplif
+//│ ║  l.817: 	to_church_ty = to_ch_simplif
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch_simplif1344_2034'#  <:  ((α1345_2053',) -> α1346_2054')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch_simplif1344'#  <:  ((α1345_2035'',) -> α1346_2036'')
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch_simplif]
 
 // * Redefinition in the context of distrib, just for the record (still infers but doesn't check)
@@ -872,11 +856,9 @@ to_church_ty = to_ch_simplif
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.863: 	to_church_ty = to_ch_simplif
+//│ ║  l.847: 	to_church_ty = to_ch_simplif
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch_simplif2080_2174'#  <:  ((α2081_2193',) -> α2082_2194')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch_simplif2080'#  <:  ((α2081_2175'',) -> α2082_2176'')
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch_simplif1]
 
 // * Still doesn't work (Same with the full definition)
@@ -893,11 +875,9 @@ to_church_ty = to_ch_A1
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.884: 	to_church_ty = to_ch_A1
+//│ ║  l.866: 	to_church_ty = to_ch_A1
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch_A11462_2264'#  <:  ((α1470_2285',) -> α1471_2286')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch_A11462'#  <:  ((α1470_2265'',) -> α1471_2266'')
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch_A1]
 
 // * Now works

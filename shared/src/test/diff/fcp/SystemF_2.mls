@@ -88,31 +88,25 @@ c2_ c2_
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
 //│ ║  l.87: 	c2_ c2_
 //│ ║        	^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 4. α380_676'''''›  <:  'X351_665    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 4. α380_675''''›  <:  'X351_558'
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
 //│    = [Function (anonymous)]
 
 :e
 c2_ c2_!
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.98: 	c2_ c2_!
+//│ ║  l.96: 	c2_ c2_!
 //│ ║        	^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 4. α380_769'''''›  <:  α373_770    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 4. α380_768''''›  <:  α373_767''''
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
 //│    = [Function (anonymous)]
 
 :e // * Started failing after better distrib, not sure why...
 c2_ c2_ K
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.109: 	c2_ c2_ K
+//│ ║  l.105: 	c2_ c2_ K
 //│ ║         	^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 4. α380_860'''''›  <:  'X351_849    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 4. α380_859''''›  <:  'X351_558'
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
 //│    = [Function (anonymous)]
 
@@ -222,16 +216,16 @@ succ = succ_
 //│   <:  succ:
 //│ (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X0. ('X0 -> 'X0) -> 'X0 -> 'X0)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.217: 	succ = succ_
+//│ ║  l.211: 	succ = succ_
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.208: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
+//│ ║  l.202: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│ ║         	                                                         ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.208: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
+//│ ║  l.202: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│ ║         	                                                         ^^
 //│ ╟── from quantified type variable:
-//│ ║  l.208: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
+//│ ║  l.202: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│ ╙──       	                  ^^
 //│     = [Function: succ_1]
 

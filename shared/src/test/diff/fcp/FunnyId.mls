@@ -50,27 +50,19 @@ rec def id x = if true then x else id id x
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
 //│ ║  l.49: 	rec def id x = if true then x else id id x
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α123_133'' -> α132_135'')›  <:  α123_139'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α123_133'' -> α132_135'')›  <:  α123_133''
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
 //│ ║  l.49: 	rec def id x = if true then x else id id x
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α123_133'' -> α132_135'')›  <:  α123_139'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α123_133'' -> α132_135'')›  <:  α123_133''
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
 //│ ║  l.49: 	rec def id x = if true then x else id id x
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α123_133'' -> α132_135'')›  <:  α128'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α123_133'' -> α132_135'')›  <:  α128'
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
 //│ ║  l.49: 	rec def id x = if true then x else id id x
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α123_133'' -> α132_135'')›  <:  α128'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α123_133'' -> α132_135'')›  <:  α128'
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ id: 'id
 //│   where
 //│     'id :> forall 'a. ('b & 'a) -> 'a
@@ -94,7 +86,7 @@ id_ty = id
 //│   <:  id_ty:
 //│ 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.85: 	id_ty = id
+//│ ║  l.77: 	id_ty = id
 //│ ║        	^^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.5: 	def id_ty: forall 'a. 'a -> 'a

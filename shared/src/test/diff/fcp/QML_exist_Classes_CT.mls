@@ -305,38 +305,7 @@ rec def mod a b = if a < b then a else mod (a - b) b
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?mod. ?mod <: int -> int -> int` exceeded recursion depth limit (250)
 //│ ║  l.297: 	rec def mod a b = if a < b then a else mod (a - b) b
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ‹∀ 1. (α2690_2737'' -> ‹∀ 2. {(α2691_2740''' -> α2701_2743''') where: mod2689_2736# <: ((α2698_2738''',) -> α2699_2739''')}›)›  <!<  ((α2698_3102,) -> α2699_3103)
-//│ ╟── while constraining:  mod2689_2736#  <!<  ((α2698_3102,) -> α2699_3103)
-//│ ╟── while constraining:  {(α2691_3104 -> α2701_3107) where: mod2689_2736# <: ((α2698_3102,) -> α2699_3103)}  <!<  ((α2691_3091,) -> α2700_3092)
-//│ ╟── while constraining:  ‹∀ 2. {(α2691_3098''' -> α2701_3101''') where: mod2689_2736# <: ((α2698_3096''',) -> α2699_3097''')}›  <!<  ((α2691_3091,) -> α2700_3092)
-//│ ╟── while constraining:  ‹∀ 2. {(α2691_3098''' -> α2701_3101''') where: mod2689_2736# <: ((α2698_3096''',) -> α2699_3097''')}›  <!<  α2699_3090
-//│ ╟── while constraining:  (α2690_3095 -> ‹∀ 2. {(α2691_3098''' -> α2701_3101''') where: mod2689_2736# <: ((α2698_3096''',) -> α2699_3097''')}›)  <!<  ((α2698_3089,) -> α2699_3090)
-//│ ╟── while constraining:  ‹∀ 1. (α2690_2737'' -> ‹∀ 2. {(α2691_2740''' -> α2701_2743''') where: mod2689_2736# <: ((α2698_2738''',) -> α2699_2739''')}›)›  <!<  ((α2698_3089,) -> α2699_3090)
-//│ ╟── while constraining:  mod2689_2736#  <!<  ((α2698_3089,) -> α2699_3090)
-//│ ╟── while constraining:  {(α2691_3091 -> α2701_3094) where: mod2689_2736# <: ((α2698_3089,) -> α2699_3090)}  <!<  ((α2691_3078,) -> α2700_3079)
-//│ ╟── while constraining:  ‹∀ 2. {(α2691_3085''' -> α2701_3088''') where: mod2689_2736# <: ((α2698_3083''',) -> α2699_3084''')}›  <!<  ((α2691_3078,) -> α2700_3079)
-//│ ╟── while constraining:  ‹∀ 2. {(α2691_3085''' -> α2701_3088''') where: mod2689_2736# <: ((α2698_3083''',) -> α2699_3084''')}›  <!<  α2699_3077
-//│ ╟── while constraining:  (α2690_3082 -> ‹∀ 2. {(α2691_3085''' -> α2701_3088''') where: mod2689_2736# <: ((α2698_3083''',) -> α2699_3084''')}›)  <!<  ((α2698_3076,) -> α2699_3077)
-//│ ╟── while constraining:  ‹∀ 1. (α2690_2737'' -> ‹∀ 2. {(α2691_2740''' -> α2701_2743''') where: mod2689_2736# <: ((α2698_2738''',) -> α2699_2739''')}›)›  <!<  ((α2698_3076,) -> α2699_3077)
-//│ ╟── while constraining:  mod2689_2736#  <!<  ((α2698_3076,) -> α2699_3077)
-//│ ╟── while constraining:  {(α2691_3078 -> α2701_3081) where: mod2689_2736# <: ((α2698_3076,) -> α2699_3077)}  <!<  ((α2691_3065,) -> α2700_3066)
-//│ ╟── ......
-//│ ╟── ......
-//│ ╟── while constraining:  (α2690_2770 -> ‹∀ 2. {(α2691_2773''' -> α2701_2776''') where: mod2689_2736# <: ((α2698_2771''',) -> α2699_2772''')}›)  <!<  ((α2698_2764,) -> α2699_2765)
-//│ ╟── while constraining:  ‹∀ 1. (α2690_2737'' -> ‹∀ 2. {(α2691_2740''' -> α2701_2743''') where: mod2689_2736# <: ((α2698_2738''',) -> α2699_2739''')}›)›  <!<  ((α2698_2764,) -> α2699_2765)
-//│ ╟── while constraining:  mod2689_2736#  <!<  ((α2698_2764,) -> α2699_2765)
-//│ ╟── while constraining:  {(α2691_2766 -> α2701_2769) where: mod2689_2736# <: ((α2698_2764,) -> α2699_2765)}  <!<  ((α2691_2753,) -> α2700_2754)
-//│ ╟── while constraining:  ‹∀ 2. {(α2691_2760''' -> α2701_2763''') where: mod2689_2736# <: ((α2698_2758''',) -> α2699_2759''')}›  <!<  ((α2691_2753,) -> α2700_2754)
-//│ ╟── while constraining:  ‹∀ 2. {(α2691_2760''' -> α2701_2763''') where: mod2689_2736# <: ((α2698_2758''',) -> α2699_2759''')}›  <!<  α2699_2752
-//│ ╟── while constraining:  (α2690_2757 -> ‹∀ 2. {(α2691_2760''' -> α2701_2763''') where: mod2689_2736# <: ((α2698_2758''',) -> α2699_2759''')}›)  <!<  ((α2698_2751,) -> α2699_2752)
-//│ ╟── while constraining:  ‹∀ 1. (α2690_2737'' -> ‹∀ 2. {(α2691_2740''' -> α2701_2743''') where: mod2689_2736# <: ((α2698_2738''',) -> α2699_2739''')}›)›  <!<  ((α2698_2751,) -> α2699_2752)
-//│ ╟── while constraining:  mod2689_2736#  <!<  ((α2698_2751,) -> α2699_2752)
-//│ ╟── while constraining:  {(α2691_2753 -> α2701_2756) where: mod2689_2736# <: ((α2698_2751,) -> α2699_2752)}  <!<  (Int -> Int)
-//│ ╟── while constraining:  ‹∀ 2. {(α2691_2747''' -> α2701_2750''') where: mod2689_2736# <: ((α2698_2745''',) -> α2699_2746''')}›  <!<  (Int -> Int)
-//│ ╟── while constraining:  (α2690_2744 -> ‹∀ 2. {(α2691_2747''' -> α2701_2750''') where: mod2689_2736# <: ((α2698_2745''',) -> α2699_2746''')}›)  <!<  (Int -> (Int -> Int))
-//│ ╟── while constraining:  ‹∀ 1. (α2690_2737'' -> ‹∀ 2. {(α2691_2740''' -> α2701_2743''') where: mod2689_2736# <: ((α2698_2738''',) -> α2699_2739''')}›)›  <!<  (Int -> (Int -> Int))
-//│ ╟── while constraining:  mod2689_2736#  <!<  (Int -> (Int -> Int))
-//│ ╙── while constraining:  ‹∀ 0. mod2689'#›  <!<  (Int -> (Int -> Int))
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│    = [Function: mod]
 
 def stepImpl arrImpl = ArraysImpl {
@@ -441,7 +410,7 @@ def step arr f = f (stepImpl2 arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.422: 	def step arr f = f (stepImpl2 arr)
+//│ ║  l.391: 	def step arr f = f (stepImpl2 arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -458,7 +427,7 @@ def step (arr: Arrays['a]) f = f (stepImpl2 arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.456: 	def step (arr: Arrays['a]) f = f (stepImpl2 arr)
+//│ ║  l.425: 	def step (arr: Arrays['a]) f = f (stepImpl2 arr)
 //│ ║         	                                  ^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -477,7 +446,7 @@ def step arr f = f (stepImpl2_ty arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.473: 	def step arr f = f (stepImpl2_ty arr)
+//│ ║  l.442: 	def step arr f = f (stepImpl2_ty arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -495,7 +464,7 @@ def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.490: 	def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
+//│ ║  l.459: 	def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
 //│ ║         	                                  ^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -531,11 +500,9 @@ rec def mkMonoArray n =
 :e // * Since the removal of "recursive definition hacks"
 snb = mkMonoArray 5
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.532: 	snb = mkMonoArray 5
+//│ ║  l.501: 	snb = mkMonoArray 5
 //│ ║         	      ^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  mkMonoArray6027_6060'#  <:  ((α6035_6071',) -> α6036_6072')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  mkMonoArray6027'#  <:  ((α6035_6061'',) -> α6036_6062'')
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ snb: error | Arrays['a]
 //│    = [Function (anonymous)]
 

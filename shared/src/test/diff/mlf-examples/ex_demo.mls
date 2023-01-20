@@ -285,9 +285,7 @@ rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
 //│ ║  l.248: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 2. ('a592_593''' -> 'a592_593''')›  <:  α598'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 2. ('a592_593''' -> 'a592_593''')›  <:  α598'
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
 //│ ║  l.248: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -309,29 +307,21 @@ rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 :e // * Since "sound extrusion"
 rec def id1 x = if true then x else id1 id1 x
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.310: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.308: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α619_629'' -> α628_631'')›  <:  α619_635'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α619_629'' -> α628_631'')›  <:  α619_629''
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.310: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.308: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α619_629'' -> α628_631'')›  <:  α619_635'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α619_629'' -> α628_631'')›  <:  α619_629''
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.310: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.308: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α619_629'' -> α628_631'')›  <:  α624'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α619_629'' -> α628_631'')›  <:  α624'
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.310: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.308: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α619_629'' -> α628_631'')›  <:  α624'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α619_629'' -> α628_631'')›  <:  α624'
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ id1: 'id1
 //│   where
 //│     'id1 :> forall 'a. ('b & 'a) -> 'a
@@ -345,29 +335,21 @@ rec def id1 x = if true then x else id1 id1 x
 :e // * Since "sound extrusion"
 rec def id1 x = if true then x else id1 id1 x
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.346: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.336: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α663_673'' -> α672_675'')›  <:  α663_679'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α663_673'' -> α672_675'')›  <:  α663_673''
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.346: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.336: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α663_673'' -> α672_675'')›  <:  α663_679'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α663_673'' -> α672_675'')›  <:  α663_673''
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.346: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.336: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α663_673'' -> α672_675'')›  <:  α668'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α663_673'' -> α672_675'')›  <:  α668'
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.346: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.336: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α663_673'' -> α672_675'')›  <:  α668'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α663_673'' -> α672_675'')›  <:  α668'
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ id1: 'id1
 //│   where
 //│     'id1 :> forall 'a. ('b & 'a) -> 'a
@@ -395,11 +377,9 @@ rec def id1 x = if true then x else id1 id1 x
 :e
 id1 id
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.396: 	id1 id
+//│ ║  l.378: 	id1 id
 //│ ║         	^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α237_238'' -> α237_238'')››  <:  α707_759    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α237_238'' -> α237_238'')››  <:  α707_746''
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: ('a & 'b) -> 'b | error | 'c
 //│   where
 //│     'a <: 'd & 'b
@@ -412,11 +392,9 @@ id1 id
 :e
 id1 id1
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.413: 	id1 id1
+//│ ║  l.393: 	id1 id1
 //│ ║         	^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. id1706'#›  <:  α714_804    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. id1706'#›  <:  α714'
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
 //│    = [Function: id13]
 :NoRecursiveTypes
@@ -448,16 +426,16 @@ id1
 :e
 id1: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.449: 	id1: nothing
+//│ ║  l.427: 	id1: nothing
 //│ ║         	^^^
 //│ ╟── function of type `?a -> ?b` does not match type `nothing`
-//│ ║  l.384: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.366: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.449: 	id1: nothing
+//│ ║  l.427: 	id1: nothing
 //│ ║         	^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.449: 	id1: nothing
+//│ ║  l.427: 	id1: nothing
 //│ ╙──       	     ^^^^^^^
 //│ res: nothing
 //│    = [Function: id13]
@@ -1131,11 +1109,9 @@ def print_fact_ n =
   let _ = c_printint_ (c_fact_ (to_church_ n)) in
           print_string "\n"
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1131: 	  let _ = c_printint_ (c_fact_ (to_church_ n)) in
+//│ ║  l.1109: 	  let _ = c_printint_ (c_fact_ (to_church_ n)) in
 //│ ║          	                       ^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 2. ‹∀ 3. (α3836_3880'''' -> α3875_3894'''')››  <:  α3239_5086'''    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 2. ‹∀ 3. (α3836_3880'''' -> α3875_3894'''')››  <:  α3239_5075'''''
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ print_fact_: int -> unit
 //│            = [Function: print_fact_]
 // * Works when using the annotated `c_fact`:
@@ -1163,11 +1139,9 @@ def print_fact2_ n =
   concat " = "
          (c_printint2_ (c_fact_ (to_church_ n))) ))
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1164: 	         (c_printint2_ (c_fact_ (to_church_ n))) ))
+//│ ║  l.1140: 	         (c_printint2_ (c_fact_ (to_church_ n))) ))
 //│ ║          	                        ^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 2. ‹∀ 3. (α3836_3880'''' -> α3875_3894'''')››  <:  α3239_5827''    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 2. ‹∀ 3. (α3836_3880'''' -> α3875_3894'''')››  <:  α3239_5816'''''
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ print_fact2_: int -> string
 //│             = [Function: print_fact2_]
 // * Works when using the annotated `c_fact`:
@@ -1210,11 +1184,9 @@ this_should_be_98_ =
   let c_98_ = c_pred_ c_99_ in
   c_printint2_ c_98_
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1207: 	  let c_i10_ = c_mul_ c_i5_ c_i2_ in
+//│ ║  l.1181: 	  let c_i10_ = c_mul_ c_i5_ c_i2_ in
 //│ ║          	               ^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α3238_3258'' -> ‹∀ 2. (α3239_3264''' -> ‹∀ 3. (α3240_3267'''' -> α3247_3268'''')›)›)››  <:  α3242_6714''    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α3238_3258'' -> ‹∀ 2. (α3239_3264''' -> ‹∀ 3. (α3240_3267'''' -> α3247_3268'''')›)›)››  <:  α3242_3259''
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ this_should_be_98_: string
 //│                   = '98'
 //│ constrain calls  : 913
@@ -1235,11 +1207,9 @@ c_i5_ = c_add_ c_i3_ c_i2_
 :e
 c_i10_ = c_mul_ c_i5_ c_i2_
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1236: 	c_i10_ = c_mul_ c_i5_ c_i2_
+//│ ║  l.1208: 	c_i10_ = c_mul_ c_i5_ c_i2_
 //│ ║          	         ^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α3238_3258'' -> ‹∀ 2. (α3239_3264''' -> ‹∀ 3. (α3240_3267'''' -> α3247_3268'''')›)›)››  <:  α3242_7077'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α3238_3258'' -> ‹∀ 2. (α3239_3264''' -> ‹∀ 3. (α3240_3267'''' -> α3247_3268'''')›)›)››  <:  α3242_3259''
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ c_i10_: error
 //│       = [Function (anonymous)]
 //│ constrain calls  : 498
@@ -1267,17 +1237,13 @@ c_i9_ = c_pred_ c_i10_
 :e
 c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1268: 	c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
+//│ ║  l.1238: 	c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
 //│ ║          	                ^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α3238_3258'' -> ‹∀ 2. (α3239_3264''' -> ‹∀ 3. (α3240_3267'''' -> α3247_3268'''')›)›)››  <:  α3239_7676'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α3238_3258'' -> ‹∀ 2. (α3239_3264''' -> ‹∀ 3. (α3240_3267'''' -> α3247_3268'''')›)›)››  <:  α3239_7671'''
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1268: 	c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
+//│ ║  l.1238: 	c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
 //│ ║          	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  error<>  <:  α3250_8011'    ClassTag  TypeVariable
-//│ ╙──  ... looks like:  error<>  <:  α3250_3263''
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ c_99_: nothing -> anything -> error | error
 //│      = [Function (anonymous)]
 //│ constrain calls  : 2760

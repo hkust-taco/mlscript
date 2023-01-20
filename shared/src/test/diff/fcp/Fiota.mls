@@ -50,9 +50,7 @@ S: Id -> Id -> Id -> Id
 //│ ╔══[ERROR] Cyclic-looking constraint while typing type ascription; a type annotation may be required
 //│ ║  l.49: 	S: Id -> Id -> Id -> Id
 //│ ║        	^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  Id  <:  'a163_187'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  Id  <:  'a163_164''
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: Id -> Id -> Id -> Id
 //│    = [Function: S]
 

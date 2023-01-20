@@ -13,9 +13,7 @@ def z =
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
 //│ ║  l.9: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
 //│ ║       	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 2. (α58_73''' -> α67_77''')›  <:  α58_90''    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 2. (α58_73''' -> α67_77''')›  <:  α58_73'''
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│  = [Function: z]
 
 def z =
@@ -41,10 +39,10 @@ pow1 3 4
 :e
 z (fun self -> 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.42: 	z (fun self -> 1)
+//│ ║  l.40: 	z (fun self -> 1)
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` is not a function
-//│ ║  l.42: 	z (fun self -> 1)
+//│ ║  l.40: 	z (fun self -> 1)
 //│ ║        	               ^
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.3: 	def z: (('a -> 'b) -> (('a -> 'b) & 'c)) -> 'c
@@ -130,11 +128,9 @@ def z =
 //│   <:  z:
 //│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.128: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
+//│ ║  l.126: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 2. (α641_656''' -> α650_660''')›  <:  α641_673''    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 2. (α641_656''' -> α650_660''')›  <:  α641_656'''
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│  = [Function: z2]
 
 def z =
@@ -154,40 +150,9 @@ def z =
 //│   <:  z:
 //│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d, ?e. ?a -> ?c <: (forall ?f, ?g, ?h, ?i, ?j. ?f -> ?g) -> ?k` exceeded recursion depth limit (250)
-//│ ║  l.152: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
+//│ ║  l.148: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  α960_1022''  <!<  α960_1027''
-//│ ╟── while constraining:  (α960_1022'',)  <!<  (α960_1027'',)
-//│ ╟── while constraining:  (α960_1027'' -> ‹∀ 3. α969_1026''''›)  <!<  ((α960_1022'',) -> α963_1023'')
-//│ ╟── while constraining:  ‹∀ 2. (α960_975''' -> ‹∀ 3. α969_1026''''›)›  <!<  ((α960_1022'',) -> α963_1023'')
-//│ ╟── while constraining:  ‹∀ 2. (α960_975''' -> α969_979''')›  <!<  ((α960_1022'',) -> α963_1023'')
-//│ ╟── while constraining:  ‹∀ 2. (α960_975''' -> α969_979''')›  <!<  α960_1022''
-//│ ╟── while constraining:  α960_1017''  <!<  α960_1022''
-//│ ╟── while constraining:  (α960_1017'',)  <!<  (α960_1022'',)
-//│ ╟── while constraining:  (α960_1022'' -> ‹∀ 3. α969_1021''''›)  <!<  ((α960_1017'',) -> α963_1018'')
-//│ ╟── while constraining:  ‹∀ 2. (α960_975''' -> ‹∀ 3. α969_1021''''›)›  <!<  ((α960_1017'',) -> α963_1018'')
-//│ ╟── while constraining:  ‹∀ 2. (α960_975''' -> α969_979''')›  <!<  ((α960_1017'',) -> α963_1018'')
-//│ ╟── while constraining:  ‹∀ 2. (α960_975''' -> α969_979''')›  <!<  α960_1017''
-//│ ╟── while constraining:  α960_1012''  <!<  α960_1017''
-//│ ╟── while constraining:  (α960_1012'',)  <!<  (α960_1017'',)
-//│ ╟── while constraining:  (α960_1017'' -> ‹∀ 3. α969_1016''''›)  <!<  ((α960_1012'',) -> α963_1013'')
-//│ ╟── ......
-//│ ╟── ......
-//│ ╟── while constraining:  (α960_987'',)  <!<  (α960_992'',)
-//│ ╟── while constraining:  (α960_992'' -> ‹∀ 3. α969_991''''›)  <!<  ((α960_987'',) -> α963_988'')
-//│ ╟── while constraining:  ‹∀ 2. (α960_975''' -> ‹∀ 3. α969_991''''›)›  <!<  ((α960_987'',) -> α963_988'')
-//│ ╟── while constraining:  ‹∀ 2. (α960_975''' -> α969_979''')›  <!<  ((α960_987'',) -> α963_988'')
-//│ ╟── while constraining:  ‹∀ 2. (α960_975''' -> α969_979''')›  <!<  α960_987''
-//│ ╟── while constraining:  α940_982''  <!<  α960_987''
-//│ ╟── while constraining:  (α940_982'',)  <!<  (α960_987'',)
-//│ ╟── while constraining:  (α960_987'' -> ‹∀ 3. α969_986''''›)  <!<  ((α940_982'',) -> α943_983'')
-//│ ╟── while constraining:  ‹∀ 2. (α960_975''' -> ‹∀ 3. α969_986''''›)›  <!<  ((α940_982'',) -> α943_983'')
-//│ ╟── while constraining:  ‹∀ 2. (α960_975''' -> α969_979''')›  <!<  ((α940_982'',) -> α943_983'')
-//│ ╟── while constraining:  ‹∀ 2. (α960_975''' -> α969_979''')›  <!<  α940_982''
-//│ ╟── while constraining:  (‹∀ 2. (α960_975''' -> α969_979''')›,)  <!<  (α940_982'',)
-//│ ╟── while constraining:  (α940_982'' -> ‹∀ 3. α949_981''''›)  <!<  ((‹∀ 2. (α960_975''' -> α969_979''')›,) -> α980'')
-//│ ╟── while constraining:  ‹∀ 2. (α940_955''' -> ‹∀ 3. α949_981''''›)›  <!<  ((‹∀ 2. (α960_975''' -> α969_979''')›,) -> α980'')
-//│ ╙── while constraining:  ‹∀ 2. (α940_955''' -> α949_959''')›  <!<  ((‹∀ 2. (α960_975''' -> α969_979''')›,) -> α980'')
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│  = [Function: z4]
 
 def z =

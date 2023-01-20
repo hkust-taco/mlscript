@@ -223,9 +223,7 @@ def a0'_ = a2'_ a1'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
 //│ ║  l.222: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α45_46'' -> α45_46'')››  <:  α33_1821'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α45_46'' -> α45_46'')››  <:  α33_35''
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ a0'_: anything -> ('a -> 'b & 'c -> 'a & 'd -> 'c) -> 'd -> 'b | error
 //│     = [Function: a0$_]
 
@@ -337,11 +335,9 @@ def a0' = a2' a1'
 :e
 def a0'_ = a2'_ a1'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.338: 	def a0'_ = a2'_ a1'
+//│ ║  l.336: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α45_46'' -> α45_46'')››  <:  α33_2675'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α45_46'' -> α45_46'')››  <:  α33_35''
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ a0'_: anything -> 'a | error
 //│   where
 //│     forall 'b, 'c, 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a

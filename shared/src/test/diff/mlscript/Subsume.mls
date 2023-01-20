@@ -314,9 +314,7 @@ twice twice!
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
 //│ ║  l.313: 	twice twice!
 //│ ║         	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 3. α259_509''''›  <:  α255_510    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 3. α259_498'''›  <:  α255_497'''
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: (('a | 'b) -> 'b & ('b | 'c) -> ('a & 'c)) -> 'c -> 'b | error
 //│    = [Function (anonymous)]
 

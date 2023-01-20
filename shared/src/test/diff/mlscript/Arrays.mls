@@ -64,9 +64,7 @@ ty3A = ty3A
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
 //│ ║  l.+1: 	ty3A = ty3A
 //│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a107_121'#  <:  'a107_119'#    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a107_108'#  <:  'a107_108'#
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ constrain calls  : 49
 //│ annoying  calls  : 23
 //│ subtyping calls  : 131
@@ -120,9 +118,7 @@ ty4B = ty4B
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
 //│ ║  l.+1: 	ty4B = ty4B
 //│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a150_164'#]]  <:  MyArray[MyArray['a150_162'#]]    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray[MyArray['a150_151'#]]  <:  MyArray[MyArray['a150_151'#]]
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ constrain calls  : 58
 //│ annoying  calls  : 23
 //│ subtyping calls  : 199

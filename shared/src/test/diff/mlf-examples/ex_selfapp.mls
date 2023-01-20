@@ -66,9 +66,7 @@ rec def foo xs = elim xs (
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ║  l.59: 	  )
 //│ ║        	^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  int<number>  <:  'a38_126'    ClassTag  TypeVariable
-//│ ╙──  ... looks like:  int<number>  <:  'a38_114''
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
 //│ ║  l.56: 	rec def foo xs = elim xs (
 //│ ║        	            ^^^^^^^^^^^^^^
@@ -78,9 +76,7 @@ rec def foo xs = elim xs (
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ║  l.59: 	  )
 //│ ║        	^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  int<number>  <:  'a38_126'    ClassTag  TypeVariable
-//│ ╙──  ... looks like:  int<number>  <:  'a38_114''
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ foo: Ls[int] -> Ls[int]
 //│    = <no result>
 //│      elim is not implemented
@@ -101,15 +97,13 @@ rec def foo = fun xs -> case xs of
   Nil -> Nil,
   Cons -> Cons (xs.head + 1, foo (foo xs.tail))
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.100: 	rec def foo = fun xs -> case xs of
-//│ ║         	              ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.101: 	  Nil -> Nil,
-//│ ║         	^^^^^^^^^^^^^
-//│ ║  l.102: 	  Cons -> Cons (xs.head + 1, foo (foo xs.tail))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‹∀ 0. α59'› | α207_229')  <:  α194_234'    ComposedType  TypeVariable
-//│ ╙──  ... looks like:  (‹∀ 0. α59'› | α207_220'')  <:  α194_215''
+//│ ║  l.96: 	rec def foo = fun xs -> case xs of
+//│ ║        	              ^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.97: 	  Nil -> Nil,
+//│ ║        	^^^^^^^^^^^^^
+//│ ║  l.98: 	  Cons -> Cons (xs.head + 1, foo (foo xs.tail))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ foo: 'tail -> 'a
 //│   where
 //│     'a :> (Cons[int] with {tail: 'a}) | Nil
@@ -171,11 +165,9 @@ def build_ = fun g -> g (fun x -> fun xs -> Cons (x, xs)) Nil
 :e // * [FCP-LIM]
 build_ : forall 'a. (forall 'b. (('a -> 'b -> 'b) -> 'b -> 'b)) -> List['a]
 //│ ╔══[ERROR] Cyclic-looking constraint while typing type ascription; a type annotation may be required
-//│ ║  l.172: 	build_ : forall 'a. (forall 'b. (('a -> 'b -> 'b) -> 'b -> 'b)) -> List['a]
+//│ ║  l.166: 	build_ : forall 'a. (forall 'b. (('a -> 'b -> 'b) -> 'b -> 'b)) -> List['a]
 //│ ║         	^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (cons<> & {head: head53_428', tail: tail54_425', Cons#a: mut a49_426'..a49_426'})  <:  List[‘a410']    ComposedType  TypeRef
-//│ ╙──  ... looks like:  (cons<> & {head: head53_422'''', tail: tail54_419'''', Cons#a: mut a49_420''''..a49_420''''})  <:  List[‘a410']
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> List['a]
 //│    = [Function: build_]
 
@@ -183,11 +175,9 @@ build_ : forall 'a. (forall 'b. (('a -> 'b -> 'b) -> 'b -> 'b)) -> List['a]
 :e // works with :RecursiveTypes
 def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> Cons (x, xs)) Nil
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.184: 	def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> Cons (x, xs)) Nil
+//│ ║  l.176: 	def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> Cons (x, xs)) Nil
 //│ ║         	                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (cons<> & {head: head53_477'', tail: tail54_474'', Cons#a: mut a49_475''..a49_475''})  <:  List[a49_475'']    ComposedType  TypeRef
-//│ ╙──  ... looks like:  (cons<> & {head: head53_471'''', tail: tail54_468'''', Cons#a: mut a49_469''''..a49_469''''})  <:  List[a49_469'''']
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ build: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> ((Cons['a] with {tail: 'tail}) | error | Nil)
 //│   where
 //│     'tail :> (Cons['a] with {tail: 'tail}) | Nil
@@ -297,28 +287,28 @@ rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│   <:  k:
 //│ int -> Ba -> Ba
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.295: 	rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║  l.285: 	rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.137: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
+//│ ║  l.131: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
 //│ ║         	                 ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.137: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
+//│ ║  l.131: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
 //│ ║         	                 ^^
 //│ ╟── from quantified type variable:
-//│ ║  l.138: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
+//│ ║  l.132: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
 //│ ╙──       	                     ^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.295: 	rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║  l.285: 	rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.137: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
+//│ ║  l.131: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
 //│ ║         	                 ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.137: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
+//│ ║  l.131: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
 //│ ║         	                 ^^
 //│ ╟── from quantified type variable:
-//│ ║  l.138: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
+//│ ║  l.132: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
 //│ ╙──       	                     ^^
 //│  = [Function: k1]
 
@@ -337,11 +327,9 @@ k = k_
 //│   <:  k:
 //│ int -> Ba -> Ba
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.333: 	k = k_
+//│ ║  l.323: 	k = k_
 //│ ║         	^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 3. (α1246_1436'''' -> ‹∀ 4. (α1247_1441''''' -> α1263_1442''''')›)›  <:  α1245_1405    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 3. (α1246_1359'''' -> ‹∀ 4. (α1247_1364''''' -> α1263_1365''''')›)›  <:  α1245_1352'''
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│  = [Function: k_]
 
 
@@ -372,11 +360,9 @@ def bfoo xs = build (foldr k z xs)
 :e
 def bfoo_ xs = build_ (foldr k_ z_ xs)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.373: 	def bfoo_ xs = build_ (foldr k_ z_ xs)
+//│ ║  l.361: 	def bfoo_ xs = build_ (foldr k_ z_ xs)
 //│ ║         	                       ^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 3. (α1246_1750'''' -> ‹∀ 4. (α1247_1755''''' -> α1263_1756''''')›)›  <:  ((k_1243_1679''#,) -> α1254_1720'')    PolymorphicType  FunctionType
-//│ ╙──  ... looks like:  ‹∀ 3. (α1246_1689'''' -> ‹∀ 4. (α1247_1694''''' -> α1263_1695''''')›)›  <:  ((k_1243'#,) -> α1254_1683''')
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ bfoo_: anything -> error
 //│      = [Function: bfoo_]
 // * Alt:
@@ -451,13 +437,13 @@ def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│   <:  k:
 //│ int -> Baa -> Baa
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.449: 	def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║  l.435: 	def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` does not match type `'a`
-//│ ║  l.449: 	def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║  l.435: 	def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	                                                       ^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.138: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
+//│ ║  l.132: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
 //│ ╙──       	                  ^^
 //│  = <no result>
 //│    k is not implemented
@@ -475,13 +461,13 @@ k = k_ // nope
 //│   <:  k:
 //│ int -> Baa -> Baa
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.473: 	k = k_ // nope
+//│ ║  l.459: 	k = k_ // nope
 //│ ║         	^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.138: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
+//│ ║  l.132: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
 //│ ║         	                     ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.138: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
+//│ ║  l.132: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
 //│ ╙──       	                     ^^
 //│  = <no result>
 //│    k_, k and k are not implemented
@@ -501,11 +487,9 @@ k = k_ // nope
 //│   <:  k:
 //│ int -> Baa -> Baa
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.497: 	k = k_ // nope
+//│ ║  l.483: 	k = k_ // nope
 //│ ║         	^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 3. (α2628_2811'''' -> ‹∀ 4. (α2629_2816''''' -> α2645_2817''''')›)›  <:  α2627_2780    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 3. (α2628_2733'''' -> ‹∀ 4. (α2629_2738''''' -> α2645_2739''''')›)›  <:  α2627_2726'''
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│  = [Function: k_1]
 
 

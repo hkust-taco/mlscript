@@ -56,9 +56,7 @@ id1 id
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
 //│ ║  l.55: 	id1 id
 //│ ║        	^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α19' -> α19')›  <:  α96_147    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α19' -> α19')›  <:  α96_134''
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: ('a & 'b) -> 'b | error | 'c
 //│   where
 //│     'a <: 'd & 'b

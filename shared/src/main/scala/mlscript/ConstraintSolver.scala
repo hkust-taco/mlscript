@@ -81,7 +81,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         err(
           msg"$msgHead exceeded recursion depth limit (${depthLimit.toString})" -> prov.loco
           :: (
-            if (verbose) stack.toList.filterOutConsecutive().flatMap { case (l, r) =>
+            if (!explainErrors) msg"Note: use flag `:ex` to see internal error info." -> N :: Nil
+            else if (verbose) stack.toList.filterOutConsecutive().flatMap { case (l, r) =>
               msg"while constraining:  ${s"$l"}" -> l.prov.loco ::
               msg"                       <!<  ${s"$r"}" -> r.prov.loco ::
               Nil
@@ -502,13 +503,17 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             // if (!lhs.isInstanceOf[TV] && !rhs.isInstanceOf[TV] && shadows.contains(shadow)) { // FIXME there are cyclic constraints like this; find a better way of allowing recursion after extrusion!
               println(s"SHADOWING DETECTED!")
               // err(msg"Cyclic-looking constraint ${lhs_rhs.toString}" -> prov.loco :: Nil)
-              err(msg"Cyclic-looking constraint while typing ${prov.desc}; a type annotation may be required" -> prov.loco ::
-                // msg"this constraint:  ${lhs.expPos}  <:  ${rhs.expNeg}" -> N ::
-                // msg" ... looks like:  ${shadow._1.expPos}  <:  ${shadow._2.expNeg}" -> N ::
-                msg"————————— Additional debugging info: —————————" -> N ::
-                msg"this constraint:  ${lhs.toString}  <:  ${rhs.toString}    ${lhs.getClass.getSimpleName}  ${rhs.getClass.getSimpleName}" -> N ::
-                msg" ... looks like:  ${shadow._1.toString}  <:  ${shadow._2.toString}" -> N ::
-                Nil)
+              err(msg"Cyclic-looking constraint while typing ${prov.desc}; a type annotation may be required" -> prov.loco :: (
+                if (!explainErrors)
+                  msg"Note: use flag `:ex` to see internal error info." -> N :: Nil
+                else
+                  // msg"this constraint:  ${lhs.expPos}  <:  ${rhs.expNeg}" -> N ::
+                  // msg" ... looks like:  ${shadow._1.expPos}  <:  ${shadow._2.expNeg}" -> N ::
+                  msg"————————— Additional debugging info: —————————" -> N ::
+                  msg"this constraint:  ${lhs.toString}  <:  ${rhs.toString}    ${lhs.getClass.getSimpleName}  ${rhs.getClass.getSimpleName}" -> N ::
+                  msg" ... looks like:  ${shadow._1.toString}  <:  ${shadow._2.toString}" -> N ::
+                  Nil
+                ))
               return ()
             }
             
