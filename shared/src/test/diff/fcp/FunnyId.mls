@@ -96,7 +96,7 @@ id_ty = id
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.85: 	id_ty = id
 //│ ║        	^^^^^^^^^^
-//│ ╟── type `‘a_203` is not a function
+//│ ╟── type `'a` is not a function
 //│ ║  l.5: 	def id_ty: forall 'a. 'a -> 'a
 //│ ║       	                  ^^
 //│ ╟── Note: constraint arises from application:

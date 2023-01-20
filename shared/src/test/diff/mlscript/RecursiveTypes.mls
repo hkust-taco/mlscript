@@ -366,10 +366,10 @@ bar2_ty2 = bar_ty2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.358: 	bar2_ty2 = bar_ty2
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── type `C[?r]` does not have field 'x'
+//│ ╟── type `C['r]` does not have field 'x'
 //│ ║  l.291: 	def bar_ty2: C['r] as 'r
 //│ ║         	             ^^^^^
-//│ ╟── but it flows into reference with expected type `{x: ?r0}`
+//│ ╟── but it flows into reference with expected type `{x: 'r0}`
 //│ ║  l.358: 	bar2_ty2 = bar_ty2
 //│ ║         	           ^^^^^^^
 //│ ╟── Note: constraint arises from record type:
@@ -388,7 +388,7 @@ bar_ty2 = bar2_ty2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.380: 	bar_ty2 = bar2_ty2
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── type `{x: ?r}` is not an instance of type `C`
+//│ ╟── type `{x: 'r}` is not an instance of type `C`
 //│ ║  l.338: 	def bar2_ty2: { x: 'r } as 'r
 //│ ║         	              ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `C[?]`

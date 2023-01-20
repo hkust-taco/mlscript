@@ -76,8 +76,8 @@ add_ty = add
 //│ ║  l.71: 	add_ty = add
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a_548' -> ‘a_548')  <:  α49_566'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (‘a_548' -> ‘a_548')  <:  α49_561'''
+//│ ╟── this constraint:  (‘a548' -> ‘a548')  <:  α49_566'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (‘a548' -> ‘a548')  <:  α49_561'''
 //│       = [Function: add]
 
 def add (n: ChurchInt) m = n succ m
@@ -109,8 +109,8 @@ mul_ty = mul
 //│ ║  l.104: 	mul_ty = mul
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a_918' -> ‘a_918')  <:  α49_946'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (‘a_918' -> ‘a_918')  <:  α49_928''''
+//│ ╟── this constraint:  (‘a918' -> ‘a918')  <:  α49_946'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (‘a918' -> ‘a918')  <:  α49_928''''
 //│       = [Function: mul]
 
 def mul (n: ChurchInt) m = n (add m) zero
@@ -254,8 +254,8 @@ pred_ty = pred
 //│ ║  l.249: 	pred_ty = pred
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a_2632' -> ‘a_2632')  <:  α49_2690'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (‘a_2632' -> ‘a_2632')  <:  α49_2674^6
+//│ ╟── this constraint:  (‘a2632' -> ‘a2632')  <:  α49_2690'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (‘a2632' -> ‘a2632')  <:  α49_2674^6
 //│        = [Function: pred1]
 
 // * Only difference: use `succ_ty`

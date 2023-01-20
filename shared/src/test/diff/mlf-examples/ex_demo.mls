@@ -140,7 +140,7 @@ delta succ
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.139: 	delta succ
 //│ ║         	^^^^^^^^^^
-//│ ╟── type `‘a_291` is not an instance of type `int`
+//│ ╟── type `'a` is not an instance of type `int`
 //│ ║  l.105: 	type Sid = forall 'a. 'a -> 'a
 //│ ║         	                  ^^
 //│ ╟── Note: constraint arises from reference:
@@ -164,7 +164,7 @@ delta (choose id succ)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.163: 	delta (choose id succ)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_342` is not an instance of type `int`
+//│ ╟── type `'a` is not an instance of type `int`
 //│ ║  l.105: 	type Sid = forall 'a. 'a -> 'a
 //│ ║         	                  ^^
 //│ ╟── Note: constraint arises from reference:
@@ -249,7 +249,7 @@ rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
 //│ ║  l.248: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_604` is not a function
+//│ ╟── type `'a` is not a function
 //│ ║  l.248: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ║         	                       ^^
 //│ ╟── Note: constraint arises from function type:
@@ -258,10 +258,10 @@ rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
 //│ ║  l.248: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `?a -> ?a` is not an instance of type `'a_604`
+//│ ╟── type `'a -> 'a` does not match type `'a0`
 //│ ║  l.248: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ║         	                           ^^^^^^^^
-//│ ╟── but it flows into reference with expected type `‘a_604`
+//│ ╟── but it flows into reference with expected type `'a0`
 //│ ║  l.248: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ║         	                                                    ^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -270,7 +270,7 @@ rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
 //│ ║  l.248: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `?a -> ?a` does not match type `nothing`
+//│ ╟── type `'a -> 'a` does not match type `nothing`
 //│ ║  l.248: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ║         	                           ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
@@ -291,7 +291,7 @@ rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
 //│ ║  l.248: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `?a -> ?a` does not match type `nothing`
+//│ ╟── type `'a -> 'a` does not match type `nothing`
 //│ ║  l.248: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ║         	                           ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`

@@ -456,10 +456,10 @@ amf mt4
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.455: 	amf mt4
 //│ ║         	^^^^^^^
-//│ ╟── type `(mut bool, bool, bool,)` does not match type `MutArray[?a]`
+//│ ╟── type `(mut bool, bool, bool,)` does not match type `MutArray['a]`
 //│ ║  l.384: 	def mt4: (mut bool, bool, bool)
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `MutArray[?a]`
+//│ ╟── but it flows into reference with expected type `MutArray['a]`
 //│ ║  l.455: 	amf mt4
 //│ ║         	    ^^^
 //│ ╟── Note: constraint arises from applied type reference:

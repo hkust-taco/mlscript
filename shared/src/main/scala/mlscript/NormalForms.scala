@@ -50,7 +50,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         LhsRefined(bo.map(_.freshenAbove(lim, rigidify)), ts, r.freshenAbove(lim, rigidify), trs.view.mapValues(_.freshenAbove(lim, rigidify)).to(SortedMap))
       case LhsTop => this
     }
-    def hasTag(ttg: TraitTag): Bool = this match {
+    def hasTag(ttg: AbstractTag): Bool = this match {
       case LhsRefined(bo, ts, r, trs) => ts(ttg)
       case LhsTop => false
     }
@@ -58,15 +58,15 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case LhsRefined(bo, ts, r, trs) => bo.size + ts.size + r.fields.size + trs.size
       case LhsTop => 0
     }
-    def & (that: TraitTag): LhsNf = this match {
+    def & (that: AbstractTag): LhsNf = this match {
       case LhsTop => LhsRefined(N, SortedSet.single(that), RecordType.empty, smEmp)
       case LhsRefined(b, ts, r, trs) => LhsRefined(b, ts + that, r, trs)
     }
     def & (that: BaseTypeOrTag)(implicit etf: ExpandTupleFields): Opt[LhsNf] = (this, that) match {
       case (LhsTop, that: TupleType) => S(LhsRefined(S(that), ssEmp, if (expandTupleFields) that.toRecord else RecordType.empty, smEmp))
       case (LhsTop, that: BaseType) => S(LhsRefined(S(that), ssEmp, RecordType.empty, smEmp))
-      case (LhsTop, that: TraitTag) => S(LhsRefined(N, SortedSet.single(that), RecordType.empty, smEmp))
-      case (LhsRefined(b1, ts, r1, trs), that: TraitTag) => S(LhsRefined(b1, ts + that, r1, trs))
+      case (LhsTop, that: AbstractTag) => S(LhsRefined(N, SortedSet.single(that), RecordType.empty, smEmp))
+      case (LhsRefined(b1, ts, r1, trs), that: AbstractTag) => S(LhsRefined(b1, ts + that, r1, trs))
       case (LhsRefined(b1, ts, r1, trs), that: BaseType) =>
         var r1Final = r1
         ((b1, that) match {
@@ -152,7 +152,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     }
     def isTop: Bool = isInstanceOf[LhsTop.type]
   }
-  case class LhsRefined(base: Opt[BaseType], ttags: SortedSet[TraitTag], reft: RecordType, trefs: SortedMap[TypeName, TypeRef]) extends LhsNf {
+  case class LhsRefined(base: Opt[BaseType], ttags: SortedSet[AbstractTag], reft: RecordType, trefs: SortedMap[TypeName, TypeRef]) extends LhsNf {
     // assert(!trefs.exists(primitiveTypes contains _._1.name))
     override def toString: Str = s"${base.getOrElse("")}${reft}${
       (ttags.iterator ++ trefs.valuesIterator).map("∧"+_).mkString}"
@@ -185,7 +185,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     //   case RhsField(name, ty) => RhsField(name, ty.freshenAbove(lim, rigidify))
     //   case RhsBot => this
     // }
-    def hasTag(ttg: TraitTag): Bool = this match {
+    def hasTag(ttg: AbstractTag): Bool = this match {
       case RhsBases(ts, _, trs) => ts.contains(ttg)
       case RhsBot | _: RhsField => false
     }
@@ -224,14 +224,14 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         N // TODO could do some more merging here – for the possible base types
       case _ => N
     }
-    def | (that: TraitTag): RhsNf = this match {
+    def | (that: AbstractTag): RhsNf = this match {
       case RhsBot => RhsBases(that :: Nil, N, smEmp)
       case rf: RhsField => RhsBases(that :: Nil, S(R(rf)), smEmp)
       case RhsBases(ps, bf, trs) => RhsBases(that :: ps, bf, trs)
     }
     // TODO use inheritance hierarchy to better merge these
     def | (that: BaseTypeOrTag): Opt[RhsNf] = (this, that) match {
-      case (RhsBot, p: ObjectTag) => S(RhsBases(p::Nil,N,smEmp))
+      case (RhsBot, p: TypeTag) => S(RhsBases(p::Nil,N,smEmp))
       case (RhsBot, that: MiscBaseType) => S(RhsBases(Nil,S(L(that)),smEmp))
       case (RhsBases(ps, bf, trs), p: ClassTag) =>
         S(RhsBases(if (ps.contains(p)) ps else p :: ps , bf, trs))
@@ -256,9 +256,9 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case (RhsBases(_, S(L(_: Overload)), _), _) | (_, _: Overload) =>
         N // TODO: maybe we can still merge with functions here? (see note above)
       
-      case (RhsBases(ps, bf, trs), tt: TraitTag) =>
+      case (RhsBases(ps, bf, trs), tt: AbstractTag) =>
         S(RhsBases(if (ps.contains(tt)) ps else tt :: ps, bf, trs))
-      case (f @ RhsField(_, _), p: ObjectTag) => S(RhsBases(p::Nil, S(R(f)), smEmp))
+      case (f @ RhsField(_, _), p: TypeTag) => S(RhsBases(p::Nil, S(R(f)), smEmp))
       case (f @ RhsField(_, _), _: FunctionType | _: ArrayBase) =>
         // S(RhsBases(Nil, S(that), S(f)))
         N // can't merge a record and a function or a tuple -> it's the same as Top
@@ -291,7 +291,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       RhsField(name, ty.update(self.freshenAbove(lim, _, rigidify = rigidify), self.freshenAbove(lim, _, rigidify = rigidify)))
     override def toString: Str = s"{$name:$ty}"
   }
-  case class RhsBases(tags: Ls[ObjectTag], rest: Opt[MiscBaseType \/ RhsField], trefs: SortedMap[TypeName, TypeRef]) extends RhsNf {
+  case class RhsBases(tags: Ls[TypeTag], rest: Opt[MiscBaseType \/ RhsField], trefs: SortedMap[TypeName, TypeRef]) extends RhsNf {
     def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, freshened: MutMap[TV, ST], shadows: Shadows): RhsBases =
       RhsBases(tags, rest.map(_ match {
         case L(v) => L(v.freshenAboveImpl(lim, rigidify))
@@ -321,9 +321,9 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       // Conjunct(lnf.freshenAbove(lim, rigidify), vars.map(_.freshenAbove(lim, rigidify).asInstanceOf[TV]/*FIXME could also be a rigid*/),
       //   rnf.freshenAbove(lim, rigidify), nvars.map(_.freshenAbove(lim, rigidify).asInstanceOf[TV]/*FIXME could also be a rigid*/))
       val (vars2, tags2) = vars.toBuffer[TV].partitionMap(
-        _.freshenAbove(lim, rigidify) match { case tv: TV => L(tv); case tt: TraitTag => R(tt) })
+        _.freshenAbove(lim, rigidify) match { case tv: TV => L(tv); case tt: AbstractTag => R(tt) })
       val (nvars2, ntags2) = nvars.toBuffer[TV].partitionMap(
-        _.freshenAbove(lim, rigidify) match { case tv: TV => L(tv); case tt: TraitTag => R(tt) })
+        _.freshenAbove(lim, rigidify) match { case tv: TV => L(tv); case tt: AbstractTag => R(tt) })
       // val base = Conjunct(lnf.freshenAbove(lim, rigidify), vars2.toSortedSet,
       //   rnf.freshenAbove(lim, rigidify), nvars2.toSortedSet)
       // tags2.foldLeft(base)(_ & _)
@@ -334,12 +334,12 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def - (fact: Factorizable): Conjunct = fact match {
       case tv: TV => Conjunct(lnf, vars - tv, rnf, nvars)
       case NegVar(tv) => Conjunct(lnf, vars, rnf, nvars - tv)
-      case tt: TraitTag => lnf match {
+      case tt: AbstractTag => lnf match {
         case LhsRefined(b, tts, rft, trs) =>
           if (tts(tt)) copy(lnf = LhsRefined(b, tts - tt, rft, trs)) else this
         case LhsTop => this
       }
-      case NegTrait(tt) => rnf match {
+      case NegAbsTag(tt) => rnf match {
         case RhsBases(tts, r, trs) => copy(rnf = RhsBases(tts.filterNot(_ === tt), r, trs))
         case RhsBot | _: RhsField => this
       }
@@ -610,7 +610,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       // case bt: TraitTag => of(bt)
       // case rt @ RecordType(fs) => of(rt)
       case bt: BaseType => DNF.of(polymLvl, cons, LhsRefined(S(bt), ssEmp, if (expandTupleFields) bt.toRecord else RecordType.empty, smEmp))
-      case tt: TraitTag => DNF.of(polymLvl, cons, LhsRefined(N, SortedSet.single(tt), RecordType.empty, smEmp))
+      case tt: AbstractTag => DNF.of(polymLvl, cons, LhsRefined(N, SortedSet.single(tt), RecordType.empty, smEmp))
       case rcd: RecordType => DNF.of(polymLvl, cons, LhsRefined(N, ssEmp, rcd, smEmp))
       case ExtrType(pol) => extr(!pol)
       case ty @ ComposedType(p, l, r) => merge(p)(mk(polymLvl, cons, l, pol), mk(polymLvl, cons, r, pol))
@@ -654,7 +654,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       // trace(s"?CNF $ty") {
       ty match {
         case bt: BaseType => of(bt)
-        case tt: TraitTag => of(RhsBases(tt :: Nil, N, smEmp))
+        case tt: AbstractTag => of(RhsBases(tt :: Nil, N, smEmp))
         case rt @ RecordType(fs) => of(rt)
         case ExtrType(pol) => extr(!pol)
         // case ty @ ComposedType(p, l, r) => merge(p)(mk(l, pol), mk(r, pol))

@@ -174,8 +174,8 @@ build_ : forall 'a. (forall 'b. (('a -> 'b -> 'b) -> 'b -> 'b)) -> List['a]
 //│ ║  l.172: 	build_ : forall 'a. (forall 'b. (('a -> 'b -> 'b) -> 'b -> 'b)) -> List['a]
 //│ ║         	^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (cons<> & {head: head53_428', tail: tail54_425', Cons#a: mut a49_426'..a49_426'})  <:  List[‘a_410']    ComposedType  TypeRef
-//│ ╙──  ... looks like:  (cons<> & {head: head53_422'''', tail: tail54_419'''', Cons#a: mut a49_420''''..a49_420''''})  <:  List[‘a_410']
+//│ ╟── this constraint:  (cons<> & {head: head53_428', tail: tail54_425', Cons#a: mut a49_426'..a49_426'})  <:  List[‘a410']    ComposedType  TypeRef
+//│ ╙──  ... looks like:  (cons<> & {head: head53_422'''', tail: tail54_419'''', Cons#a: mut a49_420''''..a49_420''''})  <:  List[‘a410']
 //│ res: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> List['a]
 //│    = [Function: build_]
 
@@ -453,7 +453,7 @@ def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.449: 	def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `int` is not an instance of type `'a_2481`
+//│ ╟── operator application of type `int` does not match type `'a`
 //│ ║  l.449: 	def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	                                                       ^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:

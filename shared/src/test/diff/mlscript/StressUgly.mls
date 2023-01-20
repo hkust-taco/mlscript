@@ -36,7 +36,7 @@ eval1_ty = eval1_ty_ugly
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.30: 	eval1_ty = eval1_ty_ugly
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `Add[?b]` is not an instance of type `int`
+//│ ╟── type `Add['b]` is not an instance of type `int`
 //│ ║  l.13: 	def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
 //│ ║        	                   ^^^^^^^
 //│ ╟── Note: constraint arises from type reference:

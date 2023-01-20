@@ -14,7 +14,7 @@ case r of { T1 -> r | _ -> 0 }
 
 // TODO also factor ClassTag-s like `2`:
 case r of { T1 -> r | T2 -> r }
-//│ res: 1 & #T1 | 'a | #T2 & (2 & #T1 | 2 & ~'a | 2 & ~#T1 | 2 & ~#T2)
+//│ res: 1 & #T1 | 'a | #T2 & (2 & #T1 | 2 & ~#T1 | 2 & ~#T2 | 2 & ~'a)
 //│    = [Number: 1]
 
 r = if true then T1 ((1,2,3)) else T2 ((3,4,5,4))
@@ -26,7 +26,7 @@ case r of { T1 -> r | _ -> 0 }
 //│    = [ 1, 2, 3 ]
 
 case r of { T1 -> r | T2 -> r }
-//│ res: (1, 2, 3,) & #T1 | 'a | #T2 & ((3, 4, 5, 4,) & #T1 | (3, 4, 5, 4,) & ~'a | (3, 4, 5, 4,) & ~#T1 | (3, 4, 5, 4,) & ~#T2)
+//│ res: (1, 2, 3,) & #T1 | 'a | #T2 & ((3, 4, 5, 4,) & #T1 | (3, 4, 5, 4,) & ~#T1 | (3, 4, 5, 4,) & ~#T2 | (3, 4, 5, 4,) & ~'a)
 //│    = [ 1, 2, 3 ]
 
 
@@ -400,7 +400,7 @@ append2 ((mut 1, mut 2, mut false)) ((mut (), 'hi'))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.399: 	append2 ((mut 1, mut 2, mut false)) ((mut (), 'hi'))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── tuple literal of type `(mut ?a, "hi",)` does not match type `MutArray[?bb]`
+//│ ╟── tuple literal of type `(mut ?a, "hi",)` does not match type `MutArray['bb]`
 //│ ║  l.399: 	append2 ((mut 1, mut 2, mut false)) ((mut (), 'hi'))
 //│ ║         	                                     ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from applied type reference:
@@ -512,10 +512,10 @@ snd (T1 ((1,2,3)))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.510: 	fst iarr
 //│ ║         	^^^^^^^^
-//│ ╟── type `Array[?a & ?b]` is not a 2-element tuple
+//│ ╟── type `Array['a & 'b]` is not a 2-element tuple
 //│ ║  l.501: 	def intersect: Array['a] -> Array['b] -> Array['a & 'b]
 //│ ║         	                                         ^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(?c, ?d,)`
+//│ ╟── but it flows into reference with expected type `(?a, ?b,)`
 //│ ║  l.510: 	fst iarr
 //│ ║         	    ^^^^
 //│ ╟── Note: constraint arises from tuple literal:
@@ -604,7 +604,7 @@ inn2 v1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.585: 	inn2 v1
 //│ ║         	^^^^^^^
-//│ ╟── integer literal of type `1` does not match type `Array[?a]`
+//│ ╟── integer literal of type `1` does not match type `Array['a]`
 //│ ║  l.542: 	v1 = T1 (T2 ((1,2,true)))
 //│ ╙──       	              ^
 //│ res: Array[nothing] | error
@@ -641,10 +641,10 @@ ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.639: 	ra: ('a, 'a, 'a) as 'a
 //│ ║         	^^
-//│ ╟── type `(?a, ?a,)` does not match type `(?a0, ?a0, ?a0,)`
+//│ ╟── type `('a, 'a,)` does not match type `('a0, 'a0, 'a0,)`
 //│ ║  l.614: 	def ra: ('a, 'a) as 'a
 //│ ║         	        ^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(?a1, ?a1, ?a1,)`
+//│ ╟── but it flows into reference with expected type `('a1, 'a1, 'a1,)`
 //│ ║  l.639: 	ra: ('a, 'a, 'a) as 'a
 //│ ║         	^^
 //│ ╟── Note: constraint arises from tuple type:
@@ -658,10 +658,10 @@ ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.640: 	ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ║         	^^
-//│ ╟── type `(?a, ?a,)` does not match type `(Array[?a0], Array[?a0], Array[?a0],)`
+//│ ╟── type `('a, 'a,)` does not match type `(Array['a0], Array['a0], Array['a0],)`
 //│ ║  l.614: 	def ra: ('a, 'a) as 'a
 //│ ║         	        ^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(Array[?a1], Array[?a1], Array[?a1],)`
+//│ ╟── but it flows into reference with expected type `(Array['a1], Array['a1], Array['a1],)`
 //│ ║  l.640: 	ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ║         	^^
 //│ ╟── Note: constraint arises from tuple type:

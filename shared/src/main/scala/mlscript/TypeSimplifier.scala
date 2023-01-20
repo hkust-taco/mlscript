@@ -191,7 +191,7 @@ trait TypeSimplifier { self: Typer =>
             }
             
             val traitPrefixes =
-              tts.iterator.collect{ case TraitTag(_, Var(tagNme)) => tagNme.capitalize }.toSet
+              tts.iterator.collect{ case TraitTag(Var(tagNme)) => tagNme.capitalize }.toSet
             
             bo match {
               case S(cls @ ClassTag(Var(tagNme), ps)) if !primitiveTypes.contains(tagNme) =>
@@ -486,7 +486,7 @@ trait TypeSimplifier { self: Typer =>
       case FunctionType(l, r) => analyze2(l, !pol); analyze2(r, pol)
       case Overload(as) => as.foreach(analyze2(_, pol))
       case tv: TypeVariable => process(tv, pol)
-      case _: ObjectTag | ExtrType(_) => ()
+      case _: TypeTag | ExtrType(_) => ()
       case ct: ComposedType => process(ct, pol)
       case NegType(und) => analyze2(und, !pol)
       case ProxyType(underlying) => analyze2(underlying, pol)
@@ -768,7 +768,7 @@ trait TypeSimplifier { self: Typer =>
       case ot @ Overload(as) =>
         // ot.mapAltsPol(pol.base)((p, t) => transform(t, PolMap(p), parents)) // * Q: PolMap(p) correct?
         ot.mapAltsPol(pol)((p, t) => transform(t, p, parents))
-      case _: ObjectTag | ExtrType(_) => st
+      case _: TypeTag | ExtrType(_) => st
       case tv: TypeVariable if parents.exists(_ === tv) =>
         if (pol(tv).getOrElse(lastWords(s"parent in invariant position $tv $parents"))) BotType else TopType
       case tv: TypeVariable =>
@@ -999,7 +999,8 @@ trait TypeSimplifier { self: Typer =>
                           (fields1.size === fields2.size || nope) && fields1.map(_._2).lazyZip(fields2.map(_._2)).forall(unifyF)
                         case (FunctionType(lhs1, rhs1), FunctionType(lhs2, rhs2)) => unify(lhs1, lhs2) && unify(rhs1, rhs2)
                         case (Without(base1, names1), Without(base2, names2)) => unify(base1, base2) && (names1 === names2 || nope)
-                        case (TraitTag(l1, id1), TraitTag(l2, id2)) => l1 === l2 && id1 === id2 || nope
+                        case (TraitTag(id1), TraitTag(id2)) => id1 === id2 || nope
+                        case (SkolemTag(l1, id1), SkolemTag(l2, id2)) => l1 === l2 && id1 === id2 || nope
                         case (ExtrType(pol1), ExtrType(pol2)) => pol1 === pol2 || nope
                         case (TypeBounds(lb1, ub1), TypeBounds(lb2, ub2)) =>
                           unify(lb1, lb2) && unify(ub1, ub2)

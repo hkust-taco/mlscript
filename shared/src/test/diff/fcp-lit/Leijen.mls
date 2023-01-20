@@ -442,7 +442,7 @@ app (map head) (single ids)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.441: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘d_1330` is not an instance of type `int`
+//│ ╟── type `'d` is not an instance of type `int`
 //│ ║  l.441: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
 //│ ║         	                                                      ^^
 //│ ╟── Note: constraint arises from type reference:
@@ -522,7 +522,7 @@ ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.521: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ║         	^^^
-//│ ╟── type `‘a_1487` is not an instance of type `'b_1486`
+//│ ╟── type `'a` does not match type `'b`
 //│ ║  l.521: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ║         	                             ^^
 //│ ╟── Note: constraint arises from quantified type variable:

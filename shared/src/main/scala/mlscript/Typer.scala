@@ -1320,16 +1320,21 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         case WithType(base, rcd) =>
           WithExtension(go(base), Record(rcd.fields.mapValues(field)))
         case ProxyType(und) => go(und)
-        case tag: ObjectTag => tag.id match {
+        case obj: ObjectTag => obj.id match {
           case Var(n) =>
             if (primitiveTypes.contains(n) // primitives like `int` are internally maintained as class tags
               || n.isCapitalized // rigid type params like A in class Foo[A]
-              || n.startsWith("'") // rigid type varibales
               || n === "this" // `this` type
             ) TypeName(n)
             else TypeTag(n.capitalize)
           case lit: Lit => Literal(lit)
         }
+        case SkolemTag(_, tv) => tv.nameHint match {
+            case S(n) if
+                 n.isCapitalized // rigid type params like A in class Foo[A]
+              => TypeName(n)
+            case _ => go(tv)
+          }
         case TypeRef(td, Nil) => td
         case tr @ TypeRef(td, targs) => AppliedType(td, tr.mapTargs(S(true)) {
           case ta @ ((S(true), TopType) | (S(false), BotType)) => Bounds(Bot, Top)

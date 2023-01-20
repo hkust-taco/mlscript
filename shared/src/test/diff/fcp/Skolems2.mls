@@ -253,7 +253,7 @@ foo((fun x -> foo((fun y -> x, 0)), 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.252: 	foo((fun x -> foo((fun y -> x, 0)), 0))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘c_341` does not match type `nothing`
+//│ ╟── type `'c` does not match type `nothing`
 //│ ║  l.234: 	def foo((a, b) : forall 'c. ('c -> 'c, 0)) = ()
 //│ ║         	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:

@@ -258,7 +258,7 @@ res.x + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.248: 	res.x + 1
 //│ ║         	^^^^^^^
-//│ ╟── type `{x: ?a}` is not an instance of type `int`
+//│ ╟── type `{x: 'a}` is not an instance of type `int`
 //│ ║  l.225: 	def wrap_ty: 'a -> {x: 'a}
 //│ ║         	                   ^^^^^^^
 //│ ╟── but it flows into field selection with expected type `int`

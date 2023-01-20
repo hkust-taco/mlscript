@@ -44,7 +44,7 @@ ty1 = ty0
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.40: 	ty1 = ty0
 //│ ║        	^^^^^^^^^
-//│ ╟── type `A & ‘a_233` is not an instance of type `'b_234`
+//│ ╟── type `A & 'a` does not match type `'b`
 //│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ║        	          ^^^^^^
 //│ ╟── Note: constraint arises from type variable:

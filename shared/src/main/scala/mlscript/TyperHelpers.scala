@@ -151,8 +151,8 @@ abstract class TyperHelpers { Typer: Typer =>
         case RhsBot | _: RhsField => ()
         case RhsBases(ps, _, _) =>
           ps.foreach {
-            case ttg: TraitTag =>
-              val nt = NegTrait(ttg)
+            case ttg: AbstractTag =>
+              val nt = NegAbsTag(ttg)
               factors(nt) = factors.getOrElse(nt, 0) + 1
             case _ => ()
           }
@@ -166,9 +166,9 @@ abstract class TyperHelpers { Typer: Typer =>
             cs.partitionMap(c => if (c.vars(v)) L(c) else R(c))
           case NegVar(v) =>
             cs.partitionMap(c => if (c.nvars(v)) L(c) else R(c))
-          case ttg: TraitTag =>
+          case ttg: AbstractTag =>
             cs.partitionMap(c => if (c.lnf.hasTag(ttg)) L(c) else R(c))
-          case NegTrait(ttg) =>
+          case NegAbsTag(ttg) =>
             cs.partitionMap(c => if (c.rnf.hasTag(ttg)) L(c) else R(c))
         }
         (fact & factorize(factored.map(_ - fact), sort).reduce(_ | _)) :: (
@@ -204,11 +204,11 @@ abstract class TyperHelpers { Typer: Typer =>
       c.foreach {
         case tv: TV =>
           factors(tv) = factors.getOrElse(tv, 0) + 1
-        case tt: TraitTag =>
+        case tt: AbstractTag =>
           factors(tt) = factors.getOrElse(tt, 0) + 1
         case nv: NegVar =>
           factors(nv) = factors.getOrElse(nv, 0) + 1
-        case nt: NegTrait =>
+        case nt: NegAbsTag =>
           factors(nt) = factors.getOrElse(nt, 0) + 1
         case _ =>
       }
@@ -331,7 +331,7 @@ abstract class TyperHelpers { Typer: Typer =>
         // ConstrainedType(cs.mapValues(_.mapValues(f)), f(bod))
         // ConstrainedType(cs.mapKeys(f(_).asInstanceOf[TV]).mapValues(_.mapValues(f)), f(bod))
         ConstrainedType(cs.map(lu => f(lu._1) -> f(lu._2)), f(bod))
-      case _: TypeVariable | _: ObjectTag | _: ExtrType => this
+      case _: TypeVariable | _: TypeTag | _: ExtrType => this
     }
     def mapPol(pol: Opt[Bool], smart: Bool = false)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): SimpleType = this match {
@@ -357,7 +357,7 @@ abstract class TyperHelpers { Typer: Typer =>
         // ConstrainedType(cs.map(tvbs => tvbs.mapV), f(pol, bod))
         // ConstrainedType(cs.mapValues(_.map(b => b._1 -> f.tupled(b.mapFirst(some)))), f(pol, bod))
         ConstrainedType(cs.map(lu => f(S(true), lu._1) -> f(S(false), lu._2)), f(pol, bod))
-      case _: TypeVariable | _: ObjectTag | _: ExtrType => this
+      case _: TypeVariable | _: TypeTag | _: ExtrType => this
     }
     
     def toUpper(prov: TypeProvenance): FieldType = FieldType(None, this)(prov)
@@ -454,7 +454,7 @@ abstract class TyperHelpers { Typer: Typer =>
         case (_, ProxyType(und)) => this <:< und
         // * Leads to too much simplification in printed types:
         // case (ClassTag(ErrTypeId, _), _) | (_, ClassTag(ErrTypeId, _)) => true
-        case (_: ObjectTag, _: ObjectTag) | (_: TV, _: TV) if this === that => true
+        case (_: TypeTag, _: TypeTag) | (_: TV, _: TV) if this === that => true
         case (ab: ArrayBase, at: ArrayType) => ab.inner <:< at.inner
         case (TupleType(fs1), TupleType(fs2)) =>
           fs1.sizeCompare(fs2) === 0 && fs1.lazyZip(fs2).forall {
@@ -534,10 +534,10 @@ abstract class TyperHelpers { Typer: Typer =>
         case (_: ConstrainedType, _) => false
         case (_: Without, _)
           | (_: ArrayBase, _) | (_, _: ArrayBase)
-          | (_: TraitTag, _) | (_, _: TraitTag)
+          | (_: AbstractTag, _) | (_, _: AbstractTag)
           => false // don't even try
         case (_: FunctionType, _) | (_, _: FunctionType) => false
-        case (_: RecordType, _: ObjectTag) | (_: ObjectTag, _: RecordType) => false
+        case (_: RecordType, _: TypeTag) | (_: TypeTag, _: RecordType) => false
         // case _ => lastWords(s"TODO $this $that ${getClass} ${that.getClass()}")
       }
     // }(r => s"! $r")
@@ -591,7 +591,7 @@ abstract class TyperHelpers { Typer: Typer =>
       // case e @ ExtrType(false) => e
       case p @ ProvType(und) => ProvType(und.withoutPos(names))(p.prov)
       case p @ ProxyType(und) => und.withoutPos(names)
-      case p: ObjectTag => p
+      case p: TypeTag => p
       case TypeBounds(lo, hi) => hi.withoutPos(names)
       case _: TypeVariable | _: NegType | _: TypeRef => Without(this, names)(noProv)
       case PolymorphicType(plvl, bod) => PolymorphicType.mk(plvl, bod.withoutPos(names))
@@ -649,7 +649,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case ExtrType(`union`) => Nil
       case ComposedType(`union`, l, r) => l.components(union) ::: r.components(union)
       case NegType(tv: TypeVariable) if !union => NegVar(tv) :: Nil
-      case NegType(tt: TraitTag) if !union => NegTrait(tt) :: Nil
+      case NegType(tt: AbstractTag) if !union => NegAbsTag(tt) :: Nil
       case ProvType(und) => und.components(union)
       case _ => this :: Nil
     }
@@ -675,7 +675,7 @@ abstract class TyperHelpers { Typer: Typer =>
         case NegType(n) => pol.contravar -> n :: Nil
         case ExtrType(_) => Nil
         case ProxyType(und) => pol -> und :: Nil
-        case _: ObjectTag => Nil
+        case _: TypeTag => Nil
         case tr: TypeRef => tr.mapTargs(pol)(_ -> _)
         case Without(b, ns) => pol -> b :: Nil
         case TypeBounds(lb, ub) =>
@@ -720,7 +720,7 @@ abstract class TyperHelpers { Typer: Typer =>
         case NegType(n) => pol.map(!_) -> n :: Nil
         case ExtrType(_) => Nil
         case ProxyType(und) => pol -> und :: Nil
-        case _: ObjectTag => Nil
+        case _: TypeTag => Nil
         case tr: TypeRef => tr.mapTargs(pol)(_ -> _)
         case Without(b, ns) => pol -> b :: Nil
         case TypeBounds(lb, ub) => S(false) -> lb :: S(true) -> ub :: Nil
@@ -901,7 +901,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case NegType(n) => n :: Nil
       case ExtrType(_) => Nil
       case ProxyType(und) => und :: Nil
-      case _: ObjectTag => Nil
+      case _: TypeTag => Nil
       case TypeRef(d, ts) => ts
       case Without(b, ns) => b :: Nil
       case TypeBounds(lb, ub) => lb :: ub :: Nil
@@ -1049,7 +1049,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case NegType(n) => apply(pol.map(!_))(n)
       case ExtrType(_) => ()
       case ProxyType(und) => apply(pol)(und)
-      case _: ObjectTag => ()
+      case _: TypeTag => ()
       case tr: TypeRef => tr.mapTargs(pol)(apply(_)(_)); ()
       case Without(b, ns) => apply(pol)(b)
       case TypeBounds(lb, ub) =>
@@ -1098,7 +1098,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case NegType(n) => apply(pol.contravar)(n)
       case ExtrType(_) => ()
       case ProxyType(und) => apply(pol)(und)
-      case _: ObjectTag => ()
+      case _: TypeTag => ()
       case tr: TypeRef => tr.mapTargs(pol)(apply(_)(_)); ()
       case Without(b, ns) => apply(pol)(b)
       // case TypeBounds(lb, ub) => apply(S(false))(lb); apply(S(true))(ub)

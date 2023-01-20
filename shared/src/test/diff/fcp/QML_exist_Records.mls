@@ -128,7 +128,7 @@ stepImpl_ty = stepImpl_Ann_3
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.124: 	stepImpl_ty = stepImpl_Ann_3
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_1474` does not match type `nothing`
+//│ ╟── type `'a` does not match type `nothing`
 //│ ║  l.53: 	def stepImpl_ty: ArraysRep['a, 'r] -> ArraysRep['a, ('r, string)]
 //│ ║        	                           ^^
 //│ ╟── Note: constraint arises from type variable:
@@ -287,7 +287,7 @@ def step arr f = f (stepImpl2_Ann_3 arr)
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.283: 	def step arr f = f (stepImpl2_Ann_3 arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_3140` does not match type `nothing`
+//│ ╟── type `'a` does not match type `nothing`
 //│ ║  l.234: 	def step: Arrays['a] -> Arrays['a]
 //│ ║         	                 ^^
 //│ ╟── Note: constraint arises from type variable:

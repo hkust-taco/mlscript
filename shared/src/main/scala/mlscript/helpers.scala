@@ -43,9 +43,6 @@ abstract class TypeImpl extends Located { self: Type =>
   // TODO remove obsolete pretty-printing hacks
     case Top => "anything"
     case Bot => "nothing"
-    case TypeName(name) if name.startsWith("'") =>
-      // "_"+name
-      "‘" + name.tail
     case TypeName(name) => name
     // case uv: TypeVar => ctx.vs.getOrElse(uv, s"[??? $uv ???]")
     case TypeTag(name) => "#"+name
@@ -189,7 +186,7 @@ object ShowCtx {
     * completely new names. If same name exists increment counter suffix
     * in the name.
     */
-  def mk(tys: IterableOnce[Type], pre: Str = "'", debug: Bool = false): ShowCtx = {
+  def mk(tys: IterableOnce[Type], _pre: Str = "'", debug: Bool = false): ShowCtx = {
     val (otherVars, namedVars) = tys.iterator.toList.flatMap(_.typeVarsList).distinct.partitionMap { tv =>
       tv.identifier match { case L(_) => L(tv.nameHint -> tv); case R(nh) => R(nh -> tv) }
     }
@@ -198,7 +195,8 @@ object ShowCtx {
       case (N, tv) => R(tv)
     }
     val usedNames = MutMap.empty[Str, Int]
-    def assignName(n: Str): Str =
+    def assignName(n: Str): Str = {
+      val pre = if (n.startsWith("'")) "" else _pre
       usedNames.get(n) match {
         case S(cnt) =>
           usedNames(n) = cnt + 1
@@ -209,8 +207,10 @@ object ShowCtx {
           pre + 
           n
       }
+    }
     val namedMap = (namedVars ++ hintedVars).map { case (nh, tv) =>
-      tv -> assignName(nh.dropWhile(_ === '\''))
+      // tv -> assignName(nh.dropWhile(_ === '\''))
+      tv -> assignName(nh.stripPrefix(_pre))
       // tv -> assignName(nh.stripPrefix(pre))
     }.toMap
     val used = usedNames.keySet

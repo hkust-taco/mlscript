@@ -40,7 +40,7 @@ class Nil_oops[A]: List[A]
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.39: 	    method Map f = Nil_oops {}
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `A_99` is not an instance of type `B_105`
+//│ ╟── type `A` does not match type `B`
 //│ ║  l.36: 	class Nil_oops[A]: List[A]
 //│ ║        	               ^
 //│ ╟── Note: constraint arises from method type parameter:

@@ -45,7 +45,7 @@ test(fun x -> x + 1)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.44: 	test(fun x -> x + 1)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_87` is not an instance of type `int`
+//│ ╟── type `'a` is not an instance of type `int`
 //│ ║  l.20: 	test(f: forall 'a. 'a -> 'a) =
 //│ ║        	               ^^
 //│ ╟── Note: constraint arises from reference:
@@ -59,7 +59,7 @@ test succ
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.58: 	test succ
 //│ ║        	^^^^^^^^^
-//│ ╟── type `‘a_96` is not an instance of type `int`
+//│ ╟── type `'a` is not an instance of type `int`
 //│ ║  l.20: 	test(f: forall 'a. 'a -> 'a) =
 //│ ╙──      	               ^^
 //│ res: (1, true,) | error

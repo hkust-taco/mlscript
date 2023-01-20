@@ -32,7 +32,7 @@ s2: S1
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.31: 	s2: S1
 //│ ║        	^^
-//│ ╟── type `‘a_161` is not an instance of type `'a_158`
+//│ ╟── type `'a` does not match type `'a0`
 //│ ║  l.15: 	type S2 = (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║        	                  ^^
 //│ ╟── Note: constraint arises from type variable:

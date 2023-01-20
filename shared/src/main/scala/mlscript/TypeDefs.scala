@@ -122,7 +122,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
   }
   def trtNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): TraitTag = {
     require(td.kind is Trt)
-    TraitTag(MinLevel, Var(td.nme.name.decapitalize))(prov)
+    TraitTag(Var(td.nme.name.decapitalize))(prov)
   }
   
   def baseClassesOf(tyd: mlscript.TypeDef): Set[TypeName] =
@@ -154,7 +154,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
       case p: ProxyType => fieldsOf(p.underlying, paramTags)
       case Without(base, ns) => fieldsOf(base, paramTags).filter(ns contains _._1)
       case TypeBounds(lb, ub) => fieldsOf(ub, paramTags)
-      case _: ObjectTag | _: FunctionType | _: ArrayBase | _: TypeVariable
+      case _: TypeTag | _: FunctionType | _: ArrayBase | _: TypeVariable
         | _: NegType | _: ExtrType | _: ComposedType | _: SpliceType
         | _: ConstrainedType | _: PolymorphicType | _: Overload
         => Map.empty
@@ -244,7 +244,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
           case Overload(alts) => alts.forall(checkCycle)
           case ConstrainedType(cs, bod) =>
             cs.forall(lu => checkCycle(lu._1) && checkCycle(lu._2)) && checkCycle(bod)
-          case _: ExtrType | _: ObjectTag | _: FunctionType | _: RecordType | _: ArrayBase | _: SpliceType => true
+          case _: ExtrType | _: TypeTag | _: FunctionType | _: RecordType | _: ArrayBase | _: SpliceType => true
         }
         // }()
         val rightParents = td.kind match {
@@ -256,7 +256,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
             val parentsClasses = MutSet.empty[TypeRef]
             def checkParents(ty: SimpleType): Bool = ty match {
               // case ClassTag(Var("string"), _) => true // Q: always?
-              case _: ObjectTag => true // Q: always? // FIXME actually no
+              case _: TypeTag => true // Q: always? // FIXME actually no
               case tr @ TypeRef(tn2, _) =>
                 val td2 = ctx.tyDefs(tn2.name)
                 td2.kind match {
@@ -529,7 +529,8 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
             case _ => Nil
           }
           def go(md: MethodDef[_ <: Term \/ Type]): (Str, MethodType) = {
-            val thisTag = TraitTag(thisCtx.lvl/*TODO correct?*/, Var("this"))(noProv)
+            val thisTag = TraitTag(Var("this"))(noProv) // FIXME or Skolem?!
+            // val thisTag = SkolemTag(thisCtx.lvl/*TODO correct?*/, Var("this"))(noProv)
             val thisTy = thisTag & tr
             thisCtx += "this" -> VarSymbol(thisTy, Var("this"))
             val MethodDef(rec, prt, nme, tparams, rhs) = md
@@ -562,7 +563,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
             }
             rhs.fold(_ => defined, _ => declared) += nme.name -> nme.toLoc
             val dummyTargs2 = tparams.map(p =>
-              TraitTag(MinLevel, Var(p.name))(originProv(p.toLoc, "method type parameter", p.name)))
+              TraitTag(Var(p.name))(originProv(p.toLoc, "method type parameter", p.name))) // FIXME or Skolem?!
             val targsMap2 = targsMap ++ tparams.iterator.map(_.name).zip(dummyTargs2).toMap
             val reverseRigid2 = reverseRigid ++ dummyTargs2.map(t => t ->
               freshVar(t.prov, N, S(t.id.idStr))(thisCtx.lvl + 1)) +
@@ -659,7 +660,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
       trace(s"upd[$curVariance] $ty") { // Note: could simplify this (at some perf cost) by just using ty.childrenPol
         ty match {
           case ProxyType(underlying) => updateVariance(underlying, curVariance)
-          case TraitTag(_, _) | ClassTag(_, _) => ()
+          case _: TypeTag => ()
           case ExtrType(pol) => ()
           case t: TypeVariable =>
             // update the variance information for the type variable

@@ -131,7 +131,7 @@ class ComplexMonoid_bad_0[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╟── function of type `?a -> (forall ?b, ?real. ?b)` is not a record (expected a record with fields: real, imaginary)
 //│ ║  l.31: 	def Complex real imaginary = Complex { real; imaginary }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into application with expected type `{imaginary: A_837, real: A_837}`
+//│ ╟── but it flows into application with expected type `{imaginary: A, real: A}`
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from record type:
@@ -146,7 +146,7 @@ class ComplexMonoid_bad_0[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╟── function of type `?a -> (forall ?b, ?real. ?b)` does not have field 'Complex#A'
 //│ ║  l.31: 	def Complex real imaginary = Complex { real; imaginary }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into application with expected type `{Complex#A <: A_837}`
+//│ ╟── but it flows into application with expected type `{Complex#A <: A}`
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from applied type reference:
@@ -166,7 +166,7 @@ class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
 //│ ║        	                                                               ^^^^^^^^^^^^^^
-//│ ╟── reference of type `ComplexMonoid_bad_1[A_927] & this` does not have field 'imaginary'
+//│ ╟── reference of type `ComplexMonoid_bad_1[A] & this` does not have field 'imaginary'
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
 //│ ╙──      	                                                               ^^^^
 //│ ╔══[ERROR] Type mismatch in method definition:
@@ -190,7 +190,7 @@ class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╟── function of type `?a -> (forall ?b, ?real. ?b)` is not a record (expected a record with fields: real, imaginary)
 //│ ║  l.31: 	def Complex real imaginary = Complex { real; imaginary }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into application with expected type `{imaginary: A_956, real: A_956}`
+//│ ╟── but it flows into application with expected type `{imaginary: A, real: A}`
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from record type:
@@ -205,7 +205,7 @@ class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╟── function of type `?a -> (forall ?b, ?real. ?b)` does not have field 'Complex#A'
 //│ ║  l.31: 	def Complex real imaginary = Complex { real; imaginary }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into application with expected type `{Complex#A <: A_956}`
+//│ ╟── but it flows into application with expected type `{Complex#A <: A}`
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from applied type reference:
@@ -227,7 +227,7 @@ class ComplexMonoid_bad_2[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+5: 	    Complex (this.base.Add self.real that.real) (this.base.Add self.imaginary that.imaginary)
 //│ ║        	             ^^^^^^^^^^^^^
-//│ ╟── type `Monoid[A_1051]` is not an instance of `ComplexMonoid_bad_2[?A]`
+//│ ╟── type `Monoid[A]` is not an instance of `ComplexMonoid_bad_2[?A]`
 //│ ║  l.+1: 	class ComplexMonoid_bad_2[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║        	                                                           ^^^^^^^^^
 //│ ╟── but it flows into field selection with expected type `ComplexMonoid_bad_2[?A]`
@@ -236,7 +236,7 @@ class ComplexMonoid_bad_2[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+5: 	    Complex (this.base.Add self.real that.real) (this.base.Add self.imaginary that.imaginary)
 //│ ║        	                                                 ^^^^^^^^^^^^^
-//│ ╟── type `Monoid[A_1051]` is not an instance of `ComplexMonoid_bad_2[?A]`
+//│ ╟── type `Monoid[A]` is not an instance of `ComplexMonoid_bad_2[?A]`
 //│ ║  l.+1: 	class ComplexMonoid_bad_2[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║        	                                                           ^^^^^^^^^
 //│ ╟── but it flows into field selection with expected type `ComplexMonoid_bad_2[?A]`

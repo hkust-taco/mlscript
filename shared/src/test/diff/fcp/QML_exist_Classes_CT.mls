@@ -229,7 +229,7 @@ sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.228: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘Rep_2443` is not an instance of type `int`
+//│ ╟── type `'Rep` is not an instance of type `int`
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                         ^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -254,7 +254,7 @@ sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.253: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘Rep_2550` does not match type `nothing`
+//│ ╟── type `'Rep` does not match type `nothing`
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                         ^^^^
 //│ ╟── Note: constraint arises from quantified type variable:

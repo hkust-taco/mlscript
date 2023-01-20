@@ -313,10 +313,10 @@ a2._1
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.312: 	a2._1
 //│ ║         	^^^^^
-//│ ╟── type `Array[?a]` does not match type `{_1: ?b} | ~{_2: true, x: "haha"}`
+//│ ╟── type `Array['a]` does not match type `{_1: ?a} | ~{_2: true, x: "haha"}`
 //│ ║  l.289: 	def rep5: 'a -> Array['a]
 //│ ║         	                ^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{_1: ?b} | ~{_2: true, x: "haha"}`
+//│ ╟── but it flows into reference with expected type `{_1: ?a} | ~{_2: true, x: "haha"}`
 //│ ║  l.312: 	a2._1
 //│ ╙──       	^^
 //│ res: error

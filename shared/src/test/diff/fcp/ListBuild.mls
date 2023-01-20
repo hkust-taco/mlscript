@@ -182,7 +182,7 @@ build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.181: 	build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 //│ ║         	^^^^^
-//│ ╟── type `Ls[?a]` is not an instance of type `'b_808`
+//│ ╟── type `Ls['a]` does not match type `'b`
 //│ ║  l.181: 	build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 //│ ║         	               ^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -262,7 +262,7 @@ b g x = build_ g x
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.258: 	b g x = build_ g x
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── type `Ls[?a]` is not a function
+//│ ╟── type `Ls['a]` is not a function
 //│ ║  l.23: 	def nil: Ls['a]
 //│ ║        	         ^^^^^^
 //│ ╟── Note: constraint arises from application:

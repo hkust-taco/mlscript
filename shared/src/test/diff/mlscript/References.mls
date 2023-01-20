@@ -37,7 +37,7 @@ move_ty = move
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.31: 	move_ty = move
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── type `‘b_198` is not an instance of type `'a_197`
+//│ ╟── type `'b` does not match type `'a`
 //│ ║  l.27: 	def move_ty: Ref['a] -> Ref[('a & 'b)..'b] -> unit
 //│ ║        	                                       ^^
 //│ ╟── Note: constraint arises from type variable:

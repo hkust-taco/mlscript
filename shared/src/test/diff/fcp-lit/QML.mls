@@ -325,7 +325,7 @@ ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub2 (xinit1 true) 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.324: 	ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub2 (xinit1 true) 0))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘r_1263` does not match type `nothing`
+//│ ╟── type `'r` does not match type `nothing`
 //│ ║  l.183: 	type ExSmall = (forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) -> 'y
 //│ ║         	                       ^^
 //│ ╟── Note: constraint arises from quantified type variable:
@@ -343,10 +343,10 @@ ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub1 (xinit2 true) 0))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.342: 	ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub1 (xinit2 true) 0))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` is not an instance of type `'r_1306`
+//│ ╟── type `anything` does not match type `'r`
 //│ ║  l.183: 	type ExSmall = (forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) -> 'y
 //│ ║         	                       ^^
-//│ ╟── but it flows into application with expected type `‘r_1306`
+//│ ╟── but it flows into application with expected type `'r`
 //│ ║  l.342: 	ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub1 (xinit2 true) 0))
 //│ ║         	                                                               ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:

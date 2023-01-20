@@ -528,7 +528,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_, TypeBounds(lb, ub)) => rec(lhs, lb, true)
           case (p @ ProvType(und), _) => rec(und, rhs, true)
           case (_, p @ ProvType(und)) => rec(lhs, und, true)
-          case (_: ObjectTag, _: ObjectTag) if lhs === rhs => ()
+          case (_: TypeTag, _: TypeTag) if lhs === rhs => ()
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs, true)
           
           // * Note: at this point, it could be that a polymorphic type could be distribbed
@@ -538,7 +538,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rec(l1, l0, false)
             rec(r0, r1, false)
           
-          case (prim: ClassTag, ot: ObjectTag)
+          case (prim: ClassTag, ot: TypeTag)
             if prim.parentsST.contains(ot.id) => ()
             
           case (tv @ AssignedVariable(lhs), rhs) =>
@@ -1059,7 +1059,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case p @ ProvType(und) => ProvType(extrude(und, lowerLvl, pol, upperLvl))(p.prov)
       case p @ ProxyType(und) => extrude(und, lowerLvl, pol, upperLvl)
       // case _: ClassTag | _: TraitTag => ty
-      case tt @ TraitTag(level, id) =>
+      case tt @ SkolemTag(level, id) =>
         // println(lowerLvl, upperLvl)
         // if (lowerLvl > upperLvl)
         if (level > lowerLvl) {
@@ -1073,7 +1073,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             //   )(tt.prov)
             // )
         } else ty
-      case _: ClassTag => ty
+      case _: ClassTag | _: TraitTag => ty
       case tr @ TypeRef(d, ts) =>
         TypeRef(d, tr.mapTargs(S(pol)) {
           case (N, targ) =>
@@ -1231,20 +1231,30 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case tv: TypeVariable => freshened.get(tv) match {
         case Some(tv) => tv
         case None if rigidify && tv.level <= below =>
-          val rv = TraitTag( // Rigid type variables (ie, skolems) are encoded as TraitTag-s
+          // println(tv.nameHint,tv.nameHint.orElse(S("_")).map("‘"+_))
+          val rv = SkolemTag( // Rigid type variables (ie, skolems) are encoded as TraitTag-s
             lvl,
             // tv.level,
-            // {if (tv.nameHint.isDefined) freshVar(noProv,N,S("")).toString
-            // Var(tv.nameHint.getOrElse("_"+freshVar(noProv,N).toString).toString)}
-            // Var(tv.nameHint.getOrElse("_"+freshVar(noProv,N).toString).toString)
-            // Var(tv.nameHint.getOrElse("_"+freshVar(noProv).toString)))(tv.prov)
-            Var(tv.nameHint.getOrElse("")+"_"+freshVar(noProv,N,S("")).mkStr)
+            // // {if (tv.nameHint.isDefined) freshVar(noProv,N,S("")).toString
+            // // Var(tv.nameHint.getOrElse("_"+freshVar(noProv,N).toString).toString)}
+            // // Var(tv.nameHint.getOrElse("_"+freshVar(noProv,N).toString).toString)
+            // // Var(tv.nameHint.getOrElse("_"+freshVar(noProv).toString)))(tv.prov)
+            // Var(tv.nameHint.getOrElse("")+"_"+freshVar(noProv,N,S("")).mkStr)
+            freshVar(noProv, N, tv.nameHint.orElse(S("_")))
+            // freshVar(noProv, N, S(tv.nameHint.fold("_")(_ + "_")))
+            // freshVar(noProv,N,tv.nameHint.orElse(S("_")).map("'"+_))
+            // freshVar(noProv,N,tv.nameHint.orElse(S("_")).map("‘"+_))
+            // freshVar(noProv,N,tv.nameHint.orElse(S("‘")))
+            // freshVar(noProv,N,tv.nameHint match {
+            //   case snh @ S(nh) => if (nh.startsWith("'")) S("''!!"+nh.tail) else snh
+            //   case N => S("‘")
+            // })
           )(tv.prov)
           if (tv.lowerBounds.nonEmpty || tv.upperBounds.nonEmpty) {
             // The bounds of `tv` may be recursive (refer to `tv` itself),
             //    so here we create a fresh variabe that will be able to tie the presumed recursive knot
             //    (if there is no recursion, it will just be a useless type variable)
-            val tv2 = freshVar(tv.prov, S(tv), tv.nameHint)(if (tv.level > below) tv.level else lvl)
+            val tv2 = freshVar(tv.prov, S(tv), tv.nameHint)(lvl)
             freshened += tv -> tv2
             // Assuming there were no recursive bounds, given L <: tv <: U,
             //    we essentially need to turn tv's occurrence into the type-bounds (rv | L)..(rv & U),
@@ -1297,9 +1307,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case e @ ExtrType(_) => e
       case p @ ProvType(und) => ProvType(freshen(und))(p.prov)
       case p @ ProxyType(und) => freshen(und)
-      case TraitTag(level, id) if level > above && level <= below =>
-        TraitTag(lvl, id)(ty.prov)
-      case _: ClassTag | _: TraitTag => ty
+      case SkolemTag(level, id) if level > above && level <= below =>
+        SkolemTag(lvl, id)(ty.prov)
+      case _: ClassTag | _: TraitTag | _: SkolemTag => ty
       case w @ Without(b, ns) => Without(freshen(b), ns)(w.prov)
       case tr @ TypeRef(d, ts) => TypeRef(d, ts.map(freshen(_)))(tr.prov)
       case pt @ PolymorphicType(polyLvl, bod) if pt.level <= above => pt // is this really useful?

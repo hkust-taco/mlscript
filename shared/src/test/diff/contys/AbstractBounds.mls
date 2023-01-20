@@ -9,7 +9,7 @@ class Test[A, B]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.8: 	  method Foo (a: A) = a: B
 //│ ║       	                      ^
-//│ ╟── reference of type `A_25` is not an instance of type `B_26`
+//│ ╟── reference of type `A` does not match type `B`
 //│ ╟── Note: constraint arises from class type parameter:
 //│ ║  l.7: 	class Test[A, B]
 //│ ║       	              ^
@@ -32,7 +32,7 @@ class Test2[A, B]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.31: 	  method Foo2 (a: A) = a: B
 //│ ║        	                       ^
-//│ ╟── reference of type `A_67` is not an instance of type `B_68`
+//│ ╟── reference of type `A` does not match type `B`
 //│ ╟── Note: constraint arises from class type parameter:
 //│ ║  l.30: 	class Test2[A, B]
 //│ ║        	               ^
@@ -56,7 +56,7 @@ class Test3[A, B]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.54: 	  method Foo3 (a: A) = a: B
 //│ ║        	                       ^
-//│ ╟── reference of type `A_109` is not an instance of type `B_110`
+//│ ╟── reference of type `A` does not match type `B`
 //│ ╟── Note: constraint arises from class type parameter:
 //│ ║  l.53: 	class Test3[A, B]
 //│ ║        	               ^
@@ -66,10 +66,10 @@ class Test3[A, B]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.55: 	  method Bar3 (a: A) = ((fun x -> x) a): B
 //│ ║        	                       ^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `A_109` is not an instance of type `B_110`
+//│ ╟── reference of type `A` does not match type `B`
 //│ ║  l.55: 	  method Bar3 (a: A) = ((fun x -> x) a): B
 //│ ║        	                                     ^
-//│ ╟── but it flows into reference with expected type `B_110`
+//│ ╟── but it flows into reference with expected type `B`
 //│ ║  l.55: 	  method Bar3 (a: A) = ((fun x -> x) a): B
 //│ ║        	                                  ^
 //│ ╟── Note: constraint arises from class type parameter:

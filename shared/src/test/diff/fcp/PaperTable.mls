@@ -678,7 +678,7 @@ auto auto
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.677: 	auto auto
 //│ ║         	^^^^^^^^^
-//│ ╟── type `‘a_2189` is not a function
+//│ ╟── type `'a` is not a function
 //│ ║  l.164: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
 //│ ║         	                   ^^
 //│ ╟── Note: constraint arises from function type:
@@ -1121,7 +1121,7 @@ auto auto
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.1120: 	auto auto
 //│ ║          	^^^^^^^^^
-//│ ╟── type `‘a_3557` is not a function
+//│ ╟── type `'a` is not a function
 //│ ║  l.164: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
 //│ ║         	                   ^^
 //│ ╟── Note: constraint arises from function type:
@@ -1531,7 +1531,7 @@ auto auto
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.1530: 	auto auto
 //│ ║          	^^^^^^^^^
-//│ ╟── type `‘a_4669` is not a function
+//│ ╟── type `'a` is not a function
 //│ ║  l.164: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
 //│ ║         	                   ^^
 //│ ╟── Note: constraint arises from function type:
@@ -1887,7 +1887,7 @@ auto auto
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.1886: 	auto auto
 //│ ║          	^^^^^^^^^
-//│ ╟── type `‘a_5752` is not a function
+//│ ╟── type `'a` is not a function
 //│ ║  l.164: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
 //│ ║         	                   ^^
 //│ ╟── Note: constraint arises from function type:

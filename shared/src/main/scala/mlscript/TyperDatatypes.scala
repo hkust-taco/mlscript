@@ -473,13 +473,19 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     }
   }
   
-  sealed trait ObjectTag extends BaseTypeOrTag with Ordered[ObjectTag] {
-    val id: SimpleTerm
-    def compare(that: ObjectTag): Int = this.id compare that.id
+  sealed trait TypeTag extends BaseTypeOrTag with Ordered[TypeTag] {
+    val id: IdentifiedTerm
+    def compare(that: TypeTag): Int = (this, that) match {
+      case (obj1: ObjectTag, obj2: ObjectTag) => obj1.id compare obj2.id
+      case (SkolemTag(_, id1), SkolemTag(_, id2)) => id1 compare id2
+      case (_: ObjectTag, _: SkolemTag) => 1
+      case (_: SkolemTag, _: ObjectTag) => -1
+    }
   }
   
-  case class ClassTag(id: SimpleTerm, parents: Set[TypeName])(val prov: TypeProvenance) extends BaseType with ObjectTag {
-    lazy val parentsST = parents.iterator.map(tn => Var(tn.name)).toSet[SimpleTerm]
+  case class ClassTag(id: SimpleTerm, parents: Set[TypeName])(val prov: TypeProvenance)
+      extends BaseType with TypeTag with ObjectTag {
+    lazy val parentsST = parents.iterator.map(tn => Var(tn.name)).toSet[IdentifiedTerm]
     def glb(that: ClassTag): Opt[ClassTag] =
       if (that.id === this.id) S(this)
       else if (that.parentsST.contains(this.id)) S(that)
@@ -494,20 +500,31 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def level: Level = MinLevel
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = MinLevel
     def freshenAboveImpl(lim: Int, rigidify: Bool)(implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST]): this.type = this
-    // override def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST]): this.type = this
     override def toString = showProvOver(false)(id.idStr+s"<${parents.map(_.name).mkString(",")}>")
   }
   
   sealed trait TypeVarOrRigidVar extends SimpleType
   
-  case class TraitTag(level: Level, id: SimpleTerm)(val prov: TypeProvenance) extends BaseTypeOrTag with ObjectTag with TypeVarOrRigidVar with Factorizable {
-    // def level: Level = MinLevel
+  sealed trait ObjectTag extends TypeTag {
+    val id: SimpleTerm
+    override def toString = "#" + id.idStr
+  }
+  
+  sealed abstract class AbstractTag extends BaseTypeOrTag with TypeTag with Factorizable
+  
+  case class TraitTag(id: Var)(val prov: TypeProvenance) extends AbstractTag with ObjectTag {
+    def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = MinLevel
+    def level: Level = MinLevel
+  }
+  
+  case class SkolemTag(level: Level, id: TV)(val prov: TypeProvenance) extends AbstractTag with TypeVarOrRigidVar {
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level =
-      // MinLevel
       if (level <= ub) level else MinLevel
-    override def toString =
+    override def toString = {
+      val str = id.mkStr
       // (if (id.idStr.startsWith("'")) "‘"+id.idStr.tail else id.idStr) + showLevel(level)
-      "‘"+(if (id.idStr.startsWith("'")) id.idStr.tail else id.idStr) + (if (id.idStr.last==='\'') "_" else "") + showLevel(level)
+      "‘"+(if (str.startsWith("'")) str.tail else str) + (if (str.last==='\'') "_" else "") + showLevel(level)
+    }
   }
   
   /** `TypeBounds(lb, ub)` represents an unknown type between bounds `lb` and `ub`.
@@ -557,8 +574,15 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       originalTV: Opt[TV],
       val nameHint: Opt[Str] = N,
       val recPlaceholder: Bool = false
-  )(val prov: TypeProvenance) extends SimpleType with TypeVarOrRigidVar with Ordered[TypeVariable] with Factorizable {
+    )(val prov: TypeProvenance)
+    extends SimpleType
+      with TypeVarOrRigidVar
+      with Ordered[TypeVariable]
+      with Factorizable
+      with IdentifiedTerm
+  {
     require(level <= MaxLevel)
+    
     
     var assignedTo: Opt[ST] = N
     
@@ -660,7 +684,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     lazy val underlying: SimpleType = tv.neg()
     val prov = noProv
   }
-  case class NegTrait(tt: TraitTag) extends ProxyType with Factorizable {
+  case class NegAbsTag(tt: AbstractTag) extends ProxyType with Factorizable {
     lazy val underlying: SimpleType = tt.neg()
     val prov = noProv
   }

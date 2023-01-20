@@ -98,7 +98,9 @@ final case class DecLit(value: BigDecimal)        extends Lit
 final case class StrLit(value: Str)               extends Lit
 final case class UnitLit(undefinedOrNull: Bool)   extends Lit
 
-sealed abstract class SimpleTerm extends Term with SimpleTermImpl
+trait IdentifiedTerm
+
+sealed abstract class SimpleTerm extends Term with IdentifiedTerm with SimpleTermImpl
 
 sealed trait Statement extends StatementImpl
 final case class LetS(isRec: Bool, pat: Term, rhs: Term)  extends Statement

@@ -63,7 +63,7 @@ def test x = case x of { int -> x.f | _ -> x.x }
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.59: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `int & {x: ‘a_68} | {x: ‘a_68} & ~?a` does not have field 'f'
+//│ ╟── expression of type `int & {x: 'a} | {x: 'a} & ~?a` does not have field 'f'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.59: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	                                ^^^
@@ -104,7 +104,7 @@ test (error: B & { c: int })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.103: 	test (error: B & { c: int })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `B & {c: int}` does not match type `A & {a: ?a} | B & {b: ?a} | C & {c: ?a}`
+//│ ╟── type `B & {c: int}` does not match type `A & {a: 'a} | B & {b: 'a} | C & {c: 'a}`
 //│ ║  l.103: 	test (error: B & { c: int })
 //│ ║         	             ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
@@ -128,7 +128,7 @@ test (error: A & { x: int })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.127: 	test (error: A & { x: int })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `A & {x: int}` does not match type `A & {x: ?a, y: ?b} | B & {x: ?a, y: ?b} | C & {x: ?a, y: ?b}`
+//│ ╟── type `A & {x: int}` does not match type `A & {x: 'a, y: 'b} | B & {x: 'a, y: 'b} | C & {x: 'a, y: 'b}`
 //│ ║  l.127: 	test (error: A & { x: int })
 //│ ║         	             ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
@@ -165,10 +165,10 @@ negInt: A | { x: 'a }
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.164: 	negInt: A | { x: 'a }
 //│ ║         	^^^^^^
-//│ ╟── type `~int` does not match type `A | {x: ?a}`
+//│ ╟── type `~int` does not match type `A | {x: 'a}`
 //│ ║  l.151: 	def negInt: ~int
 //│ ║         	            ^^^^
-//│ ╟── but it flows into reference with expected type `A | {x: ?a}`
+//│ ╟── but it flows into reference with expected type `A | {x: 'a}`
 //│ ║  l.164: 	negInt: A | { x: 'a }
 //│ ║         	^^^^^^
 //│ ╟── Note: constraint arises from union type:
@@ -304,10 +304,10 @@ ty = ty2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.300: 	ty = ty2
 //│ ║         	^^^^^^^^
-//│ ╟── type `TT & {x: int}` does not match type `AA | ‘a_272\x`
+//│ ╟── type `TT & {x: int}` does not match type `AA | 'a\x`
 //│ ║  l.292: 	def ty2: TT & { x: int }
 //│ ║         	         ^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `AA | ‘a_272\x`
+//│ ╟── but it flows into reference with expected type `AA | 'a\x`
 //│ ║  l.300: 	ty = ty2
 //│ ║         	     ^^^
 //│ ╟── Note: constraint arises from union type:

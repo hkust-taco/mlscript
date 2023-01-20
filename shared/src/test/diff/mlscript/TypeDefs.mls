@@ -170,7 +170,7 @@ id: Runaway2
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.169: 	id: Runaway2
 //│ ║         	^^
-//│ ╟── type `{x: ?a -> ?a}` is not a function
+//│ ╟── type `{x: 'a -> 'a}` is not a function
 //│ ║  l.133: 	type Lol = { x: 'a -> 'a }
 //│ ║         	           ^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from function type:
@@ -194,7 +194,7 @@ error: {x: int} -> nothing : Runaway2
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.193: 	error: {x: int} -> nothing : Runaway2
 //│ ║         	^^^^^
-//│ ╟── type `?a -> ?a` is not an instance of type `int`
+//│ ╟── type `'a -> 'a` is not an instance of type `int`
 //│ ║  l.133: 	type Lol = { x: 'a -> 'a }
 //│ ║         	                ^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:

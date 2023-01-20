@@ -78,7 +78,7 @@ manual id
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.77: 	manual id
 //│ ║        	^^^^^^^^^
-//│ ╟── type `?a -> nothing` does not match type `nothing`
+//│ ╟── type `'a -> nothing` does not match type `nothing`
 //│ ║  l.71: 	def manual: 'a -> nothing as 'a
 //│ ║        	            ^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:

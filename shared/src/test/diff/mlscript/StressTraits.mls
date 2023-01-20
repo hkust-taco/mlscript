@@ -83,7 +83,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 72
 //│ annoying  calls  : 90
-//│ subtyping calls  : 4297
+//│ subtyping calls  : 4293
 
 :stats
 :e
@@ -103,7 +103,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 95
 //│ annoying  calls  : 216
-//│ subtyping calls  : 17984
+//│ subtyping calls  : 17332
 
 
 // ====== 2 ====== //
@@ -160,7 +160,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 83
 //│ annoying  calls  : 90
-//│ subtyping calls  : 2921
+//│ subtyping calls  : 2917
 
 
 // ====== 4 ====== //
@@ -190,7 +190,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 103
 //│ annoying  calls  : 131
-//│ subtyping calls  : 3962
+//│ subtyping calls  : 3958
 
 :stats
 :e
@@ -208,7 +208,7 @@ foo (arg with { x = 1} with { y = 2 })
 //│ res: error
 //│ constrain calls  : 78
 //│ annoying  calls  : 128
-//│ subtyping calls  : 3375
+//│ subtyping calls  : 3371
 
 :stats
 :e
@@ -226,7 +226,7 @@ foo (arg with { x = 1; y = 2; z = 3 })
 //│ res: error
 //│ constrain calls  : 78
 //│ annoying  calls  : 128
-//│ subtyping calls  : 3363
+//│ subtyping calls  : 3359
 
 
 // ====== 5 ====== //
@@ -257,7 +257,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 107
 //│ annoying  calls  : 131
-//│ subtyping calls  : 4393
+//│ subtyping calls  : 4389
 
 
 // ====== 6 ====== //
@@ -289,7 +289,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 111
 //│ annoying  calls  : 131
-//│ subtyping calls  : 4958
+//│ subtyping calls  : 4954
 
 
 // ====== 7 ====== //
@@ -322,7 +322,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 115
 //│ annoying  calls  : 131
-//│ subtyping calls  : 5678
+//│ subtyping calls  : 5674
 
 def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│ foo_manual: ({fA: 'a} & #A | ~#A & ({fB: 'a} & #B | ~#B & ({fC: 'a} & #C | ~#C & ({fD: 'a} & #D | ~#D & ({fE: 'a} & #E | ~#E & ({fF: 'a} & #F | {fG: 'a} & #G & ~#F)))))) -> 'a
@@ -333,10 +333,10 @@ foo_manual arg
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.332: 	foo_manual arg
 //│ ║         	^^^^^^^^^^^^^^
-//│ ╟── type `{fB: int} & #B` does not match type `{fA: ?a} & #A | ~#A & ({fB: ?a} & #B | ~#B & ({fC: ?a} & #C | ~#C & ({fD: ?a} & #D | ~#D & ({fE: ?a} & #E | ~#E & ({fF: ?a} & #F | {fG: ?a} & #G & ~#F)))))`
+//│ ╟── type `{fB: int} & #B` does not match type `{fA: 'a} & #A | ~#A & ({fB: 'a} & #B | ~#B & ({fC: 'a} & #C | ~#C & ({fD: 'a} & #D | ~#D & ({fE: 'a} & #E | ~#E & ({fF: 'a} & #F | {fG: 'a} & #G & ~#F)))))`
 //│ ║  l.308: 	def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
 //│ ║         	                  ^^^^^^
-//│ ╟── but it flows into reference with expected type `{fA: ?a0} & #A | ~#A & ({fB: ?a0} & #B | ~#B & ({fC: ?a0} & #C | ~#C & ({fD: ?a0} & #D | ~#D & ({fE: ?a0} & #E | ~#E & ({fF: ?a0} & #F | {fG: ?a0} & #G & ~#F)))))`
+//│ ╟── but it flows into reference with expected type `{fA: 'a0} & #A | ~#A & ({fB: 'a0} & #B | ~#B & ({fC: 'a0} & #C | ~#C & ({fD: 'a0} & #D | ~#D & ({fE: 'a0} & #E | ~#E & ({fF: 'a0} & #F | {fG: 'a0} & #G & ~#F)))))`
 //│ ║  l.332: 	foo_manual arg
 //│ ║         	           ^^^
 //│ ╟── Note: constraint arises from union type:
@@ -388,6 +388,6 @@ foo arg
 //│ res: error
 //│ constrain calls  : 119
 //│ annoying  calls  : 131
-//│ subtyping calls  : 6574
+//│ subtyping calls  : 6570
 
 
