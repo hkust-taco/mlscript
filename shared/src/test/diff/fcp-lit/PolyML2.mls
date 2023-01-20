@@ -23,18 +23,26 @@ def Cons head tail = Cons { head; tail }
 // ------------ Type signatures for functions used in the examples ------------
 // (I guess)
 
+:e // TODO(oc) use ML-style list functions
 rec def mem x l = case l of
   { Nil -> false
   | Cons -> if eq l.head x then true else mem x l.tail
   }
+//│ ╔══[ERROR] Inferred recursive type: nothing
+//│ ║  l.29: 	  | Cons -> if eq l.head x then true else mem x l.tail
+//│ ╙──      	                                                ^^^^^^
 //│ mem: anything -> 'tail -> bool
 //│   where
 //│     'tail <: (Cons[?] with {tail: 'tail}) | Nil
 
+:e
 rec def fold_left f x l = case l of
   { Nil -> x
   | Cons -> fold_left f (f x l.head) l.tail
   }
+//│ ╔══[ERROR] Inferred recursive type: nothing
+//│ ║  l.41: 	  | Cons -> fold_left f (f x l.head) l.tail
+//│ ╙──      	                                     ^^^^^^
 //│ fold_left: ('a -> 'head -> 'b & 'b -> 'head0 -> 'b) -> 'a -> ((Cons[?] with {head: 'head, tail: 'tail}) | Nil) -> ('a | 'b)
 //│   where
 //│     'tail <: (Cons[?] with {head: 'head0, tail: 'tail}) | Nil

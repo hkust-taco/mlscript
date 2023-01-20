@@ -128,7 +128,7 @@ type Bot = 'a
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.127: 	42 : Bot
 //│ ║         	^^
-//│ ╟── integer literal of type `42` is not an instance of type `'a_50`
+//│ ╟── integer literal of type `42` is not an instance of type `'a_26`
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.123: 	type Bot = 'a
 //│ ║         	           ^^
@@ -156,7 +156,7 @@ succ : PolyId
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.155: 	succ : PolyId
 //│ ║         	^^^^
-//│ ╟── type `‘a_56` is not an instance of type `int`
+//│ ╟── type `‘a_31` is not an instance of type `int`
 //│ ║  l.147: 	type PolyId = 'a -> 'a
 //│ ╙──       	              ^^
 //│ res: PolyId

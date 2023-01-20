@@ -78,18 +78,18 @@ def simpleStepImpl arrImpl = ArraysImpl {
     update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.Update r0 i a, "updated");
     fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.Fold f b r0
   }
-//│ simpleStepImpl: (ArraysRep[in 'A | 'A0 | 'A1 & 'A2 out nothing, in 'Rep | 'Rep0 out nothing] & 'a) -> (ArraysImpl['A1, 'Rep1] with {fold: forall 'c, 'b, 'A3, 'Rep2. 'c -> 'b -> (('Rep2, anything,) -> 'b
+//│ simpleStepImpl: (ArraysRep[in 'A | 'A0 out nothing, in 'Rep | 'Rep0 | 'Rep0 & 'a & 'Rep1 out 'Rep0 & 'a & 'Rep1] & 'c) -> (ArraysImpl['A1, 'Rep2] with {fold: forall 'd, 'b, 'A2, 'Rep3. 'd -> 'b -> (('Rep3, anything,) -> 'b
 //│   where
-//│     'c <: 'A3 -> 'b -> 'b
-//│     'a <: ArraysRep['A3, 'Rep2]), init: forall 'A4, 'Rep3. ('A4 -> ('Rep3, "initialized",)
+//│     'd <: 'A2 -> 'b -> 'b
+//│     'c <: ArraysRep['A2, 'Rep3]), init: forall 'A3, 'Rep4. ('A3 -> ('Rep4, "initialized",)
 //│   where
-//│     'a <: ArraysRep['A4, 'Rep3]), sub: forall 'A5, 'Rep4. ('Rep4, anything,) -> (int -> 'A5
+//│     'c <: ArraysRep['A3, 'Rep4]), sub: forall 'Rep5, 'A4. ('Rep5, anything,) -> (int -> 'A4
 //│   where
-//│     'a <: ArraysRep['A5, 'Rep4]), update: forall 'Rep5, 'A6. ('Rep5, anything,) -> int -> ('A6 -> ('Rep5, "updated",)
+//│     'c <: ArraysRep['A4, 'Rep5]), update: forall 'Rep6, 'A5. ('Rep6, anything,) -> int -> ('A5 -> ('Rep6, "updated",)
 //│   where
-//│     'a <: ArraysRep['A6, 'Rep5])})
+//│     'c <: ArraysRep['A5, 'Rep6])})
 //│   where
-//│     'Rep1 :> (nothing, "initialized" | "updated",)
+//│     'Rep2 :> (nothing, "initialized" | "updated",)
 //│           <: (nothing, anything,)
 //│     'A1 <: 'A & 'A0
 //│               = [Function: simpleStepImpl]
@@ -108,37 +108,37 @@ def simpleStepImpl2_ty: (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> Arrays
 
 
 def simpleStepImpl2 arr = arr simpleStepImpl
-//│ simpleStepImpl2: ((forall 'A, 'Rep, 'Rep0, 'A0, 'Rep1, 'a, 'A1, 'A2. (ArraysRep[in 'A0 | 'A1 | 'A2 & 'A out nothing, in 'Rep | 'Rep1 out nothing] & 'a) -> (ArraysImpl['A2, 'Rep0] with {fold: forall 'c, 'b, 'A3, 'Rep2. 'c -> 'b -> (('Rep2, anything,) -> 'b
+//│ simpleStepImpl2: ((forall 'Rep, 'Rep0, 'Rep1, 'A, 'A0, 'Rep2, 'a, 'c, 'A1. (ArraysRep[in 'A1 | 'A0 out nothing, in 'Rep2 | 'Rep | 'Rep & 'c & 'Rep1 out 'Rep & 'c & 'Rep1] & 'a) -> (ArraysImpl['A, 'Rep0] with {fold: forall 'd, 'b, 'A2, 'Rep3. 'd -> 'b -> (('Rep3, anything,) -> 'b
 //│   where
-//│     'c <: 'A3 -> 'b -> 'b
-//│     'a <: ArraysRep['A3, 'Rep2]), init: forall 'Rep3, 'A4. ('A4 -> ('Rep3, "initialized",)
+//│     'a <: ArraysRep['A2, 'Rep3]
+//│     'd <: 'A2 -> 'b -> 'b), init: forall 'A3, 'Rep4. ('A3 -> ('Rep4, "initialized",)
 //│   where
-//│     'a <: ArraysRep['A4, 'Rep3]), sub: forall 'Rep4, 'A5. ('Rep4, anything,) -> (int -> 'A5
+//│     'a <: ArraysRep['A3, 'Rep4]), sub: forall 'Rep5, 'A4. ('Rep5, anything,) -> (int -> 'A4
 //│   where
-//│     'a <: ArraysRep['A5, 'Rep4]), update: forall 'Rep5, 'A6. ('Rep5, anything,) -> int -> ('A6 -> ('Rep5, "updated",)
+//│     'a <: ArraysRep['A4, 'Rep5]), update: forall 'Rep6, 'A5. ('Rep6, anything,) -> int -> ('A5 -> ('Rep6, "updated",)
 //│   where
-//│     'a <: ArraysRep['A6, 'Rep5])})) -> 'd) -> 'd
+//│     'a <: ArraysRep['A5, 'Rep6])})) -> 'e) -> 'e
 //│   where
 //│     'Rep0 :> (nothing, "initialized" | "updated",)
 //│           <: (nothing, anything,)
-//│     'A2 <: 'A0 & 'A1
+//│     'A <: 'A1 & 'A0
 //│                = [Function: simpleStepImpl2]
 
 simpleStepImpl2_ty = simpleStepImpl2
-//│ ((forall 'A, 'Rep, 'Rep0, 'A0, 'Rep1, 'A1, 'a, 'A2. (ArraysRep[in 'A0 | 'A2 | 'A1 & 'A out nothing, in 'Rep | 'Rep0 out nothing] & 'a) -> (ArraysImpl['A1, 'Rep1] with {fold: forall 'c, 'b, 'A3, 'Rep2. 'c -> 'b -> (('Rep2, anything,) -> 'b
+//│ ((forall 'A, 'a, 'Rep, 'Rep0, 'Rep1, 'Rep2, 'A0, 'A1, 'c. (ArraysRep[in 'A0 | 'A out nothing, in 'Rep0 | 'Rep2 | 'Rep2 & 'c & 'Rep out 'Rep2 & 'c & 'Rep] & 'a) -> (ArraysImpl['A1, 'Rep1] with {fold: forall 'd, 'b, 'A2, 'Rep3. 'd -> 'b -> (('Rep3, anything,) -> 'b
 //│   where
-//│     'a <: ArraysRep['A3, 'Rep2]
-//│     'c <: 'A3 -> 'b -> 'b), init: forall 'A4, 'Rep3. ('A4 -> ('Rep3, "initialized",)
+//│     'a <: ArraysRep['A2, 'Rep3]
+//│     'd <: 'A2 -> 'b -> 'b), init: forall 'A3, 'Rep4. ('A3 -> ('Rep4, "initialized",)
 //│   where
-//│     'a <: ArraysRep['A4, 'Rep3]), sub: forall 'Rep4, 'A5. ('Rep4, anything,) -> (int -> 'A5
+//│     'a <: ArraysRep['A3, 'Rep4]), sub: forall 'Rep5, 'A4. ('Rep5, anything,) -> (int -> 'A4
 //│   where
-//│     'a <: ArraysRep['A5, 'Rep4]), update: forall 'Rep5, 'A6. ('Rep5, anything,) -> int -> ('A6 -> ('Rep5, "updated",)
+//│     'a <: ArraysRep['A4, 'Rep5]), update: forall 'Rep6, 'A5. ('Rep6, anything,) -> int -> ('A5 -> ('Rep6, "updated",)
 //│   where
-//│     'a <: ArraysRep['A6, 'Rep5])})) -> 'd) -> 'd
+//│     'a <: ArraysRep['A5, 'Rep6])})) -> 'e) -> 'e
 //│   where
 //│     'Rep1 :> (nothing, "initialized" | "updated",)
 //│           <: (nothing, anything,)
-//│     'A1 <: 'A0 & 'A2
+//│     'A1 <: 'A0 & 'A
 //│   <:  simpleStepImpl2_ty:
 //│ (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> ArraysImpl['A, ('Rep, string,)]
 //│                   = [Function: simpleStepImpl2]
@@ -167,10 +167,10 @@ def simpleStep: Arrays['a] -> Arrays['a]
 def simpleStep arr f = f (simpleStepImpl2 arr)
 //│ 'a -> (('c -> 'd) -> 'd
 //│   where
-//│     'a <: (forall 'e, 'Rep, 'A. (ArraysRep[in anything out nothing, in anything out nothing] & 'e) -> (ArraysImpl['A, 'Rep] with {fold: forall 'f, 'b, 'A0, 'Rep0. 'f -> 'b -> (('Rep0, anything,) -> 'b
+//│     'a <: (forall 'e, 'A, 'Rep. (ArraysRep[in anything out nothing, in anything out nothing] & 'e) -> (ArraysImpl['A, 'Rep] with {fold: forall 'f, 'b, 'A0, 'Rep0. 'f -> 'b -> (('Rep0, anything,) -> 'b
 //│   where
-//│     'f <: 'A0 -> 'b -> 'b
-//│     'e <: ArraysRep['A0, 'Rep0]), init: forall 'A1, 'Rep1. ('A1 -> ('Rep1, "initialized",)
+//│     'e <: ArraysRep['A0, 'Rep0]
+//│     'f <: 'A0 -> 'b -> 'b), init: forall 'A1, 'Rep1. ('A1 -> ('Rep1, "initialized",)
 //│   where
 //│     'e <: ArraysRep['A1, 'Rep1]), sub: forall 'Rep2, 'A2. ('Rep2, anything,) -> (int -> 'A2
 //│   where
@@ -180,7 +180,6 @@ def simpleStep arr f = f (simpleStepImpl2 arr)
 //│   where
 //│     'Rep :> (nothing, "initialized" | "updated",)
 //│          <: (nothing, anything,)
-//│     'A <: nothing
 //│   <:  simpleStep:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -202,7 +201,7 @@ def simpleStep arr f = f (simpleStepImpl2_ty arr)
 //│   <:  simpleStep:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.198: 	def simpleStep arr f = f (simpleStepImpl2_ty arr)
+//│ ║  l.197: 	def simpleStep arr f = f (simpleStepImpl2_ty arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -227,16 +226,16 @@ sb (fun arr -> arr.Sub (arr.Init true) 1)
 :e // * Expected – argument order confusion
 sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.228: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
+//│ ║  l.227: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘Rep_2443` is not an instance of type `int`
+//│ ╟── type `‘Rep_2428` is not an instance of type `int`
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                         ^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.16: 	  method Sub: Rep -> int -> A
 //│ ║        	                     ^^^
 //│ ╟── from application:
-//│ ║  l.228: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
+//│ ║  l.227: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ║         	                          ^^^^^^^^^^^^^
 //│ ╟── Note: class type parameter Rep is defined at:
 //│ ║  l.14: 	class ArraysRep[A, Rep]
@@ -252,16 +251,16 @@ sb (fun arr -> arr.Update (arr.Init true) 1 false)
 :e // * Rightly prevent skolem confusion
 sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.253: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
+//│ ║  l.252: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘Rep_2550` does not match type `nothing`
+//│ ╟── type `‘Rep_2535` does not match type `nothing`
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                         ^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                         ^^^^
 //│ ╟── from application:
-//│ ║  l.253: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
+//│ ║  l.252: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ╙──       	                                             ^^^^^^^^^^^^^^
 //│ res: int -> anything -> anything | error
 //│    = [Function (anonymous)]
@@ -295,48 +294,54 @@ def mod: int -> int -> int
 
 :e // * Since the removal of "recursive definition hacks"
 rec def mod a b = if a < b then a else mod (a - b) b
-//│ 'mod
+//│ ╔══[ERROR] Inferred recursive type: 'mod
 //│   where
 //│     'mod :> forall 'a, 'b. (int & 'a) -> ((int & 'b) -> 'a
 //│   where
 //│     'mod <: int -> 'b -> 'a)
+//│ ╙──
+//│ 'mod
+//│   where
+//│     'mod :> forall 'a, 'b. (int & 'b) -> ((int & 'a) -> 'b
+//│   where
+//│     'mod <: int -> 'a -> 'b)
 //│   <:  mod:
 //│ int -> int -> int
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?mod. ?mod <: int -> int -> int` exceeded recursion depth limit (250)
-//│ ║  l.297: 	rec def mod a b = if a < b then a else mod (a - b) b
+//│ ║  l.296: 	rec def mod a b = if a < b then a else mod (a - b) b
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ‹∀ 1. (α2690_2737'' -> ‹∀ 2. {(α2691_2740''' -> α2701_2743''') where: mod2689_2736# <: ((α2698_2738''',) -> α2699_2739''')}›)›  <!<  ((α2698_3102,) -> α2699_3103)
-//│ ╟── while constraining:  mod2689_2736#  <!<  ((α2698_3102,) -> α2699_3103)
-//│ ╟── while constraining:  {(α2691_3104 -> α2701_3107) where: mod2689_2736# <: ((α2698_3102,) -> α2699_3103)}  <!<  ((α2691_3091,) -> α2700_3092)
-//│ ╟── while constraining:  ‹∀ 2. {(α2691_3098''' -> α2701_3101''') where: mod2689_2736# <: ((α2698_3096''',) -> α2699_3097''')}›  <!<  ((α2691_3091,) -> α2700_3092)
-//│ ╟── while constraining:  ‹∀ 2. {(α2691_3098''' -> α2701_3101''') where: mod2689_2736# <: ((α2698_3096''',) -> α2699_3097''')}›  <!<  α2699_3090
-//│ ╟── while constraining:  (α2690_3095 -> ‹∀ 2. {(α2691_3098''' -> α2701_3101''') where: mod2689_2736# <: ((α2698_3096''',) -> α2699_3097''')}›)  <!<  ((α2698_3089,) -> α2699_3090)
-//│ ╟── while constraining:  ‹∀ 1. (α2690_2737'' -> ‹∀ 2. {(α2691_2740''' -> α2701_2743''') where: mod2689_2736# <: ((α2698_2738''',) -> α2699_2739''')}›)›  <!<  ((α2698_3089,) -> α2699_3090)
-//│ ╟── while constraining:  mod2689_2736#  <!<  ((α2698_3089,) -> α2699_3090)
-//│ ╟── while constraining:  {(α2691_3091 -> α2701_3094) where: mod2689_2736# <: ((α2698_3089,) -> α2699_3090)}  <!<  ((α2691_3078,) -> α2700_3079)
-//│ ╟── while constraining:  ‹∀ 2. {(α2691_3085''' -> α2701_3088''') where: mod2689_2736# <: ((α2698_3083''',) -> α2699_3084''')}›  <!<  ((α2691_3078,) -> α2700_3079)
-//│ ╟── while constraining:  ‹∀ 2. {(α2691_3085''' -> α2701_3088''') where: mod2689_2736# <: ((α2698_3083''',) -> α2699_3084''')}›  <!<  α2699_3077
-//│ ╟── while constraining:  (α2690_3082 -> ‹∀ 2. {(α2691_3085''' -> α2701_3088''') where: mod2689_2736# <: ((α2698_3083''',) -> α2699_3084''')}›)  <!<  ((α2698_3076,) -> α2699_3077)
-//│ ╟── while constraining:  ‹∀ 1. (α2690_2737'' -> ‹∀ 2. {(α2691_2740''' -> α2701_2743''') where: mod2689_2736# <: ((α2698_2738''',) -> α2699_2739''')}›)›  <!<  ((α2698_3076,) -> α2699_3077)
-//│ ╟── while constraining:  mod2689_2736#  <!<  ((α2698_3076,) -> α2699_3077)
-//│ ╟── while constraining:  {(α2691_3078 -> α2701_3081) where: mod2689_2736# <: ((α2698_3076,) -> α2699_3077)}  <!<  ((α2691_3065,) -> α2700_3066)
+//│ ╟── while constraining:  ‹∀ 1. (α2675_2722'' -> ‹∀ 2. {(α2676_2725''' -> α2686_2728''') where: mod2674_2721# <: ((α2683_2723''',) -> α2684_2724''')}›)›  <!<  ((α2683_3087,) -> α2684_3088)
+//│ ╟── while constraining:  mod2674_2721#  <!<  ((α2683_3087,) -> α2684_3088)
+//│ ╟── while constraining:  {(α2676_3089 -> α2686_3092) where: mod2674_2721# <: ((α2683_3087,) -> α2684_3088)}  <!<  ((α2676_3076,) -> α2685_3077)
+//│ ╟── while constraining:  ‹∀ 2. {(α2676_3083''' -> α2686_3086''') where: mod2674_2721# <: ((α2683_3081''',) -> α2684_3082''')}›  <!<  ((α2676_3076,) -> α2685_3077)
+//│ ╟── while constraining:  ‹∀ 2. {(α2676_3083''' -> α2686_3086''') where: mod2674_2721# <: ((α2683_3081''',) -> α2684_3082''')}›  <!<  α2684_3075
+//│ ╟── while constraining:  (α2675_3080 -> ‹∀ 2. {(α2676_3083''' -> α2686_3086''') where: mod2674_2721# <: ((α2683_3081''',) -> α2684_3082''')}›)  <!<  ((α2683_3074,) -> α2684_3075)
+//│ ╟── while constraining:  ‹∀ 1. (α2675_2722'' -> ‹∀ 2. {(α2676_2725''' -> α2686_2728''') where: mod2674_2721# <: ((α2683_2723''',) -> α2684_2724''')}›)›  <!<  ((α2683_3074,) -> α2684_3075)
+//│ ╟── while constraining:  mod2674_2721#  <!<  ((α2683_3074,) -> α2684_3075)
+//│ ╟── while constraining:  {(α2676_3076 -> α2686_3079) where: mod2674_2721# <: ((α2683_3074,) -> α2684_3075)}  <!<  ((α2676_3063,) -> α2685_3064)
+//│ ╟── while constraining:  ‹∀ 2. {(α2676_3070''' -> α2686_3073''') where: mod2674_2721# <: ((α2683_3068''',) -> α2684_3069''')}›  <!<  ((α2676_3063,) -> α2685_3064)
+//│ ╟── while constraining:  ‹∀ 2. {(α2676_3070''' -> α2686_3073''') where: mod2674_2721# <: ((α2683_3068''',) -> α2684_3069''')}›  <!<  α2684_3062
+//│ ╟── while constraining:  (α2675_3067 -> ‹∀ 2. {(α2676_3070''' -> α2686_3073''') where: mod2674_2721# <: ((α2683_3068''',) -> α2684_3069''')}›)  <!<  ((α2683_3061,) -> α2684_3062)
+//│ ╟── while constraining:  ‹∀ 1. (α2675_2722'' -> ‹∀ 2. {(α2676_2725''' -> α2686_2728''') where: mod2674_2721# <: ((α2683_2723''',) -> α2684_2724''')}›)›  <!<  ((α2683_3061,) -> α2684_3062)
+//│ ╟── while constraining:  mod2674_2721#  <!<  ((α2683_3061,) -> α2684_3062)
+//│ ╟── while constraining:  {(α2676_3063 -> α2686_3066) where: mod2674_2721# <: ((α2683_3061,) -> α2684_3062)}  <!<  ((α2676_3050,) -> α2685_3051)
 //│ ╟── ......
 //│ ╟── ......
-//│ ╟── while constraining:  (α2690_2770 -> ‹∀ 2. {(α2691_2773''' -> α2701_2776''') where: mod2689_2736# <: ((α2698_2771''',) -> α2699_2772''')}›)  <!<  ((α2698_2764,) -> α2699_2765)
-//│ ╟── while constraining:  ‹∀ 1. (α2690_2737'' -> ‹∀ 2. {(α2691_2740''' -> α2701_2743''') where: mod2689_2736# <: ((α2698_2738''',) -> α2699_2739''')}›)›  <!<  ((α2698_2764,) -> α2699_2765)
-//│ ╟── while constraining:  mod2689_2736#  <!<  ((α2698_2764,) -> α2699_2765)
-//│ ╟── while constraining:  {(α2691_2766 -> α2701_2769) where: mod2689_2736# <: ((α2698_2764,) -> α2699_2765)}  <!<  ((α2691_2753,) -> α2700_2754)
-//│ ╟── while constraining:  ‹∀ 2. {(α2691_2760''' -> α2701_2763''') where: mod2689_2736# <: ((α2698_2758''',) -> α2699_2759''')}›  <!<  ((α2691_2753,) -> α2700_2754)
-//│ ╟── while constraining:  ‹∀ 2. {(α2691_2760''' -> α2701_2763''') where: mod2689_2736# <: ((α2698_2758''',) -> α2699_2759''')}›  <!<  α2699_2752
-//│ ╟── while constraining:  (α2690_2757 -> ‹∀ 2. {(α2691_2760''' -> α2701_2763''') where: mod2689_2736# <: ((α2698_2758''',) -> α2699_2759''')}›)  <!<  ((α2698_2751,) -> α2699_2752)
-//│ ╟── while constraining:  ‹∀ 1. (α2690_2737'' -> ‹∀ 2. {(α2691_2740''' -> α2701_2743''') where: mod2689_2736# <: ((α2698_2738''',) -> α2699_2739''')}›)›  <!<  ((α2698_2751,) -> α2699_2752)
-//│ ╟── while constraining:  mod2689_2736#  <!<  ((α2698_2751,) -> α2699_2752)
-//│ ╟── while constraining:  {(α2691_2753 -> α2701_2756) where: mod2689_2736# <: ((α2698_2751,) -> α2699_2752)}  <!<  (Int -> Int)
-//│ ╟── while constraining:  ‹∀ 2. {(α2691_2747''' -> α2701_2750''') where: mod2689_2736# <: ((α2698_2745''',) -> α2699_2746''')}›  <!<  (Int -> Int)
-//│ ╟── while constraining:  (α2690_2744 -> ‹∀ 2. {(α2691_2747''' -> α2701_2750''') where: mod2689_2736# <: ((α2698_2745''',) -> α2699_2746''')}›)  <!<  (Int -> (Int -> Int))
-//│ ╟── while constraining:  ‹∀ 1. (α2690_2737'' -> ‹∀ 2. {(α2691_2740''' -> α2701_2743''') where: mod2689_2736# <: ((α2698_2738''',) -> α2699_2739''')}›)›  <!<  (Int -> (Int -> Int))
-//│ ╟── while constraining:  mod2689_2736#  <!<  (Int -> (Int -> Int))
-//│ ╙── while constraining:  ‹∀ 0. mod2689'#›  <!<  (Int -> (Int -> Int))
+//│ ╟── while constraining:  (α2675_2755 -> ‹∀ 2. {(α2676_2758''' -> α2686_2761''') where: mod2674_2721# <: ((α2683_2756''',) -> α2684_2757''')}›)  <!<  ((α2683_2749,) -> α2684_2750)
+//│ ╟── while constraining:  ‹∀ 1. (α2675_2722'' -> ‹∀ 2. {(α2676_2725''' -> α2686_2728''') where: mod2674_2721# <: ((α2683_2723''',) -> α2684_2724''')}›)›  <!<  ((α2683_2749,) -> α2684_2750)
+//│ ╟── while constraining:  mod2674_2721#  <!<  ((α2683_2749,) -> α2684_2750)
+//│ ╟── while constraining:  {(α2676_2751 -> α2686_2754) where: mod2674_2721# <: ((α2683_2749,) -> α2684_2750)}  <!<  ((α2676_2738,) -> α2685_2739)
+//│ ╟── while constraining:  ‹∀ 2. {(α2676_2745''' -> α2686_2748''') where: mod2674_2721# <: ((α2683_2743''',) -> α2684_2744''')}›  <!<  ((α2676_2738,) -> α2685_2739)
+//│ ╟── while constraining:  ‹∀ 2. {(α2676_2745''' -> α2686_2748''') where: mod2674_2721# <: ((α2683_2743''',) -> α2684_2744''')}›  <!<  α2684_2737
+//│ ╟── while constraining:  (α2675_2742 -> ‹∀ 2. {(α2676_2745''' -> α2686_2748''') where: mod2674_2721# <: ((α2683_2743''',) -> α2684_2744''')}›)  <!<  ((α2683_2736,) -> α2684_2737)
+//│ ╟── while constraining:  ‹∀ 1. (α2675_2722'' -> ‹∀ 2. {(α2676_2725''' -> α2686_2728''') where: mod2674_2721# <: ((α2683_2723''',) -> α2684_2724''')}›)›  <!<  ((α2683_2736,) -> α2684_2737)
+//│ ╟── while constraining:  mod2674_2721#  <!<  ((α2683_2736,) -> α2684_2737)
+//│ ╟── while constraining:  {(α2676_2738 -> α2686_2741) where: mod2674_2721# <: ((α2683_2736,) -> α2684_2737)}  <!<  (Int -> Int)
+//│ ╟── while constraining:  ‹∀ 2. {(α2676_2732''' -> α2686_2735''') where: mod2674_2721# <: ((α2683_2730''',) -> α2684_2731''')}›  <!<  (Int -> Int)
+//│ ╟── while constraining:  (α2675_2729 -> ‹∀ 2. {(α2676_2732''' -> α2686_2735''') where: mod2674_2721# <: ((α2683_2730''',) -> α2684_2731''')}›)  <!<  (Int -> (Int -> Int))
+//│ ╟── while constraining:  ‹∀ 1. (α2675_2722'' -> ‹∀ 2. {(α2676_2725''' -> α2686_2728''') where: mod2674_2721# <: ((α2683_2723''',) -> α2684_2724''')}›)›  <!<  (Int -> (Int -> Int))
+//│ ╟── while constraining:  mod2674_2721#  <!<  (Int -> (Int -> Int))
+//│ ╙── while constraining:  ‹∀ 0. mod2674'#›  <!<  (Int -> (Int -> Int))
 //│    = [Function: mod]
 
 def stepImpl arrImpl = ArraysImpl {
@@ -351,21 +356,21 @@ def stepImpl arrImpl = ArraysImpl {
       else (r0, arrImpl.Update r1 (div i 2) a);
     fold = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.Fold f (arrImpl.Fold f b r0) r1
   }
-//│ stepImpl: (ArraysRep[in 'A | 'A0 | 'A1 | 'A2 | 'A3 & 'A4 | 'A3 & ('A5 | 'A6) out nothing, in anything out nothing] & 'a) -> (ArraysImpl['A3, 'Rep] with {fold: forall 'Rep0, 'A7, 'c, 'b, 'Rep1, 'd, 'b0, 'A8. 'c -> 'd -> (('Rep1, 'Rep0,) -> ('d | 'b0)
+//│ stepImpl: (ArraysRep[in 'A | 'A0 | 'A1 | 'A2 | 'A3 & 'A4 out nothing, in anything out 'a & 'Rep & 'Rep0 & 'Rep1 & 'Rep2] & 'c) -> (ArraysImpl['A3, 'Rep3] with {fold: forall 'Rep4, 'A5, 'Rep5, 'd, 'A6, 'b, 'b0, 'e. 'e -> 'd -> (('Rep4, 'Rep5,) -> ('d | 'b)
 //│   where
-//│     'a <: ArraysRep['A8, 'Rep0] & ArraysRep['A7, 'Rep1]
-//│     'c <: 'A8 -> ('d | 'b0) -> 'b0 & 'A7 -> ('b | 'd) -> ('b0 & 'b)), init: forall 'A9, 'Rep2, 'A10, 'Rep3. (('A9 & 'A10) -> ('Rep2, 'Rep3,)
+//│     'c <: ArraysRep['A5, 'Rep5] & ArraysRep['A6, 'Rep4]
+//│     'e <: 'A5 -> ('d | 'b) -> 'b & 'A6 -> ('b0 | 'd) -> ('b & 'b0)), init: forall 'A7, 'Rep6, 'A8, 'Rep7. (('A7 & 'A8) -> ('Rep6, 'Rep7,)
 //│   where
-//│     'a <: ArraysRep['A9, 'Rep2] & ArraysRep['A10, 'Rep3]), sub: forall 'A11, 'Rep4, 'e, 'Rep5, 'A12. ('Rep5, 'Rep4,) -> (int -> 'e
+//│     'c <: ArraysRep['A7, 'Rep6] & ArraysRep['A8, 'Rep7]), sub: forall 'Rep8, 'A9, 'A10, 'f, 'Rep9. ('Rep8, 'Rep9,) -> (int -> 'f
 //│   where
-//│     'a <: ArraysRep['A11, 'Rep5] & ArraysRep['A12, 'Rep4]), update: forall 'Rep6, 'Rep7, 'A13, 'A14. ('Rep6, 'Rep7,) -> int -> (('A13 & 'A14) -> ('Rep6, 'Rep7,)
+//│     'c <: ArraysRep['A9, 'Rep8] & ArraysRep['A10, 'Rep9]), update: forall 'Rep10, 'Rep11, 'A11, 'A12. ('Rep10, 'Rep11,) -> int -> (('A11 & 'A12) -> ('Rep10, 'Rep11,)
 //│   where
-//│     'a <: ArraysRep['A13, 'Rep6] & ArraysRep['A14, 'Rep7])})
+//│     'c <: ArraysRep['A11, 'Rep10] & ArraysRep['A12, 'Rep11])})
 //│   where
-//│     'A12 <: 'e
-//│     'A11 <: 'e
-//│     'Rep :> ('f, 'g,)
-//│          <: (nothing, nothing,)
+//│     'A10 <: 'f
+//│     'A9 <: 'f
+//│     'Rep3 :> ('a, 'g,)
+//│           <: (nothing, nothing,)
 //│     'A3 <: 'A & 'A0 & 'A1 & 'A2
 //│         = [Function: stepImpl]
 
@@ -374,41 +379,41 @@ def stepImpl2_ty: (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> ArraysImpl['
 //│             = <missing implementation>
 
 def stepImpl2 arr = arr stepImpl
-//│ stepImpl2: ((forall 'A, 'A0, 'A1, 'a, 'A2, 'A3, 'A4, 'A5, 'A6, 'c, 'd, 'Rep. (ArraysRep[in 'A1 | 'A4 | 'A6 | 'A | 'A3 & 'A2 | 'A3 & ('A5 | 'A0) out nothing, in anything out nothing] & 'c) -> (ArraysImpl['A3, 'Rep] with {fold: forall 'A7, 'e, 'Rep0, 'f, 'b, 'b0, 'Rep1, 'A8. 'f -> 'e -> (('Rep0, 'Rep1,) -> ('e | 'b)
+//│ stepImpl2: ((forall 'a, 'A, 'Rep, 'A0, 'Rep0, 'A1, 'A2, 'c, 'A3, 'Rep1, 'd, 'A4, 'Rep2, 'Rep3. (ArraysRep[in 'A2 | 'A | 'A0 | 'A1 | 'A3 & 'A4 out nothing, in anything out 'c & 'Rep3 & 'Rep2 & 'Rep0 & 'Rep1] & 'a) -> (ArraysImpl['A3, 'Rep] with {fold: forall 'A5, 'b, 'b0, 'e, 'f, 'Rep4, 'A6, 'Rep5. 'e -> 'f -> (('Rep5, 'Rep4,) -> ('f | 'b0)
 //│   where
-//│     'c <: ArraysRep['A8, 'Rep1] & ArraysRep['A7, 'Rep0]
-//│     'f <: 'A8 -> ('e | 'b) -> 'b & 'A7 -> ('b0 | 'e) -> ('b & 'b0)), init: forall 'A9, 'Rep2, 'A10, 'Rep3. (('A10 & 'A9) -> ('Rep3, 'Rep2,)
+//│     'a <: ArraysRep['A5, 'Rep4] & ArraysRep['A6, 'Rep5]
+//│     'e <: 'A5 -> ('f | 'b0) -> 'b0 & 'A6 -> ('b | 'f) -> ('b0 & 'b)), init: forall 'A7, 'Rep6, 'A8, 'Rep7. (('A7 & 'A8) -> ('Rep6, 'Rep7,)
 //│   where
-//│     'c <: ArraysRep['A10, 'Rep3] & ArraysRep['A9, 'Rep2]), sub: forall 'g, 'A11, 'Rep4, 'A12, 'Rep5. ('Rep5, 'Rep4,) -> (int -> 'g
+//│     'a <: ArraysRep['A7, 'Rep6] & ArraysRep['A8, 'Rep7]), sub: forall 'Rep8, 'Rep9, 'A9, 'g, 'A10. ('Rep9, 'Rep8,) -> (int -> 'g
 //│   where
-//│     'c <: ArraysRep['A11, 'Rep5] & ArraysRep['A12, 'Rep4]), update: forall 'Rep6, 'Rep7, 'A13, 'A14. ('Rep6, 'Rep7,) -> int -> (('A13 & 'A14) -> ('Rep6, 'Rep7,)
+//│     'a <: ArraysRep['A10, 'Rep9] & ArraysRep['A9, 'Rep8]), update: forall 'A11, 'Rep10, 'Rep11, 'A12. ('Rep10, 'Rep11,) -> int -> (('A12 & 'A11) -> ('Rep10, 'Rep11,)
 //│   where
-//│     'c <: ArraysRep['A13, 'Rep6] & ArraysRep['A14, 'Rep7])})) -> 'h) -> 'h
+//│     'a <: ArraysRep['A12, 'Rep10] & ArraysRep['A11, 'Rep11])})) -> 'h) -> 'h
 //│   where
-//│     'A12 <: 'g
-//│     'A11 <: 'g
-//│     'Rep :> ('a, 'd,)
+//│     'A9 <: 'g
+//│     'A10 <: 'g
+//│     'Rep :> ('c, 'd,)
 //│          <: (nothing, nothing,)
-//│     'A3 <: 'A1 & 'A4 & 'A6 & 'A
+//│     'A3 <: 'A2 & 'A & 'A0 & 'A1
 //│          = [Function: stepImpl2]
 
 stepImpl2_ty = stepImpl2
-//│ ((forall 'a, 'A, 'A0, 'c, 'A1, 'A2, 'A3, 'd, 'A4, 'A5, 'A6, 'Rep. (ArraysRep[in 'A4 | 'A | 'A2 | 'A3 | 'A6 & 'A5 | 'A6 & ('A1 | 'A0) out nothing, in anything out nothing] & 'c) -> (ArraysImpl['A6, 'Rep] with {fold: forall 'A7, 'Rep0, 'e, 'A8, 'b, 'f, 'b0, 'Rep1. 'f -> 'e -> (('Rep0, 'Rep1,) -> ('e | 'b)
+//│ ((forall 'Rep, 'A, 'Rep0, 'a, 'Rep1, 'A0, 'A1, 'A2, 'c, 'A3, 'Rep2, 'Rep3, 'A4, 'd. (ArraysRep[in 'A2 | 'A0 | 'A | 'A4 | 'A1 & 'A3 out nothing, in anything out 'd & 'Rep0 & 'Rep & 'Rep3 & 'Rep2] & 'a) -> (ArraysImpl['A1, 'Rep1] with {fold: forall 'b, 'A5, 'A6, 'b0, 'Rep4, 'e, 'Rep5, 'f. 'e -> 'f -> (('Rep4, 'Rep5,) -> ('f | 'b0)
 //│   where
-//│     'c <: ArraysRep['A8, 'Rep1] & ArraysRep['A7, 'Rep0]
-//│     'f <: 'A8 -> ('e | 'b) -> 'b & 'A7 -> ('b0 | 'e) -> ('b & 'b0)), init: forall 'A9, 'Rep2, 'A10, 'Rep3. (('A9 & 'A10) -> ('Rep2, 'Rep3,)
+//│     'a <: ArraysRep['A5, 'Rep5] & ArraysRep['A6, 'Rep4]
+//│     'e <: 'A5 -> ('f | 'b0) -> 'b0 & 'A6 -> ('b | 'f) -> ('b0 & 'b)), init: forall 'A7, 'Rep6, 'A8, 'Rep7. (('A7 & 'A8) -> ('Rep6, 'Rep7,)
 //│   where
-//│     'c <: ArraysRep['A9, 'Rep2] & ArraysRep['A10, 'Rep3]), sub: forall 'A11, 'g, 'A12, 'Rep4, 'Rep5. ('Rep5, 'Rep4,) -> (int -> 'g
+//│     'a <: ArraysRep['A7, 'Rep6] & ArraysRep['A8, 'Rep7]), sub: forall 'Rep8, 'A9, 'g, 'A10, 'Rep9. ('Rep9, 'Rep8,) -> (int -> 'g
 //│   where
-//│     'c <: ArraysRep['A12, 'Rep5] & ArraysRep['A11, 'Rep4]), update: forall 'Rep6, 'Rep7, 'A13, 'A14. ('Rep6, 'Rep7,) -> int -> (('A13 & 'A14) -> ('Rep6, 'Rep7,)
+//│     'a <: ArraysRep['A9, 'Rep9] & ArraysRep['A10, 'Rep8]), update: forall 'Rep10, 'A11, 'A12, 'Rep11. ('Rep11, 'Rep10,) -> int -> (('A11 & 'A12) -> ('Rep11, 'Rep10,)
 //│   where
-//│     'c <: ArraysRep['A13, 'Rep6] & ArraysRep['A14, 'Rep7])})) -> 'h) -> 'h
+//│     'a <: ArraysRep['A11, 'Rep11] & ArraysRep['A12, 'Rep10])})) -> 'h) -> 'h
 //│   where
-//│     'A11 <: 'g
-//│     'A12 <: 'g
-//│     'Rep :> ('d, 'a,)
-//│          <: (nothing, nothing,)
-//│     'A6 <: 'A4 & 'A & 'A2 & 'A3
+//│     'A10 <: 'g
+//│     'A9 <: 'g
+//│     'Rep1 :> ('d, 'c,)
+//│           <: (nothing, nothing,)
+//│     'A1 <: 'A2 & 'A0 & 'A & 'A4
 //│   <:  stepImpl2_ty:
 //│ (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> ArraysImpl['A, ('Rep, 'Rep,)]
 //│             = [Function: stepImpl2]
@@ -422,26 +427,26 @@ def step: Arrays['a] -> Arrays['a]
 def step arr f = f (stepImpl2 arr)
 //│ 'a -> (('c -> 'd) -> 'd
 //│   where
-//│     'a <: (forall 'A, 'e, 'Rep, 'f, 'g. (ArraysRep[in anything out nothing, in anything out nothing] & 'f) -> (ArraysImpl['A, 'Rep] with {fold: forall 'Rep0, 'h, 'b, 'A0, 'b0, 'A1, 'i, 'Rep1. 'h -> 'i -> (('Rep0, 'Rep1,) -> ('i | 'b)
+//│     'a <: (forall 'e, 'f, 'Rep, 'A, 'g. (ArraysRep[in anything out nothing, in anything out nothing] & 'g) -> (ArraysImpl['A, 'Rep] with {fold: forall 'h, 'b, 'i, 'A0, 'A1, 'b0, 'Rep0, 'Rep1. 'h -> 'i -> (('Rep1, 'Rep0,) -> ('i | 'b0)
 //│   where
-//│     'f <: ArraysRep['A0, 'Rep1] & ArraysRep['A1, 'Rep0]
-//│     'h <: 'A0 -> ('i | 'b) -> 'b & 'A1 -> ('b0 | 'i) -> ('b & 'b0)), init: forall 'A2, 'Rep2, 'A3, 'Rep3. (('A2 & 'A3) -> ('Rep2, 'Rep3,)
+//│     'g <: ArraysRep['A1, 'Rep0] & ArraysRep['A0, 'Rep1]
+//│     'h <: 'A1 -> ('i | 'b0) -> 'b0 & 'A0 -> ('b | 'i) -> ('b0 & 'b)), init: forall 'A2, 'Rep2, 'A3, 'Rep3. (('A2 & 'A3) -> ('Rep2, 'Rep3,)
 //│   where
-//│     'f <: ArraysRep['A2, 'Rep2] & ArraysRep['A3, 'Rep3]), sub: forall 'A4, 'j, 'A5, 'Rep4, 'Rep5. ('Rep4, 'Rep5,) -> (int -> 'j
+//│     'g <: ArraysRep['A2, 'Rep2] & ArraysRep['A3, 'Rep3]), sub: forall 'A4, 'j, 'A5, 'Rep4, 'Rep5. ('Rep4, 'Rep5,) -> (int -> 'j
 //│   where
-//│     'f <: ArraysRep['A5, 'Rep4] & ArraysRep['A4, 'Rep5]), update: forall 'Rep6, 'Rep7, 'A6, 'A7. ('Rep6, 'Rep7,) -> int -> (('A6 & 'A7) -> ('Rep6, 'Rep7,)
+//│     'g <: ArraysRep['A4, 'Rep4] & ArraysRep['A5, 'Rep5]), update: forall 'Rep6, 'A6, 'A7, 'Rep7. ('Rep7, 'Rep6,) -> int -> (('A6 & 'A7) -> ('Rep7, 'Rep6,)
 //│   where
-//│     'f <: ArraysRep['A6, 'Rep6] & ArraysRep['A7, 'Rep7])})) -> 'c)
+//│     'g <: ArraysRep['A6, 'Rep7] & ArraysRep['A7, 'Rep6])})) -> 'c)
 //│   where
-//│     'A4 <: 'j
 //│     'A5 <: 'j
-//│     'Rep :> ('g, 'e,)
+//│     'A4 <: 'j
+//│     'Rep :> ('f, 'e,)
 //│          <: (nothing, nothing,)
 //│     'A <: nothing
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.422: 	def step arr f = f (stepImpl2 arr)
+//│ ║  l.427: 	def step arr f = f (stepImpl2 arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -458,7 +463,7 @@ def step (arr: Arrays['a]) f = f (stepImpl2 arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.456: 	def step (arr: Arrays['a]) f = f (stepImpl2 arr)
+//│ ║  l.461: 	def step (arr: Arrays['a]) f = f (stepImpl2 arr)
 //│ ║         	                                  ^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -477,7 +482,7 @@ def step arr f = f (stepImpl2_ty arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.473: 	def step arr f = f (stepImpl2_ty arr)
+//│ ║  l.478: 	def step arr f = f (stepImpl2_ty arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -495,7 +500,7 @@ def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.490: 	def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
+//│ ║  l.495: 	def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
 //│ ║         	                                  ^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -519,8 +524,15 @@ ssb (fun arr ->
 
 
 
+:e
 rec def mkMonoArray n =
   if n == 0 then base else step (mkMonoArray(n - 1))
+//│ ╔══[ERROR] Inferred recursive type: 'mkMonoArray
+//│   where
+//│     'mkMonoArray :> forall 'a. (int -> Arrays['a]
+//│   where
+//│     'mkMonoArray <: int -> Arrays['a])
+//│ ╙──
 //│ mkMonoArray: 'mkMonoArray
 //│   where
 //│     'mkMonoArray :> forall 'a. (int -> Arrays['a]
@@ -530,12 +542,18 @@ rec def mkMonoArray n =
 
 :e // * Since the removal of "recursive definition hacks"
 snb = mkMonoArray 5
+//│ ╔══[ERROR] Inferred recursive type: 'mkMonoArray
+//│   where
+//│     'mkMonoArray :> forall 'a. (int -> Arrays['a]
+//│   where
+//│     'mkMonoArray <: int -> Arrays['a])
+//│ ╙──
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.532: 	snb = mkMonoArray 5
+//│ ║  l.544: 	snb = mkMonoArray 5
 //│ ║         	      ^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  mkMonoArray6027_6060'#  <:  ((α6035_6071',) -> α6036_6072')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  mkMonoArray6027'#  <:  ((α6035_6061'',) -> α6036_6062'')
+//│ ╟── this constraint:  mkMonoArray6033_6080'#  <:  ((α6041_6091',) -> α6042_6092')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  mkMonoArray6033'#  <:  ((α6041_6081'',) -> α6042_6082'')
 //│ snb: error | Arrays['a]
 //│    = [Function (anonymous)]
 

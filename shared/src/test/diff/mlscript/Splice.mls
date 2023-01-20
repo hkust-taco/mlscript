@@ -33,7 +33,7 @@ def f1 (x, ...y) = x
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.29: 	def f1 (x, ...y) = x
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `(‘a_49, ...Array[int])` does not match type `(?a, ...?b)`
+//│ ╟── type `(‘a_35, ...Array[int])` does not match type `(?a, ...?b)`
 //│ ║  l.25: 	def f1 : ('a, ...Array[int]) -> 'a
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from splice:

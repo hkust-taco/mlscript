@@ -128,7 +128,7 @@ def bar2 = foo
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.124: 	def bar2 = foo
 //│ ║         	^^^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of type `'a_553`
+//│ ╟── type `int` is not an instance of type `'a_538`
 //│ ║  l.4: 	class Derived1: Base1[int] & { x: int }
 //│ ║       	                      ^^^
 //│ ╟── Note: constraint arises from type variable:

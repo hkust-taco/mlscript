@@ -57,8 +57,8 @@ id1 id
 //│ ║  l.55: 	id1 id
 //│ ║        	^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α19' -> α19')›  <:  α96_147    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α19' -> α19')›  <:  α96_134''
+//│ ╟── this constraint:  ‹∀ 0. (α5' -> α5')›  <:  α82_133    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α5' -> α5')›  <:  α82_120''
 //│ res: ('a & 'b) -> 'b | error | 'c
 //│   where
 //│     'a <: 'd & 'b

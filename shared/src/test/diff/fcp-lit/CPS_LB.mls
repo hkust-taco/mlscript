@@ -71,17 +71,17 @@ def test18 = (s x x x x x x x x x x x x x x x x x x e)
 
 :RecursiveTypes
 def test18 = (s x x x x x x x x x x x x x x x x x x e)
-//│ test18: () -> (forall 'a, 'b. List['a] -> (() -> List['a | string] -> 'b) -> 'b)
+//│ test18: () -> (forall 'b, 'a. List['a] -> (() -> List['a | string] -> 'b) -> 'b)
 :NoRecursiveTypes
 
 
 // (* A function that receives a token *)
 def f t = (s x x t x x e)
-//│ f: (() -> List["x"] -> (() -> (forall 'a, 'b. List['a] -> (() -> List["x" | 'a] -> 'b) -> 'b)) -> (() -> (forall 'a0, 'c. List['a0] -> (() -> List["x" | 'a0] -> 'c) -> 'c)) -> (() -> List[string] -> () -> (forall 'a1, 'd. List['a1] -> (() -> List['a1 | string] -> 'd) -> 'd)) -> 'e) -> 'e
+//│ f: (() -> List["x"] -> (() -> (forall 'a, 'b. List['a] -> (() -> List["x" | 'a] -> 'b) -> 'b)) -> (() -> (forall 'a0, 'c. List['a0] -> (() -> List["x" | 'a0] -> 'c) -> 'c)) -> (() -> List[string] -> () -> (forall 'd, 'a1. List['a1] -> (() -> List['a1 | string] -> 'd) -> 'd)) -> 'e) -> 'e
 
 // (* If the token is used twice, we must reveive two arguments *)
 def g t1 t2 = (s x x t1 x (s x t2 x e) e)
-//│ g: (() -> List["x"] -> (() -> (forall 'a, 'b. List['a] -> (() -> List["x" | 'a] -> 'b) -> 'b)) -> 'c -> (() -> List[string] -> () -> (forall 'a0, 'd. List['a0] -> (() -> List['a0 | string] -> 'd) -> 'd)) -> 'e) -> (() -> List["x"] -> (() -> (forall 'f, 'a1. List['a1] -> (() -> List["x" | 'a1] -> 'f) -> 'f)) -> (() -> List[string] -> () -> (forall 'a2, 'g. List['a2] -> (() -> List['a2 | string] -> 'g) -> 'g)) -> 'c) -> 'e
+//│ g: (() -> List["x"] -> (() -> (forall 'a, 'b. List['a] -> (() -> List["x" | 'a] -> 'b) -> 'b)) -> 'c -> (() -> List[string] -> () -> (forall 'a0, 'd. List['a0] -> (() -> List['a0 | string] -> 'd) -> 'd)) -> 'e) -> (() -> List["x"] -> (() -> (forall 'a1, 'f. List['a1] -> (() -> List["x" | 'a1] -> 'f) -> 'f)) -> (() -> List[string] -> () -> (forall 'a2, 'g. List['a2] -> (() -> List['a2 | string] -> 'g) -> 'g)) -> 'c) -> 'e
 
 // (* This does not type. It requires first-class polymorphism. *)
 def h t = g t t

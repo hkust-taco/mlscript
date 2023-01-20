@@ -78,7 +78,7 @@ example succ
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.77: 	example succ
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── type `‘a_229` is not an instance of type `int`
+//│ ╟── type `‘a_215` is not an instance of type `int`
 //│ ║  l.55: 	def example f = (f: forall 'a. 'a -> 'a)
 //│ ╙──      	                           ^^
 //│ res: 'a -> 'a | error

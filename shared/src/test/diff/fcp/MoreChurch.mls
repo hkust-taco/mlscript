@@ -69,15 +69,15 @@ def add n m = n succ m
 
 :e // * Since "sound extrusion"
 add_ty = add
-//│ ((forall 'a, 'b, 'c, 'd. ('c -> 'd -> 'a) -> ('a -> 'b & 'c) -> 'd -> 'b) -> 'e -> 'f) -> 'e -> 'f
+//│ ((forall 'a, 'b, 'c, 'd. ('d -> 'a -> 'b) -> ('b -> 'c & 'd) -> 'a -> 'c) -> 'e -> 'f) -> 'e -> 'f
 //│   <:  add_ty:
 //│ ChurchInt -> ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
 //│ ║  l.71: 	add_ty = add
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a_548' -> ‘a_548')  <:  α49_566'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (‘a_548' -> ‘a_548')  <:  α49_561'''
+//│ ╟── this constraint:  (‘a_533' -> ‘a_533')  <:  α34_551'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (‘a_533' -> ‘a_533')  <:  α34_546'''
 //│       = [Function: add]
 
 def add (n: ChurchInt) m = n succ m
@@ -97,20 +97,20 @@ def mul_ty: ChurchInt -> ChurchInt -> ChurchInt
 //│       = <missing implementation>
 
 def mul n m = n (add m) zero
-//│ mul: ((forall 'a, 'b, 'c, 'd, 'e. ('e -> 'c -> 'b & 'a) -> (('b -> 'd & 'b -> 'b & 'e) -> 'c -> 'd | 'a)) -> (forall 'f. anything -> 'f -> 'f) -> 'g) -> ChurchInt -> 'g
+//│ mul: ((forall 'a, 'b, 'c, 'd, 'e. ('d -> 'c -> 'b & 'a) -> (('b -> 'e & 'b -> 'b & 'd) -> 'c -> 'e | 'a)) -> (forall 'f. anything -> 'f -> 'f) -> 'g) -> ChurchInt -> 'g
 //│    = [Function: mul]
 
 :e // fails since the fix to spurious-TV-cycles
 mul_ty = mul
-//│ ((forall 'a, 'b, 'c, 'd, 'e. ('b -> 'd -> 'a & 'e) -> (('a -> 'c & 'a -> 'a & 'b) -> 'd -> 'c | 'e)) -> (forall 'f. anything -> 'f -> 'f) -> 'g) -> ChurchInt -> 'g
+//│ ((forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e -> 'a & 'd) -> (('a -> 'b & 'a -> 'a & 'c) -> 'e -> 'b | 'd)) -> (forall 'f. anything -> 'f -> 'f) -> 'g) -> ChurchInt -> 'g
 //│   <:  mul_ty:
 //│ ChurchInt -> ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
 //│ ║  l.104: 	mul_ty = mul
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a_918' -> ‘a_918')  <:  α49_946'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (‘a_918' -> ‘a_918')  <:  α49_928''''
+//│ ╟── this constraint:  (‘a_903' -> ‘a_903')  <:  α34_931'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (‘a_903' -> ‘a_903')  <:  α34_913''''
 //│       = [Function: mul]
 
 def mul (n: ChurchInt) m = n (add m) zero
@@ -243,19 +243,19 @@ def pred n =
   let s p = pair (snd p) (succ (snd p)) in
   let z = pair zero zero in
   fst (n s z)
-//│ pred: ((forall 'a, 'b, 'c, 'd, 'e. ((forall 'f. anything -> 'f -> 'f) -> 'd -> 'e -> 'b & (forall 'g. anything -> 'g -> 'g) -> 'c) -> ('c -> (forall 'h. ('b -> 'h & 'd) -> 'e -> 'h) -> 'a) -> 'a) -> (forall 'i. ((forall 'j. anything -> 'j -> 'j) -> (forall 'k. anything -> 'k -> 'k) -> 'i) -> 'i) -> (forall 'l. 'l -> anything -> 'l) -> 'm) -> 'm
+//│ pred: ((forall 'a, 'b, 'c, 'd, 'e. ((forall 'f. anything -> 'f -> 'f) -> 'c -> 'e -> 'b & (forall 'g. anything -> 'g -> 'g) -> 'd) -> ('d -> (forall 'h. ('b -> 'h & 'c) -> 'e -> 'h) -> 'a) -> 'a) -> (forall 'i. ((forall 'j. anything -> 'j -> 'j) -> (forall 'k. anything -> 'k -> 'k) -> 'i) -> 'i) -> (forall 'l. 'l -> anything -> 'l) -> 'm) -> 'm
 //│     = [Function: pred1]
 :e
 pred_ty = pred
-//│ ((forall 'a, 'b, 'c, 'd, 'e. ((forall 'f. anything -> 'f -> 'f) -> 'd -> 'b -> 'a & (forall 'g. anything -> 'g -> 'g) -> 'c) -> ('c -> (forall 'h. ('a -> 'h & 'd) -> 'b -> 'h) -> 'e) -> 'e) -> (forall 'i. ((forall 'j. anything -> 'j -> 'j) -> (forall 'k. anything -> 'k -> 'k) -> 'i) -> 'i) -> (forall 'l. 'l -> anything -> 'l) -> 'm) -> 'm
+//│ ((forall 'a, 'b, 'c, 'd, 'e. ((forall 'f. anything -> 'f -> 'f) -> 'b -> 'e -> 'd & (forall 'g. anything -> 'g -> 'g) -> 'a) -> ('a -> (forall 'h. ('d -> 'h & 'b) -> 'e -> 'h) -> 'c) -> 'c) -> (forall 'i. ((forall 'j. anything -> 'j -> 'j) -> (forall 'k. anything -> 'k -> 'k) -> 'i) -> 'i) -> (forall 'l. 'l -> anything -> 'l) -> 'm) -> 'm
 //│   <:  pred_ty:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
 //│ ║  l.249: 	pred_ty = pred
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a_2632' -> ‘a_2632')  <:  α49_2690'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (‘a_2632' -> ‘a_2632')  <:  α49_2674^6
+//│ ╟── this constraint:  (‘a_2615' -> ‘a_2615')  <:  α34_2673'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (‘a_2615' -> ‘a_2615')  <:  α34_2657^6
 //│        = [Function: pred1]
 
 // * Only difference: use `succ_ty`
@@ -266,7 +266,7 @@ def pred n =
 //│ pred: ((forall 'a, 'b. ((forall 'c. anything -> 'c -> 'c) -> ChurchInt & (forall 'd. anything -> 'd -> 'd) -> 'a) -> ('a -> ChurchInt -> 'b) -> 'b) -> (forall 'e. ((forall 'f. anything -> 'f -> 'f) -> (forall 'g. anything -> 'g -> 'g) -> 'e) -> 'e) -> (forall 'h. 'h -> anything -> 'h) -> 'i) -> 'i
 //│     = [Function: pred2]
 pred_ty = pred
-//│ ((forall 'a, 'b. ((forall 'c. anything -> 'c -> 'c) -> ChurchInt & (forall 'd. anything -> 'd -> 'd) -> 'b) -> ('b -> ChurchInt -> 'a) -> 'a) -> (forall 'e. ((forall 'f. anything -> 'f -> 'f) -> (forall 'g. anything -> 'g -> 'g) -> 'e) -> 'e) -> (forall 'h. 'h -> anything -> 'h) -> 'i) -> 'i
+//│ ((forall 'a, 'b. ((forall 'c. anything -> 'c -> 'c) -> ChurchInt & (forall 'd. anything -> 'd -> 'd) -> 'a) -> ('a -> ChurchInt -> 'b) -> 'b) -> (forall 'e. ((forall 'f. anything -> 'f -> 'f) -> (forall 'g. anything -> 'g -> 'g) -> 'e) -> 'e) -> (forall 'h. 'h -> anything -> 'h) -> 'i) -> 'i
 //│   <:  pred_ty:
 //│ ChurchInt -> ChurchInt
 //│        = [Function: pred2]

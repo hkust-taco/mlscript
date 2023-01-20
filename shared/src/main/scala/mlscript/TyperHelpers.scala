@@ -738,13 +738,13 @@ abstract class TyperHelpers { Typer: Typer =>
           // ???
     }}
     
-    def getVarsPol(pol: PolMap)(implicit ctx: Ctx): SortedMap[TypeVariable, Opt[Bool]] = {
+    def getVarsPol(pol: PolMap, ignoreTopLevelOccs: Bool = false)(implicit ctx: Ctx): SortedMap[TypeVariable, Opt[Bool]] = {
       val res = MutMap.empty[TV, Pol]
       val traversed = MutSet.empty[TV -> Bool]
       // val traversed = MutSet.empty[TV]
-      def go(pol: PolMap)(ty: ST): Unit = {
+      def go(pol: PolMap, ignore: Bool)(ty: ST): Unit = {
         // trace(s"getVarsPol[${printPol(pol.base)}] $ty ${pol(1)}") {
-        // trace(s"getVarsPol[${printPol(pol.base)}] $ty ${pol}") {
+        // trace(s"getVarsPol[${printPol(pol.base)}] $ty ${pol} $ignore") {
         ty match {
           case tv: TypeVariable =>
             /* 
@@ -782,9 +782,13 @@ abstract class TyperHelpers { Typer: Typer =>
             }
             */
             val tvpol = pol(tv.level)
-            res.updateWith(tv) {
-              case S(p) if p =/= tvpol => S(N)
-              case _ => S(tvpol)
+            if (!ignore) res.updateWith(tv) {
+              case S(p) if p =/= tvpol =>
+                // println(s"> $tv: $tvpol =/= $p ~> S(N)")
+                S(N)
+              case _ =>
+                // println(s"> $tv: $tvpol")
+                S(tvpol)
             }
             val needsTraversing = tvpol match {
               case S(p) =>
@@ -802,21 +806,69 @@ abstract class TyperHelpers { Typer: Typer =>
             // println(s"$tv ${printPol(tvpol)} $needsTraversing")
             if (needsTraversing)
               tv.childrenPol(pol) // * Note: `childrenPol` deals with `assignedTo`
-                .foreach(cp => go(cp._1)(cp._2))
+                .foreach(cp => go(cp._1, ignore)(cp._2))
+          case ProxyType(und) => go(pol, ignore)(und)
+          // TODO AssignedVariable, Without, TypeBounds, ConstrainedType
+          
+          
+        // case tv @ AssignedVariable(ty) =>
+        //   go(pol, ignore)(ty)
+          
+        // case tv: TypeVariable =>
+        //   // (if (pol(tv.level) =/= S(false)) tv.lowerBounds.map(PolMap.pos -> _) else Nil) :::
+        //   // (if (pol(tv.level) =/= S(true)) tv.upperBounds.map(PolMap.neg -> _) else Nil)
+        //   (if (pol(tv) =/= S(false)) tv.lowerBounds.map(pol.at(tv.level, true) -> _) else Nil) :::
+        //   (if (pol(tv) =/= S(true)) tv.upperBounds.map(pol.at(tv.level, false) -> _) else Nil)
+        // case FunctionType(l, r) => pol.contravar -> l :: pol.covar -> r :: Nil
+        case Overload(as) => as.foreach(go(pol, ignore))
+        // case ComposedType(_, l, r) => pol -> l :: pol -> r :: Nil
+        // case RecordType(fs) => fs.unzip._2.flatMap(childrenPolField)
+        // case TupleType(fs) => fs.unzip._2.flatMap(childrenPolField)
+        // case ArrayType(fld) => childrenPolField(fld)
+        // case SpliceType(elems) => ???
+        case NegType(n) => go(pol.contravar, ignore)(n)
+        // case ExtrType(_) => Nil
+        // case ProxyType(und) => pol -> und :: Nil
+        // case _: ObjectTag => Nil
+        case Without(b, ns) => go(pol, ignore)(b)
+        case TypeBounds(lb, ub) =>
+          // PolMap.neg -> lb :: PolMap.pos -> ub :: Nil
+          go(PolMap.neg, ignore)(lb)
+          go(PolMap.pos, ignore)(ub)
+          // val res = collection.mutable.Buffer.empty[PolMap -> ST]
+          // // pol.traverseBounds(lb, ub)(_ -> _ |> (res +=  _))
+          // pol.traverseBounds(lb, ub)(res +=  _ -> _)
+          // res.toList
+        // case PolymorphicType(_, und) => pol -> und :: Nil
+        case ConstrainedType(cs, bod) =>
+          // cs.foreach {
+          //   case (lo, hi) =>
+          //     go(S(true))(lo)
+          //     go(S(false))(hi)
+          // }
+          cs.foreach { vbs => go(PolMap.pos, false)(vbs._1); go(PolMap.posAtNeg, false)(vbs._2) }
+          go(pol, ignore)(bod)
+        
+        
+        // case tr: TypeRef => tr.mapTargs(pol)(_ -> _) // ?
+          
+          case ComposedType(p, l, r) =>
+            go(pol, ignore)(l)
+            go(pol, ignore)(r)
           case pt: PolymorphicType =>
             // val quantified = go(S(true))(pt.body, lb, pt.polymLevel min ub)
             // val unquantified = go(pol)(pt.body, MinLevel-1, MaxLevel)
             // unquantified ++ 
             // go(S(true))(pt.body, lb, pt.polymLevel min ub)
-            go(pol.enter(pt.polymLevel))(pt.body)
+            go(pol.enter(pt.polymLevel), ignore)(pt.body)
           case ty =>
             // ty.children(includeBounds = true) // * Q: is `includeBounds` useful here?
             //   .foreach(go(_, lb, ub))
-            ty.childrenPol(pol).foreach(cp => go(cp._1)(cp._2))
+            ty.childrenPol(pol).foreach(cp => go(cp._1, false)(cp._2)) // TODO
         }
         // }()
       }
-      go(pol)(this)
+      go(pol, ignoreTopLevelOccs)(this)
       res.toSortedMap
     }
     

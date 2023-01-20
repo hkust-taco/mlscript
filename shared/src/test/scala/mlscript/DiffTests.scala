@@ -129,6 +129,7 @@ class DiffTests
     var declared: Map[Str, typer.ST] = Map.empty
     val failures = mutable.Buffer.empty[Int]
     val unmergedChanges = mutable.Buffer.empty[Int]
+    typer.createdTypeVars.clear()
     
     case class Mode(
       expectTypeErrors: Bool = false,
@@ -173,6 +174,7 @@ class DiffTests
     var distributeForalls = true
     // var distributeForalls = false
     var noCycleCheck = false
+    var occursCheck = false
     var noRecursiveTypes = false
     var noConstrainedTypes = true
     // var noConstrainedTypes = false
@@ -218,8 +220,9 @@ class DiffTests
           case "DontDistributeForalls" => distributeForalls = false; mode
           case "NoCycleCheck" => noCycleCheck = true; mode
           case "CycleCheck" => noCycleCheck = false; mode
-          case "RecursiveTypes" => noRecursiveTypes = false; mode
-          case "NoRecursiveTypes" => noRecursiveTypes = true; mode
+          case "OccursCheck" => occursCheck = true; mode
+          case "RecursiveTypes" => noRecursiveTypes = false; occursCheck = false; mode
+          case "NoRecursiveTypes" => noRecursiveTypes = true; occursCheck = true; mode
           case "ConstrainedTypes" => noConstrainedTypes = false; mode
           case "NoConstrainedTypes" => noConstrainedTypes = true; mode
           case "ArgGen" => noArgGen = false; mode
@@ -463,7 +466,7 @@ class DiffTests
               // else 
               typer.processTypeDefs(typeDefs)(ctx, raise)
             
-            def getType(ty: typer.TypeScheme): Type = {
+            def getType(ty: typer.TypeScheme, removePolarVars: Bool = true): Type = {
               // val wty = ty.instantiate(0)
               // val wty = ty.uninstantiatedBody
               // val wty = ty.asInstanceOf[typer.ST]
@@ -477,7 +480,7 @@ class DiffTests
                   def debugOutput(msg: => Str): Unit =
                     if (mode.dbgSimplif) output(msg)
                 }
-                val sim = SimplifyPipeline(wty)(ctx)
+                val sim = SimplifyPipeline(wty, removePolarVars)(ctx)
                 val exp = typer.expandType(sim)(ctx)
                 if (mode.dbgSimplif) output(s"⬤ Expanded: ${exp}")
                 // exp
@@ -707,7 +710,35 @@ class DiffTests
                   (name, typingLines, diagnosticLines.toList, typeBeforeDiags)
               }
             }
-
+            
+            
+            if (occursCheck) {
+              typer.dbg = mode.dbg
+              val tvs = typer.createdTypeVars.toList
+              
+              if (mode.dbg)
+                output(s"${tvs.map(tv => tv -> tv.isRecursive_$(omitTopLevel = true)(ctx))}")
+              
+              val recs = tvs.filter(_.isRecursive_$(omitTopLevel = true)(ctx))
+              
+              // recs.distinct.foreach { tv =>
+              recs.find(_.prov.loco.isDefined).orElse(recs.headOption).foreach { tv =>
+                import Message._
+                // output(tv.toString())
+                if (mode.dbg) output("REC: " + tv + tv.showBounds)
+                report(ErrorReport(
+                  msg"Inferred recursive type: ${
+                    // typer.expandType(tv)(ctx).show
+                    getType(tv, removePolarVars = false).show
+                  }" -> tv.prov.loco :: Nil) :: Nil)
+              }
+              
+              typer.dbg = false
+            }
+            
+            typer.createdTypeVars.clear()
+            
+            
             import JSTestBackend._
             
             val executionResults: Result \/ Ls[(ReplHost.Reply, Str)] = if (!allowTypeErrors &&

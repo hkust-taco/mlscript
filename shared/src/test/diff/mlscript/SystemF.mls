@@ -136,8 +136,8 @@ iter256_ty = iter256
 //│ ║  l.131: 	iter256() = iter4() (iter4())
 //│ ║         	            ^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 3. α126_491''''›  <:  α124_460''    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 3. α126_481'''›  <:  α124_222''
+//│ ╟── this constraint:  ‹∀ 3. α112_477''''›  <:  α110_446''    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 3. α112_467'''›  <:  α110_208''
 //│ iter256: () -> ((('a | 'b) -> ('b & 'c) & 'c -> ('a & 'c)) -> 'c -> 'b | error)
 //│   where
 //│     'c :> 'b
@@ -416,8 +416,8 @@ pu sh_pu
 //│ ║  l.414: 	pu sh_pu
 //│ ║         	^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α3142_3159'' -> ‹∀ 2. (α3143_3167''' -> ‹∀ 3. (α3144_3168'''' -> α3153_3169'''')›)›)››  <:  α3148_3244    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α3142_3159'' -> ‹∀ 2. (α3143_3167''' -> ‹∀ 3. (α3144_3168'''' -> α3153_3169'''')›)›)››  <:  α3148_3166''
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α3128_3145'' -> ‹∀ 2. (α3129_3153''' -> ‹∀ 3. (α3130_3154'''' -> α3139_3155'''')›)›)››  <:  α3134_3230    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α3128_3145'' -> ‹∀ 2. (α3129_3153''' -> ‹∀ 3. (α3130_3154'''' -> α3139_3155'''')›)›)››  <:  α3134_3152''
 //│ res: anything -> anything -> anything -> nothing | error
 //│    = [Function (anonymous)]
 
@@ -428,8 +428,8 @@ pu sh_pu
 //│ ║  l.426: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α3267_3269' -> α3268_3270')›  <:  α3267_3276    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α3267_3269' -> α3268_3270')›  <:  α3267_3269'
+//│ ╟── this constraint:  ‹∀ 0. (α3253_3255' -> α3254_3256')›  <:  α3253_3262    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α3253_3255' -> α3254_3256')›  <:  α3253_3255'
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded

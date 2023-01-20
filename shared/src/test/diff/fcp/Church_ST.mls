@@ -65,7 +65,7 @@ def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x
 //│     = [Function: succ2]
 
 def succ (n: ChurchInt) f x = f (n f x)
-//│ ChurchInt -> (forall 'a, 'N, 'N0. ('N0 -> 'a & 'N -> ('N0 & 'N)) -> ('N0 & 'N) -> 'a)
+//│ ChurchInt -> (forall 'N, 'a, 'N0. ('N -> 'a & 'N0 -> ('N & 'N0)) -> ('N & 'N0) -> 'a)
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: succ3]
@@ -128,19 +128,34 @@ wrap x = { x }
 //│ wrap: 'a -> {x: 'a}
 //│     = [Function: wrap]
 
+:e
 n1w = n1 wrap
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> {x: 'a}
+//│ ╙──
 //│ n1w: 'M -> 'M
 //│   where
 //│     'M :> {x: 'M}
 //│    = [Function (anonymous)]
 
+:e
 n1w 0
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> 0 | {x: 'a}
+//│ ╙──
 //│ res: 'a
 //│   where
 //│     'a :> 0 | {x: 'a}
 //│    = { x: 0 }
 
+:e
 n1 wrap 0
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> 0 | {x: 'a}
+//│ ╙──
 //│ res: 'a
 //│   where
 //│     'a :> 0 | {x: 'a}
@@ -148,28 +163,37 @@ n1 wrap 0
 
 :e
 res.x + 1
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> 0 | {x: 'a}
+//│ ╙──
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.150: 	res.x + 1
+//│ ║  l.165: 	res.x + 1
 //│ ║         	^^^^^
 //│ ╟── integer literal of type `0` does not have field 'x'
-//│ ║  l.143: 	n1 wrap 0
+//│ ║  l.154: 	n1 wrap 0
 //│ ║         	        ^
 //│ ╟── but it flows into reference with expected type `{x: ?x}`
-//│ ║  l.150: 	res.x + 1
+//│ ║  l.165: 	res.x + 1
 //│ ╙──       	^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.150: 	res.x + 1
+//│ ║  l.165: 	res.x + 1
 //│ ║         	^^^^^^^
 //│ ╟── record literal of type `{x: ?a}` is not an instance of type `int`
 //│ ║  l.127: 	wrap x = { x }
 //│ ║         	         ^^^^^
 //│ ╟── but it flows into field selection with expected type `int`
-//│ ║  l.150: 	res.x + 1
+//│ ║  l.165: 	res.x + 1
 //│ ╙──       	^^^^^
 //│ res: error | int
 //│    = 1
 
+:e
 n2 wrap 0
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> 0 | {x: 'a}
+//│ ╙──
 //│ res: 'a
 //│   where
 //│     'a :> 0 | {x: 'a}
@@ -177,32 +201,36 @@ n2 wrap 0
 
 :e
 res.x.x + 1
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> 0 | {x: 'a}
+//│ ╙──
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.179: 	res.x.x + 1
+//│ ║  l.203: 	res.x.x + 1
 //│ ║         	^^^^^
 //│ ╟── integer literal of type `0` does not have field 'x'
-//│ ║  l.172: 	n2 wrap 0
+//│ ║  l.192: 	n2 wrap 0
 //│ ║         	        ^
 //│ ╟── but it flows into reference with expected type `{x: ?x}`
-//│ ║  l.179: 	res.x.x + 1
+//│ ║  l.203: 	res.x.x + 1
 //│ ╙──       	^^^
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.179: 	res.x.x + 1
+//│ ║  l.203: 	res.x.x + 1
 //│ ║         	^^^^^^^
 //│ ╟── integer literal of type `0` does not have field 'x'
-//│ ║  l.172: 	n2 wrap 0
+//│ ║  l.192: 	n2 wrap 0
 //│ ║         	        ^
 //│ ╟── but it flows into field selection with expected type `{x: ?x}`
-//│ ║  l.179: 	res.x.x + 1
+//│ ║  l.203: 	res.x.x + 1
 //│ ╙──       	^^^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.179: 	res.x.x + 1
+//│ ║  l.203: 	res.x.x + 1
 //│ ║         	^^^^^^^^^
 //│ ╟── record literal of type `{x: ?a}` is not an instance of type `int`
 //│ ║  l.127: 	wrap x = { x }
 //│ ║         	         ^^^^^
 //│ ╟── but it flows into field selection with expected type `int`
-//│ ║  l.179: 	res.x.x + 1
+//│ ║  l.203: 	res.x.x + 1
 //│ ╙──       	^^^^^^^
 //│ res: error | int
 //│    = 1
@@ -218,13 +246,23 @@ wrap_ty = wrap
 //│ 'a -> {x: 'a}
 //│        = [Function: wrap]
 
+:e
 n1w = n1 wrap_ty
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> {x: 'a}
+//│ ╙──
 //│ n1w: 'M -> 'M
 //│   where
 //│     'M :> {x: 'M}
 //│    = [Function (anonymous)]
 
+:e
 n1w 0
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> 0 | {x: 'a}
+//│ ╙──
 //│ res: 'a
 //│   where
 //│     'a :> 0 | {x: 'a}
@@ -232,23 +270,27 @@ n1w 0
 
 :e
 res.x + 1
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> 0 | {x: 'a}
+//│ ╙──
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.234: 	res.x + 1
+//│ ║  l.272: 	res.x + 1
 //│ ║         	^^^^^
 //│ ╟── integer literal of type `0` does not have field 'x'
-//│ ║  l.227: 	n1w 0
+//│ ║  l.261: 	n1w 0
 //│ ║         	    ^
 //│ ╟── but it flows into reference with expected type `{x: ?x}`
-//│ ║  l.234: 	res.x + 1
+//│ ║  l.272: 	res.x + 1
 //│ ╙──       	^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.234: 	res.x + 1
+//│ ║  l.272: 	res.x + 1
 //│ ║         	^^^^^^^
 //│ ╟── type `{x: ?a}` is not an instance of type `int`
-//│ ║  l.211: 	def wrap_ty: 'a -> {x: 'a}
+//│ ║  l.239: 	def wrap_ty: 'a -> {x: 'a}
 //│ ║         	                   ^^^^^^^
 //│ ╟── but it flows into field selection with expected type `int`
-//│ ║  l.234: 	res.x + 1
+//│ ║  l.272: 	res.x + 1
 //│ ╙──       	^^^^^
 //│ res: error | int
 //│    = 1
@@ -283,7 +325,7 @@ succ = s
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.281: 	succ = s
+//│ ║  l.323: 	succ = s
 //│ ║         	^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.35: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -320,7 +362,7 @@ z: ChurchInt
 :stats
 s: ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.321: 	s: ChurchInt -> ChurchInt
+//│ ║  l.363: 	s: ChurchInt -> ChurchInt
 //│ ║         	^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -472,14 +514,14 @@ sz = s zero
 
 :ns
 sz
-//│ res: forall 'a, 'N, 'b, 'c, 'd. 'b
+//│ res: forall 'N, 'a, 'b, 'c, 'd. 'c
 //│   where
-//│     'b :> forall 'e, 'f, 'g. 'e -> (forall 'h, 'i. 'h -> 'i)
+//│     'c :> forall 'e, 'f, 'g. 'e -> (forall 'h, 'i. 'h -> 'i)
 //│     'i :> 'g
 //│     'h <: 'd
 //│     'd <: 'N
-//│     'e <: 'f -> 'g & 'c
-//│     'c <: 'N -> 'N
+//│     'e <: 'f -> 'g & 'b
+//│     'b <: 'N -> 'N
 //│     'N <: 'a
 //│     'f :> 'a
 //│    = [Function (anonymous)]
@@ -493,7 +535,7 @@ sz: ChurchInt
 :e
 s zero : ChurchInt
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.494: 	s zero : ChurchInt
+//│ ║  l.536: 	s zero : ChurchInt
 //│ ║         	^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -508,16 +550,16 @@ s zero : ChurchInt
 :e
 sz1 = sz 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.509: 	sz1 = sz 1
+//│ ║  l.551: 	sz1 = sz 1
 //│ ║         	      ^^^^
 //│ ╟── integer literal of type `1` is not a function
-//│ ║  l.509: 	sz1 = sz 1
+//│ ║  l.551: 	sz1 = sz 1
 //│ ║         	         ^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.265: 	def s n f x = f (n f x)
+//│ ║  l.307: 	def s n f x = f (n f x)
 //│ ║         	              ^^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.265: 	def s n f x = f (n f x)
+//│ ║  l.307: 	def s n f x = f (n f x)
 //│ ╙──       	              ^
 //│ sz1: anything -> nothing | error
 //│    = [Function (anonymous)]
@@ -552,7 +594,7 @@ to_church_ty = to_ch
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.550: 	to_church_ty = to_ch
+//│ ║  l.592: 	to_church_ty = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -561,7 +603,7 @@ to_church_ty = to_ch
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                        ^^
 //│ ╟── from application:
-//│ ║  l.265: 	def s n f x = f (n f x)
+//│ ║  l.307: 	def s n f x = f (n f x)
 //│ ╙──       	              ^^^^^^^^^
 //│             = [Function: to_ch]
 
@@ -589,7 +631,7 @@ to_church_ty = to_ch_simplif
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.587: 	to_church_ty = to_ch_simplif
+//│ ║  l.629: 	to_church_ty = to_ch_simplif
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -598,7 +640,7 @@ to_church_ty = to_ch_simplif
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                        ^^
 //│ ╟── from application:
-//│ ║  l.265: 	def s n f x = f (n f x)
+//│ ║  l.307: 	def s n f x = f (n f x)
 //│ ╙──       	              ^^^^^^^^^
 //│             = [Function: to_ch_simplif]
 
@@ -609,11 +651,11 @@ rec def to_ch_A1 n =
   if n == 0 then z
   else s (to_ch_A1 (n - 1) : ChurchInt)
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.608: 	rec def to_ch_A1 n =
+//│ ║  l.650: 	rec def to_ch_A1 n =
 //│ ║         	                 ^^^
-//│ ║  l.609: 	  if n == 0 then z
+//│ ║  l.651: 	  if n == 0 then z
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.610: 	  else s (to_ch_A1 (n - 1) : ChurchInt)
+//│ ║  l.652: 	  else s (to_ch_A1 (n - 1) : ChurchInt)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -622,11 +664,11 @@ rec def to_ch_A1 n =
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ╙──     	                        ^^
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.608: 	rec def to_ch_A1 n =
+//│ ║  l.650: 	rec def to_ch_A1 n =
 //│ ║         	                 ^^^
-//│ ║  l.609: 	  if n == 0 then z
+//│ ║  l.651: 	  if n == 0 then z
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.610: 	  else s (to_ch_A1 (n - 1) : ChurchInt)
+//│ ║  l.652: 	  else s (to_ch_A1 (n - 1) : ChurchInt)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -635,7 +677,7 @@ rec def to_ch_A1 n =
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                        ^^
 //│ ╟── from reference:
-//│ ║  l.265: 	def s n f x = f (n f x)
+//│ ║  l.307: 	def s n f x = f (n f x)
 //│ ╙──       	                     ^
 //│ to_ch_A1: int -> (forall 'a. ('N -> 'a & 'N -> 'N) -> (forall 'b. ('N & 'b) -> ('b | 'a)))
 //│         = [Function: to_ch_A1]
@@ -650,13 +692,13 @@ rec def to_ch_A2 n = (
     else s (to_ch_A2 (n - 1))
   ) : ChurchInt
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.648: 	rec def to_ch_A2 n = (
+//│ ║  l.690: 	rec def to_ch_A2 n = (
 //│ ║         	                 ^^^^^
-//│ ║  l.649: 	    if n == 0 then z
+//│ ║  l.691: 	    if n == 0 then z
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.650: 	    else s (to_ch_A2 (n - 1))
+//│ ║  l.692: 	    else s (to_ch_A2 (n - 1))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.651: 	  ) : ChurchInt
+//│ ║  l.693: 	  ) : ChurchInt
 //│ ║         	^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -665,13 +707,13 @@ rec def to_ch_A2 n = (
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ╙──     	                        ^^
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.648: 	rec def to_ch_A2 n = (
+//│ ║  l.690: 	rec def to_ch_A2 n = (
 //│ ║         	                 ^^^^^
-//│ ║  l.649: 	    if n == 0 then z
+//│ ║  l.691: 	    if n == 0 then z
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.650: 	    else s (to_ch_A2 (n - 1))
+//│ ║  l.692: 	    else s (to_ch_A2 (n - 1))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.651: 	  ) : ChurchInt
+//│ ║  l.693: 	  ) : ChurchInt
 //│ ║         	^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -680,13 +722,13 @@ rec def to_ch_A2 n = (
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ╙──     	                        ^^
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.648: 	rec def to_ch_A2 n = (
+//│ ║  l.690: 	rec def to_ch_A2 n = (
 //│ ║         	                 ^^^^^
-//│ ║  l.649: 	    if n == 0 then z
+//│ ║  l.691: 	    if n == 0 then z
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.650: 	    else s (to_ch_A2 (n - 1))
+//│ ║  l.692: 	    else s (to_ch_A2 (n - 1))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.651: 	  ) : ChurchInt
+//│ ║  l.693: 	  ) : ChurchInt
 //│ ║         	^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -695,16 +737,16 @@ rec def to_ch_A2 n = (
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                        ^^
 //│ ╟── from application:
-//│ ║  l.265: 	def s n f x = f (n f x)
+//│ ║  l.307: 	def s n f x = f (n f x)
 //│ ╙──       	                 ^^^^^
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.648: 	rec def to_ch_A2 n = (
+//│ ║  l.690: 	rec def to_ch_A2 n = (
 //│ ║         	                 ^^^^^
-//│ ║  l.649: 	    if n == 0 then z
+//│ ║  l.691: 	    if n == 0 then z
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.650: 	    else s (to_ch_A2 (n - 1))
+//│ ║  l.692: 	    else s (to_ch_A2 (n - 1))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.651: 	  ) : ChurchInt
+//│ ║  l.693: 	  ) : ChurchInt
 //│ ║         	^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -713,7 +755,7 @@ rec def to_ch_A2 n = (
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                        ^^
 //│ ╟── from application:
-//│ ║  l.265: 	def s n f x = f (n f x)
+//│ ║  l.307: 	def s n f x = f (n f x)
 //│ ╙──       	                 ^^^^^
 //│ to_ch_A2: int -> ChurchInt
 //│         = [Function: to_ch_A2]
@@ -739,7 +781,7 @@ to_church_ty = to_church_mix
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.737: 	to_church_ty = to_church_mix
+//│ ║  l.779: 	to_church_ty = to_church_mix
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -754,9 +796,9 @@ to_church_ty = to_church_mix
 rec def to_chD n =
   succD (to_chD n)
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.754: 	rec def to_chD n =
+//│ ║  l.796: 	rec def to_chD n =
 //│ ║         	               ^^^
-//│ ║  l.755: 	  succD (to_chD n)
+//│ ║  l.797: 	  succD (to_chD n)
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -768,9 +810,9 @@ rec def to_chD n =
 //│ ║  l.74: 	def succD: forall 'M. ChurchInt -> ('M -> 'M) -> ('M -> 'M)
 //│ ╙──      	                  ^^
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.754: 	rec def to_chD n =
+//│ ║  l.796: 	rec def to_chD n =
 //│ ║         	               ^^^
-//│ ║  l.755: 	  succD (to_chD n)
+//│ ║  l.797: 	  succD (to_chD n)
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)

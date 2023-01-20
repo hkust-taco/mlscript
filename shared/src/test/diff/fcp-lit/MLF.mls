@@ -110,7 +110,7 @@ let f = choose id in (f auto) (f succ)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.109: 	let f = choose id in (f auto) (f succ)
 //│ ║         	                     ^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a_345` is not an instance of type `int`
+//│ ╟── type `‘a_331` is not an instance of type `int`
 //│ ║  l.30: 	def auto (x: forall 'a. 'a -> 'a) = x x
 //│ ╙──      	                    ^^
 //│ res: int -> int | error

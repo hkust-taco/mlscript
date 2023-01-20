@@ -65,8 +65,8 @@ ty3A = ty3A
 //│ ║  l.+1: 	ty3A = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a107_121'#  <:  'a107_119'#    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a107_108'#  <:  'a107_108'#
+//│ ╟── this constraint:  'a92_106'#  <:  'a92_104'#    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a92_93'#  <:  'a92_93'#
 //│ constrain calls  : 49
 //│ annoying  calls  : 23
 //│ subtyping calls  : 131
@@ -121,8 +121,8 @@ ty4B = ty4B
 //│ ║  l.+1: 	ty4B = ty4B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a150_164'#]]  <:  MyArray[MyArray['a150_162'#]]    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray[MyArray['a150_151'#]]  <:  MyArray[MyArray['a150_151'#]]
+//│ ╟── this constraint:  MyArray[MyArray['a135_149'#]]  <:  MyArray[MyArray['a135_147'#]]    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray[MyArray['a135_136'#]]  <:  MyArray[MyArray['a135_136'#]]
 //│ constrain calls  : 58
 //│ annoying  calls  : 23
 //│ subtyping calls  : 199
@@ -174,7 +174,7 @@ ty2A = ty2B
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.+1: 	ty2A = ty2B
 //│ ║        	^^^^^^^^^^^
-//│ ╟── type `‘a_173` is not an instance of type `MyArray`
+//│ ╟── type `‘a_158` is not an instance of type `MyArray`
 //│ ║  l.23: 	def ty2A: MyArray['a]
 //│ ║        	                  ^^
 //│ ╟── Note: constraint arises from applied type reference:

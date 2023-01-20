@@ -206,17 +206,17 @@ class C[A]: { a: A }
 
 :ns
 rec def foo (c: C['a]) = foo (c.a)
-//│ foo: forall 'foo, 'a, 'a0, 'b, 'a1. 'foo
+//│ foo: forall 'a, 'a0, 'b, 'a1, 'foo. 'foo
 //│   where
 //│     'foo := forall 'a2, 'a3, 'c. C['a2] -> 'c
 //│     'c :> 'b
 //│     'b :> forall 'd. 'd
 //│     'd :> 'b
 //│     'a2 <: 'a3
-//│     'a3 <: 'a1
-//│     'a1 <: C['a0]
+//│     'a3 <: 'a
+//│     'a <: C['a1]
+//│     'a1 <: 'a0
 //│     'a0 <: 'a
-//│     'a <: 'a1
 
 foo
 //│ res: 'a -> nothing
@@ -418,17 +418,17 @@ f 1
 
 :ns
 rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
-//│ f: forall 'b, 'c, 'a, 'f, 'd. 'f
+//│ f: forall 'f, 'a, 'b, 'c, 'd. 'f
 //│   where
-//│     'f := forall 'e, 'g, 'h. 'e -> 'h
-//│     'e <: 'g & 'd & int & number
-//│     'g :> 'a
-//│        <: 'h
+//│     'f := forall 'e, 'g, 'h. 'g -> 'e
+//│     'g <: 'h & 'b & int & number
 //│     'h :> 'a
-//│     'a <: 'b
-//│     'b :> 'd\a & {a: 'c}
+//│        <: 'e
+//│     'e :> 'a
+//│     'a <: 'd
+//│     'd :> 'b\a & {a: 'c}
 //│        <: {a: 'a}
-//│     'd :> 'd\a & {a: 'c}
+//│     'b :> 'b\a & {a: 'c}
 //│        <: ({a: 'a} | ~{a: 'c} | ~{})\a & ({a: 'a} | ~{a: 'c})\a & (number | ~{a: 'c} | ~{})\a & (number | ~{a: 'c})\a & (int | ~{a: 'c} | ~{})\a & (int | ~{a: 'c})\a
 //│     'c :> int
 

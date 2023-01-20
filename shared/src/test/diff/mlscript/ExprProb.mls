@@ -51,19 +51,19 @@ rec def eval1_stub e = case e of {
   | Add -> eval1_stub e.lhs
   | _ -> 0
   }
-//│ eval1_stub: forall 'a, 'b, 'c, 'eval1_stub, 'd, 'e, 'lhs, 'lhs0. 'eval1_stub
+//│ eval1_stub: forall 'lhs, 'eval1_stub, 'a, 'b, 'lhs0, 'c, 'd, 'e. 'eval1_stub
 //│   where
-//│     'eval1_stub := forall 'lhs1, 'f, 'g, 'h, 'i, 'j. 'j -> (1 | 'h | 0)
-//│     'h :> 'b
-//│     'b :> forall 'k. 1 | 'k | 0
-//│     'k :> 'b
-//│     'j <: #Lit & 'g | (#Add & 'f | 'i & ~#Add) & ~#Lit
+//│     'eval1_stub := forall 'f, 'g, 'h, 'i, 'j, 'lhs1. 'i -> (1 | 'h | 0)
+//│     'h :> 'd
+//│     'd :> forall 'k. 1 | 'k | 0
+//│     'k :> 'd
+//│     'i <: #Lit & 'g | (#Add & 'f | 'j & ~#Add) & ~#Lit
 //│     'f <: {lhs: 'lhs1}
-//│     'lhs1 <: 'lhs
-//│     'lhs <: 'c
-//│     'c <: #Lit & 'd | (#Add & 'e | 'a & ~#Add) & ~#Lit
-//│     'e <: {lhs: 'lhs0}
-//│     'lhs0 <: 'lhs
+//│     'lhs1 <: 'lhs0
+//│     'lhs0 <: 'b
+//│     'b <: #Lit & 'c | (#Add & 'e | 'a & ~#Add) & ~#Lit
+//│     'e <: {lhs: 'lhs}
+//│     'lhs <: 'lhs0
 //│           = [Function: eval1_stub2]
 
 eval1_stub
@@ -90,40 +90,40 @@ rec def eval1 k e = case e of {
 
 :ns
 eval1
-//│ res: forall 'a, 'b, 'c, 'd, 'e, 'rhs, 'val, 'f, 'g, 'eval1, 'h, 'i, 'rhs0, 'rhs1, 'j, 'k, 'l, 'm, 'n, 'val0, 'o, 'p, 'lhs, 'lhs0, 'lhs1. 'eval1
+//│ res: forall 'a, 'lhs, 'rhs, 'b, 'c, 'd, 'lhs0, 'val, 'lhs1, 'val0, 'e, 'f, 'g, 'h, 'i, 'j, 'k, 'rhs0, 'rhs1, 'eval1, 'l, 'm, 'n, 'o, 'p. 'eval1
 //│   where
-//│     'eval1 := forall 'q, 'r, 's. 'q -> (forall 't, 'u, 'val1, 'v, 'w, 'x, 'rhs2, 'lhs2, 'y. 'y -> ('val1 | 'v | 'w))
-//│     'w :> 's
-//│     'v :> int
-//│     'y <: #Lit & 'x | (#Add & 't | 'u & ~#Add) & ~#Lit
-//│     'u <: 'r
-//│     't <: {rhs: 'rhs2} & {lhs: 'lhs2}
+//│     'eval1 := forall 'q, 'r, 's. 'q -> (forall 't, 'u, 'rhs2, 'val1, 'lhs2, 'v, 'w, 'x, 'y. 't -> ('val1 | 'y | 'x))
+//│     'x :> 's
+//│     'y :> int
+//│     't <: #Lit & 'v | (#Add & 'u | 'w & ~#Add) & ~#Lit
+//│     'w <: 'r
+//│     'u <: {rhs: 'rhs2} & {lhs: 'lhs2}
 //│     'lhs2 <: 'lhs0
-//│     'rhs2 <: 'rhs0
-//│     'rhs0 <: 'n
-//│     'n <: #Lit & 'd | (#Add & 'o | 'g & ~#Add) & ~#Lit
-//│     'g <: 'j
-//│     'o <: {rhs: 'rhs1} & {lhs: 'lhs1}
-//│     'lhs1 <: 'lhs0
-//│     'lhs0 <: 'm
-//│     'm <: #Lit & 'l | (#Add & 'e | 'k & ~#Add) & ~#Lit
-//│     'k <: 'a
-//│     'e <: {rhs: 'rhs} & {lhs: 'lhs}
+//│     'rhs2 <: 'rhs1
+//│     'rhs1 <: 'f
+//│     'f <: #Lit & 'i | (#Add & 'p | 'l & ~#Add) & ~#Lit
+//│     'l <: 'j
+//│     'p <: {rhs: 'rhs} & {lhs: 'lhs}
 //│     'lhs <: 'lhs0
-//│     'rhs <: 'rhs0
-//│     'l <: {val: 'val0}
+//│     'lhs0 <: 'n
+//│     'n <: #Lit & 'k | (#Add & 'a | 'b & ~#Add) & ~#Lit
+//│     'b <: 'c
+//│     'a <: {rhs: 'rhs0} & {lhs: 'lhs1}
+//│     'lhs1 <: 'lhs0
+//│     'rhs0 <: 'rhs1
+//│     'k <: {val: 'val0}
 //│     'val0 <: int
-//│     'rhs1 <: 'rhs0
-//│     'd <: {val: 'val}
+//│     'rhs <: 'rhs1
+//│     'i <: {val: 'val}
 //│     'val <: int
-//│     'x <: {val: 'val1}
-//│     'q <: 'r -> 's & 'f & 'p
-//│     'f <: 'h
-//│     'h <: 'j -> 'b & 'f & 'p
-//│     'p <: 'c
-//│     'c <: 'a -> 'i & 'f & 'p
-//│     'i <: int
-//│     'b <: int
+//│     'v <: {val: 'val1}
+//│     'q <: 'r -> 's & 'e & 'm
+//│     'e <: 'd
+//│     'd <: 'j -> 'o & 'e & 'm
+//│     'm <: 'h
+//│     'h <: 'c -> 'g & 'e & 'm
+//│     'g <: int
+//│     'o <: int
 //│    = [Function: eval1]
 
 :re
@@ -299,8 +299,8 @@ rec def prettier1 k ev e = case e of {
   }
 //│ prettier1: ('a -> 'b & 'c -> string & 'd -> string & 'e -> string & 'f -> string) -> ('rhs -> number & 'lhs -> number & 'rhs0 -> number & 'lhs0 -> number & 'rhs1 -> number & 'lhs1 -> number & 'rhs2 -> number & 'lhs2 -> number & 'rhs3 -> number & 'lhs3 -> number) -> (Add[?] & {lhs: 'lhs & 'lhs4, rhs: 'rhs & 'rhs4} | Lit | 'a & ~#Add & ~#Lit) -> (string | 'b)
 //│   where
-//│     'lhs4 <: (Add[?] & {lhs: 'lhs0 & 'lhs4, rhs: 'rhs0 & 'rhs4} | Lit | 'd & ~#Add & ~#Lit) & (Add[?] & {lhs: 'lhs1 & 'lhs4, rhs: 'rhs1 & 'rhs4} | Lit | 'e & ~#Add & ~#Lit)
-//│     'rhs4 <: (Add[?] & {lhs: 'lhs2 & 'lhs4, rhs: 'rhs2 & 'rhs4} | Lit | 'c & ~#Add & ~#Lit) & (Add[?] & {lhs: 'lhs3 & 'lhs4, rhs: 'rhs3 & 'rhs4} | Lit | 'f & ~#Add & ~#Lit)
+//│     'lhs4 <: (Add[?] & {lhs: 'lhs1 & 'lhs4, rhs: 'rhs1 & 'rhs4} | Lit | 'c & ~#Add & ~#Lit) & (Add[?] & {lhs: 'lhs2 & 'lhs4, rhs: 'rhs2 & 'rhs4} | Lit | 'd & ~#Add & ~#Lit)
+//│     'rhs4 <: (Add[?] & {lhs: 'lhs0 & 'lhs4, rhs: 'rhs0 & 'rhs4} | Lit | 'e & ~#Add & ~#Lit) & (Add[?] & {lhs: 'lhs3 & 'lhs4, rhs: 'rhs3 & 'rhs4} | Lit | 'f & ~#Add & ~#Lit)
 //│          = [Function: prettier1]
 //│ constrain calls  : 496
 //│ annoying  calls  : 0
@@ -424,8 +424,8 @@ rec def prettier2 k ev = prettier1 (fun x -> case x of {
   }) ev
 //│ prettier2: ('a -> string & 'b -> string) -> ('rhs -> number & 'lhs -> number & 'rhs0 -> number & 'lhs0 -> number & 'rhs1 -> number & 'lhs1 -> number & 'rhs2 -> number & 'lhs2 -> number & 'rhs3 -> number & 'lhs3 -> number & 'rhs4 -> number & 'lhs4 -> number & 'rhs5 -> number & 'lhs5 -> number & 'rhs6 -> number & 'lhs6 -> number & 'rhs7 -> number & 'lhs7 -> number & 'rhs8 -> number & 'lhs8 -> number) -> (Add[?] & {lhs: 'lhs & 'lhs9, rhs: 'rhs & 'rhs9} | Lit | Nega[?] & {arg: 'arg} | 'a & ~#Add & ~#Lit & ~#Nega) -> string
 //│   where
-//│     'lhs9 <: (Add[?] & {lhs: 'lhs0 & 'lhs9, rhs: 'rhs0 & 'rhs9} | Lit | Nega[?] & {arg: 'arg} | 'a & ~#Add & ~#Lit & ~#Nega) & (Add[?] & {lhs: 'lhs1 & 'lhs9, rhs: 'rhs1 & 'rhs9} | Lit | Nega[?] & {arg: 'arg} | 'a & ~#Add & ~#Lit & ~#Nega)
-//│     'rhs9 <: (Add[?] & {lhs: 'lhs2 & 'lhs9, rhs: 'rhs2 & 'rhs9} | Lit | Nega[?] & {arg: 'arg} | 'a & ~#Add & ~#Lit & ~#Nega) & (Add[?] & {lhs: 'lhs3 & 'lhs9, rhs: 'rhs3 & 'rhs9} | Lit | Nega[?] & {arg: 'arg} | 'a & ~#Add & ~#Lit & ~#Nega)
+//│     'lhs9 <: (Add[?] & {lhs: 'lhs1 & 'lhs9, rhs: 'rhs1 & 'rhs9} | Lit | Nega[?] & {arg: 'arg} | 'a & ~#Add & ~#Lit & ~#Nega) & (Add[?] & {lhs: 'lhs2 & 'lhs9, rhs: 'rhs2 & 'rhs9} | Lit | Nega[?] & {arg: 'arg} | 'a & ~#Add & ~#Lit & ~#Nega)
+//│     'rhs9 <: (Add[?] & {lhs: 'lhs0 & 'lhs9, rhs: 'rhs0 & 'rhs9} | Lit | Nega[?] & {arg: 'arg} | 'a & ~#Add & ~#Lit & ~#Nega) & (Add[?] & {lhs: 'lhs3 & 'lhs9, rhs: 'rhs3 & 'rhs9} | Lit | Nega[?] & {arg: 'arg} | 'a & ~#Add & ~#Lit & ~#Nega)
 //│     'arg <: Add[?] & {lhs: 'lhs8 & 'lhs10, rhs: 'rhs8 & 'rhs10} | Lit | Nega[?] & {arg: 'arg} | 'b & ~#Add & ~#Lit & ~#Nega
 //│     'lhs10 <: (Add[?] & {lhs: 'lhs5 & 'lhs10, rhs: 'rhs5 & 'rhs10} | Lit | Nega[?] & {arg: 'arg} | 'b & ~#Add & ~#Lit & ~#Nega) & (Add[?] & {lhs: 'lhs6 & 'lhs10, rhs: 'rhs6 & 'rhs10} | Lit | Nega[?] & {arg: 'arg} | 'b & ~#Add & ~#Lit & ~#Nega)
 //│     'rhs10 <: (Add[?] & {lhs: 'lhs4 & 'lhs10, rhs: 'rhs4 & 'rhs10} | Lit | Nega[?] & {arg: 'arg} | 'b & ~#Add & ~#Lit & ~#Nega) & (Add[?] & {lhs: 'lhs7 & 'lhs10, rhs: 'rhs7 & 'rhs10} | Lit | Nega[?] & {arg: 'arg} | 'b & ~#Add & ~#Lit & ~#Nega)

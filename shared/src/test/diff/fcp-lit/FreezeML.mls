@@ -548,7 +548,7 @@ a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.547: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a_1516`
+//│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a_1502`
 //│ ║  l.547: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:

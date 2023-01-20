@@ -187,8 +187,8 @@ x => y => x x y
 //│ ║  l.+1: 	(x => x x) (x => x x)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α445_447' -> α446_448')›  <:  α445_454    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α445_447' -> α446_448')›  <:  α445_447'
+//│ ╟── this constraint:  ‹∀ 0. (α431_433' -> α432_434')›  <:  α431_440    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α431_433' -> α432_434')›  <:  α431_433'
 //│ res: error
 
 
@@ -204,8 +204,8 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (x x)) (x => f (x x)))
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α478_483'' -> α480_485'')›  <:  α478_494'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α478_483'' -> α480_485'')›  <:  α478_483''
+//│ ╟── this constraint:  ‹∀ 1. (α464_469'' -> α466_471'')›  <:  α464_480'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α464_469'' -> α466_471'')›  <:  α464_469''
 //│ res: ('a -> 'a & 'a -> 'b) -> (error | 'b)
 
 // * Z combinator:
@@ -215,8 +215,8 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α548_563'' -> α557_567'')›  <:  α548_580'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α548_563'' -> α557_567'')›  <:  α548_563''
+//│ ╟── this constraint:  ‹∀ 1. (α534_549'' -> α543_553'')›  <:  α534_566'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α534_549'' -> α543_553'')›  <:  α534_549''
 //│ res: (('a -> 'b) -> ('c -> 'd & 'a -> 'b) & ('c -> 'd) -> 'e) -> (error | 'e)
 
 // * Function that takes arbitrarily many arguments:
@@ -226,8 +226,8 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α668_683'' -> α677_687'')›  <:  α668_700'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α668_683'' -> α677_687'')›  <:  α668_683''
+//│ ╟── this constraint:  ‹∀ 1. (α654_669'' -> α663_673'')›  <:  α654_686'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α654_669'' -> α663_673'')›  <:  α654_669''
 //│ res: 'a | error
 //│   where
 //│     'a :> anything -> 'a
@@ -390,8 +390,8 @@ let rec x = (let y = (x x); (z => z))
 //│ ║  l.+1: 	(w => x => x) ((y => y y) (y => y y))
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α1382_1384' -> α1383_1385')›  <:  α1382_1391    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α1382_1384' -> α1383_1385')›  <:  α1382_1384'
+//│ ╟── this constraint:  ‹∀ 0. (α1368_1370' -> α1369_1371')›  <:  α1368_1377    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α1368_1370' -> α1369_1371')›  <:  α1368_1370'
 //│ res: 'a -> 'a
 
 
@@ -405,7 +405,7 @@ let rec x = (let y = (x x); (z => z))
 // * Z combinator:
 // :e // Works thanks to inconsistent constrained types...
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
-//│ res: ((forall 'a, 'b. ('a -> 'b
+//│ res: ((forall 'a, 'b. ('b -> 'a
 //│   where
 //│     forall 'c, 'd. ('c -> 'd
 //│   where
@@ -415,7 +415,7 @@ let rec x = (let y = (x x); (z => z))
 //│   where
 //│     'e <: (forall 'f, 'g. ('f -> 'g
 //│   where
-//│     'c <: 'c -> 'f -> 'g)) -> 'd)) -> 'a -> 'b)) -> 'h & 'e) -> 'h
+//│     'c <: 'c -> 'f -> 'g)) -> 'd)) -> 'b -> 'a)) -> 'h & 'e) -> 'h
 
 // * Function that takes arbitrarily many arguments:
 // :e // Works thanks to inconsistent constrained types...

@@ -113,7 +113,7 @@ DNE_to_EM: DNE -> EM
 def DNE_to_EM_let dne =
   let poly = dne (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
   in poly
-//│ DNE_to_EM_let: ((forall 'a, 'v, 'b. ((Right & {v: 'v -> 'b}) -> 'a & (Left with {v: 'v}) -> 'b) -> 'a) -> 'c) -> 'c
+//│ DNE_to_EM_let: ((forall 'v, 'a, 'b. ((Right & {v: 'v -> 'a}) -> 'b & (Left with {v: 'v}) -> 'a) -> 'b) -> 'c) -> 'c
 //│              = [Function: DNE_to_EM_let]
 
 // * This one used to work because we used let polymorphism
@@ -370,7 +370,7 @@ def DNE_to_EM dne =
   dne (fun not_em -> not_em (Right { v = fun a -> not_em (Left { v = a }) }))
 //│ DNE_to_EM: ((forall 'a, 'b. ((Right & {v: forall 'v, 'c. ('v -> 'c
 //│   where
-//│     'a <: (Left with {v: 'v}) -> 'c)}) -> 'b & 'a) -> 'b) -> 'd) -> 'd
+//│     'b <: (Left with {v: 'v}) -> 'c)}) -> 'a & 'b) -> 'a) -> 'd) -> 'd
 
 :e // * Still needs distrib! (after "sound extrusion")
 DNE_to_EM: DNE -> EM

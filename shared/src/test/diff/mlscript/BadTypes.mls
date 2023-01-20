@@ -106,7 +106,7 @@ type Bad = { x: 'a }
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.+1: 	{x = 123}: Bad
 //│ ║        	^^^^^^^^^
-//│ ╟── integer literal of type `123` is not an instance of type `'a_33`
+//│ ╟── integer literal of type `123` is not an instance of type `'a_15`
 //│ ║  l.+1: 	{x = 123}: Bad
 //│ ║        	     ^^^
 //│ ╟── Note: constraint arises from type variable:
@@ -120,7 +120,7 @@ type Bad = { x: 'a }
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.+1: 	{x = "ah"}: Bad
 //│ ║        	^^^^^^^^^^
-//│ ╟── string literal of type `"ah"` is not an instance of type `'a_34`
+//│ ╟── string literal of type `"ah"` is not an instance of type `'a_16`
 //│ ║  l.+1: 	{x = "ah"}: Bad
 //│ ║        	     ^^^^
 //│ ╟── Note: constraint arises from type variable:
@@ -168,7 +168,7 @@ someRec: BadRec
 //│ ╟── type `{y: ?a}` does not have field 'x'
 //│ ║  l.157: 	def someRec: { y: 'a } as 'a
 //│ ║         	             ^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{x: ‘a_47, y: BadRec}`
+//│ ╟── but it flows into reference with expected type `{x: ‘a_28, y: BadRec}`
 //│ ║  l.+1: 	someRec: BadRec
 //│ ║        	^^^^^^^
 //│ ╟── Note: constraint arises from record type:
@@ -192,7 +192,7 @@ someRec: BadRec
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.+1: 	someRec: BadRec
 //│ ║        	^^^^^^^
-//│ ╟── type `{x: ?a, y: ?a}` is not an instance of type `'a_57`
+//│ ╟── type `{x: ?a, y: ?a}` is not an instance of type `'a_38`
 //│ ║  l.184: 	def someRec: { x: 'a; y: 'a } as 'a
 //│ ║         	             ^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
@@ -244,7 +244,7 @@ type ExSigR4 = SigR['a]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.+1: 	1: ExSigR4
 //│ ║        	^
-//│ ╟── integer literal of type `1` is not an instance of type `'a_72`
+//│ ╟── integer literal of type `1` is not an instance of type `'a_48`
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.239: 	type ExSigR4 = SigR['a]
 //│ ║         	                    ^^

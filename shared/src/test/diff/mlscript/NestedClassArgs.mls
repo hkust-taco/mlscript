@@ -290,7 +290,7 @@ def append ls elem = L { h = elem; t = S { v = ls } }
 
 :ns
 append
-//│ res: forall 'a, 'T, 'T0. 'a -> (forall 'b, 'T1, 'v, 'c, 'T2, 'h, 't. 'c -> 'b)
+//│ res: forall 'a, 'T, 'T0. 'a -> (forall 'T1, 'T2, 'b, 't, 'h, 'c, 'v. 'c -> 'b)
 //│   where
 //│     'b :> #L & {h: 'h, t: 't, L#T = 'T1}
 //│     't :> #S & {v: 'v, S#T = 'T2}
@@ -342,7 +342,7 @@ append_ty_2 = append
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.336: 	append_ty_2 = append
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘T0_1545` is not an instance of type `L`
+//│ ╟── type `‘T0_1528` is not an instance of type `L`
 //│ ║  l.329: 	def append_ty_2: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] & {h: 'h; t: S['T0] & {v: 'v}})
 //│ ║         	                                                                          ^^^
 //│ ╟── Note: constraint arises from applied type reference:
@@ -365,7 +365,7 @@ append_ty_2 = append_ty
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.361: 	append_ty_2 = append_ty
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘T0_1647` is not an instance of type `L`
+//│ ╟── type `‘T0_1630` is not an instance of type `L`
 //│ ║  l.329: 	def append_ty_2: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] & {h: 'h; t: S['T0] & {v: 'v}})
 //│ ║         	                                                                          ^^^
 //│ ╟── Note: constraint arises from applied type reference:

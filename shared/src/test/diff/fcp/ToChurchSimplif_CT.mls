@@ -49,9 +49,9 @@ s
 
 :e // * Since "sound extrusion"
 succ = s
-//│ 'a -> (forall 'b. 'b -> (forall 'c, 'd. ('d -> 'c
+//│ 'a -> (forall 'b. 'b -> (forall 'c, 'd. ('c -> 'd
 //│   where
-//│     'a <: 'b -> 'd -> 'c)))
+//│     'a <: 'b -> 'c -> 'd)))
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -119,9 +119,18 @@ succ_min n f = n f
 
 
 
+:e
 rec def to_ch n =
   if n == 0 then zero
   else s (to_ch n)
+//│ ╔══[ERROR] Inferred recursive type: 'to_ch
+//│   where
+//│     'to_ch :> forall 'a, 'b. ((number & 'a) -> (forall 'c. 'c -> (forall 'd, 'e. ('d -> 'e
+//│   where
+//│     'b <: 'c -> 'd -> 'e)) | ChurchInt)
+//│   where
+//│     'to_ch <: 'a -> 'b)
+//│ ╙──
 //│ to_ch: 'to_ch
 //│   where
 //│     'to_ch :> forall 'a, 'b. ((number & 'a) -> (forall 'c. 'c -> (forall 'd, 'e. ('d -> 'e
@@ -134,28 +143,45 @@ rec def to_ch n =
 
 :e
 to_church = to_ch
-//│ 'to_ch
+//│ ╔══[ERROR] Inferred recursive type: 'to_ch
 //│   where
 //│     'to_ch :> forall 'a, 'b. ((number & 'a) -> (forall 'c. 'c -> (forall 'd, 'e. ('d -> 'e
 //│   where
 //│     'b <: 'c -> 'd -> 'e)) | ChurchInt)
 //│   where
 //│     'to_ch <: 'a -> 'b)
+//│ ╙──
+//│ 'to_ch
+//│   where
+//│     'to_ch :> forall 'a, 'b. ((number & 'b) -> (forall 'c. 'c -> (forall 'd, 'e. ('d -> 'e
+//│   where
+//│     'a <: 'c -> 'd -> 'e)) | ChurchInt)
+//│   where
+//│     'to_ch <: 'b -> 'a)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.136: 	to_church = to_ch
+//│ ║  l.145: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch173_241#  <:  ((α174_258,) -> α180_259)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch173'#  <:  ((α174_242'',) -> α180_243'')
+//│ ╟── this constraint:  to_ch158_247#  <:  ((α159_264,) -> α165_265)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  to_ch158'#  <:  ((α159_248'',) -> α165_249'')
 //│          = <no result>
 //│            to_ch and zero are not implemented
 
 
+:e
 rec def to_ch n =
   if true then zero
   else s (to_ch n)
+//│ ╔══[ERROR] Inferred recursive type: 'to_ch
+//│   where
+//│     'to_ch :> forall 'a, 'b. ('a -> (forall 'c. 'c -> (forall 'd, 'e. ('d -> 'e
+//│   where
+//│     'b <: 'c -> 'd -> 'e)) | ChurchInt)
+//│   where
+//│     'to_ch <: 'a -> 'b)
+//│ ╙──
 //│ to_ch: 'to_ch
 //│   where
 //│     'to_ch :> forall 'a, 'b. ('a -> (forall 'c. 'c -> (forall 'd, 'e. ('d -> 'e
@@ -168,6 +194,14 @@ rec def to_ch n =
 
 :e
 to_church = to_ch
+//│ ╔══[ERROR] Inferred recursive type: 'to_ch
+//│   where
+//│     'to_ch :> forall 'a, 'b. ('a -> (forall 'c. 'c -> (forall 'd, 'e. ('d -> 'e
+//│   where
+//│     'b <: 'c -> 'd -> 'e)) | ChurchInt)
+//│   where
+//│     'to_ch <: 'a -> 'b)
+//│ ╙──
 //│ 'to_ch
 //│   where
 //│     'to_ch :> forall 'a, 'b. ('a -> (forall 'c. 'c -> (forall 'd, 'e. ('d -> 'e
@@ -178,11 +212,11 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.170: 	to_church = to_ch
+//│ ║  l.196: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch288_354#  <:  ((α289_371,) -> α293_372)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch288'#  <:  ((α289_355'',) -> α293_356'')
+//│ ╟── this constraint:  to_ch315_402#  <:  ((α316_419,) -> α320_420)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  to_ch315'#  <:  ((α316_403'',) -> α320_404'')
 //│          = <no result>
 //│            to_ch and zero are not implemented
 
@@ -204,7 +238,7 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.200: 	to_church = to_ch
+//│ ║  l.234: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -227,13 +261,13 @@ def to_ch n =
 
 :e // * Since "sound extrusion"
 to_church = to_ch
-//│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd. (('d & 'b) -> ('d | 'c)
+//│ int -> (forall 'a. 'a -> (forall 'b, 'a, 'c, 'd. (('b & 'c) -> ('b | 'd)
 //│   where
-//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c)))
+//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'c -> 'd)))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.229: 	to_church = to_ch
+//│ ║  l.263: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -262,7 +296,7 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.258: 	to_church = to_ch
+//│ ║  l.292: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -276,21 +310,21 @@ to_church = to_ch
 
 def to_ch n =
   s (to_church n)
-//│ to_ch: int -> (forall 'a. 'a -> (forall 'b, 'c. ('c -> 'b
+//│ to_ch: int -> (forall 'a. 'a -> (forall 'b, 'c. ('b -> 'c
 //│   where
-//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'c -> 'b)))
+//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c)))
 //│      = <no result>
 //│        to_church, to_ch and zero are not implemented
 
 :e // * Since "sound extrusion"
 to_church = to_ch
-//│ int -> (forall 'a. 'a -> (forall 'b, 'c. ('c -> 'b
+//│ int -> (forall 'a. 'a -> (forall 'b, 'c. ('b -> 'c
 //│   where
-//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'c -> 'b)))
+//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c)))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.286: 	to_church = to_ch
+//│ ║  l.320: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -318,7 +352,7 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.314: 	to_church = to_ch
+//│ ║  l.348: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -346,7 +380,7 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.342: 	to_church = to_ch
+//│ ║  l.376: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -377,7 +411,7 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.373: 	to_church = to_ch
+//│ ║  l.407: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -405,7 +439,7 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.401: 	to_church = to_ch
+//│ ║  l.435: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `int` is not a function
 //│ ║  l.21: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -439,9 +473,16 @@ to_church = to_ch
 //│            to_ch, to_church, to_ch, to_church, to_ch, to_church, to_ch, to_church, to_ch, to_church, to_ch, to_church, to_ch and zero are not implemented
 
 
+:e
 rec def to_ch n =
   if n == 0 then zero
   else succ (to_ch (n - 1))
+//│ ╔══[ERROR] Inferred recursive type: 'to_ch
+//│   where
+//│     'to_ch :> forall 'to_ch. (int -> ChurchInt
+//│   where
+//│     'to_ch <: int -> ChurchInt)
+//│ ╙──
 //│ to_ch: 'to_ch
 //│   where
 //│     'to_ch :> forall 'to_ch. (int -> ChurchInt
@@ -452,6 +493,12 @@ rec def to_ch n =
 
 :e // * Since the removal of "recursive definition hacks"
 to_church = to_ch
+//│ ╔══[ERROR] Inferred recursive type: 'to_ch
+//│   where
+//│     'to_ch :> forall 'to_ch. (int -> ChurchInt
+//│   where
+//│     'to_ch <: int -> ChurchInt)
+//│ ╙──
 //│ 'to_ch
 //│   where
 //│     'to_ch :> forall 'to_ch. (int -> ChurchInt
@@ -460,29 +507,94 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.454: 	to_church = to_ch
+//│ ║  l.495: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch1073_1112'#  <:  ((α1081_1121',) -> α1082_1122')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch1073'#  <:  ((α1081_1113'',) -> α1082_1114'')
+//│ ╟── this constraint:  to_ch1142_1188'#  <:  ((α1150_1197',) -> α1151_1198')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  to_ch1142'#  <:  ((α1150_1189'',) -> α1151_1190'')
 //│          = <no result>
 //│            to_ch and zero are not implemented
 
 
+:e
 rec def to_ch n =
   if n == 0 then z
   else s (to_ch (n - 1))
+//│ ╔══[ERROR] Inferred recursive type: 'to_ch
+//│   where
+//│     'to_ch :> forall 'a, 'b, 'c, 'd. (int -> 'b -> ('c -> ('c | 'd)
+//│   where
+//│     'a <: 'b -> 'c -> 'd)
+//│   where
+//│     'to_ch <: int -> 'a)
+//│ ╙──
 //│ to_ch: 'to_ch
+//│   where
+//│     'to_ch :> forall 'a, 'b, 'c, 'd. (int -> 'b -> ('c -> ('c | 'd)
+//│   where
+//│     'a <: 'b -> 'c -> 'd)
+//│   where
+//│     'to_ch <: int -> 'a)
+//│      = [Function: to_ch7]
+
+:e // * Since the removal of "recursive definition hacks"
+to_church = to_ch
+//│ ╔══[ERROR] Inferred recursive type: 'to_ch
+//│   where
+//│     'to_ch :> forall 'a, 'b, 'c, 'd. (int -> 'd -> ('a -> ('a | 'b)
+//│   where
+//│     'c <: 'd -> 'a -> 'b)
+//│   where
+//│     'to_ch <: int -> 'c)
+//│ ╙──
+//│ 'to_ch
+//│   where
+//│     'to_ch :> forall 'a, 'b, 'c, 'd. (int -> 'b -> ('c -> ('c | 'd)
+//│   where
+//│     'a <: 'b -> 'c -> 'd)
+//│   where
+//│     'to_ch <: int -> 'a)
+//│   <:  to_church:
+//│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
+//│ ║  l.541: 	to_church = to_ch
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  to_ch1210_1352'#  <:  ((α1218_1371',) -> α1219_1372')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  to_ch1210'#  <:  ((α1218_1353'',) -> α1219_1354'')
+//│          = [Function: to_ch7]
+
+
+:e
+rec def to_ch_weird n =
+  s (to_ch_weird n)
+//│ ╔══[ERROR] Inferred recursive type: 'to_ch_weird
+//│   where
+//│     'to_ch_weird :> forall 'a, 'b, 'c, 'd, 'e. ('c -> 'a -> ('e -> 'd
+//│   where
+//│     'b <: 'a -> 'e -> 'd)
+//│   where
+//│     'to_ch_weird <: 'c -> 'b)
+//│ ╙──
+//│ to_ch_weird: 'to_ch_weird
+//│   where
+//│     'to_ch_weird :> forall 'a, 'b, 'c, 'd, 'e. ('b -> 'd -> ('e -> 'a
+//│   where
+//│     'c <: 'd -> 'e -> 'a)
+//│   where
+//│     'to_ch_weird <: 'b -> 'c)
+//│            = [Function: to_ch_weird]
+
+:e // * Since the removal of "recursive definition hacks"
+to_church = to_ch
+//│ ╔══[ERROR] Inferred recursive type: 'to_ch
 //│   where
 //│     'to_ch :> forall 'a, 'b, 'c, 'd. (int -> 'a -> ('b -> ('b | 'c)
 //│   where
 //│     'd <: 'a -> 'b -> 'c)
 //│   where
 //│     'to_ch <: int -> 'd)
-//│      = [Function: to_ch7]
-
-:e // * Since the removal of "recursive definition hacks"
-to_church = to_ch
+//│ ╙──
 //│ 'to_ch
 //│   where
 //│     'to_ch :> forall 'a, 'b, 'c, 'd. (int -> 'b -> ('c -> ('c | 'd)
@@ -493,42 +605,11 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.485: 	to_church = to_ch
+//│ ║  l.589: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch1127_1235'#  <:  ((α1135_1254',) -> α1136_1255')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch1127'#  <:  ((α1135_1236'',) -> α1136_1237'')
-//│          = [Function: to_ch7]
-
-
-rec def to_ch_weird n =
-  s (to_ch_weird n)
-//│ to_ch_weird: 'to_ch_weird
-//│   where
-//│     'to_ch_weird :> forall 'a, 'b, 'c, 'd, 'e. ('e -> 'a -> ('b -> 'c
-//│   where
-//│     'd <: 'a -> 'b -> 'c)
-//│   where
-//│     'to_ch_weird <: 'e -> 'd)
-//│            = [Function: to_ch_weird]
-
-:e // * Since the removal of "recursive definition hacks"
-to_church = to_ch
-//│ 'to_ch
-//│   where
-//│     'to_ch :> forall 'a, 'b, 'c, 'd. (int -> 'b -> ('c -> ('c | 'd)
-//│   where
-//│     'a <: 'b -> 'c -> 'd)
-//│   where
-//│     'to_ch <: int -> 'a)
-//│   <:  to_church:
-//│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.516: 	to_church = to_ch
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  to_ch1127_1373'#  <:  ((α1135_1392',) -> α1136_1393')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  to_ch1127'#  <:  ((α1135_1374'',) -> α1136_1375'')
+//│ ╟── this constraint:  to_ch1210_1545'#  <:  ((α1218_1564',) -> α1219_1565')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  to_ch1210'#  <:  ((α1218_1546'',) -> α1219_1547'')
 //│          = [Function: to_ch7]
 
 

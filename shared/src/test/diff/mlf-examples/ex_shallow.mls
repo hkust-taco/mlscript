@@ -224,8 +224,8 @@ def a0'_ = a2'_ a1'
 //│ ║  l.222: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α45_46'' -> α45_46'')››  <:  α33_1821'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α45_46'' -> α45_46'')››  <:  α33_35''
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α29_30'' -> α29_30'')››  <:  α17_1801'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α29_30'' -> α29_30'')››  <:  α17_19''
 //│ a0'_: anything -> ('a -> 'b & 'c -> 'a & 'd -> 'c) -> 'd -> 'b | error
 //│     = [Function: a0$_]
 
@@ -286,7 +286,7 @@ def a0_ = a2_ a1
 //│   = [Function: a21]
 //│ a2_: A1 -> (forall 'a. (anything -> 'a
 //│   where
-//│     forall 'b, 'c, 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a))
+//│     forall 'b, 'c, 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f, 'g, 'h. ('h -> 'f & 'g -> 'h) -> 'g -> 'f) -> 'a))
 //│    = [Function: a2_1]
 //│ a0: anything -> 'a
 //│   where
@@ -331,7 +331,7 @@ def a2'_ x =
 def a0' = a2' a1'
 //│ a0': anything -> 'a
 //│   where
-//│     forall 'b, 'c, 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a
+//│     forall 'b, 'c, 'd. ('d -> 'b -> 'c) -> (forall 'e. ('c -> 'e & 'd) -> 'b -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a
 //│    = [Function: a0$1]
 
 :e
@@ -340,8 +340,8 @@ def a0'_ = a2'_ a1'
 //│ ║  l.338: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α45_46'' -> α45_46'')››  <:  α33_2675'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α45_46'' -> α45_46'')››  <:  α33_35''
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α29_30'' -> α29_30'')››  <:  α17_2653'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α29_30'' -> α29_30'')››  <:  α17_19''
 //│ a0'_: anything -> 'a | error
 //│   where
 //│     forall 'b, 'c, 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a
@@ -352,7 +352,7 @@ def a0'_ = a2'_ a1'
 def a0'_ = a2'_ a1'
 //│ a0'_: anything -> 'a
 //│   where
-//│     forall 'b, 'c, 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a
+//│     forall 'b, 'c, 'd. ('c -> 'd -> 'b) -> (forall 'e. ('b -> 'e & 'c) -> 'd -> 'e) <: (forall 'f, 'g, 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a
 //│     = [Function: a0$_3]
 :NoRecursiveTypes
 

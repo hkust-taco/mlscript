@@ -47,30 +47,40 @@ id_ty = id
 // * Not sure why we get a cycle in this slight variation!
 :e
 rec def id x = if true then x else id id x
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> forall 'b, 'c. 'b -> 'c
+//│        <: 'd -> 'a
+//│     'b <: 'd & 'c
+//│     'd :> forall 'b, 'c. 'b -> 'c
+//│        <: 'a
+//│     'c :> 'a
+//│ ║  l.49: 	rec def id x = if true then x else id id x
+//│ ╙──      	                                   ^^^^^
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
 //│ ║  l.49: 	rec def id x = if true then x else id id x
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α123_133'' -> α132_135'')›  <:  α123_139'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α123_133'' -> α132_135'')›  <:  α123_133''
+//│ ╟── this constraint:  ‹∀ 1. (α109_119'' -> α118_121'')›  <:  α109_125'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α109_119'' -> α118_121'')›  <:  α109_119''
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
 //│ ║  l.49: 	rec def id x = if true then x else id id x
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α123_133'' -> α132_135'')›  <:  α123_139'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α123_133'' -> α132_135'')›  <:  α123_133''
+//│ ╟── this constraint:  ‹∀ 1. (α109_119'' -> α118_121'')›  <:  α109_125'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α109_119'' -> α118_121'')›  <:  α109_119''
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
 //│ ║  l.49: 	rec def id x = if true then x else id id x
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α123_133'' -> α132_135'')›  <:  α128'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α123_133'' -> α132_135'')›  <:  α128'
+//│ ╟── this constraint:  ‹∀ 1. (α109_119'' -> α118_121'')›  <:  α114'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α109_119'' -> α118_121'')›  <:  α114'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
 //│ ║  l.49: 	rec def id x = if true then x else id id x
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α123_133'' -> α132_135'')›  <:  α128'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α123_133'' -> α132_135'')›  <:  α128'
+//│ ╟── this constraint:  ‹∀ 1. (α109_119'' -> α118_121'')›  <:  α114'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α109_119'' -> α118_121'')›  <:  α114'
 //│ id: 'id
 //│   where
 //│     'id :> forall 'a. ('b & 'a) -> 'a
@@ -83,6 +93,16 @@ rec def id x = if true then x else id id x
 
 :e
 id_ty = id
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> 'b
+//│     'b :> forall 'a, 'c. 'c -> 'a | ‘a_209
+//│        <: 'd -> 'b & ‘a_209
+//│     'c <: 'a & 'd
+//│     'd :> forall 'a, 'c. 'c -> 'a | ‘a_209
+//│        <: 'b
+//│ ║  l.49: 	rec def id x = if true then x else id id x
+//│ ╙──      	                  ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ 'id
 //│   where
 //│     'id :> forall 'a. ('b & 'a) -> 'a
@@ -94,9 +114,9 @@ id_ty = id
 //│   <:  id_ty:
 //│ 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.85: 	id_ty = id
+//│ ║  l.95: 	id_ty = id
 //│ ║        	^^^^^^^^^^
-//│ ╟── type `‘a_203` is not a function
+//│ ╟── type `‘a_209` is not a function
 //│ ║  l.5: 	def id_ty: forall 'a. 'a -> 'a
 //│ ║       	                  ^^
 //│ ╟── Note: constraint arises from application:

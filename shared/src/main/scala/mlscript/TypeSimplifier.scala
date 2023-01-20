@@ -377,7 +377,7 @@ trait TypeSimplifier { self: Typer =>
   
   
   /** Remove polar type variables, unify indistinguishable ones, and inline the bounds of non-recursive ones. */
-  def simplifyType(st: SimpleType, pol: Opt[Bool] = S(true), removePolarVars: Bool = true, inlineBounds: Bool = true)(implicit ctx: Ctx): SimpleType = {
+  def simplifyType(st: SimpleType, removePolarVars: Bool, pol: Opt[Bool] = S(true), inlineBounds: Bool = true)(implicit ctx: Ctx): SimpleType = {
     
     
     
@@ -571,7 +571,8 @@ trait TypeSimplifier { self: Typer =>
     // val rewritableVars = allVars.filter(v => v.level <= 1)
     val rewritableVars = allVars
     
-    var recVars = MutSet.from(allVars.iterator.filter(_.isRecursive_$))
+    // val recVars = MutSet.from(allVars.iterator.filter(_.isRecursive_$(omitTopLevel = true)))
+    var recVars = MutSet.from(allVars.iterator.filter(_.isRecursive_$(omitTopLevel = false)))
     
     println(s"[vars] ${allVars}")
     println(s"[rw vars] ${rewritableVars}")
@@ -733,8 +734,14 @@ trait TypeSimplifier { self: Typer =>
     // * applying the var substitution and simplifying some things on the fly.
     
     // * The recursive vars may have changed due to the previous phase!
-    recVars = MutSet.from(allVars.iterator.filter(v => !varSubst.contains(v) && v.isRecursive_$))
+    recVars = MutSet.from(allVars.iterator.filter(v =>
+      !varSubst.contains(v) && v.isRecursive_$(omitTopLevel = false)))
     println(s"[rec] ${recVars}")
+    
+    // val cyclicVars = MutSet.from(allVars.iterator.filter(v =>
+    //   // !varSubst.contains(v) && 
+    //   v.isRecursive_$(omitTopLevel = false)))
+    // println(s"[cyc] ${cyclicVars}")
     
     val renewals = MutMap.empty[TypeVariable, TypeVariable]
     
@@ -770,6 +777,7 @@ trait TypeSimplifier { self: Typer =>
         ot.mapAltsPol(pol)((p, t) => transform(t, p, parents))
       case _: ObjectTag | ExtrType(_) => st
       case tv: TypeVariable if parents.exists(_ === tv) =>
+        if (pol(tv).isEmpty) transform(tv, pol, parents - tv) else
         if (pol(tv).getOrElse(lastWords(s"parent in invariant position $tv $parents"))) BotType else TopType
       case tv: TypeVariable =>
         varSubst.get(tv) match {
@@ -1044,7 +1052,7 @@ trait TypeSimplifier { self: Typer =>
   abstract class SimplifyPipeline {
     def debugOutput(msg: => Str): Unit
     
-    def apply(st: ST)(implicit ctx: Ctx): ST = {
+    def apply(st: ST, removePolarVars: Bool = true)(implicit ctx: Ctx): ST = {
       var cur = st
       
       cur = removeIrrelevantBounds(cur, inPlace = false)
@@ -1055,7 +1063,7 @@ trait TypeSimplifier { self: Typer =>
       debugOutput(s"⬤ Unskid: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")
       
-      cur = simplifyType(cur)
+      cur = simplifyType(cur, removePolarVars)
       debugOutput(s"⬤ Type after simplification: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")
       
@@ -1079,7 +1087,7 @@ trait TypeSimplifier { self: Typer =>
       // * The DNFs introduced by `normalizeTypes_!` may lead more coocc info to arise
       // *  by merging things like function types together...
       // * So we need another pass of simplification!
-      cur = simplifyType(cur)
+      cur = simplifyType(cur, removePolarVars)
       // cur = simplifyType(simplifyType(cur)(ct)
       debugOutput(s"⬤ Resim: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")

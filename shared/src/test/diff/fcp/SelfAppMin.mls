@@ -22,8 +22,8 @@ e = eval eval
 //│ ║  l.20: 	e = eval eval
 //│ ║        	    ^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α25_40'' -> ‹∀ 2. (α26_44''' -> (0<int,number> | α32_48'''))›)››  <:  α25_88'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α25_40'' -> ‹∀ 2. (α26_44''' -> (0<int,number> | α32_48'''))›)››  <:  α25_40''
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α9_24'' -> ‹∀ 2. (α10_28''' -> (0<int,number> | α16_32'''))›)››  <:  α9_72'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α9_24'' -> ‹∀ 2. (α10_28''' -> (0<int,number> | α16_32'''))›)››  <:  α9_24''
 //│ e: (A & {f: A | L} | L) -> 0 | error
 //│  = [Function (anonymous)]
 
@@ -32,18 +32,31 @@ e (A{f = L{}})
 //│    = 0
 
 
+:e // TODO(oc) improve on `nothing`
 e = eval eval!
+//│ ╔══[ERROR] Inferred recursive type: nothing
+//│ ║  l.14: 	  A -> eval eval x.f
+//│ ╙──      	                 ^^^
 //│ e: 'f -> 0
 //│   where
 //│     'f <: A & {f: 'f} | L
 //│  = [Function (anonymous)]
 
+:e // TODO(oc) improve on `nothing`
 e (A{f = L{}})
+//│ ╔══[ERROR] Inferred recursive type: nothing
+//│ ║  l.14: 	  A -> eval eval x.f
+//│ ╙──      	                 ^^^
 //│ res: 0
 //│    = 0
 
+:e
 // * Note: this computation will diverge
 rec def v = A{f = v}
+//│ ╔══[ERROR] Inferred recursive type: 'f
+//│   where
+//│     'f :> A with {f: 'f}
+//│ ╙──
 //│ v: 'f
 //│   where
 //│     'f :> A with {f: 'f}
@@ -51,12 +64,17 @@ rec def v = A{f = v}
 
 :e
 e v
+//│ ╔══[ERROR] Inferred recursive type: 'f
+//│   where
+//│     'f :> A with {f: 'f}
+//│ ║  l.14: 	  A -> eval eval x.f
+//│ ╙──      	                 ^^^
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.53: 	e v
+//│ ║  l.66: 	e v
 //│ ║        	^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (a<> & {f: f24_270})  <:  f33_253    ComposedType  TypeVariable
-//│ ╙──  ... looks like:  (a<> & {f: f24_236'})  <:  f33_148'
+//│ ╟── this constraint:  (a<> & {f: f8_259})  <:  f17_242    ComposedType  TypeVariable
+//│ ╙──  ... looks like:  (a<> & {f: f8_222'})  <:  f17_132'
 //│ res: error | 0
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
@@ -82,11 +100,11 @@ def eval eval x = case x of
 :e
 e = eval eval
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.83: 	e = eval eval
-//│ ║        	    ^^^^^^^^^
+//│ ║  l.101: 	e = eval eval
+//│ ║         	    ^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α314_329'' -> ‹∀ 2. (α315_333''' -> (0<int,number> | {x: α321_337'''}))›)››  <:  α314_377'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α314_329'' -> ‹∀ 2. (α315_333''' -> (0<int,number> | {x: α321_337'''}))›)››  <:  α314_329''
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α307_322'' -> ‹∀ 2. (α308_326''' -> (0<int,number> | {x: α314_330'''}))›)››  <:  α307_370'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α307_322'' -> ‹∀ 2. (α308_326''' -> (0<int,number> | {x: α314_330'''}))›)››  <:  α307_322''
 //│ e: (A & {f: A | L} | L) -> (0 | {x: 0 | {x: nothing}}) | error
 //│  = [Function (anonymous)]
 

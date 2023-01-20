@@ -53,8 +53,10 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
     // def wrapMethod(pt: PolymorphicType, prov: TypeProvenance): MethodType =
     //   MethodType(pt.polymLevel, S((thisTy(prov), pt.body)), nme :: Nil, isInherited = false)(prov)
     
+    // * This is lazy so that the variable is not created if the type doesn't end up being processed,
+    // * which may happen if it is ill-formed.
+    lazy val thisTv: TypeVariable = freshVar(noProv, N, S("this"), Nil, TypeRef(nme, targs)(noProv) :: Nil)(1) // FIXME coudl N here result in divergence? cf. absence of shadow
     
-    val thisTv: TypeVariable = freshVar(noProv, N, S("this"), Nil, TypeRef(nme, targs)(noProv) :: Nil)(1) // FIXME coudl N here result in divergence? cf. absence of shadow
     var tvarVariances: Opt[VarianceStore] = N
     def getVariancesOrDefault: collection.Map[TV, VarianceInfo] =
       tvarVariances.getOrElse(Map.empty[TV, VarianceInfo].withDefaultValue(VarianceInfo.in))

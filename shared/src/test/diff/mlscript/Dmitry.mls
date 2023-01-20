@@ -9,7 +9,7 @@ class Hidden[A]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.8: 	  method Main (a: A) = this.Foo a
 //│ ║       	                       ^^^^^^^^^^
-//│ ╟── expression of type `A_26 & (Class1 | ~?a)` does not have field 'payload'
+//│ ╟── expression of type `A_10 & (Class1 | ~?a)` does not have field 'payload'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.7: 	  method Foo s = case s of { Class1 -> s.payload | _ -> 123 }
 //│ ║       	                                       ^^^^^^^^^
