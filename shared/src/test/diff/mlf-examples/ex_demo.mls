@@ -1201,7 +1201,7 @@ c_i5_ = c_add_ c_i3_ c_i2_
 //│      = [Function (anonymous)]
 //│ constrain calls  : 178
 //│ annoying  calls  : 0
-//│ subtyping calls  : 691
+//│ subtyping calls  : 705
 
 :stats
 :e
@@ -1222,7 +1222,7 @@ c_i10_ = c_mul c_i5_ c_i2_
 //│       = [Function (anonymous)]
 //│ constrain calls  : 633
 //│ annoying  calls  : 0
-//│ subtyping calls  : 4032
+//│ subtyping calls  : 4034
 
 // * Ouchie (cf stats)
 :stats
@@ -1231,7 +1231,7 @@ c_i9_ = c_pred_ c_i10_
 //│      = [Function (anonymous)]
 //│ constrain calls  : 1881
 //│ annoying  calls  : 0
-//│ subtyping calls  : 15347
+//│ subtyping calls  : 15352
 
 :stats
 :e
@@ -1248,7 +1248,7 @@ c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
 //│      = [Function (anonymous)]
 //│ constrain calls  : 2760
 //│ annoying  calls  : 0
-//│ subtyping calls  : 22409
+//│ subtyping calls  : 22422
 :stats
 // * Works again:
 c_99_ = c_add_ (c_mul c_i9_ c_i10_) c_i9_
@@ -1256,7 +1256,7 @@ c_99_ = c_add_ (c_mul c_i9_ c_i10_) c_i9_
 //│      = [Function (anonymous)]
 //│ constrain calls  : 2617
 //│ annoying  calls  : 0
-//│ subtyping calls  : 27488
+//│ subtyping calls  : 27565
 
 // * Ouchie++
 :stats
@@ -1266,7 +1266,7 @@ c_98_ = c_pred_ c_99_
 //│      = [Function (anonymous)]
 //│ constrain calls  : 13513
 //│ annoying  calls  : 0
-//│ subtyping calls  : 130474
+//│ subtyping calls  : 130619
 :ResetFuel
 
 

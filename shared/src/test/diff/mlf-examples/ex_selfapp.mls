@@ -260,7 +260,7 @@ def k: int -> Ba -> Ba
 
 // * Note: annotation in `(xs: Ba)` is needed
 def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
-//│ int -> Ba -> (forall 'b, 'b0, 'b1, 'a. (nothing -> 'b -> ('b & 'b0) & int -> ('b1 -> ('b1 & 'b0) & 'b0 -> 'a)) -> ('b & 'b1 & 'b0) -> 'a)
+//│ int -> Ba -> (forall 'b, 'b0, 'a. (int -> ('b -> ('b & 'b0) & 'b0 -> 'a)) -> ('b & 'b0) -> 'a)
 //│   <:  k:
 //│ int -> Ba -> Ba
 //│  = <no result>
@@ -268,7 +268,7 @@ def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 
 // * [FCP-IMPROV] annotation in `z` was not needed
 def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
-//│ int -> Ba -> (forall 'b, 'a, 'b0. (int -> ('b0 -> ('b0 & 'b) & 'b -> 'a)) -> ('b0 & 'b) -> 'a)
+//│ int -> Ba -> (forall 'a, 'b, 'b0. (int -> ('b -> ('b & 'b0) & 'b0 -> 'a)) -> ('b & 'b0) -> 'a)
 //│   <:  k:
 //│ int -> Ba -> Ba
 //│  = <no result>
@@ -283,7 +283,7 @@ def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
 // * Notice the extrusion, yielding an imprecise type
 :e
 rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
-//│ int -> Ba -> (forall 'b, 'a. (nothing -> 'b -> 'b & int -> anything -> 'a & nothing -> anything -> nothing & int -> anything -> anything) -> nothing -> 'a)
+//│ int -> Ba -> (forall 'a. (int -> anything -> 'a & int -> anything -> anything) -> nothing -> 'a)
 //│   <:  k:
 //│ int -> Ba -> Ba
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
@@ -433,7 +433,7 @@ def k: int -> Baa -> Baa
 
 :e
 def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
-//│ int -> Baa -> (forall 'b, 'b0, 'a. (nothing -> 'b -> ('b & 'b0) & int -> 'b0 -> 'a) -> ('b & 'b0) -> 'a)
+//│ int -> Baa -> (forall 'a, 'b. (int -> 'a -> 'b) -> 'a -> 'b)
 //│   <:  k:
 //│ int -> Baa -> Baa
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -457,7 +457,7 @@ def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z c n)
 
 :e
 k = k_ // nope
-//│ int -> (forall 'a, 'b, 'c. ((int -> Baa -> Baa) -> Baa -> 'c -> 'a -> 'b) -> (forall 'd. (int -> 'b -> 'd & 'c) -> 'a -> 'd))
+//│ int -> (forall 'a, 'b, 'c. ((int -> Baa -> Baa) -> Baa -> 'a -> 'b -> 'c) -> (forall 'd. (int -> 'c -> 'd & 'a) -> 'b -> 'd))
 //│   <:  k:
 //│ int -> Baa -> Baa
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -476,7 +476,7 @@ k = k_ // nope
 rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k_ z c n)
 //│ k_: 'k_
 //│   where
-//│     'k_ :> int -> (forall 'a, 'b, 'c. ('k_ -> Baa -> 'a -> 'b -> 'c) -> (forall 'd. (int -> 'c -> 'd & 'a) -> 'b -> 'd))
+//│     'k_ :> int -> (forall 'a, 'b, 'c. ('k_ -> Baa -> 'c -> 'a -> 'b) -> (forall 'd. (int -> 'b -> 'd & 'c) -> 'a -> 'd))
 //│   = [Function: k_1]
 
 :e

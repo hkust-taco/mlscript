@@ -74,6 +74,21 @@ class NormalForms extends TyperDatatypes { self: Typer =>
             // println(s"!GLB! $this $that ${p0.glb(p1)}")
             p0.glb(p1)
           
+          // * Note: it also feels natural to simplify `f: int -> int & nothing -> string`
+          // * to just `f: int -> int`, but these types are not strictly-speaking equivalent;
+          // * indeed, we could still call such a function as `f error : string`...
+          // * (This is similar to how `{ x: nothing }` is not the same as `nothing`.)
+          // * Note: in any case it should be fine to make this approximation in positive positions.
+          // * Still, it seems making this approximation is morally correct even in negative positions,
+          // * at least in a CBV setting, since the only way to use the bad function component is
+          // * by passing a non-returning computation. So this should be semantically sound.
+          case (S(FunctionType(AliasOf(TupleType(fs)), _)), _: Overload | _: FT)
+          if fs.exists(_._2.ub.isBot) => S(that)
+          case (sov @ S(Overload(alts)), FunctionType(AliasOf(TupleType(fs)), _))
+          if fs.exists(_._2.ub.isBot) => sov
+          
+          // case (sov @ S(Overload(alts)), FunctionType(l, _))
+          // if l <:< BotParam => sov
           case (S(ov @ Overload(alts)), ft: FunctionType) =>
             def go(alts: Ls[FT]): Ls[FT] = alts match {
               case (f @ FunctionType(l, r)) :: alts =>

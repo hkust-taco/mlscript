@@ -20,7 +20,7 @@ def f: ('a -> 'b & 'c -> 'b & 'a -> 'c) -> 'a -> 'b
 //│ f: (('a | 'c) -> 'b & 'a -> 'c) -> 'a -> 'b
 
 def f: int -> int & nothing -> string
-//│ f: int -> int & nothing -> string
+//│ f: int -> int
 
 def f: int -> int & string -> anything
 //│ f: int -> int & string -> anything
