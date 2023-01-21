@@ -12,7 +12,7 @@ def None = None{}
 
 def flatMap = fun f -> fun opt ->
   case opt of { Some -> f opt.v | None -> opt }
-//│ flatMap: ('v -> 'a) -> (None & 'a | (Some[?] with {v: 'v})) -> 'a
+//│ flatMap: ('v -> 'a) -> (None & 'a | Some[?] & {v: 'v}) -> 'a
 //│        = [Function: flatMap]
 
 f x = Some x
@@ -80,7 +80,7 @@ rec def evalOpt x = case x of {
 //│        = [Function: evalOpt]
 //│ constrain calls  : 1045
 //│ annoying  calls  : 135
-//│ subtyping calls  : 14164
+//│ subtyping calls  : 14166
 
 :stats
 evalOpt (Plus{lhs = Lit{v=2}; rhs = Lit{v=3}})

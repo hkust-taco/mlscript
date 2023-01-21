@@ -180,7 +180,7 @@ c = c6
 //│ 'a -> C6['a]
 //│ constrain calls  : 164
 //│ annoying  calls  : 35
-//│ subtyping calls  : 1601
+//│ subtyping calls  : 1624
 
 
 // Reproduction of an issue found while trying out TypeRef ctor typing:
@@ -330,7 +330,7 @@ def append_ty_2: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] & {h: 'h; t: S['T0] &
 //│ append_ty_2: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] with {h: 'h, t: S['T0] with {v: 'v}})
 
 append_ty_2 error
-//│ res: ('T & 'h) -> (L['T] with {h: 'h, t: S['T0] with {v: nothing}})
+//│ res: ('T & 'h) -> (L['T] with {h: 'h, t: S['T0] & {v: nothing}})
 
 :e
 append_ty_2 = append

@@ -27,7 +27,7 @@ rec def mem x l = case l of
   { Nil -> false
   | Cons -> if eq l.head x then true else mem x l.tail
   }
-//│ mem: anything -> 'tail -> bool
+//│ mem: anything -> 'tail -> (false | true)
 //│   where
 //│     'tail <: (Cons[?] with {tail: 'tail}) | Nil
 

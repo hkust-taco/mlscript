@@ -321,7 +321,7 @@ def match_opt: forall 'a 'r. (() -> 'r, 'a -> 'r) -> Option['a] -> 'r
 match_opt (n, s) opt = case opt of
   None -> n(),
   Some -> s(opt.val)
-//│ (() -> 'a, 'val -> 'a,) -> (None | (Some[?] with {val: 'val})) -> 'a
+//│ (() -> 'a, 'val -> 'a,) -> (None | Some[?] & {val: 'val}) -> 'a
 //│   <:  match_opt:
 //│ (() -> 'r, 'a -> 'r,) -> Option['a] -> 'r
 //│          = [Function: match_opt]

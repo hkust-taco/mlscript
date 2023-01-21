@@ -34,7 +34,7 @@ flatMap3 (fun x -> x.value) arg
 
 
 foo = flatMap3 (fun x -> x.value)
-//│ foo: ((Some[?] with {value: 'a}) | 'a & ~#Some) -> 'a
+//│ foo: (Some[?] & {value: 'a} | 'a & ~#Some) -> 'a
 //│    = [Function (anonymous)]
 
 foo arg
@@ -87,7 +87,7 @@ def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
 //│        = [Function: simpler1]
 
 simpler (fun x -> x.value)
-//│ res: (None & 'a | (Some[?] with {value: 'b})) -> ('b | 'a)
+//│ res: (None & 'a | Some[?] & {value: 'b}) -> ('b | 'a)
 //│    = [Function (anonymous)]
 
 :e

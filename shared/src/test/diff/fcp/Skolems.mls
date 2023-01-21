@@ -259,7 +259,7 @@ bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v1, u1)) in (v1, u1))
 //│ ╟── from reference:
 //│ ║  l.249: 	bar (fun ((u1, v1),) -> let tmp = bar (fun ((u2, v2),) -> (v1, u1)) in (v1, u1))
 //│ ╙──       	                                                               ^^
-//│ res: (2, 1,) | error
+//│ res: error
 //│    = [ 2, 1 ]
 
 

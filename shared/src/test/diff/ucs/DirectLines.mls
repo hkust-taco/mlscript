@@ -16,7 +16,7 @@ class None: Option
 //│ Defined class None
 //│ Option: () -> Option
 //│       = [Function: Option1]
-//│ Some: 'value -> (Some with {value: 'value})
+//│ Some: 'value -> (Some & {value: 'value})
 //│     = [Function: Some1]
 //│ None: () -> None
 //│     = [Function: None1]

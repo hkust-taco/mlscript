@@ -43,7 +43,7 @@ rec def lefts() =
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.+5: 	  in res
 //│ ║        	^^^^^^^^^
-//│ ╟── application of type `Left with {v: ?v}` is not an instance of type `int`
+//│ ╟── application of type `Left & {v: ?v}` is not an instance of type `int`
 //│ ║  l.+2: 	  let res = Left {v = lefts()}
 //│ ║        	            ^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `int`

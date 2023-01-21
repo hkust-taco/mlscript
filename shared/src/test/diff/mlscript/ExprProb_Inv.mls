@@ -290,7 +290,7 @@ rec def pretty1 k e = case e of {
 //│        = [Function: pretty1]
 //│ constrain calls  : 126
 //│ annoying  calls  : 0
-//│ subtyping calls  : 604
+//│ subtyping calls  : 608
 
 
 :stats
@@ -309,7 +309,7 @@ rec def prettier1 k ev e = case e of {
 //│          = [Function: prettier1]
 //│ constrain calls  : 496
 //│ annoying  calls  : 0
-//│ subtyping calls  : 2228
+//│ subtyping calls  : 2237
 
 :stats
 rec def prettier11 k ev e = case e of {
@@ -329,7 +329,7 @@ rec def prettier11 k ev e = case e of {
 //│           = [Function: prettier11]
 //│ constrain calls  : 250
 //│ annoying  calls  : 0
-//│ subtyping calls  : 1427
+//│ subtyping calls  : 1448
 
 // Doesn't make much sense, but generates very ugly type unless aggressively simplified:
 :stats
@@ -349,7 +349,7 @@ rec def prettier12 k ev e = case e of {
 //│           = [Function: prettier12]
 //│ constrain calls  : 238
 //│ annoying  calls  : 0
-//│ subtyping calls  : 1442
+//│ subtyping calls  : 1471
 
 
 :stats
@@ -379,7 +379,7 @@ prettier12 done (eval1 done) e1
 //│    = '123'
 //│ constrain calls  : 2320
 //│ annoying  calls  : 605
-//│ subtyping calls  : 20880
+//│ subtyping calls  : 20889
 
 
 e1 = add (lit 1) (add (lit 2) (lit 3))
@@ -443,7 +443,7 @@ rec def prettier2 k ev = prettier1 (fun x -> case x of {
 //│          = [Function: prettier2]
 //│ constrain calls  : 365
 //│ annoying  calls  : 0
-//│ subtyping calls  : 3141
+//│ subtyping calls  : 3008
 
 :stats
 rec def prettier22 k ev = prettier12 (fun x -> case x of {
@@ -458,7 +458,7 @@ rec def prettier22 k ev = prettier12 (fun x -> case x of {
 //│           = [Function: prettier22]
 //│ constrain calls  : 369
 //│ annoying  calls  : 0
-//│ subtyping calls  : 3886
+//│ subtyping calls  : 3685
 
 
 
@@ -530,7 +530,7 @@ prettier2 done (eval1 done)
 //│    = [Function (anonymous)]
 //│ constrain calls  : 667
 //│ annoying  calls  : 0
-//│ subtyping calls  : 5165
+//│ subtyping calls  : 5088
 
 
 prettier22 done (eval1 done)
@@ -555,7 +555,7 @@ prettier2 done (eval2 done)
 //│    = [Function (anonymous)]
 //│ constrain calls  : 772
 //│ annoying  calls  : 0
-//│ subtyping calls  : 12591
+//│ subtyping calls  : 12004
 
 prettier2 done (eval2 done) e2
 prettier2 done (eval2 done) d2
@@ -580,7 +580,7 @@ prettier22 done (eval2 done) d2
 //│    = '-1'
 //│ constrain calls  : 1484
 //│ annoying  calls  : 390
-//│ subtyping calls  : 12873
+//│ subtyping calls  : 12705
 
 
 

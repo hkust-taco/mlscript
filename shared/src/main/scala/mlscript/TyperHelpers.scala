@@ -442,14 +442,16 @@ abstract class TyperHelpers { Typer: Typer =>
     def <:< (that: SimpleType)
       (implicit ctx: Ctx, crt: CompareRecTypes = true, cache: MutMap[ST -> ST, Bool] = MutMap.empty): Bool =
     {
+      val doCompareRecTypes = (crt === true) && !noRecursiveTypes
     // trace(s"? $this <: $that") {
     // trace(s"? $this <: $that   assuming:  ${
     //     cache.iterator.map(kv => "" + kv._1._1 + (if (kv._2) " <: " else " <? ") + kv._1._2).mkString(" ; ")}") {
       subtypingCalls += 1
       def assume[R](k: MutMap[ST -> ST, Bool] => R): R =
-        if (crt === false) k(cache) else k(cache.map(kv => kv._1 -> true))
+        if (doCompareRecTypes) k(cache.map(kv => kv._1 -> true)) else k(cache)
       if (!mentionsTypeBounds && ((this is that) || this === that)) return true
       (this, that) match {
+        case (_, ExtrType(false)) | (ExtrType(true), _) => true
         case (ProxyType(und), _) => und <:< that
         case (_, ProxyType(und)) => this <:< und
         // * Leads to too much simplification in printed types:
@@ -479,7 +481,7 @@ abstract class TyperHelpers { Typer: Typer =>
           ns1.forall(ns2) && bs1 <:< that
         case (_, Without(bs, ns)) =>
           this <:< bs
-        case (_: TypeVariable, _) | (_, _: TypeVariable) if crt === false => false
+        case (_: TypeVariable, _) | (_, _: TypeVariable) if !doCompareRecTypes => false
         case (_: TypeVariable, _) | (_, _: TypeVariable)
           if cache.contains(this -> that)
           => cache(this -> that)
@@ -507,13 +509,10 @@ abstract class TyperHelpers { Typer: Typer =>
         case (_, ConstrainedType(cs, bod)) => this <:< bod // could assume cs here
         case (_, NegType(und)) => (this & und) <:< BotType
         case (NegType(und), _) => TopType <:< (that | und)
-        case (_, ExtrType(false)) => true
-        case (ExtrType(true), _) => true
-        case (_, ExtrType(true)) | (ExtrType(false), _) => false // not sure whether LHS <: Bot (or Top <: RHS)
         case (tr: TypeRef, _)
-          if (primitiveTypes contains tr.defn.name) && !tr.defn.name.isCapitalized => tr.expand <:< that
+          if (primitiveTypes contains tr.defn.name) => tr.expand <:< that
         case (_, tr: TypeRef)
-          if (primitiveTypes contains tr.defn.name) && !tr.defn.name.isCapitalized => this <:< tr.expand
+          if (primitiveTypes contains tr.defn.name) => this <:< tr.expand
         case (tr1: TypeRef, _) =>
           val td1 = ctx.tyDefs(tr1.defn.name)
           that match {
@@ -530,7 +529,7 @@ abstract class TyperHelpers { Typer: Typer =>
           false // TODO try to expand them (this requires populating the cache because of recursive types)
         case (_: PolymorphicType, _) | (_, _: PolymorphicType) => false
         case (_, ov: Overload) => ov.alts.forall(this <:< _)
-        case (ov: Overload, _) => ov.alts.exists(_ <:< this)
+        case (ov: Overload, _) => ov.alts.exists(_ <:< that)
         case (_: ConstrainedType, _) => false
         case (_: Without, _)
           | (_: ArrayBase, _) | (_, _: ArrayBase)
@@ -538,13 +537,14 @@ abstract class TyperHelpers { Typer: Typer =>
           => false // don't even try
         case (_: FunctionType, _) | (_, _: FunctionType) => false
         case (_: RecordType, _: TypeTag) | (_: TypeTag, _: RecordType) => false
+        case (_, ExtrType(true)) | (ExtrType(false), _) => false // not sure whether LHS <: Bot (or Top <: RHS)
         // case _ => lastWords(s"TODO $this $that ${getClass} ${that.getClass()}")
       }
     // }(r => s"! $r")
     }
     
-    def isTop: Bool = (TopType <:< this)(Ctx.empty)
-    def isBot: Bool = (this <:< BotType)(Ctx.empty)
+    def isTop(implicit ctx: Ctx): Bool = TopType <:< this
+    def isBot(implicit ctx: Ctx): Bool = this <:< BotType
     
     // * Sometimes, Without types are temporarily pushed to the RHS of constraints,
     // *  sometimes behind a single negation,

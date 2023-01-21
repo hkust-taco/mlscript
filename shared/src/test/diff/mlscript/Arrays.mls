@@ -9,7 +9,7 @@ dummy = MyArray {
     set = fun (i, a) -> ();
     get = fun i -> error
   }
-//│ dummy: MyArray['A] with {get: anything -> nothing, set: (anything, anything,) -> (), size: 0}
+//│ dummy: MyArray['A] & {get: anything -> nothing, set: (anything, anything,) -> (), size: 0}
 
 dummy: MyArray[int]
 //│ res: MyArray[int]

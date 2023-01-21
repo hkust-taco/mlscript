@@ -68,7 +68,7 @@ rec def map f tree = case tree of {
   }
 //│ map: 'map
 //│   where
-//│     'map :> forall 'a, 'value, 'A, 'subTree, 'subTree0, 'value0. 'a -> (((Leaf[?] with {value: 'value0}) | (Node[?] with {subTree: 'subTree0})) -> (Leaf['value] | (Node['A] with {subTree: 'subTree}))
+//│     'map :> forall 'a, 'value, 'A, 'subTree, 'subTree0, 'value0. 'a -> ((Leaf[?] & {value: 'value0} | (Node[?] with {subTree: 'subTree0})) -> (Leaf['value] | (Node['A] with {subTree: 'subTree}))
 //│   where
 //│     'map <: (forall 'b, 'c, 'd, 'e. (('b, 'd,) -> ('c, 'e,)
 //│   where
@@ -94,7 +94,7 @@ def map f tree = case tree of {
   | Leaf -> Leaf { value = f tree.value }
   | Node -> Node { subTree = map (mapTwo f) tree.subTree }
   }
-//│ 'a -> (((Leaf[?] with {value: 'value}) | (Node[?] with {subTree: PerfectTree[('b, 'c,)]})) -> (Leaf['value0] | (Node['A] with {subTree: PerfectTree[('d, 'e,)]}))
+//│ 'a -> ((Leaf[?] & {value: 'value} | (Node[?] with {subTree: PerfectTree[('b, 'c,)]})) -> (Leaf['value0] | (Node['A] with {subTree: PerfectTree[('d, 'e,)]}))
 //│   where
 //│     'a <: 'value -> 'value0 & 'b -> ('d & 'A) & 'c -> ('A & 'e))
 //│   <:  map:

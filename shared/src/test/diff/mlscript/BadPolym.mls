@@ -111,24 +111,27 @@ error: number -> int & string -> string : int -> number
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
+// * The tricky thing in these tests is that we currently lossily merge function types
+// * in constraint solving, so the best-effort subtyping check may actually accept things
+// * that fail to constrain. But in this case we try to make the check fail by using a type alias.
+// * It somehow still seems to work well...
+
 type Als = number -> int
 //│ Defined type alias Als
 
-// * The tricky thing in these tests is that we currently lossily merge function types
-// * in constraint solving, so the best-effort subtyping check may actually accept things
-// * that fail to constrain. But in this case we make the check fail by using a type alias.
-:e
+:re
 error: Als & string -> string : int -> number
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.121: 	error: Als & string -> string : int -> number
-//│ ║         	^^^^^
-//│ ╟── type `int` is not an instance of type `string`
-//│ ║  l.121: 	error: Als & string -> string : int -> number
-//│ ║         	                                ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.121: 	error: Als & string -> string : int -> number
-//│ ╙──       	             ^^^^^^
 //│ res: int -> number
 //│ Runtime error:
 //│   Error: unexpected runtime error
+
+type Id[A] = A
+//│ Defined type alias Id[+A]
+
+:re
+error: Id[Id[Als] & bool -> bool] & string -> string : int -> number
+//│ res: int -> number
+//│ Runtime error:
+//│   Error: unexpected runtime error
+
 

@@ -23,23 +23,23 @@ class Pair(fst, snd)
 //│ Defined class Pair
 //│ Option: () -> Option
 //│       = [Function: Option1]
-//│ Some: 'value -> (Some with {value: 'value})
+//│ Some: 'value -> (Some & {value: 'value})
 //│     = [Function: Some1]
 //│ None: () -> None
 //│     = [Function: None1]
 //│ Either: () -> Either
 //│       = [Function: Either1]
-//│ Left: 'leftValue -> (Left with {leftValue: 'leftValue})
+//│ Left: 'leftValue -> (Left & {leftValue: 'leftValue})
 //│     = [Function: Left1]
-//│ Right: 'rightValue -> (Right with {rightValue: 'rightValue})
+//│ Right: 'rightValue -> (Right & {rightValue: 'rightValue})
 //│      = [Function: Right1]
 //│ List: () -> List
 //│     = [Function: List1]
 //│ Nil: () -> Nil
 //│    = [Function: Nil1]
-//│ Cons: ('head, 'tail,) -> (Cons with {head: 'head, tail: 'tail})
+//│ Cons: ('head, 'tail,) -> (Cons & {head: 'head, tail: 'tail})
 //│     = [Function: Cons1]
-//│ Pair: ('fst, 'snd,) -> (Pair with {fst: 'fst, snd: 'snd})
+//│ Pair: ('fst, 'snd,) -> (Pair & {fst: 'fst, snd: 'snd})
 //│     = [Function: Pair1]
 
 
@@ -50,7 +50,7 @@ fun optionApply(x, y, f) =
       Some(yv) then Some(f(xv, yv))
       None() then None()
     None() then None()
-//│ optionApply: (None | (Some with {value: 'value}), None | (Some with {value: 'value0}), ('value, 'value0,) -> 'value1,) -> (None | (Some with {value: 'value1}))
+//│ optionApply: (None | Some & {value: 'value}, None | Some & {value: 'value0}, ('value, 'value0,) -> 'value1,) -> (None | Some & {value: 'value1})
 //│            = [Function: optionApply]
 
 
@@ -60,11 +60,11 @@ fun mapPartition(f, xs) = if xs is
   Cons(x, xs) and mapPartition(f, xs) is Pair(l, r) and f(x) is
     Left(v)  then Pair(Cons(v, l), r)
     Right(v) then Pair(l, Cons(v, r))
-//│ mapPartition: ('head -> ((Left with {leftValue: 'leftValue}) | (Right with {rightValue: 'rightValue})) & 'head0 -> ((Left with {leftValue: 'leftValue0}) | (Right with {rightValue: 'rightValue0})), (Cons with {head: 'head, tail: 'tail}) | Nil,) -> (Pair with {fst: (Cons with {head: 'leftValue, tail: 'fst}) | 'fst, snd: (Cons with {head: 'rightValue, tail: 'snd}) | 'snd})
+//│ mapPartition: ('head -> (Left & {leftValue: 'leftValue} | Right & {rightValue: 'rightValue}) & 'head0 -> (Left & {leftValue: 'leftValue0} | Right & {rightValue: 'rightValue0}), Cons & {head: 'head, tail: 'tail} | Nil,) -> (Pair & {fst: Cons & {head: 'leftValue, tail: 'fst} | 'fst, snd: Cons & {head: 'rightValue, tail: 'snd} | 'snd})
 //│   where
-//│     'snd :> (Cons with {head: 'rightValue0, tail: 'snd}) | Nil
-//│     'fst :> (Cons with {head: 'leftValue0, tail: 'fst}) | Nil
-//│     'tail <: (Cons with {head: 'head0, tail: 'tail}) | Nil
+//│     'snd :> Cons & {head: 'rightValue0, tail: 'snd} | Nil
+//│     'fst :> Cons & {head: 'leftValue0, tail: 'fst} | Nil
+//│     'tail <: Cons & {head: 'head0, tail: 'tail} | Nil
 //│             = [Function: mapPartition]
 
 fun mapPartition(f, xs) = if xs is
@@ -73,11 +73,11 @@ fun mapPartition(f, xs) = if xs is
     mapPartition(f, xs) is Pair(l, r) and f(x) is
       Left(v)  then Pair(Cons(v, l), r)
       Right(v) then Pair(l, Cons(v, r))
-//│ mapPartition: ('head -> ((Left with {leftValue: 'leftValue}) | (Right with {rightValue: 'rightValue})) & 'head0 -> ((Left with {leftValue: 'leftValue0}) | (Right with {rightValue: 'rightValue0})), (Cons with {head: 'head, tail: 'tail}) | Nil,) -> (Pair with {fst: (Cons with {head: 'leftValue, tail: 'fst}) | 'fst, snd: (Cons with {head: 'rightValue, tail: 'snd}) | 'snd})
+//│ mapPartition: ('head -> (Left & {leftValue: 'leftValue} | Right & {rightValue: 'rightValue}) & 'head0 -> (Left & {leftValue: 'leftValue0} | Right & {rightValue: 'rightValue0}), Cons & {head: 'head, tail: 'tail} | Nil,) -> (Pair & {fst: Cons & {head: 'leftValue, tail: 'fst} | 'fst, snd: Cons & {head: 'rightValue, tail: 'snd} | 'snd})
 //│   where
-//│     'snd :> (Cons with {head: 'rightValue0, tail: 'snd}) | Nil
-//│     'fst :> (Cons with {head: 'leftValue0, tail: 'fst}) | Nil
-//│     'tail <: (Cons with {head: 'head0, tail: 'tail}) | Nil
+//│     'snd :> Cons & {head: 'rightValue0, tail: 'snd} | Nil
+//│     'fst :> Cons & {head: 'leftValue0, tail: 'fst} | Nil
+//│     'tail <: Cons & {head: 'head0, tail: 'tail} | Nil
 //│             = [Function: mapPartition1]
 
 fun mapPartition(f, xs) = if xs is
@@ -91,11 +91,11 @@ fun mapPartition(f, xs) = if xs is
             Pair(Cons(v, l), r)
           Right(v) then
             Pair(l, Cons(v, r))
-//│ mapPartition: ('head -> ((Left with {leftValue: 'leftValue}) | (Right with {rightValue: 'rightValue})) & 'head0 -> ((Left with {leftValue: 'leftValue0}) | (Right with {rightValue: 'rightValue0})), (Cons with {head: 'head, tail: 'tail}) | Nil,) -> (Pair with {fst: (Cons with {head: 'leftValue, tail: 'fst}) | 'fst, snd: (Cons with {head: 'rightValue, tail: 'snd}) | 'snd})
+//│ mapPartition: ('head -> (Left & {leftValue: 'leftValue} | Right & {rightValue: 'rightValue}) & 'head0 -> (Left & {leftValue: 'leftValue0} | Right & {rightValue: 'rightValue0}), Cons & {head: 'head, tail: 'tail} | Nil,) -> (Pair & {fst: Cons & {head: 'leftValue, tail: 'fst} | 'fst, snd: Cons & {head: 'rightValue, tail: 'snd} | 'snd})
 //│   where
-//│     'snd :> (Cons with {head: 'rightValue0, tail: 'snd}) | Nil
-//│     'fst :> (Cons with {head: 'leftValue0, tail: 'fst}) | Nil
-//│     'tail <: (Cons with {head: 'head0, tail: 'tail}) | Nil
+//│     'snd :> Cons & {head: 'rightValue0, tail: 'snd} | Nil
+//│     'fst :> Cons & {head: 'leftValue0, tail: 'fst} | Nil
+//│     'tail <: Cons & {head: 'head0, tail: 'tail} | Nil
 //│             = [Function: mapPartition2]
 
 

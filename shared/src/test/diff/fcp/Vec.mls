@@ -293,12 +293,12 @@ def head1 vec = vec (fun v -> case v of {
   | Nil -> impossible v.size
   | Cons -> v.head
   })
-//│ head1: ((forall 'head. ((Cons[?, ?]\size\tail with {head: 'head}) | Nil & {size: nothing}) -> 'head) -> 'a) -> 'a
+//│ head1: ((forall 'head. (Cons[?, ?] & {head: 'head} | Nil & {size: nothing}) -> 'head) -> 'a) -> 'a
 
 def head1_ty : Vec['a, S['p]] -> 'a
 head1_ty = head1
 //│ head1_ty: Vec['a, S['p]] -> 'a
-//│ ((forall 'head. ((Cons[?, ?]\size\tail with {head: 'head}) | Nil & {size: nothing}) -> 'head) -> 'a) -> 'a
+//│ ((forall 'head. (Cons[?, ?] & {head: 'head} | Nil & {size: nothing}) -> 'head) -> 'a) -> 'a
 //│   <:  head1_ty:
 //│ Vec['a, S['p]] -> 'a
 
@@ -375,7 +375,7 @@ def head1_ty v = case v of {
   | Nil -> impossible v.size
   | Cons -> v.head
   }
-//│ ((Cons[?, ?]\size\tail with {head: 'head}) | Nil & {size: nothing}) -> 'head
+//│ (Cons[?, ?] & {head: 'head} | Nil & {size: nothing}) -> 'head
 //│   <:  head1_ty:
 //│ Vec['a, S['p]] -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:

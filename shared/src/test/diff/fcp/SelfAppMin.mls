@@ -31,9 +31,9 @@ e (A{f = L{}})
 
 
 e = eval eval!
-//│ e: 'f -> 0
+//│ e: (A & {f: 'f} | L) -> 0
 //│   where
-//│     'f <: A & {f: 'f} | L
+//│     'f <: (A with {f: 'f}) | L
 //│  = [Function (anonymous)]
 
 e (A{f = L{}})
@@ -53,7 +53,7 @@ e v
 //│ ║  l.51: 	e v
 //│ ║        	^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ res: error | 0
+//│ res: 0 | error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 

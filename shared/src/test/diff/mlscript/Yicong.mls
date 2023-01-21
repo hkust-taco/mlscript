@@ -319,7 +319,7 @@ two = Two {fst=(1,2,3); snd=(true,false)}
 two.fst
 tk (two.snd)
 //│ Defined class Two[+A, +B]
-//│ two: Two[1 | 2 | 3, bool] with {fst: (1, 2, 3,), snd: (true, false,)}
+//│ two: Two[1 | 2 | 3, bool] & {fst: (1, 2, 3,), snd: (true, false,)}
 //│    = Two { fst: [ 1, 2, 3 ], snd: [ true, false ] }
 //│ res: (1, 2, 3,)
 //│    = [ 1, 2, 3 ]

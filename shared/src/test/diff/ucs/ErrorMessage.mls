@@ -2,7 +2,7 @@
 
 class Point(x, y)
 //│ Defined class Point
-//│ Point: ('x, 'y,) -> (Point with {x: 'x, y: 'y})
+//│ Point: ('x, 'y,) -> (Point & {x: 'x, y: 'y})
 //│      = [Function: Point1]
 
 :e

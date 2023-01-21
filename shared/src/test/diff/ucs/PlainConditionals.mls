@@ -3,7 +3,7 @@
 
 class Pair(fst, snd)
 //│ Defined class Pair
-//│ Pair: ('fst, 'snd,) -> (Pair with {fst: 'fst, snd: 'snd})
+//│ Pair: ('fst, 'snd,) -> (Pair & {fst: 'fst, snd: 'snd})
 //│     = [Function: Pair1]
 
 

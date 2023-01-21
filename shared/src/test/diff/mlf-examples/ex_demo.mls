@@ -1058,7 +1058,7 @@ def to_church_ = to_church
 rec def c_fact (n: Fint) =
   c_if (c_iszero n) (fun (u: Funit) -> c_i1)
     (fun (u: Funit) -> c_mul n (c_fact (c_pred n)))
-//│ c_fact: Fint -> (forall 'b, 'c, 'a, 'd. ('d -> 'b & 'c -> 'a & 'a -> 'a) -> (forall 'e. ('d & 'c & 'e) -> ('a | 'e | 'b)) | Fint)
+//│ c_fact: Fint -> (forall 'b, 'c, 'd, 'a. ('b -> 'c & 'd -> 'a & 'a -> 'a) -> (forall 'e. ('b & 'd & 'e) -> ('a | 'e | 'c)) | Fint)
 //│       = [Function: c_fact]
 
 // def c_fact: Fint -> (forall 'a 'b. ('a & 'b) -> (forall 'c 'd 'e 'f 'g 'h. (('c & 'h) -> ('d | 'g | 'c))))
@@ -1079,9 +1079,9 @@ def c_fact_A n =
 rec def c_fact_ n =
   c_if_ (c_iszero_ n) (fun _ -> c_i1)
     (fun _ -> c_mul_ n (c_fact_ (c_pred_ n)))
-//│ c_fact_: ((anything -> anything -> (forall 'a. ((forall 'b. 'b -> 'b) -> 'a) -> 'a)) -> (forall 'c. ((forall 'b. 'b -> 'b) -> 'c) -> anything -> 'c) -> (anything -> (forall 'd, 'e. ('d -> 'e) -> 'd -> 'e)) -> (anything -> 'f) -> 'g & (forall 'h, 'i, 'j, 'k. ((anything -> (forall 'l. 'l -> 'l)) -> 'i -> 'j -> 'k & (anything -> (forall 'l. 'l -> 'l)) -> 'h) -> (forall 'm. ('h -> (forall 'n. ('n -> 'j & 'i) -> 'n -> 'k) -> 'm) -> 'm)) -> (forall 'o. ((anything -> (forall 'p. 'p -> 'p)) -> (anything -> (forall 'p. 'p -> 'p)) -> 'o) -> 'o) -> (forall 'q. 'q -> anything -> 'q) -> 'r & (forall 's. ((forall 't, 'u, 'v. ('t -> 'u -> 'v) -> (forall 'w. ('w -> 'u & 't) -> 'w -> 'v)) -> 'x -> 's) -> 's) -> (anything -> (forall 'p. 'p -> 'p)) -> 'f) -> 'g
+//│ c_fact_: ((anything -> anything -> (forall 'a. ((forall 'b. 'b -> 'b) -> 'a) -> 'a)) -> (forall 'c. ((forall 'b. 'b -> 'b) -> 'c) -> anything -> 'c) -> (anything -> (forall 'd, 'e. ('d -> 'e) -> 'd -> 'e)) -> (anything -> 'f) -> 'g & (forall 'h, 'i, 'j, 'k. ((anything -> (forall 'l. 'l -> 'l)) -> 'h -> 'i -> 'j & (anything -> (forall 'l. 'l -> 'l)) -> 'k) -> (forall 'm. ('k -> (forall 'n. ('n -> 'i & 'h) -> 'n -> 'j) -> 'm) -> 'm)) -> (forall 'o. ((anything -> (forall 'p. 'p -> 'p)) -> (anything -> (forall 'p. 'p -> 'p)) -> 'o) -> 'o) -> (forall 'q. 'q -> anything -> 'q) -> 'r & (forall 's. ((forall 't, 'u, 'v. ('t -> 'u -> 'v) -> (forall 'w. ('w -> 'u & 't) -> 'w -> 'v)) -> 'x -> 's) -> 's) -> (anything -> (forall 'p. 'p -> 'p)) -> 'f) -> 'g
 //│   where
-//│     'r <: (anything -> anything -> (forall 'a. ((forall 'b. 'b -> 'b) -> 'a) -> 'a)) -> (forall 'c. ((forall 'b. 'b -> 'b) -> 'c) -> anything -> 'c) -> (anything -> (forall 'd, 'e. ('d -> 'e) -> 'd -> 'e)) -> (anything -> 'y) -> 'x & (forall 'h, 'i, 'j, 'k. ((anything -> (forall 'l. 'l -> 'l)) -> 'i -> 'j -> 'k & (anything -> (forall 'l. 'l -> 'l)) -> 'h) -> (forall 'm. ('h -> (forall 'n. ('n -> 'j & 'i) -> 'n -> 'k) -> 'm) -> 'm)) -> (forall 'o. ((anything -> (forall 'p. 'p -> 'p)) -> (anything -> (forall 'p. 'p -> 'p)) -> 'o) -> 'o) -> (forall 'q. 'q -> anything -> 'q) -> 'r & (forall 'z. ((forall 't, 'u, 'v. ('t -> 'u -> 'v) -> (forall 'w. ('w -> 'u & 't) -> 'w -> 'v)) -> 'x -> 'z) -> 'z) -> (anything -> (forall 'p. 'p -> 'p)) -> 'y
+//│     'r <: (anything -> anything -> (forall 'a. ((forall 'b. 'b -> 'b) -> 'a) -> 'a)) -> (forall 'c. ((forall 'b. 'b -> 'b) -> 'c) -> anything -> 'c) -> (anything -> (forall 'd, 'e. ('d -> 'e) -> 'd -> 'e)) -> (anything -> 'y) -> 'x & (forall 'h, 'i, 'j, 'k. ((anything -> (forall 'l. 'l -> 'l)) -> 'h -> 'i -> 'j & (anything -> (forall 'l. 'l -> 'l)) -> 'k) -> (forall 'm. ('k -> (forall 'n. ('n -> 'i & 'h) -> 'n -> 'j) -> 'm) -> 'm)) -> (forall 'o. ((anything -> (forall 'p. 'p -> 'p)) -> (anything -> (forall 'p. 'p -> 'p)) -> 'o) -> 'o) -> (forall 'q. 'q -> anything -> 'q) -> 'r & (forall 'z. ((forall 't, 'u, 'v. ('t -> 'u -> 'v) -> (forall 'w. ('w -> 'u & 't) -> 'w -> 'v)) -> 'x -> 'z) -> 'z) -> (anything -> (forall 'p. 'p -> 'p)) -> 'y
 //│        = [Function: c_fact_]
 
 
@@ -1231,7 +1231,7 @@ c_i9_ = c_pred_ c_i10_
 //│      = [Function (anonymous)]
 //│ constrain calls  : 1881
 //│ annoying  calls  : 0
-//│ subtyping calls  : 15319
+//│ subtyping calls  : 15320
 
 :stats
 :e
@@ -1248,7 +1248,7 @@ c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
 //│      = [Function (anonymous)]
 //│ constrain calls  : 2760
 //│ annoying  calls  : 0
-//│ subtyping calls  : 22324
+//│ subtyping calls  : 22333
 :stats
 // * Works again:
 c_99_ = c_add_ (c_mul c_i9_ c_i10_) c_i9_
@@ -1256,7 +1256,7 @@ c_99_ = c_add_ (c_mul c_i9_ c_i10_) c_i9_
 //│      = [Function (anonymous)]
 //│ constrain calls  : 2617
 //│ annoying  calls  : 0
-//│ subtyping calls  : 25853
+//│ subtyping calls  : 25882
 
 // * Ouchie++
 :stats
@@ -1266,7 +1266,7 @@ c_98_ = c_pred_ c_99_
 //│      = [Function (anonymous)]
 //│ constrain calls  : 13513
 //│ annoying  calls  : 0
-//│ subtyping calls  : 125557
+//│ subtyping calls  : 126009
 :ResetFuel
 
 
@@ -1345,10 +1345,10 @@ def c_succ_ n = fun f -> fun x -> n f (f x)
 //│        = [Function: c_succ_1]
 
 def c_add_ n m = m c_succ_ n
-//│ c_add_: 'a -> (forall 'b. ((forall 'c. 'c -> (forall 'd. 'd -> (forall 'e, 'f, 'g. ('e -> 'g
+//│ c_add_: 'a -> (forall 'b. ((forall 'c. 'c -> (forall 'd. 'd -> (forall 'e, 'f, 'g. ('g -> 'f
 //│   where
-//│     'd <: 'e -> 'f
-//│     'c <: 'd -> 'f -> 'g)))) -> 'a -> 'b) -> 'b)
+//│     'c <: 'd -> 'e -> 'f
+//│     'd <: 'g -> 'e)))) -> 'a -> 'b) -> 'b)
 //│       = [Function: c_add_1]
 
 // let c_i1 = fun f x -> f x
@@ -1365,12 +1365,12 @@ def c_i2_ = c_succ_ c_i1
 //│   where
 //│     'b <: 'a -> 'a & 'c -> 'a))
 //│     = [Function: c_i22]
-//│ c_i2_: 'a -> (forall 'b, 'c, 'd. ('b -> 'd
+//│ c_i2_: 'a -> (forall 'b, 'c, 'd. ('d -> 'c
 //│   where
-//│     'a <: 'b -> 'c
+//│     'a <: 'd -> 'b
 //│     forall 'e. 'e -> (forall 'f, 'g. ('f -> 'g
 //│   where
-//│     'e <: 'f -> 'g)) <: 'a -> 'c -> 'd))
+//│     'e <: 'f -> 'g)) <: 'a -> 'b -> 'c))
 //│      = [Function: c_i2_1]
 
 // let c_i3 = c_succ c_i2
@@ -1380,12 +1380,12 @@ def c_i3_ = c_succ_ c_i2
 //│   where
 //│     'b <: 'a -> 'a & 'c -> 'a))
 //│     = [Function: c_i31]
-//│ c_i3_: 'b -> (forall 'c, 'd, 'e. ('c -> 'e
+//│ c_i3_: 'b -> (forall 'c, 'd, 'e. ('e -> 'd
 //│   where
+//│     'b <: 'e -> 'c
 //│     forall 'f. 'f -> (forall 'a, 'g. ('g -> 'a
 //│   where
-//│     'f <: 'a -> 'a & 'g -> 'a)) <: 'b -> 'd -> 'e
-//│     'b <: 'c -> 'd))
+//│     'f <: 'a -> 'a & 'g -> 'a)) <: 'b -> 'c -> 'd))
 //│      = [Function: c_i3_1]
 
 
@@ -1393,16 +1393,16 @@ def c_i3_ = c_succ_ c_i2
 c_i5_ = c_add_ c_i3_ c_i2
 //│ c_i5_: 'b
 //│   where
-//│     'b :> forall 'c. 'c -> (forall 'd, 'e, 'f, 'g. ('d -> 'f
+//│     'b :> forall 'c. 'c -> (forall 'd, 'e, 'f, 'g. ('f -> 'e
 //│   where
-//│     'c <: 'd -> 'e & 'd -> 'g
-//│     forall 'h. 'h -> (forall 'i, 'j, 'k. ('i -> 'k
+//│     'c <: 'f -> 'd & 'f -> 'g
+//│     forall 'h. 'h -> (forall 'i, 'j, 'k. ('k -> 'j
 //│   where
-//│     'h <: 'i -> 'j
 //│     forall 'l. 'l -> (forall 'a, 'm. ('m -> 'a
 //│   where
-//│     'l <: 'a -> 'a & 'm -> 'a)) <: 'h -> 'j -> 'k)) <: 'c -> 'e -> 'f
-//│     'b <: 'c -> 'g -> 'f))
+//│     'l <: 'a -> 'a & 'm -> 'a)) <: 'h -> 'i -> 'j
+//│     'h <: 'k -> 'i)) <: 'c -> 'd -> 'e
+//│     'b <: 'c -> 'g -> 'e))
 //│      = [Function (anonymous)]
 
 

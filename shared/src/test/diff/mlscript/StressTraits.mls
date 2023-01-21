@@ -103,7 +103,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 95
 //│ annoying  calls  : 216
-//│ subtyping calls  : 17332
+//│ subtyping calls  : 17285
 
 
 // ====== 2 ====== //
@@ -354,7 +354,7 @@ foo_manual = foo
 //│ ({fA: 'a} & #A | ~#A & ({fB: 'a} & #B | ~#B & ({fC: 'a} & #C | ~#C & ({fD: 'a} & #D | ~#D & ({fE: 'a} & #E | ~#E & ({fF: 'a} & #F | {fG: 'a} & #G & ~#F)))))) -> 'a
 //│ constrain calls  : 100
 //│ annoying  calls  : 183
-//│ subtyping calls  : 6087
+//│ subtyping calls  : 6067
 
 
 // ====== 8 ====== //
