@@ -20,28 +20,38 @@ class DiffTestCompiler extends DiffTests {
     outputBuilder ++= "\nLifted:\n"
     var rstUnit = unit;
     try
-      rstUnit = ClassLifter(mode.fullExceptionStack).liftTypingUnit(unit)
-      outputBuilder ++= PrettyPrinter.showTypingUnit(rstUnit)
+      // rstUnit = ClassLifter().liftTypingUnit(unit)
+      // outputBuilder ++= PrettyPrinter.showTypingUnit(rstUnit)
+      println("wwww")
+      outputBuilder ++= "\n\nGraphOpt:\n"
+      val go = GraphOptimizer()
+      val graph = go.buildGraph(unit)
+      outputBuilder ++= graph.toString()
+      outputBuilder ++= "\n\nPromoted ------------------------------------\n"
+      val graph2 = go.simplifyProgram(go.promoteJoinPoints(graph))
+      val graph3 = go.activeAnalyze(graph2)
+      outputBuilder ++= graph3.toString()
+      outputBuilder ++= "\n\nSplitted ------------------------------------\n"
+      val graph4 = go.simplifyProgram(go.splitFunction(graph3))
+      val graph5 = go.activeAnalyze(graph4)
+      outputBuilder ++= graph5.toString()
+      outputBuilder ++= "\n\nScalarReplaced ------------------------------\n"
+      val graph6 = go.simplifyProgram(go.replaceScalar(graph5))
+      val graph7 = go.activeAnalyze(graph6)
+      outputBuilder ++= graph7.toString()
+      outputBuilder ++= "\n"
+
     catch
+      case err @ GraphOptimizingError(msg) =>
+        outputBuilder ++= s"GraphOpt failed: ${msg}"
+        outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
+      case err =>
+        outputBuilder ++= s"GraphOpt failed"
+        outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
       case NonFatal(err) =>
         outputBuilder ++= "Lifting failed: " ++ err.toString()
-        if mode.fullExceptionStack then 
-          outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
-    if(mode.mono){
-      outputBuilder ++= "\nMono:\n"
-      val treeDebug = new TreeDebug()
-      try{
-        val monomorph = new Monomorph(treeDebug)
-        val monomorphized = monomorph.defunctionalize(rstUnit)
-        outputBuilder ++= "\nDefunc result: \n"
-        outputBuilder ++= ExprPrinter.print(monomorphized)
-        outputBuilder ++= "\n"
-      }catch{
-        case error: MonomorphError => outputBuilder ++= (error.getMessage() :: error.getStackTrace().map(_.toString()).toList).mkString("\n")
-        // case error: StackOverflowError => outputBuilder ++= (error.getMessage() :: error.getStackTrace().take(40).map(_.toString()).toList).mkString("\n")
-      }
-      // outputBuilder ++= treeDebug.getLines.mkString("\n")
-    }
+        /* if mode.fullExceptionStack then */ outputBuilder ++=
+          "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
     outputBuilder.toString().linesIterator.toList
   
   override protected lazy val files = allFiles.filter { file =>
