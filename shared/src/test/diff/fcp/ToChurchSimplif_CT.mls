@@ -215,7 +215,7 @@ to_church = to_ch
 def to_ch n =
   if true then z
   else s (to_church n)
-//│ to_ch: int -> (forall 'a. 'a -> (forall 'a 'b 'c 'd. (('d & 'b) -> ('d | 'c)
+//│ to_ch: int -> (forall 'a. 'a -> (forall 'a 'b 'c 'd. (('b & 'd) -> ('d | 'c)
 //│   where
 //│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c)))
 //│      = <no result>
@@ -223,7 +223,7 @@ def to_ch n =
 
 :e // * Since "sound extrusion"
 to_church = to_ch
-//│ int -> (forall 'a. 'a -> (forall 'b 'a 'c 'd. (('b & 'c) -> ('b | 'd)
+//│ int -> (forall 'a. 'a -> (forall 'b 'a 'c 'd. (('c & 'b) -> ('b | 'd)
 //│   where
 //│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'c -> 'd)))
 //│   <:  to_church:

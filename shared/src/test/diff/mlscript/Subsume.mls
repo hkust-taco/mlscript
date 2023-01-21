@@ -270,7 +270,7 @@ def g a = add a 1
 
 
 def twice f x = f (f x)
-//│ twice: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ twice: ('a -> 'b & 'b -> 'c) -> 'a -> 'c
 //│      = [Function: twice]
 
 def ty1: (('b | 'c) -> 'c) -> 'b -> 'c
@@ -296,17 +296,17 @@ ty2 = ty1
 
 ty1 = twice
 ty2 = twice
-//│ ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ ('a -> 'b & 'b -> 'c) -> 'a -> 'c
 //│   <:  ty1:
 //│ (('b | 'c) -> 'c) -> 'b -> 'c
 //│    = [Function: twice]
-//│ ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ ('a -> 'b & 'b -> 'c) -> 'a -> 'c
 //│   <:  ty2:
 //│ ('b -> ('b & 'd)) -> 'b -> 'd
 //│    = [Function: twice]
 
 twice twice
-//│ res: ('a -> 'b & ('c | 'b) -> 'a) -> 'c -> 'b
+//│ res: (('a | 'b) -> 'c & 'c -> 'b) -> 'a -> 'b
 //│    = [Function (anonymous)]
 
 :e
@@ -315,7 +315,7 @@ twice twice!
 //│ ║  l.313: 	twice twice!
 //│ ║         	^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ res: (('a | 'b) -> 'b & ('b | 'c) -> ('a & 'c)) -> 'c -> 'b | error
+//│ res: (('a | 'b) -> ('b & 'c) & ('c | 'a) -> 'a) -> 'b -> 'a | error
 //│    = [Function (anonymous)]
 
 

@@ -74,7 +74,7 @@ def simpleStepImpl arrImpl = ArraysImpl {
     update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.Update r0 i a, "updated");
     fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.Fold f b r0
   }
-//│ simpleStepImpl: ArraysRep[in 'A | 'A0 | 'A1 | 'A2 & 'A3 out 'A2 & 'A0, in 'Rep | 'Rep0 out 'Rep1 & ('Rep2 | 'Rep3)] -> (ArraysImpl['A3, 'Rep4] with {fold: forall 'b. ('A2 -> 'b -> 'b) -> 'b -> ('Rep0, anything,) -> 'b, init: 'A -> ('Rep1, "initialized",), sub: ('Rep, anything,) -> int -> 'A0, update: forall 'a. ('Rep3 & 'a, anything,) -> int -> 'A1 -> ('Rep2 | 'a, "updated",)})
+//│ simpleStepImpl: ArraysRep[in 'A | 'A0 | 'A1 | 'A2 & 'A3 out 'A0 & 'A2, in 'Rep | 'Rep0 out 'Rep1 & ('Rep2 | 'Rep3)] -> (ArraysImpl['A3, 'Rep4] with {fold: forall 'b. ('A2 -> 'b -> 'b) -> 'b -> ('Rep0, anything,) -> 'b, init: 'A -> ('Rep1, "initialized",), sub: ('Rep, anything,) -> int -> 'A0, update: forall 'a. ('Rep3 & 'a, anything,) -> int -> 'A1 -> ('Rep2 | 'a, "updated",)})
 //│   where
 //│     'Rep4 :> ('Rep1 | 'Rep2 | 'c, "initialized" | "updated",)
 //│           <: (nothing, anything,)
@@ -87,13 +87,10 @@ def simpleStepImpl arrImpl = ArraysImpl {
 :Fuel 50000
 simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
 //│ res: ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string,)]
-//│   where
-//│     'a := 'A
-//│     'A <: 'a
 //│    = [Function: simpleStepImpl]
 //│ constrain calls  : 46463
 //│ annoying  calls  : 101
-//│ subtyping calls  : 380936
+//│ subtyping calls  : 380933
 :ResetFuel
 
 // def simpleStepImpl2_ty: Arrays['a] -> ArraysImpl['a, ('_, string)]
@@ -106,20 +103,20 @@ def simpleStepImpl2_ty: (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> Arrays
 
 
 def simpleStepImpl2 arr = arr simpleStepImpl
-//│ simpleStepImpl2: ((forall 'Rep 'A 'Rep0 'a 'A0 'A1 'Rep1 'Rep2 'A2 'Rep3 'Rep4 'A3. ArraysRep[in 'A1 | 'A0 | 'A2 | 'A3 & 'A out 'A3 & 'A0, in 'Rep2 | 'Rep out 'Rep0 & ('Rep4 | 'Rep3)] -> (ArraysImpl['A, 'Rep1] with {fold: forall 'b. ('A3 -> 'b -> 'b) -> 'b -> ('Rep, anything,) -> 'b, init: 'A1 -> ('Rep0, "initialized",), sub: ('Rep2, anything,) -> int -> 'A0, update: forall 'c. ('Rep3 & 'c, anything,) -> int -> 'A2 -> ('Rep4 | 'c, "updated",)})) -> 'd) -> 'd
+//│ simpleStepImpl2: ((forall 'Rep 'Rep0 'Rep1 'A 'A0 'Rep2 'A1 'A2 'a 'Rep3 'Rep4 'A3. ArraysRep[in 'A3 | 'A1 | 'A0 | 'A & 'A2 out 'A1 & 'A, in 'Rep0 | 'Rep2 out 'Rep4 & ('Rep1 | 'Rep3)] -> (ArraysImpl['A2, 'Rep] with {fold: forall 'b. ('A -> 'b -> 'b) -> 'b -> ('Rep2, anything,) -> 'b, init: 'A3 -> ('Rep4, "initialized",), sub: ('Rep0, anything,) -> int -> 'A1, update: forall 'c. ('Rep3 & 'c, anything,) -> int -> 'A0 -> ('Rep1 | 'c, "updated",)})) -> 'd) -> 'd
 //│   where
-//│     'Rep1 :> ('Rep0 | 'Rep4 | 'a, "initialized" | "updated",)
-//│           <: (nothing, anything,)
-//│     'A :> 'A0
-//│        <: nothing
+//│     'Rep :> ('Rep4 | 'Rep1 | 'a, "initialized" | "updated",)
+//│          <: (nothing, anything,)
+//│     'A2 :> 'A1
+//│         <: nothing
 //│                = [Function: simpleStepImpl2]
 
 simpleStepImpl2_ty = simpleStepImpl2
-//│ ((forall 'Rep 'Rep0 'A 'Rep1 'Rep2 'A0 'A1 'a 'A2 'Rep3 'A3 'Rep4. ArraysRep[in 'A | 'A1 | 'A3 | 'A2 & 'A0 out 'A2 & 'A1, in 'Rep4 | 'Rep2 out 'Rep0 & ('Rep3 | 'Rep)] -> (ArraysImpl['A0, 'Rep1] with {fold: forall 'b. ('A2 -> 'b -> 'b) -> 'b -> ('Rep2, anything,) -> 'b, init: 'A -> ('Rep0, "initialized",), sub: ('Rep4, anything,) -> int -> 'A1, update: forall 'c. ('Rep & 'c, anything,) -> int -> 'A3 -> ('Rep3 | 'c, "updated",)})) -> 'd) -> 'd
+//│ ((forall 'A 'a 'Rep 'A0 'Rep0 'Rep1 'A1 'Rep2 'Rep3 'A2 'A3 'Rep4. ArraysRep[in 'A2 | 'A | 'A0 | 'A1 & 'A3 out 'A & 'A1, in 'Rep1 | 'Rep4 out 'Rep2 & ('Rep | 'Rep3)] -> (ArraysImpl['A3, 'Rep0] with {fold: forall 'b. ('A1 -> 'b -> 'b) -> 'b -> ('Rep4, anything,) -> 'b, init: 'A2 -> ('Rep2, "initialized",), sub: ('Rep1, anything,) -> int -> 'A, update: forall 'c. ('Rep3 & 'c, anything,) -> int -> 'A0 -> ('Rep | 'c, "updated",)})) -> 'd) -> 'd
 //│   where
-//│     'Rep1 :> ('Rep0 | 'Rep3 | 'a, "initialized" | "updated",)
+//│     'Rep0 :> ('Rep2 | 'Rep | 'a, "initialized" | "updated",)
 //│           <: (nothing, anything,)
-//│     'A0 :> 'A1
+//│     'A3 :> 'A
 //│         <: nothing
 //│   <:  simpleStepImpl2_ty:
 //│ (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> ArraysImpl['A, ('Rep, string,)]
@@ -131,7 +128,7 @@ def simpleStepImpl2_ty (arr: Arrays['a]) = arr simpleStepImpl
 //│   <:  simpleStepImpl2_ty:
 //│ (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> ArraysImpl['A, ('Rep, string,)]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.129: 	def simpleStepImpl2_ty (arr: Arrays['a]) = arr simpleStepImpl
+//│ ║  l.126: 	def simpleStepImpl2_ty (arr: Arrays['a]) = arr simpleStepImpl
 //│ ║         	                                           ^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -150,16 +147,16 @@ def simpleStep: Arrays['a] -> Arrays['a]
 
 :e // * Since "sound extrusion"
 def simpleStep arr f = f (simpleStepImpl2 arr)
-//│ ((forall 'Rep 'A 'Rep0 'A0 'a 'Rep1 'A1 'A2 'A3 'Rep2 'Rep3 'Rep4. ArraysRep[in 'A3 | 'A2 | 'A | 'A1 & 'A0 out 'A1 & 'A2, in 'Rep2 | 'Rep1 out 'Rep3 & ('Rep0 | 'Rep)] -> (ArraysImpl['A0, 'Rep4] with {fold: forall 'b. ('A1 -> 'b -> 'b) -> 'b -> ('Rep1, anything,) -> 'b, init: 'A3 -> ('Rep3, "initialized",), sub: ('Rep2, anything,) -> int -> 'A2, update: forall 'c. ('Rep & 'c, anything,) -> int -> 'A -> ('Rep0 | 'c, "updated",)})) -> 'd) -> ('d -> 'e) -> 'e
+//│ ((forall 'a 'A 'Rep 'A0 'A1 'Rep0 'Rep1 'Rep2 'Rep3 'A2 'A3 'Rep4. ArraysRep[in 'A0 | 'A1 | 'A3 | 'A2 & 'A out 'A1 & 'A2, in 'Rep1 | 'Rep4 out 'Rep3 & ('Rep | 'Rep0)] -> (ArraysImpl['A, 'Rep2] with {fold: forall 'b. ('A2 -> 'b -> 'b) -> 'b -> ('Rep4, anything,) -> 'b, init: 'A0 -> ('Rep3, "initialized",), sub: ('Rep1, anything,) -> int -> 'A1, update: forall 'c. ('Rep0 & 'c, anything,) -> int -> 'A3 -> ('Rep | 'c, "updated",)})) -> 'd) -> ('d -> 'e) -> 'e
 //│   where
-//│     'Rep4 :> ('Rep3 | 'Rep0 | 'a, "initialized" | "updated",)
+//│     'Rep2 :> ('Rep3 | 'Rep | 'a, "initialized" | "updated",)
 //│           <: (nothing, anything,)
-//│     'A0 :> 'A2
-//│         <: nothing
+//│     'A :> 'A1
+//│        <: nothing
 //│   <:  simpleStep:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.152: 	def simpleStep arr f = f (simpleStepImpl2 arr)
+//│ ║  l.149: 	def simpleStep arr f = f (simpleStepImpl2 arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -181,7 +178,7 @@ def simpleStep arr f = f (simpleStepImpl2_ty arr)
 //│   <:  simpleStep:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.176: 	def simpleStep arr f = f (simpleStepImpl2_ty arr)
+//│ ║  l.173: 	def simpleStep arr f = f (simpleStepImpl2_ty arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -206,7 +203,7 @@ sb (fun arr -> arr.Sub (arr.Init true) 1)
 :e // * Expected – argument order confusion
 sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.207: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
+//│ ║  l.204: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'Rep` is not an instance of type `int`
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -215,7 +212,7 @@ sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ║  l.16: 	  method Sub: Rep -> int -> A
 //│ ║        	                     ^^^
 //│ ╟── from application:
-//│ ║  l.207: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
+//│ ║  l.204: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ║         	                          ^^^^^^^^^^^^^
 //│ ╟── Note: class type parameter Rep is defined at:
 //│ ║  l.14: 	class ArraysRep[A, Rep]
@@ -231,7 +228,7 @@ sb (fun arr -> arr.Update (arr.Init true) 1 false)
 :e // * Rightly prevent skolem confusion
 sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.232: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
+//│ ║  l.229: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'Rep` does not match type `nothing`
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -240,7 +237,7 @@ sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                         ^^^^
 //│ ╟── from application:
-//│ ║  l.232: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
+//│ ║  l.229: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ╙──       	                                             ^^^^^^^^^^^^^^
 //│ res: int -> anything -> anything | error
 //│    = [Function (anonymous)]
@@ -289,9 +286,9 @@ def stepImpl arrImpl = ArraysImpl {
       else (r0, arrImpl.Update r1 (div i 2) a);
     fold = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.Fold f (arrImpl.Fold f b r0) r1
   }
-//│ stepImpl: ArraysRep[in 'A | 'A0 | 'A1 | 'A2 | 'A3 | 'A4 | 'A5 & ('A6 | 'A7) out 'A6 & 'A7 & 'A2 & 'A1, in 'Rep | 'Rep0 | 'Rep1 | 'Rep2 out 'Rep3 & 'Rep4 & ('Rep5 & ('Rep6 | 'Rep7) | 'Rep8 & ('Rep6 | 'Rep7))] -> (ArraysImpl['A5, 'Rep9] with {fold: forall 'b 'b0 'b1. ('A6 -> 'b -> ('b & 'b0) & 'A7 -> 'b0 -> ('b0 & 'b1)) -> ('b & 'b0) -> ('Rep2, 'Rep1,) -> ('b1 | 'b), init: ('A0 & 'A) -> ('Rep4, 'Rep3,), sub: ('Rep, 'Rep0,) -> int -> ('A1 | 'A2), update: forall 'a 'c. ('Rep7 & 'a, 'Rep5 & 'c,) -> int -> ('A4 & 'A3) -> ('Rep6 | 'a, 'Rep8 | 'c,)})
+//│ stepImpl: ArraysRep[in 'A | 'A0 | 'A1 | 'A2 | 'A3 | 'A4 | 'A5 & ('A6 | 'A7) out 'A1 & 'A2 & 'A6 & 'A7, in 'Rep | 'Rep0 | 'Rep1 | 'Rep2 out 'Rep3 & 'Rep4 & ('Rep5 & ('Rep6 | 'Rep7) | 'Rep8 & ('Rep6 | 'Rep7))] -> (ArraysImpl['A5, 'Rep9] with {fold: forall 'b 'b0 'b1. ('A6 -> 'b0 -> ('b0 & 'b1) & 'A7 -> 'b -> ('b0 & 'b & 'b1)) -> ('b0 & 'b & 'b1) -> ('Rep2, 'Rep1,) -> 'b1, init: ('A & 'A0) -> ('Rep4, 'Rep3,), sub: ('Rep, 'Rep0,) -> int -> ('A1 | 'A2), update: forall 'a 'c. ('Rep5 & 'a, 'Rep7 & 'c,) -> int -> ('A3 & 'A4) -> ('Rep8 | 'a, 'Rep6 | 'c,)})
 //│   where
-//│     'Rep9 :> ('Rep4 | 'Rep6 | 'd, 'Rep3 | 'Rep8 | 'e,)
+//│     'Rep9 :> ('Rep4 | 'Rep8 | 'd, 'Rep3 | 'Rep6 | 'e,)
 //│           <: (nothing, nothing,)
 //│     'A5 :> anything
 //│         <: nothing
@@ -302,20 +299,20 @@ def stepImpl2_ty: (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> ArraysImpl['
 //│             = <missing implementation>
 
 def stepImpl2 arr = arr stepImpl
-//│ stepImpl2: ((forall 'Rep 'Rep0 'A 'A0 'A1 'a 'Rep1 'Rep2 'A2 'c 'Rep3 'A3 'A4 'Rep4 'Rep5 'A5 'Rep6 'Rep7 'Rep8 'A6 'Rep9 'A7. ArraysRep[in 'A4 | 'A5 | 'A2 | 'A0 | 'A6 | 'A7 | 'A1 & ('A | 'A3) out 'A & 'A3 & 'A0 & 'A2, in 'Rep7 | 'Rep0 | 'Rep2 | 'Rep3 out 'Rep9 & 'Rep1 & ('Rep4 & ('Rep5 | 'Rep6) | 'Rep & ('Rep5 | 'Rep6))] -> (ArraysImpl['A1, 'Rep8] with {fold: forall 'b 'b0 'b1. ('A -> 'b -> ('b & 'b0) & 'A3 -> 'b0 -> ('b0 & 'b1)) -> ('b & 'b0) -> ('Rep3, 'Rep2,) -> ('b1 | 'b), init: ('A5 & 'A4) -> ('Rep1, 'Rep9,), sub: ('Rep7, 'Rep0,) -> int -> ('A2 | 'A0), update: forall 'd 'e. ('Rep4 & 'd, 'Rep6 & 'e,) -> int -> ('A7 & 'A6) -> ('Rep | 'd, 'Rep5 | 'e,)})) -> 'f) -> 'f
+//│ stepImpl2: ((forall 'Rep 'Rep0 'Rep1 'A 'A0 'Rep2 'Rep3 'A1 'A2 'Rep4 'A3 'Rep5 'A4 'Rep6 'Rep7 'A5 'a 'Rep8 'c 'A6 'Rep9 'A7. ArraysRep[in 'A2 | 'A3 | 'A4 | 'A5 | 'A1 | 'A | 'A6 & ('A7 | 'A0) out 'A4 & 'A5 & 'A7 & 'A0, in 'Rep2 | 'Rep9 | 'Rep | 'Rep7 out 'Rep1 & 'Rep5 & ('Rep8 & ('Rep0 | 'Rep3) | 'Rep4 & ('Rep0 | 'Rep3))] -> (ArraysImpl['A6, 'Rep6] with {fold: forall 'b 'b0 'b1. ('A7 -> 'b -> ('b & 'b0) & 'A0 -> 'b1 -> ('b & 'b1 & 'b0)) -> ('b & 'b1 & 'b0) -> ('Rep7, 'Rep,) -> 'b0, init: ('A2 & 'A3) -> ('Rep1, 'Rep5,), sub: ('Rep2, 'Rep9,) -> int -> ('A4 | 'A5), update: forall 'd 'e. ('Rep4 & 'd, 'Rep3 & 'e,) -> int -> ('A1 & 'A) -> ('Rep8 | 'd, 'Rep0 | 'e,)})) -> 'f) -> 'f
 //│   where
-//│     'Rep8 :> ('Rep1 | 'Rep | 'c, 'Rep9 | 'Rep5 | 'a,)
+//│     'Rep6 :> ('Rep1 | 'Rep8 | 'a, 'Rep5 | 'Rep0 | 'c,)
 //│           <: (nothing, nothing,)
-//│     'A1 :> anything
+//│     'A6 :> anything
 //│         <: nothing
 //│          = [Function: stepImpl2]
 
 stepImpl2_ty = stepImpl2
-//│ ((forall 'A 'A0 'Rep 'A1 'Rep0 'A2 'Rep1 'Rep2 'A3 'A4 'A5 'Rep3 'a 'A6 'c 'Rep4 'A7 'Rep5 'Rep6 'Rep7 'Rep8 'Rep9. ArraysRep[in 'A4 | 'A2 | 'A | 'A5 | 'A6 | 'A7 | 'A0 & ('A1 | 'A3) out 'A1 & 'A3 & 'A5 & 'A, in 'Rep0 | 'Rep2 | 'Rep5 | 'Rep1 out 'Rep4 & 'Rep3 & ('Rep & ('Rep8 | 'Rep7) | 'Rep6 & ('Rep8 | 'Rep7))] -> (ArraysImpl['A0, 'Rep9] with {fold: forall 'b 'b0 'b1. ('A1 -> 'b -> ('b & 'b0) & 'A3 -> 'b0 -> ('b0 & 'b1)) -> ('b & 'b0) -> ('Rep1, 'Rep5,) -> ('b1 | 'b), init: ('A2 & 'A4) -> ('Rep3, 'Rep4,), sub: ('Rep0, 'Rep2,) -> int -> ('A | 'A5), update: forall 'd 'e. ('Rep & 'd, 'Rep7 & 'e,) -> int -> ('A7 & 'A6) -> ('Rep6 | 'd, 'Rep8 | 'e,)})) -> 'f) -> 'f
+//│ ((forall 'A 'A0 'Rep 'A1 'Rep0 'Rep1 'Rep2 'A2 'Rep3 'Rep4 'Rep5 'A3 'A4 'Rep6 'A5 'A6 'A7 'Rep7 'Rep8 'a 'Rep9 'c. ArraysRep[in 'A1 | 'A6 | 'A3 | 'A2 | 'A | 'A4 | 'A5 & ('A7 | 'A0) out 'A3 & 'A2 & 'A7 & 'A0, in 'Rep6 | 'Rep | 'Rep8 | 'Rep9 out 'Rep1 & 'Rep5 & ('Rep2 & ('Rep4 | 'Rep7) | 'Rep3 & ('Rep4 | 'Rep7))] -> (ArraysImpl['A5, 'Rep0] with {fold: forall 'b 'b0 'b1. ('A7 -> 'b -> ('b & 'b0) & 'A0 -> 'b1 -> ('b & 'b1 & 'b0)) -> ('b & 'b1 & 'b0) -> ('Rep9, 'Rep8,) -> 'b0, init: ('A1 & 'A6) -> ('Rep1, 'Rep5,), sub: ('Rep6, 'Rep,) -> int -> ('A3 | 'A2), update: forall 'd 'e. ('Rep3 & 'd, 'Rep7 & 'e,) -> int -> ('A & 'A4) -> ('Rep2 | 'd, 'Rep4 | 'e,)})) -> 'f) -> 'f
 //│   where
-//│     'Rep9 :> ('Rep3 | 'Rep6 | 'c, 'Rep4 | 'Rep8 | 'a,)
+//│     'Rep0 :> ('Rep1 | 'Rep2 | 'a, 'Rep5 | 'Rep4 | 'c,)
 //│           <: (nothing, nothing,)
-//│     'A0 :> anything
+//│     'A5 :> anything
 //│         <: nothing
 //│   <:  stepImpl2_ty:
 //│ (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> ArraysImpl['A, ('Rep, 'Rep,)]
@@ -328,16 +325,16 @@ def step: Arrays['a] -> Arrays['a]
 
 :e // * Since "sound extrusion"
 def step arr f = f (stepImpl2 arr)
-//│ ((forall 'Rep 'Rep0 'A 'A0 'Rep1 'Rep2 'Rep3 'Rep4 'A1 'Rep5 'Rep6 'Rep7 'Rep8 'A2 'A3 'A4 'a 'c 'A5 'Rep9 'A6 'A7. ArraysRep[in 'A2 | 'A6 | 'A5 | 'A3 | 'A4 | 'A | 'A7 & ('A0 | 'A1) out 'A0 & 'A1 & 'A3 & 'A5, in 'Rep1 | 'Rep4 | 'Rep2 | 'Rep3 out 'Rep & 'Rep6 & ('Rep8 & ('Rep5 | 'Rep7) | 'Rep0 & ('Rep5 | 'Rep7))] -> (ArraysImpl['A7, 'Rep9] with {fold: forall 'b 'b0 'b1. ('A0 -> 'b -> ('b & 'b0) & 'A1 -> 'b0 -> ('b0 & 'b1)) -> ('b & 'b0) -> ('Rep3, 'Rep2,) -> ('b1 | 'b), init: ('A6 & 'A2) -> ('Rep6, 'Rep,), sub: ('Rep1, 'Rep4,) -> int -> ('A5 | 'A3), update: forall 'd 'e. ('Rep7 & 'd, 'Rep8 & 'e,) -> int -> ('A & 'A4) -> ('Rep5 | 'd, 'Rep0 | 'e,)})) -> 'f) -> ('f -> 'g) -> 'g
+//│ ((forall 'Rep 'Rep0 'A 'Rep1 'Rep2 'Rep3 'Rep4 'Rep5 'A0 'Rep6 'Rep7 'a 'Rep8 'A1 'Rep9 'A2 'A3 'A4 'A5 'c 'A6 'A7. ArraysRep[in 'A2 | 'A0 | 'A1 | 'A6 | 'A5 | 'A3 | 'A4 & ('A | 'A7) out 'A1 & 'A6 & 'A & 'A7, in 'Rep7 | 'Rep | 'Rep6 | 'Rep0 out 'Rep1 & 'Rep5 & ('Rep2 & ('Rep4 | 'Rep9) | 'Rep3 & ('Rep4 | 'Rep9))] -> (ArraysImpl['A4, 'Rep8] with {fold: forall 'b 'b0 'b1. ('A -> 'b -> ('b & 'b0) & 'A7 -> 'b1 -> ('b & 'b1 & 'b0)) -> ('b & 'b1 & 'b0) -> ('Rep0, 'Rep6,) -> 'b0, init: ('A2 & 'A0) -> ('Rep1, 'Rep5,), sub: ('Rep7, 'Rep,) -> int -> ('A1 | 'A6), update: forall 'd 'e. ('Rep3 & 'd, 'Rep9 & 'e,) -> int -> ('A5 & 'A3) -> ('Rep2 | 'd, 'Rep4 | 'e,)})) -> 'f) -> ('f -> 'g) -> 'g
 //│   where
-//│     'Rep9 :> ('Rep6 | 'Rep5 | 'c, 'Rep | 'Rep0 | 'a,)
+//│     'Rep8 :> ('Rep1 | 'Rep2 | 'a, 'Rep5 | 'Rep4 | 'c,)
 //│           <: (nothing, nothing,)
-//│     'A7 :> anything
+//│     'A4 :> anything
 //│         <: nothing
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.330: 	def step arr f = f (stepImpl2 arr)
+//│ ║  l.327: 	def step arr f = f (stepImpl2 arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -346,7 +343,7 @@ def step arr f = f (stepImpl2 arr)
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                         ^^^^
 //│ ╟── from reference:
-//│ ║  l.284: 	      then arrImpl.Sub r0 (div i 2)
+//│ ║  l.281: 	      then arrImpl.Sub r0 (div i 2)
 //│ ╙──       	                       ^^
 //│     = [Function: step]
 
@@ -357,7 +354,7 @@ def step (arr: Arrays['a]) f = f (stepImpl2 arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.355: 	def step (arr: Arrays['a]) f = f (stepImpl2 arr)
+//│ ║  l.352: 	def step (arr: Arrays['a]) f = f (stepImpl2 arr)
 //│ ║         	                                  ^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -366,7 +363,7 @@ def step (arr: Arrays['a]) f = f (stepImpl2 arr)
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                         ^^^^
 //│ ╟── from reference:
-//│ ║  l.284: 	      then arrImpl.Sub r0 (div i 2)
+//│ ║  l.281: 	      then arrImpl.Sub r0 (div i 2)
 //│ ╙──       	                       ^^
 //│     = [Function: step1]
 
@@ -380,7 +377,7 @@ def step arr f = f (stepImpl2_ty arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.375: 	def step arr f = f (stepImpl2_ty arr)
+//│ ║  l.372: 	def step arr f = f (stepImpl2_ty arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -398,7 +395,7 @@ def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.393: 	def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
+//│ ║  l.390: 	def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
 //│ ║         	                                  ^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.41: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r

@@ -16,7 +16,7 @@ def id x = x
 
 test1 f =
   (f 0, f true)
-//│ test1: (true -> 'a & 0 -> 'b) -> ('b, 'a,)
+//│ test1: (0 -> 'a & true -> 'b) -> ('a, 'b,)
 //│      = [Function: test1]
 
 test1 (fun value -> { value })
@@ -40,14 +40,14 @@ test2 (fun value -> { value })
 // * From supertype's `freeze-ml.sup`
 
 def poly f = (f 42, f true)
-//│ poly: (true -> 'a & 42 -> 'b) -> ('b, 'a,)
+//│ poly: (42 -> 'a & true -> 'b) -> ('a, 'b,)
 //│     = [Function: poly]
 
 def bad1 f = (poly f, f 42 + 1)
 def bad2 f = (f 42 + 1, poly f)
 //│ bad1: (42 -> (int & 'a) & true -> 'b) -> (('a, 'b,), int,)
 //│     = [Function: bad1]
-//│ bad2: (true -> 'a & 42 -> (int & 'b)) -> (int, ('b, 'a,),)
+//│ bad2: (42 -> (int & 'a) & true -> 'b) -> (int, ('a, 'b,),)
 //│     = [Function: bad2]
 
 

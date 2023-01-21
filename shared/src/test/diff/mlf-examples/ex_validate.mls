@@ -275,9 +275,9 @@ fun x -> fun y ->
 fun x -> fun y ->
   let isnil = x y in
     (isnil (cons 1 (cons 2 (cons 3 nil))), isnil nil, isnil (cons "ok" nil), isnil (cons true nil)) 
-//│ res: Id -> (List[true] -> 'a & List["ok"] -> 'b & List[nothing] -> 'c & List[1 | 2 | 3] -> 'd) -> ('d, 'c, 'b, 'a,)
+//│ res: Id -> (List[1 | 2 | 3] -> 'a & List[nothing] -> 'b & List["ok"] -> 'c & List[true] -> 'd) -> ('a, 'b, 'c, 'd,)
 //│    = [Function: res]
-//│ res: ('a -> (List[true] -> 'b & List["ok"] -> 'c & List[nothing] -> 'd & List[1 | 2 | 3] -> 'e)) -> 'a -> ('e, 'd, 'c, 'b,)
+//│ res: ('a -> (List[1 | 2 | 3] -> 'b & List[nothing] -> 'c & List["ok"] -> 'd & List[true] -> 'e)) -> 'a -> ('b, 'c, 'd, 'e,)
 //│    = [Function: res]
 
 // (*let t1 = f delta	
@@ -781,7 +781,7 @@ def a = fun f -> f id
 //│            = [Function: church_succ]
 //│ f: Sa -> Sid
 //│  = [Function: f]
-//│ f_: ((forall 'a 'b. ((forall 'c. anything -> 'c -> 'c) -> 'a -> anything) -> 'a -> 'b -> 'b) -> anything & (forall 'd 'e. ('d -> 'e & 'd) -> 'e) -> 'f) -> 'f
+//│ f_: ((forall 'a 'b. ('a -> 'b & 'a) -> 'b) -> 'c & (forall 'd 'e. ((forall 'f. anything -> 'f -> 'f) -> 'd -> anything) -> 'd -> 'e -> 'e) -> anything) -> 'c
 //│   = [Function: f_]
 //│ a: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
 //│  = [Function: a]
@@ -882,12 +882,12 @@ rec def id_ x = if true then x else id_ id_ x
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ id_: 'id_
 //│   where
-//│     'id_ :> forall 'a. ('b & 'a) -> 'a
+//│     'id_ :> forall 'a. ('a & 'b) -> 'a
 //│     'a :> 'c
-//│     'b :> 'id_
-//│        <: 'c
 //│     'c :> 'id_
 //│        <: 'b -> 'c
+//│     'b :> 'id_
+//│        <: 'c
 //│    = [Function: id_]
 
 // let rec (id:sid) x = if true then x else id id x
@@ -901,12 +901,12 @@ def id: Sid
 rec def id x = if true then x else id id x
 //│ 'id
 //│   where
-//│     'id :> forall 'a. ('b & 'a) -> 'a
+//│     'id :> forall 'a. ('a & 'b) -> 'a
 //│     'a :> 'c
-//│     'b :> 'id
-//│        <: 'c
 //│     'c :> 'id
 //│        <: 'b -> 'c
+//│     'b :> 'id
+//│        <: 'c
 //│   <:  id:
 //│ Sid
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required

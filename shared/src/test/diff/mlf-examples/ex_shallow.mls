@@ -39,7 +39,7 @@ def church_one = fun f -> fun x -> f x
 // (* church_un is like apply_twice *)
 // let church_two = fun f x -> f (f x)
 def church_two = fun f -> fun x -> f (f x)
-//│ church_two: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ church_two: ('a -> 'b & 'b -> 'c) -> 'a -> 'c
 //│           = [Function: church_two]
 
 // let church_succ n = fun f x -> f (n f x)
@@ -73,15 +73,15 @@ def a0_ = a2_ a1
 //│ Defined type alias A1
 //│ a1: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
 //│   = [Function: a1]
-//│ a3: ((forall 'a 'b 'c. ('a -> 'b & 'c -> 'a) -> 'c -> 'b) -> 'd) -> anything -> 'd
+//│ a3: ((forall 'a 'b 'c. ('a -> 'b & 'b -> 'c) -> 'a -> 'c) -> 'd) -> anything -> 'd
 //│   = [Function: a3]
-//│ a2: A1 -> anything -> ('a -> 'b & 'c -> 'a & 'd -> 'c) -> 'd -> 'b
+//│ a2: A1 -> anything -> ('a -> 'b & 'b -> 'c & 'c -> 'd) -> 'a -> 'd
 //│   = [Function: a2]
-//│ a2_: A1 -> anything -> ('a -> 'b & 'c -> 'a & 'd -> 'c) -> 'd -> 'b
+//│ a2_: A1 -> anything -> ('a -> 'b & 'b -> 'c & 'c -> 'd) -> 'a -> 'd
 //│    = [Function: a2_]
-//│ a0: anything -> ('a -> 'b & 'c -> 'a & 'd -> 'c) -> 'd -> 'b
+//│ a0: anything -> ('a -> 'b & 'b -> 'c & 'c -> 'd) -> 'a -> 'd
 //│   = [Function: a0]
-//│ a0_: anything -> ('a -> 'b & 'c -> 'a & 'd -> 'c) -> 'd -> 'b
+//│ a0_: anything -> ('a -> 'b & 'b -> 'c & 'c -> 'd) -> 'a -> 'd
 //│    = [Function: a0_]
 
 // let test0 = 
@@ -193,7 +193,7 @@ def either x y = if true then x else y
 //│       = [Function: either]
 
 def a1' = fun f -> fun x -> f (f (either id x))
-//│ a1': ('a -> 'b & (forall 'c. 'c -> 'c | 'd) -> 'a) -> 'd -> 'b
+//│ a1': ((forall 'a. 'a -> 'a | 'b) -> 'c & 'c -> 'd) -> 'b -> 'd
 //│    = [Function: a1$]
 
 def a2' (x: A1') =
@@ -202,7 +202,7 @@ def a2' (x: A1') =
     let _ = x y church_two in
     y church_succ
   ) a3
-//│ a2': A1' -> anything -> ('a -> 'b & 'c -> 'a & 'd -> 'c) -> 'd -> 'b
+//│ a2': A1' -> anything -> ('a -> 'b & 'b -> 'c & 'c -> 'd) -> 'a -> 'd
 //│    = [Function: a2$]
 
 def a2'_ x =
@@ -211,11 +211,11 @@ def a2'_ x =
     let _ = x y church_two in
     y church_succ
   ) a3
-//│ a2'_: ((forall 'a. ((forall 'b 'c 'd. ('b -> 'c & 'd -> 'b) -> 'd -> 'c) -> 'a) -> anything -> 'a) -> (forall 'e 'f 'g. ('e -> 'f & 'g -> 'e) -> 'g -> 'f) -> anything & (forall 'h 'i. ('i -> 'h & 'i) -> 'h) -> (forall 'j. 'j -> 'j) -> anything) -> anything -> ('k -> 'l & 'm -> 'k & 'n -> 'm) -> 'n -> 'l
+//│ a2'_: ((forall 'a 'b. ('a -> 'b & 'a) -> 'b) -> (forall 'c. 'c -> 'c) -> anything & (forall 'd. ((forall 'e 'f 'g. ('e -> 'f & 'f -> 'g) -> 'e -> 'g) -> 'd) -> anything -> 'd) -> (forall 'h 'i 'j. ('j -> 'h & 'h -> 'i) -> 'j -> 'i) -> anything) -> anything -> ('k -> 'l & 'l -> 'm & 'm -> 'n) -> 'k -> 'n
 //│     = [Function: a2$_]
 
 def a0' = a2' a1'
-//│ a0': anything -> ('a -> 'b & 'c -> 'a & 'd -> 'c) -> 'd -> 'b
+//│ a0': anything -> ('a -> 'b & 'b -> 'c & 'c -> 'd) -> 'a -> 'd
 //│    = [Function: a0$]
 
 :e
@@ -224,13 +224,13 @@ def a0'_ = a2'_ a1'
 //│ ║  l.222: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ a0'_: anything -> ('a -> 'b & 'c -> 'a & 'd -> 'c) -> 'd -> 'b | error
+//│ a0'_: anything -> ('a -> 'b & 'b -> 'c & 'c -> 'd) -> 'a -> 'd | error
 //│     = [Function: a0$_]
 
 :RecursiveTypes
 // * Note: requires :DistributeForalls
 def a0'_ = a2'_ a1'
-//│ a0'_: anything -> ('a -> 'b & 'c -> 'a & 'd -> 'c) -> 'd -> 'b
+//│ a0'_: anything -> ('a -> 'b & 'b -> 'c & 'c -> 'd) -> 'a -> 'd
 //│     = [Function: a0$_1]
 :NoRecursiveTypes
 
@@ -276,23 +276,23 @@ def a0_ = a2_ a1
 //│   = [Function: a11]
 //│ a3: 'a -> (forall 'b. (anything -> 'b
 //│   where
-//│     'a <: (forall 'c 'd 'e. ('c -> 'd & 'e -> 'c) -> 'e -> 'd) -> 'b))
+//│     'a <: (forall 'c 'd 'e. ('c -> 'd & 'd -> 'e) -> 'c -> 'e) -> 'b))
 //│   = [Function: a31]
 //│ a2: A1 -> (forall 'a. (anything -> 'a
 //│   where
-//│     forall 'b 'c 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f 'g 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a))
+//│     forall 'b 'c 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a))
 //│   = [Function: a21]
 //│ a2_: A1 -> (forall 'a. (anything -> 'a
 //│   where
-//│     forall 'b 'c 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f 'g 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a))
+//│     forall 'b 'c 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a))
 //│    = [Function: a2_1]
 //│ a0: anything -> 'a
 //│   where
-//│     forall 'b 'c 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f 'g 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a
+//│     forall 'b 'c 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
 //│   = [Function: a01]
 //│ a0_: anything -> 'a
 //│   where
-//│     forall 'b 'c 'd. ('c -> 'd -> 'b) -> (forall 'e. ('b -> 'e & 'c) -> 'd -> 'e) <: (forall 'f 'g 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a
+//│     forall 'b 'c 'd. ('c -> 'd -> 'b) -> (forall 'e. ('b -> 'e & 'c) -> 'd -> 'e) <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
 //│    = [Function: a0_1]
 
 def a1' = fun f -> fun x -> f (f (either id x))
@@ -310,7 +310,7 @@ def a2' (x: A1') =
   ) a3
 //│ a2': A1' -> (forall 'a. (anything -> 'a
 //│   where
-//│     forall 'b 'c 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f 'g 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a))
+//│     forall 'b 'c 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a))
 //│    = [Function: a2$1]
 
 def a2'_ x =
@@ -319,17 +319,17 @@ def a2'_ x =
     let _ = x y church_two in
     y church_succ
   ) a3
-//│ a2'_: ((forall 'a. 'a -> (forall 'b. (anything -> 'b
+//│ a2'_: ((forall 'a 'b. ('a -> 'b & 'a) -> 'b) -> (forall 'c. 'c -> 'c) -> anything & (forall 'd. 'd -> (forall 'e. (anything -> 'e
 //│   where
-//│     'a <: (forall 'c 'd 'e. ('d -> 'e & 'c -> 'd) -> 'c -> 'e) -> 'b))) -> (forall 'c 'd 'e. ('d -> 'e & 'c -> 'd) -> 'c -> 'e) -> anything & (forall 'f 'g. ('f -> 'g & 'f) -> 'g) -> (forall 'h. 'h -> 'h) -> anything) -> (forall 'i. (anything -> 'i
+//│     'd <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'e))) -> (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> anything) -> (forall 'i. (anything -> 'i
 //│   where
-//│     forall 'j 'k 'l. ('j -> 'k -> 'l) -> (forall 'm. ('l -> 'm & 'j) -> 'k -> 'm) <: (forall 'c 'd 'e. ('d -> 'e & 'c -> 'd) -> 'c -> 'e) -> 'i))
+//│     forall 'j 'k 'l. ('j -> 'k -> 'l) -> (forall 'm. ('l -> 'm & 'j) -> 'k -> 'm) <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'i))
 //│     = [Function: a2$_1]
 
 def a0' = a2' a1'
 //│ a0': anything -> 'a
 //│   where
-//│     forall 'b 'c 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f 'g 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a
+//│     forall 'b 'c 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
 //│    = [Function: a0$1]
 
 :e
@@ -340,7 +340,7 @@ def a0'_ = a2'_ a1'
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ a0'_: anything -> 'a | error
 //│   where
-//│     forall 'b 'c 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f 'g 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a
+//│     forall 'b 'c 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
 //│     = [Function: a0$_2]
 
 // * ^ Strangely, this one works with recursive types:
@@ -348,7 +348,7 @@ def a0'_ = a2'_ a1'
 def a0'_ = a2'_ a1'
 //│ a0'_: anything -> 'a
 //│   where
-//│     forall 'b 'c 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f 'g 'h. ('f -> 'g & 'h -> 'f) -> 'h -> 'g) -> 'a
+//│     forall 'b 'c 'd. ('b -> 'c -> 'd) -> (forall 'e. ('d -> 'e & 'b) -> 'c -> 'e) <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
 //│     = [Function: a0$_3]
 :NoRecursiveTypes
 

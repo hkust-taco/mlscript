@@ -55,12 +55,12 @@ rec def evalPeel f e = case e of {
   | Add -> eval f e.lhs + eval f e.rhs
   | _ -> f e
   }
-//│ evalPeel: ('a -> 'val & 'b -> int) -> (Add & {lhs: Expr['b], rhs: Expr['b]} | Lit & {val: 'val} | 'a & ~#Add & ~#Lit) -> (int | 'val)
+//│ evalPeel: ('b -> int & 'a -> 'val) -> (Add & {lhs: Expr['b], rhs: Expr['b]} | Lit & {val: 'val} | 'a & ~#Add & ~#Lit) -> (int | 'val)
 //│         = <no result>
 //│           eval is not implemented
 
 eval = evalPeel
-//│ ('a -> 'val & 'b -> int) -> (Add & {lhs: Expr['b], rhs: Expr['b]} | Lit & {val: 'val} | 'a & ~#Add & ~#Lit) -> (int | 'val)
+//│ ('b -> int & 'a -> 'val) -> (Add & {lhs: Expr['b], rhs: Expr['b]} | Lit & {val: 'val} | 'a & ~#Add & ~#Lit) -> (int | 'val)
 //│   <:  eval:
 //│ ('b -> int) -> Expr['b] -> int
 //│     = <no result>

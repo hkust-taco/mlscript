@@ -156,7 +156,7 @@ def poly: (forall 'a. 'a -> 'a) -> (int, bool)
 def poly f = (f 1, f true)
 //│ poly: (forall 'a. 'a -> 'a) -> (int, bool,)
 //│     = <missing implementation>
-//│ (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+//│ (1 -> 'a & true -> 'b) -> ('a, 'b,)
 //│   <:  poly:
 //│ (forall 'a. 'a -> 'a) -> (int, bool,)
 //│     = [Function: poly]
@@ -306,7 +306,7 @@ id poly (fun x -> x)
 
 // B1
 fun f -> (f 1, f true)
-//│ res: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+//│ res: (1 -> 'a & true -> 'b) -> ('a, 'b,)
 //│    = [Function: res]
 
 // B2
@@ -477,7 +477,7 @@ a = choose id (fun (x: (forall 'a. 'a -> 'a)) -> auto_ x)
 //│  = [Function: id1]
 
 a id
-//│ res: 'a -> 'a
+//│ res: 'b -> 'b
 //│    = [Function: id1]
 
 choose id (fun x -> auto_ x)
@@ -489,7 +489,7 @@ a = choose id auto_
 //│  = [Function: id1]
 
 a id
-//│ res: 'a -> 'a
+//│ res: 'b -> 'b
 //│    = [Function: id1]
 
 
@@ -539,7 +539,7 @@ res id
 //│ ╟── from type variable:
 //│ ║  l.505: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ╙──       	                          ^^
-//│ res: 'a -> 'a | error
+//│ res: 'b -> 'b | error
 //│    = [Function: id1]
 
 

@@ -17,6 +17,6 @@ monster{}
 //│ res: 'a -> anything -> 'a
 
 fun y -> (let tmp = y I in y K)
-//│ res: ((forall 'a. 'a -> anything -> 'a) -> 'b & (forall 'c. 'c -> 'c) -> anything) -> 'b
+//│ res: ((forall 'a. 'a -> 'a) -> anything & (forall 'b. 'b -> anything -> 'b) -> 'c) -> 'c
 
 

@@ -23,10 +23,10 @@ x => x 42
 //│ res: 42
 
 f => x => f (f x)  // twice
-//│ res: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ res: ('a -> 'b & 'b -> 'c) -> 'a -> 'c
 
 let twice = f => x => f (f x)
-//│ twice: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ twice: ('a -> 'b & 'b -> 'c) -> 'a -> 'c
 
 
 
@@ -211,7 +211,7 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ res: (('a -> 'b) -> ('c -> 'd & 'a -> 'b) & ('c -> 'd) -> 'e) -> (error | 'e)
+//│ res: (('a -> 'b) -> 'c & ('d -> 'e) -> ('d -> 'e & 'a -> 'b)) -> (error | 'c)
 
 // * Function that takes arbitrarily many arguments:
 :e

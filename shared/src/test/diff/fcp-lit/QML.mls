@@ -13,10 +13,10 @@ let id x = x in id
 //│    = [ 3, false ]
 
 let poly f = (f 1, f true) in poly
-//│ res: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+//│ res: (1 -> 'a & true -> 'b) -> ('a, 'b,)
 //│    = [Function (anonymous)]
 let poly f = let y = f in (y 1, y true) in poly
-//│ res: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+//│ res: (1 -> 'a & true -> 'b) -> ('a, 'b,)
 //│    = [Function (anonymous)]
 
 // Altered from
@@ -393,7 +393,7 @@ def step = fun xx -> xx (fun ((((xinit, xsub), xupdate), xfold),) ->
     else (fst r, xupdate (snd r) (div i 2) a) in
   let fold f b r = xfold f (xfold f b (fst r)) (snd r) in
     fun f -> f ((((init, sub), update), fold),) )
-//│ ((forall 'c 'b 'd 'e 'f 'a 'g 'h 'i 'b0 'j 'k 'l 'm 'n 'o. ((('e -> 'g, 'b0 -> int -> 'c,), 'b -> int -> 'l -> 'i & 'a -> int -> 'l -> 'n,), 'm -> ('h -> 'f -> 'j & 'j -> 'o -> 'd),) -> (((('e -> ('g, 'g,), ('b0, 'b0,) -> int -> 'c,), forall 'a0 'b1. ('a & 'a0, 'b & 'b1,) -> int -> 'l -> ('a0 | 'n, 'b1 | 'i,),), 'm -> 'h -> ('f, 'o,) -> 'd,) -> 'k) -> 'k) -> 'p) -> 'p
+//│ ((forall 'c 'a 'd 'e 'f 'b 'g 'h 'i 'a0 'j 'k 'l 'm 'n 'o. ((('e -> 'g, 'a0 -> int -> 'c,), 'a -> int -> 'l -> 'i & 'b -> int -> 'l -> 'n,), 'm -> ('h -> 'f -> 'j & 'o -> 'd -> 'h),) -> (((('e -> ('g, 'g,), ('a0, 'a0,) -> int -> 'c,), forall 'a1 'b0. ('a & 'a1, 'b & 'b0,) -> int -> 'l -> ('a1 | 'i, 'b0 | 'n,),), 'm -> 'o -> ('d, 'f,) -> 'j,) -> 'k) -> 'k) -> 'p) -> 'p
 //│   <:  step:
 //│ ExSig -> ExSig
 //│ ╔══[ERROR] Type mismatch in def definition:

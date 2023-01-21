@@ -81,7 +81,7 @@ foo arg
 //│      arg is not implemented
 //│ constrain calls  : 54
 //│ annoying  calls  : 40
-//│ subtyping calls  : 502
+//│ subtyping calls  : 514
 
 :stats
 foo (arg with { payload = 1 })

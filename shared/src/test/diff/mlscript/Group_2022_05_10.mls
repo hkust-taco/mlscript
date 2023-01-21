@@ -1,6 +1,6 @@
 
 def f x = (x 1, x "ok")
-//│ f: ("ok" -> 'a & 1 -> 'b) -> ('b, 'a,)
+//│ f: (1 -> 'a & "ok" -> 'b) -> ('a, 'b,)
 //│  = [Function: f]
 
 f (fun x -> (x, x))

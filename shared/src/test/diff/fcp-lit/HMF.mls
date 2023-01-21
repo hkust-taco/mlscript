@@ -134,7 +134,7 @@ def id x = x
 
 // FreezeML B1
 def poly f = (f 1, f true)
-//│ poly: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+//│ poly: (1 -> 'a & true -> 'b) -> ('a, 'b,)
 //│     = [Function: poly]
 
 // FreezeML A10
@@ -188,7 +188,7 @@ app (map head) (single ids)
 
 // nope
 fun f -> poly f
-//│ res: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+//│ res: (1 -> 'a & true -> 'b) -> ('a, 'b,)
 //│    = [Function: res]
 
 // FreezeML D2
@@ -269,7 +269,7 @@ def poly: (forall 'a. 'a -> 'a) -> (int, bool)
 def poly f = (f 1, f true)
 //│ poly: (forall 'a. 'a -> 'a) -> (int, bool,)
 //│     = <missing implementation>
-//│ (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+//│ (1 -> 'a & true -> 'b) -> ('a, 'b,)
 //│   <:  poly:
 //│ (forall 'a. 'a -> 'a) -> (int, bool,)
 //│     = [Function: poly1]

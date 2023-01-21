@@ -187,7 +187,7 @@ type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 // let succ (n:Int) = fun f x -> f (n f x)
 def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 def succ_ n = fun f -> fun x -> f (n f x)
-//│ succ: ChurchInt -> ('a -> 'b & 'a0 -> ('a & 'a0)) -> ('a & 'a0) -> 'b
+//│ succ: ChurchInt -> ('a -> ('a & 'a0) & 'a0 -> 'b) -> ('a & 'a0) -> 'b
 //│     = [Function: succ]
 //│ succ_: ('a -> 'b -> 'c) -> ('c -> 'd & 'a) -> 'b -> 'd
 //│      = [Function: succ_]
@@ -196,7 +196,7 @@ def succ_ n = fun f -> fun x -> f (n f x)
 
 //:e // due to tapping
 def add (n: ChurchInt) (m: ChurchInt) = n succ m
-//│ add: ChurchInt -> ChurchInt -> (('a -> 'b & 'a0 -> ('a & 'a0)) -> ('a & 'a0) -> 'b | ChurchInt)
+//│ add: ChurchInt -> ChurchInt -> (('a -> ('a & 'a0) & 'a0 -> 'b) -> ('a & 'a0) -> 'b | ChurchInt)
 //│    = [Function: add]
 
 def add_ n m = n succ_ m
@@ -221,7 +221,7 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│      = Nil {}
 //│ table: List[("one", forall 'a 'b. ('a -> 'b) -> 'a -> 'b,)]
 //│      = Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
-//│ table: List[("one" | "two", forall 'a 'b 'c. ('a -> 'b & 'c -> 'b & 'a -> 'c) -> 'a -> 'b,)]
+//│ table: List[("one" | "two", forall 'a 'b 'c. ('a -> 'b & 'b -> 'c & 'a -> 'c) -> 'a -> 'c,)]
 //│      = Cons {
 //│          head: [ 'two', [Function (anonymous)] ],
 //│          tail: Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
@@ -273,7 +273,7 @@ a = add (nfind table "one")
 //│  = [Function (anonymous)]
 
 b = (nfind table "two")
-//│ b: ('a -> 'b & 'c -> 'a & 'c -> 'b & 'd -> 'b & 'c -> 'd) -> ('b & 'c) -> 'b
+//│ b: ('a -> 'b & 'a -> 'c & 'c -> 'b & 'a -> 'd & 'd -> 'b) -> ('b & 'a) -> 'b
 //│  = [Function (anonymous)]
 
 b (fun x -> x)
@@ -289,7 +289,7 @@ b (fun x -> 0)
 //│    = [Function (anonymous)]
 
 b = (find table "two")
-//│ b: None | Some[forall 'a 'b 'c. ('a -> 'b & 'c -> 'a & 'c -> 'b) -> 'c -> 'b]
+//│ b: None | Some[forall 'a 'b 'c. ('a -> 'b & 'a -> 'c & 'c -> 'b) -> 'a -> 'b]
 //│  = None {}
 
 // * Note: this one required `:DistributeForalls`
@@ -339,25 +339,25 @@ match_opt (
     fun () -> fun f -> fun x -> x,
     fun v -> v
   ) b
-//│ res: ('a -> 'b & 'c -> 'a & 'c -> 'b) -> ('b & 'c) -> 'b
+//│ res: ('a -> 'b & 'a -> 'c & 'c -> 'b) -> 'a -> ('b | 'a)
 //│    = [Function (anonymous)]
 
 match_opt (
     fun () -> fun f -> fun x -> x,
     fun v -> v
   ) (find table "two")
-//│ res: ('a -> 'b & 'c -> 'a & 'c -> 'b) -> ('b & 'c) -> 'b
+//│ res: ('a -> 'b & 'a -> 'c & 'c -> 'b) -> 'a -> ('b | 'a)
 //│    = [Function (anonymous)]
 
 def foo key = match_opt (
     fun () -> fun f -> id,
     fun v -> v
   ) (find table key)
-//│ foo: anything -> ('a -> 'b & 'c -> 'a & 'c -> 'b & 'd -> 'b & 'c -> 'd) -> ('b & 'c) -> 'b
+//│ foo: anything -> ('a -> 'b & 'a -> 'c & 'c -> 'b & 'a -> 'd & 'd -> 'b) -> 'a -> ('b | 'a)
 //│    = [Function: foo]
 
 foo 1
-//│ res: ('a -> 'b & 'c -> 'a & 'c -> 'b & 'd -> 'b & 'c -> 'd) -> ('b & 'c) -> 'b
+//│ res: ('a -> 'b & 'a -> 'c & 'c -> 'b & 'a -> 'd & 'd -> 'b) -> 'a -> ('b | 'a)
 //│    = [Function (anonymous)]
 
 :e
@@ -393,7 +393,7 @@ foo 1 error 2
     fun () -> fun f -> fun x -> x,
     fun v -> v
   ) (find table key)) "two"
-//│ res: ('a -> 'b & 'c -> 'a & 'c -> 'b & 'd -> 'b & 'c -> 'd) -> ('b & 'c) -> 'b
+//│ res: ('a -> 'b & 'a -> 'c & 'c -> 'b & 'a -> 'd & 'd -> 'b) -> 'a -> ('b | 'a)
 //│    = [Function (anonymous)]
 
 res id
@@ -403,7 +403,7 @@ res id
 case b of
   None -> fun f -> fun x -> x,
   Some -> b.val
-//│ res: ('a -> 'b & 'c -> 'b & 'a -> 'c & 'd -> 'b & 'a -> 'd) -> ('b & 'a) -> 'b
+//│ res: ('a -> 'b & 'b -> 'c & 'a -> 'c & 'a -> 'd & 'd -> 'c) -> ('c & 'a) -> 'c
 //│    = [Function (anonymous)]
 
 res id
@@ -413,7 +413,7 @@ res id
 (fun opt -> case b of
   None -> fun f -> fun x -> x,
   Some -> b.val) (find table "two")
-//│ res: ('a -> 'b & 'c -> 'b & 'a -> 'c & 'd -> 'b & 'a -> 'd) -> ('b & 'a) -> 'b
+//│ res: ('a -> 'b & 'b -> 'c & 'a -> 'c & 'a -> 'd & 'd -> 'c) -> ('c & 'a) -> 'c
 //│    = [Function (anonymous)]
 
 

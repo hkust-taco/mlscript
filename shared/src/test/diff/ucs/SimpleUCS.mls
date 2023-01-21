@@ -283,7 +283,7 @@ fun f(u, v, w) =
 //│  = [Function: f16]
 
 fun p(x) = if x >= 0 then Right(x) else Left(x)
-//│ p: (number & 'leftValue) -> (Left & {leftValue: 'leftValue} | Right & {rightValue: 'leftValue})
+//│ p: (number & 'rightValue) -> (Left & {leftValue: 'rightValue} | Right & {rightValue: 'rightValue})
 //│  = [Function: p]
 
 fun g(a, b) =

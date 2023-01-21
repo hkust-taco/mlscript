@@ -60,10 +60,12 @@ trait TypeSimplifier { self: Typer =>
           }
         case N =>
           nv.lowerBounds = if (allVarPols(tv).forall(_ === true))
-              tv.lowerBounds.iterator.map(process(_, S(true -> tv))).reduceOption(_ | _).filterNot(_.isBot).toList
+              tv.lowerBounds.reverseIterator.map(process(_, S(true -> tv)))
+                .reduceOption(_ | _).filterNot(_.isBot).toList
             else Nil
           nv.upperBounds = if (allVarPols(tv).forall(_ === false))
-              tv.upperBounds.iterator.map(process(_, S(false -> tv))).reduceOption(_ & _).filterNot(_.isTop).toList
+              tv.upperBounds.reverseIterator.map(process(_, S(false -> tv)))
+                .reduceOption(_ & _).filterNot(_.isTop).toList
             else Nil
         }
         

@@ -433,7 +433,7 @@ rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│     'c :> int
 
 f
-//│ res: ((int & 'b | ~{a: int})\a & int & number & 'c) -> ('a | 'c)
+//│ res: (int & (int & 'b | ~{a: int})\a & 'c) -> ('a | 'c)
 //│   where
 //│     'b <: {a: 'a}
 //│     'a <: 'b

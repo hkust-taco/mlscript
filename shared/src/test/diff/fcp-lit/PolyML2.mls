@@ -48,7 +48,7 @@ class Collection[a]: { l: List[a] }
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
 //│ Defined Collection.Mem: Collection[?] -> anything -> bool
-//│ Defined Collection.Fold: Collection['a] -> ('b -> 'a -> ('b & 'c) & 'd -> 'a -> ('b & 'c)) -> 'd -> ('c | 'd)
+//│ Defined Collection.Fold: Collection['a] -> ('b -> 'a -> 'c & ('c | 'd) -> 'a -> 'd) -> 'b -> ('c | 'd | 'b)
 
 def coll_mem c x = c.Mem x
 //│ coll_mem: Collection[?] -> anything -> bool

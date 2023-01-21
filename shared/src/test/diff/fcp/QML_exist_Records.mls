@@ -144,12 +144,12 @@ def stepImpl_Ann_4 arrImpl = {
     update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.update r0 i a, "hey");
     fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
   } : ArraysRep['a, 'r]
-//│ stepImpl_Ann_4: {fold: ('a -> nothing -> anything) -> anything -> 'b -> nothing, init: ('c | 'd) -> ('b & 'e), sub: 'b -> int -> 'd, update: 'b -> int -> 'a -> ('b & 'e)} -> ArraysRep['a, 'r]
+//│ stepImpl_Ann_4: {fold: ('a -> nothing -> anything) -> anything -> 'b -> nothing, init: 'a -> ('b & 'c), sub: 'b -> int -> 'd, update: 'b -> int -> ('d | 'e) -> ('b & 'c)} -> ArraysRep['a, 'r]
 //│   where
-//│     'r :> ('e, "hey" | "hi",)
+//│     'r :> ('c, "hey" | "hi",)
 //│        <: ('b, anything,)
 //│     'a :> 'd
-//│        <: 'c
+//│        <: 'e
 //│               = [Function: stepImpl_Ann_4]
 
 :e // * Since "sound extrusion"
@@ -173,12 +173,12 @@ test = stepImpl_Ann_4 baseImpl
 
 :e // * Since "sound extrusion"
 stepImpl_ty = stepImpl_Ann_4
-//│ {fold: ('a -> nothing -> anything) -> anything -> 'b -> nothing, init: ('c | 'd) -> ('b & 'e), sub: 'b -> int -> 'd, update: 'b -> int -> 'a -> ('b & 'e)} -> ArraysRep['a, 'r]
+//│ {fold: ('a -> nothing -> anything) -> anything -> 'b -> nothing, init: 'a -> ('b & 'c), sub: 'b -> int -> 'd, update: 'b -> int -> ('d | 'e) -> ('b & 'c)} -> ArraysRep['a, 'r]
 //│   where
-//│     'r :> ('e, "hey" | "hi",)
+//│     'r :> ('c, "hey" | "hi",)
 //│        <: ('b, anything,)
 //│     'a :> 'd
-//│        <: 'c
+//│        <: 'e
 //│   <:  stepImpl_ty:
 //│ ArraysRep['a, 'r] -> ArraysRep['a, ('r, string,)]
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -215,7 +215,7 @@ def stepImpl2_Ann_3 arr = arr stepImpl_Ann_3
 //│                = [Function: stepImpl2_Ann_3]
 
 def stepImpl2_Ann_4 arr = arr stepImpl_Ann_4
-//│ stepImpl2_Ann_4: ((forall 'b 'c 'r 'd 'a 'e. {fold: ('a -> nothing -> anything) -> anything -> 'c -> nothing, init: 'a -> ('c & 'e), sub: 'c -> int -> 'd, update: 'c -> int -> ('d | 'b) -> ('c & 'e)} -> ArraysRep['a, 'r]) -> 'f) -> 'f
+//│ stepImpl2_Ann_4: ((forall 'b 'c 'r 'd 'a 'e. {fold: ('a -> nothing -> anything) -> anything -> 'c -> nothing, init: ('b | 'd) -> ('c & 'e), sub: 'c -> int -> 'd, update: 'c -> int -> 'a -> ('c & 'e)} -> ArraysRep['a, 'r]) -> 'f) -> 'f
 //│   where
 //│     'r :> ('e, "hey" | "hi",)
 //│        <: ('c, anything,)
@@ -298,7 +298,7 @@ def step arr f = f (stepImpl2_Ann_3 arr)
 // * This used to be the only working one based on an internal annotation
 :e // * Since "sound extrusion"
 def step arr f = f (stepImpl2_Ann_4 arr)
-//│ ((forall 'a 'b 'c 'r 'd 'e. {fold: ('a -> nothing -> anything) -> anything -> 'd -> nothing, init: ('c | 'b) -> ('d & 'e), sub: 'd -> int -> 'b, update: 'd -> int -> 'a -> ('d & 'e)} -> ArraysRep['a, 'r]) -> 'f) -> ('f -> 'g) -> 'g
+//│ ((forall 'a 'b 'c 'r 'd 'e. {fold: ('a -> nothing -> anything) -> anything -> 'd -> nothing, init: 'a -> ('d & 'e), sub: 'd -> int -> 'b, update: 'd -> int -> ('b | 'c) -> ('d & 'e)} -> ArraysRep['a, 'r]) -> 'f) -> ('f -> 'g) -> 'g
 //│   where
 //│     'r :> ('e, "hey" | "hi",)
 //│        <: ('d, anything,)

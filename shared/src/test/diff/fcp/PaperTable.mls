@@ -100,7 +100,7 @@ rec def append l1 l2 =
   else cons (head l1) (append (tail l1) l2)
 //│ append: List['a] -> List['a] -> List['a]
 //│       = <missing implementation>
-//│ List['a] -> (forall 'b. (List['a] & 'b) -> (List['a] | 'b))
+//│ List['a] -> (forall 'b. ('b & List['a]) -> (List['a] | 'b))
 //│   <:  append:
 //│ List['a] -> List['a] -> List['a]
 //│       = [Function: append]
@@ -156,7 +156,7 @@ def poly: (forall 'a. 'a -> 'a) -> (int, bool)
 def poly f = (f 1, f true)
 //│ poly: (forall 'a. 'a -> 'a) -> (int, bool,)
 //│     = <missing implementation>
-//│ (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+//│ (1 -> 'a & true -> 'b) -> ('a, 'b,)
 //│   <:  poly:
 //│ (forall 'a. 'a -> 'a) -> (int, bool,)
 //│     = [Function: poly]
@@ -185,7 +185,7 @@ rec def map f l =
   else cons (f (head l)) (map f (tail l))
 //│ map: ('a -> 'b) -> List['a] -> List['b]
 //│    = <missing implementation>
-//│ ('b -> 'c & 'a -> 'a0) -> List['a & 'b] -> List['a0 | 'c]
+//│ ('b -> 'c & 'a -> 'a0) -> List['b & 'a] -> List['a0 | 'c]
 //│   <:  map:
 //│ ('a -> 'b) -> List['a] -> List['b]
 //│    = [Function: map]
@@ -269,7 +269,7 @@ def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M
 def succ (n: ChurchInt) f x = f (n f x)
 //│ succ: (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = <missing implementation>
-//│ ChurchInt -> (forall 'N 'a 'N0. ('N -> 'a & 'N0 -> ('N & 'N0)) -> ('N & 'N0) -> 'a)
+//│ ChurchInt -> (forall 'N 'N0 'a. ('N -> ('N & 'N0) & 'N0 -> 'a) -> ('N & 'N0) -> 'a)
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: succ1]
@@ -352,7 +352,7 @@ id poly (fun x -> x)
 
 // B1
 fun f -> (f 1, f true)
-//│ res: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+//│ res: (1 -> 'a & true -> 'b) -> ('a, 'b,)
 //│    = [Function: res]
 
 // B2
@@ -519,7 +519,7 @@ def s n f x = f (n f x)
 
 // G3
 n3 = s (s (s z))
-//│ n3: ('a -> 'b & 'c -> 'a & 'd -> 'c) -> 'd -> 'b
+//│ n3: ('a -> 'b & 'b -> 'c & 'c -> 'd) -> 'a -> 'd
 //│   = [Function (anonymous)]
 
 // G1A
@@ -557,7 +557,7 @@ fst (fst (fst (n3 (fun x -> (x, 0)) 1)))
 //│    = [Function (anonymous)]
 
 (s (s z)) (s (s z))
-//│ res: ('a -> ('a & 'b & 'c) & 'b -> ('a & 'b)) -> 'b -> 'c
+//│ res: ('a -> ('a & 'b) & 'b -> ('a & 'b & 'c)) -> 'a -> 'c
 //│    = [Function (anonymous)]
 
 // G7
@@ -592,12 +592,12 @@ rec def id1 x = if true then x else id1 id1 x
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ id1: 'id1
 //│   where
-//│     'id1 :> forall 'a. ('b & 'a) -> 'a
+//│     'id1 :> forall 'a. ('a & 'b) -> 'a
 //│     'a :> 'c
-//│     'b :> 'id1
-//│        <: 'c
 //│     'c :> 'id1
 //│        <: 'b -> 'c
+//│     'b :> 'id1
+//│        <: 'c
 //│    = [Function: id11]
 
 :e
@@ -723,7 +723,7 @@ id poly (fun x -> x)
 
 // B1
 fun f -> (f 1, f true)
-//│ res: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+//│ res: (1 -> 'a & true -> 'b) -> ('a, 'b,)
 //│    = [Function: res]
 
 // B2
@@ -890,7 +890,7 @@ def s n f x = f (n f x)
 
 // G3
 n3 = s (s (s z))
-//│ n3: ('a -> 'b & 'c -> 'a & 'd -> 'c) -> 'd -> 'b
+//│ n3: ('a -> 'b & 'b -> 'c & 'c -> 'd) -> 'a -> 'd
 //│   = [Function (anonymous)]
 
 // G1A
@@ -918,9 +918,9 @@ fst (fst (fst (n3 (fun x -> (x, 0)) 1)))
 //│    = [Function (anonymous)]
 
 (s (s z)) (s (s z))
-//│ res: (('a | 'b) -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ res: ('a -> 'b & ('b | 'c) -> 'c) -> 'a -> 'c
 //│   where
-//│     'c :> 'a | 'b
+//│     'a :> 'b | 'c
 //│    = [Function (anonymous)]
 
 // G7
@@ -942,12 +942,12 @@ rec def id1 x = if true then x else id1 id1 x
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ id1: 'id1
 //│   where
-//│     'id1 :> forall 'a. ('b & 'a) -> 'a
+//│     'id1 :> forall 'a. ('a & 'b) -> 'a
 //│     'a :> 'c
-//│     'b :> 'id1
-//│        <: 'c
 //│     'c :> 'id1
 //│        <: 'b -> 'c
+//│     'b :> 'id1
+//│        <: 'c
 //│    = [Function: id12]
 
 :e
@@ -1073,7 +1073,7 @@ id poly (fun x -> x)
 
 // B1
 fun f -> (f 1, f true)
-//│ res: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+//│ res: (1 -> 'a & true -> 'b) -> ('a, 'b,)
 //│    = [Function: res]
 
 // B2
@@ -1240,7 +1240,7 @@ def s n f x = f (n f x)
 
 // G3
 n3 = s (s (s z))
-//│ n3: ('a -> 'b & 'c -> 'a & 'd -> 'c) -> 'd -> 'b
+//│ n3: ('a -> 'b & 'b -> 'c & 'c -> 'd) -> 'a -> 'd
 //│   = [Function (anonymous)]
 
 // G1A
@@ -1273,9 +1273,9 @@ fst (fst (fst (n3 (fun x -> (x, 0)) 1)))
 //│ ║  l.1271: 	(s (s z)) (s (s z))
 //│ ║          	^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ res: (('a | 'b) -> 'b & 'c -> 'a) -> 'c -> 'b | error
+//│ res: ('a -> 'b & ('b | 'c) -> 'c) -> 'a -> 'c | error
 //│   where
-//│     'c :> 'a | 'b
+//│     'a :> 'b | 'c
 //│    = [Function (anonymous)]
 
 // G7
@@ -1309,12 +1309,12 @@ rec def id1 x = if true then x else id1 id1 x
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ id1: 'id1
 //│   where
-//│     'id1 :> forall 'a. ('b & 'a) -> 'a
+//│     'id1 :> forall 'a. ('a & 'b) -> 'a
 //│     'a :> 'c
-//│     'b :> 'id1
-//│        <: 'c
 //│     'c :> 'id1
 //│        <: 'b -> 'c
+//│     'b :> 'id1
+//│        <: 'c
 //│    = [Function: id13]
 
 :e
@@ -1440,7 +1440,7 @@ id poly (fun x -> x)
 
 // B1
 fun f -> (f 1, f true)
-//│ res: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+//│ res: (1 -> 'a & true -> 'b) -> ('a, 'b,)
 //│    = [Function: res]
 
 // B2
@@ -1607,7 +1607,7 @@ def s n f x = f (n f x)
 
 // G3
 n3 = s (s (s z))
-//│ n3: ('a -> 'b & 'c -> 'a & 'd -> 'c) -> 'd -> 'b
+//│ n3: ('a -> 'b & 'b -> 'c & 'c -> 'd) -> 'a -> 'd
 //│   = [Function (anonymous)]
 
 // G1A
@@ -1640,9 +1640,9 @@ fst (fst (fst (n3 (fun x -> (x, 0)) 1)))
 //│ ║  l.1638: 	(s (s z)) (s (s z))
 //│ ║          	^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ res: (('a | 'b) -> 'b & 'c -> 'a) -> 'c -> 'b | error
+//│ res: ('a -> 'b & ('b | 'c) -> 'c) -> 'a -> 'c | error
 //│   where
-//│     'c :> 'a | 'b
+//│     'a :> 'b | 'c
 //│    = [Function (anonymous)]
 
 // G7
@@ -1659,12 +1659,12 @@ to_ch: int -> ChurchInt
 rec def id1 x = if true then x else id1 id1 x
 //│ id1: 'id1
 //│   where
-//│     'id1 :> forall 'a. ('b & 'a) -> 'a
+//│     'id1 :> forall 'a. ('a & 'b) -> 'a
 //│     'a :> 'c
-//│     'b :> 'id1
-//│        <: 'c
 //│     'c :> 'id1
 //│        <: 'b -> 'c
+//│     'b :> 'id1
+//│        <: 'c
 //│    = [Function: id14]
 
 :e

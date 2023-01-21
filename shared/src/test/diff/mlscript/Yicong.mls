@@ -177,7 +177,7 @@ q = if true then (1,1) else (1,1,1)
 
 // Note: function with non-tuple domain
 def h f = (f (1,2,false), f (1,true))
-//│ h: ((1, true,) -> 'a & (1, 2, false,) -> 'b) -> ('b, 'a,)
+//│ h: ((1, 2, false,) -> 'a & (1, true,) -> 'b) -> ('a, 'b,)
 //│  = [Function: h]
 
 :e
@@ -206,7 +206,7 @@ h (fun (x, y) -> x)
 //│    = [ 1, 1 ]
 
 def h f = (f ((1,2,false)), f ((1,true)))
-//│ h: ((1, true,) -> 'a & (1, 2, false,) -> 'b) -> ('b, 'a,)
+//│ h: ((1, 2, false,) -> 'a & (1, true,) -> 'b) -> ('a, 'b,)
 //│  = [Function: h1]
 
 h (fun x -> x[0])

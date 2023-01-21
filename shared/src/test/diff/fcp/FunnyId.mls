@@ -65,24 +65,24 @@ rec def id x = if true then x else id id x
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ id: 'id
 //│   where
-//│     'id :> forall 'a. ('b & 'a) -> 'a
+//│     'id :> forall 'a. ('a & 'b) -> 'a
 //│     'a :> 'c
-//│     'b :> 'id
-//│        <: 'c
 //│     'c :> 'id
 //│        <: 'b -> 'c
+//│     'b :> 'id
+//│        <: 'c
 //│   = [Function: id2]
 
 :e
 id_ty = id
 //│ 'id
 //│   where
-//│     'id :> forall 'a. ('b & 'a) -> 'a
+//│     'id :> forall 'a. ('a & 'b) -> 'a
 //│     'a :> 'c
-//│     'b :> 'id
-//│        <: 'c
 //│     'c :> 'id
 //│        <: 'b -> 'c
+//│     'b :> 'id
+//│        <: 'c
 //│   <:  id_ty:
 //│ 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:

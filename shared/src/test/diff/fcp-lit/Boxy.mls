@@ -45,7 +45,7 @@ def ids: List[forall 'a. 'a -> 'a]
 // ============ Sec 1 ============
 
 def f get = (get (cons 1 (cons 2 nil)), get (cons "a" (cons "b" (cons "c" nil))))
-//│ f: (List["a" | "b" | "c"] -> 'a & List[1 | 2] -> 'b) -> ('b, 'a,)
+//│ f: (List[1 | 2] -> 'a & List["a" | "b" | "c"] -> 'b) -> ('a, 'b,)
 
 // definition in paper:
 //   g None = (0, "0")
@@ -54,7 +54,7 @@ def g x = case x of
   { None -> (0, "0")
   | Some -> (x.val (cons 1 (cons 2 nil)), x.val (cons "a" (cons "b" (cons "c" nil))))
   }
-//│ g: (None | Some[?] & {val: List["a" | "b" | "c"] -> 'a & List[1 | 2] -> 'b}) -> (0 | 'b, "0" | 'a,)
+//│ g: (None | Some[?] & {val: List[1 | 2] -> 'a & List["a" | "b" | "c"] -> 'b}) -> (0 | 'a, "0" | 'b,)
 
 // ============ Sec 2 ============
 
@@ -65,7 +65,7 @@ length ids
 // ============ Sec 3.2 ============
 
 (fun x -> fun g -> (g true, g 3)) 4
-//│ res: (3 -> 'a & true -> 'b) -> ('b, 'a,)
+//│ res: (true -> 'a & 3 -> 'b) -> ('a, 'b,)
 
 // ============ Sec 3.3 ============
 

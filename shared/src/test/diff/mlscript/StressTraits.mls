@@ -63,7 +63,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 40
 //│ annoying  calls  : 31
-//│ subtyping calls  : 1535
+//│ subtyping calls  : 1534
 
 :stats
 :e
@@ -83,7 +83,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 72
 //│ annoying  calls  : 90
-//│ subtyping calls  : 4293
+//│ subtyping calls  : 4292
 
 :stats
 :e
@@ -131,7 +131,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 48
 //│ annoying  calls  : 31
-//│ subtyping calls  : 518
+//│ subtyping calls  : 517
 
 
 // ====== 3 ====== //
@@ -160,7 +160,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 83
 //│ annoying  calls  : 90
-//│ subtyping calls  : 2917
+//│ subtyping calls  : 2916
 
 
 // ====== 4 ====== //

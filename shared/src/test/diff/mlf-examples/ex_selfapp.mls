@@ -223,7 +223,7 @@ rec def foldr k z xs =
     fun (h, t) -> k h (foldr k z t),
     fun () -> z
   )
-//│ foldr: ('b -> 'c -> 'd & 'a -> 'c -> 'c) -> (forall 'e. ('e & 'c) -> Ls['a & 'b] -> ('e | 'd))
+//│ foldr: ('b -> 'c -> 'd & 'a -> 'c -> 'c) -> (forall 'e. ('e & 'c) -> Ls['b & 'a] -> ('e | 'd))
 //│      = <no result>
 //│        elim is not implemented
 
@@ -260,7 +260,7 @@ def k: int -> Ba -> Ba
 
 // * Note: annotation in `(xs: Ba)` is needed
 def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
-//│ int -> Ba -> (forall 'b 'b0 'a. (int -> ('b -> ('b & 'b0) & 'b0 -> 'a)) -> ('b & 'b0) -> 'a)
+//│ int -> Ba -> (forall 'b 'a 'b0. (int -> ('b -> 'a & 'b0 -> ('b & 'b0))) -> ('b & 'b0) -> 'a)
 //│   <:  k:
 //│ int -> Ba -> Ba
 //│  = <no result>
@@ -268,7 +268,7 @@ def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 
 // * [FCP-IMPROV] annotation in `z` was not needed
 def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
-//│ int -> Ba -> (forall 'a 'b 'b0. (int -> ('b -> ('b & 'b0) & 'b0 -> 'a)) -> ('b & 'b0) -> 'a)
+//│ int -> Ba -> (forall 'b 'b0 'a. (int -> ('b0 -> 'a & 'b -> ('b0 & 'b))) -> ('b0 & 'b) -> 'a)
 //│   <:  k:
 //│ int -> Ba -> Ba
 //│  = <no result>

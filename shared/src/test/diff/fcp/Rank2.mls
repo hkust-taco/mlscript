@@ -71,7 +71,7 @@ test succ
 
 test f =
   ((f: forall 'a. 'a -> 'a) 1, f 2)
-//│ test: (forall 'a. 2 -> 'b & 'a -> 'a) -> (1, 'b,)
+//│ test: (forall 'a. 'a -> 'a & 2 -> 'b) -> (1, 'b,)
 //│     = [Function: test3]
 
 def pair x y = test id

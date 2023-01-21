@@ -59,7 +59,7 @@ def eval eval e = case e of {
   | Lit -> e.n
   | Add -> eval eval e.lhs + eval eval e.rhs
   }
-//│ eval: ('a -> 'rhs -> int & 'a) -> ((Add with {lhs: 'rhs, rhs: 'rhs}) | (Lit with {n: 'n})) -> (int | 'n)
+//│ eval: ('a -> 'lhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'lhs}) | (Lit with {n: 'n})) -> (int | 'n)
 //│     = [Function: eval1]
 
 eval eval! e
@@ -71,7 +71,7 @@ def evalN evalN e = case e of {
   | Neg -> 0 - evalN evalN e.e
   | _ -> eval evalN e
   }
-//│ evalN: ('a -> 'lhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'lhs}) | (Lit with {n: 'n}) | (Neg with {e: 'lhs})) -> (int | 'n)
+//│ evalN: ('a -> 'e -> int & 'a) -> ((Add with {lhs: 'e, rhs: 'e}) | (Lit with {n: 'n}) | (Neg with {e: 'e})) -> (int | 'n)
 //│      = [Function: evalN]
 
 evalN eval! e
@@ -113,15 +113,15 @@ def evalN evalN k e = case e of {
 
 
 def evalComposed evalComposed = evalN evalN! (fun e -> eval evalComposed e)
-//│ evalComposed: ('a -> 'lhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'lhs}) | (Lit with {n: 'n}) | (Neg with {e: 'e})) -> (int | 'n)
-//│   where
-//│     'e <: (Add with {lhs: 'lhs, rhs: 'lhs}) | Lit | (Neg with {e: 'e})
-//│             = [Function: evalComposed]
-
-def evalComposed evalComposed = evalN evalN! (eval evalComposed)
 //│ evalComposed: ('a -> 'rhs -> int & 'a) -> ((Add with {lhs: 'rhs, rhs: 'rhs}) | (Lit with {n: 'n}) | (Neg with {e: 'e})) -> (int | 'n)
 //│   where
 //│     'e <: (Add with {lhs: 'rhs, rhs: 'rhs}) | Lit | (Neg with {e: 'e})
+//│             = [Function: evalComposed]
+
+def evalComposed evalComposed = evalN evalN! (eval evalComposed)
+//│ evalComposed: ('a -> 'lhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'lhs}) | (Lit with {n: 'n}) | (Neg with {e: 'e})) -> (int | 'n)
+//│   where
+//│     'e <: (Add with {lhs: 'lhs, rhs: 'lhs}) | Lit | (Neg with {e: 'e})
 //│             = [Function: evalComposed1]
 
 

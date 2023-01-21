@@ -58,19 +58,19 @@ iter2 f x = f(f x)
 def iter2_ty: forall 'X. ('X -> 'X) -> 'X -> 'X
 //│ res: 'a -> 'a
 //│    = [Function: id]
-//│ iter2: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ iter2: ('a -> 'b & 'b -> 'c) -> 'a -> 'c
 //│      = [Function: iter2]
 //│ iter2_ty: ('X -> 'X) -> 'X -> 'X
 //│         = <missing implementation>
 
 iter2_ty = iter2
-//│ ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ ('a -> 'b & 'b -> 'c) -> 'a -> 'c
 //│   <:  iter2_ty:
 //│ ('X -> 'X) -> 'X -> 'X
 //│         = [Function: iter2]
 
 iter4() = iter2 iter2
-//│ iter4: () -> ('a -> ('b & 'c) & 'b -> 'a) -> 'b -> 'c
+//│ iter4: () -> ('a -> 'b & 'b -> ('a & 'c)) -> 'a -> 'c
 //│      = [Function: iter4]
 
 def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
@@ -97,7 +97,7 @@ iter4_ty = iter4
 //│ ║  l.58: 	def iter2_ty: forall 'X. ('X -> 'X) -> 'X -> 'X
 //│ ╙──      	                     ^^
 //│         = [Function: iter4_ty]
-//│ () -> ('a -> ('b & 'c) & 'b -> 'a) -> 'b -> 'c
+//│ () -> ('a -> 'b & 'b -> ('a & 'c)) -> 'a -> 'c
 //│   <:  iter4_ty:
 //│ () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -114,7 +114,7 @@ iter4_ty = iter4
 :DistributeForalls
 
 iter4_ty = iter4
-//│ () -> ('a -> ('b & 'c) & 'b -> 'a) -> 'b -> 'c
+//│ () -> ('a -> 'b & 'b -> ('a & 'c)) -> 'a -> 'c
 //│   <:  iter4_ty:
 //│ () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│         = [Function: iter4]
@@ -136,9 +136,9 @@ iter256_ty = iter256
 //│ ║  l.131: 	iter256() = iter4() (iter4())
 //│ ║         	            ^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ iter256: () -> ((('a | 'b) -> ('b & 'c) & 'c -> ('a & 'c)) -> 'c -> 'b | error)
+//│ iter256: () -> (('a -> ('a & 'b) & ('b | 'c) -> ('a & 'c)) -> 'a -> 'c | error)
 //│   where
-//│     'c :> 'b
+//│     'a :> 'c
 //│        = [Function: iter256]
 //│ iter256_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│           = <missing implementation>
@@ -146,9 +146,9 @@ iter256_ty = iter256
 //│   <:  iter256_ty:
 //│ () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│           = [Function: iter256_ty]
-//│ () -> ((('a | 'b) -> ('b & 'c) & 'c -> ('a & 'c)) -> 'c -> 'b | error)
+//│ () -> (('a -> ('a & 'b) & ('b | 'c) -> ('a & 'c)) -> 'a -> 'c | error)
 //│   where
-//│     'c :> 'b
+//│     'a :> 'c
 //│   <:  iter256_ty:
 //│ () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│           = [Function: iter256]
@@ -180,21 +180,21 @@ S_ty = S
 
 res1() = iter4() S Z
 res2() = iter256() S Z
-//│ res1: () -> ('a -> 'b & 'c -> 'a & 'a -> 'c) -> 'c -> 'b
+//│ res1: () -> ('a -> 'b & 'a -> 'c & 'c -> 'a) -> 'c -> 'b
 //│     = [Function: res1]
-//│ res2: () -> (error | ('a -> 'b & 'c -> 'c & 'a -> 'c & 'c -> 'a & 'a -> 'a) -> 'c -> 'b)
+//│ res2: () -> (error | ('a -> 'b & 'a -> 'a & 'c -> 'a & 'a -> 'c & 'c -> 'c) -> 'c -> 'b)
 //│     = [Function: res2]
 
 res1_ty() = iter4_ty() S_ty Z_ty
 res2_ty() = iter256_ty() S_ty Z_ty
-//│ res1_ty: () -> ('X -> 'X & 'X0 -> 'X0) -> ('X & 'X0) -> ('X0 | 'X)
+//│ res1_ty: () -> ('X -> 'X & 'X0 -> 'X0) -> ('X & 'X0) -> ('X | 'X0)
 //│        = [Function: res1_ty]
-//│ res2_ty: () -> ('X -> 'X & 'X0 -> 'X0) -> ('X & 'X0) -> ('X0 | 'X)
+//│ res2_ty: () -> ('X -> 'X & 'X0 -> 'X0) -> ('X & 'X0) -> ('X | 'X0)
 //│        = [Function: res2_ty]
 
 
 S (S Z)
-//│ res: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ res: ('a -> 'b & 'b -> 'c) -> 'a -> 'c
 //│    = [Function (anonymous)]
 
 
@@ -235,7 +235,7 @@ snd_ty = snd
 //│       = [Function: snd]
 
 p02 = pair Z (S (S Z))
-//│ p02: ((forall 'a. anything -> 'a -> 'a) -> (forall 'b. ('c -> 'b & 'd -> 'c) -> 'd -> 'b) -> 'e) -> 'e
+//│ p02: ((forall 'a. anything -> 'a -> 'a) -> (forall 'b. ('c -> 'd & 'd -> 'b) -> 'c -> 'b) -> 'e) -> 'e
 //│    = [Function (anonymous)]
 
 p02_ty = pair_ty Z_ty (S_ty (S_ty Z_ty))
@@ -246,7 +246,7 @@ fp = fst p02
 sp = snd p02
 //│ fp: anything -> 'a -> 'a
 //│   = [Function: Z]
-//│ sp: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ sp: ('a -> 'b & 'b -> 'c) -> 'a -> 'c
 //│   = [Function (anonymous)]
 
 
@@ -272,7 +272,7 @@ sp_ty = sp
 //│   <:  sp_ty:
 //│ ('a -> 'a) -> 'a -> 'a
 //│      = [Function (anonymous)]
-//│ ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ ('a -> 'b & 'b -> 'c) -> 'a -> 'c
 //│   <:  sp_ty:
 //│ ('a -> 'a) -> 'a -> 'a
 //│      = [Function (anonymous)]
@@ -298,11 +298,11 @@ p01 = p Z
 p02 = pair Z (S (S Z))
 p02_ty = pair_ty Z_ty (S_ty (S_ty Z_ty))
 p02_ty = p02
-//│ p02: ((forall 'a. anything -> 'a -> 'a) -> (forall 'b. ('c -> 'b & 'd -> 'c) -> 'd -> 'b) -> 'e) -> 'e
+//│ p02: ((forall 'a. anything -> 'a -> 'a) -> (forall 'b. ('c -> 'd & 'd -> 'b) -> 'c -> 'b) -> 'e) -> 'e
 //│    = [Function (anonymous)]
 //│ p02_ty: ((forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X0. ('X0 -> 'X0) -> 'X0 -> 'X0) -> 'Z) -> 'Z
 //│       = [Function (anonymous)]
-//│ p02_ty: ((forall 'a. anything -> 'a -> 'a) -> (forall 'b. ('c -> 'b & 'd -> 'c) -> 'd -> 'b) -> 'e) -> 'e
+//│ p02_ty: ((forall 'a. anything -> 'a -> 'a) -> (forall 'b. ('c -> 'd & 'd -> 'b) -> 'c -> 'b) -> 'e) -> 'e
 //│       = [Function (anonymous)]
 
 fp02 = fst p02
@@ -333,15 +333,15 @@ sp02 = snd p02
 def sp02_ty: forall 'X. ('X -> 'X) -> 'X -> 'X
 sp02_ty = snd_ty p02_ty
 sp02_ty = sp02
-//│ sp02: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ sp02: ('a -> 'b & 'b -> 'c) -> 'a -> 'c
 //│     = [Function (anonymous)]
 //│ sp02_ty: ('X -> 'X) -> 'X -> 'X
 //│        = <missing implementation>
-//│ ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ ('a -> 'b & 'b -> 'c) -> 'a -> 'c
 //│   <:  sp02_ty:
 //│ ('X -> 'X) -> 'X -> 'X
 //│        = [Function (anonymous)]
-//│ ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ ('a -> 'b & 'b -> 'c) -> 'a -> 'c
 //│   <:  sp02_ty:
 //│ ('X -> 'X) -> 'X -> 'X
 //│        = [Function (anonymous)]
@@ -390,7 +390,7 @@ E q = q id
 // shallow (not (not true))        -- Shallow encoding.
 // λid.id(λb t f.b f t)(id(λb t f.b f t)(λx y.x))
 sh id = (id not) ((id not) tru)
-//│ sh: ((forall 'a 'b 'c. ('a -> 'b -> 'c) -> 'b -> 'a -> 'c) -> (forall 'd. 'd -> anything -> 'd) -> 'e & (forall 'f 'g 'h. ('h -> 'f -> 'g) -> 'f -> 'h -> 'g) -> 'e -> 'i) -> 'i
+//│ sh: ((forall 'a 'b 'c. ('a -> 'b -> 'c) -> 'b -> 'a -> 'c) -> 'd -> 'e & (forall 'f 'g 'h. ('h -> 'f -> 'g) -> 'f -> 'h -> 'g) -> (forall 'i. 'i -> anything -> 'i) -> 'd) -> 'e
 //│   = [Function: sh]
 
 // E[forall X.X->X->X](shallow (not( not true)))
@@ -405,7 +405,7 @@ sh_pu id x y = id (id u x) x
 //│  = [Function: E]
 //│ pu: ((forall 'a. 'a -> 'a) -> 'b -> 'c & 'b) -> anything -> 'c
 //│   = [Function: pu]
-//│ sh_pu: ('a -> 'b -> 'c & (forall 'd. ((forall 'e. 'e -> 'e) -> 'd) -> 'd) -> 'b -> 'a) -> 'b -> anything -> 'c
+//│ sh_pu: ((forall 'a. ((forall 'b. 'b -> 'b) -> 'a) -> 'a) -> 'c -> 'd & 'd -> 'c -> 'e) -> 'c -> anything -> 'e
 //│      = [Function: sh_pu]
 
 :e

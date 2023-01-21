@@ -31,9 +31,9 @@ g' = fun f -> f f
 
 fun f -> f (g f)
 fun f -> f (g' f)
-//│ res: (forall 'a. (forall 'a0. 'a0 -> 'a0) -> 'b & 'a -> 'a) -> 'b
+//│ res: (forall 'a. 'a -> 'a & (forall 'a0. 'a0 -> 'a0) -> 'b) -> 'b
 //│    = [Function: res]
-//│ res: ('a -> 'b & 'c -> 'a & 'c) -> 'b
+//│ res: ('a -> 'b & 'b -> 'c & 'a) -> 'c
 //│    = [Function: res]
 
 // ============ Sec 4.1 ============

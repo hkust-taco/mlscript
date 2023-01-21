@@ -165,7 +165,7 @@ def poly (f: forall 'a. 'a -> 'a) = (f 1, f true)
 def poly_ f = (f 1, f true)
 //│ poly: (forall 'a. 'a -> 'a) -> (1, true,)
 //│     = [Function: poly]
-//│ poly_: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+//│ poly_: (1 -> 'a & true -> 'b) -> ('a, 'b,)
 //│      = [Function: poly_]
 
 // FreezeML A10

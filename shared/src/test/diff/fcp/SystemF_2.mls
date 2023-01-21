@@ -16,15 +16,15 @@ id x = x
 iter2 f x = f(f x)
 //│ id: 'a -> 'a
 //│   = [Function: id]
-//│ iter2: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ iter2: ('a -> 'b & 'b -> 'c) -> 'a -> 'c
 //│      = [Function: iter2]
 
 iter2 iter2
-//│ res: ('a -> 'b & ('c | 'b) -> 'a) -> 'c -> 'b
+//│ res: (('a | 'b) -> 'c & 'c -> 'b) -> 'a -> 'b
 //│    = [Function (anonymous)]
 
 id iter2 iter2
-//│ res: ('a -> 'b & ('c | 'b) -> 'a) -> 'c -> 'b
+//│ res: (('a | 'b) -> 'c & 'c -> 'b) -> 'a -> 'b
 //│    = [Function (anonymous)]
 
 iter2 iter2 K
@@ -38,7 +38,7 @@ iter2 iter2 K
 
 // (λzy. y(zI)(zK))(λx. xx).
 foo = (fun z -> fun y -> y (z I) (z K))
-//│ foo: ((forall 'a. 'a -> anything -> 'a) -> 'b & (forall 'c. 'c -> 'c) -> 'd) -> ('d -> 'b -> 'e) -> 'e
+//│ foo: ((forall 'a. 'a -> 'a) -> 'b & (forall 'c. 'c -> anything -> 'c) -> 'd) -> ('b -> 'd -> 'e) -> 'e
 //│    = [Function: foo]
 
 foo (fun x -> x x)
@@ -74,17 +74,17 @@ c2 = succ (succ n0)
 //│   = [Function (anonymous)]
 
 c2 c2 K
-//│ res: ('X & 'a) -> ('X | anything -> 'a)
+//│ res: ('a & 'X) -> ('X | anything -> 'a)
 //│   where
 //│     'X :> anything -> 'X
 //│    = [Function (anonymous)]
 
 def c2_ n0 = succ_ (succ_ n0)
-//│ c2_: ('a -> 'b -> 'c) -> ('d -> 'e & 'c -> 'd & 'a) -> 'b -> 'e
+//│ c2_: ('a -> 'b -> 'c) -> ('c -> 'd & 'd -> 'e & 'a) -> 'b -> 'e
 //│    = [Function: c2_]
 
 c2_ = succ_ (succ_ n0)
-//│ c2_: ('a -> 'b & 'X -> ('a & 'X)) -> 'X -> 'b
+//│ c2_: ('X -> ('X & 'a) & 'a -> 'b) -> 'X -> 'b
 //│    = [Function (anonymous)]
 
 :e // * Started failing after better distrib, not sure why...
@@ -115,11 +115,11 @@ c2_ c2_ K
 //│    = [Function (anonymous)]
 
 c2__ = succ_ (succ_ n0_)
-//│ c2__: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ c2__: ('a -> 'b & 'b -> 'c) -> 'a -> 'c
 //│     = [Function (anonymous)]
 
 c2__ c2__
-//│ res: ('a -> 'b & ('c | 'b) -> 'a) -> 'c -> 'b
+//│ res: (('a | 'b) -> 'c & 'c -> 'b) -> 'a -> 'b
 //│    = [Function (anonymous)]
 
 c2__ c2__ K
@@ -238,7 +238,7 @@ c2 = succ (succ n0)
 //│   = [Function (anonymous)]
 
 c2 c2 K
-//│ res: ('X & 'a) -> ('X | anything -> 'a)
+//│ res: ('a & 'X) -> ('X | anything -> 'a)
 //│   where
 //│     'X :> anything -> 'X
 //│    = [Function (anonymous)]
@@ -296,7 +296,7 @@ c2_ c2_ K
 //│     forall 'X. ('X -> 'X) -> 'X -> 'X <: 'k -> 'l -> 'm
 //│     'k <: 'm -> 'n)) <: 'j -> 'g -> 'h) <: 'o -> 'b
 //│   where
-//│     'j :> forall 'p 'q 'r 's. (('s & 'p) -> (anything -> 's | 'r)
+//│     'j :> forall 'p 'q 'r 's. (('p & 's) -> (anything -> 's | 'r)
 //│   where
 //│     'j <: 'q -> 'r
 //│     forall 't. 't -> (forall 'u 'v 'w. ('u -> 'w

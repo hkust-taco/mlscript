@@ -1,6 +1,6 @@
 
 let twice f x = f / f x
-//│ twice: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ twice: ('a -> 'b & 'b -> 'c) -> 'a -> 'c
 // Note: the pretty-printed type of `twice` *used to be* simplified to ('a -> ('a & 'b)) -> 'a -> 'b
 //    (another equivalent simplification is ('a | 'b -> 'a) -> 'b -> 'a);
 //    this simplification lost some information in the context of first-class polymorphism
@@ -11,7 +11,7 @@ twice(x => x + 1)
 //│ res: int -> int
 
 twice twice
-//│ res: ('a -> 'b & ('c | 'b) -> 'a) -> 'c -> 'b
+//│ res: (('a | 'b) -> 'c & 'c -> 'b) -> 'a -> 'b
 
 let f = x => 1, x
 //│ f: 'a -> (1, 'a,)

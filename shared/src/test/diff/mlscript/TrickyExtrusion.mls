@@ -18,7 +18,7 @@ test f =
 
 // * Precise type:
 test f = (f 0, f True)
-//│ test: (true -> 'a & 0 -> 'b) -> ('b, 'a,)
+//│ test: (0 -> 'a & true -> 'b) -> ('a, 'b,)
 //│     = [Function: test]
 
 // * Imprecise type (notice the `(0 | true)`):
@@ -121,7 +121,7 @@ test f =
 
 // * Q: why does this type *appear* approximated after simplification?
 test
-//│ res: (true -> 'a & 0 -> 'b) -> ('b, 'a,)
+//│ res: (0 -> 'a & true -> 'b) -> ('a, 'b,)
 //│    = [Function: test3]
 
 // * We can tell the type is still precise enough because these work:
@@ -153,7 +153,7 @@ not (test id)._1
 rec def test f =
   let r x = f x
   in (r 0, r True)
-//│ test: (true -> 'a & 0 -> 'b) -> ('b, 'a,)
+//│ test: (0 -> 'a & true -> 'b) -> ('a, 'b,)
 //│     = [Function: test4]
 
 

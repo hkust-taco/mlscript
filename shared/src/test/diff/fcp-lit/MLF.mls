@@ -121,7 +121,7 @@ def auto2 x = x x
 //│ auto2: ('a -> 'b & 'a) -> 'b
 
 choose id auto2
-//│ res: ('a -> 'b & 'b & 'a) -> 'b
+//│ res: ('a -> 'b & 'a) -> ('b | 'a)
 
 :e // This is a legit error
 res (choose id succ)
@@ -142,7 +142,7 @@ let f = choose id in (f auto, f succ)
 //│ res: (forall 'b 'a. (forall 'a0. 'a0 -> 'a0 & 'b) -> ('a -> 'a | 'b), int -> int,)
 
 let f = choose id in (f auto2, f succ)
-//│ res: (forall 'a 'b. ('a -> 'b & 'b & 'a) -> 'b, int -> int,)
+//│ res: (forall 'a 'b. ('a -> 'b & 'a) -> ('b | 'a), int -> int,)
 
 // ------------ Sec 6 ------------
 
@@ -179,7 +179,7 @@ let tmp = I I in K K
 //│ res: (42, "foo",)
 
 (fun f -> (f succ, choose f auto)) (choose id)
-//│ res: (int -> int, forall 'b 'a. (forall 'a0. 'a0 -> 'a0 & 'b) -> ('a -> 'a | 'b),)
+//│ res: (int -> int, forall 'b 'c. (forall 'a. 'a -> 'a & 'b) -> ('c -> 'c | 'b),)
 
 // ------------ Sec 2.3.1 ------------
 
@@ -229,11 +229,11 @@ fun (x: forall 'b 'a. 'a -> 'b -> 'a) -> x
 // FreezeML B1
 // nope
 poly = fun f -> (f 1, f true)
-//│ poly: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+//│ poly: (1 -> 'a & true -> 'b) -> ('a, 'b,)
 
 // FreezeML B2
 polyL = fun xs -> poly (head xs)
-//│ polyL: List[true -> 'a & 1 -> 'b] -> ('b, 'a,)
+//│ polyL: List[1 -> 'a & true -> 'b] -> ('a, 'b,)
 
 let ids = single id in (polyL ids, append ids (single inc))
 //│ res: ((1, true,), List[int -> int],)

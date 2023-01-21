@@ -6,7 +6,7 @@ def foo f =
 
 def bar h =
   (h 0, h true)
-//│ bar: (true -> 'a & 0 -> 'b) -> ('b, 'a,)
+//│ bar: (0 -> 'a & true -> 'b) -> ('a, 'b,)
 //│    = [Function: bar]
 
 bar id
