@@ -19,7 +19,7 @@ def eval eval x = case x of {
   Lit -> x.val
   | Add -> eval eval x.lhs + eval eval x.rhs
   }
-//│ eval: ('a -> 'rhs -> int & 'a -> 'lhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val})) -> (int | 'val)
+//│ eval: ('a -> 'rhs -> int & 'a) -> ((Add with {lhs: 'rhs, rhs: 'rhs}) | (Lit with {val: 'val})) -> (int | 'val)
 //│     = [Function: eval1]
 
 eval eval!
@@ -41,7 +41,7 @@ def evalN evalN x = case x of {
   Neg -> 0 - (evalN evalN x.underlying)
   | _ -> eval evalN x
   }
-//│ evalN: ('a -> 'underlying -> int & 'a -> 'lhs -> int & 'a -> 'rhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val}) | (Neg with {underlying: 'underlying})) -> (int | 'val)
+//│ evalN: ('a -> 'lhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'lhs}) | (Lit with {val: 'val}) | (Neg with {underlying: 'lhs})) -> (int | 'val)
 //│      = [Function: evalN]
 
 evalN evalN!
@@ -113,13 +113,13 @@ def evalN3 evalN3 x = case x of {
 //│ ╟── but it flows into application with expected type `int`
 //│ ║  l.+2: 	  Neg -> 0 - (evalN2 x.underlying)
 //│ ╙──      	              ^^^^^^^^^^^^^^^^^^^
-//│ evalN3: ('a -> 'lhs -> int & 'a -> 'rhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val}) | (Neg with {underlying: 'b -> nothing -> int & 'b})) -> (error | int | 'val)
+//│ evalN3: ('a -> 'lhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'lhs}) | (Lit with {val: 'val}) | (Neg with {underlying: 'b -> nothing -> int & 'b})) -> (error | int | 'val)
 
 def evalN3 evalN3 x = case x of {
   Neg -> 0 - (evalN3 x.underlying)
   | _ -> eval evalN3 x
   }
-//│ evalN3: ('underlying -> int & 'a -> 'lhs -> int & 'a -> 'rhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val}) | (Neg with {underlying: 'underlying})) -> (int | 'val)
+//│ evalN3: ('a -> 'lhs -> int & 'underlying -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'lhs}) | (Lit with {val: 'val}) | (Neg with {underlying: 'underlying})) -> (int | 'val)
 
 evalN3 evalN3! e
 //│ ╔══[ERROR] Type mismatch in application:

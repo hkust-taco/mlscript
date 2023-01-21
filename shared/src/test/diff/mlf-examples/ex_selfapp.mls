@@ -260,7 +260,7 @@ def k: int -> Ba -> Ba
 
 // * Note: annotation in `(xs: Ba)` is needed
 def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
-//│ int -> Ba -> (forall 'b, 'a, 'b0, 'b1. (int -> 'b -> 'a & nothing -> 'b0 -> ('b0 & 'b) & int -> 'b1 -> ('b1 & 'b)) -> ('b0 & 'b1 & 'b) -> 'a)
+//│ int -> Ba -> (forall 'b, 'b0, 'b1, 'a. (nothing -> 'b -> ('b & 'b0) & int -> ('b1 -> ('b1 & 'b0) & 'b0 -> 'a)) -> ('b & 'b1 & 'b0) -> 'a)
 //│   <:  k:
 //│ int -> Ba -> Ba
 //│  = <no result>
@@ -268,7 +268,7 @@ def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 
 // * [FCP-IMPROV] annotation in `z` was not needed
 def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
-//│ int -> Ba -> (forall 'b, 'a, 'b0. (int -> 'b0 -> ('b0 & 'b) & int -> 'b -> 'a) -> ('b0 & 'b) -> 'a)
+//│ int -> Ba -> (forall 'b, 'a, 'b0. (int -> ('b0 -> ('b0 & 'b) & 'b -> 'a)) -> ('b0 & 'b) -> 'a)
 //│   <:  k:
 //│ int -> Ba -> Ba
 //│  = <no result>

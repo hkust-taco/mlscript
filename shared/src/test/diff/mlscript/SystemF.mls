@@ -182,7 +182,7 @@ res1() = iter4() S Z
 res2() = iter256() S Z
 //│ res1: () -> ('a -> 'b & 'c -> 'a & 'a -> 'c) -> 'c -> 'b
 //│     = [Function: res1]
-//│ res2: () -> (error | ('a -> 'b & 'a -> 'c & 'c -> 'c & 'c -> 'a & 'a -> 'a) -> 'c -> 'b)
+//│ res2: () -> (error | ('a -> 'b & 'c -> 'c & 'a -> 'c & 'c -> 'a & 'a -> 'a) -> 'c -> 'b)
 //│     = [Function: res2]
 
 res1_ty() = iter4_ty() S_ty Z_ty

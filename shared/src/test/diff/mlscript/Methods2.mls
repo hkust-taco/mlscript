@@ -61,6 +61,7 @@ class Nil[A]: List[A]
 //│ Defined Nil.HeadOption: Nil[?] -> None[nothing]
 //│ Defined Nil.Map: Nil[?] -> anything -> Nil[nothing]
 
+// TODO(fcp): why isn't `forall 'B` distributed, in the `Cons.Map` type?
 class Cons[A]: List[A] & { head: A; tail: List[A] }
     method Size = succ this.tail.Size
     method HeadOption = Some { payload = this.head }
@@ -68,7 +69,7 @@ class Cons[A]: List[A] & { head: A; tail: List[A] }
 //│ Defined class Cons[+A]
 //│ Defined Cons.Size: Cons[?] -> int
 //│ Defined Cons.HeadOption: Cons['A] -> Some['A]
-//│ Defined Cons.Map: Cons['A] -> (forall 'B, 'A0, 'head. ('A -> ('B & 'A0) & 'A -> ('A0 & 'head)) -> (Cons['A0] with {head: 'head, tail: List['B]}))
+//│ Defined Cons.Map: Cons['A] -> (forall 'B. ('A -> 'B) -> (Cons['B] with {head: 'B, tail: List['B]}))
 
 // Note that the useless `with {tail: List['A]}` refinement is kept
 //  because the approximate subtyping check `list & {List#A = 'A} <: List['A]` currently returns false
@@ -159,13 +160,13 @@ o = l.HeadOption
 :e
 case o of {None -> 0 | Some -> o.payload}
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.160: 	case o of {None -> 0 | Some -> o.payload}
+//│ ║  l.161: 	case o of {None -> 0 | Some -> o.payload}
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Option[?A]` does not match type `None[?] & ?a | Some[?] & ?b`
 //│ ║  l.24: 	    method HeadOption: Option[A]
 //│ ║        	                       ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `None[?] & ?a | Some[?] & ?c`
-//│ ║  l.160: 	case o of {None -> 0 | Some -> o.payload}
+//│ ║  l.161: 	case o of {None -> 0 | Some -> o.payload}
 //│ ╙──       	     ^
 //│ res: 0
 //│    = 0
@@ -204,15 +205,15 @@ case res of {None -> 0 | Some -> res.payload}
 case o of {
     Some -> o.Get | None -> 0 }
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.204: 	case o of {
+//│ ║  l.205: 	case o of {
 //│ ║         	^^^^^^^^^^^
-//│ ║  l.205: 	    Some -> o.Get | None -> 0 }
+//│ ║  l.206: 	    Some -> o.Get | None -> 0 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Option[?A]` does not match type `None[?] & ?a | Some[?] & ?b`
 //│ ║  l.24: 	    method HeadOption: Option[A]
 //│ ║        	                       ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `None[?] & ?a | Some[?] & ?c`
-//│ ║  l.204: 	case o of {
+//│ ║  l.205: 	case o of {
 //│ ╙──       	     ^
 //│ res: 0 | 1
 //│    = 0

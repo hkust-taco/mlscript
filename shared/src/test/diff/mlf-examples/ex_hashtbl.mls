@@ -273,7 +273,7 @@ a = add (nfind table "one")
 //│  = [Function (anonymous)]
 
 b = (nfind table "two")
-//│ b: ('a -> 'b & 'c -> 'b & 'a -> 'c & 'd -> 'b & 'a -> 'd) -> ('b & 'a) -> 'b
+//│ b: ('a -> 'b & 'c -> 'a & 'c -> 'b & 'd -> 'b & 'c -> 'd) -> ('b & 'c) -> 'b
 //│  = [Function (anonymous)]
 
 b (fun x -> x)
@@ -289,7 +289,7 @@ b (fun x -> 0)
 //│    = [Function (anonymous)]
 
 b = (find table "two")
-//│ b: None | Some[forall 'a, 'b, 'c. ('a -> 'b & 'c -> 'b & 'a -> 'c) -> 'a -> 'b]
+//│ b: None | Some[forall 'a, 'b, 'c. ('a -> 'b & 'c -> 'a & 'c -> 'b) -> 'c -> 'b]
 //│  = None {}
 
 // * Note: this one required `:DistributeForalls`
@@ -339,25 +339,25 @@ match_opt (
     fun () -> fun f -> fun x -> x,
     fun v -> v
   ) b
-//│ res: ('a -> 'b & 'c -> 'b & 'a -> 'c) -> ('b & 'a) -> 'b
+//│ res: ('a -> 'b & 'c -> 'a & 'c -> 'b) -> ('b & 'c) -> 'b
 //│    = [Function (anonymous)]
 
 match_opt (
     fun () -> fun f -> fun x -> x,
     fun v -> v
   ) (find table "two")
-//│ res: ('a -> 'b & 'c -> 'b & 'a -> 'c) -> ('b & 'a) -> 'b
+//│ res: ('a -> 'b & 'c -> 'a & 'c -> 'b) -> ('b & 'c) -> 'b
 //│    = [Function (anonymous)]
 
 def foo key = match_opt (
     fun () -> fun f -> id,
     fun v -> v
   ) (find table key)
-//│ foo: anything -> ('a -> 'b & 'c -> 'b & 'a -> 'c & 'd -> 'b & 'a -> 'd) -> ('b & 'a) -> 'b
+//│ foo: anything -> ('a -> 'b & 'c -> 'a & 'c -> 'b & 'd -> 'b & 'c -> 'd) -> ('b & 'c) -> 'b
 //│    = [Function: foo]
 
 foo 1
-//│ res: ('a -> 'b & 'c -> 'b & 'a -> 'c & 'd -> 'b & 'a -> 'd) -> ('b & 'a) -> 'b
+//│ res: ('a -> 'b & 'c -> 'a & 'c -> 'b & 'd -> 'b & 'c -> 'd) -> ('b & 'c) -> 'b
 //│    = [Function (anonymous)]
 
 :e
@@ -393,7 +393,7 @@ foo 1 error 2
     fun () -> fun f -> fun x -> x,
     fun v -> v
   ) (find table key)) "two"
-//│ res: ('a -> 'b & 'c -> 'b & 'a -> 'c & 'd -> 'b & 'a -> 'd) -> ('b & 'a) -> 'b
+//│ res: ('a -> 'b & 'c -> 'a & 'c -> 'b & 'd -> 'b & 'c -> 'd) -> ('b & 'c) -> 'b
 //│    = [Function (anonymous)]
 
 res id

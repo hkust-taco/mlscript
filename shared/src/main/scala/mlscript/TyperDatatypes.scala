@@ -223,6 +223,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   sealed trait Factorizable extends SimpleType
   
+  type FT = FunctionType
+  
   case class FunctionType(lhs: SimpleType, rhs: SimpleType)(val prov: TypeProvenance) extends MiscBaseType {
     // lazy val level: Int = lhs.level max rhs.level
     lazy val level: Level = levelBelow(MaxLevel)(MutSet.empty)
@@ -236,7 +238,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     }} -> $rhs)"
   }
   case class Overload(alts: Ls[FunctionType])(val prov: TypeProvenance) extends MiscBaseType {
-    require(alts.lengthIs > 1)
+    require(alts.lengthIs > 0)
     def mapAlts(lf: ST => ST)(rf: ST => ST): Overload =
       Overload(alts.map(ft => FunctionType(lf(ft.lhs), rf(ft.rhs))(ft.prov)))(prov)
     def mapAltsPol(pol: Opt[Bool])(f: (Opt[Bool], SimpleType) => SimpleType): Overload =
@@ -252,6 +254,13 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       alts.iterator.map(_.levelBelow(ub)).max
     def freshenAboveImpl(lim: Int, rigidify: Bool)(implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST]): Overload =
       Overload(alts.map(_.freshenAboveImpl(lim, rigidify)))(prov)
+  }
+  object Overload {
+    def mk(alts: Ls[FunctionType])(prov: TypeProvenance): ST = alts match {
+      case Nil => mkProxy(TopType, prov)
+      case ft :: Nil => mkProxy(ft, prov)
+      case alts => Overload(alts)(prov)
+    }
   }
   
   case class RecordType(fields: List[(Var, FieldType)])(val prov: TypeProvenance) extends SimpleType {

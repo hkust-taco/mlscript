@@ -93,7 +93,7 @@ rec def fl f x l = match_list l x (fun head -> fun tail -> fl f (f x head) tail)
 //│ fl: ('b -> 'a -> 'c & 'c -> 'a -> 'c) -> 'b -> List['a] -> ('b | 'c)
 
 rec def fl2 f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
-//│ fl2: ('c -> 'b -> 'a & 'a -> 'b -> 'a) -> 'c -> List['b] -> ('a | 'c)
+//│ fl2: (('a | 'c) -> 'b -> 'a) -> 'c -> List['b] -> ('a | 'c)
 
 :RecursiveTypes // needed for this recursive def
 def fold_left = fl
@@ -103,7 +103,7 @@ def fold_left = fl
 :NoRecursiveTypes
 
 def fold_left = fl2
-//│ ('c -> 'b -> 'a & 'a -> 'b -> 'a) -> 'c -> List['b] -> ('a | 'c)
+//│ (('a | 'c) -> 'b -> 'a) -> 'c -> List['b] -> ('a | 'c)
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 

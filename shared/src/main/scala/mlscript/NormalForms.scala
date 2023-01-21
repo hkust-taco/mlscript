@@ -62,7 +62,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case LhsTop => LhsRefined(N, SortedSet.single(that), RecordType.empty, smEmp)
       case LhsRefined(b, ts, r, trs) => LhsRefined(b, ts + that, r, trs)
     }
-    def & (that: BaseTypeOrTag)(implicit etf: ExpandTupleFields): Opt[LhsNf] = (this, that) match {
+    def & (that: BaseTypeOrTag)(implicit ctx: Ctx, etf: ExpandTupleFields): Opt[LhsNf] = (this, that) match {
       case (LhsTop, that: TupleType) => S(LhsRefined(S(that), ssEmp, if (expandTupleFields) that.toRecord else RecordType.empty, smEmp))
       case (LhsTop, that: BaseType) => S(LhsRefined(S(that), ssEmp, RecordType.empty, smEmp))
       case (LhsTop, that: AbstractTag) => S(LhsRefined(N, SortedSet.single(that), RecordType.empty, smEmp))
@@ -73,15 +73,37 @@ class NormalForms extends TyperDatatypes { self: Typer =>
           case (S(p0 @ ClassTag(pt0, ps0)), p1 @ ClassTag(pt1, ps1)) =>
             // println(s"!GLB! $this $that ${p0.glb(p1)}")
             p0.glb(p1)
-          case (S(ft1 @ FunctionType(l0, r0)), ft2 @ FunctionType(l1, r1)) =>
-            // S(FunctionType(l0 | l1, r0 & r1)(noProv/*TODO*/))
-            S(Overload(ft1 :: ft2 :: Nil)(noProv/*TODO*/))
-          case (S(Overload(alts)), ft: FunctionType) =>
-            S(Overload(ft :: alts)(noProv/*TODO*/))
-          case (S(ft: FunctionType), Overload(alts)) =>
-            S(Overload(ft :: alts)(noProv/*TODO*/))
-          case (S(Overload(alts1)), Overload(alts2)) =>
-            S(Overload(alts1 ::: alts2)(noProv)) // TODO(fcp) merge better?
+          
+          case (S(ov @ Overload(alts)), ft: FunctionType) =>
+            def go(alts: Ls[FT]): Ls[FT] = alts match {
+              case (f @ FunctionType(l, r)) :: alts =>
+                /* // * Note: A simpler version that gets most of the way there:
+                if (l >:< ft.lhs) FunctionType(l, r & ft.rhs)(f.prov) :: alts
+                else if (r >:< ft.rhs) FunctionType(l | ft.lhs, r)(f.prov) :: alts
+                else f :: go(alts)
+                */
+                val l_LT_lhs = l <:< ft.lhs
+                lazy val l_GT_lhs = ft.lhs <:< l
+                lazy val r_LT_rhs = r <:< ft.rhs
+                lazy val r_GT_rhs = ft.rhs <:< r
+                if (l_LT_lhs && r_GT_rhs) ft :: alts
+                else if (l_GT_lhs && r_LT_rhs) f :: alts
+                else if (l_LT_lhs && l_GT_lhs) FunctionType(l, r & ft.rhs)(f.prov) :: alts
+                else if (r_LT_rhs && r_GT_rhs) FunctionType(l | ft.lhs, r)(f.prov) :: alts
+                else f :: go(alts)
+              case Nil => ft :: Nil
+            }
+            S(Overload(go(alts))(ov.prov))
+          case (S(ft: FunctionType), _: Overload | _: FT) =>
+            return LhsRefined(S(Overload(ft :: Nil)(that.prov)), ts, r1, trs) & that
+          case (S(Overload(alts1)), ov2 @ Overload(a2 :: alts2)) =>
+            alts2 match {
+              case Nil => 
+                return this & a2
+              case _ =>
+                return this & a2 flatMap (_ & Overload(alts2)(ov2.prov))
+            }
+          
           case (S(TupleType(fs0)), tup @ TupleType(fs1)) if fs0.size === fs1.size =>
             if (expandTupleFields)
               r1Final = RecordType(mergeSortedMap(r1Final.fields, tup.toRecord.fields)(_ && _).toList)(noProv)
@@ -463,7 +485,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   
   object Conjunct {
     def of(tvs: SortedSet[TypeVariable]): Conjunct = Conjunct(LhsTop, tvs, RhsBot, ssEmp)
-    def mk(lnf: LhsNf, vars: SortedSet[TypeVariable], rnf: RhsNf, nvars: SortedSet[TypeVariable])(implicit etf: ExpandTupleFields): Conjunct = {
+    def mk(lnf: LhsNf, vars: SortedSet[TypeVariable], rnf: RhsNf, nvars: SortedSet[TypeVariable])(implicit ctx: Ctx, etf: ExpandTupleFields): Conjunct = {
       Conjunct(lnf, vars, rnf match {
         case RhsField(name, ty) => RhsField(name, ty)
         case RhsBases(prims, bf, trs) =>

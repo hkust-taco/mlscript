@@ -221,7 +221,7 @@ def apply_to_id f = f id
 test1 = apply_to_id step
 test2 = apply_to_id delta
 test2_ = apply_to_id delta_
-//│ step: (0 -> int & 1 -> int) -> int
+//│ step: ((0 | 1) -> int) -> int
 //│     = [Function: step]
 //│ apply_to_id: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
 //│            = [Function: apply_to_id]
@@ -275,9 +275,9 @@ fun x -> fun y ->
 fun x -> fun y ->
   let isnil = x y in
     (isnil (cons 1 (cons 2 (cons 3 nil))), isnil nil, isnil (cons "ok" nil), isnil (cons true nil)) 
-//│ res: Id -> (List[1 | 2 | 3] -> 'a & List[nothing] -> 'b & List[true] -> 'c & List["ok"] -> 'd) -> ('a, 'b, 'd, 'c,)
+//│ res: Id -> (List[true] -> 'a & List["ok"] -> 'b & List[nothing] -> 'c & List[1 | 2 | 3] -> 'd) -> ('d, 'c, 'b, 'a,)
 //│    = [Function: res]
-//│ res: ('a -> (List[1 | 2 | 3] -> 'b & List[nothing] -> 'c & List[true] -> 'd & List["ok"] -> 'e)) -> 'a -> ('b, 'c, 'e, 'd,)
+//│ res: ('a -> (List[true] -> 'b & List["ok"] -> 'c & List[nothing] -> 'd & List[1 | 2 | 3] -> 'e)) -> 'a -> ('e, 'd, 'c, 'b,)
 //│    = [Function: res]
 
 // (*let t1 = f delta	
@@ -357,7 +357,7 @@ def ff_ = fun g ->
 //│   = [Function: aa]
 //│ ff: (forall 'b. (Id -> 'b) -> 'b) -> int
 //│   = [Function: ff]
-//│ ff_: (((8 -> int) -> int) -> anything & (Id -> Id) -> anything) -> int
+//│ ff_: (((Id & 8 -> int) -> (int | Id)) -> anything) -> int
 //│    = [Function: ff_]
 
 // let bigtest = ff aa

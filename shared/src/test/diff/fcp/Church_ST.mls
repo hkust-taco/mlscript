@@ -467,7 +467,7 @@ def to_church_ty n =
 
 
 sz = s zero
-//│ sz: ('N -> 'a & 'N -> 'N) -> 'N -> 'a
+//│ sz: ('N -> ('N & 'a)) -> 'N -> 'a
 //│   = [Function (anonymous)]
 
 :ns
@@ -666,7 +666,7 @@ rec def to_ch_A1 n =
 //│ ╟── from reference:
 //│ ║  l.265: 	def s n f x = f (n f x)
 //│ ╙──       	                     ^
-//│ to_ch_A1: int -> (forall 'a. ('N -> 'a & 'N -> 'N) -> (forall 'b. ('N & 'b) -> ('b | 'a)))
+//│ to_ch_A1: int -> (forall 'a. ('N -> ('N & 'a)) -> (forall 'b. ('N & 'b) -> ('b | 'a)))
 //│         = [Function: to_ch_A1]
 
 // * nope
@@ -937,7 +937,7 @@ to_church_ty = to_ch_simplif
 //│             = [Function: to_ch_simplif1]
 
 to_church_ty = to_ch_A1
-//│ int -> ('N -> 'a & 'N -> 'N) -> ('a & 'N) -> 'a
+//│ int -> ('N -> ('N & 'a)) -> ('a & 'N) -> 'a
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_ch_A1]

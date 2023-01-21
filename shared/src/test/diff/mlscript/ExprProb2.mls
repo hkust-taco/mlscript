@@ -19,11 +19,11 @@ def eval1 eval1 e = case e of {
   | Lit -> e.val
   | Add -> eval1 eval1 e.lhs + eval1 eval1 e.rhs
   }
-//│ eval1: ('a -> 'rhs -> int & 'a -> 'lhs -> int & 'a) -> (Add[?] & {lhs: 'lhs, rhs: 'rhs} | (Lit with {val: 'val})) -> (int | 'val)
+//│ eval1: ('a -> 'rhs -> int & 'a) -> (Add[?] & {lhs: 'rhs, rhs: 'rhs} | (Lit with {val: 'val})) -> (int | 'val)
 //│      = [Function: eval1]
 //│ constrain calls  : 44
 //│ annoying  calls  : 0
-//│ subtyping calls  : 166
+//│ subtyping calls  : 185
 
 :stats
 :js
@@ -41,11 +41,11 @@ def eval1f eval1 e = case e of {
 //│   });
 //│ };
 //│ // End of generated code
-//│ eval1f: ('rhs -> int & 'lhs -> int) -> (Add[?] & {lhs: 'lhs, rhs: 'rhs} | (Lit with {val: 'val})) -> (int | 'val)
+//│ eval1f: ('rhs -> int) -> (Add[?] & {lhs: 'rhs, rhs: 'rhs} | (Lit with {val: 'val})) -> (int | 'val)
 //│       = [Function: eval1f]
 //│ constrain calls  : 36
 //│ annoying  calls  : 0
-//│ subtyping calls  : 151
+//│ subtyping calls  : 160
 
 
 e1 = add (lit 1) (add (lit 2) (lit 3))
@@ -111,14 +111,14 @@ def eval2 eval2 e = case e of {
   | Nega -> 0 - (eval2 eval2 e.arg)
   | _ -> eval1 eval2 e
   }
-//│ eval2: ('a -> 'arg -> int & 'a -> 'lhs -> int & 'a -> 'rhs -> int & 'a) -> (Add[?] & {lhs: 'lhs, rhs: 'rhs} | (Lit with {val: 'val}) | Nega[?] & {arg: 'arg}) -> (int | 'val)
+//│ eval2: ('a -> 'lhs -> int & 'a) -> (Add[?] & {lhs: 'lhs, rhs: 'lhs} | (Lit with {val: 'val}) | Nega[?] & {arg: 'lhs}) -> (int | 'val)
 //│      = [Function: eval2]
 
 def eval2f eval2 e = case e of {
   | Nega -> 0 - (eval2 e.arg)
   | _ -> eval1f eval2 e
   }
-//│ eval2f: ('arg -> int & 'lhs -> int & 'rhs -> int) -> (Add[?] & {lhs: 'lhs, rhs: 'rhs} | (Lit with {val: 'val}) | Nega[?] & {arg: 'arg}) -> (int | 'val)
+//│ eval2f: ('lhs -> int) -> (Add[?] & {lhs: 'lhs, rhs: 'lhs} | (Lit with {val: 'val}) | Nega[?] & {arg: 'lhs}) -> (int | 'val)
 //│       = [Function: eval2f]
 
 
@@ -309,7 +309,7 @@ def eval2_broken eval2 e = case e of {
   | Nega -> e.arg
   | _ -> eval1 eval2 e
   }
-//│ eval2_broken: ('a -> 'lhs -> int & 'a -> 'rhs -> int & 'a) -> (Add[?] & {lhs: 'lhs, rhs: 'rhs} | (Lit with {val: 'arg}) | Nega[?] & {arg: 'arg}) -> ('arg | int)
+//│ eval2_broken: ('a -> 'lhs -> int & 'a) -> (Add[?] & {lhs: 'lhs, rhs: 'lhs} | (Lit with {val: 'arg}) | Nega[?] & {arg: 'arg}) -> ('arg | int)
 
 :e
 eval2_broken eval2_broken! e2
@@ -332,7 +332,7 @@ def eval2f_oops eval2 e = case e of {
   | Nega -> 0 - (eval2 e.arg)
   | _ -> eval1 eval2 e // should be: eval1f eval2 e
   }
-//│ eval2f_oops: ('arg -> int & 'a -> 'lhs -> int & 'a -> 'rhs -> int & 'a) -> (Add[?] & {lhs: 'lhs, rhs: 'rhs} | (Lit with {val: 'val}) | Nega[?] & {arg: 'arg}) -> (int | 'val)
+//│ eval2f_oops: ('a -> 'lhs -> int & 'arg -> int & 'a) -> (Add[?] & {lhs: 'lhs, rhs: 'lhs} | (Lit with {val: 'val}) | Nega[?] & {arg: 'arg}) -> (int | 'val)
 
 // :e
 fix eval2f_oops e2

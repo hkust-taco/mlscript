@@ -45,9 +45,9 @@ def poly f = (f 42, f true)
 
 def bad1 f = (poly f, f 42 + 1)
 def bad2 f = (f 42 + 1, poly f)
-//│ bad1: (42 -> int & true -> 'a & 42 -> 'b) -> (('b, 'a,), int,)
+//│ bad1: (42 -> (int & 'a) & true -> 'b) -> (('a, 'b,), int,)
 //│     = [Function: bad1]
-//│ bad2: (42 -> int & true -> 'a & 42 -> 'b) -> (int, ('b, 'a,),)
+//│ bad2: (true -> 'a & 42 -> (int & 'b)) -> (int, ('b, 'a,),)
 //│     = [Function: bad2]
 
 

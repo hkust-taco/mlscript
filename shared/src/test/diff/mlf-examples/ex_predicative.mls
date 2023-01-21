@@ -141,7 +141,7 @@ def three = fun f -> fun x -> f (f (f x))
 //│    = [Function: app]
 //│ two: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
 //│    = [Function: two]
-//│ three: ('a -> 'b & 'c -> 'd & 'b -> 'c) -> 'a -> 'd
+//│ three: ('a -> 'b & 'c -> 'a & 'd -> 'c) -> 'd -> 'b
 //│      = [Function: three]
 
 

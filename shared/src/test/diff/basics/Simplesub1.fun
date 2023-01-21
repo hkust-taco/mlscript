@@ -202,7 +202,7 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (x x)) (x => f (x x)))
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ res: ('a -> 'a & 'a -> 'b) -> (error | 'b)
+//│ res: ('a -> 'a) -> (error | 'a)
 
 // * Z combinator:
 :e

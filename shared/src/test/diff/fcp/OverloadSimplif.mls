@@ -9,14 +9,26 @@ def foo f x =
 def foo k f x =
   if true then f x
   else f (k x)
-//│ foo: ('a -> 'b) -> ('b -> 'c & 'a -> 'c) -> 'a -> 'c
+//│ foo: ('a -> 'b) -> (('a | 'b) -> 'c) -> 'a -> 'c
 
-// * TODO simplify
+// * Not ethe simplified type, similar to the one above, as expected
 foo id
-//│ res: ('a -> 'b & 'c -> 'b) -> ('a & 'c) -> 'b
+//│ res: ('a -> 'b) -> 'a -> 'b
 
 
 def f: ('a -> 'b & 'c -> 'b & 'a -> 'c) -> 'a -> 'b
-//│ f: ('a -> 'c & 'a -> 'b & 'c -> 'b) -> 'a -> 'b
+//│ f: (('a | 'c) -> 'b & 'a -> 'c) -> 'a -> 'b
+
+def f: int -> int & nothing -> string
+//│ f: int -> int & nothing -> string
+
+def f: int -> int & string -> anything
+//│ f: int -> int & string -> anything
+
+def f: int -> int & 1 -> number
+//│ f: int -> int
+
+def f: int -> int & 'a -> 'a
+//│ f: int -> int & 'a -> 'a
 
 
