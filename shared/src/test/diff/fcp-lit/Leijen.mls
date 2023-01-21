@@ -82,7 +82,7 @@ def cons: 'a -> List['a] -> List['a]
 def cons head tail = Cons { head; tail }
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
+//│ 'b -> (forall 'a 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -884,12 +884,12 @@ revapp (fun f -> f f) takeAuto
 
 // ,("apply (\\f -> choose auto f) (auto :: (forall a. a -> a) -> (forall a. a -> a))", ok "(forall a. a -> a) -> (forall a. a -> a)")
 app (fun f -> choose auto f) (auto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a))
-//│ res: (forall 'a, 'a0. 'a -> 'a & 'a0 -> 'a0) -> (forall 'a1. 'a1 -> 'a1)
+//│ res: (forall 'a 'a0. 'a -> 'a & 'a0 -> 'a0) -> (forall 'a1. 'a1 -> 'a1)
 //│    = [Function: auto]
 
 // ,("revapp (auto :: (forall a. a -> a) -> (forall a. a -> a)) (\\f -> choose auto f)", ok "(forall a. a -> a) -> (forall a. a -> a)")
 revapp (auto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)) (fun f -> choose auto f)
-//│ res: (forall 'a, 'a0. 'a -> 'a & 'a0 -> 'a0) -> (forall 'a1. 'a1 -> 'a1)
+//│ res: (forall 'a 'a0. 'a -> 'a & 'a0 -> 'a0) -> (forall 'a1. 'a1 -> 'a1)
 //│    = [Function: auto]
 
 // ============ Eta expansion of polymorphic types ============
@@ -909,7 +909,7 @@ fun x -> (auto x, x 1)
 
 // ,("\\x -> (auto x, (x :: forall a. a -> a) 1)", ok "forall a. (forall a. a -> a) -> (a -> a, Int)")
 fun x -> (auto x, (x : forall 'a. 'a -> 'a) 1)
-//│ res: (forall 'a, 'a0. 'a -> 'a & 'a0 -> 'a0) -> (forall 'a1. 'a1 -> 'a1, 1,)
+//│ res: (forall 'a 'a0. 'a -> 'a & 'a0 -> 'a0) -> (forall 'a1. 'a1 -> 'a1, 1,)
 //│    = [Function: res]
 
 // ,("\\x -> (auto x, (x :: Int -> Int) 1)", Wrong)

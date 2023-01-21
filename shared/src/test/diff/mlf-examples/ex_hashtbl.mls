@@ -120,11 +120,11 @@ rec def find table key =
 
 :ns
 find
-//│ res: forall 'a, 'a0, 'b, 'c, 'd, 'find, 'a1, 'e, 'a2, 'f, 'g. 'find
+//│ res: forall 'a 'a0 'b 'c 'd 'find 'a1 'e 'a2 'f 'g. 'find
 //│   where
-//│     'find := forall 'h, 'i, 'a3, 'j, 'a4, 'a5. 'h -> (forall 'val, 'k, 'l, 'm, 'a6. 'k -> 'm)
+//│     'find := forall 'h 'i 'a3 'j 'a4 'a5. 'h -> (forall 'val 'k 'l 'm 'a6. 'k -> 'm)
 //│     'm :> (forall 'n. 'n) | (forall 'o. 'o) | 'e
-//│     'e :> forall 'p, 'val0, 'a7. 'p
+//│     'e :> forall 'p 'val0 'a7. 'p
 //│     'p :> (forall 'n. 'n) | (forall 'q. 'q) | 'e
 //│     'q :> #Some & {val: 'val0, Some#a = 'a7}
 //│     'val0 :> 'f
@@ -200,7 +200,7 @@ def add (n: ChurchInt) (m: ChurchInt) = n succ m
 //│    = [Function: add]
 
 def add_ n m = n succ_ m
-//│ add_: ((forall 'a, 'b, 'c, 'd. ('a -> 'b -> 'c) -> ('c -> 'd & 'a) -> 'b -> 'd) -> 'e -> 'f) -> 'e -> 'f
+//│ add_: ((forall 'a 'b 'c 'd. ('a -> 'b -> 'c) -> ('c -> 'd & 'a) -> 'b -> 'd) -> 'e -> 'f) -> 'e -> 'f
 //│     = [Function: add_]
 
 // let printInt (n:Int) = print (n (fun x -> x+1) 0)
@@ -219,9 +219,9 @@ table = hashtbl_add table "one" (fun f -> fun x -> f x)
 table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│ table: List[nothing]
 //│      = Nil {}
-//│ table: List[("one", forall 'a, 'b. ('a -> 'b) -> 'a -> 'b,)]
+//│ table: List[("one", forall 'a 'b. ('a -> 'b) -> 'a -> 'b,)]
 //│      = Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
-//│ table: List[("one" | "two", forall 'a, 'b, 'c. ('a -> 'b & 'c -> 'b & 'a -> 'c) -> 'a -> 'b,)]
+//│ table: List[("one" | "two", forall 'a 'b 'c. ('a -> 'b & 'c -> 'b & 'a -> 'c) -> 'a -> 'b,)]
 //│      = Cons {
 //│          head: [ 'two', [Function (anonymous)] ],
 //│          tail: Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
@@ -289,7 +289,7 @@ b (fun x -> 0)
 //│    = [Function (anonymous)]
 
 b = (find table "two")
-//│ b: None | Some[forall 'a, 'b, 'c. ('a -> 'b & 'c -> 'a & 'c -> 'b) -> 'c -> 'b]
+//│ b: None | Some[forall 'a 'b 'c. ('a -> 'b & 'c -> 'a & 'c -> 'b) -> 'c -> 'b]
 //│  = None {}
 
 // * Note: this one required `:DistributeForalls`

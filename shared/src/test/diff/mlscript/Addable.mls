@@ -101,7 +101,7 @@ rec def addNTimes a n =
   if n <= 0 then 0 else a.Add addNTimes a (n - 1)
 //│ addNTimes: 'addNTimes
 //│   where
-//│     'addNTimes :> forall 'a, 'A. 'a -> int -> 0
+//│     'addNTimes :> forall 'a 'A. 'a -> int -> 0
 //│     'a <: Addable[in 'a -> nothing & 'A out 'A | 'addNTimes] & 'b
 //│     'b <: Addable[in 'b -> nothing & 'A0 out 'A0 | 'addNTimes]
 
@@ -109,7 +109,7 @@ addNTimes n 12
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	addNTimes n 12
 //│ ║        	^^^^^^^^^^^
-//│ ╟── function of type `?a -> (forall ?b, ?c. ?b -> ?c)` is not an instance of type `Num`
+//│ ╟── function of type `?a -> (forall ?b ?c. ?b -> ?c)` is not an instance of type `Num`
 //│ ║  l.100: 	rec def addNTimes a n =
 //│ ║         	                  ^^^^^
 //│ ║  l.101: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
@@ -126,7 +126,7 @@ addSame n n
 //│ ╟── application of type `Num & {val: ?val}` is not a function
 //│ ║  l.17: 	n = Num { val = 1 }
 //│ ║        	    ^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(forall ?a, ?val0. ?a) -> ?b`
+//│ ╟── but it flows into reference with expected type `(forall ?a ?val0. ?a) -> ?b`
 //│ ║  l.+1: 	addSame n n
 //│ ╙──      	        ^
 //│ res: error

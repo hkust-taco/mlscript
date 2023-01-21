@@ -514,7 +514,7 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ╙──       	                    ^^
 //│ res: 'c
 //│   where
-//│     'c :> (forall 'a. 'a -> 'a) | (forall 'a0, 'd. ('a0 -> 'a0) -> 'd)
+//│     'c :> (forall 'a. 'a -> 'a) | (forall 'a0 'd. ('a0 -> 'a0) -> 'd)
 //│     'd :> (forall 'b. 'b -> 'b) | error
 //│     'a0 :> anything
 //│         <: nothing

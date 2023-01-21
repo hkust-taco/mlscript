@@ -78,7 +78,7 @@ def test extr =
   let f n m = n 0
   in let _ = extr f
   in f 0
-//│ test: ((forall 'a, 'b. 'a -> (anything -> 'b
+//│ test: ((forall 'a 'b. 'a -> (anything -> 'b
 //│   where
 //│     'a <: 0 -> 'b)) -> anything) -> (anything -> 'c
 //│   where
@@ -107,7 +107,7 @@ def test extr x =
   let f n m = x (n 0)
   in let _ = extr f
   in f 0
-//│ test: ((forall 'a, 'b, 'c. 'a -> (anything -> 'c
+//│ test: ((forall 'a 'b 'c. 'a -> (anything -> 'c
 //│   where
 //│     'a <: 0 -> 'b
 //│     'd <: 'b -> 'c)) -> anything) -> 'd -> (anything -> 'e

@@ -120,7 +120,7 @@ example mkpair
 example_ mkpair
 //│ res: int -> (anything, int,)
 //│    = [Function (anonymous)]
-//│ res: 'a -> (forall 'b, 'c. 'b -> 'c -> ('b, 'c,), 'a,)
+//│ res: 'a -> (forall 'b 'c. 'b -> 'c -> ('b, 'c,), 'a,)
 //│    = [Function (anonymous)]
 
 // let make_ex3 x (f:['a > sid] 'a -> 'b ) = f x 

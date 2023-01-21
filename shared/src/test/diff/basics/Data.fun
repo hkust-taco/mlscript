@@ -3,7 +3,7 @@
 data Test a b
 //│ Parsed: data Test a b;
 //│ Desugared: class Test[a, b]: {a: a, b: b}
-//│ Desugared: def Test: forall a, b. a -> b -> Test[a, b]
+//│ Desugared: def Test: forall a b. a -> b -> Test[a, b]
 //│ AST: Def(false, Test, PolyType(List(Left(TypeName(a)), Left(TypeName(b))),Function(TypeName(a),Function(TypeName(b),AppliedType(TypeName(Test),List(TypeName(a), TypeName(b)))))), true)
 //│ Defined class Test[+a, +b]
 //│ Test: 'a -> 'b -> Test['a, 'b]

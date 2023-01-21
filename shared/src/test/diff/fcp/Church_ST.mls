@@ -59,13 +59,13 @@ def succ n f x = f (n f x)
 
 // * This explicit annotation makes it type check; like in MLF:
 def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
-//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'N0, 'a, 'N1. ('N0 -> 'a & 'N1 -> ('N0 & 'N1)) -> ('N0 & 'N1) -> 'a)
+//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'N0 'a 'N1. ('N0 -> 'a & 'N1 -> ('N0 & 'N1)) -> ('N0 & 'N1) -> 'a)
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: succ2]
 
 def succ (n: ChurchInt) f x = f (n f x)
-//│ ChurchInt -> (forall 'N, 'a, 'N0. ('N -> 'a & 'N0 -> ('N & 'N0)) -> ('N & 'N0) -> 'a)
+//│ ChurchInt -> (forall 'N 'a 'N0. ('N -> 'a & 'N0 -> ('N & 'N0)) -> ('N & 'N0) -> 'a)
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: succ3]
@@ -267,7 +267,7 @@ def s n f x = f (n f x)
 //│  = [Function: s]
 
 def s_A1 (n: ChurchInt) f x = f (n f x)
-//│ s_A1: ChurchInt -> (forall 'N, 'a, 'N0. ('N -> 'a & 'N0 -> ('N & 'N0)) -> ('N & 'N0) -> 'a)
+//│ s_A1: ChurchInt -> (forall 'N 'a 'N0. ('N -> 'a & 'N0 -> ('N & 'N0)) -> ('N & 'N0) -> 'a)
 //│     = [Function: s_A1]
 
 zero = z
@@ -297,7 +297,7 @@ succ = s
 //│     = [Function: s]
 
 succ = s_A1
-//│ ChurchInt -> (forall 'N, 'a, 'N0. ('N -> 'a & 'N0 -> ('N & 'N0)) -> ('N & 'N0) -> 'a)
+//│ ChurchInt -> (forall 'N 'a 'N0. ('N -> 'a & 'N0 -> ('N & 'N0)) -> ('N & 'N0) -> 'a)
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: s_A1]
@@ -472,9 +472,9 @@ sz = s zero
 
 :ns
 sz
-//│ res: forall 'a, 'b, 'c, 'd, 'N. 'c
+//│ res: forall 'a 'b 'c 'd 'N. 'c
 //│   where
-//│     'c :> forall 'e, 'f, 'g. 'e -> (forall 'h, 'i. 'h -> 'i)
+//│     'c :> forall 'e 'f 'g. 'e -> (forall 'h 'i. 'h -> 'i)
 //│     'i :> 'g
 //│     'h <: 'a
 //│     'a <: 'N
@@ -569,11 +569,11 @@ to_church_ty = to_ch
 rec def to_ch_s_A1 n =
   if n == 0 then z
   else s_A1 (to_ch_s_A1 (n - 1))
-//│ to_ch_s_A1: int -> (forall 'N, 'a, 'N0. ('N -> 'a & 'N0 -> ('N & 'N0)) -> (forall 'b. ('N & 'N0 & 'b) -> ('b | 'a)))
+//│ to_ch_s_A1: int -> (forall 'N 'a 'N0. ('N -> 'a & 'N0 -> ('N & 'N0)) -> (forall 'b. ('N & 'N0 & 'b) -> ('b | 'a)))
 //│           = [Function: to_ch_s_A1]
 
 to_church_ty = to_ch_s_A1
-//│ int -> (forall 'N, 'a, 'N0. ('N -> 'a & 'N0 -> ('N & 'N0)) -> (forall 'b. ('N & 'N0 & 'b) -> ('b | 'a)))
+//│ int -> (forall 'N 'a 'N0. ('N -> 'a & 'N0 -> ('N & 'N0)) -> (forall 'b. ('N & 'N0 & 'b) -> ('b | 'a)))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_ch_s_A1]

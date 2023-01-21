@@ -83,7 +83,7 @@ class Test3[A, B]
 //│ Defined Test3.Bar3: Test3['A, 'B] -> 'A -> 'B
 
 fun x -> fun y -> x.Foo3 y
-//│ res: 'a -> (forall 'A, 'b. ('A -> 'b
+//│ res: 'a -> (forall 'A 'b. ('A -> 'b
 //│   where
 //│     'a <: Test3['A, 'b]))
 //│    = [Function: res]
@@ -103,7 +103,7 @@ class Test4[A, B]
 //│     forall 'a. 'a -> 'a <: 'A -> 'B)
 
 fun x -> fun y -> x.Bar4 y id
-//│ res: 'a -> (forall 'A, 'B. (('A -> 'B) -> 'B
+//│ res: 'a -> (forall 'A 'B. (('A -> 'B) -> 'B
 //│   where
 //│     'a <: Test4['A, 'B]))
 //│   where
@@ -111,7 +111,7 @@ fun x -> fun y -> x.Bar4 y id
 //│    = [Function: res]
 
 fun x -> fun y -> x.Baz4 y
-//│ res: 'a -> (forall 'B, 'A. (('A & 'B) -> 'B
+//│ res: 'a -> (forall 'B 'A. (('A & 'B) -> 'B
 //│   where
 //│     'a <: Test4['A, 'B]))
 //│   where

@@ -28,7 +28,7 @@ data type Bool2 of True2 & False2
 //│ Parsed: data type Bool2 of {& True2 False2};
 //│ Desugared: type alias Bool2 = &[True2, False2]
 //│ Desugared: class &[True2, False2]: {False2 <: False2, True2 <: True2}
-//│ Desugared: def &: forall True2, False2. True2 -> False2 -> &[True2, False2]
+//│ Desugared: def &: forall True2 False2. True2 -> False2 -> &[True2, False2]
 //│ AST: Def(false, &, PolyType(List(Left(TypeName(True2)), Left(TypeName(False2))),Function(TypeName(True2),Function(TypeName(False2),AppliedType(TypeName(&),List(TypeName(True2), TypeName(False2)))))), true)
 //│ ╔══[ERROR] type identifier not found: True2
 //│ ║  l.27: 	data type Bool2 of True2 & False2

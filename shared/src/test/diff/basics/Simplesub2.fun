@@ -73,7 +73,7 @@ let rec produce3 = b => { head: 123, tail: if b then codata else codata2 }
 
 let rec produce3 = b => { head: 123, tail: (if b then codata else codata2) }
 let res = x => consume (produce3 x)
-//│ produce3: bool -> {head: 123, tail: forall 'codata2, 'a. 'codata2 | {head: 42, tail: 'a}}
+//│ produce3: bool -> {head: 123, tail: forall 'codata2 'a. 'codata2 | {head: 42, tail: 'a}}
 //│   where
 //│     'a :> {head: int, tail: 'a}
 //│     'codata2 :> {head: 0, tail: {head: 1, tail: 'codata2}}

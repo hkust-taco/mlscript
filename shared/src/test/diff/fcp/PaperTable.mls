@@ -71,7 +71,7 @@ def cons: 'a -> List['a] -> List['a]
 def cons head tail = Cons { head; tail }
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
+//│ 'b -> (forall 'a 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -269,7 +269,7 @@ def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M
 def succ (n: ChurchInt) f x = f (n f x)
 //│ succ: (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = <missing implementation>
-//│ ChurchInt -> (forall 'N, 'a, 'N0. ('N -> 'a & 'N0 -> ('N & 'N0)) -> ('N & 'N0) -> 'a)
+//│ ChurchInt -> (forall 'N 'a 'N0. ('N -> 'a & 'N0 -> ('N & 'N0)) -> ('N & 'N0) -> 'a)
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: succ1]
@@ -586,7 +586,7 @@ to_ch: int -> ChurchInt
 :e
 // G8
 rec def id1 x = if true then x else id1 id1 x
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c. ?b -> ?c <: ?id1` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c. ?b -> ?c <: ?id1` exceeded recursion depth limit (250)
 //│ ║  l.588: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
@@ -603,7 +603,7 @@ rec def id1 x = if true then x else id1 id1 x
 :e
 // G9
 id1 id1
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j, ?k, ?l, ?m, ?n, ?o, ?p, ?q, ?r, ?s, ?t, ?u, ?id1. ?id1 <: (forall ?v, ?w, ?x, ?y, ?z, ?a1, ?b1, ?c1, ?d1, ?e1, ?f1, ?g1, ?id10, ?h1, ?i1, ?j1, ?k1, ?l1, ?m1, ?n1, ?o1, ?p1. ?id10) -> ?q1` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?d ?e ?f ?g ?h ?i ?j ?k ?l ?m ?n ?o ?p ?q ?r ?s ?t ?u ?id1. ?id1 <: (forall ?v ?w ?x ?y ?z ?a1 ?b1 ?c1 ?d1 ?e1 ?f1 ?g1 ?id10 ?h1 ?i1 ?j1 ?k1 ?l1 ?m1 ?n1 ?o1 ?p1. ?id10) -> ?q1` exceeded recursion depth limit (250)
 //│ ║  l.605: 	id1 id1
 //│ ║         	^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
@@ -629,7 +629,7 @@ auto auto
 // Gn+1
 :e
 (fun x -> x x) (fun x -> x x)
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b. ?b -> ?a <: (forall ?c, ?d. ?d -> ?c) -> ?e` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b. ?b -> ?a <: (forall ?c ?d. ?d -> ?c) -> ?e` exceeded recursion depth limit (250)
 //│ ║  l.631: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
@@ -936,7 +936,7 @@ to_ch: int -> ChurchInt
 :e
 // G8
 rec def id1 x = if true then x else id1 id1 x
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c. ?a -> ?b <: ?id1` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c. ?a -> ?b <: ?id1` exceeded recursion depth limit (250)
 //│ ║  l.938: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
@@ -953,7 +953,7 @@ rec def id1 x = if true then x else id1 id1 x
 :e
 // G9
 id1 id1
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?id1, ?h, ?i, ?j, ?k, ?l, ?m, ?n, ?o, ?p, ?q, ?r, ?s, ?t, ?u. ?id1 <: (forall ?v, ?w, ?x, ?y, ?z, ?a1, ?b1, ?c1, ?d1, ?e1, ?f1, ?g1, ?id10, ?h1, ?i1, ?j1, ?k1, ?l1, ?m1, ?n1, ?o1, ?p1. ?id10) -> ?q1` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?d ?e ?f ?g ?id1 ?h ?i ?j ?k ?l ?m ?n ?o ?p ?q ?r ?s ?t ?u. ?id1 <: (forall ?v ?w ?x ?y ?z ?a1 ?b1 ?c1 ?d1 ?e1 ?f1 ?g1 ?id10 ?h1 ?i1 ?j1 ?k1 ?l1 ?m1 ?n1 ?o1 ?p1. ?id10) -> ?q1` exceeded recursion depth limit (250)
 //│ ║  l.955: 	id1 id1
 //│ ║         	^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
@@ -979,7 +979,7 @@ auto auto
 // Gn+1
 :e
 (fun x -> x x) (fun x -> x x)
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b. ?b -> ?a <: (forall ?c, ?d. ?d -> ?c) -> ?e` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b. ?b -> ?a <: (forall ?c ?d. ?d -> ?c) -> ?e` exceeded recursion depth limit (250)
 //│ ║  l.981: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.

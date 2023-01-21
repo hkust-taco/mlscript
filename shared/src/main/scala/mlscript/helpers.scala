@@ -98,7 +98,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case PolyType(Nil, body) => body.showIn(ctx, outerPrec)
     case PolyType(targs, body) => parensIf(
         s"${targs.iterator.map(_.fold(_.name, _.showIn(ctx, 0)))
-          .mkString("forall ", ", ", ".")} ${body.showIn(ctx, 1)}",
+          .mkString("forall ", " ", ".")} ${body.showIn(ctx, 1)}",
         outerPrec > 1 // or 0?
       )
     case Constrained(b, bs, ws) => parensIf(s"${b.showIn(ctx, 0)}\n  where${bs.map {

@@ -13,7 +13,7 @@ def f e = case e of
 
 :ns
 f
-//│ res: forall 'a, 'z, 'b, 'y, 'c, 'd. 'c -> ('y | 'z | 'd)
+//│ res: forall 'a 'z 'b 'y 'c 'd. 'c -> ('y | 'z | 'd)
 //│   where
 //│     'c <: #Foo & 'a | (#Foo & 'b | 'd & ~#Foo) & ~#Foo
 //│     'b <: {z: 'z}

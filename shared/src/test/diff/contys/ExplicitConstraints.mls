@@ -116,7 +116,7 @@ let r = f(1)
 //│     int <: 'b -> 'b
 :ns
 r
-//│ res: forall 'c, 'a. 'c
+//│ res: forall 'c 'a. 'c
 //│   where
 //│     'c :> forall 'b. ('a
 //│   where

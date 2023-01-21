@@ -166,13 +166,13 @@ f 42 // Boom!
 
 
 def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
-//│ swapWith: (forall 'x, 'y. ('x, 'y,) -> ('y, 'x,)) -> ('a, 'b,) -> ('b, 'a,)
+//│ swapWith: (forall 'x 'y. ('x, 'y,) -> ('y, 'x,)) -> ('a, 'b,) -> ('b, 'a,)
 //│         = <missing implementation>
 
 def swapWith f (a, b) = f ((a, b))
 //│ (('a, 'b,) -> 'c) -> ('a, 'b,) -> 'c
 //│   <:  swapWith:
-//│ (forall 'x, 'y. ('x, 'y,) -> ('y, 'x,)) -> ('a, 'b,) -> ('b, 'a,)
+//│ (forall 'x 'y. ('x, 'y,) -> ('y, 'x,)) -> ('a, 'b,) -> ('b, 'a,)
 //│         = [Function: swapWith]
 
 

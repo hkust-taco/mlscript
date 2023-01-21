@@ -149,7 +149,7 @@ def z =
 //│ ((anything -> nothing) -> anything) -> error
 //│   <:  z:
 //│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d, ?e. ?e -> ?d <: (forall ?f, ?g, ?h, ?i, ?j. ?j -> ?g) -> ?k` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?d ?e. ?e -> ?d <: (forall ?f ?g ?h ?i ?j. ?j -> ?g) -> ?k` exceeded recursion depth limit (250)
 //│ ║  l.148: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.

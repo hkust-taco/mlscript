@@ -8,9 +8,9 @@ data type Either l r of
 //│ Desugared: type alias Either[l, r] = Left[l, r] | Right[l, r]
 //│ Desugared: class Left[l, r]: {l: l}
 //│ Desugared: class Right[l, r]: {r: r}
-//│ Desugared: def Left: forall l, r. l -> Left[l, r]
+//│ Desugared: def Left: forall l r. l -> Left[l, r]
 //│ AST: Def(false, Left, PolyType(List(Left(TypeName(l)), Left(TypeName(r))),Function(TypeName(l),AppliedType(TypeName(Left),List(TypeName(l), TypeName(r))))), true)
-//│ Desugared: def Right: forall l, r. r -> Right[l, r]
+//│ Desugared: def Right: forall l r. r -> Right[l, r]
 //│ AST: Def(false, Right, PolyType(List(Left(TypeName(l)), Left(TypeName(r))),Function(TypeName(r),AppliedType(TypeName(Right),List(TypeName(l), TypeName(r))))), true)
 //│ Defined type alias Either[+l, +r]
 //│ Defined class Left[+l, ±r]

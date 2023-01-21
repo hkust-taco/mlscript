@@ -55,9 +55,9 @@ rec def eval1_stub e = case e of {
   | Add -> eval1_stub e.lhs
   | _ -> 0
   }
-//│ eval1_stub: forall 'a, 'lhs, 'b, 'c, 'lhs0, 'd, 'eval1_stub, 'e. 'eval1_stub
+//│ eval1_stub: forall 'a 'lhs 'b 'c 'lhs0 'd 'eval1_stub 'e. 'eval1_stub
 //│   where
-//│     'eval1_stub := forall 'lhs1, 'f, 'g, 'h, 'i, 'j. 'i -> (1 | 'j | 0)
+//│     'eval1_stub := forall 'lhs1 'f 'g 'h 'i 'j. 'i -> (1 | 'j | 0)
 //│     'j :> 'b
 //│     'b :> forall 'k. 1 | 'k | 0
 //│     'k :> 'b
@@ -94,9 +94,9 @@ rec def eval1 k e = case e of {
 
 :ns
 eval1
-//│ res: forall 'a, 'eval1, 'b, 'c, 'd, 'e, 'rhs, 'f, 'g, 'val, 'val0, 'h, 'lhs, 'i, 'j, 'lhs0, 'k, 'l, 'rhs0, 'lhs1, 'm, 'rhs1, 'n, 'o, 'p. 'eval1
+//│ res: forall 'a 'eval1 'b 'c 'd 'e 'rhs 'f 'g 'val 'val0 'h 'lhs 'i 'j 'lhs0 'k 'l 'rhs0 'lhs1 'm 'rhs1 'n 'o 'p. 'eval1
 //│   where
-//│     'eval1 := forall 'q, 'r, 's. 'q -> (forall 't, 'u, 'v, 'w, 'x, 'lhs2, 'val1, 'y, 'rhs2. 'y -> ('val1 | 'x | 'u))
+//│     'eval1 := forall 'q 'r 's. 'q -> (forall 't 'u 'v 'w 'x 'lhs2 'val1 'y 'rhs2. 'y -> ('val1 | 'x | 'u))
 //│     'u :> 's
 //│     'x :> int
 //│     'y <: #Lit & 'v | (#Add & 't | 'w & ~#Add) & ~#Lit
@@ -164,7 +164,7 @@ error: ('a & ~add) -> 'a
 
 :ns
 def eval1_ty_ugly: ('a -> int) -> (Lit | Add['b] | 'a & ~Lit & ~Add[?] as 'b) -> int
-//│ eval1_ty_ugly: forall 'a, 'b. ('a -> int) -> 'b -> int
+//│ eval1_ty_ugly: forall 'a 'b. ('a -> int) -> 'b -> int
 //│   where
 //│     'b := Lit | Add['b] | 'a & ~Lit & ~Add[?]
 //│              = <missing implementation>
@@ -193,7 +193,7 @@ def eval1_ty_ugly = eval1
 
 :ns
 def eval1_ty: ('a -> int) -> (Lit | Add['b] | 'a & ~lit & ~add as 'b) -> int
-//│ eval1_ty: forall 'b, 'a. ('a -> int) -> 'b -> int
+//│ eval1_ty: forall 'b 'a. ('a -> int) -> 'b -> int
 //│   where
 //│     'b := Lit | Add['b] | 'a & ~#Lit & ~#Add
 //│         = <missing implementation>
@@ -467,9 +467,9 @@ eval2 done e1
 //│ subtyping calls  : 1325
 
 e2 = add (lit 1) (nega e1)
-//│ e2: Add['E] with {lhs: Lit & {val: 1}, rhs: Nega[forall 'E0, 'E1. Add['E0] with {lhs: Lit & {val: 1}, rhs: Add['E1] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}]}
+//│ e2: Add['E] with {lhs: Lit & {val: 1}, rhs: Nega[forall 'E0 'E1. Add['E0] with {lhs: Lit & {val: 1}, rhs: Add['E1] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}]}
 //│   where
-//│     'E :> Lit & {val: 1} | Nega[forall 'E0, 'E1. Add['E0] with {lhs: Lit & {val: 1}, rhs: Add['E1] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}]
+//│     'E :> Lit & {val: 1} | Nega[forall 'E0 'E1. Add['E0] with {lhs: Lit & {val: 1}, rhs: Add['E1] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}]
 //│     'E0 :> (Add['E1] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}
 //│     'E1 :> Lit & {val: 2 | 3}
 //│   = Add {
@@ -611,7 +611,7 @@ prettier2 done eval1 e1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> (forall ?b, ?c. ?val | ?b | ?c)` is not an instance of type `number`
+//│ ╟── function of type `?a -> (forall ?b ?c. ?val | ?b | ?c)` is not an instance of type `number`
 //│ ║  l.81: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
 //│ ║  l.82: 	  | Lit -> e.val
@@ -657,7 +657,7 @@ prettier2 done eval2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> (forall ?b, ?c. ?val | ?b | ?c)` is not an instance of type `number`
+//│ ╟── function of type `?a -> (forall ?b ?c. ?val | ?b | ?c)` is not an instance of type `number`
 //│ ║  l.81: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
 //│ ║  l.82: 	  | Lit -> e.val
@@ -683,7 +683,7 @@ prettier2 done eval2 e1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> (forall ?b, ?c. ?val | ?b | ?c)` is not an instance of type `number`
+//│ ╟── function of type `?a -> (forall ?b ?c. ?val | ?b | ?c)` is not an instance of type `number`
 //│ ║  l.81: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
 //│ ║  l.82: 	  | Lit -> e.val
@@ -709,7 +709,7 @@ prettier2 done eval2 e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> (forall ?b, ?c. ?val | ?b | ?c)` is not an instance of type `number`
+//│ ╟── function of type `?a -> (forall ?b ?c. ?val | ?b | ?c)` is not an instance of type `number`
 //│ ║  l.81: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
 //│ ║  l.82: 	  | Lit -> e.val
@@ -735,7 +735,7 @@ prettier2 done eval2 d2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 d2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> (forall ?b, ?c. ?val | ?b | ?c)` is not an instance of type `number`
+//│ ╟── function of type `?a -> (forall ?b ?c. ?val | ?b | ?c)` is not an instance of type `number`
 //│ ║  l.81: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
 //│ ║  l.82: 	  | Lit -> e.val
@@ -761,7 +761,7 @@ prettier2 done eval1 e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> (forall ?b, ?c. ?val | ?b | ?c)` is not an instance of type `number`
+//│ ╟── function of type `?a -> (forall ?b ?c. ?val | ?b | ?c)` is not an instance of type `number`
 //│ ║  l.81: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
 //│ ║  l.82: 	  | Lit -> e.val

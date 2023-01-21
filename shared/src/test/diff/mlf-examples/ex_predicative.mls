@@ -20,7 +20,7 @@ def imp' z =
   (fun y -> y z y)
 //│ imp: Bot -> nothing
 //│    = [Function: imp]
-//│ imp': ('a -> 'a -> (forall 'b, 'c. ('a -> 'b -> 'c & 'b) -> 'c) -> 'd & 'a) -> 'd
+//│ imp': ('a -> 'a -> (forall 'b 'c. ('a -> 'b -> 'c & 'b) -> 'c) -> 'd & 'a) -> 'd
 //│     = [Function: imp$]
 
 
@@ -89,7 +89,7 @@ def t y a = (fun x -> x (x y)) ((fun z -> z) (fun x -> a x))
 (fun x -> fun y -> x y) (fun y -> fun x -> x y) delta'
 //│ res: ((Sid -> Sid) -> 'a) -> 'a
 //│    = [Function (anonymous)]
-//│ res: ((forall 'a, 'b. ('a -> 'b & 'a) -> 'b) -> 'c) -> 'c
+//│ res: ((forall 'a 'b. ('a -> 'b & 'a) -> 'b) -> 'c) -> 'c
 //│    = [Function (anonymous)]
 
 // (* Rank 8 *)
@@ -206,23 +206,23 @@ def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) 
 def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
 //│ t2: 'a -> 'b -> ('c -> 'd
 //│   where
-//│     forall 'e, 'f, 'g. ('e -> 'f & 'g -> 'e) -> 'g -> 'f <: (forall 'h, 'i, 'j. 'h -> (('i -> (forall 'k, 'l, 'm, 'n. 'm -> ('l -> 'k
+//│     forall 'e 'f 'g. ('e -> 'f & 'g -> 'e) -> 'g -> 'f <: (forall 'h 'i 'j. 'h -> (('i -> (forall 'k 'l 'm 'n. 'm -> ('l -> 'k
 //│   where
 //│     'm <: 'n -> 'k
 //│     'h <: (forall 'o. anything -> 'o -> 'o) -> 'm -> 'l -> 'n)) -> 'j) -> 'j
 //│   where
 //│     'h <: (forall 'p. anything -> 'p -> 'p) -> 'i)) -> (forall 'q. ((forall 'r. anything -> 'r -> 'r) -> (forall 's. anything -> 's -> 's) -> 'q) -> 'q) -> (forall 't. 't -> anything -> 't) -> 'u & 'v -> 'c -> 'd
-//│     forall 'w, 'x. ((forall 'y. anything -> anything -> 'y -> 'y) -> (forall 'z. 'z -> anything -> 'z) -> (forall 'a1, 'b1. ('a1 -> 'b1) -> 'a1 -> 'b1) -> (forall 'c1, 'd1, 'e1, 'f1, 'g1. 'e1 -> ('f1 -> 'c1
+//│     forall 'w 'x. ((forall 'y. anything -> anything -> 'y -> 'y) -> (forall 'z. 'z -> anything -> 'z) -> (forall 'a1 'b1. ('a1 -> 'b1) -> 'a1 -> 'b1) -> (forall 'c1 'd1 'e1 'f1 'g1. 'e1 -> ('f1 -> 'c1
 //│   where
-//│     'x <: (forall 'h1, 'h, 'i1. 'h -> (('i1 -> (forall 'k, 'l, 'm, 'n. 'm -> ('l -> 'k
+//│     'x <: (forall 'h1 'h 'i1. 'h -> (('i1 -> (forall 'k 'l 'm 'n. 'm -> ('l -> 'k
 //│   where
 //│     'm <: 'n -> 'k
 //│     'h <: (forall 'o. anything -> 'o -> 'o) -> 'm -> 'l -> 'n)) -> 'h1) -> 'h1
 //│   where
 //│     'h <: (forall 'j1. anything -> 'j1 -> 'j1) -> 'i1)) -> (forall 'q. ((forall 'r. anything -> 'r -> 'r) -> (forall 's. anything -> 's -> 's) -> 'q) -> 'q) -> (forall 'k1. 'k1 -> anything -> 'k1) -> 'g1 & 'd1 -> 'f1 -> 'c1
-//│     forall 'l1, 'm1. ((forall 'n1. anything -> anything -> 'n1 -> 'n1) -> (forall 'o1. 'o1 -> anything -> 'o1) -> (forall 'p1, 'q1. ('p1 -> 'q1) -> 'p1 -> 'q1) -> (forall 'r1, 's1, 't1, 'u1, 'v1. 'u1 -> ('v1 -> 't1
+//│     forall 'l1 'm1. ((forall 'n1. anything -> anything -> 'n1 -> 'n1) -> (forall 'o1. 'o1 -> anything -> 'o1) -> (forall 'p1 'q1. ('p1 -> 'q1) -> 'p1 -> 'q1) -> (forall 'r1 's1 't1 'u1 'v1. 'u1 -> ('v1 -> 't1
 //│   where
-//│     'l1 <: (forall 'w1, 'h, 'x1. 'h -> (('x1 -> (forall 'k, 'l, 'm, 'n. 'm -> ('l -> 'k
+//│     'l1 <: (forall 'w1 'h 'x1. 'h -> (('x1 -> (forall 'k 'l 'm 'n. 'm -> ('l -> 'k
 //│   where
 //│     'm <: 'n -> 'k
 //│     'h <: (forall 'o. anything -> 'o -> 'o) -> 'm -> 'l -> 'n)) -> 'w1) -> 'w1
@@ -268,7 +268,7 @@ def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) 
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ t2: (nothing -> 'a -> anything) -> error
 //│   where
-//│     'a :> forall 'b, 'c, 'd. ((forall 'e. anything -> 'e -> 'e) -> (forall 'f. anything -> 'f -> 'f) -> 'b & (forall 'g. anything -> 'g -> 'g) -> (forall 'h. ('a -> 'h) -> 'a -> 'h) -> 'c & 'd) -> (anything -> 'd | 'c | 'b)
+//│     'a :> forall 'b 'c 'd. ((forall 'e. anything -> 'e -> 'e) -> (forall 'f. anything -> 'f -> 'f) -> 'b & (forall 'g. anything -> 'g -> 'g) -> (forall 'h. ('a -> 'h) -> 'a -> 'h) -> 'c & 'd) -> (anything -> 'd | 'c | 'b)
 //│        <: (forall 'i. anything -> 'i -> 'i) -> nothing -> nothing -> anything & (forall 'j. anything -> 'j -> 'j) -> anything
 //│   = [Function: t23]
 
@@ -362,11 +362,11 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 (fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ res: 'a -> 'b
 //│   where
-//│     forall 'c, 'd, 'e. ('c -> 'e
+//│     forall 'c 'd 'e. ('c -> 'e
 //│   where
-//│     forall 'f, 'g, 'h. ('h -> 'g
+//│     forall 'f 'g 'h. ('h -> 'g
 //│   where
-//│     forall 'i, 'j, 'k. ('i -> 'k
+//│     forall 'i 'j 'k. ('i -> 'k
 //│   where
 //│     forall 'l. 'l -> anything -> 'l <: 'i -> 'j & 'j -> 'k) <: 'h -> 'f & 'f -> 'g) <: 'c -> 'd & 'd -> 'e) <: 'a -> 'm & 'm -> 'b
 //│    = [Function (anonymous)]

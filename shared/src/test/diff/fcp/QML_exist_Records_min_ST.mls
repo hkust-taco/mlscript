@@ -22,7 +22,7 @@ def stepImpl arrImpl = { fold = fun f ->  arrImpl.fold f }
 
 // :d
 def stepImpl2 arr = arr stepImpl
-//│ stepImpl2: ((forall 'a, 'b. {fold: 'a -> 'b} -> {fold: 'a -> 'b}) -> 'c) -> 'c
+//│ stepImpl2: ((forall 'a 'b. {fold: 'a -> 'b} -> {fold: 'a -> 'b}) -> 'c) -> 'c
 //│          = [Function: stepImpl2]
 
 def step: Arrays -> Arrays
@@ -32,7 +32,7 @@ def step: Arrays -> Arrays
 // :d
 :e
 def step arr f = f (stepImpl2 arr)
-//│ ((forall 'a, 'b. {fold: 'a -> 'b} -> {fold: 'a -> 'b}) -> 'c) -> ('c -> 'd) -> 'd
+//│ ((forall 'a 'b. {fold: 'a -> 'b} -> {fold: 'a -> 'b}) -> 'c) -> ('c -> 'd) -> 'd
 //│   <:  step:
 //│ Arrays -> Arrays
 //│ ╔══[ERROR] Type mismatch in def definition:

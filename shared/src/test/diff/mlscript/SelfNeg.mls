@@ -16,7 +16,7 @@ foo
 
 :ns
 r = foo (fun a -> fun f -> f a)
-//│ r: forall 'b, 'a, 'c, 'd. 'b
+//│ r: forall 'b 'a 'c 'd. 'b
 //│   where
 //│     'b :> 'a -> 'a
 //│     'a <: 'd & 'c
@@ -56,7 +56,7 @@ def foo: ('a -> (~'a -> anything) -> anything) -> MutArray['a]
 
 :ns
 r = foo (fun a -> fun f -> f a)
-//│ r: forall 'a, 'b, 'c. 'c
+//│ r: forall 'a 'b 'c. 'c
 //│   where
 //│     'c :> MutArray['a]
 //│     'a <: 'b
@@ -109,9 +109,9 @@ r = bar (fun x -> (x, x + 1, not x, x x))
 
 :ns
 r
-//│ res: forall 'b, 'a, 'c, 'd. 'b
+//│ res: forall 'b 'a 'c 'd. 'b
 //│   where
-//│     'b :> forall 'e, 'f. ('c, 'e, 'f, 'd,)
+//│     'b :> forall 'e 'f. ('c, 'e, 'f, 'd,)
 //│     'f :> bool
 //│     'e :> int
 //│     'c :> 'a & int & ~'a

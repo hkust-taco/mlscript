@@ -60,10 +60,10 @@ id1 id
 //│ res: ('a & 'b) -> 'b | error | 'c
 //│   where
 //│     'a <: 'd & 'b
-//│     'd :> forall 'a, 'b. ('a & 'b) -> 'b
+//│     'd :> forall 'a 'b. ('a & 'b) -> 'b
 //│        <: 'e
 //│     'b :> 'e
-//│     'e :> forall 'a, 'b. ('a & 'b) -> 'b
+//│     'e :> forall 'a 'b. ('a & 'b) -> 'b
 //│        <: 'd -> 'e & 'c
 //│    = <no result>
 //│      id1 and choose are not implemented
