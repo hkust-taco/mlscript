@@ -80,6 +80,8 @@ class NormalForms extends TyperDatatypes { self: Typer =>
             S(Overload(ft :: alts)(noProv/*TODO*/))
           case (S(ft: FunctionType), Overload(alts)) =>
             S(Overload(ft :: alts)(noProv/*TODO*/))
+          case (S(Overload(alts1)), Overload(alts2)) =>
+            S(Overload(alts1 ::: alts2)(noProv)) // TODO(fcp) merge better?
           case (S(TupleType(fs0)), tup @ TupleType(fs1)) if fs0.size === fs1.size =>
             if (expandTupleFields)
               r1Final = RecordType(mergeSortedMap(r1Final.fields, tup.toRecord.fields)(_ && _).toList)(noProv)
@@ -108,7 +110,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
           case (S(b), w: Without) => S(Without(b & w, ssEmp)(noProv))
           case (S(w: Without), b) => S(Without(w & b, ssEmp)(noProv))
             
-          case (S(_), _) => N
+          case (S(_), _) => N // TODO(fcp) double-check!
           case (N, tup: TupleType) =>
             if (expandTupleFields)
               r1Final = RecordType(mergeSortedMap(r1Final.fields, tup.toRecord.fields)(_ && _).toList)(noProv)
@@ -269,12 +271,13 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         S(RhsBases(ps, S(L(ArrayType(ar1 || ar2)(noProv))), trs))
       case (RhsBases(_, S(L(_: Without)), _), _) | (_, _: Without) => die // Without should be handled elsewhere
       case (RhsBases(ps, S(L(bt)), trs), _) if (that === bt) => S(this)
+      
+      // TODO: do we really still have `(A -> B) | (C -> D) =:= (A & C) -> (B | D)`?
       case (RhsBases(ps, S(L(FunctionType(l0, r0))), trs), FunctionType(l1, r1)) =>
         S(RhsBases(ps, S(L(FunctionType(l0 & l1, r0 | r1)(noProv))), trs))
       
-      // TODO: do we really still have `(A -> B) | (C -> D) =:= (A & C) -> (B | D)`?
       case (RhsBases(_, S(L(_: Overload)), _), _) | (_, _: Overload) =>
-        N // TODO: maybe we can still merge with functions here? (see note above)
+        N // TODO(fcp): Correct?! maybe we can still merge with functions here? (see note above)
       
       case (RhsBases(ps, bf, trs), tt: AbstractTag) =>
         S(RhsBases(if (ps.contains(tt)) ps else tt :: ps, bf, trs))
@@ -520,7 +523,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       thatCs.map(DNF(newLvl, cons ::: that.cons, thisCs) & _).foldLeft(DNF.extr(false))(_ | _)
     }
     private def levelWith(that: DNF)(implicit ctx: Ctx): (Level, Ls[Conjunct], Ls[Conjunct]) = {
-        println(s"--- $levelBelowPolym ${that.polymLevel} ${that.levelBelow(polymLevel)}")
+        // println(s"--- $levelBelowPolym ${that.polymLevel} ${that.levelBelow(polymLevel)}")
         
         // * Some easy cases to avoid having to adjust levels when we can:
         if (levelBelowPolym <= that.polymLevel && that.levelBelowPolym <= polymLevel)
@@ -545,7 +548,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     }
     def | (that: DNF)(implicit ctx: Ctx, etf: ExpandTupleFields): DNF = {
       val (newLvl, thisCs, thatCs) = levelWith(that)
-      println(s"-- $polymLevel ${that.polymLevel} $newLvl")
+      // println(s"-- $polymLevel ${that.polymLevel} $newLvl")
       thatCs.foldLeft(DNF(newLvl,
         cons ::: that.cons, // FIXME?!
         // ???,
