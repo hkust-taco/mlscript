@@ -742,13 +742,13 @@ trait TypeSimplifier { self: Typer =>
     
     val semp = Set.empty[TV]
     
-    def mergeTransform(pol: Bool, polmap: PolMap, tv: TV, parent: Set[TV], canDistribForall: Opt[Level]): ST =
-      // transform(merge(pol, if (pol) tv.lowerBounds else tv.upperBounds), S(pol), parent)
+    def mergeTransform(pol: Bool, polmap: PolMap, tv: TV, parents: Set[TV], canDistribForall: Opt[Level]): ST =
+      // transform(merge(pol, if (pol) tv.lowerBounds else tv.upperBounds), S(pol), parents)
       transform(tv.assignedTo match {
         case S(ty) => ty
         case N => merge(pol,if (pol) tv.lowerBounds else tv.upperBounds)
-      // }, PolMap(S(pol)), parent)
-      }, polmap.at(tv.level, pol), parent, canDistribForall)
+      // }, PolMap(S(pol)), parents)
+      }, polmap.at(tv.level, pol), parents, canDistribForall)
     
     def transform(st: SimpleType, pol: PolMap, parents: Set[TV], canDistribForall: Opt[Level] = N): SimpleType =
           trace(s"transform[${printPol(pol)}] $st   (${parents.mkString(", ")})  $pol  $canDistribForall") {
@@ -847,7 +847,7 @@ trait TypeSimplifier { self: Typer =>
                       println(s"NEW SUBS $tv -> N")
                       varSubst += tv -> N
                       // transform(merge(p, bounds), PolMap(polo), parents)
-                      transform(merge(p, bounds), pol, parents, canDistribForall)
+                      transform(merge(p, bounds), pol, parents + tv, canDistribForall)
                     }
                     else setBounds
                   case _ => setBounds
