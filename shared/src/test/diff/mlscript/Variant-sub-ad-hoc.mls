@@ -34,8 +34,6 @@ class Plus
 //│ Defined class Var
 //│ Defined class Plus
 
-// * Note: had to increase fuel and depth limit for this case...
-// * why does it seem to take more steps now?
 :stats
 rec def evalOpt = fun x -> case x of {
   | Lit ->

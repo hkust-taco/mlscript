@@ -48,6 +48,7 @@ trait TypeSimplifier { self: Typer =>
           // * If the variable is polar, we turn the `assignedTo` into a simple bound.
           // *  I'm not actually sure if that's useful/a good idea.
           // *  Maybe we should process with the appropriate parent, but still generate an `assignedTo`?
+          // * (Tried it, and it makes almost no difference in the end result.)
           allVarPols(tv) match {
             case S(true) =>
               nv.lowerBounds =
