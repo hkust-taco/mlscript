@@ -472,16 +472,16 @@ sz = s zero
 
 :ns
 sz
-//│ res: forall 'a 'b 'c 'd 'N. 'c
+//│ res: forall 'a 'b 'c 'N 'd. 'a
 //│   where
-//│     'c :> forall 'e 'f 'g. 'e -> (forall 'h 'i. 'h -> 'i)
+//│     'a :> forall 'e 'f 'g. 'e -> (forall 'h 'i. 'h -> 'i)
 //│     'i :> 'g
-//│     'h <: 'a
-//│     'a <: 'N
-//│     'e <: 'f -> 'g & 'd
-//│     'd <: 'N -> 'N
-//│     'N <: 'b
-//│     'f :> 'b
+//│     'h <: 'c
+//│     'c <: 'N
+//│     'e <: 'f -> 'g & 'b
+//│     'b <: 'N -> 'N
+//│     'N <: 'd
+//│     'f :> 'd
 //│    = [Function (anonymous)]
 
 sz: ChurchInt
@@ -666,7 +666,7 @@ rec def to_ch_A1 n =
 //│ ╟── from reference:
 //│ ║  l.265: 	def s n f x = f (n f x)
 //│ ╙──       	                     ^
-//│ to_ch_A1: int -> (forall 'a. ('N -> ('N & 'a)) -> (forall 'b. ('N & 'b) -> ('b | 'a)))
+//│ to_ch_A1: int -> (anything -> nothing) -> nothing -> nothing
 //│         = [Function: to_ch_A1]
 
 // * nope
@@ -832,7 +832,7 @@ rec def to_chD n =
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ╙──     	                        ^^
-//│ to_chD: anything -> ('M -> 'M) -> 'M -> 'M
+//│ to_chD: anything -> (anything -> nothing) -> nothing -> anything
 //│       = [Function: to_chD]
 
 
@@ -936,10 +936,20 @@ to_church_ty = to_ch_simplif
 //│ int -> ChurchInt
 //│             = [Function: to_ch_simplif1]
 
+:e
 to_church_ty = to_ch_A1
-//│ int -> ('N -> ('N & 'a)) -> ('N & 'a) -> 'a
+//│ int -> (anything -> nothing) -> nothing -> nothing
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.940: 	to_church_ty = to_ch_A1
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `'N`
+//│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║       	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.8: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ╙──     	                        ^^
 //│             = [Function: to_ch_A1]
 
 // * Now works

@@ -108,44 +108,44 @@ rec def find table key =
   if is_empty table then None
   else if eq (head table)._1 key then Some (head table)._2
   else find (tail table) key
-//│ find: List[{_1: anything, _2: 'a & 'b}] -> anything -> (Some['a] | None | Some['b])
+//│ find: List[{_1: anything, _2: 'a}] -> anything -> (None | Some['a])
 //│     = [Function: find]
 rec def find table key =
   if is_empty table then None
   else let ht = head table in if eq ht._1 key then Some ht._2
   else find (tail table) key
-//│ find: List[{_1: anything, _2: 'a & 'b}] -> anything -> (Some['a] | None | Some['b])
+//│ find: List[{_1: anything, _2: 'a}] -> anything -> (None | Some['a])
 //│     = [Function: find1]
 :NoRecursiveTypes
 
 :ns
 find
-//│ res: forall 'a 'a0 'b 'c 'd 'find 'a1 'e 'a2 'f 'g. 'find
+//│ res: forall 'a 'b 'a0 'c 'a1 'a2 'd 'e 'f 'g 'find 'h. 'find
 //│   where
-//│     'find := forall 'h 'i 'a3 'j 'a4 'a5. 'h -> (forall 'val 'k 'l 'm 'a6. 'k -> 'm)
-//│     'm :> (forall 'n. 'n) | (forall 'o. 'o) | 'e
-//│     'e :> forall 'p 'val0 'a7. 'p
-//│     'p :> (forall 'n. 'n) | (forall 'q. 'q) | 'e
-//│     'q :> #Some & {val: 'val0, Some#a = 'a7}
-//│     'val0 :> 'f
-//│           <: 'a7
-//│     'a7 :> 'f
-//│     'o :> #Some & {val: 'val, Some#a = 'a6}
-//│     'val :> 'i
-//│          <: 'a6
-//│     'a6 :> 'i
-//│     'n :> #None
-//│     'k <: 'b & 'l
-//│     'l :> 'j
-//│     'b <: 'g
-//│     'g <: 'b & 'c
+//│     'find := 'e -> (forall 'i 'a3 'j 'val 'k. 'k -> 'i)
+//│     'i :> (forall 'l. 'l) | (forall 'm. 'm) | 'h
+//│     'h :> forall 'n 'val0 'a4. 'n
+//│     'n :> (forall 'l. 'l) | (forall 'o. 'o) | 'h
+//│     'o :> #Some & {val: 'val0, Some#a = 'a4}
+//│     'val0 :> 'g
+//│           <: 'a4
+//│     'a4 :> 'g
+//│     'm :> #Some & {val: 'val, Some#a = 'a3}
+//│     'val :> 'g
+//│          <: 'a3
+//│     'a3 :> 'g
+//│     'l :> #None
+//│     'k <: 'f & 'j
+//│     'j :> 'd
+//│     'f <: 'b
+//│     'b <: 'f & 'c
 //│     'c :> 'd
-//│     'h <: List['a3] & List['a5] & List['a4]
-//│     'a5 <: {_2: 'i} & {_1: 'j}
-//│     'a3 <: 'a0
-//│     'a0 <: 'a1 & 'a2 & 'a
-//│     'a <: 'a0
-//│     'a2 <: {_2: 'f} & {_1: 'd}
+//│     'e :> List['a1]
+//│        <: List['a2] & List['a0] & List['a]
+//│     'a1 :> 'a2
+//│         <: 'a & 'a0 & 'a2
+//│     'a2 <: 'a & 'a0
+//│     'a0 <: {_2: 'g} & {_1: 'd}
 //│    = [Function: find1]
 
 :ng
@@ -221,7 +221,7 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│      = Nil {}
 //│ table: List[("one", forall 'a 'b. ('a -> 'b) -> 'a -> 'b,)]
 //│      = Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
-//│ table: List[("one" | "two", forall 'a 'b 'c. ('a -> 'b & 'b -> 'c & 'a -> 'c) -> 'a -> 'c,)]
+//│ table: List[("one" | "two", forall 'a 'b 'c. ('b -> 'c & 'c -> 'a & 'b -> 'a) -> 'b -> 'a,)]
 //│      = Cons {
 //│          head: [ 'two', [Function (anonymous)] ],
 //│          tail: Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }

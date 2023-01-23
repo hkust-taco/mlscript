@@ -249,20 +249,19 @@ fun mapPartition(f, xs) =
       let r = res.snd
       Left(v)  then Pair(Cons(v, l), r)
       Right(v) then Pair(l, Cons(v, r))
-//│ mapPartition: ('head -> (Left & {leftValue: 'leftValue} | Right & {rightValue: 'rightValue}) & 'head0 -> (Left | Right) & 'head1 -> (Left & {leftValue: 'leftValue0} | Right & {rightValue: 'rightValue0}), (Cons & 'a | Nil) & (Cons & {head: 'head, tail: 'tail} | Nil),) -> (Pair & {fst: Cons & {head: 'leftValue, tail: 'fst} | 'fst, snd: Cons & {head: 'rightValue, tail: 'tail0} | 'tail0})
+//│ mapPartition: ('head -> (Left & {leftValue: 'leftValue} | Right & {rightValue: 'rightValue}), 'tail,) -> (Pair & {fst: 'fst, snd: 'tail0})
 //│   where
-//│     'tail0 :> Cons & {head: 'rightValue0, tail: 'tail0} | Nil
-//│     'fst :> Cons & {head: 'leftValue0, tail: 'fst} | Nil
-//│     'a <: {head: 'head0, tail: 'tail}
-//│     'tail <: Cons & {head: 'head1, tail: 'tail} & 'a | Nil
+//│     'tail0 :> Cons & {head: 'rightValue, tail: 'tail0} | Nil
+//│     'fst :> Nil | Cons & {head: 'leftValue, tail: 'fst}
+//│     'tail <: Cons & {head: 'head, tail: 'tail} | Nil
 //│             = [Function: mapPartition]
 
 // FIXME: Something wrong with code generation.
 mapPartition(x => if x % 2 == 0 then Left(x) else Right(x), zeroToThree)
-//│ res: Pair & {fst: Cons & {head: 0, tail: 'fst} | 'fst | Nil, snd: Cons & {head: 0, tail: 'tail} | Nil | 'tail}
+//│ res: Pair & {fst: 'fst, snd: 'snd}
 //│   where
-//│     'tail :> forall 'tail. Cons & {head: 1 | 2 | 3, tail: 'tail} | Nil
-//│     'fst :> forall 'fst. Cons & {head: 1 | 2 | 3, tail: 'fst} | Nil
+//│     'snd :> Cons & {head: 0 | 1 | 2 | 3, tail: 'snd} | Nil
+//│     'fst :> Nil | Cons & {head: 0 | 1 | 2 | 3, tail: 'fst}
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 

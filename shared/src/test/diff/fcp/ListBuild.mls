@@ -280,7 +280,7 @@ rec def fold f z xs =
   | undefined -> z
   | _ -> (fun ((h, t)) -> f h (fold f z t)) ht
   }
-//│ fold: ('A -> 'a -> 'b & 'A -> 'a -> 'a) -> ('a & 'b) -> Ls['A] -> 'b
+//│ fold: ('A -> ('a | 'b) -> 'b) -> 'a -> Ls['A] -> ('a | 'b)
 //│     = [Function: fold]
 
 fold add 0 xs0

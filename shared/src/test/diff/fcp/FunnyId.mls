@@ -28,8 +28,63 @@ id_ty = id
 // * "we get `'a <: 'a -> anything` because `id` is passed for `x`
 // * and we can't infer polymorphic recursion, so all `x` should have the same type"
 rec def id x = let tmp = id id x in x
-//│ id: 'a -> 'a
+//│ id: 'id
+//│   where
+//│     'id :> 'a -> 'a
+//│     'a :> 'id
+//│        <: 'a -> anything
 //│   = [Function: id1]
+
+:e
+:re
+id 1
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.40: 	id 1
+//│ ║        	^^^^
+//│ ╟── integer literal of type `1` is not a function
+//│ ║  l.40: 	id 1
+//│ ║        	   ^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.30: 	rec def id x = let tmp = id id x in x
+//│ ║        	                         ^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.30: 	rec def id x = let tmp = id id x in x
+//│ ╙──      	                                    ^
+//│ res: 'a -> 'a | 1 | error | 'b
+//│   where
+//│     'a :> 'a -> 'a | 1
+//│        <: 'a -> anything & 'b
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
+
+:e
+id_ty = id
+//│ 'id
+//│   where
+//│     'id :> 'a -> 'a
+//│     'a :> 'id
+//│        <: 'a -> anything
+//│   <:  id_ty:
+//│ 'a -> 'a
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.61: 	id_ty = id
+//│ ║        	^^^^^^^^^^
+//│ ╟── type `'a` is not a function
+//│ ║  l.5: 	def id_ty: forall 'a. 'a -> 'a
+//│ ║       	                  ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.30: 	rec def id x = let tmp = id id x in x
+//│ ║        	                         ^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.30: 	rec def id x = let tmp = id id x in x
+//│ ╙──      	                                    ^
+//│      = [Function: id1]
+
+// * Note: the above seem to work with :precise-rec-typing
+:precise-rec-typing
+rec def id x = let tmp = id id x in x
+//│ id: 'a -> 'a
+//│   = [Function: id2]
 
 :re
 id 1
@@ -41,62 +96,48 @@ id_ty = id
 //│ 'a -> 'a
 //│   <:  id_ty:
 //│ 'a -> 'a
-//│      = [Function: id1]
+//│      = [Function: id2]
 
 
 // * Not sure why we get a cycle in this slight variation!
 :e
 rec def id x = if true then x else id id x
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.49: 	rec def id x = if true then x else id id x
-//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.49: 	rec def id x = if true then x else id id x
-//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.49: 	rec def id x = if true then x else id id x
-//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.49: 	rec def id x = if true then x else id id x
-//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.104: 	rec def id x = if true then x else id id x
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ id: 'id
 //│   where
-//│     'id :> forall 'a. ('a & 'b) -> 'a
-//│     'a :> 'c
-//│     'c :> 'id
-//│        <: 'b -> 'c
+//│     'id :> 'a -> 'b
+//│     'a :> 'id
+//│        <: 'b
 //│     'b :> 'id
-//│        <: 'c
-//│   = [Function: id2]
+//│        <: 'a -> 'b
+//│   = [Function: id3]
 
 :e
 id_ty = id
 //│ 'id
 //│   where
-//│     'id :> forall 'a. ('a & 'b) -> 'a
-//│     'a :> 'c
-//│     'c :> 'id
-//│        <: 'b -> 'c
+//│     'id :> 'a -> 'b
+//│     'a :> 'id
+//│        <: 'b
 //│     'b :> 'id
-//│        <: 'c
+//│        <: 'a -> 'b
 //│   <:  id_ty:
 //│ 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.77: 	id_ty = id
-//│ ║        	^^^^^^^^^^
+//│ ║  l.119: 	id_ty = id
+//│ ║         	^^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.5: 	def id_ty: forall 'a. 'a -> 'a
 //│ ║       	                  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.49: 	rec def id x = if true then x else id id x
-//│ ║        	                                   ^^^^^^^
+//│ ║  l.104: 	rec def id x = if true then x else id id x
+//│ ║         	                                   ^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.49: 	rec def id x = if true then x else id id x
-//│ ╙──      	                                         ^
-//│      = [Function: id2]
+//│ ║  l.104: 	rec def id x = if true then x else id id x
+//│ ╙──       	                            ^
+//│      = [Function: id3]
 
 

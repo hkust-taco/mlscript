@@ -268,14 +268,14 @@ y => (let f = x => x y; {a: f (z => z), b: f (z => succ z)})
 
 
 let rec f = x => f x.u
-//│ f: 'u -> nothing
+//│ f: 'a -> nothing
 //│   where
-//│     'u <: {u: 'u}
+//│     'a <: {u: 'a}
 
 
 // from https://www.cl.cam.ac.uk/~sd601/mlsub/
 let rec recursive_monster = x => { thing: x, self: recursive_monster x }
-//│ recursive_monster: 'a -> {self: 'b, thing: 'a}
+//│ recursive_monster: 'a -> 'b
 //│   where
 //│     'b :> {self: 'b, thing: 'a}
 
@@ -314,11 +314,35 @@ let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 (x => (let y = (x x); 0))
 //│ res: ('a -> anything & 'a) -> 0
 
+
+(let rec x = (y => (y (x x))); x)
+//│ res: 'a -> 'b
+//│   where
+//│     'a <: 'b -> 'b
+//│     'b <: 'a
+
+:e // * Note: this works with precise-rec-typing (see below)
+res (z => (z, z))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	res (z => (z, z))
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ╟── tuple of type `(?a, ?a,)` is not a function
+//│ ║  l.+1: 	res (z => (z, z))
+//│ ║        	           ^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.318: 	(let rec x = (y => (y (x x))); x)
+//│ ╙──       	                    ^^^^^^^
+//│ res: error | 'a
+//│   where
+//│     'a :> ('a, 'a,)
+
+:precise-rec-typing
 (let rec x = (y => (y (x x))); x)
 //│ res: (nothing -> 'a) -> 'a
 
 res (z => (z, z))
 //│ res: (nothing, nothing,)
+
 
 next => 0
 //│ res: anything -> 0
@@ -327,9 +351,9 @@ next => 0
 //│ res: 'a -> 'a
 
 (let rec x = (y => (x (y y))); x)
-//│ res: ('a -> 'b & 'a) -> nothing
+//│ res: 'a -> nothing
 //│   where
-//│     'b <: 'b -> 'b
+//│     'a <: 'a -> 'a
 
 x => (y => (x (y y)))
 //│ res: ('a -> 'b) -> ('c -> 'a & 'c) -> 'b
@@ -338,24 +362,29 @@ x => (y => (x (y y)))
 //│ res: 'a -> 'a
 
 (let rec x = (y => (let z = (x x); y)); x)
-//│ res: 'a -> 'a
+//│ res: 'x
+//│   where
+//│     'x :> 'a -> 'a
+//│     'a :> 'x
 
 (let rec x = (y => {u: y, v: (x x)}); x)
-//│ res: 'a
+//│ res: 'x
 //│   where
-//│     'a :> forall 'b. 'b -> {u: 'b, v: 'c}
-//│     'c :> {u: 'a, v: 'c}
+//│     'x :> 'a -> 'b
+//│     'b :> {u: 'a, v: 'b}
+//│     'a :> 'x
 
 (let rec x = (y => {u: (x x), v: y}); x)
-//│ res: 'a
+//│ res: 'x
 //│   where
-//│     'a :> forall 'b. 'b -> {u: 'c, v: 'b}
-//│     'c :> {u: 'c, v: 'a}
+//│     'x :> 'a -> 'b
+//│     'b :> {u: 'b, v: 'a}
+//│     'a :> 'x
 
 (let rec x = (y => (let z = (y x); y)); x)
 //│ res: 'x
 //│   where
-//│     'x :> forall 'a. 'a -> 'a
+//│     'x :> 'a -> 'a
 //│     'a <: 'x -> anything
 
 (x => (let y = (x x.v); 0))

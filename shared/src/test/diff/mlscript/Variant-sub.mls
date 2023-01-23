@@ -74,18 +74,18 @@ rec def evalOpt x = case x of {
         Some (l + r)
       ) (evalOpt x.rhs)) (evalOpt x.lhs)
   }
-//│ evalOpt: ((Lit with {v: 'v}) | (Neg with {sub: 'rhs}) | (Plus with {lhs: 'rhs, rhs: 'rhs}) | Var) -> (NoneBecause | Some[int | 'v])
+//│ evalOpt: 'a -> (NoneBecause | Some[int])
 //│   where
-//│     'rhs <: Lit | (Neg with {sub: 'rhs}) | (Plus with {lhs: 'rhs, rhs: 'rhs}) | Var
+//│     'a <: Lit & {v: int} | (Neg with {sub: 'a}) | (Plus with {lhs: 'a, rhs: 'a}) | Var
 //│        = [Function: evalOpt]
-//│ constrain calls  : 1045
-//│ annoying  calls  : 135
-//│ subtyping calls  : 14166
+//│ constrain calls  : 680
+//│ annoying  calls  : 105
+//│ subtyping calls  : 5538
 
 :stats
 evalOpt (Plus{lhs = Lit{v=2}; rhs = Lit{v=3}})
 //│ res: NoneBecause | Some[int]
 //│    = Some { v: 5 }
-//│ constrain calls  : 135
+//│ constrain calls  : 159
 //│ annoying  calls  : 37
-//│ subtyping calls  : 1155
+//│ subtyping calls  : 1230

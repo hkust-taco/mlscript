@@ -23,6 +23,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   
   // def generalizeCurriedFunctions: Boolean = false
   var generalizeCurriedFunctions: Boolean = false
+  var preciselyTypeRecursion: Bool = false
   
   var distributeForalls: Boolean = false
   
@@ -47,6 +48,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   val MaxLevel: Int = 1024
   
   type Pol = Opt[Bool]
+  
+  type GenLambdas >: Bool
+  def doGenLambdas(implicit gl: GenLambdas): Bool = gl === true
   
   /**  `env`: maps the names of all global and local bindings to their types
     *  Keys of `mthEnv`:
@@ -567,6 +571,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       
       ctx.copy(inRecursiveDef = S(Var(nme))).nextLevel { implicit ctx: Ctx =>
         implicit val extrCtx: Opt[ExtrCtx] = N
+        implicit val genLambdas: GenLambdas = preciselyTypeRecursion
         val rhs_ty = typeTerm(rhs)
         
         val ty = rhs_ty
@@ -637,7 +642,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     // }
     // typeTerm(term)
     {
-      implicit val genLambdas: Bool = true
+      implicit val genLambdas: GenLambdas = true
       typeTerm(term)
     }
   
@@ -648,7 +653,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   
   /** Infer the type of a term. */
   // def typeTerm(term: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty, genLambdas: Bool = false): SimpleType
-  def typeTerm(term: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty, genLambdas: Bool = generalizeCurriedFunctions): SimpleType
+  def typeTerm(term: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty, genLambdas: GenLambdas = generalizeCurriedFunctions): SimpleType
         = trace[ST](s"$lvl. Typing ${if (ctx.inPattern) "pattern" else "term"} $term") {
         // = trace[ST](s"$lvl. Typing ${if (ctx.inPattern) "pattern" else "term"} $term   ${extrCtx.map(_.size)}") {
     implicit val prov: TypeProvenance = ttp(term)
@@ -865,7 +870,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         err(msg"Unsupported pattern shape${
           if (dbg) " ("+pat.getClass.toString+")" else ""}:", pat.toLoc)(raise)
       case Lam(pat, body)
-      if genLambdas /* && ctx.inRecursiveDef.forall(rd => !body.freeVars.contains(rd)) */ =>
+      if doGenLambdas /* && ctx.inRecursiveDef.forall(rd => !body.freeVars.contains(rd)) */ =>
       // if genLambdas && ctx.inRecursiveDef.isEmpty => // this simplif does not seem to bring much benefit
       // if genLambdas =>
         println(s"TYPING POLY LAM")
@@ -959,7 +964,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                 // .tap(instantiateForGoodMeasure(ctx))
             */
             ctx.poly { implicit ctx =>
-              typeTerm(a)
+              typePolymorphicTerm(a)
               // (newCtx, raise, extrCtx2, vars,
               //   genLambdas = false // currently can't do it because we don't yet push foralls into argument tuples
               //   )

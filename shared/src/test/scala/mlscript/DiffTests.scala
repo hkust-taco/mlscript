@@ -145,6 +145,7 @@ class DiffTests
       fullExceptionStack: Bool = false,
       stats: Bool = false,
       stdout: Bool = false,
+      preciselyTypeRecursion: Bool = false,
       noExecution: Bool = false,
       noGeneration: Bool = false,
       showGeneratedJS: Bool = false,
@@ -202,6 +203,7 @@ class DiffTests
           // case "limit-errors" => mode.copy(limitErrors = true)
           case "stats" => mode.copy(stats = true)
           case "stdout" => mode.copy(stdout = true)
+          case "precise-rec-typing" => mode.copy(preciselyTypeRecursion = true)
           case "ParseOnly" => parseOnly = true; mode
           case "AllowTypeErrors" => allowTypeErrors = true; mode
           case "AllowParseErrors" => allowParseErrors = true; mode
@@ -443,6 +445,7 @@ class DiffTests
             typer.verbose = mode.verbose
             typer.explainErrors = mode.explainErrors
             stdout = mode.stdout
+            typer.preciselyTypeRecursion = mode.preciselyTypeRecursion
             
             val (diags, (typeDefs, stmts)) = p.desugared
             report(diags)

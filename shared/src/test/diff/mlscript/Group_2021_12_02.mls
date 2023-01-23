@@ -44,10 +44,9 @@ rec def evalImpl f e = case e of {
   | Add -> evalImpl f e.lhs + evalImpl f e.rhs
   | _ -> f e
   }
-//│ evalImpl: ('a -> 'val & 'b -> int & 'c -> int) -> (Add & {lhs: 'lhs, rhs: 'rhs} | Lit & {val: 'val} | 'a & ~#Add & ~#Lit) -> (int | 'val)
+//│ evalImpl: ('a -> int) -> (Add & {lhs: 'rhs, rhs: 'rhs} | Lit & {val: 'val} | 'a & ~#Add & ~#Lit) -> (int | 'val)
 //│   where
-//│     'lhs <: Add & {lhs: 'lhs, rhs: 'rhs} | Lit & {val: int} | 'b & ~#Add & ~#Lit
-//│     'rhs <: Add & {lhs: 'lhs, rhs: 'rhs} | Lit & {val: int} | 'c & ~#Add & ~#Lit
+//│     'rhs <: Add & {lhs: 'rhs, rhs: 'rhs} | Lit & {val: int} | 'a & ~#Add & ~#Lit
 //│         = [Function: evalImpl]
 
 rec def evalPeel f e = case e of {
@@ -67,19 +66,17 @@ eval = evalPeel
 //│       evalPeel and eval are not implemented
 
 eval = evalImpl
-//│ ('a -> 'val & 'b -> int & 'c -> int) -> (Add & {lhs: 'lhs, rhs: 'rhs} | Lit & {val: 'val} | 'a & ~#Add & ~#Lit) -> (int | 'val)
+//│ ('a -> int) -> (Add & {lhs: 'rhs, rhs: 'rhs} | Lit & {val: 'val} | 'a & ~#Add & ~#Lit) -> (int | 'val)
 //│   where
-//│     'lhs <: Add & {lhs: 'lhs, rhs: 'rhs} | Lit & {val: int} | 'b & ~#Add & ~#Lit
-//│     'rhs <: Add & {lhs: 'lhs, rhs: 'rhs} | Lit & {val: int} | 'c & ~#Add & ~#Lit
+//│     'rhs <: Add & {lhs: 'rhs, rhs: 'rhs} | Lit & {val: int} | 'a & ~#Add & ~#Lit
 //│   <:  eval:
 //│ ('b -> int) -> Expr['b] -> int
 //│     = [Function: evalImpl]
 
 eval0 = evalImpl
-//│ ('a -> 'val & 'b -> int & 'c -> int) -> (Add & {lhs: 'lhs, rhs: 'rhs} | Lit & {val: 'val} | 'a & ~#Add & ~#Lit) -> (int | 'val)
+//│ ('a -> int) -> (Add & {lhs: 'rhs, rhs: 'rhs} | Lit & {val: 'val} | 'a & ~#Add & ~#Lit) -> (int | 'val)
 //│   where
-//│     'lhs <: Add & {lhs: 'lhs, rhs: 'rhs} | Lit & {val: int} | 'b & ~#Add & ~#Lit
-//│     'rhs <: Add & {lhs: 'lhs, rhs: 'rhs} | Lit & {val: int} | 'c & ~#Add & ~#Lit
+//│     'rhs <: Add & {lhs: 'rhs, rhs: 'rhs} | Lit & {val: int} | 'a & ~#Add & ~#Lit
 //│   <:  eval0:
 //│ ('b -> int) -> 'a -> int
 //│   where
@@ -87,10 +84,9 @@ eval0 = evalImpl
 //│      = [Function: evalImpl]
 
 evalUgly = evalImpl
-//│ ('a -> 'val & 'b -> int & 'c -> int) -> (Add & {lhs: 'lhs, rhs: 'rhs} | Lit & {val: 'val} | 'a & ~#Add & ~#Lit) -> (int | 'val)
+//│ ('a -> int) -> (Add & {lhs: 'rhs, rhs: 'rhs} | Lit & {val: 'val} | 'a & ~#Add & ~#Lit) -> (int | 'val)
 //│   where
-//│     'lhs <: Add & {lhs: 'lhs, rhs: 'rhs} | Lit & {val: int} | 'b & ~#Add & ~#Lit
-//│     'rhs <: Add & {lhs: 'lhs, rhs: 'rhs} | Lit & {val: int} | 'c & ~#Add & ~#Lit
+//│     'rhs <: Add & {lhs: 'rhs, rhs: 'rhs} | Lit & {val: int} | 'a & ~#Add & ~#Lit
 //│   <:  evalUgly:
 //│ ('b -> int) -> 'a -> int
 //│   where
@@ -98,10 +94,9 @@ evalUgly = evalImpl
 //│         = [Function: evalImpl]
 
 eval1 = evalImpl
-//│ ('a -> 'val & 'b -> int & 'c -> int) -> (Add & {lhs: 'lhs, rhs: 'rhs} | Lit & {val: 'val} | 'a & ~#Add & ~#Lit) -> (int | 'val)
+//│ ('a -> int) -> (Add & {lhs: 'rhs, rhs: 'rhs} | Lit & {val: 'val} | 'a & ~#Add & ~#Lit) -> (int | 'val)
 //│   where
-//│     'lhs <: Add & {lhs: 'lhs, rhs: 'rhs} | Lit & {val: int} | 'b & ~#Add & ~#Lit
-//│     'rhs <: Add & {lhs: 'lhs, rhs: 'rhs} | Lit & {val: int} | 'c & ~#Add & ~#Lit
+//│     'rhs <: Add & {lhs: 'rhs, rhs: 'rhs} | Lit & {val: int} | 'a & ~#Add & ~#Lit
 //│   <:  eval1:
 //│ ('b -> int) -> Expr['b] -> int
 //│      = [Function: evalImpl]
@@ -114,7 +109,7 @@ evalBad = eval
 //│   where
 //│     'a <: 'b & ~Add & ~Lit | Add & {lhs: 'a, rhs: 'a} | Lit & {val: int}
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.110: 	evalBad = eval
+//│ ║  l.105: 	evalBad = eval
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── type `'c` is not an instance of type `int`
 //│ ║  l.25: 	def evalBad: ('b -> 'c) -> (Lit & {val: int} | Add & {lhs: 'a; rhs: 'a} | ~Lit & ~Add & 'b as 'a) -> (int | 'c)
@@ -127,10 +122,10 @@ evalBad = eval
 :e
 eval {} (Lit{} with { val = 1 })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.128: 	eval {} (Lit{} with { val = 1 })
+//│ ║  l.123: 	eval {} (Lit{} with { val = 1 })
 //│ ║         	^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.128: 	eval {} (Lit{} with { val = 1 })
+//│ ║  l.123: 	eval {} (Lit{} with { val = 1 })
 //│ ║         	     ^^
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.38: 	def eval: ('b -> int) -> Expr['b] -> int
@@ -153,10 +148,10 @@ eval (fun x -> x.hello) (Const{} with {hello=1})
 :e
 eval (fun x -> x.hello) {hello=1}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.154: 	eval (fun x -> x.hello) {hello=1}
+//│ ║  l.149: 	eval (fun x -> x.hello) {hello=1}
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{hello: 1}` does not match type `'b & ~Add & ~Lit | Add & {lhs: Expr['b], rhs: Expr['b]} | Lit & {val: int}`
-//│ ║  l.154: 	eval (fun x -> x.hello) {hello=1}
+//│ ║  l.149: 	eval (fun x -> x.hello) {hello=1}
 //│ ║         	                        ^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.31: 	type Expr[A] = Lit & {val: int} | Add & {lhs: Expr[A]; rhs: Expr[A]} | ~Lit & ~Add & A

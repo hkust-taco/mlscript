@@ -10,9 +10,9 @@ rec def eval x = case x of {
   Lit -> x.val
   | Add -> eval x.lhs + eval x.rhs
   }
-//│ eval: ((Add with {lhs: 'rhs, rhs: 'rhs}) | (Lit with {val: 'val})) -> (int | 'val)
+//│ eval: 'a -> int
 //│   where
-//│     'rhs <: (Add with {lhs: 'rhs, rhs: 'rhs}) | Lit
+//│     'a <: (Add with {lhs: 'a, rhs: 'a}) | Lit
 //│     = [Function: eval]
 
 def eval eval x = case x of {
@@ -101,7 +101,7 @@ def evalN3 evalN3 x = case x of {
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.+2: 	  Neg -> 0 - (evalN2 x.underlying)
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> (forall ?b ?c. ?b | ?c)` is not an instance of type `int`
+//│ ╟── function of type `?a -> (forall ?b ?c. ?c | ?b)` is not an instance of type `int`
 //│ ║  l.73: 	def evalN2 evalN2 x = case x of {
 //│ ║        	                  ^^^^^^^^^^^^^^^
 //│ ║  l.74: 	  Neg -> 0 - (evalN2 evalN2 x.underlying)

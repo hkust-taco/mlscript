@@ -136,17 +136,17 @@ def c: 'a -> C5['a]
 //│ c: 'a -> C5['a]
 
 rec def c5 a = C5{ a = C2 { a = c5 a } }
-//│ c5: anything -> (C5['A] with {a: C2[in C5['A] out C5['A] | 'a] with {a: 'a}})
+//│ c5: anything -> 'a
 //│   where
-//│     'a :> forall 'A0. C5['A] with {a: C2['A0] with {a: 'a}}
-//│     'A0 :> C5['A] | 'a
+//│     'a :> C5['A] with {a: C2['A0] with {a: 'a}}
+//│     'A0 :> 'a | C5['A]
 //│         <: C5['A]
 
 c = c5
-//│ anything -> (C5['A] with {a: C2[in C5['A] out C5['A] | 'a] with {a: 'a}})
+//│ anything -> 'a
 //│   where
-//│     'a :> forall 'A0. C5['A] with {a: C2['A0] with {a: 'a}}
-//│     'A0 :> C5['A] | 'a
+//│     'a :> C5['A] with {a: C2['A0] with {a: 'a}}
+//│     'A0 :> 'a | C5['A]
 //│         <: C5['A]
 //│   <:  c:
 //│ 'a -> C5['a]
@@ -163,24 +163,24 @@ def c: 'a -> C6['a]
 //│ c: 'a -> C6['a]
 
 rec def c6 a = C6{ a = c5 (c6 a) }
-//│ c6: anything -> (C6['A] with {a: C5[out C6['A]] with {a: C2[in C5[out C6['A]] out C5[out C6['A]] | 'a] with {C2#A :> C5[out C6['A]] <: C5[out C6['A]] | 'a, a: 'a}}})
+//│ c6: anything -> (C6['A] with {a: forall 'a 'A0 'A1. 'a})
 //│   where
-//│     'a :> forall 'A0. C5[out C6['A]] with {a: C2['A0] with {a: 'a}}
-//│     'A0 :> C5[out C6['A]] | 'a
-//│         <: C5[out C6['A]]
+//│     'a :> C5['A0] with {a: C2['A1] with {a: 'a}}
+//│     'A1 :> 'a | C5['A0]
+//│         <: C5['A0]
 
 :stats
 c = c6
-//│ anything -> (C6['A] with {a: C5[out C6['A]] with {a: C2[in C5[out C6['A]] out C5[out C6['A]] | 'a] with {C2#A :> C5[out C6['A]] <: C5[out C6['A]] | 'a, a: 'a}}})
+//│ anything -> (C6['A] with {a: forall 'a 'A0 'A1. 'a})
 //│   where
-//│     'a :> forall 'A0. C5[out C6['A]] with {a: C2['A0] with {a: 'a}}
-//│     'A0 :> C5[out C6['A]] | 'a
-//│         <: C5[out C6['A]]
+//│     'a :> C5['A0] with {a: C2['A1] with {a: 'a}}
+//│     'A1 :> 'a | C5['A0]
+//│         <: C5['A0]
 //│   <:  c:
 //│ 'a -> C6['a]
-//│ constrain calls  : 164
-//│ annoying  calls  : 35
-//│ subtyping calls  : 1612
+//│ constrain calls  : 71
+//│ annoying  calls  : 30
+//│ subtyping calls  : 418
 
 
 // Reproduction of an issue found while trying out TypeRef ctor typing:
@@ -290,18 +290,18 @@ def append ls elem = L { h = elem; t = S { v = ls } }
 
 :ns
 append
-//│ res: forall 'a 'T 'T0. 'a -> (forall 'h 'T1 't 'T2 'b 'v 'c. 'c -> 'b)
+//│ res: forall 'a 'T 'T0. 'a -> (forall 'T1 't 'v 'T2 'h 'b 'c. 'b -> 'c)
 //│   where
-//│     'b :> #L & {h: 'h, t: 't, L#T = 'T1}
-//│     't :> #S & {v: 'v, S#T = 'T2}
-//│        <: O[L['T1]]
+//│     'c :> #L & {h: 'h, t: 't, L#T = 'T2}
+//│     't :> #S & {v: 'v, S#T = 'T1}
+//│        <: O[L['T2]]
 //│     'v :> 'a
-//│        <: L['T1] & 'T2
-//│     'T2 :> L['T1] | 'a
-//│         <: L['T1]
-//│     'c <: 'h
-//│     'h <: 'T1
-//│     'T1 :> 'T
+//│        <: L['T2] & 'T1
+//│     'T1 :> L['T2] | 'a
+//│         <: L['T2]
+//│     'b <: 'h
+//│     'h <: 'T2
+//│     'T2 :> 'T
 //│         <: 'T0
 //│     'a <: L[in 'T out 'T0]
 //│     'T0 :> 'T

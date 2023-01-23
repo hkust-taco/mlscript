@@ -157,11 +157,11 @@ rec def filter p ls = case ls of
   { Cons -> if p ls.head then Cons ls.head (filter p ls.tail) else filter p ls.tail
   | Nil -> Nil
   }
-//│ filter: ('head -> bool & 'head0 -> bool & 'head1 -> bool) -> ((Cons[?] with {head: 'head, tail: 'tail}) | Nil) -> ((Cons['A | 'head] with {head: 'head, tail: 'a}) | 'b)
+//│ filter: ('head -> bool) -> ((Cons[?] with {head: 'head & 'a, tail: 'tail}) | Nil) -> ((Cons['A | 'a] with {head: 'a, tail: 'b}) | 'c)
 //│   where
-//│     'a :> (Cons['A | 'head0] with {head: 'head0, tail: 'a}) | 'b
-//│     'b :> (Cons['A | 'head1] with {head: 'head1, tail: 'a}) | Nil
-//│     'tail <: ((Cons[?] with {head: 'head0 & 'A, tail: 'tail}) | Nil) & ((Cons[?] with {head: 'head1 & 'A, tail: 'tail}) | Nil)
+//│     'b :> (Cons['A | 'd] with {head: 'd, tail: 'b}) | 'c
+//│     'c :> (Cons['A | 'e] with {head: 'e, tail: 'b}) | Nil
+//│     'tail <: ((Cons[?] with {head: 'head & 'A & 'd, tail: 'tail}) | Nil) & ((Cons[?] with {head: 'head & 'e & 'A, tail: 'tail}) | Nil)
 //│       = [Function: filter]
 
 

@@ -68,17 +68,17 @@ rec def map f tree = case tree of {
   }
 //│ map: 'map
 //│   where
-//│     'map :> forall 'a 'value 'A 'subTree 'subTree0 'value0. 'a -> ((Leaf[?] & {value: 'value0} | (Node[?] with {subTree: 'subTree0})) -> (Leaf['value] | (Node['A] with {subTree: 'subTree}))
+//│     'map :> 'a -> (forall 'subTree 'A 'value 'value0 'subTree0. ((Leaf[?] & {value: 'value0} | (Node[?] with {subTree: 'subTree0})) -> (Leaf['value] | (Node['A] with {subTree: 'subTree}))
 //│   where
+//│     'a <: 'value0 -> 'value
 //│     'map <: (forall 'b 'c 'd 'e. (('b, 'd,) -> ('c, 'e,)
 //│   where
-//│     'a <: 'b -> 'c & 'd -> 'e)) -> 'subTree0 -> (PerfectTree[Two['A]] & 'subTree)
-//│     'a <: 'value0 -> 'value)
+//│     'a <: 'b -> 'c & 'd -> 'e)) -> 'subTree0 -> (PerfectTree[Two['A]] & 'subTree)))
 //│    = [Function: map]
 
 :e
 map succ n4
-//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b ?A ?value ?A0 ?subTree ?subTree0 ?A1. ?b) -> ?c` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
 //│ ║  l.80: 	map succ n4
 //│ ║        	^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.

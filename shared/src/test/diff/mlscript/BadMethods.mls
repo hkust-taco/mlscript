@@ -23,7 +23,7 @@ class Bar[A]: Foo[A]
 //│ Declared Bar.Map: Bar['A] -> anything -> 'A
 //│ Defined Bar.Map: Bar[?] -> 'Map
 //│   where
-//│     'Map :> forall 'a. ('Map -> (anything -> 'Map) -> 'a) -> 'a
+//│     'Map :> ('Map -> (anything -> 'Map) -> 'a) -> 'a
 
 Foo.Map
 Bar.Map

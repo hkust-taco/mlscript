@@ -194,10 +194,78 @@ rec def wat n =
 //│ wat: anything -> ('a -> ('a & 'a0) & 'a0 -> 'b) -> ('a & 'a0) -> 'b
 //│    = [Function: wat]
 
+:e
+rec def wat n =
+  succ wat n
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.198: 	rec def wat n =
+//│ ║         	            ^^^
+//│ ║  l.199: 	  succ wat n
+//│ ║         	^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──      	                        ^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.198: 	rec def wat n =
+//│ ║         	            ^^^
+//│ ║  l.199: 	  succ wat n
+//│ ║         	^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──      	                        ^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.198: 	rec def wat n =
+//│ ║         	            ^^^
+//│ ║  l.199: 	  succ wat n
+//│ ║         	^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── from reference:
+//│ ║  l.47: 	def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
+//│ ╙──      	                                                   ^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.198: 	rec def wat n =
+//│ ║         	            ^^^
+//│ ║  l.199: 	  succ wat n
+//│ ║         	^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── from reference:
+//│ ║  l.47: 	def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
+//│ ╙──      	                                                   ^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.198: 	rec def wat n =
+//│ ║         	            ^^^
+//│ ║  l.199: 	  succ wat n
+//│ ║         	^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──      	                        ^^
+//│ wat: (anything -> nothing) -> nothing -> anything
+//│    = [Function: wat1]
+
+:precise-rec-typing
 rec def wat n =
   succ wat n
 //│ wat: ('a -> ('a & 'a0) & 'a0 -> 'b) -> ('a & 'a0) -> 'b
-//│    = [Function: wat1]
+//│    = [Function: wat2]
 
 :ng
 rec def nani =
@@ -315,7 +383,7 @@ to_church_ty = to_church_4
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.313: 	to_church_ty = to_church_4
+//│ ║  l.381: 	to_church_ty = to_church_4
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `('a -> 'a) -> 'a -> 'a` does not match type `'a0`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -373,20 +441,7 @@ def tc n = to_church_ty n : ChurchInt
 //│ tc: int -> ChurchInt
 //│   = [Function: tc1]
 
-:e
 def tc n = to_church_2 n : ChurchInt // Requires :RecursiveTypes
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.377: 	def tc n = to_church_2 n : ChurchInt // Requires :RecursiveTypes
-//│ ║         	           ^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                        ^^
-//│ ╟── from application:
-//│ ║  l.48: 	def succ' n = fun f -> fun x -> f (n f x)
-//│ ╙──      	                                ^^^^^^^^^
 //│ tc: int -> ChurchInt
 //│   = [Function: tc2]
 
@@ -461,16 +516,16 @@ def succ' n = fun f -> fun x -> f (n f x)
 //│   where
 //│     'b <: 'a -> 'a & 'a -> 'c)))
 //│     = [Function: succ1]
-//│ succ': 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. ('d -> 'c
+//│ succ': 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. ('c -> 'e
 //│   where
-//│     'b <: 'e -> 'c
-//│     'a <: 'b -> 'd -> 'e)))
+//│     'b <: 'd -> 'e
+//│     'a <: 'b -> 'c -> 'd)))
 //│      = [Function: succ$1]
 
 // * Note: without constrained types we wouldn't get the principal type of succ'
 
 succ_ty = succ
-//│ ChurchInt -> (forall 'b. 'b -> (forall 'a 'c. ('a -> 'c
+//│ ChurchInt -> (forall 'b. 'b -> (forall 'c 'a. ('a -> 'c
 //│   where
 //│     'b <: 'a -> 'a & 'a -> 'c)))
 //│   <:  succ_ty:
@@ -487,7 +542,7 @@ succ_ty = succ'
 //│   <:  succ_ty:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.482: 	succ_ty = succ'
+//│ ║  l.537: 	succ_ty = succ'
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.30: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -508,18 +563,18 @@ succ_ty = succ'
 :DontDistributeForalls
 
 succ'
-//│ res: 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. ('d -> 'c
+//│ res: 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. ('c -> 'e
 //│   where
-//│     'b <: 'e -> 'c
-//│     'a <: 'b -> 'd -> 'e)))
+//│     'b <: 'd -> 'e
+//│     'a <: 'b -> 'c -> 'd)))
 //│    = [Function: succ$1]
 
 // :e // * Error delayed by inconsistent constrained types
 succ' {}
 //│ res: 'a -> (forall 'b 'c 'd. ('b -> 'd
 //│   where
-//│     anything <: 'a -> 'b -> 'c
-//│     'a <: 'c -> 'd))
+//│     'a <: 'c -> 'd
+//│     anything <: 'a -> 'b -> 'c))
 //│    = [Function (anonymous)]
 
 // :e // * Error delayed by inconsistent constrained types
@@ -532,13 +587,13 @@ succ' {} {}
 :e
 succ' {} {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.533: 	succ' {} {} {}
+//│ ║  l.588: 	succ' {} {} {}
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.533: 	succ' {} {} {}
+//│ ║  l.588: 	succ' {} {} {}
 //│ ║         	      ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.457: 	def succ' n = fun f -> fun x -> f (n f x)
+//│ ║  l.512: 	def succ' n = fun f -> fun x -> f (n f x)
 //│ ╙──       	                                   ^^^
 //│ res: error
 //│ Runtime error:

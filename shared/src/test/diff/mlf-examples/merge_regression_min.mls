@@ -42,29 +42,21 @@ id1 id
 rec def id1 x = choose x (id1 id1 x)
 //│ id1: 'id1
 //│   where
-//│     'id1 :> forall 'a. ('a & 'b) -> 'a
-//│     'a :> 'c
-//│     'c :> 'id1
-//│        <: 'b -> 'c
+//│     'id1 :> 'a -> 'b
+//│     'a :> 'id1
+//│        <: 'b
 //│     'b :> 'id1
-//│        <: 'c
+//│        <: 'a -> 'b
 //│    = <no result>
 //│      choose is not implemented
 
-:e
 id1 id
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.55: 	id1 id
-//│ ║        	^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ res: ('a & 'b) -> 'a | error | 'c
+//│ res: ('a & 'b) -> 'b | 'c
 //│   where
-//│     'a :> 'd
-//│     'd :> forall 'a 'b. ('a & 'b) -> 'a
-//│        <: 'e -> 'd & 'c
-//│     'b <: 'a & 'e
-//│     'e :> forall 'a 'b. ('a & 'b) -> 'a
-//│        <: 'd
+//│     'a :> ('a & 'b) -> 'b
+//│        <: 'b
+//│     'b :> ('a & 'b) -> 'b
+//│        <: 'a -> 'b & 'c
 //│    = <no result>
 //│      id1 and choose are not implemented
 

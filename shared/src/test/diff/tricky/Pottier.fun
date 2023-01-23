@@ -9,29 +9,28 @@ let rec f = x => y => add (f x.tail y.tail) (f x.tail y.tail)
 let rec f = x => y => add (f x.tail x.tail) (f y.tail y.tail)
 let rec f = x => y => add (f x.tail x) (f y.tail y)
 let rec f = x => y => add (f x.tail y) (f y.tail x)
-//│ f: 'tail -> anything -> int
+//│ f: 'a -> anything -> int
 //│   where
-//│     'tail <: {tail: 'tail}
+//│     'a <: {tail: 'a}
 //│ f: 'a -> 'a -> int
 //│   where
 //│     'a <: {tail: 'a}
-//│ f: 'tail -> 'tail -> int
+//│ f: 'a -> 'a -> int
 //│   where
-//│     'tail <: {tail: 'tail}
-//│ f: 'tail -> 'tail -> int
+//│     'a <: {tail: 'a}
+//│ f: 'a -> 'a -> int
 //│   where
-//│     'tail <: {tail: 'tail}
-//│ f: {tail: 'tail} -> {tail: 'tail} -> int
+//│     'a <: {tail: 'a}
+//│ f: 'a -> {tail: 'tail} -> int
 //│   where
-//│     'tail <: {tail: 'tail}
-//│ f: 'tail -> 'a -> int
+//│     'a <: {tail: {tail: 'tail} & 'a}
+//│     'tail <: 'a & {tail: 'tail}
+//│ f: 'a -> 'a -> int
 //│   where
-//│     'tail <: {tail: 'tail} & 'a
-//│     'a <: {tail: 'tail}
-//│ f: 'tail -> 'a -> int
+//│     'a <: {tail: 'a}
+//│ f: 'a -> 'a -> int
 //│   where
-//│     'tail <: {tail: 'tail} & 'a
-//│     'a <: {tail: 'tail}
+//│     'a <: {tail: 'a}
 
 let f = x => y => if true then { l: x; r: y } else { l: y; r: x } // 2-crown
 //│ f: 'a -> 'a -> {l: 'a, r: 'a}
@@ -40,10 +39,11 @@ let f = x => y => if true then { l: x; r: y } else { l: y; r: x } // 2-crown
 // Inspired by [Pottier 98, chap 13.5]
 
 let rec f = x => y => if true then x else { t: f x.t y.t }
-//│ f: ('t & 'a) -> 't -> ('b | 'a)
+//│ f: 'a -> 't -> 'b
 //│   where
-//│     'b :> {t: 'b}
+//│     'b :> {t: 'b} | 'a
 //│     't <: {t: 't}
+//│     'a <: {t: 'a}
 
 
 

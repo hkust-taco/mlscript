@@ -35,9 +35,9 @@ rec def fold_left f x l = case l of
   { Nil -> x
   | Cons -> fold_left f (f x l.head) l.tail
   }
-//│ fold_left: ('a -> 'head -> 'b & 'b -> 'head0 -> 'b) -> 'a -> ((Cons[?] with {head: 'head, tail: 'tail}) | Nil) -> ('a | 'b)
+//│ fold_left: ('a -> 'head -> ('a & 'b)) -> ('a & 'b) -> 'tail -> 'b
 //│   where
-//│     'tail <: (Cons[?] with {head: 'head0, tail: 'tail}) | Nil
+//│     'tail <: (Cons[?] with {head: 'head, tail: 'tail}) | Nil
 
 // ------------ polymorphic methods ------------
 
@@ -48,7 +48,7 @@ class Collection[a]: { l: List[a] }
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
 //│ Defined Collection.Mem: Collection[?] -> anything -> bool
-//│ Defined Collection.Fold: Collection['a] -> ('b -> 'a -> 'c & ('c | 'd) -> 'a -> 'd) -> 'b -> ('c | 'd | 'b)
+//│ Defined Collection.Fold: Collection['a] -> ('b -> 'a -> ('b & 'c)) -> ('b & 'c) -> 'c
 
 def coll_mem c x = c.Mem x
 //│ coll_mem: Collection[?] -> anything -> bool
@@ -60,5 +60,5 @@ def simple_and_double c =
   (l1, l2)
 //│ simple_and_double: Collection['a] -> (forall 'b. Nil | 'b, forall 'c. Nil | 'c,)
 //│   where
-//│     'c :> (Cons[('a, 'a,)] with {tail: Nil}) | (Cons[('a, 'a,)] with {tail: 'c})
-//│     'b :> (Cons['a] with {tail: Nil}) | (Cons['a] with {tail: 'b})
+//│     'c :> Cons[('a, 'a,)] with {tail: Nil | 'c}
+//│     'b :> Cons['a] with {tail: Nil | 'b}
