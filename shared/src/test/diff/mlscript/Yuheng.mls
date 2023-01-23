@@ -115,6 +115,17 @@ rec def eval(e) = case e of
 //│     'value1 :> ('value0, 'value1,)
 //│     = [Function: eval]
 
+// :ns
+rec def eval(e) = case e of
+  { IntLit -> e.value
+  | Pair -> (eval e.lhs,)
+  }
+//│ eval: ((IntLit with {value: 'value}) | (Pair[?, ?]\rhs with {lhs: 'lhs})) -> (('value0,) | 'value)
+//│   where
+//│     'lhs <: (IntLit with {value: 'value0}) | (Pair[?, ?]\rhs with {lhs: 'lhs})
+//│     'value0 :> ('value0,)
+//│     = [Function: eval1]
+
 rec def eval(e) = case e of
   { IntLit -> e.value
   | Pair -> (eval e.lhs, eval e.rhs)
@@ -126,7 +137,7 @@ rec def eval(e) = case e of
 //│     'rhs <: (IntLit with {value: 'value1}) | (Pair[?, ?] with {lhs: 'lhs, rhs: 'rhs}) | ~IntLit & ~Pair[?, ?]
 //│     'value0 :> ('value0, 'value1,)
 //│     'value1 :> ('value0, 'value1,)
-//│     = [Function: eval1]
+//│     = [Function: eval2]
 
 eval (IntLit { value = 1 })
 //│ res: 'a | 1
@@ -187,13 +198,13 @@ ep = eval p
 class Pair2[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[A] }
 //│ Defined class Pair2[±A, ±B]
 //│ ╔══[WARNING] Type definition Pair2 has bivariant type parameters:
-//│ ║  l.187: 	class Pair2[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[A] }
+//│ ║  l.209: 	class Pair2[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[A] }
 //│ ║         	      ^^^^^
 //│ ╟── A is irrelevant and may be removed
-//│ ║  l.187: 	class Pair2[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[A] }
+//│ ║  l.209: 	class Pair2[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[A] }
 //│ ║         	            ^
 //│ ╟── B is irrelevant and may be removed
-//│ ║  l.187: 	class Pair2[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[A] }
+//│ ║  l.209: 	class Pair2[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[A] }
 //│ ╙──       	               ^
 
 
@@ -208,7 +219,7 @@ ep + 1
 //│ ║  l.+1: 	ep + 1
 //│ ║        	^^^^
 //│ ╟── tuple literal of type `(?a, ?b,)` is not an instance of type `int`
-//│ ║  l.120: 	  | Pair -> (eval e.lhs, eval e.rhs)
+//│ ║  l.142: 	  | Pair -> (eval e.lhs, eval e.rhs)
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
 //│ ║  l.+1: 	ep + 1
@@ -284,7 +295,7 @@ rec def eval(e) = case e of
 //│ ║  l.+4: 	  }
 //│ ║        	^^^
 //│ ╟── type `Expr[?]` does not match type `IntLit & ?a | Pair[?, ?] & ?b`
-//│ ║  l.262: 	def eval: Expr['a] -> 'a
+//│ ║  l.284: 	def eval: Expr['a] -> 'a
 //│ ║         	          ^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.+1: 	rec def eval(e) = case e of

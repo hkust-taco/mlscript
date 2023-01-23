@@ -394,71 +394,12 @@ def eval_lexpr' eval_rec subst v = case v of {
 //│            = <no result>
 //│              eval_var, list_assoc and eq are not implemented
 
+:e
 rec def eval4 subst = eval_lexpr' eval4 subst
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: ?eval4` took too many steps and ran out of fuel (5000)
-//│ ║  l.397: 	rec def eval4 subst = eval_lexpr' eval4 subst
+//│ ║  l.398: 	rec def eval4 subst = eval_lexpr' eval4 subst
 //│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟──  + (cons<> & {Cons#A: mut A51_3851'..A51_3851', head: head55_3847', tail: tail56_3852'})
-//│ ╟──  + (cons<> & {head: head55_3847', tail: tail56_3852', Cons#A: mut A51_3851'..A51_3851'})
-//│ ╟──  + (cons<> & {head: head55_3847', tail: tail56_3852', Cons#A: mut A51_3851'..A51_3851'})
-//│ ║  l.42: 	def Cons head tail = Cons { head; tail }
-//│ ║        	                     ^^^^^^^^^^^^^^^^^^^
-//│ ╟──  + (cons<> & {head: head55_3847', tail: tail56_3852', Cons#A: mut A51_3851'..A51_3851'})
-//│ ║  l.42: 	def Cons head tail = Cons { head; tail }
-//│ ║        	                     ^^^^^^^^^^^^^^^^^^^
-//│ ╟──  + (cons<> & {head: head55_3847', tail: tail56_3852', Cons#A: mut A51_3851'..A51_3851'})
-//│ ║  l.126: 	          body = eval_rec (Cons (Tuple v.name (Var { name = new_name })) subst) v.body }
-//│ ║         	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟──  + α310_3846'
-//│ ║  l.126: 	          body = eval_rec (Cons (Tuple v.name (Var { name = new_name })) subst) v.body }
-//│ ║         	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟──  - {head: head182_3876'}
-//│ ║  l.52: 	      if eq l.head._1 s then Success l.head._2
-//│ ║        	                                     ^^^^^^
-//│ ╟──  - {head: head182_3876'}
-//│ ║  l.52: 	      if eq l.head._1 s then Success l.head._2
-//│ ║        	                                     ^^^^^^
-//│ ╟──  - {head: head182_3876'}
-//│ ║  l.52: 	      if eq l.head._1 s then Success l.head._2
-//│ ║        	                                     ^
-//│ ╟──  - {head: head182_3876'}
-//│ ║  l.52: 	      if eq l.head._1 s then Success l.head._2
-//│ ║        	                                     ^
-//│ ╟──  - {head: head182_3876'}
-//│ ║  l.50: 	rec def list_assoc s l = case l of {
-//│ ║        	                              ^
-//│ ╟──  - α178_3872'
-//│ ║  l.50: 	rec def list_assoc s l = case l of {
-//│ ║        	                              ^
-//│ ╟──  - ((cons<> & α178_3872') | ((nil<> & α181_3875') & ~(cons<>)))
-//│ ╟──  - ((cons<> & α178_3872') | ((nil<> & α181_3875') & ~(cons<>)))
-//│ ║  l.50: 	rec def list_assoc s l = case l of {
-//│ ║        	                              ^
-//│ ╟──  - ((cons<> & α178_3872') | ((nil<> & α181_3875') & ~(cons<>)))
-//│ ╟──  - ((cons<> & α178_3872') | ((nil<> & α181_3875') & ~(cons<>)))
-//│ ╟──  - ((cons<> & α178_3872') | ((nil<> & α181_3875') & ~(cons<>)))
-//│ ║  l.78: 	  | Var -> let res = list_assoc v.name sub in case res of {
-//│ ║        	                                       ^^^
-//│ ╟──  - ((cons<> & α178_3872') | ((nil<> & α181_3875') & ~(cons<>)))
-//│ ╟──  - α158_3871'
-//│ ╟──  - α158_3871'
-//│ ╟──  - α158_3871'
-//│ ║  l.117: 	  | Var -> eval_var subst v
-//│ ║         	                    ^^^^^
-//│ ╟──  - α158_3871'
-//│ ╟──  - α230_3869'
-//│ ╟──  - α230_3869'
-//│ ╟──  - α230_3869'
-//│ ║  l.386: 	  | App -> eval_lambda eval_rec subst v
-//│ ║         	                                ^^^^^
-//│ ╟──  - α230_3869'
-//│ ╟──  - α2831_3945'
-//│ ╟──  - α2831_3945'
-//│ ╟──  - α2831_3945'
-//│ ║  l.397: 	rec def eval4 subst = eval_lexpr' eval4 subst
-//│ ║         	                                        ^^^^^
-//│ ╟──  - α2831_3945'
-//│ ╙──  - α3701'
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ eval4: (List[?] & 'a) -> 'b -> 'result
 //│   where
 //│     'b <: Abs[?] | Add[?] & {lhs: 'b, rhs: 'b} | App[?] | Mul[?] & {lhs: 'b, rhs: 'b} | Num | Var
@@ -467,10 +408,41 @@ rec def eval4 subst = eval_lexpr' eval4 subst
 //│      = <no result>
 //│        eval_lexpr', eval_var, list_assoc and eq are not implemented
 
-eval4 Nil (Abs { name = "s"; body = Add { lhs = Var { name = "s" }; rhs = Num { num = 1 } } })
-//│ res: 'rhs
+:Fuel 20000
+
+rec def eval4 subst = eval_lexpr' eval4 subst
+//│ eval4: (List[?] & 'tail & 'tail0) -> 'b -> 'rhs
 //│   where
-//│     'rhs :> Abs[nothing] | App[nothing] | Num | Var | Add['rhs] | Mul['rhs]
+//│     'tail0 <: (Cons[?] with {head: {_1: string, _2: 'result}, tail: 'tail0}) | Nil
+//│     'tail <: (Cons[?] with {head: {_1: string, _2: 'result0}, tail: 'tail}) | Nil
+//│     'result0 :> Num | 'rhs | Var
+//│              <: 'b & (Abs[?] & 'c | 'lhs & (Abs[?] & 'c & ~#Abs | 'lhs0 & (Num | ~#Abs & ~#Num)))
+//│     'rhs :> Abs['rhs] | (App['a] with {lhs: 'lhs | 'lhs0, rhs: 'rhs}) | 'result0 | 'result | 'd | 'e | (Add['rhs] with {lhs: 'rhs, rhs: 'rhs}) | (Mul['rhs] with {lhs: 'rhs, rhs: 'rhs})
+//│     'result :> 'rhs | Var
+//│             <: 'b & (Abs[?] & 'c | 'lhs & (Abs[?] & 'c & ~#Abs | 'lhs0 & (Num | ~#Abs & ~#Num)))
+//│     'a :> (Add['rhs] with {lhs: 'rhs, rhs: 'rhs}) | (App['a] with {lhs: 'lhs | 'lhs0, rhs: 'rhs}) | (Mul['rhs] with {lhs: 'rhs, rhs: 'rhs}) | 'rhs | Var
+//│     'lhs :> (Add['rhs] with {lhs: 'rhs, rhs: 'rhs}) | (App['a] with {lhs: 'lhs | 'lhs0, rhs: 'rhs}) | (Mul['rhs] with {lhs: 'rhs, rhs: 'rhs}) | Num | Var
+//│          <: 'b & 'a
+//│     'lhs0 :> (Add['rhs] with {lhs: 'rhs, rhs: 'rhs}) | (App['a] with {lhs: 'lhs | 'lhs0, rhs: 'rhs}) | (Mul['rhs] with {lhs: 'rhs, rhs: 'rhs}) | Num | Var
+//│           <: 'b & 'a
+//│     'b <: Abs[?] & {body: 'b} | Add[?] & {lhs: 'b, rhs: 'b} | App[?] & {lhs: 'b, rhs: 'b} | Mul[?] & {lhs: 'b, rhs: 'b} | Num & (Add[?] & 'e | Mul[?] & 'e | Num & 'result0 | Var & 'd) | Var & 'd
+//│     'd :> Var
+//│        <: 'b & (Abs[?] & 'c | 'lhs & (Abs[?] & 'c & ~#Abs | 'lhs0 & (Num & {name: string} | {name: string} & ~#Abs & ~#Num)))
+//│     'e :> (Mul['rhs] with {lhs: 'rhs, rhs: 'rhs}) | (Add['rhs] with {lhs: 'rhs, rhs: 'rhs})
+//│        <: 'b & (Abs[?] & {lhs: anything, rhs: anything} & 'c | 'lhs & (Abs[?] & {lhs: anything, rhs: anything} & 'c & ~#Abs | 'lhs0 & (Num & {lhs: anything, rhs: anything} | {lhs: anything, rhs: anything} & ~#Abs & ~#Num)))
+//│     'c <: {body: 'b, name: string}
+//│      = <no result>
+//│        eval_lexpr', eval_var, list_assoc and eq are not implemented
+
+:ResetFuel
+
+eval4 Nil (Abs { name = "s"; body = Add { lhs = Var { name = "s" }; rhs = Num { num = 1 } } })
+//│ res: 'result
+//│   where
+//│     'result :> Var | Abs['result] | (App['a] with {lhs: 'lhs, rhs: 'result}) | Num | 'b
+//│     'a :> (App['a] with {lhs: 'lhs, rhs: 'result}) | Num | 'result | Var | 'b
+//│     'lhs :> (App['a] with {lhs: 'lhs, rhs: 'result}) | Num | Var | 'b
+//│     'b :> Add['result] | Mul['result]
 //│    = <no result>
 //│      eval4, eval_lexpr', eval_var, list_assoc and eq are not implemented
 

@@ -95,8 +95,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       if (fuel <= 0) {
         err(
           msg"$msgHead took too many steps and ran out of fuel (${startingFuel.toString})" -> prov.loco
-          :: cctx._1.map(c => msg" + ${s"$c"}" -> c.prov.loco)
-          ::: cctx._2.map(c => msg" - ${s"$c"}" -> c.prov.loco)
+          :: (
+          if (!explainErrors) msg"Note: use flag `:ex` to see internal error info." -> N :: Nil
+          else cctx._1.map(c => msg" + ${s"$c"}" -> c.prov.loco)
+            ::: cctx._2.map(c => msg" - ${s"$c"}" -> c.prov.loco))
         )
         ret()
       } else fuel -= 1
