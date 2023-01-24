@@ -112,6 +112,9 @@ def evalN evalN k e = case e of {
 //│      = [Function: evalN1]
 
 
+// * Note that these `evalComposed` types could be simplified further
+// *  by making the simplifier realize that in `Lit with {n: 'n}`, `'n` really co-occurs with `int`!
+
 def evalComposed evalComposed = evalN evalN! (fun e -> eval evalComposed e)
 //│ evalComposed: ('a -> 'rhs -> int & 'a) -> ((Add with {lhs: 'rhs, rhs: 'rhs}) | (Lit with {n: 'n}) | (Neg with {e: 'b})) -> (int | 'n)
 //│   where

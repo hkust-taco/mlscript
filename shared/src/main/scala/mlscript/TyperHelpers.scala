@@ -388,11 +388,17 @@ abstract class TyperHelpers { Typer: Typer =>
         (this, that) match {
       case (TopType | RecordType(Nil), _) => that
       case (BotType, _) => BotType
-      // Unnecessary and can complicate constraint solving quite a lot:
+      
+      // * Unnecessary and can complicate constraint solving quite a lot:
       // case (ComposedType(true, l, r), _) => l & that | r & that
+      
       case (_: ClassTag, _: FunctionType) => BotType
-      // case (FunctionType(l1, r1), FunctionType(l2, r2)) =>
+      
+      // * This one is only correct in negative position (but we don't track polarity here);
+      // * the existence of first-class polymorphic types makes it unsound in positive positions.
+      // case (FunctionType(l1, r1), FunctionType(l2, r2)) if approximateNegativeFunction =>
       //   FunctionType(l1 | l2, r1 & r2)(prov)
+      
       case (RecordType(fs1), RecordType(fs2)) =>
         RecordType(mergeSortedMap(fs1, fs2)(_ && _).toList)(prov)
       case (t0 @ TupleType(fs0), t1 @ TupleType(fs1)) =>

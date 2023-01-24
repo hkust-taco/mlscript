@@ -163,7 +163,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 }
                 
                 // println(s"Possible? $r ${lnf & r.lnf}")
-                !vars.exists(r.nvars) && ((lnf & r.lnf)(ctx, etf = false)).isDefined && ((lnf, r.rnf) match {
+                !vars.exists(r.nvars) && ((lnf & (r.lnf, pol = false))(ctx, etf = false)).isDefined && ((lnf, r.rnf) match {
                   case (LhsRefined(_, ttags, _, _), RhsBases(objTags, rest, trs))
                     if objTags.exists { case t: TraitTag => ttags(t); case _ => false }
                     => false
@@ -251,7 +251,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         case (ls, ExtrType(true) :: rs) => annoying(ls, done_ls, rs, done_rs)
           
         // case ((tr @ TypeRef(_, _)) :: ls, rs) => annoying(tr.expand :: ls, done_ls, rs, done_rs)
-        case ((tr @ TypeRef(_, _)) :: ls, rs) => annoying(ls, (done_ls & tr) getOrElse
+        case ((tr @ TypeRef(_, _)) :: ls, rs) => annoying(ls, (done_ls & (tr, pol = true)) getOrElse
           (return println(s"OK  $done_ls & $tr  =:=  ${BotType}")), rs, done_rs)
         
         // case (ls, (tr @ TypeRef(_, _)) :: rs) => annoying(ls, done_ls, tr.expand :: rs, done_rs)
@@ -269,7 +269,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           lastWords(s"unexpected Without in negative position not at the top level: ${w}")
         */
         
-        case ((l: BaseTypeOrTag) :: ls, rs) => annoying(ls, (done_ls & l)(ctx, etf = true) getOrElse
+        case ((l: BaseTypeOrTag) :: ls, rs) => annoying(ls, (done_ls & (l, pol = true))(ctx, etf = true) getOrElse
           (return println(s"OK  $done_ls & $l  =:=  ${BotType}")), rs, done_rs)
         case (ls, (r: BaseTypeOrTag) :: rs) => annoying(ls, done_ls, rs, done_rs | r getOrElse
           (return println(s"OK  $done_rs | $r  =:=  ${TopType}")))

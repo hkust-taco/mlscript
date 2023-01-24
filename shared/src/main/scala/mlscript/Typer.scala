@@ -22,8 +22,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   def maxSuccessiveErrReports: Int = 3
   
   var generalizeCurriedFunctions: Boolean = false
+  var approximateNegativeFunction: Boolean = false
   var preciselyTypeRecursion: Bool = false
-  
   var distributeForalls: Boolean = false
   
   var noCycleCheck: Boolean = false

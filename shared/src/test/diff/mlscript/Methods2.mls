@@ -61,7 +61,8 @@ class Nil[A]: List[A]
 //│ Defined Nil.HeadOption: Nil[?] -> None[nothing]
 //│ Defined Nil.Map: Nil[?] -> anything -> Nil[nothing]
 
-// TODO(fcp): why isn't `forall 'B` distributed, in the `Cons.Map` type?
+// * Note: `forall 'B` not distributed out in `Cons.Map` because for some weird reason
+// * the `this` TV has level 0, though it is seemingly refreshed on every use...
 class Cons[A]: List[A] & { head: A; tail: List[A] }
     method Size = succ this.tail.Size
     method HeadOption = Some { payload = this.head }
@@ -160,13 +161,13 @@ o = l.HeadOption
 :e
 case o of {None -> 0 | Some -> o.payload}
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.161: 	case o of {None -> 0 | Some -> o.payload}
+//│ ║  l.162: 	case o of {None -> 0 | Some -> o.payload}
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Option[?A]` does not match type `None[?] & ?a | Some[?] & ?b`
 //│ ║  l.24: 	    method HeadOption: Option[A]
 //│ ║        	                       ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `None[?] & ?a | Some[?] & ?c`
-//│ ║  l.161: 	case o of {None -> 0 | Some -> o.payload}
+//│ ║  l.162: 	case o of {None -> 0 | Some -> o.payload}
 //│ ╙──       	     ^
 //│ res: 0
 //│    = 0
@@ -205,15 +206,15 @@ case res of {None -> 0 | Some -> res.payload}
 case o of {
     Some -> o.Get | None -> 0 }
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.205: 	case o of {
+//│ ║  l.206: 	case o of {
 //│ ║         	^^^^^^^^^^^
-//│ ║  l.206: 	    Some -> o.Get | None -> 0 }
+//│ ║  l.207: 	    Some -> o.Get | None -> 0 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Option[?A]` does not match type `None[?] & ?a | Some[?] & ?b`
 //│ ║  l.24: 	    method HeadOption: Option[A]
 //│ ║        	                       ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `None[?] & ?a | Some[?] & ?c`
-//│ ║  l.205: 	case o of {
+//│ ║  l.206: 	case o of {
 //│ ╙──       	     ^
 //│ res: 0 | 1
 //│    = 0

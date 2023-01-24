@@ -172,6 +172,7 @@ class DiffTests
     // var generalizeCurriedFunctions = true
     var distributeForalls = true
     // var distributeForalls = false
+    var approximateNegativeFunction = false
     var noCycleCheck = false
     var noRecursiveTypes = false
     var constrainedTypes = false
@@ -222,6 +223,7 @@ class DiffTests
             distributeForalls = false
             generalizeCurriedFunctions = true
             mode
+          case "ApproximateNegativeFunction" => approximateNegativeFunction = true; mode
           case "NoCycleCheck" => noCycleCheck = true; mode
           case "CycleCheck" => noCycleCheck = false; mode
           case "RecursiveTypes" => noRecursiveTypes = false; mode
@@ -442,6 +444,7 @@ class DiffTests
             // typer.recordProvenances = !noProvs
             typer.recordProvenances = !noProvs && !mode.dbg && !mode.dbgSimplif || mode.explainErrors
             typer.generalizeCurriedFunctions = generalizeCurriedFunctions
+            typer.approximateNegativeFunction = approximateNegativeFunction
             typer.distributeForalls = distributeForalls
             typer.noCycleCheck = noCycleCheck
             typer.noRecursiveTypes = noRecursiveTypes
