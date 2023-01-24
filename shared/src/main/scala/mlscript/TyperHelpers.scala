@@ -384,6 +384,16 @@ abstract class TyperHelpers { Typer: Typer =>
       case (NegType(`that`), _) => TopType
       case _ => ComposedType(true, that, this)(prov)
     }
+    
+    /** This is to intersect two types that occur in negative position,
+      * where it may be sound to perform some online simplifications/approximations. */
+    def &- (that: SimpleType, prov: TypeProvenance = noProv): SimpleType = (this, that) match {
+      // * This one is only correct in negative position because
+      // * the existence of first-class polymorphic types makes it unsound in positive positions.
+      case (FunctionType(l1, r1), FunctionType(l2, r2)) if approximateNegativeFunction =>
+        FunctionType(l1 | l2, r1 &- r2)(prov)
+      case _ => this & (that, prov)
+    }
     def & (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType =
         (this, that) match {
       case (TopType | RecordType(Nil), _) => that
@@ -393,12 +403,6 @@ abstract class TyperHelpers { Typer: Typer =>
       // case (ComposedType(true, l, r), _) => l & that | r & that
       
       case (_: ClassTag, _: FunctionType) => BotType
-      
-      // * This one is only correct in negative position (but we don't track polarity here);
-      // * the existence of first-class polymorphic types makes it unsound in positive positions.
-      // case (FunctionType(l1, r1), FunctionType(l2, r2)) if approximateNegativeFunction =>
-      //   FunctionType(l1 | l2, r1 & r2)(prov)
-      
       case (RecordType(fs1), RecordType(fs2)) =>
         RecordType(mergeSortedMap(fs1, fs2)(_ && _).toList)(prov)
       case (t0 @ TupleType(fs0), t1 @ TupleType(fs1)) =>

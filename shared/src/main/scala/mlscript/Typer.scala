@@ -1272,7 +1272,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                 bounds ::= nv -> Bounds(b, b)
               case N =>
                 val l = go(tv.lowerBounds.foldLeft(BotType: ST)(_ | _))
-                val u = go(tv.upperBounds.foldLeft(TopType: ST)(_ & _))
+                val u = go(tv.upperBounds.foldLeft(TopType: ST)(_ &- _))
                 if (l =/= Bot || u =/= Top)
                   bounds ::= nv -> Bounds(l, u)
             }
@@ -1350,7 +1350,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           val (ubs, others1) = cs.groupMap(_._1)(_._2).toList.partition(_._2.sizeIs > 1)
           // val (lbs, others2) = others1.groupMap(_._2)(_._1).toList.partition(_._2.sizeIs > 1)
           val lbs = others1.mapValues(_.head).groupMap(_._2)(_._1).toList
-          val bounds = (ubs.mapValues(_.reduce(_ & _)) ++ lbs.mapValues(_.reduce(_ | _)).map(_.swap))
+          val bounds = (ubs.mapValues(_.reduce(_ &- _)) ++ lbs.mapValues(_.reduce(_ | _)).map(_.swap))
           val procesased = bounds.map { case (lo, hi) => Bounds(go(lo), go(hi)) }
           Constrained(go(bod), Nil, procesased)
           

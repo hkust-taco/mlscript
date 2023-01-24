@@ -66,7 +66,7 @@ trait TypeSimplifier { self: Typer =>
             else Nil
           nv.upperBounds = if (allVarPols(tv).forall(_ === false))
               tv.upperBounds.reverseIterator.map(process(_, S(false -> tv)))
-                .reduceOption(_ & _).filterNot(_.isTop).toList
+                .reduceOption(_ &- _).filterNot(_.isTop).toList
             else Nil
         }
         
@@ -618,7 +618,7 @@ trait TypeSimplifier { self: Typer =>
         =>
           println(s"  [..] $v ${atom}")
           val bundle = TypeBounds.mk(
-              v.upperBounds.foldLeft(atom)(_ & _),
+              v.upperBounds.foldLeft(atom)(_ &- _),
               v.lowerBounds.foldLeft(atom)(_ | _),
             )
           varSubst += v -> S(bundle)
@@ -638,7 +638,7 @@ trait TypeSimplifier { self: Typer =>
           
           println(s"  [..] $v ${w}")
           val bundle = TypeBounds.mk(
-              v.upperBounds.foldLeft(w: ST)(_ & _),
+              v.upperBounds.foldLeft(w: ST)(_ &- _),
               v.lowerBounds.foldLeft(w: ST)(_ | _),
             )
           varSubst += v -> S(bundle)
@@ -935,7 +935,7 @@ trait TypeSimplifier { self: Typer =>
         else (false, ty) -> tv
       case (tv, S(pol)) =>
         if (pol) (true, tv.lowerBounds.foldLeft(BotType: ST)(_ | _)) -> tv
-        else (false, tv.upperBounds.foldLeft(TopType: ST)(_ & _)) -> tv
+        else (false, tv.upperBounds.foldLeft(TopType: ST)(_ &- _)) -> tv
     }.toMap
     
     println(s"consed: $consed")
