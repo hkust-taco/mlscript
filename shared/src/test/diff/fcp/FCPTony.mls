@@ -103,7 +103,7 @@ mul id id {}
 // ————————————————————————
 
 
-:ArgGen
+:GeneralizeArguments
 :DistributeForalls
 
 

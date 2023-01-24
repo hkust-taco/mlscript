@@ -1,5 +1,5 @@
 :NoRecursiveTypes
-// :ArgGen
+// :GeneralizeArguments
 
 
 def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b

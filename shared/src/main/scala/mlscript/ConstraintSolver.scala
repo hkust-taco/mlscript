@@ -573,7 +573,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (lhs: TypeVariable, rhs) =>
             val tv = lhs
             println(s"wrong level: ${rhs.level}")
-            if (!noConstrainedTypes && rhs.level <= lvl) {
+            if (constrainedTypes && rhs.level <= lvl) {
               println(s"STASHING $tv bound in extr ctx")
               val buf = ctx.extrCtx.getOrElseUpdate(tv, Buffer.empty)
               buf += false -> rhs
@@ -591,7 +591,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (lhs, rhs: TypeVariable) =>
             val tv = rhs
             println(s"wrong level: ${lhs.level}")
-            if (!noConstrainedTypes && lhs.level <= lvl) {
+            if (constrainedTypes && lhs.level <= lvl) {
               println(s"STASHING $tv bound in extr ctx")
               val buf = ctx.extrCtx.getOrElseUpdate(tv, Buffer.empty)
               buf += true -> lhs

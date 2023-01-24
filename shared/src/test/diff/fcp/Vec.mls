@@ -1,5 +1,5 @@
 
-// :ArgGen // Type of cons is much simpler without this...
+// :GeneralizeArguments // Type of cons is much simpler without this...
 
 :AllowTypeErrors // TODO
 

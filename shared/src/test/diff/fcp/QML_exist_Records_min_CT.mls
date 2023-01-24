@@ -4,7 +4,7 @@
 :NoRecursiveTypes
 :ConstrainedTypes
 // :DistributeForalls
-// :ArgGen
+// :GeneralizeArguments
 
 
 type ArraysRep[Rep] = { fold: forall 'b. 'b -> Rep -> 'b }

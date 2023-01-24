@@ -1,6 +1,6 @@
 :DistributeForalls
 :NoRecursiveTypes
-// :ArgGen // * This actually causes extrusions in pred, failing its type checking
+// :GeneralizeArguments // * This actually causes extrusions in pred, failing its type checking
 
 
 

@@ -30,8 +30,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   var noRecursiveTypes: Boolean = false
   var irregularTypes: Boolean = false
   
-  var noConstrainedTypes: Boolean = false
-  var noArgGen: Boolean = true
+  var constrainedTypes: Boolean = false
+  var generalizeArguments: Boolean = false
   
   var recordProvenances: Boolean = true
   
@@ -884,7 +884,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         // val body_ty = typeTerm(body)(newCtx, raise2, vars, genLambdas = generalizeCurriedFunctions)
         
         val body_ty = typeTerm(body)(newCtx, raise, vars,
-          doGenLambdas && (generalizeCurriedFunctions || !noConstrainedTypes))
+          doGenLambdas && (generalizeCurriedFunctions || constrainedTypes))
         
         // val body_ty = if (!genLamBodies || !generalizeCurriedFunctions) typeTerm(body)(newCtx, raise, vars)
         //     // else newCtx.nextLevel |> { implicit ctx =>
@@ -936,7 +936,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         typeTerm(desug)
       case App(f, a) =>
         // val genArgs = ctx.inRecursiveDef.forall(rd => !f.freeVars.contains(rd))
-        val genArgs = !noArgGen && ctx.inRecursiveDef.isEmpty //&& !generalizeCurriedFunctions
+        val genArgs = generalizeArguments && ctx.inRecursiveDef.isEmpty //&& !generalizeCurriedFunctions
         // val genArgs = true
         
         val f_ty = typeMonomorphicTerm(f)

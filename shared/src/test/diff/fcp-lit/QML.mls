@@ -1,6 +1,6 @@
 :NoRecursiveTypes
 :DontDistributeForalls
-// :ArgGen
+// :GeneralizeArguments
 
 
 // =============== Sec 2 ===============
@@ -176,7 +176,7 @@ def mod = let rec mod a b = if a < b then a else mod (a - b) b in mod
 // (forall r. (forall b. Sig[a, r, b]) -> y) -> y
 
 :DistributeForalls
-// :ArgGen
+// :GeneralizeArguments
 
 type ExSmall = (forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) -> 'y
 //│ Defined type alias ExSmall

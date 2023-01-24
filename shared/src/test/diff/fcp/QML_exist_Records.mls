@@ -3,7 +3,7 @@
 
 :NoRecursiveTypes
 // :DistributeForalls
-// :ArgGen
+// :GeneralizeArguments
 // :ConstrainedTypes
 
 

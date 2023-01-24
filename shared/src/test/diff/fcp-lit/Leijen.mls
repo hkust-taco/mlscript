@@ -1,6 +1,6 @@
 :NoRecursiveTypes
 :DontDistributeForalls
-:ArgGen // * Needed in order to quantify non-function arguments to runST
+:GeneralizeArguments // * Needed in order to quantify non-function arguments to runST
 
 // From HML implementation
 

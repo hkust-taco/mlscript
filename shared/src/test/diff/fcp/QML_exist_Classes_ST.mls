@@ -4,7 +4,7 @@
 :NoRecursiveTypes
 :NoConstrainedTypes
 // :DistributeForalls
-// :ArgGen
+// :GeneralizeArguments
 
 // TODO try without some signatures
 

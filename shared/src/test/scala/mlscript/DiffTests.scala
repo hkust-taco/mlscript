@@ -174,9 +174,9 @@ class DiffTests
     // var distributeForalls = false
     var noCycleCheck = false
     var noRecursiveTypes = false
-    var noConstrainedTypes = true
+    var constrainedTypes = false
     var irregularTypes = false
-    var noArgGen = true
+    var generalizeArguments = false
     var newParser = basePath.headOption.contains("parser") || basePath.headOption.contains("compiler")
     
     val backend = new JSTestBackend()
@@ -226,10 +226,10 @@ class DiffTests
           case "CycleCheck" => noCycleCheck = false; mode
           case "RecursiveTypes" => noRecursiveTypes = false; mode
           case "NoRecursiveTypes" => noRecursiveTypes = true; mode
-          case "ConstrainedTypes" => noConstrainedTypes = false; mode
-          case "NoConstrainedTypes" => noConstrainedTypes = true; mode
-          case "ArgGen" => noArgGen = false; mode
-          case "NoArgGen" => noArgGen = true; mode
+          case "ConstrainedTypes" => constrainedTypes = true; mode
+          case "NoConstrainedTypes" => constrainedTypes = false; mode
+          case "GeneralizeArguments" => generalizeArguments = true; mode
+          case "DontGeneralizeArguments" => generalizeArguments = false; mode
           case "IrregularTypes" => irregularTypes = true; mode
           case str @ "Fuel" =>
             // println("'"+line.drop(str.length + 2)+"'")
@@ -445,8 +445,8 @@ class DiffTests
             typer.distributeForalls = distributeForalls
             typer.noCycleCheck = noCycleCheck
             typer.noRecursiveTypes = noRecursiveTypes
-            typer.noConstrainedTypes = noConstrainedTypes || mode.generateTsDeclarations
-            typer.noArgGen = noArgGen
+            typer.constrainedTypes = constrainedTypes
+            typer.generalizeArguments = generalizeArguments
             typer.irregularTypes = irregularTypes
             typer.verbose = mode.verbose
             typer.explainErrors = mode.explainErrors
