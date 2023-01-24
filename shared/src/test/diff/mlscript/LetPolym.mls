@@ -192,9 +192,6 @@ def test =
 //│ test: ((int -> int) -> "1" -> 'a) -> int -> 'a
 //│     = [Function: test15]
 
-// :GeneralizeCurriedFunctions
-
-// :d
 fun f -> fun x ->
   let local = (fun y -> f y) x
   in ()
@@ -204,16 +201,16 @@ fun f -> fun x ->
 :e
 res add "1"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.205: 	res add "1"
+//│ ║  l.202: 	res add "1"
 //│ ║         	^^^^^^^^^^^
 //│ ╟── string literal of type `"1"` is not an instance of type `int`
-//│ ║  l.205: 	res add "1"
+//│ ║  l.202: 	res add "1"
 //│ ║         	        ^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.199: 	  let local = (fun y -> f y) x
+//│ ║  l.196: 	  let local = (fun y -> f y) x
 //│ ║         	                          ^
 //│ ╟── from reference:
-//│ ║  l.199: 	  let local = (fun y -> f y) x
+//│ ║  l.196: 	  let local = (fun y -> f y) x
 //│ ╙──       	                             ^
 //│ res: () | error
 //│    = []
@@ -227,16 +224,16 @@ fun f -> fun x ->
 :e
 res add "1"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.228: 	res add "1"
+//│ ║  l.225: 	res add "1"
 //│ ║         	^^^^^^^^^^^
 //│ ╟── string literal of type `"1"` is not an instance of type `int`
-//│ ║  l.228: 	res add "1"
+//│ ║  l.225: 	res add "1"
 //│ ║         	        ^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.222: 	  let local = f ((fun y -> y) x)
+//│ ║  l.219: 	  let local = f ((fun y -> y) x)
 //│ ║         	                 ^^^^^^^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.222: 	  let local = f ((fun y -> y) x)
+//│ ║  l.219: 	  let local = f ((fun y -> y) x)
 //│ ╙──       	                              ^
 //│ res: () | error
 //│    = []
@@ -257,17 +254,17 @@ fun f -> fun x ->
     let tmp = add x 1 in x
   )) (fun f -> f true)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.256: 	(fun k -> k (fun x ->
+//│ ║  l.253: 	(fun k -> k (fun x ->
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.257: 	    let tmp = add x 1 in x
+//│ ║  l.254: 	    let tmp = add x 1 in x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.258: 	  )) (fun f -> f true)
+//│ ║  l.255: 	  )) (fun f -> f true)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `int`
-//│ ║  l.258: 	  )) (fun f -> f true)
+//│ ║  l.255: 	  )) (fun f -> f true)
 //│ ║         	                 ^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.257: 	    let tmp = add x 1 in x
+//│ ║  l.254: 	    let tmp = add x 1 in x
 //│ ╙──       	                  ^
 //│ res: error | true
 //│    = true
@@ -279,21 +276,21 @@ fun f -> fun x ->
     ) in test
   ) (fun f -> f true)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.276: 	(fun k ->
+//│ ║  l.273: 	(fun k ->
 //│ ║         	^^^^^^^^^
-//│ ║  l.277: 	    let test = k (fun x ->
+//│ ║  l.274: 	    let test = k (fun x ->
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.278: 	      let tmp = add x 1 in x
+//│ ║  l.275: 	      let tmp = add x 1 in x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.279: 	    ) in test
+//│ ║  l.276: 	    ) in test
 //│ ║         	^^^^^^^^^^^^^
-//│ ║  l.280: 	  ) (fun f -> f true)
+//│ ║  l.277: 	  ) (fun f -> f true)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `int`
-//│ ║  l.280: 	  ) (fun f -> f true)
+//│ ║  l.277: 	  ) (fun f -> f true)
 //│ ║         	                ^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.278: 	      let tmp = add x 1 in x
+//│ ║  l.275: 	      let tmp = add x 1 in x
 //│ ╙──       	                    ^
 //│ res: error | true
 //│    = true
@@ -352,13 +349,13 @@ foo (fun x -> (x, x))
 :e
 foo (fun x -> (0, x + 1))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.353: 	foo (fun x -> (0, x + 1))
+//│ ║  l.350: 	foo (fun x -> (0, x + 1))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'a` is not an instance of type `int`
-//│ ║  l.342: 	def foo (f: forall 'a. 'a -> ('a, 'a)) =
+//│ ║  l.339: 	def foo (f: forall 'a. 'a -> ('a, 'a)) =
 //│ ║         	                   ^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.353: 	foo (fun x -> (0, x + 1))
+//│ ║  l.350: 	foo (fun x -> (0, x + 1))
 //│ ╙──       	                  ^
 //│ res: error | int
 //│    = 43

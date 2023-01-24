@@ -1,5 +1,4 @@
 :NoRecursiveTypes
-:GeneralizeCurriedFunctions
 :DistributeForalls
 
 // ============ Dummy classes to represent the types in the examples ============
@@ -21,7 +20,7 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail})
+//│ ('head & 'a) -> (List['a] & 'tail) -> (Cons['a] with {head: 'head, tail: 'tail})
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -120,30 +119,30 @@ rec def find table key =
 
 :ns
 find
-//│ res: forall 'b 'c 'val 'a 'd 'e 'f 'a0 'g 'a1 'h 'i 'j 'find 'k 'l 'a2. 'find
+//│ res: forall 'b 'c 'd 'e 'f 'g 'val 'a 'a0 'a1 'h 'i 'j 'k 'l 'a2 'find. 'find
 //│   where
-//│     'find := 'g -> 'e -> 'k
-//│     'k :> (forall 'm. 'm) | (forall 'n. 'n)
+//│     'find := 'g -> 'f -> 'l
+//│     'l :> (forall 'm. 'm) | (forall 'n. 'n)
+//│        <: 'e
+//│     'e :> (forall 'm. 'm) | (forall 'n. 'n)
+//│        <: 'h
+//│     'h :> (forall 'm. 'm) | (forall 'n. 'n)
+//│        <: 'b
+//│     'b :> (forall 'm. 'm) | (forall 'n. 'n)
 //│        <: 'd
 //│     'd :> (forall 'm. 'm) | (forall 'n. 'n)
-//│        <: 'j
-//│     'j :> (forall 'm. 'm) | (forall 'n. 'n)
-//│        <: 'c
-//│     'c :> (forall 'm. 'm) | (forall 'n. 'n)
-//│        <: 'i
-//│     'i :> (forall 'm. 'm) | (forall 'n. 'n)
-//│        <: 'k
+//│        <: 'l
 //│     'n :> #None
-//│     'm :> #Some & {val: 'val, Some#a = 'a}
-//│     'e <: 'b
+//│     'm :> #Some & {val: 'val, Some#a = 'a0}
+//│     'f <: 'i
 //│     'g :> List['a2]
-//│        <: List['a2] & List['a1] & List['a0]
-//│     'a2 <: 'a0 & 'a1
-//│     'a1 <: {_2: 'f} & {_1: 'l}
-//│     'l <: 'b
-//│     'f <: 'h
-//│     'h <: 'val
-//│     'val <: 'a
+//│        <: List['a2] & List['a] & List['a1]
+//│     'a2 <: 'a1 & 'a
+//│     'a <: {_2: 'k} & {_1: 'c}
+//│     'c <: 'i
+//│     'k <: 'j
+//│     'j <: 'val
+//│     'val <: 'a0
 //│    = [Function: find1]
 
 :ng
@@ -158,7 +157,7 @@ def find_A table key =
   if is_empty table then None
   else if eq (head table)._1 key then Some (head table)._2
   else find_A (tail table) key
-//│ List[(anything, 'b,)] -> anything -> (None | Some['b])
+//│ List[(anything, 'val,)] -> anything -> (None | Some['val])
 //│   <:  find_A:
 //│ List[(anything, 'b,)] -> anything -> (None | Some['b])
 //│       = <no result>
@@ -185,7 +184,7 @@ type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 // let succ (n:Int) = fun f x -> f (n f x)
 def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 def succ_ n = fun f -> fun x -> f (n f x)
-//│ succ: ChurchInt -> ('a -> ('a & 'a0) & 'a0 -> 'b) -> ('a & 'a0) -> 'b
+//│ succ: ChurchInt -> ('a -> ('a & 'b)) -> 'a -> 'b
 //│     = [Function: succ]
 //│ succ_: ('a -> 'b -> 'c) -> ('c -> 'd & 'a) -> 'b -> 'd
 //│      = [Function: succ_]
@@ -194,11 +193,11 @@ def succ_ n = fun f -> fun x -> f (n f x)
 
 //:e // due to tapping
 def add (n: ChurchInt) (m: ChurchInt) = n succ m
-//│ add: ChurchInt -> ChurchInt -> (('a -> ('a & 'a0) & 'a0 -> 'b) -> ('a & 'a0) -> 'b | ChurchInt)
+//│ add: ChurchInt -> ChurchInt -> (('a -> ('a & 'b)) -> 'a -> 'b | ChurchInt)
 //│    = [Function: add]
 
 def add_ n m = n succ_ m
-//│ add_: ((forall 'a 'b 'c 'd. ('a -> 'b -> 'c) -> ('c -> 'd & 'a) -> 'b -> 'd) -> 'e -> 'f) -> 'e -> 'f
+//│ add_: ((forall 'a 'b 'c 'd. ('b -> 'c -> 'd) -> ('d -> 'a & 'b) -> 'c -> 'a) -> 'e -> 'f) -> 'e -> 'f
 //│     = [Function: add_]
 
 // let printInt (n:Int) = print (n (fun x -> x+1) 0)
@@ -234,16 +233,16 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 :e // * Since "sound extrusion"
 zog = printInt (add (nfind table "one") (nfind table "two"))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.235: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║  l.234: 	zog = printInt (add (nfind table "one") (nfind table "two"))
 //│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.182: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.181: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.182: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.181: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                        ^^
 //│ ╟── from application:
-//│ ║  l.217: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
+//│ ║  l.216: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│ ╙──       	                                                      ^^^
 //│ zog: string
 //│    = '0'
@@ -256,16 +255,16 @@ zog = printInt (add (nfind table "one") (nfind table "two"))
 :e // * Since "sound extrusion"
 a = add (nfind table "one")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.257: 	a = add (nfind table "one")
+//│ ║  l.256: 	a = add (nfind table "one")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.182: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.181: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.182: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.181: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                        ^^
 //│ ╟── from application:
-//│ ║  l.217: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
+//│ ║  l.216: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│ ╙──       	                                                      ^^^
 //│ a: error
 //│  = [Function (anonymous)]
@@ -337,40 +336,40 @@ match_opt (
     fun () -> fun f -> fun x -> x,
     fun v -> v
   ) b
-//│ res: ('a -> 'b & 'a -> 'c & 'c -> 'b) -> 'a -> ('b | 'a)
+//│ res: ('a -> 'b & 'a -> 'c & 'c -> 'b) -> ('a & 'd) -> ('d | 'b)
 //│    = [Function (anonymous)]
 
 match_opt (
     fun () -> fun f -> fun x -> x,
     fun v -> v
   ) (find table "two")
-//│ res: ('a -> 'b & 'a -> 'c & 'c -> 'b) -> 'a -> ('b | 'a)
+//│ res: ('a -> 'b & 'a -> 'c & 'c -> 'b) -> ('a & 'd) -> ('d | 'b)
 //│    = [Function (anonymous)]
 
 def foo key = match_opt (
     fun () -> fun f -> id,
     fun v -> v
   ) (find table key)
-//│ foo: anything -> ('a -> 'b & 'a -> 'c & 'c -> 'b & 'a -> 'd & 'd -> 'b & 'a -> 'e & 'e -> 'b & 'a -> 'f & 'f -> 'b) -> 'a -> ('b | 'a)
+//│ foo: anything -> ('a -> 'b & 'a -> 'c & 'c -> 'b & 'a -> 'd & 'd -> 'b & 'a -> 'e & 'e -> 'b & 'a -> 'f & 'f -> 'b) -> 'a -> ('a | 'b)
 //│    = [Function: foo]
 
 foo 1
-//│ res: ('a -> 'b & 'a -> 'c & 'c -> 'b & 'a -> 'd & 'd -> 'b & 'a -> 'e & 'e -> 'b & 'a -> 'f & 'f -> 'b) -> 'a -> ('b | 'a)
+//│ res: ('a -> 'b & 'a -> 'c & 'c -> 'b & 'a -> 'd & 'd -> 'b & 'a -> 'e & 'e -> 'b & 'a -> 'f & 'f -> 'b) -> 'a -> ('a | 'b)
 //│    = [Function (anonymous)]
 
 :e
 foo 1 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.362: 	foo 1 2
+//│ ║  l.361: 	foo 1 2
 //│ ║         	^^^^^^^
 //│ ╟── integer literal of type `2` is not a function
-//│ ║  l.362: 	foo 1 2
+//│ ║  l.361: 	foo 1 2
 //│ ║         	      ^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.217: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
+//│ ║  l.216: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│ ║         	                                                   ^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.217: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
+//│ ║  l.216: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│ ╙──       	                                                   ^
 //│ res: 'a -> 'a | error
 //│    = [Function: id]
@@ -391,7 +390,7 @@ foo 1 error 2
     fun () -> fun f -> fun x -> x,
     fun v -> v
   ) (find table key)) "two"
-//│ res: ('a -> 'b & 'a -> 'c & 'c -> 'b & 'a -> 'd & 'd -> 'b & 'a -> 'e & 'e -> 'b & 'a -> 'f & 'f -> 'b) -> 'a -> ('b | 'a)
+//│ res: ('a -> 'b & 'b -> 'c & 'a -> 'c) -> ('d & 'a) -> ('d | 'c)
 //│    = [Function (anonymous)]
 
 res id
@@ -411,7 +410,7 @@ res id
 (fun opt -> case b of
   None -> fun f -> fun x -> x,
   Some -> b.val) (find table "two")
-//│ res: ('a -> 'b & 'b -> 'c & 'a -> 'c & 'a -> 'd & 'd -> 'c) -> ('c & 'a) -> 'c
+//│ res: ('a -> 'b & 'b -> 'c & 'a -> 'c) -> ('d & 'a) -> ('d | 'c)
 //│    = [Function (anonymous)]
 
 

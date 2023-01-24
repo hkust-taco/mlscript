@@ -1,5 +1,4 @@
 :NoRecursiveTypes
-:GeneralizeCurriedFunctions
 :NoConstrainedTypes
 :DontDistributeForalls
 
@@ -43,13 +42,13 @@ test(fun x ->
 :e
 test(fun x -> x + 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.44: 	test(fun x -> x + 1)
+//│ ║  l.43: 	test(fun x -> x + 1)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'a` is not an instance of type `int`
-//│ ║  l.20: 	test(f: forall 'a. 'a -> 'a) =
+//│ ║  l.19: 	test(f: forall 'a. 'a -> 'a) =
 //│ ║        	               ^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.44: 	test(fun x -> x + 1)
+//│ ║  l.43: 	test(fun x -> x + 1)
 //│ ╙──      	              ^
 //│ res: (1, true,) | error
 //│    = [ 2, 2 ]
@@ -57,10 +56,10 @@ test(fun x -> x + 1)
 :e
 test succ
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.58: 	test succ
+//│ ║  l.57: 	test succ
 //│ ║        	^^^^^^^^^
 //│ ╟── type `'a` is not an instance of type `int`
-//│ ║  l.20: 	test(f: forall 'a. 'a -> 'a) =
+//│ ║  l.19: 	test(f: forall 'a. 'a -> 'a) =
 //│ ╙──      	               ^^
 //│ res: (1, true,) | error
 //│    = [ 2, 2 ]
@@ -98,13 +97,13 @@ test id
 :e
 test (fun x -> x + 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.99: 	test (fun x -> x + 1)
+//│ ║  l.98: 	test (fun x -> x + 1)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `int`
-//│ ║  l.87: 	  pair (f 1) (f true)
+//│ ║  l.86: 	  pair (f 1) (f true)
 //│ ║        	                ^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.99: 	test (fun x -> x + 1)
+//│ ║  l.98: 	test (fun x -> x + 1)
 //│ ╙──      	               ^
 //│ res: (1, 2,) | error
 //│    = [ 1, 2 ]

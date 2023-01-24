@@ -3,7 +3,6 @@
 
 
 :NoRecursiveTypes
-:GeneralizeCurriedFunctions
 :NoConstrainedTypes
 // :DistributeForalls
 // :ArgGen
@@ -36,13 +35,13 @@ def step arr f = f (stepImpl2 arr)
 //│   <:  step:
 //│ Arrays -> Arrays
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.34: 	def step arr f = f (stepImpl2 arr)
+//│ ║  l.33: 	def step arr f = f (stepImpl2 arr)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.12: 	type ArraysRep = { fold: forall 'b. 'b -> 'b }
+//│ ║  l.11: 	type ArraysRep = { fold: forall 'b. 'b -> 'b }
 //│ ║        	                                ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.12: 	type ArraysRep = { fold: forall 'b. 'b -> 'b }
+//│ ║  l.11: 	type ArraysRep = { fold: forall 'b. 'b -> 'b }
 //│ ╙──      	                                ^^
 //│     = [Function: step]
 

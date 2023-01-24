@@ -1,5 +1,4 @@
 :ConstrainedTypes
-:GeneralizeCurriedFunctions
 
 
 def f n = n 0
@@ -9,16 +8,16 @@ def f n = n 0
 :e
 f {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.10: 	f {}
-//│ ║        	^^^^
+//│ ║  l.9: 	f {}
+//│ ║       	^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.10: 	f {}
-//│ ║        	  ^^
+//│ ║  l.9: 	f {}
+//│ ║       	  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.5: 	def f n = n 0
+//│ ║  l.4: 	def f n = n 0
 //│ ║       	          ^^^
 //│ ╟── from reference:
-//│ ║  l.5: 	def f n = n 0
+//│ ║  l.4: 	def f n = n 0
 //│ ╙──     	          ^
 //│ res: error
 //│ Runtime error:
@@ -28,16 +27,16 @@ f {}
 :e
 f {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.29: 	f {} {}
+//│ ║  l.28: 	f {} {}
 //│ ║        	^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.29: 	f {} {}
+//│ ║  l.28: 	f {} {}
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.5: 	def f n = n 0
+//│ ║  l.4: 	def f n = n 0
 //│ ║       	          ^^^
 //│ ╟── from reference:
-//│ ║  l.5: 	def f n = n 0
+//│ ║  l.4: 	def f n = n 0
 //│ ╙──     	          ^
 //│ res: error
 //│ Runtime error:
@@ -60,13 +59,13 @@ f {}
 :e
 f {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.61: 	f {} {}
+//│ ║  l.60: 	f {} {}
 //│ ║        	^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.61: 	f {} {}
+//│ ║  l.60: 	f {} {}
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.47: 	def f n m = n 0
+//│ ║  l.46: 	def f n m = n 0
 //│ ╙──      	            ^^^
 //│ res: error
 //│ Runtime error:
@@ -88,13 +87,13 @@ def test extr =
 :e
 test 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.89: 	test 1
+//│ ║  l.88: 	test 1
 //│ ║        	^^^^^^
 //│ ╟── integer literal of type `1` is not a function
-//│ ║  l.89: 	test 1
+//│ ║  l.88: 	test 1
 //│ ║        	     ^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.79: 	  in let _ = extr f
+//│ ║  l.78: 	  in let _ = extr f
 //│ ╙──      	             ^^^^^^
 //│ res: anything -> 'a | error
 //│   where
@@ -119,13 +118,13 @@ def test extr x =
 :e
 test 0
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.120: 	test 0
+//│ ║  l.119: 	test 0
 //│ ║         	^^^^^^
 //│ ╟── integer literal of type `0` is not a function
-//│ ║  l.120: 	test 0
+//│ ║  l.119: 	test 0
 //│ ║         	     ^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.108: 	  in let _ = extr f
+//│ ║  l.107: 	  in let _ = extr f
 //│ ╙──       	             ^^^^^^
 //│ res: 'a -> (anything -> 'b
 //│   where
@@ -153,13 +152,13 @@ test 0 1
 :e
 test 0 1 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.154: 	test 0 1 2
+//│ ║  l.153: 	test 0 1 2
 //│ ║         	^^^^^^^^^^
 //│ ╟── integer literal of type `1` is not a function
-//│ ║  l.154: 	test 0 1 2
+//│ ║  l.153: 	test 0 1 2
 //│ ║         	       ^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.137: 	  let f n m = x (n 0)
+//│ ║  l.136: 	  let f n m = x (n 0)
 //│ ╙──       	              ^^^^^^^
 //│ res: error
 //│ Runtime error:
@@ -183,13 +182,13 @@ test 0 1
 :e
 test 0 1 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.184: 	test 0 1 2
+//│ ║  l.183: 	test 0 1 2
 //│ ║         	^^^^^^^^^^
 //│ ╟── integer literal of type `0` is not a function
-//│ ║  l.170: 	  in f 0
+//│ ║  l.169: 	  in f 0
 //│ ║         	       ^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.169: 	  let f n m = (n x 0)
+//│ ║  l.168: 	  let f n m = (n x 0)
 //│ ╙──       	               ^^^
 //│ res: error
 //│ Runtime error:

@@ -15,7 +15,7 @@ def Nil = Nil {}
 //│    = [Function: Nil1]
 
 def Cons head tail = Cons { head; tail }
-//│ Cons: 'a -> (List['A] & 'tail) -> (Cons['A | 'a] with {head: 'a, tail: 'tail})
+//│ Cons: ('head & 'A) -> (List['A] & 'tail) -> (Cons['A] with {head: 'head, tail: 'tail})
 //│     = [Function: Cons1]
 
 
@@ -86,7 +86,7 @@ res.tail.head
 
 // This used to yield a more precise Cons constructor, but it's no longer necessary in the new class semantics
 def Cons head tail = originalCons { head; tail } with { head; tail }
-//│ Cons: 'a -> (List['A] & 'tail) -> (Cons['A | 'a] & {head: 'a, tail: 'tail})
+//│ Cons: ('A & 'head) -> (List['A] & 'tail) -> (Cons['A] & {head: 'head, tail: 'tail})
 //│     = [Function: Cons2]
 
 

@@ -1,4 +1,3 @@
-:GeneralizeCurriedFunctions
 :NoRecursiveTypes
 
 
@@ -30,13 +29,13 @@ s2 = S: S2
 :e // * S2 is less genetral than S1
 s2: S1
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.31: 	s2: S1
+//│ ║  l.30: 	s2: S1
 //│ ║        	^^
 //│ ╟── type `'a` does not match type `'a0`
-//│ ║  l.15: 	type S2 = (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.14: 	type S2 = (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║        	                  ^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.12: 	type S1 = ('a -> 'b -> 'c) -> ('a -> 'b) -> 'a -> 'c
+//│ ║  l.11: 	type S1 = ('a -> 'b -> 'c) -> ('a -> 'b) -> 'a -> 'c
 //│ ╙──      	           ^^
 //│ res: S1
 //│    = [Function: S]
@@ -48,7 +47,7 @@ type Id = forall 'a. 'a -> 'a
 :e // TODO: could probably use different type var shadows from different type alias occurrences
 S: Id -> Id -> Id -> Id
 //│ ╔══[ERROR] Cyclic-looking constraint while typing type ascription; a type annotation may be required
-//│ ║  l.49: 	S: Id -> Id -> Id -> Id
+//│ ║  l.48: 	S: Id -> Id -> Id -> Id
 //│ ║        	^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: Id -> Id -> Id -> Id

@@ -1,5 +1,4 @@
 :NoRecursiveTypes
-:GeneralizeCurriedFunctions
 :NoConstrainedTypes
 :DontDistributeForalls
 

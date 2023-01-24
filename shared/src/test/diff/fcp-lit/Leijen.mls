@@ -1,4 +1,3 @@
-:GeneralizeCurriedFunctions
 :NoRecursiveTypes
 :DontDistributeForalls
 :ArgGen // * Needed in order to quantify non-function arguments to runST
@@ -278,13 +277,13 @@ fun f -> fun x -> f x
 :e
 inc true
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.279: 	inc true
+//│ ║  l.278: 	inc true
 //│ ║         	^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `int`
-//│ ║  l.279: 	inc true
+//│ ║  l.278: 	inc true
 //│ ║         	    ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.148: 	def inc: int -> int
+//│ ║  l.147: 	def inc: int -> int
 //│ ╙──       	         ^^^
 //│ res: error | int
 //│    = 2
@@ -382,13 +381,13 @@ map xauto ids
 :e // * This term needs distributivity to work because of how autox is defined (see at the end of this file):
 map xauto (map xauto ids)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.383: 	map xauto (map xauto ids)
+//│ ║  l.382: 	map xauto (map xauto ids)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.175: 	def xauto : forall 'a. (forall 'b. 'b -> 'b) -> 'a -> 'a
+//│ ║  l.174: 	def xauto : forall 'a. (forall 'b. 'b -> 'b) -> 'a -> 'a
 //│ ║         	                               ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.175: 	def xauto : forall 'a. (forall 'b. 'b -> 'b) -> 'a -> 'a
+//│ ║  l.174: 	def xauto : forall 'a. (forall 'b. 'b -> 'b) -> 'a -> 'a
 //│ ╙──       	                               ^^
 //│ res: error | List['a -> 'a]
 //│    = Cons { head: [Function: id1], tail: Nil {} }
@@ -440,13 +439,13 @@ app (map head) (single ids)
 :ng
 (error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.441: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
+//│ ║  l.440: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'d` is not an instance of type `int`
-//│ ║  l.441: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
+//│ ║  l.440: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
 //│ ║         	                                                      ^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.441: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
+//│ ║  l.440: 	(error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'd) -> (int -> int)])
 //│ ╙──       	                                                                        ^^^
 //│ res: error | int
 
@@ -520,13 +519,13 @@ fun x -> let polys (xs: List[forall 'a. 'a -> 'a]) = 1 in let f y = x in polys (
 :e
 ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.521: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
+//│ ║  l.520: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ║         	^^^
 //│ ╟── type `'a` does not match type `'b`
-//│ ║  l.521: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
+//│ ║  l.520: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ║         	                             ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.521: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
+//│ ║  l.520: 	ids : forall 'b. List[forall 'a. 'a -> 'b]
 //│ ╙──       	             ^^
 //│ res: List[anything -> nothing]
 //│    = Cons { head: [Function: id1], tail: Nil {} }
@@ -816,13 +815,13 @@ single id : List[forall 'a. 'a -> 'a]
 :ng
 returnST 1 : forall 's. ST['s, int]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.817: 	returnST 1 : forall 's. ST['s, int]
+//│ ║  l.816: 	returnST 1 : forall 's. ST['s, int]
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.817: 	returnST 1 : forall 's. ST['s, int]
+//│ ║  l.816: 	returnST 1 : forall 's. ST['s, int]
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.817: 	returnST 1 : forall 's. ST['s, int]
+//│ ║  l.816: 	returnST 1 : forall 's. ST['s, int]
 //│ ╙──       	                    ^^
 //│ res: ST['s, int]
 
@@ -951,13 +950,13 @@ runST4 (newRef4 1)
 :e
 (fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.952: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.951: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.952: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.951: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║         	                                                      ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.952: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.951: 	(fun x -> xauto x) : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ╙──       	                                                      ^^
 //│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0)
 //│    = [Function: res]
@@ -970,13 +969,13 @@ runST4 (newRef4 1)
 :e
 xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.971: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.970: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║         	^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.971: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.970: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ║         	                                         ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.971: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ║  l.970: 	xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ ╙──       	                                         ^^
 //│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0)
 //│    = [Function: xauto]
@@ -1022,13 +1021,13 @@ test2 = test1
 //│   <:  test2:
 //│ List[forall 'a. 'a -> 'a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.1020: 	test2 = test1
+//│ ║  l.1019: 	test2 = test1
 //│ ║          	^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.1006: 	def test2: List[forall 'a. 'a -> 'a]
+//│ ║  l.1005: 	def test2: List[forall 'a. 'a -> 'a]
 //│ ║          	                       ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.1006: 	def test2: List[forall 'a. 'a -> 'a]
+//│ ║  l.1005: 	def test2: List[forall 'a. 'a -> 'a]
 //│ ╙──        	                       ^^
 //│      = <no result>
 //│        test1 and test2 are not implemented

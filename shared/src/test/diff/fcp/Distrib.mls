@@ -1,5 +1,4 @@
 :NoRecursiveTypes
-:GeneralizeCurriedFunctions
 :NoConstrainedTypes
 :DistributeForalls
 
@@ -108,14 +107,14 @@ f1 = f2
 //│   <:  f1:
 //│ 'a -> (forall 'b. 'b -> ('a, 'b,))
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.106: 	f1 = f2
+//│ ║  l.105: 	f1 = f2
 //│ ║         	^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.10: 	def f1: 'a -> (forall 'b. 'b -> ('a, 'b))
-//│ ║        	                      ^^
+//│ ║  l.9: 	def f1: 'a -> (forall 'b. 'b -> ('a, 'b))
+//│ ║       	                      ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.10: 	def f1: 'a -> (forall 'b. 'b -> ('a, 'b))
-//│ ╙──      	                      ^^
+//│ ║  l.9: 	def f1: 'a -> (forall 'b. 'b -> ('a, 'b))
+//│ ╙──     	                      ^^
 
 f2 = f1
 //│ 'a -> (forall 'b. 'b -> ('a, 'b,))

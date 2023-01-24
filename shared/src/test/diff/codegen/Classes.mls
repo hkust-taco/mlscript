@@ -127,7 +127,7 @@ def MyBox inner info = MyBox { inner; info }
 //│   }));
 //│ };
 //│ // End of generated code
-//│ MyBox: (int & 'a) -> (string & 'info) -> (MyBox with {info: 'info, inner: 'a})
+//│ MyBox: (int & 'inner) -> (string & 'info) -> (MyBox with {info: 'info, inner: 'inner})
 //│      = [Function: MyBox1]
 
 :js

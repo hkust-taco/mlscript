@@ -2,7 +2,6 @@
 
 
 :NoRecursiveTypes
-:GeneralizeCurriedFunctions
 :NoConstrainedTypes
 
 
@@ -45,7 +44,7 @@ def simpleStepImpl arrImpl = ArraysImpl {
   }
 //│ simpleStepImpl: ArraysRep[in 'A | 'A0 | 'A1 | 'A2 & 'A3 out 'A0 & 'A2, in 'Rep | 'Rep0 out 'Rep1 & ('Rep2 | 'Rep3)] -> (ArraysImpl['A3, 'Rep4] with {fold: forall 'b. ('A2 -> 'b -> 'b) -> 'b -> ('Rep0, anything,) -> 'b, init: 'A -> ('Rep1, "initialized",), sub: ('Rep, anything,) -> int -> 'A0, update: forall 'a. ('Rep3 & 'a, anything,) -> int -> 'A1 -> ('Rep2 | 'a, "updated",)})
 //│   where
-//│     'Rep4 :> ('Rep1 | 'Rep2 | 'c, "initialized" | "updated",)
+//│     'Rep4 :> ('Rep1 | 'Rep2, "initialized" | "updated",)
 //│           <: (nothing, anything,)
 //│     'A3 :> 'A0
 //│         <: nothing
@@ -57,9 +56,9 @@ def simpleStepImpl arrImpl = ArraysImpl {
 simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
 //│ res: ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string,)]
 //│    = [Function: simpleStepImpl]
-//│ constrain calls  : 46463
+//│ constrain calls  : 46431
 //│ annoying  calls  : 101
-//│ subtyping calls  : 380933
+//│ subtyping calls  : 380825
 :ResetFuel
 
 // def simpleStepImpl2_ty: Arrays['a] -> ArraysImpl['a, ('_, string)]
@@ -85,16 +84,16 @@ mkArrays impl k = k impl
 :e
 def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.86: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
+//│ ║  l.85: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
 //│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.36: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║  l.35: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                         ^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.36: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║  l.35: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                         ^^^^
 //│ ╟── from reference:
-//│ ║  l.42: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.Sub r0 i;
+//│ ║  l.41: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.Sub r0 i;
 //│ ╙──      	                                                    ^^
 //│ stepped: error
 //│        = <no result>

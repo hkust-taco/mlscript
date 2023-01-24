@@ -184,7 +184,7 @@ class BadPair[A, B]: AbstractPair[A, B]
 //│ ╙──       	               ^
 //│ Defined class BadPair[+A, +B]
 //│ Defined BadPair.Test: BadPair['A, ?] -> ('A -> 'A -> 'a) -> 'a
-//│ Defined BadPair.Map: BadPair['A, ?] -> ('A -> 'a) -> anything -> BadPair['a, 'a]
+//│ Defined BadPair.Map: BadPair['A, ?] -> ('A -> 'x) -> anything -> BadPair['x, 'x]
 
 bp = BadPair { x = 42; y = true }
 bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
@@ -204,11 +204,11 @@ BadPair = BadPair { x = 42; y = 0 }
 BadPair.Map
 BadPair.(BadPair.Map)
 //│ BadPair: BadPair[42, 0]
-//│ res: BadPair['A, ?] -> ('A -> 'a) -> anything -> BadPair['a, 'a]
+//│ res: BadPair['A, ?] -> ('A -> 'x) -> anything -> BadPair['x, 'x]
 //│ ╔══[ERROR] Class BadPair has no method BadPair.Map
 //│ ║  l.205: 	BadPair.(BadPair.Map)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
-//│ res: (42 -> 'a) -> anything -> BadPair['a, 'a]
+//│ res: (42 -> 'x) -> anything -> BadPair['x, 'x]
 
 
 class ClassA

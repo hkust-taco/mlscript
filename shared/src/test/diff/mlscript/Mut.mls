@@ -355,7 +355,7 @@ def h : B -> int -> int
 def h b i = (fun _ -> b.x) (b.x <- i) 
 //│ h: B -> int -> int
 //│  = <missing implementation>
-//│ {mut x: in 'x out 'x0} -> 'x -> 'x0
+//│ {mut x: in 'x out 'a} -> 'x -> 'a
 //│   <:  h:
 //│ B -> int -> int
 //│  = [Function: h]

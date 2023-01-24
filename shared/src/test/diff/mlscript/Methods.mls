@@ -156,7 +156,7 @@ class Pair[A, B]: AbstractPair[A, B]
     method Map fx fy = Pair { x = fx this.x; y = fy this.y }
 //│ Defined class Pair[+A, +B]
 //│ Defined Pair.Test: Pair['A, 'B] -> ('A -> 'B -> bool) -> bool
-//│ Defined Pair.Map: Pair['A, 'B] -> ('A -> 'a) -> ('B -> 'y) -> Pair['a, 'y]
+//│ Defined Pair.Map: Pair['A, 'B] -> ('A -> 'x) -> ('B -> 'y) -> Pair['x, 'y]
 
 class Tru[A, B]: Pair[A, B]
     method Test f = true

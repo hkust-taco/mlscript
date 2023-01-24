@@ -1,5 +1,4 @@
 :NoRecursiveTypes
-:GeneralizeCurriedFunctions
 
 
 def foo(f: forall 'a. 'a -> 'a) =

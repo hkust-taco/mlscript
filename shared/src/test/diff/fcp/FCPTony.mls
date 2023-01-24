@@ -1,4 +1,3 @@
-:GeneralizeCurriedFunctions
 :NoRecursiveTypes
 :NoProvs
 :ConstrainedTypes
@@ -20,13 +19,13 @@ def g x y = app x y
 :e
 g {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.21: 	g {} {}
+//│ ║  l.20: 	g {} {}
 //│ ║        	^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.21: 	g {} {}
+//│ ║  l.20: 	g {} {}
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.8: 	def app n f = n f
+//│ ║  l.7: 	def app n f = n f
 //│ ╙──     	              ^^^
 //│ res: error
 //│ Runtime error:
@@ -54,13 +53,13 @@ def mul r s = r (app s) id
 :e
 mul id {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.55: 	mul id {}
+//│ ║  l.54: 	mul id {}
 //│ ║        	^^^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.55: 	mul id {}
+//│ ║  l.54: 	mul id {}
 //│ ║        	       ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.40: 	def app p q = p q
+//│ ║  l.39: 	def app p q = p q
 //│ ╙──      	              ^^^
 //│ res: error
 //│ Runtime error:
@@ -75,13 +74,13 @@ def fact t = mul t {}
 :e
 fact id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.76: 	fact id
+//│ ║  l.75: 	fact id
 //│ ║        	^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.69: 	def fact t = mul t {}
+//│ ║  l.68: 	def fact t = mul t {}
 //│ ║        	                   ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.40: 	def app p q = p q
+//│ ║  l.39: 	def app p q = p q
 //│ ╙──      	              ^^^
 //│ res: error
 //│ Runtime error:
@@ -160,13 +159,13 @@ f
 :e
 f {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.161: 	f {} {}
+//│ ║  l.160: 	f {} {}
 //│ ║         	^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.161: 	f {} {}
+//│ ║  l.160: 	f {} {}
 //│ ║         	  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.128: 	def add n m = n succ m
+//│ ║  l.127: 	def add n m = n succ m
 //│ ╙──       	              ^^^^^^
 //│ res: error
 //│ Runtime error:

@@ -1,7 +1,6 @@
 // * From https://crypto.stanford.edu/~blynn/lambda/systemf.html
 
 :NoRecursiveTypes
-:GeneralizeCurriedFunctions
 :NoConstrainedTypes
 :DontDistributeForalls
 
@@ -85,29 +84,29 @@ iter4_ty = iter4
 //│   <:  iter4_ty:
 //│ () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.82: 	iter4_ty() = iter2_ty iter2_ty
+//│ ║  l.81: 	iter4_ty() = iter2_ty iter2_ty
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.76: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
+//│ ║  l.75: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│ ║        	                            ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.76: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
+//│ ║  l.75: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│ ║        	                            ^^
 //│ ╟── from quantified type variable:
-//│ ║  l.58: 	def iter2_ty: forall 'X. ('X -> 'X) -> 'X -> 'X
+//│ ║  l.57: 	def iter2_ty: forall 'X. ('X -> 'X) -> 'X -> 'X
 //│ ╙──      	                     ^^
 //│         = [Function: iter4_ty]
 //│ () -> ('a -> 'b & 'b -> ('a & 'c)) -> 'a -> 'c
 //│   <:  iter4_ty:
 //│ () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.83: 	iter4_ty = iter4
+//│ ║  l.82: 	iter4_ty = iter4
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.76: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
+//│ ║  l.75: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│ ║        	                            ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.76: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
+//│ ║  l.75: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│ ╙──      	                            ^^
 //│         = [Function: iter4]
 
@@ -133,7 +132,7 @@ def iter256_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 iter256_ty() = iter4_ty() (iter4_ty())
 iter256_ty = iter256
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.131: 	iter256() = iter4() (iter4())
+//│ ║  l.130: 	iter256() = iter4() (iter4())
 //│ ║         	            ^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ iter256: () -> (('a -> ('a & 'b) & ('b | 'c) -> ('a & 'c)) -> 'a -> 'c | error)
@@ -180,9 +179,9 @@ S_ty = S
 
 res1() = iter4() S Z
 res2() = iter256() S Z
-//│ res1: () -> ('a -> 'b & 'a -> 'c & 'c -> 'a) -> 'c -> 'b
+//│ res1: () -> ('a -> ('b & 'c) & 'c -> 'a) -> 'c -> 'b
 //│     = [Function: res1]
-//│ res2: () -> (error | ('a -> 'b & 'a -> 'a & 'c -> 'a & 'a -> 'c & 'c -> 'c) -> 'c -> 'b)
+//│ res2: () -> (error | ('a -> ('a & 'b & 'c) & 'c -> ('a & 'c)) -> 'c -> 'b)
 //│     = [Function: res2]
 
 res1_ty() = iter4_ty() S_ty Z_ty
@@ -194,7 +193,7 @@ res2_ty() = iter256_ty() S_ty Z_ty
 
 
 S (S Z)
-//│ res: ('a -> 'b & 'b -> 'c) -> 'a -> 'c
+//│ res: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
 //│    = [Function (anonymous)]
 
 
@@ -235,7 +234,7 @@ snd_ty = snd
 //│       = [Function: snd]
 
 p02 = pair Z (S (S Z))
-//│ p02: ((forall 'a. anything -> 'a -> 'a) -> (forall 'b. ('c -> 'd & 'd -> 'b) -> 'c -> 'b) -> 'e) -> 'e
+//│ p02: ((forall 'a. anything -> 'a -> 'a) -> (('b -> 'c & 'd -> 'b) -> 'd -> 'c) -> 'e) -> 'e
 //│    = [Function (anonymous)]
 
 p02_ty = pair_ty Z_ty (S_ty (S_ty Z_ty))
@@ -246,7 +245,7 @@ fp = fst p02
 sp = snd p02
 //│ fp: anything -> 'a -> 'a
 //│   = [Function: Z]
-//│ sp: ('a -> 'b & 'b -> 'c) -> 'a -> 'c
+//│ sp: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
 //│   = [Function (anonymous)]
 
 
@@ -272,7 +271,7 @@ sp_ty = sp
 //│   <:  sp_ty:
 //│ ('a -> 'a) -> 'a -> 'a
 //│      = [Function (anonymous)]
-//│ ('a -> 'b & 'b -> 'c) -> 'a -> 'c
+//│ ('a -> 'b & 'c -> 'a) -> 'c -> 'b
 //│   <:  sp_ty:
 //│ ('a -> 'a) -> 'a -> 'a
 //│      = [Function (anonymous)]
@@ -298,11 +297,11 @@ p01 = p Z
 p02 = pair Z (S (S Z))
 p02_ty = pair_ty Z_ty (S_ty (S_ty Z_ty))
 p02_ty = p02
-//│ p02: ((forall 'a. anything -> 'a -> 'a) -> (forall 'b. ('c -> 'd & 'd -> 'b) -> 'c -> 'b) -> 'e) -> 'e
+//│ p02: ((forall 'a. anything -> 'a -> 'a) -> (('b -> 'c & 'd -> 'b) -> 'd -> 'c) -> 'e) -> 'e
 //│    = [Function (anonymous)]
 //│ p02_ty: ((forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X0. ('X0 -> 'X0) -> 'X0 -> 'X0) -> 'Z) -> 'Z
 //│       = [Function (anonymous)]
-//│ p02_ty: ((forall 'a. anything -> 'a -> 'a) -> (forall 'b. ('c -> 'd & 'd -> 'b) -> 'c -> 'b) -> 'e) -> 'e
+//│ p02_ty: ((forall 'a. anything -> 'a -> 'a) -> (('b -> 'c & 'd -> 'b) -> 'd -> 'c) -> 'e) -> 'e
 //│       = [Function (anonymous)]
 
 fp02 = fst p02
@@ -326,22 +325,22 @@ fp02_ty = fp02
 fp02
 //│ res: forall 'a. 'a
 //│   where
-//│     'a :> forall 'b. 'b -> (forall 'c. 'c -> 'c)
+//│     'a :> forall 'b 'c. 'b -> 'c -> 'c
 //│    = [Function: Z]
 
 sp02 = snd p02
 def sp02_ty: forall 'X. ('X -> 'X) -> 'X -> 'X
 sp02_ty = snd_ty p02_ty
 sp02_ty = sp02
-//│ sp02: ('a -> 'b & 'b -> 'c) -> 'a -> 'c
+//│ sp02: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
 //│     = [Function (anonymous)]
 //│ sp02_ty: ('X -> 'X) -> 'X -> 'X
 //│        = <missing implementation>
-//│ ('a -> 'b & 'b -> 'c) -> 'a -> 'c
+//│ ('a -> 'b & 'c -> 'a) -> 'c -> 'b
 //│   <:  sp02_ty:
 //│ ('X -> 'X) -> 'X -> 'X
 //│        = [Function (anonymous)]
-//│ ('a -> 'b & 'b -> 'c) -> 'a -> 'c
+//│ ('a -> 'b & 'c -> 'a) -> 'c -> 'b
 //│   <:  sp02_ty:
 //│ ('X -> 'X) -> 'X -> 'X
 //│        = [Function (anonymous)]
@@ -390,7 +389,7 @@ E q = q id
 // shallow (not (not true))        -- Shallow encoding.
 // λid.id(λb t f.b f t)(id(λb t f.b f t)(λx y.x))
 sh id = (id not) ((id not) tru)
-//│ sh: ((forall 'a 'b 'c. ('a -> 'b -> 'c) -> 'b -> 'a -> 'c) -> 'd -> 'e & (forall 'f 'g 'h. ('h -> 'f -> 'g) -> 'f -> 'h -> 'g) -> (forall 'i. 'i -> anything -> 'i) -> 'd) -> 'e
+//│ sh: ((forall 'a 'b 'c. ('a -> 'b -> 'c) -> 'b -> 'a -> 'c) -> 'd -> 'e & (forall 'f 'g 'h. ('f -> 'g -> 'h) -> 'g -> 'f -> 'h) -> (forall 'i. 'i -> anything -> 'i) -> 'd) -> 'e
 //│   = [Function: sh]
 
 // E[forall X.X->X->X](shallow (not( not true)))
@@ -411,7 +410,7 @@ sh_pu id x y = id (id u x) x
 :e
 pu sh_pu
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.412: 	pu sh_pu
+//│ ║  l.411: 	pu sh_pu
 //│ ║         	^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: anything -> anything -> anything -> nothing | error
@@ -421,7 +420,7 @@ pu sh_pu
 :e
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.422: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.421: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error

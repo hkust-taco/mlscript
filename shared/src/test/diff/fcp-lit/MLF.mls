@@ -1,6 +1,5 @@
 :NoJS
 
-:GeneralizeCurriedFunctions
 :NoRecursiveTypes
 
 
@@ -108,10 +107,10 @@ app auto id
 :e
 let f = choose id in (f auto) (f succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.109: 	let f = choose id in (f auto) (f succ)
+//│ ║  l.108: 	let f = choose id in (f auto) (f succ)
 //│ ║         	                     ^^^^^^^^^^^^^^^^^
 //│ ╟── type `'a` is not an instance of type `int`
-//│ ║  l.30: 	def auto (x: forall 'a. 'a -> 'a) = x x
+//│ ║  l.29: 	def auto (x: forall 'a. 'a -> 'a) = x x
 //│ ╙──      	                    ^^
 //│ res: int -> int | error
 
@@ -126,13 +125,13 @@ choose id auto2
 :e // This is a legit error
 res (choose id succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.127: 	res (choose id succ)
+//│ ║  l.126: 	res (choose id succ)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `int -> int` is not an instance of type `int`
-//│ ║  l.127: 	res (choose id succ)
+//│ ║  l.126: 	res (choose id succ)
 //│ ║         	               ^^^^
 //│ ╟── but it flows into application with expected type `int`
-//│ ║  l.127: 	res (choose id succ)
+//│ ║  l.126: 	res (choose id succ)
 //│ ╙──       	     ^^^^^^^^^^^^^^
 //│ res: int -> int | error | int
 
@@ -179,7 +178,7 @@ let tmp = I I in K K
 //│ res: (42, "foo",)
 
 (fun f -> (f succ, choose f auto)) (choose id)
-//│ res: (int -> int, forall 'b 'c. (forall 'a. 'a -> 'a & 'b) -> ('c -> 'c | 'b),)
+//│ res: (int -> int | 'b, (forall 'a. 'a -> 'a & 'b) -> (int -> int | 'b),)
 
 // ------------ Sec 2.3.1 ------------
 
@@ -210,7 +209,7 @@ fun z -> omega z
 
 (fun x -> fun y -> x y) omegad
 (fun x -> fun y -> x y) omega
-//│ res: (forall 'a. 'a -> 'a) -> 'a0 -> 'a0
+//│ res: (forall 'a. 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0)
 //│ res: ('a -> 'b & 'a) -> 'b
 
 // ------------ Sec 4.3 ------------

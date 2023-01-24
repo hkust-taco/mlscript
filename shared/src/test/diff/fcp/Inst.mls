@@ -1,4 +1,3 @@
-:GeneralizeCurriedFunctions
 :NoRecursiveTypes
 
 
@@ -32,7 +31,7 @@ i i! i 1
 :w
 def foo x = x!
 //│ ╔══[WARNING] Inferred type `?a` of this reference cannot be instantiated
-//│ ║  l.33: 	def foo x = x!
+//│ ║  l.32: 	def foo x = x!
 //│ ╙──      	            ^
 //│ foo: 'a -> 'a
 
@@ -65,7 +64,7 @@ class A: { f: Id }
   method G2 = this.f!
   method G3 = (this.f: Id)!
 //│ ╔══[WARNING] Inferred type `?f` of this field selection cannot be instantiated
-//│ ║  l.65: 	  method G2 = this.f!
+//│ ║  l.64: 	  method G2 = this.f!
 //│ ╙──      	              ^^^^^^
 //│ Defined class A
 //│ Defined A.F: A -> 'a -> 'a

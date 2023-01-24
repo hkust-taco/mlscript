@@ -1,5 +1,4 @@
 :NoJS
-:GeneralizeCurriedFunctions
 :NoRecursiveTypes
 :NoConstrainedTypes
 

@@ -2,7 +2,6 @@
 // * https://dl.acm.org/doi/10.1145/3385412.3386003
 // * Extended version: https://arxiv.org/abs/2004.00396
 
-:GeneralizeCurriedFunctions
 :NoRecursiveTypes
 
 
@@ -71,7 +70,7 @@ def cons: 'a -> List['a] -> List['a]
 def cons head tail = Cons { head; tail }
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail})
+//│ ('head & 'a) -> (List['a] & 'tail) -> (Cons['a] with {head: 'head, tail: 'tail})
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -504,13 +503,13 @@ a id
 :e // * Skolem extrusion; rightly rejected
 choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.505: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
+//│ ║  l.504: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ║         	                                  ^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║  l.172: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║  l.172: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──       	                    ^^
 //│ res: 'c
 //│   where
@@ -528,16 +527,16 @@ res
 :e // skolem extrusion
 res id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.529: 	res id
+//│ ║  l.528: 	res id
 //│ ║         	^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║  l.172: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║  l.172: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║         	                    ^^
 //│ ╟── from type variable:
-//│ ║  l.505: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
+//│ ║  l.504: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ╙──       	                          ^^
 //│ res: 'b -> 'b | error
 //│    = [Function: id1]
@@ -546,13 +545,13 @@ res id
 :e
 a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.547: 	a (fun x -> { u = x })
+//│ ║  l.546: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{u: ?a}` does not match type `'a`
-//│ ║  l.547: 	a (fun x -> { u = x })
+//│ ║  l.546: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.173: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║  l.172: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──       	                    ^^
 //│ res: 'b -> ('b | {u: 'b}) | error
 //│    = [Function (anonymous)]

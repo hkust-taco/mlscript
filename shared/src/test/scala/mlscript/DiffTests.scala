@@ -168,8 +168,8 @@ class DiffTests
     var noJavaScript = false
     var noProvs = false
     var allowRuntimeErrors = false
-    // var generalizeCurriedFunctions = false
-    var generalizeCurriedFunctions = true
+    var generalizeCurriedFunctions = false
+    // var generalizeCurriedFunctions = true
     var distributeForalls = true
     // var distributeForalls = false
     var noCycleCheck = false
@@ -214,8 +214,14 @@ class DiffTests
           case "NoProvs" => noProvs = true; mode
           case "GeneralizeCurriedFunctions" => generalizeCurriedFunctions = true; mode
           case "DontGeneralizeCurriedFunctions" => generalizeCurriedFunctions = false; mode
-          case "DistributeForalls" => distributeForalls = true; mode
-          case "DontDistributeForalls" => distributeForalls = false; mode
+          case "DistributeForalls" =>
+            distributeForalls = true
+            generalizeCurriedFunctions = false
+            mode
+          case "DontDistributeForalls" =>
+            distributeForalls = false
+            generalizeCurriedFunctions = true
+            mode
           case "NoCycleCheck" => noCycleCheck = true; mode
           case "CycleCheck" => noCycleCheck = false; mode
           case "RecursiveTypes" => noRecursiveTypes = false; mode

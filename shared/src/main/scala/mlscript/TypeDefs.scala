@@ -571,7 +571,8 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
                 (td.thisTv -> td.thisTv) // needed to prevent the type variable from being refreshed during substitution!
             val bodyTy: PolymorphicType = subst(rhs.fold(term =>
               ctx.getMthDefn(prt.name, nme.name)
-                .fold(typeLetRhs(rec, nme.name, term)(thisCtx, raise, targsMap2, genLambdas = generalizeCurriedFunctions)) { mt =>
+                .fold(typeLetRhs(rec, nme.name, term)(thisCtx, raise, targsMap2,
+                    genLambdas = !distributeForalls || generalizeCurriedFunctions)) { mt =>
                   // Now buckle-up because this is some seriously twisted stuff:
                   //    If the method is already in the environment,
                   //    it means it belongs to a previously-defined class/trait (not the one being typed),

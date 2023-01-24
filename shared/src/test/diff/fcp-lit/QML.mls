@@ -1,4 +1,3 @@
-:GeneralizeCurriedFunctions
 :NoRecursiveTypes
 :DontDistributeForalls
 // :ArgGen
@@ -176,7 +175,6 @@ def mod = let rec mod a b = if a < b then a else mod (a - b) b in mod
 // exists r. forall b. Sig[a, r, b]
 // (forall r. (forall b. Sig[a, r, b]) -> y) -> y
 
-:GeneralizeCurriedFunctions
 :DistributeForalls
 // :ArgGen
 
@@ -204,35 +202,35 @@ def sstep = fun xx -> xx (fun (xinit, xsub) ->
     then xsub r1 (div i 2)
     else xsub r2 (div i 2) in
   fun f -> f (init, sub))
-//│ ((forall 'a 'b 'c 'd 'e. ('d -> 'a, 'e -> int -> 'b,) -> (('d -> ('a, 'a,), ('e, 'e,) -> (int & number) -> 'b,) -> 'c) -> 'c) -> 'f) -> 'f
+//│ ((forall 'a 'b 'c 'd 'e. ('e -> 'b, 'a -> int -> 'd,) -> (('e -> ('b, 'b,), ('a, 'a,) -> (int & number) -> 'd,) -> 'c) -> 'c) -> 'f) -> 'f
 //│   <:  sstep:
 //│ ExSmall -> ExSmall
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.200: 	def sstep = fun xx -> xx (fun (xinit, xsub) -> 
+//│ ║  l.198: 	def sstep = fun xx -> xx (fun (xinit, xsub) -> 
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.201: 	  let init a = (xinit a, xinit a) in
+//│ ║  l.199: 	  let init a = (xinit a, xinit a) in
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.202: 	  let sub ((r1, r2)) i =
+//│ ║  l.200: 	  let sub ((r1, r2)) i =
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.203: 	    if mod i 2 == 0
+//│ ║  l.201: 	    if mod i 2 == 0
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.204: 	    then xsub r1 (div i 2)
+//│ ║  l.202: 	    then xsub r1 (div i 2)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.205: 	    else xsub r2 (div i 2) in
+//│ ║  l.203: 	    else xsub r2 (div i 2) in
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.206: 	  fun f -> f (init, sub))
+//│ ║  l.204: 	  fun f -> f (init, sub))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.183: 	type ExSmall = (forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) -> 'y
+//│ ║  l.181: 	type ExSmall = (forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) -> 'y
 //│ ║         	                       ^^
 //│ ╟── but it flows into application with expected type `nothing`
-//│ ║  l.201: 	  let init a = (xinit a, xinit a) in
+//│ ║  l.199: 	  let init a = (xinit a, xinit a) in
 //│ ║         	                ^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.183: 	type ExSmall = (forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) -> 'y
+//│ ║  l.181: 	type ExSmall = (forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) -> 'y
 //│ ║         	                       ^^
 //│ ╟── from reference:
-//│ ║  l.204: 	    then xsub r1 (div i 2)
+//│ ║  l.202: 	    then xsub r1 (div i 2)
 //│ ╙──       	              ^^
 //│      = [Function: sstep]
 
@@ -286,13 +284,13 @@ a2 = ma2 (fun (xinit, xsub) -> xinit true)
 :e // This is expected – xinit returns a value of locally-quantified type 'r
 a2[0]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.287: 	a2[0]
+//│ ║  l.285: 	a2[0]
 //│ ║         	^^^^^
 //│ ╟── type `anything` does not match type `Array[?a]`
-//│ ║  l.183: 	type ExSmall = (forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) -> 'y
+//│ ║  l.181: 	type ExSmall = (forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) -> 'y
 //│ ║         	                       ^^
 //│ ╟── but it flows into reference with expected type `Array[?b]`
-//│ ║  l.287: 	a2[0]
+//│ ║  l.285: 	a2[0]
 //│ ╙──       	^^
 //│ res: error | undefined
 //│    = [ true, true ]
@@ -323,16 +321,16 @@ ma1 (fun (xinit, xsub) -> xsub (xinit true) 0)
 :e
 ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub2 (xinit1 true) 0))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.324: 	ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub2 (xinit1 true) 0))
+//│ ║  l.322: 	ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub2 (xinit1 true) 0))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'r` does not match type `nothing`
-//│ ║  l.183: 	type ExSmall = (forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) -> 'y
+//│ ║  l.181: 	type ExSmall = (forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) -> 'y
 //│ ║         	                       ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.183: 	type ExSmall = (forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) -> 'y
+//│ ║  l.181: 	type ExSmall = (forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) -> 'y
 //│ ║         	                       ^^
 //│ ╟── from application:
-//│ ║  l.324: 	ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub2 (xinit1 true) 0))
+//│ ║  l.322: 	ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub2 (xinit1 true) 0))
 //│ ╙──       	                                                               ^^^^^^^^^^^
 //│ res: error
 //│ Runtime error:
@@ -341,16 +339,16 @@ ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub2 (xinit1 true) 0))
 :e
 ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub1 (xinit2 true) 0))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.342: 	ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub1 (xinit2 true) 0))
+//│ ║  l.340: 	ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub1 (xinit2 true) 0))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `'r`
-//│ ║  l.183: 	type ExSmall = (forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) -> 'y
+//│ ║  l.181: 	type ExSmall = (forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) -> 'y
 //│ ║         	                       ^^
 //│ ╟── but it flows into application with expected type `'r`
-//│ ║  l.342: 	ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub1 (xinit2 true) 0))
+//│ ║  l.340: 	ma1 (fun (xinit1, xsub1) -> ma2 (fun (xinit2, xsub2) -> xsub1 (xinit2 true) 0))
 //│ ║         	                                                               ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.183: 	type ExSmall = (forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) -> 'y
+//│ ║  l.181: 	type ExSmall = (forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) -> 'y
 //│ ╙──       	                       ^^
 //│ res: error
 //│    = [ true, true ]
@@ -393,45 +391,45 @@ def step = fun xx -> xx (fun ((((xinit, xsub), xupdate), xfold),) ->
     else (fst r, xupdate (snd r) (div i 2) a) in
   let fold f b r = xfold f (xfold f b (fst r)) (snd r) in
     fun f -> f ((((init, sub), update), fold),) )
-//│ ((forall 'c 'a 'd 'e 'f 'g 'h 'i 'j 'k 'l 'm 'n 'b 'a0 'o. ((('d -> 'g, 'a0 -> int -> 'k,), 'a -> int -> 'e -> 'h & 'b -> int -> 'e -> 'c,), 'l -> ('i -> 'f -> 'n & 'm -> 'j -> 'i),) -> (((('d -> ('g, 'g,), ('a0, 'a0,) -> (int & number) -> 'k,), forall 'a1 'b0. ('a & 'a1, 'b & 'b0,) -> int -> 'e -> ('a1 | 'h, 'b0 | 'c,),), 'l -> 'm -> ('j, 'f,) -> 'n,) -> 'o) -> 'o) -> 'p) -> 'p
+//│ ((forall 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'l 'm 'n 'o 'p. ((('m -> 'b, 'h -> int -> 'k,), 'l -> int -> 'a -> 'e & 'i -> int -> 'a -> 'd,), 'p -> ('n -> 'j -> 'g & 'c -> 'o -> 'n),) -> (((('m -> ('b, 'b,), ('h, 'h,) -> (int & number) -> 'k,), forall 'q 'r. ('l & 'q, 'i & 'r,) -> (int & number) -> 'a -> ('e | 'q, 'r | 'd,),), 'p -> 'c -> ('o, 'j,) -> 'g,) -> 'f) -> 'f) -> 's) -> 's
 //│   <:  step:
 //│ ExSig -> ExSig
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.384: 	def step = fun xx -> xx (fun ((((xinit, xsub), xupdate), xfold),) ->
+//│ ║  l.382: 	def step = fun xx -> xx (fun ((((xinit, xsub), xupdate), xfold),) ->
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.385: 	  let init a = (xinit a, xinit a) in
+//│ ║  l.383: 	  let init a = (xinit a, xinit a) in
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.386: 	  let sub r i =
+//│ ║  l.384: 	  let sub r i =
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.387: 	    if mod i 2 == 0
+//│ ║  l.385: 	    if mod i 2 == 0
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.388: 	    then xsub (fst r) (div i 2)
+//│ ║  l.386: 	    then xsub (fst r) (div i 2)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.389: 	    else xsub (snd r) (div i 2) in
+//│ ║  l.387: 	    else xsub (snd r) (div i 2) in
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.390: 	  let update r i a =
+//│ ║  l.388: 	  let update r i a =
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.391: 	    if mod i 2 == 0
+//│ ║  l.389: 	    if mod i 2 == 0
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.392: 	    then (xupdate (fst r) (div i 2) a, snd r)
+//│ ║  l.390: 	    then (xupdate (fst r) (div i 2) a, snd r)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.393: 	    else (fst r, xupdate (snd r) (div i 2) a) in
+//│ ║  l.391: 	    else (fst r, xupdate (snd r) (div i 2) a) in
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.394: 	  let fold f b r = xfold f (xfold f b (fst r)) (snd r) in
+//│ ║  l.392: 	  let fold f b r = xfold f (xfold f b (fst r)) (snd r) in
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.395: 	    fun f -> f ((((init, sub), update), fold),) )
+//│ ║  l.393: 	    fun f -> f ((((init, sub), update), fold),) )
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.362: 	type ExSig = (forall 'r. (forall 'b. ((('a -> 'r, 'r -> int -> 'a), 'r -> int -> 'a -> 'r), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b)) -> 'y) -> 'y
+//│ ║  l.360: 	type ExSig = (forall 'r. (forall 'b. ((('a -> 'r, 'r -> int -> 'a), 'r -> int -> 'a -> 'r), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b)) -> 'y) -> 'y
 //│ ║         	                     ^^
 //│ ╟── but it flows into application with expected type `nothing`
-//│ ║  l.385: 	  let init a = (xinit a, xinit a) in
+//│ ║  l.383: 	  let init a = (xinit a, xinit a) in
 //│ ║         	                         ^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.362: 	type ExSig = (forall 'r. (forall 'b. ((('a -> 'r, 'r -> int -> 'a), 'r -> int -> 'a -> 'r), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b)) -> 'y) -> 'y
+//│ ║  l.360: 	type ExSig = (forall 'r. (forall 'b. ((('a -> 'r, 'r -> int -> 'a), 'r -> int -> 'a -> 'r), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b)) -> 'y) -> 'y
 //│ ║         	                     ^^
 //│ ╟── from quantified type variable:
-//│ ║  l.83: 	def snd: forall 'a 'b. (('a, 'b),) -> 'b
+//│ ║  l.82: 	def snd: forall 'a 'b. (('a, 'b),) -> 'b
 //│ ╙──      	                   ^^
 //│     = [Function: step]
 
@@ -457,13 +455,13 @@ mkArray 3 (fun ((((xinit, xsub), xupdate), xfold),) -> xinit 2)
 :e
 res 0
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.458: 	res 0
+//│ ║  l.456: 	res 0
 //│ ║         	^^^^^
 //│ ╟── type `anything` is not a function
-//│ ║  l.362: 	type ExSig = (forall 'r. (forall 'b. ((('a -> 'r, 'r -> int -> 'a), 'r -> int -> 'a -> 'r), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b)) -> 'y) -> 'y
+//│ ║  l.360: 	type ExSig = (forall 'r. (forall 'b. ((('a -> 'r, 'r -> int -> 'a), 'r -> int -> 'a -> 'r), ('a -> 'b -> 'b) -> 'b -> 'r -> 'b)) -> 'y) -> 'y
 //│ ║         	                     ^^
 //│ ╟── but it flows into reference with expected type `0 -> ?a`
-//│ ║  l.458: 	res 0
+//│ ║  l.456: 	res 0
 //│ ╙──       	^^^
 //│ res: error
 //│ Runtime error:

@@ -50,7 +50,7 @@ let lockA = Lock 20 in let lockB = Lock 30 in (Bank lockA 2000).Better(Bank lock
 //│ Defined Bank.Potential: Bank -> number
 //│ Defined Bank.Better: Bank -> Bank -> bool
 //│ Lock: 'pins -> Lock['pins]
-//│ Bank: (Lock[int] & 'a) -> (int & 'cash) -> (Bank with {cash: 'cash, lock: 'a})
+//│ Bank: (Lock[int] & 'lock) -> (int & 'cash) -> (Bank with {cash: 'cash, lock: 'lock})
 //│ res: bool
 //│ // start ts
 //│ export declare class Lock<T> {
@@ -66,7 +66,7 @@ let lockA = Lock 20 in let lockB = Lock 30 in (Bank lockA 2000).Better(Bank lock
 //│     Better(arg: Bank): bool
 //│ }
 //│ export declare const Lock<pins>: (arg: pins) => Lock<pins>
-//│ export declare const Bank<a, cash>: (arg: Lock<int> & a) => (arg1: int & cash) => Omit<Bank, "cash" | "lock"> & {readonly cash: cash, readonly lock: a}
+//│ export declare const Bank<lock, cash>: (arg: Lock<int> & lock) => (arg1: int & cash) => Omit<Bank, "cash" | "lock"> & {readonly cash: cash, readonly lock: lock}
 //│ export declare const res: bool
 //│ // end ts
 

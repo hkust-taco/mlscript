@@ -1,5 +1,4 @@
 :NoRecursiveTypes
-:GeneralizeCurriedFunctions
 
 
 def id_ty: forall 'a. 'a -> 'a
@@ -39,16 +38,16 @@ rec def id x = let tmp = id id x in x
 :re
 id 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.40: 	id 1
+//│ ║  l.39: 	id 1
 //│ ║        	^^^^
 //│ ╟── integer literal of type `1` is not a function
-//│ ║  l.40: 	id 1
+//│ ║  l.39: 	id 1
 //│ ║        	   ^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.30: 	rec def id x = let tmp = id id x in x
+//│ ║  l.29: 	rec def id x = let tmp = id id x in x
 //│ ║        	                         ^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.30: 	rec def id x = let tmp = id id x in x
+//│ ║  l.29: 	rec def id x = let tmp = id id x in x
 //│ ╙──      	                                    ^
 //│ res: 'a -> 'a | 1 | error | 'b
 //│   where
@@ -67,16 +66,16 @@ id_ty = id
 //│   <:  id_ty:
 //│ 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.61: 	id_ty = id
+//│ ║  l.60: 	id_ty = id
 //│ ║        	^^^^^^^^^^
 //│ ╟── type `'a` is not a function
-//│ ║  l.5: 	def id_ty: forall 'a. 'a -> 'a
+//│ ║  l.4: 	def id_ty: forall 'a. 'a -> 'a
 //│ ║       	                  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.30: 	rec def id x = let tmp = id id x in x
+//│ ║  l.29: 	rec def id x = let tmp = id id x in x
 //│ ║        	                         ^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.30: 	rec def id x = let tmp = id id x in x
+//│ ║  l.29: 	rec def id x = let tmp = id id x in x
 //│ ╙──      	                                    ^
 //│      = [Function: id1]
 
@@ -103,7 +102,7 @@ id_ty = id
 :e
 rec def id x = if true then x else id id x
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.104: 	rec def id x = if true then x else id id x
+//│ ║  l.103: 	rec def id x = if true then x else id id x
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ id: 'id
@@ -127,17 +126,70 @@ id_ty = id
 //│   <:  id_ty:
 //│ 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.119: 	id_ty = id
+//│ ║  l.118: 	id_ty = id
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `'a` is not a function
-//│ ║  l.5: 	def id_ty: forall 'a. 'a -> 'a
+//│ ║  l.4: 	def id_ty: forall 'a. 'a -> 'a
 //│ ║       	                  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.104: 	rec def id x = if true then x else id id x
+//│ ║  l.103: 	rec def id x = if true then x else id id x
 //│ ║         	                                   ^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.104: 	rec def id x = if true then x else id id x
+//│ ║  l.103: 	rec def id x = if true then x else id id x
 //│ ╙──       	                            ^
 //│      = [Function: id3]
+
+
+
+:RecursiveTypes
+:NoJS
+
+
+def choose: 'a -> 'a -> 'a
+//│ choose: 'a -> 'a -> 'a
+
+rec def id1 x = choose x (id1 id1 x)
+//│ id1: 'id1
+//│   where
+//│     'id1 :> 'a -> 'b
+//│     'a :> 'id1
+//│        <: 'b
+//│     'b :> 'id1
+//│        <: 'a -> 'b
+
+id1 id
+//│ res: 'a -> 'b | 'id
+//│   where
+//│     'a :> forall 'id 'c 'd. 'a -> 'b | 'id
+//│        <: 'b
+//│     'b :> forall 'id 'c 'd. 'id
+//│        <: 'a -> 'b
+//│     'id :> 'c -> 'd
+//│     'c :> 'id
+//│        <: 'd
+//│     'd :> 'id
+//│        <: 'c -> 'd
+
+rec def id1 x = if true then x else id1 id1 x
+//│ id1: 'id1
+//│   where
+//│     'id1 :> 'a -> 'b
+//│     'a :> 'id1
+//│        <: 'b
+//│     'b :> 'id1
+//│        <: 'a -> 'b
+
+id1 id
+//│ res: 'a -> 'b | 'id
+//│   where
+//│     'a :> forall 'id 'c 'd. 'a -> 'b | 'id
+//│        <: 'b
+//│     'b :> forall 'id 'c 'd. 'id
+//│        <: 'a -> 'b
+//│     'id :> 'c -> 'd
+//│     'c :> 'id
+//│        <: 'd
+//│     'd :> 'id
+//│        <: 'c -> 'd
 
 

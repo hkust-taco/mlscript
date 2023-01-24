@@ -306,16 +306,12 @@ ty2 = twice
 //│    = [Function: twice]
 
 twice twice
-//│ res: (('a | 'b) -> 'c & 'c -> 'b) -> 'a -> 'b
+//│ res: ('a -> 'b & 'b -> ('a & 'c)) -> 'a -> 'c
 //│    = [Function (anonymous)]
 
-:e
+// * Note: cycle check fails when generalizing curried lambdas
 twice twice!
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.313: 	twice twice!
-//│ ║         	^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ res: (('a | 'b) -> ('b & 'c) & ('c | 'a) -> 'a) -> 'b -> 'a | error
+//│ res: ('a -> ('a & 'b) & 'b -> ('a & 'b & 'c)) -> 'a -> 'c
 //│    = [Function (anonymous)]
 
 
@@ -374,10 +370,8 @@ fun p -> fun q -> p q p
 
 :ns
 fun p -> fun q -> p q p
-//│ res: forall 'a 'b 'c 'd. 'a -> (forall 'e 'f. 'e -> 'f)
+//│ res: forall 'a 'b 'c 'd. 'a -> 'b -> 'd
 //│   where
-//│     'f :> 'd
-//│     'e <: 'b
 //│     'a <: 'b -> 'c
 //│     'c <: 'a -> 'd
 //│    = [Function: res]

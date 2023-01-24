@@ -1,5 +1,4 @@
 :NoRecursiveTypes
-:GeneralizeCurriedFunctions
 
 // type mylist ('b) = Nil | Cons of ('b * mylist ('b))
 // ;;

@@ -123,7 +123,7 @@ rec def mapList f ls = case ls of
 
 
 def Cons head tail = Cons { value = head; tail = tail }
-//│ Cons: 'a -> (List['A] & 'tail) -> (Cons['A | 'a] with {tail: 'tail, value: 'a})
+//│ Cons: ('value & 'A) -> (List['A] & 'tail) -> (Cons['A] with {tail: 'tail, value: 'value})
 //│     = [Function: Cons1]
 
 def None = None{}
@@ -136,9 +136,9 @@ rec def unzip xs = case xs of
                                        snd = Cons xs.value.snd tmp.snd }
 //│ unzip: 'a -> {fst: 'tail, snd: 'tail0}
 //│   where
-//│     'tail0 :> (Cons['b] with {tail: 'tail0}) | None
-//│     'tail :> (Cons['c] with {tail: 'tail}) | None
-//│     'a <: None | Some[?] & {tail: 'a, value: {fst: 'c, snd: 'b}}
+//│     'tail0 :> (Cons['value] with {tail: 'tail0}) | None
+//│     'tail :> (Cons['value0] with {tail: 'tail}) | None
+//│     'a <: None | Some[?] & {tail: 'a, value: {fst: 'value0, snd: 'value}}
 //│      = [Function: unzip]
 
 // * Declare desired types:
@@ -152,15 +152,15 @@ def unzip_ty: List[{ fst: 'a; snd: 'b }] -> { fst: List['a]; snd: List['b] }
 // * Assert the inferred types subsume them (the signatures above are checked):
 def Cons_ty = Cons
 def unzip_ty = unzip
-//│ 'a -> (List['A] & 'tail) -> (Cons['A | 'a] with {tail: 'tail, value: 'a})
+//│ ('value & 'A) -> (List['A] & 'tail) -> (Cons['A] with {tail: 'tail, value: 'value})
 //│   <:  Cons_ty:
 //│ 'a -> (List['a] & 'b) -> (Cons['a] with {tail: 'b})
 //│        = [Function: Cons_ty]
 //│ 'a -> {fst: 'tail, snd: 'tail0}
 //│   where
-//│     'tail0 :> (Cons['b] with {tail: 'tail0}) | None
-//│     'tail :> (Cons['c] with {tail: 'tail}) | None
-//│     'a <: None | Some[?] & {tail: 'a, value: {fst: 'c, snd: 'b}}
+//│     'tail0 :> (Cons['value] with {tail: 'tail0}) | None
+//│     'tail :> (Cons['value0] with {tail: 'tail}) | None
+//│     'a <: None | Some[?] & {tail: 'a, value: {fst: 'value0, snd: 'value}}
 //│   <:  unzip_ty:
 //│ List[{fst: 'a, snd: 'b}] -> {fst: List['a], snd: List['b]}
 //│         = [Function: unzip_ty]

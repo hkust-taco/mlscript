@@ -1,4 +1,3 @@
-:GeneralizeCurriedFunctions
 :NoRecursiveTypes
 :NoProvs
 :NoJS
@@ -36,13 +35,13 @@ ty1 = ty2
 //│   <:  ty1:
 //│ MutArray[forall 'A. 'A -> 'A]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.34: 	ty1 = ty2
+//│ ║  l.33: 	ty1 = ty2
 //│ ║        	^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.15: 	def ty1: MutArray[forall 'A. 'A -> 'A]
+//│ ║  l.14: 	def ty1: MutArray[forall 'A. 'A -> 'A]
 //│ ║        	                         ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.15: 	def ty1: MutArray[forall 'A. 'A -> 'A]
+//│ ║  l.14: 	def ty1: MutArray[forall 'A. 'A -> 'A]
 //│ ╙──      	                         ^^
 
 :e
@@ -51,13 +50,13 @@ ty2 = ty1
 //│   <:  ty2:
 //│ MutArray['A -> 'A]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.49: 	ty2 = ty1
+//│ ║  l.48: 	ty2 = ty1
 //│ ║        	^^^^^^^^^
 //│ ╟── type `'A` does not match type `'A0`
-//│ ║  l.15: 	def ty1: MutArray[forall 'A. 'A -> 'A]
+//│ ║  l.14: 	def ty1: MutArray[forall 'A. 'A -> 'A]
 //│ ║        	                         ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.24: 	def ty2: forall 'A. MutArray['A -> 'A]
+//│ ║  l.23: 	def ty2: forall 'A. MutArray['A -> 'A]
 //│ ╙──      	                ^^
 
 

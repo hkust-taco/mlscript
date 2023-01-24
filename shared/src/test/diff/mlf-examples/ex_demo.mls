@@ -1,5 +1,4 @@
 :NoRecursiveTypes
-:GeneralizeCurriedFunctions
 :DontDistributeForalls // * Distributing here causes problems; TODO investigate
 
 // ============ Dummy classes to represent the types in the examples ============
@@ -138,13 +137,13 @@ test1 = delta id
 :e
 delta succ
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.139: 	delta succ
+//│ ║  l.138: 	delta succ
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `'a` is not an instance of type `int`
-//│ ║  l.105: 	type Sid = forall 'a. 'a -> 'a
+//│ ║  l.104: 	type Sid = forall 'a. 'a -> 'a
 //│ ║         	                  ^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.128: 	def succ n = n + 1
+//│ ║  l.127: 	def succ n = n + 1
 //│ ╙──       	             ^
 //│ res: error | Sid
 //│    = 'function succ(n) {  return n + 1;}1'
@@ -162,13 +161,13 @@ test2 = delta_ (choose id id)
 :e
 delta (choose id succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.163: 	delta (choose id succ)
+//│ ║  l.162: 	delta (choose id succ)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'a` is not an instance of type `int`
-//│ ║  l.105: 	type Sid = forall 'a. 'a -> 'a
+//│ ║  l.104: 	type Sid = forall 'a. 'a -> 'a
 //│ ║         	                  ^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.128: 	def succ n = n + 1
+//│ ║  l.127: 	def succ n = n + 1
 //│ ╙──       	             ^
 //│ res: error | Sid
 //│    = [Function: id]
@@ -247,44 +246,44 @@ def id1 x = if true then x else idy_ty idy_ty x
 :e
 rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.248: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ║  l.247: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'a` is not a function
-//│ ║  l.248: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ║  l.247: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ║         	                       ^^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.248: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ║  l.247: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ╙──       	                           ^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.248: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ║  l.247: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'a -> 'a` does not match type `nothing`
-//│ ║  l.248: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ║  l.247: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ║         	                           ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.248: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ║  l.247: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ║         	                                                    ^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.248: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ║  l.247: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ╙──       	                       ^^
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.248: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ║  l.247: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.248: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ║  l.247: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'a -> 'a` does not match type `nothing`
-//│ ║  l.248: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ║  l.247: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ║         	                           ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.248: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ║  l.247: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ║         	                                                                   ^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.248: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ║  l.247: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ║         	                       ^^
 //│ ╟── from application:
-//│ ║  l.248: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
+//│ ║  l.247: 	rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 //│ ╙──       	                                                           ^^^^^^^^^
 //│ id1: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│    = [Function: id1]
@@ -292,7 +291,7 @@ rec def id1 (x: forall 'a. 'a -> 'a) = if true then x else id1 id1 x
 :e // * Since "sound extrusion"
 rec def id1 x = if true then x else id1 id1 x
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.293: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.292: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ id1: 'id1
@@ -307,7 +306,7 @@ rec def id1 x = if true then x else id1 id1 x
 :e // * Since "sound extrusion"
 rec def id1 x = if true then x else id1 id1 x
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.308: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.307: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ id1: 'id1
@@ -377,16 +376,16 @@ id1
 :e
 id1: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.378: 	id1: nothing
+//│ ║  l.377: 	id1: nothing
 //│ ║         	^^^
 //│ ╟── function of type `?a -> ?b` does not match type `nothing`
-//│ ║  l.326: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.325: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.378: 	id1: nothing
+//│ ║  l.377: 	id1: nothing
 //│ ║         	^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.378: 	id1: nothing
+//│ ║  l.377: 	id1: nothing
 //│ ╙──       	     ^^^^^^^
 //│ res: nothing
 //│    = [Function: id13]
@@ -1060,7 +1059,7 @@ def print_fact_ n =
   let _ = c_printint_ (c_fact_ (to_church_ n)) in
           print_string "\n"
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1060: 	  let _ = c_printint_ (c_fact_ (to_church_ n)) in
+//│ ║  l.1059: 	  let _ = c_printint_ (c_fact_ (to_church_ n)) in
 //│ ║          	                       ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ print_fact_: int -> unit
@@ -1090,7 +1089,7 @@ def print_fact2_ n =
   concat " = "
          (c_printint2_ (c_fact_ (to_church_ n))) ))
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1091: 	         (c_printint2_ (c_fact_ (to_church_ n))) ))
+//│ ║  l.1090: 	         (c_printint2_ (c_fact_ (to_church_ n))) ))
 //│ ║          	                        ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ print_fact2_: int -> string
@@ -1135,7 +1134,7 @@ this_should_be_98_ =
   let c_98_ = c_pred_ c_99_ in
   c_printint2_ c_98_
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1132: 	  let c_i10_ = c_mul_ c_i5_ c_i2_ in
+//│ ║  l.1131: 	  let c_i10_ = c_mul_ c_i5_ c_i2_ in
 //│ ║          	               ^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ this_should_be_98_: string
@@ -1158,7 +1157,7 @@ c_i5_ = c_add_ c_i3_ c_i2_
 :e
 c_i10_ = c_mul_ c_i5_ c_i2_
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1159: 	c_i10_ = c_mul_ c_i5_ c_i2_
+//│ ║  l.1158: 	c_i10_ = c_mul_ c_i5_ c_i2_
 //│ ║          	         ^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ c_i10_: error
@@ -1188,11 +1187,11 @@ c_i9_ = c_pred_ c_i10_
 :e
 c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1189: 	c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
+//│ ║  l.1188: 	c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
 //│ ║          	                ^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1189: 	c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
+//│ ║  l.1188: 	c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
 //│ ║          	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ c_99_: ('a -> anything & 'b -> 'c & 'a -> 'b & 'a -> 'd & 'c -> 'c & 'd -> 'd) -> 'a -> error | error

@@ -1,5 +1,4 @@
 :NoRecursiveTypes
-:GeneralizeCurriedFunctions
 
 
 
@@ -59,16 +58,16 @@ def example f = (f: forall 'a. 'a -> 'a)
 :e
 example 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.60: 	example 1
+//│ ║  l.59: 	example 1
 //│ ║        	^^^^^^^^^
 //│ ╟── integer literal of type `1` is not a function
-//│ ║  l.60: 	example 1
+//│ ║  l.59: 	example 1
 //│ ║        	        ^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.55: 	def example f = (f: forall 'a. 'a -> 'a)
+//│ ║  l.54: 	def example f = (f: forall 'a. 'a -> 'a)
 //│ ║        	                               ^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.55: 	def example f = (f: forall 'a. 'a -> 'a)
+//│ ║  l.54: 	def example f = (f: forall 'a. 'a -> 'a)
 //│ ╙──      	                 ^
 //│ res: 'a -> 'a | error
 //│    = 1
@@ -76,10 +75,10 @@ example 1
 :e
 example succ
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.77: 	example succ
+//│ ║  l.76: 	example succ
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── type `'a` is not an instance of type `int`
-//│ ║  l.55: 	def example f = (f: forall 'a. 'a -> 'a)
+//│ ║  l.54: 	def example f = (f: forall 'a. 'a -> 'a)
 //│ ╙──      	                           ^^
 //│ res: 'a -> 'a | error
 //│    = [Function: succ]
@@ -112,16 +111,16 @@ def ex x = example x
 :e
 ex 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.113: 	ex 1
+//│ ║  l.112: 	ex 1
 //│ ║         	^^^^
 //│ ╟── integer literal of type `1` does not match type `nothing`
-//│ ║  l.113: 	ex 1
+//│ ║  l.112: 	ex 1
 //│ ║         	   ^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.100: 	def example f = ((0, f) : forall 'a. (0, 'a))
-//│ ║         	                                 ^^
+//│ ║  l.99: 	def example f = ((0, f) : forall 'a. (0, 'a))
+//│ ║        	                                 ^^
 //│ ╟── from reference:
-//│ ║  l.108: 	def ex x = example x
+//│ ║  l.107: 	def ex x = example x
 //│ ╙──       	                   ^
 //│ res: (0, nothing,) | error
 //│    = [ 0, 1 ]

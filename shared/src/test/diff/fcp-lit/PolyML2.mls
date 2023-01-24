@@ -1,5 +1,4 @@
 :NoJS
-:GeneralizeCurriedFunctions
 :NoRecursiveTypes
 
 // ============ Sec 4.2 ============
@@ -18,7 +17,7 @@ def Nil = Nil {}
 //│ Nil: Nil
 
 def Cons head tail = Cons { head; tail }
-//│ Cons: 'b -> (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail})
+//│ Cons: ('head & 'a) -> (List['a] & 'tail) -> (Cons['a] with {head: 'head, tail: 'tail})
 
 // ------------ Type signatures for functions used in the examples ------------
 // (I guess)
@@ -58,7 +57,7 @@ def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
   let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
   (l1, l2)
-//│ simple_and_double: Collection['a] -> (forall 'b. 'b, forall 'c. 'c,)
+//│ simple_and_double: Collection['a] -> (forall 'tail. 'tail, forall 'tail0. 'tail0,)
 //│   where
-//│     'c :> (Cons[('a, 'a,)] with {tail: 'c}) | Nil
-//│     'b :> (Cons['a] with {tail: 'b}) | Nil
+//│     'tail0 :> (Cons[('a, 'a,)] with {tail: 'tail0}) | Nil
+//│     'tail :> (Cons['a] with {tail: 'tail}) | Nil
