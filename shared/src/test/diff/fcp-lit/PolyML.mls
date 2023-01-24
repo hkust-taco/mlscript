@@ -90,14 +90,14 @@ def fold_left: forall 'a 'b. ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 //│ fold_left: ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 
 rec def fl f x l = match_list l x (fun head -> fun tail -> fl f (f x head) tail)
-//│ fl: ('b -> 'a -> ('b & 'c)) -> ('b & 'c) -> List['a] -> 'c
+//│ fl: ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 
 rec def fl2 f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
 //│ fl2: ('a -> 'b -> ('a & 'a0)) -> ('a & 'a0) -> List['b] -> 'a0
 
 :RecursiveTypes // needed for this recursive def
 def fold_left = fl
-//│ ('b -> 'a -> ('b & 'c)) -> ('b & 'c) -> List['a] -> 'c
+//│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 :NoRecursiveTypes

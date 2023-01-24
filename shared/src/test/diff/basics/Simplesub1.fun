@@ -359,7 +359,10 @@ x => (y => (x (y y)))
 //│ res: ('a -> 'b) -> ('c -> 'a & 'c) -> 'b
 
 (let rec x = (let y = (x x); (z => z)); x)
-//│ res: 'a -> 'a
+//│ res: 'x
+//│   where
+//│     'x :> 'a -> 'a
+//│     'a :> 'x
 
 (let rec x = (y => (let z = (x x); y)); x)
 //│ res: 'x
@@ -391,14 +394,23 @@ x => (y => (x (y y)))
 //│ res: ('v -> anything & {v: 'v}) -> 0
 
 let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
-//│ x: 'a -> 'a
-//│ res: {u: 'u} -> 'u
+//│ x: 'x
+//│   where
+//│     'x :> 'a -> 'a
+//│     'a :> 'x
+//│ res: ({u: 'u} & 'a) -> ('u | 'a) | 'b
+//│   where
+//│     'a :> forall 'u. ({u: 'u} & 'a) -> ('u | 'a)
+//│        <: 'b
 
 :ns
 let rec x = (let y = (x x); (z => z))
-//│ x: forall 'x. 'x
+//│ x: forall 'x 'a 'b. 'x
 //│   where
-//│     'x := forall 'a. 'a -> 'a
+//│     'x := 'b -> 'b
+//│     'b :> 'b -> 'b
+//│        <: 'a
+//│     'a :> 'b -> 'b
 
 
 

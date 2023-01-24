@@ -344,9 +344,9 @@ id1 id
 id1 id1
 //│ res: 'a -> 'b | 'id1
 //│   where
-//│     'a :> forall 'c 'd 'id1. 'a -> 'b | 'id1
+//│     'a :> forall 'id1 'c 'd. 'a -> 'b | 'id1
 //│        <: 'b
-//│     'b :> forall 'c 'd 'id1. 'id1
+//│     'b :> forall 'id1 'c 'd. 'id1
 //│        <: 'a -> 'b
 //│     'id1 :> 'c -> 'd
 //│     'c :> 'id1
@@ -359,18 +359,18 @@ id1 id1
 // * TODO type pp – inline id1?
 :ns
 id1
-//│ res: forall 'a 'b 'c 'd 'id1 'e. 'id1
+//│ res: forall 'a 'b 'c 'id1 'd 'e. 'id1
 //│   where
 //│     'id1 := 'e -> 'b
 //│     'e :> 'e -> 'b
-//│        <: 'a
+//│        <: 'c
 //│     'b :> 'e -> 'b
-//│        <: 'c & 'd
+//│        <: 'a & 'd
 //│     'd :> 'e -> 'b
-//│        <: 'e -> 'c
-//│     'c :> 'e -> 'b
-//│        <: 'a
+//│        <: 'e -> 'a
 //│     'a :> 'e -> 'b
+//│        <: 'c
+//│     'c :> 'e -> 'b
 //│        <: 'b
 //│    = [Function: id13]
 
@@ -472,7 +472,7 @@ ex_list1 = cons (make_ex1 (("A String", print_string)))
 ex_list2 = cons (make_ex2 (("String", "String", eqstring)))
   (cons (make_ex2 ((1250, 4890, eqint)))
   (cons (make_ex2 ((true, false, eqbool))) nil))
-//│ ex_list2: List[forall 'b. (forall 'a 'a0 'a1. ('a, 'a, 'a -> 'a -> bool,) -> 'b & ('a0, 'a0, 'a0 -> 'a0 -> (bool | false),) -> 'b & ('a1, 'a1, 'a1 -> 'a1 -> bool,) -> 'b) -> 'b]
+//│ ex_list2: List[forall 'b. (forall 'a 'a0 'a1. ('a0, 'a0, 'a0 -> 'a0 -> bool,) -> 'b & ('a1, 'a1, 'a1 -> 'a1 -> (bool | false),) -> 'b & ('a, 'a, 'a -> 'a -> bool,) -> 'b) -> 'b]
 //│         = Cons {
 //│             head: [Function (anonymous)],
 //│             tail: Cons {
@@ -1298,8 +1298,8 @@ def c_succ_ n = fun f -> fun x -> n f (f x)
 def c_add_ n m = m c_succ_ n
 //│ c_add_: 'a -> (forall 'b. ((forall 'c. 'c -> (forall 'd. 'd -> (forall 'e 'f 'g. ('e -> 'g
 //│   where
-//│     'd <: 'e -> 'f
-//│     'c <: 'd -> 'f -> 'g)))) -> 'a -> 'b) -> 'b)
+//│     'c <: 'd -> 'f -> 'g
+//│     'd <: 'e -> 'f)))) -> 'a -> 'b) -> 'b)
 //│       = [Function: c_add_1]
 
 // let c_i1 = fun f x -> f x
@@ -1318,10 +1318,10 @@ def c_i2_ = c_succ_ c_i1
 //│     = [Function: c_i22]
 //│ c_i2_: 'a -> (forall 'b 'c 'd. ('b -> 'd
 //│   where
+//│     'a <: 'b -> 'c
 //│     forall 'e. 'e -> (forall 'f 'g. ('f -> 'g
 //│   where
-//│     'e <: 'f -> 'g)) <: 'a -> 'c -> 'd
-//│     'a <: 'b -> 'c))
+//│     'e <: 'f -> 'g)) <: 'a -> 'c -> 'd))
 //│      = [Function: c_i2_1]
 
 // let c_i3 = c_succ c_i2
@@ -1350,10 +1350,10 @@ c_i5_ = c_add_ c_i3_ c_i2
 //│     'b <: 'c -> 'e -> 'f
 //│     forall 'h. 'h -> (forall 'i 'j 'k. ('i -> 'k
 //│   where
-//│     'h <: 'i -> 'j
 //│     forall 'l. 'l -> (forall 'a 'm. ('m -> 'a
 //│   where
-//│     'l <: 'a -> 'a & 'm -> 'a)) <: 'h -> 'j -> 'k)) <: 'c -> 'g -> 'f))
+//│     'l <: 'a -> 'a & 'm -> 'a)) <: 'h -> 'j -> 'k
+//│     'h <: 'i -> 'j)) <: 'c -> 'g -> 'f))
 //│      = [Function (anonymous)]
 
 

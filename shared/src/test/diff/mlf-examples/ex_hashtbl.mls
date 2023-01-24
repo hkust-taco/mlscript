@@ -108,44 +108,42 @@ rec def find table key =
   if is_empty table then None
   else if eq (head table)._1 key then Some (head table)._2
   else find (tail table) key
-//│ find: List[{_1: anything, _2: 'a}] -> anything -> (None | Some['a])
+//│ find: List[{_1: anything, _2: 'val}] -> anything -> (None | Some['val])
 //│     = [Function: find]
 rec def find table key =
   if is_empty table then None
   else let ht = head table in if eq ht._1 key then Some ht._2
   else find (tail table) key
-//│ find: List[{_1: anything, _2: 'a}] -> anything -> (None | Some['a])
+//│ find: List[{_1: anything, _2: 'val}] -> anything -> (None | Some['val])
 //│     = [Function: find1]
 :NoRecursiveTypes
 
 :ns
 find
-//│ res: forall 'a 'b 'a0 'c 'a1 'a2 'd 'e 'f 'g 'find 'h. 'find
+//│ res: forall 'b 'c 'val 'a 'd 'e 'f 'a0 'g 'a1 'h 'i 'j 'find 'k 'l 'a2. 'find
 //│   where
-//│     'find := 'e -> (forall 'i 'a3 'j 'val 'k. 'k -> 'i)
-//│     'i :> (forall 'l. 'l) | (forall 'm. 'm) | 'h
-//│     'h :> forall 'n 'val0 'a4. 'n
-//│     'n :> (forall 'l. 'l) | (forall 'o. 'o) | 'h
-//│     'o :> #Some & {val: 'val0, Some#a = 'a4}
-//│     'val0 :> 'g
-//│           <: 'a4
-//│     'a4 :> 'g
-//│     'm :> #Some & {val: 'val, Some#a = 'a3}
-//│     'val :> 'g
-//│          <: 'a3
-//│     'a3 :> 'g
-//│     'l :> #None
-//│     'k <: 'f & 'j
-//│     'j :> 'd
-//│     'f <: 'b
-//│     'b <: 'f & 'c
-//│     'c :> 'd
-//│     'e :> List['a1]
-//│        <: List['a2] & List['a0] & List['a]
-//│     'a1 :> 'a2
-//│         <: 'a & 'a0 & 'a2
-//│     'a2 <: 'a & 'a0
-//│     'a0 <: {_2: 'g} & {_1: 'd}
+//│     'find := 'g -> 'e -> 'k
+//│     'k :> (forall 'm. 'm) | (forall 'n. 'n)
+//│        <: 'd
+//│     'd :> (forall 'm. 'm) | (forall 'n. 'n)
+//│        <: 'j
+//│     'j :> (forall 'm. 'm) | (forall 'n. 'n)
+//│        <: 'c
+//│     'c :> (forall 'm. 'm) | (forall 'n. 'n)
+//│        <: 'i
+//│     'i :> (forall 'm. 'm) | (forall 'n. 'n)
+//│        <: 'k
+//│     'n :> #None
+//│     'm :> #Some & {val: 'val, Some#a = 'a}
+//│     'e <: 'b
+//│     'g :> List['a2]
+//│        <: List['a2] & List['a1] & List['a0]
+//│     'a2 <: 'a0 & 'a1
+//│     'a1 <: {_2: 'f} & {_1: 'l}
+//│     'l <: 'b
+//│     'f <: 'h
+//│     'h <: 'val
+//│     'val <: 'a
 //│    = [Function: find1]
 
 :ng
@@ -177,7 +175,7 @@ def nfind table key =
   { None -> fun f -> fun x -> x
   | Some -> opt.val
   }
-//│ nfind: List[{_1: anything, _2: 'a}] -> anything -> (anything -> 'b -> 'b | 'a)
+//│ nfind: List[{_1: anything, _2: 'val}] -> anything -> (anything -> 'a -> 'a | 'val)
 //│      = [Function: nfind]
 
 // type Int = ['a] ('a -> 'a) -> ('a -> 'a)
@@ -221,7 +219,7 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│      = Nil {}
 //│ table: List[("one", forall 'a 'b. ('a -> 'b) -> 'a -> 'b,)]
 //│      = Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
-//│ table: List[("one" | "two", forall 'a 'b 'c. ('b -> 'c & 'c -> 'a & 'b -> 'a) -> 'b -> 'a,)]
+//│ table: List[("one" | "two", forall 'a 'b 'c. ('a -> 'b & 'b -> 'c & 'a -> 'c) -> 'a -> 'c,)]
 //│      = Cons {
 //│          head: [ 'two', [Function (anonymous)] ],
 //│          tail: Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
@@ -236,16 +234,16 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 :e // * Since "sound extrusion"
 zog = printInt (add (nfind table "one") (nfind table "two"))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.237: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║  l.235: 	zog = printInt (add (nfind table "one") (nfind table "two"))
 //│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.184: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.182: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.184: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.182: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                        ^^
 //│ ╟── from application:
-//│ ║  l.219: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
+//│ ║  l.217: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│ ╙──       	                                                      ^^^
 //│ zog: string
 //│    = '0'
@@ -258,16 +256,16 @@ zog = printInt (add (nfind table "one") (nfind table "two"))
 :e // * Since "sound extrusion"
 a = add (nfind table "one")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.259: 	a = add (nfind table "one")
+//│ ║  l.257: 	a = add (nfind table "one")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.184: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.182: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.184: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.182: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                        ^^
 //│ ╟── from application:
-//│ ║  l.219: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
+//│ ║  l.217: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│ ╙──       	                                                      ^^^
 //│ a: error
 //│  = [Function (anonymous)]
@@ -311,7 +309,7 @@ def nfind table key =
   { None -> fun f -> fun x -> x
   | Some -> opt.val
   }) (find table key)
-//│ nfind: List[{_1: anything, _2: 'a}] -> anything -> (anything -> 'b -> 'b | 'a)
+//│ nfind: List[{_1: anything, _2: 'val}] -> anything -> (anything -> 'a -> 'a | 'val)
 //│      = [Function: nfind1]
 
 def match_opt: forall 'a 'r. (() -> 'r, 'a -> 'r) -> Option['a] -> 'r
@@ -353,26 +351,26 @@ def foo key = match_opt (
     fun () -> fun f -> id,
     fun v -> v
   ) (find table key)
-//│ foo: anything -> ('a -> 'b & 'a -> 'c & 'c -> 'b & 'a -> 'd & 'd -> 'b) -> 'a -> ('b | 'a)
+//│ foo: anything -> ('a -> 'b & 'a -> 'c & 'c -> 'b & 'a -> 'd & 'd -> 'b & 'a -> 'e & 'e -> 'b & 'a -> 'f & 'f -> 'b) -> 'a -> ('b | 'a)
 //│    = [Function: foo]
 
 foo 1
-//│ res: ('a -> 'b & 'a -> 'c & 'c -> 'b & 'a -> 'd & 'd -> 'b) -> 'a -> ('b | 'a)
+//│ res: ('a -> 'b & 'a -> 'c & 'c -> 'b & 'a -> 'd & 'd -> 'b & 'a -> 'e & 'e -> 'b & 'a -> 'f & 'f -> 'b) -> 'a -> ('b | 'a)
 //│    = [Function (anonymous)]
 
 :e
 foo 1 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.364: 	foo 1 2
+//│ ║  l.362: 	foo 1 2
 //│ ║         	^^^^^^^
 //│ ╟── integer literal of type `2` is not a function
-//│ ║  l.364: 	foo 1 2
+//│ ║  l.362: 	foo 1 2
 //│ ║         	      ^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.219: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
+//│ ║  l.217: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│ ║         	                                                   ^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.219: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
+//│ ║  l.217: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│ ╙──       	                                                   ^
 //│ res: 'a -> 'a | error
 //│    = [Function: id]
@@ -393,7 +391,7 @@ foo 1 error 2
     fun () -> fun f -> fun x -> x,
     fun v -> v
   ) (find table key)) "two"
-//│ res: ('a -> 'b & 'a -> 'c & 'c -> 'b & 'a -> 'd & 'd -> 'b) -> 'a -> ('b | 'a)
+//│ res: ('a -> 'b & 'a -> 'c & 'c -> 'b & 'a -> 'd & 'd -> 'b & 'a -> 'e & 'e -> 'b & 'a -> 'f & 'f -> 'b) -> 'a -> ('b | 'a)
 //│    = [Function (anonymous)]
 
 res id

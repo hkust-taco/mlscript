@@ -114,10 +114,10 @@ type List[A] = Cons[A] | None
 rec def mapList f ls = case ls of
   Cons -> Cons{value = f ls.value; tail = mapList f ls.tail},
   None -> None{}
-//│ mapList: ('value -> 'a) -> 'tail -> 'b
+//│ mapList: ('value -> 'value0) -> 'a -> 'tail
 //│   where
-//│     'b :> (Cons['a] with {tail: 'b}) | None
-//│     'tail <: (Cons[?] with {tail: 'tail, value: 'value}) | None
+//│     'tail :> (Cons['value0] with {tail: 'tail}) | None
+//│     'a <: (Cons[?] with {tail: 'a, value: 'value}) | None
 //│        = [Function: mapList]
 
 

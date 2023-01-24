@@ -27,17 +27,17 @@ rec def mem x l = case l of
   { Nil -> false
   | Cons -> if eq l.head x then true else mem x l.tail
   }
-//│ mem: anything -> 'tail -> (false | true)
+//│ mem: anything -> 'a -> bool
 //│   where
-//│     'tail <: (Cons[?] with {tail: 'tail}) | Nil
+//│     'a <: (Cons[?] with {tail: 'a}) | Nil
 
 rec def fold_left f x l = case l of
   { Nil -> x
   | Cons -> fold_left f (f x l.head) l.tail
   }
-//│ fold_left: ('a -> 'head -> ('a & 'b)) -> ('a & 'b) -> 'tail -> 'b
+//│ fold_left: ('a -> 'head -> 'a) -> 'a -> 'b -> 'a
 //│   where
-//│     'tail <: (Cons[?] with {head: 'head, tail: 'tail}) | Nil
+//│     'b <: (Cons[?] with {head: 'head, tail: 'b}) | Nil
 
 // ------------ polymorphic methods ------------
 
@@ -48,7 +48,7 @@ class Collection[a]: { l: List[a] }
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
 //│ Defined Collection.Mem: Collection[?] -> anything -> bool
-//│ Defined Collection.Fold: Collection['a] -> ('b -> 'a -> ('b & 'c)) -> ('b & 'c) -> 'c
+//│ Defined Collection.Fold: Collection['a] -> ('b -> 'a -> 'b) -> 'b -> 'b
 
 def coll_mem c x = c.Mem x
 //│ coll_mem: Collection[?] -> anything -> bool
@@ -58,7 +58,7 @@ def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
   let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
   (l1, l2)
-//│ simple_and_double: Collection['a] -> (forall 'b. Nil | 'b, forall 'c. Nil | 'c,)
+//│ simple_and_double: Collection['a] -> (forall 'b. 'b, forall 'c. 'c,)
 //│   where
-//│     'c :> Cons[('a, 'a,)] with {tail: Nil | 'c}
-//│     'b :> Cons['a] with {tail: Nil | 'b}
+//│     'c :> (Cons[('a, 'a,)] with {tail: 'c}) | Nil
+//│     'b :> (Cons['a] with {tail: 'b}) | Nil

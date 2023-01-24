@@ -305,7 +305,7 @@ object Main {
       decls = decls.tail
       try d match {
         case d @ Def(isrec, nme, L(rhs), _) =>
-          val ty_sch = typeLetRhs(isrec, nme.name, rhs)(ctx, raise)
+          val ty_sch = typeLetRhs(isrec, nme.name, rhs)(ctx, raise, Map.empty, true)
           val inst = ty_sch.instantiate(ctx, Shadows.empty)
           println(s"Typed `$nme` as: $inst")
           println(s" where: ${inst.showBounds}")
@@ -343,6 +343,8 @@ object Main {
           declared += nme -> ty_sch
           results append S(d.nme.name) -> htmlize(getType(ty_sch).show)
         case s: DesugaredStatement =>
+          implicit val vars: Map[Str, SimpleType] = Map.empty
+          implicit val gl: typer.GenLambdas = true
           typer.typeStatement(s, allowPure = true) match {
             case R(binds) =>
               binds.foreach { case (nme, pty) =>

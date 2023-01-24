@@ -625,7 +625,7 @@ class DiffTests
                 // statement is defined and has a body/definition
                 case d @ Def(isrec, nme, L(rhs), isByname) =>
                   typer.dbg = mode.dbg
-                  val ty_sch = typer.typeLetRhs(isrec, nme.name, rhs)(ctx, raiseToBuffer)
+                  val ty_sch = typer.typeLetRhs(isrec, nme.name, rhs)(ctx, raiseToBuffer, Map.empty, genLambdas = true)
                   val exp = getType(ty_sch)
                   // statement does not have a declared type for the body
                   // the inferred type must be used and stored for lookup
@@ -651,7 +651,7 @@ class DiffTests
                   }))
                 case desug: DesugaredStatement =>
                   typer.dbg = mode.dbg
-                  typer.typeStatement(desug, allowPure = true)(ctx, raiseToBuffer) match {
+                  typer.typeStatement(desug, allowPure = true)(ctx, raiseToBuffer, Map.empty, genLambdas = true) match {
                     case R(binds) =>
                       binds.map { case nme -> pty =>
                         val ptType = getType(pty)

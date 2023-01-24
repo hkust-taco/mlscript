@@ -21,10 +21,9 @@ let rec f = x => y => add (f x.tail y) (f y.tail x)
 //│ f: 'a -> 'a -> int
 //│   where
 //│     'a <: {tail: 'a}
-//│ f: 'a -> {tail: 'tail} -> int
+//│ f: 'a -> 'a -> int
 //│   where
-//│     'a <: {tail: {tail: 'tail} & 'a}
-//│     'tail <: 'a & {tail: 'tail}
+//│     'a <: {tail: 'a}
 //│ f: 'a -> 'a -> int
 //│   where
 //│     'a <: {tail: 'a}
@@ -39,11 +38,11 @@ let f = x => y => if true then { l: x; r: y } else { l: y; r: x } // 2-crown
 // Inspired by [Pottier 98, chap 13.5]
 
 let rec f = x => y => if true then x else { t: f x.t y.t }
-//│ f: 'a -> 't -> 'b
+//│ f: 'a -> 'b -> 'c
 //│   where
-//│     'b :> {t: 'b} | 'a
-//│     't <: {t: 't}
-//│     'a <: {t: 'a}
+//│     'b <: {t: 'b}
+//│     'a <: {t: 'a} & 'c
+//│     'c :> {t: 'c}
 
 
 

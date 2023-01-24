@@ -61,9 +61,7 @@ addSame n
 
 rec def addNTimes a n =
   if n <= 1 then a else a.Add (addNTimes a (n - 1))
-//│ addNTimes: (Addable['A] & 'a) -> int -> 'A
-//│   where
-//│     'A :> Addable['A] & 'a
+//│ addNTimes: (Addable['A] & 'A) -> int -> 'A
 //│          = [Function: addNTimes]
 
 addNTimes n 12
@@ -87,7 +85,9 @@ addNTimes s 5
 rec def addNTimes a n =
   if n < 0 then 0 else a.Add (addNTimes a (n - 1))
 addNTimes n 12
-//│ addNTimes: Addable['A] -> int -> (0 | 'A)
+//│ addNTimes: Addable['A] -> int -> 'A
+//│   where
+//│     'A :> 0
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	addNTimes n 12
 //│ ║        	^^^^^^^^^^^
@@ -103,14 +103,17 @@ rec def addNTimes a n =
   if n <= 0 then 0 else a.Add addNTimes a (n - 1)
 //│ addNTimes: 'addNTimes
 //│   where
-//│     'addNTimes :> 'a -> int -> 0
-//│     'a <: Addable[in 'a -> nothing & 'A out 'A | 'addNTimes]
+//│     'addNTimes :> 'a -> int -> 'b
+//│     'a <: Addable['A]
+//│     'A :> 'addNTimes
+//│        <: 'a -> int -> 'b
+//│     'b :> 0
 
 addNTimes n 12
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	addNTimes n 12
 //│ ║        	^^^^^^^^^^^
-//│ ╟── function of type `?a -> (forall ?b ?c. ?b -> ?c)` is not an instance of type `Num`
+//│ ╟── function of type `?a -> ?b -> ?c` is not an instance of type `Num`
 //│ ║  l.102: 	rec def addNTimes a n =
 //│ ║         	                  ^^^^^
 //│ ║  l.103: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)

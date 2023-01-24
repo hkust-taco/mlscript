@@ -27,9 +27,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   
   var distributeForalls: Boolean = false
   
-  // var genLamBodies: Boolean = false
-  var genLamBodies: Boolean = true
-  
   var noCycleCheck: Boolean = false
   var noRecursiveTypes: Boolean = false
   var irregularTypes: Boolean = false
@@ -499,11 +496,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   }(r => s"=> ${r._1} ——— ${r._2.mkString(", ")}")
   
   def typePattern(pat: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty): SimpleType =
-    typeTerm(pat)(ctx.copy(inPattern = true), raise, vars)
+    typeTerm(pat)(ctx.copy(inPattern = true), raise, vars, genLambdas = false)
   
   
   def typeStatement(s: DesugaredStatement, allowPure: Bool)
-        (implicit ctx: Ctx, raise: Raise): PolymorphicType \/ Opt[Binding] = s match {
+        (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType], genLambdas: GenLambdas): PolymorphicType \/ Opt[Binding] = s match {
     case Def(false, Var("_"), L(rhs), isByname) => typeStatement(rhs, allowPure)
     case Def(isrec, nme, L(rhs), isByname) => // TODO reject R(..)
       if (nme.name === "_")
@@ -541,7 +538,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   
   /** Infer the type of a let binding right-hand side. */
   def typeLetRhs(isrec: Boolean, nme: Str, rhs: Term)(implicit ctx: Ctx, raise: Raise,
-      vars: Map[Str, SimpleType] = Map.empty): PolymorphicType = {
+      vars: Map[Str, SimpleType], genLambdas: GenLambdas): PolymorphicType = {
     
     implicit val prov: TP = NoProv // TODO
     
@@ -586,9 +583,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     // } else typeTerm(rhs)(ctx.nextLevel, raise, vars) // Note: let polymorphism (`ctx.nextLevel`)
     // } else typeTerm(rhs)(ctx, raise, vars)
     } else ctx.nextLevel { ctx => // Note: let polymorphism (`ctx.nextLevel`)
-      typeTerm(rhs)(ctx, raise, vars)
+      typeTerm(rhs)(ctx, raise, vars, genLambdas = true)
     }
     PolymorphicType(lvl, res)
+    // * ^ TODO change: this only needs to be done in the rec case;
+    // *    and in that case, only for functions!
   }
   
   def mkProxy(ty: SimpleType, prov: TypeProvenance): SimpleType = {
@@ -624,7 +623,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   }
   
   // FIXME should generalize at lambdas passed in arg or returned from blocks
-  def typePolymorphicTerm(term: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty): SimpleType = 
+  def typePolymorphicTerm(term: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): SimpleType = 
     // if (ctx.inPattern) typeTerm(term) else ctx.nextLevel |> { implicit ctx =>
     //   val ty = typeTerm(term)
     //   println(s"POLY? ${ty.level} >= ${ctx.lvl}")
@@ -653,7 +652,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   
   /** Infer the type of a term. */
   // def typeTerm(term: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty, genLambdas: Bool = false): SimpleType
-  def typeTerm(term: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty, genLambdas: GenLambdas = generalizeCurriedFunctions): SimpleType
+  def typeTerm(term: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty, genLambdas: GenLambdas): SimpleType
         = trace[ST](s"$lvl. Typing ${if (ctx.inPattern) "pattern" else "term"} $term") {
         // = trace[ST](s"$lvl. Typing ${if (ctx.inPattern) "pattern" else "term"} $term   ${extrCtx.map(_.size)}") {
     implicit val prov: TypeProvenance = ttp(term)
@@ -889,7 +888,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         
         // val body_ty = typeTerm(body)(newCtx, raise2, vars, genLambdas = generalizeCurriedFunctions)
         
-        val body_ty = typeTerm(body)(newCtx, raise, vars)
+        val body_ty = typeTerm(body)(newCtx, raise, vars, doGenLambdas && generalizeCurriedFunctions)
         
         // val body_ty = if (!genLamBodies || !generalizeCurriedFunctions) typeTerm(body)(newCtx, raise, vars)
         //     // else newCtx.nextLevel |> { implicit ctx =>
@@ -928,7 +927,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case Lam(pat, body) =>
         val newCtx = ctx.nest
         val param_ty = typePattern(pat)(newCtx, raise, vars)
-        val body_ty = typeTerm(body)(newCtx, raise, vars, genLambdas = generalizeCurriedFunctions)
+        assert(!doGenLambdas)
+        val body_ty = typeTerm(body)(newCtx, raise, vars, genLambdas)
         FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
       case App(App(Var("is"), _), _) =>
         val desug = If(IfThen(term, Var("true")), S(Var("false")))
@@ -1048,11 +1048,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val n_ty = typeLetRhs(isrec, nme.name, rhs)
         val newCtx = ctx.nest
         newCtx += nme.name -> VarSymbol(n_ty, nme)
-        typeTerm(bod)(newCtx, raise)
+        typeTerm(bod)(newCtx, raise, vars, genLambdas)
       // case Blk(s :: stmts) =>
       //   val (newCtx, ty) = typeStatement(s)
       //   typeTerm(Blk(stmts))(newCtx, lvl, raise)
-      case Blk(stmts) => typeTerms(stmts, false, Nil)(ctx.nest, raise, prov)
+      case Blk(stmts) => typeTerms(stmts, false, Nil)(ctx.nest, raise, prov, vars, genLambdas)
       case Bind(l, r) =>
         val l_ty = typeTerm(l)
         val newCtx = ctx.nest // so the pattern's context don't merge with the outer context!
@@ -1119,7 +1119,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   }(r => s"$lvl. : ${r}")
   
   def typeArms(scrutVar: Opt[Var], arms: CaseBranches)
-      (implicit ctx: Ctx, raise: Raise, lvl: Int)
+      (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType], genLambdas: GenLambdas)
       : Ls[SimpleType -> SimpleType] -> SimpleType = arms match {
     case NoCases => Nil -> BotType
     case Wildcard(b) =>
@@ -1128,7 +1128,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       scrutVar match {
         case Some(v) =>
           newCtx += v.name -> VarSymbol(fv, v)
-          val b_ty = typeTerm(b)(newCtx, raise)
+          val b_ty = typeTerm(b)(newCtx, raise, vars, genLambdas)
           (fv -> TopType :: Nil) -> b_ty
         case _ =>
           (fv -> TopType :: Nil) -> typeTerm(b)
@@ -1160,17 +1160,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             // S(v.name), // this one seems a bit excessive
           )
           newCtx += v.name -> VarSymbol(tv, v)
-          val bod_ty = typeTerm(bod)(newCtx, raise)
+          val bod_ty = typeTerm(bod)(newCtx, raise, vars, genLambdas)
           (patTy -> tv, bod_ty, typeArms(scrutVar, rest))
         case N =>
-          val bod_ty = typeTerm(bod)(newCtx, raise)
+          val bod_ty = typeTerm(bod)(newCtx, raise, vars, genLambdas)
           (patTy -> TopType, bod_ty, typeArms(scrutVar, rest))
       }
       (req_ty :: tys) -> (bod_ty | rest_ty)
   }
   
   def typeTerms(term: Ls[Statement], rcd: Bool, fields: List[Opt[Var] -> SimpleType], allowPure: Bool = false)
-        (implicit ctx: Ctx, raise: Raise, prov: TypeProvenance): SimpleType
+        (implicit ctx: Ctx, raise: Raise, prov: TypeProvenance, vars: Map[Str, SimpleType], genLambdas: GenLambdas): SimpleType
       = term match {
     case (trm @ Var(nme)) :: sts if rcd => // field punning
       typeTerms(Tup(S(trm) -> Fld(false, false, trm) :: Nil) :: sts, rcd, fields)
