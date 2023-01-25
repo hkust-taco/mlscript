@@ -220,26 +220,26 @@ class ClassLifter(logDebugMsg: Boolean = false) {
 
   private def liftCaseBranch(brn: CaseBranches)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (CaseBranches, LocalContext) = brn match{
     case Case(v: Var, body, rest) =>
-      val nTrm = liftTermNew(body)(using ctx.addV(v))
+      val nTrm = liftTerm(body)(using ctx.addV(v))
       val nRest = liftCaseBranch(rest)
       (Case(v, nTrm._1, nRest._1), nTrm._2 ++ nRest._2)
     case Case(pat, body, rest) =>
-      val nTrm = liftTermNew(body)
+      val nTrm = liftTerm(body)
       val nRest = liftCaseBranch(rest)
       (Case(pat, nTrm._1, nRest._1), nTrm._2 ++ nRest._2)
     case Wildcard(body) =>
-      val nTrm = liftTermNew(body)
+      val nTrm = liftTerm(body)
       (Wildcard(nTrm._1), nTrm._2)
     case NoCases => (brn, emptyCtx)
   }
 
   private def liftIf(body: IfBody)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (IfBody, LocalContext) = body match{
     case IfElse(expr) =>
-      val ret = liftTermNew(expr)
+      val ret = liftTerm(expr)
       (IfElse(ret._1), ret._2)
     case IfThen(expr, rhs) =>
-      val nE = liftTermNew(expr)
-      val nR = liftTermNew(rhs)
+      val nE = liftTerm(expr)
+      val nR = liftTerm(rhs)
       (IfThen(nE._1, nR._1), nE._2 ++ nR._2)
     case _ => ???
   }
@@ -247,7 +247,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
   private def liftTuple(tup: Tup)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (Tup, LocalContext) = {
     val ret = tup.fields.map{
         case (None, Fld(b1, b2, trm)) =>
-          val tmp = liftTermNew(trm)
+          val tmp = liftTerm(trm)
           ((None, Fld(b1, b2, tmp._1)), tmp._2)
         case (Some(v), Fld(b1, b2, trm)) =>
           val nTrm = liftTermAsType(trm)
@@ -290,7 +290,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     }
   }
 
-  private def liftTermNew(target: Term)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (Term, LocalContext) = target match {
+  private def liftTerm(target: Term)(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (Term, LocalContext) = target match {
     case v: Var =>
       if(ctx.contains(v) || v.name.equals("this") || primiTypes.contains(v.name))   (v, emptyCtx)
       else if(cache.contains(TypeName(v.name))){
@@ -305,8 +305,8 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       }
     case Lam(lhs, rhs) =>
       val lctx = getFreeVars(lhs)(using emptyCtx, cache, None)
-      val (ltrm, _) = liftTermNew(lhs)(using ctx.addV(lctx.vSet))
-      val (rtrm, rctx) = liftTermNew(rhs)(using ctx.addV(lctx.vSet))
+      val (ltrm, _) = liftTerm(lhs)(using ctx.addV(lctx.vSet))
+      val (rtrm, rctx) = liftTerm(rhs)(using ctx.addV(lctx.vSet))
       (Lam(ltrm, rtrm), rctx -+ lctx)
     case t: Tup =>
       liftTuple(t)
@@ -318,29 +318,29 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       }.unzip
       (Rcd(ret._1), ret._2.fold(emptyCtx)(_ ++ _))
     case Asc(trm, ty) =>
-      val ret = liftTermNew(trm)
+      val ret = liftTerm(trm)
       val nTy = liftType(ty)
       (Asc(ret._1, nTy._1), ret._2 ++ nTy._2)
     case App(v: Var, prm: Tup) if cache.contains(TypeName(v.name)) =>
       val ret = liftConstr(TypeName(v.name), prm)
       (App(Var(ret._1.name), ret._2), ret._3)
     case App(lhs, rhs) =>
-      val (ltrm, lctx) = liftTermNew(lhs)
-      val (rtrm, rctx) = liftTermNew(rhs)
+      val (ltrm, lctx) = liftTerm(lhs)
+      val (rtrm, rctx) = liftTerm(rhs)
       (App(ltrm, rtrm), lctx ++ rctx)
     case Assign(lhs, rhs) =>
-      val (ltrm, lctx) = liftTermNew(lhs)
-      val (rtrm, rctx) = liftTermNew(rhs)
+      val (ltrm, lctx) = liftTerm(lhs)
+      val (rtrm, rctx) = liftTerm(rhs)
       (Assign(ltrm, rtrm), lctx ++ rctx)
     case Bind(lhs, rhs) =>
-      val (ltrm, lctx) = liftTermNew(lhs)
+      val (ltrm, lctx) = liftTerm(lhs)
       val (rtrm, rctx) = liftTermAsType(rhs)
       (Bind(ltrm, rtrm), lctx ++ rctx)
     case Bra(rcd, trm) =>
-      val ret = liftTermNew(trm)
+      val ret = liftTerm(trm)
       (Bra(rcd, ret._1), ret._2)
     case CaseOf(trm, cases) =>
-      val nTrm = liftTermNew(trm)
+      val nTrm = liftTerm(trm)
       val nCases = liftCaseBranch(cases)
       (CaseOf(nTrm._1, nCases._1), nTrm._2 ++ nCases._2)
     case If(body, None) =>
@@ -348,26 +348,26 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       (If(ret._1, None), ret._2)
     case If(body, Some(trm)) =>
       val ret = liftIf(body)
-      val nTrm = liftTermNew(trm)
+      val nTrm = liftTerm(trm)
       (If(ret._1, Some(nTrm._1)), ret._2 ++ nTrm._2)
     case Let(isRec, name, rhs, body) =>
-      val nRhs = if(isRec) liftTermNew(rhs)(using ctx.addV(name)) else liftTermNew(rhs)
-      val nBody = liftTermNew(body)(using ctx.addV(name))
+      val nRhs = if(isRec) liftTerm(rhs)(using ctx.addV(name)) else liftTerm(rhs)
+      val nBody = liftTerm(body)(using ctx.addV(name))
       (Let(isRec, name, nRhs._1, nBody._1), nRhs._2 ++ nBody._2)
     case Sel(receiver, fieldName) =>
-      val nRec = liftTermNew(receiver)
+      val nRec = liftTerm(receiver)
       (Sel(nRec._1, fieldName), nRec._2)
     case Splc(fields) => ???
     case Subs(arr, idx) =>
-      val (ltrm, lctx) = liftTermNew(arr)
-      val (rtrm, rctx) = liftTermNew(idx)
+      val (ltrm, lctx) = liftTerm(arr)
+      val (rtrm, rctx) = liftTerm(idx)
       (Subs(ltrm, rtrm), lctx ++ rctx)
     case Test(trm, ty) =>
-      val (ltrm, lctx) = liftTermNew(trm)
+      val (ltrm, lctx) = liftTerm(trm)
       val (rtrm, rctx) = liftTermAsType(ty)
       (Test(ltrm, rtrm), lctx ++ rctx)
     case TyApp(lhs, targs) =>
-      val ret = liftTermNew(lhs)
+      val ret = liftTerm(lhs)
       val nTs = targs.map(liftType).unzip
       (TyApp(ret._1, nTs._1), nTs._2.fold(ret._2)(_ ++ _))
     case With(trm, fields) => ???
@@ -381,23 +381,29 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val supArgs = Tup(cls.body.params.fields.flatMap(tupleEntityToVar).map(toFldsEle))
       val anoCls = NuTypeDef(Cls, nTpNm, Nil, cls.body.params, List(App(Var(t.name), supArgs)), tu)
       val nSta = New(Some((nTpNm, prm)), TypingUnit(Nil))
-      val ret = liftEntitiesNew(List(anoCls, nSta))
+      val ret = liftEntities(List(anoCls, nSta))
       (Blk(ret._1), ret._2)
     case New(None, tu) =>
       val nTpNm = TypeName(genAnoName())
       val anoCls = NuTypeDef(Cls, nTpNm, Nil, Tup(Nil), Nil, tu)
       val nSta = New(Some((nTpNm, Tup(Nil))), TypingUnit(Nil))
-      val ret = liftEntitiesNew(List(anoCls, nSta))
+      val ret = liftEntities(List(anoCls, nSta))
       (Blk(ret._1), ret._2)
     case New(head, body) => ???
     case Blk(stmts) =>
-      val ret = liftEntitiesNew(stmts)
+      val ret = liftEntities(stmts)
       (Blk(ret._1), ret._2)
     case lit: Lit => (lit, emptyCtx)
     case Inst(bod) =>
-      val (trm, ctx) = liftTermNew(bod)
+      val (trm, ctx) = liftTerm(bod)
       (Inst(trm), ctx)
-    case Forall(_, _) | Where(_) => ??? // TODO(fcp)
+    case Forall(ps, bod) =>
+      val (trm, ctx) = liftTerm(bod)
+      (Forall(ps, trm), ctx)
+    case Where(bod, sts) =>
+      val (bod2, ctx) = liftTerm(bod)
+      val (sts2, ctx2) = liftEntities(sts)
+      (Where(bod2, sts2), ctx2)
   }
 
   //serves for lifting Tup(Some(_), Fld(_, _, trm)), where trm refers to a type
@@ -458,13 +464,20 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val nlhs = liftType(lb)
       val nrhs = liftType(ub)
       Bounds(nlhs._1, nrhs._1) -> (nlhs._2 ++ nrhs._2)
-    case Constrained(base, where, _TODO) => // TODO(fcp)
-      val (nTargs, nCtx) = where.map(x => {
-        val tmp = liftType(x._2)
-        (x._1, tmp._1.asInstanceOf[Bounds]) -> tmp._2
-      }).unzip
+    case Constrained(base, bounds, where) =>
+      val (nTargs, nCtx) = bounds.map { case (tv, Bounds(lb, ub)) =>
+        val nlhs = liftType(lb)
+        val nrhs = liftType(ub)
+        (tv, Bounds(nlhs._1, nrhs._1)) -> (nlhs._2 ++ nrhs._2)
+      }.unzip
+      val (bounds2, nCtx2) = where.map { case Bounds(lb, ub) =>
+        val nlhs = liftType(lb)
+        val nrhs = liftType(ub)
+        Bounds(nlhs._1, nrhs._1) -> (nlhs._2 ++ nrhs._2)
+      }.unzip
       val (nBase, bCtx) = liftType(base)
-      Constrained(nBase, nTargs, _TODO) -> (nCtx.fold(emptyCtx)(_ ++ _) ++ bCtx)
+      Constrained(nBase, nTargs, bounds2) ->
+        ((nCtx ++ nCtx2).fold(emptyCtx)(_ ++ _) ++ bCtx)
     case Function(lhs, rhs) =>
       val nlhs = liftType(lhs)
       val nrhs = liftType(rhs)
@@ -515,8 +528,10 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       Union(nlhs._1, nrhs._1) -> (nlhs._2 ++ nrhs._2)
     case x : TypeName =>
       liftTypeName(x)
-    // Bot, Literal, Top, TypeTag, TypeVar
-    case others => others -> emptyCtx
+    case PolyType(targs, body) =>
+      val (body2, ctx) = liftType(body)
+      PolyType(targs, body2) -> ctx
+    case Top | Bot | _: Literal | _: TypeTag | _: TypeVar => target -> emptyCtx
   }
   
 
@@ -525,16 +540,15 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     val NuFunDef(rec, nm, tpVs, body) = func
     body match{
       case Left(value) =>
-        val ret = liftTermNew(value)(using ctx.addV(nm).addT(tpVs))
+        val ret = liftTerm(value)(using ctx.addV(nm).addT(tpVs))
         (func.copy(rhs = Left(ret._1)), ret._2)
       case Right(PolyType(targs, body)) =>
         val nBody = liftType(body)(using ctx.addT(tpVs))
-        val targs2 = targs.map {
-          case L(tp) => tp
-          case R(tp) => ??? // TODO(fcp)
-        }
-        val nTargs = targs2.map(liftTypeName(_)(using ctx.addT(tpVs))).unzip
-        (func.copy(rhs = Right(PolyType(nTargs._1.map(Left.apply), nBody._1))), nTargs._2.fold(nBody._2)(_ ++ _))
+        val nTargs = targs.map {
+          case L(tp) => liftTypeName(tp)(using ctx.addT(tpVs)).mapFirst(Left.apply)
+          case R(tv) => R(tv) -> emptyCtx
+        }.unzip
+        (func.copy(rhs = Right(PolyType(nTargs._1, nBody._1))), nTargs._2.fold(nBody._2)(_ ++ _))
     }
   }
   
@@ -572,7 +586,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     nameInfoMap.toMap
   }
 
-  private def liftEntitiesNew(etts: List[Statement])(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (List[Statement], LocalContext) = {
+  private def liftEntities(etts: List[Statement])(using ctx: LocalContext, cache: ClassCache, outer: Option[ClassInfoCache]): (List[Statement], LocalContext) = {
     log("liftEntities: " ++ etts.headOption.map(_.toString()).getOrElse(""))
     val (newCls, newFuncs, rstTrms) = splitEntities(etts)
     val newClsNms = newCls.map(x => Var(x.nme.name)).toSet
@@ -589,7 +603,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
 
     newCls.foreach(x => liftTypeDefNew(x)(using newCache))
     val (liftedFuns, funVs) = newFuncs.map(liftFunc(_)(using ctx.addV(newFuncNms), newCache)).unzip
-    val (liftedTerms, termVs) = rstTrms.map(liftTermNew(_)(using ctx.addV(newFuncNms), newCache)).unzip
+    val (liftedTerms, termVs) = rstTrms.map(liftTerm(_)(using ctx.addV(newFuncNms), newCache)).unzip
     (liftedFuns ++ liftedTerms, (funVs ++ termVs).fold(emptyCtx)(_ ++ _))
   }
 
@@ -623,9 +637,9 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       outer.map(x => List(toFldsEle(Var(genParName(x.liftedNm.name))))).getOrElse(Nil)
       ++ params.fields
       ++ freeVs.vSet.map(toFldsEle) 
-    val nPars = pars.map(liftTermNew(_)(using emptyCtx, nCache, nOuter)).unzip
+    val nPars = pars.map(liftTerm(_)(using emptyCtx, nCache, nOuter)).unzip
     val nFuncs = funcList.map(liftFunc(_)(using emptyCtx, nCache, nOuter)).unzip
-    val nTerms = termList.map(liftTermNew(_)(using emptyCtx, nCache, nOuter)).unzip
+    val nTerms = termList.map(liftTerm(_)(using emptyCtx, nCache, nOuter)).unzip
     clsList.foreach(x => liftTypeDefNew(x)(using nCache, nOuter))
     retSeq = retSeq.appended(NuTypeDef(kind, nName, nTps, Tup(nParams), nPars._1, TypingUnit(nFuncs._1 ++ nTerms._1)))
   }
@@ -634,7 +648,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     log("=========================\n")
     log(s"lifting: \n${showStructure(rawUnit)}\n")
     retSeq = Nil
-    val re = liftEntitiesNew(rawUnit.entities)(using emptyCtx, Map(), None)
+    val re = liftEntities(rawUnit.entities)(using emptyCtx, Map(), None)
     log(s"freeVars: ${re._2}")
     // println(logOutput.toString())
     TypingUnit(retSeq.toList++re._1)
