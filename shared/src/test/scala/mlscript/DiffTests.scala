@@ -473,7 +473,7 @@ class DiffTests
               // else 
               typer.processTypeDefs(typeDefs)(ctx, raise)
             
-            def getType(ty: typer.TypeScheme): Type = {
+            def getType(ty: typer.SimpleType): Type = {
               if (mode.isDebugging) output(s"⬤ Typed as: $ty")
               if (mode.isDebugging) output(s" where: ${ty.showBounds}")
               typer.dbg = mode.dbgSimplif

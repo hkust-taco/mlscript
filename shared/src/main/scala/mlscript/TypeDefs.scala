@@ -30,7 +30,6 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
     kind: TypeDefKind,
     nme: TypeName,
     tparamsargs: List[(TypeName, TypeVariable)],
-    tvars: Iterable[TypeVariable], // * TODO rm // "implicit" type variables. instantiate every time a `TypeRef` is expanded
     bodyTy: SimpleType,
     mthDecls: List[MethodDef[Right[Term, Type]]],
     mthDefs: List[MethodDef[Left[Term, Type]]],
@@ -43,18 +42,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
         baseClasses.iterator.filterNot(traversed).flatMap(v =>
           ctx.tyDefs.get(v.name).fold(Set.empty[TypeName])(_.allBaseClasses(ctx)(traversed + v)))
     val (tparams: List[TypeName], targs: List[TypeVariable]) = tparamsargs.unzip
-    
-    
-    
-    
-    
-    
-    // TODO FIXME pt.level -> pt.polymLevel
-    // def wrapMethod(pt: PolymorphicType, prov: TypeProvenance): MethodType =
-    //   MethodType(pt.polymLevel, S((thisTy(prov), pt.body)), nme :: Nil, isInherited = false)(prov)
-    
-    
-    val thisTv: TypeVariable = freshVar(noProv, N, S("this"), Nil, TypeRef(nme, targs)(noProv) :: Nil)(1) // FIXME coudl N here result in divergence? cf. absence of shadow
+    val thisTv: TypeVariable = freshVar(noProv, N, S("this"), Nil, TypeRef(nme, targs)(noProv) :: Nil)(1) // FIXME could N here result in divergence? cf. absence of shadow
     var tvarVariances: Opt[VarianceStore] = N
     def getVariancesOrDefault: collection.Map[TV, VarianceInfo] =
       tvarVariances.getOrElse(Map.empty[TV, VarianceInfo].withDefaultValue(VarianceInfo.in))
@@ -190,14 +178,9 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
           val dummyTargs = td.tparams.map(p =>
             freshVar(originProv(p.toLoc, s"${td.kind.str} type parameter", p.name), N, S(p.name))(ctx.lvl + 1))
           val tparamsargs = td.tparams.lazyZip(dummyTargs)
-          // val (bodyTy, tvars) = 
-          //   typeType2(td.body, simplify = false)(ctx.copy(lvl = 0), raise, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
-          // assert(tvars.isEmpty)
-          // val td1 = TypeDef(td.kind, td.nme, tparamsargs.toList, tvars, bodyTy,
-          //   td.mthDecls, td.mthDefs, baseClassesOf(td), td.toLoc, td.positionals.map(_.name))
           val bodyTy =
             typePolyType(td.body, simplify = false)(ctx, raise, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
-          val td1 = TypeDef(td.kind, td.nme, tparamsargs.toList, Nil, bodyTy,
+          val td1 = TypeDef(td.kind, td.nme, tparamsargs.toList, bodyTy,
             td.mthDecls, td.mthDefs, baseClassesOf(td), td.toLoc, td.positionals.map(_.name))
           allDefs += n -> td1
           S(td1)
@@ -325,7 +308,6 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
                 // *  (if they aren't, the object type just won't be instantiable),
                 // *  but will help report inheritance errors earlier (see test BadInherit2).
                 case (nme, FieldType(S(lb), ub)) =>
-                  // implicit val ec: Opt[ExtrCtx] = N
                   implicit val shadows: Shadows = Shadows.empty
                   constrain(lb, ub)
                 case _ => ()
@@ -529,7 +511,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
             case _ => Nil
           }
           def go(md: MethodDef[_ <: Term \/ Type]): (Str, MethodType) = {
-            val thisTag = TraitTag(Var("this"))(noProv) // FIXME or Skolem?!
+            val thisTag = TraitTag(Var("this"))(noProv) // or Skolem?!
             // val thisTag = SkolemTag(thisCtx.lvl/*TODO correct?*/, Var("this"))(noProv)
             val thisTy = thisTag & tr
             thisCtx += "this" -> VarSymbol(thisTy, Var("this"))
@@ -589,17 +571,10 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
                   })
                 },
               ty => {
-                // PolymorphicType(thisCtx.lvl,
-                // typeType(ty)(thisCtx.nextLevel, raise, N, targsMap2))
-                
-                implicit val prov: TP = NoProv // TODO
-                
+                implicit val tp: TP = prov
                 thisCtx.nextLevel { newCtx =>
                   PolymorphicType(ctx.lvl, typeType(ty)(newCtx, raise, targsMap2))
                 }
-                // thisCtx.poly { implicit ctx =>
-                //   typeType(ty)(ctx, raise, targsMap2)
-                // }
                 // ^ Note: we need to go to the next level here,
                 //    which is also done automatically by `typeLetRhs` in the case above
               }), reverseRigid2)
@@ -737,11 +712,6 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
             // *  in a type, this can make a difference (like currently in `analysis/Weird.mls`)
             updateVariance(bod, curVariance)
           case ConstrainedType(cs, bod) =>
-            // cs.foreach(_._2.foreach(pb =>
-            //   // if (pb._1) updateVariance(pb._2, curVariance)
-            //   // else updateVariance(pb._2, curVariance.flip)
-            //   updateVariance(pb._2, if (pb._1) VarianceInfo.co else VarianceInfo.contra)
-            // ))
             cs.foreach { lu =>
               updateVariance(lu._1, VarianceInfo.co)
               updateVariance(lu._2, VarianceInfo.contra)
@@ -768,7 +738,7 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
       val visitedSet: MutSet[Bool -> TypeVariable] = MutSet()
       varianceUpdated = false;
       tyDefs.foreach {
-        case t @ TypeDef(k, nme, _, _, body, mthDecls, mthDefs, _, _, _) =>
+        case t @ TypeDef(k, nme, _, body, mthDecls, mthDefs, _, _, _) =>
           trace(s"${k.str} ${nme.name}  ${
                 t.tvarVariances.getOrElse(die).iterator.map(kv => s"${kv._2} ${kv._1}").mkString("  ")}") {
             updateVariance(body, VarianceInfo.co)(t, visitedSet)

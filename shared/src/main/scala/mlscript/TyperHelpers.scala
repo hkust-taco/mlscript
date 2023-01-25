@@ -63,8 +63,6 @@ abstract class TyperHelpers { Typer: Typer =>
     case false => "-"
   }
   final def printPol(pol: Opt[Bool]): Str = pol match {
-    // case S(true) => "+"
-    // case S(false) => "-"
     case S(p) => printPol(p)
     case N => "="
   }
@@ -293,11 +291,7 @@ abstract class TyperHelpers { Typer: Typer =>
     }
     // }(r => s"= $r")
     
-    // lazy val shadow: ST = this match {
-    //   case tv: TV => tv.original
-    //   case _ => map(_.shadow)
-    // }
-    val initialRun = currentConstrainingRun
+    private val initialRun = currentConstrainingRun
     private var shadowRun = initialRun - 1
     private var _shadow: ST = this
     private def computeShadow: ST = this match {
@@ -328,8 +322,6 @@ abstract class TyperHelpers { Typer: Typer =>
       case TypeRef(defn, targs) => TypeRef(defn, targs.map(f(_)))(prov)
       case PolymorphicType(plvl, und) => PolymorphicType(plvl, f(und))
       case ConstrainedType(cs, bod) =>
-        // ConstrainedType(cs.mapValues(_.mapValues(f)), f(bod))
-        // ConstrainedType(cs.mapKeys(f(_).asInstanceOf[TV]).mapValues(_.mapValues(f)), f(bod))
         ConstrainedType(cs.map(lu => f(lu._1) -> f(lu._2)), f(bod))
       case _: TypeVariable | _: TypeTag | _: ExtrType => this
     }
@@ -354,8 +346,6 @@ abstract class TyperHelpers { Typer: Typer =>
       case PolymorphicType(plvl, und) =>
         if (smart) PolymorphicType.mk(plvl, f(pol, und)) else PolymorphicType(plvl, f(pol, und))
       case ConstrainedType(cs, bod) =>
-        // ConstrainedType(cs.map(tvbs => tvbs.mapV), f(pol, bod))
-        // ConstrainedType(cs.mapValues(_.map(b => b._1 -> f.tupled(b.mapFirst(some)))), f(pol, bod))
         ConstrainedType(cs.map(lu => f(S(true), lu._1) -> f(S(false), lu._2)), f(pol, bod))
       case _: TypeVariable | _: TypeTag | _: ExtrType => this
     }
@@ -452,10 +442,10 @@ abstract class TyperHelpers { Typer: Typer =>
     def <:< (that: SimpleType)
       (implicit ctx: Ctx, crt: CompareRecTypes = true, cache: MutMap[ST -> ST, Bool] = MutMap.empty): Bool =
     {
-      val doCompareRecTypes = (crt === true) && !noRecursiveTypes
     // trace(s"? $this <: $that") {
     // trace(s"? $this <: $that   assuming:  ${
     //     cache.iterator.map(kv => "" + kv._1._1 + (if (kv._2) " <: " else " <? ") + kv._1._2).mkString(" ; ")}") {
+      val doCompareRecTypes = (crt === true) && !noRecursiveTypes
       subtypingCalls += 1
       def assume[R](k: MutMap[ST -> ST, Bool] => R): R =
         if (doCompareRecTypes) k(cache.map(kv => kv._1 -> true)) else k(cache)
@@ -664,53 +654,6 @@ abstract class TyperHelpers { Typer: Typer =>
       case _ => this :: Nil
     }
     
-    def childrenPol(pol: PolMap)(implicit ctx: Ctx): List[PolMap -> SimpleType] = {
-      def childrenPolField(fld: FieldType): List[PolMap -> SimpleType] =
-        fld.lb.map(pol.contravar -> _).toList ::: pol.covar -> fld.ub :: Nil
-      this match {
-        case tv @ AssignedVariable(ty) =>
-          pol -> ty :: Nil
-        case tv: TypeVariable =>
-          // (if (pol(tv.level) =/= S(false)) tv.lowerBounds.map(PolMap.pos -> _) else Nil) :::
-          // (if (pol(tv.level) =/= S(true)) tv.upperBounds.map(PolMap.neg -> _) else Nil)
-          (if (pol(tv) =/= S(false)) tv.lowerBounds.map(pol.at(tv.level, true) -> _) else Nil) :::
-          (if (pol(tv) =/= S(true)) tv.upperBounds.map(pol.at(tv.level, false) -> _) else Nil)
-        case FunctionType(l, r) => pol.contravar -> l :: pol.covar -> r :: Nil
-        case Overload(as) => as.map(pol -> _)
-        case ComposedType(_, l, r) => pol -> l :: pol -> r :: Nil
-        case RecordType(fs) => fs.unzip._2.flatMap(childrenPolField)
-        case TupleType(fs) => fs.unzip._2.flatMap(childrenPolField)
-        case ArrayType(fld) => childrenPolField(fld)
-        case SpliceType(elems) => elems flatMap {case L(l) => pol -> l :: Nil case R(r) => childrenPolField(r)}
-        case NegType(n) => pol.contravar -> n :: Nil
-        case ExtrType(_) => Nil
-        case ProxyType(und) => pol -> und :: Nil
-        case _: TypeTag => Nil
-        case tr: TypeRef => tr.mapTargs(pol)(_ -> _)
-        case Without(b, ns) => pol -> b :: Nil
-        case TypeBounds(lb, ub) =>
-          PolMap.neg -> lb :: PolMap.pos -> ub :: Nil
-          // val res = collection.mutable.Buffer.empty[PolMap -> ST]
-          // // pol.traverseBounds(lb, ub)(_ -> _ |> (res +=  _))
-          // pol.traverseBounds(lb, ub)(res +=  _ -> _)
-          // res.toList
-        case PolymorphicType(_, und) => pol -> und :: Nil
-        case ConstrainedType(cs, bod) =>
-          // cs.flatMap(_._2.unzip._2) ::: bod :: Nil
-          // cs.flatMap(vbs => vbs._2.map {
-          //   case (true, b) => 
-          // }) ::: bod :: Nil
-          
-          // cs.map(_._1) ::: 
-          // cs.flatMap(vbs => vbs._2.mapKeys(some)) ::: pol -> bod :: Nil
-          
-          // cs.flatMap(vbs => PolMap.pos -> vbs._1 :: PolMap.neg -> vbs._2 :: Nil) ::: pol -> bod :: Nil
-          cs.flatMap(vbs => PolMap.pos -> vbs._1 :: PolMap.posAtNeg -> vbs._2 :: Nil) ::: pol -> bod :: Nil
-          // cs.flatMap(vbs => pol.invar -> vbs._1 :: pol.invar -> vbs._2 :: Nil) ::: pol -> bod :: Nil
-          
-          // ???
-    }}
-    
     def childrenPol(pol: Opt[Bool])(implicit ctx: Ctx): List[Opt[Bool] -> SimpleType] = {
       def childrenPolField(fld: FieldType): List[Opt[Bool] -> SimpleType] =
         fld.lb.map(pol.map(!_) -> _).toList ::: pol -> fld.ub :: Nil
@@ -736,61 +679,45 @@ abstract class TyperHelpers { Typer: Typer =>
         case TypeBounds(lb, ub) => S(false) -> lb :: S(true) -> ub :: Nil
         case PolymorphicType(_, und) => pol -> und :: Nil
         case ConstrainedType(cs, bod) =>
-          // cs.flatMap(_._2.unzip._2) ::: bod :: Nil
-          // cs.flatMap(vbs => vbs._2.map {
-          //   case (true, b) => 
-          // }) ::: bod :: Nil
-          
-          // cs.map(_._1) ::: 
-          // cs.flatMap(vbs => vbs._2.mapKeys(some)) ::: pol -> bod :: Nil
           cs.flatMap(vbs => S(true) -> vbs._1 :: S(false) -> vbs._2 :: Nil) ::: pol -> bod :: Nil
-          
-          // ???
+    }}
+    
+    def childrenPol(pol: PolMap)(implicit ctx: Ctx): List[PolMap -> SimpleType] = {
+      def childrenPolField(fld: FieldType): List[PolMap -> SimpleType] =
+        fld.lb.map(pol.contravar -> _).toList ::: pol.covar -> fld.ub :: Nil
+      this match {
+        case tv @ AssignedVariable(ty) =>
+          pol -> ty :: Nil
+        case tv: TypeVariable =>
+          (if (pol(tv) =/= S(false)) tv.lowerBounds.map(pol.at(tv.level, true) -> _) else Nil) :::
+          (if (pol(tv) =/= S(true)) tv.upperBounds.map(pol.at(tv.level, false) -> _) else Nil)
+        case FunctionType(l, r) => pol.contravar -> l :: pol.covar -> r :: Nil
+        case Overload(as) => as.map(pol -> _)
+        case ComposedType(_, l, r) => pol -> l :: pol -> r :: Nil
+        case RecordType(fs) => fs.unzip._2.flatMap(childrenPolField)
+        case TupleType(fs) => fs.unzip._2.flatMap(childrenPolField)
+        case ArrayType(fld) => childrenPolField(fld)
+        case SpliceType(elems) => elems flatMap {case L(l) => pol -> l :: Nil case R(r) => childrenPolField(r)}
+        case NegType(n) => pol.contravar -> n :: Nil
+        case ExtrType(_) => Nil
+        case ProxyType(und) => pol -> und :: Nil
+        case _: TypeTag => Nil
+        case tr: TypeRef => tr.mapTargs(pol)(_ -> _)
+        case Without(b, ns) => pol -> b :: Nil
+        case TypeBounds(lb, ub) => PolMap.neg -> lb :: PolMap.pos -> ub :: Nil
+        case PolymorphicType(_, und) => pol -> und :: Nil
+        case ConstrainedType(cs, bod) =>
+          cs.flatMap(vbs => PolMap.pos -> vbs._1 :: PolMap.posAtNeg -> vbs._2 :: Nil) ::: pol -> bod :: Nil
     }}
     
     def getVarsPol(pol: PolMap)(implicit ctx: Ctx): SortedMap[TypeVariable, Opt[Bool]] = {
       val res = MutMap.empty[TV, Pol]
       val traversed = MutSet.empty[TV -> Bool]
-      // val traversed = MutSet.empty[TV]
       def go(pol: PolMap)(ty: ST): Unit = {
         // trace(s"getVarsPol[${printPol(pol.base)}] $ty ${pol(1)}") {
         // trace(s"getVarsPol[${printPol(pol.base)}] $ty ${pol}") {
         ty match {
           case tv: TypeVariable =>
-            /* 
-            // if (traversed(tv)) ()
-            if (traversed(tv)) ()
-            // if (traversed(tv -> pol)) ()
-            else {
-              /* 
-              traversed += tv
-              // if (tv.level > lb && tv.level <= ub) {
-              //   // println(s"ADD $tv")
-              //   res.updateWith(tv) {
-              //     case S(p) if p =/= pol => S(N)
-              //     case _ => S(pol)
-              //   }
-              //   // res += tv -> pol
-              // }
-              val tvpol = pol(tv.level)
-              res.updateWith(tv) {
-                case S(p) if p =/= tvpol => S(N)
-                case _ => S(tvpol)
-              }
-              tv.childrenPol(pol) // * Note: `childrenPol` deals with `assignedTo`
-                .foreach(cp => go(cp._1)(cp._2))
-              */
-              pol(tv) match {
-                case S(p) =>
-                  traversed += tv -> p
-                case N =>
-                  traversed += tv -> true
-                  traversed += tv -> false
-              }
-              tv.childrenPol(pol) // * Note: `childrenPol` deals with `assignedTo`
-                .foreach(cp => go(cp._1)(cp._2))
-            }
-            */
             val tvpol = pol(tv.level)
             res.updateWith(tv) {
               case S(p) if p =/= tvpol => S(N)
@@ -814,14 +741,8 @@ abstract class TyperHelpers { Typer: Typer =>
               tv.childrenPol(pol) // * Note: `childrenPol` deals with `assignedTo`
                 .foreach(cp => go(cp._1)(cp._2))
           case pt: PolymorphicType =>
-            // val quantified = go(S(true))(pt.body, lb, pt.polymLevel min ub)
-            // val unquantified = go(pol)(pt.body, MinLevel-1, MaxLevel)
-            // unquantified ++ 
-            // go(S(true))(pt.body, lb, pt.polymLevel min ub)
             go(pol.enter(pt.polymLevel))(pt.body)
           case ty =>
-            // ty.children(includeBounds = true) // * Q: is `includeBounds` useful here?
-            //   .foreach(go(_, lb, ub))
             ty.childrenPol(pol).foreach(cp => go(cp._1)(cp._2))
         }
         // }()
@@ -829,75 +750,6 @@ abstract class TyperHelpers { Typer: Typer =>
       go(pol)(this)
       res.toSortedMap
     }
-    
-    // def getVarsPol(pol: Opt[Bool])(implicit ctx: Ctx): SortedMap[TypeVariable, Opt[Bool]] =
-    //   varsPolBetween(pol)(MinLevel-1, MaxLevel)
-    // def getVarsPol(pol: Opt[Bool])(implicit ctx: Ctx): SortedMap[TypeVariable, Opt[Bool]] = {
-    //   val res = MutMap.empty[TypeVariable, Opt[Bool]]
-    //   @tailrec
-    //   def rec(queue: List[Opt[Bool] -> SimpleType]): Unit =
-    //       // trace(s"getVarsPol ${queue.iterator.map(e => s"${printPol(e._1)}${e._2}").mkString(", ")}") {
-    //       queue match {
-    //     case (tvp, tv: TypeVariable) :: tys =>
-    //       res.get(tv) match {
-    //         case S(N) => rec(tys)
-    //         case S(p) if p === tvp => rec(tys)
-    //         case S(S(p)) =>
-    //           assert(!tvp.contains(p))
-    //           // println(s"$tv -> =")
-    //           res += tv -> N
-    //           rec(tv.childrenPol(tvp) ::: tys)
-    //         case N =>
-    //           res += tv -> tvp
-    //           // println(s"$tv -> ${printPol(tvp)}")
-    //           rec(tv.childrenPol(tvp) ::: tys)
-    //       }
-    //     case (typ, ty) :: tys => rec(ty.childrenPol(typ) ::: tys)
-    //     case Nil => ()
-    //   }
-    //   // }()
-    //   rec(pol -> this :: Nil)
-    //   SortedMap.from(res)(Ordering.by(_.uid))
-    // }
-    // def getVarsPol(pol: Opt[Bool])(implicit ctx: Ctx): SortedMap[TypeVariable, Opt[Bool]] = {
-    //   val res = MutMap.empty[TV, Pol]
-    //   // val traversed = MutSet.empty[TV -> Pol]
-    //   val traversed = MutSet.empty[TV]
-    //   def go(pol: Pol)(ty: ST): Unit = {
-    //     // trace(s"varsBetween($ty, $lb, $ub)") {
-    //     ty match {
-    //       // case tv: TypeVariable =>
-    //       //   if (traversed(tv)) ()
-    //       //   // if (traversed(tv -> pol)) ()
-    //       //   else {
-    //       //     traversed += tv
-    //       //     if (tv.level > lb && tv.level <= ub) {
-    //       //       // println(s"ADD $tv")
-    //       //       res.updateWith(tv) {
-    //       //         case S(p) if p =/= pol => S(N)
-    //       //         case _ => S(pol)
-    //       //       }
-    //       //       // res += tv -> pol
-    //       //     }
-    //       //     tv.childrenPol(pol) // * Note: `childrenPol` deals with `assignedTo`
-    //       //       .foreach(cp => go(cp._1)(cp._2, lb, ub))
-    //       //   }
-    //       case pt: PolymorphicType =>
-    //         // val quantified = go(S(true))(pt.body, lb, pt.polymLevel min ub)
-    //         // val unquantified = go(pol)(pt.body, MinLevel-1, MaxLevel)
-    //         // unquantified ++ 
-    //         // go(S(true))(pt.body, lb, pt.polymLevel min ub)
-    //         go(pol)(pt.body, lb, pt.polymLevel min ub)
-    //       case ty =>
-    //         // ty.children(includeBounds = true) // * Q: is `includeBounds` useful here?
-    //         //   .foreach(go(_, lb, ub))
-    //         ty.childrenPol(pol).foreach(cp => go(cp._1)(cp._2, lb, ub))
-    //     }
-    //     // }()
-    //   }
-    //   go(pol)(this, lb, ub)
-    //   res.toSortedMap
-    // }
     
     def children(includeBounds: Bool): List[SimpleType] = this match {
       case tv @ AssignedVariable(ty) => if (includeBounds) ty :: Nil else Nil
@@ -916,10 +768,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case Without(b, ns) => b :: Nil
       case TypeBounds(lb, ub) => lb :: ub :: Nil
       case PolymorphicType(_, und) => und :: Nil
-      // case ConstrainedType(cs, und) => cs.flatMap(_._2.unzip._2) ::: und :: Nil
-      case ConstrainedType(cs, und) =>
-        // cs.map(_._1) ::: cs.flatMap(_._2.unzip._2) ::: und :: Nil
-        cs.flatMap(lu => lu._1 :: lu._2 :: Nil) ::: und :: Nil
+      case ConstrainedType(cs, und) => cs.flatMap(lu => lu._1 :: lu._2 :: Nil) ::: und :: Nil
       case SpliceType(fs) => fs.flatMap{ case L(l) => l :: Nil case R(r) => r.lb.toList ::: r.ub :: Nil}
     }
     
@@ -937,10 +786,11 @@ abstract class TyperHelpers { Typer: Typer =>
     }
     
     /** (exclusive, inclusive) */
-    def varsBetween(lb: Level, ub: Level): Set[TV] = { // TODO don't traverse types with lower levels?
+    def varsBetween(lb: Level, ub: Level): Set[TV] = {
       val res = MutSet.empty[TypeVariable]
       val traversed = MutSet.empty[TypeVariable]
-      def go(ty: ST, lb: Level, ub: Level): Unit = if (lb < ub) {
+      def go(ty: ST, lb: Level, ub: Level): Unit =
+          if (lb < ub && ty.level > lb) { // * Don't traverse types with lower levels
         // trace(s"varsBetween($ty, $lb, $ub)") {
         ty match {
           case tv: TypeVariable =>
@@ -966,49 +816,6 @@ abstract class TyperHelpers { Typer: Typer =>
       res.toSet
     }
     
-    /* 
-    /** (exclusive, inclusive) */
-    def varsPolBetween(pol: Opt[Bool])(lb: Level, ub: Level)(implicit ctx: Ctx): SortedMap[TypeVariable, Pol] = {
-      val res = MutMap.empty[TV, Pol]
-      // val traversed = MutSet.empty[TV -> Pol]
-      val traversed = MutSet.empty[TV]
-      def go(pol: Pol)(ty: ST, lb: Level, ub: Level): Unit = if (lb < ub) {
-        // trace(s"varsBetween($ty, $lb, $ub)") {
-        ty match {
-          case tv: TypeVariable =>
-            if (traversed(tv)) ()
-            // if (traversed(tv -> pol)) ()
-            else {
-              traversed += tv
-              if (tv.level > lb && tv.level <= ub) {
-                // println(s"ADD $tv")
-                res.updateWith(tv) {
-                  case S(p) if p =/= pol => S(N)
-                  case _ => S(pol)
-                }
-                // res += tv -> pol
-              }
-              tv.childrenPol(pol) // * Note: `childrenPol` deals with `assignedTo`
-                .foreach(cp => go(cp._1)(cp._2, lb, ub))
-            }
-          case pt: PolymorphicType =>
-            // val quantified = go(S(true))(pt.body, lb, pt.polymLevel min ub)
-            // val unquantified = go(pol)(pt.body, MinLevel-1, MaxLevel)
-            // unquantified ++ 
-            // go(S(true))(pt.body, lb, pt.polymLevel min ub)
-            go(pol)(pt.body, lb, pt.polymLevel min ub)
-          case ty =>
-            // ty.children(includeBounds = true) // * Q: is `includeBounds` useful here?
-            //   .foreach(go(_, lb, ub))
-            ty.childrenPol(pol).foreach(cp => go(cp._1)(cp._2, lb, ub))
-        }
-        // }()
-      }
-      go(pol)(this, lb, ub)
-      res.toSortedMap
-    }
-    */
-    
     def showBounds: String =
       getVars.iterator.filter(tv => tv.assignedTo.nonEmpty || (tv.upperBounds ++ tv.lowerBounds).nonEmpty).map {
       case tv @ AssignedVariable(ty) => "\n\t\t" + tv.toString + " := " + ty
@@ -1031,12 +838,6 @@ abstract class TyperHelpers { Typer: Typer =>
     
   }
   
-  
-  // TODO rm?
-  def shallowCopy(st: ST)(implicit cache: MutMap[TV, TV] = MutMap.empty): ST = st match {
-    case tv: TV => cache.getOrElseUpdate(tv, freshVar(tv.prov, S(tv), tv.nameHint, Nil, Nil)(tv.level))
-    case _ => st.map(shallowCopy)
-  }
   
   def merge(pol: Bool, ts: Ls[ST]): ST =
     if (pol) ts.foldLeft(BotType: ST)(_ | _)
@@ -1067,9 +868,6 @@ abstract class TyperHelpers { Typer: Typer =>
         if (pol =/= S(false)) apply(S(true))(ub)
       case PolymorphicType(plvl, und) => apply(pol)(und)
       case ConstrainedType(cs, bod) =>
-        // cs.foreach(_._2.foreach{
-        //   case (pol, b) => apply(S(pol))(b)
-        // })
         cs.foreach {
           case (lo, hi) =>
             apply(S(true))(lo)
@@ -1089,13 +887,11 @@ abstract class TyperHelpers { Typer: Typer =>
         else super.applyField(pol)(fld)
     }
   }
+  
   class Traverser2(implicit ctx: Ctx) {
     def apply(pol: PolMap)(st: ST): Unit = st match {
       case tv @ AssignedVariable(ty) => apply(pol)(ty)
       case tv: TypeVariable =>
-        // // FIXME
-        // if (pol(tv) =/= S(false)) tv.lowerBounds.foreach(apply(PolMap.pos))
-        // if (pol(tv) =/= S(true)) tv.upperBounds.foreach(apply(PolMap.neg))
         if (pol(tv) =/= S(false)) tv.lowerBounds.foreach(apply(pol.at(tv.level, true)))
         if (pol(tv) =/= S(true)) tv.upperBounds.foreach(apply(pol.at(tv.level, false)))
       case FunctionType(l, r) => apply(pol.contravar)(l); apply(pol)(r)
@@ -1111,32 +907,13 @@ abstract class TyperHelpers { Typer: Typer =>
       case _: TypeTag => ()
       case tr: TypeRef => tr.mapTargs(pol)(apply(_)(_)); ()
       case Without(b, ns) => apply(pol)(b)
-      // case TypeBounds(lb, ub) => apply(S(false))(lb); apply(S(true))(ub)
-      case TypeBounds(lb, ub) =>
-        // if (pol.base =/= S(true)) apply(PolMap.neg)(lb)
-        // if (pol.base =/= S(false)) apply(PolMap.pos)(ub)
-        // if (pol.base =/= S(true)) apply(pol.neg)(lb)
-        // if (pol.base =/= S(false)) apply(pol.pos)(ub)
-        // pol.base match {
-        //   case S(true) => apply(pol)(ub)
-        //   case S(false) => apply(pol)(lb)
-        //   case N => ???
-        // }
-        // pol.bounds(lb, ub)(pol => apply(pol))
-        pol.traverseBounds(lb, ub)(apply(_)(_))
-      case PolymorphicType(plvl, und) =>
-        apply(pol.enter(plvl))(und)
+      case TypeBounds(lb, ub) => pol.traverseBounds(lb, ub)(apply(_)(_))
+      case PolymorphicType(plvl, und) => apply(pol.enter(plvl))(und)
       case ConstrainedType(cs, bod) =>
-        // cs.foreach(_._2.foreach{
-        //   case (pol, b) => apply(S(pol))(b)
-        // })
         cs.foreach {
           case (lo, hi) =>
             apply(PolMap.pos)(lo)
-            // apply(PolMap.neg)(hi)
             apply(PolMap.posAtNeg)(hi)
-            // apply(pol.invar)(lo)
-            // apply(pol.invar)(hi)
         }
         apply(pol)(bod)
     }
@@ -1197,6 +974,11 @@ abstract class TyperHelpers { Typer: Typer =>
   
   
   
+  /** This class helps keep track of the *relative polarity* of different [olymorphism levels.
+    * Polarity is relative because polymorphic types can exist at arbitrary polarities,
+    * yet the type variables they quantify have their polarity determined by their local
+    * use in the polymorphic type.
+    * Things get quite involved once type ranges are involved. */
   abstract class PolMap(val base: Pol) { outer =>
     private val ctx = 0
     private val lvl = 0
@@ -1208,7 +990,6 @@ abstract class TyperHelpers { Typer: Typer =>
         def apply(lvl: Level): Pol =
           if (lvl > polymLvl) S(true) else outer(lvl)
         def quantifPolarity(lvl: Level): PolMap =
-          // if (lvl > polymLvl) base else outer.quantifPolarity(lvl)
           if (lvl > polymLvl) this else outer.quantifPolarity(lvl)
         def show: Str = s"$outer;Q($lvl)"
       }
@@ -1228,73 +1009,18 @@ abstract class TyperHelpers { Typer: Typer =>
           outer.quantifPolarity(lvl)
         def show: Str = s"$outer;-"
       }
-    // def pos: PolMap =
-    //   new PolMap(S(true)) {
-    //     def apply(lvl: Level): Pol = outer(lvl)
-    //   }
-    // def neg: PolMap =
-    //   new PolMap(S(false)) {
-    //     def apply(lvl: Level): Pol = outer(lvl)
-    //   }
-    // def posAt(lvl: Level): PolMap =
-    //   new PolMap(base) {
-    //     def apply(lvl: Level): Pol =
-    //       outer.quantifPolarity(lvl) match {
-    //         case S(true) => outer.apply(lvl)
-    //         case S(false) => outer.apply(lvl).map(!_)
-    //         case N => N
-    //       }
-    //     def quantifPolarity(lvl: Level): Pol =
-    //       outer.quantifPolarity(lvl)
-    //   }
     def at(atLvl: Level, pol: Bool): PolMap =
       new PolMap(base) {
         val pm = quantifPolarity(atLvl)
-        def apply(lvl: Level): Pol =
-          // outer.quantifPolarity(lvl) match {
-          //   case S(true) => S(pol)
-          //   case S(false) => S(!pol)
-          //   case N => N
-          // }
-          {
-          // assert(lvl <= atLvl) // ?
-          pm(lvl) match {
-            case S(true) => S(pol)
-            case S(false) => S(!pol)
-            case N => N
-          }
+        def apply(lvl: Level): Pol = pm(lvl) match {
+          case S(true) => S(pol)
+          case S(false) => S(!pol)
+          case N => N
         }
         def quantifPolarity(lvl: Level): PolMap =
           outer.quantifPolarity(lvl)
         def show: Str = s"$outer;@[${printPol(S(pol))}]($lvl)"
       }
-    // def bounds[A](lb: ST, ub: ST)(k: (PolMap, ST) => A): A = base match {
-    // def traverseBounds(lb: ST, ub: ST)(k: (PolMap, ST) => Unit): Unit = base match {
-    //   case S(p) =>
-    //     k(new PolMap(base) {
-    //       def apply(lvl: Level): Pol =
-    //         outer.quantifPolarity(lvl) match {
-    //           case N => N
-    //           case S(true) => S(p)
-    //           case S(false) => S(!p)
-    //         }
-    //       def quantifPolarity(lvl: Level): Pol =
-    //         outer.quantifPolarity(lvl)
-    //     }, if (p) ub else lb)
-    //   case N =>
-    //     def polma(p: Bool) = new PolMap(S(p)) {
-    //       def apply(lvl: Level): Pol =
-    //         outer.quantifPolarity(lvl) match {
-    //           case N => N
-    //           case S(true) => S(p)
-    //           case S(false) => S(!p)
-    //         }
-    //       def quantifPolarity(lvl: Level): Pol =
-    //         outer.quantifPolarity(lvl)
-    //     }
-    //     k(polma(false), lb)
-    //     k(polma(true), ub)
-    // }
     def traverseBounds(lb: ST, ub: ST)(k: (PolMap, ST) => Unit): Unit = {
       def polma(p: Bool) = new PolMap(S(p)) {
         def apply(lvl: Level): Pol =
@@ -1314,7 +1040,6 @@ abstract class TyperHelpers { Typer: Typer =>
     override def toString: String = show
   }
   object PolMap {
-    // def apply(pol: Pol)
     private def mk(init: Pol): PolMap = new PolMap(init) {
       def apply(lvl: Level): Pol = init
       def quantifPolarity(lvl: Level): PolMap = this
@@ -1330,17 +1055,6 @@ abstract class TyperHelpers { Typer: Typer =>
       case N => neu
     }
   }
-  // val PolMap: PolMap = new PolMap
-  
-  // class PolMap(f: Level => Pol) {
-    
-  //   def enter(polymLvl: Level): PolMap =
-  //     new PolMap(lvl => if (lvl > polymLvl) S(true) else f(lvl) )
-    
-  //   def covar =
-  //     new PolMap(lvl => if (lvl > polymLvl))
-    
-  // }
   
   
   

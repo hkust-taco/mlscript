@@ -202,18 +202,15 @@ object Main {
     val curBlockTypeDefs = typeDefs.flatMap(td => ctx.tyDefs.get(td.nme.name))
     typer.computeVariances(curBlockTypeDefs, ctx)
     
-    def getType(ty: typer.TypeScheme): Type = {
-      // val wty = ty.uninstantiatedBody
-      // val wty = ty.asInstanceOf[ST]
-      val wty = ty
+    def getType(ty: typer.SimpleType): Type = {
       object SimplifyPipeline extends typer.SimplifyPipeline {
         def debugOutput(msg: => Str): Unit = println(msg)
       }
-      val sim = SimplifyPipeline(wty)(ctx)
+      val sim = SimplifyPipeline(ty)(ctx)
       val exp = typer.expandType(sim)
       exp
     }
-    def formatBinding(nme: Str, ty: TypeScheme): Str = {
+    def formatBinding(nme: Str, ty: SimpleType): Str = {
       val exp = getType(ty)
       s"""<b>
               <font color="#93a1a1">val </font>
@@ -293,7 +290,6 @@ object Main {
       sb.toString
     }
     
-    // var declared: Map[Var, typer.PolymorphicType] = Map.empty
     var declared: Map[Var, ST] = Map.empty
     
     def htmlize(str: Str): Str =
@@ -306,9 +302,8 @@ object Main {
       try d match {
         case d @ Def(isrec, nme, L(rhs), _) =>
           val ty_sch = typeLetRhs(isrec, nme.name, rhs)(ctx, raise, Map.empty, true)
-          val inst = ty_sch.instantiate(ctx, Shadows.empty)
-          println(s"Typed `$nme` as: $inst")
-          println(s" where: ${inst.showBounds}")
+          println(s"Typed `$nme` as: $ty_sch")
+          println(s" where: ${ty_sch.showBounds}")
           val exp = getType(ty_sch)
           declared.get(nme) match {
             case S(sign) =>
@@ -329,10 +324,6 @@ object Main {
                 :: Nil)
             case N => ()
           }
-          // val ty_sch = PolymorphicType(0, typeType(rhs)(ctx.nextLevel, raise,
-          //   extrCtx = N,
-          //   vars = tps.map(tp => tp.fold(_.name, _ => ??? // FIXME
-          //     ) -> freshVar(noProv/*FIXME*/, N)(1)).toMap))
           implicit val tp: TP = NoProv // TODO
           val ty_sch = ctx.poly { implicit ctx =>
             typeType(rhs)(ctx, raise,

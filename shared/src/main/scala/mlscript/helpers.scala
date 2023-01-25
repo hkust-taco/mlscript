@@ -211,7 +211,6 @@ object ShowCtx {
     val namedMap = (namedVars ++ hintedVars).map { case (nh, tv) =>
       // tv -> assignName(nh.dropWhile(_ === '\''))
       tv -> assignName(nh.stripPrefix(_pre))
-      // tv -> assignName(nh.stripPrefix(pre))
     }.toMap
     val used = usedNames.keySet
     
@@ -241,11 +240,6 @@ trait ComposedImpl { self: Composed =>
   lazy val distinctComponents =
     components.filterNot(c => if (pol) c === Bot else c === Top).distinct
 }
-
-// abstract class PolyTypeImpl extends Located { self: PolyType =>
-//   def children: List[Located] =  targs :+ body
-//   def show: Str = s"${targs.iterator.map(_.name).mkString("[", ", ", "] ->")} ${body.show}"
-// }
 
 trait TypeVarImpl extends Ordered[TypeVar] { self: TypeVar =>
   def compare(that: TypeVar): Int = {
@@ -482,7 +476,6 @@ trait TermImpl extends StatementImpl { self: Term =>
         case s => throw new NotAType(s)
       })
     case Forall(ps, bod) =>
-      // PolyType(ps.map(v => L(TypeName(v.name).withLocOf(v))), bod.toType_!)
       PolyType(ps.map(v => R(TypeVar(R(v.name), N).withLocOf(v))), bod.toType_!)
     // 
     case Sel(receiver, fieldName) => receiver match {
