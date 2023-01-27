@@ -294,7 +294,7 @@ object MLParser {
   def addTopLevelSeparators(lines: IndexedSeq[Str]): IndexedSeq[Str] = {
     (lines.iterator ++ lines.lastOption).toList.sliding(2).map {
       case l0 :: l1 :: Nil =>
-        if (l1.startsWith(" ") || l1.startsWith("\t")) l0 + "\n"
+        if (l1.startsWith(" ") || l1.startsWith("\t") || l0.startsWith("//")) l0 + "\n"
         else l0 + ";"
       case l :: Nil => l
       case _ => die
