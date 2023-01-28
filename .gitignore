@@ -9,3 +9,4 @@ project/metals.sbt
 **.worksheet.sc
 .idea/
 .vscode/
+.DS_Store
