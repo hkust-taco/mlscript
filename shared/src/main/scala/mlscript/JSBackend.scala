@@ -4,8 +4,10 @@ import mlscript.utils._, shorthands._, algorithms._
 import mlscript.codegen.Helpers._
 import mlscript.codegen._
 import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.HashMap 
 import mlscript.{JSField, JSLit}
 import scala.collection.mutable.{Set => MutSet}
+import scala.Symbol
 
 class JSBackend(allowUnresolvedSymbols: Boolean) {
   /**
@@ -65,7 +67,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case TyApp(base, _) =>
       translatePattern(base)
     case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf | _: Subs | _: Assign
-        | If(_, _) | New(_, _) | _: Splc =>
+        | If(_, _) | New(_, _) | _: Splc | Quoted(_) | Unquoted(_) =>
       throw CodeGenError(s"term ${inspect(t)} is not a valid pattern")
   }
 
@@ -186,7 +188,6 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         R(blkScope.tempVars `with` (flattened.iterator.zipWithIndex.map {
           case (t: Term, index) if index + 1 == flattened.length => translateTerm(t)(blkScope).`return`
           case (t: Term, index)                                  => JSExprStmt(translateTerm(t)(blkScope))
-          // TODO: find out if we need to support this.
           case (_: Def | _: TypeDef | _: NuFunDef /* | _: NuTypeDef */, _) =>
             throw CodeGenError("unsupported definitions in blocks")
         }.toList)),
@@ -246,6 +247,10 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       callee(args.map { case (_, Fld(_, _, arg)) => translateTerm(arg) }: _*)
     case New(_, TypingUnit(_)) =>
       throw CodeGenError("custom class body is not supported yet")
+    case Quoted(body) =>
+      translateQuoted(body)
+    case Unquoted(body) =>
+      throw CodeGenError("unquotes should only be in quasiquotes")
     case _: Bind | _: Test | If(_, _) | TyApp(_, _) | _: Splc =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
@@ -456,6 +461,46 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       case S(memberParams) => JSClassMethod(name, memberParams, bodyStmts)
       case N => JSClassGetter(name, bodyStmts)
     }
+  }
+
+  /**
+   * Translate body of quasiquotes (Quoted) to S-expression in JSArray
+   */
+  private def translateQuoted(body: Term)(implicit scope: Scope): JSExpr = body match { // TODO: remove implicit argument for scope
+    case Lam(_,_) | Tup(_) | Rcd(_) =>
+      JSArray(Ls(translateTerm(body)))
+    case Var(name) =>
+      JSArray(Ls(JSExpr("Var"), JSIdent(name)))
+    case App(App(Var(op), Tup((N -> Fld(_, _, lhs)) :: Nil)), Tup((N -> Fld(_, _, rhs)) :: Nil))
+      if JSBinary.operators contains op =>
+        JSArray(Ls(JSExpr("App"), JSExpr(op), translateQuoted(lhs), translateQuoted(rhs)))
+    case App(trm, parameters @ Tup(args)) =>
+      JSArray(Ls(JSExpr("Fun"), translateQuoted(trm), translateQuoted(parameters)))
+     case IntLit(value) => 
+      JSArray(Ls(JSLit(value.toString)))
+    case StrLit(value) =>
+      JSArray(Ls(JSExpr("StrLit"), JSExpr(value)))
+    case DecLit(value) =>
+      JSArray(Ls(JSLit(value.toString)))
+    case UnitLit(value) => 
+      JSArray(Ls(JSLit(if (value) "undefined" else "null")))
+    case Unquoted(unquoted_body) => 
+      translateTerm(unquoted_body)
+    case If(IfThen(condition, branch1), S(branch2)) => // error if no ELSE branch in normal code
+      JSArray(Ls(JSExpr("If"), translateQuoted(condition), translateQuoted(branch1), translateQuoted(branch2)))
+    case Bra(rcd, trm) => 
+      translateQuoted(trm)
+    case Sel(receiver, Var(fieldName)) => 
+      JSArray(Ls(JSExpr("Sel"), translateQuoted(receiver), JSExpr(fieldName)))
+    case Let(isRec, Var(name), rhs, body) => 
+      JSImmEvalFn(None, Ls(JSNamePattern(name)), L(JSArray(Ls(JSExpr("Let"), JSIdent(name), translateQuoted(rhs), translateQuoted(body)))), Ls(JSLit(s"Symbol('${name}')")))
+    case Subs(arr, idx) => 
+      JSArray(Ls(JSExpr("Subs"), translateQuoted(arr), translateQuoted(idx)))
+    case Blk(stmts) => throw CodeGenError("Blk not supported in quasiquotes... yet")
+    case New(S(head), body) => throw CodeGenError(s"New HEAD ${head} BODY ${body}\n\tNew not supported in quasiquotes... yet")
+    case Assign(_,_) | Asc(_,_) | Bind(_,_) | Test(_,_) | With(_,_) | CaseOf(_,_) | TyApp(_,_) | Splc(_) => 
+      throw CodeGenError(s"${inspect(body)} not supported in quasiquotes")
+    case _ => throw CodeGenError(s"missing implementation: ${inspect(body)}")
   }
 
   /**

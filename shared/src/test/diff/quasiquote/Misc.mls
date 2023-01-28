@@ -2,46 +2,46 @@
 
 code"2 + 2"
 // in JS: ["+", 2, 2]
-//│ res: code & {Code#T <: int}
-//│ Code generation crashed:
-//│   scala.MatchError: Quoted' + (2,) (2,) ' (of class mlscript.Quoted)
+//│ res: code & {Code#C = anything, Code#T <: int}
+//│    = [ 'App', '+', [ 2 ], [ 2 ] ]
 
 code"x => x + 2"
 // in JS (bad): ["lambda", ["x"], ["+", ["ref", "x"]], 2]]
 // in JS (hygienic): const x_sym = Symbol("x"); ["lambda", [x_sym], ["+", x_sym], 2]]
-//│ res: code & {Code#T <: int -> int}
-//│ Code generation crashed:
-//│   scala.MatchError: Quoted' x, => + (x,) (2,) ' (of class mlscript.Quoted)
+//│ res: code & {Code#C = anything, Code#T <: int -> int}
+//│    = [
+//│        'Lam',
+//│        [ 'Tup', [ 'Var', 'x' ] ],
+//│        [ 'App', '+', [ 'Var', 'x' ], [ 2 ] ]
+//│      ]
 
 fun foo(x) =
   code"10 + x"
-//│ foo: int -> (code & {Code#T <: int})
-//│ Code generation crashed:
-//│   scala.MatchError: Quoted' + (10,) (x,) ' (of class mlscript.Quoted)
+//│ foo: int -> (code & {Code#C = anything, Code#T <: int})
+//│    = [Function: foo]
 
 code"foo(123) + 1"
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.22: 	code"foo(123) + 1"
+//│ ║  l.23: 	code"foo(123) + 1"
 //│ ║        	     ^^^^^^^^^^
-//│ ╟── application of type `code & {Code#T <: ?a}` is not an instance of type `int`
-//│ ║  l.22: 	code"foo(123) + 1"
+//│ ╟── application of type `code & {Code#C = anything, Code#T <: ?a}` is not an instance of type `int`
+//│ ║  l.23: 	code"foo(123) + 1"
 //│ ╙──      	     ^^^^^^^^
-//│ res: code & {Code#T <: error | int}
-//│ Code generation crashed:
-//│   scala.MatchError: Quoted' + (foo (123,),) (1,) ' (of class mlscript.Quoted)
+//│ res: code & {Code#C = anything, Code#T <: error | int}
+//│    = [ 'App', '+', [ 'Fun', [ 'Var', 'foo' ], [ 'Tup', [Array] ] ], [ 1 ] ]
 
 code"10 + ${qq_int}"
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
-//│ 	at: scala.Predef$.assert(Predef.scala:264)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.$anonfun$mapTargs$3(TyperDatatypes.scala:256)
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$6(Typer.scala:588)
 //│ 	at: scala.Option.fold(Option.scala:263)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.mapTargs(TyperDatatypes.scala:255)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.childrenPol(TyperHelpers.scala:611)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.childrenPol$(TyperHelpers.scala:594)
-//│ 	at: mlscript.TyperDatatypes$SimpleType.childrenPol(TyperDatatypes.scala:81)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.rec$1(TyperHelpers.scala:636)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.getVarsPol(TyperHelpers.scala:640)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.getVarsPol$(TyperHelpers.scala:616)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:593)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:882)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:872)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:882)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$15(Typer.scala:640)
 
 "x"
 //│ res: "x"
@@ -52,17 +52,22 @@ code"x => y => 15 + ${   code"x + y"   }"
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.51: 	code"x => y => 15 + ${   code"x + y"   }"
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `code & {Code#T <: ?a}` is not an instance of type `int`
-//│ res: code & {Code#T <: int -> int -> (error | int)}
-//│ Code generation crashed:
-//│   scala.MatchError: Quoted' x, => y, => + (15,) (Unquote' Quoted' + (x,) (y,) ' ',) ' (of class mlscript.Quoted)
+//│ ╙── expression of type `code & {Code#C :> ?y.type56, Code#T <: ?a}` is not an instance of type `int`
+//│ res: code & {Code#C = anything, Code#T <: int -> anything -> (error | int)}
+//│    = [
+//│        'Lam',
+//│        [ 'Tup', [ 'Var', 'x' ] ],
+//│        [ 'Lam', [ 'Tup', [Array] ], [ 'App', '+', [Array], [Array] ] ]
+//│      ]
 
 // FIXME
 qq_int : Code<int>
 //│ ╔══[ERROR] identifier not found: qq_int
-//│ ║  l.61: 	qq_int : Code<int>
+//│ ║  l.64: 	qq_int : Code<int>
 //│ ╙──      	^^^^^^
-//│ res: code & {Code#T <: int}
+//│ ╔══[ERROR] Wrong number of type arguments – expected 2, found 1
+//│ ║  l.64: 	qq_int : Code<int>
+//│ ╙──      	         ^^^^^^^^
+//│ res: code & {Code#C = anything, Code#T <: int}
 //│ Code generation encountered an error:
 //│   unresolved symbol qq_int
-

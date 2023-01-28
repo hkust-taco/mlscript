@@ -39,7 +39,9 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       "gt",
       "not",
       "toString",
-      "negate"
+      "negate",
+      "run",
+      "Const",
     ) foreach { name =>
       register(BuiltinSymbol(name, name))
     }

@@ -838,3 +838,51 @@ object JSCodeHelpers {
     = JSFuncDecl(name, params.toList, stmts.toList)
   def param(name: Str): JSNamePattern = JSNamePattern(name)
 }
+
+final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
+  def toSourceCode: SourceCode = SourceCode(
+    """
+    const symbol_value_map = new Map();
+         
+    function _run(s_expr) { 
+      switch(s_expr[0]) {
+        case "Var":
+          if (symbol_value_map.has(s_expr[1])) {
+            return symbol_value_map.get(s_expr[1]);
+          } else {
+            return s_expr[1];
+          }
+        case "App":
+          return eval(_run(s_expr[2]) + s_expr[1] + _run(s_expr[3]));
+        case "Fun": 
+          return _run(s_expr[1])(..._run(s_expr[2]))
+        case "If":
+          if (_run(s_expr[1])) { return _run(s_expr[2]) } else { return _run(s_expr[3]) };
+        case "Lam":
+          return s_expr[1];
+        
+        case "Sel": 
+          return _run(s_expr[1])[s_expr[2]];
+
+        case "Let":
+          symbol_value_map.set(s_expr[1], _run(s_expr[2]));
+          return _run(s_expr[3]);
+
+        case "Subs": 
+          return _run(s_expr[1])[_run(s_expr[2])];
+
+        case "StrLit":
+          return `'${s_expr[1]}'`;
+
+        case "Unquoted": 
+          let res = run(s_expr[1]);
+          return _run(res);
+          
+        default:
+          return s_expr[0];
+      }
+    } 
+    return _run(s_expr);
+    """
+  )
+}
