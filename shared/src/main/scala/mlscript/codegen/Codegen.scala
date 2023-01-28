@@ -842,69 +842,47 @@ object JSCodeHelpers {
 final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
   def toSourceCode: SourceCode = SourceCode(
     """
-    const defined_symbol_map = new Map();
-    const undefined_symbol_map = new Map()
-    
-    function _randomSymbol(name) {
-      const { randomUUID } = require("crypto");
-      return `${name}_${randomUUID().slice(0, 4)}`;
-    }
-
-    function _getSymbol(name) {
-      if (defined_symbol_map.has(name)) {
-        return defined_symbol_map.get(name);
-      } else if (undefined_symbol_map.has(name)) {
-        return undefined_symbol_map.get(name); 
-      } else {
-        undefined_symbol_map.set(name, _randomSymbol(name));
-        return undefined_symbol_map.get(name);
-      }
-    }
-
-    function _checkUndefined(program_str) {
-      undefined_symbol_map.forEach((value, key) => program_str = program_str.replaceAll(value, key));
-			return program_str;
-    }
-      
+    const symbol_value_map = new Map();
+         
     function _run(s_expr) { 
       switch(s_expr[0]) {
         case "Var":
-          return _getSymbol(s_expr[1]);
+          if (symbol_value_map.has(s_expr[1])) {
+            return symbol_value_map.get(s_expr[1]);
+          } else {
+            return s_expr[1];
+          }
         case "App":
-          return _run(s_expr[2]) + s_expr[1] + _run(s_expr[3]);
-        case "Fun":
-          return `${_run(s_expr[1])}(${_run(s_expr[2]).slice(1, -1)})`
+          return eval(_run(s_expr[2]) + s_expr[1] + _run(s_expr[3]));
+        case "Fun": 
+          return _run(s_expr[1])(..._run(s_expr[2]))
         case "If":
-          return `if (${_run(s_expr[1])}) { ${_run(s_expr[2])} } else { ${_run(s_expr[3])} }`;
+          if (_run(s_expr[1])) { return _run(s_expr[2]) } else { return _run(s_expr[3]) };
         case "Lam":
-          return `(${_run(s_expr[1]).slice(1, -1)}) => ${_run(s_expr[2])}`;
-        case "Tup":
-          let tup_array = s_expr.slice(1).map((value) => _run(value));
-          return `[${tup_array.toString()}]`;
-        case "Rcd":
-          let rcd_array = s_expr.slice(1).map(function([key,value]) {return `${_run(key)} : ${_run(value)}`});
-          return `{${rcd_array.toString()}}`
-        case "Sel":
-          return 0;
-        case "Let": // second is the var 
-          let unique_name = _randomSymbol(s_expr[1]);
-          defined_symbol_map.set(s_expr[1], unique_name);
-          return `const ${unique_name} = ${_run(s_expr[2])}; ${_run(s_expr[3])}`;
-        case "Subs":
-          return `${_run(s_expr[1])}[${_run(s_expr[2])}]`;
+          return s_expr[1];
+        
+        case "Sel": 
+          return _run(s_expr[1])[s_expr[2]];
+
+        case "Let":
+          symbol_value_map.set(s_expr[1], _run(s_expr[2]));
+          return _run(s_expr[3]);
+
+        case "Subs": 
+          return _run(s_expr[1])[_run(s_expr[2])];
+
         case "StrLit":
           return `'${s_expr[1]}'`;
+
         case "Unquoted": 
-					let res = run(s_expr[1]);
-					return `${_run(res)}`;
+          let res = run(s_expr[1]);
+          return _run(res);
+          
         default:
           return s_expr[0];
       }
     } 
-    let res = _run(s_expr);
-    res = _checkUndefined(res);
-		console.log(res);
-    return eval(res);
+    return _run(s_expr);
     """
   )
 }

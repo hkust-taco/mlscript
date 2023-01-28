@@ -1,94 +1,128 @@
 :NewParser
 :ge
 
-// Var 
-// TODO: need to handle all keywords
-
-// Lam 
-let code_lam = code"(x, y) => x + 1"
-//│ code_lam: code & {Code#C = anything, Code#T <: (int, anything,) -> int}
+// Lam  TODO (27 Jan 2023) - Fix
+let code_lam = code"let lambda = (x) => x; lambda(3)"
+//│ code_lam: code & {Code#C = anything, Code#T <: 3}
 //│         = [
-//│             'Lam',
-//│             [ 'Tup', [ 'Var', 'x' ], [ 'Var', 'y' ] ],
-//│             [ 'App', '+', [ 'Var', 'x' ], [ 1 ] ]
+//│             'Let',
+//│             Symbol(lambda),
+//│             [ [Function (anonymous)] ],
+//│             [ 'Fun', [ 'Var', Symbol(lambda) ], [ [Array] ] ]
 //│           ]
 
+run(code_lam)
+//│ res: 3
+//│    = 3
+
 // App
-let code_app = code"1 + 2 * 3"
+let code_app = code"3 + 2 * 2"
 //│ code_app: code & {Code#C = anything, Code#T <: int}
-//│         = [ 'App', '+', [ 1 ], [ 'App', '*', [ 2 ], [ 3 ] ] ]
+//│         = [ 'App', '+', [ 3 ], [ 'App', '*', [ 2 ], [ 2 ] ] ]
 
+run(code_app)
+//│ res: int
+//│    = 7
 
-let code_app3 = code"test(x)"
-//│ code_app3: code & {Code#C = anything, Code#T = nothing}
-//│          = [ 'Fun', [ 'Var', 'test' ], [ 'Tup', [ 'Var', 'x' ] ] ]
+fun test(x) = x
+//│ test: 'a -> 'a
+//│     = [Function: test]
+
+let code_app3 = code"test(3)"
+//│ code_app3: code & {Code#C = anything, Code#T <: 3}
+//│          = [ 'Fun', [ 'Var', [Function: test] ], [ [ 3 ] ] ]
+ 
+run(code_app3)
+//│ res: 3
+//│    = 3
 
 // If
-let code_if = code"if true then 1 else 3"
-//│ code_if: code & {Code#C = anything, Code#T <: 1 | 3}
-//│        = [ 'If', [ 'Var', 'true' ], [ 1 ], [ 3 ] ]
+let code_if = code"if false then 1 else 2 + 3"
+//│ code_if: code & {Code#C = anything, Code#T <: int}
+//│        = [ 'If', [ 'Var', false ], [ 1 ], [ 'App', '+', [ 2 ], [ 3 ] ] ]
 
-// Unquoted 
+run(code_if)
+//│ res: int
+//│    = 5
 
 // Tup 
 let code_tup = code"(1,2,3)"
 //│ code_tup: code & {Code#C = anything, Code#T <: (1, 2, 3,)}
-//│         = [ 'Tup', [ 1 ], [ 2 ], [ 3 ] ]
+//│         = [ [ 1, 2, 3 ] ]
 
-let code_tup2 = code"(x, y, z)"
-//│ code_tup2: code & {Code#C = anything, Code#T <: (nothing, nothing, nothing,)}
-//│          = [ 'Tup', [ 'Var', 'x' ], [ 'Var', 'y' ], [ 'Var', 'z' ] ]
+run(code_tup)
+//│ res: (1, 2, 3,)
+//│    = [ 1, 2, 3 ]
 
 // Rcd 
-let code_res = code"{y: 1, x: 2}"
-//│ code_res: code & {Code#C = anything, Code#T <: {x: 2, y: 1}}
-//│         = [ 'Rcd', [ [ 'Var', 'y' ], [ 1 ] ], [ [ 'Var', 'x' ], [ 2 ] ] ]
+let code_rcd = code"let r = { x: 10}; r.x"
+//│ code_rcd: code & {Code#C = anything, Code#T <: 10}
+//│         = [
+//│             'Let',
+//│             Symbol(r),
+//│             [ { x: 10 } ],
+//│             [ 'Sel', [ 'Var', Symbol(r) ], 'x' ]
+//│           ]
 
-// Sel
-let code_sel = code"{ x: 1 }.x"
-//│ code_sel: code & {Code#C = anything, Code#T <: 1}
-//│         = [ 'Sel', [ 'Rcd', [ [Array], [Array] ] ], [ 'Var', 'x' ] ]
-
-run(code_sel)
-//│ res: 1
-//│    = 0
-
-// let code_sel2 = code"let a = {x : 1}; a.x" <- this has errors in normal code
+run(code_rcd)
+//│ res: 10
+//│    = 10
 
 // Let 
-let code_let1 = code"let x = 2; let y = 3; y"
-//│ code_let1: code & {Code#C = anything, Code#T <: 3}
-//│          = [ 'Let', 'x', [ 2 ], [ 'Let', 'y', [ 3 ], [ 'Var', 'y' ] ] ]
-
-let code_let2 = code"let x = (y) => y; let y = (z) => z + 2; x(3)"
-//│ code_let2: code & {Code#C = anything, Code#T <: 3}
+let code_let1 = code"let x = 100; let y = 10; y + x"
+//│ code_let1: code & {Code#C = anything, Code#T <: int}
 //│          = [
 //│              'Let',
-//│              'x',
-//│              [ 'Lam', [ 'Tup', [Array] ], [ 'Var', 'y' ] ],
+//│              Symbol(x),
+//│              [ 100 ],
+//│              [ 'Let', Symbol(y), [ 10 ], [ 'App', '+', [Array], [Array] ] ]
+//│            ]
+
+let code_let2 = code"let x = (y) => y * 3; let y = (z) => z + 2; x(3)"
+//│ code_let2: code & {Code#C = anything, Code#T <: int}
+//│          = [
+//│              'Let',
+//│              Symbol(x),
+//│              [ [Function (anonymous)] ],
 //│              [
 //│                'Let',
-//│                'y',
-//│                [ 'Lam', [Array], [Array] ],
+//│                Symbol(y),
+//│                [ [Function (anonymous)] ],
 //│                [ 'Fun', [Array], [Array] ]
 //│              ]
 //│            ]
 
 let code_let3 = code"let x = 3; x + x"
 //│ code_let3: code & {Code#C = anything, Code#T <: int}
-//│          = [ 'Let', 'x', [ 3 ], [ 'App', '+', [ 'Var', 'x' ], [ 'Var', 'x' ] ] ]
-
+//│          = [
+//│              'Let',
+//│              Symbol(x),
+//│              [ 3 ],
+//│              [ 'App', '+', [ 'Var', Symbol(x) ], [ 'Var', Symbol(x) ] ]
+//│            ]
 
 
 // Subs 
-//let code_subs = code"let a = (1, 2); a[0]"
+let code_subs = code"let a = (1, 2); a[0]"
+//│ code_subs: code & {Code#C = anything, Code#T <: 1 | 2 | undefined}
+//│          = [
+//│              'Let',
+//│              Symbol(a),
+//│              [ [ 1, 2 ] ],
+//│              [ 'Subs', [ 'Var', Symbol(a) ], [ 0 ] ]
+//│            ]
 
-//run(code_subs)
+run(code_subs)
+//│ res: 1 | 2 | undefined
+//│    = 1
 
+let code_subs3 = code"(1,2,3)[1]"
+//│ code_subs3: code & {Code#C = anything, Code#T <: 1 | 2 | 3 | undefined}
+//│           = [ 'Subs', [ [ 1, 2, 3 ] ], [ 1 ] ]
 
-//let code_subs2 = code"let a = (1, 2, 3); a[0]"
-
-//let code_subs3 = code"(1,2,3)[1]"
+run(code_subs3)
+//│ res: 1 | 2 | 3 | undefined
+//│    = 2
 
 
 // Assign <-
@@ -111,18 +145,3 @@ let code_new = code"new Foo(1)"
 //│ Code generation encountered an error:
 //│   New HEAD (TypeName(Foo),1,) BODY TypingUnit(List())
 //│ 	New not supported in quasiquotes... yet
-
-// Quoted 
-let d = code"code"3""
-//│ d: code & {Code#C = anything, Code#T <: code & {Code#C = anything, Code#T <: 3}}
-//│ Code generation encountered an error:
-//│   missing implementation: Quoted(IntLit(3))
-
-let code_fun = code"let x = (y) => y; x(3)"
-//│ code_fun: code & {Code#C = anything, Code#T <: 3}
-//│         = [
-//│             'Let',
-//│             'x',
-//│             [ 'Lam', [ 'Tup', [Array] ], [ 'Var', 'y' ] ],
-//│             [ 'Fun', [ 'Var', 'x' ], [ 'Tup', [Array] ] ]
-//│           ]

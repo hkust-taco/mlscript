@@ -2,50 +2,34 @@
 :ge
 
 
-code"let f = x => x; f(if true then 11 else 22)"
-//│ res: code & {Code#C = anything, Code#T <: 11 | 22}
+code"let f = x => x; f(if true then 1 else 2)"
+//│ res: code & {Code#C = anything, Code#T <: 1 | 2}
 //│    = [
 //│        'Let',
-//│        'f',
-//│        [ 'Lam', [ 'Tup', [Array] ], [ 'Var', 'x' ] ],
-//│        [ 'Fun', [ 'Var', 'f' ], [ 'Tup', [Array] ] ]
+//│        Symbol(f),
+//│        [ [Function (anonymous)] ],
+//│        [ 'Fun', [ 'Var', Symbol(f) ], [ [Array] ] ]
 //│      ]
 
 run(res)
-//│ res: 11 | 22
-//│ Runtime error:
-//│   SyntaxError: Unexpected token 'if'
+//│ res: 1 | 2
+//│    = 1
+
+let x = x => x
+x(3)
+//│ x: 'a -> 'a
+//│  = [Function: x]
+//│ res: 3
+//│    = 3
 
 // The JS for creating symbols should appear here:
 :js
 code"x => x + 1"
 //│ // Query 1
-//│ res = [
-//│   "Lam",
-//│   [
-//│     "Tup",
-//│     [
-//│       "Var",
-//│       "x"
-//│     ]
-//│   ],
-//│   [
-//│     "App",
-//│     "+",
-//│     [
-//│       "Var",
-//│       "x"
-//│     ],
-//│     [1]
-//│   ]
-//│ ];
+//│ res = [(x) => x + 1];
 //│ // End of generated code
 //│ res: code & {Code#C = anything, Code#T <: int -> int}
-//│    = [
-//│        'Lam',
-//│        [ 'Tup', [ 'Var', 'x' ] ],
-//│        [ 'App', '+', [ 'Var', 'x' ], [ 1 ] ]
-//│      ]
+//│    = [ [Function (anonymous)] ]
 
 // Bad way: Source quote ->(codegen) JS to construct the S-Expr ->(node) JS objects ->(run(*)) JS-string ->(eval) result
 // Good way: Source quote ->(codegen) JS to construct the S-Expr ->(node(*)) JS objects ->(run) result
@@ -75,134 +59,60 @@ run(y)
 
 
 code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: α59
-//│ ║  l.77: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: α67
+//│ ║  l.61: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
 //│ ╙──      	                                            ^^^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.77: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
+//│ ║  l.61: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
 //│ ║        	                             ^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `code & {Code#C :> ?b.type55, Code#T <: ?a}` is not an instance of type `int`
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: α62
-//│ ║  l.77: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
+//│ ╙── expression of type `code & {Code#C :> ?b.type63, Code#T <: ?a}` is not an instance of type `int`
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: α70
+//│ ║  l.61: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
 //│ ╙──      	                             ^^^^^^^^^^^^^^^^^^^^^^
 //│ res: code & {Code#C = anything, Code#T <: error}
 //│ Code generation encountered an error:
 //│   unresolved symbol a
 
-
-let z1 = 100
-//│ z1: 100
-//│   = 100
-let z2 = 1000
-//│ z2: 1000
-//│   = 1000
-
-let code_unquote = code"let z1 = 1; z1 + ${code"z1 + z2"}"
-//│ code_unquote: code & {Code#C = anything, Code#T <: int}
-//│             = [
-//│                 'Let',
-//│                 'z1',
-//│                 [ 1 ],
-//│                 [ 'App', '+', [ 'Var', 'z1' ], [ 'App', '+', [Array], [Array] ] ]
-//│               ]
-
-run(code_unquote)
-//│ res: int
-//│    = 1002
-
-let z3 = 2
-let code_function = code"let y = 100; let x = (y) => y + y; x(3)"
-//│ z3: 2
-//│   = 2
+let code_function = code"let x = (y, z) => y + z; x(3, 30)"
 //│ code_function: code & {Code#C = anything, Code#T <: int}
 //│              = [
 //│                  'Let',
-//│                  'y',
-//│                  [ 100 ],
-//│                  [
-//│                    'Let',
-//│                    'x',
-//│                    [ 'Lam', [Array], [Array] ],
-//│                    [ 'Fun', [Array], [Array] ]
-//│                  ]
+//│                  Symbol(x),
+//│                  [ [Function (anonymous)] ],
+//│                  [ 'Fun', [ 'Var', Symbol(x) ], [ [Array] ] ]
 //│                ]
 
 run(code_function)
 //│ res: int
-//│    = 6
+//│    = 33
 
 
 // Unquote
 fun test(n) = if n > 0 then code"1000" else code"1"
 //│ test: number -> (code & {Code#C = anything, Code#T <: 1000 | 1})
 //│     = [Function: test]
-let x = 1
 let code_unquote = code"let x = 1; x + ${test(3)}"
 run(code_unquote)
-//│ x: 1
-//│  = 1
 //│ ╔══[ERROR] Type mismatch. Required: Code, found: α98'
-//│ ║  l.140: 	let code_unquote = code"let x = 1; x + ${test(3)}"
-//│ ╙──       	                                         ^^^^^^^
+//│ ║  l.94: 	let code_unquote = code"let x = 1; x + ${test(3)}"
+//│ ╙──      	                                         ^^^^^^^
 //│ code_unquote: code & {Code#C = anything, Code#T <: int}
-//│             = [ 'Let', 'x', [ 1 ], [ 'App', '+', [ 'Var', 'x' ], [ 1000 ] ] ]
+//│             = [
+//│                 'Let',
+//│                 Symbol(x),
+//│                 [ 1 ],
+//│                 [ 'App', '+', [ 'Var', Symbol(x) ], [ 1000 ] ]
+//│               ]
 //│ res: int
 //│    = 1001
-
-let x = 0
-run(code_unquote)
-//│ x: 0
-//│  = 0
-//│ res: int
-//│    = 1001
-
-// Free variable
-:js
-let code_free = code"x_free + 1"
-//│ // Query 1
-//│ globalThis["code_free"] = [
-//│   "App",
-//│   "+",
-//│   [
-//│     "Var",
-//│     "x_free"
-//│   ],
-//│   [1]
-//│ ];
-//│ // End of generated code
-//│ code_free: code & {Code#C = anything, Code#T <: int}
-//│          = [ 'App', '+', [ 'Var', 'x_free' ], [ 1 ] ]
-
-// Type we want:
-//    code_free: Code[int, { x_free: int }]
-
-
-run(code_free)
-//│ res: int
-//│ Runtime error:
-//│   ReferenceError: x_free is not defined
-
-let x_free = 100
-run(code_free)
-//│ x_free: 100
-//│       = 100
-//│ res: int
-//│    = 101
-
-let x_free = 1000
-run(code_free)
-//│ x_free: 1000
-//│       = 1000
-//│ res: int
-//│    = 101
 
 let code_nested = code"let a = 1; let b = 2; ${code"a + b"}"
 //│ code_nested: code & {Code#C = anything, Code#T <: code & {Code#C = anything, Code#T <: int}}
 //│            = [
 //│                'Let',
-//│                'a',
+//│                Symbol(a),
 //│                [ 1 ],
-//│                [ 'Let', 'b', [ 2 ], [ 'App', '+', [Array], [Array] ] ]
+//│                [ 'Let', Symbol(b), [ 2 ], [ 'App', '+', [Array], [Array] ] ]
 //│              ]
 
 run(code_nested)

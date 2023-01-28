@@ -467,39 +467,33 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
    * Translate body of quasiquotes (Quoted) to S-expression in JSArray
    */
   private def translateQuoted(body: Term)(implicit scope: Scope): JSExpr = body match { // TODO: remove implicit argument for scope
+    case Lam(_,_) | Tup(_) | Rcd(_) =>
+      JSArray(Ls(translateTerm(body)))
     case Var(name) =>
-      JSArray(Ls(JSExpr("Var"), JSExpr(name)))
+      JSArray(Ls(JSExpr("Var"), JSIdent(name)))
     case App(App(Var(op), Tup((N -> Fld(_, _, lhs)) :: Nil)), Tup((N -> Fld(_, _, rhs)) :: Nil))
       if JSBinary.operators contains op =>
         JSArray(Ls(JSExpr("App"), JSExpr(op), translateQuoted(lhs), translateQuoted(rhs)))
     case App(trm, parameters @ Tup(args)) =>
       JSArray(Ls(JSExpr("Fun"), translateQuoted(trm), translateQuoted(parameters)))
-    case IntLit(value) => 
+     case IntLit(value) => 
       JSArray(Ls(JSLit(value.toString)))
     case StrLit(value) =>
       JSArray(Ls(JSExpr("StrLit"), JSExpr(value)))
     case DecLit(value) =>
       JSArray(Ls(JSLit(value.toString)))
     case UnitLit(value) => 
-      JSArray(Ls(JSExpr(if (value) "undefined" else "null")))
-    case Lam(params, body) =>
-      JSArray(Ls(JSExpr("Lam"), translateQuoted(params), translateQuoted(body)))
-    case Tup(fields) =>
-      var fields_array = fields map { case (_, Fld(_, _, term)) => translateQuoted(term) }
-      JSArray(JSExpr("Tup")::fields_array)
+      JSArray(Ls(JSLit(if (value) "undefined" else "null")))
     case Unquoted(unquoted_body) => 
       translateTerm(unquoted_body)
     case If(IfThen(condition, branch1), S(branch2)) => // error if no ELSE branch in normal code
       JSArray(Ls(JSExpr("If"), translateQuoted(condition), translateQuoted(branch1), translateQuoted(branch2)))
     case Bra(rcd, trm) => 
       translateQuoted(trm)
-    case Rcd(fields) => 
-      var fields_array = fields map {case (key @ Var(_), Fld(_, _, term)) => JSArray(Ls(translateQuoted(key), translateQuoted(term)))}
-      JSArray(JSExpr("Rcd") :: fields_array)
-    case Sel(receiver, fieldName) => 
-      JSArray(Ls(JSExpr("Sel"), translateQuoted(receiver), translateQuoted(fieldName)))
+    case Sel(receiver, Var(fieldName)) => 
+      JSArray(Ls(JSExpr("Sel"), translateQuoted(receiver), JSExpr(fieldName)))
     case Let(isRec, Var(name), rhs, body) => 
-      JSArray(Ls(JSExpr("Let"), JSExpr(name), translateQuoted(rhs), translateQuoted(body)))
+      JSImmEvalFn(None, Ls(JSNamePattern(name)), L(JSArray(Ls(JSExpr("Let"), JSIdent(name), translateQuoted(rhs), translateQuoted(body)))), Ls(JSLit(s"Symbol('${name}')")))
     case Subs(arr, idx) => 
       JSArray(Ls(JSExpr("Subs"), translateQuoted(arr), translateQuoted(idx)))
     case Blk(stmts) => throw CodeGenError("Blk not supported in quasiquotes... yet")
