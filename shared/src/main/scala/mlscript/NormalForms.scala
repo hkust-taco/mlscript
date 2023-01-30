@@ -554,11 +554,17 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       cs.maxByOption(_.level).fold(0)(_.level)
     def isPolymorphic: Bool = level > polymLevel
     lazy val effectivePolymLevel: Level = if (isPolymorphic) polymLevel else level
-    def instantiate(implicit ctx: Ctx, shadows: Shadows): Ls[Conjunct] =
+    def instantiate(implicit ctx: Ctx, shadows: Shadows): (Constrs, Ls[Conjunct]) =
       if (isPolymorphic) {
         implicit val state: MutMap[TV, ST] = MutMap.empty
-        cs.map(_.freshenAbove(polymLevel, rigidify = false))
-      } else cs
+        (
+          cons.map { case (l, r) => (
+            l.freshenAbove(polymLevel, rigidify = false),
+            r.freshenAbove(polymLevel, rigidify = false)
+          )},
+          cs.map(_.freshenAbove(polymLevel, rigidify = false))
+        )
+      } else (cons, cs)
     def rigidify(implicit ctx: Ctx, shadows: Shadows): Ls[Conjunct] =
       if (isPolymorphic) {
         implicit val state: MutMap[TV, ST] = MutMap.empty

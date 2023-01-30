@@ -19,7 +19,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     250
   
   type ExtrCtx = MutMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound
-  // type ExtrCtx = Level -> MutMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound
   
   protected var currentConstrainingRun = 0
   
@@ -30,10 +29,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   object Shadows { val empty: Shadows = Shadows(Set.empty, Set.empty) }
   
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
-  // def constrain(lhs: SimpleType, rhs: SimpleType, extrusionContext: Opt[ExtrCtx])(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx): Unit = { val outerCtx = ctx ; {
-  def constrain(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx, 
-          shadows: Shadows = Shadows.empty
-        ): Unit = {
+  def constrain(lhs: SimpleType, rhs: SimpleType)
+        (implicit raise: Raise, prov: TypeProvenance, ctx: Ctx, shadows: Shadows = Shadows.empty)
+        : Unit = {
     currentConstrainingRun += 1
     if (stopConstrainingOnFirstFailure)
       constrainImpl(lhs, rhs)(err => {
@@ -42,11 +40,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       }, prov, ctx, shadows)
     else constrainImpl(lhs, rhs)
   }
-  def constrainImpl(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx, 
-          shadows: Shadows
-        ): Unit = { val outerCtx = ctx ; {
-    // if (shadows.isEmpty) // FIXME hack!!
-    // currentConstrainingRun += 1
+  def constrainImpl(lhs: SimpleType, rhs: SimpleType)
+        (implicit raise: Raise, prov: TypeProvenance, ctx: Ctx, shadows: Shadows)
+        : Unit = { val outerCtx = ctx ; {
     val ctx = ()
     
     // We need a cache to remember the subtyping tests in process; we also make the cache remember
@@ -111,16 +107,80 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }
     
     /* To solve constraints that are more tricky. */
-    def goToWork(lhs: ST, rhs: ST)(implicit cctx: ConCtx, ctx: Ctx, shadows: Shadows): Unit =
-      constrainDNF(DNF.mkDeep(MaxLevel, Nil, lhs, true), DNF.mkDeep(MaxLevel, Nil, rhs, false), rhs)
+    def goToWork(lhs: ST, rhs: ST)(implicit cctx: ConCtx, ctx: Ctx, shadows: Shadows): Unit = {
+      val lhsDNF = DNF.mkDeep(MaxLevel, Nil, lhs, true)
+      val rhsDNF = DNF.mkDeep(MaxLevel, Nil, rhs, false)
+      
+      val oldCtx = ctx
+      
+      if (!rhsDNF.isPolymorphic) {
+        
+        constrainDNF(lhsDNF, rhsDNF)
+        
+      } else ctx.nextLevel { implicit ctx =>
+        
+        // val rigid = poly.rigidify
+        implicit val state: MutMap[TV, ST] = MutMap.empty
+        val rigid = DNF(MaxLevel,
+          rhsDNF.cons.mapKeys(_.freshenAbove(rhsDNF.polymLevel, rigidify = true)),
+          rhsDNF.cs.map(_.freshenAbove(rhsDNF.polymLevel, rigidify = true)),
+        )
+        // println(s"Rigidified RHS: $rigid")
+        
+        println(s"DNF BUMP TO LEVEL ${lvl}  -->  $rigid")
+        // println(s"where ${rigid.showBounds}")
+        
+        constrainDNF(lhsDNF, rigid)
+        
+        // TODO dedup from rec method
+        val ec = ctx.extrCtx
+        // trace(s"UNSTASHING...") {
+        trace(s"UNSTASHING...") {
+          implicit val ctx: Ctx = oldCtx
+          ec.foreach { case (tv, bs) => 
+            println(s"where($tv) ${tv.showBounds}")
+            bs.foreach {
+            case (true, b) => println(s"UNSTASH ${b} <: $tv where ${b.showBounds}"); rec(b, tv, false)
+            case (false, b) => println(s"UNSTASH ${tv} <: $b where ${b.showBounds}"); rec(tv, b, false)
+          }}
+          ec.clear()
+        }()
+        // System.out.println("?!")
+        // rigid
+        
+      }
+      
+      // val (lhsCons, lhsCs) = _lhs.instantiate
+      // lhsCons.foreach(c => constrainImpl(c._1, c._2))
+      // if (!_rhs.isPolymorphic) _rhs else
+      // constrainDNF(lhsCs, rhsCs)
+    }
     
-    def constrainDNF(lhs: DNF, rhs: DNF, oldRhs: ST)(implicit cctx: ConCtx, ctx: Ctx, shadows: Shadows): Unit =
+    // def constrainDNF(lhsCs: Ls[Conjunct], rhsCs: Ls[Conjunct])(implicit cctx: ConCtx, ctx: Ctx, shadows: Shadows): Unit =
+    // def constrainDNF(lhs: DNF, rhsCs: Ls[Conjunct])(implicit cctx: ConCtx, ctx: Ctx, shadows: Shadows): Unit =
+    def constrainDNF(_lhs: DNF, rhs: DNF)(implicit cctx: ConCtx, ctx: Ctx, shadows: Shadows): Unit =
     // trace(s"ARGH  $lhs  <!  $rhs") {
     trace(s"${lvl}. ARGH  $lhs  <!  $rhs") {
       annoyingCalls += 1
       consumeFuel()
       
-      val lhsCs = lhs.instantiate
+      // val rhs = if (!_rhs.isPolymorphic) _rhs else {
+      //   implicit val state: MutMap[TV, ST] = MutMap.empty
+      //   val rigid = DNF(MaxLevel,
+      //     _rhs.cons.mapKeys(_.freshenAbove(_rhs.polymLevel, rigidify = true)),
+      //     _rhs.cs.map(_.freshenAbove(_rhs.polymLevel, rigidify = true)),
+      //   )
+      //   println(s"Rigidified RHS: $rigid")
+      //   System.out.println("?!")
+      //   rigid
+      // }
+      
+      require(!rhs.isPolymorphic)
+      if (rhs.cons.nonEmpty) ???
+      
+      val (lhsCons, lhsCs) = _lhs.instantiate
+      
+      lhsCons.foreach(c => constrainImpl(c._1, c._2))
       
       // * Same remark as in the `rec` method [note:1]
       // assert(lvl >= rhs.level)
@@ -152,7 +212,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               }
               
               // First, we filter out those RHS alternatives that obviously don't match our LHS:
-              val possible = fullRhs.rigidify.filter { r =>
+              // val possible = fullRhs.rigidify.filter { r =>
+              val possible = fullRhs.cs.filter { r =>
                 
                 // Note that without this subtyping check,
                 //  the number of constraints in the `eval1_ty_ugly = eval1_ty`
@@ -772,6 +833,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               }()
               res
               
+              
               // val extrCtx_old = extrCtx
               // {
               //   val ec: ExtrCtx = MutMap.empty
@@ -827,6 +889,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               }
             }()
             rec(bod, rhs, true)
+          case (_, ConstrainedType(cs, bod)) => ??? // TODO?
           case (_, ComposedType(true, l, r)) =>
             goToWork(lhs, rhs)
           case (ComposedType(false, l, r), _) =>
