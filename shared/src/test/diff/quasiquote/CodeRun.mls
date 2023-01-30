@@ -41,37 +41,6 @@ code"x => x + 1"
 //    (x => [ ... ])(Symbol("x"))
 
 
-let x = code"3 + 2"
-//│ x: code & {Code#C = anything, Code#T <: int}
-//│  = [ 'App', '+', [ 3 ], [ 2 ] ]
-
-run(x)
-//│ res: int
-//│    = 5
-
-let y = code"1"
-//│ y: code & {Code#C = anything, Code#T <: 1}
-//│  = [ 1 ]
-
-run(y)
-//│ res: 1
-//│    = 1
-
-
-code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: α67
-//│ ║  l.61: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
-//│ ╙──      	                                            ^^^^^
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.61: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
-//│ ║        	                             ^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `code & {Code#C :> ?b.type63, Code#T <: ?a}` is not an instance of type `int`
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: α70
-//│ ║  l.61: 	code"let a = 1; let b = 2; ${a + code"b + ${a + b}" }"
-//│ ╙──      	                             ^^^^^^^^^^^^^^^^^^^^^^
-//│ res: code & {Code#C = anything, Code#T <: error}
-//│ Code generation encountered an error:
-//│   unresolved symbol a
 
 let code_function = code"let x = (y, z) => y + z; x(3, 30)"
 //│ code_function: code & {Code#C = anything, Code#T <: int}
@@ -93,8 +62,8 @@ fun test(n) = if n > 0 then code"1000" else code"1"
 //│     = [Function: test]
 let code_unquote = code"let x = 1; x + ${test(3)}"
 run(code_unquote)
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: α98'
-//│ ║  l.94: 	let code_unquote = code"let x = 1; x + ${test(3)}"
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: α74'
+//│ ║  l.63: 	let code_unquote = code"let x = 1; x + ${test(3)}"
 //│ ╙──      	                                         ^^^^^^^
 //│ code_unquote: code & {Code#C = anything, Code#T <: int}
 //│             = [
@@ -105,6 +74,8 @@ run(code_unquote)
 //│               ]
 //│ res: int
 //│    = 1001
+
+
 
 let code_nested = code"let a = 1; let b = 2; ${code"a + b"}"
 //│ code_nested: code & {Code#C = anything, Code#T <: code & {Code#C = anything, Code#T <: int}}
@@ -119,3 +90,85 @@ run(code_nested)
 //│ res: code & {Code#C = anything, Code#T <: int}
 //│    = 3
 
+:js
+code"let z = x => ${code"x + 1"}; z(3)"
+//│ // Query 1
+//│ res = ((z) => [
+//│   "Let",
+//│   z,
+//│   [
+//│     (x) => run([
+//│       "App",
+//│       "+",
+//│       [
+//│         "Var",
+//│         x
+//│       ],
+//│       [1]
+//│     ])
+//│   ],
+//│   [
+//│     "Fun",
+//│     [
+//│       "Var",
+//│       z
+//│     ],
+//│     [[3]]
+//│   ]
+//│ ])(Symbol('z'));
+//│ // End of generated code
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.94: 	code"let z = x => ${code"x + 1"}; z(3)"
+//│ ║        	                         ^^^
+//│ ╟── function of type `?a -> ?a` is not an instance of type `int`
+//│ ║  l.18: 	let x = x => x
+//│ ║        	        ^^^^^^
+//│ ╟── but it flows into reference with expected type `int`
+//│ ║  l.94: 	code"let z = x => ${code"x + 1"}; z(3)"
+//│ ╙──      	                         ^
+//│ res: code & {Code#C = anything, Code#T <: error | int}
+//│    = [
+//│        'Let',
+//│        Symbol(z),
+//│        [ [Function (anonymous)] ],
+//│        [ 'Fun', [ 'Var', Symbol(z) ], [ [Array] ] ]
+//│      ]
+
+
+run(res)
+//│ res: error | int
+//│    = 4
+
+// BUG? 
+//let fx = code"x_free + 1"
+//code"let x_free = 3; ${fx}"
+
+
+:js
+code"let z = x => x + 1; z(3)"
+//│ // Query 1
+//│ res = ((z) => [
+//│   "Let",
+//│   z,
+//│   [(x) => x + 1],
+//│   [
+//│     "Fun",
+//│     [
+//│       "Var",
+//│       z
+//│     ],
+//│     [[3]]
+//│   ]
+//│ ])(Symbol('z'));
+//│ // End of generated code
+//│ res: code & {Code#C = anything, Code#T <: int}
+//│    = [
+//│        'Let',
+//│        Symbol(z),
+//│        [ [Function (anonymous)] ],
+//│        [ 'Fun', [ 'Var', Symbol(z) ], [ [Array] ] ]
+//│      ]
+
+run(res)
+//│ res: int
+//│    = 4

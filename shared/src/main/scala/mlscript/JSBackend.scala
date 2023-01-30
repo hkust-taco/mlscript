@@ -250,7 +250,9 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case Quoted(body) =>
       translateQuoted(body)
     case Unquoted(body) =>
-      throw CodeGenError("unquotes should only be in quasiquotes")
+      val callee = translateVar("run", true)
+      callee(translateTerm(body))
+
     case _: Bind | _: Test | If(_, _) | TyApp(_, _) | _: Splc =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
@@ -466,8 +468,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   /**
    * Translate body of quasiquotes (Quoted) to S-expression in JSArray
    */
-  private def translateQuoted(body: Term)(implicit scope: Scope): JSExpr = body match { // TODO: remove implicit argument for scope
-    case Lam(_,_) | Tup(_) | Rcd(_) =>
+  private def translateQuoted(body: Term)(implicit scope: Scope): JSExpr = body match { 
+    case Lam(_,_) | Tup(_) | Rcd(_) => 
       JSArray(Ls(translateTerm(body)))
     case Var(name) =>
       JSArray(Ls(JSExpr("Var"), JSIdent(name)))
@@ -496,6 +498,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       JSImmEvalFn(None, Ls(JSNamePattern(name)), L(JSArray(Ls(JSExpr("Let"), JSIdent(name), translateQuoted(rhs), translateQuoted(body)))), Ls(JSLit(s"Symbol('${name}')")))
     case Subs(arr, idx) => 
       JSArray(Ls(JSExpr("Subs"), translateQuoted(arr), translateQuoted(idx)))
+    case Quoted(body) => 
+      JSArray(Ls(JSExpr("Quoted"), translateQuoted(body)))
     case Blk(stmts) => throw CodeGenError("Blk not supported in quasiquotes... yet")
     case New(S(head), body) => throw CodeGenError(s"New HEAD ${head} BODY ${body}\n\tNew not supported in quasiquotes... yet")
     case Assign(_,_) | Asc(_,_) | Bind(_,_) | Test(_,_) | With(_,_) | CaseOf(_,_) | TyApp(_,_) | Splc(_) => 

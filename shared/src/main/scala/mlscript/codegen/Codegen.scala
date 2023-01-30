@@ -854,6 +854,8 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
           }
         case "App":
           return eval(_run(s_expr[2]) + s_expr[1] + _run(s_expr[3]));
+        
+        // TODO: if not local function, use globalThis
         case "Fun": 
           return _run(s_expr[1])(..._run(s_expr[2]))
         case "If":
@@ -874,10 +876,14 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
         case "StrLit":
           return `'${s_expr[1]}'`;
 
+        // TODO: remove when confirm not needed
         case "Unquoted": 
           let res = run(s_expr[1]);
           return _run(res);
-          
+        
+        case "Quoted": 
+          return s_expr[1];
+
         default:
           return s_expr[0];
       }

@@ -1,7 +1,7 @@
 :NewParser
 :ge
 
-// Lam  TODO (27 Jan 2023) - Fix
+// Lam  
 let code_lam = code"let lambda = (x) => x; lambda(3)"
 //│ code_lam: code & {Code#C = anything, Code#T <: 3}
 //│         = [

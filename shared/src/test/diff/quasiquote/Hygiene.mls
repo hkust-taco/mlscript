@@ -37,3 +37,18 @@ fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${
 run(test(2, code"0"))
 //│ res: error | int
 //│    = 3
+
+// Test 3: 
+fun power(n, x) = if n > 0 then code"${power(n-1, x)} * ${x}" else code"1"
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: α77'
+//│ ║  l.42: 	fun power(n, x) = if n > 0 then code"${power(n-1, x)} * ${x}" else code"1"
+//│ ╙──      	                                       ^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: [α72']
+//│ ║  l.42: 	fun power(n, x) = if n > 0 then code"${power(n-1, x)} * ${x}" else code"1"
+//│ ╙──      	                                                          ^
+//│ power: (int, anything,) -> (code & {Code#C = anything, Code#T <: int})
+//│      = [Function: power]
+
+run(power(3, code"3"))
+//│ res: int
+//│    = 27
