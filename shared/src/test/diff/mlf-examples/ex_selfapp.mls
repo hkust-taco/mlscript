@@ -132,7 +132,7 @@ def build_ = fun g -> g (fun x -> fun xs -> Cons (x, xs)) Nil
 //│ build_: ((forall 'b. 'b -> (forall 'a 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))) -> Nil -> 'c) -> 'c
 //│       = [Function: build_]
 
-:e // * [FCP-LIM]
+:e // * Expected: List is a structural equirecursive types and recursive types are disabled
 build_ : forall 'a. (forall 'b. (('a -> 'b -> 'b) -> 'b -> 'b)) -> List['a]
 //│ ╔══[ERROR] Cyclic-looking constraint while typing type ascription; a type annotation may be required
 //│ ║  l.136: 	build_ : forall 'a. (forall 'b. (('a -> 'b -> 'b) -> 'b -> 'b)) -> List['a]

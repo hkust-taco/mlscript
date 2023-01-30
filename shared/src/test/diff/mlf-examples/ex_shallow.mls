@@ -52,7 +52,14 @@ def church_succ n = fun f -> fun x -> f (n f x)
 // let a3 = (fun z z' -> z church_two);;
 // let a2 (x:a1) =  (x auto); (fun y -> x y; y church_succ) a3;;
 // let a0 = a2 a1;;
-type A1 = forall 'a 'b. (('a | Sid) -> 'b) -> 'b
+
+// * The MLF type above could be encoded as:
+// type A1 = forall 'a 'b. (('a | Sid) -> 'b) -> 'b
+// * However that's unnecessary as this is equivalent to the type below,
+// * which MLF cannot express directly due to its rigid syntactic limitations:
+type A1 = forall 'b. (Sid -> 'b) -> 'b
+//│ Defined type alias A1
+
 def a1 = fun f -> f id
 def a3 = fun z -> fun _ -> z church_two
 def a2 (x: A1) =
@@ -67,7 +74,6 @@ def a2_ (x: A1) =
     let _ = x y in
     y church_succ
   ) a3
-//│ Defined type alias A1
 //│ a1: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
 //│   = [Function: a1]
 //│ a3: ((forall 'a 'b 'c. ('a -> 'b & 'b -> 'c) -> 'a -> 'c) -> 'd) -> anything -> 'd
@@ -77,33 +83,14 @@ def a2_ (x: A1) =
 //│ a2_: A1 -> anything -> ('a -> 'b & 'c -> 'd & 'd -> 'a) -> 'c -> 'b
 //│    = [Function: a2_]
 
-:e // * [FCP-LIM] since polymorphic RHS DNF fix
 def a0 = a2 a1
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.81: 	def a0 = a2 a1
-//│ ║        	         ^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.5: 	type Sid = forall 'a. 'a -> 'a
-//│ ║       	                  ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.5: 	type Sid = forall 'a. 'a -> 'a
-//│ ╙──     	                  ^^
-//│ a0: anything -> ('a -> 'b & 'c -> 'd & 'd -> 'a) -> 'c -> 'b | error
+//│ a0: anything -> ('a -> 'b & 'c -> 'd & 'd -> 'a) -> 'c -> 'b
 //│   = [Function: a0]
 
-:e // * [FCP-LIM] since polymorphic RHS DNF fix
 def a0_ = a2_ a1
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.95: 	def a0_ = a2_ a1
-//│ ║        	          ^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.5: 	type Sid = forall 'a. 'a -> 'a
-//│ ║       	                  ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.5: 	type Sid = forall 'a. 'a -> 'a
-//│ ╙──     	                  ^^
-//│ a0_: anything -> ('a -> 'b & 'c -> 'd & 'd -> 'a) -> 'c -> 'b | error
+//│ a0_: anything -> ('a -> 'b & 'c -> 'd & 'd -> 'a) -> 'c -> 'b
 //│    = [Function: a0_]
+
 
 // let test0 = 
 //   (fun f -> f (fun h -> h id))
@@ -113,31 +100,13 @@ def a0_ = a2_ a1
 //            (fun x -> ((fun f x -> f x) x) (fun f x -> x))))
 // ;;
 
-:e // * [FCP-LIM] since polymorphic RHS DNF fix
 def test0 =
   (fun f -> f (fun h -> h id))
     (fun (g: A1) ->
       k (g (fun (x: Sid) -> x x))
         ((fun t -> (fun u -> fun v -> v) (g t) (t (fun f -> fun x -> x)))
           (fun x -> ((fun f -> fun x -> f x) x) (fun f -> fun x -> x))))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.118: 	  (fun f -> f (fun h -> h id))
-//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.119: 	    (fun (g: A1) ->
-//│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.120: 	      k (g (fun (x: Sid) -> x x))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.121: 	        ((fun t -> (fun u -> fun v -> v) (g t) (t (fun f -> fun x -> x)))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.122: 	          (fun x -> ((fun f -> fun x -> f x) x) (fun f -> fun x -> x))))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.5: 	type Sid = forall 'a. 'a -> 'a
-//│ ║       	                  ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.5: 	type Sid = forall 'a. 'a -> 'a
-//│ ╙──     	                  ^^
-//│ test0: error | Sid
+//│ test0: Sid
 //│      = [Function: test0]
 
 def test0_ =
@@ -155,8 +124,12 @@ def test0_ =
 
 // type a1_sid = ['b] ['a = sid] ('a -> 'b) -> 'b;;
 // type a1_nat = ['b] ['a = nat -> nat] ('a -> 'b) -> 'b;;
-type A1_sid = forall 'a 'b. (('a & Sid | Sid) -> 'b) -> 'b
-type A1_nat = forall 'a 'b. (('a & ChurchInt -> ChurchInt | ChurchInt -> ChurchInt) -> 'b) -> 'b
+
+// type A1_sid = forall 'a 'b. (('a & Sid | Sid) -> 'b) -> 'b
+// type A1_nat = forall 'a 'b. (('a & ChurchInt -> ChurchInt | ChurchInt -> ChurchInt) -> 'b) -> 'b
+// * Simplified:
+type A1_sid = forall 'b. (Sid -> 'b) -> 'b
+type A1_nat = forall 'a 'b. ((ChurchInt -> ChurchInt) -> 'b) -> 'b
 //│ Defined type alias A1_sid
 //│ Defined type alias A1_nat
 
@@ -188,28 +161,13 @@ def a1_sid_to_nat_ g =
 //            (fun x -> ((fun f x -> f x) x) (fun f x -> x))))
 // ;;
 
-:e // * [FCP-LIM] since polymorphic RHS DNF fix
 def test_in_F_eta = 
   (fun f -> f (fun h -> h id))
     (fun (g: A1_sid) ->
       k (g (fun (x : Sid) -> x x))
         ((fun t -> (fun u -> fun v -> v) ((a1_sid_to_nat g) t) (t (fun f -> fun x -> x)))
           (fun x -> ((fun f -> fun x -> f x) x) (fun f -> fun x -> x))))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.193: 	  (fun f -> f (fun h -> h id))
-//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.194: 	    (fun (g: A1_sid) ->
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.195: 	      k (g (fun (x : Sid) -> x x))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.196: 	        ((fun t -> (fun u -> fun v -> v) ((a1_sid_to_nat g) t) (t (fun f -> fun x -> x)))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.197: 	          (fun x -> ((fun f -> fun x -> f x) x) (fun f -> fun x -> x))))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `anything` does not match type `nothing`
-//│ ║  l.15: 	def id x = x
-//│ ╙──      	           ^
-//│ test_in_F_eta: error
+//│ test_in_F_eta: Sid
 //│              = [Function: test_in_F_eta]
 
 def test_in_F_eta_ = 
@@ -236,7 +194,12 @@ def test_in_F_eta_ =
 // *)
 
 // type a1' = ['a > sid] ('a -> 'a) -> 'a -> 'a;;
-type A1' = forall 'a. (('a | Sid) -> ('a | Sid)) -> ('a | Sid) -> ('a | Sid)
+
+// type A1' = forall 'a. (('a | Sid) -> ('a | Sid)) -> ('a | Sid) -> ('a | Sid)
+// * Or (no need to change the negative occurrences):
+type A1' = forall 'a. (('a | Sid) -> 'a) -> 'a -> ('a | Sid)
+// * Since 'a occurs both positively and negatively, we cannot simplify it to the following:
+// type A1' = (Sid -> Sid) -> Sid -> Sid
 //│ Defined type alias A1'
 
 // let either x y = if true then x else y;;
@@ -273,7 +236,7 @@ def a2'_ x =
 :e // * [FCP-LIM] since polymorphic RHS DNF fix
 def a0' = a2' a1'
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.274: 	def a0' = a2' a1'
+//│ ║  l.237: 	def a0' = a2' a1'
 //│ ║         	          ^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.5: 	type Sid = forall 'a. 'a -> 'a
@@ -287,7 +250,7 @@ def a0' = a2' a1'
 :e
 def a0'_ = a2'_ a1'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.288: 	def a0'_ = a2'_ a1'
+//│ ║  l.251: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ a0'_: error
@@ -298,7 +261,7 @@ def a0'_ = a2'_ a1'
 :e // * Not sure why this started failing...
 def a0'_ = a2'_ a1'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.299: 	def a0'_ = a2'_ a1'
+//│ ║  l.262: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ a0'_: anything -> ('a -> 'b & 'c -> 'd & 'd -> 'a) -> 'c -> 'b | error
@@ -356,34 +319,14 @@ def a2_ (x: A1) =
 //│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a))
 //│    = [Function: a2_1]
 
-:e // * [FCP-LIM] since polymorphic RHS DNF fix
 def a0 = a2 a1
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.360: 	def a0 = a2 a1
-//│ ║         	         ^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.5: 	type Sid = forall 'a. 'a -> 'a
-//│ ║       	                  ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.5: 	type Sid = forall 'a. 'a -> 'a
-//│ ╙──     	                  ^^
-//│ a0: anything -> 'a | error
+//│ a0: anything -> 'a
 //│   where
-//│     forall 'b 'c 'd 'e. ('d -> 'e -> 'b) -> ('b -> 'c & 'd) -> 'e -> 'c <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
+//│     forall 'b 'c 'd 'e. ('e -> 'b -> 'c) -> ('c -> 'd & 'e) -> 'b -> 'd <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
 //│   = [Function: a01]
 
-:e // * [FCP-LIM] since polymorphic RHS DNF fix
 def a0_ = a2_ a1
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.376: 	def a0_ = a2_ a1
-//│ ║         	          ^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.5: 	type Sid = forall 'a. 'a -> 'a
-//│ ║       	                  ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.5: 	type Sid = forall 'a. 'a -> 'a
-//│ ╙──     	                  ^^
-//│ a0_: anything -> 'a | error
+//│ a0_: anything -> 'a
 //│   where
 //│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
 //│    = [Function: a0_1]
@@ -394,7 +337,6 @@ def a1' = fun f -> fun x -> f (f (either id x))
 //│     'a <: (forall 'e. 'e -> 'e | 'b) -> 'c & 'c -> 'd))
 //│    = [Function: a1$1]
 
-// * Strangely, constrained types make this one FAIL!
 def a2' (x: A1') =
   let _ = x auto id in
   (fun y ->
@@ -414,15 +356,15 @@ def a2'_ x =
   ) a3
 //│ a2'_: ((forall 'a 'b. ('a -> 'b & 'a) -> 'b) -> (forall 'c. 'c -> 'c) -> anything & (forall 'd. 'd -> (forall 'e. (anything -> 'e
 //│   where
-//│     'd <: (forall 'f 'g 'h. ('g -> 'h & 'h -> 'f) -> 'g -> 'f) -> 'e))) -> (forall 'f 'g 'h. ('g -> 'h & 'h -> 'f) -> 'g -> 'f) -> anything) -> (forall 'i. (anything -> 'i
+//│     'd <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'e))) -> (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> anything) -> (forall 'i. (anything -> 'i
 //│   where
-//│     forall 'j 'k 'l 'm. ('j -> 'k -> 'l) -> ('l -> 'm & 'j) -> 'k -> 'm <: (forall 'f 'g 'h. ('g -> 'h & 'h -> 'f) -> 'g -> 'f) -> 'i))
+//│     forall 'j 'k 'l 'm. ('k -> 'l -> 'm) -> ('m -> 'j & 'k) -> 'l -> 'j <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'i))
 //│     = [Function: a2$_1]
 
 :e // * [FCP-LIM] since polymorphic RHS DNF fix
 def a0' = a2' a1'
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.423: 	def a0' = a2' a1'
+//│ ║  l.365: 	def a0' = a2' a1'
 //│ ║         	          ^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.5: 	type Sid = forall 'a. 'a -> 'a
@@ -438,7 +380,7 @@ def a0' = a2' a1'
 :e
 def a0'_ = a2'_ a1'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.439: 	def a0'_ = a2'_ a1'
+//│ ║  l.381: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ a0'_: anything -> 'a | error
@@ -451,7 +393,7 @@ def a0'_ = a2'_ a1'
 def a0'_ = a2'_ a1'
 //│ a0'_: anything -> 'a
 //│   where
-//│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
+//│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('h -> 'f & 'f -> 'g) -> 'h -> 'g) -> 'a
 //│     = [Function: a0$_3]
 :NoRecursiveTypes
 
