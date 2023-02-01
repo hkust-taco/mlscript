@@ -888,7 +888,13 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
           return s_expr[0];
       }
     } 
-    return _run(s_expr);
+    let result = _run(s_expr);
+
+    if (typeof result === "symbol" && symbol_value_map.has(result)) {
+      return symbol_value_map.get(result);
+    } else {
+      return result;
+    }
     """
   )
 }

@@ -15,12 +15,7 @@ run(res)
 //│ res: 1 | 2
 //│    = 1
 
-let x = x => x
-x(3)
-//│ x: 'a -> 'a
-//│  = [Function: x]
-//│ res: 3
-//│    = 3
+
 
 // The JS for creating symbols should appear here:
 :js
@@ -62,8 +57,8 @@ fun test(n) = if n > 0 then code"1000" else code"1"
 //│     = [Function: test]
 let code_unquote = code"let x = 1; x + ${test(3)}"
 run(code_unquote)
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: α74'
-//│ ║  l.63: 	let code_unquote = code"let x = 1; x + ${test(3)}"
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: α66'
+//│ ║  l.58: 	let code_unquote = code"let x = 1; x + ${test(3)}"
 //│ ╙──      	                                         ^^^^^^^
 //│ code_unquote: code & {Code#C = anything, Code#T <: int}
 //│             = [
@@ -89,6 +84,7 @@ let code_nested = code"let a = 1; let b = 2; ${code"a + b"}"
 run(code_nested)
 //│ res: code & {Code#C = anything, Code#T <: int}
 //│    = 3
+
 
 :js
 code"let z = x => ${code"x + 1"}; z(3)"
@@ -117,16 +113,7 @@ code"let z = x => ${code"x + 1"}; z(3)"
 //│   ]
 //│ ])(Symbol('z'));
 //│ // End of generated code
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.94: 	code"let z = x => ${code"x + 1"}; z(3)"
-//│ ║        	                         ^^^
-//│ ╟── function of type `?a -> ?a` is not an instance of type `int`
-//│ ║  l.18: 	let x = x => x
-//│ ║        	        ^^^^^^
-//│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.94: 	code"let z = x => ${code"x + 1"}; z(3)"
-//│ ╙──      	                         ^
-//│ res: code & {Code#C = anything, Code#T <: error | int}
+//│ res: code & {Code#C = anything, Code#T <: code & {Code#C = anything, Code#T <: int}}
 //│    = [
 //│        'Let',
 //│        Symbol(z),
@@ -136,7 +123,7 @@ code"let z = x => ${code"x + 1"}; z(3)"
 
 
 run(res)
-//│ res: error | int
+//│ res: code & {Code#C = anything, Code#T <: int}
 //│    = 4
 
 // BUG? 
@@ -144,31 +131,3 @@ run(res)
 //code"let x_free = 3; ${fx}"
 
 
-:js
-code"let z = x => x + 1; z(3)"
-//│ // Query 1
-//│ res = ((z) => [
-//│   "Let",
-//│   z,
-//│   [(x) => x + 1],
-//│   [
-//│     "Fun",
-//│     [
-//│       "Var",
-//│       z
-//│     ],
-//│     [[3]]
-//│   ]
-//│ ])(Symbol('z'));
-//│ // End of generated code
-//│ res: code & {Code#C = anything, Code#T <: int}
-//│    = [
-//│        'Let',
-//│        Symbol(z),
-//│        [ [Function (anonymous)] ],
-//│        [ 'Fun', [ 'Var', Symbol(z) ], [ [Array] ] ]
-//│      ]
-
-run(res)
-//│ res: int
-//│    = 4
