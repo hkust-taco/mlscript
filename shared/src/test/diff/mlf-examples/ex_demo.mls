@@ -1124,6 +1124,10 @@ this_should_be_98 =
 //│ this_should_be_98: string
 //│                  = '98'
 
+// * [FCP:patho]
+// * Note that as of this commit, if we increase the depth/fuel to eg 2500/500000,
+// * this ends up terminating with additional cycle error (instead of depth/fuel crash)
+// * after around 6 sec...
 :stats // * Note: subtyping takes too many steps when replacing both `c_mul_` by `c_mul`
 :e // * Not sure what's a minimal change to make this one work
 this_should_be_98_ =
@@ -1134,14 +1138,18 @@ this_should_be_98_ =
   let c_98_ = c_pred_ c_99_ in
   c_printint2_ c_98_
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1131: 	  let c_i10_ = c_mul_ c_i5_ c_i2_ in
+//│ ║  l.1135: 	  let c_i10_ = c_mul_ c_i5_ c_i2_ in
 //│ ║          	               ^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?d ?e ?f. ?b -> ?e <: (forall ?g ?h ?i ?j ?k ?l ?m ?n ?o ?p ?q ?r ?s ?t ?u ?v ?w ?x ?y ?z ?a1 ?b1 ?c1 ?d1 ?e1 ?f1 ?g1 ?h1 ?i1 ?j1 ?k1 ?l1 ?m1 ?n1 ?o1 ?p1 ?q1 ?r1 ?s1 ?t1 ?u1 ?v1 ?w1 ?x1 ?y1 ?z1 ?a2 ?b2 ?c2 ?d2 ?e2 ?f2 ?g2 ?h2 ?i2 ?j2 ?k2 ?l2 ?m2 ?n2 ?o2 ?p2 ?q2 ?r2 ?s2 ?t2 ?u2 ?v2 ?w2 ?x2 ?y2 ?z2 ?a3 ?b3 ?c3 'a ?d3 ?e3 ?f3 ?g3 ?h3 ?i3 ?j3 ?k3 ?l3 ?m3 ?n3 ?o3 ?p3 ?q3 ?r3 ?s3 ?t3 ?u3 ?v3 ?w3 ?x3 ?y3 ?z3 ?a4 ?b4 ?c4 ?d4 ?e4 ?f4 ?g4 ?h4 ?i4 ?j4 ?k4 ?l4 ?m4 ?n4 ?o4 ?p4 ?q4 ?r4 ?s4 ?t4 ?u4 ?v4 ?w4 ?x4 ?y4 ?z4 ?a5 ?b5 ?c5 ?d5 ?e5 ?f5 ?g5 ?h5 'a0 ?i5 ?j5 ?k5 ?l5 ?m5 ?n5 ?o5 ?p5 ?q5 ?r5 ?s5 ?t5 ?u5 ?v5 ?w5 ?x5 ?y5 ?z5 ?a6 ?b6 ?c6 ?d6 ?e6 ?f6 ?g6 ?h6 ?i6 ?j6 ?k6 ?l6 ?m6 ?n6 ?o6 ?p6 ?q6 ?r6 ?s6 ?t6 ?u6 ?v6 ?w6 ?x6 ?y6 ?z6 ?a7 ?b7 ?c7 ?d7 ?e7 ?f7 ?g7 ?h7 ?i7 ?j7 ?k7 ?l7 ?m7 ?n7 ?o7 ?p7 ?q7 ?r7 ?s7 ?t7 ?u7 ?v7 ?w7 ?x7 ?y7 ?z7 ?a8 ?b8 ?c8 ?d8 ?e8 ?f8 ?g8 ?h8 ?i8 ?j8 ?k8 ?l8 ?m8 ?n8 ?o8 ?p8 ?q8 ?r8 ?s8 ?t8 ?u8 ?v8 ?w8 ?x8 ?y8 ?z8 ?a9 ?b9 ?c9 ?d9 ?e9 ?f9 ?g9 ?h9 ?i9 ?j9 ?k9 ?l9 ?m9 ?n9 ?o9 ?p9 ?q9 ?r9 ?s9 ?t9 ?u9 ?v9 ?w9 ?x9 ?y9 ?z9 ?a10 ?b10 ?c10 ?d10 ?e10 ?f10 ?g10 ?h10 ?i10 ?j10 ?k10 ?l10 ?m10. ?l2) -> ?n10` exceeded recursion depth limit (250)
+//│ ║  l.1136: 	  let c_i9_ = c_pred_ c_i10_ in
+//│ ║          	              ^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ this_should_be_98_: string
 //│                   = '98'
-//│ constrain calls  : 899
+//│ constrain calls  : 6775
 //│ annoying  calls  : 0
-//│ subtyping calls  : 2890
+//│ subtyping calls  : 52416
 
 // * Decomposing...
 
@@ -1157,14 +1165,16 @@ c_i5_ = c_add_ c_i3_ c_i2_
 :e
 c_i10_ = c_mul_ c_i5_ c_i2_
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1158: 	c_i10_ = c_mul_ c_i5_ c_i2_
+//│ ║  l.1166: 	c_i10_ = c_mul_ c_i5_ c_i2_
 //│ ║          	         ^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ c_i10_: error
+//│ c_i10_: ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'm -> 'l & 'n -> 'm & 'o -> 'n & 'p -> 'o & 'q -> 'p & 'r -> 'q & (forall 's. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'm -> 'l & 'n -> 'm & 'o -> 'n & 'p -> 'o & 's -> 'p & 't & 'u & 'v & 'w & 'x & 'y) -> 's -> 'h | 'z) -> ('a1 & 'b1) & (forall 'c1. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'm -> 'l & 'n -> 'm & 'o -> 'n & 'c1 -> 'o & 'u & 'v & 'w & 'x & 'y) -> 'c1 -> 'g | 'd1) -> ('e1 -> 'q -> 'i & 'z) & (forall 'f1. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'm -> 'l & 'n -> 'm & 'f1 -> 'n & 'v & 'w & 'x & 'y) -> 'f1 -> 'f | 'g1) -> ('t -> 'p -> ('h & 'i) & 'd1) & (forall 'h1. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'm -> 'l & 'h1 -> 'm & 'w & 'x & 'y) -> 'h1 -> 'e | 'i1) -> ('u -> 'o -> ('g & 'h & 'i) & 'g1) & (forall 'j1. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'j1 -> 'l & 'x & 'y) -> 'j1 -> 'd | 'k1) -> ('v -> 'n -> ('f & 'g & 'h & 'i) & 'i1) & (forall 'l1. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l1 -> 'k & 'y) -> 'l1 -> 'c | 'm1) -> ('w -> 'm -> ('e & 'f & 'g & 'h & 'i) & 'k1) & (forall 'n1. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'n1 -> 'j) -> 'n1 -> 'b | 'o1) -> ('x -> 'l -> ('d & 'e & 'f & 'g & 'h & 'i) & 'm1) & 'p1 -> ('y -> 'k -> ('c & 'd & 'e & 'f & 'g & 'h & 'i) & 'o1) & 'e1 & 't & 'u & 'v & 'w & 'x & 'y) -> ('r & 'p1) -> (forall 'r. ('a -> ('b & 'c & 'd & 'e & 'f & 'g & 'h & 'i) & 'j -> 'a & 'k -> 'j & 'l -> 'k & 'm -> 'l & 'n -> 'm & 'o -> 'n & 'p -> 'o & 'q -> 'p & 'r -> 'q & 'e1 & 't & 'u & 'v & 'w & 'x & 'y) -> 'r -> 'i | 'i | 'a1) | error
+//│   where
+//│     'b1 <: (forall 'q1 'r1 's1. ('q1 -> 'r1 -> 's1) -> (forall 't1. ('t1 -> 'r1 & 'q1) -> 't1 -> 's1)) -> (forall 'u1 'v1 'w1. ('v1 -> 'w1 & 'u1 -> 'v1) -> 'u1 -> 'w1) -> 'b1
 //│       = [Function (anonymous)]
-//│ constrain calls  : 492
+//│ constrain calls  : 1744
 //│ annoying  calls  : 0
-//│ subtyping calls  : 1741
+//│ subtyping calls  : 15579
 :stats
 // * This one works:
 c_i10_ = c_mul c_i5_ c_i2_
@@ -1187,18 +1197,14 @@ c_i9_ = c_pred_ c_i10_
 :e
 c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1188: 	c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
+//│ ║  l.1198: 	c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
 //│ ║          	                ^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1188: 	c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
-//│ ║          	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ c_99_: ('a -> anything & 'b -> 'c & 'a -> 'b & 'a -> 'd & 'c -> 'c & 'd -> 'd) -> 'a -> error | error
 //│      = [Function (anonymous)]
-//│ constrain calls  : 2736
+//│ constrain calls  : 3330
 //│ annoying  calls  : 0
-//│ subtyping calls  : 22340
+//│ subtyping calls  : 25594
 :stats
 // * Works again:
 c_99_ = c_add_ (c_mul c_i9_ c_i10_) c_i9_
@@ -1288,17 +1294,17 @@ def c_succ_ n = fun f -> fun x -> n f (f x)
 //│   where
 //│     'b <: 'a -> 'a & 'c -> 'a)))
 //│       = [Function: c_succ1]
-//│ c_succ_: 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. ('c -> 'e
+//│ c_succ_: 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. ('d -> 'c
 //│   where
-//│     'b <: 'c -> 'd
-//│     'a <: 'b -> 'd -> 'e)))
+//│     'b <: 'd -> 'e
+//│     'a <: 'b -> 'e -> 'c)))
 //│        = [Function: c_succ_1]
 
 def c_add_ n m = m c_succ_ n
-//│ c_add_: 'a -> (forall 'b. ((forall 'c. 'c -> (forall 'd. 'd -> (forall 'e 'f 'g. ('e -> 'g
+//│ c_add_: 'a -> (forall 'b. ((forall 'c. 'c -> (forall 'd. 'd -> (forall 'e 'f 'g. ('g -> 'f
 //│   where
-//│     'c <: 'd -> 'f -> 'g
-//│     'd <: 'e -> 'f)))) -> 'a -> 'b) -> 'b)
+//│     'd <: 'g -> 'e
+//│     'c <: 'd -> 'e -> 'f)))) -> 'a -> 'b) -> 'b)
 //│       = [Function: c_add_1]
 
 // let c_i1 = fun f x -> f x
@@ -1315,12 +1321,12 @@ def c_i2_ = c_succ_ c_i1
 //│   where
 //│     'b <: 'a -> 'a & 'c -> 'a))
 //│     = [Function: c_i22]
-//│ c_i2_: 'a -> (forall 'b 'c 'd. ('b -> 'd
+//│ c_i2_: 'a -> (forall 'b 'c 'd. ('d -> 'c
 //│   where
-//│     'a <: 'b -> 'c
 //│     forall 'e. 'e -> (forall 'f 'g. ('f -> 'g
 //│   where
-//│     'e <: 'f -> 'g)) <: 'a -> 'c -> 'd))
+//│     'e <: 'f -> 'g)) <: 'a -> 'b -> 'c
+//│     'a <: 'd -> 'b))
 //│      = [Function: c_i2_1]
 
 // let c_i3 = c_succ c_i2
@@ -1330,12 +1336,12 @@ def c_i3_ = c_succ_ c_i2
 //│   where
 //│     'b <: 'a -> 'a & 'c -> 'a))
 //│     = [Function: c_i31]
-//│ c_i3_: 'b -> (forall 'c 'd 'e. ('c -> 'e
+//│ c_i3_: 'b -> (forall 'c 'd 'e. ('e -> 'd
 //│   where
-//│     'b <: 'c -> 'd
 //│     forall 'f. 'f -> (forall 'a 'g. ('g -> 'a
 //│   where
-//│     'f <: 'a -> 'a & 'g -> 'a)) <: 'b -> 'd -> 'e))
+//│     'f <: 'a -> 'a & 'g -> 'a)) <: 'b -> 'c -> 'd
+//│     'b <: 'e -> 'c))
 //│      = [Function: c_i3_1]
 
 
@@ -1343,16 +1349,16 @@ def c_i3_ = c_succ_ c_i2
 c_i5_ = c_add_ c_i3_ c_i2
 //│ c_i5_: 'b
 //│   where
-//│     'b :> forall 'c. 'c -> (forall 'd 'e 'f 'g. ('d -> 'f
+//│     'b :> forall 'c. 'c -> (forall 'd 'e 'f 'g. ('f -> 'e
 //│   where
-//│     'c <: 'd -> 'e & 'd -> 'g
-//│     'b <: 'c -> 'e -> 'f
-//│     forall 'h. 'h -> (forall 'i 'j 'k. ('i -> 'k
+//│     'c <: 'f -> 'd & 'f -> 'g
+//│     'b <: 'c -> 'd -> 'e
+//│     forall 'h. 'h -> (forall 'i 'j 'k. ('k -> 'j
 //│   where
+//│     'h <: 'k -> 'i
 //│     forall 'l. 'l -> (forall 'a 'm. ('m -> 'a
 //│   where
-//│     'l <: 'a -> 'a & 'm -> 'a)) <: 'h -> 'j -> 'k
-//│     'h <: 'i -> 'j)) <: 'c -> 'g -> 'f))
+//│     'l <: 'a -> 'a & 'm -> 'a)) <: 'h -> 'i -> 'j)) <: 'c -> 'g -> 'e))
 //│      = [Function (anonymous)]
 
 

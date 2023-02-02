@@ -119,6 +119,9 @@ package object utils {
     /** A lesser precedence one! */
     @inline def /> [B] (rhs: A => B): B = rhs(self)
     
+    @inline def matches(pf: PartialFunction[A, Bool]): Bool =
+      pf.lift(self).contains(true)
+    
     /** 
      * A helper to write left-associative applications, mainly used to get rid of paren hell
      * Example:

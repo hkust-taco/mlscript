@@ -550,9 +550,12 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     private lazy val trueOriginal: Opt[TV] =
       originalTV.flatMap(_.trueOriginal.orElse(originalTV))
     
-    override def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST]): TypeVarOrRigidVar =
+    override def freshenAbove(lim: Int, rigidify: Bool)
+        (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
+        : TypeVarOrRigidVar =
       super.freshenAbove(lim, rigidify) match {
-        case tv: TypeVarOrRigidVar => tv // * Note that type variables can be refreshed as rigid variables (trait tags)
+        case tv: TypeVarOrRigidVar =>
+          tv // * Note that type variables can be refreshed as rigid variables (trait tags)
         case _ => die
       }
     

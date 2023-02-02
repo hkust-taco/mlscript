@@ -44,10 +44,11 @@ s2: S1
 type Id = forall 'a. 'a -> 'a
 //│ Defined type alias Id
 
+
 :e // TODO: could probably use different type var shadows from different type alias occurrences
 S: Id -> Id -> Id -> Id
 //│ ╔══[ERROR] Cyclic-looking constraint while typing type ascription; a type annotation may be required
-//│ ║  l.48: 	S: Id -> Id -> Id -> Id
+//│ ║  l.49: 	S: Id -> Id -> Id -> Id
 //│ ║        	^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: Id -> Id -> Id -> Id
