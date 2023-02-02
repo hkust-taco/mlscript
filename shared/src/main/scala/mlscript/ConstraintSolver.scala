@@ -535,8 +535,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       // *    Therefore this subtyping check may not be worth it.
       // *    In any case, we make it more lightweight by not traversing type variables
       // *    and not using a subtyping cache (cf. `CompareRecTypes = false`).
-      implicit val ctr: CompareRecTypes = false
-      if (lhs <:< rhs) ()
+      if ({ implicit val ctr: CompareRecTypes = false; lhs <:< rhs }) ()
       
       // println(s"  where ${FunctionType(lhs, rhs)(primProv).showBounds}")
       else {
@@ -552,7 +551,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           // case (l: TV, r: TV) if noRecursiveTypes =>
           //   if (cache(lhs_rhs)) return println(s"Cached! (not recursive")
           //   cache += lhs_rhs
-          case (_: TV, _: TV) if cache(lhs_rhs) => return println(s"Cached! (not recursive")
           case _ =>
             if (!noRecursiveTypes && cache(lhs_rhs)) return println(s"Cached!")
             val shadow = lhs.shadow -> rhs.shadow
@@ -580,11 +578,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               return ()
             }
             
-            // if (!noRecursiveTypes) cache += lhs_rhs
-            if (lhs_rhs match {
-              case (_: TV, _: TV) => true
-              case _ => !noRecursiveTypes
-            }) cache += lhs_rhs
+            if (!noRecursiveTypes) cache += lhs_rhs
             
             Shadows(shadows.current + lhs_rhs, shadows.previous + shadow)
             

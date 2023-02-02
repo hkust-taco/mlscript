@@ -270,7 +270,7 @@ a = add (nfind table "one")
 //│  = [Function (anonymous)]
 
 b = (nfind table "two")
-//│ b: ('a -> 'b & 'a -> 'c & 'c -> 'b & 'a -> 'd & 'd -> 'b) -> ('b & 'a) -> 'b
+//│ b: ('a -> 'b & 'a -> 'c & 'c -> 'b & 'a -> 'd & 'd -> 'b & 'a -> 'e & 'e -> 'b & 'a -> 'f & 'f -> 'b) -> ('b & 'a) -> 'b
 //│  = [Function (anonymous)]
 
 b (fun x -> x)
@@ -350,11 +350,11 @@ def foo key = match_opt (
     fun () -> fun f -> id,
     fun v -> v
   ) (find table key)
-//│ foo: anything -> ('a -> 'b & 'a -> 'c & 'c -> 'b & 'a -> 'd & 'd -> 'b & 'a -> 'e & 'e -> 'b & 'a -> 'f & 'f -> 'b) -> 'a -> ('a | 'b)
+//│ foo: anything -> ('a -> 'b & 'a -> 'c & 'c -> 'b & 'a -> 'd & 'd -> 'b & 'a -> 'e & 'e -> 'b & 'a -> 'f & 'f -> 'b & 'a -> 'g & 'g -> 'b & 'a -> 'h & 'h -> 'b & 'a -> 'i & 'i -> 'b & 'a -> 'j & 'j -> 'b) -> 'a -> ('a | 'b)
 //│    = [Function: foo]
 
 foo 1
-//│ res: ('a -> 'b & 'a -> 'c & 'c -> 'b & 'a -> 'd & 'd -> 'b & 'a -> 'e & 'e -> 'b & 'a -> 'f & 'f -> 'b) -> 'a -> ('a | 'b)
+//│ res: ('a -> 'b & 'a -> 'c & 'c -> 'b & 'a -> 'd & 'd -> 'b & 'a -> 'e & 'e -> 'b & 'a -> 'f & 'f -> 'b & 'a -> 'g & 'g -> 'b & 'a -> 'h & 'h -> 'b & 'a -> 'i & 'i -> 'b & 'a -> 'j & 'j -> 'b) -> 'a -> ('a | 'b)
 //│    = [Function (anonymous)]
 
 :e

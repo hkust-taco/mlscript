@@ -50,20 +50,35 @@ def simpleStepImpl arrImpl = ArraysImpl {
 //│         <: nothing
 //│               = [Function: simpleStepImpl]
 
-// * Something off is going on here
+
+:e
+// * Something off is going on here (see stats)
 :stats
-:Fuel 50000
+simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?A ?Rep ?Rep0 ?c ?d ?Rep1 ?A0 ?e ?Rep2 ?Rep3 ?f ?A1 ?A2 ?Rep4 ?Rep5 ?g ?Rep6 ?h ?Rep7 ?Rep8 ?sub ?Rep9 ?i ?init ?A3 ?A4 ?A5 ?j ?A6 ?A7 ?update ?A8 ?Rep10 ?k ?fold ?A9. ?c -> ?a <: ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string,)]` took too many steps and ran out of fuel (5000)
+//│ ║  l.57: 	simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ res: ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string,)]
+//│   where
+//│     'a :> error
+//│    = [Function: simpleStepImpl]
+//│ constrain calls  : 5231
+//│ annoying  calls  : 61
+//│ subtyping calls  : 32257
+// :ResetFuel
+
+// * Note that the above incidentally can be checked using recursive types
+:RecursiveTypes
+:stats
 simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
 //│ res: ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string,)]
 //│    = [Function: simpleStepImpl]
-//│ constrain calls  : 46430
+//│ constrain calls  : 575
 //│ annoying  calls  : 101
-//│ subtyping calls  : 380824
-:ResetFuel
+//│ subtyping calls  : 5623
+:NoRecursiveTypes
 
-// def simpleStepImpl2_ty: Arrays['a] -> ArraysImpl['a, ('_, string)]
-// def simpleStepImpl2_ty: Arrays['a] -> ArraysImpl['a, '_]
-// def simpleStepImpl2 arr = arr simpleStepImpl
 
 def arr: Arrays[int]
 //│ arr: Arrays[int]
@@ -84,8 +99,8 @@ mkArrays impl k = k impl
 :e
 def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.85: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
-//│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.100: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
+//│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.35: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                         ^^^^

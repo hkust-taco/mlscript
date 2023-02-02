@@ -280,7 +280,7 @@ def step arr f = f (stepImpl2_Ann_2 arr)
 
 :e
 def step arr f = f (stepImpl2_Ann_3 arr)
-//│ ((forall 'a 'b 'c 'd 'e 'f 'g 'h 'i. {fold: (nothing -> nothing -> anything) -> anything -> anything -> nothing, init: 'f -> 'i, sub: 'g -> 'b -> 'e, update: 'c -> 'd -> 'h -> 'a} -> {fold: Fold[nothing, (anything, string,)], init: 'f -> ('i, "hi",), sub: ('g, anything,) -> 'b -> 'e, update: ('c, anything,) -> 'd -> 'h -> ('a, "hey",)}) -> 'j) -> ('j -> 'k) -> 'k
+//│ ((forall 'a 'b 'c 'd 'e 'f 'g 'h 'i. {fold: (nothing -> nothing -> anything) -> anything -> anything -> nothing, init: 'd -> 'g, sub: 'a -> 'c -> 'f, update: 'i -> 'h -> 'b -> 'e} -> {fold: Fold[nothing, (anything, string,)], init: 'd -> ('g, "hi",), sub: ('a, anything,) -> 'c -> 'f, update: ('i, anything,) -> 'h -> 'b -> ('e, "hey",)}) -> 'j) -> ('j -> 'k) -> 'k
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -297,12 +297,12 @@ def step arr f = f (stepImpl2_Ann_3 arr)
 // * This used to be the only working one based on an internal annotation
 :e // * Since "sound extrusion"
 def step arr f = f (stepImpl2_Ann_4 arr)
-//│ ((forall 'b 'c 'd 'e 'a 'r. {fold: ('a -> nothing -> anything) -> anything -> 'b -> nothing, init: ('e | 'd) -> ('b & 'c), sub: 'b -> int -> 'd, update: 'b -> int -> ('e | 'd) -> ('b & 'c)} -> ArraysRep['a, 'r]) -> 'f) -> ('f -> 'g) -> 'g
+//│ ((forall 'b 'c 'd 'e 'a 'r. {fold: ('a -> nothing -> anything) -> anything -> 'e -> nothing, init: ('d | 'b) -> ('e & 'c), sub: 'e -> int -> 'b, update: 'e -> int -> ('d | 'b) -> ('e & 'c)} -> ArraysRep['a, 'r]) -> 'f) -> ('f -> 'g) -> 'g
 //│   where
 //│     'r :> ('c, "hey" | "hi",)
-//│        <: ('b, anything,)
-//│     'a :> 'd
-//│        <: 'e
+//│        <: ('e, anything,)
+//│     'a :> 'b
+//│        <: 'd
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -357,7 +357,7 @@ def step (arr: Arrays['a]) f = f (stepImpl2_Ann_2_Ann arr)
 // * Also worked, but this one is easier as it internally uses the fully-annotated `stepImpl_ty`
 :e // * Since "sound extrusion"
 def step arr f = f (stepImpl2_ arr)
-//│ ((forall 'a 'r. ArraysRep['a, 'r] -> ArraysRep['a, ('r, string,)]) -> 'b) -> ('b -> 'c) -> 'c
+//│ ((forall 'r 'a. ArraysRep['a, 'r] -> ArraysRep['a, ('r, string,)]) -> 'b) -> ('b -> 'c) -> 'c
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:

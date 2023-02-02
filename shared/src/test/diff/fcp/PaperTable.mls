@@ -582,8 +582,13 @@ to_ch: int -> ChurchInt
 //│ res: int -> ChurchInt
 //│    = [Function: to_ch]
 
+:e
 // G8
 rec def id1 x = if true then x else id1 id1 x
+//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: ?id1` exceeded recursion depth limit (250)
+//│ ║  l.587: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ id1: 'id1
 //│   where
 //│     'id1 :> 'a -> 'b
@@ -596,8 +601,8 @@ rec def id1 x = if true then x else id1 id1 x
 :e
 // G9
 id1 id1
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?d ?id1 ?e. ?id1 <: (forall ?f ?g ?id10 ?h ?i ?j. ?id10) -> ?k` exceeded recursion depth limit (250)
-//│ ║  l.598: 	id1 id1
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?id1 ?c ?d ?e. ?id1 <: (forall ?f ?g ?h ?i ?id10 ?j. ?id10) -> ?k` exceeded recursion depth limit (250)
+//│ ║  l.603: 	id1 id1
 //│ ║         	^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -607,7 +612,7 @@ id1 id1
 :e
 auto auto
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.608: 	auto auto
+//│ ║  l.613: 	auto auto
 //│ ║         	^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.163: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
@@ -623,7 +628,7 @@ auto auto
 :e
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c ?d. ?c -> ?d) -> ?e` exceeded recursion depth limit (250)
-//│ ║  l.624: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.629: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -924,8 +929,13 @@ to_ch: int -> ChurchInt
 //│ res: int -> ChurchInt
 //│    = [Function: to_ch1]
 
+:e
 // G8
 rec def id1 x = if true then x else id1 id1 x
+//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: ?id1` exceeded recursion depth limit (250)
+//│ ║  l.934: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ id1: 'id1
 //│   where
 //│     'id1 :> 'a -> 'b
@@ -938,8 +948,8 @@ rec def id1 x = if true then x else id1 id1 x
 :e
 // G9
 id1 id1
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?id1 ?c ?d ?e. ?id1 <: (forall ?f ?id10 ?g ?h ?i ?j. ?id10) -> ?k` exceeded recursion depth limit (250)
-//│ ║  l.940: 	id1 id1
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?id1 ?d ?e. ?id1 <: (forall ?f ?g ?id10 ?h ?i ?j. ?id10) -> ?k` exceeded recursion depth limit (250)
+//│ ║  l.950: 	id1 id1
 //│ ║         	^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -949,7 +959,7 @@ id1 id1
 :e
 auto auto
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.950: 	auto auto
+//│ ║  l.960: 	auto auto
 //│ ║         	^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.163: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
@@ -965,7 +975,7 @@ auto auto
 :e
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c ?d. ?c -> ?d) -> ?e` exceeded recursion depth limit (250)
-//│ ║  l.966: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.976: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -1271,7 +1281,7 @@ to_ch: int -> ChurchInt
 // G8
 rec def id1 x = if true then x else id1 id1 x
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.1272: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.1282: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║          	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ id1: 'id1
@@ -1287,7 +1297,7 @@ rec def id1 x = if true then x else id1 id1 x
 // G9
 id1 id1
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1288: 	id1 id1
+//│ ║  l.1298: 	id1 id1
 //│ ║          	^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -1297,7 +1307,7 @@ id1 id1
 :e
 auto auto
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1298: 	auto auto
+//│ ║  l.1308: 	auto auto
 //│ ║          	^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.163: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
@@ -1313,7 +1323,7 @@ auto auto
 :e
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1314: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.1324: 	(fun x -> x x) (fun x -> x x)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -1645,7 +1655,7 @@ id1 id1
 :e
 auto auto
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1646: 	auto auto
+//│ ║  l.1656: 	auto auto
 //│ ║          	^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.163: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
@@ -1661,7 +1671,7 @@ auto auto
 :e
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1662: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.1672: 	(fun x -> x x) (fun x -> x x)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
