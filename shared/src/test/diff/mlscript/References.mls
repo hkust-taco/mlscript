@@ -160,7 +160,7 @@ move ri rn
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.159: 	move ri rn
 //│ ║         	^^^^^^^^^^
-//│ ╟── type `number` is not an instance of type `int`
+//│ ╟── type `number` is not an instance of `int`
 //│ ║  l.87: 	rn = r : Ref[number]
 //│ ║        	             ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -214,7 +214,7 @@ swap ri rn
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.202: 	swap ri rn
 //│ ║         	^^^^^^^^^^
-//│ ╟── type `number` is not an instance of type `int`
+//│ ╟── type `number` is not an instance of `int`
 //│ ║  l.87: 	rn = r : Ref[number]
 //│ ║        	             ^^^^^^
 //│ ╟── Note: constraint arises from type reference:

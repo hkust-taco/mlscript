@@ -28,9 +28,9 @@ ty2A = ty2A
 //│ MyArray['a]
 //│   <:  ty2A:
 //│ MyArray['a]
-//│ constrain calls  : 39
-//│ annoying  calls  : 23
-//│ subtyping calls  : 125
+//│ constrain calls  : 1
+//│ annoying  calls  : 0
+//│ subtyping calls  : 1
 
 def ty2B: MyArray[MyArray['a]]
 //│ ty2B: MyArray[MyArray['a]]
@@ -40,9 +40,9 @@ ty2B = ty2A
 //│ MyArray['a]
 //│   <:  ty2B:
 //│ MyArray[MyArray['a]]
-//│ constrain calls  : 35
+//│ constrain calls  : 30
 //│ annoying  calls  : 23
-//│ subtyping calls  : 106
+//│ subtyping calls  : 99
 
 
 
@@ -51,7 +51,6 @@ def ty3A: MyArray['a] as 'a
 //│   where
 //│     'a := MyArray['a]
 
-:e // FIXME (probably the issue reproduced in `ADRsRepro.mls`)
 :stats
 ty3A = ty3A
 //│ 'a
@@ -61,13 +60,9 @@ ty3A = ty3A
 //│ 'a
 //│   where
 //│     'a := MyArray['a]
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.+1: 	ty3A = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ constrain calls  : 49
-//│ annoying  calls  : 23
-//│ subtyping calls  : 131
+//│ constrain calls  : 1
+//│ annoying  calls  : 0
+//│ subtyping calls  : 1
 
 def ty3B: MyArray[MyArray['a]] as 'a
 //│ ty3B: 'a
@@ -83,9 +78,9 @@ ty3B = ty3A
 //│ 'a
 //│   where
 //│     'a := MyArray[MyArray['a]]
-//│ constrain calls  : 61
+//│ constrain calls  : 56
 //│ annoying  calls  : 23
-//│ subtyping calls  : 159
+//│ subtyping calls  : 152
 
 :stats
 ty3A = ty3B
@@ -96,16 +91,15 @@ ty3A = ty3B
 //│ 'a
 //│   where
 //│     'a := MyArray['a]
-//│ constrain calls  : 61
+//│ constrain calls  : 56
 //│ annoying  calls  : 23
-//│ subtyping calls  : 159
+//│ subtyping calls  : 152
 
 def ty4B: MyArray[MyArray[MyArray['a]]] as 'a
 //│ ty4B: 'a
 //│   where
 //│     'a := MyArray[MyArray[MyArray['a]]]
 
-:e // FIXME (probably the issue reproduced in `ADRsRepro.mls`)
 :stats
 ty4B = ty4B
 //│ 'a
@@ -115,13 +109,9 @@ ty4B = ty4B
 //│ 'a
 //│   where
 //│     'a := MyArray[MyArray[MyArray['a]]]
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.+1: 	ty4B = ty4B
-//│ ║        	^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ constrain calls  : 58
-//│ annoying  calls  : 23
-//│ subtyping calls  : 199
+//│ constrain calls  : 1
+//│ annoying  calls  : 0
+//│ subtyping calls  : 1
 
 
 
@@ -139,10 +129,13 @@ ty1A = ty1B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── type `int` does not match type `0 | 1`
 //│ ║  l.17: 	def ty1A: MyArray[int]
-//│ ╙──      	                  ^^^
-//│ constrain calls  : 22
-//│ annoying  calls  : 28
-//│ subtyping calls  : 165
+//│ ║        	                  ^^^
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.18: 	def ty1B: MyArray[0 | 1]
+//│ ╙──      	                  ^^^^^
+//│ constrain calls  : 5
+//│ annoying  calls  : 5
+//│ subtyping calls  : 61
 
 :e
 :stats
@@ -155,10 +148,13 @@ ty1B = ty1A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── type `int` does not match type `0 | 1`
 //│ ║  l.17: 	def ty1A: MyArray[int]
-//│ ╙──      	                  ^^^
-//│ constrain calls  : 20
-//│ annoying  calls  : 28
-//│ subtyping calls  : 166
+//│ ║        	                  ^^^
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.18: 	def ty1B: MyArray[0 | 1]
+//│ ╙──      	                  ^^^^^
+//│ constrain calls  : 5
+//│ annoying  calls  : 5
+//│ subtyping calls  : 51
 
 
 :e
@@ -176,8 +172,8 @@ ty2A = ty2B
 //│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.35: 	def ty2B: MyArray[MyArray['a]]
 //│ ╙──      	                  ^^^^^^^^^^^
-//│ constrain calls  : 30
+//│ constrain calls  : 27
 //│ annoying  calls  : 22
-//│ subtyping calls  : 144
+//│ subtyping calls  : 140
 
 

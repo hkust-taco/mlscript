@@ -119,29 +119,29 @@ rec def find table key =
 
 :ns
 find
-//│ res: forall 'b 'c 'd 'e 'f 'g 'val 'a 'a0 'a1 'h 'i 'j 'k 'l 'a2 'find. 'find
+//│ res: forall 'b 'c 'd 'a 'e 'f 'g 'val 'a0 'h 'a1 'i 'j 'a2 'find 'k 'l. 'find
 //│   where
-//│     'find := 'g -> 'f -> 'l
-//│     'l :> (forall 'm. 'm) | (forall 'n. 'n)
+//│     'find := 'l -> 'h -> 'g
+//│     'g :> (forall 'm. 'm) | (forall 'n. 'n)
 //│        <: 'e
 //│     'e :> (forall 'm. 'm) | (forall 'n. 'n)
-//│        <: 'h
-//│     'h :> (forall 'm. 'm) | (forall 'n. 'n)
+//│        <: 'i
+//│     'i :> (forall 'm. 'm) | (forall 'n. 'n)
+//│        <: 'c
+//│     'c :> (forall 'm. 'm) | (forall 'n. 'n)
 //│        <: 'b
 //│     'b :> (forall 'm. 'm) | (forall 'n. 'n)
-//│        <: 'd
-//│     'd :> (forall 'm. 'm) | (forall 'n. 'n)
-//│        <: 'l
+//│        <: 'g
 //│     'n :> #None
 //│     'm :> #Some & {val: 'val, Some#a = 'a0}
-//│     'f <: 'i
-//│     'g :> List['a2]
-//│        <: List['a2] & List['a] & List['a1]
-//│     'a2 <: 'a1 & 'a
-//│     'a <: {_2: 'k} & {_1: 'c}
-//│     'c <: 'i
-//│     'k <: 'j
-//│     'j <: 'val
+//│     'h <: 'k
+//│     'l :> List['a1]
+//│        <: List['a1] & List['a2] & List['a]
+//│     'a1 <: 'a & 'a2
+//│     'a2 <: {_2: 'f} & {_1: 'j}
+//│     'j <: 'k
+//│     'f <: 'd
+//│     'd <: 'val
 //│     'val <: 'a0
 //│    = [Function: find1]
 
@@ -197,7 +197,7 @@ def add (n: ChurchInt) (m: ChurchInt) = n succ m
 //│    = [Function: add]
 
 def add_ n m = n succ_ m
-//│ add_: ((forall 'a 'b 'c 'd. ('b -> 'c -> 'd) -> ('d -> 'a & 'b) -> 'c -> 'a) -> 'e -> 'f) -> 'e -> 'f
+//│ add_: ((forall 'a 'b 'c 'd. ('a -> 'b -> 'c) -> ('c -> 'd & 'a) -> 'b -> 'd) -> 'e -> 'f) -> 'e -> 'f
 //│     = [Function: add_]
 
 // let printInt (n:Int) = print (n (fun x -> x+1) 0)
@@ -216,7 +216,7 @@ table = hashtbl_add table "one" (fun f -> fun x -> f x)
 table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│ table: List[nothing]
 //│      = Nil {}
-//│ table: List[("one", forall 'a 'b. ('a -> 'b) -> 'a -> 'b,)]
+//│ table: List[("one", forall 'a 'b. ('b -> 'a) -> 'b -> 'a,)]
 //│      = Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
 //│ table: List[("one" | "two", forall 'a 'b 'c. ('a -> 'b & 'b -> 'c & 'a -> 'c) -> 'a -> 'c,)]
 //│      = Cons {
@@ -400,7 +400,7 @@ res id
 case b of
   None -> fun f -> fun x -> x,
   Some -> b.val
-//│ res: ('a -> 'b & 'b -> 'c & 'a -> 'c & 'a -> 'd & 'd -> 'c) -> ('c & 'a) -> 'c
+//│ res: ('a -> 'b & 'b -> 'c & 'a -> 'c) -> ('d & 'a) -> ('d | 'c)
 //│    = [Function (anonymous)]
 
 res id

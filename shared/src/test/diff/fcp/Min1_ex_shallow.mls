@@ -12,7 +12,7 @@ def a1' : ((forall 'a. 'a -> 'a) -> anything) -> nothing
 //│ a1': ((forall 'a. 'a -> 'a) -> anything) -> nothing
 //│    = <missing implementation>
 
-// * Fails due to premature LHS instantiation
+// * Fails due to premature LHS instantiation (TODO improve)
 // :d
 :e
 a1' : A1'

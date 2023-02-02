@@ -1139,9 +1139,9 @@ this_should_be_98_ =
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ this_should_be_98_: string
 //│                   = '98'
-//│ constrain calls  : 913
+//│ constrain calls  : 899
 //│ annoying  calls  : 0
-//│ subtyping calls  : 2904
+//│ subtyping calls  : 2890
 
 // * Decomposing...
 
@@ -1149,9 +1149,9 @@ this_should_be_98_ =
 c_i5_ = c_add_ c_i3_ c_i2_
 //│ c_i5_: (('a | 'b) -> 'a & 'c -> 'b & 'd -> 'c & 'e -> 'd) -> 'e -> 'a
 //│      = [Function (anonymous)]
-//│ constrain calls  : 178
+//│ constrain calls  : 175
 //│ annoying  calls  : 0
-//│ subtyping calls  : 665
+//│ subtyping calls  : 662
 
 :stats
 :e
@@ -1162,26 +1162,26 @@ c_i10_ = c_mul_ c_i5_ c_i2_
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ c_i10_: error
 //│       = [Function (anonymous)]
-//│ constrain calls  : 498
+//│ constrain calls  : 492
 //│ annoying  calls  : 0
-//│ subtyping calls  : 1747
+//│ subtyping calls  : 1741
 :stats
 // * This one works:
 c_i10_ = c_mul c_i5_ c_i2_
 //│ c_i10_: ('a -> ('a & 'a0)) -> 'a -> 'a0 | Fint
 //│       = [Function (anonymous)]
-//│ constrain calls  : 633
+//│ constrain calls  : 631
 //│ annoying  calls  : 0
-//│ subtyping calls  : 4034
+//│ subtyping calls  : 4032
 
 // * Ouchie (cf stats)
 :stats
 c_i9_ = c_pred_ c_i10_
 //│ c_i9_: ('a -> 'b & 'a -> 'c & 'a -> 'd & 'c -> ('b & 'c) & 'd -> 'd) -> (forall 'e. ('a & 'e) -> ('e | 'd | 'b))
 //│      = [Function (anonymous)]
-//│ constrain calls  : 1881
+//│ constrain calls  : 1878
 //│ annoying  calls  : 0
-//│ subtyping calls  : 15319
+//│ subtyping calls  : 15316
 
 :stats
 :e
@@ -1196,17 +1196,17 @@ c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ c_99_: ('a -> anything & 'b -> 'c & 'a -> 'b & 'a -> 'd & 'c -> 'c & 'd -> 'd) -> 'a -> error | error
 //│      = [Function (anonymous)]
-//│ constrain calls  : 2760
+//│ constrain calls  : 2736
 //│ annoying  calls  : 0
-//│ subtyping calls  : 22364
+//│ subtyping calls  : 22340
 :stats
 // * Works again:
 c_99_ = c_add_ (c_mul c_i9_ c_i10_) c_i9_
 //│ c_99_: ('a -> ('a & 'b) & 'a0 -> ('b & 'a0) & 'c -> ('b & 'a & 'a0) & 'd -> ('b & 'a1 & 'a2 & 'e) & 'a1 -> ('a1 & 'b) & 'a2 -> ('b & 'a2) & 'c -> 'd & 'a3 -> ('a3 & 'b) & 'a4 -> ('b & 'a4) & 'c -> ('b & 'a3 & 'a4) & 'c -> 'f & ('a5 | 'c) -> 'a5 & 'e -> ('b & 'a1 & 'a2 & 'e) & 'f -> ('b & 'a3 & 'a4 & 'f)) -> (forall 'g. ('c & 'g) -> ('a5 | 'g | 'b)) | Fint
 //│      = [Function (anonymous)]
-//│ constrain calls  : 2617
+//│ constrain calls  : 2603
 //│ annoying  calls  : 0
-//│ subtyping calls  : 27290
+//│ subtyping calls  : 27276
 
 // * Ouchie++
 :stats
@@ -1214,9 +1214,9 @@ c_99_ = c_add_ (c_mul c_i9_ c_i10_) c_i9_
 c_98_ = c_pred_ c_99_
 //│ c_98_: ('a -> 'b & ('a | 'c) -> 'd & 'a -> 'c & 'a -> 'e & ('a | 'f | 'g) -> 'd & 'a -> 'h & 'a -> 'f & 'i -> ('g & 'j) & 'a -> 'i & 'k -> ('f & 'i) & 'a -> 'k & 'a -> 'l & 'a -> 'j & 'a -> 'g & 'a -> 'd & 'a -> 'm & 'a -> 'n & 'o -> ('m & 'd) & 'a -> 'o & 'p -> ('d & 'o) & 'a -> 'p & 'a -> 'q & 'a -> 'r & 'a -> 's & 'b -> ('b & 'd) & 'c -> 'd & 'e -> ('c & 'e) & ('f | 'g) -> 'd & 'h -> ('f & 'h & 'i) & 'g -> 'd & 'j -> ('g & 'j) & 'l -> ('k & 'l) & 'm -> ('m & 'd) & 'n -> ('d & 'o & 'n) & 'q -> ('p & 'q) & 'r -> ('d & 'r) & 's -> 's) -> (forall 't. ('a & 't) -> ('t | 's | 'd))
 //│      = [Function (anonymous)]
-//│ constrain calls  : 13513
+//│ constrain calls  : 13505
 //│ annoying  calls  : 0
-//│ subtyping calls  : 131317
+//│ subtyping calls  : 131309
 :ResetFuel
 
 

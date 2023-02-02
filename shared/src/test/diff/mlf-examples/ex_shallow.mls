@@ -230,7 +230,7 @@ def a2'_ x =
     let _ = x y church_two in
     y church_succ
   ) a3
-//│ a2'_: ((forall 'a 'b. ('a -> 'b & 'a) -> 'b) -> (forall 'c. 'c -> 'c) -> anything & (forall 'd. ((forall 'e 'f 'g. ('e -> 'f & 'f -> 'g) -> 'e -> 'g) -> 'd) -> anything -> 'd) -> (forall 'h 'i 'j. ('h -> 'i & 'i -> 'j) -> 'h -> 'j) -> anything) -> anything -> ('k -> 'l & 'm -> 'n & 'n -> 'k) -> 'm -> 'l
+//│ a2'_: ((forall 'a 'b. ('a -> 'b & 'a) -> 'b) -> (forall 'c. 'c -> 'c) -> anything & (forall 'd. ((forall 'e 'f 'g. ('e -> 'f & 'f -> 'g) -> 'e -> 'g) -> 'd) -> anything -> 'd) -> (forall 'e 'f 'g. ('e -> 'f & 'f -> 'g) -> 'e -> 'g) -> anything) -> anything -> ('h -> 'i & 'j -> 'k & 'k -> 'h) -> 'j -> 'i
 //│     = [Function: a2$_]
 
 :e // * [FCP-LIM] since polymorphic RHS DNF fix
@@ -308,7 +308,7 @@ def a2_ (x: A1) =
 //│   = [Function: a11]
 //│ a3: 'a -> (forall 'b. (anything -> 'b
 //│   where
-//│     'a <: (forall 'c 'd 'e. ('c -> 'd & 'd -> 'e) -> 'c -> 'e) -> 'b))
+//│     'a <: (forall 'c 'd 'e. ('d -> 'e & 'e -> 'c) -> 'd -> 'c) -> 'b))
 //│   = [Function: a31]
 //│ a2: A1 -> (forall 'a. (anything -> 'a
 //│   where
@@ -322,7 +322,7 @@ def a2_ (x: A1) =
 def a0 = a2 a1
 //│ a0: anything -> 'a
 //│   where
-//│     forall 'b 'c 'd 'e. ('e -> 'b -> 'c) -> ('c -> 'd & 'e) -> 'b -> 'd <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
+//│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
 //│   = [Function: a01]
 
 def a0_ = a2_ a1
@@ -358,7 +358,7 @@ def a2'_ x =
 //│   where
 //│     'd <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'e))) -> (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> anything) -> (forall 'i. (anything -> 'i
 //│   where
-//│     forall 'j 'k 'l 'm. ('k -> 'l -> 'm) -> ('m -> 'j & 'k) -> 'l -> 'j <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'i))
+//│     forall 'j 'k 'l 'm. ('l -> 'm -> 'j) -> ('j -> 'k & 'l) -> 'm -> 'k <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'i))
 //│     = [Function: a2$_1]
 
 :e // * [FCP-LIM] since polymorphic RHS DNF fix
@@ -393,7 +393,7 @@ def a0'_ = a2'_ a1'
 def a0'_ = a2'_ a1'
 //│ a0'_: anything -> 'a
 //│   where
-//│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('h -> 'f & 'f -> 'g) -> 'h -> 'g) -> 'a
+//│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
 //│     = [Function: a0$_3]
 :NoRecursiveTypes
 

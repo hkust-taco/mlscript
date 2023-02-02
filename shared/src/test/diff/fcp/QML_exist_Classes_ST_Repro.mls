@@ -56,9 +56,9 @@ def simpleStepImpl arrImpl = ArraysImpl {
 simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
 //│ res: ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string,)]
 //│    = [Function: simpleStepImpl]
-//│ constrain calls  : 46431
+//│ constrain calls  : 46430
 //│ annoying  calls  : 101
-//│ subtyping calls  : 380825
+//│ subtyping calls  : 380824
 :ResetFuel
 
 // def simpleStepImpl2_ty: Arrays['a] -> ArraysImpl['a, ('_, string)]

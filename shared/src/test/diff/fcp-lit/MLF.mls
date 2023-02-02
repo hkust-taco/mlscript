@@ -138,10 +138,10 @@ res (choose id succ)
 // Didier Le Botlan suggested this fix by email:
 
 let f = choose id in (f auto, f succ)
-//│ res: (forall 'b 'a. (forall 'a0. 'a0 -> 'a0 & 'b) -> ('a -> 'a | 'b), int -> int,)
+//│ res: (forall 'b 'a. (forall 'a0. 'a0 -> 'a0 & 'b) -> ('a -> 'a | 'b), forall 'b. (int & 'b) -> (int | 'b),)
 
 let f = choose id in (f auto2, f succ)
-//│ res: (forall 'a 'b. ('a -> 'b & 'a) -> ('b | 'a), int -> int,)
+//│ res: (forall 'a 'b 'c. ('b -> 'c & 'b & 'a) -> ('c | 'a), forall 'a. (int & 'a) -> (int | 'a),)
 
 // ------------ Sec 6 ------------
 
@@ -219,7 +219,7 @@ fun (x: forall 'a. 'a -> 'b -> 'a) -> x
 //│ res: (forall 'a. 'a -> 'b -> 'a) -> 'a0 -> 'b -> 'a0
 
 fun (x: forall 'b 'a. 'a -> 'b -> 'a) -> x
-//│ res: (forall 'a. 'a -> anything -> 'a) -> 'a0 -> anything -> 'a0
+//│ res: (forall 'a 'b. 'a -> 'b -> 'a) -> (forall 'a 'b. 'a -> 'b -> 'a)
 
 // ============ Leijen 2007 ============
 

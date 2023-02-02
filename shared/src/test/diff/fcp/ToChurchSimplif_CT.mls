@@ -448,7 +448,7 @@ rec def to_ch n =
 //│   where
 //│     'd <: 'a -> 'b -> 'c)
 //│   where
-//│     'd :> forall 'e 'f 'g. 'e -> ('f -> ('f | 'g)
+//│     'd :> forall 'e 'f 'g 'h. 'e -> (('h & 'f) -> ('h | 'g)
 //│   where
 //│     'd <: 'e -> 'f -> 'g)
 //│      = [Function: to_ch7]
@@ -459,12 +459,12 @@ to_church = to_ch
 //│   where
 //│     'd <: 'a -> 'b -> 'c)
 //│   where
-//│     'd :> forall 'e 'f 'g. 'e -> ('f -> ('f | 'g)
+//│     'd :> forall 'e 'f 'g 'h. 'e -> (('h & 'f) -> ('h | 'g)
 //│   where
 //│     'd <: 'e -> 'f -> 'g)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?to_ch ?d. ?to_ch <: int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?to_ch ?c ?d. ?to_ch <: int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)` exceeded recursion depth limit (250)
 //│ ║  l.457: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
@@ -488,12 +488,12 @@ to_church = to_ch
 //│   where
 //│     'd <: 'a -> 'b -> 'c)
 //│   where
-//│     'd :> forall 'e 'f 'g. 'e -> ('f -> ('f | 'g)
+//│     'd :> forall 'e 'f 'g 'h. 'e -> (('h & 'f) -> ('h | 'g)
 //│   where
 //│     'd <: 'e -> 'f -> 'g)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?to_ch ?c ?d. ?to_ch <: int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?to_ch ?a ?b ?c ?d. ?to_ch <: int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)` exceeded recursion depth limit (250)
 //│ ║  l.486: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.

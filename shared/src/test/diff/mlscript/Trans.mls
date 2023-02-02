@@ -34,7 +34,7 @@ a: B
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.33: 	a: B
 //│ ║        	^
-//│ ╟── type `A` is not an instance of type `B`
+//│ ╟── type `A` is not an instance of `B`
 //│ ║  l.24: 	c: A
 //│ ║        	   ^
 //│ ╟── but it flows into reference with expected type `B`
@@ -51,7 +51,7 @@ a: C
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.50: 	a: C
 //│ ║        	^
-//│ ╟── type `A` is not an instance of type `C`
+//│ ╟── type `A` is not an instance of `C`
 //│ ║  l.24: 	c: A
 //│ ║        	   ^
 //│ ╟── but it flows into reference with expected type `C`

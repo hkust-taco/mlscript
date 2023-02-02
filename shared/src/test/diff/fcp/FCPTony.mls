@@ -66,9 +66,9 @@ mul id {}
 //│   TypeError: p is not a function
 
 def fact t = mul t {}
-//│ fact: ((forall 'a 'b. ('b -> 'a
+//│ fact: ((forall 'a 'b. ('a -> 'b
 //│   where
-//│     anything <: 'b -> 'a)) -> (forall 'c. 'c -> 'c) -> 'd) -> 'd
+//│     anything <: 'a -> 'b)) -> (forall 'c. 'c -> 'c) -> 'd) -> 'd
 //│     = [Function: fact]
 
 :e
@@ -125,11 +125,11 @@ def succ n f x = f (n f x)
 
 :ns
 def add n m = n succ m
-//│ add: forall 'a. 'a -> (forall 'b 'c 'd. ('b -> 'd
+//│ add: forall 'a. 'a -> (forall 'b 'c 'd. ('d -> 'c
 //│   where
-//│     'a <: (ChurchInt -> ChurchInt) -> 'c))
+//│     'a <: (ChurchInt -> ChurchInt) -> 'b))
 //│   where
-//│     'c <: 'b -> 'd
+//│     'b <: 'd -> 'c
 //│    = [Function: add]
 
 add
@@ -140,12 +140,12 @@ add
 
 :ns
 def f x y = add x y
-//│ f: forall 'a. 'a -> (forall 'b 'c 'd 'e 'f. ('d -> 'c
+//│ f: forall 'a. 'a -> (forall 'b 'c 'd 'e 'f. ('b -> 'c
 //│   where
-//│     'a <: (ChurchInt -> ChurchInt) -> 'b))
+//│     'a <: (ChurchInt -> ChurchInt) -> 'd))
 //│   where
-//│     'd <: 'e
-//│     'b <: 'e -> 'f
+//│     'b <: 'e
+//│     'd <: 'e -> 'f
 //│     'f <: 'c
 //│  = [Function: f]
 

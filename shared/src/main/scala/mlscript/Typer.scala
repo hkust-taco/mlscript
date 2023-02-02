@@ -475,7 +475,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   
   
   def typeStatement(s: DesugaredStatement, allowPure: Bool)
-        (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType], genLambdas: GenLambdas): PolymorphicType \/ Opt[Binding] = s match {
+        (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType], genLambdas: GenLambdas): ST \/ Opt[Binding] = s match {
     case Def(false, Var("_"), L(rhs), isByname) => typeStatement(rhs, allowPure)
     case Def(isrec, nme, L(rhs), isByname) => // TODO reject R(..)
       if (nme.name === "_")
@@ -505,10 +505,21 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               err.allMsgs)),
             prov = TypeProvenance(t.toLoc, t.describe), ctx)
       }
-      L(PolymorphicType(MinLevel, ty))
+      L(ty)
     case _ =>
       err(msg"Illegal position for this ${s.describe} statement.", s.toLoc)(raise)
       R(N)
+  }
+  
+  /** Like `typeLetRhs` but removes unnecessary polymorphic type wrappers. */
+  def typeLetRhs2(isrec: Boolean, nme: Str, rhs: Term)(implicit ctx: Ctx, raise: Raise): ST = {
+    val res = typeLetRhs(isrec: Boolean, nme: Str, rhs: Term)(ctx, raise, Map.empty, genLambdas = true)
+    def stripPoly(ty: ST): ST = ty match {
+      case pt: PolymorphicType =>
+        PolymorphicType.mk(pt.polymLevel, stripPoly(pt.body))
+      case _ => ty
+    }
+    stripPoly(res)
   }
   
   /** Infer the type of a let binding right-hand side. */

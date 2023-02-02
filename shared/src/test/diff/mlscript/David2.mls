@@ -148,7 +148,7 @@ rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops
 // * We may still want to retain the precise typing of the `value` part:
 
 def mkIntegerPrecise value = Integer { value; addOne = addOne1 }
-//│ mkIntegerPrecise: (int & 'value) -> (Integer with {addOne: forall 'a 'b. ((Integer\value with {addOne: 'a -> 'b}) & 'a) -> 'b, value: 'value})
+//│ mkIntegerPrecise: (int & 'value) -> (Integer with {addOne: forall 'a 'b. ((Integer\value with {addOne: 'b -> 'a}) & 'b) -> 'a, value: 'value})
 //│                 = [Function: mkIntegerPrecise]
 
 def mkIntegerPrecise value = Integer { value; addOne = fun n -> mkInteger (n.value + 1) }

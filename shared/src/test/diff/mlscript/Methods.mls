@@ -15,7 +15,7 @@ Foo.Fun
 Bar.Fun
 //│ res: Foo['A, 'B] -> ('A -> 'B -> 'C) -> 'A -> 'B -> 'C
 //│    = undefined
-//│ res: Bar -> 'a -> 'a
+//│ res: Bar -> (forall 'a. 'a -> 'a)
 //│    = undefined
 
 f = Foo { x = 1; y = 2 }
@@ -294,7 +294,7 @@ Test3A.F
 class Test3A: Test1[forall 'a. 'a -> 'a]
 Test3A.F
 //│ Defined class Test3A
-//│ res: Test3A -> 'a -> 'a
+//│ res: Test3A -> (forall 'a. 'a -> 'a)
 //│    = undefined
 
 :e

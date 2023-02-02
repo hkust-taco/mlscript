@@ -50,12 +50,12 @@ rec def eval1_stub e = case e of {
   | Add -> eval1_stub e.lhs
   | _ -> 0
   }
-//│ eval1_stub: forall 'a 'b 'c 'eval1_stub 'lhs 'd 'e. 'eval1_stub
+//│ eval1_stub: forall 'a 'b 'c 'd 'lhs 'eval1_stub 'e. 'eval1_stub
 //│   where
-//│     'eval1_stub := 'b -> (1 | 'd | 0)
-//│     'd :> 1 | 'd | 0
-//│     'b <: #Lit & 'a | (#Add & 'c | 'e & ~#Add) & ~#Lit
-//│     'c <: {lhs: 'lhs}
+//│     'eval1_stub := 'b -> (1 | 'e | 0)
+//│     'e :> 1 | 'e | 0
+//│     'b <: #Lit & 'c | (#Add & 'd | 'a & ~#Add) & ~#Lit
+//│     'd <: {lhs: 'lhs}
 //│     'lhs <: 'b
 //│           = [Function: eval1_stub2]
 
@@ -82,14 +82,14 @@ rec def eval1 k e = case e of {
 
 :ns
 eval1
-//│ res: forall 'a 'lhs 'b 'c 'd 'rhs 'e 'eval1 'val 'f 'g. 'eval1
+//│ res: forall 'lhs 'rhs 'a 'b 'val 'c 'd 'e 'eval1 'f 'g. 'eval1
 //│   where
-//│     'eval1 := 'f -> 'b -> ('val | 'g | 'd)
-//│     'g := int
-//│     'b <: #Lit & 'a | (#Add & 'e | 'c & ~#Add) & ~#Lit
+//│     'eval1 := 'f -> 'g -> ('val | 'b | 'd)
+//│     'b := int
+//│     'g <: #Lit & 'a | (#Add & 'e | 'c & ~#Add) & ~#Lit
 //│     'e <: {rhs: 'rhs} & {lhs: 'lhs}
-//│     'lhs <: 'b
-//│     'rhs <: 'b
+//│     'lhs <: 'g
+//│     'rhs <: 'g
 //│     'a <: {val: 'val}
 //│     'val <: int
 //│     'f <: 'c -> 'd
@@ -152,9 +152,9 @@ def eval1_ty_ugly = eval1
 //│   where
 //│     'b <: 'a & ~Add[?] & ~Lit | Add['b] | Lit
 //│              = [Function: eval1_ty_ugly]
-//│ constrain calls  : 76
+//│ constrain calls  : 75
 //│ annoying  calls  : 37
-//│ subtyping calls  : 698
+//│ subtyping calls  : 697
 
 :ns
 def eval1_ty: ('a -> int) -> (Lit | Add['b] | 'a & ~lit & ~add as 'b) -> int
@@ -180,9 +180,9 @@ def eval1_ty = eval1
 //│   where
 //│     'b <: 'a & ~#Add & ~#Lit | Add['b] | Lit
 //│         = [Function: eval1_ty]
-//│ constrain calls  : 76
+//│ constrain calls  : 75
 //│ annoying  calls  : 37
-//│ subtyping calls  : 696
+//│ subtyping calls  : 695
 
 :stats
 eval1_ty_ugly = eval1_ty
@@ -194,9 +194,9 @@ eval1_ty_ugly = eval1_ty
 //│   where
 //│     'b <: 'a & ~Add[?] & ~Lit | Add['b] | Lit
 //│              = [Function: eval1]
-//│ constrain calls  : 31
+//│ constrain calls  : 30
 //│ annoying  calls  : 33
-//│ subtyping calls  : 414
+//│ subtyping calls  : 413
 
 :stats
 eval1_ty = eval1_ty_ugly
@@ -208,9 +208,9 @@ eval1_ty = eval1_ty_ugly
 //│   where
 //│     'b <: 'a & ~#Add & ~#Lit | Add['b] | Lit
 //│         = [Function: eval1]
-//│ constrain calls  : 203
+//│ constrain calls  : 202
 //│ annoying  calls  : 529
-//│ subtyping calls  : 4550
+//│ subtyping calls  : 4549
 
 
 // Workaround:
@@ -234,9 +234,9 @@ def eval1_ty = eval1
 //│   <:  eval1_ty:
 //│ ('a -> int) -> E1['a] -> int
 //│         = [Function: eval1_ty2]
-//│ constrain calls  : 74
+//│ constrain calls  : 73
 //│ annoying  calls  : 37
-//│ subtyping calls  : 588
+//│ subtyping calls  : 587
 
 
 :stats
@@ -328,9 +328,9 @@ prettier12 done (eval1 done) e1
 //│    = '123'
 //│ res: string
 //│    = '123'
-//│ constrain calls  : 1326
+//│ constrain calls  : 1315
 //│ annoying  calls  : 500
-//│ subtyping calls  : 13390
+//│ subtyping calls  : 13379
 
 
 e1 = add (lit 1) (add (lit 2) (lit 3))
@@ -411,9 +411,9 @@ rec def prettier22 k ev = prettier12 (fun x -> case x of {
 eval2 done e1
 //│ res: int
 //│    = 6
-//│ constrain calls  : 182
+//│ constrain calls  : 181
 //│ annoying  calls  : 60
-//│ subtyping calls  : 1396
+//│ subtyping calls  : 1395
 
 e2 = add (lit 1) (nega e1)
 //│ e2: Add[Lit & {val: 1} | Nega[Add[Add[Lit & {val: 2 | 3}] & {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}} | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add[Lit & {val: 2 | 3}] & {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}]] with {lhs: Lit & {val: 1}, rhs: Nega[Add[Add[Lit & {val: 2 | 3}] & {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}} | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add[Lit & {val: 2 | 3}] & {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}]}
@@ -426,9 +426,9 @@ e2 = add (lit 1) (nega e1)
 eval2 done e2
 //│ res: int
 //│    = -5
-//│ constrain calls  : 280
+//│ constrain calls  : 279
 //│ annoying  calls  : 103
-//│ subtyping calls  : 2142
+//│ subtyping calls  : 2141
 
 d2 = nega (add (lit 1) (nega (lit 1)))
 //│ d2: Nega[Add[Lit & {val: 1} | Nega[Lit & {val: 1}]] with {lhs: Lit & {val: 1}, rhs: Nega[Lit & {val: 1}]}]
@@ -438,9 +438,9 @@ d2 = nega (add (lit 1) (nega (lit 1)))
 eval2 done d2
 //│ res: int
 //│    = 0
-//│ constrain calls  : 188
+//│ constrain calls  : 187
 //│ annoying  calls  : 71
-//│ subtyping calls  : 1347
+//│ subtyping calls  : 1346
 
 
 prettier2 done
@@ -467,9 +467,9 @@ prettier2 done (eval1 done)
 //│     'c <: Nega[?] & {arg: 'a}
 //│     'b <: Add[?] & {lhs: 'b, rhs: 'b} | Lit
 //│    = [Function (anonymous)]
-//│ constrain calls  : 103
+//│ constrain calls  : 101
 //│ annoying  calls  : 0
-//│ subtyping calls  : 556
+//│ subtyping calls  : 554
 
 
 
@@ -494,9 +494,9 @@ prettier2 done (eval2 done)
 //│     'b <: Add[?] & {lhs: 'b, rhs: 'b} | Lit | 'f & ~#Add & ~#Lit
 //│     'f <: Nega[?] & {arg: 'b}
 //│    = [Function (anonymous)]
-//│ constrain calls  : 121
+//│ constrain calls  : 119
 //│ annoying  calls  : 0
-//│ subtyping calls  : 774
+//│ subtyping calls  : 772
 
 prettier2 done (eval2 done) e2
 prettier2 done (eval2 done) d2
@@ -521,9 +521,9 @@ prettier22 done (eval2 done) d2
 //│    = '1-123'
 //│ res: string
 //│    = '-1'
-//│ constrain calls  : 1204
+//│ constrain calls  : 1198
 //│ annoying  calls  : 390
-//│ subtyping calls  : 10984
+//│ subtyping calls  : 10978
 
 
 
@@ -606,9 +606,9 @@ prettier2 done (eval1 done) e2
 //│ res: error | string
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
-//│ constrain calls  : 716
+//│ constrain calls  : 714
 //│ annoying  calls  : 238
-//│ subtyping calls  : 9195
+//│ subtyping calls  : 9193
 
 :e
 :stats
@@ -635,9 +635,9 @@ prettier2 done eval2
 //│     'a <: Add[?] & {lhs: nothing -> int & 'a, rhs: nothing -> int & 'a} | Lit | 'b & ~#Add & ~#Lit
 //│     'b <: Nega[?] & {arg: 'a}
 //│    = [Function (anonymous)]
-//│ constrain calls  : 80
+//│ constrain calls  : 79
 //│ annoying  calls  : 0
-//│ subtyping calls  : 519
+//│ subtyping calls  : 518
 
 :e
 :stats
@@ -673,9 +673,9 @@ prettier2 done eval2 e1
 //│ ╙──       	                 ^^^^^
 //│ res: error
 //│    = '123'
-//│ constrain calls  : 411
+//│ constrain calls  : 410
 //│ annoying  calls  : 108
-//│ subtyping calls  : 4529
+//│ subtyping calls  : 4528
 
 :e
 :stats
@@ -711,9 +711,9 @@ prettier2 done eval2 e2
 //│ ╙──       	                 ^^^^^
 //│ res: error
 //│    = '1-123'
-//│ constrain calls  : 470
+//│ constrain calls  : 469
 //│ annoying  calls  : 131
-//│ subtyping calls  : 5069
+//│ subtyping calls  : 5068
 
 :e
 :stats
@@ -749,9 +749,9 @@ prettier2 done eval2 d2
 //│ ╙──       	                 ^^^^^
 //│ res: error | string
 //│    = '-1-1'
-//│ constrain calls  : 336
+//│ constrain calls  : 335
 //│ annoying  calls  : 95
-//│ subtyping calls  : 3043
+//│ subtyping calls  : 3042
 
 :e
 :stats
@@ -787,7 +787,7 @@ prettier2 done eval1 e2
 //│ ╙──       	                 ^^^^^
 //│ res: error
 //│    = '1-123'
-//│ constrain calls  : 458
+//│ constrain calls  : 457
 //│ annoying  calls  : 131
-//│ subtyping calls  : 4955
+//│ subtyping calls  : 4954
 

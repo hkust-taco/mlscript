@@ -204,7 +204,7 @@ BadPair = BadPair { x = 42; y = 0 }
 BadPair.Map
 BadPair.(BadPair.Map)
 //│ BadPair: BadPair[42, 0]
-//│ res: BadPair['A, ?] -> ('A -> 'x) -> anything -> BadPair['x, 'x]
+//│ res: BadPair['A, ?] -> (forall 'x. ('A -> 'x) -> anything -> BadPair['x, 'x])
 //│ ╔══[ERROR] Class BadPair has no method BadPair.Map
 //│ ║  l.205: 	BadPair.(BadPair.Map)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^

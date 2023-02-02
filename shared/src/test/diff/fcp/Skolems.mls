@@ -131,7 +131,7 @@ foo (fun x -> foo (fun y -> x) x)
 def oops (i: forall 'a. 'a -> 'a) =
   let _ = (i id) "hello"
   in i
-//│ oops: (forall 'a. 'a -> 'a) -> 'a0 -> 'a0
+//│ oops: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│     = [Function: oops]
 
 // If we were not careful this would lead to unsound skolem extrusion:

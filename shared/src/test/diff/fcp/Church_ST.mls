@@ -311,9 +311,9 @@ succD = s
 z: ChurchInt
 //│ res: ChurchInt
 //│    = [Function: z]
-//│ constrain calls  : 15
+//│ constrain calls  : 14
 //│ annoying  calls  : 0
-//│ subtyping calls  : 27
+//│ subtyping calls  : 26
 
 :e
 :stats
@@ -329,9 +329,9 @@ s: ChurchInt -> ChurchInt
 //│ ╙──     	                        ^^
 //│ res: ChurchInt -> ChurchInt
 //│    = [Function: s]
-//│ constrain calls  : 93
+//│ constrain calls  : 92
 //│ annoying  calls  : 0
-//│ subtyping calls  : 292
+//│ subtyping calls  : 291
 
 
 
@@ -892,17 +892,17 @@ rec def to_chD n =
 z: ChurchInt
 //│ res: ChurchInt
 //│    = [Function: z]
-//│ constrain calls  : 15
+//│ constrain calls  : 14
 //│ annoying  calls  : 0
-//│ subtyping calls  : 27
+//│ subtyping calls  : 26
 
 :stats
 s: ChurchInt -> ChurchInt
 //│ res: ChurchInt -> ChurchInt
 //│    = [Function: s]
-//│ constrain calls  : 79
+//│ constrain calls  : 78
 //│ annoying  calls  : 0
-//│ subtyping calls  : 252
+//│ subtyping calls  : 251
 
 // * Now works
 to_church_ty = to_ch

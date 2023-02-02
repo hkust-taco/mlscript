@@ -63,7 +63,7 @@ d1_ : HTree[Z, int]
 //│    = [Function: d1_]
 
 d2 = DNode { subTree = (d1_, d1_); n = S{} }
-//│ d2: DNode['N, 1] with {n: forall 'P. S['P], subTree: (forall 'a. (DLeaf[1] -> 'a) -> 'a, forall 'b. (DLeaf[1] -> 'b) -> 'b,)}
+//│ d2: DNode['N, 1] with {n: forall 'P. S['P], subTree: (forall 'a. (DLeaf[1] -> 'a) -> 'a, forall 'a. (DLeaf[1] -> 'a) -> 'a,)}
 //│   = DNode { n: S {}, subTree: [ [Function: d1_], [Function: d1_] ] }
 
 def d1_ty: HTree[Z, int]
