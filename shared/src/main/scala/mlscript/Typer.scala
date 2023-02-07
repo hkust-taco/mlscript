@@ -848,15 +848,27 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         nestedCtx.outermostCtx = Some(nestedCtx)
 
         val body_type = typeTerm(body)(nestedCtx, raise, vars)
-        val freeVarList = nestedCtx.outermostFreeVarType.toList
-        val context_type = freeVarList match {
+        val ctx_list = nestedCtx.outermostFreeVarType.toList
+
+        val ctx_type = ctx_list match {
           case Nil => TypeRef(TypeName("anything"), Nil)(NoProv)
-          case _ =>
-            new TypeVariable(lvl, Nil, Nil,
-              nameHint = Some(freeVarList.map(t => t.toString).mkString("&")))(prov)
+          case _ => ctx_list.reduceLeft(_ & _)
         }
 
-        TypeRef(TypeName("Code"), body_type :: context_type :: Nil)(noProv)
+//        val a_ty = typeTerm(a)
+//        val res = freshVar(prov)
+//        val arg_ty = mkProxy(a_ty, tp(a.toCoveringLoc, "argument"))
+//        // ^ Note: this no longer really makes a difference, due to tupled arguments by default
+//        val funProv = tp(f.toCoveringLoc, "applied expression")
+//        val fun_ty = mkProxy(f_ty, funProv)
+//        // ^ This is mostly not useful, except in test Tuples.fun with `(1, true, "hey").2`
+//        val resTy = con(fun_ty, FunctionType(arg_ty, res)(
+//          prov
+//          // funProv // TODO: better?
+//        ), res)
+//        resTy
+
+        TypeRef(TypeName("Code"), body_type :: ctx_type :: Nil)(noProv)
       case Unquoted(body) =>
         val nestedCtx = ctx.parent match {
           case Some(p) => p.copy(
@@ -870,14 +882,22 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val b = TypeRef(TypeName("Code"), Nil)(noProv).<:<(body_type);
         println(b);
         println(body_type.<:<(TypeRef(TypeName("Code"), Nil)(noProv)))
-        body_type match {
-          case TypeRef(TypeName("Code"), return_type :: context_type :: Nil) =>
-            context_type match {
-              case TypeRef(TypeName("nothing"), Nil) => return_type // inline the return type instead of returning Code[T, C]
-              case _ => body_type // free variable found, return Code[T, C]
-            }
-          case _ => err(s"Type mismatch. Required: Code, found: $body_type", body.toLoc)
+
+        val context_type = if (body_type.<:<(TypeRef(TypeName("Code"), Nil)(noProv))) {
+          body_type
+        } else {
+          err(s"Type mismatch. Required: Code, found: $body_type", body.toLoc)
         }
+        context_type
+
+//        body_type match {
+//          case TypeRef(TypeName("Code"), return_type :: context_type :: Nil) =>
+//            context_type match {
+//              case TypeRef(TypeName("nothing"), Nil) => return_type // inline the return type instead of returning Code[T, C]
+//              case _ => body_type // free variable found, return Code[T, C]
+//            }
+//          case _ => err(s"Type mismatch. Required: Code, found: $body_type", body.toLoc)
+//        }
     }
   }(r => s"$lvl. : ${r}")
 
