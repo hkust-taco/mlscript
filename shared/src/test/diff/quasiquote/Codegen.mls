@@ -1,6 +1,47 @@
 :NewParser
 :ge
 
+// Notes for meeting (10 Feb)
+// Free variables in quasiquote definition cause errors unless defined in an unquote 
+
+// Example: free variable quasiquote defined first -> error and cannot be used 
+let fx = code"x+1"
+let q = code"let x = 2; ${fx}" -> code"let x = 2; x + 1"
+//│ ╔══[PARSE ERROR] Expected end of input; found '->' keyword instead
+//│ ║  l.9: 	let q = code"let x = 2; ${fx}" -> code"let x = 2; x + 1"
+//│ ╙──     	                               ^^
+//│ fx: code & {Code#C = anything, Code#T <: int}
+//│ Runtime error:
+//│   ReferenceError: x is not defined
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: [Code[α33',x.type27'34']]
+//│ ║  l.9: 	let q = code"let x = 2; ${fx}" -> code"let x = 2; x + 1"
+//│ ╙──     	                          ^^
+//│ q: code & {Code#C = anything, Code#T <: error}
+//│ Runtime error:
+//│   ReferenceError: fx is not defined
+
+// Example: free variable quasiquote in unquote, and there is a definition in scope -> no problem 
+code"let z = x => ${let c = code"x + 1"; c}; z(3)"
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: [Code[α40',x.type36''41']]
+//│ ║  l.24: 	code"let z = x => ${let c = code"x + 1"; c}; z(3)"
+//│ ╙──      	                            ^^^^^^^^^^^^^^
+//│ res: code & {Code#C = anything, Code#T <: error}
+//│    = [
+//│        'Let',
+//│        Symbol(z),
+//│        [ [Function (anonymous)] ],
+//│        [ 'Fun', [ 'Var', Symbol(z) ], [ [Array] ] ]
+//│      ]
+
+run(res)
+//│ res: error
+//│    = 4
+
+
+
+
+
+
 // Lam  
 let code_lam = code"let lambda = (x) => x; lambda(3)"
 //│ code_lam: code & {Code#C = anything, Code#T <: 3}
