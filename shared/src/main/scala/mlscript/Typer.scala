@@ -852,7 +852,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
 
         val ctx_type = ctx_list match {
           case Nil => TypeRef(TypeName("anything"), Nil)(NoProv)
-          case _ => ctx_list.reduceLeft(_ & _)
+          case _ => ctx_list.reduceLeft(_ | _)
         }
 
 //        val a_ty = typeTerm(a)
@@ -877,18 +877,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case _ => ???
         }
 
+        val tt = freshVar(noProv)(0)
+        val tc = freshVar(noProv)(0)
+        val f_ty = FunctionType(TypeRef(TypeName("Code"), Ls(tt, tc))(noProv), tt)(noProv)
         val body_type = typeTerm(body)(nestedCtx, raise, vars)
-        println("check subtype" + body_type.toString)
-        val b = TypeRef(TypeName("Code"), Nil)(noProv).<:<(body_type);
-        println(b);
-        println(body_type.<:<(TypeRef(TypeName("Code"), Nil)(noProv)))
-
-        val context_type = if (body_type.<:<(TypeRef(TypeName("Code"), Nil)(noProv))) {
-          body_type
-        } else {
-          err(s"Type mismatch. Required: Code, found: $body_type", body.toLoc)
-        }
-        context_type
+        val res = freshVar(prov)
+        val resTy = con(f_ty, FunctionType(body_type, res)(prov), res)
+        resTy
 
 //        body_type match {
 //          case TypeRef(TypeName("Code"), return_type :: context_type :: Nil) =>
