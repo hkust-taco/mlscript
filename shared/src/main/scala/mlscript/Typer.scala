@@ -32,6 +32,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   var irregularTypes: Boolean = false
   var constrainedTypes: Boolean = false
   
+  var newDefs: Bool = false
+  
   var recordProvenances: Boolean = true
   
   type Raise = Diagnostic => Unit
@@ -699,6 +701,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               )
             )
           case VarSymbol(ty, _) => ty
+          case ti: LazyTypeInfo =>
+            // ti.complete() match {
+            //   case cls: TypedNuCls => 
+            //     cls.ctorSignature
+            //   case TypedNuFun(fd, ty) => ???
+            // }
+            ti.typeSignature
         }
         mkProxy(ty, prov)
         // ^ TODO maybe use a description passed in param?
@@ -915,7 +924,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       // case Blk(s :: stmts) =>
       //   val (newCtx, ty) = typeStatement(s)
       //   typeTerm(Blk(stmts))(newCtx, lvl, raise)
-      case Blk(stmts) => typeTerms(stmts, false, Nil)(ctx.nest, raise, prov, vars, genLambdas)
+      case Blk(stmts) =>
+        if (newDefs) {
+          val ttu = typeTypingUnit(TypingUnit(stmts), allowPure = false)
+          // TODO check unused defs
+          // ttu.res
+          ttu.result.getOrElse(UnitType)
+        } else typeTerms(stmts, false, Nil)(ctx.nest, raise, prov, vars, genLambdas)
       case Bind(l, r) =>
         val l_ty = typeMonomorphicTerm(l)
         val newCtx = ctx.nest // so the pattern's context don't merge with the outer context!

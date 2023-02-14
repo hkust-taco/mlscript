@@ -249,6 +249,7 @@ object NewLexer {
     "mut",
     "class",
     "trait",
+    "mixin",
     "interface",
     "new",
     "namespace",

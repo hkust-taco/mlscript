@@ -43,16 +43,19 @@ final case class MethodDef[RHS <: Term \/ Type](
   val children: Ls[Located] = nme :: body :: Nil
 }
 
+sealed trait NameRef extends Located { val name: Str }
+
 sealed abstract class TypeDefKind(val str: Str)
 sealed trait ObjDefKind
 case object Cls extends TypeDefKind("class") with ObjDefKind
 case object Trt extends TypeDefKind("trait") with ObjDefKind
+case object Mxn extends TypeDefKind("mixin")
 case object Als extends TypeDefKind("type alias")
 case object Nms extends TypeDefKind("namespace")
 
 sealed abstract class Term                                           extends Terms with TermImpl
 sealed abstract class Lit                                            extends SimpleTerm with LitImpl
-final case class Var(name: Str)                                      extends SimpleTerm with VarImpl
+final case class Var(name: Str)                                      extends SimpleTerm with VarImpl with NameRef
 final case class Lam(lhs: Term, rhs: Term)                           extends Term
 final case class App(lhs: Term, rhs: Term)                           extends Term
 final case class Tup(fields: Ls[Opt[Var] -> Fld])                    extends Term
@@ -145,7 +148,7 @@ case object Bot                                          extends NullaryType
 final case class Literal(lit: Lit)                       extends NullaryType
 
 /** Reference to an existing type with the given name. */
-final case class TypeName(name: Str)                     extends NullaryType with NamedType with TypeNameImpl
+final case class TypeName(name: Str)                     extends NullaryType with NamedType with TypeNameImpl with NameRef
 final case class TypeTag (name: Str)                     extends NullaryType
 
 final case class TypeVar(val identifier: Int \/ Str, nameHint: Opt[Str]) extends NullaryType with TypeVarImpl {

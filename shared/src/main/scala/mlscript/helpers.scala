@@ -300,6 +300,10 @@ trait DeclImpl extends Located { self: Decl =>
 
 trait NuDeclImpl extends Located { self: NuDecl =>
   val body: Located
+  val name: Str = self match {
+    case td: NuTypeDef => td.nme.name
+    case fd: NuFunDef => fd.nme.name
+  }
   def showBody: Str = this match {
     case NuFunDef(_, _, _, rhs) => rhs.fold(_.toString, _.show)
     case td: NuTypeDef => td.body.show
@@ -753,10 +757,10 @@ trait StatementImpl extends Located { self: Statement =>
     case d @ NuFunDef(_, v, ts, rhs) => v :: ts ::: d.body :: Nil
     case TyApp(lhs, targs) => lhs :: targs
     case New(base, bod) => base.toList.flatMap(ab => ab._1 :: ab._2 :: Nil) ::: bod :: Nil
-    case NuTypeDef(_, _, _, _, _, _) => ???
     case Where(bod, wh) => bod :: wh
     case Forall(ps, bod) => ps ::: bod :: Nil
     case Inst(bod) => bod :: Nil
+    case NuTypeDef(k, nme, tps, ps, pars, bod) => nme :: tps ::: ps :: pars ::: bod :: Nil
   }
   
   

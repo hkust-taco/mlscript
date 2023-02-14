@@ -23,12 +23,96 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   type TP = TypeProvenance
   
   sealed abstract class TypeInfo
-
+  
   /** A type for abstract classes that is used to check and throw
    * errors if the abstract class is being instantiated */
   case class AbstractConstructor(absMths: Set[Var], isTraitWithMethods: Bool) extends TypeInfo
   
   case class VarSymbol(ty: ST, definingVar: Var) extends TypeInfo
+  
+  class LazyTypeInfo(val level: Int, val decl: NuDecl)(implicit ctx: Ctx) extends TypeInfo {
+  // class LazyTypeInfo[A](level: Int, decl: NuDecl) extends TypeInfo {
+    var isComputing: Bool = false
+    var result: Opt[TypedNuTermDef] = N
+    // var result: Opt[A] = N
+    val tv: TV = freshVar(
+      TypeProvenance(decl.toLoc, decl.describe, S(decl.name), decl.isInstanceOf[NuTypeDef]),
+      N,
+      S(decl.name))(level)
+    def complete()(implicit raise: Raise): TypedNuTermDef = result.getOrElse {
+      if (isComputing) lastWords(s"TODO cyclic defn")
+      else {
+        isComputing = true
+        // var res: ST = errType
+        try {
+          // res = 
+          decl match {
+            case fd: NuFunDef =>
+              assert(fd.isLetRec.isEmpty)
+              implicit val prov = noProv // TODO
+              val res_ty = fd.rhs match {
+                case R(PolyType(tps, ty)) =>
+                  // val body_ty = typeType(ty)(ctx.nextLevel, raise,
+                  //   vars = tps.map(tp => tp.name -> freshVar(noProv/*FIXME*/, N)(1)).toMap)
+                  val body_ty = ctx.nextLevel { implicit ctx: Ctx =>
+                    typeType(ty)(ctx, raise,
+                    vars = tps.map(tp => tp.asInstanceOf[L[TN]].value.name -> freshVar(noProv/*FIXME*/, N)(1)).toMap)
+                  }
+                  // TODO check against `tv`
+                  TypedNuFun(fd, PolymorphicType(ctx.lvl, body_ty))
+                case L(body) =>
+                  implicit val vars: Map[Str, SimpleType] = Map.empty
+                  implicit val gl: GenLambdas = true
+                  val body_ty = typeLetRhs(isrec = true, fd.nme.name, body)
+                  // implicit val prov: TP = noProv // TODO
+                  // subsume(body_ty, PolymorphicType(level, tv)) // TODO
+                  TypedNuFun(fd, body_ty)
+              }
+              // subsume(res_ty, tv)
+              res_ty
+            case td: NuTypeDef =>
+              td.kind match {
+                case Cls =>
+                  val ttu = typeTypingUnit(td.body, allowPure = false)
+                  // TODO check against `tv`
+                  TypedNuCls(td, ttu)
+                case Mxn =>
+                  implicit val prov = noProv // TODO
+                  ctx.nextLevel { newCtx =>
+                    val thisTV = freshVar(noProv/*FIXME*/, N, S("this"))
+                    val superTV = freshVar(noProv/*FIXME*/, N, S("super"))
+                    newCtx += "this" -> VarSymbol(thisTV, Var("this"))
+                    newCtx += "super" -> VarSymbol(superTV, Var("super"))
+                    newCtx |> { implicit ctx =>
+                      val ttu = typeTypingUnit(td.body, allowPure = false)
+                      TypedNuMxn(td, thisTV, superTV, ttu)
+                    }
+                  }
+                case _ => ???
+              }
+          }
+          
+        // } finally { result = S(res); isComputing = false }
+        } finally { /* result = S(res); */ isComputing = false }
+      }
+    }
+    def typeSignature(implicit raise: Raise): ST = if (isComputing) tv else complete() match {
+      case cls: TypedNuCls =>
+        // ???
+        // TODO
+        errType
+      case TypedNuFun(fd, ty) => ???
+    }
+    override def toString: String =
+      s"${decl.name} ~> ${if (isComputing) "<computing>" else result.fold("<uncomputed>")(_.toString)}"
+  }
+  
+  // /** A type that potentially contains universally quantified type variables,
+  //   * and which can be isntantiated to a given level. */
+  // sealed abstract class TypeScheme {
+  //   def uninstantiatedBody: SimpleType
+  //   def instantiate(implicit lvl: Int): SimpleType
+  // }
   
   /** A type with universally quantified type variables
     * (by convention, those variables of level greater than `level` are considered quantified). */

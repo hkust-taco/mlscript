@@ -180,6 +180,8 @@ class DiffTests
     var generalizeArguments = false
     var newParser = basePath.headOption.contains("parser") || basePath.headOption.contains("compiler")
     
+    var newDefs = false
+    
     val backend = new JSTestBackend()
     val host = ReplHost()
     val codeGenTestHelpers = new CodeGenTestHelpers(file, output)
@@ -211,6 +213,7 @@ class DiffTests
           case "AllowRuntimeErrors" => allowRuntimeErrors = true; mode
           case "ShowRelativeLineNums" => showRelativeLineNums = true; mode
           case "NewParser" => newParser = true; mode
+          case "NewDefs" => newDefs = true; mode
           case "NoJS" => noJavaScript = true; mode
           case "NoProvs" => noProvs = true; mode
           case "GeneralizeCurriedFunctions" => generalizeCurriedFunctions = true; mode
@@ -391,7 +394,7 @@ class DiffTests
         
         // try to parse block of text into mlscript ast
         val ans = try {
-          if (newParser || basePath.headOption.contains("compiler")) {
+          if (newParser) {
             
             val origin = Origin(testName, globalStartLineNum, fph)
             val lexer = new NewLexer(origin, raise, dbg = mode.dbgParsing)
@@ -441,6 +444,7 @@ class DiffTests
             if (mode.stats) typer.resetStats()
             typer.dbg = mode.dbg
             typer.dbgUCS = mode.dbgUCS
+            typer.newDefs = newDefs
             // typer.recordProvenances = !noProvs
             typer.recordProvenances = !noProvs && !mode.dbg && !mode.dbgSimplif || mode.explainErrors
             typer.generalizeCurriedFunctions = generalizeCurriedFunctions
@@ -456,22 +460,7 @@ class DiffTests
             stdout = mode.stdout
             typer.preciselyTypeRecursion = mode.preciselyTypeRecursion
             
-            val (diags, (typeDefs, stmts)) = p.desugared
-            report(diags)
-            
-            if (mode.showParse) {
-              typeDefs.foreach(td => output("Desugared: " + td))
-              stmts.foreach { s =>
-                output("Desugared: " + s)
-                output("AST: " + mlscript.codegen.Helpers.inspect(s))
-              }
-            }
-            
             val oldCtx = ctx
-            ctx = 
-              // if (newParser) typer.typeTypingUnit(tu)
-              // else 
-              typer.processTypeDefs(typeDefs)(ctx, raise)
             
             def getType(ty: typer.SimpleType): Type = {
               if (mode.isDebugging) output(s"⬤ Typed as: $ty")
@@ -499,6 +488,60 @@ class DiffTests
                 }
               }
             }
+            
+            val (typeDefs, stmts) = if (newDefs) {
+              
+              val tpd = typer.typeTypingUnit(TypingUnit(p.tops), allowPure = true)(ctx, raise)
+              
+              def showTTU(ttu: typer.TypedTypingUnit, ind: Int): Unit = {
+                val indStr = "  " * ind
+                ttu.entities.foreach {
+                  case tc: typer.TypedNuCls =>
+                    output(s"${indStr}class ${tc.name}")
+                  case tm: typer.TypedNuMxn =>
+                    output(s"${indStr}mixin ${tm.name}")
+                    output(s"${indStr}  this: ${tm.thisTV} ${tm.thisTV.showBounds}")
+                    output(s"${indStr}  super: ${tm.superTV} ${tm.superTV.showBounds}")
+                    // tm.ttu.entities.foreach { }
+                    showTTU(tm.ttu, ind + 1)
+                  case tf: typer.TypedNuFun =>
+                    val exp = getType(tf.ty)
+                    output(s"${indStr}fun ${tf.name}: ${exp.show}")
+                    output(s"${indStr}(fun) ${tf.name}: ${tf.ty} ${tf.ty.body.showBounds}")
+                }
+              }
+              showTTU(tpd, 0)
+              
+              // val exp = getType(typer.PolymorphicType(0, res_ty))
+              // output(s"Typed: ${exp}")
+              tpd.result.foreach { res_ty => 
+                val exp = getType(typer.PolymorphicType(0, res_ty))
+                output(s"Typed: ${exp.show}")
+              }
+              
+              (Nil, Nil)
+              
+            } else {
+              
+              val (diags, (typeDefs, stmts)) = p.desugared
+              report(diags)
+              
+              if (mode.showParse) {
+                typeDefs.foreach(td => output("Desugared: " + td))
+                stmts.foreach { s =>
+                  output("Desugared: " + s)
+                  output("AST: " + mlscript.codegen.Helpers.inspect(s))
+                }
+              }
+              
+              ctx = 
+                // if (newParser) typer.typeTypingUnit(tu)
+                // else 
+                typer.processTypeDefs(typeDefs)(ctx, raise)
+              
+              (typeDefs, stmts)
+            }
+            
             // initialize ts typegen code builder and
             // declare all type definitions for current block
             val tsTypegenCodeBuilder = new TsTypegenCodeBuilder()

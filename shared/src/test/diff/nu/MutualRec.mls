@@ -1,0 +1,45 @@
+:NewParser
+:NewDefs
+
+
+class Foo()
+123
+//│ class Foo
+//│ Typed: 123
+
+Foo
+//│ Typed: error
+
+fun fooo(x) =
+  class C(y, z)
+  C(0, x)
+//│ fun fooo: anything -> error
+//│ (fun) fooo: ‹∀ 0. fooo28'#› 
+//│ 		fooo28'# := (α29' -> α31')
+//│ 		α31' :> error<>
+//│ Code generation encountered an error:
+//│   unsupported definitions in blocks
+
+
+:ns
+mixin Foo {
+  fun test(x) = super.x + 1
+}
+//│ mixin Foo
+//│   this: this51 
+//│   super: super52 
+//│ 		super52 <: {x: x62_63} & {x: x56_57}
+//│ 		x56_57 <: int<number>
+//│ 		x62_63 <: int<number>
+//│   fun test: forall 'a 'test 'b. 'test
+//│   where
+//│     'test := 'b -> 'a
+//│     'a :> int
+//│   (fun) test: ‹∀ 1. test60''#› 
+//│ 		test60''# := (α61'' -> α65'')
+//│ 		α65'' :> int<number>
+//│ Code generation crashed:
+//│   scala.MatchError: mixin Foo() {fun test = (x,) => + ((super).x,) (1,)} (of class mlscript.NuTypeDef)
+
+
+
