@@ -773,18 +773,15 @@ trait TypeSimplifier { self: Typer =>
     val semp = Set.empty[TV]
     
     def mergeTransform(pol: Bool, polmap: PolMap, tv: TV, parents: Set[TV], canDistribForall: Opt[Level]): ST =
-      // transform(merge(pol, if (pol) tv.lowerBounds else tv.upperBounds), S(pol), parents)
       transform(tv.assignedTo match {
         case S(ty) => ty
-        case N => merge(pol,if (pol) tv.lowerBounds else tv.upperBounds)
-      // }, PolMap(S(pol)), parents)
+        case N => merge(pol, if (pol) tv.lowerBounds else tv.upperBounds)
       }, polmap.at(tv.level, pol), parents, canDistribForall)
     
     def transform(st: SimpleType, pol: PolMap, parents: Set[TV], canDistribForall: Opt[Level] = N): SimpleType =
           trace(s"transform[${printPol(pol)}] $st   (${parents.mkString(", ")})  $pol  $canDistribForall") {
         def transformField(f: FieldType): FieldType = f match {
           case FieldType(S(lb), ub) if lb === ub =>
-            // val b = transform(ub, PolMap.neu, semp)
             val b = transform(ub, pol.invar, semp)
             FieldType(S(b), b)(f.prov)
           case _ => f.update(transform(_, pol.contravar, semp), transform(_, pol, semp))
@@ -800,7 +797,6 @@ trait TypeSimplifier { self: Typer =>
         FunctionType(transform(l, pol.contravar, semp),
           transform(r, pol, semp, canDistribForall))(st.prov)
       case ot @ Overload(as) =>
-        // ot.mapAltsPol(pol.base)((p, t) => transform(t, PolMap(p), parents)) // * Q: PolMap(p) correct?
         ot.mapAltsPol(pol)((p, t) => transform(t, p, parents, canDistribForall))
       case _: TypeTag | ExtrType(_) => st
       case tv: TypeVariable if parents.exists(_ === tv) =>
@@ -811,8 +807,6 @@ trait TypeSimplifier { self: Typer =>
             println(s"-> $tv2")
             transform(tv2, pol, parents + tv, canDistribForall)
           case S(N) =>
-            // println(s"-> bound")
-            // println(s"-> bound ${pol}")
             println(s"-> bound ${pol(tv)}")
             pol(tv).fold {
               // TypeBounds.mk(mergeTransform(true, tv, parents + tv), mergeTransform(false, tv, parents + tv)) // FIXME polarities seem inverted
@@ -826,9 +820,7 @@ trait TypeSimplifier { self: Typer =>
                     mergeTransform(false, pol, tv, parents + tv, canDistribForall))
                 case N => ???
               }
-              // ???
             }(mergeTransform(_, pol, tv, parents + tv, canDistribForall))
-            // ){p => println(p); mergeTransform(p, pol, tv, parents + tv)}
           case N =>
             var wasDefined = true
             val res = renewals.getOrElseUpdate(tv, {
@@ -850,8 +842,6 @@ trait TypeSimplifier { self: Typer =>
                       case S(ty) =>
                         res.assignedTo = S(transform(ty, PolMap.neu, semp, canDistribForall))
                       case N =>
-                        // res.lowerBounds = tv.lowerBounds.map(transform(_, PolMap.pos, Set.single(tv)))
-                        // res.upperBounds = tv.upperBounds.map(transform(_, PolMap.neg, Set.single(tv)))
                         res.lowerBounds = tv.lowerBounds.map(transform(_, pol.at(tv.level, true), Set.single(tv)))
                         res.upperBounds = tv.upperBounds.map(transform(_, pol.at(tv.level, false), Set.single(tv)))
                     }
@@ -876,7 +866,6 @@ trait TypeSimplifier { self: Typer =>
                     }) {
                       println(s"NEW SUBS $tv -> N")
                       varSubst += tv -> N
-                      // transform(merge(p, bounds), PolMap(polo), parents)
                       transform(merge(p, bounds), pol, parents + tv, canDistribForall)
                     }
                     else setBounds
@@ -907,8 +896,6 @@ trait TypeSimplifier { self: Typer =>
         ))(pol =>
           if (pol) transform(ub, PolMap.pos, parents) else transform(lb, PolMap.neg, parents))
       case PolymorphicType(plvl, bod) =>
-        // PolymorphicType.mk(plvl, transform(bod, pol.enter(plvl), parents)) // FIXME? parent or None?
-        
         val res = transform(bod, pol.enter(plvl), parents, canDistribForall = S(plvl))
         canDistribForall match {
           case S(outerLvl) if distributeForalls =>
@@ -919,17 +906,9 @@ trait TypeSimplifier { self: Typer =>
           case _ =>
             PolymorphicType.mk(plvl, res)
         }
-        
       case ConstrainedType(cs, bod) =>
         ConstrainedType(
-          // cs.map { case (tv, bs) =>
-          //   (transform(tv, N, semp) match {
-          //     case tv: TV => tv
-          //     case other => lastWords(s"not supposed to transform a constrained variable into a non-variable: $other")
-          //   }) -> bs.map { case (p, b) => p -> transform(b, S(p), semp) }
-          // },
           cs.map { case (lo, hi) =>
-            // (transform(lo, PolMap.pos, semp), transform(hi, PolMap.neg, semp))
             (transform(lo, PolMap.pos, semp), transform(hi, PolMap.posAtNeg, semp))
           },
           transform(bod, pol, parents)
@@ -969,12 +948,14 @@ trait TypeSimplifier { self: Typer =>
     
     println(s"consed: $consed")
     
+    // * Q: shouldn't this use a PolMap instead?
+    // * It should actually be sound not to, though, as the handling is symmetric...
     def process(pol: Opt[Bool], st: ST, parent: Opt[TV]): ST =
         // trace(s"cons[${printPol(pol)}] $st") {
           st.unwrapProvs match {
       case tv @ AssignedVariable(ty) =>
         processed.setAndIfUnset(tv) {
-          tv.assignedTo = S(process(N, ty, S(tv))) // TODO polarity?
+          tv.assignedTo = S(process(pol, ty, S(tv)))
         }
         tv
       case tv: TV =>

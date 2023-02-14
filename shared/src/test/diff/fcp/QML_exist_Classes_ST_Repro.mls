@@ -42,9 +42,9 @@ def simpleStepImpl arrImpl = ArraysImpl {
     update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.Update r0 i a, "updated");
     fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.Fold f b r0
   }
-//│ simpleStepImpl: ArraysRep[in 'A | 'A0 | 'A1 | 'A2 & 'A3 out 'A0 & 'A2, in 'Rep | 'Rep0 out 'Rep1 & ('Rep2 | 'Rep3)] -> (ArraysImpl['A3, 'Rep4] with {fold: forall 'b. ('A2 -> 'b -> 'b) -> 'b -> ('Rep0, anything,) -> 'b, init: 'A -> ('Rep1, "initialized",), sub: ('Rep, anything,) -> int -> 'A0, update: forall 'a. ('Rep3 & 'a, anything,) -> int -> 'A1 -> ('Rep2 | 'a, "updated",)})
+//│ simpleStepImpl: ArraysRep[in 'A | 'A0 | 'A1 | 'A2 & 'A3 out 'A0 & 'A2, in 'Rep | 'Rep0 out nothing] -> (ArraysImpl['A3, 'Rep1] with {fold: forall 'b. ('A2 -> 'b -> 'b) -> 'b -> ('Rep0, anything,) -> 'b, init: 'A -> (nothing, "initialized",), sub: ('Rep, anything,) -> int -> 'A0, update: forall 'a. ('Rep2 & 'a, anything,) -> int -> 'A1 -> ('a, "updated",)})
 //│   where
-//│     'Rep4 :> ('Rep1 | 'Rep2, "initialized" | "updated",)
+//│     'Rep1 :> (nothing, "initialized" | "updated",)
 //│           <: (nothing, anything,)
 //│     'A3 :> 'A0
 //│         <: nothing
@@ -55,7 +55,7 @@ def simpleStepImpl arrImpl = ArraysImpl {
 // * Something off is going on here (see stats)
 :stats
 simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?A ?Rep ?Rep0 ?c ?d ?Rep1 ?A0 ?e ?Rep2 ?Rep3 ?f ?A1 ?A2 ?Rep4 ?Rep5 ?g ?Rep6 ?h ?Rep7 ?Rep8 ?sub ?Rep9 ?i ?init ?A3 ?A4 ?A5 ?j ?A6 ?A7 ?update ?A8 ?Rep10 ?k ?fold ?A9. ?c -> ?a <: ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string,)]` took too many steps and ran out of fuel (5000)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?A ?a ?Rep ?A0 ?A1 ?fold ?Rep0 ?b ?A2 ?c ?d ?Rep1 ?init ?Rep2 ?Rep3 ?A3 ?e ?f ?update ?A4 ?Rep4 ?g ?A5 ?Rep5 ?Rep6 ?Rep7 ?A6 ?A7 ?h ?sub ?Rep8 ?Rep9 ?Rep10 ?A8 ?i ?j ?k ?A9. ?k -> ?c <: ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string,)]` took too many steps and ran out of fuel (5000)
 //│ ║  l.57: 	simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
