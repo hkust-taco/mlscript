@@ -175,6 +175,10 @@ package object utils {
     }
   }
   
+  implicit class MutSetObjectHelpers(self: mutable.Set.type) {
+    def single[A](a: A): mutable.Set[A] = mutable.Set.empty[A] += a
+  }
+  
   implicit class SetObjectHelpers(self: Set.type) {
     def single[A](a: A): Set[A] = (Set.newBuilder[A] += a).result()
   }

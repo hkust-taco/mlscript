@@ -219,7 +219,7 @@ fun (x: forall 'a. 'a -> 'b -> 'a) -> x
 //│ res: (forall 'a. 'a -> 'b -> 'a) -> 'a0 -> 'b -> 'a0
 
 fun (x: forall 'b 'a. 'a -> 'b -> 'a) -> x
-//│ res: (forall 'a 'b. 'a -> 'b -> 'a) -> (forall 'a 'b. 'a -> 'b -> 'a)
+//│ res: (forall 'a. 'a -> anything -> 'a) -> (forall 'a. 'a -> anything -> 'a)
 
 // ============ Leijen 2007 ============
 

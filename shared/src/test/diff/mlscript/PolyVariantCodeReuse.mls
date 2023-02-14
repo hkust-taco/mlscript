@@ -406,7 +406,7 @@ rec def eval4 subst = eval_lexpr' eval4 subst
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ eval4: (List[?] & 'a) -> 'b -> 'result
 //│   where
-//│     'b <: Abs[?] | Add[?] & {lhs: 'b, rhs: 'b} | App[?] | Mul[?] & {lhs: 'b, rhs: 'b} | Num | Var
+//│     'b <: Abs[?] | Add[?] & {lhs: 'b, rhs: 'b} | App[?] | Mul[?] & {lhs: 'b, rhs: 'b} | Num & 'result | Var
 //│     'a <: (Cons[?] with {head: {_1: string, _2: 'result & (Num | ~#Num)}, tail: 'a}) | Nil
 //│     'result :> Mul['result] | Add['result] | Abs[nothing] | App[nothing] | Num | Var
 //│      = <no result>

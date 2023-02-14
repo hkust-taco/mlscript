@@ -923,7 +923,7 @@ abstract class TyperHelpers { Typer: Typer =>
     }
   }
   object Traverser2 {
-    trait InvariantFields extends Traverser2 {
+    trait InvariantFields extends Traverser2 { // FIXME rm? `PolMap.neu` seems wrong!
       override def applyField(pol: PolMap)(fld: FieldType): Unit =
         if (fld.lb.exists(_ === fld.ub)) apply(PolMap.neu)(fld.ub)
         else super.applyField(pol)(fld)

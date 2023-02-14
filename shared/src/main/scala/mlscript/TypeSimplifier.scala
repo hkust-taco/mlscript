@@ -5,6 +5,7 @@ import scala.collection.immutable.{SortedMap, SortedSet}
 import scala.util.chaining._
 import mlscript.utils._, shorthands._
 
+
 trait TypeSimplifier { self: Typer =>
   
   
@@ -12,7 +13,7 @@ trait TypeSimplifier { self: Typer =>
     pols.iterator.map(e => s"${printPol(e._2)}${e._1}").mkString(", ")
   
   
-  /** Remove bounds that are not reachable by traversing the type, following variances.
+  /** Remove bounds that are not reachable by traversing the type following variances.
     * Note that doing this on annotated type signatures would need to use polarity None
     *   because a type signature can both be used (positively) and checked against (negatively). */
   def removeIrrelevantBounds(ty: SimpleType, pol: Opt[Bool] = S(true), inPlace: Bool = false)
@@ -20,11 +21,8 @@ trait TypeSimplifier { self: Typer =>
   {
     val _ctx = ctx
     
-    // val pols = ty.getVarsPol(S(true))
     val allVarPols = ty.getVarsPol(PolMap(pol))
     println(s"allVarPols: ${printPols(allVarPols)}")
-    
-    // println(s"Pols ${pols}")
     
     val renewed = MutMap.empty[TypeVariable, TypeVariable]
     
@@ -116,22 +114,12 @@ trait TypeSimplifier { self: Typer =>
             PolymorphicType.mk(plvl, res)
         }
       
-      // case ConstrainedType(cs, body) =>
-      //   val rw 
-      
       case ft @ FunctionType(l, r) =>
         FunctionType(process(l, N), process(r, N, canDistribForall = canDistribForall))(ft.prov)
       
-      // case _ => ty.mapPol(N)((_, ty) => process(ty, N))
       case _ =>
         
-        val rw = ty match {
-          // case ConstrainedType(cs, body) =>
-          //   ConstrainedType(cs.map(_.mapFirst(renew)), body)
-          case _ => ty
-        }
-        
-        rw.mapPol(N, smart = true)((_, ty) => process(ty, N))
+        ty.mapPol(N, smart = true)((_, ty) => process(ty, N))
       
     }
     // }(r => s"= $r")
@@ -306,7 +294,6 @@ trait TypeSimplifier { self: Typer =>
                         canDistribForall.orElse(Option.when(dnf.isPolymorphic)(dnf.polymLevel)))
                     )(ft.prov)) -> nFields
                   case S(ot @ Overload(alts)) =>
-                    // S(Overload(alts.map(go(_, pol).asInstanceOf[FunctionType]))(noProv)) -> nFields
                     S(ot.mapAltsPol(pol)((p, t) => go(t, p))) -> nFields
                   case S(at @ ArrayType(inner)) =>
                     S(ArrayType(inner.update(go(_, pol.map(!_)), go(_, pol)))(at.prov)) -> nFields
@@ -337,9 +324,6 @@ trait TypeSimplifier { self: Typer =>
         }, sort = true)
       }.foldLeft(BotType: ST)(_ | _) |> factorize(ctx)
       val res = otherCs2 | csNegs2
-      // val cons = dnf.cons.map(_.mapSecond(_.map{case(p,b)=>p->go(b,S(p))})
-      //   // .mapFirst(v => renew(v))
-      //   )
       val cons = dnf.cons.map { case (lo,hi) => (go(lo,S(true)), go(hi,S(false))) }
       val base = ConstrainedType.mk(cons, res)
       canDistribForall match {
@@ -390,7 +374,6 @@ trait TypeSimplifier { self: Typer =>
     
     val occNums: MutMap[(Bool, TypeVariable), Int] = LinkedHashMap.empty[(Bool, TypeVariable), Int].withDefaultValue(0)
     val occursInvariantly = MutSet.empty[TV]
-    // val constrainedVars = MutSet.empty[TV] // TODO rm
     
     val analyzed1 = MutSet.empty[PolarVariable]
     
@@ -409,17 +392,8 @@ trait TypeSimplifier { self: Typer =>
                 occNums(true -> tv) += 1
                 occNums(false -> tv) += 1
             }
-            // if (pol.isEmpty) occursInvariantly += tv
-            // pol.fold {
-            //   occNums(true -> tv) += 1
-            //   occNums(false -> tv) += 1
-            // }{ pol => occNums(pol -> tv) += 1 }
             tv.assignedTo match {
               case S(ty) =>
-                // if (pol.base =/= S(false))
-                //   analyzed1.setAndIfUnset(tv -> true) { apply(PolMap.pos)(ty) }
-                // if (pol.base =/= S(true))
-                //   analyzed1.setAndIfUnset(tv -> false) { apply(PolMap.neg)(ty) }
                 if (pol.base =/= S(false))
                   analyzed1.setAndIfUnset(tv -> true) { apply(pol)(ty) }
                 if (pol.base =/= S(true))
@@ -428,21 +402,11 @@ trait TypeSimplifier { self: Typer =>
                 // *  but it currently leads to a couple worse-looking simplified types:
                 // analyzed1.setAndIfUnset(tv -> true) { apply(pol)(ty) }
               case N =>
-                // if (pol(tv) =/= S(false))
-                //   analyzed1.setAndIfUnset(tv -> true) { tv.lowerBounds.foreach(apply(PolMap.pos)) }
-                // if (pol(tv) =/= S(true))
-                //   analyzed1.setAndIfUnset(tv -> false) { tv.upperBounds.foreach(apply(PolMap.neg)) }
                 if (pol(tv) =/= S(false))
-                  // analyzed1.setAndIfUnset(tv -> true) { tv.lowerBounds.foreach(apply(pol)) }
                   analyzed1.setAndIfUnset(tv -> true) { tv.lowerBounds.foreach(apply(pol.at(tv.level, true))) }
                 if (pol(tv) =/= S(true))
-                  // analyzed1.setAndIfUnset(tv -> false) { tv.upperBounds.foreach(apply(pol.contravar)) }
                   analyzed1.setAndIfUnset(tv -> false) { tv.upperBounds.foreach(apply(pol.at(tv.level, false))) }
             }
-          // case ConstrainedType(cs, bod) =>
-          //   // occursInvariantly ++= cs.iterator.map(_._1)
-          //   constrainedVars ++= cs.iterator.map(_._1)
-          //   super.apply(pol)(st)
           case _ =>
             super.apply(pol)(st)
         }
@@ -451,7 +415,6 @@ trait TypeSimplifier { self: Typer =>
     Analyze1(PolMap(pol))(st)
     
     println(s"[inv] ${occursInvariantly.mkString(", ")}")
-    // println(s"[con] ${constrainedVars.mkString(", ")}")
     println(s"[nums] ${occNums.iterator
       .map(occ => s"${printPol(S(occ._1._1))}${occ._1._2} ${occ._2}")
       .mkString(" ; ")
@@ -465,92 +428,164 @@ trait TypeSimplifier { self: Typer =>
     
     val coOccurrences: MutMap[(Bool, TypeVariable), MutSet[SimpleType]] = LinkedHashMap.empty
     
-    val analyzed2 = MutSet.empty[ST -> Bool]
+    // * Remember which TVs we analyzed at which polarity
+    val analyzed2 = MutSet.empty[Bool -> ST]
+    // * The above is not enough. Sometimes we want to analyze a group of bounds and co-occurring types altogether.
+    // * However, the TV component of these types may have polarities that change depending on the context!
+    // * So we can't just assign a polarity to th ewhole thing...
+    // * Instead, we remember the polarities of each of these type subexpressions.
+    val analyzed22 = MutSet.empty[Set[Opt[Bool] -> ST]]
     
-    def analyze2(st: SimpleType, pol: Bool): Unit =
-      analyzeImpl(st.unwrapProvs, pol)
     
-    def analyzeImpl(st: SimpleType, pol: Bool): Unit =
-        trace(s"analyze2[${printPol(S(pol))}] $st") {
-        // trace(s"analyze2[${printPol(S(pol))}] $st       ${analyzed2}") {
-          analyzed2.setAndIfUnset(st -> pol) {
-            st match {
-      case RecordType(fs) => fs.foreach { f => f._2.lb.foreach(analyze2(_, !pol)); analyze2(f._2.ub, pol) }
-      case TupleType(fs) => fs.foreach { f => f._2.lb.foreach(analyze2(_, !pol)); analyze2(f._2.ub, pol) }
-      case ArrayType(inner) =>
-        inner.lb.foreach(analyze2(_, !pol))
-        analyze2(inner.ub, pol)
-      case SpliceType(elems) => elems.foreach {
-        case L(l) => analyze2(l, pol)
-        case R(r) => 
-          r.lb.foreach(analyze2(_, !pol))
-          analyze2(r.ub, pol)
-      }
-      case FunctionType(l, r) => analyze2(l, !pol); analyze2(r, pol)
-      case Overload(as) => as.foreach(analyze2(_, pol))
-      case tv: TypeVariable => process(tv, pol)
-      case _: TypeTag | ExtrType(_) => ()
-      case ct: ComposedType => process(ct, pol)
-      case NegType(und) => analyze2(und, !pol)
-      case ProxyType(underlying) => analyze2(underlying, pol)
-      case tr @ TypeRef(defn, targs) =>
-        val _ = tr.mapTargs(S(pol)) { (pol, ta) =>
-          if (pol =/= S(false)) analyze2(ta, true)
-          if (pol =/= S(true)) analyze2(ta, false)
-        }
-      case Without(base, names) => analyze2(base, pol)
-      case TypeBounds(lb, ub) =>
-        if (pol) analyze2(ub, true) else analyze2(lb, false)
-      case PolymorphicType(lvl, bod) => analyze2(bod, pol)
-      case ConstrainedType(cs, bod) =>
-        // cs.foreach(_._2.foreach(pb => analyze2(pb._2, pb._1)))
-        cs.foreach { case (lo, hi) => analyze2(lo, true); analyze2(hi, false) }
-        analyze2(bod, pol)
-    }
-    }
-    }()
+    // **********************
+    // * An alternative approach that tries to learn more co-occurrence info by
+    // * accumulating the effective bounds on type vriables
+    // * (ie including those not specified in the TV itself).
+    // * Commented because this still needs work before it can be used (Q: should it be?).
+    // **********************
+    /*
+    val lbs, ubs = MutMap.empty[TV, MutSet[ST]]
+    def getLbs(tv: TV) = lbs.getOrElseUpdate(tv, MutSet.empty)
+    def getUbs(tv: TV) = ubs.getOrElseUpdate(tv, MutSet.empty)
     
-    def process(st: SimpleType, pol: Bool) = {
-      val newOccs = MutSet.empty[SimpleType]
-      def go(st: SimpleType): Unit = goImpl(st.unwrapProvs)
-      def goImpl(st: SimpleType): Unit =
-          trace(s"go[${printPol(S(pol))}] $st   (${newOccs.mkString(", ")})") {
-            st match {
+    def getBounds(ty: ST, pol: Bool): Set[ST] = {
+      val traversed = MutSet.empty[TV]
+      def go(ty: ST): Set[ST] = ty.unwrapProxies match { // TODO(later) guard against bad rec types?
+        case tv2: TV =>
+          if (traversed.add(tv2)) tv2.assignedTo match {
+            case S(ty2) => go(ty2) + tv2
+            case N =>
+              Set.single(tv2) ++
+                (if (pol) tv2.lowerBounds else tv2.upperBounds).iterator.flatMap(go)
+          } else Set.empty
         case ComposedType(p, l, r) =>
-          // println(s">> $pol $l $r")
-          if (p === pol) { go(l); go(r) }
-          else { analyze2(l, pol); analyze2(r, pol) } // TODO compute intersection if p =/= pol
-        case _: BaseType | _: TypeRef => newOccs += st; analyze2(st, pol)
-        case tv: TypeVariable =>
-          // println(s"$tv ${newOccs.contains(tv)}")
-          if (!newOccs.contains(tv)) {
-            newOccs += st
-            tv.assignedTo match {
-              case S(ty) =>
-                go(ty)
-              case N =>
-                (if (pol) tv.lowerBounds else tv.upperBounds).foreach(go)
-            }
-          }
-        case _ => analyze2(st, pol)
+          if (p === pol) go(l) ++ go(r)
+          else Set.single(ty) ++ (go(l) & go(r))
+        case _ => Set.single(ty)
       }
+      go(ty)
+    }
+    analyzed1.foreach { case (tv, pol) =>
+      val bs = getBounds(tv, pol)
+      println(tv,pol,bs)
+      (if (pol) getLbs(tv) else getUbs(tv)) ++= bs.iterator.filterNot(_ is tv)
+      bs.foreach {
+        case tv2: TV if tv2 isnt tv =>
+          (if (pol) getUbs(tv2) else getLbs(tv2)) += tv
+        case _ =>
+      }
+    }
+    println(s"Bounds:")
+    s"${lbs.foreach { case (tv, bs) =>
+      println(s" $tv")
+      bs.foreach(b => println(s"\t:> $b"))
+    }}"
+    s"${ubs.foreach { case (tv, bs) =>
+      println(s" $tv")
+      bs.foreach(b => println(s"\t<: $b"))
+    }}"
+    */
+    
+    
+    def analyze2(st: SimpleType, pol: PolMap): Unit =
+      Analyze2(pol)(st.unwrapProvs)
+    
+    object Analyze2 extends Traverser2 {
+      override def apply(pol: PolMap)(st: ST): Unit = trace(s"analyze2[${(pol)}] $st") {
+          st match {
+            case tv: TypeVariable =>
+              pol(tv) match {
+                case S(pol_tv) =>
+                  if (analyzed2.add(pol_tv -> tv))
+                    processImpl(st, pol, pol_tv)
+                case N =>
+                  if (analyzed2.add(true -> tv))
+                    // * To compute the positive co-occurrences
+                    processImpl(st, pol.at(tv.level, true), true)
+                  if (analyzed2.add(false -> tv))
+                    // * To compute the negative positive co-occurrences
+                    processImpl(st, pol.at(tv.level, false), false)
+                  
+              }
+            case ct: ComposedType =>
+                def getComponents(ty: ST): Set[Opt[Bool] -> ST] = ty.unwrapProxies match {
+                  case tv: TV => Set.single(pol(tv) -> tv)
+                  case ty @ ComposedType(p, l, r) =>
+                    if (p === ct.pol) getComponents(l) ++ getComponents(r)
+                    else Set.single(N -> ty)
+                  case _ => Set.single(N -> ty)
+                }
+              val comps = getComponents(ct)
+              println(s"Components $comps")
+              if (analyzed22.add(comps))
+                processImpl(st, pol, ct.pol)
+              else println(s"Found in $analyzed22")
+            case _ =>
+              super.apply(pol)(st)
+          }
       }()
+    }
+    
+    def processImpl(st: SimpleType, pol: PolMap, occPol: Bool) = {
+      val newOccs = MutSet.empty[SimpleType]
+      
+      println(s">> Processing $st at [${printPol(S(occPol))}]")
+      
+      def go(ty: ST): Unit =
+          trace(s"go $ty   (${newOccs.mkString(", ")})") {
+            ty.unwrapProxies match {
+        case tv2: TV =>
+          // println(s"${printPol(pol(tv2))}$tv2")
+          if (newOccs.add(tv2)) tv2.assignedTo match {
+            case S(ty2) => go(ty2)
+            case N =>
+              pol(tv2) match {
+                case S(p) =>
+                  (if (p) tv2.lowerBounds else tv2.upperBounds).foreach(go)
+                  // (if (p) getLbs(tv2) else getUbs(tv2)).foreach(go)
+                case N =>
+                  trace(s"Analyzing invar-occ of $tv2") {
+                    analyze2(tv2, pol)
+                  }()
+              }
+          }
+        case ComposedType(p, l, r) if p === occPol => go(l); go(r)
+        case _ => newOccs += ty; ()
+      }}()
       go(st)
-      var firstTime = false
+      
+      println(s">> Occurrences $newOccs")
       newOccs.foreach {
         case tv: TypeVariable =>
-          // println(s">>>> $tv $newOccs ${coOccurrences.get(pol -> tv)}")
-          coOccurrences.get(pol -> tv) match {
-            case Some(os) => os.filterInPlace(newOccs) // computes the intersection
-            case None => coOccurrences(pol -> tv) = newOccs.clone()
+          def occ(pol: Bool): Unit = {
+            val occs = if (pol === occPol) newOccs else MutSet.single[ST](tv)
+            println(s">>>> occs[${printPol(pol)}$tv] := $occs  <~ ${coOccurrences.get(pol -> tv)}")
+            coOccurrences.get(pol -> tv) match {
+              case Some(os) =>
+                // Q: filter out vars of different level?
+                os.filterInPlace(occs) // computes the intersection
+              case None => coOccurrences(pol -> tv) = occs.clone() // `clone` not needed?
+            }
           }
-          // println(s">> $pol ${coOccurrences.get(pol -> tv)}")
+          pol(tv) match {
+            case S(p) =>
+              occ(p)
+            case N =>
+              occ(true)
+              occ(false)
+          }
         case _ => ()
+      }
+      newOccs.foreach {
+        case tv: TypeVariable => ()
+        case ty => analyze2(ty, pol)
       }
     }
     
-    if (pol =/= S(false)) analyze2(st, true)
-    if (pol =/= S(true)) analyze2(st, false)
+    analyze2(st, PolMap(pol))
+    
+    
+    coOccurrences.foreach(kv => assert(kv._2.nonEmpty))
     
     println(s"[occs] ${coOccurrences.iterator
       .map(occ => s"${printPol(S(occ._1._1))}${occ._1._2} ${occ._2.mkString("{",",","}")}")
@@ -569,24 +604,17 @@ trait TypeSimplifier { self: Typer =>
     
     // val allVars = st.getVars
     val allVars = analyzed1.iterator.map(_._1).toSortedSet
-    // val rewritableVars = allVars.filterNot(constrainedVars)
-    // val rewritableVars = allVars.filter(v => v.level <= 1 && !constrainedVars(v))
-    // val rewritableVars = allVars.filter(v => v.level <= 1)
-    val rewritableVars = allVars
     
     var recVars = MutSet.from(allVars.iterator.filter(_.isRecursive_$))
     
     println(s"[vars] ${allVars}")
-    println(s"[rw vars] ${rewritableVars}")
     println(s"[rec] ${recVars}")
     // println(s"[bounds] ${st.showBounds}")
     
     // * Remove polar type variables that only occur once, including if they are part of a recursive bounds graph:
     if (inlineBounds) occNums.iterator.foreach { case (k @ (pol, tv), num) =>
       assert(num > 0)
-      if (num === 1 && !occNums.contains(!pol -> tv)
-            && rewritableVars(tv) // or !constrainedVars(tv)
-          ) {
+      if (num === 1 && !occNums.contains(!pol -> tv)) {
         println(s"0[1] $tv")
         varSubst += tv -> None
       }
@@ -594,7 +622,7 @@ trait TypeSimplifier { self: Typer =>
     
     // * Simplify away those non-recursive variables that only occur in positive or negative positions
     // *  (i.e., polar ones):
-    rewritableVars.foreach { case v0 => if (!recVars.contains(v0)) {
+    allVars.foreach { case v0 => if (!recVars.contains(v0)) {
       (coOccurrences.get(true -> v0), coOccurrences.get(false -> v0)) match {
         case (Some(_), None) | (None, Some(_)) =>
           if (removePolarVars) {
@@ -607,7 +635,7 @@ trait TypeSimplifier { self: Typer =>
     
     // * Remove variables that are 'dominated' by another type or variable
     // *  A variable v dominated by T if T is in both of v's positive and negative cooccurrences
-    rewritableVars.foreach { case v => if (!varSubst.contains(v)) {
+    allVars.foreach { case v => if (!varSubst.contains(v)) {
       println(s"2[v] $v ${coOccurrences.get(true -> v)} ${coOccurrences.get(false -> v)}")
       
       coOccurrences.get(true -> v).iterator.flatMap(_.iterator).foreach {
@@ -650,7 +678,7 @@ trait TypeSimplifier { self: Typer =>
     }}
     
     // * Unify equivalent variables based on polar co-occurrence analysis:
-    rewritableVars.foreach { case v =>
+    allVars.foreach { case v =>
       if (!v.assignedTo.isDefined && !varSubst.contains(v)) // TODO also handle v.assignedTo.isDefined?
         trace(s"3[v] $v +${coOccurrences.get(true -> v).mkString} -${coOccurrences.get(false -> v).mkString}") {
         
@@ -672,10 +700,12 @@ trait TypeSimplifier { self: Typer =>
             trace(s"[w] $w ${printPol(S(pol))}${coOccurrences.get(pol -> w).mkString}") {
               
               // * The bounds opposite to the polarity where the two variables co-occur
+              // * We don't want to merge variables when this would introduce
               val otherBounds = (if (pol) v.upperBounds else v.lowerBounds)
               val otherBounds2 = (if (pol) w.upperBounds else w.lowerBounds)
               
-              if (otherBounds =/= otherBounds2)
+              // if (otherBounds =/= otherBounds2)
+              if (otherBounds.toSet =/= otherBounds2.toSet)
                 // * ^ This is a bit of an ugly heuristic to simplify a couple of niche situations...
                 // *    More principled/regular approaches could be to either:
                 // *      1. just not merge things with other bounds; or
@@ -683,7 +713,6 @@ trait TypeSimplifier { self: Typer =>
                 // *        that we don't import these other bounds when inlining bounds...
                 // *    Choice (2.) seems tricky to implement.
                 println(s"$v and $w have non-equal other bounds and won't be merged")
-              
               else if (coOccurrences.get(pol -> w).forall(_(v))) {
                 
                 // * Unify w into v

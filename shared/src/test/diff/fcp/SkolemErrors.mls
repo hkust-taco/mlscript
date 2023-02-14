@@ -1,0 +1,34 @@
+
+:NoJS
+
+
+def k: (forall 'a. 'a -> 'a) -> int
+//│ k: (forall 'a. 'a -> 'a) -> int
+
+
+fun x -> k x
+//│ res: (forall 'a. 'a -> 'a) -> int
+
+fun x -> k (fun y -> x y)
+//│ res: (anything -> nothing) -> int
+
+
+
+
+:ShowRelativeLineNums
+:AllowTypeErrors
+
+:e
+k (fun x -> x + 1)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	k (fun x -> x + 1)
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ╟── type `'a` is not an instance of type `int`
+//│ ║  l.5: 	def k: (forall 'a. 'a -> 'a) -> int
+//│ ║       	               ^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.+1: 	k (fun x -> x + 1)
+//│ ╙──      	            ^
+//│ res: error | int
+
+

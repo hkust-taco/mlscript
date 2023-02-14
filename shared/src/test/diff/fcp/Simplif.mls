@@ -10,6 +10,9 @@ def f: forall 'a. 'a -> int
 def f: forall 'a. int -> 'a
 //│ f: int -> nothing
 
+def f: 'a -> 'b -> ('a, 'b)
+//│ f: 'a -> 'b -> ('a, 'b,)
+
 def f: (forall 'a. 'a -> 'b) -> 'b
 //│ f: (anything -> 'b) -> 'b
 
@@ -38,5 +41,61 @@ def foo: (forall 'a. MutArray['a -> 'b]) -> 'b
 // def foo: MutArray[forall 'b. forall 'a {'a <: 'b}. ('a .. 'b) -> 'b] -> 'b
 
 // def foo: MutArray[forall 'b. forall 'a. ('a .. 'b) -> ('a .. 'b)] -> 'b
+
+
+def foo: forall 'a 'b. ('a & 'b) -> ('a | 'b)
+//│ foo: 'b -> 'b
+
+def foo: (forall 'a 'b. ('a & 'b) -> ('a | 'b)) -> 1
+//│ foo: (forall 'b. 'b -> 'b) -> 1
+
+def foo: ((forall 'a 'b. ('a & 'b) -> ('a | 'b)) -> 1) -> 2
+//│ foo: ((forall 'b. 'b -> 'b) -> 1) -> 2
+
+def foo: (((forall 'a 'b. ('a & 'b) -> ('a | 'b)) -> 1) -> 2) -> 3
+//│ foo: (((forall 'b. 'b -> 'b) -> 1) -> 2) -> 3
+
+
+// * Note that this degenerate type is equivalent to `anything -> nothing`
+// * (Take 'a = Int and 'b = ~Int.)
+def foo: forall 'a 'b. ('a | 'b) -> ('a & 'b)
+//│ foo: ('a | 'b) -> ('a & 'b)
+foo (1 : anything) : nothing
+//│ res: nothing
+
+def foo: (forall 'a 'b. ('a | 'b) -> ('a & 'b)) -> 1
+//│ foo: (forall 'a 'b. ('a | 'b) -> ('a & 'b)) -> 1
+
+:e
+foo id
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.70: 	foo id
+//│ ║        	^^^^^^
+//│ ╟── type `'a` does not match type `'b`
+//│ ║  l.66: 	def foo: (forall 'a 'b. ('a | 'b) -> ('a & 'b)) -> 1
+//│ ║        	                 ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.66: 	def foo: (forall 'a 'b. ('a | 'b) -> ('a & 'b)) -> 1
+//│ ║        	                    ^^
+//│ ╟── from intersection type:
+//│ ║  l.66: 	def foo: (forall 'a 'b. ('a | 'b) -> ('a & 'b)) -> 1
+//│ ╙──      	                                     ^^^^^^^^^
+//│ res: 1 | error
+
+
+def foo: MutArray[forall 'a 'b. ('a & 'b) -> ('a | 'b)]
+//│ foo: MutArray[forall 'b. 'b -> 'b]
+
+def foo: MutArray[MutArray[(forall 'a 'b. ('a & 'b) -> ('a | 'b)) -> 1]]
+//│ foo: MutArray[MutArray[(forall 'b. 'b -> 'b) -> 1]]
+
+
+def foo: forall 'a 'b. ('a & 'b) -> 'a -> 'b -> ('a | 'b, 'b | 'a)
+//│ foo: 'a -> 'a -> 'a -> ('a, 'a,)
+
+def foo: (forall 'a 'b. ('a & 'b) -> 'a -> 'b -> ('a | 'b, 'b | 'a)) -> 1
+//│ foo: (forall 'a. 'a -> 'a -> 'a -> ('a, 'a,)) -> 1
+
+
 
 

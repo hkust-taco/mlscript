@@ -176,176 +176,7 @@ move ri rn
 //│    = []
 
 
-:d
 def swap a b = let tmp = a.Get in (a.Set b.Get, b.Set tmp)
-//│ 1. Typing term (a,) => (b,) => let tmp = (a).Get in (a).Set ((b).Get,), (b).Set (tmp,),
-//│ | TYPING POLY LAM
-//│ | 2. Typing pattern a,
-//│ | | 2. Typing pattern a
-//│ | | 2. : a644''
-//│ | 2. : (a644'',)
-//│ | 2. Typing term (b,) => let tmp = (a).Get in (a).Set ((b).Get,), (b).Set (tmp,),
-//│ | | 2. Typing pattern b,
-//│ | | | 2. Typing pattern b
-//│ | | | 2. : b645''
-//│ | | 2. : (b645'',)
-//│ | | 2. Typing term let tmp = (a).Get in (a).Set ((b).Get,), (b).Set (tmp,),
-//│ | | | 3. Typing term (a).Get
-//│ | | | | 3. Typing term a
-//│ | | | | 3. : a644''
-//│ | | | | INST [0]   ‹∀ 0. (this23' -> A22')›
-//│ | | | |   where  
-//│ 		this23' <: Ref[A22']
-//│ | | | | TO [3] ~>  (this23_647''' -> A22_648''')
-//│ | | | |   where  
-//│ 		this23_647''' <: Ref[A22_648''']
-//│ | | | | CONSTRAIN (this23_647''' -> A22_648''') <! (a644'' -> α646''')
-//│ | | | |   where 
-//│ 		this23_647''' <: Ref[A22_648''']
-//│ | | | | 3. C (this23_647''' -> A22_648''') <! (a644'' -> α646''')    (0)
-//│ | | | | | 3. C (a644'',) <! (this23_647''',)    (1)
-//│ | | | | | | 3. C a644'' <! this23_647'''    (2)
-//│ | | | | | | | NEW this23_647''' LB (2)
-//│ | | | | | | | 3. C a644'' <! Ref[A22_648''']    (4)
-//│ | | | | | | | | wrong level: 3
-//│ | | | | | | | | RECONSTRAINING TVs
-//│ | | | | | | | | EXTR RHS  ~>  Ref[A22_649''..A22_650'']  to 2
-//│ | | | | | | | |  where 
-//│ 		A22_650'' :> A22_649''
-//│ | | | | | | | | 3. C a644'' <! Ref[A22_649''..A22_650'']    (6)
-//│ | | | | | | | | | NEW a644'' UB (2)
-//│ | | | | | 3. C A22_648''' <! α646'''    (1)
-//│ | | | | | | NEW A22_648''' UB (3)
-//│ | | | | | | 3. C A22_649'' <! α646'''    (3)
-//│ | | | | | | | NEW α646''' LB (2)
-//│ | | | 3. : α646'''
-//│ | | | UNSTASHING... (out)
-//│ | | | 2. Typing term (a).Set ((b).Get,), (b).Set (tmp,),
-//│ | | | | 2. Typing term (a).Set ((b).Get,)
-//│ | | | | | 2. Typing term (a).Set
-//│ | | | | | | 2. Typing term a
-//│ | | | | | | 2. : a644''
-//│ | | | | | | INST [0]   ‹∀ 0. (this23' -> (A22' -> Unit))›
-//│ | | | | | |   where  
-//│ 		this23' <: Ref[A22']
-//│ | | | | | | TO [2] ~>  (this23_652'' -> (A22_653'' -> Unit))
-//│ | | | | | |   where  
-//│ 		this23_652'' <: Ref[A22_653'']
-//│ | | | | | | CONSTRAIN (this23_652'' -> (A22_653'' -> Unit)) <! (a644'' -> α651'')
-//│ | | | | | |   where 
-//│ 		a644'' <: Ref[A22_649''..A22_650'']
-//│ 		A22_650'' :> A22_649''
-//│ 		this23_652'' <: Ref[A22_653'']
-//│ | | | | | | 2. C (this23_652'' -> (A22_653'' -> Unit)) <! (a644'' -> α651'')    (0)
-//│ | | | | | | | 2. C (a644'',) <! (this23_652'',)    (1)
-//│ | | | | | | | | 2. C a644'' <! this23_652''    (2)
-//│ | | | | | | | | | NEW a644'' UB (2)
-//│ | | | | | | | 2. C (A22_653'' -> Unit) <! α651''    (1)
-//│ | | | | | | | | NEW α651'' LB (2)
-//│ | | | | | 2. : α651''
-//│ | | | | | 2. Typing term (b).Get
-//│ | | | | | | 2. Typing term b
-//│ | | | | | | 2. : b645''
-//│ | | | | | | INST [0]   ‹∀ 0. (this23' -> A22')›
-//│ | | | | | |   where  
-//│ 		this23' <: Ref[A22']
-//│ | | | | | | TO [2] ~>  (this23_655'' -> A22_656'')
-//│ | | | | | |   where  
-//│ 		this23_655'' <: Ref[A22_656'']
-//│ | | | | | | CONSTRAIN (this23_655'' -> A22_656'') <! (b645'' -> α654'')
-//│ | | | | | |   where 
-//│ 		this23_655'' <: Ref[A22_656'']
-//│ | | | | | | 2. C (this23_655'' -> A22_656'') <! (b645'' -> α654'')    (0)
-//│ | | | | | | | 2. C (b645'',) <! (this23_655'',)    (1)
-//│ | | | | | | | | 2. C b645'' <! this23_655''    (2)
-//│ | | | | | | | | | NEW b645'' UB (2)
-//│ | | | | | | | 2. C A22_656'' <! α654''    (1)
-//│ | | | | | | | | NEW A22_656'' UB (2)
-//│ | | | | | 2. : α654''
-//│ | | | | | CONSTRAIN α651'' <! (α654'' -> α657'')
-//│ | | | | |   where 
-//│ 		α651'' :> (A22_653'' -> Unit)
-//│ | | | | | 2. C α651'' <! (α654'' -> α657'')    (0)
-//│ | | | | | | NEW α651'' UB (2)
-//│ | | | | | | 2. C (A22_653'' -> Unit) <! (α654'' -> α657'')    (2)
-//│ | | | | | | | 2. C (α654'',) <! (A22_653'',)    (2)
-//│ | | | | | | | | 2. C α654'' <! A22_653''    (3)
-//│ | | | | | | | | | NEW α654'' UB (2)
-//│ | | | | | | | 2. C Unit <! α657''    (2)
-//│ | | | | | | | | NEW α657'' LB (0)
-//│ | | | | 2. : α657''
-//│ | | | | 2. Typing term (b).Set (tmp,)
-//│ | | | | | 2. Typing term (b).Set
-//│ | | | | | | 2. Typing term b
-//│ | | | | | | 2. : b645''
-//│ | | | | | | INST [0]   ‹∀ 0. (this23' -> (A22' -> Unit))›
-//│ | | | | | |   where  
-//│ 		this23' <: Ref[A22']
-//│ | | | | | | TO [2] ~>  (this23_659'' -> (A22_660'' -> Unit))
-//│ | | | | | |   where  
-//│ 		this23_659'' <: Ref[A22_660'']
-//│ | | | | | | CONSTRAIN (this23_659'' -> (A22_660'' -> Unit)) <! (b645'' -> α658'')
-//│ | | | | | |   where 
-//│ 		b645'' <: this23_655''
-//│ 		α654'' <: A22_653''
-//│ 		this23_655'' <: Ref[A22_656'']
-//│ 		A22_656'' <: α654''
-//│ 		this23_659'' <: Ref[A22_660'']
-//│ | | | | | | 2. C (this23_659'' -> (A22_660'' -> Unit)) <! (b645'' -> α658'')    (0)
-//│ | | | | | | | 2. C (b645'',) <! (this23_659'',)    (1)
-//│ | | | | | | | | 2. C b645'' <! this23_659''    (2)
-//│ | | | | | | | | | NEW b645'' UB (2)
-//│ | | | | | | | 2. C (A22_660'' -> Unit) <! α658''    (1)
-//│ | | | | | | | | NEW α658'' LB (2)
-//│ | | | | | 2. : α658''
-//│ | | | | | 2. Typing term tmp
-//│ | | | | | 2. : ‹∀ 2. α646'''›
-//│ | | | | | CONSTRAIN α658'' <! (‹∀ 2. α646'''› -> α661'')
-//│ | | | | |   where 
-//│ 		α646''' :> A22_649''
-//│ 		α658'' :> (A22_660'' -> Unit)
-//│ | | | | | 2. C α658'' <! (‹∀ 2. α646'''› -> α661'')    (0)
-//│ | | | | | | NEW α658'' UB (2)
-//│ | | | | | | 2. C (A22_660'' -> Unit) <! (‹∀ 2. α646'''› -> α661'')    (2)
-//│ | | | | | | | 2. C (‹∀ 2. α646'''›,) <! (A22_660'',)    (2)
-//│ | | | | | | | | 2. C ‹∀ 2. α646'''› <! A22_660''    (3)
-//│ | | | | | | | | | NEW A22_660'' LB (2)
-//│ | | | | | | | 2. C Unit <! α661''    (2)
-//│ | | | | | | | | NEW α661'' LB (0)
-//│ | | | | 2. : α661''
-//│ | | | 2. : (α657'', α661'',)
-//│ | | 2. : (α657'', α661'',)
-//│ | 2. : (b645'' -> (α657'', α661'',))
-//│ | Inferred poly constr: (a644'' -> (b645'' -> (α657'', α661'',)))  —— where 
-//│ 		a644'' <: this23_652'' & Ref[A22_649''..A22_650'']
-//│ 		b645'' <: this23_659'' & this23_655''
-//│ 		α646''' :> A22_649''
-//│ 		A22_650'' :> A22_649''
-//│ 		this23_652'' <: Ref[A22_653'']
-//│ 		α654'' <: A22_653''
-//│ 		this23_655'' <: Ref[A22_656'']
-//│ 		A22_656'' <: α654''
-//│ 		α657'' :> Unit
-//│ 		this23_659'' <: Ref[A22_660'']
-//│ 		A22_660'' :> ‹∀ 2. α646'''›
-//│ 		α661'' :> Unit
-//│ | UNSTASHING... (out)
-//│ 1. : ‹∀ 1. (a644'' -> (b645'' -> (α657'', α661'',)))›
-//│ UNSTASHING... (out)
-//│ ⬤ Typed as: ‹∀ 1. (a644'' -> (b645'' -> (α657'', α661'',)))›
-//│  where: 
-//│ 		a644'' <: this23_652'' & Ref[A22_649''..A22_650'']
-//│ 		b645'' <: this23_659'' & this23_655''
-//│ 		α646''' :> A22_649''
-//│ 		A22_650'' :> A22_649''
-//│ 		this23_652'' <: Ref[A22_653'']
-//│ 		α654'' <: A22_653''
-//│ 		this23_655'' <: Ref[A22_656'']
-//│ 		A22_656'' <: α654''
-//│ 		α657'' :> Unit
-//│ 		this23_659'' <: Ref[A22_660'']
-//│ 		A22_660'' :> ‹∀ 2. α646'''›
-//│ 		α661'' :> Unit
 //│ swap: Ref[in 'A | 'A0 out 'A & 'A0] -> Ref[in 'A0 & 'A1 | 'A2 out 'A1 & ('A | 'A2)] -> (unit, unit,)
 //│     = [Function: swap]
 
@@ -370,7 +201,7 @@ swap ri r
 swap rn ri
 swap ri rn
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.370: 	swap rn ri
+//│ ║  l.201: 	swap rn ri
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.87: 	rn = r : Ref[number]
@@ -381,7 +212,7 @@ swap ri rn
 //│ res: (unit, unit,) | error
 //│    = [ [], [] ]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.371: 	swap ri rn
+//│ ║  l.202: 	swap ri rn
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `number` is not an instance of `int`
 //│ ║  l.87: 	rn = r : Ref[number]
@@ -390,7 +221,7 @@ swap ri rn
 //│ ║  l.86: 	ri = r : Ref[int]
 //│ ║        	             ^^^
 //│ ╟── from field selection:
-//│ ║  l.180: 	def swap a b = let tmp = a.Get in (a.Set b.Get, b.Set tmp)
+//│ ║  l.179: 	def swap a b = let tmp = a.Get in (a.Set b.Get, b.Set tmp)
 //│ ║         	                                         ^^^^^
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.3: 	class Ref[A]
@@ -458,13 +289,13 @@ refun.Get
 fun x -> refun.Set x
 refun.Swap
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.457: 	refun.Get
+//│ ║  l.288: 	refun.Get
 //│ ║         	^^^^^^^^^
 //│ ╟── type `string` is not an instance of `int`
-//│ ║  l.451: 	def refun: Ref[int] | Ref[string]
+//│ ║  l.282: 	def refun: Ref[int] | Ref[string]
 //│ ║         	                          ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.451: 	def refun: Ref[int] | Ref[string]
+//│ ║  l.282: 	def refun: Ref[int] | Ref[string]
 //│ ║         	               ^^^
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.3: 	class Ref[A]
@@ -473,13 +304,13 @@ refun.Swap
 //│    = <no result>
 //│      refun is not implemented
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.458: 	fun x -> refun.Set x
+//│ ║  l.289: 	fun x -> refun.Set x
 //│ ║         	         ^^^^^^^^^
 //│ ╟── type `string` is not an instance of `int`
-//│ ║  l.451: 	def refun: Ref[int] | Ref[string]
+//│ ║  l.282: 	def refun: Ref[int] | Ref[string]
 //│ ║         	                          ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.451: 	def refun: Ref[int] | Ref[string]
+//│ ║  l.282: 	def refun: Ref[int] | Ref[string]
 //│ ║         	               ^^^
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.3: 	class Ref[A]
@@ -488,13 +319,13 @@ refun.Swap
 //│    = <no result>
 //│      refun is not implemented
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.459: 	refun.Swap
+//│ ║  l.290: 	refun.Swap
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `string` is not an instance of `int`
-//│ ║  l.451: 	def refun: Ref[int] | Ref[string]
+//│ ║  l.282: 	def refun: Ref[int] | Ref[string]
 //│ ║         	                          ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.451: 	def refun: Ref[int] | Ref[string]
+//│ ║  l.282: 	def refun: Ref[int] | Ref[string]
 //│ ║         	               ^^^
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.3: 	class Ref[A]
@@ -508,13 +339,13 @@ refun.Swap
 :e
 def bar x = RefImpl { mut value = x } : Ref[int] & Ref[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.509: 	def bar x = RefImpl { mut value = x } : Ref[int] & Ref[string]
+//│ ║  l.340: 	def bar x = RefImpl { mut value = x } : Ref[int] & Ref[string]
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `string` is not an instance of type `int`
-//│ ║  l.509: 	def bar x = RefImpl { mut value = x } : Ref[int] & Ref[string]
+//│ ║  l.340: 	def bar x = RefImpl { mut value = x } : Ref[int] & Ref[string]
 //│ ║         	                                                       ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.509: 	def bar x = RefImpl { mut value = x } : Ref[int] & Ref[string]
+//│ ║  l.340: 	def bar x = RefImpl { mut value = x } : Ref[int] & Ref[string]
 //│ ║         	                                            ^^^
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.12: 	class RefImpl[A]: Ref[A] & { mut value: A }
