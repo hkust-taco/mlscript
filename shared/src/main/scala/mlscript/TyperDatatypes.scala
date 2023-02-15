@@ -32,7 +32,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   class LazyTypeInfo(val level: Int, val decl: NuDecl)(implicit ctx: Ctx) extends TypeInfo {
   // class LazyTypeInfo[A](level: Int, decl: NuDecl) extends TypeInfo {
-    var isComputing: Bool = false
+    var isComputing: Bool = false // TODO replace by a Ctx entry
     var result: Opt[TypedNuTermDef] = N
     // var result: Opt[A] = N
     val tv: TV = freshVar(
@@ -42,9 +42,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def complete()(implicit raise: Raise): TypedNuTermDef = result.getOrElse {
       if (isComputing) lastWords(s"TODO cyclic defn")
       else {
-        isComputing = true
         // var res: ST = errType
-        try {
+        val res = try {
+          isComputing = true
           // res = 
           decl match {
             case fd: NuFunDef =>
@@ -94,6 +94,10 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
           
         // } finally { result = S(res); isComputing = false }
         } finally { /* result = S(res); */ isComputing = false }
+        
+        result = S(res)
+        res
+        
       }
     }
     def typeSignature(implicit raise: Raise): ST = if (isComputing) tv else complete() match {

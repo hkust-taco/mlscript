@@ -30,6 +30,10 @@ package object utils {
     def mapLines(f: String => String): String = splitSane('\n') map f mkString "\n"
     def indent(pre: String): String = mapLines(pre + _)
     def indent: String = indent("\t")
+    def indentNewLines(pre: String = "\t"): String = splitSane('\n').toList match {
+      case head :: (rest @ _ :: _)  => head + "\n" + rest.map(pre + _).mkString("\n")
+      case _ => self
+    }
     def truncate(maxChars: Int, replace: String): String = {
       val newStr = self.take(maxChars)
       if (newStr.length < self.length) newStr + replace

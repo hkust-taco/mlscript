@@ -64,7 +64,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   
   case class TypedTypingUnit(entities: Ls[TypedNuDecl], result: Opt[ST])
   
-  def typeTypingUnit(tu: TypingUnit, allowPure: Bool)(implicit ctx: Ctx, raise: Raise): TypedTypingUnit = {
+  def typeTypingUnit(tu: TypingUnit, allowPure: Bool)(implicit ctx: Ctx, raise: Raise): TypedTypingUnit =
+      trace(s"${ctx.lvl}. Typing $tu") {
     // val named = mutable.Map.empty[Str, LazyTypeInfo[TypedNuTermDef]]
     val named = mutable.Map.empty[Str, LazyTypeInfo]
     // val namedTerms = mutable.Map.empty[Var, LazyTypeInfo[TypedNuTypeDef]]
@@ -135,7 +136,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     val res_ty = go(tu.entities)
     // TypedTypingUnit(infos.unzip._2.map(_.complete()), S(res_ty))
     TypedTypingUnit(infos.unzip._2.map(_.complete()), res_ty)
-  }
+  }()
   
   // class TypedTypingUnit(tu: TypingUnit)(implicit ctx: Ctx, raise: Raise) {
   // }

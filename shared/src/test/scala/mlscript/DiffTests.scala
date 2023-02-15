@@ -500,14 +500,17 @@ class DiffTests
                     output(s"${indStr}class ${tc.name}")
                   case tm: typer.TypedNuMxn =>
                     output(s"${indStr}mixin ${tm.name}")
-                    output(s"${indStr}  this: ${tm.thisTV} ${tm.thisTV.showBounds}")
-                    output(s"${indStr}  super: ${tm.superTV} ${tm.superTV.showBounds}")
+                    output(s"${indStr}  this: ${tm.thisTV} ${tm.thisTV.showBounds
+                      .indentNewLines(indStr+"  |")}")
+                    output(s"${indStr}  super: ${tm.superTV} ${tm.superTV.showBounds
+                      .indentNewLines(indStr+"  |")}")
                     // tm.ttu.entities.foreach { }
                     showTTU(tm.ttu, ind + 1)
                   case tf: typer.TypedNuFun =>
                     val exp = getType(tf.ty)
-                    output(s"${indStr}fun ${tf.name}: ${exp.show}")
-                    output(s"${indStr}(fun) ${tf.name}: ${tf.ty} ${tf.ty.body.showBounds}")
+                    output(s"${indStr}fun ${tf.name}: ${tf.ty} where ${tf.ty.body.showBounds
+                      .indentNewLines(indStr+"|")}")
+                    output(s"${indStr}[pretty-printed] ${tf.name}: ${exp.show.indentNewLines(indStr+"|")}")
                 }
               }
               showTTU(tpd, 0)
