@@ -22,6 +22,13 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   
   sealed abstract class TypedNuDecl {
     def name: Str
+    def freshen(implicit ctx: Ctx): TypedNuDecl = this match {
+      case m @ TypedNuMxn(td, thisTV, superTV, ttu) =>
+        implicit val freshened: MutMap[TV, ST] = MutMap.empty
+        implicit val shadows: Shadows = Shadows.empty
+        TypedNuMxn(td, thisTV, superTV, ttu.freshenAbove(m.level, rigidify = false))
+      case _ => ???
+    }
   }
   
   sealed trait TypedNuTermDef extends TypedNuDecl {
@@ -54,18 +61,27 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   }
   
   case class TypedNuMxn(td: NuTypeDef, thisTV: ST, superTV: ST, ttu: TypedTypingUnit) extends TypedNuTypeDef(Mxn) with TypedNuTermDef {
+    def level = thisTV.level - 1 // TODO cleaner
     def nme: TypeName = td.nme
     def name: Str = nme.name
+    // def freshen(implicit ctx: Ctx): TypedNuMxn = TypedNuMxn(td, 
   }
   
-  case class TypedNuFun(fd: NuFunDef, ty: PolymorphicType) extends TypedNuDecl with TypedNuTermDef {
+  case class TypedNuFun(fd: NuFunDef, ty: ST) extends TypedNuDecl with TypedNuTermDef {
     def name: Str = fd.nme.name
   }
   
-  case class TypedTypingUnit(entities: Ls[TypedNuDecl], result: Opt[ST])
+  case class TypedTypingUnit(entities: Ls[TypedNuDecl], result: Opt[ST]) {
+    // def freshen(implicit ctx: Ctx): TypedTypingUnit = ???
+    def freshenAbove(lim: Int, rigidify: Bool)
+          (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
+          : TypedTypingUnit =
+      TypedTypingUnit(entities, result.map(_.freshenAbove(lim, rigidify)))
+  }
   
   def typeTypingUnit(tu: TypingUnit, allowPure: Bool)(implicit ctx: Ctx, raise: Raise): TypedTypingUnit =
       trace(s"${ctx.lvl}. Typing $tu") {
+      // trace(s"${ctx.lvl}. Typing $tu") { ctx.nextLevel { implicit ctx: Ctx =>
     // val named = mutable.Map.empty[Str, LazyTypeInfo[TypedNuTermDef]]
     val named = mutable.Map.empty[Str, LazyTypeInfo]
     // val namedTerms = mutable.Map.empty[Var, LazyTypeInfo[TypedNuTypeDef]]
@@ -137,6 +153,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     // TypedTypingUnit(infos.unzip._2.map(_.complete()), S(res_ty))
     TypedTypingUnit(infos.unzip._2.map(_.complete()), res_ty)
   }()
+  // }(raise, noProv/*TODO*/)}()
   
   // class TypedTypingUnit(tu: TypingUnit)(implicit ctx: Ctx, raise: Raise) {
   // }

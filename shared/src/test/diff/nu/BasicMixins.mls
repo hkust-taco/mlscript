@@ -1,0 +1,99 @@
+:NewParser
+:NewDefs
+:NoJS
+
+
+// :d
+mixin BaseTest {
+  fun test = super.base
+}
+//│ mixin BaseTest
+//│   this: this23' 
+//│   super: super24' 
+//│   |		super24' <: {base: base27_28'}
+//│   fun test: ‹∀ 1. test26''#› where 
+//│   |		test26''# := base27''
+//│   |		base27'' :> base27_28' <: test26''#
+//│   [pretty-printed] test: nothing
+
+mixin BaseInc {
+  fun test = super.base + 1
+}
+//│ mixin BaseInc
+//│   this: this33' 
+//│   super: super34' 
+//│   |		super34' <: {base: base37_38'}
+//│   |		base37_38' <: int<number>
+//│   fun test: ‹∀ 1. test36''#› where 
+//│   |		test36''# := α40''
+//│   |		α40'' :> int<number> <: test36''#
+//│   [pretty-printed] test: int
+
+:d
+class Base1(base: int): BaseTest
+//│ 0. Typing TypingUnit(List(class Base1(base: int,): BaseTest {}))
+//│ | 0. Typing TypingUnit(List())
+//│ | List()
+//│ | base: int,
+//│ | List(BaseTest)
+//│ | Typing type int
+//│ | | vars=Map() newDefsInfo=Map()
+//│ | | 0. type int
+//│ | | => Int
+//│ | => Int ——— 
+//│ | Inheriting from BaseTest
+//│ | | CONSTRAIN {base: Int} <! super24'
+//│ | |   where 
+//│ 		super24' <: {base: base27_28'}
+//│ | | 0. C {base: Int} <! super24'    (0)
+//│ | | | NEW super24' LB (0)
+//│ | | | 0. C {base: Int} <! {base: base27_28'}    (2)
+//│ | | | | 0. C {base: Int} <! {base: base27_28'}    (2)
+//│ | | | | | 0. C {base: Int} <! {base: base27_28'}    (2)
+//│ | | | | | | 0. C {base: Int} <! {base: base27_28'}    (2)
+//│ | | | | | | | 0. C {base: Int} <! {base: base27_28'}    (2)
+//│ | | | | | | | | 0. C Int <! base27_28'    (2)
+//│ | | | | | | | | | NEW base27_28' LB (0)
+//│ | | CONSTRAIN this44 <! this23'
+//│ | |   where 
+//│ | | 0. C this44 <! this23'    (0)
+//│ | | | NEW this23' LB (0)
+//│ class Base1
+
+class Base1(base): BaseTest
+//│ class Base1
+
+:e
+class Base1(x): BaseTest
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.66: 	class Base1(x): BaseTest
+//│ ║        	      ^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `{x: ?x}` does not have field 'base'
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.8: 	  fun test = super.base
+//│ ║       	             ^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.8: 	  fun test = super.base
+//│ ╙──     	             ^^^^^
+//│ class Base1
+
+Base1
+//│ Typed: error
+
+
+// :ns
+mixin Foo {
+  fun test(x) = [super.base + x, x, super.misc]
+}
+//│ mixin Foo
+//│   this: this52' 
+//│   super: super53' 
+//│   |		super53' <: {misc: misc61_62'} & {base: base57_58'}
+//│   |		base57_58' <: int<number>
+//│   fun test: ‹∀ 1. test55''#› where 
+//│   |		test55''# := (α56'' -> (α60'', α56'', misc61'',))
+//│   |		α56'' <: int<number>
+//│   |		α60'' :> int<number>
+//│   |		misc61'' :> misc61_62'
+//│   [pretty-printed] test: (int & 'a) -> (int, 'a, nothing,)
+

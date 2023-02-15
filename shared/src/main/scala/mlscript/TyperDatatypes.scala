@@ -30,6 +30,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   case class VarSymbol(ty: ST, definingVar: Var) extends TypeInfo
   
+  // TODO rm level? already in ctx
   class LazyTypeInfo(val level: Int, val decl: NuDecl)(implicit ctx: Ctx) extends TypeInfo {
   // class LazyTypeInfo[A](level: Int, decl: NuDecl) extends TypeInfo {
     var isComputing: Bool = false // TODO replace by a Ctx entry
@@ -63,7 +64,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                 case L(body) =>
                   implicit val vars: Map[Str, SimpleType] = Map.empty
                   implicit val gl: GenLambdas = true
-                  val body_ty = typeLetRhs(isrec = true, fd.nme.name, body)
+                  val body_ty = typeLetRhs2(isrec = true, fd.nme.name, body)
                   // implicit val prov: TP = noProv // TODO
                   // subsume(body_ty, PolymorphicType(level, tv)) // TODO
                   TypedNuFun(fd, body_ty)
@@ -75,18 +76,89 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                 case Cls =>
                   val ttu = typeTypingUnit(td.body, allowPure = false)
                   // TODO check against `tv`
+                  println(td.tparams)
+                  println(td.params)
+                  println(td.parents)
+                  implicit val prov: TP =
+                    TypeProvenance(decl.toLoc, decl.describe)
+                  val finalType = freshVar(noProv/*TODO*/, N, S("this"))
+                  // def inherit(parents: Ls[Term], superType: ST, members: Ls[TypedNuDecl -> ST]): Unit = parents match {
+                  def inherit(parents: Ls[Term], superType: ST, members: Ls[TypedNuDecl]): Unit = parents match {
+                    case p :: ps =>
+                      val newMembs = trace(s"Inheriting from $p") {
+                        p match {
+                          case Var(nme) =>
+                            ctx.get(nme) match {
+                              case S(lti: LazyTypeInfo) =>
+                                lti.complete().freshen match {
+                                  case mxn: TypedNuMxn =>
+                                    // mxn.thisTV
+                                    // mxn.ttu.entities
+                                    // ???
+                                    // val fresh = mxn.freshen
+                                    // println(fresh)
+                                    constrain(superType, mxn.superTV)
+                                    constrain(finalType, mxn.thisTV)
+                                    mxn.ttu.entities.map {
+                                      case fun @ TypedNuFun(fd, ty) =>
+                                        fun
+                                      case _ => ???
+                                    }
+                                  case cls: TypedNuCls =>
+                                    ???
+                                  case als: TypedNuAls =>
+                                    // TODO dealias first?
+                                    err(msg"Cannot inherit from a type alias", p.toLoc)
+                                    Nil
+                                  case cls: TypedNuFun =>
+                                    ???
+                                }
+                              case S(_) =>
+                                err(msg"Cannot inherit from this", p.toLoc)
+                                Nil
+                              case N => 
+                                err(msg"Could not find definition `${nme}`", p.toLoc)
+                                Nil
+                            }
+                          case _ =>
+                            err(msg"Illegal parent specification", p.toLoc)
+                            Nil
+                        }
+                      }()
+                      val newSuperType = superType
+                      inherit(ps, superType, newMembs)
+                    case Nil =>
+                  }
+                  val typedParams = td.params.fields.map {
+                    case (S(nme), Fld(mut, spec, value)) =>
+                      assert(!mut && !spec, "TODO") // TODO
+                      value.toType match {
+                        case R(tpe) =>
+                          implicit val vars: Map[Str, SimpleType] = Map.empty // TODO type params
+                          implicit val newDefsInfo: Map[Str, (TypeDefKind, Int)] = Map.empty // TODO?
+                          val ty = typeType(tpe)
+                          nme -> FieldType(N, ty)(provTODO)
+                        case _ => ???
+                      }
+                    case (N, Fld(mut, spec, nme: Var)) =>
+                      assert(!mut && !spec, "TODO") // TODO
+                      nme -> FieldType(N, freshVar(ttp(nme), N, S(nme.name)))(provTODO)
+                    case _ => ???
+                  }
+                  val baseType = RecordType(typedParams)(provTODO)
+                  inherit(td.parents, baseType, Nil)
                   TypedNuCls(td, ttu)
                 case Mxn =>
-                  implicit val prov = noProv // TODO
-                  ctx.nextLevel { newCtx =>
+                  implicit val prov: TP = noProv // TODO
+                  ctx.nextLevel { implicit ctx =>
                     val thisTV = freshVar(noProv/*FIXME*/, N, S("this"))
                     val superTV = freshVar(noProv/*FIXME*/, N, S("super"))
-                    newCtx += "this" -> VarSymbol(thisTV, Var("this"))
-                    newCtx += "super" -> VarSymbol(superTV, Var("super"))
-                    newCtx |> { implicit ctx =>
-                      val ttu = typeTypingUnit(td.body, allowPure = false)
-                      TypedNuMxn(td, thisTV, superTV, ttu)
-                    }
+                    ctx += "this" -> VarSymbol(thisTV, Var("this"))
+                    ctx += "super" -> VarSymbol(superTV, Var("super"))
+                    // ctx |> { implicit ctx =>
+                    val ttu = typeTypingUnit(td.body, allowPure = false)
+                    TypedNuMxn(td, thisTV, superTV, ttu)
+                    // }
                   }
                 case _ => ???
               }

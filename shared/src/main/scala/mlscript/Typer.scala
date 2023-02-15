@@ -176,6 +176,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     override def toString: Str = "[NO PROV]"
   }
   def noProv: TypeProvenance = NoProv
+  def provTODO: TypeProvenance = noProv
   def noTyProv: TypeProvenance = TypeProvenance(N, "type", isType = true)
   
   val TopType: ExtrType = ExtrType(false)(noTyProv)

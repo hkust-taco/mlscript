@@ -14,39 +14,10 @@ Foo
 fun fooo(x) =
   class C(y, z)
   C(0, x)
-//│ fun fooo: ‹∀ 0. fooo24'#› where 
-//│ |		fooo24'# := (α25' -> α27')
-//│ |		α27' :> error<>
+//│ fun fooo: ‹∀ 0. fooo25'#› where 
+//│ |		fooo25'# := (α26' -> α31')
+//│ |		α31' :> error<>
 //│ [pretty-printed] fooo: anything -> error
-
-// :d
-mixin Foo {
-  fun test = super.base
-}
-//│ mixin Foo
-//│   this: this32 
-//│   super: super33 
-//│   |		super33 <: {base: base36_37}
-//│   fun test: ‹∀ 1. test35''#› where 
-//│   |		test35''# := base36''
-//│   |		base36'' :> base36_37 <: test35''#
-//│   [pretty-printed] test: nothing
-
-// :ns
-mixin Foo {
-  fun test(x) = [super.base + x, x, super.misc]
-}
-//│ mixin Foo
-//│   this: this42 
-//│   super: super43 
-//│   |		super43 <: {misc: misc51_52} & {base: base47_48}
-//│   |		base47_48 <: int<number>
-//│   fun test: ‹∀ 1. test45''#› where 
-//│   |		test45''# := (α46'' -> (α50'', α46'', misc51'',))
-//│   |		α46'' <: int<number>
-//│   |		α50'' :> int<number>
-//│   |		misc51'' :> misc51_52
-//│   [pretty-printed] test: (int & 'a) -> (int, 'a, nothing,)
 
 
 
