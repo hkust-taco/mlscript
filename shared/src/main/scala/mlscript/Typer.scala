@@ -160,8 +160,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   implicit def lvl(implicit ctx: Ctx): Int = ctx.lvl
   
   import TypeProvenance.{apply => tp}
-  def ttp(trm: Term, desc: Str = ""): TypeProvenance =
-    TypeProvenance(trm.toLoc, if (desc === "") trm.describe else desc)
+  def ttp(trm: Term, desc: Str = "", isType: Bool = false): TypeProvenance =
+    TypeProvenance(trm.toLoc, if (desc === "") trm.describe else desc, isType = isType)
   def originProv(loco: Opt[Loc], desc: Str, name: Str): TypeProvenance = {
     tp(loco, desc, S(name), isType = true)
     // ^ If we did not treat "origin provenances" differently,

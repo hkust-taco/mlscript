@@ -54,7 +54,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   }
   
   // case class TypedNuCls(nme: TypeName) extends TypedNuTypeDef(Als) with TypedNuTermDef {
-  case class TypedNuCls(td: NuTypeDef, ttu: TypedTypingUnit) extends TypedNuTypeDef(Cls) with TypedNuTermDef {
+  case class TypedNuCls(td: NuTypeDef, ttu: TypedTypingUnit, params: Ls[Var -> FieldType]) extends TypedNuTypeDef(Cls) with TypedNuTermDef {
   // case class TypedNuCls(td: NuTypeDef, paramTypes: Ls[ST], ttu: TypedTypingUnit) extends TypedNuTypeDef(Cls) with TypedNuTermDef {
     def nme: TypeName = td.nme
     def name: Str = nme.name

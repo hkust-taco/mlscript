@@ -74,7 +74,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
             case td: NuTypeDef =>
               td.kind match {
                 case Cls =>
-                  val ttu = typeTypingUnit(td.body, allowPure = false)
+                  val ttu = typeTypingUnit(td.body, allowPure = false) // TODO use
                   // TODO check against `tv`
                   println(td.tparams)
                   println(td.params)
@@ -126,8 +126,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                         }
                       }()
                       val newSuperType = superType
-                      inherit(ps, superType, newMembs)
+                      inherit(ps, newSuperType, newMembs)
                     case Nil =>
+                      constrain(superType, finalType)
                   }
                   val typedParams = td.params.fields.map {
                     case (S(nme), Fld(mut, spec, value)) =>
@@ -145,9 +146,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                       nme -> FieldType(N, freshVar(ttp(nme), N, S(nme.name)))(provTODO)
                     case _ => ???
                   }
-                  val baseType = RecordType(typedParams)(provTODO)
+                  val baseType = RecordType(typedParams)(ttp(td.params, isType = true))
                   inherit(td.parents, baseType, Nil)
-                  TypedNuCls(td, ttu)
+                  TypedNuCls(td, ttu, typedParams)
                 case Mxn =>
                   implicit val prov: TP = noProv // TODO
                   ctx.nextLevel { implicit ctx =>
@@ -174,9 +175,10 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     }
     def typeSignature(implicit raise: Raise): ST = if (isComputing) tv else complete() match {
       case cls: TypedNuCls =>
-        // ???
-        // TODO
-        errType
+        FunctionType(
+          TupleType(cls.params.mapKeys(some))(provTODO),
+          ClassTag(Var(cls.td.nme.name), Set.empty)(provTODO)
+        )(provTODO)
       case TypedNuFun(fd, ty) => ???
     }
     override def toString: String =

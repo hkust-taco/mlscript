@@ -58,7 +58,19 @@ class Base1(base: int): BaseTest
 //│ | |   where 
 //│ | | 0. C this44 <! this23'    (0)
 //│ | | | NEW this23' LB (0)
+//│ | CONSTRAIN {base: Int} <! this44
+//│ |   where 
+//│ | 0. C {base: Int} <! this44    (0)
+//│ | | NEW this44 LB (0)
 //│ class Base1
+
+:ns
+Base1
+//│ Typed: (base: int,) -> Base1
+
+// TODO
+Base1
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: Base1
 
 class Base1(base): BaseTest
 //│ class Base1
@@ -66,9 +78,11 @@ class Base1(base): BaseTest
 :e
 class Base1(x): BaseTest
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.66: 	class Base1(x): BaseTest
+//│ ║  l.79: 	class Base1(x): BaseTest
 //│ ║        	      ^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `{x: ?x}` does not have field 'base'
+//│ ╟── type `{x: ?x}` does not have field 'base'
+//│ ║  l.79: 	class Base1(x): BaseTest
+//│ ║        	           ^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.8: 	  fun test = super.base
 //│ ║       	             ^^^^^^^^^^
@@ -77,8 +91,9 @@ class Base1(x): BaseTest
 //│ ╙──     	             ^^^^^
 //│ class Base1
 
+// TODO
 Base1
-//│ Typed: error
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: Base1
 
 
 // :ns
@@ -86,14 +101,14 @@ mixin Foo {
   fun test(x) = [super.base + x, x, super.misc]
 }
 //│ mixin Foo
-//│   this: this52' 
-//│   super: super53' 
-//│   |		super53' <: {misc: misc61_62'} & {base: base57_58'}
-//│   |		base57_58' <: int<number>
-//│   fun test: ‹∀ 1. test55''#› where 
-//│   |		test55''# := (α56'' -> (α60'', α56'', misc61'',))
-//│   |		α56'' <: int<number>
-//│   |		α60'' :> int<number>
-//│   |		misc61'' :> misc61_62'
+//│   this: this53' 
+//│   super: super54' 
+//│   |		super54' <: {misc: misc62_63'} & {base: base58_59'}
+//│   |		base58_59' <: int<number>
+//│   fun test: ‹∀ 1. test56''#› where 
+//│   |		test56''# := (α57'' -> (α61'', α57'', misc62'',))
+//│   |		α57'' <: int<number>
+//│   |		α61'' :> int<number>
+//│   |		misc62'' :> misc62_63'
 //│   [pretty-printed] test: (int & 'a) -> (int, 'a, nothing,)
 

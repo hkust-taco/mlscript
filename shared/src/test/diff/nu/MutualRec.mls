@@ -9,15 +9,32 @@ class Foo()
 //│ Typed: 123
 
 Foo
-//│ Typed: error
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: Foo
+//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
+//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$9(TypeSimplifier.scala:191)
+//│ 	at: mlscript.NormalForms$Conjunct.toTypeWith(NormalForms.scala:399)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$6(TypeSimplifier.scala:324)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.TypeSimplifier.helper$1(TypeSimplifier.scala:162)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$82(TypeSimplifier.scala:340)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.TypeSimplifier.go$1(TypeSimplifier.scala:346)
 
 fun fooo(x) =
   class C(y, z)
   C(0, x)
-//│ fun fooo: ‹∀ 0. fooo25'#› where 
-//│ |		fooo25'# := (α26' -> α31')
-//│ |		α31' :> error<>
-//│ [pretty-printed] fooo: anything -> error
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: C
+//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:631)
+//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$9(TypeSimplifier.scala:191)
+//│ 	at: mlscript.NormalForms$Conjunct.toTypeWith(NormalForms.scala:399)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$6(TypeSimplifier.scala:324)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.TypeSimplifier.helper$1(TypeSimplifier.scala:162)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$82(TypeSimplifier.scala:340)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.TypeSimplifier.go$1(TypeSimplifier.scala:346)
 
 
 
