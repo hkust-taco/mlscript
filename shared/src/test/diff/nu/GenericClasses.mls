@@ -7,20 +7,28 @@
 class Some<A>(value: A) {
   fun get = value
   fun toArray = [value]
+  fun mapBad(f) = Some(f(value)) // Notice the extruded type
 }
 //│ class Some
-//│   fun get: ‹∀ 1. get28''#› where 
-//│   |		get28''# := A23'
+//│   fun get: ‹∀ 1. get29''#› where 
+//│   |		get29''# := A23'
 //│   [pretty-printed] get: nothing
-//│   fun toArray: ‹∀ 1. toArray29''#› where 
-//│   |		toArray29''# := (A23',)
+//│   fun toArray: ‹∀ 1. toArray30''#› where 
+//│   |		toArray30''# := (A23',)
 //│   [pretty-printed] toArray: (nothing,)
+//│   fun mapBad: ‹∀ 1. mapBad31''#› where 
+//│   |		mapBad31''# := (α32'' -> α34'')
+//│   |		α32'' <: ((A23',) -> α33'')
+//│   |		α33'' <: α33_35
+//│   |		α34'' :> α34_36
+//│   [pretty-printed] mapBad: (nothing -> anything) -> nothing
+
 
 let s = Some(1)
-//│ fun s: ‹∀ 0. s35'#› where 
-//│ |		s35'# := α41'
-//│ |		A23_38' :> 1<int,number>
-//│ |		α41' :> (Some<> & {Some#A: mut A23_38'..A23_38'}) <: s35'#
+//│ fun s: ‹∀ 0. s49'#› where 
+//│ |		s49'# := α60'
+//│ |		A23_52' :> 1<int,number>
+//│ |		α60' :> (Some<> & {Some#A: mut A23_52'..A23_52'}) <: s49'#
 //│ [pretty-printed] s: Some & {Some#A = 'A}
 //│ |  where
 //│ |    'A :> 1
@@ -34,17 +42,47 @@ s.get
 s.toArray
 //│ Typed: (1,)
 
+
+
+// FIXME
+
+s.mapBad
+//│ Typed: (1 -> anything) -> nothing
+
+s.mapBad(succ)
+//│ Typed: nothing
+
+
+s.map
+//│ ╔══[ERROR] class `Some` does not contain member `map`
+//│ ║  l.55: 	s.map
+//│ ╙──      	 ^^^^
+//│ Typed: error
+
+s.map(succ)
+//│ ╔══[ERROR] class `Some` does not contain member `map`
+//│ ║  l.61: 	s.map(succ)
+//│ ╙──      	 ^^^^
+//│ Typed: error
+
+
+
 module None {
   fun get = error
   fun toArray = []
+  fun mapBad(f) = None
 }
 //│ class None
-//│   fun get: ‹∀ 1. get81''#› where 
-//│   |		get81''# := ⊥
+//│   fun get: ‹∀ 1. get180''#› where 
+//│   |		get180''# := ⊥
 //│   [pretty-printed] get: nothing
-//│   fun toArray: ‹∀ 1. toArray82''#› where 
-//│   |		toArray82''# := ()
+//│   fun toArray: ‹∀ 1. toArray181''#› where 
+//│   |		toArray181''# := ()
 //│   [pretty-printed] toArray: ()
+//│   fun mapBad: ‹∀ 1. mapBad182''#› where 
+//│   |		mapBad182''# := (α183'' -> None174)
+//│   [pretty-printed] mapBad: anything -> nothing
+
 
 None.toArray
 //│ Typed: ()
@@ -55,23 +93,61 @@ type Option<A> = Some<A> | None
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 
-let opt = if true then Some(123 + 1) else None
-//│ fun opt: ‹∀ 0. opt92'#› where 
-//│ |		opt92'# := (α101' | None<>)
-//│ |		A23_96' :> int<number>
-//│ |		α101' :> (Some<> & {Some#A: mut A23_96'..A23_96'})
+
+let opt = if true then Some(123) else None
+//│ fun opt: ‹∀ 0. opt197'#› where 
+//│ |		opt197'# := (α209' | None<>)
+//│ |		A23_201' :> 123<int,number>
+//│ |		α209' :> (Some<> & {Some#A: mut A23_201'..A23_201'})
 //│ [pretty-printed] opt: None | Some & {Some#A = 'A}
+//│ |  where
+//│ |    'A :> 123
+
+opt.toArray
+//│ Typed: Array[123]
+
+opt.mapBad(succ)
+//│ Typed: nothing
+
+opt.map(succ)
+//│ ╔══[ERROR] class `Some` does not contain member `map`
+//│ ║  l.110: 	opt.map(succ)
+//│ ╙──       	   ^^^^
+//│ Typed: error
+
+
+
+if opt is Some then opt.value else 0
+//│ Typed: 0 | 123
+
+if opt is Some(v) then v else 0
+//│ Typed: 0 | 123
+
+
+fun map(x, f) = if x is
+  None then None
+  Some(v) then Some(f(v))
+//│ fun map: ‹∀ 0. map310'#› where 
+//│ |		map310'# := ((α311', α312',) -> (None<> | α328'))
+//│ |		α311' <: ((None<> & α313') | ((Some<> & α314') & ~(None<>)))
+//│ |		α312' <: ((‹∀ 1. value315''›,) -> α327')
+//│ |		α314' <: {value: value315_316'}
+//│ |		value315'' :> value315_316'
+//│ |		α327' <: A23_319'
+//│ |		α328' :> (Some<> & {Some#A: mut A23_319'..A23_319'})
+//│ [pretty-printed] map: (None | Some & {value: 'value}, 'value -> 'A,) -> (None | Some & {Some#A = 'A})
+
+let mo = map(opt, succ)
+//│ fun mo: ‹∀ 0. mo344'#› where 
+//│ |		A23_319' :> int<number>
+//│ |		α328' :> (Some<> & {Some#A: mut A23_319'..A23_319'})
+//│ |		mo344'# := α345'
+//│ |		α345' :> (None<> | α328') <: mo344'#
+//│ [pretty-printed] mo: None | Some & {Some#A = 'A}
 //│ |  where
 //│ |    'A :> int
 
-opt.toArray
+mo.toArray
 //│ Typed: Array[int]
-
-// TODO
-if opt is Some then opt.value else 0
-//│ ╔══[ERROR] Cannot find the constructor `Some` in the context
-//│ ║  l.71: 	if opt is Some then opt.value else 0
-//│ ╙──      	          ^^^^
-//│ Typed: error
 
 

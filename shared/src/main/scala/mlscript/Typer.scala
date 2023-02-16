@@ -1028,13 +1028,20 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       val patTy = pat match {
         case lit: Lit =>
           ClassTag(lit, lit.baseClasses)(tp(pat.toLoc, "literal pattern"))
-        case Var(nme) =>
+        case v @ Var(nme) =>
           val tpr = tp(pat.toLoc, "type pattern")
           ctx.tyDefs.get(nme) match {
             case None =>
-              err("type identifier not found: " + nme, pat.toLoc)(raise)
-              val e = ClassTag(ErrTypeId, Set.empty)(tpr)
-              return ((e -> e) :: Nil) -> e
+              ctx.tyDefs2.get(nme) match {
+                case N =>
+                  err("type identifier not found: " + nme, pat.toLoc)(raise)
+                  val e = ClassTag(ErrTypeId, Set.empty)(tpr)
+                  return ((e -> e) :: Nil) -> e
+                case S(td) =>
+                  ClassTag(v,
+                      Set.empty//TODO
+                    )(provTODO)
+              }
             case Some(td) =>
               td.kind match {
                 case Als => err(msg"can only match on classes and traits", pat.toLoc)(raise)

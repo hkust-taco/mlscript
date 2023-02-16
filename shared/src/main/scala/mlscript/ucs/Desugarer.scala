@@ -160,10 +160,10 @@ class Desugarer extends TypeDefs { self: Typer =>
       // This case handles simple class tests.
       // x is A
       case classNameVar @ Var(className) =>
-        ctx.tyDefs.get(className) match {
+        ctx.tyDefs.get(className).orElse(ctx.tyDefs2.get(className)) match {
           case N => throw new DesugaringException({
             import Message.MessageContext
-            msg"Cannot find the constructor `$className` in the context"
+            msg"Cannot find constructor `$className` in scope"
           }, classNameVar.toLoc)
           case S(_) => 
             printlnUCS(s"Build a Clause.MatchClass from $scrutinee where pattern is $classNameVar")
@@ -172,18 +172,26 @@ class Desugarer extends TypeDefs { self: Typer =>
       // This case handles classes with destruction.
       // x is A(r, s, t)
       case app @ App(classNameVar @ Var(className), Tup(args)) =>
-        ctx.tyDefs.get(className) match {
-          case N =>
-            throw new DesugaringException({
-              import Message.MessageContext
-              msg"Cannot find class `$className` in the context"
-            }, classNameVar.toLoc)
-          case S(td) =>
-            if (args.length === td.positionals.length) {
+        ctx.tyDefs.get(className).map(td => (td.kind, td.positionals))
+            .orElse(ctx.tyDefs2.get(className).map(td =>
+                (td.decl.asInstanceOf[NuTypeDef].kind,
+                  td.complete().asInstanceOf[TypedNuCls].params.map(_._1.name))))
+              match {
+          // ctx2.tyDefs.get(className) match {
+            case N =>
+              throw new DesugaringException({
+                import Message.MessageContext
+                msg"Cannot find class `$className` in scope"
+              }, classNameVar.toLoc)
+          //   case S(td) =>
+          // }
+          // case S(td) =>
+          case S((kind, positionals)) =>
+            if (args.length === positionals.length) {
               val (subPatterns, bindings) = desugarPositionals(
                 scrutinee,
                 args.iterator.map(_._2.value),
-                td.positionals
+                positionals
               )
               val clause = Clause.MatchClass(scrutinee, classNameVar, bindings)(pattern.toLoc.toList ::: collectLocations(scrutinee.term))
               printlnUCS(s"Build a Clause.MatchClass from $scrutinee where pattern is $pattern")
@@ -193,9 +201,9 @@ class Desugarer extends TypeDefs { self: Typer =>
             } else {
               throw new DesugaringException({
                 import Message.MessageContext
-                val expected = td.positionals.length
+                val expected = positionals.length
                 val actual = args.length
-                msg"${td.kind.str} $className expects ${expected.toString} ${
+                msg"${kind.str} $className expects ${expected.toString} ${
                   "parameter".pluralize(expected)
                 } but found ${args.length.toString} ${
                   "parameter".pluralize(expected)
