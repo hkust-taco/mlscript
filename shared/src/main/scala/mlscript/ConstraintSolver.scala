@@ -361,6 +361,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               rec(f0, f1, true)
             case (LhsRefined(S(f: FunctionType), ts, r, trs), RhsBases(pts, _, _)) =>
               annoying(Nil, LhsRefined(N, ts, r, trs), Nil, done_rs)
+            case (LhsRefined(S(ClassTag(Var(nme), _)), ts, r, _), RhsBases(ots, S(R(RhsField(fldNme, fldTy))), trs)) if nme.isCapitalized =>
+              val fty = lookupNuTypeDefField(lookupNuTypeDef(nme, r.fields.toMap), fldNme)
+              rec(fty.ub, fldTy.ub, false)
+              recLb(fldTy, fty)
+              // ???
             case (LhsRefined(S(pt: ClassTag), ts, r, trs), RhsBases(pts, bf, trs2)) =>
               if (pts.contains(pt) || pts.exists(p => pt.parentsST.contains(p.id)))
                 println(s"OK  $pt  <:  ${pts.mkString(" | ")}")
@@ -407,6 +412,65 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           
       }
     }()
+    
+    def lookupNuTypeDef(clsNme: Str, rfnt: Map[Var, FieldType])
+      // (implicit raise: Raise, cctx: ConCtx, ctx: Ctx, shadows: Shadows)
+      (implicit ctx: Ctx)
+      : TypedNuCls = {
+      val info = ctx.tyDefs2(clsNme)
+      
+      // Option.when(info.isComputing) {
+      //   ???
+      // }.getOrElse 
+      { info.complete() match {
+        case td: TypedNuCls =>
+          implicit val freshened: MutMap[TV, ST] = MutMap.empty
+          implicit val shadows: Shadows = Shadows.empty
+          // freshened ++= td.tparams.map(tp => tp._2 -> TopType)
+          td.tparams.foreach { case (tn, _tv) =>
+            val tv = freshVar(_tv.prov, S(_tv), _tv.nameHint)
+            println(s"Assigning $tv")
+            assert(tv.assignedTo.isEmpty)
+            tv.assignedTo = S(rfnt.get(Var(td.nme.name + "#" + tn.name)) match {
+              case S(fty) =>
+                TypeBounds(
+                  fty.lb.getOrElse(BotType),
+                  fty.ub,
+                )(tv.prov)
+              case N =>
+                // FIXME type bounds are kind of wrong for this
+                TypeBounds(
+                  tv.lowerBounds.foldLeft(BotType: ST)(_ | _),
+                  tv.upperBounds.foldLeft(TopType: ST)(_ & _),
+                )(tv.prov)
+            })
+            freshened += _tv -> tv
+          }
+          // println(td)
+          // val res = td.freshenAbove(td.level + 1, rigidify = true).asInstanceOf[TypedNuCls]
+          val res =
+            // td.freshenAbove(td.level, rigidify = true).asInstanceOf[TypedNuCls]
+            td.freshenAbove(td.level, rigidify = false).asInstanceOf[TypedNuCls]
+          // println(res)
+          // println(res.members.map(_._2.asInstanceOf[TypedNuFun].ty.showBounds))
+          res
+        case _ => ???
+      }}
+    }
+    def lookupNuTypeDefField(cls: TypedNuCls, fld: Var): FieldType = {
+      // println(fld.name, cls.members)
+      cls.members.get(fld.name) match {
+        case S(d: TypedNuFun) =>
+          d.ty.toUpper(provTODO)
+        case S(p: NuParam) =>
+          p.ty
+        case N =>
+          err(msg"${cls.td.kind.str} `${cls.td.nme.name}` does not contain member `${fld.name}`",
+            // ttp(fld))
+            fld.toLoc).toUpper(noProv)
+        // case _ => ???
+      }
+    }
     
     /** Helper function to constrain Field lower bounds. */
     def recLb(lhs: FieldType, rhs: FieldType)
@@ -557,43 +621,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs, true)
           
           case (ClassTag(Var(nme), _), rt: RecordType) if nme.isCapitalized =>
-            def lookupNuTypeDef(clsNme: Str): TypedNuCls = {
-              val info = ctx.tyDefs2(clsNme)
-              
-              // Option.when(info.isComputing) {
-              //   ???
-              // }.getOrElse 
-              { info.complete() match {
-                case td: TypedNuCls =>
-                  implicit val freshened: MutMap[TV, ST] = MutMap.empty
-                  implicit val shadows: Shadows = Shadows.empty
-                  println(td)
-                  // val res = td.freshenAbove(td.level + 1, rigidify = true).asInstanceOf[TypedNuCls]
-                  val res =
-                    // td.freshenAbove(td.level, rigidify = true).asInstanceOf[TypedNuCls]
-                    td.freshenAbove(td.level, rigidify = false).asInstanceOf[TypedNuCls]
-                  println(res)
-                  // println(res.members.map(_._2.asInstanceOf[TypedNuFun].ty.showBounds))
-                  res
-                case _ => ???
-              }}
-            }
-            def lookupNuTypeDefField(cls: TypedNuCls, rfnt: Map[Var, Field], fld: Var): FieldType = {
-              println(fld.name, cls.members)
-              cls.members.get(fld.name) match {
-                case S(d: TypedNuFun) =>
-                  d.ty.toUpper(provTODO)
-                case S(p: NuParam) =>
-                  p.ty
-                case N =>
-                  err(msg"${cls.td.kind.str} `${cls.td.nme.name}` does not contain member `${fld.name}`",
-                    // ttp(fld))
-                    fld.toLoc).toUpper(noProv)
-                // case _ => ???
-              }
-            }
             rt.fields.foreach { case (fldNme, fldTy) =>
-              val fty = lookupNuTypeDefField(lookupNuTypeDef(nme), Map.empty, fldNme)
+              val fty = lookupNuTypeDefField(lookupNuTypeDef(nme, Map.empty), fldNme)
               rec(fty.ub, fldTy.ub, false)
               recLb(fldTy, fty)
             }

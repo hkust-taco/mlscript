@@ -6,46 +6,72 @@
 // :d
 class Some<A>(value: A) {
   fun get = value
+  fun toArray = [value]
 }
 //│ class Some
-//│   fun get: ‹∀ 1. get27''#› where 
-//│   |		get27''# := A23'
+//│   fun get: ‹∀ 1. get28''#› where 
+//│   |		get28''# := A23'
 //│   [pretty-printed] get: nothing
-
+//│   fun toArray: ‹∀ 1. toArray29''#› where 
+//│   |		toArray29''# := (A23',)
+//│   [pretty-printed] toArray: (nothing,)
 
 let s = Some(1)
-//│ fun s: ‹∀ 0. s31'#› where 
-//│ |		s31'# := α35'
-//│ |		A23_34' :> 1<int,number>
-//│ |		α35' :> (Some<> & {A: mut A23_34'..A23_34'}) <: s31'#
-//│ [pretty-printed] s: Some & {A = 'A}
+//│ fun s: ‹∀ 0. s35'#› where 
+//│ |		s35'# := α41'
+//│ |		A23_38' :> 1<int,number>
+//│ |		α41' :> (Some<> & {Some#A: mut A23_38'..A23_38'}) <: s35'#
+//│ [pretty-printed] s: Some & {Some#A = 'A}
 //│ |  where
 //│ |    'A :> 1
 
-// TODO
 s.value
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.26: 	s.value
-//│ ║        	^^^^^^^
-//│ ╟── application of type `Some & {A = ?A}` does not have field 'value'
-//│ ║  l.16: 	let s = Some(1)
-//│ ║        	        ^^^^^^^
-//│ ╟── but it flows into reference with expected type `{value: ?value}`
-//│ ║  l.26: 	s.value
-//│ ╙──      	^
-//│ Typed: error
+//│ Typed: 1
+
+s.get
+//│ Typed: 1
+
+s.toArray
+//│ Typed: (1,)
+
+module None {
+  fun get = error
+  fun toArray = []
+}
+//│ class None
+//│   fun get: ‹∀ 1. get81''#› where 
+//│   |		get81''# := ⊥
+//│   [pretty-printed] get: nothing
+//│   fun toArray: ‹∀ 1. toArray82''#› where 
+//│   |		toArray82''# := ()
+//│   [pretty-printed] toArray: ()
+
+None.toArray
+//│ Typed: ()
+
 
 // TODO
-s.get
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.39: 	s.get
-//│ ║        	^^^^^
-//│ ╟── application of type `Some & {A = ?A}` does not have field 'get'
-//│ ║  l.16: 	let s = Some(1)
-//│ ║        	        ^^^^^^^
-//│ ╟── but it flows into reference with expected type `{get: ?get}`
-//│ ║  l.39: 	s.get
-//│ ╙──      	^
+type Option<A> = Some<A> | None
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+
+let opt = if true then Some(123 + 1) else None
+//│ fun opt: ‹∀ 0. opt92'#› where 
+//│ |		opt92'# := (α101' | None<>)
+//│ |		A23_96' :> int<number>
+//│ |		α101' :> (Some<> & {Some#A: mut A23_96'..A23_96'})
+//│ [pretty-printed] opt: None | Some & {Some#A = 'A}
+//│ |  where
+//│ |    'A :> int
+
+opt.toArray
+//│ Typed: Array[int]
+
+// TODO
+if opt is Some then opt.value else 0
+//│ ╔══[ERROR] Cannot find the constructor `Some` in the context
+//│ ║  l.71: 	if opt is Some then opt.value else 0
+//│ ╙──      	          ^^^^
 //│ Typed: error
 
 

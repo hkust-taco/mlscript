@@ -89,7 +89,7 @@ trait TypeSimplifier { self: Typer =>
         val prefix = fnme.takeWhile(_ =/= '#')
         val postfix = fnme.drop(prefix.length + 1)
         lazy val default = fty.update(process(_ , N), process(_ , N))
-        if (postfix.isEmpty) v -> default :: Nil
+        if (postfix.isEmpty || prefix.isCapitalized/*  TODO  */) v -> default :: Nil
         else {
           val td = ctx.tyDefs(prefix)
           td.tvarVariances.fold(v -> default :: Nil)(tvv =>

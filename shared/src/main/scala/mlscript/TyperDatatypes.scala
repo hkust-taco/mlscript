@@ -265,7 +265,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
           // ) { case (acc, (tn, tv)) => acc &  }
           ClassTag(Var(cls.td.nme.name), Set.empty)(provTODO) & RecordType.mk(
             cls.tparams.map { case (tn, tv) =>
-              Var(tn.name).withLocOf(tn) -> FieldType(S(tv), tv)(provTODO) }
+              Var(cls.td.nme.name + "#" + tn.name).withLocOf(tn) -> FieldType(S(tv), tv)(provTODO) }
           )(provTODO)
         )(provTODO)
       case TypedNuFun(_, fd, ty) =>
