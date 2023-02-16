@@ -31,9 +31,10 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   case class VarSymbol(ty: ST, definingVar: Var) extends TypeInfo
   
   // TODO rm level? already in ctx
-  class LazyTypeInfo(val level: Int, val decl: NuDecl)(implicit ctx: Ctx) extends TypeInfo {
+  class LazyTypeInfo(val level: Int, val decl: NuDecl)(implicit ctx: Ctx, vars: Map[Str, SimpleType]) extends TypeInfo {
   // class LazyTypeInfo[A](level: Int, decl: NuDecl) extends TypeInfo {
     private def outerCtx = ctx
+    private def outerVars = vars
     val tparams: Ls[TN -> TV] = Nil // TODO
     var isComputing: Bool = false // TODO replace by a Ctx entry
     var result: Opt[TypedNuTermDef] = N
@@ -71,12 +72,13 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                   //   vars = tps.map(tp => tp.name -> freshVar(noProv/*FIXME*/, N)(1)).toMap)
                   val body_ty = ctx.nextLevel { implicit ctx: Ctx => // TODO use poly instead!
                     typeType(ty)(ctx, raise,
-                    vars = tps.map(tp => tp.asInstanceOf[L[TN]].value.name -> freshVar(noProv/*FIXME*/, N)(1)).toMap)
+                    vars = vars ++ tps.map(tp => tp.asInstanceOf[L[TN]].value.name -> freshVar(noProv/*FIXME*/, N)(1)).toMap)
                   }
                   // TODO check against `tv`
                   TypedNuFun(ctx.lvl, fd, PolymorphicType(ctx.lvl, body_ty))
                 case L(body) =>
-                  implicit val vars: Map[Str, SimpleType] = Map.empty
+                  implicit val vars: Map[Str, SimpleType] =
+                    outerVars ++ Map.empty // TODO tparams
                   implicit val gl: GenLambdas = true
                   val body_ty = typeLetRhs2(isrec = true, fd.nme.name, body)
                   // implicit val prov: TP = noProv // TODO
@@ -98,14 +100,14 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                         S(tp.name),
                         true), N, S(tp.name)))
                     
+                    implicit val vars: Map[Str, SimpleType] =
+                      outerVars ++ tparams.iterator.mapKeys(_.name).toMap
+                    
                     val typedParams = td.params.fields.map {
                       case (S(nme), Fld(mut, spec, value)) =>
                         assert(!mut && !spec, "TODO") // TODO
                         value.toType match {
                           case R(tpe) =>
-                            implicit val vars: Map[Str, SimpleType] =
-                              // Map.empty // TODO type params
-                              tparams.iterator.mapKeys(_.name).toMap
                             implicit val newDefsInfo: Map[Str, (TypeDefKind, Int)] = Map.empty // TODO?
                             val ty = typeType(tpe)
                             nme -> FieldType(N, ty)(provTODO)
@@ -231,6 +233,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                 case Mxn =>
                   implicit val prov: TP = noProv // TODO
                   ctx.nextLevel { implicit ctx =>
+                    implicit val vars: Map[Str, SimpleType] =
+                      outerVars ++ Map.empty // TODO type params
                     val thisTV = freshVar(noProv/*FIXME*/, N, S("this"))
                     val superTV = freshVar(noProv/*FIXME*/, N, S("super"))
                     ctx += "this" -> VarSymbol(thisTV, Var("this"))

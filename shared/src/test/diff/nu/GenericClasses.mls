@@ -3,35 +3,42 @@
 :NoJS
 
 
-// :d
 class Some<A>(value: A) {
   fun get = value
   fun toArray = [value]
   fun mapBad(f) = Some(f(value)) // Notice the extruded type
+  fun map(f : A => 'b) = Some(f(value)) // FIXME still problematic
 }
 //│ class Some
-//│   fun get: ‹∀ 1. get29''#› where 
-//│   |		get29''# := A23'
+//│   fun get: ‹∀ 1. get30''#› where 
+//│   |		get30''# := A23'
 //│   [pretty-printed] get: nothing
-//│   fun toArray: ‹∀ 1. toArray30''#› where 
-//│   |		toArray30''# := (A23',)
+//│   fun toArray: ‹∀ 1. toArray31''#› where 
+//│   |		toArray31''# := (A23',)
 //│   [pretty-printed] toArray: (nothing,)
-//│   fun mapBad: ‹∀ 1. mapBad31''#› where 
-//│   |		mapBad31''# := (α32'' -> α34'')
-//│   |		α32'' <: ((A23',) -> α33'')
-//│   |		α33'' <: α33_35
-//│   |		α34'' :> α34_36
+//│   fun mapBad: ‹∀ 1. mapBad32''#› where 
+//│   |		mapBad32''# := (α33'' -> α35'')
+//│   |		α33'' <: ((A23',) -> α34'')
+//│   |		α34'' <: α34_36
+//│   |		α35'' :> α35_37
 //│   [pretty-printed] mapBad: (nothing -> anything) -> nothing
+//│   fun map: ‹∀ 1. map38''#› where 
+//│   |		map38''# := ((A23' -> 'b39'') -> α41'')
+//│   |		'b39'' <: α40''
+//│   |		α40'' <: α40_42
+//│   |		α41'' :> α41_43
+//│   [pretty-printed] map: (nothing -> anything) -> nothing
 
 
 let s = Some(1)
-//│ fun s: ‹∀ 0. s49'#› where 
-//│ |		s49'# := α60'
-//│ |		A23_52' :> 1<int,number>
-//│ |		α60' :> (Some<> & {Some#A: mut A23_52'..A23_52'}) <: s49'#
+//│ fun s: ‹∀ 0. s63'#› where 
+//│ |		s63'# := α79'
+//│ |		A23_66' :> 1<int,number>
+//│ |		α79' :> (Some<> & {Some#A: mut A23_66'..A23_66'}) <: s63'#
 //│ [pretty-printed] s: Some & {Some#A = 'A}
 //│ |  where
 //│ |    'A :> 1
+
 
 s.value
 //│ Typed: 1
@@ -41,7 +48,6 @@ s.get
 
 s.toArray
 //│ Typed: (1,)
-
 
 
 // FIXME
@@ -54,16 +60,10 @@ s.mapBad(succ)
 
 
 s.map
-//│ ╔══[ERROR] class `Some` does not contain member `map`
-//│ ║  l.55: 	s.map
-//│ ╙──      	 ^^^^
-//│ Typed: error
+//│ Typed: (1 -> anything) -> nothing
 
 s.map(succ)
-//│ ╔══[ERROR] class `Some` does not contain member `map`
-//│ ║  l.61: 	s.map(succ)
-//│ ╙──      	 ^^^^
-//│ Typed: error
+//│ Typed: nothing
 
 
 
@@ -73,14 +73,14 @@ module None {
   fun mapBad(f) = None
 }
 //│ class None
-//│   fun get: ‹∀ 1. get180''#› where 
-//│   |		get180''# := ⊥
+//│   fun get: ‹∀ 1. get248''#› where 
+//│   |		get248''# := ⊥
 //│   [pretty-printed] get: nothing
-//│   fun toArray: ‹∀ 1. toArray181''#› where 
-//│   |		toArray181''# := ()
+//│   fun toArray: ‹∀ 1. toArray249''#› where 
+//│   |		toArray249''# := ()
 //│   [pretty-printed] toArray: ()
-//│   fun mapBad: ‹∀ 1. mapBad182''#› where 
-//│   |		mapBad182''# := (α183'' -> None174)
+//│   fun mapBad: ‹∀ 1. mapBad250''#› where 
+//│   |		mapBad250''# := (α251'' -> None242)
 //│   [pretty-printed] mapBad: anything -> nothing
 
 
@@ -95,10 +95,10 @@ type Option<A> = Some<A> | None
 
 
 let opt = if true then Some(123) else None
-//│ fun opt: ‹∀ 0. opt197'#› where 
-//│ |		opt197'# := (α209' | None<>)
-//│ |		A23_201' :> 123<int,number>
-//│ |		α209' :> (Some<> & {Some#A: mut A23_201'..A23_201'})
+//│ fun opt: ‹∀ 0. opt265'#› where 
+//│ |		opt265'# := (α282' | None<>)
+//│ |		A23_269' :> 123<int,number>
+//│ |		α282' :> (Some<> & {Some#A: mut A23_269'..A23_269'})
 //│ [pretty-printed] opt: None | Some & {Some#A = 'A}
 //│ |  where
 //│ |    'A :> 123
@@ -110,8 +110,8 @@ opt.mapBad(succ)
 //│ Typed: nothing
 
 opt.map(succ)
-//│ ╔══[ERROR] class `Some` does not contain member `map`
-//│ ║  l.110: 	opt.map(succ)
+//│ ╔══[ERROR] namespace `None` does not contain member `map`
+//│ ║  l.112: 	opt.map(succ)
 //│ ╙──       	   ^^^^
 //│ Typed: error
 
@@ -127,22 +127,22 @@ if opt is Some(v) then v else 0
 fun map(x, f) = if x is
   None then None
   Some(v) then Some(f(v))
-//│ fun map: ‹∀ 0. map310'#› where 
-//│ |		map310'# := ((α311', α312',) -> (None<> | α328'))
-//│ |		α311' <: ((None<> & α313') | ((Some<> & α314') & ~(None<>)))
-//│ |		α312' <: ((‹∀ 1. value315''›,) -> α327')
-//│ |		α314' <: {value: value315_316'}
-//│ |		value315'' :> value315_316'
-//│ |		α327' <: A23_319'
-//│ |		α328' :> (Some<> & {Some#A: mut A23_319'..A23_319'})
+//│ fun map: ‹∀ 0. map413'#› where 
+//│ |		map413'# := ((α414', α415',) -> (None<> | α436'))
+//│ |		α414' <: ((None<> & α416') | ((Some<> & α417') & ~(None<>)))
+//│ |		α415' <: ((‹∀ 1. value418''›,) -> α435')
+//│ |		α417' <: {value: value418_419'}
+//│ |		value418'' :> value418_419'
+//│ |		α435' <: A23_422'
+//│ |		α436' :> (Some<> & {Some#A: mut A23_422'..A23_422'})
 //│ [pretty-printed] map: (None | Some & {value: 'value}, 'value -> 'A,) -> (None | Some & {Some#A = 'A})
 
 let mo = map(opt, succ)
-//│ fun mo: ‹∀ 0. mo344'#› where 
-//│ |		A23_319' :> int<number>
-//│ |		α328' :> (Some<> & {Some#A: mut A23_319'..A23_319'})
-//│ |		mo344'# := α345'
-//│ |		α345' :> (None<> | α328') <: mo344'#
+//│ fun mo: ‹∀ 0. mo452'#› where 
+//│ |		A23_422' :> int<number>
+//│ |		α436' :> (Some<> & {Some#A: mut A23_422'..A23_422'})
+//│ |		mo452'# := α453'
+//│ |		α453' :> (None<> | α436') <: mo452'#
 //│ [pretty-printed] mo: None | Some & {Some#A = 'A}
 //│ |  where
 //│ |    'A :> int

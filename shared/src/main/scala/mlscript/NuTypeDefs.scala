@@ -157,7 +157,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     }
   }
   
-  def typeTypingUnit(tu: TypingUnit, allowPure: Bool)(implicit ctx: Ctx, raise: Raise): TypedTypingUnit =
+  def typeTypingUnit(tu: TypingUnit, allowPure: Bool)
+        (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): TypedTypingUnit =
       trace(s"${ctx.lvl}. Typing $tu") {
       // trace(s"${ctx.lvl}. Typing $tu") { ctx.nextLevel { implicit ctx: Ctx =>
     // val named = mutable.Map.empty[Str, LazyTypeInfo[TypedNuTermDef]]

@@ -491,7 +491,8 @@ class DiffTests
             
             val (typeDefs, stmts) = if (newDefs) {
               
-              val tpd = typer.typeTypingUnit(TypingUnit(p.tops), allowPure = true)(ctx, raise)
+              val vars: Map[Str, typer.SimpleType] = Map.empty
+              val tpd = typer.typeTypingUnit(TypingUnit(p.tops), allowPure = true)(ctx, raise, vars)
               
               tpd.force()(raise)
               
@@ -683,7 +684,7 @@ class DiffTests
                 // statement is defined and has a body/definition
                 case d @ Def(isrec, nme, L(rhs), isByname) =>
                   typer.dbg = mode.dbg
-                  val ty_sch = typer.typeLetRhs2(isrec, nme.name, rhs)(ctx, raiseToBuffer)
+                  val ty_sch = typer.typeLetRhs2(isrec, nme.name, rhs)(ctx, raiseToBuffer, vars = Map.empty)
                   val exp = getType(ty_sch)
                   // statement does not have a declared type for the body
                   // the inferred type must be used and stored for lookup

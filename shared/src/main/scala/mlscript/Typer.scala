@@ -528,8 +528,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   }
   
   /** Like `typeLetRhs` but removes unnecessary polymorphic type wrappers. */
-  def typeLetRhs2(isrec: Boolean, nme: Str, rhs: Term)(implicit ctx: Ctx, raise: Raise): ST = {
-    val res = typeLetRhs(isrec: Boolean, nme: Str, rhs: Term)(ctx, raise, Map.empty, genLambdas = true)
+  def typeLetRhs2(isrec: Boolean, nme: Str, rhs: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): ST = {
+    val res = typeLetRhs(isrec: Boolean, nme: Str, rhs: Term)(ctx, raise, vars, genLambdas = true)
     def stripPoly(ty: ST): ST = ty match {
       case pt: PolymorphicType =>
         PolymorphicType.mk(pt.polymLevel, stripPoly(pt.body))
