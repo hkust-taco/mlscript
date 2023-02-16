@@ -1,0 +1,161 @@
+:NewParser
+:NewDefs
+:NoJS
+
+
+class Add<E>(lhs: E, rhs: E)
+class Lit(n: int)
+//│ class Add
+//│ class Lit
+
+let add11 = Add(Lit(1), Lit(2))
+//│ fun add11: ‹∀ 0. add1130'#› where 
+//│ |		add1130'# := α34'
+//│ |		E24_31' :> Lit<>
+//│ |		α34' :> (Add<> & {Add#E: mut E24_31'..E24_31'}) <: add1130'#
+//│ [pretty-printed] add11: Add & {Add#E = 'E}
+//│ |  where
+//│ |    'E :> Lit
+
+
+mixin EvalBase {
+  fun eval(e) =
+    if e is
+      Lit(n) then n: int
+      Add(l, r) then this.eval(l) + this.eval(r)
+}
+//│ mixin EvalBase
+//│   this: this41' 
+//│   |		this41' <: {eval: eval62_63'} & {eval: eval55_56'}
+//│   |		eval55_56' <: ((‹∀ 2. lhs51_58'''›,) -> α57_60')
+//│   |		lhs51_58''' :> lhs51_59'
+//│   |		α57_60' <: int<number>
+//│   |		eval62_63' <: ((‹∀ 2. rhs53_65'''›,) -> α64_67')
+//│   |		rhs53_65''' :> rhs53_66'
+//│   |		α64_67' <: int<number>
+//│   super: super42' 
+//│   fun eval: ‹∀ 1. eval44''#› where 
+//│   |		eval44''# := (α45'' -> (Int | α68''))
+//│   |		α45'' <: ((Lit<> & α46'') | ((Add<> & α50'') & ~(Lit<>)))
+//│   |		α46'' <: {n: n47_48''}
+//│   |		n47_48'' <: int<number>
+//│   |		α50'' <: {rhs: rhs53_54''} & {lhs: lhs51_52''}
+//│   |		lhs51_52'' <: lhs51_59'
+//│   |		rhs53_54'' <: rhs53_66'
+//│   |		α68'' :> int<number>
+//│   [pretty-printed] eval: (Add & {lhs: anything, rhs: anything} | Lit & {n: int}) -> int
+
+
+module TestLang: EvalBase
+//│ class TestLang
+
+TestLang.eval
+//│ Typed: 'rhs -> int
+//│   where
+//│     'rhs <: Add & {lhs: 'rhs, rhs: 'rhs} | Lit & {n: int}
+
+TestLang.eval(add11)
+//│ Typed: int
+
+
+class Neg<A>(expr: A)
+//│ class Neg
+
+let add2negadd11 = Add(Lit(2), Neg(add11))
+//│ fun add2negadd11: ‹∀ 0. add2negadd11208'#› where 
+//│ |		E24_31' :> E24_188 | Lit<> <: E24_189
+//│ |		rhs53_171 :> Lit<> <: ((Lit<> & α46_172) | ((Add<> & α50_174) & ~(Lit<>)))
+//│ |		α46_172 :> Lit<> <: {n: n47_173}
+//│ |		n47_173 :> Int <: int<number>
+//│ |		α50_174 <: {rhs: rhs53_175} & {lhs: lhs51_176}
+//│ |		rhs53_175 <: rhs53_171
+//│ |		lhs51_176 <: lhs51_177
+//│ |		lhs51_177 :> Lit<> <: ((Lit<> & α46_178) | ((Add<> & α50_180) & ~(Lit<>)))
+//│ |		α46_178 :> Lit<> <: {n: n47_179}
+//│ |		n47_179 :> Int <: int<number>
+//│ |		α50_180 <: {rhs: rhs53_181} & {lhs: lhs51_182}
+//│ |		rhs53_181 <: rhs53_171
+//│ |		lhs51_182 <: lhs51_177
+//│ |		add1130_186' :> (Add<> & {Add#E: mut E24_188..E24_189}) | α34_187 <: add1130_191 & α34_190
+//│ |		α34_187 :> (Add<> & {Add#E: mut E24_188..E24_189}) | (Add<> & {Add#E: mut E24_188..E24_189}) <: α45_193 & α34_190
+//│ |		E24_188 <: lhs51_198 & rhs53_197
+//│ |		E24_189 :> E24_188 | Lit<> <: lhs51_198 & rhs53_197
+//│ |		α34_190 :> (Add<> & {Add#E: mut E24_188..E24_189}) <: α34_187 & add1130_186'
+//│ |		add1130_191 :> (Add<> & {Add#E: mut E24_188..E24_189}) | α34_187 <: α45_193
+//│ |		α45_193 :> (Add<> & {Add#E: mut E24_188..E24_189}) <: ((Lit<> & α46_194) | ((Add<> & α50_196) & ~(Lit<>)))
+//│ |		α46_194 <: {n: n47_195}
+//│ |		n47_195 <: int<number>
+//│ |		α50_196 :> (Add<> & {Add#E: mut E24_188..E24_189}) <: {rhs: rhs53_197} & {lhs: lhs51_198}
+//│ |		rhs53_197 :> Lit<> <: rhs53_171
+//│ |		lhs51_198 :> Lit<> <: lhs51_177
+//│ |		add2negadd11208'# := α213'
+//│ |		E24_209' :> (Neg<> & {Neg#A: mut A204_211'..A204_211'}) | Lit<>
+//│ |		A204_211' :> (Add<> & {Add#E: mut E24_31'..E24_31'}) | α34_190
+//│ |		α213' :> (Add<> & {Add#E: mut E24_209'..E24_209'}) <: add2negadd11208'#
+//│ [pretty-printed] add2negadd11: Add & {Add#E = 'E}
+//│ |  where
+//│ |    'E :> Lit | Neg & {Neg#A = 'A}
+//│ |    'A :> Add & {Add#E :> 'lhs & 'E0 <: Lit | 'E0}
+//│ |    'lhs <: Add & {lhs: 'lhs, rhs: 'lhs} | Lit & {n: int}
+
+
+mixin EvalNeg {
+  fun eval(e) =
+    if e is Neg(d) then 0 - this.eval(d)
+    else super.eval(e)
+}
+//│ mixin EvalNeg
+//│   this: this249' 
+//│   |		this249' <: {eval: eval258_259'}
+//│   |		eval258_259' <: ((‹∀ 2. expr255_261'''›,) -> α260_263')
+//│   |		expr255_261''' :> expr255_262'
+//│   |		α260_263' <: int<number>
+//│   super: super250' 
+//│   |		super250' <: {eval: eval266_267'}
+//│   |		eval266_267' <: ((α265_269',) -> α268_270')
+//│   fun eval: ‹∀ 1. eval252''#› where 
+//│   |		eval252''# := (α253'' -> (α264'' | α268''))
+//│   |		α253'' <: ((Neg<> & α254'') | (α265'' & ~(Neg<>)))
+//│   |		α254'' <: {expr: expr255_256''}
+//│   |		expr255_256'' <: expr255_262'
+//│   |		α264'' :> int<number>
+//│   |		α265'' <: α265_269'
+//│   |		α268'' :> α268_270'
+//│   [pretty-printed] eval: (Neg & {expr: anything} | ~Neg) -> int
+
+
+module TestLang: EvalBase, EvalNeg
+//│ class TestLang
+
+TestLang.eval
+//│ Typed: 'expr -> int
+//│   where
+//│     'expr <: Neg & {expr: 'expr} | (Add & {lhs: 'expr, rhs: 'expr} | Lit & {n: int}) & ~Neg
+
+
+TestLang.eval(add11)
+//│ Typed: int
+
+TestLang.eval(Neg(add11))
+//│ Typed: int
+
+TestLang.eval(Add(Lit(2), Neg(Lit(1))))
+//│ Typed: int
+
+TestLang.eval(Neg(Neg(add11)))
+//│ Typed: int
+
+
+// FIXME too much polymorphism inferred?
+:ex
+TestLang.eval(add2negadd11)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
+//│ ║  l.151: 	TestLang.eval(add2negadd11)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  E24_682#  <:  rhs53_649    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  E24'  <:  rhs53_649
+//│ Typed: error | int
+
+// TestLang.eval(Add(Lit(2), Neg(add11)))
+
