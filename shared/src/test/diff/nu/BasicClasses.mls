@@ -14,32 +14,32 @@ class Base0(n) {
 //│   fun me: ‹∀ 1. me30''#› where 
 //│   |		this24' :> Base0<> <: {my: my36_37'} & {n: n32_33'}
 //│   |		me30''# := this24'
-//│   |		n32_33' :> ‘n68
-//│   |		my36_37' :> ‹∀ 1. my31_45''#›
-//│   |		my31_45''# := n32_46''
-//│   |		n32_46'' :> ‘n43 <: mine34_47''# & my31_45''#
-//│   |		mine34_47''# := my31_45''#
+//│   |		n32_33' :> n23_65
+//│   |		my36_37' :> ‹∀ 1. my31_44''#›
+//│   |		my31_44''# := n32_45''
+//│   |		n32_45'' :> n32_42 <: mine34_46''# & my31_44''#
+//│   |		mine34_46''# := my31_44''#
 //│   [pretty-printed] me: Base0
 //│   fun my: ‹∀ 1. my31''#› where 
 //│   |		my31''# := n32''
 //│   |		n32'' :> n32_33' <: mine34''# & my31''#
-//│   |		n32_33' :> ‘n68
+//│   |		n32_33' :> n23_65
 //│   |		mine34''# := my31''#
-//│   [pretty-printed] my: 'n
+//│   [pretty-printed] my: nothing
 //│   fun mine: ‹∀ 1. mine34''#› where 
 //│   |		my31''# := n32''
 //│   |		n32'' :> n32_33' <: mine34''# & my31''#
-//│   |		n32_33' :> ‘n68
+//│   |		n32_33' :> n23_65
 //│   |		mine34''# := my31''#
-//│   [pretty-printed] mine: 'n
+//│   [pretty-printed] mine: nothing
 //│   fun oops: ‹∀ 1. oops35''#› where 
 //│   |		oops35''# := my36''
 //│   |		my36'' :> my36_37' <: oops35''#
-//│   |		my36_37' :> ‹∀ 1. my31_45''#›
-//│   |		my31_45''# := n32_46''
-//│   |		n32_46'' :> ‘n43 <: mine34_47''# & my31_45''#
-//│   |		mine34_47''# := my31_45''#
-//│   [pretty-printed] oops: 'n
+//│   |		my36_37' :> ‹∀ 1. my31_44''#›
+//│   |		my31_44''# := n32_45''
+//│   |		n32_45'' :> n32_42 <: mine34_46''# & my31_44''#
+//│   |		mine34_46''# := my31_44''#
+//│   [pretty-printed] oops: nothing
 
 // :d
 // Base0
@@ -73,156 +73,134 @@ let n1 = b1.n
 //│ | | | | | | | 1. FRESHEN me30''# || 0 .. 1  2 false
 //│ | | | | | | | | 1. FRESHEN this24' || 0 .. 1  1 false
 //│ | | | | | | | | | 1. FRESHEN this24' || 0 .. 1  1 false
-//│ | | | | | | | | | | New skolem: this24' ~> ‘this107'
 //│ | | | | | | | | | | 1. FRESHEN Base0<> || 0 .. 1  0 true
 //│ | | | | | | | | | | => Base0<>
-//│ | | | | | | | | | | this24_108' :> List((‘this107' & Base0<>))
 //│ | | | | | | | | | | 1. FRESHEN {my: my36_37'} || 0 .. 1  1 false
 //│ | | | | | | | | | | | 1. FRESHEN {my: my36_37'} || 0 .. 1  1 false
 //│ | | | | | | | | | | | | 1. FRESHEN {my: my36_37'} || 0 .. 1  1 false
 //│ | | | | | | | | | | | | | 1. FRESHEN {my: my36_37'} || 0 .. 1  1 false
 //│ | | | | | | | | | | | | | | 1. FRESHEN {my: my36_37'} || 0 .. 1  1 false
 //│ | | | | | | | | | | | | | | | 1. FRESHEN my36_37' || 0 .. 1  1 false
-//│ | | | | | | | | | | | | | | | | New skolem: my36_37' ~> ‘my109'
-//│ | | | | | | | | | | | | | | | | 1. FRESHEN ‹∀ 1. my31_45''#› || 0 .. 1  0 true
-//│ | | | | | | | | | | | | | | | | => ‹∀ 1. my31_45''#›
-//│ | | | | | | | | | | | | | | | | my36_110' :> List((‘my109' & ‹∀ 1. my31_45''#›))
-//│ | | | | | | | | | | | | | | | | my36_110' <: List(‘my109')
-//│ | | | | | | | | | | | | | | | => my36_110'
-//│ | | | | | | | | | | | | | | => {my: my36_110'}
-//│ | | | | | | | | | | | | | => {my: my36_110'}
-//│ | | | | | | | | | | | | => {my: my36_110'}
-//│ | | | | | | | | | | | => {my: my36_110'}
-//│ | | | | | | | | | | => {my: my36_110'}
+//│ | | | | | | | | | | | | | | | | 1. FRESHEN ‹∀ 1. my31_44''#› || 0 .. 1  0 true
+//│ | | | | | | | | | | | | | | | | => ‹∀ 1. my31_44''#›
+//│ | | | | | | | | | | | | | | | => my36_108'
+//│ | | | | | | | | | | | | | | => {my: my36_108'}
+//│ | | | | | | | | | | | | | => {my: my36_108'}
+//│ | | | | | | | | | | | | => {my: my36_108'}
+//│ | | | | | | | | | | | => {my: my36_108'}
+//│ | | | | | | | | | | => {my: my36_108'}
 //│ | | | | | | | | | | 1. FRESHEN {n: n32_33'} || 0 .. 1  1 false
 //│ | | | | | | | | | | | 1. FRESHEN {n: n32_33'} || 0 .. 1  1 false
 //│ | | | | | | | | | | | | 1. FRESHEN {n: n32_33'} || 0 .. 1  1 false
 //│ | | | | | | | | | | | | | 1. FRESHEN {n: n32_33'} || 0 .. 1  1 false
 //│ | | | | | | | | | | | | | | 1. FRESHEN {n: n32_33'} || 0 .. 1  1 false
 //│ | | | | | | | | | | | | | | | 1. FRESHEN n32_33' || 0 .. 1  1 false
-//│ | | | | | | | | | | | | | | | | New skolem: n32_33' ~> ‘n111'
-//│ | | | | | | | | | | | | | | | | 1. FRESHEN ‘n68 || 0 .. 1  0 true
-//│ | | | | | | | | | | | | | | | | => ‘n68
-//│ | | | | | | | | | | | | | | | | n32_112' :> List((‘n111' & ‘n68))
-//│ | | | | | | | | | | | | | | | | n32_112' <: List(‘n111')
-//│ | | | | | | | | | | | | | | | => n32_112'
-//│ | | | | | | | | | | | | | | => {n: n32_112'}
-//│ | | | | | | | | | | | | | => {n: n32_112'}
-//│ | | | | | | | | | | | | => {n: n32_112'}
-//│ | | | | | | | | | | | => {n: n32_112'}
-//│ | | | | | | | | | | => {n: n32_112'}
-//│ | | | | | | | | | | this24_108' <: List(((‘this107' | {my: my36_110'}) | {n: n32_112'}))
-//│ | | | | | | | | | => this24_108'
-//│ | | | | | | | | => this24_108'
+//│ | | | | | | | | | | | | | | | | 1. FRESHEN n23_65 || 0 .. 1  0 true
+//│ | | | | | | | | | | | | | | | | => n23_65
+//│ | | | | | | | | | | | | | | | => n32_109'
+//│ | | | | | | | | | | | | | | => {n: n32_109'}
+//│ | | | | | | | | | | | | | => {n: n32_109'}
+//│ | | | | | | | | | | | | => {n: n32_109'}
+//│ | | | | | | | | | | | => {n: n32_109'}
+//│ | | | | | | | | | | => {n: n32_109'}
+//│ | | | | | | | | | => this24_107'
+//│ | | | | | | | | => this24_107'
 //│ | | | | | | | => me30_106''#
 //│ | | | | | | => ‹∀ 1. me30_106''#›
 //│ | | | | | | 1. FRESHEN ‹∀ 1. my31''#› || 0 .. 1024  1 false
 //│ | | | | | | | 1. FRESHEN my31''# || 0 .. 1  2 false
 //│ | | | | | | | | 1. FRESHEN n32'' || 0 .. 1  2 false
 //│ | | | | | | | | | 1. FRESHEN n32_33' || 0 .. 1  1 false
-//│ | | | | | | | | | => n32_112'
+//│ | | | | | | | | | => n32_109'
 //│ | | | | | | | | | 1. FRESHEN mine34''# || 0 .. 1  2 false
 //│ | | | | | | | | | | 1. FRESHEN mine34''# || 0 .. 1  2 false
 //│ | | | | | | | | | | | 1. FRESHEN mine34''# || 0 .. 1  2 false
 //│ | | | | | | | | | | | | 1. FRESHEN my31''# || 0 .. 1  2 false
 //│ | | | | | | | | | | | | | 1. FRESHEN my31''# || 0 .. 1  2 false
-//│ | | | | | | | | | | | | | => my31_114''
-//│ | | | | | | | | | | | | => my31_114''
-//│ | | | | | | | | | | | => mine34_116''#
-//│ | | | | | | | | | | => mine34_116''#
-//│ | | | | | | | | | => mine34_116''#
+//│ | | | | | | | | | | | | | => my31_111''
+//│ | | | | | | | | | | | | => my31_111''
+//│ | | | | | | | | | | | => mine34_113''#
+//│ | | | | | | | | | | => mine34_113''#
+//│ | | | | | | | | | => mine34_113''#
 //│ | | | | | | | | | 1. FRESHEN my31''# || 0 .. 1  2 false
 //│ | | | | | | | | | | 1. FRESHEN my31''# || 0 .. 1  2 false
-//│ | | | | | | | | | | => my31_114''
-//│ | | | | | | | | | => my31_114''
-//│ | | | | | | | | => n32_115''
-//│ | | | | | | | => my31_114''#
-//│ | | | | | | => ‹∀ 1. my31_114''#›
+//│ | | | | | | | | | | => my31_111''
+//│ | | | | | | | | | => my31_111''
+//│ | | | | | | | | => n32_112''
+//│ | | | | | | | => my31_111''#
+//│ | | | | | | => ‹∀ 1. my31_111''#›
 //│ | | | | | | 1. FRESHEN ‹∀ 1. mine34''#› || 0 .. 1024  1 false
 //│ | | | | | | | 1. FRESHEN mine34''# || 0 .. 1  2 false
-//│ | | | | | | | => mine34_116''#
-//│ | | | | | | => ‹∀ 1. mine34_116''#›
+//│ | | | | | | | => mine34_113''#
+//│ | | | | | | => ‹∀ 1. mine34_113''#›
 //│ | | | | | | 1. FRESHEN ‹∀ 1. oops35''#› || 0 .. 1024  1 false
 //│ | | | | | | | 1. FRESHEN oops35''# || 0 .. 1  2 false
 //│ | | | | | | | | 1. FRESHEN my36'' || 0 .. 1  2 false
 //│ | | | | | | | | | 1. FRESHEN my36_37' || 0 .. 1  1 false
-//│ | | | | | | | | | => my36_110'
+//│ | | | | | | | | | => my36_108'
 //│ | | | | | | | | | 1. FRESHEN oops35''# || 0 .. 1  2 false
 //│ | | | | | | | | | | 1. FRESHEN oops35''# || 0 .. 1  2 false
-//│ | | | | | | | | | | => oops35_119''
-//│ | | | | | | | | | => oops35_119''
-//│ | | | | | | | | => my36_120''
-//│ | | | | | | | => oops35_119''#
-//│ | | | | | | => ‹∀ 1. oops35_119''#›
+//│ | | | | | | | | | | => oops35_116''
+//│ | | | | | | | | | => oops35_116''
+//│ | | | | | | | | => my36_117''
+//│ | | | | | | | => oops35_116''#
+//│ | | | | | | => ‹∀ 1. oops35_116''#›
 //│ | | | | | | 1. FRESHEN n23' || 0 .. 1024  1 false
-//│ | | | | | | | New skolem: n23' ~> ‘n121'
-//│ | | | | | | => ‘n121'
+//│ | | | | | | => n23_118'
 //│ | | | | | | 1. FRESHEN n23' || 0 .. 1024  1 false
-//│ | | | | | | => ‘n121'
+//│ | | | | | | => n23_118'
 //│ | | | | | | 1. FRESHEN ‹∀ 1. mine34''#› || 0 .. 1024  1 false
 //│ | | | | | | | 1. FRESHEN mine34''# || 0 .. 1  2 false
-//│ | | | | | | | => mine34_116''#
-//│ | | | | | | => ‹∀ 1. mine34_116''#›
+//│ | | | | | | | => mine34_113''#
+//│ | | | | | | => ‹∀ 1. mine34_113''#›
 //│ | | | | | | 1. FRESHEN ‹∀ 1. oops35''#› || 0 .. 1024  1 false
 //│ | | | | | | | 1. FRESHEN oops35''# || 0 .. 1  2 false
-//│ | | | | | | | => oops35_119''#
-//│ | | | | | | => ‹∀ 1. oops35_119''#›
+//│ | | | | | | | => oops35_116''#
+//│ | | | | | | => ‹∀ 1. oops35_116''#›
 //│ | | | | | | 1. FRESHEN ‹∀ 1. my31''#› || 0 .. 1024  1 false
 //│ | | | | | | | 1. FRESHEN my31''# || 0 .. 1  2 false
-//│ | | | | | | | => my31_114''#
-//│ | | | | | | => ‹∀ 1. my31_114''#›
+//│ | | | | | | | => my31_111''#
+//│ | | | | | | => ‹∀ 1. my31_111''#›
 //│ | | | | | | 1. FRESHEN ‹∀ 1. me30''#› || 0 .. 1024  1 false
 //│ | | | | | | | 1. FRESHEN me30''# || 0 .. 1  2 false
 //│ | | | | | | | => me30_106''#
 //│ | | | | | | => ‹∀ 1. me30_106''#›
-//│ | | | | | | TypedNuCls(0,class Base0(n,) {fun me = this; fun my = (this).n; fun mine = my; fun oops = (this).my},TypedTypingUnit(List(me ~> TypedNuFun(1,fun me = this,‹∀ 1. me30_106''#›), my ~> TypedNuFun(1,fun my = (this).n,‹∀ 1. my31_114''#›), mine ~> TypedNuFun(1,fun mine = my,‹∀ 1. mine34_116''#›), oops ~> TypedNuFun(1,fun oops = (this).my,‹∀ 1. oops35_119''#›)),None),List((n,‘n121')),HashMap(n -> NuParam(n,‘n121'), mine -> TypedNuFun(1,fun mine = my,‹∀ 1. mine34_116''#›), oops -> TypedNuFun(1,fun oops = (this).my,‹∀ 1. oops35_119''#›), my -> TypedNuFun(1,fun my = (this).n,‹∀ 1. my31_114''#›), me -> TypedNuFun(1,fun me = this,‹∀ 1. me30_106''#›)))
-//│ | | | | | | (n,HashMap(n -> NuParam(n,‘n121'), mine -> TypedNuFun(1,fun mine = my,‹∀ 1. mine34_116''#›), oops -> TypedNuFun(1,fun oops = (this).my,‹∀ 1. oops35_119''#›), my -> TypedNuFun(1,fun my = (this).n,‹∀ 1. my31_114''#›), me -> TypedNuFun(1,fun me = this,‹∀ 1. me30_106''#›)))
-//│ | | | | | | 1. C ‘n121' <! n104'    (3)
-//│ | | | | | | | NEW n104' LB (1)
+//│ | | | | | | TypedNuCls(0,class Base0(n,) {fun me = this; fun my = (this).n; fun mine = my; fun oops = (this).my},TypedTypingUnit(List(me ~> TypedNuFun(1,fun me = this,‹∀ 1. me30_106''#›), my ~> TypedNuFun(1,fun my = (this).n,‹∀ 1. my31_111''#›), mine ~> TypedNuFun(1,fun mine = my,‹∀ 1. mine34_113''#›), oops ~> TypedNuFun(1,fun oops = (this).my,‹∀ 1. oops35_116''#›)),None),List((n,n23_118')),HashMap(n -> NuParam(n,n23_118'), mine -> TypedNuFun(1,fun mine = my,‹∀ 1. mine34_113''#›), oops -> TypedNuFun(1,fun oops = (this).my,‹∀ 1. oops35_116''#›), my -> TypedNuFun(1,fun my = (this).n,‹∀ 1. my31_111''#›), me -> TypedNuFun(1,fun me = this,‹∀ 1. me30_106''#›)))
+//│ | | | | | | (n,HashMap(n -> NuParam(n,n23_118'), mine -> TypedNuFun(1,fun mine = my,‹∀ 1. mine34_113''#›), oops -> TypedNuFun(1,fun oops = (this).my,‹∀ 1. oops35_116''#›), my -> TypedNuFun(1,fun my = (this).n,‹∀ 1. my31_111''#›), me -> TypedNuFun(1,fun me = this,‹∀ 1. me30_106''#›)))
+//│ | | | | | | 1. C n23_118' <! n104'    (3)
+//│ | | | | | | | NEW n23_118' UB (1)
 //│ | 1. : n104'
 //│ | CONSTRAIN n104' <! n1103'
 //│ |   where 
-//│ 		n104' :> ‘n121'
 //│ | 1. C n104' <! n1103'    (0)
 //│ | | NEW n104' UB (1)
-//│ | | 1. C ‘n121' <! n1103'    (2)
-//│ | | | NEW n1103' LB (1)
 //│ | UNSTASHING... (out)
 //│ ⬤ Typed as: ‹∀ 0. n1103'#›
 //│  where: 
 //│ 		n1103'# := n104'
-//│ 		n104' :> ‘n121' <: n1103'#
+//│ 		n104' <: n1103'#
 //│ fun n1: ‹∀ 0. n1103'#› where 
 //│ |		n1103'# := n104'
-//│ |		n104' :> ‘n121' <: n1103'#
-//│ [pretty-printed] n1: 'n
+//│ |		n104' <: n1103'#
+//│ [pretty-printed] n1: nothing
 
 // TODO
 n1 + 1
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.201: 	n1 + 1
-//│ ║         	^^^^
-//│ ╟── reference of type `?n` is not an instance of type `int`
-//│ ║  l.7: 	class Base0(n) {
-//│ ║       	            ^
-//│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.201: 	n1 + 1
-//│ ╙──       	^^
-//│ Typed: error | int
+//│ Typed: int
 
 
 let b2 = Base0("hi")
 let n2 = b2.n
-//│ fun b2: ‹∀ 0. b2129'#› where 
-//│ |		b2129'# := α144'
-//│ |		α144' :> Base0<> <: {n: n146'} & b2129'#
-//│ |		n2145'# := n146'
-//│ |		n146' :> ‘n163' <: n2145'#
+//│ fun b2: ‹∀ 0. b2126'#› where 
+//│ |		b2126'# := α141'
+//│ |		α141' :> Base0<> <: {n: n143'} & b2126'#
+//│ |		n2142'# := n143'
+//│ |		n143' <: n2142'#
 //│ [pretty-printed] b2: Base0
-//│ fun n2: ‹∀ 0. n2145'#› where 
-//│ |		n2145'# := n146'
-//│ |		n146' :> ‘n163' <: n2145'#
-//│ [pretty-printed] n2: 'n
+//│ fun n2: ‹∀ 0. n2142'#› where 
+//│ |		n2142'# := n143'
+//│ |		n143' <: n2142'#
+//│ [pretty-printed] n2: nothing
 
 
 
@@ -232,18 +210,18 @@ class Base1(base: int) {
   fun foo(x) = this.base + x
 }
 //│ class Base1
-//│   fun getBase1: ‹∀ 1. getBase1174''#› where 
-//│   |		getBase1174''# := Int
+//│   fun getBase1: ‹∀ 1. getBase1168''#› where 
+//│   |		getBase1168''# := Int
 //│   [pretty-printed] getBase1: int
-//│   fun getBase2: ‹∀ 1. getBase2175''#› where 
-//│   |		getBase2175''# := base176''
-//│   |		base176'' :> base176_177' <: getBase2175''#
-//│   |		base176_177' :> Int
+//│   fun getBase2: ‹∀ 1. getBase2169''#› where 
+//│   |		getBase2169''# := base170''
+//│   |		base170'' :> base170_171' <: getBase2169''#
+//│   |		base170_171' :> Int
 //│   [pretty-printed] getBase2: int
-//│   fun foo: ‹∀ 1. foo178''#› where 
-//│   |		foo178''# := (α179'' -> α183'')
-//│   |		α179'' <: int<number>
-//│   |		α183'' :> int<number>
+//│   fun foo: ‹∀ 1. foo172''#› where 
+//│   |		foo172''# := (α173'' -> α177'')
+//│   |		α173'' <: int<number>
+//│   |		α177'' :> int<number>
 //│   [pretty-printed] foo: int -> int
 
 class Base1(base: int) {
@@ -252,26 +230,26 @@ class Base1(base: int) {
   fun foo(x) = base + x
 }
 //│ class Base1
-//│   fun getBase1: ‹∀ 1. getBase1209''#› where 
-//│   |		getBase1209''# := Int
+//│   fun getBase1: ‹∀ 1. getBase1203''#› where 
+//│   |		getBase1203''# := Int
 //│   [pretty-printed] getBase1: int
-//│   fun me: ‹∀ 1. me210''#› where 
-//│   |		this204' :> Base1<>
-//│   |		me210''# := this204'
+//│   fun me: ‹∀ 1. me204''#› where 
+//│   |		this198' :> Base1<>
+//│   |		me204''# := this198'
 //│   [pretty-printed] me: Base1
-//│   fun foo: ‹∀ 1. foo211''#› where 
-//│   |		foo211''# := (α212'' -> α214'')
-//│   |		α212'' <: int<number>
-//│   |		α214'' :> int<number>
+//│   fun foo: ‹∀ 1. foo205''#› where 
+//│   |		foo205''# := (α206'' -> α208'')
+//│   |		α206'' <: int<number>
+//│   |		α208'' :> int<number>
 //│   [pretty-printed] foo: int -> int
 
 Base1
 //│ Typed: (base: int,) -> Base1
 
 let b = Base1(1)
-//│ fun b: ‹∀ 0. b227'#› where 
-//│ |		b227'# := α233'
-//│ |		α233' :> Base1<> <: b227'#
+//│ fun b: ‹∀ 0. b221'#› where 
+//│ |		b221'# := α227'
+//│ |		α227' :> Base1<> <: b221'#
 //│ [pretty-printed] b: Base1
 
 b.base
@@ -285,62 +263,59 @@ b.me
 //│ 0. Typing TypingUnit(List((b).me))
 //│ | 0. Typing term (b).me
 //│ | | 0. Typing term b
-//│ | | 0. : b227'#
-//│ | | CONSTRAIN b227'# <! {me: me253}
+//│ | | 0. : b221'#
+//│ | | CONSTRAIN b221'# <! {me: me245}
 //│ | |   where 
-//│ 		getBase1209''# := Int
-//│ 		b227'# := α233'
-//│ 		α233' :> Base1<> <: {getBase1: getBase1244} & {base: base236} & b227'#
-//│ 		base236 :> Int
-//│ 		getBase1244 :> ‹∀ 1. getBase1209''#›
-//│ | | 0. C b227'# <! {me: me253}    (0)
-//│ | | | 0. C α233' <! {me: me253}    (2)
-//│ | | | | NEW α233' UB (0)
-//│ | | | | 0. C Base1<> <! {me: me253}    (4)
-//│ | | | | | 0. C Base1<> <! {me: me253}    (4)
-//│ | | | | | | TypedNuCls(0,class Base1(base: int,) {fun getBase1 = base; fun me = this; fun foo = (x,) => + (base,) (x,)},TypedTypingUnit(List(getBase1 ~> TypedNuFun(1,fun getBase1 = base,‹∀ 1. getBase1209''#›), me ~> TypedNuFun(1,fun me = this,‹∀ 1. me210''#›), foo ~> TypedNuFun(1,fun foo = (x,) => + (base,) (x,),‹∀ 1. foo211''#›)),None),List((base,Int)),Map(base -> NuParam(base,Int), getBase1 -> TypedNuFun(1,fun getBase1 = base,‹∀ 1. getBase1209''#›), me -> TypedNuFun(1,fun me = this,‹∀ 1. me210''#›), foo -> TypedNuFun(1,fun foo = (x,) => + (base,) (x,),‹∀ 1. foo211''#›)))
+//│ 		getBase1203''# := Int
+//│ 		b221'# := α227'
+//│ 		α227' :> Base1<> <: {getBase1: getBase1237} & {base: base230} & b221'#
+//│ 		base230 :> Int
+//│ 		getBase1237 :> ‹∀ 1. getBase1203''#›
+//│ | | 0. C b221'# <! {me: me245}    (0)
+//│ | | | 0. C α227' <! {me: me245}    (2)
+//│ | | | | NEW α227' UB (0)
+//│ | | | | 0. C Base1<> <! {me: me245}    (4)
+//│ | | | | | 0. C Base1<> <! {me: me245}    (4)
+//│ | | | | | | TypedNuCls(0,class Base1(base: int,) {fun getBase1 = base; fun me = this; fun foo = (x,) => + (base,) (x,)},TypedTypingUnit(List(getBase1 ~> TypedNuFun(1,fun getBase1 = base,‹∀ 1. getBase1203''#›), me ~> TypedNuFun(1,fun me = this,‹∀ 1. me204''#›), foo ~> TypedNuFun(1,fun foo = (x,) => + (base,) (x,),‹∀ 1. foo205''#›)),None),List((base,Int)),Map(base -> NuParam(base,Int), getBase1 -> TypedNuFun(1,fun getBase1 = base,‹∀ 1. getBase1203''#›), me -> TypedNuFun(1,fun me = this,‹∀ 1. me204''#›), foo -> TypedNuFun(1,fun foo = (x,) => + (base,) (x,),‹∀ 1. foo205''#›)))
 //│ | | | | | | (>>,0,0)
-//│ | | | | | | 0. FRESHEN ‹∀ 1. getBase1209''#› || 0 .. 1024  0 true
-//│ | | | | | | => ‹∀ 1. getBase1209''#›
-//│ | | | | | | 0. FRESHEN ‹∀ 1. me210''#› || 0 .. 1024  1 false
-//│ | | | | | | | 0. FRESHEN me210''# || 0 .. 1  2 false
-//│ | | | | | | | | 0. FRESHEN this204' || 0 .. 1  1 false
-//│ | | | | | | | | | 0. FRESHEN this204' || 0 .. 1  1 false
-//│ | | | | | | | | | | New skolem: this204' ~> ‘this257
+//│ | | | | | | 0. FRESHEN ‹∀ 1. getBase1203''#› || 0 .. 1024  0 true
+//│ | | | | | | => ‹∀ 1. getBase1203''#›
+//│ | | | | | | 0. FRESHEN ‹∀ 1. me204''#› || 0 .. 1024  1 false
+//│ | | | | | | | 0. FRESHEN me204''# || 0 .. 1  2 false
+//│ | | | | | | | | 0. FRESHEN this198' || 0 .. 1  1 false
+//│ | | | | | | | | | 0. FRESHEN this198' || 0 .. 1  1 false
 //│ | | | | | | | | | | 0. FRESHEN Base1<> || 0 .. 1  0 true
 //│ | | | | | | | | | | => Base1<>
-//│ | | | | | | | | | | this204_258 :> List((‘this257 & Base1<>))
-//│ | | | | | | | | | | this204_258 <: List(‘this257)
-//│ | | | | | | | | | => this204_258
-//│ | | | | | | | | => this204_258
-//│ | | | | | | | => me210_256''#
-//│ | | | | | | => ‹∀ 1. me210_256''#›
-//│ | | | | | | 0. FRESHEN ‹∀ 1. foo211''#› || 0 .. 1024  0 true
-//│ | | | | | | => ‹∀ 1. foo211''#›
-//│ | | | | | | 0. FRESHEN ‹∀ 1. getBase1209''#› || 0 .. 1024  0 true
-//│ | | | | | | => ‹∀ 1. getBase1209''#›
-//│ | | | | | | 0. FRESHEN ‹∀ 1. me210''#› || 0 .. 1024  1 false
-//│ | | | | | | | 0. FRESHEN me210''# || 0 .. 1  2 false
-//│ | | | | | | | => me210_256''#
-//│ | | | | | | => ‹∀ 1. me210_256''#›
-//│ | | | | | | 0. FRESHEN ‹∀ 1. foo211''#› || 0 .. 1024  0 true
-//│ | | | | | | => ‹∀ 1. foo211''#›
-//│ | | | | | | TypedNuCls(0,class Base1(base: int,) {fun getBase1 = base; fun me = this; fun foo = (x,) => + (base,) (x,)},TypedTypingUnit(List(getBase1 ~> TypedNuFun(0,fun getBase1 = base,‹∀ 1. getBase1209''#›), me ~> TypedNuFun(0,fun me = this,‹∀ 1. me210_256''#›), foo ~> TypedNuFun(0,fun foo = (x,) => + (base,) (x,),‹∀ 1. foo211''#›)),None),List((base,Int)),Map(base -> NuParam(base,Int), getBase1 -> TypedNuFun(0,fun getBase1 = base,‹∀ 1. getBase1209''#›), me -> TypedNuFun(0,fun me = this,‹∀ 1. me210_256''#›), foo -> TypedNuFun(0,fun foo = (x,) => + (base,) (x,),‹∀ 1. foo211''#›)))
-//│ | | | | | | (me,Map(base -> NuParam(base,Int), getBase1 -> TypedNuFun(0,fun getBase1 = base,‹∀ 1. getBase1209''#›), me -> TypedNuFun(0,fun me = this,‹∀ 1. me210_256''#›), foo -> TypedNuFun(0,fun foo = (x,) => + (base,) (x,),‹∀ 1. foo211''#›)))
-//│ | | | | | | 0. C ‹∀ 1. me210_256''#› <! me253    (3)
-//│ | | | | | | | NEW me253 LB (0)
-//│ | 0. : me253
-//│ ⬤ Typed as: ‹∀ 0. me253›
+//│ | | | | | | | | | => this198_249
+//│ | | | | | | | | => this198_249
+//│ | | | | | | | => me204_248''#
+//│ | | | | | | => ‹∀ 1. me204_248''#›
+//│ | | | | | | 0. FRESHEN ‹∀ 1. foo205''#› || 0 .. 1024  0 true
+//│ | | | | | | => ‹∀ 1. foo205''#›
+//│ | | | | | | 0. FRESHEN ‹∀ 1. getBase1203''#› || 0 .. 1024  0 true
+//│ | | | | | | => ‹∀ 1. getBase1203''#›
+//│ | | | | | | 0. FRESHEN ‹∀ 1. me204''#› || 0 .. 1024  1 false
+//│ | | | | | | | 0. FRESHEN me204''# || 0 .. 1  2 false
+//│ | | | | | | | => me204_248''#
+//│ | | | | | | => ‹∀ 1. me204_248''#›
+//│ | | | | | | 0. FRESHEN ‹∀ 1. foo205''#› || 0 .. 1024  0 true
+//│ | | | | | | => ‹∀ 1. foo205''#›
+//│ | | | | | | TypedNuCls(0,class Base1(base: int,) {fun getBase1 = base; fun me = this; fun foo = (x,) => + (base,) (x,)},TypedTypingUnit(List(getBase1 ~> TypedNuFun(0,fun getBase1 = base,‹∀ 1. getBase1203''#›), me ~> TypedNuFun(0,fun me = this,‹∀ 1. me204_248''#›), foo ~> TypedNuFun(0,fun foo = (x,) => + (base,) (x,),‹∀ 1. foo205''#›)),None),List((base,Int)),Map(base -> NuParam(base,Int), getBase1 -> TypedNuFun(0,fun getBase1 = base,‹∀ 1. getBase1203''#›), me -> TypedNuFun(0,fun me = this,‹∀ 1. me204_248''#›), foo -> TypedNuFun(0,fun foo = (x,) => + (base,) (x,),‹∀ 1. foo205''#›)))
+//│ | | | | | | (me,Map(base -> NuParam(base,Int), getBase1 -> TypedNuFun(0,fun getBase1 = base,‹∀ 1. getBase1203''#›), me -> TypedNuFun(0,fun me = this,‹∀ 1. me204_248''#›), foo -> TypedNuFun(0,fun foo = (x,) => + (base,) (x,),‹∀ 1. foo205''#›)))
+//│ | | | | | | 0. C ‹∀ 1. me204_248''#› <! me245    (3)
+//│ | | | | | | | NEW me245 LB (0)
+//│ | 0. : me245
+//│ ⬤ Typed as: ‹∀ 0. me245›
 //│  where: 
-//│ 		me253 :> ‹∀ 1. me210_256''#›
-//│ 		me210_256''# := this204_258
-//│ 		this204_258 :> (‘this257 & Base1<>) <: ‘this257
-//│ Typed: Base1 & 'this
+//│ 		me245 :> ‹∀ 1. me204_248''#›
+//│ 		me204_248''# := this198_249
+//│ 		this198_249 :> Base1<>
+//│ Typed: Base1
 
 :e
 b.getBaseTypo
 //│ ╔══[ERROR] class `Base1` does not contain member `getBaseTypo`
-//│ ║  l.341: 	b.getBaseTypo
+//│ ║  l.316: 	b.getBaseTypo
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ Typed: error
 
@@ -356,20 +331,20 @@ class Annots(base: 0 | 1) {
   fun a = base
 }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.355: 	  a: int
+//│ ║  l.330: 	  a: int
 //│ ║         	  ^
 //│ ╟── type `(0 | 1,)` is not an instance of type `int`
-//│ ║  l.354: 	class Annots(base: 0 | 1) {
+//│ ║  l.329: 	class Annots(base: 0 | 1) {
 //│ ║         	                   ^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.355: 	  a: int
+//│ ║  l.330: 	  a: int
 //│ ║         	  ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.355: 	  a: int
+//│ ║  l.330: 	  a: int
 //│ ╙──       	     ^^^
 //│ class Annots
-//│   fun a: ‹∀ 1. a275''#› where 
-//│   |		a275''# := ((0<int,number> | 1<int,number>),)
+//│   fun a: ‹∀ 1. a265''#› where 
+//│   |		a265''# := ((0<int,number> | 1<int,number>),)
 //│   [pretty-printed] a: (0 | 1,)
 
 

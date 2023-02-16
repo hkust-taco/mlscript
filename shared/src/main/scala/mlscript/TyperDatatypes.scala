@@ -50,6 +50,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       res
     }
     
+    // TODO does this also need freshening in freshenAbove?
     private lazy val thisTV: TV =
       freshVar(noProv/*FIXME*/, N, S("this"))(lvl + 1)
     
@@ -143,6 +144,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                                       // ???
                                       // val fresh = mxn.freshen
                                       // println(fresh)
+                                      
+                                      println(s"Fresh $mxn")
+                                      
                                       constrain(superType, mxn.superTV)
                                       constrain(finalType, mxn.thisTV)
                                       
@@ -173,10 +177,14 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                               Nil
                           }
                         }()
-                        val newSuperType = superType &
+                        val newSuperType = 
+                          // superType &
+                          WithType(
+                          superType,
                           RecordType(
                             // newMembs.foldLeft(TopType.toUpper(provTODO))(_ && _.ty.toUpper(provTODO))
                             newMembs.map(m => m.fd.nme -> m.ty.toUpper(provTODO))
+                          )(provTODO)
                           )(provTODO)
                         inherit(ps, newSuperType, members ++ newMembs)
                       case Nil =>

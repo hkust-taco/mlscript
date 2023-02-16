@@ -569,7 +569,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                   implicit val shadows: Shadows = Shadows.empty
                   println(td)
                   // val res = td.freshenAbove(td.level + 1, rigidify = true).asInstanceOf[TypedNuCls]
-                  val res = td.freshenAbove(td.level, rigidify = true).asInstanceOf[TypedNuCls]
+                  val res =
+                    // td.freshenAbove(td.level, rigidify = true).asInstanceOf[TypedNuCls]
+                    td.freshenAbove(td.level, rigidify = false).asInstanceOf[TypedNuCls]
                   println(res)
                   // println(res.members.map(_._2.asInstanceOf[TypedNuFun].ty.showBounds))
                   res
@@ -758,7 +760,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           // * Simple case when the parameter type vars don't need to be split
           case (AliasOf(PolymorphicType(plvl, AliasOf(FunctionType(param, bod)))), _)
           if distributeForalls
-          && param.level <= plvl =>
+          && param.level <= plvl
+          && bod.level > plvl =>
             val newLhs = FunctionType(param, PolymorphicType(plvl, bod))(rhs.prov)
             println(s"DISTRIB-L  ~>  $newLhs")
             rec(newLhs, rhs, true)

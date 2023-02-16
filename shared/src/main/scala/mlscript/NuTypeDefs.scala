@@ -74,7 +74,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         case m @ TypedNuMxn(td, thisTV, superTV, ttu) =>
           // println(">>",m.level)
           // TypedNuMxn(td, thisTV, superTV, ttu.freshenAbove(m.level, rigidify))
-          TypedNuMxn(td, thisTV, superTV, ttu.freshenAbove(lim, rigidify))
+          // TypedNuMxn(td, thisTV, superTV, ttu.freshenAbove(lim, rigidify))
+          TypedNuMxn(td,
+            thisTV.freshenAbove(lim, rigidify).asInstanceOf[TV],
+            superTV.freshenAbove(lim, rigidify).asInstanceOf[TV],
+            ttu.freshenAbove(lim, rigidify))
         case TypedNuFun(level, fd, ty) =>
           // TypedNuFun(level min ctx.lvl, fd, ty.freshenAbove(level, rigidify))
           TypedNuFun(level min ctx.lvl, fd, ty.freshenAbove(lim, rigidify))

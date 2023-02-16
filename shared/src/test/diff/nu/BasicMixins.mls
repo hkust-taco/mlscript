@@ -29,75 +29,32 @@ mixin BaseInc {
 //│   |		α40'' :> int<number> <: test36''#
 //│   [pretty-printed] test: int
 
-:d
+// :d
 class Base1(base: int): BaseTest
-//│ 0. Typing TypingUnit(List(class Base1(base: int,): BaseTest {}))
-//│ Completing class Base1(base: int,): BaseTest {}
-//│ | Typing type int
-//│ | | vars=Map() newDefsInfo=Map()
-//│ | | 1. type int
-//│ | | => Int
-//│ | => Int ——— 
-//│ | List()
-//│ | base: int,
-//│ | List(BaseTest)
-//│ | 1. Inheriting from BaseTest
-//│ | | 1. FRESHEN ‹∀ 1. test26''#› || 0 .. 1024  1 false
-//│ | | | 1. FRESHEN test26''# || 0 .. 1  2 false
-//│ | | | | 1. FRESHEN base27'' || 0 .. 1  2 false
-//│ | | | | | 1. FRESHEN base27_28' || 0 .. 1  1 false
-//│ | | | | | => base27_49'
-//│ | | | | | 1. FRESHEN test26''# || 0 .. 1  2 false
-//│ | | | | | | 1. FRESHEN test26''# || 0 .. 1  2 false
-//│ | | | | | | => test26_47''
-//│ | | | | | => test26_47''
-//│ | | | | => base27_48''
-//│ | | | => test26_47''#
-//│ | | => ‹∀ 1. test26_47''#›
-//│ | | CONSTRAIN {base: Int} <! super24'
-//│ | |   where 
-//│ 		super24' <: {base: base27_28'}
-//│ | | 1. C {base: Int} <! super24'    (0)
-//│ | | | NEW super24' LB (0)
-//│ | | | 1. C {base: Int} <! {base: base27_28'}    (2)
-//│ | | | | 1. C {base: Int} <! {base: base27_28'}    (2)
-//│ | | | | | 1. C {base: Int} <! {base: base27_28'}    (2)
-//│ | | | | | | 1. C {base: Int} <! {base: base27_28'}    (2)
-//│ | | | | | | | 1. C {base: Int} <! {base: base27_28'}    (2)
-//│ | | | | | | | | 1. C Int <! base27_28'    (2)
-//│ | | | | | | | | | NEW base27_28' LB (0)
-//│ | | CONSTRAIN this45' <! this23'
-//│ | |   where 
-//│ | | 1. C this45' <! this23'    (0)
-//│ | | | NEW this45' UB (1)
-//│ | CONSTRAIN {base: Int, test: ‹∀ 1. test26_47''#›} <! this45'
-//│ |   where 
-//│ 		this45' <: this23'
-//│ 		test26_47''# := base27_48''
-//│ 		base27_48'' :> base27_49' <: test26_47''#
-//│ | 1. C {base: Int, test: ‹∀ 1. test26_47''#›} <! this45'    (0)
-//│ | | NEW this45' LB (1)
-//│ | | 1. C {base: Int, test: ‹∀ 1. test26_47''#›} <! this23'    (2)
-//│ | | | NEW this23' LB (1)
-//│ | 1. Typing TypingUnit(List())
-//│ | UNSTASHING... (out)
-//│ CONSTRAIN Base1<> <! this44'
-//│   where 
-//│ 0. C Base1<> <! this44'    (0)
-//│ | NEW this44' LB (0)
 //│ class Base1
+
+Base1(1).test
+//│ Typed: int
 
 
 class Base1(base): BaseTest
 //│ class Base1
 
+Base1
+//│ Typed: (base: anything,) -> Base1
+
+// TODO
+Base1(1).test
+//│ Typed: nothing
+
+
 :e
 class Base1(x): BaseTest
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.95: 	class Base1(x): BaseTest
+//│ ║  l.52: 	class Base1(x): BaseTest
 //│ ║        	      ^^^^^^^^^^^^^^^^^^
 //│ ╟── type `{x: ?x}` does not have field 'base'
-//│ ║  l.95: 	class Base1(x): BaseTest
+//│ ║  l.52: 	class Base1(x): BaseTest
 //│ ║        	           ^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.8: 	  fun test = super.base
@@ -116,321 +73,118 @@ mixin Foo {
   fun test(x) = [super.base + x, x, super.misc]
 }
 //│ mixin Foo
-//│   this: this72' 
-//│   super: super73' 
-//│   |		super73' <: {misc: misc81_82'} & {base: base77_78'}
-//│   |		base77_78' <: int<number>
-//│   fun test: ‹∀ 1. test75''#› where 
-//│   |		test75''# := (α76'' -> (α80'', α76'', misc81'',))
-//│   |		α76'' <: int<number>
-//│   |		α80'' :> int<number>
-//│   |		misc81'' :> misc81_82'
+//│   this: this110' 
+//│   super: super111' 
+//│   |		super111' <: {misc: misc119_120'} & {base: base115_116'}
+//│   |		base115_116' <: int<number>
+//│   fun test: ‹∀ 1. test113''#› where 
+//│   |		test113''# := (α114'' -> (α118'', α114'', misc119'',))
+//│   |		α114'' <: int<number>
+//│   |		α118'' :> int<number>
+//│   |		misc119'' :> misc119_120'
 //│   [pretty-printed] test: (int & 'a) -> (int, 'a, nothing,)
 
 
+
 mixin WrapBase {
-  fun wrap(x) = x
+  // fun wrap(x) = x
+  // fun wrap(x) = x : int
+  fun wrap(x : int) = x : int
 }
 //│ mixin WrapBase
-//│   this: this91' 
-//│   super: super92' 
-//│   fun wrap: ‹∀ 1. wrap94''#› where 
-//│   |		wrap94''# := (α95'' -> α95'')
-//│   [pretty-printed] wrap: 'a -> 'a
+//│   this: this129' 
+//│   super: super130' 
+//│   fun wrap: ‹∀ 1. wrap132''#› where 
+//│   |		wrap132''# := (Int -> Int)
+//│   [pretty-printed] wrap: int -> int
 
-:d
+// :d
 mixin Wrap {
   fun wrap(x) = [super.wrap(x)]
 }
-//│ 0. Typing TypingUnit(List(mixin Wrap() {fun wrap = (x,) => '(' (super).wrap (x,), ')'}))
-//│ Completing mixin Wrap() {fun wrap = (x,) => '(' (super).wrap (x,), ')'}
-//│ | 1. Typing TypingUnit(List(fun wrap = (x,) => '(' (super).wrap (x,), ')'))
-//│ | UNSTASHING... (out)
-//│ Completing fun wrap = (x,) => '(' (super).wrap (x,), ')'
-//│ | 2. Typing term (x,) => '(' (super).wrap (x,), ')'
-//│ | | 2. Typing pattern x,
-//│ | | | 2. Typing pattern x
-//│ | | | 2. : x105''
-//│ | | 2. : (x105'',)
-//│ | | 2. Typing term '(' (super).wrap (x,), ')'
-//│ | | | 2. Typing term (super).wrap (x,),
-//│ | | | | 2. Typing term (super).wrap (x,)
-//│ | | | | | 2. Typing term (super).wrap
-//│ | | | | | | 2. Typing term super
-//│ | | | | | | 2. : super102'
-//│ | | | | | | CONSTRAIN super102' <! {wrap: wrap106''}
-//│ | | | | | |   where 
-//│ | | | | | | 2. C super102' <! {wrap: wrap106''}    (0)
-//│ | | | | | | | wrong level: 2
-//│ | | | | | | | RECONSTRAINING TVs
-//│ | | | | | | | EXTR RHS  ~>  {wrap: wrap106_107'}  to 1
-//│ | | | | | | |  where 
-//│ | | | | | | | 2. C super102' <! {wrap: wrap106_107'}    (2)
-//│ | | | | | | | | NEW super102' UB (1)
-//│ | | | | | 2. : wrap106''
-//│ | | | | | 2. Typing term x
-//│ | | | | | 2. : x105''
-//│ | | | | | CONSTRAIN wrap106'' <! (x105'' -> α108'')
-//│ | | | | |   where 
-//│ 		wrap106'' :> wrap106_107'
-//│ | | | | | 2. C wrap106'' <! (x105'' -> α108'')    (0)
-//│ | | | | | | NEW wrap106'' UB (2)
-//│ | | | | | | 2. C wrap106_107' <! (x105'' -> α108'')    (2)
-//│ | | | | | | | wrong level: 2
-//│ | | | | | | | RECONSTRAINING TVs
-//│ | | | | | | | EXTR RHS  ~>  (x105_109' -> α108_110')  to 1
-//│ | | | | | | |  where 
-//│ | | | | | | | 2. C wrap106_107' <! (x105_109' -> α108_110')    (4)
-//│ | | | | | | | | NEW wrap106_107' UB (1)
-//│ | | | | 2. : α108''
-//│ | | | 2. : (α108'',)
-//│ | | 2. : (α108'',)
-//│ | 2. : (x105'' -> (α108'',))
-//│ | CONSTRAIN (x105'' -> (α108'',)) <! wrap104''
-//│ |   where 
-//│ 		x105'' <: x105_109'
-//│ 		α108'' :> α108_110'
-//│ | 2. C (x105'' -> (α108'',)) <! wrap104''    (0)
-//│ | | NEW wrap104'' LB (2)
-//│ | UNSTASHING... (out)
 //│ mixin Wrap
-//│   this: this101' 
-//│   super: super102' 
-//│   |		super102' <: {wrap: wrap106_107'}
-//│   |		wrap106_107' <: (x105_109' -> α108_110')
-//│ ⬤ Typed as: ‹∀ 1. wrap104''#›
-//│  where: 
-//│ 		wrap104''# := (x105'' -> (α108'',))
-//│ 		x105'' <: x105_109'
-//│ 		α108'' :> α108_110'
-//│   fun wrap: ‹∀ 1. wrap104''#› where 
-//│   |		wrap104''# := (x105'' -> (α108'',))
-//│   |		x105'' <: x105_109'
-//│   |		α108'' :> α108_110'
+//│   this: this135' 
+//│   super: super136' 
+//│   |		super136' <: {wrap: wrap140_141'}
+//│   |		wrap140_141' <: ((α139_143',) -> α142_144')
+//│   fun wrap: ‹∀ 1. wrap138''#› where 
+//│   |		wrap138''# := (α139'' -> (α142'',))
+//│   |		α139'' <: α139_143'
+//│   |		α142'' :> α142_144'
 //│   [pretty-printed] wrap: anything -> (nothing,)
 
 
 
-:d
+// :d
 module WrapBase1: WrapBase, Wrap
-//│ 0. Typing TypingUnit(List(namespace WrapBase1(): WrapBase, Wrap {}))
-//│ Completing namespace WrapBase1(): WrapBase, Wrap {}
-//│ | List()
-//│ | 
-//│ | List(WrapBase, Wrap)
-//│ | 1. Inheriting from WrapBase
-//│ | | 1. FRESHEN ‹∀ 1. wrap94''#› || 0 .. 1024  0 true
-//│ | | => ‹∀ 1. wrap94''#›
-//│ | | CONSTRAIN {} <! super92'
-//│ | |   where 
-//│ | | 1. C {} <! super92'    (0)
-//│ | | | NEW super92' LB (0)
-//│ | | CONSTRAIN this118' <! this91'
-//│ | |   where 
-//│ | | 1. C this118' <! this91'    (0)
-//│ | | | NEW this118' UB (1)
-//│ | 1. Inheriting from Wrap
-//│ | | 1. FRESHEN ‹∀ 1. wrap104''#› || 0 .. 1024  1 false
-//│ | | | 1. FRESHEN wrap104''# || 0 .. 1  2 false
-//│ | | | | 1. FRESHEN (x105'' -> (α108'',)) || 0 .. 1  2 false
-//│ | | | | | 1. FRESHEN (x105'',) || 0 .. 1  2 false
-//│ | | | | | | 1. FRESHEN x105'' || 0 .. 1  2 false
-//│ | | | | | | | 1. FRESHEN x105_109' || 0 .. 1  1 false
-//│ | | | | | | | => x105_123'
-//│ | | | | | | => x105_122''
-//│ | | | | | => (x105_122'',)
-//│ | | | | | 1. FRESHEN (α108'',) || 0 .. 1  2 false
-//│ | | | | | | 1. FRESHEN α108'' || 0 .. 1  2 false
-//│ | | | | | | | 1. FRESHEN α108_110' || 0 .. 1  1 false
-//│ | | | | | | | => α108_125'
-//│ | | | | | | => α108_124''
-//│ | | | | | => (α108_124'',)
-//│ | | | | => (x105_122'' -> (α108_124'',))
-//│ | | | => wrap104_121''#
-//│ | | => ‹∀ 1. wrap104_121''#›
-//│ | | CONSTRAIN {wrap: ‹∀ 1. wrap94''#›} <! super102'
-//│ | |   where 
-//│ 		wrap94''# := (α95'' -> α95'')
-//│ 		super102' <: {wrap: wrap106_107'}
-//│ 		wrap106_107' <: (x105_109' -> α108_110')
-//│ | | 1. C {wrap: ‹∀ 1. wrap94''#›} <! super102'    (0)
-//│ | | | NEW super102' LB (0)
-//│ | | | 1. C {wrap: ‹∀ 1. wrap94''#›} <! {wrap: wrap106_107'}    (2)
-//│ | | | | 1. C ‹∀ 1. wrap94''#› <! wrap106_107'    (2)
-//│ | | | | | NEW wrap106_107' LB (0)
-//│ | | | | | 1. C ‹∀ 1. wrap94''#› <! (x105_109' -> α108_110')    (4)
-//│ | | | | | | could be distribbed: Set(α95'')
-//│ | | | | | | cannot be distribbed: Set(α95'')
-//│ | | | | | | INST [1]   ‹∀ 1. wrap94''#›
-//│ | | | | | |   where  
-//│ 		wrap94''# := (α95'' -> α95'')
-//│ | | | | | | 1. FRESHEN wrap94''# || 1 .. 1024  2 false
-//│ | | | | | | | 1. FRESHEN (α95'' -> α95'') || 1 .. 1024  2 false
-//│ | | | | | | | | 1. FRESHEN (α95'',) || 1 .. 1024  2 false
-//│ | | | | | | | | | 1. FRESHEN α95'' || 1 .. 1024  2 false
-//│ | | | | | | | | | => α95_127'
-//│ | | | | | | | | => (α95_127',)
-//│ | | | | | | | | 1. FRESHEN α95'' || 1 .. 1024  2 false
-//│ | | | | | | | | | 1. FRESHEN α95'' || 1 .. 1024  2 false
-//│ | | | | | | | | | => α95_127'
-//│ | | | | | | | | => α95_127'
-//│ | | | | | | | => (α95_127' -> α95_127')
-//│ | | | | | | => wrap94_126'#
-//│ | | | | | | TO [1] ~>  wrap94_126'#
-//│ | | | | | |   where  
-//│ 		wrap94_126'# := (α95_127' -> α95_127')
-//│ | | | | | | 1. C wrap94_126'# <! (x105_109' -> α108_110')    (6)
-//│ | | | | | | | 1. C (α95_127' -> α95_127') <! (x105_109' -> α108_110')    (9)
-//│ | | | | | | | | 1. C (x105_109',) <! (α95_127',)    (6)
-//│ | | | | | | | | | 1. C x105_109' <! α95_127'    (7)
-//│ | | | | | | | | | | NEW x105_109' UB (1)
-//│ | | | | | | | | 1. C α95_127' <! α108_110'    (6)
-//│ | | | | | | | | | 1. C α95_127' <! α108_110'    (6)
-//│ | | | | | | | | | | NEW α95_127' UB (1)
-//│ | | CONSTRAIN this118' <! this101'
-//│ | |   where 
-//│ 		this118' <: this91'
-//│ | | 1. C this118' <! this101'    (0)
-//│ | | | NEW this118' UB (1)
-//│ | CONSTRAIN {wrap: (‹∀ 1. wrap94''#› & ‹∀ 1. wrap104_121''#›)} <! this118'
-//│ |   where 
-//│ 		wrap94''# := (α95'' -> α95'')
-//│ 		this118' <: this101' & this91'
-//│ 		wrap104_121''# := (x105_122'' -> (α108_124'',))
-//│ 		x105_122'' <: x105_123'
-//│ 		α108_124'' :> α108_125'
-//│ | 1. C {wrap: (‹∀ 1. wrap94''#› & ‹∀ 1. wrap104_121''#›)} <! this118'    (0)
-//│ | | NEW this118' LB (1)
-//│ | | 1. C {wrap: (‹∀ 1. wrap94''#› & ‹∀ 1. wrap104_121''#›)} <! this101'    (2)
-//│ | | | NEW this101' LB (1)
-//│ | | 1. C {wrap: (‹∀ 1. wrap94''#› & ‹∀ 1. wrap104_121''#›)} <! this91'    (2)
-//│ | | | NEW this91' LB (1)
-//│ | 1. Typing TypingUnit(List())
-//│ | UNSTASHING... (out)
-//│ CONSTRAIN WrapBase1<> <! this117'
-//│   where 
-//│ 0. C WrapBase1<> <! this117'    (0)
-//│ | NEW this117' LB (0)
 //│ class WrapBase1
 
 
 WrapBase1
 //│ Typed: WrapBase1
 
-:d
+// :d
 WrapBase1.wrap
-//│ 0. Typing TypingUnit(List((WrapBase1).wrap))
-//│ | 0. Typing term (WrapBase1).wrap
-//│ | | 0. Typing term WrapBase1
-//│ | | 0. : WrapBase1<>
-//│ | | CONSTRAIN WrapBase1<> <! {wrap: wrap128}
-//│ | |   where 
-//│ | | 0. C WrapBase1<> <! {wrap: wrap128}    (0)
-//│ | | | TypedNuCls(0,namespace WrapBase1(): WrapBase, Wrap {},TypedTypingUnit(List(),None),List(),Map(wrap -> TypedNuFun(1,fun wrap = (x,) => '(' (super).wrap (x,), ')',‹∀ 1. wrap104_121''#›)))
-//│ | | | (>>,0,0)
-//│ | | | 0. FRESHEN ‹∀ 1. wrap104_121''#› || 0 .. 1024  1 false
-//│ | | | | 0. FRESHEN wrap104_121''# || 0 .. 1  2 false
-//│ | | | | | 0. FRESHEN (x105_122'' -> (α108_124'',)) || 0 .. 1  2 false
-//│ | | | | | | 0. FRESHEN (x105_122'',) || 0 .. 1  2 false
-//│ | | | | | | | 0. FRESHEN x105_122'' || 0 .. 1  2 false
-//│ | | | | | | | | 0. FRESHEN x105_123' || 0 .. 1  1 false
-//│ | | | | | | | | | New skolem: x105_123' ~> ‘x131
-//│ | | | | | | | | => ‘x131
-//│ | | | | | | | => x105_130''
-//│ | | | | | | => (x105_130'',)
-//│ | | | | | | 0. FRESHEN (α108_124'',) || 0 .. 1  2 false
-//│ | | | | | | | 0. FRESHEN α108_124'' || 0 .. 1  2 false
-//│ | | | | | | | | 0. FRESHEN α108_125' || 0 .. 1  1 false
-//│ | | | | | | | | | New skolem: α108_125' ~> ‘_133
-//│ | | | | | | | | => ‘_133
-//│ | | | | | | | => α108_132''
-//│ | | | | | | => (α108_132'',)
-//│ | | | | | => (x105_130'' -> (α108_132'',))
-//│ | | | | => wrap104_129''#
-//│ | | | => ‹∀ 1. wrap104_129''#›
-//│ | | | TypedNuCls(0,namespace WrapBase1(): WrapBase, Wrap {},TypedTypingUnit(List(),None),List(),Map(wrap -> TypedNuFun(0,fun wrap = (x,) => '(' (super).wrap (x,), ')',‹∀ 1. wrap104_129''#›)))
-//│ | | | (wrap,Map(wrap -> TypedNuFun(0,fun wrap = (x,) => '(' (super).wrap (x,), ')',‹∀ 1. wrap104_129''#›)))
-//│ | | | 0. C ‹∀ 1. wrap104_129''#› <! wrap128    (1)
-//│ | | | | NEW wrap128 LB (0)
-//│ | 0. : wrap128
-//│ ⬤ Typed as: ‹∀ 0. wrap128›
-//│  where: 
-//│ 		wrap128 :> ‹∀ 1. wrap104_129''#›
-//│ 		wrap104_129''# := (x105_130'' -> (α108_132'',))
-//│ 		x105_130'' <: ‘x131
-//│ 		α108_132'' :> ‘_133
-//│ Typed: 'x -> ('_,)
+//│ Typed: int -> (int,)
 
-:d
-WrapBase1.wrap
-//│ 0. Typing TypingUnit(List((WrapBase1).wrap))
-//│ | 0. Typing term (WrapBase1).wrap
-//│ | | 0. Typing term WrapBase1
-//│ | | 0. : WrapBase1<>
-//│ | | CONSTRAIN WrapBase1<> <! {wrap: wrap138}
-//│ | |   where 
-//│ | | 0. C WrapBase1<> <! {wrap: wrap138}    (0)
-//│ | | | TypedNuCls(0,namespace WrapBase1(): WrapBase, Wrap {},TypedTypingUnit(List(),None),List(),Map(wrap -> TypedNuFun(1,fun wrap = (x,) => '(' (super).wrap (x,), ')',‹∀ 1. wrap104_121''#›)))
-//│ | | | (>>,0,0)
-//│ | | | 0. FRESHEN ‹∀ 1. wrap104_121''#› || 0 .. 1024  1 false
-//│ | | | | 0. FRESHEN wrap104_121''# || 0 .. 1  2 false
-//│ | | | | | 0. FRESHEN (x105_122'' -> (α108_124'',)) || 0 .. 1  2 false
-//│ | | | | | | 0. FRESHEN (x105_122'',) || 0 .. 1  2 false
-//│ | | | | | | | 0. FRESHEN x105_122'' || 0 .. 1  2 false
-//│ | | | | | | | | 0. FRESHEN x105_123' || 0 .. 1  1 false
-//│ | | | | | | | | | New skolem: x105_123' ~> ‘x141
-//│ | | | | | | | | => ‘x141
-//│ | | | | | | | => x105_140''
-//│ | | | | | | => (x105_140'',)
-//│ | | | | | | 0. FRESHEN (α108_124'',) || 0 .. 1  2 false
-//│ | | | | | | | 0. FRESHEN α108_124'' || 0 .. 1  2 false
-//│ | | | | | | | | 0. FRESHEN α108_125' || 0 .. 1  1 false
-//│ | | | | | | | | | New skolem: α108_125' ~> ‘_143
-//│ | | | | | | | | => ‘_143
-//│ | | | | | | | => α108_142''
-//│ | | | | | | => (α108_142'',)
-//│ | | | | | => (x105_140'' -> (α108_142'',))
-//│ | | | | => wrap104_139''#
-//│ | | | => ‹∀ 1. wrap104_139''#›
-//│ | | | TypedNuCls(0,namespace WrapBase1(): WrapBase, Wrap {},TypedTypingUnit(List(),None),List(),Map(wrap -> TypedNuFun(0,fun wrap = (x,) => '(' (super).wrap (x,), ')',‹∀ 1. wrap104_139''#›)))
-//│ | | | (wrap,Map(wrap -> TypedNuFun(0,fun wrap = (x,) => '(' (super).wrap (x,), ')',‹∀ 1. wrap104_139''#›)))
-//│ | | | 0. C ‹∀ 1. wrap104_139''#› <! wrap138    (1)
-//│ | | | | NEW wrap138 LB (0)
-//│ | 0. : wrap138
-//│ ⬤ Typed as: ‹∀ 0. wrap138›
-//│  where: 
-//│ 		wrap138 :> ‹∀ 1. wrap104_139''#›
-//│ 		wrap104_139''# := (x105_140'' -> (α108_142'',))
-//│ 		x105_140'' <: ‘x141
-//│ 		α108_142'' :> ‘_143
-//│ Typed: 'x -> ('_,)
+// :d
+// WrapBase1.wrap
 
-// FIXME
 WrapBase1.wrap(1)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.409: 	WrapBase1.wrap(1)
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `1` does not match type `?x`
-//│ ║  l.409: 	WrapBase1.wrap(1)
-//│ ╙──       	               ^
-//│ Typed: ('_,) | error
+//│ Typed: (int,)
 
-// FIXME
+:e
 WrapBase1.wrap("ok")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.419: 	WrapBase1.wrap("ok")
+//│ ║  l.137: 	WrapBase1.wrap("ok")
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"ok"` does not match type `?x`
-//│ ║  l.419: 	WrapBase1.wrap("ok")
-//│ ╙──       	               ^^^^
-//│ Typed: ('_,) | error
+//│ ╟── string literal of type `"ok"` is not an instance of type `int`
+//│ ║  l.137: 	WrapBase1.wrap("ok")
+//│ ║         	               ^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.92: 	  fun wrap(x : int) = x : int
+//│ ║        	               ^^^
+//│ ╟── from reference:
+//│ ║  l.103: 	  fun wrap(x) = [super.wrap(x)]
+//│ ╙──       	                            ^
+//│ Typed: (int,) | error
 
 
-module WrapBase2: WrapBase, Wrap, Wrap
+module WrapBase2: WrapBase, Wrap, Wrap, Wrap
 //│ class WrapBase2
 
-// FIXME
-WrapBase2.wrap
-//│ Typed: ('_ | '_0 | 'x) -> ('_0,)
+let w = WrapBase2.wrap
+//│ fun w: ‹∀ 0. w241'#› where 
+//│ |		w241'# := wrap242'
+//│ |		wrap242' :> ‹∀ 1. wrap138_243''#› <: w241'#
+//│ |		wrap138_243''# := (α139_244'' -> (α142_250'',))
+//│ |		α139_244'' <: α139_245'
+//│ |		α139_245' <: α139_246'
+//│ |		α139_246' <: α139_247'
+//│ |		α139_247' <: α139_248'
+//│ |		α139_248' <: α139_249'
+//│ |		α139_249' <: Int
+//│ |		α142_250'' :> α142_251'
+//│ |		α142_251' :> ‹∀ 2. (α142_252''',)›
+//│ |		α142_252''' :> α142_253'
+//│ |		α142_253' :> ‹∀ 2. (α142_254''',)›
+//│ |		α142_254''' :> α142_255'
+//│ |		α142_255' :> Int
+//│ [pretty-printed] w: int -> (((int,),),)
+
+let wd = w(1)
+//│ fun wd: ‹∀ 0. wd272'#› where 
+//│ |		α142_251' :> ‹∀ 2. (α142_252''',)›
+//│ |		α142_252''' :> α142_253'
+//│ |		α142_253' :> ‹∀ 2. (α142_254''',)›
+//│ |		α142_254''' :> α142_255'
+//│ |		α142_255' :> Int
+//│ |		wd272'# := α273'
+//│ |		α273' :> ‹∀ 2. (α142_274''',)› <: wd272'#
+//│ |		α142_274''' :> α142_251'
+//│ [pretty-printed] wd: (((int,),),)
+
+wd._1._1._1 + 1
+//│ Typed: int
 
 
