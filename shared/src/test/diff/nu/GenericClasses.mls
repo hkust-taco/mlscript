@@ -3,15 +3,49 @@
 :NoJS
 
 
-:e
-class Some<A>(value: A)
-//│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.7: 	class Some<A>(value: A)
-//│ ╙──     	                     ^
+// :d
+class Some<A>(value: A) {
+  fun get = value
+}
 //│ class Some
+//│   fun get: ‹∀ 1. get27''#› where 
+//│   |		get27''# := A23'
+//│   [pretty-printed] get: nothing
 
 
-Some(1)
-//│ Typed: Some
+let s = Some(1)
+//│ fun s: ‹∀ 0. s31'#› where 
+//│ |		s31'# := α35'
+//│ |		A23_34' :> 1<int,number>
+//│ |		α35' :> (Some<> & {A: mut A23_34'..A23_34'}) <: s31'#
+//│ [pretty-printed] s: Some & {A = 'A}
+//│ |  where
+//│ |    'A :> 1
+
+// TODO
+s.value
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.26: 	s.value
+//│ ║        	^^^^^^^
+//│ ╟── application of type `Some & {A = ?A}` does not have field 'value'
+//│ ║  l.16: 	let s = Some(1)
+//│ ║        	        ^^^^^^^
+//│ ╟── but it flows into reference with expected type `{value: ?value}`
+//│ ║  l.26: 	s.value
+//│ ╙──      	^
+//│ Typed: error
+
+// TODO
+s.get
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.39: 	s.get
+//│ ║        	^^^^^
+//│ ╟── application of type `Some & {A = ?A}` does not have field 'get'
+//│ ║  l.16: 	let s = Some(1)
+//│ ║        	        ^^^^^^^
+//│ ╟── but it flows into reference with expected type `{get: ?get}`
+//│ ║  l.39: 	s.get
+//│ ╙──      	^
+//│ Typed: error
 
 

@@ -67,7 +67,7 @@ let n1 = b1.n
 //│ | | | | NEW α99' UB (1)
 //│ | | | | 1. C Base0<> <! {n: n104'}    (4)
 //│ | | | | | 1. C Base0<> <! {n: n104'}    (4)
-//│ | | | | | | TypedNuCls(0,class Base0(n,) {fun me = this; fun my = (this).n; fun mine = my; fun oops = (this).my},TypedTypingUnit(List(me ~> TypedNuFun(1,fun me = this,‹∀ 1. me30''#›), my ~> TypedNuFun(1,fun my = (this).n,‹∀ 1. my31''#›), mine ~> TypedNuFun(1,fun mine = my,‹∀ 1. mine34''#›), oops ~> TypedNuFun(1,fun oops = (this).my,‹∀ 1. oops35''#›)),None),List((n,n23')),HashMap(n -> NuParam(n,n23'), mine -> TypedNuFun(1,fun mine = my,‹∀ 1. mine34''#›), oops -> TypedNuFun(1,fun oops = (this).my,‹∀ 1. oops35''#›), my -> TypedNuFun(1,fun my = (this).n,‹∀ 1. my31''#›), me -> TypedNuFun(1,fun me = this,‹∀ 1. me30''#›)))
+//│ | | | | | | TypedNuCls(0,class Base0(n,) {fun me = this; fun my = (this).n; fun mine = my; fun oops = (this).my},TypedTypingUnit(List(me ~> TypedNuFun(1,fun me = this,‹∀ 1. me30''#›), my ~> TypedNuFun(1,fun my = (this).n,‹∀ 1. my31''#›), mine ~> TypedNuFun(1,fun mine = my,‹∀ 1. mine34''#›), oops ~> TypedNuFun(1,fun oops = (this).my,‹∀ 1. oops35''#›)),None),List(),List((n,n23')),HashMap(n -> NuParam(n,n23'), mine -> TypedNuFun(1,fun mine = my,‹∀ 1. mine34''#›), oops -> TypedNuFun(1,fun oops = (this).my,‹∀ 1. oops35''#›), my -> TypedNuFun(1,fun my = (this).n,‹∀ 1. my31''#›), me -> TypedNuFun(1,fun me = this,‹∀ 1. me30''#›)))
 //│ | | | | | | (>>,0,1)
 //│ | | | | | | 1. FRESHEN ‹∀ 1. me30''#› || 0 .. 1024  1 false
 //│ | | | | | | | 1. FRESHEN me30''# || 0 .. 1  2 false
@@ -165,7 +165,7 @@ let n1 = b1.n
 //│ | | | | | | | 1. FRESHEN me30''# || 0 .. 1  2 false
 //│ | | | | | | | => me30_106''#
 //│ | | | | | | => ‹∀ 1. me30_106''#›
-//│ | | | | | | TypedNuCls(0,class Base0(n,) {fun me = this; fun my = (this).n; fun mine = my; fun oops = (this).my},TypedTypingUnit(List(me ~> TypedNuFun(1,fun me = this,‹∀ 1. me30_106''#›), my ~> TypedNuFun(1,fun my = (this).n,‹∀ 1. my31_111''#›), mine ~> TypedNuFun(1,fun mine = my,‹∀ 1. mine34_113''#›), oops ~> TypedNuFun(1,fun oops = (this).my,‹∀ 1. oops35_116''#›)),None),List((n,n23_118')),HashMap(n -> NuParam(n,n23_118'), mine -> TypedNuFun(1,fun mine = my,‹∀ 1. mine34_113''#›), oops -> TypedNuFun(1,fun oops = (this).my,‹∀ 1. oops35_116''#›), my -> TypedNuFun(1,fun my = (this).n,‹∀ 1. my31_111''#›), me -> TypedNuFun(1,fun me = this,‹∀ 1. me30_106''#›)))
+//│ | | | | | | TypedNuCls(0,class Base0(n,) {fun me = this; fun my = (this).n; fun mine = my; fun oops = (this).my},TypedTypingUnit(List(me ~> TypedNuFun(1,fun me = this,‹∀ 1. me30_106''#›), my ~> TypedNuFun(1,fun my = (this).n,‹∀ 1. my31_111''#›), mine ~> TypedNuFun(1,fun mine = my,‹∀ 1. mine34_113''#›), oops ~> TypedNuFun(1,fun oops = (this).my,‹∀ 1. oops35_116''#›)),None),List(),List((n,n23_118')),HashMap(n -> NuParam(n,n23_118'), mine -> TypedNuFun(1,fun mine = my,‹∀ 1. mine34_113''#›), oops -> TypedNuFun(1,fun oops = (this).my,‹∀ 1. oops35_116''#›), my -> TypedNuFun(1,fun my = (this).n,‹∀ 1. my31_111''#›), me -> TypedNuFun(1,fun me = this,‹∀ 1. me30_106''#›)))
 //│ | | | | | | (n,HashMap(n -> NuParam(n,n23_118'), mine -> TypedNuFun(1,fun mine = my,‹∀ 1. mine34_113''#›), oops -> TypedNuFun(1,fun oops = (this).my,‹∀ 1. oops35_116''#›), my -> TypedNuFun(1,fun my = (this).n,‹∀ 1. my31_111''#›), me -> TypedNuFun(1,fun me = this,‹∀ 1. me30_106''#›)))
 //│ | | | | | | 1. C n23_118' <! n104'    (3)
 //│ | | | | | | | NEW n23_118' UB (1)
@@ -276,7 +276,7 @@ b.me
 //│ | | | | NEW α227' UB (0)
 //│ | | | | 0. C Base1<> <! {me: me245}    (4)
 //│ | | | | | 0. C Base1<> <! {me: me245}    (4)
-//│ | | | | | | TypedNuCls(0,class Base1(base: int,) {fun getBase1 = base; fun me = this; fun foo = (x,) => + (base,) (x,)},TypedTypingUnit(List(getBase1 ~> TypedNuFun(1,fun getBase1 = base,‹∀ 1. getBase1203''#›), me ~> TypedNuFun(1,fun me = this,‹∀ 1. me204''#›), foo ~> TypedNuFun(1,fun foo = (x,) => + (base,) (x,),‹∀ 1. foo205''#›)),None),List((base,Int)),Map(base -> NuParam(base,Int), getBase1 -> TypedNuFun(1,fun getBase1 = base,‹∀ 1. getBase1203''#›), me -> TypedNuFun(1,fun me = this,‹∀ 1. me204''#›), foo -> TypedNuFun(1,fun foo = (x,) => + (base,) (x,),‹∀ 1. foo205''#›)))
+//│ | | | | | | TypedNuCls(0,class Base1(base: int,) {fun getBase1 = base; fun me = this; fun foo = (x,) => + (base,) (x,)},TypedTypingUnit(List(getBase1 ~> TypedNuFun(1,fun getBase1 = base,‹∀ 1. getBase1203''#›), me ~> TypedNuFun(1,fun me = this,‹∀ 1. me204''#›), foo ~> TypedNuFun(1,fun foo = (x,) => + (base,) (x,),‹∀ 1. foo205''#›)),None),List(),List((base,Int)),Map(base -> NuParam(base,Int), getBase1 -> TypedNuFun(1,fun getBase1 = base,‹∀ 1. getBase1203''#›), me -> TypedNuFun(1,fun me = this,‹∀ 1. me204''#›), foo -> TypedNuFun(1,fun foo = (x,) => + (base,) (x,),‹∀ 1. foo205''#›)))
 //│ | | | | | | (>>,0,0)
 //│ | | | | | | 0. FRESHEN ‹∀ 1. getBase1203''#› || 0 .. 1024  0 true
 //│ | | | | | | => ‹∀ 1. getBase1203''#›
@@ -300,7 +300,7 @@ b.me
 //│ | | | | | | => ‹∀ 1. me204_248''#›
 //│ | | | | | | 0. FRESHEN ‹∀ 1. foo205''#› || 0 .. 1024  0 true
 //│ | | | | | | => ‹∀ 1. foo205''#›
-//│ | | | | | | TypedNuCls(0,class Base1(base: int,) {fun getBase1 = base; fun me = this; fun foo = (x,) => + (base,) (x,)},TypedTypingUnit(List(getBase1 ~> TypedNuFun(0,fun getBase1 = base,‹∀ 1. getBase1203''#›), me ~> TypedNuFun(0,fun me = this,‹∀ 1. me204_248''#›), foo ~> TypedNuFun(0,fun foo = (x,) => + (base,) (x,),‹∀ 1. foo205''#›)),None),List((base,Int)),Map(base -> NuParam(base,Int), getBase1 -> TypedNuFun(0,fun getBase1 = base,‹∀ 1. getBase1203''#›), me -> TypedNuFun(0,fun me = this,‹∀ 1. me204_248''#›), foo -> TypedNuFun(0,fun foo = (x,) => + (base,) (x,),‹∀ 1. foo205''#›)))
+//│ | | | | | | TypedNuCls(0,class Base1(base: int,) {fun getBase1 = base; fun me = this; fun foo = (x,) => + (base,) (x,)},TypedTypingUnit(List(getBase1 ~> TypedNuFun(0,fun getBase1 = base,‹∀ 1. getBase1203''#›), me ~> TypedNuFun(0,fun me = this,‹∀ 1. me204_248''#›), foo ~> TypedNuFun(0,fun foo = (x,) => + (base,) (x,),‹∀ 1. foo205''#›)),None),List(),List((base,Int)),Map(base -> NuParam(base,Int), getBase1 -> TypedNuFun(0,fun getBase1 = base,‹∀ 1. getBase1203''#›), me -> TypedNuFun(0,fun me = this,‹∀ 1. me204_248''#›), foo -> TypedNuFun(0,fun foo = (x,) => + (base,) (x,),‹∀ 1. foo205''#›)))
 //│ | | | | | | (me,Map(base -> NuParam(base,Int), getBase1 -> TypedNuFun(0,fun getBase1 = base,‹∀ 1. getBase1203''#›), me -> TypedNuFun(0,fun me = this,‹∀ 1. me204_248''#›), foo -> TypedNuFun(0,fun foo = (x,) => + (base,) (x,),‹∀ 1. foo205''#›)))
 //│ | | | | | | 0. C ‹∀ 1. me204_248''#› <! me245    (3)
 //│ | | | | | | | NEW me245 LB (0)

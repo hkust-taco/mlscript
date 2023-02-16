@@ -91,12 +91,21 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                   implicit val prov: TP = noProv // TODO
                   ctx.nextLevel { implicit ctx =>
                     
+                    val tparams = td.tparams.map(tp =>
+                      tp -> freshVar(TypeProvenance(
+                        tp.toLoc,
+                        "type parameter",
+                        S(tp.name),
+                        true), N, S(tp.name)))
+                    
                     val typedParams = td.params.fields.map {
                       case (S(nme), Fld(mut, spec, value)) =>
                         assert(!mut && !spec, "TODO") // TODO
                         value.toType match {
                           case R(tpe) =>
-                            implicit val vars: Map[Str, SimpleType] = Map.empty // TODO type params
+                            implicit val vars: Map[Str, SimpleType] =
+                              // Map.empty // TODO type params
+                              tparams.iterator.mapKeys(_.name).toMap
                             implicit val newDefsInfo: Map[Str, (TypeDefKind, Int)] = Map.empty // TODO?
                             val ty = typeType(tpe)
                             nme -> FieldType(N, ty)(provTODO)
@@ -119,10 +128,11 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     // val thisTV = freshVar(noProv/*FIXME*/, N, S("this"))
                     ctx += "this" -> VarSymbol(thisTV, Var("this"))
                     
-                    // TODO check against `tv`
-                    println(td.tparams)
-                    println(td.params)
-                    println(td.parents)
+                    // // TODO check against `tv`
+                    // println(td.tparams)
+                    // println(td.params)
+                    // println(td.parents)
+                    
                     implicit val prov: TP =
                       TypeProvenance(decl.toLoc, decl.describe)
                     val finalType = freshVar(noProv/*TODO*/, N, S("this"))
@@ -215,7 +225,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     // constrain(thisTy, thisTV)
                     
                     val mems = baseMems ++ paramMems ++ clsMems
-                    TypedNuCls(outerCtx.lvl, td, ttu, typedParams, mems.map(d => d.name -> d).toMap)
+                    TypedNuCls(outerCtx.lvl, td, ttu,
+                      tparams, typedParams, mems.map(d => d.name -> d).toMap)
                   }
                 case Mxn =>
                   implicit val prov: TP = noProv // TODO
@@ -249,7 +260,13 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         val cls = _cls.freshen.asInstanceOf[TypedNuCls]
         FunctionType(
           TupleType(cls.params.mapKeys(some))(provTODO),
-          ClassTag(Var(cls.td.nme.name), Set.empty)(provTODO)
+          // cls.tparams.foldLeft(
+          //   ClassTag(Var(cls.td.nme.name), Set.empty)(provTODO)
+          // ) { case (acc, (tn, tv)) => acc &  }
+          ClassTag(Var(cls.td.nme.name), Set.empty)(provTODO) & RecordType.mk(
+            cls.tparams.map { case (tn, tv) =>
+              Var(tn.name).withLocOf(tn) -> FieldType(S(tv), tv)(provTODO) }
+          )(provTODO)
         )(provTODO)
       case TypedNuFun(_, fd, ty) =>
         // println(fd, ty)

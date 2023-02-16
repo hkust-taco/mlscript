@@ -82,12 +82,13 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         case TypedNuFun(level, fd, ty) =>
           // TypedNuFun(level min ctx.lvl, fd, ty.freshenAbove(level, rigidify))
           TypedNuFun(level min ctx.lvl, fd, ty.freshenAbove(lim, rigidify))
-        case TypedNuCls(level, td, ttu, params, members) =>
+        case TypedNuCls(level, td, ttu, tps, params, members) =>
           println(">>",level,ctx.lvl)
           // TypedNuCls(level, td, ttu.freshenAbove(level, rigidify),
           //   params.mapValues(_.freshenAbove(level, rigidify)),
           //   members.mapValuesIter(_.freshenAbove(level, rigidify)).toMap)
           TypedNuCls(level, td, ttu.freshenAbove(lim, rigidify),
+            tps.mapValues(_.freshenAbove(lim, rigidify).asInstanceOf[TV]),
             params.mapValues(_.freshenAbove(lim, rigidify)),
             members.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap)
         // case _ => ???
@@ -103,7 +104,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   
   sealed abstract class TypedNuTypeDef(kind: TypeDefKind) extends TypedNuDecl {
     def nme: TypeName
-    val tparams: Ls[TN -> TV] = Nil // TODO
+    // val tparams: Ls[TN -> TV] = Nil // TODO
   }
   // case class TypedNuTypeDef(
   //   kind: TypeDefKind,
@@ -123,7 +124,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   }
   
   // case class TypedNuCls(nme: TypeName) extends TypedNuTypeDef(Als) with TypedNuTermDef {
-  case class TypedNuCls(level: Level, td: NuTypeDef, ttu: TypedTypingUnit, params: Ls[Var -> FieldType],
+  case class TypedNuCls(level: Level, td: NuTypeDef, ttu: TypedTypingUnit,
+        tparams: Ls[TN -> TV], params: Ls[Var -> FieldType],
       // members: Map[Str, LazyTypeInfo])
       members: Map[Str, NuMember])
     extends TypedNuTypeDef(Cls) with TypedNuTermDef {
