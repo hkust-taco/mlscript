@@ -102,14 +102,14 @@ mixin Foo {
   fun test(x) = [super.base + x, x, super.misc]
 }
 //│ mixin Foo
-//│   this: this59' 
-//│   super: super60' 
-//│   |		super60' <: {misc: misc68_69'} & {base: base64_65'}
-//│   |		base64_65' <: int<number>
-//│   fun test: ‹∀ 1. test62''#› where 
-//│   |		test62''# := (α63'' -> (α67'', α63'', misc68'',))
-//│   |		α63'' <: int<number>
-//│   |		α67'' :> int<number>
-//│   |		misc68'' :> misc68_69'
+//│   this: this60' 
+//│   super: super61' 
+//│   |		super61' <: {misc: misc69_70'} & {base: base65_66'}
+//│   |		base65_66' <: int<number>
+//│   fun test: ‹∀ 1. test63''#› where 
+//│   |		test63''# := (α64'' -> (α68'', α64'', misc69'',))
+//│   |		α64'' <: int<number>
+//│   |		α68'' :> int<number>
+//│   |		misc69'' :> misc69_70'
 //│   [pretty-printed] test: (int & 'a) -> (int, 'a, nothing,)
 

@@ -564,7 +564,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               //   ???
               // }.getOrElse 
               { info.complete() match {
-                case td: TypedNuCls => td
+                case td: TypedNuCls =>
+                  implicit val freshened: MutMap[TV, ST] = MutMap.empty
+                  implicit val shadows: Shadows = Shadows.empty
+                  td.freshenAbove(td.level, rigidify = true).asInstanceOf[TypedNuCls]
                 case _ => ???
               }}
             }

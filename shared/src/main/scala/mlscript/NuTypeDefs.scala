@@ -23,11 +23,20 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   
   sealed trait NuMember {
     def name: Str
+    
+    def freshenAbove(lim: Int, rigidify: Bool)
+          (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
+          : NuMember
   }
   
   
   case class NuParam(nme: Var, ty: FieldType) extends NuMember {
     def name: Str = nme.name
+    
+    def freshenAbove(lim: Int, rigidify: Bool)
+          (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
+          : NuParam =
+      NuParam(nme, ty.freshenAbove(lim, rigidify))
   }
   
   
@@ -50,18 +59,23 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def freshen(implicit ctx: Ctx): TypedNuDecl = {
       implicit val freshened: MutMap[TV, ST] = MutMap.empty
       implicit val shadows: Shadows = Shadows.empty
+      // println(level)
       freshenAbove(level, rigidify = false)
     }
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
           : TypedNuTermDef = {
-      implicit val freshened: MutMap[TV, ST] = MutMap.empty
-      implicit val shadows: Shadows = Shadows.empty
+      // implicit val freshened: MutMap[TV, ST] = MutMap.empty
+      // implicit val shadows: Shadows = Shadows.empty
       this match {
         case m @ TypedNuMxn(td, thisTV, superTV, ttu) =>
           TypedNuMxn(td, thisTV, superTV, ttu.freshenAbove(m.level, rigidify))
         case TypedNuFun(level, fd, ty) =>
           TypedNuFun(level, fd, ty.freshenAbove(level, rigidify))
+        case TypedNuCls(level, td, ttu, params, members) =>
+          TypedNuCls(level, td, ttu.freshenAbove(level, rigidify),
+            params.mapValues(_.freshenAbove(level, rigidify)),
+            members.mapValuesIter(_.freshenAbove(level, rigidify)).toMap)
         // case _ => ???
       }
     }
@@ -87,6 +101,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   
   case class TypedNuAls(nme: TypeName) extends TypedNuTypeDef(Als) {
     def name: Str = nme.name
+    
+    def freshenAbove(lim: Int, rigidify: Bool)
+          (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
+          : TypedNuTermDef = ???
   }
   
   // case class TypedNuCls(nme: TypeName) extends TypedNuTypeDef(Als) with TypedNuTermDef {

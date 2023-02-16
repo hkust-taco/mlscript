@@ -33,6 +33,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   // TODO rm level? already in ctx
   class LazyTypeInfo(val level: Int, val decl: NuDecl)(implicit ctx: Ctx) extends TypeInfo {
   // class LazyTypeInfo[A](level: Int, decl: NuDecl) extends TypeInfo {
+    private def outerCtx = ctx
     val tparams: Ls[TN -> TV] = Nil // TODO
     var isComputing: Bool = false // TODO replace by a Ctx entry
     var result: Opt[TypedNuTermDef] = N
@@ -202,7 +203,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     // constrain(thisTy, thisTV)
                     
                     val mems = baseMems ++ paramMems ++ clsMems
-                    TypedNuCls(ctx.lvl, td, ttu, typedParams, mems.map(d => d.name -> d).toMap)
+                    TypedNuCls(outerCtx.lvl, td, ttu, typedParams, mems.map(d => d.name -> d).toMap)
                   }
                 case Mxn =>
                   implicit val prov: TP = noProv // TODO
@@ -232,7 +233,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         else complete() match {
       case cls: TypedNuCls if cls.td.kind is Nms =>
         ClassTag(Var(cls.td.nme.name), Set.empty)(provTODO)
-      case cls: TypedNuCls =>
+      case _cls: TypedNuCls =>
+        val cls = _cls.freshen.asInstanceOf[TypedNuCls]
         FunctionType(
           TupleType(cls.params.mapKeys(some))(provTODO),
           ClassTag(Var(cls.td.nme.name), Set.empty)(provTODO)
