@@ -185,9 +185,13 @@ trait TypeSimplifier { self: Typer =>
               tts.iterator.collect{ case TraitTag(Var(tagNme)) => tagNme.capitalize }.toSet
             
             bo match {
-              case S(cls @ ClassTag(Var(tagNme), ps)) if !primitiveTypes.contains(tagNme) =>
-                val clsNme = tagNme.capitalize
-                val clsTyNme = TypeName(tagNme.capitalize)
+              case S(cls @ ClassTag(Var(tagNme), ps))
+                if !primitiveTypes.contains(tagNme)
+                && ctx.tyDefs.contains(tagNme.capitalize)
+                && !tagNme.isCapitalized // currently capitalization characterizes nudefs
+              =>
+                val clsNme = tagNme.capitalize // TODO rm capitalize
+                val clsTyNme = TypeName(clsNme)
                 val td = ctx.tyDefs(clsNme)
                 
                 val rcdMap  = rcd.fields.toMap

@@ -61,7 +61,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   }
   
   case class TypedNuMxn(td: NuTypeDef, thisTV: ST, superTV: ST, ttu: TypedTypingUnit) extends TypedNuTypeDef(Mxn) with TypedNuTermDef {
-    def level = thisTV.level - 1 // TODO cleaner
+    def level: Level = thisTV.level - 1 // TODO cleaner
     def nme: TypeName = td.nme
     def name: Str = nme.name
     // def freshen(implicit ctx: Ctx): TypedNuMxn = TypedNuMxn(td, 

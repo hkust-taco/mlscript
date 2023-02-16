@@ -64,13 +64,6 @@ class Base1(base: int): BaseTest
 //│ | | NEW this44 LB (0)
 //│ class Base1
 
-:ns
-Base1
-//│ Typed: (base: int,) -> Base1
-
-// TODO
-Base1
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: Base1
 
 class Base1(base): BaseTest
 //│ class Base1
@@ -78,10 +71,10 @@ class Base1(base): BaseTest
 :e
 class Base1(x): BaseTest
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.79: 	class Base1(x): BaseTest
+//│ ║  l.72: 	class Base1(x): BaseTest
 //│ ║        	      ^^^^^^^^^^^^^^^^^^
 //│ ╟── type `{x: ?x}` does not have field 'base'
-//│ ║  l.79: 	class Base1(x): BaseTest
+//│ ║  l.72: 	class Base1(x): BaseTest
 //│ ║        	           ^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.8: 	  fun test = super.base
@@ -91,9 +84,8 @@ class Base1(x): BaseTest
 //│ ╙──     	             ^^^^^
 //│ class Base1
 
-// TODO
 Base1
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: Base1
+//│ Typed: (x: anything,) -> Base1
 
 
 // :ns

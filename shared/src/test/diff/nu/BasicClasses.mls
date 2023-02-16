@@ -1,0 +1,37 @@
+:NewParser
+:NewDefs
+:NoJS
+
+
+class Base1(base: int)
+//│ class Base1
+
+Base1
+//│ Typed: (base: int,) -> Base1
+
+let b = Base1(1)
+//│ fun b: ‹∀ 0. b25'#› where 
+//│ |		b25'# := α26'
+//│ |		α26' :> Base1<> <: b25'#
+//│ [pretty-printed] b: Base1
+
+// TODO
+b.base
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.19: 	b.base
+//│ ║        	^^^^^^
+//│ ╟── application of type `Base1` does not have field 'base'
+//│ ║  l.12: 	let b = Base1(1)
+//│ ║        	        ^^^^^^^^
+//│ ╟── but it flows into reference with expected type `{base: ?base}`
+//│ ║  l.19: 	b.base
+//│ ╙──      	^
+//│ Typed: error
+
+// TODO
+b : Base1
+//│ ╔══[ERROR] type identifier not found: Base1
+//│ ║  l.32: 	b : Base1
+//│ ╙──      	    ^^^^^
+//│ Typed: error
+

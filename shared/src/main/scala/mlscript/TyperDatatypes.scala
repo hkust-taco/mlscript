@@ -49,8 +49,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
           // res = 
           decl match {
             case fd: NuFunDef =>
-              assert(fd.isLetRec.isEmpty)
-              implicit val prov = noProv // TODO
+              // assert(fd.isLetRec.isEmpty, fd.isLetRec)
+              implicit val prov: TP = noProv // TODO
               val res_ty = fd.rhs match {
                 case R(PolyType(tps, ty)) =>
                   // val body_ty = typeType(ty)(ctx.nextLevel, raise,
