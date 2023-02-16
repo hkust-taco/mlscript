@@ -50,7 +50,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     }
     def complete()(implicit raise: Raise): TypedNuTermDef = result.getOrElse {
       if (isComputing) lastWords(s"TODO cyclic defition ${decl.name}")
-      else {
+      else trace(s"Completing ${decl}") {
         // var res: ST = errType
         val res = try {
           isComputing = true
@@ -112,8 +112,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     
                     val ttu = typeTypingUnit(td.body, allowPure = false) // TODO use
                     
-                    // val ttu.entities.map {
-                    //   case fun @ TypedNuFun(fd, ty) =>
+                    // val clsMems = ttu.entities.map(_.complete()).map {
+                    //   case fun @ TypedNuFun(_, fd, ty) =>
                     //     fun
                     //   case _ => ???
                     // }
@@ -205,7 +205,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         result = S(res)
         res
         
-      }
+      }()
     }
     def typeSignature(implicit raise: Raise): ST = if (isComputing) tv else complete() match {
       case cls: TypedNuCls if cls.td.kind is Nms =>

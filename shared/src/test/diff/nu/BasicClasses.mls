@@ -4,6 +4,7 @@
 
 
 // TODO
+// :d
 class Base0(n) {
   fun me = this
   fun my = this.n
@@ -11,7 +12,7 @@ class Base0(n) {
   fun oops = this.my
 }
 //│ ╔══[ERROR] class `Base0` does not contain member `my`
-//│ ║  l.11: 	  fun oops = this.my
+//│ ║  l.12: 	  fun oops = this.my
 //│ ╙──      	                 ^^^
 //│ class Base0
 //│   fun me: ‹∀ 1. me29''#› where 
@@ -68,14 +69,14 @@ b.base
 // :d
 b.getBase1
 //│ ╔══[ERROR] class `Base1` does not contain member `getBase1`
-//│ ║  l.69: 	b.getBase1
+//│ ║  l.70: 	b.getBase1
 //│ ╙──      	 ^^^^^^^^^
 //│ Typed: error
 
 :e
 b.getBaseTypo
 //│ ╔══[ERROR] class `Base1` does not contain member `getBaseTypo`
-//│ ║  l.76: 	b.getBaseTypo
+//│ ║  l.77: 	b.getBaseTypo
 //│ ╙──      	 ^^^^^^^^^^^^
 //│ Typed: error
 

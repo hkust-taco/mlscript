@@ -558,10 +558,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           
           case (ClassTag(Var(nme), _), rt: RecordType) if nme.isCapitalized =>
             def lookupNuTypeDef(clsNme: Str): TypedNuCls = {
-              ctx.tyDefs2(clsNme).complete() match {
+              val info = ctx.tyDefs2(clsNme)
+              Option.when(info.isComputing) {
+                ???
+              }.getOrElse { info.complete() match {
                 case td: TypedNuCls => td
                 case _ => ???
-              }
+              }}
             }
             def lookupNuTypeDefField(cls: TypedNuCls, rfnt: Map[Var, Field], fld: Var): FieldType = {
               println(fld.name, cls.members)

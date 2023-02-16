@@ -32,40 +32,41 @@ mixin BaseInc {
 :d
 class Base1(base: int): BaseTest
 //│ 0. Typing TypingUnit(List(class Base1(base: int,): BaseTest {}))
-//│ Typing type int
-//│ | vars=Map() newDefsInfo=Map()
-//│ | 1. type int
-//│ | => Int
-//│ => Int ——— 
-//│ 1. Typing TypingUnit(List())
-//│ List()
-//│ base: int,
-//│ List(BaseTest)
-//│ Inheriting from BaseTest
-//│ | CONSTRAIN {base: Int} <! super24'
-//│ |   where 
+//│ Completing class Base1(base: int,): BaseTest {}
+//│ | Typing type int
+//│ | | vars=Map() newDefsInfo=Map()
+//│ | | 1. type int
+//│ | | => Int
+//│ | => Int ——— 
+//│ | 1. Typing TypingUnit(List())
+//│ | List()
+//│ | base: int,
+//│ | List(BaseTest)
+//│ | Inheriting from BaseTest
+//│ | | CONSTRAIN {base: Int} <! super24'
+//│ | |   where 
 //│ 		super24' <: {base: base27_28'}
-//│ | 1. C {base: Int} <! super24'    (0)
-//│ | | NEW super24' LB (0)
-//│ | | 1. C {base: Int} <! {base: base27_28'}    (2)
+//│ | | 1. C {base: Int} <! super24'    (0)
+//│ | | | NEW super24' LB (0)
 //│ | | | 1. C {base: Int} <! {base: base27_28'}    (2)
 //│ | | | | 1. C {base: Int} <! {base: base27_28'}    (2)
 //│ | | | | | 1. C {base: Int} <! {base: base27_28'}    (2)
 //│ | | | | | | 1. C {base: Int} <! {base: base27_28'}    (2)
-//│ | | | | | | | 1. C Int <! base27_28'    (2)
-//│ | | | | | | | | NEW base27_28' LB (0)
-//│ | CONSTRAIN this44' <! this23'
+//│ | | | | | | | 1. C {base: Int} <! {base: base27_28'}    (2)
+//│ | | | | | | | | 1. C Int <! base27_28'    (2)
+//│ | | | | | | | | | NEW base27_28' LB (0)
+//│ | | CONSTRAIN this44' <! this23'
+//│ | |   where 
+//│ | | 1. C this44' <! this23'    (0)
+//│ | | | NEW this44' UB (1)
+//│ | CONSTRAIN {base: Int} <! this44'
 //│ |   where 
-//│ | 1. C this44' <! this23'    (0)
-//│ | | NEW this44' UB (1)
-//│ CONSTRAIN {base: Int} <! this44'
-//│   where 
 //│ 		this44' <: this23'
-//│ 1. C {base: Int} <! this44'    (0)
-//│ | NEW this44' LB (0)
-//│ | 1. C {base: Int} <! this23'    (2)
-//│ | | NEW this23' LB (0)
-//│ UNSTASHING... (out)
+//│ | 1. C {base: Int} <! this44'    (0)
+//│ | | NEW this44' LB (0)
+//│ | | 1. C {base: Int} <! this23'    (2)
+//│ | | | NEW this23' LB (0)
+//│ | UNSTASHING... (out)
 //│ class Base1
 
 
@@ -75,10 +76,10 @@ class Base1(base): BaseTest
 :e
 class Base1(x): BaseTest
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.76: 	class Base1(x): BaseTest
+//│ ║  l.77: 	class Base1(x): BaseTest
 //│ ║        	      ^^^^^^^^^^^^^^^^^^
 //│ ╟── type `{x: ?x}` does not have field 'base'
-//│ ║  l.76: 	class Base1(x): BaseTest
+//│ ║  l.77: 	class Base1(x): BaseTest
 //│ ║        	           ^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.8: 	  fun test = super.base
