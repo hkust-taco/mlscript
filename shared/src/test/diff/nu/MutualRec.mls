@@ -21,6 +21,7 @@ fun fooo(x) =
 
 
 
+// TODO
 // :d
 namespace Test0_1 {
   fun a = Test0_2.b
@@ -28,19 +29,20 @@ namespace Test0_1 {
 namespace Test0_2 {
   fun a = 123
 }
-//│ ╔══[ERROR] namespace `Test0_2` does not contain member `b`
-//│ ║  l.26: 	  fun a = Test0_2.b
-//│ ╙──      	                 ^^
 //│ class Test0_1
-//│   fun a: ‹∀ 1. a38''#› where 
-//│   |		a38''# := b42''
-//│   |		b42'' :> error<> | error<> <: a38''#
+//│ ╔══[ERROR] namespace `Test0_2` does not contain member `b`
+//│ ║  l.27: 	  fun a = Test0_2.b
+//│ ╙──      	                 ^^
+//│   fun a: ‹∀ 1. a41''#› where 
+//│   |		a41''# := b42''
+//│   |		b42'' :> error<> | error<> <: a41''#
 //│   [pretty-printed] a: error
 //│ class Test0_2
-//│   fun a: ‹∀ 1. a40''#› where 
-//│   |		a40''# := 123<int,number>
+//│   fun a: ‹∀ 1. a45''#› where 
+//│   |		a45''# := 123<int,number>
 //│   [pretty-printed] a: 123
 
+// TODO
 // :d
 namespace Test1_1 {
   fun a = Test1_2.b
@@ -48,21 +50,25 @@ namespace Test1_1 {
 namespace Test1_2 {
   fun a = Test1_1.a
 }
-//│ ╔══[ERROR] namespace `Test1_2` does not contain member `b`
-//│ ║  l.46: 	  fun a = Test1_2.b
-//│ ╙──      	                 ^^
 //│ class Test1_1
-//│   fun a: ‹∀ 1. a50''#› where 
-//│   |		a50''# := b56''
-//│   |		b56'' :> error<> | error<> <: a50''#
+//│ ╔══[ERROR] namespace `Test1_2` does not contain member `b`
+//│ ║  l.48: 	  fun a = Test1_2.b
+//│ ╙──      	                 ^^
+//│   fun a: ‹∀ 1. a53''#› where 
+//│   |		a53''# := b54''
+//│   |		b54'' :> error<> | error<> <: a53''#
 //│   [pretty-printed] a: error
 //│ class Test1_2
-//│   fun a: ‹∀ 1. a52''#› where 
-//│   |		a52''# := a53''
-//│   |		a53'' :> a53_54 <: a52''#
-//│   [pretty-printed] a: nothing
+//│ ╔══[ERROR] namespace `Test1_1` does not contain member `a`
+//│ ║  l.51: 	  fun a = Test1_1.a
+//│ ╙──      	                 ^^
+//│   fun a: ‹∀ 1. a57''#› where 
+//│   |		a57''# := a58''
+//│   |		a58'' :> error<> | error<> <: a57''#
+//│   [pretty-printed] a: error
 
 
+// TODO
 namespace Test2_1 {
   fun t2 = Test2_2
   fun a = Test2_2.b
@@ -73,35 +79,41 @@ namespace Test2_2 {
   fun c = Test2_1.a
   fun e = Test2_1.d
 }
+//│ class Test2_1
 //│ ╔══[ERROR] namespace `Test2_2` does not contain member `b`
-//│ ║  l.68: 	  fun a = Test2_2.b
+//│ ║  l.74: 	  fun a = Test2_2.b
 //│ ╙──      	                 ^^
 //│ ╔══[ERROR] namespace `Test2_2` does not contain member `e`
-//│ ║  l.69: 	  fun d = Test2_2.e
+//│ ║  l.75: 	  fun d = Test2_2.e
 //│ ╙──      	                 ^^
-//│ class Test2_1
-//│   fun t2: ‹∀ 1. t268''#› where 
-//│   |		t268''# := Test2_2<>
+//│   fun t2: ‹∀ 1. t271''#› where 
+//│   |		t271''# := Test2_2<>
 //│   [pretty-printed] t2: Test2_2
-//│   fun a: ‹∀ 1. a80''#› where 
-//│   |		a80''# := b81''
-//│   |		b81'' :> error<> | error<> <: a80''#
+//│   fun a: ‹∀ 1. a72''#› where 
+//│   |		a72''# := b73''
+//│   |		b73'' :> error<> | error<> <: a72''#
 //│   [pretty-printed] a: error
-//│   fun d: ‹∀ 1. d82''#› where 
-//│   |		d82''# := e83''
-//│   |		e83'' :> error<> | error<> <: d82''#
+//│   fun d: ‹∀ 1. d74''#› where 
+//│   |		d74''# := e75''
+//│   |		e75'' :> error<> | error<> <: d74''#
 //│   [pretty-printed] d: error
 //│ class Test2_2
-//│   fun b: ‹∀ 1. b72''#› where 
-//│   |		b72''# := 123<int,number>
+//│ ╔══[ERROR] namespace `Test2_1` does not contain member `a`
+//│ ║  l.79: 	  fun c = Test2_1.a
+//│ ╙──      	                 ^^
+//│ ╔══[ERROR] namespace `Test2_1` does not contain member `d`
+//│ ║  l.80: 	  fun e = Test2_1.d
+//│ ╙──      	                 ^^
+//│   fun b: ‹∀ 1. b81''#› where 
+//│   |		b81''# := 123<int,number>
 //│   [pretty-printed] b: 123
-//│   fun c: ‹∀ 1. c73''#› where 
-//│   |		c73''# := a74''
-//│   |		a74'' :> a74_75 <: c73''#
-//│   [pretty-printed] c: nothing
-//│   fun e: ‹∀ 1. e76''#› where 
-//│   |		e76''# := d77''
-//│   |		d77'' :> d77_78 <: e76''#
-//│   [pretty-printed] e: nothing
+//│   fun c: ‹∀ 1. c82''#› where 
+//│   |		c82''# := a83''
+//│   |		a83'' :> error<> | error<> <: c82''#
+//│   [pretty-printed] c: error
+//│   fun e: ‹∀ 1. e84''#› where 
+//│   |		e84''# := d85''
+//│   |		d85'' :> error<> | error<> <: e84''#
+//│   [pretty-printed] e: error
 
 

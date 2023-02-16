@@ -33,18 +33,37 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   
   sealed abstract class TypedNuDecl extends NuMember {
     def name: Str
-    def freshen(implicit ctx: Ctx): TypedNuDecl = this match {
-      case m @ TypedNuMxn(td, thisTV, superTV, ttu) =>
-        implicit val freshened: MutMap[TV, ST] = MutMap.empty
-        implicit val shadows: Shadows = Shadows.empty
-        TypedNuMxn(td, thisTV, superTV, ttu.freshenAbove(m.level, rigidify = false))
-      case _ => ???
-    }
+    // def freshen(implicit ctx: Ctx): TypedNuDecl = this match {
+    //   case m @ TypedNuMxn(td, thisTV, superTV, ttu) =>
+    //     implicit val freshened: MutMap[TV, ST] = MutMap.empty
+    //     implicit val shadows: Shadows = Shadows.empty
+    //     TypedNuMxn(td, thisTV, superTV, ttu.freshenAbove(m.level, rigidify = false))
+    //   case _ => ???
+    // }
   }
   
   sealed trait TypedNuTermDef extends TypedNuDecl with AnyTypeDef {
     override def toString: String = this match {
       case _ => ???
+    }
+    def level: Level
+    def freshen(implicit ctx: Ctx): TypedNuDecl = {
+      implicit val freshened: MutMap[TV, ST] = MutMap.empty
+      implicit val shadows: Shadows = Shadows.empty
+      freshenAbove(level, rigidify = false)
+    }
+    def freshenAbove(lim: Int, rigidify: Bool)
+          (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
+          : TypedNuTermDef = {
+      implicit val freshened: MutMap[TV, ST] = MutMap.empty
+      implicit val shadows: Shadows = Shadows.empty
+      this match {
+        case m @ TypedNuMxn(td, thisTV, superTV, ttu) =>
+          TypedNuMxn(td, thisTV, superTV, ttu.freshenAbove(m.level, rigidify))
+        case TypedNuFun(level, fd, ty) =>
+          TypedNuFun(level, fd, ty.freshenAbove(level, rigidify))
+        // case _ => ???
+      }
     }
   }
   
@@ -66,7 +85,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   }
   
   // case class TypedNuCls(nme: TypeName) extends TypedNuTypeDef(Als) with TypedNuTermDef {
-  case class TypedNuCls(td: NuTypeDef, ttu: TypedTypingUnit, params: Ls[Var -> FieldType],
+  case class TypedNuCls(level: Level, td: NuTypeDef, ttu: TypedTypingUnit, params: Ls[Var -> FieldType],
       // members: Map[Str, LazyTypeInfo])
       members: Map[Str, NuMember])
     extends TypedNuTypeDef(Cls) with TypedNuTermDef {
@@ -82,16 +101,17 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     // def freshen(implicit ctx: Ctx): TypedNuMxn = TypedNuMxn(td, 
   }
   
-  case class TypedNuFun(fd: NuFunDef, ty: ST) extends TypedNuDecl with TypedNuTermDef {
+  case class TypedNuFun(level: Level, fd: NuFunDef, ty: ST) extends TypedNuDecl with TypedNuTermDef {
     def name: Str = fd.nme.name
   }
   
-  case class TypedTypingUnit(entities: Ls[TypedNuDecl], result: Opt[ST]) {
+  case class TypedTypingUnit(entities: Ls[LazyTypeInfo], result: Opt[ST]) {
     // def freshen(implicit ctx: Ctx): TypedTypingUnit = ???
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
           : TypedTypingUnit =
-      TypedTypingUnit(entities, result.map(_.freshenAbove(lim, rigidify)))
+      TypedTypingUnit(entities.map(_.map(_.freshenAbove(lim, rigidify)))
+        , result.map(_.freshenAbove(lim, rigidify)))
   }
   
   def typeTypingUnit(tu: TypingUnit, allowPure: Bool)(implicit ctx: Ctx, raise: Raise): TypedTypingUnit =
@@ -144,7 +164,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           case decl: NuDecl =>
             val lti = named.getOrElse(decl.name, die)
             // completeTypeInfo()
-            lti.complete()
+            // lti.complete() // ???
             // UnitType
             N
           // case ds: DesugaredStatement =>
@@ -171,7 +191,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     }
     val res_ty = go(tu.entities)
     // TypedTypingUnit(infos.unzip._2.map(_.complete()), S(res_ty))
-    TypedTypingUnit(infos.unzip._2.map(_.complete()), res_ty)
+    // TypedTypingUnit(infos.unzip._2.map(_.complete()), res_ty)
+    TypedTypingUnit(infos.unzip._2, res_ty)
   }()
   // }(raise, noProv/*TODO*/)}()
   

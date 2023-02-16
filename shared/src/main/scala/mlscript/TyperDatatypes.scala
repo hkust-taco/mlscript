@@ -41,8 +41,15 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       TypeProvenance(decl.toLoc, decl.describe, S(decl.name), decl.isInstanceOf[NuTypeDef]),
       N,
       S(decl.name))(level)
+    
+    def map(f: TypedNuTermDef => TypedNuTermDef): LazyTypeInfo = {
+      val res = new LazyTypeInfo(level, decl)
+      // if (result.nonEmpty) res.result = res
+      res.result = result.map(f)
+      res
+    }
     def complete()(implicit raise: Raise): TypedNuTermDef = result.getOrElse {
-      if (isComputing) lastWords(s"TODO cyclic defn")
+      if (isComputing) lastWords(s"TODO cyclic defition ${decl.name}")
       else {
         // var res: ST = errType
         val res = try {
@@ -56,19 +63,19 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                 case R(PolyType(tps, ty)) =>
                   // val body_ty = typeType(ty)(ctx.nextLevel, raise,
                   //   vars = tps.map(tp => tp.name -> freshVar(noProv/*FIXME*/, N)(1)).toMap)
-                  val body_ty = ctx.nextLevel { implicit ctx: Ctx =>
+                  val body_ty = ctx.nextLevel { implicit ctx: Ctx => // TODO use poly instead!
                     typeType(ty)(ctx, raise,
                     vars = tps.map(tp => tp.asInstanceOf[L[TN]].value.name -> freshVar(noProv/*FIXME*/, N)(1)).toMap)
                   }
                   // TODO check against `tv`
-                  TypedNuFun(fd, PolymorphicType(ctx.lvl, body_ty))
+                  TypedNuFun(ctx.lvl, fd, PolymorphicType(ctx.lvl, body_ty))
                 case L(body) =>
                   implicit val vars: Map[Str, SimpleType] = Map.empty
                   implicit val gl: GenLambdas = true
                   val body_ty = typeLetRhs2(isrec = true, fd.nme.name, body)
                   // implicit val prov: TP = noProv // TODO
                   // subsume(body_ty, PolymorphicType(level, tv)) // TODO
-                  TypedNuFun(fd, body_ty)
+                  TypedNuFun(ctx.lvl, fd, body_ty)
               }
               // subsume(res_ty, tv)
               res_ty
@@ -96,6 +103,12 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     }
                     // ctx ++= typedParams.mapKeysIter(_.name).mapValues(_.ub |> VarSymbol(_))
                     ctx ++= typedParams.map(p => p._1.name -> VarSymbol(p._2.ub, p._1))
+                    
+                    ctx += "this" -> VarSymbol(
+                        ClassTag(Var(td.name),
+                          Set.empty//TODO
+                        )(provTODO),
+                      Var("this"))
                     
                     val ttu = typeTypingUnit(td.body, allowPure = false) // TODO use
                     
@@ -132,8 +145,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                                       // println(fresh)
                                       constrain(superType, mxn.superTV)
                                       constrain(finalType, mxn.thisTV)
-                                      mxn.ttu.entities.map {
-                                        case fun @ TypedNuFun(fd, ty) =>
+                                      mxn.ttu.entities.map(_.complete()).map {
+                                        case fun @ TypedNuFun(_, fd, ty) =>
                                           fun
                                         case _ => ???
                                       }
@@ -168,7 +181,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     val paramMems = typedParams.map(f => NuParam(f._1, f._2))
                     val baseMems = inherit(td.parents, baseType, Nil)
                     val mems = baseMems ++ paramMems
-                    TypedNuCls(td, ttu, typedParams, mems.map(d => d.name -> d).toMap)
+                    TypedNuCls(ctx.lvl, td, ttu, typedParams, mems.map(d => d.name -> d).toMap)
                   }
                 case Mxn =>
                   implicit val prov: TP = noProv // TODO
@@ -202,7 +215,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
           TupleType(cls.params.mapKeys(some))(provTODO),
           ClassTag(Var(cls.td.nme.name), Set.empty)(provTODO)
         )(provTODO)
-      case TypedNuFun(fd, ty) =>
+      case TypedNuFun(_, fd, ty) =>
         println(fd, ty)
         ???
     }

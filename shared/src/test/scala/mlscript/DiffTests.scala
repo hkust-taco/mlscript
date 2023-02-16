@@ -495,7 +495,7 @@ class DiffTests
               
               def showTTU(ttu: typer.TypedTypingUnit, ind: Int): Unit = {
                 val indStr = "  " * ind
-                ttu.entities.foreach {
+                ttu.entities.map(_.complete()(raise)).foreach {
                   case tc: typer.TypedNuCls =>
                     output(s"${indStr}class ${tc.name}")
                     showTTU(tc.ttu, ind + 1)
