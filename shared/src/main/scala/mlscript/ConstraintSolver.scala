@@ -428,7 +428,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           implicit val shadows: Shadows = Shadows.empty
           // freshened ++= td.tparams.map(tp => tp._2 -> TopType)
           td.tparams.foreach { case (tn, _tv) =>
-            val tv = freshVar(_tv.prov, S(_tv), _tv.nameHint)
+            // val tv = freshVar(_tv.prov, S(_tv), _tv.nameHint)
+            val tv = freshVar(_tv.prov, N, _tv.nameHint) // TODO safe not to set original?!
             println(s"Assigning $tv")
             assert(tv.assignedTo.isEmpty)
             tv.assignedTo = S(rfnt.get(Var(td.nme.name + "#" + tn.name)) match {

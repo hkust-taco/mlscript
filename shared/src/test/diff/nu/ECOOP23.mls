@@ -146,16 +146,10 @@ TestLang.eval(Neg(Neg(add11)))
 //│ Typed: int
 
 
-// FIXME too much polymorphism inferred?
-:ex
 TestLang.eval(add2negadd11)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.151: 	TestLang.eval(add2negadd11)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  E24_682#  <:  rhs53_649    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  E24'  <:  rhs53_649
-//│ Typed: error | int
+//│ Typed: int
 
-// TestLang.eval(Add(Lit(2), Neg(add11)))
+TestLang.eval(Add(Lit(2), Neg(add11)))
+//│ Typed: int
+
 
