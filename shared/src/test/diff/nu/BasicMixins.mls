@@ -89,28 +89,39 @@ mixin Foo {
 mixin WrapBase {
   // fun wrap(x) = x
   // fun wrap(x) = x : int
-  fun wrap(x : int) = x : int
+  fun wrapA(x : int) = x : int
+  fun wrap(x) = x
 }
 //│ mixin WrapBase
 //│   this: this129' 
 //│   super: super130' 
-//│   fun wrap: ‹∀ 1. wrap132''#› where 
-//│   |		wrap132''# := (Int -> Int)
-//│   [pretty-printed] wrap: int -> int
+//│   fun wrapA: ‹∀ 1. wrapA133''#› where 
+//│   |		wrapA133''# := (Int -> Int)
+//│   [pretty-printed] wrapA: int -> int
+//│   fun wrap: ‹∀ 1. wrap134''#› where 
+//│   |		wrap134''# := (α135'' -> α135'')
+//│   [pretty-printed] wrap: 'a -> 'a
 
 // :d
 mixin Wrap {
+  fun wrapA(x) = [super.wrapA(x)]
   fun wrap(x) = [super.wrap(x)]
 }
 //│ mixin Wrap
-//│   this: this135' 
-//│   super: super136' 
-//│   |		super136' <: {wrap: wrap140_141'}
-//│   |		wrap140_141' <: ((α139_143',) -> α142_144')
-//│   fun wrap: ‹∀ 1. wrap138''#› where 
-//│   |		wrap138''# := (α139'' -> (α142'',))
-//│   |		α139'' <: α139_143'
-//│   |		α142'' :> α142_144'
+//│   this: this142' 
+//│   super: super143' 
+//│   |		super143' <: {wrap: wrap155_156'} & {wrapA: wrapA148_149'}
+//│   |		wrapA148_149' <: ((α147_151',) -> α150_152')
+//│   |		wrap155_156' <: ((α154_158',) -> α157_159')
+//│   fun wrapA: ‹∀ 1. wrapA146''#› where 
+//│   |		wrapA146''# := (α147'' -> (α150'',))
+//│   |		α147'' <: α147_151'
+//│   |		α150'' :> α150_152'
+//│   [pretty-printed] wrapA: anything -> (nothing,)
+//│   fun wrap: ‹∀ 1. wrap153''#› where 
+//│   |		wrap153''# := (α154'' -> (α157'',))
+//│   |		α154'' <: α154_158'
+//│   |		α157'' :> α157_159'
 //│   [pretty-printed] wrap: anything -> (nothing,)
 
 
@@ -124,65 +135,77 @@ WrapBase1
 //│ Typed: WrapBase1
 
 // :d
-WrapBase1.wrap
+WrapBase1.wrapA
 //│ Typed: int -> (int,)
+
+WrapBase1.wrap
+//│ Typed: 'a -> ('a,)
 
 // :d
 // WrapBase1.wrap
 
+
 WrapBase1.wrap(1)
+//│ Typed: (1,)
+
+WrapBase1.wrap("ok")
+//│ Typed: ("ok",)
+
+
+WrapBase1.wrapA(1)
 //│ Typed: (int,)
 
 :e
-WrapBase1.wrap("ok")
+WrapBase1.wrapA("ok")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.137: 	WrapBase1.wrap("ok")
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.159: 	WrapBase1.wrapA("ok")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"ok"` is not an instance of type `int`
-//│ ║  l.137: 	WrapBase1.wrap("ok")
-//│ ║         	               ^^^^
+//│ ║  l.159: 	WrapBase1.wrapA("ok")
+//│ ║         	                ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.92: 	  fun wrap(x : int) = x : int
-//│ ║        	               ^^^
+//│ ║  l.92: 	  fun wrapA(x : int) = x : int
+//│ ║        	                ^^^
 //│ ╟── from reference:
-//│ ║  l.103: 	  fun wrap(x) = [super.wrap(x)]
-//│ ╙──       	                            ^
+//│ ║  l.107: 	  fun wrapA(x) = [super.wrapA(x)]
+//│ ╙──       	                              ^
 //│ Typed: (int,) | error
+
 
 
 module WrapBase2: WrapBase, Wrap, Wrap, Wrap
 //│ class WrapBase2
 
 let w = WrapBase2.wrap
-//│ fun w: ‹∀ 0. w241'#› where 
-//│ |		w241'# := wrap242'
-//│ |		wrap242' :> ‹∀ 1. wrap138_243''#› <: w241'#
-//│ |		wrap138_243''# := (α139_244'' -> (α142_250'',))
-//│ |		α139_244'' <: α139_245'
-//│ |		α139_245' <: α139_246'
-//│ |		α139_246' <: α139_247'
-//│ |		α139_247' <: α139_248'
-//│ |		α139_248' <: α139_249'
-//│ |		α139_249' <: Int
-//│ |		α142_250'' :> α142_251'
-//│ |		α142_251' :> ‹∀ 2. (α142_252''',)›
-//│ |		α142_252''' :> α142_253'
-//│ |		α142_253' :> ‹∀ 2. (α142_254''',)›
-//│ |		α142_254''' :> α142_255'
-//│ |		α142_255' :> Int
-//│ [pretty-printed] w: int -> (((int,),),)
+//│ fun w: ‹∀ 0. w374'#› where 
+//│ |		w374'# := wrap375'
+//│ |		wrap375' :> ‹∀ 1. wrap153_389''#› <: w374'#
+//│ |		wrap153_389''# := (α154_390'' -> (α157_398'',))
+//│ |		α154_390'' <: α154_391'
+//│ |		α154_391' <: α154_392'
+//│ |		α154_392' <: α154_393'
+//│ |		α154_393' <: α154_394'
+//│ |		α154_394' <: α154_395'
+//│ |		α154_395' <: α135_396'
+//│ |		α135_396' <: α157_397'
+//│ |		α157_398'' :> α157_399'
+//│ |		α157_399' :> ‹∀ 2. (α157_400''',)›
+//│ |		α157_400''' :> α157_401'
+//│ |		α157_401' :> ‹∀ 2. (α157_402''',)›
+//│ |		α157_402''' :> α157_397'
+//│ [pretty-printed] w: 'a -> ((('a,),),)
 
 let wd = w(1)
-//│ fun wd: ‹∀ 0. wd272'#› where 
-//│ |		α142_251' :> ‹∀ 2. (α142_252''',)›
-//│ |		α142_252''' :> α142_253'
-//│ |		α142_253' :> ‹∀ 2. (α142_254''',)›
-//│ |		α142_254''' :> α142_255'
-//│ |		α142_255' :> Int
-//│ |		wd272'# := α273'
-//│ |		α273' :> ‹∀ 2. (α142_274''',)› <: wd272'#
-//│ |		α142_274''' :> α142_251'
-//│ [pretty-printed] wd: (((int,),),)
+//│ fun wd: ‹∀ 0. wd422'#› where 
+//│ |		α157_397' :> 1<int,number>
+//│ |		α157_399' :> ‹∀ 2. (α157_400''',)›
+//│ |		α157_400''' :> α157_401'
+//│ |		α157_401' :> ‹∀ 2. (α157_402''',)›
+//│ |		α157_402''' :> α157_397'
+//│ |		wd422'# := α423'
+//│ |		α423' :> ‹∀ 2. (α157_424''',)› <: wd422'#
+//│ |		α157_424''' :> α157_399'
+//│ [pretty-printed] wd: (((1,),),)
 
 wd._1._1._1 + 1
 //│ Typed: int

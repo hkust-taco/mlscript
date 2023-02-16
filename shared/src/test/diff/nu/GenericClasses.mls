@@ -1,0 +1,17 @@
+:NewParser
+:NewDefs
+:NoJS
+
+
+:e
+class Some<A>(value: A)
+//│ ╔══[ERROR] type identifier not found: A
+//│ ║  l.7: 	class Some<A>(value: A)
+//│ ╙──     	                     ^
+//│ class Some
+
+
+Some(1)
+//│ Typed: Some
+
+
