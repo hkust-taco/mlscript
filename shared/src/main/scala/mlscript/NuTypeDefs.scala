@@ -52,9 +52,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   }
   
   sealed trait TypedNuTermDef extends TypedNuDecl with AnyTypeDef {
-    override def toString: String = this match {
-      case _ => ???
-    }
+    // override def toString: String = this match {
+    //   case _ => ???
+    // }
     def level: Level
     def freshen(implicit ctx: Ctx): TypedNuDecl = {
       implicit val freshened: MutMap[TV, ST] = MutMap.empty
@@ -67,16 +67,25 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           : TypedNuTermDef = {
       // implicit val freshened: MutMap[TV, ST] = MutMap.empty
       // implicit val shadows: Shadows = Shadows.empty
+      ctx.copy(lvl = level + 1) |> { implicit ctx =>
       this match {
         case m @ TypedNuMxn(td, thisTV, superTV, ttu) =>
-          TypedNuMxn(td, thisTV, superTV, ttu.freshenAbove(m.level, rigidify))
+          // println(">>",m.level)
+          // TypedNuMxn(td, thisTV, superTV, ttu.freshenAbove(m.level, rigidify))
+          TypedNuMxn(td, thisTV, superTV, ttu.freshenAbove(lim, rigidify))
         case TypedNuFun(level, fd, ty) =>
-          TypedNuFun(level, fd, ty.freshenAbove(level, rigidify))
+          // TypedNuFun(level min ctx.lvl, fd, ty.freshenAbove(level, rigidify))
+          TypedNuFun(level min ctx.lvl, fd, ty.freshenAbove(lim, rigidify))
         case TypedNuCls(level, td, ttu, params, members) =>
-          TypedNuCls(level, td, ttu.freshenAbove(level, rigidify),
-            params.mapValues(_.freshenAbove(level, rigidify)),
-            members.mapValuesIter(_.freshenAbove(level, rigidify)).toMap)
+          println(">>",level,ctx.lvl)
+          // TypedNuCls(level, td, ttu.freshenAbove(level, rigidify),
+          //   params.mapValues(_.freshenAbove(level, rigidify)),
+          //   members.mapValuesIter(_.freshenAbove(level, rigidify)).toMap)
+          TypedNuCls(level, td, ttu.freshenAbove(lim, rigidify),
+            params.mapValues(_.freshenAbove(lim, rigidify)),
+            members.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap)
         // case _ => ???
+      }
       }
     }
     def force()(implicit raise: Raise): Unit = this match {

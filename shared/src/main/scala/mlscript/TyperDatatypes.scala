@@ -131,7 +131,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                       // case R(p) :: ps => ???
                       // case L(p) :: ps =>
                       case p :: ps =>
-                        val newMembs = trace(s"Inheriting from $p") {
+                        val newMembs = trace(s"${lvl}. Inheriting from $p") {
                           p match {
                             case Var(nme) =>
                               ctx.get(nme) match {

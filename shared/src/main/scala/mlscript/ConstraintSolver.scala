@@ -567,7 +567,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 case td: TypedNuCls =>
                   implicit val freshened: MutMap[TV, ST] = MutMap.empty
                   implicit val shadows: Shadows = Shadows.empty
-                  td.freshenAbove(td.level, rigidify = true).asInstanceOf[TypedNuCls]
+                  println(td)
+                  val res = td.freshenAbove(td.level + 1, rigidify = true).asInstanceOf[TypedNuCls]
+                  println(res)
+                  // println(res.members.map(_._2.asInstanceOf[TypedNuFun].ty.showBounds))
+                  res
                 case _ => ???
               }}
             }
@@ -649,6 +653,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               cache -= lhs -> rhs
               ()
             } else {
+              println(s"LHS bounds  ${lhs.showBounds}")
               val lhs2 = extrudeAndCheck(lhs, rhs.level, true, MaxLevel)
               println(s"EXTR LHS  ~>  $lhs2  to ${rhs.level}")
               println(s" where ${lhs2.showBounds}")
@@ -1122,7 +1127,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         : SimpleType =
   {
     def freshenImpl(ty: SimpleType, below: Level): SimpleType =
-    // (trace(s"${lvl}. FRESHEN $ty || $above .. $below  ${ty.level} ${ty.level <= above}")
+    (trace(s"${lvl}. FRESHEN $ty || $above .. $below  ${ty.level} ${ty.level <= above}")
     {
       // * Cannot soundly freshen if the context's level is above the current polymorphism level,
       // * as that would wrongly capture the newly-freshened variables.
@@ -1167,6 +1172,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         case None if rigidify && tv.level <= below =>
           // * Rigid type variables (ie, skolems) are encoded as SkolemTag-s
           val rv = SkolemTag(lvl, freshVar(noProv, N, tv.nameHint.orElse(S("_"))))(tv.prov)
+          println(s"New skolem: $tv ~> $rv")
           if (tv.lowerBounds.nonEmpty || tv.upperBounds.nonEmpty) {
             // The bounds of `tv` may be recursive (refer to `tv` itself),
             //    so here we create a fresh variabe that will be able to tie the presumed recursive knot
@@ -1181,7 +1187,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             // Now, since there may be recursive bounds, we do the same
             //    but through the indirection of a type variable tv2:
             tv2.lowerBounds ::= tv.lowerBounds.map(freshen).foldLeft(rv: ST)(_ & _)
+            println(s"$tv2 :> ${tv2.lowerBounds}")
             tv2.upperBounds ::= tv.upperBounds.map(freshen).foldLeft(rv: ST)(_ | _)
+            println(s"$tv2 <: ${tv2.upperBounds}")
             tv2
           } else {
             freshened += tv -> rv
@@ -1239,7 +1247,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case o @ Overload(alts) =>
         o.mapAlts(freshen)(freshen)
     }}
-    // (r => s"=> $r"))
+    (r => s"=> $r"))
     
     freshenImpl(ty, below)
   }

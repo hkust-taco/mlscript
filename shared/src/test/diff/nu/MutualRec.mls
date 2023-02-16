@@ -16,7 +16,6 @@ fun fooo(x) =
   C(0, x)
 //│ fun fooo: ‹∀ 0. fooo26'#› where 
 //│ |		fooo26'# := (α27' -> α35')
-//│ |		α27' <: z30_34'
 //│ |		α35' :> C<>
 //│ [pretty-printed] fooo: anything -> C
 
@@ -29,14 +28,14 @@ module Test0_2 {
   fun b = 123
 }
 //│ class Test0_1
-//│   fun a: ‹∀ 1. a45''#› where 
-//│   |		a45''# := b50''
-//│   |		b49''# := 123<int,number>
-//│   |		b50'' :> ‹∀ 1. b49''#› <: a45''#
+//│   fun a: ‹∀ 1. a44''#› where 
+//│   |		a44''# := b49''
+//│   |		b48''# := 123<int,number>
+//│   |		b49'' :> ‹∀ 1. b48''#› <: a44''#
 //│   [pretty-printed] a: 123
 //│ class Test0_2
-//│   fun b: ‹∀ 1. b49''#› where 
-//│   |		b49''# := 123<int,number>
+//│   fun b: ‹∀ 1. b48''#› where 
+//│   |		b48''# := 123<int,number>
 //│   [pretty-printed] b: 123
 
 Test0_1.a
@@ -50,16 +49,16 @@ module Test1_2 {
   fun b = Test1_1.a
 }
 //│ class Test1_1
-//│   fun a: ‹∀ 1. a67''#› where 
-//│   |		a67''# := b74''
-//│   |		b71''# := a72''
-//│   |		a72'' :> a72_73 <: b71''#
-//│   |		b74'' :> ‹∀ 1. b71''#› <: a67''#
+//│   fun a: ‹∀ 1. a66''#› where 
+//│   |		a66''# := b73''
+//│   |		b70''# := a71''
+//│   |		a71'' :> a71_72 <: b70''#
+//│   |		b73'' :> ‹∀ 1. b70''#› <: a66''#
 //│   [pretty-printed] a: nothing
 //│ class Test1_2
-//│   fun b: ‹∀ 1. b71''#› where 
-//│   |		b71''# := a72''
-//│   |		a72'' :> a72_73 <: b71''#
+//│   fun b: ‹∀ 1. b70''#› where 
+//│   |		b70''# := a71''
+//│   |		a71'' :> a71_72 <: b70''#
 //│   [pretty-printed] b: nothing
 
 Test1_1.a
@@ -79,34 +78,34 @@ module Test2_2 {
   fun e = Test2_1.n
 }
 //│ class Test2_1
-//│   fun t2: ‹∀ 1. t2100''#› where 
-//│   |		t2100''# := Test2_2<>
+//│   fun t2: ‹∀ 1. t299''#› where 
+//│   |		t299''# := Test2_2<>
 //│   [pretty-printed] t2: Test2_2
-//│   fun a: ‹∀ 1. a113''#› where 
-//│   |		b106''# := 123<int,number>
-//│   |		a113''# := b114''
-//│   |		b114'' :> ‹∀ 1. b106''#› <: a113''#
+//│   fun a: ‹∀ 1. a112''#› where 
+//│   |		b105''# := 123<int,number>
+//│   |		a112''# := b113''
+//│   |		b113'' :> ‹∀ 1. b105''#› <: a112''#
 //│   [pretty-printed] a: 123
-//│   fun d: ‹∀ 1. d118''#› where 
-//│   |		e110''# := n111''
-//│   |		n111'' :> n111_112 <: e110''#
-//│   |		d118''# := e119''
-//│   |		e119'' :> ‹∀ 1. e110''#› <: d118''#
+//│   fun d: ‹∀ 1. d117''#› where 
+//│   |		e109''# := n110''
+//│   |		n110'' :> n110_111 <: e109''#
+//│   |		d117''# := e118''
+//│   |		e118'' :> ‹∀ 1. e109''#› <: d117''#
 //│   [pretty-printed] d: nothing
-//│   fun n: ‹∀ 1. n123''#› where 
-//│   |		n123''# := 456<int,number>
+//│   fun n: ‹∀ 1. n122''#› where 
+//│   |		n122''# := 456<int,number>
 //│   [pretty-printed] n: 456
 //│ class Test2_2
-//│   fun b: ‹∀ 1. b106''#› where 
-//│   |		b106''# := 123<int,number>
+//│   fun b: ‹∀ 1. b105''#› where 
+//│   |		b105''# := 123<int,number>
 //│   [pretty-printed] b: 123
-//│   fun c: ‹∀ 1. c107''#› where 
-//│   |		c107''# := a108''
-//│   |		a108'' :> a108_109 <: c107''#
+//│   fun c: ‹∀ 1. c106''#› where 
+//│   |		c106''# := a107''
+//│   |		a107'' :> a107_108 <: c106''#
 //│   [pretty-printed] c: nothing
-//│   fun e: ‹∀ 1. e110''#› where 
-//│   |		e110''# := n111''
-//│   |		n111'' :> n111_112 <: e110''#
+//│   fun e: ‹∀ 1. e109''#› where 
+//│   |		e109''# := n110''
+//│   |		n110'' :> n110_111 <: e109''#
 //│   [pretty-printed] e: nothing
 
 Test2_1.t2.b
