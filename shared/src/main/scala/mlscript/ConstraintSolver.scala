@@ -559,9 +559,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (ClassTag(Var(nme), _), rt: RecordType) if nme.isCapitalized =>
             def lookupNuTypeDef(clsNme: Str): TypedNuCls = {
               val info = ctx.tyDefs2(clsNme)
-              Option.when(info.isComputing) {
-                ???
-              }.getOrElse { info.complete() match {
+              
+              // Option.when(info.isComputing) {
+              //   ???
+              // }.getOrElse 
+              { info.complete() match {
                 case td: TypedNuCls => td
                 case _ => ???
               }}

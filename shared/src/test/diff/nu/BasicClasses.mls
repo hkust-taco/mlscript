@@ -15,24 +15,26 @@ class Base0(n) {
 //│ ║  l.12: 	  fun oops = this.my
 //│ ╙──      	                 ^^^
 //│ class Base0
-//│   fun me: ‹∀ 1. me29''#› where 
-//│   |		me29''# := Base0<>
+//│   fun me: ‹∀ 1. me30''#› where 
+//│   |		this24 :> Base0<> <: {my: my36_37} & {n: n32_33}
+//│   |		me30''# := this24
+//│   |		my36_37 :> error<>
 //│   [pretty-printed] me: Base0
-//│   fun my: ‹∀ 1. my30''#› where 
-//│   |		my30''# := n31''
-//│   |		n31'' :> n23' <: mine32''# & my30''#
-//│   |		mine32''# := my30''#
+//│   fun my: ‹∀ 1. my31''#› where 
+//│   |		my31''# := n32''
+//│   |		n32'' :> n32_33 <: mine34''# & my31''#
+//│   |		mine34''# := my31''#
 //│   [pretty-printed] my: nothing
-//│   fun mine: ‹∀ 1. mine32''#› where 
-//│   |		my30''# := n31''
-//│   |		n31'' :> n23' <: mine32''# & my30''#
-//│   |		mine32''# := my30''#
+//│   fun mine: ‹∀ 1. mine34''#› where 
+//│   |		my31''# := n32''
+//│   |		n32'' :> n32_33 <: mine34''# & my31''#
+//│   |		mine34''# := my31''#
 //│   [pretty-printed] mine: nothing
-//│   fun oops: ‹∀ 1. oops33''#› where 
-//│   |		oops33''# := my34''
-//│   |		my34'' :> error<> | error<> <: oops33''#
+//│   fun oops: ‹∀ 1. oops35''#› where 
+//│   |		oops35''# := my36''
+//│   |		my36'' :> my36_37 <: oops35''#
+//│   |		my36_37 :> error<>
 //│   [pretty-printed] oops: error
-
 
 class Base1(base: int) {
   fun getBase1 = base
@@ -40,26 +42,46 @@ class Base1(base: int) {
   fun foo(x) = this.base + x
 }
 //│ class Base1
-//│   fun getBase1: ‹∀ 1. getBase150''#› where 
-//│   |		getBase150''# := Int
+//│   fun getBase1: ‹∀ 1. getBase156''#› where 
+//│   |		getBase156''# := Int
 //│   [pretty-printed] getBase1: int
-//│   fun getBase2: ‹∀ 1. getBase251''#› where 
-//│   |		getBase251''# := base52''
-//│   |		base52'' :> Int <: getBase251''#
+//│   fun getBase2: ‹∀ 1. getBase257''#› where 
+//│   |		getBase257''# := base58''
+//│   |		base58'' :> base58_59 <: getBase257''#
+//│   |		base58_59 :> Int
 //│   [pretty-printed] getBase2: int
-//│   fun foo: ‹∀ 1. foo53''#› where 
-//│   |		foo53''# := (α54'' -> α57'')
-//│   |		α54'' <: int<number>
-//│   |		α57'' :> int<number>
+//│   fun foo: ‹∀ 1. foo60''#› where 
+//│   |		foo60''# := (α61'' -> α65'')
+//│   |		α61'' <: int<number>
+//│   |		α65'' :> int<number>
+//│   [pretty-printed] foo: int -> int
+
+class Base1(base: int) {
+  fun getBase1 = base
+  fun me = this
+  fun foo(x) = base + x
+}
+//│ class Base1
+//│   fun getBase1: ‹∀ 1. getBase179''#› where 
+//│   |		getBase179''# := Int
+//│   [pretty-printed] getBase1: int
+//│   fun me: ‹∀ 1. me80''#› where 
+//│   |		this74 :> Base1<>
+//│   |		me80''# := this74
+//│   [pretty-printed] me: Base1
+//│   fun foo: ‹∀ 1. foo81''#› where 
+//│   |		foo81''# := (α82'' -> α84'')
+//│   |		α82'' <: int<number>
+//│   |		α84'' :> int<number>
 //│   [pretty-printed] foo: int -> int
 
 Base1
 //│ Typed: (base: int,) -> Base1
 
 let b = Base1(1)
-//│ fun b: ‹∀ 0. b65'#› where 
-//│ |		b65'# := α66'
-//│ |		α66' :> Base1<> <: b65'#
+//│ fun b: ‹∀ 0. b92'#› where 
+//│ |		b92'# := α93'
+//│ |		α93' :> Base1<> <: b92'#
 //│ [pretty-printed] b: Base1
 
 b.base
@@ -69,14 +91,14 @@ b.base
 // :d
 b.getBase1
 //│ ╔══[ERROR] class `Base1` does not contain member `getBase1`
-//│ ║  l.70: 	b.getBase1
+//│ ║  l.92: 	b.getBase1
 //│ ╙──      	 ^^^^^^^^^
 //│ Typed: error
 
 :e
 b.getBaseTypo
 //│ ╔══[ERROR] class `Base1` does not contain member `getBaseTypo`
-//│ ║  l.77: 	b.getBaseTypo
+//│ ║  l.99: 	b.getBaseTypo
 //│ ╙──      	 ^^^^^^^^^^^^
 //│ Typed: error
 

@@ -48,6 +48,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       res.result = result.map(f)
       res
     }
+    private lazy val thisTV: TV = freshVar(noProv/*FIXME*/, N, S("this"))
     def complete()(implicit raise: Raise): TypedNuTermDef = result.getOrElse {
       if (isComputing) lastWords(s"TODO cyclic defition ${decl.name}")
       else trace(s"Completing ${decl}") {
@@ -104,19 +105,14 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     // ctx ++= typedParams.mapKeysIter(_.name).mapValues(_.ub |> VarSymbol(_))
                     ctx ++= typedParams.map(p => p._1.name -> VarSymbol(p._2.ub, p._1))
                     
-                    ctx += "this" -> VarSymbol(
-                        ClassTag(Var(td.name),
-                          Set.empty//TODO
-                        )(provTODO),
-                      Var("this"))
+                    // ctx += "this" -> VarSymbol(
+                    //     ClassTag(Var(td.name),
+                    //       Set.empty//TODO
+                    //     )(provTODO),
+                    //   Var("this"))
                     
-                    val ttu = typeTypingUnit(td.body, allowPure = false) // TODO use
-                    
-                    // val clsMems = ttu.entities.map(_.complete()).map {
-                    //   case fun @ TypedNuFun(_, fd, ty) =>
-                    //     fun
-                    //   case _ => ???
-                    // }
+                    // val thisTV = freshVar(noProv/*FIXME*/, N, S("this"))
+                    ctx += "this" -> VarSymbol(thisTV, Var("this"))
                     
                     // TODO check against `tv`
                     println(td.tparams)
@@ -180,6 +176,25 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     val baseType = RecordType(typedParams)(ttp(td.params, isType = true))
                     val paramMems = typedParams.map(f => NuParam(f._1, f._2))
                     val baseMems = inherit(td.parents, baseType, Nil)
+                    
+                    // ctx += thisTV
+                    
+                    // TODO
+                    // ctx += "super" -> VarSymbol(superTV, Var("super"))
+                    
+                    val ttu = typeTypingUnit(td.body, allowPure = false) // TODO use
+                    
+                    val clsMems = ttu.entities.map(_.complete()).map {
+                      case fun @ TypedNuFun(_, fd, ty) =>
+                        fun
+                      case _ => ???
+                    }
+                    
+                    // val thisTy = ClassTag(Var(td.name),
+                    //       Set.empty//TODO
+                    //     )(provTODO)
+                    // constrain(thisTy, thisTV)
+                    
                     val mems = baseMems ++ paramMems
                     TypedNuCls(ctx.lvl, td, ttu, typedParams, mems.map(d => d.name -> d).toMap)
                   }
@@ -207,7 +222,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         
       }()
     }
-    def typeSignature(implicit raise: Raise): ST = if (isComputing) tv else complete() match {
+    def typeSignature(implicit raise: Raise): ST = if (isComputing) tv // FIXME wrong in general
+        else complete() match {
       case cls: TypedNuCls if cls.td.kind is Nms =>
         ClassTag(Var(cls.td.nme.name), Set.empty)(provTODO)
       case cls: TypedNuCls =>
@@ -221,6 +237,19 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     }
     def force()(implicit raise: Raise): Unit = {
       complete().force()
+      decl match {
+        case td: NuTypeDef =>
+          td.kind match {
+            case Cls | Nms =>
+              implicit val prov: TP = noProv // TODO
+              val thisTy = ClassTag(Var(td.name),
+                    Set.empty//TODO
+                  )(provTODO)
+              constrain(thisTy, thisTV)
+            case _ =>
+          }
+        case _ =>
+      }
     }
     override def toString: String =
       s"${decl.name} ~> ${if (isComputing) "<computing>" else result.fold("<uncomputed>")(_.toString)}"
