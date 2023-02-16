@@ -39,6 +39,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     var isComputing: Bool = false // TODO replace by a Ctx entry
     var result: Opt[TypedNuTermDef] = N
     // var result: Opt[A] = N
+    
     val tv: TV = freshVar(
       TypeProvenance(decl.toLoc, decl.describe, S(decl.name), decl.isInstanceOf[NuTypeDef]),
       N,
@@ -256,7 +257,14 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         
       }()
     }
-    def typeSignature(implicit raise: Raise): ST = if (isComputing) tv // TODO FIXME wrong in general (when accessed from difft scope/level)
+    def typeSignature(implicit raise: Raise): ST =
+        if (isComputing)
+          decl match {
+            case _: NuFunDef =>
+              tv // TODO FIXME wrong in general (when accessed from difft scope/level)
+            case _ =>
+              err(msg"Cyclic definition", decl.toLoc)
+          }
         else complete() match {
       case cls: TypedNuCls if cls.td.kind is Nms =>
         ClassTag(Var(cls.td.nme.name), Set.empty)(provTODO)

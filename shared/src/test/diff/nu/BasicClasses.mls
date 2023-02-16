@@ -51,131 +51,8 @@ let b1 = Base0(42)
 //│ |		α99' :> Base0<> <: b184'#
 //│ [pretty-printed] b1: Base0
 
-:d
+// :d
 let n1 = b1.n
-//│ 0. Typing TypingUnit(List(let n1 = (b1).n))
-//│ Completing let n1 = (b1).n
-//│ | 1. Typing term (b1).n
-//│ | | 1. Typing term b1
-//│ | | 1. : b184'#
-//│ | | CONSTRAIN b184'# <! {n: n104'}
-//│ | |   where 
-//│ 		b184'# := α99'
-//│ 		α99' :> Base0<> <: b184'#
-//│ | | 1. C b184'# <! {n: n104'}    (0)
-//│ | | | 1. C α99' <! {n: n104'}    (2)
-//│ | | | | NEW α99' UB (1)
-//│ | | | | 1. C Base0<> <! {n: n104'}    (4)
-//│ | | | | | 1. C Base0<> <! {n: n104'}    (4)
-//│ | | | | | | (>>,0,1)
-//│ | | | | | | 1. FRESHEN ‹∀ 1. me30''#› || 0 .. 1024  1 false
-//│ | | | | | | | 1. FRESHEN me30''# || 0 .. 1  2 false
-//│ | | | | | | | | 1. FRESHEN this24' || 0 .. 1  1 false
-//│ | | | | | | | | | 1. FRESHEN this24' || 0 .. 1  1 false
-//│ | | | | | | | | | | 1. FRESHEN Base0<> || 0 .. 1  0 true
-//│ | | | | | | | | | | => Base0<>
-//│ | | | | | | | | | | 1. FRESHEN {my: my36_37'} || 0 .. 1  1 false
-//│ | | | | | | | | | | | 1. FRESHEN {my: my36_37'} || 0 .. 1  1 false
-//│ | | | | | | | | | | | | 1. FRESHEN {my: my36_37'} || 0 .. 1  1 false
-//│ | | | | | | | | | | | | | 1. FRESHEN {my: my36_37'} || 0 .. 1  1 false
-//│ | | | | | | | | | | | | | | 1. FRESHEN {my: my36_37'} || 0 .. 1  1 false
-//│ | | | | | | | | | | | | | | | 1. FRESHEN my36_37' || 0 .. 1  1 false
-//│ | | | | | | | | | | | | | | | | 1. FRESHEN ‹∀ 1. my31_44''#› || 0 .. 1  0 true
-//│ | | | | | | | | | | | | | | | | => ‹∀ 1. my31_44''#›
-//│ | | | | | | | | | | | | | | | => my36_108'
-//│ | | | | | | | | | | | | | | => {my: my36_108'}
-//│ | | | | | | | | | | | | | => {my: my36_108'}
-//│ | | | | | | | | | | | | => {my: my36_108'}
-//│ | | | | | | | | | | | => {my: my36_108'}
-//│ | | | | | | | | | | => {my: my36_108'}
-//│ | | | | | | | | | | 1. FRESHEN {n: n32_33'} || 0 .. 1  1 false
-//│ | | | | | | | | | | | 1. FRESHEN {n: n32_33'} || 0 .. 1  1 false
-//│ | | | | | | | | | | | | 1. FRESHEN {n: n32_33'} || 0 .. 1  1 false
-//│ | | | | | | | | | | | | | 1. FRESHEN {n: n32_33'} || 0 .. 1  1 false
-//│ | | | | | | | | | | | | | | 1. FRESHEN {n: n32_33'} || 0 .. 1  1 false
-//│ | | | | | | | | | | | | | | | 1. FRESHEN n32_33' || 0 .. 1  1 false
-//│ | | | | | | | | | | | | | | | | 1. FRESHEN n23_65 || 0 .. 1  0 true
-//│ | | | | | | | | | | | | | | | | => n23_65
-//│ | | | | | | | | | | | | | | | => n32_109'
-//│ | | | | | | | | | | | | | | => {n: n32_109'}
-//│ | | | | | | | | | | | | | => {n: n32_109'}
-//│ | | | | | | | | | | | | => {n: n32_109'}
-//│ | | | | | | | | | | | => {n: n32_109'}
-//│ | | | | | | | | | | => {n: n32_109'}
-//│ | | | | | | | | | => this24_107'
-//│ | | | | | | | | => this24_107'
-//│ | | | | | | | => me30_106''#
-//│ | | | | | | => ‹∀ 1. me30_106''#›
-//│ | | | | | | 1. FRESHEN ‹∀ 1. my31''#› || 0 .. 1024  1 false
-//│ | | | | | | | 1. FRESHEN my31''# || 0 .. 1  2 false
-//│ | | | | | | | | 1. FRESHEN n32'' || 0 .. 1  2 false
-//│ | | | | | | | | | 1. FRESHEN n32_33' || 0 .. 1  1 false
-//│ | | | | | | | | | => n32_109'
-//│ | | | | | | | | | 1. FRESHEN mine34''# || 0 .. 1  2 false
-//│ | | | | | | | | | | 1. FRESHEN mine34''# || 0 .. 1  2 false
-//│ | | | | | | | | | | | 1. FRESHEN mine34''# || 0 .. 1  2 false
-//│ | | | | | | | | | | | | 1. FRESHEN my31''# || 0 .. 1  2 false
-//│ | | | | | | | | | | | | | 1. FRESHEN my31''# || 0 .. 1  2 false
-//│ | | | | | | | | | | | | | => my31_111''
-//│ | | | | | | | | | | | | => my31_111''
-//│ | | | | | | | | | | | => mine34_113''#
-//│ | | | | | | | | | | => mine34_113''#
-//│ | | | | | | | | | => mine34_113''#
-//│ | | | | | | | | | 1. FRESHEN my31''# || 0 .. 1  2 false
-//│ | | | | | | | | | | 1. FRESHEN my31''# || 0 .. 1  2 false
-//│ | | | | | | | | | | => my31_111''
-//│ | | | | | | | | | => my31_111''
-//│ | | | | | | | | => n32_112''
-//│ | | | | | | | => my31_111''#
-//│ | | | | | | => ‹∀ 1. my31_111''#›
-//│ | | | | | | 1. FRESHEN ‹∀ 1. mine34''#› || 0 .. 1024  1 false
-//│ | | | | | | | 1. FRESHEN mine34''# || 0 .. 1  2 false
-//│ | | | | | | | => mine34_113''#
-//│ | | | | | | => ‹∀ 1. mine34_113''#›
-//│ | | | | | | 1. FRESHEN ‹∀ 1. oops35''#› || 0 .. 1024  1 false
-//│ | | | | | | | 1. FRESHEN oops35''# || 0 .. 1  2 false
-//│ | | | | | | | | 1. FRESHEN my36'' || 0 .. 1  2 false
-//│ | | | | | | | | | 1. FRESHEN my36_37' || 0 .. 1  1 false
-//│ | | | | | | | | | => my36_108'
-//│ | | | | | | | | | 1. FRESHEN oops35''# || 0 .. 1  2 false
-//│ | | | | | | | | | | 1. FRESHEN oops35''# || 0 .. 1  2 false
-//│ | | | | | | | | | | => oops35_116''
-//│ | | | | | | | | | => oops35_116''
-//│ | | | | | | | | => my36_117''
-//│ | | | | | | | => oops35_116''#
-//│ | | | | | | => ‹∀ 1. oops35_116''#›
-//│ | | | | | | 1. FRESHEN n23' || 0 .. 1024  1 false
-//│ | | | | | | => n23_118'
-//│ | | | | | | 1. FRESHEN n23' || 0 .. 1024  1 false
-//│ | | | | | | => n23_118'
-//│ | | | | | | 1. FRESHEN ‹∀ 1. mine34''#› || 0 .. 1024  1 false
-//│ | | | | | | | 1. FRESHEN mine34''# || 0 .. 1  2 false
-//│ | | | | | | | => mine34_113''#
-//│ | | | | | | => ‹∀ 1. mine34_113''#›
-//│ | | | | | | 1. FRESHEN ‹∀ 1. oops35''#› || 0 .. 1024  1 false
-//│ | | | | | | | 1. FRESHEN oops35''# || 0 .. 1  2 false
-//│ | | | | | | | => oops35_116''#
-//│ | | | | | | => ‹∀ 1. oops35_116''#›
-//│ | | | | | | 1. FRESHEN ‹∀ 1. my31''#› || 0 .. 1024  1 false
-//│ | | | | | | | 1. FRESHEN my31''# || 0 .. 1  2 false
-//│ | | | | | | | => my31_111''#
-//│ | | | | | | => ‹∀ 1. my31_111''#›
-//│ | | | | | | 1. FRESHEN ‹∀ 1. me30''#› || 0 .. 1024  1 false
-//│ | | | | | | | 1. FRESHEN me30''# || 0 .. 1  2 false
-//│ | | | | | | | => me30_106''#
-//│ | | | | | | => ‹∀ 1. me30_106''#›
-//│ | | | | | | 1. C n23_118' <! n104'    (3)
-//│ | | | | | | | NEW n23_118' UB (1)
-//│ | 1. : n104'
-//│ | CONSTRAIN n104' <! n1103'
-//│ |   where 
-//│ | 1. C n104' <! n1103'    (0)
-//│ | | NEW n104' UB (1)
-//│ | UNSTASHING... (out)
-//│ ⬤ Typed as: ‹∀ 0. n1103'#›
-//│  where: 
-//│ 		n1103'# := n104'
-//│ 		n104' <: n1103'#
 //│ fun n1: ‹∀ 0. n1103'#› where 
 //│ |		n1103'# := n104'
 //│ |		n104' <: n1103'#
@@ -255,67 +132,39 @@ b.base
 b.getBase1
 //│ Typed: int
 
-:d
+// :d
 b.me
-//│ 0. Typing TypingUnit(List((b).me))
-//│ | 0. Typing term (b).me
-//│ | | 0. Typing term b
-//│ | | 0. : b221'#
-//│ | | CONSTRAIN b221'# <! {me: me245}
-//│ | |   where 
-//│ 		getBase1203''# := Int
-//│ 		b221'# := α227'
-//│ 		α227' :> Base1<> <: {getBase1: getBase1237} & {base: base230} & b221'#
-//│ 		base230 :> Int
-//│ 		getBase1237 :> ‹∀ 1. getBase1203''#›
-//│ | | 0. C b221'# <! {me: me245}    (0)
-//│ | | | 0. C α227' <! {me: me245}    (2)
-//│ | | | | NEW α227' UB (0)
-//│ | | | | 0. C Base1<> <! {me: me245}    (4)
-//│ | | | | | 0. C Base1<> <! {me: me245}    (4)
-//│ | | | | | | (>>,0,0)
-//│ | | | | | | 0. FRESHEN ‹∀ 1. getBase1203''#› || 0 .. 1024  0 true
-//│ | | | | | | => ‹∀ 1. getBase1203''#›
-//│ | | | | | | 0. FRESHEN ‹∀ 1. me204''#› || 0 .. 1024  1 false
-//│ | | | | | | | 0. FRESHEN me204''# || 0 .. 1  2 false
-//│ | | | | | | | | 0. FRESHEN this198' || 0 .. 1  1 false
-//│ | | | | | | | | | 0. FRESHEN this198' || 0 .. 1  1 false
-//│ | | | | | | | | | | 0. FRESHEN Base1<> || 0 .. 1  0 true
-//│ | | | | | | | | | | => Base1<>
-//│ | | | | | | | | | => this198_249
-//│ | | | | | | | | => this198_249
-//│ | | | | | | | => me204_248''#
-//│ | | | | | | => ‹∀ 1. me204_248''#›
-//│ | | | | | | 0. FRESHEN ‹∀ 1. foo205''#› || 0 .. 1024  0 true
-//│ | | | | | | => ‹∀ 1. foo205''#›
-//│ | | | | | | 0. FRESHEN ‹∀ 1. getBase1203''#› || 0 .. 1024  0 true
-//│ | | | | | | => ‹∀ 1. getBase1203''#›
-//│ | | | | | | 0. FRESHEN ‹∀ 1. me204''#› || 0 .. 1024  1 false
-//│ | | | | | | | 0. FRESHEN me204''# || 0 .. 1  2 false
-//│ | | | | | | | => me204_248''#
-//│ | | | | | | => ‹∀ 1. me204_248''#›
-//│ | | | | | | 0. FRESHEN ‹∀ 1. foo205''#› || 0 .. 1024  0 true
-//│ | | | | | | => ‹∀ 1. foo205''#›
-//│ | | | | | | 0. C ‹∀ 1. me204_248''#› <! me245    (3)
-//│ | | | | | | | NEW me245 LB (0)
-//│ | 0. : me245
-//│ ⬤ Typed as: ‹∀ 0. me245›
-//│  where: 
-//│ 		me245 :> ‹∀ 1. me204_248''#›
-//│ 		me204_248''# := this198_249
-//│ 		this198_249 :> Base1<>
 //│ Typed: Base1
 
 :e
 b.getBaseTypo
 //│ ╔══[ERROR] class `Base1` does not contain member `getBaseTypo`
-//│ ║  l.310: 	b.getBaseTypo
+//│ ║  l.140: 	b.getBaseTypo
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ Typed: error
 
 
 b : Base1
 //│ Typed: Base1
+
+
+:e // TODO
+class Rec(n) {
+  fun go = Rec(n + 1)
+}
+//│ ╔══[ERROR] Cyclic definition
+//│ ║  l.152: 	class Rec(n) {
+//│ ║         	      ^^^^^^^^
+//│ ║  l.153: 	  fun go = Rec(n + 1)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.154: 	}
+//│ ╙──       	^
+//│ class Rec
+//│   fun go: ‹∀ 1. go266''#› where 
+//│   |		go266''# := α269''
+//│   |		α269'' :> error<> <: go266''#
+//│   [pretty-printed] go: error
+
 
 
 
@@ -325,20 +174,20 @@ class Annots(base: 0 | 1) {
   fun a = base
 }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.324: 	  a: int
+//│ ║  l.173: 	  a: int
 //│ ║         	  ^
 //│ ╟── type `(0 | 1,)` is not an instance of type `int`
-//│ ║  l.323: 	class Annots(base: 0 | 1) {
+//│ ║  l.172: 	class Annots(base: 0 | 1) {
 //│ ║         	                   ^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.324: 	  a: int
+//│ ║  l.173: 	  a: int
 //│ ║         	  ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.324: 	  a: int
+//│ ║  l.173: 	  a: int
 //│ ╙──       	     ^^^
 //│ class Annots
-//│   fun a: ‹∀ 1. a265''#› where 
-//│   |		a265''# := ((0<int,number> | 1<int,number>),)
+//│   fun a: ‹∀ 1. a276''#› where 
+//│   |		a276''# := ((0<int,number> | 1<int,number>),)
 //│   [pretty-printed] a: (0 | 1,)
 
 
