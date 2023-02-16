@@ -42,30 +42,18 @@ class Base1(base: int): BaseTest
 //│ | base: int,
 //│ | List(BaseTest)
 //│ | 1. Inheriting from BaseTest
-//│ | | 2. FRESHEN ‹∀ 1. test26''#› || 0 .. 1024  1 false
-//│ | | | 3. FRESHEN test26''# || 1 .. 1024  2 false
-//│ | | | | 3. FRESHEN base27'' || 1 .. 1024  2 false
-//│ | | | | | 3. FRESHEN base27_28' || 1 .. 1024  1 true
-//│ | | | | | => base27_28'
-//│ | | | | | 3. FRESHEN test26''# || 1 .. 1024  2 false
-//│ | | | | | | 3. FRESHEN test26''# || 1 .. 1024  2 false
-//│ | | | | | | => test26_47'''
-//│ | | | | | => test26_47'''
-//│ | | | | => base27_48'''
-//│ | | | => test26_47'''#
-//│ | | | 2. FRESHEN ‹∀ 2. test26_47'''#› || 0 .. 1024  1 false
-//│ | | | | 2. FRESHEN test26_47'''# || 0 .. 2  3 false
-//│ | | | | | 2. FRESHEN base27_48''' || 0 .. 2  3 false
-//│ | | | | | | 2. FRESHEN base27_28' || 0 .. 2  1 false
-//│ | | | | | | => base27_51''
-//│ | | | | | | 2. FRESHEN test26_47'''# || 0 .. 2  3 false
-//│ | | | | | | | 2. FRESHEN test26_47'''# || 0 .. 2  3 false
-//│ | | | | | | | => test26_49'''
-//│ | | | | | | => test26_49'''
-//│ | | | | | => base27_50'''
-//│ | | | | => test26_49'''#
-//│ | | | => ‹∀ 2. test26_49'''#›
-//│ | | => ‹∀ 2. test26_49'''#›
+//│ | | 1. FRESHEN ‹∀ 1. test26''#› || 0 .. 1024  1 false
+//│ | | | 1. FRESHEN test26''# || 0 .. 1  2 false
+//│ | | | | 1. FRESHEN base27'' || 0 .. 1  2 false
+//│ | | | | | 1. FRESHEN base27_28' || 0 .. 1  1 false
+//│ | | | | | => base27_49'
+//│ | | | | | 1. FRESHEN test26''# || 0 .. 1  2 false
+//│ | | | | | | 1. FRESHEN test26''# || 0 .. 1  2 false
+//│ | | | | | | => test26_47''
+//│ | | | | | => test26_47''
+//│ | | | | => base27_48''
+//│ | | | => test26_47''#
+//│ | | => ‹∀ 1. test26_47''#›
 //│ | | CONSTRAIN {base: Int} <! super24'
 //│ | |   where 
 //│ 		super24' <: {base: base27_28'}
@@ -82,32 +70,15 @@ class Base1(base: int): BaseTest
 //│ | |   where 
 //│ | | 1. C this45' <! this23'    (0)
 //│ | | | NEW this45' UB (1)
-//│ | CONSTRAIN {base: Int, test: ‹∀ 2. test26_49'''#›} <! this45'
+//│ | CONSTRAIN {base: Int, test: ‹∀ 1. test26_47''#›} <! this45'
 //│ |   where 
 //│ 		this45' <: this23'
-//│ 		test26_49'''# := base27_50'''
-//│ 		base27_50''' :> base27_51'' <: test26_49'''#
-//│ | 1. C {base: Int, test: ‹∀ 2. test26_49'''#›} <! this45'    (0)
-//│ | | wrong level: 2
-//│ | | LHS bounds  
-//│ 		test26_49'''# := base27_50'''
-//│ 		base27_50''' :> base27_51'' <: test26_49'''#
-//│ | | RECONSTRAINING TVs
-//│ | | | 1. C base27_54' <! test26_52'''#    (1)
-//│ | | | | 1. C base27_54' <! test26_52'''#    (1)
-//│ | | | | | 1. C base27_54' <! base27_53'''    (4)
-//│ | | | | | | NEW base27_53''' LB (1)
-//│ | | | | | | 1. C base27_54' <! test26_52'''#    (7)
-//│ | | | | | | | 1. C base27_54' <! test26_52'''#    (7)
-//│ | | | | | | | | Cached!
-//│ | | EXTR LHS  ~>  {base: Int, test: ‹∀ 2. test26_52'''#›}  to 1
-//│ | |  where 
-//│ 		test26_52'''# := base27_53'''
-//│ 		base27_53''' :> base27_54' | base27_54' <: test26_52'''#
-//│ | | 1. C {base: Int, test: ‹∀ 2. test26_52'''#›} <! this45'    (2)
-//│ | | | NEW this45' LB (1)
-//│ | | | 1. C {base: Int, test: ‹∀ 2. test26_52'''#›} <! this23'    (3)
-//│ | | | | NEW this23' LB (1)
+//│ 		test26_47''# := base27_48''
+//│ 		base27_48'' :> base27_49' <: test26_47''#
+//│ | 1. C {base: Int, test: ‹∀ 1. test26_47''#›} <! this45'    (0)
+//│ | | NEW this45' LB (1)
+//│ | | 1. C {base: Int, test: ‹∀ 1. test26_47''#›} <! this23'    (2)
+//│ | | | NEW this23' LB (1)
 //│ | 1. Typing TypingUnit(List())
 //│ | UNSTASHING... (out)
 //│ CONSTRAIN Base1<> <! this44'
@@ -123,11 +94,11 @@ class Base1(base): BaseTest
 :e
 class Base1(x): BaseTest
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.124: 	class Base1(x): BaseTest
-//│ ║         	      ^^^^^^^^^^^^^^^^^^
+//│ ║  l.95: 	class Base1(x): BaseTest
+//│ ║        	      ^^^^^^^^^^^^^^^^^^
 //│ ╟── type `{x: ?x}` does not have field 'base'
-//│ ║  l.124: 	class Base1(x): BaseTest
-//│ ║         	           ^^^
+//│ ║  l.95: 	class Base1(x): BaseTest
+//│ ║        	           ^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.8: 	  fun test = super.base
 //│ ║       	             ^^^^^^^^^^
@@ -145,15 +116,15 @@ mixin Foo {
   fun test(x) = [super.base + x, x, super.misc]
 }
 //│ mixin Foo
-//│   this: this88' 
-//│   super: super89' 
-//│   |		super89' <: {misc: misc97_98'} & {base: base93_94'}
-//│   |		base93_94' <: int<number>
-//│   fun test: ‹∀ 1. test91''#› where 
-//│   |		test91''# := (α92'' -> (α96'', α92'', misc97'',))
-//│   |		α92'' <: int<number>
-//│   |		α96'' :> int<number>
-//│   |		misc97'' :> misc97_98'
+//│   this: this72' 
+//│   super: super73' 
+//│   |		super73' <: {misc: misc81_82'} & {base: base77_78'}
+//│   |		base77_78' <: int<number>
+//│   fun test: ‹∀ 1. test75''#› where 
+//│   |		test75''# := (α76'' -> (α80'', α76'', misc81'',))
+//│   |		α76'' <: int<number>
+//│   |		α80'' :> int<number>
+//│   |		misc81'' :> misc81_82'
 //│   [pretty-printed] test: (int & 'a) -> (int, 'a, nothing,)
 
 
@@ -161,10 +132,10 @@ mixin WrapBase {
   fun wrap(x) = x
 }
 //│ mixin WrapBase
-//│   this: this107' 
-//│   super: super108' 
-//│   fun wrap: ‹∀ 1. wrap110''#› where 
-//│   |		wrap110''# := (α111'' -> α111'')
+//│   this: this91' 
+//│   super: super92' 
+//│   fun wrap: ‹∀ 1. wrap94''#› where 
+//│   |		wrap94''# := (α95'' -> α95'')
 //│   [pretty-printed] wrap: 'a -> 'a
 
 :d
@@ -179,63 +150,63 @@ mixin Wrap {
 //│ | 2. Typing term (x,) => '(' (super).wrap (x,), ')'
 //│ | | 2. Typing pattern x,
 //│ | | | 2. Typing pattern x
-//│ | | | 2. : x121''
-//│ | | 2. : (x121'',)
+//│ | | | 2. : x105''
+//│ | | 2. : (x105'',)
 //│ | | 2. Typing term '(' (super).wrap (x,), ')'
 //│ | | | 2. Typing term (super).wrap (x,),
 //│ | | | | 2. Typing term (super).wrap (x,)
 //│ | | | | | 2. Typing term (super).wrap
 //│ | | | | | | 2. Typing term super
-//│ | | | | | | 2. : super118'
-//│ | | | | | | CONSTRAIN super118' <! {wrap: wrap122''}
+//│ | | | | | | 2. : super102'
+//│ | | | | | | CONSTRAIN super102' <! {wrap: wrap106''}
 //│ | | | | | |   where 
-//│ | | | | | | 2. C super118' <! {wrap: wrap122''}    (0)
+//│ | | | | | | 2. C super102' <! {wrap: wrap106''}    (0)
 //│ | | | | | | | wrong level: 2
 //│ | | | | | | | RECONSTRAINING TVs
-//│ | | | | | | | EXTR RHS  ~>  {wrap: wrap122_123'}  to 1
+//│ | | | | | | | EXTR RHS  ~>  {wrap: wrap106_107'}  to 1
 //│ | | | | | | |  where 
-//│ | | | | | | | 2. C super118' <! {wrap: wrap122_123'}    (2)
-//│ | | | | | | | | NEW super118' UB (1)
-//│ | | | | | 2. : wrap122''
+//│ | | | | | | | 2. C super102' <! {wrap: wrap106_107'}    (2)
+//│ | | | | | | | | NEW super102' UB (1)
+//│ | | | | | 2. : wrap106''
 //│ | | | | | 2. Typing term x
-//│ | | | | | 2. : x121''
-//│ | | | | | CONSTRAIN wrap122'' <! (x121'' -> α124'')
+//│ | | | | | 2. : x105''
+//│ | | | | | CONSTRAIN wrap106'' <! (x105'' -> α108'')
 //│ | | | | |   where 
-//│ 		wrap122'' :> wrap122_123'
-//│ | | | | | 2. C wrap122'' <! (x121'' -> α124'')    (0)
-//│ | | | | | | NEW wrap122'' UB (2)
-//│ | | | | | | 2. C wrap122_123' <! (x121'' -> α124'')    (2)
+//│ 		wrap106'' :> wrap106_107'
+//│ | | | | | 2. C wrap106'' <! (x105'' -> α108'')    (0)
+//│ | | | | | | NEW wrap106'' UB (2)
+//│ | | | | | | 2. C wrap106_107' <! (x105'' -> α108'')    (2)
 //│ | | | | | | | wrong level: 2
 //│ | | | | | | | RECONSTRAINING TVs
-//│ | | | | | | | EXTR RHS  ~>  (x121_125' -> α124_126')  to 1
+//│ | | | | | | | EXTR RHS  ~>  (x105_109' -> α108_110')  to 1
 //│ | | | | | | |  where 
-//│ | | | | | | | 2. C wrap122_123' <! (x121_125' -> α124_126')    (4)
-//│ | | | | | | | | NEW wrap122_123' UB (1)
-//│ | | | | 2. : α124''
-//│ | | | 2. : (α124'',)
-//│ | | 2. : (α124'',)
-//│ | 2. : (x121'' -> (α124'',))
-//│ | CONSTRAIN (x121'' -> (α124'',)) <! wrap120''
+//│ | | | | | | | 2. C wrap106_107' <! (x105_109' -> α108_110')    (4)
+//│ | | | | | | | | NEW wrap106_107' UB (1)
+//│ | | | | 2. : α108''
+//│ | | | 2. : (α108'',)
+//│ | | 2. : (α108'',)
+//│ | 2. : (x105'' -> (α108'',))
+//│ | CONSTRAIN (x105'' -> (α108'',)) <! wrap104''
 //│ |   where 
-//│ 		x121'' <: x121_125'
-//│ 		α124'' :> α124_126'
-//│ | 2. C (x121'' -> (α124'',)) <! wrap120''    (0)
-//│ | | NEW wrap120'' LB (2)
+//│ 		x105'' <: x105_109'
+//│ 		α108'' :> α108_110'
+//│ | 2. C (x105'' -> (α108'',)) <! wrap104''    (0)
+//│ | | NEW wrap104'' LB (2)
 //│ | UNSTASHING... (out)
 //│ mixin Wrap
-//│   this: this117' 
-//│   super: super118' 
-//│   |		super118' <: {wrap: wrap122_123'}
-//│   |		wrap122_123' <: (x121_125' -> α124_126')
-//│ ⬤ Typed as: ‹∀ 1. wrap120''#›
+//│   this: this101' 
+//│   super: super102' 
+//│   |		super102' <: {wrap: wrap106_107'}
+//│   |		wrap106_107' <: (x105_109' -> α108_110')
+//│ ⬤ Typed as: ‹∀ 1. wrap104''#›
 //│  where: 
-//│ 		wrap120''# := (x121'' -> (α124'',))
-//│ 		x121'' <: x121_125'
-//│ 		α124'' :> α124_126'
-//│   fun wrap: ‹∀ 1. wrap120''#› where 
-//│   |		wrap120''# := (x121'' -> (α124'',))
-//│   |		x121'' <: x121_125'
-//│   |		α124'' :> α124_126'
+//│ 		wrap104''# := (x105'' -> (α108'',))
+//│ 		x105'' <: x105_109'
+//│ 		α108'' :> α108_110'
+//│   fun wrap: ‹∀ 1. wrap104''#› where 
+//│   |		wrap104''# := (x105'' -> (α108'',))
+//│   |		x105'' <: x105_109'
+//│   |		α108'' :> α108_110'
 //│   [pretty-printed] wrap: anything -> (nothing,)
 
 
@@ -248,130 +219,98 @@ module WrapBase1: WrapBase, Wrap
 //│ | 
 //│ | List(WrapBase, Wrap)
 //│ | 1. Inheriting from WrapBase
-//│ | | 2. FRESHEN ‹∀ 1. wrap110''#› || 0 .. 1024  0 true
-//│ | | => ‹∀ 1. wrap110''#›
-//│ | | CONSTRAIN {} <! super108'
+//│ | | 1. FRESHEN ‹∀ 1. wrap94''#› || 0 .. 1024  0 true
+//│ | | => ‹∀ 1. wrap94''#›
+//│ | | CONSTRAIN {} <! super92'
 //│ | |   where 
-//│ | | 1. C {} <! super108'    (0)
-//│ | | | NEW super108' LB (0)
-//│ | | CONSTRAIN this134' <! this107'
+//│ | | 1. C {} <! super92'    (0)
+//│ | | | NEW super92' LB (0)
+//│ | | CONSTRAIN this118' <! this91'
 //│ | |   where 
-//│ | | 1. C this134' <! this107'    (0)
-//│ | | | NEW this134' UB (1)
+//│ | | 1. C this118' <! this91'    (0)
+//│ | | | NEW this118' UB (1)
 //│ | 1. Inheriting from Wrap
-//│ | | 2. FRESHEN ‹∀ 1. wrap120''#› || 0 .. 1024  1 false
-//│ | | | 3. FRESHEN wrap120''# || 1 .. 1024  2 false
-//│ | | | | 3. FRESHEN (x121'' -> (α124'',)) || 1 .. 1024  2 false
-//│ | | | | | 3. FRESHEN (x121'',) || 1 .. 1024  2 false
-//│ | | | | | | 3. FRESHEN x121'' || 1 .. 1024  2 false
-//│ | | | | | | | 3. FRESHEN x121_125' || 1 .. 1024  1 true
-//│ | | | | | | | => x121_125'
-//│ | | | | | | => x121_138'''
-//│ | | | | | => (x121_138''',)
-//│ | | | | | 3. FRESHEN (α124'',) || 1 .. 1024  2 false
-//│ | | | | | | 3. FRESHEN α124'' || 1 .. 1024  2 false
-//│ | | | | | | | 3. FRESHEN α124_126' || 1 .. 1024  1 true
-//│ | | | | | | | => α124_126'
-//│ | | | | | | => α124_139'''
-//│ | | | | | => (α124_139''',)
-//│ | | | | => (x121_138''' -> (α124_139''',))
-//│ | | | => wrap120_137'''#
-//│ | | | 2. FRESHEN ‹∀ 2. wrap120_137'''#› || 0 .. 1024  1 false
-//│ | | | | 2. FRESHEN wrap120_137'''# || 0 .. 2  3 false
-//│ | | | | | 2. FRESHEN (x121_138''' -> (α124_139''',)) || 0 .. 2  3 false
-//│ | | | | | | 2. FRESHEN (x121_138''',) || 0 .. 2  3 false
-//│ | | | | | | | 2. FRESHEN x121_138''' || 0 .. 2  3 false
-//│ | | | | | | | | 2. FRESHEN x121_125' || 0 .. 2  1 false
-//│ | | | | | | | | => x121_142''
-//│ | | | | | | | => x121_141'''
-//│ | | | | | | => (x121_141''',)
-//│ | | | | | | 2. FRESHEN (α124_139''',) || 0 .. 2  3 false
-//│ | | | | | | | 2. FRESHEN α124_139''' || 0 .. 2  3 false
-//│ | | | | | | | | 2. FRESHEN α124_126' || 0 .. 2  1 false
-//│ | | | | | | | | => α124_144''
-//│ | | | | | | | => α124_143'''
-//│ | | | | | | => (α124_143''',)
-//│ | | | | | => (x121_141''' -> (α124_143''',))
-//│ | | | | => wrap120_140'''#
-//│ | | | => ‹∀ 2. wrap120_140'''#›
-//│ | | => ‹∀ 2. wrap120_140'''#›
-//│ | | CONSTRAIN {wrap: ‹∀ 1. wrap110''#›} <! super118'
+//│ | | 1. FRESHEN ‹∀ 1. wrap104''#› || 0 .. 1024  1 false
+//│ | | | 1. FRESHEN wrap104''# || 0 .. 1  2 false
+//│ | | | | 1. FRESHEN (x105'' -> (α108'',)) || 0 .. 1  2 false
+//│ | | | | | 1. FRESHEN (x105'',) || 0 .. 1  2 false
+//│ | | | | | | 1. FRESHEN x105'' || 0 .. 1  2 false
+//│ | | | | | | | 1. FRESHEN x105_109' || 0 .. 1  1 false
+//│ | | | | | | | => x105_123'
+//│ | | | | | | => x105_122''
+//│ | | | | | => (x105_122'',)
+//│ | | | | | 1. FRESHEN (α108'',) || 0 .. 1  2 false
+//│ | | | | | | 1. FRESHEN α108'' || 0 .. 1  2 false
+//│ | | | | | | | 1. FRESHEN α108_110' || 0 .. 1  1 false
+//│ | | | | | | | => α108_125'
+//│ | | | | | | => α108_124''
+//│ | | | | | => (α108_124'',)
+//│ | | | | => (x105_122'' -> (α108_124'',))
+//│ | | | => wrap104_121''#
+//│ | | => ‹∀ 1. wrap104_121''#›
+//│ | | CONSTRAIN {wrap: ‹∀ 1. wrap94''#›} <! super102'
 //│ | |   where 
-//│ 		wrap110''# := (α111'' -> α111'')
-//│ 		super118' <: {wrap: wrap122_123'}
-//│ 		wrap122_123' <: (x121_125' -> α124_126')
-//│ | | 1. C {wrap: ‹∀ 1. wrap110''#›} <! super118'    (0)
-//│ | | | NEW super118' LB (0)
-//│ | | | 1. C {wrap: ‹∀ 1. wrap110''#›} <! {wrap: wrap122_123'}    (2)
-//│ | | | | 1. C ‹∀ 1. wrap110''#› <! wrap122_123'    (2)
-//│ | | | | | NEW wrap122_123' LB (0)
-//│ | | | | | 1. C ‹∀ 1. wrap110''#› <! (x121_125' -> α124_126')    (4)
-//│ | | | | | | could be distribbed: Set(α111'')
-//│ | | | | | | cannot be distribbed: Set(α111'')
-//│ | | | | | | INST [1]   ‹∀ 1. wrap110''#›
+//│ 		wrap94''# := (α95'' -> α95'')
+//│ 		super102' <: {wrap: wrap106_107'}
+//│ 		wrap106_107' <: (x105_109' -> α108_110')
+//│ | | 1. C {wrap: ‹∀ 1. wrap94''#›} <! super102'    (0)
+//│ | | | NEW super102' LB (0)
+//│ | | | 1. C {wrap: ‹∀ 1. wrap94''#›} <! {wrap: wrap106_107'}    (2)
+//│ | | | | 1. C ‹∀ 1. wrap94''#› <! wrap106_107'    (2)
+//│ | | | | | NEW wrap106_107' LB (0)
+//│ | | | | | 1. C ‹∀ 1. wrap94''#› <! (x105_109' -> α108_110')    (4)
+//│ | | | | | | could be distribbed: Set(α95'')
+//│ | | | | | | cannot be distribbed: Set(α95'')
+//│ | | | | | | INST [1]   ‹∀ 1. wrap94''#›
 //│ | | | | | |   where  
-//│ 		wrap110''# := (α111'' -> α111'')
-//│ | | | | | | 1. FRESHEN wrap110''# || 1 .. 1024  2 false
-//│ | | | | | | | 1. FRESHEN (α111'' -> α111'') || 1 .. 1024  2 false
-//│ | | | | | | | | 1. FRESHEN (α111'',) || 1 .. 1024  2 false
-//│ | | | | | | | | | 1. FRESHEN α111'' || 1 .. 1024  2 false
-//│ | | | | | | | | | => α111_146'
-//│ | | | | | | | | => (α111_146',)
-//│ | | | | | | | | 1. FRESHEN α111'' || 1 .. 1024  2 false
-//│ | | | | | | | | | 1. FRESHEN α111'' || 1 .. 1024  2 false
-//│ | | | | | | | | | => α111_146'
-//│ | | | | | | | | => α111_146'
-//│ | | | | | | | => (α111_146' -> α111_146')
-//│ | | | | | | => wrap110_145'#
-//│ | | | | | | TO [1] ~>  wrap110_145'#
+//│ 		wrap94''# := (α95'' -> α95'')
+//│ | | | | | | 1. FRESHEN wrap94''# || 1 .. 1024  2 false
+//│ | | | | | | | 1. FRESHEN (α95'' -> α95'') || 1 .. 1024  2 false
+//│ | | | | | | | | 1. FRESHEN (α95'',) || 1 .. 1024  2 false
+//│ | | | | | | | | | 1. FRESHEN α95'' || 1 .. 1024  2 false
+//│ | | | | | | | | | => α95_127'
+//│ | | | | | | | | => (α95_127',)
+//│ | | | | | | | | 1. FRESHEN α95'' || 1 .. 1024  2 false
+//│ | | | | | | | | | 1. FRESHEN α95'' || 1 .. 1024  2 false
+//│ | | | | | | | | | => α95_127'
+//│ | | | | | | | | => α95_127'
+//│ | | | | | | | => (α95_127' -> α95_127')
+//│ | | | | | | => wrap94_126'#
+//│ | | | | | | TO [1] ~>  wrap94_126'#
 //│ | | | | | |   where  
-//│ 		wrap110_145'# := (α111_146' -> α111_146')
-//│ | | | | | | 1. C wrap110_145'# <! (x121_125' -> α124_126')    (6)
-//│ | | | | | | | 1. C (α111_146' -> α111_146') <! (x121_125' -> α124_126')    (9)
-//│ | | | | | | | | 1. C (x121_125',) <! (α111_146',)    (6)
-//│ | | | | | | | | | 1. C x121_125' <! α111_146'    (7)
-//│ | | | | | | | | | | NEW x121_125' UB (1)
-//│ | | | | | | | | 1. C α111_146' <! α124_126'    (6)
-//│ | | | | | | | | | 1. C α111_146' <! α124_126'    (6)
-//│ | | | | | | | | | | NEW α111_146' UB (1)
-//│ | | CONSTRAIN this134' <! this117'
+//│ 		wrap94_126'# := (α95_127' -> α95_127')
+//│ | | | | | | 1. C wrap94_126'# <! (x105_109' -> α108_110')    (6)
+//│ | | | | | | | 1. C (α95_127' -> α95_127') <! (x105_109' -> α108_110')    (9)
+//│ | | | | | | | | 1. C (x105_109',) <! (α95_127',)    (6)
+//│ | | | | | | | | | 1. C x105_109' <! α95_127'    (7)
+//│ | | | | | | | | | | NEW x105_109' UB (1)
+//│ | | | | | | | | 1. C α95_127' <! α108_110'    (6)
+//│ | | | | | | | | | 1. C α95_127' <! α108_110'    (6)
+//│ | | | | | | | | | | NEW α95_127' UB (1)
+//│ | | CONSTRAIN this118' <! this101'
 //│ | |   where 
-//│ 		this134' <: this107'
-//│ | | 1. C this134' <! this117'    (0)
-//│ | | | NEW this134' UB (1)
-//│ | CONSTRAIN {wrap: (‹∀ 1. wrap110''#› & ‹∀ 2. wrap120_140'''#›)} <! this134'
+//│ 		this118' <: this91'
+//│ | | 1. C this118' <! this101'    (0)
+//│ | | | NEW this118' UB (1)
+//│ | CONSTRAIN {wrap: (‹∀ 1. wrap94''#› & ‹∀ 1. wrap104_121''#›)} <! this118'
 //│ |   where 
-//│ 		wrap110''# := (α111'' -> α111'')
-//│ 		this134' <: this117' & this107'
-//│ 		wrap120_140'''# := (x121_141''' -> (α124_143''',))
-//│ 		x121_141''' <: x121_142''
-//│ 		α124_143''' :> α124_144''
-//│ | 1. C {wrap: (‹∀ 1. wrap110''#› & ‹∀ 2. wrap120_140'''#›)} <! this134'    (0)
-//│ | | wrong level: 2
-//│ | | LHS bounds  
-//│ 		wrap110''# := (α111'' -> α111'')
-//│ 		wrap120_140'''# := (x121_141''' -> (α124_143''',))
-//│ 		x121_141''' <: x121_142''
-//│ 		α124_143''' :> α124_144''
-//│ | | RECONSTRAINING TVs
-//│ | | EXTR LHS  ~>  {wrap: (‹∀ 1. wrap110''#› & ‹∀ 2. wrap120_147'''#›)}  to 1
-//│ | |  where 
-//│ 		wrap110''# := (α111'' -> α111'')
-//│ 		wrap120_147'''# := (x121_148''' -> (α124_150''',))
-//│ 		x121_148''' <: x121_149'
-//│ 		α124_150''' :> α124_151'
-//│ | | 1. C {wrap: (‹∀ 1. wrap110''#› & ‹∀ 2. wrap120_147'''#›)} <! this134'    (2)
-//│ | | | NEW this134' LB (1)
-//│ | | | 1. C {wrap: (‹∀ 1. wrap110''#› & ‹∀ 2. wrap120_147'''#›)} <! this117'    (3)
-//│ | | | | NEW this117' LB (1)
-//│ | | | 1. C {wrap: (‹∀ 1. wrap110''#› & ‹∀ 2. wrap120_147'''#›)} <! this107'    (3)
-//│ | | | | NEW this107' LB (1)
+//│ 		wrap94''# := (α95'' -> α95'')
+//│ 		this118' <: this101' & this91'
+//│ 		wrap104_121''# := (x105_122'' -> (α108_124'',))
+//│ 		x105_122'' <: x105_123'
+//│ 		α108_124'' :> α108_125'
+//│ | 1. C {wrap: (‹∀ 1. wrap94''#› & ‹∀ 1. wrap104_121''#›)} <! this118'    (0)
+//│ | | NEW this118' LB (1)
+//│ | | 1. C {wrap: (‹∀ 1. wrap94''#› & ‹∀ 1. wrap104_121''#›)} <! this101'    (2)
+//│ | | | NEW this101' LB (1)
+//│ | | 1. C {wrap: (‹∀ 1. wrap94''#› & ‹∀ 1. wrap104_121''#›)} <! this91'    (2)
+//│ | | | NEW this91' LB (1)
 //│ | 1. Typing TypingUnit(List())
 //│ | UNSTASHING... (out)
-//│ CONSTRAIN WrapBase1<> <! this133'
+//│ CONSTRAIN WrapBase1<> <! this117'
 //│   where 
-//│ 0. C WrapBase1<> <! this133'    (0)
-//│ | NEW this133' LB (0)
+//│ 0. C WrapBase1<> <! this117'    (0)
+//│ | NEW this117' LB (0)
 //│ class WrapBase1
 
 
@@ -384,75 +323,43 @@ WrapBase1.wrap
 //│ | 0. Typing term (WrapBase1).wrap
 //│ | | 0. Typing term WrapBase1
 //│ | | 0. : WrapBase1<>
-//│ | | CONSTRAIN WrapBase1<> <! {wrap: wrap152}
+//│ | | CONSTRAIN WrapBase1<> <! {wrap: wrap128}
 //│ | |   where 
-//│ | | 0. C WrapBase1<> <! {wrap: wrap152}    (0)
-//│ | | | TypedNuCls(0,namespace WrapBase1(): WrapBase, Wrap {},TypedTypingUnit(List(),None),List(),Map(wrap -> TypedNuFun(1,fun wrap = (x,) => '(' (super).wrap (x,), ')',‹∀ 2. wrap120_140'''#›)))
-//│ | | | (>>,0,1)
-//│ | | | 2. FRESHEN ‹∀ 2. wrap120_140'''#› || 1 .. 1024  2 false
-//│ | | | | 2. FRESHEN wrap120_140'''# || 1 .. 2  3 false
-//│ | | | | | 2. FRESHEN (x121_141''' -> (α124_143''',)) || 1 .. 2  3 false
-//│ | | | | | | 2. FRESHEN (x121_141''',) || 1 .. 2  3 false
-//│ | | | | | | | 2. FRESHEN x121_141''' || 1 .. 2  3 false
-//│ | | | | | | | | 2. FRESHEN x121_142'' || 1 .. 2  2 false
-//│ | | | | | | | | | New skolem: x121_142'' ~> ‘x155''
-//│ | | | | | | | | | 2. FRESHEN x121_149' || 1 .. 2  1 true
-//│ | | | | | | | | | => x121_149'
-//│ | | | | | | | | | x121_156'' :> List((‘x155'' & x121_149'))
-//│ | | | | | | | | | x121_156'' <: List(‘x155'')
-//│ | | | | | | | | => x121_156''
-//│ | | | | | | | => x121_154'''
-//│ | | | | | | => (x121_154''',)
-//│ | | | | | | 2. FRESHEN (α124_143''',) || 1 .. 2  3 false
-//│ | | | | | | | 2. FRESHEN α124_143''' || 1 .. 2  3 false
-//│ | | | | | | | | 2. FRESHEN α124_144'' || 1 .. 2  2 false
-//│ | | | | | | | | | New skolem: α124_144'' ~> ‘_158''
-//│ | | | | | | | | | α124_159'' :> List(‘_158'')
-//│ | | | | | | | | | 2. FRESHEN α124_151' || 1 .. 2  1 true
-//│ | | | | | | | | | => α124_151'
-//│ | | | | | | | | | α124_159'' <: List((‘_158'' | α124_151'))
-//│ | | | | | | | | => α124_159''
-//│ | | | | | | | => α124_157'''
-//│ | | | | | | => (α124_157''',)
-//│ | | | | | => (x121_154''' -> (α124_157''',))
-//│ | | | | => wrap120_153'''#
-//│ | | | => ‹∀ 2. wrap120_153'''#›
-//│ | | | TypedNuCls(0,namespace WrapBase1(): WrapBase, Wrap {},TypedTypingUnit(List(),None),List(),Map(wrap -> TypedNuFun(1,fun wrap = (x,) => '(' (super).wrap (x,), ')',‹∀ 2. wrap120_153'''#›)))
-//│ | | | List(
-//│ 		wrap120_153'''# := (x121_154''' -> (α124_157''',))
-//│ 		x121_154''' <: x121_156''
-//│ 		x121_156'' :> (‘x155'' & x121_149') <: ‘x155''
-//│ 		α124_157''' :> α124_159''
-//│ 		α124_159'' :> ‘_158'' <: (‘_158'' | α124_151'))
-//│ | | | (wrap,Map(wrap -> TypedNuFun(1,fun wrap = (x,) => '(' (super).wrap (x,), ')',‹∀ 2. wrap120_153'''#›)))
-//│ | | | 0. C ‹∀ 2. wrap120_153'''#› <! wrap152    (1)
-//│ | | | | wrong level: 2
-//│ | | | | LHS bounds  
-//│ 		wrap120_153'''# := (x121_154''' -> (α124_157''',))
-//│ 		x121_154''' <: x121_156''
-//│ 		x121_156'' :> (‘x155'' & x121_149') <: ‘x155''
-//│ 		α124_157''' :> α124_159''
-//│ 		α124_159'' :> ‘_158'' <: (‘_158'' | α124_151')
-//│ | | | | RECONSTRAINING TVs
-//│ | | | | EXTR LHS  ~>  ‹∀ 2. wrap120_160'''#›  to 0
-//│ | | | |  where 
-//│ 		wrap120_160'''# := (x121_161''' -> (α124_163''',))
-//│ 		x121_161''' <: x121_162
-//│ 		x121_162 <: ⊥
-//│ 		α124_163''' :> α124_164
-//│ 		α124_164 :> ⊤
-//│ | | | | 0. C ‹∀ 2. wrap120_160'''#› <! wrap152    (4)
-//│ | | | | | NEW wrap152 LB (0)
-//│ | 0. : wrap152
-//│ ⬤ Typed as: ‹∀ 0. wrap152›
+//│ | | 0. C WrapBase1<> <! {wrap: wrap128}    (0)
+//│ | | | TypedNuCls(0,namespace WrapBase1(): WrapBase, Wrap {},TypedTypingUnit(List(),None),List(),Map(wrap -> TypedNuFun(1,fun wrap = (x,) => '(' (super).wrap (x,), ')',‹∀ 1. wrap104_121''#›)))
+//│ | | | (>>,0,0)
+//│ | | | 0. FRESHEN ‹∀ 1. wrap104_121''#› || 0 .. 1024  1 false
+//│ | | | | 0. FRESHEN wrap104_121''# || 0 .. 1  2 false
+//│ | | | | | 0. FRESHEN (x105_122'' -> (α108_124'',)) || 0 .. 1  2 false
+//│ | | | | | | 0. FRESHEN (x105_122'',) || 0 .. 1  2 false
+//│ | | | | | | | 0. FRESHEN x105_122'' || 0 .. 1  2 false
+//│ | | | | | | | | 0. FRESHEN x105_123' || 0 .. 1  1 false
+//│ | | | | | | | | | New skolem: x105_123' ~> ‘x131
+//│ | | | | | | | | => ‘x131
+//│ | | | | | | | => x105_130''
+//│ | | | | | | => (x105_130'',)
+//│ | | | | | | 0. FRESHEN (α108_124'',) || 0 .. 1  2 false
+//│ | | | | | | | 0. FRESHEN α108_124'' || 0 .. 1  2 false
+//│ | | | | | | | | 0. FRESHEN α108_125' || 0 .. 1  1 false
+//│ | | | | | | | | | New skolem: α108_125' ~> ‘_133
+//│ | | | | | | | | => ‘_133
+//│ | | | | | | | => α108_132''
+//│ | | | | | | => (α108_132'',)
+//│ | | | | | => (x105_130'' -> (α108_132'',))
+//│ | | | | => wrap104_129''#
+//│ | | | => ‹∀ 1. wrap104_129''#›
+//│ | | | TypedNuCls(0,namespace WrapBase1(): WrapBase, Wrap {},TypedTypingUnit(List(),None),List(),Map(wrap -> TypedNuFun(0,fun wrap = (x,) => '(' (super).wrap (x,), ')',‹∀ 1. wrap104_129''#›)))
+//│ | | | (wrap,Map(wrap -> TypedNuFun(0,fun wrap = (x,) => '(' (super).wrap (x,), ')',‹∀ 1. wrap104_129''#›)))
+//│ | | | 0. C ‹∀ 1. wrap104_129''#› <! wrap128    (1)
+//│ | | | | NEW wrap128 LB (0)
+//│ | 0. : wrap128
+//│ ⬤ Typed as: ‹∀ 0. wrap128›
 //│  where: 
-//│ 		wrap152 :> ‹∀ 2. wrap120_160'''#›
-//│ 		wrap120_160'''# := (x121_161''' -> (α124_163''',))
-//│ 		x121_161''' <: x121_162
-//│ 		x121_162 <: ⊥
-//│ 		α124_163''' :> α124_164
-//│ 		α124_164 :> ⊤
-//│ Typed: nothing -> (anything,)
+//│ 		wrap128 :> ‹∀ 1. wrap104_129''#›
+//│ 		wrap104_129''# := (x105_130'' -> (α108_132'',))
+//│ 		x105_130'' <: ‘x131
+//│ 		α108_132'' :> ‘_133
+//│ Typed: 'x -> ('_,)
 
 :d
 WrapBase1.wrap
@@ -460,94 +367,63 @@ WrapBase1.wrap
 //│ | 0. Typing term (WrapBase1).wrap
 //│ | | 0. Typing term WrapBase1
 //│ | | 0. : WrapBase1<>
-//│ | | CONSTRAIN WrapBase1<> <! {wrap: wrap171}
+//│ | | CONSTRAIN WrapBase1<> <! {wrap: wrap138}
 //│ | |   where 
-//│ | | 0. C WrapBase1<> <! {wrap: wrap171}    (0)
-//│ | | | TypedNuCls(0,namespace WrapBase1(): WrapBase, Wrap {},TypedTypingUnit(List(),None),List(),Map(wrap -> TypedNuFun(1,fun wrap = (x,) => '(' (super).wrap (x,), ')',‹∀ 2. wrap120_140'''#›)))
-//│ | | | (>>,0,1)
-//│ | | | 2. FRESHEN ‹∀ 2. wrap120_140'''#› || 1 .. 1024  2 false
-//│ | | | | 2. FRESHEN wrap120_140'''# || 1 .. 2  3 false
-//│ | | | | | 2. FRESHEN (x121_141''' -> (α124_143''',)) || 1 .. 2  3 false
-//│ | | | | | | 2. FRESHEN (x121_141''',) || 1 .. 2  3 false
-//│ | | | | | | | 2. FRESHEN x121_141''' || 1 .. 2  3 false
-//│ | | | | | | | | 2. FRESHEN x121_142'' || 1 .. 2  2 false
-//│ | | | | | | | | | New skolem: x121_142'' ~> ‘x174''
-//│ | | | | | | | | | 2. FRESHEN x121_149' || 1 .. 2  1 true
-//│ | | | | | | | | | => x121_149'
-//│ | | | | | | | | | x121_175'' :> List((‘x174'' & x121_149'))
-//│ | | | | | | | | | x121_175'' <: List(‘x174'')
-//│ | | | | | | | | => x121_175''
-//│ | | | | | | | => x121_173'''
-//│ | | | | | | => (x121_173''',)
-//│ | | | | | | 2. FRESHEN (α124_143''',) || 1 .. 2  3 false
-//│ | | | | | | | 2. FRESHEN α124_143''' || 1 .. 2  3 false
-//│ | | | | | | | | 2. FRESHEN α124_144'' || 1 .. 2  2 false
-//│ | | | | | | | | | New skolem: α124_144'' ~> ‘_177''
-//│ | | | | | | | | | α124_178'' :> List(‘_177'')
-//│ | | | | | | | | | 2. FRESHEN α124_151' || 1 .. 2  1 true
-//│ | | | | | | | | | => α124_151'
-//│ | | | | | | | | | α124_178'' <: List((‘_177'' | α124_151'))
-//│ | | | | | | | | => α124_178''
-//│ | | | | | | | => α124_176'''
-//│ | | | | | | => (α124_176''',)
-//│ | | | | | => (x121_173''' -> (α124_176''',))
-//│ | | | | => wrap120_172'''#
-//│ | | | => ‹∀ 2. wrap120_172'''#›
-//│ | | | TypedNuCls(0,namespace WrapBase1(): WrapBase, Wrap {},TypedTypingUnit(List(),None),List(),Map(wrap -> TypedNuFun(1,fun wrap = (x,) => '(' (super).wrap (x,), ')',‹∀ 2. wrap120_172'''#›)))
-//│ | | | List(
-//│ 		wrap120_172'''# := (x121_173''' -> (α124_176''',))
-//│ 		x121_173''' <: x121_175''
-//│ 		x121_175'' :> (‘x174'' & x121_149') <: ‘x174''
-//│ 		α124_176''' :> α124_178''
-//│ 		α124_178'' :> ‘_177'' <: (‘_177'' | α124_151'))
-//│ | | | (wrap,Map(wrap -> TypedNuFun(1,fun wrap = (x,) => '(' (super).wrap (x,), ')',‹∀ 2. wrap120_172'''#›)))
-//│ | | | 0. C ‹∀ 2. wrap120_172'''#› <! wrap171    (1)
-//│ | | | | wrong level: 2
-//│ | | | | LHS bounds  
-//│ 		wrap120_172'''# := (x121_173''' -> (α124_176''',))
-//│ 		x121_173''' <: x121_175''
-//│ 		x121_175'' :> (‘x174'' & x121_149') <: ‘x174''
-//│ 		α124_176''' :> α124_178''
-//│ 		α124_178'' :> ‘_177'' <: (‘_177'' | α124_151')
-//│ | | | | RECONSTRAINING TVs
-//│ | | | | EXTR LHS  ~>  ‹∀ 2. wrap120_179'''#›  to 0
-//│ | | | |  where 
-//│ 		wrap120_179'''# := (x121_180''' -> (α124_182''',))
-//│ 		x121_180''' <: x121_181
-//│ 		x121_181 <: ⊥
-//│ 		α124_182''' :> α124_183
-//│ 		α124_183 :> ⊤
-//│ | | | | 0. C ‹∀ 2. wrap120_179'''#› <! wrap171    (4)
-//│ | | | | | NEW wrap171 LB (0)
-//│ | 0. : wrap171
-//│ ⬤ Typed as: ‹∀ 0. wrap171›
+//│ | | 0. C WrapBase1<> <! {wrap: wrap138}    (0)
+//│ | | | TypedNuCls(0,namespace WrapBase1(): WrapBase, Wrap {},TypedTypingUnit(List(),None),List(),Map(wrap -> TypedNuFun(1,fun wrap = (x,) => '(' (super).wrap (x,), ')',‹∀ 1. wrap104_121''#›)))
+//│ | | | (>>,0,0)
+//│ | | | 0. FRESHEN ‹∀ 1. wrap104_121''#› || 0 .. 1024  1 false
+//│ | | | | 0. FRESHEN wrap104_121''# || 0 .. 1  2 false
+//│ | | | | | 0. FRESHEN (x105_122'' -> (α108_124'',)) || 0 .. 1  2 false
+//│ | | | | | | 0. FRESHEN (x105_122'',) || 0 .. 1  2 false
+//│ | | | | | | | 0. FRESHEN x105_122'' || 0 .. 1  2 false
+//│ | | | | | | | | 0. FRESHEN x105_123' || 0 .. 1  1 false
+//│ | | | | | | | | | New skolem: x105_123' ~> ‘x141
+//│ | | | | | | | | => ‘x141
+//│ | | | | | | | => x105_140''
+//│ | | | | | | => (x105_140'',)
+//│ | | | | | | 0. FRESHEN (α108_124'',) || 0 .. 1  2 false
+//│ | | | | | | | 0. FRESHEN α108_124'' || 0 .. 1  2 false
+//│ | | | | | | | | 0. FRESHEN α108_125' || 0 .. 1  1 false
+//│ | | | | | | | | | New skolem: α108_125' ~> ‘_143
+//│ | | | | | | | | => ‘_143
+//│ | | | | | | | => α108_142''
+//│ | | | | | | => (α108_142'',)
+//│ | | | | | => (x105_140'' -> (α108_142'',))
+//│ | | | | => wrap104_139''#
+//│ | | | => ‹∀ 1. wrap104_139''#›
+//│ | | | TypedNuCls(0,namespace WrapBase1(): WrapBase, Wrap {},TypedTypingUnit(List(),None),List(),Map(wrap -> TypedNuFun(0,fun wrap = (x,) => '(' (super).wrap (x,), ')',‹∀ 1. wrap104_139''#›)))
+//│ | | | (wrap,Map(wrap -> TypedNuFun(0,fun wrap = (x,) => '(' (super).wrap (x,), ')',‹∀ 1. wrap104_139''#›)))
+//│ | | | 0. C ‹∀ 1. wrap104_139''#› <! wrap138    (1)
+//│ | | | | NEW wrap138 LB (0)
+//│ | 0. : wrap138
+//│ ⬤ Typed as: ‹∀ 0. wrap138›
 //│  where: 
-//│ 		wrap171 :> ‹∀ 2. wrap120_179'''#›
-//│ 		wrap120_179'''# := (x121_180''' -> (α124_182''',))
-//│ 		x121_180''' <: x121_181
-//│ 		x121_181 <: ⊥
-//│ 		α124_182''' :> α124_183
-//│ 		α124_183 :> ⊤
-//│ Typed: nothing -> (anything,)
+//│ 		wrap138 :> ‹∀ 1. wrap104_139''#›
+//│ 		wrap104_139''# := (x105_140'' -> (α108_142'',))
+//│ 		x105_140'' <: ‘x141
+//│ 		α108_142'' :> ‘_143
+//│ Typed: 'x -> ('_,)
 
+// FIXME
 WrapBase1.wrap(1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.533: 	WrapBase1.wrap(1)
+//│ ║  l.409: 	WrapBase1.wrap(1)
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `1` does not match type `nothing`
-//│ ║  l.533: 	WrapBase1.wrap(1)
+//│ ╟── integer literal of type `1` does not match type `?x`
+//│ ║  l.409: 	WrapBase1.wrap(1)
 //│ ╙──       	               ^
-//│ Typed: (anything,) | error
+//│ Typed: ('_,) | error
 
 // FIXME
 WrapBase1.wrap("ok")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.543: 	WrapBase1.wrap("ok")
+//│ ║  l.419: 	WrapBase1.wrap("ok")
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"ok"` does not match type `nothing`
-//│ ║  l.543: 	WrapBase1.wrap("ok")
+//│ ╟── string literal of type `"ok"` does not match type `?x`
+//│ ║  l.419: 	WrapBase1.wrap("ok")
 //│ ╙──       	               ^^^^
-//│ Typed: (anything,) | error
+//│ Typed: ('_,) | error
 
 
 module WrapBase2: WrapBase, Wrap, Wrap
@@ -555,6 +431,6 @@ module WrapBase2: WrapBase, Wrap, Wrap
 
 // FIXME
 WrapBase2.wrap
-//│ Typed: 'a -> ('a,)
+//│ Typed: ('_ | '_0 | 'x) -> ('_0,)
 
 

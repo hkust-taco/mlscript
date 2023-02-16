@@ -60,14 +60,16 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       implicit val freshened: MutMap[TV, ST] = MutMap.empty
       implicit val shadows: Shadows = Shadows.empty
       // println(level)
+      ctx.copy(lvl = level + 1) |> { implicit ctx =>
       freshenAbove(level, rigidify = false)
+      }
     }
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
           : TypedNuTermDef = {
       // implicit val freshened: MutMap[TV, ST] = MutMap.empty
       // implicit val shadows: Shadows = Shadows.empty
-      ctx.copy(lvl = level + 1) |> { implicit ctx =>
+      // ctx.copy(lvl = level + 1) |> { implicit ctx =>
       this match {
         case m @ TypedNuMxn(td, thisTV, superTV, ttu) =>
           // println(">>",m.level)
@@ -85,7 +87,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             params.mapValues(_.freshenAbove(lim, rigidify)),
             members.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap)
         // case _ => ???
-      }
+      // }
       }
     }
     def force()(implicit raise: Raise): Unit = this match {

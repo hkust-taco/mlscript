@@ -568,7 +568,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                   implicit val freshened: MutMap[TV, ST] = MutMap.empty
                   implicit val shadows: Shadows = Shadows.empty
                   println(td)
-                  val res = td.freshenAbove(td.level + 1, rigidify = true).asInstanceOf[TypedNuCls]
+                  // val res = td.freshenAbove(td.level + 1, rigidify = true).asInstanceOf[TypedNuCls]
+                  val res = td.freshenAbove(td.level, rigidify = true).asInstanceOf[TypedNuCls]
                   println(res)
                   // println(res.members.map(_._2.asInstanceOf[TypedNuFun].ty.showBounds))
                   res
