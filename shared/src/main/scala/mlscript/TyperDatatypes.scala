@@ -48,7 +48,10 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       res.result = result.map(f)
       res
     }
-    private lazy val thisTV: TV = freshVar(noProv/*FIXME*/, N, S("this"))
+    
+    private lazy val thisTV: TV =
+      freshVar(noProv/*FIXME*/, N, S("this"))(lvl + 1)
+    
     def complete()(implicit raise: Raise): TypedNuTermDef = result.getOrElse {
       if (isComputing) lastWords(s"TODO cyclic defition ${decl.name}")
       else trace(s"Completing ${decl}") {
@@ -141,6 +144,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                                       // println(fresh)
                                       constrain(superType, mxn.superTV)
                                       constrain(finalType, mxn.thisTV)
+                                      
+                                      // TODO check overriding
                                       mxn.ttu.entities.map(_.complete()).map {
                                         case fun @ TypedNuFun(_, fd, ty) =>
                                           fun
@@ -184,6 +189,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     
                     val ttu = typeTypingUnit(td.body, allowPure = false) // TODO use
                     
+                    // TODO check overriding
                     val clsMems = ttu.entities.map(_.complete()).map {
                       case fun @ TypedNuFun(_, fd, ty) =>
                         fun
@@ -195,7 +201,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     //     )(provTODO)
                     // constrain(thisTy, thisTV)
                     
-                    val mems = baseMems ++ paramMems
+                    val mems = baseMems ++ paramMems ++ clsMems
                     TypedNuCls(ctx.lvl, td, ttu, typedParams, mems.map(d => d.name -> d).toMap)
                   }
                 case Mxn =>
@@ -222,7 +228,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         
       }()
     }
-    def typeSignature(implicit raise: Raise): ST = if (isComputing) tv // FIXME wrong in general
+    def typeSignature(implicit raise: Raise): ST = if (isComputing) tv // TODO FIXME wrong in general (when accessed from difft scope/level)
         else complete() match {
       case cls: TypedNuCls if cls.td.kind is Nms =>
         ClassTag(Var(cls.td.nme.name), Set.empty)(provTODO)
@@ -232,11 +238,13 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
           ClassTag(Var(cls.td.nme.name), Set.empty)(provTODO)
         )(provTODO)
       case TypedNuFun(_, fd, ty) =>
-        println(fd, ty)
-        ???
+        // println(fd, ty)
+        // ???
+        ty
     }
-    def force()(implicit raise: Raise): Unit = {
-      complete().force()
+    def force()(implicit raise: Raise): TypedNuTermDef = {
+      val res = complete()
+      res.force()
       decl match {
         case td: NuTypeDef =>
           td.kind match {
@@ -250,6 +258,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
           }
         case _ =>
       }
+      res
     }
     override def toString: String =
       s"${decl.name} ~> ${if (isComputing) "<computing>" else result.fold("<uncomputed>")(_.toString)}"

@@ -572,7 +572,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               println(fld.name, cls.members)
               cls.members.get(fld.name) match {
                 case S(d: TypedNuFun) =>
-                  ???
+                  d.ty.toUpper(provTODO)
                 case S(p: NuParam) =>
                   p.ty
                 case N =>

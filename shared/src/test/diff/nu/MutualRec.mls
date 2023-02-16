@@ -76,24 +76,21 @@ namespace Test2_2 {
   fun c = Test2_1.a
   fun e = Test2_1.d
 }
-//│ ╔══[ERROR] namespace `Test2_2` does not contain member `b`
-//│ ║  l.71: 	  fun a = Test2_2.b
-//│ ╙──      	                 ^^
-//│ ╔══[ERROR] namespace `Test2_2` does not contain member `e`
-//│ ║  l.72: 	  fun d = Test2_2.e
-//│ ╙──      	                 ^^
 //│ class Test2_1
 //│   fun t2: ‹∀ 1. t276''#› where 
 //│   |		t276''# := Test2_2<>
 //│   [pretty-printed] t2: Test2_2
 //│   fun a: ‹∀ 1. a89''#› where 
+//│   |		b82''# := 123<int,number>
 //│   |		a89''# := b90''
-//│   |		b90'' :> error<> | error<> <: a89''#
-//│   [pretty-printed] a: error
+//│   |		b90'' :> ‹∀ 1. b82''#› <: a89''#
+//│   [pretty-printed] a: 123
 //│   fun d: ‹∀ 1. d91''#› where 
+//│   |		e86''# := d87''
+//│   |		d87'' :> d87_88 <: e86''#
 //│   |		d91''# := e92''
-//│   |		e92'' :> error<> | error<> <: d91''#
-//│   [pretty-printed] d: error
+//│   |		e92'' :> ‹∀ 1. e86''#› <: d91''#
+//│   [pretty-printed] d: nothing
 //│ class Test2_2
 //│   fun b: ‹∀ 1. b82''#› where 
 //│   |		b82''# := 123<int,number>

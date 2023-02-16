@@ -3,38 +3,62 @@
 :NoJS
 
 
-// TODO
-// :d
+
 class Base0(n) {
   fun me = this
   fun my = this.n
   fun mine = my
   fun oops = this.my
 }
-//│ ╔══[ERROR] class `Base0` does not contain member `my`
-//│ ║  l.12: 	  fun oops = this.my
-//│ ╙──      	                 ^^^
 //│ class Base0
 //│   fun me: ‹∀ 1. me30''#› where 
-//│   |		this24 :> Base0<> <: {my: my36_37} & {n: n32_33}
-//│   |		me30''# := this24
-//│   |		my36_37 :> error<>
+//│   |		this24' :> Base0<> <: {my: my36_37'} & {n: n32_33'}
+//│   |		me30''# := this24'
+//│   |		my31''# := n32''
+//│   |		n32'' :> n32_33' <: mine34''# & my31''#
+//│   |		mine34''# := my31''#
+//│   |		my36_37' :> ‹∀ 1. my31''#›
 //│   [pretty-printed] me: Base0
 //│   fun my: ‹∀ 1. my31''#› where 
 //│   |		my31''# := n32''
-//│   |		n32'' :> n32_33 <: mine34''# & my31''#
+//│   |		n32'' :> n32_33' <: mine34''# & my31''#
 //│   |		mine34''# := my31''#
 //│   [pretty-printed] my: nothing
 //│   fun mine: ‹∀ 1. mine34''#› where 
 //│   |		my31''# := n32''
-//│   |		n32'' :> n32_33 <: mine34''# & my31''#
+//│   |		n32'' :> n32_33' <: mine34''# & my31''#
 //│   |		mine34''# := my31''#
 //│   [pretty-printed] mine: nothing
 //│   fun oops: ‹∀ 1. oops35''#› where 
+//│   |		my31''# := n32''
+//│   |		n32'' :> n32_33' <: mine34''# & my31''#
+//│   |		mine34''# := my31''#
 //│   |		oops35''# := my36''
-//│   |		my36'' :> my36_37 <: oops35''#
-//│   |		my36_37 :> error<>
-//│   [pretty-printed] oops: error
+//│   |		my36'' :> my36_37' <: oops35''#
+//│   |		my36_37' :> ‹∀ 1. my31''#›
+//│   [pretty-printed] oops: nothing
+
+
+let b1 = Base0(42)
+b1.n
+//│ fun b1: ‹∀ 0. b154'#› where 
+//│ |		b154'# := α55'
+//│ |		α55' :> Base0<> <: b154'#
+//│ [pretty-printed] b1: Base0
+//│ Typed: 42
+
+
+let b2 = Base0("hi")
+//│ fun b2: ‹∀ 0. b263'#› where 
+//│ |		b263'# := α64'
+//│ |		α64' :> Base0<> <: b263'#
+//│ [pretty-printed] b2: Base0
+
+// FIXME 42
+b2.n
+//│ Typed: "hi" | 42
+
+
 
 class Base1(base: int) {
   fun getBase1 = base
@@ -42,18 +66,18 @@ class Base1(base: int) {
   fun foo(x) = this.base + x
 }
 //│ class Base1
-//│   fun getBase1: ‹∀ 1. getBase156''#› where 
-//│   |		getBase156''# := Int
+//│   fun getBase1: ‹∀ 1. getBase175''#› where 
+//│   |		getBase175''# := Int
 //│   [pretty-printed] getBase1: int
-//│   fun getBase2: ‹∀ 1. getBase257''#› where 
-//│   |		getBase257''# := base58''
-//│   |		base58'' :> base58_59 <: getBase257''#
-//│   |		base58_59 :> Int
+//│   fun getBase2: ‹∀ 1. getBase276''#› where 
+//│   |		getBase276''# := base77''
+//│   |		base77'' :> base77_78' <: getBase276''#
+//│   |		base77_78' :> Int
 //│   [pretty-printed] getBase2: int
-//│   fun foo: ‹∀ 1. foo60''#› where 
-//│   |		foo60''# := (α61'' -> α65'')
-//│   |		α61'' <: int<number>
-//│   |		α65'' :> int<number>
+//│   fun foo: ‹∀ 1. foo79''#› where 
+//│   |		foo79''# := (α80'' -> α84'')
+//│   |		α80'' <: int<number>
+//│   |		α84'' :> int<number>
 //│   [pretty-printed] foo: int -> int
 
 class Base1(base: int) {
@@ -62,44 +86,42 @@ class Base1(base: int) {
   fun foo(x) = base + x
 }
 //│ class Base1
-//│   fun getBase1: ‹∀ 1. getBase179''#› where 
-//│   |		getBase179''# := Int
+//│   fun getBase1: ‹∀ 1. getBase198''#› where 
+//│   |		getBase198''# := Int
 //│   [pretty-printed] getBase1: int
-//│   fun me: ‹∀ 1. me80''#› where 
-//│   |		this74 :> Base1<>
-//│   |		me80''# := this74
+//│   fun me: ‹∀ 1. me99''#› where 
+//│   |		this93' :> Base1<>
+//│   |		me99''# := this93'
 //│   [pretty-printed] me: Base1
-//│   fun foo: ‹∀ 1. foo81''#› where 
-//│   |		foo81''# := (α82'' -> α84'')
-//│   |		α82'' <: int<number>
-//│   |		α84'' :> int<number>
+//│   fun foo: ‹∀ 1. foo100''#› where 
+//│   |		foo100''# := (α101'' -> α103'')
+//│   |		α101'' <: int<number>
+//│   |		α103'' :> int<number>
 //│   [pretty-printed] foo: int -> int
 
 Base1
 //│ Typed: (base: int,) -> Base1
 
 let b = Base1(1)
-//│ fun b: ‹∀ 0. b92'#› where 
-//│ |		b92'# := α93'
-//│ |		α93' :> Base1<> <: b92'#
+//│ fun b: ‹∀ 0. b111'#› where 
+//│ |		b111'# := α112'
+//│ |		α112' :> Base1<> <: b111'#
 //│ [pretty-printed] b: Base1
 
 b.base
 //│ Typed: int
 
-// TODO
-// :d
 b.getBase1
-//│ ╔══[ERROR] class `Base1` does not contain member `getBase1`
-//│ ║  l.92: 	b.getBase1
-//│ ╙──      	 ^^^^^^^^^
-//│ Typed: error
+//│ Typed: int
+
+b.me
+//│ Typed: Base1
 
 :e
 b.getBaseTypo
 //│ ╔══[ERROR] class `Base1` does not contain member `getBaseTypo`
-//│ ║  l.99: 	b.getBaseTypo
-//│ ╙──      	 ^^^^^^^^^^^^
+//│ ║  l.121: 	b.getBaseTypo
+//│ ╙──       	 ^^^^^^^^^^^^
 //│ Typed: error
 
 
@@ -107,11 +129,27 @@ b : Base1
 //│ Typed: Base1
 
 
+
 // TODO treat `a: int` as a signature
 class Annots(base: 0 | 1) {
   a: int
   fun a = base
 }
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.135: 	  a: int
+//│ ║         	  ^
+//│ ╟── type `(0 | 1,)` is not an instance of type `int`
+//│ ║  l.134: 	class Annots(base: 0 | 1) {
+//│ ║         	                   ^
+//│ ╟── but it flows into reference with expected type `int`
+//│ ║  l.135: 	  a: int
+//│ ║         	  ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.135: 	  a: int
+//│ ╙──       	     ^^^
+//│ class Annots
+//│   fun a: ‹∀ 1. a133''#› where 
+//│   |		a133''# := ((0<int,number> | 1<int,number>),)
+//│   [pretty-printed] a: (0 | 1,)
 
 

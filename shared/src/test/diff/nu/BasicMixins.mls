@@ -67,10 +67,10 @@ class Base1(base: int): BaseTest
 //│ | | | NEW this23' LB (0)
 //│ | 1. Typing TypingUnit(List())
 //│ | UNSTASHING... (out)
-//│ CONSTRAIN Base1<> <! this44
+//│ CONSTRAIN Base1<> <! this44'
 //│   where 
-//│ 0. C Base1<> <! this44    (0)
-//│ | NEW this44 LB (0)
+//│ 0. C Base1<> <! this44'    (0)
+//│ | NEW this44' LB (0)
 //│ class Base1
 
 
