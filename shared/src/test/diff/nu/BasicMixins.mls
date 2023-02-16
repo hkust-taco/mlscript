@@ -10,6 +10,7 @@ mixin BaseTest {
 //│ mixin BaseTest
 //│   this: this23' 
 //│   super: super24' 
+//│   |		super24' <: {base: base27_28'}
 //│   fun test: ‹∀ 1. test26''#› where 
 //│   |		test26''# := base27''
 //│   |		base27'' :> base27_28' <: test26''#
@@ -21,6 +22,8 @@ mixin BaseInc {
 //│ mixin BaseInc
 //│   this: this33' 
 //│   super: super34' 
+//│   |		super34' <: {base: base37_38'}
+//│   |		base37_38' <: int<number>
 //│   fun test: ‹∀ 1. test36''#› where 
 //│   |		test36''# := α40''
 //│   |		α40'' :> int<number> <: test36''#
@@ -72,10 +75,10 @@ class Base1(base): BaseTest
 :e
 class Base1(x): BaseTest
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.73: 	class Base1(x): BaseTest
+//│ ║  l.76: 	class Base1(x): BaseTest
 //│ ║        	      ^^^^^^^^^^^^^^^^^^
 //│ ╟── type `{x: ?x}` does not have field 'base'
-//│ ║  l.73: 	class Base1(x): BaseTest
+//│ ║  l.76: 	class Base1(x): BaseTest
 //│ ║        	           ^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.8: 	  fun test = super.base
@@ -96,6 +99,8 @@ mixin Foo {
 //│ mixin Foo
 //│   this: this56' 
 //│   super: super57' 
+//│   |		super57' <: {misc: misc65_66'} & {base: base61_62'}
+//│   |		base61_62' <: int<number>
 //│   fun test: ‹∀ 1. test59''#› where 
 //│   |		test59''# := (α60'' -> (α64'', α60'', misc65'',))
 //│   |		α60'' <: int<number>

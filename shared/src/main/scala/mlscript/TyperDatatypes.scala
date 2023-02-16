@@ -219,6 +219,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         println(fd, ty)
         ???
     }
+    def force()(implicit raise: Raise): Unit = {
+      complete().force()
+    }
     override def toString: String =
       s"${decl.name} ~> ${if (isComputing) "<computing>" else result.fold("<uncomputed>")(_.toString)}"
   }

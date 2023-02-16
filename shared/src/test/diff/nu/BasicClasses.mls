@@ -10,10 +10,10 @@ class Base0(n) {
   fun mine = my
   fun oops = this.my
 }
-//│ class Base0
 //│ ╔══[ERROR] class `Base0` does not contain member `my`
 //│ ║  l.11: 	  fun oops = this.my
 //│ ╙──      	                 ^^^
+//│ class Base0
 //│   fun me: ‹∀ 1. me29''#› where 
 //│   |		me29''# := Base0<>
 //│   [pretty-printed] me: Base0

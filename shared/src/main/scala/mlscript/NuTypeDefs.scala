@@ -65,6 +65,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         // case _ => ???
       }
     }
+    def force()(implicit raise: Raise): Unit = this match {
+      case x: TypedNuMxn => x.ttu.force()
+      case x: TypedNuCls => x.ttu.force()
+      case _: TypedNuFun => ()
+    }
   }
   
   sealed abstract class TypedNuTypeDef(kind: TypeDefKind) extends TypedNuDecl {
@@ -112,6 +117,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           : TypedTypingUnit =
       TypedTypingUnit(entities.map(_.map(_.freshenAbove(lim, rigidify)))
         , result.map(_.freshenAbove(lim, rigidify)))
+    def force()(implicit raise: Raise): Unit = {
+      entities.foreach(_.force())
+    }
   }
   
   def typeTypingUnit(tu: TypingUnit, allowPure: Bool)(implicit ctx: Ctx, raise: Raise): TypedTypingUnit =

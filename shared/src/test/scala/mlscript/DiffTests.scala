@@ -493,6 +493,8 @@ class DiffTests
               
               val tpd = typer.typeTypingUnit(TypingUnit(p.tops), allowPure = true)(ctx, raise)
               
+              tpd.force()(raise)
+              
               def showTTU(ttu: typer.TypedTypingUnit, ind: Int): Unit = {
                 val indStr = "  " * ind
                 ttu.entities.map(_.complete()(raise)).foreach {
