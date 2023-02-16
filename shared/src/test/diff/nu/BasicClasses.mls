@@ -3,35 +3,51 @@
 :NoJS
 
 
-class Base1(base: int)
+class Base1(base: int) {
+  fun getBase1(x) = base
+  fun getBase2(x) = this.base
+  fun foo(x) = this.base + x
+}
+//│ ╔══[ERROR] identifier not found: base
+//│ ║  l.7: 	  fun getBase1(x) = base
+//│ ╙──     	                    ^^^^
+//│ ╔══[ERROR] identifier not found: this
+//│ ║  l.8: 	  fun getBase2(x) = this.base
+//│ ╙──     	                    ^^^^
+//│ ╔══[ERROR] identifier not found: this
+//│ ║  l.9: 	  fun foo(x) = this.base + x
+//│ ╙──     	               ^^^^
 //│ class Base1
 
 Base1
 //│ Typed: (base: int,) -> Base1
 
 let b = Base1(1)
-//│ fun b: ‹∀ 0. b25'#› where 
-//│ |		b25'# := α26'
-//│ |		α26' :> Base1<> <: b25'#
+//│ fun b: ‹∀ 0. b38'#› where 
+//│ |		b38'# := α39'
+//│ |		α39' :> Base1<> <: b38'#
 //│ [pretty-printed] b: Base1
 
-// TODO
 b.base
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.19: 	b.base
-//│ ║        	^^^^^^
-//│ ╟── application of type `Base1` does not have field 'base'
-//│ ║  l.12: 	let b = Base1(1)
-//│ ║        	        ^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{base: ?base}`
-//│ ║  l.19: 	b.base
-//│ ╙──      	^
-//│ Typed: error
+//│ Typed: int
 
 // TODO
-b : Base1
-//│ ╔══[ERROR] type identifier not found: Base1
-//│ ║  l.32: 	b : Base1
-//│ ╙──      	    ^^^^^
+// :d
+b.getBase1
+//│ ╔══[ERROR] class `Base1` does not contain member `getBase1`
+//│ ║  l.36: 	b.getBase1
+//│ ╙──      	 ^^^^^^^^^
 //│ Typed: error
+
+:e
+b.getBaseTypo
+//│ ╔══[ERROR] class `Base1` does not contain member `getBaseTypo`
+//│ ║  l.43: 	b.getBaseTypo
+//│ ╙──      	 ^^^^^^^^^^^^
+//│ Typed: error
+
+
+b : Base1
+//│ Typed: Base1
+
 

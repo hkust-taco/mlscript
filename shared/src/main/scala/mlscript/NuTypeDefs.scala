@@ -20,7 +20,18 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   
   // * For now these are just unused stubs to be completed and used later
   
-  sealed abstract class TypedNuDecl {
+  
+  sealed trait NuMember {
+    def name: Str
+  }
+  
+  
+  case class NuParam(nme: Var, ty: FieldType) extends NuMember {
+    def name: Str = nme.name
+  }
+  
+  
+  sealed abstract class TypedNuDecl extends NuMember {
     def name: Str
     def freshen(implicit ctx: Ctx): TypedNuDecl = this match {
       case m @ TypedNuMxn(td, thisTV, superTV, ttu) =>
@@ -31,7 +42,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     }
   }
   
-  sealed trait TypedNuTermDef extends TypedNuDecl {
+  sealed trait TypedNuTermDef extends TypedNuDecl with AnyTypeDef {
     override def toString: String = this match {
       case _ => ???
     }
@@ -39,6 +50,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   
   sealed abstract class TypedNuTypeDef(kind: TypeDefKind) extends TypedNuDecl {
     def nme: TypeName
+    val tparams: Ls[TN -> TV] = Nil // TODO
   }
   // case class TypedNuTypeDef(
   //   kind: TypeDefKind,
@@ -54,7 +66,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   }
   
   // case class TypedNuCls(nme: TypeName) extends TypedNuTypeDef(Als) with TypedNuTermDef {
-  case class TypedNuCls(td: NuTypeDef, ttu: TypedTypingUnit, params: Ls[Var -> FieldType]) extends TypedNuTypeDef(Cls) with TypedNuTermDef {
+  case class TypedNuCls(td: NuTypeDef, ttu: TypedTypingUnit, params: Ls[Var -> FieldType],
+      // members: Map[Str, LazyTypeInfo])
+      members: Map[Str, NuMember])
+    extends TypedNuTypeDef(Cls) with TypedNuTermDef {
   // case class TypedNuCls(td: NuTypeDef, paramTypes: Ls[ST], ttu: TypedTypingUnit) extends TypedNuTypeDef(Cls) with TypedNuTermDef {
     def nme: TypeName = td.nme
     def name: Str = nme.name
@@ -95,6 +110,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     val infos = tu.entities.collect {
       case decl: NuDecl =>
         val lti = new LazyTypeInfo(lvl, decl)
+        decl match {
+          case td: NuTypeDef =>
+            ctx.tyDefs2 += td.nme.name -> lti
+          case _: NuFunDef =>
+        }
         // def registerTerm = 
         named.updateWith(decl.name) {
           case sv @ S(v) =>

@@ -12,6 +12,12 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
   import TypeProvenance.{apply => tp}
   
   
+  trait AnyTypeDef {
+    // val kind: TypeDefKind
+    // val nme: TypeName
+    // val tparamsargs: List[(TypeName, TypeVariable)]
+  }
+  
   /**
    * TypeDef holds information about declarations like classes, interfaces, and type aliases
    *

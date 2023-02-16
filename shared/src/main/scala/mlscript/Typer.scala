@@ -66,6 +66,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       lvl: Int,
       inPattern: Bool,
       tyDefs: Map[Str, TypeDef],
+      // tyDefs2: MutMap[Str, NuTypeDef],
+      tyDefs2: MutMap[Str, LazyTypeInfo],
       inRecursiveDef: Opt[Var],
       nuTyDefs: Map[Str, TypedNuTypeDef],
       extrCtx: ExtrCtx,
@@ -151,6 +153,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       lvl = MinLevel,
       inPattern = false,
       tyDefs = Map.from(builtinTypes.map(t => t.nme.name -> t)),
+      tyDefs2 = MutMap.empty,
       inRecursiveDef = N,
       nuTyDefs = Map.empty,
       MutMap.empty,
@@ -329,6 +332,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     def typeNamed(loc: Opt[Loc], name: Str): (() => ST) \/ (TypeDefKind, Int) =
       newDefsInfo.get(name)
         .orElse(ctx.tyDefs.get(name).map(td => (td.kind, td.tparamsargs.size)))
+        .orElse(ctx.get(name).flatMap {
+          case ti: LazyTypeInfo =>
+            // ti.complete()
+            ti.decl match {
+              case NuTypeDef(Cls, _, tps, _, _, _) =>
+                S(Cls, tps.size)
+              case _ => ???
+            }
+          case _ => N
+        })
         .toRight(() => err("type identifier not found: " + name, loc)(raise))
     val localVars = mutable.Map.empty[TypeVar, TypeVariable]
     def tyTp(loco: Opt[Loc], desc: Str, originName: Opt[Str] = N) =

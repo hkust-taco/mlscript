@@ -556,6 +556,33 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_: TypeTag, _: TypeTag) if lhs === rhs => ()
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs, true)
           
+          case (ClassTag(Var(nme), _), rt: RecordType) if nme.isCapitalized =>
+            def lookupNuTypeDef(clsNme: Str): TypedNuCls = {
+              ctx.tyDefs2(clsNme).complete() match {
+                case td: TypedNuCls => td
+                case _ => ???
+              }
+            }
+            def lookupNuTypeDefField(cls: TypedNuCls, rfnt: Map[Var, Field], fld: Var): FieldType = {
+              println(fld.name, cls.members)
+              cls.members.get(fld.name) match {
+                case S(d: TypedNuFun) =>
+                  ???
+                case S(p: NuParam) =>
+                  p.ty
+                case N =>
+                  err(msg"${cls.td.kind.str} `${cls.td.nme.name}` does not contain member `${fld.name}`",
+                    // ttp(fld))
+                    fld.toLoc).toUpper(noProv)
+                // case _ => ???
+              }
+            }
+            rt.fields.foreach { case (fldNme, fldTy) =>
+              val fty = lookupNuTypeDefField(lookupNuTypeDef(nme), Map.empty, fldNme)
+              rec(fty.ub, fldTy.ub, false)
+              recLb(fldTy, fty)
+            }
+          
           // * Note: at this point, it could be that a polymorphic type could be distribbed
           // *  out of `r1`, but this would likely not result in something useful, since the
           // *  LHS is a normal non-polymorphic function type...
