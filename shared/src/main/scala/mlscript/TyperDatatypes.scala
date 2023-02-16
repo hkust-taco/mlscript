@@ -74,7 +74,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
               res_ty
             case td: NuTypeDef =>
               td.kind match {
-                case Cls =>
+                case Cls | Nms =>
                   val typedParams = td.params.fields.map {
                     case (S(nme), Fld(mut, spec, value)) =>
                       assert(!mut && !spec, "TODO") // TODO
@@ -191,12 +191,16 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       }
     }
     def typeSignature(implicit raise: Raise): ST = if (isComputing) tv else complete() match {
+      case cls: TypedNuCls if cls.td.kind is Nms =>
+        ClassTag(Var(cls.td.nme.name), Set.empty)(provTODO)
       case cls: TypedNuCls =>
         FunctionType(
           TupleType(cls.params.mapKeys(some))(provTODO),
           ClassTag(Var(cls.td.nme.name), Set.empty)(provTODO)
         )(provTODO)
-      case TypedNuFun(fd, ty) => ???
+      case TypedNuFun(fd, ty) =>
+        println(fd, ty)
+        ???
     }
     override def toString: String =
       s"${decl.name} ~> ${if (isComputing) "<computing>" else result.fold("<uncomputed>")(_.toString)}"

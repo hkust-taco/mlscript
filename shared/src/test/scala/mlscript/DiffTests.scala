@@ -498,6 +498,7 @@ class DiffTests
                 ttu.entities.foreach {
                   case tc: typer.TypedNuCls =>
                     output(s"${indStr}class ${tc.name}")
+                    showTTU(tc.ttu, ind + 1)
                   case tm: typer.TypedNuMxn =>
                     output(s"${indStr}mixin ${tm.name}")
                     output(s"${indStr}  this: ${tm.thisTV} ${tm.thisTV.showBounds

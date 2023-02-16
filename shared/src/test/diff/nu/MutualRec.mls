@@ -16,10 +16,93 @@ fun fooo(x) =
   C(0, x)
 //│ fun fooo: ‹∀ 0. fooo25'#› where 
 //│ |		fooo25'# := (α26' -> α31')
-//│ |		α26' <: z30'
+//│ |		α26' <: z29'
 //│ |		α31' :> C<>
 //│ [pretty-printed] fooo: anything -> C
 
 
+
+// :d
+namespace Test0_1 {
+  fun a = Test0_2.b
+}
+namespace Test0_2 {
+  fun a = 123
+}
+//│ ╔══[ERROR] namespace `Test0_2` does not contain member `b`
+//│ ║  l.27: 	  fun a = Test0_2.b
+//│ ╙──      	                 ^^
+//│ class Test0_1
+//│   fun a: ‹∀ 0. a39'#› where 
+//│   |		a39'# := b43'
+//│   |		b43' :> error<> | error<> <: a39'#
+//│   [pretty-printed] a: error
+//│ class Test0_2
+//│   fun a: ‹∀ 0. a41'#› where 
+//│   |		a41'# := 123<int,number>
+//│   [pretty-printed] a: 123
+
+// :d
+namespace Test1_1 {
+  fun a = Test1_2.b
+}
+namespace Test1_2 {
+  fun a = Test1_1.a
+}
+//│ ╔══[ERROR] namespace `Test1_2` does not contain member `b`
+//│ ║  l.47: 	  fun a = Test1_2.b
+//│ ╙──      	                 ^^
+//│ class Test1_1
+//│   fun a: ‹∀ 0. a51'#› where 
+//│   |		a51'# := b57'
+//│   |		b57' :> error<> | error<> <: a51'#
+//│   [pretty-printed] a: error
+//│ class Test1_2
+//│   fun a: ‹∀ 0. a53'#› where 
+//│   |		a53'# := a54'
+//│   |		a54' :> a54_55 <: a53'#
+//│   [pretty-printed] a: nothing
+
+
+namespace Test2_1 {
+  fun t2 = Test2_2
+  fun a = Test2_2.b
+  fun d = Test2_2.e
+}
+namespace Test2_2 {
+  fun b = 123
+  fun c = Test2_1.a
+  fun e = Test2_1.d
+}
+//│ ╔══[ERROR] namespace `Test2_2` does not contain member `b`
+//│ ║  l.69: 	  fun a = Test2_2.b
+//│ ╙──      	                 ^^
+//│ ╔══[ERROR] namespace `Test2_2` does not contain member `e`
+//│ ║  l.70: 	  fun d = Test2_2.e
+//│ ╙──      	                 ^^
+//│ class Test2_1
+//│   fun t2: ‹∀ 0. t269'#› where 
+//│   |		t269'# := Test2_2<>
+//│   [pretty-printed] t2: Test2_2
+//│   fun a: ‹∀ 0. a81'#› where 
+//│   |		a81'# := b82'
+//│   |		b82' :> error<> | error<> <: a81'#
+//│   [pretty-printed] a: error
+//│   fun d: ‹∀ 0. d83'#› where 
+//│   |		d83'# := e84'
+//│   |		e84' :> error<> | error<> <: d83'#
+//│   [pretty-printed] d: error
+//│ class Test2_2
+//│   fun b: ‹∀ 0. b73'#› where 
+//│   |		b73'# := 123<int,number>
+//│   [pretty-printed] b: 123
+//│   fun c: ‹∀ 0. c74'#› where 
+//│   |		c74'# := a75'
+//│   |		a75' :> a75_76 <: c74'#
+//│   [pretty-printed] c: nothing
+//│   fun e: ‹∀ 0. e77'#› where 
+//│   |		e77'# := d78'
+//│   |		d78' :> d78_79 <: e77'#
+//│   [pretty-printed] e: nothing
 
 

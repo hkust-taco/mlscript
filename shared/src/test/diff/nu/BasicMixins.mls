@@ -32,15 +32,15 @@ mixin BaseInc {
 :d
 class Base1(base: int): BaseTest
 //│ 0. Typing TypingUnit(List(class Base1(base: int,): BaseTest {}))
-//│ | 0. Typing TypingUnit(List())
-//│ | List()
-//│ | base: int,
-//│ | List(BaseTest)
 //│ | Typing type int
 //│ | | vars=Map() newDefsInfo=Map()
 //│ | | 0. type int
 //│ | | => Int
 //│ | => Int ——— 
+//│ | 0. Typing TypingUnit(List())
+//│ | List()
+//│ | base: int,
+//│ | List(BaseTest)
 //│ | Inheriting from BaseTest
 //│ | | CONSTRAIN {base: Int} <! super24'
 //│ | |   where 

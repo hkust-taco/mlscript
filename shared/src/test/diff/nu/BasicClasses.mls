@@ -5,25 +5,37 @@
 
 // :d
 class Base1(base: int) {
-  fun getBase1(x) = base
-  fun getBase2(x) = this.base
+  fun getBase1 = base
+  fun getBase2 = this.base
   fun foo(x) = this.base + x
 }
 //│ ╔══[ERROR] identifier not found: this
-//│ ║  l.9: 	  fun getBase2(x) = this.base
-//│ ╙──     	                    ^^^^
+//│ ║  l.9: 	  fun getBase2 = this.base
+//│ ╙──     	                 ^^^^
 //│ ╔══[ERROR] identifier not found: this
 //│ ║  l.10: 	  fun foo(x) = this.base + x
 //│ ╙──      	               ^^^^
 //│ class Base1
+//│   fun getBase1: ‹∀ 0. getBase126'#› where 
+//│   |		getBase126'# := Int
+//│   [pretty-printed] getBase1: int
+//│   fun getBase2: ‹∀ 0. getBase227'#› where 
+//│   |		getBase227'# := base28'
+//│   |		base28' :> error<> <: getBase227'#
+//│   [pretty-printed] getBase2: error
+//│   fun foo: ‹∀ 0. foo29'#› where 
+//│   |		foo29'# := (α30' -> α33')
+//│   |		α30' <: int<number>
+//│   |		α33' :> int<number>
+//│   [pretty-printed] foo: int -> int
 
 Base1
 //│ Typed: (base: int,) -> Base1
 
 let b = Base1(1)
-//│ fun b: ‹∀ 0. b38'#› where 
-//│ |		b38'# := α39'
-//│ |		α39' :> Base1<> <: b38'#
+//│ fun b: ‹∀ 0. b42'#› where 
+//│ |		b42'# := α43'
+//│ |		α43' :> Base1<> <: b42'#
 //│ [pretty-printed] b: Base1
 
 b.base
@@ -33,19 +45,27 @@ b.base
 // :d
 b.getBase1
 //│ ╔══[ERROR] class `Base1` does not contain member `getBase1`
-//│ ║  l.34: 	b.getBase1
+//│ ║  l.46: 	b.getBase1
 //│ ╙──      	 ^^^^^^^^^
 //│ Typed: error
 
 :e
 b.getBaseTypo
 //│ ╔══[ERROR] class `Base1` does not contain member `getBaseTypo`
-//│ ║  l.41: 	b.getBaseTypo
+//│ ║  l.53: 	b.getBaseTypo
 //│ ╙──      	 ^^^^^^^^^^^^
 //│ Typed: error
 
 
 b : Base1
 //│ Typed: Base1
+
+
+// TODO treat `a: int` as a signature
+class Annots(base: 0 | 1) {
+  a: int
+  fun a = base
+}
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 
