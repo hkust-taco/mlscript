@@ -75,7 +75,33 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
             case td: NuTypeDef =>
               td.kind match {
                 case Cls =>
+                  val typedParams = td.params.fields.map {
+                    case (S(nme), Fld(mut, spec, value)) =>
+                      assert(!mut && !spec, "TODO") // TODO
+                      value.toType match {
+                        case R(tpe) =>
+                          implicit val vars: Map[Str, SimpleType] = Map.empty // TODO type params
+                          implicit val newDefsInfo: Map[Str, (TypeDefKind, Int)] = Map.empty // TODO?
+                          val ty = typeType(tpe)
+                          nme -> FieldType(N, ty)(provTODO)
+                        case _ => ???
+                      }
+                    case (N, Fld(mut, spec, nme: Var)) =>
+                      assert(!mut && !spec, "TODO") // TODO
+                      nme -> FieldType(N, freshVar(ttp(nme), N, S(nme.name)))(provTODO)
+                    case _ => ???
+                  }
+                  // ctx ++= typedParams.mapKeysIter(_.name).mapValues(_.ub |> VarSymbol(_))
+                  ctx ++= typedParams.map(p => p._1.name -> VarSymbol(p._2.ub, p._1))
+                  
                   val ttu = typeTypingUnit(td.body, allowPure = false) // TODO use
+                  
+                  // val ttu.entities.map {
+                  //   case fun @ TypedNuFun(fd, ty) =>
+                  //     fun
+                  //   case _ => ???
+                  // }
+                  
                   // TODO check against `tv`
                   println(td.tparams)
                   println(td.params)
@@ -85,6 +111,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                   val finalType = freshVar(noProv/*TODO*/, N, S("this"))
                   // def inherit(parents: Ls[Term], superType: ST, members: Ls[TypedNuDecl -> ST]): Unit = parents match {
                   def inherit(parents: Ls[Term], superType: ST, members: Ls[TypedNuDecl]): Ls[TypedNuDecl] = parents match {
+                  // def inherit(parents: Ls[Term \/ TypedTypingUnit], superType: ST, members: Ls[TypedNuDecl]): Ls[TypedNuDecl] = parents match {
+                    // case R(p) :: ps => ???
+                    // case L(p) :: ps =>
                     case p :: ps =>
                       val newMembs = trace(s"Inheriting from $p") {
                         p match {
@@ -131,22 +160,6 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     case Nil =>
                       constrain(superType, finalType)
                       members
-                  }
-                  val typedParams = td.params.fields.map {
-                    case (S(nme), Fld(mut, spec, value)) =>
-                      assert(!mut && !spec, "TODO") // TODO
-                      value.toType match {
-                        case R(tpe) =>
-                          implicit val vars: Map[Str, SimpleType] = Map.empty // TODO type params
-                          implicit val newDefsInfo: Map[Str, (TypeDefKind, Int)] = Map.empty // TODO?
-                          val ty = typeType(tpe)
-                          nme -> FieldType(N, ty)(provTODO)
-                        case _ => ???
-                      }
-                    case (N, Fld(mut, spec, nme: Var)) =>
-                      assert(!mut && !spec, "TODO") // TODO
-                      nme -> FieldType(N, freshVar(ttp(nme), N, S(nme.name)))(provTODO)
-                    case _ => ???
                   }
                   val baseType = RecordType(typedParams)(ttp(td.params, isType = true))
                   val paramMems = typedParams.map(f => NuParam(f._1, f._2))

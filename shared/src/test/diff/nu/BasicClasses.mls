@@ -3,20 +3,18 @@
 :NoJS
 
 
+// :d
 class Base1(base: int) {
   fun getBase1(x) = base
   fun getBase2(x) = this.base
   fun foo(x) = this.base + x
 }
-//│ ╔══[ERROR] identifier not found: base
-//│ ║  l.7: 	  fun getBase1(x) = base
+//│ ╔══[ERROR] identifier not found: this
+//│ ║  l.9: 	  fun getBase2(x) = this.base
 //│ ╙──     	                    ^^^^
 //│ ╔══[ERROR] identifier not found: this
-//│ ║  l.8: 	  fun getBase2(x) = this.base
-//│ ╙──     	                    ^^^^
-//│ ╔══[ERROR] identifier not found: this
-//│ ║  l.9: 	  fun foo(x) = this.base + x
-//│ ╙──     	               ^^^^
+//│ ║  l.10: 	  fun foo(x) = this.base + x
+//│ ╙──      	               ^^^^
 //│ class Base1
 
 Base1
@@ -35,14 +33,14 @@ b.base
 // :d
 b.getBase1
 //│ ╔══[ERROR] class `Base1` does not contain member `getBase1`
-//│ ║  l.36: 	b.getBase1
+//│ ║  l.34: 	b.getBase1
 //│ ╙──      	 ^^^^^^^^^
 //│ Typed: error
 
 :e
 b.getBaseTypo
 //│ ╔══[ERROR] class `Base1` does not contain member `getBaseTypo`
-//│ ║  l.43: 	b.getBaseTypo
+//│ ║  l.41: 	b.getBaseTypo
 //│ ╙──      	 ^^^^^^^^^^^^
 //│ Typed: error
 
