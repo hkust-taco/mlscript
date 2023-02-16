@@ -173,7 +173,11 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                               Nil
                           }
                         }()
-                        val newSuperType = superType
+                        val newSuperType = superType &
+                          RecordType(
+                            // newMembs.foldLeft(TopType.toUpper(provTODO))(_ && _.ty.toUpper(provTODO))
+                            newMembs.map(m => m.fd.nme -> m.ty.toUpper(provTODO))
+                          )(provTODO)
                         inherit(ps, newSuperType, members ++ newMembs)
                       case Nil =>
                         constrain(superType, finalType)

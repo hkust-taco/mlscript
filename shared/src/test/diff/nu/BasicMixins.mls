@@ -58,13 +58,16 @@ class Base1(base: int): BaseTest
 //│ | |   where 
 //│ | | 1. C this45' <! this23'    (0)
 //│ | | | NEW this45' UB (1)
-//│ | CONSTRAIN {base: Int} <! this45'
+//│ | CONSTRAIN {base: Int, test: ‹∀ 1. test26''#›} <! this45'
 //│ |   where 
+//│ 		test26''# := base27''
+//│ 		base27'' :> base27_28' <: test26''#
+//│ 		base27_28' :> Int
 //│ 		this45' <: this23'
-//│ | 1. C {base: Int} <! this45'    (0)
-//│ | | NEW this45' LB (0)
-//│ | | 1. C {base: Int} <! this23'    (2)
-//│ | | | NEW this23' LB (0)
+//│ | 1. C {base: Int, test: ‹∀ 1. test26''#›} <! this45'    (0)
+//│ | | NEW this45' LB (1)
+//│ | | 1. C {base: Int, test: ‹∀ 1. test26''#›} <! this23'    (2)
+//│ | | | NEW this23' LB (1)
 //│ | 1. Typing TypingUnit(List())
 //│ | UNSTASHING... (out)
 //│ CONSTRAIN Base1<> <! this44'
@@ -80,10 +83,10 @@ class Base1(base): BaseTest
 :e
 class Base1(x): BaseTest
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.81: 	class Base1(x): BaseTest
+//│ ║  l.84: 	class Base1(x): BaseTest
 //│ ║        	      ^^^^^^^^^^^^^^^^^^
 //│ ╟── type `{x: ?x}` does not have field 'base'
-//│ ║  l.81: 	class Base1(x): BaseTest
+//│ ║  l.84: 	class Base1(x): BaseTest
 //│ ║        	           ^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.8: 	  fun test = super.base
@@ -137,18 +140,31 @@ mixin Wrap {
 //│   |		α92'' :> α92_94'
 //│   [pretty-printed] wrap: anything -> (nothing,)
 
-// TODO
+
+
 module WrapBase1: WrapBase, Wrap
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.141: 	module WrapBase1: WrapBase, Wrap
-//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not have field 'wrap'
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.121: 	  fun wrap(x) = [super.wrap(x)]
-//│ ║         	                 ^^^^^^^^^^
-//│ ╟── from reference:
-//│ ║  l.121: 	  fun wrap(x) = [super.wrap(x)]
-//│ ╙──       	                 ^^^^^
 //│ class WrapBase1
+
+
+WrapBase1
+//│ Typed: WrapBase1
+
+WrapBase1.wrap
+//│ Typed: 'a -> ('a,)
+
+WrapBase1.wrap(1)
+//│ Typed: (1,)
+
+// FIXME
+WrapBase1.wrap("ok")
+//│ Typed: ("ok" | 1,)
+
+
+module WrapBase2: WrapBase, Wrap, Wrap
+//│ class WrapBase2
+
+// FIXME
+WrapBase2.wrap
+//│ Typed: 'a -> ("ok" | 1 | 'a,)
 
 
