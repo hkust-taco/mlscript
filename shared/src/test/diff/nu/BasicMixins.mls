@@ -113,3 +113,42 @@ mixin Foo {
 //│   |		misc69'' :> misc69_70'
 //│   [pretty-printed] test: (int & 'a) -> (int, 'a, nothing,)
 
+
+mixin WrapBase {
+  fun wrap(x) = x
+}
+mixin Wrap {
+  fun wrap(x) = [super.wrap(x)]
+}
+//│ mixin WrapBase
+//│   this: this80' 
+//│   super: super81' 
+//│   fun wrap: ‹∀ 1. wrap83''#› where 
+//│   |		wrap83''# := (α84'' -> α84'')
+//│   [pretty-printed] wrap: 'a -> 'a
+//│ mixin Wrap
+//│   this: this85' 
+//│   super: super86' 
+//│   |		super86' <: {wrap: wrap90_91'}
+//│   |		wrap90_91' <: ((α89_93',) -> α92_94')
+//│   fun wrap: ‹∀ 1. wrap88''#› where 
+//│   |		wrap88''# := (α89'' -> (α92'',))
+//│   |		α89'' <: α89_93'
+//│   |		α92'' :> α92_94'
+//│   [pretty-printed] wrap: anything -> (nothing,)
+
+// TODO
+module WrapBase1: WrapBase, Wrap
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.141: 	module WrapBase1: WrapBase, Wrap
+//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not have field 'wrap'
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.121: 	  fun wrap(x) = [super.wrap(x)]
+//│ ║         	                 ^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.121: 	  fun wrap(x) = [super.wrap(x)]
+//│ ╙──       	                 ^^^^^
+//│ class WrapBase1
+
+

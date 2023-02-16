@@ -253,6 +253,7 @@ object NewLexer {
     "interface",
     "new",
     "namespace",
+    "module",
     "type",
     "where",
     "forall",

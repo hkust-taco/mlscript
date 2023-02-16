@@ -22,87 +22,103 @@ fun fooo(x) =
 
 
 
-// TODO
-// :d
-namespace Test0_1 {
+module Test0_1 {
   fun a = Test0_2.b
 }
-namespace Test0_2 {
-  fun a = 123
+module Test0_2 {
+  fun b = 123
 }
-//│ ╔══[ERROR] namespace `Test0_2` does not contain member `b`
-//│ ║  l.28: 	  fun a = Test0_2.b
-//│ ╙──      	                 ^^
 //│ class Test0_1
 //│   fun a: ‹∀ 1. a45''#› where 
 //│   |		a45''# := b50''
-//│   |		b50'' :> error<> | error<> <: a45''#
-//│   [pretty-printed] a: error
-//│ class Test0_2
-//│   fun a: ‹∀ 1. a49''#› where 
-//│   |		a49''# := 123<int,number>
+//│   |		b49''# := 123<int,number>
+//│   |		b50'' :> ‹∀ 1. b49''#› <: a45''#
 //│   [pretty-printed] a: 123
+//│ class Test0_2
+//│   fun b: ‹∀ 1. b49''#› where 
+//│   |		b49''# := 123<int,number>
+//│   [pretty-printed] b: 123
 
-// TODO
-// :d
-namespace Test1_1 {
+Test0_1.a
+//│ Typed: 123
+
+
+module Test1_1 {
   fun a = Test1_2.b
 }
-namespace Test1_2 {
-  fun a = Test1_1.a
+module Test1_2 {
+  fun b = Test1_1.a
 }
-//│ ╔══[ERROR] namespace `Test1_2` does not contain member `b`
-//│ ║  l.49: 	  fun a = Test1_2.b
-//│ ╙──      	                 ^^
 //│ class Test1_1
-//│   fun a: ‹∀ 1. a60''#› where 
-//│   |		a60''# := b67''
-//│   |		b67'' :> error<> | error<> <: a60''#
-//│   [pretty-printed] a: error
-//│ class Test1_2
-//│   fun a: ‹∀ 1. a64''#› where 
-//│   |		a64''# := a65''
-//│   |		a65'' :> a65_66 <: a64''#
+//│   fun a: ‹∀ 1. a67''#› where 
+//│   |		a67''# := b74''
+//│   |		b71''# := a72''
+//│   |		a72'' :> a72_73 <: b71''#
+//│   |		b74'' :> ‹∀ 1. b71''#› <: a67''#
 //│   [pretty-printed] a: nothing
+//│ class Test1_2
+//│   fun b: ‹∀ 1. b71''#› where 
+//│   |		b71''# := a72''
+//│   |		a72'' :> a72_73 <: b71''#
+//│   [pretty-printed] b: nothing
+
+Test1_1.a
+//│ Typed: nothing
 
 
-// TODO
-namespace Test2_1 {
+// TODO check TV hygiene
+module Test2_1 {
   fun t2 = Test2_2
   fun a = Test2_2.b
   fun d = Test2_2.e
+  fun n = 456
 }
-namespace Test2_2 {
+module Test2_2 {
   fun b = 123
   fun c = Test2_1.a
-  fun e = Test2_1.d
+  fun e = Test2_1.n
 }
 //│ class Test2_1
-//│   fun t2: ‹∀ 1. t281''#› where 
-//│   |		t281''# := Test2_2<>
+//│   fun t2: ‹∀ 1. t2100''#› where 
+//│   |		t2100''# := Test2_2<>
 //│   [pretty-printed] t2: Test2_2
-//│   fun a: ‹∀ 1. a94''#› where 
-//│   |		b87''# := 123<int,number>
-//│   |		a94''# := b95''
-//│   |		b95'' :> ‹∀ 1. b87''#› <: a94''#
+//│   fun a: ‹∀ 1. a113''#› where 
+//│   |		b106''# := 123<int,number>
+//│   |		a113''# := b114''
+//│   |		b114'' :> ‹∀ 1. b106''#› <: a113''#
 //│   [pretty-printed] a: 123
-//│   fun d: ‹∀ 1. d99''#› where 
-//│   |		e91''# := d92''
-//│   |		d92'' :> d92_93 <: e91''#
-//│   |		d99''# := e100''
-//│   |		e100'' :> ‹∀ 1. e91''#› <: d99''#
+//│   fun d: ‹∀ 1. d118''#› where 
+//│   |		e110''# := n111''
+//│   |		n111'' :> n111_112 <: e110''#
+//│   |		d118''# := e119''
+//│   |		e119'' :> ‹∀ 1. e110''#› <: d118''#
 //│   [pretty-printed] d: nothing
+//│   fun n: ‹∀ 1. n123''#› where 
+//│   |		n123''# := 456<int,number>
+//│   [pretty-printed] n: 456
 //│ class Test2_2
-//│   fun b: ‹∀ 1. b87''#› where 
-//│   |		b87''# := 123<int,number>
+//│   fun b: ‹∀ 1. b106''#› where 
+//│   |		b106''# := 123<int,number>
 //│   [pretty-printed] b: 123
-//│   fun c: ‹∀ 1. c88''#› where 
-//│   |		c88''# := a89''
-//│   |		a89'' :> a89_90 <: c88''#
+//│   fun c: ‹∀ 1. c107''#› where 
+//│   |		c107''# := a108''
+//│   |		a108'' :> a108_109 <: c107''#
 //│   [pretty-printed] c: nothing
-//│   fun e: ‹∀ 1. e91''#› where 
-//│   |		e91''# := d92''
-//│   |		d92'' :> d92_93 <: e91''#
+//│   fun e: ‹∀ 1. e110''#› where 
+//│   |		e110''# := n111''
+//│   |		n111'' :> n111_112 <: e110''#
 //│   [pretty-printed] e: nothing
 
+Test2_1.t2.b
+//│ Typed: 123
+
+Test2_1.a
+//│ Typed: 123
+
+// FIXME
+Test2_1.d
+//│ Typed: nothing
+
+Test2_1.n
+//│ Typed: 456
 
