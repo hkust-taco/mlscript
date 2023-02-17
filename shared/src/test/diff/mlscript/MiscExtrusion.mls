@@ -59,7 +59,12 @@ alsoPrintSize id
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.58: 	alsoPrintSize id
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `anything` does not match type `nothing`
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.48: 	def mapExpr: (forall 'a. Expr['a] -> Expr['a]) -> Program -> Program
+//│ ║        	                                          ^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.48: 	def mapExpr: (forall 'a. Expr['a] -> Expr['a]) -> Program -> Program
+//│ ╙──      	                              ^^
 //│ res: Program -> Program | error
 
 def alsoPrintSize (f: forall 'a. Expr['a] -> Expr['a]) =
@@ -87,9 +92,14 @@ def alsoPrintSizeCo f =
 :e
 alsoPrintSizeCo id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.88: 	alsoPrintSizeCo id
+//│ ║  l.93: 	alsoPrintSizeCo id
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `anything` does not match type `nothing`
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.83: 	def mapExprCo: (forall 'a. ExprCo['a] -> ExprCo['a]) -> Program -> Program
+//│ ║        	                                  ^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.83: 	def mapExprCo: (forall 'a. ExprCo['a] -> ExprCo['a]) -> Program -> Program
+//│ ╙──      	                                                ^^
 //│ res: Program -> Program | error
 
 def alsoPrintSizeCo (f: forall 'a. Expr['a] -> Expr['a]) =

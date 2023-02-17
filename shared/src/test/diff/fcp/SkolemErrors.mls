@@ -25,7 +25,7 @@ k (fun x -> x + 1)
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'a` is not an instance of type `int`
 //│ ║  l.5: 	def k: (forall 'a. 'a -> 'a) -> int
-//│ ║       	               ^^
+//│ ║       	                   ^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.+1: 	k (fun x -> x + 1)
 //│ ╙──      	            ^

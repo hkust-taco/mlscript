@@ -420,7 +420,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         recVars.getOrElse(tv,
           localVars.getOrElseUpdate(tv, freshVar(noProv, N, tv.identifier.toOption)
               (outerCtxLvl)) // * Type variables not explicily bound are assigned the widest (the outer context's) level
-            .withProv(tyTp(ty.toLoc, "type variable")))
+          ).withProv(tyTp(ty.toLoc, "type variable"))
       case AppliedType(base, targs) =>
         val prov = tyTp(ty.toLoc, "applied type reference")
         typeNamed(ty.toLoc, base.name) match {
@@ -460,7 +460,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               die // this probably never happens...
               freshVar(tyTp(tn.toLoc, "quantified type name"), N, S(tn.name))
             case R(tv) =>
-              val nv = freshVar(tyTp(tv.toLoc, "quantified type variable"), N, tv.identifier.toOption)
+              val nv = freshVar(tyTp(
+                    // tv.toLoc,
+                    N, // * Here we choose to omit this location,
+                    // * because pointing to the binding place of forall TVs in error messages
+                    // * is often redundant, as these forall types are usually self-contained.
+                    "quantified type variable",
+                  tv.identifier.toOption.orElse(tv.nameHint)
+                ), N, tv.identifier.toOption)
               newVars += tv -> nv
               nv
           }

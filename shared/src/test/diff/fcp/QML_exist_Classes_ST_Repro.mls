@@ -74,9 +74,9 @@ simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
 simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
 //│ res: ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string,)]
 //│    = [Function: simpleStepImpl]
-//│ constrain calls  : 575
+//│ constrain calls  : 579
 //│ annoying  calls  : 101
-//│ subtyping calls  : 5623
+//│ subtyping calls  : 5641
 :NoRecursiveTypes
 
 
@@ -103,10 +103,10 @@ def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
 //│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.35: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                            ^^^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.35: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
+//│ ║        	                                            ^^^^
 //│ ╟── from reference:
 //│ ║  l.41: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.Sub r0 i;
 //│ ╙──      	                                                    ^^

@@ -46,7 +46,7 @@ test(fun x -> x + 1)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'a` is not an instance of type `int`
 //│ ║  l.19: 	test(f: forall 'a. 'a -> 'a) =
-//│ ║        	               ^^
+//│ ║        	                   ^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.43: 	test(fun x -> x + 1)
 //│ ╙──      	              ^
@@ -60,7 +60,7 @@ test succ
 //│ ║        	^^^^^^^^^
 //│ ╟── type `'a` is not an instance of type `int`
 //│ ║  l.19: 	test(f: forall 'a. 'a -> 'a) =
-//│ ╙──      	               ^^
+//│ ╙──      	                   ^^
 //│ res: (1, true,) | error
 //│    = [ 2, 2 ]
 

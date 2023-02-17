@@ -111,7 +111,7 @@ let f = choose id in (f auto) (f succ)
 //│ ║         	                     ^^^^^^^^^^^^^^^^^
 //│ ╟── type `'a` is not an instance of type `int`
 //│ ║  l.29: 	def auto (x: forall 'a. 'a -> 'a) = x x
-//│ ╙──      	                    ^^
+//│ ╙──      	                        ^^
 //│ res: int -> int | error
 
 // Reproduced with an unnanotated auto:

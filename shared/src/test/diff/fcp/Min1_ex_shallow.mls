@@ -21,10 +21,10 @@ a1' : A1'
 //│ ║        	^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.4: 	type Sid = forall 'a. 'a -> 'a
-//│ ║       	                  ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║       	                      ^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.4: 	type Sid = forall 'a. 'a -> 'a
-//│ ╙──     	                  ^^
+//│ ╙──     	                            ^^
 //│ res: A1'
 //│    = <no result>
 //│      a1' is not implemented
@@ -40,10 +40,10 @@ def a0' = a2' a1'
 //│ ║        	          ^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.4: 	type Sid = forall 'a. 'a -> 'a
-//│ ║       	                  ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║       	                      ^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.4: 	type Sid = forall 'a. 'a -> 'a
-//│ ╙──     	                  ^^
+//│ ╙──     	                            ^^
 //│ a0': 0 | error
 //│    = <no result>
 //│      a1' is not implemented

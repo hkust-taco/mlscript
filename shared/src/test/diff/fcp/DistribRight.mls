@@ -83,10 +83,10 @@ T: (anything, (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a))
 //│ ║        	^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.80: 	T: (anything, (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a))
-//│ ║        	                                                         ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                                             ^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.80: 	T: (anything, (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a))
-//│ ╙──      	                                                         ^^
+//│ ╙──      	                                                                   ^^
 //│ res: (anything, (forall 'a. 'a -> 'a, anything,) -> (forall 'a0. 'a0 -> 'a0),)
 
 

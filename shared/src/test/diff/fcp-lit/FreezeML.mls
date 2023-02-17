@@ -507,10 +507,10 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ║         	                                  ^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.172: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
-//│ ║         	                    ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║         	                        ^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.172: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
-//│ ╙──       	                    ^^
+//│ ╙──       	                              ^^
 //│ res: 'c
 //│   where
 //│     'c :> (forall 'a. 'a -> 'a) | (forall 'a0 'd. ('a0 -> 'a0) -> 'd)
@@ -531,10 +531,10 @@ res id
 //│ ║         	^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.172: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
-//│ ║         	                    ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║         	                        ^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.172: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
-//│ ║         	                    ^^
+//│ ║         	                              ^^
 //│ ╟── from type variable:
 //│ ║  l.504: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ╙──       	                          ^^
@@ -550,9 +550,9 @@ a (fun x -> { u = x })
 //│ ╟── record literal of type `{u: ?a}` does not match type `'a`
 //│ ║  l.546: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.172: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
-//│ ╙──       	                    ^^
+//│ ╙──       	                              ^^
 //│ res: 'b -> ('b | {u: 'b}) | error
 //│    = [Function (anonymous)]
 

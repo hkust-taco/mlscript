@@ -31,7 +31,7 @@ bar (fun x -> case x of {})
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.8: 	def foo: (forall 'a. 'a -> 'a) -> int
-//│ ║       	                 ^^
+//│ ║       	                     ^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.28: 	bar (fun x -> case x of {})
 //│ ╙──      	                   ^
@@ -62,7 +62,7 @@ foo (fun a -> a + 1)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'a` is not an instance of type `int`
 //│ ║  l.47: 	def foo: (forall 'a. 'a -> 'b) -> 'b
-//│ ║        	                 ^^
+//│ ║        	                     ^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.59: 	foo (fun a -> a + 1)
 //│ ╙──      	              ^

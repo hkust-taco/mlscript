@@ -237,10 +237,10 @@ zog = printInt (add (nfind table "one") (nfind table "two"))
 //│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.181: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║         	                                   ^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.181: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                        ^^
+//│ ║         	                             ^^
 //│ ╟── from application:
 //│ ║  l.216: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│ ╙──       	                                                      ^^^
@@ -259,10 +259,10 @@ a = add (nfind table "one")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.181: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║         	                                   ^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.181: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                        ^^
+//│ ║         	                             ^^
 //│ ╟── from application:
 //│ ║  l.216: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│ ╙──       	                                                      ^^^

@@ -111,10 +111,10 @@ f1 = f2
 //│ ║         	^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.9: 	def f1: 'a -> (forall 'b. 'b -> ('a, 'b))
-//│ ║       	                      ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║       	                          ^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.9: 	def f1: 'a -> (forall 'b. 'b -> ('a, 'b))
-//│ ╙──     	                      ^^
+//│ ╙──     	                                     ^^
 
 f2 = f1
 //│ 'a -> (forall 'b. 'b -> ('a, 'b,))

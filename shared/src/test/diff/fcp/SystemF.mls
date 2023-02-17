@@ -88,13 +88,13 @@ iter4_ty = iter4
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.75: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
-//│ ║        	                            ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                       ^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.75: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
-//│ ║        	                            ^^
-//│ ╟── from quantified type variable:
+//│ ║        	                                 ^^
+//│ ╟── from type variable:
 //│ ║  l.57: 	def iter2_ty: forall 'X. ('X -> 'X) -> 'X -> 'X
-//│ ╙──      	                     ^^
+//│ ╙──      	                                ^^
 //│         = [Function: iter4_ty]
 //│ () -> ('a -> 'b & 'b -> ('a & 'c)) -> 'a -> 'c
 //│   <:  iter4_ty:
@@ -104,10 +104,10 @@ iter4_ty = iter4
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.75: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
-//│ ║        	                            ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                       ^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.75: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
-//│ ╙──      	                            ^^
+//│ ╙──      	                                 ^^
 //│         = [Function: iter4]
 
 :DistributeForalls

@@ -261,25 +261,25 @@ rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.101: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
-//│ ║         	                 ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║         	                                   ^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.101: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
-//│ ║         	                 ^^
-//│ ╟── from quantified type variable:
+//│ ║         	                             ^^
+//│ ╟── from type variable:
 //│ ║  l.102: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
-//│ ╙──       	                     ^^
+//│ ╙──       	                                      ^^
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.255: 	rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.101: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
-//│ ║         	                 ^^
+//│ ║         	                                   ^^
 //│ ╟── but it flows into application with expected type `nothing`
 //│ ║  l.255: 	rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	                                                       ^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.101: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
-//│ ╙──       	                 ^^
+//│ ╙──       	                                                ^^
 //│  = [Function: k1]
 
 
@@ -302,9 +302,9 @@ k = k_
 //│ ╟── function of type `?a -> (forall ?b. ?b -> ?b)` does not match type `nothing`
 //│ ║  l.216: 	def z_ = fun c -> fun n -> n
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.101: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
-//│ ╙──       	                 ^^
+//│ ╙──       	                             ^^
 //│  = [Function: k_]
 
 
@@ -427,9 +427,9 @@ def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ╟── operator application of type `int` does not match type `'a`
 //│ ║  l.420: 	def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	                                                       ^^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.102: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
-//│ ╙──       	                  ^^
+//│ ╙──       	                          ^^
 //│  = <no result>
 //│    k is not implemented
 
@@ -450,10 +450,13 @@ k = k_ // nope
 //│ ║         	^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.102: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
-//│ ║         	                     ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║         	                                      ^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.102: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
-//│ ╙──       	                     ^^
+//│ ║         	                                ^^
+//│ ╟── from type variable:
+//│ ║  l.102: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
+//│ ╙──       	                                      ^^
 //│  = <no result>
 //│    k_, k and k are not implemented
 
@@ -472,14 +475,14 @@ k = k_ // nope
 //│   <:  k:
 //│ int -> Baa -> Baa
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.468: 	k = k_ // nope
+//│ ║  l.471: 	k = k_ // nope
 //│ ║         	^^^^^^
 //│ ╟── type `('a -> 'b -> 'b) -> 'b -> 'b` does not match type `nothing`
 //│ ║  l.102: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
 //│ ║         	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.102: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
-//│ ╙──       	                     ^^
+//│ ╙──       	                                ^^
 //│  = [Function: k_1]
 
 

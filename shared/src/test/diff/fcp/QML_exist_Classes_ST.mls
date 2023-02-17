@@ -117,10 +117,10 @@ def simpleStepImpl2_ty (arr: Arrays['a]) = arr simpleStepImpl
 //│ ║         	                                           ^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                            ^^^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
+//│ ║        	                                            ^^^^
 //│ ╟── from reference:
 //│ ║  l.72: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.Sub r0 i;
 //│ ╙──      	                                                    ^^
@@ -145,10 +145,10 @@ def simpleStep arr f = f (simpleStepImpl2 arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                            ^^^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
+//│ ║        	                                            ^^^^
 //│ ╟── from reference:
 //│ ║  l.72: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.Sub r0 i;
 //│ ╙──      	                                                    ^^
@@ -164,10 +164,10 @@ def simpleStep arr f = f (simpleStepImpl2_ty arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                            ^^^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ╙──      	                         ^^^^
+//│ ╙──      	                                            ^^^^
 //│           = [Function: simpleStep1]
 
 sb = simpleStep base
@@ -189,7 +189,7 @@ sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'Rep` is not an instance of type `int`
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
+//│ ║        	                                            ^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.15: 	  method Sub: Rep -> int -> A
 //│ ║        	                     ^^^
@@ -214,10 +214,10 @@ sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'Rep` does not match type `nothing`
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                            ^^^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
+//│ ║        	                                            ^^^^
 //│ ╟── from application:
 //│ ║  l.211: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ╙──       	                                             ^^^^^^^^^^^^^^
@@ -320,10 +320,10 @@ def step arr f = f (stepImpl2 arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                            ^^^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
+//│ ║        	                                            ^^^^
 //│ ╟── from reference:
 //│ ║  l.263: 	      then arrImpl.Sub r0 (div i 2)
 //│ ╙──       	                       ^^
@@ -352,10 +352,10 @@ def step arr f = f (stepImpl2_ty arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                            ^^^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ╙──      	                         ^^^^
+//│ ╙──      	                                            ^^^^
 //│     = [Function: step2]
 :e
 def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
@@ -370,10 +370,10 @@ def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
 //│ ║         	                                  ^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                            ^^^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ╙──      	                         ^^^^
+//│ ╙──      	                                            ^^^^
 //│     = [Function: step3]
 
 

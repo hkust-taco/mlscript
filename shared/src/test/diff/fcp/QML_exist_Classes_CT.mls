@@ -152,10 +152,10 @@ def simpleStepImpl2_ty (arr: Arrays['a]) = arr simpleStepImpl
 //│ ║         	                                           ^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                            ^^^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ╙──      	                         ^^^^
+//│ ╙──      	                                            ^^^^
 //│                   = [Function: simpleStepImpl2_ty1]
 
 def simpleStep: Arrays['a] -> Arrays['a]
@@ -187,10 +187,10 @@ def simpleStep arr f = f (simpleStepImpl2 arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                            ^^^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ╙──      	                         ^^^^
+//│ ╙──      	                                            ^^^^
 //│           = [Function: simpleStep]
 
 :e // TODO update: seems like the given type for `simpleStepImpl2_ty` is not precise enough
@@ -203,12 +203,7 @@ def simpleStep arr f = f (simpleStepImpl2_ty arr)
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.197: 	def simpleStep arr f = f (simpleStepImpl2_ty arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ╙──      	                         ^^^^
+//│ ╙── type `anything` does not match type `nothing`
 //│           = [Function: simpleStep1]
 
 sb = simpleStep base
@@ -226,16 +221,16 @@ sb (fun arr -> arr.Sub (arr.Init true) 1)
 :e // * Expected – argument order confusion
 sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.227: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
+//│ ║  l.222: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'Rep` is not an instance of type `int`
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
+//│ ║        	                                            ^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.15: 	  method Sub: Rep -> int -> A
 //│ ║        	                     ^^^
 //│ ╟── from application:
-//│ ║  l.227: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
+//│ ║  l.222: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ║         	                          ^^^^^^^^^^^^^
 //│ ╟── Note: class type parameter Rep is defined at:
 //│ ║  l.13: 	class ArraysRep[A, Rep]
@@ -251,16 +246,16 @@ sb (fun arr -> arr.Update (arr.Init true) 1 false)
 :e // * Rightly prevent skolem confusion
 sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.252: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
+//│ ║  l.247: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'Rep` does not match type `nothing`
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                            ^^^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
+//│ ║        	                                            ^^^^
 //│ ╟── from application:
-//│ ║  l.252: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
+//│ ║  l.247: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ╙──       	                                             ^^^^^^^^^^^^^^
 //│ res: int -> anything -> anything | error
 //│    = [Function (anonymous)]
@@ -398,14 +393,14 @@ def step arr f = f (stepImpl2 arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.381: 	def step arr f = f (stepImpl2 arr)
+//│ ║  l.376: 	def step arr f = f (stepImpl2 arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                            ^^^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ╙──      	                         ^^^^
+//│ ╙──      	                                            ^^^^
 //│     = [Function: step]
 
 // * Now the annotation was okay [until "sound extrusion"] because the result no longer extruded it...
@@ -415,14 +410,14 @@ def step (arr: Arrays['a]) f = f (stepImpl2 arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.413: 	def step (arr: Arrays['a]) f = f (stepImpl2 arr)
+//│ ║  l.408: 	def step (arr: Arrays['a]) f = f (stepImpl2 arr)
 //│ ║         	                                  ^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                            ^^^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ╙──      	                         ^^^^
+//│ ╙──      	                                            ^^^^
 //│     = [Function: step1]
 
 // * Don't know why these don't work:
@@ -434,14 +429,9 @@ def step arr f = f (stepImpl2_ty arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.430: 	def step arr f = f (stepImpl2_ty arr)
+//│ ║  l.425: 	def step arr f = f (stepImpl2_ty arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ╙──      	                         ^^^^
+//│ ╙── type `anything` does not match type `nothing`
 //│     = [Function: step2]
 :e
 def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
@@ -452,14 +442,9 @@ def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.447: 	def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
+//│ ║  l.437: 	def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
 //│ ║         	                                  ^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ╙──      	                         ^^^^
+//│ ╙── type `anything` does not match type `nothing`
 //│     = [Function: step3]
 
 

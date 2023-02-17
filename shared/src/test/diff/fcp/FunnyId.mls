@@ -70,7 +70,7 @@ id_ty = id
 //│ ║        	^^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.4: 	def id_ty: forall 'a. 'a -> 'a
-//│ ║       	                  ^^
+//│ ║       	                      ^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.29: 	rec def id x = let tmp = id id x in x
 //│ ║        	                         ^^^^^^^
@@ -130,7 +130,7 @@ id_ty = id
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.4: 	def id_ty: forall 'a. 'a -> 'a
-//│ ║       	                  ^^
+//│ ║       	                      ^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.103: 	rec def id x = if true then x else id id x
 //│ ║         	                                   ^^^^^^^

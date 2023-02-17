@@ -216,13 +216,13 @@ succ = succ_
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.198: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
-//│ ║         	                                                         ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║         	                                                                    ^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.198: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
-//│ ║         	                                                         ^^
-//│ ╟── from quantified type variable:
+//│ ║         	                                                              ^^
+//│ ╟── from type variable:
 //│ ║  l.198: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
-//│ ╙──       	                  ^^
+//│ ╙──       	                             ^^
 //│     = [Function: succ_1]
 
 c2 = succ (succ n0)

@@ -240,10 +240,10 @@ def a0' = a2' a1'
 //│ ║         	          ^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.5: 	type Sid = forall 'a. 'a -> 'a
-//│ ║       	                  ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║       	                      ^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.5: 	type Sid = forall 'a. 'a -> 'a
-//│ ╙──     	                  ^^
+//│ ╙──     	                            ^^
 //│ a0': anything -> ('a -> 'b & 'c -> 'd & 'd -> 'a) -> 'c -> 'b | error
 //│    = [Function: a0$]
 
@@ -362,12 +362,7 @@ def a0' = a2' a1'
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.361: 	def a0' = a2' a1'
 //│ ║         	          ^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.5: 	type Sid = forall 'a. 'a -> 'a
-//│ ║       	                  ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.5: 	type Sid = forall 'a. 'a -> 'a
-//│ ╙──     	                  ^^
+//│ ╙── type `anything` does not match type `nothing`
 //│ a0': anything -> 'a | error
 //│   where
 //│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
@@ -376,7 +371,7 @@ def a0' = a2' a1'
 :e
 def a0'_ = a2'_ a1'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.377: 	def a0'_ = a2'_ a1'
+//│ ║  l.372: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ a0'_: anything -> 'a | error

@@ -45,10 +45,10 @@ def step arr g = g (stepImpl2 arr)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.10: 	type ArraysRep[Rep] = { fold: forall 'b. 'b -> Rep -> 'b }
-//│ ║        	                                     ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                         ^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.10: 	type ArraysRep[Rep] = { fold: forall 'b. 'b -> Rep -> 'b }
-//│ ║        	                                     ^^
+//│ ║        	                                                      ^^
 //│ ╟── from application:
 //│ ║  l.17: 	def stepImpl arrImpl = { fold = fun f -> fun r0 -> arrImpl.fold f r0 }
 //│ ╙──      	                                                   ^^^^^^^^^^^^^^^^^

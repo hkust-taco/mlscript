@@ -341,7 +341,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     // override def toString = s"[$underlying]"
     // override def toString = s"$underlying[${prov.desc.take(5)}]"
     // override def toString = s"$underlying[${prov.toString.take(5)}]"
-    // override def toString = s"$underlying@${prov}"
+    // override def toString = s"$underlying@${prov.loco.fold("?")(l => l.spanStart+"–"+l.spanEnd)}"
     // override def toString = showProvOver(true)(""+underlying)
     
     // TOOD override equals/hashCode? — could affect hash consing...

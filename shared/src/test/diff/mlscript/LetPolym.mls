@@ -353,7 +353,7 @@ foo (fun x -> (0, x + 1))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'a` is not an instance of type `int`
 //│ ║  l.339: 	def foo (f: forall 'a. 'a -> ('a, 'a)) =
-//│ ║         	                   ^^
+//│ ║         	                       ^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.350: 	foo (fun x -> (0, x + 1))
 //│ ╙──       	                  ^

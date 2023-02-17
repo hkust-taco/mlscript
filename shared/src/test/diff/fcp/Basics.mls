@@ -79,7 +79,7 @@ example succ
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── type `'a` is not an instance of type `int`
 //│ ║  l.54: 	def example f = (f: forall 'a. 'a -> 'a)
-//│ ╙──      	                           ^^
+//│ ╙──      	                               ^^
 //│ res: 'a -> 'a | error
 //│    = [Function: succ]
 
@@ -116,9 +116,9 @@ ex 1
 //│ ╟── integer literal of type `1` does not match type `nothing`
 //│ ║  l.112: 	ex 1
 //│ ║         	   ^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.99: 	def example f = ((0, f) : forall 'a. (0, 'a))
-//│ ║        	                                 ^^
+//│ ║        	                                         ^^
 //│ ╟── from reference:
 //│ ║  l.107: 	def ex x = example x
 //│ ╙──       	                   ^

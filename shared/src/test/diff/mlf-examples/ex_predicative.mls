@@ -153,10 +153,10 @@ def three = fun f -> fun x -> f (f (f x))
 //│ ║         	^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.29: 	type Sid = forall 'a. 'a -> 'a
-//│ ║        	                  ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                      ^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.29: 	type Sid = forall 'a. 'a -> 'a
-//│ ╙──      	                  ^^
+//│ ╙──      	                            ^^
 //│ res: Sid
 //│    = [Function (anonymous)]
 // * this one works:
@@ -182,10 +182,10 @@ def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (f
 //│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.170: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║         	                                   ^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.170: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                        ^^
+//│ ║         	                             ^^
 //│ ╟── from application:
 //│ ║  l.179: 	def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
 //│ ╙──       	                                                                                                                                                                            ^^^^^^^^^^^^
@@ -256,10 +256,10 @@ def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) 
 //│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.170: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║         	                                   ^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.170: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                        ^^
+//│ ║         	                             ^^
 //│ ╟── from application:
 //│ ║  l.252: 	def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
 //│ ╙──       	                                                                                                                                                                            ^^^^^^^^^^^^

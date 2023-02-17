@@ -33,13 +33,13 @@ def baz x =
 //│ ║        	  ^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.30: 	  (x: 's -> 's): forall 'a. 'a -> 'a
-//│ ║        	                        ^^
+//│ ║        	                            ^^
 //│ ╟── but it flows into type variable with expected type `nothing`
 //│ ║  l.30: 	  (x: 's -> 's): forall 'a. 'a -> 'a
 //│ ║        	      ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.30: 	  (x: 's -> 's): forall 'a. 'a -> 'a
-//│ ╙──      	                        ^^
+//│ ╙──      	                                  ^^
 //│ baz: (anything -> nothing) -> (forall 'a. 'a -> 'a)
 //│    = [Function: baz]
 
@@ -107,7 +107,7 @@ def baz x =
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'a` does not match type `MutArray['s]`
 //│ ║  l.104: 	  (x: MutArray['s] -> 't): forall 'a. 'a -> 'a
-//│ ║         	                                  ^^
+//│ ║         	                                      ^^
 //│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.104: 	  (x: MutArray['s] -> 't): forall 'a. 'a -> 'a
 //│ ╙──       	      ^^^^^^^^^^^^
@@ -121,13 +121,13 @@ def baz x =
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.118: 	  (x: MutArray['s] -> 't): forall 'a. MutArray['a] -> 'a
-//│ ║         	                                  ^^
+//│ ║         	                                               ^^
 //│ ╟── but it flows into type variable with expected type `nothing`
 //│ ║  l.118: 	  (x: MutArray['s] -> 't): forall 'a. MutArray['a] -> 'a
 //│ ║         	               ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.118: 	  (x: MutArray['s] -> 't): forall 'a. MutArray['a] -> 'a
-//│ ╙──       	                                  ^^
+//│ ╙──       	                                               ^^
 //│ baz: (MutArray['s] -> nothing) -> (forall 'a. MutArray['a] -> 'a)
 //│   where
 //│     's :> anything
@@ -168,7 +168,7 @@ def bar y =
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.165: 	  (fun x -> y (id2 x, x)) : forall 'a. 'a -> 'a
-//│ ║         	                                   ^^
+//│ ║         	                                       ^^
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.154: 	def id2: (forall 's. 's -> 's) -> (forall 't. 't -> 't)
 //│ ║         	                     ^^^^^^^^
@@ -186,10 +186,10 @@ def bar y =
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'s` does not match type `'a`
 //│ ║  l.154: 	def id2: (forall 's. 's -> 's) -> (forall 't. 't -> 't)
-//│ ║         	                 ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║         	                     ^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.183: 	  (fun x -> y (id2 x, x)) : forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──       	                                   ^^
+//│ ╙──       	                                        ^^
 //│ bar: ((forall 't. 't -> 't, nothing -> anything,) -> anything -> nothing) -> (forall 'a. ('a -> 'a) -> 'a -> 'a)
 //│    = [Function: bar11]
 
@@ -216,10 +216,10 @@ def baz x =
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.213: 	  (x: ('s -> 's) -> 0): forall 'a. ('a -> 'a) -> 0
-//│ ║         	                               ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║         	                                          ^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.213: 	  (x: ('s -> 's) -> 0): forall 'a. ('a -> 'a) -> 0
-//│ ║         	                               ^^
+//│ ║         	                                    ^^
 //│ ╟── from type variable:
 //│ ║  l.213: 	  (x: ('s -> 's) -> 0): forall 'a. ('a -> 'a) -> 0
 //│ ╙──       	             ^^
@@ -236,13 +236,13 @@ def boo =
 //│ ║         	            ^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.232: 	  let tmp = (id: 's -> 's): forall 'a. 'a -> 'a
-//│ ║         	                                   ^^
+//│ ║         	                                       ^^
 //│ ╟── but it flows into type variable with expected type `nothing`
 //│ ║  l.232: 	  let tmp = (id: 's -> 's): forall 'a. 'a -> 'a
 //│ ║         	                 ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.232: 	  let tmp = (id: 's -> 's): forall 'a. 'a -> 'a
-//│ ╙──       	                                   ^^
+//│ ╙──       	                                             ^^
 //│ boo: 0
 //│    = [Function: boo]
 
@@ -267,10 +267,10 @@ def boo x =
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.263: 	  let tmp = (x: ('s -> 's) -> 't): forall 'a. ('a -> 'a) -> 0
-//│ ║         	                                          ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║         	                                                     ^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.263: 	  let tmp = (x: ('s -> 's) -> 't): forall 'a. ('a -> 'a) -> 0
-//│ ║         	                                          ^^
+//│ ║         	                                               ^^
 //│ ╟── from type variable:
 //│ ║  l.263: 	  let tmp = (x: ('s -> 's) -> 't): forall 'a. ('a -> 'a) -> 0
 //│ ╙──       	                       ^^

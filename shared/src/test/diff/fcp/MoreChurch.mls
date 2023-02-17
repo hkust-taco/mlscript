@@ -123,10 +123,10 @@ def pow (n: ChurchInt) (m: ChurchInt) = n (mul m) (succ zero)
 //│ ║         	                                        ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.7: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║       	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║       	                                           ^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.7: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║       	                        ^^
+//│ ║       	                             ^^
 //│ ╟── from reference:
 //│ ║  l.31: 	def succ n f x = f (n f x)
 //│ ╙──      	                        ^

@@ -33,7 +33,7 @@ s2: S1
 //│ ║        	^^
 //│ ╟── type `'a` does not match type `'a0`
 //│ ║  l.14: 	type S2 = (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ ║        	                  ^^
+//│ ║        	                      ^^
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.11: 	type S1 = ('a -> 'b -> 'c) -> ('a -> 'b) -> 'a -> 'c
 //│ ╙──      	           ^^
