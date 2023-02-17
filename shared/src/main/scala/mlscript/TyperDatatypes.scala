@@ -92,7 +92,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
               td.kind match {
                 case Cls | Nms =>
                   implicit val prov: TP = noProv // TODO
-                  ctx.nextLevel { implicit ctx =>
+                  ctx.nest.nextLevel { implicit ctx =>
                     
                     val tparams = td.tparams.map(tp =>
                       tp -> freshVar(TypeProvenance(
@@ -235,7 +235,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                   }
                 case Mxn =>
                   implicit val prov: TP = noProv // TODO
-                  ctx.nextLevel { implicit ctx =>
+                  ctx.nest.nextLevel { implicit ctx =>
                     implicit val vars: Map[Str, SimpleType] =
                       outerVars ++ Map.empty // TODO type params
                     val thisTV = freshVar(noProv/*FIXME*/, N, S("this"))

@@ -1161,7 +1161,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         : SimpleType =
   {
     def freshenImpl(ty: SimpleType, below: Level): SimpleType =
-    (trace(s"${lvl}. FRESHEN $ty || $above .. $below  ${ty.level} ${ty.level <= above}")
+    // (trace(s"${lvl}. FRESHEN $ty || $above .. $below  ${ty.level} ${ty.level <= above}")
     {
       // * Cannot soundly freshen if the context's level is above the current polymorphism level,
       // * as that would wrongly capture the newly-freshened variables.
@@ -1281,7 +1281,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case o @ Overload(alts) =>
         o.mapAlts(freshen)(freshen)
     }}
-    (r => s"=> $r"))
+    // (r => s"=> $r"))
     
     freshenImpl(ty, below)
   }
