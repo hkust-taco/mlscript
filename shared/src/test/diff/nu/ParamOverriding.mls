@@ -1,0 +1,32 @@
+:NewParser
+:NewDefs
+:NoJS
+
+
+mixin Over {
+  fun p = "hi"
+}
+//│ mixin Over
+//│   this: this23' 
+//│   super: super24' 
+//│   fun p: ‹∀ 1. p26''#› where 
+//│   |		p26''# := "hi"<string>
+//│   [pretty-printed] p: "hi"
+
+
+class Base1(p: int): Over {
+  fun test = [p, this.p]
+}
+//│ class Base1
+//│   fun test: ‹∀ 1. test35''#› where 
+//│   |		test35''# := (Int, p36'',)
+//│   |		p36'' :> p36_37'
+//│   |		p36_37' :> Int
+//│   [pretty-printed] test: (int, int,)
+
+
+// FIXME
+Base1(123).test
+//│ Typed: (int, int,)
+
+
