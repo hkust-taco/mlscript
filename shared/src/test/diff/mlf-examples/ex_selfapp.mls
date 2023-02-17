@@ -453,10 +453,7 @@ k = k_ // nope
 //│ ║         	                                      ^^
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.102: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
-//│ ║         	                                ^^
-//│ ╟── from type variable:
-//│ ║  l.102: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
-//│ ╙──       	                                      ^^
+//│ ╙──       	                                ^^
 //│  = <no result>
 //│    k_, k and k are not implemented
 
@@ -475,7 +472,7 @@ k = k_ // nope
 //│   <:  k:
 //│ int -> Baa -> Baa
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.471: 	k = k_ // nope
+//│ ║  l.468: 	k = k_ // nope
 //│ ║         	^^^^^^
 //│ ╟── type `('a -> 'b -> 'b) -> 'b -> 'b` does not match type `nothing`
 //│ ║  l.102: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b

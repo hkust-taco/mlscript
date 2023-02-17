@@ -857,10 +857,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         }.toList.flatten
       
       val constraintProvenanceHints = 
-        if (rhsProv.loco.isDefined && rhsProv2.loco =/= prov.loco)
+        if (rhsProv.loco.isDefined && rhsProv.loco =/= prov.loco)
           msg"Note: constraint arises from ${rhsProv.desc}:" -> show(rhsProv.loco) :: (
-            if (rhsProv2.loco.isDefined && rhsProv2.loco =/= rhsProv.loco && rhsProv2.loco =/= prov.loco)
-              msg"from ${rhsProv2.desc}:" -> show(rhsProv2.loco) :: Nil
+            if (rhsProv2.loco.isDefined
+              && rhsProv2.loco =/= rhsProv.loco
+              && rhsProv2.loco =/= prov.loco
+              && rhsProv2.loco =/= lhsProv.loco
+            ) msg"from ${rhsProv2.desc}:" -> show(rhsProv2.loco) :: Nil
             else Nil
           )
         else Nil
