@@ -16,17 +16,26 @@ mixin Over {
 
 class Base1(p: int): Over {
   fun test = [p, this.p]
+  fun test2 = super.p
 }
 //│ class Base1
-//│   fun test: ‹∀ 1. test35''#› where 
-//│   |		test35''# := (Int, p36'',)
-//│   |		p36'' :> p36_37'
-//│   |		p36_37' :> Int
-//│   [pretty-printed] test: (int, int,)
+//│   fun test: ‹∀ 1. test36''#› where 
+//│   |		p26''# := "hi"<string>
+//│   |		test36''# := (Int, p37'',)
+//│   |		p37'' :> p37_38'
+//│   |		p37_38' :> ‹∀ 1. p26''#›
+//│   [pretty-printed] test: (int, "hi",)
+//│   fun test2: ‹∀ 1. test239''#› where 
+//│   |		test239''# := p40''
+//│   |		p40'' :> p40_41' <: test239''#
+//│   [pretty-printed] test2: nothing
 
+
+Base1(123).test
+//│ Typed: (int, "hi",)
 
 // FIXME
-Base1(123).test
-//│ Typed: (int, int,)
+Base1(123).test2
+//│ Typed: nothing
 
 

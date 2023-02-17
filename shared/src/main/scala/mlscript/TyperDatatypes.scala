@@ -140,7 +140,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                       TypeProvenance(decl.toLoc, decl.describe)
                     val finalType = freshVar(noProv/*TODO*/, N, S("this"))
                     // def inherit(parents: Ls[Term], superType: ST, members: Ls[TypedNuDecl -> ST]): Unit = parents match {
-                    def inherit(parents: Ls[Term], superType: ST, members: Ls[TypedNuDecl]): Ls[TypedNuDecl] = parents match {
+                    def inherit(parents: Ls[Term], superType: ST, members: Ls[NuMember]): Ls[NuMember] = parents match {
                     // def inherit(parents: Ls[Term \/ TypedTypingUnit], superType: ST, members: Ls[TypedNuDecl]): Ls[TypedNuDecl] = parents match {
                       // case R(p) :: ps => ???
                       // case L(p) :: ps =>
@@ -206,7 +206,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     }
                     val baseType = RecordType(typedParams)(ttp(td.params, isType = true))
                     val paramMems = typedParams.map(f => NuParam(f._1, f._2))
-                    val baseMems = inherit(td.parents, baseType, Nil)
+                    // val baseMems = inherit(td.parents, baseType, Nil)
+                    val baseMems = inherit(td.parents, baseType, paramMems)
                     
                     // ctx += thisTV
                     
@@ -227,7 +228,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     //     )(provTODO)
                     // constrain(thisTy, thisTV)
                     
-                    val mems = baseMems ++ paramMems ++ clsMems
+                    // val mems = baseMems ++ paramMems ++ clsMems
+                    val mems = baseMems ++ clsMems
                     TypedNuCls(outerCtx.lvl, td, ttu,
                       tparams, typedParams, mems.map(d => d.name -> d).toMap)
                   }
