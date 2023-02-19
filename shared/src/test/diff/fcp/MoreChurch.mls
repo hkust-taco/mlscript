@@ -118,19 +118,19 @@ def pow_ty: ChurchInt -> ChurchInt -> ChurchInt
 
 :e
 def pow (n: ChurchInt) (m: ChurchInt) = n (mul m) (succ zero)
-//│ ╔══[ERROR] Type mismatch in application:
+//│ ╔══[ERROR] Type error in application
 //│ ║  l.120: 	def pow (n: ChurchInt) (m: ChurchInt) = n (mul m) (succ zero)
 //│ ║         	                                        ^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'a` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║       	                                           ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'a`
 //│ ║  l.7: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║       	                             ^^
-//│ ╟── from reference:
+//│ ╟── Note: constraint arises from reference:
 //│ ║  l.31: 	def succ n f x = f (n f x)
 //│ ╙──      	                        ^
-//│ pow: ChurchInt -> ChurchInt -> ((anything -> nothing) -> nothing -> anything | error)
+//│ pow: ChurchInt -> ChurchInt -> (((??a | 'a) -> (??a0 & 'b) & 'c -> ('c & 'b)) -> (??a0 & 'a & 'c) -> (??a | 'a | 'b) | error)
 //│    = [Function: pow]
 
 def pow (n: ChurchInt) (m: ChurchInt) = n (mul_ty m) (succ_ty zero_ty)
@@ -230,11 +230,11 @@ def pred n =
   let s p = pair (snd p) (succ (snd p)) in
   let z = pair zero zero in
   fst (n s z)
-//│ pred: ((forall 'a 'b 'c 'd 'e 'f. ((forall 'g. anything -> 'g -> 'g) -> ('b -> 'a -> 'c & 'e)) -> ('e -> (('c -> 'f & 'b) -> 'a -> 'f) -> 'd) -> 'd) -> (forall 'h. ((forall 'i. anything -> 'i -> 'i) -> (forall 'i. anything -> 'i -> 'i) -> 'h) -> 'h) -> (forall 'j. 'j -> anything -> 'j) -> 'k) -> 'k
+//│ pred: ((forall 'a 'b 'c 'd 'e 'f. ((forall 'g. anything -> 'g -> 'g) -> ('d -> 'a -> 'f & 'e)) -> ('e -> (('f -> 'c & 'd) -> 'a -> 'c) -> 'b) -> 'b) -> (forall 'h. ((forall 'i. anything -> 'i -> 'i) -> (forall 'i. anything -> 'i -> 'i) -> 'h) -> 'h) -> (forall 'j. 'j -> anything -> 'j) -> 'k) -> 'k
 //│     = [Function: pred1]
 // * Note: cycle check fails when generalizing curried lambdas
 pred_ty = pred
-//│ ((forall 'a 'b 'c 'd 'e 'f. ((forall 'g. anything -> 'g -> 'g) -> ('e -> 'a -> 'b & 'c)) -> ('c -> (('b -> 'f & 'e) -> 'a -> 'f) -> 'd) -> 'd) -> (forall 'h. ((forall 'i. anything -> 'i -> 'i) -> (forall 'i. anything -> 'i -> 'i) -> 'h) -> 'h) -> (forall 'j. 'j -> anything -> 'j) -> 'k) -> 'k
+//│ ((forall 'a 'b 'c 'd 'e 'f. ((forall 'g. anything -> 'g -> 'g) -> ('d -> 'c -> 'a & 'f)) -> ('f -> (('a -> 'e & 'd) -> 'c -> 'e) -> 'b) -> 'b) -> (forall 'h. ((forall 'i. anything -> 'i -> 'i) -> (forall 'i. anything -> 'i -> 'i) -> 'h) -> 'h) -> (forall 'j. 'j -> anything -> 'j) -> 'k) -> 'k
 //│   <:  pred_ty:
 //│ ChurchInt -> ChurchInt
 //│        = [Function: pred1]
@@ -244,7 +244,7 @@ def pred n =
   let s p = pair (snd p) (succ_ty (snd p)) in
   let z = pair zero zero in
   fst (n s z)
-//│ pred: ((forall 'a 'b. ((forall 'c. anything -> 'c -> 'c) -> (ChurchInt & 'b)) -> ('b -> ChurchInt -> 'a) -> 'a) -> (forall 'd. ((forall 'e. anything -> 'e -> 'e) -> (forall 'e. anything -> 'e -> 'e) -> 'd) -> 'd) -> (forall 'f. 'f -> anything -> 'f) -> 'g) -> 'g
+//│ pred: ((forall 'a 'b. ((forall 'c. anything -> 'c -> 'c) -> (ChurchInt & 'a)) -> ('a -> ChurchInt -> 'b) -> 'b) -> (forall 'd. ((forall 'e. anything -> 'e -> 'e) -> (forall 'e. anything -> 'e -> 'e) -> 'd) -> 'd) -> (forall 'f. 'f -> anything -> 'f) -> 'g) -> 'g
 //│     = [Function: pred2]
 pred_ty = pred
 //│ ((forall 'a 'b. ((forall 'c. anything -> 'c -> 'c) -> (ChurchInt & 'a)) -> ('a -> ChurchInt -> 'b) -> 'b) -> (forall 'd. ((forall 'e. anything -> 'e -> 'e) -> (forall 'e. anything -> 'e -> 'e) -> 'd) -> 'd) -> (forall 'f. 'f -> anything -> 'f) -> 'g) -> 'g

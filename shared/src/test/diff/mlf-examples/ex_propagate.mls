@@ -65,11 +65,11 @@ let delta = (fun x -> x x) : 'a -> Sid in delta
 // * Interestingly, these ones change from the ones above
 
 fun x -> ((fun y -> y y) : 'a -> Sid)
-//│ res: anything -> ('a -> anything -> nothing & 'a) -> Sid
+//│ res: anything -> ('a -> ??a -> ??a0 & 'a) -> Sid
 //│    = [Function: res]
 
 let delta = (fun x -> x x) : 'a -> Sid in delta
-//│ res: ('a -> anything -> nothing & 'a) -> Sid
+//│ res: ('a -> ??a -> ??a0 & 'a) -> Sid
 //│    = [Function (anonymous)]
 
 

@@ -16,13 +16,13 @@ def a1' : ((forall 'a. 'a -> 'a) -> anything) -> nothing
 // :d
 :e
 a1' : A1'
-//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ╔══[ERROR] Type error in type ascription
 //│ ║  l.18: 	a1' : A1'
 //│ ║        	^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'a` leaks out of its scope
 //│ ║  l.4: 	type Sid = forall 'a. 'a -> 'a
 //│ ║       	                      ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'a`
 //│ ║  l.4: 	type Sid = forall 'a. 'a -> 'a
 //│ ╙──     	                            ^^
 //│ res: A1'
@@ -35,13 +35,13 @@ def a2' (x: A1') = 0
 
 :e
 def a0' = a2' a1'
-//│ ╔══[ERROR] Type mismatch in application:
+//│ ╔══[ERROR] Type error in application
 //│ ║  l.37: 	def a0' = a2' a1'
 //│ ║        	          ^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'a` leaks out of its scope
 //│ ║  l.4: 	type Sid = forall 'a. 'a -> 'a
 //│ ║       	                      ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'a`
 //│ ║  l.4: 	type Sid = forall 'a. 'a -> 'a
 //│ ╙──     	                            ^^
 //│ a0': 0 | error

@@ -23,15 +23,22 @@ foo_ty = foo
 //│ 'a -> 'b -> ('a, 'b,)
 //│   <:  foo_ty:
 //│ 'a -> (forall 'b. 'b -> ('a, 'b,))
-//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ╔══[ERROR] Type error in def definition
 //│ ║  l.22: 	foo_ty = foo
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'b` leaks out of its scope
 //│ ║  l.16: 	def foo_ty: 'a -> (forall 'b. 'b -> ('a, 'b,))
 //│ ║        	                              ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'b`
 //│ ║  l.16: 	def foo_ty: 'a -> (forall 'b. 'b -> ('a, 'b,))
-//│ ╙──      	                                         ^^
+//│ ║        	                                         ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this reference:
+//│ ║  l.22: 	foo_ty = foo
+//│ ║        	         ^^^
+//│ ╟── • this reference:
+//│ ║  l.8: 	  let tmp = foo x y in (x, y,)
+//│ ╙──     	                           ^
 //│       = [Function: foo]
 
 :e // * Needs distributivity (see at the end)
@@ -39,18 +46,19 @@ foo_ty x y = (x, y,)
 //│ 'a -> 'b -> ('a, 'b,)
 //│   <:  foo_ty:
 //│ 'a -> (forall 'b. 'b -> ('a, 'b,))
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.38: 	foo_ty x y = (x, y,)
+//│ ╔══[ERROR] Type error in def definition
+//│ ║  l.45: 	foo_ty x y = (x, y,)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'b` leaks out of its scope
 //│ ║  l.16: 	def foo_ty: 'a -> (forall 'b. 'b -> ('a, 'b,))
 //│ ║        	                              ^^
-//│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.38: 	foo_ty x y = (x, y,)
-//│ ║        	                 ^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'b`
 //│ ║  l.16: 	def foo_ty: 'a -> (forall 'b. 'b -> ('a, 'b,))
-//│ ╙──      	                                         ^^
+//│ ║        	                                         ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this reference:
+//│ ║  l.45: 	foo_ty x y = (x, y,)
+//│ ╙──      	                 ^
 //│       = [Function: foo_ty1]
 
 
@@ -68,15 +76,22 @@ foo2_ty = foo2
 //│ 'a -> 'b -> 'c -> ('a, 'b, 'c,)
 //│   <:  foo2_ty:
 //│ 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.67: 	foo2_ty = foo2
+//│ ╔══[ERROR] Type error in def definition
+//│ ║  l.75: 	foo2_ty = foo2
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.62: 	def foo2_ty: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
+//│ ╟── type variable `'b` leaks out of its scope
+//│ ║  l.70: 	def foo2_ty: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
 //│ ║        	                               ^^
-//│ ╟── Note: constraint arises from type variable:
-//│ ║  l.62: 	def foo2_ty: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
-//│ ╙──      	                                                            ^^
+//│ ╟── back into type variable `'b`
+//│ ║  l.70: 	def foo2_ty: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
+//│ ║        	                                                            ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this reference:
+//│ ║  l.75: 	foo2_ty = foo2
+//│ ║        	          ^^^^
+//│ ╟── • this reference:
+//│ ║  l.66: 	  let tmp = foo2 x y z in (x, y, z)
+//│ ╙──      	                              ^
 //│        = [Function: foo2]
 
 :e // * Needs distributivity (see at the end)
@@ -84,18 +99,19 @@ foo2_ty x y z = (x, y, z,)
 //│ 'a -> 'b -> 'c -> ('a, 'b, 'c,)
 //│   <:  foo2_ty:
 //│ 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.83: 	foo2_ty x y z = (x, y, z,)
+//│ ╔══[ERROR] Type error in def definition
+//│ ║  l.98: 	foo2_ty x y z = (x, y, z,)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.62: 	def foo2_ty: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
+//│ ╟── type variable `'b` leaks out of its scope
+//│ ║  l.70: 	def foo2_ty: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
 //│ ║        	                               ^^
-//│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.83: 	foo2_ty x y z = (x, y, z,)
-//│ ║        	                    ^
-//│ ╟── Note: constraint arises from type variable:
-//│ ║  l.62: 	def foo2_ty: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
-//│ ╙──      	                                                            ^^
+//│ ╟── back into type variable `'b`
+//│ ║  l.70: 	def foo2_ty: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
+//│ ║        	                                                            ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this reference:
+//│ ║  l.98: 	foo2_ty x y z = (x, y, z,)
+//│ ╙──      	                    ^
 //│        = [Function: foo2_ty1]
 
 

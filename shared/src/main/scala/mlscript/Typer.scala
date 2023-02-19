@@ -461,8 +461,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               freshVar(tyTp(tn.toLoc, "quantified type name"), N, S(tn.name))
             case R(tv) =>
               val nv = freshVar(tyTp(
-                    // tv.toLoc,
-                    N, // * Here we choose to omit this location,
+                    tv.toLoc,
+                    // N, // * Here we choose to omit this location,
                     // * because pointing to the binding place of forall TVs in error messages
                     // * is often redundant, as these forall types are usually self-contained.
                     "quantified type variable",
@@ -1184,6 +1184,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               => TypeName(n)
             case _ => go(tv)
           }
+        case ex @ Extruded(p, SkolemTag(_, tv)) =>
+          if (p) tv.asPosExtrudedTypeVar else tv.asNegExtrudedTypeVar
         case TypeRef(td, Nil) => td
         case tr @ TypeRef(td, targs) => AppliedType(td, tr.mapTargs(S(true)) {
           case ta @ ((S(true), TopType) | (S(false), BotType)) => Bounds(Bot, Top)

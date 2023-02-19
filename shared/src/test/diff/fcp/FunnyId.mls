@@ -76,7 +76,10 @@ id_ty = id
 //│ ║        	                         ^^^^^^^
 //│ ╟── from reference:
 //│ ║  l.29: 	rec def id x = let tmp = id id x in x
-//│ ╙──      	                                    ^
+//│ ║        	                                    ^
+//│ ╟── Note: quantified type variable 'a is defined at:
+//│ ║  l.4: 	def id_ty: forall 'a. 'a -> 'a
+//│ ╙──     	                  ^^
 //│      = [Function: id1]
 
 // * Note: the above seem to work with :precise-rec-typing
@@ -102,7 +105,7 @@ id_ty = id
 :e
 rec def id x = if true then x else id id x
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.103: 	rec def id x = if true then x else id id x
+//│ ║  l.106: 	rec def id x = if true then x else id id x
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ id: 'id
@@ -126,17 +129,20 @@ id_ty = id
 //│   <:  id_ty:
 //│ 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.118: 	id_ty = id
+//│ ║  l.121: 	id_ty = id
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.4: 	def id_ty: forall 'a. 'a -> 'a
 //│ ║       	                      ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.103: 	rec def id x = if true then x else id id x
+//│ ║  l.106: 	rec def id x = if true then x else id id x
 //│ ║         	                                   ^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.103: 	rec def id x = if true then x else id id x
-//│ ╙──       	                            ^
+//│ ║  l.106: 	rec def id x = if true then x else id id x
+//│ ║         	                            ^
+//│ ╟── Note: quantified type variable 'a is defined at:
+//│ ║  l.4: 	def id_ty: forall 'a. 'a -> 'a
+//│ ╙──     	                  ^^
 //│      = [Function: id3]
 
 

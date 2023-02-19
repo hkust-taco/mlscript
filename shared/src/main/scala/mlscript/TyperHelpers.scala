@@ -354,7 +354,7 @@ abstract class TyperHelpers { Typer: Typer =>
     def toLower(prov: TypeProvenance): FieldType = FieldType(Some(this), TopType)(prov)
     
     def | (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = (this, that) match {
-      case (TopType, _) => TopType
+      case (TopType, _) => this
       case (BotType, _) => that
       
       // These were wrong! During constraint solving it's important to keep them!

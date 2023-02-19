@@ -14,7 +14,7 @@ def t (z: Sid) = (fun a -> z) : forall 'a 'b. 'b -> 'a -> 'a
 // (* Une seule instance, mais polymorphe. *)
 // let t z = ( (fun a -> z) : ['a,'b] 'b -> 'a -> 'a );;
 def t z = (fun a -> z) : forall 'a 'b. 'b -> 'a -> 'a
-//│ t: (anything -> nothing) -> anything -> 'a -> 'a
+//│ t: (??a -> ??a0) -> anything -> 'a -> 'a
 //│  = [Function: t1]
 
 def t z = fun a -> z
@@ -196,68 +196,80 @@ rec def wat n =
 :e
 rec def wat n =
   succ wat n
-//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ╔══[ERROR] Type error in binding of lambda expression
 //│ ║  l.197: 	rec def wat n =
 //│ ║         	            ^^^
 //│ ║  l.198: 	  succ wat n
 //│ ║         	^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'a` leaks out of its scope
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                                   ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'a`
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──      	                             ^^
-//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ╔══[ERROR] Type error in binding of lambda expression
 //│ ║  l.197: 	rec def wat n =
 //│ ║         	            ^^^
 //│ ║  l.198: 	  succ wat n
 //│ ║         	^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'a` leaks out of its scope
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                                   ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'a`
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──      	                             ^^
-//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ╔══[ERROR] Type error in binding of lambda expression
 //│ ║  l.197: 	rec def wat n =
 //│ ║         	            ^^^
 //│ ║  l.198: 	  succ wat n
 //│ ║         	^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'a` leaks out of its scope
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                                           ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'a`
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                             ^^
-//│ ╟── from reference:
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this application:
+//│ ║  l.198: 	  succ wat n
+//│ ║         	  ^^^^^^^^^^
+//│ ╟── Note: constraint arises from reference:
 //│ ║  l.46: 	def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 //│ ╙──      	                                                   ^
-//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ╔══[ERROR] Type error in binding of lambda expression
 //│ ║  l.197: 	rec def wat n =
 //│ ║         	            ^^^
 //│ ║  l.198: 	  succ wat n
 //│ ║         	^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'a` leaks out of its scope
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                                           ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'a`
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                             ^^
-//│ ╟── from reference:
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this application:
+//│ ║  l.198: 	  succ wat n
+//│ ║         	  ^^^^^^^^^^
+//│ ╟── Note: constraint arises from reference:
 //│ ║  l.46: 	def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 //│ ╙──      	                                                   ^
-//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ╔══[ERROR] Type error in binding of lambda expression
 //│ ║  l.197: 	rec def wat n =
 //│ ║         	            ^^^
 //│ ║  l.198: 	  succ wat n
 //│ ║         	^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'a` leaks out of its scope
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                                   ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'a`
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──      	                                                 ^^
-//│ wat: (anything -> nothing) -> nothing -> anything
+//│ ║        	                                                 ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this application:
+//│ ║  l.198: 	  succ wat n
+//│ ╙──       	  ^^^^^^^^^^
+//│ wat: ((??a | 'a) -> (??a0 & 'a & 'b)) -> (??a0 & 'a) -> (??a | 'b)
 //│    = [Function: wat1]
 
 :precise-rec-typing
@@ -382,7 +394,7 @@ to_church_ty = to_church_4
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.380: 	to_church_ty = to_church_4
+//│ ║  l.392: 	to_church_ty = to_church_4
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `('a -> 'a) -> 'a -> 'a` does not match type `'a0`
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -517,8 +529,8 @@ def succ' n = fun f -> fun x -> f (n f x)
 //│     = [Function: succ1]
 //│ succ': 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. ('c -> 'e
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e)))
+//│     'b <: 'd -> 'e
+//│     'a <: 'b -> 'c -> 'd)))
 //│      = [Function: succ$1]
 
 // * Note: without constrained types we wouldn't get the principal type of succ'
@@ -540,40 +552,47 @@ succ_ty = succ'
 //│     'a <: 'b -> 'c -> 'd)))
 //│   <:  succ_ty:
 //│ ChurchInt -> ChurchInt
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.536: 	succ_ty = succ'
+//│ ╔══[ERROR] Type error in def definition
+//│ ║  l.548: 	succ_ty = succ'
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'a` leaks out of its scope
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                                   ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'a`
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──      	                             ^^
+//│ ║        	                             ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this function:
+//│ ║  l.523: 	def succ' n = fun f -> fun x -> f (n f x)
+//│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── • this reference:
+//│ ║  l.548: 	succ_ty = succ'
+//│ ╙──       	          ^^^^^
 //│        = [Function: succ$1]
 :DistributeForalls
 succ_ty = succ'
 //│ 'a -> 'b -> ('c -> 'd
 //│   where
-//│     'a <: 'b -> 'c -> 'e
-//│     'b <: 'e -> 'd)
+//│     'b <: 'e -> 'd
+//│     'a <: 'b -> 'c -> 'e)
 //│   <:  succ_ty:
 //│ ChurchInt -> ChurchInt
 //│        = [Function: succ$1]
 :DontDistributeForalls
 
 succ'
-//│ res: 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. ('e -> 'd
+//│ res: 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. ('c -> 'e
 //│   where
-//│     'b <: 'c -> 'd
-//│     'a <: 'b -> 'e -> 'c)))
+//│     'b <: 'd -> 'e
+//│     'a <: 'b -> 'c -> 'd)))
 //│    = [Function: succ$1]
 
 // :e // * Error delayed by inconsistent constrained types
 succ' {}
 //│ res: 'a -> (forall 'b 'c 'd. ('b -> 'd
 //│   where
-//│     anything <: 'a -> 'b -> 'c
-//│     'a <: 'c -> 'd))
+//│     'a <: 'c -> 'd
+//│     anything <: 'a -> 'b -> 'c))
 //│    = [Function (anonymous)]
 
 // :e // * Error delayed by inconsistent constrained types
@@ -586,13 +605,13 @@ succ' {} {}
 :e
 succ' {} {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.587: 	succ' {} {} {}
+//│ ║  l.606: 	succ' {} {} {}
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.587: 	succ' {} {} {}
+//│ ║  l.606: 	succ' {} {} {}
 //│ ║         	      ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.511: 	def succ' n = fun f -> fun x -> f (n f x)
+//│ ║  l.523: 	def succ' n = fun f -> fun x -> f (n f x)
 //│ ╙──       	                                   ^^^
 //│ res: error
 //│ Runtime error:

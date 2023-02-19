@@ -79,7 +79,10 @@ foo id
 //│ ║        	                                           ^^
 //│ ╟── from intersection type:
 //│ ║  l.66: 	def foo: (forall 'a 'b. ('a | 'b) -> ('a & 'b)) -> 1
-//│ ╙──      	                                     ^^^^^^^^^
+//│ ║        	                                     ^^^^^^^^^
+//│ ╟── Note: quantified type variable 'a is defined at:
+//│ ║  l.66: 	def foo: (forall 'a 'b. ('a | 'b) -> ('a & 'b)) -> 1
+//│ ╙──      	                 ^^
 //│ res: 1 | error
 
 

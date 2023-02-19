@@ -52,19 +52,23 @@ def print: Expr['a] -> unit
 
 def alsoPrintSize f =
   mapExpr(fun e -> let tmp = print e in f e)
-//│ alsoPrintSize: (Expr[?] -> Expr[in anything out nothing]) -> Program -> Program
+//│ alsoPrintSize: (Expr[in ??a out ??a0] -> Expr[in ??a0 out ??a]) -> Program -> Program
 
 :e
 alsoPrintSize id
-//│ ╔══[ERROR] Type mismatch in application:
+//│ ╔══[ERROR] Type error in application
 //│ ║  l.58: 	alsoPrintSize id
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'a` leaks out of its scope
 //│ ║  l.48: 	def mapExpr: (forall 'a. Expr['a] -> Expr['a]) -> Program -> Program
 //│ ║        	                                          ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'a`
 //│ ║  l.48: 	def mapExpr: (forall 'a. Expr['a] -> Expr['a]) -> Program -> Program
-//│ ╙──      	                              ^^
+//│ ║        	                              ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this application:
+//│ ║  l.54: 	  mapExpr(fun e -> let tmp = print e in f e)
+//│ ╙──      	                                        ^^^
 //│ res: Program -> Program | error
 
 def alsoPrintSize (f: forall 'a. Expr['a] -> Expr['a]) =
@@ -87,19 +91,23 @@ def printCo: ExprCo['a] -> unit
 
 def alsoPrintSizeCo f =
   mapExprCo(fun e -> let tmp = printCo e in f e)
-//│ alsoPrintSizeCo: (ExprCo[?] -> ExprCo[nothing]) -> Program -> Program
+//│ alsoPrintSizeCo: (ExprCo[??a] -> ExprCo[??a0]) -> Program -> Program
 
 :e
 alsoPrintSizeCo id
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.93: 	alsoPrintSizeCo id
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.97: 	alsoPrintSizeCo id
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.83: 	def mapExprCo: (forall 'a. ExprCo['a] -> ExprCo['a]) -> Program -> Program
+//│ ╟── type variable `'a` leaks out of its scope
+//│ ║  l.87: 	def mapExprCo: (forall 'a. ExprCo['a] -> ExprCo['a]) -> Program -> Program
 //│ ║        	                                  ^^
-//│ ╟── Note: constraint arises from type variable:
-//│ ║  l.83: 	def mapExprCo: (forall 'a. ExprCo['a] -> ExprCo['a]) -> Program -> Program
-//│ ╙──      	                                                ^^
+//│ ╟── back into type variable `'a`
+//│ ║  l.87: 	def mapExprCo: (forall 'a. ExprCo['a] -> ExprCo['a]) -> Program -> Program
+//│ ║        	                                                ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this application:
+//│ ║  l.93: 	  mapExprCo(fun e -> let tmp = printCo e in f e)
+//│ ╙──      	                                            ^^^
 //│ res: Program -> Program | error
 
 def alsoPrintSizeCo (f: forall 'a. Expr['a] -> Expr['a]) =

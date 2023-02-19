@@ -79,7 +79,10 @@ example succ
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── type `'a` is not an instance of type `int`
 //│ ║  l.54: 	def example f = (f: forall 'a. 'a -> 'a)
-//│ ╙──      	                               ^^
+//│ ║        	                               ^^
+//│ ╟── Note: quantified type variable 'a is defined at:
+//│ ║  l.54: 	def example f = (f: forall 'a. 'a -> 'a)
+//│ ╙──      	                           ^^
 //│ res: 'a -> 'a | error
 //│    = [Function: succ]
 
@@ -93,40 +96,41 @@ def example f = (f: forall 'a. 'a -> int -> 'b) f
 //│        = [Function: example1]
 
 def example f = ((fun x -> x, f) : forall 'a. ('a -> 'a, 'a -> 'a))
-//│ example: (anything -> nothing) -> ('a -> 'a, 'a -> 'a,)
+//│ example: (??a -> ??a0) -> ('a -> 'a, 'a -> 'a,)
 //│        = [Function: example2]
 
 def example f = ((0, f) : forall 'a. (0, 'a))
-//│ example: nothing -> (0, nothing,)
+//│ example: ??a -> (0, nothing,)
 //│        = [Function: example3]
 
 def ex = example
-//│ ex: nothing -> (0, nothing,)
+//│ ex: ??a -> (0, nothing,)
 //│   = [Function: ex]
 
 def ex x = example x
-//│ ex: nothing -> (0, nothing,)
+//│ ex: ??a -> (0, nothing,)
 //│   = [Function: ex1]
 
 :e
 ex 1
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.112: 	ex 1
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.115: 	ex 1
 //│ ║         	^^^^
-//│ ╟── integer literal of type `1` does not match type `nothing`
-//│ ║  l.112: 	ex 1
+//│ ╟── type variable `'a` leaks out of its scope
+//│ ║  l.115: 	ex 1
 //│ ║         	   ^
-//│ ╟── Note: constraint arises from type variable:
-//│ ║  l.99: 	def example f = ((0, f) : forall 'a. (0, 'a))
-//│ ║        	                                         ^^
-//│ ╟── from reference:
-//│ ║  l.107: 	def ex x = example x
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this reference:
+//│ ║  l.102: 	def example f = ((0, f) : forall 'a. (0, 'a))
+//│ ║         	                     ^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.110: 	def ex x = example x
 //│ ╙──       	                   ^
 //│ res: (0, nothing,) | error
 //│    = [ 0, 1 ]
 
 def example f = ((0, f) : forall 'a. (0, 'a -> 'a))
-//│ example: (anything -> nothing) -> (0, 'a -> 'a,)
+//│ example: (??a -> ??a0) -> (0, 'a -> 'a,)
 //│        = [Function: example4]
 
 

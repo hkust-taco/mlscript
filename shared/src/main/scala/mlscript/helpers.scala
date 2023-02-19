@@ -196,7 +196,7 @@ object ShowCtx {
     }
     val usedNames = MutMap.empty[Str, Int]
     def assignName(n: Str): Str = {
-      val pre = if (n.startsWith("'")) "" else _pre
+      val pre = if (n.startsWith("'") || n.startsWith(ExtrusionPrefix)) "" else _pre
       usedNames.get(n) match {
         case S(cnt) =>
           usedNames(n) = cnt + 1

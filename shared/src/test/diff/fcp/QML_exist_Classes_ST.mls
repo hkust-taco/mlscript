@@ -112,16 +112,33 @@ def simpleStepImpl2_ty (arr: Arrays['a]) = arr simpleStepImpl
 //│ Arrays['a] -> error
 //│   <:  simpleStepImpl2_ty:
 //│ (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> ArraysImpl['A, ('Rep, string,)]
-//│ ╔══[ERROR] Type mismatch in application:
+//│ ╔══[ERROR] Type error in application
 //│ ║  l.111: 	def simpleStepImpl2_ty (arr: Arrays['a]) = arr simpleStepImpl
 //│ ║         	                                           ^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'Rep` leaks out of its scope
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                                            ^^^^
-//│ ╟── Note: constraint arises from type variable:
-//│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                                            ^^^^
-//│ ╟── from reference:
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this function:
+//│ ║  l.70: 	def simpleStepImpl arrImpl = ArraysImpl {
+//│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.71: 	    init   = fun a -> (arrImpl.Init a, "initialized");
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.72: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.Sub r0 i;
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.73: 	    update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.Update r0 i a, "updated");
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.74: 	    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.Fold f b r0
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.75: 	  }
+//│ ║        	^^^
+//│ ╟── • this reference:
+//│ ║  l.111: 	def simpleStepImpl2_ty (arr: Arrays['a]) = arr simpleStepImpl
+//│ ║         	                                               ^^^^^^^^^^^^^^
+//│ ╟── • this reference:
+//│ ║  l.111: 	def simpleStepImpl2_ty (arr: Arrays['a]) = arr simpleStepImpl
+//│ ║         	                                           ^^^
+//│ ╟── Note: constraint arises from reference:
 //│ ║  l.72: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.Sub r0 i;
 //│ ╙──      	                                                    ^^
 //│                   = [Function: simpleStepImpl2_ty1]
@@ -140,16 +157,36 @@ def simpleStep arr f = f (simpleStepImpl2 arr)
 //│         <: nothing
 //│   <:  simpleStep:
 //│ Arrays['a] -> Arrays['a]
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.134: 	def simpleStep arr f = f (simpleStepImpl2 arr)
+//│ ╔══[ERROR] Type error in def definition
+//│ ║  l.151: 	def simpleStep arr f = f (simpleStepImpl2 arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'Rep` leaks out of its scope
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                                            ^^^^
-//│ ╟── Note: constraint arises from type variable:
-//│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                                            ^^^^
-//│ ╟── from reference:
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this applied expression:
+//│ ║  l.90: 	def simpleStepImpl2 arr = arr simpleStepImpl
+//│ ║        	                          ^^^
+//│ ╟── • this reference:
+//│ ║  l.151: 	def simpleStep arr f = f (simpleStepImpl2 arr)
+//│ ║         	                                          ^^^
+//│ ╟── • this function:
+//│ ║  l.70: 	def simpleStepImpl arrImpl = ArraysImpl {
+//│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.71: 	    init   = fun a -> (arrImpl.Init a, "initialized");
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.72: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.Sub r0 i;
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.73: 	    update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.Update r0 i a, "updated");
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.74: 	    fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.Fold f b r0
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.75: 	  }
+//│ ║        	^^^
+//│ ╟── • this reference:
+//│ ║  l.90: 	def simpleStepImpl2 arr = arr simpleStepImpl
+//│ ║        	                              ^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from reference:
 //│ ║  l.72: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.Sub r0 i;
 //│ ╙──      	                                                    ^^
 //│           = [Function: simpleStep]
@@ -159,15 +196,16 @@ def simpleStep arr f = f (simpleStepImpl2_ty arr)
 //│ (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> (ArraysImpl['A, ('Rep, string,)] -> 'a) -> 'a
 //│   <:  simpleStep:
 //│ Arrays['a] -> Arrays['a]
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.158: 	def simpleStep arr f = f (simpleStepImpl2_ty arr)
+//│ ╔══[ERROR] Type error in def definition
+//│ ║  l.195: 	def simpleStep arr f = f (simpleStepImpl2_ty arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'Rep` leaks out of its scope
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                                            ^^^^
-//│ ╟── Note: constraint arises from type variable:
-//│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ╙──      	                                            ^^^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this reference:
+//│ ║  l.195: 	def simpleStep arr f = f (simpleStepImpl2_ty arr)
+//│ ╙──       	                                             ^^^
 //│           = [Function: simpleStep1]
 
 sb = simpleStep base
@@ -175,7 +213,7 @@ sb = simpleStep base
 //│   = [Function (anonymous)]
 
 sb (fun arr -> arr.Init true)
-//│ res: anything
+//│ res: ??Rep
 //│    = [ true, 'initialized' ]
 
 sb (fun arr -> arr.Sub (arr.Init true) 1)
@@ -185,7 +223,7 @@ sb (fun arr -> arr.Sub (arr.Init true) 1)
 :e // * Expected – argument order confusion
 sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.186: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
+//│ ║  l.224: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'Rep` is not an instance of type `int`
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
@@ -194,9 +232,12 @@ sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ║  l.15: 	  method Sub: Rep -> int -> A
 //│ ║        	                     ^^^
 //│ ╟── from application:
-//│ ║  l.186: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
+//│ ║  l.224: 	sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│ ║         	                          ^^^^^^^^^^^^^
-//│ ╟── Note: class type parameter Rep is defined at:
+//│ ╟── Note: quantified type variable 'Rep is defined at:
+//│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
+//│ ║        	                         ^^^^
+//│ ╟──       class type parameter Rep is defined at:
 //│ ║  l.13: 	class ArraysRep[A, Rep]
 //│ ╙──      	                   ^^^
 //│ res: error | true
@@ -204,24 +245,34 @@ sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│   TypeError: number 0 is not iterable (cannot read property Symbol(Symbol.iterator))
 
 sb (fun arr -> arr.Update (arr.Init true) 1 false)
-//│ res: anything
+//│ res: ??Rep
 //│    = [ false, 'updated' ]
 
 :e // * Rightly prevent skolem confusion
 sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.211: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.252: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `'Rep` does not match type `nothing`
+//│ ╟── type variable `'Rep` leaks out of its scope
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                                            ^^^^
-//│ ╟── Note: constraint arises from type variable:
-//│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                                            ^^^^
-//│ ╟── from application:
-//│ ║  l.211: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this application:
+//│ ║  l.252: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
+//│ ║         	                                             ^^^^^^^^^^^^^^
+//│ ╟── • this application:
+//│ ║  l.211: 	sb = simpleStep base
+//│ ║         	     ^^^^^^^^^^^^^^^
+//│ ╟── • this reference:
+//│ ║  l.252: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
+//│ ║         	                ^^
+//│ ╟── • this reference:
+//│ ║  l.252: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
+//│ ║         	                                ^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.252: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ╙──       	                                             ^^^^^^^^^^^^^^
-//│ res: int -> anything -> anything | error
+//│ res: int -> anything -> (??Rep | ??Rep0) | error
 //│    = [Function (anonymous)]
 
 sb (fun arr ->
@@ -281,20 +332,20 @@ def stepImpl2_ty: (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> ArraysImpl['
 //│             = <missing implementation>
 
 def stepImpl2 arr = arr stepImpl
-//│ stepImpl2: ((forall 'A 'A0 'Rep 'A1 'A2 'A3 'Rep0 'Rep1 'Rep2 'A4 'Rep3 'Rep4 'A5 'A6 'a 'Rep5 'A7 'c. ArraysRep[in 'A | 'A7 | 'A2 | 'A5 | 'A1 | 'A3 | 'A4 & ('A0 | 'A6) out 'A2 & 'A5 & 'A0 & 'A6, in 'Rep0 | 'Rep5 | 'Rep2 | 'Rep3 out nothing] -> (ArraysImpl['A4, 'Rep] with {fold: forall 'b 'b0. ('A0 -> 'b -> 'b & 'A6 -> 'b0 -> ('b & 'b0)) -> ('b & 'b0) -> ('Rep3, 'Rep2,) -> 'b, init: ('A & 'A7) -> (nothing, nothing,), sub: ('Rep0, 'Rep5,) -> int -> ('A2 | 'A5), update: forall 'd 'e. ('Rep1 & 'd, 'Rep4 & 'e,) -> int -> ('A1 & 'A3) -> ('d, 'e,)})) -> 'f) -> 'f
+//│ stepImpl2: ((forall 'Rep 'Rep0 'A 'Rep1 'A0 'A1 'A2 'Rep2 'a 'A3 'Rep3 'Rep4 'A4 'A5 'Rep5 'A6 'A7 'c. ArraysRep[in 'A5 | 'A7 | 'A6 | 'A1 | 'A3 | 'A0 | 'A4 & ('A | 'A2) out 'A6 & 'A1 & 'A & 'A2, in 'Rep5 | 'Rep4 | 'Rep0 | 'Rep1 out nothing] -> (ArraysImpl['A4, 'Rep3] with {fold: forall 'b 'b0. ('A -> 'b0 -> 'b0 & 'A2 -> 'b -> ('b0 & 'b)) -> ('b0 & 'b) -> ('Rep1, 'Rep0,) -> 'b0, init: ('A5 & 'A7) -> (nothing, nothing,), sub: ('Rep5, 'Rep4,) -> int -> ('A6 | 'A1), update: forall 'd 'e. ('Rep2 & 'd, 'Rep & 'e,) -> int -> ('A3 & 'A0) -> ('d, 'e,)})) -> 'f) -> 'f
 //│   where
-//│     'Rep :> ('c, 'a,)
-//│          <: (nothing, nothing,)
+//│     'Rep3 :> ('c, 'a,)
+//│           <: (nothing, nothing,)
 //│     'A4 :> anything
 //│         <: nothing
 //│          = [Function: stepImpl2]
 
 stepImpl2_ty = stepImpl2
-//│ ((forall 'A 'Rep 'A0 'A1 'Rep0 'Rep1 'A2 'Rep2 'a 'A3 'Rep3 'A4 'A5 'Rep4 'A6 'c 'Rep5 'A7. ArraysRep[in 'A3 | 'A7 | 'A | 'A6 | 'A2 | 'A0 | 'A5 & ('A4 | 'A1) out 'A & 'A6 & 'A4 & 'A1, in 'Rep4 | 'Rep3 | 'Rep1 | 'Rep0 out nothing] -> (ArraysImpl['A5, 'Rep] with {fold: forall 'b 'b0. ('A4 -> 'b0 -> 'b0 & 'A1 -> 'b -> ('b0 & 'b)) -> ('b0 & 'b) -> ('Rep0, 'Rep1,) -> 'b0, init: ('A3 & 'A7) -> (nothing, nothing,), sub: ('Rep4, 'Rep3,) -> int -> ('A | 'A6), update: forall 'd 'e. ('Rep2 & 'd, 'Rep5 & 'e,) -> int -> ('A2 & 'A0) -> ('d, 'e,)})) -> 'f) -> 'f
+//│ ((forall 'Rep 'A 'A0 'Rep0 'A1 'A2 'A3 'Rep1 'A4 'Rep2 'Rep3 'A5 'a 'Rep4 'A6 'A7 'c 'Rep5. ArraysRep[in 'A0 | 'A7 | 'A5 | 'A3 | 'A1 | 'A4 | 'A6 & ('A | 'A2) out 'A5 & 'A3 & 'A & 'A2, in 'Rep2 | 'Rep4 | 'Rep | 'Rep3 out nothing] -> (ArraysImpl['A6, 'Rep5] with {fold: forall 'b 'b0. ('A -> 'b -> 'b & 'A2 -> 'b0 -> ('b & 'b0)) -> ('b & 'b0) -> ('Rep3, 'Rep,) -> 'b, init: ('A0 & 'A7) -> (nothing, nothing,), sub: ('Rep2, 'Rep4,) -> int -> ('A5 | 'A3), update: forall 'd 'e. ('Rep1 & 'd, 'Rep0 & 'e,) -> int -> ('A1 & 'A4) -> ('d, 'e,)})) -> 'f) -> 'f
 //│   where
-//│     'Rep :> ('c, 'a,)
-//│          <: (nothing, nothing,)
-//│     'A5 :> anything
+//│     'Rep5 :> ('c, 'a,)
+//│           <: (nothing, nothing,)
+//│     'A6 :> anything
 //│         <: nothing
 //│   <:  stepImpl2_ty:
 //│ (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> ArraysImpl['A, ('Rep, 'Rep,)]
@@ -307,25 +358,57 @@ def step: Arrays['a] -> Arrays['a]
 
 :e // * Since "sound extrusion"
 def step arr f = f (stepImpl2 arr)
-//│ ((forall 'Rep 'a 'A 'Rep0 'A0 'A1 'Rep1 'A2 'A3 'Rep2 'A4 'c 'Rep3 'A5 'A6 'Rep4 'Rep5 'A7. ArraysRep[in 'A | 'A1 | 'A7 | 'A4 | 'A0 | 'A2 | 'A5 & ('A3 | 'A6) out 'A7 & 'A4 & 'A3 & 'A6, in 'Rep0 | 'Rep3 | 'Rep4 | 'Rep5 out nothing] -> (ArraysImpl['A5, 'Rep1] with {fold: forall 'b 'b0. ('A3 -> 'b -> 'b & 'A6 -> 'b0 -> ('b & 'b0)) -> ('b & 'b0) -> ('Rep5, 'Rep4,) -> 'b, init: ('A & 'A1) -> (nothing, nothing,), sub: ('Rep0, 'Rep3,) -> int -> ('A7 | 'A4), update: forall 'd 'e. ('Rep & 'd, 'Rep2 & 'e,) -> int -> ('A0 & 'A2) -> ('d, 'e,)})) -> 'f) -> ('f -> 'g) -> 'g
+//│ ((forall 'Rep 'A 'Rep0 'Rep1 'A0 'Rep2 'a 'A1 'Rep3 'Rep4 'A2 'c 'A3 'A4 'Rep5 'A5 'A6 'A7. ArraysRep[in 'A5 | 'A0 | 'A4 | 'A6 | 'A7 | 'A | 'A2 & ('A1 | 'A3) out 'A4 & 'A6 & 'A1 & 'A3, in 'Rep0 | 'Rep5 | 'Rep4 | 'Rep out nothing] -> (ArraysImpl['A2, 'Rep3] with {fold: forall 'b 'b0. ('A1 -> 'b -> 'b & 'A3 -> 'b0 -> ('b & 'b0)) -> ('b & 'b0) -> ('Rep, 'Rep4,) -> 'b, init: ('A5 & 'A0) -> (nothing, nothing,), sub: ('Rep0, 'Rep5,) -> int -> ('A4 | 'A6), update: forall 'd 'e. ('Rep2 & 'd, 'Rep1 & 'e,) -> int -> ('A7 & 'A) -> ('d, 'e,)})) -> 'f) -> ('f -> 'g) -> 'g
 //│   where
-//│     'Rep1 :> ('c, 'a,)
+//│     'Rep3 :> ('c, 'a,)
 //│           <: (nothing, nothing,)
-//│     'A5 :> anything
+//│     'A2 :> anything
 //│         <: nothing
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.309: 	def step arr f = f (stepImpl2 arr)
+//│ ╔══[ERROR] Type error in def definition
+//│ ║  l.360: 	def step arr f = f (stepImpl2 arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'Rep` leaks out of its scope
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                                            ^^^^
-//│ ╟── Note: constraint arises from type variable:
-//│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                                            ^^^^
-//│ ╟── from reference:
-//│ ║  l.263: 	      then arrImpl.Sub r0 (div i 2)
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this applied expression:
+//│ ║  l.334: 	def stepImpl2 arr = arr stepImpl
+//│ ║         	                    ^^^
+//│ ╟── • this reference:
+//│ ║  l.360: 	def step arr f = f (stepImpl2 arr)
+//│ ║         	                              ^^^
+//│ ╟── • this function:
+//│ ║  l.310: 	def stepImpl arrImpl = ArraysImpl {
+//│ ║         	             ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.311: 	    init = fun a -> (arrImpl.Init a, arrImpl.Init a);
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.312: 	    sub = fun ((r0, r1)) -> fun i ->
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.313: 	      if mod i 2 == 0
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.314: 	      then arrImpl.Sub r0 (div i 2)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.315: 	      else arrImpl.Sub r1 (div i 2);
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.316: 	    update = fun ((r0, r1)) -> fun i -> fun a ->
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.317: 	      if mod i 2 == 0
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.318: 	      then (arrImpl.Update r0 (div i 2) a, r1)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.319: 	      else (r0, arrImpl.Update r1 (div i 2) a);
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.320: 	    fold = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.Fold f (arrImpl.Fold f b r0) r1
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.321: 	  }
+//│ ║         	^^^
+//│ ╟── • this reference:
+//│ ║  l.334: 	def stepImpl2 arr = arr stepImpl
+//│ ║         	                        ^^^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.314: 	      then arrImpl.Sub r0 (div i 2)
 //│ ╙──       	                       ^^
 //│     = [Function: step]
 
@@ -336,7 +419,7 @@ def step (arr: Arrays['a]) f = f (stepImpl2 arr)
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b. ?a -> ?b <: Arrays['a] -> ?c` took too many steps and ran out of fuel (5000)
-//│ ║  l.334: 	def step (arr: Arrays['a]) f = f (stepImpl2 arr)
+//│ ║  l.417: 	def step (arr: Arrays['a]) f = f (stepImpl2 arr)
 //│ ║         	                                  ^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│     = [Function: step1]
@@ -347,33 +430,38 @@ def step arr f = f (stepImpl2_ty arr)
 //│ (forall 'r. (ArraysRep['A, 'Rep] -> 'r) -> 'r) -> (ArraysImpl['A, ('Rep, 'Rep,)] -> 'a) -> 'a
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.346: 	def step arr f = f (stepImpl2_ty arr)
+//│ ╔══[ERROR] Type error in def definition
+//│ ║  l.429: 	def step arr f = f (stepImpl2_ty arr)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'Rep` leaks out of its scope
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                                            ^^^^
-//│ ╟── Note: constraint arises from type variable:
-//│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ╙──      	                                            ^^^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this reference:
+//│ ║  l.429: 	def step arr f = f (stepImpl2_ty arr)
+//│ ╙──       	                                 ^^^
 //│     = [Function: step2]
 :e
 def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
 //│ Arrays['a] -> ((ArraysImpl['A, ('Rep, 'Rep,)] | error) -> 'b) -> 'b
 //│   where
-//│     'Rep :> anything
-//│          <: nothing
+//│     'Rep :> ??Rep
+//│          <: ??Rep0
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.361: 	def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.445: 	def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
 //│ ║         	                                  ^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'Rep` leaks out of its scope
 //│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                                            ^^^^
-//│ ╟── Note: constraint arises from type variable:
-//│ ║  l.40: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ╙──      	                                            ^^^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this reference:
+//│ ║  l.445: 	def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
+//│ ║         	                                               ^^^
+//│ ╟── • this reference:
+//│ ║  l.445: 	def step (arr: Arrays['a]) f = f (stepImpl2_ty arr)
+//│ ╙──       	                                  ^^^^^^^^^^^^
 //│     = [Function: step3]
 
 
@@ -400,7 +488,7 @@ snb = mkMonoArray 5
 //│    = [Function (anonymous)]
 
 snb (fun arr -> arr.Init true)
-//│ res: anything
+//│ res: ??Rep | ??Rep0
 //│    = [
 //│        [ [ [Array], [Array] ], [ [Array], [Array] ] ],
 //│        [ [ [Array], [Array] ], [ [Array], [Array] ] ]

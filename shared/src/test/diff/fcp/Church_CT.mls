@@ -43,16 +43,20 @@ def succ n f x = f (n f x)
 //│     'a <: 'b -> 'c -> 'd)))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ╔══[ERROR] Type error in def definition
 //│ ║  l.39: 	def succ n f x = f (n f x)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'M` leaks out of its scope
 //│ ║  l.34: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                                                                      ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'M`
 //│ ║  l.34: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                                                                ^^
-//│ ╟── from type variable:
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this function:
+//│ ║  l.39: 	def succ n f x = f (n f x)
+//│ ║        	           ^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.34: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ╙──      	                             ^^
 //│     = [Function: succ1]
@@ -69,15 +73,19 @@ def succ n f x = f (n f x)
 //│     'b <: 'd -> 'e)))
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.65: 	def succ n f x = f (n f x)
+//│ ╔══[ERROR] Type error in def definition
+//│ ║  l.69: 	def succ n f x = f (n f x)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                                   ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'N`
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ╙──     	                             ^^
+//│ ║       	                             ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this function:
+//│ ║  l.69: 	def succ n f x = f (n f x)
+//│ ╙──      	           ^^^^^^^^^^^^^^^
 //│     = [Function: succ2]
 
 
@@ -105,10 +113,16 @@ succ = succD
 //│ ChurchInt -> ('M -> 'M) -> 'M -> 'M
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.104: 	succ = succD
+//│ ╔══[ERROR] Type error in def definition
+//│ ║  l.112: 	succ = succD
 //│ ║         	^^^^^^^^^^^^
-//│ ╙── type `anything` does not match type `nothing`
+//│ ╟── type variable `'N` leaks out of its scope
+//│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║       	                        ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this reference:
+//│ ║  l.112: 	succ = succD
+//│ ╙──       	       ^^^^^
 //│     = [Function: succ2]
 
 
@@ -154,22 +168,22 @@ n1 wrap 0
 :e
 res.x + 1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.155: 	res.x + 1
+//│ ║  l.169: 	res.x + 1
 //│ ║         	^^^^^
 //│ ╟── integer literal of type `0` does not have field 'x'
-//│ ║  l.148: 	n1 wrap 0
+//│ ║  l.162: 	n1 wrap 0
 //│ ║         	        ^
 //│ ╟── but it flows into reference with expected type `{x: ?x}`
-//│ ║  l.155: 	res.x + 1
+//│ ║  l.169: 	res.x + 1
 //│ ╙──       	^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.155: 	res.x + 1
+//│ ║  l.169: 	res.x + 1
 //│ ║         	^^^^^^^
 //│ ╟── record literal of type `{x: ?a}` is not an instance of type `int`
-//│ ║  l.132: 	wrap x = { x }
+//│ ║  l.146: 	wrap x = { x }
 //│ ║         	         ^^^^^
 //│ ╟── but it flows into field selection with expected type `int`
-//│ ║  l.155: 	res.x + 1
+//│ ║  l.169: 	res.x + 1
 //│ ╙──       	^^^^^
 //│ res: error | int
 //│    = 1
@@ -183,31 +197,31 @@ n2 wrap 0
 :e
 res.x.x + 1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.184: 	res.x.x + 1
+//│ ║  l.198: 	res.x.x + 1
 //│ ║         	^^^^^
 //│ ╟── integer literal of type `0` does not have field 'x'
-//│ ║  l.177: 	n2 wrap 0
+//│ ║  l.191: 	n2 wrap 0
 //│ ║         	        ^
 //│ ╟── but it flows into reference with expected type `{x: ?x}`
-//│ ║  l.184: 	res.x.x + 1
+//│ ║  l.198: 	res.x.x + 1
 //│ ╙──       	^^^
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.184: 	res.x.x + 1
+//│ ║  l.198: 	res.x.x + 1
 //│ ║         	^^^^^^^
 //│ ╟── integer literal of type `0` does not have field 'x'
-//│ ║  l.177: 	n2 wrap 0
+//│ ║  l.191: 	n2 wrap 0
 //│ ║         	        ^
 //│ ╟── but it flows into field selection with expected type `{x: ?x}`
-//│ ║  l.184: 	res.x.x + 1
+//│ ║  l.198: 	res.x.x + 1
 //│ ╙──       	^^^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.184: 	res.x.x + 1
+//│ ║  l.198: 	res.x.x + 1
 //│ ║         	^^^^^^^^^
 //│ ╟── record literal of type `{x: ?a}` is not an instance of type `int`
-//│ ║  l.132: 	wrap x = { x }
+//│ ║  l.146: 	wrap x = { x }
 //│ ║         	         ^^^^^
 //│ ╟── but it flows into field selection with expected type `int`
-//│ ║  l.184: 	res.x.x + 1
+//│ ║  l.198: 	res.x.x + 1
 //│ ╙──       	^^^^^^^
 //│ res: error | int
 //│    = 1
@@ -238,22 +252,22 @@ n1w 0
 :e
 res.x + 1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.239: 	res.x + 1
+//│ ║  l.253: 	res.x + 1
 //│ ║         	^^^^^
 //│ ╟── integer literal of type `0` does not have field 'x'
-//│ ║  l.232: 	n1w 0
+//│ ║  l.246: 	n1w 0
 //│ ║         	    ^
 //│ ╟── but it flows into reference with expected type `{x: ?x}`
-//│ ║  l.239: 	res.x + 1
+//│ ║  l.253: 	res.x + 1
 //│ ╙──       	^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.239: 	res.x + 1
+//│ ║  l.253: 	res.x + 1
 //│ ║         	^^^^^^^
 //│ ╟── type `{x: 'a}` is not an instance of type `int`
-//│ ║  l.216: 	def wrap_ty: 'a -> {x: 'a}
+//│ ║  l.230: 	def wrap_ty: 'a -> {x: 'a}
 //│ ║         	                   ^^^^^^^
 //│ ╟── but it flows into field selection with expected type `int`
-//│ ║  l.239: 	res.x + 1
+//│ ║  l.253: 	res.x + 1
 //│ ╙──       	^^^^^
 //│ res: error | int
 //│    = 1
@@ -288,15 +302,22 @@ succ = s
 //│     'b <: 'd -> 'e)))
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.284: 	succ = s
+//│ ╔══[ERROR] Type error in def definition
+//│ ║  l.298: 	succ = s
 //│ ║         	^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                                   ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'N`
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ╙──     	                             ^^
+//│ ║       	                             ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this function:
+//│ ║  l.284: 	def s n f x = f (n f x)
+//│ ║         	        ^^^^^^^^^^^^^^^
+//│ ╟── • this reference:
+//│ ║  l.298: 	succ = s
+//│ ╙──       	       ^
 //│     = [Function: s]
 
 :stats
@@ -310,15 +331,22 @@ z: ChurchInt
 :e // * Since "sound extrusion"
 :stats
 s: ChurchInt -> ChurchInt
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.312: 	s: ChurchInt -> ChurchInt
+//│ ╔══[ERROR] Type error in type ascription
+//│ ║  l.333: 	s: ChurchInt -> ChurchInt
 //│ ║         	^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                                   ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'N`
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ╙──     	                             ^^
+//│ ║       	                             ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this function:
+//│ ║  l.284: 	def s n f x = f (n f x)
+//│ ║         	        ^^^^^^^^^^^^^^^
+//│ ╟── • this reference:
+//│ ║  l.333: 	s: ChurchInt -> ChurchInt
+//│ ╙──       	^
 //│ res: ChurchInt -> ChurchInt
 //│    = [Function: s]
 //│ constrain calls  : 104
@@ -472,13 +500,13 @@ sz: ChurchInt
 
 :e // * Since "sound extrusion"
 s zero : ChurchInt
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.474: 	s zero : ChurchInt
+//│ ╔══[ERROR] Type error in type ascription
+//│ ║  l.502: 	s zero : ChurchInt
 //│ ║         	^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                                   ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'N`
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ╙──     	                             ^^
 //│ res: ChurchInt
@@ -509,10 +537,10 @@ sz1
 :e  // * Since inconsistent constrained types (delayed error from above)
 sz1 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.510: 	sz1 2
+//│ ║  l.538: 	sz1 2
 //│ ║         	^^^^^
 //│ ╟── integer literal of type `1` is not a function
-//│ ║  l.489: 	sz1 = sz 1
+//│ ║  l.517: 	sz1 = sz 1
 //│ ║         	         ^
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -588,7 +616,7 @@ to_church_ty = to_ch
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?d ?to_ch. ?to_ch <: int -> ChurchInt` exceeded recursion depth limit (250)
-//│ ║  l.581: 	to_church_ty = to_ch
+//│ ║  l.609: 	to_church_ty = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch]
@@ -613,7 +641,7 @@ to_church_ty = to_ch_simplif
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?to_ch_simplif ?c ?d. ?to_ch_simplif <: int -> ChurchInt` exceeded recursion depth limit (250)
-//│ ║  l.606: 	to_church_ty = to_ch_simplif
+//│ ║  l.634: 	to_church_ty = to_ch_simplif
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch_simplif]
@@ -624,63 +652,63 @@ to_church_ty = to_ch_simplif
 rec def to_ch_A1 n =
   if n == 0 then z
   else s (to_ch_A1 (n - 1) : ChurchInt)
-//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.624: 	rec def to_ch_A1 n =
+//│ ╔══[ERROR] Type error in binding of lambda expression
+//│ ║  l.652: 	rec def to_ch_A1 n =
 //│ ║         	                 ^^^
-//│ ║  l.625: 	  if n == 0 then z
+//│ ║  l.653: 	  if n == 0 then z
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.626: 	  else s (to_ch_A1 (n - 1) : ChurchInt)
+//│ ║  l.654: 	  else s (to_ch_A1 (n - 1) : ChurchInt)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                                   ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'N`
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ╙──     	                             ^^
-//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.624: 	rec def to_ch_A1 n =
+//│ ╔══[ERROR] Type error in binding of lambda expression
+//│ ║  l.652: 	rec def to_ch_A1 n =
 //│ ║         	                 ^^^
-//│ ║  l.625: 	  if n == 0 then z
+//│ ║  l.653: 	  if n == 0 then z
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.626: 	  else s (to_ch_A1 (n - 1) : ChurchInt)
+//│ ║  l.654: 	  else s (to_ch_A1 (n - 1) : ChurchInt)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                                           ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'N`
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ╙──     	                             ^^
-//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.624: 	rec def to_ch_A1 n =
+//│ ╔══[ERROR] Type error in binding of lambda expression
+//│ ║  l.652: 	rec def to_ch_A1 n =
 //│ ║         	                 ^^^
-//│ ║  l.625: 	  if n == 0 then z
+//│ ║  l.653: 	  if n == 0 then z
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.626: 	  else s (to_ch_A1 (n - 1) : ChurchInt)
+//│ ║  l.654: 	  else s (to_ch_A1 (n - 1) : ChurchInt)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                                           ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'N`
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                             ^^
-//│ ╟── from application:
-//│ ║  l.270: 	def s n f x = f (n f x)
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.284: 	def s n f x = f (n f x)
 //│ ╙──       	                 ^^^^^
-//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.624: 	rec def to_ch_A1 n =
+//│ ╔══[ERROR] Type error in binding of lambda expression
+//│ ║  l.652: 	rec def to_ch_A1 n =
 //│ ║         	                 ^^^
-//│ ║  l.625: 	  if n == 0 then z
+//│ ║  l.653: 	  if n == 0 then z
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.626: 	  else s (to_ch_A1 (n - 1) : ChurchInt)
+//│ ║  l.654: 	  else s (to_ch_A1 (n - 1) : ChurchInt)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                                   ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'N`
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                             ^^
-//│ ╟── from application:
-//│ ║  l.270: 	def s n f x = f (n f x)
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.284: 	def s n f x = f (n f x)
 //│ ╙──       	                 ^^^^^
 //│ to_ch_A1: int -> (forall 'a. 'a -> (forall 'a 'b 'c 'd 'e. (('e & 'b) -> ('b | 'c)
 //│   where
@@ -716,7 +744,7 @@ to_church_ty = to_ch_A1
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.707: 	to_church_ty = to_ch_A1
+//│ ║  l.735: 	to_church_ty = to_ch_A1
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch_A11]
@@ -727,71 +755,71 @@ rec def to_ch_A2 n = (
     if n == 0 then z
     else s (to_ch_A2 (n - 1))
   ) : ChurchInt
-//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.726: 	rec def to_ch_A2 n = (
+//│ ╔══[ERROR] Type error in binding of lambda expression
+//│ ║  l.754: 	rec def to_ch_A2 n = (
 //│ ║         	                 ^^^^^
-//│ ║  l.727: 	    if n == 0 then z
+//│ ║  l.755: 	    if n == 0 then z
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.728: 	    else s (to_ch_A2 (n - 1))
+//│ ║  l.756: 	    else s (to_ch_A2 (n - 1))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.729: 	  ) : ChurchInt
+//│ ║  l.757: 	  ) : ChurchInt
 //│ ║         	^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                                   ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'N`
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ╙──     	                             ^^
-//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.726: 	rec def to_ch_A2 n = (
+//│ ╔══[ERROR] Type error in binding of lambda expression
+//│ ║  l.754: 	rec def to_ch_A2 n = (
 //│ ║         	                 ^^^^^
-//│ ║  l.727: 	    if n == 0 then z
+//│ ║  l.755: 	    if n == 0 then z
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.728: 	    else s (to_ch_A2 (n - 1))
+//│ ║  l.756: 	    else s (to_ch_A2 (n - 1))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.729: 	  ) : ChurchInt
+//│ ║  l.757: 	  ) : ChurchInt
 //│ ║         	^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                                           ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'N`
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ╙──     	                             ^^
-//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.726: 	rec def to_ch_A2 n = (
+//│ ╔══[ERROR] Type error in binding of lambda expression
+//│ ║  l.754: 	rec def to_ch_A2 n = (
 //│ ║         	                 ^^^^^
-//│ ║  l.727: 	    if n == 0 then z
+//│ ║  l.755: 	    if n == 0 then z
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.728: 	    else s (to_ch_A2 (n - 1))
+//│ ║  l.756: 	    else s (to_ch_A2 (n - 1))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.729: 	  ) : ChurchInt
+//│ ║  l.757: 	  ) : ChurchInt
 //│ ║         	^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                                           ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'N`
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                             ^^
-//│ ╟── from application:
-//│ ║  l.270: 	def s n f x = f (n f x)
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.284: 	def s n f x = f (n f x)
 //│ ╙──       	                 ^^^^^
-//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.726: 	rec def to_ch_A2 n = (
+//│ ╔══[ERROR] Type error in binding of lambda expression
+//│ ║  l.754: 	rec def to_ch_A2 n = (
 //│ ║         	                 ^^^^^
-//│ ║  l.727: 	    if n == 0 then z
+//│ ║  l.755: 	    if n == 0 then z
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.728: 	    else s (to_ch_A2 (n - 1))
+//│ ║  l.756: 	    else s (to_ch_A2 (n - 1))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.729: 	  ) : ChurchInt
+//│ ║  l.757: 	  ) : ChurchInt
 //│ ║         	^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                                   ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'N`
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                             ^^
-//│ ╟── from application:
-//│ ║  l.270: 	def s n f x = f (n f x)
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.284: 	def s n f x = f (n f x)
 //│ ╙──       	                 ^^^^^
 //│ to_ch_A2: int -> ChurchInt
 //│         = [Function: to_ch_A2]
@@ -805,7 +833,7 @@ rec def to_ch_A2 n = (
 //│   where
 //│     'to_ch_A2 :> forall 'to_ch_A2. (int -> ChurchInt
 //│   where
-//│     'to_ch_A2 <: int -> (nothing -> anything) -> anything -> nothing)
+//│     'to_ch_A2 <: int -> (??N -> ??N0) -> ??N0 -> ??N)
 //│         = [Function: to_ch_A21]
 
 :e // * Since the removal of "recursive definition hacks"
@@ -814,11 +842,11 @@ to_church_ty = to_ch_A2
 //│   where
 //│     'to_ch_A2 :> forall 'to_ch_A2. (int -> ChurchInt
 //│   where
-//│     'to_ch_A2 <: int -> (nothing -> anything) -> anything -> nothing)
+//│     'to_ch_A2 <: int -> (??N -> ??N0) -> ??N0 -> ??N)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.812: 	to_church_ty = to_ch_A2
+//│ ║  l.840: 	to_church_ty = to_ch_A2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch_A21]
@@ -828,29 +856,39 @@ to_church_ty = to_ch_A2
 def to_church_mix n =
   if n == 0 then z
   else s (to_church (n - 1))
-//│ to_church_mix: int -> (forall 'a. 'a -> (forall 'b 'c 'a 'd 'e. (('c & 'd) -> ('d | 'e)
+//│ to_church_mix: int -> (forall 'a. 'a -> (forall 'a 'b 'c 'd 'e. (('e & 'b) -> ('b | 'c)
 //│   where
-//│     ChurchInt <: 'a -> 'c -> 'b
-//│     'a <: 'b -> 'e)))
+//│     ChurchInt <: 'a -> 'e -> 'd
+//│     'a <: 'd -> 'c)))
 //│              = [Function: to_church_mix]
 
 :e
 to_church_ty = to_church_mix
-//│ int -> (forall 'a. 'a -> (forall 'b 'c 'a 'd 'e. (('e & 'c) -> ('c | 'd)
+//│ int -> (forall 'a. 'a -> (forall 'a 'b 'c 'd 'e. (('d & 'e) -> ('e | 'b)
 //│   where
-//│     'a <: 'b -> 'd
-//│     ChurchInt <: 'a -> 'e -> 'b)))
+//│     ChurchInt <: 'a -> 'd -> 'c
+//│     'a <: 'c -> 'b)))
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.838: 	to_church_ty = to_church_mix
+//│ ╔══[ERROR] Type error in def definition
+//│ ║  l.866: 	to_church_ty = to_church_mix
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║       	                                   ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'N`
 //│ ║  l.7: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ╙──     	                             ^^
+//│ ║       	                             ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this function:
+//│ ║  l.284: 	def s n f x = f (n f x)
+//│ ║         	        ^^^^^^^^^^^^^^^
+//│ ╟── • this application:
+//│ ║  l.858: 	  else s (to_church (n - 1))
+//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── • this reference:
+//│ ║  l.866: 	to_church_ty = to_church_mix
+//│ ╙──       	               ^^^^^^^^^^^^^
 //│             = [Function: to_church_mix]
 
 
@@ -880,8 +918,8 @@ rec def to_chD n =
 succ = s
 //│ 'a -> 'b -> ('c -> 'd
 //│   where
-//│     'b <: 'e -> 'd
-//│     'a <: 'b -> 'c -> 'e)
+//│     'a <: 'b -> 'c -> 'e
+//│     'b <: 'e -> 'd)
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│     = [Function: s]
@@ -903,17 +941,17 @@ rec def to_chD n =
 to_church_ty = to_ch
 //│ int -> 'a -> ('b -> ('b | 'c)
 //│   where
-//│     'd <: 'a -> 'b -> 'e
-//│     'a <: 'e -> 'c)
+//│     'a <: 'd -> 'c
+//│     'e <: 'a -> 'b -> 'd)
 //│   where
-//│     'd :> forall 'f 'g 'h 'i 'j. 'g -> (('j & 'i) -> ('j | 'f)
+//│     'e :> forall 'f 'g 'h 'i 'j. 'h -> (('j & 'g) -> ('j | 'f)
 //│   where
-//│     'g <: 'h -> 'f
-//│     'd <: 'g -> 'i -> 'h)
+//│     'h <: 'i -> 'f
+//│     'e <: 'h -> 'g -> 'i)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?d ?to_ch. ?to_ch <: int -> ChurchInt` exceeded recursion depth limit (250)
-//│ ║  l.903: 	to_church_ty = to_ch
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?to_ch ?b ?c ?d. ?to_ch <: int -> ChurchInt` exceeded recursion depth limit (250)
+//│ ║  l.941: 	to_church_ty = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch]
@@ -922,17 +960,17 @@ to_church_ty = to_ch
 to_church_ty = to_ch_simplif
 //│ anything -> 'a -> ('b -> 'c
 //│   where
-//│     'd <: 'a -> 'b -> 'e
-//│     'a <: 'e -> 'c)
+//│     'a <: 'd -> 'c
+//│     'e <: 'a -> 'b -> 'd)
 //│   where
-//│     'd :> forall 'f 'g 'h 'i. 'h -> ('i -> 'g
+//│     'e :> forall 'f 'g 'h 'i. 'f -> ('g -> 'i
 //│   where
-//│     'h <: 'f -> 'g
-//│     'd <: 'h -> 'i -> 'f)
+//│     'e <: 'f -> 'g -> 'h
+//│     'f <: 'h -> 'i)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?to_ch_simplif ?b ?c ?d. ?to_ch_simplif <: int -> ChurchInt` exceeded recursion depth limit (250)
-//│ ║  l.922: 	to_church_ty = to_ch_simplif
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?to_ch_simplif ?d. ?to_ch_simplif <: int -> ChurchInt` exceeded recursion depth limit (250)
+//│ ║  l.960: 	to_church_ty = to_ch_simplif
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch_simplif]
@@ -941,30 +979,30 @@ to_church_ty = to_ch_simplif
 rec def to_ch_simplif n = s (to_ch_simplif n)
 //│ to_ch_simplif: anything -> 'a -> ('b -> 'c
 //│   where
-//│     'd <: 'a -> 'b -> 'e
-//│     'a <: 'e -> 'c)
+//│     'a <: 'd -> 'c
+//│     'e <: 'a -> 'b -> 'd)
 //│   where
-//│     'd :> forall 'f 'g 'h 'i. 'f -> ('g -> 'i
+//│     'e :> forall 'f 'g 'h 'i. 'f -> ('g -> 'i
 //│   where
-//│     'f <: 'h -> 'i
-//│     'd <: 'f -> 'g -> 'h)
+//│     'e <: 'f -> 'g -> 'h
+//│     'f <: 'h -> 'i)
 //│              = [Function: to_ch_simplif1]
 
 :e // * Since the removal of "recursive definition hacks"
 to_church_ty = to_ch_simplif
 //│ anything -> 'a -> ('b -> 'c
 //│   where
-//│     'd <: 'a -> 'b -> 'e
-//│     'a <: 'e -> 'c)
+//│     'a <: 'd -> 'c
+//│     'e <: 'a -> 'b -> 'd)
 //│   where
-//│     'd :> forall 'f 'g 'h 'i. 'f -> ('g -> 'i
+//│     'e :> forall 'f 'g 'h 'i. 'f -> ('g -> 'i
 //│   where
-//│     'd <: 'f -> 'g -> 'h
+//│     'e <: 'f -> 'g -> 'h
 //│     'f <: 'h -> 'i)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?to_ch_simplif ?c ?d. ?to_ch_simplif <: int -> ChurchInt` exceeded recursion depth limit (250)
-//│ ║  l.954: 	to_church_ty = to_ch_simplif
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?to_ch_simplif ?d. ?to_ch_simplif <: int -> ChurchInt` exceeded recursion depth limit (250)
+//│ ║  l.992: 	to_church_ty = to_ch_simplif
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch_simplif1]
@@ -974,17 +1012,17 @@ to_church_ty = to_ch_simplif
 to_church_ty = to_ch_A1
 //│ 'to_ch_A1
 //│   where
-//│     'to_ch_A1 :> forall 'to_ch_A1. (int -> (forall 'a 'b 'c 'd 'e. 'b -> (('c & 'a) -> ('a | 'e)
+//│     'to_ch_A1 :> forall 'to_ch_A1. (int -> (forall 'a 'b 'c 'd 'e. 'c -> (('e & 'b) -> ('b | 'd)
 //│   where
-//│     ChurchInt <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e))
+//│     'c <: 'a -> 'd
+//│     ChurchInt <: 'c -> 'e -> 'a))
 //│   where
 //│     'to_ch_A1 <: int -> ChurchInt)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.974: 	to_church_ty = to_ch_A1
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.1012: 	to_church_ty = to_ch_A1
+//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch_A11]
 

@@ -63,13 +63,7 @@ update0 0 ((mut 1,))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── possibly-undefined array access of type `undefined` does not match type `~undefined`
 //│ ║  l.45: 	def update0 i arr = arr[i] <- arr[i]
-//│ ║        	                              ^^^^^^
-//│ ╟── Note: constraint arises from prohibited undefined element:
-//│ ║  l.45: 	def update0 i arr = arr[i] <- arr[i]
-//│ ║        	                              ^^^^^^
-//│ ╟── from mutable tuple field:
-//│ ║  l.60: 	update0 0 ((mut 1,))
-//│ ╙──      	                ^
+//│ ╙──      	                              ^^^^^^
 //│ res: error | unit
 //│    = []
 
@@ -103,17 +97,17 @@ foo = emptyArray
 :e
 def bar x = (mut x,) : MutArray[int] & MutArray[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.104: 	def bar x = (mut x,) : MutArray[int] & MutArray[string]
-//│ ║         	            ^^^^^^^^
+//│ ║  l.98: 	def bar x = (mut x,) : MutArray[int] & MutArray[string]
+//│ ║        	            ^^^^^^^^
 //│ ╟── type `string` is not an instance of `int`
-//│ ║  l.104: 	def bar x = (mut x,) : MutArray[int] & MutArray[string]
-//│ ║         	                                                ^^^^^^
+//│ ║  l.98: 	def bar x = (mut x,) : MutArray[int] & MutArray[string]
+//│ ║        	                                                ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.104: 	def bar x = (mut x,) : MutArray[int] & MutArray[string]
-//│ ║         	                                ^^^
+//│ ║  l.98: 	def bar x = (mut x,) : MutArray[int] & MutArray[string]
+//│ ║        	                                ^^^
 //│ ╟── from mutable tuple field:
-//│ ║  l.104: 	def bar x = (mut x,) : MutArray[int] & MutArray[string]
-//│ ╙──       	                 ^
+//│ ║  l.98: 	def bar x = (mut x,) : MutArray[int] & MutArray[string]
+//│ ╙──      	                 ^
 //│ bar: nothing -> MutArray[in int | string out nothing]
 //│    = [Function: bar]
 

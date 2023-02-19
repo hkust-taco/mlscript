@@ -232,16 +232,23 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 // :e // due to tapping
 :e // * Since "sound extrusion"
 zog = printInt (add (nfind table "one") (nfind table "two"))
-//│ ╔══[ERROR] Type mismatch in application:
+//│ ╔══[ERROR] Type error in application
 //│ ║  l.234: 	zog = printInt (add (nfind table "one") (nfind table "two"))
 //│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'a` leaks out of its scope
 //│ ║  l.181: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                                   ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'a`
 //│ ║  l.181: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                             ^^
-//│ ╟── from application:
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this field selection:
+//│ ║  l.175: 	  | Some -> opt.val
+//│ ║         	            ^^^^^^^
+//│ ╟── • this application:
+//│ ║  l.234: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║         	                     ^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from application:
 //│ ║  l.216: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│ ╙──       	                                                      ^^^
 //│ zog: string
@@ -254,16 +261,23 @@ zog = printInt (add (nfind table "one") (nfind table "two"))
 // :e // FIXME? refreshing-extr
 :e // * Since "sound extrusion"
 a = add (nfind table "one")
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.256: 	a = add (nfind table "one")
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.263: 	a = add (nfind table "one")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'a` leaks out of its scope
 //│ ║  l.181: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                                   ^^
-//│ ╟── Note: constraint arises from type variable:
+//│ ╟── back into type variable `'a`
 //│ ║  l.181: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                             ^^
-//│ ╟── from application:
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this field selection:
+//│ ║  l.175: 	  | Some -> opt.val
+//│ ║         	            ^^^^^^^
+//│ ╟── • this application:
+//│ ║  l.263: 	a = add (nfind table "one")
+//│ ║         	         ^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from application:
 //│ ║  l.216: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│ ╙──       	                                                      ^^^
 //│ a: error
@@ -360,10 +374,10 @@ foo 1
 :e
 foo 1 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.361: 	foo 1 2
+//│ ║  l.375: 	foo 1 2
 //│ ║         	^^^^^^^
 //│ ╟── integer literal of type `2` is not a function
-//│ ║  l.361: 	foo 1 2
+//│ ║  l.375: 	foo 1 2
 //│ ║         	      ^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.216: 	table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
