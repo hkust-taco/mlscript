@@ -250,7 +250,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       callee(args.map { case (_, Fld(_, _, arg)) => translateTerm(arg) }: _*)
     case New(_, TypingUnit(_)) =>
       throw CodeGenError("custom class body is not supported yet")
-    case _: Bind | _: Test | If(_, _) | TyApp(_, _) | _: Splc | _: Where | _: Forall =>
+    case Forall(_, bod) => translateTerm(bod)
+    case _: Bind | _: Test | If(_, _) | TyApp(_, _) | _: Splc | _: Where =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
 

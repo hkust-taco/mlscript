@@ -242,6 +242,7 @@ trait ComposedImpl { self: Composed =>
 }
 
 trait TypeVarImpl extends Ordered[TypeVar] { self: TypeVar =>
+  def name: Opt[Str] = identifier.toOption.orElse(nameHint)
   def compare(that: TypeVar): Int = {
     (this.identifier.fold((_, ""), (0, _))) compare (that.identifier.fold((_, ""), (0, _)))
   }
@@ -476,7 +477,7 @@ trait TermImpl extends StatementImpl { self: Term =>
         case s => throw new NotAType(s)
       })
     case Forall(ps, bod) =>
-      PolyType(ps.map(v => R(TypeVar(R(v.name), N).withLocOf(v))), bod.toType_!)
+      PolyType(ps.map(R(_)), bod.toType_!)
     // 
     case Sel(receiver, fieldName) => receiver match {
       case Var(name) if !name.startsWith("`") => TypeName(s"$name.$fieldName")
