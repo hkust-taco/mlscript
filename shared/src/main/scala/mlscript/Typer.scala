@@ -265,8 +265,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       },
       "run" -> {
         val tv = freshVar(noProv)(1)
-        val cv = freshVar(noProv)(1)
-        PolymorphicType(0, fun(singleTup(TypeRef(TypeName("Code"), tv :: cv :: Nil)(noProv)), tv)(noProv))
+        // val cv = freshVar(noProv)(1)
+        PolymorphicType(0, fun(singleTup(TypeRef(TypeName("Code"), tv :: BotType :: Nil)(noProv)), tv)(noProv))
       },
       "Const" -> fun(singleTup(IntType), TypeRef(TypeName("Code"), IntType :: BotType :: Nil)(noProv))(noProv),
     ) ++ primTypes ++ primTypes.map(p => "" + p._1.capitalize -> p._2) // TODO settle on naming convention...
@@ -851,7 +851,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val ctx_list = nestedCtx.outermostFreeVarType.toList
 
         val ctx_type = ctx_list match {
-          case Nil => TypeRef(TypeName("anything"), Nil)(NoProv)
+          case Nil => TypeRef(TypeName("nothing"), Nil)(NoProv)
           case _ => ctx_list.reduceLeft(_ | _)
         }
 
