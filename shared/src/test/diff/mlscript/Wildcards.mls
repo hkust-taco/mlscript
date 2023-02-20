@@ -50,9 +50,6 @@ E{} : E[?]
 //│ ║        	^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.47: 	E{} : E[?]
-//│ ║        	        ^
-//│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.47: 	E{} : E[?]
 //│ ╙──      	        ^
 //│ res: E[?]
 //│    = E {}
@@ -66,13 +63,10 @@ def e = E{}
 //│   <:  e:
 //│ E[?]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.62: 	def e = E{}
+//│ ║  l.59: 	def e = E{}
 //│ ║        	^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.61: 	def e: E[?]
-//│ ║        	         ^
-//│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.61: 	def e: E[?]
+//│ ║  l.58: 	def e: E[?]
 //│ ╙──      	         ^
 //│  = [Function: e]
 
@@ -83,11 +77,11 @@ type Als1[A] = int -> A
 :e
 add 1 : Als1[?]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.84: 	add 1 : Als1[?]
+//│ ║  l.78: 	add 1 : Als1[?]
 //│ ║        	^^^^^
 //│ ╟── type `int` does not match type `nothing`
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.84: 	add 1 : Als1[?]
+//│ ║  l.78: 	add 1 : Als1[?]
 //│ ╙──      	             ^
 //│ res: Als1[?]
 //│    = [Function (anonymous)]
@@ -101,11 +95,11 @@ a1 = add 1
 //│   <:  a1:
 //│ Als1[?]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.97: 	a1 = add 1
+//│ ║  l.91: 	a1 = add 1
 //│ ║        	^^^^^^^^^^
 //│ ╟── type `int` does not match type `nothing`
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.96: 	def a1: Als1[?]
+//│ ║  l.90: 	def a1: Als1[?]
 //│ ╙──      	             ^
 //│   = [Function (anonymous)]
 
@@ -116,10 +110,10 @@ type Als2[A] = A -> int
 :e
 add 1 : Als2[?]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.117: 	add 1 : Als2[?]
+//│ ║  l.111: 	add 1 : Als2[?]
 //│ ║         	^^^^^
 //│ ╟── type `anything` is not an instance of type `int`
-//│ ║  l.117: 	add 1 : Als2[?]
+//│ ║  l.111: 	add 1 : Als2[?]
 //│ ╙──       	             ^
 //│ res: Als2[?]
 //│    = [Function (anonymous)]
@@ -133,10 +127,10 @@ a2 = add 1
 //│   <:  a2:
 //│ Als2[?]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.129: 	a2 = add 1
+//│ ║  l.123: 	a2 = add 1
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `anything` is not an instance of type `int`
-//│ ║  l.128: 	def a2: Als2[?]
+//│ ║  l.122: 	def a2: Als2[?]
 //│ ╙──       	             ^
 //│   = [Function (anonymous)]
 
@@ -151,26 +145,26 @@ q = 1
 //│   <:  q:
 //│ anything
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.149: 	q = 1
+//│ ║  l.143: 	q = 1
 //│ ║         	^^^^^
 //│ ╟── integer literal of type `1` does not match type `nothing`
-//│ ║  l.149: 	q = 1
+//│ ║  l.143: 	q = 1
 //│ ║         	    ^
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.144: 	def q: ?
+//│ ║  l.138: 	def q: ?
 //│ ╙──       	       ^
 //│  = 1
 
 :e
 q + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.165: 	q + 1
+//│ ║  l.159: 	q + 1
 //│ ║         	^^^
 //│ ╟── type `anything` is not an instance of type `int`
-//│ ║  l.144: 	def q: ?
+//│ ║  l.138: 	def q: ?
 //│ ║         	       ^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.165: 	q + 1
+//│ ║  l.159: 	q + 1
 //│ ╙──       	^
 //│ res: error | int
 //│    = 2
@@ -178,13 +172,13 @@ q + 1
 :e
 q q
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.179: 	q q
+//│ ║  l.173: 	q q
 //│ ║         	^^^
 //│ ╟── type `anything` is not a function
-//│ ║  l.144: 	def q: ?
+//│ ║  l.138: 	def q: ?
 //│ ║         	       ^
 //│ ╟── but it flows into reference with expected type `anything -> ?a`
-//│ ║  l.179: 	q q
+//│ ║  l.173: 	q q
 //│ ╙──       	^
 //│ res: error
 //│ Runtime error:
@@ -208,13 +202,13 @@ def f: Expr[?] -> Expr[?]
 :e
 f e
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.209: 	f e
+//│ ║  l.203: 	f e
 //│ ║         	^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.201: 	def e: Expr[?]
+//│ ║  l.195: 	def e: Expr[?]
 //│ ║         	            ^
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.202: 	def f: Expr[?] -> Expr[?]
+//│ ║  l.196: 	def f: Expr[?] -> Expr[?]
 //│ ╙──       	            ^
 //│ res: error | Expr[?]
 
@@ -241,13 +235,10 @@ foo = Foo{}
 //│   <:  foo:
 //│ Foo[?]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.239: 	foo = Foo{}
+//│ ║  l.233: 	foo = Foo{}
 //│ ║         	^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.235: 	def foo: Foo[?]
-//│ ║         	             ^
-//│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.235: 	def foo: Foo[?]
+//│ ║  l.229: 	def foo: Foo[?]
 //│ ╙──       	             ^
 
 foo
@@ -256,13 +247,10 @@ foo
 :e
 foo : Foo['a]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.257: 	foo : Foo['a]
+//│ ║  l.248: 	foo : Foo['a]
 //│ ║         	^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.235: 	def foo: Foo[?]
-//│ ║         	             ^
-//│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.235: 	def foo: Foo[?]
+//│ ║  l.229: 	def foo: Foo[?]
 //│ ╙──       	             ^
 //│ res: Foo['a]
 //│   where
@@ -272,13 +260,10 @@ foo : Foo['a]
 :e
 foo.Foo1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.273: 	foo.Foo1
+//│ ║  l.261: 	foo.Foo1
 //│ ║         	^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.235: 	def foo: Foo[?]
-//│ ║         	             ^
-//│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.235: 	def foo: Foo[?]
+//│ ║  l.229: 	def foo: Foo[?]
 //│ ╙──       	             ^
 //│ res: Foo['A] -> Foo['A] | error
 //│   where
@@ -291,13 +276,10 @@ foo1 = Foo.Foo1
 :e
 foo1 foo
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.292: 	foo1 foo
+//│ ║  l.277: 	foo1 foo
 //│ ║         	^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.235: 	def foo: Foo[?]
-//│ ║         	             ^
-//│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.235: 	def foo: Foo[?]
+//│ ║  l.229: 	def foo: Foo[?]
 //│ ╙──       	             ^
 //│ res: Foo['A] -> Foo['A] | error
 //│   where
@@ -308,49 +290,34 @@ foo1 foo
 :e
 foo2 = foo : Foo['a .. 'b]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.309: 	foo2 = foo : Foo['a .. 'b]
+//│ ║  l.291: 	foo2 = foo : Foo['a .. 'b]
 //│ ║         	       ^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.235: 	def foo: Foo[?]
-//│ ║         	             ^
-//│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.235: 	def foo: Foo[?]
+//│ ║  l.229: 	def foo: Foo[?]
 //│ ╙──       	             ^
 //│ foo2: Foo[anything]
 
 :e
 foo2.Id
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.322: 	foo2.Id
+//│ ║  l.301: 	foo2.Id
 //│ ║         	^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.235: 	def foo: Foo[?]
+//│ ║  l.229: 	def foo: Foo[?]
 //│ ║         	             ^
-//│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.235: 	def foo: Foo[?]
-//│ ║         	             ^
-//│ ╟── from type bounds:
-//│ ║  l.309: 	foo2 = foo : Foo['a .. 'b]
-//│ ║         	                 ^^^^^^^^
 //│ ╟── Note: class type parameter A is defined at:
-//│ ║  l.224: 	class Foo[A]
+//│ ║  l.218: 	class Foo[A]
 //│ ╙──       	          ^
 //│ res: nothing -> anything | error
 
 :e
 foo3 = foo2 : Foo['a]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.341: 	foo3 = foo2 : Foo['a]
+//│ ║  l.314: 	foo3 = foo2 : Foo['a]
 //│ ║         	       ^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.235: 	def foo: Foo[?]
-//│ ║         	             ^
-//│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.235: 	def foo: Foo[?]
-//│ ║         	             ^
-//│ ╟── from type variable:
-//│ ║  l.341: 	foo3 = foo2 : Foo['a]
-//│ ╙──       	                  ^^
+//│ ║  l.229: 	def foo: Foo[?]
+//│ ╙──       	             ^
 //│ foo3: Foo['a]
 //│   where
 //│     'a :> anything
@@ -359,19 +326,13 @@ foo3 = foo2 : Foo['a]
 :e
 foo3.Id
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.360: 	foo3.Id
+//│ ║  l.327: 	foo3.Id
 //│ ║         	^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.235: 	def foo: Foo[?]
+//│ ║  l.229: 	def foo: Foo[?]
 //│ ║         	             ^
-//│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.235: 	def foo: Foo[?]
-//│ ║         	             ^
-//│ ╟── from type variable:
-//│ ║  l.341: 	foo3 = foo2 : Foo['a]
-//│ ║         	                  ^^
 //│ ╟── Note: class type parameter A is defined at:
-//│ ║  l.224: 	class Foo[A]
+//│ ║  l.218: 	class Foo[A]
 //│ ╙──       	          ^
 //│ res: nothing -> anything | error
 
@@ -379,13 +340,13 @@ foo3.Id
 :e
 foo2 = foo : Foo[anything .. nothing]
 //│ ╔══[ERROR] Type mismatch in type bounds:
-//│ ║  l.380: 	foo2 = foo : Foo[anything .. nothing]
+//│ ║  l.341: 	foo2 = foo : Foo[anything .. nothing]
 //│ ║         	                 ^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.380: 	foo2 = foo : Foo[anything .. nothing]
+//│ ║  l.341: 	foo2 = foo : Foo[anything .. nothing]
 //│ ║         	                 ^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.380: 	foo2 = foo : Foo[anything .. nothing]
+//│ ║  l.341: 	foo2 = foo : Foo[anything .. nothing]
 //│ ╙──       	                             ^^^^^^^
 //│ foo2: Foo[in anything out nothing]
 
@@ -428,41 +389,35 @@ rec def bar = Bar{value = bar; id}
 //│   <:  bar:
 //│ Bar[?]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.423: 	rec def bar = Bar{value = bar; id}
+//│ ║  l.384: 	rec def bar = Bar{value = bar; id}
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Bar[?A] & {id: ?id, value: ?value}` does not match type `nothing`
-//│ ║  l.423: 	rec def bar = Bar{value = bar; id}
+//│ ║  l.384: 	rec def bar = Bar{value = bar; id}
 //│ ║         	              ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.423: 	rec def bar = Bar{value = bar; id}
+//│ ║  l.384: 	rec def bar = Bar{value = bar; id}
 //│ ║         	                          ^^^
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.419: 	def bar: Bar[?]
+//│ ║  l.380: 	def bar: Bar[?]
 //│ ╙──       	             ^
 
 :e
 bar.Bid
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.444: 	bar.Bid
+//│ ║  l.405: 	bar.Bid
 //│ ║         	^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.419: 	def bar: Bar[?]
-//│ ║         	             ^
-//│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.419: 	def bar: Bar[?]
+//│ ║  l.380: 	def bar: Bar[?]
 //│ ╙──       	             ^
 //│ res: nothing -> anything | error
 
 :e
 bar: Bar['a..'b]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.457: 	bar: Bar['a..'b]
+//│ ║  l.415: 	bar: Bar['a..'b]
 //│ ║         	^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.419: 	def bar: Bar[?]
-//│ ║         	             ^
-//│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.419: 	def bar: Bar[?]
+//│ ║  l.380: 	def bar: Bar[?]
 //│ ╙──       	             ^
 //│ res: Bar[anything]
 
@@ -486,13 +441,10 @@ baz = { id; bid = id }
 //│   <:  baz:
 //│ Baz[?]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.484: 	baz = { id; bid = id }
+//│ ║  l.439: 	baz = { id; bid = id }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.480: 	def baz: Baz[?]
-//│ ║         	             ^
-//│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.480: 	def baz: Baz[?]
+//│ ║  l.435: 	def baz: Baz[?]
 //│ ╙──       	             ^
 
 baz.id
@@ -504,26 +456,20 @@ baz.bid
 :e
 baz.bid baz
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.505: 	baz.bid baz
+//│ ║  l.457: 	baz.bid baz
 //│ ║         	^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.480: 	def baz: Baz[?]
-//│ ║         	             ^
-//│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.480: 	def baz: Baz[?]
+//│ ║  l.435: 	def baz: Baz[?]
 //│ ╙──       	             ^
 //│ res: error | Baz[?]
 
 :e
 baz.bid (baz: Baz['a..'b])
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.518: 	baz.bid (baz: Baz['a..'b])
+//│ ║  l.467: 	baz.bid (baz: Baz['a..'b])
 //│ ║         	         ^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.480: 	def baz: Baz[?]
-//│ ║         	             ^
-//│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.480: 	def baz: Baz[?]
+//│ ║  l.435: 	def baz: Baz[?]
 //│ ╙──       	             ^
 //│ res: Baz[?]
 

@@ -1,5 +1,4 @@
 :NoRecursiveTypes
-:NoProvs
 :ConstrainedTypes
 
 
@@ -19,13 +18,13 @@ def g x y = app x y
 :e
 g {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.20: 	g {} {}
+//│ ║  l.19: 	g {} {}
 //│ ║        	^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.20: 	g {} {}
+//│ ║  l.19: 	g {} {}
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.7: 	def app n f = n f
+//│ ║  l.6: 	def app n f = n f
 //│ ╙──     	              ^^^
 //│ res: error
 //│ Runtime error:
@@ -53,14 +52,17 @@ def mul r s = r (app s) id
 :e
 mul id {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.54: 	mul id {}
+//│ ║  l.53: 	mul id {}
 //│ ║        	^^^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.54: 	mul id {}
+//│ ║  l.53: 	mul id {}
 //│ ║        	       ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.39: 	def app p q = p q
-//│ ╙──      	              ^^^
+//│ ║  l.38: 	def app p q = p q
+//│ ║        	              ^^^
+//│ ╟── from reference:
+//│ ║  l.44: 	def mul r s = r (app s) id
+//│ ╙──      	                     ^
 //│ res: error
 //│ Runtime error:
 //│   TypeError: p is not a function
@@ -74,13 +76,13 @@ def fact t = mul t {}
 :e
 fact id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.75: 	fact id
+//│ ║  l.77: 	fact id
 //│ ║        	^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.68: 	def fact t = mul t {}
+//│ ║  l.70: 	def fact t = mul t {}
 //│ ║        	                   ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.39: 	def app p q = p q
+//│ ║  l.38: 	def app p q = p q
 //│ ╙──      	              ^^^
 //│ res: error
 //│ Runtime error:
@@ -159,13 +161,13 @@ f
 :e
 f {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.160: 	f {} {}
+//│ ║  l.162: 	f {} {}
 //│ ║         	^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.160: 	f {} {}
+//│ ║  l.162: 	f {} {}
 //│ ║         	  ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.127: 	def add n m = n succ m
+//│ ║  l.129: 	def add n m = n succ m
 //│ ╙──       	              ^^^^^^
 //│ res: error
 //│ Runtime error:

@@ -34,14 +34,27 @@ def step arr f = f (stepImpl2 arr)
 //│ ((forall 'a 'b. {fold: 'a -> 'b} -> {fold: 'a -> 'b}) -> 'c) -> ('c -> 'd) -> 'd
 //│   <:  step:
 //│ Arrays -> Arrays
-//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ╔══[ERROR] Type error in def definition
 //│ ║  l.33: 	def step arr f = f (stepImpl2 arr)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'b` leaks out of its scope
 //│ ║  l.11: 	type ArraysRep = { fold: forall 'b. 'b -> 'b }
-//│ ║        	                                ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                    ^^
+//│ ╟── back into type variable `'b`
 //│ ║  l.11: 	type ArraysRep = { fold: forall 'b. 'b -> 'b }
-//│ ╙──      	                                ^^
+//│ ║        	                                          ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this applied expression:
+//│ ║  l.33: 	def step arr f = f (stepImpl2 arr)
+//│ ║        	                 ^
+//│ ╟── • this application:
+//│ ║  l.23: 	def stepImpl2 arr = arr stepImpl
+//│ ║        	                    ^^^^^^^^^^^^
+//│ ╟── • this application:
+//│ ║  l.33: 	def step arr f = f (stepImpl2 arr)
+//│ ║        	                    ^^^^^^^^^^^^^
+//│ ╟── • this application:
+//│ ║  l.18: 	def stepImpl arrImpl = { fold = fun f ->  arrImpl.fold f }
+//│ ╙──      	                                          ^^^^^^^^^^^^^^
 //│     = [Function: step]
 

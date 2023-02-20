@@ -235,22 +235,38 @@ def a2'_ x =
 
 :e // * [FCP-LIM] since polymorphic RHS DNF fix
 def a0' = a2' a1'
-//│ ╔══[ERROR] Type mismatch in application:
+//│ ╔══[ERROR] Type error in application
 //│ ║  l.237: 	def a0' = a2' a1'
 //│ ║         	          ^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'a` leaks out of its scope
 //│ ║  l.5: 	type Sid = forall 'a. 'a -> 'a
-//│ ║       	                  ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║       	                      ^^
+//│ ╟── back into type variable `'a`
 //│ ║  l.5: 	type Sid = forall 'a. 'a -> 'a
-//│ ╙──     	                  ^^
+//│ ║       	                            ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this applied expression:
+//│ ║  l.214: 	def a1' = fun f -> fun x -> f (f (either id x))
+//│ ║         	                               ^
+//│ ╟── • this reference:
+//│ ║  l.214: 	def a1' = fun f -> fun x -> f (f (either id x))
+//│ ║         	                                         ^^
+//│ ╟── • this reference:
+//│ ║  l.210: 	def either x y = if true then x else y
+//│ ║         	                              ^
+//│ ╟── • this reference:
+//│ ║  l.237: 	def a0' = a2' a1'
+//│ ║         	              ^^^
+//│ ╟── • this reference:
+//│ ║  l.15: 	def id x = x
+//│ ╙──      	           ^
 //│ a0': anything -> ('a -> 'b & 'c -> 'd & 'd -> 'a) -> 'c -> 'b | error
 //│    = [Function: a0$]
 
 :e
 def a0'_ = a2'_ a1'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.251: 	def a0'_ = a2'_ a1'
+//│ ║  l.267: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ a0'_: anything -> ('a -> 'b & 'c -> 'd & 'd -> 'a) -> 'c -> 'b | error
@@ -359,15 +375,41 @@ def a2'_ x =
 
 :e // * [FCP-LIM] since polymorphic RHS DNF fix
 def a0' = a2' a1'
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.361: 	def a0' = a2' a1'
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.377: 	def a0' = a2' a1'
 //│ ║         	          ^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'a` leaks out of its scope
 //│ ║  l.5: 	type Sid = forall 'a. 'a -> 'a
 //│ ║       	                  ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.5: 	type Sid = forall 'a. 'a -> 'a
-//│ ╙──     	                  ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this function:
+//│ ║  l.15: 	def id x = x
+//│ ║        	       ^^^^^
+//│ ╟── • this reference:
+//│ ║  l.346: 	def a1' = fun f -> fun x -> f (f (either id x))
+//│ ║         	                                         ^^
+//│ ╟── • this reference:
+//│ ║  l.210: 	def either x y = if true then x else y
+//│ ║         	                              ^
+//│ ╟── • this reference:
+//│ ║  l.377: 	def a0' = a2' a1'
+//│ ║         	              ^^^
+//│ ╟── • this function:
+//│ ║  l.352: 	def a2' (x: A1') =
+//│ ║         	        ^^^^^^^^^^
+//│ ║  l.353: 	  let _ = x auto id in
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.354: 	  (fun y ->
+//│ ║         	^^^^^^^^^^^
+//│ ║  l.355: 	    let _ = x y church_two in
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.356: 	    y church_succ
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.357: 	  ) a3
+//│ ║         	^^^^^^^
+//│ ╟── • this reference:
+//│ ║  l.377: 	def a0' = a2' a1'
+//│ ╙──       	          ^^^
 //│ a0': anything -> 'a | error
 //│   where
 //│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
@@ -376,7 +418,7 @@ def a0' = a2' a1'
 :e
 def a0'_ = a2'_ a1'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.377: 	def a0'_ = a2'_ a1'
+//│ ║  l.419: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ a0'_: anything -> 'a | error

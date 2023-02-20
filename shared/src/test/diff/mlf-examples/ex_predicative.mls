@@ -148,15 +148,19 @@ def three = fun f -> fun x -> f (f (f x))
 // * Tony noticed this did not work before this commit generalizing the LHS of ascriptions...
 :e // TODO this works when generalizing the LHS of ascriptions
 (app id): Sid
-//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ╔══[ERROR] Type error in type ascription
 //│ ║  l.150: 	(app id): Sid
 //│ ║         	^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'a` leaks out of its scope
 //│ ║  l.29: 	type Sid = forall 'a. 'a -> 'a
-//│ ║        	                  ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                      ^^
+//│ ╟── back into type variable `'a`
 //│ ║  l.29: 	type Sid = forall 'a. 'a -> 'a
-//│ ╙──      	                  ^^
+//│ ║        	                            ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this application:
+//│ ║  l.133: 	def app = fun f -> fun x -> f x
+//│ ╙──       	                            ^^^
 //│ res: Sid
 //│    = [Function (anonymous)]
 // * this one works:
@@ -177,17 +181,36 @@ type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 
 :e // * [FCP-LIM] TODO?
 def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.179: 	def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.183: 	def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
 //│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.170: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.170: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                        ^^
-//│ ╟── from application:
-//│ ║  l.179: 	def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
+//│ ╟── type variable `'a` leaks out of its scope
+//│ ║  l.174: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                                   ^^
+//│ ╟── back into type variable `'a`
+//│ ║  l.174: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                             ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this applied expression:
+//│ ║  l.183: 	def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
+//│ ║         	                                                                                                                        ^
+//│ ╟── • this applied expression:
+//│ ║  l.183: 	def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
+//│ ║         	                       ^
+//│ ╟── • this function:
+//│ ║  l.183: 	def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
+//│ ║         	                                                                                                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── • this reference:
+//│ ║  l.132: 	def k2 = fun x -> fun y -> y
+//│ ║         	                           ^
+//│ ╟── • this application:
+//│ ║  l.183: 	def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
+//│ ║         	                                                                                                                                                   ^^^^
+//│ ╟── • this reference:
+//│ ║  l.131: 	def k = fun x -> fun y -> x
+//│ ║         	                          ^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.183: 	def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
 //│ ╙──       	                                                                                                                                                                            ^^^^^^^^^^^^
 //│ t: anything -> error
 //│  = [Function: t3]
@@ -199,7 +222,7 @@ t id succ 0
 :e
 def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b ?c ?d ?e. ?e -> ?b -> ?d) -> ?f` exceeded recursion depth limit (250)
-//│ ║  l.200: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
+//│ ║  l.223: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ t2: (nothing -> anything) -> error
@@ -251,22 +274,41 @@ t2 id succ 0
 :e // * [FCP-LIM] TODO?
 def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
 def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.252: 	def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.275: 	def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
 //│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.170: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.170: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                        ^^
-//│ ╟── from application:
-//│ ║  l.252: 	def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
+//│ ╟── type variable `'a` leaks out of its scope
+//│ ║  l.174: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                                   ^^
+//│ ╟── back into type variable `'a`
+//│ ║  l.174: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                             ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this applied expression:
+//│ ║  l.275: 	def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
+//│ ║         	                                                                                                                        ^
+//│ ╟── • this applied expression:
+//│ ║  l.275: 	def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
+//│ ║         	                       ^
+//│ ╟── • this function:
+//│ ║  l.275: 	def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
+//│ ║         	                                                                                                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── • this reference:
+//│ ║  l.132: 	def k2 = fun x -> fun y -> y
+//│ ║         	                           ^
+//│ ╟── • this application:
+//│ ║  l.275: 	def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
+//│ ║         	                                                                                                                                                   ^^^^
+//│ ╟── • this reference:
+//│ ║  l.131: 	def k = fun x -> fun y -> x
+//│ ║         	                          ^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.275: 	def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
 //│ ╙──       	                                                                                                                                                                            ^^^^^^^^^^^^
 //│ t: anything -> error
 //│  = [Function: t4]
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.253: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
+//│ ║  l.276: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ t2: ('a -> ('b -> 'c & 'd & 'e & 'f)) -> (('a & 'g) -> ((forall 'h. anything -> 'h -> 'h) -> ((forall 'i 'j 'k 'l 'm 'n. ((forall 'h. anything -> 'h -> 'h) -> ('k -> 'j -> 'i & 'l)) -> ('l -> (forall 'o. ('i -> 'o & 'k) -> 'j -> 'o) -> 'n) -> ('m -> 'm | 'n) | 'e) -> (forall 'p 'q 'r 's. ((forall 'h. anything -> 'h -> 'h) -> (forall 'h. anything -> 'h -> 'h) -> 'p & 'q & 'r) -> ('r -> 'r | 's | 'p) | 't | 'c | 'u) -> 'b & 'v) & 'b & 't & 'w & 'x) -> ('c | 'u) | error)
@@ -296,7 +338,7 @@ t id succ 0
 :e
 t2 id succ 0
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.297: 	t2 id succ 0
+//│ ║  l.339: 	t2 id succ 0
 //│ ║         	^^^^^^^^^^
 //│ ╟── function of type `?a -> (forall ?b. ?b -> ?a)` is not an instance of type `int`
 //│ ║  l.131: 	def k = fun x -> fun y -> x
@@ -332,7 +374,7 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 :e // FIXME? refreshing-extr
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.333: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.375: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -398,11 +440,11 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 :re
 (fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.399: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
+//│ ║  l.441: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.399: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
+//│ ║  l.441: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error

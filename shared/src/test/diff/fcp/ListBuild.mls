@@ -184,9 +184,9 @@ build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 //│ ╟── type `Ls['a]` does not match type `'b`
 //│ ║  l.180: 	build: (('a -> Ls['a] -> Ls['a]) -> Ls['a] -> Ls['a]) -> Ls['a]
 //│ ║         	               ^^^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.137: 	def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> cons (x, xs)) nil
-//│ ╙──       	                           ^^
+//│ ╙──       	                                      ^^
 //│ res: (('a -> Ls['a] -> Ls['a | error]) -> Ls['a | error] -> Ls['a]) -> Ls['a | error]
 //│    = [Function: build]
 

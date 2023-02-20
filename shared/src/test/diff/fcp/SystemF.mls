@@ -83,31 +83,45 @@ iter4_ty = iter4
 //│ () -> ('X -> 'X) -> 'X -> 'X
 //│   <:  iter4_ty:
 //│ () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
-//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ╔══[ERROR] Type error in def definition
 //│ ║  l.81: 	iter4_ty() = iter2_ty iter2_ty
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'X` leaks out of its scope
 //│ ║  l.75: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
-//│ ║        	                            ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                       ^^
+//│ ╟── back into type variable `'X`
 //│ ║  l.75: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
-//│ ║        	                            ^^
-//│ ╟── from quantified type variable:
+//│ ║        	                                 ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this application:
+//│ ║  l.81: 	iter4_ty() = iter2_ty iter2_ty
+//│ ║        	             ^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.57: 	def iter2_ty: forall 'X. ('X -> 'X) -> 'X -> 'X
-//│ ╙──      	                     ^^
+//│ ╙──      	                                ^^
 //│         = [Function: iter4_ty]
 //│ () -> ('a -> 'b & 'b -> ('a & 'c)) -> 'a -> 'c
 //│   <:  iter4_ty:
 //│ () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
-//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ╔══[ERROR] Type error in def definition
 //│ ║  l.82: 	iter4_ty = iter4
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'X` leaks out of its scope
 //│ ║  l.75: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
-//│ ║        	                            ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                       ^^
+//│ ╟── back into type variable `'X`
 //│ ║  l.75: 	def iter4_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
-//│ ╙──      	                            ^^
+//│ ║        	                                 ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this function:
+//│ ║  l.56: 	iter2 f x = f(f x)
+//│ ║        	        ^^^^^^^^^^
+//│ ╟── • this application:
+//│ ║  l.71: 	iter4() = iter2 iter2
+//│ ║        	          ^^^^^^^^^^^
+//│ ╟── • this reference:
+//│ ║  l.82: 	iter4_ty = iter4
+//│ ╙──      	           ^^^^^
 //│         = [Function: iter4]
 
 :DistributeForalls
@@ -406,7 +420,7 @@ sh_pu id x y = id (id u x) x
 :e
 pu sh_pu
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.407: 	pu sh_pu
+//│ ║  l.421: 	pu sh_pu
 //│ ║         	^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: anything -> anything -> anything -> nothing | error
@@ -416,7 +430,7 @@ pu sh_pu
 :e
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.417: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.431: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error

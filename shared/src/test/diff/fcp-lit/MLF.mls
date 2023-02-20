@@ -111,6 +111,9 @@ let f = choose id in (f auto) (f succ)
 //│ ║         	                     ^^^^^^^^^^^^^^^^^
 //│ ╟── type `'a` is not an instance of type `int`
 //│ ║  l.29: 	def auto (x: forall 'a. 'a -> 'a) = x x
+//│ ║        	                        ^^
+//│ ╟── Note: quantified type variable 'a is defined at:
+//│ ║  l.29: 	def auto (x: forall 'a. 'a -> 'a) = x x
 //│ ╙──      	                    ^^
 //│ res: int -> int | error
 
@@ -125,13 +128,13 @@ choose id auto2
 :e // This is a legit error
 res (choose id succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.126: 	res (choose id succ)
+//│ ║  l.129: 	res (choose id succ)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `int -> int` is not an instance of type `int`
-//│ ║  l.126: 	res (choose id succ)
+//│ ║  l.129: 	res (choose id succ)
 //│ ║         	               ^^^^
 //│ ╟── but it flows into application with expected type `int`
-//│ ║  l.126: 	res (choose id succ)
+//│ ║  l.129: 	res (choose id succ)
 //│ ╙──       	     ^^^^^^^^^^^^^^
 //│ res: int -> int | error | int
 

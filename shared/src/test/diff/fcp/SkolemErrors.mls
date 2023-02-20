@@ -10,7 +10,7 @@ fun x -> k x
 //│ res: (forall 'a. 'a -> 'a) -> int
 
 fun x -> k (fun y -> x y)
-//│ res: (anything -> nothing) -> int
+//│ res: (??a -> ??a0) -> int
 
 
 
@@ -25,10 +25,13 @@ k (fun x -> x + 1)
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'a` is not an instance of type `int`
 //│ ║  l.5: 	def k: (forall 'a. 'a -> 'a) -> int
-//│ ║       	               ^^
+//│ ║       	                   ^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.+1: 	k (fun x -> x + 1)
-//│ ╙──      	            ^
+//│ ║        	            ^
+//│ ╟── Note: quantified type variable 'a is defined at:
+//│ ║  l.5: 	def k: (forall 'a. 'a -> 'a) -> int
+//│ ╙──     	               ^^
 //│ res: error | int
 
 

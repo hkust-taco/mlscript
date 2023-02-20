@@ -1,4 +1,3 @@
-:NoProvs
 :NoRecursiveTypes
 :NoConstrainedTypes
 :NoCycleCheck
@@ -28,13 +27,13 @@ def f y = (fun h -> h (h (h (const y)))) id2
 :e
 f {} {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.29: 	f {} {} {}
+//│ ║  l.28: 	f {} {} {}
 //│ ║        	^^^^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.29: 	f {} {} {}
+//│ ║  l.28: 	f {} {} {}
 //│ ║        	  ^^
 //│ ╟── but it flows into application with expected type `anything -> ?a`
-//│ ║  l.29: 	f {} {} {}
+//│ ║  l.28: 	f {} {} {}
 //│ ╙──      	^^^^^^^
 //│ res: error
 //│ Runtime error:
@@ -50,13 +49,13 @@ def f y = (fun h -> h (h (h (fun _ -> y)))) id {}
 :e
 f {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.51: 	f {} {}
+//│ ║  l.50: 	f {} {}
 //│ ║        	^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.51: 	f {} {}
+//│ ║  l.50: 	f {} {}
 //│ ║        	  ^^
 //│ ╟── but it flows into application with expected type `anything -> ?a`
-//│ ║  l.51: 	f {} {}
+//│ ║  l.50: 	f {} {}
 //│ ╙──      	^^^^
 //│ res: error
 //│ Runtime error:

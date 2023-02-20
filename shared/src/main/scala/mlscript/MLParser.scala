@@ -46,8 +46,12 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (pat, S(bod)) => LetS(false, pat, bod)
   }
 
-  def term[p: P]: P[Term] = P(let | fun | ite | withsAsc | _match)
-
+  def term[p: P]: P[Term] = P(let | fun | ite | forall | withsAsc | _match)
+  
+  def forall[p: P]: P[Term] = P( (kw("forall") ~/ tyVar.rep ~ "." ~ term).map {
+    case (vars, ty) => Forall(vars.toList, ty)
+  } )
+  
   def lit[p: P]: P[Lit] =
     locate(number.map(x => IntLit(BigInt(x))) | Lexer.stringliteral.map(StrLit(_))
     | P(kw("undefined")).map(x => UnitLit(true)) | P(kw("null")).map(x => UnitLit(false)))

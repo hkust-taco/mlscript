@@ -374,8 +374,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   object PolymorphicType {
     def mk(polymLevel: Level, body: SimpleType): SimpleType = {
       require(polymLevel <= MaxLevel)
+      println(polymLevel, body.level)
       if (polymLevel === MaxLevel || body.level <= polymLevel) body
-      else body match { // TODO see through proxies?
+      else body.unwrapProvs match { // Q: unwrap other proxies?
         case PolymorphicType(lvl, bod) => PolymorphicType(polymLevel min lvl, bod)
         case _ => PolymorphicType(polymLevel, body)
       }
@@ -587,6 +588,17 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = MinLevel
     override def toString = if (pol) "⊥" else "⊤"
   }
+  
+  /** Represents a type variable skolem that was extruded outsdie its polym level.
+    * The goal is to retain precise information to produce good errors,
+    * but still have this be functionally equivalent to `ExtrType(pol)`. */
+  case class Extruded(pol: Bool, underlying: SkolemTag)(val prov: TypeProvenance, val reason: Ls[Ls[ST]]) extends AbstractTag with TypeVarOrRigidVar {
+    val level: Level = MinLevel
+    val id = underlying.id
+    def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = 0
+    override def toString = if (pol) s"⊥(${underlying})" else s"⊤(${underlying})"
+  }
+  
   /** Polarity `pol` being `true` means union; `false` means intersection. */
   case class ComposedType(pol: Bool, lhs: SimpleType, rhs: SimpleType)(val prov: TypeProvenance) extends SimpleType {
     def level: Level = lhs.level max rhs.level
@@ -627,7 +639,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     // override def toString = s"[$underlying]"
     // override def toString = s"$underlying[${prov.desc.take(5)}]"
     // override def toString = s"$underlying[${prov.toString.take(5)}]"
-    // override def toString = s"$underlying@${prov}"
+    // override def toString = s"$underlying@${prov.loco.fold("?")(l => l.spanStart+"–"+l.spanEnd)}"
     // override def toString = showProvOver(true)(""+underlying)
     
     // TOOD override equals/hashCode? — could affect hash consing...
@@ -745,8 +757,10 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def compare(that: TypeTag): Int = (this, that) match {
       case (obj1: ObjectTag, obj2: ObjectTag) => obj1.id compare obj2.id
       case (SkolemTag(_, id1), SkolemTag(_, id2)) => id1 compare id2
-      case (_: ObjectTag, _: SkolemTag) => 1
-      case (_: SkolemTag, _: ObjectTag) => -1
+      case (Extruded(_, id1), Extruded(_, id2)) => id1 compare id2
+      case (_: ObjectTag, _) => 0
+      case (_: SkolemTag, _) => 1
+      case (_: Extruded, _) => 2
     }
   }
   
@@ -888,8 +902,12 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
           }
         }
       }
-    private[mlscript] val uid: Int = { freshCount += 1; freshCount - 1 }
+    private[mlscript] val uid: Int = freshUid
     lazy val asTypeVar = new TypeVar(L(uid), nameHint)
+    lazy val (asPosExtrudedTypeVar, asNegExtrudedTypeVar) = {
+      val nme = S(ExtrusionPrefix+nameHint.getOrElse("_").dropWhile(_ === '\''))
+      (new TypeVar(L(freshUid), nme), new TypeVar(L(freshUid), nme))
+    }
     def compare(that: TV): Int = this.uid compare that.uid
     override def toString: String =
       (trueOriginal match {
@@ -919,6 +937,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   type TV = TypeVariable
   private var freshCount = 0
+  private def freshUid: Int = { freshCount += 1; freshCount - 1 }
   def freshVar(p: TypeProvenance, original: Opt[TV], nameHint: Opt[Str] = N, lbs: Ls[ST] = Nil, ubs: Ls[ST] = Nil, recPlaceholder: Bool = false)
         (implicit lvl: Int): TypeVariable =
     new TypeVariable(lvl, lbs, ubs, original, nameHint, recPlaceholder)(p)

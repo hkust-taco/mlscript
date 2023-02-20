@@ -22,7 +22,7 @@ S: (forall 'a. 'a -> 'a) -> anything -> (forall 'c. 'c -> 'c)
 //│    = [Function: S1]
 
 S: 'c -> 'b -> (forall 'a. 'a -> 'a)
-//│ res: (anything -> nothing) -> anything -> (forall 'a. 'a -> 'a)
+//│ res: (??a -> ??a0) -> anything -> (forall 'a. 'a -> 'a)
 //│    = [Function: S1]
 
 S: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
@@ -78,15 +78,19 @@ def T: ('a, forall 'b. ('a, 'b) -> 'a)
 
 :e
 T: (anything, (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a))
-//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ╔══[ERROR] Type error in type ascription
 //│ ║  l.80: 	T: (anything, (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a))
 //│ ║        	^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'a` leaks out of its scope
 //│ ║  l.80: 	T: (anything, (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a))
-//│ ║        	                                                         ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                                             ^^
+//│ ╟── back into type variable `'a`
 //│ ║  l.80: 	T: (anything, (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a))
-//│ ╙──      	                                                         ^^
+//│ ║        	                                                                   ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this reference:
+//│ ║  l.80: 	T: (anything, (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a))
+//│ ╙──      	^
 //│ res: (anything, (forall 'a. 'a -> 'a, anything,) -> (forall 'a0. 'a0 -> 'a0),)
 
 
@@ -98,14 +102,14 @@ def T: 'a -> (forall 'b. ('a, 'b) -> 'a)
 :e
 T: anything -> (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.99: 	T: anything -> (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a)
-//│ ║        	^
+//│ ║  l.103: 	T: anything -> (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a)
+//│ ║         	^
 //│ ╟── type `anything` is not a function
-//│ ║  l.99: 	T: anything -> (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a)
-//│ ║        	   ^^^^^^^^
+//│ ║  l.103: 	T: anything -> (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a)
+//│ ║         	   ^^^^^^^^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.99: 	T: anything -> (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a)
-//│ ╙──      	                                                              ^^^^^^^^
+//│ ║  l.103: 	T: anything -> (forall 'a. 'a -> 'a, anything) -> (forall 'a. 'a -> 'a)
+//│ ╙──       	                                                              ^^^^^^^^
 //│ res: anything -> (forall 'a. 'a -> 'a, anything,) -> (forall 'a0. 'a0 -> 'a0)
 
 

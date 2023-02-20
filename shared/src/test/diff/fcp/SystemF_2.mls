@@ -211,18 +211,25 @@ succ = succ_
 //│     'a <: 'b -> 'c -> 'd)))
 //│   <:  succ:
 //│ (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X0. ('X0 -> 'X0) -> 'X0 -> 'X0)
-//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ╔══[ERROR] Type error in def definition
 //│ ║  l.207: 	succ = succ_
 //│ ║         	^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'X` leaks out of its scope
 //│ ║  l.198: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
-//│ ║         	                                                         ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║         	                                                                    ^^
+//│ ╟── back into type variable `'X`
 //│ ║  l.198: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
-//│ ║         	                                                         ^^
-//│ ╟── from quantified type variable:
+//│ ║         	                                                              ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this function:
+//│ ║  l.197: 	succ_ n s z = s (n s z)
+//│ ║         	        ^^^^^^^^^^^^^^^
+//│ ╟── • this reference:
+//│ ║  l.207: 	succ = succ_
+//│ ║         	       ^^^^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.198: 	def succ: (forall 'X. ('X -> 'X) -> 'X -> 'X) -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
-//│ ╙──       	                  ^^
+//│ ╙──       	                             ^^
 //│     = [Function: succ_1]
 
 c2 = succ (succ n0)

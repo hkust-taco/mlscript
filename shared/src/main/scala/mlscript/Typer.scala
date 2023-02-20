@@ -432,11 +432,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               }
           }
         })
-      case tv: TypeVar =>
+      case tv: TypeVar => vars.getOrElse(tv.identifier.toOption.getOrElse(""), {
         recVars.getOrElse(tv,
-          localVars.getOrElseUpdate(tv, freshVar(noProv, N, tv.identifier.toOption)
+          localVars.getOrElseUpdate(tv, freshVar(noProv, N, tv.name)
               (outerCtxLvl)) // * Type variables not explicily bound are assigned the widest (the outer context's) level
-            .withProv(tyTp(ty.toLoc, "type variable")))
+          ).withProv(tyTp(ty.toLoc, "type variable"))
+      })
       case AppliedType(base, targs) =>
         val prov = tyTp(ty.toLoc, "applied type reference")
         typeNamed(ty.toLoc, base.name) match {
@@ -450,7 +451,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case L(e) => e()
         }
       case Recursive(uv, body) =>
-        val tv = freshVar(tyTp(ty.toLoc, "local type binding"), N, uv.identifier.toOption)
+        val tv = freshVar(tyTp(ty.toLoc, "local type binding"), N, uv.name)
         val bod = rec(body)(ctx, recVars + (uv -> tv))
         tv.assignedTo = S(bod)
         tv
@@ -476,7 +477,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               die // this probably never happens...
               freshVar(tyTp(tn.toLoc, "quantified type name"), N, S(tn.name))
             case R(tv) =>
-              val nv = freshVar(tyTp(tv.toLoc, "quantified type variable"), N, tv.identifier.toOption)
+              val nv = freshVar(tyTp(
+                    tv.toLoc,
+                    // N, // * Here we choose to omit this location,
+                    // * because pointing to the binding place of forall TVs in error messages
+                    // * is often redundant, as these forall types are usually self-contained.
+                    "quantified type variable",
+                  tv.name
+                ), N, tv.name)
               newVars += tv -> nv
               nv
           }
@@ -991,7 +999,19 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case TyApp(_, _) => ??? // TODO handle
       case Where(bod, sts) =>
         typeTerms(sts :+ bod, false, Nil, allowPure = true)
-      case Forall(_, _) => ??? // TODO handle
+      case Forall(vs, bod) =>
+        ctx.poly { implicit ctx =>
+          val newVars = vs.map {
+            case tv @ TypeVar(R(nme), _) => nme ->
+              SkolemTag(lvl, freshVar(tp(tv.toLoc, "quantified type variable"), N, S(nme)))(
+                tp(tv.toLoc, "rigid type variable"))
+            case _ => die
+          }
+          vars ++ newVars |> { implicit vars =>
+            implicit val genLambdas: GenLambdas = false
+            typeTerm(bod)
+          }
+        }
       case Inst(bod) =>
         val bod_ty = typePolymorphicTerm(bod)
         var founPoly = false
@@ -1213,6 +1233,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               => TypeName(n)
             case _ => go(tv)
           }
+        case ex @ Extruded(p, SkolemTag(_, tv)) =>
+          if (p) tv.asPosExtrudedTypeVar else tv.asNegExtrudedTypeVar
         case TypeRef(td, Nil) => td
         case tr @ TypeRef(td, targs) => AppliedType(td, tr.mapTargs(S(true)) {
           case ta @ ((S(true), TopType) | (S(false), BotType)) => Bounds(Bot, Top)

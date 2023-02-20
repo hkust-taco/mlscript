@@ -33,10 +33,13 @@ s2: S1
 //│ ║        	^^
 //│ ╟── type `'a` does not match type `'a0`
 //│ ║  l.14: 	type S2 = (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ ║        	                  ^^
+//│ ║        	                      ^^
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.11: 	type S1 = ('a -> 'b -> 'c) -> ('a -> 'b) -> 'a -> 'c
-//│ ╙──      	           ^^
+//│ ║        	           ^^
+//│ ╟── Note: quantified type variable 'a is defined at:
+//│ ║  l.14: 	type S2 = (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│ ╙──      	                  ^^
 //│ res: S1
 //│    = [Function: S]
 
@@ -48,7 +51,7 @@ type Id = forall 'a. 'a -> 'a
 :e // TODO: could probably use different type var shadows from different type alias occurrences
 S: Id -> Id -> Id -> Id
 //│ ╔══[ERROR] Cyclic-looking constraint while typing type ascription; a type annotation may be required
-//│ ║  l.49: 	S: Id -> Id -> Id -> Id
+//│ ║  l.52: 	S: Id -> Id -> Id -> Id
 //│ ║        	^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: Id -> Id -> Id -> Id

@@ -53,15 +53,22 @@ succ = s
 //│     'a <: 'b -> 'd -> 'c)))
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
-//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ╔══[ERROR] Type error in def definition
 //│ ║  l.50: 	succ = s
 //│ ║        	^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.10: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                   ^^
+//│ ╟── back into type variable `'N`
 //│ ║  l.10: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ╙──      	                        ^^
+//│ ║        	                             ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this function:
+//│ ║  l.33: 	def s n f x = (n f x)
+//│ ║        	        ^^^^^^^^^^^^^
+//│ ╟── • this reference:
+//│ ║  l.50: 	succ = s
+//│ ╙──      	       ^
 //│     = [Function: s]
 
 :e // * Since "sound extrusion"
@@ -71,15 +78,19 @@ succ n f = n f
 //│     'a <: 'b -> 'c))
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.68: 	succ n f = n f
+//│ ╔══[ERROR] Type error in def definition
+//│ ║  l.75: 	succ n f = n f
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'N` leaks out of its scope
 //│ ║  l.10: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                   ^^
+//│ ╟── back into type variable `'N`
 //│ ║  l.10: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
-//│ ╙──      	                        ^^
+//│ ║        	                             ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this function:
+//│ ║  l.75: 	succ n f = n f
+//│ ╙──      	       ^^^^^^^
 //│     = [Function: succ2]
 
 succ n = n
@@ -99,21 +110,22 @@ succ_min n f = n f
 //│     'a <: 'c -> 'b))
 //│   <:  succ_min:
 //│ (forall 'N. 'N -> 'N) -> (forall 'M. 'M -> 'M)
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.96: 	succ_min n f = n f
-//│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.91: 	def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
-//│ ║        	                                                  ^^
-//│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.96: 	succ_min n f = n f
-//│ ║        	                 ^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.91: 	def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
-//│ ║        	                                                  ^^
-//│ ╟── from application:
-//│ ║  l.96: 	succ_min n f = n f
-//│ ╙──      	               ^^^
+//│ ╔══[ERROR] Type error in def definition
+//│ ║  l.107: 	succ_min n f = n f
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `'M` leaks out of its scope
+//│ ║  l.102: 	def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
+//│ ║         	                                                       ^^
+//│ ╟── back into type variable `'M`
+//│ ║  l.102: 	def succ_min : (forall 'N. ('N -> 'N)) -> (forall 'M. ('M -> 'M))
+//│ ║         	                                                             ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this function:
+//│ ║  l.107: 	succ_min n f = n f
+//│ ║         	           ^^^^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.107: 	succ_min n f = n f
+//│ ╙──       	               ^^^
 //│         = [Function: succ_min]
 
 
@@ -139,7 +151,7 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?to_ch ?d. ?to_ch <: int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)` exceeded recursion depth limit (250)
-//│ ║  l.133: 	to_church = to_ch
+//│ ║  l.145: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│          = <no result>
@@ -167,7 +179,7 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?to_ch ?a ?b ?c ?d. ?to_ch <: int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)` exceeded recursion depth limit (250)
-//│ ║  l.161: 	to_church = to_ch
+//│ ║  l.173: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│          = <no result>
@@ -190,15 +202,25 @@ to_church = to_ch
 //│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c)) | ChurchInt)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.187: 	to_church = to_ch
+//│ ╔══[ERROR] Type error in def definition
+//│ ║  l.199: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'M` leaks out of its scope
 //│ ║  l.20: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ║        	                              ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                         ^^
+//│ ╟── back into type variable `'M`
 //│ ║  l.20: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ╙──      	                              ^^
+//│ ║        	                                   ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this function:
+//│ ║  l.33: 	def s n f x = (n f x)
+//│ ║        	        ^^^^^^^^^^^^^
+//│ ╟── • this application:
+//│ ║  l.191: 	  else s (to_church n)
+//│ ║         	       ^^^^^^^^^^^^^^^
+//│ ╟── • this reference:
+//│ ║  l.199: 	to_church = to_ch
+//│ ╙──       	            ^^^^^
 //│          = <no result>
 //│            to_ch and zero are not implemented
 
@@ -219,15 +241,25 @@ to_church = to_ch
 //│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c)))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.216: 	to_church = to_ch
+//│ ╔══[ERROR] Type error in def definition
+//│ ║  l.238: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'M` leaks out of its scope
 //│ ║  l.20: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ║        	                              ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                         ^^
+//│ ╟── back into type variable `'M`
 //│ ║  l.20: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ╙──      	                              ^^
+//│ ║        	                                   ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this function:
+//│ ║  l.33: 	def s n f x = (n f x)
+//│ ║        	        ^^^^^^^^^^^^^
+//│ ╟── • this application:
+//│ ║  l.230: 	  else s (to_church n)
+//│ ║         	       ^^^^^^^^^^^^^^^
+//│ ╟── • this reference:
+//│ ║  l.238: 	to_church = to_ch
+//│ ╙──       	            ^^^^^
 //│          = <no result>
 //│            to_ch, to_church, to_ch and zero are not implemented
 
@@ -248,15 +280,25 @@ to_church = to_ch
 //│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c)) | ChurchInt)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.245: 	to_church = to_ch
+//│ ╔══[ERROR] Type error in def definition
+//│ ║  l.277: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'M` leaks out of its scope
 //│ ║  l.20: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ║        	                              ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                         ^^
+//│ ╟── back into type variable `'M`
 //│ ║  l.20: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ╙──      	                              ^^
+//│ ║        	                                   ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this function:
+//│ ║  l.33: 	def s n f x = (n f x)
+//│ ║        	        ^^^^^^^^^^^^^
+//│ ╟── • this application:
+//│ ║  l.269: 	  else s (to_church n)
+//│ ║         	       ^^^^^^^^^^^^^^^
+//│ ╟── • this reference:
+//│ ║  l.277: 	to_church = to_ch
+//│ ╙──       	            ^^^^^
 //│          = <no result>
 //│            to_ch and zero are not implemented
 
@@ -276,15 +318,25 @@ to_church = to_ch
 //│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c)))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.273: 	to_church = to_ch
+//│ ╔══[ERROR] Type error in def definition
+//│ ║  l.315: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'M` leaks out of its scope
 //│ ║  l.20: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ║        	                              ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                         ^^
+//│ ╟── back into type variable `'M`
 //│ ║  l.20: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ╙──      	                              ^^
+//│ ║        	                                   ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this function:
+//│ ║  l.33: 	def s n f x = (n f x)
+//│ ║        	        ^^^^^^^^^^^^^
+//│ ╟── • this application:
+//│ ║  l.307: 	  s (to_church n)
+//│ ║         	  ^^^^^^^^^^^^^^^
+//│ ╟── • this reference:
+//│ ║  l.315: 	to_church = to_ch
+//│ ╙──       	            ^^^^^
 //│          = <no result>
 //│            to_ch, to_church, to_ch and zero are not implemented
 
@@ -304,15 +356,25 @@ to_church = to_ch
 //│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c)))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.301: 	to_church = to_ch
+//│ ╔══[ERROR] Type error in def definition
+//│ ║  l.353: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'M` leaks out of its scope
 //│ ║  l.20: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ║        	                              ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                         ^^
+//│ ╟── back into type variable `'M`
 //│ ║  l.20: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ╙──      	                              ^^
+//│ ║        	                                   ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this function:
+//│ ║  l.33: 	def s n f x = (n f x)
+//│ ║        	        ^^^^^^^^^^^^^
+//│ ╟── • this application:
+//│ ║  l.345: 	  s (to_church n)
+//│ ║         	  ^^^^^^^^^^^^^^^
+//│ ╟── • this reference:
+//│ ║  l.353: 	to_church = to_ch
+//│ ╙──       	            ^^^^^
 //│          = <no result>
 //│            to_ch, to_church, to_ch, to_church, to_ch and zero are not implemented
 
@@ -332,15 +394,25 @@ to_church = to_ch
 //│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c)))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.329: 	to_church = to_ch
+//│ ╔══[ERROR] Type error in def definition
+//│ ║  l.391: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'M` leaks out of its scope
 //│ ║  l.20: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ║        	                              ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                         ^^
+//│ ╟── back into type variable `'M`
 //│ ║  l.20: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ╙──      	                              ^^
+//│ ║        	                                   ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this function:
+//│ ║  l.33: 	def s n f x = (n f x)
+//│ ║        	        ^^^^^^^^^^^^^
+//│ ╟── • this application:
+//│ ║  l.383: 	  s (to_church n)
+//│ ║         	  ^^^^^^^^^^^^^^^
+//│ ╟── • this reference:
+//│ ║  l.391: 	to_church = to_ch
+//│ ╙──       	            ^^^^^
 //│          = <no result>
 //│            to_ch, to_church, to_ch, to_church, to_ch, to_church, to_ch and zero are not implemented
 
@@ -363,15 +435,25 @@ to_church = to_ch
 //│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c)))
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.360: 	to_church = to_ch
+//│ ╔══[ERROR] Type error in def definition
+//│ ║  l.432: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'M` leaks out of its scope
 //│ ║  l.20: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ║        	                              ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║        	                                         ^^
+//│ ╟── back into type variable `'M`
 //│ ║  l.20: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
-//│ ╙──      	                              ^^
+//│ ║        	                                   ^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this function:
+//│ ║  l.33: 	def s n f x = (n f x)
+//│ ║        	        ^^^^^^^^^^^^^
+//│ ╟── • this application:
+//│ ║  l.424: 	  s (to_church n)
+//│ ║         	  ^^^^^^^^^^^^^^^
+//│ ╟── • this reference:
+//│ ║  l.432: 	to_church = to_ch
+//│ ╙──       	            ^^^^^
 //│          = <no result>
 //│            to_ch, to_church, to_ch, to_church, to_ch, to_church, to_ch, to_church, to_ch and zero are not implemented
 
@@ -392,7 +474,7 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.388: 	to_church = to_ch
+//│ ║  l.470: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `int` is not a function
 //│ ║  l.20: 	def to_church: int -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
@@ -465,7 +547,7 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?to_ch ?c ?d. ?to_ch <: int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)` exceeded recursion depth limit (250)
-//│ ║  l.457: 	to_church = to_ch
+//│ ║  l.539: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│          = [Function: to_ch7]
@@ -494,7 +576,7 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?to_ch ?a ?b ?c ?d. ?to_ch <: int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)` exceeded recursion depth limit (250)
-//│ ║  l.486: 	to_church = to_ch
+//│ ║  l.568: 	to_church = to_ch
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│          = [Function: to_ch7]

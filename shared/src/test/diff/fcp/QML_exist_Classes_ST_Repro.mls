@@ -74,9 +74,9 @@ simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
 simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
 //│ res: ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string,)]
 //│    = [Function: simpleStepImpl]
-//│ constrain calls  : 575
+//│ constrain calls  : 579
 //│ annoying  calls  : 101
-//│ subtyping calls  : 5623
+//│ subtyping calls  : 5641
 :NoRecursiveTypes
 
 
@@ -98,16 +98,20 @@ mkArrays impl k = k impl
 // * Inconsistent bounds on 'Rep after type avoidance during extrusion
 :e
 def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
-//│ ╔══[ERROR] Type mismatch in application:
+//│ ╔══[ERROR] Type error in application
 //│ ║  l.100: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
 //│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'Rep` leaks out of its scope
 //│ ║  l.35: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.35: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                         ^^^^
-//│ ╟── from reference:
+//│ ║        	                                            ^^^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this function:
+//│ ║  l.100: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
+//│ ║         	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── • this reference:
+//│ ║  l.100: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
+//│ ║         	              ^^^
+//│ ╟── Note: constraint arises from reference:
 //│ ║  l.41: 	    sub    = fun ((r0, r1)) -> fun i -> arrImpl.Sub r0 i;
 //│ ╙──      	                                                    ^^
 //│ stepped: error

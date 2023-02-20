@@ -105,7 +105,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     /** This is used in the context of constrained types.
       * We "unstash" all constraints that were currently stashed/saved for later
       * due to a polymorphism level mismatch. */
-    def unstash(oldCtx: Ctx)(implicit ctx: Ctx, cctx: ConCtx): Unit = {
+    def unstash(oldCtx: Ctx)(implicit ctx: Ctx, cctx: ConCtx, prevCctxs: Ls[ConCtx]): Unit = {
       val ec = ctx.extrCtx
       trace(s"UNSTASHING...") {
         implicit val ctx: Ctx = oldCtx
@@ -120,7 +120,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     } //  ensuring ctx.extrCtx.isEmpty
     
     /* To solve constraints that are more tricky. */
-    def goToWork(lhs: ST, rhs: ST)(implicit cctx: ConCtx, ctx: Ctx, shadows: Shadows): Unit = {
+    def goToWork(lhs: ST, rhs: ST)(implicit cctx: ConCtx, prevCctxs: Ls[ConCtx], ctx: Ctx, shadows: Shadows): Unit = {
       val lhsDNF = DNF.mkDeep(MaxLevel, Nil, lhs, true)
       val rhsDNF = DNF.mkDeep(MaxLevel, Nil, rhs, false)
       
@@ -148,8 +148,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       }
     }
     
-    def constrainDNF(_lhs: DNF, rhs: DNF)(implicit cctx: ConCtx, ctx: Ctx, shadows: Shadows): Unit =
-    trace(s"${lvl}. ARGH  $lhs  <!  $rhs") {
+    def constrainDNF(_lhs: DNF, rhs: DNF)(implicit cctx: ConCtx, prevCctxs: Ls[ConCtx], ctx: Ctx, shadows: Shadows): Unit =
+    trace(s"${lvl}. ARGH  ${_lhs}  <!  $rhs") {
       annoyingCalls += 1
       consumeFuel()
       
@@ -247,7 +247,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         This works by constructing all pairs of "conjunct <: disjunct" implied by the conceptual
         "DNF <: CNF" form of the constraint. */
     def annoying(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
-          (implicit cctx: ConCtx, shadows: Shadows, ctx: Ctx, dbgHelp: Str = "Case")
+          (implicit cctx: ConCtx, prevCctxs: Ls[ConCtx], shadows: Shadows, ctx: Ctx, dbgHelp: Str = "Case")
           : Unit =
     {
       annoyingCalls += 1
@@ -256,7 +256,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }
     
     def annoyingImpl(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
-          (implicit cctx: ConCtx, ctx: Ctx, shadows: Shadows, dbgHelp: Str = "Case")
+          (implicit cctx: ConCtx, prevCctxs: Ls[ConCtx], ctx: Ctx, shadows: Shadows, dbgHelp: Str = "Case")
           : Unit =
     trace(s"${lvl}. A  $done_ls  %  $ls  <!  $rs  %  $done_rs") {
       def mkRhs(ls: Ls[SimpleType]): SimpleType = {
@@ -475,7 +475,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     
     /** Helper function to constrain Field lower bounds. */
     def recLb(lhs: FieldType, rhs: FieldType)
-      (implicit raise: Raise, cctx: ConCtx, ctx: Ctx, shadows: Shadows): Unit = {
+      (implicit raise: Raise, cctx: ConCtx, prevCctxs: Ls[ConCtx], ctx: Ctx, shadows: Shadows): Unit = {
         (lhs.lb, rhs.lb) match {
           case (Some(l), Some(r)) => rec(l, r, false)
           case (Some(l), None) =>
@@ -492,12 +492,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       * This is a bit of a sledgehammer approach that could be improved – it will duplicate TV bounds!
       * For instance, it would be better to accumulate new TVs' future bounds first
       * and add them by constraining later. */
-    def extrudeAndCheck(ty: SimpleType, lowerLvl: Int, pol: Boolean, upperLvl: Level)
-          (implicit raise: Raise, cctx: ConCtx, ctx: Ctx, shadows: Shadows)
+    def extrudeAndCheck(ty: SimpleType, lowerLvl: Int, pol: Boolean, upperLvl: Level, reason: Ls[Ls[ST]])
+          (implicit raise: Raise, cctx: ConCtx, prevCctxs: Ls[ConCtx], ctx: Ctx, shadows: Shadows)
           : SimpleType =
     {
       val originalVars = ty.getVars
-      val res = extrude(ty, lowerLvl, pol, upperLvl)(ctx, MutMap.empty, MutSortMap.empty)
+      val res = extrude(ty, lowerLvl, pol, upperLvl)(ctx, MutMap.empty, MutSortMap.empty, reason)
       val newVars = res.getVars -- originalVars
       if (newVars.nonEmpty) trace(s"RECONSTRAINING TVs") {
         newVars.foreach {
@@ -514,8 +514,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       res
     }
     
+    /** `cctx` accumulates the types that have been compared up to this point;
+      * it is reset when going through a nested position (sameLevel = false).
+      * `prevCctxs` accumulate the previous `cctx`s that led to this constraint.
+      * Currently `prevCctxs` is just used to show possibly-helpful type annotation
+      * locations upon skolem extrusion. */
     def rec(lhs: SimpleType, rhs: SimpleType, sameLevel: Bool)
-          (implicit raise: Raise, cctx: ConCtx, ctx: Ctx, shadows: Shadows)
+          (implicit raise: Raise, cctx: ConCtx, prevCctxs: Ls[ConCtx], ctx: Ctx, shadows: Shadows)
           : Unit =
     {
       constrainCalls += 1
@@ -529,6 +534,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           ->
           (if (cctx._2.headOption.exists(_ is rhs)) cctx._2 else rhs :: cctx._2)
         else (lhs :: Nil) -> (rhs :: Nil),
+        if (sameLevel || prevCctxs.isEmpty) prevCctxs else cctx :: prevCctxs,
         ctx,
         if (sameLevel) shadows else shadows.copy(current = Set.empty)
       )
@@ -537,7 +543,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }
     
     def recImpl(lhs: SimpleType, rhs: SimpleType)
-          (implicit raise: Raise, cctx: ConCtx, ctx: Ctx, shadows: Shadows)
+          (implicit raise: Raise, cctx: ConCtx, prevCctxs: Ls[ConCtx], ctx: Ctx, shadows: Shadows)
           : Unit =
     // trace(s"$lvl. C $lhs <! $rhs") {
     // trace(s"$lvl. C $lhs <! $rhs    (${cache.size})") {
@@ -669,7 +675,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               cache -= lhs -> rhs
               ()
             } else {
-              val rhs2 = extrudeAndCheck(rhs, lhs.level, false, MaxLevel)
+              val rhs2 = extrudeAndCheck(rhs, lhs.level, false, MaxLevel,
+                cctx._1 :: prevCctxs.unzip._1 ::: prevCctxs.unzip._2)
               println(s"EXTR RHS  ~>  $rhs2  to ${lhs.level}")
               println(s" where ${rhs2.showBounds}")
               // println(s"   and ${rhs.showBounds}")
@@ -686,8 +693,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               cache -= lhs -> rhs
               ()
             } else {
-              println(s"LHS bounds  ${lhs.showBounds}")
-              val lhs2 = extrudeAndCheck(lhs, rhs.level, true, MaxLevel)
+              val lhs2 = extrudeAndCheck(lhs, rhs.level, true, MaxLevel,
+                cctx._2 :: prevCctxs.unzip._2 ::: prevCctxs.unzip._1)
               println(s"EXTR LHS  ~>  $lhs2  to ${rhs.level}")
               println(s" where ${lhs2.showBounds}")
               // println(s"   and ${lhs.showBounds}")
@@ -817,7 +824,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             // * – in this case, the higher level is meant to allow further instantiations to match
             // * the rigid type variables without extrusion,
             // * while preventing the rigid variables from leaking out.
-            rec(poly.instantiate, rhs, true)
+            
+            // * Hack ("heuristic"): we only start remembering `prevCctxs`
+            // * after going through at least one instantiation.
+            // * This is to filter out locations that were unlikely to cause
+            // * any skolem extrusion down the line.
+            // *  – indeed, skolem extrusions are often caused by premature instantiation.
+            (if (prevCctxs.isEmpty) (Nil -> Nil) :: Nil else prevCctxs) |> {
+              implicit prevCctxs => rec(poly.instantiate, rhs, true)
+            }
             
           case (ConstrainedType(cs, bod), _) =>
             trace(s"DISCHARGE CONSTRAINTS") {
@@ -850,31 +865,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       
       def doesntMatch(ty: SimpleType) = msg"does not match type `${ty.expNeg}`"
       def doesntHaveField(n: Str) = msg"does not have field '$n'"
-      
-      val failure = failureOpt.getOrElse((lhs.unwrapProvs, rhs.unwrapProvs) match {
-        // case (lunw, _) if lunw.isInstanceOf[TV] || lunw.isInstanceOf => doesntMatch(rhs)
-        case (_: TV | _: ProxyType, _) => doesntMatch(rhs)
-        case (RecordType(fs0), RecordType(fs1)) =>
-          (fs1.map(_._1).toSet -- fs0.map(_._1).toSet)
-            .headOption.fold(doesntMatch(rhs)) { n1 => doesntHaveField(n1.name) }
-        case (lunw, obj: ObjectTag)
-          if obj.id.isInstanceOf[Var]
-          => msg"is not an instance of type `${
-              if (primitiveTypes(obj.id.idStr)) obj.id.idStr else obj.id.idStr.capitalize}`"
-        case (lunw, obj: TypeRef)
-          => msg"is not an instance of `${obj.expNeg}`"
-        case (lunw, TupleType(fs))
-          if !lunw.isInstanceOf[TupleType] => msg"is not a ${fs.size.toString}-element tuple"
-        case (lunw, FunctionType(_, _))
-          if !lunw.isInstanceOf[FunctionType] => msg"is not a function"
-        case (lunw, RecordType((n, _) :: Nil))
-          if !lunw.isInstanceOf[RecordType] => doesntHaveField(n.name)
-        case (lunw, RecordType(fs @ (_ :: _)))
-          if !lunw.isInstanceOf[RecordType] =>
-            msg"is not a record (expected a record with field${
-              if (fs.sizeCompare(1) > 0) "s" else ""}: ${fs.map(_._1.name).mkString(", ")})"
-        case _ => doesntMatch(rhs)
-      })
       
       val lhsChain: List[ST] = cctx._1
       val rhsChain: List[ST] = cctx._2
@@ -919,6 +909,112 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         if (prov.isType) msg"type"
         else msg"${prov.desc} of type"
       
+      
+      // * Accumulate messages showing possibly-helpful type annotations.
+      def getPossibleAnnots(cctxs: Ls[Ls[ST]]): Ls[Message -> Opt[Loc]] = {
+        val suggested = MutSet.empty[Loc]
+        val removed = MutSet.empty[Loc]
+        def go(cctxs: Ls[Ls[ST]]): Ls[Message -> Opt[Loc]] = cctxs match {
+          case reason :: reasons =>
+            val possible = reason.iterator.map(_.prov).collect {
+              case p @ TypeProvenance(loco @ S(loc), desc, _, _)
+                if !suggested.contains(loc)
+                && !p.isType
+                && !suggested.exists(loc covers _)
+              =>
+                suggested.foreach(loc2 => if (loc2 covers loc) removed += loc2)
+                suggested.add(loc)
+                msg"• this ${desc}:" -> loco
+            }.toList
+            possible ::: go(reasons)
+          case Nil => Nil
+        }
+        go(cctxs).filterNot(_._2.exists(removed))
+      }
+      
+      def mk_constraintProvenanceHints = rhsProv.loco match {
+        case S(rhsProv_loc) if !prov.loco.contains(rhsProv_loc) && !shownLocos(rhsProv_loc) =>
+          msg"Note: constraint arises from ${rhsProv.desc}:" -> show(rhsProv.loco) :: (
+            rhsProv2.loco match {
+              case S(rhsProv2_loc)
+                if rhsProv2_loc =/= rhsProv_loc
+                && !prov.loco.contains(rhsProv2_loc)
+                && !lhsProv.loco.contains(rhsProv2_loc)
+                && !shownLocos(rhsProv2_loc)
+                => msg"from ${rhsProv2.desc}:" -> show(rhsProv2.loco) :: Nil
+              case _ => Nil
+            })
+        case _ => Nil
+      }
+      
+      
+      val failure = failureOpt.getOrElse((lhs.unwrapProvs, rhs.unwrapProvs) match {
+        case lhs_rhs @ ((_: Extruded, _) | (_, _: Extruded)) =>
+          val (mainExtr, extr1, extr2, reason) = lhs_rhs match {
+            case (extr: Extruded, extr2: Extruded)
+              =>
+              (extr, S(extr), S(extr2), extr.reason ++ extr2.reason)
+              // * ^ Note: I expect extr.reason and extr2.reason to have the same size.
+              // * Interleave them for more natural reporting order?
+            case (extr: Extruded, _) => (extr, S(extr), N, extr.reason)
+            case (_, extr: Extruded) => (extr, N, S(extr), extr.reason)
+            case _ => die
+          }
+          val possibleAnnots = getPossibleAnnots(reason)
+          val e1loco = show(lhsProv.loco).orElse(show(mainExtr.underlying.prov.loco))
+            .orElse(show(mainExtr.underlying.id.prov.loco))
+          val msgs = msg"Type error in ${prov.desc}" -> show(prov.loco) ::
+            msg"type variable `${mainExtr.underlying.expPos}` leaks out of its scope" ->
+              e1loco :: (extr2 match {
+                case S(extr2) =>
+                  val e2loco = show(rhsProv.loco).orElse(show(extr2.underlying.prov.loco))
+                    .orElse(show(extr2.underlying.id.prov.loco))
+                  if (extr1.isDefined && e2loco =/= e1loco)
+                    msg"back into type variable `${extr2.underlying.expNeg}`" -> e2loco :: Nil
+                  else Nil
+                case N =>
+                  msg"into ${printProv(rhsProv)} `${rhs.expNeg}`" -> show(rhsProv.loco) :: Nil
+              }) ::: (
+                if (possibleAnnots.nonEmpty)
+                  msg"adding a type annotation to any of the following terms may help resolve the problem" -> N ::
+                    possibleAnnots
+                else Nil
+              ) ::: (
+                rhsProv2.loco match {
+                  case S(rhsProv2_loc)
+                    if !rhsProv.loco.contains(rhsProv2_loc)
+                    && !prov.loco.contains(rhsProv2_loc)
+                    && !lhsProv.loco.contains(rhsProv2_loc)
+                    && !shownLocos(rhsProv2_loc)
+                    => msg"Note: constraint arises from ${rhsProv2.desc}:" -> show(rhsProv2.loco) :: Nil
+                  case _ => Nil
+                }
+              )
+          return raise(ErrorReport(msgs ::: mk_constraintProvenanceHints))
+        case (_: TV | _: ProxyType, _) => doesntMatch(rhs)
+        case (RecordType(fs0), RecordType(fs1)) =>
+          (fs1.map(_._1).toSet -- fs0.map(_._1).toSet)
+            .headOption.fold(doesntMatch(rhs)) { n1 => doesntHaveField(n1.name) }
+        case (lunw, obj: ObjectTag)
+          if obj.id.isInstanceOf[Var]
+          => msg"is not an instance of type `${
+              if (primitiveTypes(obj.id.idStr)) obj.id.idStr else obj.id.idStr.capitalize}`"
+        case (lunw, obj: TypeRef)
+          => msg"is not an instance of `${obj.expNeg}`"
+        case (lunw, TupleType(fs))
+          if !lunw.isInstanceOf[TupleType] => msg"is not a ${fs.size.toString}-element tuple"
+        case (lunw, FunctionType(_, _))
+          if !lunw.isInstanceOf[FunctionType] => msg"is not a function"
+        case (lunw, RecordType((n, _) :: Nil))
+          if !lunw.isInstanceOf[RecordType] => doesntHaveField(n.name)
+        case (lunw, RecordType(fs @ (_ :: _)))
+          if !lunw.isInstanceOf[RecordType] =>
+            msg"is not a record (expected a record with field${
+              if (fs.sizeCompare(1) > 0) "s" else ""}: ${fs.map(_._1.name).mkString(", ")})"
+        case _ => doesntMatch(rhs)
+      })
+      
+      
       val mismatchMessage =
         msg"Type mismatch in ${prov.desc}:" -> show(prov.loco) :: (
           msg"${printProv(lhsProv)} `${lhs.expPos}` $failure"
@@ -930,14 +1026,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           msg"but it flows into ${l.prov.desc}$expTyMsg" -> show(l.prov.loco) :: Nil
         }.toList.flatten
       
-      val constraintProvenanceHints = 
-        if (rhsProv.loco.isDefined && rhsProv2.loco =/= prov.loco)
-          msg"Note: constraint arises from ${rhsProv.desc}:" -> show(rhsProv.loco) :: (
-            if (rhsProv2.loco.isDefined && rhsProv2.loco =/= rhsProv.loco && rhsProv2.loco =/= prov.loco)
-              msg"from ${rhsProv2.desc}:" -> show(rhsProv2.loco) :: Nil
-            else Nil
-          )
-        else Nil
+      val constraintProvenanceHints = mk_constraintProvenanceHints
       
       var first = true
       val originProvHints = originProvList.collect {
@@ -973,7 +1062,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       raise(ErrorReport(msgs))
     }
     
-    rec(lhs, rhs, true)(raise, Nil -> Nil, outerCtx, shadows)
+    rec(lhs, rhs, true)(raise, Nil -> Nil, Nil, outerCtx, shadows)
   }}
   
   
@@ -1000,7 +1089,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     * `upperLvl` tracks the lowest such current quantification level. */
   private final
   def extrude(ty: SimpleType, lowerLvl: Int, pol: Boolean, upperLvl: Level)
-        (implicit ctx: Ctx, cache: MutMap[PolarVariable, TV], cache2: MutSortMap[TraitTag, TraitTag])
+        (implicit ctx: Ctx, cache: MutMap[TypeVarOrRigidVar->Bool, TypeVarOrRigidVar], cache2: MutSortMap[TraitTag, TraitTag], reason: Ls[Ls[ST]])
         : SimpleType =
   // (trace(s"EXTR[${printPol(S(pol))}] $ty || $lowerLvl .. $upperLvl  ${ty.level} ${ty.level <= lowerLvl}"){
     if (ty.level <= lowerLvl) ty else ty match {
@@ -1064,11 +1153,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case p @ ProxyType(und) => extrude(und, lowerLvl, pol, upperLvl)
       case tt @ SkolemTag(level, id) =>
         if (level > lowerLvl) {
-            // * When a rigid type variable is extruded, we need to widen it to Top or Bot
-            ExtrType(!pol)(ty.prov/* TODO wrap/explain prov */)
-            // * Creating a new skolem instead, as was done at some point, is actually unsound
+            // * When a rigid type variable is extruded,
+            // * we need to essentially widen it to Top or Bot.
+            // * Creating a new skolem instead, as was done at some point, is actually unsound.
+            // * But for better error messages, we instead use an `Extruded` abstract tag,
+            // * making sure we pick a *different* one for positive and negative positions,
+            // * which achieves the same effect as Top/Bot.
+            new Extruded(!pol, tt)(
+              tt.prov.copy(desc = "extruded type variable reference"), reason)
         } else ty
-      case _: ClassTag | _: TraitTag => ty
+      case _: ClassTag | _: TraitTag | _: Extruded => ty
       case tr @ TypeRef(d, ts) =>
         TypeRef(d, tr.mapTargs(S(pol)) {
           case (N, targ) =>
@@ -1086,7 +1180,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (S(pol), targ) => extrude(targ, lowerLvl, pol, upperLvl)
         })(tr.prov)
       case PolymorphicType(polymLevel, body) =>
-        PolymorphicType(polymLevel, extrude(body, lowerLvl, pol, upperLvl = upperLvl min polymLevel))
+        PolymorphicType(polymLevel, extrude(body, lowerLvl, pol, upperLvl =
+            // upperLvl min polymLevel // * for some crazy reason, this stopped type checking
+            Math.min(upperLvl, polymLevel)
+          ))
       case ConstrainedType(cs, bod) =>
         ConstrainedType(cs.map { case (lo, hi) =>
           extrude(lo, lowerLvl, true, upperLvl) -> extrude(hi, lowerLvl, false, upperLvl)
@@ -1267,8 +1364,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case p @ ProvType(und) => ProvType(freshen(und))(p.prov)
       case p @ ProxyType(und) => freshen(und)
       case SkolemTag(level, id) if level > above && level <= below =>
-        SkolemTag(lvl, id)(ty.prov)
-      case _: ClassTag | _: TraitTag | _: SkolemTag => ty
+        freshen(id)
+      case _: ClassTag | _: TraitTag | _: SkolemTag | _: Extruded => ty
       case w @ Without(b, ns) => Without(freshen(b), ns)(w.prov)
       case tr @ TypeRef(d, ts) => TypeRef(d, ts.map(freshen(_)))(tr.prov)
       case pt @ PolymorphicType(polyLvl, bod) if pt.level <= above => pt // is this really useful?

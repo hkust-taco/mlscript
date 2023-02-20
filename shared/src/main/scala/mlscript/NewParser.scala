@@ -444,7 +444,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         R(Forall(as.flatMap {
           // case S(Var(nme)) -> Fld(false, false, trm) =>
           case N -> Fld(false, false, v: Var) =>
-            v :: Nil
+            TypeVar(R(v.name), N).withLocOf(v) :: Nil
           case v -> f =>
             err(msg"illegal `forall` quantifiee" -> f.value.toLoc :: Nil)
             Nil

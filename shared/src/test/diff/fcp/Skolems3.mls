@@ -12,7 +12,7 @@
 // * which is correctly approximated as `'y <: (anything, anything) -> nothing`.
 def bar y =
   (fun x -> y (x, x)) : forall 'a. 'a -> 'a
-//│ bar: ((anything, anything,) -> nothing) -> (forall 'a. 'a -> 'a)
+//│ bar: ((??a, ??a,) -> ??a0) -> (forall 'a. 'a -> 'a)
 //│    = [Function: bar]
 
 // * In fact, what happens above is that local TV 'x is extruded into 'x0 (where 'x <: 'x0)
@@ -28,19 +28,16 @@ def bar y =
 :e
 def baz x =
   (x: 's -> 's): forall 'a. 'a -> 'a
-//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ╔══[ERROR] Type error in type ascription
 //│ ║  l.30: 	  (x: 's -> 's): forall 'a. 'a -> 'a
 //│ ║        	  ^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'a` leaks out of its scope
 //│ ║  l.30: 	  (x: 's -> 's): forall 'a. 'a -> 'a
-//│ ║        	                        ^^
-//│ ╟── but it flows into type variable with expected type `nothing`
+//│ ║        	                            ^^
+//│ ╟── back into type variable `'a`
 //│ ║  l.30: 	  (x: 's -> 's): forall 'a. 'a -> 'a
-//│ ║        	      ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.30: 	  (x: 's -> 's): forall 'a. 'a -> 'a
-//│ ╙──      	                        ^^
-//│ baz: (anything -> nothing) -> (forall 'a. 'a -> 'a)
+//│ ╙──      	                                  ^^
+//│ baz: (('s | ??a) -> (??a0 & 's)) -> (forall 'a. 'a -> 'a)
 //│    = [Function: baz]
 
 // * Thankfully, it turns out this kind of situations just doesn't seem to arise very often.
@@ -48,7 +45,7 @@ def baz x =
 // * approximants of an extruded type variable, as in bar above as well as baz below:
 def baz x =
   (x: 's -> 't): forall 'a. 'a -> 'a
-//│ baz: (anything -> nothing) -> (forall 'a. 'a -> 'a)
+//│ baz: (??a -> ??a0) -> (forall 'a. 'a -> 'a)
 //│    = [Function: baz1]
 
 
@@ -56,7 +53,7 @@ def baz x =
 
 def bar y =
   (fun x -> y (mut x)) : forall 'a. 'a -> 'a
-//│ bar: (anything -> nothing) -> (forall 'a. 'a -> 'a)
+//│ bar: (??a -> ??a0) -> (forall 'a. 'a -> 'a)
 //│    = [Function: bar1]
 
 def lift: 'a -> MutArray['a]
@@ -70,32 +67,32 @@ def lift x = (mut x)
 
 def bar y =
   (fun x -> y (lift x)) : forall 'a. 'a -> 'a
-//│ bar: (MutArray[anything] -> nothing) -> (forall 'a. 'a -> 'a)
+//│ bar: (MutArray[in 'a out 'a | ??a] -> ??a0) -> (forall 'a0. 'a0 -> 'a0)
 //│    = [Function: bar2]
 
 def bar y =
   (fun x -> y (x, x)) : forall 'a. MutArray['a] -> 'a
-//│ bar: ((MutArray[?], MutArray[?],) -> nothing) -> (forall 'a. MutArray['a] -> 'a)
+//│ bar: ((MutArray[in ??a out ??a0], MutArray[in ??a out ??a0],) -> ??a) -> (forall 'a. MutArray['a] -> 'a)
 //│    = [Function: bar3]
 
 def bar y =
   (fun x -> y (x, x)) : forall 'a. MutArray['a] -> MutArray['a]
-//│ bar: ((MutArray[?], MutArray[?],) -> MutArray[in anything out nothing]) -> (forall 'a. MutArray['a] -> MutArray['a])
+//│ bar: ((MutArray[in ??a out ??a0], MutArray[in ??a out ??a0],) -> MutArray[in ??a0 out ??a]) -> (forall 'a. MutArray['a] -> MutArray['a])
 //│    = [Function: bar4]
 
 def bar y =
   (fun x -> y (mut x)) : forall 'a. MutArray['a] -> 'a
-//│ bar: (MutArray[?] -> nothing) -> (forall 'a. MutArray['a] -> 'a)
+//│ bar: (MutArray[in ??a out ??a0] -> ??a) -> (forall 'a. MutArray['a] -> 'a)
 //│    = [Function: bar5]
 
 def bar y =
   (fun x -> y (lift x)) : forall 'a. MutArray['a] -> 'a
-//│ bar: (MutArray[in 'a out 'a | MutArray[?]] -> nothing) -> (forall 'a0. MutArray['a0] -> 'a0)
+//│ bar: (MutArray[in 'a out 'a | MutArray[in ??a out ??a0]] -> ??a) -> (forall 'a0. MutArray['a0] -> 'a0)
 //│    = [Function: bar6]
 
 def bar y =
   (fun x -> y (lift x)) : forall 'a. MutArray['a] -> MutArray['a]
-//│ bar: (MutArray[in 'a out 'a | MutArray[?]] -> MutArray[in anything out nothing]) -> (forall 'a0. MutArray['a0] -> MutArray['a0])
+//│ bar: (MutArray[in 'a out 'a | MutArray[in ??a out ??a0]] -> MutArray[in ??a0 out ??a]) -> (forall 'a0. MutArray['a0] -> MutArray['a0])
 //│    = [Function: bar7]
 
 // * Again, we can still make it fail using contrived annotations.
@@ -103,35 +100,32 @@ def bar y =
 def baz x =
   (x: MutArray['s] -> 't): forall 'a. 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.104: 	  (x: MutArray['s] -> 't): forall 'a. 'a -> 'a
+//│ ║  l.101: 	  (x: MutArray['s] -> 't): forall 'a. 'a -> 'a
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'a` does not match type `MutArray['s]`
-//│ ║  l.104: 	  (x: MutArray['s] -> 't): forall 'a. 'a -> 'a
-//│ ║         	                                  ^^
+//│ ║  l.101: 	  (x: MutArray['s] -> 't): forall 'a. 'a -> 'a
+//│ ║         	                                      ^^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.104: 	  (x: MutArray['s] -> 't): forall 'a. 'a -> 'a
-//│ ╙──       	      ^^^^^^^^^^^^
-//│ baz: (MutArray['s] -> nothing) -> (forall 'a. 'a -> 'a)
+//│ ║  l.101: 	  (x: MutArray['s] -> 't): forall 'a. 'a -> 'a
+//│ ║         	      ^^^^^^^^^^^^
+//│ ╟── Note: quantified type variable 'a is defined at:
+//│ ║  l.101: 	  (x: MutArray['s] -> 't): forall 'a. 'a -> 'a
+//│ ╙──       	                                  ^^
+//│ baz: (MutArray['s] -> ??a) -> (forall 'a. 'a -> 'a)
 //│    = [Function: baz2]
 :e
 def baz x =
   (x: MutArray['s] -> 't): forall 'a. MutArray['a] -> 'a
-//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ╔══[ERROR] Type error in type ascription
 //│ ║  l.118: 	  (x: MutArray['s] -> 't): forall 'a. MutArray['a] -> 'a
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'a` leaks out of its scope
 //│ ║  l.118: 	  (x: MutArray['s] -> 't): forall 'a. MutArray['a] -> 'a
-//│ ║         	                                  ^^
-//│ ╟── but it flows into type variable with expected type `nothing`
-//│ ║  l.118: 	  (x: MutArray['s] -> 't): forall 'a. MutArray['a] -> 'a
-//│ ║         	               ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.118: 	  (x: MutArray['s] -> 't): forall 'a. MutArray['a] -> 'a
-//│ ╙──       	                                  ^^
-//│ baz: (MutArray['s] -> nothing) -> (forall 'a. MutArray['a] -> 'a)
+//│ ╙──       	                                               ^^
+//│ baz: (MutArray['s] -> ??a) -> (forall 'a. MutArray['a] -> 'a)
 //│   where
-//│     's :> anything
-//│        <: nothing
+//│     's :> ??a0
+//│        <: ??a
 //│    = [Function: baz3]
 
 
@@ -143,12 +137,12 @@ def baz x =
 // * but things still work out similarly as before.
 def bar y =
   (fun x -> let tmp = y (x, x) in x) : forall 'a. 'a -> 'a
-//│ bar: ((anything, anything,) -> anything) -> (forall 'a. 'a -> 'a)
+//│ bar: ((??a, ??a,) -> anything) -> (forall 'a. 'a -> 'a)
 //│    = [Function: bar8]
 
 def bar y =
   (fun x -> let tmp = (fun x0 -> y (x0, x0)) x in x) : forall 'a. 'a -> 'a
-//│ bar: ((anything, anything,) -> anything) -> (forall 'a. 'a -> 'a)
+//│ bar: ((??a, ??a,) -> anything) -> (forall 'a. 'a -> 'a)
 //│    = [Function: bar9]
 
 def id2: (forall 's. 's -> 's) -> (forall 't. 't -> 't)
@@ -164,33 +158,39 @@ id2 = id
 def bar y =
   (fun x -> y (id2 x, x)) : forall 'a. 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.165: 	  (fun x -> y (id2 x, x)) : forall 'a. 'a -> 'a
+//│ ║  l.159: 	  (fun x -> y (id2 x, x)) : forall 'a. 'a -> 'a
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'a` is not a function
-//│ ║  l.165: 	  (fun x -> y (id2 x, x)) : forall 'a. 'a -> 'a
-//│ ║         	                                   ^^
+//│ ║  l.159: 	  (fun x -> y (id2 x, x)) : forall 'a. 'a -> 'a
+//│ ║         	                                       ^^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.154: 	def id2: (forall 's. 's -> 's) -> (forall 't. 't -> 't)
+//│ ║  l.148: 	def id2: (forall 's. 's -> 's) -> (forall 't. 't -> 't)
 //│ ║         	                     ^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.165: 	  (fun x -> y (id2 x, x)) : forall 'a. 'a -> 'a
-//│ ╙──       	                   ^
-//│ bar: ((forall 't. 't -> 't, anything,) -> nothing) -> (forall 'a. 'a -> 'a)
+//│ ║  l.159: 	  (fun x -> y (id2 x, x)) : forall 'a. 'a -> 'a
+//│ ║         	                   ^
+//│ ╟── Note: quantified type variable 'a is defined at:
+//│ ║  l.159: 	  (fun x -> y (id2 x, x)) : forall 'a. 'a -> 'a
+//│ ╙──       	                                   ^^
+//│ bar: ((forall 't. 't -> 't, ??a,) -> ??a0) -> (forall 'a. 'a -> 'a)
 //│    = [Function: bar10]
 
 :e // * Legit (rigid var function can't be used as polymorphic function)
 def bar y =
   (fun x -> y (id2 x, x)) : forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.183: 	  (fun x -> y (id2 x, x)) : forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.180: 	  (fun x -> y (id2 x, x)) : forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `'s` does not match type `'a`
-//│ ║  l.154: 	def id2: (forall 's. 's -> 's) -> (forall 't. 't -> 't)
-//│ ║         	                 ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.183: 	  (fun x -> y (id2 x, x)) : forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──       	                                   ^^
-//│ bar: ((forall 't. 't -> 't, nothing -> anything,) -> anything -> nothing) -> (forall 'a. ('a -> 'a) -> 'a -> 'a)
+//│ ║  l.148: 	def id2: (forall 's. 's -> 's) -> (forall 't. 't -> 't)
+//│ ║         	                     ^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.180: 	  (fun x -> y (id2 x, x)) : forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                                        ^^
+//│ ╟── Note: quantified type variable 's is defined at:
+//│ ║  l.148: 	def id2: (forall 's. 's -> 's) -> (forall 't. 't -> 't)
+//│ ╙──       	                 ^^
+//│ bar: ((forall 't. 't -> 't, ??a -> ??a0,) -> ??a0 -> ??a) -> (forall 'a. ('a -> 'a) -> 'a -> 'a)
 //│    = [Function: bar11]
 
 def id3: ('s -> 's) -> ('s -> 's)
@@ -204,26 +204,26 @@ id3 = id
 
 def bar y =
   (fun x -> y (id3 x, 0)) : forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ bar: ((nothing -> anything, 0,) -> anything -> nothing) -> (forall 'a. ('a -> 'a) -> 'a -> 'a)
+//│ bar: (((??a & 's) -> ('s | ??a0), 0,) -> ??a0 -> ??a) -> (forall 'a. ('a -> 'a) -> 'a -> 'a)
 //│    = [Function: bar12]
 
 
 :e // * Legit (similar to previous baz example)
 def baz x =
   (x: ('s -> 's) -> 0): forall 'a. ('a -> 'a) -> 0
-//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ╔══[ERROR] Type error in type ascription
 //│ ║  l.213: 	  (x: ('s -> 's) -> 0): forall 'a. ('a -> 'a) -> 0
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'a` leaks out of its scope
 //│ ║  l.213: 	  (x: ('s -> 's) -> 0): forall 'a. ('a -> 'a) -> 0
-//│ ║         	                               ^^
-//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║         	                                          ^^
+//│ ╟── back into type variable `'a`
 //│ ║  l.213: 	  (x: ('s -> 's) -> 0): forall 'a. ('a -> 'a) -> 0
-//│ ║         	                               ^^
-//│ ╟── from type variable:
+//│ ║         	                                    ^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.213: 	  (x: ('s -> 's) -> 0): forall 'a. ('a -> 'a) -> 0
 //│ ╙──       	             ^^
-//│ baz: ((nothing -> anything) -> 0) -> (forall 'a. ('a -> 'a) -> 0)
+//│ baz: (((??a & 's) -> ('s | ??a0)) -> 0) -> (forall 'a. ('a -> 'a) -> 0)
 //│    = [Function: baz4]
 
 
@@ -231,18 +231,15 @@ def baz x =
 def boo =
   let tmp = (id: 's -> 's): forall 'a. 'a -> 'a
   in 0
-//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ╔══[ERROR] Type error in type ascription
 //│ ║  l.232: 	  let tmp = (id: 's -> 's): forall 'a. 'a -> 'a
 //│ ║         	            ^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── type variable `'a` leaks out of its scope
 //│ ║  l.232: 	  let tmp = (id: 's -> 's): forall 'a. 'a -> 'a
-//│ ║         	                                   ^^
-//│ ╟── but it flows into type variable with expected type `nothing`
+//│ ║         	                                       ^^
+//│ ╟── back into type variable `'a`
 //│ ║  l.232: 	  let tmp = (id: 's -> 's): forall 'a. 'a -> 'a
-//│ ║         	                 ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.232: 	  let tmp = (id: 's -> 's): forall 'a. 'a -> 'a
-//│ ╙──       	                                   ^^
+//│ ╙──       	                                             ^^
 //│ boo: 0
 //│    = [Function: boo]
 
@@ -255,26 +252,26 @@ def boo =
 def boo x =
   let tmp = (x: 's -> 't): forall 'a. ('a -> 'a) -> 0
   in 0
-//│ boo: ((nothing -> anything) -> 0) -> 0
+//│ boo: ((??a -> ??a0) -> 0) -> 0
 //│    = [Function: boo2]
 
 :e
 def boo x =
   let tmp = (x: ('s -> 's) -> 't): forall 'a. ('a -> 'a) -> 0
   in 0
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.263: 	  let tmp = (x: ('s -> 's) -> 't): forall 'a. ('a -> 'a) -> 0
+//│ ╔══[ERROR] Type error in type ascription
+//│ ║  l.260: 	  let tmp = (x: ('s -> 's) -> 't): forall 'a. ('a -> 'a) -> 0
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.263: 	  let tmp = (x: ('s -> 's) -> 't): forall 'a. ('a -> 'a) -> 0
-//│ ║         	                                          ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.263: 	  let tmp = (x: ('s -> 's) -> 't): forall 'a. ('a -> 'a) -> 0
-//│ ║         	                                          ^^
-//│ ╟── from type variable:
-//│ ║  l.263: 	  let tmp = (x: ('s -> 's) -> 't): forall 'a. ('a -> 'a) -> 0
+//│ ╟── type variable `'a` leaks out of its scope
+//│ ║  l.260: 	  let tmp = (x: ('s -> 's) -> 't): forall 'a. ('a -> 'a) -> 0
+//│ ║         	                                                     ^^
+//│ ╟── back into type variable `'a`
+//│ ║  l.260: 	  let tmp = (x: ('s -> 's) -> 't): forall 'a. ('a -> 'a) -> 0
+//│ ║         	                                               ^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.260: 	  let tmp = (x: ('s -> 's) -> 't): forall 'a. ('a -> 'a) -> 0
 //│ ╙──       	                       ^^
-//│ boo: ((nothing -> anything) -> 0) -> 0
+//│ boo: (((??a & 's) -> ('s | ??a0)) -> 0) -> 0
 //│    = [Function: boo3]
 
 
