@@ -974,7 +974,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         ctx.poly { implicit ctx =>
           val newVars = vs.map {
             case tv @ TypeVar(R(nme), _) => nme ->
-              SkolemTag(lvl, freshVar(tp(tv.toLoc, "quantified type variable"), N, S(nme)))(
+              SkolemTag(freshVar(tp(tv.toLoc, "quantified type variable"), N, S(nme)))(
                 tp(tv.toLoc, "rigid type variable"))
             case _ => die
           }
@@ -1191,13 +1191,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             else TypeTag(n.capitalize)
           case lit: Lit => Literal(lit)
         }
-        case SkolemTag(_, tv) => tv.nameHint match {
+        case SkolemTag(tv) => tv.nameHint match {
             case S(n) if
                 n.isCapitalized // rigid type params like A in class Foo[A]
               => TypeName(n)
             case _ => go(tv)
           }
-        case ex @ Extruded(p, SkolemTag(_, tv)) =>
+        case ex @ Extruded(p, SkolemTag(tv)) =>
           if (p) tv.asPosExtrudedTypeVar else tv.asNegExtrudedTypeVar
         case TypeRef(td, Nil) => td
         case tr @ TypeRef(td, targs) => AppliedType(td, tr.mapTargs(S(true)) {

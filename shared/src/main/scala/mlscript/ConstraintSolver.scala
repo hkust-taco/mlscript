@@ -1078,8 +1078,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case e @ ExtrType(_) => e
       case p @ ProvType(und) => ProvType(extrude(und, lowerLvl, pol, upperLvl))(p.prov)
       case p @ ProxyType(und) => extrude(und, lowerLvl, pol, upperLvl)
-      case tt @ SkolemTag(level, id) =>
-        if (level > lowerLvl) {
+      case tt @ SkolemTag(id) =>
+        if (tt.level > lowerLvl) {
             // * When a rigid type variable is extruded,
             // * we need to essentially widen it to Top or Bot.
             // * Creating a new skolem instead, as was done at some point, is actually unsound.
@@ -1229,7 +1229,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         case Some(tv) => tv
         case None if rigidify && tv.level <= below =>
           // * Rigid type variables (ie, skolems) are encoded as SkolemTag-s
-          val rv = SkolemTag(lvl, freshVar(noProv, N, tv.nameHint.orElse(S("_"))))(tv.prov)
+          val rv = SkolemTag(freshVar(noProv, N, tv.nameHint.orElse(S("_"))))(tv.prov)
           if (tv.lowerBounds.nonEmpty || tv.upperBounds.nonEmpty) {
             // The bounds of `tv` may be recursive (refer to `tv` itself),
             //    so here we create a fresh variabe that will be able to tie the presumed recursive knot
@@ -1287,7 +1287,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case e @ ExtrType(_) => e
       case p @ ProvType(und) => ProvType(freshen(und))(p.prov)
       case p @ ProxyType(und) => freshen(und)
-      case SkolemTag(level, id) if level > above && level <= below =>
+      case s @ SkolemTag(id) if s.level > above && s.level <= below =>
         freshen(id)
       case _: ClassTag | _: TraitTag | _: SkolemTag | _: Extruded => ty
       case w @ Without(b, ns) => Without(freshen(b), ns)(w.prov)

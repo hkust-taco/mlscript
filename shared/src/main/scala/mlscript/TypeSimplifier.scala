@@ -1035,7 +1035,7 @@ trait TypeSimplifier { self: Typer =>
                         case (FunctionType(lhs1, rhs1), FunctionType(lhs2, rhs2)) => unify(lhs1, lhs2) && unify(rhs1, rhs2)
                         case (Without(base1, names1), Without(base2, names2)) => unify(base1, base2) && (names1 === names2 || nope)
                         case (TraitTag(id1), TraitTag(id2)) => id1 === id2 || nope
-                        case (SkolemTag(l1, id1), SkolemTag(l2, id2)) => l1 === l2 && id1 === id2 || nope
+                        case (SkolemTag(id1), SkolemTag(id2)) => id1 === id2 || nope
                         case (ExtrType(pol1), ExtrType(pol2)) => pol1 === pol2 || nope
                         case (TypeBounds(lb1, ub1), TypeBounds(lb2, ub2)) =>
                           unify(lb1, lb2) && unify(ub1, ub2)

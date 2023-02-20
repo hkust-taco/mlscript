@@ -440,7 +440,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     val id: IdentifiedTerm
     def compare(that: TypeTag): Int = (this, that) match {
       case (obj1: ObjectTag, obj2: ObjectTag) => obj1.id compare obj2.id
-      case (SkolemTag(_, id1), SkolemTag(_, id2)) => id1 compare id2
+      case (SkolemTag(id1), SkolemTag(id2)) => id1 compare id2
       case (Extruded(_, id1), Extruded(_, id2)) => id1 compare id2
       case (_: ObjectTag, _) => 0
       case (_: SkolemTag, _) => 1
@@ -482,9 +482,10 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def level: Level = MinLevel
   }
   
-  case class SkolemTag(level: Level, id: TV)(val prov: TypeProvenance) extends AbstractTag with TypeVarOrRigidVar {
+  case class SkolemTag(id: TV)(val prov: TypeProvenance) extends AbstractTag with TypeVarOrRigidVar {
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level =
-      if (level <= ub) level else MinLevel
+      id.levelBelow(ub)
+    val level: Level = id.level
     override def toString = {
       val str = id.mkStr
       // (if (id.idStr.startsWith("'")) "‘"+id.idStr.tail else id.idStr) + showLevel(level)
