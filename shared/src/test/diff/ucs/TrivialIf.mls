@@ -56,3 +56,30 @@ fun f(x, y) =
 //│ ║  l.54: 	  else if x == y + 7 then 0
 //│ ╙──      	          ^^^^^^^^^^
 //│ f: (number, int,) -> (0 | error)
+
+
+
+// FIXME
+if 42 is n then n + 1
+//│ ╔══[ERROR] Cannot find the constructor `n` in the context
+//│ ║  l.63: 	if 42 is n then n + 1
+//│ ╙──      	         ^
+//│ res: error
+
+// FIXME
+:e
+if 42 is n then n + 1 else 0
+//│ ╔══[ERROR] Cannot find the constructor `n` in the context
+//│ ║  l.71: 	if 42 is n then n + 1 else 0
+//│ ╙──      	         ^
+//│ res: error
+
+
+if Some(42) is Some(n) then n + 1
+//│ res: int
+
+// TODO warn useless `else`
+if Some(42) is Some(n) then n + 1 else 0
+//│ res: int
+
+

@@ -9,6 +9,7 @@ class Left(leftValue): Either
 class Right(rightValue): Either
 class List
 class Nil: List
+let Nil = Nil()
 class Cons(head, tail): List
 class Pair(fst, snd)
 //│ Defined class Option
@@ -37,6 +38,8 @@ class Pair(fst, snd)
 //│     = [Function: List1]
 //│ Nil: () -> Nil
 //│    = [Function: Nil1]
+//│ Nil: Nil
+//│    = Nil {}
 //│ Cons: ('head, 'tail,) -> (Cons with {head: 'head, tail: 'tail})
 //│     = [Function: Cons1]
 //│ Pair: ('fst, 'snd,) -> (Pair with {fst: 'fst, snd: 'snd})
@@ -53,6 +56,16 @@ fun optionApply(x, y, f) =
 //│ optionApply: (None | (Some with {value: 'value}), None | (Some with {value: 'value0}), ('value, 'value0,) -> 'value1,) -> (None | (Some with {value: 'value1}))
 //│            = [Function: optionApply]
 
+let zeroToThree = Cons(0, Cons(1, Cons(2, Cons(3, Nil))))
+//│ zeroToThree: Cons & {head: 0, tail: Cons & {head: 1, tail: Cons & {head: 2, tail: Cons & {head: 3, tail: Nil}}}}
+//│            = Cons {
+//│                head: 0,
+//│                tail: Cons { head: 1, tail: Cons { head: 2, tail: [Cons] } }
+//│              }
+
+fun f(x) = if x % 2 == 0 then Left(x) else Right(x)
+//│ f: (int & 'rightValue) -> ((Left with {leftValue: 'rightValue}) | (Right with {rightValue: 'rightValue}))
+//│  = [Function: f]
 
 
 fun mapPartition(f, xs) = if xs is
@@ -62,10 +75,31 @@ fun mapPartition(f, xs) = if xs is
     Right(v) then Pair(l, Cons(v, r))
 //│ mapPartition: ('head -> ((Left with {leftValue: 'head0}) | (Right with {rightValue: 'head1})), 'a,) -> (Pair with {fst: 'fst, snd: 'tail})
 //│   where
-//│     'tail :> (Cons with {head: 'head1, tail: 'tail}) | () -> Nil
-//│     'fst :> () -> Nil | (Cons with {head: 'head0, tail: 'fst})
+//│     'tail :> (Cons with {head: 'head1, tail: 'tail}) | Nil
+//│     'fst :> Nil | (Cons with {head: 'head0, tail: 'fst})
 //│     'a <: (Cons with {head: 'head, tail: 'a}) | Nil
 //│             = [Function: mapPartition]
+
+mapPartition(x => Left(x + 1), zeroToThree)
+//│ res: Pair with {fst: 'fst, snd: 'tail}
+//│   where
+//│     'tail :> (Cons with {head: nothing, tail: 'tail}) | Nil
+//│     'fst :> Nil | (Cons with {head: int, tail: 'fst})
+//│    = Pair {
+//│        fst: Cons { head: 1, tail: Cons { head: 2, tail: [Cons] } },
+//│        snd: Nil {}
+//│      }
+
+mapPartition(f, zeroToThree)
+//│ res: Pair with {fst: 'fst, snd: 'tail}
+//│   where
+//│     'tail :> (Cons with {head: 0 | 1 | 2 | 3, tail: 'tail}) | Nil
+//│     'fst :> Nil | (Cons with {head: 0 | 1 | 2 | 3, tail: 'fst})
+//│    = Pair {
+//│        fst: Cons { head: 0, tail: Cons { head: 2, tail: Nil {} } },
+//│        snd: Cons { head: 1, tail: Cons { head: 3, tail: Nil {} } }
+//│      }
+
 
 fun mapPartition(f, xs) = if xs is
   Nil then Pair(Nil, Nil)
@@ -75,10 +109,21 @@ fun mapPartition(f, xs) = if xs is
       Right(v) then Pair(l, Cons(v, r))
 //│ mapPartition: ('head -> ((Left with {leftValue: 'head0}) | (Right with {rightValue: 'head1})), 'a,) -> (Pair with {fst: 'fst, snd: 'tail})
 //│   where
-//│     'tail :> (Cons with {head: 'head1, tail: 'tail}) | () -> Nil
-//│     'fst :> () -> Nil | (Cons with {head: 'head0, tail: 'fst})
+//│     'tail :> (Cons with {head: 'head1, tail: 'tail}) | Nil
+//│     'fst :> Nil | (Cons with {head: 'head0, tail: 'fst})
 //│     'a <: (Cons with {head: 'head, tail: 'a}) | Nil
 //│             = [Function: mapPartition1]
+
+mapPartition(f, zeroToThree)
+//│ res: Pair with {fst: 'fst, snd: 'tail}
+//│   where
+//│     'tail :> (Cons with {head: 0 | 1 | 2 | 3, tail: 'tail}) | Nil
+//│     'fst :> Nil | (Cons with {head: 0 | 1 | 2 | 3, tail: 'fst})
+//│    = Pair {
+//│        fst: Cons { head: 0, tail: Cons { head: 2, tail: Nil {} } },
+//│        snd: Cons { head: 1, tail: Cons { head: 3, tail: Nil {} } }
+//│      }
+
 
 fun mapPartition(f, xs) = if xs is
   Nil then
@@ -93,10 +138,20 @@ fun mapPartition(f, xs) = if xs is
             Pair(l, Cons(v, r))
 //│ mapPartition: ('head -> ((Left with {leftValue: 'head0}) | (Right with {rightValue: 'head1})), 'a,) -> (Pair with {fst: 'fst, snd: 'tail})
 //│   where
-//│     'tail :> (Cons with {head: 'head1, tail: 'tail}) | () -> Nil
-//│     'fst :> () -> Nil | (Cons with {head: 'head0, tail: 'fst})
+//│     'tail :> (Cons with {head: 'head1, tail: 'tail}) | Nil
+//│     'fst :> Nil | (Cons with {head: 'head0, tail: 'fst})
 //│     'a <: (Cons with {head: 'head, tail: 'a}) | Nil
 //│             = [Function: mapPartition2]
+
+mapPartition(f, zeroToThree)
+//│ res: Pair with {fst: 'fst, snd: 'tail}
+//│   where
+//│     'tail :> (Cons with {head: 0 | 1 | 2 | 3, tail: 'tail}) | Nil
+//│     'fst :> Nil | (Cons with {head: 0 | 1 | 2 | 3, tail: 'fst})
+//│    = Pair {
+//│        fst: Cons { head: 0, tail: Cons { head: 2, tail: Nil {} } },
+//│        snd: Cons { head: 1, tail: Cons { head: 3, tail: Nil {} } }
+//│      }
 
 
 // TODO make this one work (needs tuple support)
@@ -106,12 +161,17 @@ fun mapPartition(f, xs) = if xs is
     Left(v)  then (Cons(v, l), r)
     Right(v) then (l, Cons(v, r))
 //│ ╔══[ERROR] The case when this is false is not handled: is (mapPartition (f, xs,),) (l, r,)
-//│ ║  l.105: 	  Cons(x, xs) and mapPartition(f, xs) is (l, r) and f(x) is
+//│ ║  l.160: 	  Cons(x, xs) and mapPartition(f, xs) is (l, r) and f(x) is
 //│ ╙──       	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ mapPartition: (anything, anything,) -> error
 //│ Code generation encountered an error:
 //│   if expression has not been desugared
 
+// TODO
+mapPartition(f, zeroToThree)
+//│ res: error
+//│ Runtime error:
+//│   ReferenceError: mapPartition3 is not defined
 
 
 // * Vertical alignment is not allowed! (good)
@@ -125,16 +185,16 @@ fun mapPartition(f, xs) = if xs is
           and f(x) is Left(v)  then (Cons(v, l), r)
                       Right(v) then (l, Cons(v, r))
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.126: 	                      Right(v) then (l, Cons(v, r))
+//│ ║  l.186: 	                      Right(v) then (l, Cons(v, r))
 //│ ╙──       	                               ^^^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.125: 	          and f(x) is Left(v)  then (Cons(v, l), r)
+//│ ║  l.185: 	          and f(x) is Left(v)  then (Cons(v, l), r)
 //│ ║         	                                    ^^^^^^^^^^^^^^^
-//│ ║  l.126: 	                      Right(v) then (l, Cons(v, r))
+//│ ║  l.186: 	                      Right(v) then (l, Cons(v, r))
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] type identifier not found: Tuple#2
 //│ ╙──
-//│ mapPartition: (anything, 'a,) -> ((() -> Nil, () -> Nil,) | error)
+//│ mapPartition: (anything, 'a,) -> ((Nil, Nil,) | error)
 //│   where
 //│     'a <: Cons & {tail: 'a} | Nil
 //│ Code generation encountered an error:

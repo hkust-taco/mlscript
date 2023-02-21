@@ -265,12 +265,40 @@ mapPartition(x => if x % 2 == 0 then Left(x) else Right(x), zeroToThree)
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 
+// TODO this should be the desugaring of the above:
+fun mapPartition(f, xs) =
+  if xs is
+    Nil then Pair(Nil(), Nil())
+    Cons(x, xs) and mapPartition(f, xs) is tmp0 and res.fst is l and res.snd is r and f(x) is
+      Left(v)  then Pair(Cons(v, l), r)
+      Right(v) then Pair(l, Cons(v, r))
+//│ ╔══[ERROR] Cannot find the constructor `tmp0` in the context
+//│ ║  l.272: 	    Cons(x, xs) and mapPartition(f, xs) is tmp0 and res.fst is l and res.snd is r and f(x) is
+//│ ╙──       	                                           ^^^^
+//│ mapPartition: (anything, anything,) -> error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared
+
+// FIXME `b` should be bound here!
 fun mn(a) =
   if a is
     Some(x) and x is
-      Left(a)  then "left-defined"
-      let y = x + 1
+      Left(b)  then "left-defined"
+      let y = b + 1
       Right(b) then "right-defined"
     None       then "undefined"
-//│ mn: (None | Some & {value: nothing}) -> ("left-defined" | "right-defined" | "undefined")
-//│   = [Function: mn]
+//│ ╔══[ERROR] identifier not found: b
+//│ ║  l.287: 	      let y = b + 1
+//│ ╙──       	              ^
+//│ mn: (None | Some & {value: Left | Right}) -> ("left-defined" | "right-defined" | "undefined")
+//│ Code generation encountered an error:
+//│   unresolved symbol b
+
+:ng
+mn(Some(Left(0)))
+mn(Some(Right(0)))
+mn(None())
+//│ res: "left-defined" | "right-defined" | "undefined"
+//│ res: "left-defined" | "right-defined" | "undefined"
+//│ res: "left-defined" | "right-defined" | "undefined"
+

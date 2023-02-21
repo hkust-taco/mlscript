@@ -8,7 +8,15 @@ class Pair(fst, snd)
 
 
 
+Pair(0, 1) is Pair
+//│ res: bool
+//│    = true
+
 Pair(0, 1) is Pair(a, b)
+//│ res: bool
+//│    = true
+
+Pair(0, 1) is Pair(0, _)
 //│ res: bool
 //│    = true
 
@@ -39,5 +47,31 @@ fun foo(x) = if x is Pair(a, b) then a > b else false
 //│ foo: (Pair & {fst: number, snd: number} | ~Pair) -> bool
 //│    = [Function: foo2]
 
+
+// TODO proper error
+fun foo(x) = x is
+  Pair
+  Int
+//│ /!!!\ Uncaught error: java.lang.Exception: illegal pattern: Blk(...)
+
+// TODO proper error
+fun foo(x) = x is
+  Pair(a, b) and a > b
+  Int
+//│ /!!!\ Uncaught error: java.lang.Exception: illegal pattern: Blk(...)
+
+// TODO support `|`
+fun foo(x) = x is Pair(a, b) | Int
+fun foo(x) = x is (Pair(a, b) and a > b) | Int
+//│ ╔══[ERROR] Cannot find operator `|` in the context
+//│ ║  l.64: 	fun foo(x) = x is Pair(a, b) | Int
+//│ ╙──      	                             ^
+//│ foo: anything -> error
+//│ ╔══[ERROR] Cannot find operator `|` in the context
+//│ ║  l.65: 	fun foo(x) = x is (Pair(a, b) and a > b) | Int
+//│ ╙──      	                                         ^
+//│ foo: anything -> error
+//│ Code generation encountered an error:
+//│   if expression has not been desugared
 
 
