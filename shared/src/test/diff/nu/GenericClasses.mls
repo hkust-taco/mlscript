@@ -182,14 +182,14 @@ Test(true)
 
 class Test<A>(n: A) {
   fun foo: A = n
-  fun foo1(x : A) = x
+  fun foo1(x: A) = x
   fun id(x) = x
 }
 //│ class Test
 //│   fun foo: ‘A210' where 
 //│   [pretty-printed] foo: A
-//│   fun foo1: (‘A210' -> ‘A210') where 
-//│   [pretty-printed] foo1: A -> A
+//│   fun foo1: ((x: ‘A210',) -> ‘A210') where 
+//│   [pretty-printed] foo1: (x: A,) -> A
 //│   fun id: (α216'' -> α216'') where 
 //│   [pretty-printed] id: 'a -> 'a
 
@@ -229,28 +229,27 @@ t.id
 
 :e
 class Test<A> {
-  // fun foo(x: A) = x // FIXME
-  fun foo1(x : A) = x
-  fun foo2(x : A) = x + 1
+  fun foo1(x: A) = x
+  fun foo2(x: A) = x + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.234: 	  fun foo2(x : A) = x + 1
-//│ ║         	                    ^^^
+//│ ║  l.233: 	  fun foo2(x: A) = x + 1
+//│ ║         	                   ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.234: 	  fun foo2(x : A) = x + 1
-//│ ║         	                    ^
+//│ ║  l.233: 	  fun foo2(x: A) = x + 1
+//│ ║         	                   ^
 //│ ╟── Note: type parameter A is defined at:
 //│ ║  l.231: 	class Test<A> {
 //│ ╙──       	           ^
 //│ class Test
-//│   fun foo1: (‘A317' -> ‘A317') where 
-//│   [pretty-printed] foo1: A -> A
-//│   fun foo2: (‘A317' -> α323'') where 
+//│   fun foo1: ((x: ‘A317',) -> ‘A317') where 
+//│   [pretty-printed] foo1: (x: A,) -> A
+//│   fun foo2: ((x: ‘A317',) -> α323'') where 
 //│   |		α323'' :> error<> | int<number>
-//│   [pretty-printed] foo2: A -> (error | int)
+//│   [pretty-printed] foo2: (x: A,) -> (error | int)
 
 Test().foo1
-//│ Typed: 'A -> 'A
+//│ Typed: (x: 'A,) -> 'A
 
 Test().foo1(1)
 //│ Typed: 1
@@ -265,7 +264,7 @@ let t = Test()
 //│ [pretty-printed] t: Test & {Test#A = 'A}
 
 t.foo1
-//│ Typed: 'A -> 'A
+//│ Typed: (x: 'A,) -> 'A
 
 [t.foo1(0), t.foo1(true)]
 //│ Typed: (0, true,)
@@ -278,11 +277,11 @@ t
 
 
 // FIXME
-fun foo(x : Test<int>) = x.foo1
+fun foo(x: Test<int>) = x.foo1
 //│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: Test
 
 
 Test().foo2
-//│ Typed: anything -> (error | int)
+//│ Typed: (x: anything,) -> (error | int)
 
 

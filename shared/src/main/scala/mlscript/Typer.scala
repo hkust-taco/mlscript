@@ -36,7 +36,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   
   var recordProvenances: Boolean = true
   
-  type Raise = Diagnostic => Unit
   type Binding = Str -> SimpleType
   type Bindings = Map[Str, SimpleType]
   
@@ -762,8 +761,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case tup: Tup if funkyTuples =>
         typeTerms(tup :: Nil, false, Nil)
       case Tup(fs) =>
-        TupleType(fs.map { case (n, Fld(mut, _, t)) =>
+        TupleType(fs.mapConserve { case e @ (n, Fld(mut, spec, t)) =>
+          n match {
+            case S(v) if ctx.inPattern =>
+              (n, Fld(mut, spec,
+                Asc(v, t.toTypeRaise).withLoc(v.toLoc.fold(t.toLoc)(_ ++ t.toLoc |> some))))
+            case _ => e
+          }
+        }.map { case (n, Fld(mut, _, t)) =>
           val tym = typePolymorphicTerm(t)
+          // val tym = if (n.isDefined) typeType(t.toTypeRaise)
+          //   else typePolymorphicTerm(t)
           val fprov = tp(t.toLoc, (if (mut) "mutable " else "") + "tuple field")
           if (mut) {
             val res = freshVar(fprov, N, n.map(_.name))
@@ -771,7 +779,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             (n, FieldType(Some(rs), rs)(fprov))
           } else (n, tym.toUpper(fprov))
         })(fs match {
-          case Nil | ((N, _) :: Nil) => noProv
+          case Nil | ((N, _) :: Nil) => noProv // TODO rm?
           case _ => tp(term.toLoc, "tuple literal")
         })
       case Subs(a, i) =>

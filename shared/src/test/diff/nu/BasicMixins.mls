@@ -111,14 +111,14 @@ Base1.test
 mixin WrapBase {
   // fun wrap(x) = x
   // fun wrap(x) = x : int
-  fun wrapA(x : int) = x : int
+  fun wrapA(x: int) = x : int
   fun wrap(x) = x
 }
 //│ mixin WrapBase
 //│   this: this223' 
 //│   super: super224' 
-//│   fun wrapA: (Int -> Int) where 
-//│   [pretty-printed] wrapA: int -> int
+//│   fun wrapA: ((x: Int,) -> Int) where 
+//│   [pretty-printed] wrapA: (x: int,) -> int
 //│   fun wrap: (α227'' -> α227'') where 
 //│   [pretty-printed] wrap: 'a -> 'a
 
@@ -182,8 +182,8 @@ WrapBase1.wrapA("ok")
 //│ ║  l.177: 	WrapBase1.wrapA("ok")
 //│ ║         	                ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.114: 	  fun wrapA(x : int) = x : int
-//│ ║         	                ^^^
+//│ ║  l.114: 	  fun wrapA(x: int) = x : int
+//│ ║         	               ^^^
 //│ ╟── from reference:
 //│ ║  l.127: 	  fun wrapA(x) = [super.wrapA(x)]
 //│ ╙──       	                              ^

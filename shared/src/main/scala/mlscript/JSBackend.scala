@@ -72,7 +72,10 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   }
 
   private def translateParams(t: Term)(implicit scope: Scope): Ls[JSPattern] = t match {
-    case Tup(params) => params map { case _ -> Fld(_, _, p) => translatePattern(p) }
+    case Tup(params) => params map {
+      case N -> Fld(_, _, p) => translatePattern(p)
+      case S(nme) -> Fld(_, _, p) => translatePattern(nme)
+    }
     case _           => throw CodeGenError(s"term $t is not a valid parameter list")
   }
 
@@ -617,6 +620,7 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
       case e: UnimplementedError => JSTestBackend.Unimplemented(e.getMessage())
       case e: Throwable => JSTestBackend.UnexpectedCrash(e.getClass().getName, e.getMessage())
     }
+    // generate(pgrm)(topLevelScope, allowEscape)
 
   /**
     * Generate JavaScript code which targets MLscript test from the given block.

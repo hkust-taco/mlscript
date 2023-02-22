@@ -443,6 +443,10 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Inst(bod) => s"${bod.print(true)}!"
   }}
   
+  def toTypeRaise(implicit raise: Raise): Type = toType match {
+    case L(d) => raise(d); Bot
+    case R(ty) => ty
+  }
   def toType: Diagnostic \/ Type =
     try R(toType_!.withLocOf(this)) catch {
       case e: NotAType =>
@@ -645,7 +649,7 @@ trait StatementImpl extends Located { self: Statement =>
         val bod = pars.map(tt).foldRight(Record(params): Type)(Inter)
         val termName = Var(nme.name).withLocOf(nme)
         val ctor = Def(false, termName, L(Lam(tup, App(termName, Tup(N -> Fld(false, false, Rcd(fs.map {
-          case (S(nme), fld) => nme -> fld
+          case (S(nme), fld) => nme -> Fld(false, false, nme)
           case (N, fld @ Fld(mut, spec, nme: Var)) => nme -> fld
           case _ => die
         })) :: Nil)))), true)

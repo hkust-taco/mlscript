@@ -390,7 +390,7 @@ class DiffTests
           }
         }
         
-        val raise: typer.Raise = d => report(d :: Nil)
+        val raise: Raise = d => report(d :: Nil)
         
         // try to parse block of text into mlscript ast
         val ans = try {
@@ -658,7 +658,7 @@ class DiffTests
               // `typerResults` buffer after the statement has been processed.
               val diagnosticLines = mutable.Buffer.empty[Str]
               // We put diagnosis to the buffer in the following `Typer` routines.
-              val raiseToBuffer: typer.Raise = d => {
+              val raiseToBuffer: Raise = d => {
                 report(d :: Nil, diagnosticLines += _)
               }
               // Typing results are before diagnostic messages in the subsumption case.
@@ -671,7 +671,7 @@ class DiffTests
                   typer.dbg = mode.dbg
                   
                   implicit val prov: typer.TP = typer.NoProv // TODO
-                  implicit val r: typer.Raise = raise
+                  implicit val r: Raise = raise
                   
                   val ty_sch = ctx.poly { ctx =>
                     typer.typeType(rhs)(ctx, raise, vars = tps.collect {
