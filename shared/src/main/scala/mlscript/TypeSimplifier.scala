@@ -639,7 +639,7 @@ trait TypeSimplifier { self: Typer =>
     
     // * Remove variables that are 'dominated' by another type or variable
     // *  A variable v dominated by T if T is in both of v's positive and negative cooccurrences
-    allVars.foreach { case v => if (!varSubst.contains(v)) {
+    allVars.foreach { case v => if (v.assignedTo.isEmpty && !varSubst.contains(v)) {
       println(s"2[v] $v ${coOccurrences.get(true -> v)} ${coOccurrences.get(false -> v)}")
       
       coOccurrences.get(true -> v).iterator.flatMap(_.iterator).foreach {

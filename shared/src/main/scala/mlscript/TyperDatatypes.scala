@@ -102,7 +102,10 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                         true), N, S(tp.name)))
                     
                     implicit val vars: Map[Str, SimpleType] =
-                      outerVars ++ tparams.iterator.mapKeys(_.name).toMap
+                      // outerVars ++ tparams.iterator.mapKeys(_.name).toMap
+                      outerVars ++ tparams.iterator.map {
+                        case (tp, tv) => (tp.name, SkolemTag(tv.level, tv)(tv.prov))
+                      }
                     
                     val typedParams = td.params.fields.map {
                       case (S(nme), Fld(mut, spec, value)) =>

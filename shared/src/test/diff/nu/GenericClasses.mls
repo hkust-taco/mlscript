@@ -11,18 +11,18 @@ class Some<A>(value: A) {
 }
 //│ class Some
 //│   fun get: ‹∀ 1. get28''#› where 
-//│   |		get28''# := A23'
-//│   [pretty-printed] get: nothing
+//│   |		get28''# := ‘A23'
+//│   [pretty-printed] get: A
 //│   fun toArray: ‹∀ 1. toArray29''#› where 
-//│   |		toArray29''# := (A23',)
-//│   [pretty-printed] toArray: (nothing,)
+//│   |		toArray29''# := (‘A23',)
+//│   [pretty-printed] toArray: (A,)
 
 
 let s = Some(1)
-//│ fun s: ‹∀ 0. s35'#› where 
-//│ |		s35'# := α41'
-//│ |		A23_38' :> 1<int,number>
-//│ |		α41' :> (Some<> & {Some#A: mut A23_38'..A23_38'}) <: s35'#
+//│ fun s: ‹∀ 0. s33'#› where 
+//│ |		s33'# := α39'
+//│ |		A23_36' :> 1<int,number>
+//│ |		α39' :> (Some<> & {Some#A: mut A23_36'..A23_36'}) <: s33'#
 //│ [pretty-printed] s: Some & {Some#A = 'A}
 //│ |  where
 //│ |    'A :> 1
@@ -57,11 +57,11 @@ module None {
   // fun mapBad(f) = None // TODO
 }
 //│ class None
-//│   fun get: ‹∀ 1. get81''#› where 
-//│   |		get81''# := ⊥
+//│   fun get: ‹∀ 1. get79''#› where 
+//│   |		get79''# := ⊥
 //│   [pretty-printed] get: nothing
-//│   fun toArray: ‹∀ 1. toArray82''#› where 
-//│   |		toArray82''# := ()
+//│   fun toArray: ‹∀ 1. toArray80''#› where 
+//│   |		toArray80''# := ()
 //│   [pretty-printed] toArray: ()
 
 
@@ -76,10 +76,10 @@ type Option<A> = Some<A> | None
 
 
 let opt = if true then Some(123) else None
-//│ fun opt: ‹∀ 0. opt92'#› where 
-//│ |		opt92'# := (α99' | None<>)
-//│ |		A23_96' :> 123<int,number>
-//│ |		α99' :> (Some<> & {Some#A: mut A23_96'..A23_96'})
+//│ fun opt: ‹∀ 0. opt90'#› where 
+//│ |		opt90'# := (α97' | None<>)
+//│ |		A23_94' :> 123<int,number>
+//│ |		α97' :> (Some<> & {Some#A: mut A23_94'..A23_94'})
 //│ [pretty-printed] opt: None | Some & {Some#A = 'A}
 //│ |  where
 //│ |    'A :> 123
@@ -106,27 +106,149 @@ if opt is Some(v) then v else 0
 fun map(x, f) = if x is
   None then None
   Some(v) then Some(f(v))
-//│ fun map: ‹∀ 0. map145'#› where 
-//│ |		map145'# := ((α146', α147',) -> (None<> | α158'))
-//│ |		α146' <: ((None<> & α148') | ((Some<> & α149') & ~(None<>)))
-//│ |		α147' <: ((‹∀ 1. value150''›,) -> α157')
-//│ |		α149' <: {value: value150_151'}
-//│ |		value150'' :> value150_151'
-//│ |		α157' <: A23_154'
-//│ |		α158' :> (Some<> & {Some#A: mut A23_154'..A23_154'})
+//│ fun map: ‹∀ 0. map143'#› where 
+//│ |		map143'# := ((α144', α145',) -> (None<> | α156'))
+//│ |		α144' <: ((None<> & α146') | ((Some<> & α147') & ~(None<>)))
+//│ |		α145' <: ((‹∀ 1. value148''›,) -> α155')
+//│ |		α147' <: {value: value148_149'}
+//│ |		value148'' :> value148_149'
+//│ |		α155' <: A23_152'
+//│ |		α156' :> (Some<> & {Some#A: mut A23_152'..A23_152'})
 //│ [pretty-printed] map: (None | Some & {value: 'value}, 'value -> 'A,) -> (None | Some & {Some#A = 'A})
 
 let mo = map(opt, succ)
-//│ fun mo: ‹∀ 0. mo174'#› where 
-//│ |		A23_154' :> int<number>
-//│ |		α158' :> (Some<> & {Some#A: mut A23_154'..A23_154'})
-//│ |		mo174'# := α175'
-//│ |		α175' :> (None<> | α158') <: mo174'#
+//│ fun mo: ‹∀ 0. mo172'#› where 
+//│ |		A23_152' :> int<number>
+//│ |		α156' :> (Some<> & {Some#A: mut A23_152'..A23_152'})
+//│ |		mo172'# := α173'
+//│ |		α173' :> (None<> | α156') <: mo172'#
 //│ [pretty-printed] mo: None | Some & {Some#A = 'A}
 //│ |  where
 //│ |    'A :> int
 
 mo.toArray
 //│ Typed: Array[int]
+
+
+
+class Test(n) {
+  fun foo = n + 1
+}
+//│ class Test
+//│   fun foo: ‹∀ 1. foo204''#› where 
+//│   |		foo204''# := α206''
+//│   |		α206'' :> int<number> <: foo204''#
+//│   [pretty-printed] foo: int
+
+Test(1)
+//│ Typed: Test
+
+:e
+Test(true)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.147: 	Test(true)
+//│ ║         	^^^^^^^^^^
+//│ ╟── reference of type `true` is not an instance of type `int`
+//│ ║  l.147: 	Test(true)
+//│ ║         	     ^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.135: 	  fun foo = n + 1
+//│ ║         	            ^
+//│ ╟── from reference:
+//│ ║  l.134: 	class Test(n) {
+//│ ╙──       	           ^
+//│ Typed: Test | error
+
+
+:e
+class Test<A>(n: A) {
+  fun foo = n + 1
+}
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.165: 	  fun foo = n + 1
+//│ ║         	            ^^^
+//│ ╟── reference of type `A` is not an instance of type `int`
+//│ ║  l.165: 	  fun foo = n + 1
+//│ ║         	            ^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.164: 	class Test<A>(n: A) {
+//│ ╙──       	           ^
+//│ class Test
+//│   fun foo: ‹∀ 1. foo222''#› where 
+//│   |		foo222''# := α224''
+//│   |		α224'' :> error<> | int<number> <: foo222''#
+//│   [pretty-printed] foo: error | int
+
+Test(1)
+//│ Typed: Test & {Test#A :> 'A <: 1 | 'A}
+
+Test(true)
+//│ Typed: Test & {Test#A :> 'A <: 'A | true}
+
+
+class Test<A>(n: A) {
+  fun foo: A = n
+}
+//│ class Test
+//│   fun foo: ‹∀ 1. foo252''#› where 
+//│   |		foo252''# := ‘A248'
+//│   [pretty-printed] foo: A
+
+Test(1).foo
+//│ Typed: 1
+
+Test("ok").foo
+//│ Typed: "ok"
+
+
+:e
+class Test<A> {
+  // fun foo(x: A) = x // FIXME
+  fun foo1(x : A) = x
+  fun foo2(x : A) = x + 1
+}
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.208: 	  fun foo2(x : A) = x + 1
+//│ ║         	                    ^^^
+//│ ╟── reference of type `A` is not an instance of type `int`
+//│ ║  l.208: 	  fun foo2(x : A) = x + 1
+//│ ║         	                    ^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.205: 	class Test<A> {
+//│ ╙──       	           ^
+//│ class Test
+//│   fun foo1: ‹∀ 1. foo1290''#› where 
+//│   |		foo1290''# := (‘A285' -> ‘A285')
+//│   [pretty-printed] foo1: A -> A
+//│   fun foo2: ‹∀ 1. foo2291''#› where 
+//│   |		foo2291''# := (‘A285' -> α293'')
+//│   |		α293'' :> error<> | int<number>
+//│   [pretty-printed] foo2: A -> (error | int)
+
+Test().foo1
+//│ Typed: 'A -> 'A
+
+Test().foo1(1)
+//│ Typed: 1
+
+x => Test().foo1(x)
+//│ Typed: 'a -> 'a
+
+let t = Test()
+//│ fun t: ‹∀ 0. t364'#› where 
+//│ |		t364'# := α371'
+//│ |		α371' :> (Test<> & {Test#A: mut A285_367'..A285_367'}) <: t364'#
+//│ [pretty-printed] t: Test & {Test#A = 'A}
+
+[t.foo1(0), t.foo1(true)]
+//│ Typed: (0 | true, 0 | true,)
+
+// FIXME
+fun foo(x : Test<int>) = x.foo1
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: Test
+
+
+Test().foo2
+//│ Typed: anything -> (error | int)
 
 
