@@ -57,11 +57,11 @@ module None {
   // fun mapBad(f) = None // TODO
 }
 //│ class None
-//│   fun get: ‹∀ 1. get79''#› where 
-//│   |		get79''# := ⊥
+//│   fun get: ‹∀ 1. get92''#› where 
+//│   |		get92''# := ⊥
 //│   [pretty-printed] get: nothing
-//│   fun toArray: ‹∀ 1. toArray80''#› where 
-//│   |		toArray80''# := ()
+//│   fun toArray: ‹∀ 1. toArray93''#› where 
+//│   |		toArray93''# := ()
 //│   [pretty-printed] toArray: ()
 
 
@@ -76,10 +76,10 @@ type Option<A> = Some<A> | None
 
 
 let opt = if true then Some(123) else None
-//│ fun opt: ‹∀ 0. opt90'#› where 
-//│ |		opt90'# := (α97' | None<>)
-//│ |		A23_94' :> 123<int,number>
-//│ |		α97' :> (Some<> & {Some#A: mut A23_94'..A23_94'})
+//│ fun opt: ‹∀ 0. opt103'#› where 
+//│ |		opt103'# := (α110' | None<>)
+//│ |		A23_107' :> 123<int,number>
+//│ |		α110' :> (Some<> & {Some#A: mut A23_107'..A23_107'})
 //│ [pretty-printed] opt: None | Some & {Some#A = 'A}
 //│ |  where
 //│ |    'A :> 123
@@ -106,22 +106,22 @@ if opt is Some(v) then v else 0
 fun map(x, f) = if x is
   None then None
   Some(v) then Some(f(v))
-//│ fun map: ‹∀ 0. map143'#› where 
-//│ |		map143'# := ((α144', α145',) -> (None<> | α156'))
-//│ |		α144' <: ((None<> & α146') | ((Some<> & α147') & ~(None<>)))
-//│ |		α145' <: ((‹∀ 1. value148''›,) -> α155')
-//│ |		α147' <: {value: value148_149'}
-//│ |		value148'' :> value148_149'
-//│ |		α155' <: A23_152'
-//│ |		α156' :> (Some<> & {Some#A: mut A23_152'..A23_152'})
+//│ fun map: ‹∀ 0. map163'#› where 
+//│ |		map163'# := ((α164', α165',) -> (None<> | α176'))
+//│ |		α164' <: ((None<> & α166') | ((Some<> & α167') & ~(None<>)))
+//│ |		α165' <: ((‹∀ 1. value168''›,) -> α175')
+//│ |		α167' <: {value: value168_169'}
+//│ |		value168'' :> value168_169'
+//│ |		α175' <: A23_172'
+//│ |		α176' :> (Some<> & {Some#A: mut A23_172'..A23_172'})
 //│ [pretty-printed] map: (None | Some & {value: 'value}, 'value -> 'A,) -> (None | Some & {Some#A = 'A})
 
 let mo = map(opt, succ)
-//│ fun mo: ‹∀ 0. mo172'#› where 
-//│ |		A23_152' :> int<number>
-//│ |		α156' :> (Some<> & {Some#A: mut A23_152'..A23_152'})
-//│ |		mo172'# := α173'
-//│ |		α173' :> (None<> | α156') <: mo172'#
+//│ fun mo: ‹∀ 0. mo192'#› where 
+//│ |		A23_172' :> int<number>
+//│ |		α176' :> (Some<> & {Some#A: mut A23_172'..A23_172'})
+//│ |		mo192'# := α193'
+//│ |		α193' :> (None<> | α176') <: mo192'#
 //│ [pretty-printed] mo: None | Some & {Some#A = 'A}
 //│ |  where
 //│ |    'A :> int
@@ -135,9 +135,9 @@ class Test(n) {
   fun foo = n + 1
 }
 //│ class Test
-//│   fun foo: ‹∀ 1. foo204''#› where 
-//│   |		foo204''# := α206''
-//│   |		α206'' :> int<number> <: foo204''#
+//│   fun foo: ‹∀ 1. foo231''#› where 
+//│   |		foo231''# := α233''
+//│   |		α233'' :> int<number> <: foo231''#
 //│   [pretty-printed] foo: int
 
 Test(1)
@@ -174,9 +174,9 @@ class Test<A>(n: A) {
 //│ ║  l.164: 	class Test<A>(n: A) {
 //│ ╙──       	           ^
 //│ class Test
-//│   fun foo: ‹∀ 1. foo222''#› where 
-//│   |		foo222''# := α224''
-//│   |		α224'' :> error<> | int<number> <: foo222''#
+//│   fun foo: ‹∀ 1. foo249''#› where 
+//│   |		foo249''# := α251''
+//│   |		α251'' :> error<> | int<number> <: foo249''#
 //│   [pretty-printed] foo: error | int
 
 Test(1)
@@ -190,9 +190,12 @@ class Test<A>(n: A) {
   fun foo: A = n
 }
 //│ class Test
-//│   fun foo: ‹∀ 1. foo252''#› where 
-//│   |		foo252''# := ‘A248'
+//│   fun foo: ‹∀ 1. foo279''#› where 
+//│   |		foo279''# := ‘A275'
 //│   [pretty-printed] foo: A
+
+Test(1)
+//│ Typed: Test & {Test#A :> 'A <: 1 | 'A}
 
 Test(1).foo
 //│ Typed: 1
@@ -208,21 +211,21 @@ class Test<A> {
   fun foo2(x : A) = x + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.208: 	  fun foo2(x : A) = x + 1
+//│ ║  l.211: 	  fun foo2(x : A) = x + 1
 //│ ║         	                    ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.208: 	  fun foo2(x : A) = x + 1
+//│ ║  l.211: 	  fun foo2(x : A) = x + 1
 //│ ║         	                    ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.205: 	class Test<A> {
+//│ ║  l.208: 	class Test<A> {
 //│ ╙──       	           ^
 //│ class Test
-//│   fun foo1: ‹∀ 1. foo1290''#› where 
-//│   |		foo1290''# := (‘A285' -> ‘A285')
+//│   fun foo1: ‹∀ 1. foo1328''#› where 
+//│   |		foo1328''# := (‘A323' -> ‘A323')
 //│   [pretty-printed] foo1: A -> A
-//│   fun foo2: ‹∀ 1. foo2291''#› where 
-//│   |		foo2291''# := (‘A285' -> α293'')
-//│   |		α293'' :> error<> | int<number>
+//│   fun foo2: ‹∀ 1. foo2329''#› where 
+//│   |		foo2329''# := (‘A323' -> α331'')
+//│   |		α331'' :> error<> | int<number>
 //│   [pretty-printed] foo2: A -> (error | int)
 
 Test().foo1
@@ -234,14 +237,178 @@ Test().foo1(1)
 x => Test().foo1(x)
 //│ Typed: 'a -> 'a
 
+:d
 let t = Test()
-//│ fun t: ‹∀ 0. t364'#› where 
-//│ |		t364'# := α371'
-//│ |		α371' :> (Test<> & {Test#A: mut A285_367'..A285_367'}) <: t364'#
+//│ 0. Typing TypingUnit(List(let t = Test ()))
+//│ Completing let t = Test ()
+//│ | 1. Typing term Test ()
+//│ | | 1. Typing term Test
+//│ | | | (>>,0,1)
+//│ | | 1. : (() -> (Test<> & {Test#A: mut A323_405'..A323_405'}))
+//│ | | CONSTRAIN (() -> (Test<> & {Test#A: mut A323_405'..A323_405'})) <! (() -> α409')
+//│ | |   where 
+//│ | | 1. C (() -> (Test<> & {Test#A: mut A323_405'..A323_405'})) <! (() -> α409')    (0)
+//│ | | | 1. C () <! ()    (1)
+//│ | | | 1. C (Test<> & {Test#A: mut A323_405'..A323_405'}) <! α409'    (1)
+//│ | | | | NEW α409' LB (1)
+//│ | 1. : α409'
+//│ | CONSTRAIN α409' <! t402'
+//│ |   where 
+//│ 		α409' :> (Test<> & {Test#A: mut A323_405'..A323_405'})
+//│ | 1. C α409' <! t402'    (0)
+//│ | | NEW α409' UB (1)
+//│ | | 1. C (Test<> & {Test#A: mut A323_405'..A323_405'}) <! t402'    (2)
+//│ | | | NEW t402' LB (1)
+//│ | UNSTASHING... (out)
+//│ | (0,1)
+//│ ⬤ Typed as: ‹∀ 0. t402'#›
+//│  where: 
+//│ 		t402'# := α409'
+//│ 		α409' :> (Test<> & {Test#A: mut A323_405'..A323_405'}) <: t402'#
+//│ fun t: ‹∀ 0. t402'#› where 
+//│ |		t402'# := α409'
+//│ |		α409' :> (Test<> & {Test#A: mut A323_405'..A323_405'}) <: t402'#
 //│ [pretty-printed] t: Test & {Test#A = 'A}
+
+:d
+t
+//│ 0. Typing TypingUnit(List(t))
+//│ | 0. Typing term t
+//│ | 0. : t402'#
+//│ ⬤ Typed as: ‹∀ 0. t402'#›
+//│  where: 
+//│ 		t402'# := α409'
+//│ 		α409' :> (Test<> & {Test#A: mut A323_405'..A323_405'}) <: t402'#
+//│ Typed: Test & {Test#A = 'A}
+
+:d
+t.foo1
+//│ 0. Typing TypingUnit(List((t).foo1))
+//│ | 0. Typing term (t).foo1
+//│ | | 0. Typing term t
+//│ | | 0. : t402'#
+//│ | | CONSTRAIN t402'# <! {foo1: foo1420}
+//│ | |   where 
+//│ 		t402'# := α409'
+//│ 		α409' :> (Test<> & {Test#A: mut A323_405'..A323_405'}) <: t402'#
+//│ | | 0. C t402'# <! {foo1: foo1420}    (0)
+//│ | | | 0. C α409' <! {foo1: foo1420}    (2)
+//│ | | | | NEW α409' UB (0)
+//│ | | | | 0. C (Test<> & {Test#A: mut A323_405'..A323_405'}) <! {foo1: foo1420}    (4)
+//│ | | | | | (1,1)
+//│ | | | | | (0,0)
+//│ | | | | | (1,1)
+//│ | | | | | (1,1)
+//│ | | | | | (1,1)
+//│ | | | | | (0,0)
+//│ | | | | | (0,0)
+//│ | | | | | 0. ARGH  DNF(1, Test<>{Test#A: mut A323_405'..A323_405'})  <!  DNF(0, {foo1: foo1420})
+//│ | | | | | | DNF DISCHARGE CONSTRAINTS
+//│ | | | | | | Consider Test<>{Test#A: mut A323_405'..A323_405'} <: DNF(0, {foo1: foo1420})
+//│ | | | | | | Possible: List({foo1: foo1420})
+//│ | | | | | | 0. A  Test<>{Test#A: mut A323_405'..A323_405'}  %  List()  <!  List({foo1: foo1420})  %  ⊥
+//│ | | | | | | | 0. A  Test<>{Test#A: mut A323_405'..A323_405'}  %  List()  <!  List()  %  {foo1:foo1420}
+//│ | | | | | | | | 0. A  Test<>{Test#A: mut A323_405'..A323_405'}  %  List()  <!  List()  %  |{foo1:foo1420}
+//│ | | | | | | | | | Assigning A323' := A323_405'..A323_405' where 
+//│ | | | | | | | | | Set A323' ~> A421'
+//│ | | | | | | | | | (>>,0,0)
+//│ | | | | | | | | | Looking up foo1 in TypeName(Test)
+//│ | | | | | | | | | Looked up ‹∀ 1. foo1328_423''#› where 
+//│ 		A421'# := A323_405'..A323_405'
+//│ 		foo1328_423''# := (A421'# -> A421'#)
+//│ | | | | | | | | | 0. C ‹∀ 1. foo1328_423''#› <! foo1420    (3)
+//│ | | | | | | | | | | wrong level: 1
+//│ | | | | | | | | | | RECONSTRAINING TVs
+//│ | | | | | | | | | | | 0. C A323_429 <! A323_430    (4)
+//│ | | | | | | | | | | | | NEW A323_429 UB (0)
+//│ | | | | | | | | | | EXTR LHS  ~>  ‹∀ 1. foo1328_427''#›  to 0
+//│ | | | | | | | | | |  where 
+//│ 		foo1328_427''# := (A421_428' -> A421_428')
+//│ 		A421_428' :> A323_429 <: A323_430
+//│ 		A323_429 <: A323_430
+//│ 		A323_430 <: A323_429
+//│ | | | | | | | | | | 0. C ‹∀ 1. foo1328_427''#› <! foo1420    (6)
+//│ | | | | | | | | | | | wrong level: 1
+//│ | | | | | | | | | | | RECONSTRAINING TVs
+//│ | | | | | | | | | | | | 0. C (A421_432 -> A421_433) <! (A421_433 -> A421_432)    (5)
+//│ | | | | | | | | | | | | | 0. C (A421_433,) <! (A421_432,)    (6)
+//│ | | | | | | | | | | | | | | 0. C A421_433 <! A421_432    (7)
+//│ | | | | | | | | | | | | | | | NEW A421_433 UB (0)
+//│ | | | | | | | | | | | | | | | 0. C A421_432 <! A421_432    (10)
+//│ | | | | | | | | | | | | | | | 0. C A323_429 <! A421_432    (10)
+//│ | | | | | | | | | | | | | | | | NEW A323_429 UB (0)
+//│ | | | | | | | | | | | | | 0. C A421_433 <! A421_432    (6)
+//│ | | | | | | | | | | | | | | 0. C A421_433 <! A421_432    (6)
+//│ | | | | | | | | | | | | | | | 0. C A421_433 <! A421_432    (6)
+//│ | | | | | | | | | | | | | | | | Cached!
+//│ | | | | | | | | | | | EXTR LHS  ~>  ‹∀ 1. foo1328_431''›  to 0
+//│ | | | | | | | | | | |  where 
+//│ 		A323_429 <: A421_432 & A323_430
+//│ 		A323_430 <: A323_429
+//│ 		foo1328_431'' :> (A421_432 -> A421_433) <: (A421_433 -> A421_432)
+//│ 		A421_432 <: A323_430
+//│ 		A421_433 :> A421_432 | A323_429 <: A421_432
+//│ | | | | | | | | | | | 0. C ‹∀ 1. foo1328_431''› <! foo1420    (8)
+//│ | | | | | | | | | | | | NEW foo1420 LB (0)
+//│ | 0. : foo1420
+//│ ⬤ Typed as: ‹∀ 0. foo1420›
+//│  where: 
+//│ 		foo1420 :> ‹∀ 1. foo1328_431''›
+//│ 		A323_429 <: A421_432 & A323_430
+//│ 		A323_430 <: A323_429
+//│ 		foo1328_431'' :> (A421_432 -> A421_433) <: (A421_433 -> A421_432)
+//│ 		A421_432 <: A323_430
+//│ 		A421_433 :> A421_432 | A323_429 <: A421_432
+//│ Typed: 'A -> 'A
 
 [t.foo1(0), t.foo1(true)]
 //│ Typed: (0 | true, 0 | true,)
+
+t.foo1(0)
+//│ Typed: 0 | true
+
+:d
+t
+//│ 0. Typing TypingUnit(List(t))
+//│ | 0. Typing term t
+//│ | 0. : t402'#
+//│ ⬤ Typed as: ‹∀ 0. t402'#›
+//│  where: 
+//│ 		t402'# := α409'
+//│ 		A323_405' :> A323_486 | A323_468 | A323_452 | A323_430 <: A323_485 & A323_467 & A323_451 & A323_429
+//│ 		α409' :> (Test<> & {Test#A: mut A323_405'..A323_405'}) <: {foo1: foo1476} & {foo1: foo1458} & {foo1: foo1442} & {foo1: foo1420} & t402'#
+//│ 		foo1420 :> ‹∀ 1. foo1328_431''›
+//│ 		A323_429 :> 0<int,number> | true<bool> | true<bool> | 0<int,number> | 0<int,number> <: A421_432 & A323_430
+//│ 		A323_430 :> 0<int,number> | true<bool> | true<bool> | 0<int,number> | 0<int,number> <: α490 & A477_488 & A323_486 & α472 & A459_470 & A323_468 & α456 & A443_454 & A323_452 & A323_429
+//│ 		foo1328_431'' :> (A421_432 -> A421_433) <: (A421_433 -> A421_432)
+//│ 		A421_432 :> 0<int,number> | true<bool> | true<bool> | 0<int,number> | 0<int,number> <: A323_430
+//│ 		A421_433 :> A421_432 | A323_429 <: A421_432
+//│ 		foo1442 :> ‹∀ 1. foo1328_453''› <: ((0<int,number>,) -> α456)
+//│ 		A323_451 :> 0<int,number> | true<bool> | true<bool> | 0<int,number> | 0<int,number> | A323_430 <: α456 & A443_454 & A323_452
+//│ 		A323_452 :> 0<int,number> | true<bool> | true<bool> | 0<int,number> | 0<int,number> <: α490 & A477_488 & A323_486 & α472 & A459_470 & A323_468 & A323_451 & A323_429
+//│ 		foo1328_453'' :> (A443_454 -> A443_455) <: (A443_455 -> A443_454)
+//│ 		A443_454 :> 0<int,number> | true<bool> | true<bool> | 0<int,number> | 0<int,number> <: α456 & A323_452
+//│ 		A443_455 :> A443_454 | A323_451 <: α456 & A443_454
+//│ 		α456 :> 0<int,number> | true<bool> | true<bool> | 0<int,number> | 0<int,number>
+//│ 		foo1458 :> ‹∀ 1. foo1328_469''› <: ((true<bool>,) -> α472)
+//│ 		A323_467 :> 0<int,number> | true<bool> | true<bool> | 0<int,number> | A323_452 | A323_430 <: α472 & A459_470 & A323_468
+//│ 		A323_468 :> 0<int,number> | true<bool> | true<bool> | 0<int,number> <: α490 & A477_488 & A323_486 & A323_467 & A323_451 & A323_429
+//│ 		foo1328_469'' :> (A459_470 -> A459_471) <: (A459_471 -> A459_470)
+//│ 		A459_470 :> 0<int,number> | true<bool> | true<bool> | 0<int,number> <: α472 & A323_468
+//│ 		A459_471 :> A459_470 | A323_467 <: α472 & A459_470
+//│ 		α472 :> 0<int,number> | true<bool> | 0<int,number> | true<bool>
+//│ 		foo1476 :> ‹∀ 1. foo1328_487''› <: ((0<int,number>,) -> α490)
+//│ 		A323_485 :> 0<int,number> | true<bool> | A323_468 | A323_452 | A323_430 <: α490 & A477_488 & A323_486
+//│ 		A323_486 :> 0<int,number> | true<bool> <: A323_485 & A323_467 & A323_451 & A323_429
+//│ 		foo1328_487'' :> (A477_488 -> A477_489) <: (A477_489 -> A477_488)
+//│ 		A477_488 :> true<bool> | 0<int,number> <: α490 & A323_486
+//│ 		A477_489 :> A477_488 | A323_485 <: α490 & A477_488
+//│ 		α490 :> 0<int,number> | true<bool>
+//│ Typed: Test & {Test#A = 'A & 'A0}
+//│   where
+//│     'A :> 0 | true
+//│        <: 'A0
+//│     'A0 <: 'A
 
 // FIXME
 fun foo(x : Test<int>) = x.foo1

@@ -427,12 +427,41 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           implicit val freshened: MutMap[TV, ST] = MutMap.empty
           implicit val shadows: Shadows = Shadows.empty
           // freshened ++= td.tparams.map(tp => tp._2 -> TopType)
+          
+          // /* 
           td.tparams.foreach { case (tn, _tv) =>
             // val tv = freshVar(_tv.prov, S(_tv), _tv.nameHint)
-            val tv = freshVar(_tv.prov, N, _tv.nameHint) // TODO safe not to set original?!
-            println(s"Assigning $tv")
+            val targ = rfnt.get(Var(td.nme.name + "#" + tn.name)) match {
+              case S(fty) =>
+                TypeBounds(
+                  fty.lb.getOrElse(BotType),
+                  fty.ub,
+                )(_tv.prov)
+              case N =>
+                // FIXME type bounds are kind of wrong for this
+                TypeBounds(
+                  _tv.lowerBounds.foldLeft(BotType: ST)(_ | _),
+                  _tv.upperBounds.foldLeft(TopType: ST)(_ & _),
+                )(_tv.prov)
+            }
+            // println(s"Assigning ${_tv} ~> $tv := $targ where ${
+            //   targ.ub.showBounds}${targ.showBounds}")
+            //   // targ.ub.showBounds}${targ.lb.fold("")(_.showBounds)}")
+            println(s"Assigning ${_tv} := $targ where ${targ.showBounds}")
+            val tv =
+              freshVar(_tv.prov, N, _tv.nameHint)(targ.level) // TODO safe not to set original?!
+              // freshVar(_tv.prov, S(_tv), _tv.nameHint)(targ.level) // TODO safe not to set original?!
+            println(s"Set ${_tv} ~> $tv")
             assert(tv.assignedTo.isEmpty)
-            tv.assignedTo = S(rfnt.get(Var(td.nme.name + "#" + tn.name)) match {
+            tv.assignedTo = S(targ)
+            // println(s"Assigned ${tv.assignedTo}")
+            freshened += _tv -> tv
+          }
+          // */
+          /* 
+          td.tparams.foreach { case (tn, tv) =>
+            assert(tv.assignedTo.isEmpty)
+            val targ = rfnt.get(Var(td.nme.name + "#" + tn.name)) match {
               case S(fty) =>
                 TypeBounds(
                   fty.lb.getOrElse(BotType),
@@ -444,9 +473,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                   tv.lowerBounds.foldLeft(BotType: ST)(_ | _),
                   tv.upperBounds.foldLeft(TopType: ST)(_ & _),
                 )(tv.prov)
-            })
-            freshened += _tv -> tv
+            }
+            println(s"Type param $tv := ${targ}")
+            freshened += tv -> targ
           }
+          */
+          
           // println(td)
           // val res = td.freshenAbove(td.level + 1, rigidify = true).asInstanceOf[TypedNuCls]
           val res =
@@ -460,7 +492,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }
     def lookupNuTypeDefField(cls: TypedNuCls, fld: Var): FieldType = {
       // println(fld.name, cls.members)
-      cls.members.get(fld.name) match {
+      println(s"Looking up $fld in ${cls.td.nme}")
+      val res = cls.members.get(fld.name) match {
         case S(d: TypedNuFun) =>
           d.ty.toUpper(provTODO)
         case S(p: NuParam) =>
@@ -471,6 +504,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             fld.toLoc).toUpper(noProv)
         // case _ => ???
       }
+      println(s"Looked up $res where ${res.ub.showBounds}")
+      res
     }
     
     /** Helper function to constrain Field lower bounds. */

@@ -868,7 +868,13 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     require(level <= MaxLevel)
     
     
-    var assignedTo: Opt[ST] = N
+    // var assignedTo: Opt[ST] = N
+    private var _assignedTo: Opt[ST] = N
+    def assignedTo: Opt[ST] = _assignedTo
+    def assignedTo_=(value: Opt[ST]): Unit = {
+      require(value.forall(_.level <= level))
+      _assignedTo = value
+    }
     
     // * Bounds shoudl always be disregarded when `equatedTo` is defined, as they are then irrelevant:
     def lowerBounds: List[SimpleType] = { require(assignedTo.isEmpty); _lowerBounds }
