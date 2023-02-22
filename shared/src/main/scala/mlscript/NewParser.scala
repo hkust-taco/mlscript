@@ -292,7 +292,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
             }
             val ps = parents(if (kind === Als) KEYWORD("=") else KEYWORD(":"))
             val body = curlyTypingUnit
-            R(NuTypeDef(kind, tn, tparams, params, ps, body))
+            val res = NuTypeDef(kind, tn, tparams, params, ps, body)
+            R(res.withLoc(S(l0 ++ res.getLoc)))
           
           // TODO make `fun` by-name and `let` by-value
           case (KEYWORD(kwStr @ ("fun" | "let")), l0) :: c => // TODO support rec?

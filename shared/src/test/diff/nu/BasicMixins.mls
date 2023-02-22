@@ -71,7 +71,7 @@ Base1(1).test
 class Base1(x): BaseTest
 //│ ╔══[ERROR] Type mismatch in type declaration:
 //│ ║  l.71: 	class Base1(x): BaseTest
-//│ ║        	      ^^^^^^^^^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `{x: ?x}` does not have field 'base'
 //│ ║  l.71: 	class Base1(x): BaseTest
 //│ ║        	           ^^^

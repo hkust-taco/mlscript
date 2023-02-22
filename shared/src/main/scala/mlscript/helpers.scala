@@ -567,7 +567,7 @@ trait Located {
   def withLocOf(that: Located): this.type = withLoc(that.toLoc)
   def hasLoc: Bool = origin.isDefined
   lazy val toLoc: Opt[Loc] = getLoc
-  private def getLoc: Opt[Loc] = {
+  private[mlscript] def getLoc: Opt[Loc] = {
     def subLocs = children.iterator.flatMap(_.toLoc.iterator)
     if (spanStart < 0) spanStart =
       subLocs.map(_.spanStart).minOption.getOrElse(return N)
