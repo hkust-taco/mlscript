@@ -48,7 +48,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   // }
   
   
-  sealed abstract class TypedNuDecl extends NuMember {
+  // sealed abstract class TypedNuDecl extends NuMember {
+  sealed trait TypedNuDecl extends NuMember {
     def name: Str
     // def freshen(implicit ctx: Ctx): TypedNuDecl = this match {
     //   case m @ TypedNuMxn(td, thisTV, superTV, ttu) =>
@@ -69,9 +70,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       implicit val shadows: Shadows = Shadows.empty
       // println(level)
       ctx.copy(lvl = level + 1) |> { implicit ctx =>
-      freshenAbove(level, rigidify = false)
+      freshenAbove(level, rigidify = false).asInstanceOf[TypedNuDecl]
       }
     }
+    /* 
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
           : TypedNuTermDef = {
@@ -103,6 +105,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       // }
       }
     }
+    */
     def force()(implicit raise: Raise): Unit = this match {
       case x: TypedNuMxn => x.ttu.force()
       case x: TypedNuCls => x.ttu.force()
@@ -110,9 +113,15 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     }
   }
   
-  sealed abstract class TypedNuTypeDef(kind: TypeDefKind) extends TypedNuDecl {
+  sealed abstract class TypedNuTypeDef(kind: TypeDefKind) extends TypedNuTypeDefBase with TypedNuDecl {
     def nme: TypeName
     // val tparams: Ls[TN -> TV] = Nil // TODO
+    override def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV,ST]): TypedNuTypeDef = ???
+    // val prov: TP
+    val td: NuTypeDef
+    val prov: TP = TypeProvenance(td.toLoc, td.describe, isType = true)
+    val level: Level
+    def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = ???
   }
   // case class TypedNuTypeDef(
   //   kind: TypeDefKind,
@@ -123,12 +132,13 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   //   toLoc: Opt[Loc],
   // )
   
-  case class TypedNuAls(nme: TypeName) extends TypedNuTypeDef(Als) {
+  // case class TypedNuAls(level: Level, nme: TypeName)(val prov: TP) extends TypedNuTypeDef(Als) {
+  case class TypedNuAls(level: Level, td: NuTypeDef) extends TypedNuTypeDef(Als) {
     def name: Str = nme.name
-    
-    def freshenAbove(lim: Int, rigidify: Bool)
-          (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
-          : TypedNuTermDef = ???
+    def nme: mlscript.TypeName = ???
+    // def freshenAbove(lim: Int, rigidify: Bool)
+    //       (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
+    //       : TypedNuTypeDef = ???
   }
   
   // case class TypedNuCls(nme: TypeName) extends TypedNuTypeDef(Als) with TypedNuTermDef {
@@ -143,7 +153,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   }
   
   case class TypedNuMxn(td: NuTypeDef, thisTV: ST, superTV: ST, ttu: TypedTypingUnit) extends TypedNuTypeDef(Mxn) with TypedNuTermDef {
-    def level: Level = thisTV.level - 1 // TODO cleaner
+    val level: Level = thisTV.level - 1 // TODO cleaner
     def nme: TypeName = td.nme
     def name: Str = nme.name
     // def freshen(implicit ctx: Ctx): TypedNuMxn = TypedNuMxn(td, 
@@ -152,6 +162,13 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   /** Note: the type `ty` is stoed *without* its polymorphic wrapper! */
   case class TypedNuFun(level: Level, fd: NuFunDef, ty: ST) extends TypedNuDecl with TypedNuTermDef {
     def name: Str = fd.nme.name
+    def freshenAbove(lim: Int, rigidify: Bool)
+          (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
+          : TypedNuFun = this match {
+      case TypedNuFun(level, fd, ty) =>
+        // TypedNuFun(level min ctx.lvl, fd, ty.freshenAbove(level, rigidify))
+        TypedNuFun(level min ctx.lvl, fd, ty.freshenAbove(lim, rigidify))
+    }
   }
   
   case class TypedTypingUnit(entities: Ls[LazyTypeInfo], result: Opt[ST]) {
@@ -159,7 +176,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
           : TypedTypingUnit =
-      TypedTypingUnit(entities.map(_.map(_.freshenAbove(lim, rigidify)))
+      TypedTypingUnit(entities.map(_.map(_.freshenAbove(lim, rigidify).asInstanceOf[TypedNuTermDef]))
         , result.map(_.freshenAbove(lim, rigidify)))
     def force()(implicit raise: Raise): Unit = {
       entities.foreach(_.force())

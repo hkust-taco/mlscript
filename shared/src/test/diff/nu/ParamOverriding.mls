@@ -21,7 +21,10 @@ class Base1(p: int): Over {
 //│   fun test: (Int, p33'',) where 
 //│   |		p33'' :> p33_34'
 //│   |		p33_34' :> "hi"<string>
-//│   [pretty-printed] test: (int, "hi",)
+//│   [pretty-printed] test: (int, 'p,)
+//│   |  where
+//│   |    'p :> 'p0
+//│   |    'p0 :> "hi"
 
 
 Base1(123).test

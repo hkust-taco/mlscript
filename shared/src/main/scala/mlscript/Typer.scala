@@ -1262,6 +1262,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           val bounds = (ubs.mapValues(_.reduce(_ &- _)) ++ lbs.mapValues(_.reduce(_ | _)).map(_.swap))
           val procesased = bounds.map { case (lo, hi) => Bounds(go(lo), go(hi)) }
           Constrained(go(bod), Nil, procesased)
+        
+        // case DeclType(lvl, info) =>
+          
           
     }
     // }(r => s"~> $r")

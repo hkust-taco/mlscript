@@ -30,6 +30,15 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   case class VarSymbol(ty: ST, definingVar: Var) extends TypeInfo
   
+  // case class DeclType(level: Level, info: LazyTypeInfo) extends SimpleType {
+  //   // def level: Level = info.complete().level
+  //   def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = ???
+  //   val prov: TP = TypeProvenance(info.decl.toLoc, info.decl.describe, isType = true)
+  // }
+  // case class DeclType() extends SimpleType {
+  
+  protected abstract class TypedNuTypeDefBase extends SimpleType
+  
   // TODO rm level? already in ctx
   class LazyTypeInfo(val level: Int, val decl: NuDecl)(implicit ctx: Ctx, vars: Map[Str, SimpleType]) extends TypeInfo {
   // class LazyTypeInfo[A](level: Int, decl: NuDecl) extends TypeInfo {
@@ -246,11 +255,13 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     val ttu = typeTypingUnit(td.body, allowPure = false) // TODO use
                     
                     // TODO check overriding
-                    val clsMems = ttu.entities.map(_.complete()).map {
-                      case fun @ TypedNuFun(_, fd, ty) =>
-                        fun
-                      case _ => ???
-                    }
+                    val clsMems = ttu.entities.map(_.complete())
+                    // .map {
+                    //   case fun @ TypedNuFun(_, fd, ty) =>
+                    //     fun
+                    //   // case _ => ???
+                    //   case m => m
+                    // }
                     
                     // val thisTy = ClassTag(Var(td.name),
                     //       Set.empty//TODO

@@ -136,6 +136,7 @@ final case class Bounds(lb: Type, ub: Type)              extends Type
 final case class WithExtension(base: Type, rcd: Record)  extends Type
 final case class Splice(fields: Ls[Either[Type, Field]]) extends Type
 final case class Constrained(base: Type, tvBounds: Ls[TypeVar -> Bounds], where: Ls[Bounds]) extends Type
+final case class FirstClassDefn(defn: NuTypeDef)         extends Type
 
 final case class Field(in: Opt[Type], out: Type)         extends FieldImpl
 
@@ -185,4 +186,5 @@ final case class NuFunDef(
 }
 
 
-sealed abstract class PgrmOrTypingUnit
+sealed abstract class PgrmOrTypingUnit // TODO rm
+

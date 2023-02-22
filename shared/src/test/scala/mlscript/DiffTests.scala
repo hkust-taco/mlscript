@@ -491,10 +491,13 @@ class DiffTests
             
             val (typeDefs, stmts) = if (newDefs) {
               
+              /* 
               val vars: Map[Str, typer.SimpleType] = Map.empty
               val tpd = typer.typeTypingUnit(TypingUnit(p.tops), allowPure = true)(ctx, raise, vars)
               
               tpd.force()(raise)
+              
+              // val sctx = ShowCtx.mk(tpd)
               
               def showTTU(ttu: typer.TypedTypingUnit, ind: Int): Unit = {
                 val indStr = "  " * ind
@@ -511,14 +514,18 @@ class DiffTests
                     // tm.ttu.entities.foreach { }
                     showTTU(tm.ttu, ind + 1)
                   case tf: typer.TypedNuFun =>
-                    val exp = getType(tf.ty)
+                    // val exp = getType(tf.ty)
                     output(s"${indStr}${tf.fd.isLetRec match {
                       case S(false) => "let"
                       case S(true) => "let rec"
                       case N => "fun"
                     }} ${tf.name}: ${tf.ty} where ${tf.ty.showBounds
                       .indentNewLines(indStr+"|")}")
-                    output(s"${indStr}[pretty-printed] ${tf.name}: ${exp.show.indentNewLines(indStr+"|")}")
+                    output(s"${indStr}[pretty-printed] ${tf.name}: ${
+                      // exp.show
+                      typer.expandType(tf.ty)(ctx).show
+                      // typer.expandType(tf.ty)(ctx).showIn(sctx)
+                        .indentNewLines(indStr+"|")}")
                 }
               }
               showTTU(tpd, 0)
@@ -529,6 +536,21 @@ class DiffTests
                 val exp = getType(typer.PolymorphicType(0, res_ty))
                 output(s"Typed: ${exp.show}")
               }
+              */
+              
+              import typer._
+              
+              val mod = NuTypeDef(Nms, TypeName("ws"), Nil, Tup(Nil), Nil, TypingUnit(p.tops))
+              val info = new LazyTypeInfo(ctx.lvl, mod)(ctx, Map.empty)
+              // val modTpe = DeclType(ctx.lvl, info)
+              info.force()(raise)
+              
+              // val tpd = info
+              
+              
+              // val exp = typer.expandType(modTpe)(ctx)
+              // FirstClassDefn()
+              
               
               (Nil, Nil)
               

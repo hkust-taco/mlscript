@@ -12,8 +12,9 @@ let add11 = Add(Lit(1), Lit(2))
 //│ let add11: α33 where 
 //│ |		α33 :> (Add<> & {Add#E: mut E24_34..E24_34})
 //│ |		E24_34 :> Lit<>
-//│ [pretty-printed] add11: Add & {Add#E = 'E}
+//│ [pretty-printed] add11: 'a
 //│ |  where
+//│ |    'a :> Add & {Add#E = 'E}
 //│ |    'E :> Lit
 
 
@@ -24,24 +25,32 @@ mixin EvalBase {
       Add(l, r) then this.eval(l) + this.eval(r)
 }
 //│ mixin EvalBase
-//│   this: this40' 
-//│   |		this40' <: {eval: eval60_61'} & {eval: eval53_54'}
-//│   |		eval53_54' <: ((‹∀ 2. lhs49_56'''›,) -> α55_58')
-//│   |		lhs49_56''' :> lhs49_57'
-//│   |		α55_58' <: int<number>
-//│   |		eval60_61' <: ((‹∀ 2. rhs51_63'''›,) -> α62_65')
-//│   |		rhs51_63''' :> rhs51_64'
-//│   |		α62_65' <: int<number>
-//│   super: super41' 
-//│   fun eval: (α43'' -> (Int | α66'')) where 
-//│   |		α43'' <: ((Lit<> & α44'') | ((Add<> & α48'') & ~(Lit<>)))
-//│   |		α44'' <: {n: n45_46''}
-//│   |		n45_46'' <: int<number>
-//│   |		α48'' <: {rhs: rhs51_52''} & {lhs: lhs49_50''}
-//│   |		lhs49_50'' <: lhs49_57'
-//│   |		rhs51_52'' <: rhs51_64'
-//│   |		α66'' :> int<number>
-//│   [pretty-printed] eval: (Add & {lhs: anything, rhs: anything} | Lit & {n: int}) -> int
+//│   this: this36' 
+//│   |		this36' <: {eval: eval56_57'} & {eval: eval49_50'}
+//│   |		eval49_50' <: ((‹∀ 2. lhs45_52'''›,) -> α51_54')
+//│   |		lhs45_52''' :> lhs45_53'
+//│   |		α51_54' <: int<number>
+//│   |		eval56_57' <: ((‹∀ 2. rhs47_59'''›,) -> α58_61')
+//│   |		rhs47_59''' :> rhs47_60'
+//│   |		α58_61' <: int<number>
+//│   super: super37' 
+//│   fun eval: (α39'' -> (Int | α62'')) where 
+//│   |		α39'' <: ((Lit<> & α40'') | ((Add<> & α44'') & ~(Lit<>)))
+//│   |		α40'' <: {n: n41_42''}
+//│   |		n41_42'' <: int<number>
+//│   |		α44'' <: {rhs: rhs47_48''} & {lhs: lhs45_46''}
+//│   |		lhs45_46'' <: lhs45_53'
+//│   |		rhs47_48'' <: rhs47_60'
+//│   |		α62'' :> int<number>
+//│   [pretty-printed] eval: 'a -> (int | 'b)
+//│   |  where
+//│   |    'b :> int
+//│   |    'a <: Lit & 'c | Add & 'd & ~Lit
+//│   |    'd <: {rhs: 'rhs} & {lhs: 'lhs}
+//│   |    'lhs <: 'lhs0
+//│   |    'rhs <: 'rhs0
+//│   |    'c <: {n: 'n}
+//│   |    'n <: int
 
 
 module TestLang: EvalBase
@@ -60,25 +69,38 @@ class Neg<A>(expr: A)
 //│ class Neg
 
 let add2negadd11 = Add(Lit(2), Neg(add11))
-//│ let add2negadd11: α150 where 
-//│ |		E24_34 :> Lit<> <: lhs49_132 & rhs51_130
-//│ |		lhs49_126 :> Lit<> <: ((Lit<> & α44_127) | ((Add<> & α48_129) & ~(Lit<>)))
-//│ |		α44_127 :> Lit<> <: {n: n45_128}
-//│ |		n45_128 :> Int <: int<number>
-//│ |		α48_129 :> (Add<> & {Add#E: mut E24_34..E24_34}) <: {rhs: rhs51_130} & {lhs: lhs49_132}
-//│ |		rhs51_130 :> Lit<> <: rhs51_131
-//│ |		rhs51_131 :> Lit<> <: ((Lit<> & α44_127) | ((Add<> & α48_129) & ~(Lit<>)))
-//│ |		lhs49_132 :> Lit<> <: lhs49_126
-//│ |		A141_149 :> (Add<> & {Add#E: mut E24_34..E24_34})
-//│ |		α150 :> (Add<> & {Add#E: mut E24_151..E24_151})
-//│ |		E24_151 :> (Neg<> & {Neg#A: mut A141_149..A141_149}) | Lit<>
-//│ [pretty-printed] add2negadd11: Add & {Add#E = 'E}
+//│ let add2negadd11: α137 where 
+//│ |		E24_34 :> Lit<> <: lhs45_119 & rhs47_117
+//│ |		lhs45_113 :> Lit<> <: ((Lit<> & α40_114) | ((Add<> & α44_116) & ~(Lit<>)))
+//│ |		α40_114 :> Lit<> <: {n: n41_115}
+//│ |		n41_115 :> Int <: int<number>
+//│ |		α44_116 :> (Add<> & {Add#E: mut E24_34..E24_34}) <: {rhs: rhs47_117} & {lhs: lhs45_119}
+//│ |		rhs47_117 :> Lit<> <: rhs47_118
+//│ |		rhs47_118 :> Lit<> <: ((Lit<> & α40_114) | ((Add<> & α44_116) & ~(Lit<>)))
+//│ |		lhs45_119 :> Lit<> <: lhs45_113
+//│ |		A128_136 :> (Add<> & {Add#E: mut E24_34..E24_34})
+//│ |		α137 :> (Add<> & {Add#E: mut E24_138..E24_138})
+//│ |		E24_138 :> (Neg<> & {Neg#A: mut A128_136..A128_136}) | Lit<>
+//│ [pretty-printed] add2negadd11: 'a
 //│ |  where
-//│ |    'E :> Lit | Neg & {Neg#A = 'A}
+//│ |    'a :> Add & {Add#E = 'E}
+//│ |    'E :> Neg & {Neg#A = 'A} | Lit
 //│ |    'A :> Add & {Add#E = 'E0}
 //│ |    'E0 :> Lit
-//│ |        <: 'lhs
-//│ |    'lhs <: Add & {lhs: 'lhs, rhs: 'lhs} | Lit & {n: int}
+//│ |        <: 'lhs & 'rhs
+//│ |    'lhs :> Lit
+//│ |         <: 'lhs0
+//│ |    'lhs0 :> Lit
+//│ |          <: Lit & 'b | Add & 'c & ~Lit
+//│ |    'c :> Add & {Add#E = 'E0}
+//│ |       <: {rhs: 'rhs} & {lhs: 'lhs}
+//│ |    'rhs :> Lit
+//│ |         <: 'rhs0
+//│ |    'rhs0 :> Lit
+//│ |          <: Lit & 'b | Add & 'c & ~Lit
+//│ |    'b :> Lit
+//│ |       <: {n: 'n}
+//│ |    'n := int
 
 
 mixin EvalNeg {
@@ -87,22 +109,29 @@ mixin EvalNeg {
     else super.eval(e)
 }
 //│ mixin EvalNeg
-//│   this: this175' 
-//│   |		this175' <: {eval: eval183_184'}
-//│   |		eval183_184' <: ((‹∀ 2. expr180_186'''›,) -> α185_188')
-//│   |		expr180_186''' :> expr180_187'
-//│   |		α185_188' <: int<number>
-//│   super: super176' 
-//│   |		super176' <: {eval: eval191_192'}
-//│   |		eval191_192' <: ((α190_194',) -> α193_195')
-//│   fun eval: (α178'' -> (α189'' | α193'')) where 
-//│   |		α178'' <: ((Neg<> & α179'') | (α190'' & ~(Neg<>)))
-//│   |		α179'' <: {expr: expr180_181''}
-//│   |		expr180_181'' <: expr180_187'
-//│   |		α189'' :> int<number>
-//│   |		α190'' <: α190_194'
-//│   |		α193'' :> α193_195'
-//│   [pretty-printed] eval: (Neg & {expr: anything} | ~Neg) -> int
+//│   this: this140' 
+//│   |		this140' <: {eval: eval148_149'}
+//│   |		eval148_149' <: ((‹∀ 2. expr145_151'''›,) -> α150_153')
+//│   |		expr145_151''' :> expr145_152'
+//│   |		α150_153' <: int<number>
+//│   super: super141' 
+//│   |		super141' <: {eval: eval156_157'}
+//│   |		eval156_157' <: ((α155_159',) -> α158_160')
+//│   fun eval: (α143'' -> (α154'' | α158'')) where 
+//│   |		α143'' <: ((Neg<> & α144'') | (α155'' & ~(Neg<>)))
+//│   |		α144'' <: {expr: expr145_146''}
+//│   |		expr145_146'' <: expr145_152'
+//│   |		α154'' :> int<number>
+//│   |		α155'' <: α155_159'
+//│   |		α158'' :> α158_160'
+//│   [pretty-printed] eval: 'a -> ('b | 'c)
+//│   |  where
+//│   |    'c :> 'd
+//│   |    'b :> int
+//│   |    'a <: Neg & 'e | 'f & ~Neg
+//│   |    'f <: 'g
+//│   |    'e <: {expr: 'expr}
+//│   |    'expr <: 'expr0
 
 
 module TestLang: EvalBase, EvalNeg
