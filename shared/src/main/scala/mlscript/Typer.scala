@@ -335,7 +335,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case ti: LazyTypeInfo =>
             // ti.complete()
             ti.decl match {
-              case NuTypeDef(Cls, _, tps, _, _, _) =>
+              case NuTypeDef(Cls, _, tps, _, _, _, _) =>
                 S(Cls, tps.size)
               case _ => ???
             }
@@ -1193,7 +1193,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     // def mkTypingUnit(members: Ls[Str -> NuMember]): TypingUnit = {
       TypingUnit(
           // Asc(Var("this"), go(thisTy)) :: 
-          NuFunDef(S(false), Var("this"), Nil, R(go(thisTy))) :: 
+          // NuFunDef(S(false), Var("this"), Nil, R(go(thisTy))) :: 
             sorted.collect {
         case (_, td: TypedNuDecl) => goDecl(td)
         case (_, td: TypedNuFun) => ???
@@ -1207,6 +1207,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           // Tup(params.map(p => S(p._1) -> Fld(p._2.ub))))
           Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub))))),
           Nil,//TODO
+          S(go(thisTy)),
           mkTypingUnit(thisTy, members))
           // mkTypingUnit(() :: members.toList.sortBy(_._1)))
       case TypedNuFun(level, fd, ty) =>

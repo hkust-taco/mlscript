@@ -11,6 +11,7 @@ class Some<A>(value: A) {
 }
 //│ 
 //│ class Some[A](value: A) {
+//│ this: 'this
 //│ fun get: A
 //│ fun toArray: (A,)
 //│ }
@@ -57,6 +58,7 @@ module None {
 }
 //│ 
 //│ namespace None() {
+//│ this: 'this
 //│ fun get: nothing
 //│ fun toArray: ()
 //│ }
@@ -125,6 +127,7 @@ class Test(n) {
 }
 //│ 
 //│ class Test(n: 'n) {
+//│ this: 'this
 //│ fun foo: 'a
 //│ }
 
@@ -136,16 +139,16 @@ Test(1)
 :e
 Test(true)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.137: 	Test(true)
+//│ ║  l.140: 	Test(true)
 //│ ║         	^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `int`
-//│ ║  l.137: 	Test(true)
+//│ ║  l.140: 	Test(true)
 //│ ║         	     ^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.124: 	  fun foo = n + 1
+//│ ║  l.126: 	  fun foo = n + 1
 //│ ║         	            ^
 //│ ╟── from reference:
-//│ ║  l.123: 	class Test(n) {
+//│ ║  l.125: 	class Test(n) {
 //│ ╙──       	           ^
 //│ 
 //│ 'a
@@ -157,16 +160,17 @@ class Test<A>(n: A) {
   fun foo = n + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.157: 	  fun foo = n + 1
+//│ ║  l.160: 	  fun foo = n + 1
 //│ ║         	            ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.157: 	  fun foo = n + 1
+//│ ║  l.160: 	  fun foo = n + 1
 //│ ║         	            ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.156: 	class Test<A>(n: A) {
+//│ ║  l.159: 	class Test<A>(n: A) {
 //│ ╙──       	           ^
 //│ 
 //│ class Test[A](n: A) {
+//│ this: 'this
 //│ fun foo: 'a
 //│ }
 
@@ -192,6 +196,7 @@ class Test<A>(n: A) {
 }
 //│ 
 //│ class Test[A](n: A) {
+//│ this: 'this
 //│ fun foo: A
 //│ fun foo1: (x: A,) -> A
 //│ fun id: 'a -> 'a
@@ -247,16 +252,17 @@ class Test<A> {
   fun foo2(x: A) = x + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.247: 	  fun foo2(x: A) = x + 1
+//│ ║  l.252: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.247: 	  fun foo2(x: A) = x + 1
+//│ ║  l.252: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.245: 	class Test<A> {
+//│ ║  l.250: 	class Test<A> {
 //│ ╙──       	           ^
 //│ 
 //│ class Test[A]() {
+//│ this: 'this
 //│ fun foo1: (x: A,) -> A
 //│ fun foo2: (x: A,) -> 'a
 //│ }

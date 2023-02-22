@@ -10,6 +10,7 @@ class C {
 }
 //│ 
 //│ class C() {
+//│ this: 'this
 //│ fun const: 'a -> 'b -> 'b
 //│ fun id: 'b -> 'b
 //│ }
@@ -23,6 +24,7 @@ class Base0(n) {
 }
 //│ 
 //│ class Base0(n: 'n) {
+//│ this: 'this
 //│ fun me: 'this
 //│ fun mine: 'n0
 //│ fun my: 'n0
@@ -64,6 +66,7 @@ class Base1(base: int) {
 }
 //│ 
 //│ class Base1(base: int) {
+//│ this: 'this
 //│ fun foo: 'a -> 'b
 //│ fun getBase1: int
 //│ fun getBase2: 'base
@@ -76,6 +79,7 @@ class Base1(base: int) {
 }
 //│ 
 //│ class Base1(base: int) {
+//│ this: 'this
 //│ fun foo: 'a -> 'b
 //│ fun getBase1: int
 //│ fun me: 'this
@@ -109,7 +113,7 @@ b.me
 :e
 b.getBaseTypo
 //│ ╔══[ERROR] class `Base1` does not contain member `getBaseTypo`
-//│ ║  l.110: 	b.getBaseTypo
+//│ ║  l.114: 	b.getBaseTypo
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ 
 //│ 'getBaseTypo
@@ -127,14 +131,15 @@ class Rec(n) {
   fun go = Rec(n + 1)
 }
 //│ ╔══[ERROR] Cyclic definition
-//│ ║  l.126: 	class Rec(n) {
+//│ ║  l.130: 	class Rec(n) {
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.127: 	  fun go = Rec(n + 1)
+//│ ║  l.131: 	  fun go = Rec(n + 1)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.128: 	}
+//│ ║  l.132: 	}
 //│ ╙──       	^
 //│ 
 //│ class Rec(n: 'n) {
+//│ this: 'this
 //│ fun go: 'a
 //│ }
 
@@ -147,19 +152,20 @@ class Annots(base: 0 | 1) {
   fun a = base
 }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.146: 	  a: int
+//│ ║  l.151: 	  a: int
 //│ ║         	  ^
 //│ ╟── type `(0 | 1,)` is not an instance of type `int`
-//│ ║  l.145: 	class Annots(base: 0 | 1) {
+//│ ║  l.150: 	class Annots(base: 0 | 1) {
 //│ ║         	                   ^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.146: 	  a: int
+//│ ║  l.151: 	  a: int
 //│ ║         	  ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.146: 	  a: int
+//│ ║  l.151: 	  a: int
 //│ ╙──       	     ^^^
 //│ 
 //│ class Annots(base: (0 | 1,)) {
+//│ this: 'this
 //│ fun a: (0 | 1,)
 //│ }
 

@@ -8,7 +8,7 @@ class Foo()
 123
 //│ 
 //│ class Foo() {
-//│ let this: 'this
+//│ this: 'this
 //│ }
 //│ 123
 //│ Typed: 123
@@ -113,11 +113,11 @@ module Test0_2 {
 }
 //│ 
 //│ namespace Test0_1() {
-//│ let this: 'this
+//│ this: 'this
 //│ fun a: 'b
 //│ }
 //│ namespace Test0_2() {
-//│ let this: 'this0
+//│ this: 'this0
 //│ fun b: 123
 //│ }
 
@@ -134,11 +134,11 @@ class Test0_2() {
 }
 //│ 
 //│ class Test0_1() {
-//│ let this: 'this
+//│ this: 'this
 //│ fun a: 'b
 //│ }
 //│ class Test0_2() {
-//│ let this: 'this0
+//│ this: 'this0
 //│ fun b: 123
 //│ }
 
@@ -159,11 +159,11 @@ module Test1_2 {
 //│ ╙──       	^
 //│ 
 //│ namespace Test1_1() {
-//│ let this: 'this
+//│ this: 'this
 //│ fun a: 'b
 //│ }
 //│ namespace Test1_2() {
-//│ let this: 'this0
+//│ this: 'this0
 //│ fun b: 'a
 //│ }
 
@@ -189,11 +189,11 @@ class Test1_2 {
 //│ ╙──       	^
 //│ 
 //│ class Test1_1() {
-//│ let this: 'this
+//│ this: 'this
 //│ fun a: 'b
 //│ }
 //│ class Test1_2() {
-//│ let this: 'this0
+//│ this: 'this0
 //│ fun b: 'a
 //│ }
 
@@ -238,14 +238,14 @@ module Test2_2 {
 //│ ╙──       	^
 //│ 
 //│ namespace Test2_1() {
-//│ let this: 'this
+//│ this: 'this
 //│ fun a: 'b
 //│ fun d: 'e
 //│ fun n: 456
 //│ fun t2: Test2_2
 //│ }
 //│ namespace Test2_2() {
-//│ let this: 'this0
+//│ this: 'this0
 //│ fun b: 123
 //│ fun c: 'a
 //│ fun e: 'n

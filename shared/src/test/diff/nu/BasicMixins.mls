@@ -11,10 +11,10 @@ mixin BaseTest {
 //│ fun test = ...
 //│ },this23',super24',TypedTypingUnit(List(test ~> TypedNuFun(1,fun test = ...,base26'')),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
 //│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1204)
-//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1230)
+//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1231)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1221)
-//│ 	at: mlscript.Typer.expandType(Typer.scala:1321)
+//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1222)
+//│ 	at: mlscript.Typer.expandType(Typer.scala:1322)
 //│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:504)
 //│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:943)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
@@ -30,10 +30,10 @@ mixin BaseInc {
 //│ fun test2 = ...
 //│ },this29',super30',TypedTypingUnit(List(test ~> TypedNuFun(1,fun test = ...,α36''), test2 ~> TypedNuFun(1,fun test2 = ...,base37'')),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
 //│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1204)
-//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1230)
+//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1231)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1221)
-//│ 	at: mlscript.Typer.expandType(Typer.scala:1321)
+//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1222)
+//│ 	at: mlscript.Typer.expandType(Typer.scala:1322)
 //│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:504)
 //│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:943)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
@@ -46,7 +46,7 @@ class Base1(base: int): BaseTest, BaseInc {
 }
 //│ 
 //│ class Base1(base: int) {
-//│ let this: 'this
+//│ this: 'this
 //│ fun test: 'a
 //│ fun test2: 'base
 //│ fun test3: (int, 'base0,)
@@ -71,7 +71,7 @@ Base1(1).test3
 class Base1(base): BaseTest
 //│ 
 //│ class Base1(base: 'base) {
-//│ let this: 'this
+//│ this: 'this
 //│ fun test: 'base0
 //│ }
 
@@ -103,7 +103,7 @@ class Base1(x): BaseTest
 //│ ╙──     	             ^^^^^
 //│ 
 //│ class Base1(x: 'x) {
-//│ let this: 'this
+//│ this: 'this
 //│ fun test: 'base
 //│ }
 
@@ -121,10 +121,10 @@ mixin Foo {
 //│ fun test = ...
 //│ },this187',super188',TypedTypingUnit(List(test ~> TypedNuFun(1,fun test = ...,(α190'' -> (α194'', α190'', misc195'',)))),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
 //│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1204)
-//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1230)
+//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1231)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1221)
-//│ 	at: mlscript.Typer.expandType(Typer.scala:1321)
+//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1222)
+//│ 	at: mlscript.Typer.expandType(Typer.scala:1322)
 //│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:504)
 //│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:943)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
@@ -134,7 +134,7 @@ mixin Foo {
 module Base1(base: int, misc: string): Foo
 //│ 
 //│ namespace Base1(base: int, misc: string) {
-//│ let this: 'this
+//│ this: 'this
 //│ fun test: 'a -> ('b, 'a, 'misc,)
 //│ }
 
@@ -155,10 +155,10 @@ mixin WrapBase {
 //│ fun wrap = ...
 //│ },this222',super223',TypedTypingUnit(List(wrapA ~> TypedNuFun(1,fun wrapA = ...,((x: Int,) -> Int)), wrap ~> TypedNuFun(1,fun wrap = ...,(α226'' -> α226''))),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
 //│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1204)
-//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1230)
+//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1231)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1221)
-//│ 	at: mlscript.Typer.expandType(Typer.scala:1321)
+//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1222)
+//│ 	at: mlscript.Typer.expandType(Typer.scala:1322)
 //│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:504)
 //│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:943)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
@@ -175,10 +175,10 @@ mixin Wrap {
 //│ fun wrap = ...
 //│ },this228',super229',TypedTypingUnit(List(wrapA ~> TypedNuFun(1,fun wrapA = ...,(α232'' -> (α235'',))), wrap ~> TypedNuFun(1,fun wrap = ...,(α238'' -> (α241'',)))),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
 //│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1204)
-//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1230)
+//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1231)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1221)
-//│ 	at: mlscript.Typer.expandType(Typer.scala:1321)
+//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1222)
+//│ 	at: mlscript.Typer.expandType(Typer.scala:1322)
 //│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:504)
 //│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:943)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
@@ -191,7 +191,7 @@ mixin Wrap {
 module WrapBase1: WrapBase, Wrap
 //│ 
 //│ namespace WrapBase1() {
-//│ let this: 'this
+//│ this: 'this
 //│ fun wrap: 'a -> ('b,)
 //│ fun wrapA: 'c -> ('d,)
 //│ }
@@ -256,7 +256,7 @@ WrapBase1.wrapA("ok")
 module WrapBase2: WrapBase, Wrap, Wrap, Wrap
 //│ 
 //│ namespace WrapBase2() {
-//│ let this: 'this
+//│ this: 'this
 //│ fun wrap: 'a -> ('b,)
 //│ fun wrapA: 'c -> ('d,)
 //│ }

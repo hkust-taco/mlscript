@@ -85,9 +85,9 @@ object Helpers {
         s"NuFunDef(${lt}, ${nme.name}, ${targs.mkString("[", ", ", "]")}, ${inspect(term)})"
       case NuFunDef(lt, nme, targs, R(ty)) =>
         s"NuFunDef(${lt}, ${nme.name}, ${targs.mkString("[", ", ", "]")}, $ty)"
-      case NuTypeDef(kind, nme, tparams, params, parents, body) =>
+      case NuTypeDef(kind, nme, tparams, params, parents, ths, body) =>
         s"NuTypeDef(${kind.str}, ${nme.name}, ${tparams.mkString("(", ", ", ")")}, ${
-          inspect(params)}, ${parents.map(inspect).mkString("(", ", ", ")")}, ${inspect(body)})"
+          inspect(params)}, ${parents.map(inspect).mkString("(", ", ", ")")}, $ths, ${inspect(body)})"
       case others => others.toString()
     }
     .mkString("TypingUnit(", ", ", ")")
