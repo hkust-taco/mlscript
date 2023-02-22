@@ -456,7 +456,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         tv
       case Rem(base, fs) => Without(rec(base), fs.toSortedSet)(tyTp(ty.toLoc, "field removal type"))
       case Constrained(base, tvbs, where) =>
-        val res = rec(base)
+        val res = rec(base match {
+          case ty: Type => ty
+          case _ => die
+        })
         tvbs.foreach { case (tv, Bounds(lb, ub)) =>
           constrain(rec(lb), tv)(raise, tp(lb.toLoc, "lower bound specifiation"), ctx)
           constrain(tv, rec(ub))(raise, tp(ub.toLoc, "upper bound specifiation"), ctx)
@@ -1216,8 +1219,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     def goLike(ty: TypeLike): mlscript.TypeLike = ty match {
       case ty: SimpleType =>
         val res = go(ty)
-        if (bounds.isEmpty) res
-        else Constrained(res, bounds, Nil)
+        // if (bounds.isEmpty) res
+        // else Constrained(res, bounds, Nil)
+        res
       case OtherTypeLike(ttu) =>
         val mems = ttu.entities.map { lti =>
           lti.result match {
@@ -1315,11 +1319,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     }
     // }(r => s"~> $r")
     
-    // val res = go(st)
-    // if (bounds.isEmpty) res
-    // else Constrained(res, bounds, Nil)
+    val res = goLike(st)
+    if (bounds.isEmpty) res
+    else Constrained(res, bounds, Nil)
     
-    goLike(st)
+    // goLike(st)
   }
   
   

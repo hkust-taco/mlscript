@@ -67,7 +67,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     
     def complete()(implicit raise: Raise): TypedNuTermDef = result.getOrElse {
       if (isComputing) lastWords(s"TODO cyclic defition ${decl.name}")
-      else trace(s"Completing ${decl}") {
+      else trace(s"Completing ${decl.showDbg}") {
         // var res: ST = errType
         val res = try {
           isComputing = true

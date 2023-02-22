@@ -824,7 +824,7 @@ trait StatementImpl extends Located { self: Statement =>
     case DataDefn(head) => s"data $head"
     case _: Term => super.toString
     case d: Decl => d.show
-    case d: NuDecl => d.show
+    case d: NuDecl => d.showDbg
   }
 }
 

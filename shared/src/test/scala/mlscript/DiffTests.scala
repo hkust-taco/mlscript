@@ -502,9 +502,9 @@ class DiffTests
               tpd.force()(raise)
               
               val exp = typer.expandType(tpd)(ctx)
+              // output(exp.toString)
               output(exp.show)
               
-              /* 
               // val sctx = ShowCtx.mk(tpd)
               
               def showTTU(ttu: typer.TypedTypingUnit, ind: Int): Unit = {
@@ -536,8 +536,8 @@ class DiffTests
                         .indentNewLines(indStr+"|")}")
                 }
               }
-              showTTU(tpd, 0)
-              */
+              if (mode.explainErrors)
+                showTTU(tpd, 0)
               
               // val exp = getType(typer.PolymorphicType(0, res_ty))
               // output(s"Typed: ${exp}")
