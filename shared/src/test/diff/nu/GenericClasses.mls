@@ -187,11 +187,15 @@ Test(true)
 
 class Test<A>(n: A) {
   fun foo: A = n
+  fun foo1(x : A) = x
 }
 //│ class Test
-//│   fun foo: ‹∀ 1. foo251''#› where 
-//│   |		foo251''# := ‘A247'
+//│   fun foo: ‹∀ 1. foo252''#› where 
+//│   |		foo252''# := ‘A247'
 //│   [pretty-printed] foo: A
+//│   fun foo1: ‹∀ 1. foo1253''#› where 
+//│   |		foo1253''# := (‘A247' -> ‘A247')
+//│   [pretty-printed] foo1: A -> A
 
 Test(1)
 //│ Typed: Test & {Test#A = 'A}
@@ -204,6 +208,22 @@ Test(1).foo
 Test("ok").foo
 //│ Typed: "ok"
 
+let t = Test(1)
+//│ let t: α307 where 
+//│ |		α307 :> (Test<> & {Test#A: mut A247_308..A247_308})
+//│ |		A247_308 :> 1<int,number>
+//│ [pretty-printed] t: Test & {Test#A = 'A}
+//│ |  where
+//│ |    'A :> 1
+
+t.foo1(true)
+//│ Typed: 1 | true
+
+t : Test<'a>
+//│ Typed: Test['a]
+//│   where
+//│     'a :> 1 | true
+
 
 :e
 class Test<A> {
@@ -212,21 +232,21 @@ class Test<A> {
   fun foo2(x : A) = x + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.212: 	  fun foo2(x : A) = x + 1
+//│ ║  l.232: 	  fun foo2(x : A) = x + 1
 //│ ║         	                    ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.212: 	  fun foo2(x : A) = x + 1
+//│ ║  l.232: 	  fun foo2(x : A) = x + 1
 //│ ║         	                    ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.209: 	class Test<A> {
+//│ ║  l.229: 	class Test<A> {
 //│ ╙──       	           ^
 //│ class Test
-//│   fun foo1: ‹∀ 1. foo1294''#› where 
-//│   |		foo1294''# := (‘A289' -> ‘A289')
+//│   fun foo1: ‹∀ 1. foo1339''#› where 
+//│   |		foo1339''# := (‘A334' -> ‘A334')
 //│   [pretty-printed] foo1: A -> A
-//│   fun foo2: ‹∀ 1. foo2295''#› where 
-//│   |		foo2295''# := (‘A289' -> α297'')
-//│   |		α297'' :> error<> | int<number>
+//│   fun foo2: ‹∀ 1. foo2340''#› where 
+//│   |		foo2340''# := (‘A334' -> α342'')
+//│   |		α342'' :> error<> | int<number>
 //│   [pretty-printed] foo2: A -> (error | int)
 
 Test().foo1
@@ -240,8 +260,8 @@ x => Test().foo1(x)
 
 // :d
 let t = Test()
-//│ let t: α370 where 
-//│ |		α370 :> ‹∀ 0. (Test<> & {Test#A: mut A289_366'..A289_366'})›
+//│ let t: α415 where 
+//│ |		α415 :> ‹∀ 0. (Test<> & {Test#A: mut A334_411'..A334_411'})›
 //│ [pretty-printed] t: Test & {Test#A = 'A}
 
 t.foo1

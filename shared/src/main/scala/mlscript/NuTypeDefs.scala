@@ -30,14 +30,22 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   }
   
   
-  case class NuParam(nme: Var, ty: FieldType) extends NuMember {
+  case class NuParam(nme: Var, ty: FieldType, isType: Bool) extends NuMember {
     def name: Str = nme.name
     
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
           : NuParam =
-      NuParam(nme, ty.freshenAbove(lim, rigidify))
+      NuParam(nme, ty.freshenAbove(lim, rigidify), isType)
   }
+  // case class NuTypeParam(nme: TN, ty: FieldType) extends NuMember {
+  //   def name: Str = nme.name
+    
+  //   def freshenAbove(lim: Int, rigidify: Bool)
+  //         (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
+  //         : NuParam =
+  //     NuParam(nme, ty.freshenAbove(lim, rigidify))
+  // }
   
   
   sealed abstract class TypedNuDecl extends NuMember {

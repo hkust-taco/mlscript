@@ -216,9 +216,13 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                         members
                     }
                     val baseType = RecordType(typedParams)(ttp(td.params, isType = true))
-                    val paramMems = typedParams.map(f => NuParam(f._1, f._2))
+                    val tparamMems = tparams.map { case (tn, tv) =>
+                      val fldNme = td.nme.name + "#" + tn.name
+                      NuParam(Var(fldNme).withLocOf(tn), FieldType(S(tv), tv)(tv.prov), isType = true)
+                    }
+                    val paramMems = typedParams.map(f => NuParam(f._1, f._2, isType = false))
                     // val baseMems = inherit(td.parents, baseType, Nil)
-                    val baseMems = inherit(td.parents, baseType, paramMems)
+                    val baseMems = inherit(td.parents, baseType, tparamMems ++ paramMems)
                     
                     // ctx += thisTV
                     
@@ -675,14 +679,28 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       TypeRef(defn, targs.map(_.freshenAbove(lim, rigidify)))(prov)
     def expand(implicit ctx: Ctx): SimpleType = expandWith(paramTags = true)
     def expandWith(paramTags: Bool)(implicit ctx: Ctx): SimpleType = //if (defn.name.isCapitalized) {
-      ctx.tyDefs2.get(defn.name).map(_.decl match {
-        case td: NuTypeDef if td.kind is Cls =>
-          ClassTag(Var(td.nme.name).withLocOf(td.nme),
-            Set.empty//TODO
-            )(provTODO)
-        case _ => ???
-      }
-    ).getOrElse {
+      // ctx.tyDefs2.get(defn.name).map(_.decl match {
+      //   case td: NuTypeDef if td.kind is Cls =>
+      //     ClassTag(Var(td.nme.name).withLocOf(td.nme),
+      //       Set.empty//TODO
+      //       )(provTODO)
+      //   case _ => ???
+      // }
+      ctx.tyDefs2.get(defn.name).map { info =>
+        implicit val raise: Raise = throw _ // FIXME
+        info.complete() match {
+          case td: TypedNuCls =>
+            assert(td.tparams.size === targs.size)
+            ClassTag(Var(td.nme.name).withLocOf(td.nme),
+              Set.empty//TODO
+              )(provTODO) & RecordType(td.tparams.lazyZip(targs).map {
+                case ((tn, tv), ta) =>
+                  val fldNme = td.td.nme.name + "#" + tn.name
+                  Var(fldNme).withLocOf(tn) -> FieldType(S(ta), ta)(provTODO)
+              })(provTODO)
+          case _ => ???
+        }
+    }.getOrElse {
       val td = ctx.tyDefs(defn.name)
       require(targs.size === td.tparamsargs.size)
       lazy val tparamTags =
