@@ -43,7 +43,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     val tv: TV = freshVar(
       TypeProvenance(decl.toLoc, decl.describe, S(decl.name), decl.isInstanceOf[NuTypeDef]),
       N,
-      S(decl.name))(level)
+      S(decl.name))(level + 1)
     
     def map(f: TypedNuTermDef => TypedNuTermDef): LazyTypeInfo = {
       val res = new LazyTypeInfo(level, decl)
@@ -87,14 +87,28 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                       implicit val gl: GenLambdas = true
                       TypedNuFun(ctx.lvl, fd, typeTerm(body))
                     case N =>
+                      /* 
                       implicit val gl: GenLambdas = true
                       val body_ty = typeLetRhs2(isrec = true, fd.nme.name, body)
                       // implicit val prov: TP = noProv // TODO
                       // subsume(body_ty, PolymorphicType(level, tv)) // TODO
                       TypedNuFun(ctx.lvl, fd, body_ty)
+                      */
+                      
+                      // * We don't type functions polymorphically from the point of view of a typing unit
+                      // * to avoid cyclic-looking constraints due to the polymorphic recursion limitation,
+                      // * as these functions are allowed to be mutually-recursive.
+                      // * In the future, we should type each mutual-recursion-component independently
+                      // * and polymorphically wrt to non-recursive users of them.
+                      implicit val gl: GenLambdas = false
+                      val body_ty = ctx.nextLevel { implicit ctx: Ctx =>
+                        typeTerm(body)
+                      }
+                      TypedNuFun(ctx.lvl, fd, body_ty)
                   }
               }
               // subsume(res_ty, tv)
+              constrain(res_ty.ty, tv)
               res_ty
             case td: NuTypeDef =>
               td.kind match {
@@ -278,6 +292,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         if (isComputing)
           decl match {
             case _: NuFunDef =>
+              println(s"Already computing! Using TV: $tv")
               tv // TODO FIXME wrong in general (when accessed from difft scope/level)
             case _ =>
               err(msg"Cyclic definition", decl.toLoc)

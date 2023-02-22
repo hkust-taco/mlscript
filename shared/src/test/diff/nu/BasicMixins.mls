@@ -10,10 +10,10 @@ mixin BaseTest {
 //│ mixin BaseTest
 //│   this: this23' 
 //│   super: super24' 
-//│   |		super24' <: {base: base27_28'}
-//│   fun test: ‹∀ 1. test26''#› where 
-//│   |		test26''# := base27''
-//│   |		base27'' :> base27_28' <: test26''#
+//│   |		super24' <: {base: base26_27'}
+//│   fun test: base26'' where 
+//│   |		test25'' :> base26_27'
+//│   |		base26'' :> base26_27' <: test25''
 //│   [pretty-printed] test: nothing
 
 mixin BaseInc {
@@ -21,18 +21,18 @@ mixin BaseInc {
   fun test2 = this.base
 }
 //│ mixin BaseInc
-//│   this: this33' 
-//│   |		this33' <: {base: base43_44'}
-//│   super: super34' 
-//│   |		super34' <: {base: base38_39'}
-//│   |		base38_39' <: int<number>
-//│   fun test: ‹∀ 1. test37''#› where 
-//│   |		test37''# := α41''
-//│   |		α41'' :> int<number> <: test37''#
+//│   this: this31' 
+//│   |		this31' <: {base: base39_40'}
+//│   super: super32' 
+//│   |		super32' <: {base: base35_36'}
+//│   |		base35_36' <: int<number>
+//│   fun test: α38'' where 
+//│   |		test33'' :> int<number>
+//│   |		α38'' :> int<number> <: test33''
 //│   [pretty-printed] test: int
-//│   fun test2: ‹∀ 1. test242''#› where 
-//│   |		test242''# := base43''
-//│   |		base43'' :> base43_44' <: test242''#
+//│   fun test2: base39'' where 
+//│   |		test234'' :> base39_40'
+//│   |		base39'' :> base39_40' <: test234''
 //│   [pretty-printed] test2: nothing
 
 // :d
@@ -40,10 +40,9 @@ class Base1(base: int): BaseTest, BaseInc {
   fun test3 = [base, this.base]
 }
 //│ class Base1
-//│   fun test3: ‹∀ 1. test368''#› where 
-//│   |		test368''# := (Int, base69'',)
-//│   |		base69'' :> base69_70'
-//│   |		base69_70' :> Int
+//│   fun test3: (Int, base64'',) where 
+//│   |		base64'' :> base64_65'
+//│   |		base64_65' :> Int
 //│   [pretty-printed] test3: (int, int,)
 
 Base1(1).test
@@ -70,10 +69,10 @@ Base1(1).test
 :e
 class Base1(x): BaseTest
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.71: 	class Base1(x): BaseTest
+//│ ║  l.70: 	class Base1(x): BaseTest
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `{x: ?x}` does not have field 'base'
-//│ ║  l.71: 	class Base1(x): BaseTest
+//│ ║  l.70: 	class Base1(x): BaseTest
 //│ ║        	           ^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.8: 	  fun test = super.base
@@ -92,15 +91,14 @@ mixin Foo {
   fun test(x) = [super.base + x, x, super.misc]
 }
 //│ mixin Foo
-//│   this: this191' 
-//│   super: super192' 
-//│   |		super192' <: {misc: misc200_201'} & {base: base196_197'}
-//│   |		base196_197' <: int<number>
-//│   fun test: ‹∀ 1. test194''#› where 
-//│   |		test194''# := (α195'' -> (α199'', α195'', misc200'',))
-//│   |		α195'' <: int<number>
-//│   |		α199'' :> int<number>
-//│   |		misc200'' :> misc200_201'
+//│   this: this183' 
+//│   super: super184' 
+//│   |		super184' <: {misc: misc191_192'} & {base: base187_188'}
+//│   |		base187_188' <: int<number>
+//│   fun test: (α186'' -> (α190'', α186'', misc191'',)) where 
+//│   |		α186'' <: int<number>
+//│   |		α190'' :> int<number>
+//│   |		misc191'' :> misc191_192'
 //│   [pretty-printed] test: (int & 'a) -> (int, 'a, nothing,)
 
 module Base1(base: int, misc: string): Foo
@@ -117,13 +115,11 @@ mixin WrapBase {
   fun wrap(x) = x
 }
 //│ mixin WrapBase
-//│   this: this236' 
-//│   super: super237' 
-//│   fun wrapA: ‹∀ 1. wrapA240''#› where 
-//│   |		wrapA240''# := (Int -> Int)
+//│   this: this223' 
+//│   super: super224' 
+//│   fun wrapA: (Int -> Int) where 
 //│   [pretty-printed] wrapA: int -> int
-//│   fun wrap: ‹∀ 1. wrap241''#› where 
-//│   |		wrap241''# := (α242'' -> α242'')
+//│   fun wrap: (α227'' -> α227'') where 
 //│   [pretty-printed] wrap: 'a -> 'a
 
 // :d
@@ -132,20 +128,18 @@ mixin Wrap {
   fun wrap(x) = [super.wrap(x)]
 }
 //│ mixin Wrap
-//│   this: this249' 
-//│   super: super250' 
-//│   |		super250' <: {wrap: wrap262_263'} & {wrapA: wrapA255_256'}
-//│   |		wrapA255_256' <: ((α254_258',) -> α257_259')
-//│   |		wrap262_263' <: ((α261_265',) -> α264_266')
-//│   fun wrapA: ‹∀ 1. wrapA253''#› where 
-//│   |		wrapA253''# := (α254'' -> (α257'',))
-//│   |		α254'' <: α254_258'
-//│   |		α257'' :> α257_259'
+//│   this: this232' 
+//│   super: super233' 
+//│   |		super233' <: {wrap: wrap243_244'} & {wrapA: wrapA237_238'}
+//│   |		wrapA237_238' <: ((α236_240',) -> α239_241')
+//│   |		wrap243_244' <: ((α242_246',) -> α245_247')
+//│   fun wrapA: (α236'' -> (α239'',)) where 
+//│   |		α236'' <: α236_240'
+//│   |		α239'' :> α239_241'
 //│   [pretty-printed] wrapA: anything -> (nothing,)
-//│   fun wrap: ‹∀ 1. wrap260''#› where 
-//│   |		wrap260''# := (α261'' -> (α264'',))
-//│   |		α261'' <: α261_265'
-//│   |		α264'' :> α264_266'
+//│   fun wrap: (α242'' -> (α245'',)) where 
+//│   |		α242'' <: α242_246'
+//│   |		α245'' :> α245_247'
 //│   [pretty-printed] wrap: anything -> (nothing,)
 
 
@@ -182,16 +176,16 @@ WrapBase1.wrapA(1)
 :e
 WrapBase1.wrapA("ok")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.183: 	WrapBase1.wrapA("ok")
+//│ ║  l.177: 	WrapBase1.wrapA("ok")
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"ok"` is not an instance of type `int`
-//│ ║  l.183: 	WrapBase1.wrapA("ok")
+//│ ║  l.177: 	WrapBase1.wrapA("ok")
 //│ ║         	                ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.116: 	  fun wrapA(x : int) = x : int
+//│ ║  l.114: 	  fun wrapA(x : int) = x : int
 //│ ║         	                ^^^
 //│ ╟── from reference:
-//│ ║  l.131: 	  fun wrapA(x) = [super.wrapA(x)]
+//│ ║  l.127: 	  fun wrapA(x) = [super.wrapA(x)]
 //│ ╙──       	                              ^
 //│ Typed: (int,) | error
 
@@ -201,32 +195,31 @@ module WrapBase2: WrapBase, Wrap, Wrap, Wrap
 //│ class WrapBase2
 
 let w = WrapBase2.wrap
-//│ let w: wrap481 where 
-//│ |		wrap481 :> ‹∀ 1. wrap260_495''#›
-//│ |		wrap260_495''# := (α261_496'' -> (α264_504'',))
-//│ |		α261_496'' <: α261_497
-//│ |		α261_497 <: α261_498
-//│ |		α261_498 <: α261_499
-//│ |		α261_499 <: α261_500
-//│ |		α261_500 <: α261_501
-//│ |		α261_501 <: α242_502
-//│ |		α242_502 <: α264_503
-//│ |		α264_504'' :> α264_505
-//│ |		α264_505 :> ‹∀ 2. (α264_506''',)›
-//│ |		α264_506''' :> α264_507
-//│ |		α264_507 :> ‹∀ 2. (α264_508''',)›
-//│ |		α264_508''' :> α264_503
+//│ let w: wrap418 where 
+//│ |		wrap418 :> (α242_431 -> (α245_439,))
+//│ |		α242_431 <: α242_432
+//│ |		α242_432 <: α242_433
+//│ |		α242_433 <: α242_434
+//│ |		α242_434 <: α242_435
+//│ |		α242_435 <: α242_436
+//│ |		α242_436 <: α227_437
+//│ |		α227_437 <: α245_438
+//│ |		α245_439 :> α245_440
+//│ |		α245_440 :> (α245_441,)
+//│ |		α245_441 :> α245_442
+//│ |		α245_442 :> (α245_443,)
+//│ |		α245_443 :> α245_438
 //│ [pretty-printed] w: 'a -> ((('a,),),)
 
 let wd = w(1)
-//│ let wd: α527 where 
-//│ |		α264_503 :> 1<int,number>
-//│ |		α264_505 :> ‹∀ 2. (α264_506''',)›
-//│ |		α264_506''' :> α264_507
-//│ |		α264_507 :> ‹∀ 2. (α264_508''',)›
-//│ |		α264_508''' :> α264_503
-//│ |		α527 :> ‹∀ 2. (α264_528''',)›
-//│ |		α264_528''' :> α264_505
+//│ let wd: α461 where 
+//│ |		α245_438 :> 1<int,number>
+//│ |		α245_439 :> α245_440
+//│ |		α245_440 :> (α245_441,)
+//│ |		α245_441 :> α245_442
+//│ |		α245_442 :> (α245_443,)
+//│ |		α245_443 :> α245_438
+//│ |		α461 :> (α245_439,)
 //│ [pretty-printed] wd: (((1,),),)
 
 wd._1._1._1 + 1

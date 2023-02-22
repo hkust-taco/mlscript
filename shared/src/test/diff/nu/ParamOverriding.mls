@@ -9,8 +9,7 @@ mixin Over {
 //│ mixin Over
 //│   this: this23' 
 //│   super: super24' 
-//│   fun p: ‹∀ 1. p26''#› where 
-//│   |		p26''# := "hi"<string>
+//│   fun p: "hi"<string> where 
 //│   [pretty-printed] p: "hi"
 
 
@@ -19,11 +18,9 @@ class Base1(p: int): Over {
   // fun test2 = super.p // TODO
 }
 //│ class Base1
-//│   fun test: ‹∀ 1. test35''#› where 
-//│   |		p26''# := "hi"<string>
-//│   |		test35''# := (Int, p36'',)
-//│   |		p36'' :> p36_37'
-//│   |		p36_37' :> ‹∀ 1. p26''#›
+//│   fun test: (Int, p33'',) where 
+//│   |		p33'' :> p33_34'
+//│   |		p33_34' :> "hi"<string>
 //│   [pretty-printed] test: (int, "hi",)
 
 

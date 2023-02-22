@@ -149,6 +149,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     // def freshen(implicit ctx: Ctx): TypedNuMxn = TypedNuMxn(td, 
   }
   
+  /** Note: the type `ty` is stoed *without* its polymorphic wrapper! */
   case class TypedNuFun(level: Level, fd: NuFunDef, ty: ST) extends TypedNuDecl with TypedNuTermDef {
     def name: Str = fd.nme.name
   }

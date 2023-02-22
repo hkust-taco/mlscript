@@ -11,34 +11,33 @@ class Base0(n) {
   fun oops = this.my
 }
 //│ class Base0
-//│   fun me: ‹∀ 1. me30''#› where 
-//│   |		this24' :> Base0<> <: {my: my36_37'} & {n: n32_33'}
-//│   |		me30''# := this24'
-//│   |		n32_33' :> n23_65
-//│   |		my36_37' :> ‹∀ 1. my31_44''#›
-//│   |		my31_44''# := n32_45''
-//│   |		n32_45'' :> n32_42 <: mine34_46''# & my31_44''#
-//│   |		mine34_46''# := my31_44''#
+//│   fun me: this24' where 
+//│   |		this24' :> Base0<> <: {my: my32_33'} & {n: n30_31'}
+//│   |		n30_31' :> n23_59
+//│   |		my32_33' :> n30_39
+//│   |		n30_39 :> n30_37 <: mine28_40 & my27_41
+//│   |		mine28_40 :> n30_37
+//│   |		my27_41 :> n30_37
 //│   [pretty-printed] me: Base0
-//│   fun my: ‹∀ 1. my31''#› where 
-//│   |		my31''# := n32''
-//│   |		n32'' :> n32_33' <: mine34''# & my31''#
-//│   |		n32_33' :> n23_65
-//│   |		mine34''# := my31''#
+//│   fun my: n30'' where 
+//│   |		my27'' :> n30_31'
+//│   |		mine28'' :> n30_31'
+//│   |		n30'' :> n30_31' <: mine28'' & my27''
+//│   |		n30_31' :> n23_59
 //│   [pretty-printed] my: nothing
-//│   fun mine: ‹∀ 1. mine34''#› where 
-//│   |		my31''# := n32''
-//│   |		n32'' :> n32_33' <: mine34''# & my31''#
-//│   |		n32_33' :> n23_65
-//│   |		mine34''# := my31''#
+//│   fun mine: n30'' where 
+//│   |		my27'' :> n30_31'
+//│   |		mine28'' :> n30_31'
+//│   |		n30'' :> n30_31' <: mine28'' & my27''
+//│   |		n30_31' :> n23_59
 //│   [pretty-printed] mine: nothing
-//│   fun oops: ‹∀ 1. oops35''#› where 
-//│   |		oops35''# := my36''
-//│   |		my36'' :> my36_37' <: oops35''#
-//│   |		my36_37' :> ‹∀ 1. my31_44''#›
-//│   |		my31_44''# := n32_45''
-//│   |		n32_45'' :> n32_42 <: mine34_46''# & my31_44''#
-//│   |		mine34_46''# := my31_44''#
+//│   fun oops: my32'' where 
+//│   |		oops29'' :> my32_33'
+//│   |		my32'' :> my32_33' <: oops29''
+//│   |		my32_33' :> n30_39
+//│   |		n30_39 :> n30_37 <: mine28_40 & my27_41
+//│   |		mine28_40 :> n30_37
+//│   |		my27_41 :> n30_37
 //│   [pretty-printed] oops: nothing
 
 // :d
@@ -46,13 +45,13 @@ class Base0(n) {
 // Base0
 
 let b1 = Base0(42)
-//│ let b1: α98 where 
-//│ |		α98 :> Base0<>
+//│ let b1: α85 where 
+//│ |		α85 :> Base0<>
 //│ [pretty-printed] b1: Base0
 
 // :d
 let n1 = b1.n
-//│ let n1: n102 where 
+//│ let n1: n89 where 
 //│ [pretty-printed] n1: nothing
 
 // TODO
@@ -62,10 +61,10 @@ n1 + 1
 
 let b2 = Base0("hi")
 let n2 = b2.n
-//│ let b2: α137 where 
-//│ |		α137 :> Base0<> <: {n: n139}
+//│ let b2: α122 where 
+//│ |		α122 :> Base0<> <: {n: n124}
 //│ [pretty-printed] b2: Base0
-//│ let n2: n139 where 
+//│ let n2: n124 where 
 //│ [pretty-printed] n2: nothing
 
 
@@ -76,18 +75,16 @@ class Base1(base: int) {
   fun foo(x) = this.base + x
 }
 //│ class Base1
-//│   fun getBase1: ‹∀ 1. getBase1162''#› where 
-//│   |		getBase1162''# := Int
+//│   fun getBase1: Int where 
 //│   [pretty-printed] getBase1: int
-//│   fun getBase2: ‹∀ 1. getBase2163''#› where 
-//│   |		getBase2163''# := base164''
-//│   |		base164'' :> base164_165' <: getBase2163''#
-//│   |		base164_165' :> Int
+//│   fun getBase2: base146'' where 
+//│   |		getBase2144'' :> base146_147'
+//│   |		base146'' :> base146_147' <: getBase2144''
+//│   |		base146_147' :> Int
 //│   [pretty-printed] getBase2: int
-//│   fun foo: ‹∀ 1. foo166''#› where 
-//│   |		foo166''# := (α167'' -> α171'')
-//│   |		α167'' <: int<number>
-//│   |		α171'' :> int<number>
+//│   fun foo: (α148'' -> α152'') where 
+//│   |		α148'' <: int<number>
+//│   |		α152'' :> int<number>
 //│   [pretty-printed] foo: int -> int
 
 class Base1(base: int) {
@@ -96,25 +93,22 @@ class Base1(base: int) {
   fun foo(x) = base + x
 }
 //│ class Base1
-//│   fun getBase1: ‹∀ 1. getBase1197''#› where 
-//│   |		getBase1197''# := Int
+//│   fun getBase1: Int where 
 //│   [pretty-printed] getBase1: int
-//│   fun me: ‹∀ 1. me198''#› where 
-//│   |		this192' :> Base1<>
-//│   |		me198''# := this192'
+//│   fun me: this174' where 
+//│   |		this174' :> Base1<>
 //│   [pretty-printed] me: Base1
-//│   fun foo: ‹∀ 1. foo199''#› where 
-//│   |		foo199''# := (α200'' -> α202'')
-//│   |		α200'' <: int<number>
-//│   |		α202'' :> int<number>
+//│   fun foo: (α179'' -> α181'') where 
+//│   |		α179'' <: int<number>
+//│   |		α181'' :> int<number>
 //│   [pretty-printed] foo: int -> int
 
 Base1
 //│ Typed: (base: int,) -> Base1
 
 let b = Base1(1)
-//│ let b: α220 where 
-//│ |		α220 :> Base1<>
+//│ let b: α198 where 
+//│ |		α198 :> Base1<>
 //│ [pretty-printed] b: Base1
 
 b.base
@@ -130,7 +124,7 @@ b.me
 :e
 b.getBaseTypo
 //│ ╔══[ERROR] class `Base1` does not contain member `getBaseTypo`
-//│ ║  l.131: 	b.getBaseTypo
+//│ ║  l.125: 	b.getBaseTypo
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ Typed: error
 
@@ -144,16 +138,16 @@ class Rec(n) {
   fun go = Rec(n + 1)
 }
 //│ ╔══[ERROR] Cyclic definition
-//│ ║  l.143: 	class Rec(n) {
+//│ ║  l.137: 	class Rec(n) {
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.144: 	  fun go = Rec(n + 1)
+//│ ║  l.138: 	  fun go = Rec(n + 1)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.145: 	}
+//│ ║  l.139: 	}
 //│ ╙──       	^
 //│ class Rec
-//│   fun go: ‹∀ 1. go258''#› where 
-//│   |		go258''# := α261''
-//│   |		α261'' :> error<> <: go258''#
+//│   fun go: α239'' where 
+//│   |		go236'' :> error<>
+//│   |		α239'' :> error<> <: go236''
 //│   [pretty-printed] go: error
 
 
@@ -165,20 +159,19 @@ class Annots(base: 0 | 1) {
   fun a = base
 }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.164: 	  a: int
+//│ ║  l.158: 	  a: int
 //│ ║         	  ^
 //│ ╟── type `(0 | 1,)` is not an instance of type `int`
-//│ ║  l.163: 	class Annots(base: 0 | 1) {
+//│ ║  l.157: 	class Annots(base: 0 | 1) {
 //│ ║         	                   ^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.164: 	  a: int
+//│ ║  l.158: 	  a: int
 //│ ║         	  ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.164: 	  a: int
+//│ ║  l.158: 	  a: int
 //│ ╙──       	     ^^^
 //│ class Annots
-//│   fun a: ‹∀ 1. a268''#› where 
-//│   |		a268''# := ((0<int,number> | 1<int,number>),)
+//│   fun a: ((0<int,number> | 1<int,number>),) where 
 //│   [pretty-printed] a: (0 | 1,)
 
 

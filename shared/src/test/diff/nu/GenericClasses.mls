@@ -10,18 +10,16 @@ class Some<A>(value: A) {
   // fun map(f : A => 'b) = Some(f(value)) // TODO
 }
 //│ class Some
-//│   fun get: ‹∀ 1. get28''#› where 
-//│   |		get28''# := ‘A23'
+//│   fun get: ‘A23' where 
 //│   [pretty-printed] get: A
-//│   fun toArray: ‹∀ 1. toArray29''#› where 
-//│   |		toArray29''# := (‘A23',)
+//│   fun toArray: (‘A23',) where 
 //│   [pretty-printed] toArray: (A,)
 
 
 let s = Some(1)
-//│ let s: α38 where 
-//│ |		α38 :> (Some<> & {Some#A: mut A23_39..A23_39})
-//│ |		A23_39 :> 1<int,number>
+//│ let s: α32 where 
+//│ |		α32 :> (Some<> & {Some#A: mut A23_33..A23_33})
+//│ |		A23_33 :> 1<int,number>
 //│ [pretty-printed] s: Some & {Some#A = 'A}
 //│ |  where
 //│ |    'A :> 1
@@ -56,11 +54,9 @@ module None {
   // fun mapBad(f) = None // TODO
 }
 //│ class None
-//│   fun get: ‹∀ 1. get78''#› where 
-//│   |		get78''# := ⊥
+//│   fun get: ⊥ where 
 //│   [pretty-printed] get: nothing
-//│   fun toArray: ‹∀ 1. toArray79''#› where 
-//│   |		toArray79''# := ()
+//│   fun toArray: () where 
 //│   [pretty-printed] toArray: ()
 
 
@@ -75,9 +71,9 @@ type Option<A> = Some<A> | None
 
 
 let opt = if true then Some(123) else None
-//│ let opt: (α95 | None<>) where 
-//│ |		α95 :> (Some<> & {Some#A: mut A23_96..A23_96})
-//│ |		A23_96 :> 123<int,number>
+//│ let opt: (α72 | None<>) where 
+//│ |		α72 :> (Some<> & {Some#A: mut A23_73..A23_73})
+//│ |		A23_73 :> 123<int,number>
 //│ [pretty-printed] opt: None | Some & {Some#A = 'A}
 //│ |  where
 //│ |    'A :> 123
@@ -104,21 +100,20 @@ if opt is Some(v) then v else 0
 fun map(x, f) = if x is
   None then None
   Some(v) then Some(f(v))
-//│ fun map: ‹∀ 0. map137'#› where 
-//│ |		map137'# := ((α138', α139',) -> (None<> | α150'))
-//│ |		α138' <: ((None<> & α140') | ((Some<> & α141') & ~(None<>)))
-//│ |		α139' <: ((‹∀ 1. value142''›,) -> α149')
-//│ |		α141' <: {value: value142_143'}
-//│ |		value142'' :> value142_143'
-//│ |		α149' <: A23_151'
-//│ |		α150' :> (Some<> & {Some#A: mut A23_151'..A23_151'})
+//│ fun map: ((α106', α107',) -> (None<> | α116')) where 
+//│ |		α106' <: ((None<> & α108') | ((Some<> & α109') & ~(None<>)))
+//│ |		α107' <: ((‹∀ 1. value110''›,) -> α115')
+//│ |		α109' <: {value: value110_111'}
+//│ |		value110'' :> value110_111'
+//│ |		α115' <: A23_117'
+//│ |		α116' :> (Some<> & {Some#A: mut A23_117'..A23_117'})
 //│ [pretty-printed] map: (None | Some & {value: 'value}, 'value -> 'A,) -> (None | Some & {Some#A = 'A})
 
 let mo = map(opt, succ)
-//│ let mo: α167 where 
-//│ |		α167 :> (None<> | α150_177)
-//│ |		α150_177 :> (Some<> & {Some#A: mut A23_178..A23_179})
-//│ |		A23_179 :> A23_178 | int<number>
+//│ let mo: α132 where 
+//│ |		α132 :> (None<> | α116_140)
+//│ |		α116_140 :> (Some<> & {Some#A: mut A23_141..A23_142})
+//│ |		A23_142 :> A23_141 | int<number>
 //│ [pretty-printed] mo: None | Some & {Some#A :> 'A <: 'A | int}
 
 mo.toArray
@@ -130,9 +125,9 @@ class Test(n) {
   fun foo = n + 1
 }
 //│ class Test
-//│   fun foo: ‹∀ 1. foo205''#› where 
-//│   |		foo205''# := α207''
-//│   |		α207'' :> int<number> <: foo205''#
+//│   fun foo: α165'' where 
+//│   |		foo163'' :> int<number>
+//│   |		α165'' :> int<number> <: foo163''
 //│   [pretty-printed] foo: int
 
 Test(1)
@@ -141,16 +136,16 @@ Test(1)
 :e
 Test(true)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.142: 	Test(true)
+//│ ║  l.137: 	Test(true)
 //│ ║         	^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `int`
-//│ ║  l.142: 	Test(true)
+//│ ║  l.137: 	Test(true)
 //│ ║         	     ^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.130: 	  fun foo = n + 1
+//│ ║  l.125: 	  fun foo = n + 1
 //│ ║         	            ^
 //│ ╟── from reference:
-//│ ║  l.129: 	class Test(n) {
+//│ ║  l.124: 	class Test(n) {
 //│ ╙──       	           ^
 //│ Typed: Test | error
 
@@ -160,18 +155,18 @@ class Test<A>(n: A) {
   fun foo = n + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.160: 	  fun foo = n + 1
+//│ ║  l.155: 	  fun foo = n + 1
 //│ ║         	            ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.160: 	  fun foo = n + 1
+//│ ║  l.155: 	  fun foo = n + 1
 //│ ║         	            ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.159: 	class Test<A>(n: A) {
+//│ ║  l.154: 	class Test<A>(n: A) {
 //│ ╙──       	           ^
 //│ class Test
-//│   fun foo: ‹∀ 1. foo225''#› where 
-//│   |		foo225''# := α227''
-//│   |		α227'' :> error<> | int<number> <: foo225''#
+//│   fun foo: α187'' where 
+//│   |		foo185'' :> int<number> | error<>
+//│   |		α187'' :> error<> | int<number> <: foo185''
 //│   [pretty-printed] foo: error | int
 
 Test(1)
@@ -188,14 +183,15 @@ Test(true)
 class Test<A>(n: A) {
   fun foo: A = n
   fun foo1(x : A) = x
+  fun id(x) = x
 }
 //│ class Test
-//│   fun foo: ‹∀ 1. foo252''#› where 
-//│   |		foo252''# := ‘A247'
+//│   fun foo: ‘A210' where 
 //│   [pretty-printed] foo: A
-//│   fun foo1: ‹∀ 1. foo1253''#› where 
-//│   |		foo1253''# := (‘A247' -> ‘A247')
+//│   fun foo1: (‘A210' -> ‘A210') where 
 //│   [pretty-printed] foo1: A -> A
+//│   fun id: (α216'' -> α216'') where 
+//│   [pretty-printed] id: 'a -> 'a
 
 Test(1)
 //│ Typed: Test & {Test#A = 'A}
@@ -209,9 +205,9 @@ Test("ok").foo
 //│ Typed: "ok"
 
 let t = Test(1)
-//│ let t: α307 where 
-//│ |		α307 :> (Test<> & {Test#A: mut A247_308..A247_308})
-//│ |		A247_308 :> 1<int,number>
+//│ let t: α265 where 
+//│ |		α265 :> (Test<> & {Test#A: mut A210_266..A210_266})
+//│ |		A210_266 :> 1<int,number>
 //│ [pretty-printed] t: Test & {Test#A = 'A}
 //│ |  where
 //│ |    'A :> 1
@@ -224,6 +220,12 @@ t : Test<'a>
 //│   where
 //│     'a :> 1 | true
 
+t.id
+//│ Typed: 'a -> 'a
+
+[t.id(1), t.id(true)]
+//│ Typed: (1, true,)
+
 
 :e
 class Test<A> {
@@ -232,21 +234,19 @@ class Test<A> {
   fun foo2(x : A) = x + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.232: 	  fun foo2(x : A) = x + 1
+//│ ║  l.234: 	  fun foo2(x : A) = x + 1
 //│ ║         	                    ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.232: 	  fun foo2(x : A) = x + 1
+//│ ║  l.234: 	  fun foo2(x : A) = x + 1
 //│ ║         	                    ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.229: 	class Test<A> {
+//│ ║  l.231: 	class Test<A> {
 //│ ╙──       	           ^
 //│ class Test
-//│   fun foo1: ‹∀ 1. foo1339''#› where 
-//│   |		foo1339''# := (‘A334' -> ‘A334')
+//│   fun foo1: (‘A317' -> ‘A317') where 
 //│   [pretty-printed] foo1: A -> A
-//│   fun foo2: ‹∀ 1. foo2340''#› where 
-//│   |		foo2340''# := (‘A334' -> α342'')
-//│   |		α342'' :> error<> | int<number>
+//│   fun foo2: (‘A317' -> α323'') where 
+//│   |		α323'' :> error<> | int<number>
 //│   [pretty-printed] foo2: A -> (error | int)
 
 Test().foo1
@@ -260,8 +260,8 @@ x => Test().foo1(x)
 
 // :d
 let t = Test()
-//│ let t: α415 where 
-//│ |		α415 :> ‹∀ 0. (Test<> & {Test#A: mut A334_411'..A334_411'})›
+//│ let t: α377 where 
+//│ |		α377 :> ‹∀ 0. (Test<> & {Test#A: mut A317_374'..A317_374'})›
 //│ [pretty-printed] t: Test & {Test#A = 'A}
 
 t.foo1
