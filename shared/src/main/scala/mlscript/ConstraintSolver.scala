@@ -492,7 +492,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }
     def lookupNuTypeDefField(cls: TypedNuCls, fld: Var): FieldType = {
       // println(fld.name, cls.members)
-      println(s"Looking up $fld in ${cls.td.nme}")
+      // println(s"Looking up $fld in ${cls.td.nme}")
       val res = cls.members.get(fld.name) match {
         case S(d: TypedNuFun) =>
           d.ty.toUpper(provTODO)
@@ -504,7 +504,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             fld.toLoc).toUpper(noProv)
         // case _ => ???
       }
-      println(s"Looked up $res where ${res.ub.showBounds}")
+      println(s"Lookup ${cls.td.nme.name}.${fld.name} : $res where ${res.ub.showBounds}")
       res
     }
     

@@ -275,16 +275,18 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         ClassTag(Var(cls.td.nme.name), Set.empty)(provTODO)
       case _cls: TypedNuCls =>
         val cls = _cls.freshen.asInstanceOf[TypedNuCls]
-        FunctionType(
-          TupleType(cls.params.mapKeys(some))(provTODO),
-          // cls.tparams.foldLeft(
-          //   ClassTag(Var(cls.td.nme.name), Set.empty)(provTODO)
-          // ) { case (acc, (tn, tv)) => acc &  }
-          ClassTag(Var(cls.td.nme.name), Set.empty)(provTODO) & RecordType.mk(
-            cls.tparams.map { case (tn, tv) =>
-              Var(cls.td.nme.name + "#" + tn.name).withLocOf(tn) -> FieldType(S(tv), tv)(provTODO) }
+        PolymorphicType.mk(cls.level,
+          FunctionType(
+            TupleType(cls.params.mapKeys(some))(provTODO),
+            // cls.tparams.foldLeft(
+            //   ClassTag(Var(cls.td.nme.name), Set.empty)(provTODO)
+            // ) { case (acc, (tn, tv)) => acc &  }
+            ClassTag(Var(cls.td.nme.name), Set.empty)(provTODO) & RecordType.mk(
+              cls.tparams.map { case (tn, tv) =>
+                Var(cls.td.nme.name + "#" + tn.name).withLocOf(tn) -> FieldType(S(tv), tv)(provTODO) }
+            )(provTODO)
           )(provTODO)
-        )(provTODO)
+        )
       case TypedNuFun(_, fd, ty) =>
         // println(fd, ty)
         // ???

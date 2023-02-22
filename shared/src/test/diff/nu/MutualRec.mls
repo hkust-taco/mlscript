@@ -16,6 +16,7 @@ fun fooo(x) =
   C(0, x)
 //│ fun fooo: ‹∀ 0. fooo26'#› where 
 //│ |		fooo26'# := (α27' -> α35')
+//│ |		α27' <: z30_37'
 //│ |		α35' :> C<>
 //│ [pretty-printed] fooo: anything -> C
 
@@ -28,14 +29,14 @@ module Test0_2 {
   fun b = 123
 }
 //│ class Test0_1
-//│   fun a: ‹∀ 1. a44''#› where 
-//│   |		a44''# := b49''
-//│   |		b48''# := 123<int,number>
-//│   |		b49'' :> ‹∀ 1. b48''#› <: a44''#
+//│   fun a: ‹∀ 1. a47''#› where 
+//│   |		a47''# := b52''
+//│   |		b51''# := 123<int,number>
+//│   |		b52'' :> ‹∀ 1. b51''#› <: a47''#
 //│   [pretty-printed] a: 123
 //│ class Test0_2
-//│   fun b: ‹∀ 1. b48''#› where 
-//│   |		b48''# := 123<int,number>
+//│   fun b: ‹∀ 1. b51''#› where 
+//│   |		b51''# := 123<int,number>
 //│   [pretty-printed] b: 123
 
 Test0_1.a
@@ -50,23 +51,23 @@ module Test1_2 {
   fun b = Test1_1.a
 }
 //│ ╔══[ERROR] Cyclic definition
-//│ ║  l.46: 	module Test1_1 {
+//│ ║  l.47: 	module Test1_1 {
 //│ ║        	       ^^^^^^^^^
-//│ ║  l.47: 	  fun a = Test1_2.b
+//│ ║  l.48: 	  fun a = Test1_2.b
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.48: 	}
+//│ ║  l.49: 	}
 //│ ╙──      	^
 //│ class Test1_1
-//│   fun a: ‹∀ 1. a66''#› where 
-//│   |		a66''# := b72''
-//│   |		b70''# := a71''
-//│   |		a71'' :> error<> <: b70''#
-//│   |		b72'' :> ‹∀ 1. b70''#› <: a66''#
+//│   fun a: ‹∀ 1. a69''#› where 
+//│   |		a69''# := b75''
+//│   |		b73''# := a74''
+//│   |		a74'' :> error<> <: b73''#
+//│   |		b75'' :> ‹∀ 1. b73''#› <: a69''#
 //│   [pretty-printed] a: error
 //│ class Test1_2
-//│   fun b: ‹∀ 1. b70''#› where 
-//│   |		b70''# := a71''
-//│   |		a71'' :> error<> <: b70''#
+//│   fun b: ‹∀ 1. b73''#› where 
+//│   |		b73''# := a74''
+//│   |		a74'' :> error<> <: b73''#
 //│   [pretty-printed] b: error
 
 Test1_1.a
@@ -86,60 +87,60 @@ module Test2_2 {
   fun e = Test2_1.n
 }
 //│ ╔══[ERROR] Cyclic definition
-//│ ║  l.77: 	module Test2_1 {
+//│ ║  l.78: 	module Test2_1 {
 //│ ║        	       ^^^^^^^^^
-//│ ║  l.78: 	  fun t2 = Test2_2
+//│ ║  l.79: 	  fun t2 = Test2_2
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.79: 	  fun a = Test2_2.b
+//│ ║  l.80: 	  fun a = Test2_2.b
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.80: 	  fun d = Test2_2.e
+//│ ║  l.81: 	  fun d = Test2_2.e
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.81: 	  fun n = 456
+//│ ║  l.82: 	  fun n = 456
 //│ ║        	^^^^^^^^^^^^^
-//│ ║  l.82: 	}
+//│ ║  l.83: 	}
 //│ ╙──      	^
 //│ ╔══[ERROR] Cyclic definition
-//│ ║  l.77: 	module Test2_1 {
+//│ ║  l.78: 	module Test2_1 {
 //│ ║        	       ^^^^^^^^^
-//│ ║  l.78: 	  fun t2 = Test2_2
+//│ ║  l.79: 	  fun t2 = Test2_2
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.79: 	  fun a = Test2_2.b
+//│ ║  l.80: 	  fun a = Test2_2.b
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.80: 	  fun d = Test2_2.e
+//│ ║  l.81: 	  fun d = Test2_2.e
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.81: 	  fun n = 456
+//│ ║  l.82: 	  fun n = 456
 //│ ║        	^^^^^^^^^^^^^
-//│ ║  l.82: 	}
+//│ ║  l.83: 	}
 //│ ╙──      	^
 //│ class Test2_1
-//│   fun t2: ‹∀ 1. t295''#› where 
-//│   |		t295''# := Test2_2<>
+//│   fun t2: ‹∀ 1. t298''#› where 
+//│   |		t298''# := Test2_2<>
 //│   [pretty-printed] t2: Test2_2
-//│   fun a: ‹∀ 1. a106''#› where 
-//│   |		b101''# := 123<int,number>
-//│   |		a106''# := b107''
-//│   |		b107'' :> ‹∀ 1. b101''#› <: a106''#
+//│   fun a: ‹∀ 1. a109''#› where 
+//│   |		b104''# := 123<int,number>
+//│   |		a109''# := b110''
+//│   |		b110'' :> ‹∀ 1. b104''#› <: a109''#
 //│   [pretty-printed] a: 123
-//│   fun d: ‹∀ 1. d111''#› where 
-//│   |		e104''# := n105''
-//│   |		n105'' :> error<> <: e104''#
-//│   |		d111''# := e112''
-//│   |		e112'' :> ‹∀ 1. e104''#› <: d111''#
+//│   fun d: ‹∀ 1. d114''#› where 
+//│   |		e107''# := n108''
+//│   |		n108'' :> error<> <: e107''#
+//│   |		d114''# := e115''
+//│   |		e115'' :> ‹∀ 1. e107''#› <: d114''#
 //│   [pretty-printed] d: error
-//│   fun n: ‹∀ 1. n116''#› where 
-//│   |		n116''# := 456<int,number>
+//│   fun n: ‹∀ 1. n119''#› where 
+//│   |		n119''# := 456<int,number>
 //│   [pretty-printed] n: 456
 //│ class Test2_2
-//│   fun b: ‹∀ 1. b101''#› where 
-//│   |		b101''# := 123<int,number>
+//│   fun b: ‹∀ 1. b104''#› where 
+//│   |		b104''# := 123<int,number>
 //│   [pretty-printed] b: 123
-//│   fun c: ‹∀ 1. c102''#› where 
-//│   |		c102''# := a103''
-//│   |		a103'' :> error<> <: c102''#
+//│   fun c: ‹∀ 1. c105''#› where 
+//│   |		c105''# := a106''
+//│   |		a106'' :> error<> <: c105''#
 //│   [pretty-printed] c: error
-//│   fun e: ‹∀ 1. e104''#› where 
-//│   |		e104''# := n105''
-//│   |		n105'' :> error<> <: e104''#
+//│   fun e: ‹∀ 1. e107''#› where 
+//│   |		e107''# := n108''
+//│   |		n108'' :> error<> <: e107''#
 //│   [pretty-printed] e: error
 
 Test2_1.t2.b
