@@ -1188,14 +1188,50 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         Field(f.lb.map(go), go(f.ub))
     }
     
+    def mkTypingUnit(thisTy: ST, members: Map[Str, NuMember]): TypingUnit = {
+      val sorted = members.toList.sortBy(_._1)
+    // def mkTypingUnit(members: Ls[Str -> NuMember]): TypingUnit = {
+      TypingUnit(
+          // Asc(Var("this"), go(thisTy)) :: 
+          NuFunDef(S(false), Var("this"), Nil, R(go(thisTy))) :: 
+            sorted.collect {
+        case (_, td: TypedNuDecl) => goDecl(td)
+        case (_, td: TypedNuFun) => ???
+        // case (_, p: NuParam) => ???
+        // case _ => die
+      })
+    }
+    def goDecl(d: TypedNuDecl): NuDecl = d match {
+      case TypedNuCls(level, td, ttu, tparams, params, members, thisTy) =>
+        NuTypeDef(td.kind, td.nme, td.tparams,
+          // Tup(params.map(p => S(p._1) -> Fld(p._2.ub))))
+          Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub))))),
+          Nil,//TODO
+          mkTypingUnit(thisTy, members))
+          // mkTypingUnit(() :: members.toList.sortBy(_._1)))
+      case TypedNuFun(level, fd, ty) =>
+        NuFunDef(fd.isLetRec, fd.nme, Nil, R(go(ty)))
+    }
     def goLike(ty: TypeLike): mlscript.TypeLike = ty match {
       case ty: SimpleType =>
         val res = go(ty)
         if (bounds.isEmpty) res
         else Constrained(res, bounds, Nil)
       case OtherTypeLike(ttu) =>
-        
-        Signature(Nil)
+        val mems = ttu.entities.map { lti =>
+          lti.result match {
+            // // case S(td: TypedNuTermDef) => ???
+            // case S(TypedNuCls(level, td, ttu, tparams, params, members)) =>
+            //   NuTypeDef(td.kind, td.nme, td.tparams,
+            //     // Tup(params.map(p => S(p._1) -> Fld(p._2.ub))))
+            //     Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub))))),
+            //     Nil,//TODO
+            //     members)
+            case S(d) => goDecl(d)
+            case N => lastWords("Cannot expand uncomputed type info.")
+          }
+        }
+        Signature(mems, ttu.result.map(go))
     }
     
     def go(st: SimpleType): Type =

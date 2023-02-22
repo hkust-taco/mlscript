@@ -6,28 +6,36 @@
 mixin Over {
   fun p = "hi"
 }
-//│ mixin Over
-//│   this: this23' 
-//│   super: super24' 
-//│   fun p: "hi"<string> where 
-//│   [pretty-printed] p: "hi"
+//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin Over() {
+//│ fun p = ...
+//│ },this23',super24',TypedTypingUnit(List(p ~> TypedNuFun(1,fun p = ...,"hi"<string>)),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
+//│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1204)
+//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1230)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1221)
+//│ 	at: mlscript.Typer.expandType(Typer.scala:1321)
+//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:504)
+//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:943)
+//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
+//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
+//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
 
 
 class Base1(p: int): Over {
   fun test = [p, this.p]
   // fun test2 = super.p // TODO
 }
-//│ class Base1
-//│   fun test: (Int, p33'',) where 
-//│   |		p33'' :> p33_34'
-//│   |		p33_34' :> "hi"<string>
-//│   [pretty-printed] test: (int, 'p,)
-//│   |  where
-//│   |    'p :> 'p0
-//│   |    'p0 :> "hi"
+//│ 
+//│ class Base1(p: int) {
+//│ let this: 'this
+//│ fun p: "hi"
+//│ fun test: (int, 'p,)
+//│ }
 
 
 Base1(123).test
+//│ 
+//│ 'test
 //│ Typed: (int, "hi",)
 
 // TODO

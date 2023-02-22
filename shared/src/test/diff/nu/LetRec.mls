@@ -71,7 +71,7 @@ f
 :p
 let rec f = 1
 //│ |#let| |#rec| |f| |#=| |1|
-//│ Parsed: let rec f[List()] = ...;
+//│ Parsed: let rec f = ...;
 //│ Desugared: rec def f: 1
 //│ AST: Def(true, f, IntLit(1), false)
 //│ f: 1

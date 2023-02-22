@@ -108,10 +108,28 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
         case S(false) => "let"
         case S(true) => "let rec"
         case N => "fun"
-      }} ${nme.name}[${targs.map(_.showIn(ctx, 0).mkString(", "))}]${rhs match {
-        case L(trm) => s" = ..."
-        case R(ty) => ty.showIn(ctx, 0)
+      }} ${nme.name}${targs.map(_.showIn(ctx, 0)).mkStringOr(", ", "[", "]")}${rhs match {
+        case L(trm) => " = ..."
+        case R(ty) => ": " + ty.showIn(ctx, 0)
       }}"
+    case Signature(decls, res) =>
+      decls.map("\n" + _.showIn(ctx, 0)).mkString + (res match {
+        case S(ty) => "\n" + ty.showIn(ctx, 0)
+        case N => ""
+      })
+    case NuTypeDef(kind, nme, tparams, params, parents, body) =>
+      s"${kind.str} ${nme.name}${tparams.map(_.showIn(ctx, 0))mkStringOr(", ", "[", "]")}(${
+        params.fields.map {
+          case (N, Fld(_, _, Asc(v: Var, ty))) => v.name + ": " + ty.showIn(ctx, 0)
+          case (N, _) => "???"
+          case (S(nme), rhs) => nme.name
+        }.mkString(", ")
+      })${parents match {
+        case Nil => ""
+        case ps => ps.mkString(", ") // TODO pp
+      }}${if (body.entities.isEmpty) "" else
+        " {" + Signature(body.entities.collect { case d: NuDecl => d }, N).showIn(ctx, 0) + "\n}"
+      }"
   }
   
   def childrenTypes: List[TypeLike] = this match {
@@ -130,8 +148,15 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
     case PolyType(targs, body) => targs.map(_.fold(identity, identity)) :+ body
     case Splice(fs) => fs.flatMap{ case L(l) => l :: Nil case R(r) => r.in.toList ++ (r.out :: Nil) }
     case Constrained(b, bs, ws) => b :: bs.flatMap(c => c._1 :: c._2 :: Nil) ::: ws.flatMap(c => c.lb :: c.ub :: Nil)
-    case Signature(xs) => xs
+    case Signature(xs, res) => xs ::: res.toList
     case NuFunDef(isLetRec, nme, targs, rhs) => targs ::: rhs.toOption.toList
+    case NuTypeDef(kind, nme, tparams, params, parents, body) =>
+      // TODO improve this mess
+      tparams ::: params.fields.collect {
+        case (_, Fld(_, _, Asc(_, ty))) => ty
+      } ::: Signature(body.entities.collect {
+        case d: NuDecl => d
+      }, N) :: Nil // TODO parents?
   }
   
   lazy val typeVarsList: List[TypeVar] = this match {

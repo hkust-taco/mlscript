@@ -52,8 +52,10 @@ package object utils {
   implicit class IterableOps[A](private val self: IterableOnce[A]) extends AnyVal {
     def mkStringOr(
       sep: String = "", start: String = "", end: String = "", els: String = ""
-    ): String =
-      if (self.iterator.nonEmpty) self.iterator.mkString(start, sep, end) else els
+    ): String = {
+      val ite = self.iterator
+      if (ite.nonEmpty) ite.mkString(start, sep, end) else els
+    }
     def collectLast[B](f: Paf[A, B]): Opt[B] = self.iterator.collect(f).foldLeft[Opt[B]](N)((_, a) => S(a))
     def toSortedSet(implicit ord: Ordering[A]): SortedSet[A] =
       SortedSet.from(self)

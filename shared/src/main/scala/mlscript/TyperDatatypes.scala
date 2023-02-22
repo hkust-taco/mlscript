@@ -271,7 +271,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     // val mems = baseMems ++ paramMems ++ clsMems
                     val mems = baseMems ++ clsMems
                     TypedNuCls(outerCtx.lvl, td, ttu,
-                      tparams, typedParams, mems.map(d => d.name -> d).toMap)
+                      tparams, typedParams, mems.map(d => d.name -> d).toMap, thisTV)
                   }
                 case Mxn =>
                   implicit val prov: TP = noProv // TODO

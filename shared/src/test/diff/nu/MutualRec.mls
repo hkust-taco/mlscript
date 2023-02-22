@@ -6,81 +6,75 @@
 
 class Foo()
 123
-//│ class Foo
+//│ 
+//│ class Foo() {
+//│ let this: 'this
+//│ }
+//│ 123
 //│ Typed: 123
 
 Foo
+//│ 
+//│ () -> Foo
 //│ Typed: () -> Foo
 
 fun fooo(x) =
   class C(y, z)
   C(0, x)
-//│ fun fooo: (α26' -> α34') where 
-//│ |		α26' <: z29_36'
-//│ |		α34' :> C<>
-//│ [pretty-printed] fooo: 'a -> 'b
-//│ |  where
-//│ |    'b :> C
-//│ |    'a <: 'z
+//│ 
+//│ fun fooo: 'a -> 'b
 
 
 
 fun foo = bar
 fun bar = foo
-//│ fun foo: foo37' where 
-//│ |		foo37' <: bar38'
-//│ [pretty-printed] foo: 'foo
-//│ |  where
-//│ |    'foo <: 'bar
-//│ fun bar: foo37' where 
-//│ |		foo37' <: bar38'
-//│ [pretty-printed] bar: 'foo
-//│ |  where
-//│ |    'foo <: 'bar
+//│ 
+//│ fun foo: 'foo
+//│ fun bar: 'foo
 
 foo(bar)
+//│ 
+//│ 'a
 //│ Typed: nothing
 
 
 fun foo = {x: foo}
-//│ fun foo: {x: foo41'} where 
-//│ |		foo41' :> {x: foo41'}
-//│ [pretty-printed] foo: {x: 'foo}
-//│ |  where
-//│ |    'foo :> {x: 'foo}
+//│ 
+//│ fun foo: {x: 'foo}
 
 
 fun foo = {x: bar}
 fun bar = {y: foo}
-//│ fun foo: {x: {y: foo42'}} where 
-//│ |		foo42' :> {x: {y: foo42'}}
-//│ [pretty-printed] foo: {x: {y: 'foo}}
-//│ |  where
-//│ |    'foo :> {x: {y: 'foo}}
-//│ fun bar: {y: foo42'} where 
-//│ |		foo42' :> {x: {y: foo42'}}
-//│ [pretty-printed] bar: {y: 'foo}
-//│ |  where
-//│ |    'foo :> {x: {y: 'foo}}
+//│ 
+//│ fun foo: {x: {y: 'foo}}
+//│ fun bar: {y: 'foo}
 
 // FIXME pretty-printing?
 foo
+//│ 
+//│ {x: {y: 'foo}}
 //│ Typed: 'foo
 //│   where
 //│     'foo :> {x: {y: 'foo}}
 
 :ns
 foo
+//│ 
+//│ {x: {y: 'foo}}
 //│ Typed: forall 'foo. {x: {y: 'foo}}
 //│   where
 //│     'foo :> {x: {y: 'foo}}
 
 foo.x
+//│ 
+//│ 'x
 //│ Typed: 'x
 //│   where
 //│     'x :> {y: {x: 'x}}
 
 foo.x.y
+//│ 
+//│ 'y
 //│ Typed: 'foo
 //│   where
 //│     'foo :> {x: {y: 'foo}}
@@ -88,61 +82,26 @@ foo.x.y
 
 fun foo(a) = {h: a, t: bar(a)}
 fun bar(b) = foo(b)
-//│ fun foo: (α62' -> {h: α62', t: α65'}) where 
-//│ |		α62' <: α63'
-//│ |		α63' <: α62'
-//│ |		α65' :> {h: α62', t: α65'}
-//│ [pretty-printed] foo: 'a -> {h: 'a, t: 'b}
-//│ |  where
-//│ |    'b :> {h: 'a, t: 'b}
-//│ |    'a <: 'c
-//│ |    'c <: 'a
-//│ fun bar: (α63' -> α64') where 
-//│ |		α62' <: α63'
-//│ |		α63' <: α62'
-//│ |		α64' :> {h: α62', t: α65'} <: α65'
-//│ |		α65' :> {h: α62', t: α65'}
-//│ [pretty-printed] bar: 'a -> 'b
-//│ |  where
-//│ |    'b :> {h: 'c, t: 'd}
-//│ |       <: 'd
-//│ |    'd :> {h: 'c, t: 'd}
-//│ |    'a <: 'c
-//│ |    'c <: 'a
+//│ 
+//│ fun foo: 'a -> {h: 'a, t: 'b}
+//│ fun bar: 'c -> 'd
 
 :ns
 foo
-//│ Typed: forall 'a 'b 'c. 'b -> {h: 'b, t: 'a}
+//│ 
+//│ 'a -> {h: 'a, t: 'b}
+//│ Typed: forall 'a 'b 'c. 'a -> {h: 'a, t: 'c}
 //│   where
-//│     'a :> {h: 'b, t: 'a}
-//│     'b <: 'c
-//│     'c <: 'b
+//│     'c :> {h: 'a, t: 'c}
+//│     'a <: 'b
+//│     'b <: 'a
 
 
 fun foo(a) = {h1: a, t1: bar(a)}
 fun bar(b) = {h2: b, t2: foo(b)}
-//│ fun foo: (α68' -> {h1: α68', t1: α71'}) where 
-//│ |		α68' <: α69'
-//│ |		α69' <: α68'
-//│ |		α70' :> {h1: α68', t1: α71'}
-//│ |		α71' :> {h2: α69', t2: α70'}
-//│ [pretty-printed] foo: 'a -> {h1: 'a, t1: 'b}
-//│ |  where
-//│ |    'b :> {h2: 'c, t2: 'd}
-//│ |    'd :> {h1: 'a, t1: 'b}
-//│ |    'a <: 'c
-//│ |    'c <: 'a
-//│ fun bar: (α69' -> {h2: α69', t2: α70'}) where 
-//│ |		α68' <: α69'
-//│ |		α69' <: α68'
-//│ |		α70' :> {h1: α68', t1: α71'}
-//│ |		α71' :> {h2: α69', t2: α70'}
-//│ [pretty-printed] bar: 'a -> {h2: 'a, t2: 'b}
-//│ |  where
-//│ |    'b :> {h1: 'c, t1: 'd}
-//│ |    'd :> {h2: 'a, t2: 'b}
-//│ |    'a <: 'c
-//│ |    'c <: 'a
+//│ 
+//│ fun foo: 'a -> {h1: 'a, t1: 'b}
+//│ fun bar: 'c -> {h2: 'c, t2: 'd}
 
 
 
@@ -152,20 +111,19 @@ module Test0_1 {
 module Test0_2 {
   fun b = 123
 }
-//│ class Test0_1
-//│   fun a: b80'' where 
-//│   |		a76'' :> 123<int,number>
-//│   |		b80'' :> 123<int,number> <: a76''
-//│   [pretty-printed] a: 'b
-//│   |  where
-//│   |    'b :> 123
-//│   |       <: 'a
-//│   |    'a :> 123
-//│ class Test0_2
-//│   fun b: 123<int,number> where 
-//│   [pretty-printed] b: 123
+//│ 
+//│ namespace Test0_1() {
+//│ let this: 'this
+//│ fun a: 'b
+//│ }
+//│ namespace Test0_2() {
+//│ let this: 'this0
+//│ fun b: 123
+//│ }
 
 Test0_1.a
+//│ 
+//│ 'a
 //│ Typed: 123
 
 class Test0_1 {
@@ -174,18 +132,15 @@ class Test0_1 {
 class Test0_2() {
   fun b = 123
 }
-//│ class Test0_1
-//│   fun a: b97'' where 
-//│   |		a91'' :> 123<int,number>
-//│   |		b97'' :> 123<int,number> <: a91''
-//│   [pretty-printed] a: 'b
-//│   |  where
-//│   |    'b :> 123
-//│   |       <: 'a
-//│   |    'a :> 123
-//│ class Test0_2
-//│   fun b: 123<int,number> where 
-//│   [pretty-printed] b: 123
+//│ 
+//│ class Test0_1() {
+//│ let this: 'this
+//│ fun a: 'b
+//│ }
+//│ class Test0_2() {
+//│ let this: 'this0
+//│ fun b: 123
+//│ }
 
 
 :e // TODO
@@ -196,32 +151,25 @@ module Test1_2 {
   fun b = Test1_1.a
 }
 //│ ╔══[ERROR] Cyclic definition
-//│ ║  l.192: 	module Test1_1 {
+//│ ║  l.147: 	module Test1_1 {
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.193: 	  fun a = Test1_2.b
+//│ ║  l.148: 	  fun a = Test1_2.b
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.194: 	}
+//│ ║  l.149: 	}
 //│ ╙──       	^
-//│ class Test1_1
-//│   fun a: b108'' where 
-//│   |		a103'' :> error<>
-//│   |		b108'' :> error<> <: a103''
-//│   [pretty-printed] a: 'b
-//│   |  where
-//│   |    'b :> error
-//│   |       <: 'a
-//│   |    'a :> error
-//│ class Test1_2
-//│   fun b: a107'' where 
-//│   |		b106'' :> error<>
-//│   |		a107'' :> error<> <: b106''
-//│   [pretty-printed] b: 'a
-//│   |  where
-//│   |    'a :> error
-//│   |       <: 'b
-//│   |    'b :> error
+//│ 
+//│ namespace Test1_1() {
+//│ let this: 'this
+//│ fun a: 'b
+//│ }
+//│ namespace Test1_2() {
+//│ let this: 'this0
+//│ fun b: 'a
+//│ }
 
 Test1_1.a
+//│ 
+//│ 'a
 //│ Typed: error
 
 
@@ -233,30 +181,21 @@ class Test1_2 {
   fun b = Test1_1().a
 }
 //│ ╔══[ERROR] Cyclic definition
-//│ ║  l.229: 	class Test1_1 {
+//│ ║  l.177: 	class Test1_1 {
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.230: 	  fun a = Test1_2().b
+//│ ║  l.178: 	  fun a = Test1_2().b
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.231: 	}
+//│ ║  l.179: 	}
 //│ ╙──       	^
-//│ class Test1_1
-//│   fun a: b131'' where 
-//│   |		a121'' :> error<>
-//│   |		b131'' :> error<> <: a121''
-//│   [pretty-printed] a: 'b
-//│   |  where
-//│   |    'b :> error
-//│   |       <: 'a
-//│   |    'a :> error
-//│ class Test1_2
-//│   fun b: a126'' where 
-//│   |		b124'' :> error<>
-//│   |		a126'' :> error<> <: b124''
-//│   [pretty-printed] b: 'a
-//│   |  where
-//│   |    'a :> error
-//│   |       <: 'b
-//│   |    'b :> error
+//│ 
+//│ class Test1_1() {
+//│ let this: 'this
+//│ fun a: 'b
+//│ }
+//│ class Test1_2() {
+//│ let this: 'this0
+//│ fun b: 'a
+//│ }
 
 
 // TODO check TV hygiene
@@ -272,82 +211,64 @@ module Test2_2 {
   fun e = Test2_1.n
 }
 //│ ╔══[ERROR] Cyclic definition
-//│ ║  l.263: 	module Test2_1 {
+//│ ║  l.202: 	module Test2_1 {
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.264: 	  fun t2 = Test2_2
+//│ ║  l.203: 	  fun t2 = Test2_2
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.265: 	  fun a = Test2_2.b
+//│ ║  l.204: 	  fun a = Test2_2.b
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.266: 	  fun d = Test2_2.e
+//│ ║  l.205: 	  fun d = Test2_2.e
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.267: 	  fun n = 456
+//│ ║  l.206: 	  fun n = 456
 //│ ║         	^^^^^^^^^^^^^
-//│ ║  l.268: 	}
+//│ ║  l.207: 	}
 //│ ╙──       	^
 //│ ╔══[ERROR] Cyclic definition
-//│ ║  l.263: 	module Test2_1 {
+//│ ║  l.202: 	module Test2_1 {
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.264: 	  fun t2 = Test2_2
+//│ ║  l.203: 	  fun t2 = Test2_2
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.265: 	  fun a = Test2_2.b
+//│ ║  l.204: 	  fun a = Test2_2.b
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.266: 	  fun d = Test2_2.e
+//│ ║  l.205: 	  fun d = Test2_2.e
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.267: 	  fun n = 456
+//│ ║  l.206: 	  fun n = 456
 //│ ║         	^^^^^^^^^^^^^
-//│ ║  l.268: 	}
+//│ ║  l.207: 	}
 //│ ╙──       	^
-//│ class Test2_1
-//│   fun t2: Test2_2<> where 
-//│   [pretty-printed] t2: Test2_2
-//│   fun a: b150'' where 
-//│   |		a140'' :> 123<int,number>
-//│   |		b150'' :> 123<int,number> <: a140''
-//│   [pretty-printed] a: 'b
-//│   |  where
-//│   |    'b :> 123
-//│   |       <: 'a
-//│   |    'a :> 123
-//│   fun d: e158'' where 
-//│   |		d141'' :> error<>
-//│   |		e158'' :> error<> <: d141''
-//│   [pretty-printed] d: 'e
-//│   |  where
-//│   |    'e :> error
-//│   |       <: 'd
-//│   |    'd :> error
-//│   fun n: 456<int,number> where 
-//│   [pretty-printed] n: 456
-//│ class Test2_2
-//│   fun b: 123<int,number> where 
-//│   [pretty-printed] b: 123
-//│   fun c: a148'' where 
-//│   |		c146'' :> error<>
-//│   |		a148'' :> error<> <: c146''
-//│   [pretty-printed] c: 'a
-//│   |  where
-//│   |    'a :> error
-//│   |       <: 'c
-//│   |    'c :> error
-//│   fun e: n149'' where 
-//│   |		e147'' :> error<>
-//│   |		n149'' :> error<> <: e147''
-//│   [pretty-printed] e: 'n
-//│   |  where
-//│   |    'n :> error
-//│   |       <: 'e
-//│   |    'e :> error
+//│ 
+//│ namespace Test2_1() {
+//│ let this: 'this
+//│ fun a: 'b
+//│ fun d: 'e
+//│ fun n: 456
+//│ fun t2: Test2_2
+//│ }
+//│ namespace Test2_2() {
+//│ let this: 'this0
+//│ fun b: 123
+//│ fun c: 'a
+//│ fun e: 'n
+//│ }
 
 Test2_1.t2.b
+//│ 
+//│ 'b
 //│ Typed: 123
 
 Test2_1.a
+//│ 
+//│ 'a
 //│ Typed: 123
 
 // FIXME
 Test2_1.d
+//│ 
+//│ 'd
 //│ Typed: error
 
 Test2_1.n
+//│ 
+//│ 'n
 //│ Typed: 456
 

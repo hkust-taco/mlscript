@@ -126,7 +126,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             thisTV.freshenAbove(lim, rigidify).asInstanceOf[TV],
             superTV.freshenAbove(lim, rigidify).asInstanceOf[TV],
             ttu.freshenAbove(lim, rigidify))
-        case TypedNuCls(level, td, ttu, tps, params, members) =>
+        case TypedNuCls(level, td, ttu, tps, params, members, thisTy) =>
           println(">>",level,ctx.lvl)
           // TypedNuCls(level, td, ttu.freshenAbove(level, rigidify),
           //   params.mapValues(_.freshenAbove(level, rigidify)),
@@ -134,7 +134,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           TypedNuCls(level, td, ttu.freshenAbove(lim, rigidify),
             tps.mapValues(_.freshenAbove(lim, rigidify).asInstanceOf[TV]),
             params.mapValues(_.freshenAbove(lim, rigidify)),
-            members.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap)
+            members.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap,
+            thisTy.freshenAbove(lim, rigidify))
         // case _ => ???
       // }
       }
@@ -166,7 +167,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   case class TypedNuCls(level: Level, td: NuTypeDef, ttu: TypedTypingUnit,
         tparams: Ls[TN -> TV], params: Ls[Var -> FieldType],
       // members: Map[Str, LazyTypeInfo])
-      members: Map[Str, NuMember])
+      members: Map[Str, NuMember], thisTy: ST)
     extends TypedNuTypeDef(Cls) with TypedNuTermDef {
   // case class TypedNuCls(td: NuTypeDef, paramTypes: Ls[ST], ttu: TypedTypingUnit) extends TypedNuTypeDef(Cls) with TypedNuTermDef {
     def nme: TypeName = td.nme
