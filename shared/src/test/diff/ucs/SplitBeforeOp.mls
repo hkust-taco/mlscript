@@ -18,7 +18,7 @@ if x
 if x
   is A and
     y then 0
-//│ ╔══[ERROR] Cannot find the constructor `A` in the context
+//│ ╔══[ERROR] Cannot find constructor `A` in scope
 //│ ║  l.19: 	  is A and
 //│ ╙──      	     ^
 //│ res: error
@@ -32,7 +32,7 @@ if x
   is
     A() then "A"
     B() then "B"
-//│ ╔══[ERROR] Cannot find class `A` in the context
+//│ ╔══[ERROR] Cannot find class `A` in scope
 //│ ║  l.33: 	    A() then "A"
 //│ ╙──      	    ^
 //│ res: error

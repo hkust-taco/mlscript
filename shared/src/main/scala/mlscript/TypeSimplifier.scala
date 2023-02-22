@@ -89,9 +89,9 @@ trait TypeSimplifier { self: Typer =>
         val prefix = fnme.takeWhile(_ =/= '#')
         val postfix = fnme.drop(prefix.length + 1)
         lazy val default = fty.update(process(_ , N), process(_ , N))
-        if (postfix.isEmpty || prefix.isCapitalized/*  TODO  */) v -> default :: Nil
-        else {
-          val td = ctx.tyDefs(prefix)
+        if (postfix.isEmpty) v -> default :: Nil
+        else ctx.tyDefs.get(prefix) match {
+        case S(td) =>
           td.tvarVariances.fold(v -> default :: Nil)(tvv =>
             tvv(td.tparamsargs.find(_._1.name === postfix).getOrElse(die)._2) match {
               case VarianceInfo(true, true) => Nil
@@ -100,6 +100,8 @@ trait TypeSimplifier { self: Typer =>
                 else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType)(fty.prov) :: Nil
                 else  v -> default :: Nil
             })
+        case N => // TODO look into ctx.tyDefs2
+          v -> default :: Nil
         }
       })(ty.prov)
       
