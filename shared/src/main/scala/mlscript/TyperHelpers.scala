@@ -513,8 +513,8 @@ abstract class TyperHelpers { Typer: Typer =>
           if (primitiveTypes contains tr.defn.name) => tr.expand <:< that
         case (_, tr: TypeRef)
           if (primitiveTypes contains tr.defn.name) => this <:< tr.expand
-        case (tr1: TypeRef, _) =>
-          val td1 = ctx.tyDefs(tr1.defn.name)
+        case (tr1: TypeRef, _) => ctx.tyDefs.get(tr1.defn.name) match {
+            case S(td1) =>
           that match {
             case tr2: TypeRef if tr2.defn === tr1.defn =>
               val tvv = td1.getVariancesOrDefault
@@ -525,6 +525,8 @@ abstract class TyperHelpers { Typer: Typer =>
             case _ =>
               (td1.kind is Cls) && clsNameToNomTag(td1)(noProv, ctx) <:< that
           }
+            case N => false // TODO look into ctx.tyDefs2
+        }
         case (_, _: TypeRef) =>
           false // TODO try to expand them (this requires populating the cache because of recursive types)
         case (_: PolymorphicType, _) | (_, _: PolymorphicType) => false

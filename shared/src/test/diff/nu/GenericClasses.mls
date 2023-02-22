@@ -276,9 +276,17 @@ t
 //│ Typed: Test & {Test#A = 'A}
 
 
-// FIXME
 fun foo(x: Test<int>) = x.foo1
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: Test
+//│ fun foo: ((x: Test[Int],) -> foo1422') where 
+//│ |		foo1422' :> ((x: A423#,) -> A423#)
+//│ |		A423# := int<number>..int<number>
+//│ [pretty-printed] foo: (x: Test[int],) -> (x: int,) -> int
+
+foo(t)
+//│ Typed: (x: int,) -> int
+
+foo(t)(1)
+//│ Typed: int
 
 
 Test().foo2
