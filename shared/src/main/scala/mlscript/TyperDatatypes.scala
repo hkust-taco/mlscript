@@ -78,13 +78,21 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                   // TODO check against `tv`
                   TypedNuFun(ctx.lvl, fd, PolymorphicType(ctx.lvl, body_ty))
                 case L(body) =>
-                  implicit val vars: Map[Str, SimpleType] =
-                    outerVars ++ Map.empty // TODO tparams
-                  implicit val gl: GenLambdas = true
-                  val body_ty = typeLetRhs2(isrec = true, fd.nme.name, body)
-                  // implicit val prov: TP = noProv // TODO
-                  // subsume(body_ty, PolymorphicType(level, tv)) // TODO
-                  TypedNuFun(ctx.lvl, fd, body_ty)
+                  // println(fd.isLetRec)
+                  // implicit val vars: Map[Str, SimpleType] =
+                  //   outerVars ++ Map.empty // TODO tparams
+                  fd.isLetRec match {
+                    case S(true) => ???
+                    case S(false) =>
+                      implicit val gl: GenLambdas = true
+                      TypedNuFun(ctx.lvl, fd, typeTerm(body))
+                    case N =>
+                      implicit val gl: GenLambdas = true
+                      val body_ty = typeLetRhs2(isrec = true, fd.nme.name, body)
+                      // implicit val prov: TP = noProv // TODO
+                      // subsume(body_ty, PolymorphicType(level, tv)) // TODO
+                      TypedNuFun(ctx.lvl, fd, body_ty)
+                  }
               }
               // subsume(res_ty, tv)
               res_ty

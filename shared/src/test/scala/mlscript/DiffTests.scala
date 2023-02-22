@@ -512,7 +512,11 @@ class DiffTests
                     showTTU(tm.ttu, ind + 1)
                   case tf: typer.TypedNuFun =>
                     val exp = getType(tf.ty)
-                    output(s"${indStr}fun ${tf.name}: ${tf.ty} where ${tf.ty.showBounds
+                    output(s"${indStr}${tf.fd.isLetRec match {
+                      case S(false) => "let"
+                      case S(true) => "let rec"
+                      case N => "fun"
+                    }} ${tf.name}: ${tf.ty} where ${tf.ty.showBounds
                       .indentNewLines(indStr+"|")}")
                     output(s"${indStr}[pretty-printed] ${tf.name}: ${exp.show.indentNewLines(indStr+"|")}")
                 }
