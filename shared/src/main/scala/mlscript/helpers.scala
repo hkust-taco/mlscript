@@ -11,23 +11,11 @@ import mlscript.utils._, shorthands._
 
 // Auxiliary definitions for types
 
-abstract class TypeImpl extends Located { self: Type =>
-  
-  lazy val typeVarsList: List[TypeVar] = this match {
-    case uv: TypeVar => uv :: Nil
-    case Recursive(n, b) => n :: b.typeVarsList
-    case _ => children.flatMap(_.typeVarsList)
-  }
+trait SignatureImpl extends Located { self: Signature =>
+  def children: List[Located] = members
+}
 
-  /**
-    * @return
-    *  set of free type variables in type
-    */
-  lazy val freeTypeVariables: Set[TypeVar] = this match {
-    case Recursive(uv, body) => body.freeTypeVariables - uv
-    case t: TypeVar => Set.single(t)
-    case _ => this.children.foldRight(Set.empty[TypeVar])((ty, acc) => ty.freeTypeVariables ++ acc)
-  }
+trait TypeLikeImpl extends Located { self: TypeLike =>
   
   def show: Str = showIn(ShowCtx.mk(this :: Nil), 0)
   
@@ -115,9 +103,18 @@ abstract class TypeImpl extends Located { self: Type =>
     }.mkString}${ws.map{
       case Bounds(lo, hi) => s"\n    ${lo.showIn(ctx, 0)} <: ${hi.showIn(ctx, 0)}" // TODO print differently from bs?
     }.mkString}", outerPrec > 0)
+    case NuFunDef(isLetRec, nme, targs, rhs) =>
+      s"${isLetRec match {
+        case S(false) => "let"
+        case S(true) => "let rec"
+        case N => "fun"
+      }} ${nme.name}[${targs.map(_.showIn(ctx, 0).mkString(", "))}]${rhs match {
+        case L(trm) => s" = ..."
+        case R(ty) => ty.showIn(ctx, 0)
+      }}"
   }
   
-  def children: List[Type] = this match {
+  def childrenTypes: List[TypeLike] = this match {
     case _: NullaryType => Nil
     case Function(l, r) => l :: r :: Nil
     case Bounds(l, r) => l :: r :: Nil
@@ -133,8 +130,32 @@ abstract class TypeImpl extends Located { self: Type =>
     case PolyType(targs, body) => targs.map(_.fold(identity, identity)) :+ body
     case Splice(fs) => fs.flatMap{ case L(l) => l :: Nil case R(r) => r.in.toList ++ (r.out :: Nil) }
     case Constrained(b, bs, ws) => b :: bs.flatMap(c => c._1 :: c._2 :: Nil) ::: ws.flatMap(c => c.lb :: c.ub :: Nil)
+    case Signature(xs) => xs
+    case NuFunDef(isLetRec, nme, targs, rhs) => targs ::: rhs.toOption.toList
   }
+  
+  lazy val typeVarsList: List[TypeVar] = this match {
+    case uv: TypeVar => uv :: Nil
+    case Recursive(n, b) => n :: b.typeVarsList
+    case _ => childrenTypes.flatMap(_.typeVarsList)
+  }
+  
+  /**
+    * @return
+    *  set of free type variables in type
+    */
+  lazy val freeTypeVariables: Set[TypeVar] = this match {
+    case Recursive(uv, body) => body.freeTypeVariables - uv
+    case t: TypeVar => Set.single(t)
+    case _ => childrenTypes.foldRight(Set.empty[TypeVar])((ty, acc) => ty.freeTypeVariables ++ acc)
+  }
+  
+}
 
+trait TypeImpl extends Located { self: Type =>
+  
+  def children: List[Located] = childrenTypes
+  
   /**
     * Collect fields recursively during code generation.
     * Note that the type checker will reject illegal cases.
@@ -186,7 +207,7 @@ object ShowCtx {
     * completely new names. If same name exists increment counter suffix
     * in the name.
     */
-  def mk(tys: IterableOnce[Type], _pre: Str = "'", debug: Bool = false): ShowCtx = {
+  def mk(tys: IterableOnce[TypeLike], _pre: Str = "'", debug: Bool = false): ShowCtx = {
     val (otherVars, namedVars) = tys.iterator.toList.flatMap(_.typeVarsList).distinct.partitionMap { tv =>
       tv.identifier match { case L(_) => L(tv.nameHint -> tv); case R(nh) => R(nh -> tv) }
     }
@@ -313,7 +334,7 @@ trait NuDeclImpl extends Located { self: NuDecl =>
     case _: NuFunDef => "definition"
     case _: NuTypeDef => "type declaration"
   }
-  def show: Str = showHead + (this match {
+  def showDbg: Str = showHead + (this match {
     case NuFunDef(_, _, _, L(_)) => " = "
     case NuFunDef(_, _, _, R(_)) => ": "
     case NuTypeDef(_, _, _, _, _, _) => " "

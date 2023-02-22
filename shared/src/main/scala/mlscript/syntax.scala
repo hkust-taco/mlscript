@@ -117,7 +117,9 @@ sealed trait Terms extends DesugaredStatement
 
 // Types
 
-sealed abstract class Type extends TypeImpl
+sealed abstract class TypeLike extends TypeLikeImpl
+
+sealed abstract class Type extends TypeLike with TypeImpl
 
 sealed trait NamedType extends Type { val base: TypeName }
 
@@ -164,8 +166,11 @@ final case class PolyType(targs: Ls[TypeName \/ TypeVar], body: Type) extends Ty
 // New Definitions AST
 
 final case class TypingUnit(entities: Ls[Statement]) extends PgrmOrTypingUnit with TypingUnitImpl
+// final case class TypingUnit(entities: Ls[Statement]) extends TypeLike with PgrmOrTypingUnit with TypingUnitImpl
 
-sealed abstract class NuDecl extends Statement with NuDeclImpl
+final case class Signature(members: Ls[NuDecl]) extends TypeLike with SignatureImpl
+
+sealed abstract class NuDecl extends TypeLike with Statement with NuDeclImpl
 
 final case class NuTypeDef(
   kind: TypeDefKind,
@@ -186,5 +191,5 @@ final case class NuFunDef(
 }
 
 
-sealed abstract class PgrmOrTypingUnit // TODO rm
+sealed trait PgrmOrTypingUnit // TODO rm
 

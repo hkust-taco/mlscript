@@ -462,7 +462,11 @@ class DiffTests
             
             val oldCtx = ctx
             
-            def getType(ty: typer.SimpleType): Type = {
+            def getType(ty: typer.SimpleType): Type = getTypeLike(ty) match {
+              case ty: Type => ty
+              case _ => die
+            }
+            def getTypeLike(ty: typer.SimpleType): TypeLike = {
               if (mode.isDebugging) output(s"⬤ Typed as: $ty")
               if (mode.isDebugging) output(s" where: ${ty.showBounds}")
               typer.dbg = mode.dbgSimplif
@@ -491,11 +495,13 @@ class DiffTests
             
             val (typeDefs, stmts) = if (newDefs) {
               
-              /* 
+              // /* 
               val vars: Map[Str, typer.SimpleType] = Map.empty
               val tpd = typer.typeTypingUnit(TypingUnit(p.tops), allowPure = true)(ctx, raise, vars)
               
               tpd.force()(raise)
+              
+              val exp = typer.expandType(tpd)(ctx)
               
               // val sctx = ShowCtx.mk(tpd)
               
@@ -536,14 +542,16 @@ class DiffTests
                 val exp = getType(typer.PolymorphicType(0, res_ty))
                 output(s"Typed: ${exp.show}")
               }
-              */
+              // */
               
+              /* 
               import typer._
               
               val mod = NuTypeDef(Nms, TypeName("ws"), Nil, Tup(Nil), Nil, TypingUnit(p.tops))
               val info = new LazyTypeInfo(ctx.lvl, mod)(ctx, Map.empty)
               // val modTpe = DeclType(ctx.lvl, info)
               info.force()(raise)
+               */
               
               // val tpd = info
               
@@ -653,7 +661,10 @@ class DiffTests
                     .withFilter { case (mthd, _) =>
                       mthd.rhs.isRight || !mthDeclSet.contains(mthd.nme.name)
                     }
-                    .map { case (mthd, mthdTy) => (mthd.nme.name, mthdTy) }
+                    .map {
+                      case (mthd, mthdTy: Type) => (mthd.nme.name, mthdTy)
+                      case _ => die
+                    }
 
                   tsTypegenCodeBuilder.addTypeDef(td, methods)
                 }
@@ -703,7 +714,7 @@ class DiffTests
                   
                   ctx += nme.name -> typer.VarSymbol(ty_sch, nme)
                   declared += nme.name -> ty_sch
-                  val exp = getType(ty_sch)
+                  val exp = getType(ty_sch).asInstanceOf[Type]
                   if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
                   S(nme.name -> (s"$nme: ${exp.show}" :: Nil))
                   

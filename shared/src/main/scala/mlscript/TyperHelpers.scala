@@ -826,9 +826,9 @@ abstract class TyperHelpers { Typer: Typer =>
           + (if (tv.upperBounds.isEmpty) "" else " <: " + tv.upperBounds.mkString(" & ")))
       }.mkString
     
-    def expPos(implicit ctx: Ctx): Type = exp(S(true), this)
-    def expNeg(implicit ctx: Ctx): Type = exp(S(false), this)
-    def exp(pol: Opt[Bool], ty: ST)(implicit ctx: Ctx): Type = (
+    def expPos(implicit ctx: Ctx): mlscript.TypeLike = exp(S(true), this)
+    def expNeg(implicit ctx: Ctx): mlscript.TypeLike = exp(S(false), this)
+    def exp(pol: Opt[Bool], ty: ST)(implicit ctx: Ctx): mlscript.TypeLike = (
       ty
       // |> (_.normalize(false))
       // |> (simplifyType(_, pol, removePolarVars = false, inlineBounds = false))

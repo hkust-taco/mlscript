@@ -202,7 +202,7 @@ object Main {
     val curBlockTypeDefs = typeDefs.flatMap(td => ctx.tyDefs.get(td.nme.name))
     typer.computeVariances(curBlockTypeDefs, ctx)
     
-    def getType(ty: typer.SimpleType): Type = {
+    def getType(ty: typer.SimpleType): mlscript.TypeLike = {
       object SimplifyPipeline extends typer.SimplifyPipeline {
         def debugOutput(msg: => Str): Unit = println(msg)
       }

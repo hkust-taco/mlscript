@@ -482,8 +482,19 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       body.fold(PolymorphicType(MinLevel, errType))(b => PolymorphicType(level, ProvType(b._2)(prov)))
   }
   
+  sealed abstract class TypeLike {
+    def unwrapProvs: TypeLike
+  }
+  abstract class OtherTypeLike extends TypeLike {
+    this: TypedTypingUnit => def self: TypedTypingUnit = this
+    def unwrapProvs: TypeLike = this
+  }
+  object OtherTypeLike {
+    def unapply(ot: OtherTypeLike): S[TypedTypingUnit] = S(ot.self)
+  }
+  
   /** A general type form (TODO: rename to AnyType). */
-  sealed abstract class SimpleType extends SimpleTypeImpl {
+  sealed abstract class SimpleType extends TypeLike with SimpleTypeImpl {
     val prov: TypeProvenance
     def level: Level
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level

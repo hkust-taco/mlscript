@@ -116,7 +116,28 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   sealed abstract class TypedNuTypeDef(kind: TypeDefKind) extends TypedNuTypeDefBase with TypedNuDecl {
     def nme: TypeName
     // val tparams: Ls[TN -> TV] = Nil // TODO
-    override def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV,ST]): TypedNuTypeDef = ???
+    override def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV,ST]): TypedNuTypeDef = 
+      this match {
+        case m @ TypedNuMxn(td, thisTV, superTV, ttu) =>
+          // println(">>",m.level)
+          // TypedNuMxn(td, thisTV, superTV, ttu.freshenAbove(m.level, rigidify))
+          // TypedNuMxn(td, thisTV, superTV, ttu.freshenAbove(lim, rigidify))
+          TypedNuMxn(td,
+            thisTV.freshenAbove(lim, rigidify).asInstanceOf[TV],
+            superTV.freshenAbove(lim, rigidify).asInstanceOf[TV],
+            ttu.freshenAbove(lim, rigidify))
+        case TypedNuCls(level, td, ttu, tps, params, members) =>
+          println(">>",level,ctx.lvl)
+          // TypedNuCls(level, td, ttu.freshenAbove(level, rigidify),
+          //   params.mapValues(_.freshenAbove(level, rigidify)),
+          //   members.mapValuesIter(_.freshenAbove(level, rigidify)).toMap)
+          TypedNuCls(level, td, ttu.freshenAbove(lim, rigidify),
+            tps.mapValues(_.freshenAbove(lim, rigidify).asInstanceOf[TV]),
+            params.mapValues(_.freshenAbove(lim, rigidify)),
+            members.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap)
+        // case _ => ???
+      // }
+      }
     // val prov: TP
     val td: NuTypeDef
     val prov: TP = TypeProvenance(td.toLoc, td.describe, isType = true)
@@ -171,7 +192,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     }
   }
   
-  case class TypedTypingUnit(entities: Ls[LazyTypeInfo], result: Opt[ST]) {
+  case class TypedTypingUnit(entities: Ls[LazyTypeInfo], result: Opt[ST]) extends OtherTypeLike {
     // def freshen(implicit ctx: Ctx): TypedTypingUnit = ???
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])

@@ -1171,7 +1171,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   
   
   /** Convert an inferred SimpleType into the immutable Type representation. */
-  def expandType(st: SimpleType, stopAtTyVars: Bool = false)(implicit ctx: Ctx): Type = {
+  def expandType(st: TypeLike, stopAtTyVars: Bool = false)(implicit ctx: Ctx): mlscript.TypeLike = {
     val expandType = ()
     
     import Set.{empty => semp}
@@ -1186,6 +1186,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         Field(S(res), res) // TODO improve Field
       case f =>
         Field(f.lb.map(go), go(f.ub))
+    }
+    
+    def goLike(ty: TypeLike): mlscript.TypeLike = ty match {
+      case ty: SimpleType =>
+        val res = go(ty)
+        if (bounds.isEmpty) res
+        else Constrained(res, bounds, Nil)
+      case OtherTypeLike(ttu) =>
+        
+        Signature(Nil)
     }
     
     def go(st: SimpleType): Type =
@@ -1265,13 +1275,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         
         // case DeclType(lvl, info) =>
           
-          
     }
     // }(r => s"~> $r")
     
-    val res = go(st)
-    if (bounds.isEmpty) res
-    else Constrained(res, bounds, Nil)
+    // val res = go(st)
+    // if (bounds.isEmpty) res
+    // else Constrained(res, bounds, Nil)
+    
+    goLike(st)
   }
   
   
