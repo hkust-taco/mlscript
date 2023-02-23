@@ -7,11 +7,11 @@ mixin Over {
   fun p = "hi"
 }
 //│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin Over() {fun p = ...},this23',super24',TypedTypingUnit(List(p ~> TypedNuFun(1,fun p = "hi","hi"<string>)),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
-//│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1210)
-//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1238)
+//│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1230)
+//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1258)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1229)
-//│ 	at: mlscript.Typer.expandType(Typer.scala:1325)
+//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1249)
+//│ 	at: mlscript.Typer.expandType(Typer.scala:1345)
 //│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:504)
 //│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:943)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)

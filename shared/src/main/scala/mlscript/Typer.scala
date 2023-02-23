@@ -1056,7 +1056,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           (fv -> TopType :: Nil) -> typeTerm(b)
       }
     case Case(pat, bod, rest) =>
-      val patTy = pat match {
+      val (tagTy: ST, patTy: ST) = pat match {
         case lit: Lit =>
           ClassTag(lit, lit.baseClasses)(tp(pat.toLoc, "literal pattern"))
         case v @ Var(nme) =>
@@ -1069,16 +1069,36 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                   val e = ClassTag(ErrTypeId, Set.empty)(tpr)
                   return ((e -> e) :: Nil) -> e
                 case S(td) =>
-                  ClassTag(v,
-                      Set.empty//TODO
-                    )(provTODO)
+                  // ClassTag(v,
+                  //     Set.empty//TODO
+                  //   )(provTODO)
+                  // td.complete() match {
+                  //   case cls: TypedNuCls =>
+                  //     // lookupNuTypeDef(cls.td.nme.name, v => ???)
+                  //     clsNameToNomTag(cls.td)(tp(pat.toLoc, "class pattern"), ctx)
+                  // }
+                  val cls = lookupNuTypeDef(nme, { v =>
+                    val fv = freshVar(provTODO, N, S(v.name.replaceAll("#", "_")))
+                    println(v, fv)
+                    S(FieldType(S(fv), fv)(provTODO))
+                  })
+                  val tag = clsNameToNomTag(cls.td)(tp(pat.toLoc, "class pattern"), ctx)
+                  // val ty = tag &
+                  val ty =
+                    // RecordType.mk(cls.params)(provTODO) // TODO?!
+                    RecordType.mk(cls.tparams.map{
+                      case (tn, tv) =>
+                        (Var(nme+"#"+tn.name).withLocOf(tn), FieldType(S(tv), tv)(provTODO))
+                    })(provTODO)
+                  println(s"Match arm $nme : $ty")
+                  tag -> ty
               }
             case Some(td) =>
               td.kind match {
-                case Als => err(msg"can only match on classes and traits", pat.toLoc)(raise)
-                case Nms => err(msg"can only match on classes and traits", pat.toLoc)(raise)
-                case Cls => clsNameToNomTag(td)(tp(pat.toLoc, "class pattern"), ctx)
-                case Trt => trtNameToNomTag(td)(tp(pat.toLoc, "trait pattern"), ctx)
+                case Als => val t = err(msg"can only match on classes and traits", pat.toLoc)(raise); t -> t
+                case Nms => val t = err(msg"can only match on classes and traits", pat.toLoc)(raise); t -> t
+                case Cls => val t = clsNameToNomTag(td)(tp(pat.toLoc, "class pattern"), ctx); t -> t
+                case Trt => val t = trtNameToNomTag(td)(tp(pat.toLoc, "trait pattern"), ctx); t -> t
               }
           }
       }
@@ -1091,12 +1111,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           // newCtx += v.name -> VarSymbol(tv, v)
           // val bod_ty = typeTerm(bod)(newCtx, raise, vars, genLambdas)
           // (patTy -> tv, bod_ty, typeArms(scrutVar, rest))
-          newCtx += v.name -> VarSymbol(patTy, v)
+          newCtx += v.name -> VarSymbol(tagTy & patTy, v)
           val bod_ty = typeTerm(bod)(newCtx, raise, vars, genLambdas)
-          (patTy -> patTy, bod_ty, typeArms(scrutVar, rest))
+          (tagTy -> patTy, bod_ty, typeArms(scrutVar, rest))
         case N =>
           val bod_ty = typeTerm(bod)(newCtx, raise, vars, genLambdas)
-          (patTy -> TopType, bod_ty, typeArms(scrutVar, rest))
+          (tagTy -> TopType, bod_ty, typeArms(scrutVar, rest))
       }
       (req_ty :: tys) -> (bod_ty | rest_ty)
   }
