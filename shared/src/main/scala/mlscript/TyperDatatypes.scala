@@ -195,7 +195,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                                       
                                       println(s"Fresh $mxn")
                                       
-                                      // FIXME constraining level?!
+                                      assert(finalType.level === lvl)
+                                      assert(mxn.superTV.level === lvl)
+                                      assert(mxn.thisTV.level === lvl)
                                       constrain(superType, mxn.superTV)
                                       constrain(finalType, mxn.thisTV)
                                       
@@ -237,7 +239,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                           )(provTODO)
                         inherit(ps, newSuperType, members ++ newMembs)
                       case Nil =>
-                        // FIXME constraining level?!
+                        assert(finalType.level === lvl)
                         constrain(superType, finalType)
                         members
                     }

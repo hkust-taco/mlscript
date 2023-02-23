@@ -16,24 +16,21 @@ class Lit(n: int)
 //│     'this0 :> Lit
 //│     'this :> Add
 
-fun add11 = Add(Lit(1), Lit(2))
+let add11 = Add(Lit(1), Lit(2))
 //│ 
-//│ fun add11: 'a
+//│ let add11: 'a
 //│   where
 //│     'a :> Add & {Add#E = 'E}
-//│        <: 'add11
-//│     'add11 :> Add & {Add#E = 'E}
 //│     'E :> Lit
 
 fun eval(e) =
   if e is
-    Lit(n) then n
+    Lit(n) then n: int
     Add(l, r) then eval(l) + eval(r)
 //│ 
-//│ fun eval: 'a -> ('n | 'b)
+//│ fun eval: 'a -> (int | 'b)
 //│   where
 //│     'b := int
-//│     'n := int
 //│     'a <: Lit | Add & {Add#E = 'E} & ~Lit
 //│     'E <: 'rhs & 'lhs
 //│     'lhs <: 'a
@@ -92,6 +89,18 @@ TestLang.eval
 //│     'a <: Add & {Add#E = 'E} | Lit
 //│     'E <: 'a
 
+
+
+add11
+//│ 
+//│ 'a
+//│   where
+//│     'a :> Add & {Add#E = 'E}
+//│     'E :> Lit
+//│ Typed: Add & {Add#E = 'E}
+//│   where
+//│     'E :> Lit
+
 TestLang.eval(add11)
 //│ 
 //│ 'a
@@ -99,6 +108,77 @@ TestLang.eval(add11)
 //│     'a :> int | 'b
 //│     'b := int
 //│ Typed: int
+
+add11
+//│ 
+//│ 'a
+//│   where
+//│     'a :> Add & {Add#E = 'E}
+//│        <: 'b
+//│     'E :> Lit
+//│        <: 'E0
+//│     'E0 :> Lit
+//│         <: 'E & 'rhs & 'lhs
+//│     'lhs :> Lit
+//│          <: 'lhs0
+//│     'lhs0 :> Lit
+//│           <: 'b
+//│     'rhs :> Lit
+//│          <: 'rhs0
+//│     'rhs0 :> Lit
+//│           <: 'b
+//│     'b :> Lit | Add & {Add#E = 'E}
+//│        <: Lit | Add & {Add#E = 'E0} & ~Lit
+//│ Typed: Add & {Add#E = 'E}
+//│   where
+//│     'E :> Lit
+//│        <: Add & {Add#E = 'E} | Lit
+
+TestLang.eval(add11)
+//│ 
+//│ 'a
+//│   where
+//│     'a :> int | 'b
+//│     'b := int
+//│ Typed: int
+
+add11
+//│ 
+//│ 'a
+//│   where
+//│     'a :> Add & {Add#E = 'E}
+//│        <: 'b & 'c
+//│     'E :> Lit
+//│        <: 'E0 & 'E1
+//│     'E1 :> Lit
+//│         <: 'E & 'rhs & 'lhs
+//│     'lhs :> Lit
+//│          <: 'lhs0
+//│     'lhs0 :> Lit
+//│           <: 'c
+//│     'rhs :> Lit
+//│          <: 'rhs0
+//│     'rhs0 :> Lit
+//│           <: 'c
+//│     'c :> Lit | Add & {Add#E = 'E}
+//│        <: Lit | Add & {Add#E = 'E1} & ~Lit
+//│     'E0 :> Lit
+//│         <: 'E & 'rhs1 & 'lhs1
+//│     'lhs1 :> Lit
+//│           <: 'lhs2
+//│     'lhs2 :> Lit
+//│           <: 'b
+//│     'rhs1 :> Lit
+//│           <: 'rhs2
+//│     'rhs2 :> Lit
+//│           <: 'b
+//│     'b :> Lit | Add & {Add#E = 'E}
+//│        <: Lit | Add & {Add#E = 'E0} & ~Lit
+//│ Typed: Add & {Add#E = 'E}
+//│   where
+//│     'E :> Lit
+//│        <: Add & {Add#E = 'E} | Lit
+
 
 
 class Neg<A>(expr: A)
@@ -115,15 +195,11 @@ let add2negadd11 = Add(Lit(2), Neg(add11))
 //│   where
 //│     'a :> Add & {Add#E = 'E}
 //│     'E :> Neg & {Neg#A = 'A} | Lit
-//│     'A :> Add & {Add#E :> 'E0 <: 'E1}
-//│     'E1 :> 'E0 | 'E2 | Lit
-//│     'E0 <: 'E3
-//│     'E3 :> 'E2 | Lit
-//│         <: 'E4
+//│     'A :> Add & {Add#E = 'E0}
+//│     'E0 :> Lit
+//│         <: 'E1 & 'E2
 //│     'E2 :> Lit
-//│         <: 'E4
-//│     'E4 :> Lit
-//│         <: 'E2 & 'rhs & 'lhs
+//│         <: 'E0 & 'rhs & 'lhs
 //│     'lhs :> Lit
 //│          <: 'lhs0
 //│     'lhs0 :> Lit
@@ -132,8 +208,20 @@ let add2negadd11 = Add(Lit(2), Neg(add11))
 //│          <: 'rhs0
 //│     'rhs0 :> Lit
 //│           <: 'b
-//│     'b :> Lit | Add & {Add#E :> 'E2 <: 'E3}
-//│        <: Lit | Add & {Add#E = 'E4} & ~Lit
+//│     'b :> Lit | Add & {Add#E = 'E0}
+//│        <: Lit | Add & {Add#E = 'E2} & ~Lit
+//│     'E1 :> Lit
+//│         <: 'E0 & 'rhs1 & 'lhs1
+//│     'lhs1 :> Lit
+//│           <: 'lhs2
+//│     'lhs2 :> Lit
+//│           <: 'c
+//│     'rhs1 :> Lit
+//│           <: 'rhs2
+//│     'rhs2 :> Lit
+//│           <: 'c
+//│     'c :> Lit | Add & {Add#E = 'E0}
+//│        <: Lit | Add & {Add#E = 'E1} & ~Lit
 
 
 mixin EvalNeg {
@@ -141,7 +229,7 @@ mixin EvalNeg {
     if e is Neg(d) then 0 - this.eval(d)
     else super.eval(e)
 }
-//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin EvalNeg() {fun eval = ...},this156',super157',TypedTypingUnit(List(eval ~> TypedNuFun(1,fun eval = (e,) => {if (is (e,) (Neg (d,),)) then - (0,) ((this).eval (d,),) else (super).eval (e,)},(α159'' -> (α171'' | α175'')))),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
+//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin EvalNeg() {fun eval = ...},this197',super198',TypedTypingUnit(List(eval ~> TypedNuFun(1,fun eval = (e,) => {if (is (e,) (Neg (d,),)) then - (0,) ((this).eval (d,),) else (super).eval (e,)},(α200'' -> (α212'' | α216'')))),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
 //│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1259)
 //│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1287)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
@@ -266,13 +354,13 @@ TestLang.eval(Neg(Neg(add11)))
 
 TestLang.eval(add2negadd11)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.267: 	TestLang.eval(add2negadd11)
+//│ ║  l.355: 	TestLang.eval(add2negadd11)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Neg & {Neg#A = ?A}` does not match type `Add & {Add#E = ?E} | Lit`
-//│ ║  l.112: 	let add2negadd11 = Add(Lit(2), Neg(add11))
+//│ ║  l.192: 	let add2negadd11 = Add(Lit(2), Neg(add11))
 //│ ║         	                               ^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.45: 	    if e is
+//│ ║  l.42: 	    if e is
 //│ ║        	       ^
 //│ ╟── Note: type parameter E is defined at:
 //│ ║  l.6: 	class Add<E>(lhs: E, rhs: E)
@@ -290,10 +378,18 @@ TestLang.eval(add2negadd11)
 //│ Typed: error | int
 
 TestLang.eval(Add(Lit(2), Neg(add11)))
-//│ ╔══[ERROR] Subtyping constraint of the form `?eval <: ?a -> ?b` exceeded recursion depth limit (250)
-//│ ║  l.292: 	TestLang.eval(Add(Lit(2), Neg(add11)))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.380: 	TestLang.eval(Add(Lit(2), Neg(add11)))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ ╟── application of type `Neg & {Neg#A = ?A}` does not match type `Add & {Add#E = ?E} | Lit`
+//│ ║  l.192: 	let add2negadd11 = Add(Lit(2), Neg(add11))
+//│ ║         	                               ^^^^^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.42: 	    if e is
+//│ ║        	       ^
+//│ ╟── Note: type parameter E is defined at:
+//│ ║  l.6: 	class Add<E>(lhs: E, rhs: E)
+//│ ╙──     	          ^
 //│ 
 //│ 'a
 //│   where

@@ -950,10 +950,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case _ => mthCallOrSel(obj, fieldName)
         }
       case Let(isrec, nme, rhs, bod) =>
-        val n_ty = typeLetRhs(isrec, nme.name, rhs)
-        val newCtx = ctx.nest
-        newCtx += nme.name -> VarSymbol(n_ty, nme)
-        typeTerm(bod)(newCtx, raise, vars, genLambdas)
+        if (newDefs) {
+          if (isrec) ???
+          val rhs_ty = typeTerm(rhs)
+          val newCtx = ctx.nest
+          newCtx += nme.name -> VarSymbol(rhs_ty, nme)
+          typeTerm(bod)(newCtx, raise, vars, genLambdas)
+        } else {
+          val n_ty = typeLetRhs(isrec, nme.name, rhs)
+          val newCtx = ctx.nest
+          newCtx += nme.name -> VarSymbol(n_ty, nme)
+          typeTerm(bod)(newCtx, raise, vars, genLambdas)
+        }
       // case Blk(s :: stmts) =>
       //   val (newCtx, ty) = typeStatement(s)
       //   typeTerm(Blk(stmts))(newCtx, lvl, raise)

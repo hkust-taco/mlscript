@@ -1,0 +1,89 @@
+:NewParser
+:NewDefs
+:NoJS
+
+
+class Add<E>(lhs: E, rhs: E)
+// class Lit(n: int)
+//│ 
+//│ class Add[E](lhs: E, rhs: E) {
+//│ this: 'this
+//│ }
+//│   where
+//│     'this :> Add
+
+let e = Add(1, 1)
+//│ 
+//│ let e: 'a
+//│   where
+//│     'a :> Add & {Add#E = 'E}
+//│     'E :> 1
+
+:d
+e
+//│ 0. Typing TypingUnit(List(e))
+//│ | 0. Typing term e
+//│ | 0. : α29
+//│ ======== TYPED ========
+//│ res: Some(α29) where 
+//│ 		α29 :> (Add<> & {Add#E: mut E23_30..E23_30})
+//│ 		E23_30 :> 1<int,number>
+//│ 
+//│ 'a
+//│   where
+//│     'a :> Add & {Add#E = 'E}
+//│     'E :> 1
+//│ ⬤ Typed as: ‹∀ 0. α29›
+//│  where: 
+//│ 		α29 :> (Add<> & {Add#E: mut E23_30..E23_30})
+//│ 		E23_30 :> 1<int,number>
+//│ Typed: Add & {Add#E = 'E}
+//│   where
+//│     'E :> 1
+
+e.lhs
+//│ 
+//│ 'lhs
+//│   where
+//│     'lhs :> 1
+//│ Typed: 1
+
+:d
+e
+//│ 0. Typing TypingUnit(List(e))
+//│ | 0. Typing term e
+//│ | 0. : α29
+//│ ======== TYPED ========
+//│ res: Some(α29) where 
+//│ 		α29 :> (Add<> & {Add#E: mut E23_30..E23_30}) <: {lhs: lhs35}
+//│ 		E23_30 :> 1<int,number> <: lhs35
+//│ 		lhs35 :> 1<int,number>
+//│ 
+//│ 'a
+//│   where
+//│     'a :> Add & {Add#E = 'E}
+//│        <: {lhs: 'lhs}
+//│     'E :> 1
+//│        <: 'lhs
+//│     'lhs :> 1
+//│ ⬤ Typed as: ‹∀ 0. α29›
+//│  where: 
+//│ 		α29 :> (Add<> & {Add#E: mut E23_30..E23_30}) <: {lhs: lhs35}
+//│ 		E23_30 :> 1<int,number> <: lhs35
+//│ 		lhs35 :> 1<int,number>
+//│ Typed: Add & {Add#E = 'E}
+//│   where
+//│     'E :> 1
+
+
+Add(2, 2)
+//│ 
+//│ 'a
+//│   where
+//│     'a :> Add & {Add#E = 'E}
+//│     'E :> 2
+//│ Typed: Add & {Add#E = 'E}
+//│   where
+//│     'E :> 2
+
+

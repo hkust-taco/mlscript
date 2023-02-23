@@ -130,16 +130,9 @@ if opt is Some then opt.value else 0
 
 if opt is Some(v) then v else 0
 //│ 
-//│ (forall 'value. 'value) | 0
+//│ 'value | 0
 //│   where
-//│     'value :> 'A
-//│     'A :> 123
-//│        <: 'A0
-//│     'A0 :> 123
-//│         <: 'A & 'A1
-//│     'A1 :> 123
-//│         <: 'A0 & 'value0
-//│     'value0 :> 123
+//│     'value :> 123
 //│ Typed: 0 | 123
 
 
@@ -150,10 +143,10 @@ fun map(x, f) = if x is
 //│ fun map: ('a, 'b,) -> (None | 'c)
 //│   where
 //│     'c :> Some & {Some#A = 'A}
-//│     'b <: (forall 'value. 'value) -> 'd
+//│     'b <: 'value -> 'd
 //│     'd <: 'A
-//│     'value :> 'A0
 //│     'a <: None | Some & {Some#A = 'A0} & ~None
+//│     'A0 <: 'value
 
 let mo = map(opt, succ)
 //│ 
@@ -199,16 +192,16 @@ Test(1)
 :e
 Test(true)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.200: 	Test(true)
+//│ ║  l.193: 	Test(true)
 //│ ║         	^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `int`
-//│ ║  l.200: 	Test(true)
+//│ ║  l.193: 	Test(true)
 //│ ║         	     ^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.178: 	  fun foo = n + 1
+//│ ║  l.171: 	  fun foo = n + 1
 //│ ║         	            ^
 //│ ╟── from reference:
-//│ ║  l.177: 	class Test(n) {
+//│ ║  l.170: 	class Test(n) {
 //│ ╙──       	           ^
 //│ 
 //│ 'a
@@ -222,13 +215,13 @@ class Test<A>(n: A) {
   fun foo = n + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.222: 	  fun foo = n + 1
+//│ ║  l.215: 	  fun foo = n + 1
 //│ ║         	            ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.222: 	  fun foo = n + 1
+//│ ║  l.215: 	  fun foo = n + 1
 //│ ║         	            ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.221: 	class Test<A>(n: A) {
+//│ ║  l.214: 	class Test<A>(n: A) {
 //│ ╙──       	           ^
 //│ 
 //│ class Test[A](n: A) {
@@ -350,13 +343,13 @@ class Test<A> {
   fun foo2(x: A) = x + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.350: 	  fun foo2(x: A) = x + 1
+//│ ║  l.343: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.350: 	  fun foo2(x: A) = x + 1
+//│ ║  l.343: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.348: 	class Test<A> {
+//│ ║  l.341: 	class Test<A> {
 //│ ╙──       	           ^
 //│ 
 //│ class Test[A]() {

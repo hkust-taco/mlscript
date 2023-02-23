@@ -538,13 +538,17 @@ class DiffTests
               if (mode.dbg || mode.explainErrors) {
                 output("======== TYPED ========")
                 showTTU(tpd, 0)
+                // output("res: " + tpd.result)
+                tpd.result.foreach { res_ty =>
+                  output("res: " + tpd.result + " where " + res_ty.showBounds)
+                }
               }
               
               output(exp.show)
               
               // val exp = getType(typer.PolymorphicType(0, res_ty))
               // output(s"Typed: ${exp}")
-              tpd.result.foreach { res_ty => 
+              tpd.result.foreach { res_ty =>
                 val exp = getType(typer.PolymorphicType(0, res_ty))
                 output(s"Typed: ${exp.show}")
               }
