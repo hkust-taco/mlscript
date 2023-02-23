@@ -125,16 +125,15 @@ if opt is Some then opt.value else 0
 //│ 
 //│ 'value | 0
 //│   where
-//│     'value :> 123
-//│ Typed: 0 | 123
+//│     'value :> anything
+//│ Typed: anything
 
 if opt is Some(v) then v else 0
 //│ 
 //│ (forall 'value. 'value) | 0
 //│   where
-//│     'value :> 'value0
-//│     'value0 :> 123
-//│ Typed: 0 | 123
+//│     'value :> anything
+//│ Typed: anything
 
 
 fun map(x, f) = if x is
@@ -146,15 +145,20 @@ fun map(x, f) = if x is
 //│     'c :> Some & {Some#A = 'A}
 //│     'b <: (forall 'value. 'value) -> 'd
 //│     'd <: 'A
-//│     'value :> 'value0
-//│     'a <: None & 'e | Some & 'f & ~None
-//│     'f <: {value: 'value0}
+//│     'value :> anything
+//│     'a <: None | Some & ~None
 
 let mo = map(opt, succ)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.151: 	let mo = map(opt, succ)
+//│ ║         	         ^^^^^^^^^^^^^^
+//│ ╟── reference of type `anything` is not an instance of type `int`
+//│ ║  l.139: 	fun map(x, f) = if x is
+//│ ╙──       	                   ^
 //│ 
 //│ let mo: 'a
 //│   where
-//│     'a :> None | 'b
+//│     'a :> None | 'b | error
 //│     'b :> Some & {Some#A :> 'A <: 'A0}
 //│     'A0 :> 'A | int
 
@@ -162,10 +166,10 @@ mo.toArray
 //│ 
 //│ 'toArray
 //│   where
-//│     'toArray :> ('A,) | ()
+//│     'toArray :> error | ('A,) | ()
 //│     'A := in 'A0 out 'A1
 //│     'A1 :> 'A0 | int
-//│ Typed: Array[int]
+//│ Typed: Array[int] | error
 
 
 
@@ -194,16 +198,16 @@ Test(1)
 :e
 Test(true)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.195: 	Test(true)
+//│ ║  l.199: 	Test(true)
 //│ ║         	^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `int`
-//│ ║  l.195: 	Test(true)
+//│ ║  l.199: 	Test(true)
 //│ ║         	     ^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.173: 	  fun foo = n + 1
+//│ ║  l.177: 	  fun foo = n + 1
 //│ ║         	            ^
 //│ ╟── from reference:
-//│ ║  l.172: 	class Test(n) {
+//│ ║  l.176: 	class Test(n) {
 //│ ╙──       	           ^
 //│ 
 //│ 'a
@@ -217,13 +221,13 @@ class Test<A>(n: A) {
   fun foo = n + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.217: 	  fun foo = n + 1
+//│ ║  l.221: 	  fun foo = n + 1
 //│ ║         	            ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.217: 	  fun foo = n + 1
+//│ ║  l.221: 	  fun foo = n + 1
 //│ ║         	            ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.216: 	class Test<A>(n: A) {
+//│ ║  l.220: 	class Test<A>(n: A) {
 //│ ╙──       	           ^
 //│ 
 //│ class Test[A](n: A) {
@@ -345,13 +349,13 @@ class Test<A> {
   fun foo2(x: A) = x + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.345: 	  fun foo2(x: A) = x + 1
+//│ ║  l.349: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.345: 	  fun foo2(x: A) = x + 1
+//│ ║  l.349: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.343: 	class Test<A> {
+//│ ║  l.347: 	class Test<A> {
 //│ ╙──       	           ^
 //│ 
 //│ class Test[A]() {

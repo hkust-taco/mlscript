@@ -3,6 +3,84 @@
 :NoJS
 
 
+class A(n: int)
+//│ 
+//│ class A(n: int) {
+//│ this: 'this
+//│ }
+//│   where
+//│     'this :> A
+
+let a = A(42)
+//│ 
+//│ let a: 'a
+//│   where
+//│     'a :> A
+
+
+fun f(x: A) = x.n
+//│ 
+//│ fun f: (x: A,) -> 'n
+//│   where
+//│     'n :> int
+
+fun f(x: A) = if x is A then x.n
+//│ 
+//│ fun f: (x: A,) -> 'n
+//│   where
+//│     'n :> int
+
+// FIXedME no bounds on 'n...
+fun f(x: A | 'b) = if x is A then x.n else 0
+//│ 
+//│ fun f: (x: (A | 'b,),) -> ('n | 0)
+//│   where
+//│     'n :> int
+
+
+fun f(x) = x.n
+//│ 
+//│ fun f: 'a -> 'n
+//│   where
+//│     'a <: {n: 'n}
+
+f(a)
+//│ 
+//│ 'a
+//│   where
+//│     'a :> int
+//│ Typed: int
+
+fun f(x) = if x is A then x.n
+//│ 
+//│ fun f: 'a -> 'n
+//│   where
+//│     'n :> int
+//│     'a <: A
+
+f(a)
+//│ 
+//│ 'a
+//│   where
+//│     'a :> int
+//│ Typed: int
+
+fun f(x) = if x is A then x.n else 0
+//│ 
+//│ fun f: 'a -> ('n | 0)
+//│   where
+//│     'n :> int
+//│     'a <: A | 'b & ~A
+
+f(a)
+//│ 
+//│ 'a
+//│   where
+//│     'a :> 'n | 0
+//│     'n :> int
+//│ Typed: int
+
+
 
 class C {
   fun id(x) = x
@@ -160,7 +238,7 @@ b.me
 :e
 b.getBaseTypo
 //│ ╔══[ERROR] class `Base1` does not contain member `getBaseTypo`
-//│ ║  l.161: 	b.getBaseTypo
+//│ ║  l.239: 	b.getBaseTypo
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ 
 //│ 'getBaseTypo
@@ -180,11 +258,11 @@ class Rec(n) {
   fun go = Rec(n + 1)
 }
 //│ ╔══[ERROR] Cyclic definition
-//│ ║  l.179: 	class Rec(n) {
+//│ ║  l.257: 	class Rec(n) {
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.180: 	  fun go = Rec(n + 1)
+//│ ║  l.258: 	  fun go = Rec(n + 1)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.181: 	}
+//│ ║  l.259: 	}
 //│ ╙──       	^
 //│ 
 //│ class Rec(n: 'n) {
@@ -207,16 +285,16 @@ class Annots(base: 0 | 1) {
   fun a = base
 }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.206: 	  a: int
+//│ ║  l.284: 	  a: int
 //│ ║         	  ^
 //│ ╟── type `(0 | 1,)` is not an instance of type `int`
-//│ ║  l.205: 	class Annots(base: 0 | 1) {
+//│ ║  l.283: 	class Annots(base: 0 | 1) {
 //│ ║         	                   ^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.206: 	  a: int
+//│ ║  l.284: 	  a: int
 //│ ║         	  ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.206: 	  a: int
+//│ ║  l.284: 	  a: int
 //│ ╙──       	     ^^^
 //│ 
 //│ class Annots(base: (0 | 1,)) {

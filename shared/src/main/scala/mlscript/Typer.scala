@@ -1085,12 +1085,15 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       val newCtx = ctx.nest
       val (req_ty, bod_ty, (tys, rest_ty)) = scrutVar match {
         case S(v) =>
-          val tv = freshVar(tp(v.toLoc, "refined scrutinee"), N,
-            // S(v.name), // this one seems a bit excessive
-          )
-          newCtx += v.name -> VarSymbol(tv, v)
+          // val tv = freshVar(tp(v.toLoc, "refined scrutinee"), N,
+          //   // S(v.name), // this one seems a bit excessive
+          // )
+          // newCtx += v.name -> VarSymbol(tv, v)
+          // val bod_ty = typeTerm(bod)(newCtx, raise, vars, genLambdas)
+          // (patTy -> tv, bod_ty, typeArms(scrutVar, rest))
+          newCtx += v.name -> VarSymbol(patTy, v)
           val bod_ty = typeTerm(bod)(newCtx, raise, vars, genLambdas)
-          (patTy -> tv, bod_ty, typeArms(scrutVar, rest))
+          (patTy -> patTy, bod_ty, typeArms(scrutVar, rest))
         case N =>
           val bod_ty = typeTerm(bod)(newCtx, raise, vars, genLambdas)
           (patTy -> TopType, bod_ty, typeArms(scrutVar, rest))

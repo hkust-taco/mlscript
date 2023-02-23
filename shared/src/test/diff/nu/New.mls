@@ -19,7 +19,16 @@ if f is Foo then 1 else 0
 //│    = 1
 
 if f is Foo(a) then a else 0
-//│ res: 0 | 1
+//│ ╔══[ERROR] Type mismatch in reference:
+//│ ║  l.21: 	if f is Foo(a) then a else 0
+//│ ║        	   ^
+//│ ╟── class pattern of type `Foo` does not have field 'x'
+//│ ║  l.21: 	if f is Foo(a) then a else 0
+//│ ║        	        ^^^
+//│ ╟── but it flows into reference with expected type `{x: ?x}`
+//│ ║  l.21: 	if f is Foo(a) then a else 0
+//│ ╙──      	   ^
+//│ res: 0 | error
 //│    = 1
 
 // case f of
@@ -33,11 +42,20 @@ if f is Foo(a) then a else 0
 
 
 fun test(x) = if x is Foo(a) then a
-//│ test: (Foo & {x: 'x}) -> 'x
+//│ ╔══[ERROR] Type mismatch in reference:
+//│ ║  l.44: 	fun test(x) = if x is Foo(a) then a
+//│ ║        	                 ^
+//│ ╟── class pattern of type `Foo` does not have field 'x'
+//│ ║  l.44: 	fun test(x) = if x is Foo(a) then a
+//│ ║        	                      ^^^
+//│ ╟── but it flows into reference with expected type `{x: ?x}`
+//│ ║  l.44: 	fun test(x) = if x is Foo(a) then a
+//│ ╙──      	                 ^
+//│ test: Foo -> error
 //│     = [Function: test]
 
 test(f)
-//│ res: 1
+//│ res: error
 //│    = 1
 
 class Point(x, y)
