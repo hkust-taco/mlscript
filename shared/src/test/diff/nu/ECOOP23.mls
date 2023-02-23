@@ -35,11 +35,7 @@ fun eval(e) =
 //│        <: Lit | Add & {Add#E = 'E} & ~Lit
 //│     'rhs :> 'E
 //│     'lhs :> 'E
-//│     'E :> 'E0 | 'E1
-//│        <: (Lit | Add & {Add#E :> 'E2 <: 'E0} & ~Lit) & 'E2 & (Lit | Add & {Add#E :> 'E3 <: 'E1} & ~Lit) & 'E3
-//│     'E0 <: (Lit | Add & {Add#E :> 'E2 <: 'E0} & ~Lit) & 'E2 & (Lit | Add & {Add#E :> 'E3 <: 'E1} & ~Lit) & 'E3
-//│     'E2 :> 'E1
-//│     'E1 <: (Lit | Add & {Add#E :> 'E2 <: 'E0} & ~Lit) & (Lit | Add & {Add#E :> 'E3 <: 'E1} & ~Lit) & 'E3
+//│     'E <: Lit | Add & {Add#E = 'E} & ~Lit
 
 
 mixin EvalBase {
@@ -48,14 +44,14 @@ mixin EvalBase {
       Lit(n) then n: int
       Add(l, r) then this.eval(l) + this.eval(r)
 }
-//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin EvalBase() {fun eval = ...},this63',super64',TypedTypingUnit(List(eval ~> TypedNuFun(1,fun eval = (e,) => {if e is ‹(Lit (n,)) then n : int; (Add (l, r,)) then + ((this).eval (l,),) ((this).eval (r,),)›},(α66'' -> (Int | α92'')))),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
+//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin EvalBase() {fun eval = ...},this59',super60',TypedTypingUnit(List(eval ~> TypedNuFun(1,fun eval = (e,) => {if e is ‹(Lit (n,)) then n : int; (Add (l, r,)) then + ((this).eval (l,),) ((this).eval (r,),)›},(α62'' -> (Int | α88'')))),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
 //│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1251)
 //│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1279)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
 //│ 	at: mlscript.Typer.goLike$1(Typer.scala:1270)
 //│ 	at: mlscript.Typer.expandType(Typer.scala:1366)
 //│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:504)
-//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:943)
+//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:946)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
 //│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
@@ -135,14 +131,14 @@ mixin EvalNeg {
     if e is Neg(d) then 0 - this.eval(d)
     else super.eval(e)
 }
-//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin EvalNeg() {fun eval = ...},this161',super162',TypedTypingUnit(List(eval ~> TypedNuFun(1,fun eval = (e,) => {if (is (e,) (Neg (d,),)) then - (0,) ((this).eval (d,),) else (super).eval (e,)},(α164'' -> (α177'' | α181'')))),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
+//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin EvalNeg() {fun eval = ...},this157',super158',TypedTypingUnit(List(eval ~> TypedNuFun(1,fun eval = (e,) => {if (is (e,) (Neg (d,),)) then - (0,) ((this).eval (d,),) else (super).eval (e,)},(α160'' -> (α173'' | α177'')))),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
 //│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1251)
 //│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1279)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
 //│ 	at: mlscript.Typer.goLike$1(Typer.scala:1270)
 //│ 	at: mlscript.Typer.expandType(Typer.scala:1366)
 //│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:504)
-//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:943)
+//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:946)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
 //│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
@@ -262,14 +258,14 @@ TestLang.eval(Neg(Neg(add11)))
 
 TestLang.eval(add2negadd11)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.263: 	TestLang.eval(add2negadd11)
+//│ ║  l.523: 	TestLang.eval(add2negadd11)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Neg & {Neg#A = ?A}` does not match type `Add & {Add#E = ?E} | Lit`
-//│ ║  l.116: 	let add2negadd11 = Add(Lit(2), Neg(add11))
+//│ ║  l.376: 	let add2negadd11 = Add(Lit(2), Neg(add11))
 //│ ║         	                               ^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.47: 	    if e is
-//│ ║        	       ^
+//│ ║  l.307: 	    if e is
+//│ ║         	       ^
 //│ ╟── Note: type parameter E is defined at:
 //│ ║  l.6: 	class Add<E>(lhs: E, rhs: E)
 //│ ╙──     	          ^
@@ -287,14 +283,14 @@ TestLang.eval(add2negadd11)
 
 TestLang.eval(Add(Lit(2), Neg(add11)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.288: 	TestLang.eval(Add(Lit(2), Neg(add11)))
+//│ ║  l.548: 	TestLang.eval(Add(Lit(2), Neg(add11)))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Neg & {Neg#A = ?A}` does not match type `Add & {Add#E = ?E} | Lit`
-//│ ║  l.116: 	let add2negadd11 = Add(Lit(2), Neg(add11))
+//│ ║  l.376: 	let add2negadd11 = Add(Lit(2), Neg(add11))
 //│ ║         	                               ^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.47: 	    if e is
-//│ ║        	       ^
+//│ ║  l.307: 	    if e is
+//│ ║         	       ^
 //│ ╟── Note: type parameter E is defined at:
 //│ ║  l.6: 	class Add<E>(lhs: E, rhs: E)
 //│ ╙──     	          ^

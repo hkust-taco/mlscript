@@ -503,7 +503,6 @@ class DiffTests
               
               val exp = typer.expandType(tpd)(ctx)
               // output(exp.toString)
-              output(exp.show)
               
               // val sctx = ShowCtx.mk(tpd)
               
@@ -536,8 +535,12 @@ class DiffTests
                         .indentNewLines(indStr+"|")}")
                 }
               }
-              if (mode.explainErrors)
+              if (mode.dbg || mode.explainErrors) {
+                output("======== TYPED ========")
                 showTTU(tpd, 0)
+              }
+              
+              output(exp.show)
               
               // val exp = getType(typer.PolymorphicType(0, res_ty))
               // output(s"Typed: ${exp}")

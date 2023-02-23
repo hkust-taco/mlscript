@@ -116,8 +116,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                       TypedNuFun(ctx.lvl, fd, body_ty)
                   }
               }
-              // subsume(res_ty, tv)
-              constrain(res_ty.ty, tv)
+              // // subsume(res_ty, tv)
+              // constrain(res_ty.ty, tv)
+              ctx.nextLevel { implicit ctx: Ctx => constrain(res_ty.ty, tv) }
               res_ty
             case td: NuTypeDef =>
               td.kind match {
@@ -194,6 +195,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                                       
                                       println(s"Fresh $mxn")
                                       
+                                      // FIXME constraining level?!
                                       constrain(superType, mxn.superTV)
                                       constrain(finalType, mxn.thisTV)
                                       
@@ -235,6 +237,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                           )(provTODO)
                         inherit(ps, newSuperType, members ++ newMembs)
                       case Nil =>
+                        // FIXME constraining level?!
                         constrain(superType, finalType)
                         members
                     }

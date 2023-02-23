@@ -13,7 +13,7 @@ mixin Over {
 //│ 	at: mlscript.Typer.goLike$1(Typer.scala:1270)
 //│ 	at: mlscript.Typer.expandType(Typer.scala:1366)
 //│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:504)
-//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:943)
+//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:946)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
 //│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
