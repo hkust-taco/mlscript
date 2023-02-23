@@ -1072,26 +1072,47 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                   // ClassTag(v,
                   //     Set.empty//TODO
                   //   )(provTODO)
-                  // td.complete() match {
-                  //   case cls: TypedNuCls =>
-                  //     // lookupNuTypeDef(cls.td.nme.name, v => ???)
-                  //     clsNameToNomTag(cls.td)(tp(pat.toLoc, "class pattern"), ctx)
-                  // }
-                  val cls = lookupNuTypeDef(nme, { v =>
-                    val fv = freshVar(provTODO, N, S(v.name.replaceAll("#", "_")))
-                    println(v, fv)
-                    S(FieldType(S(fv), fv)(provTODO))
-                  })
-                  val tag = clsNameToNomTag(cls.td)(tp(pat.toLoc, "class pattern"), ctx)
-                  // val ty = tag &
-                  val ty =
-                    // RecordType.mk(cls.params)(provTODO) // TODO?!
-                    RecordType.mk(cls.tparams.map{
-                      case (tn, tv) =>
-                        (Var(nme+"#"+tn.name).withLocOf(tn), FieldType(S(tv), tv)(provTODO))
-                    })(provTODO)
-                  println(s"Match arm $nme : $ty")
-                  tag -> ty
+                  td.complete() match {
+                    case cls: TypedNuCls =>
+                      // lookupNuTypeDef(cls.td.nme.name, v => ???)
+                      
+                      val tag = clsNameToNomTag(cls.td)(tp(pat.toLoc, "class pattern"), ctx)
+                      
+                      val fresh_cls = {
+                        implicit val freshened: MutMap[TV, ST] = MutMap.empty
+                        // cls.tparams.foreach { case (tn, tv) =>
+                        //   val fv = freshVar(provTODO, N, S(v.name.replaceAll("#", "_")))
+                        //   freshened += tv -> fv
+                        // }
+                        implicit val shadows: Shadows = Shadows.empty
+                        cls.freshenAbove(td.level, rigidify = false).asInstanceOf[TypedNuCls]
+                      }
+                      
+                      val ty =
+                        // RecordType.mk(cls.params)(provTODO) // TODO?!
+                        RecordType.mk(fresh_cls.tparams.map{
+                          case (tn, tv) =>
+                            (Var(nme+"#"+tn.name).withLocOf(tn), FieldType(S(tv), tv)(provTODO))
+                        })(provTODO)
+                      println(s"Match arm $nme: $tag & $ty")
+                      tag -> ty
+                      
+                  }
+                  // val cls = lookupNuTypeDef(nme, { v =>
+                  //   val fv = freshVar(provTODO, N, S(v.name.replaceAll("#", "_")))
+                  //   println(v, fv)
+                  //   S(FieldType(S(fv), fv)(provTODO))
+                  // })
+                  // val tag = clsNameToNomTag(cls.td)(tp(pat.toLoc, "class pattern"), ctx)
+                  // // val ty = tag &
+                  // val ty =
+                  //   // RecordType.mk(cls.params)(provTODO) // TODO?!
+                  //   RecordType.mk(cls.tparams.map{
+                  //     case (tn, tv) =>
+                  //       (Var(nme+"#"+tn.name).withLocOf(tn), FieldType(S(tv), tv)(provTODO))
+                  //   })(provTODO)
+                  // println(s"Match arm $nme : $ty")
+                  // tag -> ty
               }
             case Some(td) =>
               td.kind match {

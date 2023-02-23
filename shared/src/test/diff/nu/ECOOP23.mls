@@ -25,31 +25,21 @@ let add11 = Add(Lit(1), Lit(2))
 
 fun eval(e) =
   if e is
-    // Lit(n) then n: int
+    Lit(n) then n: int
     Add(l, r) then eval(l) + eval(r)
 //│ 
-//│ fun eval: 'a -> 'b
+//│ fun eval: 'a -> (int | 'b)
 //│   where
-//│     'b :> int
-//│        <: 'c & 'd
-//│     'd := int
-//│     'c := int
+//│     'b := int
 //│     'a :> (forall 'lhs. 'lhs) | (forall 'rhs. 'rhs)
-//│        <: Add & {Add#E = 'E}
-//│     'E := 'Add_E
-//│     'rhs :> 'Add_E
-//│     'lhs :> 'Add_E
-//│     'Add_E :> 'Add_E0 | 'Add_E1
-//│            <: {Add#E :> 'E0 <: 'E1} & 'Add_E2 & {Add#E :> 'E2 <: 'E3} & 'Add_E3 & Add
-//│     'Add_E0 <: {Add#E :> 'E0 <: 'E1} & 'Add_E2 & {Add#E :> 'E2 <: 'E3} & 'Add_E3 & Add
-//│     'E0 :> 'Add_E2
-//│     'Add_E2 :> 'Add_E1
-//│             <: 'Add_E0
-//│     'Add_E1 <: {Add#E :> 'E0 <: 'E1} & 'Add_E0 & {Add#E :> 'E2 <: 'E3} & 'Add_E3 & Add
-//│     'E3 <: 'E2 & 'Add_E1
-//│     'E2 :> 'Add_E3
-//│     'Add_E3 <: 'Add_E1
-//│     'E1 <: 'E0 & 'Add_E0
+//│        <: Lit | Add & {Add#E = 'E} & ~Lit
+//│     'rhs :> 'E
+//│     'lhs :> 'E
+//│     'E :> 'E0 | 'E1
+//│        <: (Lit | Add & {Add#E :> 'E2 <: 'E0} & ~Lit) & 'E2 & (Lit | Add & {Add#E :> 'E3 <: 'E1} & ~Lit) & 'E3
+//│     'E0 <: (Lit | Add & {Add#E :> 'E2 <: 'E0} & ~Lit) & 'E2 & (Lit | Add & {Add#E :> 'E3 <: 'E1} & ~Lit) & 'E3
+//│     'E2 :> 'E1
+//│     'E1 <: (Lit | Add & {Add#E :> 'E2 <: 'E0} & ~Lit) & (Lit | Add & {Add#E :> 'E3 <: 'E1} & ~Lit) & 'E3
 
 
 mixin EvalBase {
@@ -58,12 +48,12 @@ mixin EvalBase {
       Lit(n) then n: int
       Add(l, r) then this.eval(l) + this.eval(r)
 }
-//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin EvalBase() {fun eval = ...},this68',super69',TypedTypingUnit(List(eval ~> TypedNuFun(1,fun eval = (e,) => {if e is ‹(Lit (n,)) then n : int; (Add (l, r,)) then + ((this).eval (l,),) ((this).eval (r,),)›},(α71'' -> (Int | α98'')))),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
-//│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1230)
-//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1258)
+//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin EvalBase() {fun eval = ...},this63',super64',TypedTypingUnit(List(eval ~> TypedNuFun(1,fun eval = (e,) => {if e is ‹(Lit (n,)) then n : int; (Add (l, r,)) then + ((this).eval (l,),) ((this).eval (r,),)›},(α66'' -> (Int | α92'')))),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
+//│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1251)
+//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1279)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1249)
-//│ 	at: mlscript.Typer.expandType(Typer.scala:1345)
+//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1270)
+//│ 	at: mlscript.Typer.expandType(Typer.scala:1366)
 //│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:504)
 //│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:943)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
@@ -81,12 +71,11 @@ module TestLang: EvalBase
 //│     'b := int
 //│     'a :> (forall 'lhs. 'lhs) | (forall 'rhs. 'rhs)
 //│        <: Lit | Add & {Add#E = 'E} & ~Lit
-//│     'rhs :> 'Add_E
-//│     'lhs :> 'Add_E0
-//│     'Add_E0 <: Lit | Add & {Add#E = 'E} & ~Lit
-//│     'E := 'Add_E1
-//│     'Add_E1 <: 'Add_E & 'Add_E0
-//│     'Add_E <: Lit | Add & {Add#E = 'E} & ~Lit
+//│     'rhs :> 'E0
+//│     'lhs :> 'E1
+//│     'E1 <: Lit | Add & {Add#E = 'E} & ~Lit
+//│     'E <: 'E0 & 'E1
+//│     'E0 <: Lit | Add & {Add#E = 'E} & ~Lit
 //│     'this :> TestLang
 
 TestLang.eval
@@ -97,23 +86,15 @@ TestLang.eval
 //│     'b := int
 //│     'a :> (forall 'lhs. 'lhs) | (forall 'rhs. 'rhs)
 //│        <: Lit | Add & {Add#E = 'E} & ~Lit
-//│     'rhs :> 'Add_E
-//│     'lhs :> 'Add_E0
-//│     'Add_E0 <: Lit | Add & {Add#E = 'E} & ~Lit
-//│     'E := 'Add_E1
-//│     'Add_E1 <: 'Add_E & 'Add_E0
-//│     'Add_E <: Lit | Add & {Add#E = 'E} & ~Lit
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Should not be replacing an invariant type variable by its bound...
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:203)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$70(TypeSimplifier.scala:819)
-//│ 	at: scala.Option.fold(Option.scala:263)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$56(TypeSimplifier.scala:829)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.TypeSimplifier.transform$1(TypeSimplifier.scala:923)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$56(TypeSimplifier.scala:886)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.TypeSimplifier.transform$1(TypeSimplifier.scala:923)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$56(TypeSimplifier.scala:886)
+//│     'rhs :> 'E0
+//│     'lhs :> 'E1
+//│     'E1 <: Lit | Add & {Add#E = 'E} & ~Lit
+//│     'E <: 'E0 & 'E1
+//│     'E0 <: Lit | Add & {Add#E = 'E} & ~Lit
+//│ Typed: 'E -> int
+//│   where
+//│     'E <: Add & {Add#E = 'E0} | Lit
+//│     'E0 <: 'E
 
 TestLang.eval(add11)
 //│ 
@@ -140,14 +121,13 @@ let add2negadd11 = Add(Lit(2), Neg(add11))
 //│     'E :> Neg & {Neg#A = 'A} | Lit
 //│     'A :> Add & {Add#E = 'E0}
 //│     'E0 :> Lit
-//│         <: 'Add_E
-//│     'Add_E :> Lit
-//│            <: 'E0 & 'Add_E0 & 'Add_E1
-//│     'Add_E1 :> Lit
-//│             <: Lit | Add & {Add#E = 'E1} & ~Lit
-//│     'Add_E0 :> Lit
-//│             <: Lit | Add & {Add#E = 'E1} & ~Lit
-//│     'E1 := 'Add_E
+//│         <: 'E1
+//│     'E1 :> Lit
+//│         <: 'E0 & 'E2 & 'E3
+//│     'E3 :> Lit
+//│         <: Lit | Add & {Add#E = 'E1} & ~Lit
+//│     'E2 :> Lit
+//│         <: Lit | Add & {Add#E = 'E1} & ~Lit
 
 
 mixin EvalNeg {
@@ -155,12 +135,12 @@ mixin EvalNeg {
     if e is Neg(d) then 0 - this.eval(d)
     else super.eval(e)
 }
-//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin EvalNeg() {fun eval = ...},this168',super169',TypedTypingUnit(List(eval ~> TypedNuFun(1,fun eval = (e,) => {if (is (e,) (Neg (d,),)) then - (0,) ((this).eval (d,),) else (super).eval (e,)},(α171'' -> (α185'' | α189'')))),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
-//│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1230)
-//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1258)
+//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin EvalNeg() {fun eval = ...},this161',super162',TypedTypingUnit(List(eval ~> TypedNuFun(1,fun eval = (e,) => {if (is (e,) (Neg (d,),)) then - (0,) ((this).eval (d,),) else (super).eval (e,)},(α164'' -> (α177'' | α181'')))),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
+//│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1251)
+//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1279)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1249)
-//│ 	at: mlscript.Typer.expandType(Typer.scala:1345)
+//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1270)
+//│ 	at: mlscript.Typer.expandType(Typer.scala:1366)
 //│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:504)
 //│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:943)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
@@ -183,19 +163,17 @@ module TestLang: EvalBase, EvalNeg
 //│     'b := int
 //│     'a :> (forall 'lhs. 'lhs) | (forall 'rhs. 'rhs) | (forall 'expr. 'expr)
 //│        <: Neg & {Neg#A = 'A} | 'f & ~Neg
-//│     'expr :> 'Neg_A
-//│     'rhs :> 'Add_E
-//│     'lhs :> 'Add_E0
-//│     'Add_E0 <: Neg & {Neg#A = 'A} | 'f & ~Neg
-//│     'A := 'Neg_A0
-//│     'Neg_A0 <: 'Neg_A
-//│     'Neg_A <: Neg & {Neg#A = 'A} | 'f & ~Neg
+//│     'expr :> 'A0
+//│     'rhs :> 'E
+//│     'lhs :> 'E0
+//│     'E0 <: Neg & {Neg#A = 'A} | 'f & ~Neg
+//│     'A <: 'A0
+//│     'A0 <: Neg & {Neg#A = 'A} | 'f & ~Neg
 //│     'f <: 'g
 //│     'g <: 'h
-//│     'h <: Lit | Add & {Add#E = 'E} & ~Lit
-//│     'E := 'Add_E1
-//│     'Add_E1 <: 'Add_E & 'Add_E0
-//│     'Add_E <: Neg & {Neg#A = 'A} | 'f & ~Neg
+//│     'h <: Lit | Add & {Add#E = 'E1} & ~Lit
+//│     'E1 <: 'E & 'E0
+//│     'E <: Neg & {Neg#A = 'A} | 'f & ~Neg
 //│     'this :> TestLang
 
 TestLang.eval
@@ -211,30 +189,22 @@ TestLang.eval
 //│     'b := int
 //│     'a :> (forall 'lhs. 'lhs) | (forall 'rhs. 'rhs) | (forall 'expr. 'expr)
 //│        <: Neg & {Neg#A = 'A} | 'f & ~Neg
-//│     'expr :> 'Neg_A
-//│     'rhs :> 'Add_E
-//│     'lhs :> 'Add_E0
-//│     'Add_E0 <: Neg & {Neg#A = 'A} | 'f & ~Neg
-//│     'A := 'Neg_A0
-//│     'Neg_A0 <: 'Neg_A
-//│     'Neg_A <: Neg & {Neg#A = 'A} | 'f & ~Neg
+//│     'expr :> 'A0
+//│     'rhs :> 'E
+//│     'lhs :> 'E0
+//│     'E0 <: Neg & {Neg#A = 'A} | 'f & ~Neg
+//│     'A <: 'A0
+//│     'A0 <: Neg & {Neg#A = 'A} | 'f & ~Neg
 //│     'f <: 'g
 //│     'g <: 'h
-//│     'h <: Lit | Add & {Add#E = 'E} & ~Lit
-//│     'E := 'Add_E1
-//│     'Add_E1 <: 'Add_E & 'Add_E0
-//│     'Add_E <: Neg & {Neg#A = 'A} | 'f & ~Neg
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Should not be replacing an invariant type variable by its bound...
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:203)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$70(TypeSimplifier.scala:819)
-//│ 	at: scala.Option.fold(Option.scala:263)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$56(TypeSimplifier.scala:829)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.TypeSimplifier.transform$1(TypeSimplifier.scala:923)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$56(TypeSimplifier.scala:886)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.TypeSimplifier.transform$1(TypeSimplifier.scala:923)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$56(TypeSimplifier.scala:814)
+//│     'h <: Lit | Add & {Add#E = 'E1} & ~Lit
+//│     'E1 <: 'E & 'E0
+//│     'E <: Neg & {Neg#A = 'A} | 'f & ~Neg
+//│ Typed: 'E -> int
+//│   where
+//│     'E <: Add & {Add#E = 'E0} | Lit | Neg & {Neg#A = 'A}
+//│     'A <: 'E
+//│     'E0 <: 'E
 
 
 TestLang.eval(add11)
@@ -292,13 +262,13 @@ TestLang.eval(Neg(Neg(add11)))
 
 TestLang.eval(add2negadd11)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.293: 	TestLang.eval(add2negadd11)
+//│ ║  l.263: 	TestLang.eval(add2negadd11)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Neg & {Neg#A = ?A}` does not match type `Add & {Add#E = ?E} | Lit`
-//│ ║  l.135: 	let add2negadd11 = Add(Lit(2), Neg(add11))
+//│ ║  l.116: 	let add2negadd11 = Add(Lit(2), Neg(add11))
 //│ ║         	                               ^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.57: 	    if e is
+//│ ║  l.47: 	    if e is
 //│ ║        	       ^
 //│ ╟── Note: type parameter E is defined at:
 //│ ║  l.6: 	class Add<E>(lhs: E, rhs: E)
@@ -316,14 +286,28 @@ TestLang.eval(add2negadd11)
 //│ Typed: error | int
 
 TestLang.eval(Add(Lit(2), Neg(add11)))
-//│ ╔══[ERROR] Subtyping constraint of the form `?eval <: ?a -> ?b` exceeded recursion depth limit (250)
-//│ ║  l.318: 	TestLang.eval(Add(Lit(2), Neg(add11)))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.288: 	TestLang.eval(Add(Lit(2), Neg(add11)))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ ╟── application of type `Neg & {Neg#A = ?A}` does not match type `Add & {Add#E = ?E} | Lit`
+//│ ║  l.116: 	let add2negadd11 = Add(Lit(2), Neg(add11))
+//│ ║         	                               ^^^^^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.47: 	    if e is
+//│ ║        	       ^
+//│ ╟── Note: type parameter E is defined at:
+//│ ║  l.6: 	class Add<E>(lhs: E, rhs: E)
+//│ ╙──     	          ^
 //│ 
 //│ 'a
 //│   where
-//│     'a :> error
-//│ Typed: error
+//│     'a :> 'b | 'c | error
+//│     'c :> 'd
+//│        <: int
+//│     'd :> int | 'e
+//│        <: int
+//│     'e := int
+//│     'b := int
+//│ Typed: error | int
 
 
