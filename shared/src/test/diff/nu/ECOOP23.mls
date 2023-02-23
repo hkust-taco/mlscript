@@ -12,10 +12,16 @@ class Lit(n: int)
 //│ class Lit(n: int) {
 //│ this: 'this0
 //│ }
+//│   where
+//│     'this0 :> Lit
+//│     'this :> Add
 
 let add11 = Add(Lit(1), Lit(2))
 //│ 
 //│ let add11: 'a
+//│   where
+//│     'a :> Add & {Add#E = 'E}
+//│     'E :> Lit
 
 
 mixin EvalBase {
@@ -24,16 +30,14 @@ mixin EvalBase {
       Lit(n) then n: int
       Add(l, r) then this.eval(l) + this.eval(r)
 }
-//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin EvalBase() {
-//│ fun eval = ...
-//│ },this39',super40',TypedTypingUnit(List(eval ~> TypedNuFun(1,fun eval = ...,(α42'' -> (Int | α65'')))),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
-//│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1204)
-//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1231)
+//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin EvalBase() {fun eval = ...},this39',super40',TypedTypingUnit(List(eval ~> TypedNuFun(1,fun eval = (e,) => {if e is ‹(Lit (n,)) then n : int; (Add (l, r,)) then + ((this).eval (l,),) ((this).eval (r,),)›},(α42'' -> (Int | α65'')))),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
+//│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1207)
+//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1235)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1222)
+//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1226)
 //│ 	at: mlscript.Typer.expandType(Typer.scala:1322)
 //│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:504)
-//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:942)
+//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:943)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
 //│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
@@ -45,10 +49,38 @@ module TestLang: EvalBase
 //│ this: 'this
 //│ fun eval: 'a -> (int | 'b)
 //│ }
+//│   where
+//│     'b := int
+//│     'a :> (forall 'lhs. 'lhs) | (forall 'rhs. 'rhs)
+//│        <: Lit & 'c | Add & 'd & ~Lit
+//│     'rhs :> 'rhs0
+//│     'lhs :> 'lhs0
+//│     'lhs0 <: Lit & 'c | Add & 'd & ~Lit
+//│     'd <: {rhs: 'rhs1} & {lhs: 'lhs1}
+//│     'lhs1 <: 'lhs0
+//│     'rhs1 <: 'rhs0
+//│     'rhs0 <: Lit & 'c | Add & 'd & ~Lit
+//│     'c <: {n: 'n}
+//│     'n <: int
+//│     'this :> TestLang
 
 TestLang.eval
 //│ 
 //│ 'eval
+//│   where
+//│     'eval :> 'a -> (int | 'b)
+//│     'b := int
+//│     'a :> (forall 'lhs. 'lhs) | (forall 'rhs. 'rhs)
+//│        <: Lit & 'c | Add & 'd & ~Lit
+//│     'rhs :> 'rhs0
+//│     'lhs :> 'lhs0
+//│     'lhs0 <: Lit & 'c | Add & 'd & ~Lit
+//│     'd <: {rhs: 'rhs1} & {lhs: 'lhs1}
+//│     'lhs1 <: 'lhs0
+//│     'rhs1 <: 'rhs0
+//│     'rhs0 <: Lit & 'c | Add & 'd & ~Lit
+//│     'c <: {n: 'n}
+//│     'n <: int
 //│ Typed: 'rhs -> int
 //│   where
 //│     'rhs <: Add & {lhs: 'rhs, rhs: 'rhs} | Lit & {n: int}
@@ -56,6 +88,9 @@ TestLang.eval
 TestLang.eval(add11)
 //│ 
 //│ 'a
+//│   where
+//│     'a :> int | 'b
+//│     'b := int
 //│ Typed: int
 
 
@@ -64,10 +99,31 @@ class Neg<A>(expr: A)
 //│ class Neg[A](expr: A) {
 //│ this: 'this
 //│ }
+//│   where
+//│     'this :> Neg
 
 let add2negadd11 = Add(Lit(2), Neg(add11))
 //│ 
 //│ let add2negadd11: 'a
+//│   where
+//│     'a :> Add & {Add#E = 'E}
+//│     'E :> Neg & {Neg#A = 'A} | Lit
+//│     'A :> Add & {Add#E = 'E0}
+//│     'E0 :> Lit
+//│         <: 'lhs & 'rhs
+//│     'lhs :> Lit
+//│          <: 'lhs0
+//│     'lhs0 :> Lit
+//│           <: Lit & 'b | Add & 'c & ~Lit
+//│     'c :> Add & {Add#E = 'E0}
+//│        <: {rhs: 'rhs} & {lhs: 'lhs}
+//│     'rhs :> Lit
+//│          <: 'rhs0
+//│     'rhs0 :> Lit
+//│           <: Lit & 'b | Add & 'c & ~Lit
+//│     'b :> Lit
+//│        <: {n: 'n}
+//│     'n := int
 
 
 mixin EvalNeg {
@@ -75,16 +131,14 @@ mixin EvalNeg {
     if e is Neg(d) then 0 - this.eval(d)
     else super.eval(e)
 }
-//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin EvalNeg() {
-//│ fun eval = ...
-//│ },this151',super152',TypedTypingUnit(List(eval ~> TypedNuFun(1,fun eval = ...,(α154'' -> (α165'' | α169'')))),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
-//│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1204)
-//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1231)
+//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin EvalNeg() {fun eval = ...},this151',super152',TypedTypingUnit(List(eval ~> TypedNuFun(1,fun eval = (e,) => {if (is (e,) (Neg (d,),)) then - (0,) ((this).eval (d,),) else (super).eval (e,)},(α154'' -> (α165'' | α169'')))),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
+//│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1207)
+//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1235)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1222)
+//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1226)
 //│ 	at: mlscript.Typer.expandType(Typer.scala:1322)
 //│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:504)
-//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:942)
+//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:943)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
 //│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
@@ -96,10 +150,62 @@ module TestLang: EvalBase, EvalNeg
 //│ this: 'this
 //│ fun eval: 'a -> ('b | 'c)
 //│ }
+//│   where
+//│     'c :> 'd
+//│        <: int
+//│     'd :> int | 'e
+//│        <: int
+//│     'e := int
+//│     'b := int
+//│     'a :> (forall 'lhs. 'lhs) | (forall 'rhs. 'rhs) | (forall 'expr. 'expr)
+//│        <: Neg & 'f | 'g & ~Neg
+//│     'expr :> 'expr0
+//│     'rhs :> 'rhs0
+//│     'lhs :> 'lhs0
+//│     'lhs0 <: Neg & 'f | 'g & ~Neg
+//│     'f <: {expr: 'expr1}
+//│     'expr1 <: 'expr0
+//│     'expr0 <: Neg & 'f | 'g & ~Neg
+//│     'g <: 'h
+//│     'h <: 'i
+//│     'i <: Lit & 'j | Add & 'k & ~Lit
+//│     'k <: {rhs: 'rhs1} & {lhs: 'lhs1}
+//│     'lhs1 <: 'lhs0
+//│     'rhs1 <: 'rhs0
+//│     'rhs0 <: Neg & 'f | 'g & ~Neg
+//│     'j <: {n: 'n}
+//│     'n <: int
+//│     'this :> TestLang
 
 TestLang.eval
 //│ 
 //│ 'eval
+//│   where
+//│     'eval :> 'a -> ('b | 'c)
+//│     'c :> 'd
+//│        <: int
+//│     'd :> int | 'e
+//│        <: int
+//│     'e := int
+//│     'b := int
+//│     'a :> (forall 'lhs. 'lhs) | (forall 'rhs. 'rhs) | (forall 'expr. 'expr)
+//│        <: Neg & 'f | 'g & ~Neg
+//│     'expr :> 'expr0
+//│     'rhs :> 'rhs0
+//│     'lhs :> 'lhs0
+//│     'lhs0 <: Neg & 'f | 'g & ~Neg
+//│     'f <: {expr: 'expr1}
+//│     'expr1 <: 'expr0
+//│     'expr0 <: Neg & 'f | 'g & ~Neg
+//│     'g <: 'h
+//│     'h <: 'i
+//│     'i <: Lit & 'j | Add & 'k & ~Lit
+//│     'k <: {rhs: 'rhs1} & {lhs: 'lhs1}
+//│     'lhs1 <: 'lhs0
+//│     'rhs1 <: 'rhs0
+//│     'rhs0 <: Neg & 'f | 'g & ~Neg
+//│     'j <: {n: 'n}
+//│     'n <: int
 //│ Typed: 'rhs -> int
 //│   where
 //│     'rhs <: Add & {lhs: 'rhs, rhs: 'rhs} | Lit & {n: int} | Neg & {expr: 'rhs}
@@ -108,32 +214,80 @@ TestLang.eval
 TestLang.eval(add11)
 //│ 
 //│ 'a
+//│   where
+//│     'a :> 'b | 'c
+//│     'c :> 'd
+//│        <: int
+//│     'd :> int | 'e
+//│        <: int
+//│     'e := int
+//│     'b := int
 //│ Typed: int
 
 TestLang.eval(Neg(add11))
 //│ 
 //│ 'a
+//│   where
+//│     'a :> 'b | 'c
+//│     'c :> 'd
+//│        <: int
+//│     'd :> int | 'e
+//│        <: int
+//│     'e := int
+//│     'b := int
 //│ Typed: int
 
 TestLang.eval(Add(Lit(2), Neg(Lit(1))))
 //│ 
 //│ 'a
+//│   where
+//│     'a :> 'b | 'c
+//│     'c :> 'd
+//│        <: int
+//│     'd :> int | 'e
+//│        <: int
+//│     'e := int
+//│     'b := int
 //│ Typed: int
 
 TestLang.eval(Neg(Neg(add11)))
 //│ 
 //│ 'a
+//│   where
+//│     'a :> 'b | 'c
+//│     'c :> 'd
+//│        <: int
+//│     'd :> int | 'e
+//│        <: int
+//│     'e := int
+//│     'b := int
 //│ Typed: int
 
 
 TestLang.eval(add2negadd11)
 //│ 
 //│ 'a
+//│   where
+//│     'a :> 'b | 'c
+//│     'c :> 'd
+//│        <: int
+//│     'd :> int | 'e
+//│        <: int
+//│     'e := int
+//│     'b := int
 //│ Typed: int
 
 TestLang.eval(Add(Lit(2), Neg(add11)))
 //│ 
 //│ 'a
+//│   where
+//│     'a :> 'b | 'c
+//│     'c :> 'd
+//│        <: int
+//│     'd :> int | 'e
+//│        <: int
+//│     'e := int
+//│     'b := int
 //│ Typed: int
 
 

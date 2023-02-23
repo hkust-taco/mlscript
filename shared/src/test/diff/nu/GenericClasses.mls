@@ -15,26 +15,42 @@ class Some<A>(value: A) {
 //│ fun get: A
 //│ fun toArray: (A,)
 //│ }
+//│   where
+//│     'this :> Some
 
 
 let s = Some(1)
 //│ 
 //│ let s: 'a
+//│   where
+//│     'a :> Some & {Some#A = 'A}
+//│     'A :> 1
 
 
 s.value
 //│ 
 //│ 'value
+//│   where
+//│     'value :> 1
 //│ Typed: 1
 
 s.get
 //│ 
 //│ 'get
+//│   where
+//│     'get :> 1
 //│ Typed: 1
 
 s.toArray
 //│ 
 //│ 'toArray
+//│   where
+//│     'toArray :> ('A,)
+//│     'A := 'A0
+//│     'A0 :> 1
+//│         <: 'get & 'value
+//│     'value :> 1
+//│     'get :> 1
 //│ Typed: (1,)
 
 
@@ -62,11 +78,15 @@ module None {
 //│ fun get: nothing
 //│ fun toArray: ()
 //│ }
+//│   where
+//│     'this :> None
 
 
 None.toArray
 //│ 
 //│ 'toArray
+//│   where
+//│     'toArray :> ()
 //│ Typed: ()
 
 
@@ -79,10 +99,17 @@ type Option<A> = Some<A> | None
 let opt = if true then Some(123) else None
 //│ 
 //│ let opt: 'a | None
+//│   where
+//│     'a :> Some & {Some#A = 'A}
+//│     'A :> 123
 
 opt.toArray
 //│ 
 //│ 'toArray
+//│   where
+//│     'toArray :> () | ('A,)
+//│     'A := 'A0
+//│     'A0 :> 123
 //│ Typed: Array[123]
 
 
@@ -97,11 +124,16 @@ opt.toArray
 if opt is Some then opt.value else 0
 //│ 
 //│ 'value | 0
+//│   where
+//│     'value :> 123
 //│ Typed: 0 | 123
 
 if opt is Some(v) then v else 0
 //│ 
 //│ (forall 'value. 'value) | 0
+//│   where
+//│     'value :> 'value0
+//│     'value0 :> 123
 //│ Typed: 0 | 123
 
 
@@ -110,14 +142,29 @@ fun map(x, f) = if x is
   Some(v) then Some(f(v))
 //│ 
 //│ fun map: ('a, 'b,) -> (None | 'c)
+//│   where
+//│     'c :> Some & {Some#A = 'A}
+//│     'b <: (forall 'value. 'value) -> 'd
+//│     'd <: 'A
+//│     'value :> 'value0
+//│     'a <: None & 'e | Some & 'f & ~None
+//│     'f <: {value: 'value0}
 
 let mo = map(opt, succ)
 //│ 
 //│ let mo: 'a
+//│   where
+//│     'a :> None | 'b
+//│     'b :> Some & {Some#A :> 'A <: 'A0}
+//│     'A0 :> 'A | int
 
 mo.toArray
 //│ 
 //│ 'toArray
+//│   where
+//│     'toArray :> ('A,) | ()
+//│     'A := in 'A0 out 'A1
+//│     'A1 :> 'A0 | int
 //│ Typed: Array[int]
 
 
@@ -130,28 +177,38 @@ class Test(n) {
 //│ this: 'this
 //│ fun foo: 'a
 //│ }
+//│   where
+//│     'a :> int
+//│        <: 'foo
+//│     'foo :> int
+//│     'this :> Test
+//│     'n <: int
 
 Test(1)
 //│ 
 //│ 'a
+//│   where
+//│     'a :> Test
 //│ Typed: Test
 
 :e
 Test(true)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.140: 	Test(true)
+//│ ║  l.195: 	Test(true)
 //│ ║         	^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `int`
-//│ ║  l.140: 	Test(true)
+//│ ║  l.195: 	Test(true)
 //│ ║         	     ^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.126: 	  fun foo = n + 1
+//│ ║  l.173: 	  fun foo = n + 1
 //│ ║         	            ^
 //│ ╟── from reference:
-//│ ║  l.125: 	class Test(n) {
+//│ ║  l.172: 	class Test(n) {
 //│ ╙──       	           ^
 //│ 
 //│ 'a
+//│   where
+//│     'a :> Test | error
 //│ Typed: Test | error
 
 
@@ -160,23 +217,31 @@ class Test<A>(n: A) {
   fun foo = n + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.160: 	  fun foo = n + 1
+//│ ║  l.217: 	  fun foo = n + 1
 //│ ║         	            ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.160: 	  fun foo = n + 1
+//│ ║  l.217: 	  fun foo = n + 1
 //│ ║         	            ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.159: 	class Test<A>(n: A) {
+//│ ║  l.216: 	class Test<A>(n: A) {
 //│ ╙──       	           ^
 //│ 
 //│ class Test[A](n: A) {
 //│ this: 'this
 //│ fun foo: 'a
 //│ }
+//│   where
+//│     'a :> error | int
+//│        <: 'foo
+//│     'foo :> int | error
+//│     'this :> Test
 
 Test(1)
 //│ 
 //│ 'a
+//│   where
+//│     'a :> Test & {Test#A = 'A}
+//│     'A :> 1
 //│ Typed: Test & {Test#A = 'A}
 //│   where
 //│     'A :> 1
@@ -184,6 +249,9 @@ Test(1)
 Test(true)
 //│ 
 //│ 'a
+//│   where
+//│     'a :> Test & {Test#A = 'A}
+//│     'A :> true
 //│ Typed: Test & {Test#A = 'A}
 //│   where
 //│     'A :> true
@@ -201,10 +269,15 @@ class Test<A>(n: A) {
 //│ fun foo1: (x: A,) -> A
 //│ fun id: 'a -> 'a
 //│ }
+//│   where
+//│     'this :> Test
 
 Test(1)
 //│ 
 //│ 'a
+//│   where
+//│     'a :> Test & {Test#A = 'A}
+//│     'A :> 1
 //│ Typed: Test & {Test#A = 'A}
 //│   where
 //│     'A :> 1
@@ -212,25 +285,40 @@ Test(1)
 Test(1).foo
 //│ 
 //│ 'foo
+//│   where
+//│     'foo :> 1
 //│ Typed: 1
 
 Test("ok").foo
 //│ 
 //│ 'foo
+//│   where
+//│     'foo :> "ok"
 //│ Typed: "ok"
 
 let t = Test(1)
 //│ 
 //│ let t: 'a
+//│   where
+//│     'a :> Test & {Test#A = 'A}
+//│     'A :> 1
 
 t.foo1(true)
 //│ 
 //│ 'a
+//│   where
+//│     'a :> 1 | true
 //│ Typed: 1 | true
 
 t : Test<'a>
 //│ 
 //│ Test['a]
+//│   where
+//│     'a :> 1 | true
+//│        <: 'A
+//│     'A :> true | 1
+//│        <: 'a & 'b
+//│     'b :> true | 1
 //│ Typed: Test['a]
 //│   where
 //│     'a :> 1 | true
@@ -238,11 +326,16 @@ t : Test<'a>
 t.id
 //│ 
 //│ 'id
+//│   where
+//│     'id :> 'a -> 'a
 //│ Typed: 'a -> 'a
 
 [t.id(1), t.id(true)]
 //│ 
 //│ ('a, 'b,)
+//│   where
+//│     'b :> true
+//│     'a :> 1
 //│ Typed: (1, true,)
 
 
@@ -252,13 +345,13 @@ class Test<A> {
   fun foo2(x: A) = x + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.252: 	  fun foo2(x: A) = x + 1
+//│ ║  l.345: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.252: 	  fun foo2(x: A) = x + 1
+//│ ║  l.345: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.250: 	class Test<A> {
+//│ ║  l.343: 	class Test<A> {
 //│ ╙──       	           ^
 //│ 
 //│ class Test[A]() {
@@ -266,66 +359,122 @@ class Test<A> {
 //│ fun foo1: (x: A,) -> A
 //│ fun foo2: (x: A,) -> 'a
 //│ }
+//│   where
+//│     'a :> error | int
+//│     'this :> Test
 
 Test().foo1
 //│ 
 //│ 'foo1
+//│   where
+//│     'foo1 :> (x: 'A,) -> 'A
+//│     'A := 'A0
 //│ Typed: (x: 'A,) -> 'A
 
 Test().foo1(1)
 //│ 
 //│ 'a
+//│   where
+//│     'a :> 1
 //│ Typed: 1
 
 x => Test().foo1(x)
 //│ 
 //│ 'a -> 'b
+//│   where
+//│     'a <: 'A
+//│     'A <: 'b
 //│ Typed: 'a -> 'a
 
 // :d
 let t = Test()
 //│ 
 //│ let t: 'a
+//│   where
+//│     'a :> forall 'A. Test & {Test#A = 'A}
 
 t.foo1
 //│ 
 //│ 'foo1
+//│   where
+//│     'foo1 :> (x: 'A,) -> 'A
+//│     'A := 'A0
 //│ Typed: (x: 'A,) -> 'A
 
 [t.foo1(0), t.foo1(true)]
 //│ 
 //│ ('a, 'b,)
+//│   where
+//│     'b :> true
+//│     'a :> 0
 //│ Typed: (0, true,)
 
 t.foo1(0)
 //│ 
 //│ 'a
+//│   where
+//│     'a :> 0
 //│ Typed: 0
 
 t
 //│ 
 //│ 'a
+//│   where
+//│     'a :> forall 'A. Test & {Test#A = 'A}
+//│        <: {foo1: 'foo1} & {foo1: 'foo10} & {foo1: 'foo11} & {foo1: 'foo12}
+//│     'foo12 :> (x: 'A0,) -> 'A0
+//│     'A0 := 'A1
+//│     'foo11 :> (x: 'A2,) -> 'A2
+//│            <: 0 -> 'b
+//│     'A2 := 'A3
+//│     'A3 :> 0
+//│         <: 'b
+//│     'b :> 0
+//│     'foo10 :> (x: 'A4,) -> 'A4
+//│            <: true -> 'c
+//│     'A4 := 'A5
+//│     'A5 :> true
+//│         <: 'c
+//│     'c :> true
+//│     'foo1 :> (x: 'A6,) -> 'A6
+//│           <: 0 -> 'd
+//│     'A6 := 'A7
+//│     'A7 :> 0
+//│         <: 'd
+//│     'd :> 0
 //│ Typed: Test & {Test#A = 'A}
 
 
 fun foo(x: Test<int>) = x.foo1
 //│ 
 //│ fun foo: (x: Test[int],) -> 'foo1
+//│   where
+//│     'foo1 :> (x: 'A,) -> 'A
+//│     'A := int
 
 foo(t)
 //│ 
 //│ 'a
+//│   where
+//│     'a :> (x: 'A,) -> 'A
+//│     'A := int
 //│ Typed: (x: int,) -> int
 
 foo(t)(1)
 //│ 
 //│ 'a
+//│   where
+//│     'a :> int
 //│ Typed: int
 
 
 Test().foo2
 //│ 
 //│ 'foo2
+//│   where
+//│     'foo2 :> (x: 'A,) -> 'a
+//│     'a :> error | int
+//│     'A := 'A0
 //│ Typed: (x: anything,) -> (error | int)
 
 

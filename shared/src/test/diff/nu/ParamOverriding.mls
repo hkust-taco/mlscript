@@ -6,16 +6,14 @@
 mixin Over {
   fun p = "hi"
 }
-//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin Over() {
-//│ fun p = ...
-//│ },this23',super24',TypedTypingUnit(List(p ~> TypedNuFun(1,fun p = ...,"hi"<string>)),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
-//│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1204)
-//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1231)
+//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin Over() {fun p = ...},this23',super24',TypedTypingUnit(List(p ~> TypedNuFun(1,fun p = "hi","hi"<string>)),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
+//│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1207)
+//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1235)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1222)
+//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1226)
 //│ 	at: mlscript.Typer.expandType(Typer.scala:1322)
 //│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:504)
-//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:942)
+//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:943)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
 //│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
@@ -31,11 +29,20 @@ class Base1(p: int): Over {
 //│ fun p: "hi"
 //│ fun test: (int, 'p,)
 //│ }
+//│   where
+//│     'p :> 'p0
+//│     'this :> Base1
+//│           <: {p: 'p0}
+//│     'p0 :> "hi"
 
 
 Base1(123).test
 //│ 
 //│ 'test
+//│   where
+//│     'test :> (int, 'p,)
+//│     'p :> 'p0
+//│     'p0 :> "hi"
 //│ Typed: (int, "hi",)
 
 // TODO
