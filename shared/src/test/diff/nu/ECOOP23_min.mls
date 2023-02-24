@@ -10,11 +10,11 @@ class Add<E>(lhs: E, rhs: E)
 //│ this: 'this
 //│ }
 //│   where
-//│     'this :> Add
+//│     'this :> Add[?]
 
 let e = Add(1, 1)
 //│ 
-//│ let e: Add & {Add#E = 'E}
+//│ let e: Add['E]
 //│   where
 //│     'E :> 1
 
@@ -28,14 +28,14 @@ e
 //│ 		α35 :> (Add<> & {Add#E: mut E23_36..E23_36})
 //│ 		E23_36 :> 1<int,number>
 //│ 
-//│ Add & {Add#E = 'E}
+//│ Add['E]
 //│   where
 //│     'E :> 1
 //│ ⬤ Typed as: ‹∀ 0. α35›
 //│  where: 
 //│ 		α35 :> (Add<> & {Add#E: mut E23_36..E23_36})
 //│ 		E23_36 :> 1<int,number>
-//│ Typed: Add & {Add#E = 'E}
+//│ Typed: Add['E]
 //│   where
 //│     'E :> 1
 
@@ -55,7 +55,7 @@ e
 //│ 		E23_36 :> 1<int,number> <: lhs49
 //│ 		lhs49 :> 1<int,number>
 //│ 
-//│ Add & {Add#E = 'E}
+//│ Add['E]
 //│   where
 //│     'E :> 1
 //│ ⬤ Typed as: ‹∀ 0. α35›
@@ -63,17 +63,17 @@ e
 //│ 		α35 :> (Add<> & {Add#E: mut E23_36..E23_36}) <: {lhs: lhs49}
 //│ 		E23_36 :> 1<int,number> <: lhs49
 //│ 		lhs49 :> 1<int,number>
-//│ Typed: Add & {Add#E = 'E}
+//│ Typed: Add['E]
 //│   where
 //│     'E :> 1
 
 
 Add(2, 2)
 //│ 
-//│ Add & {Add#E = 'E}
+//│ Add['E]
 //│   where
 //│     'E :> 2
-//│ Typed: Add & {Add#E = 'E}
+//│ Typed: Add['E]
 //│   where
 //│     'E :> 2
 

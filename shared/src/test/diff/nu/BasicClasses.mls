@@ -11,6 +11,11 @@ class A(n: int)
 //│   where
 //│     'this :> A
 
+A
+//│ 
+//│ (n: int,) -> A
+//│ Typed: (n: int,) -> A
+
 let a = A(42)
 //│ 
 //│ let a: A
@@ -177,7 +182,7 @@ b.me
 :e
 b.getBaseTypo
 //│ ╔══[ERROR] class `Base1` does not contain member `getBaseTypo`
-//│ ║  l.178: 	b.getBaseTypo
+//│ ║  l.183: 	b.getBaseTypo
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ 
 //│ error
@@ -195,11 +200,11 @@ class Rec(n) {
   fun go = Rec(n + 1)
 }
 //│ ╔══[ERROR] Cyclic definition
-//│ ║  l.194: 	class Rec(n) {
+//│ ║  l.199: 	class Rec(n) {
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.195: 	  fun go = Rec(n + 1)
+//│ ║  l.200: 	  fun go = Rec(n + 1)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.196: 	}
+//│ ║  l.201: 	}
 //│ ╙──       	^
 //│ 
 //│ class Rec(n: nothing) {
@@ -218,16 +223,16 @@ class Annots(base: 0 | 1) {
   fun a = base
 }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.217: 	  a: int
+//│ ║  l.222: 	  a: int
 //│ ║         	  ^
 //│ ╟── type `(0 | 1,)` is not an instance of type `int`
-//│ ║  l.216: 	class Annots(base: 0 | 1) {
+//│ ║  l.221: 	class Annots(base: 0 | 1) {
 //│ ║         	                   ^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.217: 	  a: int
+//│ ║  l.222: 	  a: int
 //│ ║         	  ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.217: 	  a: int
+//│ ║  l.222: 	  a: int
 //│ ╙──       	     ^^^
 //│ 
 //│ class Annots(base: (0 | 1,)) {

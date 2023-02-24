@@ -16,12 +16,12 @@ class Some<A>(value: A) {
 //│ fun toArray: (A,)
 //│ }
 //│   where
-//│     'this :> Some
+//│     'this :> Some[?]
 
 
 let s = Some(1)
 //│ 
-//│ let s: Some & {Some#A = 'A}
+//│ let s: Some['A]
 //│   where
 //│     'A :> 1
 
@@ -84,7 +84,7 @@ type Option<A> = Some<A> | None
 
 let opt = if true then Some(123) else None
 //│ 
-//│ let opt: None | Some & {Some#A = 'A}
+//│ let opt: None | Some['A]
 //│   where
 //│     'A :> 123
 
@@ -117,11 +117,11 @@ fun map(x, f) = if x is
   None then None
   Some(v) then Some(f(v))
 //│ 
-//│ fun map: (None | Some & {Some#A = 'A}, 'A -> 'A0,) -> (None | Some & {Some#A = 'A0})
+//│ fun map: (None | Some['A], 'A -> 'A0,) -> (None | Some['A0])
 
 let mo = map(opt, succ)
 //│ 
-//│ let mo: None | Some & {Some#A = 'A}
+//│ let mo: None | Some['A]
 //│   where
 //│     'A :> int
 
@@ -186,23 +186,23 @@ class Test<A>(n: A) {
 //│ fun foo: error | int
 //│ }
 //│   where
-//│     'this :> Test
+//│     'this :> Test[?]
 
 Test(1)
 //│ 
-//│ Test & {Test#A = 'A}
+//│ Test['A]
 //│   where
 //│     'A :> 1
-//│ Typed: Test & {Test#A = 'A}
+//│ Typed: Test['A]
 //│   where
 //│     'A :> 1
 
 Test(true)
 //│ 
-//│ Test & {Test#A = 'A}
+//│ Test['A]
 //│   where
 //│     'A :> true
-//│ Typed: Test & {Test#A = 'A}
+//│ Typed: Test['A]
 //│   where
 //│     'A :> true
 
@@ -220,14 +220,14 @@ class Test<A>(n: A) {
 //│ fun id: 'a -> 'a
 //│ }
 //│   where
-//│     'this :> Test
+//│     'this :> Test[?]
 
 Test(1)
 //│ 
-//│ Test & {Test#A = 'A}
+//│ Test['A]
 //│   where
 //│     'A :> 1
-//│ Typed: Test & {Test#A = 'A}
+//│ Typed: Test['A]
 //│   where
 //│     'A :> 1
 
@@ -243,7 +243,7 @@ Test("ok").foo
 
 let t = Test(1)
 //│ 
-//│ let t: Test & {Test#A = 'A}
+//│ let t: Test['A]
 //│   where
 //│     'A :> 1
 
@@ -293,7 +293,7 @@ class Test<A> {
 //│ fun foo2: (x: A,) -> (error | int)
 //│ }
 //│   where
-//│     'this :> Test
+//│     'this :> Test[?]
 
 Test().foo1
 //│ 
@@ -313,7 +313,7 @@ x => Test().foo1(x)
 // :d
 let t = Test()
 //│ 
-//│ let t: forall 'A. Test & {Test#A = 'A}
+//│ let t: forall 'A. Test['A]
 
 t.foo1
 //│ 
@@ -332,8 +332,8 @@ t.foo1(0)
 
 t
 //│ 
-//│ forall 'A. Test & {Test#A = 'A}
-//│ Typed: Test & {Test#A = 'A}
+//│ forall 'A. Test['A]
+//│ Typed: Test['A]
 
 
 fun foo(x: Test<int>) = x.foo1

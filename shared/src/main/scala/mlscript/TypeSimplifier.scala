@@ -272,6 +272,90 @@ trait TypeSimplifier { self: Typer =>
                 
                 trs3.valuesIterator.foldLeft(withTraits)(_ & _)
                 
+              case S(cls @ ClassTag(Var(clsNme), ps))
+                if !primitiveTypes.contains(clsNme)
+                && ctx.tyDefs2.contains(clsNme)
+                && ctx.tyDefs2(clsNme).result.isDefined
+              =>
+                val clsTyNme = TypeName(clsNme)
+                val lti = ctx.tyDefs2(clsNme)
+                val defn = lti.result.getOrElse(die)
+                val cls = defn.asInstanceOf[TypedNuCls]
+                
+                val rcdMap  = rcd.fields.toMap
+                
+                val rcd2  = rcd.copy(rcd.fields.mapValues(_.update(go(_, pol.map(!_)), go(_, pol))))(rcd.prov)
+                println(s"rcd2 ${rcd2}")
+                
+                val vs =
+                  // td.getVariancesOrDefault
+                  Map.empty[TV, VarianceInfo].withDefaultValue(VarianceInfo.in)
+                
+                // * Reconstruct a TypeRef from its current structural components
+                val typeRef = TypeRef(cls.td.nme, cls.tparams.zipWithIndex.map { case ((tp, tv), tpidx) =>
+                  val fieldTagNme = tparamField(clsTyNme, tp)
+                  val fromTyRef = trs2.get(clsTyNme).map(_.targs(tpidx) |> { ta => FieldType(S(ta), ta)(noProv) })
+                  fromTyRef.++(rcd2.fields.iterator.filter(_._1 === fieldTagNme).map(_._2))
+                    .foldLeft((BotType: ST, TopType: ST)) {
+                      case ((acc_lb, acc_ub), FieldType(lb, ub)) =>
+                        (acc_lb | lb.getOrElse(BotType), acc_ub & ub)
+                    }.pipe {
+                      case (lb, ub) =>
+                        vs(tv) match {
+                          case VarianceInfo(true, true) => TypeBounds.mk(BotType, TopType)
+                          case VarianceInfo(false, false) => TypeBounds.mk(lb, ub)
+                          case VarianceInfo(co, contra) =>
+                            if (co) ub else lb
+                        }
+                    }
+                })(noProv)
+                println(s"typeRef ${typeRef}")
+                
+                val clsFields = fieldsOf(typeRef.expandWith(paramTags = true), paramTags = true)
+                println(s"clsFields ${clsFields.mkString(", ")}")
+                
+                val cleanPrefixes = ps.map(_.name.capitalize) + clsNme ++ traitPrefixes
+                
+                val cleanedRcd = RecordType(
+                  rcd2.fields.filterNot { case (field, fty) =>
+                    // * This is a bit messy, but was the only way I was able to achieve maximal simplification:
+                    // *  We remove fields that are already inclued by definition of the class by testing for subtyping
+                    // *  with BOTH the new normalized type (from `clsFields`) AND the old one too (from `rcdMap`).
+                    // *  The reason there's a difference is probably because:
+                    // *    - Subtye checking with <:< is an imperfect heuristic and may stop working after normalizing.
+                    // *    - Recursive types will be normalized progressively...
+                    // *        at this point we may look at some bounds that have not yet been normalized.
+                    clsFields.get(field).exists(cf => cf <:< fty ||
+                      rcdMap.get(field).exists(cf <:< _))
+                  }
+                )(rcd2.prov)
+                
+                val rcd2Fields  = rcd2.fields.unzip._1.toSet
+                
+                // // * Which fields were NOT part of the original type,
+                // // *  and should therefore be excluded from the reconstructed TypeRef:
+                // val removedFields = clsFields.keysIterator
+                //   .filterNot(field => field.name.isCapitalized || rcd2Fields.contains(field)).toSortedSet
+                // val withoutType = if (removedFields.isEmpty) typeRef
+                //   else typeRef.without(removedFields)
+                
+                // // * Whether we need a `with` (which overrides field types)
+                // // *  as opposed to simply an intersection (which refines them):
+                // val needsWith = !rcd2.fields.forall {
+                //   case (field, fty) =>
+                //     clsFields.get(field).forall(cf => fty <:< cf || rcdMap.get(field).exists(_ <:< cf))
+                // }
+                // val withType = if (needsWith) if (cleanedRcd.fields.isEmpty) withoutType
+                //   else WithType(withoutType, cleanedRcd.sorted)(noProv) else typeRef & cleanedRcd.sorted
+                
+                val withTraits = tts.toArray.sorted // TODO also filter out tts that are inherited by the class
+                  .foldLeft(typeRef & cleanedRcd: ST)(_ & _)
+                
+                val trs3 = trs2 - cls.nme // TODO also filter out class refs that are inherited by the class
+                
+                trs3.valuesIterator.foldLeft(withTraits)(_ & _)
+                
+                
               case _ =>
                 lazy val nFields = rcd.fields
                   .filterNot(traitPrefixes contains _._1.name.takeWhile(_ =/= '#'))
