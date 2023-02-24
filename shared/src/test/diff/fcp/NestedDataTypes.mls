@@ -231,11 +231,11 @@ rec def map f tree = case tree of {
 //│ map: 'map
 //│   where
 //│     'map :> forall 'subTree 'A 'a 'subTree0 'value 'value0. 'a -> ((Leaf[?] & {value: 'value} | (Node[?] with {subTree: 'subTree})) -> (Leaf['value0] | (Node['A] with {subTree: 'subTree0}))
-//│   where
-//│     'a <: 'value -> 'value0
-//│     'map <: (forall 'b 'c 'd 'e. (('b, 'd,) -> ('c, 'e,)
-//│   where
-//│     'a <: 'b -> 'c & 'd -> 'e)) -> 'subTree -> (PerfectTree[Two['A]] & 'subTree0))
+//│       where
+//│         'a <: 'value -> 'value0
+//│         'map <: (forall 'b 'c 'd 'e. ('b, 'd,) -> ('c, 'e,)
+//│           where
+//│             'a <: 'b -> 'c & 'd -> 'e) -> 'subTree -> (PerfectTree[Two['A]] & 'subTree0))
 //│    = [Function: map1]
 
 :e

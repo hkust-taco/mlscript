@@ -8,8 +8,8 @@ class Add<E>(lhs: E, rhs: E)
 //│ class Add[E](lhs: E, rhs: E) {
 //│   this: 'this
 //│ }
-//│   where
-//│     'this :> Add[?]
+//│ where
+//│   'this :> Add[?]
 
 let e = Add(1, 1)
 //│ let e: Add['E]

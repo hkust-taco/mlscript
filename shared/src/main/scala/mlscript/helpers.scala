@@ -86,24 +86,34 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
     case PolyType(Nil, body) => body.showIn(ctx, outerPrec)
     case PolyType(targs, body) => parensIf(
         s"${targs.iterator.map(_.fold(_.name, _.showIn(ctx, 0)))
-          .mkString("forall ", " ", ".")} ${body.showIn(ctx, 1)}",
+          .mkString("forall ", " ", ".")} ${body.showIn(ctx, 0)}",
         outerPrec > 1 // or 0?
       )
-    case Constrained(b, bs, ws) => parensIf(s"${
-        b.showIn(ctx, 0).stripSuffix("\n")}\n${ctx.indStr}  where${bs.map {
-      case (uv, Bounds(Bot, ub)) =>
-        s"\n    ${ctx.vs(uv)} <: ${ub.showIn(ctx, 0)}"
-      case (uv, Bounds(lb, Top)) =>
-        s"\n    ${ctx.vs(uv)} :> ${lb.showIn(ctx, 0)}"
-      case (uv, Bounds(lb, ub)) if lb === ub =>
-        s"\n    ${ctx.vs(uv)} := ${lb.showIn(ctx, 0)}"
-      case (uv, Bounds(lb, ub)) =>
-        val vstr = ctx.vs(uv)
-        s"\n    ${vstr             } :> ${lb.showIn(ctx, 0)}" +
-        s"\n    ${" " * vstr.length} <: ${ub.showIn(ctx, 0)}"
-    }.mkString}${ws.map{
-      case Bounds(lo, hi) => s"\n    ${lo.showIn(ctx, 0)} <: ${hi.showIn(ctx, 0)}" // TODO print differently from bs?
-    }.mkString}", outerPrec > 0)
+    case Constrained(b, bs, ws) =>
+      val oldCtx = ctx
+      val bStr = b.showIn(ctx, 0).stripSuffix("\n")
+      val multiline = bStr.contains('\n')
+      parensIf({
+        val ctx = if (multiline) oldCtx.indent else oldCtx.indent.indent
+        s"${
+          bStr
+        }\n${oldCtx.indStr}${if (multiline) "" else "  "}where${
+              bs.map {
+          case (uv, Bounds(Bot, ub)) =>
+            s"\n${ctx.indStr}${ctx.vs(uv)} <: ${ub.showIn(ctx, 0)}"
+          case (uv, Bounds(lb, Top)) =>
+            s"\n${ctx.indStr}${ctx.vs(uv)} :> ${lb.showIn(ctx, 0)}"
+          case (uv, Bounds(lb, ub)) if lb === ub =>
+            s"\n${ctx.indStr}${ctx.vs(uv)} := ${lb.showIn(ctx, 0)}"
+          case (uv, Bounds(lb, ub)) =>
+            val vstr = ctx.vs(uv)
+            s"\n${ctx.indStr}${vstr             } :> ${lb.showIn(ctx, 0)}" +
+            s"\n${ctx.indStr}${" " * vstr.length} <: ${ub.showIn(ctx, 0)}"
+        }.mkString
+      }${ws.map{
+          case Bounds(lo, hi) => s"\n${ctx.indStr}${lo.showIn(ctx, 0)} <: ${hi.showIn(ctx, 0)}" // TODO print differently from bs?
+        }.mkString}"
+      }, outerPrec > 0)
     case NuFunDef(isLetRec, nme, targs, rhs) =>
       s"${isLetRec match {
         case S(false) => "let"

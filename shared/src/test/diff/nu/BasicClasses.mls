@@ -7,8 +7,8 @@ class A(n: int)
 //│ class A(n: int) {
 //│   this: 'this
 //│ }
-//│   where
-//│     'this :> A
+//│ where
+//│   'this :> A
 
 A
 //│ (n: int,) -> A
@@ -56,8 +56,8 @@ class C {
 //│   fun const: anything -> 'a -> 'a
 //│   fun id: 'a -> 'a
 //│ }
-//│   where
-//│     'this :> C
+//│ where
+//│   'this :> C
 
 
 class Base0(n) {
@@ -73,9 +73,9 @@ class Base0(n) {
 //│   fun my: 'n
 //│   fun oops: 'my
 //│ }
-//│   where
-//│     'this :> Base0
-//│           <: {my: 'my, n: 'n}
+//│ where
+//│   'this :> Base0
+//│         <: {my: 'my, n: 'n}
 
 // :d
 // Base0
@@ -111,9 +111,9 @@ class Base1(base: int) {
 //│   fun getBase1: int
 //│   fun getBase2: int
 //│ }
-//│   where
-//│     'this :> Base1
-//│           <: {base: int}
+//│ where
+//│   'this :> Base1
+//│         <: {base: int}
 
 class Base1(base: int) {
   fun getBase1 = base
@@ -126,8 +126,8 @@ class Base1(base: int) {
 //│   fun getBase1: int
 //│   fun me: 'this
 //│ }
-//│   where
-//│     'this :> Base1
+//│ where
+//│   'this :> Base1
 
 Base1
 //│ (base: int,) -> Base1
@@ -172,8 +172,8 @@ class Rec(n) {
 //│   this: 'this
 //│   fun go: error
 //│ }
-//│   where
-//│     'this :> Rec
+//│ where
+//│   'this :> Rec
 
 
 
@@ -199,8 +199,8 @@ class Annots(base: 0 | 1) {
 //│   this: 'this
 //│   fun a: (0 | 1,)
 //│ }
-//│   where
-//│     'this :> Annots
+//│ where
+//│   'this :> Annots
 
 
 

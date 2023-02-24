@@ -103,11 +103,11 @@ fun f: 'a => forall 'b; 'a where
 
 :ns
 f
-//│ res: forall 'a. 'a -> (forall 'b. ('a
+//│ res: forall 'a. 'a -> (forall 'b. 'a
 //│   where
-//│     'a <: 'b -> 'b))
-//│   where
-//│     'a :> int
+//│     'a <: 'b -> 'b)
+//│ where
+//│   'a :> int
 
 // * Note the first-class polymorphic type with impossible bound...
 let r = f(1)
@@ -118,9 +118,9 @@ let r = f(1)
 r
 //│ res: forall 'c 'a. 'c
 //│   where
-//│     'c :> forall 'b. ('a
-//│   where
-//│     'a <: 'b -> 'b)
+//│     'c :> forall 'b. 'a
+//│       where
+//│         'a <: 'b -> 'b
 //│     'a :> int
 
 :e
@@ -159,11 +159,11 @@ fun f: 'a => forall 'b; 'b where
 
 :ns
 f
-//│ res: forall 'a. 'a -> (forall 'b. ('b
+//│ res: forall 'a. 'a -> (forall 'b. 'b
 //│   where
-//│     'a <: 'b -> 'b))
-//│   where
-//│     'a :> int
+//│     'a <: 'b -> 'b)
+//│ where
+//│   'a :> int
 
 let r = f(1)
 //│ r: 'b

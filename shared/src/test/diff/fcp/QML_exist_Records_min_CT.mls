@@ -36,8 +36,8 @@ def step arr g = g (stepImpl2 arr)
 //│ 'a -> (('b -> 'c) -> 'c
 //│   where
 //│     'a <: (forall 'd. 'd -> {fold: forall 'e 'f 'g. 'e -> ('f -> 'g
-//│   where
-//│     'd <: {fold: 'e -> 'f -> 'g})}) -> 'b)
+//│       where
+//│         'd <: {fold: 'e -> 'f -> 'g})}) -> 'b)
 //│   <:  step:
 //│ Arrays -> Arrays
 //│ ╔══[ERROR] Type error in def definition

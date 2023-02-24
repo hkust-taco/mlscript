@@ -22,9 +22,9 @@ class Base1(p: int): Over {
 //│   fun p: "hi"
 //│   fun test: (int, "hi" | 'p,)
 //│ }
-//│   where
-//│     'this :> Base1
-//│           <: {p: 'p}
+//│ where
+//│   'this :> Base1
+//│         <: {p: 'p}
 
 
 Base1(123).test

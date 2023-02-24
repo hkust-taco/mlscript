@@ -14,8 +14,8 @@ class Some<A>(value: A) {
 //│   fun get: A
 //│   fun toArray: (A,)
 //│ }
-//│   where
-//│     'this :> Some[?]
+//│ where
+//│   'this :> Some[?]
 
 
 let s = Some(1)
@@ -57,8 +57,8 @@ module None {
 //│   fun get: nothing
 //│   fun toArray: ()
 //│ }
-//│   where
-//│     'this :> None
+//│ where
+//│   'this :> None
 
 
 None.toArray
@@ -117,8 +117,8 @@ class Test(n) {
 //│   this: 'this
 //│   fun foo: int
 //│ }
-//│   where
-//│     'this :> Test
+//│ where
+//│   'this :> Test
 
 Test(1)
 //│ Test
@@ -157,8 +157,8 @@ class Test<A>(n: A) {
 //│   this: 'this
 //│   fun foo: error | int
 //│ }
-//│   where
-//│     'this :> Test[?]
+//│ where
+//│   'this :> Test[?]
 
 Test(1)
 //│ Test['A]
@@ -182,8 +182,8 @@ class Test<A>(n: A) {
 //│   fun foo1: (x: A,) -> A
 //│   fun id: 'a -> 'a
 //│ }
-//│   where
-//│     'this :> Test[?]
+//│ where
+//│   'this :> Test[?]
 
 Test(1)
 //│ Test['A]
@@ -235,8 +235,8 @@ class Test<A> {
 //│   fun foo1: (x: A,) -> A
 //│   fun foo2: (x: A,) -> (error | int)
 //│ }
-//│   where
-//│     'this :> Test[?]
+//│ where
+//│   'this :> Test[?]
 
 Test().foo1
 //│ (x: 'A,) -> 'A

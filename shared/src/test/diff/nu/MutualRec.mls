@@ -10,8 +10,8 @@ class Foo()
 //│   this: 'this
 //│ }
 //│ 123
-//│   where
-//│     'this :> Foo
+//│ where
+//│   'this :> Foo
 
 Foo
 //│ () -> Foo
@@ -42,8 +42,8 @@ fun foo = {x: bar}
 fun bar = {y: foo}
 //│ fun foo: 'foo
 //│ fun bar: {y: 'foo}
-//│   where
-//│     'foo :> {x: {y: 'foo}}
+//│ where
+//│   'foo :> {x: {y: 'foo}}
 
 // FIXME pretty-printing?
 foo
@@ -72,8 +72,8 @@ fun foo(a) = {h: a, t: bar(a)}
 fun bar(b) = foo(b)
 //│ fun foo: 'a -> 'b
 //│ fun bar: 'a -> 'b
-//│   where
-//│     'b :> {h: 'a, t: 'b}
+//│ where
+//│   'b :> {h: 'a, t: 'b}
 
 :ns
 foo
@@ -88,9 +88,9 @@ fun foo(a) = {h1: a, t1: bar(a)}
 fun bar(b) = {h2: b, t2: foo(b)}
 //│ fun foo: 'a -> 'b
 //│ fun bar: 'a -> 'c
-//│   where
-//│     'b :> {h1: 'a, t1: 'c}
-//│     'c :> {h2: 'a, t2: 'b}
+//│ where
+//│   'b :> {h1: 'a, t1: 'c}
+//│   'c :> {h2: 'a, t2: 'b}
 
 
 
@@ -108,9 +108,9 @@ module Test0_2 {
 //│   this: 'this0
 //│   fun b: 123
 //│ }
-//│   where
-//│     'this0 :> Test0_2
-//│     'this :> Test0_1
+//│ where
+//│   'this0 :> Test0_2
+//│   'this :> Test0_1
 
 Test0_1.a
 //│ 123
@@ -129,9 +129,9 @@ class Test0_2() {
 //│   this: 'this0
 //│   fun b: 123
 //│ }
-//│   where
-//│     'this0 :> Test0_2
-//│     'this :> Test0_1
+//│ where
+//│   'this0 :> Test0_2
+//│   'this :> Test0_1
 
 
 :e // TODO
@@ -156,9 +156,9 @@ module Test1_2 {
 //│   this: 'this0
 //│   fun b: error
 //│ }
-//│   where
-//│     'this0 :> Test1_2
-//│     'this :> Test1_1
+//│ where
+//│   'this0 :> Test1_2
+//│   'this :> Test1_1
 
 Test1_1.a
 //│ error
@@ -186,9 +186,9 @@ class Test1_2 {
 //│   this: 'this0
 //│   fun b: error
 //│ }
-//│   where
-//│     'this0 :> Test1_2
-//│     'this :> Test1_1
+//│ where
+//│   'this0 :> Test1_2
+//│   'this :> Test1_1
 
 
 // TODO check TV hygiene
@@ -242,9 +242,9 @@ module Test2_2 {
 //│   fun c: error
 //│   fun e: error
 //│ }
-//│   where
-//│     'this0 :> Test2_2
-//│     'this :> Test2_1
+//│ where
+//│   'this0 :> Test2_2
+//│   'this :> Test2_1
 
 Test2_1.t2.b
 //│ 123
