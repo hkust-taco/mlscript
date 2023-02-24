@@ -638,6 +638,11 @@ final case class JSRecord(entries: Ls[Str -> JSExpr]) extends JSExpr {
     })
 }
 
+final case class JSClassExpr(cls: JSClassDecl) extends JSExpr {
+  implicit def precedence: Int = 22
+  def toSourceCode: SourceCode = cls.toSourceCode
+}
+
 abstract class JSStmt extends JSCode
 
 final case class JSExprStmt(expr: JSExpr) extends JSStmt {

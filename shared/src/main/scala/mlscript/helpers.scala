@@ -674,8 +674,21 @@ trait StatementImpl extends Located { self: Statement =>
       (diags ::: diags2 ::: diags3) -> (TypeDef(Als, TypeName(v.name).withLocOf(v), targs,
           dataDefs.map(td => AppliedType(td.nme, td.tparams)).reduceOption(Union).getOrElse(Bot), Nil, Nil, Nil
         ).withLocOf(hd) :: cs)
+      case NuTypeDef(Mxn, TypeName(mxName), tps, tup @ Tup(fs), pars, sup, ths, unit) =>
+        val (diags, ds) =
+          NuTypeDef(Cls, TypeName(mxName), tps, tup, pars :+ Var("base"), sup, ths, unit).desugared
+        ds match {
+          case (cls: TypeDef) :: _ => diags -> (NuFunDef(None, Var(mxName), List(), Left(Lam(Tup(Ls(None -> Fld(false, false, Var("base")))), ClassExpression(cls)))) :: Nil)
+          case _ => ???
+        }
       case NuTypeDef(Nms, nme, tps, tup @ Tup(fs), pars, sup, ths, unit) =>
-        ??? // TODO
+        val (diags, ds) =
+          NuTypeDef(Cls, nme, tps, tup, pars, sup, ths, unit).desugared
+        // ds match {
+        //   case (cls: TypeDef) :: _ => diags -> (cls :: Nil)
+        //   case _ => ???
+        // }
+        ???
       case NuTypeDef(k @ Als, nme, tps, tup @ Tup(fs), pars, sup, ths, unit) =>
         // TODO properly check:
         require(fs.isEmpty, fs)
@@ -708,7 +721,12 @@ trait StatementImpl extends Located { self: Statement =>
           case (N, fld @ Fld(mut, spec, nme: Var)) => nme -> fld
           case _ => die
         })) :: Nil)))), true)
-        diags.toList -> (TypeDef(k, nme, tps, bod, Nil, Nil, pos) :: ctor :: Nil)
+        val mthDefs = unit.children.foldLeft(List[MethodDef[Left[Term, Type]]]())((lst, loc) => loc match {
+          case NuFunDef(isLetRec, mnme, tys, Left(rhs)) => lst :+ MethodDef(isLetRec.getOrElse(false), nme, mnme, tys, Left(rhs))
+          case _ => lst
+        })
+        // TODO: mthDecls
+        diags.toList -> (TypeDef(k, nme, tps, bod, Nil, mthDefs, pos) :: ctor :: Nil)
     case d: DesugaredStatement => Nil -> (d :: Nil)
   }
   import Message._
