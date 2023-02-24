@@ -29,7 +29,7 @@ fun eval(e) =
 //│ 
 //│ fun eval: 'a -> int
 //│   where
-//│     'a <: Lit | Add & {Add#E = 'E} & ~Lit
+//│     'a <: Add & {Add#E = 'E} | Lit
 //│     'E <: 'a
 
 
@@ -43,7 +43,7 @@ mixin EvalBase {
 //│ mixin EvalBase() {
 //│ super: 'super
 //│ this: 'this
-//│ fun eval: (Lit | Add & {Add#E = 'E} & ~Lit) -> int
+//│ fun eval: (Add & {Add#E = 'E} | Lit) -> int
 //│ }
 //│   where
 //│     'E <: 'lhs
@@ -57,7 +57,7 @@ module TestLang: EvalBase
 //│ fun eval: 'a -> int
 //│ }
 //│   where
-//│     'a <: Lit | Add & {Add#E = 'E} & ~Lit
+//│     'a <: Add & {Add#E = 'E} | Lit
 //│     'E <: 'a
 //│     'this :> TestLang
 
@@ -65,7 +65,7 @@ TestLang.eval
 //│ 
 //│ 'a -> int
 //│   where
-//│     'a <: Lit | Add & {Add#E = 'E} & ~Lit
+//│     'a <: Add & {Add#E = 'E} | Lit
 //│     'E <: 'a
 //│ Typed: 'a -> int
 //│   where
@@ -93,8 +93,7 @@ add11
 //│ Add & {Add#E = 'E}
 //│   where
 //│     'E :> Lit
-//│        <: 'a
-//│     'a <: Lit | Add & {Add#E = 'E} & ~Lit
+//│        <: Add & {Add#E = 'E} | Lit
 //│ Typed: Add & {Add#E = 'E}
 //│   where
 //│     'E :> Lit
@@ -110,8 +109,7 @@ add11
 //│ Add & {Add#E = 'E}
 //│   where
 //│     'E :> Lit
-//│        <: 'a
-//│     'a <: Lit | Add & {Add#E = 'E} & ~Lit
+//│        <: Add & {Add#E = 'E} | Lit
 //│ Typed: Add & {Add#E = 'E}
 //│   where
 //│     'E :> Lit
@@ -134,8 +132,7 @@ let add2negadd11 = Add(Lit(2), Neg(add11))
 //│     'E :> Lit | Neg & {Neg#A = 'A}
 //│     'A :> Add & {Add#E = 'E0}
 //│     'E0 :> Lit
-//│         <: 'a
-//│     'a <: Lit | Add & {Add#E = 'E0} & ~Lit
+//│         <: Add & {Add#E = 'E0} | Lit
 
 
 mixin EvalNeg {
@@ -162,18 +159,18 @@ module TestLang: EvalBase, EvalNeg
 //│ fun eval: 'a -> int
 //│ }
 //│   where
-//│     'a <: Neg & {Neg#A = 'A} | (Lit | Add & {Add#E = 'E} & ~Lit) & ~Neg
-//│     'E <: 'a
+//│     'a <: Add & {Add#E = 'E} | Lit | Neg & {Neg#A = 'A}
 //│     'A <: 'a
+//│     'E <: 'a
 //│     'this :> TestLang
 
 TestLang.eval
 //│ 
 //│ 'a -> int
 //│   where
-//│     'a <: Neg & {Neg#A = 'A} | (Lit | Add & {Add#E = 'E} & ~Lit) & ~Neg
-//│     'E <: 'a
+//│     'a <: Add & {Add#E = 'E} | Lit | Neg & {Neg#A = 'A}
 //│     'A <: 'a
+//│     'E <: 'a
 //│ Typed: 'a -> int
 //│   where
 //│     'a <: Add & {Add#E = 'E} | Lit | Neg & {Neg#A = 'A}
@@ -205,10 +202,10 @@ TestLang.eval(Neg(Neg(add11)))
 :e
 TestLang.eval(add2negadd11)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.206: 	TestLang.eval(add2negadd11)
+//│ ║  l.203: 	TestLang.eval(add2negadd11)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Neg & {Neg#A = ?A}` does not match type `Add & {Add#E = ?E} | Lit`
-//│ ║  l.130: 	let add2negadd11 = Add(Lit(2), Neg(add11))
+//│ ║  l.128: 	let add2negadd11 = Add(Lit(2), Neg(add11))
 //│ ║         	                               ^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.38: 	    if e is
@@ -223,10 +220,10 @@ TestLang.eval(add2negadd11)
 :e
 TestLang.eval(Add(Lit(2), Neg(add11)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.224: 	TestLang.eval(Add(Lit(2), Neg(add11)))
+//│ ║  l.221: 	TestLang.eval(Add(Lit(2), Neg(add11)))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Neg & {Neg#A = ?A}` does not match type `Add & {Add#E = ?E} | Lit`
-//│ ║  l.130: 	let add2negadd11 = Add(Lit(2), Neg(add11))
+//│ ║  l.128: 	let add2negadd11 = Add(Lit(2), Neg(add11))
 //│ ║         	                               ^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.38: 	    if e is

@@ -84,13 +84,13 @@ type Option<A> = Some<A> | None
 
 let opt = if true then Some(123) else None
 //│ 
-//│ let opt: Some & {Some#A = 'A} | None
+//│ let opt: None | Some & {Some#A = 'A}
 //│   where
 //│     'A :> 123
 
 opt.toArray
 //│ 
-//│ (123,) | ()
+//│ Array[123]
 //│ Typed: Array[123]
 
 
@@ -104,12 +104,12 @@ opt.toArray
 
 if opt is Some then opt.value else 0
 //│ 
-//│ 123 | 0
+//│ 0 | 123
 //│ Typed: 0 | 123
 
 if opt is Some(v) then v else 0
 //│ 
-//│ 123 | 0
+//│ 0 | 123
 //│ Typed: 0 | 123
 
 
@@ -117,7 +117,7 @@ fun map(x, f) = if x is
   None then None
   Some(v) then Some(f(v))
 //│ 
-//│ fun map: (None | Some & {Some#A = 'A} & ~None, 'A -> 'A0,) -> (None | Some & {Some#A = 'A0})
+//│ fun map: (None | Some & {Some#A = 'A}, 'A -> 'A0,) -> (None | Some & {Some#A = 'A0})
 
 let mo = map(opt, succ)
 //│ 
@@ -127,7 +127,7 @@ let mo = map(opt, succ)
 
 mo.toArray
 //│ 
-//│ () | (int,)
+//│ Array[int]
 //│ Typed: Array[int]
 
 
@@ -163,7 +163,7 @@ Test(true)
 //│ ║  l.135: 	class Test(n) {
 //│ ╙──       	           ^
 //│ 
-//│ error | Test
+//│ Test | error
 //│ Typed: Test | error
 
 
@@ -183,7 +183,7 @@ class Test<A>(n: A) {
 //│ 
 //│ class Test[A](n: A) {
 //│ this: 'this
-//│ fun foo: int | error
+//│ fun foo: error | int
 //│ }
 //│   where
 //│     'this :> Test
@@ -249,14 +249,14 @@ let t = Test(1)
 
 t.foo1(true)
 //│ 
-//│ true | 1
+//│ 1 | true
 //│ Typed: 1 | true
 
 t : Test<'a>
 //│ 
 //│ Test['a]
 //│   where
-//│     'a :> true | 1
+//│     'a :> 1 | true
 //│ Typed: Test['a]
 //│   where
 //│     'a :> 1 | true
@@ -290,7 +290,7 @@ class Test<A> {
 //│ class Test[A]() {
 //│ this: 'this
 //│ fun foo1: (x: A,) -> A
-//│ fun foo2: (x: A,) -> (int | error)
+//│ fun foo2: (x: A,) -> (error | int)
 //│ }
 //│   where
 //│     'this :> Test
@@ -338,11 +338,11 @@ t
 
 fun foo(x: Test<int>) = x.foo1
 //│ 
-//│ fun foo: (x: Test[int],) -> (x: int & 'A,) -> (int | 'A)
+//│ fun foo: (x: Test[int],) -> (x: int,) -> int
 
 foo(t)
 //│ 
-//│ (x: int & 'A,) -> (int | 'A)
+//│ (x: int,) -> int
 //│ Typed: (x: int,) -> int
 
 foo(t)(1)
@@ -353,7 +353,7 @@ foo(t)(1)
 
 Test().foo2
 //│ 
-//│ (x: anything,) -> (int | error)
+//│ (x: anything,) -> (error | int)
 //│ Typed: (x: anything,) -> (error | int)
 
 

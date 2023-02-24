@@ -26,7 +26,7 @@ fun f(x: A) = if x is A then x.n
 
 fun f(x: A | 'b) = if x is A then x.n else 0
 //│ 
-//│ fun f: (x: (anything,),) -> (int | 0)
+//│ fun f: (x: (anything,),) -> int
 
 
 fun f(x) = x.n
@@ -49,11 +49,11 @@ f(a)
 
 fun f(x) = if x is A then x.n else 0
 //│ 
-//│ fun f: anything -> (int | 0)
+//│ fun f: anything -> int
 
 f(a)
 //│ 
-//│ int | 0
+//│ int
 //│ Typed: int
 
 
@@ -128,11 +128,11 @@ class Base1(base: int) {
 //│ this: 'this
 //│ fun foo: int -> int
 //│ fun getBase1: int
-//│ fun getBase2: int | 'base
+//│ fun getBase2: int
 //│ }
 //│   where
 //│     'this :> Base1
-//│           <: {base: 'base & int}
+//│           <: {base: int}
 
 class Base1(base: int) {
   fun getBase1 = base

@@ -40,7 +40,7 @@ class Base1(base: int): BaseTest, BaseInc {
 //│ this: 'this
 //│ fun test: int
 //│ fun test2: int
-//│ fun test3: (int, int | 'base,)
+//│ fun test3: (int, 'base | int,)
 //│ }
 //│   where
 //│     'this :> Base1
@@ -233,7 +233,7 @@ WrapBase1.wrapA("ok")
 //│ ║  l.158: 	  fun wrapA(x) = [super.wrapA(x)]
 //│ ╙──       	                              ^
 //│ 
-//│ error | (int,)
+//│ (int,) | error
 //│ Typed: (int,) | error
 
 

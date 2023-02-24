@@ -22,19 +22,19 @@ let e = Add(1, 1)
 e
 //│ 0. Typing TypingUnit(List(e))
 //│ | 0. Typing term e
-//│ | 0. : α33
+//│ | 0. : α35
 //│ ======== TYPED ========
-//│ res: Some(α33) where 
-//│ 		α33 :> (Add<> & {Add#E: mut E23_34..E23_34})
-//│ 		E23_34 :> 1<int,number>
+//│ res: Some(α35) where 
+//│ 		α35 :> (Add<> & {Add#E: mut E23_36..E23_36})
+//│ 		E23_36 :> 1<int,number>
 //│ 
 //│ Add & {Add#E = 'E}
 //│   where
 //│     'E :> 1
-//│ ⬤ Typed as: ‹∀ 0. α33›
+//│ ⬤ Typed as: ‹∀ 0. α35›
 //│  where: 
-//│ 		α33 :> (Add<> & {Add#E: mut E23_34..E23_34})
-//│ 		E23_34 :> 1<int,number>
+//│ 		α35 :> (Add<> & {Add#E: mut E23_36..E23_36})
+//│ 		E23_36 :> 1<int,number>
 //│ Typed: Add & {Add#E = 'E}
 //│   where
 //│     'E :> 1
@@ -48,21 +48,21 @@ e.lhs
 e
 //│ 0. Typing TypingUnit(List(e))
 //│ | 0. Typing term e
-//│ | 0. : α33
+//│ | 0. : α35
 //│ ======== TYPED ========
-//│ res: Some(α33) where 
-//│ 		α33 :> (Add<> & {Add#E: mut E23_34..E23_34}) <: {lhs: lhs45}
-//│ 		E23_34 :> 1<int,number> <: lhs45
-//│ 		lhs45 :> 1<int,number>
+//│ res: Some(α35) where 
+//│ 		α35 :> (Add<> & {Add#E: mut E23_36..E23_36}) <: {lhs: lhs49}
+//│ 		E23_36 :> 1<int,number> <: lhs49
+//│ 		lhs49 :> 1<int,number>
 //│ 
 //│ Add & {Add#E = 'E}
 //│   where
 //│     'E :> 1
-//│ ⬤ Typed as: ‹∀ 0. α33›
+//│ ⬤ Typed as: ‹∀ 0. α35›
 //│  where: 
-//│ 		α33 :> (Add<> & {Add#E: mut E23_34..E23_34}) <: {lhs: lhs45}
-//│ 		E23_34 :> 1<int,number> <: lhs45
-//│ 		lhs45 :> 1<int,number>
+//│ 		α35 :> (Add<> & {Add#E: mut E23_36..E23_36}) <: {lhs: lhs49}
+//│ 		E23_36 :> 1<int,number> <: lhs49
+//│ 		lhs49 :> 1<int,number>
 //│ Typed: Add & {Add#E = 'E}
 //│   where
 //│     'E :> 1

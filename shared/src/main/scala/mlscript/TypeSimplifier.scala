@@ -346,9 +346,9 @@ trait TypeSimplifier { self: Typer =>
       }
     }
     
-    def goLike(ty: TL, pol: Opt[Bool], canDistribForall: Opt[Level] = N): ST = trace(s"normLike[${printPol(pol)}] $ty") { ty match {
-      case ty: ST =>
-        go(ty, pol)
+    def goLike(ty: TL, pol: Opt[Bool], canDistribForall: Opt[Level] = N): TL = trace(s"normLike[${printPol(pol)}] $ty") { ty match {
+      case ty: ST => go(ty, pol)
+      case OtherTypeLike(tu) => tu.mapPol(pol, true)((p, t) => go(t, p))
     }}()
     def go(ty: ST, pol: Opt[Bool], canDistribForall: Opt[Level] = N): ST = trace(s"norm[${printPol(pol)}] $ty") {
       pol match {
@@ -1123,7 +1123,7 @@ trait TypeSimplifier { self: Typer =>
       // cur = factorRecursiveTypes_!(cur, approximateRecTypes = false)
       // debugOutput(s"⬤ Factored: ${cur}")
       // debugOutput(s" where: ${cur.showBounds}")
-      if (all) {
+      
       cur = normalizeTypes_!(cur)
       debugOutput(s"⬤ Normalized: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")
@@ -1147,7 +1147,7 @@ trait TypeSimplifier { self: Typer =>
       cur = factorRecursiveTypes_!(cur, approximateRecTypes = false)
       debugOutput(s"⬤ Factored: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")
-      }
+      
       cur
     }
   }
