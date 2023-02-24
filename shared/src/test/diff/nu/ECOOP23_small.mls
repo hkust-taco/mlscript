@@ -1,0 +1,53 @@
+:NewParser
+:NewDefs
+:NoJS
+
+
+class Neg<A>(expr: A)
+class Add<E>(lhs: E, rhs: E)
+class Lit(n: int)
+//│ class Neg[A](expr: A)
+//│ class Add[E](lhs: E, rhs: E)
+//│ class Lit(n: int)
+
+let add11 = Add(Lit(1), Lit(2))
+let add2negadd11 = Add(Lit(2), Neg(add11))
+//│ let add11: Add[Lit]
+//│ let add2negadd11: Add[Lit | Neg[Add[Lit]]]
+
+mixin EvalNothing {
+  fun eval(e: nothing) = e
+}
+mixin EvalAddLit {
+  fun eval(e) =
+    if e is
+      Lit(n) then n: int
+      Add(l, r) then this.eval(l) + this.eval(r)
+    else super.eval(e)
+}
+mixin EvalNeg {
+  fun eval(e) =
+    if e is Neg(d) then 0 - this.eval(d)
+    else super.eval(e)
+}
+//│ mixin EvalNothing() {
+//│   fun eval: (e: nothing,) -> nothing
+//│ }
+//│ mixin EvalAddLit() {
+//│   super: {eval: 'a -> 'b}
+//│   this: {eval: 'lhs -> int}
+//│   fun eval: (Add['lhs] | Lit | 'a & ~Add & ~Lit) -> (int | 'b)
+//│ }
+//│ mixin EvalNeg() {
+//│   super: {eval: 'c -> 'd}
+//│   this: {eval: 'expr -> int}
+//│   fun eval: (Neg['expr] | 'c & ~Neg) -> (int | 'd)
+//│ }
+
+module TestLang: EvalNothing, EvalAddLit, EvalNeg
+//│ namespace TestLang() {
+//│   this: {eval: ('expr | 'lhs) -> int}
+//│   fun eval: (Add['lhs & (Add[Add[anything] | Lit | Neg[Add[anything] | Lit | Neg[anything]]] | Lit | Neg[Add[anything] | Lit | Neg[anything]])] | Lit | Neg['expr & (Add[anything] | Lit | Neg[anything])]) -> int
+//│ }
+
+

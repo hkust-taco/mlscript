@@ -245,6 +245,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           
       }
     }
+    def varianceOf(tv: TV)(implicit ctx: Ctx): VarianceInfo =
+      variances.getOrElse(tv, VarianceInfo.in)
     
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTermDef =

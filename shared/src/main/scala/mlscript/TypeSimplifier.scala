@@ -106,8 +106,23 @@ trait TypeSimplifier { self: Typer =>
                 else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType)(fty.prov) :: Nil
                 else  v -> default :: Nil
             })
-        case N => // TODO look into ctx.tyDefs2
-          v -> default :: Nil
+        case N =>
+          // v -> default :: Nil
+          ctx.tyDefs2.get(prefix) match {
+            case S(td) =>
+              td.result match {
+                case S(cls: TypedNuCls) =>
+                  cls.varianceOf(cls.tparams.find(_._1.name === postfix).getOrElse(die)._2) match {
+                    case VarianceInfo(true, true) => Nil
+                    case VarianceInfo(co, contra) =>
+                      if (co) v -> FieldType(S(BotType), process(fty.ub, N))(fty.prov) :: Nil
+                      else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType)(fty.prov) :: Nil
+                      else  v -> default :: Nil
+                  }
+                case _ => die
+              }
+            case N => die
+          }
         }
       })(ty.prov)
       
@@ -288,9 +303,10 @@ trait TypeSimplifier { self: Typer =>
                 val rcd2  = rcd.copy(rcd.fields.mapValues(_.update(go(_, pol.map(!_)), go(_, pol))))(rcd.prov)
                 println(s"rcd2 ${rcd2}")
                 
-                val vs =
-                  // td.getVariancesOrDefault
-                  Map.empty[TV, VarianceInfo].withDefaultValue(VarianceInfo.in)
+                // val vs =
+                //   // td.getVariancesOrDefault
+                //   // Map.empty[TV, VarianceInfo].withDefaultValue(VarianceInfo.in)
+                //   cls.variances
                 
                 // * Reconstruct a TypeRef from its current structural components
                 val typeRef = TypeRef(cls.td.nme, cls.tparams.zipWithIndex.map { case ((tp, tv, vi), tpidx) =>
@@ -302,7 +318,7 @@ trait TypeSimplifier { self: Typer =>
                         (acc_lb | lb.getOrElse(BotType), acc_ub & ub)
                     }.pipe {
                       case (lb, ub) =>
-                        vs(tv) match {
+                        cls.varianceOf(tv) match {
                           case VarianceInfo(true, true) => TypeBounds.mk(BotType, TopType)
                           case VarianceInfo(false, false) => TypeBounds.mk(lb, ub)
                           case VarianceInfo(co, contra) =>

@@ -1101,7 +1101,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                         // RecordType.mk(cls.params)(provTODO) // TODO?!
                         RecordType.mk(fresh_cls.tparams.map{
                           case (tn, tv, vi) => // TODO use variances
-                            (Var(nme+"#"+tn.name).withLocOf(tn), FieldType(S(tv), tv)(provTODO))
+                            // println("VVV"+fresh_cls.variances.get(tv))
+                            (Var(nme+"#"+tn.name).withLocOf(tn),
+                              FieldType.mk(fresh_cls.varianceOf(tv), tv, tv)(provTODO))
                         })(provTODO)
                       println(s"Match arm $nme: $tag & $ty")
                       tag -> ty

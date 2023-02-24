@@ -972,6 +972,14 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString =
       lb.fold(s"$ub")(lb => s"mut ${if (lb === BotType) "" else lb}..$ub")
   }
+  object FieldType {
+    def mk(vi: VarianceInfo, lb: ST, ub: ST)(prov: TP): FieldType = vi match {
+      case VarianceInfo(true, true) => FieldType(N, TopType)(prov)
+      case VarianceInfo(true, false) => FieldType(N, ub)(prov)
+      case VarianceInfo(false, true) => FieldType(S(lb), TopType)(prov)
+      case VarianceInfo(false, false) => FieldType(S(lb), ub)(prov)
+    }
+  }
   
   /** A type variable living at a certain polymorphism level `level`, with mutable bounds.
     * Invariant: Types appearing in the bounds never have a level higher than this variable's `level`. */

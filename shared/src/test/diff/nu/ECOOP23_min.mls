@@ -8,9 +8,7 @@ class Add<E>(lhs: E, rhs: E)
 //│ class Add[E](lhs: E, rhs: E)
 
 let e = Add(1, 1)
-//│ let e: Add['E]
-//│   where
-//│     'E :> 1
+//│ let e: Add[1]
 
 :d
 e
@@ -21,9 +19,7 @@ e
 //│ res: Some(α32) where 
 //│ 		α32 :> (Add<> & {Add#E: mut E23_33..E23_33})
 //│ 		E23_33 :> 1<int,number>
-//│ Add['E]
-//│   where
-//│     'E :> 1
+//│ Add[1]
 
 e.lhs
 //│ 1
@@ -35,17 +31,13 @@ e
 //│ | 0. : α32
 //│ ======== TYPED ========
 //│ res: Some(α32) where 
-//│ 		α32 :> (Add<> & {Add#E: mut E23_33..E23_33}) <: {lhs: lhs42}
-//│ 		E23_33 :> 1<int,number> <: lhs42
-//│ 		lhs42 :> 1<int,number>
-//│ Add['E]
-//│   where
-//│     'E :> 1
+//│ 		α32 :> (Add<> & {Add#E: mut E23_33..E23_33}) <: {lhs: lhs38}
+//│ 		E23_33 :> 1<int,number> <: lhs38
+//│ 		lhs38 :> 1<int,number>
+//│ Add[1]
 
 
 Add(2, 2)
-//│ Add['E]
-//│   where
-//│     'E :> 2
+//│ Add[2]
 
 
