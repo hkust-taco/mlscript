@@ -499,10 +499,11 @@ class DiffTests
               val vars: Map[Str, typer.SimpleType] = Map.empty
               val tpd = typer.typeTypingUnit(TypingUnit(p.tops), allowPure = true)(ctx.nest, raise, vars)
               
-              tpd.force()(raise)
+              val comp = tpd.force()(raise)
               
               tpd.entities.foreach { e =>
                 e.complete()(raise) match {
+              // comp.entities.foreach {
                   case tf: typer.TypedNuFun =>
                     val sign = typer.PolymorphicType.mk(ctx.lvl, tf.ty)
                     ctx += tf.fd.nme.name -> typer.VarSymbol(sign, tf.fd.nme)
@@ -514,7 +515,6 @@ class DiffTests
                 }
               }
               
-              val exp = typer.expandType(tpd)(ctx)
               // output(exp.toString)
               
               // val sctx = ShowCtx.mk(tpd)
@@ -556,6 +556,17 @@ class DiffTests
                   output("res: " + tpd.result + " where " + res_ty.showBounds)
                 }
               }
+              
+              val sim = if (mode.noSimplification) comp else try {
+                typer.dbg = mode.dbgSimplif
+                object SimplifyPipeline extends typer.SimplifyPipeline {
+                  def debugOutput(msg: => Str): Unit =
+                    if (mode.dbgSimplif) output(msg)
+                }
+                SimplifyPipeline(comp, all = false)(ctx)
+              } finally typer.dbg = false
+              
+              val exp = typer.expandType(sim)(ctx)
               
               output(exp.show)
               

@@ -10,6 +10,7 @@ mixin Over {
 //│ mixin Over() {
 //│ super: 'super
 //│ this: 'this
+//│ fun p: "hi"
 //│ }
 
 
@@ -21,22 +22,16 @@ class Base1(p: int): Over {
 //│ class Base1(p: int) {
 //│ this: 'this
 //│ fun p: "hi"
-//│ fun test: (int, 'p,)
+//│ fun test: (int, "hi" | 'p,)
 //│ }
 //│   where
-//│     'p :> 'p0
 //│     'this :> Base1
-//│           <: {p: 'p0}
-//│     'p0 :> "hi"
+//│           <: {p: 'p}
 
 
 Base1(123).test
 //│ 
-//│ 'test
-//│   where
-//│     'test :> (int, 'p,)
-//│     'p :> 'p0
-//│     'p0 :> "hi"
+//│ (int, "hi",)
 //│ Typed: (int, "hi",)
 
 // TODO

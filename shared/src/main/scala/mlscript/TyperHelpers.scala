@@ -735,8 +735,12 @@ abstract class TyperHelpers { Typer: Typer =>
   trait TypeLikeImpl { self: TypeLike =>
     
     def childrenPol(pol: PolMap)(implicit ctx: Ctx): List[PolMap -> SimpleType] = {
-      def childrenPolField(fld: FieldType): List[PolMap -> SimpleType] =
+      def childrenPolField(pol: PolMap)(fld: FieldType): List[PolMap -> SimpleType] =
         fld.lb.map(pol.contravar -> _).toList ::: pol.covar -> fld.ub :: Nil
+      def childrenPolMem(m: NuMember): List[PolMap -> SimpleType] = m match {
+        case NuParam(nme, ty, isType) => childrenPolField(PolMap.pos)(ty) // TODO invariant when mutable
+        case TypedNuFun(level, fd, ty) => pol -> ty :: Nil
+      }
       this match {
         case tv @ AssignedVariable(ty) =>
           pol -> ty :: Nil
@@ -746,10 +750,10 @@ abstract class TyperHelpers { Typer: Typer =>
         case FunctionType(l, r) => pol.contravar -> l :: pol.covar -> r :: Nil
         case Overload(as) => as.map(pol -> _)
         case ComposedType(_, l, r) => pol -> l :: pol -> r :: Nil
-        case RecordType(fs) => fs.unzip._2.flatMap(childrenPolField)
-        case TupleType(fs) => fs.unzip._2.flatMap(childrenPolField)
-        case ArrayType(fld) => childrenPolField(fld)
-        case SpliceType(elems) => elems flatMap {case L(l) => pol -> l :: Nil case R(r) => childrenPolField(r)}
+        case RecordType(fs) => fs.unzip._2.flatMap(childrenPolField(pol))
+        case TupleType(fs) => fs.unzip._2.flatMap(childrenPolField(pol))
+        case ArrayType(fld) => childrenPolField(pol)(fld)
+        case SpliceType(elems) => elems flatMap {case L(l) => pol -> l :: Nil case R(r) => childrenPolField(pol)(r)}
         case NegType(n) => pol.contravar -> n :: Nil
         case ExtrType(_) => Nil
         case ProxyType(und) => pol -> und :: Nil
@@ -760,6 +764,23 @@ abstract class TyperHelpers { Typer: Typer =>
         case PolymorphicType(_, und) => pol -> und :: Nil
         case ConstrainedType(cs, bod) =>
           cs.flatMap(vbs => PolMap.pos -> vbs._1 :: PolMap.posAtNeg -> vbs._2 :: Nil) ::: pol -> bod :: Nil
+        case OtherTypeLike(tu) =>
+          // tu.entities.flatMap(_.childrenPol) ::: tu.result.toList
+          val ents = tu.entities.flatMap {
+            case tf: TypedNuFun =>
+              PolMap.pos -> tf.ty :: Nil
+            case mxn: TypedNuMxn =>
+              mxn.members.valuesIterator.flatMap(childrenPolMem) ++
+                S(pol.invar -> mxn.superTV) ++
+                S(pol.invar -> mxn.thisTV)
+            case cls: TypedNuCls =>
+              cls.tparams.iterator.map(PolMap.neu -> _._2) ++
+              // cls.params.flatMap(p => childrenPolField(pol.invar)(p._2))
+                cls.params.flatMap(p => childrenPolField(PolMap.pos)(p._2)) ++
+                cls.members.valuesIterator.flatMap(childrenPolMem) ++
+                S(pol.invar -> cls.thisTy)
+          }
+          ents ::: tu.result.toList.map(pol -> _)
     }}
     
     def getVarsPol(pol: PolMap)(implicit ctx: Ctx): SortedMap[TypeVariable, Opt[Bool]] = {
@@ -900,6 +921,23 @@ abstract class TyperHelpers { Typer: Typer =>
   class Traverser2(implicit ctx: Ctx) {
     def applyLike(pol: PolMap)(ty: TypeLike): Unit = ty match {
       case ty: ST => apply(pol)(ty)
+      case OtherTypeLike(tu) =>
+        tu.entities.foreach(applyMem(pol))
+        tu.result.foreach(apply(pol))
+    }
+    def applyMem(pol: PolMap)(m: NuMember): Unit = m match {
+      case TypedNuCls(level, td, ttu, tparams, params, members, thisTy) =>
+        tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
+        params.foreach(p => applyField(pol)(p._2))
+        members.valuesIterator.foreach(applyMem(pol))
+        // thisTy.foreach(apply(pol.invar)(_))
+        apply(pol.invar)(thisTy)
+      case TypedNuMxn(td, thisTV, superTV, members, ttu) =>
+        members.valuesIterator.foreach(applyMem(pol))
+        apply(pol.invar)(thisTV)
+        apply(pol.invar)(superTV)
+      case NuParam(nme, ty, isType) => applyField(pol)(ty)
+      case TypedNuFun(level, fd, ty) => apply(pol)(ty)
     }
     def apply(pol: PolMap)(st: ST): Unit = st match {
       case tv @ AssignedVariable(ty) => apply(pol)(ty)

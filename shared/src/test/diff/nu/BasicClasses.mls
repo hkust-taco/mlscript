@@ -13,72 +13,47 @@ class A(n: int)
 
 let a = A(42)
 //│ 
-//│ let a: 'a
-//│   where
-//│     'a :> A
+//│ let a: A
 
 
 fun f(x: A) = x.n
 //│ 
-//│ fun f: (x: A,) -> 'n
-//│   where
-//│     'n :> int
+//│ fun f: (x: A,) -> int
 
 fun f(x: A) = if x is A then x.n
 //│ 
-//│ fun f: (x: A,) -> 'n
-//│   where
-//│     'n :> int
+//│ fun f: (x: A,) -> int
 
-// FIXedME no bounds on 'n...
 fun f(x: A | 'b) = if x is A then x.n else 0
 //│ 
-//│ fun f: (x: (A | 'b,),) -> ('n | 0)
-//│   where
-//│     'n :> int
+//│ fun f: (x: (anything,),) -> (int | 0)
 
 
 fun f(x) = x.n
 //│ 
-//│ fun f: 'a -> 'n
-//│   where
-//│     'a <: {n: 'n}
+//│ fun f: {n: 'n} -> 'n
 
 f(a)
 //│ 
-//│ 'a
-//│   where
-//│     'a :> int
+//│ int
 //│ Typed: int
 
 fun f(x) = if x is A then x.n
 //│ 
-//│ fun f: 'a -> 'n
-//│   where
-//│     'n :> int
-//│     'a <: A
+//│ fun f: A -> int
 
 f(a)
 //│ 
-//│ 'a
-//│   where
-//│     'a :> forall 'n. 'n
-//│     'n :> int
+//│ int
 //│ Typed: int
 
 fun f(x) = if x is A then x.n else 0
 //│ 
-//│ fun f: 'a -> ('n | 0)
-//│   where
-//│     'n :> int
-//│     'a <: A | 'b & ~A
+//│ fun f: anything -> (int | 0)
 
 f(a)
 //│ 
-//│ 'a
-//│   where
-//│     'a :> forall 'n. 'n | 0
-//│     'n :> int
+//│ int | 0
 //│ Typed: int
 
 
@@ -90,8 +65,8 @@ class C {
 //│ 
 //│ class C() {
 //│ this: 'this
-//│ fun const: 'a -> 'b -> 'b
-//│ fun id: 'b -> 'b
+//│ fun const: anything -> 'a -> 'a
+//│ fun id: 'a -> 'a
 //│ }
 //│   where
 //│     'this :> C
@@ -104,29 +79,16 @@ class Base0(n) {
   fun oops = this.my
 }
 //│ 
-//│ class Base0(n: 'n) {
+//│ class Base0(n: nothing) {
 //│ this: 'this
 //│ fun me: 'this
-//│ fun mine: 'n0
-//│ fun my: 'n0
+//│ fun mine: 'n
+//│ fun my: 'n
 //│ fun oops: 'my
 //│ }
 //│   where
-//│     'my :> 'my0
-//│         <: 'oops
-//│     'oops :> 'my0
-//│     'n0 :> 'n1
-//│         <: 'mine & 'my1
-//│     'my1 :> 'n1
-//│     'mine :> 'n1
 //│     'this :> Base0
-//│           <: {my: 'my0} & {n: 'n1}
-//│     'n1 :> 'n2
-//│     'my0 :> 'n3
-//│     'n3 :> 'n4
-//│         <: 'mine0 & 'my2
-//│     'my2 :> 'n4
-//│     'mine0 :> 'n4
+//│           <: {my: 'my, n: 'n}
 
 // :d
 // Base0
@@ -134,32 +96,25 @@ class Base0(n) {
 
 let b1 = Base0(42)
 //│ 
-//│ let b1: 'a
-//│   where
-//│     'a :> Base0
+//│ let b1: Base0
 
 // :d
 let n1 = b1.n
 //│ 
-//│ let n1: 'n
+//│ let n1: nothing
 
 // TODO
 n1 + 1
 //│ 
-//│ 'a
-//│   where
-//│     'a :> int
+//│ int
 //│ Typed: int
 
 
 let b2 = Base0("hi")
 let n2 = b2.n
 //│ 
-//│ let b2: 'a
-//│ let n2: 'n
-//│   where
-//│     'a :> Base0
-//│        <: {n: 'n}
+//│ let b2: Base0
+//│ let n2: nothing
 
 
 
@@ -171,20 +126,13 @@ class Base1(base: int) {
 //│ 
 //│ class Base1(base: int) {
 //│ this: 'this
-//│ fun foo: 'a -> 'b
+//│ fun foo: int -> int
 //│ fun getBase1: int
-//│ fun getBase2: 'base
+//│ fun getBase2: int | 'base
 //│ }
 //│   where
-//│     'base :> 'base0
-//│           <: 'getBase2
-//│     'getBase2 :> 'base0
-//│     'b :> int
-//│     'a <: int
 //│     'this :> Base1
-//│           <: {base: 'base1} & {base: 'base0}
-//│     'base0 :> int
-//│     'base1 := int
+//│           <: {base: 'base & int}
 
 class Base1(base: int) {
   fun getBase1 = base
@@ -194,13 +142,11 @@ class Base1(base: int) {
 //│ 
 //│ class Base1(base: int) {
 //│ this: 'this
-//│ fun foo: 'a -> 'b
+//│ fun foo: int -> int
 //│ fun getBase1: int
 //│ fun me: 'this
 //│ }
 //│   where
-//│     'b :> int
-//│     'a <: int
 //│     'this :> Base1
 
 Base1
@@ -210,41 +156,31 @@ Base1
 
 let b = Base1(1)
 //│ 
-//│ let b: 'a
-//│   where
-//│     'a :> Base1
+//│ let b: Base1
 
 b.base
 //│ 
-//│ 'base
-//│   where
-//│     'base :> int
+//│ int
 //│ Typed: int
 
 b.getBase1
 //│ 
-//│ 'getBase1
-//│   where
-//│     'getBase1 :> int
+//│ int
 //│ Typed: int
 
 // :d
 b.me
 //│ 
-//│ 'me
-//│   where
-//│     'me :> Base1
+//│ Base1
 //│ Typed: Base1
 
 :e
 b.getBaseTypo
 //│ ╔══[ERROR] class `Base1` does not contain member `getBaseTypo`
-//│ ║  l.240: 	b.getBaseTypo
+//│ ║  l.178: 	b.getBaseTypo
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ 
-//│ 'getBaseTypo
-//│   where
-//│     'getBaseTypo :> error
+//│ error
 //│ Typed: error
 
 
@@ -259,23 +195,19 @@ class Rec(n) {
   fun go = Rec(n + 1)
 }
 //│ ╔══[ERROR] Cyclic definition
-//│ ║  l.258: 	class Rec(n) {
+//│ ║  l.194: 	class Rec(n) {
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.259: 	  fun go = Rec(n + 1)
+//│ ║  l.195: 	  fun go = Rec(n + 1)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.260: 	}
+//│ ║  l.196: 	}
 //│ ╙──       	^
 //│ 
-//│ class Rec(n: 'n) {
+//│ class Rec(n: nothing) {
 //│ this: 'this
-//│ fun go: 'a
+//│ fun go: error
 //│ }
 //│   where
-//│     'a :> error
-//│        <: 'go
-//│     'go :> error
 //│     'this :> Rec
-//│     'n <: int
 
 
 
@@ -286,16 +218,16 @@ class Annots(base: 0 | 1) {
   fun a = base
 }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.285: 	  a: int
+//│ ║  l.217: 	  a: int
 //│ ║         	  ^
 //│ ╟── type `(0 | 1,)` is not an instance of type `int`
-//│ ║  l.284: 	class Annots(base: 0 | 1) {
+//│ ║  l.216: 	class Annots(base: 0 | 1) {
 //│ ║         	                   ^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.285: 	  a: int
+//│ ║  l.217: 	  a: int
 //│ ║         	  ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.285: 	  a: int
+//│ ║  l.217: 	  a: int
 //│ ╙──       	     ^^^
 //│ 
 //│ class Annots(base: (0 | 1,)) {
@@ -304,6 +236,7 @@ class Annots(base: 0 | 1) {
 //│ }
 //│   where
 //│     'this :> Annots
+
 
 
 

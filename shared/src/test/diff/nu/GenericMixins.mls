@@ -1,0 +1,33 @@
+:NewParser
+:NewDefs
+:NoJS
+
+
+// TODO support
+mixin BaseTest<A> {
+  fun test(x: A) = x
+}
+//│ ╔══[ERROR] type identifier not found: A
+//│ ║  l.8: 	  fun test(x: A) = x
+//│ ╙──     	              ^
+//│ 
+//│ mixin BaseTest[A]() {
+//│ super: 'super
+//│ this: 'this
+//│ fun test: (x: error,) -> error
+//│ }
+
+// TODO support
+mixin BaseTest<A>(x: A) {
+  fun test = x
+}
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.22: 	  fun test = x
+//│ ╙──      	             ^
+//│ 
+//│ mixin BaseTest[A]() {
+//│ super: 'super
+//│ this: 'this
+//│ fun test: error
+//│ }
+

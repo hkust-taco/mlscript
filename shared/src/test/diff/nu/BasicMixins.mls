@@ -11,6 +11,7 @@ mixin BaseTest {
 //│ mixin BaseTest() {
 //│ super: 'super
 //│ this: 'this
+//│ fun test: 'base
 //│ }
 //│   where
 //│     'super <: {base: 'base}
@@ -23,11 +24,12 @@ mixin BaseInc {
 //│ mixin BaseInc() {
 //│ super: 'super
 //│ this: 'this
+//│ fun test: int
+//│ fun test2: 'base
 //│ }
 //│   where
 //│     'this <: {base: 'base}
-//│     'super <: {base: 'base0}
-//│     'base0 <: int
+//│     'super <: {base: int}
 
 // :d
 class Base1(base: int): BaseTest, BaseInc {
@@ -36,82 +38,59 @@ class Base1(base: int): BaseTest, BaseInc {
 //│ 
 //│ class Base1(base: int) {
 //│ this: 'this
-//│ fun test: 'a
-//│ fun test2: 'base
-//│ fun test3: (int, 'base0,)
+//│ fun test: int
+//│ fun test2: int
+//│ fun test3: (int, int | 'base,)
 //│ }
 //│   where
-//│     'base0 :> 'base1
-//│     'base :> 'base2
-//│           <: 'test2
-//│     'test2 :> 'base2
-//│     'base2 :> int
-//│     'a :> int
-//│        <: 'test
-//│     'test :> int
 //│     'this :> Base1
-//│           <: {base: 'base1}
-//│     'base1 :> int
+//│           <: {base: 'base}
 
 Base1(1).test
 //│ 
-//│ 'test
-//│   where
-//│     'test :> int
+//│ int
 //│ Typed: int
 
 Base1(1).test2
 //│ 
-//│ 'test2
-//│   where
-//│     'test2 :> int
+//│ int
 //│ Typed: int
 
 Base1(1).test3
 //│ 
-//│ 'test3
-//│   where
-//│     'test3 :> (int, 'base,)
-//│     'base :> 'base0
-//│     'base0 :> int
+//│ (int, int,)
 //│ Typed: (int, int,)
 
 
 class Base1(base): BaseTest
 //│ 
-//│ class Base1(base: 'base) {
+//│ class Base1(base: nothing) {
 //│ this: 'this
-//│ fun test: 'base0
+//│ fun test: nothing
 //│ }
 //│   where
-//│     'base0 :> 'base1
-//│            <: 'test
-//│     'test :> 'base1
 //│     'this :> Base1
-//│     'base <: 'base1
 
 Base1
 //│ 
-//│ forall 'base 'base0. (base: 'base,) -> Base1
-//│   where
-//│     'base <: 'base0
+//│ (base: anything,) -> Base1
 //│ Typed: (base: anything,) -> Base1
 
 // TODO
 Base1(1).test
 //│ 
-//│ 'test
+//│ nothing
 //│ Typed: nothing
 
 
 :e
 class Base1(x): BaseTest
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.108: 	class Base1(x): BaseTest
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.87: 	class Base1(x): BaseTest
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `{x: ?x}` does not have field 'base'
-//│ ║  l.108: 	class Base1(x): BaseTest
-//│ ║         	           ^^^
+//│ ║  l.87: 	class Base1(x): BaseTest
+//│ ║        	           ^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.8: 	  fun test = super.base
 //│ ║       	             ^^^^^^^^^^
@@ -119,19 +98,16 @@ class Base1(x): BaseTest
 //│ ║  l.8: 	  fun test = super.base
 //│ ╙──     	             ^^^^^
 //│ 
-//│ class Base1(x: 'x) {
+//│ class Base1(x: nothing) {
 //│ this: 'this
-//│ fun test: 'base
+//│ fun test: nothing
 //│ }
 //│   where
-//│     'base :> 'base0
-//│           <: 'test
-//│     'test :> 'base0
 //│     'this :> Base1
 
 Base1
 //│ 
-//│ forall 'x. (x: 'x,) -> Base1
+//│ (x: anything,) -> Base1
 //│ Typed: (x: anything,) -> Base1
 
 
@@ -143,33 +119,23 @@ mixin Foo {
 //│ mixin Foo() {
 //│ super: 'super
 //│ this: 'this
+//│ fun test: (int & 'a) -> (int, 'a, 'misc,)
 //│ }
 //│   where
-//│     'super <: {misc: 'misc} & {base: 'base}
-//│     'base <: int
+//│     'super <: {base: int, misc: 'misc}
 
 module Base1(base: int, misc: string): Foo
 //│ 
 //│ namespace Base1(base: int, misc: string) {
 //│ this: 'this
-//│ fun test: 'a -> ('b, 'a, 'misc,)
+//│ fun test: (int & 'a) -> (int, 'a, string,)
 //│ }
 //│   where
-//│     'misc :> 'misc0
-//│     'misc0 :> string
-//│     'b :> int
-//│     'a <: int
 //│     'this :> Base1
 
 Base1.test
 //│ 
-//│ 'test
-//│   where
-//│     'test :> 'a -> ('b, 'a, 'misc,)
-//│     'misc :> 'misc0
-//│     'misc0 :> string
-//│     'b :> int
-//│     'a <: int
+//│ (int & 'a) -> (int, 'a, string,)
 //│ Typed: (int & 'a) -> (int, 'a, string,)
 
 
@@ -183,6 +149,8 @@ mixin WrapBase {
 //│ mixin WrapBase() {
 //│ super: 'super
 //│ this: 'this
+//│ fun wrap: 'a -> 'a
+//│ fun wrapA: (x: int,) -> int
 //│ }
 
 // :d
@@ -194,11 +162,11 @@ mixin Wrap {
 //│ mixin Wrap() {
 //│ super: 'super
 //│ this: 'this
+//│ fun wrap: 'a -> ('b,)
+//│ fun wrapA: 'c -> ('d,)
 //│ }
 //│   where
-//│     'super <: {wrap: 'wrap} & {wrapA: 'wrapA}
-//│     'wrapA <: 'a -> 'b
-//│     'wrap <: 'c -> 'd
+//│     'super <: {wrap: 'a -> 'b, wrapA: 'c -> 'd}
 
 
 
@@ -207,18 +175,10 @@ module WrapBase1: WrapBase, Wrap
 //│ 
 //│ namespace WrapBase1() {
 //│ this: 'this
-//│ fun wrap: 'a -> ('b,)
-//│ fun wrapA: 'c -> ('d,)
+//│ fun wrap: 'a -> ('a,)
+//│ fun wrapA: int -> (int,)
 //│ }
 //│   where
-//│     'd :> 'e
-//│     'e :> int
-//│     'c <: 'f
-//│     'f <: int
-//│     'b :> 'g
-//│     'a <: 'h
-//│     'h <: 'i
-//│     'i <: 'g
 //│     'this :> WrapBase1
 
 
@@ -230,24 +190,12 @@ WrapBase1
 // :d
 WrapBase1.wrapA
 //│ 
-//│ 'wrapA
-//│   where
-//│     'wrapA :> 'a -> ('b,)
-//│     'b :> 'c
-//│     'c :> int
-//│     'a <: 'd
-//│     'd <: int
+//│ int -> (int,)
 //│ Typed: int -> (int,)
 
 WrapBase1.wrap
 //│ 
-//│ 'wrap
-//│   where
-//│     'wrap :> 'a -> ('b,)
-//│     'b :> 'c
-//│     'a <: 'd
-//│     'd <: 'e
-//│     'e <: 'c
+//│ 'a -> ('a,)
 //│ Typed: 'a -> ('a,)
 
 // :d
@@ -256,52 +204,36 @@ WrapBase1.wrap
 
 WrapBase1.wrap(1)
 //│ 
-//│ 'a
-//│   where
-//│     'a :> ('b,)
-//│     'b :> 'c
-//│     'c :> 1
+//│ (1,)
 //│ Typed: (1,)
 
 WrapBase1.wrap("ok")
 //│ 
-//│ 'a
-//│   where
-//│     'a :> ('b,)
-//│     'b :> 'c
-//│     'c :> "ok"
+//│ ("ok",)
 //│ Typed: ("ok",)
 
 
 WrapBase1.wrapA(1)
 //│ 
-//│ 'a
-//│   where
-//│     'a :> ('b,)
-//│     'b :> 'c
-//│     'c :> int
+//│ (int,)
 //│ Typed: (int,)
 
 :e
 WrapBase1.wrapA("ok")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.286: 	WrapBase1.wrapA("ok")
+//│ ║  l.222: 	WrapBase1.wrapA("ok")
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"ok"` is not an instance of type `int`
-//│ ║  l.286: 	WrapBase1.wrapA("ok")
+//│ ║  l.222: 	WrapBase1.wrapA("ok")
 //│ ║         	                ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.179: 	  fun wrapA(x: int) = x : int
+//│ ║  l.145: 	  fun wrapA(x: int) = x : int
 //│ ║         	               ^^^
 //│ ╟── from reference:
-//│ ║  l.190: 	  fun wrapA(x) = [super.wrapA(x)]
+//│ ║  l.158: 	  fun wrapA(x) = [super.wrapA(x)]
 //│ ╙──       	                              ^
 //│ 
-//│ 'a
-//│   where
-//│     'a :> ('b,) | error
-//│     'b :> 'c
-//│     'c :> int
+//│ error | (int,)
 //│ Typed: (int,) | error
 
 
@@ -310,71 +242,23 @@ module WrapBase2: WrapBase, Wrap, Wrap, Wrap
 //│ 
 //│ namespace WrapBase2() {
 //│ this: 'this
-//│ fun wrap: 'a -> ('b,)
-//│ fun wrapA: 'c -> ('d,)
+//│ fun wrap: 'a -> ((('a,),),)
+//│ fun wrapA: int -> (((int,),),)
 //│ }
 //│   where
-//│     'd :> 'e
-//│     'e :> ('f,)
-//│     'f :> 'g
-//│     'g :> ('h,)
-//│     'h :> 'i
-//│     'i :> int
-//│     'c <: 'j
-//│     'j <: 'k
-//│     'k <: 'l
-//│     'l <: 'm
-//│     'm <: 'n
-//│     'n <: int
-//│     'b :> 'o
-//│     'o :> ('p,)
-//│     'p :> 'q
-//│     'q :> ('r,)
-//│     'r :> 's
-//│     'a <: 't
-//│     't <: 'u
-//│     'u <: 'v
-//│     'v <: 'w
-//│     'w <: 'x
-//│     'x <: 'y
-//│     'y <: 's
 //│     'this :> WrapBase2
 
 let w = WrapBase2.wrap
 //│ 
-//│ let w: 'wrap
-//│   where
-//│     'wrap :> 'a -> ('b,)
-//│     'b :> 'c
-//│     'c :> ('d,)
-//│     'd :> 'e
-//│     'e :> ('f,)
-//│     'f :> 'g
-//│     'a <: 'h
-//│     'h <: 'i
-//│     'i <: 'j
-//│     'j <: 'k
-//│     'k <: 'l
-//│     'l <: 'm
-//│     'm <: 'g
+//│ let w: 'a -> ((('a,),),)
 
 let wd = w(1)
 //│ 
-//│ let wd: 'a
-//│   where
-//│     'a :> ('b,)
-//│     'b :> 'c
-//│     'c :> ('d,)
-//│     'd :> 'e
-//│     'e :> ('f,)
-//│     'f :> 'g
-//│     'g :> 1
+//│ let wd: (((1,),),)
 
 wd._1._1._1 + 1
 //│ 
-//│ 'a
-//│   where
-//│     'a :> int
+//│ int
 //│ Typed: int
 
 

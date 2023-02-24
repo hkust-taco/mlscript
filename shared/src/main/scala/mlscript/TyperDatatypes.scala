@@ -37,7 +37,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   // }
   // case class DeclType() extends SimpleType {
   
-  protected abstract class TypedNuTypeDefBase extends SimpleType
+  protected abstract class TypedNuTypeDefBase
+  // protected abstract class TypedNuTypeDefBase extends SimpleType
   
   // TODO rm level? already in ctx
   class LazyTypeInfo(val level: Int, val decl: NuDecl)(implicit ctx: Ctx, vars: Map[Str, SimpleType]) extends TypeInfo {
@@ -289,7 +290,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     ctx += "super" -> VarSymbol(superTV, Var("super"))
                     // ctx |> { implicit ctx =>
                     val ttu = typeTypingUnit(td.body, allowPure = false)
-                    TypedNuMxn(td, thisTV, superTV, ttu)
+                    val mems = ttu.entities.map(_.complete())
+                    TypedNuMxn(td, thisTV, superTV, mems.map(m => m.name -> m).toMap, ttu)
                     // }
                   }
                 case _ => ???
@@ -492,12 +494,12 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   type TL = TypeLike
   
-  abstract class OtherTypeLike extends TypeLike {
-    this: TypedTypingUnit => def self: TypedTypingUnit = this
+  abstract class OtherTypeLike extends TypeLike { this: CompletedTypingUnit =>
+    def self: CompletedTypingUnit = this
     def unwrapProvs: TypeLike = this
   }
   object OtherTypeLike {
-    def unapply(ot: OtherTypeLike): S[TypedTypingUnit] = S(ot.self)
+    def unapply(ot: OtherTypeLike): S[CompletedTypingUnit] = S(ot.self)
   }
   
   /** A general type form (TODO: rename to AnyType). */

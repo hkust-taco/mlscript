@@ -27,6 +27,13 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
           : NuMember
+    
+    // TODO rm – just use `mapPolMap`
+    def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
+          (implicit ctx: Ctx): NuMember
+    
+    def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
+          (implicit ctx: Ctx): NuMember
   }
   
   
@@ -37,6 +44,13 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
           : NuParam =
       NuParam(nme, ty.freshenAbove(lim, rigidify), isType)
+    
+    def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
+          (implicit ctx: Ctx): NuMember =
+        NuParam(nme, ty.update(t => f(pol.map(!_), t), t => f(pol, t)), isType)
+    def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
+          (implicit ctx: Ctx): NuMember =
+        NuParam(nme, ty.update(t => f(pol.contravar, t), t => f(pol, t)), isType)
   }
   // case class NuTypeParam(nme: TN, ty: FieldType) extends NuMember {
   //   def name: Str = nme.name
@@ -73,6 +87,13 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       freshenAbove(level, rigidify = false).asInstanceOf[TypedNuDecl]
       }
     }
+    def map(f: ST => ST)(implicit ctx: Ctx): TypedNuTermDef =
+      mapPol(N, false)((_, ty) => f(ty)).asInstanceOf[TypedNuTermDef]//TODO
+    def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
+          (implicit ctx: Ctx): TypedNuTermDef
+    def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
+          (implicit ctx: Ctx): TypedNuTermDef
+    // def childrenTypes: Ls[ST]
     /* 
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
@@ -118,13 +139,14 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     // val tparams: Ls[TN -> TV] = Nil // TODO
     override def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV,ST]): TypedNuTypeDef = 
       this match {
-        case m @ TypedNuMxn(td, thisTV, superTV, ttu) =>
+        case m @ TypedNuMxn(td, thisTV, superTV, members, ttu) =>
           // println(">>",m.level)
           // TypedNuMxn(td, thisTV, superTV, ttu.freshenAbove(m.level, rigidify))
           // TypedNuMxn(td, thisTV, superTV, ttu.freshenAbove(lim, rigidify))
           TypedNuMxn(td,
             thisTV.freshenAbove(lim, rigidify).asInstanceOf[TV],
             superTV.freshenAbove(lim, rigidify).asInstanceOf[TV],
+            members.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap,
             ttu.freshenAbove(lim, rigidify))
         case TypedNuCls(level, td, ttu, tps, params, members, thisTy) =>
           println(">>",level,ctx.lvl)
@@ -161,24 +183,56 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     // def freshenAbove(lim: Int, rigidify: Bool)
     //       (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
     //       : TypedNuTypeDef = ???
+    
+    def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
+          (implicit ctx: Ctx): NuMember = ???
+    def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
+          (implicit ctx: Ctx): NuMember = ???
   }
   
   // case class TypedNuCls(nme: TypeName) extends TypedNuTypeDef(Als) with TypedNuTermDef {
   case class TypedNuCls(level: Level, td: NuTypeDef, ttu: TypedTypingUnit,
         tparams: Ls[TN -> TV], params: Ls[Var -> FieldType],
       // members: Map[Str, LazyTypeInfo])
-      members: Map[Str, NuMember], thisTy: ST)
-    extends TypedNuTypeDef(Cls) with TypedNuTermDef {
+      members: Map[Str, NuMember],
+      thisTy: ST
+  ) extends TypedNuTypeDef(Cls) with TypedNuTermDef {
   // case class TypedNuCls(td: NuTypeDef, paramTypes: Ls[ST], ttu: TypedTypingUnit) extends TypedNuTypeDef(Cls) with TypedNuTermDef {
     def nme: TypeName = td.nme
     def name: Str = nme.name
+    
+    def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
+          (implicit ctx: Ctx): TypedNuTermDef =
+        TypedNuCls(level, td, ttu,
+          tparams.map(tp => tp._1 -> f(N, tp._2).asInstanceOf[TV]),
+          // params.mapValues(_.mapPol(pol)(f)),
+          params.mapValues(_.update(t => f(pol.map(!_), t), t => f(pol, t))),
+          members.mapValuesIter(_.mapPol(pol, smart)(f)).toMap,
+          f(N, thisTy).asInstanceOf[TV]
+        )
+    def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
+          (implicit ctx: Ctx): TypedNuTermDef =
+        TypedNuCls(level, td, ttu,
+          tparams.map(tp => tp._1 -> f(pol.invar, tp._2).asInstanceOf[TV]),
+          // params.mapValues(_.mapPol(pol)(f)),
+          params.mapValues(_.update(t => f(pol.contravar, t), t => f(pol, t))),
+          members.mapValuesIter(_.mapPolMap(pol)(f)).toMap,
+          f(pol.invar, thisTy).asInstanceOf[TV]
+        )
   }
   
-  case class TypedNuMxn(td: NuTypeDef, thisTV: ST, superTV: ST, ttu: TypedTypingUnit) extends TypedNuTypeDef(Mxn) with TypedNuTermDef {
+  case class TypedNuMxn(td: NuTypeDef, thisTV: ST, superTV: ST, members: Map[Str, NuMember], ttu: TypedTypingUnit) extends TypedNuTypeDef(Mxn) with TypedNuTermDef {
     val level: Level = thisTV.level - 1 // TODO cleaner
     def nme: TypeName = td.nme
     def name: Str = nme.name
     // def freshen(implicit ctx: Ctx): TypedNuMxn = TypedNuMxn(td, 
+    
+    def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
+          (implicit ctx: Ctx): TypedNuTermDef =
+      TypedNuMxn(td, f(N, thisTV), f(N, superTV), members.mapValuesIter(_.mapPol(pol, smart)(f)).toMap, ttu)
+    def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
+          (implicit ctx: Ctx): TypedNuTermDef =
+      TypedNuMxn(td, f(pol.invar, thisTV), f(pol.invar, superTV), members.mapValuesIter(_.mapPolMap(pol)(f)).toMap, ttu)
   }
   
   /** Note: the type `ty` is stoed *without* its polymorphic wrapper! */
@@ -191,17 +245,35 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         // TypedNuFun(level min ctx.lvl, fd, ty.freshenAbove(level, rigidify))
         TypedNuFun(level min ctx.lvl, fd, ty.freshenAbove(lim, rigidify))
     }
+    
+    def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
+          (implicit ctx: Ctx): TypedNuTermDef =
+      // TypedNuFun(level, fd, ty.mapPol(pol, smart)(f))
+      TypedNuFun(level, fd, f(pol, ty))
+    def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
+          (implicit ctx: Ctx): TypedNuTermDef =
+      TypedNuFun(level, fd, f(pol, ty))
   }
   
-  case class TypedTypingUnit(entities: Ls[LazyTypeInfo], result: Opt[ST]) extends OtherTypeLike {
+  case class CompletedTypingUnit(entities: Ls[TypedNuTermDef], result: Opt[ST]) extends OtherTypeLike {
+    def map(f: ST => ST)(implicit ctx: Ctx): CompletedTypingUnit =
+      CompletedTypingUnit(entities.map(_.map(f)), result.map(f))
+    def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
+          (implicit ctx: Ctx): CompletedTypingUnit =
+      CompletedTypingUnit(entities.map(_.mapPol(pol, smart)(f)), result.map(f(pol, _)))
+    def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
+          (implicit ctx: Ctx): CompletedTypingUnit =
+      CompletedTypingUnit(entities.map(_.mapPolMap(pol)(f)), result.map(f(pol, _)))
+  }
+  case class TypedTypingUnit(entities: Ls[LazyTypeInfo], result: Opt[ST]) /* extends OtherTypeLike */ {
     // def freshen(implicit ctx: Ctx): TypedTypingUnit = ???
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
           : TypedTypingUnit =
       TypedTypingUnit(entities.map(_.map(_.freshenAbove(lim, rigidify).asInstanceOf[TypedNuTermDef]))
         , result.map(_.freshenAbove(lim, rigidify)))
-    def force()(implicit raise: Raise): Unit = {
-      entities.foreach(_.force())
+    def force()(implicit raise: Raise): CompletedTypingUnit = {
+      CompletedTypingUnit(entities.map(_.force()), result)
     }
   }
   

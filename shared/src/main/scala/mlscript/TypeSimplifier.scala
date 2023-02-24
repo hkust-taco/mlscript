@@ -33,6 +33,8 @@ trait TypeSimplifier { self: Typer =>
     
     def processLike(ty: TypeLike): TypeLike = ty match {
       case ty: ST => process(ty, N)
+      case OtherTypeLike(tu) =>
+        tu.map(process(_, N))
     }
     def process(ty: ST, parent: Opt[Bool -> TV], canDistribForall: Opt[Level] = N): ST =
         // trace(s"process($ty) $canDistribForall") {
@@ -793,6 +795,7 @@ trait TypeSimplifier { self: Typer =>
     
     def transformLike(ty: TL, pol: PolMap): TL = ty match {
       case ty: ST => transform(ty, pol, semp)
+      case OtherTypeLike(tu) => tu.mapPolMap(pol)((p,t) => transform(t, p, semp))
     }
     def transform(st: SimpleType, pol: PolMap, parents: Set[TV], canDistribForall: Opt[Level] = N): SimpleType =
           trace(s"transform[${printPol(pol)}] $st   (${parents.mkString(", ")})  $pol  $canDistribForall") {
@@ -1003,8 +1006,9 @@ trait TypeSimplifier { self: Typer =>
     }
     // }(r => s"~> $r")
     
-    def processLike(pol: Opt[Bool], ty: TL): ST = ty match {
+    def processLike(pol: Opt[Bool], ty: TL): TL = ty match {
       case ty: ST => process(pol, ty, N)
+      case OtherTypeLike(tu) => tu.mapPol(pol, smart = true)(process(_, _, N))
     }
     
     processLike(S(pol), st)
@@ -1100,7 +1104,7 @@ trait TypeSimplifier { self: Typer =>
   abstract class SimplifyPipeline {
     def debugOutput(msg: => Str): Unit
     
-    def apply(st: TypeLike)(implicit ctx: Ctx): TypeLike = {
+    def apply(st: TypeLike, all: Bool = true)(implicit ctx: Ctx): TypeLike = {
       var cur = st
       
       cur = removeIrrelevantBounds(cur, inPlace = false)
@@ -1119,7 +1123,7 @@ trait TypeSimplifier { self: Typer =>
       // cur = factorRecursiveTypes_!(cur, approximateRecTypes = false)
       // debugOutput(s"⬤ Factored: ${cur}")
       // debugOutput(s" where: ${cur.showBounds}")
-      
+      if (all) {
       cur = normalizeTypes_!(cur)
       debugOutput(s"⬤ Normalized: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")
@@ -1143,7 +1147,7 @@ trait TypeSimplifier { self: Typer =>
       cur = factorRecursiveTypes_!(cur, approximateRecTypes = false)
       debugOutput(s"⬤ Factored: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")
-      
+      }
       cur
     }
   }

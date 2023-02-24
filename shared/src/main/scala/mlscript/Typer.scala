@@ -1261,16 +1261,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       })
     }
     def goDecl(d: TypedNuDecl): NuDecl = d match {
-      case TypedNuMxn(td, thisTV, superTV, ttu) =>
+      case TypedNuMxn(td, thisTV, superTV, members, ttu) =>
         NuTypeDef(td.kind, td.nme, td.tparams,
           Tup(Nil),
           Nil,//TODO
           S(go(superTV)),
           S(go(thisTV)),
-          mkTypingUnit(thisTV, 
-            // members
-            Map.empty
-          ))
+          // mkTypingUnit(thisTV, 
+          //   // members
+          //   Map.empty
+          // )
+          mkTypingUnit(thisTV, members))
       case TypedNuCls(level, td, ttu, tparams, params, members, thisTy) =>
         NuTypeDef(td.kind, td.nme, td.tparams,
           // Tup(params.map(p => S(p._1) -> Fld(p._2.ub))))
@@ -1289,21 +1290,24 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         // if (bounds.isEmpty) res
         // else Constrained(res, bounds, Nil)
         res
-      case OtherTypeLike(ttu) =>
-        val mems = ttu.entities.map { lti =>
-          lti.result match {
-            // // case S(td: TypedNuTermDef) => ???
-            // case S(TypedNuCls(level, td, ttu, tparams, params, members)) =>
-            //   NuTypeDef(td.kind, td.nme, td.tparams,
-            //     // Tup(params.map(p => S(p._1) -> Fld(p._2.ub))))
-            //     Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub))))),
-            //     Nil,//TODO
-            //     members)
-            case S(d) => goDecl(d)
-            case N => lastWords("Cannot expand uncomputed type info.")
-          }
-        }
-        Signature(mems, ttu.result.map(go))
+      case OtherTypeLike(tu) =>
+        val mems = tu.entities.map(goDecl)
+        Signature(mems, tu.result.map(go))
+      // case OtherTypeLike(ttu) =>
+      //   val mems = ttu.entities.map { lti =>
+      //     lti.result match {
+      //       // // case S(td: TypedNuTermDef) => ???
+      //       // case S(TypedNuCls(level, td, ttu, tparams, params, members)) =>
+      //       //   NuTypeDef(td.kind, td.nme, td.tparams,
+      //       //     // Tup(params.map(p => S(p._1) -> Fld(p._2.ub))))
+      //       //     Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub))))),
+      //       //     Nil,//TODO
+      //       //     members)
+      //       case S(d) => goDecl(d)
+      //       case N => lastWords("Cannot expand uncomputed type info.")
+      //     }
+      //   }
+      //   Signature(mems, ttu.result.map(go))
     }
     
     def go(st: SimpleType): Type =
