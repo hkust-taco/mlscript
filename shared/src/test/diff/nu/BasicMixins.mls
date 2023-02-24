@@ -7,33 +7,27 @@
 mixin BaseTest {
   fun test = super.base
 }
-//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin BaseTest() {fun test = ...},this23',super24',TypedTypingUnit(List(test ~> TypedNuFun(1,fun test = (super).base,base26'')),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
-//│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1259)
-//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1287)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1278)
-//│ 	at: mlscript.Typer.expandType(Typer.scala:1374)
-//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:517)
-//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:963)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
-//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+//│ 
+//│ mixin BaseTest() {
+//│ super: 'super
+//│ this: 'this
+//│ }
+//│   where
+//│     'super <: {base: 'base}
 
 mixin BaseInc {
   fun test = super.base + 1
   fun test2 = this.base
 }
-//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin BaseInc() {fun test = ...; fun test2 = ...},this29',super30',TypedTypingUnit(List(test ~> TypedNuFun(1,fun test = + ((super).base,) (1,),α36''), test2 ~> TypedNuFun(1,fun test2 = (this).base,base37'')),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
-//│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1259)
-//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1287)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1278)
-//│ 	at: mlscript.Typer.expandType(Typer.scala:1374)
-//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:517)
-//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:963)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
-//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+//│ 
+//│ mixin BaseInc() {
+//│ super: 'super
+//│ this: 'this
+//│ }
+//│   where
+//│     'this <: {base: 'base}
+//│     'super <: {base: 'base0}
+//│     'base0 <: int
 
 // :d
 class Base1(base: int): BaseTest, BaseInc {
@@ -113,10 +107,10 @@ Base1(1).test
 :e
 class Base1(x): BaseTest
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.114: 	class Base1(x): BaseTest
+//│ ║  l.108: 	class Base1(x): BaseTest
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `{x: ?x}` does not have field 'base'
-//│ ║  l.114: 	class Base1(x): BaseTest
+//│ ║  l.108: 	class Base1(x): BaseTest
 //│ ║         	           ^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.8: 	  fun test = super.base
@@ -145,17 +139,14 @@ Base1
 mixin Foo {
   fun test(x) = [super.base + x, x, super.misc]
 }
-//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin Foo() {fun test = ...},this187',super188',TypedTypingUnit(List(test ~> TypedNuFun(1,fun test = (x,) => '(' + ((super).base,) (x,), x, (super).misc, ')',(α190'' -> (α194'', α190'', misc195'',)))),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
-//│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1259)
-//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1287)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1278)
-//│ 	at: mlscript.Typer.expandType(Typer.scala:1374)
-//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:517)
-//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:963)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
-//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+//│ 
+//│ mixin Foo() {
+//│ super: 'super
+//│ this: 'this
+//│ }
+//│   where
+//│     'super <: {misc: 'misc} & {base: 'base}
+//│     'base <: int
 
 module Base1(base: int, misc: string): Foo
 //│ 
@@ -188,34 +179,26 @@ mixin WrapBase {
   fun wrapA(x: int) = x : int
   fun wrap(x) = x
 }
-//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin WrapBase() {fun wrapA = ...; fun wrap = ...},this222',super223',TypedTypingUnit(List(wrapA ~> TypedNuFun(1,fun wrapA = (x: int,) => x : int,((x: Int,) -> Int)), wrap ~> TypedNuFun(1,fun wrap = (x,) => x,(α226'' -> α226''))),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
-//│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1259)
-//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1287)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1278)
-//│ 	at: mlscript.Typer.expandType(Typer.scala:1374)
-//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:517)
-//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:963)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
-//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+//│ 
+//│ mixin WrapBase() {
+//│ super: 'super
+//│ this: 'this
+//│ }
 
 // :d
 mixin Wrap {
   fun wrapA(x) = [super.wrapA(x)]
   fun wrap(x) = [super.wrap(x)]
 }
-//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin Wrap() {fun wrapA = ...; fun wrap = ...},this228',super229',TypedTypingUnit(List(wrapA ~> TypedNuFun(1,fun wrapA = (x,) => '(' (super).wrapA (x,), ')',(α232'' -> (α235'',))), wrap ~> TypedNuFun(1,fun wrap = (x,) => '(' (super).wrap (x,), ')',(α238'' -> (α241'',)))),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
-//│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1259)
-//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1287)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1278)
-//│ 	at: mlscript.Typer.expandType(Typer.scala:1374)
-//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:517)
-//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:963)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
-//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+//│ 
+//│ mixin Wrap() {
+//│ super: 'super
+//│ this: 'this
+//│ }
+//│   where
+//│     'super <: {wrap: 'wrap} & {wrapA: 'wrapA}
+//│     'wrapA <: 'a -> 'b
+//│     'wrap <: 'c -> 'd
 
 
 
@@ -302,16 +285,16 @@ WrapBase1.wrapA(1)
 :e
 WrapBase1.wrapA("ok")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.303: 	WrapBase1.wrapA("ok")
+//│ ║  l.286: 	WrapBase1.wrapA("ok")
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"ok"` is not an instance of type `int`
-//│ ║  l.303: 	WrapBase1.wrapA("ok")
+//│ ║  l.286: 	WrapBase1.wrapA("ok")
 //│ ║         	                ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.188: 	  fun wrapA(x: int) = x : int
+//│ ║  l.179: 	  fun wrapA(x: int) = x : int
 //│ ║         	               ^^^
 //│ ╟── from reference:
-//│ ║  l.205: 	  fun wrapA(x) = [super.wrapA(x)]
+//│ ║  l.190: 	  fun wrapA(x) = [super.wrapA(x)]
 //│ ╙──       	                              ^
 //│ 
 //│ 'a

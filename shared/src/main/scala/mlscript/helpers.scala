@@ -117,7 +117,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
         case S(ty) => "\n" + ty.showIn(ctx, 0)
         case N => ""
       })
-    case NuTypeDef(kind, nme, tparams, params, parents, ths, body) =>
+    case NuTypeDef(kind, nme, tparams, params, parents, sup, ths, body) =>
       s"${kind.str} ${nme.name}${tparams.map(_.showIn(ctx, 0))mkStringOr(", ", "[", "]")}(${
         params.fields.map {
           case (N, Fld(_, _, Asc(v: Var, ty))) => v.name + ": " + ty.showIn(ctx, 0)
@@ -127,8 +127,9 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
       })${parents match {
         case Nil => ""
         case ps => ps.mkString(", ") // TODO pp
-      }}${if (body.entities.isEmpty && ths.isEmpty) "" else
-        " {" + ths.fold("")("\nthis: " + _.showIn(ctx, 0)) +
+      }}${if (body.entities.isEmpty && sup.isEmpty && ths.isEmpty) "" else
+        " {" + sup.fold("")("\nsuper: " + _.showIn(ctx, 0)) +
+        ths.fold("")("\nthis: " + _.showIn(ctx, 0)) +
           Signature(body.entities.collect { case d: NuDecl => d }, N).showIn(ctx, 0) + "\n}"
       }"
   }
@@ -151,11 +152,11 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
     case Constrained(b, bs, ws) => b :: bs.flatMap(c => c._1 :: c._2 :: Nil) ::: ws.flatMap(c => c.lb :: c.ub :: Nil)
     case Signature(xs, res) => xs ::: res.toList
     case NuFunDef(isLetRec, nme, targs, rhs) => targs ::: rhs.toOption.toList
-    case NuTypeDef(kind, nme, tparams, params, parents, ths, body) =>
+    case NuTypeDef(kind, nme, tparams, params, parents, sup, ths, body) =>
       // TODO improve this mess
       tparams ::: params.fields.collect {
         case (_, Fld(_, _, Asc(_, ty))) => ty
-      } ::: ths.toList ::: Signature(body.entities.collect {
+      } ::: sup.toList ::: ths.toList ::: Signature(body.entities.collect {
         case d: NuDecl => d
       }, N) :: Nil // TODO parents?
   }
@@ -368,13 +369,13 @@ trait NuDeclImpl extends Located { self: NuDecl =>
   def showDbg: Str = showHead + (this match {
     case NuFunDef(_, _, _, L(_)) => " = "
     case NuFunDef(_, _, _, R(_)) => ": "
-    case NuTypeDef(_, _, _, _, _, _, _) => " "
+    case NuTypeDef(_, _, _, _, _, _, _, _) => " "
   }) + showBody
   def showHead: Str = this match {
     case NuFunDef(N, n, _, b) => s"fun $n"
     case NuFunDef(S(false), n, _, b) => s"let $n"
     case NuFunDef(S(true), n, _, b) => s"let rec $n"
-    case NuTypeDef(k, n, tps, sps, parents, ths, bod) =>
+    case NuTypeDef(k, n, tps, sps, parents, sup, ths, bod) =>
       s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_.name).mkString("‹", ", ", "›")}(${
         // sps.mkString("(",",",")")
         sps})${if (parents.isEmpty) "" else if (k === Als) " = " else ": "}${parents.mkString(", ")}"
@@ -673,9 +674,9 @@ trait StatementImpl extends Located { self: Statement =>
       (diags ::: diags2 ::: diags3) -> (TypeDef(Als, TypeName(v.name).withLocOf(v), targs,
           dataDefs.map(td => AppliedType(td.nme, td.tparams)).reduceOption(Union).getOrElse(Bot), Nil, Nil, Nil
         ).withLocOf(hd) :: cs)
-      case NuTypeDef(Nms, nme, tps, tup @ Tup(fs), pars, ths, unit) =>
+      case NuTypeDef(Nms, nme, tps, tup @ Tup(fs), pars, sup, ths, unit) =>
         ??? // TODO
-      case NuTypeDef(k @ Als, nme, tps, tup @ Tup(fs), pars, ths, unit) =>
+      case NuTypeDef(k @ Als, nme, tps, tup @ Tup(fs), pars, sup, ths, unit) =>
         // TODO properly check:
         require(fs.isEmpty, fs)
         require(pars.size === 1, pars)
@@ -686,7 +687,7 @@ trait StatementImpl extends Located { self: Statement =>
           case R(ty) => Nil -> ty
         }
         diags -> (TypeDef(k, nme, tps, rhs, Nil, Nil, Nil) :: Nil)
-      case NuTypeDef(k @ (Cls | Trt), nme, tps, tup @ Tup(fs), pars, ths, unit) =>
+      case NuTypeDef(k @ (Cls | Trt), nme, tps, tup @ Tup(fs), pars, sup, ths, unit) =>
         val diags = Buffer.empty[Diagnostic]
         def tt(trm: Term): Type = trm.toType match {
           case L(ds) => diags += ds; Top
@@ -819,7 +820,7 @@ trait StatementImpl extends Located { self: Statement =>
     case Where(bod, wh) => bod :: wh
     case Forall(ps, bod) => ps ::: bod :: Nil
     case Inst(bod) => bod :: Nil
-    case NuTypeDef(k, nme, tps, ps, pars, ths, bod) =>
+    case NuTypeDef(k, nme, tps, ps, pars, sup, ths, bod) =>
       nme :: tps ::: ps :: pars ::: ths.toList ::: bod :: Nil
   }
   

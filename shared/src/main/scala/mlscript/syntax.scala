@@ -178,6 +178,7 @@ final case class NuTypeDef(
   tparams: Ls[TypeName],
   params: Tup, // the specialized parameters for that type
   parents: Ls[Term],
+  superAnnot: Opt[Type],
   thisAnnot: Opt[Type],
   body: TypingUnit
 ) extends NuDecl with Statement

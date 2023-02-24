@@ -51,17 +51,17 @@ mixin EvalBase {
       Lit(n) then n: int
       Add(l, r) then this.eval(l) + this.eval(r)
 }
-//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin EvalBase() {fun eval = ...},this56',super57',TypedTypingUnit(List(eval ~> TypedNuFun(1,fun eval = (e,) => {if e is ‹(Lit (n,)) then n : int; (Add (l, r,)) then + ((this).eval (l,),) ((this).eval (r,),)›},(α59'' -> (Int | α82'')))),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
-//│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1259)
-//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1287)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1278)
-//│ 	at: mlscript.Typer.expandType(Typer.scala:1374)
-//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:517)
-//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:963)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
-//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+//│ 
+//│ mixin EvalBase() {
+//│ super: 'super
+//│ this: 'this
+//│ }
+//│   where
+//│     'this <: {eval: 'eval} & {eval: 'eval0}
+//│     'eval0 <: 'lhs -> 'a
+//│     'a <: int
+//│     'eval <: 'rhs -> 'b
+//│     'b <: int
 
 
 module TestLang: EvalBase
@@ -132,17 +132,17 @@ mixin EvalNeg {
     if e is Neg(d) then 0 - this.eval(d)
     else super.eval(e)
 }
-//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin EvalNeg() {fun eval = ...},this154',super155',TypedTypingUnit(List(eval ~> TypedNuFun(1,fun eval = (e,) => {if (is (e,) (Neg (d,),)) then - (0,) ((this).eval (d,),) else (super).eval (e,)},(α157'' -> (α169'' | α173'')))),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
-//│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1259)
-//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1287)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.Typer.goLike$1(Typer.scala:1278)
-//│ 	at: mlscript.Typer.expandType(Typer.scala:1374)
-//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:517)
-//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:963)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
-//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+//│ 
+//│ mixin EvalNeg() {
+//│ super: 'super
+//│ this: 'this
+//│ }
+//│   where
+//│     'this <: {eval: 'eval}
+//│     'eval <: 'expr -> 'a
+//│     'a <: int
+//│     'super <: {eval: 'eval0}
+//│     'eval0 <: 'b -> 'c
 
 
 module TestLang: EvalBase, EvalNeg
