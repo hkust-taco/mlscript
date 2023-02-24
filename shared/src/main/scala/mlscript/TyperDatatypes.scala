@@ -487,9 +487,11 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       body.fold(PolymorphicType(MinLevel, errType))(b => PolymorphicType(level, ProvType(b._2)(prov)))
   }
   
-  sealed abstract class TypeLike {
+  sealed abstract class TypeLike extends TypeLikeImpl {
     def unwrapProvs: TypeLike
   }
+  type TL = TypeLike
+  
   abstract class OtherTypeLike extends TypeLike {
     this: TypedTypingUnit => def self: TypedTypingUnit = this
     def unwrapProvs: TypeLike = this

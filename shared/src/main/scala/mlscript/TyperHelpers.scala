@@ -79,6 +79,9 @@ abstract class TyperHelpers { Typer: Typer =>
   def subst(ts: PolymorphicType, map: Map[SimpleType, SimpleType]): PolymorphicType = 
     PolymorphicType(ts.polymLevel, subst(ts.body, map))
 
+  def substLike(ty: TL, map: Map[SimpleType, SimpleType], substInMap: Bool): TL = ty match {
+    case ty: ST => subst(ty, map, substInMap)
+  }
   def subst(st: SimpleType, map: Map[SimpleType, SimpleType], substInMap: Bool = false)
         (implicit cache: MutMap[TypeVariable, SimpleType] = MutMap.empty): SimpleType =
             // trace(s"subst($st)") {
@@ -684,6 +687,53 @@ abstract class TyperHelpers { Typer: Typer =>
           cs.flatMap(vbs => S(true) -> vbs._1 :: S(false) -> vbs._2 :: Nil) ::: pol -> bod :: Nil
     }}
     
+    /** (exclusive, inclusive) */
+    def varsBetween(lb: Level, ub: Level): Set[TV] = {
+      val res = MutSet.empty[TypeVariable]
+      val traversed = MutSet.empty[TypeVariable]
+      def go(ty: ST, lb: Level, ub: Level): Unit =
+          if (lb < ub && ty.level > lb) { // * Don't traverse types with lower levels
+        // trace(s"varsBetween($ty, $lb, $ub)") {
+        ty match {
+          case tv: TypeVariable =>
+            if (traversed(tv)) ()
+            else {
+              traversed += tv
+              if (tv.level > lb && tv.level <= ub) {
+                // println(s"ADD $tv")
+                res += tv
+              }
+              tv.children(includeBounds = true) // * Note: `children` deals with `assignedTo`
+                .foreach(go(_, lb, ub))
+            }
+          case pt: PolymorphicType =>
+            go(pt.body, lb, pt.polymLevel min ub)
+          case ty =>
+            ty.children(includeBounds = true) // * Q: is `includeBounds` useful here?
+              .foreach(go(_, lb, ub))
+        }
+        // }()
+      }
+      go(this, lb, ub)
+      res.toSet
+    }
+    
+    def expPos(implicit ctx: Ctx): mlscript.TypeLike = exp(S(true), this)
+    def expNeg(implicit ctx: Ctx): mlscript.TypeLike = exp(S(false), this)
+    def exp(pol: Opt[Bool], ty: ST)(implicit ctx: Ctx): mlscript.TypeLike = (
+      ty
+      // |> (_.normalize(false))
+      // |> (simplifyType(_, pol, removePolarVars = false, inlineBounds = false))
+      // |> (shallowCopy)
+      |> (subst(_, Map.empty)) // * Make a copy of the type and its TV graph – although we won't show the TV bounds, we still care about the bounds as they affect class type reconstruction in normalizeTypes_!
+      |> (normalizeTypes_!(_, pol)(ctx))
+      |> (expandType(_, stopAtTyVars = true))
+    )
+    
+  }
+  
+  trait TypeLikeImpl { self: TypeLike =>
+    
     def childrenPol(pol: PolMap)(implicit ctx: Ctx): List[PolMap -> SimpleType] = {
       def childrenPolField(fld: FieldType): List[PolMap -> SimpleType] =
         fld.lb.map(pol.contravar -> _).toList ::: pol.covar -> fld.ub :: Nil
@@ -715,7 +765,7 @@ abstract class TyperHelpers { Typer: Typer =>
     def getVarsPol(pol: PolMap)(implicit ctx: Ctx): SortedMap[TypeVariable, Opt[Bool]] = {
       val res = MutMap.empty[TV, Pol]
       val traversed = MutSet.empty[TV -> Bool]
-      def go(pol: PolMap)(ty: ST): Unit = {
+      def go(pol: PolMap)(ty: TypeLike): Unit = {
         // trace(s"getVarsPol[${printPol(pol.base)}] $ty ${pol(1)}") {
         // trace(s"getVarsPol[${printPol(pol.base)}] $ty ${pol}") {
         ty match {
@@ -776,7 +826,7 @@ abstract class TyperHelpers { Typer: Typer =>
     
     def getVars: SortedSet[TypeVariable] = {
       val res = MutSet.empty[TypeVariable]
-      @tailrec def rec(queue: List[SimpleType]): Unit = queue match {
+      @tailrec def rec(queue: List[TypeLike]): Unit = queue match {
         case (tv: TypeVariable) :: tys =>
           if (res(tv)) rec(tys)
           else { res += tv; rec(tv.children(includeBounds = true) ::: tys) }
@@ -787,37 +837,6 @@ abstract class TyperHelpers { Typer: Typer =>
       SortedSet.from(res)(Ordering.by(_.uid))
     }
     
-    /** (exclusive, inclusive) */
-    def varsBetween(lb: Level, ub: Level): Set[TV] = {
-      val res = MutSet.empty[TypeVariable]
-      val traversed = MutSet.empty[TypeVariable]
-      def go(ty: ST, lb: Level, ub: Level): Unit =
-          if (lb < ub && ty.level > lb) { // * Don't traverse types with lower levels
-        // trace(s"varsBetween($ty, $lb, $ub)") {
-        ty match {
-          case tv: TypeVariable =>
-            if (traversed(tv)) ()
-            else {
-              traversed += tv
-              if (tv.level > lb && tv.level <= ub) {
-                // println(s"ADD $tv")
-                res += tv
-              }
-              tv.children(includeBounds = true) // * Note: `children` deals with `assignedTo`
-                .foreach(go(_, lb, ub))
-            }
-          case pt: PolymorphicType =>
-            go(pt.body, lb, pt.polymLevel min ub)
-          case ty =>
-            ty.children(includeBounds = true) // * Q: is `includeBounds` useful here?
-              .foreach(go(_, lb, ub))
-        }
-        // }()
-      }
-      go(this, lb, ub)
-      res.toSet
-    }
-    
     def showBounds: String =
       getVars.iterator.filter(tv => tv.assignedTo.nonEmpty || (tv.upperBounds ++ tv.lowerBounds).nonEmpty).map {
       case tv @ AssignedVariable(ty) => "\n\t\t" + tv.toString + " := " + ty
@@ -825,18 +844,6 @@ abstract class TyperHelpers { Typer: Typer =>
           + (if (tv.lowerBounds.isEmpty) "" else " :> " + tv.lowerBounds.mkString(" | "))
           + (if (tv.upperBounds.isEmpty) "" else " <: " + tv.upperBounds.mkString(" & ")))
       }.mkString
-    
-    def expPos(implicit ctx: Ctx): mlscript.TypeLike = exp(S(true), this)
-    def expNeg(implicit ctx: Ctx): mlscript.TypeLike = exp(S(false), this)
-    def exp(pol: Opt[Bool], ty: ST)(implicit ctx: Ctx): mlscript.TypeLike = (
-      ty
-      // |> (_.normalize(false))
-      // |> (simplifyType(_, pol, removePolarVars = false, inlineBounds = false))
-      // |> (shallowCopy)
-      |> (subst(_, Map.empty)) // * Make a copy of the type and its TV graph – although we won't show the TV bounds, we still care about the bounds as they affect class type reconstruction in normalizeTypes_!
-      |> (normalizeTypes_!(_, pol)(ctx))
-      |> (expandType(_, stopAtTyVars = true))
-    )
     
   }
   
@@ -891,6 +898,9 @@ abstract class TyperHelpers { Typer: Typer =>
   }
   
   class Traverser2(implicit ctx: Ctx) {
+    def applyLike(pol: PolMap)(ty: TypeLike): Unit = ty match {
+      case ty: ST => apply(pol)(ty)
+    }
     def apply(pol: PolMap)(st: ST): Unit = st match {
       case tv @ AssignedVariable(ty) => apply(pol)(ty)
       case tv: TypeVariable =>
