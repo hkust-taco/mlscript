@@ -157,7 +157,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             tps.mapValues(_.freshenAbove(lim, rigidify).asInstanceOf[TV]),
             params.mapValues(_.freshenAbove(lim, rigidify)),
             members.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap,
-            thisTy.freshenAbove(lim, rigidify))(cls.instanceType)
+            thisTy.freshenAbove(lim, rigidify))(
+              cls.instanceType.freshenAbove(lim, rigidify))
         // case _ => ???
       // }
       }
@@ -197,11 +198,52 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       members: Map[Str, NuMember],
       thisTy: ST
   )(
-    val instanceType: ST, // only meant to be used in `force`
+    val instanceType: ST, // only meant to be used in `force` and `variances`
   ) extends TypedNuTypeDef(Cls) with TypedNuTermDef {
   // case class TypedNuCls(td: NuTypeDef, paramTypes: Ls[ST], ttu: TypedTypingUnit) extends TypedNuTypeDef(Cls) with TypedNuTermDef {
     def nme: TypeName = td.nme
     def name: Str = nme.name
+    
+    private var _variances: Opt[VarianceStore] = N
+    def variances(implicit ctx: Ctx): VarianceStore = {
+      _variances match {
+        case S(res) => res
+        case N =>
+          // CompletedTypingUnit(this :: Nil, N).childrenPol(PolMap.pos)
+          
+          // val vars = CompletedTypingUnit(this :: Nil, N).getVarsPol(PolMap.pos)
+          // MutMap.from(vars.iterator.mapValues {
+          //   case S(true) => VarianceInfo.co
+          //   case S(false) => VarianceInfo.contra
+          //   case N => VarianceInfo.in
+          // })
+          
+          val store = VarianceStore.empty
+          object Trav extends Traverser2.InvariantFields {
+            override def apply(pol: PolMap)(ty: ST): Unit =
+                trace(s"Trav($pol)($ty)") {
+                ty match {
+              case tv: TypeVariable =>
+                store(tv) = store.getOrElse(tv, VarianceInfo.bi) && (pol(tv) match {
+                  case S(true) => VarianceInfo.co
+                  case S(false) => VarianceInfo.contra
+                  case N => VarianceInfo.in
+                })
+                super.apply(pol)(ty)
+              case ty @ RecordType(fs) =>
+                // Ignore type param members such as `C#A` in `{C#A: mut A30'..A30'}`
+                super.apply(pol)(RecordType(fs.filterNot(_._1.name.contains('#')))(ty.prov))
+              case _ => super.apply(pol)(ty)
+            }
+            }()
+          }
+          // Trav.applyLike(PolMap.pos)(CompletedTypingUnit(this :: Nil, N))
+          Trav(PolMap.pos)(instanceType)
+          // println(store)
+          store
+          
+      }
+    }
     
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTermDef =
@@ -211,7 +253,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           params.mapValues(_.update(t => f(pol.map(!_), t), t => f(pol, t))),
           members.mapValuesIter(_.mapPol(pol, smart)(f)).toMap,
           f(pol.map(!_), thisTy)//.asInstanceOf[TV]
-        )(instanceType)
+        )(f(pol, instanceType))
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTermDef =
         TypedNuCls(level, td, ttu,
@@ -220,7 +262,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           params.mapValues(_.update(t => f(pol.contravar, t), t => f(pol, t))),
           members.mapValuesIter(_.mapPolMap(pol)(f)).toMap,
           f(pol.contravar, thisTy)//.asInstanceOf[TV]
-        )(instanceType)
+        )(f(pol, instanceType))
   }
   
   case class TypedNuMxn(td: NuTypeDef, thisTV: ST, superTV: ST, members: Map[Str, NuMember], ttu: TypedTypingUnit) extends TypedNuTypeDef(Mxn) with TypedNuTermDef {

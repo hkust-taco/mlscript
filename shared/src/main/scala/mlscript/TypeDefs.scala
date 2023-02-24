@@ -795,4 +795,6 @@ class TypeDefs extends NuTypeDefs { self: Typer =>
   }
   
   type VarianceStore = MutMap[TypeVariable, VarianceInfo]
+  object VarianceStore { def empty: VarianceStore = MutMap.empty }
+  
 }

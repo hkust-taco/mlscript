@@ -22,6 +22,7 @@ trait TypeSimplifier { self: Typer =>
     val _ctx = ctx
     
     val allVarPols = ty.getVarsPol(PolMap(pol))
+    println("!!"+ty.childrenPol(PolMap(pol)))
     println(s"allVarPols: ${printPols(allVarPols)}")
     
     val renewed = MutMap.empty[TypeVariable, TypeVariable]

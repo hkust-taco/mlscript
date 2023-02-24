@@ -559,6 +559,7 @@ class DiffTests
                 }
               }
               
+              val oldDbg = typer.dbg
               val sim = if (mode.noSimplification) comp else try {
                 typer.dbg = mode.dbgSimplif
                 object SimplifyPipeline extends typer.SimplifyPipeline {
@@ -566,7 +567,7 @@ class DiffTests
                     if (mode.dbgSimplif) output(msg)
                 }
                 SimplifyPipeline(comp, all = false)(ctx)
-              } finally typer.dbg = false
+              } finally typer.dbg = oldDbg
               
               val exp = typer.expandType(sim)(ctx)
               

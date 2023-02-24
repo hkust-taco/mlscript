@@ -678,7 +678,9 @@ abstract class TyperHelpers { Typer: Typer =>
         case NegType(n) => pol.map(!_) -> n :: Nil
         case ExtrType(_) => Nil
         case ProxyType(und) => pol -> und :: Nil
-        case _: TypeTag => Nil
+        // case _: TypeTag => Nil
+        case _: ObjectTag | _: Extruded => Nil
+        case SkolemTag(_, tv) => pol -> tv :: Nil
         case tr: TypeRef => tr.mapTargs(pol)(_ -> _)
         case Without(b, ns) => pol -> b :: Nil
         case TypeBounds(lb, ub) => S(false) -> lb :: S(true) -> ub :: Nil
@@ -757,7 +759,9 @@ abstract class TyperHelpers { Typer: Typer =>
         case NegType(n) => pol.contravar -> n :: Nil
         case ExtrType(_) => Nil
         case ProxyType(und) => pol -> und :: Nil
-        case _: TypeTag => Nil
+        // case _: TypeTag => Nil
+        case _: ObjectTag | _: Extruded => Nil
+        case SkolemTag(_, tv) => pol -> tv :: Nil
         case tr: TypeRef => tr.mapTargs(pol)(_ -> _)
         case Without(b, ns) => pol -> b :: Nil
         case TypeBounds(lb, ub) => PolMap.neg -> lb :: PolMap.pos -> ub :: Nil
@@ -778,7 +782,8 @@ abstract class TyperHelpers { Typer: Typer =>
               // cls.params.flatMap(p => childrenPolField(pol.invar)(p._2))
                 cls.params.flatMap(p => childrenPolField(PolMap.pos)(p._2)) ++
                 cls.members.valuesIterator.flatMap(childrenPolMem) ++
-                S(pol.contravar -> cls.thisTy)
+                S(pol.contravar -> cls.thisTy) ++
+                S(pol.covar -> cls.instanceType)
           }
           ents ::: tu.result.toList.map(pol -> _)
     }}
@@ -824,6 +829,10 @@ abstract class TyperHelpers { Typer: Typer =>
       res.toSortedMap
     }
     
+    private def childrenMem(m: NuMember): List[ST] = m match {
+      case NuParam(nme, ty, isType) => ty.lb.toList ::: ty.ub :: Nil
+      case TypedNuFun(level, fd, ty) => ty :: Nil
+    }
     def children(includeBounds: Bool): List[SimpleType] = this match {
       case tv @ AssignedVariable(ty) => if (includeBounds) ty :: Nil else Nil
       case tv: TypeVariable => if (includeBounds) tv.lowerBounds ::: tv.upperBounds else Nil
@@ -836,13 +845,33 @@ abstract class TyperHelpers { Typer: Typer =>
       case NegType(n) => n :: Nil
       case ExtrType(_) => Nil
       case ProxyType(und) => und :: Nil
-      case _: TypeTag => Nil
+      // case _: TypeTag => Nil
+      case _: ObjectTag | _: Extruded => Nil
+      case SkolemTag(_, tv) => tv :: Nil
       case TypeRef(d, ts) => ts
       case Without(b, ns) => b :: Nil
       case TypeBounds(lb, ub) => lb :: ub :: Nil
       case PolymorphicType(_, und) => und :: Nil
       case ConstrainedType(cs, und) => cs.flatMap(lu => lu._1 :: lu._2 :: Nil) ::: und :: Nil
       case SpliceType(fs) => fs.flatMap{ case L(l) => l :: Nil case R(r) => r.lb.toList ::: r.ub :: Nil}
+      case OtherTypeLike(tu) =>
+        // tu.childrenPol(PolMap.neu).map(tp => tp._1)
+        val ents = tu.entities.flatMap {
+          case tf: TypedNuFun =>
+            tf.ty :: Nil
+          case mxn: TypedNuMxn =>
+            mxn.members.valuesIterator.flatMap(childrenMem) ++
+              S(mxn.superTV) ++
+              S(mxn.thisTV)
+          case cls: TypedNuCls =>
+            cls.tparams.iterator.map(_._2) ++
+            // cls.params.flatMap(p => childrenPolField(pol.invar)(p._2))
+              cls.params.flatMap(p => p._2.lb.toList ::: p._2.ub :: Nil) ++
+              cls.members.valuesIterator.flatMap(childrenMem) ++
+              S(cls.thisTy) ++
+              S(cls.instanceType)
+        }
+        ents ::: tu.result.toList
     }
     
     def getVars: SortedSet[TypeVariable] = {
@@ -954,7 +983,9 @@ abstract class TyperHelpers { Typer: Typer =>
       case NegType(n) => apply(pol.contravar)(n)
       case ExtrType(_) => ()
       case ProxyType(und) => apply(pol)(und)
-      case _: TypeTag => ()
+      // case _: TypeTag => ()
+      case _: ObjectTag | _: Extruded => ()
+      case SkolemTag(_, tv) => apply(pol)(tv)
       case tr: TypeRef => tr.mapTargs(pol)(apply(_)(_)); ()
       case Without(b, ns) => apply(pol)(b)
       case TypeBounds(lb, ub) => pol.traverseBounds(lb, ub)(apply(_)(_))

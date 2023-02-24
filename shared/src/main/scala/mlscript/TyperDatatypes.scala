@@ -399,6 +399,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         case cls: TypedNuCls =>
           implicit val prov: TP = noProv // TODO
           constrain(cls.instanceType, thisTV)
+          println(cls.variances)
         case _ =>
       }
       res

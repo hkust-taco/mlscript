@@ -7,6 +7,9 @@ class C<A>
 //│ class C[A]()
 
 
+class C<A>(a: A)
+
+
 class Some<A>(value: A) {
   fun get = value
   fun toArray = [value]
