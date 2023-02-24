@@ -293,7 +293,7 @@ trait TypeSimplifier { self: Typer =>
                   Map.empty[TV, VarianceInfo].withDefaultValue(VarianceInfo.in)
                 
                 // * Reconstruct a TypeRef from its current structural components
-                val typeRef = TypeRef(cls.td.nme, cls.tparams.zipWithIndex.map { case ((tp, tv), tpidx) =>
+                val typeRef = TypeRef(cls.td.nme, cls.tparams.zipWithIndex.map { case ((tp, tv, vi), tpidx) =>
                   val fieldTagNme = tparamField(clsTyNme, tp)
                   val fromTyRef = trs2.get(clsTyNme).map(_.targs(tpidx) |> { ta => FieldType(S(ta), ta)(noProv) })
                   fromTyRef.++(rcd2.fields.iterator.filter(_._1 === fieldTagNme).map(_._2))

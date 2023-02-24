@@ -45,7 +45,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   // class LazyTypeInfo[A](level: Int, decl: NuDecl) extends TypeInfo {
     private def outerCtx = ctx
     private def outerVars = vars
-    val tparams: Ls[TN -> TV] = Nil // TODO
+    val tparams: Ls[(TN, TV)] = Nil // TODO
+    // val tparams: Ls[(TN, TV, VarianceInfo)] = Nil // TODO
     var isComputing: Bool = false // TODO replace by a Ctx entry
     var result: Opt[TypedNuTermDef] = N
     // var result: Opt[A] = N
@@ -134,18 +135,18 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                   ctx.nest.nextLevel { implicit ctx =>
                     
                     val tparams = td.tparams.map(tp =>
-                      tp -> freshVar(TypeProvenance(
-                        tp.toLoc,
+                      (tp._2, freshVar(TypeProvenance(
+                        tp._2.toLoc,
                         "type parameter",
-                        S(tp.name),
-                        true), N, S(tp.name)))
+                        S(tp._2.name),
+                        true), N, S(tp._2.name)), tp._1))
                     
                     println(s"Type params ${tparams.mkString(" ")}")
                     
                     implicit val vars: Map[Str, SimpleType] =
                       // outerVars ++ tparams.iterator.mapKeys(_.name).toMap
                       outerVars ++ tparams.iterator.map {
-                        case (tp, tv) => (tp.name, SkolemTag(tv.level, tv)(tv.prov))
+                        case (tp, tv, vi) => (tp.name, SkolemTag(tv.level, tv)(tv.prov))
                       }
                     
                     val typedParams = td.params.fields.map {
@@ -187,9 +188,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     // val finalType = freshVar(noProv/*TODO*/, N, S("this"))
                     val finalType = thisTV
                     
-                    val tparamMems = tparams.map { case (tn, tv) =>
-                      val fldNme = td.nme.name + "#" + tn.name
-                      NuParam(Var(fldNme).withLocOf(tn), FieldType(S(tv), tv)(tv.prov), isType = true)
+                    val tparamMems = tparams.map { case (tp, tv, vi) => // TODO use vi
+                      val fldNme = td.nme.name + "#" + tp.name
+                      NuParam(Var(fldNme).withLocOf(tp), FieldType(S(tv), tv)(tv.prov), isType = true)
                     }
                     // tparamMems.map(p => p.nme -> p.ty):Int
                     val tparamFields = tparamMems.map(p => p.nme -> p.ty)
@@ -369,7 +370,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
             //   ClassTag(Var(cls.td.nme.name), Set.empty)(provTODO)
             // ) { case (acc, (tn, tv)) => acc &  }
             ClassTag(Var(cls.td.nme.name), Set.empty)(provTODO) & RecordType.mk(
-              cls.tparams.map { case (tn, tv) =>
+              cls.tparams.map { case (tn, tv, vi) => // TODO use vi
                 Var(cls.td.nme.name + "#" + tn.name).withLocOf(tn) -> FieldType(S(tv), tv)(provTODO) }
             )(provTODO)
           )(provTODO)
@@ -789,7 +790,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
             ClassTag(Var(td.nme.name).withLocOf(td.nme),
               Set.empty//TODO
               )(provTODO) & RecordType(td.tparams.lazyZip(targs).map {
-                case ((tn, tv), ta) =>
+                case ((tn, tv, vi), ta) => // TODO use vi
                   val fldNme = td.td.nme.name + "#" + tn.name
                   Var(fldNme).withLocOf(tn) -> FieldType(S(ta), ta)(provTODO)
               })(provTODO)

@@ -134,7 +134,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
       })).mkString
     case NuTypeDef(kind, nme, tparams, params, parents, sup, ths, body) =>
       val bodyCtx = ctx.indent
-      s"${kind.str} ${nme.name}${tparams.map(_.showIn(ctx, 0))mkStringOr(", ", "[", "]")}(${
+      s"${kind.str} ${nme.name}${tparams.map(_._2.showIn(ctx, 0)).mkStringOr(", ", "[", "]")}(${
         params.fields.map {
           case (N, Fld(_, _, Asc(v: Var, ty))) => v.name + ": " + ty.showIn(ctx, 0)
           case (N, _) => "???"
@@ -171,7 +171,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
     case NuFunDef(isLetRec, nme, targs, rhs) => targs ::: rhs.toOption.toList
     case NuTypeDef(kind, nme, tparams, params, parents, sup, ths, body) =>
       // TODO improve this mess
-      tparams ::: params.fields.collect {
+      tparams.map(_._2) ::: params.fields.collect {
         case (_, Fld(_, _, Asc(_, ty))) => ty
       } ::: sup.toList ::: ths.toList ::: Signature(body.entities.collect {
         case d: NuDecl => d
@@ -398,7 +398,7 @@ trait NuDeclImpl extends Located { self: NuDecl =>
     case NuFunDef(S(false), n, _, b) => s"let $n"
     case NuFunDef(S(true), n, _, b) => s"let rec $n"
     case NuTypeDef(k, n, tps, sps, parents, sup, ths, bod) =>
-      s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_.name).mkString("‹", ", ", "›")}(${
+      s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_._2.name).mkString("‹", ", ", "›")}(${
         // sps.mkString("(",",",")")
         sps})${if (parents.isEmpty) "" else if (k === Als) " = " else ": "}${parents.mkString(", ")}"
   }
@@ -708,7 +708,7 @@ trait StatementImpl extends Located { self: Statement =>
           case L(ds) => (ds :: Nil) -> Top
           case R(ty) => Nil -> ty
         }
-        diags -> (TypeDef(k, nme, tps, rhs, Nil, Nil, Nil) :: Nil)
+        diags -> (TypeDef(k, nme, tps.map(_._2), rhs, Nil, Nil, Nil) :: Nil)
       case NuTypeDef(k @ (Cls | Trt), nme, tps, tup @ Tup(fs), pars, sup, ths, unit) =>
         val diags = Buffer.empty[Diagnostic]
         def tt(trm: Term): Type = trm.toType match {
@@ -730,7 +730,7 @@ trait StatementImpl extends Located { self: Statement =>
           case (N, fld @ Fld(mut, spec, nme: Var)) => nme -> fld
           case _ => die
         })) :: Nil)))), true)
-        diags.toList -> (TypeDef(k, nme, tps, bod, Nil, Nil, pos) :: ctor :: Nil)
+        diags.toList -> (TypeDef(k, nme, tps.map(_._2), bod, Nil, Nil, pos) :: ctor :: Nil)
     case d: DesugaredStatement => Nil -> (d :: Nil)
   }
   import Message._
@@ -843,7 +843,7 @@ trait StatementImpl extends Located { self: Statement =>
     case Forall(ps, bod) => ps ::: bod :: Nil
     case Inst(bod) => bod :: Nil
     case NuTypeDef(k, nme, tps, ps, pars, sup, ths, bod) =>
-      nme :: tps ::: ps :: pars ::: ths.toList ::: bod :: Nil
+      nme :: tps.map(_._2) ::: ps :: pars ::: ths.toList ::: bod :: Nil
   }
   
   

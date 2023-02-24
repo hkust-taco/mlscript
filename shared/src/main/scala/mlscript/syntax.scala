@@ -175,7 +175,7 @@ sealed abstract class NuDecl extends TypeLike with Statement with NuDeclImpl
 final case class NuTypeDef(
   kind: TypeDefKind,
   nme: TypeName,
-  tparams: Ls[TypeName],
+  tparams: Ls[(Opt[VarianceInfo], TypeName)],
   params: Tup, // the specialized parameters for that type
   parents: Ls[Term],
   superAnnot: Opt[Type],
@@ -195,4 +195,34 @@ final case class NuFunDef(
 
 
 sealed trait PgrmOrTypingUnit // TODO rm
+
+
+
+final case class VarianceInfo(isCovariant: Bool, isContravariant: Bool) {
+  
+  /** Combine two pieces of variance information together
+   */
+  def &&(that: VarianceInfo): VarianceInfo =
+    VarianceInfo(isCovariant && that.isCovariant, isContravariant && that.isContravariant)
+  
+  /*  Flip the current variance if it encounters a contravariant position
+    */
+  def flip: VarianceInfo = VarianceInfo(isContravariant, isCovariant)
+  
+  override def toString: Str = show
+  
+  def show: Str = this match {
+    case (VarianceInfo(true, true)) => "±"
+    case (VarianceInfo(false, true)) => "-"
+    case (VarianceInfo(true, false)) => "+"
+    case (VarianceInfo(false, false)) => "="
+  }
+}
+
+object VarianceInfo {
+  val bi: VarianceInfo = VarianceInfo(true, true)
+  val co: VarianceInfo = VarianceInfo(true, false)
+  val contra: VarianceInfo = VarianceInfo(false, true)
+  val in: VarianceInfo = VarianceInfo(false, false)
+}
 

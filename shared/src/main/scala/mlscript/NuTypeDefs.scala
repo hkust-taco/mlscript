@@ -154,7 +154,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           //   params.mapValues(_.freshenAbove(level, rigidify)),
           //   members.mapValuesIter(_.freshenAbove(level, rigidify)).toMap)
           TypedNuCls(level, td, ttu.freshenAbove(lim, rigidify),
-            tps.mapValues(_.freshenAbove(lim, rigidify).asInstanceOf[TV]),
+            // tps.mapValues(_.freshenAbove(lim, rigidify).asInstanceOf[TV]),
+            tps.map(tp => (tp._1, tp._2.freshenAbove(lim, rigidify).asInstanceOf[TV], tp._3)),
             params.mapValues(_.freshenAbove(lim, rigidify)),
             members.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap,
             thisTy.freshenAbove(lim, rigidify))(
@@ -193,7 +194,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   
   // case class TypedNuCls(nme: TypeName) extends TypedNuTypeDef(Als) with TypedNuTermDef {
   case class TypedNuCls(level: Level, td: NuTypeDef, ttu: TypedTypingUnit,
-        tparams: Ls[TN -> TV], params: Ls[Var -> FieldType],
+        tparams: Ls[(TN, TV, Opt[VarianceInfo])], params: Ls[Var -> FieldType],
       // members: Map[Str, LazyTypeInfo])
       members: Map[Str, NuMember],
       thisTy: ST
@@ -248,7 +249,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTermDef =
         TypedNuCls(level, td, ttu,
-          tparams.map(tp => tp._1 -> f(N, tp._2).asInstanceOf[TV]),
+          tparams.map(tp => (tp._1, f(N, tp._2).asInstanceOf[TV], tp._3)),
           // params.mapValues(_.mapPol(pol)(f)),
           params.mapValues(_.update(t => f(pol.map(!_), t), t => f(pol, t))),
           members.mapValuesIter(_.mapPol(pol, smart)(f)).toMap,
@@ -257,7 +258,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTermDef =
         TypedNuCls(level, td, ttu,
-          tparams.map(tp => tp._1 -> f(pol.invar, tp._2).asInstanceOf[TV]),
+          tparams.map(tp => (tp._1, f(pol.invar, tp._2).asInstanceOf[TV], tp._3)),
           // params.mapValues(_.mapPol(pol)(f)),
           params.mapValues(_.update(t => f(pol.contravar, t), t => f(pol, t))),
           members.mapValuesIter(_.mapPolMap(pol)(f)).toMap,

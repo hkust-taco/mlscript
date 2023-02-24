@@ -1100,7 +1100,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                       val ty =
                         // RecordType.mk(cls.params)(provTODO) // TODO?!
                         RecordType.mk(fresh_cls.tparams.map{
-                          case (tn, tv) =>
+                          case (tn, tv, vi) => // TODO use variances
                             (Var(nme+"#"+tn.name).withLocOf(tn), FieldType(S(tv), tv)(provTODO))
                         })(provTODO)
                       println(s"Match arm $nme: $tag & $ty")

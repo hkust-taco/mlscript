@@ -656,7 +656,7 @@ class DiffTests
 
                 // generate warnings for bivariant type variables
                 val bivariantTypeVars = ttd.tparamsargs.iterator.filter{ case (tname, tvar) =>
-                  tvv.get(tvar).contains(typer.VarianceInfo.bi)
+                  tvv.get(tvar).contains(VarianceInfo.bi)
                 }.map(_._1).toList
                 if (!bivariantTypeVars.isEmpty) {
                   varianceWarnings.put(td.nme, bivariantTypeVars)

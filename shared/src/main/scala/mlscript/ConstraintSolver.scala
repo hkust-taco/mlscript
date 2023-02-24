@@ -40,7 +40,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         // freshened ++= td.tparams.map(tp => tp._2 -> TopType)
         
         // /* 
-        td.tparams.foreach { case (tn, _tv) =>
+        td.tparams.foreach { case (tn, _tv, vi) =>
           // val tv = freshVar(_tv.prov, S(_tv), _tv.nameHint)
           val targ = rfnt(Var(td.nme.name + "#" + tn.name)) match {
             case S(fty) =>

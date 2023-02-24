@@ -7,7 +7,9 @@ class C<A>
 //│ class C[A]()
 
 
+// :d
 class C<A>(a: A)
+//│ class C[A](a: A)
 
 
 class Some<A>(value: A) {
@@ -117,7 +119,7 @@ class Test(n) {
   fun bar = n
 }
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.112: 	class Test(n) {
+//│ ║  l.117: 	class Test(n) {
 //│ ╙──       	           ^
 //│ class Test(n: error) {
 //│   fun bar: error
@@ -137,13 +139,13 @@ class Test<A>(n: A) {
   fun foo = n + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.134: 	  fun foo = n + 1
+//│ ║  l.139: 	  fun foo = n + 1
 //│ ║         	            ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.134: 	  fun foo = n + 1
+//│ ║  l.139: 	  fun foo = n + 1
 //│ ║         	            ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.133: 	class Test<A>(n: A) {
+//│ ║  l.138: 	class Test<A>(n: A) {
 //│ ╙──       	           ^
 //│ class Test[A](n: A) {
 //│   fun foo: error | int
@@ -208,13 +210,13 @@ class Test<A> {
   fun foo2(x: A) = x + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.205: 	  fun foo2(x: A) = x + 1
+//│ ║  l.210: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.205: 	  fun foo2(x: A) = x + 1
+//│ ║  l.210: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.203: 	class Test<A> {
+//│ ║  l.208: 	class Test<A> {
 //│ ╙──       	           ^
 //│ class Test[A]() {
 //│   fun foo1: (x: A,) -> A

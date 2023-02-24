@@ -292,7 +292,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
             }
             val ps = parents(if (kind === Als) KEYWORD("=") else KEYWORD(":"))
             val body = curlyTypingUnit
-            val res = NuTypeDef(kind, tn, tparams, params, ps, N, N, body)
+            val res = NuTypeDef(kind, tn, tparams.map(N -> _), params, ps, N, N, body)
             R(res.withLoc(S(l0 ++ res.getLoc)))
           
           // TODO make `fun` by-name and `let` by-value
