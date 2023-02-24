@@ -4,11 +4,7 @@
 
 
 class A(n: int)
-//│ class A(n: int) {
-//│   this: 'this_A
-//│ }
-//│ where
-//│   'this_A :> A & {n: int}
+//│ class A(n: int)
 
 A
 //│ (n: int,) -> A
@@ -52,12 +48,9 @@ class C {
   fun const(x) = id
 }
 //│ class C() {
-//│   this: 'this_C
 //│   fun const: anything -> 'a -> 'a
 //│   fun id: 'a -> 'a
 //│ }
-//│ where
-//│   'this_C :> C
 
 
 class Base0(n) {
@@ -67,15 +60,12 @@ class Base0(n) {
   fun oops = this.my
 }
 //│ class Base0(n: nothing) {
-//│   this: 'this_Base0
-//│   fun me: 'this_Base0
+//│   this: {my: 'my, n: 'n} & 'base0
+//│   fun me: Base0 & {n: nothing} | 'base0
 //│   fun mine: 'n
 //│   fun my: 'n
 //│   fun oops: 'my
 //│ }
-//│ where
-//│   'this_Base0 :> Base0 & {n: nothing}
-//│               <: {my: 'my, n: 'n}
 
 // :d
 // Base0
@@ -106,14 +96,11 @@ class Base1(base: int) {
   fun foo(x) = this.base + x
 }
 //│ class Base1(base: int) {
-//│   this: 'this_Base1
+//│   this: {base: int}
 //│   fun foo: int -> int
 //│   fun getBase1: int
 //│   fun getBase2: int
 //│ }
-//│ where
-//│   'this_Base1 :> Base1 & {base: int}
-//│               <: {base: int}
 
 class Base1(base: int) {
   fun getBase1 = base
@@ -121,13 +108,11 @@ class Base1(base: int) {
   fun foo(x) = base + x
 }
 //│ class Base1(base: int) {
-//│   this: 'this_Base1
+//│   this: 'base1
 //│   fun foo: int -> int
 //│   fun getBase1: int
-//│   fun me: 'this_Base1
+//│   fun me: Base1 & {base: int} | 'base1
 //│ }
-//│ where
-//│   'this_Base1 :> Base1 & {base: int}
 
 Base1
 //│ (base: int,) -> Base1
@@ -148,7 +133,7 @@ b.me
 :e
 b.getBaseTypo
 //│ ╔══[ERROR] class `Base1` does not contain member `getBaseTypo`
-//│ ║  l.149: 	b.getBaseTypo
+//│ ║  l.134: 	b.getBaseTypo
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ error
 
@@ -162,18 +147,15 @@ class Rec(n) {
   fun go = Rec(n + 1)
 }
 //│ ╔══[ERROR] Cyclic definition
-//│ ║  l.161: 	class Rec(n) {
+//│ ║  l.146: 	class Rec(n) {
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.162: 	  fun go = Rec(n + 1)
+//│ ║  l.147: 	  fun go = Rec(n + 1)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.163: 	}
+//│ ║  l.148: 	}
 //│ ╙──       	^
 //│ class Rec(n: nothing) {
-//│   this: 'this_Rec
 //│   fun go: error
 //│ }
-//│ where
-//│   'this_Rec :> Rec & {n: nothing}
 
 
 
@@ -184,23 +166,20 @@ class Annots(base: 0 | 1) {
   fun a = base
 }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.183: 	  a: int
+//│ ║  l.165: 	  a: int
 //│ ║         	  ^
 //│ ╟── type `(0 | 1,)` is not an instance of type `int`
-//│ ║  l.182: 	class Annots(base: 0 | 1) {
+//│ ║  l.164: 	class Annots(base: 0 | 1) {
 //│ ║         	                   ^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.183: 	  a: int
+//│ ║  l.165: 	  a: int
 //│ ║         	  ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.183: 	  a: int
+//│ ║  l.165: 	  a: int
 //│ ╙──       	     ^^^
 //│ class Annots(base: (0 | 1,)) {
-//│   this: 'this_Annots
 //│   fun a: (0 | 1,)
 //│ }
-//│ where
-//│   'this_Annots :> Annots & {base: (0 | 1,)}
 
 
 

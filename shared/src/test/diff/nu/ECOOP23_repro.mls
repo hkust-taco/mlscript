@@ -5,15 +5,8 @@
 
 class Add<E>(lhs: E, rhs: E)
 class Lit(n: int)
-//│ class Add[E](lhs: E, rhs: E) {
-//│   this: 'this_Add
-//│ }
-//│ class Lit(n: int) {
-//│   this: 'this_Lit
-//│ }
-//│ where
-//│   'this_Lit :> Lit & {n: int}
-//│   'this_Add :> Add['E] & {lhs: E, rhs: E}
+//│ class Add[E](lhs: E, rhs: E)
+//│ class Lit(n: int)
 
 let add11 = Add(Lit(1), Lit(2))
 //│ let add11: Add['E]
@@ -37,25 +30,21 @@ mixin EvalBase {
       Add(l, r) then this.eval(l) + this.eval(r)
 }
 //│ mixin EvalBase() {
-//│   super: 'super
-//│   this: 'this
+//│   this: {eval: 'lhs -> int}
 //│   fun eval: (Add['E] | Lit) -> int
 //│ }
 //│ where
 //│   'E <: 'lhs
-//│   'this <: {eval: 'lhs -> int}
 
 
 module TestLang: EvalBase
 //│ namespace TestLang() {
-//│   this: 'this_TestLang
+//│   this: {eval: 'E -> int}
 //│   fun eval: (Add['E] | Lit) -> int
 //│ }
 //│ where
-//│   'this_TestLang :> TestLang & {eval: (Add['E] | Lit) -> int}
-//│                  <: {eval: 'E -> int}
 //│   'E <: (Add['E0] | Lit) & (Add['E1] | Lit)
-//│   'E1 <: Add['E0] | Lit
+//│   'E0 <: Add['E1] | Lit
 
 TestLang.eval
 //│ (Add['E] | Lit) -> int
@@ -90,11 +79,7 @@ add11
 
 
 class Neg<A>(expr: A)
-//│ class Neg[A](expr: A) {
-//│   this: 'this_Neg
-//│ }
-//│ where
-//│   'this_Neg :> Neg['A] & {expr: A}
+//│ class Neg[A](expr: A)
 
 let add2negadd11 = Add(Lit(2), Neg(add11))
 //│ let add2negadd11: Add['E]
@@ -111,29 +96,25 @@ mixin EvalNeg {
     else super.eval(e)
 }
 //│ mixin EvalNeg() {
-//│   super: 'super
-//│   this: 'this
+//│   super: {eval: 'a -> 'b}
+//│   this: {eval: 'expr -> int}
 //│   fun eval: (Neg['A] | 'a & ~Neg) -> (int | 'b)
 //│ }
 //│ where
 //│   'A <: 'expr
-//│   'this <: {eval: 'expr -> int}
-//│   'super <: {eval: 'a -> 'b}
 
 
 module TestLang: EvalBase, EvalNeg
 //│ namespace TestLang() {
-//│   this: 'this_TestLang
+//│   this: {eval: ('A | 'E) -> int}
 //│   fun eval: (Add['E] | Lit | Neg['A]) -> int
 //│ }
 //│ where
-//│   'this_TestLang :> TestLang & {eval: (Add['E] | Lit | Neg['A]) -> int}
-//│                  <: {eval: ('A | 'E) -> int}
-//│   'A <: Add['E0] | Lit | Neg['A0]
-//│   'E <: (Add['E1] | Lit | Neg['A1]) & (Add['E2] | Lit | Neg['A2])
-//│   'A2 <: Add['E0] | Lit | Neg['A0]
-//│   'E2 <: Add['E1] | Lit | Neg['A1]
-//│   'A1 <: Add['E0] | Lit | Neg['A0]
+//│   'E <: (Add['E0] | Lit | Neg['A0]) & (Add['E1] | Lit | Neg['A1])
+//│   'A1 <: Add['E2] | Lit | Neg['A2]
+//│   'E1 <: Add['E0] | Lit | Neg['A0]
+//│   'A0 <: Add['E2] | Lit | Neg['A2]
+//│   'A <: Add['E2] | Lit | Neg['A2]
 
 TestLang.eval
 //│ (Add['E] | Lit | Neg['A]) -> int

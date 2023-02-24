@@ -64,7 +64,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     
     // TODO does this also need freshening in freshenAbove?
     private lazy val thisTV: TV =
-      freshVar(noProv/*FIXME*/, N, S("this_"+decl.name))(lvl + 1)
+      // freshVar(noProv/*FIXME*/, N, S("this_"+decl.name))(lvl + 1)
+      freshVar(noProv/*FIXME*/, N, S(decl.name.decapitalize))(lvl + 1)
     
     def complete()(implicit raise: Raise): TypedNuTermDef = result.getOrElse {
       if (isComputing) lastWords(s"TODO cyclic defition ${decl.name}")

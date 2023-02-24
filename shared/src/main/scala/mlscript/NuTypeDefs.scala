@@ -210,7 +210,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           // params.mapValues(_.mapPol(pol)(f)),
           params.mapValues(_.update(t => f(pol.map(!_), t), t => f(pol, t))),
           members.mapValuesIter(_.mapPol(pol, smart)(f)).toMap,
-          f(N, thisTy).asInstanceOf[TV]
+          f(pol.map(!_), thisTy)//.asInstanceOf[TV]
         )(instanceType)
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTermDef =
@@ -219,7 +219,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           // params.mapValues(_.mapPol(pol)(f)),
           params.mapValues(_.update(t => f(pol.contravar, t), t => f(pol, t))),
           members.mapValuesIter(_.mapPolMap(pol)(f)).toMap,
-          f(pol.invar, thisTy).asInstanceOf[TV]
+          f(pol.contravar, thisTy)//.asInstanceOf[TV]
         )(instanceType)
   }
   
@@ -231,10 +231,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTermDef =
-      TypedNuMxn(td, f(N, thisTV), f(N, superTV), members.mapValuesIter(_.mapPol(pol, smart)(f)).toMap, ttu)
+      TypedNuMxn(td, f(pol.map(!_), thisTV), f(pol.map(!_), superTV), members.mapValuesIter(_.mapPol(pol, smart)(f)).toMap, ttu)
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTermDef =
-      TypedNuMxn(td, f(pol.invar, thisTV), f(pol.invar, superTV), members.mapValuesIter(_.mapPolMap(pol)(f)).toMap, ttu)
+      TypedNuMxn(td, f(pol.contravar, thisTV), f(pol.contravar, superTV), members.mapValuesIter(_.mapPolMap(pol)(f)).toMap, ttu)
   }
   
   /** Note: the type `ty` is stoed *without* its polymorphic wrapper! */

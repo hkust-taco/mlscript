@@ -771,14 +771,14 @@ abstract class TyperHelpers { Typer: Typer =>
               PolMap.pos -> tf.ty :: Nil
             case mxn: TypedNuMxn =>
               mxn.members.valuesIterator.flatMap(childrenPolMem) ++
-                S(pol.invar -> mxn.superTV) ++
-                S(pol.invar -> mxn.thisTV)
+                S(pol.contravar -> mxn.superTV) ++
+                S(pol.contravar -> mxn.thisTV)
             case cls: TypedNuCls =>
               cls.tparams.iterator.map(PolMap.neu -> _._2) ++
               // cls.params.flatMap(p => childrenPolField(pol.invar)(p._2))
                 cls.params.flatMap(p => childrenPolField(PolMap.pos)(p._2)) ++
                 cls.members.valuesIterator.flatMap(childrenPolMem) ++
-                S(pol.invar -> cls.thisTy)
+                S(pol.contravar -> cls.thisTy)
           }
           ents ::: tu.result.toList.map(pol -> _)
     }}
@@ -931,11 +931,11 @@ abstract class TyperHelpers { Typer: Typer =>
         params.foreach(p => applyField(pol)(p._2))
         members.valuesIterator.foreach(applyMem(pol))
         // thisTy.foreach(apply(pol.invar)(_))
-        apply(pol.invar)(thisTy)
+        apply(pol.contravar)(thisTy)
       case TypedNuMxn(td, thisTV, superTV, members, ttu) =>
         members.valuesIterator.foreach(applyMem(pol))
-        apply(pol.invar)(thisTV)
-        apply(pol.invar)(superTV)
+        apply(pol.contravar)(thisTV)
+        apply(pol.contravar)(superTV)
       case NuParam(nme, ty, isType) => applyField(pol)(ty)
       case TypedNuFun(level, fd, ty) => apply(pol)(ty)
     }

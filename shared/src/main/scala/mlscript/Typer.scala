@@ -1261,24 +1261,26 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       })
     }
     def goDecl(d: TypedNuDecl): NuDecl = d match {
-      case TypedNuMxn(td, thisTV, superTV, members, ttu) =>
+      case TypedNuMxn(td, thisTy, superTy, members, ttu) =>
         NuTypeDef(td.kind, td.nme, td.tparams,
           Tup(Nil),
           Nil,//TODO
-          S(go(superTV)),
-          S(go(thisTV)),
-          // mkTypingUnit(thisTV, 
+          // S(go(superTy)),
+          // S(go(thisTy)),
+          Option.when(!(TopType <:< superTy))(go(superTy)),
+          Option.when(!(TopType <:< thisTy))(go(thisTy)),
+          // mkTypingUnit(thisTy, 
           //   // members
           //   Map.empty
           // )
-          mkTypingUnit(thisTV, members))
+          mkTypingUnit(thisTy, members))
       case TypedNuCls(level, td, ttu, tparams, params, members, thisTy) =>
         NuTypeDef(td.kind, td.nme, td.tparams,
           // Tup(params.map(p => S(p._1) -> Fld(p._2.ub))))
           Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub))))),
           Nil,//TODO
           N,//TODO
-          S(go(thisTy)),
+          Option.when(!(TopType <:< thisTy))(go(thisTy)),
           mkTypingUnit(thisTy, members))
           // mkTypingUnit(() :: members.toList.sortBy(_._1)))
       case TypedNuFun(level, fd, ty) =>

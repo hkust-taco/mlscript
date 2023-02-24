@@ -11,8 +11,6 @@ mixin BaseTest<A> {
 //│ ║  l.8: 	  fun test(x: A) = x
 //│ ╙──     	              ^
 //│ mixin BaseTest[A]() {
-//│   super: 'super
-//│   this: 'this
 //│   fun test: (x: error,) -> error
 //│ }
 
@@ -21,11 +19,9 @@ mixin BaseTest<A>(x: A) {
   fun test = x
 }
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.21: 	  fun test = x
+//│ ║  l.19: 	  fun test = x
 //│ ╙──      	             ^
 //│ mixin BaseTest[A]() {
-//│   super: 'super
-//│   this: 'this
 //│   fun test: error
 //│ }
 
