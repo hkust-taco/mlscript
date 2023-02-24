@@ -1066,7 +1066,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     case Case(pat, bod, rest) =>
       val (tagTy: ST, patTy: ST) = pat match {
         case lit: Lit =>
-          ClassTag(lit, lit.baseClasses)(tp(pat.toLoc, "literal pattern"))
+          val t = ClassTag(lit, lit.baseClasses)(tp(pat.toLoc, "literal pattern"))
+          t -> t
         case v @ Var(nme) =>
           val tpr = tp(pat.toLoc, "type pattern")
           ctx.tyDefs.get(nme) match {
@@ -1134,15 +1135,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       val newCtx = ctx.nest
       val (req_ty, bod_ty, (tys, rest_ty)) = scrutVar match {
         case S(v) =>
-          // val tv = freshVar(tp(v.toLoc, "refined scrutinee"), N,
-          //   // S(v.name), // this one seems a bit excessive
-          // )
-          // newCtx += v.name -> VarSymbol(tv, v)
-          // val bod_ty = typeTerm(bod)(newCtx, raise, vars, genLambdas)
-          // (patTy -> tv, bod_ty, typeArms(scrutVar, rest))
-          newCtx += v.name -> VarSymbol(tagTy & patTy, v)
-          val bod_ty = typeTerm(bod)(newCtx, raise, vars, genLambdas)
-          (tagTy -> patTy, bod_ty, typeArms(scrutVar, rest))
+          if (newDefs) {
+            newCtx += v.name -> VarSymbol(tagTy & patTy, v)
+            val bod_ty = typeTerm(bod)(newCtx, raise, vars, genLambdas)
+            (tagTy -> patTy, bod_ty, typeArms(scrutVar, rest))
+          } else {
+            val tv = freshVar(tp(v.toLoc, "refined scrutinee"), N,
+              // S(v.name), // this one seems a bit excessive
+            )
+            newCtx += v.name -> VarSymbol(tv, v)
+            val bod_ty = typeTerm(bod)(newCtx, raise, vars, genLambdas)
+            (patTy -> tv, bod_ty, typeArms(scrutVar, rest))
+          }
         case N =>
           val bod_ty = typeTerm(bod)(newCtx, raise, vars, genLambdas)
           (tagTy -> TopType, bod_ty, typeArms(scrutVar, rest))

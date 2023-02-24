@@ -384,7 +384,7 @@ trait NuDeclImpl extends Located { self: NuDecl =>
 trait TypingUnitImpl extends Located { self: TypingUnit =>
   def show: Str = entities.map {
     case t: Term => t.toString
-    case d: NuDecl => d.show
+    case d: NuDecl => d.showDbg
     case _ => die
   }.mkString("{", "; ", "}")
   lazy val children: List[Located] = entities
