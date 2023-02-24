@@ -6,42 +6,33 @@
 
 class Foo()
 123
-//│ 
 //│ class Foo() {
-//│ this: 'this
+//│   this: 'this
 //│ }
 //│ 123
 //│   where
 //│     'this :> Foo
-//│ Typed: 123
 
 Foo
-//│ 
 //│ () -> Foo
-//│ Typed: () -> Foo
 
 fun fooo(x) =
   class C(y, z)
   C(0, x)
-//│ 
 //│ fun fooo: anything -> C
 
 
 
 fun foo = bar
 fun bar = foo
-//│ 
 //│ fun foo: nothing
 //│ fun bar: nothing
 
 foo(bar)
-//│ 
 //│ nothing
-//│ Typed: nothing
 
 
 fun foo = {x: foo}
-//│ 
 //│ fun foo: 'foo
 //│   where
 //│     'foo :> {x: 'foo}
@@ -49,7 +40,6 @@ fun foo = {x: foo}
 
 fun foo = {x: bar}
 fun bar = {y: foo}
-//│ 
 //│ fun foo: 'foo
 //│ fun bar: {y: 'foo}
 //│   where
@@ -57,46 +47,29 @@ fun bar = {y: foo}
 
 // FIXME pretty-printing?
 foo
-//│ 
 //│ forall 'foo. 'foo
-//│   where
-//│     'foo :> {x: {y: 'foo}}
-//│ Typed: 'foo
 //│   where
 //│     'foo :> {x: {y: 'foo}}
 
 :ns
 foo
-//│ 
 //│ forall 'foo. {x: {y: 'foo}}
-//│   where
-//│     'foo :> {x: {y: 'foo}}
-//│ Typed: forall 'foo. {x: {y: 'foo}}
 //│   where
 //│     'foo :> {x: {y: 'foo}}
 
 foo.x
-//│ 
 //│ 'x
-//│   where
-//│     'x :> {y: {x: 'x}}
-//│ Typed: 'x
 //│   where
 //│     'x :> {y: {x: 'x}}
 
 foo.x.y
-//│ 
 //│ 'foo
-//│   where
-//│     'foo :> {x: {y: 'foo}}
-//│ Typed: 'foo
 //│   where
 //│     'foo :> {x: {y: 'foo}}
 
 
 fun foo(a) = {h: a, t: bar(a)}
 fun bar(b) = foo(b)
-//│ 
 //│ fun foo: 'a -> 'b
 //│ fun bar: 'a -> 'b
 //│   where
@@ -104,22 +77,15 @@ fun bar(b) = foo(b)
 
 :ns
 foo
-//│ 
-//│ forall 'a 'b 'c. 'a -> {h: 'a, t: 'c}
+//│ forall 'a 'b 'c. 'c -> {h: 'c, t: 'b}
 //│   where
-//│     'c :> {h: 'a, t: 'c}
-//│     'a <: 'b
-//│     'b <: 'a
-//│ Typed: forall 'a 'b 'c. 'a -> {h: 'a, t: 'c}
-//│   where
-//│     'c :> {h: 'a, t: 'c}
-//│     'a <: 'b
-//│     'b <: 'a
+//│     'b :> {h: 'c, t: 'b}
+//│     'c <: 'a
+//│     'a <: 'c
 
 
 fun foo(a) = {h1: a, t1: bar(a)}
 fun bar(b) = {h2: b, t2: foo(b)}
-//│ 
 //│ fun foo: 'a -> 'b
 //│ fun bar: 'a -> 'c
 //│   where
@@ -134,23 +100,20 @@ module Test0_1 {
 module Test0_2 {
   fun b = 123
 }
-//│ 
 //│ namespace Test0_1() {
-//│ this: 'this
-//│ fun a: 123
+//│   this: 'this
+//│   fun a: 123
 //│ }
 //│ namespace Test0_2() {
-//│ this: 'this0
-//│ fun b: 123
+//│   this: 'this0
+//│   fun b: 123
 //│ }
 //│   where
 //│     'this0 :> Test0_2
 //│     'this :> Test0_1
 
 Test0_1.a
-//│ 
 //│ 123
-//│ Typed: 123
 
 class Test0_1 {
   fun a = Test0_2().b
@@ -158,14 +121,13 @@ class Test0_1 {
 class Test0_2() {
   fun b = 123
 }
-//│ 
 //│ class Test0_1() {
-//│ this: 'this
-//│ fun a: 123
+//│   this: 'this
+//│   fun a: 123
 //│ }
 //│ class Test0_2() {
-//│ this: 'this0
-//│ fun b: 123
+//│   this: 'this0
+//│   fun b: 123
 //│ }
 //│   where
 //│     'this0 :> Test0_2
@@ -180,29 +142,26 @@ module Test1_2 {
   fun b = Test1_1.a
 }
 //│ ╔══[ERROR] Cyclic definition
-//│ ║  l.176: 	module Test1_1 {
+//│ ║  l.138: 	module Test1_1 {
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.177: 	  fun a = Test1_2.b
+//│ ║  l.139: 	  fun a = Test1_2.b
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.178: 	}
+//│ ║  l.140: 	}
 //│ ╙──       	^
-//│ 
 //│ namespace Test1_1() {
-//│ this: 'this
-//│ fun a: error
+//│   this: 'this
+//│   fun a: error
 //│ }
 //│ namespace Test1_2() {
-//│ this: 'this0
-//│ fun b: error
+//│   this: 'this0
+//│   fun b: error
 //│ }
 //│   where
 //│     'this0 :> Test1_2
 //│     'this :> Test1_1
 
 Test1_1.a
-//│ 
 //│ error
-//│ Typed: error
 
 
 :e // TODO
@@ -213,20 +172,19 @@ class Test1_2 {
   fun b = Test1_1().a
 }
 //│ ╔══[ERROR] Cyclic definition
-//│ ║  l.209: 	class Test1_1 {
+//│ ║  l.168: 	class Test1_1 {
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.210: 	  fun a = Test1_2().b
+//│ ║  l.169: 	  fun a = Test1_2().b
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.211: 	}
+//│ ║  l.170: 	}
 //│ ╙──       	^
-//│ 
 //│ class Test1_1() {
-//│ this: 'this
-//│ fun a: error
+//│   this: 'this
+//│   fun a: error
 //│ }
 //│ class Test1_2() {
-//│ this: 'this0
-//│ fun b: error
+//│   this: 'this0
+//│   fun b: error
 //│ }
 //│   where
 //│     'this0 :> Test1_2
@@ -246,67 +204,58 @@ module Test2_2 {
   fun e = Test2_1.n
 }
 //│ ╔══[ERROR] Cyclic definition
-//│ ║  l.237: 	module Test2_1 {
+//│ ║  l.195: 	module Test2_1 {
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.238: 	  fun t2 = Test2_2
+//│ ║  l.196: 	  fun t2 = Test2_2
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.239: 	  fun a = Test2_2.b
+//│ ║  l.197: 	  fun a = Test2_2.b
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.240: 	  fun d = Test2_2.e
+//│ ║  l.198: 	  fun d = Test2_2.e
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.241: 	  fun n = 456
+//│ ║  l.199: 	  fun n = 456
 //│ ║         	^^^^^^^^^^^^^
-//│ ║  l.242: 	}
+//│ ║  l.200: 	}
 //│ ╙──       	^
 //│ ╔══[ERROR] Cyclic definition
-//│ ║  l.237: 	module Test2_1 {
+//│ ║  l.195: 	module Test2_1 {
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.238: 	  fun t2 = Test2_2
+//│ ║  l.196: 	  fun t2 = Test2_2
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.239: 	  fun a = Test2_2.b
+//│ ║  l.197: 	  fun a = Test2_2.b
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.240: 	  fun d = Test2_2.e
+//│ ║  l.198: 	  fun d = Test2_2.e
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.241: 	  fun n = 456
+//│ ║  l.199: 	  fun n = 456
 //│ ║         	^^^^^^^^^^^^^
-//│ ║  l.242: 	}
+//│ ║  l.200: 	}
 //│ ╙──       	^
-//│ 
 //│ namespace Test2_1() {
-//│ this: 'this
-//│ fun a: 123
-//│ fun d: error
-//│ fun n: 456
-//│ fun t2: Test2_2
+//│   this: 'this
+//│   fun a: 123
+//│   fun d: error
+//│   fun n: 456
+//│   fun t2: Test2_2
 //│ }
 //│ namespace Test2_2() {
-//│ this: 'this0
-//│ fun b: 123
-//│ fun c: error
-//│ fun e: error
+//│   this: 'this0
+//│   fun b: 123
+//│   fun c: error
+//│   fun e: error
 //│ }
 //│   where
 //│     'this0 :> Test2_2
 //│     'this :> Test2_1
 
 Test2_1.t2.b
-//│ 
 //│ 123
-//│ Typed: 123
 
 Test2_1.a
-//│ 
 //│ 123
-//│ Typed: 123
 
 // FIXME
 Test2_1.d
-//│ 
 //│ error
-//│ Typed: error
 
 Test2_1.n
-//│ 
 //│ 456
-//│ Typed: 456
 

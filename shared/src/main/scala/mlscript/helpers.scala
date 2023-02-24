@@ -89,7 +89,8 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
           .mkString("forall ", " ", ".")} ${body.showIn(ctx, 1)}",
         outerPrec > 1 // or 0?
       )
-    case Constrained(b, bs, ws) => parensIf(s"${b.showIn(ctx, 0)}\n  where${bs.map {
+    case Constrained(b, bs, ws) => parensIf(s"${
+        b.showIn(ctx, 0).stripSuffix("\n")}\n${ctx.indStr}  where${bs.map {
       case (uv, Bounds(Bot, ub)) =>
         s"\n    ${ctx.vs(uv)} <: ${ub.showIn(ctx, 0)}"
       case (uv, Bounds(lb, Top)) =>
@@ -113,11 +114,16 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
         case R(ty) => ": " + ty.showIn(ctx, 0)
       }}"
     case Signature(decls, res) =>
-      decls.map("\n" + _.showIn(ctx, 0)).mkString + (res match {
-        case S(ty) => "\n" + ty.showIn(ctx, 0)
-        case N => ""
-      })
+      // decls.map(ctx.indStr + (if (ctx.indentLevel === 0) "" else "\n") + _.showIn(ctx, 0)).mkString +
+      (decls.map(ctx.indStr + _.showIn(ctx, 0) + "\n") ::: (res match {
+        case S(ty) => ctx.indStr + ty.showIn(ctx, 0) + "\n" :: Nil
+        case N => Nil
+      // })).mkString(if (ctx.indentLevel === 0) "" else "\n", "\n", "")
+      // })).mkString("\n")
+      // })).mkString("", "\n", "\n")
+      })).mkString
     case NuTypeDef(kind, nme, tparams, params, parents, sup, ths, body) =>
+      val bodyCtx = ctx.indent
       s"${kind.str} ${nme.name}${tparams.map(_.showIn(ctx, 0))mkStringOr(", ", "[", "]")}(${
         params.fields.map {
           case (N, Fld(_, _, Asc(v: Var, ty))) => v.name + ": " + ty.showIn(ctx, 0)
@@ -128,9 +134,10 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
         case Nil => ""
         case ps => ps.mkString(", ") // TODO pp
       }}${if (body.entities.isEmpty && sup.isEmpty && ths.isEmpty) "" else
-        " {" + sup.fold("")("\nsuper: " + _.showIn(ctx, 0)) +
-        ths.fold("")("\nthis: " + _.showIn(ctx, 0)) +
-          Signature(body.entities.collect { case d: NuDecl => d }, N).showIn(ctx, 0) + "\n}"
+        " {\n" + sup.fold("")(s"${bodyCtx.indStr}super: " + _.showIn(bodyCtx, 0) + "\n") +
+        ths.fold("")(s"${bodyCtx.indStr}this: " + _.showIn(bodyCtx, 0) + "\n") +
+          Signature(body.entities.collect { case d: NuDecl => d }, N).showIn(bodyCtx, 0) +
+            ctx.indStr + "}"
       }"
   }
   
@@ -226,7 +233,12 @@ trait TypeImpl extends Located { self: Type =>
 }
 
 
-final case class ShowCtx(vs: Map[TypeVar, Str], debug: Bool) // TODO make use of `debug` or rm
+final case class ShowCtx(vs: Map[TypeVar, Str], debug: Bool, indentLevel: Int) // TODO make use of `debug` or rm
+{
+  lazy val indStr: Str = "  " * indentLevel
+  def lnIndStr: Str = "\n" + indStr
+  def indent: ShowCtx = copy(indentLevel = indentLevel + 1)
+}
 object ShowCtx {
   /**
     * Create a context from a list of types. For named variables and
@@ -269,7 +281,7 @@ object ShowCtx {
       S(('a' + idx % numLetters).toChar.toString + (if (postfix === 0) "" else postfix.toString), idx + 1)
     }.filterNot(used).map(assignName)
     
-    ShowCtx(namedMap ++ unnamedVars.zip(names), debug)
+    ShowCtx(namedMap ++ unnamedVars.zip(names), debug, 0)
   }
 }
 

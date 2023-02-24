@@ -5,19 +5,17 @@
 
 class Add<E>(lhs: E, rhs: E)
 class Lit(n: int)
-//│ 
 //│ class Add[E](lhs: E, rhs: E) {
-//│ this: 'this
+//│   this: 'this
 //│ }
 //│ class Lit(n: int) {
-//│ this: 'this0
+//│   this: 'this0
 //│ }
 //│   where
 //│     'this0 :> Lit
 //│     'this :> Add[?]
 
 let add11 = Add(Lit(1), Lit(2))
-//│ 
 //│ let add11: Add['E]
 //│   where
 //│     'E :> Lit
@@ -26,7 +24,6 @@ fun eval(e) =
   if e is
     Lit(n) then n: int
     Add(l, r) then eval(l) + eval(r)
-//│ 
 //│ fun eval: 'a -> int
 //│   where
 //│     'a <: Add['E] | Lit
@@ -39,11 +36,10 @@ mixin EvalBase {
       Lit(n) then n: int
       Add(l, r) then this.eval(l) + this.eval(r)
 }
-//│ 
 //│ mixin EvalBase() {
-//│ super: 'super
-//│ this: 'this
-//│ fun eval: (Add['E] | Lit) -> int
+//│   super: 'super
+//│   this: 'this
+//│   fun eval: (Add['E] | Lit) -> int
 //│ }
 //│   where
 //│     'E <: 'lhs
@@ -51,10 +47,9 @@ mixin EvalBase {
 
 
 module TestLang: EvalBase
-//│ 
 //│ namespace TestLang() {
-//│ this: 'this
-//│ fun eval: 'a -> int
+//│   this: 'this
+//│   fun eval: 'a -> int
 //│ }
 //│   where
 //│     'a <: Add['E] | Lit
@@ -62,55 +57,32 @@ module TestLang: EvalBase
 //│     'this :> TestLang
 
 TestLang.eval
-//│ 
 //│ 'a -> int
 //│   where
 //│     'a <: Add['E] | Lit
 //│     'E <: 'a
-//│ Typed: 'a -> int
-//│   where
-//│     'a <: Add['E] | Lit
-//│     'E <: 'a
 
 
 
 add11
-//│ 
 //│ Add['E]
-//│   where
-//│     'E :> Lit
-//│ Typed: Add['E]
 //│   where
 //│     'E :> Lit
 
 TestLang.eval(add11)
-//│ 
 //│ int
-//│ Typed: int
 
 add11
-//│ 
 //│ Add['E]
-//│   where
-//│     'E :> Lit
-//│        <: Add['E] | Lit
-//│ Typed: Add['E]
 //│   where
 //│     'E :> Lit
 //│        <: Add['E] | Lit
 
 TestLang.eval(add11)
-//│ 
 //│ int
-//│ Typed: int
 
 add11
-//│ 
 //│ Add['E]
-//│   where
-//│     'E :> Lit
-//│        <: Add['E] | Lit
-//│ Typed: Add['E]
 //│   where
 //│     'E :> Lit
 //│        <: Add['E] | Lit
@@ -118,15 +90,13 @@ add11
 
 
 class Neg<A>(expr: A)
-//│ 
 //│ class Neg[A](expr: A) {
-//│ this: 'this
+//│   this: 'this
 //│ }
 //│   where
 //│     'this :> Neg[?]
 
 let add2negadd11 = Add(Lit(2), Neg(add11))
-//│ 
 //│ let add2negadd11: Add['E]
 //│   where
 //│     'E :> Lit | Neg['A]
@@ -140,11 +110,10 @@ mixin EvalNeg {
     if e is Neg(d) then 0 - this.eval(d)
     else super.eval(e)
 }
-//│ 
 //│ mixin EvalNeg() {
-//│ super: 'super
-//│ this: 'this
-//│ fun eval: (Neg['A] | 'a & ~Neg) -> (int | 'b)
+//│   super: 'super
+//│   this: 'this
+//│   fun eval: (Neg['A] | 'a & ~Neg) -> (int | 'b)
 //│ }
 //│   where
 //│     'A <: 'expr
@@ -153,10 +122,9 @@ mixin EvalNeg {
 
 
 module TestLang: EvalBase, EvalNeg
-//│ 
 //│ namespace TestLang() {
-//│ this: 'this
-//│ fun eval: 'a -> int
+//│   this: 'this
+//│   fun eval: 'a -> int
 //│ }
 //│   where
 //│     'a <: Add['E] | Lit | Neg['A]
@@ -165,13 +133,7 @@ module TestLang: EvalBase, EvalNeg
 //│     'this :> TestLang
 
 TestLang.eval
-//│ 
 //│ 'a -> int
-//│   where
-//│     'a <: Add['E] | Lit | Neg['A]
-//│     'A <: 'a
-//│     'E <: 'a
-//│ Typed: 'a -> int
 //│   where
 //│     'a <: Add['E] | Lit | Neg['A]
 //│     'A <: 'a
@@ -179,60 +141,48 @@ TestLang.eval
 
 
 TestLang.eval(add11)
-//│ 
 //│ int
-//│ Typed: int
 
 TestLang.eval(Neg(add11))
-//│ 
 //│ int
-//│ Typed: int
 
 TestLang.eval(Add(Lit(2), Neg(Lit(1))))
-//│ 
 //│ int
-//│ Typed: int
 
 TestLang.eval(Neg(Neg(add11)))
-//│ 
 //│ int
-//│ Typed: int
 
 
 :e
 TestLang.eval(add2negadd11)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.203: 	TestLang.eval(add2negadd11)
+//│ ║  l.157: 	TestLang.eval(add2negadd11)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Neg[?A]` does not match type `Add[?E] | Lit`
-//│ ║  l.128: 	let add2negadd11 = Add(Lit(2), Neg(add11))
-//│ ║         	                               ^^^^^^^^^^
+//│ ║  l.99: 	let add2negadd11 = Add(Lit(2), Neg(add11))
+//│ ║        	                               ^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.38: 	    if e is
+//│ ║  l.35: 	    if e is
 //│ ║        	       ^
 //│ ╟── Note: type parameter E is defined at:
 //│ ║  l.6: 	class Add<E>(lhs: E, rhs: E)
 //│ ╙──     	          ^
-//│ 
 //│ error | int
-//│ Typed: error | int
 
 :e
 TestLang.eval(Add(Lit(2), Neg(add11)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.221: 	TestLang.eval(Add(Lit(2), Neg(add11)))
+//│ ║  l.173: 	TestLang.eval(Add(Lit(2), Neg(add11)))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Neg[?A]` does not match type `Add[?E] | Lit`
-//│ ║  l.128: 	let add2negadd11 = Add(Lit(2), Neg(add11))
-//│ ║         	                               ^^^^^^^^^^
+//│ ║  l.99: 	let add2negadd11 = Add(Lit(2), Neg(add11))
+//│ ║        	                               ^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.38: 	    if e is
+//│ ║  l.35: 	    if e is
 //│ ║        	       ^
 //│ ╟── Note: type parameter E is defined at:
 //│ ║  l.6: 	class Add<E>(lhs: E, rhs: E)
 //│ ╙──     	          ^
-//│ 
 //│ error
-//│ Typed: error
 
 

@@ -568,15 +568,17 @@ class DiffTests
               
               val exp = typer.expandType(sim)(ctx)
               
-              output(exp.show)
+              val expStr = exp.show
               
-              // val exp = getType(typer.PolymorphicType(0, res_ty))
-              // output(s"Typed: ${exp}")
-              tpd.result.foreach { res_ty =>
-                val exp = getType(typer.PolymorphicType(0, res_ty))
-                output(s"Typed: ${exp.show}")
-              }
-              // */
+              output(expStr.stripSuffix("\n"))
+              
+              // // val exp = getType(typer.PolymorphicType(0, res_ty))
+              // // output(s"Typed: ${exp}")
+              // tpd.result.foreach { res_ty =>
+              //   val exp = getType(typer.PolymorphicType(0, res_ty))
+              //   output(s"Typed: ${exp.show}")
+              // }
+              // // */
               
               /* 
               import typer._

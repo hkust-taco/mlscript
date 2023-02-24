@@ -7,11 +7,10 @@
 mixin BaseTest {
   fun test = super.base
 }
-//│ 
 //│ mixin BaseTest() {
-//│ super: 'super
-//│ this: 'this
-//│ fun test: 'base
+//│   super: 'super
+//│   this: 'this
+//│   fun test: 'base
 //│ }
 //│   where
 //│     'super <: {base: 'base}
@@ -20,12 +19,11 @@ mixin BaseInc {
   fun test = super.base + 1
   fun test2 = this.base
 }
-//│ 
 //│ mixin BaseInc() {
-//│ super: 'super
-//│ this: 'this
-//│ fun test: int
-//│ fun test2: 'base
+//│   super: 'super
+//│   this: 'this
+//│   fun test: int
+//│   fun test2: 'base
 //│ }
 //│   where
 //│     'this <: {base: 'base}
@@ -35,61 +33,49 @@ mixin BaseInc {
 class Base1(base: int): BaseTest, BaseInc {
   fun test3 = [base, this.base]
 }
-//│ 
 //│ class Base1(base: int) {
-//│ this: 'this
-//│ fun test: int
-//│ fun test2: int
-//│ fun test3: (int, 'base | int,)
+//│   this: 'this
+//│   fun test: int
+//│   fun test2: int
+//│   fun test3: (int, 'base | int,)
 //│ }
 //│   where
 //│     'this :> Base1
 //│           <: {base: 'base}
 
 Base1(1).test
-//│ 
 //│ int
-//│ Typed: int
 
 Base1(1).test2
-//│ 
 //│ int
-//│ Typed: int
 
 Base1(1).test3
-//│ 
 //│ (int, int,)
-//│ Typed: (int, int,)
 
 
 class Base1(base): BaseTest
-//│ 
 //│ class Base1(base: nothing) {
-//│ this: 'this
-//│ fun test: nothing
+//│   this: 'this
+//│   fun test: nothing
 //│ }
 //│   where
 //│     'this :> Base1
 
 Base1
-//│ 
 //│ (base: anything,) -> Base1
-//│ Typed: (base: anything,) -> Base1
 
 // TODO
 Base1(1).test
-//│ 
 //│ nothing
-//│ Typed: nothing
 
 
 :e
 class Base1(x): BaseTest
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.87: 	class Base1(x): BaseTest
+//│ ║  l.73: 	class Base1(x): BaseTest
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `{x: ?x}` does not have field 'base'
-//│ ║  l.87: 	class Base1(x): BaseTest
+//│ ║  l.73: 	class Base1(x): BaseTest
 //│ ║        	           ^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.8: 	  fun test = super.base
@@ -97,46 +83,39 @@ class Base1(x): BaseTest
 //│ ╟── from reference:
 //│ ║  l.8: 	  fun test = super.base
 //│ ╙──     	             ^^^^^
-//│ 
 //│ class Base1(x: nothing) {
-//│ this: 'this
-//│ fun test: nothing
+//│   this: 'this
+//│   fun test: nothing
 //│ }
 //│   where
 //│     'this :> Base1
 
 Base1
-//│ 
 //│ (x: anything,) -> Base1
-//│ Typed: (x: anything,) -> Base1
 
 
 // :ns
 mixin Foo {
   fun test(x) = [super.base + x, x, super.misc]
 }
-//│ 
 //│ mixin Foo() {
-//│ super: 'super
-//│ this: 'this
-//│ fun test: (int & 'a) -> (int, 'a, 'misc,)
+//│   super: 'super
+//│   this: 'this
+//│   fun test: (int & 'a) -> (int, 'a, 'misc,)
 //│ }
 //│   where
 //│     'super <: {base: int, misc: 'misc}
 
 module Base1(base: int, misc: string): Foo
-//│ 
 //│ namespace Base1(base: int, misc: string) {
-//│ this: 'this
-//│ fun test: (int & 'a) -> (int, 'a, string,)
+//│   this: 'this
+//│   fun test: (int & 'a) -> (int, 'a, string,)
 //│ }
 //│   where
 //│     'this :> Base1
 
 Base1.test
-//│ 
 //│ (int & 'a) -> (int, 'a, string,)
-//│ Typed: (int & 'a) -> (int, 'a, string,)
 
 
 mixin WrapBase {
@@ -145,12 +124,11 @@ mixin WrapBase {
   fun wrapA(x: int) = x : int
   fun wrap(x) = x
 }
-//│ 
 //│ mixin WrapBase() {
-//│ super: 'super
-//│ this: 'this
-//│ fun wrap: 'a -> 'a
-//│ fun wrapA: (x: int,) -> int
+//│   super: 'super
+//│   this: 'this
+//│   fun wrap: 'a -> 'a
+//│   fun wrapA: (x: int,) -> int
 //│ }
 
 // :d
@@ -158,12 +136,11 @@ mixin Wrap {
   fun wrapA(x) = [super.wrapA(x)]
   fun wrap(x) = [super.wrap(x)]
 }
-//│ 
 //│ mixin Wrap() {
-//│ super: 'super
-//│ this: 'this
-//│ fun wrap: 'a -> ('b,)
-//│ fun wrapA: 'c -> ('d,)
+//│   super: 'super
+//│   this: 'this
+//│   fun wrap: 'a -> ('b,)
+//│   fun wrapA: 'c -> ('d,)
 //│ }
 //│   where
 //│     'super <: {wrap: 'a -> 'b, wrapA: 'c -> 'd}
@@ -172,93 +149,73 @@ mixin Wrap {
 
 // :d
 module WrapBase1: WrapBase, Wrap
-//│ 
 //│ namespace WrapBase1() {
-//│ this: 'this
-//│ fun wrap: 'a -> ('a,)
-//│ fun wrapA: int -> (int,)
+//│   this: 'this
+//│   fun wrap: 'a -> ('a,)
+//│   fun wrapA: int -> (int,)
 //│ }
 //│   where
 //│     'this :> WrapBase1
 
 
 WrapBase1
-//│ 
 //│ WrapBase1
-//│ Typed: WrapBase1
 
 // :d
 WrapBase1.wrapA
-//│ 
 //│ int -> (int,)
-//│ Typed: int -> (int,)
 
 WrapBase1.wrap
-//│ 
 //│ 'a -> ('a,)
-//│ Typed: 'a -> ('a,)
 
 // :d
 // WrapBase1.wrap
 
 
 WrapBase1.wrap(1)
-//│ 
 //│ (1,)
-//│ Typed: (1,)
 
 WrapBase1.wrap("ok")
-//│ 
 //│ ("ok",)
-//│ Typed: ("ok",)
 
 
 WrapBase1.wrapA(1)
-//│ 
 //│ (int,)
-//│ Typed: (int,)
 
 :e
 WrapBase1.wrapA("ok")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.222: 	WrapBase1.wrapA("ok")
+//│ ║  l.186: 	WrapBase1.wrapA("ok")
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"ok"` is not an instance of type `int`
-//│ ║  l.222: 	WrapBase1.wrapA("ok")
+//│ ║  l.186: 	WrapBase1.wrapA("ok")
 //│ ║         	                ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.145: 	  fun wrapA(x: int) = x : int
+//│ ║  l.124: 	  fun wrapA(x: int) = x : int
 //│ ║         	               ^^^
 //│ ╟── from reference:
-//│ ║  l.158: 	  fun wrapA(x) = [super.wrapA(x)]
+//│ ║  l.136: 	  fun wrapA(x) = [super.wrapA(x)]
 //│ ╙──       	                              ^
-//│ 
 //│ (int,) | error
-//│ Typed: (int,) | error
 
 
 
 module WrapBase2: WrapBase, Wrap, Wrap, Wrap
-//│ 
 //│ namespace WrapBase2() {
-//│ this: 'this
-//│ fun wrap: 'a -> ((('a,),),)
-//│ fun wrapA: int -> (((int,),),)
+//│   this: 'this
+//│   fun wrap: 'a -> ((('a,),),)
+//│   fun wrapA: int -> (((int,),),)
 //│ }
 //│   where
 //│     'this :> WrapBase2
 
 let w = WrapBase2.wrap
-//│ 
 //│ let w: 'a -> ((('a,),),)
 
 let wd = w(1)
-//│ 
 //│ let wd: (((1,),),)
 
 wd._1._1._1 + 1
-//│ 
 //│ int
-//│ Typed: int
 
 
