@@ -53,17 +53,21 @@ class C {
 //│ }
 
 
+// TODO
 class Base0(n) {
   fun me = this
   fun my = this.n
   fun mine = my
   fun oops = this.my
 }
-//│ class Base0(n: nothing) {
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ║  l.57: 	class Base0(n) {
+//│ ╙──      	            ^
+//│ class Base0(n: error) {
 //│   this: {my: 'my, n: 'n} & 'base0
-//│   fun me: Base0 & {n: nothing} | 'base0
-//│   fun mine: 'n
-//│   fun my: 'n
+//│   fun me: Base0 & {n: error} | 'base0
+//│   fun mine: error | 'n
+//│   fun my: error | 'n
 //│   fun oops: 'my
 //│ }
 
@@ -76,7 +80,7 @@ let b1 = Base0(42)
 
 // :d
 let n1 = b1.n
-//│ let n1: nothing
+//│ let n1: error
 
 // TODO
 n1 + 1
@@ -86,7 +90,7 @@ n1 + 1
 let b2 = Base0("hi")
 let n2 = b2.n
 //│ let b2: Base0
-//│ let n2: nothing
+//│ let n2: error
 
 
 
@@ -133,7 +137,7 @@ b.me
 :e
 b.getBaseTypo
 //│ ╔══[ERROR] class `Base1` does not contain member `getBaseTypo`
-//│ ║  l.134: 	b.getBaseTypo
+//│ ║  l.138: 	b.getBaseTypo
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ error
 
@@ -143,17 +147,17 @@ b : Base1
 
 
 :e // TODO
-class Rec(n) {
+class Rec(n: int) {
   fun go = Rec(n + 1)
 }
 //│ ╔══[ERROR] Cyclic definition
-//│ ║  l.146: 	class Rec(n) {
-//│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.147: 	  fun go = Rec(n + 1)
+//│ ║  l.150: 	class Rec(n: int) {
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.151: 	  fun go = Rec(n + 1)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.148: 	}
+//│ ║  l.152: 	}
 //│ ╙──       	^
-//│ class Rec(n: nothing) {
+//│ class Rec(n: int) {
 //│   fun go: error
 //│ }
 
@@ -166,16 +170,16 @@ class Annots(base: 0 | 1) {
   fun a = base
 }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.165: 	  a: int
+//│ ║  l.169: 	  a: int
 //│ ║         	  ^
 //│ ╟── type `(0 | 1,)` is not an instance of type `int`
-//│ ║  l.164: 	class Annots(base: 0 | 1) {
+//│ ║  l.168: 	class Annots(base: 0 | 1) {
 //│ ║         	                   ^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.165: 	  a: int
+//│ ║  l.169: 	  a: int
 //│ ║         	  ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.165: 	  a: int
+//│ ║  l.169: 	  a: int
 //│ ╙──       	     ^^^
 //│ class Annots(base: (0 | 1,)) {
 //│   fun a: (0 | 1,)

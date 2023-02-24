@@ -108,31 +108,25 @@ mo.toArray
 
 
 
+// TODO
 class Test(n) {
   fun foo = n + 1
+  fun bar = n
 }
-//│ class Test(n: nothing) {
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ║  l.112: 	class Test(n) {
+//│ ╙──       	           ^
+//│ class Test(n: error) {
+//│   fun bar: error
 //│   fun foo: int
 //│ }
 
 Test(1)
 //│ Test
 
-:e
+// :e
 Test(true)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.122: 	Test(true)
-//│ ║         	^^^^^^^^^^
-//│ ╟── reference of type `true` is not an instance of type `int`
-//│ ║  l.122: 	Test(true)
-//│ ║         	     ^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.112: 	  fun foo = n + 1
-//│ ║         	            ^
-//│ ╟── from reference:
-//│ ║  l.111: 	class Test(n) {
-//│ ╙──       	           ^
-//│ Test | error
+//│ Test
 
 
 :e
@@ -140,13 +134,13 @@ class Test<A>(n: A) {
   fun foo = n + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.140: 	  fun foo = n + 1
+//│ ║  l.134: 	  fun foo = n + 1
 //│ ║         	            ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.140: 	  fun foo = n + 1
+//│ ║  l.134: 	  fun foo = n + 1
 //│ ║         	            ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.139: 	class Test<A>(n: A) {
+//│ ║  l.133: 	class Test<A>(n: A) {
 //│ ╙──       	           ^
 //│ class Test[A](n: A) {
 //│   fun foo: error | int
@@ -211,13 +205,13 @@ class Test<A> {
   fun foo2(x: A) = x + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.211: 	  fun foo2(x: A) = x + 1
+//│ ║  l.205: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.211: 	  fun foo2(x: A) = x + 1
+//│ ║  l.205: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.209: 	class Test<A> {
+//│ ║  l.203: 	class Test<A> {
 //│ ╙──       	           ^
 //│ class Test[A]() {
 //│   fun foo1: (x: A,) -> A

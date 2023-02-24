@@ -12,10 +12,17 @@ class Foo()
 Foo
 //│ () -> Foo
 
+// TODO
 fun fooo(x) =
   class C(y, z)
   C(0, x)
-//│ fun fooo: anything -> C
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ║  l.17: 	  class C(y, z)
+//│ ╙──      	          ^
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ║  l.17: 	  class C(y, z)
+//│ ╙──      	             ^
+//│ fun fooo: error -> C
 
 
 
@@ -128,11 +135,11 @@ module Test1_2 {
   fun b = Test1_1.a
 }
 //│ ╔══[ERROR] Cyclic definition
-//│ ║  l.124: 	module Test1_1 {
+//│ ║  l.131: 	module Test1_1 {
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.125: 	  fun a = Test1_2.b
+//│ ║  l.132: 	  fun a = Test1_2.b
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.126: 	}
+//│ ║  l.133: 	}
 //│ ╙──       	^
 //│ namespace Test1_1() {
 //│   fun a: error
@@ -153,11 +160,11 @@ class Test1_2 {
   fun b = Test1_1().a
 }
 //│ ╔══[ERROR] Cyclic definition
-//│ ║  l.149: 	class Test1_1 {
+//│ ║  l.156: 	class Test1_1 {
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.150: 	  fun a = Test1_2().b
+//│ ║  l.157: 	  fun a = Test1_2().b
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.151: 	}
+//│ ║  l.158: 	}
 //│ ╙──       	^
 //│ class Test1_1() {
 //│   fun a: error
@@ -180,30 +187,30 @@ module Test2_2 {
   fun e = Test2_1.n
 }
 //│ ╔══[ERROR] Cyclic definition
-//│ ║  l.171: 	module Test2_1 {
+//│ ║  l.178: 	module Test2_1 {
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.172: 	  fun t2 = Test2_2
+//│ ║  l.179: 	  fun t2 = Test2_2
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.173: 	  fun a = Test2_2.b
+//│ ║  l.180: 	  fun a = Test2_2.b
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.174: 	  fun d = Test2_2.e
+//│ ║  l.181: 	  fun d = Test2_2.e
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.175: 	  fun n = 456
+//│ ║  l.182: 	  fun n = 456
 //│ ║         	^^^^^^^^^^^^^
-//│ ║  l.176: 	}
+//│ ║  l.183: 	}
 //│ ╙──       	^
 //│ ╔══[ERROR] Cyclic definition
-//│ ║  l.171: 	module Test2_1 {
+//│ ║  l.178: 	module Test2_1 {
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.172: 	  fun t2 = Test2_2
+//│ ║  l.179: 	  fun t2 = Test2_2
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.173: 	  fun a = Test2_2.b
+//│ ║  l.180: 	  fun a = Test2_2.b
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.174: 	  fun d = Test2_2.e
+//│ ║  l.181: 	  fun d = Test2_2.e
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.175: 	  fun n = 456
+//│ ║  l.182: 	  fun n = 456
 //│ ║         	^^^^^^^^^^^^^
-//│ ║  l.176: 	}
+//│ ║  l.183: 	}
 //│ ╙──       	^
 //│ namespace Test2_1() {
 //│   fun a: 123

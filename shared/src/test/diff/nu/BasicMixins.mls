@@ -44,26 +44,33 @@ Base1(1).test3
 //│ (int, int,)
 
 
+// TODO
 class Base1(base): BaseTest
-//│ class Base1(base: nothing) {
-//│   fun test: nothing
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ║  l.48: 	class Base1(base): BaseTest
+//│ ╙──      	            ^^^^
+//│ class Base1(base: error) {
+//│   fun test: error
 //│ }
 
 Base1
-//│ (base: anything,) -> Base1
+//│ (base: error,) -> Base1
 
 // TODO
 Base1(1).test
-//│ nothing
+//│ error
 
 
 :e
 class Base1(x): BaseTest
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ║  l.65: 	class Base1(x): BaseTest
+//│ ╙──      	            ^
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.61: 	class Base1(x): BaseTest
+//│ ║  l.65: 	class Base1(x): BaseTest
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `{x: ?x}` does not have field 'base'
-//│ ║  l.61: 	class Base1(x): BaseTest
+//│ ╟── type `{x: error}` does not have field 'base'
+//│ ║  l.65: 	class Base1(x): BaseTest
 //│ ║        	           ^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.8: 	  fun test = super.base
@@ -71,12 +78,12 @@ class Base1(x): BaseTest
 //│ ╟── from reference:
 //│ ║  l.8: 	  fun test = super.base
 //│ ╙──     	             ^^^^^
-//│ class Base1(x: nothing) {
+//│ class Base1(x: error) {
 //│   fun test: nothing
 //│ }
 
 Base1
-//│ (x: anything,) -> Base1
+//│ (x: error,) -> Base1
 
 
 // :ns
@@ -156,16 +163,16 @@ WrapBase1.wrapA(1)
 :e
 WrapBase1.wrapA("ok")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.157: 	WrapBase1.wrapA("ok")
+//│ ║  l.164: 	WrapBase1.wrapA("ok")
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"ok"` is not an instance of type `int`
-//│ ║  l.157: 	WrapBase1.wrapA("ok")
+//│ ║  l.164: 	WrapBase1.wrapA("ok")
 //│ ║         	                ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.103: 	  fun wrapA(x: int) = x : int
+//│ ║  l.110: 	  fun wrapA(x: int) = x : int
 //│ ║         	               ^^^
 //│ ╟── from reference:
-//│ ║  l.113: 	  fun wrapA(x) = [super.wrapA(x)]
+//│ ║  l.120: 	  fun wrapA(x) = [super.wrapA(x)]
 //│ ╙──       	                              ^
 //│ (int,) | error
 

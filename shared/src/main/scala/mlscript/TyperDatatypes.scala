@@ -159,8 +159,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                           case _ => ???
                         }
                       case (N, Fld(mut, spec, nme: Var)) =>
-                        assert(!mut && !spec, "TODO") // TODO
-                        nme -> FieldType(N, freshVar(ttp(nme), N, S(nme.name)))(provTODO)
+                        // assert(!mut && !spec, "TODO") // TODO
+                        // nme -> FieldType(N, freshVar(ttp(nme), N, S(nme.name)))(provTODO)
+                        nme -> FieldType(N, err(msg"Class parameters currently need type annotations", nme.toLoc))(provTODO)
                       case _ => ???
                     }
                     // ctx ++= typedParams.mapKeysIter(_.name).mapValues(_.ub |> VarSymbol(_))
@@ -233,13 +234,15 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                                         case _ => ???
                                       }
                                     case cls: TypedNuCls =>
-                                      ???
+                                      err(msg"Class inheritance is not supported yet (use mixins)", p.toLoc) // TODO
+                                      Nil
                                     case als: TypedNuAls =>
                                       // TODO dealias first?
                                       err(msg"Cannot inherit from a type alias", p.toLoc)
                                       Nil
                                     case cls: TypedNuFun =>
-                                      ???
+                                      err(msg"Cannot inherit from this", p.toLoc)
+                                      Nil
                                   }
                                 case S(_) =>
                                   err(msg"Cannot inherit from this", p.toLoc)
@@ -249,7 +252,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                                   Nil
                               }
                             case _ =>
-                              err(msg"Illegal parent specification", p.toLoc)
+                              err(msg"Unsupported parent specification", p.toLoc) // TODO
                               Nil
                           }
                         }()

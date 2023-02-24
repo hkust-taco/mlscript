@@ -1,0 +1,28 @@
+:NewParser
+:NewDefs
+:NoJS
+
+
+// TODO
+mixin BaseTest(x: int) {
+  fun test = x
+}
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.8: 	  fun test = x
+//│ ╙──     	             ^
+//│ mixin BaseTest() {
+//│   fun test: error
+//│ }
+
+// TODO
+mixin BaseTest(x) {
+  fun test = x
+}
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.19: 	  fun test = x
+//│ ╙──      	             ^
+//│ mixin BaseTest() {
+//│   fun test: error
+//│ }
+
+
