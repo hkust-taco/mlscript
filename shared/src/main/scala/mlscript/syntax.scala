@@ -78,6 +78,7 @@ final case class TyApp(lhs: Term, targs: Ls[Type])                   extends Ter
 final case class Where(body: Term, where: Ls[Statement])             extends Term
 final case class Forall(params: Ls[TypeVar], body: Term)                 extends Term
 final case class Inst(body: Term)                                    extends Term
+final case class ClassExpression(cls: TypeDef)                       extends Term
 
 sealed abstract class IfBody extends IfBodyImpl
 // final case class IfTerm(expr: Term) extends IfBody // rm?

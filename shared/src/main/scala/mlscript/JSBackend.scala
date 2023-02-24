@@ -254,6 +254,9 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case New(_, TypingUnit(_)) =>
       throw CodeGenError("custom class body is not supported yet")
     case Forall(_, bod) => translateTerm(bod)
+    case ClassExpression(TypeDef(Cls, TypeName(name), tparams, baseType, _, members, _)) =>
+      val clsBody = scope.declareClass(name, tparams map { _.name }, baseType, members)
+      JSClassExpr(translateClassDeclaration(clsBody, Some(ClassSymbol("base", "base", Ls(), baseType, Ls()))))
     case _: Bind | _: Test | If(_, _) | TyApp(_, _) | _: Splc | _: Where =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
@@ -441,6 +444,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     }
     // Declare the alias for `this` before declaring parameters.
     val selfSymbol = memberScope.declareThisAlias()
+    val superSymbol = memberScope.declareSuper()
     // Declare parameters.
     val (memberParams, body) = method.rhs.value match {
       case Lam(params, body) =>

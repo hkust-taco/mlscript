@@ -245,6 +245,12 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     symbol
   }
 
+  def declareSuper(): ValueSymbol = {
+    val symbol = ValueSymbol("super", "super", Some(false), false)
+    register(symbol)
+    symbol
+  }
+
   def declareValue(lexicalName: Str, isByvalueRec: Option[Boolean], isLam: Boolean): ValueSymbol = {
     val runtimeName = lexicalValueSymbols.get(lexicalName) match {
       // If we are implementing a stub symbol and the stub symbol did not shadow any other
