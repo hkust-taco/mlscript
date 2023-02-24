@@ -63,7 +63,7 @@ fun bar = {y: foo}
 // FIXME pretty-printing?
 foo
 //│ 
-//│ {x: {y: 'foo}}
+//│ forall 'foo. {x: {y: 'foo}}
 //│   where
 //│     'foo :> {x: {y: 'foo}}
 //│ Typed: 'foo
@@ -73,7 +73,7 @@ foo
 :ns
 foo
 //│ 
-//│ {x: {y: 'foo}}
+//│ forall 'foo. {x: {y: 'foo}}
 //│   where
 //│     'foo :> {x: {y: 'foo}}
 //│ Typed: forall 'foo. {x: {y: 'foo}}
@@ -117,11 +117,11 @@ fun bar(b) = foo(b)
 :ns
 foo
 //│ 
-//│ 'a -> {h: 'a, t: 'b}
+//│ forall 'a 'b 'c. 'a -> {h: 'a, t: 'c}
 //│   where
-//│     'b :> {h: 'a, t: 'b}
-//│     'a <: 'c
-//│     'c <: 'a
+//│     'c :> {h: 'a, t: 'c}
+//│     'a <: 'b
+//│     'b <: 'a
 //│ Typed: forall 'a 'b 'c. 'a -> {h: 'a, t: 'c}
 //│   where
 //│     'c :> {h: 'a, t: 'c}

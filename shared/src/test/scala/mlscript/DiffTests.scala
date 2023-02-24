@@ -497,9 +497,22 @@ class DiffTests
               
               // /* 
               val vars: Map[Str, typer.SimpleType] = Map.empty
-              val tpd = typer.typeTypingUnit(TypingUnit(p.tops), allowPure = true)(ctx, raise, vars)
+              val tpd = typer.typeTypingUnit(TypingUnit(p.tops), allowPure = true)(ctx.nest, raise, vars)
               
               tpd.force()(raise)
+              
+              tpd.entities.foreach { e =>
+                e.complete()(raise) match {
+                  case tf: typer.TypedNuFun =>
+                    val sign = typer.PolymorphicType.mk(ctx.lvl, tf.ty)
+                    ctx += tf.fd.nme.name -> typer.VarSymbol(sign, tf.fd.nme)
+                  case tt: typer.TypedNuTypeDef =>
+                    ctx += e.decl.name -> e
+                    // ctx += e.decl.name ->
+                    //   typer.VarSymbol(e.typeSignature(raise), e.decl.nameVar)
+                  // case tt: typer.TypedNuMxn =>
+                }
+              }
               
               val exp = typer.expandType(tpd)(ctx)
               // output(exp.toString)

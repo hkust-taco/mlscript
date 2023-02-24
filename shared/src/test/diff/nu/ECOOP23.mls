@@ -25,6 +25,11 @@ fun add11 = Add(Lit(1), Lit(2))
 //│     'add11 :> Add & {Add#E = 'E}
 //│     'E :> Lit
 
+// add11 + 1
+
+// add11
+
+
 fun eval(e) =
   if e is
     Lit(n) then n
@@ -52,8 +57,8 @@ mixin EvalBase {
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
 //│ 	at: mlscript.Typer.goLike$1(Typer.scala:1278)
 //│ 	at: mlscript.Typer.expandType(Typer.scala:1374)
-//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:504)
-//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:950)
+//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:517)
+//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:963)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
 //│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
@@ -115,25 +120,11 @@ let add2negadd11 = Add(Lit(2), Neg(add11))
 //│   where
 //│     'a :> Add & {Add#E = 'E}
 //│     'E :> Neg & {Neg#A = 'A} | Lit
-//│     'A :> Add & {Add#E :> 'E0 <: 'E1}
-//│     'E1 :> 'E0 | 'E2 | Lit
-//│     'E0 <: 'E3
-//│     'E3 :> 'E2 | Lit
-//│         <: 'E4
-//│     'E2 :> Lit
-//│         <: 'E4
-//│     'E4 :> Lit
-//│         <: 'E2 & 'rhs & 'lhs
-//│     'lhs :> Lit
-//│          <: 'lhs0
-//│     'lhs0 :> Lit
-//│           <: 'b
-//│     'rhs :> Lit
-//│          <: 'rhs0
-//│     'rhs0 :> Lit
-//│           <: 'b
-//│     'b :> Lit | Add & {Add#E :> 'E2 <: 'E3}
-//│        <: Lit | Add & {Add#E = 'E4} & ~Lit
+//│     'A :> forall 'b 'E0 'add11. 'b
+//│     'b :> Add & {Add#E = 'E0}
+//│        <: 'add11
+//│     'add11 :> Add & {Add#E = 'E0}
+//│     'E0 :> Lit
 
 
 mixin EvalNeg {
@@ -141,14 +132,14 @@ mixin EvalNeg {
     if e is Neg(d) then 0 - this.eval(d)
     else super.eval(e)
 }
-//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin EvalNeg() {fun eval = ...},this156',super157',TypedTypingUnit(List(eval ~> TypedNuFun(1,fun eval = (e,) => {if (is (e,) (Neg (d,),)) then - (0,) ((this).eval (d,),) else (super).eval (e,)},(α159'' -> (α171'' | α175'')))),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
+//│ /!!!\ Uncaught error: scala.MatchError: TypedNuMxn(mixin EvalNeg() {fun eval = ...},this154',super155',TypedTypingUnit(List(eval ~> TypedNuFun(1,fun eval = (e,) => {if (is (e,) (Neg (d,),)) then - (0,) ((this).eval (d,),) else (super).eval (e,)},(α157'' -> (α169'' | α173'')))),None)) (of class mlscript.NuTypeDefs$TypedNuMxn)
 //│ 	at: mlscript.Typer.mlscript$Typer$$goDecl$1(Typer.scala:1259)
 //│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:1287)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
 //│ 	at: mlscript.Typer.goLike$1(Typer.scala:1278)
 //│ 	at: mlscript.Typer.expandType(Typer.scala:1374)
-//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:504)
-//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:950)
+//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:517)
+//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:963)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
 //│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
@@ -265,39 +256,31 @@ TestLang.eval(Neg(Neg(add11)))
 
 
 TestLang.eval(add2negadd11)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.267: 	TestLang.eval(add2negadd11)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Neg & {Neg#A = ?A}` does not match type `Add & {Add#E = ?E} | Lit`
-//│ ║  l.112: 	let add2negadd11 = Add(Lit(2), Neg(add11))
-//│ ║         	                               ^^^^^^^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.45: 	    if e is
-//│ ║        	       ^
-//│ ╟── Note: type parameter E is defined at:
-//│ ║  l.6: 	class Add<E>(lhs: E, rhs: E)
-//│ ╙──     	          ^
 //│ 
 //│ 'a
 //│   where
-//│     'a :> 'b | 'c | error
+//│     'a :> 'b | 'c
 //│     'c :> 'd
 //│        <: int
 //│     'd :> int | 'e
 //│        <: int
 //│     'e := int
 //│     'b := int
-//│ Typed: error | int
+//│ Typed: int
+
+// add11
 
 TestLang.eval(Add(Lit(2), Neg(add11)))
-//│ ╔══[ERROR] Subtyping constraint of the form `?eval <: ?a -> ?b` exceeded recursion depth limit (250)
-//│ ║  l.292: 	TestLang.eval(Add(Lit(2), Neg(add11)))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ 
 //│ 'a
 //│   where
-//│     'a :> error
-//│ Typed: error
+//│     'a :> 'b | 'c
+//│     'c :> 'd
+//│        <: int
+//│     'd :> int | 'e
+//│        <: int
+//│     'e := int
+//│     'b := int
+//│ Typed: int
 
 

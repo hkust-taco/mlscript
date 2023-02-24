@@ -152,17 +152,17 @@ let mo = map(opt, succ)
 //│ 
 //│ let mo: 'a
 //│   where
-//│     'a :> None | 'b
-//│     'b :> Some & {Some#A :> 'A <: 'A0}
-//│     'A0 :> 'A | int
+//│     'a :> forall 'b. None | 'b
+//│     'b :> Some & {Some#A = 'A}
+//│     'A :> int
 
 mo.toArray
 //│ 
 //│ 'toArray
 //│   where
 //│     'toArray :> ('A,) | ()
-//│     'A := in 'A0 out 'A1
-//│     'A1 :> 'A0 | int
+//│     'A := 'A0
+//│     'A0 :> int
 //│ Typed: Array[int]
 
 
@@ -454,7 +454,8 @@ foo(t)
 //│ 
 //│ 'a
 //│   where
-//│     'a :> (x: 'A,) -> 'A
+//│     'a :> forall 'foo1. 'foo1
+//│     'foo1 :> (x: 'A,) -> 'A
 //│     'A := int
 //│ Typed: (x: int,) -> int
 

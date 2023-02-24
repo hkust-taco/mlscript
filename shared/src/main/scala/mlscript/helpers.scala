@@ -348,10 +348,15 @@ trait DeclImpl extends Located { self: Decl =>
 
 trait NuDeclImpl extends Located { self: NuDecl =>
   val body: Located
-  val name: Str = self match {
-    case td: NuTypeDef => td.nme.name
-    case fd: NuFunDef => fd.nme.name
+  // val name: Str = self match {
+  //   case td: NuTypeDef => td.nme.name
+  //   case fd: NuFunDef => fd.nme.name
+  // }
+  val nameVar: Var = self match {
+    case td: NuTypeDef => td.nme.toVar
+    case fd: NuFunDef => fd.nme
   }
+  def name: Str = nameVar.name
   def showBody: Str = this match {
     case NuFunDef(_, _, _, rhs) => rhs.fold(_.toString, _.show)
     case td: NuTypeDef => td.body.show
@@ -387,6 +392,7 @@ trait TypingUnitImpl extends Located { self: TypingUnit =>
 trait TypeNameImpl extends Ordered[TypeName] { self: TypeName =>
   val base: TypeName = this
   def compare(that: TypeName): Int = this.name compare that.name
+  lazy val toVar: Var = Var(name).withLocOf(this)
 }
 
 trait TermImpl extends StatementImpl { self: Term =>
