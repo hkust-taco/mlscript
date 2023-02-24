@@ -524,6 +524,8 @@ class DiffTests
                 ttu.entities.map(_.complete()(raise)).foreach {
                   case tc: typer.TypedNuCls =>
                     output(s"${indStr}class ${tc.name}")
+                    output(s"${indStr}  this: ${tc.thisTy} ${tc.thisTy.showBounds
+                      .indentNewLines(indStr+"  |")}")
                     showTTU(tc.ttu, ind + 1)
                   case tm: typer.TypedNuMxn =>
                     output(s"${indStr}mixin ${tm.name}")

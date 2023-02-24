@@ -7,11 +7,11 @@
 class Foo()
 123
 //│ class Foo() {
-//│   this: 'this
+//│   this: 'this_Foo
 //│ }
 //│ 123
 //│ where
-//│   'this :> Foo
+//│   'this_Foo :> Foo
 
 Foo
 //│ () -> Foo
@@ -77,11 +77,11 @@ fun bar(b) = foo(b)
 
 :ns
 foo
-//│ forall 'a 'b 'c. 'c -> {h: 'c, t: 'b}
+//│ forall 'a 'b 'c. 'b -> {h: 'b, t: 'a}
 //│   where
-//│     'b :> {h: 'c, t: 'b}
-//│     'c <: 'a
-//│     'a <: 'c
+//│     'a :> {h: 'b, t: 'a}
+//│     'b <: 'c
+//│     'c <: 'b
 
 
 fun foo(a) = {h1: a, t1: bar(a)}
@@ -101,16 +101,16 @@ module Test0_2 {
   fun b = 123
 }
 //│ namespace Test0_1() {
-//│   this: 'this
+//│   this: 'this_Test0_1
 //│   fun a: 123
 //│ }
 //│ namespace Test0_2() {
-//│   this: 'this0
+//│   this: 'this_Test0_2
 //│   fun b: 123
 //│ }
 //│ where
-//│   'this0 :> Test0_2
-//│   'this :> Test0_1
+//│   'this_Test0_2 :> Test0_2
+//│   'this_Test0_1 :> Test0_1
 
 Test0_1.a
 //│ 123
@@ -122,16 +122,16 @@ class Test0_2() {
   fun b = 123
 }
 //│ class Test0_1() {
-//│   this: 'this
+//│   this: 'this_Test0_1
 //│   fun a: 123
 //│ }
 //│ class Test0_2() {
-//│   this: 'this0
+//│   this: 'this_Test0_2
 //│   fun b: 123
 //│ }
 //│ where
-//│   'this0 :> Test0_2
-//│   'this :> Test0_1
+//│   'this_Test0_2 :> Test0_2
+//│   'this_Test0_1 :> Test0_1
 
 
 :e // TODO
@@ -149,16 +149,16 @@ module Test1_2 {
 //│ ║  l.140: 	}
 //│ ╙──       	^
 //│ namespace Test1_1() {
-//│   this: 'this
+//│   this: 'this_Test1_1
 //│   fun a: error
 //│ }
 //│ namespace Test1_2() {
-//│   this: 'this0
+//│   this: 'this_Test1_2
 //│   fun b: error
 //│ }
 //│ where
-//│   'this0 :> Test1_2
-//│   'this :> Test1_1
+//│   'this_Test1_2 :> Test1_2
+//│   'this_Test1_1 :> Test1_1
 
 Test1_1.a
 //│ error
@@ -179,16 +179,16 @@ class Test1_2 {
 //│ ║  l.170: 	}
 //│ ╙──       	^
 //│ class Test1_1() {
-//│   this: 'this
+//│   this: 'this_Test1_1
 //│   fun a: error
 //│ }
 //│ class Test1_2() {
-//│   this: 'this0
+//│   this: 'this_Test1_2
 //│   fun b: error
 //│ }
 //│ where
-//│   'this0 :> Test1_2
-//│   'this :> Test1_1
+//│   'this_Test1_2 :> Test1_2
+//│   'this_Test1_1 :> Test1_1
 
 
 // TODO check TV hygiene
@@ -230,21 +230,21 @@ module Test2_2 {
 //│ ║  l.200: 	}
 //│ ╙──       	^
 //│ namespace Test2_1() {
-//│   this: 'this
+//│   this: 'this_Test2_1
 //│   fun a: 123
 //│   fun d: error
 //│   fun n: 456
 //│   fun t2: Test2_2
 //│ }
 //│ namespace Test2_2() {
-//│   this: 'this0
+//│   this: 'this_Test2_2
 //│   fun b: 123
 //│   fun c: error
 //│   fun e: error
 //│ }
 //│ where
-//│   'this0 :> Test2_2
-//│   'this :> Test2_1
+//│   'this_Test2_2 :> Test2_2
+//│   'this_Test2_1 :> Test2_1
 
 Test2_1.t2.b
 //│ 123

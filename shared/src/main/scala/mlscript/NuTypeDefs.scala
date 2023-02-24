@@ -148,7 +148,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             superTV.freshenAbove(lim, rigidify).asInstanceOf[TV],
             members.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap,
             ttu.freshenAbove(lim, rigidify))
-        case TypedNuCls(level, td, ttu, tps, params, members, thisTy) =>
+        case cls @ TypedNuCls(level, td, ttu, tps, params, members, thisTy) =>
           println(">>",level,ctx.lvl)
           // TypedNuCls(level, td, ttu.freshenAbove(level, rigidify),
           //   params.mapValues(_.freshenAbove(level, rigidify)),
@@ -157,7 +157,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             tps.mapValues(_.freshenAbove(lim, rigidify).asInstanceOf[TV]),
             params.mapValues(_.freshenAbove(lim, rigidify)),
             members.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap,
-            thisTy.freshenAbove(lim, rigidify))
+            thisTy.freshenAbove(lim, rigidify))(cls.instanceType)
         // case _ => ???
       // }
       }
@@ -196,6 +196,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       // members: Map[Str, LazyTypeInfo])
       members: Map[Str, NuMember],
       thisTy: ST
+  )(
+    val instanceType: ST, // only meant to be used in `force`
   ) extends TypedNuTypeDef(Cls) with TypedNuTermDef {
   // case class TypedNuCls(td: NuTypeDef, paramTypes: Ls[ST], ttu: TypedTypingUnit) extends TypedNuTypeDef(Cls) with TypedNuTermDef {
     def nme: TypeName = td.nme
@@ -209,7 +211,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           params.mapValues(_.update(t => f(pol.map(!_), t), t => f(pol, t))),
           members.mapValuesIter(_.mapPol(pol, smart)(f)).toMap,
           f(N, thisTy).asInstanceOf[TV]
-        )
+        )(instanceType)
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTermDef =
         TypedNuCls(level, td, ttu,
@@ -218,7 +220,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           params.mapValues(_.update(t => f(pol.contravar, t), t => f(pol, t))),
           members.mapValuesIter(_.mapPolMap(pol)(f)).toMap,
           f(pol.invar, thisTy).asInstanceOf[TV]
-        )
+        )(instanceType)
   }
   
   case class TypedNuMxn(td: NuTypeDef, thisTV: ST, superTV: ST, members: Map[Str, NuMember], ttu: TypedTypingUnit) extends TypedNuTypeDef(Mxn) with TypedNuTermDef {

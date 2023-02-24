@@ -18,13 +18,13 @@ class Base1(p: int): Over {
   // fun test2 = super.p // TODO
 }
 //│ class Base1(p: int) {
-//│   this: 'this
+//│   this: 'this_Base1
 //│   fun p: "hi"
 //│   fun test: (int, "hi" | 'p,)
 //│ }
 //│ where
-//│   'this :> Base1
-//│         <: {p: 'p}
+//│   'this_Base1 :> Base1 & {p: "hi"}
+//│               <: {p: 'p}
 
 
 Base1(123).test

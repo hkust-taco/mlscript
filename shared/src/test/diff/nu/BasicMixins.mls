@@ -34,14 +34,14 @@ class Base1(base: int): BaseTest, BaseInc {
   fun test3 = [base, this.base]
 }
 //│ class Base1(base: int) {
-//│   this: 'this
+//│   this: 'this_Base1
 //│   fun test: int
-//│   fun test2: int
+//│   fun test2: 'base | int
 //│   fun test3: (int, 'base | int,)
 //│ }
 //│ where
-//│   'this :> Base1
-//│         <: {base: 'base}
+//│   'this_Base1 :> Base1 & {test2: 'base | int, test: int, base: int}
+//│               <: {base: 'base}
 
 Base1(1).test
 //│ int
@@ -55,11 +55,11 @@ Base1(1).test3
 
 class Base1(base): BaseTest
 //│ class Base1(base: nothing) {
-//│   this: 'this
+//│   this: 'this_Base1
 //│   fun test: nothing
 //│ }
 //│ where
-//│   'this :> Base1
+//│   'this_Base1 :> Base1 & {test: nothing, base: nothing}
 
 Base1
 //│ (base: anything,) -> Base1
@@ -84,11 +84,11 @@ class Base1(x): BaseTest
 //│ ║  l.8: 	  fun test = super.base
 //│ ╙──     	             ^^^^^
 //│ class Base1(x: nothing) {
-//│   this: 'this
+//│   this: 'this_Base1
 //│   fun test: nothing
 //│ }
 //│ where
-//│   'this :> Base1
+//│   'this_Base1 :> Base1 & {test: nothing, x: nothing}
 
 Base1
 //│ (x: anything,) -> Base1
@@ -108,11 +108,11 @@ mixin Foo {
 
 module Base1(base: int, misc: string): Foo
 //│ namespace Base1(base: int, misc: string) {
-//│   this: 'this
+//│   this: 'this_Base1
 //│   fun test: (int & 'a) -> (int, 'a, string,)
 //│ }
 //│ where
-//│   'this :> Base1
+//│   'this_Base1 :> Base1 & {misc: string, test: (int & 'a) -> (int, 'a, string,), base: int}
 
 Base1.test
 //│ (int & 'a) -> (int, 'a, string,)
@@ -150,12 +150,12 @@ mixin Wrap {
 // :d
 module WrapBase1: WrapBase, Wrap
 //│ namespace WrapBase1() {
-//│   this: 'this
+//│   this: 'this_WrapBase1
 //│   fun wrap: 'a -> ('a,)
 //│   fun wrapA: int -> (int,)
 //│ }
 //│ where
-//│   'this :> WrapBase1
+//│   'this_WrapBase1 :> WrapBase1 & {wrap: 'a -> ('a,), wrapA: int -> (int,)}
 
 
 WrapBase1
@@ -202,12 +202,12 @@ WrapBase1.wrapA("ok")
 
 module WrapBase2: WrapBase, Wrap, Wrap, Wrap
 //│ namespace WrapBase2() {
-//│   this: 'this
+//│   this: 'this_WrapBase2
 //│   fun wrap: 'a -> ((('a,),),)
 //│   fun wrapA: int -> (((int,),),)
 //│ }
 //│ where
-//│   'this :> WrapBase2
+//│   'this_WrapBase2 :> WrapBase2 & {wrap: 'a -> ((('a,),),), wrapA: int -> (((int,),),)}
 
 let w = WrapBase2.wrap
 //│ let w: 'a -> ((('a,),),)

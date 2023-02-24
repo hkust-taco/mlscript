@@ -6,14 +6,14 @@
 class Add<E>(lhs: E, rhs: E)
 class Lit(n: int)
 //│ class Add[E](lhs: E, rhs: E) {
-//│   this: 'this
+//│   this: 'this_Add
 //│ }
 //│ class Lit(n: int) {
-//│   this: 'this0
+//│   this: 'this_Lit
 //│ }
 //│ where
-//│   'this0 :> Lit
-//│   'this :> Add[?]
+//│   'this_Lit :> Lit & {n: int}
+//│   'this_Add :> Add['E] & {lhs: E, rhs: E}
 
 let add11 = Add(Lit(1), Lit(2))
 //│ let add11: Add['E]
@@ -48,19 +48,19 @@ mixin EvalBase {
 
 module TestLang: EvalBase
 //│ namespace TestLang() {
-//│   this: 'this
-//│   fun eval: 'a -> int
+//│   this: 'this_TestLang
+//│   fun eval: (Add['E] | Lit) -> int
 //│ }
 //│ where
-//│   'a <: Add['E] | Lit
-//│   'E <: 'a
-//│   'this :> TestLang
+//│   'this_TestLang :> TestLang & {eval: (Add['E] | Lit) -> int}
+//│                  <: {eval: 'E -> int}
+//│   'E <: (Add['E0] | Lit) & (Add['E1] | Lit)
+//│   'E1 <: Add['E0] | Lit
 
 TestLang.eval
-//│ 'a -> int
+//│ (Add['E] | Lit) -> int
 //│   where
-//│     'a <: Add['E] | Lit
-//│     'E <: 'a
+//│     'E <: Add[in (Add['E0] | Lit) & 'E1 | 'E0 out 'E1 & 'E0] | Lit
 
 
 
@@ -76,7 +76,7 @@ add11
 //│ Add['E]
 //│   where
 //│     'E :> Lit
-//│        <: Add['E] | Lit
+//│        <: Add[in (Add['E0] | Lit) & 'E1 | 'E0 out 'E1 & 'E0] | Lit
 
 TestLang.eval(add11)
 //│ int
@@ -85,16 +85,16 @@ add11
 //│ Add['E]
 //│   where
 //│     'E :> Lit
-//│        <: Add['E] | Lit
+//│        <: Add[in (Add['E0] | Lit) & 'E1 | 'E0 out 'E1 & 'E0] | Lit
 
 
 
 class Neg<A>(expr: A)
 //│ class Neg[A](expr: A) {
-//│   this: 'this
+//│   this: 'this_Neg
 //│ }
 //│ where
-//│   'this :> Neg[?]
+//│   'this_Neg :> Neg['A] & {expr: A}
 
 let add2negadd11 = Add(Lit(2), Neg(add11))
 //│ let add2negadd11: Add['E]
@@ -102,7 +102,7 @@ let add2negadd11 = Add(Lit(2), Neg(add11))
 //│     'E :> Lit | Neg['A]
 //│     'A :> Add['E0]
 //│     'E0 :> Lit
-//│         <: Add['E0] | Lit
+//│         <: Add[in (Add['E1] | Lit) & 'E2 | 'E1 out 'E2 & 'E1] | Lit
 
 
 mixin EvalNeg {
@@ -123,21 +123,24 @@ mixin EvalNeg {
 
 module TestLang: EvalBase, EvalNeg
 //│ namespace TestLang() {
-//│   this: 'this
-//│   fun eval: 'a -> int
+//│   this: 'this_TestLang
+//│   fun eval: (Add['E] | Lit | Neg['A]) -> int
 //│ }
 //│ where
-//│   'a <: Add['E] | Lit | Neg['A]
-//│   'A <: 'a
-//│   'E <: 'a
-//│   'this :> TestLang
+//│   'this_TestLang :> TestLang & {eval: (Add['E] | Lit | Neg['A]) -> int}
+//│                  <: {eval: ('A | 'E) -> int}
+//│   'A <: Add['E0] | Lit | Neg['A0]
+//│   'E <: (Add['E1] | Lit | Neg['A1]) & (Add['E2] | Lit | Neg['A2])
+//│   'A2 <: Add['E0] | Lit | Neg['A0]
+//│   'E2 <: Add['E1] | Lit | Neg['A1]
+//│   'A1 <: Add['E0] | Lit | Neg['A0]
 
 TestLang.eval
-//│ 'a -> int
+//│ (Add['E] | Lit | Neg['A]) -> int
 //│   where
-//│     'a <: Add['E] | Lit | Neg['A]
-//│     'A <: 'a
-//│     'E <: 'a
+//│     'A <: Add['E0] | Lit | Neg['A0]
+//│     'E <: Add[in (Add['E1] | Lit | Neg['A1]) & 'E2 | 'E1 out 'E2 & 'E1] | Lit | Neg[in (Add['E0] | Lit | Neg['A0]) & 'A2 | 'A1 out 'A2 & 'A1]
+//│     'A1 <: Add['E0] | Lit | Neg['A0]
 
 
 TestLang.eval(add11)
@@ -153,36 +156,12 @@ TestLang.eval(Neg(Neg(add11)))
 //│ int
 
 
-:e
+// :e
 TestLang.eval(add2negadd11)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.157: 	TestLang.eval(add2negadd11)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Neg[?A]` does not match type `Add[?E] | Lit`
-//│ ║  l.99: 	let add2negadd11 = Add(Lit(2), Neg(add11))
-//│ ║        	                               ^^^^^^^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.35: 	    if e is
-//│ ║        	       ^
-//│ ╟── Note: type parameter E is defined at:
-//│ ║  l.6: 	class Add<E>(lhs: E, rhs: E)
-//│ ╙──     	          ^
-//│ error | int
+//│ int
 
-:e
+// :e
 TestLang.eval(Add(Lit(2), Neg(add11)))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.173: 	TestLang.eval(Add(Lit(2), Neg(add11)))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Neg[?A]` does not match type `Add[?E] | Lit`
-//│ ║  l.99: 	let add2negadd11 = Add(Lit(2), Neg(add11))
-//│ ║        	                               ^^^^^^^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.35: 	    if e is
-//│ ║        	       ^
-//│ ╟── Note: type parameter E is defined at:
-//│ ║  l.6: 	class Add<E>(lhs: E, rhs: E)
-//│ ╙──     	          ^
-//│ error
+//│ int
 
 

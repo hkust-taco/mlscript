@@ -68,6 +68,8 @@ package object utils {
     def mapValues[C](f: B => C): List[A -> C] = mapValuesIter(f).toList
     def mapKeysIter[C](f: A => C): Iterator[C -> B] = self.iterator.map(p => f(p._1) -> p._2)
     def mapValuesIter[C](f: B => C): Iterator[A -> C] = self.iterator.map(p => p._1 -> f(p._2))
+    def keys: Iterator[A] = self.iterator.map(_._1)
+    def values: Iterator[B] = self.iterator.map(_._2)
     def toSortedMap(implicit ord: Ordering[A]): SortedMap[A, B] =
       SortedMap.from(self)
   }

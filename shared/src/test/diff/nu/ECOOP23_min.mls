@@ -6,10 +6,10 @@
 class Add<E>(lhs: E, rhs: E)
 // class Lit(n: int)
 //│ class Add[E](lhs: E, rhs: E) {
-//│   this: 'this
+//│   this: 'this_Add
 //│ }
 //│ where
-//│   'this :> Add[?]
+//│   'this_Add :> Add['E] & {lhs: E, rhs: E}
 
 let e = Add(1, 1)
 //│ let e: Add['E]
@@ -20,11 +20,11 @@ let e = Add(1, 1)
 e
 //│ 0. Typing TypingUnit(List(e))
 //│ | 0. Typing term e
-//│ | 0. : α35
+//│ | 0. : α34
 //│ ======== TYPED ========
-//│ res: Some(α35) where 
-//│ 		α35 :> (Add<> & {Add#E: mut E23_36..E23_36})
-//│ 		E23_36 :> 1<int,number>
+//│ res: Some(α34) where 
+//│ 		α34 :> (Add<> & {Add#E: mut E23_35..E23_35})
+//│ 		E23_35 :> 1<int,number>
 //│ Add['E]
 //│   where
 //│     'E :> 1
@@ -36,12 +36,12 @@ e.lhs
 e
 //│ 0. Typing TypingUnit(List(e))
 //│ | 0. Typing term e
-//│ | 0. : α35
+//│ | 0. : α34
 //│ ======== TYPED ========
-//│ res: Some(α35) where 
-//│ 		α35 :> (Add<> & {Add#E: mut E23_36..E23_36}) <: {lhs: lhs45}
-//│ 		E23_36 :> 1<int,number> <: lhs45
-//│ 		lhs45 :> 1<int,number>
+//│ res: Some(α34) where 
+//│ 		α34 :> (Add<> & {Add#E: mut E23_35..E23_35}) <: {lhs: lhs44}
+//│ 		E23_35 :> 1<int,number> <: lhs44
+//│ 		lhs44 :> 1<int,number>
 //│ Add['E]
 //│   where
 //│     'E :> 1

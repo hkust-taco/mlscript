@@ -64,7 +64,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     
     // TODO does this also need freshening in freshenAbove?
     private lazy val thisTV: TV =
-      freshVar(noProv/*FIXME*/, N, S("this"))(lvl + 1)
+      freshVar(noProv/*FIXME*/, N, S("this_"+decl.name))(lvl + 1)
     
     def complete()(implicit raise: Raise): TypedNuTermDef = result.getOrElse {
       if (isComputing) lastWords(s"TODO cyclic defition ${decl.name}")
@@ -121,9 +121,14 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
               // constrain(res_ty.ty, tv)
               ctx.nextLevel { implicit ctx: Ctx => constrain(res_ty.ty, tv) }
               res_ty
+              
+              
             case td: NuTypeDef =>
+              
               td.kind match {
+                
                 case Cls | Nms =>
+                  
                   implicit val prov: TP = noProv // TODO
                   ctx.nest.nextLevel { implicit ctx =>
                     
@@ -133,6 +138,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                         "type parameter",
                         S(tp.name),
                         true), N, S(tp.name)))
+                    
+                    println(s"Type params ${tparams.mkString(" ")}")
                     
                     implicit val vars: Map[Str, SimpleType] =
                       // outerVars ++ tparams.iterator.mapKeys(_.name).toMap
@@ -174,9 +181,25 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     
                     implicit val prov: TP =
                       TypeProvenance(decl.toLoc, decl.describe)
-                    val finalType = freshVar(noProv/*TODO*/, N, S("this"))
+                    
+                    // val finalType = freshVar(noProv/*TODO*/, N, S("this"))
+                    val finalType = thisTV
+                    
+                    val tparamMems = tparams.map { case (tn, tv) =>
+                      val fldNme = td.nme.name + "#" + tn.name
+                      NuParam(Var(fldNme).withLocOf(tn), FieldType(S(tv), tv)(tv.prov), isType = true)
+                    }
+                    // tparamMems.map(p => p.nme -> p.ty):Int
+                    val tparamFields = tparamMems.map(p => p.nme -> p.ty)
+                    assert(!typedParams.keys.exists(tparamFields.keys.toSet), ???)
+                    
+                    
                     // def inherit(parents: Ls[Term], superType: ST, members: Ls[TypedNuDecl -> ST]): Unit = parents match {
-                    def inherit(parents: Ls[Term], superType: ST, members: Ls[NuMember]): Ls[NuMember] = parents match {
+                      
+                    def inherit(parents: Ls[Term], superType: ST, members: Ls[NuMember])
+                          // : Ls[NuMember] =
+                          : (ST, Ls[NuMember]) =
+                        parents match {
                     // def inherit(parents: Ls[Term \/ TypedTypingUnit], superType: ST, members: Ls[TypedNuDecl]): Ls[TypedNuDecl] = parents match {
                       // case R(p) :: ps => ???
                       // case L(p) :: ps =>
@@ -240,18 +263,27 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                           )(provTODO)
                         inherit(ps, newSuperType, members ++ newMembs)
                       case Nil =>
-                        assert(finalType.level === lvl)
-                        constrain(superType, finalType)
-                        members
+                        val thisType = superType &
+                          clsNameToNomTag(td)(provTODO, ctx) &
+                          RecordType(tparamFields)(ttp(td.params, isType = true))
+                        // trace(s"${lvl}. Finalizing inheritance with $thisType <: $finalType") {
+                        //   assert(finalType.level === lvl)
+                        //   constrain(thisType, finalType)
+                        //   members
+                        // }()
+                        println(s"${lvl}. Finalized inheritance with $superType ~> $thisType")
+                        (thisType, members)
                     }
-                    val baseType = RecordType(typedParams)(ttp(td.params, isType = true))
-                    val tparamMems = tparams.map { case (tn, tv) =>
-                      val fldNme = td.nme.name + "#" + tn.name
-                      NuParam(Var(fldNme).withLocOf(tn), FieldType(S(tv), tv)(tv.prov), isType = true)
-                    }
+                    
+                    val baseType =
+                      // clsNameToNomTag(td)(provTODO, ctx) &
+                      // RecordType(tparamFields ::: typedParams)(ttp(td.params, isType = true))
+                      RecordType(typedParams)(ttp(td.params, isType = true))
                     val paramMems = typedParams.map(f => NuParam(f._1, f._2, isType = false))
                     // val baseMems = inherit(td.parents, baseType, Nil)
-                    val baseMems = inherit(td.parents, baseType, tparamMems ++ paramMems)
+                    
+                    val (thisType, baseMems) =
+                      inherit(td.parents, baseType, tparamMems ++ paramMems)
                     
                     // ctx += thisTV
                     
@@ -274,10 +306,16 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     //     )(provTODO)
                     // constrain(thisTy, thisTV)
                     
+                    // val thisType = superType &
+                    //   clsNameToNomTag(td)(provTODO, ctx) &
+                    //   RecordType(tparamFields)(ttp(td.params, isType = true))
+                    
                     // val mems = baseMems ++ paramMems ++ clsMems
                     val mems = baseMems ++ clsMems
+                    
                     TypedNuCls(outerCtx.lvl, td, ttu,
-                      tparams, typedParams, mems.map(d => d.name -> d).toMap, thisTV)
+                      tparams, typedParams, mems.map(d => d.name -> d).toMap, thisTV
+                    )(thisType)
                   }
                 case Mxn =>
                   implicit val prov: TP = noProv // TODO
@@ -340,17 +378,23 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def force()(implicit raise: Raise): TypedNuTermDef = {
       val res = complete()
       res.force()
-      decl match {
-        case td: NuTypeDef =>
-          td.kind match {
-            case Cls | Nms =>
-              implicit val prov: TP = noProv // TODO
-              val thisTy = ClassTag(Var(td.name),
-                    Set.empty//TODO
-                  )(provTODO)
-              constrain(thisTy, thisTV)
-            case _ =>
-          }
+      // decl match {
+      //   case td: NuTypeDef =>
+      //     td.kind match {
+      //       case Cls | Nms =>
+      //         // implicit val prov: TP = noProv // TODO
+      //         // val thisTy = ClassTag(Var(td.name),
+      //         //       Set.empty//TODO
+      //         //     )(provTODO)
+      //         // constrain(thisTy, thisTV)
+      //       case _ =>
+      //     }
+      //   case _ =>
+      // }
+      res match {
+        case cls: TypedNuCls =>
+          implicit val prov: TP = noProv // TODO
+          constrain(cls.instanceType, thisTV)
         case _ =>
       }
       res
