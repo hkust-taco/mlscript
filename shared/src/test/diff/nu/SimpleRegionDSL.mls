@@ -2,7 +2,7 @@
 :NewDefs
 :NoJS
 
-// Adopted from Compositional Embeddings of Domain-Specific Languages (OOPSLA 2022)
+// Adapted example from Compositional Embeddings of Domain-Specific Languages (OOPSLA 2022)
 // ******************* Initial System *******************
 
 class Vector(x: int, y: int)
