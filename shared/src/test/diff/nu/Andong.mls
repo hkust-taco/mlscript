@@ -2,10 +2,17 @@
 :NewDefs
 :NoJS
 
+
 class Union<Region>(a: Region, b: Region)
 //│ class Union[Region](a: Region, b: Region)
 
-// ? x is shadowed. Why is b required?
+// * [FIXME:UCS] unhygienically desugars to:
+// | | | | Desugared term: case x of { Union => let x = (x).a in let y = (x).b in x }
 fun hmm(x) =
   if x is Union(x, y) then x
 //│ fun hmm: Union[{b: anything} & 'a] -> 'a
+
+fun hmm(x) =
+  if x is Union(z, y) then x
+//│ fun hmm: Union['Region] -> Union['Region]
+

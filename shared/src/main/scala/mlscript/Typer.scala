@@ -253,6 +253,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       "log" -> PolymorphicType(MinLevel, fun(singleTup(tv), UnitType)(noProv)),
       "discard" -> PolymorphicType(MinLevel, fun(singleTup(tv), UnitType)(noProv)),
       "negate" -> fun(singleTup(IntType), IntType)(noProv),
+      "round" -> fun(singleTup(DecType), IntType)(noProv),
       "add" -> intBinOpTy,
       "sub" -> intBinOpTy,
       "mul" -> intBinOpTy,
