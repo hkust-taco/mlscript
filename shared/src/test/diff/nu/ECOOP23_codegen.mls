@@ -33,8 +33,8 @@ mixin EvalBase {
 //│ // Query 1
 //│ globalThis.EvalBase = function EvalBase(base) {
 //│   return (class EvalBase extends base {
-//│     constructor(fields) {
-//│       super(fields);
+//│     constructor(...rest) {
+//│       super(...rest);
 //│     }
 //│     eval(e) {
 //│       const self = this;
@@ -49,6 +49,7 @@ mixin EvalBase {
 //│ };
 //│ // End of generated code
 
+:js
 class Neg<A>(expr: A)
 //│ 
 //│ class Neg[A](expr: A) {
@@ -56,6 +57,17 @@ class Neg<A>(expr: A)
 //│ }
 //│   where
 //│     'this :> Neg
+//│ // Prelude
+//│ class Neg {
+//│   constructor(expr) {
+//│     this.expr = expr;
+//│   }
+//│ }
+//│ // Query 1
+//│ globalThis.Neg1 = function Neg1(expr) {
+//│   return new Neg(expr);
+//│ };
+//│ // End of generated code
 
 :js
 mixin EvalNeg {
@@ -76,8 +88,8 @@ mixin EvalNeg {
 //│ // Query 1
 //│ globalThis.EvalNeg = function EvalNeg(base) {
 //│   return (class EvalNeg extends base {
-//│     constructor(fields) {
-//│       super(fields);
+//│     constructor(...rest) {
+//│       super(...rest);
 //│     }
 //│     eval(e) {
 //│       const self = this;
@@ -111,8 +123,8 @@ mixin EvalNegNeg {
 //│ // Query 1
 //│ globalThis.EvalNegNeg = function EvalNegNeg(base) {
 //│   return (class EvalNegNeg extends base {
-//│     constructor(fields) {
-//│       super(fields);
+//│     constructor(...rest) {
+//│       super(...rest);
 //│     }
 //│     eval(e) {
 //│       const self = this;
@@ -142,7 +154,6 @@ module TestLang: EvalBase, EvalNeg, EvalNegNeg
 //│     'this :> TestLang
 //│ Code generation crashed:
 //│   scala.NotImplementedError: an implementation is missing
-
 
 :js
 fun mk(n) = if n is

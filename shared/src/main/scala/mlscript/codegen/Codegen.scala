@@ -790,15 +790,22 @@ final case class JSClassDecl(
   def toSourceCode: SourceCode = {
     val constructor: SourceCode = {
       val buffer = new ListBuffer[Str]()
-      buffer += "  constructor(fields) {"
-      if (`extends`.isDefined)
-        buffer += "    super(fields);"
+      val params = fields.iterator.zipWithIndex.foldLeft("")((s, p) =>
+        if (p._2 === fields.length - 1) (if(`extends`.isDefined) s"$s...${p._1}" else s"$s${p._1}")
+        else s"$s${p._1}, ")
+      buffer += s"  constructor($params) {"
+      if (`extends`.isDefined) {
+        val restName = if (fields.length > 0) fields.last else ??? // TODO: throw?
+        buffer += s"    super(...$restName);"
+      }
       implements.foreach { name =>
         buffer += s"    $name.implement(this);"
       }
-      fields.foreach { name =>
-        val innerName = if (JSField.isValidIdentifier(name)) s".${name}" else s"[${JSLit.makeStringLiteral(name)}]"
-        buffer += s"    this$innerName = fields$innerName;"
+      fields.iterator.zipWithIndex.foreach { pair =>
+        if (`extends`.isEmpty || pair._2 < fields.length - 1) {
+          // val innerName = if (JSField.isValidIdentifier(pair._1)) s".${pair._1}" else s"[${JSLit.makeStringLiteral(pair._1)}]"
+          buffer += s"    this.${pair._1} = ${pair._1};" // TODO: invalid name?
+        }
       }
       buffer += "  }"
       SourceCode(buffer.toList)
