@@ -803,8 +803,8 @@ final case class JSClassDecl(
       }
       fields.iterator.zipWithIndex.foreach { pair =>
         if (`extends`.isEmpty || pair._2 < fields.length - 1) {
-          // val innerName = if (JSField.isValidIdentifier(pair._1)) s".${pair._1}" else s"[${JSLit.makeStringLiteral(pair._1)}]"
-          buffer += s"    this.${pair._1} = ${pair._1};" // TODO: invalid name?
+          val innerName = if (JSField.isValidIdentifier(pair._1)) s".${pair._1}" else s"[${JSLit.makeStringLiteral(pair._1)}]"
+          buffer += s"    this${innerName} = ${pair._1};" // TODO: invalid name?
         }
       }
       buffer += "  }"

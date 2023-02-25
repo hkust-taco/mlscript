@@ -1,18 +1,33 @@
 :NewParser
 :NewDefs
 
+:js
 class Add<E>(lhs: E, rhs: E)
 class Lit(n: int)
-//│ 
-//│ class Add[E](lhs: E, rhs: E) {
-//│ this: 'this
+//│ class Add[E](lhs: E, rhs: E)
+//│ class Lit(n: int)
+//│ // Prelude
+//│ let res;
+//│ class Add {
+//│   constructor(lhs, rhs) {
+//│     this.lhs = lhs;
+//│     this.rhs = rhs;
+//│   }
 //│ }
-//│ class Lit(n: int) {
-//│ this: 'this0
+//│ class Lit {
+//│   constructor(n) {
+//│     this.n = n;
+//│   }
 //│ }
-//│   where
-//│     'this0 :> Lit
-//│     'this :> Add
+//│ // Query 1
+//│ globalThis.Add1 = function Add1(lhs, rhs) {
+//│   return new Add(lhs, rhs);
+//│ };
+//│ // Query 2
+//│ globalThis.Lit1 = function Lit1(n) {
+//│   return new Lit(n);
+//│ };
+//│ // End of generated code
 
 :js
 mixin EvalBase {
@@ -21,15 +36,10 @@ mixin EvalBase {
       Lit(n) then n: int
       Add(l, r) then this.eval(l) + this.eval(r)
 }
-//│ 
 //│ mixin EvalBase() {
-//│ super: 'super
-//│ this: 'this
-//│ fun eval: (Add & {Add#E = 'E} | Lit) -> int
+//│   this: {eval: 'lhs -> int}
+//│   fun eval: (Add['lhs] | Lit) -> int
 //│ }
-//│   where
-//│     'E <: 'lhs
-//│     'this <: {eval: 'lhs -> int}
 //│ // Query 1
 //│ globalThis.EvalBase = function EvalBase(base) {
 //│   return (class EvalBase extends base {
@@ -51,12 +61,7 @@ mixin EvalBase {
 
 :js
 class Neg<A>(expr: A)
-//│ 
-//│ class Neg[A](expr: A) {
-//│ this: 'this
-//│ }
-//│   where
-//│     'this :> Neg
+//│ class Neg[A](expr: A)
 //│ // Prelude
 //│ class Neg {
 //│   constructor(expr) {
@@ -75,16 +80,11 @@ mixin EvalNeg {
     if e is Neg(d) then 0 - this.eval(d)
     else super.eval(e)
 }
-//│ 
 //│ mixin EvalNeg() {
-//│ super: 'super
-//│ this: 'this
-//│ fun eval: (Neg & {Neg#A = 'A} | 'a & ~Neg) -> (int | 'b)
+//│   super: {eval: 'a -> 'b}
+//│   this: {eval: 'expr -> int}
+//│   fun eval: (Neg['expr] | 'a & ~Neg) -> (int | 'b)
 //│ }
-//│   where
-//│     'A <: 'expr
-//│     'this <: {eval: 'expr -> int}
-//│     'super <: {eval: 'a -> 'b}
 //│ // Query 1
 //│ globalThis.EvalNeg = function EvalNeg(base) {
 //│   return (class EvalNeg extends base {
@@ -107,19 +107,11 @@ mixin EvalNegNeg {
     if e is Neg(Neg(d)) then this.eval(d)
     else super.eval(e)
 }
-//│ 
 //│ mixin EvalNegNeg() {
-//│ super: 'super
-//│ this: 'this
-//│ fun eval: (Neg & {Neg#A = 'A} | 'a & ~Neg) -> 'b
+//│   super: {eval: (Neg['A] | 'a) -> 'b}
+//│   this: {eval: 'expr -> 'b}
+//│   fun eval: (Neg['A & (~Neg | Neg['expr])] | 'a & ~Neg) -> 'b
 //│ }
-//│   where
-//│     'A :> 'A0
-//│        <: 'A1 & (~Neg | Neg & {Neg#A = 'A2})
-//│     'A2 :> 'A3
-//│         <: 'expr
-//│     'this <: {eval: 'expr -> 'b}
-//│     'super <: {eval: (Neg & {Neg#A :> 'A0 & (~Neg | Neg & {Neg#A :> 'expr <: 'expr & 'A3}) <: 'A0 | 'A1} | 'a) -> 'b}
 //│ // Query 1
 //│ globalThis.EvalNegNeg = function EvalNegNeg(base) {
 //│   return (class EvalNegNeg extends base {
@@ -138,22 +130,21 @@ mixin EvalNegNeg {
 
 :js
 module TestLang: EvalBase, EvalNeg, EvalNegNeg
-//│ 
-//│ namespace TestLang() {
-//│ this: 'this
-//│ fun eval: 'a -> int
+//│ module TestLang() {
+//│   fun eval: 'a -> int
 //│ }
-//│   where
-//│     'a <: Add & {Add#E = 'E} | Lit | Neg & {Neg#A = 'A}
-//│     'A :> 'A0
-//│        <: 'A0 & (~Neg | Neg & {Neg#A = 'A1})
-//│     'A0 <: (Neg & {Neg#A :> 'A2 <: 'A1} | ~Neg) & 'a
-//│     'A1 <: 'A2
-//│     'A2 <: 'a
-//│     'E <: 'a
-//│     'this :> TestLang
-//│ Code generation crashed:
-//│   scala.NotImplementedError: an implementation is missing
+//│ where
+//│   'a <: Add['a] | Lit | Neg['A & (~Neg | Neg['a])]
+//│   'A <: 'a
+//│ // Query 1
+//│ globalThis.TestLang1 = function TestLang1() {
+//│   return (new class TestLang extends EvalNegNeg(EvalNeg(EvalBase())) {
+//│     constructor(...rest) {
+//│       super(...rest);
+//│     }
+//│   });
+//│ };
+//│ // End of generated code
 
 :js
 fun mk(n) = if n is
@@ -161,27 +152,15 @@ fun mk(n) = if n is
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
 TestLang.eval(mk(0))
-//│ 
 //│ fun mk: number -> (Lit | 'a)
 //│ int
-//│   where
-//│     'a :> Neg & {Neg#A = 'A} | Add & {Add#E = 'E}
-//│     'E :> 'E0 | Lit | 'a
-//│        <: 'E1
-//│     'A :> 'A0 | Lit | 'a
-//│        <: 'A1
-//│     'A0 :> Lit | 'b
-//│         <: 'A2 & 'c & (Neg & {Neg#A = 'A0} | ~Neg)
-//│     'b :> Neg & {Neg#A :> 'A0 <: 'A1} | Add & {Add#E :> 'E0 <: 'E1}
-//│     'E1 :> 'E0 | Lit | 'b
-//│         <: 'E0
-//│     'A1 :> 'A0 | Lit | 'b
-//│         <: 'A0 & 'A2
-//│     'A2 :> 'A0 | Lit | 'b
-//│         <: 'A0 & 'c & (~Neg | Neg & {Neg#A = 'A2})
-//│     'c <: Add & {Add#E = 'E0} | Lit | Neg & {Neg#A = 'A2}
-//│     'E0 :> Lit | 'b
-//│         <: 'c
-//│ Typed: int
-//│ Code generation encountered an error:
-//│   unresolved symbol TestLang
+//│ where
+//│   'a :> Neg[Lit | 'a] | Add[Lit | 'a]
+//│ // Query 1
+//│ globalThis.mk = function mk(n) {
+//│   return n == 0 === true ? Lit1(0) : n == 1 === true ? Neg1(mk(n)) : Add1(mk(n), mk(n));
+//│ };
+//│ // Query 2
+//│ res = TestLang1().eval(mk(0));
+//│ // End of generated code
+

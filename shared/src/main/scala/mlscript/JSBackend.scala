@@ -129,6 +129,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case App(App(App(Var("if"), Tup((_, Fld(_, _, tst)) :: Nil)), Tup((_, Fld(_, _, con)) :: Nil)), Tup((_, Fld(_, _, alt)) :: Nil)) =>
       JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
     case App(App(App(Var("if"), tst), con), alt) => die
+    case App(ce: ClassExpression, _) => JSNew(translateTerm(ce))
     // Function invocation
     case App(trm, Tup(args)) =>
       val callee = trm match {
@@ -254,9 +255,12 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case New(_, TypingUnit(_)) =>
       throw CodeGenError("custom class body is not supported yet")
     case Forall(_, bod) => translateTerm(bod)
-    case ClassExpression(TypeDef(Cls, TypeName(name), tparams, baseType, _, members, _)) =>
+    case ClassExpression(TypeDef(Cls, TypeName(name), tparams, baseType, _, members, _), parents) =>
       val clsBody = scope.declareClass(name, tparams map { _.name }, baseType, members)
-      JSClassExpr(translateClassDeclaration(clsBody, Some(ClassSymbol("base", "base", Ls(), baseType, Ls()))))
+      parents match {
+        case Some(p) => JSClassExpr(translateClassDeclaration(clsBody, Some(translateTerm(p))))
+        case _ => JSClassExpr(translateClassDeclaration(clsBody, N))
+      }
     case _: Bind | _: Test | If(_, _) | TyApp(_, _) | _: Splc | _: Where =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
@@ -408,7 +412,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     */
   protected def translateClassDeclaration(
       classSymbol: ClassSymbol,
-      baseClassSymbol: Opt[ClassSymbol]
+      base: Opt[JSExpr]
   )(implicit scope: Scope): JSClassDecl = {
     // Translate class methods and getters.
     val classScope = scope.derive(s"class ${classSymbol.lexicalName}")
@@ -423,7 +427,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     fields.foreach(constructorScope.declareValue(_, Some(false), false))
     val rest = constructorScope.declareValue("rest", Some(false), false)
 
-    val base = baseClassSymbol.map { sym => JSIdent(sym.runtimeName) }
+    // val base = baseClassSymbol.map { sym => JSIdent(sym.runtimeName) }
     val traits = classSymbol.body.collectTypeNames.flatMap {
       name => scope.getType(name) match {
         case S(TraitSymbol(_, runtimeName, _, _, _)) => S(runtimeName)
@@ -573,8 +577,11 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
     val (traitSymbols, classSymbols) = declareTypeDefs(typeDefs)
     val defStmts = 
       traitSymbols.map { translateTraitDeclaration(_)(topLevelScope) } ++
-      sortClassSymbols(classSymbols).map { case (derived, base) =>
-        translateClassDeclaration(derived, base)(topLevelScope)
+      sortClassSymbols(classSymbols).map {
+        case (derived, Some(base)) =>
+          translateClassDeclaration(derived, Some(JSIdent(base.runtimeName)))(topLevelScope)
+        case (derived, None) =>
+          translateClassDeclaration(derived, None)(topLevelScope)
       }.toList
 
     val resultsIdent = JSIdent(resultsName)
@@ -648,8 +655,11 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
     val (traitSymbols, classSymbols) = declareTypeDefs(typeDefs)
     val defStmts = 
       traitSymbols.map { translateTraitDeclaration(_)(topLevelScope) } ++
-      sortClassSymbols(classSymbols).map { case (derived, base) =>
-        translateClassDeclaration(derived, base)(topLevelScope)
+      sortClassSymbols(classSymbols).map {
+        case (derived, Some(base)) =>
+          translateClassDeclaration(derived, Some(JSIdent(base.runtimeName)))(topLevelScope)
+        case (derived, None) =>
+          translateClassDeclaration(derived, None)(topLevelScope)
       }.toList
 
     val zeroWidthSpace = JSLit("\"\\u200B\"")

@@ -705,20 +705,31 @@ trait StatementImpl extends Located { self: Statement =>
           dataDefs.map(td => AppliedType(td.nme, td.tparams)).reduceOption(Union).getOrElse(Bot), Nil, Nil, Nil
         ).withLocOf(hd) :: cs)
       case NuTypeDef(Mxn, TypeName(mxName), tps, tup @ Tup(fs), pars, sup, ths, unit) =>
+        val bases = pars.foldLeft(Var("base"): Term)((res, p) => p match {
+            case Var(pname) => App(Var(pname), Tup(Ls(None -> Fld(false, false, res))))
+            case _ => ???
+          })
         val (diags, ds) =
-          NuTypeDef(Cls, TypeName(mxName), tps, tup, pars :+ Var("base"), sup, ths, unit).desugared
+          NuTypeDef(Cls, TypeName(mxName), tps, tup, Ls(bases), sup, ths, unit).desugared
         ds match {
-          case (cls: TypeDef) :: _ => diags -> (NuFunDef(None, Var(mxName), List(), Left(Lam(Tup(Ls(None -> Fld(false, false, Var("base")))), ClassExpression(cls)))) :: Nil)
+          case (cls: TypeDef) :: _ => diags -> (NuFunDef(None, Var(mxName), List(), Left(Lam(Tup(Ls(None -> Fld(false, false, Var("base")))), ClassExpression(cls, S(bases))))) :: Nil)
           case _ => ???
         }
       case NuTypeDef(Nms, nme, tps, tup @ Tup(fs), pars, sup, ths, unit) =>
-        val (diags, ds) =
-          NuTypeDef(Cls, nme, tps, tup, pars, sup, ths, unit).desugared
-        // ds match {
-        //   case (cls: TypeDef) :: _ => diags -> (cls :: Nil)
-        //   case _ => ???
-        // }
-        ???
+        if (pars.length > 0) {
+          val bases = pars.drop(1).foldLeft(App(pars.head, Tup(Ls())): Term)((res, p) => p match {
+            case Var(pname) => App(Var(pname), Tup(Ls(None -> Fld(false, false, res))))
+            case _ => ???
+          })
+          val (diags, ds) =
+            NuTypeDef(Cls, nme, tps, tup, Ls(bases), sup, ths, unit).desugared
+          val termName = Var(nme.name).withLocOf(nme)
+          ds match {
+            case (cls: TypeDef) :: _ => diags -> (Def(false, termName, Left(App(ClassExpression(cls, S(bases)), Tup(Ls()))), true) :: Nil)
+            case _ => ???
+          }
+        }
+        else ???
       case NuTypeDef(k @ Als, nme, tps, tup @ Tup(fs), pars, sup, ths, unit) =>
         // TODO properly check:
         require(fs.isEmpty, fs)
