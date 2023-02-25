@@ -77,7 +77,8 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
     case Bounds(lb, Top) => s"in ${lb.showIn(ctx, 0)}"
     case Bounds(lb, ub) => s"in ${lb.showIn(ctx, 0)} out ${ub.showIn(ctx, 0)}"
     // 
-    case AppliedType(n, args) => s"${n.name}[${args.map(_.showIn(ctx, 0)).mkString(", ")}]"
+    case AppliedType(n, args) =>
+      s"${n.name}${args.map(_.showIn(ctx, 0)).mkString(ctx.<, ", ", ctx.>)}"
     case Rem(b, ns) => s"${b.showIn(ctx, 90)}${ns.map("\\"+_).mkString}"
     case Literal(IntLit(n)) => n.toString
     case Literal(DecLit(n)) => n.toString
@@ -243,11 +244,18 @@ trait TypeImpl extends Located { self: Type =>
 }
 
 
-final case class ShowCtx(vs: Map[TypeVar, Str], debug: Bool, indentLevel: Int) // TODO make use of `debug` or rm
+final case class ShowCtx(
+    vs: Map[TypeVar, Str],
+    debug: Bool, // TODO make use of `debug` or rm
+    indentLevel: Int,
+    newDefs: Bool,
+  )
 {
   lazy val indStr: Str = "  " * indentLevel
   def lnIndStr: Str = "\n" + indStr
   def indent: ShowCtx = copy(indentLevel = indentLevel + 1)
+  def < : Str = if (newDefs) "<" else "["
+  def > : Str = if (newDefs) ">" else "]"
 }
 object ShowCtx {
   /**
@@ -291,7 +299,7 @@ object ShowCtx {
       S(('a' + idx % numLetters).toChar.toString + (if (postfix === 0) "" else postfix.toString), idx + 1)
     }.filterNot(used).map(assignName)
     
-    ShowCtx(namedMap ++ unnamedVars.zip(names), debug, 0)
+    ShowCtx(namedMap ++ unnamedVars.zip(names), debug, indentLevel = 0, newDefs = false)
   }
 }
 

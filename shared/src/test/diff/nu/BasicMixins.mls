@@ -95,7 +95,7 @@ mixin Foo {
 //│ }
 
 module Base1(base: int, misc: string): Foo
-//│ namespace Base1(base: int, misc: string) {
+//│ module Base1(base: int, misc: string) {
 //│   fun test: (int & 'a) -> (int, 'a, string,)
 //│ }
 
@@ -129,7 +129,7 @@ mixin Wrap {
 
 // :d
 module WrapBase1: WrapBase, Wrap
-//│ namespace WrapBase1() {
+//│ module WrapBase1() {
 //│   fun wrap: 'a -> ('a,)
 //│   fun wrapA: int -> (int,)
 //│ }
@@ -178,7 +178,7 @@ WrapBase1.wrapA("ok")
 
 
 module WrapBase2: WrapBase, Wrap, Wrap, Wrap
-//│ namespace WrapBase2() {
+//│ module WrapBase2() {
 //│   fun wrap: 'a -> ((('a,),),)
 //│   fun wrapA: int -> (((int,),),)
 //│ }

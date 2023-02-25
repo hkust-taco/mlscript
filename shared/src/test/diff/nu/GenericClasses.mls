@@ -7,7 +7,7 @@ class C<A>
 //│ class C[A]()
 
 fun f(x) = if x is C then x
-//│ fun f: C['A] -> C['A]
+//│ fun f: C<'A> -> C<'A>
 
 
 // :d
@@ -15,10 +15,10 @@ class C<A>(a: A)
 //│ class C[A](a: A)
 
 fun f(x) = if x is C(a) then a
-//│ fun f: C['a] -> 'a
+//│ fun f: C<'a> -> 'a
 
 let c = C(1)
-//│ let c: C[1]
+//│ let c: C<1>
 
 f(c)
 //│ 1
@@ -37,7 +37,7 @@ class Some<A>(value: A) {
 
 
 let s = Some(1)
-//│ let s: Some[1]
+//│ let s: Some<1>
 
 
 s.value
@@ -68,7 +68,7 @@ module None {
   fun toArray = []
   // fun mapBad(f) = None // TODO
 }
-//│ namespace None() {
+//│ module None() {
 //│   fun get: nothing
 //│   fun toArray: ()
 //│ }
@@ -85,10 +85,10 @@ type Option<A> = Some<A> | None
 
 
 let opt = if true then Some(123) else None
-//│ let opt: None | Some[123]
+//│ let opt: None | Some<123>
 
 opt.toArray
-//│ Array[123]
+//│ Array<123>
 
 
 // TODO
@@ -109,13 +109,13 @@ if opt is Some(v) then v else 0
 fun map(x, f) = if x is
   None then None
   Some(v) then Some(f(v))
-//│ fun map: (None | Some['value], 'value -> 'A,) -> (None | Some['A])
+//│ fun map: (None | Some<'value>, 'value -> 'A,) -> (None | Some<'A>)
 
 let mo = map(opt, succ)
-//│ let mo: None | Some[int]
+//│ let mo: None | Some<int>
 
 mo.toArray
-//│ Array[int]
+//│ Array<int>
 
 
 
@@ -158,10 +158,10 @@ class Test<A>(n: A) {
 //│ }
 
 Test(1)
-//│ Test[1]
+//│ Test<1>
 
 Test(true)
-//│ Test[true]
+//│ Test<true>
 
 
 class Test<A>(n: A) {
@@ -176,7 +176,7 @@ class Test<A>(n: A) {
 //│ }
 
 Test(1)
-//│ Test[1]
+//│ Test<1>
 
 Test(1).foo
 //│ 1
@@ -185,13 +185,13 @@ Test("ok").foo
 //│ "ok"
 
 let t = Test(1)
-//│ let t: Test[1]
+//│ let t: Test<1>
 
 t.foo1(true)
 //│ 1 | true
 
 t : Test<'a>
-//│ Test['a]
+//│ Test<'a>
 //│   where
 //│     'a :> 1 | true
 
@@ -232,7 +232,7 @@ x => TestBad().foo1(x)
 
 // :d
 let t = TestBad()
-//│ let t: forall 'A. TestBad['A]
+//│ let t: forall 'A. TestBad<'A>
 
 t.foo1
 //│ (x: 'A,) -> 'A
@@ -244,11 +244,11 @@ t.foo1(0)
 //│ 0
 
 t
-//│ forall 'A. TestBad['A]
+//│ forall 'A. TestBad<'A>
 
 
 fun foo(x: TestBad<int>) = x.foo1
-//│ fun foo: (x: TestBad[int],) -> (x: int,) -> int
+//│ fun foo: (x: TestBad<int>,) -> (x: int,) -> int
 
 foo(t)
 //│ (x: int,) -> int
@@ -263,13 +263,13 @@ TestBad().foo2
 
 
 class Weird(x: C<'a>)
-//│ class Weird(x: C['a])
+//│ class Weird(x: C<'a>)
 
 let w = Weird(c)
 //│ let w: Weird
 
 w.x
-//│ C['a]
+//│ C<'a>
 
 // FIXME
 not(w.x.a)

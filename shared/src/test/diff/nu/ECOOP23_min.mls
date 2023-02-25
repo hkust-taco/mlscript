@@ -8,7 +8,7 @@ class Add<E>(lhs: E, rhs: E)
 //│ class Add[E](lhs: E, rhs: E)
 
 let e = Add(1, 1)
-//│ let e: Add[1]
+//│ let e: Add<1>
 
 :d
 e
@@ -19,7 +19,7 @@ e
 //│ res: Some(α30) where 
 //│ 		α30 :> (Add<> & {Add#E: mut E23_31..E23_31})
 //│ 		E23_31 :> 1<int,number>
-//│ Add[1]
+//│ Add<1>
 
 e.lhs
 //│ 1
@@ -34,10 +34,10 @@ e
 //│ 		α30 :> (Add<> & {Add#E: mut E23_31..E23_31}) <: {lhs: lhs36}
 //│ 		E23_31 :> 1<int,number> <: lhs36
 //│ 		lhs36 :> 1<int,number>
-//│ Add[1]
+//│ Add<1>
 
 
 Add(2, 2)
-//│ Add[2]
+//│ Add<2>
 
 

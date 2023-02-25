@@ -103,10 +103,10 @@ module Test0_1 {
 module Test0_2 {
   fun b = 123
 }
-//│ namespace Test0_1() {
+//│ module Test0_1() {
 //│   fun a: 123
 //│ }
-//│ namespace Test0_2() {
+//│ module Test0_2() {
 //│   fun b: 123
 //│ }
 
@@ -141,10 +141,10 @@ module Test1_2 {
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ║  l.133: 	}
 //│ ╙──       	^
-//│ namespace Test1_1() {
+//│ module Test1_1() {
 //│   fun a: error
 //│ }
-//│ namespace Test1_2() {
+//│ module Test1_2() {
 //│   fun b: error
 //│ }
 
@@ -212,13 +212,13 @@ module Test2_2 {
 //│ ║         	^^^^^^^^^^^^^
 //│ ║  l.183: 	}
 //│ ╙──       	^
-//│ namespace Test2_1() {
+//│ module Test2_1() {
 //│   fun a: 123
 //│   fun d: error
 //│   fun n: 456
 //│   fun t2: Test2_2
 //│ }
-//│ namespace Test2_2() {
+//│ module Test2_2() {
 //│   fun b: 123
 //│   fun c: error
 //│   fun e: error
