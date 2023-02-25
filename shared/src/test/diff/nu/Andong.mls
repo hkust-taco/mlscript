@@ -1,0 +1,11 @@
+:NewParser
+:NewDefs
+:NoJS
+
+class Union<Region>(a: Region, b: Region)
+//│ class Union[Region](a: Region, b: Region)
+
+// ? x is shadowed. Why is b required?
+fun hmm(x) =
+  if x is Union(x, y) then x
+//│ fun hmm: Union[{b: anything} & 'a] -> 'a
