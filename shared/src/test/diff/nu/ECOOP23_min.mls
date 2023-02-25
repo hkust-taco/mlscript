@@ -14,11 +14,11 @@ let e = Add(1, 1)
 e
 //│ 0. Typing TypingUnit(List(e))
 //│ | 0. Typing term e
-//│ | 0. : α32
+//│ | 0. : α30
 //│ ======== TYPED ========
-//│ res: Some(α32) where 
-//│ 		α32 :> (Add<> & {Add#E: mut E23_33..E23_33})
-//│ 		E23_33 :> 1<int,number>
+//│ res: Some(α30) where 
+//│ 		α30 :> (Add<> & {Add#E: mut E23_31..E23_31})
+//│ 		E23_31 :> 1<int,number>
 //│ Add[1]
 
 e.lhs
@@ -28,12 +28,12 @@ e.lhs
 e
 //│ 0. Typing TypingUnit(List(e))
 //│ | 0. Typing term e
-//│ | 0. : α32
+//│ | 0. : α30
 //│ ======== TYPED ========
-//│ res: Some(α32) where 
-//│ 		α32 :> (Add<> & {Add#E: mut E23_33..E23_33}) <: {lhs: lhs38}
-//│ 		E23_33 :> 1<int,number> <: lhs38
-//│ 		lhs38 :> 1<int,number>
+//│ res: Some(α30) where 
+//│ 		α30 :> (Add<> & {Add#E: mut E23_31..E23_31}) <: {lhs: lhs36}
+//│ 		E23_31 :> 1<int,number> <: lhs36
+//│ 		lhs36 :> 1<int,number>
 //│ Add[1]
 
 

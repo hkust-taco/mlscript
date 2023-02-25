@@ -39,12 +39,10 @@ mixin EvalBase {
 
 module TestLang: EvalBase
 //│ namespace TestLang() {
-//│   this: {eval: 'lhs -> int}
 //│   fun eval: 'a -> int
 //│ }
 //│ where
-//│   'lhs <: 'a
-//│   'a <: Add['lhs] | Lit
+//│   'a <: Add['a] | Lit
 
 TestLang.eval
 //│ 'a -> int
@@ -75,12 +73,10 @@ module TestLang: EvalNothing, EvalAddLit
 //│   fun eval: (Add['lhs] | Lit | 'a & ~Add & ~Lit) -> (int | 'b)
 //│ }
 //│ namespace TestLang() {
-//│   this: {eval: 'lhs0 -> int}
 //│   fun eval: 'c -> int
 //│ }
 //│ where
-//│   'lhs0 <: 'c
-//│   'c <: Add['lhs0] | Lit
+//│   'c <: Add['c] | Lit
 
 TestLang.eval
 //│ 'a -> int
@@ -112,13 +108,10 @@ mixin EvalNeg {
 
 module TestLang: EvalBase, EvalNeg
 //│ namespace TestLang() {
-//│   this: {eval: ('expr | 'lhs) -> int}
 //│   fun eval: 'a -> int
 //│ }
 //│ where
-//│   'expr <: 'a
-//│   'a <: Add['lhs] | Lit | Neg['expr]
-//│   'lhs <: 'a
+//│   'a <: Add['a] | Lit | Neg['a]
 
 TestLang.eval
 //│ 'a -> int
@@ -161,14 +154,11 @@ mixin EvalNegNeg {
 
 module TestLang: EvalBase, EvalNeg, EvalNegNeg
 //│ namespace TestLang() {
-//│   this: {eval: ('A | 'expr | 'lhs) -> int}
 //│   fun eval: 'a -> int
 //│ }
 //│ where
+//│   'a <: Add['a] | Lit | Neg['A & (~Neg | Neg['a])]
 //│   'A <: 'a
-//│   'a <: Add['lhs] | Lit | Neg['A & (~Neg | Neg['expr])]
-//│   'expr <: 'a
-//│   'lhs <: 'a
 
 fun mk(n) = if n is
   0 then Lit(0)

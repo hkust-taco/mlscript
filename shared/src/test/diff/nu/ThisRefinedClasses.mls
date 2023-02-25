@@ -1,0 +1,64 @@
+:NewParser
+:NewDefs
+:NoJS
+
+
+
+// * I don't think it's a good idea to generate `this` refinements for classes,
+// * as this could easily lead to typos and delayed error reporting.
+// * Instead, we should require explicit `this` annotations by users when needed.
+
+
+:e
+class Foo { fun test = this.x }
+//│ ╔══[ERROR] Unhandled cyclic definition
+//│ ║  l.13: 	class Foo { fun test = this.x }
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ class Foo() {
+//│   fun test: error
+//│ }
+
+
+:e
+class Foo(n: int) { fun test = this.x }
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.23: 	class Foo(n: int) { fun test = this.x }
+//│ ║        	                               ^^^^^^
+//│ ╟── reference of type `Foo & {n: int}` does not have field 'x'
+//│ ║  l.23: 	class Foo(n: int) { fun test = this.x }
+//│ ╙──      	                               ^^^^
+//│ class Foo(n: int) {
+//│   fun test: error
+//│ }
+
+
+:e
+class Foo<A>(n: A) { fun test = this.x }
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.36: 	class Foo<A>(n: A) { fun test = this.x }
+//│ ║        	                                ^^^^^^
+//│ ╟── reference of type `Foo & {Foo#A = ?A, n: A}` does not have field 'x'
+//│ ║  l.36: 	class Foo<A>(n: A) { fun test = this.x }
+//│ ╙──      	                                ^^^^
+//│ class Foo[A](n: A) {
+//│   fun test: error
+//│ }
+
+
+
+// TODO support: (treat `this` annot not like a term ascription)
+class Foo {
+  this: { x: 'a }
+  // fun test = this.x
+}
+//│ ╔══[ERROR] Unhandled cyclic definition
+//│ ║  l.50: 	class Foo {
+//│ ║        	^^^^^^^^^^^
+//│ ║  l.51: 	  this: { x: 'a }
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ║  l.52: 	  // fun test = this.x
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.53: 	}
+//│ ╙──      	^
+//│ class Foo()
+

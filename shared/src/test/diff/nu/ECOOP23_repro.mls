@@ -51,12 +51,10 @@ mixin EvalAdd {
 
 module TestLang: EvalAdd
 //│ namespace TestLang() {
-//│   this: {eval: 'lhs -> 'a}
-//│   fun eval: 'b -> 'a
+//│   fun eval: 'a -> nothing
 //│ }
 //│ where
-//│   'lhs <: 'b
-//│   'b <: Add['lhs]
+//│   'a <: Add['a]
 
 TestLang.eval
 //│ 'a -> nothing
@@ -79,12 +77,10 @@ mixin EvalBase {
 
 module TestLang: EvalBase
 //│ namespace TestLang() {
-//│   this: {eval: 'lhs -> int}
 //│   fun eval: 'a -> int
 //│ }
 //│ where
-//│   'lhs <: 'a
-//│   'a <: Add['lhs] | Lit
+//│   'a <: Add['a] | Lit
 
 TestLang.eval
 //│ 'a -> int
@@ -131,13 +127,10 @@ mixin EvalNeg {
 
 module TestLang: EvalBase, EvalNeg
 //│ namespace TestLang() {
-//│   this: {eval: ('expr | 'lhs) -> int}
 //│   fun eval: 'a -> int
 //│ }
 //│ where
-//│   'expr <: 'a
-//│   'a <: Add['lhs] | Lit | Neg['expr]
-//│   'lhs <: 'a
+//│   'a <: Add['a] | Lit | Neg['a]
 
 TestLang.eval
 //│ 'a -> int

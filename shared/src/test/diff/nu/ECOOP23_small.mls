@@ -21,7 +21,7 @@ mixin EvalNothing {
 mixin EvalAddLit {
   fun eval(e) =
     if e is
-      Lit(n) then n: int
+      Lit(n) then n
       Add(l, r) then this.eval(l) + this.eval(r)
     else super.eval(e)
 }
@@ -46,12 +46,14 @@ mixin EvalNeg {
 
 module TestLang: EvalNothing, EvalAddLit, EvalNeg
 //│ namespace TestLang() {
-//│   this: {eval: ('expr | 'lhs) -> int}
 //│   fun eval: 'a -> int
 //│ }
 //│ where
-//│   'expr <: 'a
-//│   'a <: Add['lhs] | Lit | Neg['expr]
-//│   'lhs <: 'a
+//│   'a <: Add['a] | Lit | Neg['a]
+
+TestLang.eval
+//│ 'a -> int
+//│   where
+//│     'a <: Add['a] | Lit | Neg['a]
 
 

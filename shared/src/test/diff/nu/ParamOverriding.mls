@@ -16,9 +16,8 @@ class Base1(p: int): Over {
   // fun test2 = super.p // TODO
 }
 //│ class Base1(p: int) {
-//│   this: {p: 'p}
 //│   fun p: "hi"
-//│   fun test: (int, "hi" | 'p,)
+//│   fun test: (int, "hi",)
 //│ }
 
 

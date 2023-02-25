@@ -69,8 +69,12 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       freshVar(noProv/*FIXME*/, N, S(decl.name.decapitalize))(lvl + 1)
     
     def complete()(implicit raise: Raise): TypedNuTermDef = result.getOrElse {
-      if (isComputing) lastWords(s"TODO cyclic defition ${decl.name}")
-      else trace(s"Completing ${decl.showDbg}") {
+      if (isComputing) {
+        // lastWords(s"TODO cyclic defition ${decl.name}")
+        err(msg"Unhandled cyclic definition", decl.toLoc) // TODO better loc/explanation
+      }
+      // else // TODO avert infinite completion recursion here?
+      trace(s"Completing ${decl.showDbg}") {
         // var res: ST = errType
         val res = try {
           isComputing = true
@@ -319,7 +323,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     val mems = baseMems ++ clsMems
                     
                     TypedNuCls(outerCtx.lvl, td, ttu,
-                      tparams, typedParams, mems.map(d => d.name -> d).toMap, thisTV
+                      tparams, typedParams, mems.map(d => d.name -> d).toMap,
+                      // if (td.kind is Nms) TopType else thisTV
+                      TopType
                     )(thisType)
                   }
                 case Mxn =>

@@ -28,10 +28,9 @@ class Base1(base: int): BaseTest, BaseInc {
   fun test3 = [base, this.base]
 }
 //│ class Base1(base: int) {
-//│   this: {base: 'base}
 //│   fun test: int
-//│   fun test2: 'base | int
-//│   fun test3: (int, 'base | int,)
+//│   fun test2: int
+//│   fun test3: (int, int,)
 //│ }
 
 Base1(1).test
@@ -47,7 +46,7 @@ Base1(1).test3
 // TODO
 class Base1(base): BaseTest
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.48: 	class Base1(base): BaseTest
+//│ ║  l.47: 	class Base1(base): BaseTest
 //│ ╙──      	            ^^^^
 //│ class Base1(base: error) {
 //│   fun test: error
@@ -64,13 +63,13 @@ Base1(1).test
 :e
 class Base1(x): BaseTest
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.65: 	class Base1(x): BaseTest
+//│ ║  l.64: 	class Base1(x): BaseTest
 //│ ╙──      	            ^
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.65: 	class Base1(x): BaseTest
+//│ ║  l.64: 	class Base1(x): BaseTest
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `{x: error}` does not have field 'base'
-//│ ║  l.65: 	class Base1(x): BaseTest
+//│ ║  l.64: 	class Base1(x): BaseTest
 //│ ║        	           ^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.8: 	  fun test = super.base
@@ -163,16 +162,16 @@ WrapBase1.wrapA(1)
 :e
 WrapBase1.wrapA("ok")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.164: 	WrapBase1.wrapA("ok")
+//│ ║  l.163: 	WrapBase1.wrapA("ok")
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"ok"` is not an instance of type `int`
-//│ ║  l.164: 	WrapBase1.wrapA("ok")
+//│ ║  l.163: 	WrapBase1.wrapA("ok")
 //│ ║         	                ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.110: 	  fun wrapA(x: int) = x : int
+//│ ║  l.109: 	  fun wrapA(x: int) = x : int
 //│ ║         	               ^^^
 //│ ╟── from reference:
-//│ ║  l.120: 	  fun wrapA(x) = [super.wrapA(x)]
+//│ ║  l.119: 	  fun wrapA(x) = [super.wrapA(x)]
 //│ ╙──       	                              ^
 //│ (int,) | error
 
