@@ -952,9 +952,11 @@ trait TypeSimplifier { self: Typer =>
             pol(tv) match {
               case S(p) if inlineBounds && !occursInvariantly(tv) && !recVars.contains(tv) =>
                 // * Inline the bounds of non-rec non-invar-occ type variables
-                println(s"Inlining bounds of $tv (~> $res)")
+                println(s"Inlining bounds of $tv (~> $res) ${printPol(p)}")
+                // if (p) mergeTransform(true, pol, tv, Set.single(tv), canDistribForall) | res
+                // else mergeTransform(false, pol.contravar, tv, Set.single(tv), canDistribForall) & res
                 if (p) mergeTransform(true, pol, tv, Set.single(tv), canDistribForall) | res
-                else mergeTransform(false, pol.contravar, tv, Set.single(tv), canDistribForall) & res
+                else mergeTransform(false, pol, tv, Set.single(tv), canDistribForall) & res
               case _ if (!wasDefined) =>
                 def setBounds = {
                   trace(s"Setting bounds of $res...") {
@@ -1012,9 +1014,17 @@ trait TypeSimplifier { self: Typer =>
         pol.base.fold[ST](TypeBounds.mk(
           transform(lb, PolMap.neg, parents, canDistribForall),
           transform(ub, PolMap.pos, parents, canDistribForall),
+          // transform(lb, pol, parents, canDistribForall),
+          // transform(ub, pol, parents, canDistribForall),
+          // transform(lb, pol.contravar, parents, canDistribForall),
+          // transform(ub, pol.covar, parents, canDistribForall),
           noProv
-        ))(pol =>
-          if (pol) transform(ub, PolMap.pos, parents) else transform(lb, PolMap.neg, parents))
+        ))(p =>
+          // if (p) transform(ub, PolMap.pos, parents) else transform(lb, PolMap.neg, parents)
+          if (p) transform(ub, pol, parents) else transform(lb, pol, parents)
+          // if (p) transform(ub, pol.covar, parents)
+          // else transform(lb, pol.contravar, parents)
+        )
       case PolymorphicType(plvl, bod) =>
         val res = transform(bod, pol.enter(plvl), parents, canDistribForall = S(plvl))
         canDistribForall match {
@@ -1075,7 +1085,8 @@ trait TypeSimplifier { self: Typer =>
           st.unwrapProvs match {
       case tv @ AssignedVariable(ty) =>
         processed.setAndIfUnset(tv) {
-          tv.assignedTo = S(process(pol, ty, S(tv)))
+          // tv.assignedTo = S(process(pol, ty, S(tv))) // * WRONG!
+          tv.assignedTo = S(process(N, ty, S(tv)))
         }
         tv
       case tv: TV =>
@@ -1086,6 +1097,7 @@ trait TypeSimplifier { self: Typer =>
         tv
       case _ =>
         lazy val mapped = st.mapPol(pol, smart = true)(process(_, _, parent))
+        // println(s"mapped $mapped")
         pol match {
           case S(p) =>
             // println(s"!1! ${st} ${consed.get(p -> st)}")

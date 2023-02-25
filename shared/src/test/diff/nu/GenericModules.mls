@@ -1,0 +1,59 @@
+:NewParser
+:NewDefs
+:NoJS
+
+
+module Test<A> {
+  fun foo: A => A
+}
+//│ module Test[A]() {
+//│   fun foo: A -> A
+//│ }
+
+Test.foo
+//│ nothing -> anything
+
+:e
+Test.foo(1)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.17: 	Test.foo(1)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── integer literal of type `1` does not match type `nothing`
+//│ ║  l.17: 	Test.foo(1)
+//│ ║        	         ^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.6: 	module Test<A> {
+//│ ╙──     	            ^
+//│ anything
+
+:e
+Test.foo(error) + 1
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.30: 	Test.foo(error) + 1
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `anything` is not an instance of type `int`
+//│ ║  l.30: 	Test.foo(error) + 1
+//│ ╙──      	^^^^^^^^^^^^^^^
+//│ error | int
+
+:e
+Test<int> .foo
+//│ ╔══[ERROR] Type application syntax is not yet supported
+//│ ║  l.40: 	Test<int> .foo
+//│ ╙──      	^^^^^^^^^
+//│ error
+
+:e
+(Test<int>).foo
+//│ ╔══[ERROR] Type application syntax is not yet supported
+//│ ║  l.47: 	(Test<int>).foo
+//│ ╙──      	 ^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.47: 	(Test<int>).foo
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── receiver of type `{_1: error}` does not have field 'foo'
+//│ ║  l.47: 	(Test<int>).foo
+//│ ╙──      	^^^^^^^^^^^
+//│ error
+
+
