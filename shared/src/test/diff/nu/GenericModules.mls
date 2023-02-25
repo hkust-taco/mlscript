@@ -46,12 +46,6 @@ Test<int> .foo
 //│ ╔══[ERROR] Type application syntax is not yet supported
 //│ ║  l.45: 	(Test<int>).foo
 //│ ╙──      	 ^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.45: 	(Test<int>).foo
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ╟── receiver of type `{_1: error}` does not have field 'foo'
-//│ ║  l.45: 	(Test<int>).foo
-//│ ╙──      	^^^^^^^^^^^
 //│ error
 
 

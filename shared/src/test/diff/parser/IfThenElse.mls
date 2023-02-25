@@ -541,7 +541,7 @@ if true
 //│ ╟── Note: 'if' expression started here:
 //│ ║  l.536: 	(if true)
 //│ ╙──       	 ^^
-//│ Parsed: {'(' if (true) then undefined, ')'}
+//│ Parsed: {'(' if (true) then undefined ')'}
 
 :pe
 (if true then)
@@ -549,7 +549,7 @@ if true
 //│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
 //│ ║  l.547: 	(if true then)
 //│ ╙──       	             ^
-//│ Parsed: {'(' if (true) then undefined, ')'}
+//│ Parsed: {'(' if (true) then undefined ')'}
 
 :pe
 if true then;

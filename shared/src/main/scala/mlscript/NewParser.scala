@@ -427,15 +427,22 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case (br @ BRACKETS(bk @ (Round | Square | Curly), toks), loc) :: _ =>
         consume
         val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) // TODO
-        val bra = if (bk === Curly) Bra(true, Rcd(res.map {
-          case S(n) -> fld => n -> fld
-          case N -> (fld @ Fld(_, _, v: Var)) => v -> fld
-          case N -> fld =>
-            err((
-              msg"Record field should have a name" -> fld.value.toLoc :: Nil))
-            Var("<error>") -> fld
-        }))
-        else Bra(false, Tup(res))
+        val bra = (bk, res) match {
+          case (Curly, _) =>
+            Bra(true, Rcd(res.map {
+            case S(n) -> fld => n -> fld
+            case N -> (fld @ Fld(_, _, v: Var)) => v -> fld
+            case N -> fld =>
+              err((
+                msg"Record field should have a name" -> fld.value.toLoc :: Nil))
+              Var("<error>") -> fld
+            }))
+          case (Round, (N, Fld(false, false, elt)) :: Nil) =>
+            Bra(false, elt)
+          case _ =>
+            // TODO actually reject round tuples? (except for function arg lists)
+            Bra(false, Tup(res))
+        }
         exprCont(bra.withLoc(S(loc)), prec, allowNewlines = false)
       case (KEYWORD("forall"), l0) :: _ =>
         consume

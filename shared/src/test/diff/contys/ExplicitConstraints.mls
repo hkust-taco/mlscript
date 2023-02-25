@@ -31,10 +31,10 @@ fun f: int => (int where int : string)
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.24: 	fun f: int => (int where int : string)
 //│ ╙──      	                               ^^^^^^
-//│ f: int -> (int,)
+//│ f: int -> int
 
 fun f: 'a => ('a where 'a : string)
-//│ f: (string & 'a) -> ('a,)
+//│ f: (string & 'a) -> 'a
 
 
 :e
@@ -51,7 +51,7 @@ fun f: 'a => ('a where 'a : string) where int : 'a
 //│ ╟── from type variable:
 //│ ║  l.41: 	fun f: 'a => ('a where 'a : string) where int : 'a
 //│ ╙──      	                                                ^^
-//│ f: (string & 'a) -> ('a | int,)
+//│ f: (string & 'a) -> ('a | int)
 
 
 :e

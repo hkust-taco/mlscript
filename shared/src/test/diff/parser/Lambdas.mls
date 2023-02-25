@@ -7,7 +7,7 @@ x => x
 
 (x) => x
 //│ |(|x|)| |=>| |x|
-//│ Parsed: {(x,) => x}
+//│ Parsed: {('(' x ')',) => x}
 
 // TODO
 fun x => x
@@ -61,7 +61,7 @@ x =>
 //│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
 //│ ║  l.59: 	(x =>)
 //│ ╙──      	     ^
-//│ Parsed: {'(' (x,) => undefined, ')'}
+//│ Parsed: {'(' (x,) => undefined ')'}
 
 a --> b --> c
 //│ |a| |-->| |b| |-->| |c|
@@ -73,11 +73,11 @@ a => b => c
 
 (a => b) => c
 //│ |(|a| |=>| |b|)| |=>| |c|
-//│ Parsed: {((a,) => b,) => c}
+//│ Parsed: {('(' (a,) => b ')',) => c}
 
 a => (b => c)
 //│ |a| |=>| |(|b| |=>| |c|)|
-//│ Parsed: {(a,) => '(' (b,) => c, ')'}
+//│ Parsed: {(a,) => '(' (b,) => c ')'}
 
 xs.forall(x => x > 0)
 //│ |xs|.forall|(|x| |=>| |x| |>| |0|)|

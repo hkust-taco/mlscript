@@ -14,7 +14,7 @@ new
 //│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
 //│ ║  l.12: 	(new)
 //│ ╙──      	    ^
-//│ Parsed: {'(' new {}, ')'}
+//│ Parsed: {'(' new {} ')'}
 
 :pe
 new {}

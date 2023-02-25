@@ -222,7 +222,7 @@ foo
 
 (1)
 //│ |(|1|)|
-//│ Parsed: {'(' 1, ')'}
+//│ Parsed: {'(' 1 ')'}
 
 (1
 //│ ╔══[PARSE ERROR] Unmatched opening parenthesis
@@ -236,7 +236,7 @@ foo
 //│ ║  l.234: 	(1))
 //│ ╙──       	   ^
 //│ |(|1|)|
-//│ Parsed: {'(' 1, ')'}
+//│ Parsed: {'(' 1 ')'}
 
 (
 //│ ╔══[PARSE ERROR] Unmatched opening parenthesis
