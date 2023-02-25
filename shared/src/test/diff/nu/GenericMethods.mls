@@ -1,0 +1,105 @@
+:NewParser
+:NewDefs
+:NoJS
+
+
+fun foo1 = forall 'A; (x: 'A) => x
+//│ fun foo1: forall 'A. (x: 'A,) -> 'A
+
+foo1(42)
+//│ 42
+
+:e
+foo1[int](42)
+//│ ╔══[ERROR] Type application syntax is not yet supported
+//│ ║  l.13: 	foo1[int](42)
+//│ ╙──      	^^^^^^^^^
+//│ error
+
+
+fun foo2<A>(x: A) = x
+//│ fun foo2: (x: 'a,) -> 'a
+
+foo2(42)
+//│ 42
+
+:e
+foo2<int>(42)
+//│ ╔══[ERROR] Type application syntax is not yet supported
+//│ ║  l.27: 	foo2<int>(42)
+//│ ╙──      	^^^^^^^^^
+//│ error
+
+
+fun foo3[A](x: A) = x
+//│ fun foo3: (x: 'a,) -> 'a
+
+foo3(42)
+//│ 42
+
+:e
+foo3[int](42)
+//│ ╔══[ERROR] Type application syntax is not yet supported
+//│ ║  l.41: 	foo3[int](42)
+//│ ╙──      	^^^^^^^^^
+//│ error
+
+
+fun bar: forall 'A; 'A => 'A
+//│ fun bar: forall 'A. 'A -> 'A
+
+:e
+fun bar<A> : A => A
+//│ ╔══[ERROR] Type parameters here are not yet supported in this position
+//│ ║  l.52: 	fun bar<A> : A => A
+//│ ╙──      	        ^
+//│ ╔══[ERROR] type identifier not found: A
+//│ ║  l.52: 	fun bar<A> : A => A
+//│ ╙──      	             ^
+//│ ╔══[ERROR] type identifier not found: A
+//│ ║  l.52: 	fun bar<A> : A => A
+//│ ╙──      	                  ^
+//│ fun bar: error -> error
+
+:pe
+:e
+:w
+fun bar<A>: A => A
+//│ ╔══[PARSE ERROR] Unmatched opening angle bracket
+//│ ║  l.67: 	fun bar<A>: A => A
+//│ ║        	       ^
+//│ ╙── Note that `<` without spaces around it is considered as an angle bracket and not as an operator
+//│ ╔══[PARSE ERROR] Unexpected 'fun' keyword in expression position
+//│ ║  l.67: 	fun bar<A>: A => A
+//│ ╙──      	^^^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.67: 	fun bar<A>: A => A
+//│ ╙──      	    ^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Unsupported pattern shape:
+//│ ║  l.67: 	fun bar<A>: A => A
+//│ ╙──      	        ^^^^^
+//│ ╔══[ERROR] identifier not found: A
+//│ ║  l.67: 	fun bar<A>: A => A
+//│ ╙──      	                 ^
+//│ error -> error
+
+
+module Test {
+  fun foo: 'A => 'A
+  fun bar: 'A
+  fun test<A>(x: A) = x
+}
+//│ module Test() {
+//│   fun bar: nothing
+//│   fun foo: forall 'A. 'A -> 'A
+//│   fun test: (x: 'a,) -> 'a
+//│ }
+
+class Test<A>(n: A) {
+  fun test<A>(x: A) = [x, n]
+}
+//│ class Test[A](n: A) {
+//│   fun test: (x: 'a,) -> ('a, A,)
+//│ }
+
+

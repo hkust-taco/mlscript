@@ -441,13 +441,18 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         consume
         val as = argsMaybeIndented()
         skip(KEYWORD(";"))
+        // yeetSpaces match {
+        //   case (KEYWORD(";" | "."), _) :: _ =>
+        //     consume
+        //   case _ => ???
+        // }
         val e = expr(0)
         R(Forall(as.flatMap {
           // case S(Var(nme)) -> Fld(false, false, trm) =>
           case N -> Fld(false, false, v: Var) =>
             TypeVar(R(v.name), N).withLocOf(v) :: Nil
           case v -> f =>
-            err(msg"illegal `forall` quantifiee" -> f.value.toLoc :: Nil)
+            err(msg"illegal `forall` quantifier body" -> f.value.toLoc :: Nil)
             Nil
         }, e))
       case (KEYWORD("let"), l0) :: _ =>
@@ -675,10 +680,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
             case R(ty) => ty
           }
           case _ => ???
-        })
+        }).withLoc(acc.toLoc.fold(some(loc))(_ ++ loc |> some))
         exprCont(res, prec, allowNewlines)
         
-      case (br @ BRACKETS(Square, toks), loc) :: _ =>
+      case (br @ BRACKETS(Square, toks), loc) :: _ => // * Currently unreachable because we match Square brackets as tparams
         consume
         val idx = rec(toks, S(br.innerLoc), "subscript").concludeWith(_.expr(0))
         val res = Subs(acc, idx.withLoc(S(loc)))

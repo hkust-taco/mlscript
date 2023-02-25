@@ -186,7 +186,7 @@ final case class NuTypeDef(
 final case class NuFunDef(
   isLetRec: Opt[Bool], // None means it's a `fun`, which is always recursive; Some means it's a `let`
   nme: Var,
-  targs: Ls[TypeName],
+  tparams: Ls[TypeName],
   // rhs: Term \/ PolyType,
   rhs: Term \/ Type,
 ) extends NuDecl with DesugaredStatement {

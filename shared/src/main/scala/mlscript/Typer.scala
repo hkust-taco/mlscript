@@ -950,8 +950,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case _ => mthCallOrSel(obj, fieldName)
         }
       case Let(isrec, nme, rhs, bod) =>
-        if (newDefs) {
-          if (isrec) ???
+        if (newDefs && !isrec) {
+          // if (isrec) ???
           val rhs_ty = typeTerm(rhs)
           val newCtx = ctx.nest
           newCtx += nme.name -> VarSymbol(rhs_ty, nme)
@@ -1015,7 +1015,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case New(S((nmedTy, trm)), TypingUnit(Nil)) =>
         typeMonomorphicTerm(App(Var(nmedTy.base.name).withLocOf(nmedTy), trm))
       case New(base, args) => ???
-      case TyApp(_, _) => ??? // TODO handle
+      case TyApp(_, _) =>
+        // ??? // TODO handle
+        err(msg"Type application syntax is not yet supported", term.toLoc)
       case Where(bod, sts) =>
         typeTerms(sts :+ bod, false, Nil, allowPure = true)
       case Forall(vs, bod) =>

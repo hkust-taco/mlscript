@@ -83,13 +83,22 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
             case fd: NuFunDef =>
               // assert(fd.isLetRec.isEmpty, fd.isLetRec)
               implicit val prov: TP = noProv // TODO
+              def checkNoTyParams() =
+                if (fd.tparams.nonEmpty)
+                  err(msg"Type parameters here are not yet supported in this position",
+                    fd.tparams.head.toLoc)
               val res_ty = fd.rhs match {
                 case R(PolyType(tps, ty)) =>
+                  checkNoTyParams()
                   // val body_ty = typeType(ty)(ctx.nextLevel, raise,
                   //   vars = tps.map(tp => tp.name -> freshVar(noProv/*FIXME*/, N)(1)).toMap)
-                  val body_ty = ctx.nextLevel { implicit ctx: Ctx => // TODO use poly instead!
+                  val body_ty = 
+                  // ctx.nextLevel { implicit ctx: Ctx =>
+                  //   // * Note: can't use `ctx.poly` instead of `ctx.nextLevel` because all the methods
+                  //   // * in the current typing unit are quantified together.
+                  ctx.poly { implicit ctx: Ctx =>
                     typeType(ty)(ctx, raise,
-                    vars = vars ++ tps.map(tp => tp.asInstanceOf[L[TN]].value.name -> freshVar(noProv/*FIXME*/, N)(1)).toMap)
+                      vars = vars ++ tps.map(tp => tp.asInstanceOf[L[TN]].value.name -> freshVar(noProv/*FIXME*/, N)(1)).toMap)
                   }
                   // TODO check against `tv`
                   TypedNuFun(ctx.lvl, fd, PolymorphicType(ctx.lvl, body_ty))
@@ -98,8 +107,14 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                   // implicit val vars: Map[Str, SimpleType] =
                   //   outerVars ++ Map.empty // TODO tparams
                   fd.isLetRec match {
-                    case S(true) => ???
-                    case S(false) =>
+                    case S(true) => // * Let rec bindings
+                      checkNoTyParams()
+                      implicit val gl: GenLambdas = true
+                      TypedNuFun(ctx.lvl, fd, typeTerm(
+                        Let(true, fd.nme, body, fd.nme)
+                      ))
+                    case S(false) => // * Let bindings
+                      checkNoTyParams()
                       implicit val gl: GenLambdas = true
                       TypedNuFun(ctx.lvl, fd, typeTerm(body))
                     case N =>
@@ -118,7 +133,15 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                       // * and polymorphically wrt to non-recursive users of them.
                       implicit val gl: GenLambdas = false
                       val body_ty = ctx.nextLevel { implicit ctx: Ctx =>
-                        typeTerm(body)
+                        // * Note: can't use `ctx.poly` instead of `ctx.nextLevel` because all the methods
+                        // * in the current typing unit are quantified together.
+                        vars ++ fd.tparams.map { tn =>
+                          tn.name -> freshVar(TypeProvenance(tn.toLoc, "method type parameter",
+                            originName = S(tn.name),
+                            isType = true), N)
+                        } |> { implicit vars =>
+                          typeTerm(body)
+                        }
                       }
                       TypedNuFun(ctx.lvl, fd, body_ty)
                   }
