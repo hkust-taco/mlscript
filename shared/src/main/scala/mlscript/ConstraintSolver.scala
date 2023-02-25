@@ -48,8 +48,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             case N =>
               // FIXME type bounds are kind of wrong for this
               TypeBounds(
-                _tv.lowerBounds.foldLeft(BotType: ST)(_ | _),
-                _tv.upperBounds.foldLeft(TopType: ST)(_ & _),
+                // _tv.lowerBounds.foldLeft(BotType: ST)(_ | _),
+                // _tv.upperBounds.foldLeft(TopType: ST)(_ & _),
+                _tv.lowerBounds.foldLeft(
+                  Extruded(false, SkolemTag(_tv.level, _tv)(provTODO))(provTODO, Nil): ST
+                  // ^ TODO provide extrusion reason?
+                )(_ | _),
+                _tv.upperBounds.foldLeft(
+                  Extruded(true, SkolemTag(_tv.level, _tv)(provTODO))(provTODO, Nil): ST
+                  // ^ TODO provide extrusion reason?
+                )(_ & _),
               )(_tv.prov)
           }
           // println(s"Assigning ${_tv} ~> $tv := $targ where ${
