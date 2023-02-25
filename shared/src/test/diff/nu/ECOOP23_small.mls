@@ -47,7 +47,11 @@ mixin EvalNeg {
 module TestLang: EvalNothing, EvalAddLit, EvalNeg
 //│ namespace TestLang() {
 //│   this: {eval: ('expr | 'lhs) -> int}
-//│   fun eval: (Add['lhs & (Add[Add[anything] | Lit | Neg[Add[anything] | Lit | Neg[anything]]] | Lit | Neg[Add[anything] | Lit | Neg[anything]])] | Lit | Neg['expr & (Add[anything] | Lit | Neg[anything])]) -> int
+//│   fun eval: 'a -> int
 //│ }
+//│ where
+//│   'expr <: 'a
+//│   'a <: Add['lhs] | Lit | Neg['expr]
+//│   'lhs <: 'a
 
 

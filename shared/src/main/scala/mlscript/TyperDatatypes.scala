@@ -271,12 +271,12 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                         val thisType = superType &
                           clsNameToNomTag(td)(provTODO, ctx) &
                           RecordType(tparamFields)(ttp(td.params, isType = true))
-                        // trace(s"${lvl}. Finalizing inheritance with $thisType <: $finalType") {
-                        //   assert(finalType.level === lvl)
-                        //   constrain(thisType, finalType)
-                        //   members
-                        // }()
-                        println(s"${lvl}. Finalized inheritance with $superType ~> $thisType")
+                        trace(s"${lvl}. Finalizing inheritance with $thisType <: $finalType") {
+                          assert(finalType.level === lvl)
+                          constrain(thisType, finalType)
+                          members
+                        }()
+                        // println(s"${lvl}. Finalized inheritance with $superType ~> $thisType")
                         (thisType, members)
                     }
                     
@@ -398,9 +398,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       // }
       res match {
         case cls: TypedNuCls =>
-          implicit val prov: TP = noProv // TODO
-          constrain(cls.instanceType, thisTV)
-          println(cls.variances)
+          // implicit val prov: TP = noProv // TODO
+          // constrain(cls.instanceType, thisTV)
+          // println(cls.variances)
         case _ =>
       }
       res

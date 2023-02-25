@@ -48,11 +48,20 @@ mixin EvalAdd {
 //│ }
 
 // FIXME type vars are wrongly refreshed when tying the knot
+
 module TestLang: EvalAdd
 //│ namespace TestLang() {
 //│   this: {eval: 'lhs -> 'a}
-//│   fun eval: Add[Add[anything] & 'lhs] -> 'a
+//│   fun eval: 'b -> 'a
 //│ }
+//│ where
+//│   'lhs <: 'b
+//│   'b <: Add['lhs]
+
+TestLang.eval
+//│ 'a -> nothing
+//│   where
+//│     'a <: Add['a]
 
 
 
@@ -71,11 +80,16 @@ mixin EvalBase {
 module TestLang: EvalBase
 //│ namespace TestLang() {
 //│   this: {eval: 'lhs -> int}
-//│   fun eval: (Add['lhs & (Add[Add[anything] | Lit] | Lit)] | Lit) -> int
+//│   fun eval: 'a -> int
 //│ }
+//│ where
+//│   'lhs <: 'a
+//│   'a <: Add['lhs] | Lit
 
 TestLang.eval
-//│ (Add[Add[Add[anything] | Lit] | Lit] | Lit) -> int
+//│ 'a -> int
+//│   where
+//│     'a <: Add['a] | Lit
 
 
 
@@ -118,11 +132,17 @@ mixin EvalNeg {
 module TestLang: EvalBase, EvalNeg
 //│ namespace TestLang() {
 //│   this: {eval: ('expr | 'lhs) -> int}
-//│   fun eval: (Add['lhs & (Add[Add[anything] | Lit | Neg[Add[anything] | Lit | Neg[anything]]] | Lit | Neg[Add[anything] | Lit | Neg[anything]])] | Lit | Neg['expr & (Add[anything] | Lit | Neg[anything])]) -> int
+//│   fun eval: 'a -> int
 //│ }
+//│ where
+//│   'expr <: 'a
+//│   'a <: Add['lhs] | Lit | Neg['expr]
+//│   'lhs <: 'a
 
 TestLang.eval
-//│ (Add[Add[Add[anything] | Lit | Neg[Add[anything] | Lit | Neg[anything]]] | Lit | Neg[Add[anything] | Lit | Neg[anything]]] | Lit | Neg[Add[anything] | Lit | Neg[anything]]) -> int
+//│ 'a -> int
+//│   where
+//│     'a <: Add['a] | Lit | Neg['a]
 
 
 TestLang.eval(add11)

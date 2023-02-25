@@ -40,11 +40,16 @@ mixin EvalBase {
 module TestLang: EvalBase
 //│ namespace TestLang() {
 //│   this: {eval: 'lhs -> int}
-//│   fun eval: (Add['lhs & (Add[Add[anything] | Lit] | Lit)] | Lit) -> int
+//│   fun eval: 'a -> int
 //│ }
+//│ where
+//│   'lhs <: 'a
+//│   'a <: Add['lhs] | Lit
 
 TestLang.eval
-//│ (Add[Add[Add[anything] | Lit] | Lit] | Lit) -> int
+//│ 'a -> int
+//│   where
+//│     'a <: Add['a] | Lit
 
 TestLang.eval(add11)
 //│ int
@@ -71,11 +76,16 @@ module TestLang: EvalNothing, EvalAddLit
 //│ }
 //│ namespace TestLang() {
 //│   this: {eval: 'lhs0 -> int}
-//│   fun eval: (Add['lhs0 & (Add[Add[anything] | Lit] | Lit)] | Lit) -> int
+//│   fun eval: 'c -> int
 //│ }
+//│ where
+//│   'lhs0 <: 'c
+//│   'c <: Add['lhs0] | Lit
 
 TestLang.eval
-//│ (Add[Add[Add[anything] | Lit] | Lit] | Lit) -> int
+//│ 'a -> int
+//│   where
+//│     'a <: Add['a] | Lit
 
 TestLang.eval(add11)
 //│ int
@@ -103,11 +113,17 @@ mixin EvalNeg {
 module TestLang: EvalBase, EvalNeg
 //│ namespace TestLang() {
 //│   this: {eval: ('expr | 'lhs) -> int}
-//│   fun eval: (Add['lhs & (Add[Add[anything] | Lit | Neg[Add[anything] | Lit | Neg[anything]]] | Lit | Neg[Add[anything] | Lit | Neg[anything]])] | Lit | Neg['expr & (Add[anything] | Lit | Neg[anything])]) -> int
+//│   fun eval: 'a -> int
 //│ }
+//│ where
+//│   'expr <: 'a
+//│   'a <: Add['lhs] | Lit | Neg['expr]
+//│   'lhs <: 'a
 
 TestLang.eval
-//│ (Add[Add[Add[anything] | Lit | Neg[Add[anything] | Lit | Neg[anything]]] | Lit | Neg[Add[anything] | Lit | Neg[anything]]] | Lit | Neg[Add[anything] | Lit | Neg[anything]]) -> int
+//│ 'a -> int
+//│   where
+//│     'a <: Add['a] | Lit | Neg['a]
 
 
 TestLang.eval(add11)
@@ -145,9 +161,14 @@ mixin EvalNegNeg {
 
 module TestLang: EvalBase, EvalNeg, EvalNegNeg
 //│ namespace TestLang() {
-//│   this: {eval: ('expr | 'lhs) -> int & 'expr0 -> 'a}
-//│   fun eval: (Add['lhs & (Add[Add[anything] | Lit | Neg[Add[anything] | Lit | Neg[Add[anything] | Lit | Neg[Add[anything] | Lit | Neg[anything]]] | Neg[Neg[Add[anything] | Lit | Neg[anything]] | ~Neg[anything]] & ~Neg]] | Lit | Neg[Add[anything] | Lit | Neg[Add[anything] | Lit | Neg[Add[anything] | Lit | Neg[anything]]] | Neg[Neg[Add[anything] | Lit | Neg[anything]] | ~Neg[anything]] & ~Neg])] | Lit | Neg['expr & (Add[anything] | Lit | Neg['expr0 & (Add[anything] | Lit | Neg[Add[anything] | Lit | Neg[anything]])] | Neg[Neg[Add[anything] | Lit | Neg[anything]] | ~Neg[anything]] & ~Neg)]) -> (int | 'a)
+//│   this: {eval: ('A | 'expr | 'lhs) -> int}
+//│   fun eval: 'a -> int
 //│ }
+//│ where
+//│   'A <: 'a
+//│   'a <: Add['lhs] | Lit | Neg['A & (~Neg | Neg['expr])]
+//│   'expr <: 'a
+//│   'lhs <: 'a
 
 fun mk(n) = if n is
   0 then Lit(0)
@@ -158,7 +179,10 @@ fun mk(n) = if n is
 //│     'E :> Add['E] | Lit | Neg['E]
 
 TestLang.eval
-//│ (Add[Add[Add[anything] | Lit | Neg[Add[anything] | Lit | Neg[Add[anything] | Lit | Neg[Add[anything] | Lit | Neg[anything]]] | Neg[Neg[Add[anything] | Lit | Neg[anything]] | ~Neg[anything]] & ~Neg]] | Lit | Neg[Add[anything] | Lit | Neg[Add[anything] | Lit | Neg[Add[anything] | Lit | Neg[anything]]] | Neg[Neg[Add[anything] | Lit | Neg[anything]] | ~Neg[anything]] & ~Neg]] | Lit | Neg[Add[anything] | Lit | Neg[Add[anything] | Lit | Neg[Add[anything] | Lit | Neg[anything]]] | Neg[Neg[Add[anything] | Lit | Neg[anything]] | ~Neg[anything]] & ~Neg]) -> int
+//│ 'a -> int
+//│   where
+//│     'a <: Add['a] | Lit | Neg['A & (~Neg | Neg['a])]
+//│     'A <: 'a
 
 TestLang.eval(mk(0))
 //│ int

@@ -30,10 +30,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     : TypedNuCls = {
     val info = ctx.tyDefs2(clsNme)
     
-    // Option.when(info.isComputing) {
-    //   ???
-    // }.getOrElse 
-    { info.complete() match {
+    info.complete() match {
       case td: TypedNuCls =>
         implicit val freshened: MutMap[TV, ST] = MutMap.empty
         implicit val shadows: Shadows = Shadows.empty
@@ -99,7 +96,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         // println(res.members.map(_._2.asInstanceOf[TypedNuFun].ty.showBounds))
         res
       case _ => ???
-    }}
+    }
   }
   
   
@@ -442,11 +439,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               rec(f0, f1, true)
             case (LhsRefined(S(f: FunctionType), ts, r, trs), RhsBases(pts, _, _)) =>
               annoying(Nil, LhsRefined(N, ts, r, trs), Nil, done_rs)
-            case (LhsRefined(S(ClassTag(Var(nme), _)), ts, r, _), RhsBases(ots, S(R(RhsField(fldNme, fldTy))), trs)) if nme.isCapitalized =>
-              val fty = lookupNuTypeDefField(lookupNuTypeDef(nme, r.fields.toMap.get), fldNme)
-              rec(fty.ub, fldTy.ub, false)
-              recLb(fldTy, fty)
-              // ???
+            case (LhsRefined(S(ClassTag(Var(nme), _)), ts, r, trs0), RhsBases(ots, S(R(RhsField(fldNme, fldTy))), trs))
+            if nme.isCapitalized =>
+              val lti = ctx.tyDefs2(nme)
+              if (lti.isComputing)
+                annoying(Nil, LhsRefined(N, ts, r, trs0), Nil, done_rs) // TODO maybe pick a parent class here instead?
+              else {
+                val fty = lookupNuTypeDefField(lookupNuTypeDef(nme, r.fields.toMap.get), fldNme)
+                rec(fty.ub, fldTy.ub, false)
+                recLb(fldTy, fty)
+              }
             case (LhsRefined(S(pt: ClassTag), ts, r, trs), RhsBases(pts, bf, trs2)) =>
               if (pts.contains(pt) || pts.exists(p => pt.parentsST.contains(p.id)))
                 println(s"OK  $pt  <:  ${pts.mkString(" | ")}")
