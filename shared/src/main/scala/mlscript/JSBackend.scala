@@ -418,6 +418,11 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     // Collect class fields.
     val fields = classSymbol.body.collectFields ++
       classSymbol.body.collectTypeNames.flatMap(resolveTraitFields)
+
+    val constructorScope = classScope.derive(s"${classSymbol.lexicalName} constructor")
+    fields.foreach(constructorScope.declareValue(_, Some(false), false))
+    val rest = constructorScope.declareValue("rest", Some(false), false)
+
     val base = baseClassSymbol.map { sym => JSIdent(sym.runtimeName) }
     val traits = classSymbol.body.collectTypeNames.flatMap {
       name => scope.getType(name) match {
@@ -427,7 +432,10 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case N => N
       }
     }
-    JSClassDecl(classSymbol.runtimeName, fields, base, members, traits)
+    if (base.isDefined)
+      JSClassDecl(classSymbol.runtimeName, fields :+ rest.runtimeName, base, members, traits)
+    else
+      JSClassDecl(classSymbol.runtimeName, fields, base, members, traits)
   }
 
   /**

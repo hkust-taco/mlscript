@@ -746,11 +746,11 @@ trait StatementImpl extends Located { self: Statement =>
         val pos = params.unzip._1
         val bod = pars.map(tt).foldRight(Record(params): Type)(Inter)
         val termName = Var(nme.name).withLocOf(nme)
-        val ctor = Def(false, termName, L(Lam(tup, App(termName, Tup(N -> Fld(false, false, Rcd(fs.map {
-          case (S(nme), fld) => nme -> Fld(false, false, nme)
-          case (N, fld @ Fld(mut, spec, nme: Var)) => nme -> fld
+        val ctor = Def(false, termName, L(Lam(tup, App(termName, Tup(fs.map {
+          case (S(nme), fld) => N -> Fld(false, false, nme)
+          case (N, fld @ Fld(mut, spec, nme: Var)) => N -> Fld(false, false, nme)
           case _ => die
-        })) :: Nil)))), true)
+        })))), true)
         val mthDefs = unit.children.foldLeft(List[MethodDef[Left[Term, Type]]]())((lst, loc) => loc match {
           case NuFunDef(isLetRec, mnme, tys, Left(rhs)) => lst :+ MethodDef(isLetRec.getOrElse(false), nme, mnme, tys, Left(rhs))
           case _ => lst
