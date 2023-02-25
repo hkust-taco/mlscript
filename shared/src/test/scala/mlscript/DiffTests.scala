@@ -572,7 +572,9 @@ class DiffTests
               val exp = typer.expandType(sim)(ctx)
               
               val expStr =
-                exp.showIn(ShowCtx.mk(exp :: Nil).copy(newDefs = true), 0)
+                exp.showIn(ShowCtx.mk(exp :: Nil)
+                    // .copy(newDefs = true) // TODO later
+                  , 0)
               
               output(expStr.stripSuffix("\n"))
               

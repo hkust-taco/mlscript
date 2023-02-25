@@ -267,7 +267,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 (TypeName("<error>").withLoc(curLoc.map(_.left)), false)
             }
             val tparams = yeetSpaces match {
-              case (br @ BRACKETS(Angle, toks), loc) :: _ =>
+              case (br @ BRACKETS(Angle | Square, toks), loc) :: _ =>
                 consume
                 val ts = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()).map {
                   case (N, Fld(false, false, v @ Var(nme))) =>
@@ -319,7 +319,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
             }
             foundErr || !success pipe { implicit fe =>
               val tparams = if (kwStr === "let") Ls[TypeName]() else yeetSpaces match {
-                case (br @ BRACKETS(Angle, toks), loc) :: _ =>
+                case (br @ BRACKETS(Angle | Square, toks), loc) :: _ =>
                   consume
                   val ts = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()).map {
                     case (N, Fld(false, false, v @ Var(nme))) =>
@@ -665,7 +665,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           case R(res) => exprCont(res, 0, allowNewlines)
         }
         
-      case (br @ BRACKETS(Angle, toks), loc) :: _ =>
+      case (br @ BRACKETS(Angle | Square, toks), loc) :: _ =>
         consume
         val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented())
         // val res = TyApp(acc, as.map(_.mapSecond.to))

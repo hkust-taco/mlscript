@@ -9,7 +9,7 @@ class Lit(value: int)
 //│ class Lit(value: int)
 
 let add11 = Add(Lit(1), Lit(2))
-//│ let add11: Add<Lit>
+//│ let add11: Add[Lit]
 
 fun eval(e) =
   if e is
@@ -17,7 +17,7 @@ fun eval(e) =
     Add(l, r) then eval(l) + eval(r)
 //│ fun eval: 'a -> int
 //│   where
-//│     'a <: Add<'a> | Lit
+//│     'a <: Add['a] | Lit
 
 
 mixin EvalLit {
@@ -44,7 +44,7 @@ mixin EvalAdd {
 }
 //│ mixin EvalAdd() {
 //│   this: {eval: 'lhs -> 'a}
-//│   fun eval: Add<'lhs> -> 'a
+//│   fun eval: Add['lhs] -> 'a
 //│ }
 
 // FIXME type vars are wrongly refreshed when tying the knot
@@ -54,12 +54,12 @@ module TestLang: EvalAdd
 //│   fun eval: 'a -> nothing
 //│ }
 //│ where
-//│   'a <: Add<'a>
+//│   'a <: Add['a]
 
 TestLang.eval
 //│ 'a -> nothing
 //│   where
-//│     'a <: Add<'a>
+//│     'a <: Add['a]
 
 
 
@@ -71,7 +71,7 @@ mixin EvalBase {
 }
 //│ mixin EvalBase() {
 //│   this: {eval: 'lhs -> int}
-//│   fun eval: (Add<'lhs> | Lit) -> int
+//│   fun eval: (Add['lhs] | Lit) -> int
 //│ }
 
 
@@ -80,29 +80,29 @@ module TestLang: EvalBase
 //│   fun eval: 'a -> int
 //│ }
 //│ where
-//│   'a <: Add<'a> | Lit
+//│   'a <: Add['a] | Lit
 
 TestLang.eval
 //│ 'a -> int
 //│   where
-//│     'a <: Add<'a> | Lit
+//│     'a <: Add['a] | Lit
 
 
 
 add11
-//│ Add<Lit>
+//│ Add[Lit]
 
 TestLang.eval(add11)
 //│ int
 
 add11
-//│ Add<Lit>
+//│ Add[Lit]
 
 TestLang.eval(add11)
 //│ int
 
 add11
-//│ Add<Lit>
+//│ Add[Lit]
 
 
 
@@ -110,7 +110,7 @@ class Neg<A>(expr: A)
 //│ class Neg[A](expr: A)
 
 let add2negadd11 = Add(Lit(2), Neg(add11))
-//│ let add2negadd11: Add<Lit | Neg<Add<Lit>>>
+//│ let add2negadd11: Add[Lit | Neg[Add[Lit]]]
 
 
 mixin EvalNeg {
@@ -121,7 +121,7 @@ mixin EvalNeg {
 //│ mixin EvalNeg() {
 //│   super: {eval: 'a -> 'b}
 //│   this: {eval: 'expr -> int}
-//│   fun eval: (Neg<'expr> | 'a & ~Neg) -> (int | 'b)
+//│   fun eval: (Neg['expr] | 'a & ~Neg) -> (int | 'b)
 //│ }
 
 
@@ -130,12 +130,12 @@ module TestLang: EvalBase, EvalNeg
 //│   fun eval: 'a -> int
 //│ }
 //│ where
-//│   'a <: Add<'a> | Lit | Neg<'a>
+//│   'a <: Add['a] | Lit | Neg['a]
 
 TestLang.eval
 //│ 'a -> int
 //│   where
-//│     'a <: Add<'a> | Lit | Neg<'a>
+//│     'a <: Add['a] | Lit | Neg['a]
 
 
 TestLang.eval(add11)
