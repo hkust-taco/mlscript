@@ -1,0 +1,78 @@
+:NewParser
+:NewDefs
+:NoJS
+
+
+
+mixin Test {
+  class Foo(n: int)
+  let f = Foo(123)
+}
+//│ mixin Test() {
+//│   class Foo(n: int)
+//│   let f: Foo
+//│ }
+
+module M: Test
+//│ module M() {
+//│   class Foo(n: int)
+//│   let f: Foo
+//│ }
+
+M.f
+//│ Foo
+
+M.f.n
+//│ int
+
+:e
+M.Foo
+//│ ╔══[ERROR] Method Foo not found
+//│ ║  l.29: 	M.Foo
+//│ ╙──      	^^^^^
+//│ error
+
+:e
+mixin Test2 { let f = Foo(1) }
+//│ ╔══[ERROR] identifier not found: Foo
+//│ ║  l.36: 	mixin Test2 { let f = Foo(1) }
+//│ ╙──      	                      ^^^
+//│ mixin Test2() {
+//│   let f: error
+//│ }
+
+// FIXME the `Foo` class is not in scope here
+mixin Test3 { fun f(x) = if x is Foo then 1 }
+//│ mixin Test3() {
+//│   fun f: Foo -> 1
+//│ }
+
+
+
+:e // TODO
+mixin Test {
+  class Lit(n: int)
+  class Add<A>(lhs: A, rhs: A) {
+    let cached = size(this)
+  }
+  fun size(x) = if x is
+    Foo then 1
+    Add(l, r) then this.size(l) + this.size(r)
+}
+//│ ╔══[ERROR] Unhandled cyclic definition
+//│ ║  l.55: 	  class Add<A>(lhs: A, rhs: A) {
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.56: 	    let cached = size(this)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.57: 	  }
+//│ ╙──      	^^^
+//│ mixin Test() {
+//│   this: {size: 'lhs -> int}
+//│   class Add[A](lhs: A, rhs: A) {
+//│     let cached: int
+//│   }
+//│   class Lit(n: int)
+//│   fun size: (Add['lhs] | Foo) -> int
+//│ }
+
+

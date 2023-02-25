@@ -742,6 +742,7 @@ abstract class TyperHelpers { Typer: Typer =>
       def childrenPolMem(m: NuMember): List[PolMap -> SimpleType] = m match {
         case NuParam(nme, ty, isType) => childrenPolField(PolMap.pos)(ty) // TODO invariant when mutable
         case TypedNuFun(level, fd, ty) => pol -> ty :: Nil
+        case td: TypedNuTermDef => CompletedTypingUnit(td :: Nil, N).childrenPol(pol: PolMap) // TODO refactor
       }
       this match {
         case tv @ AssignedVariable(ty) =>

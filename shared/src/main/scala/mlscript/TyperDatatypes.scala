@@ -259,6 +259,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                                       mxn.ttu.entities.map(_.complete()).map {
                                         case fun @ TypedNuFun(_, fd, ty) =>
                                           fun
+                                        case m: NuMember => m
                                         case _ => ???
                                       }
                                     case cls: TypedNuCls =>
@@ -290,7 +291,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                           superType,
                           RecordType(
                             // newMembs.foldLeft(TopType.toUpper(provTODO))(_ && _.ty.toUpper(provTODO))
-                            newMembs.map(m => m.fd.nme -> m.ty.toUpper(provTODO))
+                            // newMembs.map(m => m.fd.nme -> m.ty.toUpper(provTODO))
+                            newMembs.collect{case m: TypedNuFun => m.fd.nme -> m.ty.toUpper(provTODO)}
                           )(provTODO)
                           )(provTODO)
                         inherit(ps, newSuperType, members ++ newMembs)
