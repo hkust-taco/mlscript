@@ -23,7 +23,7 @@ f: forall 'X. 'X -> 'X
 
 
 r = { f = forall 'A. fun (x: 'A) -> x }
-//│ r: {f: 'A -> 'A}
+//│ r: {f: forall 'A. 'A -> 'A}
 //│  = { f: [Function: f] }
 
 r.f 0
