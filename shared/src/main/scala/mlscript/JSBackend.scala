@@ -262,8 +262,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case ClassExpression(TypeDef(Cls, TypeName(name), tparams, baseType, _, members, _), parents) =>
       val clsBody = scope.declareClass(name, tparams map { _.name }, baseType, members)
       parents match {
-        case Some(p) => JSClassExpr(translateNewClassExpression(clsBody, Some(p)))
-        case _ => JSClassExpr(translateNewClassExpression(clsBody, N))
+        case Some(p) => JSClassExpr(translateNewClassExpression(clsBody, Ls(p)))
+        case _ => JSClassExpr(translateNewClassExpression(clsBody))
       }
     case _: Bind | _: Test | If(_, _) | TyApp(_, _) | _: Splc | _: Where =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
@@ -515,12 +515,11 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
   protected def translateNewClassDeclaration(
       classSymbol: ClassSymbol,
-      base: Opt[Term],
       superFields: Ls[Term] = Nil,
       rest: Opt[Str] = N
   )(implicit scope: Scope): JSClassGetter = {
     val getterScope = scope.derive(s"${classSymbol.lexicalName} getter")
-    val classBody = translateNewClassExpression(classSymbol, base, superFields, rest)(getterScope)
+    val classBody = translateNewClassExpression(classSymbol, superFields, rest)(getterScope)
     val constructor = classBody match {
       case JSClassNewDecl(_, fields, _, _, _, _, _) => fields.map(JSNamePattern(_))
     }
@@ -541,7 +540,6 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
   protected def translateNewClassExpression(
       classSymbol: ClassSymbol,
-      base: Opt[Term],
       superFields: Ls[Term] = Nil,
       rest: Opt[Str] = N
   )(implicit scope: Scope): JSClassNewDecl = {
@@ -558,7 +556,36 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     fields.foreach(constructorScope.declareValue(_, Some(false), false))
     val restRuntime = rest.flatMap(name => S(constructorScope.declareValue(name, Some(false), false).runtimeName))
 
-    val baseJS = base.flatMap { sym => S(translateTerm(sym)(constructorScope)) }
+    val bases = superFields.map { sym => sym match {
+      case App(lhs, _) => S(translateTerm(App(lhs, Tup(Ls())))(constructorScope))
+      case _ => S(translateTerm(sym)(constructorScope))
+    } }
+    val base: Opt[JSExpr] =
+      if (bases.length === 0) N
+      else if (bases.length === 1) bases.head match {
+        case Some(JSIdent(nme)) => scope.resolveValue(nme) match {
+          case Some(sym: MixinSymbol) => Some(JSInvoke(JSIdent(nme), Ls()))
+          case Some(_) => Some(JSIdent(nme))
+          case _ => ???
+        }
+        case Some(inv: JSInvoke) => Some(inv)
+        case _ => ???
+      }
+      else bases.reduceLeft((res, call) => (res, call) match {
+        case (S(JSIdent(res)), S(JSIdent(call))) => scope.resolveValue(res) match {
+          case Some(sym: MixinSymbol) => S(JSInvoke(JSIdent(call), Ls(JSInvoke(JSIdent(res), Ls()))))
+          case Some(_) => S(JSInvoke(JSIdent(call), Ls(JSIdent(res))))
+          case _ => ???
+        }
+        case (S(res), S(JSIdent(call))) => S(JSInvoke(JSIdent(call), Ls(res)))
+        case (S(JSIdent(res)), S(JSInvoke(call, _))) => scope.resolveValue(res) match {
+          case Some(sym: MixinSymbol) => S(JSInvoke(call, Ls(JSInvoke(JSIdent(res), Ls()))))
+          case Some(_) => S(JSInvoke(call, Ls(JSIdent(res))))
+          case _ => ???
+        }
+        case (S(res), S(JSInvoke(call, _))) => S(JSInvoke(call, Ls(res)))
+        case _ => ???
+      })
     val traits = classSymbol.body.collectTypeNames.flatMap {
       name => scope.getType(name) match {
         case S(TraitSymbol(_, runtimeName, _, _, _)) => S(runtimeName)
@@ -571,11 +598,11 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val superParameters = (superFields map {
       case App(lhs, Tup(rhs)) => rhs map {
         case (_, Fld(mut, spec, trm)) => translateTerm(trm)(constructorScope)
-      } 
-      case _ => ??? // TODO: throw?
+      }
+      case _ => Nil
     }).flatten
 
-    JSClassNewDecl(classSymbol.runtimeName, fields, baseJS, restRuntime match {
+    JSClassNewDecl(classSymbol.lexicalName, fields, base, restRuntime match {
       case Some(restRuntime) => superParameters :+ JSIdent(s"...$restRuntime")
       case _ => superParameters
     }, restRuntime, members, traits)
@@ -1020,11 +1047,8 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
       ) ++
       classSymbols.map { sym =>
         superParameters.get(sym.lexicalName) match {
-          case Some(sp) => translateNewClassDeclaration(sym, sp match {
-            case head :: _ => Some(head)
-            case _ => None
-          }, sp)(topLevelScope)
-          case _ => translateNewClassDeclaration(sym, None)(topLevelScope)
+          case Some(sp) => translateNewClassDeclaration(sym, sp)(topLevelScope)
+          case _ => translateNewClassDeclaration(sym)(topLevelScope)
         }
       }.toList
 

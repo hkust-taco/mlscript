@@ -36,7 +36,7 @@ class Bar(x: int, y: int): Foo(x + y)
 //│   cache: {},
 //│   get Bar() {
 //│     if (this.cache.Bar === undefined) {
-//│       class Bar extends new Foo(x + y) {
+//│       class Bar extends new Foo() {
 //│         constructor(x, y) {
 //│           super(x + y);
 //│           this.x = x;
@@ -101,11 +101,7 @@ mixin BB {}
 //│ // End of generated code
 
 :js
-:e
-class C(x: int): BB()
-//│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.105: 	class C(x: int): BB()
-//│ ╙──       	                 ^^^^
+class C(x: int): BB
 //│ class C(x: int)
 //│ // Prelude
 //│ let typing_unit4 = {
@@ -125,4 +121,58 @@ class C(x: int): BB()
 //│   }
 //│ };
 //│ globalThis.C = typing_unit4.C;
+//│ // End of generated code
+
+:js
+:e
+class D(x: int): AA(x)
+//│ ╔══[ERROR] Unsupported parent specification
+//│ ║  l.128: 	class D(x: int): AA(x)
+//│ ╙──       	                 ^^^^^
+//│ class D(x: int)
+//│ // Prelude
+//│ let typing_unit5 = {
+//│   cache: {},
+//│   get D() {
+//│     if (this.cache.D === undefined) {
+//│       class D extends AA() {
+//│         constructor(x) {
+//│           super(x);
+//│           this.x = x;
+//│         }
+//│       };
+//│       this.cache.D = ((x) => new D(x));
+//│       this.cache.D["class"] = D;
+//│     }
+//│     return this.cache.D;
+//│   }
+//│ };
+//│ globalThis.D = typing_unit5.D;
+//│ // End of generated code
+
+:js
+:e
+class E(x: int): BB, AA(x)
+//│ ╔══[ERROR] Unsupported parent specification
+//│ ║  l.155: 	class E(x: int): BB, AA(x)
+//│ ╙──       	                     ^^^^^
+//│ class E(x: int)
+//│ // Prelude
+//│ let typing_unit6 = {
+//│   cache: {},
+//│   get E() {
+//│     if (this.cache.E === undefined) {
+//│       class E extends AA(BB()) {
+//│         constructor(x) {
+//│           super(x);
+//│           this.x = x;
+//│         }
+//│       };
+//│       this.cache.E = ((x) => new E(x));
+//│       this.cache.E["class"] = E;
+//│     }
+//│     return this.cache.E;
+//│   }
+//│ };
+//│ globalThis.E = typing_unit6.E;
 //│ // End of generated code
