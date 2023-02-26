@@ -36,10 +36,11 @@ class Bar(x: int, y: int): Foo(x + y)
 //│   cache: {},
 //│   get Bar() {
 //│     if (this.cache.Bar === undefined) {
-//│       class Bar extends Foo {
+//│       class Bar extends new Foo(x + y) {
 //│         constructor(x, y) {
 //│           super(x + y);
 //│           this.x = x;
+//│           this.y = y;
 //│         }
 //│       };
 //│       this.cache.Bar = ((x, y) => new Bar(x, y));
@@ -49,4 +50,79 @@ class Bar(x: int, y: int): Foo(x + y)
 //│   }
 //│ };
 //│ globalThis.Bar = typing_unit1.Bar;
+//│ // End of generated code
+
+
+:js
+mixin AA(a: int) {
+}
+//│ mixin AA()
+//│ // Prelude
+//│ let typing_unit2 = {
+//│   cache: {},
+//│   AA(base) {
+//│     if (base === undefined) {
+//│       return (class AA {
+//│         constructor(a) {
+//│           this.a = a;
+//│         }
+//│       });
+//│     } else {
+//│       return (class AA extends base {
+//│         constructor(a, ...rest) {
+//│           super(...rest);
+//│         }
+//│       });
+//│     }
+//│   }
+//│ };
+//│ globalThis.AA = typing_unit2.AA;
+//│ // End of generated code
+
+:js
+mixin BB {}
+//│ mixin BB()
+//│ // Prelude
+//│ let typing_unit3 = {
+//│   cache: {},
+//│   BB(base) {
+//│     if (base === undefined) {
+//│       return class BB {};
+//│     } else {
+//│       return (class BB extends base {
+//│         constructor(...rest) {
+//│           super(...rest);
+//│         }
+//│       });
+//│     }
+//│   }
+//│ };
+//│ globalThis.BB = typing_unit3.BB;
+//│ // End of generated code
+
+:js
+:e
+class C(x: int): BB()
+//│ ╔══[ERROR] Unsupported parent specification
+//│ ║  l.105: 	class C(x: int): BB()
+//│ ╙──       	                 ^^^^
+//│ class C(x: int)
+//│ // Prelude
+//│ let typing_unit4 = {
+//│   cache: {},
+//│   get C() {
+//│     if (this.cache.C === undefined) {
+//│       class C extends BB() {
+//│         constructor(x) {
+//│           super();
+//│           this.x = x;
+//│         }
+//│       };
+//│       this.cache.C = ((x) => new C(x));
+//│       this.cache.C["class"] = C;
+//│     }
+//│     return this.cache.C;
+//│   }
+//│ };
+//│ globalThis.C = typing_unit4.C;
 //│ // End of generated code

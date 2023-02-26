@@ -55,20 +55,36 @@ mixin EvalBase {
 //│ let typing_unit1 = {
 //│   cache: {},
 //│   EvalBase(base) {
-//│     return (class EvalBase extends base {
-//│       constructor(...rest) {
-//│         super(...rest);
-//│       }
-//│       eval(e) {
-//│         const self = this;
-//│         return ((() => {
-//│           let a;
-//│           return (a = e, a instanceof Lit ? ((n) => n)(e.n) : a instanceof Add ? ((l) => ((r) => self.eval(l) + self.eval(r))(e.rhs))(e.lhs) : (() => {
-//│             throw new Error("non-exhaustive case expression");
+//│     if (base === undefined) {
+//│       return (class EvalBase {
+//│         constructor() {
+//│         }
+//│         eval(e) {
+//│           const self = this;
+//│           return ((() => {
+//│             let a;
+//│             return (a = e, a instanceof Lit ? ((n) => n)(e.n) : a instanceof Add ? ((l) => ((r) => self.eval(l) + self.eval(r))(e.rhs))(e.lhs) : (() => {
+//│               throw new Error("non-exhaustive case expression");
+//│             })());
 //│           })());
-//│         })());
-//│       }
-//│     });
+//│         }
+//│       });
+//│     } else {
+//│       return (class EvalBase extends base {
+//│         constructor(...rest) {
+//│           super(...rest);
+//│         }
+//│         eval(e) {
+//│           const self = this;
+//│           return ((() => {
+//│             let a;
+//│             return (a = e, a instanceof Lit ? ((n) => n)(e.n) : a instanceof Add ? ((l) => ((r) => self.eval(l) + self.eval(r))(e.rhs))(e.lhs) : (() => {
+//│               throw new Error("non-exhaustive case expression");
+//│             })());
+//│           })());
+//│         }
+//│       });
+//│     }
 //│   }
 //│ };
 //│ globalThis.EvalBase = typing_unit1.EvalBase;
@@ -111,17 +127,30 @@ mixin EvalNeg {
 //│ let typing_unit3 = {
 //│   cache: {},
 //│   EvalNeg(base) {
-//│     return (class EvalNeg extends base {
-//│       constructor(...rest) {
-//│         super(...rest);
-//│       }
-//│       eval(e) {
-//│         const self = this;
-//│         return ((() => {
-//│           return e instanceof Neg ? ((d) => 0 - self.eval(d))(e.expr) : super.eval(e);
-//│         })());
-//│       }
-//│     });
+//│     if (base === undefined) {
+//│       return (class EvalNeg {
+//│         constructor() {
+//│         }
+//│         eval(e) {
+//│           const self = this;
+//│           return ((() => {
+//│             return e instanceof Neg ? ((d) => 0 - self.eval(d))(e.expr) : super.eval(e);
+//│           })());
+//│         }
+//│       });
+//│     } else {
+//│       return (class EvalNeg extends base {
+//│         constructor(...rest) {
+//│           super(...rest);
+//│         }
+//│         eval(e) {
+//│           const self = this;
+//│           return ((() => {
+//│             return e instanceof Neg ? ((d) => 0 - self.eval(d))(e.expr) : super.eval(e);
+//│           })());
+//│         }
+//│       });
+//│     }
 //│   }
 //│ };
 //│ globalThis.EvalNeg = typing_unit3.EvalNeg;
@@ -142,17 +171,30 @@ mixin EvalNegNeg {
 //│ let typing_unit4 = {
 //│   cache: {},
 //│   EvalNegNeg(base) {
-//│     return (class EvalNegNeg extends base {
-//│       constructor(...rest) {
-//│         super(...rest);
-//│       }
-//│       eval(e) {
-//│         const self = this;
-//│         return ((() => {
-//│           return e instanceof Neg ? ((tmp0) => tmp0 instanceof Neg ? ((d) => self.eval(d))(tmp0.expr) : super.eval(e))(e.expr) : super.eval(e);
-//│         })());
-//│       }
-//│     });
+//│     if (base === undefined) {
+//│       return (class EvalNegNeg {
+//│         constructor() {
+//│         }
+//│         eval(e) {
+//│           const self = this;
+//│           return ((() => {
+//│             return e instanceof Neg ? ((tmp0) => tmp0 instanceof Neg ? ((d) => self.eval(d))(tmp0.expr) : super.eval(e))(e.expr) : super.eval(e);
+//│           })());
+//│         }
+//│       });
+//│     } else {
+//│       return (class EvalNegNeg extends base {
+//│         constructor(...rest) {
+//│           super(...rest);
+//│         }
+//│         eval(e) {
+//│           const self = this;
+//│           return ((() => {
+//│             return e instanceof Neg ? ((tmp0) => tmp0 instanceof Neg ? ((d) => self.eval(d))(tmp0.expr) : super.eval(e))(e.expr) : super.eval(e);
+//│           })());
+//│         }
+//│       });
+//│     }
 //│   }
 //│ };
 //│ globalThis.EvalNegNeg = typing_unit4.EvalNegNeg;
@@ -202,4 +244,3 @@ TestLang.eval(mk(0))
 //│ // Query 2
 //│ res = TestLang.eval(mk(0));
 //│ // End of generated code
-

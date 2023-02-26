@@ -262,7 +262,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case ClassExpression(TypeDef(Cls, TypeName(name), tparams, baseType, _, members, _), parents) =>
       val clsBody = scope.declareClass(name, tparams map { _.name }, baseType, members)
       parents match {
-        case Some(p) => JSClassExpr(translateNewClassExpression(clsBody, Some(translateTerm(p))))
+        case Some(p) => JSClassExpr(translateNewClassExpression(clsBody, Some(p)))
         case _ => JSClassExpr(translateNewClassExpression(clsBody, N))
       }
     case _: Bind | _: Test | If(_, _) | TyApp(_, _) | _: Splc | _: Where =>
@@ -466,7 +466,12 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     
     val classBody = JSClassNewDecl(mixinSymbol.runtimeName, fields, S(JSIdent(base.runtimeName)),
       Ls(JSIdent(s"...${rest.runtimeName}")), S(rest.runtimeName), members, traits)
-    JSClassMethod(mixinSymbol.lexicalName, Ls(JSNamePattern(base.runtimeName)), R(Ls(JSReturnStmt(S(JSClassExpr(classBody))))))
+    val baseClassBody = JSClassNewDecl(mixinSymbol.runtimeName, fields, N,
+      Ls(), N, members, traits)
+    JSClassMethod(mixinSymbol.lexicalName, Ls(JSNamePattern(base.runtimeName)), R(Ls(
+      JSIfStmt(JSBinary("===", JSIdent(base.runtimeName), JSIdent("undefined")),
+        Ls(JSReturnStmt(S(JSClassExpr(baseClassBody)))), Ls(JSReturnStmt(S(JSClassExpr(classBody)))))
+    )))
   }
 
   protected def translateModuleDeclaration(
@@ -510,7 +515,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
   protected def translateNewClassDeclaration(
       classSymbol: ClassSymbol,
-      base: Opt[JSExpr],
+      base: Opt[Term],
       superFields: Ls[Term] = Nil,
       rest: Opt[Str] = N
   )(implicit scope: Scope): JSClassGetter = {
@@ -536,7 +541,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
   protected def translateNewClassExpression(
       classSymbol: ClassSymbol,
-      base: Opt[JSExpr],
+      base: Opt[Term],
       superFields: Ls[Term] = Nil,
       rest: Opt[Str] = N
   )(implicit scope: Scope): JSClassNewDecl = {
@@ -553,7 +558,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     fields.foreach(constructorScope.declareValue(_, Some(false), false))
     val restRuntime = rest.flatMap(name => S(constructorScope.declareValue(name, Some(false), false).runtimeName))
 
-    // val base = baseClassSymbol.map { sym => JSIdent(sym.runtimeName) }
+    val baseJS = base.flatMap { sym => S(translateTerm(sym)(constructorScope)) }
     val traits = classSymbol.body.collectTypeNames.flatMap {
       name => scope.getType(name) match {
         case S(TraitSymbol(_, runtimeName, _, _, _)) => S(runtimeName)
@@ -570,7 +575,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       case _ => ??? // TODO: throw?
     }).flatten
 
-    JSClassNewDecl(classSymbol.runtimeName, fields, base, restRuntime match {
+    JSClassNewDecl(classSymbol.runtimeName, fields, baseJS, restRuntime match {
       case Some(restRuntime) => superParameters :+ JSIdent(s"...$restRuntime")
       case _ => superParameters
     }, restRuntime, members, traits)
@@ -1013,15 +1018,14 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
           case _ => None
         })(topLevelScope)
       ) ++
-      sortClassSymbols(classSymbols).map {
-        case (derived, Some(base)) => {
-          superParameters.get(derived.lexicalName) match {
-            case Some(sp) => translateNewClassDeclaration(derived, Some(JSIdent(base.runtimeName)), sp)(topLevelScope)
-            case _ => translateNewClassDeclaration(derived, Some(JSIdent(base.runtimeName)))(topLevelScope)
-          }
+      classSymbols.map { sym =>
+        superParameters.get(sym.lexicalName) match {
+          case Some(sp) => translateNewClassDeclaration(sym, sp match {
+            case head :: _ => Some(head)
+            case _ => None
+          }, sp)(topLevelScope)
+          case _ => translateNewClassDeclaration(sym, None)(topLevelScope)
         }
-        case (derived, None) =>
-          translateNewClassDeclaration(derived, None)(topLevelScope)
       }.toList
 
     def include(typeName: Str, moduleName: Str) =
