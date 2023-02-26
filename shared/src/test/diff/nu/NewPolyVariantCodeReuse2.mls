@@ -1,0 +1,212 @@
+:NewParser
+:NewDefs
+:NoJS
+
+
+// * Adapted example from Code reuse through polymorphic variants (FOSE 2000)
+// * This time with a List class.
+
+// FIXME:
+//  - simplification problem or constraint bug: `'result :> anything <: Num`
+//  - constraining loop with unannotated `list_assoc` ascription
+//  - still a number of quite ugly types
+
+
+class List<A> {
+  fun match: forall 'res; (ifNil: () => 'res, ifCons: (A, List[A]) => 'res) => 'res
+}
+let Nil: () => List<'a>
+let Cons: (head: 'a, tail: List<'a>) => List<'a>
+//│ class List[A]() {
+//│   fun match: forall 'res. (ifNil: () -> 'res, ifCons: (A, List[A],) -> 'res,) -> 'res
+//│ }
+//│ let Nil: forall 'a. () -> List['a]
+//│ let Cons: forall 'a0. (head: 'a0, tail: List['a0],) -> List['a0]
+
+class NotFound
+class Success<A>(result: A)
+//│ class NotFound()
+//│ class Success[A](result: A)
+
+fun eq(l: string, r: string): bool
+//│ fun eq: (l: string, r: string,) -> bool
+
+// * Annotation currently needed to avoid later ascription loop (due to excessive TV refreshing?)
+// fun list_assoc(s, l) =
+fun list_assoc(s, l: List<'a>) =
+  l.match(
+    ifNil: () => NotFound(),
+    ifCons: (h, t) =>
+      if eq(s, h._1) then Success(h._2)
+      else list_assoc(s, t)
+  )
+//│ fun list_assoc: (string, l: List['a],) -> (NotFound | Success['A])
+//│   where
+//│     'a <: {_1: string, _2: 'A}
+
+list_assoc : (string, List<{ _1: string, _2: 'b }>) => (NotFound | Success['b])
+//│ (string, List[{_1: string, _2: 'b}],) -> (NotFound | Success['b])
+
+fun list_assoc(s: string, l: List<{ _1: string, _2: 'b }>): NotFound | Success['b]
+//│ fun list_assoc: forall 'b. (s: string, l: List[{_1: string, _2: 'b}],) -> (NotFound | Success['b])
+
+class Var(s: string)
+//│ class Var(s: string)
+
+mixin EvalVar {
+  fun eval(sub, v) =
+    if v is Var(s) then
+      if list_assoc(s, sub) is
+        NotFound then v
+        Success(r) then r
+}
+//│ mixin EvalVar() {
+//│   fun eval: (List[{_1: string, _2: 'b}], Var,) -> ('b | Var)
+//│ }
+
+class Abs<A>(x: string, t: A)
+class App<A>(s: A, t: A)
+//│ class Abs[A](x: string, t: A)
+//│ class App[A](s: A, t: A)
+
+fun incr(x: {a: int}): unit
+//│ fun incr: (x: {a: int},) -> unit
+
+fun gensym(): string
+//│ fun gensym: () -> string
+
+fun int_to_string(x: int): string
+//│ fun int_to_string: (x: int,) -> string
+
+mixin EvalLambda {
+  fun eval(sub, v) =
+    if v is
+      App(t1, t2) then
+        let l1 = this.eval(sub, t1)
+        let l2 = this.eval(sub, t2)
+        if t1 is
+          Abs(x, t) then this.eval(Cons((x, l2), Nil()), t)
+        else
+          App(l1, l2)
+      Abs(x, t) then
+        let s = gensym()
+        Abs(s, this.eval(Cons((x, Var(s)), sub), t))
+    else
+      super.eval(sub, v)
+}
+//│ mixin EvalLambda() {
+//│   super: {eval: ('b, 'c,) -> 'd}
+//│   this: {eval: (List[out (string, 'e,)], 't,) -> 'd & ('b, 't0,) -> ('e & 'f) & (List[in 'a out 'a | 'a0 | (string, Var,)], 't1,) -> 'g}
+//│   fun eval: (List['a1] & 'b, Abs['t1] | App['t0 & (Abs['t] | ~Abs)] | 'c & ~Abs & ~App,) -> (Abs['g] | App['e | 'f] | 'd)
+//│ }
+//│ where
+//│   'a1 :> 'a | (string, Var,)
+//│       <: 'a0
+
+module Test1: EvalVar, EvalLambda
+//│ module Test1() {
+//│   fun eval: (List[{_1: string, _2: 'result}], 'a,) -> 'result
+//│ }
+//│ where
+//│   'a <: Abs['a] | App['a & (Abs['a] | ~Abs)] | Var
+//│   'result :> anything
+
+Test1.eval(Nil(), Var("a"))
+//│ 'a
+//│   where
+//│     'a :> App['a] | Abs['a] | Var
+
+Test1.eval(Nil(), Abs("b", Var("a")))
+//│ 'a
+//│   where
+//│     'a :> App['a] | Abs['a] | Var
+
+Test1.eval(Cons(("c", Var("d")), Nil()), App(Abs("b", Var("b")), Var("c")))
+//│ 'a
+//│   where
+//│     'a :> App['a] | Abs['a] | Var
+
+Test1.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("b", Var("b")), Var("c")))
+//│ 'a
+//│   where
+//│     'a :> Abs[Var] | Var | App['a] | Abs['a]
+
+class Num(n: int)
+class Add<A>(l: A, r: A)
+class Mul<A>(l: A, r: A)
+//│ class Num(n: int)
+//│ class Add[A](l: A, r: A)
+//│ class Mul[A](l: A, r: A)
+
+fun map_expr(f, v) =
+  if v is
+    Var then v
+    Num then v
+    Add(l, r) then Add(f(l), f(r))
+    Mul(l, r) then Mul(f(l), f(r))
+//│ fun map_expr: ('l -> 'A & 'l0 -> 'A0, Add['l] | Mul['l0] | Num | Var,) -> (Add['A] | Mul['A0] | Num | Var)
+
+mixin EvalExpr {
+  fun eval(sub, v) =
+    fun eta(e) = this.eval(sub, e)
+    let vv = map_expr(eta, v)
+    if vv is
+      Var then super.eval(sub, vv)
+      Add(Num(l), Num(r)) then Num(l + r)
+      Mul(Num(l), Num(r)) then Num(l * r)
+    else v
+}
+//│ mixin EvalExpr() {
+//│   super: {eval: ('a, Var,) -> 'b}
+//│   this: {eval: ('a, 'c,) -> anything}
+//│   fun eval: ('a, 'd & (Add['c] | Mul['c] | Num | Var),) -> (Num | 'd | 'b)
+//│ }
+
+module Test2: EvalVar, EvalExpr
+//│ module Test2() {
+//│   fun eval: (List[{_1: string, _2: 'b}], 'a,) -> ('b | Num | Var | 'a)
+//│ }
+//│ where
+//│   'a <: Add['c] | Mul['c] | Num | Var
+//│   'c <: 'a
+
+Test2.eval(Nil(), Var("a"))
+//│ Num | Var
+
+Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Var("a"))
+//│ Abs[Var] | Num | Var
+
+Test2.eval(Cons(("a", Num(1)), Nil()), Var("a"))
+//│ Num | Var
+
+Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
+//│ Abs[Var] | Add[Num | Var] | Num | Var
+
+module Test3: EvalVar, EvalExpr, EvalLambda
+//│ module Test3() {
+//│   fun eval: (List[{_1: string, _2: 'result}], 'a,) -> anything
+//│ }
+//│ where
+//│   'a <: Abs['a] | App['a & (Abs['a] | ~Abs)] | (Add['b] | Mul['b] | Num | Var) & ~Abs & ~App
+//│   'b <: 'a
+//│   'result :> anything
+//│           <: Num
+
+Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
+//│ 'a
+//│   where
+//│     'a :> App['a] | Abs['a] | Abs[Var] | Num | Var
+
+Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
+//│ 'a
+//│   where
+//│     'a :> App['a] | Abs['a] | Abs[Var] | Add[Num | Var] | Num | Var
+
+module Test3: EvalVar, EvalLambda, EvalExpr
+//│ module Test3() {
+//│   fun eval: (List[{_1: string, _2: 'result}], nothing,) -> anything
+//│ }
+//│ where
+//│   'result :> anything
+//│           <: Num
+

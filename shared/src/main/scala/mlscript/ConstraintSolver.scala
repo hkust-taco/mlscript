@@ -800,12 +800,25 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (tr1: TypeRef, tr2: TypeRef) if tr1.defn.name =/= "Array" =>
             if (tr1.defn === tr2.defn) {
               assert(tr1.targs.sizeCompare(tr2.targs) === 0)
-              val td = ctx.tyDefs(tr1.defn.name)
-              val tvv = td.getVariancesOrDefault
-              td.tparamsargs.unzip._2.lazyZip(tr1.targs).lazyZip(tr2.targs).foreach { (tv, targ1, targ2) =>
-                val v = tvv(tv)
-                if (!v.isContravariant) rec(targ1, targ2, false)
-                if (!v.isCovariant) rec(targ2, targ1, false)
+              ctx.tyDefs.get(tr1.defn.name) match {
+                case S(td) =>
+                  val tvv = td.getVariancesOrDefault
+                  td.tparamsargs.unzip._2.lazyZip(tr1.targs).lazyZip(tr2.targs).foreach { (tv, targ1, targ2) =>
+                    val v = tvv(tv)
+                    if (!v.isContravariant) rec(targ1, targ2, false)
+                    if (!v.isCovariant) rec(targ2, targ1, false)
+                  }
+                case N =>
+                  ctx.tyDefs2(tr1.defn.name).complete() match {
+                    case cls: TypedNuCls =>
+                      cls.tparams.map(_._2).lazyZip(tr1.targs).lazyZip(tr2.targs).foreach {
+                        (tv, targ1, targ2) =>
+                          val v = cls.varianceOf(tv)
+                          if (!v.isContravariant) rec(targ1, targ2, false)
+                          if (!v.isCovariant) rec(targ2, targ1, false)
+                      }
+                    case _ => ???
+                  }
               }
             } else {
               (tr1.mkTag, tr2.mkTag) match {

@@ -2,14 +2,17 @@
 :NewDefs
 :NoJS
 
-// Adapted example from Code reuse through polymorphic variants (FOSE 2000)
-class Nil
-//│ class Nil()
+
+// * Adapted example from Code reuse through polymorphic variants (FOSE 2000)
+
+
+module Nil
+//│ module Nil()
 
 class Cons<A>(head: A, tail: Cons<A> | Nil)
 //│ class Cons[A](head: A, tail: Cons[A] | Nil)
 
-let l = Cons(1, Nil())
+let l = Cons(1, Nil)
 //│ let l: Cons['A]
 //│   where
 //│     'A :> 1
@@ -71,7 +74,7 @@ mixin EvalLambda {
         let l1 = this.eval(sub, t1)
         let l2 = this.eval(sub, t2)
         if t1 is
-          Abs(x, t) then this.eval(Cons((x, l2), Nil()), t)
+          Abs(x, t) then this.eval(Cons((x, l2), Nil), t)
         else
           App(l1, l2)
       Abs(x, t) then
@@ -100,27 +103,27 @@ module Test1: EvalVar, EvalLambda
 //│   'A0 :> (string, 'result,)
 //│       <: 'A1 & {_1: string, _2: 'result}
 //│   'A1 <: 'A & 'A0
-//│   'result :> Var | App['result] | Abs['result]
+//│   'result :> Var | Abs['result] | App['result]
 
-Test1.eval(Nil(), Var("a"))
+Test1.eval(Nil, Var("a"))
 //│ 'a
 //│   where
 //│     'a :> App['a] | Abs['a] | Var
 
-Test1.eval(Nil(), Abs("b", Var("a")))
+Test1.eval(Nil, Abs("b", Var("a")))
 //│ 'a
 //│   where
 //│     'a :> App['a] | Abs['a] | Var
 
-Test1.eval(Cons(("c", Var("d")), Nil()), App(Abs("b", Var("b")), Var("c")))
+Test1.eval(Cons(("c", Var("d")), Nil), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
 //│   where
 //│     'a :> App['a] | Abs['a] | Var
 
-Test1.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("b", Var("b")), Var("c")))
+Test1.eval(Cons(("c", Abs("d", Var("d"))), Nil), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
 //│   where
-//│     'a :> App['a] | Abs['a] | Abs[Var] | Var
+//│     'a :> Abs['a] | Abs[Var] | Var | App['a]
 
 class Num(n: int)
 class Add<A>(l: A, r: A)
@@ -162,32 +165,32 @@ module Test2: EvalVar, EvalExpr
 //│   'b <: 'a
 //│   'A <: {_1: string, _2: 'result}
 
-Test2.eval(Nil(), Var("a"))
+Test2.eval(Nil, Var("a"))
 //│ Num | Var
 
-Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Var("a"))
+Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Var("a"))
 //│ Abs[Var] | Num | Var
 
-Test2.eval(Cons(("a", Num(1)), Nil()), Var("a"))
+Test2.eval(Cons(("a", Num(1)), Nil), Var("a"))
 //│ Num | Var
 
 :e
-Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
+Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.175: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.178: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Num | Var`
-//│ ║  l.175: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
-//│ ║         	                                                   ^^^^^^^^^^^^^^^^^^
+//│ ║  l.178: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║         	                                                 ^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.133: 	  if v is
+//│ ║  l.136: 	  if v is
 //│ ║         	     ^
 //│ ╟── from reference:
-//│ ║  l.143: 	    let vv = map_expr(eta, v)
+//│ ║  l.146: 	    let vv = map_expr(eta, v)
 //│ ╙──       	                           ^
 //│ Abs[Var] | Num | Var | error
 
-Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil()), Add(Num(1), Var("a")))
+Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil), Add(Num(1), Var("a")))
 //│ Abs[Var] | Add[Num | Var] | Num | Var
 
 module Test3: EvalVar, EvalExpr, EvalLambda
@@ -205,15 +208,15 @@ module Test3: EvalVar, EvalExpr, EvalLambda
 //│   'c <: 'a
 //│   'a <: Abs['a] | App['a & (Abs['a] | ~Abs)] | 'b & ~Abs & ~App
 
-Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
+Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ 'a
 //│   where
 //│     'a :> App['a] | Abs['a] | Abs[Var] | Num | Var
 
-Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
+Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
 //│ 'a
 //│   where
-//│     'a :> App['a] | Abs['a] | Abs[Var] | Add[Num | Var] | Num | Var
+//│     'a :> Abs['a] | Abs[Var] | Add[Num | Var] | Num | Var | App['a]
 
 module Test3: EvalVar, EvalLambda, EvalExpr
 //│ module Test3() {
@@ -232,18 +235,18 @@ module Test3: EvalVar, EvalLambda, EvalExpr
 // Because EvalExpr does not dispatch lambdas to super and map_expr only
 // handles exprs
 :e
-Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
+Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.235: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.238: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Num | Var`
-//│ ║  l.235: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil()), Abs("a", Var("a")))
-//│ ║         	                                                   ^^^^^^^^^^^^^^^^^^
+//│ ║  l.238: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║         	                                                 ^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.133: 	  if v is
+//│ ║  l.136: 	  if v is
 //│ ║         	     ^
 //│ ╟── from reference:
-//│ ║  l.143: 	    let vv = map_expr(eta, v)
+//│ ║  l.146: 	    let vv = map_expr(eta, v)
 //│ ╙──       	                           ^
 //│ error | 'a
 //│   where

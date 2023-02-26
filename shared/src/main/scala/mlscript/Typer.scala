@@ -336,8 +336,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case ti: LazyTypeInfo =>
             // ti.complete()
             ti.decl match {
-              case NuTypeDef(Cls, _, tps, _, _, _, _, _) =>
-                S(Cls, tps.size)
+              case NuTypeDef(k @ (Cls | Nms), _, tps, _, _, _, _, _) =>
+                S(k, tps.size)
               case _ => ???
             }
           case _ => N
