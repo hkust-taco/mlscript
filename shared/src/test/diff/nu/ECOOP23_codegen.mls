@@ -8,25 +8,36 @@ class Lit(n: int)
 //│ class Lit(n: int)
 //│ // Prelude
 //│ let res;
-//│ class Add {
-//│   constructor(lhs, rhs) {
-//│     this.lhs = lhs;
-//│     this.rhs = rhs;
+//│ let __mls_modules__ = { cache: {} };
+//│ Object.defineProperty(__mls_modules__, "Add", {
+//│   get: function () {
+//│     if (this.cache.Add === undefined) {
+//│       class Add {
+//│         constructor(lhs, rhs) {
+//│           this.lhs = lhs;
+//│           this.rhs = rhs;
+//│         }
+//│       };
+//│       this.cache.Add = ((lhs, rhs) => new Add(lhs, rhs));
+//│       this.cache.Add["class"] = Add;
+//│     }
+//│     return this.cache.Add;
 //│   }
-//│ }
-//│ class Lit {
-//│   constructor(n) {
-//│     this.n = n;
+//│ });
+//│ Object.defineProperty(__mls_modules__, "Lit", {
+//│   get: function () {
+//│     if (this.cache.Lit === undefined) {
+//│       class Lit {
+//│         constructor(n) {
+//│           this.n = n;
+//│         }
+//│       };
+//│       this.cache.Lit = ((n) => new Lit(n));
+//│       this.cache.Lit["class"] = Lit;
+//│     }
+//│     return this.cache.Lit;
 //│   }
-//│ }
-//│ // Query 1
-//│ globalThis.Add1 = function Add1(lhs, rhs) {
-//│   return new Add(lhs, rhs);
-//│ };
-//│ // Query 2
-//│ globalThis.Lit1 = function Lit1(n) {
-//│   return new Lit(n);
-//│ };
+//│ });
 //│ // End of generated code
 
 :js
@@ -50,7 +61,7 @@ mixin EvalBase {
 //│       const self = this;
 //│       return ((() => {
 //│         let a;
-//│         return (a = e, a instanceof Lit ? ((n) => n)(e.n) : a instanceof Add ? ((l) => ((r) => self.eval(l) + self.eval(r))(e.rhs))(e.lhs) : (() => {
+//│         return (a = e, a instanceof __mls_modules__.Lit ? ((n) => n)(e.n) : a instanceof __mls_modules__.Add ? ((l) => ((r) => self.eval(l) + self.eval(r))(e.rhs))(e.lhs) : (() => {
 //│           throw new Error("non-exhaustive case expression");
 //│         })());
 //│       })());
@@ -63,15 +74,20 @@ mixin EvalBase {
 class Neg<A>(expr: A)
 //│ class Neg[A](expr: A)
 //│ // Prelude
-//│ class Neg {
-//│   constructor(expr) {
-//│     this.expr = expr;
+//│ Object.defineProperty(__mls_modules__, "Neg", {
+//│   get: function () {
+//│     if (this.cache.Neg === undefined) {
+//│       class Neg {
+//│         constructor(expr) {
+//│           this.expr = expr;
+//│         }
+//│       };
+//│       this.cache.Neg = ((expr) => new Neg(expr));
+//│       this.cache.Neg["class"] = Neg;
+//│     }
+//│     return this.cache.Neg;
 //│   }
-//│ }
-//│ // Query 1
-//│ globalThis.Neg1 = function Neg1(expr) {
-//│   return new Neg(expr);
-//│ };
+//│ });
 //│ // End of generated code
 
 :js
@@ -94,7 +110,7 @@ mixin EvalNeg {
 //│     eval(e) {
 //│       const self = this;
 //│       return ((() => {
-//│         return e instanceof Neg ? ((d) => 0 - self.eval(d))(e.expr) : super.eval(e);
+//│         return e instanceof __mls_modules__.Neg ? ((d) => 0 - self.eval(d))(e.expr) : super.eval(e);
 //│       })());
 //│     }
 //│   });
@@ -121,7 +137,7 @@ mixin EvalNegNeg {
 //│     eval(e) {
 //│       const self = this;
 //│       return ((() => {
-//│         return e instanceof Neg ? ((tmp0) => tmp0 instanceof Neg ? ((d) => self.eval(d))(tmp0.expr) : super.eval(e))(e.expr) : super.eval(e);
+//│         return e instanceof __mls_modules__.Neg ? ((tmp0) => tmp0 instanceof __mls_modules__.Neg ? ((d) => self.eval(d))(tmp0.expr) : super.eval(e))(e.expr) : super.eval(e);
 //│       })());
 //│     }
 //│   });
@@ -158,7 +174,7 @@ TestLang.eval(mk(0))
 //│   'a :> Neg[Lit | 'a] | Add[Lit | 'a]
 //│ // Query 1
 //│ globalThis.mk = function mk(n) {
-//│   return n == 0 === true ? Lit1(0) : n == 1 === true ? Neg1(mk(n)) : Add1(mk(n), mk(n));
+//│   return n == 0 === true ? new __mls_modules__.Lit(0) : n == 1 === true ? new __mls_modules__.Neg(mk(n)) : new __mls_modules__.Add(mk(n), mk(n));
 //│ };
 //│ // Query 2
 //│ res = TestLang1().eval(mk(0));

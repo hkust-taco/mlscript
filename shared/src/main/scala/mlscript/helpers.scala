@@ -421,17 +421,12 @@ trait PgrmImpl { self: Pgrm =>
       val pos = params.unzip._1
       val bod = pars.map(tt).foldRight(Record(params): Type)(Inter)
       val termName = Var(nme.name).withLocOf(nme)
-      val ctor = Def(false, termName, L(Lam(tup, App(termName, Tup(fs.map {
-        case (S(nme), fld) => N -> Fld(false, false, nme)
-        case (N, fld @ Fld(mut, spec, nme: Var)) => N -> Fld(false, false, nme)
-        case _ => die
-      })))), true)
       val mthDefs = unit.children.foldLeft(List[MethodDef[Left[Term, Type]]]())((lst, loc) => loc match {
         case NuFunDef(isLetRec, mnme, tys, Left(rhs)) => lst :+ MethodDef(isLetRec.getOrElse(false), nme, mnme, tys, Left(rhs))
         case _ => lst
       })
       // TODO: mthDecls
-      diags.toList -> (TypeDef(k, nme, tps.map(_._2), bod, Nil, mthDefs, pos) :: ctor :: Nil)
+      diags.toList -> (TypeDef(k, nme, tps.map(_._2), bod, Nil, mthDefs, pos) :: Nil)
   }
 }
 
