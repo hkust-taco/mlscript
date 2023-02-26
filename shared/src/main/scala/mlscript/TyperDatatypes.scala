@@ -368,7 +368,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     TypedNuMxn(td, thisTV, superTV, mems.map(m => m.name -> m).toMap, ttu)
                     // }
                   }
-                case _ => ???
+                // case Als => ???
+                // case _ => ???
               }
           }
           

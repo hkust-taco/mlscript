@@ -1,0 +1,34 @@
+:NewParser
+:NewDefs
+:NoJS
+
+
+class List<A> {
+  fun match: forall 'res; (ifNil: () => 'res, ifCons: ('res, List[A]) => 'res) => 'res
+}
+let Nil: List<nothing>
+let Cons: (head: 'a, tail: List<'a>) => List<'a>
+//│ class List[A]() {
+//│   fun match: forall 'res. (ifNil: () -> 'res, ifCons: ('res, List[A],) -> 'res,) -> 'res
+//│ }
+//│ let Nil: List[nothing]
+//│ let Cons: forall 'a. (head: 'a, tail: List['a],) -> List['a]
+
+let x: List<int>
+//│ let x: List[int]
+
+// FIXME
+x: List<anything>
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.21: 	x: List<anything>
+//│ ║        	^
+//│ ╟── expression of type `anything` is not an instance of type `int`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.17: 	let x: List<int>
+//│ ║        	            ^^^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.6: 	class List<A> {
+//│ ╙──     	           ^
+//│ List[anything]
+
+

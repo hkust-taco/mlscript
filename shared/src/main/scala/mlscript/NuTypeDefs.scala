@@ -349,7 +349,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         // def registerTerm = 
         named.updateWith(decl.name) {
           case sv @ S(v) =>
-            ???
+            // * TODO allow defining a previously given signature
+            err(msg"Refininition of ${decl.name}", decl.toLoc)
+            S(lti)
           case N =>
             S(lti)
         }

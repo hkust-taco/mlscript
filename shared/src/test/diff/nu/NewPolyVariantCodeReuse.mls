@@ -6,22 +6,11 @@
 class Nil
 //│ class Nil()
 
-// ? why tuple type (Cons[A] | Nil,)
 class Cons<A>(head: A, tail: Cons<A> | Nil)
-//│ class Cons[A](head: A, tail: (Cons[A] | Nil,))
+//│ class Cons[A](head: A, tail: Cons[A] | Nil)
 
-// FIXME
 let l = Cons(1, Nil())
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.14: 	let l = Cons(1, Nil())
-//│ ║        	        ^^^^^^^^^^^^^^
-//│ ╟── application of type `Nil` is not a 1-element tuple
-//│ ║  l.14: 	let l = Cons(1, Nil())
-//│ ║        	                ^^^^^
-//│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.10: 	class Cons<A>(head: A, tail: Cons<A> | Nil)
-//│ ╙──      	                             ^^^^^^^
-//│ let l: Cons['A] | error
+//│ let l: Cons['A]
 //│   where
 //│     'A :> 1
 
@@ -33,20 +22,12 @@ class Success<A>(result: A)
 fun eq(l: string, r: string): bool
 //│ fun eq: (l: string, r: string,) -> bool
 
-// FIXME
 fun list_assoc(s, l) =
   if l is
     Cons(h, t) then
       if eq(s, h._1) then Success(h._2)
       else list_assoc(s, t)
     Nil then NotFound()
-//│ ╔══[ERROR] Type mismatch in expression:
-//│ ╟── type `(Cons[?A] | Nil,)` does not match type `Cons[?A0] | Nil`
-//│ ║  l.10: 	class Cons<A>(head: A, tail: Cons<A> | Nil)
-//│ ║        	                             ^^^^^^^
-//│ ╟── but it flows into reference with expected type `Cons[?A1] | Nil`
-//│ ║  l.38: 	  if l is
-//│ ╙──      	     ^
 //│ fun list_assoc: (string, Cons['A] | Nil,) -> (NotFound | Success['A0])
 //│   where
 //│     'A <: {_1: string, _2: 'A0}
@@ -83,7 +64,6 @@ fun gensym(): string
 fun int_to_string(x: int): string
 //│ fun int_to_string: (x: int,) -> string
 
-// FIXME
 mixin EvalLambda {
   fun eval(sub, v) =
     if v is
@@ -100,19 +80,10 @@ mixin EvalLambda {
     else
       super.eval(sub, v)
 }
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.94: 	          Abs(x, t) then this.eval(Cons((x, l2), Nil()), t)
-//│ ║        	                                   ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Nil` is not a 1-element tuple
-//│ ║  l.94: 	          Abs(x, t) then this.eval(Cons((x, l2), Nil()), t)
-//│ ║        	                                                 ^^^^^
-//│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.10: 	class Cons<A>(head: A, tail: Cons<A> | Nil)
-//│ ╙──      	                             ^^^^^^^
 //│ mixin EvalLambda() {
 //│   super: {eval: ('a, 'b,) -> 'c}
-//│   this: {eval: (Cons[in 'A out (string, 'd,) | 'A] | error, 't,) -> 'c & ('a, 't0,) -> ('d & 'e) & (Cons[in 'A0 out (string, Var,) | 'A0 | 'A1], 't1,) -> 'f}
-//│   fun eval: ((Cons['A2] | Nil,) & 'a, Abs['t1] | App['t0 & (Abs['t] | ~Abs)] | 'b & ~Abs & ~App,) -> (Abs['f] | App['d | 'e] | 'c)
+//│   this: {eval: (Cons[in 'A out (string, 'd,) | 'A], 't,) -> 'c & ('a, 't0,) -> ('d & 'e) & (Cons[in 'A0 out (string, Var,) | 'A0 | 'A1], 't1,) -> 'f}
+//│   fun eval: ('a & (Cons['A2] | Nil), Abs['t1] | App['t0 & (Abs['t] | ~Abs)] | 'b & ~Abs & ~App,) -> (Abs['f] | App['d | 'e] | 'c)
 //│ }
 //│ where
 //│   'A2 :> (string, Var,) | 'A0
@@ -131,35 +102,16 @@ mixin EvalLambda {
 //           body = eval_rec (Cons (Tuple v.name (Var { name = new_name })) subst) v.body }
 //   }
 
-// FIXME
 module Test1: EvalVar, EvalLambda
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.135: 	module Test1: EvalVar, EvalLambda
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Cons[in ?A out ?A0]` is not a 1-element tuple
-//│ ║  l.99: 	        Abs(s, this.eval(Cons((x, Var(s)), sub), t))
-//│ ║        	                         ^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.10: 	class Cons<A>(head: A, tail: Cons<A> | Nil)
-//│ ║        	                             ^^^^^^^
-//│ ╟── from reference:
-//│ ║  l.99: 	        Abs(s, this.eval(Cons((x, Var(s)), sub), t))
-//│ ╙──      	                                           ^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.135: 	module Test1: EvalVar, EvalLambda
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Cons[in ?A out ?A0]` is not a 1-element tuple
-//│ ║  l.94: 	          Abs(x, t) then this.eval(Cons((x, l2), Nil()), t)
-//│ ║        	                                   ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.10: 	class Cons<A>(head: A, tail: Cons<A> | Nil)
-//│ ║        	                             ^^^^^^^
-//│ ╟── from reference:
-//│ ║  l.99: 	        Abs(s, this.eval(Cons((x, Var(s)), sub), t))
-//│ ╙──      	                                           ^^^
 //│ module Test1() {
-//│   fun eval: (nothing, 'a,) -> 'result
+//│   fun eval: (Cons['A | 'A0] | Nil, 'a,) -> 'result
 //│ }
 //│ where
-//│   'result :> Var | App['result] | Abs['result]
 //│   'a <: Abs['a] | App['a & (Abs['a] | ~Abs)] | Var
+//│   'A :> 'A0
+//│      <: 'A0 & 'A1
+//│   'A0 :> (string, 'result,)
+//│       <: 'A1 & {_1: string, _2: 'result}
+//│   'A1 <: 'A & 'A0
+//│   'result :> Var | App['result] | Abs['result]
+
