@@ -629,13 +629,13 @@ final case class JSArray(items: Ls[JSExpr]) extends JSExpr {
     SourceCode.array(items map { _.embed(JSCommaExpr.outerPrecedence) })
 }
 
-final case class JSRecord(entries: Ls[Str -> JSExpr]) extends JSExpr {
+final case class JSRecord(entries: Ls[Str -> JSExpr], methods: Ls[JSStmt] = Nil) extends JSExpr {
   override def precedence: Int = 22
   // Make
   override def toSourceCode: SourceCode = SourceCode
-    .record(entries map { case (key, value) =>
+    .record((entries map { case (key, value) =>
       SourceCode(JSField.emitValidFieldName(key) + ": ") ++ value.embed(JSCommaExpr.outerPrecedence)
-    })
+    }) ++ (methods.map((m) => m.toSourceCode)))
 }
 
 final case class JSClassExpr(cls: JSClassNewDecl) extends JSExpr {

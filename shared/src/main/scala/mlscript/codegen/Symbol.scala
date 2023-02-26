@@ -114,7 +114,7 @@ final case class ModuleSymbol(
 
   override def compare(that: ClassSymbol): Int = lexicalName.compare(that.lexicalName)
 
-  override def toString: Str = s"mixin $lexicalName ($runtimeName)"
+  override def toString: Str = s"module $lexicalName ($runtimeName)"
 }
 
 final case class TraitSymbol(

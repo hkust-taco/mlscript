@@ -20,7 +20,6 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   protected val polyfill = Polyfill()
 
   protected val visitedSymbols = MutSet[ValueSymbol]()
-  protected var moduleName = ""
 
   /**
     * This function translates parameter destructions in `def` declarations.
@@ -99,14 +98,14 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         val ident = JSIdent(sym.runtimeName)
         if (sym.isByvalueRec.isEmpty && !sym.isLam) ident() else ident
       case S(sym: MixinSymbol) =>
-        JSIdent(s"$moduleName${sym.runtimeName}")
+        JSIdent(sym.runtimeName)
       case S(sym: ModuleSymbol) =>
-        JSIdent(s"$moduleName${sym.runtimeName}")
+        JSIdent(sym.runtimeName)
       case S(sym: ClassSymbol) =>
         if (isCallee)
-          JSNew(JSIdent(s"$moduleName${sym.runtimeName}"))
+          JSNew(JSIdent(sym.runtimeName))
         else
-          JSArrowFn(JSNamePattern("x") :: Nil, L(JSNew(JSIdent(s"$moduleName${sym.runtimeName}"))(JSIdent("x"))))
+          JSArrowFn(JSNamePattern("x") :: Nil, L(JSNew(JSIdent(sym.runtimeName))(JSIdent("x"))))
       case S(sym: TraitSymbol) =>
         JSIdent(sym.lexicalName)("build")
       case N => scope.getType(name) match {
@@ -295,7 +294,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           // JS is dumb so `instanceof String` won't actually work on "primitive" strings...
           JSBinary("===", scrut.member("constructor"), JSLit("String"))
         case Var(name) => topLevelScope.getType(name) match {
-          case S(ClassSymbol(_, runtimeName, _, _, _)) => JSInstanceOf(scrut, JSIdent(s"$moduleName$runtimeName"))
+          case S(ClassSymbol(_, runtimeName, _, _, _)) => JSInstanceOf(scrut, JSIdent(runtimeName))
           case S(TraitSymbol(_, runtimeName, _, _, _)) => JSIdent(runtimeName)("is")(scrut)
           case S(_: TypeAliasSymbol) => throw new CodeGenError(s"cannot match type alias $name")
           case N => throw new CodeGenError(s"unknown match case: $name")
@@ -440,9 +439,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   }
 
   protected def translateMixinDeclaration(
-      mixinSymbol: MixinSymbol,
-      module: Str
-  )(implicit scope: Scope): JSExprStmt = {
+      mixinSymbol: MixinSymbol
+  )(implicit scope: Scope): JSClassMethod = {
     val getterScope = scope.derive(s"getter ${mixinSymbol.lexicalName}")
     val mixinScope = getterScope.derive(s"mixin ${mixinSymbol.lexicalName}")
     mixinScope.declareSuper()
@@ -468,16 +466,13 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     
     val classBody = JSClassNewDecl(mixinSymbol.runtimeName, fields, S(JSIdent(base.runtimeName)),
       Ls(JSIdent(s"...${rest.runtimeName}")), S(rest.runtimeName), members, traits)
-    JSExprStmt(JSAssignExpr(JSField(JSIdent(module), mixinSymbol.lexicalName), JSFuncExpr(N, Ls(JSNamePattern(base.runtimeName)), Ls(
-      JSReturnStmt(S(JSClassExpr(classBody)))
-    ))))
+    JSClassMethod(mixinSymbol.lexicalName, Ls(JSNamePattern(base.runtimeName)), R(Ls(JSReturnStmt(S(JSClassExpr(classBody))))))
   }
 
   protected def translateModuleDeclaration(
       moduleSymbol: ModuleSymbol,
-      base: Opt[Term],
-      module: Str
-  )(implicit scope: Scope): JSExprStmt = {
+      base: Opt[Term]
+  )(implicit scope: Scope): JSClassGetter = {
     val getterScope = scope.derive(s"getter ${moduleSymbol.lexicalName}")
     val moduleScope = scope.derive(s"module ${moduleSymbol.lexicalName}")
     val constructorScope = moduleScope.derive(s"${moduleSymbol.lexicalName} constructor")
@@ -504,26 +499,21 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
                    members,
                    traits)
 
-    JSExprStmt(JSInvoke(JSField(JSIdent("Object"), "defineProperty"),
-      Ls(JSIdent(module), JSLit(JSLit.makeStringLiteral(moduleSymbol.lexicalName)), JSRecord(Ls(
-        "get" -> JSFuncExpr(N, Ls(), Ls(
-          JSIfStmt(JSBinary("===", JSField(JSField(JSIdent("this"), "cache"), moduleSymbol.lexicalName), JSIdent("undefined")), Ls(
-            JSExprStmt(JSAssignExpr(JSField(JSField(JSIdent("this"), "cache"), moduleSymbol.lexicalName),
-              JSNew(JSClassExpr(decl))))
-          )),
-        JSReturnStmt(S(JSField(JSField(JSIdent("this"), "cache"), moduleSymbol.lexicalName)))
-        ))
-      )))
-    ))
+    JSClassGetter(moduleSymbol.lexicalName, R(Ls(
+      JSIfStmt(JSBinary("===", JSField(JSField(JSIdent("this"), "cache"), moduleSymbol.lexicalName), JSIdent("undefined")), Ls(
+        JSExprStmt(JSAssignExpr(JSField(JSField(JSIdent("this"), "cache"), moduleSymbol.lexicalName),
+          JSNew(JSClassExpr(decl))))
+      )),
+      JSReturnStmt(S(JSField(JSField(JSIdent("this"), "cache"), moduleSymbol.lexicalName)))
+    )))
   }
 
   protected def translateNewClassDeclaration(
       classSymbol: ClassSymbol,
       base: Opt[JSExpr],
-      module: Str,
       superFields: Ls[Term] = Nil,
       rest: Opt[Str] = N
-  )(implicit scope: Scope): JSExprStmt = {
+  )(implicit scope: Scope): JSClassGetter = {
     val getterScope = scope.derive(s"${classSymbol.lexicalName} getter")
     val classBody = translateNewClassExpression(classSymbol, base, superFields, rest)(getterScope)
     val constructor = classBody match {
@@ -533,19 +523,15 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       case JSClassNewDecl(_, fields, _, _, _, _, _) => fields.map(JSIdent(_))
     }
 
-    JSExprStmt(JSInvoke(JSField(JSIdent("Object"), "defineProperty"),
-      Ls(JSIdent(module), JSLit(JSLit.makeStringLiteral(classSymbol.lexicalName)), JSRecord(Ls(
-        "get" -> JSFuncExpr(N, Ls(), Ls(
-          JSIfStmt(JSBinary("===", JSField(JSField(JSIdent("this"), "cache"), classSymbol.lexicalName), JSIdent("undefined")), Ls(
-            JSExprStmt(JSClassExpr(classBody)),
-            JSExprStmt(JSAssignExpr(JSField(JSField(JSIdent("this"), "cache"), classSymbol.lexicalName),
-              JSArrowFn(constructor, L(JSInvoke(JSNew(JSIdent(classSymbol.lexicalName)), params))))),
-            JSExprStmt(JSAssignExpr(JSMember(JSField(JSField(JSIdent("this"), "cache"), classSymbol.lexicalName), JSLit(JSLit.makeStringLiteral("class"))), JSIdent(classSymbol.lexicalName)))
-          )),
-        JSReturnStmt(S(JSField(JSField(JSIdent("this"), "cache"), classSymbol.lexicalName)))
-        ))
-      )))
-    ))
+    JSClassGetter(classSymbol.lexicalName, R(Ls(
+      JSIfStmt(JSBinary("===", JSField(JSField(JSIdent("this"), "cache"), classSymbol.lexicalName), JSIdent("undefined")), Ls(
+        JSExprStmt(JSClassExpr(classBody)),
+        JSExprStmt(JSAssignExpr(JSField(JSField(JSIdent("this"), "cache"), classSymbol.lexicalName),
+          JSArrowFn(constructor, L(JSInvoke(JSNew(JSIdent(classSymbol.lexicalName)), params))))),
+        JSExprStmt(JSAssignExpr(JSMember(JSField(JSField(JSIdent("this"), "cache"), classSymbol.lexicalName), JSLit(JSLit.makeStringLiteral("class"))), JSIdent(classSymbol.lexicalName)))
+      )),
+      JSReturnStmt(S(JSField(JSField(JSIdent("this"), "cache"), classSymbol.lexicalName)))
+    )))
   }
 
   protected def translateNewClassExpression(
@@ -893,7 +879,6 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
 class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
   private val lastResultSymbol = topLevelScope.declareValue("res", Some(false), false)
   private val resultIdent = JSIdent(lastResultSymbol.runtimeName)
-  private val mlsModule = topLevelScope.declareValue("__mls_modules__", Some(false), false)
 
   private var numRun = 0
 
@@ -1015,29 +1000,37 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
   }
 
   private def generateNewDef(pgrm: Pgrm)(implicit scope: Scope, allowEscape: Bool): JSTestBackend.TestCode = {
-    moduleName = s"${mlsModule.runtimeName}." // enable new def
+    val mlsModule = topLevelScope.declareValue("typing_unit", Some(false), false)
     val (diags, (typeDefs, otherStmts)) = pgrm.newDesugared
 
     val (traitSymbols, classSymbols, mixinSymbols, moduleSymbols, superParameters) = declareNewTypeDefs(typeDefs)
     val defStmts = 
       traitSymbols.map { translateTraitDeclaration(_)(topLevelScope) } ++
-      mixinSymbols.map { translateMixinDeclaration(_, mlsModule.runtimeName)(topLevelScope) } ++
+      mixinSymbols.map { translateMixinDeclaration(_)(topLevelScope) } ++
       moduleSymbols.map((m) =>
         translateModuleDeclaration(m, superParameters.get(m.lexicalName) match {
           case Some(head :: _) => Some(head)
           case _ => None
-        }, mlsModule.runtimeName)(topLevelScope)
+        })(topLevelScope)
       ) ++
       sortClassSymbols(classSymbols).map {
         case (derived, Some(base)) => {
           superParameters.get(derived.lexicalName) match {
-            case Some(sp) => translateNewClassDeclaration(derived, Some(JSIdent(base.runtimeName)), mlsModule.runtimeName, sp)(topLevelScope)
-            case _ => translateNewClassDeclaration(derived, Some(JSIdent(base.runtimeName)), mlsModule.runtimeName)(topLevelScope)
+            case Some(sp) => translateNewClassDeclaration(derived, Some(JSIdent(base.runtimeName)), sp)(topLevelScope)
+            case _ => translateNewClassDeclaration(derived, Some(JSIdent(base.runtimeName)))(topLevelScope)
           }
         }
         case (derived, None) =>
-          translateNewClassDeclaration(derived, None, mlsModule.runtimeName)(topLevelScope)
+          translateNewClassDeclaration(derived, None)(topLevelScope)
       }.toList
+
+    def include(typeName: Str, moduleName: Str) =
+      JSExprStmt(JSAssignExpr(JSField(JSIdent("globalThis"), typeName), JSField(JSIdent(moduleName), typeName)))
+    val includes =
+      traitSymbols.map((sym) => include(sym.runtimeName, mlsModule.runtimeName)) ++
+      mixinSymbols.map((sym) => include(sym.runtimeName, mlsModule.runtimeName)) ++
+      moduleSymbols.map((sym) => include(sym.runtimeName, mlsModule.runtimeName)) ++
+      classSymbols.map((sym) => include(sym.runtimeName, mlsModule.runtimeName)).toList
 
     val zeroWidthSpace = JSLit("\"\\u200B\"")
     val catchClause = JSCatchClause(
@@ -1110,9 +1103,9 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
     }
 
     // If this is the first time, insert the declaration of `res`.
-    var prelude: Ls[JSStmt] = defStmts
+    var prelude: Ls[JSStmt] = JSLetDecl(Ls(mlsModule.runtimeName -> S(JSRecord(Ls("cache" -> JSRecord(Ls())), defStmts)))) :: includes
     if (numRun === 0)
-      prelude = JSLetDecl(lastResultSymbol.runtimeName -> N :: Nil) :: JSLetDecl(Ls(mlsModule.runtimeName -> S(JSRecord(Ls("cache" -> JSRecord(Ls())))))) :: prelude
+      prelude = JSLetDecl(lastResultSymbol.runtimeName -> N :: Nil) :: prelude
 
     // Increase the run number.
     numRun = numRun + 1

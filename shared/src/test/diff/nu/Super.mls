@@ -6,9 +6,9 @@ class Foo(x: int)
 //│ class Foo(x: int)
 //│ // Prelude
 //│ let res;
-//│ let __mls_modules__ = { cache: {} };
-//│ Object.defineProperty(__mls_modules__, "Foo", {
-//│   get: function () {
+//│ let typing_unit = {
+//│   cache: {},
+//│   get Foo() {
 //│     if (this.cache.Foo === undefined) {
 //│       class Foo {
 //│         constructor(x) {
@@ -20,19 +20,21 @@ class Foo(x: int)
 //│     }
 //│     return this.cache.Foo;
 //│   }
-//│ });
+//│ };
+//│ globalThis.Foo = typing_unit.Foo;
 //│ // End of generated code
 
 :js
 :e
 class Bar(x: int, y: int): Foo(x + y)
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.28: 	class Bar(x: int, y: int): Foo(x + y)
+//│ ║  l.29: 	class Bar(x: int, y: int): Foo(x + y)
 //│ ╙──      	                           ^^^^^^^^^^
 //│ class Bar(x: int, y: int)
 //│ // Prelude
-//│ Object.defineProperty(__mls_modules__, "Bar", {
-//│   get: function () {
+//│ let typing_unit1 = {
+//│   cache: {},
+//│   get Bar() {
 //│     if (this.cache.Bar === undefined) {
 //│       class Bar extends Foo {
 //│         constructor(x, y) {
@@ -45,5 +47,6 @@ class Bar(x: int, y: int): Foo(x + y)
 //│     }
 //│     return this.cache.Bar;
 //│   }
-//│ });
+//│ };
+//│ globalThis.Bar = typing_unit1.Bar;
 //│ // End of generated code
