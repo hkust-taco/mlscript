@@ -220,6 +220,30 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     symbol
   }
 
+  def declareMixin(
+      lexicalName: Str,
+      params: Ls[Str],
+      base: Type,
+      methods: Ls[MethodDef[Left[Term, Type]]]
+  ): MixinSymbol = {
+    val runtimeName = allocateRuntimeName(lexicalName)
+    val symbol = MixinSymbol(lexicalName, runtimeName, params.sorted, base, methods)
+    register(symbol)
+    symbol
+  }
+
+  def declareModule(
+      lexicalName: Str,
+      params: Ls[Str],
+      base: Type,
+      methods: Ls[MethodDef[Left[Term, Type]]]
+  ): ModuleSymbol = {
+    val runtimeName = allocateRuntimeName(lexicalName)
+    val symbol = ModuleSymbol(lexicalName, runtimeName, params.sorted, base, methods)
+    register(symbol)
+    symbol
+  }
+
   def declareTrait(
       lexicalName: Str,
       params: Ls[Str],
@@ -245,10 +269,9 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     symbol
   }
 
-  def declareSuper(): ValueSymbol = {
+  def declareSuper(): Unit = {
     val symbol = ValueSymbol("super", "super", Some(false), false)
     register(symbol)
-    symbol
   }
 
   def declareValue(lexicalName: Str, isByvalueRec: Option[Boolean], isLam: Boolean): ValueSymbol = {

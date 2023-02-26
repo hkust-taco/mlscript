@@ -838,12 +838,13 @@ final case class JSClassNewDecl(
   def toSourceCode: SourceCode = {
     val constructor: SourceCode = {
       val buffer = new ListBuffer[Str]()
-      val params = fields.iterator.zipWithIndex.foldLeft("")((s, p) =>
-        if (p._2 === fields.length - 1) (rest match {
-          case Some(rest) => s"$s${p._1}, ...$rest"
-          case _ => s"$s${p._1}"
-        })
-        else s"$s${p._1}, ")
+      val params =
+        fields.iterator.zipWithIndex.foldRight(rest match {
+          case Some(rest) => s"...$rest"
+          case _ => ""
+        })((p, s) =>
+        if (s.isEmpty) s"${p._1}"
+        else s"${p._1}, $s")
       buffer += s"  constructor($params) {"
       if (`extends`.isDefined) {
         val sf = superFields.iterator.zipWithIndex.foldLeft("")((res, p) =>

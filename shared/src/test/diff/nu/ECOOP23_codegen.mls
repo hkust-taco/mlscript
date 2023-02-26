@@ -51,8 +51,8 @@ mixin EvalBase {
 //│   this: {eval: 'lhs -> int}
 //│   fun eval: (Add['lhs] | Lit) -> int
 //│ }
-//│ // Query 1
-//│ globalThis.EvalBase = function EvalBase(base) {
+//│ // Prelude
+//│ __mls_modules__.EvalBase = function (base) {
 //│   return (class EvalBase extends base {
 //│     constructor(...rest) {
 //│       super(...rest);
@@ -101,8 +101,8 @@ mixin EvalNeg {
 //│   this: {eval: 'expr -> int}
 //│   fun eval: (Neg['expr] | 'a & ~Neg) -> (int | 'b)
 //│ }
-//│ // Query 1
-//│ globalThis.EvalNeg = function EvalNeg(base) {
+//│ // Prelude
+//│ __mls_modules__.EvalNeg = function (base) {
 //│   return (class EvalNeg extends base {
 //│     constructor(...rest) {
 //│       super(...rest);
@@ -128,8 +128,8 @@ mixin EvalNegNeg {
 //│   this: {eval: 'expr -> 'b}
 //│   fun eval: (Neg['A & (~Neg | Neg['expr])] | 'a & ~Neg) -> 'b
 //│ }
-//│ // Query 1
-//│ globalThis.EvalNegNeg = function EvalNegNeg(base) {
+//│ // Prelude
+//│ __mls_modules__.EvalNegNeg = function (base) {
 //│   return (class EvalNegNeg extends base {
 //│     constructor(...rest) {
 //│       super(...rest);
@@ -152,14 +152,19 @@ module TestLang: EvalBase, EvalNeg, EvalNegNeg
 //│ where
 //│   'a <: Add['a] | Lit | Neg['A & (~Neg | Neg['a])]
 //│   'A <: 'a
-//│ // Query 1
-//│ globalThis.TestLang1 = function TestLang1() {
-//│   return (new class TestLang extends EvalNegNeg(EvalNeg(EvalBase())) {
-//│     constructor(...rest) {
-//│       super(...rest);
+//│ // Prelude
+//│ Object.defineProperty(__mls_modules__, "TestLang", {
+//│   get: function () {
+//│     if (this.cache.TestLang === undefined) {
+//│       this.cache.TestLang = new class TestLang extends __mls_modules__.EvalNegNeg(__mls_modules__.EvalNeg(__mls_modules__.EvalBase())) {
+//│         constructor(...rest) {
+//│           super(...rest);
+//│         }
+//│       };
 //│     }
-//│   });
-//│ };
+//│     return this.cache.TestLang;
+//│   }
+//│ });
 //│ // End of generated code
 
 :js
@@ -177,6 +182,6 @@ TestLang.eval(mk(0))
 //│   return n == 0 === true ? new __mls_modules__.Lit(0) : n == 1 === true ? new __mls_modules__.Neg(mk(n)) : new __mls_modules__.Add(mk(n), mk(n));
 //│ };
 //│ // Query 2
-//│ res = TestLang1().eval(mk(0));
+//│ res = __mls_modules__.TestLang.eval(mk(0));
 //│ // End of generated code
 

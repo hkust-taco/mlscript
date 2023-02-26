@@ -98,6 +98,10 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         visitedSymbols += sym
         val ident = JSIdent(sym.runtimeName)
         if (sym.isByvalueRec.isEmpty && !sym.isLam) ident() else ident
+      case S(sym: MixinSymbol) =>
+        JSIdent(s"$moduleName${sym.runtimeName}")
+      case S(sym: ModuleSymbol) =>
+        JSIdent(s"$moduleName${sym.runtimeName}")
       case S(sym: ClassSymbol) =>
         if (isCallee)
           JSNew(JSIdent(s"$moduleName${sym.runtimeName}"))
@@ -435,6 +439,84 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     JSClassDecl(classSymbol.runtimeName, fields, base, members, traits)
   }
 
+  protected def translateMixinDeclaration(
+      mixinSymbol: MixinSymbol,
+      module: Str
+  )(implicit scope: Scope): JSExprStmt = {
+    val getterScope = scope.derive(s"getter ${mixinSymbol.lexicalName}")
+    val mixinScope = getterScope.derive(s"mixin ${mixinSymbol.lexicalName}")
+    mixinScope.declareSuper()
+    val members = mixinSymbol.methods.map {
+      translateClassMember(_)(mixinScope)
+    }
+    // Collect class fields.
+    val fields = mixinSymbol.body.collectFields ++
+      mixinSymbol.body.collectTypeNames.flatMap(resolveTraitFields)
+    val constructorScope = mixinScope.derive(s"${mixinSymbol.lexicalName} constructor")
+    fields.foreach(constructorScope.declareValue(_, Some(false), false))
+    val rest = constructorScope.declareValue("rest", Some(false), false)
+    val base = getterScope.declareValue("base", Some(false), false)
+
+    val traits = mixinSymbol.body.collectTypeNames.flatMap {
+      name => scope.getType(name) match {
+        case S(TraitSymbol(_, runtimeName, _, _, _)) => S(runtimeName)
+        case S(_: ClassSymbol) => N
+        case S(_: TypeSymbol) => N
+        case N => N
+      }
+    }
+    
+    val classBody = JSClassNewDecl(mixinSymbol.runtimeName, fields, S(JSIdent(base.runtimeName)),
+      Ls(JSIdent(s"...${rest.runtimeName}")), S(rest.runtimeName), members, traits)
+    JSExprStmt(JSAssignExpr(JSField(JSIdent(module), mixinSymbol.lexicalName), JSFuncExpr(N, Ls(JSNamePattern(base.runtimeName)), Ls(
+      JSReturnStmt(S(JSClassExpr(classBody)))
+    ))))
+  }
+
+  protected def translateModuleDeclaration(
+      moduleSymbol: ModuleSymbol,
+      base: Opt[Term],
+      module: Str
+  )(implicit scope: Scope): JSExprStmt = {
+    val getterScope = scope.derive(s"getter ${moduleSymbol.lexicalName}")
+    val moduleScope = scope.derive(s"module ${moduleSymbol.lexicalName}")
+    val constructorScope = moduleScope.derive(s"${moduleSymbol.lexicalName} constructor")
+    val members = moduleSymbol.methods.map {
+      translateClassMember(_)(moduleScope)
+    }
+    // Collect class fields.
+    val fields = moduleSymbol.body.collectFields ++
+      moduleSymbol.body.collectTypeNames.flatMap(resolveTraitFields)
+    val traits = moduleSymbol.body.collectTypeNames.flatMap {
+      name => scope.getType(name) match {
+        case S(TraitSymbol(_, runtimeName, _, _, _)) => S(runtimeName)
+        case S(_: ClassSymbol) => N
+        case S(_: TypeSymbol) => N
+        case N => N
+      }
+    }
+    val rest = constructorScope.declareValue("rest", Some(false), false)
+    val decl = JSClassNewDecl(moduleSymbol.runtimeName,
+                   fields,
+                   base.flatMap((b) => S(translateTerm(b))),
+                   Ls(JSIdent(s"...${rest.runtimeName}")),
+                   S(rest.runtimeName),
+                   members,
+                   traits)
+
+    JSExprStmt(JSInvoke(JSField(JSIdent("Object"), "defineProperty"),
+      Ls(JSIdent(module), JSLit(JSLit.makeStringLiteral(moduleSymbol.lexicalName)), JSRecord(Ls(
+        "get" -> JSFuncExpr(N, Ls(), Ls(
+          JSIfStmt(JSBinary("===", JSField(JSField(JSIdent("this"), "cache"), moduleSymbol.lexicalName), JSIdent("undefined")), Ls(
+            JSExprStmt(JSAssignExpr(JSField(JSField(JSIdent("this"), "cache"), moduleSymbol.lexicalName),
+              JSNew(JSClassExpr(decl))))
+          )),
+        JSReturnStmt(S(JSField(JSField(JSIdent("this"), "cache"), moduleSymbol.lexicalName)))
+        ))
+      )))
+    ))
+  }
+
   protected def translateNewClassDeclaration(
       classSymbol: ClassSymbol,
       base: Opt[JSExpr],
@@ -605,58 +687,89 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     (traits.toList, classes.toList)
   }
 
-  protected def declareNewTypeDefs(typeDefs: Ls[NuTypeDef]): (Ls[TraitSymbol], Ls[ClassSymbol], HashMap[String, Ls[Term]]) = {
+  protected def declareNewTypeDefs(typeDefs: Ls[NuTypeDef]):
+    (Ls[TraitSymbol], Ls[ClassSymbol], Ls[MixinSymbol], Ls[ModuleSymbol], HashMap[String, Ls[Term]]) = {
     val traits = new ListBuffer[TraitSymbol]()
     val classes = new ListBuffer[ClassSymbol]()
+    val mixins = new ListBuffer[MixinSymbol]()
+    val modules = new ListBuffer[ModuleSymbol]()
     val superParameters = HashMap[String, Ls[Term]]()
     def tt(trm: Term): Type = trm.toType match {
       case L(ds) => Top
       case R(ty) => ty
     }
 
+    def prepare(nme: Str, fs: Ls[Opt[Var] -> Fld], pars: Ls[Term], unit: TypingUnit) = {
+      val params = fs.map {
+        case (S(nme), Fld(mut, spec, trm)) =>
+          val ty = tt(trm)
+          nme -> Field(if (mut) S(ty) else N, ty)
+        case (N, Fld(mut, spec, nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top)
+        case _ => die
+      }
+      val body = pars.map(tt).foldRight(Record(params): Type)(Inter)
+      val members = unit.children.foldLeft(List[MethodDef[Left[Term, Type]]]())((lst, loc) => loc match {
+        case NuFunDef(isLetRec, mnme, tys, Left(rhs)) => lst :+ MethodDef(isLetRec.getOrElse(false), TypeName(nme), mnme, tys, Left(rhs))
+        case _ => lst
+      })
+      
+      (body, members)
+    }
+
     typeDefs.foreach {
-      case NuTypeDef(Mxn, TypeName(mxName), tps, tup @ Tup(fs), pars, sup, ths, unit) => ???
-      case NuTypeDef(Nms, nme, tps, tup @ Tup(fs), pars, sup, ths, unit) => ???
+      case NuTypeDef(Mxn, TypeName(mxName), tps, tup @ Tup(fs), pars, sup, ths, unit) => {
+        val (body, members) = prepare(mxName, fs, pars, unit)
+        val sym = topLevelScope.declareMixin(mxName, tps map { _._2.name }, body, members)
+        mixins += sym
+        superParameters.put(sym.lexicalName, pars)
+      }
+      case NuTypeDef(Nms, TypeName(nme), tps, tup @ Tup(fs), pars, sup, ths, unit) => {
+        val params = fs.map {
+          case (S(nme), Fld(mut, spec, trm)) =>
+            val ty = tt(trm)
+            nme -> Field(if (mut) S(ty) else N, ty)
+          case (N, Fld(mut, spec, nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top)
+          case _ => die
+        }
+        if (pars.length > 0) {
+          val bases = pars.drop(1).foldLeft(App(pars.head, Tup(Ls())): Term)((res, p) => p match {
+            case Var(pname) => App(Var(pname), Tup(Ls(None -> Fld(false, false, res))))
+            case _ => ???
+          })
+          val body = pars.map(tt).foldRight(Record(params): Type)(Inter)
+          val members = unit.children.foldLeft(List[MethodDef[Left[Term, Type]]]())((lst, loc) => loc match {
+            case NuFunDef(isLetRec, mnme, tys, Left(rhs)) => lst :+ MethodDef(isLetRec.getOrElse(false), TypeName(nme), mnme, tys, Left(rhs))
+            case _ => lst
+          })
+          val sym = topLevelScope.declareModule(nme, tps map { _._2.name }, body, members)
+          modules += sym
+          superParameters.put(sym.lexicalName, Ls(bases))
+        }
+        else {
+          val (body, members) = prepare(nme, fs, pars, unit)
+          val sym = topLevelScope.declareModule(nme, tps map { _._2.name }, body, members)
+          modules += sym
+          superParameters.put(sym.lexicalName, pars)
+        }
+      }
       case NuTypeDef(Als, TypeName(nme), tps, _, pars, _, _, _) => {
         val body = tt(pars.head)
         topLevelScope.declareTypeAlias(nme, tps map { _._2.name }, body)
       }
       case NuTypeDef(Cls, TypeName(nme), tps, tup @ Tup(fs), pars, sup, ths, unit) => {
-        val params = fs.map {
-          case (S(nme), Fld(mut, spec, trm)) =>
-            val ty = tt(trm)
-            nme -> Field(if (mut) S(ty) else N, ty)
-          case (N, Fld(mut, spec, nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top)
-          case _ => die
-        }
-        val body = pars.map(tt).foldRight(Record(params): Type)(Inter)
-        val members = unit.children.foldLeft(List[MethodDef[Left[Term, Type]]]())((lst, loc) => loc match {
-          case NuFunDef(isLetRec, mnme, tys, Left(rhs)) => lst :+ MethodDef(isLetRec.getOrElse(false), TypeName(nme), mnme, tys, Left(rhs))
-          case _ => lst
-        })
+        val (body, members) = prepare(nme, fs, pars, unit)
         val sym = topLevelScope.declareClass(nme, tps map { _._2.name }, body, members)
         classes += sym
         superParameters.put(sym.lexicalName, pars)
       }
       case NuTypeDef(k @ Trt, TypeName(nme), tps, tup @ Tup(fs), pars, sup, ths, unit) => {
-        val params = fs.map {
-          case (S(nme), Fld(mut, spec, trm)) =>
-            val ty = tt(trm)
-            nme -> Field(if (mut) S(ty) else N, ty)
-          case (N, Fld(mut, spec, nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top)
-          case _ => die
-        }
-        val body = pars.map(tt).foldRight(Record(params): Type)(Inter)
-        val members = unit.children.foldLeft(List[MethodDef[Left[Term, Type]]]())((lst, loc) => loc match {
-          case NuFunDef(isLetRec, mnme, tys, Left(rhs)) => lst :+ MethodDef(isLetRec.getOrElse(false), TypeName(nme), mnme, tys, Left(rhs))
-          case _ => lst
-        })
+        val (body, members) = prepare(nme, fs, pars, unit)
         val sym = topLevelScope.declareTrait(nme, tps map { _._2.name }, body, members)
         traits += sym
         superParameters.put(sym.lexicalName, pars)
       }
     }
-    (traits.toList, classes.toList, superParameters)
+    (traits.toList, classes.toList, mixins.toList, modules.toList, superParameters)
   }
 
   /**
@@ -905,9 +1018,16 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
     moduleName = s"${mlsModule.runtimeName}." // enable new def
     val (diags, (typeDefs, otherStmts)) = pgrm.newDesugared
 
-    val (traitSymbols, classSymbols, superParameters) = declareNewTypeDefs(typeDefs)
+    val (traitSymbols, classSymbols, mixinSymbols, moduleSymbols, superParameters) = declareNewTypeDefs(typeDefs)
     val defStmts = 
       traitSymbols.map { translateTraitDeclaration(_)(topLevelScope) } ++
+      mixinSymbols.map { translateMixinDeclaration(_, mlsModule.runtimeName)(topLevelScope) } ++
+      moduleSymbols.map((m) =>
+        translateModuleDeclaration(m, superParameters.get(m.lexicalName) match {
+          case Some(head :: _) => Some(head)
+          case _ => None
+        }, mlsModule.runtimeName)(topLevelScope)
+      ) ++
       sortClassSymbols(classSymbols).map {
         case (derived, Some(base)) => {
           superParameters.get(derived.lexicalName) match {
