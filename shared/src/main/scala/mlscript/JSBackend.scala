@@ -20,7 +20,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   protected val polyfill = Polyfill()
 
   protected val visitedSymbols = MutSet[ValueSymbol]()
-  protected val moduleName = ""
+  protected var moduleName = ""
 
   /**
     * This function translates parameter destructions in `def` declarations.
@@ -718,8 +718,6 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
 
   private var numRun = 0
 
-  override protected val moduleName: String = s"${mlsModule.runtimeName}."
-
   /**
     * Generate a piece of code for test purpose. It can be invoked repeatedly.
     */
@@ -838,6 +836,7 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
   }
 
   private def generateNewDef(pgrm: Pgrm)(implicit scope: Scope, allowEscape: Bool): JSTestBackend.TestCode = {
+    moduleName = s"${mlsModule.runtimeName}." // enable new def
     val (diags, (typeDefs, otherStmts)) = pgrm.newDesugared
 
     val (traitSymbols, classSymbols) = declareTypeDefs(typeDefs)
