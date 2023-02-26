@@ -805,7 +805,7 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
   }
 
   private def generateNewDef(pgrm: Pgrm)(implicit scope: Scope, allowEscape: Bool): JSTestBackend.TestCode = {
-    val (diags, (typeDefs, otherStmts)) = pgrm.desugared
+    val (diags, (typeDefs, otherStmts)) = pgrm.newDesugared
 
     val (traitSymbols, classSymbols) = declareTypeDefs(typeDefs)
     val defStmts = 
