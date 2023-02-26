@@ -343,13 +343,12 @@ trait PgrmImpl { self: Pgrm =>
    }
     diags.toList -> res
   }
-  lazy val newDesugared: (Ls[Diagnostic] -> (Ls[TypeDef], Ls[Terms])) = {
+  lazy val newDesugared: (Ls[Diagnostic] -> (Ls[NuTypeDef], Ls[Terms])) = {
     val diags = Buffer.empty[Diagnostic]
     val res = tops.flatMap { s => s match {
       case nd: NuTypeDef => {
-        val (ds, d) = desugaredNewDec(nd)
-        diags ++= ds
-        d
+        diags ++= tryDesugaredNewDec(nd)
+        Ls(nd)
       }
       case _ => {
         val (ds, d) = s.desugared
@@ -358,8 +357,8 @@ trait PgrmImpl { self: Pgrm =>
       }
     }
     }.partitionMap {
-      case td: TypeDef => L(td)
       case ot: Terms => R(ot)
+      case nd: NuTypeDef => L(nd)
       case NuFunDef(isLetRec, nme, tys, rhs) =>
         R(Def(isLetRec.getOrElse(true), nme, rhs, isLetRec.isEmpty))
    }
@@ -367,33 +366,24 @@ trait PgrmImpl { self: Pgrm =>
   }
   override def toString = tops.map("" + _ + ";").mkString(" ")
 
-  private def desugaredNewDec(nd: NuTypeDef): Ls[Diagnostic] -> Ls[DesugaredStatement] = nd match {
+  private def tryDesugaredNewDec(nd: NuTypeDef): Ls[Diagnostic] = nd match {
     case NuTypeDef(Mxn, TypeName(mxName), tps, tup @ Tup(fs), pars, sup, ths, unit) =>
       val bases = pars.foldLeft(Var("base"): Term)((res, p) => p match {
           case Var(pname) => App(Var(pname), Tup(Ls(None -> Fld(false, false, res))))
           case _ => ???
         })
-      val (diags, ds) =
-        desugaredNewDec(NuTypeDef(Cls, TypeName(mxName), tps, tup, Ls(bases), sup, ths, unit))
-      ds match {
-        case (cls: TypeDef) :: _ => diags -> (NuFunDef(None, Var(mxName), List(), Left(Lam(Tup(Ls(None -> Fld(false, false, Var("base")))), ClassExpression(cls, S(bases))))) :: Nil)
-        case _ => ???
-      }
+      tryDesugaredNewDec(NuTypeDef(Cls, TypeName(mxName), tps, tup, Ls(bases), sup, ths, unit))
     case NuTypeDef(Nms, nme, tps, tup @ Tup(fs), pars, sup, ths, unit) =>
       if (pars.length > 0) {
         val bases = pars.drop(1).foldLeft(App(pars.head, Tup(Ls())): Term)((res, p) => p match {
           case Var(pname) => App(Var(pname), Tup(Ls(None -> Fld(false, false, res))))
           case _ => ???
         })
-        val (diags, ds) =
-          desugaredNewDec(NuTypeDef(Cls, nme, tps, tup, Ls(bases), sup, ths, unit))
-        val termName = Var(nme.name).withLocOf(nme)
-        ds match {
-          case (cls: TypeDef) :: _ => diags -> (Def(false, termName, Left(App(ClassExpression(cls, S(bases)), Tup(Ls()))), true) :: Nil)
-          case _ => ???
-        }
+        tryDesugaredNewDec(NuTypeDef(Cls, nme, tps, tup, Ls(bases), sup, ths, unit))
       }
-      else ???
+      else {
+        tryDesugaredNewDec(NuTypeDef(Cls, nme, tps, tup, Ls(), sup, ths, unit))
+      }
     case NuTypeDef(k @ Als, nme, tps, tup @ Tup(fs), pars, sup, ths, unit) =>
       // TODO properly check:
       require(fs.isEmpty, fs)
@@ -404,7 +394,7 @@ trait PgrmImpl { self: Pgrm =>
         case L(ds) => (ds :: Nil) -> Top
         case R(ty) => Nil -> ty
       }
-      diags -> (TypeDef(k, nme, tps.map(_._2), rhs, Nil, Nil, Nil) :: Nil)
+      diags
     case NuTypeDef(k @ (Cls | Trt), nme, tps, tup @ Tup(fs), pars, sup, ths, unit) =>
       val diags = Buffer.empty[Diagnostic]
       def tt(trm: Term): Type = trm.toType match {
@@ -426,7 +416,7 @@ trait PgrmImpl { self: Pgrm =>
         case _ => lst
       })
       // TODO: mthDecls
-      diags.toList -> (TypeDef(k, nme, tps.map(_._2), bod, Nil, mthDefs, pos) :: Nil)
+      diags.toList
   }
 }
 

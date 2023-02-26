@@ -1,0 +1,49 @@
+:NewParser
+:NewDefs
+
+:js
+class Foo(x: int)
+//│ class Foo(x: int)
+//│ // Prelude
+//│ let res;
+//│ let __mls_modules__ = { cache: {} };
+//│ Object.defineProperty(__mls_modules__, "Foo", {
+//│   get: function () {
+//│     if (this.cache.Foo === undefined) {
+//│       class Foo {
+//│         constructor(x) {
+//│           this.x = x;
+//│         }
+//│       };
+//│       this.cache.Foo = ((x) => new Foo(x));
+//│       this.cache.Foo["class"] = Foo;
+//│     }
+//│     return this.cache.Foo;
+//│   }
+//│ });
+//│ // End of generated code
+
+:js
+:e
+class Bar(x: int, y: int): Foo(x + y)
+//│ ╔══[ERROR] Unsupported parent specification
+//│ ║  l.28: 	class Bar(x: int, y: int): Foo(x + y)
+//│ ╙──      	                           ^^^^^^^^^^
+//│ class Bar(x: int, y: int)
+//│ // Prelude
+//│ Object.defineProperty(__mls_modules__, "Bar", {
+//│   get: function () {
+//│     if (this.cache.Bar === undefined) {
+//│       class Bar extends Foo {
+//│         constructor(x, y) {
+//│           super(x + y);
+//│           this.x = x;
+//│         }
+//│       };
+//│       this.cache.Bar = ((x, y) => new Bar(x, y));
+//│       this.cache.Bar["class"] = Bar;
+//│     }
+//│     return this.cache.Bar;
+//│   }
+//│ });
+//│ // End of generated code

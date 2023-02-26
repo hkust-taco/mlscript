@@ -830,6 +830,8 @@ final case class JSClassNewDecl(
     name: Str,
     fields: Ls[Str],
     `extends`: Opt[JSExpr] = N,
+    superFields: Ls[JSExpr] = Nil,
+    rest: Opt[Str] = N,
     methods: Ls[JSClassMemberDecl] = Nil,
     implements: Ls[Str] = Nil,
 ) extends JSStmt {
@@ -837,12 +839,18 @@ final case class JSClassNewDecl(
     val constructor: SourceCode = {
       val buffer = new ListBuffer[Str]()
       val params = fields.iterator.zipWithIndex.foldLeft("")((s, p) =>
-        if (p._2 === fields.length - 1) (if(`extends`.isDefined) s"$s...${p._1}" else s"$s${p._1}")
+        if (p._2 === fields.length - 1) (rest match {
+          case Some(rest) => s"$s${p._1}, ...$rest"
+          case _ => s"$s${p._1}"
+        })
         else s"$s${p._1}, ")
       buffer += s"  constructor($params) {"
       if (`extends`.isDefined) {
-        val restName = if (fields.length > 0) fields.last else ??? // TODO: throw?
-        buffer += s"    super(...$restName);"
+        val sf = superFields.iterator.zipWithIndex.foldLeft("")((res, p) =>
+          if (p._2 === superFields.length - 1) s"$res${p._1.toSourceCode}"
+          else s"$res${p._1.toSourceCode}, "
+        )
+        buffer += s"    super($sf);"
       }
       implements.foreach { name =>
         buffer += s"    $name.implement(this);"
