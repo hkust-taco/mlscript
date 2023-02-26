@@ -638,7 +638,7 @@ final case class JSRecord(entries: Ls[Str -> JSExpr]) extends JSExpr {
     })
 }
 
-final case class JSClassExpr(cls: JSClassDecl) extends JSExpr {
+final case class JSClassExpr(cls: JSClassNewDecl) extends JSExpr {
   implicit def precedence: Int = 22
   def toSourceCode: SourceCode = cls.toSourceCode
 }
@@ -781,6 +781,52 @@ final case class JSClassMember(name: Str, body: JSExpr) extends JSClassMemberDec
 }
 
 final case class JSClassDecl(
+    name: Str,
+    fields: Ls[Str],
+    `extends`: Opt[JSExpr] = N,
+    methods: Ls[JSClassMemberDecl] = Nil,
+    implements: Ls[Str] = Nil,
+) extends JSStmt {
+  def toSourceCode: SourceCode = {
+    val constructor: SourceCode = {
+      val buffer = new ListBuffer[Str]()
+      buffer += "  constructor(fields) {"
+      if (`extends`.isDefined)
+        buffer += "    super(fields);"
+      implements.foreach { name =>
+        buffer += s"    $name.implement(this);"
+      }
+      fields.foreach { name =>
+        val innerName = if (JSField.isValidIdentifier(name)) s".${name}" else s"[${JSLit.makeStringLiteral(name)}]"
+        buffer += s"    this$innerName = fields$innerName;"
+      }
+      buffer += "  }"
+      SourceCode(buffer.toList)
+    }
+    val methodsSourceCode =
+      methods.foldLeft(SourceCode.empty) { case (x, y) =>
+        x + y.toSourceCode.indented
+      }
+    val epilogue = SourceCode("}")
+    `extends` match {
+      case Some(base) =>
+        SourceCode(s"class $name extends ") ++ base.toSourceCode ++
+          SourceCode(" {") + constructor + methodsSourceCode + epilogue
+      case None =>
+        if (fields.isEmpty && methods.isEmpty && implements.isEmpty) {
+          SourceCode(s"class $name {}")
+        } else {
+          SourceCode(
+            s"class $name {" :: Nil
+          ) + constructor + methodsSourceCode + epilogue
+        }
+    }
+  }
+
+  private val fieldsSet = collection.immutable.HashSet.from(fields)
+}
+
+final case class JSClassNewDecl(
     name: Str,
     fields: Ls[Str],
     `extends`: Opt[JSExpr] = N,

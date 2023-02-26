@@ -258,8 +258,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case ClassExpression(TypeDef(Cls, TypeName(name), tparams, baseType, _, members, _), parents) =>
       val clsBody = scope.declareClass(name, tparams map { _.name }, baseType, members)
       parents match {
-        case Some(p) => JSClassExpr(translateClassDeclaration(clsBody, Some(translateTerm(p))))
-        case _ => JSClassExpr(translateClassDeclaration(clsBody, N))
+        case Some(p) => JSClassExpr(translateNewClassDeclaration(clsBody, Some(translateTerm(p))))
+        case _ => JSClassExpr(translateNewClassDeclaration(clsBody, N))
       }
     case _: Bind | _: Test | If(_, _) | TyApp(_, _) | _: Splc | _: Where =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
@@ -412,12 +412,36 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     */
   protected def translateClassDeclaration(
       classSymbol: ClassSymbol,
-      base: Opt[JSExpr]
+      baseClassSymbol: Opt[ClassSymbol]
   )(implicit scope: Scope): JSClassDecl = {
-    // Translate class methods and getters.
+        // Translate class methods and getters.
     val classScope = scope.derive(s"class ${classSymbol.lexicalName}")
     val members = classSymbol.methods.map {
       translateClassMember(_)(classScope)
+    }
+    // Collect class fields.
+    val fields = classSymbol.body.collectFields ++
+      classSymbol.body.collectTypeNames.flatMap(resolveTraitFields)
+    val base = baseClassSymbol.map { sym => JSIdent(sym.runtimeName) }
+    val traits = classSymbol.body.collectTypeNames.flatMap {
+      name => scope.getType(name) match {
+        case S(TraitSymbol(_, runtimeName, _, _, _)) => S(runtimeName)
+        case S(_: ClassSymbol) => N
+        case S(_: TypeSymbol) => N
+        case N => N
+      }
+    }
+    JSClassDecl(classSymbol.runtimeName, fields, base, members, traits)
+  }
+
+  protected def translateNewClassDeclaration(
+      classSymbol: ClassSymbol,
+      base: Opt[JSExpr]
+  )(implicit scope: Scope): JSClassNewDecl = {
+    // Translate class methods and getters.
+    val classScope = scope.derive(s"class ${classSymbol.lexicalName}")
+    val members = classSymbol.methods.map {
+      translateNewClassMember(_)(classScope)
     }
     // Collect class fields.
     val fields = classSymbol.body.collectFields ++
@@ -437,15 +461,51 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       }
     }
     if (base.isDefined)
-      JSClassDecl(classSymbol.runtimeName, fields :+ rest.runtimeName, base, members, traits)
+      JSClassNewDecl(classSymbol.runtimeName, fields :+ rest.runtimeName, base, members, traits)
     else
-      JSClassDecl(classSymbol.runtimeName, fields, base, members, traits)
+      JSClassNewDecl(classSymbol.runtimeName, fields, base, members, traits)
   }
 
   /**
    * Translate class methods and getters.
    */
   private def translateClassMember(
+      method: MethodDef[Left[Term, Type]],
+  )(implicit scope: Scope): JSClassMemberDecl = {
+    val name = method.nme.name
+    // Create the method/getter scope.
+    val memberScope = method.rhs.value match {
+      case _: Lam => scope.derive(s"method $name")
+      case _ => scope.derive(s"getter $name")
+    }
+    // Declare the alias for `this` before declaring parameters.
+    val selfSymbol = memberScope.declareThisAlias()
+    // Declare parameters.
+    val (memberParams, body) = method.rhs.value match {
+      case Lam(params, body) =>
+        val methodParams = translateParams(params)(memberScope)
+        (S(methodParams), body)
+      case term =>
+        (N, term)
+    }
+    // Translate class member body.
+    val bodyResult = translateTerm(body)(memberScope).`return`
+    // If `this` is accessed, add `const self = this`.
+    val bodyStmts = if (visitedSymbols(selfSymbol)) {
+      val thisDecl = JSConstDecl(selfSymbol.runtimeName, JSIdent("this"))
+      visitedSymbols -= selfSymbol
+      R(thisDecl :: bodyResult :: Nil)
+    } else {
+      R(bodyResult :: Nil)
+    }
+    // Returns members depending on what it is.
+    memberParams match {
+      case S(memberParams) => JSClassMethod(name, memberParams, bodyStmts)
+      case N => JSClassGetter(name, bodyStmts)
+    }
+  }
+
+  private def translateNewClassMember(
       method: MethodDef[Left[Term, Type]],
   )(implicit scope: Scope): JSClassMemberDecl = {
     val name = method.nme.name
@@ -577,11 +637,8 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
     val (traitSymbols, classSymbols) = declareTypeDefs(typeDefs)
     val defStmts = 
       traitSymbols.map { translateTraitDeclaration(_)(topLevelScope) } ++
-      sortClassSymbols(classSymbols).map {
-        case (derived, Some(base)) =>
-          translateClassDeclaration(derived, Some(JSIdent(base.runtimeName)))(topLevelScope)
-        case (derived, None) =>
-          translateClassDeclaration(derived, None)(topLevelScope)
+      sortClassSymbols(classSymbols).map { case (derived, base) =>
+        translateClassDeclaration(derived, base)(topLevelScope)
       }.toList
 
     val resultsIdent = JSIdent(resultsName)
@@ -633,12 +690,19 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
   /**
     * Generate a piece of code for test purpose. It can be invoked repeatedly.
     */
-  def apply(pgrm: Pgrm, allowEscape: Bool): JSTestBackend.Result =
-    try generate(pgrm)(topLevelScope, allowEscape) catch {
-      case e: CodeGenError => JSTestBackend.IllFormedCode(e.getMessage())
-      case e: UnimplementedError => JSTestBackend.Unimplemented(e.getMessage())
-      case e: Throwable => JSTestBackend.UnexpectedCrash(e.getClass().getName, e.getMessage())
-    }
+  def apply(pgrm: Pgrm, allowEscape: Bool, isNewDef: Boolean): JSTestBackend.Result =
+    if (!isNewDef)
+      try generate(pgrm)(topLevelScope, allowEscape) catch {
+        case e: CodeGenError => JSTestBackend.IllFormedCode(e.getMessage())
+        case e: UnimplementedError => JSTestBackend.Unimplemented(e.getMessage())
+        case e: Throwable => JSTestBackend.UnexpectedCrash(e.getClass().getName, e.getMessage())
+      }
+    else
+      try generateNewDef(pgrm)(topLevelScope, allowEscape) catch {
+        case e: CodeGenError => JSTestBackend.IllFormedCode(e.getMessage())
+        case e: UnimplementedError => JSTestBackend.Unimplemented(e.getMessage())
+        case e: Throwable => JSTestBackend.UnexpectedCrash(e.getClass().getName, e.getMessage())
+      }
     // generate(pgrm)(topLevelScope, allowEscape)
 
   /**
@@ -655,11 +719,102 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
     val (traitSymbols, classSymbols) = declareTypeDefs(typeDefs)
     val defStmts = 
       traitSymbols.map { translateTraitDeclaration(_)(topLevelScope) } ++
+      sortClassSymbols(classSymbols).map { case (derived, base) =>
+        translateClassDeclaration(derived, base)(topLevelScope)
+      }.toList
+
+    val zeroWidthSpace = JSLit("\"\\u200B\"")
+    val catchClause = JSCatchClause(
+      JSIdent("e"),
+      (zeroWidthSpace + JSIdent("e") + zeroWidthSpace).log() :: Nil
+    )
+
+    // Generate statements.
+    val queries = otherStmts.map {
+      case Def(recursive, Var(name), L(body), isByname) =>
+        val bodyIsLam = body match { case _: Lam => true case _ => false }
+        (if (recursive) {
+          val isByvalueRecIn = if (isByname) None else Some(true)
+          val sym = scope.declareValue(name, isByvalueRecIn, bodyIsLam)
+          try {
+            val translated = translateTerm(body)
+            scope.unregisterSymbol(sym)
+            val isByvalueRecOut = if (isByname) None else Some(false)
+            R((translated, scope.declareValue(name, isByvalueRecOut, bodyIsLam)))
+          } catch {
+            case e: UnimplementedError =>
+              scope.stubize(sym, e.symbol)
+              L(e.getMessage())
+            case e: Throwable =>
+              scope.unregisterSymbol(sym)
+              val isByvalueRecOut = if (isByname) None else Some(false)
+              scope.declareValue(name, isByvalueRecOut, bodyIsLam)
+              throw e
+          }
+        } else {
+          (try R(translateTerm(body)) catch {
+            case e: UnimplementedError =>
+              scope.declareStubValue(name, e.symbol)
+              L(e.getMessage())
+            case e: Throwable => throw e
+          }) map {
+            val isByvalueRec = if (isByname) None else Some(false)
+            expr => (expr, scope.declareValue(name, isByvalueRec, bodyIsLam))
+          }
+        }) match {
+          case R((originalExpr, sym)) =>
+            val expr = 
+              if (sym.isByvalueRec.isEmpty && !sym.isLam)
+                JSArrowFn(Nil, L(originalExpr))
+              else
+                originalExpr
+            JSTestBackend.CodeQuery(
+              scope.tempVars.emit(),
+              ((JSIdent("globalThis").member(sym.runtimeName) := (expr match {
+                case t: JSArrowFn => t.toFuncExpr(S(sym.runtimeName))
+                case t            => t
+              })) :: Nil),
+              sym.runtimeName
+            )
+          case L(reason) => JSTestBackend.AbortedQuery(reason)
+        }
+      case Def(_, Var(name), _, _) =>
+        scope.declareStubValue(name)
+        JSTestBackend.EmptyQuery
+      case term: Term =>
+        try {
+          val body = translateTerm(term)(scope)
+          val res = JSTestBackend.CodeQuery(scope.tempVars.emit(), (resultIdent := body) :: Nil)
+          scope.refreshRes()
+          res
+        } catch {
+          case e: UnimplementedError => JSTestBackend.AbortedQuery(e.getMessage())
+          case e: Throwable          => throw e
+        }
+    }
+
+    // If this is the first time, insert the declaration of `res`.
+    var prelude: Ls[JSStmt] = defStmts
+    if (numRun === 0)
+      prelude = JSLetDecl(lastResultSymbol.runtimeName -> N :: Nil) :: prelude
+
+    // Increase the run number.
+    numRun = numRun + 1
+
+    JSTestBackend.TestCode(SourceCode.fromStmts(polyfill.emit() ::: prelude).toLines, queries)
+  }
+
+  private def generateNewDef(pgrm: Pgrm)(implicit scope: Scope, allowEscape: Bool): JSTestBackend.TestCode = {
+    val (diags, (typeDefs, otherStmts)) = pgrm.desugared
+
+    val (traitSymbols, classSymbols) = declareTypeDefs(typeDefs)
+    val defStmts = 
+      traitSymbols.map { translateTraitDeclaration(_)(topLevelScope) } ++
       sortClassSymbols(classSymbols).map {
         case (derived, Some(base)) =>
-          translateClassDeclaration(derived, Some(JSIdent(base.runtimeName)))(topLevelScope)
+          translateNewClassDeclaration(derived, Some(JSIdent(base.runtimeName)))(topLevelScope)
         case (derived, None) =>
-          translateClassDeclaration(derived, None)(topLevelScope)
+          translateNewClassDeclaration(derived, None)(topLevelScope)
       }.toList
 
     val zeroWidthSpace = JSLit("\"\\u200B\"")
