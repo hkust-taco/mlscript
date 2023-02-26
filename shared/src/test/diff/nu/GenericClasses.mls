@@ -83,7 +83,7 @@ None.toArray
 
 // TODO
 type Option<A> = Some<A> | None
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ /!!!\ Uncaught error: scala.MatchError: Als (of class mlscript.Als$)
 
 
 
