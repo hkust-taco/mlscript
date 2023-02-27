@@ -133,24 +133,15 @@ object Main {
           }
           
           import typer._
-          
+
           implicit val raise: Raise = throw _
           implicit var ctx: Ctx = Ctx.init
           implicit val extrCtx: Opt[typer.ExtrCtx] = N
-          
-          
-          
-          val res = new collection.mutable.StringBuilder
-          val results = new collection.mutable.ArrayBuffer[Option[Str] -> Str]
-          val stopAtFirstError = true
-          var errorOccurred = false
 
-          
           val vars: Map[Str, typer.SimpleType] = Map.empty
-          
           val tpd = typer.typeTypingUnit(tu, allowPure = true)(ctx.nest, raise, vars)
           val comp = tpd.force()(raise)
-          
+
           object SimplifyPipeline extends typer.SimplifyPipeline {
             def debugOutput(msg: => Str): Unit =
               // if (mode.dbgSimplif) output(msg)
@@ -160,46 +151,36 @@ object Main {
             
           val exp = typer.expandType(sim)(ctx)
           
-          val expStr =
+          val expStr = "=====================Typing Results=====================\n" +
             exp.showIn(ShowCtx.mk(exp :: Nil)
                 // .copy(newDefs = true) // TODO later
               , 0)
           
           // TODO format HTML better
-          val str = expStr.stripSuffix("\n")
+          val typingStr = expStr.stripSuffix("\n")
             .replaceAll("  ", "&nbsp;&nbsp;")
             .replaceAll("\n", "<br/>")
+
+          val backend = new JSWebBackend()
+          val (lines, resNames) = backend(pgrm, true)
+          val code = lines.mkString("\n")
+
+          val jsStr = ("\n\n=====================JavaScript Code=====================\n" + code)
+            .stripSuffix("\n")
+            .replaceAll("  ", "&nbsp;&nbsp;")
+            .replaceAll("\n", "<br/>")
+
+          val exe = executeCode(code) match {
+            case Left(err) => err
+            case Right(lines) => generateResultTable(resNames.zip(lines))
+          }
+
+          val resStr = ("\n\n=====================Results=====================")
+            .stripSuffix("\n")
+            .replaceAll("  ", "&nbsp;&nbsp;")
+            .replaceAll("\n", "<br/>") + exe
           
-          
-          // val curBlockTypeDefs = typeDefs.flatMap(td => ctx.tyDefs.get(td.nme.name))
-          // typer.computeVariances(curBlockTypeDefs, ctx)
-          
-          // def getType(ty: typer.SimpleType): mlscript.TypeLike = {
-          //   object SimplifyPipeline extends typer.SimplifyPipeline {
-          //     def debugOutput(msg: => Str): Unit = println(msg)
-          //   }
-          //   val sim = SimplifyPipeline(ty)(ctx)
-          //   val exp = typer.expandType(sim)
-          //   exp
-          // }
-          // def formatBinding(nme: Str, ty: SimpleType): Str = {
-          //   val exp = getType(ty)
-          //   s"""<b>
-          //           <font color="#93a1a1">val </font>
-          //           <font color="LightGreen">${nme}</font>: 
-          //           <font color="LightBlue">${exp.show}</font>
-          //           </b><br/>"""
-          // }
-          
-          
-          // TODO
-          // val backend = new JSWebBackend()
-          // val lines = backend(pgrm)
-          // val code = lines.mkString("\n")
-          // println("Running code: " + code)
-          // R(code)
-          
-          str
+          typingStr + jsStr + resStr
       }
     } catch {
       // case err: ErrorReport =>
@@ -216,12 +197,54 @@ object Main {
     }
     
     target.innerHTML = tryRes
-    
+  }
+
+  // Execute the generated code.
+  // We extract this function because there is some boilerplate code.
+  // It returns a tuple of three items:
+  // 1. results of definitions;
+  // 2. results of expressions;
+  // 3. error message (if has).
+  @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))
+  private def executeCode(code: Str): Either[Str, Ls[Str]] = {
+    try {
+      R(js.eval(code).asInstanceOf[js.Array[Str]].toList)
+    } catch {
+      case e: Throwable =>
+        val errorBuilder = new StringBuilder()
+        errorBuilder ++= "<font color=\"red\">Runtime error occurred:</font>"
+        errorBuilder ++= htmlLineBreak + e.getMessage
+        errorBuilder ++= htmlLineBreak
+        errorBuilder ++= htmlLineBreak
+        L(errorBuilder.toString)
+    }
+  }
+
+  private def generateResultTable(res: Ls[(Str, Str)]): Str = {
+    val htmlBuilder = new StringBuilder
+    htmlBuilder ++= """<table>
+                      |  <thead>
+                      |    <tr>
+                      |       <td>Name</td>
+                      |       <td>Value</td>
+                      |    </tr>
+                      |  </thead>
+                      |""".stripMargin
+
+    res.foreach(value => {
+      htmlBuilder ++= s"""<tr>
+                         |  <td class="name">${value._1}</td>
+                         |  ${s"<td>${value._2}</td>"}
+                         |</tr>
+                         |""".stripMargin
+    })
+
+    htmlBuilder ++= "</table>"
+    htmlBuilder.toString
   }
   
   private val htmlLineBreak = "<br />"
   private val htmlWhiteSpace = "&nbsp;"
   private val splitLeadingSpaces: Regex = "^( +)(.+)$".r
-  
 }
 
