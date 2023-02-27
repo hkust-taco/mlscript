@@ -220,6 +220,18 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     symbol
   }
 
+  def declareNewClass(
+      lexicalName: Str,
+      params: Ls[Str],
+      base: Type,
+      methods: Ls[MethodDef[Left[Term, Type]]]
+  ): NewClassSymbol = {
+    val runtimeName = allocateRuntimeName(lexicalName)
+    val symbol = NewClassSymbol(lexicalName, runtimeName, params.sorted, base, methods)
+    register(symbol)
+    symbol
+  }
+
   def declareMixin(
       lexicalName: Str,
       params: Ls[Str],

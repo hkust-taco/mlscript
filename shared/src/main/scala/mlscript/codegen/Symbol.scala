@@ -85,6 +85,22 @@ final case class ClassSymbol(
   override def toString: Str = s"class $lexicalName ($runtimeName)"
 }
 
+final case class NewClassSymbol(
+    lexicalName: Str,
+    runtimeName: Str,
+    params: Ls[Str],
+    body: Type,
+    methods: Ls[MethodDef[Left[Term, Type]]],
+) extends TypeSymbol
+    with RuntimeSymbol with Ordered[NewClassSymbol] {
+
+  import scala.math.Ordered.orderingToOrdered
+
+  override def compare(that: NewClassSymbol): Int = lexicalName.compare(that.lexicalName)
+
+  override def toString: Str = s"new class $lexicalName ($runtimeName)"
+}
+
 final case class MixinSymbol(
     lexicalName: Str,
     runtimeName: Str,
@@ -92,11 +108,11 @@ final case class MixinSymbol(
     body: Type,
     methods: Ls[MethodDef[Left[Term, Type]]],
 ) extends TypeSymbol
-    with RuntimeSymbol with Ordered[ClassSymbol] {
+    with RuntimeSymbol with Ordered[MixinSymbol] {
 
   import scala.math.Ordered.orderingToOrdered
 
-  override def compare(that: ClassSymbol): Int = lexicalName.compare(that.lexicalName)
+  override def compare(that: MixinSymbol): Int = lexicalName.compare(that.lexicalName)
 
   override def toString: Str = s"mixin $lexicalName ($runtimeName)"
 }
@@ -108,11 +124,11 @@ final case class ModuleSymbol(
     body: Type,
     methods: Ls[MethodDef[Left[Term, Type]]],
 ) extends TypeSymbol
-    with RuntimeSymbol with Ordered[ClassSymbol] {
+    with RuntimeSymbol with Ordered[ModuleSymbol] {
 
   import scala.math.Ordered.orderingToOrdered
 
-  override def compare(that: ClassSymbol): Int = lexicalName.compare(that.lexicalName)
+  override def compare(that: ModuleSymbol): Int = lexicalName.compare(that.lexicalName)
 
   override def toString: Str = s"module $lexicalName ($runtimeName)"
 }

@@ -101,6 +101,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         JSIdent(sym.runtimeName)
       case S(sym: ModuleSymbol) =>
         JSIdent(sym.runtimeName)
+      case S(sym: NewClassSymbol) =>
+        JSIdent(sym.runtimeName)
       case S(sym: ClassSymbol) =>
         if (isCallee)
           JSNew(JSIdent(sym.runtimeName))
@@ -288,6 +290,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
           JSBinary("===", scrut.member("constructor"), JSLit("String"))
         case Var(name) => topLevelScope.getType(name) match {
           case S(ClassSymbol(_, runtimeName, _, _, _)) => JSInstanceOf(scrut, JSIdent(runtimeName))
+          case S(NewClassSymbol(_, runtimeName, _, _, _)) => JSInstanceOf(scrut, JSMember(JSIdent(runtimeName), JSIdent(JSLit.makeStringLiteral("class"))))
           case S(TraitSymbol(_, runtimeName, _, _, _)) => JSIdent(runtimeName)("is")(scrut)
           case S(_: TypeAliasSymbol) => throw new CodeGenError(s"cannot match type alias $name")
           case N => throw new CodeGenError(s"unknown match case: $name")
@@ -539,7 +542,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   }
 
   protected def translateNewClassDeclaration(
-      classSymbol: ClassSymbol,
+      classSymbol: NewClassSymbol,
       superFields: Ls[Term] = Nil,
       rest: Opt[Str] = N
   )(implicit scope: Scope): JSClassGetter = {
@@ -564,7 +567,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   }
 
   protected def translateNewClassExpression(
-      classSymbol: ClassSymbol,
+      classSymbol: NewClassSymbol,
       superFields: Ls[Term] = Nil,
       rest: Opt[Str] = N
   )(implicit scope: Scope): JSClassNewDecl = {
@@ -731,9 +734,9 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   }
 
   protected def declareNewTypeDefs(typeDefs: Ls[NuTypeDef]):
-    (Ls[TraitSymbol], Ls[ClassSymbol], Ls[MixinSymbol], Ls[ModuleSymbol], HashMap[String, Ls[Term]]) = {
+    (Ls[TraitSymbol], Ls[NewClassSymbol], Ls[MixinSymbol], Ls[ModuleSymbol], HashMap[String, Ls[Term]]) = {
     val traits = new ListBuffer[TraitSymbol]()
-    val classes = new ListBuffer[ClassSymbol]()
+    val classes = new ListBuffer[NewClassSymbol]()
     val mixins = new ListBuffer[MixinSymbol]()
     val modules = new ListBuffer[ModuleSymbol]()
     val superParameters = HashMap[String, Ls[Term]]()
@@ -778,7 +781,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       }
       case NuTypeDef(Cls, TypeName(nme), tps, tup @ Tup(fs), pars, sup, ths, unit) => {
         val (body, members) = prepare(nme, fs, pars, unit)
-        val sym = topLevelScope.declareClass(nme, tps map { _._2.name }, body, members)
+        val sym = topLevelScope.declareNewClass(nme, tps map { _._2.name }, body, members)
         classes += sym
         superParameters.put(sym.lexicalName, pars)
       }
