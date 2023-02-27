@@ -36,7 +36,7 @@ class Bar(x: int, y: int): Foo(x + y)
 //│   cache: {},
 //│   get Bar() {
 //│     if (this.cache.Bar === undefined) {
-//│       class Bar extends new Foo() {
+//│       class Bar extends Foo["class"] {
 //│         constructor(x, y) {
 //│           super(x + y);
 //│           this.x = x;
