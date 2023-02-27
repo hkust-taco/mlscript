@@ -198,12 +198,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         R(blkScope.tempVars `with` (flattened.iterator.zipWithIndex.map {
           case (t: Term, index) if index + 1 == flattened.length => translateTerm(t)(blkScope).`return`
           case (t: Term, index)                                  => JSExprStmt(translateTerm(t)(blkScope))
-          case (NuFunDef(S(false), Var(nme), _, L(rhs)), _) => {
-            val pat = blkScope.declareValue(nme, S(false), false)
-            JSLetDecl(Ls(pat.runtimeName -> S(translateTerm(rhs)(blkScope))))
-          }
-          case (NuFunDef(N, Var(nme), _, L(rhs)), _) => {
-            val pat = blkScope.declareValue(nme, S(true), true)
+          case (NuFunDef(isLetRec, Var(nme), _, L(rhs)), _) => {
+            val pat = blkScope.declareValue(nme, isLetRec, isLetRec.isEmpty)
             JSLetDecl(Ls(pat.runtimeName -> S(translateTerm(rhs)(blkScope))))
           }
           // TODO: find out if we need to support this.
