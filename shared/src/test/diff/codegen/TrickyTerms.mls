@@ -65,13 +65,13 @@ def tmp tmp = tmp
 tmp (let tmp = 1 in tmp)
 let t = tmp in let tmp = 1 in t tmp
 //│ // Query 1
-//│ globalThis.tmp2 = function tmp2(tmp2) {
-//│   return tmp2;
+//│ globalThis.tmp2 = function tmp2(tmp) {
+//│   return tmp;
 //│ };
 //│ // Query 2
-//│ res = tmp2(((tmp3) => tmp3)(1));
+//│ res = tmp2(((tmp) => tmp)(1));
 //│ // Query 3
-//│ res = ((t) => ((tmp3) => t(tmp3))(1))(tmp2);
+//│ res = ((t) => ((tmp) => t(tmp))(1))(tmp2);
 //│ // End of generated code
 //│ tmp: 'a -> 'a
 //│    = [Function: tmp2]

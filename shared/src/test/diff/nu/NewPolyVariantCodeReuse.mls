@@ -104,16 +104,16 @@ mixin EvalVar {
 //│       return (class EvalVar {
 //│         constructor() {
 //│         }
-//│         eval(sub1, v) {
+//│         eval(sub, v) {
 //│           return ((() => {
 //│             let a;
 //│             return (a = v, a instanceof Var["class"] ? ((s) => (() => {
 //│               return (((tmp0) => {
-//│                 let b;
-//│                 return (b = tmp0, b instanceof NotFound["class"] ? v : b instanceof Success["class"] ? ((r) => r)(tmp0.result) : (() => {
+//│                 let a;
+//│                 return (a = tmp0, a instanceof NotFound["class"] ? v : a instanceof Success["class"] ? ((r) => r)(tmp0.result) : (() => {
 //│                   throw new Error("non-exhaustive case expression");
 //│                 })());
-//│               })(list_assoc(s, sub1)));
+//│               })(list_assoc(s, sub)));
 //│             })())(v.s) : (() => {
 //│               throw new Error("non-exhaustive case expression");
 //│             })());
@@ -125,16 +125,16 @@ mixin EvalVar {
 //│         constructor(...rest) {
 //│           super(...rest);
 //│         }
-//│         eval(sub1, v) {
+//│         eval(sub, v) {
 //│           return ((() => {
 //│             let a;
 //│             return (a = v, a instanceof Var["class"] ? ((s) => (() => {
 //│               return (((tmp0) => {
-//│                 let b;
-//│                 return (b = tmp0, b instanceof NotFound["class"] ? v : b instanceof Success["class"] ? ((r) => r)(tmp0.result) : (() => {
+//│                 let a;
+//│                 return (a = tmp0, a instanceof NotFound["class"] ? v : a instanceof Success["class"] ? ((r) => r)(tmp0.result) : (() => {
 //│                   throw new Error("non-exhaustive case expression");
 //│                 })());
-//│               })(list_assoc(s, sub1)));
+//│               })(list_assoc(s, sub)));
 //│             })())(v.s) : (() => {
 //│               throw new Error("non-exhaustive case expression");
 //│             })());
@@ -191,13 +191,13 @@ mixin EvalLambda {
 //│       return (class EvalLambda {
 //│         constructor() {
 //│         }
-//│         eval(sub1, v) {
+//│         eval(sub, v) {
 //│           const self = this;
 //│           return ((() => {
 //│             let a;
 //│             return (a = v, a instanceof App["class"] ? ((t1) => ((t2) => (() => {
-//│               let l1 = self.eval(sub1, t1);
-//│               let l2 = self.eval(sub1, t2);
+//│               let l1 = self.eval(sub, t1);
+//│               let l2 = self.eval(sub, t2);
 //│               return (t1 instanceof Abs["class"] ? ((x) => ((t) => self.eval(Cons([
 //│                 x,
 //│                 l2
@@ -209,9 +209,9 @@ mixin EvalLambda {
 //│               return (Abs(s, self.eval(Cons([
 //│                 x,
 //│                 Var(s)
-//│               ], sub1), t)));
+//│               ], sub), t)));
 //│             })())(v.t))(v.x) : (() => {
-//│               return super.eval(sub1, v);
+//│               return super.eval(sub, v);
 //│             })());
 //│           })());
 //│         }
@@ -221,13 +221,13 @@ mixin EvalLambda {
 //│         constructor(...rest) {
 //│           super(...rest);
 //│         }
-//│         eval(sub1, v) {
+//│         eval(sub, v) {
 //│           const self = this;
 //│           return ((() => {
 //│             let a;
 //│             return (a = v, a instanceof App["class"] ? ((t1) => ((t2) => (() => {
-//│               let l1 = self.eval(sub1, t1);
-//│               let l2 = self.eval(sub1, t2);
+//│               let l1 = self.eval(sub, t1);
+//│               let l2 = self.eval(sub, t2);
 //│               return (t1 instanceof Abs["class"] ? ((x) => ((t) => self.eval(Cons([
 //│                 x,
 //│                 l2
@@ -239,9 +239,9 @@ mixin EvalLambda {
 //│               return (Abs(s, self.eval(Cons([
 //│                 x,
 //│                 Var(s)
-//│               ], sub1), t)));
+//│               ], sub), t)));
 //│             })())(v.t))(v.x) : (() => {
-//│               return super.eval(sub1, v);
+//│               return super.eval(sub, v);
 //│             })());
 //│           })());
 //│         }

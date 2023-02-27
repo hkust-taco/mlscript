@@ -32,10 +32,10 @@ def eval1f eval1 e = case e of {
   | Add -> eval1 e.lhs + eval1 e.rhs
   }
 //│ // Query 1
-//│ globalThis.eval1f = function eval1f(eval11) {
+//│ globalThis.eval1f = function eval1f(eval1) {
 //│   return ((e) => {
 //│     let a;
-//│     return (a = e, a instanceof Lit ? e.val : a instanceof Add ? eval11(e.lhs) + eval11(e.rhs) : (() => {
+//│     return (a = e, a instanceof Lit ? e.val : a instanceof Add ? eval1(e.lhs) + eval1(e.rhs) : (() => {
 //│       throw new Error("non-exhaustive case expression");
 //│     })());
 //│   });

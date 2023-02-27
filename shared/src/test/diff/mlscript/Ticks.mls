@@ -315,7 +315,7 @@ trait T : {x': int}
 :js
 let f' = fun x -> x + 1 in f' 2
 //│ // Query 1
-//│ res = ((f$1) => f$1(2))((x) => x + 1);
+//│ res = ((f$) => f$(2))((x) => x + 1);
 //│ // End of generated code
 //│ res: int
 //│    = 3

@@ -36,7 +36,7 @@ x
 :js
 fun x -> x
 //│ // Query 1
-//│ res = ((x1) => x1);
+//│ res = ((x) => x);
 //│ // End of generated code
 //│ res: 'a -> 'a
 //│    = [Function: res]
@@ -128,8 +128,8 @@ A { a = 0 }
 def f x = x
 f 0
 //│ // Query 1
-//│ globalThis.f = function f(x1) {
-//│   return x1;
+//│ globalThis.f = function f(x) {
+//│   return x;
 //│ };
 //│ // Query 2
 //│ res = f(0);
@@ -228,7 +228,7 @@ f 0
 :js
 let x = 0 in x + 1
 //│ // Query 1
-//│ res = ((x1) => x1 + 1)(0);
+//│ res = ((x) => x + 1)(0);
 //│ // End of generated code
 //│ res: int
 //│    = 1
@@ -239,9 +239,9 @@ let x = 0 in x + 1
 :js
 def f x = case x of { }
 //│ // Query 1
-//│ globalThis.f1 = function f1(x1) {
+//│ globalThis.f1 = function f1(x) {
 //│   let a;
-//│   return (a = x1, (() => {
+//│   return (a = x, (() => {
 //│     throw new Error("non-exhaustive case expression");
 //│   })());
 //│ };
