@@ -1,6 +1,5 @@
 :NewParser
 :NewDefs
-:NoJS
 
 
 // * Adapted example from Code reuse through polymorphic variants (FOSE 2000)
@@ -16,14 +15,23 @@ let l = Cons(1, Nil)
 //│ let l: Cons['A]
 //│   where
 //│     'A :> 1
+//│ l
+//│   = Cons { head: 1, tail: Nil {} }
 
 class NotFound
 class Success<A>(result: A)
 //│ class NotFound()
 //│ class Success[A](result: A)
 
-fun eq(l: string, r: string): bool
-//│ fun eq: (l: string, r: string,) -> bool
+let e = eq
+//│ let e: anything -> anything -> bool
+//│ e
+//│   = [Function: eq]
+
+let eq(l: string, r: string): bool = e(l)(r)
+//│ let eq: (l: string, r: string,) -> bool
+//│ eq
+//│    = [Function: eq1]
 
 fun list_assoc(s, l) =
   if l is
@@ -34,6 +42,8 @@ fun list_assoc(s, l) =
 //│ fun list_assoc: (string, Cons['A] | Nil,) -> (NotFound | Success['A0])
 //│   where
 //│     'A <: {_1: string, _2: 'A0}
+//│ Code generation crashed:
+//│   scala.MatchError: Some(module Nil (Nil)) (of class scala.Some)
 
 // fun list_assoc(s: string, l: Cons<{ _1: string, _2: 'b }> | Nil): NotFound | Success['b]
 
@@ -91,6 +101,8 @@ mixin EvalLambda {
 //│ where
 //│   'A2 :> (string, Var,) | 'A0
 //│       <: 'A1
+//│ Code generation encountered an error:
+//│   unsupported definitions in blocks
 
 module Test1: EvalVar, EvalLambda
 //│ module Test1() {
@@ -103,27 +115,39 @@ module Test1: EvalVar, EvalLambda
 //│   'A0 :> (string, 'result,)
 //│       <: 'A1 & {_1: string, _2: 'result}
 //│   'A1 <: 'A & 'A0
-//│   'result :> Var | Abs['result] | App['result]
+//│   'result :> Var | App['result] | Abs['result]
 
 Test1.eval(Nil, Var("a"))
 //│ 'a
 //│   where
 //│     'a :> App['a] | Abs['a] | Var
+//│ res
+//│ Runtime error:
+//│   ReferenceError: Test1 is not defined
 
 Test1.eval(Nil, Abs("b", Var("a")))
 //│ 'a
 //│   where
 //│     'a :> App['a] | Abs['a] | Var
+//│ res
+//│ Runtime error:
+//│   ReferenceError: Test1 is not defined
 
 Test1.eval(Cons(("c", Var("d")), Nil), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
 //│   where
 //│     'a :> App['a] | Abs['a] | Var
+//│ res
+//│ Runtime error:
+//│   ReferenceError: Test1 is not defined
 
 Test1.eval(Cons(("c", Abs("d", Var("d"))), Nil), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
 //│   where
-//│     'a :> Abs['a] | Abs[Var] | Var | App['a]
+//│     'a :> App['a] | Abs['a] | Abs[Var] | Var
+//│ res
+//│ Runtime error:
+//│   ReferenceError: Test1 is not defined
 
 class Num(n: int)
 class Add<A>(l: A, r: A)
@@ -155,6 +179,8 @@ mixin EvalExpr {
 //│   this: {eval: ('a, 'c,) -> anything}
 //│   fun eval: ('a, 'd & (Add['c] | Mul['c] | Num | Var),) -> (Num | 'd | 'b)
 //│ }
+//│ Code generation encountered an error:
+//│   unsupported definitions in blocks
 
 module Test2: EvalVar, EvalExpr
 //│ module Test2() {
@@ -167,31 +193,46 @@ module Test2: EvalVar, EvalExpr
 
 Test2.eval(Nil, Var("a"))
 //│ Num | Var
+//│ res
+//│ Runtime error:
+//│   ReferenceError: Test2 is not defined
 
 Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Var("a"))
 //│ Abs[Var] | Num | Var
+//│ res
+//│ Runtime error:
+//│   ReferenceError: Test2 is not defined
 
 Test2.eval(Cons(("a", Num(1)), Nil), Var("a"))
 //│ Num | Var
+//│ res
+//│ Runtime error:
+//│   ReferenceError: Test2 is not defined
 
 :e
 Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.178: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.213: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Num | Var`
-//│ ║  l.178: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.213: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	                                                 ^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.136: 	  if v is
+//│ ║  l.160: 	  if v is
 //│ ║         	     ^
 //│ ╟── from reference:
-//│ ║  l.146: 	    let vv = map_expr(eta, v)
+//│ ║  l.170: 	    let vv = map_expr(eta, v)
 //│ ╙──       	                           ^
 //│ Abs[Var] | Num | Var | error
+//│ res
+//│ Runtime error:
+//│   ReferenceError: Test2 is not defined
 
 Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil), Add(Num(1), Var("a")))
 //│ Abs[Var] | Add[Num | Var] | Num | Var
+//│ res
+//│ Runtime error:
+//│   ReferenceError: Test2 is not defined
 
 module Test3: EvalVar, EvalExpr, EvalLambda
 //│ module Test3() {
@@ -212,11 +253,17 @@ Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ 'a
 //│   where
 //│     'a :> App['a] | Abs['a] | Abs[Var] | Num | Var
+//│ res
+//│ Runtime error:
+//│   ReferenceError: Test3 is not defined
 
 Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
 //│ 'a
 //│   where
-//│     'a :> Abs['a] | Abs[Var] | Add[Num | Var] | Num | Var | App['a]
+//│     'a :> App['a] | Abs['a] | Abs[Var] | Add[Num | Var] | Num | Var
+//│ res
+//│ Runtime error:
+//│   ReferenceError: Test3 is not defined
 
 module Test3: EvalVar, EvalLambda, EvalExpr
 //│ module Test3() {
@@ -237,17 +284,20 @@ module Test3: EvalVar, EvalLambda, EvalExpr
 :e
 Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.238: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.285: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Num | Var`
-//│ ║  l.238: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.285: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	                                                 ^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.136: 	  if v is
+//│ ║  l.160: 	  if v is
 //│ ║         	     ^
 //│ ╟── from reference:
-//│ ║  l.146: 	    let vv = map_expr(eta, v)
+//│ ║  l.170: 	    let vv = map_expr(eta, v)
 //│ ╙──       	                           ^
 //│ error | 'a
 //│   where
 //│     'a :> Abs['a] | App['a] | Var | Abs[Var] | Num
+//│ res
+//│ Runtime error:
+//│   TypeError: Cannot read properties of undefined (reading 'eval')

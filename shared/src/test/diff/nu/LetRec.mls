@@ -1,49 +1,112 @@
 :NewParser
 :NewDefs
-:NoJS // TODO rm
+// :NoJS // TODO rm
 
 
 :js
 fun f(x) = x > 0 && f(x - 1)
 //│ fun f: int -> bool
+//│ // Prelude
+//│ let res;
+//│ let typing_unit = { cache: {} };
+//│ // Query 1
+//│ globalThis.f = function f(x) {
+//│   return x > 0 && f(x - 1);
+//│ };
+//│ // End of generated code
 
 f(12)
 //│ bool
+//│ res
+//│     = false
 
 :js
 let rec f(x) = x > 0 && f(x - 1)
 //│ let rec f: int -> bool
+//│ // Prelude
+//│ let typing_unit2 = { cache: {} };
+//│ // Query 1
+//│ globalThis.f1 = function f1(x) {
+//│   return x > 0 && f1(x - 1);
+//│ };
+//│ // End of generated code
+//│ f
+//│   = [Function: f1]
 
 f(12)
 //│ bool
+//│ res
+//│     = false
 
 :js
 let rec f() =
   f()
 //│ let rec f: () -> nothing
+//│ // Prelude
+//│ let typing_unit4 = { cache: {} };
+//│ // Query 1
+//│ globalThis.f2 = function f2() {
+//│   return ((() => {
+//│     return f2();
+//│   })());
+//│ };
+//│ // End of generated code
+//│ f
+//│   = [Function: f2]
 
-// :re
+:re
 f()
 //│ nothing
+//│ res
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 // TODO (for later) this should be rejected by the type checker
-// :ge
+:ge
 :js
 let rec f =
   f
 //│ let rec f: nothing
+//│ Code generation encountered an error:
+//│   unguarded recursive use of by-value binding f
 
-// :re
+:re
 :js
 f
 //│ nothing
+//│ // Prelude
+//│ let typing_unit7 = { cache: {} };
+//│ // Query 1
+//│ res = f3;
+//│ // End of generated code
+//│ res
+//│ Runtime error:
+//│   ReferenceError: f3 is not defined
 
 :p
 let rec f = 1
 //│ |#let| |#rec| |f| |#=| |1|
 //│ Parsed: let rec f = 1;
 //│ let rec f: 1
+//│ f
+//│   = 1
 
 let rec f =
   1
 //│ let rec f: 1
+//│ f
+//│   = 1
+
+
+// FIXME should work
+// No recursion:
+let foo = 1
+let foo = foo + 1
+//│ let foo: 1
+//│ let foo: int
+//│ foo
+//│     = 1
+//│ foo
+//│     = 2
+
+
