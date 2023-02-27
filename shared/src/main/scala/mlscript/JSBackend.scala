@@ -476,7 +476,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
 
   protected def translateModuleDeclaration(
       moduleSymbol: ModuleSymbol,
-      base: Opt[Term]
+      superFields: Ls[Term] = Nil
   )(implicit scope: Scope): JSClassGetter = {
     val getterScope = scope.derive(s"getter ${moduleSymbol.lexicalName}")
     val moduleScope = scope.derive(s"module ${moduleSymbol.lexicalName}")
@@ -496,9 +496,41 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       }
     }
     val rest = constructorScope.declareValue("rest", Some(false), false)
+
+    val bases = superFields.map { sym => sym match {
+      case App(lhs, _) => S(translateTerm(App(lhs, Tup(Ls())))(constructorScope))
+      case _ => S(translateTerm(sym)(constructorScope))
+    } }
+    val base: Opt[JSExpr] =
+      if (bases.length === 0) N
+      else if (bases.length === 1) bases.head match {
+        case Some(JSIdent(nme)) => scope.resolveValue(nme) match {
+          case Some(sym: MixinSymbol) => Some(JSInvoke(JSIdent(nme), Ls()))
+          case Some(_) => Some(JSIdent(nme))
+          case _ => throw CodeGenError(s"unresolved symbol in parents: $nme")
+        }
+        case Some(inv: JSInvoke) => Some(inv)
+        case _ => throw CodeGenError("unresolved parents.")
+      }
+      else bases.reduceLeft((res, call) => (res, call) match {
+        case (S(JSIdent(res)), S(JSIdent(call))) => scope.resolveValue(res) match {
+          case Some(sym: MixinSymbol) => S(JSInvoke(JSIdent(call), Ls(JSInvoke(JSIdent(res), Ls()))))
+          case Some(_) => S(JSInvoke(JSIdent(call), Ls(JSIdent(res))))
+          case _ => throw CodeGenError(s"unresolved symbol in parents: $res")
+        }
+        case (S(res), S(JSIdent(call))) => S(JSInvoke(JSIdent(call), Ls(res)))
+        case (S(JSIdent(res)), S(JSInvoke(call, _))) => scope.resolveValue(res) match {
+          case Some(sym: MixinSymbol) => S(JSInvoke(call, Ls(JSInvoke(JSIdent(res), Ls()))))
+          case Some(_) => S(JSInvoke(call, Ls(JSIdent(res))))
+          case _ => throw CodeGenError(s"unresolved symbol in parents: $res")
+        }
+        case (S(res), S(JSInvoke(call, _))) => S(JSInvoke(call, Ls(res)))
+        case _ => throw CodeGenError("unresolved parents.")
+      })
+
     val decl = JSClassNewDecl(moduleSymbol.runtimeName,
                    fields,
-                   base.flatMap((b) => S(translateTerm(b))),
+                   base,
                    Ls(JSIdent(s"...${rest.runtimeName}")),
                    S(rest.runtimeName),
                    members,
@@ -566,25 +598,25 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case Some(JSIdent(nme)) => scope.resolveValue(nme) match {
           case Some(sym: MixinSymbol) => Some(JSInvoke(JSIdent(nme), Ls()))
           case Some(_) => Some(JSIdent(nme))
-          case _ => ???
+          case _ => throw CodeGenError(s"unresolved symbol in parents: $nme")
         }
         case Some(inv: JSInvoke) => Some(inv)
-        case _ => ???
+        case _ => throw CodeGenError("unresolved parents.")
       }
       else bases.reduceLeft((res, call) => (res, call) match {
         case (S(JSIdent(res)), S(JSIdent(call))) => scope.resolveValue(res) match {
           case Some(sym: MixinSymbol) => S(JSInvoke(JSIdent(call), Ls(JSInvoke(JSIdent(res), Ls()))))
           case Some(_) => S(JSInvoke(JSIdent(call), Ls(JSIdent(res))))
-          case _ => ???
+          case _ => throw CodeGenError(s"unresolved symbol in parents: $res")
         }
         case (S(res), S(JSIdent(call))) => S(JSInvoke(JSIdent(call), Ls(res)))
         case (S(JSIdent(res)), S(JSInvoke(call, _))) => scope.resolveValue(res) match {
           case Some(sym: MixinSymbol) => S(JSInvoke(call, Ls(JSInvoke(JSIdent(res), Ls()))))
           case Some(_) => S(JSInvoke(call, Ls(JSIdent(res))))
-          case _ => ???
+          case _ => throw CodeGenError(s"unresolved symbol in parents: $res")
         }
         case (S(res), S(JSInvoke(call, _))) => S(JSInvoke(call, Ls(res)))
-        case _ => ???
+        case _ => throw CodeGenError("unresolved parents.")
       })
     val traits = classSymbol.body.collectTypeNames.flatMap {
       name => scope.getType(name) match {
@@ -742,33 +774,10 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         superParameters.put(sym.lexicalName, pars)
       }
       case NuTypeDef(Nms, TypeName(nme), tps, tup @ Tup(fs), pars, sup, ths, unit) => {
-        val params = fs.map {
-          case (S(nme), Fld(mut, spec, trm)) =>
-            val ty = tt(trm)
-            nme -> Field(if (mut) S(ty) else N, ty)
-          case (N, Fld(mut, spec, nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top)
-          case _ => die
-        }
-        if (pars.length > 0) {
-          val bases = pars.drop(1).foldLeft(App(pars.head, Tup(Ls())): Term)((res, p) => p match {
-            case Var(pname) => App(Var(pname), Tup(Ls(None -> Fld(false, false, res))))
-            case _ => ???
-          })
-          val body = pars.map(tt).foldRight(Record(params): Type)(Inter)
-          val members = unit.children.foldLeft(List[MethodDef[Left[Term, Type]]]())((lst, loc) => loc match {
-            case NuFunDef(isLetRec, mnme, tys, Left(rhs)) => lst :+ MethodDef(isLetRec.getOrElse(false), TypeName(nme), mnme, tys, Left(rhs))
-            case _ => lst
-          })
-          val sym = topLevelScope.declareModule(nme, tps map { _._2.name }, body, members)
-          modules += sym
-          superParameters.put(sym.lexicalName, Ls(bases))
-        }
-        else {
-          val (body, members) = prepare(nme, fs, pars, unit)
-          val sym = topLevelScope.declareModule(nme, tps map { _._2.name }, body, members)
-          modules += sym
-          superParameters.put(sym.lexicalName, pars)
-        }
+        val (body, members) = prepare(nme, fs, pars, unit)
+        val sym = topLevelScope.declareModule(nme, tps map { _._2.name }, body, members)
+        modules += sym
+        superParameters.put(sym.lexicalName, pars)
       }
       case NuTypeDef(Als, TypeName(nme), tps, _, pars, _, _, _) => {
         val body = tt(pars.head)
@@ -1041,8 +1050,8 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
       mixinSymbols.map { translateMixinDeclaration(_)(topLevelScope) } ++
       moduleSymbols.map((m) =>
         translateModuleDeclaration(m, superParameters.get(m.lexicalName) match {
-          case Some(head :: _) => Some(head)
-          case _ => None
+          case Some(lst) => lst
+          case _ => Nil
         })(topLevelScope)
       ) ++
       classSymbols.map { sym =>
