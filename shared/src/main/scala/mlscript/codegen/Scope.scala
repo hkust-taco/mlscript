@@ -42,7 +42,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       "negate",
       "eq",
       "unit",
-      "log",
+      "log"
     ) foreach { name =>
       register(BuiltinSymbol(name, name))
     }
@@ -55,11 +55,17 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     }
   }
 
+  private def isRuntimeNameShadowing(name: Str): Boolean =
+    runtimeSymbols.contains(name) || (enclosing match {
+      case Some(enclosing) => enclosing.isRuntimeNameShadowing(name)
+      case _ => false
+    })
+
   private val allocateRuntimeNameIter = for {
     i <- (1 to Int.MaxValue).iterator
     c <- Scope.nameAlphabet.combinations(i)
     name = c.mkString
-    if !runtimeSymbols.contains(name)
+    if !isRuntimeNameShadowing(name)
   } yield {
     name
   }
@@ -80,13 +86,13 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     // Replace ticks
     val realPrefix = Scope.replaceTicks(prefix)
     // Try just prefix.
-    if (!runtimeSymbols.contains(realPrefix) && !Symbol.isKeyword(realPrefix)) {
+    if (!isRuntimeNameShadowing(realPrefix) && !Symbol.isKeyword(realPrefix)) {
       return realPrefix
     }
     // Try prefix with an integer.
     for (i <- 1 to Int.MaxValue) {
       val name = s"$realPrefix$i"
-      if (!runtimeSymbols.contains(name)) {
+      if (!isRuntimeNameShadowing(name)) {
         return name
       }
     }

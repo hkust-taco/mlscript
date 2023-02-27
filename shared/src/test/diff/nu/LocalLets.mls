@@ -9,8 +9,7 @@ let f =
 //│ ║  l.6: 	  let tmp = "ok"
 //│ ╙──     	      ^^^^^^^^^^
 //│ f: 123
-//│ Code generation encountered an error:
-//│   unsupported definitions in blocks
+//│  = 123
 
 
 // TODO allow

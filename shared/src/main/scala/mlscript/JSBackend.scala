@@ -198,6 +198,14 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         R(blkScope.tempVars `with` (flattened.iterator.zipWithIndex.map {
           case (t: Term, index) if index + 1 == flattened.length => translateTerm(t)(blkScope).`return`
           case (t: Term, index)                                  => JSExprStmt(translateTerm(t)(blkScope))
+          case (NuFunDef(S(false), Var(nme), _, L(rhs)), _) => {
+            val pat = blkScope.declareValue(nme, S(false), false)
+            JSLetDecl(Ls(pat.runtimeName -> S(translateTerm(rhs)(blkScope))))
+          }
+          case (NuFunDef(N, Var(nme), _, L(rhs)), _) => {
+            val pat = blkScope.declareValue(nme, S(true), true)
+            JSLetDecl(Ls(pat.runtimeName -> S(translateTerm(rhs)(blkScope))))
+          }
           // TODO: find out if we need to support this.
           case (_: Def | _: TypeDef | _: NuFunDef /* | _: NuTypeDef */, _) =>
             throw CodeGenError("unsupported definitions in blocks")
@@ -291,6 +299,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case Var(name) => topLevelScope.getType(name) match {
           case S(ClassSymbol(_, runtimeName, _, _, _)) => JSInstanceOf(scrut, JSIdent(runtimeName))
           case S(NewClassSymbol(_, runtimeName, _, _, _)) => JSInstanceOf(scrut, JSMember(JSIdent(runtimeName), JSIdent(JSLit.makeStringLiteral("class"))))
+          case S(ModuleSymbol(_, runtimeName, _, _, _)) => JSInstanceOf(scrut, JSMember(JSIdent(runtimeName), JSIdent(JSLit.makeStringLiteral("class"))))
           case S(TraitSymbol(_, runtimeName, _, _, _)) => JSIdent(runtimeName)("is")(scrut)
           case S(_: TypeAliasSymbol) => throw new CodeGenError(s"cannot match type alias $name")
           case N => throw new CodeGenError(s"unknown match case: $name")
@@ -539,12 +548,14 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
                    members,
                    traits)
 
-    JSClassGetter(moduleSymbol.lexicalName, R(Ls(
-      JSIfStmt(JSBinary("===", JSField(JSField(JSIdent("this"), "cache"), moduleSymbol.lexicalName), JSIdent("undefined")), Ls(
-        JSExprStmt(JSAssignExpr(JSField(JSField(JSIdent("this"), "cache"), moduleSymbol.lexicalName),
-          JSNew(JSClassExpr(decl))))
+    JSClassGetter(moduleSymbol.runtimeName, R(Ls(
+      JSIfStmt(JSBinary("===", JSField(JSField(JSIdent("this"), "cache"), moduleSymbol.runtimeName), JSIdent("undefined")), Ls(
+        decl,
+        JSExprStmt(JSAssignExpr(JSField(JSField(JSIdent("this"), "cache"), moduleSymbol.runtimeName),
+          JSNew(JSInvoke(JSIdent(moduleSymbol.runtimeName), Ls())))),
+        JSExprStmt(JSAssignExpr(JSMember(JSField(JSField(JSIdent("this"), "cache"), moduleSymbol.runtimeName), JSLit(JSLit.makeStringLiteral("class"))), JSIdent(moduleSymbol.runtimeName))),
       )),
-      JSReturnStmt(S(JSField(JSField(JSIdent("this"), "cache"), moduleSymbol.lexicalName)))
+      JSReturnStmt(S(JSField(JSField(JSIdent("this"), "cache"), moduleSymbol.runtimeName)))
     )))
   }
 
@@ -562,14 +573,14 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       case JSClassNewDecl(_, fields, _, _, _, _, _) => fields.map(JSIdent(_))
     }
 
-    JSClassGetter(classSymbol.lexicalName, R(Ls(
-      JSIfStmt(JSBinary("===", JSField(JSField(JSIdent("this"), "cache"), classSymbol.lexicalName), JSIdent("undefined")), Ls(
+    JSClassGetter(classSymbol.runtimeName, R(Ls(
+      JSIfStmt(JSBinary("===", JSField(JSField(JSIdent("this"), "cache"), classSymbol.runtimeName), JSIdent("undefined")), Ls(
         JSExprStmt(JSClassExpr(classBody)),
-        JSExprStmt(JSAssignExpr(JSField(JSField(JSIdent("this"), "cache"), classSymbol.lexicalName),
-          JSArrowFn(constructor, L(JSInvoke(JSNew(JSIdent(classSymbol.lexicalName)), params))))),
-        JSExprStmt(JSAssignExpr(JSMember(JSField(JSField(JSIdent("this"), "cache"), classSymbol.lexicalName), JSLit(JSLit.makeStringLiteral("class"))), JSIdent(classSymbol.lexicalName)))
+        JSExprStmt(JSAssignExpr(JSField(JSField(JSIdent("this"), "cache"), classSymbol.runtimeName),
+          JSArrowFn(constructor, L(JSInvoke(JSNew(JSIdent(classSymbol.runtimeName)), params))))),
+        JSExprStmt(JSAssignExpr(JSMember(JSField(JSField(JSIdent("this"), "cache"), classSymbol.runtimeName), JSLit(JSLit.makeStringLiteral("class"))), JSIdent(classSymbol.runtimeName)))
       )),
-      JSReturnStmt(S(JSField(JSField(JSIdent("this"), "cache"), classSymbol.lexicalName)))
+      JSReturnStmt(S(JSField(JSField(JSIdent("this"), "cache"), classSymbol.runtimeName)))
     )))
   }
 
@@ -608,7 +619,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       case _ => Nil
     }).flatten
 
-    JSClassNewDecl(classSymbol.lexicalName, fields, base, restRuntime match {
+    JSClassNewDecl(classSymbol.runtimeName, fields, base, restRuntime match {
       case Some(restRuntime) => superParameters :+ JSIdent(s"...$restRuntime")
       case _ => superParameters
     }, restRuntime, members, traits)
@@ -636,6 +647,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       case term =>
         (N, term)
     }
+
     // Translate class member body.
     val bodyResult = translateTerm(body)(memberScope).`return`
     // If `this` is accessed, add `const self = this`.
@@ -708,13 +720,13 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         val (body, members) = prepare(mxName, fs, pars, unit)
         val sym = topLevelScope.declareMixin(mxName, tps map { _._2.name }, body, members)
         mixins += sym
-        superParameters.put(sym.lexicalName, pars)
+        superParameters.put(sym.runtimeName, pars)
       }
       case NuTypeDef(Nms, TypeName(nme), tps, tup @ Tup(fs), pars, sup, ths, unit) => {
         val (body, members) = prepare(nme, fs, pars, unit)
         val sym = topLevelScope.declareModule(nme, tps map { _._2.name }, body, members)
         modules += sym
-        superParameters.put(sym.lexicalName, pars)
+        superParameters.put(sym.runtimeName, pars)
       }
       case NuTypeDef(Als, TypeName(nme), tps, _, pars, _, _, _) => {
         val body = tt(pars.head)
@@ -724,13 +736,13 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         val (body, members) = prepare(nme, fs, pars, unit)
         val sym = topLevelScope.declareNewClass(nme, tps map { _._2.name }, body, members)
         classes += sym
-        superParameters.put(sym.lexicalName, pars)
+        superParameters.put(sym.runtimeName, pars)
       }
       case NuTypeDef(k @ Trt, TypeName(nme), tps, tup @ Tup(fs), pars, sup, ths, unit) => {
         val (body, members) = prepare(nme, fs, pars, unit)
         val sym = topLevelScope.declareTrait(nme, tps map { _._2.name }, body, members)
         traits += sym
-        superParameters.put(sym.lexicalName, pars)
+        superParameters.put(sym.runtimeName, pars)
       }
     }
     (traits.toList, classes.toList, mixins.toList, modules.toList, superParameters)
@@ -986,13 +998,13 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
       traitSymbols.map { translateTraitDeclaration(_)(topLevelScope) } ++
       mixinSymbols.map { translateMixinDeclaration(_)(topLevelScope) } ++
       moduleSymbols.map((m) =>
-        translateModuleDeclaration(m, superParameters.get(m.lexicalName) match {
+        translateModuleDeclaration(m, superParameters.get(m.runtimeName) match {
           case Some(lst) => lst
           case _ => Nil
         })(topLevelScope)
       ) ++
       classSymbols.map { sym =>
-        superParameters.get(sym.lexicalName) match {
+        superParameters.get(sym.runtimeName) match {
           case Some(sp) => translateNewClassDeclaration(sym, sp)(topLevelScope)
           case _ => translateNewClassDeclaration(sym)(topLevelScope)
         }
