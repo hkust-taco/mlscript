@@ -53,7 +53,7 @@ class Foo(x: int)
 :ShowRepl
 class Bar(x: int, y: int): Foo(x + y)
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.31: 	class Bar(x: int, y: int): Foo(x + y)
+//│ ║  l.54: 	class Bar(x: int, y: int): Foo(x + y)
 //│ ╙──      	                           ^^^^^^^^^^
 //│ class Bar(x: int, y: int)
 //│ // Prelude
@@ -76,7 +76,7 @@ class Bar(x: int, y: int): Foo(x + y)
 //│ };
 //│ globalThis.Bar = typing_unit1.Bar;
 //│ // End of generated code
-//│ ┌ Block at Super.mls:31
+//│ ┌ Block at Super.mls:54
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   let typing_unit1 = {
@@ -128,7 +128,7 @@ mixin AA(a: int) {
 //│ };
 //│ globalThis.AA = typing_unit2.AA;
 //│ // End of generated code
-//│ ┌ Block at Super.mls:60
+//│ ┌ Block at Super.mls:107
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   let typing_unit2 = {
@@ -175,7 +175,7 @@ mixin BB {}
 //│ };
 //│ globalThis.BB = typing_unit3.BB;
 //│ // End of generated code
-//│ ┌ Block at Super.mls:87
+//│ ┌ Block at Super.mls:159
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   let typing_unit3 = {
@@ -220,7 +220,7 @@ class C(x: int): BB
 //│ };
 //│ globalThis.C = typing_unit4.C;
 //│ // End of generated code
-//│ ┌ Block at Super.mls:109
+//│ ┌ Block at Super.mls:202
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   let typing_unit4 = {
@@ -249,7 +249,7 @@ class C(x: int): BB
 :ShowRepl
 class D(x: int): AA(x)
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.134: 	class D(x: int): AA(x)
+//│ ║  l.250: 	class D(x: int): AA(x)
 //│ ╙──       	                 ^^^^^
 //│ class D(x: int)
 //│ // Prelude
@@ -271,7 +271,7 @@ class D(x: int): AA(x)
 //│ };
 //│ globalThis.D = typing_unit5.D;
 //│ // End of generated code
-//│ ┌ Block at Super.mls:134
+//│ ┌ Block at Super.mls:250
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   let typing_unit5 = {
@@ -300,7 +300,7 @@ class D(x: int): AA(x)
 :ShowRepl
 class E(x: int): BB, AA(x)
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.162: 	class E(x: int): BB, AA(x)
+//│ ║  l.301: 	class E(x: int): BB, AA(x)
 //│ ╙──       	                     ^^^^^
 //│ class E(x: int)
 //│ // Prelude
@@ -322,7 +322,7 @@ class E(x: int): BB, AA(x)
 //│ };
 //│ globalThis.E = typing_unit6.E;
 //│ // End of generated code
-//│ ┌ Block at Super.mls:162
+//│ ┌ Block at Super.mls:301
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   let typing_unit6 = {

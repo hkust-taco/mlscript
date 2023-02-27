@@ -464,3 +464,5 @@ TestLang.eval(mk(0))
 //│   ├──   res = TestLang.eval(mk(0));
 //│   ├── Intermediate: 0
 //│   └── Reply: [success] 0
+//│ res
+//│     = [Function: mk]

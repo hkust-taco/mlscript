@@ -493,7 +493,7 @@ class DiffTests
               }
             }
             
-            val (typeDefs, stmts) = if (newDefs) {
+            val (typeDefs, stmts, newDefsResults) = if (newDefs) {
               
               // /* 
               val vars: Map[Str, typer.SimpleType] = Map.empty
@@ -602,7 +602,13 @@ class DiffTests
               // FirstClassDefn()
               
               
-              (Nil, Nil)
+              // (Nil, Nil, N)
+              (Nil, Nil, S(p.tops.collect {
+                // case LetS(isRec, pat, bod) => ("res", Nil, Nil, false)
+                case NuFunDef(isLet @ S(_), nme, tparams, bod) =>
+                  (nme.name + " ", nme.name :: Nil, Nil, false)
+                case t: Term => ("res ", "res" :: Nil, Nil, false)
+              }))
               
             } else {
               
@@ -622,7 +628,7 @@ class DiffTests
                 // else 
                 typer.processTypeDefs(typeDefs)(ctx, raise)
               
-              (typeDefs, stmts)
+              (typeDefs, stmts, N)
             }
             
             // initialize ts typegen code builder and
@@ -727,7 +733,7 @@ class DiffTests
             // generate typescript types if generateTsDeclarations flag is
             // set in the mode
             // The tuple type means: (<stmt name>, <type>, <diagnosis>, <order>)
-            val typerResults: Ls[(Str, Ls[Str], Ls[Str], Bool)] = stmts.map { stmt =>
+            val typerResults: Ls[(Str, Ls[Str], Ls[Str], Bool)] = newDefsResults getOrElse stmts.map { stmt =>
               // Because diagnostic lines are after the typing results,
               // we need to cache the diagnostic blocks and add them to the
               // `typerResults` buffer after the statement has been processed.
@@ -910,7 +916,7 @@ class DiffTests
                 }
               case L(other) =>
                 // Print type checking results first.
-                typerResults.foreach { case (_, typingLines, diagnosticLines, typeBeforeDiags) =>
+                if (!newDefs) typerResults.foreach { case (_, typingLines, diagnosticLines, typeBeforeDiags) =>
                   if (typeBeforeDiags) {
                     typingLines.foreach(output)
                     diagnosticLines.foreach(output)
