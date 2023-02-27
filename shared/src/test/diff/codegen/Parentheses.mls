@@ -108,7 +108,7 @@ add 0 1
 :js
 id (fun x -> x)
 //│ // Query 1
-//│ res = id((x) => x);
+//│ res = id((x1) => x1);
 //│ // End of generated code
 //│ res: 'a -> 'a
 //│    = [Function (anonymous)]
@@ -124,7 +124,7 @@ fun x -> {t1 = gt 1 2; t2 = 1}
 //│   }
 //│ }
 //│ // Query 1
-//│ res = ((x) => ({
+//│ res = ((x1) => ({
 //│   t1: gt(1)(2),
 //│   t2: 1
 //│ }));

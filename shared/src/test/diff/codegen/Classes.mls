@@ -40,9 +40,9 @@ class Box[T]: { inner: T }
 //│   constructor(fields) {
 //│     this.inner = fields.inner;
 //│   }
-//│   Map(f) {
+//│   Map(f1) {
 //│     const self = this;
-//│     return new Box({ inner: f(self.inner) });
+//│     return new Box({ inner: f1(self.inner) });
 //│   }
 //│   get Get() {
 //│     const self = this;
@@ -107,9 +107,9 @@ def MyBox inner info = MyBox { inner; info }
 //│     super(fields);
 //│     this.info = fields.info;
 //│   }
-//│   Map(f) {
+//│   Map(f1) {
 //│     const self = this;
-//│     return withConstruct(Box1(f(self.inner)), { info: self.info });
+//│     return withConstruct(Box1(f1(self.inner)), { info: self.info });
 //│   }
 //│   get Inc() {
 //│     const self = this;

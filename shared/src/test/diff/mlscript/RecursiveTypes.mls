@@ -7,9 +7,9 @@ let rec l = fun a -> fun a -> fun a -> l in let rec r = fun a -> fun a -> r in i
 //│ let res;
 //│ // Query 1
 //│ res = ((l) => ((r) => true ? l : r)(function r(a) {
-//│   return (a) => r;
+//│   return (a1) => r;
 //│ }))(function l(a) {
-//│   return (a) => (a) => l;
+//│   return (a1) => (a2) => l;
 //│ });
 //│ // End of generated code
 //│ res: 'l | 'r

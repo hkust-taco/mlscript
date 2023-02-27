@@ -392,11 +392,13 @@ module TestLang: EvalBase, EvalNeg, EvalNegNeg
 //│   cache: {},
 //│   get TestLang() {
 //│     if (this.cache.TestLang === undefined) {
-//│       this.cache.TestLang = new class TestLang extends EvalNegNeg(EvalNeg(EvalBase())) {
+//│       class TestLang extends EvalNegNeg(EvalNeg(EvalBase())) {
 //│         constructor(...rest) {
 //│           super(...rest);
 //│         }
-//│       };
+//│       }
+//│       this.cache.TestLang = new TestLang();
+//│       this.cache.TestLang["class"] = TestLang;
 //│     }
 //│     return this.cache.TestLang;
 //│   }
@@ -410,18 +412,20 @@ module TestLang: EvalBase, EvalNeg, EvalNegNeg
 //│ │ │     cache: {},
 //│ │ │     get TestLang() {
 //│ │ │       if (this.cache.TestLang === undefined) {
-//│ │ │         this.cache.TestLang = new class TestLang extends EvalNegNeg(EvalNeg(EvalBase())) {
+//│ │ │         class TestLang extends EvalNegNeg(EvalNeg(EvalBase())) {
 //│ │ │           constructor(...rest) {
 //│ │ │             super(...rest);
 //│ │ │           }
-//│ │ │         };
+//│ │ │         }
+//│ │ │         this.cache.TestLang = new TestLang();
+//│ │ │         this.cache.TestLang["class"] = TestLang;
 //│ │ │       }
 //│ │ │       return this.cache.TestLang;
 //│ │ │     }
 //│ │ │   };
 //│ │ │   globalThis.TestLang = typing_unit5.TestLang;
 //│ │ └── Reply
-//│ │     TestLang {}
+//│ │     TestLang { class: [Function: TestLang] }
 //│ └── No queries
 
 :js
@@ -444,7 +448,7 @@ TestLang.eval(mk(0))
 //│ // Query 2
 //│ res = TestLang.eval(mk(0));
 //│ // End of generated code
-//│ ┌ Block at ECOOP23_codegen.mls:429
+//│ ┌ Block at ECOOP23_codegen.mls:433
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   let typing_unit6 = { cache: {} };
