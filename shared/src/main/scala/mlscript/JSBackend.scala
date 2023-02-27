@@ -133,7 +133,6 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case App(App(App(Var("if"), Tup((_, Fld(_, _, tst)) :: Nil)), Tup((_, Fld(_, _, con)) :: Nil)), Tup((_, Fld(_, _, alt)) :: Nil)) =>
       JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
     case App(App(App(Var("if"), tst), con), alt) => die
-    case App(ce: ClassExpression, _) => JSNew(translateTerm(ce))
     // Function invocation
     case App(trm, Tup(args)) =>
       val callee = trm match {
@@ -259,12 +258,6 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case New(_, TypingUnit(_)) =>
       throw CodeGenError("custom class body is not supported yet")
     case Forall(_, bod) => translateTerm(bod)
-    case ClassExpression(TypeDef(Cls, TypeName(name), tparams, baseType, _, members, _), parents) =>
-      val clsBody = scope.declareClass(name, tparams map { _.name }, baseType, members)
-      parents match {
-        case Some(p) => JSClassExpr(translateNewClassExpression(clsBody, Ls(p)))
-        case _ => JSClassExpr(translateNewClassExpression(clsBody))
-      }
     case _: Bind | _: Test | If(_, _) | TyApp(_, _) | _: Splc | _: Where =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
