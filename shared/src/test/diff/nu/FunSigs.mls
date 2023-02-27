@@ -14,7 +14,7 @@ let f =
 
 // FIXME
 fun log: string -> unit
-//│ ╔══[PARSE ERROR] Unexpected '->' keyword in expression position
+//│ ╔══[PARSE ERROR] Unexpected '->' in expression position
 //│ ║  l.16: 	fun log: string -> unit
 //│ ╙──      	                ^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword

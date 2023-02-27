@@ -11,9 +11,12 @@
 
 :e
 class Foo { fun test = this.x }
-//│ ╔══[ERROR] Unhandled cyclic definition
+//│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.13: 	class Foo { fun test = this.x }
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	                       ^^^^^^
+//│ ╟── reference of type `Foo` does not have field 'x'
+//│ ║  l.13: 	class Foo { fun test = this.x }
+//│ ╙──      	                       ^^^^
 //│ class Foo() {
 //│   fun test: error
 //│ }
@@ -22,10 +25,10 @@ class Foo { fun test = this.x }
 :e
 class Foo(n: int) { fun test = this.x }
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.23: 	class Foo(n: int) { fun test = this.x }
+//│ ║  l.26: 	class Foo(n: int) { fun test = this.x }
 //│ ║        	                               ^^^^^^
 //│ ╟── reference of type `Foo & {n: int}` does not have field 'x'
-//│ ║  l.23: 	class Foo(n: int) { fun test = this.x }
+//│ ║  l.26: 	class Foo(n: int) { fun test = this.x }
 //│ ╙──      	                               ^^^^
 //│ class Foo(n: int) {
 //│   fun test: error
@@ -35,10 +38,10 @@ class Foo(n: int) { fun test = this.x }
 :e
 class Foo<A>(n: A) { fun test = this.x }
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.36: 	class Foo<A>(n: A) { fun test = this.x }
+//│ ║  l.39: 	class Foo<A>(n: A) { fun test = this.x }
 //│ ║        	                                ^^^^^^
 //│ ╟── reference of type `Foo & {Foo#A = ?A, n: A}` does not have field 'x'
-//│ ║  l.36: 	class Foo<A>(n: A) { fun test = this.x }
+//│ ║  l.39: 	class Foo<A>(n: A) { fun test = this.x }
 //│ ╙──      	                                ^^^^
 //│ class Foo[A](n: A) {
 //│   fun test: error
@@ -51,14 +54,34 @@ class Foo {
   this: { x: 'a }
   // fun test = this.x
 }
-//│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.50: 	class Foo {
-//│ ║        	^^^^^^^^^^^
-//│ ║  l.51: 	  this: { x: 'a }
-//│ ║        	^^^^^^^^^^^^^^^^^
-//│ ║  l.52: 	  // fun test = this.x
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.53: 	}
-//│ ╙──      	^
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.54: 	  this: { x: 'a }
+//│ ║        	  ^^^^
+//│ ╟── reference of type `Foo` does not have field 'x'
+//│ ╟── Note: constraint arises from record type:
+//│ ║  l.54: 	  this: { x: 'a }
+//│ ╙──      	        ^^^^^^^^^
 //│ class Foo()
+
+
+// TODO
+// * All on one line:
+class Test { this: { x: int}; fun test = this.x }
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.69: 	class Test { this: { x: int}; fun test = this.x }
+//│ ║        	             ^^^^
+//│ ╟── reference of type `Test` does not have field 'x'
+//│ ╟── Note: constraint arises from record type:
+//│ ║  l.69: 	class Test { this: { x: int}; fun test = this.x }
+//│ ╙──      	                   ^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.69: 	class Test { this: { x: int}; fun test = this.x }
+//│ ║        	                                         ^^^^^^
+//│ ╟── reference of type `Test` does not have field 'x'
+//│ ║  l.69: 	class Test { this: { x: int}; fun test = this.x }
+//│ ╙──      	                                         ^^^^
+//│ class Test() {
+//│   fun test: error
+//│ }
+
 

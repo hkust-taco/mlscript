@@ -677,7 +677,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs, true)
           
           case (ClassTag(Var(nme), _), rt: RecordType) if nme.isCapitalized =>
-            rt.fields.foreach { case (fldNme, fldTy) =>
+            val lti = ctx.tyDefs2(nme)
+            if (lti.isComputing) reportError()
+            else rt.fields.foreach { case (fldNme, fldTy) =>
               val fty = lookupNuTypeDefField(lookupNuTypeDef(nme, _ => N), fldNme)
               rec(fty.ub, fldTy.ub, false)
               recLb(fldTy, fty)
