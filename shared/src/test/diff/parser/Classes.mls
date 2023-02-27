@@ -47,7 +47,7 @@ class Foo: Bar { fun f = 0
 //│ ╔══[PARSE ERROR] Unexpected 'fun' keyword in expression position
 //│ ║  l.44: 	  fun bar = 1
 //│ ╙──      	  ^^^
-//│ ╔══[PARSE ERROR] Unexpected '=' keyword here
+//│ ╔══[PARSE ERROR] Unexpected '=' here
 //│ ║  l.44: 	  fun bar = 1
 //│ ╙──      	          ^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword

@@ -23,22 +23,9 @@ fun foo: 'a + 'a + 'a where 'a : int
 //│   where
 //│     'a <: int}
 
-:pe
-:w
-:e
 fun foo: 'a -> 'a -> 'a where 'a : int
-//│ |#fun| |foo|#:| |'a| |#->| |'a| |#->| |'a| |#where| |'a| |#:| |int|
-//│ ╔══[PARSE ERROR] Unexpected '->' keyword in expression position
-//│ ║  l.29: 	fun foo: 'a -> 'a -> 'a where 'a : int
-//│ ╙──      	            ^^
-//│ ╔══[PARSE ERROR] Unexpected '->' keyword in expression position
-//│ ║  l.29: 	fun foo: 'a -> 'a -> 'a where 'a : int
-//│ ╙──      	                  ^^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.29: 	fun foo: 'a -> 'a -> 'a where 'a : int
-//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] not a recognized type: 'a ('a ('a where {'a : int},),)
-//│ ║  l.29: 	fun foo: 'a -> 'a -> 'a where 'a : int
-//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^
-//│ Parsed: {fun foo: anything}
+//│ |#fun| |foo|#:| |'a| |->| |'a| |->| |'a| |#where| |'a| |#:| |int|
+//│ Parsed: {fun foo: 'a -> 'a -> 'a
+//│   where
+//│     'a <: int}
 
