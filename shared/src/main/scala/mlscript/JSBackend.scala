@@ -804,7 +804,7 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
 
   polyfill.use("prettyPrint", prettyPrinterName)
 
-  def apply(pgrm: Pgrm): Ls[Str] = {
+  def apply(pgrm: Pgrm, newDefs: Bool): Ls[Str] = {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
     val (traitSymbols, classSymbols) = declareTypeDefs(typeDefs)
