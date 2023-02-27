@@ -251,6 +251,7 @@ object NewLexer {
     "trait",
     "mixin",
     "interface",
+    "extends",
     "new",
     "namespace",
     "module",

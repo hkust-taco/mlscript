@@ -156,7 +156,7 @@ mixin EvalExpr {
 //│   fun eval: ('a, 'd & (Add['c] | Mul['c] | Num | Var),) -> (Num | 'd | 'b)
 //│ }
 
-module Test2: EvalVar, EvalExpr
+module Test2 extends EvalVar, EvalExpr
 //│ module Test2() {
 //│   fun eval: (Cons['A] | Nil, 'a,) -> (Num | Var | 'result | 'a)
 //│ }
@@ -193,7 +193,7 @@ Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil), Add(Num(1), Var("a")))
 //│ Abs[Var] | Add[Num | Var] | Num | Var
 
-module Test3: EvalVar, EvalExpr, EvalLambda
+module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│ module Test3() {
 //│   fun eval: (Cons['A | 'A0] | Nil, 'a,) -> 'result
 //│ }
@@ -218,7 +218,7 @@ Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), App(Abs("a", Var("a")), Add(Num
 //│   where
 //│     'a :> Abs['a] | Abs[Var] | Add[Num | Var] | Num | Var | App['a]
 
-module Test3: EvalVar, EvalLambda, EvalExpr
+module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│ module Test3() {
 //│   fun eval: (Cons['A | 'A0] | Nil, 'a,) -> ('a | 'result)
 //│ }
