@@ -363,7 +363,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           case _ =>
             exprOrIf(0, allowSpace = false)
         }
-        cur match {
+        yeetSpaces match {
+          case (KEYWORD(";"), _) :: _ => consume; t :: block
           case (NEWLINE, _) :: _ => consume; t :: block
           case _ => t :: Nil
         }

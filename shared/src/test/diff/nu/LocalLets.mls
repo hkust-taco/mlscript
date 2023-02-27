@@ -13,3 +13,13 @@ let f =
 //│   unsupported definitions in blocks
 
 
+// TODO allow
+let x : int | string
+let x = 1
+//│ x: int | string
+//│  = <missing implementation>
+//│ 1
+//│   <:  x:
+//│ int | string
+//│  = 1
+

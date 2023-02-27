@@ -12,18 +12,8 @@ let f =
 //│  = <no result>
 //│    log is not implemented
 
-// FIXME
 fun log: string -> unit
-//│ ╔══[PARSE ERROR] Unexpected '->' keyword in expression position
-//│ ║  l.16: 	fun log: string -> unit
-//│ ╙──      	                ^^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.16: 	fun log: string -> unit
-//│ ╙──      	         ^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Wrong number of type arguments – expected 0, found 1
-//│ ║  l.16: 	fun log: string -> unit
-//│ ╙──      	         ^^^^^^^^^^^^^^
-//│ log: string
+//│ log: string -> unit
 //│    = <missing implementation>
 
 fun log: string => unit
