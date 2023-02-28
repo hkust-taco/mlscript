@@ -159,10 +159,11 @@ object Main {
           val (lines, resNames) = backend(pgrm, true)
           val code = lines.mkString("\n")
 
-          val jsStr = ("\n\n=====================JavaScript Code=====================\n" + code)
-            .stripSuffix("\n")
-            .replaceAll("  ", "&nbsp;&nbsp;")
-            .replaceAll("\n", "<br/>")
+          // TODO: add a toggle button to show js code
+          // val jsStr = ("\n\n=====================JavaScript Code=====================\n" + code)
+          //   .stripSuffix("\n")
+          //   .replaceAll("  ", "&nbsp;&nbsp;")
+          //   .replaceAll("\n", "<br/>")
 
           val exe = executeCode(code) match {
             case Left(err) => err
@@ -174,7 +175,7 @@ object Main {
             .replaceAll("  ", "&nbsp;&nbsp;")
             .replaceAll("\n", "<br/>") + exe
           
-          typingStr + jsStr + resStr
+          typingStr + resStr
       }
     } catch {
       // case err: ErrorReport =>

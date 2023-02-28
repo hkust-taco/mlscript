@@ -1,347 +1,41 @@
 :NewParser
 :NewDefs
 
-:js
-:ShowRepl
+
 class Foo(x: int)
 //│ class Foo(x: int)
-//│ // Prelude
-//│ let res;
-//│ let typing_unit = {
-//│   cache: {},
-//│   get Foo() {
-//│     if (this.cache.Foo === undefined) {
-//│       class Foo {
-//│         constructor(x) {
-//│           this.x = x;
-//│         }
-//│       };
-//│       this.cache.Foo = ((x) => new Foo(x));
-//│       this.cache.Foo["class"] = Foo;
-//│     }
-//│     return this.cache.Foo;
-//│   }
-//│ };
-//│ globalThis.Foo = typing_unit.Foo;
-//│ // End of generated code
-//│ ┌ Block at Super.mls:6
-//│ ├─┬ Prelude
-//│ │ ├── Code
-//│ │ │   let res;
-//│ │ │   let typing_unit = {
-//│ │ │     cache: {},
-//│ │ │     get Foo() {
-//│ │ │       if (this.cache.Foo === undefined) {
-//│ │ │         class Foo {
-//│ │ │           constructor(x) {
-//│ │ │             this.x = x;
-//│ │ │           }
-//│ │ │         };
-//│ │ │         this.cache.Foo = ((x) => new Foo(x));
-//│ │ │         this.cache.Foo["class"] = Foo;
-//│ │ │       }
-//│ │ │       return this.cache.Foo;
-//│ │ │     }
-//│ │ │   };
-//│ │ │   globalThis.Foo = typing_unit.Foo;
-//│ │ └── Reply
-//│ │     [Function (anonymous)] { class: [class Foo] }
-//│ └── No queries
 
-:js
+
 :e
-:ShowRepl
 class Bar(x: int, y: int): Foo(x + y)
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.54: 	class Bar(x: int, y: int): Foo(x + y)
+//│ ║  l.10: 	class Bar(x: int, y: int): Foo(x + y)
 //│ ╙──      	                           ^^^^^^^^^^
 //│ class Bar(x: int, y: int)
-//│ // Prelude
-//│ let typing_unit1 = {
-//│   cache: {},
-//│   get Bar() {
-//│     if (this.cache.Bar === undefined) {
-//│       class Bar extends Foo["class"] {
-//│         constructor(x, y) {
-//│           super(x + y);
-//│           this.x = x;
-//│           this.y = y;
-//│         }
-//│       };
-//│       this.cache.Bar = ((x, y) => new Bar(x, y));
-//│       this.cache.Bar["class"] = Bar;
-//│     }
-//│     return this.cache.Bar;
-//│   }
-//│ };
-//│ globalThis.Bar = typing_unit1.Bar;
-//│ // End of generated code
-//│ ┌ Block at Super.mls:54
-//│ ├─┬ Prelude
-//│ │ ├── Code
-//│ │ │   let typing_unit1 = {
-//│ │ │     cache: {},
-//│ │ │     get Bar() {
-//│ │ │       if (this.cache.Bar === undefined) {
-//│ │ │         class Bar extends Foo["class"] {
-//│ │ │           constructor(x, y) {
-//│ │ │             super(x + y);
-//│ │ │             this.x = x;
-//│ │ │             this.y = y;
-//│ │ │           }
-//│ │ │         };
-//│ │ │         this.cache.Bar = ((x, y) => new Bar(x, y));
-//│ │ │         this.cache.Bar["class"] = Bar;
-//│ │ │       }
-//│ │ │       return this.cache.Bar;
-//│ │ │     }
-//│ │ │   };
-//│ │ │   globalThis.Bar = typing_unit1.Bar;
-//│ │ └── Reply
-//│ │     [Function (anonymous)] { class: [class Bar extends Foo] }
-//│ └── No queries
 
 
-:js
-:ShowRepl
 mixin AA(a: int) {
 }
 //│ mixin AA()
-//│ // Prelude
-//│ let typing_unit2 = {
-//│   cache: {},
-//│   AA(base) {
-//│     if (base === undefined) {
-//│       return (class AA {
-//│         constructor(a) {
-//│           this.a = a;
-//│         }
-//│       });
-//│     } else {
-//│       return (class AA extends base {
-//│         constructor(a, ...rest) {
-//│           super(...rest);
-//│         }
-//│       });
-//│     }
-//│   }
-//│ };
-//│ globalThis.AA = typing_unit2.AA;
-//│ // End of generated code
-//│ ┌ Block at Super.mls:107
-//│ ├─┬ Prelude
-//│ │ ├── Code
-//│ │ │   let typing_unit2 = {
-//│ │ │     cache: {},
-//│ │ │     AA(base) {
-//│ │ │       if (base === undefined) {
-//│ │ │         return (class AA {
-//│ │ │           constructor(a) {
-//│ │ │             this.a = a;
-//│ │ │           }
-//│ │ │         });
-//│ │ │       } else {
-//│ │ │         return (class AA extends base {
-//│ │ │           constructor(a, ...rest) {
-//│ │ │             super(...rest);
-//│ │ │           }
-//│ │ │         });
-//│ │ │       }
-//│ │ │     }
-//│ │ │   };
-//│ │ │   globalThis.AA = typing_unit2.AA;
-//│ │ └── Reply
-//│ │     [Function: AA]
-//│ └── No queries
 
-:js
-:ShowRepl
 mixin BB {}
 //│ mixin BB()
-//│ // Prelude
-//│ let typing_unit3 = {
-//│   cache: {},
-//│   BB(base) {
-//│     if (base === undefined) {
-//│       return class BB {};
-//│     } else {
-//│       return (class BB extends base {
-//│         constructor(...rest) {
-//│           super(...rest);
-//│         }
-//│       });
-//│     }
-//│   }
-//│ };
-//│ globalThis.BB = typing_unit3.BB;
-//│ // End of generated code
-//│ ┌ Block at Super.mls:159
-//│ ├─┬ Prelude
-//│ │ ├── Code
-//│ │ │   let typing_unit3 = {
-//│ │ │     cache: {},
-//│ │ │     BB(base) {
-//│ │ │       if (base === undefined) {
-//│ │ │         return class BB {};
-//│ │ │       } else {
-//│ │ │         return (class BB extends base {
-//│ │ │           constructor(...rest) {
-//│ │ │             super(...rest);
-//│ │ │           }
-//│ │ │         });
-//│ │ │       }
-//│ │ │     }
-//│ │ │   };
-//│ │ │   globalThis.BB = typing_unit3.BB;
-//│ │ └── Reply
-//│ │     [Function: BB]
-//│ └── No queries
 
-:js
-:ShowRepl
+
 class C(x: int): BB
 //│ class C(x: int)
-//│ // Prelude
-//│ let typing_unit4 = {
-//│   cache: {},
-//│   get C() {
-//│     if (this.cache.C === undefined) {
-//│       class C extends BB() {
-//│         constructor(x) {
-//│           super();
-//│           this.x = x;
-//│         }
-//│       };
-//│       this.cache.C = ((x) => new C(x));
-//│       this.cache.C["class"] = C;
-//│     }
-//│     return this.cache.C;
-//│   }
-//│ };
-//│ globalThis.C = typing_unit4.C;
-//│ // End of generated code
-//│ ┌ Block at Super.mls:202
-//│ ├─┬ Prelude
-//│ │ ├── Code
-//│ │ │   let typing_unit4 = {
-//│ │ │     cache: {},
-//│ │ │     get C() {
-//│ │ │       if (this.cache.C === undefined) {
-//│ │ │         class C extends BB() {
-//│ │ │           constructor(x) {
-//│ │ │             super();
-//│ │ │             this.x = x;
-//│ │ │           }
-//│ │ │         };
-//│ │ │         this.cache.C = ((x) => new C(x));
-//│ │ │         this.cache.C["class"] = C;
-//│ │ │       }
-//│ │ │       return this.cache.C;
-//│ │ │     }
-//│ │ │   };
-//│ │ │   globalThis.C = typing_unit4.C;
-//│ │ └── Reply
-//│ │     [Function (anonymous)] { class: [Function: C] }
-//│ └── No queries
 
-:js
 :e
-:ShowRepl
 class D(x: int): AA(x)
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.250: 	class D(x: int): AA(x)
-//│ ╙──       	                 ^^^^^
+//│ ║  l.29: 	class D(x: int): AA(x)
+//│ ╙──      	                 ^^^^^
 //│ class D(x: int)
-//│ // Prelude
-//│ let typing_unit5 = {
-//│   cache: {},
-//│   get D() {
-//│     if (this.cache.D === undefined) {
-//│       class D extends AA() {
-//│         constructor(x) {
-//│           super(x);
-//│           this.x = x;
-//│         }
-//│       };
-//│       this.cache.D = ((x) => new D(x));
-//│       this.cache.D["class"] = D;
-//│     }
-//│     return this.cache.D;
-//│   }
-//│ };
-//│ globalThis.D = typing_unit5.D;
-//│ // End of generated code
-//│ ┌ Block at Super.mls:250
-//│ ├─┬ Prelude
-//│ │ ├── Code
-//│ │ │   let typing_unit5 = {
-//│ │ │     cache: {},
-//│ │ │     get D() {
-//│ │ │       if (this.cache.D === undefined) {
-//│ │ │         class D extends AA() {
-//│ │ │           constructor(x) {
-//│ │ │             super(x);
-//│ │ │             this.x = x;
-//│ │ │           }
-//│ │ │         };
-//│ │ │         this.cache.D = ((x) => new D(x));
-//│ │ │         this.cache.D["class"] = D;
-//│ │ │       }
-//│ │ │       return this.cache.D;
-//│ │ │     }
-//│ │ │   };
-//│ │ │   globalThis.D = typing_unit5.D;
-//│ │ └── Reply
-//│ │     [Function (anonymous)] { class: [Function: D] }
-//│ └── No queries
 
-:js
+
 :e
-:ShowRepl
 class E(x: int): BB, AA(x)
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.301: 	class E(x: int): BB, AA(x)
-//│ ╙──       	                     ^^^^^
+//│ ║  l.37: 	class E(x: int): BB, AA(x)
+//│ ╙──      	                     ^^^^^
 //│ class E(x: int)
-//│ // Prelude
-//│ let typing_unit6 = {
-//│   cache: {},
-//│   get E() {
-//│     if (this.cache.E === undefined) {
-//│       class E extends AA(BB()) {
-//│         constructor(x) {
-//│           super(x);
-//│           this.x = x;
-//│         }
-//│       };
-//│       this.cache.E = ((x) => new E(x));
-//│       this.cache.E["class"] = E;
-//│     }
-//│     return this.cache.E;
-//│   }
-//│ };
-//│ globalThis.E = typing_unit6.E;
-//│ // End of generated code
-//│ ┌ Block at Super.mls:301
-//│ ├─┬ Prelude
-//│ │ ├── Code
-//│ │ │   let typing_unit6 = {
-//│ │ │     cache: {},
-//│ │ │     get E() {
-//│ │ │       if (this.cache.E === undefined) {
-//│ │ │         class E extends AA(BB()) {
-//│ │ │           constructor(x) {
-//│ │ │             super(x);
-//│ │ │             this.x = x;
-//│ │ │           }
-//│ │ │         };
-//│ │ │         this.cache.E = ((x) => new E(x));
-//│ │ │         this.cache.E["class"] = E;
-//│ │ │       }
-//│ │ │       return this.cache.E;
-//│ │ │     }
-//│ │ │   };
-//│ │ │   globalThis.E = typing_unit6.E;
-//│ │ └── Reply
-//│ │     [Function (anonymous)] { class: [Function: E] }
-//│ └── No queries
