@@ -125,7 +125,7 @@ mixin SizeExt {
 //│ // End of generated code
 
 :js
-module TestSize: SizeBase, SizeExt
+module TestSize extends SizeBase, SizeExt
 //│ module TestSize() {
 //│   fun size: 'a -> int
 //│ }
@@ -195,7 +195,7 @@ mixin Contains {
 //│   fun contains: (Circle | Intersect['a1] | Outside['a] | Translate['a2] | Union['a0], {x: int, y: int} & 'b,) -> (bool | 'c)
 //│ }
 
-module TestContains: Contains
+module TestContains extends Contains
 //│ module TestContains() {
 //│   fun contains: ('a, {x: int, y: int},) -> bool
 //│ }
@@ -248,10 +248,10 @@ mixin Text {
 //│ }
 
 :e
-module SizeText: Text
+module SizeText extends Text
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.251: 	module SizeText: Text
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.251: 	module SizeText extends Text
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not have field 'size'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.243: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
@@ -260,8 +260,8 @@ module SizeText: Text
 //│ ║  l.243: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
 //│ ╙──       	                                                                     ^^^^
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.251: 	module SizeText: Text
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.251: 	module SizeText extends Text
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not have field 'size'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.242: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
@@ -270,8 +270,8 @@ module SizeText: Text
 //│ ║  l.242: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
 //│ ╙──       	                                                                                 ^^^^
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.251: 	module SizeText: Text
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.251: 	module SizeText extends Text
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not have field 'size'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.241: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
@@ -280,8 +280,8 @@ module SizeText: Text
 //│ ║  l.241: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
 //│ ╙──       	                                                                      ^^^^
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.251: 	module SizeText: Text
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.251: 	module SizeText extends Text
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not have field 'size'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.240: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
@@ -293,7 +293,7 @@ module SizeText: Text
 //│   fun text: (Circle | Intersect[anything] | Outside[anything] | Translate[anything] | Union[anything]) -> string
 //│ }
 
-module SizeText: SizeBase, Text
+module SizeText extends SizeBase, Text
 //│ module SizeText() {
 //│   fun size: 'a -> int
 //│   fun text: (Circle | Intersect['Region] | Outside['a] | Translate['Region0] | Union['Region1]) -> string
@@ -356,7 +356,7 @@ mixin IsEmpty {
 //│   fun isEmpty: (Intersect['a0] | Outside['a3] | Scale['a2] | Translate['a1] | Union['a] | Univ | ~Intersect[anything] & ~Outside[anything] & ~Scale[anything] & ~Translate[anything] & ~Union[anything] & ~Univ) -> (bool | 'b)
 //│ }
 
-module IsUnivIsEmpty: IsUniv, IsEmpty
+module IsUnivIsEmpty extends IsUniv, IsEmpty
 //│ module IsUnivIsEmpty() {
 //│   fun isEmpty: 'a -> bool
 //│   fun isUniv: 'b -> bool
@@ -365,7 +365,7 @@ module IsUnivIsEmpty: IsUniv, IsEmpty
 //│   'a <: Intersect['a] | Outside['b] | Scale['a] | Translate['a] | Union['a] | Univ | ~Intersect[anything] & ~Outside[anything] & ~Scale[anything] & ~Translate[anything] & ~Union[anything] & ~Univ
 //│   'b <: Intersect['b] | Outside['a] | Scale['b] | Translate['b] | Union['b] | Univ | ~Intersect[anything] & ~Outside[anything] & ~Scale[anything] & ~Translate[anything] & ~Union[anything] & ~Univ
 
-module IsUnivIsEmpty: IsEmpty, IsUniv
+module IsUnivIsEmpty extends IsEmpty, IsUniv
 //│ module IsUnivIsEmpty() {
 //│   fun isEmpty: 'a -> bool
 //│   fun isUniv: 'b -> bool
@@ -407,7 +407,7 @@ mixin Eliminate {
 //│   fun eliminate: (Intersect['a2] | Outside['a0 & (Outside['a] | ~Outside)] | Scale['a4] | Translate['a3] | Union['a1] | 'h & ~Intersect & ~Outside & ~Scale & ~Translate & ~Union) -> (Intersect['e] | Outside['c] | Scale['g] | Translate['f] | Union['d] | 'b | 'h)
 //│ }
 
-module TestElim: Eliminate
+module TestElim extends Eliminate
 //│ module TestElim() {
 //│   fun eliminate: 'a -> 'b
 //│ }
@@ -459,7 +459,7 @@ TestElim.eliminate(mk(100))
 
 // *************************************************************************
 
-module Lang: SizeBase, SizeExt, Contains, Text, IsUniv, IsEmpty, Eliminate
+module Lang extends SizeBase, SizeExt, Contains, Text, IsUniv, IsEmpty, Eliminate
 //│ module Lang() {
 //│   fun contains: ('a, {x: int, y: int},) -> bool
 //│   fun eliminate: 'b -> 'c

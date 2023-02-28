@@ -44,7 +44,7 @@ mixin EvalNeg {
 //│   fun eval: (Neg['expr] | 'c & ~Neg) -> (int | 'd)
 //│ }
 
-module TestLang: EvalNothing, EvalAddLit, EvalNeg
+module TestLang extends EvalNothing, EvalAddLit, EvalNeg
 //│ module TestLang() {
 //│   fun eval: 'a -> int
 //│ }

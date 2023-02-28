@@ -284,13 +284,21 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 Tup(as).withLoc(S(loc))
               case _ => Tup(Nil)
             }
-            def parents(Sep: Stroken): Ls[Term] = yeetSpaces match {
-              case (Sep, _) :: _ =>
+            def otherParents: Ls[Term] = yeetSpaces match {
+              case (COMMA, _) :: _ =>
                 consume
-                expr(0) :: parents(COMMA)
+                expr(0) :: otherParents
               case _ => Nil
             }
-            val ps = parents(if (kind === Als) KEYWORD("=") else KEYWORD(":"))
+            val ps = yeetSpaces match {
+              case (KEYWORD("="), _) :: _ if kind is Als =>
+                consume
+                expr(0) :: otherParents
+              case (KEYWORD(":" | "extends"), _) :: _ =>
+                consume
+                expr(0) :: otherParents
+              case _ => Nil
+            }
             val body = curlyTypingUnit
             val res = NuTypeDef(kind, tn, tparams.map(N -> _), params, ps, N, N, body)
             R(res.withLoc(S(l0 ++ res.getLoc)))
