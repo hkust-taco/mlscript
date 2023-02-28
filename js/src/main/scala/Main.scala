@@ -100,12 +100,6 @@ object Main {
       sb.toString
     }
     
-    // var declared: Map[Var, ST] = Map.empty
-    
-    def htmlize(str: Str): Str =
-      str.replace("\n", "<br/>").replace("  ", "&emsp;")
-    
-    
     val tryRes = try {
       import fastparse._
       import fastparse.Parsed.{Success, Failure}
@@ -245,6 +239,5 @@ object Main {
   
   private val htmlLineBreak = "<br />"
   private val htmlWhiteSpace = "&nbsp;"
-  private val splitLeadingSpaces: Regex = "^( +)(.+)$".r
 }
 

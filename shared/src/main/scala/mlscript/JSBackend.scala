@@ -481,35 +481,36 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       case _ => S(translateTerm(sym)(constructorScope))
     } }
 
-    if (bases.length === 0) N
-      else if (bases.length === 1) bases.head match {
-        case Some(JSIdent(nme)) => scope.resolveValue(nme) match {
-          case Some(sym: MixinSymbol) => Some(JSInvoke(JSIdent(nme), Ls()))
-          case Some(_) => Some(JSMember(JSIdent(nme), JSLit(JSLit.makeStringLiteral("class"))))
-          case _ => throw CodeGenError(s"unresolved symbol in parents: $nme")
+    bases match {
+      case head :: tail => tail.foldLeft(
+        head match {
+          case Some(JSIdent(nme)) => scope.resolveValue(nme) match {
+            case Some(sym: MixinSymbol) => Some(JSInvoke(JSIdent(nme), Ls()))
+            case Some(_) => Some(JSMember(JSIdent(nme), JSLit(JSLit.makeStringLiteral("class"))))
+            case _ => throw CodeGenError(s"unresolved symbol in parents: $nme")
+          }
+          case Some(JSInvoke(JSIdent(nme), _)) => scope.resolveValue(nme) match {
+            case Some(sym: MixinSymbol) => Some(JSInvoke(JSIdent(nme), Ls()))
+            case Some(_) => Some(JSMember(JSIdent(nme), JSLit(JSLit.makeStringLiteral("class"))))
+            case _ => throw CodeGenError(s"unresolved symbol in parents: $nme")
+          }
+          case _ => throw CodeGenError("unresolved parents.")
         }
-        case Some(JSInvoke(JSIdent(nme), _)) => scope.resolveValue(nme) match {
-          case Some(sym: MixinSymbol) => Some(JSInvoke(JSIdent(nme), Ls()))
-          case Some(_) => Some(JSMember(JSIdent(nme), JSLit(JSLit.makeStringLiteral("class"))))
-          case _ => throw CodeGenError(s"unresolved symbol in parents: $nme")
-        }
-        case _ => throw CodeGenError("unresolved parents.")
-      }
-      else bases.reduceLeft((res, call) => (res, call) match {
-        case (S(JSIdent(res)), S(JSIdent(call))) => scope.resolveValue(res) match {
-          case Some(sym: MixinSymbol) => S(JSInvoke(JSIdent(call), Ls(JSInvoke(JSIdent(res), Ls()))))
-          case Some(_) => S(JSInvoke(JSIdent(call), Ls(JSMember(JSIdent(res), JSLit(JSLit.makeStringLiteral("class"))))))
+      )((res, next) => (res, next) match {
+        case (S(res), S(JSIdent(next))) => scope.resolveValue(next) match {
+          case Some(sym: MixinSymbol) => S(JSInvoke(JSIdent(next), Ls(res)))
+          case Some(_) => throw CodeGenError("can not have more than one parents.")
           case _ => throw CodeGenError(s"unresolved symbol in parents: $res")
         }
-        case (S(res), S(JSIdent(call))) => S(JSInvoke(JSIdent(call), Ls(res)))
-        case (S(JSIdent(res)), S(JSInvoke(call, _))) => scope.resolveValue(res) match {
-          case Some(sym: MixinSymbol) => S(JSInvoke(call, Ls(JSInvoke(JSIdent(res), Ls()))))
-          case Some(_) => S(JSInvoke(call, Ls(JSMember(JSIdent(res), JSLit(JSLit.makeStringLiteral("class"))))))
+        case (S(res), S(JSInvoke(JSIdent(next), _))) => scope.resolveValue(next) match {
+          case Some(sym: MixinSymbol) => S(JSInvoke(JSIdent(next), Ls(res)))
+          case Some(_) => throw CodeGenError("can not have more than one parents.")
           case _ => throw CodeGenError(s"unresolved symbol in parents: $res")
         }
-        case (S(res), S(JSInvoke(call, _))) => S(JSInvoke(call, Ls(res)))
         case _ => throw CodeGenError("unresolved parents.")
       })
+      case Nil => N
+    }
   }
 
   protected def translateModuleDeclaration(
@@ -643,7 +644,6 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       case term =>
         (N, term)
     }
-
     // Translate class member body.
     val bodyResult = translateTerm(body)(memberScope).`return`
     // If `this` is accessed, add `const self = this`.

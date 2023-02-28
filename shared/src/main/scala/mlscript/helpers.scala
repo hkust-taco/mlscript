@@ -781,41 +781,41 @@ trait StatementImpl extends Located { self: Statement =>
       (diags ::: diags2 ::: diags3) -> (TypeDef(Als, TypeName(v.name).withLocOf(v), targs,
           dataDefs.map(td => AppliedType(td.nme, td.tparams)).reduceOption(Union).getOrElse(Bot), Nil, Nil, Nil
         ).withLocOf(hd) :: cs)
-    case NuTypeDef(Nms, nme, tps, tup @ Tup(fs), pars, sup, ths, unit) =>
-      ??? // TODO
-    case NuTypeDef(k @ Als, nme, tps, tup @ Tup(fs), pars, sup, ths, unit) =>
-      // TODO properly check:
-      require(fs.isEmpty, fs)
-      require(pars.size === 1, pars)
-      require(ths.isEmpty, ths)
-      require(unit.entities.isEmpty, unit)
-      val (diags, rhs) = pars.head.toType match {
-        case L(ds) => (ds :: Nil) -> Top
-        case R(ty) => Nil -> ty
-      }
-      diags -> (TypeDef(k, nme, tps.map(_._2), rhs, Nil, Nil, Nil) :: Nil)
-    case NuTypeDef(k @ (Cls | Trt), nme, tps, tup @ Tup(fs), pars, sup, ths, unit) =>
-      val diags = Buffer.empty[Diagnostic]
-      def tt(trm: Term): Type = trm.toType match {
-        case L(ds) => diags += ds; Top
-        case R(ty) => ty
-      }
-      val params = fs.map {
-        case (S(nme), Fld(mut, spec, trm)) =>
-          val ty = tt(trm)
-          nme -> Field(if (mut) S(ty) else N, ty)
-        case (N, Fld(mut, spec, nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top)
-        case _ => die
-      }
-      val pos = params.unzip._1
-      val bod = pars.map(tt).foldRight(Record(params): Type)(Inter)
-      val termName = Var(nme.name).withLocOf(nme)
-      val ctor = Def(false, termName, L(Lam(tup, App(termName, Tup(N -> Fld(false, false, Rcd(fs.map {
-        case (S(nme), fld) => nme -> Fld(false, false, nme)
-        case (N, fld @ Fld(mut, spec, nme: Var)) => nme -> fld
-        case _ => die
-      })) :: Nil)))), true)
-      diags.toList -> (TypeDef(k, nme, tps.map(_._2), bod, Nil, Nil, pos) :: ctor :: Nil)
+      case NuTypeDef(Nms, nme, tps, tup @ Tup(fs), pars, sup, ths, unit) =>
+        ??? // TODO
+      case NuTypeDef(k @ Als, nme, tps, tup @ Tup(fs), pars, sup, ths, unit) =>
+        // TODO properly check:
+        require(fs.isEmpty, fs)
+        require(pars.size === 1, pars)
+        require(ths.isEmpty, ths)
+        require(unit.entities.isEmpty, unit)
+        val (diags, rhs) = pars.head.toType match {
+          case L(ds) => (ds :: Nil) -> Top
+          case R(ty) => Nil -> ty
+        }
+        diags -> (TypeDef(k, nme, tps.map(_._2), rhs, Nil, Nil, Nil) :: Nil)
+      case NuTypeDef(k @ (Cls | Trt), nme, tps, tup @ Tup(fs), pars, sup, ths, unit) =>
+        val diags = Buffer.empty[Diagnostic]
+        def tt(trm: Term): Type = trm.toType match {
+          case L(ds) => diags += ds; Top
+          case R(ty) => ty
+        }
+        val params = fs.map {
+          case (S(nme), Fld(mut, spec, trm)) =>
+            val ty = tt(trm)
+            nme -> Field(if (mut) S(ty) else N, ty)
+          case (N, Fld(mut, spec, nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top)
+          case _ => die
+        }
+        val pos = params.unzip._1
+        val bod = pars.map(tt).foldRight(Record(params): Type)(Inter)
+        val termName = Var(nme.name).withLocOf(nme)
+        val ctor = Def(false, termName, L(Lam(tup, App(termName, Tup(N -> Fld(false, false, Rcd(fs.map {
+          case (S(nme), fld) => nme -> Fld(false, false, nme)
+          case (N, fld @ Fld(mut, spec, nme: Var)) => nme -> fld
+          case _ => die
+        })) :: Nil)))), true)
+        diags.toList -> (TypeDef(k, nme, tps.map(_._2), bod, Nil, Nil, pos) :: ctor :: Nil)
     case d: DesugaredStatement => Nil -> (d :: Nil)
   }
   import Message._
