@@ -5,24 +5,8 @@
 // * Adapted example from Code reuse through polymorphic variants (FOSE 2000)
 
 
-:js
 module Nil
 //│ module Nil()
-//│ // Prelude
-//│ let res;
-//│ let typing_unit = {
-//│   cache: {},
-//│   get Nil() {
-//│     if (this.cache.Nil === undefined) {
-//│       class Nil {}
-//│       this.cache.Nil = new Nil();
-//│       this.cache.Nil["class"] = Nil;
-//│     }
-//│     return this.cache.Nil;
-//│   }
-//│ };
-//│ globalThis.Nil = typing_unit.Nil;
-//│ // End of generated code
 
 class Cons<A>(head: A, tail: Cons<A> | Nil)
 //│ class Cons[A](head: A, tail: Cons[A] | Nil)
@@ -61,29 +45,9 @@ fun list_assoc(s, l) =
 
 // fun list_assoc(s: string, l: Cons<{ _1: string, _2: 'b }> | Nil): NotFound | Success['b]
 
-:js
 class Var(s: string)
 //│ class Var(s: string)
-//│ // Prelude
-//│ let typing_unit7 = {
-//│   cache: {},
-//│   get Var() {
-//│     if (this.cache.Var === undefined) {
-//│       class Var {
-//│         constructor(s) {
-//│           this.s = s;
-//│         }
-//│       };
-//│       this.cache.Var = ((s) => new Var(s));
-//│       this.cache.Var["class"] = Var;
-//│     }
-//│     return this.cache.Var;
-//│   }
-//│ };
-//│ globalThis.Var = typing_unit7.Var;
-//│ // End of generated code
 
-:js
 mixin EvalVar {
   fun eval(sub, v) =
     if v is Var(s) then
@@ -96,56 +60,6 @@ mixin EvalVar {
 //│ }
 //│ where
 //│   'A <: {_1: string, _2: 'result}
-//│ // Prelude
-//│ let typing_unit8 = {
-//│   cache: {},
-//│   EvalVar(base) {
-//│     if (base === undefined) {
-//│       return (class EvalVar {
-//│         constructor() {
-//│         }
-//│         eval(sub, v) {
-//│           return ((() => {
-//│             let a;
-//│             return (a = v, a instanceof Var["class"] ? ((s) => (() => {
-//│               return (((tmp0) => {
-//│                 let a;
-//│                 return (a = tmp0, a instanceof NotFound["class"] ? v : a instanceof Success["class"] ? ((r) => r)(tmp0.result) : (() => {
-//│                   throw new Error("non-exhaustive case expression");
-//│                 })());
-//│               })(list_assoc(s, sub)));
-//│             })())(v.s) : (() => {
-//│               throw new Error("non-exhaustive case expression");
-//│             })());
-//│           })());
-//│         }
-//│       });
-//│     } else {
-//│       return (class EvalVar extends base {
-//│         constructor(...rest) {
-//│           super(...rest);
-//│         }
-//│         eval(sub, v) {
-//│           return ((() => {
-//│             let a;
-//│             return (a = v, a instanceof Var["class"] ? ((s) => (() => {
-//│               return (((tmp0) => {
-//│                 let a;
-//│                 return (a = tmp0, a instanceof NotFound["class"] ? v : a instanceof Success["class"] ? ((r) => r)(tmp0.result) : (() => {
-//│                   throw new Error("non-exhaustive case expression");
-//│                 })());
-//│               })(list_assoc(s, sub)));
-//│             })())(v.s) : (() => {
-//│               throw new Error("non-exhaustive case expression");
-//│             })());
-//│           })());
-//│         }
-//│       });
-//│     }
-//│   }
-//│ };
-//│ globalThis.EvalVar = typing_unit8.EvalVar;
-//│ // End of generated code
 
 class Abs<A>(x: string, t: A)
 class App<A>(s: A, t: A)
@@ -158,7 +72,6 @@ fun gensym(): string = "fun"
 fun int_to_string(x: int): string = "0"
 //│ fun int_to_string: (x: int,) -> string
 
-:js
 mixin EvalLambda {
   fun eval(sub, v) =
     if v is
@@ -183,76 +96,7 @@ mixin EvalLambda {
 //│ where
 //│   'A2 :> (string, Var,) | 'A0
 //│       <: 'A1
-//│ // Prelude
-//│ let typing_unit12 = {
-//│   cache: {},
-//│   EvalLambda(base) {
-//│     if (base === undefined) {
-//│       return (class EvalLambda {
-//│         constructor() {
-//│         }
-//│         eval(sub, v) {
-//│           const self = this;
-//│           return ((() => {
-//│             let a;
-//│             return (a = v, a instanceof App["class"] ? ((t1) => ((t2) => (() => {
-//│               let l1 = self.eval(sub, t1);
-//│               let l2 = self.eval(sub, t2);
-//│               return (t1 instanceof Abs["class"] ? ((x) => ((t) => self.eval(Cons([
-//│                 x,
-//│                 l2
-//│               ], Nil), t))(t1.t))(t1.x) : (() => {
-//│                 return App(l1, l2);
-//│               })());
-//│             })())(v.t))(v.s) : a instanceof Abs["class"] ? ((x) => ((t) => (() => {
-//│               let s = gensym();
-//│               return (Abs(s, self.eval(Cons([
-//│                 x,
-//│                 Var(s)
-//│               ], sub), t)));
-//│             })())(v.t))(v.x) : (() => {
-//│               return super.eval(sub, v);
-//│             })());
-//│           })());
-//│         }
-//│       });
-//│     } else {
-//│       return (class EvalLambda extends base {
-//│         constructor(...rest) {
-//│           super(...rest);
-//│         }
-//│         eval(sub, v) {
-//│           const self = this;
-//│           return ((() => {
-//│             let a;
-//│             return (a = v, a instanceof App["class"] ? ((t1) => ((t2) => (() => {
-//│               let l1 = self.eval(sub, t1);
-//│               let l2 = self.eval(sub, t2);
-//│               return (t1 instanceof Abs["class"] ? ((x) => ((t) => self.eval(Cons([
-//│                 x,
-//│                 l2
-//│               ], Nil), t))(t1.t))(t1.x) : (() => {
-//│                 return App(l1, l2);
-//│               })());
-//│             })())(v.t))(v.s) : a instanceof Abs["class"] ? ((x) => ((t) => (() => {
-//│               let s = gensym();
-//│               return (Abs(s, self.eval(Cons([
-//│                 x,
-//│                 Var(s)
-//│               ], sub), t)));
-//│             })())(v.t))(v.x) : (() => {
-//│               return super.eval(sub, v);
-//│             })());
-//│           })());
-//│         }
-//│       });
-//│     }
-//│   }
-//│ };
-//│ globalThis.EvalLambda = typing_unit12.EvalLambda;
-//│ // End of generated code
 
-:js
 module Test1: EvalVar, EvalLambda
 //│ module Test1() {
 //│   fun eval: (Cons['A | 'A0] | Nil, 'a,) -> 'result
@@ -265,24 +109,6 @@ module Test1: EvalVar, EvalLambda
 //│       <: 'A1 & {_1: string, _2: 'result}
 //│   'A1 <: 'A & 'A0
 //│   'result :> Var | App['result] | Abs['result]
-//│ // Prelude
-//│ let typing_unit13 = {
-//│   cache: {},
-//│   get Test1() {
-//│     if (this.cache.Test1 === undefined) {
-//│       class Test1 extends EvalLambda(EvalVar()) {
-//│         constructor(...rest) {
-//│           super(...rest);
-//│         }
-//│       }
-//│       this.cache.Test1 = new Test1();
-//│       this.cache.Test1["class"] = Test1;
-//│     }
-//│     return this.cache.Test1;
-//│   }
-//│ };
-//│ globalThis.Test1 = typing_unit13.Test1;
-//│ // End of generated code
 
 Test1.eval(Nil, Var("a"))
 //│ 'a
@@ -370,16 +196,16 @@ Test2.eval(Cons(("a", Num(1)), Nil), Var("a"))
 :e
 Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.371: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.366: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Num | Var`
-//│ ║  l.371: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.366: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	                                                 ^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.323: 	  if v is
+//│ ║  l.318: 	  if v is
 //│ ║         	     ^
 //│ ╟── from reference:
-//│ ║  l.333: 	    let vv = map_expr(eta, v)
+//│ ║  l.328: 	    let vv = map_expr(eta, v)
 //│ ╙──       	                           ^
 //│ Abs[Var] | Num | Var | error
 //│ res
@@ -420,7 +246,6 @@ Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), App(Abs("a", Var("a")), Add(Num
 //│ res
 //│     = Var { s: 'a' }
 
-:js
 module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│ module Test3() {
 //│   fun eval: (Cons['A | 'A0] | Nil, 'a,) -> ('a | 'result)
@@ -434,40 +259,22 @@ module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│   'result :> Abs['result] | App['result] | Num | 'a | Var
 //│   'a <: Add['b] | Mul['b] | Num | Var
 //│   'b <: 'a
-//│ // Prelude
-//│ let typing_unit30 = {
-//│   cache: {},
-//│   get Test31() {
-//│     if (this.cache.Test31 === undefined) {
-//│       class Test31 extends EvalExpr(EvalLambda(EvalVar())) {
-//│         constructor(...rest) {
-//│           super(...rest);
-//│         }
-//│       }
-//│       this.cache.Test31 = new Test31();
-//│       this.cache.Test31["class"] = Test31;
-//│     }
-//│     return this.cache.Test31;
-//│   }
-//│ };
-//│ globalThis.Test31 = typing_unit30.Test31;
-//│ // End of generated code
 
 // Because EvalExpr does not dispatch lambdas to super and map_expr only
 // handles exprs
 :e
 Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.459: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.453: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Num | Var`
-//│ ║  l.459: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.453: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	                                                 ^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.323: 	  if v is
+//│ ║  l.318: 	  if v is
 //│ ║         	     ^
 //│ ╟── from reference:
-//│ ║  l.333: 	    let vv = map_expr(eta, v)
+//│ ║  l.328: 	    let vv = map_expr(eta, v)
 //│ ╙──       	                           ^
 //│ error | 'a
 //│   where

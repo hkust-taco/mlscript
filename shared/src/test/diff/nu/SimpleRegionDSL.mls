@@ -75,7 +75,6 @@ class Scale<Region>(v: Vector, a: Region)
 //│ class Empty()
 //│ class Scale[Region](v: Vector, a: Region)
 
-:js
 mixin SizeExt {
   fun size(a) =
     if a is
@@ -89,66 +88,13 @@ mixin SizeExt {
 //│   this: {size: 'a -> int}
 //│   fun size: (Empty | Scale['a] | Univ | 'b & ~Empty & ~Scale & ~Univ) -> (int | 'c)
 //│ }
-//│ // Prelude
-//│ let typing_unit7 = {
-//│   cache: {},
-//│   SizeExt(base) {
-//│     if (base === undefined) {
-//│       return (class SizeExt {
-//│         constructor() {
-//│         }
-//│         size(a) {
-//│           const self = this;
-//│           return ((() => {
-//│             let a;
-//│             return a = a, a instanceof Univ["class"] ? 1 : a instanceof Empty["class"] ? 1 : a instanceof Scale["class"] ? ((a) => self.size(a) + 1)(a.a) : super.size(a);
-//│           })());
-//│         }
-//│       });
-//│     } else {
-//│       return (class SizeExt extends base {
-//│         constructor(...rest) {
-//│           super(...rest);
-//│         }
-//│         size(a) {
-//│           const self = this;
-//│           return ((() => {
-//│             let a;
-//│             return a = a, a instanceof Univ["class"] ? 1 : a instanceof Empty["class"] ? 1 : a instanceof Scale["class"] ? ((a) => self.size(a) + 1)(a.a) : super.size(a);
-//│           })());
-//│         }
-//│       });
-//│     }
-//│   }
-//│ };
-//│ globalThis.SizeExt = typing_unit7.SizeExt;
-//│ // End of generated code
 
-:js
 module TestSize extends SizeBase, SizeExt
 //│ module TestSize() {
 //│   fun size: 'a -> int
 //│ }
 //│ where
 //│   'a <: Circle | Empty | Intersect['a] | Outside['a] | Scale['a] | Translate['a] | Union['a] | Univ
-//│ // Prelude
-//│ let typing_unit8 = {
-//│   cache: {},
-//│   get TestSize() {
-//│     if (this.cache.TestSize === undefined) {
-//│       class TestSize extends SizeExt(SizeBase()) {
-//│         constructor(...rest) {
-//│           super(...rest);
-//│         }
-//│       }
-//│       this.cache.TestSize = new TestSize();
-//│       this.cache.TestSize["class"] = TestSize;
-//│     }
-//│     return this.cache.TestSize;
-//│   }
-//│ };
-//│ globalThis.TestSize = typing_unit8.TestSize;
-//│ // End of generated code
 
 // TODO: UCS hygiene
 :re
@@ -250,44 +196,44 @@ mixin Text {
 :e
 module SizeText extends Text
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.251: 	module SizeText extends Text
+//│ ║  l.249: 	module SizeText extends Text
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not have field 'size'
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.243: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
+//│ ║  l.241: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
 //│ ║         	                                                                     ^^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.243: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
+//│ ║  l.241: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
 //│ ╙──       	                                                                     ^^^^
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.251: 	module SizeText extends Text
+//│ ║  l.249: 	module SizeText extends Text
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not have field 'size'
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.242: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
+//│ ║  l.240: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
 //│ ║         	                                                                                 ^^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.242: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
+//│ ║  l.240: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
 //│ ╙──       	                                                                                 ^^^^
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.251: 	module SizeText extends Text
+//│ ║  l.249: 	module SizeText extends Text
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not have field 'size'
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.241: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
+//│ ║  l.239: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
 //│ ║         	                                                                      ^^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.241: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
+//│ ║  l.239: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
 //│ ╙──       	                                                                      ^^^^
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.251: 	module SizeText extends Text
+//│ ║  l.249: 	module SizeText extends Text
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not have field 'size'
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.240: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
+//│ ║  l.238: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
 //│ ║         	                                                                   ^^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.240: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
+//│ ║  l.238: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
 //│ ╙──       	                                                                   ^^^^
 //│ module SizeText() {
 //│   fun text: (Circle | Intersect[anything] | Outside[anything] | Translate[anything] | Union[anything]) -> string
@@ -532,16 +478,16 @@ Lang.size(mk(100))
 :re
 Lang.contains(mk(100), Vector(0, 0))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.533: 	Lang.contains(mk(100), Vector(0, 0))
+//│ ║  l.531: 	Lang.contains(mk(100), Vector(0, 0))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Scale[?Region]` does not match type `Circle | Intersect[?Region0] | Outside[?Region1] | Translate[?Region2] | Union[?Region3]`
-//│ ║  l.446: 	  _ then Scale(Vector(0, 0), mk(n))
+//│ ║  l.444: 	  _ then Scale(Vector(0, 0), mk(n))
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into application with expected type `Circle | Intersect[?Region4] | Outside[?Region5] | Translate[?Region6] | Union[?Region7]`
-//│ ║  l.533: 	Lang.contains(mk(100), Vector(0, 0))
+//│ ║  l.531: 	Lang.contains(mk(100), Vector(0, 0))
 //│ ║         	              ^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.186: 	    if a is
+//│ ║  l.184: 	    if a is
 //│ ╙──       	       ^
 //│ error | bool
 //│ res
@@ -552,16 +498,16 @@ Lang.contains(mk(100), Vector(0, 0))
 :re
 Lang.text(mk(100))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.553: 	Lang.text(mk(100))
+//│ ║  l.551: 	Lang.text(mk(100))
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Scale[?Region]` does not match type `Circle | Intersect[?Region0] | Outside[?Region1] | Translate[?Region2] | Union[?Region3]`
-//│ ║  l.446: 	  _ then Scale(Vector(0, 0), mk(n))
+//│ ║  l.444: 	  _ then Scale(Vector(0, 0), mk(n))
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into application with expected type `Circle | Intersect[?Region4] | Outside[?Region5] | Translate[?Region6] | Union[?Region7]`
-//│ ║  l.553: 	Lang.text(mk(100))
+//│ ║  l.551: 	Lang.text(mk(100))
 //│ ║         	          ^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.238: 	    if e is
+//│ ║  l.236: 	    if e is
 //│ ╙──       	       ^
 //│ error | string
 //│ res
