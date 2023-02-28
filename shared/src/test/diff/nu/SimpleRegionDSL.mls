@@ -49,8 +49,8 @@ fun go(x, offset) =
 //│   where
 //│     'Region :> Circle | Union[Translate['Region]]
 
-// * Note that first-class polymorphism manages (correctly) to preserve que universal quantification
-let circles = go(20, 1024)
+// * Note that first-class polymorphism manages (correctly) to preserve the universal quantification
+let circles = go(2, 1024)
 //│ let circles: forall 'Region. 'Region
 //│   where
 //│     'Region :> Circle | Union[Translate['Region]]
@@ -312,7 +312,7 @@ SizeText.text(circles)
 SizeText.size(circles)
 //│ int
 //│ res
-//│     = 4194301
+//│     = 13
 
 SizeText.text(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)))
 //│ string
