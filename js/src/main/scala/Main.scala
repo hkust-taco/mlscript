@@ -176,7 +176,7 @@ object Main {
           }
 
           val resStr = ("""<tr>
-                          |  <td colspan="2">Results</td>
+                          |  <td colspan="2">Execution Results</td>
                           |</tr>
                           |""".stripMargin + exe + "</table>")
           
