@@ -145,15 +145,20 @@ object Main {
             
           val exp = typer.expandType(sim)(ctx)
           
-          val expStr = "=====================Typing Results=====================\n" +
-            exp.showIn(ShowCtx.mk(exp :: Nil)
-                // .copy(newDefs = true) // TODO later
-              , 0)
-          
-          // TODO format HTML better
-          val typingStr = expStr.stripSuffix("\n")
+          val expStr = exp.showIn(ShowCtx.mk(exp :: Nil), 0).stripSuffix("\n")
             .replaceAll("  ", "&nbsp;&nbsp;")
             .replaceAll("\n", "<br/>")
+
+          // TODO format HTML better
+          val typingStr = """<div><table width="100%">
+                            |  <tr>
+                            |    <td colspan="2">Typing Results</td>
+                            |  </tr>
+                            |""".stripMargin +
+                         s"""<tr>
+                            |  ${s"<td colspan=\"2\">${expStr}</td>"}
+                            |</tr>
+                            |""".stripMargin
 
           val backend = new JSWebBackend()
           val (lines, resNames) = backend(pgrm, true)
@@ -170,10 +175,10 @@ object Main {
             case Right(lines) => generateResultTable(resNames.zip(lines))
           }
 
-          val resStr = ("\n\n=====================Results=====================")
-            .stripSuffix("\n")
-            .replaceAll("  ", "&nbsp;&nbsp;")
-            .replaceAll("\n", "<br/>") + exe
+          val resStr = ("""<tr>
+                          |  <td colspan="2">Results</td>
+                          |</tr>
+                          |""".stripMargin + exe + "</table>")
           
           typingStr + resStr
       }
@@ -217,24 +222,20 @@ object Main {
 
   private def generateResultTable(res: Ls[(Str, Str)]): Str = {
     val htmlBuilder = new StringBuilder
-    htmlBuilder ++= """<table>
-                      |  <thead>
-                      |    <tr>
-                      |       <td>Name</td>
-                      |       <td>Value</td>
-                      |    </tr>
-                      |  </thead>
+    htmlBuilder ++= """<tr>
+                      |  <td>Name</td>
+                      |  <td>Value</td>
+                      |</tr>
                       |""".stripMargin
 
     res.foreach(value => {
       htmlBuilder ++= s"""<tr>
-                         |  <td class="name">${value._1}</td>
-                         |  ${s"<td>${value._2}</td>"}
+                         |  <td class="name">${value._1.replaceAll("  ", "&nbsp;&nbsp;").replaceAll("\n", "<br/>")}</td>
+                         |  ${s"<td>${value._2.replaceAll("  ", "&nbsp;&nbsp;").replaceAll("\n", "<br/>")}</td>"}
                          |</tr>
                          |""".stripMargin
     })
 
-    htmlBuilder ++= "</table>"
     htmlBuilder.toString
   }
   
