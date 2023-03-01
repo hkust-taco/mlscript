@@ -16,23 +16,17 @@ class Neg[E](expr: E)
 let add11 = Add(Lit(1), Lit(2))
 let add2negadd11 = Add(Lit(2), Neg(add11))
 
-mixin EvalNothing {
-  fun eval(e: nothing) = e
-}
 mixin EvalAddLit {
   fun eval(e) =
     if e is
       Lit(n) then n
       Add(l, r) then this.eval(l) + this.eval(r)
-    else super.eval(e)
 }
 mixin EvalNeg {
-  fun eval(e) =
-    if e is Neg(d) then 0 - this.eval(d)
-    else super.eval(e)
+  fun eval(override Neg(d)) = 0 - this.eval(d)
 }
 
-module TestLang: EvalNothing, EvalAddLit, EvalNeg
+module TestLang: EvalAddLit, EvalNeg
 
 let res = TestLang.eval(add2negadd11)
 </textarea>
@@ -45,19 +39,15 @@ let res = TestLang.eval(add2negadd11)
 
   <h3>Tip: additional definitions from the paper – copy and paste to try them out:</h3>
   <div class="panel">
+class Mul[E](lhs: E, rhs: E)<br/>
 mixin EvalMul {<br/>
-&nbsp;&nbsp;fun eval(e) =<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;if e is<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mul(l, r) then this.eval(l) * this.eval(r)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;else super.eval(e)<br/>
+&nbsp;&nbsp;fun eval(override Mul(l, r)) = this.eval(l) * this.eval(r)<br/>
 }<br/>
 mixin EvalNegNeg {<br/>
-&nbsp;&nbsp;fun eval(e) =<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;if e is Neg(Neg(d)) then this.eval(d)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;else super.eval(e)<br/>
+&nbsp;&nbsp;fun eval(override Neg(Neg(d))) = this.eval(d)<br/>
 }<br/>
 <br/>
-module TestLang2: EvalNothing, EvalAddLit, EvalNeg, EvalMul, EvalNegNeg<br/>
+module TestLang2: EvalAddLit, EvalNeg, EvalMul, EvalNegNeg<br/>
 <br/>
 let res2 = TestLang2.eval(add2negadd11)
   </div>

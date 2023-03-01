@@ -680,7 +680,7 @@ trait LitImpl { self: Lit =>
 
 trait VarImpl { self: Var =>
   def isPatVar: Bool =
-    name.head.isLetter && name.head.isLower && name =/= "true" && name =/= "false"
+    (name.head.isLetter && name.head.isLower || name.head === '_' || name.head === '$') && name =/= "true" && name =/= "false"
   var uid: Opt[Int] = N
 }
 

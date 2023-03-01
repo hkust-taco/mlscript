@@ -265,6 +265,7 @@ object NewLexer {
     "mixin",
     "interface",
     "extends",
+    "override",
     "new",
     "namespace",
     "module",

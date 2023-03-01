@@ -157,6 +157,16 @@ mixin EvalNegNeg {
 //│   fun eval: (Neg['A & (~Neg | Neg['expr])] | 'a & ~Neg) -> 'b
 //│ }
 
+// * Alternative:
+mixin EvalNegNeg {
+  fun eval(override Neg(Neg(d))) = this.eval(d)
+}
+//│ mixin EvalNegNeg() {
+//│   super: {eval: (Neg['A] | 'a) -> 'b}
+//│   this: {eval: 'expr -> 'b}
+//│   fun eval: (Neg['A & (~Neg | Neg['expr])] | 'a & ~Neg) -> 'b
+//│ }
+
 module TestLang: EvalBase, EvalNeg, EvalNegNeg
 //│ module TestLang() {
 //│   fun eval: 'a -> int

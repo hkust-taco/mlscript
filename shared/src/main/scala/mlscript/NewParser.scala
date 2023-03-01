@@ -22,6 +22,20 @@ import NewParser._
 abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: Diagnostic => Unit, val dbg: Bool, fallbackLoc: Opt[Loc], description: Str = "input") {
   outer =>
   
+  private var freshCnt: Int = 0
+  final def freshVar: Var = {
+    val res = Var("_$" + freshCnt)
+    freshCnt += 1
+    res
+  }
+  
+  object Spaces {
+    def unapply(xs: Ls[Stroken -> Loc]): S[(() => Unit, Ls[Stroken -> Loc])] = xs match {
+      case (SPACE, _) :: Spaces(cons, rest) => S((() => {cons(); consume}, rest))
+      case _ => S(() => (), xs)
+    }
+  }
+  
   final def rec(tokens: Ls[Stroken -> Loc], fallbackLoc: Opt[Loc], description: Str): NewParser =
     new NewParser(origin, tokens, raiseFun, dbg, fallbackLoc, description) {
       def doPrintDbg(msg: => Str): Unit = outer.printDbg("> " + msg)
@@ -337,7 +351,24 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                   ts
                 case _ => Nil
               }
-              val ps = funParams
+              val (ps, transformBody) = yeetSpaces match {
+                case (br @ BRACKETS(Round, Spaces(cons, (KEYWORD("override"), ovLoc) :: rest)), loc) :: rest2 =>
+                  _cur = BRACKETS(Round, rest)(br.innerLoc) -> loc :: rest2
+                  funParams match {
+                    case ps @ Tup(N -> Fld(false, false, pat) :: Nil) :: Nil =>
+                      val fv = freshVar
+                      (Tup(N -> Fld(false, false, fv) :: Nil) :: Nil, S(
+                        (body: Term) => If(IfOpApp(fv, Var("is"), IfThen(pat, body)), S(
+                          App(Sel(Var("super").withLoc(S(ovLoc)), v), Tup(N -> Fld(false, false, fv) :: Nil))
+                        ))
+                      ))
+                    case r =>
+                      err(msg"Unsupported 'override' parameter list shape" -> S(br.innerLoc) :: Nil)
+                      (r, N)
+                  }
+                case _ =>
+                  (funParams, N)
+              }
               val asc = yeetSpaces match {
                 case (KEYWORD(":"), _) :: _ =>
                   consume
@@ -349,11 +380,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 case (KEYWORD("="), _) :: _ =>
                   consume
                   val body = expr(0)
-                  val annotatedBody = asc.fold(body)(ty => Asc(body, ty))
+                  val newBody = transformBody.fold(body)(_(body))
+                  val annotatedBody = asc.fold(newBody)(ty => Asc(newBody, ty))
                   R(NuFunDef(isLetRec, v, tparams, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))))
                 case c =>
                   asc match {
                     case S(ty) =>
+                      if (transformBody.nonEmpty) die // TODO
                       R(NuFunDef(isLetRec, v, tparams, R(PolyType(Nil, ps.foldRight(ty)((p, r) => Function(p.toType match {
                         case L(diag) => raise(diag); Top // TODO better
                         case R(tp) => tp
