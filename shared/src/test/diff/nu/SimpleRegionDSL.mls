@@ -80,7 +80,7 @@ mixin SizeExt {
     if a is
       Univ then 1
       Empty then 1
-      Scale(_, a) then this.size(a) + 1
+      Scale(_, b) then this.size(b) + 1
     else super.size(a)
 }
 //│ mixin SizeExt() {
@@ -96,7 +96,7 @@ module TestSize extends SizeBase, SizeExt
 //│ where
 //│   'a <: Circle | Empty | Intersect['a] | Outside['a] | Scale['a] | Translate['a] | Union['a] | Univ
 
-// TODO: UCS hygiene
+// TODO investigate
 :re
 TestSize.size(Empty())
 //│ int
@@ -104,7 +104,7 @@ TestSize.size(Empty())
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
 
-// TODO: UCS hygiene
+// TODO investigate
 :re
 TestSize.size(circles)
 //│ int
@@ -112,7 +112,7 @@ TestSize.size(circles)
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
 
-// TODO: UCS hygiene
+// TODO investigate
 :re
 TestSize.size(Scale(Vector(1, 1), circles))
 //│ int
@@ -148,7 +148,7 @@ module TestContains extends Contains
 //│ where
 //│   'a <: Circle | Intersect['a] | Outside['a] | Translate['a] | Union['a]
 
-// TODO: UCS hygiene
+// TODO investigate
 :re
 TestContains.contains(Translate(Vector(0, 0), Circle(1)), Vector(0, 0))
 //│ bool
@@ -156,7 +156,7 @@ TestContains.contains(Translate(Vector(0, 0), Circle(1)), Vector(0, 0))
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
 
-// TODO: UCS hygiene
+// TODO investigate
 :re
 TestContains.contains(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)), Vector(0, 0))
 //│ bool
@@ -164,7 +164,7 @@ TestContains.contains(Intersect(Translate(Vector(0, 0), Circle(1)), Circle(1)), 
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
 
-// TODO: UCS hygiene
+// TODO investigate
 :re
 TestContains.contains(circles, Vector(0, 0))
 //│ bool
@@ -425,7 +425,7 @@ module Lang extends SizeBase, SizeExt, Contains, Text, IsUniv, IsEmpty, Eliminat
 //│   'c :> Outside['c] | Union['c] | Intersect['c] | Translate['c] | Scale['c]
 //│   'a <: Circle | Intersect['a] | Outside['a] | Translate['a] | Union['a]
 
-// TODO: UCS hygiene
+// TODO investigate
 :re
 Lang.size(circles)
 //│ int
@@ -433,7 +433,7 @@ Lang.size(circles)
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
 
-// TODO: UCS hygiene
+// TODO investigate
 :re
 Lang.contains(circles, Vector(0, 0))
 //│ bool
@@ -441,7 +441,7 @@ Lang.contains(circles, Vector(0, 0))
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
 
-// TODO: UCS hygiene
+// TODO investigate
 :re
 Lang.text(circles)
 //│ string
@@ -459,7 +459,7 @@ Lang.isEmpty(circles)
 //│ res
 //│     = false
 
-// TODO: UCS hygiene
+// TODO investigate
 :re
 Lang.size(Lang.eliminate(circles))
 //│ int
