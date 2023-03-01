@@ -13,8 +13,8 @@ object NewParser {
   type ExpectThen >: Bool
   type FoundErr >: Bool  // may be better done as:  class FoundErr(var found: Bool)
   
-  def expectThen(implicit ptr: ExpectThen): Bool = ptr === true
-  def foundErr(implicit ptr: FoundErr): Bool = ptr === true
+  final def expectThen(implicit ptr: ExpectThen): Bool = ptr === true
+  final def foundErr(implicit ptr: FoundErr): Bool = ptr === true
   
 }
 import NewParser._
@@ -22,18 +22,18 @@ import NewParser._
 abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: Diagnostic => Unit, val dbg: Bool, fallbackLoc: Opt[Loc], description: Str = "input") {
   outer =>
   
-  def rec(tokens: Ls[Stroken -> Loc], fallbackLoc: Opt[Loc], description: Str): NewParser =
+  final def rec(tokens: Ls[Stroken -> Loc], fallbackLoc: Opt[Loc], description: Str): NewParser =
     new NewParser(origin, tokens, raiseFun, dbg, fallbackLoc, description) {
       def doPrintDbg(msg: => Str): Unit = outer.printDbg("> " + msg)
     }
   
-  def raise(mkDiag: => Diagnostic)(implicit fe: FoundErr = false): Unit =
+  final def raise(mkDiag: => Diagnostic)(implicit fe: FoundErr = false): Unit =
     if (!foundErr) raiseFun(mkDiag)
   
-  def err(msgs: Ls[Message -> Opt[Loc]]): Unit =
+  final def err(msgs: Ls[Message -> Opt[Loc]]): Unit =
     raise(ErrorReport(msgs, source = Diagnostic.Parsing))
   
-  def mkLoc(l: Int, r: Int): Loc =
+  final def mkLoc(l: Int, r: Int): Loc =
     Loc(l, r, origin)
 
   protected def doPrintDbg(msg: => Str): Unit
@@ -55,7 +55,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     res
   }
   
-  def parseAll[R](parser: => R): R = {
+  final def parseAll[R](parser: => R): R = {
     val res = parser
     cur match {
       case c @ (tk, tkl) :: _ =>
@@ -66,7 +66,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     res
   }
   
-  def concludeWith[R](f: this.type => R): R = {
+  final def concludeWith[R](f: this.type => R): R = {
     val res = f(this)
     cur.dropWhile(tk => (tk._1 === SPACE || tk._1 === NEWLINE) && { consume; true }) match {
       case c @ (tk, tkl) :: _ =>
@@ -77,7 +77,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     printDbg(s"Concluded with $res")
     res
   }
-  def nil: Unit = ()
+  final def nil: Unit = ()
   
   type TokLoc = (Stroken, Loc)
   
@@ -115,8 +115,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case (cs, i) => cs.filterNot(_ === ' ').map(_ -> (i + 1))
     }.toMap.withDefaultValue(Int.MaxValue)
   
-  def opCharPrec(opChar: Char): Int = prec(opChar)
-  def opPrec(opStr: Str): (Int, Int) = opStr match {
+  final def opCharPrec(opChar: Char): Int = prec(opChar)
+  final def opPrec(opStr: Str): (Int, Int) = opStr match {
     case "is" => (4, 4)
     case "and" => (3, 3)
     case "or" => (2, 2)
@@ -149,13 +149,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     _cur
   }
   
-  def consume(implicit l: Line, n: Name): Unit = {
+  final def consume(implicit l: Line, n: Name): Unit = {
     if (dbg) printDbg(s"! ${n.value}\t\tconsumes ${NewLexer.printTokens(_cur.take(1))}    [at l.${l.value}]")
     _cur = _cur.tailOption.getOrElse(Nil) // FIXME throw error if empty?
   }
   
   // TODO simplify logic – this is no longer used much
-  def skip(tk: Stroken, ignored: Set[Stroken] = Set(SPACE), allowEnd: Bool = false, note: => Ls[Message -> Opt[Loc]] = Nil)
+  final def skip(tk: Stroken, ignored: Set[Stroken] = Set(SPACE), allowEnd: Bool = false, note: => Ls[Message -> Opt[Loc]] = Nil)
         (implicit fe: FoundErr): (Bool, Opt[Loc]) = wrap(tk, ignored, allowEnd) { l =>
     require(!ignored(tk))
     val skip_res = cur match {
@@ -184,7 +184,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   private def curLoc = _cur.headOption.map(_._2)
   
   /* // * TODO rm
-  def blockTerm: Blk = {
+  final def blockTerm: Blk = {
     val ts = block(false, false)
     val es = ts.map {
       case L(t) =>
@@ -196,7 +196,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   }
   */
   
-  def typingUnit: TypingUnit = {
+  final def typingUnit: TypingUnit = {
     val ts = block(false, false)
     val es = ts.map {
       case L(t) =>
@@ -208,13 +208,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     }
     TypingUnit(es)
   }
-  def typingUnitMaybeIndented(implicit fe: FoundErr): TypingUnit = yeetSpaces match {
+  final def typingUnitMaybeIndented(implicit fe: FoundErr): TypingUnit = yeetSpaces match {
     case (br @ BRACKETS(Indent, toks), _) :: _ =>
       consume
       rec(toks, S(br.innerLoc), br.describe).concludeWith(_.typingUnit)
     case _ => typingUnit
   }
-  def curlyTypingUnit(implicit fe: FoundErr): TypingUnit = yeetSpaces match {
+  final def curlyTypingUnit(implicit fe: FoundErr): TypingUnit = yeetSpaces match {
     case (br @ BRACKETS(Curly, toks), l1) :: _ =>
       consume
       rec(toks, S(br.innerLoc), br.describe).concludeWith(_.typingUnitMaybeIndented).withLoc(S(l1))
@@ -222,22 +222,22 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       TypingUnit(Nil)
   }
   
-  def toParams(t: Term): Tup = t match {
+  final def toParams(t: Term): Tup = t match {
     case t: Tup => t
     case Bra(false, t: Tup) => t
     case _ => Tup((N, Fld(false, false, t)) :: Nil)
   }
-  def toParamsTy(t: Type): Tuple = t match {
+  final def toParamsTy(t: Type): Tuple = t match {
     case t: Tuple => t
     case _ => Tuple((N, Field(None, t)) :: Nil)
   }
-  def typ(prec: Int = 0)(implicit fe: FoundErr, l: Line): Type =
+  final def typ(prec: Int = 0)(implicit fe: FoundErr, l: Line): Type =
     expr(prec).toType match {
       case L(d) => raise(d); Top // TODO better
       case R(ty) => ty
     }
   
-  def block(implicit et: ExpectThen, fe: FoundErr): Ls[IfBody \/ Statement] =
+  final def block(implicit et: ExpectThen, fe: FoundErr): Ls[IfBody \/ Statement] =
     cur match {
       case Nil => Nil
       case (NEWLINE, _) :: _ => consume; block
@@ -381,7 +381,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   private def yeetSpaces: Ls[TokLoc] =
     cur.dropWhile(_._1 === SPACE && { consume; true })
   
-  def funParams(implicit et: ExpectThen, fe: FoundErr, l: Line): Ls[Tup] = wrap(()) { l =>
+  final def funParams(implicit et: ExpectThen, fe: FoundErr, l: Line): Ls[Tup] = wrap(()) { l =>
     yeetSpaces match {
       case (KEYWORD("=" | ":"), _) :: _ => Nil
       case Nil => Nil
@@ -402,7 +402,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     }
   }
   
-  def expr(prec: Int, allowSpace: Bool = true)(implicit fe: FoundErr, l: Line): Term = wrap(prec,allowSpace) { l =>
+  final def expr(prec: Int, allowSpace: Bool = true)(implicit fe: FoundErr, l: Line): Term = wrap(prec,allowSpace) { l =>
     exprOrIf(prec, allowSpace)(et = false, fe = fe, l = implicitly) match {
       case R(e) => e
       case L(e) =>
@@ -414,7 +414,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   private def warnDbg(msg: Any, loco: Opt[Loc] = curLoc): Unit =
     raise(WarningReport(msg"[${cur.headOption.map(_._1).mkString}] ${""+msg}" -> loco :: Nil))
   
-  def exprOrIf(prec: Int, allowSpace: Bool = true)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, allowSpace) { l =>
+  final def exprOrIf(prec: Int, allowSpace: Bool = true)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, allowSpace) { l =>
     cur match {
       case (SPACE, l0) :: _ if allowSpace => // Q: do we really need the `allowSpace` flag?
         consume
@@ -581,7 +581,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     // Tup(Nil).withLoc(lastLoc) // TODO FIXME produce error term instead
     UnitLit(true).withLoc(lastLoc) // TODO FIXME produce error term instead
   
-  def exprCont(acc: Term, prec: Int, allowNewlines: Bool)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, s"`$acc`", allowNewlines) { l =>
+  final def exprCont(acc: Term, prec: Int, allowNewlines: Bool)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, s"`$acc`", allowNewlines) { l =>
     cur match {
       case (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
         consume
@@ -738,7 +738,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     }
   }
   
-  def opBlock(acc: Term, opStr: Str, opLoc: Loc)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(s"`$acc`", opStr) { l =>
+  final def opBlock(acc: Term, opStr: Str, opLoc: Loc)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(s"`$acc`", opStr) { l =>
       val opv = Var(opStr).withLoc(S(opLoc))
       val rhs = exprOrIf(0)
       // val rhs = exprOrIf(1)
@@ -766,7 +766,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           L(IfOpsApp(acc, opIfBlock(opv -> rhs :: Nil)))
       }
   }
-  def opIfBlock(acc: Ls[Var -> IfBody])(implicit et: ExpectThen, fe: FoundErr): Ls[Var -> IfBody] = wrap(acc) { l =>
+  final def opIfBlock(acc: Ls[Var -> IfBody])(implicit et: ExpectThen, fe: FoundErr): Ls[Var -> IfBody] = wrap(acc) { l =>
       cur match {
         case (NEWLINE, _) :: c => // TODO allow let bindings...
           consume
@@ -789,13 +789,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       }
   }
   
-  def tyArgs(implicit fe: FoundErr, et: ExpectThen): Opt[Ls[Type]] =
+  final def tyArgs(implicit fe: FoundErr, et: ExpectThen): Opt[Ls[Type]] =
     cur match {
       case (IDENT("<", true), l0) :: _ => ???
       case _ => ???
     }
   
-  def argsMaybeIndented()(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =
+  final def argsMaybeIndented()(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =
     cur match {
       case (br @ BRACKETS(Indent, toks), _) :: _ if (toks.headOption match {
         case S((KEYWORD("then" | "else"), _)) => false
@@ -807,14 +807,14 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     }
   
   // TODO support comma-less arg blocks...?
-  def args(allowNewlines: Bool, prec: Int = NoElsePrec)(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =
+  final def args(allowNewlines: Bool, prec: Int = NoElsePrec)(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =
     // argsOrIf(Nil).map{case (_, L(x))=> ???; case (n, R(x))=>n->x} // TODO
     argsOrIf(Nil, Nil, allowNewlines, prec).flatMap{case (n, L(x))=> 
         err(msg"Unexpected 'then'/'else' clause" -> x.toLoc :: Nil)
         n->Fld(false, false, errExpr)::Nil
       case (n, R(x))=>n->x::Nil} // TODO
   /* 
-  def argsOrIf2()(implicit fe: FoundErr, et: ExpectThen): IfBlock \/ Ls[Opt[Var] -> Fld] = {
+  final def argsOrIf2()(implicit fe: FoundErr, et: ExpectThen): IfBlock \/ Ls[Opt[Var] -> Fld] = {
     // argsOrIf(Nil).partitionMap(identity).mapFirst(ifbods => ???)
     argsOrIf(Nil) match {
       case n -> L(ib) =>
@@ -824,7 +824,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
     }
   }
   */
-  def argsOrIf(acc: Ls[Opt[Var] -> (IfBody \/ Fld)], seqAcc: Ls[Statement], allowNewlines: Bool, prec: Int = NoElsePrec)
+  final def argsOrIf(acc: Ls[Opt[Var] -> (IfBody \/ Fld)], seqAcc: Ls[Statement], allowNewlines: Bool, prec: Int = NoElsePrec)
         (implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> (IfBody \/ Fld)] =
       wrap(acc, seqAcc) { l =>
     
@@ -902,7 +902,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   }
   }
   
-  def bindings(acc: Ls[Var -> Term])(implicit fe: FoundErr): Ls[Var -> Term] = 
+  final def bindings(acc: Ls[Var -> Term])(implicit fe: FoundErr): Ls[Var -> Term] = 
     cur match {
       case (SPACE, _) :: _ =>
         consume
@@ -930,7 +930,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
         Nil
   }
   
-  def mkType(trm: Term): Type = trm.toType match {
+  final def mkType(trm: Term): Type = trm.toType match {
     case L(d) => raise(d); Top // TODO better
     case R(ty) => ty
   }
