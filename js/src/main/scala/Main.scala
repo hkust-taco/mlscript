@@ -152,7 +152,7 @@ object Main {
           // TODO format HTML better
           val typingStr = """<div><table width="100%">
                             |  <tr>
-                            |    <td colspan="2">Typing Results</td>
+                            |    <td colspan="2"><h4><i>Typing Results:</i></h4></td>
                             |  </tr>
                             |""".stripMargin +
                          s"""<tr>
@@ -176,7 +176,7 @@ object Main {
           }
 
           val resStr = ("""<tr>
-                          |  <td colspan="2">Execution Results</td>
+                          |  <td colspan="2"><h4><i>Execution Results:</i></h4></td>
                           |</tr>
                           |""".stripMargin + exe + "</table>")
           

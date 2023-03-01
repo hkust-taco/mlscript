@@ -9,9 +9,9 @@
   <h1>MLscript demonstration</h1>
   <div id="content">
     <textarea id="mlscript-input" class="panel" spellcheck="false">
-class Neg[A](expr: A)
 class Add[E](lhs: E, rhs: E)
 class Lit(n: int)
+class Neg[E](expr: E)
 
 let add11 = Add(Lit(1), Lit(2))
 let add2negadd11 = Add(Lit(2), Neg(add11))
@@ -41,4 +41,26 @@ let res = TestLang.eval(add2negadd11)
   <script type="text/javascript" src="js/target/scala-2.13/mlscript-fastopt/main.js"></script>
   <br/>
   <!-- <p>The code is available TODO.</p> -->
+  <br/>
+
+  <h3>Tip: additional definitions from the paper – copy and paste to try them out:</h3>
+  <div class="panel">
+mixin EvalMul {<br/>
+&nbsp;&nbsp;fun eval(e) =<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;if e is<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mul(l, r) then this.eval(l) * this.eval(r)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;else super.eval(e)<br/>
+}<br/>
+mixin EvalNegNeg {<br/>
+&nbsp;&nbsp;fun eval(e) =<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;if e is Neg(Neg(d)) then this.eval(d)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;else super.eval(e)<br/>
+}<br/>
+<br/>
+module TestLang2: EvalNothing, EvalAddLit, EvalNeg, EvalMul, EvalNegNeg<br/>
+<br/>
+let res2 = TestLang2.eval(add2negadd11)
+  </div>
+
+
 </html>
