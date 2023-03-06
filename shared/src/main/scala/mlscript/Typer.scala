@@ -575,12 +575,15 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case v@ValidVar(name) =>
         val ty = ctx.get(name).fold(
           if (ctx.inQuasiquote) {
-            val res = new TypeVariable(lvl, Nil, Nil, nameHint = Some(name + ".type"))(prov)
-            ctx.freeVarsEnv += name -> VarSymbol(res, v)
+            val res = new TypeVariable(lvl, Nil, Nil)(prov)
+            // TODO: why need a ClassTag in here????
+            val tag = ClassTag(StrLit(name), Set.empty)(noProv)
+            ctx.freeVarsEnv += name -> VarSymbol(tag, v)
+
             ctx.outermostCtx match {
               case Some(outermost) =>
-                outermost.freeVarsEnv += name -> VarSymbol(res, v)
-                outermost.outermostFreeVarType += res
+                outermost.freeVarsEnv += name -> VarSymbol(tag, v)
+                outermost.outermostFreeVarType += tag
               case None => ???
             }
             res
@@ -842,16 +845,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case New(base, args) => ???
       case TyApp(_, _) => ??? // TODO
       case Quoted(body) =>
-        val nestedCtx = ctx.nest.copy(
+        val nested_ctx = ctx.nest.copy(
           inQuasiquote = true,
           outerQuoteEnvironments = Some(ctx) :: ctx.outerQuoteEnvironments)
-        nestedCtx.outermostCtx = Some(nestedCtx)
+        nested_ctx.outermostCtx = Some(nested_ctx)
 
-        val body_type = typeTerm(body)(nestedCtx, raise, vars)
-        val ctx_list = nestedCtx.outermostFreeVarType.toList
+
+        val body_type = typeTerm(body)(nested_ctx, raise, vars)
+        val ctx_list = nested_ctx.outermostFreeVarType.toList
 
         val ctx_type = ctx_list match {
-          case Nil => TypeRef(TypeName("anything"), Nil)(NoProv)
+          case Nil => TypeRef(TypeName("nothing"), Nil)(NoProv)
           case _ => ctx_list.reduceLeft(_ | _)
         }
 
@@ -877,10 +881,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case _ => ???
         }
 
+
         val tt = freshVar(noProv)(0)
         val tc = freshVar(noProv)(0)
+        // func <return_type> foo(<param_type> param)
+        // Code[tt, tc] <: Code[T <- co, C <- cotra]
+
         val f_ty = FunctionType(TypeRef(TypeName("Code"), Ls(tt, tc))(noProv), tt)(noProv)
+
         val body_type = typeTerm(body)(nestedCtx, raise, vars)
+
         val res = freshVar(prov)
         val resTy = con(f_ty, FunctionType(body_type, res)(prov), res)
         resTy
