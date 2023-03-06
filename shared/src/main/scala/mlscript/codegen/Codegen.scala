@@ -842,59 +842,106 @@ object JSCodeHelpers {
 final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
   def toSourceCode: SourceCode = SourceCode(
     """
-    const symbol_value_map = new Map();
-         
-    function _run(s_expr) { 
-      switch(s_expr[0]) {
-        case "Var":
-          if (symbol_value_map.has(s_expr[1])) {
-            return symbol_value_map.get(s_expr[1]);
+    function _runExpression(s_expr, outer_symval_map = new Map(), outer_symname_map = new Map()){
+      const outer_symbol_value_map = outer_symval_map;
+      const outer_symbol_name_map = outer_symname_map;
+
+      const symbol_value_map = new Map();
+      const symbol_name_map = new Map(); 
+
+      function _getVariableValue(s_expr) {
+        // s_expr should be of the form ['Var', ...]
+        if (s_expr[0] != 'Var') {
+          return -1;
+        }
+        if (s_expr[1][0] == 'FreeVar') {
+          const var_name = s_expr[1][1];
+          if (symbol_name_map.has(var_name)) {
+            return symbol_value_map.get(symbol_name_map.get(var_name));
+          } else if (outer_symbol_name_map.has(var_name)) {
+            return outer_symbol_value_map.get(outer_symbol_name_map.get(var_name));
           } else {
-            return s_expr[1];
+            throw Error("free variable not defined");
           }
-        case "App":
-          return eval(_run(s_expr[2]) + s_expr[1] + _run(s_expr[3]));
-        
-        // TODO: if not local function, use globalThis
-        case "Fun": 
-          return _run(s_expr[1])(..._run(s_expr[2]))
-        case "If":
-          if (_run(s_expr[1])) { return _run(s_expr[2]) } else { return _run(s_expr[3]) };
-        case "Lam":
-          return s_expr[1];
-        
-        case "Sel": 
-          return _run(s_expr[1])[s_expr[2]];
-
-        case "Let":
-          symbol_value_map.set(s_expr[1], _run(s_expr[2]));
-          return _run(s_expr[3]);
-
-        case "Subs": 
-          return _run(s_expr[1])[_run(s_expr[2])];
-
-        case "StrLit":
-          return `'${s_expr[1]}'`;
-
-        // TODO: remove when confirm not needed
-        case "Unquoted": 
-          let res = run(s_expr[1]);
-          return _run(res);
-        
-        case "Quoted": 
-          return s_expr[1];
-
-        default:
-          return s_expr[0];
+        }
+        // bound variables - ['Var', Symbol()]
+        const var_symbol = s_expr[1];
+        if (symbol_value_map.has(var_symbol)) {
+          return symbol_value_map.get(var_symbol);
+        } else if (outer_symbol_value_map.has(var_symbol)) {
+					return outer_symbol_value_map.get(var_symbol);
+				}	else {
+					throw Error("cannot find definition of variable");
+				}
       }
-    } 
-    let result = _run(s_expr);
+      
+      function _run(s_expr) { 
+        switch(s_expr[0]) {
+          case "Var":
+            return _getVariableValue(s_expr);
+          case "App":
+            return eval(_run(s_expr[2]) + s_expr[1] + _run(s_expr[3]));
+          
+          // TODO: if not local function, use globalThis
+          case "Fun": 
+            let stored_function = _run(s_expr[1]);
+            if (stored_function == -1) {
+              return globalThis[s_expr[1][1][1]](..._run(s_expr[2]));
 
-    if (typeof result === "symbol" && symbol_value_map.has(result)) {
-      return symbol_value_map.get(result);
-    } else {
-      return result;
-    }
-    """
+            }
+            else {
+              return stored_function(..._run(s_expr[2]))
+            }
+          case "If":
+            if (_run(s_expr[1])) { return _run(s_expr[2]) } else { return _run(s_expr[3]) };
+          case "Lam":
+            return s_expr[1];
+
+          case "Tup":
+            return s_expr[1].map(elem => _run(elem));
+
+          case "Sel": 
+            return _run(s_expr[1])[s_expr[2]];
+
+          case "Let":
+            symbol_value_map.set(s_expr[2], _run(s_expr[3]));
+            symbol_name_map.set(s_expr[1], s_expr[2]);
+            return _run(s_expr[4]);
+
+          case "Subs": 
+            return _run(s_expr[1])[_run(s_expr[2])];
+
+          case "StrLit":
+            return `'${s_expr[1]}'`;
+
+          // TODO: remove when confirm not needed
+          case "Unquoted": 
+            //return _run(s_expr[1]);
+            return _runExpression(s_expr[1], 
+                                new Map([...outer_symbol_value_map, ...symbol_value_map]),
+                                new Map([...outer_symbol_name_map, ...symbol_name_map])
+                                );
+            //return _runExpression(s_expr[1], new Map(symbol_value_map), new Map(symbol_name_map));
+          case "Quoted": 
+            return s_expr[1];
+
+          default:
+            return s_expr[0];
+        }
+      } 
+      let result = _run(s_expr);
+      if (Array.isArray(result) && result[0] == 'Var') {
+        try {
+          return _getVariableValue(result);
+        } catch (error) {
+          return result;
+        }
+      }
+      else {
+        return result;
+      }
+
+    }    
+    return _runExpression(s_expr);    """
   )
 }

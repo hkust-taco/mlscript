@@ -1,45 +1,28 @@
 :NewParser
 :ge
 
-// Notes for meeting (10 Feb)
-// Free variables in quasiquote definition cause errors unless defined in an unquote 
+// App
+let code_app = code"3 + 2 * 1"
+//│ code_app: code & {Code#C = anything, Code#T <: int}
+//│         = [ 'App', '+', [ 3 ], [ 'App', '*', [ 2 ], [ 1 ] ] ]
 
-// Example: free variable quasiquote defined first -> error and cannot be used 
-let fx = code"x+1"
-let q = code"let x = 2; ${fx}" -> code"let x = 2; x + 1"
-//│ ╔══[PARSE ERROR] Expected end of input; found '->' keyword instead
-//│ ║  l.9: 	let q = code"let x = 2; ${fx}" -> code"let x = 2; x + 1"
-//│ ╙──     	                               ^^
+
+let fx = code"x + 1"
 //│ fx: code & {Code#C = anything, Code#T <: int}
-//│ Runtime error:
-//│   ReferenceError: x is not defined
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: [Code[α33',x.type27'34']]
-//│ ║  l.9: 	let q = code"let x = 2; ${fx}" -> code"let x = 2; x + 1"
-//│ ╙──     	                          ^^
+//│   = [ 'App', '+', [ 'Var', [ 'FreeVar', 'x' ] ], [ 1 ] ]
+
+let q = code"let x = 2; ${fx}"
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: [Code[α38',x.type32'39']]
+//│ ║  l.14: 	let q = code"let x = 2; ${fx}"
+//│ ╙──      	                          ^^
 //│ q: code & {Code#C = anything, Code#T <: error}
-//│ Runtime error:
-//│   ReferenceError: fx is not defined
-
-// Example: free variable quasiquote in unquote, and there is a definition in scope -> no problem 
-code"let z = x => ${let c = code"x + 1"; c}; z(3)"
-//│ ╔══[ERROR] Type mismatch. Required: Code, found: [Code[α40',x.type36''41']]
-//│ ║  l.24: 	code"let z = x => ${let c = code"x + 1"; c}; z(3)"
-//│ ╙──      	                            ^^^^^^^^^^^^^^
-//│ res: code & {Code#C = anything, Code#T <: error}
-//│    = [
-//│        'Let',
-//│        Symbol(z),
-//│        [ [Function (anonymous)] ],
-//│        [ 'Fun', [ 'Var', Symbol(z) ], [ [Array] ] ]
-//│      ]
-
-run(res)
-//│ res: error
-//│    = 4
-
-
-
-
+//│  = [
+//│      'Let',
+//│      'x',
+//│      Symbol(x),
+//│      [ 2 ],
+//│      [ 'Unquoted', [ 'App', '+', [Array], [Array] ] ]
+//│    ]
 
 
 // Lam  
@@ -47,40 +30,46 @@ let code_lam = code"let lambda = (x) => x; lambda(3)"
 //│ code_lam: code & {Code#C = anything, Code#T <: 3}
 //│         = [
 //│             'Let',
+//│             'lambda',
 //│             Symbol(lambda),
 //│             [ [Function (anonymous)] ],
-//│             [ 'Fun', [ 'Var', Symbol(lambda) ], [ [Array] ] ]
+//│             [ 'Fun', [ 'Var', Symbol(lambda) ], [ 'Tup', [Array] ] ]
 //│           ]
 
 run(code_lam)
 //│ res: 3
 //│    = 3
 
-// App
-let code_app = code"3 + 2 * 2"
-//│ code_app: code & {Code#C = anything, Code#T <: int}
-//│         = [ 'App', '+', [ 3 ], [ 'App', '*', [ 2 ], [ 2 ] ] ]
-
-run(code_app)
-//│ res: int
-//│    = 7
-
-fun test(x) = x
-//│ test: 'a -> 'a
+let test = (x) => x * 3
+//│ test: int -> int
 //│     = [Function: test]
 
 let code_app3 = code"test(3)"
-//│ code_app3: code & {Code#C = anything, Code#T <: 3}
-//│          = [ 'Fun', [ 'Var', [Function: test] ], [ [ 3 ] ] ]
+//│ code_app3: code & {Code#C = anything, Code#T <: int}
+//│          = [ 'Fun', [ 'Var', [ 'FreeVar', 'test' ] ], [ 'Tup', [ [Array] ] ] ]
  
 run(code_app3)
-//│ res: 3
-//│    = 3
+//│ res: int
+//│ Runtime error:
+//│   Error: free variable not defined
+
+let code_lam2 = code"let f = x => x; let y = 100; f(y)"
+run(code_lam2)
+//│ code_lam2: code & {Code#C = anything, Code#T <: 100}
+//│          = [
+//│              'Let',
+//│              'f',
+//│              Symbol(f),
+//│              [ [Function (anonymous)] ],
+//│              [ 'Let', 'y', Symbol(y), [ 100 ], [ 'Fun', [Array], [Array] ] ]
+//│            ]
+//│ res: 100
+//│    = 100
 
 // If
 let code_if = code"if false then 1 else 2 + 3"
 //│ code_if: code & {Code#C = anything, Code#T <: int}
-//│        = [ 'If', [ 'Var', false ], [ 1 ], [ 'App', '+', [ 2 ], [ 3 ] ] ]
+//│        = [ 'If', false, [ 1 ], [ 'App', '+', [ 2 ], [ 3 ] ] ]
 
 run(code_if)
 //│ res: int
@@ -89,17 +78,32 @@ run(code_if)
 // Tup 
 let code_tup = code"(1,2,3)"
 //│ code_tup: code & {Code#C = anything, Code#T <: (1, 2, 3,)}
-//│         = [ [ 1, 2, 3 ] ]
+//│         = [ 'Tup', [ [ 1 ], [ 2 ], [ 3 ] ] ]
 
 run(code_tup)
 //│ res: (1, 2, 3,)
 //│    = [ 1, 2, 3 ]
+
+let code_tup2 = code"let x = 3; let y = 5; (x, y)"
+//│ code_tup2: code & {Code#C = anything, Code#T <: (3, 5,)}
+//│          = [
+//│              'Let',
+//│              'x',
+//│              Symbol(x),
+//│              [ 3 ],
+//│              [ 'Let', 'y', Symbol(y), [ 5 ], [ 'Tup', [Array] ] ]
+//│            ]
+
+run(code_tup2)
+//│ res: (3, 5,)
+//│    = [ 3, 5 ]
 
 // Rcd 
 let code_rcd = code"let r = { x: 10}; r.x"
 //│ code_rcd: code & {Code#C = anything, Code#T <: 10}
 //│         = [
 //│             'Let',
+//│             'r',
 //│             Symbol(r),
 //│             [ { x: 10 } ],
 //│             [ 'Sel', [ 'Var', Symbol(r) ], 'x' ]
@@ -114,29 +118,34 @@ let code_let1 = code"let x = 100; let y = 10; y + x"
 //│ code_let1: code & {Code#C = anything, Code#T <: int}
 //│          = [
 //│              'Let',
+//│              'x',
 //│              Symbol(x),
 //│              [ 100 ],
-//│              [ 'Let', Symbol(y), [ 10 ], [ 'App', '+', [Array], [Array] ] ]
+//│              [ 'Let', 'y', Symbol(y), [ 10 ], [ 'App', '+', [Array], [Array] ] ]
 //│            ]
 
 let code_let2 = code"let x = (y) => y * 3; let y = (z) => z + 2; x(3)"
 //│ code_let2: code & {Code#C = anything, Code#T <: int}
 //│          = [
 //│              'Let',
+//│              'x',
 //│              Symbol(x),
 //│              [ [Function (anonymous)] ],
 //│              [
 //│                'Let',
+//│                'y',
 //│                Symbol(y),
 //│                [ [Function (anonymous)] ],
 //│                [ 'Fun', [Array], [Array] ]
 //│              ]
 //│            ]
 
+
 let code_let3 = code"let x = 3; x + x"
 //│ code_let3: code & {Code#C = anything, Code#T <: int}
 //│          = [
 //│              'Let',
+//│              'x',
 //│              Symbol(x),
 //│              [ 3 ],
 //│              [ 'App', '+', [ 'Var', Symbol(x) ], [ 'Var', Symbol(x) ] ]
@@ -148,8 +157,9 @@ let code_subs = code"let a = (1, 2); a[0]"
 //│ code_subs: code & {Code#C = anything, Code#T <: 1 | 2 | undefined}
 //│          = [
 //│              'Let',
+//│              'a',
 //│              Symbol(a),
-//│              [ [ 1, 2 ] ],
+//│              [ 'Tup', [ [Array], [Array] ] ],
 //│              [ 'Subs', [ 'Var', Symbol(a) ], [ 0 ] ]
 //│            ]
 
@@ -159,30 +169,8 @@ run(code_subs)
 
 let code_subs3 = code"(1,2,3)[1]"
 //│ code_subs3: code & {Code#C = anything, Code#T <: 1 | 2 | 3 | undefined}
-//│           = [ 'Subs', [ [ 1, 2, 3 ] ], [ 1 ] ]
+//│           = [ 'Subs', [ 'Tup', [ [Array], [Array], [Array] ] ], [ 1 ] ]
 
 run(code_subs3)
 //│ res: 1 | 2 | 3 | undefined
 //│    = 2
-
-
-// Assign <-
-// TODO: find out how to generate
-
-// Splc [ : ]
-// TODO: find out how to generate
-
-// New 
-class Foo(x) 
-let f = new Foo(1)
-//│ Defined class Foo
-//│ Foo: 'x -> (Foo with {x: 'x})
-//│    = [Function: Foo1]
-//│ f: Foo & {x: 1}
-//│  = Foo { x: 1 }
-
-let code_new = code"new Foo(1)"
-//│ code_new: code & {Code#C = anything, Code#T <: Foo & {x: 1}}
-//│ Code generation encountered an error:
-//│   New HEAD (TypeName(Foo),1,) BODY TypingUnit(List())
-//│ 	New not supported in quasiquotes... yet
