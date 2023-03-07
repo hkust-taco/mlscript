@@ -88,7 +88,6 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   object PolymorphicType {
     def mk(polymLevel: Level, body: SimpleType): SimpleType = {
       require(polymLevel <= MaxLevel)
-      println(polymLevel, body.level)
       if (polymLevel === MaxLevel || body.level <= polymLevel) body
       else body.unwrapProvs match { // Q: unwrap other proxies?
         case PolymorphicType(lvl, bod) => PolymorphicType(polymLevel min lvl, bod)

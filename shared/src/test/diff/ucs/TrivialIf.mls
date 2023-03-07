@@ -56,3 +56,38 @@ fun f(x, y) =
 //│ ║  l.54: 	  else if x == y + 7 then 0
 //│ ╙──      	          ^^^^^^^^^^
 //│ f: (number, int,) -> (0 | error)
+
+// TODO support
+fun foo(x) = if x is Some
+  (0) then 0
+  (1) then 1
+//│ ╔══[PARSE ERROR] Unexpected parenthesis section here
+//│ ║  l.63: 	  (1) then 1
+//│ ╙──      	  ^^^
+//│ ╔══[ERROR] The case when this is false is not handled: is (x,) (Some,) (0,)
+//│ ║  l.61: 	fun foo(x) = if x is Some
+//│ ║        	                ^^^^^^^^^
+//│ ║  l.62: 	  (0) then 0
+//│ ╙──      	^^^^^
+//│ foo: anything -> error
+
+// TODO support
+fun foo(x) = if x is Some of
+  0 then 0
+  1 then 1
+//│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
+//│ ║  l.76: 	  0 then 0
+//│ ╙──      	    ^^^^
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found operator application instead
+//│ ║  l.75: 	fun foo(x) = if x is Some of
+//│ ║        	                ^^^^^^^^^^^^
+//│ ║  l.76: 	  0 then 0
+//│ ║        	^^^
+//│ ╟── Note: 'if' expression started here:
+//│ ║  l.75: 	fun foo(x) = if x is Some of
+//│ ╙──      	             ^^
+//│ ╔══[ERROR] The case when this is false is not handled: == (tmp0,) (0,)
+//│ ║  l.76: 	  0 then 0
+//│ ╙──      	  ^
+//│ foo: anything -> error
+
