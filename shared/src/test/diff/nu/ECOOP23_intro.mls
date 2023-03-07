@@ -1,6 +1,5 @@
 :NewParser
 :NewDefs
-:NoJS
 
 
 
@@ -20,26 +19,30 @@ mixin ComparePoint {
 //│ }
 
 
+eq(1)(2)
+//│ bool
+//│ res
+//│     = false
 
-class Color { fun eq: Color -> bool }
-//│ class Color() {
-//│   fun eq: Color -> bool
-//│ }
 
-let Red = Color()
-//│ let Red: Color
+let Red = "red"
+//│ let Red: "red"
+//│ Red
+//│     = 'red'
 
 
 mixin CompareColored {
   fun compare(lhs, rhs) =
-    super.compare(lhs, rhs) && lhs.color.eq(rhs.color)
+    super.compare(lhs, rhs) && eq(lhs.color)(rhs.color)
 }
 //│ mixin CompareColored() {
 //│   super: {compare: ('a, 'b,) -> bool}
-//│   fun compare: ({color: {eq: 'color -> bool}} & 'a, {color: 'color} & 'b,) -> bool
+//│   fun compare: ({color: anything} & 'a, {color: anything} & 'b,) -> bool
 //│ }
 
 
+
+// * Explicit version from paper:
 
 // interface Nested[Base] { parent: Option[Base] }
 
@@ -54,6 +57,7 @@ mixin CompareColored {
 //         else rhs.parent is None
 // }
 
+// * Implicit version:
 
 mixin CompareNested {
   fun compare(lhs, rhs): bool =
@@ -68,23 +72,20 @@ mixin CompareNested {
 //│   fun compare: ({parent: Some['value] | ~Some[anything]} & 'a, {parent: Some['value0] | ~Some[anything]} & 'b,) -> bool
 //│ }
 
-mixin CompareNested {
-  fun compare(lhs, rhs): bool =
-    super.compare(lhs, rhs) &&
-      if lhs.parent is
-        Some(p) then rhs.parent is Some(q) and this.compare(p, q)
-        None    then rhs.parent is None
-}
-//│ mixin CompareNested() {
-//│   super: {compare: ('a, 'b,) -> bool}
-//│   this: {compare: ('value, 'value0,) -> bool}
-//│   fun compare: ({parent: None | Some['value]} & 'a, {parent: Some['value0] | ~Some[anything]} & 'b,) -> bool
-//│ }
+// * Alternatively:
+
+// mixin CompareNested {
+//   fun compare(lhs, rhs): bool =
+//     super.compare(lhs, rhs) &&
+//       if lhs.parent is
+//         Some(p) then rhs.parent is Some(q) and this.compare(p, q)
+//         None    then rhs.parent is None
+// }
 
 
 
-class MyPoint(x: int, y: int, color: Color, parent: Some[MyPoint] | None)
-//│ class MyPoint(x: int, y: int, color: Color, parent: None | Some[MyPoint])
+class MyPoint(x: int, y: int, color: string, parent: Some[MyPoint] | None)
+//│ class MyPoint(x: int, y: int, color: string, parent: None | Some[MyPoint])
 
 
 module CompareMyPoint extends ComparePoint, CompareColored, CompareNested
@@ -92,30 +93,85 @@ module CompareMyPoint extends ComparePoint, CompareColored, CompareNested
 //│   fun compare: ('a, 'b,) -> bool
 //│ }
 //│ where
-//│   'b <: {color: 'color, parent: Some['b] | ~Some[anything], x: number, y: number}
-//│   'a <: {color: {eq: 'color -> bool}, parent: None | Some['a], x: number, y: number}
+//│   'b <: {color: anything, parent: Some['b] | ~Some[anything], x: number, y: number}
+//│   'a <: {color: anything, parent: Some['a] | ~Some[anything], x: number, y: number}
 
 
+let p0 = MyPoint(0, 0, Red, None)
 let p1 = MyPoint(0, 1, Red, None)
 let p2 = MyPoint(0, 1, Red, None)
 let p3 = MyPoint(0, 1, Red, Some(p1))
 let p4 = MyPoint(0, 1, Red, Some(p2))
 let p5 = MyPoint(0, 1, Red, Some(p3))
+//│ let p0: MyPoint
 //│ let p1: MyPoint
 //│ let p2: MyPoint
 //│ let p3: MyPoint
 //│ let p4: MyPoint
 //│ let p5: MyPoint
+//│ p0
+//│    = MyPoint {
+//│        x: 0,
+//│        y: 0,
+//│        color: 'red',
+//│        parent: None { class: [class None] }
+//│      }
+//│ p1
+//│    = MyPoint {
+//│        x: 0,
+//│        y: 1,
+//│        color: 'red',
+//│        parent: None { class: [class None] }
+//│      }
+//│ p2
+//│    = MyPoint {
+//│        x: 0,
+//│        y: 1,
+//│        color: 'red',
+//│        parent: None { class: [class None] }
+//│      }
+//│ p3
+//│    = MyPoint {
+//│        x: 0,
+//│        y: 1,
+//│        color: 'red',
+//│        parent: Some { value: MyPoint { x: 0, y: 1, color: 'red', parent: [None] } }
+//│      }
+//│ p4
+//│    = MyPoint {
+//│        x: 0,
+//│        y: 1,
+//│        color: 'red',
+//│        parent: Some { value: MyPoint { x: 0, y: 1, color: 'red', parent: [None] } }
+//│      }
+//│ p5
+//│    = MyPoint {
+//│        x: 0,
+//│        y: 1,
+//│        color: 'red',
+//│        parent: Some { value: MyPoint { x: 0, y: 1, color: 'red', parent: [Some] } }
+//│      }
 
+
+CompareMyPoint.compare(p0, p1)
+//│ bool
+//│ res
+//│     = false
 
 CompareMyPoint.compare(p1, p2)
 //│ bool
+//│ res
+//│     = true
 
 CompareMyPoint.compare(p3, p4)
 //│ bool
+//│ res
+//│     = true
 
 CompareMyPoint.compare(p3, p5)
 //│ bool
+//│ res
+//│     = false
 
 
 

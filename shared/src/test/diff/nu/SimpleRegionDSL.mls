@@ -11,10 +11,10 @@ class Vector(x: int, y: int)
 //│ class Vector(x: int, y: int)
 
 class Circle(radius: int)
-class Outside<Region>(a: Region)
-class Union<Region>(a: Region, b: Region)
-class Intersect<Region>(a: Region, b: Region)
-class Translate<Region>(v: Vector, a: Region)
+class Outside[Region](a: Region)
+class Union[Region](a: Region, b: Region)
+class Intersect[Region](a: Region, b: Region)
+class Translate[Region](v: Vector, a: Region)
 //│ class Circle(radius: int)
 //│ class Outside[Region](a: Region)
 //│ class Union[Region](a: Region, b: Region)
@@ -70,7 +70,7 @@ let circles = go(2, 1024)
 
 class Univ
 class Empty
-class Scale<Region>(v: Vector, a: Region)
+class Scale[Region](v: Vector, a: Region)
 //│ class Univ()
 //│ class Empty()
 //│ class Scale[Region](v: Vector, a: Region)

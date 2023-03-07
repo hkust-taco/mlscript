@@ -110,7 +110,7 @@ fun mapPartition(f, xs) = if xs is
 //│ ╙──       	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ mapPartition: (anything, anything,) -> error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 
 
 

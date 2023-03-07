@@ -1,0 +1,53 @@
+:NewParser
+
+
+fun f(x) =
+  if
+    x > 0  then 0
+    x == 0 then 1
+    _      then 2
+//│ f: number -> (0 | 1 | 2)
+//│  = [Function: f]
+
+
+// FIXME
+fun f(x) =
+  if
+    x > 0  and
+      x % 2 === 0 then true
+      _           then false
+    x == 0 then true
+    _      then false
+//│ ╔══[WARNING] Found a duplicated else branch
+//│ ║  l.20: 	    _      then false
+//│ ║        	                ^^^^^
+//│ ╟── The first else branch was declared here.
+//│ ║  l.18: 	      _           then false
+//│ ╙──      	                       ^^^^^
+//│ ╔══[ERROR] identifier not found: ===
+//│ ║  l.17: 	      x % 2 === 0 then true
+//│ ╙──      	            ^^^
+//│ f: int -> bool
+//│  = [Function: f1]
+
+// FIXME
+fun f(x) =
+  if
+    x > 0  and
+      x % 2 === 0 then true
+      else false
+    x == 0 then true
+  else false
+//│ ╔══[WARNING] Found a duplicated else branch
+//│ ║  l.40: 	  else false
+//│ ║        	       ^^^^^
+//│ ╟── The first else branch was declared here.
+//│ ║  l.38: 	      else false
+//│ ╙──      	           ^^^^^
+//│ ╔══[ERROR] identifier not found: ===
+//│ ║  l.37: 	      x % 2 === 0 then true
+//│ ╙──      	            ^^^
+//│ f: int -> bool
+//│  = [Function: f2]
+
+

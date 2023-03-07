@@ -31,7 +31,7 @@ mixin Test {
 :pe
 :e
 fun f(override Pair(x, y), z) = x + y
-//│ ╔══[PARSE ERROR] Unsupported 'override' parameter section shape
+//│ ╔══[PARSE ERROR] Unsupported 'override' parameter list shape
 //│ ║  l.33: 	fun f(override Pair(x, y), z) = x + y
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unsupported pattern shape:

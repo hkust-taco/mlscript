@@ -77,7 +77,7 @@ fun foo(x) = if x is
 //│ ╙──      	            ^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 
 // Change `Pair` to a real pair.
 :e
@@ -97,7 +97,7 @@ fun foo(x) = if x is
 //│ ╙──      	        ^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 
 fun foo(x) = if x is
   Pair(a, b) then if a is
@@ -170,7 +170,7 @@ fun foo(x) = if x is
 //│ ╙──       	            ^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 
 fun foo(x, y) = if x is Z() and y is O() then 0 else 1
 //│ foo: (anything, anything,) -> (0 | 1)

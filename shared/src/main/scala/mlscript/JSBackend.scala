@@ -256,7 +256,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       }
     case Inst(bod) => translateTerm(bod)
     case iff: If =>
-      throw CodeGenError(s"if expression has not been desugared")
+      throw CodeGenError(s"if expression was not desugared")
     case New(N, TypingUnit(Nil)) => JSRecord(Nil)
     case New(S(TypeName(className) -> Tup(args)), TypingUnit(Nil)) =>
       val callee = translateVar(className, true)

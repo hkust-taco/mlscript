@@ -1,0 +1,81 @@
+:NewParser
+:NewDefs
+
+
+// * From https://arxiv.org/abs/2302.12783
+
+// 1 -spec filtermap ( fun (( T ) -> boolean ()) , [ T ]) -> [ T ]
+// 2 ; ( fun (( T ) -> { true , U } | false ) , [ T ]) -> [ U ]
+// 3 ; ( fun (( T ) -> { true , U } | boolean ()) , [ T ]) -> [ T | U ].
+// 4 filtermap ( _F , []) -> [];
+// 5 filtermap (F , [ X | XS ]) ->
+// 6 case F ( X ) of
+// 7 false -> filtermap (F , XS );
+// 8 true -> [ X | filtermap (F , XS )];
+// 9 { true , Y } -> [ Y | filtermap (F , XS )]
+// 10 end.
+
+
+module Nil
+class Cons[A](head: A, tail: Cons[A] | Nil)
+//│ module Nil()
+//│ class Cons[A](head: A, tail: Cons[A] | Nil)
+
+
+// FIXME UCS
+fun filtermap(f, xs) = if xs is
+  Nil then Nil
+  Cons(y, ys) and f(ys) is
+    false then filtermap(f, ys)
+    true then Cons(y, filtermap(f, ys))
+    [true, z] then Cons(y, filtermap(f, ys))
+//│ ╔══[ERROR] identifier not found: ys
+//│ ║  l.28: 	  Cons(y, ys) and f(ys) is
+//│ ╙──      	                    ^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.28: 	  Cons(y, ys) and f(ys) is
+//│ ║        	                  ^^^^^^^^
+//│ ║  l.29: 	    false then filtermap(f, ys)
+//│ ║        	^^^^^^^^^
+//│ ╟── reference of type `false` is not an instance of type `number`
+//│ ║  l.29: 	    false then filtermap(f, ys)
+//│ ╙──      	    ^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.28: 	  Cons(y, ys) and f(ys) is
+//│ ║        	                  ^^^^^^^^
+//│ ║  l.29: 	    false then filtermap(f, ys)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.30: 	    true then Cons(y, filtermap(f, ys))
+//│ ║        	^^^^^^^^
+//│ ╟── reference of type `true` is not an instance of type `number`
+//│ ║  l.30: 	    true then Cons(y, filtermap(f, ys))
+//│ ╙──      	    ^^^^
+//│ ╔══[ERROR] type identifier not found: Tuple#2
+//│ ╙──
+//│ fun filtermap: ((error | Cons['A] | Nil) -> number & (Cons['A] | Nil) -> error, Cons['A0] | Nil,) -> (Cons['A1] | Nil | error)
+//│   where
+//│     'A := 'A0
+//│     'A0 <: nothing
+//│ Code generation encountered an error:
+//│   unknown match case: Tuple#2
+
+
+module True
+module False
+//│ module True()
+//│ module False()
+
+class Pair[A, B](lhs: A, rhs: B)
+//│ class Pair[A, B](lhs: A, rhs: B)
+
+fun filtermap(f, xs) = if xs is
+  Nil then Nil
+  Cons(y, ys) then if f(y) is
+    True then filtermap(f, ys)
+    False then Cons(y, filtermap(f, ys))
+    Pair(True, z) then Cons(z, filtermap(f, ys))
+//│ fun filtermap: ('head -> (False | Pair[anything, 'A] | True), Cons['head] | Nil,) -> (Cons['A] | Nil)
+//│   where
+//│     'head <: 'A
+
+

@@ -11,7 +11,7 @@ if x
 //│ ╙──     	^^^^^^
 //│ res: error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 
 :e
 :ge
@@ -23,7 +23,7 @@ if x
 //│ ╙──      	     ^
 //│ res: error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 
 :e
 :ge
@@ -37,4 +37,4 @@ if x
 //│ ╙──      	    ^
 //│ res: error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
