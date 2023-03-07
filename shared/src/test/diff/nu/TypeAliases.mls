@@ -1,59 +1,66 @@
 :NewParser
+:NewDefs
+
 
 type I = int
-//│ Defined type alias I
+//│ type I = int
 
 class CI1
-//│ Defined class CI1
-//│ CI1: () -> CI1
-//│    = [Function: CI11]
+//│ class CI1()
 
 // :e
 type AI1 = Array[int]
-//│ Defined type alias AI1
+//│ type AI1 = Array[int]
 
 type AI2 = Array<int>
-//│ Defined type alias AI2
+//│ type AI2 = Array[int]
 
 // TODO fail gracefully
 // :e
 type AI3(n) = Array[int]
+//│ type AI3 = Array[int]
 //│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed: List((None,Fld(false,false,n)))
 
 // TODO fail gracefully
 // :e
 type AI3[A] = Array<A>
-//│ Defined type alias AI3[+A]
+//│ type AI3[A] = Array[A]
 
 type AI4<A> = Array<A>
-//│ Defined type alias AI4[+A]
+//│ type AI4[A] = Array[A]
 
 let r = 123
-//│ r: 123
-//│  = 123
+//│ let r: 123
+//│ r
+//│   = 123
 
 r: I
-//│ res: I
-//│    = 123
+//│ I
+//│ res
+//│     = 123
 
 let a = [r, r, r]
-//│ a: (123, 123, 123,)
-//│  = [ 123, 123, 123 ]
+//│ let a: (123, 123, 123,)
+//│ a
+//│   = [ 123, 123, 123 ]
 
 a : AI1
-//│ res: AI1
-//│    = [ 123, 123, 123 ]
+//│ AI1
+//│ res
+//│     = [ 123, 123, 123 ]
 
 a : AI2
-//│ res: AI2
-//│    = [ 123, 123, 123 ]
+//│ AI2
+//│ res
+//│     = [ 123, 123, 123 ]
 
-// :e
 a : AI3[int]
-//│ res: AI3[int]
-//│    = [ 123, 123, 123 ]
+//│ AI3[int]
+//│ res
+//│     = [ 123, 123, 123 ]
 
 a : AI4<int>
-//│ res: AI4[int]
-//│    = [ 123, 123, 123 ]
+//│ AI4[int]
+//│ res
+//│     = [ 123, 123, 123 ]
 

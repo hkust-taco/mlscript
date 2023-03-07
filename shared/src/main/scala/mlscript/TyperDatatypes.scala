@@ -48,7 +48,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     val tparams: Ls[(TN, TV)] = Nil // TODO
     // val tparams: Ls[(TN, TV, VarianceInfo)] = Nil // TODO
     var isComputing: Bool = false // TODO replace by a Ctx entry
-    var result: Opt[TypedNuTermDef] = N
+    var result: Opt[TypedNuDecl] = N
     // var result: Opt[A] = N
     
     val tv: TV = freshVar(
@@ -56,7 +56,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       N,
       S(decl.name))(level + 1)
     
-    def map(f: TypedNuTermDef => TypedNuTermDef): LazyTypeInfo = {
+    def map(f: TypedNuDecl => TypedNuDecl): LazyTypeInfo = {
       val res = new LazyTypeInfo(level, decl)
       // if (result.nonEmpty) res.result = res
       res.result = result.map(f)
@@ -68,7 +68,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       // freshVar(noProv/*FIXME*/, N, S("this_"+decl.name))(lvl + 1)
       freshVar(noProv/*FIXME*/, N, S(decl.name.decapitalize))(lvl + 1)
     
-    def complete()(implicit raise: Raise): TypedNuTermDef = result.getOrElse {
+    def complete()(implicit raise: Raise): TypedNuDecl = result.getOrElse {
       if (isComputing) {
         // lastWords(s"TODO cyclic defition ${decl.name}")
         err(msg"Unhandled cyclic definition", decl.toLoc) // TODO better loc/explanation
@@ -156,6 +156,26 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
               
               td.kind match {
                 
+                case Als =>
+                  
+                  // TODO assert td.params, td.parents are empty
+                  
+                  val tparams = td.tparams.map(tp =>
+                    (tp._2, freshVar(TypeProvenance(
+                      tp._2.toLoc,
+                      "type parameter",
+                      S(tp._2.name),
+                      true), N, S(tp._2.name)), tp._1))
+                  
+                  implicit val vars: Map[Str, SimpleType] =
+                    outerVars ++ tparams.iterator.map {
+                      case (tp, tv, vi) => (tp.name, SkolemTag(tv.level, tv)(tv.prov))
+                    }
+                  
+                  val body_ty = typeType(td.sig.getOrElse(die))
+                  
+                  TypedNuAls(outerCtx.lvl, td, tparams, body_ty)
+                  
                 case Cls | Nms =>
                   
                   implicit val prov: TP = noProv // TODO
@@ -203,6 +223,13 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     
                     // val thisTV = freshVar(noProv/*FIXME*/, N, S("this"))
                     ctx += "this" -> VarSymbol(thisTV, Var("this"))
+                    
+                    val sig_ty = typeType(td.sig.getOrElse(Top))
+                    td.sig match {
+                      case S(sig) =>
+                        err(msg"type signatures not yet supported for classes", sig.toLoc)
+                      case N => ()
+                    }
                     
                     // // TODO check against `tv`
                     // println(td.tparams)
@@ -412,7 +439,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         // ???
         ty
     }
-    def force()(implicit raise: Raise): TypedNuTermDef = {
+    def force()(implicit raise: Raise): TypedNuDecl = {
       val res = complete()
       res.force()
       // decl match {
@@ -817,6 +844,11 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       ctx.tyDefs2.get(defn.name).map { info =>
         implicit val raise: Raise = throw _ // FIXME
         info.complete() match {
+          case td: TypedNuAls =>
+            assert(td.tparams.size === targs.size)
+            substSyntax(td.body)(td.tparams.lazyZip(targs).map {
+              case (tp, ta) => SkolemTag(tp._2.level, tp._2)(noProv) -> ta
+            }.toMap)
           case td: TypedNuCls =>
             assert(td.tparams.size === targs.size)
             ClassTag(Var(td.nme.name).withLocOf(td.nme),

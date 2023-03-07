@@ -304,17 +304,26 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 expr(0) :: otherParents
               case _ => Nil
             }
-            val ps = yeetSpaces match {
+            val sig = yeetSpaces match {
               case (KEYWORD("="), _) :: _ if kind is Als =>
                 consume
-                expr(0) :: otherParents
-              case (KEYWORD(":" | "extends"), _) :: _ =>
+                S(typ(0))
+              case (KEYWORD(":"), _) :: _ =>
+                consume
+                S(typ(0))
+              case _ => N
+            }
+            val ps = yeetSpaces match {
+              // case (KEYWORD("="), _) :: _ if kind is Als =>
+              //   consume
+              //   expr(0) :: otherParents
+              case (KEYWORD("extends"), _) :: _ =>
                 consume
                 expr(0) :: otherParents
               case _ => Nil
             }
             val body = curlyTypingUnit
-            val res = NuTypeDef(kind, tn, tparams.map(N -> _), params, ps, N, N, body)
+            val res = NuTypeDef(kind, tn, tparams.map(N -> _), params, sig, ps, N, N, body)
             R(res.withLoc(S(l0 ++ res.getLoc)))
           
           // TODO make `fun` by-name and `let` by-value
@@ -625,6 +634,16 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
             L(IfOpApp(acc, v, rhs))
           case R(rhs) =>
             exprCont(opStr match {
+              case "with" =>
+                rhs match {
+                  case rhs: Rcd =>
+                    With(acc, rhs)//.withLocOf(term)
+                  case Bra(true, rhs: Rcd) =>
+                    With(acc, rhs)//.withLocOf(term)
+                  case _ =>
+                    err(msg"record literal expected here; found ${rhs.describe}" -> rhs.toLoc :: Nil)
+                    acc
+                }
               case "=>" =>
                 Lam(toParams(acc), rhs)
               case _ =>

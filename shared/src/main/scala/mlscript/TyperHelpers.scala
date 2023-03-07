@@ -772,6 +772,9 @@ abstract class TyperHelpers { Typer: Typer =>
         case OtherTypeLike(tu) =>
           // tu.entities.flatMap(_.childrenPol) ::: tu.result.toList
           val ents = tu.entities.flatMap {
+            case ta: TypedNuAls =>
+              // Q: PolMap.neu or pol.invar?!
+              ta.tparams.map(pol.invar -> _._2) ::: pol -> ta.body :: Nil
             case tf: TypedNuFun =>
               PolMap.pos -> tf.ty :: Nil
             case mxn: TypedNuMxn =>
@@ -779,7 +782,7 @@ abstract class TyperHelpers { Typer: Typer =>
                 S(pol.contravar -> mxn.superTV) ++
                 S(pol.contravar -> mxn.thisTV)
             case cls: TypedNuCls =>
-              cls.tparams.iterator.map(PolMap.neu -> _._2) ++
+              cls.tparams.iterator.map(pol.invar -> _._2) ++
               // cls.params.flatMap(p => childrenPolField(pol.invar)(p._2))
                 cls.params.flatMap(p => childrenPolField(PolMap.pos)(p._2)) ++
                 cls.members.valuesIterator.flatMap(childrenPolMem) ++
@@ -956,6 +959,9 @@ abstract class TyperHelpers { Typer: Typer =>
         tu.result.foreach(apply(pol))
     }
     def applyMem(pol: PolMap)(m: NuMember): Unit = m match {
+      case TypedNuAls(level, td, tparams, body) =>
+        tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
+        apply(pol)(body)
       case TypedNuCls(level, td, ttu, tparams, params, members, thisTy) =>
         tparams.iterator.foreach(tp => apply(pol.invar)(tp._2))
         params.foreach(p => applyField(pol)(p._2))

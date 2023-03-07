@@ -49,7 +49,7 @@ mixin EvalAdd {
 
 // FIXME type vars are wrongly refreshed when tying the knot
 
-module TestLang: EvalAdd
+module TestLang extends EvalAdd
 //│ module TestLang() {
 //│   fun eval: 'a -> nothing
 //│ }
@@ -75,7 +75,7 @@ mixin EvalBase {
 //│ }
 
 
-module TestLang: EvalBase
+module TestLang extends EvalBase
 //│ module TestLang() {
 //│   fun eval: 'a -> int
 //│ }
@@ -125,7 +125,7 @@ mixin EvalNeg {
 //│ }
 
 
-module TestLang: EvalBase, EvalNeg
+module TestLang extends EvalBase, EvalNeg
 //│ module TestLang() {
 //│   fun eval: 'a -> int
 //│ }

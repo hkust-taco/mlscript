@@ -24,7 +24,7 @@ mixin BaseInc {
 //│ }
 
 // :d
-class Base1(base: int): BaseTest, BaseInc {
+class Base1(base: int) extends BaseTest, BaseInc {
   fun test3 = [base, this.base]
 }
 //│ class Base1(base: int) {
@@ -44,9 +44,9 @@ Base1(1).test3
 
 
 // TODO
-class Base1(base): BaseTest
+class Base1(base) extends BaseTest
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.47: 	class Base1(base): BaseTest
+//│ ║  l.47: 	class Base1(base) extends BaseTest
 //│ ╙──      	            ^^^^
 //│ class Base1(base: error) {
 //│   fun test: error
@@ -61,15 +61,15 @@ Base1(1).test
 
 
 :e
-class Base1(x): BaseTest
+class Base1(x) extends BaseTest
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.64: 	class Base1(x): BaseTest
+//│ ║  l.64: 	class Base1(x) extends BaseTest
 //│ ╙──      	            ^
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.64: 	class Base1(x): BaseTest
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.64: 	class Base1(x) extends BaseTest
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `{x: error}` does not have field 'base'
-//│ ║  l.64: 	class Base1(x): BaseTest
+//│ ║  l.64: 	class Base1(x) extends BaseTest
 //│ ║        	           ^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.8: 	  fun test = super.base
@@ -80,6 +80,19 @@ class Base1(x): BaseTest
 //│ class Base1(x: error) {
 //│   fun test: nothing
 //│ }
+
+:e
+class Base1(x): BaseTest
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ║  l.85: 	class Base1(x): BaseTest
+//│ ╙──      	            ^
+//│ ╔══[ERROR] mixins cannot be used as types
+//│ ║  l.85: 	class Base1(x): BaseTest
+//│ ╙──      	                ^^^^^^^^
+//│ ╔══[ERROR] type signatures not yet supported for classes
+//│ ║  l.85: 	class Base1(x): BaseTest
+//│ ╙──      	                ^^^^^^^^
+//│ class Base1(x: error)
 
 Base1
 //│ (x: error,) -> Base1
@@ -94,7 +107,7 @@ mixin Foo {
 //│   fun test: (int & 'a) -> (int, 'a, 'misc,)
 //│ }
 
-module Base1(base: int, misc: string): Foo
+module Base1(base: int, misc: string) extends Foo
 //│ module Base1(base: int, misc: string) {
 //│   fun test: (int & 'a) -> (int, 'a, string,)
 //│ }
@@ -128,7 +141,7 @@ mixin Wrap {
 
 
 // :d
-module WrapBase1: WrapBase, Wrap
+module WrapBase1 extends WrapBase, Wrap
 //│ module WrapBase1() {
 //│   fun wrap: 'a -> ('a,)
 //│   fun wrapA: int -> (int,)
@@ -162,22 +175,22 @@ WrapBase1.wrapA(1)
 :e
 WrapBase1.wrapA("ok")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.163: 	WrapBase1.wrapA("ok")
+//│ ║  l.176: 	WrapBase1.wrapA("ok")
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"ok"` is not an instance of type `int`
-//│ ║  l.163: 	WrapBase1.wrapA("ok")
+//│ ║  l.176: 	WrapBase1.wrapA("ok")
 //│ ║         	                ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.109: 	  fun wrapA(x: int) = x : int
+//│ ║  l.122: 	  fun wrapA(x: int) = x : int
 //│ ║         	               ^^^
 //│ ╟── from reference:
-//│ ║  l.119: 	  fun wrapA(x) = [super.wrapA(x)]
+//│ ║  l.132: 	  fun wrapA(x) = [super.wrapA(x)]
 //│ ╙──       	                              ^
 //│ (int,) | error
 
 
 
-module WrapBase2: WrapBase, Wrap, Wrap, Wrap
+module WrapBase2 extends WrapBase, Wrap, Wrap, Wrap
 //│ module WrapBase2() {
 //│   fun wrap: 'a -> ((('a,),),)
 //│   fun wrapA: int -> (((int,),),)

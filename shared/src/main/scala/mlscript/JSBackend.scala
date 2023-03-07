@@ -712,29 +712,28 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     }
 
     typeDefs.foreach {
-      case NuTypeDef(Mxn, TypeName(mxName), tps, tup @ Tup(fs), pars, sup, ths, unit) => {
+      case NuTypeDef(Mxn, TypeName(mxName), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {
         val (body, members) = prepare(mxName, fs, pars, unit)
         val sym = topLevelScope.declareMixin(mxName, tps map { _._2.name }, body, members)
         mixins += sym
         superParameters.put(sym.runtimeName, pars)
       }
-      case NuTypeDef(Nms, TypeName(nme), tps, tup @ Tup(fs), pars, sup, ths, unit) => {
+      case NuTypeDef(Nms, TypeName(nme), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {
         val (body, members) = prepare(nme, fs, pars, unit)
         val sym = topLevelScope.declareModule(nme, tps map { _._2.name }, body, members)
         modules += sym
         superParameters.put(sym.runtimeName, pars)
       }
-      case NuTypeDef(Als, TypeName(nme), tps, _, pars, _, _, _) => {
-        val body = tt(pars.head)
-        topLevelScope.declareTypeAlias(nme, tps map { _._2.name }, body)
+      case NuTypeDef(Als, TypeName(nme), tps, _, sig, pars, _, _, _) => {
+        topLevelScope.declareTypeAlias(nme, tps map { _._2.name }, sig.getOrElse(die))
       }
-      case NuTypeDef(Cls, TypeName(nme), tps, tup @ Tup(fs), pars, sup, ths, unit) => {
+      case NuTypeDef(Cls, TypeName(nme), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {
         val (body, members) = prepare(nme, fs, pars, unit)
         val sym = topLevelScope.declareNewClass(nme, tps map { _._2.name }, body, members)
         classes += sym
         superParameters.put(sym.runtimeName, pars)
       }
-      case NuTypeDef(k @ Trt, TypeName(nme), tps, tup @ Tup(fs), pars, sup, ths, unit) => {
+      case NuTypeDef(k @ Trt, TypeName(nme), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {
         val (body, members) = prepare(nme, fs, pars, unit)
         val sym = topLevelScope.declareTrait(nme, tps map { _._2.name }, body, members)
         traits += sym
@@ -954,13 +953,13 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
       try generate(pgrm)(topLevelScope, allowEscape) catch {
         case e: CodeGenError => JSTestBackend.IllFormedCode(e.getMessage())
         case e: UnimplementedError => JSTestBackend.Unimplemented(e.getMessage())
-        case e: Throwable => JSTestBackend.UnexpectedCrash(e.getClass().getName, e.getMessage())
+        // case e: Throwable => JSTestBackend.UnexpectedCrash(e.getClass().getName, e.getMessage())
       }
     else
       try generateNewDef(pgrm)(topLevelScope, allowEscape) catch {
         case e: CodeGenError => JSTestBackend.IllFormedCode(e.getMessage())
         case e: UnimplementedError => JSTestBackend.Unimplemented(e.getMessage())
-        case e: Throwable => JSTestBackend.UnexpectedCrash(e.getClass().getName, e.getMessage())
+        // case e: Throwable => JSTestBackend.UnexpectedCrash(e.getClass().getName, e.getMessage())
       }
     // generate(pgrm)(topLevelScope, allowEscape)
 
@@ -1233,7 +1232,7 @@ object JSTestBackend {
   /**
     * Code generation crashed.
     */
-  final case class UnexpectedCrash(val name: Str, override val content: Str) extends ErrorMessage(content)
+  // final case class UnexpectedCrash(val name: Str, override val content: Str) extends ErrorMessage(content)
 
   /**
     * The result is not executed for some reasons. E.g. `:NoJS` flag.

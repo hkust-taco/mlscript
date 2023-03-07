@@ -380,7 +380,7 @@ mixin EvalNegNeg {
 
 :js
 :ShowRepl
-module TestLang: EvalBase, EvalNeg, EvalNegNeg
+module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│ module TestLang() {
 //│   fun eval: 'a -> int
 //│ }
@@ -477,10 +477,10 @@ class Foo(x: int)
 
 
 :e
-class Bar(x: int, y: int): Foo(x + y)
+class Bar(x: int, y: int) extends Foo(x + y)
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.480: 	class Bar(x: int, y: int): Foo(x + y)
-//│ ╙──       	                           ^^^^^^^^^^
+//│ ║  l.480: 	class Bar(x: int, y: int) extends Foo(x + y)
+//│ ╙──       	                                  ^^^^^^^^^^
 //│ class Bar(x: int, y: int)
 
 
@@ -492,20 +492,20 @@ mixin BB {}
 //│ mixin BB()
 
 
-class C(x: int): BB
+class C(x: int) extends BB
 //│ class C(x: int)
 
 :e
-class D(x: int): AA(x)
+class D(x: int) extends AA(x)
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.499: 	class D(x: int): AA(x)
-//│ ╙──       	                 ^^^^^
+//│ ║  l.499: 	class D(x: int) extends AA(x)
+//│ ╙──       	                        ^^^^^
 //│ class D(x: int)
 
 :e
-class E(x: int): BB, AA(x)
+class E(x: int) extends BB, AA(x)
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.506: 	class E(x: int): BB, AA(x)
-//│ ╙──       	                     ^^^^^
+//│ ║  l.506: 	class E(x: int) extends BB, AA(x)
+//│ ╙──       	                            ^^^^^
 //│ class E(x: int)
 

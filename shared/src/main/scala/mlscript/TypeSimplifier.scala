@@ -962,7 +962,7 @@ trait TypeSimplifier { self: Typer =>
                   trace(s"Setting bounds of $res...") {
                     tv.assignedTo match {
                       case S(ty) =>
-                        res.assignedTo = S(transform(ty, PolMap.neu, semp, canDistribForall))
+                        res.assignedTo = S(transform(ty, pol.invar, semp, canDistribForall))
                       case N =>
                         res.lowerBounds = tv.lowerBounds.map(transform(_, pol.at(tv.level, true), Set.single(tv)))
                         res.upperBounds = tv.upperBounds.map(transform(_, pol.at(tv.level, false), Set.single(tv)))

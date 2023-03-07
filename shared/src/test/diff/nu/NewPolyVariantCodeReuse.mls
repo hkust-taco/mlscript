@@ -97,7 +97,7 @@ mixin EvalLambda {
 //│   'A2 :> (string, Var,) | 'A0
 //│       <: 'A1
 
-module Test1: EvalVar, EvalLambda
+module Test1 extends EvalVar, EvalLambda
 //│ module Test1() {
 //│   fun eval: (Cons['A | 'A0] | Nil, 'a,) -> 'result
 //│ }

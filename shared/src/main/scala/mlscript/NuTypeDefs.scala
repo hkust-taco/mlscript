@@ -65,6 +65,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   // sealed abstract class TypedNuDecl extends NuMember {
   sealed trait TypedNuDecl extends NuMember {
     def name: Str
+    def level: Level
     // def freshen(implicit ctx: Ctx): TypedNuDecl = this match {
     //   case m @ TypedNuMxn(td, thisTV, superTV, ttu) =>
     //     implicit val freshened: MutMap[TV, ST] = MutMap.empty
@@ -72,13 +73,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     //     TypedNuMxn(td, thisTV, superTV, ttu.freshenAbove(m.level, rigidify = false))
     //   case _ => ???
     // }
-  }
-  
-  sealed trait TypedNuTermDef extends TypedNuDecl with AnyTypeDef {
-    // override def toString: String = this match {
-    //   case _ => ???
-    // }
-    def level: Level
     def freshen(implicit ctx: Ctx): TypedNuDecl = {
       implicit val freshened: MutMap[TV, ST] = MutMap.empty
       implicit val shadows: Shadows = Shadows.empty
@@ -87,12 +81,21 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       freshenAbove(level, rigidify = false).asInstanceOf[TypedNuDecl]
       }
     }
-    def map(f: ST => ST)(implicit ctx: Ctx): TypedNuTermDef =
-      mapPol(N, false)((_, ty) => f(ty)).asInstanceOf[TypedNuTermDef]//TODO
+    def map(f: ST => ST)(implicit ctx: Ctx): TypedNuDecl =
+      mapPol(N, false)((_, ty) => f(ty))
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
-          (implicit ctx: Ctx): TypedNuTermDef
+          (implicit ctx: Ctx): TypedNuDecl
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
-          (implicit ctx: Ctx): TypedNuTermDef
+          (implicit ctx: Ctx): TypedNuDecl
+    def force()(implicit raise: Raise): Unit = this match {
+      case x: TypedNuMxn => x.ttu.force()
+      case x: TypedNuCls => x.ttu.force()
+      case _: TypedNuFun => ()
+      case _: TypedNuAls => ()
+    }
+  }
+  
+  sealed trait TypedNuTermDef extends TypedNuDecl with AnyTypeDef {
     // def childrenTypes: Ls[ST]
     /* 
     def freshenAbove(lim: Int, rigidify: Bool)
@@ -127,11 +130,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       }
     }
     */
-    def force()(implicit raise: Raise): Unit = this match {
-      case x: TypedNuMxn => x.ttu.force()
-      case x: TypedNuCls => x.ttu.force()
-      case _: TypedNuFun => ()
-    }
   }
   
   sealed abstract class TypedNuTypeDef(kind: TypeDefKind) extends TypedNuTypeDefBase with TypedNuDecl {
@@ -179,17 +177,30 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   // )
   
   // case class TypedNuAls(level: Level, nme: TypeName)(val prov: TP) extends TypedNuTypeDef(Als) {
-  case class TypedNuAls(level: Level, td: NuTypeDef) extends TypedNuTypeDef(Als) {
+  case class TypedNuAls(level: Level, td: NuTypeDef,
+      tparams: Ls[(TN, TV, Opt[VarianceInfo])],
+      body: ST,
+  ) extends TypedNuTypeDef(Als) {
     def name: Str = nme.name
-    def nme: mlscript.TypeName = ???
+    def nme: mlscript.TypeName = td.nme
     // def freshenAbove(lim: Int, rigidify: Bool)
     //       (implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV, ST])
     //       : TypedNuTypeDef = ???
     
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
-          (implicit ctx: Ctx): NuMember = ???
+          (implicit ctx: Ctx): TypedNuDecl =
+        TypedNuAls(
+          level, td,
+          tparams.map(tp => (tp._1, f(N, tp._2).asInstanceOf[TV], tp._3)),
+          f(pol, body)
+        )
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
-          (implicit ctx: Ctx): NuMember = ???
+          (implicit ctx: Ctx): TypedNuDecl =
+        TypedNuAls(
+          level, td,
+          tparams.map(tp => (tp._1, f(pol.invar, tp._2).asInstanceOf[TV], tp._3)),
+          f(pol, body)
+        )
   }
   
   // case class TypedNuCls(nme: TypeName) extends TypedNuTypeDef(Als) with TypedNuTermDef {
@@ -302,7 +313,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       TypedNuFun(level, fd, f(pol, ty))
   }
   
-  case class CompletedTypingUnit(entities: Ls[TypedNuTermDef], result: Opt[ST]) extends OtherTypeLike {
+  case class CompletedTypingUnit(entities: Ls[TypedNuDecl], result: Opt[ST]) extends OtherTypeLike {
     def map(f: ST => ST)(implicit ctx: Ctx): CompletedTypingUnit =
       CompletedTypingUnit(entities.map(_.map(f)), result.map(f))
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)

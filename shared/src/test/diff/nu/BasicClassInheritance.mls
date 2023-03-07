@@ -7,10 +7,10 @@ class A
 //│ class A()
 
 // TODO
-class B(m: int): A
+class B(m: int) extends A
 //│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
-//│ ║  l.10: 	class B(m: int): A
-//│ ╙──      	                 ^
+//│ ║  l.10: 	class B(m: int) extends A
+//│ ╙──      	                        ^
 //│ class B(m: int)
 
 
@@ -18,10 +18,10 @@ class A(n: int)
 //│ class A(n: int)
 
 // TODO
-class B(m: int): A(n + 1)
+class B(m: int) extends A(n + 1)
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.21: 	class B(m: int): A(n + 1)
-//│ ╙──      	                 ^^^^^^^^
+//│ ║  l.21: 	class B(m: int) extends A(n + 1)
+//│ ╙──      	                        ^^^^^^^^
 //│ class B(m: int)
 
 

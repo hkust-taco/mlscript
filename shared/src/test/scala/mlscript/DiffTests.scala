@@ -522,6 +522,8 @@ class DiffTests
               def showTTU(ttu: typer.TypedTypingUnit, ind: Int): Unit = {
                 val indStr = "  " * ind
                 ttu.entities.map(_.complete()(raise)).foreach {
+                  case tc: typer.TypedNuAls =>
+                    output(s"${indStr}type ${tc.name} = ${tc.body}")
                   case tc: typer.TypedNuCls =>
                     output(s"${indStr}class ${tc.name}")
                     output(s"${indStr}  this: ${tc.thisTy} ${tc.thisTy.showBounds
@@ -936,11 +938,11 @@ class DiffTests
                   case Unimplemented(message) =>
                     output("Unable to execute the code:")
                     output(s"  ${message}")
-                  case UnexpectedCrash(name, message) =>
-                    if (!mode.fixme)
-                      failures += blockLineNum
-                    output("Code generation crashed:")
-                    output(s"  $name: $message")
+                  // case UnexpectedCrash(name, message) =>
+                  //   if (!mode.fixme)
+                  //     failures += blockLineNum
+                  //   output("Code generation crashed:")
+                  //   output(s"  $name: $message")
                   case ResultNotExecuted => ()
                 }
             }

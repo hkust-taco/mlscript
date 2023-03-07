@@ -11,7 +11,7 @@ mixin Over {
 //│ }
 
 
-class Base1(p: int): Over {
+class Base1(p: int) extends Over {
   fun test = [p, this.p]
   // fun test2 = super.p // TODO
 }

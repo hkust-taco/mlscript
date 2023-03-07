@@ -44,6 +44,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   )
   
   private val isAlphaOp = Set(
+    "with",
     "and",
     "or",
     "is",

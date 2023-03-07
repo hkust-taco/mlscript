@@ -1,0 +1,23 @@
+:NewParser
+:NewDefs
+
+
+// TODO
+class Foo(): {}
+//│ ╔══[ERROR] type signatures not yet supported for classes
+//│ ║  l.6: 	class Foo(): {}
+//│ ╙──     	             ^^
+//│ class Foo()
+
+// TODO
+class Foo(): {} {
+  fun x = 0
+}
+//│ ╔══[ERROR] type signatures not yet supported for classes
+//│ ║  l.13: 	class Foo(): {} {
+//│ ╙──      	             ^^
+//│ class Foo() {
+//│   fun x: 0
+//│ }
+
+

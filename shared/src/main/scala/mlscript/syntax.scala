@@ -177,6 +177,7 @@ final case class NuTypeDef(
   nme: TypeName,
   tparams: Ls[(Opt[VarianceInfo], TypeName)],
   params: Tup, // the specialized parameters for that type
+  sig: Opt[Type],
   parents: Ls[Term],
   superAnnot: Opt[Type],
   thisAnnot: Opt[Type],

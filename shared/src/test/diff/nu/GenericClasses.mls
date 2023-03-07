@@ -81,9 +81,8 @@ None.toArray
 //│ ()
 
 
-// TODO
 type Option<A> = Some<A> | None
-//│ /!!!\ Uncaught error: scala.MatchError: Als (of class mlscript.Als$)
+//│ type Option[A] = None | Some[A]
 
 
 
@@ -128,7 +127,7 @@ class Test(n) {
   fun bar = n
 }
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.126: 	class Test(n) {
+//│ ║  l.125: 	class Test(n) {
 //│ ╙──       	           ^
 //│ class Test(n: error) {
 //│   fun bar: error
@@ -148,13 +147,13 @@ class Test<A>(n: A) {
   fun foo = n + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.148: 	  fun foo = n + 1
+//│ ║  l.147: 	  fun foo = n + 1
 //│ ║         	            ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.148: 	  fun foo = n + 1
+//│ ║  l.147: 	  fun foo = n + 1
 //│ ║         	            ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.147: 	class Test<A>(n: A) {
+//│ ║  l.146: 	class Test<A>(n: A) {
 //│ ╙──       	           ^
 //│ class Test[A](n: A) {
 //│   fun foo: error | int
@@ -211,13 +210,13 @@ class TestBad<A> {
   fun foo2(x: A) = x + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.211: 	  fun foo2(x: A) = x + 1
+//│ ║  l.210: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^^^
 //│ ╟── reference of type `A` is not an instance of type `int`
-//│ ║  l.211: 	  fun foo2(x: A) = x + 1
+//│ ║  l.210: 	  fun foo2(x: A) = x + 1
 //│ ║         	                   ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.209: 	class TestBad<A> {
+//│ ║  l.208: 	class TestBad<A> {
 //│ ╙──       	              ^
 //│ class TestBad[A]() {
 //│   fun foo1: (x: A,) -> A

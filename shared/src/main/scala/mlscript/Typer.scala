@@ -336,9 +336,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case ti: LazyTypeInfo =>
             // ti.complete()
             ti.decl match {
-              case NuTypeDef(k @ (Cls | Nms), _, tps, _, _, _, _, _) =>
+              case NuTypeDef(k @ (Cls | Nms | Als), _, tps, _, _, _, _, _, _) =>
                 S(k, tps.size)
-              case _ => ???
+              case NuTypeDef(k @ Mxn, _, tps, _, _, _, _, _, _) =>
+                err(msg"mixins cannot be used as types", loc)
+                S(k, tps.size)
             }
           case _ => N
         })
@@ -1266,9 +1268,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       })
     }
     def goDecl(d: TypedNuDecl): NuDecl = d match {
+      case TypedNuAls(level, td, tparams, body) =>
+        NuTypeDef(td.kind, td.nme, td.tparams, Tup(Nil), S(go(body)), Nil, N, N, TypingUnit(Nil))
       case TypedNuMxn(td, thisTy, superTy, members, ttu) =>
         NuTypeDef(td.kind, td.nme, td.tparams,
           Tup(Nil),
+          N,
           Nil,//TODO
           // S(go(superTy)),
           // S(go(thisTy)),
@@ -1283,6 +1288,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         NuTypeDef(td.kind, td.nme, td.tparams,
           // Tup(params.map(p => S(p._1) -> Fld(p._2.ub))))
           Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub))))),
+          N,//TODO
           Nil,//TODO
           N,//TODO
           Option.when(!(TopType <:< thisTy))(go(thisTy)),
