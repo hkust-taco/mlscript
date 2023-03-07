@@ -86,7 +86,7 @@ foo of
 //│ ╔══[PARSE ERROR] Unexpected 'fun' keyword in expression position
 //│ ║  l.83: 	  fun f = 1
 //│ ╙──      	  ^^^
-//│ ╔══[PARSE ERROR] Unexpected '=' keyword here
+//│ ╔══[PARSE ERROR] Unexpected '=' here
 //│ ║  l.83: 	  fun f = 1
 //│ ╙──      	        ^
 //│ Parsed: {foo ({a; f},)}

@@ -82,7 +82,7 @@ fun f x y = x
 //│ ╔══[PARSE ERROR] Expected ':' or '=' followed by a function body or signature; found identifier instead
 //│ ║  l.77: 	fun f x y = x
 //│ ╙──      	        ^
-//│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
+//│ ╔══[PARSE ERROR] Expected end of input; found '=' instead
 //│ ║  l.77: 	fun f x y = x
 //│ ╙──      	          ^
 //│ Parsed: {fun f = undefined}
@@ -165,7 +165,7 @@ fun
 
 fun = 1
 //│ |#fun| |#=| |1|
-//│ ╔══[PARSE ERROR] Expected a function name; found '=' keyword instead
+//│ ╔══[PARSE ERROR] Expected a function name; found '=' instead
 //│ ║  l.166: 	fun = 1
 //│ ╙──       	    ^
 //│ ╔══[PARSE ERROR] Expected function parameter list; found literal instead

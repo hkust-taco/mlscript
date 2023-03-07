@@ -57,21 +57,24 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   
   def loc(start: Int, end: Int): Loc = Loc(start, end, origin)
   
-  // @tailrec final
+  @tailrec final
   def lex(i: Int, ind: Ls[Int], acc: Ls[TokLoc]): Ls[TokLoc] = if (i >= length) acc.reverse else {
     val c = bytes(i)
     def pe(msg: Message): Unit =
       // raise(ParseError(false, msg -> S(loc(i, i + 1)) :: Nil))
       raise(ErrorReport(msg -> S(loc(i, i + 1)) :: Nil, source = Lexing)) // TODO parse error
     // @inline 
-    def go(j: Int, tok: Token) = lex(j, ind, (tok, loc(i, j)) :: acc)
+    // def go(j: Int, tok: Token) = lex(j, ind, (tok, loc(i, j)) :: acc)
+    def next(j: Int, tok: Token) = (tok, loc(i, j)) :: acc
     c match {
       case ' ' =>
         val (_, j) = takeWhile(i)(_ === ' ')
-        go(j, SPACE)
+        // go(j, SPACE)
+        lex(j, ind, next(j, SPACE))
       case ',' =>
         val j = i + 1
-        go(j, COMMA)
+        // go(j, COMMA)
+        lex(j, ind, next(j, COMMA))
       case '"' =>
         val j = i + 1
         val (chars, k) = takeWhile(j)(c => c =/= '"' && c =/= '\n')
@@ -79,12 +82,14 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
           pe(msg"unclosed quotation mark")
           k
         }
-        go(k2, LITVAL(StrLit(chars)))
+        // go(k2, LITVAL(StrLit(chars)))
+        lex(k2, ind, next(k2, LITVAL(StrLit(chars))))
       case '/' if bytes.lift(i + 1).contains('/') =>
         val j = i + 2
         val (txt, k) =
           takeWhile(j)(c => c =/= '\n')
-        go(k, COMMENT(txt))
+        // go(k, COMMENT(txt))
+        lex(k, ind, next(k, COMMENT(txt)))
       case '/' if bytes.lift(i + 1).contains('*') => // multiple-line comment
         val j = i + 2
         var prev1 = '/'; var prev2 = '*'
@@ -94,9 +99,12 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
             prev1 = prev2; prev2 = c
             res
           })
-        go(k, COMMENT(txt.dropRight(2)))
-      case BracketKind(Left(k)) => go(i + 1, OPEN_BRACKET(k))
-      case BracketKind(Right(k)) => go(i + 1, CLOSE_BRACKET(k))
+        // go(k, COMMENT(txt.dropRight(2)))
+        lex(k, ind, next(k, COMMENT(txt.dropRight(2))))
+      // case BracketKind(Left(k)) => go(i + 1, OPEN_BRACKET(k))
+      // case BracketKind(Right(k)) => go(i + 1, CLOSE_BRACKET(k))
+      case BracketKind(Left(k)) => lex(i + 1, ind, next(i + 1, OPEN_BRACKET(k)))
+      case BracketKind(Right(k)) => lex(i + 1, ind, next(i + 1, CLOSE_BRACKET(k)))
       case '\n' =>
         val j = i + 1
         val (space, k) =
@@ -123,20 +131,25 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         }
       case _ if isIdentFirstChar(c) =>
         val (n, j) = takeWhile(i)(isIdentChar)
-        go(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n)))
+        // go(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n)))
+        lex(j, ind, next(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n))))
       case _ if isOpChar(c) =>
         val (n, j) = takeWhile(i)(isOpChar)
         if (n === "." && j < length && isIdentFirstChar(bytes(j))) {
           val (name, k) = takeWhile(j)(isIdentChar)
-          go(k, SELECT(name))
+          // go(k, SELECT(name))
+          lex(k, ind, next(k, SELECT(name)))
         }
-        else go(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true))
+        // else go(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true))
+        else lex(j, ind, next(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true)))
       case _ if isDigit(c) =>
         val (str, j) = takeWhile(i)(isDigit)
-        go(j, LITVAL(IntLit(BigInt(str))))
+        // go(j, LITVAL(IntLit(BigInt(str))))
+        lex(j, ind, next(j, LITVAL(IntLit(BigInt(str)))))
       case _ =>
         pe(msg"unexpected character '${escapeChar(c)}'")
-        go(i + 1, ERROR)
+        // go(i + 1, ERROR)
+        lex(i + 1, ind, next(i + 1, ERROR))
     }
   }
  
@@ -252,6 +265,7 @@ object NewLexer {
     "mixin",
     "interface",
     "extends",
+    "override",
     "new",
     "namespace",
     "module",

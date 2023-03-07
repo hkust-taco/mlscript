@@ -1,6 +1,5 @@
 :NewParser
 :NewDefs
-:NoJS
 
 
 // * Adapted example from Code reuse through polymorphic variants (FOSE 2000)
@@ -16,14 +15,23 @@ let l = Cons(1, Nil)
 //│ let l: Cons['A]
 //│   where
 //│     'A :> 1
+//│ l
+//│   = Cons { head: 1, tail: Nil { class: [class Nil] } }
 
 class NotFound
 class Success<A>(result: A)
 //│ class NotFound()
 //│ class Success[A](result: A)
 
-fun eq(l: string, r: string): bool
-//│ fun eq: (l: string, r: string,) -> bool
+let e = eq
+//│ let e: anything -> anything -> bool
+//│ e
+//│   = [Function: eq]
+
+let eq(l: string, r: string): bool = e(l)(r)
+//│ let eq: (l: string, r: string,) -> bool
+//│ eq
+//│    = [Function: eq1]
 
 fun list_assoc(s, l) =
   if l is
@@ -58,13 +66,10 @@ class App<A>(s: A, t: A)
 //│ class Abs[A](x: string, t: A)
 //│ class App[A](s: A, t: A)
 
-fun incr(x: {a: int}): unit
-//│ fun incr: (x: {a: int},) -> unit
-
-fun gensym(): string
+fun gensym(): string = "fun"
 //│ fun gensym: () -> string
 
-fun int_to_string(x: int): string
+fun int_to_string(x: int): string = "0"
 //│ fun int_to_string: (x: int,) -> string
 
 mixin EvalLambda {
@@ -103,27 +108,35 @@ module Test1: EvalVar, EvalLambda
 //│   'A0 :> (string, 'result,)
 //│       <: 'A1 & {_1: string, _2: 'result}
 //│   'A1 <: 'A & 'A0
-//│   'result :> Var | Abs['result] | App['result]
+//│   'result :> Var | App['result] | Abs['result]
 
 Test1.eval(Nil, Var("a"))
 //│ 'a
 //│   where
 //│     'a :> App['a] | Abs['a] | Var
+//│ res
+//│     = Var { s: 'a' }
 
 Test1.eval(Nil, Abs("b", Var("a")))
 //│ 'a
 //│   where
 //│     'a :> App['a] | Abs['a] | Var
+//│ res
+//│     = Abs { x: 'fun', t: Var { s: 'a' } }
 
 Test1.eval(Cons(("c", Var("d")), Nil), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
 //│   where
 //│     'a :> App['a] | Abs['a] | Var
+//│ res
+//│     = Var { s: 'b' }
 
 Test1.eval(Cons(("c", Abs("d", Var("d"))), Nil), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
 //│   where
-//│     'a :> Abs['a] | Abs[Var] | Var | App['a]
+//│     'a :> App['a] | Abs['a] | Abs[Var] | Var
+//│ res
+//│     = Var { s: 'b' }
 
 class Num(n: int)
 class Add<A>(l: A, r: A)
@@ -167,31 +180,42 @@ module Test2 extends EvalVar, EvalExpr
 
 Test2.eval(Nil, Var("a"))
 //│ Num | Var
+//│ res
+//│     = Var { s: 'a' }
 
 Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Var("a"))
 //│ Abs[Var] | Num | Var
+//│ res
+//│     = Var { s: 'a' }
 
 Test2.eval(Cons(("a", Num(1)), Nil), Var("a"))
 //│ Num | Var
+//│ res
+//│     = Var { s: 'a' }
 
 :e
 Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.178: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.197: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Num | Var`
-//│ ║  l.178: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.197: 	Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	                                                 ^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.136: 	  if v is
+//│ ║  l.149: 	  if v is
 //│ ║         	     ^
 //│ ╟── from reference:
-//│ ║  l.146: 	    let vv = map_expr(eta, v)
+//│ ║  l.159: 	    let vv = map_expr(eta, v)
 //│ ╙──       	                           ^
 //│ Abs[Var] | Num | Var | error
+//│ res
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
 
 Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil), Add(Num(1), Var("a")))
 //│ Abs[Var] | Add[Num | Var] | Num | Var
+//│ res
+//│     = Add { l: Num { n: 1 }, r: Var { s: 'a' } }
 
 module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│ module Test3() {
@@ -212,11 +236,15 @@ Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ 'a
 //│   where
 //│     'a :> App['a] | Abs['a] | Abs[Var] | Num | Var
+//│ res
+//│     = Abs { x: 'fun', t: Var { s: 'a' } }
 
 Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
 //│ 'a
 //│   where
-//│     'a :> Abs['a] | Abs[Var] | Add[Num | Var] | Num | Var | App['a]
+//│     'a :> App['a] | Abs['a] | Abs[Var] | Add[Num | Var] | Num | Var
+//│ res
+//│     = Var { s: 'a' }
 
 module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│ module Test3() {
@@ -237,17 +265,20 @@ module Test3 extends EvalVar, EvalLambda, EvalExpr
 :e
 Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.238: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.266: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Num | Var`
-//│ ║  l.238: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.266: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	                                                 ^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.136: 	  if v is
+//│ ║  l.149: 	  if v is
 //│ ║         	     ^
 //│ ╟── from reference:
-//│ ║  l.146: 	    let vv = map_expr(eta, v)
+//│ ║  l.159: 	    let vv = map_expr(eta, v)
 //│ ╙──       	                           ^
 //│ error | 'a
 //│   where
 //│     'a :> Abs['a] | App['a] | Var | Abs[Var] | Num
+//│ res
+//│ Runtime error:
+//│   Error: non-exhaustive case expression

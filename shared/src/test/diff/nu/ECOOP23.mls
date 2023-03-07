@@ -145,6 +145,21 @@ mixin EvalNegNeg {
   fun eval(e) =
     if e is Neg(Neg(d)) then this.eval(d)
     else super.eval(e)
+    // * Note: the above is equivalent to:
+    // if e is Neg(f) then
+    //   if f is Neg(d) then this.eval(d)
+    //   else super.eval(e)
+    // else super.eval(e)
+}
+//│ mixin EvalNegNeg() {
+//│   super: {eval: (Neg['A] | 'a) -> 'b}
+//│   this: {eval: 'expr -> 'b}
+//│   fun eval: (Neg['A & (~Neg | Neg['expr])] | 'a & ~Neg) -> 'b
+//│ }
+
+// * Alternative:
+mixin EvalNegNeg {
+  fun eval(override Neg(Neg(d))) = this.eval(d)
 }
 //│ mixin EvalNegNeg() {
 //│   super: {eval: (Neg['A] | 'a) -> 'b}

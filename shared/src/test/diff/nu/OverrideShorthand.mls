@@ -1,0 +1,53 @@
+:NewParser
+:NewDefs
+:NoJS
+
+
+
+class Pair(lhs: int, rhs: int)
+//│ class Pair(lhs: int, rhs: int)
+
+
+:p
+:e
+fun f(override Pair(x, y)) = x + y
+//│ |#fun| |f|(|#override| |Pair|(|x|,| |y|)|)| |#=| |x| |+| |y|
+//│ Parsed: fun f = (_$0,) => if _$0 is (Pair (x, y,)) then + (x,) (y,) else (super).f (_$0,);
+//│ ╔══[ERROR] identifier not found: super
+//│ ║  l.13: 	fun f(override Pair(x, y)) = x + y
+//│ ╙──      	      ^^^^^^^^
+//│ fun f: anything -> (error | int)
+
+
+mixin Test {
+  fun f(override Pair(x, y)) = x + y
+}
+//│ mixin Test() {
+//│   super: {f: 'a -> 'b}
+//│   fun f: (Pair | 'a & ~Pair) -> (int | 'b)
+//│ }
+
+
+:pe
+:e
+fun f(override Pair(x, y), z) = x + y
+//│ ╔══[PARSE ERROR] Unsupported 'override' parameter section shape
+//│ ║  l.33: 	fun f(override Pair(x, y), z) = x + y
+//│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Unsupported pattern shape:
+//│ ║  l.33: 	fun f(override Pair(x, y), z) = x + y
+//│ ╙──      	               ^^^^^^^^^^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.33: 	fun f(override Pair(x, y), z) = x + y
+//│ ╙──      	                                ^
+//│ ╔══[ERROR] identifier not found: y
+//│ ║  l.33: 	fun f(override Pair(x, y), z) = x + y
+//│ ╙──      	                                    ^
+//│ fun f: (error, anything,) -> int
+
+
+// TODO
+// :pe
+// fun f(override Pair(x, y)): int
+
+

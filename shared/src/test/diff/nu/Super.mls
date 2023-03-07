@@ -1,0 +1,41 @@
+:NewParser
+:NewDefs
+
+
+class Foo(x: int)
+//│ class Foo(x: int)
+
+
+:e
+class Bar(x: int, y: int): Foo(x + y)
+//│ ╔══[ERROR] Unsupported parent specification
+//│ ║  l.10: 	class Bar(x: int, y: int): Foo(x + y)
+//│ ╙──      	                           ^^^^^^^^^^
+//│ class Bar(x: int, y: int)
+
+
+mixin AA(a: int) {
+}
+//│ mixin AA()
+
+mixin BB {}
+//│ mixin BB()
+
+
+class C(x: int): BB
+//│ class C(x: int)
+
+:e
+class D(x: int): AA(x)
+//│ ╔══[ERROR] Unsupported parent specification
+//│ ║  l.29: 	class D(x: int): AA(x)
+//│ ╙──      	                 ^^^^^
+//│ class D(x: int)
+
+
+:e
+class E(x: int): BB, AA(x)
+//│ ╔══[ERROR] Unsupported parent specification
+//│ ║  l.37: 	class E(x: int): BB, AA(x)
+//│ ╙──      	                     ^^^^^
+//│ class E(x: int)

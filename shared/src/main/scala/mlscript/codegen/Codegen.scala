@@ -629,13 +629,18 @@ final case class JSArray(items: Ls[JSExpr]) extends JSExpr {
     SourceCode.array(items map { _.embed(JSCommaExpr.outerPrecedence) })
 }
 
-final case class JSRecord(entries: Ls[Str -> JSExpr]) extends JSExpr {
+final case class JSRecord(entries: Ls[Str -> JSExpr], methods: Ls[JSStmt] = Nil) extends JSExpr {
   override def precedence: Int = 22
   // Make
   override def toSourceCode: SourceCode = SourceCode
-    .record(entries map { case (key, value) =>
+    .record((entries map { case (key, value) =>
       SourceCode(JSField.emitValidFieldName(key) + ": ") ++ value.embed(JSCommaExpr.outerPrecedence)
-    })
+    }) ++ (methods.map((m) => m.toSourceCode)))
+}
+
+final case class JSClassExpr(cls: JSClassNewDecl) extends JSExpr {
+  implicit def precedence: Int = 22
+  def toSourceCode: SourceCode = cls.toSourceCode
 }
 
 abstract class JSStmt extends JSCode
@@ -794,6 +799,68 @@ final case class JSClassDecl(
       fields.foreach { name =>
         val innerName = if (JSField.isValidIdentifier(name)) s".${name}" else s"[${JSLit.makeStringLiteral(name)}]"
         buffer += s"    this$innerName = fields$innerName;"
+      }
+      buffer += "  }"
+      SourceCode(buffer.toList)
+    }
+    val methodsSourceCode =
+      methods.foldLeft(SourceCode.empty) { case (x, y) =>
+        x + y.toSourceCode.indented
+      }
+    val epilogue = SourceCode("}")
+    `extends` match {
+      case Some(base) =>
+        SourceCode(s"class $name extends ") ++ base.toSourceCode ++
+          SourceCode(" {") + constructor + methodsSourceCode + epilogue
+      case None =>
+        if (fields.isEmpty && methods.isEmpty && implements.isEmpty) {
+          SourceCode(s"class $name {}")
+        } else {
+          SourceCode(
+            s"class $name {" :: Nil
+          ) + constructor + methodsSourceCode + epilogue
+        }
+    }
+  }
+
+  private val fieldsSet = collection.immutable.HashSet.from(fields)
+}
+
+final case class JSClassNewDecl(
+    name: Str,
+    fields: Ls[Str],
+    `extends`: Opt[JSExpr] = N,
+    superFields: Ls[JSExpr] = Nil,
+    rest: Opt[Str] = N,
+    methods: Ls[JSClassMemberDecl] = Nil,
+    implements: Ls[Str] = Nil,
+) extends JSStmt {
+  def toSourceCode: SourceCode = {
+    val constructor: SourceCode = {
+      val buffer = new ListBuffer[Str]()
+      val params =
+        fields.iterator.zipWithIndex.foldRight(rest match {
+          case Some(rest) => s"...$rest"
+          case _ => ""
+        })((p, s) =>
+        if (s.isEmpty) s"${p._1}"
+        else s"${p._1}, $s")
+      buffer += s"  constructor($params) {"
+      if (`extends`.isDefined) {
+        val sf = superFields.iterator.zipWithIndex.foldLeft("")((res, p) =>
+          if (p._2 === superFields.length - 1) s"$res${p._1.toSourceCode}"
+          else s"$res${p._1.toSourceCode}, "
+        )
+        buffer += s"    super($sf);"
+      }
+      implements.foreach { name =>
+        buffer += s"    $name.implement(this);"
+      }
+      fields.iterator.zipWithIndex.foreach { pair =>
+        if (rest.isEmpty || pair._2 < fields.length - 1) {
+          val innerName = if (JSField.isValidIdentifier(pair._1)) s".${pair._1}" else s"[${JSLit.makeStringLiteral(pair._1)}]"
+          buffer += s"    this${innerName} = ${pair._1};" // TODO: invalid name?
+        }
       }
       buffer += "  }"
       SourceCode(buffer.toList)

@@ -20,7 +20,7 @@ h1, p{
 #content {
     width: 100%;
     padding: 0px;
-    height: 600px;
+    height: 750px;
     display: grid;
     grid-template-columns: 50% 50%;
     grid-template-rows: 100%;

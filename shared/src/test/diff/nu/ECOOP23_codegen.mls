@@ -1,0 +1,69 @@
+:NewParser
+:NewDefs
+
+class Add<E>(lhs: E, rhs: E)
+class Lit(n: int)
+//│ class Add[E](lhs: E, rhs: E)
+//│ class Lit(n: int)
+
+
+mixin EvalBase {
+  fun eval(e) =
+    if e is
+      Lit(n) then n: int
+      Add(l, r) then this.eval(l) + this.eval(r)
+}
+//│ mixin EvalBase() {
+//│   this: {eval: 'lhs -> int}
+//│   fun eval: (Add['lhs] | Lit) -> int
+//│ }
+
+
+class Neg<A>(expr: A)
+//│ class Neg[A](expr: A)
+
+
+mixin EvalNeg {
+  fun eval(e) =
+    if e is Neg(d) then 0 - this.eval(d)
+    else super.eval(e)
+}
+//│ mixin EvalNeg() {
+//│   super: {eval: 'a -> 'b}
+//│   this: {eval: 'expr -> int}
+//│   fun eval: (Neg['expr] | 'a & ~Neg) -> (int | 'b)
+//│ }
+
+
+mixin EvalNegNeg {
+  fun eval(e) =
+    if e is Neg(Neg(d)) then this.eval(d)
+    else super.eval(e)
+}
+//│ mixin EvalNegNeg() {
+//│   super: {eval: (Neg['A] | 'a) -> 'b}
+//│   this: {eval: 'expr -> 'b}
+//│   fun eval: (Neg['A & (~Neg | Neg['expr])] | 'a & ~Neg) -> 'b
+//│ }
+
+
+module TestLang: EvalBase, EvalNeg, EvalNegNeg
+//│ module TestLang() {
+//│   fun eval: 'a -> int
+//│ }
+//│ where
+//│   'a <: Add['a] | Lit | Neg['A & (~Neg | Neg['a])]
+//│   'A <: 'a
+
+
+fun mk(n) = if n is
+  0 then Lit(0)
+  1 then Neg(mk(n))
+  _ then Add(mk(n), mk(n))
+TestLang.eval(mk(0))
+//│ fun mk: number -> (Lit | 'a)
+//│ int
+//│ where
+//│   'a :> Neg[Lit | 'a] | Add[Lit | 'a]
+//│ res
+//│     = [Function: mk]
