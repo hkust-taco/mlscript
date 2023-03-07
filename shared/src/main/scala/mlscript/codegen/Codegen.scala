@@ -882,15 +882,13 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
           case "App":
             return eval(_run(s_expr[2]) + s_expr[1] + _run(s_expr[3]));
           
-          // TODO: if not local function, use globalThis
           case "Fun": 
-            let stored_function = _run(s_expr[1]);
-            if (stored_function == -1) {
-              return globalThis[s_expr[1][1][1]](..._run(s_expr[2]));
-
+            try {
+              let stored_function = _run(s_expr[1]);
+              return stored_function(..._run(s_expr[2]));
             }
-            else {
-              return stored_function(..._run(s_expr[2]))
+            catch (error) {
+              return globalThis[s_expr[1][1][1]](..._run(s_expr[2]));
             }
           case "If":
             if (_run(s_expr[1])) { return _run(s_expr[2]) } else { return _run(s_expr[3]) };

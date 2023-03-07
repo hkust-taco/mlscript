@@ -24,6 +24,9 @@ let q = code"let x = 2; ${fx}"
 //│      [ 'Unquoted', [ 'App', '+', [Array], [Array] ] ]
 //│    ]
 
+run(q)
+//│ res: error
+//│    = 3
 
 // Lam  
 let code_lam = code"let lambda = (x) => x; lambda(3)"
@@ -44,14 +47,13 @@ let test = (x) => x * 3
 //│ test: int -> int
 //│     = [Function: test]
 
-let code_app3 = code"test(3)"
+let code_app3 = code"test(4)"
 //│ code_app3: code & {Code#C = anything, Code#T <: int}
 //│          = [ 'Fun', [ 'Var', [ 'FreeVar', 'test' ] ], [ 'Tup', [ [Array] ] ] ]
  
 run(code_app3)
 //│ res: int
-//│ Runtime error:
-//│   Error: free variable not defined
+//│    = 12
 
 let code_lam2 = code"let f = x => x; let y = 100; f(y)"
 run(code_lam2)
@@ -70,6 +72,19 @@ run(code_lam2)
 let code_if = code"if false then 1 else 2 + 3"
 //│ code_if: code & {Code#C = anything, Code#T <: int}
 //│        = [ 'If', false, [ 1 ], [ 'App', '+', [ 2 ], [ 3 ] ] ]
+
+let code_lambda_if = code"let z = x => x; z(if true then 1 else 2)"
+run(code_lambda_if)
+//│ code_lambda_if: code & {Code#C = anything, Code#T <: 1 | 2}
+//│               = [
+//│                   'Let',
+//│                   'z',
+//│                   Symbol(z),
+//│                   [ [Function (anonymous)] ],
+//│                   [ 'Fun', [ 'Var', Symbol(z) ], [ 'Tup', [Array] ] ]
+//│                 ]
+//│ res: 1 | 2
+//│    = 2
 
 run(code_if)
 //│ res: int

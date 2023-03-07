@@ -117,7 +117,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     * Handle all possible cases of MLscript function applications. We extract
     * this method to prevent exhaustivity check from reaching recursion limit.
     */
-  protected def translateApp(term: App)(implicit scope: Scope): JSExpr = term match {
+  protected def translateApp(term: App)(implicit scope: Scope, inUnquote: Bool = false): JSExpr = term match {
     // Binary expressions
     case App(App(Var(op), Tup((N -> Fld(_, _, lhs)) :: Nil)), Tup((N -> Fld(_, _, rhs)) :: Nil))
         if JSBinary.operators contains op =>
@@ -131,21 +131,21 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case Var(nme) => translateVar(nme, true)
         case _ => translateTerm(trm)
       }
-      callee(args map { case (_, Fld(_, _, arg)) => translateTerm(arg) }: _*)
+      callee(args map { case (_, Fld(_, _, arg)) => translateTerm(arg)(scope, inUnquote) }: _*)
     case _ => throw CodeGenError(s"ill-formed application ${inspect(term)}")
   }
 
   /**
     * Translate MLscript terms into JavaScript expressions.
     */
-  protected def translateTerm(term: Term, inUnquote: Bool = false)(implicit scope: Scope): JSExpr = term match {
+  protected def translateTerm(term: Term)(implicit scope: Scope, inUnquote: Bool = false): JSExpr = term match {
     case _ if term.desugaredTerm.isDefined => translateTerm(term.desugaredTerm.getOrElse(die))
     case Var(name) => translateVar(name, false)
     case Lam(params, body) =>
       val lamScope = scope.derive("Lam")
       val patterns = translateParams(params)(lamScope)
       JSArrowFn(patterns, lamScope.tempVars `with` translateTerm(body)(lamScope))
-    case t: App => translateApp(t)
+    case t: App => translateApp(t)(scope, inUnquote)
     case Rcd(fields) =>
       JSRecord(fields map { case (key, Fld(_, _, value)) =>
         key.name -> translateTerm(value)
@@ -539,7 +539,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       variableTracker.addDefinedVar(name)
       JSImmEvalFn(None, Ls(JSNamePattern(name)), L(JSArray(Ls(JSExpr("Let"), JSExpr(name), JSIdent(name), _translateQuoted(rhs), _translateQuoted(body)))), Ls(JSLit(s"Symbol('${name}')")))
     case Unquoted(unquoted_body) => 
-      JSArray(Ls(JSExpr("Unquoted"), translateTerm(unquoted_body, true)))
+      JSArray(Ls(JSExpr("Unquoted"), translateTerm(unquoted_body)(scope, true)))
       //translateUnquoted(unquoted_body)
       //_translateQuoted(unquotedQuasiquote) // problem cannot resolve the global variables
       //translateQuoted(unquoted_body)
@@ -550,7 +550,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case Subs(arr, idx) => 
       JSArray(Ls(JSExpr("Subs"), _translateQuoted(arr), _translateQuoted(idx)))
     case Quoted(body) => 
-      JSArray(Ls(JSExpr("Quoted"), translateQuoted(body, false)))
+      JSArray(Ls(JSExpr("Quoted"), translateQuoted(body)))
     case Blk(stmts) => throw CodeGenError("Blk not supported in quasiquotes... yet")
     case New(S(head), body) => throw CodeGenError(s"New HEAD ${head} BODY ${body}\n\tNew not supported in quasiquotes... yet")
     case Assign(_,_) | Asc(_,_) | Bind(_,_) | Test(_,_) | With(_,_) | CaseOf(_,_) | TyApp(_,_) | Splc(_) => 
