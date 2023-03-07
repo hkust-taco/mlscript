@@ -1,0 +1,196 @@
+:NewParser
+
+code"let z = x => code"let w = ${Const(x)}; w"; z(100)"
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: α28'
+//│ ║  l.5: 	code"let z = x => code"let w = ${Const(x)}; w"; z(100)"
+//│ ╙──     	                                 ^^^^^^^^
+//│ res: code & {Code#C = anything, Code#T <: code & {Code#C = anything, Code#T <: error}}
+//│    = [
+//│        'Let',
+//│        'z',
+//│        Symbol(z),
+//│        [ [Function (anonymous)] ],
+//│        [ 'Fun', [ 'Var', Symbol(z) ], [ 'Tup', [Array] ] ]
+//│      ]
+
+run(run(res))
+//│ res: error
+//│    = 100
+
+
+let free = code"x"
+//│ free: code & {Code#C = anything, Code#T = nothing}
+//│     = [ 'Var', [ 'FreeVar', 'x' ] ]
+
+let defined = code"let x = 1; ${free}"
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: [Code[[x.type43'],x.type39'44']]
+//│ ║  l.27: 	let defined = code"let x = 1; ${free}"
+//│ ╙──      	                                ^^^^
+//│ defined: code & {Code#C = anything, Code#T <: error}
+//│        = [ 'Let', 'x', Symbol(x), [ 1 ], [ 'Unquoted', [ 'Var', [Array] ] ] ]
+
+run(defined)
+//│ res: error
+//│    = 1
+
+
+let defined2 = code"let x = 1; ${code"x + 1"}"
+//│ defined2: code & {Code#C = anything, Code#T <: code & {Code#C = anything, Code#T <: int}}
+//│         = [
+//│             'Let',
+//│             'x',
+//│             Symbol(x),
+//│             [ 1 ],
+//│             [ 'Unquoted', [ 'App', '+', [Array], [Array] ] ]
+//│           ]
+
+run(defined2)
+//│ res: code & {Code#C = anything, Code#T <: int}
+//│    = 2
+
+// 30 * 20 + 10000 + 1000 = 11600
+let defined3 = code"let x = 1000; ${code"let x = 30; ${free} * 20"} + ${code"let x = 1; ${code"let x = 10000; ${free}"}"} + ${free}"
+run(defined3)
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: [Code[[x.type63'],x.type39'64']]
+//│ ║  l.54: 	let defined3 = code"let x = 1000; ${code"let x = 30; ${free} * 20"} + ${code"let x = 1; ${code"let x = 10000; ${free}"}"} + ${free}"
+//│ ╙──      	                                                       ^^^^
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: [Code[[x.type68'],x.type39'69']]
+//│ ║  l.54: 	let defined3 = code"let x = 1000; ${code"let x = 30; ${free} * 20"} + ${code"let x = 1; ${code"let x = 10000; ${free}"}"} + ${free}"
+//│ ╙──      	                                                                                                                ^^^^
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: [Code[[x.type72'],x.type39'73']]
+//│ ║  l.54: 	let defined3 = code"let x = 1000; ${code"let x = 30; ${free} * 20"} + ${code"let x = 1; ${code"let x = 10000; ${free}"}"} + ${free}"
+//│ ╙──      	                                                                                                                              ^^^^
+//│ defined3: code & {Code#C = anything, Code#T <: int}
+//│         = [
+//│             'Let',
+//│             'x',
+//│             Symbol(x),
+//│             [ 1000 ],
+//│             [
+//│               'App',
+//│               '+',
+//│               [ 'App', '+', [Array], [Array] ],
+//│               [ 'Unquoted', [Array] ]
+//│             ]
+//│           ]
+//│ res: int
+//│    = 11600
+
+let defined4 = code"1 + ${let c = code"let x = 100; x + 1"; c}"
+run(defined4)
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: [Code[α84',Anything]]
+//│ ║  l.81: 	let defined4 = code"1 + ${let c = code"let x = 100; x + 1"; c}"
+//│ ╙──      	                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ defined4: code & {Code#C = anything, Code#T <: int}
+//│         = [
+//│             'App',
+//│             '+',
+//│             [ 1 ],
+//│             [ 'Unquoted', [ 'Let', 'x', Symbol(x), [Array], [Array] ] ]
+//│           ]
+//│ res: int
+//│    = 102
+
+
+code"let x = 1; ${code"let x = 3; x + 1 + ${code"x * 100"}"}"
+run(res)
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.97: 	code"let x = 1; ${code"let x = 3; x + 1 + ${code"x * 100"}"}"
+//│ ║        	                                  ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── expression of type `code & {Code#C :> ?x.type95, Code#T <: ?a}` is not an instance of type `int`
+//│ res: code & {Code#C = anything, Code#T <: error | int}
+//│    = [
+//│        'Let',
+//│        'x',
+//│        Symbol(x),
+//│        [ 1 ],
+//│        [ 'Unquoted', [ 'Let', 'x', Symbol(x), [Array], [Array] ] ]
+//│      ]
+//│ res: error | int
+//│    = 304
+
+
+code"let x = 1; ${code"${code"x * 100"}"}"
+run(res)
+//│ res: code & {Code#C = anything, Code#T <: code & {Code#C = anything, Code#T <: int}}
+//│    = [
+//│        'Let',
+//│        'x',
+//│        Symbol(x),
+//│        [ 1 ],
+//│        [ 'Unquoted', [ 'Unquoted', [Array] ] ]
+//│      ]
+//│ res: code & {Code#C = anything, Code#T <: int}
+//│    = 100
+
+
+fun test(n, base) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${base} + x")}" else base
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: α123'
+//│ ║  l.129: 	fun test(n, base) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${base} + x")}" else base
+//│ ╙──       	                                                 ^^^^^^^^
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: [α120']
+//│ ║  l.129: 	fun test(n, base) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${base} + x")}" else base
+//│ ╙──       	                                                                                 ^^^^
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: α130'
+//│ ║  l.129: 	fun test(n, base) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${base} + x")}" else base
+//│ ╙──       	                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ test: (int, 'a,) -> (code & {Code#C = anything, Code#T <: error | int} | 'a)
+//│     = [Function: test]
+
+:js
+run(test(2, code"100"))
+//│ // Query 1
+//│ res = run(test(2, [100]));
+//│ // End of generated code
+//│ res: error | int
+//│    = 103
+
+fun identity(x) = x 
+//│ identity: 'a -> 'a
+//│         = [Function: identity]
+
+
+:js 
+code"let x = 1; (${code"x * 100"}, code"y")"
+run(res)
+//│ // Query 1
+//│ res = ((x) => [
+//│   "Let",
+//│   "x",
+//│   x,
+//│   [1],
+//│   [
+//│     "Tup",
+//│     [
+//│       [
+//│         "Unquoted",
+//│         [
+//│           "App",
+//│           "*",
+//│           [
+//│             "Var",
+//│             x
+//│           ],
+//│           [100]
+//│         ]
+//│       ],
+//│       [
+//│         "Quoted",
+//│         ((y) => [
+//│           "Var",
+//│           y
+//│         ])([
+//│           "FreeVar",
+//│           "y"
+//│         ])
+//│       ]
+//│     ]
+//│   ]
+//│ ])(Symbol('x'));
+//│ // Query 2
+//│ res = run(res);
+//│ // End of generated code
+//│ res: code & {Code#C = anything, Code#T <: (code & {Code#C = anything, Code#T <: int}, code & {Code#C = anything, Code#T = nothing},)}
+//│    = [ 'Let', 'x', Symbol(x), [ 1 ], [ 'Tup', [ [Array], [Array] ] ] ]
+//│ res: (code & {Code#C = anything, Code#T <: int}, code & {Code#C = anything, Code#T = nothing},)
+//│    = [ 100, [ 'Var', [ 'FreeVar', 'y' ] ] ]
