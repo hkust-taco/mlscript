@@ -55,16 +55,7 @@ let circles = go(2, 1024)
 //│   where
 //│     'Region :> Circle | Union[Translate['Region]]
 //│ circles
-//│         = Union {
-//│             a: Translate {
-//│               v: Vector { x: -1024, y: 0 },
-//│               a: Union { a: [Translate], b: [Translate] }
-//│             },
-//│             b: Translate {
-//│               v: Vector { x: 1024, y: 0 },
-//│               a: Union { a: [Translate], b: [Translate] }
-//│             }
-//│           }
+//│         = Union {}
 
 // ******************* Adding More Language Constructs *******************
 
@@ -345,16 +336,7 @@ TestElim.eliminate(circles)
 //│   where
 //│     'a :> Outside['a] | Union['a] | Intersect['a] | Translate['a] | Scale['a] | Circle
 //│ res
-//│     = Union {
-//│         a: Translate {
-//│           v: Vector { x: -1024, y: 0 },
-//│           a: Union { a: [Translate], b: [Translate] }
-//│         },
-//│         b: Translate {
-//│           v: Vector { x: 1024, y: 0 },
-//│           a: Union { a: [Translate], b: [Translate] }
-//│         }
-//│       }
+//│     = Union {}
 
 fun mk(n) = if n is
   1 then Outside(mk(n))

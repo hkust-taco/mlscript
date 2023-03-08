@@ -15,11 +15,11 @@ class Lit(n: int)
 //│     if (this.cache.Add === undefined) {
 //│       class Add {
 //│         #lhs;
-//│   #rhs;
+//│         #rhs;
+//│         get lhs() { return this.#lhs; }
+//│         get rhs() { return this.#rhs; }
 //│         constructor(lhs, rhs) {
-//│           this.lhs = lhs;
 //│           this.#lhs = lhs;
-//│           this.rhs = rhs;
 //│           this.#rhs = rhs;
 //│         }
 //│       };
@@ -32,8 +32,8 @@ class Lit(n: int)
 //│     if (this.cache.Lit === undefined) {
 //│       class Lit {
 //│         #n;
+//│         get n() { return this.#n; }
 //│         constructor(n) {
-//│           this.n = n;
 //│           this.#n = n;
 //│         }
 //│       };
@@ -56,11 +56,11 @@ class Lit(n: int)
 //│ │ │       if (this.cache.Add === undefined) {
 //│ │ │         class Add {
 //│ │ │           #lhs;
-//│   #rhs;
+//│ │ │           #rhs;
+//│ │ │           get lhs() { return this.#lhs; }
+//│ │ │           get rhs() { return this.#rhs; }
 //│ │ │           constructor(lhs, rhs) {
-//│ │ │             this.lhs = lhs;
 //│ │ │             this.#lhs = lhs;
-//│ │ │             this.rhs = rhs;
 //│ │ │             this.#rhs = rhs;
 //│ │ │           }
 //│ │ │         };
@@ -73,8 +73,8 @@ class Lit(n: int)
 //│ │ │       if (this.cache.Lit === undefined) {
 //│ │ │         class Lit {
 //│ │ │           #n;
+//│ │ │           get n() { return this.#n; }
 //│ │ │           constructor(n) {
-//│ │ │             this.n = n;
 //│ │ │             this.#n = n;
 //│ │ │           }
 //│ │ │         };
@@ -87,7 +87,7 @@ class Lit(n: int)
 //│ │ │   globalThis.Add = typing_unit.Add;
 //│ │ │   globalThis.Lit = typing_unit.Lit;
 //│ │ └── Reply
-//│ │     ... [Function (anonymous)] { class: [class Lit] }
+//│ │     [Function (anonymous)] { class: [class Lit] }
 //│ └── No queries
 
 :js
@@ -162,8 +162,8 @@ class Neg<A>(expr: A)
 //│     if (this.cache.Neg === undefined) {
 //│       class Neg {
 //│         #expr;
+//│         get expr() { return this.#expr; }
 //│         constructor(expr) {
-//│           this.expr = expr;
 //│           this.#expr = expr;
 //│         }
 //│       };
@@ -184,8 +184,8 @@ class Neg<A>(expr: A)
 //│ │ │       if (this.cache.Neg === undefined) {
 //│ │ │         class Neg {
 //│ │ │           #expr;
+//│ │ │           get expr() { return this.#expr; }
 //│ │ │           constructor(expr) {
-//│ │ │             this.expr = expr;
 //│ │ │             this.#expr = expr;
 //│ │ │           }
 //│ │ │         };
@@ -450,9 +450,9 @@ mixin Fooo(x: int)
 //│   Fooo(base) {
 //│     return (class Fooo extends base {
 //│       #x;
+//│       get x() { return this.#x; }
 //│       constructor(x, ...rest) {
 //│         super(...rest);
-//│         this.x = x;
 //│         this.#x = x;
 //│       }
 //│     });
@@ -470,9 +470,9 @@ mixin Bazz(y: int)
 //│   Bazz(base) {
 //│     return (class Bazz extends base {
 //│       #y;
+//│       get y() { return this.#y; }
 //│       constructor(y, ...rest) {
 //│         super(...rest);
-//│         this.y = y;
 //│         this.#y = y;
 //│       }
 //│     });

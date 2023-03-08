@@ -845,11 +845,10 @@ final case class JSClassNewDecl(
         })((p, s) =>
         if (s.isEmpty) s"${p._1}"
         else s"${p._1}, $s")
-      if (!fields.isEmpty)
-        buffer += fields.iterator.zipWithIndex.foldLeft("")((res, f) =>
-          if (f._2 === fields.length - 1) s"$res  #${f._1};"
-          else s"$res  #${f._1};\n"
-        )
+      if (!fields.isEmpty) {
+        fields.foreach(f => buffer += s"  #${f};")
+        fields.foreach(f => buffer += s"  get ${f}() { return this.#${f}; }")
+      }
       buffer += s"  constructor($params) {"
       if (`extends`.isDefined) {
         val sf = superFields.iterator.zipWithIndex.foldLeft("")((res, p) =>
@@ -862,10 +861,7 @@ final case class JSClassNewDecl(
         buffer += s"    $name.implement(this);"
       }
       fields.iterator.zipWithIndex.foreach { pair =>
-        val innerName = if (JSField.isValidIdentifier(pair._1)) s".${pair._1}" else s"[${JSLit.makeStringLiteral(pair._1)}]"
-        val privateName = if (JSField.isValidIdentifier(pair._1)) s".#${pair._1}" else s"[#${JSLit.makeStringLiteral(pair._1)}]"
-        buffer += s"    this${innerName} = ${pair._1};"
-        buffer += s"    this${privateName} = ${pair._1};" // TODO: invalid name?
+        buffer += s"    this.#${pair._1} = ${pair._1};" // TODO: invalid name?
       }
       buffer += "  }"
       SourceCode(buffer.toList)

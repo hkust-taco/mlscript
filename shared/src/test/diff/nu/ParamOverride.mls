@@ -49,7 +49,7 @@ class Test0 extends Base1(0), Derived1(1) // TODO
 let t = Test0()
 //│ let t: Test0
 //│ t
-//│   = Test0 { n: 0 }
+//│   = Test0 {}
 
 // TODO type check
 t.n
@@ -58,7 +58,7 @@ t.n
 //│ ╙──      	 ^^
 //│ error
 //│ res
-//│     = 0
+//│     = 1
 
 // TODO type check
 // FIXME super access to field?
@@ -68,7 +68,7 @@ t.foo
 //│ ╙──      	 ^^^^
 //│ error
 //│ res
-//│     = [ 0, undefined ]
+//│     = [ 1, 0 ]
 
 
 // TODO correct module code-gen

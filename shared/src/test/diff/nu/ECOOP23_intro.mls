@@ -29,7 +29,7 @@ class Color(str: string) {
 let Red = Color("red")
 //│ let Red: Color
 //│ Red
-//│     = Color { str: 'red' }
+//│     = Color {}
 
 
 mixin CompareColored {
@@ -111,53 +111,17 @@ let p5 = MyPoint(0, 1, Red, Some(p3))
 //│ let p4: MyPoint
 //│ let p5: MyPoint
 //│ p0
-//│    = MyPoint {
-//│        x: 0,
-//│        y: 0,
-//│        color: Color { str: 'red' },
-//│        parent: None { class: [class None] }
-//│      }
+//│    = MyPoint {}
 //│ p1
-//│    = MyPoint {
-//│        x: 0,
-//│        y: 1,
-//│        color: Color { str: 'red' },
-//│        parent: None { class: [class None] }
-//│      }
+//│    = MyPoint {}
 //│ p2
-//│    = MyPoint {
-//│        x: 0,
-//│        y: 1,
-//│        color: Color { str: 'red' },
-//│        parent: None { class: [class None] }
-//│      }
+//│    = MyPoint {}
 //│ p3
-//│    = MyPoint {
-//│        x: 0,
-//│        y: 1,
-//│        color: Color { str: 'red' },
-//│        parent: Some {
-//│          value: MyPoint { x: 0, y: 1, color: [Color], parent: [None] }
-//│        }
-//│      }
+//│    = MyPoint {}
 //│ p4
-//│    = MyPoint {
-//│        x: 0,
-//│        y: 1,
-//│        color: Color { str: 'red' },
-//│        parent: Some {
-//│          value: MyPoint { x: 0, y: 1, color: [Color], parent: [None] }
-//│        }
-//│      }
+//│    = MyPoint {}
 //│ p5
-//│    = MyPoint {
-//│        x: 0,
-//│        y: 1,
-//│        color: Color { str: 'red' },
-//│        parent: Some {
-//│          value: MyPoint { x: 0, y: 1, color: [Color], parent: [Some] }
-//│        }
-//│      }
+//│    = MyPoint {}
 
 
 CompareMyPoint.compare(p0, p1)

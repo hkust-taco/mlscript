@@ -622,8 +622,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     }).flatten
 
     JSClassNewDecl(classSymbol.runtimeName, fields, base, restRuntime match {
-      case Some(restRuntime) => superParameters :+ JSIdent(s"...$restRuntime")
-      case _ => superParameters
+      case Some(restRuntime) => superParameters.reverse :+ JSIdent(s"...$restRuntime")
+      case _ => superParameters.reverse
     }, restRuntime, members, traits)
   }
 
@@ -680,7 +680,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val selfSymbol = memberScope.declareThisAlias()
     val preDecs = props.map(p => {
       val runtime = memberScope.declareValue(p, Some(false), false)
-      JSConstDecl(runtime.runtimeName, JSField(JSIdent("this"), p))
+      JSConstDecl(runtime.runtimeName, JSIdent(s"this.#$p"))
     })
     // Declare parameters.
     val (memberParams, body) = method.rhs.value match {
