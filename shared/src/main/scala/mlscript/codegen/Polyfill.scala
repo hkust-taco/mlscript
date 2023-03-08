@@ -154,6 +154,9 @@ object Polyfill {
         `throw`(JSNew(JSIdent("Error"))(JSExpr("unexpected runtime error")))
       }
     )
+    buffer += BuiltinFunc(
+      "length", fn(_, param("x")) { `return` { id("x").member("length") } }
+    )
     buffer += BuiltinFunc("concat", makeBinaryFunc("+"))
     buffer += BuiltinFunc("add", makeBinaryFunc("+"))
     buffer += BuiltinFunc("sub", makeBinaryFunc("-"))

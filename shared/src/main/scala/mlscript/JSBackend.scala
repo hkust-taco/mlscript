@@ -422,6 +422,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   )(implicit scope: Scope): JSClassDecl = {
     // Translate class methods and getters.
     val classScope = scope.derive(s"class ${classSymbol.lexicalName}")
+    classScope.declareSuper()
     val members = classSymbol.methods.map {
       translateClassMember(_)(classScope)
     }

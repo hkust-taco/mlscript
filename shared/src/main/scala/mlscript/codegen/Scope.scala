@@ -31,6 +31,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       "emptyArray",
       "succ",
       "error",
+      "length",
       "concat",
       "add",
       "sub",

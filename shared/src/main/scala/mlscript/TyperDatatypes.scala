@@ -385,6 +385,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     
                     // TODO
                     // ctx += "super" -> VarSymbol(superTV, Var("super"))
+                    ctx += "super" -> VarSymbol(thisType, Var("super"))
                     
                     val ttu = typeTypingUnit(td.body, allowPure = false) // TODO use
                     

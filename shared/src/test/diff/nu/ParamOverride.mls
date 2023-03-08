@@ -39,9 +39,9 @@ mixin Derived1(n: int) {
 //│ }
 
 
-class Test0 extends Base1(0), Derived1(1)
+class Test0 extends Base1(1/2), Derived1(1)
 //│ class Test0() {
-//│   fun foo: (int, 1, 0,)
+//│   fun foo: (int, 1, number,)
 //│   fun original: number
 //│ }
 
@@ -58,55 +58,61 @@ t.n
 t.original
 //│ number
 //│ res
-//│     = 0
+//│     = 0.5
 
 t.foo
-//│ (int, 1, 0,)
+//│ (int, 1, number,)
 //│ res
-//│     = [ 1, 1, 0 ]
+//│     = [ 1, 1, 0.5 ]
 
 
-:ShowRepl
-module Test1 extends Base1(0), Derived1(1) {
+module Test1 extends Base1(1/2), Derived1(1) {
   fun n = this.n
 }
 //│ module Test1() {
-//│   fun foo: (int, 1, 0,)
+//│   fun foo: (int, 1, number,)
 //│   fun n: 1
 //│   fun original: number
 //│ }
-//│ ┌ Block at ParamOverride.mls:70
-//│ ├─┬ Prelude
-//│ │ ├── Code
-//│ │ │   let typing_unit10 = {
-//│ │ │     cache: {},
-//│ │ │     get Test1() {
-//│ │ │       if (this.cache.Test1 === undefined) {
-//│ │ │         class Test1 extends Derived1(Base1(Object)) {
-//│ │ │           constructor() {
-//│ │ │             super(1, 0);
-//│ │ │           }
-//│ │ │           get n() {
-//│ │ │             const self = this;
-//│ │ │             return self.n;
-//│ │ │           }
-//│ │ │         }
-//│ │ │         this.cache.Test1 = new Test1();
-//│ │ │         this.cache.Test1["class"] = Test1;
-//│ │ │       }
-//│ │ │       return this.cache.Test1;
-//│ │ │     }
-//│ │ │   };
-//│ │ │   globalThis.Test1 = typing_unit10.Test1;
-//│ │ └── Reply
-//│ │     Test1 { class: [Function: Test1] }
-//│ └── No queries
 
-// FIXME
+:re
 Test1.n
 //│ 1
 //│ res
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
+
+
+class Test2(n: string) extends Base1(1/2), Derived1(1) {
+  fun bar = [this.foo, n, this.original]
+}
+//│ class Test2(n: string) {
+//│   fun bar: ((int, 1, number,), string, number,)
+//│   fun foo: (int, 1, number,)
+//│   fun original: number
+//│ }
+
+Test2("test").bar
+//│ ((int, 1, number,), string, number,)
+//│ res
+//│     = [ [ 1, 'test', 0.5 ], 'test', 0.5 ]
+
+// FIXME
+class Test3(n: string) extends Base1(1/2), Derived1(length(n)) {
+  fun foo = [super.foo, n, this.original]
+}
+//│ class Test3(n: string) {
+//│   fun foo: ((int, int, number,), string, number,)
+//│   fun original: number
+//│ }
+//│ Code generation encountered an error:
+//│   unresolved symbol super
+
+// FIXME
+Test3("test").foo
+//│ ((int, int, number,), string, number,)
+//│ res
+//│ Runtime error:
+//│   ReferenceError: Test3 is not defined
 
 

@@ -261,6 +261,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       "le" -> numberBinPred,
       "gt" -> numberBinPred,
       "ge" -> numberBinPred,
+      "length" -> fun(singleTup(StrType), IntType)(noProv),
       "concat" -> fun(singleTup(StrType), fun(singleTup(StrType), StrType)(noProv))(noProv),
       "eq" -> {
         val v = freshVar(noProv, N)(1)

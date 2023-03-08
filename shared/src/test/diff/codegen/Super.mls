@@ -145,7 +145,7 @@ module Test0 extends Foo2
 //│ │ │   globalThis.Test01 = typing_unit5.Test01;
 //│ │ └── Reply
 //│ │     Uncaught ReferenceError: Foo2 is not defined
-//│ │         at Object.get Test01 [as Test01] (REPL9:1:78)
+//│ │         at get Test01 [as Test01] (REPL9:1:78)
 //│ └── No queries
 
 :re
