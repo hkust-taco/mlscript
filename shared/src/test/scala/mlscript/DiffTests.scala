@@ -839,15 +839,21 @@ class DiffTests
                   // Execute code.
                   if (!mode.noExecution) {
                     val preludeReply = if (prelude.isEmpty) N else S(host.execute(prelude.mkString(" ")))
-                    if (mode.showRepl) showReplPrelude(prelude, preludeReply, blockLineNum)
-                    val replies = queries.map {
-                      case CodeQuery(preludeLines, codeLines, resultName) =>
-                        host.query(preludeLines.mkString, codeLines.mkString, resultName)
-                      case AbortedQuery(reason) => (ReplHost.Unexecuted(reason), "")
-                      case EmptyQuery => (ReplHost.Empty, "")
+                    preludeReply match {
+                      case S(ue: ReplHost.Unexecuted) => R((ue, "") :: Nil)
+                      case S(err: ReplHost.Error) => R((err, "") :: Nil)
+                      case _ => {
+                        if (mode.showRepl) showReplPrelude(prelude, preludeReply, blockLineNum)
+                        val replies = queries.map {
+                          case CodeQuery(preludeLines, codeLines, resultName) =>
+                            host.query(preludeLines.mkString, codeLines.mkString, resultName)
+                          case AbortedQuery(reason) => (ReplHost.Unexecuted(reason), "")
+                          case EmptyQuery => (ReplHost.Empty, "")
+                        }
+                        if (mode.showRepl) showReplContent(queries, replies)
+                        R(replies)
+                      }
                     }
-                    if (mode.showRepl) showReplContent(queries, replies)
-                    R(replies)
                   } else {
                     L(ResultNotExecuted)
                   }
@@ -865,55 +871,62 @@ class DiffTests
                 loglines.foreach(output)
               }
             }
+
+            def checkReply(replyQueue: mutable.Queue[(ReplHost.Reply, Str)], prefixLength: Int): Unit =
+              replyQueue.headOption.foreach { case (head, log) =>
+                head match {
+                  case ReplHost.Error(isSyntaxError, content) =>
+                    // We don't expect type errors nor FIXME.
+                    if (!mode.expectTypeErrors && !mode.fixme) {
+                      // We don't expect code generation errors and it is.
+                      if (!mode.expectCodeGenErrors && isSyntaxError)
+                        failures += blockLineNum
+                      // We don't expect runtime errors and it's a runtime error.
+                      if (!mode.expectRuntimeErrors && !allowRuntimeErrors && !isSyntaxError)
+                        failures += blockLineNum
+                    }
+                    if (isSyntaxError) {
+                      // If there is syntax error in the generated code,
+                      // it should be a code generation error.
+                      output("Syntax error:")
+                      totalCodeGenErrors += 1
+                    } else { // Otherwise, it is a runtime error.
+                      output("Runtime error:")
+                      totalRuntimeErrors += 1
+                    }
+                    content.linesIterator.foreach { s => output("  " + s) }
+                  case ReplHost.Unexecuted(reason) =>
+                    output(" " * prefixLength + "= <no result>")
+                    output(" " * (prefixLength + 2) + reason)
+                  case ReplHost.Result(result, _) =>
+                    result.linesIterator.zipWithIndex.foreach { case (line, i) =>
+                      if (i =:= 0) output(" " * prefixLength + "= " + line)
+                      else output(" " * (prefixLength + 2) + line)
+                    }
+                  case ReplHost.Empty =>
+                    output(" " * prefixLength + "= <missing implementation>")
+                }
+                outputLog(log)
+                replyQueue.dequeue()
+              }
             
             // If code generation fails, show the error message.
             executionResults match {
               case R(replies) =>
                 val replyQueue = mutable.Queue.from(replies)
-                typerResults.foreach { case (name, typingLines, diagnosticLines, typeBeforeDiags) =>
-                  if (typeBeforeDiags) {
-                    typingLines.foreach(output)
-                    diagnosticLines.foreach(output)
-                  } else {
-                    diagnosticLines.foreach(output)
-                    typingLines.foreach(output)
-                  }
-                  val prefixLength = name.length
-                  replyQueue.headOption.foreach { case (head, log) =>
-                    head match {
-                      case ReplHost.Error(isSyntaxError, content) =>
-                        // We don't expect type errors nor FIXME.
-                        if (!mode.expectTypeErrors && !mode.fixme) {
-                          // We don't expect code generation errors and it is.
-                          if (!mode.expectCodeGenErrors && isSyntaxError)
-                            failures += blockLineNum
-                          // We don't expect runtime errors and it's a runtime error.
-                          if (!mode.expectRuntimeErrors && !allowRuntimeErrors && !isSyntaxError)
-                            failures += blockLineNum
-                        }
-                        if (isSyntaxError) {
-                          // If there is syntax error in the generated code,
-                          // it should be a code generation error.
-                          output("Syntax error:")
-                          totalCodeGenErrors += 1
-                        } else { // Otherwise, it is a runtime error.
-                          output("Runtime error:")
-                          totalRuntimeErrors += 1
-                        }
-                        content.linesIterator.foreach { s => output("  " + s) }
-                      case ReplHost.Unexecuted(reason) =>
-                        output(" " * prefixLength + "= <no result>")
-                        output(" " * (prefixLength + 2) + reason)
-                      case ReplHost.Result(result, _) =>
-                        result.linesIterator.zipWithIndex.foreach { case (line, i) =>
-                          if (i =:= 0) output(" " * prefixLength + "= " + line)
-                          else output(" " * (prefixLength + 2) + line)
-                        }
-                      case ReplHost.Empty =>
-                        output(" " * prefixLength + "= <missing implementation>")
+                if (typerResults.isEmpty)
+                  checkReply(replyQueue, 0)
+                else {
+                  typerResults.foreach { case (name, typingLines, diagnosticLines, typeBeforeDiags) =>
+                    if (typeBeforeDiags) {
+                      typingLines.foreach(output)
+                      diagnosticLines.foreach(output)
+                    } else {
+                      diagnosticLines.foreach(output)
+                      typingLines.foreach(output)
                     }
-                    outputLog(log)
-                    replyQueue.dequeue()
+                    val prefixLength = name.length
+                    checkReply(replyQueue, prefixLength)
                   }
                 }
               case L(other) =>
