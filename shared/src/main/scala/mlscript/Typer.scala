@@ -67,8 +67,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       tyDefs: Map[Str, TypeDef],
       // tyDefs2: MutMap[Str, NuTypeDef],
       tyDefs2: MutMap[Str, LazyTypeInfo],
-      inRecursiveDef: Opt[Var],
-      nuTyDefs: Map[Str, TypedNuTypeDef],
+      inRecursiveDef: Opt[Var], // TODO rm
       extrCtx: ExtrCtx,
   ) {
     def +=(b: Str -> TypeInfo): Unit = env += b
@@ -154,7 +153,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       tyDefs = Map.from(builtinTypes.map(t => t.nme.name -> t)),
       tyDefs2 = MutMap.empty,
       inRecursiveDef = N,
-      nuTyDefs = Map.empty,
       MutMap.empty,
     )
     val empty: Ctx = init

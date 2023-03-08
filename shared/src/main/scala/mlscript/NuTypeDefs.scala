@@ -362,7 +362,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     // }
     val infos = tu.entities.collect {
       case decl: NuDecl =>
-        val lti = new LazyTypeInfo(lvl, decl, implicitly)
+        val lti = new LazyTypeInfo(decl, implicitly)
         decl match {
           case td: NuTypeDef =>
             ctx.tyDefs2 += td.nme.name -> lti

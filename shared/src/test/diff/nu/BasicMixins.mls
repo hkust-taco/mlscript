@@ -107,7 +107,11 @@ mixin Foo {
 //│   fun test: (int & 'a) -> (int, 'a, 'misc,)
 //│ }
 
+:e
 module Base1(base: int, misc: string) extends Foo
+//│ ╔══[ERROR] module parameters are not supported
+//│ ║  l.111: 	module Base1(base: int, misc: string) extends Foo
+//│ ╙──       	             ^^^^^^^^^^^^^^^
 //│ module Base1(base: int, misc: string) {
 //│   fun test: (int & 'a) -> (int, 'a, string,)
 //│ }
@@ -175,16 +179,16 @@ WrapBase1.wrapA(1)
 :e
 WrapBase1.wrapA("ok")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.176: 	WrapBase1.wrapA("ok")
+//│ ║  l.180: 	WrapBase1.wrapA("ok")
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"ok"` is not an instance of type `int`
-//│ ║  l.176: 	WrapBase1.wrapA("ok")
+//│ ║  l.180: 	WrapBase1.wrapA("ok")
 //│ ║         	                ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.122: 	  fun wrapA(x: int) = x : int
+//│ ║  l.126: 	  fun wrapA(x: int) = x : int
 //│ ║         	               ^^^
 //│ ╟── from reference:
-//│ ║  l.132: 	  fun wrapA(x) = [super.wrapA(x)]
+//│ ║  l.136: 	  fun wrapA(x) = [super.wrapA(x)]
 //│ ╙──       	                              ^
 //│ (int,) | error
 
