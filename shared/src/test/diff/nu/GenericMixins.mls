@@ -18,10 +18,7 @@ mixin BaseTest<A> {
 mixin BaseTest<A>(x: A) {
   fun test = x
 }
-//│ ╔══[ERROR] identifier not found: x
-//│ ║  l.19: 	  fun test = x
-//│ ╙──      	             ^
 //│ mixin BaseTest[A]() {
-//│   fun test: error
+//│   fun test: A
 //│ }
 

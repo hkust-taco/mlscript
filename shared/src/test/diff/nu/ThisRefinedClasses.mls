@@ -11,12 +11,9 @@
 
 :e
 class Foo { fun test = this.x }
-//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ╔══[ERROR] unsupported indirectly recursive member access
 //│ ║  l.13: 	class Foo { fun test = this.x }
-//│ ║        	                       ^^^^^^
-//│ ╟── reference of type `Foo` does not have field 'x'
-//│ ║  l.13: 	class Foo { fun test = this.x }
-//│ ╙──      	                       ^^^^
+//│ ╙──      	                           ^^
 //│ class Foo() {
 //│   fun test: error
 //│ }
@@ -24,12 +21,9 @@ class Foo { fun test = this.x }
 
 :e
 class Foo(n: int) { fun test = this.x }
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.26: 	class Foo(n: int) { fun test = this.x }
-//│ ║        	                               ^^^^^^
-//│ ╟── reference of type `Foo & {n: int}` does not have field 'x'
-//│ ║  l.26: 	class Foo(n: int) { fun test = this.x }
-//│ ╙──      	                               ^^^^
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.23: 	class Foo(n: int) { fun test = this.x }
+//│ ╙──      	                                   ^^
 //│ class Foo(n: int) {
 //│   fun test: error
 //│ }
@@ -37,12 +31,9 @@ class Foo(n: int) { fun test = this.x }
 
 :e
 class Foo<A>(n: A) { fun test = this.x }
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.39: 	class Foo<A>(n: A) { fun test = this.x }
-//│ ║        	                                ^^^^^^
-//│ ╟── reference of type `Foo & {Foo#A = ?A, n: A}` does not have field 'x'
-//│ ║  l.39: 	class Foo<A>(n: A) { fun test = this.x }
-//│ ╙──      	                                ^^^^
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.33: 	class Foo<A>(n: A) { fun test = this.x }
+//│ ╙──      	                                    ^^
 //│ class Foo[A](n: A) {
 //│   fun test: error
 //│ }
@@ -54,32 +45,21 @@ class Foo {
   this: { x: 'a }
   // fun test = this.x
 }
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.54: 	  this: { x: 'a }
-//│ ║        	  ^^^^
-//│ ╟── reference of type `Foo` does not have field 'x'
-//│ ╟── Note: constraint arises from record type:
-//│ ║  l.54: 	  this: { x: 'a }
-//│ ╙──      	        ^^^^^^^^^
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.45: 	  this: { x: 'a }
+//│ ╙──      	          ^
 //│ class Foo()
 
 
 // TODO
 // * All on one line:
 class Test { this: { x: int}; fun test = this.x }
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.69: 	class Test { this: { x: int}; fun test = this.x }
-//│ ║        	             ^^^^
-//│ ╟── reference of type `Test` does not have field 'x'
-//│ ╟── Note: constraint arises from record type:
-//│ ║  l.69: 	class Test { this: { x: int}; fun test = this.x }
-//│ ╙──      	                   ^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.69: 	class Test { this: { x: int}; fun test = this.x }
-//│ ║        	                                         ^^^^^^
-//│ ╟── reference of type `Test` does not have field 'x'
-//│ ║  l.69: 	class Test { this: { x: int}; fun test = this.x }
-//│ ╙──      	                                         ^^^^
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.56: 	class Test { this: { x: int}; fun test = this.x }
+//│ ╙──      	                     ^
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.56: 	class Test { this: { x: int}; fun test = this.x }
+//│ ╙──      	                                             ^^
 //│ class Test() {
 //│   fun test: error
 //│ }

@@ -114,7 +114,7 @@ module Test1 extends EvalVar, EvalLambda
 Test1.eval(Nil(), Var("a"))
 //│ 'a
 //│   where
-//│     'a :> Var | App['a] | Abs['a]
+//│     'a :> App['a] | Abs['a] | Var
 
 Test1.eval(Nil(), Abs("b", Var("a")))
 //│ 'a

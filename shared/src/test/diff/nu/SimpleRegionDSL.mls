@@ -195,46 +195,18 @@ mixin Text {
 
 :e
 module SizeText extends Text
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.197: 	module SizeText extends Text
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not have field 'size'
-//│ ╟── Note: constraint arises from field selection:
+//│ ╔══[ERROR] unsupported indirectly recursive member access
 //│ ║  l.189: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
-//│ ║         	                                                                     ^^^^^^^^^
-//│ ╟── from reference:
-//│ ║  l.189: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
-//│ ╙──       	                                                                     ^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.197: 	module SizeText extends Text
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not have field 'size'
-//│ ╟── Note: constraint arises from field selection:
+//│ ╙──       	                                                                         ^^^^^
+//│ ╔══[ERROR] unsupported indirectly recursive member access
 //│ ║  l.188: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
-//│ ║         	                                                                                 ^^^^^^^^^
-//│ ╟── from reference:
-//│ ║  l.188: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
-//│ ╙──       	                                                                                 ^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.197: 	module SizeText extends Text
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not have field 'size'
-//│ ╟── Note: constraint arises from field selection:
+//│ ╙──       	                                                                                     ^^^^^
+//│ ╔══[ERROR] unsupported indirectly recursive member access
 //│ ║  l.187: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
-//│ ║         	                                                                      ^^^^^^^^^
-//│ ╟── from reference:
-//│ ║  l.187: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
-//│ ╙──       	                                                                      ^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.197: 	module SizeText extends Text
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not have field 'size'
-//│ ╟── Note: constraint arises from field selection:
+//│ ╙──       	                                                                          ^^^^^
+//│ ╔══[ERROR] unsupported indirectly recursive member access
 //│ ║  l.186: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
-//│ ║         	                                                                   ^^^^^^^^^
-//│ ╟── from reference:
-//│ ║  l.186: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
-//│ ╙──       	                                                                   ^^^^
+//│ ╙──       	                                                                       ^^^^^
 //│ module SizeText() {
 //│   fun text: (Circle | Intersect[anything] | Outside[anything] | Translate[anything] | Union[anything]) -> string
 //│ }
@@ -398,7 +370,7 @@ fun mk(n) = if n is
 TestElim.eliminate(mk(100))
 //│ 'a
 //│   where
-//│     'a :> Scale['a] | Outside['a] | Union['a] | Intersect['a] | Translate['a]
+//│     'a :> Outside['a] | Union['a] | Intersect['a] | Translate['a] | Scale['a]
 //│ res
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
@@ -422,7 +394,7 @@ module Lang extends SizeBase, SizeExt, Contains, Text, IsUniv, IsEmpty, Eliminat
 //│   'd <: Intersect['d] | Outside['e] | Scale['d] | Translate['d] | Union['d] | Univ | ~Intersect[anything] & ~Outside[anything] & ~Scale[anything] & ~Translate[anything] & ~Union[anything] & ~Univ
 //│   'e <: Intersect['e] | Outside['d] | Scale['e] | Translate['e] | Union['e] | Univ | ~Intersect[anything] & ~Outside[anything] & ~Scale[anything] & ~Translate[anything] & ~Union[anything] & ~Univ
 //│   'b <: Intersect['b] | Outside['b & (Outside['b] | ~Outside)] | Scale['b] | Translate['b] | Union['b] | 'c & ~Intersect & ~Outside & ~Scale & ~Translate & ~Union
-//│   'c :> Outside['c] | Union['c] | Intersect['c] | Translate['c] | Scale['c]
+//│   'c :> Union['c] | Intersect['c] | Translate['c] | Scale['c] | Outside['c]
 //│   'a <: Circle | Intersect['a] | Outside['a] | Translate['a] | Union['a]
 
 // TODO investigate
@@ -478,13 +450,13 @@ Lang.size(mk(100))
 :re
 Lang.contains(mk(100), Vector(0, 0))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.479: 	Lang.contains(mk(100), Vector(0, 0))
+//│ ║  l.451: 	Lang.contains(mk(100), Vector(0, 0))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Scale[?Region]` does not match type `Circle | Intersect[?Region0] | Outside[?Region1] | Translate[?Region2] | Union[?Region3]`
-//│ ║  l.392: 	  _ then Scale(Vector(0, 0), mk(n))
+//│ ║  l.364: 	  _ then Scale(Vector(0, 0), mk(n))
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into application with expected type `Circle | Intersect[?Region4] | Outside[?Region5] | Translate[?Region6] | Union[?Region7]`
-//│ ║  l.479: 	Lang.contains(mk(100), Vector(0, 0))
+//│ ║  l.451: 	Lang.contains(mk(100), Vector(0, 0))
 //│ ║         	              ^^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.132: 	    if a is
@@ -498,13 +470,13 @@ Lang.contains(mk(100), Vector(0, 0))
 :re
 Lang.text(mk(100))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.499: 	Lang.text(mk(100))
+//│ ║  l.471: 	Lang.text(mk(100))
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Scale[?Region]` does not match type `Circle | Intersect[?Region0] | Outside[?Region1] | Translate[?Region2] | Union[?Region3]`
-//│ ║  l.392: 	  _ then Scale(Vector(0, 0), mk(n))
+//│ ║  l.364: 	  _ then Scale(Vector(0, 0), mk(n))
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into application with expected type `Circle | Intersect[?Region4] | Outside[?Region5] | Translate[?Region6] | Union[?Region7]`
-//│ ║  l.499: 	Lang.text(mk(100))
+//│ ║  l.471: 	Lang.text(mk(100))
 //│ ║         	          ^^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.184: 	    if e is

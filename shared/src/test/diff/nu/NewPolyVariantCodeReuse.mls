@@ -104,7 +104,7 @@ module Test1 extends EvalVar, EvalLambda
 //│   'A1 <: 'A0 & 'A
 //│   'A0 :> 'A
 //│       <: 'A & 'A1
-//│   'result :> Var | App['result] | Abs['result]
+//│   'result :> Var | Abs['result] | App['result]
 
 Test1.eval(Nil, Var("a"))
 //│ 'a

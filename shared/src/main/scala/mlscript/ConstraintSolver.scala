@@ -28,8 +28,19 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         : FieldType
         = {
     val info = ctx.tyDefs2(clsNme)
+    // require(!info.isComputing)
     
-    info.complete() match {
+    if (info.isComputing) {
+      
+      rfnt(fld) match {
+        case S(fty) =>
+          fty
+        case N =>
+          // TODO allow when annotated
+          err(msg"unsupported indirectly recursive member access", fld.toLoc).toUpper(noProv)
+      }
+      
+    } else info.complete() match {
       case cls: TypedNuCls =>
         val raw = cls.members.get(fld.name) match {
           case S(d: TypedNuFun) =>
@@ -524,15 +535,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               annoying(Nil, LhsRefined(N, ts, r, trs), Nil, done_rs)
             case (LhsRefined(S(ClassTag(Var(nme), _)), ts, r, trs0), RhsBases(ots, S(R(RhsField(fldNme, fldTy))), trs))
             if nme.isCapitalized =>
-              val lti = ctx.tyDefs2(nme)
-              if (lti.isComputing)
-                annoying(Nil, LhsRefined(N, ts, r, trs0), Nil, done_rs) // TODO maybe pick a parent class here instead?
-              else {
+              // val lti = ctx.tyDefs2(nme)
+              // if (lti.isComputing)
+              //   annoying(Nil, LhsRefined(N, ts, r, trs0), Nil, done_rs) // TODO maybe pick a parent class here instead?
+              // else {
                 // val fty = lookupNuTypeDefField(lookupNuTypeDef(nme, r.fields.toMap.get), fldNme)
                 val fty = lookupMember(nme, r.fields.toMap.get, fldNme)
                 rec(fty.ub, fldTy.ub, false)
                 recLb(fldTy, fty)
-              }
+              // }
             case (LhsRefined(S(pt: ClassTag), ts, r, trs), RhsBases(pts, bf, trs2)) =>
               if (pts.contains(pt) || pts.exists(p => pt.parentsST.contains(p.id)))
                 println(s"OK  $pt  <:  ${pts.mkString(" | ")}")
@@ -754,8 +765,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           
           case (ClassTag(Var(nme), _), rt: RecordType) if nme.isCapitalized =>
             val lti = ctx.tyDefs2(nme)
-            if (lti.isComputing) reportError()
-            else rt.fields.foreach { case (fldNme, fldTy) =>
+            // if (lti.isComputing) reportError()
+            // else 
+            rt.fields.foreach { case (fldNme, fldTy) =>
               // val fty = lookupNuTypeDefField(lookupNuTypeDef(nme, _ => N), fldNme)
               val fty = lookupMember(nme, _ => N, fldNme)
               rec(fty.ub, fldTy.ub, false)
