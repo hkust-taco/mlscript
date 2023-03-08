@@ -1268,9 +1268,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     def goDecl(d: TypedNuDecl): NuDecl = d match {
       case TypedNuAls(level, td, tparams, body) =>
         NuTypeDef(td.kind, td.nme, td.tparams, Tup(Nil), S(go(body)), Nil, N, N, TypingUnit(Nil))
-      case TypedNuMxn(td, thisTy, superTy, members, ttu) =>
+      case TypedNuMxn(td, thisTy, superTy, tparams, params, members, ttu) =>
         NuTypeDef(td.kind, td.nme, td.tparams,
-          Tup(Nil),
+          Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub))))),
           N,
           Nil,//TODO
           // S(go(superTy)),

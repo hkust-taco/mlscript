@@ -410,7 +410,7 @@ class Foo(x: int)
 
 :e
 class Bar(x: int, y: int) extends Foo(x + y)
-//│ ╔══[ERROR] Unsupported parent specification
+//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
 //│ ║  l.412: 	class Bar(x: int, y: int) extends Foo(x + y)
 //│ ╙──       	                                  ^^^^^^^^^^
 //│ class Bar(x: int, y: int)
@@ -418,7 +418,7 @@ class Bar(x: int, y: int) extends Foo(x + y)
 
 mixin AA(a: int) {
 }
-//│ mixin AA()
+//│ mixin AA(a: int)
 
 mixin BB {}
 //│ mixin BB()
@@ -427,23 +427,15 @@ mixin BB {}
 class C(x: int) extends BB
 //│ class C(x: int)
 
-:e
 class D(x: int) extends AA(x)
-//│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.431: 	class D(x: int) extends AA(x)
-//│ ╙──       	                        ^^^^^
 //│ class D(x: int)
 
-:e
 class E(x: int) extends BB, AA(x)
-//│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.438: 	class E(x: int) extends BB, AA(x)
-//│ ╙──       	                            ^^^^^
 //│ class E(x: int)
 
 :js
 mixin Fooo(x: int)
-//│ mixin Fooo()
+//│ mixin Fooo(x: int)
 //│ // Prelude
 //│ let typing_unit14 = {
 //│   cache: {},
@@ -463,7 +455,7 @@ mixin Fooo(x: int)
 
 :js
 mixin Bazz(y: int)
-//│ mixin Bazz()
+//│ mixin Bazz(y: int)
 //│ // Prelude
 //│ let typing_unit15 = {
 //│   cache: {},
@@ -482,14 +474,7 @@ mixin Bazz(y: int)
 //│ // End of generated code
 
 :js
-:e // TODO: type check
 module Barr extends Fooo(0), Bazz(1)
-//│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.486: 	module Barr extends Fooo(0), Bazz(1)
-//│ ╙──       	                    ^^^^^^^
-//│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.486: 	module Barr extends Fooo(0), Bazz(1)
-//│ ╙──       	                             ^^^^^^^
 //│ module Barr()
 //│ // Prelude
 //│ let typing_unit16 = {
@@ -510,20 +495,13 @@ module Barr extends Fooo(0), Bazz(1)
 //│ globalThis.Barr = typing_unit16.Barr;
 //│ // End of generated code
 
-:e
 Barr.x
-//│ ╔══[ERROR] module `Barr` does not contain member `x`
-//│ ║  l.514: 	Barr.x
-//│ ╙──       	    ^^
-//│ error
+//│ 0
 //│ res
 //│     = 0
 
-:e
 Barr.y
-//│ ╔══[ERROR] module `Barr` does not contain member `y`
-//│ ║  l.523: 	Barr.y
-//│ ╙──       	    ^^
-//│ error
+//│ 1
 //│ res
 //│     = 1
+

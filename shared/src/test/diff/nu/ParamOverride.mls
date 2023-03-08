@@ -15,70 +15,101 @@ class Derived0(n: int) extends Base
 //│   unresolved symbol Base
 
 
-mixin Base1(n: number)
-//│ mixin Base1()
+mixin Base1(n: number) {
+  fun original = n
+}
+//│ mixin Base1(n: number) {
+//│   fun original: number
+//│ }
 
 :e
 mixin DerivedBad(n: int) extends Base
 //│ ╔══[ERROR] mixin definitions cannot yet extend parents
-//│ ║  l.22: 	mixin DerivedBad(n: int) extends Base
+//│ ║  l.26: 	mixin DerivedBad(n: int) extends Base
 //│ ╙──      	                                 ^^^^
-//│ mixin DerivedBad()
+//│ mixin DerivedBad(n: int)
 
 mixin Derived1(n: int) {
-  // fun foo = [n, this.n, super.n] // TODO
-  fun foo = [this.n, super.n]
+  fun foo = [n, this.n, super.n]
 }
-//│ mixin Derived1() {
+//│ mixin Derived1(n: int) {
 //│   super: {n: 'n}
 //│   this: {n: 'n0}
-//│   fun foo: ('n0, 'n,)
+//│   fun foo: (int, 'n0, 'n,)
 //│ }
 
 
-// TODO type check
-class Test0 extends Base1(0), Derived1(1) // TODO
-//│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.40: 	class Test0 extends Base1(0), Derived1(1) // TODO
-//│ ╙──      	                    ^^^^^^^^
-//│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.40: 	class Test0 extends Base1(0), Derived1(1) // TODO
-//│ ╙──      	                              ^^^^^^^^^^^
-//│ class Test0()
+class Test0 extends Base1(0), Derived1(1)
+//│ class Test0() {
+//│   fun foo: (int, 1, 0,)
+//│   fun original: number
+//│ }
 
 let t = Test0()
 //│ let t: Test0
 //│ t
 //│   = Test0 {}
 
-// TODO type check
+// FIXME field value
 t.n
-//│ ╔══[ERROR] class `Test0` does not contain member `n`
-//│ ║  l.55: 	t.n
-//│ ╙──      	 ^^
-//│ error
+//│ 1
 //│ res
 //│     = 1
 
-// TODO type check
-// FIXME super access to field?
-t.foo
-//│ ╔══[ERROR] class `Test0` does not contain member `foo`
-//│ ║  l.65: 	t.foo
-//│ ╙──      	 ^^^^
-//│ error
+t.original
+//│ number
 //│ res
-//│     = [ 1, 0 ]
+//│     = 0
+
+// FIXME super access to field
+t.foo
+//│ (int, 1, 0,)
+//│ res
+//│     = [ 1, 1, 0 ]
 
 
-// TODO correct module code-gen
-module Test1 extends Base1(0), Derived1(1)
-//│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.75: 	module Test1 extends Base1(0), Derived1(1)
-//│ ╙──      	                     ^^^^^^^^
-//│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.75: 	module Test1 extends Base1(0), Derived1(1)
-//│ ╙──      	                               ^^^^^^^^^^^
-//│ module Test1()
+// FIXME error swallowed!
+:ShowRepl
+module Test1 extends Base1(0), Derived1(1) {
+  fun n = this.n
+}
+//│ module Test1() {
+//│   fun foo: (int, 1, 0,)
+//│   fun n: 1
+//│   fun original: number
+//│ }
+//│ ┌ Block at ParamOverride.mls:73
+//│ ├─┬ Prelude
+//│ │ ├── Code
+//│ │ │   let typing_unit10 = {
+//│ │ │     cache: {},
+//│ │ │     get Test1() {
+//│ │ │       if (this.cache.Test1 === undefined) {
+//│ │ │         class Test1 extends Derived1(Base1(Object)) {
+//│ │ │           constructor() {
+//│ │ │             super(1, 0);
+//│ │ │           }
+//│ │ │           get n() {
+//│ │ │             const self = this;
+//│ │ │             return self.n;
+//│ │ │           }
+//│ │ │         }
+//│ │ │         this.cache.Test1 = new Test1();
+//│ │ │         this.cache.Test1["class"] = Test1;
+//│ │ │       }
+//│ │ │       return this.cache.Test1;
+//│ │ │     }
+//│ │ │   };
+//│ │ │   globalThis.Test1 = typing_unit10.Test1;
+//│ │ └── Reply
+//│ │     Test1 { class: [Function: Test1] }
+//│ └── No queries
+
+// FIXME
+Test1.n
+//│ 1
+//│ res
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 

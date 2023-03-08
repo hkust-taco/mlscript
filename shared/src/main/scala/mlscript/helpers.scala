@@ -507,7 +507,8 @@ trait TypeNameImpl extends Ordered[TypeName] { self: TypeName =>
   lazy val toVar: Var = Var(name).withLocOf(this)
 }
 
-trait FldImpl { self: Fld =>
+trait FldImpl extends Located { self: Fld =>
+  def children: Ls[Located] = self.value :: Nil
   def describe: Str =
     (if (self.spec) "specialized " else "") +
     (if (self.mut) "mutable " else "") +
