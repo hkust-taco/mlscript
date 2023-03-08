@@ -96,7 +96,7 @@ module Test0 extends Foo0, Foo1
 
 :ShowRepl
 :js
-:ge
+// FIXME prevent misuse of `super` using the type system
 mixin Foo2 {
   fun foo2 = super
 }
