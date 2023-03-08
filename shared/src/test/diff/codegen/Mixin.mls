@@ -393,8 +393,8 @@ module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│   get TestLang() {
 //│     if (this.cache.TestLang === undefined) {
 //│       class TestLang extends EvalNegNeg(EvalNeg(EvalBase())) {
-//│         constructor(...rest) {
-//│           super(...rest);
+//│         constructor() {
+//│           super();
 //│         }
 //│       }
 //│       this.cache.TestLang = new TestLang();
@@ -413,8 +413,8 @@ module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│ │ │     get TestLang() {
 //│ │ │       if (this.cache.TestLang === undefined) {
 //│ │ │         class TestLang extends EvalNegNeg(EvalNeg(EvalBase())) {
-//│ │ │           constructor(...rest) {
-//│ │ │             super(...rest);
+//│ │ │           constructor() {
+//│ │ │             super();
 //│ │ │           }
 //│ │ │         }
 //│ │ │         this.cache.TestLang = new TestLang();
@@ -577,11 +577,11 @@ module Barr extends Fooo(0), Bazz(1)
 //│   get Barr() {
 //│     if (this.cache.Barr === undefined) {
 //│       class Barr extends Bazz(Fooo()) {
-//│         constructor(...rest) {
-//│           super(...rest);
+//│         constructor() {
+//│           super(1, 0);
 //│         }
 //│       }
-//│       this.cache.Barr = new Barr(1, 0);
+//│       this.cache.Barr = new Barr();
 //│       this.cache.Barr["class"] = Barr;
 //│     }
 //│     return this.cache.Barr;

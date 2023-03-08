@@ -546,8 +546,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val decl = JSClassNewDecl(moduleSymbol.runtimeName,
                    fields,
                    base,
-                   Ls(JSIdent(s"...${rest.runtimeName}")),
-                   S(rest.runtimeName),
+                   superParameters.reverse,
+                   N,
                    members,
                    traits)
 
@@ -555,7 +555,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       JSIfStmt(JSBinary("===", JSField(JSField(JSIdent("this"), "cache"), moduleSymbol.runtimeName), JSIdent("undefined")), Ls(
         decl,
         JSExprStmt(JSAssignExpr(JSField(JSField(JSIdent("this"), "cache"), moduleSymbol.runtimeName),
-          JSNew(JSInvoke(JSIdent(moduleSymbol.runtimeName), superParameters.reverse)))),
+          JSNew(JSInvoke(JSIdent(moduleSymbol.runtimeName), Nil)))),
         JSExprStmt(JSAssignExpr(JSMember(JSField(JSField(JSIdent("this"), "cache"), moduleSymbol.runtimeName), JSLit(JSLit.makeStringLiteral("class"))), JSIdent(moduleSymbol.runtimeName))),
       )),
       JSReturnStmt(S(JSField(JSField(JSIdent("this"), "cache"), moduleSymbol.runtimeName)))
