@@ -10,21 +10,15 @@ module A(x: int) { fun y = x }
 //│ module A(x: int) {
 //│   fun y: int
 //│ }
-//│ Code generation encountered an error:
-//│   unresolved symbol x
 
-:re
 A.x
 //│ int
 //│ res
-//│ Runtime error:
-//│   ReferenceError: A is not defined
+//│     = undefined
 
-:re
 A.y
 //│ int
 //│ res
-//│ Runtime error:
-//│   ReferenceError: A is not defined
+//│     = undefined
 
 
