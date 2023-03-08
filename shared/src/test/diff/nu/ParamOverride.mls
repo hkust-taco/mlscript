@@ -50,7 +50,6 @@ let t = Test0()
 //│ t
 //│   = Test0 {}
 
-// FIXME field value
 t.n
 //│ 1
 //│ res
@@ -61,14 +60,12 @@ t.original
 //│ res
 //│     = 0
 
-// FIXME super access to field
 t.foo
 //│ (int, 1, 0,)
 //│ res
 //│     = [ 1, 1, 0 ]
 
 
-// FIXME error swallowed!
 :ShowRepl
 module Test1 extends Base1(0), Derived1(1) {
   fun n = this.n
@@ -78,7 +75,7 @@ module Test1 extends Base1(0), Derived1(1) {
 //│   fun n: 1
 //│   fun original: number
 //│ }
-//│ ┌ Block at ParamOverride.mls:73
+//│ ┌ Block at ParamOverride.mls:70
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   let typing_unit10 = {
