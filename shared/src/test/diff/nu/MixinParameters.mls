@@ -3,24 +3,20 @@
 :NoJS
 
 
-// TODO
 mixin BaseTest(x: int) {
   fun test = x
 }
-//│ ╔══[ERROR] identifier not found: x
-//│ ║  l.8: 	  fun test = x
-//│ ╙──     	             ^
 //│ mixin BaseTest() {
-//│   fun test: error
+//│   fun test: int
 //│ }
 
 // TODO
 mixin BaseTest(x) {
   fun test = x
 }
-//│ ╔══[ERROR] identifier not found: x
-//│ ║  l.19: 	  fun test = x
-//│ ╙──      	             ^
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ║  l.14: 	mixin BaseTest(x) {
+//│ ╙──      	               ^
 //│ mixin BaseTest() {
 //│   fun test: error
 //│ }

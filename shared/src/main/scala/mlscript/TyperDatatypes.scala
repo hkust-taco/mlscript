@@ -41,11 +41,69 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   // protected abstract class TypedNuTypeDefBase extends SimpleType
   
   // TODO rm level? already in ctx
-  class LazyTypeInfo(val level: Int, val decl: NuDecl)(implicit ctx: Ctx, vars: Map[Str, SimpleType]) extends TypeInfo {
+  // class LazyTypeInfo(val level: Int, val decl: NuDecl)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]) extends TypeInfo {
+  class LazyTypeInfo(val level: Int, val decl: NuDecl, outerVars: Map[Str, SimpleType])
+          (implicit ctx: Ctx, raise: Raise) extends TypeInfo {
   // class LazyTypeInfo[A](level: Int, decl: NuDecl) extends TypeInfo {
     private def outerCtx = ctx
-    private def outerVars = vars
-    val tparams: Ls[(TN, TV)] = Nil // TODO
+    // private def outerVars = vars
+    
+    private implicit val prov: TP =
+      TypeProvenance(decl.toLoc, decl.describe)
+    
+    
+    lazy val tparams: Ls[(TN, TV, Opt[VarianceInfo])] = ctx.nest.nextLevel { implicit ctx =>
+      decl match {
+        case td: NuTypeDef =>
+          td.tparams.map(tp =>
+            (tp._2, freshVar(TypeProvenance(
+              tp._2.toLoc,
+              "type parameter",
+              S(tp._2.name),
+              true), N, S(tp._2.name)), tp._1))
+        case fd: NuFunDef => Nil // TODO
+      }
+    }
+    
+    lazy val explicitVariances: VarianceStore =
+      MutMap.from(tparams.iterator.map(tp => tp._2 -> tp._3.getOrElse(VarianceInfo.in)))
+    
+    def varianceOf(tv: TV)(implicit ctx: Ctx): VarianceInfo =
+      // TODO make use of inferred vce if result is completed
+      explicitVariances.get(tv).getOrElse(VarianceInfo.in)
+    
+    // println(s"Type params ${tparams.mkString(" ")}")
+    
+    lazy private implicit val vars: Map[Str, SimpleType] =
+      // outerVars ++ tparams.iterator.mapKeys(_.name).toMap
+      outerVars ++ tparams.iterator.map {
+        case (tp, tv, vi) => (tp.name, SkolemTag(tv.level, tv)(tv.prov))
+      }
+    
+    lazy val typedParams: Ls[Var -> FieldType] = ctx.nest.nextLevel { implicit ctx =>
+      decl match {
+        case td: NuTypeDef =>
+          td.params.fields.map {
+            case (S(nme), Fld(mut, spec, value)) =>
+              assert(!mut && !spec, "TODO") // TODO
+              value.toType match {
+                case R(tpe) =>
+                  implicit val newDefsInfo: Map[Str, (TypeDefKind, Int)] = Map.empty // TODO?
+                  val ty = typeType(tpe)
+                  nme -> FieldType(N, ty)(provTODO)
+                case _ => ???
+              }
+            case (N, Fld(mut, spec, nme: Var)) =>
+              // assert(!mut && !spec, "TODO") // TODO
+              // nme -> FieldType(N, freshVar(ttp(nme), N, S(nme.name)))(provTODO)
+              nme -> FieldType(N, err(msg"Class parameters currently need type annotations", nme.toLoc))(provTODO)
+            case _ => ???
+          }
+        case fd: NuFunDef => Nil // TODO
+      }
+    }
+    
+    
     // val tparams: Ls[(TN, TV, VarianceInfo)] = Nil // TODO
     var isComputing: Bool = false // TODO replace by a Ctx entry
     var result: Opt[TypedNuDecl] = N
@@ -57,7 +115,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       S(decl.name))(level + 1)
     
     def map(f: TypedNuDecl => TypedNuDecl): LazyTypeInfo = {
-      val res = new LazyTypeInfo(level, decl)
+      val res = new LazyTypeInfo(level, decl, implicitly)
       // if (result.nonEmpty) res.result = res
       res.result = result.map(f)
       res
@@ -82,7 +140,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
           decl match {
             case fd: NuFunDef =>
               // assert(fd.isLetRec.isEmpty, fd.isLetRec)
-              implicit val prov: TP = noProv // TODO
+              // implicit val prov: TP = noProv // TODO
               def checkNoTyParams() =
                 if (fd.tparams.nonEmpty)
                   err(msg"Type parameters here are not yet supported in this position",
@@ -156,31 +214,44 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
               
               td.kind match {
                 
+                case Trt =>
+                  err(msg"traits are not yet supported" -> td.toLoc :: Nil)
+                  ???
+                  
                 case Als =>
                   
-                  // TODO assert td.params, td.parents are empty
+                  if (td.params.fields.nonEmpty)
+                    err(msg"type alias definitions cannot have value parameters" -> td.params.toLoc :: Nil)
+                  if (td.parents.nonEmpty)
+                    err(msg"type alias definitions cannot extend parents" -> Loc(td.parents) :: Nil)
                   
-                  val tparams = td.tparams.map(tp =>
-                    (tp._2, freshVar(TypeProvenance(
-                      tp._2.toLoc,
-                      "type parameter",
-                      S(tp._2.name),
-                      true), N, S(tp._2.name)), tp._1))
+                  // val tparams = td.tparams.map(tp =>
+                  //   (tp._2, freshVar(TypeProvenance(
+                  //     tp._2.toLoc,
+                  //     "type parameter",
+                  //     S(tp._2.name),
+                  //     true), N, S(tp._2.name)), tp._1))
                   
                   implicit val vars: Map[Str, SimpleType] =
                     outerVars ++ tparams.iterator.map {
                       case (tp, tv, vi) => (tp.name, SkolemTag(tv.level, tv)(tv.prov))
                     }
                   
-                  val body_ty = typeType(td.sig.getOrElse(die))
+                  val body_ty = td.sig match {
+                    case S(sig) =>
+                      typeType(sig)
+                    case N =>
+                      err(msg"type alias definition requires a right-hand side", td.toLoc)
+                  }
                   
                   TypedNuAls(outerCtx.lvl, td, tparams, body_ty)
                   
                 case Cls | Nms =>
                   
-                  implicit val prov: TP = noProv // TODO
+                  // implicit val prov: TP = noProv // TODO
                   ctx.nest.nextLevel { implicit ctx =>
                     
+                    /* 
                     val tparams = td.tparams.map(tp =>
                       (tp._2, freshVar(TypeProvenance(
                         tp._2.toLoc,
@@ -212,6 +283,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                         nme -> FieldType(N, err(msg"Class parameters currently need type annotations", nme.toLoc))(provTODO)
                       case _ => ???
                     }
+                    */
+                    
                     // ctx ++= typedParams.mapKeysIter(_.name).mapValues(_.ub |> VarSymbol(_))
                     ctx ++= typedParams.map(p => p._1.name -> VarSymbol(p._2.ub, p._1))
                     
@@ -381,7 +454,12 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     )(thisType)
                   }
                 case Mxn =>
-                  implicit val prov: TP = noProv // TODO
+                  if (td.parents.nonEmpty)
+                    err(msg"mixin definitions cannot yet extend parents" -> Loc(td.parents) :: Nil)
+                  // implicit val prov: TP = noProv // TODO
+                  ctx ++= typedParams.map(p => p._1.name -> VarSymbol(p._2.ub, p._1))
+                  // TODO include typedParams in members!
+                  val paramMems = typedParams.map(f => NuParam(f._1, f._2, isType = false))
                   ctx.nest.nextLevel { implicit ctx =>
                     implicit val vars: Map[Str, SimpleType] =
                       outerVars ++ Map.empty // TODO type params
@@ -391,7 +469,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     ctx += "super" -> VarSymbol(superTV, Var("super"))
                     // ctx |> { implicit ctx =>
                     val ttu = typeTypingUnit(td.body, allowPure = false)
-                    val mems = ttu.entities.map(_.complete())
+                    val mems = paramMems ++ttu.entities.map(_.complete())
                     TypedNuMxn(td, thisTV, superTV, mems.map(m => m.name -> m).toMap, ttu)
                     // }
                   }
@@ -409,6 +487,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       }()
     }
     def typeSignature(implicit raise: Raise): ST =
+    /* 
         if (isComputing)
           decl match {
             case _: NuFunDef =>
@@ -439,6 +518,33 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         // ???
         ty
     }
+    */
+      decl match {
+        case _: NuFunDef =>
+          if (isComputing) {
+            println(s"Already computing! Using TV: $tv")
+            tv // TODO FIXME wrong in general (when accessed from difft scope/level)
+          } else complete() match {
+            case TypedNuFun(_, fd, ty) =>
+              ty
+            case _ => die
+          }
+        case td: NuTypeDef if td.kind is Nms =>
+          ClassTag(Var(td.nme.name), Set.empty)(provTODO)
+        case td: NuTypeDef if td.kind is Cls =>
+          PolymorphicType.mk(level,
+            FunctionType(
+              TupleType(typedParams.mapKeys(some))(provTODO),
+              ClassTag(Var(td.nme.name), Set.empty)(provTODO) & RecordType.mk(
+                tparams.map { case (tn, tv, vi) => // TODO use vi
+                  Var(td.nme.name + "#" + tn.name).withLocOf(tn) -> FieldType(S(tv), tv)(provTODO) }
+              )(provTODO)
+            )(provTODO)
+          )
+        // case td: NuTypeDef =>
+        //   ??? // TODO
+      }
+    
     def force()(implicit raise: Raise): TypedNuDecl = {
       val res = complete()
       res.force()
@@ -899,7 +1005,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
           (td.tvarVariances, td.tparamsargs)
         case N =>
           val td = ctx.tyDefs2(defn.name)
-          (N, td.tparams)
+          (N, td.tparams.map(tp => (tp._1, tp._2)))
       }
       tvarVariances.fold(targs.map(f(N, _))) { tvv =>
         assert(tparamsargs.sizeCompare(targs) === 0)
@@ -923,7 +1029,13 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
           (td.tvarVariances, td.tparamsargs)
         case N =>
           val td = ctx.tyDefs2(defn.name)
-          (N, td.tparams)
+          // (N, td.tparams)
+          // (td.explicitVariances, td.tparams)
+          // TODO computed varces
+          // (some[VarianceStore](
+          //   MutMap.from(td.tparams.iterator.map(tp => tp._2 -> tp._3.getOrElse(VarianceInfo.in)))
+          // ), td.tparams.map(tp => (tp._1, tp._2)))
+          (some(td.explicitVariances), td.tparams.map(tp => (tp._1, tp._2)))
       }
       tvarVariances.fold(targs.map(f(pol.invar, _))) { tvv =>
         assert(tparamsargs.sizeCompare(targs) === 0)

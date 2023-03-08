@@ -30,8 +30,8 @@ f(c)
 class Some<A>(value: A) {
   fun get = value
   fun toArray = [value]
-  // fun mapBad(f) = Some(f(value)) // TODO
-  // fun map(f : A => 'b) = Some(f(value)) // TODO
+  // fun mapBad(f) = Some(f(value)) // TODO cyclic
+  // fun map(f : A => 'b) = Some(f(value)) // TODO cyclic
 }
 //│ class Some[A](value: A) {
 //│   fun get: A

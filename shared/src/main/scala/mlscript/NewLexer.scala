@@ -274,6 +274,8 @@ object NewLexer {
     "where",
     "forall",
     "exists",
+    "in",
+    "out",
   )
   
   def printToken(tl: TokLoc): Str = tl match {

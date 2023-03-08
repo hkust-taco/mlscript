@@ -1,0 +1,19 @@
+:NewParser
+:NewDefs
+
+
+// TODO
+class Exp[type A]
+//│ ╔══[PARSE ERROR] Unexpected 'type' keyword here
+//│ ║  l.6: 	class Exp[type A]
+//│ ╙──     	          ^^^^
+//│ class Exp()
+
+// TODO
+class Lit(n: int) extends Exp[int]
+//│ ╔══[ERROR] Unsupported parent specification
+//│ ║  l.13: 	class Lit(n: int) extends Exp[int]
+//│ ╙──      	                          ^^^^^^^^
+//│ class Lit(n: int)
+
+

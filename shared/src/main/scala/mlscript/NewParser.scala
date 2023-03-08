@@ -283,12 +283,18 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
             val tparams = yeetSpaces match {
               case (br @ BRACKETS(Angle | Square, toks), loc) :: _ =>
                 consume
+                /* 
                 val ts = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()).map {
                   case (N, Fld(false, false, v @ Var(nme))) =>
                     TypeName(nme).withLocOf(v)
-                  case _ => ???
+                  case nmeo -> param =>
+                    err(msg"unsupported type parameter shape (${param.describe})" ->
+                      param.value.toLoc :: Nil)
+                    TypeName(nmeo.fold("<error>")(_.name)).withLocOf(param.value)
                 }
                 ts
+                */
+                rec(toks, S(br.innerLoc), br.describe).concludeWith(_.maybeIndented(_.typeParams))
               case _ => Nil
             }
             val params = yeetSpaces match {
@@ -308,7 +314,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
               case (KEYWORD("="), _) :: _ if kind is Als =>
                 consume
                 S(typ(0))
-              case (KEYWORD(":"), _) :: _ =>
+              case (KEYWORD(":"), _) :: _ if !(kind is Als) =>
                 consume
                 S(typ(0))
               case _ => N
@@ -323,7 +329,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
               case _ => Nil
             }
             val body = curlyTypingUnit
-            val res = NuTypeDef(kind, tn, tparams.map(N -> _), params, sig, ps, N, N, body)
+            val res = NuTypeDef(kind, tn, tparams, params, sig, ps, N, N, body)
             R(res.withLoc(S(l0 ++ res.getLoc)))
           
           // TODO make `fun` by-name and `let` by-value
@@ -771,7 +777,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           exprCont(res, prec, allowNewlines)
           
       case c @ (h :: _) if (h._1 match {
-        case KEYWORD(";" | "of" | "where") | BRACKETS(Round | Square, _)
+        case KEYWORD(";" | "of" | "where" | "extends") | BRACKETS(Round | Square, _)
           | BRACKETS(Indent, (
               KEYWORD(";" | "of")
               | BRACKETS(Round | Square, _)
@@ -847,16 +853,65 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
       case _ => ???
     }
   
-  final def argsMaybeIndented()(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =
+  // TODO support line-broken param lists; share logic with args/argsOrIf
+  def typeParams(implicit fe: FoundErr, et: ExpectThen): Ls[(Opt[VarianceInfo], TypeName)] = {
+    val vinfo = yeetSpaces match {
+      case (KEYWORD("in"), l0) :: (KEYWORD("out"), l1) :: _ =>
+        consume
+        S(VarianceInfo.in, l0 ++ l1)
+      case (KEYWORD("in"), l0) :: _ =>
+        consume
+        S(VarianceInfo.contra, l0)
+      case (KEYWORD("out"), l0) :: _ =>
+        consume
+        S(VarianceInfo.co, l0)
+      case _ => N
+    }
+    yeetSpaces match {
+      case (IDENT(nme, false), l0) :: _ =>
+        consume
+        val tyNme = TypeName(nme).withLoc(S(l0))
+        yeetSpaces match {
+          case (COMMA, l0) :: _ =>
+            consume
+            vinfo.map(_._1) -> tyNme :: typeParams
+          case _ =>
+            vinfo.map(_._1) -> tyNme :: Nil
+        }
+      case _ =>
+        vinfo match {
+          case S((_, loc)) =>
+            err(msg"dangling variance information" -> S(loc) :: Nil)
+          case N =>
+        }
+        Nil
+    }
+  }
+  
+  
+  final def maybeIndented[R](f: NewParser => R)(implicit fe: FoundErr, et: ExpectThen): R =
     cur match {
       case (br @ BRACKETS(Indent, toks), _) :: _ if (toks.headOption match {
         case S((KEYWORD("then" | "else"), _)) => false
         case _ => true
       }) =>
         consume
-        rec(toks, S(br.innerLoc), br.describe).concludeWith(_.args(true))
-      case _ => args(false)
+        rec(toks, S(br.innerLoc), br.describe).concludeWith(f)
+      case _ => f(this)
     }
+  
+  final def argsMaybeIndented()(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =
+    maybeIndented(_.args(true))
+  // final def argsMaybeIndented()(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =
+  //   cur match {
+  //     case (br @ BRACKETS(Indent, toks), _) :: _ if (toks.headOption match {
+  //       case S((KEYWORD("then" | "else"), _)) => false
+  //       case _ => true
+  //     }) =>
+  //       consume
+  //       rec(toks, S(br.innerLoc), br.describe).concludeWith(_.args(true))
+  //     case _ => args(false)
+  //   }
   
   // TODO support comma-less arg blocks...?
   final def args(allowNewlines: Bool, prec: Int = NoElsePrec)(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =

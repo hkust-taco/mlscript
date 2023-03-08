@@ -1,0 +1,59 @@
+:NewParser
+:NewDefs
+
+
+class C0 {
+  class NC0
+}
+//│ class C0() {
+//│   class NC0()
+//│ }
+
+let c = C0()
+//│ let c: C0
+//│ c
+//│   = C0 {}
+
+:e
+c.NC0
+//│ ╔══[ERROR] access to class member not yet supported
+//│ ║  l.18: 	c.NC0
+//│ ╙──      	 ^^^^
+//│ error
+//│ res
+//│     = undefined
+
+
+module M0 {
+  class NC0
+}
+//│ module M0() {
+//│   class NC0()
+//│ }
+
+:e
+M0.NC0
+//│ ╔══[ERROR] access to module member not yet supported
+//│ ║  l.35: 	M0.NC0
+//│ ╙──      	  ^^^^
+//│ error
+//│ res
+//│     = undefined
+
+
+module M1 {
+  module NM1
+}
+//│ module M1() {
+//│   module NM1()
+//│ }
+
+:e
+M1.NM1
+//│ ╔══[ERROR] access to module member not yet supported
+//│ ║  l.52: 	M1.NM1
+//│ ╙──      	  ^^^^
+//│ error
+//│ res
+//│     = undefined
+

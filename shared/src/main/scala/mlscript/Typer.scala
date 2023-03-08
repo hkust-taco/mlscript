@@ -921,7 +921,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           con(obj_ty, rcd_ty, res)
         }
         def mthCallOrSel(obj: Term, fieldName: Var) = 
-          (fieldName.name match {
+          ( if (newDefs) N else fieldName.name match {
             case s"$parent.$nme" => ctx.getMth(S(parent), nme) // explicit calls
             case nme => ctx.getMth(N, nme) // implicit calls
           }) match {
@@ -939,7 +939,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               val res = freshVar(prov, N)
               con(mth_ty.toPT.instantiate, FunctionType(singleTup(o_ty), res)(prov), res)
             case N =>
-              if (fieldName.name.isCapitalized) err(msg"Method ${fieldName.name} not found", term.toLoc)
+              if (!newDefs && fieldName.name.isCapitalized) err(msg"Method ${fieldName.name} not found", term.toLoc)
               else rcdSel(obj, fieldName) // TODO: no else?
           }
         obj match {

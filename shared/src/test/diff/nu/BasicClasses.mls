@@ -63,12 +63,9 @@ class Base0(n) {
 //│ ╔══[ERROR] Class parameters currently need type annotations
 //│ ║  l.57: 	class Base0(n) {
 //│ ╙──      	            ^
-//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ╔══[ERROR] unsupported indirectly recursive member access
 //│ ║  l.61: 	  fun oops = this.my
-//│ ║        	             ^^^^^^^
-//│ ╟── reference of type `Base0 & {n: error}` does not have field 'my'
-//│ ║  l.61: 	  fun oops = this.my
-//│ ╙──      	             ^^^^
+//│ ╙──      	                 ^^^
 //│ class Base0(n: error) {
 //│   fun me: Base0 & {n: error}
 //│   fun mine: error
@@ -140,7 +137,7 @@ b.me
 :e
 b.getBaseTypo
 //│ ╔══[ERROR] class `Base1` does not contain member `getBaseTypo`
-//│ ║  l.141: 	b.getBaseTypo
+//│ ║  l.138: 	b.getBaseTypo
 //│ ╙──       	 ^^^^^^^^^^^^
 //│ error
 
@@ -149,20 +146,20 @@ b : Base1
 //│ Base1
 
 
-:e // TODO
 class Rec(n: int) {
   fun go = Rec(n + 1)
 }
-//│ ╔══[ERROR] Cyclic definition
-//│ ║  l.153: 	class Rec(n: int) {
-//│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.154: 	  fun go = Rec(n + 1)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.155: 	}
-//│ ╙──       	^
 //│ class Rec(n: int) {
-//│   fun go: error
+//│   fun go: Rec
 //│ }
+
+let r = Rec(0)
+r.n
+//│ let r: Rec
+//│ int
+
+r.go.n
+//│ int
 
 
 

@@ -369,11 +369,12 @@ trait PgrmImpl { self: Pgrm =>
   }
   override def toString = tops.map("" + _ + ";").mkString(" ")
 
+  // TODO remove this senseless method
   private def tryDesugaredNewDec(nd: NuTypeDef): Ls[Diagnostic] = nd match {
     case NuTypeDef(Mxn, TypeName(mxName), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) =>
       val bases = pars.foldLeft(Var("base"): Term)((res, p) => p match {
           case Var(pname) => App(Var(pname), Tup(Ls(None -> Fld(false, false, res))))
-          case _ => ???
+          case _ => Var("anything") // ?? FIXME
         })
       tryDesugaredNewDec(NuTypeDef(Cls, TypeName(mxName), tps, tup, sig, Ls(bases), sup, ths, unit))
     case NuTypeDef(Nms, nme, tps, tup @ Tup(fs), sig, pars, sup, ths, unit) =>
@@ -381,7 +382,7 @@ trait PgrmImpl { self: Pgrm =>
         val bases = pars.drop(1).foldLeft(App(pars.head, Tup(Ls())): Term)((res, p) => p match {
           case Var(pname) => App(Var(pname), Tup(Ls(None -> Fld(false, false, res))))
           case App(pname, _) => App(pname, Tup(Ls(None -> Fld(false, false, res))))
-          case _ => ???
+          case _ => Var("anything") // ?? FIXME
         })
         tryDesugaredNewDec(NuTypeDef(Cls, nme, tps, tup, sig, Ls(bases), sup, ths, unit))
       }
@@ -390,9 +391,9 @@ trait PgrmImpl { self: Pgrm =>
       }
     case NuTypeDef(k @ Als, nme, tps, tup @ Tup(fs), sig, pars, sup, ths, unit) =>
       // TODO properly check:
-      require(fs.isEmpty, fs)
-      require(sig.isDefined)
-      require(pars.size === 0, pars)
+      // require(fs.isEmpty, fs)
+      // require(sig.isDefined)
+      // require(pars.size === 0, pars)
       require(ths.isEmpty, ths)
       require(unit.entities.isEmpty, unit)
       // val (diags, rhs) = sig.get match {
@@ -504,6 +505,13 @@ trait TypeNameImpl extends Ordered[TypeName] { self: TypeName =>
   val base: TypeName = this
   def compare(that: TypeName): Int = this.name compare that.name
   lazy val toVar: Var = Var(name).withLocOf(this)
+}
+
+trait FldImpl { self: Fld =>
+  def describe: Str =
+    (if (self.spec) "specialized " else "") +
+    (if (self.mut) "mutable " else "") +
+    self.value.describe
 }
 
 trait TermImpl extends StatementImpl { self: Term =>

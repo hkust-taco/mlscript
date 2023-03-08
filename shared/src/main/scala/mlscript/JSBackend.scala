@@ -264,7 +264,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     case New(_, TypingUnit(_)) =>
       throw CodeGenError("custom class body is not supported yet")
     case Forall(_, bod) => translateTerm(bod)
-    case _: Bind | _: Test | If(_, _) | TyApp(_, _) | _: Splc | _: Where =>
+    case TyApp(base, _) => translateTerm(base)
+    case _: Bind | _: Test | If(_, _)  | _: Splc | _: Where =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
 
@@ -773,7 +774,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         superParameters.put(sym.runtimeName, pars)
       }
       case NuTypeDef(Als, TypeName(nme), tps, _, sig, pars, _, _, _) => {
-        topLevelScope.declareTypeAlias(nme, tps map { _._2.name }, sig.getOrElse(die))
+        topLevelScope.declareTypeAlias(nme, tps map { _._2.name }, sig.getOrElse(Top))
       }
       case NuTypeDef(Cls, TypeName(nme), tps, tup @ Tup(fs), sig, pars, sup, ths, unit) => {
         val (body, members) = prepare(nme, fs, pars, unit)

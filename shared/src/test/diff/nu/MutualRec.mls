@@ -134,13 +134,9 @@ module Test1_1 {
 module Test1_2 {
   fun b = Test1_1.a
 }
-//│ ╔══[ERROR] Cyclic definition
-//│ ║  l.131: 	module Test1_1 {
-//│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.132: 	  fun a = Test1_2.b
-//│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.133: 	}
-//│ ╙──       	^
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.135: 	  fun b = Test1_1.a
+//│ ╙──       	                 ^^
 //│ module Test1_1() {
 //│   fun a: error
 //│ }
@@ -159,13 +155,9 @@ class Test1_1 {
 class Test1_2 {
   fun b = Test1_1().a
 }
-//│ ╔══[ERROR] Cyclic definition
-//│ ║  l.156: 	class Test1_1 {
-//│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.157: 	  fun a = Test1_2().b
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.158: 	}
-//│ ╙──       	^
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.156: 	  fun b = Test1_1().a
+//│ ╙──       	                   ^^
 //│ class Test1_1() {
 //│   fun a: error
 //│ }
@@ -186,34 +178,11 @@ module Test2_2 {
   fun c = Test2_1.a
   fun e = Test2_1.n
 }
-//│ ╔══[ERROR] Cyclic definition
-//│ ║  l.178: 	module Test2_1 {
-//│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.179: 	  fun t2 = Test2_2
-//│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.180: 	  fun a = Test2_2.b
-//│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.181: 	  fun d = Test2_2.e
-//│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.182: 	  fun n = 456
-//│ ║         	^^^^^^^^^^^^^
-//│ ║  l.183: 	}
-//│ ╙──       	^
-//│ ╔══[ERROR] Cyclic definition
-//│ ║  l.178: 	module Test2_1 {
-//│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.179: 	  fun t2 = Test2_2
-//│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.180: 	  fun a = Test2_2.b
-//│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.181: 	  fun d = Test2_2.e
-//│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.182: 	  fun n = 456
-//│ ║         	^^^^^^^^^^^^^
-//│ ║  l.183: 	}
-//│ ╙──       	^
+//│ ╔══[ERROR] unsupported indirectly recursive member access
+//│ ║  l.178: 	  fun c = Test2_1.a
+//│ ╙──       	                 ^^
 //│ module Test2_1() {
-//│   fun a: 123
+//│   fun a: 123 | error
 //│   fun d: error
 //│   fun n: 456
 //│   fun t2: Test2_2
@@ -228,7 +197,7 @@ Test2_1.t2.b
 //│ 123
 
 Test2_1.a
-//│ 123
+//│ 123 | error
 
 // FIXME
 Test2_1.d
