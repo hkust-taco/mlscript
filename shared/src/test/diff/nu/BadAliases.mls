@@ -95,16 +95,16 @@ type Test = int extends Base
 
 :pe
 type Poly[mut A] = A
-//│ ╔══[PARSE ERROR] unsupported type parameter shape (mutable reference)
+//│ ╔══[PARSE ERROR] Unexpected 'mut' keyword here
 //│ ║  l.97: 	type Poly[mut A] = A
-//│ ╙──      	              ^
-//│ type Poly[<error>] = A
+//│ ╙──      	          ^^^
+//│ type Poly = A
 
 :pe
 type Poly[#A] = A
-//│ ╔══[PARSE ERROR] unsupported type parameter shape (specialized reference)
+//│ ╔══[PARSE ERROR] Unexpected '#' here
 //│ ║  l.104: 	type Poly[#A] = A
-//│ ╙──       	           ^
-//│ type Poly[<error>] = A
+//│ ╙──       	          ^
+//│ type Poly = A
 
 

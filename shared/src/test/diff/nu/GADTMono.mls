@@ -4,10 +4,10 @@
 
 // TODO
 class Exp[type A]
-//│ ╔══[PARSE ERROR] Unexpected 'type' keyword in expression position
+//│ ╔══[PARSE ERROR] Unexpected 'type' keyword here
 //│ ║  l.6: 	class Exp[type A]
 //│ ╙──     	          ^^^^
-//│ class Exp[A]()
+//│ class Exp()
 
 // TODO
 class Lit(n: int) extends Exp[int]

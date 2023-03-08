@@ -6,7 +6,7 @@
 
 
 type List[A] = Cons[A] | Nil
-class Cons[A](head: A, tail: List[A])
+class Cons[out A](head: A, tail: List[A])
 module Nil
 //│ type List[A] = Cons[A] | Nil
 //│ class Cons[A](head: A, tail: List[A])
