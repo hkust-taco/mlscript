@@ -23,6 +23,81 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   protected var currentConstrainingRun = 0
   
   
+  def lookupMember(clsNme: Str, rfnt: Var => Opt[FieldType], fld: Var)
+        (implicit ctx: Ctx, raise: Raise)
+        : FieldType
+        = {
+    val info = ctx.tyDefs2(clsNme)
+    
+    info.complete() match {
+      case cls: TypedNuCls =>
+        val raw = cls.members.get(fld.name) match {
+          case S(d: TypedNuFun) =>
+            d.ty.toUpper(provTODO)
+          case S(p: NuParam) =>
+            p.ty
+          case S(_) =>
+            err(msg"access to ${cls.td.kind.str} member not yet supported",
+              fld.toLoc).toUpper(noProv)
+          case N =>
+            err(msg"${cls.td.kind.str} `${cls.td.nme.name}` does not contain member `${fld.name}`",
+              fld.toLoc).toUpper(noProv)
+        }
+        println(s"Lookup ${cls.td.nme.name}.${fld.name} : $raw where ${raw.ub.showBounds}")
+        
+        
+        // TODO dedup with below
+        
+        implicit val freshened: MutMap[TV, ST] = MutMap.empty
+        implicit val shadows: Shadows = Shadows.empty
+        
+        cls.tparams.foreach { case (tn, _tv, vi) =>
+          val targ = rfnt(Var(cls.nme.name + "#" + tn.name)) match {
+            case S(fty) =>
+              TypeBounds(
+                fty.lb.getOrElse(BotType),
+                fty.ub,
+              )(_tv.prov)
+            case N =>
+              // FIXME type bounds are kind of wrong for this
+              TypeBounds(
+                // _tv.lowerBounds.foldLeft(BotType: ST)(_ | _),
+                // _tv.upperBounds.foldLeft(TopType: ST)(_ & _),
+                _tv.lowerBounds.foldLeft(
+                  Extruded(false, SkolemTag(_tv.level, _tv)(provTODO))(provTODO, Nil): ST
+                  // ^ TODO provide extrusion reason?
+                )(_ | _),
+                _tv.upperBounds.foldLeft(
+                  Extruded(true, SkolemTag(_tv.level, _tv)(provTODO))(provTODO, Nil): ST
+                  // ^ TODO provide extrusion reason?
+                )(_ & _),
+              )(_tv.prov)
+          }
+          println(s"Assigning ${_tv} := $targ where ${targ.showBounds}")
+          val tv =
+            freshVar(_tv.prov, N, _tv.nameHint)(targ.level) // TODO safe not to set original?!
+            // freshVar(_tv.prov, S(_tv), _tv.nameHint)(targ.level) // TODO safe not to set original?!
+          println(s"Set ${_tv} ~> $tv")
+          assert(tv.assignedTo.isEmpty)
+          tv.assignedTo = S(targ)
+          // println(s"Assigned ${tv.assignedTo}")
+          freshened += _tv -> tv
+        }
+        
+        
+        val res =
+          raw.freshenAbove(cls.level, rigidify = false)//.asInstanceOf[TypedNuCls]
+        
+        println(s"Fresh ${cls.td.nme.name}.${fld.name} : $res where ${res.ub.showBounds}")
+        
+        res
+        
+      case _ => ???
+    }
+    
+  }
+  
+  
   // def lookupNuTypeDef(clsNme: Str, rfnt: Map[Var, FieldType])
   def lookupNuTypeDef(clsNme: Str, rfnt: Var => Opt[FieldType])
     // (implicit raise: Raise, cctx: ConCtx, ctx: Ctx, shadows: Shadows)
@@ -453,7 +528,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               if (lti.isComputing)
                 annoying(Nil, LhsRefined(N, ts, r, trs0), Nil, done_rs) // TODO maybe pick a parent class here instead?
               else {
-                val fty = lookupNuTypeDefField(lookupNuTypeDef(nme, r.fields.toMap.get), fldNme)
+                // val fty = lookupNuTypeDefField(lookupNuTypeDef(nme, r.fields.toMap.get), fldNme)
+                val fty = lookupMember(nme, r.fields.toMap.get, fldNme)
                 rec(fty.ub, fldTy.ub, false)
                 recLb(fldTy, fty)
               }
@@ -680,7 +756,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val lti = ctx.tyDefs2(nme)
             if (lti.isComputing) reportError()
             else rt.fields.foreach { case (fldNme, fldTy) =>
-              val fty = lookupNuTypeDefField(lookupNuTypeDef(nme, _ => N), fldNme)
+              // val fty = lookupNuTypeDefField(lookupNuTypeDef(nme, _ => N), fldNme)
+              val fty = lookupMember(nme, _ => N, fldNme)
               rec(fty.ub, fldTy.ub, false)
               recLb(fldTy, fty)
             }

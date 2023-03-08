@@ -27,9 +27,9 @@ M.f.n
 
 :e
 M.Foo
-//│ ╔══[ERROR] Method Foo not found
+//│ ╔══[ERROR] access to module member not yet supported
 //│ ║  l.29: 	M.Foo
-//│ ╙──      	^^^^^
+//│ ╙──      	 ^^^^
 //│ error
 
 :e

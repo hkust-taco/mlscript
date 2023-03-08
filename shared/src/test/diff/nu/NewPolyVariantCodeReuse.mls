@@ -242,7 +242,7 @@ Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
 //│ 'a
 //│   where
-//│     'a :> App['a] | Abs['a] | Abs[Var] | Add[Num | Var] | Num | Var
+//│     'a :> Abs[Var] | Add[Num | Var] | Num | Var | App['a] | Abs['a]
 //│ res
 //│     = Var { s: 'a' }
 
