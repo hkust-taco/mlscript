@@ -1,0 +1,84 @@
+:NewParser
+:NewDefs
+
+
+class Base0(n: number)
+//│ class Base0(n: number)
+
+// TODO
+class Derived0(n: int) extends Base
+//│ ╔══[ERROR] Could not find definition `Base`
+//│ ║  l.9: 	class Derived0(n: int) extends Base
+//│ ╙──     	                               ^^^^
+//│ class Derived0(n: int)
+//│ Code generation encountered an error:
+//│   unresolved symbol Base
+
+
+mixin Base1(n: number)
+//│ mixin Base1()
+
+:e
+mixin DerivedBad(n: int) extends Base
+//│ ╔══[ERROR] mixin definitions cannot yet extend parents
+//│ ║  l.22: 	mixin DerivedBad(n: int) extends Base
+//│ ╙──      	                                 ^^^^
+//│ mixin DerivedBad()
+
+mixin Derived1(n: int) {
+  // fun foo = [n, this.n, super.n] // TODO
+  fun foo = [this.n, super.n]
+}
+//│ mixin Derived1() {
+//│   super: {n: 'n}
+//│   this: {n: 'n0}
+//│   fun foo: ('n0, 'n,)
+//│ }
+
+
+// TODO type check
+class Test0 extends Base1(0), Derived1(1) // TODO
+//│ ╔══[ERROR] Unsupported parent specification
+//│ ║  l.40: 	class Test0 extends Base1(0), Derived1(1) // TODO
+//│ ╙──      	                    ^^^^^^^^
+//│ ╔══[ERROR] Unsupported parent specification
+//│ ║  l.40: 	class Test0 extends Base1(0), Derived1(1) // TODO
+//│ ╙──      	                              ^^^^^^^^^^^
+//│ class Test0()
+
+let t = Test0()
+//│ let t: Test0
+//│ t
+//│   = Test0 { n: 1 }
+
+// TODO type check
+t.n
+//│ ╔══[ERROR] class `Test0` does not contain member `n`
+//│ ║  l.55: 	t.n
+//│ ╙──      	 ^^
+//│ error
+//│ res
+//│     = 1
+
+// TODO type check
+// FIXME super access to field?
+t.foo
+//│ ╔══[ERROR] class `Test0` does not contain member `foo`
+//│ ║  l.65: 	t.foo
+//│ ╙──      	 ^^^^
+//│ error
+//│ res
+//│     = [ 1, undefined ]
+
+
+// TODO correct module code-gen
+module Test1 extends Base1(0), Derived1(1)
+//│ ╔══[ERROR] Unsupported parent specification
+//│ ║  l.75: 	module Test1 extends Base1(0), Derived1(1)
+//│ ╙──      	                     ^^^^^^^^
+//│ ╔══[ERROR] Unsupported parent specification
+//│ ║  l.75: 	module Test1 extends Base1(0), Derived1(1)
+//│ ╙──      	                               ^^^^^^^^^^^
+//│ module Test1()
+
+

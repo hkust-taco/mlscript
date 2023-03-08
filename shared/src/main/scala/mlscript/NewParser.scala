@@ -308,7 +308,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
               case (KEYWORD("="), _) :: _ if kind is Als =>
                 consume
                 S(typ(0))
-              case (KEYWORD(":"), _) :: _ =>
+              case (KEYWORD(":"), _) :: _ if !(kind is Als) =>
                 consume
                 S(typ(0))
               case _ => N
@@ -771,7 +771,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
           exprCont(res, prec, allowNewlines)
           
       case c @ (h :: _) if (h._1 match {
-        case KEYWORD(";" | "of" | "where") | BRACKETS(Round | Square, _)
+        case KEYWORD(";" | "of" | "where" | "extends") | BRACKETS(Round | Square, _)
           | BRACKETS(Indent, (
               KEYWORD(";" | "of")
               | BRACKETS(Round | Square, _)

@@ -158,7 +158,10 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                 
                 case Als =>
                   
-                  // TODO assert td.params, td.parents are empty
+                  if (td.params.fields.nonEmpty)
+                    err(msg"type alias definitions cannot have value parameters" -> td.params.toLoc :: Nil)
+                  if (td.parents.nonEmpty)
+                    err(msg"type alias definitions cannot extend parents" -> Loc(td.parents) :: Nil)
                   
                   val tparams = td.tparams.map(tp =>
                     (tp._2, freshVar(TypeProvenance(
@@ -172,7 +175,12 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                       case (tp, tv, vi) => (tp.name, SkolemTag(tv.level, tv)(tv.prov))
                     }
                   
-                  val body_ty = typeType(td.sig.getOrElse(die))
+                  val body_ty = td.sig match {
+                    case S(sig) =>
+                      typeType(sig)
+                    case N =>
+                      err(msg"type alias definition requires a right-hand side", td.toLoc)
+                  }
                   
                   TypedNuAls(outerCtx.lvl, td, tparams, body_ty)
                   
@@ -381,6 +389,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     )(thisType)
                   }
                 case Mxn =>
+                  if (td.parents.nonEmpty)
+                    err(msg"mixin definitions cannot yet extend parents" -> Loc(td.parents) :: Nil)
                   implicit val prov: TP = noProv // TODO
                   ctx.nest.nextLevel { implicit ctx =>
                     implicit val vars: Map[Str, SimpleType] =
