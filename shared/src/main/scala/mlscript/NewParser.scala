@@ -294,7 +294,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 }
                 ts
                 */
-                rec(toks, S(br.innerLoc), br.describe).concludeWith(_.maybeIndented(_.typeParams))
+                rec(toks, S(br.innerLoc), br.describe).concludeWith(_.maybeIndented((p, _) => p.typeParams))
               case _ => Nil
             }
             val params = yeetSpaces match {
@@ -889,19 +889,19 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
   }
   
   
-  final def maybeIndented[R](f: NewParser => R)(implicit fe: FoundErr, et: ExpectThen): R =
+  final def maybeIndented[R](f: (NewParser, Bool) => R)(implicit fe: FoundErr, et: ExpectThen): R =
     cur match {
       case (br @ BRACKETS(Indent, toks), _) :: _ if (toks.headOption match {
         case S((KEYWORD("then" | "else"), _)) => false
         case _ => true
       }) =>
         consume
-        rec(toks, S(br.innerLoc), br.describe).concludeWith(f)
-      case _ => f(this)
+        rec(toks, S(br.innerLoc), br.describe).concludeWith(f(_, true))
+      case _ => f(this, false)
     }
   
   final def argsMaybeIndented()(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =
-    maybeIndented(_.args(true))
+    maybeIndented(_.args(_))
   // final def argsMaybeIndented()(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =
   //   cur match {
   //     case (br @ BRACKETS(Indent, toks), _) :: _ if (toks.headOption match {

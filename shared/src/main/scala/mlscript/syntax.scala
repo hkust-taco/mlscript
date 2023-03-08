@@ -5,7 +5,7 @@ import mlscript.utils._, shorthands._
 
 // Terms
 
-final case class Pgrm(tops: Ls[Statement]) extends PgrmOrTypingUnit with PgrmImpl
+final case class Pgrm(tops: Ls[Statement]) extends PgrmImpl
 
 sealed abstract class Decl extends DesugaredStatement with DeclImpl
 final case class Def(rec: Bool, nme: Var, rhs: Term \/ Type, isByname: Bool) extends Decl with Terms {
@@ -76,7 +76,7 @@ final case class New(head: Opt[(NamedType, Term)], body: TypingUnit) extends Ter
 final case class If(body: IfBody, els: Opt[Term])                    extends Term
 final case class TyApp(lhs: Term, targs: Ls[Type])                   extends Term
 final case class Where(body: Term, where: Ls[Statement])             extends Term
-final case class Forall(params: Ls[TypeVar], body: Term)                 extends Term
+final case class Forall(params: Ls[TypeVar], body: Term)             extends Term
 final case class Inst(body: Term)                                    extends Term
 
 sealed abstract class IfBody extends IfBodyImpl
@@ -165,7 +165,7 @@ final case class PolyType(targs: Ls[TypeName \/ TypeVar], body: Type) extends Ty
 
 // New Definitions AST
 
-final case class TypingUnit(entities: Ls[Statement]) extends PgrmOrTypingUnit with TypingUnitImpl
+final case class TypingUnit(entities: Ls[Statement]) extends TypingUnitImpl
 // final case class TypingUnit(entities: Ls[Statement]) extends TypeLike with PgrmOrTypingUnit with TypingUnitImpl
 
 final case class Signature(members: Ls[NuDecl], result: Opt[Type]) extends TypeLike with SignatureImpl
@@ -193,9 +193,6 @@ final case class NuFunDef(
 ) extends NuDecl with DesugaredStatement {
   val body: Located = rhs.fold(identity, identity)
 }
-
-
-sealed trait PgrmOrTypingUnit // TODO rm
 
 
 

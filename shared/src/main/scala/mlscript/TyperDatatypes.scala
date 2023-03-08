@@ -42,11 +42,13 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   // TODO rm level? already in ctx
   // class LazyTypeInfo(val level: Int, val decl: NuDecl)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]) extends TypeInfo {
-  class LazyTypeInfo(val level: Int, val decl: NuDecl, outerVars: Map[Str, SimpleType])
+  class LazyTypeInfo(val decl: NuDecl, outerVars: Map[Str, SimpleType])
           (implicit ctx: Ctx, raise: Raise) extends TypeInfo {
   // class LazyTypeInfo[A](level: Int, decl: NuDecl) extends TypeInfo {
     private def outerCtx = ctx
     // private def outerVars = vars
+    
+    val level: Level = ctx.lvl
     
     private implicit val prov: TP =
       TypeProvenance(decl.toLoc, decl.describe)
@@ -115,7 +117,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       S(decl.name))(level + 1)
     
     def map(f: TypedNuDecl => TypedNuDecl): LazyTypeInfo = {
-      val res = new LazyTypeInfo(level, decl, implicitly)
+      val res = new LazyTypeInfo(decl, implicitly)
       // if (result.nonEmpty) res.result = res
       res.result = result.map(f)
       res
@@ -285,6 +287,11 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     }
                     */
                     
+                    if ((td.kind is Nms) && typedParams.nonEmpty)
+                      // * Can we do better? (Memoization semantics?)
+                      err(msg"${td.kind.str} parameters are not supported",
+                        Loc(typedParams.iterator.map(_._1)))
+                    
                     // ctx ++= typedParams.mapKeysIter(_.name).mapValues(_.ub |> VarSymbol(_))
                     ctx ++= typedParams.map(p => p._1.name -> VarSymbol(p._2.ub, p._1))
                     
@@ -360,7 +367,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                                         case fun @ TypedNuFun(_, fd, ty) =>
                                           fun
                                         case m: NuMember => m
-                                        case _ => ???
+                                        // case _ => ???
                                       }
                                     case cls: TypedNuCls =>
                                       err(msg"Class inheritance is not supported yet (use mixins)", p.toLoc) // TODO
@@ -456,9 +463,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                 case Mxn =>
                   if (td.parents.nonEmpty)
                     err(msg"mixin definitions cannot yet extend parents" -> Loc(td.parents) :: Nil)
-                  // implicit val prov: TP = noProv // TODO
                   ctx ++= typedParams.map(p => p._1.name -> VarSymbol(p._2.ub, p._1))
-                  // TODO include typedParams in members!
                   val paramMems = typedParams.map(f => NuParam(f._1, f._2, isType = false))
                   ctx.nest.nextLevel { implicit ctx =>
                     implicit val vars: Map[Str, SimpleType] =

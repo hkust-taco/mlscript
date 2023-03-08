@@ -220,6 +220,7 @@ Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), App(Abs("a", Var("a")), Add(Num
 //│ res
 //│     = Var { s: 'a' }
 
+// * Incorrect version, for regression testing
 module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│ module Test3() {
 //│   fun eval: (Cons[{_1: string, _2: 'result}] | Nil, 'a,) -> ('a | 'result)
@@ -229,15 +230,15 @@ module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│   'a <: Add['b] | Mul['b] | Num | Var
 //│   'b <: 'a
 
-// Because EvalExpr does not dispatch lambdas to super and map_expr only
-// handles exprs
+// * Because EvalExpr does not dispatch lambdas to super and map_expr only
+// * handles exprs
 :e
 Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.235: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.236: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Num | Var`
-//│ ║  l.235: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
+//│ ║  l.236: 	Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│ ║         	                                                 ^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.129: 	  if v is
