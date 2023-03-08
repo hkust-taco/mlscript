@@ -872,7 +872,7 @@ class DiffTests
               }
             }
 
-            def checkReply(replyQueue: mutable.Queue[(ReplHost.Reply, Str)], prefixLength: Int): Unit =
+            def checkReply(replyQueue: mutable.Queue[(ReplHost.Reply, Str)], prefixLength: Int, errorOnly: Boolean = false): Unit =
               replyQueue.headOption.foreach { case (head, log) =>
                 head match {
                   case ReplHost.Error(isSyntaxError, content) =>
@@ -898,13 +898,14 @@ class DiffTests
                   case ReplHost.Unexecuted(reason) =>
                     output(" " * prefixLength + "= <no result>")
                     output(" " * (prefixLength + 2) + reason)
-                  case ReplHost.Result(result, _) =>
+                  case ReplHost.Result(result, _) if (!errorOnly) =>
                     result.linesIterator.zipWithIndex.foreach { case (line, i) =>
                       if (i =:= 0) output(" " * prefixLength + "= " + line)
                       else output(" " * (prefixLength + 2) + line)
                     }
-                  case ReplHost.Empty =>
+                  case ReplHost.Empty if (!errorOnly) =>
                     output(" " * prefixLength + "= <missing implementation>")
+                  case _ => ()
                 }
                 outputLog(log)
                 replyQueue.dequeue()
@@ -915,7 +916,7 @@ class DiffTests
               case R(replies) =>
                 val replyQueue = mutable.Queue.from(replies)
                 if (typerResults.isEmpty)
-                  checkReply(replyQueue, 0)
+                  checkReply(replyQueue, 0, true)
                 else {
                   typerResults.foreach { case (name, typingLines, diagnosticLines, typeBeforeDiags) =>
                     if (typeBeforeDiags) {
