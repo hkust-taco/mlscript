@@ -93,5 +93,18 @@ type Test = int extends Base
 //│ type Test = int
 
 
+:pe
+type Poly[mut A] = A
+//│ ╔══[PARSE ERROR] unsupported type parameter shape (mutable reference)
+//│ ║  l.97: 	type Poly[mut A] = A
+//│ ╙──      	              ^
+//│ type Poly[<error>] = A
+
+:pe
+type Poly[#A] = A
+//│ ╔══[PARSE ERROR] unsupported type parameter shape (specialized reference)
+//│ ║  l.104: 	type Poly[#A] = A
+//│ ╙──       	           ^
+//│ type Poly[<error>] = A
 
 

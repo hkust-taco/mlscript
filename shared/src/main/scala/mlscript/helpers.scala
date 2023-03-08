@@ -506,6 +506,13 @@ trait TypeNameImpl extends Ordered[TypeName] { self: TypeName =>
   lazy val toVar: Var = Var(name).withLocOf(this)
 }
 
+trait FldImpl { self: Fld =>
+  def describe: Str =
+    (if (self.spec) "specialized " else "") +
+    (if (self.mut) "mutable " else "") +
+    self.value.describe
+}
+
 trait TermImpl extends StatementImpl { self: Term =>
   val original: this.type = this
   

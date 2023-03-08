@@ -286,7 +286,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], raiseFun: D
                 val ts = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()).map {
                   case (N, Fld(false, false, v @ Var(nme))) =>
                     TypeName(nme).withLocOf(v)
-                  case _ => ???
+                  case nmeo -> param =>
+                    err(msg"unsupported type parameter shape (${param.describe})" ->
+                      param.value.toLoc :: Nil)
+                    TypeName(nmeo.fold("<error>")(_.name)).withLocOf(param.value)
                 }
                 ts
               case _ => Nil
