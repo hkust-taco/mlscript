@@ -509,3 +509,101 @@ class E(x: int) extends BB, AA(x)
 //│ ╙──       	                            ^^^^^
 //│ class E(x: int)
 
+:js
+mixin Fooo(x: int)
+//│ mixin Fooo()
+//│ // Prelude
+//│ let typing_unit14 = {
+//│   cache: {},
+//│   Fooo(base) {
+//│     if (base === undefined) {
+//│       return (class Fooo {
+//│         constructor(x) {
+//│           this.x = x;
+//│         }
+//│       });
+//│     } else {
+//│       return (class Fooo extends base {
+//│         constructor(x, ...rest) {
+//│           super(...rest);
+//│           this.x = x;
+//│         }
+//│       });
+//│     }
+//│   }
+//│ };
+//│ globalThis.Fooo = typing_unit14.Fooo;
+//│ // End of generated code
+
+:js
+mixin Bazz(y: int)
+//│ mixin Bazz()
+//│ // Prelude
+//│ let typing_unit15 = {
+//│   cache: {},
+//│   Bazz(base) {
+//│     if (base === undefined) {
+//│       return (class Bazz {
+//│         constructor(y) {
+//│           this.y = y;
+//│         }
+//│       });
+//│     } else {
+//│       return (class Bazz extends base {
+//│         constructor(y, ...rest) {
+//│           super(...rest);
+//│           this.y = y;
+//│         }
+//│       });
+//│     }
+//│   }
+//│ };
+//│ globalThis.Bazz = typing_unit15.Bazz;
+//│ // End of generated code
+
+:js
+:e // TODO: type check
+module Barr extends Fooo(0), Bazz(1)
+//│ ╔══[ERROR] Unsupported parent specification
+//│ ║  l.566: 	module Barr extends Fooo(0), Bazz(1)
+//│ ╙──       	                    ^^^^^^^
+//│ ╔══[ERROR] Unsupported parent specification
+//│ ║  l.566: 	module Barr extends Fooo(0), Bazz(1)
+//│ ╙──       	                             ^^^^^^^
+//│ module Barr()
+//│ // Prelude
+//│ let typing_unit16 = {
+//│   cache: {},
+//│   get Barr() {
+//│     if (this.cache.Barr === undefined) {
+//│       class Barr extends Bazz(Fooo()) {
+//│         constructor(...rest) {
+//│           super(...rest);
+//│         }
+//│       }
+//│       this.cache.Barr = new Barr(1, 0);
+//│       this.cache.Barr["class"] = Barr;
+//│     }
+//│     return this.cache.Barr;
+//│   }
+//│ };
+//│ globalThis.Barr = typing_unit16.Barr;
+//│ // End of generated code
+
+:e
+Barr.x
+//│ ╔══[ERROR] module `Barr` does not contain member `x`
+//│ ║  l.594: 	Barr.x
+//│ ╙──       	    ^^
+//│ error
+//│ res
+//│     = 0
+
+:e
+Barr.y
+//│ ╔══[ERROR] module `Barr` does not contain member `y`
+//│ ║  l.603: 	Barr.y
+//│ ╙──       	    ^^
+//│ error
+//│ res
+//│     = 1

@@ -537,6 +537,12 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val rest = constructorScope.declareValue("rest", Some(false), false)
     val base: Opt[JSExpr] =
       translateParents(superFields, constructorScope)
+    val superParameters = (superFields map {
+      case App(lhs, Tup(rhs)) => rhs map {
+        case (_, Fld(mut, spec, trm)) => translateTerm(trm)(getterScope)
+      }
+      case _ => Nil
+    }).flatten
     val decl = JSClassNewDecl(moduleSymbol.runtimeName,
                    fields,
                    base,
@@ -549,7 +555,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       JSIfStmt(JSBinary("===", JSField(JSField(JSIdent("this"), "cache"), moduleSymbol.runtimeName), JSIdent("undefined")), Ls(
         decl,
         JSExprStmt(JSAssignExpr(JSField(JSField(JSIdent("this"), "cache"), moduleSymbol.runtimeName),
-          JSNew(JSInvoke(JSIdent(moduleSymbol.runtimeName), Ls())))),
+          JSNew(JSInvoke(JSIdent(moduleSymbol.runtimeName), superParameters.reverse)))),
         JSExprStmt(JSAssignExpr(JSMember(JSField(JSField(JSIdent("this"), "cache"), moduleSymbol.runtimeName), JSLit(JSLit.makeStringLiteral("class"))), JSIdent(moduleSymbol.runtimeName))),
       )),
       JSReturnStmt(S(JSField(JSField(JSIdent("this"), "cache"), moduleSymbol.runtimeName)))

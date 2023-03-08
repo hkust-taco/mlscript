@@ -380,6 +380,7 @@ trait PgrmImpl { self: Pgrm =>
       if (pars.length > 0) {
         val bases = pars.drop(1).foldLeft(App(pars.head, Tup(Ls())): Term)((res, p) => p match {
           case Var(pname) => App(Var(pname), Tup(Ls(None -> Fld(false, false, res))))
+          case App(pname, _) => App(pname, Tup(Ls(None -> Fld(false, false, res))))
           case _ => ???
         })
         tryDesugaredNewDec(NuTypeDef(Cls, nme, tps, tup, sig, Ls(bases), sup, ths, unit))

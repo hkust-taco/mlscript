@@ -857,10 +857,8 @@ final case class JSClassNewDecl(
         buffer += s"    $name.implement(this);"
       }
       fields.iterator.zipWithIndex.foreach { pair =>
-        if (rest.isEmpty || pair._2 < fields.length - 1) {
-          val innerName = if (JSField.isValidIdentifier(pair._1)) s".${pair._1}" else s"[${JSLit.makeStringLiteral(pair._1)}]"
-          buffer += s"    this${innerName} = ${pair._1};" // TODO: invalid name?
-        }
+        val innerName = if (JSField.isValidIdentifier(pair._1)) s".${pair._1}" else s"[${JSLit.makeStringLiteral(pair._1)}]"
+        buffer += s"    this${innerName} = ${pair._1};" // TODO: invalid name?
       }
       buffer += "  }"
       SourceCode(buffer.toList)
