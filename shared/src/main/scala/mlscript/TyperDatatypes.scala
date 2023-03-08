@@ -135,14 +135,14 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       }
       // else // TODO avert infinite completion recursion here?
       trace(s"Completing ${decl.showDbg}") {
-        // var res: ST = errType
+        println(s"Type params ${tparams.mkString(" ")}")
+        println(s"Params ${typedParams.mkString(" ")}")
+        
         val res = try {
           isComputing = true
-          // res = 
           decl match {
             case fd: NuFunDef =>
               // assert(fd.isLetRec.isEmpty, fd.isLetRec)
-              // implicit val prov: TP = noProv // TODO
               def checkNoTyParams() =
                 if (fd.tparams.nonEmpty)
                   err(msg"Type parameters here are not yet supported in this position",
@@ -227,18 +227,6 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                   if (td.parents.nonEmpty)
                     err(msg"type alias definitions cannot extend parents" -> Loc(td.parents) :: Nil)
                   
-                  // val tparams = td.tparams.map(tp =>
-                  //   (tp._2, freshVar(TypeProvenance(
-                  //     tp._2.toLoc,
-                  //     "type parameter",
-                  //     S(tp._2.name),
-                  //     true), N, S(tp._2.name)), tp._1))
-                  
-                  implicit val vars: Map[Str, SimpleType] =
-                    outerVars ++ tparams.iterator.map {
-                      case (tp, tv, vi) => (tp.name, SkolemTag(tv.level, tv)(tv.prov))
-                    }
-                  
                   val body_ty = td.sig match {
                     case S(sig) =>
                       typeType(sig)
@@ -253,55 +241,13 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                   // implicit val prov: TP = noProv // TODO
                   ctx.nest.nextLevel { implicit ctx =>
                     
-                    /* 
-                    val tparams = td.tparams.map(tp =>
-                      (tp._2, freshVar(TypeProvenance(
-                        tp._2.toLoc,
-                        "type parameter",
-                        S(tp._2.name),
-                        true), N, S(tp._2.name)), tp._1))
-                    
-                    println(s"Type params ${tparams.mkString(" ")}")
-                    
-                    implicit val vars: Map[Str, SimpleType] =
-                      // outerVars ++ tparams.iterator.mapKeys(_.name).toMap
-                      outerVars ++ tparams.iterator.map {
-                        case (tp, tv, vi) => (tp.name, SkolemTag(tv.level, tv)(tv.prov))
-                      }
-                    
-                    val typedParams = td.params.fields.map {
-                      case (S(nme), Fld(mut, spec, value)) =>
-                        assert(!mut && !spec, "TODO") // TODO
-                        value.toType match {
-                          case R(tpe) =>
-                            implicit val newDefsInfo: Map[Str, (TypeDefKind, Int)] = Map.empty // TODO?
-                            val ty = typeType(tpe)
-                            nme -> FieldType(N, ty)(provTODO)
-                          case _ => ???
-                        }
-                      case (N, Fld(mut, spec, nme: Var)) =>
-                        // assert(!mut && !spec, "TODO") // TODO
-                        // nme -> FieldType(N, freshVar(ttp(nme), N, S(nme.name)))(provTODO)
-                        nme -> FieldType(N, err(msg"Class parameters currently need type annotations", nme.toLoc))(provTODO)
-                      case _ => ???
-                    }
-                    */
-                    
                     if ((td.kind is Nms) && typedParams.nonEmpty)
                       // * Can we do better? (Memoization semantics?)
                       err(msg"${td.kind.str} parameters are not supported",
                         Loc(typedParams.iterator.map(_._1)))
                     
-                    // ctx ++= typedParams.mapKeysIter(_.name).mapValues(_.ub |> VarSymbol(_))
                     ctx ++= typedParams.map(p => p._1.name -> VarSymbol(p._2.ub, p._1))
                     
-                    // ctx += "this" -> VarSymbol(
-                    //     ClassTag(Var(td.name),
-                    //       Set.empty//TODO
-                    //     )(provTODO),
-                    //   Var("this"))
-                    
-                    // val thisTV = freshVar(noProv/*FIXME*/, N, S("this"))
                     ctx += "this" -> VarSymbol(thisTV, Var("this"))
                     
                     val sig_ty = typeType(td.sig.getOrElse(Top))
@@ -310,11 +256,6 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                         err(msg"type signatures not yet supported for classes", sig.toLoc)
                       case N => ()
                     }
-                    
-                    // // TODO check against `tv`
-                    // println(td.tparams)
-                    // println(td.params)
-                    // println(td.parents)
                     
                     implicit val prov: TP =
                       TypeProvenance(decl.toLoc, decl.describe)
@@ -331,10 +272,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     assert(!typedParams.keys.exists(tparamFields.keys.toSet), ???)
                     
                     
-                    // def inherit(parents: Ls[Term], superType: ST, members: Ls[TypedNuDecl -> ST]): Unit = parents match {
-                      
                     def inherit(parents: Ls[Term], superType: ST, members: Ls[NuMember])
-                          // : Ls[NuMember] =
                           : (ST, Ls[NuMember]) =
                         parents match {
                     // def inherit(parents: Ls[Term \/ TypedTypingUnit], superType: ST, members: Ls[TypedNuDecl]): Ls[TypedNuDecl] = parents match {
@@ -342,53 +280,67 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                       // case L(p) :: ps =>
                       case p :: ps =>
                         val newMembs = trace(s"${lvl}. Inheriting from $p") {
-                          p match {
-                            case Var(nme) =>
-                              ctx.get(nme) match {
-                                case S(lti: LazyTypeInfo) =>
-                                  lti.complete().freshen match {
-                                    case mxn: TypedNuMxn =>
-                                      // mxn.thisTV
-                                      // mxn.ttu.entities
-                                      // ???
-                                      // val fresh = mxn.freshen
-                                      // println(fresh)
-                                      
-                                      println(s"Fresh $mxn")
-                                      
-                                      assert(finalType.level === lvl)
-                                      assert(mxn.superTV.level === lvl)
-                                      assert(mxn.thisTV.level === lvl)
-                                      constrain(superType, mxn.superTV)
-                                      constrain(finalType, mxn.thisTV)
-                                      
-                                      // TODO check overriding
-                                      mxn.ttu.entities.map(_.complete()).map {
-                                        case fun @ TypedNuFun(_, fd, ty) =>
-                                          fun
-                                        case m: NuMember => m
-                                        // case _ => ???
-                                      }
-                                    case cls: TypedNuCls =>
-                                      err(msg"Class inheritance is not supported yet (use mixins)", p.toLoc) // TODO
-                                      Nil
-                                    case als: TypedNuAls =>
-                                      // TODO dealias first?
-                                      err(msg"Cannot inherit from a type alias", p.toLoc)
-                                      Nil
-                                    case cls: TypedNuFun =>
-                                      err(msg"Cannot inherit from this", p.toLoc)
-                                      Nil
-                                  }
-                                case S(_) =>
-                                  err(msg"Cannot inherit from this", p.toLoc)
-                                  Nil
-                                case N => 
-                                  err(msg"Could not find definition `${nme}`", p.toLoc)
-                                  Nil
-                              }
+                          val (v @ Var(mxnNme), mxnArgs) = p match {
+                            case v @ Var(nme) =>
+                              v -> Nil
+                            case App(v @ Var(nme), Tup(args)) =>
+                              v -> args
                             case _ =>
                               err(msg"Unsupported parent specification", p.toLoc) // TODO
+                              return inherit(ps, superType, members)
+                          }
+                          ctx.get(mxnNme) match {
+                            case S(lti: LazyTypeInfo) =>
+                              lti.complete().freshen match {
+                                case mxn: TypedNuMxn =>
+                                  
+                                  println(s"Fresh $mxn")
+                                  
+                                  assert(finalType.level === lvl)
+                                  assert(mxn.superTV.level === lvl)
+                                  assert(mxn.thisTV.level === lvl)
+                                  
+                                  constrain(superType, mxn.superTV)
+                                  constrain(finalType, mxn.thisTV)
+                                  
+                                  if (mxnArgs.sizeCompare(mxn.params) =/= 0)
+                                    err(msg"mixin $mxnNme expects ${
+                                      mxn.params.size.toString} parameters; got ${mxnArgs.size.toString}", Loc(v :: mxnArgs.unzip._2))
+                                  
+                                  val paramMems = mxn.params.lazyZip(mxnArgs).map { case (nme -> p, _ -> Fld(_, _, a)) => // TODO check name, mut, spec
+                                    implicit val genLambdas: GenLambdas = true
+                                    val a_ty = typeTerm(a)
+                                    p.lb.foreach(constrain(_, a_ty))
+                                    constrain(a_ty, p.ub)
+                                    NuParam(nme, FieldType(p.lb, a_ty)(provTODO), isType = false)
+                                  }
+                                  
+                                  // TODO check overriding
+                                  val bodyMems = mxn.ttu.entities.map(_.complete()).map {
+                                    case fun @ TypedNuFun(_, fd, ty) =>
+                                      fun
+                                    case m: NuMember => m
+                                    // case _ => ???
+                                  }
+                                  
+                                  paramMems ++ bodyMems
+                                  
+                                case cls: TypedNuCls =>
+                                  err(msg"Class inheritance is not supported yet (use mixins)", p.toLoc) // TODO
+                                  Nil
+                                case als: TypedNuAls =>
+                                  // TODO dealias first?
+                                  err(msg"Cannot inherit from a type alias", p.toLoc)
+                                  Nil
+                                case cls: TypedNuFun =>
+                                  err(msg"Cannot inherit from this", p.toLoc)
+                                  Nil
+                              }
+                            case S(_) =>
+                              err(msg"Cannot inherit from this", p.toLoc)
+                              Nil
+                            case N => 
+                              err(msg"Could not find definition `${mxnNme}`", p.toLoc)
                               Nil
                           }
                         }()
@@ -399,7 +351,10 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                           RecordType(
                             // newMembs.foldLeft(TopType.toUpper(provTODO))(_ && _.ty.toUpper(provTODO))
                             // newMembs.map(m => m.fd.nme -> m.ty.toUpper(provTODO))
-                            newMembs.collect{case m: TypedNuFun => m.fd.nme -> m.ty.toUpper(provTODO)}
+                            newMembs.collect{
+                              case m: NuParam => m.nme -> m.ty
+                              case m: TypedNuFun => m.fd.nme -> m.ty.toUpper(provTODO)
+                            }
                           )(provTODO)
                           )(provTODO)
                         inherit(ps, newSuperType, members ++ newMembs)
@@ -475,7 +430,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                     // ctx |> { implicit ctx =>
                     val ttu = typeTypingUnit(td.body, allowPure = false)
                     val mems = paramMems ++ttu.entities.map(_.complete())
-                    TypedNuMxn(td, thisTV, superTV, mems.map(m => m.name -> m).toMap, ttu)
+                    TypedNuMxn(td, thisTV, superTV, tparams, typedParams, mems.map(m => m.name -> m).toMap, ttu)
                     // }
                   }
                 // case Als => ???

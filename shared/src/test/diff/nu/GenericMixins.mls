@@ -10,15 +10,11 @@ mixin BaseTest<A> {
 //│ ╔══[ERROR] type identifier not found: A
 //│ ║  l.8: 	  fun test(x: A) = x
 //│ ╙──     	              ^
-//│ mixin BaseTest[A]() {
-//│   fun test: (x: error,) -> error
-//│ }
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: A26'
 
 // TODO support
 mixin BaseTest<A>(x: A) {
   fun test = x
 }
-//│ mixin BaseTest[A]() {
-//│   fun test: A
-//│ }
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: A31_38'
 
