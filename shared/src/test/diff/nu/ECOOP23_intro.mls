@@ -20,7 +20,7 @@ mixin ComparePoint {
 
 
 class Color(str: string) {
-  fun equals(that) = eq(this.str)(that.str)
+  fun equals(that) = eq(str)(that.str)
 }
 //│ class Color(str: string) {
 //│   fun equals: {str: anything} -> bool

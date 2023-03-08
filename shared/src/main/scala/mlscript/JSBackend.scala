@@ -445,12 +445,13 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val getterScope = scope.derive(s"getter ${mixinSymbol.lexicalName}")
     val mixinScope = getterScope.derive(s"mixin ${mixinSymbol.lexicalName}")
     mixinScope.declareSuper()
-    val members = mixinSymbol.methods.map {
-      translateClassMember(_)(mixinScope)
-    }
     // Collect class fields.
     val fields = mixinSymbol.body.collectFields ++
       mixinSymbol.body.collectTypeNames.flatMap(resolveTraitFields)
+
+    val members = mixinSymbol.methods.map {
+      translateNewClassMember(_, fields)(mixinScope)
+    } 
     val constructorScope = mixinScope.derive(s"${mixinSymbol.lexicalName} constructor")
     fields.foreach(constructorScope.declareValue(_, Some(false), false))
     val rest = constructorScope.declareValue("rest", Some(false), false)
@@ -520,12 +521,12 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     val getterScope = scope.derive(s"getter ${moduleSymbol.lexicalName}")
     val moduleScope = scope.derive(s"module ${moduleSymbol.lexicalName}")
     val constructorScope = moduleScope.derive(s"${moduleSymbol.lexicalName} constructor")
-    val members = moduleSymbol.methods.map {
-      translateClassMember(_)(moduleScope)
-    }
     // Collect class fields.
     val fields = moduleSymbol.body.collectFields ++
       moduleSymbol.body.collectTypeNames.flatMap(resolveTraitFields)
+    val members = moduleSymbol.methods.map {
+      translateNewClassMember(_, fields)(moduleScope)
+    }
     val traits = moduleSymbol.body.collectTypeNames.flatMap {
       name => scope.getType(name) match {
         case S(TraitSymbol(_, runtimeName, _, _, _)) => S(runtimeName)
@@ -594,12 +595,12 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   )(implicit scope: Scope): JSClassNewDecl = {
     // Translate class methods and getters.
     val classScope = scope.derive(s"class ${classSymbol.lexicalName}")
-    val members = classSymbol.methods.map {
-      translateClassMember(_)(classScope)
-    }
     // Collect class fields.
     val fields = classSymbol.body.collectFields ++
       classSymbol.body.collectTypeNames.flatMap(resolveTraitFields)
+    val members = classSymbol.methods.map {
+      translateNewClassMember(_, fields)(classScope)
+    }
 
     val constructorScope = classScope.derive(s"${classSymbol.lexicalName} constructor")
     fields.foreach(constructorScope.declareValue(_, Some(false), false))
@@ -659,6 +660,47 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       R(thisDecl :: bodyResult :: Nil)
     } else {
       R(bodyResult :: Nil)
+    }
+    // Returns members depending on what it is.
+    memberParams match {
+      case S(memberParams) => JSClassMethod(name, memberParams, bodyStmts)
+      case N => JSClassGetter(name, bodyStmts)
+    }
+  }
+
+  private def translateNewClassMember(
+      method: MethodDef[Left[Term, Type]],
+      props: Ls[Str] = Nil
+  )(implicit scope: Scope): JSClassMemberDecl = {
+    val name = method.nme.name
+    // Create the method/getter scope.
+    val memberScope = method.rhs.value match {
+      case _: Lam => scope.derive(s"method $name")
+      case _ => scope.derive(s"getter $name")
+    }
+    // Declare the alias for `this` before declaring parameters.
+    val selfSymbol = memberScope.declareThisAlias()
+    val preDecs = props.map(p => {
+      val runtime = memberScope.declareValue(p, Some(false), false)
+      JSConstDecl(runtime.runtimeName, JSField(JSIdent("this"), p))
+    })
+    // Declare parameters.
+    val (memberParams, body) = method.rhs.value match {
+      case Lam(params, body) =>
+        val methodParams = translateParams(params)(memberScope)
+        (S(methodParams), body)
+      case term =>
+        (N, term)
+    }
+    // Translate class member body.
+    val bodyResult = translateTerm(body)(memberScope).`return`
+    // If `this` is accessed, add `const self = this`.
+    val bodyStmts = if (visitedSymbols(selfSymbol)) {
+      val thisDecl = JSConstDecl(selfSymbol.runtimeName, JSIdent("this"))
+      visitedSymbols -= selfSymbol
+      R(preDecs ::: (thisDecl :: bodyResult :: Nil))
+    } else {
+      R(preDecs ::: (bodyResult :: Nil))
     }
     // Returns members depending on what it is.
     memberParams match {
