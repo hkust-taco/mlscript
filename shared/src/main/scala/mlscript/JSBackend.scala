@@ -469,11 +469,8 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
     
     val classBody = JSClassNewDecl(mixinSymbol.runtimeName, fields, S(JSIdent(base.runtimeName)),
       Ls(JSIdent(s"...${rest.runtimeName}")), S(rest.runtimeName), members, traits)
-    val baseClassBody = JSClassNewDecl(mixinSymbol.runtimeName, fields, N,
-      Ls(), N, members, traits)
     JSClassMethod(mixinSymbol.lexicalName, Ls(JSNamePattern(base.runtimeName)), R(Ls(
-      JSIfStmt(JSBinary("===", JSIdent(base.runtimeName), JSIdent("undefined")),
-        Ls(JSReturnStmt(S(JSClassExpr(baseClassBody)))), Ls(JSReturnStmt(S(JSClassExpr(classBody)))))
+      JSReturnStmt(S(JSClassExpr(classBody)))
     )))
   }
 
@@ -487,12 +484,12 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
       case head :: tail => tail.foldLeft(
         head match {
           case Some(JSIdent(nme)) => scope.resolveValue(nme) match {
-            case Some(sym: MixinSymbol) => Some(JSInvoke(JSIdent(nme), Ls()))
+            case Some(sym: MixinSymbol) => Some(JSInvoke(JSIdent(nme), Ls(JSIdent("Object"))))
             case Some(_) => Some(JSMember(JSIdent(nme), JSLit(JSLit.makeStringLiteral("class"))))
             case _ => throw CodeGenError(s"unresolved symbol in parents: $nme")
           }
           case Some(JSInvoke(JSIdent(nme), _)) => scope.resolveValue(nme) match {
-            case Some(sym: MixinSymbol) => Some(JSInvoke(JSIdent(nme), Ls()))
+            case Some(sym: MixinSymbol) => Some(JSInvoke(JSIdent(nme), Ls(JSIdent("Object"))))
             case Some(_) => Some(JSMember(JSIdent(nme), JSLit(JSLit.makeStringLiteral("class"))))
             case _ => throw CodeGenError(s"unresolved symbol in parents: $nme")
           }
