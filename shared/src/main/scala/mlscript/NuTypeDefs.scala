@@ -216,6 +216,14 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def nme: TypeName = td.nme
     def name: Str = nme.name
     
+    
+    // TODO
+    // def checkVariances
+    
+    // lazy val explicitVariances: VarianceStore =
+    //   MutMap.from(tparams.iterator.map(tp => tp._2 -> tp._3.getOrElse(VarianceInfo.in)))
+    
+    // TODO should we really recompute them on freshened instances, or can we avoid that?
     private var _variances: Opt[VarianceStore] = N
     def variances(implicit ctx: Ctx): VarianceStore = {
       _variances match {
@@ -253,6 +261,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           Trav(PolMap.pos)(instanceType)
           // println(store)
           store
+          
+          // TODO check consistency with explicitVariances
+          store ++ tparams.iterator.collect { case (_, tv, S(vi)) => tv -> vi }
           
       }
     }

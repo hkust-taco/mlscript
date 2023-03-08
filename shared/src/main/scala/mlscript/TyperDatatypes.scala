@@ -65,6 +65,13 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       }
     }
     
+    lazy val explicitVariances: VarianceStore =
+      MutMap.from(tparams.iterator.map(tp => tp._2 -> tp._3.getOrElse(VarianceInfo.in)))
+    
+    def varianceOf(tv: TV)(implicit ctx: Ctx): VarianceInfo =
+      // TODO make use of inferred vce if result is completed
+      explicitVariances.get(tv).getOrElse(VarianceInfo.in)
+    
     // println(s"Type params ${tparams.mkString(" ")}")
     
     lazy private implicit val vars: Map[Str, SimpleType] =
@@ -1023,7 +1030,12 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         case N =>
           val td = ctx.tyDefs2(defn.name)
           // (N, td.tparams)
-          (N, td.tparams.map(tp => (tp._1, tp._2)))
+          // (td.explicitVariances, td.tparams)
+          // TODO computed varces
+          // (some[VarianceStore](
+          //   MutMap.from(td.tparams.iterator.map(tp => tp._2 -> tp._3.getOrElse(VarianceInfo.in)))
+          // ), td.tparams.map(tp => (tp._1, tp._2)))
+          (some(td.explicitVariances), td.tparams.map(tp => (tp._1, tp._2)))
       }
       tvarVariances.fold(targs.map(f(pol.invar, _))) { tvv =>
         assert(tparamsargs.sizeCompare(targs) === 0)

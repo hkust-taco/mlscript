@@ -900,6 +900,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                     if (!v.isCovariant) rec(targ2, targ1, false)
                   }
                 case N =>
+                  /* 
                   ctx.tyDefs2(tr1.defn.name).complete() match {
                     case cls: TypedNuCls =>
                       cls.tparams.map(_._2).lazyZip(tr1.targs).lazyZip(tr2.targs).foreach {
@@ -908,7 +909,19 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                           if (!v.isContravariant) rec(targ1, targ2, false)
                           if (!v.isCovariant) rec(targ2, targ1, false)
                       }
-                    case _ => ???
+                    // case _ => ???
+                  }
+                  */
+                  ctx.tyDefs2.get(tr1.defn.name) match {
+                    case S(lti) =>
+                      lti.tparams.map(_._2).lazyZip(tr1.targs).lazyZip(tr2.targs).foreach {
+                        (tv, targ1, targ2) =>
+                          val v = lti.varianceOf(tv)
+                          if (!v.isContravariant) rec(targ1, targ2, false)
+                          if (!v.isCovariant) rec(targ2, targ1, false)
+                      }
+                    case N =>
+                      ??? // TODO
                   }
               }
             } else {
