@@ -16,24 +16,14 @@ mixin Foo0 {
 //│ let typing_unit = {
 //│   cache: {},
 //│   Foo0(base) {
-//│     if (base === undefined) {
-//│       return (class Foo0 {
-//│         constructor() {
-//│         }
-//│         get foo0() {
-//│           return 0;
-//│         }
-//│       });
-//│     } else {
-//│       return (class Foo0 extends base {
-//│         constructor(...rest) {
-//│           super(...rest);
-//│         }
-//│         get foo0() {
-//│           return 0;
-//│         }
-//│       });
-//│     }
+//│     return (class Foo0 extends base {
+//│       constructor(...rest) {
+//│         super(...rest);
+//│       }
+//│       get foo0() {
+//│         return 0;
+//│       }
+//│     });
 //│   }
 //│ };
 //│ globalThis.Foo0 = typing_unit.Foo0;
@@ -53,30 +43,17 @@ mixin Foo1 {
 //│ let typing_unit1 = {
 //│   cache: {},
 //│   Foo1(base) {
-//│     if (base === undefined) {
-//│       return (class Foo1 {
-//│         constructor() {
-//│         }
-//│         get foo0() {
-//│           return 1;
-//│         }
-//│         get foo1() {
-//│           return super.foo0;
-//│         }
-//│       });
-//│     } else {
-//│       return (class Foo1 extends base {
-//│         constructor(...rest) {
-//│           super(...rest);
-//│         }
-//│         get foo0() {
-//│           return 1;
-//│         }
-//│         get foo1() {
-//│           return super.foo0;
-//│         }
-//│       });
-//│     }
+//│     return (class Foo1 extends base {
+//│       constructor(...rest) {
+//│         super(...rest);
+//│       }
+//│       get foo0() {
+//│         return 1;
+//│       }
+//│       get foo1() {
+//│         return super.foo0;
+//│       }
+//│     });
 //│   }
 //│ };
 //│ globalThis.Foo1 = typing_unit1.Foo1;
@@ -94,10 +71,9 @@ module Test0 extends Foo0, Foo1
 //│     = [ 1, 0 ]
 
 
-// FIXME some errors are currently swallowed!
-
 :ShowRepl
 :js
+// FIXME prevent misuse of `super` using the type system
 mixin Foo2 {
   fun foo2 = super
 }
@@ -109,57 +85,20 @@ mixin Foo2 {
 //│ let typing_unit4 = {
 //│   cache: {},
 //│   Foo2(base) {
-//│     if (base === undefined) {
-//│       return (class Foo2 {
-//│         constructor() {
-//│         }
-//│         get foo2() {
-//│           return super;
-//│         }
-//│       });
-//│     } else {
-//│       return (class Foo2 extends base {
-//│         constructor(...rest) {
-//│           super(...rest);
-//│         }
-//│         get foo2() {
-//│           return super;
-//│         }
-//│       });
-//│     }
+//│     return (class Foo2 extends base {
+//│       constructor(...rest) {
+//│         super(...rest);
+//│       }
+//│       get foo2() {
+//│         return super;
+//│       }
+//│     });
 //│   }
 //│ };
 //│ globalThis.Foo2 = typing_unit4.Foo2;
 //│ // End of generated code
-//│ ┌ Block at Super.mls:101
-//│ ├─┬ Prelude
-//│ │ ├── Code
-//│ │ │   let typing_unit4 = {
-//│ │ │     cache: {},
-//│ │ │     Foo2(base) {
-//│ │ │       if (base === undefined) {
-//│ │ │         return (class Foo2 {
-//│ │ │           constructor() {
-//│ │ │           }
-//│ │ │           get foo2() {
-//│ │ │             return super;
-//│ │ │           }
-//│ │ │         });
-//│ │ │       } else {
-//│ │ │         return (class Foo2 extends base {
-//│ │ │           constructor(...rest) {
-//│ │ │             super(...rest);
-//│ │ │           }
-//│ │ │           get foo2() {
-//│ │ │             return super;
-//│ │ │           }
-//│ │ │         });
-//│ │ │       }
-//│ │ │     }
-//│ │ │   };
-//│ │ │   globalThis.Foo2 = typing_unit4.Foo2;
-//│ │ └── Reply [syntax error] 'super' keyword unexpected here
-//│ └── No queries
+//│ Syntax error:
+//│   'super' keyword unexpected here
 
 :ShowRepl
 :js
@@ -172,9 +111,9 @@ module Test0 extends Foo2
 //│   cache: {},
 //│   get Test01() {
 //│     if (this.cache.Test01 === undefined) {
-//│       class Test01 extends Foo2() {
-//│         constructor(...rest) {
-//│           super(...rest);
+//│       class Test01 extends Foo2(Object) {
+//│         constructor() {
+//│           super();
 //│         }
 //│       }
 //│       this.cache.Test01 = new Test01();
@@ -185,16 +124,16 @@ module Test0 extends Foo2
 //│ };
 //│ globalThis.Test01 = typing_unit5.Test01;
 //│ // End of generated code
-//│ ┌ Block at Super.mls:166
+//│ ┌ Block at Super.mls:105
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   let typing_unit5 = {
 //│ │ │     cache: {},
 //│ │ │     get Test01() {
 //│ │ │       if (this.cache.Test01 === undefined) {
-//│ │ │         class Test01 extends Foo2() {
-//│ │ │           constructor(...rest) {
-//│ │ │             super(...rest);
+//│ │ │         class Test01 extends Foo2(Object) {
+//│ │ │           constructor() {
+//│ │ │             super();
 //│ │ │           }
 //│ │ │         }
 //│ │ │         this.cache.Test01 = new Test01();

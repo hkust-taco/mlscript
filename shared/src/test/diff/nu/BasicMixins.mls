@@ -1,9 +1,7 @@
 :NewParser
 :NewDefs
-:NoJS
 
 
-// :d
 mixin BaseTest {
   fun test = super.base
 }
@@ -23,7 +21,7 @@ mixin BaseInc {
 //│   fun test2: 'base
 //│ }
 
-// :d
+// TODO reject by typing
 class Base1(base: int) extends BaseTest, BaseInc {
   fun test3 = [base, this.base]
 }
@@ -35,18 +33,24 @@ class Base1(base: int) extends BaseTest, BaseInc {
 
 Base1(1).test
 //│ int
+//│ res
+//│     = NaN
 
 Base1(1).test2
 //│ int
+//│ res
+//│     = 1
 
 Base1(1).test3
 //│ (int, int,)
+//│ res
+//│     = [ 1, 1 ]
 
 
 // TODO
 class Base1(base) extends BaseTest
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.47: 	class Base1(base) extends BaseTest
+//│ ║  l.51: 	class Base1(base) extends BaseTest
 //│ ╙──      	            ^^^^
 //│ class Base1(base: error) {
 //│   fun test: error
@@ -54,28 +58,32 @@ class Base1(base) extends BaseTest
 
 Base1
 //│ (base: error,) -> Base1
+//│ res
+//│     = [Function (anonymous)] { class: [Function: Base11] }
 
 // TODO
 Base1(1).test
 //│ error
+//│ res
+//│     = undefined
 
 
 :e
 class Base1(x) extends BaseTest
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.64: 	class Base1(x) extends BaseTest
+//│ ║  l.72: 	class Base1(x) extends BaseTest
 //│ ╙──      	            ^
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.64: 	class Base1(x) extends BaseTest
+//│ ║  l.72: 	class Base1(x) extends BaseTest
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `{x: error}` does not have field 'base'
-//│ ║  l.64: 	class Base1(x) extends BaseTest
+//│ ║  l.72: 	class Base1(x) extends BaseTest
 //│ ║        	           ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.8: 	  fun test = super.base
+//│ ║  l.6: 	  fun test = super.base
 //│ ║       	             ^^^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.8: 	  fun test = super.base
+//│ ║  l.6: 	  fun test = super.base
 //│ ╙──     	             ^^^^^
 //│ class Base1(x: error) {
 //│   fun test: nothing
@@ -84,18 +92,20 @@ class Base1(x) extends BaseTest
 :e
 class Base1(x): BaseTest
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.85: 	class Base1(x): BaseTest
+//│ ║  l.93: 	class Base1(x): BaseTest
 //│ ╙──      	            ^
 //│ ╔══[ERROR] mixins cannot be used as types
-//│ ║  l.85: 	class Base1(x): BaseTest
+//│ ║  l.93: 	class Base1(x): BaseTest
 //│ ╙──      	                ^^^^^^^^
 //│ ╔══[ERROR] type signatures not yet supported for classes
-//│ ║  l.85: 	class Base1(x): BaseTest
+//│ ║  l.93: 	class Base1(x): BaseTest
 //│ ╙──      	                ^^^^^^^^
 //│ class Base1(x: error)
 
 Base1
 //│ (x: error,) -> Base1
+//│ res
+//│     = [Function (anonymous)] { class: [class Base13] }
 
 
 // :ns
@@ -110,7 +120,7 @@ mixin Foo {
 :e
 module Base1(base: int, misc: string) extends Foo
 //│ ╔══[ERROR] module parameters are not supported
-//│ ║  l.111: 	module Base1(base: int, misc: string) extends Foo
+//│ ║  l.121: 	module Base1(base: int, misc: string) extends Foo
 //│ ╙──       	             ^^^^^^^^^^^^^^^
 //│ module Base1(base: int, misc: string) {
 //│   fun test: (int & 'a) -> (int, 'a, string,)
@@ -118,6 +128,8 @@ module Base1(base: int, misc: string) extends Foo
 
 Base1.test
 //│ (int & 'a) -> (int, 'a, string,)
+//│ res
+//│     = [Function: test]
 
 
 mixin WrapBase {
@@ -154,13 +166,19 @@ module WrapBase1 extends WrapBase, Wrap
 
 WrapBase1
 //│ WrapBase1
+//│ res
+//│     = WrapBase1 { class: [Function: WrapBase1] }
 
 // :d
 WrapBase1.wrapA
 //│ int -> (int,)
+//│ res
+//│     = [Function: wrapA]
 
 WrapBase1.wrap
 //│ 'a -> ('a,)
+//│ res
+//│     = [Function: wrap]
 
 // :d
 // WrapBase1.wrap
@@ -168,29 +186,37 @@ WrapBase1.wrap
 
 WrapBase1.wrap(1)
 //│ (1,)
+//│ res
+//│     = [ 1 ]
 
 WrapBase1.wrap("ok")
 //│ ("ok",)
+//│ res
+//│     = [ 'ok' ]
 
 
 WrapBase1.wrapA(1)
 //│ (int,)
+//│ res
+//│     = [ 1 ]
 
 :e
 WrapBase1.wrapA("ok")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.180: 	WrapBase1.wrapA("ok")
+//│ ║  l.204: 	WrapBase1.wrapA("ok")
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"ok"` is not an instance of type `int`
-//│ ║  l.180: 	WrapBase1.wrapA("ok")
+//│ ║  l.204: 	WrapBase1.wrapA("ok")
 //│ ║         	                ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.126: 	  fun wrapA(x: int) = x : int
+//│ ║  l.138: 	  fun wrapA(x: int) = x : int
 //│ ║         	               ^^^
 //│ ╟── from reference:
-//│ ║  l.136: 	  fun wrapA(x) = [super.wrapA(x)]
+//│ ║  l.148: 	  fun wrapA(x) = [super.wrapA(x)]
 //│ ╙──       	                              ^
 //│ (int,) | error
+//│ res
+//│     = [ 'ok' ]
 
 
 
@@ -202,11 +228,19 @@ module WrapBase2 extends WrapBase, Wrap, Wrap, Wrap
 
 let w = WrapBase2.wrap
 //│ let w: 'a -> ((('a,),),)
+//│ w
+//│   = [Function: wrap]
 
 let wd = w(1)
 //│ let wd: (((1,),),)
+//│ wd
+//│    = [ [ [ 1 ] ] ]
 
+// TODO implement _1
 wd._1._1._1 + 1
 //│ int
+//│ res
+//│ Runtime error:
+//│   TypeError: Cannot read properties of undefined (reading '_1')
 
 

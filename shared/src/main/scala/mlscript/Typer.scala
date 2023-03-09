@@ -245,6 +245,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       "false" -> FalseType,
       "document" -> BotType,
       "window" -> BotType,
+      "typeof" -> fun(singleTup(TopType), StrType)(noProv),
       "toString" -> fun(singleTup(TopType), StrType)(noProv),
       "not" -> fun(singleTup(BoolType), BoolType)(noProv),
       "succ" -> fun(singleTup(IntType), IntType)(noProv),
@@ -261,6 +262,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       "le" -> numberBinPred,
       "gt" -> numberBinPred,
       "ge" -> numberBinPred,
+      "length" -> fun(singleTup(StrType), IntType)(noProv),
       "concat" -> fun(singleTup(StrType), fun(singleTup(StrType), StrType)(noProv))(noProv),
       "eq" -> {
         val v = freshVar(noProv, N)(1)
@@ -969,6 +971,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case Blk(stmts) =>
         if (newDefs) {
           val ttu = typeTypingUnit(TypingUnit(stmts), allowPure = false)
+          ttu.force()
           // TODO check unused defs
           // ttu.res
           ttu.result.getOrElse(UnitType)
@@ -1268,9 +1271,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     def goDecl(d: TypedNuDecl): NuDecl = d match {
       case TypedNuAls(level, td, tparams, body) =>
         NuTypeDef(td.kind, td.nme, td.tparams, Tup(Nil), S(go(body)), Nil, N, N, TypingUnit(Nil))
-      case TypedNuMxn(td, thisTy, superTy, members, ttu) =>
+      case TypedNuMxn(td, thisTy, superTy, tparams, params, members, ttu) =>
         NuTypeDef(td.kind, td.nme, td.tparams,
-          Tup(Nil),
+          Tup(params.map(p => N -> Fld(false, false, Asc(p._1, go(p._2.ub))))),
           N,
           Nil,//TODO
           // S(go(superTy)),

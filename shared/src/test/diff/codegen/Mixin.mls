@@ -14,9 +14,13 @@ class Lit(n: int)
 //│   get Add() {
 //│     if (this.cache.Add === undefined) {
 //│       class Add {
+//│         #lhs;
+//│         #rhs;
+//│         get lhs() { return this.#lhs; }
+//│         get rhs() { return this.#rhs; }
 //│         constructor(lhs, rhs) {
-//│           this.lhs = lhs;
-//│           this.rhs = rhs;
+//│           this.#lhs = lhs;
+//│           this.#rhs = rhs;
 //│         }
 //│       };
 //│       this.cache.Add = ((lhs, rhs) => new Add(lhs, rhs));
@@ -27,8 +31,10 @@ class Lit(n: int)
 //│   get Lit() {
 //│     if (this.cache.Lit === undefined) {
 //│       class Lit {
+//│         #n;
+//│         get n() { return this.#n; }
 //│         constructor(n) {
-//│           this.n = n;
+//│           this.#n = n;
 //│         }
 //│       };
 //│       this.cache.Lit = ((n) => new Lit(n));
@@ -49,9 +55,13 @@ class Lit(n: int)
 //│ │ │     get Add() {
 //│ │ │       if (this.cache.Add === undefined) {
 //│ │ │         class Add {
+//│ │ │           #lhs;
+//│ │ │           #rhs;
+//│ │ │           get lhs() { return this.#lhs; }
+//│ │ │           get rhs() { return this.#rhs; }
 //│ │ │           constructor(lhs, rhs) {
-//│ │ │             this.lhs = lhs;
-//│ │ │             this.rhs = rhs;
+//│ │ │             this.#lhs = lhs;
+//│ │ │             this.#rhs = rhs;
 //│ │ │           }
 //│ │ │         };
 //│ │ │         this.cache.Add = ((lhs, rhs) => new Add(lhs, rhs));
@@ -62,8 +72,10 @@ class Lit(n: int)
 //│ │ │     get Lit() {
 //│ │ │       if (this.cache.Lit === undefined) {
 //│ │ │         class Lit {
+//│ │ │           #n;
+//│ │ │           get n() { return this.#n; }
 //│ │ │           constructor(n) {
-//│ │ │             this.n = n;
+//│ │ │             this.#n = n;
 //│ │ │           }
 //│ │ │         };
 //│ │ │         this.cache.Lit = ((n) => new Lit(n));
@@ -94,76 +106,44 @@ mixin EvalBase {
 //│ let typing_unit1 = {
 //│   cache: {},
 //│   EvalBase(base) {
-//│     if (base === undefined) {
-//│       return (class EvalBase {
-//│         constructor() {
-//│         }
-//│         eval(e) {
-//│           const self = this;
-//│           return ((() => {
-//│             let a;
-//│             return (a = e, a instanceof Lit["class"] ? ((n) => n)(e.n) : a instanceof Add["class"] ? ((l) => ((r) => self.eval(l) + self.eval(r))(e.rhs))(e.lhs) : (() => {
-//│               throw new Error("non-exhaustive case expression");
-//│             })());
+//│     return (class EvalBase extends base {
+//│       constructor(...rest) {
+//│         super(...rest);
+//│       }
+//│       eval(e) {
+//│         const self = this;
+//│         return ((() => {
+//│           let a;
+//│           return (a = e, a instanceof Lit["class"] ? ((n) => n)(e.n) : a instanceof Add["class"] ? ((l) => ((r) => self.eval(l) + self.eval(r))(e.rhs))(e.lhs) : (() => {
+//│             throw new Error("non-exhaustive case expression");
 //│           })());
-//│         }
-//│       });
-//│     } else {
-//│       return (class EvalBase extends base {
-//│         constructor(...rest) {
-//│           super(...rest);
-//│         }
-//│         eval(e) {
-//│           const self = this;
-//│           return ((() => {
-//│             let a;
-//│             return (a = e, a instanceof Lit["class"] ? ((n) => n)(e.n) : a instanceof Add["class"] ? ((l) => ((r) => self.eval(l) + self.eval(r))(e.rhs))(e.lhs) : (() => {
-//│               throw new Error("non-exhaustive case expression");
-//│             })());
-//│           })());
-//│         }
-//│       });
-//│     }
+//│         })());
+//│       }
+//│     });
 //│   }
 //│ };
 //│ globalThis.EvalBase = typing_unit1.EvalBase;
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:83
+//│ ┌ Block at Mixin.mls:95
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   let typing_unit1 = {
 //│ │ │     cache: {},
 //│ │ │     EvalBase(base) {
-//│ │ │       if (base === undefined) {
-//│ │ │         return (class EvalBase {
-//│ │ │           constructor() {
-//│ │ │           }
-//│ │ │           eval(e) {
-//│ │ │             const self = this;
-//│ │ │             return ((() => {
-//│ │ │               let a;
-//│ │ │               return (a = e, a instanceof Lit["class"] ? ((n) => n)(e.n) : a instanceof Add["class"] ? ((l) => ((r) => self.eval(l) + self.eval(r))(e.rhs))(e.lhs) : (() => {
-//│ │ │                 throw new Error("non-exhaustive case expression");
-//│ │ │               })());
+//│ │ │       return (class EvalBase extends base {
+//│ │ │         constructor(...rest) {
+//│ │ │           super(...rest);
+//│ │ │         }
+//│ │ │         eval(e) {
+//│ │ │           const self = this;
+//│ │ │           return ((() => {
+//│ │ │             let a;
+//│ │ │             return (a = e, a instanceof Lit["class"] ? ((n) => n)(e.n) : a instanceof Add["class"] ? ((l) => ((r) => self.eval(l) + self.eval(r))(e.rhs))(e.lhs) : (() => {
+//│ │ │               throw new Error("non-exhaustive case expression");
 //│ │ │             })());
-//│ │ │           }
-//│ │ │         });
-//│ │ │       } else {
-//│ │ │         return (class EvalBase extends base {
-//│ │ │           constructor(...rest) {
-//│ │ │             super(...rest);
-//│ │ │           }
-//│ │ │           eval(e) {
-//│ │ │             const self = this;
-//│ │ │             return ((() => {
-//│ │ │               let a;
-//│ │ │               return (a = e, a instanceof Lit["class"] ? ((n) => n)(e.n) : a instanceof Add["class"] ? ((l) => ((r) => self.eval(l) + self.eval(r))(e.rhs))(e.lhs) : (() => {
-//│ │ │                 throw new Error("non-exhaustive case expression");
-//│ │ │               })());
-//│ │ │             })());
-//│ │ │           }
-//│ │ │         });
-//│ │ │       }
+//│ │ │           })());
+//│ │ │         }
+//│ │ │       });
 //│ │ │     }
 //│ │ │   };
 //│ │ │   globalThis.EvalBase = typing_unit1.EvalBase;
@@ -181,8 +161,10 @@ class Neg<A>(expr: A)
 //│   get Neg() {
 //│     if (this.cache.Neg === undefined) {
 //│       class Neg {
+//│         #expr;
+//│         get expr() { return this.#expr; }
 //│         constructor(expr) {
-//│           this.expr = expr;
+//│           this.#expr = expr;
 //│         }
 //│       };
 //│       this.cache.Neg = ((expr) => new Neg(expr));
@@ -193,7 +175,7 @@ class Neg<A>(expr: A)
 //│ };
 //│ globalThis.Neg = typing_unit2.Neg;
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:176
+//│ ┌ Block at Mixin.mls:156
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   let typing_unit2 = {
@@ -201,8 +183,10 @@ class Neg<A>(expr: A)
 //│ │ │     get Neg() {
 //│ │ │       if (this.cache.Neg === undefined) {
 //│ │ │         class Neg {
+//│ │ │           #expr;
+//│ │ │           get expr() { return this.#expr; }
 //│ │ │           constructor(expr) {
-//│ │ │             this.expr = expr;
+//│ │ │             this.#expr = expr;
 //│ │ │           }
 //│ │ │         };
 //│ │ │         this.cache.Neg = ((expr) => new Neg(expr));
@@ -232,64 +216,38 @@ mixin EvalNeg {
 //│ let typing_unit3 = {
 //│   cache: {},
 //│   EvalNeg(base) {
-//│     if (base === undefined) {
-//│       return (class EvalNeg {
-//│         constructor() {
-//│         }
-//│         eval(e) {
-//│           const self = this;
-//│           return ((() => {
-//│             return e instanceof Neg["class"] ? ((d) => 0 - self.eval(d))(e.expr) : super.eval(e);
-//│           })());
-//│         }
-//│       });
-//│     } else {
-//│       return (class EvalNeg extends base {
-//│         constructor(...rest) {
-//│           super(...rest);
-//│         }
-//│         eval(e) {
-//│           const self = this;
-//│           return ((() => {
-//│             return e instanceof Neg["class"] ? ((d) => 0 - self.eval(d))(e.expr) : super.eval(e);
-//│           })());
-//│         }
-//│       });
-//│     }
+//│     return (class EvalNeg extends base {
+//│       constructor(...rest) {
+//│         super(...rest);
+//│       }
+//│       eval(e) {
+//│         const self = this;
+//│         return ((() => {
+//│           return e instanceof Neg["class"] ? ((d) => 0 - self.eval(d))(e.expr) : super.eval(e);
+//│         })());
+//│       }
+//│     });
 //│   }
 //│ };
 //│ globalThis.EvalNeg = typing_unit3.EvalNeg;
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:221
+//│ ┌ Block at Mixin.mls:205
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   let typing_unit3 = {
 //│ │ │     cache: {},
 //│ │ │     EvalNeg(base) {
-//│ │ │       if (base === undefined) {
-//│ │ │         return (class EvalNeg {
-//│ │ │           constructor() {
-//│ │ │           }
-//│ │ │           eval(e) {
-//│ │ │             const self = this;
-//│ │ │             return ((() => {
-//│ │ │               return e instanceof Neg["class"] ? ((d) => 0 - self.eval(d))(e.expr) : super.eval(e);
-//│ │ │             })());
-//│ │ │           }
-//│ │ │         });
-//│ │ │       } else {
-//│ │ │         return (class EvalNeg extends base {
-//│ │ │           constructor(...rest) {
-//│ │ │             super(...rest);
-//│ │ │           }
-//│ │ │           eval(e) {
-//│ │ │             const self = this;
-//│ │ │             return ((() => {
-//│ │ │               return e instanceof Neg["class"] ? ((d) => 0 - self.eval(d))(e.expr) : super.eval(e);
-//│ │ │             })());
-//│ │ │           }
-//│ │ │         });
-//│ │ │       }
+//│ │ │       return (class EvalNeg extends base {
+//│ │ │         constructor(...rest) {
+//│ │ │           super(...rest);
+//│ │ │         }
+//│ │ │         eval(e) {
+//│ │ │           const self = this;
+//│ │ │           return ((() => {
+//│ │ │             return e instanceof Neg["class"] ? ((d) => 0 - self.eval(d))(e.expr) : super.eval(e);
+//│ │ │           })());
+//│ │ │         }
+//│ │ │       });
 //│ │ │     }
 //│ │ │   };
 //│ │ │   globalThis.EvalNeg = typing_unit3.EvalNeg;
@@ -313,64 +271,38 @@ mixin EvalNegNeg {
 //│ let typing_unit4 = {
 //│   cache: {},
 //│   EvalNegNeg(base) {
-//│     if (base === undefined) {
-//│       return (class EvalNegNeg {
-//│         constructor() {
-//│         }
-//│         eval(e) {
-//│           const self = this;
-//│           return ((() => {
-//│             return e instanceof Neg["class"] ? ((tmp0) => tmp0 instanceof Neg["class"] ? ((d) => self.eval(d))(tmp0.expr) : super.eval(e))(e.expr) : super.eval(e);
-//│           })());
-//│         }
-//│       });
-//│     } else {
-//│       return (class EvalNegNeg extends base {
-//│         constructor(...rest) {
-//│           super(...rest);
-//│         }
-//│         eval(e) {
-//│           const self = this;
-//│           return ((() => {
-//│             return e instanceof Neg["class"] ? ((tmp0) => tmp0 instanceof Neg["class"] ? ((d) => self.eval(d))(tmp0.expr) : super.eval(e))(e.expr) : super.eval(e);
-//│           })());
-//│         }
-//│       });
-//│     }
+//│     return (class EvalNegNeg extends base {
+//│       constructor(...rest) {
+//│         super(...rest);
+//│       }
+//│       eval(e) {
+//│         const self = this;
+//│         return ((() => {
+//│           return e instanceof Neg["class"] ? ((tmp0) => tmp0 instanceof Neg["class"] ? ((d) => self.eval(d))(tmp0.expr) : super.eval(e))(e.expr) : super.eval(e);
+//│         })());
+//│       }
+//│     });
 //│   }
 //│ };
 //│ globalThis.EvalNegNeg = typing_unit4.EvalNegNeg;
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:302
+//│ ┌ Block at Mixin.mls:260
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   let typing_unit4 = {
 //│ │ │     cache: {},
 //│ │ │     EvalNegNeg(base) {
-//│ │ │       if (base === undefined) {
-//│ │ │         return (class EvalNegNeg {
-//│ │ │           constructor() {
-//│ │ │           }
-//│ │ │           eval(e) {
-//│ │ │             const self = this;
-//│ │ │             return ((() => {
-//│ │ │               return e instanceof Neg["class"] ? ((tmp0) => tmp0 instanceof Neg["class"] ? ((d) => self.eval(d))(tmp0.expr) : super.eval(e))(e.expr) : super.eval(e);
-//│ │ │             })());
-//│ │ │           }
-//│ │ │         });
-//│ │ │       } else {
-//│ │ │         return (class EvalNegNeg extends base {
-//│ │ │           constructor(...rest) {
-//│ │ │             super(...rest);
-//│ │ │           }
-//│ │ │           eval(e) {
-//│ │ │             const self = this;
-//│ │ │             return ((() => {
-//│ │ │               return e instanceof Neg["class"] ? ((tmp0) => tmp0 instanceof Neg["class"] ? ((d) => self.eval(d))(tmp0.expr) : super.eval(e))(e.expr) : super.eval(e);
-//│ │ │             })());
-//│ │ │           }
-//│ │ │         });
-//│ │ │       }
+//│ │ │       return (class EvalNegNeg extends base {
+//│ │ │         constructor(...rest) {
+//│ │ │           super(...rest);
+//│ │ │         }
+//│ │ │         eval(e) {
+//│ │ │           const self = this;
+//│ │ │           return ((() => {
+//│ │ │             return e instanceof Neg["class"] ? ((tmp0) => tmp0 instanceof Neg["class"] ? ((d) => self.eval(d))(tmp0.expr) : super.eval(e))(e.expr) : super.eval(e);
+//│ │ │           })());
+//│ │ │         }
+//│ │ │       });
 //│ │ │     }
 //│ │ │   };
 //│ │ │   globalThis.EvalNegNeg = typing_unit4.EvalNegNeg;
@@ -392,9 +324,9 @@ module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│   cache: {},
 //│   get TestLang() {
 //│     if (this.cache.TestLang === undefined) {
-//│       class TestLang extends EvalNegNeg(EvalNeg(EvalBase())) {
-//│         constructor(...rest) {
-//│           super(...rest);
+//│       class TestLang extends EvalNegNeg(EvalNeg(EvalBase(Object))) {
+//│         constructor() {
+//│           super();
 //│         }
 //│       }
 //│       this.cache.TestLang = new TestLang();
@@ -405,16 +337,16 @@ module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│ };
 //│ globalThis.TestLang = typing_unit5.TestLang;
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:383
+//│ ┌ Block at Mixin.mls:315
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   let typing_unit5 = {
 //│ │ │     cache: {},
 //│ │ │     get TestLang() {
 //│ │ │       if (this.cache.TestLang === undefined) {
-//│ │ │         class TestLang extends EvalNegNeg(EvalNeg(EvalBase())) {
-//│ │ │           constructor(...rest) {
-//│ │ │             super(...rest);
+//│ │ │         class TestLang extends EvalNegNeg(EvalNeg(EvalBase(Object))) {
+//│ │ │           constructor() {
+//│ │ │             super();
 //│ │ │           }
 //│ │ │         }
 //│ │ │         this.cache.TestLang = new TestLang();
@@ -448,7 +380,7 @@ TestLang.eval(mk(0))
 //│ // Query 2
 //│ res = TestLang.eval(mk(0));
 //│ // End of generated code
-//│ ┌ Block at Mixin.mls:433
+//│ ┌ Block at Mixin.mls:365
 //│ ├─┬ Prelude
 //│ │ ├── Code
 //│ │ │   let typing_unit6 = { cache: {} };
@@ -478,15 +410,15 @@ class Foo(x: int)
 
 :e
 class Bar(x: int, y: int) extends Foo(x + y)
-//│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.480: 	class Bar(x: int, y: int) extends Foo(x + y)
+//│ ╔══[ERROR] Class inheritance is not supported yet (use mixins)
+//│ ║  l.412: 	class Bar(x: int, y: int) extends Foo(x + y)
 //│ ╙──       	                                  ^^^^^^^^^^
 //│ class Bar(x: int, y: int)
 
 
 mixin AA(a: int) {
 }
-//│ mixin AA()
+//│ mixin AA(a: int)
 
 mixin BB {}
 //│ mixin BB()
@@ -495,17 +427,103 @@ mixin BB {}
 class C(x: int) extends BB
 //│ class C(x: int)
 
-:e
 class D(x: int) extends AA(x)
-//│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.499: 	class D(x: int) extends AA(x)
-//│ ╙──       	                        ^^^^^
 //│ class D(x: int)
 
-:e
 class E(x: int) extends BB, AA(x)
-//│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.506: 	class E(x: int) extends BB, AA(x)
-//│ ╙──       	                            ^^^^^
 //│ class E(x: int)
 
+:js
+mixin Fooo(x: int)
+//│ mixin Fooo(x: int)
+//│ // Prelude
+//│ let typing_unit14 = {
+//│   cache: {},
+//│   Fooo(base) {
+//│     return (class Fooo extends base {
+//│       #x;
+//│       get x() { return this.#x; }
+//│       constructor(x, ...rest) {
+//│         super(...rest);
+//│         this.#x = x;
+//│       }
+//│     });
+//│   }
+//│ };
+//│ globalThis.Fooo = typing_unit14.Fooo;
+//│ // End of generated code
+
+:js
+mixin Bazz(y: int)
+//│ mixin Bazz(y: int)
+//│ // Prelude
+//│ let typing_unit15 = {
+//│   cache: {},
+//│   Bazz(base) {
+//│     return (class Bazz extends base {
+//│       #y;
+//│       get y() { return this.#y; }
+//│       constructor(y, ...rest) {
+//│         super(...rest);
+//│         this.#y = y;
+//│       }
+//│     });
+//│   }
+//│ };
+//│ globalThis.Bazz = typing_unit15.Bazz;
+//│ // End of generated code
+
+:js
+module Barr extends Fooo(0), Bazz(1)
+//│ module Barr()
+//│ // Prelude
+//│ let typing_unit16 = {
+//│   cache: {},
+//│   get Barr() {
+//│     if (this.cache.Barr === undefined) {
+//│       class Barr extends Bazz(Fooo(Object)) {
+//│         constructor() {
+//│           super(1, 0);
+//│         }
+//│       }
+//│       this.cache.Barr = new Barr();
+//│       this.cache.Barr["class"] = Barr;
+//│     }
+//│     return this.cache.Barr;
+//│   }
+//│ };
+//│ globalThis.Barr = typing_unit16.Barr;
+//│ // End of generated code
+
+Barr.x
+//│ 0
+//│ res
+//│     = 0
+
+Barr.y
+//│ 1
+//│ res
+//│     = 1
+
+:e
+:ge
+mixin Base {
+  fun x = y
+}
+//│ ╔══[ERROR] identifier not found: y
+//│ ║  l.511: 	  fun x = y
+//│ ╙──       	          ^
+//│ mixin Base() {
+//│   fun x: error
+//│ }
+//│ Code generation encountered an error:
+//│   unresolved symbol y
+
+
+:re
+module Test extends Base
+//│ module Test() {
+//│   fun x: error
+//│ }
+//│ Runtime error:
+//│   ReferenceError: Base is not defined

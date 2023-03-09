@@ -13,7 +13,7 @@ module Nil
 let l = Cons(1, Nil)
 //│ let l: Cons[1]
 //│ l
-//│   = Cons { head: 1, tail: Nil { class: [class Nil] } }
+//│   = Cons {}
 
 class NotFound
 class Success[A](result: A)
@@ -95,28 +95,28 @@ Test1.eval(Nil, Var("a"))
 //│   where
 //│     'a :> App['a] | Abs['a] | Var
 //│ res
-//│     = Var { s: 'a' }
+//│     = Var {}
 
 Test1.eval(Nil, Abs("b", Var("a")))
 //│ 'a
 //│   where
 //│     'a :> App['a] | Abs['a] | Var
 //│ res
-//│     = Abs { x: 'fun', t: Var { s: 'a' } }
+//│     = Abs {}
 
 Test1.eval(Cons(("c", Var("d")), Nil), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
 //│   where
 //│     'a :> App['a] | Abs['a] | Var
 //│ res
-//│     = Var { s: 'b' }
+//│     = Var {}
 
 Test1.eval(Cons(("c", Abs("d", Var("d"))), Nil), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
 //│   where
 //│     'a :> Abs[Var] | Var | App['a] | Abs['a]
 //│ res
-//│     = Var { s: 'b' }
+//│     = Var {}
 
 class Num(n: int)
 class Add[A](l: A, r: A)
@@ -160,17 +160,17 @@ module Test2 extends EvalVar, EvalExpr
 Test2.eval(Nil, Var("a"))
 //│ Num | Var
 //│ res
-//│     = Var { s: 'a' }
+//│     = Var {}
 
 Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Var("a"))
 //│ Abs[Var] | Num | Var
 //│ res
-//│     = Var { s: 'a' }
+//│     = Var {}
 
 Test2.eval(Cons(("a", Num(1)), Nil), Var("a"))
 //│ Num | Var
 //│ res
-//│     = Var { s: 'a' }
+//│     = Var {}
 
 :e
 Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
@@ -194,7 +194,7 @@ Test2.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 Test2.eval(Cons(("a", Abs("d", Var("d"))), Nil), Add(Num(1), Var("a")))
 //│ Abs[Var] | Add[Num | Var] | Num | Var
 //│ res
-//│     = Add { l: Num { n: 1 }, r: Var { s: 'a' } }
+//│     = Add {}
 
 module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│ module Test3() {
@@ -211,14 +211,14 @@ Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), Abs("a", Var("a")))
 //│   where
 //│     'a :> App['a] | Abs['a] | Abs[Var] | Num | Var
 //│ res
-//│     = Abs { x: 'fun', t: Var { s: 'a' } }
+//│     = Abs {}
 
 Test3.eval(Cons(("c", Abs("d", Var("d"))), Nil), App(Abs("a", Var("a")), Add(Num(1), Var("c"))))
 //│ 'a
 //│   where
 //│     'a :> App['a] | Abs['a] | Abs[Var] | Add[Num | Var] | Num | Var
 //│ res
-//│     = Var { s: 'a' }
+//│     = Var {}
 
 // * Incorrect version, for regression testing
 module Test3 extends EvalVar, EvalLambda, EvalExpr

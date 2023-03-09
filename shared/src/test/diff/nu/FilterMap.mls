@@ -17,7 +17,7 @@
 
 
 module Nil
-class Cons[A](head: A, tail: Cons[A] | Nil)
+class Cons[out A](head: A, tail: Cons[A] | Nil)
 //│ module Nil()
 //│ class Cons[A](head: A, tail: Cons[A] | Nil)
 
@@ -52,10 +52,7 @@ fun filtermap(f, xs) = if xs is
 //│ ╙──      	    ^^^^
 //│ ╔══[ERROR] type identifier not found: Tuple#2
 //│ ╙──
-//│ fun filtermap: ((error | Cons['A] | Nil) -> number & (Cons['A] | Nil) -> error, Cons['A0] | Nil,) -> (Cons['A1] | Nil | error)
-//│   where
-//│     'A := 'A0
-//│     'A0 <: nothing
+//│ fun filtermap: ((error | Cons[nothing] | Nil) -> number & (Cons[nothing] | Nil) -> error, Cons[anything] | Nil,) -> (Cons[nothing] | Nil | error)
 //│ Code generation encountered an error:
 //│   unknown match case: Tuple#2
 
@@ -74,8 +71,6 @@ fun filtermap(f, xs) = if xs is
     True then filtermap(f, ys)
     False then Cons(y, filtermap(f, ys))
     Pair(True, z) then Cons(z, filtermap(f, ys))
-//│ fun filtermap: ('head -> (False | Pair[anything, 'A] | True), Cons['head] | Nil,) -> (Cons['A] | Nil)
-//│   where
-//│     'head <: 'A
+//│ fun filtermap: ('head -> (False | Pair[anything, 'A] | True), Cons['head & 'A] | Nil,) -> (Cons['A] | Nil)
 
 

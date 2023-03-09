@@ -137,23 +137,25 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     // val tparams: Ls[TN -> TV] = Nil // TODO
     override def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, shadows: Shadows, freshened: MutMap[TV,ST]): TypedNuTypeDef = 
       this match {
-        case m @ TypedNuMxn(td, thisTV, superTV, members, ttu) =>
+        case m @ TypedNuMxn(td, thisTV, superTV, tparams, params, members, ttu) =>
           // println(">>",m.level)
           // TypedNuMxn(td, thisTV, superTV, ttu.freshenAbove(m.level, rigidify))
           // TypedNuMxn(td, thisTV, superTV, ttu.freshenAbove(lim, rigidify))
           TypedNuMxn(td,
             thisTV.freshenAbove(lim, rigidify).asInstanceOf[TV],
             superTV.freshenAbove(lim, rigidify).asInstanceOf[TV],
+            tparams.map(tp => (tp._1, tp._2.freshenAbove(lim, rigidify).asInstanceOf[TV], tp._3)),
+            params.mapValues(_.freshenAbove(lim, rigidify)),
             members.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap,
             ttu.freshenAbove(lim, rigidify))
-        case cls @ TypedNuCls(level, td, ttu, tps, params, members, thisTy) =>
+        case cls @ TypedNuCls(level, td, ttu, tparams, params, members, thisTy) =>
           println(">>",level,ctx.lvl)
           // TypedNuCls(level, td, ttu.freshenAbove(level, rigidify),
           //   params.mapValues(_.freshenAbove(level, rigidify)),
           //   members.mapValuesIter(_.freshenAbove(level, rigidify)).toMap)
           TypedNuCls(level, td, ttu.freshenAbove(lim, rigidify),
-            // tps.mapValues(_.freshenAbove(lim, rigidify).asInstanceOf[TV]),
-            tps.map(tp => (tp._1, tp._2.freshenAbove(lim, rigidify).asInstanceOf[TV], tp._3)),
+            // tparams.mapValues(_.freshenAbove(lim, rigidify).asInstanceOf[TV]),
+            tparams.map(tp => (tp._1, tp._2.freshenAbove(lim, rigidify).asInstanceOf[TV], tp._3)),
             params.mapValues(_.freshenAbove(lim, rigidify)),
             members.mapValuesIter(_.freshenAbove(lim, rigidify)).toMap,
             thisTy.freshenAbove(lim, rigidify))(
@@ -290,7 +292,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         )(f(pol, instanceType))
   }
   
-  case class TypedNuMxn(td: NuTypeDef, thisTV: ST, superTV: ST, members: Map[Str, NuMember], ttu: TypedTypingUnit) extends TypedNuTypeDef(Mxn) with TypedNuTermDef {
+  case class TypedNuMxn(td: NuTypeDef, thisTV: ST, superTV: ST,
+        tparams: Ls[(TN, TV, Opt[VarianceInfo])], params: Ls[Var -> FieldType],
+        members: Map[Str, NuMember], ttu: TypedTypingUnit,
+      ) extends TypedNuTypeDef(Mxn) with TypedNuTermDef {
     val level: Level = thisTV.level - 1 // TODO cleaner
     def nme: TypeName = td.nme
     def name: Str = nme.name
@@ -298,10 +303,16 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
     def mapPol(pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTermDef =
-      TypedNuMxn(td, f(pol.map(!_), thisTV), f(pol.map(!_), superTV), members.mapValuesIter(_.mapPol(pol, smart)(f)).toMap, ttu)
+      TypedNuMxn(td, f(pol.map(!_), thisTV), f(pol.map(!_), superTV),
+        tparams.map(tp => (tp._1, f(N, tp._2).asInstanceOf[TV], tp._3)),
+        params.mapValues(_.update(t => f(pol.map(!_), t), t => f(pol, t))),
+        members.mapValuesIter(_.mapPol(pol, smart)(f)).toMap, ttu)
     def mapPolMap(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType)
           (implicit ctx: Ctx): TypedNuTermDef =
-      TypedNuMxn(td, f(pol.contravar, thisTV), f(pol.contravar, superTV), members.mapValuesIter(_.mapPolMap(pol)(f)).toMap, ttu)
+      TypedNuMxn(td, f(pol.contravar, thisTV), f(pol.contravar, superTV),
+        tparams.map(tp => (tp._1, f(pol.invar, tp._2).asInstanceOf[TV], tp._3)),
+        params.mapValues(_.update(t => f(pol.contravar, t), t => f(pol, t))),
+        members.mapValuesIter(_.mapPolMap(pol)(f)).toMap, ttu)
   }
   
   /** Note: the type `ty` is stoed *without* its polymorphic wrapper! */
