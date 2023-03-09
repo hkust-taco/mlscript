@@ -1,13 +1,16 @@
 package mlscript
 
 import scala.collection.mutable
-import scala.collection.mutable.{Map => MutMap, Set => MutSet}
-import scala.collection.immutable.{SortedSet, SortedMap}
+import scala.collection.mutable.{HashMap, ListBuffer, Map => MutMap, Set => MutSet}
+import scala.collection.immutable.{SortedMap, SortedSet}
 import scala.util.chaining._
 import scala.annotation.tailrec
-import mlscript.utils._, shorthands._
+import mlscript.utils._
+import shorthands._
 import mlscript.Message._
-import scala.collection.mutable.HashMap
+
+import scala.util.Random
+import scala.util.control.Breaks.break
 
 /** A class encapsulating type inference state.
  * It uses its own internal representation of types and type variables, using mutable data structures.
@@ -47,34 +50,51 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                   tyDefs: Map[Str, TypeDef],
                   nuTyDefs: Map[Str, TypedNuTypeDef],
                   inQuasiquote: Boolean,
-                  outerQuoteEnvironments: List[Opt[Ctx]],
+                  inUnquoted: Boolean,
+                  outerQuoteEnvironments: List[Ctx],
                   var outermostCtx: Opt[Ctx],
-                  outermostFreeVarType: MutSet[SimpleType]
+                  innerUnquoteContextRequirements: mutable.ListBuffer[SimpleType],
+                  outermostFreeVarType: MutSet[SimpleType],
+                  id: Int,
+                  topLvlCtx: Opt[Ctx]
                 ) {
+
     def +=(b: Str -> TypeInfo): Unit = env += b
 
     def ++=(bs: IterableOnce[Str -> TypeInfo]): Unit = bs.iterator.foreach(+=)
 
-    def getFreeVar(name: Str): Option[TypeInfo] = freeVarsEnv.get(name) orElse outerQuoteEnvironments.head.dlof(_.getFreeVar(name))(N)
-
-    def get(name: Str): Opt[TypeInfo] = if (inQuasiquote) {
-      getFreeVar(name) match {
-        case typeInfo @ Some(value) =>
-          typeInfo
-        case None =>
-          env.get(name) orElse parent.dlof(_.get(name))(N)
+    def get(name: Str, searchOutsideQQ: Boolean = inUnquoted, searchInsideQQ: Boolean = inQuasiquote): Opt[TypeInfo] =
+      if (searchOutsideQQ) {
+        // when you are getting a variable definition, it should bypass all qq context
+        parent match {
+          case Some(p) =>
+            p.get(name, p.inQuasiquote)
+          case _ => None
+        }
+      } else if (searchInsideQQ) {
+        // if you're in the qq, you should search within the qq only but not outside
+        println("search inside QQ")
+        if (!inQuasiquote) {
+          println("Reach limit")
+          None
+        } else {
+          {
+            println("try env")
+            env.get(name)
+          } orElse {
+            println("try free env")
+            freeVarsEnv.get(name)
+          } orElse {
+            println("try parent")
+            parent.dlof(_.get(name, searchOutsideQQ = false, searchInsideQQ = true))(N)
+          }
+        }
+      } else {
+        env.get(name) orElse parent.dlof(_.get(name))(N)
       }
-    } else {
-      env.get(name) orElse parent.dlof(_.get(name))(N)
-    }
 
-    def contains(name: Str): Bool = if (inQuasiquote) {
-      (env.contains(name) || parent.exists(_.contains(name))) || containsFreeVar(name)
-    } else {
-      env.contains(name) || parent.exists(_.contains(name))
-    }
+    def contains(name: Str): Bool = env.contains(name) || parent.exists(_.contains(name))
 
-    def containsFreeVar(name: Str): Bool = freeVarsEnv.contains(name) || outerQuoteEnvironments.head.exists(_.containsFreeVar(name))
     def addMth(parent: Opt[Str], nme: Str, ty: MethodType): Unit = mthEnv += R(parent, nme) -> ty
 
     def addMthDefn(parent: Str, nme: Str, ty: MethodType): Unit = mthEnv += L(parent, nme) -> ty
@@ -90,9 +110,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
 
     def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
 
-    def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, MutMap.empty, inQuasiquote = inQuasiquote, outermostFreeVarType = MutSet.empty)
+    def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, MutMap.empty, inQuasiquote = inQuasiquote, outermostFreeVarType = MutSet.empty, id = Random.between(0, 1000))
 
-    def nextLevel: Ctx = copy(lvl = lvl + 1)
+    def nextLevel: Ctx = copy(lvl = lvl + 1, id = Random.between(0, 1000))
 
     private val abcCache: MutMap[Str, Set[TypeName]] = MutMap.empty
 
@@ -111,9 +131,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       tyDefs = Map.from(builtinTypes.map(t => t.nme.name -> t)),
       nuTyDefs = Map.empty,
       inQuasiquote = false,
+      inUnquoted = false,
       outermostCtx = None,
-      outerQuoteEnvironments = List(None),
-      outermostFreeVarType = MutSet.empty
+      outerQuoteEnvironments = List.empty,
+      outermostFreeVarType = MutSet.empty,
+      innerUnquoteContextRequirements = ListBuffer.empty,
+      id = Random.between(0, 1000),
+      topLvlCtx = None
     )
 
     val empty: Ctx = init
@@ -192,7 +216,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       tyDef
     } :: {
       val tvT, tvC = freshVar(noProv)(1)
-      val td = TypeDef(Cls, TypeName("Code"), (TypeName("T"), tvT) :: (TypeName("C"), tvC):: Nil, Nil, TopType, Nil, Nil, Set.empty, N, Nil)
+      val td = TypeDef(Cls, TypeName("Code"), (TypeName("T"), tvT) :: (TypeName("C"), tvC) :: Nil, Nil, TopType, Nil, Nil, Set.empty, N, Nil)
       td.tvarVariances = S(MutMap(tvT -> VarianceInfo.co, tvC -> VarianceInfo.co))
       td
     } :: Nil
@@ -576,7 +600,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val ty = ctx.get(name).fold(
           if (ctx.inQuasiquote) {
             val res = new TypeVariable(lvl, Nil, Nil)(prov)
-            // TODO: why need a ClassTag in here????
             val tag = ClassTag(StrLit(name), Set.empty)(noProv)
             ctx.freeVarsEnv += name -> VarSymbol(tag, v)
 
@@ -584,7 +607,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               case Some(outermost) =>
                 outermost.freeVarsEnv += name -> VarSymbol(tag, v)
                 outermost.outermostFreeVarType += tag
-              case None => ???
+              case None => err("identifier not found: " + name, term.toLoc): TypeScheme
             }
             res
           } else {
@@ -845,45 +868,67 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case New(base, args) => ???
       case TyApp(_, _) => ??? // TODO
       case Quoted(body) =>
-        val nested_ctx = ctx.nest.copy(
+        val nested = ctx.nest
+        val nested_ctx = nested.copy(
           inQuasiquote = true,
-          outerQuoteEnvironments = Some(ctx) :: ctx.outerQuoteEnvironments)
+          inUnquoted = false,
+          outerQuoteEnvironments = nested :: ctx.outerQuoteEnvironments,
+          innerUnquoteContextRequirements = ListBuffer.empty,
+          id = Random.between(0, 1000))
         nested_ctx.outermostCtx = Some(nested_ctx)
 
-
+        println(s"typing for ${nested_ctx.id}")
         val body_type = typeTerm(body)(nested_ctx, raise, vars)
-        val ctx_list = nested_ctx.outermostFreeVarType.toList
 
-        val ctx_type = ctx_list match {
-          case Nil => TypeRef(TypeName("nothing"), Nil)(NoProv)
-          case _ => ctx_list.reduceLeft(_ | _)
+        val requirements = nested_ctx.innerUnquoteContextRequirements.toList
+        println(s"chaining for ${nested_ctx.id}")
+        println("local unquoted context:")
+        println(requirements)
+
+        val unquote_requirement = requirements match {
+          case Nil => TypeRef(TypeName("nothing"), Nil)(noProv)
+          case _ => nested_ctx.innerUnquoteContextRequirements.reduce(_ | _)
         }
 
-//        val a_ty = typeTerm(a)
-//        val res = freshVar(prov)
-//        val arg_ty = mkProxy(a_ty, tp(a.toCoveringLoc, "argument"))
-//        // ^ Note: this no longer really makes a difference, due to tupled arguments by default
-//        val funProv = tp(f.toCoveringLoc, "applied expression")
-//        val fun_ty = mkProxy(f_ty, funProv)
-//        // ^ This is mostly not useful, except in test Tuples.fun with `(1, true, "hey").2`
-//        val resTy = con(fun_ty, FunctionType(arg_ty, res)(
-//          prov
-//          // funProv // TODO: better?
-//        ), res)
-//        resTy
+        val free_vars = nested_ctx.outermostFreeVarType.toList
+
+        val free_var_requirement = free_vars match {
+          case Nil => TypeRef(TypeName("nothing"), Nil)(NoProv)
+          case _ => free_vars.reduceLeft(_ | _)
+        }
+
+        var ctx_type = unquote_requirement | free_var_requirement
+
+
+//        println("typing for neg")
+//        println(nested_ctx.env)
+//
+//        for (elem <- nested_ctx.env) {
+//          println(elem._1)
+//          ctx_type = elem._2 match {
+//            case VarSymbol(ty, _) => ctx_type & ty.instantiate.neg()
+//            case _ => ctx_type
+//          }
+//        }
 
         TypeRef(TypeName("Code"), body_type :: ctx_type :: Nil)(noProv)
       case Unquoted(body) =>
         val nestedCtx = ctx.parent match {
-          case Some(p) => p.copy(
-            inQuasiquote = true,
-            outerQuoteEnvironments = ctx.outerQuoteEnvironments.tail)
+          case Some(p) => p.nest.copy(inQuasiquote = true, inUnquoted = true)
           case _ => ???
         }
-
+//        println(s"Typing for unquoted ${nestedCtx.id}")
 
         val tt = freshVar(noProv)(0)
         val tc = freshVar(noProv)(0)
+
+
+        ctx.outermostCtx match {
+          case Some(p) =>
+//            println(s"insert ${tc} from ${nestedCtx.id} to ${p.id}")
+            p.innerUnquoteContextRequirements.append(tc)
+          case _ => ???
+        }
         // func <return_type> foo(<param_type> param)
         // Code[tt, tc] <: Code[T <- co, C <- cotra]
 
@@ -894,15 +939,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val res = freshVar(prov)
         val resTy = con(f_ty, FunctionType(body_type, res)(prov), res)
         resTy
-
-//        body_type match {
-//          case TypeRef(TypeName("Code"), return_type :: context_type :: Nil) =>
-//            context_type match {
-//              case TypeRef(TypeName("nothing"), Nil) => return_type // inline the return type instead of returning Code[T, C]
-//              case _ => body_type // free variable found, return Code[T, C]
-//            }
-//          case _ => err(s"Type mismatch. Required: Code, found: $body_type", body.toLoc)
-//        }
     }
   }(r => s"$lvl. : ${r}")
 
