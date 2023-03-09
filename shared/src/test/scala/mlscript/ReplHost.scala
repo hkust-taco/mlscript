@@ -37,7 +37,13 @@ final case class ReplHost() {
     buffer.delete(buffer.length - 3, buffer.length)
     val reply = buffer.toString()
     reply.linesIterator.find(_.startsWith(ReplHost.syntaxErrorHead)) match {
-      case None => ReplHost.Result(reply, None)
+      case None => reply.linesIterator.find(_.startsWith(ReplHost.uncaughtErrorHead)) match {
+        case None => ReplHost.Result(reply, None)
+        case Some(uncaughtErrorLine) => {
+          val message = uncaughtErrorLine.substring(ReplHost.uncaughtErrorHead.length)
+          ReplHost.Error(false, message)
+        }
+      }
       case Some(syntaxErrorLine) =>
         val message = syntaxErrorLine.substring(ReplHost.syntaxErrorHead.length)
         ReplHost.Error(true, message)
@@ -141,6 +147,7 @@ object ReplHost {
     * The syntax error beginning text from Node.js.
     */
   private val syntaxErrorHead = "Uncaught SyntaxError: "
+  private val uncaughtErrorHead = "Uncaught "
 
   /**
     * The base class of all kinds of REPL replies.

@@ -505,3 +505,25 @@ Barr.y
 //│ res
 //│     = 1
 
+:e
+:ge
+mixin Base {
+  fun x = y
+}
+//│ ╔══[ERROR] identifier not found: y
+//│ ║  l.511: 	  fun x = y
+//│ ╙──       	          ^
+//│ mixin Base() {
+//│   fun x: error
+//│ }
+//│ Code generation encountered an error:
+//│   unresolved symbol y
+
+
+:re
+module Test extends Base
+//│ module Test() {
+//│   fun x: error
+//│ }
+//│ Runtime error:
+//│   ReferenceError: Base is not defined
