@@ -34,3 +34,29 @@ class C0 extends M0(true)
 //│ class C0()
 
 
+// TODO catch this at typing
+class Foo {
+  fun foo = 0
+  fun bar = foo
+}
+//│ class Foo() {
+//│   fun bar: 0
+//│   fun foo: 0
+//│ }
+//│ Code generation encountered an error:
+//│   unresolved symbol foo
+
+// FIXME
+class Foo {
+  let foo = 0
+  fun bar = foo
+}
+//│ class Foo() {
+//│   fun bar: 0
+//│   let foo: 0
+//│ }
+//│ Code generation encountered an error:
+//│   unresolved symbol foo
+
+
+

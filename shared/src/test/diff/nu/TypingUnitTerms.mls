@@ -1,0 +1,17 @@
+:NewParser
+:NewDefs
+
+
+:e
+fun test =
+  let x = 0(0)
+  1
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.7: 	  let x = 0(0)
+//│ ║       	          ^^^^
+//│ ╟── integer literal of type `0` is not a function
+//│ ║  l.7: 	  let x = 0(0)
+//│ ╙──     	          ^
+//│ fun test: 1
+
+

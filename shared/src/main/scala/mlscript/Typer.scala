@@ -970,6 +970,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case Blk(stmts) =>
         if (newDefs) {
           val ttu = typeTypingUnit(TypingUnit(stmts), allowPure = false)
+          ttu.force()
           // TODO check unused defs
           // ttu.res
           ttu.result.getOrElse(UnitType)
