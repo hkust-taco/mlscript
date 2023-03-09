@@ -84,18 +84,18 @@ Test1.n
 
 
 class Test2(n: string) extends Base1(1/2), Derived1(1) {
-  fun bar = [this.foo, n, this.original]
+  fun bar = [this.foo, n, this.n, this.original]
 }
 //│ class Test2(n: string) {
-//│   fun bar: ((int, 1, number,), string, number,)
+//│   fun bar: ((int, 1, number,), string, 1, number,)
 //│   fun foo: (int, 1, number,)
 //│   fun original: number
 //│ }
 
 Test2("test").bar
-//│ ((int, 1, number,), string, number,)
+//│ ((int, 1, number,), string, 1, number,)
 //│ res
-//│     = [ [ 1, 'test', 0.5 ], 'test', 0.5 ]
+//│     = [ [ 1, 'test', 0.5 ], 'test', 'test', 0.5 ]
 
 // FIXME
 class Test3(n: string) extends Base1(1/2), Derived1(length(n)) {

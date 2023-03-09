@@ -245,6 +245,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       "false" -> FalseType,
       "document" -> BotType,
       "window" -> BotType,
+      "typeof" -> fun(singleTup(TopType), StrType)(noProv),
       "toString" -> fun(singleTup(TopType), StrType)(noProv),
       "not" -> fun(singleTup(BoolType), BoolType)(noProv),
       "succ" -> fun(singleTup(IntType), IntType)(noProv),

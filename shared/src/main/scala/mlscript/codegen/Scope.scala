@@ -39,6 +39,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       "div",
       "gt",
       "not",
+      "typeof",
       "toString",
       "negate",
       "eq",

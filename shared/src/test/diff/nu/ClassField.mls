@@ -1,0 +1,78 @@
+:NewParser
+:NewDefs
+
+
+
+class Foo(x: int)
+//│ class Foo(x: int)
+
+Foo
+//│ (x: int,) -> Foo
+//│ res
+//│     = [Function (anonymous)] { class: [class Foo] }
+
+typeof(Foo)
+//│ string
+//│ res
+//│     = 'function'
+
+let f = Foo(123)
+//│ let f: Foo
+//│ f
+//│   = Foo {}
+
+typeof(f)
+//│ string
+//│ res
+//│     = 'object'
+
+:e
+let cls = Foo.class
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.30: 	let cls = Foo.class
+//│ ║        	          ^^^^^^^^^
+//│ ╟── reference of type `(x: int,) -> Foo` does not have field 'class'
+//│ ║  l.30: 	let cls = Foo.class
+//│ ╙──      	          ^^^
+//│ let cls: error
+//│ cls
+//│     = [class Foo]
+
+typeof(cls)
+//│ string
+//│ res
+//│     = 'function'
+
+
+
+mixin Base
+//│ mixin Base()
+
+class Derived extends Base
+//│ class Derived()
+
+// * Strangely, we now get `{ class: [Function: Derived] }`
+Derived
+//│ () -> Derived
+//│ res
+//│     = [Function (anonymous)] { class: [Function: Derived] }
+
+:e
+let cls = Derived.class
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.61: 	let cls = Derived.class
+//│ ║        	          ^^^^^^^^^^^^^
+//│ ╟── reference of type `() -> Derived` does not have field 'class'
+//│ ║  l.61: 	let cls = Derived.class
+//│ ╙──      	          ^^^^^^^
+//│ let cls: error
+//│ cls
+//│     = [Function: Derived]
+
+typeof(cls)
+//│ string
+//│ res
+//│     = 'function'
+
+
+
