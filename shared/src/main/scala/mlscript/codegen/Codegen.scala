@@ -883,6 +883,9 @@ final case class JSQuasiquoteRunFunctionBody() extends JSStmt {
             return eval(_run(s_expr[2]) + s_expr[1] + _run(s_expr[3]));
           
           case "Fun": 
+            if (s_expr[1] instanceof Function ) {
+              return s_expr[1](..._run(s_expr[2]));
+            }
             try {
               let stored_function = _run(s_expr[1]);
               return stored_function(..._run(s_expr[2]));
