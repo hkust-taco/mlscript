@@ -63,7 +63,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
 
     def ++=(bs: IterableOnce[Str -> TypeInfo]): Unit = bs.iterator.foreach(+=)
 
-    def get(name: Str, searchOutsideQQ: Boolean = inUnquoted, searchInsideQQ: Boolean = inQuasiquote): Opt[TypeInfo] =
+    def get(name: Str, searchOutsideQQ: Boolean = inUnquoted, searchInsideQQ: Boolean = false): Opt[TypeInfo] =
       if (searchOutsideQQ) {
         // when you are getting a variable definition, it should bypass all qq context
         parent match {
@@ -73,19 +73,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         }
       } else if (searchInsideQQ) {
         // if you're in the qq, you should search within the qq only but not outside
-        println("search inside QQ")
         if (!inQuasiquote) {
-          println("Reach limit")
+          println("Reached outside of QQ -> failed to find the identifier")
           None
         } else {
           {
-            println("try env")
+            println("try searching in bounded env")
             env.get(name)
           } orElse {
-            println("try free env")
+            println("try searching in free variable env")
             freeVarsEnv.get(name)
           } orElse {
-            println("try parent")
+            println("try searching from parent")
             parent.dlof(_.get(name, searchOutsideQQ = false, searchInsideQQ = true))(N)
           }
         }
@@ -597,10 +596,21 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             res
           }
       case v@ValidVar(name) =>
-        val ty = ctx.get(name).fold(
+        println(s"inspect $name by ctx.get")
+        val isOpChar = Set(
+          '!', '#', '%', '&', '*', '+', '-', '/', ':', '<', '=', '>', '?', '@', '\\', '^', '|', '~', '.',
+          // ',',
+          ';'
+        )
+
+        val isOP = isOpChar.contains(name[0])
+        println(s"is op = $isOP")
+
+        val ty = ctx.get(name, searchInsideQQ = isOpChar.contains(name[0])).fold(
           if (ctx.inQuasiquote) {
             val res = new TypeVariable(lvl, Nil, Nil)(prov)
             val tag = ClassTag(StrLit(name), Set.empty)(noProv)
+            println(s"insert $name into the free vars")
             ctx.freeVarsEnv += name -> VarSymbol(tag, v)
 
             ctx.outermostCtx match {
@@ -925,7 +935,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
 
         ctx.outermostCtx match {
           case Some(p) =>
-//            println(s"insert ${tc} from ${nestedCtx.id} to ${p.id}")
             p.innerUnquoteContextRequirements.append(tc)
           case _ => ???
         }

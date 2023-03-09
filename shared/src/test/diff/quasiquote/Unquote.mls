@@ -2,24 +2,96 @@
 :d
 :ne
 :NoJS
-code"z"
-//│ 0. Typing term Quoted' z '
-//│ | typing for 373
-//│ | 0. Typing term z
-//│ | | search inside QQ
-//│ | | try env
-//│ | | try free env
-//│ | | try parent
-//│ | | search inside QQ
-//│ | | Reach limit
+y + z
+code"y + z"
+//│ 0. Typing term + (y,) (z,)
+//│ | 0. Typing term + (y,)
+//│ | | 0. Typing term +
+//│ | | | inspect + by ctx.get
+//│ | | 0. : (int<number> -> (int<number> -> int<number>))
+//│ | | 0. Typing term y,
+//│ | | | 0. Typing term y
+//│ | | | | inspect y by ctx.get
+//│ | | | 0. : error<>
+//│ | | 0. : (error<>,)
+//│ | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (error<> -> α26)
+//│ | |   where 
+//│ | | C (int<number> -> (int<number> -> int<number>)) <! (error<> -> α26)    (0)
+//│ | | | C (error<>,) <! (int<number>,)    (1)
+//│ | | | | C error<> <! int<number>    (2)
+//│ | | | C (int<number> -> int<number>) <! α26    (3)
 //│ | 0. : α26
-//│ | chaining for 373
+//│ | 0. Typing term z,
+//│ | | 0. Typing term z
+//│ | | | inspect z by ctx.get
+//│ | | 0. : error<>
+//│ | 0. : (error<>,)
+//│ | CONSTRAIN α26 <! (error<> -> α27)
+//│ |   where 
+//│ 		α26 :> (int<number> -> int<number>)
+//│ | C α26 <! (error<> -> α27)    (0)
+//│ | | C (int<number> -> int<number>) <! (error<> -> α27)    (1)
+//│ | | | C (error<>,) <! (int<number>,)    (2)
+//│ | | | | C error<> <! int<number>    (3)
+//│ | | | C int<number> <! α27    (4)
+//│ 0. : α27
+//│ ⬤ Typed as: α27
+//│  where: 
+//│ 		α27 :> int<number>
+//│ 0. Typing term Quoted' + (y,) (z,) '
+//│ | typing for 485
+//│ | 0. Typing term + (y,) (z,)
+//│ | | 0. Typing term + (y,)
+//│ | | | 0. Typing term +
+//│ | | | | inspect + by ctx.get
+//│ | | | | try searching in bounded env
+//│ | | | | try searching in free variable env
+//│ | | | | try searching from parent
+//│ | | | | Reached outside of QQ -> failed to find the identifier
+//│ | | | | insert + into the free vars
+//│ | | | 0. : α29
+//│ | | | 0. Typing term y,
+//│ | | | | 0. Typing term y
+//│ | | | | | inspect y by ctx.get
+//│ | | | | | try searching in bounded env
+//│ | | | | | try searching in free variable env
+//│ | | | | | try searching from parent
+//│ | | | | | Reached outside of QQ -> failed to find the identifier
+//│ | | | | | insert y into the free vars
+//│ | | | | 0. : α30
+//│ | | | 0. : (α30,)
+//│ | | | CONSTRAIN α29 <! (α30 -> α31)
+//│ | | |   where 
+//│ | | | C α29 <! (α30 -> α31)    (0)
+//│ | | 0. : α31
+//│ | | 0. Typing term z,
+//│ | | | 0. Typing term z
+//│ | | | | inspect z by ctx.get
+//│ | | | | try searching in bounded env
+//│ | | | | try searching in free variable env
+//│ | | | | try searching from parent
+//│ | | | | Reached outside of QQ -> failed to find the identifier
+//│ | | | | insert z into the free vars
+//│ | | | 0. : α32
+//│ | | 0. : (α32,)
+//│ | | CONSTRAIN α31 <! (α32 -> α33)
+//│ | |   where 
+//│ | | C α31 <! (α32 -> α33)    (0)
+//│ | 0. : α33
+//│ | chaining for 485
 //│ | local unquoted context:
 //│ | List()
-//│ 0. : Code[α26,(Nothing | "z"<>)]
-//│ ⬤ Typed as: Code[α26,(Nothing | "z"<>)]
-//│  where:
-//│ res: Code[nothing, "z"]
+//│ 0. : Code[α33,(Nothing | (("+"<> | "y"<>) | "z"<>))]
+//│ ⬤ Typed as: Code[α33,(Nothing | (("+"<> | "y"<>) | "z"<>))]
+//│  where: 
+//│ ╔══[ERROR] identifier not found: y
+//│ ║  l.5: 	y + z
+//│ ╙──     	^
+//│ ╔══[ERROR] identifier not found: z
+//│ ║  l.5: 	y + z
+//│ ╙──     	    ^
+//│ res: int
+//│ res: Code[nothing, "+" | "y" | "z"]
 
 :NewParser
 :d
@@ -27,58 +99,60 @@ code"z"
 :NoJS
 code"${code"${code"${z}"}"}"
 //│ 0. Typing term Quoted' Unquote' Quoted' Unquote' Quoted' Unquote' z ' ' ' ' ' '
-//│ | typing for 763
+//│ | typing for 447
 //│ | 0. Typing term Unquote' Quoted' Unquote' Quoted' Unquote' z ' ' ' ' '
 //│ | | 0. Typing term Quoted' Unquote' Quoted' Unquote' z ' ' ' '
-//│ | | | typing for 208
+//│ | | | typing for 715
 //│ | | | 0. Typing term Unquote' Quoted' Unquote' z ' ' '
 //│ | | | | 0. Typing term Quoted' Unquote' z ' '
-//│ | | | | | typing for 267
+//│ | | | | | typing for 408
 //│ | | | | | 0. Typing term Unquote' z '
 //│ | | | | | | 0. Typing term z
-//│ | | | | | | 0. : α34
-//│ | | | | | | CONSTRAIN (Code[α32,α33] -> α32) <! (α34 -> α35)
-//│ | | | | | |   where
-//│ | | | | | | C (Code[α32,α33] -> α32) <! (α34 -> α35)    (0)
-//│ | | | | | | | C α34 <! Code[α32,α33]    (1)
-//│ | | | | | | | C α32 <! α35    (2)
-//│ | | | | | 0. : α35
-//│ | | | | | chaining for 267
+//│ | | | | | | | inspect z by ctx.get
+//│ | | | | | | | insert z into the free vars
+//│ | | | | | | 0. : α41
+//│ | | | | | | CONSTRAIN (Code[α39,α40] -> α39) <! (α41 -> α42)
+//│ | | | | | |   where 
+//│ | | | | | | C (Code[α39,α40] -> α39) <! (α41 -> α42)    (0)
+//│ | | | | | | | C α41 <! Code[α39,α40]    (1)
+//│ | | | | | | | C α39 <! α42    (2)
+//│ | | | | | 0. : α42
+//│ | | | | | chaining for 408
 //│ | | | | | local unquoted context:
-//│ | | | | | List(α33)
-//│ | | | | 0. : Code[α35,(α33 | Nothing)]
-//│ | | | | CONSTRAIN (Code[α30,α31] -> α30) <! (Code[α35,(α33 | Nothing)] -> α36)
-//│ | | | |   where
-//│ | | | | C (Code[α30,α31] -> α30) <! (Code[α35,(α33 | Nothing)] -> α36)    (0)
-//│ | | | | | C Code[α35,(α33 | Nothing)] <! Code[α30,α31]    (1)
-//│ | | | | | | C α35 <! α30    (2)
-//│ | | | | | | C (α33 | Nothing) <! α31    (3)
-//│ | | | | | C α30 <! α36    (4)
-//│ | | | 0. : α36
-//│ | | | chaining for 208
+//│ | | | | | List(α40)
+//│ | | | | 0. : Code[α42,(α40 | Nothing)]
+//│ | | | | CONSTRAIN (Code[α37,α38] -> α37) <! (Code[α42,(α40 | Nothing)] -> α43)
+//│ | | | |   where 
+//│ | | | | C (Code[α37,α38] -> α37) <! (Code[α42,(α40 | Nothing)] -> α43)    (0)
+//│ | | | | | C Code[α42,(α40 | Nothing)] <! Code[α37,α38]    (1)
+//│ | | | | | | C α42 <! α37    (2)
+//│ | | | | | | C (α40 | Nothing) <! α38    (3)
+//│ | | | | | C α37 <! α43    (4)
+//│ | | | 0. : α43
+//│ | | | chaining for 715
 //│ | | | local unquoted context:
-//│ | | | List(α31)
-//│ | | 0. : Code[α36,(α31 | Nothing)]
-//│ | | CONSTRAIN (Code[α28,α29] -> α28) <! (Code[α36,(α31 | Nothing)] -> α37)
-//│ | |   where
-//│ 		α31 :> (α33 | Nothing)
-//│ | | C (Code[α28,α29] -> α28) <! (Code[α36,(α31 | Nothing)] -> α37)    (0)
-//│ | | | C Code[α36,(α31 | Nothing)] <! Code[α28,α29]    (1)
-//│ | | | | C α36 <! α28    (2)
-//│ | | | | C (α31 | Nothing) <! α29    (3)
-//│ | | | C α28 <! α37    (4)
-//│ | 0. : α37
-//│ | chaining for 763
+//│ | | | List(α38)
+//│ | | 0. : Code[α43,(α38 | Nothing)]
+//│ | | CONSTRAIN (Code[α35,α36] -> α35) <! (Code[α43,(α38 | Nothing)] -> α44)
+//│ | |   where 
+//│ 		α38 :> (α40 | Nothing)
+//│ | | C (Code[α35,α36] -> α35) <! (Code[α43,(α38 | Nothing)] -> α44)    (0)
+//│ | | | C Code[α43,(α38 | Nothing)] <! Code[α35,α36]    (1)
+//│ | | | | C α43 <! α35    (2)
+//│ | | | | C (α38 | Nothing) <! α36    (3)
+//│ | | | C α35 <! α44    (4)
+//│ | 0. : α44
+//│ | chaining for 447
 //│ | local unquoted context:
-//│ | List(α29)
-//│ 0. : Code[α37,(α29 | Nothing)]
-//│ ⬤ Typed as: Code[α37,(α29 | Nothing)]
-//│  where:
-//│ 		α29 :> (α31 | Nothing)
-//│ 		α31 :> (α33 | Nothing)
+//│ | List(α36)
+//│ 0. : Code[α44,(α36 | Nothing)]
+//│ ⬤ Typed as: Code[α44,(α36 | Nothing)]
+//│  where: 
+//│ 		α36 :> (α38 | Nothing)
+//│ 		α38 :> (α40 | Nothing)
 //│ ╔══[ERROR] identifier not found: z
-//│ ║  l.25: 	code"${code"${code"${z}"}"}"
-//│ ╙──      	                     ^
+//│ ║  l.106: 	code"${code"${code"${z}"}"}"
+//│ ╙──       	                     ^
 //│ res: Code[nothing, nothing]
 
 
@@ -89,57 +163,58 @@ code"${code"${code"${z}"}"}"
 let z = code"1"
 code"${code"${z}"}"
 //│ 1. Typing term Quoted' 1 '
-//│ | typing for 98
+//│ | typing for 70
 //│ | 1. Typing term 1
 //│ | 1. : 1<int,number>
-//│ | chaining for 98
+//│ | chaining for 70
 //│ | local unquoted context:
 //│ | List()
 //│ 1. : Code[1<int,number>,Nothing]
 //│ ⬤ Typed as: Code[1<int,number>,Nothing]
-//│  where:
+//│  where: 
 //│ 0. Typing term Quoted' Unquote' Quoted' Unquote' z ' ' ' '
-//│ | typing for 41
+//│ | typing for 978
 //│ | 0. Typing term Unquote' Quoted' Unquote' z ' ' '
 //│ | | 0. Typing term Quoted' Unquote' z ' '
-//│ | | | typing for 819
+//│ | | | typing for 938
 //│ | | | 0. Typing term Unquote' z '
 //│ | | | | 0. Typing term z
+//│ | | | | | inspect z by ctx.get
 //│ | | | | 0. : Code[1<int,number>,Nothing]
-//│ | | | | CONSTRAIN (Code[α44,α45] -> α44) <! (Code[1<int,number>,Nothing] -> α46)
-//│ | | | |   where
-//│ | | | | C (Code[α44,α45] -> α44) <! (Code[1<int,number>,Nothing] -> α46)    (0)
-//│ | | | | | C Code[1<int,number>,Nothing] <! Code[α44,α45]    (1)
-//│ | | | | | | C 1<int,number> <! α44    (2)
-//│ | | | | | | C Nothing <! α45    (3)
-//│ | | | | | C α44 <! α46    (4)
-//│ | | | | | | C 1<int,number> <! α46    (5)
-//│ | | | 0. : α46
-//│ | | | chaining for 819
+//│ | | | | CONSTRAIN (Code[α51,α52] -> α51) <! (Code[1<int,number>,Nothing] -> α53)
+//│ | | | |   where 
+//│ | | | | C (Code[α51,α52] -> α51) <! (Code[1<int,number>,Nothing] -> α53)    (0)
+//│ | | | | | C Code[1<int,number>,Nothing] <! Code[α51,α52]    (1)
+//│ | | | | | | C 1<int,number> <! α51    (2)
+//│ | | | | | | C Nothing <! α52    (3)
+//│ | | | | | C α51 <! α53    (4)
+//│ | | | | | | C 1<int,number> <! α53    (5)
+//│ | | | 0. : α53
+//│ | | | chaining for 938
 //│ | | | local unquoted context:
-//│ | | | List(α45)
-//│ | | 0. : Code[α46,(α45 | Nothing)]
-//│ | | CONSTRAIN (Code[α42,α43] -> α42) <! (Code[α46,(α45 | Nothing)] -> α47)
-//│ | |   where
-//│ 		α45 :> Nothing
-//│ 		α46 :> 1<int,number>
-//│ | | C (Code[α42,α43] -> α42) <! (Code[α46,(α45 | Nothing)] -> α47)    (0)
-//│ | | | C Code[α46,(α45 | Nothing)] <! Code[α42,α43]    (1)
-//│ | | | | C α46 <! α42    (2)
-//│ | | | | | C 1<int,number> <! α42    (3)
-//│ | | | | C (α45 | Nothing) <! α43    (4)
-//│ | | | C α42 <! α47    (5)
-//│ | | | | C 1<int,number> <! α47    (6)
-//│ | 0. : α47
-//│ | chaining for 41
+//│ | | | List(α52)
+//│ | | 0. : Code[α53,(α52 | Nothing)]
+//│ | | CONSTRAIN (Code[α49,α50] -> α49) <! (Code[α53,(α52 | Nothing)] -> α54)
+//│ | |   where 
+//│ 		α52 :> Nothing
+//│ 		α53 :> 1<int,number>
+//│ | | C (Code[α49,α50] -> α49) <! (Code[α53,(α52 | Nothing)] -> α54)    (0)
+//│ | | | C Code[α53,(α52 | Nothing)] <! Code[α49,α50]    (1)
+//│ | | | | C α53 <! α49    (2)
+//│ | | | | | C 1<int,number> <! α49    (3)
+//│ | | | | C (α52 | Nothing) <! α50    (4)
+//│ | | | C α49 <! α54    (5)
+//│ | | | | C 1<int,number> <! α54    (6)
+//│ | 0. : α54
+//│ | chaining for 978
 //│ | local unquoted context:
-//│ | List(α43)
-//│ 0. : Code[α47,(α43 | Nothing)]
-//│ ⬤ Typed as: Code[α47,(α43 | Nothing)]
-//│  where:
-//│ 		α43 :> (α45 | Nothing)
-//│ 		α45 :> Nothing
-//│ 		α47 :> 1<int,number>
+//│ | List(α50)
+//│ 0. : Code[α54,(α50 | Nothing)]
+//│ ⬤ Typed as: Code[α54,(α50 | Nothing)]
+//│  where: 
+//│ 		α50 :> (α52 | Nothing)
+//│ 		α52 :> Nothing
+//│ 		α54 :> 1<int,number>
 //│ z: Code[1, nothing]
 //│ res: Code[1, nothing]
 
@@ -149,7 +224,7 @@ code"${code"${z}"}"
 :NoJS
 code"let x = 1; let z = 1; code"x""
 //│ 0. Typing term Quoted' let x = 1 in let z = 1 in Quoted' x ' '
-//│ | typing for 195
+//│ | typing for 829
 //│ | 0. Typing term let x = 1 in let z = 1 in Quoted' x '
 //│ | | 1. Typing term 1
 //│ | | 1. : 1<int,number>
@@ -157,31 +232,29 @@ code"let x = 1; let z = 1; code"x""
 //│ | | | 1. Typing term 1
 //│ | | | 1. : 1<int,number>
 //│ | | | 0. Typing term Quoted' x '
-//│ | | | | typing for 0
+//│ | | | | typing for 879
 //│ | | | | 0. Typing term x
-//│ | | | | | search inside QQ
-//│ | | | | | try env
-//│ | | | | | try free env
-//│ | | | | | try parent
-//│ | | | | | search inside QQ
-//│ | | | | | try env
-//│ | | | | | try free env
-//│ | | | | | try parent
-//│ | | | | | search inside QQ
-//│ | | | | | try env
+//│ | | | | | inspect x by ctx.get
+//│ | | | | | try searching in bounded env
+//│ | | | | | try searching in free variable env
+//│ | | | | | try searching from parent
+//│ | | | | | try searching in bounded env
+//│ | | | | | try searching in free variable env
+//│ | | | | | try searching from parent
+//│ | | | | | try searching in bounded env
 //│ | | | | 0. : 1<int,number>
-//│ | | | | chaining for 0
+//│ | | | | chaining for 879
 //│ | | | | local unquoted context:
 //│ | | | | List()
 //│ | | | 0. : Code[1<int,number>,Nothing]
 //│ | | 0. : Code[1<int,number>,Nothing]
 //│ | 0. : Code[1<int,number>,Nothing]
-//│ | chaining for 195
+//│ | chaining for 829
 //│ | local unquoted context:
 //│ | List()
 //│ 0. : Code[Code[1<int,number>,Nothing],Nothing]
 //│ ⬤ Typed as: Code[Code[1<int,number>,Nothing],Nothing]
-//│  where:
+//│  where: 
 //│ res: Code[Code[1, nothing], nothing]
 
 :NewParser
@@ -190,24 +263,24 @@ code"let x = 1; let z = 1; code"x""
 :NoJS
 code"x; code"x""
 //│ ╔══[PARSE ERROR] Unexpected ';' keyword here
-//│ ║  l.181: 	code"x; code"x""
+//│ ║  l.273: 	code"x; code"x""
 //│ ╙──       	      ^
 //│ 0. Typing term Quoted' x '
-//│ | typing for 348
+//│ | typing for 115
 //│ | 0. Typing term x
-//│ | | search inside QQ
-//│ | | try env
-//│ | | try free env
-//│ | | try parent
-//│ | | search inside QQ
-//│ | | Reach limit
-//│ | 0. : α51
-//│ | chaining for 348
+//│ | | inspect x by ctx.get
+//│ | | try searching in bounded env
+//│ | | try searching in free variable env
+//│ | | try searching from parent
+//│ | | Reached outside of QQ -> failed to find the identifier
+//│ | | insert x into the free vars
+//│ | 0. : α58
+//│ | chaining for 115
 //│ | local unquoted context:
 //│ | List()
-//│ 0. : Code[α51,(Nothing | "x"<>)]
-//│ ⬤ Typed as: Code[α51,(Nothing | "x"<>)]
-//│  where:
+//│ 0. : Code[α58,(Nothing | "x"<>)]
+//│ ⬤ Typed as: Code[α58,(Nothing | "x"<>)]
+//│  where: 
 //│ res: Code[nothing, "x"]
 
 :NewParser
@@ -216,49 +289,47 @@ code"x; code"x""
 :NoJS
 code"let z = 0;${code"z"}"
 //│ 0. Typing term Quoted' let z = 0 in Unquote' Quoted' z ' ' '
-//│ | typing for 511
+//│ | typing for 565
 //│ | 0. Typing term let z = 0 in Unquote' Quoted' z ' '
 //│ | | 1. Typing term 0
 //│ | | 1. : 0<int,number>
 //│ | | 0. Typing term Unquote' Quoted' z ' '
 //│ | | | 0. Typing term Quoted' z '
-//│ | | | | typing for 317
+//│ | | | | typing for 882
 //│ | | | | 0. Typing term z
-//│ | | | | | search inside QQ
-//│ | | | | | try env
-//│ | | | | | try free env
-//│ | | | | | try parent
-//│ | | | | | search inside QQ
-//│ | | | | | try env
-//│ | | | | | try free env
-//│ | | | | | try parent
-//│ | | | | | search inside QQ
-//│ | | | | | try env
-//│ | | | | | try free env
-//│ | | | | | try parent
-//│ | | | | | search inside QQ
-//│ | | | | | Reach limit
-//│ | | | | 0. : α55
-//│ | | | | chaining for 317
+//│ | | | | | inspect z by ctx.get
+//│ | | | | | try searching in bounded env
+//│ | | | | | try searching in free variable env
+//│ | | | | | try searching from parent
+//│ | | | | | try searching in bounded env
+//│ | | | | | try searching in free variable env
+//│ | | | | | try searching from parent
+//│ | | | | | try searching in bounded env
+//│ | | | | | try searching in free variable env
+//│ | | | | | try searching from parent
+//│ | | | | | Reached outside of QQ -> failed to find the identifier
+//│ | | | | | insert z into the free vars
+//│ | | | | 0. : α62
+//│ | | | | chaining for 882
 //│ | | | | local unquoted context:
 //│ | | | | List()
-//│ | | | 0. : Code[α55,(Nothing | "z"<>)]
-//│ | | | CONSTRAIN (Code[α53,α54] -> α53) <! (Code[α55,(Nothing | "z"<>)] -> α56)
-//│ | | |   where
-//│ | | | C (Code[α53,α54] -> α53) <! (Code[α55,(Nothing | "z"<>)] -> α56)    (0)
-//│ | | | | C Code[α55,(Nothing | "z"<>)] <! Code[α53,α54]    (1)
-//│ | | | | | C α55 <! α53    (2)
-//│ | | | | | C (Nothing | "z"<>) <! α54    (3)
-//│ | | | | C α53 <! α56    (4)
-//│ | | 0. : α56
-//│ | 0. : α56
-//│ | chaining for 511
+//│ | | | 0. : Code[α62,(Nothing | "z"<>)]
+//│ | | | CONSTRAIN (Code[α60,α61] -> α60) <! (Code[α62,(Nothing | "z"<>)] -> α63)
+//│ | | |   where 
+//│ | | | C (Code[α60,α61] -> α60) <! (Code[α62,(Nothing | "z"<>)] -> α63)    (0)
+//│ | | | | C Code[α62,(Nothing | "z"<>)] <! Code[α60,α61]    (1)
+//│ | | | | | C α62 <! α60    (2)
+//│ | | | | | C (Nothing | "z"<>) <! α61    (3)
+//│ | | | | C α60 <! α63    (4)
+//│ | | 0. : α63
+//│ | 0. : α63
+//│ | chaining for 565
 //│ | local unquoted context:
-//│ | List(α54)
-//│ 0. : Code[α56,(α54 | Nothing)]
-//│ ⬤ Typed as: Code[α56,(α54 | Nothing)]
-//│  where:
-//│ 		α54 :> (Nothing | "z"<>)
+//│ | List(α61)
+//│ 0. : Code[α63,(α61 | Nothing)]
+//│ ⬤ Typed as: Code[α63,(α61 | Nothing)]
+//│  where: 
+//│ 		α61 :> (Nothing | "z"<>)
 //│ res: Code[nothing, "z"]
 
 :NewParser
@@ -267,95 +338,89 @@ code"let z = 0;${code"z"}"
 :NoJS
 code"let x = 1;${code"x + y"}"
 //│ 0. Typing term Quoted' let x = 1 in Unquote' Quoted' + (x,) (y,) ' ' '
-//│ | typing for 533
+//│ | typing for 803
 //│ | 0. Typing term let x = 1 in Unquote' Quoted' + (x,) (y,) ' '
 //│ | | 1. Typing term 1
 //│ | | 1. : 1<int,number>
 //│ | | 0. Typing term Unquote' Quoted' + (x,) (y,) ' '
 //│ | | | 0. Typing term Quoted' + (x,) (y,) '
-//│ | | | | typing for 208
+//│ | | | | typing for 656
 //│ | | | | 0. Typing term + (x,) (y,)
 //│ | | | | | 0. Typing term + (x,)
 //│ | | | | | | 0. Typing term +
-//│ | | | | | | | search inside QQ
-//│ | | | | | | | try env
-//│ | | | | | | | try free env
-//│ | | | | | | | try parent
-//│ | | | | | | | search inside QQ
-//│ | | | | | | | try env
-//│ | | | | | | | try free env
-//│ | | | | | | | try parent
-//│ | | | | | | | search inside QQ
-//│ | | | | | | | try env
-//│ | | | | | | | try free env
-//│ | | | | | | | try parent
-//│ | | | | | | | search inside QQ
-//│ | | | | | | | Reach limit
-//│ | | | | | | 0. : α61
+//│ | | | | | | | inspect + by ctx.get
+//│ | | | | | | | try searching in bounded env
+//│ | | | | | | | try searching in free variable env
+//│ | | | | | | | try searching from parent
+//│ | | | | | | | try searching in bounded env
+//│ | | | | | | | try searching in free variable env
+//│ | | | | | | | try searching from parent
+//│ | | | | | | | try searching in bounded env
+//│ | | | | | | | try searching in free variable env
+//│ | | | | | | | try searching from parent
+//│ | | | | | | | Reached outside of QQ -> failed to find the identifier
+//│ | | | | | | | insert + into the free vars
+//│ | | | | | | 0. : α68
 //│ | | | | | | 0. Typing term x,
 //│ | | | | | | | 0. Typing term x
-//│ | | | | | | | | search inside QQ
-//│ | | | | | | | | try env
-//│ | | | | | | | | try free env
-//│ | | | | | | | | try parent
-//│ | | | | | | | | search inside QQ
-//│ | | | | | | | | try env
-//│ | | | | | | | | try free env
-//│ | | | | | | | | try parent
-//│ | | | | | | | | search inside QQ
-//│ | | | | | | | | try env
-//│ | | | | | | | | try free env
-//│ | | | | | | | | try parent
-//│ | | | | | | | | search inside QQ
-//│ | | | | | | | | Reach limit
-//│ | | | | | | | 0. : α62
-//│ | | | | | | 0. : (α62,)
-//│ | | | | | | CONSTRAIN α61 <! (α62 -> α63)
-//│ | | | | | |   where
-//│ | | | | | | C α61 <! (α62 -> α63)    (0)
-//│ | | | | | 0. : α63
+//│ | | | | | | | | inspect x by ctx.get
+//│ | | | | | | | | try searching in bounded env
+//│ | | | | | | | | try searching in free variable env
+//│ | | | | | | | | try searching from parent
+//│ | | | | | | | | try searching in bounded env
+//│ | | | | | | | | try searching in free variable env
+//│ | | | | | | | | try searching from parent
+//│ | | | | | | | | try searching in bounded env
+//│ | | | | | | | | try searching in free variable env
+//│ | | | | | | | | try searching from parent
+//│ | | | | | | | | Reached outside of QQ -> failed to find the identifier
+//│ | | | | | | | | insert x into the free vars
+//│ | | | | | | | 0. : α69
+//│ | | | | | | 0. : (α69,)
+//│ | | | | | | CONSTRAIN α68 <! (α69 -> α70)
+//│ | | | | | |   where 
+//│ | | | | | | C α68 <! (α69 -> α70)    (0)
+//│ | | | | | 0. : α70
 //│ | | | | | 0. Typing term y,
 //│ | | | | | | 0. Typing term y
-//│ | | | | | | | search inside QQ
-//│ | | | | | | | try env
-//│ | | | | | | | try free env
-//│ | | | | | | | try parent
-//│ | | | | | | | search inside QQ
-//│ | | | | | | | try env
-//│ | | | | | | | try free env
-//│ | | | | | | | try parent
-//│ | | | | | | | search inside QQ
-//│ | | | | | | | try env
-//│ | | | | | | | try free env
-//│ | | | | | | | try parent
-//│ | | | | | | | search inside QQ
-//│ | | | | | | | Reach limit
-//│ | | | | | | 0. : α64
-//│ | | | | | 0. : (α64,)
-//│ | | | | | CONSTRAIN α63 <! (α64 -> α65)
-//│ | | | | |   where
-//│ | | | | | C α63 <! (α64 -> α65)    (0)
-//│ | | | | 0. : α65
-//│ | | | | chaining for 208
+//│ | | | | | | | inspect y by ctx.get
+//│ | | | | | | | try searching in bounded env
+//│ | | | | | | | try searching in free variable env
+//│ | | | | | | | try searching from parent
+//│ | | | | | | | try searching in bounded env
+//│ | | | | | | | try searching in free variable env
+//│ | | | | | | | try searching from parent
+//│ | | | | | | | try searching in bounded env
+//│ | | | | | | | try searching in free variable env
+//│ | | | | | | | try searching from parent
+//│ | | | | | | | Reached outside of QQ -> failed to find the identifier
+//│ | | | | | | | insert y into the free vars
+//│ | | | | | | 0. : α71
+//│ | | | | | 0. : (α71,)
+//│ | | | | | CONSTRAIN α70 <! (α71 -> α72)
+//│ | | | | |   where 
+//│ | | | | | C α70 <! (α71 -> α72)    (0)
+//│ | | | | 0. : α72
+//│ | | | | chaining for 656
 //│ | | | | local unquoted context:
 //│ | | | | List()
-//│ | | | 0. : Code[α65,(Nothing | (("+"<> | "y"<>) | "x"<>))]
-//│ | | | CONSTRAIN (Code[α59,α60] -> α59) <! (Code[α65,(Nothing | (("+"<> | "y"<>) | "x"<>))] -> α66)
-//│ | | |   where
-//│ | | | C (Code[α59,α60] -> α59) <! (Code[α65,(Nothing | (("+"<> | "y"<>) | "x"<>))] -> α66)    (0)
-//│ | | | | C Code[α65,(Nothing | (("+"<> | "y"<>) | "x"<>))] <! Code[α59,α60]    (1)
-//│ | | | | | C α65 <! α59    (2)
-//│ | | | | | C (Nothing | (("+"<> | "y"<>) | "x"<>)) <! α60    (3)
-//│ | | | | C α59 <! α66    (4)
-//│ | | 0. : α66
-//│ | 0. : α66
-//│ | chaining for 533
+//│ | | | 0. : Code[α72,(Nothing | (("+"<> | "y"<>) | "x"<>))]
+//│ | | | CONSTRAIN (Code[α66,α67] -> α66) <! (Code[α72,(Nothing | (("+"<> | "y"<>) | "x"<>))] -> α73)
+//│ | | |   where 
+//│ | | | C (Code[α66,α67] -> α66) <! (Code[α72,(Nothing | (("+"<> | "y"<>) | "x"<>))] -> α73)    (0)
+//│ | | | | C Code[α72,(Nothing | (("+"<> | "y"<>) | "x"<>))] <! Code[α66,α67]    (1)
+//│ | | | | | C α72 <! α66    (2)
+//│ | | | | | C (Nothing | (("+"<> | "y"<>) | "x"<>)) <! α67    (3)
+//│ | | | | C α66 <! α73    (4)
+//│ | | 0. : α73
+//│ | 0. : α73
+//│ | chaining for 803
 //│ | local unquoted context:
-//│ | List(α60)
-//│ 0. : Code[α66,(α60 | Nothing)]
-//│ ⬤ Typed as: Code[α66,(α60 | Nothing)]
-//│  where:
-//│ 		α60 :> (Nothing | (("+"<> | "y"<>) | "x"<>))
+//│ | List(α67)
+//│ 0. : Code[α73,(α67 | Nothing)]
+//│ ⬤ Typed as: Code[α73,(α67 | Nothing)]
+//│  where: 
+//│ 		α67 :> (Nothing | (("+"<> | "y"<>) | "x"<>))
 //│ res: Code[nothing, "+" | "x" | "y"]
 
 
@@ -365,65 +430,64 @@ code"let x = 1;${code"x + y"}"
 :NoJS
 code"1 + ${code"b"}"
 //│ 0. Typing term Quoted' + (1,) (Unquote' Quoted' b ' ',) '
-//│ | typing for 821
+//│ | typing for 403
 //│ | 0. Typing term + (1,) (Unquote' Quoted' b ' ',)
 //│ | | 0. Typing term + (1,)
 //│ | | | 0. Typing term +
-//│ | | | | search inside QQ
-//│ | | | | try env
-//│ | | | | try free env
-//│ | | | | try parent
-//│ | | | | search inside QQ
-//│ | | | | Reach limit
-//│ | | | 0. : α69
+//│ | | | | inspect + by ctx.get
+//│ | | | | try searching in bounded env
+//│ | | | | try searching in free variable env
+//│ | | | | try searching from parent
+//│ | | | | Reached outside of QQ -> failed to find the identifier
+//│ | | | | insert + into the free vars
+//│ | | | 0. : α76
 //│ | | | 0. Typing term 1,
 //│ | | | | 0. Typing term 1
 //│ | | | | 0. : 1<int,number>
 //│ | | | 0. : (1<int,number>,)
-//│ | | | CONSTRAIN α69 <! (1<int,number> -> α70)
-//│ | | |   where
-//│ | | | C α69 <! (1<int,number> -> α70)    (0)
-//│ | | 0. : α70
+//│ | | | CONSTRAIN α76 <! (1<int,number> -> α77)
+//│ | | |   where 
+//│ | | | C α76 <! (1<int,number> -> α77)    (0)
+//│ | | 0. : α77
 //│ | | 0. Typing term Unquote' Quoted' b ' ',
 //│ | | | 0. Typing term Unquote' Quoted' b ' '
 //│ | | | | 0. Typing term Quoted' b '
-//│ | | | | | typing for 187
+//│ | | | | | typing for 34
 //│ | | | | | 0. Typing term b
-//│ | | | | | | search inside QQ
-//│ | | | | | | try env
-//│ | | | | | | try free env
-//│ | | | | | | try parent
-//│ | | | | | | search inside QQ
-//│ | | | | | | try env
-//│ | | | | | | try free env
-//│ | | | | | | try parent
-//│ | | | | | | search inside QQ
-//│ | | | | | | Reach limit
-//│ | | | | | 0. : α73
-//│ | | | | | chaining for 187
+//│ | | | | | | inspect b by ctx.get
+//│ | | | | | | try searching in bounded env
+//│ | | | | | | try searching in free variable env
+//│ | | | | | | try searching from parent
+//│ | | | | | | try searching in bounded env
+//│ | | | | | | try searching in free variable env
+//│ | | | | | | try searching from parent
+//│ | | | | | | Reached outside of QQ -> failed to find the identifier
+//│ | | | | | | insert b into the free vars
+//│ | | | | | 0. : α80
+//│ | | | | | chaining for 34
 //│ | | | | | local unquoted context:
 //│ | | | | | List()
-//│ | | | | 0. : Code[α73,(Nothing | "b"<>)]
-//│ | | | | CONSTRAIN (Code[α71,α72] -> α71) <! (Code[α73,(Nothing | "b"<>)] -> α74)
-//│ | | | |   where
-//│ | | | | C (Code[α71,α72] -> α71) <! (Code[α73,(Nothing | "b"<>)] -> α74)    (0)
-//│ | | | | | C Code[α73,(Nothing | "b"<>)] <! Code[α71,α72]    (1)
-//│ | | | | | | C α73 <! α71    (2)
-//│ | | | | | | C (Nothing | "b"<>) <! α72    (3)
-//│ | | | | | C α71 <! α74    (4)
-//│ | | | 0. : α74
-//│ | | 0. : (α74,)
-//│ | | CONSTRAIN α70 <! (α74 -> α75)
-//│ | |   where
-//│ | | C α70 <! (α74 -> α75)    (0)
-//│ | 0. : α75
-//│ | chaining for 821
+//│ | | | | 0. : Code[α80,(Nothing | "b"<>)]
+//│ | | | | CONSTRAIN (Code[α78,α79] -> α78) <! (Code[α80,(Nothing | "b"<>)] -> α81)
+//│ | | | |   where 
+//│ | | | | C (Code[α78,α79] -> α78) <! (Code[α80,(Nothing | "b"<>)] -> α81)    (0)
+//│ | | | | | C Code[α80,(Nothing | "b"<>)] <! Code[α78,α79]    (1)
+//│ | | | | | | C α80 <! α78    (2)
+//│ | | | | | | C (Nothing | "b"<>) <! α79    (3)
+//│ | | | | | C α78 <! α81    (4)
+//│ | | | 0. : α81
+//│ | | 0. : (α81,)
+//│ | | CONSTRAIN α77 <! (α81 -> α82)
+//│ | |   where 
+//│ | | C α77 <! (α81 -> α82)    (0)
+//│ | 0. : α82
+//│ | chaining for 403
 //│ | local unquoted context:
-//│ | List(α72)
-//│ 0. : Code[α75,(α72 | "+"<>)]
-//│ ⬤ Typed as: Code[α75,(α72 | "+"<>)]
-//│  where:
-//│ 		α72 :> (Nothing | "b"<>)
+//│ | List(α79)
+//│ 0. : Code[α82,(α79 | "+"<>)]
+//│ ⬤ Typed as: Code[α82,(α79 | "+"<>)]
+//│  where: 
+//│ 		α79 :> (Nothing | "b"<>)
 //│ res: Code[nothing, "+" | "b"]
 
 
@@ -436,65 +500,67 @@ code"${Const(n)} + 1"
 //│ 1. Typing term 1
 //│ 1. : 1<int,number>
 //│ ⬤ Typed as: 1<int,number>
-//│  where:
+//│  where: 
 //│ 0. Typing term Quoted' + (Unquote' Const (n,) ',) (1,) '
-//│ | typing for 159
+//│ | typing for 790
 //│ | 0. Typing term + (Unquote' Const (n,) ',) (1,)
 //│ | | 0. Typing term + (Unquote' Const (n,) ',)
 //│ | | | 0. Typing term +
-//│ | | | | search inside QQ
-//│ | | | | try env
-//│ | | | | try free env
-//│ | | | | try parent
-//│ | | | | search inside QQ
-//│ | | | | Reach limit
-//│ | | | 0. : α78
+//│ | | | | inspect + by ctx.get
+//│ | | | | try searching in bounded env
+//│ | | | | try searching in free variable env
+//│ | | | | try searching from parent
+//│ | | | | Reached outside of QQ -> failed to find the identifier
+//│ | | | | insert + into the free vars
+//│ | | | 0. : α85
 //│ | | | 0. Typing term Unquote' Const (n,) ',
 //│ | | | | 0. Typing term Unquote' Const (n,) '
 //│ | | | | | 0. Typing term Const (n,)
 //│ | | | | | | 0. Typing term Const
+//│ | | | | | | | inspect Const by ctx.get
 //│ | | | | | | 0. : (int<number> -> Code[int<number>,⊥])
 //│ | | | | | | 0. Typing term n,
 //│ | | | | | | | 0. Typing term n
+//│ | | | | | | | | inspect n by ctx.get
 //│ | | | | | | | 0. : 1<int,number>
 //│ | | | | | | 0. : (1<int,number>,)
-//│ | | | | | | CONSTRAIN (int<number> -> Code[int<number>,⊥]) <! (1<int,number> -> α81)
-//│ | | | | | |   where
-//│ | | | | | | C (int<number> -> Code[int<number>,⊥]) <! (1<int,number> -> α81)    (0)
+//│ | | | | | | CONSTRAIN (int<number> -> Code[int<number>,⊥]) <! (1<int,number> -> α88)
+//│ | | | | | |   where 
+//│ | | | | | | C (int<number> -> Code[int<number>,⊥]) <! (1<int,number> -> α88)    (0)
 //│ | | | | | | | C (1<int,number>,) <! (int<number>,)    (1)
-//│ | | | | | | | C Code[int<number>,⊥] <! α81    (1)
-//│ | | | | | 0. : α81
-//│ | | | | | CONSTRAIN (Code[α79,α80] -> α79) <! (α81 -> α82)
-//│ | | | | |   where
-//│ 		α81 :> Code[int<number>,⊥]
-//│ | | | | | C (Code[α79,α80] -> α79) <! (α81 -> α82)    (0)
-//│ | | | | | | C α81 <! Code[α79,α80]    (1)
-//│ | | | | | | | C Code[int<number>,⊥] <! Code[α79,α80]    (2)
-//│ | | | | | | | | C int<number> <! α79    (3)
-//│ | | | | | | | | C ⊥ <! α80    (4)
-//│ | | | | | | C α79 <! α82    (5)
-//│ | | | | | | | C int<number> <! α82    (6)
-//│ | | | | 0. : α82
-//│ | | | 0. : (α82,)
-//│ | | | CONSTRAIN α78 <! (α82 -> α83)
-//│ | | |   where
-//│ 		α82 :> int<number>
-//│ | | | C α78 <! (α82 -> α83)    (0)
-//│ | | 0. : α83
+//│ | | | | | | | C Code[int<number>,⊥] <! α88    (1)
+//│ | | | | | 0. : α88
+//│ | | | | | CONSTRAIN (Code[α86,α87] -> α86) <! (α88 -> α89)
+//│ | | | | |   where 
+//│ 		α88 :> Code[int<number>,⊥]
+//│ | | | | | C (Code[α86,α87] -> α86) <! (α88 -> α89)    (0)
+//│ | | | | | | C α88 <! Code[α86,α87]    (1)
+//│ | | | | | | | C Code[int<number>,⊥] <! Code[α86,α87]    (2)
+//│ | | | | | | | | C int<number> <! α86    (3)
+//│ | | | | | | | | C ⊥ <! α87    (4)
+//│ | | | | | | C α86 <! α89    (5)
+//│ | | | | | | | C int<number> <! α89    (6)
+//│ | | | | 0. : α89
+//│ | | | 0. : (α89,)
+//│ | | | CONSTRAIN α85 <! (α89 -> α90)
+//│ | | |   where 
+//│ 		α89 :> int<number>
+//│ | | | C α85 <! (α89 -> α90)    (0)
+//│ | | 0. : α90
 //│ | | 0. Typing term 1,
 //│ | | | 0. Typing term 1
 //│ | | | 0. : 1<int,number>
 //│ | | 0. : (1<int,number>,)
-//│ | | CONSTRAIN α83 <! (1<int,number> -> α84)
-//│ | |   where
-//│ | | C α83 <! (1<int,number> -> α84)    (0)
-//│ | 0. : α84
-//│ | chaining for 159
+//│ | | CONSTRAIN α90 <! (1<int,number> -> α91)
+//│ | |   where 
+//│ | | C α90 <! (1<int,number> -> α91)    (0)
+//│ | 0. : α91
+//│ | chaining for 790
 //│ | local unquoted context:
-//│ | List(α80)
-//│ 0. : Code[α84,(α80 | "+"<>)]
-//│ ⬤ Typed as: Code[α84,(α80 | "+"<>)]
-//│  where:
+//│ | List(α87)
+//│ 0. : Code[α91,(α87 | "+"<>)]
+//│ ⬤ Typed as: Code[α91,(α87 | "+"<>)]
+//│  where: 
 //│ n: 1
 //│ res: Code[nothing, "+"]
 
@@ -506,10 +572,10 @@ fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${
 //│ 1. Typing term n, cde, => if (> (n,) (0,)) then Quoted' let x = Unquote' Const (n,) ' in Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) ' ' else cde
 //│ | 1. Typing pattern n, cde,
 //│ | | 1. Typing pattern n
-//│ | | 1. : α88'
+//│ | | 1. : α95'
 //│ | | 1. Typing pattern cde
-//│ | | 1. : α89'
-//│ | 1. : (α88', α89',)
+//│ | | 1. : α96'
+//│ | 1. : (α95', α96',)
 //│ | 1. Typing term if (> (n,) (0,)) then Quoted' let x = Unquote' Const (n,) ' in Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) ' ' else cde
 //│ | | The mutable CaseOf tree
 //│ | | if «> (n,) (0,)»
@@ -521,231 +587,236 @@ fun test(n, cde) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${
 //│ | | | 1. Typing term > (n,) (0,)
 //│ | | | | 1. Typing term > (n,)
 //│ | | | | | 1. Typing term >
+//│ | | | | | | inspect > by ctx.get
 //│ | | | | | 1. : (number<> -> (number<> -> bool<>))
 //│ | | | | | 1. Typing term n,
 //│ | | | | | | 1. Typing term n
-//│ | | | | | | 1. : α88'
-//│ | | | | | 1. : (α88',)
-//│ | | | | | CONSTRAIN (number<> -> (number<> -> bool<>)) <! (α88' -> α90')
-//│ | | | | |   where
-//│ | | | | | C (number<> -> (number<> -> bool<>)) <! (α88' -> α90')    (0)
-//│ | | | | | | C (α88',) <! (number<>,)    (1)
-//│ | | | | | | | C α88' <! number<>    (2)
-//│ | | | | | | C (number<> -> bool<>) <! α90'    (3)
-//│ | | | | 1. : α90'
+//│ | | | | | | | inspect n by ctx.get
+//│ | | | | | | 1. : α95'
+//│ | | | | | 1. : (α95',)
+//│ | | | | | CONSTRAIN (number<> -> (number<> -> bool<>)) <! (α95' -> α97')
+//│ | | | | |   where 
+//│ | | | | | C (number<> -> (number<> -> bool<>)) <! (α95' -> α97')    (0)
+//│ | | | | | | C (α95',) <! (number<>,)    (1)
+//│ | | | | | | | C α95' <! number<>    (2)
+//│ | | | | | | C (number<> -> bool<>) <! α97'    (3)
+//│ | | | | 1. : α97'
 //│ | | | | 1. Typing term 0,
 //│ | | | | | 1. Typing term 0
 //│ | | | | | 1. : 0<int,number>
 //│ | | | | 1. : (0<int,number>,)
-//│ | | | | CONSTRAIN α90' <! (0<int,number> -> α91')
-//│ | | | |   where
-//│ 		α90' :> (number<> -> bool<>)
-//│ | | | | C α90' <! (0<int,number> -> α91')    (0)
-//│ | | | | | C (number<> -> bool<>) <! (0<int,number> -> α91')    (1)
+//│ | | | | CONSTRAIN α97' <! (0<int,number> -> α98')
+//│ | | | |   where 
+//│ 		α97' :> (number<> -> bool<>)
+//│ | | | | C α97' <! (0<int,number> -> α98')    (0)
+//│ | | | | | C (number<> -> bool<>) <! (0<int,number> -> α98')    (1)
 //│ | | | | | | C (0<int,number>,) <! (number<>,)    (2)
-//│ | | | | | | C bool<> <! α91'    (2)
-//│ | | | 1. : α91'
+//│ | | | | | | C bool<> <! α98'    (2)
+//│ | | | 1. : α98'
 //│ | | | 1. Typing term Quoted' let x = Unquote' Const (n,) ' in Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) ' '
-//│ | | | | typing for 595
+//│ | | | | typing for 252
 //│ | | | | 1. Typing term let x = Unquote' Const (n,) ' in Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) '
 //│ | | | | | 2. Typing term Unquote' Const (n,) '
 //│ | | | | | | 1. Typing term Const (n,)
 //│ | | | | | | | 1. Typing term Const
+//│ | | | | | | | | inspect Const by ctx.get
 //│ | | | | | | | 1. : (int<number> -> Code[int<number>,⊥])
 //│ | | | | | | | 1. Typing term n,
 //│ | | | | | | | | 1. Typing term n
-//│ | | | | | | | | 1. : α88'
-//│ | | | | | | | 1. : (α88',)
-//│ | | | | | | | CONSTRAIN (int<number> -> Code[int<number>,⊥]) <! (α88' -> α94')
-//│ | | | | | | |   where
-//│ 		α88' <: number<>
-//│ | | | | | | | C (int<number> -> Code[int<number>,⊥]) <! (α88' -> α94')    (0)
-//│ | | | | | | | | C (α88',) <! (int<number>,)    (1)
-//│ | | | | | | | | | C α88' <! int<number>    (2)
-//│ | | | | | | | | C Code[int<number>,⊥] <! α94'    (3)
-//│ | | | | | | 1. : α94'
-//│ | | | | | | CONSTRAIN (Code[α92,α93] -> α92) <! (α94' -> α95'')
-//│ | | | | | |   where
-//│ 		α94' :> Code[int<number>,⊥]
-//│ | | | | | | C (Code[α92,α93] -> α92) <! (α94' -> α95'')    (0)
-//│ | | | | | | | C α94' <! Code[α92,α93]    (1)
-//│ | | | | | | | | C Code[int<number>,⊥] <! Code[α92,α93]    (2)
-//│ | | | | | | | | | C int<number> <! α92    (3)
-//│ | | | | | | | | | C ⊥ <! α93    (4)
-//│ | | | | | | | C α92 <! α95''    (5)
-//│ | | | | | 2. : α95''
+//│ | | | | | | | | | inspect n by ctx.get
+//│ | | | | | | | | 1. : α95'
+//│ | | | | | | | 1. : (α95',)
+//│ | | | | | | | CONSTRAIN (int<number> -> Code[int<number>,⊥]) <! (α95' -> α101')
+//│ | | | | | | |   where 
+//│ 		α95' <: number<>
+//│ | | | | | | | C (int<number> -> Code[int<number>,⊥]) <! (α95' -> α101')    (0)
+//│ | | | | | | | | C (α95',) <! (int<number>,)    (1)
+//│ | | | | | | | | | C α95' <! int<number>    (2)
+//│ | | | | | | | | C Code[int<number>,⊥] <! α101'    (3)
+//│ | | | | | | 1. : α101'
+//│ | | | | | | CONSTRAIN (Code[α99,α100] -> α99) <! (α101' -> α102'')
+//│ | | | | | |   where 
+//│ 		α101' :> Code[int<number>,⊥]
+//│ | | | | | | C (Code[α99,α100] -> α99) <! (α101' -> α102'')    (0)
+//│ | | | | | | | C α101' <! Code[α99,α100]    (1)
+//│ | | | | | | | | C Code[int<number>,⊥] <! Code[α99,α100]    (2)
+//│ | | | | | | | | | C int<number> <! α99    (3)
+//│ | | | | | | | | | C ⊥ <! α100    (4)
+//│ | | | | | | | C α99 <! α102''    (5)
+//│ | | | | | 2. : α102''
 //│ | | | | | 1. Typing term Unquote' test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',) '
 //│ | | | | | | 1. Typing term test (- (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',)
 //│ | | | | | | | 1. Typing term test
-//│ | | | | | | | 1. : test87'
+//│ | | | | | | | | inspect test by ctx.get
+//│ | | | | | | | 1. : test94'
 //│ | | | | | | | 1. Typing term - (n,) (1,), Quoted' + (Unquote' cde ',) (x,) ',
 //│ | | | | | | | | 1. Typing term - (n,) (1,)
 //│ | | | | | | | | | 1. Typing term - (n,)
 //│ | | | | | | | | | | 1. Typing term -
+//│ | | | | | | | | | | | inspect - by ctx.get
 //│ | | | | | | | | | | 1. : (int<number> -> (int<number> -> int<number>))
 //│ | | | | | | | | | | 1. Typing term n,
 //│ | | | | | | | | | | | 1. Typing term n
-//│ | | | | | | | | | | | 1. : α88'
-//│ | | | | | | | | | | 1. : (α88',)
-//│ | | | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α88' -> α98')
-//│ | | | | | | | | | |   where
-//│ 		α88' <: int<number> & number<>
-//│ | | | | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (α88' -> α98')    (0)
-//│ | | | | | | | | | | | C (α88',) <! (int<number>,)    (1)
-//│ | | | | | | | | | | | C (int<number> -> int<number>) <! α98'    (1)
-//│ | | | | | | | | | 1. : α98'
+//│ | | | | | | | | | | | | inspect n by ctx.get
+//│ | | | | | | | | | | | 1. : α95'
+//│ | | | | | | | | | | 1. : (α95',)
+//│ | | | | | | | | | | CONSTRAIN (int<number> -> (int<number> -> int<number>)) <! (α95' -> α105')
+//│ | | | | | | | | | |   where 
+//│ 		α95' <: int<number> & number<>
+//│ | | | | | | | | | | C (int<number> -> (int<number> -> int<number>)) <! (α95' -> α105')    (0)
+//│ | | | | | | | | | | | C (α95',) <! (int<number>,)    (1)
+//│ | | | | | | | | | | | C (int<number> -> int<number>) <! α105'    (1)
+//│ | | | | | | | | | 1. : α105'
 //│ | | | | | | | | | 1. Typing term 1,
 //│ | | | | | | | | | | 1. Typing term 1
 //│ | | | | | | | | | | 1. : 1<int,number>
 //│ | | | | | | | | | 1. : (1<int,number>,)
-//│ | | | | | | | | | CONSTRAIN α98' <! (1<int,number> -> α99')
-//│ | | | | | | | | |   where
-//│ 		α98' :> (int<number> -> int<number>)
-//│ | | | | | | | | | C α98' <! (1<int,number> -> α99')    (0)
-//│ | | | | | | | | | | C (int<number> -> int<number>) <! (1<int,number> -> α99')    (1)
+//│ | | | | | | | | | CONSTRAIN α105' <! (1<int,number> -> α106')
+//│ | | | | | | | | |   where 
+//│ 		α105' :> (int<number> -> int<number>)
+//│ | | | | | | | | | C α105' <! (1<int,number> -> α106')    (0)
+//│ | | | | | | | | | | C (int<number> -> int<number>) <! (1<int,number> -> α106')    (1)
 //│ | | | | | | | | | | | C (1<int,number>,) <! (int<number>,)    (2)
-//│ | | | | | | | | | | | C int<number> <! α99'    (2)
-//│ | | | | | | | | 1. : α99'
+//│ | | | | | | | | | | | C int<number> <! α106'    (2)
+//│ | | | | | | | | 1. : α106'
 //│ | | | | | | | | 1. Typing term Quoted' + (Unquote' cde ',) (x,) '
-//│ | | | | | | | | | typing for 438
+//│ | | | | | | | | | typing for 510
 //│ | | | | | | | | | 1. Typing term + (Unquote' cde ',) (x,)
 //│ | | | | | | | | | | 1. Typing term + (Unquote' cde ',)
 //│ | | | | | | | | | | | 1. Typing term +
-//│ | | | | | | | | | | | | search inside QQ
-//│ | | | | | | | | | | | | try env
-//│ | | | | | | | | | | | | try free env
-//│ | | | | | | | | | | | | try parent
-//│ | | | | | | | | | | | | search inside QQ
-//│ | | | | | | | | | | | | try env
-//│ | | | | | | | | | | | | try free env
-//│ | | | | | | | | | | | | try parent
-//│ | | | | | | | | | | | | search inside QQ
-//│ | | | | | | | | | | | | try env
-//│ | | | | | | | | | | | | try free env
-//│ | | | | | | | | | | | | try parent
-//│ | | | | | | | | | | | | search inside QQ
-//│ | | | | | | | | | | | | Reach limit
-//│ | | | | | | | | | | | 1. : α100'
+//│ | | | | | | | | | | | | inspect + by ctx.get
+//│ | | | | | | | | | | | | try searching in bounded env
+//│ | | | | | | | | | | | | try searching in free variable env
+//│ | | | | | | | | | | | | try searching from parent
+//│ | | | | | | | | | | | | try searching in bounded env
+//│ | | | | | | | | | | | | try searching in free variable env
+//│ | | | | | | | | | | | | try searching from parent
+//│ | | | | | | | | | | | | try searching in bounded env
+//│ | | | | | | | | | | | | try searching in free variable env
+//│ | | | | | | | | | | | | try searching from parent
+//│ | | | | | | | | | | | | Reached outside of QQ -> failed to find the identifier
+//│ | | | | | | | | | | | | insert + into the free vars
+//│ | | | | | | | | | | | 1. : α107'
 //│ | | | | | | | | | | | 1. Typing term Unquote' cde ',
 //│ | | | | | | | | | | | | 1. Typing term Unquote' cde '
 //│ | | | | | | | | | | | | | 1. Typing term cde
-//│ | | | | | | | | | | | | | 1. : α89'
-//│ | | | | | | | | | | | | | CONSTRAIN (Code[α101,α102] -> α101) <! (α89' -> α103')
-//│ | | | | | | | | | | | | |   where
-//│ | | | | | | | | | | | | | C (Code[α101,α102] -> α101) <! (α89' -> α103')    (0)
-//│ | | | | | | | | | | | | | | C α89' <! Code[α101,α102]    (1)
-//│ | | | | | | | | | | | | | | C α101 <! α103'    (2)
-//│ | | | | | | | | | | | | 1. : α103'
-//│ | | | | | | | | | | | 1. : (α103',)
-//│ | | | | | | | | | | | CONSTRAIN α100' <! (α103' -> α104')
-//│ | | | | | | | | | | |   where
-//│ 		α103' :> α101
-//│ | | | | | | | | | | | C α100' <! (α103' -> α104')    (0)
-//│ | | | | | | | | | | 1. : α104'
+//│ | | | | | | | | | | | | | | inspect cde by ctx.get
+//│ | | | | | | | | | | | | | 1. : α96'
+//│ | | | | | | | | | | | | | CONSTRAIN (Code[α108,α109] -> α108) <! (α96' -> α110')
+//│ | | | | | | | | | | | | |   where 
+//│ | | | | | | | | | | | | | C (Code[α108,α109] -> α108) <! (α96' -> α110')    (0)
+//│ | | | | | | | | | | | | | | C α96' <! Code[α108,α109]    (1)
+//│ | | | | | | | | | | | | | | C α108 <! α110'    (2)
+//│ | | | | | | | | | | | | 1. : α110'
+//│ | | | | | | | | | | | 1. : (α110',)
+//│ | | | | | | | | | | | CONSTRAIN α107' <! (α110' -> α111')
+//│ | | | | | | | | | | |   where 
+//│ 		α110' :> α108
+//│ | | | | | | | | | | | C α107' <! (α110' -> α111')    (0)
+//│ | | | | | | | | | | 1. : α111'
 //│ | | | | | | | | | | 1. Typing term x,
 //│ | | | | | | | | | | | 1. Typing term x
-//│ | | | | | | | | | | | | search inside QQ
-//│ | | | | | | | | | | | | try env
-//│ | | | | | | | | | | | | try free env
-//│ | | | | | | | | | | | | try parent
-//│ | | | | | | | | | | | | search inside QQ
-//│ | | | | | | | | | | | | try env
-//│ | | | | | | | | | | | | try free env
-//│ | | | | | | | | | | | | try parent
-//│ | | | | | | | | | | | | search inside QQ
-//│ | | | | | | | | | | | | try env
-//│ | | | | | | | | | | | | try free env
-//│ | | | | | | | | | | | | try parent
-//│ | | | | | | | | | | | | search inside QQ
-//│ | | | | | | | | | | | | Reach limit
-//│ | | | | | | | | | | | 1. : α105'
-//│ | | | | | | | | | | 1. : (α105',)
-//│ | | | | | | | | | | CONSTRAIN α104' <! (α105' -> α106')
-//│ | | | | | | | | | |   where
-//│ | | | | | | | | | | C α104' <! (α105' -> α106')    (0)
-//│ | | | | | | | | | 1. : α106'
-//│ | | | | | | | | | chaining for 438
+//│ | | | | | | | | | | | | inspect x by ctx.get
+//│ | | | | | | | | | | | | try searching in bounded env
+//│ | | | | | | | | | | | | try searching in free variable env
+//│ | | | | | | | | | | | | try searching from parent
+//│ | | | | | | | | | | | | try searching in bounded env
+//│ | | | | | | | | | | | | try searching in free variable env
+//│ | | | | | | | | | | | | try searching from parent
+//│ | | | | | | | | | | | | try searching in bounded env
+//│ | | | | | | | | | | | | try searching in free variable env
+//│ | | | | | | | | | | | | try searching from parent
+//│ | | | | | | | | | | | | Reached outside of QQ -> failed to find the identifier
+//│ | | | | | | | | | | | | insert x into the free vars
+//│ | | | | | | | | | | | 1. : α112'
+//│ | | | | | | | | | | 1. : (α112',)
+//│ | | | | | | | | | | CONSTRAIN α111' <! (α112' -> α113')
+//│ | | | | | | | | | |   where 
+//│ | | | | | | | | | | C α111' <! (α112' -> α113')    (0)
+//│ | | | | | | | | | 1. : α113'
+//│ | | | | | | | | | chaining for 510
 //│ | | | | | | | | | local unquoted context:
-//│ | | | | | | | | | List(α102)
-//│ | | | | | | | | 1. : Code[α106',(α102 | ("+"<> | "x"<>))]
-//│ | | | | | | | 1. : (α99', Code[α106',(α102 | ("+"<> | "x"<>))],)
-//│ | | | | | | | CONSTRAIN test87' <! ((α99', Code[α106',(α102 | ("+"<> | "x"<>))],) -> α107')
-//│ | | | | | | |   where
-//│ 		α99' :> int<number>
-//│ | | | | | | | C test87' <! ((α99', Code[α106',(α102 | ("+"<> | "x"<>))],) -> α107')    (0)
-//│ | | | | | | 1. : α107'
-//│ | | | | | | CONSTRAIN (Code[α96,α97] -> α96) <! (α107' -> α108')
-//│ | | | | | |   where
-//│ | | | | | | C (Code[α96,α97] -> α96) <! (α107' -> α108')    (0)
-//│ | | | | | | | C α107' <! Code[α96,α97]    (1)
-//│ | | | | | | | C α96 <! α108'    (2)
-//│ | | | | | 1. : α108'
-//│ | | | | 1. : α108'
-//│ | | | | chaining for 595
+//│ | | | | | | | | | List(α109)
+//│ | | | | | | | | 1. : Code[α113',(α109 | ("+"<> | "x"<>))]
+//│ | | | | | | | 1. : (α106', Code[α113',(α109 | ("+"<> | "x"<>))],)
+//│ | | | | | | | CONSTRAIN test94' <! ((α106', Code[α113',(α109 | ("+"<> | "x"<>))],) -> α114')
+//│ | | | | | | |   where 
+//│ 		α106' :> int<number>
+//│ | | | | | | | C test94' <! ((α106', Code[α113',(α109 | ("+"<> | "x"<>))],) -> α114')    (0)
+//│ | | | | | | 1. : α114'
+//│ | | | | | | CONSTRAIN (Code[α103,α104] -> α103) <! (α114' -> α115')
+//│ | | | | | |   where 
+//│ | | | | | | C (Code[α103,α104] -> α103) <! (α114' -> α115')    (0)
+//│ | | | | | | | C α114' <! Code[α103,α104]    (1)
+//│ | | | | | | | C α103 <! α115'    (2)
+//│ | | | | | 1. : α115'
+//│ | | | | 1. : α115'
+//│ | | | | chaining for 252
 //│ | | | | local unquoted context:
-//│ | | | | List(α93, α97)
-//│ | | | 1. : Code[α108',((α93 | α97) | Nothing)]
+//│ | | | | List(α100, α104)
+//│ | | | 1. : Code[α115',((α100 | α104) | Nothing)]
 //│ | | | 1. Typing term cde
-//│ | | | 1. : α89'
-//│ | | | CONSTRAIN α91' <! (true<bool> | (α109' & ~(true<bool>)))
-//│ | | |   where
-//│ 		α91' :> bool<>
-//│ | | | C α91' <! (true<bool> | (α109' & ~(true<bool>)))    (0)
-//│ | | | | C bool<> <! (true<bool> | (α109' & ~(true<bool>)))    (1)
-//│ | | | | | ARGH  DNF(bool<>{})  <!  DNF(true<bool>{} | α109'∧~(true<bool>))
-//│ | | | | | | Consider bool<>{} <: DNF(true<bool>{} | α109'∧~(true<bool>))
-//│ | | | | | | Possible: List(true<bool>{}, α109'∧~(true<bool>))
-//│ | | | | | | A  bool<>{}  %  List()  <!  List(true<bool>, (α109' & ~(true<bool>)))  %  ⊥
-//│ | | | | | | | A  bool<>{}  %  List()  <!  List((α109' & ~(true<bool>)))  %  true<bool>
+//│ | | | | inspect cde by ctx.get
+//│ | | | 1. : α96'
+//│ | | | CONSTRAIN α98' <! (true<bool> | (α116' & ~(true<bool>)))
+//│ | | |   where 
+//│ 		α98' :> bool<>
+//│ | | | C α98' <! (true<bool> | (α116' & ~(true<bool>)))    (0)
+//│ | | | | C bool<> <! (true<bool> | (α116' & ~(true<bool>)))    (1)
+//│ | | | | | ARGH  DNF(bool<>{})  <!  DNF(true<bool>{} | α116'∧~(true<bool>))
+//│ | | | | | | Consider bool<>{} <: DNF(true<bool>{} | α116'∧~(true<bool>))
+//│ | | | | | | Possible: List(true<bool>{}, α116'∧~(true<bool>))
+//│ | | | | | | A  bool<>{}  %  List()  <!  List(true<bool>, (α116' & ~(true<bool>)))  %  ⊥
+//│ | | | | | | | A  bool<>{}  %  List()  <!  List((α116' & ~(true<bool>)))  %  true<bool>
 //│ | | | | | | | | Case.1
-//│ | | | | | | | | A  bool<>{}  %  List()  <!  List(α109')  %  true<bool>
-//│ | | | | | | | | | C (bool<> & ~(true<bool>)) <! α109'    (2)
+//│ | | | | | | | | A  bool<>{}  %  List()  <!  List(α116')  %  true<bool>
+//│ | | | | | | | | | C (bool<> & ~(true<bool>)) <! α116'    (2)
 //│ | | | | | | | | Case.2
 //│ | | | | | | | | A  bool<>{}  %  List()  <!  List(~(true<bool>))  %  true<bool>
 //│ | | | | | | | | | A  bool<>{}  %  List(true<bool>)  <!  List()  %  true<bool>
 //│ | | | | | | | | | | A  true<bool>{}  %  List()  <!  List()  %  true<bool>
 //│ | | | | | | | | | | | OK  true<bool>  <:  true<bool>
-//│ | | 1. : (Code[α108',((α93 | α97) | Nothing)] | α89')
-//│ | 1. : (Code[α108',((α93 | α97) | Nothing)] | α89')
-//│ 1. : ((α88', α89',) -> (Code[α108',((α93 | α97) | Nothing)] | α89'))
-//│ CONSTRAIN ((α88', α89',) -> (Code[α108',((α93 | α97) | Nothing)] | α89')) <! test87'
-//│   where
-//│ 		test87' <: ((α99', Code[α106',(α102 | ("+"<> | "x"<>))],) -> α107')
-//│ 		α88' <: int<number> & number<>
-//│ 		α89' <: Code[α101,α102]
-//│ 		α99' :> int<number>
-//│ 		α107' <: Code[α96,α97]
-//│ 		α108' :> α96
-//│ C ((α88', α89',) -> (Code[α108',((α93 | α97) | Nothing)] | α89')) <! test87'    (0)
-//│ | C ((α88', α89',) -> (Code[α108',((α93 | α97) | Nothing)] | α89')) <! ((α99', Code[α106',(α102 | ("+"<> | "x"<>))],) -> α107')    (1)
-//│ | | C (α99', Code[α106',(α102 | ("+"<> | "x"<>))],) <! (α88', α89',)    (2)
-//│ | | | C α99' <! α88'    (3)
-//│ | | | | C int<number> <! α88'    (4)
+//│ | | 1. : (Code[α115',((α100 | α104) | Nothing)] | α96')
+//│ | 1. : (Code[α115',((α100 | α104) | Nothing)] | α96')
+//│ 1. : ((α95', α96',) -> (Code[α115',((α100 | α104) | Nothing)] | α96'))
+//│ CONSTRAIN ((α95', α96',) -> (Code[α115',((α100 | α104) | Nothing)] | α96')) <! test94'
+//│   where 
+//│ 		test94' <: ((α106', Code[α113',(α109 | ("+"<> | "x"<>))],) -> α114')
+//│ 		α95' <: int<number> & number<>
+//│ 		α96' <: Code[α108,α109]
+//│ 		α106' :> int<number>
+//│ 		α114' <: Code[α103,α104]
+//│ 		α115' :> α103
+//│ C ((α95', α96',) -> (Code[α115',((α100 | α104) | Nothing)] | α96')) <! test94'    (0)
+//│ | C ((α95', α96',) -> (Code[α115',((α100 | α104) | Nothing)] | α96')) <! ((α106', Code[α113',(α109 | ("+"<> | "x"<>))],) -> α114')    (1)
+//│ | | C (α106', Code[α113',(α109 | ("+"<> | "x"<>))],) <! (α95', α96',)    (2)
+//│ | | | C α106' <! α95'    (3)
+//│ | | | | C int<number> <! α95'    (4)
 //│ | | | | | C int<number> <! int<number>    (5)
 //│ | | | | | C int<number> <! number<>    (5)
-//│ | | | C Code[α106',(α102 | ("+"<> | "x"<>))] <! α89'    (5)
-//│ | | | | C Code[α106',(α102 | ("+"<> | "x"<>))] <! Code[α101,α102]    (6)
-//│ | | | | | C α106' <! α101    (7)
-//│ | | | | | C (α102 | ("+"<> | "x"<>)) <! α102    (8)
-//│ | | C (Code[α108',((α93 | α97) | Nothing)] | α89') <! α107'    (9)
-//│ | | | C (Code[α108',((α93 | α97) | Nothing)] | α89') <! Code[α96,α97]    (10)
-//│ | | | | C Code[α108',((α93 | α97) | Nothing)] <! Code[α96,α97]    (11)
-//│ | | | | | C α108' <! α96    (12)
-//│ | | | | | | C α96 <! α96    (13)
-//│ | | | | | C ((α93 | α97) | Nothing) <! α97    (13)
-//│ | | | | C α89' <! Code[α96,α97]    (14)
-//│ | | | | | C Code[α106',(α102 | ("+"<> | "x"<>))] <! Code[α96,α97]    (15)
-//│ | | | | | | C α106' <! α96    (16)
-//│ | | | | | | C (α102 | ("+"<> | "x"<>)) <! α97    (17)
-//│ ⬤ Typed as: test87'
-//│  where:
-//│ 		test87' :> ((α88', α89',) -> (Code[α108',((α93 | α97) | Nothing)] | α89')) <: ((α99', Code[α106',(α102 | ("+"<> | "x"<>))],) -> α107')
-//│ 		α88' :> int<number> <: int<number> & number<>
-//│ 		α89' :> Code[α106',(α102 | ("+"<> | "x"<>))] <: Code[α96,α97] & Code[α101,α102]
-//│ 		α97 :> (α102 | ("+"<> | "x"<>)) | ((α93 | α97) | Nothing)
-//│ 		α99' :> int<number> <: α88'
-//│ 		α102 :> (α102 | ("+"<> | "x"<>))
-//│ 		α106' <: α96 & α101
-//│ 		α107' :> (Code[α108',((α93 | α97) | Nothing)] | α89') <: Code[α96,α97]
-//│ 		α108' :> α96 <: α96
+//│ | | | C Code[α113',(α109 | ("+"<> | "x"<>))] <! α96'    (5)
+//│ | | | | C Code[α113',(α109 | ("+"<> | "x"<>))] <! Code[α108,α109]    (6)
+//│ | | | | | C α113' <! α108    (7)
+//│ | | | | | C (α109 | ("+"<> | "x"<>)) <! α109    (8)
+//│ | | C (Code[α115',((α100 | α104) | Nothing)] | α96') <! α114'    (9)
+//│ | | | C (Code[α115',((α100 | α104) | Nothing)] | α96') <! Code[α103,α104]    (10)
+//│ | | | | C Code[α115',((α100 | α104) | Nothing)] <! Code[α103,α104]    (11)
+//│ | | | | | C α115' <! α103    (12)
+//│ | | | | | | C α103 <! α103    (13)
+//│ | | | | | C ((α100 | α104) | Nothing) <! α104    (13)
+//│ | | | | C α96' <! Code[α103,α104]    (14)
+//│ | | | | | C Code[α113',(α109 | ("+"<> | "x"<>))] <! Code[α103,α104]    (15)
+//│ | | | | | | C α113' <! α103    (16)
+//│ | | | | | | C (α109 | ("+"<> | "x"<>)) <! α104    (17)
+//│ ⬤ Typed as: test94'
+//│  where: 
+//│ 		test94' :> ((α95', α96',) -> (Code[α115',((α100 | α104) | Nothing)] | α96')) <: ((α106', Code[α113',(α109 | ("+"<> | "x"<>))],) -> α114')
+//│ 		α95' :> int<number> <: int<number> & number<>
+//│ 		α96' :> Code[α113',(α109 | ("+"<> | "x"<>))] <: Code[α103,α104] & Code[α108,α109]
+//│ 		α104 :> (α109 | ("+"<> | "x"<>)) | ((α100 | α104) | Nothing)
+//│ 		α106' :> int<number> <: α95'
+//│ 		α109 :> (α109 | ("+"<> | "x"<>))
+//│ 		α113' <: α103 & α108
+//│ 		α114' :> (Code[α115',((α100 | α104) | Nothing)] | α96') <: Code[α103,α104]
+//│ 		α115' :> α103 <: α103
 //│ test: (int, Code[?, 'a] & 'b,) -> (Code[nothing, "+" | "x" | 'a] | 'b)
