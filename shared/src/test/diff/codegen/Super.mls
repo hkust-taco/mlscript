@@ -3,7 +3,7 @@
 
 
 
-// FIXME `let` fields should not be getters
+// * FIXME `let` fields should not be getters
 :js
 mixin Foo0 {
   let foo0 = 0
@@ -73,10 +73,13 @@ module Test0 extends Foo0, Foo1
 
 :ShowRepl
 :js
-// FIXME prevent misuse of `super` using the type system
+:e
 mixin Foo2 {
   fun foo2 = super
 }
+//│ ╔══[ERROR] Illegal use of `super`
+//│ ║  l.78: 	  fun foo2 = super
+//│ ╙──      	             ^^^^^
 //│ mixin Foo2() {
 //│   super: 'super
 //│   fun foo2: 'super
@@ -100,7 +103,7 @@ mixin Foo2 {
 //│ Syntax error:
 //│   'super' keyword unexpected here
 
-:ShowRepl
+:re
 :js
 module Test0 extends Foo2
 //│ module Test0() {
@@ -124,29 +127,8 @@ module Test0 extends Foo2
 //│ };
 //│ globalThis.Test01 = typing_unit5.Test01;
 //│ // End of generated code
-//│ ┌ Block at Super.mls:105
-//│ ├─┬ Prelude
-//│ │ ├── Code
-//│ │ │   let typing_unit5 = {
-//│ │ │     cache: {},
-//│ │ │     get Test01() {
-//│ │ │       if (this.cache.Test01 === undefined) {
-//│ │ │         class Test01 extends Foo2(Object) {
-//│ │ │           constructor() {
-//│ │ │             super();
-//│ │ │           }
-//│ │ │         }
-//│ │ │         this.cache.Test01 = new Test01();
-//│ │ │         this.cache.Test01["class"] = Test01;
-//│ │ │       }
-//│ │ │       return this.cache.Test01;
-//│ │ │     }
-//│ │ │   };
-//│ │ │   globalThis.Test01 = typing_unit5.Test01;
-//│ │ └── Reply
-//│ │     Uncaught ReferenceError: Foo2 is not defined
-//│ │         at get Test01 [as Test01] (REPL9:1:78)
-//│ └── No queries
+//│ Runtime error:
+//│   ReferenceError: Foo2 is not defined
 
 :re
 Test0
@@ -161,5 +143,13 @@ Test0.foo2
 //│ res
 //│ Runtime error:
 //│   ReferenceError: Test01 is not defined
+
+
+class Foo extends Foo0 {
+  fun foo0(n) = [super.foo0, super.foo0 + n]
+}
+//│ class Foo() {
+//│   fun foo0: int -> (0, int,)
+//│ }
 
 

@@ -97,7 +97,7 @@ Test2("test").bar
 //│ res
 //│     = [ [ 1, 'test', 0.5 ], 'test', 'test', 0.5 ]
 
-// FIXME
+
 class Test3(n: string) extends Base1(1/2), Derived1(length(n)) {
   fun foo = [super.foo, n, this.original]
 }
@@ -105,14 +105,10 @@ class Test3(n: string) extends Base1(1/2), Derived1(length(n)) {
 //│   fun foo: ((int, int, number,), string, number,)
 //│   fun original: number
 //│ }
-//│ Code generation encountered an error:
-//│   unresolved symbol super
 
-// FIXME
 Test3("test").foo
 //│ ((int, int, number,), string, number,)
 //│ res
-//│ Runtime error:
-//│   ReferenceError: Test3 is not defined
+//│     = [ [ 4, 'test', 0.5 ], 'test', 0.5 ]
 
 

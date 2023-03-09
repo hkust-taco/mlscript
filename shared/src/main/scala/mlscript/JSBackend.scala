@@ -151,6 +151,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   protected def translateTerm(term: Term)(implicit scope: Scope): JSExpr = term match {
     case _ if term.desugaredTerm.isDefined => translateTerm(term.desugaredTerm.getOrElse(die))
     case Var(name) => translateVar(name, false)
+    case Super() => JSIdent("super")
     case Lam(params, body) =>
       val lamScope = scope.derive("Lam")
       val patterns = translateParams(params)(lamScope)
@@ -422,7 +423,6 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   )(implicit scope: Scope): JSClassDecl = {
     // Translate class methods and getters.
     val classScope = scope.derive(s"class ${classSymbol.lexicalName}")
-    classScope.declareSuper()
     val members = classSymbol.methods.map {
       translateClassMember(_)(classScope)
     }
@@ -446,7 +446,6 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   )(implicit scope: Scope): JSClassMethod = {
     val getterScope = scope.derive(s"getter ${mixinSymbol.lexicalName}")
     val mixinScope = getterScope.derive(s"mixin ${mixinSymbol.lexicalName}")
-    mixinScope.declareSuper()
     // Collect class fields.
     val fields = mixinSymbol.body.collectFields ++
       mixinSymbol.body.collectTypeNames.flatMap(resolveTraitFields)

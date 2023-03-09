@@ -741,6 +741,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         // currently we get things like "flows into variable reference"
         // but we used to get the better "flows into object receiver" or "flows into applied expression"...
       case lit: Lit => ClassTag(lit, lit.baseClasses)(prov)
+      case Super() =>
+        err(s"Illegal use of `super`", term.toLoc)(raise)
+        typeTerm(Var("super").withLocOf(term))
       case App(Var("neg" | "~"), trm) => typeTerm(trm).neg(prov)
       case App(App(Var("|"), lhs), rhs) =>
         typeTerm(lhs) | (typeTerm(rhs), prov)
@@ -940,7 +943,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               con(mth_ty.toPT.instantiate, FunctionType(singleTup(o_ty), res)(prov), res)
             case N =>
               if (!newDefs && fieldName.name.isCapitalized) err(msg"Method ${fieldName.name} not found", term.toLoc)
-              else rcdSel(obj, fieldName) // TODO: no else?
+              else {
+                val realPrefix = obj match {
+                  case Super() => Var("super").withLocOf(obj)
+                  case _ => obj
+                }
+                rcdSel(realPrefix, fieldName)
+              }
           }
         obj match {
           case Var(name) if name.isCapitalized && ctx.tyDefs.isDefinedAt(name) => // explicit retrieval

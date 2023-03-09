@@ -267,6 +267,7 @@ object NewLexer {
     "interface",
     "extends",
     "override",
+    "super",
     "new",
     "namespace",
     "module",
