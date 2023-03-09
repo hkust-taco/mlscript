@@ -87,13 +87,13 @@ class Test2(n: string) extends Base1(1/2), Derived1(1) {
   fun bar = [this.foo, n, this.n, this.original]
 }
 //│ class Test2(n: string) {
-//│   fun bar: ((int, 1, number,), string, 1, number,)
-//│   fun foo: (int, 1, number,)
+//│   fun bar: ((int, string, number,), string, string, number,)
+//│   fun foo: (int, string, number,)
 //│   fun original: number
 //│ }
 
 Test2("test").bar
-//│ ((int, 1, number,), string, 1, number,)
+//│ ((int, string, number,), string, string, number,)
 //│ res
 //│     = [ [ 1, 'test', 0.5 ], 'test', 'test', 0.5 ]
 
@@ -102,12 +102,12 @@ class Test3(n: string) extends Base1(1/2), Derived1(length(n)) {
   fun foo = [super.foo, n, this.original]
 }
 //│ class Test3(n: string) {
-//│   fun foo: ((int, int, number,), string, number,)
+//│   fun foo: ((int, string, number,), string, number,)
 //│   fun original: number
 //│ }
 
 Test3("test").foo
-//│ ((int, int, number,), string, number,)
+//│ ((int, string, number,), string, number,)
 //│ res
 //│     = [ [ 4, 'test', 0.5 ], 'test', 0.5 ]
 

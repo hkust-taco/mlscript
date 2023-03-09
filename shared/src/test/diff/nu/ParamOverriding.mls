@@ -13,18 +13,19 @@ mixin Over {
 
 class Base1(p: int) extends Over {
   fun test = [p, this.p]
-  // fun test2 = super.p // TODO
+  fun test2 = super.p
 }
 //│ class Base1(p: int) {
 //│   fun p: "hi"
-//│   fun test: (int, "hi",)
+//│   fun test: (int, int,)
+//│   fun test2: int
 //│ }
 
 
 Base1(123).test
-//│ (int, "hi",)
+//│ (int, int,)
 
-// TODO
-// Base1(123).test2
+Base1(123).test2
+//│ int
 
 

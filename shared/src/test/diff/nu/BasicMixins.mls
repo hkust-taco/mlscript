@@ -2,6 +2,13 @@
 :NewDefs
 
 
+mixin Base {
+  let base = 42
+}
+//│ mixin Base() {
+//│   let base: 42
+//│ }
+
 mixin BaseTest {
   fun test = super.base
 }
@@ -10,102 +17,129 @@ mixin BaseTest {
 //│   fun test: 'base
 //│ }
 
-mixin BaseInc {
-  fun test = super.base + 1
-  fun test2 = this.base
-}
-//│ mixin BaseInc() {
-//│   super: {base: int}
-//│   this: {base: 'base}
-//│   fun test: int
-//│   fun test2: 'base
+
+module Base0 extends Base, BaseTest
+//│ module Base0() {
+//│   let base: 42
+//│   fun test: 42
 //│ }
 
-// TODO reject by typing
-class Base1(base: int) extends BaseTest, BaseInc {
-  fun test3 = [base, this.base]
-}
-//│ class Base1(base: int) {
-//│   fun test: int
-//│   fun test2: int
-//│   fun test3: (int, int,)
-//│ }
-
-Base1(1).test
-//│ int
+Base0
+//│ Base0
 //│ res
-//│     = NaN
+//│     = Base0 { class: [Function: Base0] }
 
-Base1(1).test2
-//│ int
+Base0.test
+//│ 42
 //│ res
-//│     = 1
-
-Base1(1).test3
-//│ (int, int,)
-//│ res
-//│     = [ 1, 1 ]
-
-
-// TODO
-class Base1(base) extends BaseTest
-//│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.51: 	class Base1(base) extends BaseTest
-//│ ╙──      	            ^^^^
-//│ class Base1(base: error) {
-//│   fun test: error
-//│ }
-
-Base1
-//│ (base: error,) -> Base1
-//│ res
-//│     = [Function (anonymous)] { class: [Function: Base11] }
-
-// TODO
-Base1(1).test
-//│ error
-//│ res
-//│     = undefined
+//│     = 42
 
 
 :e
-class Base1(x) extends BaseTest
-//│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.72: 	class Base1(x) extends BaseTest
-//│ ╙──      	            ^
+class Base1(base: int) extends BaseTest {
+  fun test2 = [base, this.base]
+}
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.72: 	class Base1(x) extends BaseTest
+//│ ║  l.39: 	class Base1(base: int) extends BaseTest {
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.40: 	  fun test2 = [base, this.base]
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `{x: error}` does not have field 'base'
-//│ ║  l.72: 	class Base1(x) extends BaseTest
-//│ ║        	           ^^^
+//│ ║  l.41: 	}
+//│ ║        	^
+//│ ╟── Object of type `anything` does not have field 'base'
+//│ ║  l.39: 	class Base1(base: int) extends BaseTest {
+//│ ║        	                               ^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.6: 	  fun test = super.base
-//│ ║       	             ^^^^^^^^^^
+//│ ║  l.13: 	  fun test = super.base
+//│ ║        	             ^^^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.6: 	  fun test = super.base
-//│ ╙──     	             ^^^^^
-//│ class Base1(x: error) {
+//│ ║  l.13: 	  fun test = super.base
+//│ ╙──      	             ^^^^^
+//│ class Base1(base: int) {
 //│   fun test: nothing
+//│   fun test2: (int, int,)
+//│ }
+
+
+mixin BaseOf(base: int) {
+  fun original = base
+}
+//│ mixin BaseOf(base: int) {
+//│   fun original: int
+//│ }
+
+mixin BaseInc {
+  fun base = super.base + 1
+  fun test2 = [this.original, this.base]
+}
+//│ mixin BaseInc() {
+//│   super: {base: int}
+//│   this: {base: 'base, original: 'original}
+//│   fun base: int
+//│   fun test2: ('original, 'base,)
+//│ }
+
+
+class Base2(x: int) extends BaseOf(x + 1), BaseTest, BaseInc {
+  fun base = x
+  fun overridden = super.base
+}
+//│ class Base2(x: int) {
+//│   fun base: int
+//│   fun original: int
+//│   fun overridden: int
+//│   fun test: int
+//│   fun test2: (int, int,)
+//│ }
+
+Base2(11).base
+//│ int
+//│ res
+//│     = 11
+
+Base2(11).overridden
+//│ int
+//│ res
+//│     = 13
+
+Base2(11).test
+//│ int
+//│ res
+//│     = 12
+
+Base2(11).test2
+//│ (int, int,)
+//│ res
+//│     = [ 12, 11 ]
+
+
+// TODO
+class Base2(x) extends BaseOf(x + 1), BaseTest
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ║  l.117: 	class Base2(x) extends BaseOf(x + 1), BaseTest
+//│ ╙──       	            ^
+//│ class Base2(x: error) {
+//│   fun original: int
+//│   fun test: int
 //│ }
 
 :e
 class Base1(x): BaseTest
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.93: 	class Base1(x): BaseTest
-//│ ╙──      	            ^
+//│ ║  l.127: 	class Base1(x): BaseTest
+//│ ╙──       	            ^
 //│ ╔══[ERROR] mixins cannot be used as types
-//│ ║  l.93: 	class Base1(x): BaseTest
-//│ ╙──      	                ^^^^^^^^
+//│ ║  l.127: 	class Base1(x): BaseTest
+//│ ╙──       	                ^^^^^^^^
 //│ ╔══[ERROR] type signatures not yet supported for classes
-//│ ║  l.93: 	class Base1(x): BaseTest
-//│ ╙──      	                ^^^^^^^^
+//│ ║  l.127: 	class Base1(x): BaseTest
+//│ ╙──       	                ^^^^^^^^
 //│ class Base1(x: error)
 
 Base1
 //│ (x: error,) -> Base1
 //│ res
-//│     = [Function (anonymous)] { class: [class Base13] }
+//│     = [Function (anonymous)] { class: [class Base11] }
 
 
 // :ns
@@ -120,14 +154,38 @@ mixin Foo {
 :e
 module Base1(base: int, misc: string) extends Foo
 //│ ╔══[ERROR] module parameters are not supported
-//│ ║  l.121: 	module Base1(base: int, misc: string) extends Foo
+//│ ║  l.155: 	module Base1(base: int, misc: string) extends Foo
 //│ ╙──       	             ^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.155: 	module Base1(base: int, misc: string) extends Foo
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Object of type `anything` does not have field 'misc'
+//│ ║  l.155: 	module Base1(base: int, misc: string) extends Foo
+//│ ║         	                                              ^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.147: 	  fun test(x) = [super.base + x, x, super.misc]
+//│ ║         	                                    ^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.147: 	  fun test(x) = [super.base + x, x, super.misc]
+//│ ╙──       	                                    ^^^^^
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.155: 	module Base1(base: int, misc: string) extends Foo
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Object of type `anything` does not have field 'base'
+//│ ║  l.155: 	module Base1(base: int, misc: string) extends Foo
+//│ ║         	                                              ^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.147: 	  fun test(x) = [super.base + x, x, super.misc]
+//│ ║         	                 ^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.147: 	  fun test(x) = [super.base + x, x, super.misc]
+//│ ╙──       	                 ^^^^^
 //│ module Base1(base: int, misc: string) {
-//│   fun test: (int & 'a) -> (int, 'a, string,)
+//│   fun test: (int & 'a) -> (int, 'a, nothing,)
 //│ }
 
 Base1.test
-//│ (int & 'a) -> (int, 'a, string,)
+//│ (int & 'a) -> (int, 'a, nothing,)
 //│ res
 //│     = [Function: test]
 
@@ -203,16 +261,16 @@ WrapBase1.wrapA(1)
 :e
 WrapBase1.wrapA("ok")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.204: 	WrapBase1.wrapA("ok")
+//│ ║  l.262: 	WrapBase1.wrapA("ok")
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"ok"` is not an instance of type `int`
-//│ ║  l.204: 	WrapBase1.wrapA("ok")
+//│ ║  l.262: 	WrapBase1.wrapA("ok")
 //│ ║         	                ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.138: 	  fun wrapA(x: int) = x : int
+//│ ║  l.196: 	  fun wrapA(x: int) = x : int
 //│ ║         	               ^^^
 //│ ╟── from reference:
-//│ ║  l.148: 	  fun wrapA(x) = [super.wrapA(x)]
+//│ ║  l.206: 	  fun wrapA(x) = [super.wrapA(x)]
 //│ ╙──       	                              ^
 //│ (int,) | error
 //│ res

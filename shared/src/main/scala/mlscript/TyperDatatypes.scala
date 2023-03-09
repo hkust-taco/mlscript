@@ -359,9 +359,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                           )(provTODO)
                         inherit(ps, newSuperType, members ++ newMembs)
                       case Nil =>
-                        val thisType = superType &
+                        val thisType = WithType(superType, RecordType(typedParams)(ttp(td.params, isType = true)))(provTODO) &
                           clsNameToNomTag(td)(provTODO, ctx) &
-                          RecordType(tparamFields)(ttp(td.params, isType = true))
+                          RecordType(tparamFields)(TypeProvenance(Loc(td.tparams.map(_._2)), "type parameters", isType = true))
                         trace(s"${lvl}. Finalizing inheritance with $thisType <: $finalType") {
                           assert(finalType.level === lvl)
                           constrain(thisType, finalType)
@@ -371,10 +371,10 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
                         (thisType, members)
                     }
                     
+                    // * We start from an empty super type.
                     val baseType =
-                      // clsNameToNomTag(td)(provTODO, ctx) &
-                      // RecordType(tparamFields ::: typedParams)(ttp(td.params, isType = true))
-                      RecordType(typedParams)(ttp(td.params, isType = true))
+                      RecordType(Nil)(TypeProvenance(Loc(td.parents).map(_.left), "Object"))
+                    
                     val paramMems = typedParams.map(f => NuParam(f._1, f._2, isType = false))
                     // val baseMems = inherit(td.parents, baseType, Nil)
                     
