@@ -2,7 +2,7 @@
 
 code"let z = x => code"let w = ${Const(x)}; w"; z(100)"
 //│ ╔══[ERROR] Type mismatch. Required: Code, found: α28'
-//│ ║  l.5: 	code"let z = x => code"let w = ${Const(x)}; w"; z(100)"
+//│ ║  l.3: 	code"let z = x => code"let w = ${Const(x)}; w"; z(100)"
 //│ ╙──     	                                 ^^^^^^^^
 //│ res: code & {Code#C = anything, Code#T <: code & {Code#C = anything, Code#T <: error}}
 //│    = [
@@ -24,7 +24,7 @@ let free = code"x"
 
 let defined = code"let x = 1; ${free}"
 //│ ╔══[ERROR] Type mismatch. Required: Code, found: [Code[[x.type43'],x.type39'44']]
-//│ ║  l.27: 	let defined = code"let x = 1; ${free}"
+//│ ║  l.25: 	let defined = code"let x = 1; ${free}"
 //│ ╙──      	                                ^^^^
 //│ defined: code & {Code#C = anything, Code#T <: error}
 //│        = [ 'Let', 'x', Symbol(x), [ 1 ], [ 'Unquoted', [ 'Var', [Array] ] ] ]
@@ -52,13 +52,13 @@ run(defined2)
 let defined3 = code"let x = 1000; ${code"let x = 30; ${free} * 20"} + ${code"let x = 1; ${code"let x = 10000; ${free}"}"} + ${free}"
 run(defined3)
 //│ ╔══[ERROR] Type mismatch. Required: Code, found: [Code[[x.type63'],x.type39'64']]
-//│ ║  l.54: 	let defined3 = code"let x = 1000; ${code"let x = 30; ${free} * 20"} + ${code"let x = 1; ${code"let x = 10000; ${free}"}"} + ${free}"
+//│ ║  l.52: 	let defined3 = code"let x = 1000; ${code"let x = 30; ${free} * 20"} + ${code"let x = 1; ${code"let x = 10000; ${free}"}"} + ${free}"
 //│ ╙──      	                                                       ^^^^
 //│ ╔══[ERROR] Type mismatch. Required: Code, found: [Code[[x.type68'],x.type39'69']]
-//│ ║  l.54: 	let defined3 = code"let x = 1000; ${code"let x = 30; ${free} * 20"} + ${code"let x = 1; ${code"let x = 10000; ${free}"}"} + ${free}"
+//│ ║  l.52: 	let defined3 = code"let x = 1000; ${code"let x = 30; ${free} * 20"} + ${code"let x = 1; ${code"let x = 10000; ${free}"}"} + ${free}"
 //│ ╙──      	                                                                                                                ^^^^
 //│ ╔══[ERROR] Type mismatch. Required: Code, found: [Code[[x.type72'],x.type39'73']]
-//│ ║  l.54: 	let defined3 = code"let x = 1000; ${code"let x = 30; ${free} * 20"} + ${code"let x = 1; ${code"let x = 10000; ${free}"}"} + ${free}"
+//│ ║  l.52: 	let defined3 = code"let x = 1000; ${code"let x = 30; ${free} * 20"} + ${code"let x = 1; ${code"let x = 10000; ${free}"}"} + ${free}"
 //│ ╙──      	                                                                                                                              ^^^^
 //│ defined3: code & {Code#C = anything, Code#T <: int}
 //│         = [
@@ -79,7 +79,7 @@ run(defined3)
 let defined4 = code"1 + ${let c = code"let x = 100; x + 1"; c}"
 run(defined4)
 //│ ╔══[ERROR] Type mismatch. Required: Code, found: [Code[α84',Anything]]
-//│ ║  l.81: 	let defined4 = code"1 + ${let c = code"let x = 100; x + 1"; c}"
+//│ ║  l.79: 	let defined4 = code"1 + ${let c = code"let x = 100; x + 1"; c}"
 //│ ╙──      	                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ defined4: code & {Code#C = anything, Code#T <: int}
 //│         = [
@@ -95,7 +95,7 @@ run(defined4)
 code"let x = 1; ${code"let x = 3; x + 1 + ${code"x * 100"}"}"
 run(res)
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.97: 	code"let x = 1; ${code"let x = 3; x + 1 + ${code"x * 100"}"}"
+//│ ║  l.95: 	code"let x = 1; ${code"let x = 3; x + 1 + ${code"x * 100"}"}"
 //│ ║        	                                  ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `code & {Code#C :> ?x.type95, Code#T <: ?a}` is not an instance of type `int`
 //│ res: code & {Code#C = anything, Code#T <: error | int}
@@ -126,13 +126,13 @@ run(res)
 
 fun test(n, base) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${base} + x")}" else base
 //│ ╔══[ERROR] Type mismatch. Required: Code, found: α123'
-//│ ║  l.129: 	fun test(n, base) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${base} + x")}" else base
+//│ ║  l.127: 	fun test(n, base) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${base} + x")}" else base
 //│ ╙──       	                                                 ^^^^^^^^
 //│ ╔══[ERROR] Type mismatch. Required: Code, found: [α120']
-//│ ║  l.129: 	fun test(n, base) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${base} + x")}" else base
+//│ ║  l.127: 	fun test(n, base) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${base} + x")}" else base
 //│ ╙──       	                                                                                 ^^^^
 //│ ╔══[ERROR] Type mismatch. Required: Code, found: α130'
-//│ ║  l.129: 	fun test(n, base) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${base} + x")}" else base
+//│ ║  l.127: 	fun test(n, base) = if n > 0 then code"let x = ${Const(n)}; ${test(n - 1, code"${base} + x")}" else base
 //│ ╙──       	                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ test: (int, 'a,) -> (code & {Code#C = anything, Code#T <: error | int} | 'a)
 //│     = [Function: test]
@@ -194,3 +194,20 @@ run(res)
 //│    = [ 'Let', 'x', Symbol(x), [ 1 ], [ 'Tup', [ [Array], [Array] ] ] ]
 //│ res: (code & {Code#C = anything, Code#T <: int}, code & {Code#C = anything, Code#T = nothing},)
 //│    = [ 100, [ 'Var', [ 'FreeVar', 'y' ] ] ]
+
+let c = code"x"
+//│ c: code & {Code#C = anything, Code#T = nothing}
+//│  = [ 'Var', [ 'FreeVar', 'x' ] ]
+
+let r = code"x => ${c}"
+//│ ╔══[ERROR] Type mismatch. Required: Code, found: [Code[[x.type180'],x.type175'181']]
+//│ ║  l.202: 	let r = code"x => ${c}"
+//│ ╙──       	                    ^
+//│ r: code & {Code#C = anything, Code#T <: anything -> error}
+//│  = [ [Function (anonymous)] ]
+
+run(r)(1)
+//│ res: error
+//│ Runtime error:
+//│   Error: free variable not defined
+
