@@ -849,6 +849,69 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
   
 }
 
+class JSCompilerBackend extends JSBackend(allowUnresolvedSymbols = true) {
+  private def generateNewDef(pgrm: Pgrm): Ls[Str] = {
+    val mlsModule = topLevelScope.declareValue("typing_unit", Some(false), false)
+    val (diags, (typeDefs, otherStmts)) = pgrm.newDesugared
+
+    val (traitSymbols, classSymbols, mixinSymbols, moduleSymbols, superParameters) = declareNewTypeDefs(typeDefs)
+    def include(typeName: Str, moduleName: Str) =
+      JSExprStmt(JSAssignExpr(JSField(JSIdent("globalThis"), typeName), JSField(JSIdent(moduleName), typeName)))
+    val includes =
+      traitSymbols.map((sym) => include(sym.runtimeName, mlsModule.runtimeName)) ++
+      mixinSymbols.map((sym) => include(sym.runtimeName, mlsModule.runtimeName)) ++
+      moduleSymbols.map((sym) => include(sym.runtimeName, mlsModule.runtimeName)) ++
+      classSymbols.map((sym) => include(sym.runtimeName, mlsModule.runtimeName)).toList
+
+    val defs =
+      traitSymbols.map { translateTraitDeclaration(_)(topLevelScope) } ++
+      mixinSymbols.map { translateMixinDeclaration(_)(topLevelScope) } ++
+      moduleSymbols.map((m) =>
+        translateModuleDeclaration(m, superParameters.get(m.runtimeName) match {
+          case Some(lst) => lst
+          case _ => Nil
+        })(topLevelScope)
+      ) ++
+      classSymbols.map { sym =>
+        superParameters.get(sym.runtimeName) match {
+          case Some(sp) => translateNewClassDeclaration(sym, sp)(topLevelScope)
+          case _ => translateNewClassDeclaration(sym)(topLevelScope)
+        }
+      }.toList
+
+    val defStmts =
+      JSLetDecl(Ls(mlsModule.runtimeName -> S(JSRecord(Ls("cache" -> JSRecord(Ls())), defs)))) :: includes
+
+    val stmts: Ls[JSStmt] =
+        defStmts
+        .concat(otherStmts.flatMap {
+          case Def(recursive, Var(name), L(body), isByname) =>
+            val (originalExpr, sym) = if (recursive) {
+              val isByvalueRecIn = if (isByname) None else Some(true)
+              val sym = topLevelScope.declareValue(name, isByvalueRecIn, body.isInstanceOf[Lam])
+              val translated = translateTerm(body)(topLevelScope)
+              topLevelScope.unregisterSymbol(sym)
+              val isByvalueRecOut = if (isByname) None else Some(false)
+              (translated, topLevelScope.declareValue(name, isByvalueRecOut, body.isInstanceOf[Lam]))
+            } else {
+              val translatedBody = translateTerm(body)(topLevelScope)
+              val isByvalueRec = if (isByname) None else Some(false)
+              (translatedBody, topLevelScope.declareValue(name, isByvalueRec, body.isInstanceOf[Lam]))
+            }
+            val translatedBody = if (sym.isByvalueRec.isEmpty && !sym.isLam) JSArrowFn(Nil, L(originalExpr)) else originalExpr
+            topLevelScope.tempVars `with` JSConstDecl(sym.runtimeName, translatedBody) :: Nil
+          // Ignore type declarations.
+          case Def(_, _, R(_), isByname) => Nil
+          // `exprs.push(<expr>)`.
+          case term: Term =>
+            translateTerm(term)(topLevelScope).stmt :: Nil
+        })
+    SourceCode.fromStmts(polyfill.emit() ::: stmts).toLines
+  }
+
+  def apply(pgrm: Pgrm): Ls[Str] = generateNewDef(pgrm)
+}
+
 class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
   // Name of the array that contains execution results
   val resultsName: Str = topLevelScope declareRuntimeSymbol "results"

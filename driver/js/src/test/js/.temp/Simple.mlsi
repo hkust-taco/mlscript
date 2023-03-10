@@ -1,0 +1,2 @@
+class A(n: int)
+let a: A
