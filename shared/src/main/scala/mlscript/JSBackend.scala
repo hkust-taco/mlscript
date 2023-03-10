@@ -541,7 +541,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case (_, Fld(mut, spec, trm)) => translateTerm(trm)(getterScope)
       }
       case _ => Nil
-    }).flatten
+    }).map(_.reverse).flatten
     val decl = JSClassNewDecl(moduleSymbol.runtimeName,
                    fields,
                    base,
@@ -619,7 +619,7 @@ class JSBackend(allowUnresolvedSymbols: Boolean) {
         case (_, Fld(mut, spec, trm)) => translateTerm(trm)(constructorScope)
       }
       case _ => Nil
-    }).flatten
+    }).map(_.reverse).flatten
 
     JSClassNewDecl(classSymbol.runtimeName, fields, base, restRuntime match {
       case Some(restRuntime) => superParameters.reverse :+ JSIdent(s"...$restRuntime")
