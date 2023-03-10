@@ -56,7 +56,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                   innerUnquoteContextRequirements: mutable.ListBuffer[SimpleType],
                   outermostFreeVarType: MutSet[SimpleType],
                   id: Int,
-                  topLvlCtx: Opt[Ctx]
+                  isTopLvlCtx: Bool
                 ) {
 
     def +=(b: Str -> TypeInfo): Unit = env += b
@@ -110,7 +110,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
 
     def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
 
-    def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, MutMap.empty, inQuasiquote = inQuasiquote, outermostFreeVarType = MutSet.empty, id = Random.between(0, 1000))
+    def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, MutMap.empty, inQuasiquote = inQuasiquote, outermostFreeVarType = MutSet.empty, id = Random.between(0, 1000), isTopLvlCtx = false)
 
     def nextLevel: Ctx = copy(lvl = lvl + 1, id = Random.between(0, 1000))
 
@@ -137,7 +137,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       outermostFreeVarType = MutSet.empty,
       innerUnquoteContextRequirements = ListBuffer.empty,
       id = Random.between(0, 1000),
-      topLvlCtx = None
+      isTopLvlCtx = true
     )
 
     val empty: Ctx = init
