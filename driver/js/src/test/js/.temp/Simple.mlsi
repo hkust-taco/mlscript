@@ -1,2 +1,10 @@
-class A(n: int)
+mixin B() {
+  this: {n: 'n}
+  fun foo: 'n
+}
+class A(n: int) {
+  fun foo: int
+}
 let a: A
+let console: nothing
+nothing

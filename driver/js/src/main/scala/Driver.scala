@@ -28,10 +28,13 @@ class Driver(options: DriverOptions) {
   def execute: Unit =
     try {
       compile(options.filename)
+      if (Driver.totalErrors > 0)
+        js.Dynamic.global.process.exit(-1)
     }
     catch {
       case err: Diagnostic =>
         report(err)
+        js.Dynamic.global.process.exit(-1)
     } 
   
   private def compile(filename: String): Unit = {
@@ -80,7 +83,7 @@ class Driver(options: DriverOptions) {
 
     import typer._
 
-    implicit val raise: Raise = throw _
+    implicit val raise: Raise = report
     implicit var ctx: Ctx = Ctx.init
     implicit val extrCtx: Opt[typer.ExtrCtx] = N
 
@@ -102,7 +105,7 @@ class Driver(options: DriverOptions) {
   private def generate(program: Pgrm, filename: String): Unit = {
     val backend = new JSCompilerBackend()
     val lines = backend(program)
-    val code = lines.mkString("\n")
+    val code = lines.mkString("", "\n", "\n")
     writeFile(options.outputDir, s"$filename.js", code)
   }
 }
@@ -131,6 +134,9 @@ object Driver {
   private def report(msg: String): Unit =
     System.err.println(msg)
 
+  private var totalErrors = 0
+  
+  // TODO factor with duplicated logic in DiffTests
   private def report(diag: Diagnostic): Unit = {
     val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
     val headStr = diag match {
@@ -141,6 +147,7 @@ object Driver {
           case Diagnostic.Parsing =>
             s"╔══[PARSE ERROR] "
           case _ => // TODO customize too
+              totalErrors += 1
             s"╔══[ERROR] "
         }
       case WarningReport(msg, loco, src) =>
